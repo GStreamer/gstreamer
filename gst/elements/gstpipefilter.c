@@ -35,19 +35,16 @@
 
 #include "gstpipefilter.h"
 
-GST_DEBUG_CATEGORY (gst_pipefilter_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_pipefilter_debug);
 #define GST_CAT_DEFAULT gst_pipefilter_debug
 
-GstElementDetails gst_pipefilter_details = {
+GstElementDetails gst_pipefilter_details = GST_ELEMENT_DETAILS (
   "Pipefilter",
   "Filter",
-  "LGPL",
   "Interoperate with an external program using stdin and stdout",
-  VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>\n"
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 1999",
-};
+  "Erik Walthinsen <omega@cse.ogi.edu>, "
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
 
 /* Pipefilter signals and args */
@@ -62,13 +59,14 @@ enum {
 };
 
 
+static void			gst_pipefilter_base_init	(gpointer g_class);
 static void 			gst_pipefilter_class_init	(GstPipefilterClass *klass);
 static void 			gst_pipefilter_init		(GstPipefilter *pipefilter);
 
 static void 			gst_pipefilter_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void 			gst_pipefilter_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static GstData*		gst_pipefilter_get		(GstPad *pad);
+static GstData*			gst_pipefilter_get		(GstPad *pad);
 static void 			gst_pipefilter_chain		(GstPad *pad, GstData *_data);
 static gboolean 		gst_pipefilter_handle_event 	(GstPad *pad, GstEvent *event);
 
@@ -84,7 +82,8 @@ gst_pipefilter_get_type (void)
 
   if (!pipefilter_type) {
     static const GTypeInfo pipefilter_info = {
-      sizeof(GstPipefilterClass),      NULL,
+      sizeof(GstPipefilterClass),
+      gst_pipefilter_base_init,
       NULL,
       (GClassInitFunc)gst_pipefilter_class_init,
       NULL,
@@ -94,10 +93,19 @@ gst_pipefilter_get_type (void)
       (GInstanceInitFunc)gst_pipefilter_init,
     };
     pipefilter_type = g_type_register_static(GST_TYPE_ELEMENT, "GstPipefilter", &pipefilter_info, 0);
+  
+    GST_DEBUG_CATEGORY_INIT (gst_pipefilter_debug, "pipefilter", 0, "pipefilter element");
   }
   return pipefilter_type;
 }
 
+static void
+gst_pipefilter_base_init (gpointer g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_set_details (gstelement_class, &gst_pipefilter_details);
+}
 static void 
 gst_pipefilter_class_init (GstPipefilterClass *klass)
 {
@@ -109,14 +117,14 @@ gst_pipefilter_class_init (GstPipefilterClass *klass)
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
-  gstelement_class->change_state = gst_pipefilter_change_state;
+  gobject_class->set_property = gst_pipefilter_set_property;  
+  gobject_class->get_property = gst_pipefilter_get_property;
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_COMMAND,
     g_param_spec_string("command","command","command",
                         NULL, G_PARAM_READWRITE)); /* CHECKME */
 
-  gobject_class->set_property = gst_pipefilter_set_property;  
-  gobject_class->get_property = gst_pipefilter_get_property;
+  gstelement_class->change_state = gst_pipefilter_change_state;
 }
 
 static void

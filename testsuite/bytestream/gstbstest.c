@@ -27,7 +27,7 @@
 #include <string.h>
 
 #include <gst/gst.h>
-#include <gst/gstbytestream.h>
+#include <gst/bytestream/bytestream.h>
 
 #define GST_TYPE_BSTEST  		(gst_bstest_get_type())
 #define GST_BSTEST(obj)  		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BSTEST,GstBsTest))
@@ -64,16 +64,13 @@ struct _GstBsTestClass
 GType gst_bstest_get_type (void);
 
 
-GstElementDetails gst_bstest_details = {
+GstElementDetails gst_bstest_details = GST_ELEMENT_DETAILS (
   "ByteStreamTest",
   "Filter",
-  "LGPL",
   "Test for the GstByteStream code",
-  VERSION,
-  "Erik Walthinsen <omega@temple-baptist.com>,"
-    "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2001",
-};
+  "Erik Walthinsen <omega@temple-baptist.com>, "
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
 
 /* BsTest signals and args */
@@ -94,6 +91,7 @@ enum
 };
 
 
+static void	gst_bstest_base_init		(gpointer g_class);
 static void 	gst_bstest_class_init 		(GstBsTestClass * klass);
 static void 	gst_bstest_init 		(GstBsTest * bstest);
 
@@ -116,7 +114,8 @@ gst_bstest_get_type (void)
 
   if (!bstest_type) {
     static const GTypeInfo bstest_info = {
-      sizeof (GstBsTestClass), NULL,
+      sizeof (GstBsTestClass),
+      gst_bstest_base_init,
       NULL,
       (GClassInitFunc) gst_bstest_class_init,
       NULL,
@@ -129,6 +128,13 @@ gst_bstest_get_type (void)
     bstest_type = g_type_register_static (GST_TYPE_ELEMENT, "BSTest", &bstest_info, 0);
   }
   return bstest_type;
+}
+static void
+gst_bstest_base_init (gpointer g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (gstelement_class, &gst_bstest_details);
 }
 
 static void
@@ -380,21 +386,24 @@ gst_bstest_change_state (GstElement *element)
 }
 
 static gboolean
-plugin_init (GModule * module, GstPlugin * plugin)
+plugin_init (GstPlugin * plugin)
 {
-  GstElementFactory *factory;
-
   /* We need to create an ElementFactory for each element we provide.
    * This consists of the name of the element, the GType identifier,
    * and a pointer to the details structure at the top of the file.
    */
-  factory = gst_element_factory_new ("bstest", GST_TYPE_BSTEST, &gst_bstest_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  /* The very last thing is to register the elementfactory with the plugin. */
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "bstest", GST_RANK_PRIMARY, GST_TYPE_BSTEST);
 }
 
-GST_PLUGIN_DESC (GST_VERSION_MAJOR, GST_VERSION_MINOR, "bstest", plugin_init);
+GST_PLUGIN_DEFINE (
+  GST_VERSION_MAJOR, 
+  GST_VERSION_MINOR, 
+  "bstest", 
+  "test for the bytestream element",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)

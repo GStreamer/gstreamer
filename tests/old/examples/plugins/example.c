@@ -23,18 +23,16 @@
 #include <string.h>
 #include "example.h"
 
-/* The ElementDetails structure gives a human-readable description
- * of the plugin, as well as author and version data.
+/* The ElementDetails structure gives a human-readable description of the
+ * plugin, as well as author and version data. Use the GST_ELEMENT_DETAILS
+ * macro when defining it.
  */
-static GstElementDetails example_details = {
+static GstElementDetails example_details = GST_ELEMENT_DETAILS (
   "An example plugin",
   "Example/FirstExample",
-  "LGPL",
   "Shows the basic structure of a plugin",
-  "0.1",
-  "your name <your.name@your.isp>",
-  "(C) 2001",
-};
+  "your name <your.name@your.isp>"
+);
 
 /* These are the signals that this element can fire.  They are zero-
  * based because the numbers themselves are private to the object.
@@ -186,6 +184,13 @@ gst_example_class_init (GstExampleClass *klass)
   /* we also override the default state change handler with our own
    * implementation */
   gstelement_class->change_state = gst_example_change_state;
+  /* We can now provide the details for this element, that we defined earlier. */
+  gst_element_class_set_details (gstelement_class, &example_details);
+  /* The pad templates can be easily generated from the factories above,
+   * and then added to the list of padtemplates for the class.
+   */
+  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (sink_factory));
+  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (src_factory));
 }
 
 /* This function is responsible for initializing a specific instance of
@@ -386,31 +391,20 @@ gst_example_change_state (GstElement *element)
  * this function is called to register everything that the plugin provides.
  */
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* We need to create an ElementFactory for each element we provide.
-   * This consists of the name of the element, the GType identifier,
-   * and a pointer to the details structure at the top of the file.
+  /* We need to register each element we provide with the plugin. This consists 
+   * of the name of the element, a rank that gives the importance of the element 
+   * when compared to similar plugins and the GType identifier.
    */
-  factory = gst_element_factory_new("example", GST_TYPE_EXAMPLE, &example_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  /* The pad templates can be easily generated from the factories above,
-   * and then added to the list of padtemplates for the elementfactory.
-   */
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_factory));
-
-  /* The very last thing is to register the elementfactory with the plugin. */
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "example", GST_RANK_MARGINAL, GST_TYPE_EXAMPLE))
+    return FALSE;
 
   /* Now we can return successfully. */
   return TRUE;
 
   /* At this point, the GStreamer core registers the plugin, its
-   * elementfactories, padtemplates, etc., for use in you application.
+   * elementfactories, padtemplates, etc., for use in your application.
    */
 }
 
@@ -421,12 +415,26 @@ plugin_init (GModule *module, GstPlugin *plugin)
  * The symbol pointing to this structure is the only symbol looked up when
  * loading the plugin.
  */
-GstPluginDesc plugin_desc = {
-  GST_VERSION_MAJOR, /* The major version of the core that this was built with */
-  GST_VERSION_MINOR, /* The minor version of the core that this was built with */
-  "example",         /* The name of the plugin.  This must be unique: plugins with
-		      * the same name will be assumed to be identical, and only
-		      * one will be loaded. */
-  plugin_init        /* Pointer to the initialisation function for the plugin. */
-};
+GST_PLUGIN_DEFINE (
+  GST_VERSION_MAJOR,	/* The major version of the core that this was built with */
+  GST_VERSION_MINOR,	/* The minor version of the core that this was built with */
+  "example",		/* The name of the plugin.  This must be unique: plugins with
+			 * the same name will be assumed to be identical, and only
+			 * one will be loaded. */
+  "an example plugin",	/* a short description of the plugin in English */
+  plugin_init,		/* Pointer to the initialisation function for the plugin. */
+  "0.1",		/* The version number of the plugin */
+  "LGPL",		/* ieffective license the plugin can be shipped with. Must be 
+			 * valid for all libraries it links to, too. */
+  "(c) 2003 E. Xamplewriter",
+			/* Copyright holder for this plugin. This does not include
+			 * the libraries it links to, contrary to the license. This
+			 * field should be considered informational and not legally
+			 * binding */
+  "my nifty plugin package",
+			/* package this plugin belongs to. */
+  "http://www.mydomain.com"
+			/* originating URL for this plugin. This is the place to look
+			 * for updates, information and so on. */
+);
 

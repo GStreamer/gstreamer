@@ -38,7 +38,8 @@ GQuark gst_plugin_error_quark (void);
 typedef enum
 {
   GST_PLUGIN_ERROR_MODULE,
-  GST_PLUGIN_ERROR_DEPENDENCIES
+  GST_PLUGIN_ERROR_DEPENDENCIES,
+  GST_PLUGIN_ERROR_NAME_MISMATCH
 } GstPluginError;
 
 #define GST_PLUGIN(plugin)		((GstPlugin *) (plugin))
@@ -46,58 +47,86 @@ typedef enum
 typedef struct _GstPlugin		GstPlugin;
 typedef struct _GstPluginDesc		GstPluginDesc;
 
+/* Initialiser function: returns TRUE if plugin initialised successfully */
+typedef gboolean (*GstPluginInitFunc) (GstPlugin *plugin);
+/* exiting function when plugin is unloaded */
+typedef void (*GstPluginExitFunc) (GstPlugin *plugin);
+
+struct _GstPluginDesc {
+  gint major_version;			/* major version of core that plugin was compiled for */
+  gint minor_version;			/* minor version of core that plugin was compiled for */
+  gchar *name;				/* unique name of plugin */
+  gchar *description;			/* description of plugin */
+  GstPluginInitFunc plugin_init;	/* pointer to plugin_init function */
+  GstPluginExitFunc plugin_exit;	/* pointer to exiting function */
+  gchar *version;			/* version of the plugin */
+  gchar *license;			/* effective license of plugin */
+  gchar *copyright;			/* informal copyright notice */
+  gchar *package;			/* package plugin belongs to */
+  gchar *origin;			/* URL to provider of plugin */
+  
+  GST_STRUCT_PADDING
+};
+
 struct _GstPlugin {
-  gchar 	*name;			/* name of the plugin */
-  gchar 	*longname;		/* long name of plugin */
-  gchar 	*filename;		/* filename it came from */
+  GstPluginDesc	desc;
 
-  GList 	*features;		/* list of features provided */
-  gint 		 numfeatures;
+  gchar *	filename;
+  GList *	features;		/* list of features provided */
+  gint 		numfeatures;
 
-  gpointer 	 manager;		/* managing registry */
-  GModule 	*module;		/* contains the module if the plugin is loaded */
-  gboolean	 init_called;		/* if the init function has been called */
+  gpointer 	manager;		/* managing registry */
+  GModule *	module;			/* contains the module if the plugin is loaded */
 
   GST_STRUCT_PADDING
 };
 
-/* Initialiser function: returns TRUE if plugin initialised successfully */
-typedef gboolean (*GstPluginInitFunc) (GModule *module, GstPlugin *plugin);
-
-struct _GstPluginDesc {
-  gint major_version; /* major version of core that plugin was compiled for */
-  gint minor_version; /* minor version of core that plugin was compiled for */
-  gchar *name;        /* name of plugin */
-  GstPluginInitFunc plugin_init; /* pointer to plugin_init function */
-};
-
 #ifndef GST_PLUGIN_STATIC				
-#define GST_PLUGIN_DESC_DYNAMIC(major,minor,name,init)	\
-GstPluginDesc plugin_desc = {				\
+#define GST_PLUGIN_DEFINE_DYNAMIC(major,minor,name,description,init,version,license,copyright,package,origin)	\
+GstPluginDesc gst_plugin_desc = {		      	\
   major,						\
   minor,						\
   name,							\
-  init							\
+  description,	      					\
+  init,							\
+  NULL,							\
+  version,						\
+  license,					      	\
+  copyright,						\
+  package,						\
+  origin,						\
+  GST_STRUCT_PADDING_INIT				\
 };							
+#define GST_PLUGIN_DEFINE_STATIC(major,minor,name,description,init,version,license,copyright,package,origin)
 #else
-#define GST_PLUGIN_DESC_DYNAMIC(major,minor,name,init)
-#endif
-#define GST_PLUGIN_DESC_STATIC(major,minor,name,init)	\
+#define GST_PLUGIN_DEFINE_DYNAMIC(major,minor,name,description,init,version,license,copyright,package,origin)
+#define GST_PLUGIN_DEFINE_STATIC(major,minor,name,description,init,version,license,copyright,package,origin)  \
 static void GST_GNUC_CONSTRUCTOR			\
 _gst_plugin_static_init__ ##init (void)			\
 {							\
   static GstPluginDesc plugin_desc_ = {			\
     major,						\
     minor,						\
-    name,						\
-    init						\
+    name,		      				\
+    description,	      	      			\
+    init,				      		\
+    NULL,					      	\
+    version,						\
+    license,					      	\
+    copyright,						\
+    package,						\
+    origin,						\
+    GST_STRUCT_PAD_ING_INIT				\
   };							\
   _gst_plugin_register_static (&plugin_desc_);		\
 }			
+#endif
 
-#define GST_PLUGIN_DESC(major,minor,name,init)		\
-  GST_PLUGIN_DESC_DYNAMIC (major,minor,name,init)	\
-  GST_PLUGIN_DESC_STATIC (major,minor,name,init)	
+#define GST_PLUGIN_DEFINE(major,minor,name,description,init,version,license,copyright,package,origin)\
+  GST_PLUGIN_DEFINE_STATIC(major,minor,name,description,init,version,license,copyright,package,origin)\
+  GST_PLUGIN_DEFINE_DYNAMIC(major,minor,name,description,init,version,license,copyright,package,origin)
+  
+#define GST_LICENSE_UNKNOWN "unknown"
 
 /* function for filters */
 typedef gboolean        (*GstPluginFilter)              (GstPlugin *plugin,
@@ -106,13 +135,15 @@ typedef gboolean        (*GstPluginFilter)              (GstPlugin *plugin,
 void			_gst_plugin_initialize		(void);
 void 			_gst_plugin_register_static 	(GstPluginDesc *desc);
 
-GstPlugin*		gst_plugin_new			(const gchar *filename);
-
-const gchar*		gst_plugin_get_name		(GstPlugin *plugin);
+G_CONST_RETURN gchar*	gst_plugin_get_name		(GstPlugin *plugin);
 void			gst_plugin_set_name		(GstPlugin *plugin, const gchar *name);
-const gchar*		gst_plugin_get_longname		(GstPlugin *plugin);
-void			gst_plugin_set_longname		(GstPlugin *plugin, const gchar *longname);
-const gchar*		gst_plugin_get_filename		(GstPlugin *plugin);
+G_CONST_RETURN gchar*	gst_plugin_get_longname		(GstPlugin *plugin);
+G_CONST_RETURN gchar*	gst_plugin_get_filename		(GstPlugin *plugin);
+G_CONST_RETURN gchar*	gst_plugin_get_license		(GstPlugin *plugin);
+G_CONST_RETURN gchar*	gst_plugin_get_copyright      	(GstPlugin *plugin);
+G_CONST_RETURN gchar*	gst_plugin_get_package		(GstPlugin *plugin);
+G_CONST_RETURN gchar*	gst_plugin_get_origin      	(GstPlugin *plugin);
+GModule *		gst_plugin_get_module		(GstPlugin *plugin);
 gboolean		gst_plugin_is_loaded		(GstPlugin *plugin);
 
 GList*			gst_plugin_feature_filter	(GstPlugin *plugin, 
@@ -128,7 +159,7 @@ gboolean		gst_plugin_name_filter		(GstPlugin *plugin, const gchar *name);
 GList*			gst_plugin_get_feature_list	(GstPlugin *plugin);
 GstPluginFeature*	gst_plugin_find_feature		(GstPlugin *plugin, const gchar *name, GType type);
 
-gboolean 		gst_plugin_load_plugin		(GstPlugin *plugin, GError** error);
+GstPlugin * 		gst_plugin_load_file		(const gchar *filename, GError** error);
 gboolean 		gst_plugin_unload_plugin	(GstPlugin *plugin);
 
 void			gst_plugin_add_feature		(GstPlugin *plugin, GstPluginFeature *feature);

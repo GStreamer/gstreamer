@@ -28,8 +28,6 @@
 
 G_BEGIN_DECLS
 
-extern GstElementDetails gst_aggregator_details;
-GST_DEBUG_CATEGORY_EXTERN(gst_aggregator_debug);
 
 typedef enum {
   AGGREGATOR_LOOP 		= 1,

@@ -746,17 +746,22 @@ gst_bytestream_print_status (GstByteStream * bs)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
   GST_DEBUG_CATEGORY_INIT (debug_bs, "bytestream", 0, "bytestream library");
 
-  gst_plugin_set_longname (plugin, "GstByteStream: a byte-oriented layer on top of buffer-passing");
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "gstbytestream",
-  plugin_init
-};
+  "a byte-oriented layer on top of buffer-passing",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)

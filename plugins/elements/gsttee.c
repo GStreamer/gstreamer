@@ -26,19 +26,16 @@
 
 #include "gsttee.h"
 
-GST_DEBUG_CATEGORY (gst_tee_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_tee_debug);
 #define GST_CAT_DEFAULT gst_tee_debug
 
-GstElementDetails gst_tee_details = {
+GstElementDetails gst_tee_details = GST_ELEMENT_DETAILS (
   "Tee pipe fitting",
   "Generic",
-  "LGPL",
   "1-to-N pipe fitting",
-  VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>\n"
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 1999, 2000",
-};
+  "Erik Walthinsen <omega@cse.ogi.edu>, "
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
 /* Tee signals and args */
 enum {
@@ -61,6 +58,7 @@ GST_PAD_TEMPLATE_FACTORY (tee_src_factory,
   GST_CAPS_ANY
 );
 
+static void	gst_tee_base_init	(gpointer g_class);
 static void 	gst_tee_class_init	(GstTeeClass *klass);
 static void 	gst_tee_init		(GstTee *tee);
 
@@ -83,7 +81,8 @@ gst_tee_get_type(void) {
 
   if (!tee_type) {
     static const GTypeInfo tee_info = {
-      sizeof(GstTeeClass),      NULL,
+      sizeof(GstTeeClass),
+      gst_tee_base_init,
       NULL,
       (GClassInitFunc)gst_tee_class_init,
       NULL,
@@ -93,10 +92,20 @@ gst_tee_get_type(void) {
       (GInstanceInitFunc)gst_tee_init,
     };
     tee_type = g_type_register_static (GST_TYPE_ELEMENT, "GstTee", &tee_info, 0);
+  
+    GST_DEBUG_CATEGORY_INIT (gst_tee_debug, "tee", 0, "tee element");
   }
   return tee_type;
 }
 
+static void
+gst_tee_base_init (gpointer g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_set_details (gstelement_class, &gst_tee_details);
+  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (tee_src_factory));
+}
 static void
 gst_tee_class_init (GstTeeClass *klass) 
 {
@@ -380,10 +389,3 @@ gst_tee_chain (GstPad *pad, GstData *_data)
   }
 }
 
-gboolean
-gst_tee_factory_init (GstElementFactory *factory)
-{
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (tee_src_factory));
-
-  return TRUE;
-}

@@ -47,9 +47,14 @@ enum {
   /* FILL ME */
 };
 
+extern void			__gst_element_details_clear	(GstElementDetails *dp);
+extern void			__gst_element_details_set	(GstElementDetails *dest, 
+								 const GstElementDetails *src);
+
 static void			gst_element_class_init		(GstElementClass *klass);
 static void			gst_element_init		(GstElement *element);
-static void			gst_element_base_class_init	(GstElementClass *klass);
+static void			gst_element_base_class_init	(gpointer g_class);
+static void			gst_element_base_class_finalize	(gpointer g_class);
 
 static void			gst_element_real_set_property	(GObject *object, guint prop_id, 
 								 const GValue *value, GParamSpec *pspec);
@@ -76,8 +81,8 @@ GType gst_element_get_type (void)
   if (!_gst_element_type) {
     static const GTypeInfo element_info = {
       sizeof(GstElementClass),
-      (GBaseInitFunc)gst_element_base_class_init,
-      NULL,
+      gst_element_base_class_init,
+      gst_element_base_class_finalize,
       (GClassInitFunc)gst_element_class_init,
       NULL,
       NULL,
@@ -140,20 +145,30 @@ gst_element_class_init (GstElementClass *klass)
 
   klass->change_state 			= GST_DEBUG_FUNCPTR (gst_element_change_state);
   klass->error	 			= GST_DEBUG_FUNCPTR (gst_element_error_func);
-  klass->elementfactory 		= NULL;
   klass->padtemplates 			= NULL;
   klass->numpadtemplates 		= 0;
 }
 
 static void
-gst_element_base_class_init (GstElementClass *klass)
+gst_element_base_class_init (gpointer g_class)
 {
+  GstElementClass *klass = GST_ELEMENT_CLASS (klass);
   GObjectClass *gobject_class;
 
   gobject_class = (GObjectClass*) klass;
 
   gobject_class->set_property =		GST_DEBUG_FUNCPTR(gst_element_real_set_property);
   gobject_class->get_property =		GST_DEBUG_FUNCPTR(gst_element_real_get_property);
+}
+
+static void
+gst_element_base_class_finalize (gpointer g_class)
+{
+  GstElementClass *klass = GST_ELEMENT_CLASS (klass);
+
+  g_list_foreach (klass->padtemplates, (GFunc) g_object_unref, NULL);
+  g_list_free (klass->padtemplates);
+  __gst_element_details_clear (&klass->details);
 }
 
 static void
@@ -1157,10 +1172,8 @@ gst_element_get_pad_list (GstElement *element)
  * @klass: the #GstElementClass to add the pad template to.
  * @templ: a #GstPadTemplate to add to the element class.
  *
- * Adds a padtemplate to an element class. 
- * This is useful if you have derived a custom bin and wish to provide 
- * an on-request pad at runtime. Plug-in writers should use
- * gst_element_factory_add_pad_template instead.
+ * Adds a padtemplate to an element class. This is mainly used in the _base_init
+ * functions of classes.
  */
 void
 gst_element_class_add_pad_template (GstElementClass *klass, 
@@ -1173,6 +1186,23 @@ gst_element_class_add_pad_template (GstElementClass *klass,
   
   klass->padtemplates = g_list_append (klass->padtemplates, templ);
   klass->numpadtemplates++;
+}
+
+/**
+ * gst_element_class_set_details:
+ * @klass: class to set details for
+ * @details: details to set
+ *
+ * Sets the detailed information for a #GstElementClass.
+ * <note>This function is for use in _base_init functions only.</note>
+ */
+void                    
+gst_element_class_set_details (GstElementClass *klass, GstElementDetails *details)
+{
+  g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
+  g_return_if_fail (GST_IS_ELEMENT_DETAILS (details));
+  
+  __gst_element_details_set (&klass->details, details);
 }
 
 /**
@@ -2522,22 +2552,6 @@ failure:
   return GST_STATE_FAILURE;
 }
 
-/**
- * gst_element_get_factory:
- * @element: a #GstElement to request the element factory of.
- *
- * Retrieves the factory that was used to create this element.
- *
- * Returns: the #GstElementFactory used for creating this element.
- */
-GstElementFactory*
-gst_element_get_factory (GstElement *element)
-{
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-
-  return GST_ELEMENT_GET_CLASS (element)->elementfactory;
-}
-
 static void
 gst_element_dispose (GObject *object)
 {
@@ -2616,13 +2630,6 @@ gst_element_save_thyself (GstObject *object,
   oclass = GST_ELEMENT_GET_CLASS (element);
 
   xmlNewChild(parent, NULL, "name", GST_ELEMENT_NAME(element));
-
-  if (oclass->elementfactory != NULL) {
-    GstElementFactory *factory = (GstElementFactory *)oclass->elementfactory;
-
-    xmlNewChild (parent, NULL, "type", GST_OBJECT_NAME (factory));
-    xmlNewChild (parent, NULL, "version", factory->details->version);
-  }
 
 /* FIXME: what is this? */  
 /*  if (element->manager) */

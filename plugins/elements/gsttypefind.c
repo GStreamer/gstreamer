@@ -43,18 +43,15 @@
 
 #include <gst/gsttypefind.h>
 
-GST_DEBUG_CATEGORY (gst_type_find_element_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_type_find_element_debug);
 #define GST_CAT_DEFAULT gst_type_find_element_debug
 
-GstElementDetails gst_type_find_element_details = {
+GstElementDetails gst_type_find_element_details = GST_ELEMENT_DETAILS (
   "TypeFind",
   "Generic",
-  "LGPL",
   "Finds the media type of a stream",
-  VERSION,
-  "Benjamin Otte <in7y118@public.uni-hamburg.de>",
-  "(C) 2003",
-};
+  "Benjamin Otte <in7y118@public.uni-hamburg.de>"
+);
 
 /* generic templates */
 GST_PAD_TEMPLATE_FACTORY (type_find_element_sink_factory,
@@ -87,6 +84,7 @@ enum {
 };
 
 
+static void	gst_type_find_element_base_init		(gpointer g_class);
 static void	gst_type_find_element_class_init	(gpointer	g_class,
 							 gpointer	class_data);
 static void	gst_type_find_element_init		(GTypeInstance *instance,
@@ -122,7 +120,7 @@ gst_type_find_element_get_type (void)
   if (!typefind_type) {
     static const GTypeInfo typefind_info = {
       sizeof (GstTypeFindElementClass),
-      NULL,
+      gst_type_find_element_base_init,
       NULL,
       gst_type_find_element_class_init,
       NULL,
@@ -135,6 +133,9 @@ gst_type_find_element_get_type (void)
     typefind_type = g_type_register_static (GST_TYPE_ELEMENT,
 					    "GstTypeFindElement",
 					    &typefind_info, 0);
+
+    GST_DEBUG_CATEGORY_INIT (gst_type_find_element_debug, "typefind", 
+			     GST_DEBUG_BG_YELLOW | GST_DEBUG_FG_GREEN, "typefind element");
   }
   return typefind_type;
 }
@@ -153,6 +154,13 @@ gst_type_find_element_have_type (GstTypeFindElement *typefind, guint probability
   if (gst_pad_try_set_caps (typefind->src, caps) < GST_PAD_LINK_OK) {
     gst_element_error (GST_ELEMENT (typefind), "could not set caps on source pad");
   }
+}
+static void
+gst_type_find_element_base_init (gpointer g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_set_details (gstelement_class, &gst_type_find_element_details);
 }
 static void
 gst_type_find_element_class_init (gpointer g_class, gpointer class_data)

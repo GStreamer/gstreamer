@@ -29,10 +29,28 @@
 #include <gst/gstobject.h>
 #include <gst/gstpad.h>
 #include <gst/gstclock.h>
+#include <gst/gstplugin.h>
 #include <gst/gstpluginfeature.h>
 #include <gst/gstindex.h>
 
 G_BEGIN_DECLS
+
+typedef struct _GstElementDetails GstElementDetails;
+
+/* FIXME: need translatable stuff in here (how handle in registry)? */
+struct _GstElementDetails {
+  gchar *longname;              /* long, english name */
+  gchar *klass;                 /* type of element, as hierarchy */
+  gchar *description;           /* insights of one form or another */
+  gchar *author;                /* who wrote this thing? */
+
+  GST_STRUCT_PADDING
+};
+#define GST_ELEMENT_DETAILS(longname,klass,description,author)		\
+  { longname, klass, description, author, GST_STRUCT_PADDING_INIT }
+#define GST_IS_ELEMENT_DETAILS(details) (					\
+  (details) && ((details)->longname != NULL) && ((details)->klass != NULL)	\
+  && ((details)->description != NULL) && ((details)->author != NULL))
 
 #define GST_NUM_STATES 4
 
@@ -172,8 +190,8 @@ struct _GstElement {
 struct _GstElementClass {
   GstObjectClass 	parent_class;
 
-  /* the elementfactory that created us */
-  GstElementFactory 	*elementfactory;
+  /* the element details */
+  GstElementDetails 	details;
   /* templates for our pads */
   GList 		*padtemplates;
   gint 			numpadtemplates;
@@ -224,6 +242,8 @@ struct _GstElementClass {
 void			gst_element_class_add_pad_template	(GstElementClass *klass, GstPadTemplate *templ);
 void                    gst_element_class_install_std_props	(GstElementClass *klass,
 								 const gchar      *first_name, ...);
+void			gst_element_class_set_details		(GstElementClass *klass,
+								 GstElementDetails *details);
 
 #define 		gst_element_default_deep_notify 	gst_object_default_deep_notify
 
@@ -349,19 +369,6 @@ GstBin*			gst_element_get_managing_bin	(GstElement *element);
  * factories stuff
  *
  **/
-typedef struct _GstElementDetails GstElementDetails;
-
-struct _GstElementDetails {
-  gchar *longname;              /* long, english name */
-  gchar *klass;                 /* type of element, as hierarchy */
-  gchar *license;               /* license element is under */
-  gchar *description;           /* insights of one form or another */
-  gchar *version;               /* version of the element */
-  gchar *author;                /* who wrote this thing? */
-  gchar *copyright;             /* copyright details (year, etc.) */
-
-  GST_STRUCT_PADDING
-};
 
 #define GST_TYPE_ELEMENT_FACTORY 		(gst_element_factory_get_type())
 #define GST_ELEMENT_FACTORY(obj)  		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ELEMENT_FACTORY,\
@@ -371,22 +378,15 @@ struct _GstElementDetails {
 #define GST_IS_ELEMENT_FACTORY(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ELEMENT_FACTORY))
 #define GST_IS_ELEMENT_FACTORY_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ELEMENT_FACTORY))
 
-#define GST_ELEMENT_RANK_PRIMARY    256
-#define GST_ELEMENT_RANK_SECONDARY  128
-#define GST_ELEMENT_RANK_MARGINAL   64
-#define GST_ELEMENT_RANK_NONE       0
-
 struct _GstElementFactory {
-  GstPluginFeature feature;
+  GstPluginFeature	parent;
 
-  GType type;			/* unique GType of element */
+  GType			type;			/* unique GType of element or 0 if not loaded */
 
-  guint details_dynamic : 1;
+  GstElementDetails	details;
 
-  GstElementDetails *details;	/* pointer to details struct */
-
-  GList *padtemplates;
-  guint16 numpadtemplates;
+  GList *		padtemplates;
+  guint			numpadtemplates;
 
   GST_OBJECT_PADDING
 };
@@ -399,25 +399,33 @@ struct _GstElementFactoryClass {
 
 GType 			gst_element_factory_get_type 		(void);
 
-GstElementFactory*	gst_element_factory_new			(const gchar *name, GType type,
-                                                                 GstElementDetails *details);
-GstElementFactory*	gst_element_factory_find		(const gchar *name);
+gboolean		gst_element_register			(GstPlugin *plugin,
+								 const gchar *elementname,
+								 guint rank,
+								 GType type);
 
-void			gst_element_factory_add_pad_template	(GstElementFactory *elementfactory,
-								 GstPadTemplate *templ);
+GstElementFactory*	gst_element_factory_find		(const gchar *name);
+GType			gst_element_factory_get_element_type	(GstElementFactory *factory);
+G_CONST_RETURN gchar *	gst_element_factory_get_longname	(GstElementFactory *factory);
+G_CONST_RETURN gchar *	gst_element_factory_get_klass		(GstElementFactory *factory);
+G_CONST_RETURN gchar *	gst_element_factory_get_description  	(GstElementFactory *factory);
+G_CONST_RETURN gchar *	gst_element_factory_get_version      	(GstElementFactory *factory);
+G_CONST_RETURN gchar *	gst_element_factory_get_author		(GstElementFactory *factory);
+guint			gst_element_factory_get_num_padtemplates (GstElementFactory *factory);
+G_CONST_RETURN GList *	gst_element_factory_get_padtemplates	(GstElementFactory *factory);
+
+GstElement*		gst_element_factory_create		(GstElementFactory *factory,
+								 const gchar *name);
+GstElement*		gst_element_factory_make		(const gchar *factoryname, const gchar *name);
 
 gboolean		gst_element_factory_can_src_caps	(GstElementFactory *factory,
 								 GstCaps *caps);
 gboolean		gst_element_factory_can_sink_caps	(GstElementFactory *factory,
 								 GstCaps *caps);
 
-GstElement*		gst_element_factory_create		(GstElementFactory *factory,
-								 const gchar *name);
-GstElement*		gst_element_factory_make		(const gchar *factoryname, const gchar *name);
-GstElement*		gst_element_factory_make_or_warn	(const gchar *factoryname, const gchar *name);
+void			__gst_element_factory_add_pad_template	(GstElementFactory *elementfactory,
+								 GstPadTemplate *templ);
 
-#define			gst_element_factory_set_rank(factory, rank) \
-				gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE (factory), rank)
 
 G_END_DECLS
 

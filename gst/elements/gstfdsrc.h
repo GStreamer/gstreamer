@@ -28,8 +28,6 @@
 
 G_BEGIN_DECLS
 
-extern GstElementDetails gst_fdsrc_details;
-GST_DEBUG_CATEGORY_EXTERN(gst_fdsrc_debug);
 
 #define GST_TYPE_FDSRC \
   (gst_fdsrc_get_type())

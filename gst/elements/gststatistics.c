@@ -27,18 +27,15 @@
 
 #include "gststatistics.h"
 
-GST_DEBUG_CATEGORY (gst_statistics_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_statistics_debug);
 #define GST_CAT_DEFAULT gst_statistics_debug
 
-GstElementDetails gst_statistics_details = {
+GstElementDetails gst_statistics_details = GST_ELEMENT_DETAILS (
   "Statistics",
   "Generic",
-  "LGPL",
   "Statistics on buffers/bytes/events",
-  VERSION,
-  "David I. Lehn <dlehn@users.sourceforge.net>",
-  "(C) 2001",
-};
+  "David I. Lehn <dlehn@users.sourceforge.net>"
+);
 
 
 /* Statistics signals and args */
@@ -61,6 +58,7 @@ enum {
 };
 
 
+static void gst_statistics_base_init	(gpointer g_class);
 static void gst_statistics_class_init	(GstStatisticsClass *klass);
 static void gst_statistics_init		(GstStatistics *statistics);
 
@@ -83,7 +81,8 @@ gst_statistics_get_type (void)
 
   if (!statistics_type) {
     static const GTypeInfo statistics_info = {
-      sizeof(GstStatisticsClass),      NULL,
+      sizeof(GstStatisticsClass), 
+      gst_statistics_base_init,
       NULL,
       (GClassInitFunc)gst_statistics_class_init,
       NULL,
@@ -93,18 +92,27 @@ gst_statistics_get_type (void)
       (GInstanceInitFunc)gst_statistics_init,
     };
     statistics_type = g_type_register_static (GST_TYPE_ELEMENT, "GstStatistics", &statistics_info, 0);
+  
+    GST_DEBUG_CATEGORY_INIT (gst_statistics_debug, "statistics", 0, "statistics element");
   }
   return statistics_type;
 }
 
+static void
+gst_statistics_base_init (gpointer g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_set_details (gstelement_class, &gst_statistics_details);
+}
 static void 
 gst_statistics_class_init (GstStatisticsClass *klass) 
 {
   GObjectClass *gobject_class;
+  
+  gobject_class = G_OBJECT_CLASS (klass);
 
-  gobject_class = (GObjectClass*)klass;
-
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFFERS,
     g_param_spec_int64 ("buffers", "buffers", "total buffers count",

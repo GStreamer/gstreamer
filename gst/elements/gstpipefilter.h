@@ -29,8 +29,6 @@
 
 G_BEGIN_DECLS
 
-extern GstElementDetails gst_pipefilter_details;
-GST_DEBUG_CATEGORY_EXTERN(gst_pipefilter_debug);
 
 #define GST_TYPE_PIPEFILTER \
   (gst_pipefilter_get_type())

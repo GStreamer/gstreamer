@@ -993,12 +993,11 @@ gst_file_index_get_assoc_entry (GstIndex *index,
 }
 
 gboolean
-gst_file_index_plugin_init (GModule *module, GstPlugin *plugin)
+gst_file_index_plugin_init (GstPlugin *plugin)
 {
   GstIndexFactory *factory;
 
   GST_DEBUG_CATEGORY_INIT(DC, "GST_FILEINDEX", 0, NULL);
-  gst_plugin_set_longname (plugin, "A file index");
 
   factory = gst_index_factory_new ("fileindex",
 	                           "A index that stores entries in file",

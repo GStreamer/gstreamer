@@ -28,9 +28,6 @@
 
 G_BEGIN_DECLS
 
-extern GstElementDetails gst_spider_identity_details;
-GST_DEBUG_CATEGORY_EXTERN(gst_spider_identity_debug);
-
 #define GST_TYPE_SPIDER_IDENTITY \
   (gst_spider_identity_get_type())
 #define GST_SPIDER_IDENTITY(obj) \

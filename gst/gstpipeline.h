@@ -28,8 +28,6 @@
 
 G_BEGIN_DECLS
 
-extern GstElementDetails gst_pipeline_details;
-
 #define GST_TYPE_PIPELINE 		(gst_pipeline_get_type ())
 #define GST_PIPELINE(obj) 		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PIPELINE, GstPipeline))
 #define GST_IS_PIPELINE(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PIPELINE))

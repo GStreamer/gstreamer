@@ -31,17 +31,13 @@
 #define GST_CAT_DEFAULT GST_CAT_THREAD
 #define STACK_SIZE 0x200000
 
-GstElementDetails gst_thread_details = {
+static GstElementDetails gst_thread_details = GST_ELEMENT_DETAILS (
   "Threaded container",
   "Generic/Bin",
-  "LGPL",
   "Container that creates/manages a thread",
-  VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>, "
-  "Benjamin Otte <in7y118@informatik.uni-hamburg.de",
-  "(C) 1999-2003",
-};
-
+  "Benjamin Otte <in7y118@informatik.uni-hamburg.de"
+);
 
 /* Thread signals and args */
 enum {
@@ -62,9 +58,9 @@ enum {
 };
 
 
-
-static void		gst_thread_class_init		(GstThreadClass *klass);
-static void		gst_thread_init			(GstThread *thread);
+static void		gst_thread_base_init		(gpointer g_class);
+static void		gst_thread_class_init		(gpointer g_class, gpointer class_data);
+static void		gst_thread_init			(GTypeInstance *instance, gpointer g_class);
 
 static void		gst_thread_dispose		(GObject *object);
 
@@ -117,11 +113,15 @@ gst_thread_get_type(void) {
 
   if (!thread_type) {
     static const GTypeInfo thread_info = {
-      sizeof (GstThreadClass), NULL, NULL,
-      (GClassInitFunc) gst_thread_class_init, NULL, NULL,
+      sizeof (GstThreadClass),
+      gst_thread_base_init, 
+      NULL,
+      gst_thread_class_init, 
+      NULL, 
+      NULL,
       sizeof (GstThread),
       4,
-      (GInstanceInitFunc) gst_thread_init,
+      gst_thread_init,
       NULL
     };
     thread_type = g_type_register_static (GST_TYPE_BIN, "GstThread",
@@ -130,24 +130,27 @@ gst_thread_get_type(void) {
   return thread_type;
 }
 
+static void
+gst_thread_base_init (gpointer g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (gstelement_class, &gst_thread_details);
+}
 static void do_nothing (gpointer hi) {}
 static void
-gst_thread_class_init (GstThreadClass *klass)
+gst_thread_class_init (gpointer g_class, gpointer class_data)
 {
-  GObjectClass *gobject_class;
-  GstObjectClass *gstobject_class;
-  GstElementClass *gstelement_class;
-  GstBinClass *gstbin_class;
+  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
+  GstObjectClass *gstobject_class = GST_OBJECT_CLASS (g_class);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  GstBinClass *gstbin_class = GST_BIN_CLASS (g_class);
+  GstThreadClass *klass = GST_THREAD_CLASS (g_class);
 
   /* setup gst_thread_current */
   gst_thread_current = g_private_new (do_nothing);
 
-  gobject_class =	(GObjectClass*)klass;
-  gstobject_class =	(GstObjectClass*)klass;
-  gstelement_class =	(GstElementClass*)klass;
-  gstbin_class =	(GstBinClass*)klass;
-
-  parent_class = g_type_class_ref (GST_TYPE_BIN);
+  parent_class = g_type_class_peek_parent (g_class);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PRIORITY,
     g_param_spec_enum ("priority", "Scheduling Policy", "The scheduling priority of the thread",
@@ -174,9 +177,10 @@ gst_thread_class_init (GstThreadClass *klass)
 }
 
 static void
-gst_thread_init (GstThread *thread)
+gst_thread_init (GTypeInstance *instance, gpointer g_class)
 {
   GstScheduler *scheduler;
+  GstThread *thread = GST_THREAD (instance);
 
   GST_DEBUG ("initializing thread");
 

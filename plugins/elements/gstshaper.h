@@ -29,8 +29,6 @@
 
 G_BEGIN_DECLS
 
-extern GstElementDetails gst_shaper_details;
-GST_DEBUG_CATEGORY_EXTERN(gst_shaper_debug);
 
 #define GST_TYPE_SHAPER \
   (gst_shaper_get_type())

@@ -398,8 +398,8 @@ gst_xml_registry_add_path_list_func (GstXMLRegistry *registry)
     g_markup_parse_context_parse (context, text, size, &error);
 
     if (error) {
-      fprintf (stderr, "ERROR: parsing registry %s: %s\n", 
-	       registry->location, error->message);
+      GST_ERROR ("parsing registry %s: %s\n", 
+	         registry->location, error->message);
       g_free (text);
       fclose (reg);
       return;
@@ -600,7 +600,7 @@ gst_xml_registry_load (GstRegistry *registry)
     g_markup_parse_context_parse (xmlregistry->context, text, size, &error);
 
     if (error) {
-      fprintf(stderr, "ERROR: parsing registry: %s\n", error->message);
+      GST_ERROR ("parsing registry: %s\n", error->message);
       g_free (text);
       CLASS (xmlregistry)->close_func (xmlregistry);
       return FALSE;
@@ -630,13 +630,17 @@ static GstRegistryReturn
 gst_xml_registry_load_plugin (GstRegistry *registry, GstPlugin *plugin)
 {
   GError *error = NULL;
+  GstPlugin *loaded_plugin;
 
   /* FIXME: add gerror support */
-  if (!gst_plugin_load_plugin (plugin, &error)) {
+  loaded_plugin = gst_plugin_load_file (plugin->filename, &error);
+  if (!plugin) {
     if (error) {
-      g_warning ("could not load plugin %s: %s", plugin->name, error->message);
+      g_warning ("could not load plugin %s: %s", plugin->desc.name, error->message);
     }
     return GST_REGISTRY_PLUGIN_LOAD_ERROR;
+  } else if (loaded_plugin != plugin) {
+    g_critical ("how to remove plugins?");
   }
 
   return GST_REGISTRY_OK;
@@ -649,13 +653,28 @@ gst_xml_registry_parse_plugin (GMarkupParseContext *context, const gchar *tag, c
   GstPlugin *plugin = registry->current_plugin;
   
   if (!strcmp (tag, "name")) {
-    plugin->name = g_strndup (text, text_len);
+    plugin->desc.name = g_strndup (text, text_len);
   }
-  else if (!strcmp (tag, "longname")) {
-    plugin->longname = g_strndup (text, text_len);
+  else if (!strcmp (tag, "description")) {
+    plugin->desc.description = g_strndup (text, text_len);
   }
   else if (!strcmp (tag, "filename")) {
     plugin->filename = g_strndup (text, text_len);
+  }
+  else if (!strcmp (tag, "version")) {
+    plugin->desc.version = g_strndup (text, text_len);
+  }
+  else if (!strcmp (tag, "copyright")) {
+    plugin->desc.copyright = g_strndup (text, text_len);
+  }
+  else if (!strcmp (tag, "license")) {
+    plugin->desc.license = g_strndup (text, text_len);
+  }
+  else if (!strcmp (tag, "package")) {
+    plugin->desc.package = g_strndup (text, text_len);
+  }
+  else if (!strcmp (tag, "origin")) {
+    plugin->desc.origin = g_strndup (text, text_len);
   }
   
   return TRUE;
@@ -672,39 +691,27 @@ gst_xml_registry_parse_element_factory (GMarkupParseContext *context, const gcha
     registry->current_feature->name = g_strndup (text, text_len);
   }
   else if (!strcmp (tag, "longname")) {
-    g_free (factory->details->longname);
-    factory->details->longname = g_strndup (text, text_len);
+    g_free (factory->details.longname);
+    factory->details.longname = g_strndup (text, text_len);
   }
   else if (!strcmp(tag, "class")) {
-    g_free (factory->details->klass);
-    factory->details->klass = g_strndup (text, text_len);
+    g_free (factory->details.klass);
+    factory->details.klass = g_strndup (text, text_len);
   }
   else if (!strcmp(tag, "description")) {
-    g_free (factory->details->description);
-    factory->details->description = g_strndup (text, text_len);
-  }
-  else if (!strcmp(tag, "license")) {
-    g_free (factory->details->license);
-    factory->details->license = g_strndup (text, text_len);
-  }
-  else if (!strcmp(tag, "version")) {
-    g_free (factory->details->version);
-    factory->details->version = g_strndup (text, text_len);
+    g_free (factory->details.description);
+    factory->details.description = g_strndup (text, text_len);
   }
   else if (!strcmp(tag, "author")) {
-    g_free (factory->details->author);
-    factory->details->author = g_strndup (text, text_len);
-  }
-  else if (!strcmp(tag, "copyright")) {
-    g_free (factory->details->copyright);
-    factory->details->copyright = g_strndup (text, text_len);
+    g_free (factory->details.author);
+    factory->details.author = g_strndup (text, text_len);
   }
   else if (!strcmp(tag, "rank")) {
     gint rank;
     gchar *ret;
      rank = strtol (text, &ret, 0);
     if (ret == text + text_len) {
-     gst_element_factory_set_rank (factory, rank);
+     gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE (factory), rank);
     }
   }
   
@@ -725,7 +732,7 @@ gst_xml_registry_parse_type_find_factory (GMarkupParseContext *context, const gc
     gchar *ret;
      rank = strtol (text, &ret, 0);
     if (ret == text + text_len) {
-     gst_element_factory_set_rank (factory, rank);
+     gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE (factory), rank);
     }
   }
   /* FIXME!!
@@ -922,8 +929,6 @@ gst_xml_registry_start_element (GMarkupParseContext *context,
 	  if (GST_IS_ELEMENT_FACTORY (feature)) {
 	    GstElementFactory *factory = GST_ELEMENT_FACTORY (feature);
 
-	    factory->details_dynamic = TRUE;
-	    factory->details = g_new0(GstElementDetails, 1);
 	    factory->padtemplates = NULL;
 	    xmlregistry->parser = gst_xml_registry_parse_element_factory;
 	    break;
@@ -1129,7 +1134,7 @@ gst_xml_registry_end_element (GMarkupParseContext *context,
 	xmlregistry->name_template = NULL;
 	xmlregistry->caps = NULL;
 
-	gst_element_factory_add_pad_template (GST_ELEMENT_FACTORY (xmlregistry->current_feature),
+	__gst_element_factory_add_pad_template (GST_ELEMENT_FACTORY (xmlregistry->current_feature),
 					      template);
 	xmlregistry->state = GST_XML_REGISTRY_FEATURE;
 	xmlregistry->parser = gst_xml_registry_parse_element_factory;
@@ -1212,7 +1217,7 @@ static void
 gst_xml_registry_error (GMarkupParseContext *context, GError *error,
                         gpointer user_data)
 {
-  g_print ("error %s\n", error->message);
+  GST_ERROR ("%s\n", error->message);
 }
 
 static void
@@ -1461,13 +1466,10 @@ gst_xml_registry_save_feature (GstXMLRegistry *xmlregistry, GstPluginFeature *fe
     GstElementFactory *factory = GST_ELEMENT_FACTORY (feature);
     GList *templates;
 
-    PUT_ESCAPED ("longname", factory->details->longname);
-    PUT_ESCAPED ("class", factory->details->klass);
-    PUT_ESCAPED ("description", factory->details->description);
-    PUT_ESCAPED ("license", factory->details->license);
-    PUT_ESCAPED ("version", factory->details->version);
-    PUT_ESCAPED ("author", factory->details->author);
-    PUT_ESCAPED ("copyright", factory->details->copyright);
+    PUT_ESCAPED ("longname", factory->details.longname);
+    PUT_ESCAPED ("class", factory->details.klass);
+    PUT_ESCAPED ("description", factory->details.description);
+    PUT_ESCAPED ("author", factory->details.author);
     
     templates = factory->padtemplates;
 
@@ -1523,9 +1525,14 @@ gst_xml_registry_save_plugin (GstXMLRegistry *xmlregistry, GstPlugin *plugin)
 {
   GList *walk;
   
-  PUT_ESCAPED ("name", plugin->name);
-  PUT_ESCAPED ("longname", plugin->longname);
+  PUT_ESCAPED ("name", plugin->desc.name);
+  PUT_ESCAPED ("description", plugin->desc.description);
   PUT_ESCAPED ("filename", plugin->filename);
+  PUT_ESCAPED ("version", plugin->desc.version);
+  PUT_ESCAPED ("license", plugin->desc.license);
+  PUT_ESCAPED ("copyright", plugin->desc.copyright);
+  PUT_ESCAPED ("package", plugin->desc.package);
+  PUT_ESCAPED ("origin", plugin->desc.origin);
 
   walk = plugin->features;
 
@@ -1594,6 +1601,7 @@ gst_xml_registry_rebuild_recurse (GstXMLRegistry *registry,
                                   const gchar *directory)
 {
   GDir *dir;
+  gchar *temp;
   GList *ret = NULL;
 
   dir = g_dir_open (directory, 0, NULL);
@@ -1615,13 +1623,9 @@ gst_xml_registry_rebuild_recurse (GstXMLRegistry *registry,
     }
     g_dir_close (dir);
   } else {
-    if (strstr (directory, ".so")) {
-      gchar *temp;
-
-      if ((temp = strstr (directory, ".so")) &&
-          (!strcmp (temp, ".so"))) {
-        ret = g_list_prepend (ret, gst_plugin_new (directory));
-      }
+    if ((temp = strstr (directory, G_MODULE_SUFFIX)) &&
+        (!strcmp (temp, G_MODULE_SUFFIX))) {
+      ret = g_list_prepend (ret, g_strdup (directory));
     }
   }
 
@@ -1634,6 +1638,7 @@ gst_xml_registry_rebuild (GstRegistry *registry)
   GList *walk = NULL, *plugins = NULL, *prune = NULL;
   GError *error = NULL;
   guint length;
+  GstPlugin *plugin;
   GstXMLRegistry *xmlregistry = GST_XML_REGISTRY (registry);
  
   walk = registry->paths;
@@ -1659,9 +1664,10 @@ gst_xml_registry_rebuild (GstRegistry *registry)
     walk = plugins;
     while (walk) {
       g_assert (walk->data);
-      if (gst_plugin_load_plugin (GST_PLUGIN (walk->data), NULL)) {
+      plugin = gst_plugin_load_file ((gchar *) walk->data, NULL);
+      if (plugin) {
         prune = g_list_prepend (prune, walk->data);
-        gst_registry_add_plugin (registry, GST_PLUGIN (walk->data));
+        gst_registry_add_plugin (registry, plugin);
       }
 
       walk = g_list_next (walk);
@@ -1670,6 +1676,7 @@ gst_xml_registry_rebuild (GstRegistry *registry)
     walk = prune;
     while (walk) {
       plugins = g_list_remove (plugins, walk->data);
+      g_free (walk->data);
       walk = g_list_next (walk);
     }
     g_list_free (prune);
@@ -1678,16 +1685,14 @@ gst_xml_registry_rebuild (GstRegistry *registry)
   
   walk = plugins;
   while (walk) {
-    if (gst_plugin_load_plugin (GST_PLUGIN (walk->data), &error)) {
+    if ((plugin = gst_plugin_load_file ((gchar *) walk->data, &error))) {
       g_warning ("Bizarre behavior: plugin %s actually loaded", 
-	         ((GstPlugin *) walk->data)->filename);
+	         (gchar *) walk->data);
+      gst_registry_add_plugin (registry, plugin);
     } else {
       GST_CAT_INFO (GST_CAT_PLUGIN_LOADING, "Plugin %s failed to load: %s", 
-                ((GstPlugin *) walk->data)->filename, error->message);
-      g_print ("Plugin %s failed to load\n",
-                ((GstPlugin *) walk->data)->filename);
+                (gchar *) walk->data, error->message);
 
-      g_free (((GstPlugin *) walk->data)->filename);
       g_free (walk->data);
       g_error_free (error);
       error = NULL;

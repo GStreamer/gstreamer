@@ -352,17 +352,17 @@ gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
     GstAutoplugNode *node = g_new0 (GstAutoplugNode, 1);
     node->prev = NULL;
     node->fac = (GstElementFactory *) factories->data;
-    GST_DEBUG ("trying with %s", node->fac->details->longname);
+    GST_DEBUG ("trying with %s", node->fac->details.longname);
     node->templ = gst_autoplug_can_connect_src (node->fac, srccaps);
     node->cost = (node->templ ? gst_autoplug_get_cost (node->fac) 
 		              : GST_AUTOPLUG_MAX_COST);
     node->endpoint = gst_autoplug_can_connect_sink (node->fac, sinkcaps);
     if (node->templ && node->endpoint)
       GST_DEBUG ("%s makes connection possible",
-		 node->fac->details->longname);
+		 node->fac->details.longname);
     else
       GST_DEBUG ("direct connection with %s not possible",
-		 node->fac->details->longname);
+		 node->fac->details.longname);
     if ((node->endpoint != NULL) && 
 	((bestnode == NULL) || (node->cost < bestnode->cost)))
     {

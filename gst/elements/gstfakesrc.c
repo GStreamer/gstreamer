@@ -34,19 +34,16 @@
 #define DEFAULT_SIZEMAX		4096
 #define DEFAULT_PARENTSIZE	4096*10
 
-GST_DEBUG_CATEGORY (gst_fakesrc_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_fakesrc_debug);
 #define GST_CAT_DEFAULT gst_fakesrc_debug
 
-GstElementDetails gst_fakesrc_details = {
+GstElementDetails gst_fakesrc_details = GST_ELEMENT_DETAILS (
   "Fake Source",
   "Source",
-  "LGPL",
   "Push empty (no data) buffers around",
-  VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>\n"
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 1999",
-};
+  "Erik Walthinsen <omega@cse.ogi.edu>, "
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
 
 /* FakeSrc signals and args */
@@ -101,6 +98,8 @@ gst_fakesrc_output_get_type (void)
   };
   if (!fakesrc_output_type) {
     fakesrc_output_type = g_enum_register_static ("GstFakeSrcOutput", fakesrc_output);
+  
+    GST_DEBUG_CATEGORY_INIT (gst_fakesrc_debug, "fakesrc", 0, "fakesrc element");
   }
   return fakesrc_output_type;
 }
@@ -158,6 +157,7 @@ gst_fakesrc_filltype_get_type (void)
   return fakesrc_filltype_type;
 }
 
+static void		gst_fakesrc_base_init		(gpointer g_class);
 static void		gst_fakesrc_class_init		(GstFakeSrcClass *klass);
 static void		gst_fakesrc_init		(GstFakeSrc *fakesrc);
 
@@ -184,7 +184,7 @@ gst_fakesrc_get_type (void)
   if (!fakesrc_type) {
     static const GTypeInfo fakesrc_info = {
       sizeof(GstFakeSrcClass),
-      NULL,
+      gst_fakesrc_base_init,
       NULL,
       (GClassInitFunc)gst_fakesrc_class_init,
       NULL,
@@ -198,6 +198,14 @@ gst_fakesrc_get_type (void)
   return fakesrc_type;
 }
 
+static void
+gst_fakesrc_base_init (gpointer g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class); 
+  
+  gst_element_class_set_details (gstelement_class, &gst_fakesrc_details);
+  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (fakesrc_src_factory));
+}
 static void
 gst_fakesrc_class_init (GstFakeSrcClass *klass) 
 {
@@ -879,10 +887,3 @@ gst_fakesrc_change_state (GstElement *element)
   return GST_STATE_SUCCESS;
 }
 
-gboolean
-gst_fakesrc_factory_init (GstElementFactory *factory)
-{
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (fakesrc_src_factory));
-
-  return TRUE;
-}

@@ -26,18 +26,15 @@
 
 #include "gstaggregator.h"
 
-GST_DEBUG_CATEGORY (gst_aggregator_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_aggregator_debug);
 #define GST_CAT_DEFAULT gst_aggregator_debug
 
-GstElementDetails gst_aggregator_details = {
+GstElementDetails gst_aggregator_details = GST_ELEMENT_DETAILS (
   "Aggregator pipe fitting",
   "Generic",
-  "LGPL",
   "N-to-1 pipe fitting",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2001",
-};
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
 /* Aggregator signals and args */
 enum {
@@ -80,6 +77,7 @@ gst_aggregator_sched_get_type (void)
 
 #define AGGREGATOR_IS_LOOP_BASED(ag)	((ag)->sched != AGGREGATOR_CHAIN)
 
+static void 	gst_aggregator_base_init	(gpointer g_class);
 static void 	gst_aggregator_class_init	(GstAggregatorClass *klass);
 static void 	gst_aggregator_init		(GstAggregator *aggregator);
 
@@ -106,7 +104,7 @@ gst_aggregator_get_type (void)
   if (!aggregator_type) {
     static const GTypeInfo aggregator_info = {
       sizeof(GstAggregatorClass),      
-      NULL,
+      gst_aggregator_base_init,
       NULL,
       (GClassInitFunc)gst_aggregator_class_init,
       NULL,
@@ -116,10 +114,19 @@ gst_aggregator_get_type (void)
       (GInstanceInitFunc)gst_aggregator_init,
     };
     aggregator_type = g_type_register_static (GST_TYPE_ELEMENT, "GstAggregator", &aggregator_info, 0);
+
+    GST_DEBUG_CATEGORY_INIT (gst_aggregator_debug, "aggregator", 0, "aggregator element");
   }
   return aggregator_type;
 }
 
+static void
+gst_aggregator_base_init (gpointer g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class); 
+  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (aggregator_src_factory));
+  gst_element_class_set_details (gstelement_class, &gst_aggregator_details);
+}
 static void
 gst_aggregator_class_init (GstAggregatorClass *klass) 
 {
@@ -360,11 +367,4 @@ gst_aggregator_chain (GstPad *pad, GstData *_data)
 
   gst_aggregator_push (aggregator, pad, buf, "chain");
 }
-
-gboolean
-gst_aggregator_factory_init (GstElementFactory *factory)
-{
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (aggregator_src_factory));
-
-  return TRUE;
-}
+  

@@ -29,8 +29,6 @@
 
 G_BEGIN_DECLS
 
-extern GstElementDetails gst_md5sink_details;
-GST_DEBUG_CATEGORY_EXTERN(gst_md5sink_debug);
 
 #define GST_TYPE_MD5SINK \
   (gst_md5sink_get_type())

@@ -25,15 +25,12 @@
                                                                                                                                                                          
 #include <gst/gst.h>
 
-GstElementDetails gst_autoplugger_details = {
+GstElementDetails gst_autoplugger_details = GST_ELEMENT_DETAILS (
   "Dynamic autoplugger",
   "Generic",
-  "LGPL",
   "Magic element that converts from any type to any other",
-  VERSION,
-  "Erik Walthinsen <omega@temple-baptist.com>",
-  "(C) 2001 RidgeRun, Inc. (www.ridgerun.com)",
-};
+  "Erik Walthinsen <omega@temple-baptist.com>"
+);
 
 #define GST_TYPE_AUTOPLUGGER \
   (gst_autoplugger_get_type())
@@ -164,6 +161,7 @@ gst_autoplugger_class_init (GstAutopluggerClass *klass)
   gobject_class->get_property = gst_autoplugger_get_property;
 
 /*  gstelement_class->change_state = gst_autoplugger_change_state; */
+  gst_element_class_set_details (gstelement_class, &gst_autoplugger_details);
 }
 
 static void
@@ -596,23 +594,24 @@ gst_autoplugger_get_property (GObject *object, guint prop_id, GValue *value, GPa
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new ("autoplugger", GST_TYPE_AUTOPLUGGER,
-                                    &gst_autoplugger_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "autoplugger", GST_RANK_NONE, GST_TYPE_AUTOPLUGGER))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "autoplugger",
-  plugin_init
-};
+  "magic element that converts from any type tom any other",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
 

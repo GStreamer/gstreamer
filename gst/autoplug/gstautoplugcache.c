@@ -28,15 +28,12 @@
 GST_DEBUG_CATEGORY_STATIC(debug_category);
 #define GST_CAT_DEFAULT debug_category
 
-GstElementDetails gst_autoplugcache_details = {
+GstElementDetails gst_autoplugcache_details = GST_ELEMENT_DETAILS (
   "AutoplugCache",
   "Generic",
-  "LGPL",
   "Data cache for the dynamic autoplugger",
-  VERSION,
-  "Erik Walthinsen <omega@temple-baptist.com>",
-  "(C) 2001 RidgeRun, Inc. (www.ridgerun.com)",
-};
+  "Erik Walthinsen <omega@temple-baptist.com>"
+);
 
 #define GST_TYPE_AUTOPLUGCACHE \
   (gst_autoplugcache_get_type())
@@ -162,6 +159,7 @@ gst_autoplugcache_class_init (GstAutoplugCacheClass *klass)
   gobject_class->get_property = gst_autoplugcache_get_property;
 
   gstelement_class->change_state = gst_autoplugcache_change_state;
+  gst_element_class_set_details (gstelement_class, &gst_autoplugcache_details);
 }
 
 static void
@@ -345,24 +343,25 @@ gst_autoplugcache_get_property (GObject *object, guint prop_id, GValue *value, G
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
   GST_DEBUG_CATEGORY_INIT (debug_category, "AUTOPLUGCACHE", 0, "autoplugcache element");
 
-  factory = gst_element_factory_new ("autoplugcache", GST_TYPE_AUTOPLUGCACHE,
-                                    &gst_autoplugcache_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "autoplugcache", GST_RANK_NONE, GST_TYPE_AUTOPLUGCACHE))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "autoplugcache",
-  plugin_init
-};
+  "an autoplug cache",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)

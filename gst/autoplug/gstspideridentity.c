@@ -27,18 +27,15 @@
 #include "gstspideridentity.h"
 #include "gstspider.h"
 
-GST_DEBUG_CATEGORY (gst_spider_identity_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_spider_identity_debug);
 #define GST_CAT_DEFAULT gst_spider_identity_debug
 
-GstElementDetails gst_spider_identity_details = {
+static GstElementDetails gst_spider_identity_details = GST_ELEMENT_DETAILS (
   "SpiderIdentity",
   "Generic",
-  "LGPL",
   "Link between spider and outside elements",
-  VERSION,
-  "Benjamin Otte <in7y118@public.uni-hamburg.de>",
-  "(C) 2002",
-};
+  "Benjamin Otte <in7y118@public.uni-hamburg.de>"
+);
 
 
 /* generic templates 
@@ -47,14 +44,14 @@ GstElementDetails gst_spider_identity_details = {
 GST_PAD_TEMPLATE_FACTORY (spider_src_factory,
   "src",
   GST_PAD_SRC,
-  GST_PAD_REQUEST,
+  GST_PAD_ALWAYS,
   NULL      /* no caps */
 );
 
 GST_PAD_TEMPLATE_FACTORY (spider_sink_factory,
   "sink",
   GST_PAD_SINK,
-  GST_PAD_REQUEST,
+  GST_PAD_ALWAYS,
   NULL      /* no caps */
 );
 
@@ -108,7 +105,10 @@ gst_spider_identity_get_type (void)
       0,
       (GInstanceInitFunc)gst_spider_identity_init,
     };
-    spider_identity_type = g_type_register_static (GST_TYPE_ELEMENT, "GstSpiderIdentity", &spider_identity_info, 0);
+    spider_identity_type = g_type_register_static (GST_TYPE_ELEMENT, "GstSpiderIdentity", 
+						   &spider_identity_info, 0);
+    GST_DEBUG_CATEGORY_INIT (gst_spider_identity_debug, "spideridentity", 
+			     0, "spider autoplugging proxy element");
   }
   return spider_identity_type;
 }
@@ -123,6 +123,7 @@ gst_spider_identity_class_init (GstSpiderIdentityClass *klass)
   /* add our two pad templates */
   gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (spider_src_factory));
   gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (spider_sink_factory));
+  gst_element_class_set_details (gstelement_class, &gst_spider_identity_details);
   
   gstelement_class->change_state = GST_DEBUG_FUNCPTR(gst_spider_identity_change_state);
   gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR(gst_spider_identity_request_new_pad);
@@ -156,7 +157,6 @@ gst_spider_identity_init (GstSpiderIdentity *ident)
 
   /* variables */
   ident->plugged = FALSE;
-  
 }
 
 static void 

@@ -30,9 +30,7 @@
 
 G_BEGIN_DECLS
 
-GST_DEBUG_CATEGORY_EXTERN(gst_type_find_element_debug);
 
-extern GstElementDetails gst_type_find_element_details;
 
 #define GST_TYPE_TYPE_FIND_ELEMENT		(gst_type_find_element_get_type ())
 #define GST_TYPE_FIND_ELEMENT(obj) 		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TYPE_FIND_ELEMENT, GstTypeFindElement))

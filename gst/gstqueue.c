@@ -29,15 +29,12 @@
 #include "gstevent.h"
 #include "gstinfo.h"
 
-GstElementDetails gst_queue_details = {
+static GstElementDetails gst_queue_details = GST_ELEMENT_DETAILS (
   "Queue",
   "Generic",
-  "LGPL",
   "Simple data queue",
-  VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 1999",
-};
+  "Erik Walthinsen <omega@cse.ogi.edu>"
+);
 
 
 /* Queue signals and args */
@@ -62,9 +59,11 @@ enum {
   ARG_BLOCK_TIMEOUT,
 };
 
-
-static void			gst_queue_class_init		(GstQueueClass *klass);
-static void			gst_queue_init			(GstQueue *queue);
+static void			gst_queue_base_init		(gpointer g_class);
+static void			gst_queue_class_init		(gpointer g_class,
+								 gpointer class_data);
+static void			gst_queue_init			(GTypeInstance *instance,
+								 gpointer g_class);
 static void 			gst_queue_dispose 		(GObject *object);
 
 static void			gst_queue_set_property		(GObject *object, guint prop_id, 
@@ -112,14 +111,14 @@ gst_queue_get_type(void)
   if (!queue_type) {
     static const GTypeInfo queue_info = {
       sizeof(GstQueueClass),
+      gst_queue_base_init,
       NULL,
-      NULL,
-      (GClassInitFunc)gst_queue_class_init,
+      gst_queue_class_init,
       NULL,
       NULL,
       sizeof(GstQueue),
       4,
-      (GInstanceInitFunc)gst_queue_init,
+      gst_queue_init,
       NULL
     };
     queue_type = g_type_register_static (GST_TYPE_ELEMENT, "GstQueue", &queue_info, 0);
@@ -128,37 +127,43 @@ gst_queue_get_type(void)
 }
 
 static void
-gst_queue_class_init (GstQueueClass *klass)
+gst_queue_base_init (gpointer g_class)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
+  gst_element_class_set_details (gstelement_class, &gst_queue_details);
+}
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+static void
+gst_queue_class_init (gpointer g_class, gpointer class_data)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  GstQueueClass *gstqueue_class = GST_QUEUE_CLASS (g_class);
+
+  parent_class = g_type_class_peek_parent (g_class);
 
   gst_queue_signals[FULL] =
-    g_signal_new ("full", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
+    g_signal_new ("full", G_TYPE_FROM_CLASS (gstqueue_class), G_SIGNAL_RUN_FIRST,
                   G_STRUCT_OFFSET (GstQueueClass, full), NULL, NULL,
 		  g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LEAKY,
+  g_object_class_install_property (G_OBJECT_CLASS (gstqueue_class), ARG_LEAKY,
     g_param_spec_enum ("leaky", "Leaky", "Where the queue leaks, if at all.",
                        GST_TYPE_QUEUE_LEAKY, GST_QUEUE_NO_LEAK, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LEVEL,
+  g_object_class_install_property (G_OBJECT_CLASS (gstqueue_class), ARG_LEVEL,
     g_param_spec_int ("level", "Level", "How many buffers are in the queue.",
                       0, G_MAXINT, 0, G_PARAM_READABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_LEVEL,
+  g_object_class_install_property (G_OBJECT_CLASS (gstqueue_class), ARG_MAX_LEVEL,
     g_param_spec_int ("max_level", "Maximum Level", "How many buffers the queue holds.",
                       0, G_MAXINT, 100, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MIN_THRESHOLD_BYTES,
+  g_object_class_install_property (G_OBJECT_CLASS (gstqueue_class), ARG_MIN_THRESHOLD_BYTES,
     g_param_spec_int ("min_threshold_bytes", "Minimum Threshold",
                       "Minimum bytes required before signalling not_empty to reader.",
                       0, G_MAXINT, 0, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAY_DEADLOCK,
+  g_object_class_install_property (G_OBJECT_CLASS (gstqueue_class), ARG_MAY_DEADLOCK,
     g_param_spec_boolean ("may_deadlock", "May Deadlock", "The queue may deadlock if it's full and not PLAYING",
                       TRUE, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BLOCK_TIMEOUT,
+  g_object_class_install_property (G_OBJECT_CLASS (gstqueue_class), ARG_BLOCK_TIMEOUT,
     g_param_spec_int ("block_timeout", "Timeout for Block", 
                       "Microseconds until blocked queue times out and returns filler event. "
                       "Value of -1 disables timeout",
@@ -204,8 +209,10 @@ gst_queue_getcaps (GstPad *pad, GstCaps *caps)
 }
 
 static void
-gst_queue_init (GstQueue *queue)
+gst_queue_init (GTypeInstance *instance, gpointer g_class)
 {
+  GstQueue *queue = GST_QUEUE (instance);
+  
   /* scheduling on this kind of element is, well, interesting */
   GST_FLAG_SET (queue, GST_ELEMENT_DECOUPLED);
   GST_FLAG_SET (queue, GST_ELEMENT_EVENT_AWARE);

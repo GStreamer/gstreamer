@@ -28,8 +28,6 @@
 
 G_BEGIN_DECLS
 
-extern GstElementDetails gst_fakesink_details;
-GST_DEBUG_CATEGORY_EXTERN(gst_fakesink_debug);
 
 #define GST_TYPE_FAKESINK \
   (gst_fakesink_get_type())

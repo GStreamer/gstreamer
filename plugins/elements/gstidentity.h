@@ -29,8 +29,6 @@
 
 G_BEGIN_DECLS
 
-extern GstElementDetails gst_identity_details;
-GST_DEBUG_CATEGORY_EXTERN(gst_identity_debug);
 
 #define GST_TYPE_IDENTITY \
   (gst_identity_get_type())

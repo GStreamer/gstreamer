@@ -29,18 +29,15 @@
 
 #include "gstshaper.h"
 
-GST_DEBUG_CATEGORY (gst_shaper_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_shaper_debug);
 #define GST_CAT_DEFAULT gst_shaper_debug
 
-GstElementDetails gst_shaper_details = {
+GstElementDetails gst_shaper_details = GST_ELEMENT_DETAILS (
   "Shaper",
   "Generic",
-  "LGPL",
   "Synchronizes streams on different pads",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2003",
-};
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
 
 /* Shaper signals and args */
@@ -93,6 +90,7 @@ gst_shaper_policy_get_type (void)
   return shaper_policy_type;
 }
 
+static void	gst_shaper_base_init		(gpointer g_class);
 static void 	gst_shaper_class_init		(GstShaperClass *klass);
 static void 	gst_shaper_init			(GstShaper *shaper);
 
@@ -116,7 +114,8 @@ gst_shaper_get_type (void)
 
   if (!shaper_type) {
     static const GTypeInfo shaper_info = {
-      sizeof(GstShaperClass),      NULL,
+      sizeof(GstShaperClass),
+      gst_shaper_base_init,
       NULL,
       (GClassInitFunc)gst_shaper_class_init,
       NULL,
@@ -126,10 +125,21 @@ gst_shaper_get_type (void)
       (GInstanceInitFunc)gst_shaper_init,
     };
     shaper_type = g_type_register_static (GST_TYPE_ELEMENT, "GstShaper", &shaper_info, 0);
+  
+    GST_DEBUG_CATEGORY_INIT (gst_shaper_debug, "shaper", 0, "shaper element");
   }
   return shaper_type;
 }
 
+static void
+gst_shaper_base_init (gpointer g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_set_details (gstelement_class, &gst_shaper_details);
+  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (shaper_src_factory));
+  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (shaper_sink_factory));
+}
 static void 
 gst_shaper_class_init (GstShaperClass *klass) 
 {
@@ -380,11 +390,3 @@ static void gst_shaper_get_property(GObject *object, guint prop_id, GValue *valu
   }
 }
 
-gboolean
-gst_shaper_factory_init (GstElementFactory *factory)
-{
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (shaper_src_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (shaper_sink_factory));
-
-  return TRUE;
-}

@@ -28,8 +28,6 @@
 
 G_BEGIN_DECLS
 
-extern GstElementDetails gst_filesink_details;
-GST_DEBUG_CATEGORY_EXTERN(gst_filesink_debug);
 
 #define GST_TYPE_FILESINK \
   (gst_filesink_get_type())

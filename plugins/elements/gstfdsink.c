@@ -27,18 +27,15 @@
 #include "gstfdsink.h"
 #include <unistd.h>
 
-GST_DEBUG_CATEGORY (gst_fdsink_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_fdsink_debug);
 #define GST_CAT_DEFAULT gst_fdsink_debug
 
-GstElementDetails gst_fdsink_details = {
+GstElementDetails gst_fdsink_details = GST_ELEMENT_DETAILS (
   "Filedescriptor Sink",
   "Sink/File",
-  "LGPL",
   "Write data to a file descriptor",
-  VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 1999",
-};
+  "Erik Walthinsen <omega@cse.ogi.edu>"
+);
 
 
 /* FdSink signals and args */
@@ -53,6 +50,7 @@ enum {
 };
 
 
+static void	gst_fdsink_base_init	(gpointer g_class);
 static void 	gst_fdsink_class_init	(GstFdSinkClass *klass);
 static void 	gst_fdsink_init		(GstFdSink *fdsink);
 
@@ -73,7 +71,8 @@ gst_fdsink_get_type (void)
 
   if (!fdsink_type) {
     static const GTypeInfo fdsink_info = {
-      sizeof(GstFdSinkClass),      NULL,
+      sizeof(GstFdSinkClass),
+      gst_fdsink_base_init,
       NULL,
       (GClassInitFunc)gst_fdsink_class_init,
       NULL,
@@ -83,16 +82,25 @@ gst_fdsink_get_type (void)
       (GInstanceInitFunc)gst_fdsink_init,
     };
     fdsink_type = g_type_register_static (GST_TYPE_ELEMENT, "GstFdSink", &fdsink_info, 0);
+  
+    GST_DEBUG_CATEGORY_INIT (gst_fdsink_debug, "fdsink", 0, "fdsink element");
   }
   return fdsink_type;
 }
 
 static void
+gst_fdsink_base_init (gpointer g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_set_details (gstelement_class, &gst_fdsink_details);
+}
+static void
 gst_fdsink_class_init (GstFdSinkClass *klass) 
 {
   GObjectClass *gobject_class;
 
-  gobject_class = (GObjectClass*)klass;
+  gobject_class = G_OBJECT_CLASS (klass);
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 

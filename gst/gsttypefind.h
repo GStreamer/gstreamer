@@ -100,7 +100,7 @@ void		gst_type_find_suggest			(GstTypeFind *		find,
 guint64		gst_type_find_get_length		(GstTypeFind *		find);
 
 /* registration interface */
-void      	gst_type_find_factory_register		(GstPlugin *		plugin,
+gboolean	gst_type_find_register			(GstPlugin *		plugin,
 							 const gchar *		name, 
 							 guint			rank,
 							 GstTypeFindFunction	func,

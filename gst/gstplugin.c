@@ -34,11 +34,28 @@
 #include "config.h"
 #include "gstfilter.h"
 
+#define GST_CAT_DEFAULT GST_CAT_PLUGIN_LOADING
+
 static GModule *main_module = NULL;
 static GList *_gst_plugin_static = NULL;
 
-static GstPlugin* 	gst_plugin_register_func 	(GstPluginDesc *desc, GstPlugin *plugin, 
-							 GModule *module);
+/* list of valid licenses.
+ * One of these must be specified or the plugin won't be loaded 
+ * Contact gstreamer-devel@lists.sourceforge.net if your license should be 
+ * added. */
+static gchar *valid_licenses[] = {
+  "LGPL",			/* GNU Lesser General Public License */
+  "GPL",			/* GNU General Public License */
+  GST_LICENSE_UNKNOWN,		/* some other license */
+  NULL
+};
+
+static void		gst_plugin_desc_copy		(GstPluginDesc *dest, 
+							 const GstPluginDesc *src);
+
+static GstPlugin *	gst_plugin_register_func 	(GstPlugin *plugin, 
+							 GModule *module,
+							 GstPluginDesc *desc);
 GQuark 
 gst_plugin_error_quark (void)
 {
@@ -58,18 +75,16 @@ void
 _gst_plugin_register_static (GstPluginDesc *desc)
 {
   if (main_module == NULL) {
+    GST_LOG ("queueing static plugin \"%s\" for loading later on", desc->name);
     _gst_plugin_static = g_list_prepend (_gst_plugin_static, desc);
   }
   else {
     GstPlugin *plugin;
 
+    GST_LOG ("attempting to load static plugin \"%s\" now...", desc->name);
     plugin = g_new0 (GstPlugin, 1);
-    plugin->filename = NULL;
-    plugin->module = NULL;
-    plugin = gst_plugin_register_func (desc, plugin, main_module);
-
-    if (plugin) {
-      plugin->module = main_module;
+    if (gst_plugin_register_func (plugin, main_module, desc)) {
+      GST_INFO ("loaded static plugin \"%s\"", desc->name);
       gst_registry_pool_add_plugin (plugin);
     }
   }
@@ -84,6 +99,25 @@ _gst_plugin_initialize (void)
   g_list_foreach (_gst_plugin_static, (GFunc) _gst_plugin_register_static, NULL);
 }
 
+/* this function could be extended to check if the plugin license matches the 
+ * applications license (would require the app to register its license somehow).
+ * We'll wait for someone who's interested in it to code it :)
+ */
+static gboolean
+gst_plugin_check_license (const gchar *license)
+{
+  gchar **check_license = valid_licenses;
+
+  g_assert (check_license);
+  
+  while (*check_license) {
+    if (strcmp (license, *check_license) == 0)
+      return TRUE;
+    check_license++;
+  }
+  return FALSE;
+}
+
 static gboolean
 gst_plugin_check_version (gint major, gint minor)
 {
@@ -96,67 +130,61 @@ gst_plugin_check_version (gint major, gint minor)
 }
 
 static GstPlugin*
-gst_plugin_register_func (GstPluginDesc *desc, GstPlugin *plugin, GModule *module)
+gst_plugin_register_func (GstPlugin *plugin, GModule *module, GstPluginDesc *desc)
 {
+  g_assert (plugin->module == NULL);
+
   if (!gst_plugin_check_version (desc->major_version, desc->minor_version)) {
-    GST_CAT_INFO (GST_CAT_PLUGIN_LOADING,"plugin \"%s\" has incompatible version, not loading",
+    GST_INFO ("plugin \"%s\" has incompatible version, not loading",
        plugin->filename);
-    return NULL;
+    return FALSE;
   }
 
-  g_free (plugin->name);
-  plugin->name = g_strdup(desc->name);
-
-  if (!((desc->plugin_init) (module, plugin))) {
-    GST_CAT_INFO (GST_CAT_PLUGIN_LOADING,"plugin \"%s\" failed to initialise",
+  if (!desc->license || !desc->description || !desc->package ||
+      !desc->copyright || !desc->origin) {
+    GST_INFO ("plugin \"%s\" has incorrect GstPluginDesc, not loading",
        plugin->filename);
-    return NULL;
+    return FALSE;
   }
-  GST_CAT_INFO (GST_CAT_PLUGIN_LOADING,"plugin \"%s\" initialised", GST_STR_NULL (plugin->filename));
+      
+  if (!gst_plugin_check_license (desc->license)) {
+    GST_INFO ("plugin \"%s\" has invalid license \"%s\", not loading",
+       plugin->filename, desc->license);
+    return FALSE;
+  }
+  
+  gst_plugin_desc_copy (&plugin->desc, desc);
+  plugin->module = module;
+
+  if (!((desc->plugin_init) (plugin))) {
+    GST_INFO ("plugin \"%s\" failed to initialise", plugin->filename);
+    plugin->module = NULL;
+    return FALSE;
+  }
+  
+  GST_DEBUG ("plugin \"%s\" initialised", GST_STR_NULL (plugin->filename));
 
   return plugin;
 }
 
 /**
- * gst_plugin_new:
- * @filename: The filename of the plugin
- *
- * Creates a plugin from the given filename
- *
- * Returns: A new GstPlugin object
- */
-GstPlugin*
-gst_plugin_new (const gchar *filename)
-{
-  GstPlugin *plugin = g_new0 (GstPlugin, 1);
-  plugin->filename = g_strdup (filename);
-
-  return plugin;
-}
-
-/**
- * gst_plugin_load_plugin:
+ * gst_plugin_load_file:
  * @plugin: The plugin to load
  * @error: Pointer to a NULL-valued GError.
  *
  * Load the given plugin.
  *
- * Returns: whether or not the plugin loaded. Sets @error as appropriate.
+ * Returns: a new GstPlugin or NULL, if an error occured
  */
-gboolean
-gst_plugin_load_plugin (GstPlugin *plugin, GError **error)
+GstPlugin *
+gst_plugin_load_file (const gchar *filename, GError **error)
 {
+  GstPlugin *plugin;
   GModule *module;
   GstPluginDesc *desc;
   struct stat file_status;
-  gchar *filename;
 
-  g_return_val_if_fail (plugin != NULL, FALSE);
-
-  if (plugin->module) 
-    return TRUE;
-
-  filename = plugin->filename;
+  g_return_val_if_fail (filename != NULL, NULL);
 
   GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING, "attempt to load plugin \"%s\"", filename);
 
@@ -165,7 +193,7 @@ gst_plugin_load_plugin (GstPlugin *plugin, GError **error)
                  GST_PLUGIN_ERROR,
                  GST_PLUGIN_ERROR_MODULE,
                  "Dynamic loading not supported");
-    return FALSE;
+    return NULL;
   }
 
   if (stat (filename, &file_status)) {
@@ -173,7 +201,7 @@ gst_plugin_load_plugin (GstPlugin *plugin, GError **error)
                  GST_PLUGIN_ERROR,
                  GST_PLUGIN_ERROR_MODULE,
                  "Problem opening file %s (plugin %s)\n",
-                 filename, plugin->name); 
+                 filename, plugin->desc.name); 
     return FALSE;
   }
 
@@ -182,49 +210,105 @@ gst_plugin_load_plugin (GstPlugin *plugin, GError **error)
   if (module != NULL) {
     gpointer ptr;
 
-    if (g_module_symbol (module, "plugin_desc", &ptr)) {
-      desc = (GstPluginDesc *)ptr;
+    if (g_module_symbol (module, "gst_plugin_desc", &ptr)) {
+      desc = (GstPluginDesc *) ptr;
 
-      GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING, "plugin \"%s\" loaded, called entry function...", filename);
-
-      plugin->filename = g_strdup (filename);
-      plugin = gst_plugin_register_func (desc, plugin, module);
-
-      if (plugin != NULL) {
-        GST_CAT_INFO (GST_CAT_PLUGIN_LOADING, "plugin \"%s\" loaded", plugin->filename);
-        plugin->module = module;
-        return TRUE;
+      plugin = gst_registry_pool_find_plugin (desc->name);
+      if (!plugin) {
+	plugin = g_new0 (GstPlugin, 1);
+	plugin->filename = g_strdup (filename);
+	GST_DEBUG ("created new GstPlugin %p for file \"%s\"", plugin, filename);
+      } else {
+	if (gst_plugin_is_loaded (plugin)) {
+	  if (strcmp (plugin->filename, filename) != 0) {
+	    GST_WARNING ("plugin %p from file \"%s\" with same name %s is already "
+			 "loaded, aborting loading of \"%s\"", 
+			 plugin, plugin->filename, plugin->desc.name, filename);
+	    g_set_error (error,
+			 GST_PLUGIN_ERROR,
+			 GST_PLUGIN_ERROR_NAME_MISMATCH,
+			 "already a plugin with name \"%s\" loaded",
+			 desc->name);
+	    return NULL;
+	  }
+	  GST_LOG ("Plugin %p for file \"%s\" already loaded, returning it now", plugin, filename);
+	  return plugin;
+	}
       }
-      else {
+      GST_LOG ("Plugin %p for file \"%s\" prepared, called entry function...", plugin, filename);
+
+      if (gst_plugin_register_func (plugin, module, desc)) {
+        GST_INFO ("plugin \"%s\" loaded", plugin->filename);
+        return plugin;
+      } else {
+        GST_DEBUG ("gst_plugin_register_func failed for plugin \"%s\"", filename);
 	/* plugin == NULL */
         g_set_error (error,
                      GST_PLUGIN_ERROR,
                      GST_PLUGIN_ERROR_MODULE,
                      "gst_plugin_register_func failed for plugin \"%s\"",
                      filename);
-        return FALSE;
+	g_free (plugin);
+        return NULL;
       }
-    }
-    else {
+    } else {
+      GST_DEBUG ("Could not find plugin entry point in \"%s\"", filename);
       g_set_error (error,
                    GST_PLUGIN_ERROR,
                    GST_PLUGIN_ERROR_MODULE,
-                   "Could not find plugin_desc in \"%s\"",
+                   "Could not find plugin entry point in \"%s\"",
                    filename);
     }
-    return FALSE;
-  } 
-  else {
+    return NULL;
+  } else {
+    GST_DEBUG ("Error loading plugin %s, reason: %s\n", filename, g_module_error());
     g_set_error (error,
                  GST_PLUGIN_ERROR,
                  GST_PLUGIN_ERROR_MODULE,
                  "Error loading plugin %s, reason: %s\n",
                  filename, g_module_error());
-    return FALSE;
+    return NULL;
   }
 }
 
+static void
+gst_plugin_desc_copy (GstPluginDesc *dest, const GstPluginDesc *src)
+{
+  dest->major_version = src->major_version;
+  dest->minor_version = src->minor_version;
+  g_free (dest->name);
+  dest->name = g_strdup (src->name);
+  g_free (dest->description);
+  dest->description = g_strdup (src->description);
+  dest->plugin_init = src->plugin_init;
+  dest->plugin_exit = src->plugin_exit;
+  g_free (dest->version);
+  dest->version = g_strdup (src->version);
+  g_free (dest->license);
+  dest->license = g_strdup (src->license);
+  g_free (dest->copyright);
+  dest->copyright = g_strdup (src->copyright);
+  g_free (dest->package);
+  dest->package = g_strdup (src->package);
+  g_free (dest->origin);
+  dest->origin = g_strdup (src->origin);
+}
+#if 0
+/* unused */
+static void
+gst_plugin_desc_free (GstPluginDesc *desc)
+{
+  g_free (desc->name);
+  g_free (desc->description);
+  g_free (desc->version);
+  g_free (desc->license);
+  g_free (desc->copyright);
+  g_free (desc->package);
+  g_free (desc->origin);
 
+  memset (desc, 0, sizeof (GstPluginDesc));
+}
+#endif
 /**
  * gst_plugin_unload_plugin:
  * @plugin: The plugin to unload
@@ -265,41 +349,7 @@ gst_plugin_get_name (GstPlugin *plugin)
 {
   g_return_val_if_fail (plugin != NULL, NULL);
 
-  return plugin->name;
-}
-
-/**
- * gst_plugin_set_name:
- * @plugin: plugin to set name of
- * @name: new name
- *
- * Sets the name (should be short) of the plugin.
- */
-void
-gst_plugin_set_name (GstPlugin *plugin, const gchar *name)
-{
-  g_return_if_fail (plugin != NULL);
-
-  g_free (plugin->name);
-
-  plugin->name = g_strdup (name);
-}
-
-/**
- * gst_plugin_set_longname:
- * @plugin: plugin to set long name of
- * @longname: new long name
- *
- * Sets the long name (should be descriptive) of the plugin.
- */
-void
-gst_plugin_set_longname (GstPlugin *plugin, const gchar *longname)
-{
-  g_return_if_fail(plugin != NULL);
-
-  g_free(plugin->longname);
-
-  plugin->longname = g_strdup(longname);
+  return plugin->desc.name;
 }
 
 /**
@@ -310,12 +360,12 @@ gst_plugin_set_longname (GstPlugin *plugin, const gchar *longname)
  *
  * Returns: the long name of the plugin
  */
-const gchar*
-gst_plugin_get_longname (GstPlugin *plugin)
+G_CONST_RETURN gchar*
+gst_plugin_get_description (GstPlugin *plugin)
 {
   g_return_val_if_fail (plugin != NULL, NULL);
 
-  return plugin->longname;
+  return plugin->desc.description;
 }
 
 /**
@@ -326,14 +376,90 @@ gst_plugin_get_longname (GstPlugin *plugin)
  *
  * Returns: the filename of the plugin
  */
-const gchar*
+G_CONST_RETURN gchar*
 gst_plugin_get_filename (GstPlugin *plugin)
 {
   g_return_val_if_fail (plugin != NULL, NULL);
 
   return plugin->filename;
 }
+/**
+ * gst_plugin_get_license:
+ * @plugin: plugin to get the license of
+ *
+ * get the license of the plugin
+ *
+ * Returns: the license of the plugin
+ */
+G_CONST_RETURN gchar*
+gst_plugin_get_license (GstPlugin *plugin)
+{
+  g_return_val_if_fail (plugin != NULL, NULL);
 
+  return plugin->desc.license;
+}
+/**
+ * gst_plugin_get_copyright:
+ * @plugin: plugin to get the copyright of
+ *
+ * get the informal copyright notice of the plugin
+ *
+ * Returns: the copyright of the plugin
+ */
+G_CONST_RETURN gchar*
+gst_plugin_get_copyright (GstPlugin *plugin)
+{
+  g_return_val_if_fail (plugin != NULL, NULL);
+
+  return plugin->desc.copyright;
+}
+/**
+ * gst_plugin_get_package:
+ * @plugin: plugin to get the package of
+ *
+ * get the package the plugin belongs to.
+ *
+ * Returns: the package of the plugin
+ */
+G_CONST_RETURN gchar*
+gst_plugin_get_package (GstPlugin *plugin)
+{
+  g_return_val_if_fail (plugin != NULL, NULL);
+
+  return plugin->desc.package;
+}
+/**
+ * gst_plugin_get_origin:
+ * @plugin: plugin to get the origin of
+ *
+ * get the URL where the plugin comes from
+ *
+ * Returns: the origin of the plugin
+ */
+G_CONST_RETURN gchar*
+gst_plugin_get_origin (GstPlugin *plugin)
+{
+  g_return_val_if_fail (plugin != NULL, NULL);
+
+  return plugin->desc.origin;
+}
+/**
+ * gst_plugin_get_module:
+ * @plugin: plugin to query
+ *
+ * Gets the #GModule of the plugin. If the plugin isn't loaded yet, NULL is 
+ * returned.
+ *
+ * Returns: module belonging to the plugin or NULL if the plugin isn't 
+ *          loaded yet.
+ */
+GModule *
+gst_plugin_get_module (GstPlugin *plugin)
+{
+  g_return_val_if_fail (plugin != NULL, FALSE);
+
+  return plugin->module;
+}
 /**
  * gst_plugin_is_loaded:
  * @plugin: plugin to query
@@ -433,7 +559,7 @@ gst_plugin_list_feature_filter  (GList *list,
  * @plugin: the plugin to check
  * @name: the name of the plugin
  *
- * A standard filterthat returns TRUE when the plugin is of the
+ * A standard filter that returns TRUE when the plugin is of the
  * given name.
  *
  * Returns: TRUE if the plugin is of the given name.
@@ -441,7 +567,7 @@ gst_plugin_list_feature_filter  (GList *list,
 gboolean
 gst_plugin_name_filter (GstPlugin *plugin, const gchar *name)
 {
-  return (plugin->name && !strcmp (plugin->name, name));
+  return (plugin->desc.name && !strcmp (plugin->desc.name, name));
 }
 
 /**
@@ -536,18 +662,17 @@ gst_plugin_load (const gchar *name)
 
   plugin = gst_registry_pool_find_plugin (name);
   if (plugin) {
-    gboolean result = gst_plugin_load_plugin (plugin, &error);
+    gst_plugin_load_file (plugin->filename, &error);
     if (error) {
       GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING, "load_plugin error: %s\n",
 	         error->message);
       g_error_free (error);
+      return FALSE;
     }
-    return result;
+    return TRUE;;
   }
 
-  GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING, "Could not find %s in registry pool",
-             name);
-
+  GST_DEBUG ("Could not find %s in registry pool", name);
   return FALSE;
 }
 

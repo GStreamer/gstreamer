@@ -33,18 +33,15 @@
 
 #include "gstmultidisksrc.h"
 
-GST_DEBUG_CATEGORY (gst_multidisksrc_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_multidisksrc_debug);
 #define GST_CAT_DEFAULT gst_multidisksrc_debug
 
-GstElementDetails gst_multidisksrc_details = {
+GstElementDetails gst_multidisksrc_details = GST_ELEMENT_DETAILS (
   "Multi Disk Source",
   "Source/File",
-  "LGPL",
   "Read from multiple files in order",
-  VERSION,
-  "Dominic Ludlam <dom@openfx.org>",
-  "(C) 2001",
-};
+  "Dominic Ludlam <dom@openfx.org>"
+);
 
 /* DiskSrc signals and args */
 enum {
@@ -57,6 +54,7 @@ enum {
   ARG_LOCATIONS,
 };
 
+static void		gst_multidiscsrc_base_init	(gpointer g_class);
 static void		gst_multidisksrc_class_init	(GstMultiDiskSrcClass *klass);
 static void		gst_multidisksrc_init		(GstMultiDiskSrc *disksrc);
 
@@ -81,7 +79,8 @@ gst_multidisksrc_get_type(void)
 
   if (!multidisksrc_type) {
     static const GTypeInfo multidisksrc_info = {
-      sizeof(GstMultiDiskSrcClass),      NULL,
+      sizeof(GstMultiDiskSrcClass),
+      gst_multidiscsrc_base_init,
       NULL,
       (GClassInitFunc)gst_multidisksrc_class_init,
       NULL,
@@ -91,10 +90,19 @@ gst_multidisksrc_get_type(void)
       (GInstanceInitFunc)gst_multidisksrc_init,
     };
     multidisksrc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstMultiDiskSrc", &multidisksrc_info, 0);
+  
+    GST_DEBUG_CATEGORY_INIT (gst_multidisksrc_debug, "multidisksrc", 0, "multidisksrc element");
   }
   return multidisksrc_type;
 }
 
+static void
+gst_multidiscsrc_base_init (gpointer g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_set_details (gstelement_class, &gst_multidisksrc_details);
+}
 static void
 gst_multidisksrc_class_init (GstMultiDiskSrcClass *klass)
 {

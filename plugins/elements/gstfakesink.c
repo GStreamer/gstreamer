@@ -27,18 +27,15 @@
 
 #include "gstfakesink.h"
 
-GST_DEBUG_CATEGORY (gst_fakesink_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_fakesink_debug);
 #define GST_CAT_DEFAULT gst_fakesink_debug
 
-GstElementDetails gst_fakesink_details = {
+GstElementDetails gst_fakesink_details = GST_ELEMENT_DETAILS (
   "Fake Sink",
   "Sink",
-  "LGPL",
   "Black hole for data",
-  VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 1999",
-};
+  "Erik Walthinsen <omega@cse.ogi.edu>"
+);
 
 
 /* FakeSink signals and args */
@@ -87,6 +84,7 @@ gst_fakesink_state_error_get_type (void)
   return fakesink_state_error_type;
 }
 
+static void	gst_fakesink_base_init		(gpointer g_class);
 static void	gst_fakesink_class_init		(GstFakeSinkClass *klass);
 static void	gst_fakesink_init		(GstFakeSink *fakesink);
 
@@ -114,7 +112,8 @@ gst_fakesink_get_type (void)
 
   if (!fakesink_type) {
     static const GTypeInfo fakesink_info = {
-      sizeof(GstFakeSinkClass),      NULL,
+      sizeof(GstFakeSinkClass),
+      gst_fakesink_base_init,
       NULL,
       (GClassInitFunc)gst_fakesink_class_init,
       NULL,
@@ -124,10 +123,20 @@ gst_fakesink_get_type (void)
       (GInstanceInitFunc)gst_fakesink_init,
     };
     fakesink_type = g_type_register_static (GST_TYPE_ELEMENT, "GstFakeSink", &fakesink_info, 0);
+  
+    GST_DEBUG_CATEGORY_INIT (gst_fakesink_debug, "fakesink", 0, "fakesink element");
   }
   return fakesink_type;
 }
 
+static void
+gst_fakesink_base_init (gpointer g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class); 
+  
+  gst_element_class_set_details (gstelement_class, &gst_fakesink_details);
+  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (fakesink_sink_factory));
+}
 static void
 gst_fakesink_class_init (GstFakeSinkClass *klass) 
 {
@@ -411,10 +420,3 @@ error:
   return GST_STATE_FAILURE;
 }
 
-gboolean
-gst_fakesink_factory_init (GstElementFactory *factory)
-{
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (fakesink_sink_factory));
-
-  return TRUE;
-}

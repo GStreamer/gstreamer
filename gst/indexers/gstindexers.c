@@ -21,24 +21,31 @@
 #include <gst/gstversion.h>
 #include <gst/gstplugin.h>
 
-extern gboolean gst_mem_index_plugin_init 	(GModule *module, GstPlugin *plugin);
-extern gboolean gst_file_index_plugin_init 	(GModule *module, GstPlugin *plugin);
+extern gboolean gst_mem_index_plugin_init 	(GstPlugin *plugin);
+extern gboolean gst_file_index_plugin_init 	(GstPlugin *plugin);
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
   gboolean res = TRUE;
 
-  res &= gst_mem_index_plugin_init (module, plugin);
-  res &= gst_file_index_plugin_init (module, plugin);
+  res &= gst_mem_index_plugin_init (plugin);
+  res &= gst_file_index_plugin_init (plugin);
   
   return res;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "gstindexers",
-  plugin_init
-};
+  "Gstremaer core indexers",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
+
 

@@ -397,11 +397,9 @@ gst_mem_index_get_assoc_entry (GstIndex *index, gint id,
 }
 
 gboolean
-gst_mem_index_plugin_init (GModule *module, GstPlugin *plugin)
+gst_mem_index_plugin_init (GstPlugin *plugin)
 {
   GstIndexFactory *factory;
-
-  gst_plugin_set_longname (plugin, "A memory index");
 
   factory = gst_index_factory_new ("memindex",
 	                           "A index that stores entries in memory",

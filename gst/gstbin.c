@@ -31,15 +31,12 @@
 #include "gstscheduler.h"
 #include "gstindex.h"
 
-GstElementDetails gst_bin_details = {
+static GstElementDetails gst_bin_details = GST_ELEMENT_DETAILS (
   "Generic bin",
   "Generic/Bin",
-  "LGPL",
   "Simple container object",
-  VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 1999",
-};
+  "Erik Walthinsen <omega@cse.ogi.edu>"
+);
 
 GType _gst_bin_type = 0;
 
@@ -85,6 +82,7 @@ enum
   /* FILL ME */
 };
 
+static void 			gst_bin_base_init 		(gpointer g_class);
 static void 			gst_bin_class_init 		(GstBinClass * klass);
 static void 			gst_bin_init 			(GstBin * bin);
 
@@ -97,7 +95,7 @@ gst_bin_get_type (void)
   if (!_gst_bin_type) {
     static const GTypeInfo bin_info = {
       sizeof (GstBinClass),
-      NULL,
+      gst_bin_base_init,
       NULL,
       (GClassInitFunc) gst_bin_class_init,
       NULL,
@@ -111,6 +109,14 @@ gst_bin_get_type (void)
     _gst_bin_type = g_type_register_static (GST_TYPE_ELEMENT, "GstBin", &bin_info, 0);
   }
   return _gst_bin_type;
+}
+
+static void
+gst_bin_base_init (gpointer g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_set_details (gstelement_class, &gst_bin_details);
 }
 
 static void

@@ -33,18 +33,15 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-GST_DEBUG_CATEGORY (gst_filesink_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_filesink_debug);
 #define GST_CAT_DEFAULT gst_filesink_debug
 
-GstElementDetails gst_filesink_details = {
+GstElementDetails gst_filesink_details = GST_ELEMENT_DETAILS (
   "File Sink",
   "Sink/File",
-  "LGPL",
   "Write stream to a file",
-  VERSION,
-  "Thomas <thomas@apestaart.org>",
-  "(C) 2001"
-};
+  "Thomas <thomas@apestaart.org>"
+);
 
 
 /* FileSink signals and args */
@@ -69,6 +66,7 @@ GST_PAD_FORMATS_FUNCTION (gst_filesink_get_formats,
 )
 
 
+static void	gst_filesink_base_init		(gpointer g_class);
 static void	gst_filesink_class_init		(GstFileSinkClass *klass);
 static void	gst_filesink_init		(GstFileSink *filesink);
 
@@ -97,7 +95,8 @@ gst_filesink_get_type (void)
 
   if (!filesink_type) {
     static const GTypeInfo filesink_info = {
-      sizeof(GstFileSinkClass),      NULL,
+      sizeof(GstFileSinkClass),
+      gst_filesink_base_init,
       NULL,
       (GClassInitFunc)gst_filesink_class_init,
       NULL,
@@ -107,20 +106,26 @@ gst_filesink_get_type (void)
       (GInstanceInitFunc)gst_filesink_init,
     };
     filesink_type = g_type_register_static (GST_TYPE_ELEMENT, "GstFileSink", &filesink_info, 0);
+  
+    GST_DEBUG_CATEGORY_INIT (gst_filesink_debug, "filesink", 0, "filesink element");
   }
   return filesink_type;
 }
 
 static void
+gst_filesink_base_init (gpointer g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+
+  gstelement_class->change_state = gst_filesink_change_state;
+  gst_element_class_set_details (gstelement_class, &gst_filesink_details);
+}
+static void
 gst_filesink_class_init (GstFileSinkClass *klass) 
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
-
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOCATION,
     g_param_spec_string ("location", "File Location", "Location of the file to write",
@@ -133,8 +138,6 @@ gst_filesink_class_init (GstFileSinkClass *klass)
 
   gobject_class->set_property = gst_filesink_set_property;
   gobject_class->get_property = gst_filesink_get_property;
-
-  gstelement_class->change_state = gst_filesink_change_state;
 }
 
 static void 

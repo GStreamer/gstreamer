@@ -29,18 +29,15 @@
 
 #include "gstidentity.h"
 
-GST_DEBUG_CATEGORY (gst_identity_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_identity_debug);
 #define GST_CAT_DEFAULT gst_identity_debug
 
-GstElementDetails gst_identity_details = {
+GstElementDetails gst_identity_details = GST_ELEMENT_DETAILS (
   "Identity",
   "Generic",
-  "LGPL",
   "Pass data without modification",
-  VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 1999",
-};
+  "Erik Walthinsen <omega@cse.ogi.edu>"
+);
 
 
 /* Identity signals and args */
@@ -64,6 +61,7 @@ enum {
 };
 
 
+static void gst_identity_base_init	(gpointer g_class);
 static void gst_identity_class_init	(GstIdentityClass *klass);
 static void gst_identity_init		(GstIdentity *identity);
 
@@ -82,7 +80,8 @@ gst_identity_get_type (void)
 
   if (!identity_type) {
     static const GTypeInfo identity_info = {
-      sizeof(GstIdentityClass),      NULL,
+      sizeof(GstIdentityClass),
+      gst_identity_base_init,
       NULL,
       (GClassInitFunc)gst_identity_class_init,
       NULL,
@@ -92,18 +91,27 @@ gst_identity_get_type (void)
       (GInstanceInitFunc)gst_identity_init,
     };
     identity_type = g_type_register_static (GST_TYPE_ELEMENT, "GstIdentity", &identity_info, 0);
+  
+    GST_DEBUG_CATEGORY_INIT (gst_identity_debug, "identity", 0, "identity element");
   }
   return identity_type;
 }
 
+static void
+gst_identity_base_init (gpointer g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_set_details (gstelement_class, &gst_identity_details);
+}
 static void 
 gst_identity_class_init (GstIdentityClass *klass) 
 {
   GObjectClass *gobject_class;
 
-  gobject_class = (GObjectClass*)klass;
+  gobject_class = G_OBJECT_CLASS (klass);
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOOP_BASED,
     g_param_spec_boolean ("loop-based", "Loop-based", 

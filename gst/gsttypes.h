@@ -58,9 +58,16 @@ typedef enum {
   GST_RESULT_NOT_IMPL
 } GstResult;
 
+#define GST_RANK_PRIMARY    256
+#define GST_RANK_SECONDARY  128
+#define GST_RANK_MARGINAL   64
+#define GST_RANK_NONE       0
+
 #define GST_STRUCT_PADDING  gpointer _gst_reserved[4];
 #define GST_CLASS_PADDING   gpointer _gst_reserved[4];
 #define GST_OBJECT_PADDING  gpointer _gst_reserved[4];
+
+#define GST_STRUCT_PADDING_INIT	{NULL, NULL, NULL, NULL}
 
 G_END_DECLS
 

@@ -345,13 +345,11 @@ gst_opt_scheduler_dispose (GObject *object)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
   GstSchedulerFactory *factory;
 
   GST_DEBUG_CATEGORY_INIT (debug_scheduler, "scheduler", 0, "optimal scheduler");
-
-  gst_plugin_set_longname (plugin, "An optimal scheduler");
 
 #ifdef USE_COTHREADS
   factory = gst_scheduler_factory_new ("opt"COTHREADS_NAME,
@@ -372,12 +370,18 @@ plugin_init (GModule *module, GstPlugin *plugin)
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "gstopt"COTHREADS_NAME"scheduler",
-  plugin_init
-};
+  "An optimal scheduler using "COTHREADS_NAME" cothreads",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_VERSION,
+  GST_PACKAGE,
+  GST_ORIGIN
+);
 
 
 static void

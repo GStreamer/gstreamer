@@ -28,8 +28,6 @@
 
 G_BEGIN_DECLS
 
-extern GstElementDetails gst_statistics_details;
-GST_DEBUG_CATEGORY_EXTERN(gst_statistics_debug);
 
 #define GST_TYPE_STATISTICS \
   (gst_statistics_get_type())

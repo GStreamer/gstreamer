@@ -30,8 +30,6 @@
 
 G_BEGIN_DECLS
 
-extern GstElementDetails gst_filesrc_details;
-GST_DEBUG_CATEGORY_EXTERN(gst_filesrc_debug);
 
 #define GST_TYPE_FILESRC \
   (gst_filesrc_get_type())

@@ -193,7 +193,7 @@ gst_type_find_factory_call_function (const GstTypeFindFactory *factory, GstTypeF
   factory->function (find, factory->user_data);
 }
 /**
- * gst_type_find_factory_register:
+ * gst_type_find_register:
  * @plugin: the GstPlugin to register with
  * @name: the name for registering
  * @rank: rank (or importance) of this typefind function
@@ -209,16 +209,16 @@ gst_type_find_factory_call_function (const GstTypeFindFactory *factory, GstTypeF
  *
  * Returns: TRUE on success, FALSE otherwise
  */
-void
-gst_type_find_factory_register (GstPlugin *plugin, const gchar *name, guint rank,
-				GstTypeFindFunction func, gchar **extensions, GstCaps *possible_caps,
-				gpointer data)
+gboolean
+gst_type_find_register (GstPlugin *plugin, const gchar *name, guint rank,
+			GstTypeFindFunction func, gchar **extensions, GstCaps *possible_caps,
+			gpointer data)
 {
   GstTypeFindFactory *factory;
   
-  g_return_if_fail (plugin != NULL);
-  g_return_if_fail (name != NULL);
-  g_return_if_fail (func != NULL);
+  g_return_val_if_fail (plugin != NULL, FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+  g_return_val_if_fail (func != NULL, FALSE);
 
   GST_INFO ("registering typefind function for %s", name);
   factory = GST_TYPE_FIND_FACTORY (gst_registry_pool_find_feature (name, GST_TYPE_TYPE_FIND_FACTORY));
@@ -241,6 +241,8 @@ gst_type_find_factory_register (GstPlugin *plugin, const gchar *name, guint rank
   factory->user_data = data;
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+
+  return TRUE;
 }
 
 /*** typefind function interface **********************************************/

@@ -71,7 +71,6 @@ extern GstDebugCategory *GST_CAT_BUFFER;
 extern GstDebugCategory *GST_CAT_CAPS;
 extern GstDebugCategory *GST_CAT_CLOCK;
 extern GstDebugCategory *GST_CAT_ELEMENT_PADS;
-extern GstDebugCategory *GST_CAT_ELEMENT_FACTORY;
 extern GstDebugCategory *GST_CAT_PADS;
 extern GstDebugCategory *GST_CAT_PIPELINE;
 extern GstDebugCategory *GST_CAT_PLUGIN_LOADING;

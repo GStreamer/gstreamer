@@ -32,8 +32,15 @@
 #include <gst/gst.h>
 #include "gstmd5sink.h"
 
-GST_DEBUG_CATEGORY (gst_md5sink_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_md5sink_debug);
 #define GST_CAT_DEFAULT gst_md5sink_debug
+
+GstElementDetails gst_md5sink_details = GST_ELEMENT_DETAILS (
+  "MD5 Sink",
+  "Sink",
+  "compute MD5 for incoming data",
+  "Benjamin Otte <in7y118@public.uni-hamburg.de>"
+);
 
 /* MD5Sink signals and args */
 enum {
@@ -55,6 +62,7 @@ GST_PAD_TEMPLATE_FACTORY (md5_sink_factory,
 );
 
 /* GObject stuff */
+static void			gst_md5sink_base_init		(gpointer g_class);
 static void			gst_md5sink_class_init		(GstMD5SinkClass *klass);
 static void			gst_md5sink_init		(GstMD5Sink *md5sink);
 
@@ -381,7 +389,7 @@ gst_md5sink_get_type (void)
   if (!md5sink_type) {
     static const GTypeInfo md5sink_info = {
       sizeof(GstMD5SinkClass),
-      NULL,
+      gst_md5sink_base_init,
       NULL,
       (GClassInitFunc) gst_md5sink_class_init,
       NULL,
@@ -392,10 +400,20 @@ gst_md5sink_get_type (void)
     };
     md5sink_type = g_type_register_static (GST_TYPE_ELEMENT, "GstMD5Sink", 
 	                                   &md5sink_info, 0);
+  
+    GST_DEBUG_CATEGORY_INIT (gst_md5sink_debug, "md5sink", 0, "md5sink element");
   }
   return md5sink_type;
 }
 
+static void
+gst_md5sink_base_init (gpointer g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_set_details (gstelement_class, &gst_md5sink_details);
+  gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (md5_sink_factory));
+}
 static void
 gst_md5sink_class_init (GstMD5SinkClass *klass) 
 {
@@ -405,15 +423,15 @@ gst_md5sink_class_init (GstMD5SinkClass *klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
+
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_md5sink_get_property);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MD5,
     g_param_spec_string ("md5", "md5", "current value of the md5 sum",
                          "", G_PARAM_READABLE)); 
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR(gst_md5sink_change_state);
-
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_md5sink_get_property);
 }
 
 static void 
@@ -508,20 +526,3 @@ gst_md5sink_chain (GstPad *pad, GstData *_data)
   gst_buffer_unref (buf);
 }
 
-GstElementDetails gst_md5sink_details = {
-  "MD5 Sink",
-  "Sink",
-  "LGPL",
-  "compute MD5 for incoming data",
-  VERSION,
-  "Benjamin Otte <in7y118@public.uni-hamburg.de>",
-  "(C) 2002",
-};
-
-gboolean
-gst_md5sink_factory_init (GstElementFactory *factory)
-{
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (md5_sink_factory));
-
-  return TRUE;
-}

@@ -28,7 +28,6 @@
 
 G_BEGIN_DECLS
 
-extern GstElementDetails gst_bin_details;
 extern GType _gst_bin_type;
 
 #define GST_TYPE_BIN             (_gst_bin_type)

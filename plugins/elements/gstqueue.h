@@ -30,9 +30,6 @@
 
 G_BEGIN_DECLS
 
-extern GstElementDetails gst_queue_details;
-
-
 #define GST_TYPE_QUEUE \
   (gst_queue_get_type())
 #define GST_QUEUE(obj) \

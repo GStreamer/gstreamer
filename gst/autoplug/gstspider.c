@@ -153,6 +153,7 @@ gst_spider_class_init (GstSpiderClass *klass)
   gobject_class->dispose = gst_spider_dispose;
 
   gst_element_class_add_pad_template (gstelement_class, GST_PAD_TEMPLATE_GET (spider_src_factory));
+  gst_element_class_set_details (gstelement_class, &gst_spider_details);
   
   gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR(gst_spider_request_new_pad);
 }
@@ -554,7 +555,8 @@ gst_spider_find_element_to_plug (GstElement *src, GstElementFactory *fac, GstPad
     {
       /* is the element the pad is linked to of the right type? */
       GstElement *element = GST_PAD_PARENT (pad);
-      if (GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element))->elementfactory == fac) {
+      
+      if (G_TYPE_FROM_INSTANCE (element) == gst_element_factory_get_element_type (fac)) {
         return element;
       }
     }
@@ -632,44 +634,35 @@ gst_spider_plug_from_srcpad (GstSpiderConnection *conn, GstPad *srcpad)
   return result;  
 }
 
-GstElementDetails gst_spider_details = {
+GstElementDetails gst_spider_details = GST_ELEMENT_DETAILS (
   "Spider",
   "Generic",
-  "LGPL",
   "Automatically link sinks and sources",
-  VERSION,
-  "Benjamin Otte <in7y118@public.uni-hamburg.de>",
-  "(C) 2002",
-};
+  "Benjamin Otte <in7y118@public.uni-hamburg.de>"
+);
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
   GST_DEBUG_CATEGORY_INIT (gst_spider_debug, "spider", 0, "spider autoplugging element");
-  GST_DEBUG_CATEGORY_INIT (gst_spider_identity_debug, "spideridentity", 0, "spider autoplugging proxy element");
 
-  factory = gst_element_factory_new("spider", GST_TYPE_SPIDER,
-                                   &gst_spider_details);
-  gst_plugin_set_longname (plugin, "Spider autoplugging elements");
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (spider_src_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  /* add spideridentity */
-  factory = gst_element_factory_new ("spideridentity", GST_TYPE_SPIDER_IDENTITY,
-                                     &gst_spider_identity_details);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "spider", GST_RANK_SECONDARY, GST_TYPE_SPIDER))
+    return FALSE;
+  if (!gst_element_register (plugin, "spideridentity", GST_RANK_NONE, GST_TYPE_SPIDER_IDENTITY))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "gstspider",
-  plugin_init
-};
+  "a 1:n autoplugger",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)

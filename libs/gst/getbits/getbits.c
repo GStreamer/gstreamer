@@ -214,15 +214,21 @@ void gst_getbits_newbuf(gst_getbits_t *gb,unsigned char *buffer, unsigned long l
 
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  gst_plugin_set_longname (plugin, "Accelerated routines for getting bits from a data stream");
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "gstgetbits",
-  plugin_init
-};
+  "Accelerated routines for getting bits from a data stream",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
+

@@ -330,16 +330,14 @@ parse_debug_list (const gchar *list)
 static void 
 load_plugin_func (gpointer data, gpointer user_data)
 {
-  gboolean ret;
   GstPlugin *plugin;
   const gchar *filename;
 
   filename = (const gchar *) data;
 
-  plugin = gst_plugin_new (filename);
-  ret = gst_plugin_load_plugin (plugin, NULL);
+  plugin = gst_plugin_load_file (filename, NULL);
 
-  if (ret) {
+  if (plugin) {
     GST_INFO ("Loaded plugin: \"%s\"", filename);
 
     gst_registry_pool_add_plugin (plugin);
@@ -445,19 +443,13 @@ init_pre (void)
 }
 
 static gboolean
-gst_register_core_elements (GModule *module, GstPlugin *plugin)
+gst_register_core_elements (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
   /* register some standard builtin types */
-  factory = gst_element_factory_new ("bin", gst_bin_get_type (), &gst_bin_details);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-  factory = gst_element_factory_new ("pipeline", gst_pipeline_get_type (), &gst_pipeline_details);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-  factory = gst_element_factory_new ("thread", gst_thread_get_type (), &gst_thread_details);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-  factory = gst_element_factory_new ("queue", gst_queue_get_type (), &gst_queue_details);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  g_assert (gst_element_register (plugin, "bin", GST_RANK_PRIMARY, GST_TYPE_BIN));
+  g_assert (gst_element_register (plugin, "pipeline", GST_RANK_PRIMARY, GST_TYPE_PIPELINE));
+  g_assert (gst_element_register (plugin, "thread", GST_RANK_PRIMARY, GST_TYPE_THREAD));
+  g_assert (gst_element_register (plugin, "queue", GST_RANK_PRIMARY, GST_TYPE_QUEUE));
 
   return TRUE;
 }
@@ -465,8 +457,17 @@ gst_register_core_elements (GModule *module, GstPlugin *plugin)
 static GstPluginDesc plugin_desc = {
   GST_VERSION_MAJOR,           
   GST_VERSION_MINOR,  
-  "gst_core_plugins",
-  gst_register_core_elements
+  "gst_core_elements",
+  "core elements of the GStreamer library",
+  gst_register_core_elements,
+  NULL,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN,
+
+  GST_STRUCT_PADDING_INIT
 };                         
 
 /*

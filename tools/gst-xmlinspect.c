@@ -592,13 +592,10 @@ print_element_info (GstElementFactory *factory)
   gstelement_class = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
 
   PUT_START_TAG (1, "details");
-  PUT_ESCAPED (2, "long-name",  factory->details->longname);
-  PUT_ESCAPED (2, "class",              factory->details->klass);
-  PUT_ESCAPED (2, "license",    factory->details->license);
-  PUT_ESCAPED (2, "description",        factory->details->description);
-  PUT_ESCAPED (2, "version",    factory->details->version);
-  PUT_ESCAPED (2, "authors",    factory->details->author);
-  PUT_ESCAPED (2, "copyright",  factory->details->copyright);
+  PUT_ESCAPED (2, "long-name",  factory->details.longname);
+  PUT_ESCAPED (2, "class",      factory->details.klass);
+  PUT_ESCAPED (2, "description",factory->details.description);
+  PUT_ESCAPED (2, "authors",    factory->details.author);
   PUT_END_TAG (1, "details");
 
   output_hierarchy (G_OBJECT_TYPE (element), 0, &maxlevel);
@@ -828,15 +825,15 @@ print_element_list (void)
         GstElementFactory *factory;
 
         factory = GST_ELEMENT_FACTORY (feature);
-        g_print ("%s:  %s: %s\n", plugin->name,
-                GST_PLUGIN_FEATURE_NAME (factory) ,factory->details->longname);
+        g_print ("%s:  %s: %s\n", plugin->desc.name,
+                GST_PLUGIN_FEATURE_NAME (factory) ,factory->details.longname);
       }
 #ifndef GST_DISABLE_AUTOPLUG
       else if (GST_IS_AUTOPLUG_FACTORY (feature)) {
         GstAutoplugFactory *factory;
 
         factory = GST_AUTOPLUG_FACTORY (feature);
-        g_print ("%s:  %s: %s\n", plugin->name,
+        g_print ("%s:  %s: %s\n", plugin->desc.name,
                 GST_PLUGIN_FEATURE_NAME (factory), factory->longdesc);
       }
 #endif
@@ -845,7 +842,7 @@ print_element_list (void)
         GstIndexFactory *factory;
 
         factory = GST_INDEX_FACTORY (feature);
-        g_print ("%s:  %s: %s\n", plugin->name,
+        g_print ("%s:  %s: %s\n", plugin->desc.name,
                 GST_PLUGIN_FEATURE_NAME (factory), factory->longdesc);
       }
 #endif
@@ -855,19 +852,19 @@ print_element_list (void)
 	factory = GST_TYPE_FIND_FACTORY (feature);
         if (factory->extensions) {
 	  guint i = 0;
-	  g_print ("%s type: ", plugin->name);
+	  g_print ("%s type: ", plugin->desc.name);
 	  while (factory->extensions[i]) {
 	    g_print ("%s%s", i > 0 ? ", " : "", factory->extensions[i]);
 	    i++;
 	  }
 	} else
-	  g_print ("%s type: N/A\n", plugin->name);
+	  g_print ("%s type: N/A\n", plugin->desc.name);
       }
       else if (GST_IS_SCHEDULER_FACTORY (feature)) {
         GstSchedulerFactory *factory;
 
         factory = GST_SCHEDULER_FACTORY (feature);
-        g_print ("%s:  %s: %s\n", plugin->name,
+        g_print ("%s:  %s: %s\n", plugin->desc.name,
                 GST_PLUGIN_FEATURE_NAME (factory), factory->longdesc);
       }
 #ifndef GST_DISABLE_URI
@@ -876,12 +873,12 @@ print_element_list (void)
 
         handler = GST_URI_HANDLER (feature);
         g_print ("%s:  %s: \"%s\" (%s) element \"%s\" property \"%s\"\n",
-                 plugin->name, GST_PLUGIN_FEATURE_NAME (handler), handler->uri,
+                 plugin->desc.name, GST_PLUGIN_FEATURE_NAME (handler), handler->uri,
                  handler->longdesc, handler->element, handler->property);
       }
 #endif
       else {
-        g_print ("%s:  %s (%s)\n", plugin->name,
+        g_print ("%s:  %s (%s)\n", plugin->desc.name,
                 GST_PLUGIN_FEATURE_NAME (feature),
                 g_type_name (G_OBJECT_TYPE (feature)));
       }
@@ -904,9 +901,14 @@ print_plugin_info (GstPlugin *plugin)
   gint num_other = 0;
 
   g_print ("Plugin Details:\n");
-  g_print ("  Name:\t\t%s\n",    plugin->name);
-  g_print ("  Long Name:\t%s\n", plugin->longname);
-  g_print ("  Filename:\t%s\n",  plugin->filename);
+  g_print ("  Name:\t\t%s\n",	    plugin->desc.name);
+  g_print ("  Description:\t%s\n",  plugin->desc.description);
+  g_print ("  Filename:\t%s\n",	    plugin->filename);
+  g_print ("  Version:\t%s\n",	    plugin->desc.version);
+  g_print ("  License:\t%s\n",	    plugin->desc.license);
+  g_print ("  Copyright:\t%s\n",    plugin->desc.copyright);
+  g_print ("  Package:\t%s\n",	    plugin->desc.package);
+  g_print ("  Origin URL:\t%s\n",   plugin->desc.origin);
   g_print ("\n");
 
   features = gst_plugin_get_feature_list (plugin);
@@ -921,7 +923,7 @@ print_plugin_info (GstPlugin *plugin)
 
       factory = GST_ELEMENT_FACTORY (feature);
       g_print ("  %s: %s\n", GST_OBJECT_NAME (factory),
-              factory->details->longname);
+              factory->details.longname);
       num_elements++;
     }
 #ifndef GST_DISABLE_AUTOPLUG
@@ -948,13 +950,13 @@ print_plugin_info (GstPlugin *plugin)
       factory = GST_TYPE_FIND_FACTORY (feature);
       if (factory->extensions) {
 	guint i = 0;
-	g_print ("%s type: ", plugin->name);
+	g_print ("%s type: ", plugin->desc.name);
 	while (factory->extensions[i]) {
 	  g_print ("%s%s", i > 0 ? ", " : "", factory->extensions[i]);
 	  i++;
 	}
       } else
-	g_print ("%s type: N/A\n", plugin->name);
+	g_print ("%s type: N/A\n", plugin->desc.name);
       num_types++;
     }
     else if (GST_IS_SCHEDULER_FACTORY (feature)) {

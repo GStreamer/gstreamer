@@ -32,8 +32,6 @@
 G_BEGIN_DECLS
 
 extern GPrivate *gst_thread_current;
-extern GstElementDetails gst_thread_details;
-
 
 typedef enum {
   GST_THREAD_STATE_SPINNING	= GST_BIN_FLAG_LAST,

@@ -246,14 +246,12 @@ gst_basic_scheduler_dispose (GObject *object)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
   GstSchedulerFactory *factory;
 
   GST_DEBUG_CATEGORY_INIT (debug_dataflow, "dataflow", 0, "basic scheduler dataflow");
   GST_DEBUG_CATEGORY_INIT (debug_scheduler, "scheduler", 0, "basic scheduler general information");
-
-  gst_plugin_set_longname (plugin, "A basic scheduler");
 
   factory = gst_scheduler_factory_new ("basic"COTHREADS_NAME,
 	                              "A basic scheduler using "COTHREADS_NAME" cothreads",
@@ -267,12 +265,18 @@ plugin_init (GModule *module, GstPlugin *plugin)
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "gstbasic"COTHREADS_NAME"scheduler",
-  plugin_init
-};
+  "a basic scheduler using "COTHREADS_NAME" cothreads",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
 
 static int
 gst_basic_scheduler_loopfunc_wrapper (int argc, char **argv)

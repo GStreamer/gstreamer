@@ -20,6 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "gststaticautoplugrender.h"
 
 #include <gst/gst.h>
@@ -85,11 +89,9 @@ static void gst_static_autoplug_render_init(GstStaticAutoplugRender *autoplug) {
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
   GstAutoplugFactory *factory;
-
-  gst_plugin_set_longname (plugin, "A static autoplugger");
 
   GST_DEBUG_CATEGORY_INIT (debug_category, "STATIC_AUTOPLUG", 0, "static autoplug render element");
 
@@ -106,12 +108,18 @@ plugin_init (GModule *module, GstPlugin *plugin)
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "gststaticautoplugrender",
-  plugin_init
-};
+  "a static autoplugger",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
 
 static GstPadTemplate*
 gst_autoplug_match_caps (GstElementFactory *factory, GstPadDirection direction, GstCaps *caps)
