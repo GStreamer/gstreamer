@@ -6,5 +6,27 @@ API:
 
 
 
+caps:
+
+  (Company:)
+
+  "An idea I had once was to force registration of mimetypes and then
+  only allow caps with a registered mimetype - like it's done now with caps.
+  You could then add functions to those registrations like
+  - gchar *get_human_readable_string (caps);
+  should be kinda selfexplanatory. Would return stuff like "16bit signed
+  integer audio", "MPEG2 video" or "video format in RGB colorspace" (for
+  unfixed RGB)
+  - GstCaps *default_fixate (const GstCaps *caps);
+  A default fixation function, so we don't fixate to minimum integer
+  anymore but have the ability to fixate to 320x240 for video or 44100 for
+  audio rates
+  - gboolean validate (const GstCaps *caps);
+  check if the given caps are ok for this mimetype - debugging only function
+  I'd _really_ like to have - especially during gst_register.
+
+  But that's 0.10 material."
+
+
 
 

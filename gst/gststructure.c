@@ -552,13 +552,6 @@ gst_structure_id_get_value(const GstStructure *structure, GQuark id)
   return &field->value;
 }
 
-#if 0
-void gst_structure_get(GstStructure *structure, const gchar *fieldname, ...)
-{
-
-}
-#endif
-
 /**
  * gst_structure_remove_field:
  * @structure: a #GstStructure
@@ -969,6 +962,12 @@ gst_structure_to_string(const GstStructure *structure)
   GstStructureField *field;
   GString *s;
   int i;
+  
+  /* NOTE:  This function is potentially called by the debug system,
+   * so any calls to gst_log() (and GST_DEBUG(), GST_LOG(), etc.)
+   * should be careful to avoid recursion.  This includes any functions
+   * called by gst_structure_to_string.  In particular, calls should
+   * not use the GST_PTR_FORMAT extension.  */
 
   g_return_val_if_fail(structure != NULL, NULL);
 
@@ -1048,135 +1047,6 @@ _gst_structure_parse_string (gchar *s, gchar **end, gchar **next)
   *next = s;
 
   return TRUE;
-}
-
-static int
-gst_strtoi (const char *s, char **end, int base)
-{
-  int i;
-
-  if (s[0] == '-') {
-    i = - (int) strtoul (s + 1, end, base);
-  } else {
-    i = strtoul (s, end, base);
-  }
-
-  return i;
-}
-
-static gboolean
-gst_value_from_string (GValue *value, const char *s)
-{
-  gboolean ret = FALSE;
-  gchar *end;
-  GType type = G_VALUE_TYPE (value);
-
-  if (type == G_TYPE_INVALID) return FALSE;
-
-  switch (type) {
-    case G_TYPE_INT:
-      {
-	int x;
-	x = gst_strtoi (s, &end, 0);
-	if (*end == 0) {
-	  ret = TRUE;
-	} else {
-	  if (g_ascii_strcasecmp (s, "little_endian") == 0) {
-            x = G_LITTLE_ENDIAN;
-            ret = TRUE;
-          } else if (g_ascii_strcasecmp (s, "big_endian") == 0) {
-            x = G_BIG_ENDIAN;
-            ret = TRUE;
-          } else if (g_ascii_strcasecmp (s, "byte_order") == 0) {
-            x = G_BYTE_ORDER;
-            ret = TRUE;
-          } else if (g_ascii_strcasecmp (s, "min") == 0) {
-            x = G_MININT;
-            ret = TRUE;
-          } else if (g_ascii_strcasecmp (s, "max") == 0) {
-            x = G_MAXINT;
-            ret = TRUE;
-          }
-        }
-        if (ret) {
-	  g_value_set_int (value, x);
-        }
-      }
-      break;
-    case G_TYPE_FLOAT:
-      {
-	double x;
-	x = g_ascii_strtod (s, &end);
-	if (*end == 0) {
-	  g_value_set_float (value, x);
-	  ret = TRUE;
-	}
-      }
-      break;
-    case G_TYPE_DOUBLE:
-      {
-	double x;
-	x = g_ascii_strtod (s, &end);
-	if (*end == 0) {
-	  ret = TRUE;
-	} else {
-          if (g_ascii_strcasecmp (s, "min") == 0) {
-            x = -G_MAXDOUBLE;
-            ret = TRUE;
-          } else if (g_ascii_strcasecmp (s, "max") == 0) {
-            x = G_MAXDOUBLE;
-            ret = TRUE;
-          }
-        }
-        if (ret) {
-	  g_value_set_double (value, x);
-        }
-      }
-      break;
-    case G_TYPE_BOOLEAN:
-      {
-	if (g_ascii_strcasecmp (s, "true") == 0 ||
-	    g_ascii_strcasecmp (s, "yes") == 0 ||
-	    g_ascii_strcasecmp (s, "t") == 0 ||
-	    strcmp (s, "1") == 0) {
-	  g_value_set_boolean (value, TRUE);
-	  ret = TRUE;
-	} else if (g_ascii_strcasecmp (s, "false") == 0 ||
-	    g_ascii_strcasecmp (s, "no") == 0 ||
-	    g_ascii_strcasecmp (s, "f") == 0 ||
-	    strcmp (s, "0") == 0) {
-	  g_value_set_boolean (value, FALSE);
-	  ret = TRUE;
-	}
-      }
-      break;
-    case G_TYPE_STRING:
-      {
-	g_value_set_string (value, s);
-	ret = TRUE;
-      }
-      break;
-    default:
-      /* FIXME: make more general */
-      if (type == GST_TYPE_FOURCC) {
-	guint32 fourcc = 0;
-	if (strlen(s) == 4) {
-	  fourcc = GST_MAKE_FOURCC(s[0], s[1], s[2], s[3]);
-	  ret = TRUE;
-	} else if (g_ascii_isdigit (*s)) {
-	  fourcc = strtoul (s, &end, 0);
-	  if (*end == 0) {
-	    ret = TRUE;
-	  }
-	}
-	gst_value_set_fourcc (value, fourcc);
-      } else {
-	g_critical("type %s not handled", g_type_name(type));
-      }
-      break;
-  }
-
-  return ret;
 }
 
 static gboolean _gst_structure_parse_value (gchar *str, gchar **after,
@@ -1384,14 +1254,14 @@ _gst_structure_parse_value (gchar *str, gchar **after, GValue *value,
 
       for(i=0;i<3;i++) {
 	g_value_init(value, try_types[i]);
-	ret = gst_value_from_string (value, value_s);
+	ret = gst_value_deserialize (value, value_s);
 	if (ret) break;
 	g_value_unset(value);
       }
     } else {
       g_value_init(value, type);
 
-      ret = gst_value_from_string (value, value_s);
+      ret = gst_value_deserialize (value, value_s);
     }
     *value_end = c;
   }

@@ -39,7 +39,7 @@ struct _GstValueTable {
   GType type;
   GstValueCompareFunc compare;
   GstValueSerializeFunc serialize;
-  GstValueDeserializeFunc unserialize;
+  GstValueDeserializeFunc deserialize;
 
   void *_gst_reserved [GST_PADDING];
 };

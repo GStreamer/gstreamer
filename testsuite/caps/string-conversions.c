@@ -147,10 +147,10 @@ bla:
 
   /* fixed props entries */
   test_string ("audio/raw  ,test=(int)1");
-  test_string ("audio/raw ,test=(float) 1");
+  test_string ("audio/raw ,test=(double) 1");
   test_string ("audio/raw, test=(fourcc )1");
   test_string ("audio/raw  ,test=(i)1");
-  test_string ("audio/raw ,test=(f) 1");
+  test_string ("audio/raw ,test=(d) 1");
   test_string ("audio/raw, test=(4 )1");
   test_string ("audio/raw,test=( fourcc ) 0x0000001");
   test_string ("audio/raw,test =(fourcc)  \"RGB \"");

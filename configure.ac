@@ -454,6 +454,17 @@ AC_CHECK_FUNC(sigaction,
    AC_DEFINE(HAVE_SIGACTION, 1,
              [Defined if we have sigaction ()]))
 
+dnl test for register_printf_function
+AC_CHECK_FUNC(register_printf_function,
+  [
+    GST_PRINTF_EXTENSION_FORMAT_DEFINE="#define GST_PTR_FORMAT \"P\""
+    AC_DEFINE(HAVE_PRINTF_EXTENSION, 1,
+             [Defined if we have register_printf_function ()])
+  ],
+  GST_PRINTF_EXTENSION_FORMAT_DEFINE="#define GST_PTR_FORMAT \"p\""
+)
+AC_SUBST(GST_PRINTF_EXTENSION_FORMAT_DEFINE)
+
 dnl test if we have dladdr(); we use it for debugging
 save_cflags="$CFLAGS"
 CFLAGS="$CFLAGS -D_GNU_SOURCE"

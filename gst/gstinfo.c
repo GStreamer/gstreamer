@@ -30,6 +30,9 @@
 #ifdef HAVE_DLFCN_H
 #include <dlfcn.h>
 #endif
+#ifdef HAVE_PRINTF_EXTENSION
+#include <printf.h>
+#endif
 #include <unistd.h>
 #include <string.h> /* G_VA_COPY */
 #include "gstinfo.h"
@@ -71,6 +74,13 @@ extern gchar *_gst_progname;
 static void	gst_debug_reset_threshold	(gpointer category,
 						 gpointer unused);
 static void	gst_debug_reset_all_thresholds	(void);
+
+#ifdef HAVE_PRINTF_EXTENSION
+static int _gst_info_printf_extension (FILE *stream, const struct printf_info *info,
+    const void *const *args);
+static int _gst_info_printf_extension_arginfo (const struct printf_info *info, size_t n,
+    int *argtypes);
+#endif
 
 struct _GstDebugMessage {
   gchar *		message;
@@ -145,6 +155,11 @@ void _gst_debug_init (void)
 {
   gst_atomic_int_init (&__default_level, GST_LEVEL_DEFAULT);
   gst_atomic_int_init (&__use_color, 1);
+
+#ifdef HAVE_PRINTF_EXTENSION
+  register_printf_function (GST_PTR_FORMAT[0], _gst_info_printf_extension,
+      _gst_info_printf_extension_arginfo);
+#endif
 
   /* do NOT use a single debug function before this line has been run */
   GST_CAT_DEFAULT	= _gst_debug_category_new ("default", 
@@ -328,6 +343,53 @@ gst_debug_message_get (GstDebugMessage *message)
   return message->message;
 }
 
+
+static gchar *
+gst_debug_print_object (gpointer ptr)
+{
+  GObject *object = (GObject *)ptr;
+
+#ifdef unused
+  /* This is a cute trick to detect unmapped memory, but is unportable,
+   * slow, screws around with madvise, and not actually that useful. */
+  {
+    int ret;
+
+    ret = madvise ((void *)((unsigned long)ptr & (~0xfff)), 4096, 0);
+    if (ret == -1 && errno == ENOMEM) {
+      buffer = g_strdup_printf ("%p (unmapped memory)", ptr);
+    }
+  }
+#endif
+
+  /* nicely printed object */
+  if (object == NULL) {
+    return g_strdup ("NULL");
+  }
+  if (*(GType *)ptr == GST_TYPE_CAPS) {
+    return gst_caps_to_string ((GstCaps *)ptr);
+  }
+  if (*(GType *)ptr == GST_TYPE_STRUCTURE) {
+    return gst_structure_to_string ((GstStructure *)ptr);
+  }
+#ifdef USE_POISONING
+  if (*(int *)ptr == 0xffffffff) {
+    return g_strdup_printf ("<poisoned@%p>", ptr);
+  }
+#endif
+  if (GST_IS_PAD (object) && GST_OBJECT_NAME (object)) {
+    return g_strdup_printf ("<%s:%s>", GST_DEBUG_PAD_NAME (object));
+  }
+  if (GST_IS_OBJECT (object) && GST_OBJECT_NAME (object)) {
+    return g_strdup_printf ("<%s>", GST_OBJECT_NAME (object));
+  }
+  if (G_IS_OBJECT (object)) {
+    return g_strdup_printf ("<%s@%p>", G_OBJECT_TYPE_NAME(object), object);  
+  }
+
+  return g_strdup_printf ("%p", ptr);
+}
+
 /**
  * gst_debug_construct_term_color:
  * @colorinfo: the color info
@@ -408,18 +470,10 @@ gst_debug_log_default (GstDebugCategory *category, GstDebugLevel level,
     clear = "";
     pidcolor = g_strdup ("");
   }
-  /* nicely printed object */
-  if (object == NULL) {
-    obj = g_strdup ("");
-  } else if (GST_IS_PAD (object) && GST_OBJECT_NAME (object)) {
-    obj = g_strdup_printf (" [%s:%s]", GST_DEBUG_PAD_NAME (object));
-  } else if (GST_IS_OBJECT (object) && GST_OBJECT_NAME (object)) {
-    obj = g_strdup_printf (" [%s]", GST_OBJECT_NAME (object));
-  } else {
-    obj = g_strdup_printf (" [%s@%p]", G_OBJECT_TYPE_NAME(object), object);  
-  }
 
-  g_printerr ("%s %s%15s%s(%s%5d%s) %s%s(%d):%s:%s%s %s\n", 
+  obj = gst_debug_print_object (object);
+
+  g_printerr ("%s %s%15s%s(%s%5d%s) %s%s(%d):%s: %s%s %s\n", 
   	      gst_debug_level_get_name (level),
               color, gst_debug_category_get_name (category), clear,
               pidcolor, pid, clear,
@@ -948,6 +1002,36 @@ _gst_debug_register_funcptr (void *ptr, gchar *ptrname)
 
   return ptr;
 }
+
+#ifdef HAVE_PRINTF_EXTENSION
+static int
+_gst_info_printf_extension (FILE *stream, const struct printf_info *info,
+    const void *const *args)
+{
+  char *buffer;
+  int len;
+  void *ptr;
+
+  buffer = NULL;
+  ptr = *(void **)args[0];
+
+  buffer = gst_debug_print_object (ptr);
+  len = fprintf (stream, "%*s", (info->left ? -info->width : info->width),
+      buffer);
+
+  free (buffer);
+  return len;
+}
+
+static int
+_gst_info_printf_extension_arginfo (const struct printf_info *info, size_t n,
+    int *argtypes)
+{
+  if (n > 0)
+    argtypes[0] = PA_POINTER;
+  return 1;
+}
+#endif /* HAVE_PRINTF_EXTENSION */
 
 #endif /* GST_DISABLE_GST_DEBUG */
 

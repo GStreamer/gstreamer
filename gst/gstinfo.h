@@ -155,6 +155,8 @@ typedef void (*GstLogFunction)	(GstDebugCategory *	category,
 
 void		_gst_debug_init			(void);
 
+/* note we can't use G_GNUC_PRINTF (7, 8) because gcc chokes on %P, which
+ * we use for GST_PTR_FORMAT. */
 void		gst_debug_log			(GstDebugCategory *	category,
 						 GstDebugLevel		level,
 						 const gchar *		file,
@@ -162,7 +164,7 @@ void		gst_debug_log			(GstDebugCategory *	category,
 						 gint			line,
 						 GObject *		object,
 						 const gchar *		format,
-						 ...)  G_GNUC_PRINTF (7, 8) G_GNUC_NO_INSTRUMENT;
+						 ...) G_GNUC_NO_INSTRUMENT;
 void		gst_debug_log_valist  		(GstDebugCategory *	category,
 						 GstDebugLevel		level,
 						 const gchar *		file,

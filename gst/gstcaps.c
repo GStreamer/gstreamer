@@ -1023,6 +1023,12 @@ gchar *gst_caps_to_string (const GstCaps *caps)
   GstStructure *structure;
   GString *s;
 
+  /* NOTE:  This function is potentially called by the debug system,
+   * so any calls to gst_log() (and GST_DEBUG(), GST_LOG(), etc.)
+   * should be careful to avoid recursion.  This includes any functions
+   * called by gst_caps_to_string.  In particular, calls should
+   * not use the GST_PTR_FORMAT extension.  */
+
   /* FIXME does this leak? */
 
   if (caps == NULL) {

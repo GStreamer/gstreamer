@@ -415,8 +415,22 @@ gst_value_serialize_fourcc (const GValue *value)
 static gboolean
 gst_value_deserialize_fourcc (GValue *dest, const char *s)
 {
-  g_warning("unimplemented");
-  return FALSE;
+  gboolean ret = FALSE;
+  guint32 fourcc = 0;
+  char *end;
+
+  if (strlen(s) == 4) {
+    fourcc = GST_MAKE_FOURCC(s[0], s[1], s[2], s[3]);
+    ret = TRUE;
+  } else if (g_ascii_isdigit (*s)) {
+    fourcc = strtoul (s, &end, 0);
+    if (*end == 0) {
+      ret = TRUE;
+    }
+  }
+  gst_value_set_fourcc (dest, fourcc);
+
+  return ret;
 }
 
 /*************************************/
@@ -707,8 +721,23 @@ gst_value_serialize_boolean (const GValue *value)
 static gboolean
 gst_value_deserialize_boolean (GValue *dest, const char *s)
 {
-  g_warning("unimplemented");
-  return FALSE;
+  gboolean ret = FALSE;
+
+  if (g_ascii_strcasecmp (s, "true") == 0 ||
+      g_ascii_strcasecmp (s, "yes") == 0 ||
+      g_ascii_strcasecmp (s, "t") == 0 ||
+      strcmp (s, "1") == 0) {
+    g_value_set_boolean (dest, TRUE);
+    ret = TRUE;
+  } else if (g_ascii_strcasecmp (s, "false") == 0 ||
+      g_ascii_strcasecmp (s, "no") == 0 ||
+      g_ascii_strcasecmp (s, "f") == 0 ||
+      strcmp (s, "0") == 0) {
+    g_value_set_boolean (dest, FALSE);
+    ret = TRUE;
+  }
+  
+  return ret;
 }
 
 /*************************************/
@@ -730,11 +759,52 @@ gst_value_serialize_int (const GValue *value)
   return g_strdup_printf ("%d", value->data[0].v_int);
 }
 
+static int
+gst_strtoi (const char *s, char **end, int base)
+{
+  int i;
+
+  if (s[0] == '-') {
+    i = - (int) strtoul (s + 1, end, base);
+  } else {
+    i = strtoul (s, end, base);
+  }
+
+  return i;
+}
+
 static gboolean
 gst_value_deserialize_int (GValue *dest, const char *s)
 {
-  g_warning("unimplemented");
-  return FALSE;
+  int x;
+  char *end;
+  gboolean ret = FALSE;
+
+  x = gst_strtoi (s, &end, 0);
+  if (*end == 0) {
+    ret = TRUE;
+  } else {
+    if (g_ascii_strcasecmp (s, "little_endian") == 0) {
+      x = G_LITTLE_ENDIAN;
+      ret = TRUE;
+    } else if (g_ascii_strcasecmp (s, "big_endian") == 0) {
+      x = G_BIG_ENDIAN;
+      ret = TRUE;
+    } else if (g_ascii_strcasecmp (s, "byte_order") == 0) {
+      x = G_BYTE_ORDER;
+      ret = TRUE;
+    } else if (g_ascii_strcasecmp (s, "min") == 0) {
+      x = G_MININT;
+      ret = TRUE;
+    } else if (g_ascii_strcasecmp (s, "max") == 0) {
+      x = G_MAXINT;
+      ret = TRUE;
+    }
+  }
+  if (ret) {
+    g_value_set_int (dest, x);
+  }
+  return ret;
 }
 
 /*************************************/
@@ -763,8 +833,26 @@ gst_value_serialize_double (const GValue *value)
 static gboolean
 gst_value_deserialize_double (GValue *dest, const char *s)
 {
-  g_warning("unimplemented");
-  return FALSE;
+  double x;
+  gboolean ret = FALSE;
+  char *end;
+
+  x = g_ascii_strtod (s, &end);
+  if (*end == 0) {
+    ret = TRUE;
+  } else {
+    if (g_ascii_strcasecmp (s, "min") == 0) {
+      x = -G_MAXDOUBLE;
+      ret = TRUE;
+    } else if (g_ascii_strcasecmp (s, "max") == 0) {
+      x = G_MAXDOUBLE;
+      ret = TRUE;
+    }
+  }
+  if (ret) {
+    g_value_set_double (dest, x);
+  }
+  return ret;
 }
 
 /*************************************/
@@ -840,8 +928,9 @@ gst_value_serialize_string (const GValue *value)
 static gboolean
 gst_value_deserialize_string (GValue *dest, const char *s)
 {
-  g_warning("unimplemented");
-  return FALSE;
+  g_value_set_string (dest, s);
+
+  return TRUE;
 }
 
 /*************************************/
@@ -1217,7 +1306,17 @@ gst_value_serialize (const GValue *value)
 gboolean
 gst_value_deserialize (GValue *dest, const gchar *src)
 {
-  g_warning("unimplemented");
+  GstValueTable *table;
+  int i;
+
+  for(i=0;i<gst_value_table->len;i++){
+    table = &g_array_index(gst_value_table, GstValueTable, i);
+    if(table->type != G_VALUE_TYPE(dest) ||
+        table->deserialize == NULL) continue;
+
+    return table->deserialize(dest, src);
+  }
+
   return FALSE;
 }
 

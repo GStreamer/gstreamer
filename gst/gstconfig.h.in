@@ -53,6 +53,8 @@
 /* DOES NOT WORK */
 @GST_DISABLE_URI_DEFINE@
 
+/* printf extension format */
+@GST_PRINTF_EXTENSION_FORMAT_DEFINE@
 
 /***** Deal with XML stuff, we have to handle both loadsave and registry *****/
 

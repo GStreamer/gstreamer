@@ -1,3 +1,28 @@
+2004-01-28  David Schleef  <ds@schleef.org>
+
+	* configure.ac: Add detection for HAVE_PRINTF_EXTENSION and
+	GST_PRINTF_EXTENSION_FORMAT_DEFINE.
+	* docs/random/ds/0.9-suggested-changes: Notes from Company.
+	* gst/gstcaps.c: (gst_caps_to_string): Add comment.
+	* gst/gstconfig.h.in: Add define for GST_PTR_FORMAT
+	* gst/gstinfo.c: (_gst_debug_init), (gst_debug_print_object),
+	(gst_debug_log_default), (_gst_info_printf_extension),
+	(_gst_info_printf_extension_arginfo):  Add printf extension.
+	* gst/gstinfo.h: remove G_GNUC_PRINTF, because it doesn't work with %P
+	* gst/gststructure.c: (gst_structure_to_string),
+	(_gst_structure_parse_value): Use gst_value_deserialize() and
+	remove old code.
+	* gst/gstvalue.c: (gst_value_deserialize_fourcc),
+	(gst_value_deserialize_boolean), (gst_strtoi),
+	(gst_value_deserialize_int), (gst_value_deserialize_double),
+	(gst_value_deserialize_string), (gst_value_deserialize): Implement
+	a bunch of deserialize functions and gst_value_deserialize.
+	* gst/gstvalue.h: er, _de_serialize, not unserialize
+	* testsuite/caps/string-conversions.c: (main): We don't currently
+	handle (float) in caps, so convert these to (double).
+	* testsuite/debug/Makefile.am: Add new test for the printf extension
+	* testsuite/debug/printf_extension.c: (main): same
+
 2004-01-28  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* docs/random/company/time:
