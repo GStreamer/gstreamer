@@ -16,9 +16,9 @@ int main (int argc, char *argv[])
         exit(-1);
     }
     
-    fakesrc = gst_elementfactory_make("fakesrc", "fakesrc");
-    fakesink1 = gst_elementfactory_make("fakesink", "fakesink1");
-    fakesink2 = gst_elementfactory_make("fakesink", "fakesink2");
+    fakesrc = gst_element_factory_make("fakesrc", "fakesrc");
+    fakesink1 = gst_element_factory_make("fakesink", "fakesink1");
+    fakesink2 = gst_element_factory_make("fakesink", "fakesink2");
     pipe1 = gst_pipeline_new("pipe1");
     pipe2 = gst_pipeline_new("pipe2");
     

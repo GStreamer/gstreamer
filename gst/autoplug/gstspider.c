@@ -58,14 +58,14 @@ enum {
 };
 
 /* generic templates */
-GST_PADTEMPLATE_FACTORY (spider_src_factory,
+GST_PAD_TEMPLATE_FACTORY (spider_src_factory,
   "src_%d",
   GST_PAD_SRC,
   GST_PAD_REQUEST,
   NULL      /* no caps */
 );
 
-GST_PADTEMPLATE_FACTORY (spider_sink_factory,
+GST_PAD_TEMPLATE_FACTORY (spider_sink_factory,
   "sink_%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
@@ -113,13 +113,13 @@ static                          GstElementClass	*			parent_class = NULL;
 static guint gst_spider_signals[LAST_SIGNAL] = { 0 };*/
 
 /* let gstreamer know that we have some request pads available */
-GST_PADTEMPLATE_FACTORY (gst_spider_sink_template_factory,
+GST_PAD_TEMPLATE_FACTORY (gst_spider_sink_template_factory,
   "sink%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
   NULL
 );  
-GST_PADTEMPLATE_FACTORY (gst_spider_src_template_factory,
+GST_PAD_TEMPLATE_FACTORY (gst_spider_src_template_factory,
   "src%d",
   GST_PAD_SRC,
   GST_PAD_REQUEST,
@@ -168,8 +168,8 @@ gst_spider_class_init (GstSpiderClass *klass)
   gobject_class->get_property = gst_spider_get_property;
   gobject_class->dispose = gst_spider_dispose;
 
-  gst_element_class_add_padtemplate (gstelement_class, gst_spider_src_template_factory());
-  gst_element_class_add_padtemplate (gstelement_class, gst_spider_sink_template_factory());
+  gst_element_class_add_pad_template (gstelement_class, gst_spider_src_template_factory());
+  gst_element_class_add_pad_template (gstelement_class, gst_spider_sink_template_factory());
   
   gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR(gst_spider_request_new_pad);
 }
@@ -178,7 +178,7 @@ gst_spider_init (GstSpider *spider)
 {
   /* use only elements which have sources and sinks and where the sinks have caps */
   /* FIXME: How do we handle factories that are added after the spider was constructed? */
-  spider->factories = gst_autoplug_factories_filters_with_sink_caps ((GList *) gst_elementfactory_get_list ());
+  spider->factories = gst_autoplug_factories_filters_with_sink_caps ((GList *) gst_element_factory_get_list ());
 
   spider->connections = NULL;
 }
@@ -202,12 +202,12 @@ gst_spider_request_new_pad (GstElement *element, GstPadTemplate *templ, const gc
   GstSpider *spider;
   
   g_return_val_if_fail (templ != NULL, NULL);
-  g_return_val_if_fail (GST_IS_PADTEMPLATE (templ), NULL);
+  g_return_val_if_fail (GST_IS_PAD_TEMPLATE (templ), NULL);
   
   spider = GST_SPIDER (element);
   
   /* create an identity object, so we have a pad */
-  switch ( GST_PADTEMPLATE_DIRECTION (templ))
+  switch ( GST_PAD_TEMPLATE_DIRECTION (templ))
   {
     case GST_PAD_SRC:
       padname = gst_spider_unused_elementname ((GstBin *)spider, "src_");
@@ -228,7 +228,7 @@ gst_spider_request_new_pad (GstElement *element, GstPadTemplate *templ, const gc
   /* FIXME: use the requested name for the pad */
 
   gst_object_ref (GST_OBJECT (templ));
-  GST_PAD_PADTEMPLATE (returnpad) = templ;
+  GST_PAD_PAD_TEMPLATE (returnpad) = templ;
   
   gst_bin_add (GST_BIN (element), GST_ELEMENT (identity));
   
@@ -255,7 +255,7 @@ gst_spider_set_property (GObject *object, guint prop_id, const GValue *value, GP
       while (list)
       {
 	g_return_if_fail (list->data != NULL);
-	g_return_if_fail (GST_IS_ELEMENTFACTORY (list->data));
+	g_return_if_fail (GST_IS_ELEMENT_FACTORY (list->data));
 	list = g_list_next (list);
       }
       g_list_free (spider->factories);
@@ -529,14 +529,14 @@ gst_spider_create_and_plug (GstSpiderConnection *conn, GList *plugpath)
     {
       element = (GstElement *) (endelements == NULL ? conn->src : endelements->data);
     } else {
-      element = gst_elementfactory_create ((GstElementFactory *) plugpath->data, NULL);
+      element = gst_element_factory_create ((GstElementFactory *) plugpath->data, NULL);
       gst_bin_add (GST_BIN (spider), element);
     }
     /* insert and connect new element */
     if (!gst_element_connect (conn->current, element))
     {
       /* check if the src has SOMETIMES templates. If so, connect a callback */
-      GList *templs = gst_element_get_padtemplate_list (conn->current);
+      GList *templs = gst_element_get_pad_template_list (conn->current);
 	 
       /* remove element that couldn't be connected, if it wasn't the endpoint */
       if (element != (GstElement *) conn->src)
@@ -544,7 +544,7 @@ gst_spider_create_and_plug (GstSpiderConnection *conn, GList *plugpath)
     
       while (templs) {
         GstPadTemplate *templ = (GstPadTemplate *) templs->data;
-        if ((GST_PADTEMPLATE_DIRECTION (templ) == GST_PAD_SRC) && (GST_PADTEMPLATE_PRESENCE(templ) == GST_PAD_SOMETIMES))
+        if ((GST_PAD_TEMPLATE_DIRECTION (templ) == GST_PAD_SRC) && (GST_PAD_TEMPLATE_PRESENCE(templ) == GST_PAD_SOMETIMES))
         {
           GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "adding callback to connect element %s to %s", GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
           conn->signal_id = g_signal_connect (G_OBJECT (conn->current), "new_pad", 
@@ -683,12 +683,12 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_elementfactory_new("spider", GST_TYPE_SPIDER,
+  factory = gst_element_factory_new("spider", GST_TYPE_SPIDER,
                                    &gst_spider_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (spider_src_factory));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (spider_sink_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (spider_src_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (spider_sink_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

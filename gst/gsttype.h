@@ -54,16 +54,16 @@ struct _GstTypeDefinition {
   GstTypeFindFunc typefindfunc;
 };
 
-#define GST_TYPE_TYPEFACTORY \
-  (gst_typefactory_get_type())
-#define GST_TYPEFACTORY(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TYPEFACTORY,GstTypeFactory))
-#define GST_TYPEFACTORY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TYPEFACTORY,GstTypeFactoryClass))
-#define GST_IS_TYPEFACTORY(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TYPEFACTORY))
-#define GST_IS_TYPEFACTORY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TYPEFACTORY))
+#define GST_TYPE_TYPE_FACTORY \
+  (gst_type_factory_get_type())
+#define GST_TYPE_FACTORY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TYPE_FACTORY,GstTypeFactory))
+#define GST_TYPE_FACTORY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TYPE_FACTORY,GstTypeFactoryClass))
+#define GST_IS_TYPE_FACTORY(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TYPE_FACTORY))
+#define GST_IS_TYPE_FACTORY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TYPE_FACTORY))
 
 struct _GstTypeFactory {
   GstPluginFeature feature;
@@ -78,12 +78,12 @@ struct _GstTypeFactoryClass {
 };
 
 
-GType			gst_typefactory_get_type	(void);
+GType			gst_type_factory_get_type	(void);
 
-GstTypeFactory*		gst_typefactory_new		(GstTypeDefinition *definition);
+GstTypeFactory*		gst_type_factory_new		(GstTypeDefinition *definition);
 
-GstTypeFactory*		gst_typefactory_find		(const gchar *name);
-GList* 			gst_typefactory_get_list 	(void);
+GstTypeFactory*		gst_type_factory_find		(const gchar *name);
+GList* 			gst_type_factory_get_list 	(void);
 
 
 /* create a new type, or find/merge an existing one */

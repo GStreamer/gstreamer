@@ -80,7 +80,7 @@ Mask (to be OR'ed)   info/debug         FLAGS
 0x00000800              /              CAPS
 0x00001000              /              CLOCK
 0x00002000              /              ELEMENT_PADS
-0x00004000              /              ELEMENTFACTORY
+0x00004000              /              ELEMENT_FACTORY
 0x00008000              /              PADS
 0x00010000              /              PIPELINE
 0x00020000              /              PLUGIN_LOADING

@@ -42,7 +42,7 @@ enum {
   /* FILL ME */
 };
 
-GST_PADTEMPLATE_FACTORY (md5_sink_factory,
+GST_PAD_TEMPLATE_FACTORY (md5_sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -408,7 +408,7 @@ static void
 gst_md5sink_init (GstMD5Sink *md5sink) 
 {
   GstPad *pad;
-  pad = gst_pad_new_from_template (GST_PADTEMPLATE_GET (md5_sink_factory), "sink");
+  pad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (md5_sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (md5sink), pad);
   gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_md5sink_chain));
 
@@ -497,7 +497,7 @@ GstElementDetails gst_md5sink_details = {
 gboolean
 gst_md5sink_factory_init (GstElementFactory *factory)
 {
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (md5_sink_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (md5_sink_factory));
 
   return TRUE;
 }

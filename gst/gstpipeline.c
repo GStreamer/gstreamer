@@ -103,9 +103,9 @@ gst_pipeline_init (GstPipeline *pipeline)
   /* we're a manager by default */
   GST_FLAG_SET (pipeline, GST_BIN_FLAG_MANAGER);
 
-  schedname = gst_schedulerfactory_get_default_name ();
+  schedname = gst_scheduler_factory_get_default_name ();
 
-  scheduler = gst_schedulerfactory_make (schedname, GST_ELEMENT (pipeline));
+  scheduler = gst_scheduler_factory_make (schedname, GST_ELEMENT (pipeline));
 	  
   GST_ELEMENT_SCHED (pipeline) = scheduler;
 
@@ -139,7 +139,7 @@ gst_pipeline_dispose (GObject *object)
 GstElement*
 gst_pipeline_new (const gchar *name) 
 {
-  return gst_elementfactory_make ("pipeline", name);
+  return gst_element_factory_make ("pipeline", name);
 }
 
 static GstElementStateReturn

@@ -104,7 +104,7 @@ main(int argc, char *argv[])
   // create pipeline and do something usefull
   ...
   
-  mpeg2parser = gst_elementfactory_make ("mpegdemux", "mpegdemux");
+  mpeg2parser = gst_element_factory_make ("mpegdemux", "mpegdemux");
   g_signal_connect (G_OBJECT (mpeg2parser), "new_pad", pad_connect_func, pipeline);  
   ...
 
@@ -139,7 +139,7 @@ main(int argc, char *argv[])
     ...
   GstPad *pad;
     ...
-  element = gst_elementfactory_make ("tee", "element");
+  element = gst_element_factory_make ("tee", "element");
 
   pad = gst_element_get_request_pad (element, "src%d");
   g_print ("new pad %s\n", gst_pad_get_name (pad));
@@ -161,10 +161,10 @@ main(int argc, char *argv[])
   GstPadTemplate *templ;
   GstPad *pad;
     ...
-  element = gst_elementfactory_make ("tee", "element");
-  mad = gst_elementfactory_make ("mad", "mad");
+  element = gst_element_factory_make ("tee", "element");
+  mad = gst_element_factory_make ("mad", "mad");
 
-  templ = gst_element_get_padtemplate_by_name (mad, "sink");
+  templ = gst_element_get_pad_template_by_name (mad, "sink");
 
   pad = gst_element_get_compatible_pad (element, templ);
   g_print ("new pad %s\n", gst_pad_get_name (pad));

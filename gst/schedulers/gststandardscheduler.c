@@ -202,7 +202,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   gst_plugin_set_longname (plugin, "A standard scheduler");
 
-  factory = gst_schedulerfactory_new ("standard",
+  factory = gst_scheduler_factory_new ("standard",
 	                              "A standard scheduler, it uses cothreads",
 		                      gst_standard_scheduler_get_type());
 

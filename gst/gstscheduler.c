@@ -576,19 +576,19 @@ gst_scheduler_show (GstScheduler *sched)
 
 static GList* _gst_schedulerfactories;
 
-static void 		gst_schedulerfactory_class_init		(GstSchedulerFactoryClass *klass);
-static void 		gst_schedulerfactory_init 		(GstSchedulerFactory *factory);
+static void 		gst_scheduler_factory_class_init		(GstSchedulerFactoryClass *klass);
+static void 		gst_scheduler_factory_init 		(GstSchedulerFactory *factory);
 
 #ifndef GST_DISABLE_REGISTRY
-static xmlNodePtr 	gst_schedulerfactory_save_thyself 	(GstObject *object, xmlNodePtr parent);
-static void 		gst_schedulerfactory_restore_thyself 	(GstObject *object, xmlNodePtr parent);
+static xmlNodePtr 	gst_scheduler_factory_save_thyself 	(GstObject *object, xmlNodePtr parent);
+static void 		gst_scheduler_factory_restore_thyself 	(GstObject *object, xmlNodePtr parent);
 #endif
 
 static GstPluginFeatureClass *factory_parent_class = NULL;
-/* static guint gst_schedulerfactory_signals[LAST_SIGNAL] = { 0 }; */
+/* static guint gst_scheduler_factory_signals[LAST_SIGNAL] = { 0 }; */
 
 GType 
-gst_schedulerfactory_get_type (void) 
+gst_scheduler_factory_get_type (void) 
 {
   static GType schedulerfactory_type = 0;
 
@@ -597,12 +597,12 @@ gst_schedulerfactory_get_type (void)
       sizeof (GstSchedulerFactoryClass),
       NULL,
       NULL,
-      (GClassInitFunc) gst_schedulerfactory_class_init,
+      (GClassInitFunc) gst_scheduler_factory_class_init,
       NULL,
       NULL,
       sizeof(GstSchedulerFactory),
       0,
-      (GInstanceInitFunc) gst_schedulerfactory_init,
+      (GInstanceInitFunc) gst_scheduler_factory_init,
       NULL
     };
     schedulerfactory_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE, 
@@ -612,7 +612,7 @@ gst_schedulerfactory_get_type (void)
 }
 
 static void
-gst_schedulerfactory_class_init (GstSchedulerFactoryClass *klass)
+gst_scheduler_factory_class_init (GstSchedulerFactoryClass *klass)
 {
   GObjectClass *gobject_class;
   GstObjectClass *gstobject_class;
@@ -625,8 +625,8 @@ gst_schedulerfactory_class_init (GstSchedulerFactoryClass *klass)
   factory_parent_class = g_type_class_ref (GST_TYPE_PLUGIN_FEATURE);
 
 #ifndef GST_DISABLE_REGISTRY
-  gstobject_class->save_thyself = 	GST_DEBUG_FUNCPTR (gst_schedulerfactory_save_thyself);
-  gstobject_class->restore_thyself = 	GST_DEBUG_FUNCPTR (gst_schedulerfactory_restore_thyself);
+  gstobject_class->save_thyself = 	GST_DEBUG_FUNCPTR (gst_scheduler_factory_save_thyself);
+  gstobject_class->restore_thyself = 	GST_DEBUG_FUNCPTR (gst_scheduler_factory_restore_thyself);
 #endif
 
   _gst_schedulerfactories = NULL;
@@ -635,14 +635,14 @@ gst_schedulerfactory_class_init (GstSchedulerFactoryClass *klass)
 }
 
 static void
-gst_schedulerfactory_init (GstSchedulerFactory *factory)
+gst_scheduler_factory_init (GstSchedulerFactory *factory)
 {
   _gst_schedulerfactories = g_list_prepend (_gst_schedulerfactories, factory);
 }
 	
 
 /**
- * gst_schedulerfactory_new:
+ * gst_scheduler_factory_new:
  * @name: name of schedulerfactory to create
  * @longdesc: long description of schedulerfactory to create
  * @type: the gtk type of the GstScheduler element of this factory
@@ -652,14 +652,14 @@ gst_schedulerfactory_init (GstSchedulerFactory *factory)
  * Returns: a new #GstSchedulerFactory.
  */
 GstSchedulerFactory*
-gst_schedulerfactory_new (const gchar *name, const gchar *longdesc, GType type)
+gst_scheduler_factory_new (const gchar *name, const gchar *longdesc, GType type)
 {
   GstSchedulerFactory *factory;
 
   g_return_val_if_fail(name != NULL, NULL);
-  factory = gst_schedulerfactory_find (name);
+  factory = gst_scheduler_factory_find (name);
   if (!factory) {
-    factory = GST_SCHEDULERFACTORY (g_object_new (GST_TYPE_SCHEDULERFACTORY, NULL));
+    factory = GST_SCHEDULER_FACTORY (g_object_new (GST_TYPE_SCHEDULER_FACTORY, NULL));
   }
 
   gst_object_set_name (GST_OBJECT (factory), name);
@@ -672,13 +672,13 @@ gst_schedulerfactory_new (const gchar *name, const gchar *longdesc, GType type)
 }
 
 /**
- * gst_schedulerfactory_destroy:
+ * gst_scheduler_factory_destroy:
  * @factory: factory to destroy
  *
  * Removes the scheduler from the global list.
  */
 void
-gst_schedulerfactory_destroy (GstSchedulerFactory *factory)
+gst_scheduler_factory_destroy (GstSchedulerFactory *factory)
 {
   g_return_if_fail (factory != NULL);
 
@@ -688,7 +688,7 @@ gst_schedulerfactory_destroy (GstSchedulerFactory *factory)
 }
 
 /**
- * gst_schedulerfactory_find:
+ * gst_scheduler_factory_find:
  * @name: name of schedulerfactory to find
  *
  * Search for an schedulerfactory of the given name.
@@ -696,7 +696,7 @@ gst_schedulerfactory_destroy (GstSchedulerFactory *factory)
  * Returns: #GstSchedulerFactory if found, NULL otherwise
  */
 GstSchedulerFactory*
-gst_schedulerfactory_find (const gchar *name)
+gst_scheduler_factory_find (const gchar *name)
 {
   GList *walk;
   GstSchedulerFactory *factory;
@@ -717,20 +717,20 @@ gst_schedulerfactory_find (const gchar *name)
 }
 
 /**
- * gst_schedulerfactory_get_list:
+ * gst_scheduler_factory_get_list:
  *
  * Get the global list of schedulerfactories.
  *
  * Returns: GList of type #GstSchedulerFactory
  */
 GList*
-gst_schedulerfactory_get_list (void)
+gst_scheduler_factory_get_list (void)
 {
   return _gst_schedulerfactories;
 }
 
 /**
- * gst_schedulerfactory_create:
+ * gst_scheduler_factory_create:
  * @factory: the factory used to create the instance
  * @parent: the parent element of this scheduler
  *
@@ -740,7 +740,7 @@ gst_schedulerfactory_get_list (void)
  * Returns: A new #GstScheduler instance.
  */
 GstScheduler*
-gst_schedulerfactory_create (GstSchedulerFactory *factory, GstElement *parent)
+gst_scheduler_factory_create (GstSchedulerFactory *factory, GstElement *parent)
 {
   GstScheduler *new = NULL;
 
@@ -757,7 +757,7 @@ gst_schedulerfactory_create (GstSchedulerFactory *factory, GstElement *parent)
 }
 
 /**
- * gst_schedulerfactory_make:
+ * gst_scheduler_factory_make:
  * @name: the name of the factory used to create the instance
  * @parent: the parent element of this scheduler
  *
@@ -767,28 +767,28 @@ gst_schedulerfactory_create (GstSchedulerFactory *factory, GstElement *parent)
  * Returns: A new #GstScheduler instance.
  */
 GstScheduler*
-gst_schedulerfactory_make (const gchar *name, GstElement *parent)
+gst_scheduler_factory_make (const gchar *name, GstElement *parent)
 {
   GstSchedulerFactory *factory;
 
   g_return_val_if_fail (name != NULL, NULL);
 
-  factory = gst_schedulerfactory_find (name);
+  factory = gst_scheduler_factory_find (name);
 
   if (factory == NULL)
     return NULL;
 
-  return gst_schedulerfactory_create (factory, parent);
+  return gst_scheduler_factory_create (factory, parent);
 }
 
 /**
- * gst_schedulerfactory_set_default_name:
+ * gst_scheduler_factory_set_default_name:
  * @name: the name of the factory used as a default
  *
  * Set the default schedulerfactory name.
  */
 void
-gst_schedulerfactory_set_default_name (const gchar* name)
+gst_scheduler_factory_set_default_name (const gchar* name)
 {
   if (_default_name)
     g_free (_default_name);
@@ -797,27 +797,27 @@ gst_schedulerfactory_set_default_name (const gchar* name)
 }
 
 /**
- * gst_schedulerfactory_get_default_name:
+ * gst_scheduler_factory_get_default_name:
  *
  * Get the default schedulerfactory name.
  *
  * Returns: the name of the default scheduler.
  */
 const gchar*
-gst_schedulerfactory_get_default_name (void)
+gst_scheduler_factory_get_default_name (void)
 {
   return _default_name;
 }
 
 #ifndef GST_DISABLE_REGISTRY
 static xmlNodePtr
-gst_schedulerfactory_save_thyself (GstObject *object, xmlNodePtr parent)
+gst_scheduler_factory_save_thyself (GstObject *object, xmlNodePtr parent)
 {
   GstSchedulerFactory *factory;
 
-  g_return_val_if_fail (GST_IS_SCHEDULERFACTORY (object), parent);
+  g_return_val_if_fail (GST_IS_SCHEDULER_FACTORY (object), parent);
 
-  factory = GST_SCHEDULERFACTORY (object);
+  factory = GST_SCHEDULER_FACTORY (object);
 
   if (GST_OBJECT_CLASS (factory_parent_class)->save_thyself) {
     GST_OBJECT_CLASS (factory_parent_class)->save_thyself (object, parent);
@@ -829,7 +829,7 @@ gst_schedulerfactory_save_thyself (GstObject *object, xmlNodePtr parent)
 }
 
 /**
- * gst_schedulerfactory_load_thyself:
+ * gst_scheduler_factory_load_thyself:
  * @parent: the parent XML node pointer
  *
  * Load an schedulerfactory from the given XML parent node.
@@ -837,9 +837,9 @@ gst_schedulerfactory_save_thyself (GstObject *object, xmlNodePtr parent)
  * Returns: A new factory based on the XML node.
  */
 static void
-gst_schedulerfactory_restore_thyself (GstObject *object, xmlNodePtr parent)
+gst_scheduler_factory_restore_thyself (GstObject *object, xmlNodePtr parent)
 {
-  GstSchedulerFactory *factory = GST_SCHEDULERFACTORY (object);
+  GstSchedulerFactory *factory = GST_SCHEDULER_FACTORY (object);
   xmlNodePtr children = parent->xmlChildrenNode;
 
   if (GST_OBJECT_CLASS (factory_parent_class)->restore_thyself) {

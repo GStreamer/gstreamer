@@ -42,13 +42,13 @@ used for efficient seeking.
 
 </para>
 
-@GST_TIMECACHE_UNKNOWN: 
-@GST_TIMECACHE_CERTAIN: 
-@GST_TIMECACHE_FUZZY_LOCATION: 
-@GST_TIMECACHE_FUZZY_TIMESTAMP: 
-@GST_TIMECACHE_FUZZY: 
+@GST_TIME_CACHE_UNKNOWN: 
+@GST_TIME_CACHE_CERTAIN: 
+@GST_TIME_CACHE_FUZZY_LOCATION: 
+@GST_TIME_CACHE_FUZZY_TIMESTAMP: 
+@GST_TIME_CACHE_FUZZY: 
 
-<!-- ##### FUNCTION gst_timecache_new ##### -->
+<!-- ##### FUNCTION gst_time_cache_new ##### -->
 <para>
 
 </para>
@@ -56,16 +56,7 @@ used for efficient seeking.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_timecache_get_group ##### -->
-<para>
-
-</para>
-
-@tc: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_timecache_new_group ##### -->
+<!-- ##### FUNCTION gst_time_cache_get_group ##### -->
 <para>
 
 </para>
@@ -74,7 +65,16 @@ used for efficient seeking.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_timecache_set_group ##### -->
+<!-- ##### FUNCTION gst_time_cache_new_group ##### -->
+<para>
+
+</para>
+
+@tc: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_time_cache_set_group ##### -->
 <para>
 
 </para>
@@ -84,7 +84,7 @@ used for efficient seeking.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_timecache_set_certainty ##### -->
+<!-- ##### FUNCTION gst_time_cache_set_certainty ##### -->
 <para>
 
 </para>
@@ -93,7 +93,7 @@ used for efficient seeking.
 @certainty: 
 
 
-<!-- ##### FUNCTION gst_timecache_get_certainty ##### -->
+<!-- ##### FUNCTION gst_time_cache_get_certainty ##### -->
 <para>
 
 </para>
@@ -102,7 +102,7 @@ used for efficient seeking.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_timecache_add_entry ##### -->
+<!-- ##### FUNCTION gst_time_cache_add_entry ##### -->
 <para>
 
 </para>
@@ -112,7 +112,7 @@ used for efficient seeking.
 @timestamp: 
 
 
-<!-- ##### FUNCTION gst_timecache_find_location ##### -->
+<!-- ##### FUNCTION gst_time_cache_find_location ##### -->
 <para>
 
 </para>
@@ -123,7 +123,7 @@ used for efficient seeking.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_timecache_find_timestamp ##### -->
+<!-- ##### FUNCTION gst_time_cache_find_timestamp ##### -->
 <para>
 
 </para>

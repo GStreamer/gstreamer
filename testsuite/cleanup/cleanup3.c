@@ -9,10 +9,10 @@ create_pipeline (void)
 
   pipeline = gst_pipeline_new ("main_pipeline");
 
-  fakesrc = gst_elementfactory_make ("fakesrc", "fakesrc");
+  fakesrc = gst_element_factory_make ("fakesrc", "fakesrc");
   thread = gst_thread_new ("thread");
-  fakesink = gst_elementfactory_make ("fakesink", "fakesink");
-  queue = gst_elementfactory_make ("queue", "queue");
+  fakesink = gst_element_factory_make ("fakesink", "fakesink");
+  queue = gst_element_factory_make ("queue", "queue");
   gst_bin_add (GST_BIN (thread), fakesink);
   gst_bin_add (GST_BIN (thread), queue);
   gst_element_connect (queue, "src", fakesink, "sink");

@@ -172,17 +172,17 @@ main (int argc, char *argv[])
   arg_walk++;
   iterations = atoi (argv[arg_walk]);
 
-  pipeline = gst_elementfactory_make ("pipeline", "pipeline");
+  pipeline = gst_element_factory_make ("pipeline", "pipeline");
   g_assert (pipeline);
 
-  src = gst_elementfactory_make ("fakesrc", "src");
+  src = gst_element_factory_make ("fakesrc", "src");
   g_assert (src);
 
-  sink = gst_elementfactory_make ("fakesink", "sink");
+  sink = gst_element_factory_make ("fakesink", "sink");
   g_assert (sink);
   g_signal_connect (G_OBJECT (sink), "handoff", G_CALLBACK (handoff), NULL);
 
-  bs = gst_elementfactory_make ("bstest", "bs");
+  bs = gst_element_factory_make ("bstest", "bs");
   g_assert (bs);
 
   gst_element_connect (src, "src", bs, "sink");

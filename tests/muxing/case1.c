@@ -27,21 +27,21 @@ main(int argc,char *argv[])
   pipeline = GST_BIN (gst_pipeline_new ("pipeline"));
   g_return_val_if_fail (pipeline != NULL, 1);
 
-  src = gst_elementfactory_make ("fakesrc", "src");
+  src = gst_element_factory_make ("fakesrc", "src");
   g_object_set (G_OBJECT (src), "num_buffers", 40, NULL);
   g_return_val_if_fail (src != NULL, 2);
-  tee = gst_elementfactory_make ("tee", "tee");
+  tee = gst_element_factory_make ("tee", "tee");
   g_return_val_if_fail (tee != NULL, 3);
-  identity1 = gst_elementfactory_make ("identity", "identity0");
+  identity1 = gst_element_factory_make ("identity", "identity0");
   g_return_val_if_fail (identity1 != NULL, 3);
-  identity2 = gst_elementfactory_make ("identity", "identity1");
+  identity2 = gst_element_factory_make ("identity", "identity1");
   g_object_set (G_OBJECT (identity2), "duplicate", 2, NULL);
   g_object_set (G_OBJECT (identity2), "loop_based", TRUE, NULL);
   g_return_val_if_fail (identity2 != NULL, 3);
-  aggregator = gst_elementfactory_make ("aggregator", "aggregator");
+  aggregator = gst_element_factory_make ("aggregator", "aggregator");
   g_object_set (G_OBJECT (aggregator), "sched", 4, NULL);
   g_return_val_if_fail (aggregator != NULL, 3);
-  sink = gst_elementfactory_make ("fakesink", "sink");
+  sink = gst_element_factory_make ("fakesink", "sink");
   g_return_val_if_fail (sink != NULL, 4);
 
   gst_bin_add_many (pipeline, src, tee, identity1, identity2, aggregator, sink, NULL);

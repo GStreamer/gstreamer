@@ -21,10 +21,10 @@
  */
 
 
-#ifndef __GST_TYPEFIND_H__
-#define __GST_TYPEFIND_H__
+#ifndef __GST_TYPE_FIND_H__
+#define __GST_TYPE_FIND_H__
 
-#ifndef GST_DISABLE_TYPEFIND
+#ifndef GST_DISABLE_TYPE_FIND
 
 #include <gst/gstelement.h>
 
@@ -33,18 +33,18 @@
 extern "C" {
 #endif /* __cplusplus */
 
-GstElementDetails gst_typefind_details;
+GstElementDetails gst_type_find_details;
 
-#define GST_TYPE_TYPEFIND \
-  (gst_typefind_get_type())
-#define GST_TYPEFIND(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TYPEFIND,GstTypeFind))
-#define GST_TYPEFIND_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TYPEFIND,GstTypeFindClass))
-#define GST_IS_TYPEFIND(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TYPEFIND))
-#define GST_IS_TYPEFIND_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TYPEFIND))
+#define GST_TYPE_TYPE_FIND \
+  (gst_type_find_get_type())
+#define GST_TYPE_FIND(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TYPE_FIND,GstTypeFind))
+#define GST_TYPE_FIND_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TYPE_FIND,GstTypeFindClass))
+#define GST_IS_TYPE_FIND(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TYPE_FIND))
+#define GST_IS_TYPE_FIND_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TYPE_FIND))
 
 typedef struct _GstTypeFind 		GstTypeFind;
 typedef struct _GstTypeFindClass 	GstTypeFindClass;
@@ -64,13 +64,13 @@ struct _GstTypeFindClass {
   void (*have_type) (GstElement *element);
 };
 
-GType gst_typefind_get_type (void);
+GType gst_type_find_get_type (void);
 
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /* GST_DISABLE_TYPEFIND */
+#endif /* GST_DISABLE_TYPE_FIND */
 
-#endif /* __GST_TYPEFIND_H__ */
+#endif /* __GST_TYPE_FIND_H__ */

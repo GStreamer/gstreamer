@@ -209,19 +209,19 @@ int main(int argc,char *argv[]) {
   gst_init (&argc, &argv);
   gst_control_init(&argc,&argv);
   
-  factory = gst_elementfactory_new ("dptest", GST_TYPE_DPTEST, &gst_dptest_details);
+  factory = gst_element_factory_new ("dptest", GST_TYPE_DPTEST, &gst_dptest_details);
   g_assert (factory != NULL);
 
-  pipeline = gst_elementfactory_make ("pipeline", "pipeline");
+  pipeline = gst_element_factory_make ("pipeline", "pipeline");
   g_assert (pipeline);
 
-  src = gst_elementfactory_make ("fakesrc", "src");
+  src = gst_element_factory_make ("fakesrc", "src");
   g_assert (src);
 
-  sink = gst_elementfactory_make ("fakesink", "sink");
+  sink = gst_element_factory_make ("fakesink", "sink");
   g_assert (sink);
 
-  testelement = gst_elementfactory_make ("dptest", "testelement");
+  testelement = gst_element_factory_make ("dptest", "testelement");
   g_assert (testelement);
 
   gst_element_connect (src, "src", testelement, "sink");

@@ -70,7 +70,7 @@ Get the parent element of this pad.
 @pad: the pad to query
 
 
-<!-- ##### MACRO GST_PAD_PADTEMPLATE ##### -->
+<!-- ##### MACRO GST_PAD_PAD_TEMPLATE ##### -->
 <para>
 Get the padtemplate that was used to create this pad. NULL if no padtemplate
 was used.
@@ -662,7 +662,7 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_get_padtemplate ##### -->
+<!-- ##### FUNCTION gst_pad_get_pad_template ##### -->
 <para>
 
 </para>
@@ -671,7 +671,7 @@ Destroy the pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_get_padtemplate_caps ##### -->
+<!-- ##### FUNCTION gst_pad_get_pad_template_caps ##### -->
 <para>
 
 </para>

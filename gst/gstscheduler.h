@@ -143,16 +143,16 @@ void			gst_scheduler_show		(GstScheduler *sched);
  * creating schedulers
  *
  */
-#define GST_TYPE_SCHEDULERFACTORY \
-  (gst_schedulerfactory_get_type ())
-#define GST_SCHEDULERFACTORY(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_SCHEDULERFACTORY, GstSchedulerFactory))
-#define GST_SCHEDULERFACTORY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_SCHEDULERFACTORY, GstSchedulerFactoryClass))
-#define GST_IS_SCHEDULERFACTORY(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_SCHEDULERFACTORY))
-#define GST_IS_SCHEDULERFACTORY_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_SCHEDULERFACTORY))
+#define GST_TYPE_SCHEDULER_FACTORY \
+  (gst_scheduler_factory_get_type ())
+#define GST_SCHEDULER_FACTORY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_SCHEDULER_FACTORY, GstSchedulerFactory))
+#define GST_SCHEDULER_FACTORY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_SCHEDULER_FACTORY, GstSchedulerFactoryClass))
+#define GST_IS_SCHEDULER_FACTORY(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_SCHEDULER_FACTORY))
+#define GST_IS_SCHEDULER_FACTORY_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_SCHEDULER_FACTORY))
 
 typedef struct _GstSchedulerFactory GstSchedulerFactory;
 typedef struct _GstSchedulerFactoryClass GstSchedulerFactoryClass;
@@ -168,19 +168,19 @@ struct _GstSchedulerFactoryClass {
   GstPluginFeatureClass parent;
 };
 
-GType			gst_schedulerfactory_get_type		(void);
+GType			gst_scheduler_factory_get_type		(void);
 
-GstSchedulerFactory*	gst_schedulerfactory_new		(const gchar *name, const gchar *longdesc, GType type);
-void                    gst_schedulerfactory_destroy		(GstSchedulerFactory *factory);
+GstSchedulerFactory*	gst_scheduler_factory_new		(const gchar *name, const gchar *longdesc, GType type);
+void                    gst_scheduler_factory_destroy		(GstSchedulerFactory *factory);
 
-GstSchedulerFactory*	gst_schedulerfactory_find		(const gchar *name);
-GList*			gst_schedulerfactory_get_list		(void);
+GstSchedulerFactory*	gst_scheduler_factory_find		(const gchar *name);
+GList*			gst_scheduler_factory_get_list		(void);
 
-GstScheduler*		gst_schedulerfactory_create		(GstSchedulerFactory *factory, GstElement *parent);
-GstScheduler*		gst_schedulerfactory_make		(const gchar *name, GstElement *parent);
+GstScheduler*		gst_scheduler_factory_create		(GstSchedulerFactory *factory, GstElement *parent);
+GstScheduler*		gst_scheduler_factory_make		(const gchar *name, GstElement *parent);
 
-void			gst_schedulerfactory_set_default_name	(const gchar* name);
-const gchar*		gst_schedulerfactory_get_default_name	(void);
+void			gst_scheduler_factory_set_default_name	(const gchar* name);
+const gchar*		gst_scheduler_factory_get_default_name	(void);
 
 
 #ifdef __cplusplus   

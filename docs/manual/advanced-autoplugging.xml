@@ -21,7 +21,7 @@
     <programlisting>
   ...    
   /* now it's time to get the parser */
-  decoder = gst_elementfactory_make ("mad", "decoder");
+  decoder = gst_element_factory_make ("mad", "decoder");
   ...
     </programlisting>
 
@@ -220,7 +220,7 @@ struct _GstType {
   // obtain the factory
   factory = ... 
 
-  element = gst_elementfactory_create (factory, "name");
+  element = gst_element_factory_create (factory, "name");
     </programlisting>
     <para>
       This way, you do not have to create elements by name which

@@ -341,7 +341,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_elementfactory_new ("autoplugcache", GST_TYPE_AUTOPLUGCACHE,
+  factory = gst_element_factory_new ("autoplugcache", GST_TYPE_AUTOPLUGCACHE,
                                     &gst_autoplugcache_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 

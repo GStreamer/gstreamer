@@ -58,7 +58,7 @@ enum {
  * can have.  They can be quite complex, but for this example plugin
  * they are rather simple.
  */
-GST_PADTEMPLATE_FACTORY (sink_factory,
+GST_PAD_TEMPLATE_FACTORY (sink_factory,
   "sink",			/* The name of the pad */
   GST_PAD_SINK,		/* Direction of the pad */
   GST_PAD_ALWAYS,	/* The pad exists for every instance */
@@ -75,7 +75,7 @@ GST_PADTEMPLATE_FACTORY (sink_factory,
 );
 
 /* This factory is much simpler, and defines the source pad. */
-GST_PADTEMPLATE_FACTORY (src_factory,
+GST_PAD_TEMPLATE_FACTORY (src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -190,7 +190,7 @@ gst_example_init(GstExample *example)
    * We will use the template constructed by the factory.
    */
   example->sinkpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (sink_factory), "sink");
+		  GST_PAD_TEMPLATE_GET (sink_factory), "sink");
   /* Setting the chain function allows us to supply the function that will
    * actually be performing the work.  Without this, the element would do
    * nothing, with undefined results (assertion failures and such).
@@ -207,7 +207,7 @@ gst_example_init(GstExample *example)
    * they only produce them.
    */
   example->srcpad = gst_pad_new_from_template (
-		  GST_PADTEMPLATE_GET (src_factory), "src");
+		  GST_PAD_TEMPLATE_GET (src_factory), "src");
   gst_element_add_pad(GST_ELEMENT(example),example->srcpad);
 
   /* Initialization of element's private variables. */
@@ -338,14 +338,14 @@ plugin_init (GModule *module, GstPlugin *plugin)
    * This consists of the name of the element, the GType identifier,
    * and a pointer to the details structure at the top of the file.
    */
-  factory = gst_elementfactory_new("example", GST_TYPE_EXAMPLE, &example_details);
+  factory = gst_element_factory_new("example", GST_TYPE_EXAMPLE, &example_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
   /* The pad templates can be easily generated from the factories above,
    * and then added to the list of padtemplates for the elementfactory.
    */
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (sink_factory));
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (src_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_factory));
 
   /* The very last thing is to register the elementfactory with the plugin. */
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));

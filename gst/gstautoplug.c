@@ -168,19 +168,19 @@ gst_autoplug_to_renderers (GstAutoplug *autoplug, GstCaps *srccaps, GstElement *
   return element;
 }
 
-static void 		gst_autoplugfactory_class_init 		(GstAutoplugFactoryClass *klass);
-static void 		gst_autoplugfactory_init 		(GstAutoplugFactory *factory);
+static void 		gst_autoplug_factory_class_init 		(GstAutoplugFactoryClass *klass);
+static void 		gst_autoplug_factory_init 		(GstAutoplugFactory *factory);
 
 #ifndef GST_DISABLE_REGISTRY
-static xmlNodePtr 	gst_autoplugfactory_save_thyself 	(GstObject *object, xmlNodePtr parent);
-static void 		gst_autoplugfactory_restore_thyself 	(GstObject *object, xmlNodePtr parent);
+static xmlNodePtr 	gst_autoplug_factory_save_thyself 	(GstObject *object, xmlNodePtr parent);
+static void 		gst_autoplug_factory_restore_thyself 	(GstObject *object, xmlNodePtr parent);
 #endif
 
 static GstPluginFeatureClass *factory_parent_class = NULL;
-/* static guint gst_autoplugfactory_signals[LAST_SIGNAL] = { 0 }; */
+/* static guint gst_autoplug_factory_signals[LAST_SIGNAL] = { 0 }; */
 
 GType 
-gst_autoplugfactory_get_type (void) 
+gst_autoplug_factory_get_type (void) 
 {
   static GType autoplugfactory_type = 0;
 
@@ -189,12 +189,12 @@ gst_autoplugfactory_get_type (void)
       sizeof (GstAutoplugFactoryClass),
       NULL,
       NULL,
-      (GClassInitFunc) gst_autoplugfactory_class_init,
+      (GClassInitFunc) gst_autoplug_factory_class_init,
       NULL,
       NULL,
       sizeof(GstAutoplugFactory),
       0,
-      (GInstanceInitFunc) gst_autoplugfactory_init,
+      (GInstanceInitFunc) gst_autoplug_factory_init,
       NULL
     };
     autoplugfactory_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE, 
@@ -204,7 +204,7 @@ gst_autoplugfactory_get_type (void)
 }
 
 static void
-gst_autoplugfactory_class_init (GstAutoplugFactoryClass *klass)
+gst_autoplug_factory_class_init (GstAutoplugFactoryClass *klass)
 {
   GObjectClass *gobject_class;
   GstObjectClass *gstobject_class;
@@ -217,22 +217,22 @@ gst_autoplugfactory_class_init (GstAutoplugFactoryClass *klass)
   factory_parent_class = g_type_class_ref (GST_TYPE_PLUGIN_FEATURE);
 
 #ifndef GST_DISABLE_REGISTRY
-  gstobject_class->save_thyself = 	GST_DEBUG_FUNCPTR (gst_autoplugfactory_save_thyself);
-  gstobject_class->restore_thyself = 	GST_DEBUG_FUNCPTR (gst_autoplugfactory_restore_thyself);
+  gstobject_class->save_thyself = 	GST_DEBUG_FUNCPTR (gst_autoplug_factory_save_thyself);
+  gstobject_class->restore_thyself = 	GST_DEBUG_FUNCPTR (gst_autoplug_factory_restore_thyself);
 #endif
 
   _gst_autoplugfactories = NULL;
 }
 
 static void
-gst_autoplugfactory_init (GstAutoplugFactory *factory)
+gst_autoplug_factory_init (GstAutoplugFactory *factory)
 {
   _gst_autoplugfactories = g_list_prepend (_gst_autoplugfactories, factory);
 }
 	
 
 /**
- * gst_autoplugfactory_new:
+ * gst_autoplug_factory_new:
  * @name: name of autoplugfactory to create
  * @longdesc: long description of autoplugfactory to create
  * @type: the gtk type of the GstAutoplug element of this factory
@@ -242,14 +242,14 @@ gst_autoplugfactory_init (GstAutoplugFactory *factory)
  * Returns: a new #GstAutoplugFactory.
  */
 GstAutoplugFactory*
-gst_autoplugfactory_new (const gchar *name, const gchar *longdesc, GType type)
+gst_autoplug_factory_new (const gchar *name, const gchar *longdesc, GType type)
 {
   GstAutoplugFactory *factory;
 
   g_return_val_if_fail(name != NULL, NULL);
-  factory = gst_autoplugfactory_find (name);
+  factory = gst_autoplug_factory_find (name);
   if (!factory) {
-    factory = GST_AUTOPLUGFACTORY (g_object_new (GST_TYPE_AUTOPLUGFACTORY, NULL));
+    factory = GST_AUTOPLUG_FACTORY (g_object_new (GST_TYPE_AUTOPLUG_FACTORY, NULL));
   }
 
   gst_object_set_name (GST_OBJECT (factory), name);
@@ -262,13 +262,13 @@ gst_autoplugfactory_new (const gchar *name, const gchar *longdesc, GType type)
 }
 
 /**
- * gst_autoplugfactory_destroy:
+ * gst_autoplug_factory_destroy:
  * @factory: factory to destroy
  *
  * Removes the autoplug from the global list.
  */
 void
-gst_autoplugfactory_destroy (GstAutoplugFactory *factory)
+gst_autoplug_factory_destroy (GstAutoplugFactory *factory)
 {
   g_return_if_fail (factory != NULL);
 
@@ -278,7 +278,7 @@ gst_autoplugfactory_destroy (GstAutoplugFactory *factory)
 }
 
 /**
- * gst_autoplugfactory_find:
+ * gst_autoplug_factory_find:
  * @name: name of autoplugfactory to find
  *
  * Search for an autoplugfactory of the given name.
@@ -286,7 +286,7 @@ gst_autoplugfactory_destroy (GstAutoplugFactory *factory)
  * Returns: #GstAutoplugFactory if found, NULL otherwise
  */
 GstAutoplugFactory*
-gst_autoplugfactory_find (const gchar *name)
+gst_autoplug_factory_find (const gchar *name)
 {
   GList *walk;
   GstAutoplugFactory *factory;
@@ -307,20 +307,20 @@ gst_autoplugfactory_find (const gchar *name)
 }
 
 /**
- * gst_autoplugfactory_get_list:
+ * gst_autoplug_factory_get_list:
  *
  * Get the global list of autoplugfactories.
  *
  * Returns: GList of type #GstAutoplugFactory
  */
 GList*
-gst_autoplugfactory_get_list (void)
+gst_autoplug_factory_get_list (void)
 {
   return _gst_autoplugfactories;
 }
 
 /**
- * gst_autoplugfactory_create:
+ * gst_autoplug_factory_create:
  * @factory: the factory used to create the instance
  *
  * Create a new #GstAutoplug instance from the 
@@ -329,7 +329,7 @@ gst_autoplugfactory_get_list (void)
  * Returns: A new #GstAutoplug instance.
  */
 GstAutoplug*
-gst_autoplugfactory_create (GstAutoplugFactory *factory)
+gst_autoplug_factory_create (GstAutoplugFactory *factory)
 {
   GstAutoplug *new = NULL;
 
@@ -345,7 +345,7 @@ gst_autoplugfactory_create (GstAutoplugFactory *factory)
 }
 
 /**
- * gst_autoplugfactory_make:
+ * gst_autoplug_factory_make:
  * @name: the name of the factory used to create the instance
  *
  * Create a new #GstAutoplug instance from the 
@@ -354,29 +354,29 @@ gst_autoplugfactory_create (GstAutoplugFactory *factory)
  * Returns: A new #GstAutoplug instance.
  */
 GstAutoplug*
-gst_autoplugfactory_make (const gchar *name)
+gst_autoplug_factory_make (const gchar *name)
 {
   GstAutoplugFactory *factory;
 
   g_return_val_if_fail (name != NULL, NULL);
 
-  factory = gst_autoplugfactory_find (name);
+  factory = gst_autoplug_factory_find (name);
 
   if (factory == NULL)
     return NULL;
 
-  return gst_autoplugfactory_create (factory);
+  return gst_autoplug_factory_create (factory);
 }
 
 #ifndef GST_DISABLE_REGISTRY
 static xmlNodePtr
-gst_autoplugfactory_save_thyself (GstObject *object, xmlNodePtr parent)
+gst_autoplug_factory_save_thyself (GstObject *object, xmlNodePtr parent)
 {
   GstAutoplugFactory *factory;
 
-  g_return_val_if_fail(GST_IS_AUTOPLUGFACTORY (object), parent);
+  g_return_val_if_fail(GST_IS_AUTOPLUG_FACTORY (object), parent);
 
-  factory = GST_AUTOPLUGFACTORY (object);
+  factory = GST_AUTOPLUG_FACTORY (object);
 
   if (GST_OBJECT_CLASS (factory_parent_class)->save_thyself) {
     GST_OBJECT_CLASS (factory_parent_class)->save_thyself (object, parent);
@@ -388,7 +388,7 @@ gst_autoplugfactory_save_thyself (GstObject *object, xmlNodePtr parent)
 }
 
 /**
- * gst_autoplugfactory_load_thyself:
+ * gst_autoplug_factory_load_thyself:
  * @parent: the parent XML node pointer
  *
  * Load an autoplugfactory from the given XML parent node.
@@ -396,9 +396,9 @@ gst_autoplugfactory_save_thyself (GstObject *object, xmlNodePtr parent)
  * Returns: A new factory based on the XML node.
  */
 static void
-gst_autoplugfactory_restore_thyself (GstObject *object, xmlNodePtr parent)
+gst_autoplug_factory_restore_thyself (GstObject *object, xmlNodePtr parent)
 {
-  GstAutoplugFactory *factory = GST_AUTOPLUGFACTORY (object);
+  GstAutoplugFactory *factory = GST_AUTOPLUG_FACTORY (object);
   xmlNodePtr children = parent->xmlChildrenNode;
 
   if (GST_OBJECT_CLASS (factory_parent_class)->restore_thyself) {

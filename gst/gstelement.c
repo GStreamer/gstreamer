@@ -570,17 +570,17 @@ gst_element_get_request_pad (GstElement *element, const gchar *name)
   g_return_val_if_fail (name != NULL, NULL);
 
   if (strstr (name, "%")) {
-    templ = gst_element_get_padtemplate_by_name (element, name);
+    templ = gst_element_get_pad_template (element, name);
     req_name = NULL;
     if (templ)
       templ_found = TRUE;
   } else {
-    list = gst_element_get_padtemplate_list(element);
+    list = gst_element_get_pad_template_list(element);
     while (!templ_found && list) {
       templ = (GstPadTemplate*) list->data;
       if (templ->presence == GST_PAD_REQUEST) {
         /* we know that %s and %d are the only possibilities because of sanity
-           checks in gst_padtemplate_new */
+           checks in gst_pad_template_new */
         GST_DEBUG (GST_CAT_PADS, "comparing %s to %s", name, templ->name_template);
         if ((str = strchr (templ->name_template, '%')) &&
             strncmp (templ->name_template, name, str - templ->name_template) == 0 &&
@@ -633,28 +633,28 @@ gst_element_get_pad_list (GstElement *element)
 }
 
 /**
- * gst_element_class_add_padtemplate:
+ * gst_element_class_add_pad_template:
  * @klass: element class to add padtemplate to
  * @templ: padtemplate to add
  *
  * Add a padtemplate to an element class. This is useful if you have derived a custom
  * bin and wish to provide an on-request pad at runtime. Plugin writers should use
- * gst_elementfactory_add_padtemplate instead.
+ * gst_element_factory_add_pad_template instead.
  */
 void
-gst_element_class_add_padtemplate (GstElementClass *klass, GstPadTemplate *templ)
+gst_element_class_add_pad_template (GstElementClass *klass, GstPadTemplate *templ)
 {
   g_return_if_fail (klass != NULL);
   g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
   g_return_if_fail (templ != NULL);
-  g_return_if_fail (GST_IS_PADTEMPLATE (templ));
+  g_return_if_fail (GST_IS_PAD_TEMPLATE (templ));
   
   klass->padtemplates = g_list_append (klass->padtemplates, templ);
   klass->numpadtemplates++;
 }
 
 /**
- * gst_element_get_padtemplate_list:
+ * gst_element_get_pad_template_list:
  * @element: element to get padtemplates of
  *
  * Retrieve a list of the padtemplates associated with the element.
@@ -662,7 +662,7 @@ gst_element_class_add_padtemplate (GstElementClass *klass, GstPadTemplate *templ
  * Returns: GList of padtemplates
  */
 GList*
-gst_element_get_padtemplate_list (GstElement *element)
+gst_element_get_pad_template_list (GstElement *element)
 {
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
@@ -671,17 +671,17 @@ gst_element_get_padtemplate_list (GstElement *element)
 }
 
 /**
- * gst_element_get_padtemplate_by_name:
+ * gst_element_get_pad_template:
  * @element: element to get padtemplate of
  * @name: the name of the padtemplate to get.
  *
  * Retrieve a padtemplate from this element with the
  * given name.
  *
- * Returns: the padtemplate with the given name
+ * Returns: the padtemplate with the given name. No unreferencing is necessary.
  */
 GstPadTemplate*
-gst_element_get_padtemplate_by_name (GstElement *element, const guchar *name)
+gst_element_get_pad_template (GstElement *element, const guchar *name)
 {
   GList *padlist;
 
@@ -689,7 +689,7 @@ gst_element_get_padtemplate_by_name (GstElement *element, const guchar *name)
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
-  padlist = gst_element_get_padtemplate_list (element);
+  padlist = gst_element_get_pad_template_list (element);
 
   while (padlist) {
     GstPadTemplate *padtempl = (GstPadTemplate*) padlist->data;
@@ -704,28 +704,28 @@ gst_element_get_padtemplate_by_name (GstElement *element, const guchar *name)
 }
 
 /**
- * gst_element_get_padtemplate_by_compatible:
+ * gst_element_get_pad_template_by_compatible:
  * @element: element to get padtemplate of
  * @templ: a template to find a compatible template for
  *
  * Generate a padtemplate for this element compatible with the given
  * template, ie able to link to it.
  *
- * Returns: the padtemplate
+ * Returns: the padtemplate. No unreferencing is necessary.
  */
 static GstPadTemplate*
-gst_element_get_padtemplate_by_compatible (GstElement *element, GstPadTemplate *compattempl)
+gst_element_get_pad_template_by_compatible (GstElement *element, GstPadTemplate *compattempl)
 {
   GstPadTemplate *newtempl = NULL;
   GList *padlist;
 
-  GST_DEBUG(GST_CAT_ELEMENT_PADS,"gst_element_get_padtemplate_by_compatible()");
+  GST_DEBUG(GST_CAT_ELEMENT_PADS,"gst_element_get_pad_template_by_compatible()");
 
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (compattempl != NULL, NULL);
 
-  padlist = gst_element_get_padtemplate_list (element);
+  padlist = gst_element_get_pad_template_list (element);
 
   while (padlist) {
     GstPadTemplate *padtempl = (GstPadTemplate*) padlist->data;
@@ -740,14 +740,14 @@ gst_element_get_padtemplate_by_compatible (GstElement *element, GstPadTemplate *
     if (padtempl->direction == GST_PAD_SRC &&
       compattempl->direction == GST_PAD_SINK) {
       GST_DEBUG(GST_CAT_CAPS,"compatible direction: found src pad template");
-      compat = gst_caps_check_compatibility(GST_PADTEMPLATE_CAPS (padtempl),
-					    GST_PADTEMPLATE_CAPS (compattempl));
+      compat = gst_caps_check_compatibility(GST_PAD_TEMPLATE_CAPS (padtempl),
+					    GST_PAD_TEMPLATE_CAPS (compattempl));
       GST_DEBUG(GST_CAT_CAPS,"caps are %scompatible", (compat?"":"not "));
     } else if (padtempl->direction == GST_PAD_SINK &&
 	       compattempl->direction == GST_PAD_SRC) {
       GST_DEBUG(GST_CAT_CAPS,"compatible direction: found sink pad template");
-      compat = gst_caps_check_compatibility(GST_PADTEMPLATE_CAPS (compattempl),
-					    GST_PADTEMPLATE_CAPS (padtempl));
+      compat = gst_caps_check_compatibility(GST_PAD_TEMPLATE_CAPS (compattempl),
+					    GST_PAD_TEMPLATE_CAPS (padtempl));
       GST_DEBUG(GST_CAT_CAPS,"caps are %scompatible", (compat?"":"not "));
     }
 
@@ -784,7 +784,7 @@ gst_element_request_compatible_pad (GstElement *element, GstPadTemplate *templ)
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (templ != NULL, NULL);
 
-  templ_new = gst_element_get_padtemplate_by_compatible (element, templ);
+  templ_new = gst_element_get_pad_template_by_compatible (element, templ);
   if (templ_new != NULL)
       pad = gst_element_request_pad (element, templ_new, NULL);
 
@@ -844,7 +844,7 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, GstCa
     templcaps = gst_caps_copy (gst_pad_get_caps (pad));
   }
   
-  templ = gst_padtemplate_new ((gchar *) GST_PAD_NAME (pad), GST_RPAD_DIRECTION (pad),
+  templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad), GST_RPAD_DIRECTION (pad),
                                GST_PAD_ALWAYS, templcaps, NULL);
   foundpad = gst_element_request_compatible_pad (element, templ);
   gst_object_unref (GST_OBJECT (templ)); /* this will take care of the caps too */
@@ -852,7 +852,7 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, GstCa
   /* FIXME: this is broken, but it's in here so autoplugging elements that don't
      have caps on their source padtemplates (spider) can connect... */
   if (!foundpad && !filtercaps) {
-    templ = gst_padtemplate_new ((gchar *) GST_PAD_NAME (pad), GST_RPAD_DIRECTION (pad),
+    templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad), GST_RPAD_DIRECTION (pad),
                                  GST_PAD_ALWAYS, NULL, NULL);
     foundpad = gst_element_request_compatible_pad (element, templ);
     gst_object_unref (GST_OBJECT (templ));
@@ -943,8 +943,8 @@ gst_element_connect_filtered (GstElement *src, GstElement *dest,
   }
 
   GST_DEBUG (GST_CAT_ELEMENT_PADS, "we might have request pads on both sides, checking...");
-  srctempls = gst_element_get_padtemplate_list (src);
-  desttempls = gst_element_get_padtemplate_list (dest);
+  srctempls = gst_element_get_pad_template_list (src);
+  desttempls = gst_element_get_pad_template_list (dest);
   
   if (srctempls && desttempls) {
     while (srctempls) {
@@ -953,8 +953,8 @@ gst_element_connect_filtered (GstElement *src, GstElement *dest,
         for (l=desttempls; l; l=l->next) {
           desttempl = (GstPadTemplate*) desttempls->data;
           if (desttempl->presence == GST_PAD_REQUEST && desttempl->direction != srctempl->direction) {
-            if (gst_caps_check_compatibility (gst_padtemplate_get_caps (srctempl),
-                                              gst_padtemplate_get_caps (desttempl))) {
+            if (gst_caps_check_compatibility (gst_pad_template_get_caps (srctempl),
+                                              gst_pad_template_get_caps (desttempl))) {
               srcpad = gst_element_get_request_pad (src, srctempl->name_template);
               destpad = gst_element_get_request_pad (dest, desttempl->name_template);
               if (gst_pad_connect_filtered (srcpad, destpad, filtercaps)) {

@@ -86,9 +86,9 @@ gst_autoplug_can_connect_src (GstElementFactory *fac, GstCaps *src)
   
   while (templs)
   {
-    if ((GST_PADTEMPLATE_DIRECTION (templs->data) == GST_PAD_SINK) && gst_autoplag_caps_intersect (src, GST_PADTEMPLATE_CAPS (templs->data)))
+    if ((GST_PAD_TEMPLATE_DIRECTION (templs->data) == GST_PAD_SINK) && gst_autoplag_caps_intersect (src, GST_PAD_TEMPLATE_CAPS (templs->data)))
     {
-      return GST_PADTEMPLATE (templs->data);
+      return GST_PAD_TEMPLATE (templs->data);
     }
     templs = g_list_next (templs);
   }
@@ -113,9 +113,9 @@ gst_autoplug_can_connect_sink (GstElementFactory *fac, GstCaps *sink)
   
   while (templs)
   {
-    if ((GST_PADTEMPLATE_DIRECTION (templs->data) == GST_PAD_SRC) && gst_autoplag_caps_intersect (GST_PADTEMPLATE_CAPS (templs->data), sink))
+    if ((GST_PAD_TEMPLATE_DIRECTION (templs->data) == GST_PAD_SRC) && gst_autoplag_caps_intersect (GST_PAD_TEMPLATE_CAPS (templs->data), sink))
     {
-      return GST_PADTEMPLATE (templs->data);
+      return GST_PAD_TEMPLATE (templs->data);
     }
     templs = g_list_next (templs);
   }
@@ -139,8 +139,8 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
 
       if (srctemp->direction == GST_PAD_SRC &&
           desttemp->direction == GST_PAD_SINK) {
-          if (gst_autoplag_caps_intersect (gst_padtemplate_get_caps (srctemp), 
-              gst_padtemplate_get_caps (desttemp))) {
+          if (gst_autoplag_caps_intersect (gst_pad_template_get_caps (srctemp), 
+              gst_pad_template_get_caps (desttemp))) {
             GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
                        "factory \"%s\" can connect with factory \"%s\"\n", 
                        GST_OBJECT_NAME (src), GST_OBJECT_NAME (dest));
@@ -166,7 +166,7 @@ gst_autoplug_factory_has_direction (GstElementFactory *fac, GstPadDirection dir)
   
   while (templs)
   {
-    if (GST_PADTEMPLATE_DIRECTION (templs->data) == dir)
+    if (GST_PAD_TEMPLATE_DIRECTION (templs->data) == dir)
     {
       return TRUE;
     }
@@ -236,11 +236,11 @@ gst_autoplug_factories_filters_with_sink_caps (GList *factories)
     gboolean have_sink = FALSE;
     while (templs)
     {
-      if (GST_PADTEMPLATE_DIRECTION (templs->data) == GST_PAD_SRC)
+      if (GST_PAD_TEMPLATE_DIRECTION (templs->data) == GST_PAD_SRC)
       {
         have_src = TRUE;
       }  
-      if ((GST_PADTEMPLATE_DIRECTION (templs->data) == GST_PAD_SINK) && (GST_PADTEMPLATE_CAPS (templs->data) != NULL))
+      if ((GST_PAD_TEMPLATE_DIRECTION (templs->data) == GST_PAD_SINK) && (GST_PAD_TEMPLATE_CAPS (templs->data) != NULL))
       {
         have_sink = TRUE;
       }
@@ -272,7 +272,7 @@ gst_autoplug_factories_at_most_templates(GList *factories, GstPadDirection dir, 
 
     while (templs)
     {
-      if (GST_PADTEMPLATE_DIRECTION (templs->data) == dir)
+      if (GST_PAD_TEMPLATE_DIRECTION (templs->data) == dir)
       {
         count++;
       }

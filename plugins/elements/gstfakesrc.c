@@ -64,7 +64,7 @@ enum {
   ARG_LAST_MESSAGE,
 };
 
-GST_PADTEMPLATE_FACTORY (fakesrc_src_factory,
+GST_PAD_TEMPLATE_FACTORY (fakesrc_src_factory,
   "src%d",
   GST_PAD_SRC,
   GST_PAD_REQUEST,
@@ -792,7 +792,7 @@ gst_fakesrc_change_state (GstElement *element)
 gboolean
 gst_fakesrc_factory_init (GstElementFactory *factory)
 {
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (fakesrc_src_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (fakesrc_src_factory));
 
   return TRUE;
 }

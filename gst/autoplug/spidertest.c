@@ -15,7 +15,7 @@ gst_factories_at_most_templates(GList *factories, GstPadDirection dir, guint max
 
     while (templs)
     {
-      if (GST_PADTEMPLATE_DIRECTION (templs->data) == dir)
+      if (GST_PAD_TEMPLATE_DIRECTION (templs->data) == dir)
       {
         count++;
       }
@@ -88,11 +88,11 @@ int main(int argc,char *argv[])
   g_signal_connect (bin, "error", G_CALLBACK (error_callback), NULL);
    
   /* create a disk reader */
-  filesrc = gst_elementfactory_make("filesrc", "disk_source");
+  filesrc = gst_element_factory_make("filesrc", "disk_source");
   g_object_set(G_OBJECT(filesrc),"location", argv[1], NULL);
 
   /* now it's time to get the decoder */
-  decoder = gst_elementfactory_make("spider", "spider");
+  decoder = gst_element_factory_make("spider", "spider");
   if (!decoder) {
     g_print ("could not find plugin \"spider\"\n");
     exit (-2);
@@ -104,8 +104,8 @@ int main(int argc,char *argv[])
   g_object_set (decoder, "factories", facs, NULL);
 
   /* create video and audio sink */
-  osssink = gst_elementfactory_make("osssink", "audio");
-  videosink = gst_elementfactory_make("xvideosink", "video");
+  osssink = gst_element_factory_make("osssink", "audio");
+  videosink = gst_element_factory_make("xvideosink", "video");
 
   if ((!osssink) || (!videosink)) {
     g_print ("could not create output plugins\n");

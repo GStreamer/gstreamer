@@ -230,7 +230,7 @@ struct _GstGhostPadClass {
 #define GST_PAD_NAME(pad)		(GST_OBJECT_NAME(pad))
 #define GST_PAD_PARENT(pad)		((GstElement *)(GST_OBJECT_PARENT(pad)))
 #define GST_PAD_ELEMENT_PRIVATE(pad)	(((GstPad *)(pad))->element_private)
-#define GST_PAD_PADTEMPLATE(pad)	(((GstPad *)(pad))->padtemplate)
+#define GST_PAD_PAD_TEMPLATE(pad)	(((GstPad *)(pad))->padtemplate)
 
 /* GstRealPad */
 #define GST_RPAD_DIRECTION(pad)		(((GstRealPad *)(pad))->direction)
@@ -274,11 +274,11 @@ struct _GstGhostPadClass {
 #define GST_PAD_IS_SINK(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SINK)
 
 /***** PadTemplate *****/
-#define GST_TYPE_PADTEMPLATE		(gst_padtemplate_get_type ())
-#define GST_PADTEMPLATE(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PADTEMPLATE,GstPadTemplate))
-#define GST_PADTEMPLATE_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PADTEMPLATE,GstPadTemplateClass))
-#define GST_IS_PADTEMPLATE(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PADTEMPLATE))
-#define GST_IS_PADTEMPLATE_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PADTEMPLATE))
+#define GST_TYPE_PAD_TEMPLATE		(gst_pad_template_get_type ())
+#define GST_PAD_TEMPLATE(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PAD_TEMPLATE,GstPadTemplate))
+#define GST_PAD_TEMPLATE_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PAD_TEMPLATE,GstPadTemplateClass))
+#define GST_IS_PAD_TEMPLATE(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PAD_TEMPLATE))
+#define GST_IS_PAD_TEMPLATE_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PAD_TEMPLATE))
 
 typedef enum {
   GST_PAD_ALWAYS,
@@ -286,13 +286,13 @@ typedef enum {
   GST_PAD_REQUEST,
 } GstPadPresence;
 
-#define GST_PADTEMPLATE_NAME_TEMPLATE(templ)	(((GstPadTemplate *)(templ))->name_template)
-#define GST_PADTEMPLATE_DIRECTION(templ)	(((GstPadTemplate *)(templ))->direction)
-#define GST_PADTEMPLATE_PRESENCE(templ)		(((GstPadTemplate *)(templ))->presence)
-#define GST_PADTEMPLATE_CAPS(templ)		(((GstPadTemplate *)(templ))->caps)
-#define GST_PADTEMPLATE_FIXED(templ)		(((GstPadTemplate *)(templ))->fixed)
+#define GST_PAD_TEMPLATE_NAME_TEMPLATE(templ)	(((GstPadTemplate *)(templ))->name_template)
+#define GST_PAD_TEMPLATE_DIRECTION(templ)	(((GstPadTemplate *)(templ))->direction)
+#define GST_PAD_TEMPLATE_PRESENCE(templ)		(((GstPadTemplate *)(templ))->presence)
+#define GST_PAD_TEMPLATE_CAPS(templ)		(((GstPadTemplate *)(templ))->caps)
+#define GST_PAD_TEMPLATE_FIXED(templ)		(((GstPadTemplate *)(templ))->fixed)
 
-#define GST_PADTEMPLATE_IS_FIXED(templ)		(GST_PADTEMPLATE_FIXED(templ) == TRUE)
+#define GST_PAD_TEMPLATE_IS_FIXED(templ)		(GST_PAD_TEMPLATE_FIXED(templ) == TRUE)
 
 struct _GstPadTemplate {
   GstObject	  object;
@@ -311,21 +311,21 @@ struct _GstPadTemplateClass {
   void (*pad_created)	(GstPadTemplate *templ, GstPad *pad);
 };
 
-#define GST_PADTEMPLATE_NEW(padname, dir, pres, a...) \
-  gst_padtemplate_new (                         \
+#define GST_PAD_TEMPLATE_NEW(padname, dir, pres, a...) \
+  gst_pad_template_new (                         \
     padname,                                    \
     dir,                                        \
     pres,                                       \
     a ,						\
     NULL)
 
-#define GST_PADTEMPLATE_FACTORY(name, padname, dir, pres, a...)         \
+#define GST_PAD_TEMPLATE_FACTORY(name, padname, dir, pres, a...)         \
 static GstPadTemplate*                          \
 name (void)                                     \
 {                                               \
   static GstPadTemplate *templ = NULL;       	\
   if (!templ) {                              	\
-    templ = GST_PADTEMPLATE_NEW (            	\
+    templ = GST_PAD_TEMPLATE_NEW (            	\
       padname,                          	\
       dir,                                      \
       pres,                                     \
@@ -334,7 +334,7 @@ name (void)                                     \
   return templ;                              	\
 }
 
-#define GST_PADTEMPLATE_GET(fact) (fact)()
+#define GST_PAD_TEMPLATE_GET(fact) (fact)()
 
 GType			gst_pad_get_type			(void);
 GType			gst_real_pad_get_type			(void);
@@ -357,7 +357,7 @@ void			gst_pad_set_getcaps_function		(GstPad *pad, GstPadGetCapsFunction getcaps
 void			gst_pad_set_bufferpool_function		(GstPad *pad, GstPadBufferPoolFunction bufpool);
 
 GstCaps*		gst_pad_get_caps			(GstPad *pad);
-GstCaps*		gst_pad_get_padtemplate_caps		(GstPad *pad);
+GstCaps*		gst_pad_get_pad_template_caps		(GstPad *pad);
 gboolean		gst_pad_try_set_caps			(GstPad *pad, GstCaps *caps);
 gboolean		gst_pad_check_compatibility		(GstPad *srcpad, GstPad *sinkpad);
 
@@ -379,7 +379,7 @@ void			gst_pad_add_ghost_pad			(GstPad *pad, GstPad *ghostpad);
 void			gst_pad_remove_ghost_pad		(GstPad *pad, GstPad *ghostpad);
 GList*			gst_pad_get_ghost_pad_list		(GstPad *pad);
 
-GstPadTemplate*		gst_pad_get_padtemplate			(GstPad *pad);
+GstPadTemplate*		gst_pad_get_pad_template			(GstPad *pad);
 
 GstPad*			gst_pad_get_peer			(GstPad *pad);
 
@@ -441,18 +441,18 @@ GstPad*			gst_ghost_pad_new			(gchar *name,GstPad *pad);
 
 
 /* templates and factories */
-GType			gst_padtemplate_get_type		(void);
+GType			gst_pad_template_get_type		(void);
 
-GstPadTemplate*		gst_padtemplate_new			(gchar *name_template,
+GstPadTemplate*		gst_pad_template_new			(gchar *name_template,
 		                                        	 GstPadDirection direction, GstPadPresence presence,
 								 GstCaps *caps, ...);
 
-GstCaps*		gst_padtemplate_get_caps		(GstPadTemplate *templ);
-GstCaps*		gst_padtemplate_get_caps_by_name	(GstPadTemplate *templ, const gchar *name);
+GstCaps*		gst_pad_template_get_caps		(GstPadTemplate *templ);
+GstCaps*		gst_pad_template_get_caps_by_name	(GstPadTemplate *templ, const gchar *name);
 
 #ifndef GST_DISABLE_LOADSAVE
-xmlNodePtr		gst_padtemplate_save_thyself		(GstPadTemplate *templ, xmlNodePtr parent);
-GstPadTemplate*		gst_padtemplate_load_thyself		(xmlNodePtr parent);
+xmlNodePtr		gst_pad_template_save_thyself		(GstPadTemplate *templ, xmlNodePtr parent);
+GstPadTemplate*		gst_pad_template_load_thyself		(xmlNodePtr parent);
 #endif
 
 xmlNodePtr              gst_pad_ghost_save_thyself   		(GstPad *pad,

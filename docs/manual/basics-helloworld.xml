@@ -34,14 +34,14 @@ main (int argc, char *argv[])
   pipeline = gst_pipeline_new ("pipeline");
 
   /* create a disk reader */
-  filesrc = gst_elementfactory_make ("filesrc", "disk_source");
+  filesrc = gst_element_factory_make ("filesrc", "disk_source");
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
 
   /* now it's time to get the decoder */
-  decoder = gst_elementfactory_make ("mad", "decoder");
+  decoder = gst_element_factory_make ("mad", "decoder");
   
   /* and an audio sink */
-  audiosink = gst_elementfactory_make ("osssink", "play_audio");
+  audiosink = gst_element_factory_make ("osssink", "play_audio");
 
   /* add objects to the main pipeline */
   gst_bin_add_many (GST_BIN (pipeline), filesrc, decoder, audiosink, NULL);
@@ -119,7 +119,7 @@ main (int argc, char *argv[])
     </para>
     <programlisting>
   /* create a disk reader */
-  filesrc = gst_elementfactory_make ("filesrc", "disk_source");
+  filesrc = gst_element_factory_make ("filesrc", "disk_source");
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
     </programlisting>
     <note>
@@ -135,10 +135,10 @@ main (int argc, char *argv[])
     </para>
     <programlisting>
   /* now it's time to get the decoder */
-  decoder = gst_elementfactory_make ("mad", "decoder");
+  decoder = gst_element_factory_make ("mad", "decoder");
     </programlisting>
     <para>
-      gst_elementfactory_make() takes two arguments: a string that will
+      gst_element_factory_make() takes two arguments: a string that will
       identify the element you need and a second argument: how you want
       to name the element. The name of the element is something you can
       choose yourself and might be used to retrieve the element from a
@@ -151,7 +151,7 @@ main (int argc, char *argv[])
     </para>
     <programlisting>
   /* and an audio sink */
-  audiosink = gst_elementfactory_make ("audiosink", "play_audio");
+  audiosink = gst_element_factory_make ("audiosink", "play_audio");
     </programlisting>
 
     <para>

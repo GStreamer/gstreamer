@@ -148,7 +148,7 @@ gst_bin_init (GstBin * bin)
 GstElement *
 gst_bin_new (const gchar * name)
 {
-  return gst_elementfactory_make ("bin", name);
+  return gst_element_factory_make ("bin", name);
 }
 
 /**

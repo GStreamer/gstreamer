@@ -47,7 +47,7 @@ enum {
   /* FILL ME */
 };
 
-GST_PADTEMPLATE_FACTORY (aggregator_src_factory,
+GST_PAD_TEMPLATE_FACTORY (aggregator_src_factory,
   "sink%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
@@ -349,7 +349,7 @@ gst_aggregator_chain (GstPad *pad, GstBuffer *buf)
 gboolean
 gst_aggregator_factory_init (GstElementFactory *factory)
 {
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (aggregator_src_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (aggregator_src_factory));
 
   return TRUE;
 }

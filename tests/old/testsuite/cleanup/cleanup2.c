@@ -9,9 +9,9 @@ create_pipeline (void)
 
   pipeline = gst_pipeline_new ("main_pipeline");
 
-  fakesrc = gst_elementfactory_make ("fakesrc", "fakesrc");
+  fakesrc = gst_element_factory_make ("fakesrc", "fakesrc");
   bin = gst_bin_new ("bin");
-  fakesink = gst_elementfactory_make ("fakesink", "fakesink");
+  fakesink = gst_element_factory_make ("fakesink", "fakesink");
   gst_bin_add (GST_BIN (bin), fakesink);
   gst_element_add_ghost_pad (bin, gst_element_get_pad (fakesink, "sink"), "sink");
 

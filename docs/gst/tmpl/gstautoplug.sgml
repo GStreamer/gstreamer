@@ -13,7 +13,7 @@ non renderer ones do.
 </para>
 
 <para>
-You first need to create a suitable autoplugger with gst_autoplugfactory_make() 
+You first need to create a suitable autoplugger with gst_autoplug_factory_make() 
 (see #GstAutoplugFactory).
 The name of the autoplugger must be one of the registered autopluggers 
 (see #GstStaticAutoplug and #GstStaticAutoplugRender).
@@ -29,10 +29,10 @@ then add the bin to a pipeline and run it.
   GstElement  *sink;
 
   /* create a static autoplugger */
-  autoplug = gst_autoplugfactory_make ("staticrender");
+  autoplug = gst_autoplug_factory_make ("staticrender");
 
   /* create an osssink */
-  sink = gst_elementfactory_make ("osssink", "our_sink");
+  sink = gst_element_factory_make ("osssink", "our_sink");
 
   /* create an element that can play audio/mp3 through osssink */
   element = gst_autoplug_to_renderers (autoplug, 
@@ -58,7 +58,7 @@ compatible with the provided sink caps.
   GstElement  *element;
 
   /* create a static autoplugger */
-  autoplug = gst_autoplugfactory_make ("static");
+  autoplug = gst_autoplug_factory_make ("static");
 
   /* create an element that converts audio/mp3 to audio/raw */
   element = gst_autoplug_to_caps (autoplug, 

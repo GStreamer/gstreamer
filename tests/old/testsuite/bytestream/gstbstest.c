@@ -397,7 +397,7 @@ plugin_init (GModule * module, GstPlugin * plugin)
    * This consists of the name of the element, the GType identifier,
    * and a pointer to the details structure at the top of the file.
    */
-  factory = gst_elementfactory_new ("bstest", GST_TYPE_BSTEST, &gst_bstest_details);
+  factory = gst_element_factory_new ("bstest", GST_TYPE_BSTEST, &gst_bstest_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 
   /* The very last thing is to register the elementfactory with the plugin. */

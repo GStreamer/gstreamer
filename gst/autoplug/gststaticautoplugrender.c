@@ -88,7 +88,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   gst_plugin_set_longname (plugin, "A static autoplugger");
 
-  factory = gst_autoplugfactory_new ("staticrender",
+  factory = gst_autoplug_factory_new ("staticrender",
 		  "A static autoplugger, it constructs the complete element before running it",
 		  gst_static_autoplug_render_get_type ());
 
@@ -119,11 +119,11 @@ gst_autoplug_match_caps (GstElementFactory *factory, GstPadDirection direction, 
     GstPadTemplate *template = (GstPadTemplate *)templates->data;
 
     if (template->direction == direction && direction == GST_PAD_SRC) {
-      if (gst_caps_check_compatibility (GST_PADTEMPLATE_CAPS (template), caps))
+      if (gst_caps_check_compatibility (GST_PAD_TEMPLATE_CAPS (template), caps))
         return template;
     }
     else if (template->direction == direction && direction == GST_PAD_SINK) {
-      if (gst_caps_check_compatibility (caps, GST_PADTEMPLATE_CAPS (template)))
+      if (gst_caps_check_compatibility (caps, GST_PAD_TEMPLATE_CAPS (template)))
         return template;
     }
     templates = g_list_next (templates);
@@ -152,7 +152,7 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
       desttemps = g_list_next (desttemps);
 
       if (desttemp->direction == GST_PAD_SINK && desttemp->presence != GST_PAD_REQUEST) {
-	if (gst_caps_check_compatibility (GST_PADTEMPLATE_CAPS (srctemp), GST_PADTEMPLATE_CAPS (desttemp))) {
+	if (gst_caps_check_compatibility (GST_PAD_TEMPLATE_CAPS (srctemp), GST_PAD_TEMPLATE_CAPS (desttemp))) {
 	  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
 			  "factory \"%s\" can connect with factory \"%s\"\n", 
 			  GST_OBJECT_NAME (src), GST_OBJECT_NAME (dest));
@@ -238,9 +238,9 @@ gst_autoplug_pads_autoplug (GstElement *src, GstElement *sink)
 }
 
 static GList*
-gst_autoplug_elementfactory_get_list (gpointer data)
+gst_autoplug_element_factory_get_list (gpointer data)
 {
-  return (GList *) gst_elementfactory_get_list ();
+  return (GList *) gst_element_factory_get_list ();
 }
 
 typedef struct {
@@ -321,17 +321,17 @@ gst_static_autoplug_to_render (GstAutoplug *autoplug, GstCaps *srccaps, GstEleme
     GstPadTemplate *templ;
 
     pad = GST_PAD_REALIZE (gst_element_get_pad_list (targetelement)->data);
-    templ = GST_PAD_PADTEMPLATE (pad);
+    templ = GST_PAD_PAD_TEMPLATE (pad);
 
     if (templ)
-      caps.sink = GST_PADTEMPLATE_CAPS (templ);
+      caps.sink = GST_PAD_TEMPLATE_CAPS (templ);
     else 
       goto next;
 
     GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"autoplugging two caps structures");
 
     elements =  gst_autoplug_func (caps.src, caps.sink,
-				   gst_autoplug_elementfactory_get_list,
+				   gst_autoplug_element_factory_get_list,
 				   gst_autoplug_caps_find_cost,
 				   &caps);
 
@@ -398,7 +398,7 @@ next:
 
     GST_DEBUG (0,"common factory \"%s\"", GST_OBJECT_NAME (factory));
 
-    element = gst_elementfactory_create (factory, g_strdup (GST_OBJECT_NAME (factory)));
+    element = gst_element_factory_create (factory, g_strdup (GST_OBJECT_NAME (factory)));
     gst_bin_add (GST_BIN(result), element);
 
     if (srcelement != NULL) {
@@ -412,9 +412,9 @@ next:
 
       while (pads) {
 	GstPad *pad = GST_PAD (pads->data);
-	GstPadTemplate *templ = GST_PAD_PADTEMPLATE (pad);
+	GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (pad);
 
-	if (gst_caps_check_compatibility (srccaps, GST_PADTEMPLATE_CAPS (templ))) {
+	if (gst_caps_check_compatibility (srccaps, GST_PAD_TEMPLATE_CAPS (templ))) {
           gst_element_add_ghost_pad (result, pad, "sink");
 	  break;
 	}
@@ -457,7 +457,7 @@ differ:
         factory = (GstElementFactory *)(factories[i]->data);
 
         GST_DEBUG (0,"factory \"%s\"", GST_OBJECT_NAME (factory));
-        element = gst_elementfactory_create(factory, g_strdup (GST_OBJECT_NAME (factory)));
+        element = gst_element_factory_create(factory, g_strdup (GST_OBJECT_NAME (factory)));
       }
       else {
 	element = sinkelement;
@@ -475,11 +475,11 @@ differ:
         GST_DEBUG (0,"sugest new thread for \"%s\" %08x", GST_ELEMENT_NAME (element), GST_FLAGS(element));
 
 	/* create a new queue and add to the previous bin */
-        queue = gst_elementfactory_make("queue", g_strconcat("queue_", GST_ELEMENT_NAME(element), NULL));
+        queue = gst_element_factory_make("queue", g_strconcat("queue_", GST_ELEMENT_NAME(element), NULL));
         GST_DEBUG (0,"adding element \"%s\"", GST_ELEMENT_NAME (element));
 
 	/* this will be the new bin for all following elements */
-        thebin = gst_elementfactory_make("thread", g_strconcat("thread_", GST_ELEMENT_NAME(element), NULL));
+        thebin = gst_element_factory_make("thread", g_strconcat("thread_", GST_ELEMENT_NAME(element), NULL));
 
         gst_bin_add(GST_BIN(thebin), queue);
         gst_autoplug_signal_new_object (GST_AUTOPLUG (autoplug), GST_OBJECT (queue));

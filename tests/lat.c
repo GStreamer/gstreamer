@@ -42,7 +42,7 @@ GstElement *identity_add(GstPipeline *pipeline, GstElement *first, int count) {
 
   for (i=0; i<count; i++) {
     snprintf(buf, 20, "identity_%03d", i);
-    ident = gst_elementfactory_make("identity",buf);
+    ident = gst_element_factory_make("identity",buf);
     g_return_val_if_fail(ident != NULL,NULL);
     g_object_set(G_OBJECT(ident),"silent",TRUE,NULL);
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(ident));
@@ -57,7 +57,7 @@ GstElement *identity_add(GstPipeline *pipeline, GstElement *first, int count) {
 GstElement *fakesrc() {
   GstElement *src;
 
-  src = gst_elementfactory_make("fakesrc","src");
+  src = gst_element_factory_make("fakesrc","src");
   g_return_val_if_fail(src != NULL,NULL);
   g_object_set(G_OBJECT(src),"silent",TRUE,NULL);
   g_object_set(G_OBJECT(src),"num_buffers",iterations,NULL);
@@ -70,7 +70,7 @@ GstElement *fakesrc() {
 GstElement *fakesink() {
   GstElement *sink;
 
-  sink = gst_elementfactory_make("fakesink","fakesink");
+  sink = gst_element_factory_make("fakesink","fakesink");
   g_return_val_if_fail(sink != NULL,NULL);
   g_object_set(G_OBJECT(sink),"silent",TRUE,NULL);
   g_signal_connect(G_OBJECT(sink),
@@ -90,7 +90,7 @@ GstPipeline *simple(int argc, int argi, char *argv[]) {
   }
   idents = atoi(argv[argi]);
   if ((argc - argi) == 2) {
-    gst_schedulerfactory_set_default_name (argv[argi+1]);
+    gst_scheduler_factory_set_default_name (argv[argi+1]);
   }
 
   pipeline = GST_PIPELINE(gst_pipeline_new("pipeline"));
@@ -119,7 +119,7 @@ GstPipeline *queue(int argc, int argi, char *argv[]) {
   idents = atoi(argv[argi]);
 
   if ((argc - argi) == 2) {
-    gst_schedulerfactory_set_default_name (argv[argi+1]);
+    gst_scheduler_factory_set_default_name (argv[argi+1]);
   }
 
   pipeline = GST_PIPELINE(gst_pipeline_new("pipeline"));
@@ -132,7 +132,7 @@ GstPipeline *queue(int argc, int argi, char *argv[]) {
   g_return_val_if_fail(src != NULL,NULL);
   gst_bin_add(GST_BIN(src_thr),GST_ELEMENT(src));
 
-  src_q = gst_elementfactory_make("queue","src_q");
+  src_q = gst_element_factory_make("queue","src_q");
   g_return_val_if_fail(src_q != NULL,NULL);
   gst_bin_add(GST_BIN(src_thr),GST_ELEMENT(src_q));
   gst_pad_connect(gst_element_get_pad(src,"src"),
@@ -142,7 +142,7 @@ GstPipeline *queue(int argc, int argi, char *argv[]) {
 
   last = identity_add(pipeline, src_q, idents);
 
-  sink_q = gst_elementfactory_make("queue","sink_q");
+  sink_q = gst_element_factory_make("queue","sink_q");
   g_return_val_if_fail(sink_q != NULL,NULL);
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(sink_q));
   gst_pad_connect(gst_element_get_pad(last,"src"),

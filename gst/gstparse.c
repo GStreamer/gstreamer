@@ -1,8 +1,9 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2002 Andy Wingo <wingo@pobox.com>
  *
- * :
+ * gstparse.c: get a pipeline from a text pipeline description
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,15 +21,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* #define DEBUG(format,args...) g_print (format, ##args) */
-#define DEBUG(format,args...)
-#define DEBUG_NOPREFIX(format,args...)
-#define VERBOSE(format,args...)
-
 #include <string.h>
 
-#include "gst_private.h"
 #include "gstparse.h"
+#include "gstinfo.h"
 #include "parse/types.h"
 
 typedef struct _gst_parse_delayed_pad gst_parse_delayed_pad;
@@ -44,7 +40,7 @@ typedef struct
   GstPad *target;
   GstElement *pipeline;
 }
-dyn_connect;
+dynamic_connection_t;
 
 
 GQuark 
@@ -59,14 +55,14 @@ gst_parse_error_quark (void)
 G_GNUC_UNUSED static void
 dynamic_connect (GstElement * element, GstPad * newpad, gpointer data)
 {
-  dyn_connect *connect = (dyn_connect *) data;
+  dynamic_connection_t *dc = (dynamic_connection_t *) data;
 
-  if (!strcmp (gst_pad_get_name (newpad), connect->srcpadname)) {
-    gst_element_set_state (connect->pipeline, GST_STATE_PAUSED);
-    if (!gst_pad_connect (newpad, connect->target))
+  if (!strcmp (gst_pad_get_name (newpad), dc->srcpadname)) {
+    gst_element_set_state (dc->pipeline, GST_STATE_PAUSED);
+    if (!gst_pad_connect (newpad, dc->target))
       g_warning ("could not connect %s:%s to %s:%s", GST_DEBUG_PAD_NAME (newpad), 
-                 GST_DEBUG_PAD_NAME (connect->target));
-    gst_element_set_state (connect->pipeline, GST_STATE_PLAYING);
+                 GST_DEBUG_PAD_NAME (dc->target));
+    gst_element_set_state (dc->pipeline, GST_STATE_PLAYING);
   }
 }
 
@@ -90,7 +86,7 @@ make_elements (graph_t *g, GError **error)
   else
     bin_type = "pipeline";
   
-  if (!(g->bin = gst_elementfactory_make (bin_type, NULL))) {
+  if (!(g->bin = gst_element_factory_make (bin_type, NULL))) {
     g_set_error (error,
                  GST_PARSE_ERROR,
                  GST_PARSE_ERROR_NO_SUCH_ELEMENT,
@@ -101,7 +97,7 @@ make_elements (graph_t *g, GError **error)
   l = g->elements;
   while (l) {
     e = (element_t*)l->data;
-    if (!(e->element = gst_elementfactory_make (e->type, NULL))) {
+    if (!(e->element = gst_element_factory_make (e->type, NULL))) {
       g_set_error (error,
                    GST_PARSE_ERROR,
                    GST_PARSE_ERROR_NO_SUCH_ELEMENT,
@@ -204,6 +200,7 @@ make_connections (graph_t *g, GError **error)
   connection_t *c;
   GstElement *src, *sink;
   GstPad *p1, *p2;
+  GstPadTemplate *pt1;
   
   l = g->connections;
   while (l) {
@@ -240,7 +237,22 @@ make_connections (graph_t *g, GError **error)
     if (a && b) {
       /* balanced multipad connection */
       while (a && b) {
-        if (!gst_element_connect_pads (src, (gchar*)a->data, sink, (gchar*)b->data)) {
+        p1 = gst_element_get_pad (src, (gchar*)a->data);
+        p2 = gst_element_get_pad (sink, (gchar*)b->data);
+        
+        if (!p1 && p2 && (pt1 = gst_element_get_pad_template (src, (gchar*)a->data)) &&
+            pt1->presence == GST_PAD_SOMETIMES) {
+          dynamic_connection_t *dc = g_new0 (dynamic_connection_t, 1);
+          dc->srcpadname = (gchar*)a->data;
+          dc->target = p2;
+          dc->pipeline = g->bin;
+          
+          GST_DEBUG (GST_CAT_PIPELINE, "setting up dynamic connection %s:%s and %s:%s",
+                     GST_OBJECT_NAME (GST_OBJECT (src)),
+                     (gchar*)a->data, GST_DEBUG_PAD_NAME (p2));
+          
+          g_signal_connect (G_OBJECT (src), "new_pad", G_CALLBACK (dynamic_connect), dc);
+        } else if (!p1 || !p2 || !gst_pad_connect (p1, p2)) {
           g_set_error (error,
                        GST_PARSE_ERROR,
                        GST_PARSE_ERROR_CONNECT,
@@ -253,7 +265,32 @@ make_connections (graph_t *g, GError **error)
         b = g_list_next (b);
       }
     } else if (a) {
-      if (!(p1 = gst_element_get_pad (src, (gchar*)a->data))) {
+      if ((pt1 = gst_element_get_pad_template (src, (gchar*)a->data))) {
+        if ((p1 = gst_element_get_pad (src, (gchar*)a->data)) || pt1->presence == GST_PAD_SOMETIMES) {
+          if (!p1) {
+/*
+          if ((p2 = gst_element_get_pad (sink, (gchar*)a->data))) {
+            dynamic_connection_t *dc = g_new0 (dynamic_connection_t, 1);
+            dc->srcpadname = (gchar*)a->data;
+            dc->target = p2;
+            dc->pipeline = g->bin;
+            
+            GST_DEBUG (GST_CAT_PIPELINE, "setting up dynamic connection %s:%s and %s:%s",
+                       GST_OBJECT_NAME (GST_OBJECT (src)),
+                       (gchar*)a->data, GST_DEBUG_PAD_NAME (p2));
+            
+            g_signal_connect (G_OBJECT (src), "new_pad", G_CALLBACK (dynamic_connect), dc);
+*/
+          }
+        } else {
+          g_set_error (error,
+                       GST_PARSE_ERROR,
+                       GST_PARSE_ERROR_CONNECT,
+                       "Could not get a pad %s from element %s",
+                       (gchar*)a->data, GST_OBJECT_NAME (src));
+          return FALSE;
+        }
+      } else {
         g_set_error (error,
                      GST_PARSE_ERROR,
                      GST_PARSE_ERROR_CONNECT,
@@ -261,6 +298,7 @@ make_connections (graph_t *g, GError **error)
                      (gchar*)a->data, GST_OBJECT_NAME (src));
         return FALSE;
       }
+      
       if (!(p2 = gst_element_get_compatible_pad (sink, p1))) {
         g_set_error (error,
                      GST_PARSE_ERROR,
@@ -370,7 +408,8 @@ gst_parse_launchv (const gchar **argv, GError **error)
  *
  * Create a new pipeline based on command line syntax.
  *
- * Returns: a new GstPipeline (cast to a Bin) on success, NULL on failure
+ * Returns: a new bin on success, NULL on failure. By default the bin is
+ * a GstPipeline, but it depends on the pipeline_description.
  */
 GstBin *
 gst_parse_launch (const gchar * pipeline_description, GError **error)

@@ -31,9 +31,9 @@ int main(int argc,char *argv[])
   }
 
   /* create new threads to hold the elements */
-  thread = gst_elementfactory_make ("thread", "thread");
+  thread = gst_element_factory_make ("thread", "thread");
   g_assert (thread != NULL);
-  thread2 = gst_elementfactory_make ("thread", "thread2");
+  thread2 = gst_element_factory_make ("thread", "thread2");
   g_assert (thread2 != NULL);
 
   /* these signals will allow us to save custom tags with the gst xml output */
@@ -49,18 +49,18 @@ int main(int argc,char *argv[])
   g_assert (pipeline != NULL);
 
   /* create a disk reader */
-  filesrc = gst_elementfactory_make ("filesrc", "disk_source");
+  filesrc = gst_element_factory_make ("filesrc", "disk_source");
   g_assert (filesrc != NULL);
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
 
-  queue = gst_elementfactory_make ("queue", "queue");
-  queue2 = gst_elementfactory_make ("queue", "queue2");
+  queue = gst_element_factory_make ("queue", "queue");
+  queue2 = gst_element_factory_make ("queue", "queue2");
 
   /* and an audio sink */
-  osssink = gst_elementfactory_make ("osssink", "play_audio");
+  osssink = gst_element_factory_make ("osssink", "play_audio");
   g_assert (osssink != NULL);
 
-  decode = gst_elementfactory_make ("mad", "decode");
+  decode = gst_element_factory_make ("mad", "decode");
   g_assert (decode != NULL);
 
   /* add objects to the main pipeline */

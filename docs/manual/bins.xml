@@ -56,13 +56,13 @@
   
   /* create a new bin called 'mybin'. this bin will be only for organizational purposes; a normal
      GstBin doesn't affect plan generation */
-  bin = gst_elementfactory_make ("bin", "mybin");
+  bin = gst_element_factory_make ("bin", "mybin");
 
   /* create a new thread, and give it a unique name */
-  thread = gst_elementfactory_make ("thread", NULL);
+  thread = gst_element_factory_make ("thread", NULL);
 
   /* the core bins (GstBin, GstThread, GstPipeline) also have convenience APIs,
-     gst_&lt;bintype&gt;_new (). these are equivalent to the gst_elementfactory_make () syntax. */
+     gst_&lt;bintype&gt;_new (). these are equivalent to the gst_element_factory_make () syntax. */
   pipeline = gst_pipeline_new ("pipeline_name");
     </programlisting>
   </sect1>
@@ -78,7 +78,7 @@
   
   bin = gst_bin_new ("mybin");
   
-  element = gst_elementfactory_make ("mpg123", "decoder");
+  element = gst_element_factory_make ("mpg123", "decoder");
   gst_bin_add (GST_BIN (bin), element);
    ...
     </programlisting>
@@ -151,7 +151,7 @@
     <programlisting>
 
   /* create the mp3player element */
-  GstElement *mp3player = gst_elementfactory_make ("mp3player", "mp3player");
+  GstElement *mp3player = gst_element_factory_make ("mp3player", "mp3player");
   /* set the source mp3 audio file */
   g_object_set (G_OBJECT (mp3player), "location", "helloworld.mp3", NULL);
   /* start playback */
@@ -215,7 +215,7 @@
   GstElement *bin;
   GstElement *element;
 
-  element = gst_elementfactory_create ("mad", "decoder");
+  element = gst_element_factory_create ("mad", "decoder");
   bin = gst_bin_new ("mybin");
 
   gst_bin_add (GST_BIN (bin), element);
@@ -231,7 +231,7 @@
     <programlisting>
   GstElement *filesrc;
 
-  filesrc = gst_elementfactory_create ("filesrc", "disk_reader");
+  filesrc = gst_element_factory_create ("filesrc", "disk_reader");
   
   gst_element_connect_pads (filesrc, "src", bin, "sink");
     ...

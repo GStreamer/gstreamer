@@ -17,18 +17,18 @@ int main (int argc, char *argv[])
   g_assert (bin);
 
   /* create a disk reader */
-  filesrc = gst_elementfactory_make ("filesrc", "disk_source");
+  filesrc = gst_element_factory_make ("filesrc", "disk_source");
   g_assert (filesrc);
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
 
   /* now it's time to get the decoder */
-  decoder = gst_elementfactory_make ("mad", "decode");
+  decoder = gst_element_factory_make ("mad", "decode");
   if (!decoder) {
     g_print ("could not find plugin \"mad\"");
     return -1;
   }
   /* and an audio sink */
-  osssink = gst_elementfactory_make ("osssink", "play_audio");
+  osssink = gst_element_factory_make ("osssink", "play_audio");
   g_assert (osssink);
 
   /* add objects to the main pipeline */

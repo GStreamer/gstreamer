@@ -17,10 +17,10 @@ construct_pipeline (GstElement *pipeline)
 {
   GstElement *src, *sink, *queue, *thread;
 
-  src    = gst_elementfactory_make ("fakesrc",  "src");
-  sink   = gst_elementfactory_make ("fakesink", "sink");
-  queue  = gst_elementfactory_make ("queue",    "queue");
-  thread = gst_elementfactory_make ("thread",   "thread");
+  src    = gst_element_factory_make ("fakesrc",  "src");
+  sink   = gst_element_factory_make ("fakesink", "sink");
+  queue  = gst_element_factory_make ("queue",    "queue");
+  thread = gst_element_factory_make ("thread",   "thread");
 
   gst_element_connect (src, "src", queue, "sink");
   gst_element_connect (queue, "src", sink, "sink");

@@ -74,13 +74,13 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_plugin_set_longname (plugin, "Standard GST Elements");
 
   while (_elements[i].name) {
-    factory = gst_elementfactory_new (_elements[i].name,
+    factory = gst_element_factory_new (_elements[i].name,
                                       (_elements[i].type) (),
                                       _elements[i].details);
 
     if (!factory)
       {
-	g_warning ("gst_elementfactory_new failed for `%s'",
+	g_warning ("gst_element_factory_new failed for `%s'",
 		   _elements[i].name);
 	continue;
       }

@@ -27,7 +27,7 @@
 
 #include "gst.h"
 #include "gstqueue.h"
-#ifndef GST_DISABLE_TYPEFIND
+#ifndef GST_DISABLE_TYPE_FIND
 #include "gsttypefind.h"
 #endif
 
@@ -281,13 +281,13 @@ init_post (void)
   gst_pad_get_type ();
   gst_real_pad_get_type ();
   gst_ghost_pad_get_type ();
-  gst_elementfactory_get_type ();
+  gst_element_factory_get_type ();
   gst_element_get_type ();
-  gst_typefactory_get_type ();
-  gst_schedulerfactory_get_type ();
+  gst_type_factory_get_type ();
+  gst_scheduler_factory_get_type ();
   gst_bin_get_type ();
 #ifndef GST_DISABLE_AUTOPLUG
-  gst_autoplugfactory_get_type ();
+  gst_autoplug_factory_get_type ();
 #endif
 
   plugin_path = g_getenv("GST_PLUGIN_PATH");
@@ -309,12 +309,12 @@ init_post (void)
   }
 
   /* register some standard builtin types */
-  gst_elementfactory_new ("bin", gst_bin_get_type (), &gst_bin_details);
-  gst_elementfactory_new ("pipeline", gst_pipeline_get_type (), &gst_pipeline_details);
-  gst_elementfactory_new ("thread", gst_thread_get_type (), &gst_thread_details);
-  gst_elementfactory_new ("queue", gst_queue_get_type (), &gst_queue_details);
-#ifndef GST_DISABLE_TYPEFIND
-  gst_elementfactory_new ("typefind", gst_typefind_get_type (), &gst_typefind_details);
+  gst_element_factory_new ("bin", gst_bin_get_type (), &gst_bin_details);
+  gst_element_factory_new ("pipeline", gst_pipeline_get_type (), &gst_pipeline_details);
+  gst_element_factory_new ("thread", gst_thread_get_type (), &gst_thread_details);
+  gst_element_factory_new ("queue", gst_queue_get_type (), &gst_queue_details);
+#ifndef GST_DISABLE_TYPE_FIND
+  gst_element_factory_new ("typefind", gst_type_find_get_type (), &gst_type_find_details);
 #endif
 
 #ifndef GST_DISABLE_TRACE
@@ -393,7 +393,7 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
       split_and_iterate (arg, ",", prepare_for_load_plugin_func);
       break;
     case ARG_SCHEDULER:
-      gst_schedulerfactory_set_default_name (arg);
+      gst_scheduler_factory_set_default_name (arg);
       break;
     default:
       g_warning ("option %d not recognized", option->val);

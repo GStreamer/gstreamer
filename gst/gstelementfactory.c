@@ -25,24 +25,24 @@
 
 #include "gstelement.h"
 
-static void 		gst_elementfactory_class_init 		(GstElementFactoryClass *klass);
-static void 		gst_elementfactory_init 		(GstElementFactory *factory);
+static void 		gst_element_factory_class_init 		(GstElementFactoryClass *klass);
+static void 		gst_element_factory_init 		(GstElementFactory *factory);
 
 #ifndef GST_DISABLE_REGISTRY
-static void 		gst_elementfactory_restore_thyself 	(GstObject *object, xmlNodePtr parent);
-static xmlNodePtr 	gst_elementfactory_save_thyself 	(GstObject *object, xmlNodePtr parent);
+static void 		gst_element_factory_restore_thyself 	(GstObject *object, xmlNodePtr parent);
+static xmlNodePtr 	gst_element_factory_save_thyself 	(GstObject *object, xmlNodePtr parent);
 #endif
 
-static void 		gst_elementfactory_unload_thyself 	(GstPluginFeature *feature);
+static void 		gst_element_factory_unload_thyself 	(GstPluginFeature *feature);
 
 /* global list of registered elementfactories */
 static GList* _gst_elementfactories;
 
 static GstPluginFeatureClass *parent_class = NULL;
-/* static guint gst_elementfactory_signals[LAST_SIGNAL] = { 0 }; */
+/* static guint gst_element_factory_signals[LAST_SIGNAL] = { 0 }; */
 
 GType 
-gst_elementfactory_get_type (void) 
+gst_element_factory_get_type (void) 
 {
   static GType elementfactory_type = 0;
 
@@ -51,12 +51,12 @@ gst_elementfactory_get_type (void)
       sizeof (GstElementFactoryClass),
       NULL,
       NULL,
-      (GClassInitFunc) gst_elementfactory_class_init,
+      (GClassInitFunc) gst_element_factory_class_init,
       NULL,
       NULL,
       sizeof(GstElementFactory),
       0,
-      (GInstanceInitFunc) gst_elementfactory_init,
+      (GInstanceInitFunc) gst_element_factory_init,
       NULL
     };
     elementfactory_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE, 
@@ -66,7 +66,7 @@ gst_elementfactory_get_type (void)
 }
 
 static void
-gst_elementfactory_class_init (GstElementFactoryClass *klass)
+gst_element_factory_class_init (GstElementFactoryClass *klass)
 {
   GObjectClass *gobject_class;
   GstObjectClass *gstobject_class;
@@ -79,17 +79,17 @@ gst_elementfactory_class_init (GstElementFactoryClass *klass)
   parent_class = g_type_class_ref (GST_TYPE_PLUGIN_FEATURE);
 
 #ifndef GST_DISABLE_REGISTRY
-  gstobject_class->save_thyself = 	GST_DEBUG_FUNCPTR (gst_elementfactory_save_thyself);
-  gstobject_class->restore_thyself = 	GST_DEBUG_FUNCPTR (gst_elementfactory_restore_thyself);
+  gstobject_class->save_thyself = 	GST_DEBUG_FUNCPTR (gst_element_factory_save_thyself);
+  gstobject_class->restore_thyself = 	GST_DEBUG_FUNCPTR (gst_element_factory_restore_thyself);
 #endif
 
-  gstpluginfeature_class->unload_thyself = 	GST_DEBUG_FUNCPTR (gst_elementfactory_unload_thyself);
+  gstpluginfeature_class->unload_thyself = 	GST_DEBUG_FUNCPTR (gst_element_factory_unload_thyself);
 
   _gst_elementfactories = NULL;
 }
 
 static void
-gst_elementfactory_init (GstElementFactory *factory)
+gst_element_factory_init (GstElementFactory *factory)
 {
   factory->padtemplates = NULL;
   factory->numpadtemplates = 0;
@@ -98,7 +98,7 @@ gst_elementfactory_init (GstElementFactory *factory)
 }
 
 /**
- * gst_elementfactory_find:
+ * gst_element_factory_find:
  * @name: name of factory to find
  *
  * Search for an elementfactory of the given name.
@@ -106,7 +106,7 @@ gst_elementfactory_init (GstElementFactory *factory)
  * Returns: #GstElementFactory if found, NULL otherwise
  */
 GstElementFactory*
-gst_elementfactory_find (const gchar *name)
+gst_element_factory_find (const gchar *name)
 {
   GList *walk;
   GstElementFactory *factory;
@@ -122,19 +122,19 @@ gst_elementfactory_find (const gchar *name)
   }
 
   /* this should be an ERROR */
-  GST_DEBUG (GST_CAT_ELEMENTFACTORY,"no such elementfactory \"%s\"", name);
+  GST_DEBUG (GST_CAT_ELEMENT_FACTORY,"no such elementfactory \"%s\"", name);
   return NULL;
 }
 
 /**
- * gst_elementfactory_get_list:
+ * gst_element_factory_get_list:
  *
  * Get the global list of elementfactories.
  *
  * Returns: GList of type #GstElementFactory
  */
 const GList*
-gst_elementfactory_get_list (void)
+gst_element_factory_get_list (void)
 {
   return _gst_elementfactories;
 }
@@ -160,7 +160,7 @@ gst_element_details_free (GstElementDetails *dp)
 }
 
 /**
- * gst_elementfactory_new:
+ * gst_element_factory_new:
  * @name: name of new elementfactory
  * @type: GType of new element
  * @details: #GstElementDetails structure with element details
@@ -171,7 +171,7 @@ gst_element_details_free (GstElementDetails *dp)
  * Returns: new elementfactory
  */
 GstElementFactory*
-gst_elementfactory_new (const gchar *name, GType type,
+gst_element_factory_new (const gchar *name, GType type,
                         GstElementDetails *details)
 {
   GstElementFactory *factory;
@@ -180,10 +180,10 @@ gst_elementfactory_new (const gchar *name, GType type,
   g_return_val_if_fail (type, NULL);
   g_return_val_if_fail (details, NULL);
 
-  factory = gst_elementfactory_find (name);
+  factory = gst_element_factory_find (name);
 
   if (!factory)
-    factory = GST_ELEMENTFACTORY (g_object_new (GST_TYPE_ELEMENTFACTORY, NULL));
+    factory = GST_ELEMENT_FACTORY (g_object_new (GST_TYPE_ELEMENT_FACTORY, NULL));
 
   if (factory->details_dynamic)
     {
@@ -204,7 +204,7 @@ gst_elementfactory_new (const gchar *name, GType type,
 }
 
 /**
- * gst_elementfactory_create:
+ * gst_element_factory_create:
  * @factory: factory to instantiate
  * @name: name of new element
  *
@@ -215,7 +215,7 @@ gst_elementfactory_new (const gchar *name, GType type,
  * Returns: new #GstElement
  */
 GstElement *
-gst_elementfactory_create (GstElementFactory *factory,
+gst_element_factory_create (GstElementFactory *factory,
                            const gchar *name)
 {
   GstElement *element;
@@ -223,7 +223,7 @@ gst_elementfactory_create (GstElementFactory *factory,
 
   g_return_val_if_fail(factory != NULL, NULL);
 
-  GST_DEBUG (GST_CAT_ELEMENTFACTORY,"creating element from factory \"%s\" with name \"%s\" and type %d", 
+  GST_DEBUG (GST_CAT_ELEMENT_FACTORY,"creating element from factory \"%s\" with name \"%s\" and type %d", 
              GST_OBJECT_NAME (factory), name, (gint) factory->type);
 
   if (!gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory)))
@@ -242,7 +242,7 @@ gst_elementfactory_create (GstElementFactory *factory,
   /* attempt to set the elemenfactory class pointer if necessary */
   oclass = GST_ELEMENT_CLASS(G_OBJECT_GET_CLASS(element));
   if (oclass->elementfactory == NULL) {
-    GST_DEBUG (GST_CAT_ELEMENTFACTORY,"class %s", GST_OBJECT_NAME (factory));
+    GST_DEBUG (GST_CAT_ELEMENT_FACTORY,"class %s", GST_OBJECT_NAME (factory));
     oclass->elementfactory = factory;
 
     /* copy pad template pointers to the element class, allow for custom padtemplates */
@@ -256,7 +256,7 @@ gst_elementfactory_create (GstElementFactory *factory,
 }
 
 /**
- * gst_elementfactory_make:
+ * gst_element_factory_make:
  * @factoryname: a named factory to instantiate
  * @name: name of new element
  *
@@ -267,24 +267,24 @@ gst_elementfactory_create (GstElementFactory *factory,
  * Returns: new #GstElement (or NULL if unable to create element)
  */
 GstElement*
-gst_elementfactory_make (const gchar *factoryname, const gchar *name)
+gst_element_factory_make (const gchar *factoryname, const gchar *name)
 {
   GstElementFactory *factory;
   GstElement *element;
 
   g_return_val_if_fail (factoryname != NULL, NULL);
 
-  GST_DEBUG (GST_CAT_ELEMENTFACTORY, "gstelementfactory: make \"%s\" \"%s\"", factoryname, name);
+  GST_DEBUG (GST_CAT_ELEMENT_FACTORY, "gstelementfactory: make \"%s\" \"%s\"", factoryname, name);
 
-  /* gst_plugin_load_elementfactory(factoryname); */
-  factory = gst_elementfactory_find(factoryname);
+  /* gst_plugin_load_element_factory(factoryname); */
+  factory = gst_element_factory_find(factoryname);
   if (factory == NULL) {
-    GST_INFO (GST_CAT_ELEMENTFACTORY,"no such elementfactory \"%s\"!",factoryname);
+    GST_INFO (GST_CAT_ELEMENT_FACTORY,"no such elementfactory \"%s\"!",factoryname);
     return NULL;
   }
-  element = gst_elementfactory_create(factory,name);
+  element = gst_element_factory_create(factory,name);
   if (element == NULL) {
-    GST_INFO (GST_CAT_ELEMENTFACTORY,"couldn't create instance of elementfactory \"%s\"!",factoryname);
+    GST_INFO (GST_CAT_ELEMENT_FACTORY,"couldn't create instance of elementfactory \"%s\"!",factoryname);
     return NULL;
   }
 
@@ -292,14 +292,14 @@ gst_elementfactory_make (const gchar *factoryname, const gchar *name)
 }
 
 /**
- * gst_elementfactory_add_padtemplate :
+ * gst_element_factory_add_pad_template :
  * @elementfactory: factory to add the src id to
  * @templ: the padtemplate to add
  *
  * Add the given padtemplate to this elementfactory.
  */
 void
-gst_elementfactory_add_padtemplate (GstElementFactory *factory,
+gst_element_factory_add_pad_template (GstElementFactory *factory,
 			            GstPadTemplate *templ)
 {
   GList *padtemplates;
@@ -312,7 +312,7 @@ gst_elementfactory_add_padtemplate (GstElementFactory *factory,
   gst_object_ref (GST_OBJECT (templ));
 
   while (padtemplates) {
-    GstPadTemplate *oldtempl = GST_PADTEMPLATE (padtemplates->data);
+    GstPadTemplate *oldtempl = GST_PAD_TEMPLATE (padtemplates->data);
     
     if (!strcmp (oldtempl->name_template, templ->name_template)) {
       gst_object_unref (GST_OBJECT (oldtempl));
@@ -327,7 +327,7 @@ gst_elementfactory_add_padtemplate (GstElementFactory *factory,
 }
 
 /**
- * gst_elementfactory_can_src_caps :
+ * gst_element_factory_can_src_caps :
  * @factory: factory to query
  * @caps: the caps to check
  *
@@ -336,7 +336,7 @@ gst_elementfactory_add_padtemplate (GstElementFactory *factory,
  * Returns: true if it can src the capabilities
  */
 gboolean
-gst_elementfactory_can_src_caps (GstElementFactory *factory,
+gst_element_factory_can_src_caps (GstElementFactory *factory,
 		                 GstCaps *caps)
 {
   GList *templates;
@@ -350,7 +350,7 @@ gst_elementfactory_can_src_caps (GstElementFactory *factory,
     GstPadTemplate *template = (GstPadTemplate *)templates->data;
 
     if (template->direction == GST_PAD_SRC) {
-      if (gst_caps_check_compatibility (GST_PADTEMPLATE_CAPS (template), caps))
+      if (gst_caps_check_compatibility (GST_PAD_TEMPLATE_CAPS (template), caps))
 	return TRUE;
     }
     templates = g_list_next (templates);
@@ -360,7 +360,7 @@ gst_elementfactory_can_src_caps (GstElementFactory *factory,
 }
 
 /**
- * gst_elementfactory_can_sink_caps :
+ * gst_element_factory_can_sink_caps :
  * @factory: factory to query
  * @caps: the caps to check
  *
@@ -369,7 +369,7 @@ gst_elementfactory_can_src_caps (GstElementFactory *factory,
  * Returns: true if it can sink the capabilities
  */
 gboolean
-gst_elementfactory_can_sink_caps (GstElementFactory *factory,
+gst_element_factory_can_sink_caps (GstElementFactory *factory,
 		                  GstCaps *caps)
 {
   GList *templates;
@@ -383,7 +383,7 @@ gst_elementfactory_can_sink_caps (GstElementFactory *factory,
     GstPadTemplate *template = (GstPadTemplate *)templates->data;
 
     if (template->direction == GST_PAD_SINK) {
-      if (gst_caps_check_compatibility (caps, GST_PADTEMPLATE_CAPS (template)))
+      if (gst_caps_check_compatibility (caps, GST_PAD_TEMPLATE_CAPS (template)))
 	return TRUE;
     }
     templates = g_list_next (templates);
@@ -393,24 +393,24 @@ gst_elementfactory_can_sink_caps (GstElementFactory *factory,
 }
 
 static void
-gst_elementfactory_unload_thyself (GstPluginFeature *feature)
+gst_element_factory_unload_thyself (GstPluginFeature *feature)
 {
   GstElementFactory *factory;
 
-  factory = GST_ELEMENTFACTORY (feature);
+  factory = GST_ELEMENT_FACTORY (feature);
 
   factory->type = 0;
 }
 
 #ifndef GST_DISABLE_REGISTRY
 static xmlNodePtr
-gst_elementfactory_save_thyself (GstObject *object,
+gst_element_factory_save_thyself (GstObject *object,
 		                 xmlNodePtr parent)
 {
   GList *pads;
   GstElementFactory *factory;
 
-  factory = GST_ELEMENTFACTORY (object);
+  factory = GST_ELEMENT_FACTORY (object);
   
   if (GST_OBJECT_CLASS (parent_class)->save_thyself) {
     GST_OBJECT_CLASS (parent_class)->save_thyself (object, parent);
@@ -438,7 +438,7 @@ gst_elementfactory_save_thyself (GstObject *object,
       GstPadTemplate *padtemplate = (GstPadTemplate *)pads->data;
 
       subtree = xmlNewChild(parent, NULL, "padtemplate", NULL);
-      gst_padtemplate_save_thyself(padtemplate, subtree);
+      gst_pad_template_save_thyself(padtemplate, subtree);
 
       pads = g_list_next (pads);
     }
@@ -447,9 +447,9 @@ gst_elementfactory_save_thyself (GstObject *object,
 }
 
 static void
-gst_elementfactory_restore_thyself (GstObject *object, xmlNodePtr parent)
+gst_element_factory_restore_thyself (GstObject *object, xmlNodePtr parent)
 {
-  GstElementFactory *factory = GST_ELEMENTFACTORY (object);
+  GstElementFactory *factory = GST_ELEMENT_FACTORY (object);
   xmlNodePtr children = parent->xmlChildrenNode;
   
   factory->details_dynamic = TRUE;
@@ -482,9 +482,9 @@ gst_elementfactory_restore_thyself (GstObject *object, xmlNodePtr parent)
     if (!strcmp(children->name, "padtemplate")) {
        GstPadTemplate *template;
 
-       template = gst_padtemplate_load_thyself (children);
+       template = gst_pad_template_load_thyself (children);
 
-       gst_elementfactory_add_padtemplate (factory, template);
+       gst_element_factory_add_pad_template (factory, template);
     }
 
     children = children->next;

@@ -33,15 +33,15 @@ int main(int argc,char *argv[]) {
       feature = GST_PLUGIN_FEATURE (features->data);
       features = g_list_next (features);
 
-      if (!GST_IS_ELEMENTFACTORY (feature))
+      if (!GST_IS_ELEMENT_FACTORY (feature))
 	continue;
 
-      factory = GST_ELEMENTFACTORY (feature);
+      factory = GST_ELEMENT_FACTORY (feature);
 
       factorynode = xmlNewChild (doc->xmlRootNode, NULL, "element", NULL);
       xmlNewChild (factorynode, NULL, "name", gst_object_get_name (GST_OBJECT (factory)));
 
-      element = gst_elementfactory_create(factory,"element");
+      element = gst_element_factory_create(factory,"element");
       GST_DEBUG(GST_CAT_PLUGIN_LOADING, "adding factory %s", 
               gst_object_get_name (GST_OBJECT (factory)));
       if (element == NULL) {

@@ -26,7 +26,7 @@ element_create (char *name, char *element)
 {
   GstElement *el = NULL;
 
-  el = (GstElement *) gst_elementfactory_make (element, name);
+  el = (GstElement *) gst_element_factory_make (element, name);
   if (el == NULL)
   {
     fprintf (stderr, "Could not create element %s (%s) !\n", name, element);

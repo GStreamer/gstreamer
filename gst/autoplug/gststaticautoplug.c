@@ -88,7 +88,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   gst_plugin_set_longname (plugin, "A static autoplugger");
 
-  factory = gst_autoplugfactory_new ("static",
+  factory = gst_autoplug_factory_new ("static",
 		  "A static autoplugger, it constructs the complete element before running it",
 		  gst_static_autoplug_get_type ());
 
@@ -122,8 +122,8 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
 
       if (srctemp->direction == GST_PAD_SRC &&
           desttemp->direction == GST_PAD_SINK) {
-	if (gst_caps_check_compatibility (gst_padtemplate_get_caps (srctemp), 
-				gst_padtemplate_get_caps (desttemp))) {
+	if (gst_caps_check_compatibility (gst_pad_template_get_caps (srctemp), 
+				gst_pad_template_get_caps (desttemp))) {
 	  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
 			  "factory \"%s\" can connect with factory \"%s\"\n", GST_OBJECT_NAME (src), 
 			  GST_OBJECT_NAME (dest));
@@ -197,10 +197,10 @@ autoplug_dynamic_pad (GstElement *element, GstPad *pad, gpointer data)
 
   while (pads) {
     GstPad *pad = GST_PAD (pads->data);
-    GstPadTemplate *templ = GST_PAD_PADTEMPLATE (pad);
+    GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (pad);
     pads = g_list_next (pads);
 
-    if (gst_caps_check_compatibility (GST_PADTEMPLATE_CAPS (templ), info->endcap)) {
+    if (gst_caps_check_compatibility (GST_PAD_TEMPLATE_CAPS (templ), info->endcap)) {
       gst_element_add_ghost_pad (info->result, pad, g_strdup_printf("src_%02d", info->i));
       GST_DEBUG (0,"gstpipeline: new dynamic pad %s", GST_PAD_NAME (pad));
       break;
@@ -234,9 +234,9 @@ gst_autoplug_pads_autoplug (GstElement *src, GstElement *sink)
 }
 
 static const GList*
-gst_autoplug_elementfactory_get_list (gpointer data)
+gst_autoplug_element_factory_get_list (gpointer data)
 {
-  return gst_elementfactory_get_list ();
+  return gst_element_factory_get_list ();
 }
 
 typedef struct {
@@ -256,10 +256,10 @@ gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
     res = gst_caps_check_compatibility ((GstCaps *)src, (GstCaps *)dest);
   }
   else if (IS_CAPS (src)) {
-    res = gst_elementfactory_can_sink_caps ((GstElementFactory *)dest, (GstCaps *)src);
+    res = gst_element_factory_can_sink_caps ((GstElementFactory *)dest, (GstCaps *)src);
   }
   else if (IS_CAPS (dest)) {
-    res = gst_elementfactory_can_src_caps ((GstElementFactory *)src, (GstCaps *)dest);
+    res = gst_element_factory_can_src_caps ((GstElementFactory *)src, (GstCaps *)dest);
   }
   else {
     res = gst_autoplug_can_match ((GstElementFactory *)src, (GstElementFactory *)dest);
@@ -300,7 +300,7 @@ gst_static_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *s
     GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"autoplugging two caps structures");
 
     elements =  gst_autoplug_func (caps.src, caps.sink,
-				   gst_autoplug_elementfactory_get_list,
+				   gst_autoplug_element_factory_get_list,
 				   gst_autoplug_caps_find_cost,
 				   &caps);
 
@@ -377,7 +377,7 @@ gst_static_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *s
      * initialization. i raelly don't know though.
      */
     name = g_strdup (GST_OBJECT_NAME (factory));
-    element = gst_elementfactory_create (factory, name);
+    element = gst_element_factory_create (factory, name);
     g_free(name);
     gst_bin_add (GST_BIN(result), element);
 
@@ -392,9 +392,9 @@ gst_static_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *s
 
       while (pads) {
 	GstPad *pad = GST_PAD (pads->data);
-	GstPadTemplate *templ = GST_PAD_PADTEMPLATE (pad);
+	GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (pad);
 
-	if (gst_caps_check_compatibility (srccaps, GST_PADTEMPLATE_CAPS (templ))) {
+	if (gst_caps_check_compatibility (srccaps, GST_PAD_TEMPLATE_CAPS (templ))) {
           gst_element_add_ghost_pad (result, pad, "sink");
 	  break;
 	}
@@ -429,7 +429,7 @@ differ:
       factory = (GstElementFactory *)(factories[i]->data);
 
       GST_DEBUG (0,"factory \"%s\"", GST_OBJECT_NAME (factory));
-      element = gst_elementfactory_create(factory, GST_OBJECT_NAME (factory));
+      element = gst_element_factory_create(factory, GST_OBJECT_NAME (factory));
 
       GST_DEBUG (0,"adding element %s", GST_ELEMENT_NAME (element));
       gst_bin_add(GST_BIN(thebin), element);
@@ -456,10 +456,10 @@ differ:
 
       while (pads) {
 	GstPad *pad = GST_PAD (pads->data);
-	GstPadTemplate *templ = GST_PAD_PADTEMPLATE (pad);
+	GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (pad);
 	pads = g_list_next (pads);
 
-	if (gst_caps_check_compatibility (GST_PADTEMPLATE_CAPS (templ), endcap)) {
+	if (gst_caps_check_compatibility (GST_PAD_TEMPLATE_CAPS (templ), endcap)) {
           gst_element_add_ghost_pad (result, pad, g_strdup_printf("src_%02d", i));
 	  have_pad = TRUE;
 	  break;

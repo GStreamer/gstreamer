@@ -50,7 +50,7 @@ enum {
   ARG_LAST_MESSAGE,
 };
 
-GST_PADTEMPLATE_FACTORY (fakesink_sink_factory,
+GST_PAD_TEMPLATE_FACTORY (fakesink_sink_factory,
   "sink%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
@@ -276,7 +276,7 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
 gboolean
 gst_fakesink_factory_init (GstElementFactory *factory)
 {
-  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (fakesink_sink_factory));
+  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (fakesink_sink_factory));
 
   return TRUE;
 }

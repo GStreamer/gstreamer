@@ -41,7 +41,7 @@ void eos(GstElement *element)
 }
 
 G_GNUC_UNUSED static GstCaps*
-gst_play_typefind (GstBin *bin, GstElement *element)
+gst_play_type_find (GstBin *bin, GstElement *element)
 {
   GstElement *typefind;
   GstElement *pipeline;
@@ -52,7 +52,7 @@ gst_play_typefind (GstBin *bin, GstElement *element)
 
   pipeline = gst_pipeline_new ("autoplug_pipeline");
  
-  typefind = gst_elementfactory_make ("typefind", "typefind");
+  typefind = gst_element_factory_make ("typefind", "typefind");
   g_return_val_if_fail (typefind != NULL, FALSE);
 
   gst_pad_connect (gst_element_get_pad (element, "src"),
@@ -107,10 +107,10 @@ int main(int argc,char *argv[])
   /* set up output channel and main bin */
   
   /* create adder */
-  adder = gst_elementfactory_make ("adder", "adderel");
+  adder = gst_element_factory_make ("adder", "adderel");
 
   /* create an audio sink */
-  audiosink = gst_elementfactory_make ("esdsink", "play_audio");
+  audiosink = gst_element_factory_make ("esdsink", "play_audio");
 
   /* create main bin */
   main_bin = gst_pipeline_new("bin");
@@ -267,7 +267,7 @@ create_input_channel (int id, char* location)
   GST_DEBUG(0, "c_i_p : creating filesrc");
 
   sprintf (buffer, "filesrc%d", id);
-  channel->filesrc = gst_elementfactory_make ("filesrc", buffer);
+  channel->filesrc = gst_element_factory_make ("filesrc", buffer);
   g_assert(channel->filesrc != NULL);    
 
   GST_DEBUG(0, "c_i_p : setting location");
@@ -286,7 +286,7 @@ create_input_channel (int id, char* location)
 #endif
 
   sprintf (buffer, "volenv%d", id);
-  channel->volenv = gst_elementfactory_make ("volenv", buffer);
+  channel->volenv = gst_element_factory_make ("volenv", buffer);
   g_assert(channel->volenv != NULL);    
 
   /* autoplug the pipe */
@@ -296,7 +296,7 @@ create_input_channel (int id, char* location)
 #endif
 
 #ifdef WITH_BUG
-  srccaps = gst_play_typefind (GST_BIN (channel->pipe), channel->filesrc);
+  srccaps = gst_play_type_find (GST_BIN (channel->pipe), channel->filesrc);
 #endif
 #ifdef WITH_BUG2
   {
@@ -322,7 +322,7 @@ create_input_channel (int id, char* location)
   printf ("DEBUG : c_i_p : creating autoplug\n");
 #endif
 
-  autoplug = gst_autoplugfactory_make ("static");
+  autoplug = gst_autoplug_factory_make ("static");
   g_assert (autoplug != NULL);
 
 #ifdef DEBUG
@@ -343,7 +343,7 @@ create_input_channel (int id, char* location)
 
   /* static plug, use mad plugin and assume mp3 input */
   printf ("using static plugging for input channel\n");
-  decoder =  gst_elementfactory_make ("mad", "mpg123");
+  decoder =  gst_element_factory_make ("mad", "mpg123");
   if (!decoder)
   {
     fprintf (stderr, "Could not get a decoder element !\n");

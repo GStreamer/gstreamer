@@ -20,7 +20,7 @@ main (gint argc, gchar *argv[])
 
   pipeline = gst_pipeline_new ("main_pipeline");
 
-  fakesrc = gst_elementfactory_make ("fakesrc", "fakesrc");
+  fakesrc = gst_element_factory_make ("fakesrc", "fakesrc");
   g_object_set (G_OBJECT (fakesrc), "num_buffers", 5, NULL);
   gst_bin_add (GST_BIN (pipeline), fakesrc);
 
@@ -33,7 +33,7 @@ main (gint argc, gchar *argv[])
 
     bin = gst_bin_new ("bin");
 
-    fakesink = gst_elementfactory_make ("fakesink", "fakesink");
+    fakesink = gst_element_factory_make ("fakesink", "fakesink");
 
     gst_element_connect (fakesrc, "src", fakesink, "sink");
 

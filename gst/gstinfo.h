@@ -74,7 +74,7 @@ enum {
   GST_CAT_CAPS,			/* Capabilities matching */
   GST_CAT_CLOCK,		/* Clocking */
   GST_CAT_ELEMENT_PADS,		/* Element pad management */
-  GST_CAT_ELEMENTFACTORY,	/* Elementfactory stuff */
+  GST_CAT_ELEMENT_FACTORY,	/* Elementfactory stuff */
   GST_CAT_PADS,			/* Pad creation/connection */
   GST_CAT_PIPELINE,		/* Pipeline stuff */
   GST_CAT_PLUGIN_LOADING,	/* Plugin loading */

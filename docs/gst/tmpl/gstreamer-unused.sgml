@@ -5001,7 +5001,7 @@ must be defined to activate the tracing functionality.
 @srccaps: 
 @sinkcaps: 
 
-<!-- ##### FUNCTION gst_autoplugfactory_load_thyself ##### -->
+<!-- ##### FUNCTION gst_autoplug_factory_load_thyself ##### -->
 <para>
 
 </para>
@@ -5009,7 +5009,7 @@ must be defined to activate the tracing functionality.
 @parent: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_autoplugfactory_save_thyself ##### -->
+<!-- ##### FUNCTION gst_autoplug_factory_save_thyself ##### -->
 <para>
 
 </para>
@@ -5413,7 +5413,7 @@ must be defined to activate the tracing functionality.
 
 @element: 
 
-<!-- ##### FUNCTION gst_elementfactory_add_sink ##### -->
+<!-- ##### FUNCTION gst_element_factory_add_sink ##### -->
 <para>
 
 </para>
@@ -5421,7 +5421,7 @@ must be defined to activate the tracing functionality.
 @elementfactory: 
 @id: 
 
-<!-- ##### FUNCTION gst_elementfactory_add_src ##### -->
+<!-- ##### FUNCTION gst_element_factory_add_src ##### -->
 <para>
 
 </para>
@@ -5429,7 +5429,7 @@ must be defined to activate the tracing functionality.
 @elementfactory: 
 @id: 
 
-<!-- ##### FUNCTION gst_elementfactory_can_sink_caps_list ##### -->
+<!-- ##### FUNCTION gst_element_factory_can_sink_caps_list ##### -->
 <para>
 
 </para>
@@ -5438,7 +5438,7 @@ must be defined to activate the tracing functionality.
 @caps: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_elementfactory_can_src_caps_list ##### -->
+<!-- ##### FUNCTION gst_element_factory_can_src_caps_list ##### -->
 <para>
 
 </para>
@@ -5447,14 +5447,14 @@ must be defined to activate the tracing functionality.
 @caps: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_elementfactory_destroy ##### -->
+<!-- ##### FUNCTION gst_element_factory_destroy ##### -->
 <para>
 
 </para>
 
 @elementfactory: 
 
-<!-- ##### FUNCTION gst_elementfactory_load_thyself ##### -->
+<!-- ##### FUNCTION gst_element_factory_load_thyself ##### -->
 <para>
 
 </para>
@@ -5462,14 +5462,14 @@ must be defined to activate the tracing functionality.
 @parent: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_elementfactory_register ##### -->
+<!-- ##### FUNCTION gst_element_factory_register ##### -->
 <para>
 
 </para>
 
 @elementfactory: 
 
-<!-- ##### FUNCTION gst_elementfactory_save_thyself ##### -->
+<!-- ##### FUNCTION gst_element_factory_save_thyself ##### -->
 <para>
 
 </para>
@@ -5986,7 +5986,7 @@ Call the EOS function of the pad
 @sinkpad: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_padtemplate_create ##### -->
+<!-- ##### FUNCTION gst_pad_template_create ##### -->
 <para>
 
 </para>
@@ -6072,7 +6072,7 @@ Call the EOS function of the pad
 </para>
 
 
-<!-- ##### FUNCTION gst_plugin_load_autoplugfactory ##### -->
+<!-- ##### FUNCTION gst_plugin_load_autoplug_factory ##### -->
 <para>
 
 </para>
@@ -6080,7 +6080,7 @@ Call the EOS function of the pad
 @name: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_plugin_load_elementfactory ##### -->
+<!-- ##### FUNCTION gst_plugin_load_element_factory ##### -->
 <para>
 
 </para>
@@ -6088,7 +6088,7 @@ Call the EOS function of the pad
 @name: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_plugin_load_typefactory ##### -->
+<!-- ##### FUNCTION gst_plugin_load_type_factory ##### -->
 <para>
 
 </para>
@@ -6295,7 +6295,7 @@ Call the EOS function of the pad
 @sched: 
 @element: 
 
-<!-- ##### FUNCTION gst_schedulerfactory_get_type ##### -->
+<!-- ##### FUNCTION gst_scheduler_factory_get_type ##### -->
 <para>
 
 </para>
@@ -6573,7 +6573,7 @@ Call the EOS function of the pad
 @parent: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_typefactory_load_thyself ##### -->
+<!-- ##### FUNCTION gst_type_factory_load_thyself ##### -->
 <para>
 
 </para>
@@ -6581,7 +6581,7 @@ Call the EOS function of the pad
 @parent: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_typefactory_save_thyself ##### -->
+<!-- ##### FUNCTION gst_type_factory_save_thyself ##### -->
 <para>
 
 </para>

@@ -11,19 +11,19 @@ handle.
 </para>
 <para>
 Pad and PadTemplates have #GstCaps attached to it to describe the media type they
-are capable of dealing with.  gst_padtemplate_get_caps() is used to get the
+are capable of dealing with.  gst_pad_template_get_caps() is used to get the
 caps of a padtemplate. It's not possible to modify the caps of a padtemplate after
 creation. 
 </para>
 <para>
-Padtemplates can be created with gst_padtemplate_new() or with the convenient
-GST_PADTEMPLATE_FACTORY() macro. A padtemplate can be used to create a pad or 
+Padtemplates can be created with gst_pad_template_new() or with the convenient
+GST_PAD_TEMPLATE_FACTORY() macro. A padtemplate can be used to create a pad or 
 to add to an elementfactory.
 </para>
 <para>
 The following code example shows the code to create a pad from a padtemplate.
 <programlisting>
-  GST_PADTEMPLATE_FACTORY (my_template_factory,
+  GST_PAD_TEMPLATE_FACTORY (my_template_factory,
     "sink",		/* the name of the pad */
     GST_PAD_SINK,	/* the direction of the pad */
     GST_PAD_ALWAYS, 	/* when this pad will be present */
@@ -40,7 +40,7 @@ The following code example shows the code to create a pad from a padtemplate.
   {
     GstPad *pad;
   
-    pad = gst_pad_new_from_template (GST_PADTEMPLATE_GET (my_template_factory), "sink");
+    pad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (my_template_factory), "sink");
     ...
   }
 </programlisting>
@@ -53,10 +53,10 @@ The following example shows you how to add the padtemplate to an elementfactory:
   {
     GstElementFactory *factory;
 
-    factory = gst_elementfactory_new ("my_factory", GST_TYPE_MYFACTORY, &amp;gst_myfactory_details);
+    factory = gst_element_factory_new ("my_factory", GST_TYPE_MYFACTORY, &amp;gst_myfactory_details);
     g_return_val_if_fail (factory != NULL, FALSE);
 
-    gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (my_template_factory));
+    gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (my_template_factory));
 
     gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
@@ -87,7 +87,7 @@ gst_element_request_pad_by_name() or gst_element_request_compatible_pad().
 </para>
 
 
-<!-- ##### MACRO GST_PADTEMPLATE_CAPS ##### -->
+<!-- ##### MACRO GST_PAD_TEMPLATE_CAPS ##### -->
 <para>
 Get a handle to the padtemplate #GstCaps
 </para>
@@ -95,7 +95,7 @@ Get a handle to the padtemplate #GstCaps
 @templ: the template to query
 
 
-<!-- ##### MACRO GST_PADTEMPLATE_DIRECTION ##### -->
+<!-- ##### MACRO GST_PAD_TEMPLATE_DIRECTION ##### -->
 <para>
 Get the direction of the padtemplate.
 </para>
@@ -103,7 +103,7 @@ Get the direction of the padtemplate.
 @templ: the template to query
 
 
-<!-- ##### MACRO GST_PADTEMPLATE_NAME_TEMPLATE ##### -->
+<!-- ##### MACRO GST_PAD_TEMPLATE_NAME_TEMPLATE ##### -->
 <para>
 Get the nametemplate of the padtemplate.
 </para>
@@ -111,7 +111,7 @@ Get the nametemplate of the padtemplate.
 @templ: the template to query
 
 
-<!-- ##### MACRO GST_PADTEMPLATE_PRESENCE ##### -->
+<!-- ##### MACRO GST_PAD_TEMPLATE_PRESENCE ##### -->
 <para>
 Get the presence of the padtemplate.
 </para>
@@ -119,7 +119,7 @@ Get the presence of the padtemplate.
 @templ: the template to query
 
 
-<!-- ##### MACRO GST_PADTEMPLATE_NEW ##### -->
+<!-- ##### MACRO GST_PAD_TEMPLATE_NEW ##### -->
 <para>
 Create a new padtemplate.
 </para>
@@ -130,10 +130,10 @@ Create a new padtemplate.
 @a...: the capabilities of this padtemplate usually created with GST_CAPS_NEW()
 
 
-<!-- ##### MACRO GST_PADTEMPLATE_FACTORY ##### -->
+<!-- ##### MACRO GST_PAD_TEMPLATE_FACTORY ##### -->
 <para>
 Create a factory for a padtemplate. This can be used if you only want one instance
-of the padtemplate. Use GST_PADTEMPLATE_GET() to get the unique padtemplate.
+of the padtemplate. Use GST_PAD_TEMPLATE_GET() to get the unique padtemplate.
 </para>
 
 @name: th name of the factory
@@ -143,15 +143,15 @@ of the padtemplate. Use GST_PADTEMPLATE_GET() to get the unique padtemplate.
 @a...: the capabilities of this padtemplate, usually created with GST_CAPS_NEW()
 
 
-<!-- ##### MACRO GST_PADTEMPLATE_GET ##### -->
+<!-- ##### MACRO GST_PAD_TEMPLATE_GET ##### -->
 <para>
-Get the padtemplate of the factory created with GST_PADTEMPLATE_FACTORY()
+Get the padtemplate of the factory created with GST_PAD_TEMPLATE_FACTORY()
 </para>
 
 @fact: the factory name to get the padtemplate from.
 
 
-<!-- ##### MACRO GST_PADTEMPLATE_FIXED ##### -->
+<!-- ##### MACRO GST_PAD_TEMPLATE_FIXED ##### -->
 <para>
 Get the flag indicating the properties are fixed from the template.
 </para>
@@ -159,7 +159,7 @@ Get the flag indicating the properties are fixed from the template.
 @templ: the template to query
 
 
-<!-- ##### MACRO GST_PADTEMPLATE_IS_FIXED ##### -->
+<!-- ##### MACRO GST_PAD_TEMPLATE_IS_FIXED ##### -->
 <para>
 Check if the properties of the padtemplate are fixed
 </para>
@@ -167,7 +167,7 @@ Check if the properties of the padtemplate are fixed
 @templ: the template to query
 
 
-<!-- ##### FUNCTION gst_padtemplate_new ##### -->
+<!-- ##### FUNCTION gst_pad_template_new ##### -->
 <para>
 
 </para>
@@ -180,7 +180,7 @@ Check if the properties of the padtemplate are fixed
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_padtemplate_load_thyself ##### -->
+<!-- ##### FUNCTION gst_pad_template_load_thyself ##### -->
 <para>
 
 </para>
@@ -189,7 +189,7 @@ Check if the properties of the padtemplate are fixed
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_padtemplate_save_thyself ##### -->
+<!-- ##### FUNCTION gst_pad_template_save_thyself ##### -->
 <para>
 
 </para>
@@ -199,7 +199,7 @@ Check if the properties of the padtemplate are fixed
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_padtemplate_get_caps ##### -->
+<!-- ##### FUNCTION gst_pad_template_get_caps ##### -->
 <para>
 
 </para>
@@ -208,7 +208,7 @@ Check if the properties of the padtemplate are fixed
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_padtemplate_get_caps_by_name ##### -->
+<!-- ##### FUNCTION gst_pad_template_get_caps_by_name ##### -->
 <para>
 
 </para>

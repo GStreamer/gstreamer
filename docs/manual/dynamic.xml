@@ -44,11 +44,11 @@ main(int argc, char *argv[])
   pipeline = gst_pipeline_new ("pipeline");
   g_return_val_if_fail (pipeline != NULL, -1);
 
-  src = gst_elementfactory_make ("filesrc", "src");
+  src = gst_element_factory_make ("filesrc", "src");
   g_return_val_if_fail (src != NULL, -1);
   g_object_set (G_OBJECT (src), "location", argv[1], NULL);
 
-  demux = gst_elementfactory_make ("mpegdemux", "demux");
+  demux = gst_element_factory_make ("mpegdemux", "demux");
   g_return_val_if_fail (demux != NULL, -1);
 
   gst_bin_add_many (GST_BIN (pipeline), src, demux, NULL);
@@ -105,9 +105,9 @@ new_pad_created (GstElement *parse, GstPad *pad, GstElement *pipeline)
   if (strncmp (gst_pad_get_name (pad), "audio_", 6) == 0) {
 
     // construct internal pipeline elements
-    decode = gst_elementfactory_make ("mad", "decode_audio");
+    decode = gst_element_factory_make ("mad", "decode_audio");
     g_return_if_fail (decode != NULL);
-    play = gst_elementfactory_make ("osssink", "play_audio");
+    play = gst_element_factory_make ("osssink", "play_audio");
     g_return_if_fail (play != NULL);
 
     // create the thread and pack stuff into it
@@ -121,7 +121,7 @@ new_pad_created (GstElement *parse, GstPad *pad, GstElement *pipeline)
     gst_element_connect (decode, play);
 
     // construct queue and connect everything in the main pipelie
-    audio_queue = gst_elementfactory_make ("queue", "audio_queue");
+    audio_queue = gst_element_factory_make ("queue", "audio_queue");
 
     gst_bin_add_many (GST_BIN (pipeline), audio_queue, audio_thread, NULL);
 
@@ -136,10 +136,10 @@ new_pad_created (GstElement *parse, GstPad *pad, GstElement *pipeline)
   else if (strncmp (gst_pad_get_name (pad), "video_", 6) == 0) {
 
     // construct internal pipeline elements
-    decode_video = gst_elementfactory_make ("mpeg2dec", "decode_video");
+    decode_video = gst_element_factory_make ("mpeg2dec", "decode_video");
     g_return_if_fail (decode_video != NULL);
 
-    show = gst_elementfactory_make ("xvideosink", "show");
+    show = gst_element_factory_make ("xvideosink", "show");
     g_return_if_fail (show != NULL);
 
     // create the thread and pack stuff into it
@@ -153,7 +153,7 @@ new_pad_created (GstElement *parse, GstPad *pad, GstElement *pipeline)
     gst_element_connect (decode_video, show);
 
     // construct queue and connect everything in the main pipeline
-    video_queue = gst_elementfactory_make ("queue", "video_queue");
+    video_queue = gst_element_factory_make ("queue", "video_queue");
 
     gst_bin_add_many (GST_BIN (pipeline), video_queue, video_thread);
 

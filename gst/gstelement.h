@@ -172,7 +172,7 @@ struct _GstElementClass {
   GstPad*		(*request_new_pad)	(GstElement *element, GstPadTemplate *templ, const gchar* name);
 };
 
-void			gst_element_class_add_padtemplate	(GstElementClass *klass, GstPadTemplate *templ);
+void			gst_element_class_add_pad_template	(GstElementClass *klass, GstPadTemplate *templ);
 
 GType			gst_element_get_type		(void);
 #define			gst_element_destroy(element)	gst_object_destroy (GST_OBJECT (element))
@@ -205,8 +205,8 @@ GstPad*			gst_element_get_static_pad	(GstElement *element, const gchar *name);
 GstPad*			gst_element_get_request_pad	(GstElement *element, const gchar *name);
 
 GList*			gst_element_get_pad_list	(GstElement *element);
-GList*			gst_element_get_padtemplate_list	(GstElement *element);
-GstPadTemplate*		gst_element_get_padtemplate_by_name	(GstElement *element, const guchar *name);
+GList*			gst_element_get_pad_template_list	(GstElement *element);
+GstPadTemplate*		gst_element_get_pad_template	(GstElement *element, const guchar *name);
 
 GstPad*			gst_element_get_compatible_pad	(GstElement *element, GstPad *pad);
 GstPad*			gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, 
@@ -264,13 +264,13 @@ struct _GstElementDetails {
   gchar *copyright;             /* copyright details (year, etc.) */
 };
 
-#define GST_TYPE_ELEMENTFACTORY 		(gst_elementfactory_get_type())
-#define GST_ELEMENTFACTORY(obj)  		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ELEMENTFACTORY,\
+#define GST_TYPE_ELEMENT_FACTORY 		(gst_element_factory_get_type())
+#define GST_ELEMENT_FACTORY(obj)  		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ELEMENT_FACTORY,\
 						 GstElementFactory))
-#define GST_ELEMENTFACTORY_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ELEMENTFACTORY,\
+#define GST_ELEMENT_FACTORY_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ELEMENT_FACTORY,\
 						 GstElementFactoryClass))
-#define GST_IS_ELEMENTFACTORY(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ELEMENTFACTORY))
-#define GST_IS_ELEMENTFACTORY_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ELEMENTFACTORY))
+#define GST_IS_ELEMENT_FACTORY(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ELEMENT_FACTORY))
+#define GST_IS_ELEMENT_FACTORY_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ELEMENT_FACTORY))
 
 struct _GstElementFactory {
   GstPluginFeature feature;
@@ -289,26 +289,26 @@ struct _GstElementFactoryClass {
   GstPluginFeatureClass parent_class;
 };
 
-GType 			gst_elementfactory_get_type 		(void);
+GType 			gst_element_factory_get_type 		(void);
 
-GstElementFactory*	gst_elementfactory_new			(const gchar *name,GType type,
+GstElementFactory*	gst_element_factory_new			(const gchar *name,GType type,
                                                                  GstElementDetails *details);
 
-GstElementFactory*	gst_elementfactory_find			(const gchar *name);
-const GList*		gst_elementfactory_get_list		(void);
+GstElementFactory*	gst_element_factory_find			(const gchar *name);
+const GList*		gst_element_factory_get_list		(void);
 
-void			gst_elementfactory_add_padtemplate	(GstElementFactory *elementfactory,
+void			gst_element_factory_add_pad_template	(GstElementFactory *elementfactory,
 								 GstPadTemplate *templ);
 
-gboolean		gst_elementfactory_can_src_caps		(GstElementFactory *factory,
+gboolean		gst_element_factory_can_src_caps		(GstElementFactory *factory,
 								 GstCaps *caps);
-gboolean		gst_elementfactory_can_sink_caps	(GstElementFactory *factory,
+gboolean		gst_element_factory_can_sink_caps	(GstElementFactory *factory,
 								 GstCaps *caps);
 
-GstElement*		gst_elementfactory_create		(GstElementFactory *factory,
+GstElement*		gst_element_factory_create		(GstElementFactory *factory,
 								 const gchar *name);
 /* FIXME this name is wrong, probably so is the one above it */
-GstElement*		gst_elementfactory_make			(const gchar *factoryname, const gchar *name);
+GstElement*		gst_element_factory_make			(const gchar *factoryname, const gchar *name);
 
 #ifdef __cplusplus
 }

@@ -304,7 +304,7 @@ gst_pad_new_from_template (GstPadTemplate *templ,
   pad = gst_pad_new (name, templ->direction);
   
   gst_object_ref (GST_OBJECT (templ));
-  GST_PAD_PADTEMPLATE (pad) = templ;
+  GST_PAD_PAD_TEMPLATE (pad) = templ;
   
   return pad;
 }
@@ -799,7 +799,7 @@ gst_pad_get_parent (GstPad *pad)
 }
 
 /**
- * gst_pad_get_padtemplate:
+ * gst_pad_get_pad_template:
  * @pad: the pad to get the padtemplate from
  *
  * Get the padtemplate object of this pad.
@@ -807,12 +807,12 @@ gst_pad_get_parent (GstPad *pad)
  * Returns: the padtemplate object
  */
 GstPadTemplate*
-gst_pad_get_padtemplate (GstPad *pad)
+gst_pad_get_pad_template (GstPad *pad)
 {
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  return GST_PAD_PADTEMPLATE (pad); 
+  return GST_PAD_PAD_TEMPLATE (pad); 
 }
 
 
@@ -976,12 +976,12 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
   GST_INFO (GST_CAT_CAPS, "trying to set caps %p on pad %s:%s",
             caps, GST_DEBUG_PAD_NAME (pad));
   
-  if ((template = gst_pad_get_padtemplate (GST_PAD_CAST (pad)))) {
-    if (!gst_caps_intersect (caps, gst_padtemplate_get_caps (template))) {
+  if ((template = gst_pad_get_pad_template (GST_PAD_CAST (pad)))) {
+    if (!gst_caps_intersect (caps, gst_pad_template_get_caps (template))) {
       GST_INFO (GST_CAT_CAPS, "caps did not intersect with %s:%s's padtemplate",
                 GST_DEBUG_PAD_NAME (pad));
       gst_caps_debug (caps, "caps themselves (attemped to set)");
-      gst_caps_debug (gst_padtemplate_get_caps (template),
+      gst_caps_debug (gst_pad_template_get_caps (template),
                       "pad template caps that did not agree with caps");
       return GST_PAD_CONNECT_REFUSED;
     }
@@ -1377,9 +1377,9 @@ gst_pad_get_caps (GstPad *pad)
     GST_DEBUG (GST_CAT_CAPS, "using pad get function");
     return GST_RPAD_GETCAPSFUNC (realpad) (GST_PAD_CAST (realpad), NULL);
   }
-  else if (GST_PAD_PADTEMPLATE (realpad)) {
+  else if (GST_PAD_PAD_TEMPLATE (realpad)) {
     GST_DEBUG (GST_CAT_CAPS, "using pad template");
-    return GST_PADTEMPLATE_CAPS (GST_PAD_PADTEMPLATE (realpad));
+    return GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (realpad));
   }
   GST_DEBUG (GST_CAT_CAPS, "pad has no caps");
 
@@ -1387,7 +1387,7 @@ gst_pad_get_caps (GstPad *pad)
 }
 
 /**
- * gst_pad_get_padtemplate_caps:
+ * gst_pad_get_pad_template_caps:
  * @pad: the pad to get the capabilities from
  *
  * Get the capabilities of this pad.
@@ -1395,20 +1395,20 @@ gst_pad_get_caps (GstPad *pad)
  * Returns: a list of the capabilities of this pad
  */
 GstCaps*
-gst_pad_get_padtemplate_caps (GstPad *pad)
+gst_pad_get_pad_template_caps (GstPad *pad)
 {
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  if (GST_PAD_PADTEMPLATE (pad))
-    return GST_PADTEMPLATE_CAPS (GST_PAD_PADTEMPLATE (pad));
+  if (GST_PAD_PAD_TEMPLATE (pad))
+    return GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (pad));
 
   return NULL;
 }
 
 
 /**
- * gst_padtemplate_get_caps_by_name:
+ * gst_pad_template_get_caps_by_name:
  * @templ: the padtemplate to get the capabilities from
  * @name: the name of the capability to get
  *
@@ -1417,13 +1417,13 @@ gst_pad_get_padtemplate_caps (GstPad *pad)
  * Returns: a capability or NULL if not found
  */
 GstCaps*
-gst_padtemplate_get_caps_by_name (GstPadTemplate *templ, const gchar *name)
+gst_pad_template_get_caps_by_name (GstPadTemplate *templ, const gchar *name)
 {
   GstCaps *caps;
 
   g_return_val_if_fail (templ != NULL, NULL);
 
-  caps = GST_PADTEMPLATE_CAPS (templ);
+  caps = GST_PAD_TEMPLATE_CAPS (templ);
   if (!caps) 
     return NULL;
 
@@ -1574,10 +1574,10 @@ gst_real_pad_dispose (GObject *object)
 
   GST_DEBUG (GST_CAT_REFCOUNTING, "dispose %s:%s", GST_DEBUG_PAD_NAME(pad));
 
-  if (GST_PAD_PADTEMPLATE (pad)){
-    GST_DEBUG (GST_CAT_REFCOUNTING, "unreffing padtemplate'%s'", GST_OBJECT_NAME (GST_PAD_PADTEMPLATE (pad)));
-    gst_object_unref (GST_OBJECT (GST_PAD_PADTEMPLATE (pad)));
-    GST_PAD_PADTEMPLATE (pad) = NULL;
+  if (GST_PAD_PAD_TEMPLATE (pad)){
+    GST_DEBUG (GST_CAT_REFCOUNTING, "unreffing padtemplate'%s'", GST_OBJECT_NAME (GST_PAD_PAD_TEMPLATE (pad)));
+    gst_object_unref (GST_OBJECT (GST_PAD_PAD_TEMPLATE (pad)));
+    GST_PAD_PAD_TEMPLATE (pad) = NULL;
   }
   
   /* we destroy the ghostpads, because they are nothing without the real pad  */
@@ -1952,8 +1952,8 @@ gst_pad_selectv (GstPad *pad, ...)
  * templates
  *
  */
-static void		gst_padtemplate_class_init	(GstPadTemplateClass *klass);
-static void		gst_padtemplate_init		(GstPadTemplate *templ);
+static void		gst_pad_template_class_init	(GstPadTemplateClass *klass);
+static void		gst_pad_template_init		(GstPadTemplate *templ);
 
 enum {
   TEMPL_PAD_CREATED,
@@ -1962,10 +1962,10 @@ enum {
 };
 
 static GstObject *padtemplate_parent_class = NULL;
-static guint gst_padtemplate_signals[TEMPL_LAST_SIGNAL] = { 0 };
+static guint gst_pad_template_signals[TEMPL_LAST_SIGNAL] = { 0 };
 
 GType
-gst_padtemplate_get_type (void)
+gst_pad_template_get_type (void)
 {
   static GType padtemplate_type = 0;
 
@@ -1974,12 +1974,12 @@ gst_padtemplate_get_type (void)
       sizeof(GstPadTemplateClass),
       NULL,
       NULL,
-      (GClassInitFunc)gst_padtemplate_class_init,
+      (GClassInitFunc)gst_pad_template_class_init,
       NULL,
       NULL,
       sizeof(GstPadTemplate),
       32,
-      (GInstanceInitFunc)gst_padtemplate_init,
+      (GInstanceInitFunc)gst_pad_template_init,
       NULL
     };
     padtemplate_type = g_type_register_static(GST_TYPE_OBJECT, "GstPadTemplate", &padtemplate_info, 0);
@@ -1988,7 +1988,7 @@ gst_padtemplate_get_type (void)
 }
 
 static void
-gst_padtemplate_class_init (GstPadTemplateClass *klass)
+gst_pad_template_class_init (GstPadTemplateClass *klass)
 {
   GObjectClass *gobject_class;
   GstObjectClass *gstobject_class;
@@ -1998,7 +1998,7 @@ gst_padtemplate_class_init (GstPadTemplateClass *klass)
 
   padtemplate_parent_class = g_type_class_ref(GST_TYPE_OBJECT);
 
-  gst_padtemplate_signals[TEMPL_PAD_CREATED] =
+  gst_pad_template_signals[TEMPL_PAD_CREATED] =
     g_signal_new ("pad_created", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstPadTemplateClass, pad_created), NULL, NULL,
                     gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
@@ -2009,7 +2009,7 @@ gst_padtemplate_class_init (GstPadTemplateClass *klass)
 }
 
 static void
-gst_padtemplate_init (GstPadTemplate *templ)
+gst_pad_template_init (GstPadTemplate *templ)
 {
 }
 
@@ -2054,7 +2054,7 @@ name_is_valid (const gchar *name, GstPadPresence presence)
 }
 
 /**
- * gst_padtemplate_new:
+ * gst_pad_template_new:
  * @name_template: the name template
  * @direction: the direction for the template
  * @presence: the presence of the pad
@@ -2066,7 +2066,7 @@ name_is_valid (const gchar *name, GstPadPresence presence)
  * Returns: the new padtemplate
  */
 GstPadTemplate*
-gst_padtemplate_new (gchar *name_template,
+gst_pad_template_new (gchar *name_template,
 		     GstPadDirection direction, GstPadPresence presence,
 		     GstCaps *caps, ...)
 {
@@ -2079,11 +2079,11 @@ gst_padtemplate_new (gchar *name_template,
   if (!name_is_valid (name_template, presence))
     return NULL;
 
-  new = g_object_new(gst_padtemplate_get_type () ,NULL);
+  new = g_object_new(gst_pad_template_get_type () ,NULL);
 
-  GST_PADTEMPLATE_NAME_TEMPLATE (new) = name_template;
-  GST_PADTEMPLATE_DIRECTION (new) = direction;
-  GST_PADTEMPLATE_PRESENCE (new) = presence;
+  GST_PAD_TEMPLATE_NAME_TEMPLATE (new) = name_template;
+  GST_PAD_TEMPLATE_DIRECTION (new) = direction;
+  GST_PAD_TEMPLATE_PRESENCE (new) = presence;
 
   va_start (var_args, caps);
 
@@ -2094,13 +2094,13 @@ gst_padtemplate_new (gchar *name_template,
   }
   va_end (var_args);
   
-  GST_PADTEMPLATE_CAPS (new) = thecaps;
+  GST_PAD_TEMPLATE_CAPS (new) = thecaps;
 
   return new;
 }
 
 /**
- * gst_padtemplate_get_caps:
+ * gst_pad_template_get_caps:
  * @templ: the padtemplate to use
  *
  * Get the capabilities of the padtemplate
@@ -2108,16 +2108,16 @@ gst_padtemplate_new (gchar *name_template,
  * Returns: a GstCaps*
  */
 GstCaps*
-gst_padtemplate_get_caps (GstPadTemplate *templ)
+gst_pad_template_get_caps (GstPadTemplate *templ)
 {
   g_return_val_if_fail (templ != NULL, NULL);
 
-  return GST_PADTEMPLATE_CAPS (templ);
+  return GST_PAD_TEMPLATE_CAPS (templ);
 }
 
 #ifndef GST_DISABLE_LOADSAVE
 /**
- * gst_padtemplate_save_thyself:
+ * gst_pad_template_save_thyself:
  * @templ: the padtemplate to save
  * @parent: the parent XML tree
  *
@@ -2126,7 +2126,7 @@ gst_padtemplate_get_caps (GstPadTemplate *templ)
  * Returns: the new XML tree
  */
 xmlNodePtr
-gst_padtemplate_save_thyself (GstPadTemplate *templ, xmlNodePtr parent)
+gst_pad_template_save_thyself (GstPadTemplate *templ, xmlNodePtr parent)
 {
   xmlNodePtr subtree;
   guchar *presence;
@@ -2152,16 +2152,16 @@ gst_padtemplate_save_thyself (GstPadTemplate *templ, xmlNodePtr parent)
   }
   xmlNewChild(parent,NULL,"presence", presence);
 
-  if (GST_PADTEMPLATE_CAPS (templ)) {
+  if (GST_PAD_TEMPLATE_CAPS (templ)) {
     subtree = xmlNewChild (parent, NULL, "caps", NULL);
-    gst_caps_save_thyself (GST_PADTEMPLATE_CAPS (templ), subtree);
+    gst_caps_save_thyself (GST_PAD_TEMPLATE_CAPS (templ), subtree);
   }
 
   return parent;
 }
 
 /**
- * gst_padtemplate_load_thyself:
+ * gst_pad_template_load_thyself:
  * @parent: the source XML tree
  *
  * Loads a padtemplate from the XML tree.
@@ -2169,7 +2169,7 @@ gst_padtemplate_save_thyself (GstPadTemplate *templ, xmlNodePtr parent)
  * Returns: the new padtemplate
  */
 GstPadTemplate*
-gst_padtemplate_load_thyself (xmlNodePtr parent)
+gst_pad_template_load_thyself (xmlNodePtr parent)
 {
   xmlNodePtr field = parent->xmlChildrenNode;
   GstPadTemplate *factory;
@@ -2213,7 +2213,7 @@ gst_padtemplate_load_thyself (xmlNodePtr parent)
     field = field->next;
   }
 
-  factory = gst_padtemplate_new (name_template, direction, presence, caps, NULL);
+  factory = gst_pad_template_new (name_template, direction, presence, caps, NULL);
 
   return factory;
 }
@@ -2325,7 +2325,7 @@ gst_ghost_pad_new (gchar *name,
     realpad = GST_PAD_REALIZE (realpad);
   }
   GST_GPAD_REALPAD (ghostpad) = realpad;
-  GST_PAD_PADTEMPLATE (ghostpad) = GST_PAD_PADTEMPLATE (pad);
+  GST_PAD_PAD_TEMPLATE (ghostpad) = GST_PAD_PAD_TEMPLATE (pad);
 
   /* add ourselves to the real pad's list of ghostpads */
   gst_pad_add_ghost_pad (pad, GST_PAD (ghostpad));

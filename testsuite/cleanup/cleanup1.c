@@ -9,8 +9,8 @@ create_pipeline (void)
   
   pipeline = gst_pipeline_new ("main_pipeline");
 
-  fakesrc = gst_elementfactory_make ("fakesrc", "fakesrc");
-  fakesink = gst_elementfactory_make ("fakesink", "fakesink");
+  fakesrc = gst_element_factory_make ("fakesrc", "fakesrc");
+  fakesink = gst_element_factory_make ("fakesink", "fakesink");
 
   gst_element_connect (fakesrc, "src", fakesink, "sink");
 

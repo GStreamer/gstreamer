@@ -50,7 +50,7 @@
   GstElement *sinesrc;
   GstDParamManager *dpman;
   ...
-  sinesrc = gst_elementfactory_make("sinesrc","sine-source");
+  sinesrc = gst_element_factory_make("sinesrc","sine-source");
   ...
   dpman = gst_dpman_get_manager (sinesrc);
   gst_dpman_set_mode(dpman, "synchronous");

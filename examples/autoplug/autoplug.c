@@ -23,15 +23,15 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
   gst_bin_remove (GST_BIN (autobin), typefind);
       
   /* and an audio sink */
-  osssink = gst_elementfactory_make ("osssink", "play_audio");
+  osssink = gst_element_factory_make ("osssink", "play_audio");
   g_assert (osssink != NULL);
 
   videosink = gst_bin_new ("videosink");
   /* and an video sink */
-  videoelement = gst_elementfactory_make ("xvideosink", "play_video");
+  videoelement = gst_element_factory_make ("xvideosink", "play_video");
   g_assert (videosink != NULL);
 
-  colorspace = gst_elementfactory_make ("colorspace", "colorspace");
+  colorspace = gst_element_factory_make ("colorspace", "colorspace");
   g_assert (colorspace != NULL);
 
   gst_element_connect_pads (colorspace, "src", videoelement, "sink");
@@ -41,7 +41,7 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
   gst_element_add_ghost_pad (videosink, 
 		  gst_element_get_pad (colorspace, "sink"), "sink");
 
-  autoplug = gst_autoplugfactory_make ("staticrender");
+  autoplug = gst_autoplug_factory_make ("staticrender");
   g_assert (autoplug != NULL);
 
   new_element = gst_autoplug_to_renderers (autoplug,
@@ -117,16 +117,16 @@ int main(int argc,char *argv[])
   g_assert(pipeline != NULL);
 
   /* create a disk reader */
-  filesrc = gst_elementfactory_make("filesrc", "disk_source");
+  filesrc = gst_element_factory_make("filesrc", "disk_source");
   g_assert(filesrc != NULL);
   g_object_set(G_OBJECT(filesrc),"location", argv[1],NULL);
   gst_bin_add (GST_BIN (pipeline), filesrc);
 
   autobin = gst_bin_new ("autobin");
-  cache = gst_elementfactory_make ("autoplugcache", "cache");
+  cache = gst_element_factory_make ("autoplugcache", "cache");
   g_signal_connect (G_OBJECT (cache), "cache_empty", G_CALLBACK (gst_play_cache_empty), pipeline);
 
-  typefind = gst_elementfactory_make ("typefind", "typefind");
+  typefind = gst_element_factory_make ("typefind", "typefind");
   g_signal_connect (G_OBJECT (typefind), "have_type", G_CALLBACK (gst_play_have_type), pipeline);
   gst_bin_add (GST_BIN (autobin), cache);
   gst_bin_add (GST_BIN (autobin), typefind);

@@ -20,11 +20,11 @@
   <sect1>
     <title>Using autoplugging</title>
     <para> 
-      You first need to create a suitable autoplugger with gst_autoplugfactory_make().
+      You first need to create a suitable autoplugger with gst_autoplug_factory_make().
       The name of the autoplugger must be one of the registered autopluggers..
     </para>
     <para>
-      A list of all available autopluggers can be obtained with gst_autoplugfactory_get_list().
+      A list of all available autopluggers can be obtained with gst_autoplug_factory_get_list().
     </para>
     <para>
       If the autoplugger supports the RENDERER API, use gst_autoplug_to_renderers() call to
@@ -38,10 +38,10 @@
 	GstElement  *sink;
 
 	/* create a static autoplugger */
-	autoplug = gst_autoplugfactory_make ("staticrender");
+	autoplug = gst_autoplug_factory_make ("staticrender");
 
 	/* create an osssink */
-	sink = gst_elementfactory_make ("osssink", "our_sink");
+	sink = gst_element_factory_make ("osssink", "our_sink");
 
 	/* create an element that can play audio/mp3 through osssink */
 	element = gst_autoplug_to_renderers (autoplug,
@@ -68,7 +68,7 @@
 	GstElement  *element;
 
 	/* create a static autoplugger */
-	autoplug = gst_autoplugfactory_make ("static");
+	autoplug = gst_autoplug_factory_make ("static");
 
 	/* create an element that converts audio/mp3 to audio/raw */
 	element = gst_autoplug_to_caps (autoplug,

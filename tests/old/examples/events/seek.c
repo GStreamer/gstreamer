@@ -14,9 +14,9 @@ main (int argc, char *argv[])
   g_return_val_if_fail (bin != NULL, -1);
 
   g_print ("--- creating src and sink elements\n");
-  src = gst_elementfactory_make ("fakesrc", "src");
+  src = gst_element_factory_make ("fakesrc", "src");
   g_return_val_if_fail (src != NULL, -1);
-  sink = gst_elementfactory_make ("fakesink", "sink");
+  sink = gst_element_factory_make ("fakesink", "sink");
   g_return_val_if_fail (sink != NULL, -1);
 
   g_print ("--- about to add the elements to the bin\n");

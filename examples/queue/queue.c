@@ -23,17 +23,17 @@ int main(int argc,char *argv[])
   g_assert(bin != NULL);
 
   /* create a disk reader */
-  filesrc = gst_elementfactory_make("filesrc", "disk_source");
+  filesrc = gst_element_factory_make("filesrc", "disk_source");
   g_assert(filesrc != NULL);
   g_object_set(G_OBJECT(filesrc),"location", argv[1],NULL);
 
-  parse = gst_elementfactory_make("mp3parse", "parse");
-  decode = gst_elementfactory_make("mpg123", "decode");
+  parse = gst_element_factory_make("mp3parse", "parse");
+  decode = gst_element_factory_make("mpg123", "decode");
 
-  queue = gst_elementfactory_make("queue", "queue");
+  queue = gst_element_factory_make("queue", "queue");
 
   /* and an audio sink */
-  osssink = gst_elementfactory_make("osssink", "play_audio");
+  osssink = gst_element_factory_make("osssink", "play_audio");
   g_assert(osssink != NULL);
 
   /* add objects to the main pipeline */

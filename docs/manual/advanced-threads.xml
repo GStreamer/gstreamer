@@ -15,7 +15,7 @@
 
   /* create the thread object */
   my_thread = gst_thread_new ("my_thread");
-  /* you could have used gst_elementfactory_make ("thread", "my_thread"); */
+  /* you could have used gst_element_factory_make ("thread", "my_thread"); */
   g_return_if_fail (my_thread != NULL);
 
   /* add some plugins */
@@ -115,14 +115,14 @@ main (int argc, char *argv[])
   g_assert (pipeline != NULL);
 
   /* create a disk reader */
-  filesrc = gst_elementfactory_make ("filesrc", "disk_source");
+  filesrc = gst_element_factory_make ("filesrc", "disk_source");
   g_assert (filesrc != NULL);
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
   g_signal_connect (G_OBJECT (filesrc), "eos",
                      G_CALLBACK (eos), thread);
 
   /* and an audio sink */
-  audiosink = gst_elementfactory_make ("audiosink", "play_audio");
+  audiosink = gst_element_factory_make ("audiosink", "play_audio");
   g_assert (audiosink != NULL);
 
   /* add objects to the main pipeline */

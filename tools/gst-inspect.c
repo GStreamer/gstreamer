@@ -149,7 +149,7 @@ print_element_info (GstElementFactory *factory)
   gboolean have_flags;
   gint maxlevel = 0;
 
-  element = gst_elementfactory_create(factory,"element");
+  element = gst_element_factory_create(factory,"element");
   if (!element) {
     g_print ("couldn't construct element for some reason\n");
     return -1;
@@ -475,31 +475,31 @@ print_element_list (void)
 
       feature = GST_PLUGIN_FEATURE (features->data);
 
-      if (GST_IS_ELEMENTFACTORY (feature)) {
+      if (GST_IS_ELEMENT_FACTORY (feature)) {
         GstElementFactory *factory;
 
-        factory = GST_ELEMENTFACTORY (feature);
+        factory = GST_ELEMENT_FACTORY (feature);
         printf("%s:  %s: %s\n",plugin->name, GST_OBJECT_NAME (factory) ,factory->details->longname);
       }
-      else if (GST_IS_AUTOPLUGFACTORY (feature)) {
+      else if (GST_IS_AUTOPLUG_FACTORY (feature)) {
         GstAutoplugFactory *factory;
 
-        factory = GST_AUTOPLUGFACTORY (feature);
+        factory = GST_AUTOPLUG_FACTORY (feature);
         printf("%s:  %s: %s\n", plugin->name, GST_OBJECT_NAME (factory), factory->longdesc);
       }
-      else if (GST_IS_TYPEFACTORY (feature)) {
+      else if (GST_IS_TYPE_FACTORY (feature)) {
         GstTypeFactory *factory;
 
-        factory = GST_TYPEFACTORY (feature);
+        factory = GST_TYPE_FACTORY (feature);
         printf("%s:  %s: %s\n", plugin->name, factory->mime, factory->exts);
 
         if (factory->typefindfunc)
           printf("      Has typefind function: %s\n",GST_DEBUG_FUNCPTR_NAME(factory->typefindfunc));
       }
-      else if (GST_IS_SCHEDULERFACTORY (feature)) {
+      else if (GST_IS_SCHEDULER_FACTORY (feature)) {
         GstSchedulerFactory *factory;
 
-        factory = GST_SCHEDULERFACTORY (feature);
+        factory = GST_SCHEDULER_FACTORY (feature);
         printf("%s:  %s: %s\n", plugin->name, GST_OBJECT_NAME (factory), factory->longdesc);
       }
       else {
@@ -530,31 +530,31 @@ print_plugin_info (GstPlugin *plugin)
 
     feature = GST_PLUGIN_FEATURE (features->data);
 
-    if (GST_IS_ELEMENTFACTORY (feature)) {
+    if (GST_IS_ELEMENT_FACTORY (feature)) {
       GstElementFactory *factory;
 
-      factory = GST_ELEMENTFACTORY (feature);
+      factory = GST_ELEMENT_FACTORY (feature);
       printf("  %s: %s\n", GST_OBJECT_NAME (factory) ,factory->details->longname);
     }
-    else if (GST_IS_AUTOPLUGFACTORY (feature)) {
+    else if (GST_IS_AUTOPLUG_FACTORY (feature)) {
       GstAutoplugFactory *factory;
 
-      factory = GST_AUTOPLUGFACTORY (feature);
+      factory = GST_AUTOPLUG_FACTORY (feature);
       printf("  %s: %s\n", GST_OBJECT_NAME (factory), factory->longdesc);
     }
-    else if (GST_IS_TYPEFACTORY (feature)) {
+    else if (GST_IS_TYPE_FACTORY (feature)) {
       GstTypeFactory *factory;
 
-      factory = GST_TYPEFACTORY (feature);
+      factory = GST_TYPE_FACTORY (feature);
       printf("  %s: %s\n", factory->mime, factory->exts);
 
       if (factory->typefindfunc)
         printf("      Has typefind function: %s\n",GST_DEBUG_FUNCPTR_NAME(factory->typefindfunc));
     }
-    else if (GST_IS_SCHEDULERFACTORY (feature)) {
+    else if (GST_IS_SCHEDULER_FACTORY (feature)) {
       GstSchedulerFactory *factory;
 
-      factory = GST_SCHEDULERFACTORY (feature);
+      factory = GST_SCHEDULER_FACTORY (feature);
       printf("  %s: %s\n", GST_OBJECT_NAME (factory), factory->longdesc);
     }
     else {
@@ -594,7 +594,7 @@ main (int argc, char *argv[])
 
     /* only search for a factory if there's not a '.so' */
     if (! strstr(argv[1],".so")) {
-      factory = gst_elementfactory_find (argv[1]);
+      factory = gst_element_factory_find (argv[1]);
 
       /* if there's a factory, print out the info */
       if (factory)

@@ -115,7 +115,7 @@
     <programlisting>
  GstElementFactory *factory;
 
- factory = gst_elementfactory_find ("mad");
+ factory = gst_element_factory_find ("mad");
     </programlisting>
     <para> 
       Once you have the handle to the elementfactory, you can create a real element with
@@ -124,10 +124,10 @@
     <programlisting>
  GstElement *element;
 
- element = gst_elementfactory_create (factory, "decoder");
+ element = gst_element_factory_create (factory, "decoder");
     </programlisting>
     <para>
-      gst_elementfactory_create () will use the elementfactory to create an element with the given
+      gst_element_factory_create () will use the elementfactory to create an element with the given
       name. The name of the element is something you can use later on to lookup the element in a
       bin, for example. You can pass NULL as the name argument to get a unique, default name.
     </para>
@@ -139,7 +139,7 @@
     <programlisting>
  GstElement *element;
 
- element = gst_elementfactory_make ("mad", "decoder");
+ element = gst_element_factory_make ("mad", "decoder");
     </programlisting>
     <para> 
       An element can be destroyed with:  FIXME talk about refcounting

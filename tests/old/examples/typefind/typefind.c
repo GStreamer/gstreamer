@@ -32,11 +32,11 @@ main(int argc, char *argv[])
   g_assert(bin != NULL);
 
   /* create a file reader */
-  filesrc = gst_elementfactory_make("filesrc", "file_source");
+  filesrc = gst_element_factory_make("filesrc", "file_source");
   g_assert(filesrc != NULL);
   g_object_set(G_OBJECT(filesrc),"location", argv[1],NULL);
 
-  typefind = gst_elementfactory_make("typefind", "typefind");
+  typefind = gst_element_factory_make("typefind", "typefind");
   g_assert(typefind != NULL);
 
   /* add objects to the main pipeline */

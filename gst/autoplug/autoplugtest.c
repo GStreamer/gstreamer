@@ -35,8 +35,8 @@ void have_type(GstElement *element, GstCaps *caps, GstCaps **private_caps) {
   gst_scheduler_show (GST_ELEMENT_SCHED(pipeline));
 
   if (strstr(gst_caps_get_mime(caps),"mp3")) {
-    decoder = gst_elementfactory_make ("mad","decoder");
-    sink = gst_elementfactory_make ("osssink","sink");
+    decoder = gst_element_factory_make ("mad","decoder");
+    sink = gst_element_factory_make ("osssink","sink");
     gst_bin_add(GST_BIN(autobin),decoder);
     gst_bin_add(GST_BIN(autobin),sink);
     gst_element_connect_pads(decoder,"src",sink,"sink");
@@ -46,8 +46,8 @@ void have_type(GstElement *element, GstCaps *caps, GstCaps **private_caps) {
     gst_element_connect_pads(cache,"src",decoder,"sink");
   }
   else if (strstr(gst_caps_get_mime(caps),"x-ogg")) {
-    decoder = gst_elementfactory_make ("vorbisdec","decoder");
-    sink = gst_elementfactory_make ("osssink","sink");
+    decoder = gst_element_factory_make ("vorbisdec","decoder");
+    sink = gst_element_factory_make ("osssink","sink");
     gst_bin_add(GST_BIN(autobin),decoder);
     gst_bin_add(GST_BIN(autobin),sink);
     gst_element_connect_pads(decoder,"src",sink,"sink");
@@ -67,14 +67,14 @@ int main (int argc,char *argv[]) {
   gst_init(&argc,&argv);
 
   pipeline = gst_pipeline_new("pipeline");
-  src = gst_elementfactory_make ("filesrc","src");
+  src = gst_element_factory_make ("filesrc","src");
   g_object_set(G_OBJECT(src),"location",argv[1],NULL);
   gst_bin_add (GST_BIN(pipeline),src);
 
   autobin = gst_bin_new("autobin");
-  cache = gst_elementfactory_make ("autoplugcache","cache");
+  cache = gst_element_factory_make ("autoplugcache","cache");
   g_signal_connect (G_OBJECT(cache),"cache_empty",(GCallback)cache_empty,NULL);
-  typefind = gst_elementfactory_make ("typefind", "typefind");
+  typefind = gst_element_factory_make ("typefind", "typefind");
   g_signal_connect (G_OBJECT(typefind),"have_type",(GCallback)have_type,&caps);
   gst_bin_add (GST_BIN(autobin),cache);
   gst_bin_add (GST_BIN(autobin),typefind);

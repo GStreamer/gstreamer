@@ -114,7 +114,7 @@ int main (int argc, char *argv[])
 
   g_print ("creating main bin\n");  
   /* create cutter */
-  cutter = gst_elementfactory_make ("cutter", "cutter");
+  cutter = gst_element_factory_make ("cutter", "cutter");
 
   g_object_set (G_OBJECT (cutter), 
 	"threshold_dB", -40.0, 
@@ -123,7 +123,7 @@ int main (int argc, char *argv[])
 	NULL);
 
   /* create an audio src */
-  audiosrc = gst_elementfactory_make ("osssrc", "audio_src");
+  audiosrc = gst_element_factory_make ("osssrc", "audio_src");
 
   /* set params */
 
@@ -131,8 +131,8 @@ int main (int argc, char *argv[])
                                          "channels", 1,
   					 "format", 16, NULL);
 
-  encoder = gst_elementfactory_make ("passthrough", "encoder");
-  disksink = gst_elementfactory_make ("afsink", "disk_sink");
+  encoder = gst_element_factory_make ("passthrough", "encoder");
+  disksink = gst_element_factory_make ("afsink", "disk_sink");
 
   g_object_set (G_OBJECT (disksink), "location", "/dev/null", NULL);
 
@@ -143,7 +143,7 @@ int main (int argc, char *argv[])
   main_bin = gst_pipeline_new ("bin");
   g_assert (main_bin != NULL);
 
-  queue = gst_elementfactory_make ("queue", "queue");
+  queue = gst_element_factory_make ("queue", "queue");
 
   /* add elements to bin */
   gst_bin_add (GST_BIN (main_bin), audiosrc);

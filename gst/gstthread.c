@@ -142,9 +142,9 @@ gst_thread_init (GstThread *thread)
   GST_FLAG_SET (thread, GST_BIN_FLAG_MANAGER);
   GST_FLAG_SET (thread, GST_BIN_SELF_SCHEDULABLE);
 
-  schedname = gst_schedulerfactory_get_default_name ();
+  schedname = gst_scheduler_factory_get_default_name ();
 
-  scheduler = gst_schedulerfactory_make (schedname, GST_ELEMENT (thread));
+  scheduler = gst_scheduler_factory_make (schedname, GST_ELEMENT (thread));
 
   GST_ELEMENT_SCHED (thread) = scheduler;
 
@@ -213,7 +213,7 @@ gst_thread_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 GstElement*
 gst_thread_new (const gchar *name)
 {
-  return gst_elementfactory_make ("thread", name);
+  return gst_element_factory_make ("thread", name);
 }
 
 

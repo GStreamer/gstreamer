@@ -95,6 +95,10 @@ graph:          /* empty */          { $$ = g_new0 (graph_t, 1); *((graph_t**) p
                                            $$->connections_pending = g_list_append ($$->connections_pending, $2);
                                      }
         |       graph property_value { $$ = $1;
+                                       if (!$$->current) {
+                                           fprintf (stderr, "error: property value assignments must be preceded by an element definition\n");
+                                           YYABORT;
+                                       }
                                        $$->current->property_values = g_list_append ($$->current->property_values,
                                                                                      $2);
                                      }
@@ -129,7 +133,7 @@ static int yylex (void *lvalp) {
 static int
 yyerror (const char *s)
 {
-  printf ("error: %s\n", s);
+  fprintf (stderr, "error: %s\n", s);
   return -1;
 }
 

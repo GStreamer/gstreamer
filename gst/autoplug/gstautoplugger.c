@@ -100,7 +100,7 @@ static void	gst_autoplugger_external_src_connected		(GstPad *pad, GstPad *peerpa
 */
 static void	gst_autoplugger_cache_first_buffer		(GstElement *element,GstBuffer *buf,GstAutoplugger *autoplugger);
 static void	gst_autoplugger_cache_empty			(GstElement *element, GstAutoplugger *autoplugger);
-static void	gst_autoplugger_typefind_have_type		(GstElement *element, GstCaps *caps, GstAutoplugger *autoplugger);
+static void	gst_autoplugger_type_find_have_type		(GstElement *element, GstCaps *caps, GstAutoplugger *autoplugger);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_autoplugger_signals[LAST_SIGNAL] = { 0 };*/
@@ -165,7 +165,7 @@ gst_autoplugger_init (GstAutoplugger *autoplugger)
   /* create the autoplugger cache, which is the fundamental unit of the autopluggerger */
   /* FIXME we need to find a way to set element's name before _init */
   /* FIXME ... so we can name the subelements uniquely 		    */
-  autoplugger->cache = gst_elementfactory_make("autoplugcache", "unnamed_autoplugcache");
+  autoplugger->cache = gst_element_factory_make("autoplugcache", "unnamed_autoplugcache");
   g_return_if_fail (autoplugger->cache != NULL);
 
   GST_DEBUG(GST_CAT_AUTOPLUG, "turning on caps nego proxying in cache");
@@ -216,9 +216,9 @@ gst_autoplugger_external_sink_connected(GstPad *pad, GstPad *peerpad, GstAutoplu
     if (peercaps)
       GST_INFO(GST_CAT_AUTOPLUG, "there are some caps on this pad's peer: %s",
                gst_caps_get_mime(peercaps));
-    peertemplate = GST_PAD_PADTEMPLATE(autoplugger->sinkpadpeer);
+    peertemplate = GST_PAD_PAD_TEMPLATE(autoplugger->sinkpadpeer);
     if (peertemplate) {
-      peertemplatecaps = GST_PADTEMPLATE_CAPS(peertemplate);
+      peertemplatecaps = GST_PAD_TEMPLATE_CAPS(peertemplate);
       if (peertemplatecaps) {
         GST_INFO(GST_CAT_AUTOPLUG, "there are some caps on this pad's peer's padtemplate %s",
                  gst_caps_get_mime(peertemplatecaps));
@@ -241,9 +241,9 @@ gst_autoplugger_external_src_connected(GstPad *pad, GstPad *peerpad, GstAutoplug
     if (peercaps)
       GST_INFO(GST_CAT_AUTOPLUG, "there are some caps on this pad's peer: %s",
                gst_caps_get_mime(peercaps));
-    peertemplate = GST_PAD_PADTEMPLATE(autoplugger->srcpadpeer);
+    peertemplate = GST_PAD_PAD_TEMPLATE(autoplugger->srcpadpeer);
     if (peertemplate) {
-      peertemplatecaps = GST_PADTEMPLATE_CAPS(peertemplate);
+      peertemplatecaps = GST_PAD_TEMPLATE_CAPS(peertemplate);
       if (peertemplatecaps) {
         GST_INFO(GST_CAT_AUTOPLUG, "there are some caps on this pad's peer's padtemplate %s",
                  gst_caps_get_mime(peertemplatecaps));
@@ -287,7 +287,7 @@ gst_autoplugger_autoplug(GstAutoplugger *autoplugger,GstPad *srcpad,GstCaps *src
   gst_pad_disconnect(srcpad,sinkpad);
 
   if (!autoplugger->autoplug) {
-    autoplugger->autoplug = gst_autoplugfactory_make("static");
+    autoplugger->autoplug = gst_autoplug_factory_make("static");
     g_return_val_if_fail(autoplugger->autoplug != NULL, FALSE);
   }
   GST_DEBUG(GST_CAT_AUTOPLUG, "building autoplugged bin between caps");
@@ -337,9 +337,9 @@ gst_autoplugger_external_sink_caps_nego_failed(GstPad *pad, gboolean *result, Gs
 
   srcpad_peer = GST_PAD(GST_PAD_PEER(autoplugger->cache_srcpad));
   g_return_if_fail(srcpad_peer != NULL);
-  srcpad_peer_template = GST_PAD_PADTEMPLATE(srcpad_peer);
+  srcpad_peer_template = GST_PAD_PAD_TEMPLATE(srcpad_peer);
   g_return_if_fail(srcpad_peer_template != NULL);
-  srcpad_peer_caps = GST_PADTEMPLATE_CAPS(srcpad_peer_template);
+  srcpad_peer_caps = GST_PAD_TEMPLATE_CAPS(srcpad_peer_template);
   g_return_if_fail(srcpad_peer_caps != NULL);
 
   sinkpad_peer = GST_PAD(GST_PAD_PEER(pad));
@@ -377,9 +377,9 @@ gst_autoplugger_external_src_caps_nego_failed(GstPad *pad, gboolean *result, Gst
 
   srcpad_peer = GST_PAD(GST_PAD_PEER(autoplugger->cache_srcpad));
   g_return_if_fail(srcpad_peer != NULL);
-  srcpad_peer_template = GST_PAD_PADTEMPLATE(srcpad_peer);
+  srcpad_peer_template = GST_PAD_PAD_TEMPLATE(srcpad_peer);
   g_return_if_fail(srcpad_peer_template != NULL);
-  srcpad_peer_caps = GST_PADTEMPLATE_CAPS(srcpad_peer_template);
+  srcpad_peer_caps = GST_PAD_TEMPLATE_CAPS(srcpad_peer_template);
   g_return_if_fail(srcpad_peer_caps != NULL);
 
   if (gst_autoplugger_autoplug(autoplugger,autoplugger->cache_srcpad,srcpad_caps,srcpad_peer_caps))
@@ -434,7 +434,7 @@ gst_autoplugger_cache_empty(GstElement *element, GstAutoplugger *autoplugger)
 }
 
 static void
-gst_autoplugger_typefind_have_type(GstElement *element, GstCaps *caps, GstAutoplugger *autoplugger) 
+gst_autoplugger_type_find_have_type(GstElement *element, GstCaps *caps, GstAutoplugger *autoplugger) 
 {
   GST_INFO(GST_CAT_AUTOPLUG, "typefind claims to have a type: %s",gst_caps_get_mime(caps));
 
@@ -455,7 +455,7 @@ gst_scheduler_show(GST_ELEMENT_SCHED(autoplugger));
   /* FIXME FIXME FIXME!!!: this should really be done in the caps failure!!! */
 /*
   if (!autoplugger->autoplug) {
-    autoplugger->autoplug = gst_autoplugfactory_make("static");
+    autoplugger->autoplug = gst_autoplug_factory_make("static");
   }
   autoplugger->autobin = gst_autoplug_to_caps(autoplugger->autoplug,
       caps,autoplugger->sinktemplatecaps,NULL);
@@ -528,10 +528,10 @@ gst_scheduler_show(GST_ELEMENT_SCHED(autoplugger));
     /* instantiate the typefind and set up the signal handlers */
     if (!autoplugger->typefind) {
       GST_DEBUG(GST_CAT_AUTOPLUG, "creating typefind and setting signal handler");
-      autoplugger->typefind = gst_elementfactory_make("typefind","unnamed_typefind");
+      autoplugger->typefind = gst_element_factory_make("typefind","unnamed_type_find");
       autoplugger->typefind_sinkpad = gst_element_get_pad(autoplugger->typefind,"sink");
       g_signal_connect (G_OBJECT(autoplugger->typefind),"have_type",
-                         G_CALLBACK (gst_autoplugger_typefind_have_type), autoplugger);
+                         G_CALLBACK (gst_autoplugger_type_find_have_type), autoplugger);
     }
     /* add it to self and attach it */
     GST_DEBUG(GST_CAT_AUTOPLUG, "adding typefind to self and connecting to cache");
@@ -589,7 +589,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_elementfactory_new ("autoplugger", GST_TYPE_AUTOPLUGGER,
+  factory = gst_element_factory_new ("autoplugger", GST_TYPE_AUTOPLUGGER,
                                     &gst_autoplugger_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 

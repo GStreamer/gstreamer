@@ -34,14 +34,14 @@ int main(int argc,char *argv[])
   g_assert(pipeline != NULL);
 
   /* create a disk reader */
-  filesrc = gst_elementfactory_make("filesrc", "disk_source");
+  filesrc = gst_element_factory_make("filesrc", "disk_source");
   g_assert(filesrc != NULL);
   g_object_set(G_OBJECT(filesrc),"location", argv[1],NULL);
   g_signal_connect(G_OBJECT(filesrc),"eos",
                      G_CALLBACK(eos), thread);
 
   /* and an audio sink */
-  osssink = gst_elementfactory_make("osssink", "play_audio");
+  osssink = gst_element_factory_make("osssink", "play_audio");
   g_assert(osssink != NULL);
 
   /* add objects to the main pipeline */

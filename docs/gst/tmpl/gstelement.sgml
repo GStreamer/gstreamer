@@ -256,7 +256,7 @@ The function to set the clock on a clock receiving element.
 @clock: The clock to set on the element
 
 
-<!-- ##### FUNCTION gst_element_class_add_padtemplate ##### -->
+<!-- ##### FUNCTION gst_element_class_add_pad_template ##### -->
 <para>
 
 </para>
@@ -405,7 +405,7 @@ instead.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_element_get_padtemplate_list ##### -->
+<!-- ##### FUNCTION gst_element_get_pad_template_list ##### -->
 <para>
 
 </para>
@@ -414,7 +414,7 @@ instead.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_element_get_padtemplate_by_name ##### -->
+<!-- ##### FUNCTION gst_element_get_pad_template_by_name ##### -->
 <para>
 
 </para>

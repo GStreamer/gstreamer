@@ -400,7 +400,7 @@ gst_xml_make_element (xmlNodePtr cur, GstObject *parent)
 
   GST_INFO (GST_CAT_XML,"loading \"%s\" of type \"%s\"", name, type);
 
-  element = gst_elementfactory_make (type, name);
+  element = gst_element_factory_make (type, name);
 
   g_return_val_if_fail (element != NULL, NULL);
 

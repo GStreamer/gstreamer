@@ -194,7 +194,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   gst_plugin_set_longname (plugin, "A fast scheduler");
 
-  factory = gst_schedulerfactory_new ("fast",
+  factory = gst_scheduler_factory_new ("fast",
 	                              "A fast scheduler, it uses cothreads",
 		                      gst_fast_scheduler_get_type());
 

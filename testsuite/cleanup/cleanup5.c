@@ -17,7 +17,7 @@ int main(int argc,char *argv[])
   {
     fprintf (stderr, "+");
 
-    element = gst_elementfactory_make ("tee", "tee");
+    element = gst_element_factory_make ("tee", "tee");
     if (!element) 
       break;
 
