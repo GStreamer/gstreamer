@@ -1170,6 +1170,8 @@ gst_asf_demux_process_chunk (GstASFDemux * asf_demux,
     stream->sequence = segment_info->sequence;
     asf_demux->pts = segment_info->frag_timestamp - asf_demux->preroll;
     got_bytes = gst_bytestream_peek (bs, &buffer, segment_info->chunk_size);
+    if (got_bytes == 0)
+      goto done;
     GST_DEBUG ("BUFFER: Copied stream to buffer (%p - %d)", buffer,
         GST_BUFFER_REFCOUNT_VALUE (buffer));
     stream->payload = buffer;
@@ -1185,6 +1187,8 @@ gst_asf_demux_process_chunk (GstASFDemux * asf_demux,
       /* continuing packet */
       GST_INFO ("A continuation packet");
       got_bytes = gst_bytestream_peek (bs, &buffer, segment_info->chunk_size);
+      if (got_bytes == 0)
+        goto done;
       GST_DEBUG ("Copied stream to buffer (%p - %d)", buffer,
           GST_BUFFER_REFCOUNT_VALUE (buffer));
       new_buffer = gst_buffer_merge (stream->payload, buffer);
