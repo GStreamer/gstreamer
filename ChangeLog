@@ -1,5 +1,11 @@
 2004-06-15  Zaheer Abbas Merali  <zaheerabbas at merali.org>
 
+	fixed a potential leak with previous commit
+	
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_peek_head):
+
+2004-06-15  Zaheer Abbas Merali  <zaheerabbas at merali.org>
+
 	* gst-libs/gst/riff/riff-read.c: (gst_riff_peek_head):
 	Added missing refcount, fixes bug #144425
 	Cheers Tim for finding the bug
