@@ -455,9 +455,14 @@ gst_ximagesink_xcontext_get (GstXImageSink *ximagesink)
   if ((xcontext->bpp == 24 || xcontext->bpp == 32) &&
       xcontext->endianness == G_LITTLE_ENDIAN) {
     xcontext->endianness = G_BIG_ENDIAN;
-    xcontext->visual->red_mask = GULONG_TO_BE (xcontext->visual->red_mask);
-    xcontext->visual->green_mask = GULONG_TO_BE (xcontext->visual->green_mask);
-    xcontext->visual->blue_mask = GULONG_TO_BE (xcontext->visual->blue_mask);
+    xcontext->visual->red_mask = GUINT32_TO_BE (xcontext->visual->red_mask);
+    xcontext->visual->green_mask = GUINT32_TO_BE (xcontext->visual->green_mask);
+    xcontext->visual->blue_mask = GUINT32_TO_BE (xcontext->visual->blue_mask);
+    if (xcontext->bpp == 24) {
+      xcontext->visual->red_mask >>= 8;
+      xcontext->visual->green_mask >>= 8;
+      xcontext->visual->blue_mask >>= 8;
+    }
   }
   
   xcontext->caps = gst_caps_new_simple ("video/x-raw-rgb",
