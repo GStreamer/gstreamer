@@ -472,10 +472,19 @@ translit(dnm, m, l) AC_SUBST(AVIFILE_CFLAGS)
 GST_CHECK_CONFIGPROG(AVIFILE, avifile-config)
 ])
 
+dnl *** CDParanoia ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_CDPARANOIA, true)
+GST_CHECK_FEATURE(CDPARANOIA, [CDParanoia], cdparanoia, [
+  GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface, cdda_open, , cdda_interface., CDPARANOIA_LIBS="-lcdda_interface -lcdda_paranoia")
+])
+dnl FIXME : add second check somehow if that is necessary
+dnl AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_interface )
+dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
+
 dnl *** dvdread ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBDVDREAD, true)
 GST_CHECK_FEATURE(LIBDVDREAD, [dvdread library], libdvdread, [
-GST_CHECK_LIBHEADER(LIBDVDREAD, dvdread, DVDOpen, , dvdread/dvd_reader.h, LIBDVDREAD_LIBS="-ldvdread")
+  GST_CHECK_LIBHEADER(LIBDVDREAD, dvdread, DVDOpen, , dvdread/dvd_reader.h, LIBDVDREAD_LIBS="-ldvdread")
 ])
 
 dnl **** ESound ****
@@ -504,8 +513,12 @@ GST_CHECK_CONFIGPROG(GNOME_VFS, gnome-config vfs)
 dnl *** gsm ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBGSM, true)
 GST_CHECK_FEATURE(LIBGSM, [GSM library], gsmenc gsmdec, [
-GST_CHECK_LIBHEADER(LIBGSM, gsm, gsm_create, , gsm/gsm.h, LIBGSM_LIBS="-lgsm" && LIBGSM_CFLAGS="-DGSM_HEADER_IN_SUBDIR")
+GST_CHECK_LIBHEADER(LIBGSM, gsm, gsm_create, , gsm/gsm.h, LIBGSM_LIBS="-lgsm" LIBGSM_CFLAGS="-DGSM_HEADER_IN_SUBDIR")
 ])
+dnl FIXME: this should be done somewhere in the functions, but it doesn't 
+dnl seem to be happening
+AC_SUBST(LIBGSM_LIBS)
+AC_SUBST(LIBGSM_CFLAGS)
 
 dnl *** Hermes ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBHERMES, true)
@@ -754,14 +767,6 @@ AC_CHECK_HEADER(xaudio/decoder.h,
 )
   HAVE_XAUDIO="no",
 )
-
-AC_MSG_CHECKING(CDparanoia library)
-HAVE_CDPARANOIA=yes
-AC_CHECK_LIB(cdda_interface, cdda_open, : , HAVE_CDPARANOIA=no, )
-AC_CHECK_HEADER(cdda_interface.h, :, HAVE_CDPARANOIA=no)
-AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_interface )
-AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
-
 
 dnl Check for linux/cdrom.h
 AC_CHECK_HEADER(linux/cdrom.h,
