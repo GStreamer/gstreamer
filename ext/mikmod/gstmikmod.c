@@ -71,19 +71,33 @@ mikmod_src_factory (void)
       "src",
       GST_PAD_SRC,
       GST_PAD_ALWAYS,
-      gst_caps_new (
+      gst_caps_new ( /* use16bit = TRUE */
         "mikmod_src",
         "audio/raw",
-	gst_props_new (
-  	  "format",   		GST_PROPS_STRING ("int"),
-    	    "law",   		GST_PROPS_INT (0),
-    	    "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
-    	    "signed", 		GST_PROPS_BOOLEAN (TRUE),
-    	    "width", 		GST_PROPS_INT (16),
-    	    "depth",    	GST_PROPS_INT (16),
-    	    "rate",     	GST_PROPS_INT_RANGE (8000, 48000),
-    	    "channels", 	GST_PROPS_INT_RANGE (1, 2),
-	    NULL)),NULL);
+        gst_props_new (
+          "format",     GST_PROPS_STRING ("int"),
+          "law",        GST_PROPS_INT (0),
+          "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+          "signed",     GST_PROPS_BOOLEAN (TRUE),
+          "width",      GST_PROPS_INT (16),
+          "depth",      GST_PROPS_INT (16),
+          "rate",       GST_PROPS_INT_RANGE (8000, 48000),
+          "channels",   GST_PROPS_INT_RANGE (1, 2),
+        NULL)),
+      gst_caps_new ( /* use16bit = FALSE */
+        "mikmod_src",
+        "audio/raw",
+        gst_props_new (
+          "format",     GST_PROPS_STRING ("int"),
+          "law",        GST_PROPS_INT (0),
+          "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+          "signed",     GST_PROPS_BOOLEAN (FALSE),
+          "width",      GST_PROPS_INT (8),
+          "depth",      GST_PROPS_INT (8),
+          "rate",       GST_PROPS_INT_RANGE (8000, 48000),
+          "channels",   GST_PROPS_INT_RANGE (1, 2),
+        NULL)),
+    NULL);
   }
   return template;
 }
@@ -264,7 +278,7 @@ gst_mikmod_loop (GstElement *element)
 {
   GstMikMod *mikmod;
   GstBuffer *buffer_in;
-  gint mode16bits;
+  gint width, sign;
 
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_MIKMOD (element));
@@ -291,10 +305,13 @@ gst_mikmod_loop (GstElement *element)
     }
   }  
   
-  if ( mikmod->_16bit )
-    mode16bits = 16;
-  else
-    mode16bits = 8;
+  if ( mikmod->_16bit ) {
+    width = 16;
+    sign = TRUE;
+  } else {
+    width = 8;
+    sign = FALSE;
+  }
 
   gst_mikmod_setup( mikmod );
   
@@ -317,9 +334,9 @@ gst_mikmod_loop (GstElement *element)
 			      "format",      GST_PROPS_STRING ("int"),
 			      "law",         GST_PROPS_INT (0),
 			      "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
-			      "signed",      GST_PROPS_BOOLEAN (TRUE),
-			      "width",       GST_PROPS_INT (mode16bits),
-			      "depth",       GST_PROPS_INT (mode16bits),
+			      "signed",      GST_PROPS_BOOLEAN (sign),
+			      "width",       GST_PROPS_INT (width),
+			      "depth",       GST_PROPS_INT (width),
 			      "rate",        GST_PROPS_INT (mikmod->mixfreq),
 			      "channels",    GST_PROPS_INT (2)));
 				    
