@@ -64,34 +64,6 @@ AM_PROG_LIBTOOL
 
 AC_HEADER_STDC([])
 
-dnl ###########################################
-dnl # Super Duper options for plugin building #
-dnl ###########################################
-
-dnl experimental plugins; stuff that hasn't had the dust settle yet
-GST_CHECK_FEATURE(EXPERIMENTAL, [enable building of experimental plugins],,
-[HAVE_EXPERIMENTAL=yes],disabled,
-[
-  AC_MSG_WARN(building experimental plugins)
-  USE_LIBMIKMOD="yes"
-  USE_ARTS="yes"
-  USE_ARTSC="yes"
-],[
-  AC_MSG_NOTICE(not building experimental plugins)
-  USE_LIBMIKMOD="no"
-  USE_ARTS="no"
-  USE_ARTSC="no"
-])
-
-dnl broken plugins; stuff that doesn't seem to build at the moment
-GST_CHECK_FEATURE(BROKEN, [enable building of broken plugins],,
-HAVE_BROKEN=yes,disabled,
-[
-  AC_MSG_WARN(building broken plugins)
-  AC_MSG_NOTICE(actually there are no broken plugins at the moment)
-],[
-  AC_MSG_NOTICE(not building broken plugins)
-])
 
 dnl ##############################
 dnl # Do automated configuration #
@@ -332,222 +304,6 @@ AC_SUBST(LIBXML_PKG)
 AC_SUBST(XML_LIBS)
 AC_SUBST(XML_CFLAGS)
 
-dnl Check for optional libraries
-dnl These are all libraries used in building plugins
-dnl ================================================
-dnl let's try and sort them alphabetically, shall we ?
-
-echo
-echo
-AC_MSG_NOTICE(Checking for plugin libraries)
-
-dnl *** a52dec ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_A52DEC, true)
-GST_CHECK_FEATURE(A52DEC, [a52dec], a52dec, [
-GST_CHECK_LIBHEADER(A52DEC, a52, a52_init, -lm, a52dec/a52.h, A52DEC_LIBS="-la52")
-])
-
-dnl *** aalib ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_AALIB, true)
-GST_CHECK_FEATURE(AALIB, [aasink plugin], aasink, [
-  AM_PATH_AALIB(, HAVE_AALIB=yes, HAVE_AALIB=no)
-])
-
-dnl *** alsa ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_ALSA, true)
-GST_CHECK_FEATURE(ALSA, [alsa plugins], gstalsa, [
-AM_PATH_ALSA(0.9.0, HAVE_ALSA=yes, HAVE_ALSA=no)
-])
-
-dnl *** arts ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_ARTS, true)
-GST_CHECK_FEATURE(ARTS, [arts plugins], arts, [
-AM_PATH_ARTS(, HAVE_ARTS=yes, HAVE_ARTS=no)
-])
-
-dnl *** artsc ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_ARTSC, true)
-GST_CHECK_FEATURE(ARTSC, [artsd plugins], artsdsink, [
-GST_CHECK_ARTSC()
-])
-
-dnl *** audiofile ***
-dnl this check uses the GST_CHECK_CONFIGPROG macro
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBAUDIOFILE, true)
-GST_CHECK_FEATURE(LIBAUDIOFILE, [audiofile], afsink afsrc, [
-translit(dnm, m, l) AC_SUBST(LIBAUDIOFILE_LIBS)
-translit(dnm, m, l) AC_SUBST(LIBAUDIOFILE_CFLAGS)
-GST_CHECK_CONFIGPROG(LIBAUDIOFILE, audiofile-config)
-])
-
-dnl *** avifile ***
-dnl this check uses the GST_CHECK_CONFIGPROG macro
-translit(dnm, m, l) AM_CONDITIONAL(USE_AVIFILE, true)
-GST_CHECK_FEATURE(AVIFILE, [avifile], windec winenc, [
-translit(dnm, m, l) AC_SUBST(AVIFILE_LIBS)
-translit(dnm, m, l) AC_SUBST(AVIFILE_CFLAGS)
-GST_CHECK_CONFIGPROG(AVIFILE, avifile-config)
-])
-
-dnl *** CDParanoia ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_CDPARANOIA, true)
-GST_CHECK_FEATURE(CDPARANOIA, [CDParanoia], cdparanoia, [
-  GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface, cdda_open, , cdda_interface.h, CDPARANOIA_LIBS="-lcdda_interface -lcdda_paranoia")
-])
-dnl FIXME : add second check somehow if that is necessary
-dnl AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_interface )
-dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
-
-dnl *** dvdread ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBDVDREAD, true)
-GST_CHECK_FEATURE(LIBDVDREAD, [dvdread library], libdvdread, [
-  GST_CHECK_LIBHEADER(LIBDVDREAD, dvdread, DVDOpen, , dvdread/dvd_reader.h, LIBDVDREAD_LIBS="-ldvdread")
-])
-
-dnl **** ESound ****
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBESD, true)
-GST_CHECK_FEATURE(LIBESD, [esound plugins], esdsrc esdsink, [
-  AM_PATH_ESD(0.2.12, HAVE_LIBESD=yes, HAVE_LIBESD=no)
-])
-
-dnl *** FLAC ***
-dnl thomas : checking for compile with main instead of actual function,
-dnl since that made autoconf break (for version 2.13)
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBFLAC, true)
-GST_CHECK_FEATURE(FLACLIB, [FLAC lossless audio], flacenc flacdec, [
-  GST_CHECK_LIBHEADER(FLACLIB, FLAC, main, -lm, FLAC/all.h, LIBFLAC_LIBS="-lFLAC")
-])
-
-dnl 
-dnl *** Gnome VFS ***
-dnl this check uses the GST_CHECK_CONFIGPROG macro with gnome-config vfs
-translit(dnm, m, l) AM_CONDITIONAL(USE_GNOME_VFS, true)
-GST_CHECK_FEATURE(GNOME_VFS, [Gnome VFS], gnomevfssrc, [
-translit(dnm, m, l) AC_SUBST(GNOME_VFS_LIBS)
-translit(dnm, m, l) AC_SUBST(GNOME_VFS_CFLAGS)
-GST_CHECK_CONFIGPROG(GNOME_VFS, gnome-config vfs)
-])
-
-dnl *** gsm ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBGSM, true)
-GST_CHECK_FEATURE(LIBGSM, [GSM library], gsmenc gsmdec, [
-GST_CHECK_LIBHEADER(LIBGSM, gsm, gsm_create, , gsm/gsm.h, LIBGSM_LIBS="-lgsm")
-])
-
-dnl *** Hermes ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBHERMES, true)
-GST_CHECK_FEATURE(LIBHERMES, [Hermes library], colorspace, [
-GST_CHECK_LIBHEADER(LIBHERMES, Hermes, Hermes_ConverterInstance, , Hermes/Hermes.h, LIBHERMES_LIBS="-lHermes")
-], AC_SUBST(LIBHERMES_LIBS))
-
-dnl *** lame ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBLAME, true)
-GST_CHECK_FEATURE(LIBLAME, [lame mp3 encoder library], lame, [
-GST_CHECK_LIBHEADER(LIBLAME, mp3lame, lame_init, -lm, lame/lame.h, LIBLAME_LIBS="-lmp3lame")
-])
-
-dnl AC_SUBST(HAVE_LIBLAME)
-
-dnl *** libdv ***
-dnl FIXME : check if those GLIB thingies are ok
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBDV, true)
-GST_CHECK_FEATURE(LIBDV, [dv library], dv, [
-GST_CHECK_LIBHEADER(LIBDV, dv, dv_init, -lm $GLIB_LIBS $GLIB_CFLAGS, libdv/dv.h, LIBDV_LIBS="-ldv")
-])
-dnl FIXME : check if these CPP flags can be dealt with otherwise
-dnl libdvcheck_save_CPPFLAGS="$CPPFLAGS"
-dnl CPPFLAGS="$CPPFLAGS $GLIB_CFLAGS"
-dnl AC_CHECK_HEADER(libdv/dv.h, :, HAVE_LIBDV=no)
-dnl CPPFLAGS="$libdvcheck_save_CPPFLAGS"
-
-dnl *** libjpeg ***
-dnl FIXME: we could use header checks here as well IMO
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBJPEG, true)
-GST_CHECK_FEATURE(LIBJPEG, [libjpeg], jpegenc jpegdec, [
-  AC_CHECK_LIB(jpeg, jpeg_set_defaults, HAVE_LIBJPEG="yes", HAVE_LIBJPEG="no")
-])
-
-dnl *** mad ***
-dnl FIXME: we could use header checks here as well IMO
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMAD, true)
-GST_CHECK_FEATURE(LIBMAD, [mad], mad, [
-AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_LIBMAD="yes")
-])
-
-dnl *** mikmod ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMIKMOD, true)
-GST_CHECK_FEATURE(LIBMIKMOD, [mikmod plugin], mikmod, [
-  AM_PATH_LIBMIKMOD(, HAVE_LIBMIKMOD=yes, HAVE_LIBMIKMOD=no)
-])
-
-dnl *** mpeg2dec ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_MPEG2DEC, true)
-GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
-  GST_CHECK_LIBHEADER(MPEG2DEC, mpeg2, mpeg2_init,, mpeg2dec/mpeg2.h, MPEG2DEC_LIBS="-lmpeg2")
-])
-
-dnl *** OSS audio ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_OSS, true)
-GST_CHECK_FEATURE(OSS, [OSS audio], osssrc osssink, [
-  AC_CHECK_HEADER(sys/soundcard.h, HAVE_OSS="yes", HAVE_OSS="no")
-])
-
-dnl *** quicktime ***
-dnl FIXME: make this be called openquicktime
-translit(dnm, m, l) AM_CONDITIONAL(USE_QUICKTIME, true)
-GST_CHECK_FEATURE(QUICKTIME, [Open Quicktime], quicktime_parser quicktime_decoder quicktime_demux,[
-  GST_CHECK_LIBHEADER(QUICKTIME, openquicktime, quicktime_init,, openquicktime/openquicktime.h, QUICKTIME_LIBS="-lopenquicktime")
-])
-
-dnl *** raw1394 ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_RAW1394, true)
-GST_CHECK_FEATURE(RAW1394, [raw1394 library], dv1394src, [
-  GST_CHECK_LIBHEADER(RAW1394, raw1934, raw1934_get_handle,, libraw1394/raw1394.h, RAW1394_LIBS="-raw1394")
-])
-
-dnl Check for librtp
-dnl FIXME : adapt and make it work
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBRTP, true)
-GST_CHECK_FEATURE(LIBRTP, [RTP library], rtpenc rtpdec,[
-  AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_LIBRTP=yes, HAVE_LIBRTP=no, $GLIB_LIBS $GLIB_CFLAGS)
-])
-dnl FIXME header check needs to use GLIB_CFLAGS in order to succeed for rtp
-dnl AC_CHECK_HEADERS(rtp/rtp.h, HAVE_LIBRTP=yes, HAVE_LIBRTP=no)
-dnl AC_CHECK_HEADERS(rtp/rtp-packet.h, :, HAVE_LIBRTP=no)
-dnl AC_CHECK_HEADERS(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
-dnl AC_CHECK_HEADERS(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
-
-
-dnl *** SDL ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBSDL, true)
-GST_CHECK_FEATURE(LIBSDL, [SDL plugin], sdlvideosink, [
- AM_PATH_SDL(, HAVE_LIBSDL=yes, HAVE_LIBSDL=no)
-])
-
-dnl *** shout ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBSHOUT, true)
-GST_CHECK_FEATURE(LIBSHOUT, [shout plugin], icecastsend, [
-  GST_CHECK_LIBHEADER(LIBSHOUT, shout, shout_init_connection,, shout/shout.h, LIBSHOUT_LIBS="-lshout")
-])
-
-dnl for sidplay
-dnl FIXME : make this work
-dnl AC_PATH_LIBSIDPLAY
-
-
-dnl *** vorbis ***
-dnl AM_PATH_VORBIS only takes two options
-translit(dnm, m, l) AM_CONDITIONAL(USE_VORBIS, true)
-GST_CHECK_FEATURE(VORBIS, [vorbis plugin], vorbisenc vorbisdec, [
-  AM_PATH_VORBIS(HAVE_VORBIS=yes, HAVE_VORBIS=no)
-])
-
-dnl *** xmms ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBXMMS, true)
-GST_CHECK_FEATURE(LIBXMMS, [xmms plugin], xmms, [
-  AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
-])
-
 dnl Check for libgdk-pixbuf
 dnl FIXME: not sure that this is still used anywhere.
 dnl DELETEME
@@ -666,29 +422,10 @@ LIBS=${xvsave_LIBS}
 AC_CHECK_HEADER(X11/extensions/Xv.h, :, HAVE_LIBXV=no)
 AC_CHECK_HEADER(X11/extensions/Xvlib.h, :, HAVE_LIBXV=no)
 
-dnl Check for linux/cdrom.h
-AC_CHECK_HEADER(linux/cdrom.h,
-  HAVE_LINUX_CDROM=yes, HAVE_LINUX_CDROM=no
-)
-
-dnl Check for linux/videodev.h
-AC_CHECK_HEADER(linux/videodev.h,
-  HAVE_LINUX_VIDEODEV=yes, HAVE_LINUX_VIDEODEV=no
-)
-
 
 dnl ######################################################################
 dnl # Check command line parameters, and set shell variables accordingly #
 dnl ######################################################################
-
-AC_ARG_ENABLE(plugins, AC_HELP_STRING([--disable-plugins],[enable plugin building]),
-[case "${enableval}" in
-  yes) BUILD_PLUGINS=no ;;
-  no)  BUILD_PLUGINS=yes ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --disable-plugins) ;;
-esac], 
-[BUILD_PLUGINS=no])
-AM_CONDITIONAL(BUILD_PLUGINS, test $BUILD_PLUGINS = "yes")              
 
 AC_ARG_ENABLE(libmmx,
 [  --enable-libmmx              use libmmx, if available],
@@ -921,66 +658,6 @@ if test "x$HAVE_LIBXV" = xyes; then
   AC_DEFINE(HAVE_LIBXV)
 fi
 
-if test "x$HAVE_OSS" = xyes; then
-  AC_DEFINE(HAVE_OSS)
-fi
-
-if test "x$HAVE_LIBMAD" = xyes; then
-  AC_DEFINE(HAVE_LIBMAD)
-fi
-
-if test "x$HAVE_LIBMIKMOD" = xyes; then
-  AC_DEFINE(HAVE_LIBMIKMOD)
-fi
-
-if test "x$HAVE_VORBIS" = xyes; then
-  AC_DEFINE(HAVE_VORBIS)
-fi
-
-if test "x$HAVE_AALIB" = "xyes"; then
-  AC_DEFINE(HAVE_AALIB)
-fi
-
-if test "x$HAVE_LIBJPEG" = xyes; then
-  AC_DEFINE(HAVE_LIBJPEG)
-fi
-
-if test "x$HAVE_LIBSDL" = xyes; then
-  AC_DEFINE(HAVE_LIBSDL)
-fi
-
-if test "x$HAVE_LIBHERMES" = "xyes"; then
-  AC_DEFINE(HAVE_LIBHERMES)
-fi
-
-if test "x$HAVE_LIBDVDREAD" = xyes; then
-  AC_DEFINE(HAVE_LIBDVDREAD)
-fi
-
-if test "x$HAVE_LINUX_CDROM" = xyes; then
-  AC_DEFINE(HAVE_LINUX_CDROM)
-fi
-
-if test "x$HAVE_LINUX_VIDEODEV" = xyes; then
-  AC_DEFINE(HAVE_LINUX_VIDEODEV)
-fi
-
-if test "x$HAVE_MPEG2DEC" = xyes; then
-  AC_DEFINE(HAVE_MPEG2DEC)
-fi
-
-if test "x$HAVE_A52DEC" = xyes; then
-  AC_DEFINE(HAVE_A52DEC)
-fi
-
-if test "x$HAVE_FLACLIB" = xyes; then
-  AC_DEFINE(HAVE_FLACLIB)
-fi
-
-if test "x$HAVE_LIBGSM" = xyes; then
-  AC_DEFINE(HAVE_LIBGSM)
-fi
-
 dnl #############################
 dnl # Set automake conditionals #
 dnl #############################
@@ -999,17 +676,6 @@ AM_CONDITIONAL(HAVE_ATOMIC_H,       test "x$USE_ATOMIC_H" = "xyes")
 AM_CONDITIONAL(EXPERIMENTAL,        test "$EXPERIMENTAL" = "$xyes")
 AM_CONDITIONAL(BROKEN,              test "$BROKEN" = "$xyes")
 
-AM_CONDITIONAL(HAVE_OSS,            test "x$HAVE_OSS" = "xyes")
-AM_CONDITIONAL(HAVE_XAUDIO,         test "x$HAVE_XAUDIO" = "xyes")
-AM_CONDITIONAL(HAVE_LIBMAD,         test "x$HAVE_LIBMAD" = "xyes")
-AM_CONDITIONAL(HAVE_LIBMIKMOD,      test "x$HAVE_LIBMIKMOD" = "xyes")
-AM_CONDITIONAL(HAVE_LINUX_CDROM,    test "x$HAVE_LINUX_CDROM" = "xyes")
-AM_CONDITIONAL(HAVE_LINUX_VIDEODEV, test "x$HAVE_LINUX_VIDEODEV" = "xyes")
-AM_CONDITIONAL(HAVE_LIBDVDREAD,     test "x$HAVE_LIBDVDREAD" = "xyes")
-AM_CONDITIONAL(HAVE_VORBIS,         test "x$HAVE_VORBIS" = "xyes")
-AM_CONDITIONAL(HAVE_LIBJPEG,        test "x$HAVE_LIBJPEG" = "xyes")
-AM_CONDITIONAL(HAVE_LIBSDL,         test "x$HAVE_LIBSDL" = "xyes")
-AM_CONDITIONAL(HAVE_LIBHERMES,      test "x$HAVE_LIBHERMES" = "xyes")
 AM_CONDITIONAL(HAVE_NASM,           test "x$HAVE_NASM" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGLADE_GNOME, test "x$HAVE_LIBGLADE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_GNOME,          test "x$HAVE_GNOME" = "xyes")
@@ -1025,29 +691,7 @@ AM_CONDITIONAL(HAVE_PDFTOPS,        $HAVE_PDFTOPS)
 AM_CONDITIONAL(HAVE_XSLTPROC,       $HAVE_XSLTPROC)
 AM_CONDITIONAL(HAVE_FIG2DEV_PNG,    $HAVE_FIG2DEV_PNG)
 AM_CONDITIONAL(HAVE_FIG2DEV_PDF,    $HAVE_FIG2DEV_PDF)
-AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
-AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
-AM_CONDITIONAL(HAVE_LIBSHOUT,       test "x$HAVE_LIBSHOUT" = "xyes")
-AM_CONDITIONAL(HAVE_MPEG2DEC,       test "x$HAVE_MPEG2DEC" = "xyes")
-AM_CONDITIONAL(HAVE_A52DEC,         test "x$HAVE_A52DEC" = "xyes")
-dnl thomas : the next line gives errors, this is how it is in CVS
-dnl AM_CONDITIONAL(HAVE_FLAC,      	    test "x$HAVE_FLAC" = "xyes")
-dnl thomas : the next line gives errors as well, I commented it
-dnl AM_CONDITIONAL(HAVE_LAC,      	    test "x$HAVE_FAC" = "xyes")
-dnl thomas: the next line doesn't give errors
-AM_CONDITIONAL(HAVE_FLACLIB,        test "x$HAVE_FLACLIB" = "xyes")
-AM_CONDITIONAL(HAVE_LIBRTP,         test "x$HAVE_LIBRTP" = "xyes")
-AM_CONDITIONAL(HAVE_ARTS,           test "x$HAVE_ARTS" = "xyes")
-AM_CONDITIONAL(HAVE_XMMS,           test "x$HAVE_XMMS" = "xyes")
-AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
-AM_CONDITIONAL(HAVE_LIBDV,          test "x$HAVE_LIBDV" = "xyes")
-AM_CONDITIONAL(HAVE_AALIB,          test "x$HAVE_AALIB" = "xyes")
-AM_CONDITIONAL(HAVE_GNOME_VFS,      test "x$HAVE_GNOME_VFS" = "xyes")
-AM_CONDITIONAL(HAVE_AVIFILE,        test "x$HAVE_AVIFILE" = "xyes")
-AM_CONDITIONAL(HAVE_LIBOPENQUICKTIME, test "x$HAVE_LIBOPENQUICKTIME" = "xyes")
-AM_CONDITIONAL(HAVE_LIBGSM,         test "x$HAVE_LIBGSM" = "xyes")
 AM_CONDITIONAL(PLUGINS_USE_BUILDDIR,  test "x$PLUGINS_USE_BUILDDIR" = "xyes")
-AM_CONDITIONAL(HAVE_SIDPLAY,        test "x$have_sidplay" = "xyes")
 
 
 dnl ############################
