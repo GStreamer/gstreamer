@@ -528,7 +528,7 @@ AC_CHECK_LIB(mikmod, MikMod_Init,
   HAVE_LIBMIKMOD=yes
   AC_DEFINE(HAVE_LIBMIKMOD, 1, [Define if libmikmod is available]),
   AC_MSG_WARN(
-***** NOTE: These plugins won't be built: mad
+***** NOTE: These plugins won't be built: mikmod
 )
   HAVE_LIBMIKMOD=no,
 )
