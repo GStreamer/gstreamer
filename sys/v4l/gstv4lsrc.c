@@ -178,6 +178,8 @@ gst_v4lsrc_class_init (GstV4lSrcClass *klass)
 static void
 gst_v4lsrc_init (GstV4lSrc *v4lsrc)
 {
+  GST_FLAG_SET(GST_ELEMENT(v4lsrc), GST_ELEMENT_THREAD_SUGGESTED);
+
   v4lsrc->srcpad = gst_pad_new_from_template (src_template, "src");
   gst_element_add_pad(GST_ELEMENT(v4lsrc), v4lsrc->srcpad);
 
@@ -421,16 +423,16 @@ gst_v4lsrc_srcconnect (GstPad  *pad,
       if (gst_caps_has_fixed_property(caps, "width")) {
         gst_caps_get_int(caps, "width", &w);
       } else {
-        int max;
-        gst_caps_get_int_range(caps, "width", &w, &max);
+        int min;
+        gst_caps_get_int_range(caps, "width", &min, &w);
       }
     }
     if (gst_caps_has_property(caps, "height")) {
       if (gst_caps_has_fixed_property(caps, "height")) {
         gst_caps_get_int(caps, "height", &h);
       } else {
-        int max;
-        gst_caps_get_int_range(caps, "height", &h, &max);
+        int min;
+        gst_caps_get_int_range(caps, "height", &min, &h);
       }
     }
 
@@ -589,7 +591,7 @@ gst_v4lsrc_get (GstPad *pad)
         return NULL;
 
       v4lsrc->last_frame = num;
-      time = v4lsrc->timestamp_soft_sync[num] - v4lsrc->substract_time;
+      time = v4lsrc->timestamp_sync - v4lsrc->substract_time;
 
       /* decide how often we're going to write the frame - set
        * v4lsrc->need_writes to (that-1) and have_frame to TRUE
@@ -601,12 +603,12 @@ gst_v4lsrc_get (GstPad *pad)
        * timeframe. This means that if time - begin_time = X sec,
        * we want to have written X*fps frames. If we've written
        * more - drop, if we've written less - dup... */
-      if (v4lsrc->handled * fps * GST_SECOND - time > 1.5 * fps * GST_SECOND) {
+      if (v4lsrc->handled * (GST_SECOND/fps) - time > 1.5 * (GST_SECOND/fps)) {
         /* yo dude, we've got too many frames here! Drop! DROP! */
         v4lsrc->need_writes--; /* -= (v4lsrc->handled - (time / fps)); */
         g_signal_emit(G_OBJECT(v4lsrc),
                       gst_v4lsrc_signals[SIGNAL_FRAME_DROP], 0);
-      } else if (v4lsrc->handled * fps * GST_SECOND - time < - 1.5 * fps * GST_SECOND) {
+      } else if (v4lsrc->handled * (GST_SECOND/fps) - time < - 1.5 * (GST_SECOND/fps)) {
         /* this means we're lagging far behind */
         v4lsrc->need_writes++; /* += ((time / fps) - v4lsrc->handled); */
         g_signal_emit(G_OBJECT(v4lsrc),
@@ -634,7 +636,7 @@ gst_v4lsrc_get (GstPad *pad)
   if (v4lsrc->use_fixed_fps)
     GST_BUFFER_TIMESTAMP(buf) = v4lsrc->handled * GST_SECOND / fps;
   else /* calculate time based on our own clock */
-    GST_BUFFER_TIMESTAMP(buf) = v4lsrc->timestamp_soft_sync[num] - v4lsrc->substract_time;
+    GST_BUFFER_TIMESTAMP(buf) = v4lsrc->timestamp_sync - v4lsrc->substract_time;
 
   v4lsrc->handled++;
   g_signal_emit(G_OBJECT(v4lsrc),

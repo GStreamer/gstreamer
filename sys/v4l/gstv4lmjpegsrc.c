@@ -57,6 +57,7 @@ enum {
 #endif
   ARG_QUALITY,
   ARG_NUMBUFS,
+  ARG_BUFSIZE,
   ARG_USE_FIXED_FPS
 };
 
@@ -166,8 +167,11 @@ gst_v4lmjpegsrc_class_init (GstV4lMjpegSrcClass *klass)
                      G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NUMBUFS,
-    g_param_spec_int("num_buffers","num_buffers","num_buffers",
+    g_param_spec_int("num_buffers","Num Buffers","Number of Buffers",
                      G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BUFSIZE,
+    g_param_spec_int("buffer_size", "Buffer Size", "Size of buffers",
+                     0, G_MAXINT, 0, G_PARAM_READABLE));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_USE_FIXED_FPS,
     g_param_spec_boolean("use_fixed_fps", "Use Fixed FPS",
@@ -209,6 +213,8 @@ gst_v4lmjpegsrc_class_init (GstV4lMjpegSrcClass *klass)
 static void
 gst_v4lmjpegsrc_init (GstV4lMjpegSrc *v4lmjpegsrc)
 {
+  GST_FLAG_SET(GST_ELEMENT(v4lmjpegsrc), GST_ELEMENT_THREAD_SUGGESTED);
+
   v4lmjpegsrc->srcpad = gst_pad_new_from_template (src_template, "src");
   gst_element_add_pad(GST_ELEMENT(v4lmjpegsrc), v4lmjpegsrc->srcpad);
 
@@ -387,7 +393,7 @@ gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
       gst_caps_get_int(caps, "width", &w);
     } else {
       int max;
-      gst_caps_get_int_range(caps, "width", &w, &max);
+      gst_caps_get_int_range(caps, "width",  &max, &w);
     }
   }
   if (gst_caps_has_property(caps, "height")) {
@@ -395,7 +401,7 @@ gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
       gst_caps_get_int(caps, "height", &h);
     } else {
       int max;
-      gst_caps_get_int_range(caps, "height", &h, &max);
+      gst_caps_get_int_range(caps, "height", &max, &h);
     }
   }
 
@@ -543,12 +549,12 @@ gst_v4lmjpegsrc_get (GstPad *pad)
        * timeframe. This means that if time - begin_time = X sec,
        * we want to have written X*fps frames. If we've written
        * more - drop, if we've written less - dup... */
-      if (v4lmjpegsrc->handled * fps * GST_SECOND - time > 1.5 * fps * GST_SECOND) {
+      if (v4lmjpegsrc->handled * (GST_SECOND/fps) - time > 1.5 * (GST_SECOND/fps)) {
         /* yo dude, we've got too many frames here! Drop! DROP! */
         v4lmjpegsrc->need_writes--; /* -= (v4lmjpegsrc->handled - (time / fps)); */
         g_signal_emit(G_OBJECT(v4lmjpegsrc),
                       gst_v4lmjpegsrc_signals[SIGNAL_FRAME_DROP], 0);
-      } else if (v4lmjpegsrc->handled * fps * GST_SECOND - time < - 1.5 * fps * GST_SECOND) {
+      } else if (v4lmjpegsrc->handled * (GST_SECOND/fps) - time < - 1.5 * (GST_SECOND/fps)) {
         /* this means we're lagging far behind */
         v4lmjpegsrc->need_writes++; /* += ((time / fps) - v4lmjpegsrc->handled); */
         g_signal_emit(G_OBJECT(v4lmjpegsrc),
@@ -686,6 +692,9 @@ gst_v4lmjpegsrc_get_property (GObject    *object,
       break;
     case ARG_NUMBUFS:
       g_value_set_int(value, v4lmjpegsrc->breq.count);
+      break;
+    case ARG_BUFSIZE:
+      g_value_set_int(value, v4lmjpegsrc->breq.size);
       break;
     case ARG_USE_FIXED_FPS:
       g_value_set_boolean(value, v4lmjpegsrc->use_fixed_fps);

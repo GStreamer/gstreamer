@@ -35,6 +35,8 @@
 #define MAP_FAILED ( (caddr_t) -1 )
 #endif
 
+#define MIN_BUFFERS_QUEUED 2
+
 #define DEBUG(format, args...) \
 	GST_DEBUG_ELEMENT(GST_CAT_PLUGIN_INFO, \
 		GST_ELEMENT(v4lmjpegsrc), \
@@ -43,6 +45,12 @@
 
 char *input_name[] = { "Composite", "S-Video", "TV-Tuner", "Autodetect" };
 
+enum {
+  QUEUE_STATE_ERROR = -1,
+  QUEUE_STATE_READY_FOR_QUEUE,
+  QUEUE_STATE_QUEUED,
+  QUEUE_STATE_SYNCED,
+};
 
 /******************************************************
  * gst_v4lmjpegsrc_queue_frame():
@@ -56,6 +64,10 @@ gst_v4lmjpegsrc_queue_frame (GstV4lMjpegSrc *v4lmjpegsrc,
 {
   DEBUG("queueing frame %d", num);
 
+  if (v4lmjpegsrc->frame_queue_state[num] != QUEUE_STATE_READY_FOR_QUEUE) {
+    return FALSE;
+  }
+
   if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd, MJPIOC_QBUF_CAPT, &num) < 0)
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsrc),
@@ -63,6 +75,9 @@ gst_v4lmjpegsrc_queue_frame (GstV4lMjpegSrc *v4lmjpegsrc,
       num, g_strerror(errno));
     return FALSE;
   }
+
+  v4lmjpegsrc->frame_queue_state[num] = QUEUE_STATE_QUEUED;
+  v4lmjpegsrc->num_queued++;
 
   return TRUE;
 }
@@ -80,15 +95,25 @@ gst_v4lmjpegsrc_sync_next_frame (GstV4lMjpegSrc *v4lmjpegsrc,
 {
   DEBUG("syncing on next frame");
 
-  if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd, MJPIOC_SYNC, &(v4lmjpegsrc->bsync)) < 0)
-  {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-      "Error syncing on a buffer (%ld): %s",
-      v4lmjpegsrc->bsync.frame, g_strerror(errno));
+  if (v4lmjpegsrc->num_queued <= 0) {
     return FALSE;
   }
 
+  while (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd,
+               MJPIOC_SYNC, &(v4lmjpegsrc->bsync)) < 0) {
+    if (errno != EINTR) {
+      gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+        "Error syncing on a buffer: %s",
+        g_strerror(errno));
+      return FALSE;
+    }
+    DEBUG("Sync got interrupted");
+  }
+
   *num = v4lmjpegsrc->bsync.frame;
+
+  v4lmjpegsrc->frame_queue_state[*num] = QUEUE_STATE_SYNCED;
+  v4lmjpegsrc->num_queued--;
 
   return TRUE;
 }
@@ -318,7 +343,8 @@ gboolean gst_v4lmjpegsrc_set_capture_m (GstV4lMjpegSrc *v4lmjpegsrc,
   bparm.quality = quality;
   bparm.norm = norm;
   bparm.input = input;
-  bparm.APP_len = 0; /* no JPEG markers - TODO: this is definately not right for decimation==1 */
+  bparm.APP_len = 0; /* no JPEG markers - TODO: this is definately
+                      * not right for decimation==1 */
 
   if (width <= 0)
   {
@@ -415,7 +441,8 @@ gst_v4lmjpegsrc_capture_init (GstV4lMjpegSrc *v4lmjpegsrc)
   GST_V4L_CHECK_NOT_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc));
 
   /* Request buffers */
-  if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd, MJPIOC_REQBUFS, &(v4lmjpegsrc->breq)) < 0)
+  if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd,
+            MJPIOC_REQBUFS, &(v4lmjpegsrc->breq)) < 0)
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsrc),
       "Error requesting video buffers: %s",
@@ -423,17 +450,28 @@ gst_v4lmjpegsrc_capture_init (GstV4lMjpegSrc *v4lmjpegsrc)
     return FALSE;
   }
 
+  if (v4lmjpegsrc->breq.count < MIN_BUFFERS_QUEUED)
+  {
+    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+      "Too little buffers. We got %d, we want at least %d",
+      v4lmjpegsrc->breq.count, MIN_BUFFERS_QUEUED);
+    return FALSE;
+  }
+
   gst_info("Got %ld buffers of size %ld KB\n",
     v4lmjpegsrc->breq.count, v4lmjpegsrc->breq.size/1024);
 
-  v4lmjpegsrc->use_num_times = (gint *) malloc(sizeof(gint) * v4lmjpegsrc->breq.count);
-  if (!v4lmjpegsrc->use_num_times)
-  {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-      "Error creating sync-use-time tracker: %s",
-      g_strerror(errno));
-    return FALSE;
-  }
+  /* keep track of queued buffers */
+  v4lmjpegsrc->frame_queue_state = (gint8 *)
+    g_malloc(sizeof(gint8) * v4lmjpegsrc->breq.count);
+
+  /* track how often to use each frame */
+  v4lmjpegsrc->use_num_times = (gint *)
+    g_malloc(sizeof(gint) * v4lmjpegsrc->breq.count);
+
+  /* lock for the frame_state */
+  v4lmjpegsrc->mutex_queue_state = g_mutex_new();
+  v4lmjpegsrc->cond_queue_state = g_cond_new();
 
   /* Map the buffers */
   GST_V4LELEMENT(v4lmjpegsrc)->buffer = mmap(0,
@@ -467,10 +505,23 @@ gst_v4lmjpegsrc_capture_start (GstV4lMjpegSrc *v4lmjpegsrc)
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lmjpegsrc));
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc));
 
-  /* queue'ing the buffers starts streaming capture */
-  for (n=0;n<v4lmjpegsrc->breq.count;n++)
-    if (!gst_v4lmjpegsrc_queue_frame(v4lmjpegsrc, n))
+  g_mutex_lock(v4lmjpegsrc->mutex_queue_state);
+
+  v4lmjpegsrc->quit = FALSE;
+  v4lmjpegsrc->num_queued = 0;
+  v4lmjpegsrc->queue_frame = 0;
+
+  /* set all buffers ready to queue , this starts streaming capture */
+  for (n=0;n<v4lmjpegsrc->breq.count;n++) {
+    v4lmjpegsrc->frame_queue_state[n] = QUEUE_STATE_READY_FOR_QUEUE;
+    if (!gst_v4lmjpegsrc_queue_frame(v4lmjpegsrc, n)) {
+      g_mutex_unlock(v4lmjpegsrc->mutex_queue_state);
+      gst_v4lmjpegsrc_capture_stop(v4lmjpegsrc);
       return FALSE;
+    }
+  }
+
+  g_mutex_unlock(v4lmjpegsrc->mutex_queue_state);
 
   return TRUE;
 }
@@ -491,11 +542,40 @@ gst_v4lmjpegsrc_grab_frame (GstV4lMjpegSrc *v4lmjpegsrc,
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lmjpegsrc));
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc));
 
+  g_mutex_lock(v4lmjpegsrc->mutex_queue_state);
+
+  /* do we have enough frames? */
+  while (v4lmjpegsrc->num_queued < MIN_BUFFERS_QUEUED ||
+         v4lmjpegsrc->frame_queue_state[v4lmjpegsrc->queue_frame] ==
+           QUEUE_STATE_READY_FOR_QUEUE) {
+    while (v4lmjpegsrc->frame_queue_state[v4lmjpegsrc->queue_frame] !=
+             QUEUE_STATE_READY_FOR_QUEUE &&
+           !v4lmjpegsrc->quit) {
+      GST_DEBUG(GST_CAT_PLUGIN_INFO,
+                "Waiting for frames to become available (%d < %d)",
+                v4lmjpegsrc->num_queued, MIN_BUFFERS_QUEUED);
+      g_cond_wait(v4lmjpegsrc->cond_queue_state,
+                  v4lmjpegsrc->mutex_queue_state);
+    }
+    if (v4lmjpegsrc->quit) {
+      g_mutex_unlock(v4lmjpegsrc->mutex_queue_state);
+      return TRUE; /* it won't get through anyway */
+    }
+    if (!gst_v4lmjpegsrc_queue_frame(v4lmjpegsrc, v4lmjpegsrc->queue_frame)) {
+      g_mutex_unlock(v4lmjpegsrc->mutex_queue_state);
+      return FALSE;
+    }
+    v4lmjpegsrc->queue_frame = (v4lmjpegsrc->queue_frame + 1) % v4lmjpegsrc->breq.count;
+  }
+
   /* syncing on the buffer grabs it */
-  if (!gst_v4lmjpegsrc_sync_next_frame(v4lmjpegsrc, num))
+  if (!gst_v4lmjpegsrc_sync_next_frame(v4lmjpegsrc, num)) {
     return FALSE;
+  }
 
   *size = v4lmjpegsrc->bsync.length;
+
+  g_mutex_unlock(v4lmjpegsrc->mutex_queue_state);
 
   return TRUE;
 }
@@ -538,8 +618,23 @@ gst_v4lmjpegsrc_requeue_frame (GstV4lMjpegSrc *v4lmjpegsrc,
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lmjpegsrc));
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc));
 
-  if (!gst_v4lmjpegsrc_queue_frame(v4lmjpegsrc, num))
+  /* mark frame as 'ready to requeue' */
+  g_mutex_lock(v4lmjpegsrc->mutex_queue_state);
+
+  if (v4lmjpegsrc->frame_queue_state[num] != QUEUE_STATE_SYNCED) {
+    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+                      "Invalid state %d (expected %d), can't requeue",
+                      v4lmjpegsrc->frame_queue_state[num],
+                      QUEUE_STATE_SYNCED);
     return FALSE;
+  }
+
+  v4lmjpegsrc->frame_queue_state[num] = QUEUE_STATE_READY_FOR_QUEUE;
+
+  /* let an optional wait know */
+  g_cond_broadcast(v4lmjpegsrc->cond_queue_state);
+
+  g_mutex_unlock(v4lmjpegsrc->mutex_queue_state);
 
   return TRUE;
 }
@@ -554,13 +649,24 @@ gst_v4lmjpegsrc_requeue_frame (GstV4lMjpegSrc *v4lmjpegsrc,
 gboolean
 gst_v4lmjpegsrc_capture_stop (GstV4lMjpegSrc *v4lmjpegsrc)
 {
+  int n;
+
   DEBUG("stopping capture");
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lmjpegsrc));
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc));
 
-  /* unqueue the buffers */
-  if (!gst_v4lmjpegsrc_queue_frame(v4lmjpegsrc, -1))
-    return FALSE;
+  g_mutex_lock(v4lmjpegsrc->mutex_queue_state);
+
+  /* make an optional pending wait stop */
+  v4lmjpegsrc->quit = TRUE;
+  g_cond_broadcast(v4lmjpegsrc->cond_queue_state);
+                                                                                
+  /* sync on remaining frames */
+  while (v4lmjpegsrc->num_queued > 0) {
+    gst_v4lmjpegsrc_sync_next_frame(v4lmjpegsrc, &n);
+  }
+
+  g_mutex_unlock(v4lmjpegsrc->mutex_queue_state);
 
   return TRUE;
 }
@@ -583,7 +689,11 @@ gst_v4lmjpegsrc_capture_deinit (GstV4lMjpegSrc *v4lmjpegsrc)
   munmap(GST_V4LELEMENT(v4lmjpegsrc)->buffer, v4lmjpegsrc->breq.size * v4lmjpegsrc->breq.count);
   GST_V4LELEMENT(v4lmjpegsrc)->buffer = NULL;
 
-  free(v4lmjpegsrc->use_num_times);
+  /* free buffer tracker */
+  g_mutex_free(v4lmjpegsrc->mutex_queue_state);
+  g_cond_free(v4lmjpegsrc->cond_queue_state);
+  g_free(v4lmjpegsrc->frame_queue_state);
+  g_free(v4lmjpegsrc->use_num_times);
 
   return TRUE;
 }

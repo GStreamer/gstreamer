@@ -55,6 +55,17 @@ struct _GstV4lMjpegSrc {
   struct mjpeg_sync bsync;
   struct mjpeg_requestbuffers breq;
 
+  /* num of queued frames and some GThread stuff
+   * to wait if there's not enough */
+  gint8 *frame_queue_state;
+  GMutex *mutex_queue_state;
+  GCond *cond_queue_state;
+  gint num_queued;
+  gint queue_frame;
+
+  /* True if we want to stop */
+  gboolean quit;
+
   /* A/V sync... frame counter and internal cache */
   gulong handled;
   gint last_frame;

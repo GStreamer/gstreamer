@@ -66,33 +66,34 @@ static const char *palette_name[] = {
   "YUV-4:1:0 (planar)"         /* VIDEO_PALETTE_YUV410P */
 };
 
-#define FRAME_QUEUE_READY -2
-#define FRAME_ERROR       -1
-#define FRAME_DONE         0
-/* FRAME_QUEUED is used in frame_queued array */
-#define FRAME_QUEUED       1
-/* FRAME_SOFTSYNCED is used in is_ready_soft array */
-#define FRAME_SYNCED   1
+enum {
+  QUEUE_STATE_ERROR = -1,
+  QUEUE_STATE_READY_FOR_QUEUE,
+  QUEUE_STATE_QUEUED,
+  QUEUE_STATE_SYNCED,
+};
 
 /******************************************************
  * gst_v4lsrc_queue_frame():
  *   queue a frame for capturing
+ *   Requires queue_state lock to be held!
  * return value: TRUE on success, FALSE on error
  ******************************************************/
 
 static gboolean
 gst_v4lsrc_queue_frame (GstV4lSrc *v4lsrc,
-                        gint      num)
+                        gint       num)
 {
   DEBUG("queueing frame %d", num);
 
-  v4lsrc->mmap.frame = num;
-
-  if (v4lsrc->frame_queued[num] == FRAME_ERROR) {
-    return TRUE;
+  if (v4lsrc->frame_queue_state[num] != QUEUE_STATE_READY_FOR_QUEUE) {
+    return FALSE;
   }
 
-  if (ioctl(GST_V4LELEMENT(v4lsrc)->video_fd, VIDIOCMCAPTURE, &(v4lsrc->mmap)) < 0)
+  v4lsrc->mmap.frame = num;
+
+  if (ioctl(GST_V4LELEMENT(v4lsrc)->video_fd,
+            VIDIOCMCAPTURE, &(v4lsrc->mmap)) < 0)
   {
     gst_element_error(GST_ELEMENT(v4lsrc),
       "Error queueing a buffer (%d): %s",
@@ -100,161 +101,52 @@ gst_v4lsrc_queue_frame (GstV4lSrc *v4lsrc,
     return FALSE;
   }
 
-  v4lsrc->frame_queued[num] = FRAME_QUEUED;
+  v4lsrc->frame_queue_state[num] = QUEUE_STATE_QUEUED;
+  v4lsrc->num_queued++;
 
   return TRUE;
 }
+
 /******************************************************
  * gst_v4lsrc_hard_sync_frame(GstV4lSrc *v4lsrc,gint num)
  *   sync a frame and set the timestamp correctly
+ *   Requires queue_state lock to be held
  *****************************************************/
+
 static gboolean 
-gst_v4lsrc_hard_sync_frame(GstV4lSrc *v4lsrc,gint num) {
-
-    DEBUG("Hardware syncing frame %d",num);
-
-    while (ioctl(GST_V4LELEMENT(v4lsrc)->video_fd, VIDIOCSYNC, &num) < 0) {
-      /* if the sync() got interrupted, we can retry */
-      if (errno != EINTR) {
-        v4lsrc->isready_soft_sync[num] = FRAME_ERROR; 
-        v4lsrc->frame_queued[num] = FRAME_ERROR;
-        gst_element_error(GST_ELEMENT(v4lsrc),
-           "Error syncing a buffer (%d): %s",
-            num, g_strerror(errno));
-        return FALSE;
-      }
-      DEBUG("Sync got interrupted");
-    }
-
-    v4lsrc->frame_queued[num] = FRAME_DONE;
-
-    g_mutex_lock(v4lsrc->mutex_soft_sync);
-
-    if (v4lsrc->clock) {
-      v4lsrc->timestamp_soft_sync[num] = gst_clock_get_time(v4lsrc->clock);
-    } else {
-      GTimeVal time;
-      g_get_current_time(&time);
-      v4lsrc->timestamp_soft_sync[num] = GST_TIMEVAL_TO_TIME(time);
-    }
-    v4lsrc->isready_soft_sync[num] = FRAME_SYNCED;
-    g_cond_broadcast(v4lsrc->cond_soft_sync[num]);
-
-    g_mutex_unlock(v4lsrc->mutex_soft_sync);
-
-    return TRUE;
-}
-
-/******************************************************
- * gst_v4lsrc_soft_sync_cleanup()
- *   cleans up the v4lsrc structure after an error or 
- *   exit request and exits the thread
- ******************************************************/
-static void
-gst_v4lsrc_soft_sync_cleanup(GstV4lSrc *v4lsrc) {
-  int n;
-
-  DEBUG("Software sync thread exiting");
-  /* sync all queued buffers */
-  for (n=0;n < v4lsrc->mbuf.frames; n++) { 
-    if (v4lsrc->frame_queued[n] == FRAME_QUEUED) {
-      gst_v4lsrc_hard_sync_frame(v4lsrc,n);
-      g_mutex_lock(v4lsrc->mutex_soft_sync);
-      v4lsrc->isready_soft_sync[n] = FRAME_ERROR;
-      g_cond_broadcast(v4lsrc->cond_soft_sync[n]);
-      g_mutex_unlock(v4lsrc->mutex_soft_sync);
-    }
-  }
-
-  g_thread_exit(NULL);
-}
-
-/******************************************************
- * gst_v4lsrc_soft_sync_thread()
- *   syncs on frames and signals the main thread
- * purpose: actually get the correct frame timestamps
- ******************************************************/
-
-static void *
-gst_v4lsrc_soft_sync_thread (void *arg)
+gst_v4lsrc_sync_frame (GstV4lSrc *v4lsrc, gint num)
 {
-  GstV4lSrc *v4lsrc = GST_V4LSRC(arg);
-  gint frame = 0;
-  gint qframe = 0;
-  gint nqueued = 0;
+  DEBUG("Syncing on frame %d",num);
 
-  DEBUG("starting software sync thread");
-
-  for (;;) {
-    /* queue as many frames as we can */
-    while (v4lsrc->frame_queued[qframe] == FRAME_QUEUE_READY) { 
-      if (v4lsrc->quit || !gst_v4lsrc_queue_frame(v4lsrc,qframe)) {
-        gst_v4lsrc_soft_sync_cleanup(v4lsrc);
-      }
-      qframe = (qframe + 1) % v4lsrc->mbuf.frames;
-      nqueued++;
-    }
-
-    if (nqueued < MIN_BUFFERS_QUEUED) {
-      /* not enough frames queued, wait for one to get ready and queue as much
-       * as we can again */
-      DEBUG("!enough buffers, waiting for frame %d",qframe);
-
-      g_mutex_lock(v4lsrc->mutex_queued_frames);
-
-      if (v4lsrc->quit) {
-        g_mutex_unlock(v4lsrc->mutex_queued_frames);   
-        gst_v4lsrc_soft_sync_cleanup(v4lsrc);
-      }
-
-      if (!(v4lsrc->frame_queued[qframe] == FRAME_QUEUE_READY)) {
-        g_cond_wait(v4lsrc->cond_queued_frames,v4lsrc->mutex_queued_frames);
-      }
-      g_mutex_unlock(v4lsrc->mutex_queued_frames);
-
-    } else {
-      if (!gst_v4lsrc_hard_sync_frame(v4lsrc,frame))
-        gst_v4lsrc_soft_sync_cleanup(v4lsrc);
-      frame = (frame + 1) % v4lsrc->mbuf.frames;
-      nqueued--;
-    }
-  }
-  g_assert_not_reached();
-}
-
-
-/******************************************************
- * gst_v4lsrc_sync_frame():
- *   sync on a frame for capturing
- * return value: TRUE on success, FALSE on error
- ******************************************************/
-
-static gboolean
-gst_v4lsrc_sync_next_frame (GstV4lSrc *v4lsrc,
-                            gint      *num)
-{
-  *num = v4lsrc->sync_frame;
-
-  DEBUG("syncing on next frame (%d)", *num);
-
-  /* "software sync()" on the frame */
-  g_mutex_lock(v4lsrc->mutex_soft_sync);
-  while (v4lsrc->isready_soft_sync[*num] == FRAME_DONE)
-  {
-    DEBUG("Waiting for frame %d to be synced on", *num);
-    g_cond_wait(v4lsrc->cond_soft_sync[*num], v4lsrc->mutex_soft_sync);
-  }
-  g_mutex_unlock(v4lsrc->mutex_soft_sync);
-
-  if (v4lsrc->isready_soft_sync[*num] != FRAME_SYNCED)
+  if (v4lsrc->frame_queue_state[num] != QUEUE_STATE_QUEUED) {
     return FALSE;
-  v4lsrc->isready_soft_sync[*num] = FRAME_DONE;
+  }
 
-  v4lsrc->sync_frame = (v4lsrc->sync_frame + 1)%v4lsrc->mbuf.frames;
+  while (ioctl(GST_V4LELEMENT(v4lsrc)->video_fd, VIDIOCSYNC, &num) < 0) {
+    /* if the sync() got interrupted, we can retry */
+    if (errno != EINTR) {
+      v4lsrc->frame_queue_state[num] = QUEUE_STATE_ERROR;
+      gst_element_error(GST_ELEMENT(v4lsrc),
+         "Error syncing on a buffer (%d): %s",
+          num, g_strerror(errno));
+      return FALSE;
+    }
+    DEBUG("Sync got interrupted");
+  }
+
+  if (v4lsrc->clock) {
+    v4lsrc->timestamp_sync = gst_clock_get_time(v4lsrc->clock);
+  } else {
+    GTimeVal time;
+    g_get_current_time(&time);
+    v4lsrc->timestamp_sync = GST_TIMEVAL_TO_TIME(time);
+  }
+
+  v4lsrc->frame_queue_state[num] = QUEUE_STATE_SYNCED;
+  v4lsrc->num_queued--;
 
   return TRUE;
 }
-
 
 /******************************************************
  * gst_v4lsrc_set_capture():
@@ -291,8 +183,6 @@ gst_v4lsrc_set_capture (GstV4lSrc *v4lsrc,
 gboolean
 gst_v4lsrc_capture_init (GstV4lSrc *v4lsrc)
 {
-  int n;
-
   DEBUG("initting capture subsystem");
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lsrc));
   GST_V4L_CHECK_NOT_ACTIVE(GST_V4LELEMENT(v4lsrc));
@@ -319,55 +209,16 @@ gst_v4lsrc_capture_init (GstV4lSrc *v4lsrc)
     v4lsrc->mbuf.size/(v4lsrc->mbuf.frames*1024));
 
   /* keep track of queued buffers */
-  v4lsrc->frame_queued = (gint8 *) malloc(sizeof(gint8) * v4lsrc->mbuf.frames);
-  if (!v4lsrc->frame_queued)
-  {
-    gst_element_error(GST_ELEMENT(v4lsrc),
-      "Error creating buffer tracker: %s",
-      g_strerror(errno));
-    return FALSE;
-  }
+  v4lsrc->frame_queue_state = (gint8 *)
+    g_malloc(sizeof(gint8) * v4lsrc->mbuf.frames);
 
-  /* init the GThread stuff */
-  v4lsrc->mutex_soft_sync = g_mutex_new();
-  v4lsrc->isready_soft_sync = (gint8 *) malloc(sizeof(gint8) * v4lsrc->mbuf.frames);
-  if (!v4lsrc->isready_soft_sync)
-  {
-    gst_element_error(GST_ELEMENT(v4lsrc),
-      "Error creating software-sync buffer tracker: %s",
-      g_strerror(errno));
-    return FALSE;
-  }
-  v4lsrc->timestamp_soft_sync = (GstClockTime *)
-    malloc(sizeof(GstClockTime) * v4lsrc->mbuf.frames);
-  if (!v4lsrc->timestamp_soft_sync)
-  {
-    gst_element_error(GST_ELEMENT(v4lsrc),
-      "Error creating software-sync timestamp tracker: %s",
-      g_strerror(errno));
-    return FALSE;
-  }
-  v4lsrc->cond_soft_sync = (GCond **) malloc( sizeof(GCond *) * v4lsrc->mbuf.frames);
-  if (!v4lsrc->cond_soft_sync)
-  {
-    gst_element_error(GST_ELEMENT(v4lsrc),
-      "Error creating software-sync condition tracker: %s",
-      g_strerror(errno));
-    return FALSE;
-  }
-  for (n=0;n<v4lsrc->mbuf.frames;n++)
-    v4lsrc->cond_soft_sync[n] = g_cond_new();
-  v4lsrc->use_num_times = (gint *) malloc(sizeof(gint) * v4lsrc->mbuf.frames);
-  if (!v4lsrc->use_num_times)
-  {
-    gst_element_error(GST_ELEMENT(v4lsrc),
-      "Error creating sync-use-time tracker: %s",
-      g_strerror(errno));
-    return FALSE;
-  }
+  /* track how often to use each frame */
+  v4lsrc->use_num_times = (gint *)
+    g_malloc(sizeof(gint) * v4lsrc->mbuf.frames);
 
-  v4lsrc->mutex_queued_frames = g_mutex_new();
-  v4lsrc->cond_queued_frames = g_cond_new();
+  /* lock for the frame_state */
+  v4lsrc->mutex_queue_state = g_mutex_new();
+  v4lsrc->cond_queue_state = g_cond_new();
 
   /* Map the buffers */
   GST_V4LELEMENT(v4lsrc)->buffer = mmap(0, v4lsrc->mbuf.size, 
@@ -394,30 +245,30 @@ gst_v4lsrc_capture_init (GstV4lSrc *v4lsrc)
 gboolean
 gst_v4lsrc_capture_start (GstV4lSrc *v4lsrc)
 {
-  GError *error = NULL;
   int n;
 
   DEBUG("starting capture");
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lsrc));
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lsrc));
 
+  g_mutex_lock(v4lsrc->mutex_queue_state);
+
   v4lsrc->quit = FALSE;
+  v4lsrc->num_queued = 0;
+  v4lsrc->sync_frame = 0;
+  v4lsrc->queue_frame = 0;
+
   /* set all buffers ready to queue , this starts streaming capture */
   for (n=0;n<v4lsrc->mbuf.frames;n++) {
-    v4lsrc->isready_soft_sync[n] = FRAME_DONE;
-    v4lsrc->frame_queued[n] = FRAME_QUEUE_READY;
+    v4lsrc->frame_queue_state[n] = QUEUE_STATE_READY_FOR_QUEUE;
+    if (!gst_v4lsrc_queue_frame(v4lsrc, n)) {
+      g_mutex_unlock(v4lsrc->mutex_queue_state);
+      gst_v4lsrc_capture_stop(v4lsrc);
+      return FALSE;
+    }
   }
 
-  v4lsrc->sync_frame = 0;
-  /* start the sync() thread (correct timestamps) */
-  v4lsrc->thread_soft_sync = g_thread_create(gst_v4lsrc_soft_sync_thread,
-    (void *) v4lsrc, TRUE, &error);
-  if (!v4lsrc->thread_soft_sync)
-  {
-    gst_element_error(GST_ELEMENT(v4lsrc),
-      "Failed to create software sync thread: %s",error->message);
-    return FALSE;
-  }
+  g_mutex_unlock(v4lsrc->mutex_queue_state);
 
   return TRUE;
 }
@@ -436,9 +287,41 @@ gst_v4lsrc_grab_frame (GstV4lSrc *v4lsrc, gint *num)
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lsrc));
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lsrc));
 
+  g_mutex_lock(v4lsrc->mutex_queue_state);
+
+  /* do we have enough frames? */
+  while (v4lsrc->num_queued < MIN_BUFFERS_QUEUED ||
+         v4lsrc->frame_queue_state[v4lsrc->queue_frame] ==
+           QUEUE_STATE_READY_FOR_QUEUE) {
+    while (v4lsrc->frame_queue_state[v4lsrc->queue_frame] !=
+             QUEUE_STATE_READY_FOR_QUEUE &&
+           !v4lsrc->quit) {
+      GST_DEBUG(GST_CAT_PLUGIN_INFO,
+                "Waiting for frames to become available (%d < %d)",
+                v4lsrc->num_queued, MIN_BUFFERS_QUEUED);
+      g_cond_wait(v4lsrc->cond_queue_state,
+                  v4lsrc->mutex_queue_state);
+    }
+    if (v4lsrc->quit) {
+      g_mutex_unlock(v4lsrc->mutex_queue_state);
+      return TRUE; /* it won't get through anyway */
+    }
+    if (!gst_v4lsrc_queue_frame(v4lsrc, v4lsrc->queue_frame)) {
+      g_mutex_unlock(v4lsrc->mutex_queue_state);
+      return FALSE;
+    }
+    v4lsrc->queue_frame = (v4lsrc->queue_frame + 1) % v4lsrc->mbuf.frames;
+  }
+
   /* syncing on the buffer grabs it */
-  if (!gst_v4lsrc_sync_next_frame(v4lsrc, num))
+  *num = v4lsrc->sync_frame;
+  if (!gst_v4lsrc_sync_frame(v4lsrc, *num)) {
+    g_mutex_unlock(v4lsrc->mutex_queue_state);
     return FALSE;
+  }
+  v4lsrc->sync_frame = (v4lsrc->sync_frame + 1) % v4lsrc->mbuf.frames;
+
+  g_mutex_unlock(v4lsrc->mutex_queue_state);
 
   return TRUE;
 }
@@ -453,8 +336,6 @@ gst_v4lsrc_grab_frame (GstV4lSrc *v4lsrc, gint *num)
 guint8 *
 gst_v4lsrc_get_buffer (GstV4lSrc *v4lsrc, gint  num)
 {
-  /*DEBUG("gst_v4lsrc_get_buffer(), num = %d", num);*/
-
   if (!GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lsrc)) ||
       !GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lsrc)))
     return NULL;
@@ -480,12 +361,22 @@ gst_v4lsrc_requeue_frame (GstV4lSrc *v4lsrc, gint  num)
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lsrc));
 
   /* mark frame as 'ready to requeue' */
-  g_mutex_lock(v4lsrc->mutex_queued_frames);
+  g_mutex_lock(v4lsrc->mutex_queue_state);
 
-  v4lsrc->frame_queued[num] = FRAME_QUEUE_READY;
-  g_cond_broadcast(v4lsrc->cond_queued_frames);
+  if (v4lsrc->frame_queue_state[num] != QUEUE_STATE_SYNCED) {
+    gst_element_error(GST_ELEMENT(v4lsrc),
+                      "Invalid state %d (expected %d), can't requeue",
+                      v4lsrc->frame_queue_state[num],
+                      QUEUE_STATE_SYNCED);
+    return FALSE;
+  }
 
-  g_mutex_unlock(v4lsrc->mutex_queued_frames);
+  v4lsrc->frame_queue_state[num] = QUEUE_STATE_READY_FOR_QUEUE;
+
+  /* let an optional wait know */
+  g_cond_broadcast(v4lsrc->cond_queue_state);
+
+  g_mutex_unlock(v4lsrc->mutex_queue_state);
 
   return TRUE;
 }
@@ -504,14 +395,23 @@ gst_v4lsrc_capture_stop (GstV4lSrc *v4lsrc)
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lsrc));
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lsrc));
 
-  /* we actually need to sync on all queued buffers but
-   * not on the non-queued ones */
-  g_mutex_lock(v4lsrc->mutex_queued_frames);
-  v4lsrc->quit = TRUE;
-  g_cond_broadcast(v4lsrc->cond_queued_frames);
-  g_mutex_unlock(v4lsrc->mutex_queued_frames);
+  g_mutex_lock(v4lsrc->mutex_queue_state);
 
-  g_thread_join(v4lsrc->thread_soft_sync);
+  /* make an optional pending wait stop */
+  v4lsrc->quit = TRUE;
+  g_cond_broadcast(v4lsrc->cond_queue_state);
+                                                                                
+  /* sync on remaining frames */
+  while (1) {
+    if (v4lsrc->frame_queue_state[v4lsrc->sync_frame] == QUEUE_STATE_QUEUED) {
+      gst_v4lsrc_sync_frame(v4lsrc, v4lsrc->sync_frame);
+      v4lsrc->sync_frame = (v4lsrc->sync_frame + 1) % v4lsrc->mbuf.frames;
+    } else {
+      break;
+    }
+  }
+
+  g_mutex_unlock(v4lsrc->mutex_queue_state);
 
   return TRUE;
 }
@@ -526,21 +426,15 @@ gst_v4lsrc_capture_stop (GstV4lSrc *v4lsrc)
 gboolean
 gst_v4lsrc_capture_deinit (GstV4lSrc *v4lsrc)
 {
-  int n;
-
   DEBUG("quitting capture subsystem");
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lsrc));
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lsrc));
 
   /* free buffer tracker */
-  g_mutex_free(v4lsrc->mutex_queued_frames);
-  for (n=0;n<v4lsrc->mbuf.frames;n++)
-    g_cond_free(v4lsrc->cond_soft_sync[n]);
-  free(v4lsrc->frame_queued);
-  free(v4lsrc->cond_soft_sync);
-  free(v4lsrc->isready_soft_sync);
-  free(v4lsrc->timestamp_soft_sync);
-  free(v4lsrc->use_num_times);
+  g_mutex_free(v4lsrc->mutex_queue_state);
+  g_cond_free(v4lsrc->cond_queue_state);
+  g_free(v4lsrc->frame_queue_state);
+  g_free(v4lsrc->use_num_times);
 
   /* unmap the buffer */
   munmap(GST_V4LELEMENT(v4lsrc)->buffer, v4lsrc->mbuf.size);

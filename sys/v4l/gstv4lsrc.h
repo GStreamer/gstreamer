@@ -52,21 +52,18 @@ struct _GstV4lSrc {
   /* capture/buffer info */
   struct video_mmap mmap;
   struct video_mbuf mbuf;
-  gint sync_frame;
-  gint8 *frame_queued;
   guint buffer_size;
+  GstClockTime timestamp_sync;
 
-  /* a seperate GThread for the sync() thread (improves correctness of timestamps) */
-  gint8 *isready_soft_sync; /* 1 = ok, 0 = waiting, -1 = error */
-  GstClockTime *timestamp_soft_sync;
-  GThread * thread_soft_sync;
-  GMutex * mutex_soft_sync;
-  GCond ** cond_soft_sync;
+  /* num of queued frames and some GThread stuff
+   * to wait if there's not enough */
+  gint8 *frame_queue_state;
+  GMutex *mutex_queue_state;
+  GCond *cond_queue_state;
+  gint num_queued;
+  gint sync_frame, queue_frame;
 
-  /* num of queued frames and some GThread stuff to wait if there's not enough */
-  GMutex * mutex_queued_frames;
-  GCond * cond_queued_frames;
-  /* True if we want the soft sync thread to stop */
+  /* True if we want to stop */
   gboolean quit;
 
   /* A/V sync... frame counter and internal cache */

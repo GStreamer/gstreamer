@@ -1,9 +1,6 @@
 TODO list (short term):
 =======================
-* fix clocking issues by using gst clock for v4lsrc and by using it
-    as a correction for v4lmjpegsrc/v4l2src (pause brokenness etc.)
 * v4lsrc/v4lmjpegsrc/v4l2src: fix interlacing (not handled at all...)
-* v4lsrc - add a property for capture formats?
 
 TODO list (long term):
 ======================
@@ -23,3 +20,23 @@ Linux/V4L2 API: /usr/include/linux/videodev2.h or
                 (kernel patches: http://bytesex.org/patches/)
 BSD/Meteor API: /usr/include/machine/ioctl_meteor.h
 mjpegtools    : http://www.sourceforge.net/projects/mjpeg
+
+Capturing:
+==========
+* sound is the master clock
+* it's probably a good idea to create an audiosource element:
+   - autodetect alsa/oss
+   - first try alsa, then oss... they work the same internally
+* same for videosource:
+   - autodetect v4l/v4l2 + mjpeg capabilities
+   - for this, just open device using v4l2element. On success:
+      + use v4l2
+   - on failure:
+      + use v4lelement and query for MJPEG capabilities
+      + if that's available, combine caps of v4lmjpegsrc and v4lsrc
+* both sources run in their own GstThread with a high priority
+* an encoder element takes care of encoding + muxing. A toplevel element
+   (reverse of spider) is probably a good idea here. How? Don't know...
+* format negotiation via filtered caps
+* statistics via listening to the frame_{lost,inserted,deleted,captures}
+   signals and GST_PAD_QUERY_POSITION (gst_pad_query())
