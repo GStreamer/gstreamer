@@ -1454,7 +1454,24 @@ Plug-in for demuxing Quicktime movies
 @USE_GCONF_TRUE@export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
 @USE_GCONF_TRUE@gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer.schemas > /dev/null
 
+# package for libgstplay library
+%package -n gstreamer-gstplay
+Summary:        GStreamer playback helper library
+Group:          Libraries/Multimedia
+Requires:       gstreamer >= 0.4.1
+
+%description -n gstreamer-gstplay
+Small helper library for creating media playback applications
+
+%files -n gstreamer-gstplay
+%defattr(-, root, root)
+%{_libdir}/libgstplay.*
+
+%post -n gstreamer-gstplay
+
 %changelog
+* Thu Oct 30 2002 Christian Schaller <Uraeus@linuxrising.org>
+- Added gstplay library
 * Thu Oct 24 2002 Christian Schaller <Uraeus@linuxrising.org>
 - Added wavenc to audio formats package
 * Sat Oct 20 2002 Christian Scchaller <Uraeus@linuxrising.org>
