@@ -77,7 +77,7 @@ xmms		(for the xmms plugins wrapper)
 mpeg2dec/a52dec	(for mpeg2 related plugins and dvd playback)
 			http://libmpeg2.sourceforge.net/
 			and http://liba52.sourceforge.net/
-		>=	v0.3.0/v0.7.2
+		>=	v0.3.1/v0.7.2
 libswfdec	(for the swfdec plugin)
 			ftp://ftp.comedi.org/pub/libswfdec/
 		>=	0.1.1
