@@ -10,16 +10,10 @@ void eof(GstSrc *src) {
   exit(0);
 }
 
-void mp1parse_info_chain(GstPad *pad,GstBuffer *buf) {
-  //g_print("sink : got buffer of size %d\n",GST_BUFFER_SIZE(buf));
-  gst_buffer_unref(buf);
-}
-
 void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
   GstElement *parse_audio, *parse_video, *decode, *decode_video, *play, *show;
   GstElement *audio_queue, *video_queue;
   GstElement *audio_thread, *video_thread;
-  GstPad *infopad;
 
 	GtkWidget *appwindow;
 
@@ -68,8 +62,6 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
     gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_PLAYING);
   } else if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
 	//} else if (0) {
-    infopad = gst_pad_new("sink",GST_PAD_SINK);
-    gst_pad_set_chain_function(infopad,mp1parse_info_chain);
 
     // construct internal pipeline elements
     parse_video = gst_elementfactory_make("mp1videoparse","parse_video");
@@ -78,10 +70,6 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
     g_return_if_fail(decode_video != NULL);
     show = gst_elementfactory_make("videosink","show");
     g_return_if_fail(show != NULL);
-		g_print("setting size\n");
-		//gtk_object_set(GTK_OBJECT(show),"width",384,NULL);
-		//gtk_object_set(GTK_OBJECT(show),"height",288,NULL);
-
 
 		appwindow = gnome_app_new("MPEG1 player","MPEG1 player");
 		gnome_app_set_contents(GNOME_APP(appwindow),
