@@ -350,7 +350,7 @@ free_entry (TypeFindEntry * entry)
   free_entry_buffers (entry);
 
   if (entry->caps)
-    gst_caps_free (entry->caps);
+    gst_caps_unref (entry->caps);
   g_free (entry);
 }
 static void
@@ -484,6 +484,7 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
             g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
                 0, entry->probability, entry->caps);
             stop_typefinding (typefind);
+            push_buffer_store (typefind);
             gst_pad_event_default (pad, event);
           } else {
             gst_pad_event_default (pad, event);

@@ -80,8 +80,6 @@ struct _GstFakeSrc {
   gboolean 	 has_getrange;
   gboolean 	 eos;
 
-  GstTask	*task;
-
   GstFakeSrcOutputType output;
   GstFakeSrcDataType   data;
   GstFakeSrcSizeType   sizetype;

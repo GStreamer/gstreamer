@@ -127,6 +127,8 @@ gst_shaper_class_init (GstShaperClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_shaper_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_shaper_get_property);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_POLICY,
       g_param_spec_enum ("policy", "Policy", "Shaper policy",
@@ -137,9 +139,6 @@ gst_shaper_class_init (GstShaperClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
       g_param_spec_string ("last-message", "last-message", "last-message",
           NULL, G_PARAM_READABLE));
-
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_shaper_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_shaper_get_property);
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_shaper_request_new_pad);

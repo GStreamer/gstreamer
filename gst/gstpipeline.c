@@ -313,7 +313,6 @@ pipeline_bus_handler (GstBus * bus, GstMessage * message,
   return result;
 }
 
-
 /**
  * gst_pipeline_new:
  * @name: name of new pipeline

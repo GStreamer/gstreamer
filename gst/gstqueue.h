@@ -26,8 +26,6 @@
 
 
 #include <gst/gstelement.h>
-#include <gst/gsttask.h>
-
 
 G_BEGIN_DECLS
 
@@ -88,7 +86,7 @@ struct _GstQueue {
   GCond *item_add;	/* signals buffers now available for reading */
   GCond *item_del;	/* signals space now available for writing */
 
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstQueueClass {

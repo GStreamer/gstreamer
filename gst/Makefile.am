@@ -187,6 +187,7 @@ gst_headers =			\
 	gstsystemclock.h	\
 	gsttag.h		\
 	gsttaginterface.h	\
+    gsttask.h			\
 	gsttrace.h		\
 	gsttrashstack.h		\
 	gsttypefind.h		\
@@ -198,8 +199,7 @@ gst_headers =			\
 	gstregistry.h		\
 	gstregistrypool.h	\
 	gstparse.h		\
-	gstxml.h		\
-	gsttask.h
+	gstxml.h
 
 libgstreamer_@GST_MAJORMINOR@include_HEADERS = $(gst_headers)
 nodist_libgstreamer_@GST_MAJORMINOR@include_HEADERS = \
@@ -214,15 +214,6 @@ noinst_HEADERS = 		\
 	gstdata_private.h	\
 	gstarch.h		\
 	cothreads.h		
-
-#if GST_DISABLE_OMEGA_COTHREADS
-#libcothreads_la_SOURCES =
-#libcothreads_la_CFLAGS =
-#else
-#libcothreads_la_SOURCES = cothreads.c
-#libcothreads_la_CFLAGS = $(libgstreamer_@GST_MAJORMINOR@_la_CFLAGS) 
-#endif
-
 
 gstmarshal.h: gstmarshal.list
 	glib-genmarshal --header --prefix=gst_marshal $(srcdir)/gstmarshal.list > gstmarshal.h.tmp

@@ -408,7 +408,7 @@ gst_fakesrc_event_handler (GstPad * pad, GstEvent * event)
 {
   GstFakeSrc *src;
 
-  src = GST_FAKESRC (gst_object_get_parent (GST_OBJECT (pad)));
+  src = GST_FAKESRC (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -914,7 +914,7 @@ gst_fakesrc_loop (GstPad * pad)
   return;
 
 pause:
-  gst_task_pause (src->task);
+  gst_task_pause (GST_RPAD_TASK (pad));
   GST_STREAM_UNLOCK (pad);
   return;
 }
@@ -933,11 +933,11 @@ gst_fakesrc_activate (GstPad * pad, GstActivateMode mode)
       g_return_val_if_fail (fakesrc->has_loop, FALSE);
       if (GST_ELEMENT_SCHEDULER (fakesrc)) {
         GST_STREAM_LOCK (pad);
-        fakesrc->task =
+        GST_RPAD_TASK (pad) =
             gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (fakesrc),
             (GstTaskFunction) gst_fakesrc_loop, pad);
 
-        gst_task_start (fakesrc->task);
+        gst_task_start (GST_RPAD_TASK (pad));
         GST_STREAM_UNLOCK (pad);
         result = TRUE;
       }
@@ -952,10 +952,10 @@ gst_fakesrc_activate (GstPad * pad, GstActivateMode mode)
       /* step 2, make sure streaming finishes */
       GST_STREAM_LOCK (pad);
       /* step 3, stop the task */
-      if (fakesrc->task) {
-        gst_task_stop (fakesrc->task);
-        gst_object_unref (GST_OBJECT (fakesrc->task));
-        fakesrc->task = NULL;
+      if (GST_RPAD_TASK (pad)) {
+        gst_task_stop (GST_RPAD_TASK (pad));
+        gst_object_unref (GST_OBJECT (GST_RPAD_TASK (pad)));
+        GST_RPAD_TASK (pad) = NULL;
       }
       GST_STREAM_UNLOCK (pad);
 

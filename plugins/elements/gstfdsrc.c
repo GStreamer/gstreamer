@@ -103,6 +103,9 @@ gst_fdsrc_class_init (GstFdSrcClass * klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
 
+  gobject_class->set_property = gst_fdsrc_set_property;
+  gobject_class->get_property = gst_fdsrc_get_property;
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FD,
       g_param_spec_int ("fd", "fd", "An open file descriptor to read from",
           0, G_MAXINT, 0, G_PARAM_READWRITE));
@@ -118,9 +121,6 @@ gst_fdsrc_class_init (GstFdSrcClass * klass)
       g_signal_new ("timeout", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstFdSrcClass, timeout), NULL, NULL,
       g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-
-  gobject_class->set_property = gst_fdsrc_set_property;
-  gobject_class->get_property = gst_fdsrc_get_property;
 
   gstelement_class->change_state = gst_fdsrc_change_state;
 }

@@ -37,7 +37,7 @@ bin_PROGRAMS = \
 	$(GST_REGISTRY_SRC) $(GST_REGISTRY_SRC_V) \
 	$(GST_LOADSAVE_SRC) $(GST_LOADSAVE_SRC_V) \
 	$(GST_OTHER_SRC) $(GST_OTHER_SRC_V)
-bin_SCRIPTS = 
+bin_SCRIPTS = gst-feedback-@GST_MAJORMINOR@
 
 # make sure each versioned tool has the right source file and flags
 if !GST_DISABLE_REGISTRY

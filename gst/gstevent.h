@@ -35,7 +35,7 @@ G_BEGIN_DECLS
 GST_EXPORT GType _gst_event_type;
 
 /**
- * GstBufferFlag:
+ * GstEventType:
  * @GST_EVENT_UNKNOWN: 
  * @GST_EVENT_EOS:
  * @GST_EVENT_FLUSH:
@@ -59,6 +59,7 @@ typedef enum {
   GST_EVENT_NAVIGATION		= 10,
   GST_EVENT_TAG			= 11
 } GstEventType;
+#define GST_EVENT_ANY GST_EVENT_NAVIGATION
 
 #define GST_EVENT_TRACE_NAME	"GstEvent"
 

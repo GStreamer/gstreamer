@@ -392,7 +392,6 @@ gst_md5sink_class_init (GstMD5SinkClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_md5sink_get_property);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MD5,

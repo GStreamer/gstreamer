@@ -271,7 +271,8 @@ gst_buffer_new_and_alloc (guint size)
  * Returns: the #GstCaps, or NULL if there was an error or there
  * were no caps on this buffer.
  */
-/* FIXME can we make this threadsafe without a lock on the buffer? */
+/* FIXME can we make this threadsafe without a lock on the buffer?
+ * We can use compare and swap and atomic reads. */
 GstCaps *
 gst_buffer_get_caps (GstBuffer * buffer)
 {
@@ -289,7 +290,10 @@ gst_buffer_get_caps (GstBuffer * buffer)
  * be increased and any previous caps on the buffer will be
  * unreffed.
  */
-/* FIXME can we make this threadsafe without a lock on the buffer? */
+/* FIXME can we make this threadsafe without a lock on the buffer? 
+ * We can use compare and swap and atomic reads. Another idea is to
+ * not attach the caps to the buffer but use an event to signal a caps
+ * change. */
 void
 gst_buffer_set_caps (GstBuffer * buffer, GstCaps * caps)
 {

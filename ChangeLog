@@ -1,3 +1,43 @@
+2005-03-21  Wim Taymans  <wim@fluendo.com>
+
+	* gst/Makefile.am:
+	* gst/autoplug/gstsearchfuncs.c: (gst_autoplug_caps_intersect):
+	* gst/autoplug/gstspider.c: (gst_spider_identity_plug),
+	(gst_spider_plug_from_srcpad):
+	* gst/autoplug/gstspideridentity.c: (gst_spider_identity_getcaps),
+	(gst_spider_identity_change_state),
+	(gst_spider_identity_sink_loop_type_finding):
+	* gst/elements/gstaggregator.c: (gst_aggregator_class_init):
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_event_handler),
+	(gst_fakesrc_loop), (gst_fakesrc_activate):
+	* gst/elements/gstfakesrc.h:
+	* gst/elements/gstfdsink.c: (gst_fdsink_class_init):
+	* gst/elements/gstfdsrc.c: (gst_fdsrc_class_init):
+	* gst/elements/gstfilesink.c: (gst_filesink_class_init),
+	(gst_filesink_handle_event):
+	* gst/elements/gstmd5sink.c: (gst_md5sink_class_init):
+	* gst/elements/gstmultifilesrc.c: (gst_multifilesrc_class_init):
+	* gst/elements/gstshaper.c: (gst_shaper_class_init):
+	* gst/elements/gststatistics.c: (gst_statistics_class_init):
+	* gst/elements/gsttypefindelement.c: (free_entry),
+	(gst_type_find_element_handle_event):
+	* gst/gstbin.c: (gst_bin_add_func), (gst_bin_add),
+	(gst_bin_remove_func), (gst_bin_remove):
+	* gst/gstbin.h:
+	* gst/gstbuffer.c:
+	* gst/gstcaps.h:
+	* gst/gstelement.c: (gst_element_get_state_func),
+	(gst_element_lost_state):
+	* gst/gstevent.h:
+	* gst/gstpad.h:
+	* gst/gstpipeline.c:
+	* gst/gstqueue.h:
+	* libs/gst/bytestream/bytestream.c:
+	* libs/gst/dataprotocol/Makefile.am:
+	* tools/Makefile.am:
+	* tools/gst-launch.c:
+	Small cleanups, backports from HEAD.
+
 2005-03-10  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_basesink_change_state):

@@ -410,7 +410,6 @@ event_loop (GstElement * pipeline, gboolean blocking)
   return TRUE;
 }
 
-
 int
 main (int argc, char *argv[])
 {

@@ -107,6 +107,8 @@ gst_multifilesrc_class_init (GstMultiFileSrcClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  gobject_class->set_property = gst_multifilesrc_set_property;
+  gobject_class->get_property = gst_multifilesrc_get_property;
 
   gst_multifilesrc_signals[NEW_FILE] =
       g_signal_new ("new-file", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -114,15 +116,10 @@ gst_multifilesrc_class_init (GstMultiFileSrcClass * klass)
       g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
 
 
-
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOCATIONS, g_param_spec_pointer ("locations", "locations", "locations", G_PARAM_READWRITE));     /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HAVENEWMEDIA,
       g_param_spec_boolean ("newmedia", "newmedia",
           "generate new media events?", FALSE, G_PARAM_READWRITE));
-
-
-  gobject_class->set_property = gst_multifilesrc_set_property;
-  gobject_class->get_property = gst_multifilesrc_get_property;
 
   gstelement_class->change_state = gst_multifilesrc_change_state;
 }

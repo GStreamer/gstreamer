@@ -148,13 +148,6 @@ void                     gst_caps_replace                               (GstCaps
 gchar *                  gst_caps_to_string                             (const GstCaps *caps);
 GstCaps *                gst_caps_from_string                           (const gchar   *string);
 
-gboolean                 gst_caps_structure_fixate_field_nearest_int    (GstStructure *structure,
-									 const char   *field_name,
-									 int           target);
-gboolean                 gst_caps_structure_fixate_field_nearest_double (GstStructure *structure,
-									 const char   *field_name,
-									 double        target);
-
 G_END_DECLS
 
 #endif /* __GST_CAPS_H__ */
