@@ -102,8 +102,10 @@ Please not the dot that has to be used after the BINTYPE.
 .B Links
 
 \fI[[SRCELEMENT].[PAD1,...]]\fR ! \fI[[SINKELEMENT].[PAD1,...]]\fR
+\fI[[SRCELEMENT].[PAD1,...]]\fR ! CAPS ! \fI[[SINKELEMENT].[PAD1,...]]\fR
 
-Links the element with name SRCELEMENT to the element with name SINKELEMENT.
+Links the element with name SRCELEMENT to the element with name SINKELEMENT,
+using the caps specified in CAPS as a filter.
 Names can be set on elements with the name property. If the name is omitted, the
 element that was specified directly in front of or after the link is used. This
 works across bins. If a padname is given, the link is done with these pads. If
@@ -118,6 +120,46 @@ Note that when specifying either pads or element names you have to include the
 dot or your syntax will be misinterpreted. This is a change to the old syntax
 used up to version 0.6 that allowed omitting the dot when only specifying a
 padname.
+
+.B Caps
+
+MIMETYPE \fI[, PROPERTY[, PROPERTY ...]]]\fR \fI[; CAPS[; CAPS ...]]\fR
+
+Creates a capability with the given mimetype and optionally with given
+properties. The mimetype can be escaped using " or '.
+If you want to chain caps, you can add more caps in the same format afterwards.
+
+.B Properties
+
+NAME\fI[:TYPE]\fR=VALUE
+.br
+in lists and ranges: [TYPE=]VALUE
+
+Sets the requested property in capabilites. The name is an alphanumeric value
+and the type can have the following case-insensitive values:
+.br
+- \fBi\fR or \fBint\fR for integer values or ranges
+.br
+- \fBf\fR or \fBfloat\fR for float values or ranges
+.br
+- \fB4\fR or \fBfourcc\fR for FOURCC values
+.br
+- \fBb\fR, \fBbool\fR or \fBboolean\fR for boolean values
+.br
+- \fBs\fR, \fBstr\fR or \fBstring\fR for strings
+.br
+- \fBl\fR or \fBlist\fR for lists
+.br
+If no type was given, the following order is tried: integer, float, boolean, 
+string.
+.br
+Integer values must be parsable by strtol, floats by strtol. FOURCC values may
+either be integers or strings. Boolean values are (case insensitive) \fIyes\fR, 
+\fIno\fR, \fItrue\fR or \fIfalse\fR and may like strings be escaped with " or '.
+.br
+Ranges are in this format:  [ PROPERTY, PROPERTY ]
+.br
+Lists use this format:      ( PROPERTY \fI[, PROPERTY ...]\fR )
 
 .SH "PIPELINE EXAMPLES"
 
@@ -276,6 +318,23 @@ Play any supported audio format
 .br
 Play any supported video format with video and audio output. The second pipeline
 uses threaded output.
+
+.B Filtered connections
+
+These examples show you how to use filtered caps.
+
+.B
+        gst\-launch videotestsrc ! video/raw, format:fourcc=YUY2; video/raw, format:fourcc=YV12 ! xvideosink
+.br
+Show a test image and use the YUY2 or YV12 video format for this.
+
+.B
+        gst\-launch osssrc ! "audio/raw", format=int, width=[16, 32], depth=(16, 24, 32), signed=TRUE ! osssink
+.br
+Playback currently recorded audio. Force usage of signed 16 to 32 bit samples.
+
+
+
 
 .
 .SH "SEE ALSO"
