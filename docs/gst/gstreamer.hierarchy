@@ -1,0 +1,12 @@
+GtkObject
+  GstObject
+    GstPad
+    GstElement
+      GstFilter
+        GstTee
+      GstBin
+        GstPipeline
+        GstThread
+      GstConnection
+      GstSrc
+      GstSink

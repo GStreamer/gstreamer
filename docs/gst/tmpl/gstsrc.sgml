@@ -1,0 +1,99 @@
+<!-- ##### SECTION Title ##### -->
+GstSrc
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GST_SRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### ENUM GstSrcFlags ##### -->
+<para>
+
+</para>
+
+@GST_SRC_ASYNC: 
+
+<!-- ##### MACRO GST_SRC_FLAGS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_SRC_ASYNC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_SRC_SET_FLAGS ##### -->
+<para>
+
+</para>
+
+@src: 
+@flag: 
+
+
+<!-- ##### MACRO GST_SRC_UNSET_FLAGS ##### -->
+<para>
+
+</para>
+
+@src: 
+@flag: 
+
+
+<!-- ##### FUNCTION gst_src_signal_eos ##### -->
+<para>
+
+</para>
+
+@src: 
+
+
+<!-- ##### FUNCTION gst_src_push ##### -->
+<para>
+
+</para>
+
+@src: 
+
+
+<!-- ##### FUNCTION gst_src_push_region ##### -->
+<para>
+
+</para>
+
+@src: 
+@offset: 
+@size: 
+
+
+<!-- ##### SIGNAL GstSrc::eos ##### -->
+<para>
+
+</para>
+
+@gstsrc: the object which received the signal.
+@arg1: 
+

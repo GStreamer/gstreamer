@@ -1,0 +1,86 @@
+<!-- ##### SECTION Title ##### -->
+gstutils
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gst_util_get_int_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@argname: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_util_get_long_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@argname: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_util_get_float_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@argname: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_util_get_double_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@argname: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_util_get_string_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@argname: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_util_get_pointer_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@argname: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_util_get_widget_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@argname: 
+@Returns: 
+
+

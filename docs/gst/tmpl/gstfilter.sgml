@@ -1,0 +1,33 @@
+<!-- ##### SECTION Title ##### -->
+GstFilter
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GST_FILTER ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### FUNCTION gst_filter_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+

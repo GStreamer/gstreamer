@@ -1,0 +1,50 @@
+<!-- ##### SECTION Title ##### -->
+Gstreamer
+
+<!-- ##### SECTION Short_Description ##### -->
+Media library supporting arbitrary formats and filter graphs.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+GStreamer is a framework for constructing graphs of various filters
+(termed elements here) that will handly streaming media.  Any discreet
+(packetizable) media type is supported, with provisions for automatically
+determining source type.  Metadata can be passed with all data to provide
+formatting/framing information.  Plugins are heavily used to provide for
+all elements, allowing one to construct plugins outside of the GST
+library, even released binary-only if license require (please don't).
+</para>
+
+<para>
+GStreamer borrows heavily from both the <ulink 
+url="http://www.cse.ogi.edu/sysl/">OGI media pipeline</ulink> and
+Microsoft's DirectShow, hopefully taking the best of both and leaving the
+cruft behind.  Its interface is still very fluid (I've redesigned the
+metadata handling twice already), and thus can be changed to increase the
+sanity/noise ratio.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+Check out both <ulink url="http://www.cse.ogi.edu/sysl/">OGI's
+pipeline</ulink> and Microsoft's DirectShow for some background.
+</para>
+
+<!-- ##### FUNCTION gst_init ##### -->
+<para>
+
+</para>
+
+@argc: 
+@argv: 
+
+
+<!-- ##### MACRO DEBUG ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
+

@@ -1,0 +1,364 @@
+<!-- ##### SECTION Title ##### -->
+GstElement
+
+<!-- ##### SECTION Short_Description ##### -->
+Base class for all pipeline elements
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+GstElement is the base class needed to construct an element that can be
+used in a GST pipeline.  As such, it is not a functional entity, and
+cannot do anything when placed in a pipeline.
+</para>
+
+<para>
+All GstElements have a list containing the #GstPad structure for all their
+inputs and outputs.  These can be added with gst_element_add_pad() or
+gst_element_add_ghost_pad(), and retrieved by name with
+gst_element_get_pad(), or in a list form by gst_element_get_pad_list().
+</para>
+
+<para>
+gst_element_connect() is a convenience function provided to make it
+simpler to connect pads of two elements together.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GstElementState ##### -->
+<para>
+
+</para>
+
+@GST_STATE_COMPLETE: 
+@GST_STATE_RUNNING: 
+@GST_STATE_DISCOVERY: 
+@GST_STATE_PREROLL: 
+@GST_STATE_PLAYING: 
+@GST_STATE_PAUSED: 
+@GST_STATE_MAX: 
+
+<!-- ##### MACRO GST_STATE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_STATE_IS_SET ##### -->
+<para>
+
+</para>
+
+@obj: 
+@flag: 
+
+
+<!-- ##### MACRO GST_STATE_SET ##### -->
+<para>
+
+</para>
+
+@obj: 
+@flag: 
+
+
+<!-- ##### MACRO GST_STATE_UNSET ##### -->
+<para>
+
+</para>
+
+@obj: 
+@flag: 
+
+
+<!-- ##### MACRO GST_ELEMENT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### STRUCT GstElementDetails ##### -->
+<para>
+
+</para>
+
+@longname: 
+@class: 
+@description: 
+@version: 
+@author: 
+@copyright: 
+
+<!-- ##### STRUCT GstElementFactory ##### -->
+<para>
+
+</para>
+
+@name: 
+@type: 
+@details: 
+
+<!-- ##### USER_FUNCTION GstElementLoopFunction ##### -->
+<para>
+
+</para>
+
+@element: 
+
+
+<!-- ##### FUNCTION gst_element_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_set_loop_function ##### -->
+<para>
+
+</para>
+
+@element: 
+@loop: 
+
+
+<!-- ##### FUNCTION gst_element_set_name ##### -->
+<para>
+
+</para>
+
+@element: 
+@name: 
+
+
+<!-- ##### FUNCTION gst_element_get_name ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_set_manager ##### -->
+<para>
+
+</para>
+
+@element: 
+@manager: 
+
+
+<!-- ##### FUNCTION gst_element_get_manager ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_add_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@pad: 
+
+
+<!-- ##### FUNCTION gst_element_add_ghost_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@pad: 
+
+
+<!-- ##### FUNCTION gst_element_get_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_get_pad_list ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_connect ##### -->
+<para>
+
+</para>
+
+@src: 
+@srcpadname: 
+@dest: 
+@destpadname: 
+<!-- # Unused Parameters # -->
+@srcpad: 
+@destpad: 
+
+
+<!-- ##### FUNCTION gst_element_set_state ##### -->
+<para>
+
+</para>
+
+@element: 
+@state: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_error ##### -->
+<para>
+
+</para>
+
+@element: 
+@error: 
+
+
+<!-- ##### FUNCTION gst_element_change_state ##### -->
+<para>
+
+</para>
+
+@element: 
+@state: 
+@Returns: 
+
+
+<!-- ##### MACRO gst_element_destroy ##### -->
+<para>
+
+</para>
+
+@element: 
+
+
+<!-- ##### FUNCTION gst_element_save_thyself ##### -->
+<para>
+
+</para>
+
+@element: 
+@parent: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_elementfactory_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@type: 
+@details: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_elementfactory_register ##### -->
+<para>
+
+</para>
+
+@elementfactory: 
+
+
+<!-- ##### FUNCTION gst_elementfactory_find ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_elementfactory_get_list ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_elementfactory_create ##### -->
+<para>
+
+</para>
+
+@factory: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_elementfactory_make ##### -->
+<para>
+
+</para>
+
+@factoryname: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_loopfunc_wrapper ##### -->
+<para>
+
+</para>
+
+@argc: 
+@argv: 
+@Returns: 
+
+
+<!-- ##### SIGNAL GstElement::state-change ##### -->
+<para>
+
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: 
+
+<!-- ##### SIGNAL GstElement::new-pad ##### -->
+<para>
+
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: 
+
+<!-- ##### SIGNAL GstElement::new-ghost-pad ##### -->
+<para>
+
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: 
+
+<!-- ##### SIGNAL GstElement::error ##### -->
+<para>
+
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: 
+

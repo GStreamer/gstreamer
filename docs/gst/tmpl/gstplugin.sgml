@@ -1,0 +1,128 @@
+<!-- ##### SECTION Title ##### -->
+gstplugin
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GstPlugin ##### -->
+<para>
+
+</para>
+
+@name: 
+@longname: 
+@filename: 
+@types: 
+@elements: 
+@identifiers: 
+
+<!-- ##### STRUCT GstPluginElement ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### USER_FUNCTION GstPluginInitFunc ##### -->
+<para>
+
+</para>
+
+@module: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_set_longname ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@longname: 
+
+
+<!-- ##### FUNCTION gst_plugin_init ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_plugin_load_all ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_plugin_load ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_load_absolute ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_add_factory ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@factory: 
+
+
+<!-- ##### FUNCTION gst_plugin_find ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_get_list ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_find_elementfactory ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+

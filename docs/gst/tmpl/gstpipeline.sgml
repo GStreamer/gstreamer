@@ -1,0 +1,49 @@
+<!-- ##### SECTION Title ##### -->
+GstPipeline
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GST_PIPELINE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### FUNCTION gst_pipeline_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### MACRO gst_pipeline_destroy ##### -->
+<para>
+
+</para>
+
+@pipeline: 
+
+
+<!-- ##### FUNCTION gst_pipeline_iterate ##### -->
+<para>
+
+</para>
+
+@pipeline: 
+
+

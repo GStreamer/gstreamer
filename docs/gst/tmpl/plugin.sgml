@@ -1,0 +1,48 @@
+<!-- ##### SECTION Title ##### -->
+plugin
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION plugin_initialize ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION plugin_load_all ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION plugin_load ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION plugin_load_absolute ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+

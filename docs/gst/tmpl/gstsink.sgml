@@ -1,0 +1,33 @@
+<!-- ##### SECTION Title ##### -->
+GstSink
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GST_SINK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### FUNCTION gst_sink_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+

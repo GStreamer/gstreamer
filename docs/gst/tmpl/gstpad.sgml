@@ -1,0 +1,230 @@
+<!-- ##### SECTION Title ##### -->
+GstPad
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GST_PAD ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_PAD_CONNECTED ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### USER_FUNCTION GstPadChainFunction ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+
+<!-- ##### USER_FUNCTION GstPadPushFunction ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### ENUM GstPadDirection ##### -->
+<para>
+
+</para>
+
+@GST_PAD_UNKNOWN: 
+@GST_PAD_SRC: 
+@GST_PAD_SINK: 
+
+<!-- ##### FUNCTION gst_pad_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@direction: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_destroy ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### FUNCTION gst_pad_get_direction ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_set_chain_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@chain: 
+
+
+<!-- ##### FUNCTION gst_pad_get_type_id ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_set_type_id ##### -->
+<para>
+
+</para>
+
+@pad: 
+@id: 
+
+
+<!-- ##### FUNCTION gst_pad_set_name ##### -->
+<para>
+
+</para>
+
+@pad: 
+@name: 
+
+
+<!-- ##### FUNCTION gst_pad_get_name ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_get_directory ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_set_parent ##### -->
+<para>
+
+</para>
+
+@pad: 
+@parent: 
+
+
+<!-- ##### FUNCTION gst_pad_add_ghost_parent ##### -->
+<para>
+
+</para>
+
+@pad: 
+@parent: 
+
+
+<!-- ##### FUNCTION gst_pad_remove_ghost_parent ##### -->
+<para>
+
+</para>
+
+@pad: 
+@parent: 
+
+
+<!-- ##### FUNCTION gst_pad_get_parent ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_get_ghost_parents ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_get_peer ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_connect ##### -->
+<para>
+
+</para>
+
+@srcpad: 
+@sinkpad: 
+
+
+<!-- ##### FUNCTION gst_pad_push ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buffer: 
+
+
+<!-- ##### FUNCTION gst_pad_pull ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_save_thyself ##### -->
+<para>
+
+</para>
+
+@pad: 
+@parent: 
+@Returns: 
+
+

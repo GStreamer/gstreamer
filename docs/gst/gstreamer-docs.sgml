@@ -1,0 +1,105 @@
+<!doctype book PUBLIC "-//Davenport//DTD DocBook V3.0//EN" [
+<!entity Gst SYSTEM "sgml/gst.sgml">
+
+<!entity GstObject SYSTEM "sgml/gstobject.sgml">
+<!entity GstPad SYSTEM "sgml/gstpad.sgml">
+<!entity GstElement SYSTEM "sgml/gstelement.sgml">
+<!entity GstFilter SYSTEM "sgml/gstfilter.sgml">
+<!entity GstBin SYSTEM "sgml/gstbin.sgml">
+<!entity GstPipeline SYSTEM "sgml/gstpipeline.sgml">
+<!entity GstBuffer SYSTEM "sgml/gstbuffer.sgml">
+<!entity GstSrc SYSTEM "sgml/gstsrc.sgml">
+<!entity GstSink SYSTEM "sgml/gstsink.sgml">
+
+<!entity GstPlugin SYSTEM "sgml/gstplugin.sgml">
+
+<!entity gstreamer-gsttype SYSTEM "sgml/gsttype.sgml">
+<!entity gstreamer-gstmeta SYSTEM "sgml/gstmeta.sgml">
+<!entity gstreamer-gstutils SYSTEM "sgml/gstutils.sgml">
+<!entity gstreamer-gsttrace SYSTEM "sgml/gsttrace.sgml">
+
+<!--
+<!entity gstreamer-gstasyncdisksrc SYSTEM "sgml/gstasyncdisksrc.sgml">
+<!entity gstreamer-gstaudiosink SYSTEM "sgml/gstaudiosink.sgml">
+<!entity gstreamer-gstdisksrc SYSTEM "sgml/gstdisksrc.sgml">
+<!entity gstreamer-gstesdsink SYSTEM "sgml/gstesdsink.sgml">
+<!entity gstreamer-gstfakefilter SYSTEM "sgml/gstfakefilter.sgml">
+<!entity gstreamer-gstfakesink SYSTEM "sgml/gstfakesink.sgml">
+<!entity gstreamer-gstfakesrc SYSTEM "sgml/gstfakesrc.sgml">
+<!entity gstreamer-gstfdsink SYSTEM "sgml/gstfdsink.sgml">
+<!entity gstreamer-gstfdsrc SYSTEM "sgml/gstfdsrc.sgml">
+<!entity gstreamer-gsthttpsrc SYSTEM "sgml/gsthttpsrc.sgml">
+<!entity gstreamer-gsttee SYSTEM "sgml/gsttee.sgml">
+
+<!entity gstreamer-spectrum SYSTEM "sgml/spectrum.sgml">
+<!entity gstreamer-audioraw SYSTEM "sgml/audioraw.sgml">
+-->
+
+<!entity gstreamer-tree-index SYSTEM "sgml/tree_index.sgml">
+]>
+
+
+<book>
+  <bookinfo>
+    <title>GStreamer Library Reference Manual</title>
+  </bookinfo>
+  <chapter id="gstreamer">
+    <title>GStreamer Core Library</title>
+
+    <para>libgst.la provides all the core GStreamer services,
+including initialization, plugin management, types and metadata, as 
+well as the object hiarchy that defines elements and bins, along
+with some more specialized elements.</para>
+
+    &Gst;
+    &GstObject;
+    &GstElement;
+    &GstBin;
+    &GstPipeline;
+    &GstFilter;
+    &GstSink;
+    &GstSrc;
+    &GstBuffer;
+    &GstPad;
+    &GstPlugin;
+
+    &gstreamer-gsttype;
+    &gstreamer-gstmeta;
+    &gstreamer-gstutils;
+    &gstreamer-gsttrace;
+  </chapter>
+
+<!--
+  <chapter id="element-types">
+    <title>GStreamer Element</title>
+
+
+    &gstreamer-gstfakesrc;
+    &gstreamer-gstdisksrc;
+    &gstreamer-gstasyncdisksrc;
+    &gstreamer-gsthttpsrc;
+    &gstreamer-gstfdsrc;
+
+    &gstreamer-gstaudiosink;
+    &gstreamer-gstesdsink;
+    &gstreamer-gstfdsink;
+    &gstreamer-gstfakesink;
+
+    &gstreamer-gstfakefilter;
+
+    &gstreamer-spectrum;
+    &gstreamer-audioraw;
+    &gstreamer-gsttee;
+    &gstreamer-gsttypeaudio;
+  </chapter>
+-->
+
+  <chapter id="gst-index">
+    <title>Index</title>
+
+    <sect1>
+      <title>Object Hierarchy</title>
+      &gstreamer-tree-index;
+    </sect1>
+  </chapter>
+</book>

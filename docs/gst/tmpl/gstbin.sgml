@@ -1,0 +1,108 @@
+<!-- ##### SECTION Title ##### -->
+GstBin
+
+<!-- ##### SECTION Short_Description ##### -->
+Base container element
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+GstBin is the simplest of the container elements, allowing elements to
+beocme children of itself.  Pads from the child elements can be ghosted to
+the bin, making the bin itself look transparently like any other element,
+allowing for deep nesting of predefined sub-pipelines.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GST_BIN ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### FUNCTION gst_bin_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_bin_add ##### -->
+<para>
+
+</para>
+
+@bin: 
+@element: 
+
+
+<!-- ##### FUNCTION gst_bin_remove ##### -->
+<para>
+
+</para>
+
+@bin: 
+@element: 
+
+
+<!-- ##### FUNCTION gst_bin_get_by_name ##### -->
+<para>
+
+</para>
+
+@bin: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_bin_get_list ##### -->
+<para>
+
+</para>
+
+@bin: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_bin_set_state_type ##### -->
+<para>
+
+</para>
+
+@bin: 
+@state: 
+@type: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_bin_iterate ##### -->
+<para>
+
+</para>
+
+@bin: 
+
+
+<!-- ##### FUNCTION gst_bin_create_plan ##### -->
+<para>
+
+</para>
+
+@bin: 
+
+
+<!-- ##### SIGNAL GstBin::object-added ##### -->
+<para>
+
+</para>
+
+@gstbin: the object which received the signal.
+@arg1: 
+

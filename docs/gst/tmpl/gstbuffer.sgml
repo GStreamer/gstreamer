@@ -1,0 +1,241 @@
+<!-- ##### SECTION Title ##### -->
+GstBuffer
+
+<!-- ##### SECTION Short_Description ##### -->
+Data-passing buffer type, supporting sub-buffers and metadata
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+Buffers are the basic unit of data transfer in GST.  The GstBuffer type
+provides all the state necessary to define a region of memory as part of a
+stream.  Sub-buffer are also supported, allowing a smaller region of a
+buffer to become its own buffer, with mechanisms in place to ensure that
+nither memory space goes away.  Metadata is supported as a list of
+pointers to arbitrary metadata.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GST_BUFFER ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+
+<!-- ##### MACRO GST_BUFFER_FLAGS ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+
+<!-- ##### MACRO GST_BUFFER_FLAG_SET ##### -->
+<para>
+
+</para>
+
+@buf: 
+@flag: 
+
+
+<!-- ##### MACRO GST_BUFFER_FLAG_UNSET ##### -->
+<para>
+
+</para>
+
+@buf: 
+@flag: 
+
+
+<!-- ##### MACRO GST_BUFFER_TYPE ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+
+<!-- ##### MACRO GST_BUFFER_DATA ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+
+<!-- ##### MACRO GST_BUFFER_SIZE ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+
+<!-- ##### MACRO GST_BUFFER_OFFSET ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+
+<!-- ##### MACRO GST_BUFFER_MAXSIZE ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+
+<!-- ##### MACRO GST_BUFFER_TIMESTAMP ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+
+<!-- ##### MACRO GST_BUFFER_LOCK ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+
+<!-- ##### MACRO GST_BUFFER_TRYLOCK ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+
+<!-- ##### MACRO GST_BUFFER_UNLOCK ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+
+<!-- ##### ENUM GstBufferFlags ##### -->
+<para>
+
+</para>
+
+@GST_BUFFER_READONLY: 
+@GST_BUFFER_EOS: 
+@GST_BUFFER_ORIGINAL: 
+@GST_BUFFER_DONTFREE: 
+
+<!-- ##### STRUCT GstBuffer ##### -->
+<para>
+
+</para>
+
+@lock: 
+@flags: 
+@data: 
+@size: 
+@maxsize: 
+@offset: 
+@timestamp: 
+@maxage: 
+@metas: 
+@parent: 
+
+<!-- ##### FUNCTION gst_buffer_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_buffer_create_sub ##### -->
+<para>
+
+</para>
+
+@parent: 
+@offset: 
+@size: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_buffer_ref ##### -->
+<para>
+
+</para>
+
+@buffer: 
+
+
+<!-- ##### FUNCTION gst_buffer_ref_by_count ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@count: 
+
+
+<!-- ##### FUNCTION gst_buffer_unref ##### -->
+<para>
+
+</para>
+
+@buffer: 
+
+
+<!-- ##### FUNCTION gst_buffer_destroy ##### -->
+<para>
+
+</para>
+
+@buffer: 
+
+
+<!-- ##### FUNCTION gst_buffer_add_meta ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@meta: 
+
+
+<!-- ##### FUNCTION gst_buffer_get_first_meta ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_buffer_get_metas ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_buffer_remove_meta ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@meta: 
+
+

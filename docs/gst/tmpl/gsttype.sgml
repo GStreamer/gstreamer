@@ -1,0 +1,134 @@
+<!-- ##### SECTION Title ##### -->
+gsttype
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### USER_FUNCTION GstTypeFindFunc ##### -->
+<para>
+
+</para>
+
+@buf: 
+@private: 
+@Returns: 
+
+
+<!-- ##### STRUCT GstType ##### -->
+<para>
+
+</para>
+
+@id: 
+@mime: 
+@exts: 
+@typefindfunc: 
+@srcs: 
+@sinks: 
+
+<!-- ##### STRUCT GstTypeFactory ##### -->
+<para>
+
+</para>
+
+@mime: 
+@exts: 
+@typefindfunc: 
+
+<!-- ##### FUNCTION gst_type_initialize ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_type_register ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_type_find_by_mime ##### -->
+<para>
+
+</para>
+
+@mime: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_type_find_by_ext ##### -->
+<para>
+
+</para>
+
+@ext: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_type_add_src ##### -->
+<para>
+
+</para>
+
+@id: 
+@src: 
+
+
+<!-- ##### FUNCTION gst_type_add_sink ##### -->
+<para>
+
+</para>
+
+@id: 
+@sink: 
+
+
+<!-- ##### FUNCTION gst_type_get_srcs ##### -->
+<para>
+
+</para>
+
+@id: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_type_get_sinks ##### -->
+<para>
+
+</para>
+
+@id: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_type_find_by_id ##### -->
+<para>
+
+</para>
+
+@id: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_type_get_list ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+

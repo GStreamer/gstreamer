@@ -1,0 +1,63 @@
+<!-- ##### SECTION Title ##### -->
+GstThread
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GstThreadState ##### -->
+<para>
+
+</para>
+
+@GST_THREAD_CREATE: 
+@GST_THREAD_STATE_SPINNING: 
+@GST_THREAD_STATE_REAPING: 
+
+<!-- ##### MACRO GST_THREAD ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### FUNCTION gst_thread_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_thread_main_loop ##### -->
+<para>
+
+</para>
+
+@arg: 
+
+
+<!-- ##### FUNCTION gst_thread_iterate ##### -->
+<para>
+
+</para>
+
+@thread: 
+
+
+<!-- ##### ARG GstThread:create_thread ##### -->
+<para>
+
+</para>
+

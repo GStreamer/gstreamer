@@ -1,0 +1,100 @@
+<!-- ##### SECTION Title ##### -->
+gstmeta
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GST_META ##### -->
+<para>
+
+</para>
+
+@meta: 
+
+
+<!-- ##### MACRO GST_META_FLAGS ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+
+<!-- ##### MACRO GST_META_FLAG_SET ##### -->
+<para>
+
+</para>
+
+@meta: 
+@flag: 
+
+
+<!-- ##### MACRO GST_META_FLAG_UNSET ##### -->
+<para>
+
+</para>
+
+@meta: 
+@flag: 
+
+
+<!-- ##### ENUM GstMetaFlags ##### -->
+<para>
+
+</para>
+
+@GST_META_FREEABLE: 
+
+<!-- ##### STRUCT GstMeta ##### -->
+<para>
+
+</para>
+
+@lock: 
+@flags: 
+@data: 
+@size: 
+
+<!-- ##### FUNCTION gst_meta_new_size ##### -->
+<para>
+
+</para>
+
+@size: 
+@Returns: 
+
+
+<!-- ##### MACRO gst_meta_new ##### -->
+<para>
+
+</para>
+
+@type: 
+
+
+<!-- ##### FUNCTION gst_meta_ref ##### -->
+<para>
+
+</para>
+
+@meta: 
+
+
+<!-- ##### FUNCTION gst_meta_unref ##### -->
+<para>
+
+</para>
+
+@meta: 
+
+

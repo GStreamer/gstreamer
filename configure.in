@@ -291,6 +291,7 @@ test/cothreads/Makefile
 editor/Makefile
 tools/Makefile
 docs/Makefile
+docs/gst/Makefile
 stamp.h
 gstreamer-config
 gstreamer.spec])
