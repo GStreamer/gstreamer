@@ -781,6 +781,15 @@ dnl **** Free AAC Decoder (FAAD) ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_FAAD, true)
 GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
   GST_CHECK_LIBHEADER(FAAD, faad, faacDecOpen, -lm, faad.h, FAAD_LIBS="-lfaad -lm")
+  AC_MSG_CHECKING([Checking for FAAD >= 2])
+  AC_TRY_COMPILE([
+#include <faad.h>
+#if !defined(FAAD2_VERSION)
+#error Not faad2
+#endif
+  ], [ return 0; ],
+     [ HAVE_FAAD="yes" && AC_MSG_RESULT(yes)],
+     [ HAVE_FAAD="no"  && AC_MSG_RESULT(no)])
   AS_SCRUB_INCLUDE(FAAD_CFLAGS)
   AC_SUBST(FAAD_LIBS)
 ])
