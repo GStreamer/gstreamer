@@ -159,7 +159,7 @@ gst_v4lmjpegsink_init (GstV4lMjpegSink *v4lmjpegsink)
   gst_pad_set_chain_function (v4lmjpegsink->sinkpad, gst_v4lmjpegsink_chain);
   gst_pad_set_connect_function (v4lmjpegsink->sinkpad, gst_v4lmjpegsink_sinkconnect);
 
-  v4lmjpegsink->clock = gst_clock_get_system();
+  v4lmjpegsink->clock = gst_system_clock_obtain ();
   gst_clock_register(v4lmjpegsink->clock, GST_OBJECT(v4lmjpegsink));
 
   v4lmjpegsink->width = -1;
@@ -234,7 +234,8 @@ gst_v4lmjpegsink_chain (GstPad    *pad,
     gst_clock_set (v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP (buf));
   }
   else {
-    gst_clock_wait(v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP(buf), GST_OBJECT(v4lmjpegsink));
+    //gst_clock_wait(v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP(buf), GST_OBJECT(v4lmjpegsink));
+    gst_clock_wait(v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP(buf));
   }
 
   /* check size */
