@@ -24,6 +24,8 @@
 #define DEBUG_NOPREFIX(format,args...)
 #define VERBOSE(format,args...)
 
+#define GST_PARSE_LISTPAD(list)   ((GstPad*)(list->data))
+
 #include <string.h>
 
 #include "gst_private.h"
@@ -333,7 +335,7 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
       if (!sinkpads) GST_DEBUG(0,"can't find a sink pad for %s\n", gst_element_get_name (previous));
       else GST_DEBUG(0,"have sink pad %s:%s\n",GST_DEBUG_PAD_NAME(GST_PARSE_LISTPAD(sinkpads)));
 
-      if (!srcpads && sinkpads) {
+      if (!srcpads && sinkpads && previous) {
         dyn_connect *connect = g_malloc (sizeof (dyn_connect));
 
         connect->srcpadname = srcpadname;

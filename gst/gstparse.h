@@ -25,8 +25,6 @@
 
 #include <gst/gstbin.h>
 
-#define GST_PARSE_LISTPAD(list)   ((GstPad*)(list->data))
-
 gint	gst_parse_launch	(const gchar *cmdline, GstBin *parent);
 
 #endif /* __GST_PARSE_H__ */

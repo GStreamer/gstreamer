@@ -649,7 +649,8 @@ gst_element_request_pad_by_name (GstElement *element, const gchar *name)
   g_return_val_if_fail (name != NULL, NULL);
 
   templ = gst_element_get_padtemplate_by_name (element, name);
-  g_return_val_if_fail (templ != NULL, NULL);
+  if (templ == NULL)
+    return NULL;
 
   pad = gst_element_request_pad (element, templ);
 

@@ -1544,7 +1544,8 @@ gst_pad_pullregion (GstPad *pad, GstRegionType type, guint64 offset, guint64 len
       break;
     }
   }
-  while (!(GST_BUFFER_OFFSET (result) == offset && 
+  while (result && ! GST_BUFFER_FLAG_IS_SET (result, GST_BUFFER_EOS) 
+	   && !(GST_BUFFER_OFFSET (result) == offset && 
 	   GST_BUFFER_SIZE (result) == len));
 
   return result;

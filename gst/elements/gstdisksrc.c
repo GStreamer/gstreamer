@@ -229,8 +229,10 @@ gst_disksrc_get (GstPad *pad)
   src = GST_DISKSRC (gst_pad_get_parent (pad));
   g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_DISKSRC_OPEN), NULL);
 
+
   /* deal with EOF state */
   if (src->curoffset >= src->size) {
+    GST_DEBUG (0,"map offset %ld >= size %ld --> eos\n", src->curoffset, src->size);
     gst_pad_set_eos (pad);
     return NULL;
   }
@@ -292,8 +294,12 @@ gst_disksrc_get_region (GstPad *pad, GstRegionType type,guint64 offset,guint64 l
 
   /* deal with EOF state */
   if (offset >= src->size) {
-    gst_pad_set_eos (pad);
-    return NULL;
+    //gst_pad_set_eos (pad);
+    GST_DEBUG (0,"map offset %lld >= size %ld --> eos\n", offset, src->size);
+    //FIXME
+    buf =  gst_buffer_new();
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_EOS);
+    return buf;
   }
 
   /* create the buffer */

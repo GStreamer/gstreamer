@@ -116,7 +116,7 @@ gst_schedule_src_wrapper (int argc,char *argv[])
         }
 
         GST_DEBUG (GST_CAT_DATAFLOW,"calling gst_pad_push on pad %s:%s\n",GST_DEBUG_PAD_NAME(realpad));
-        if (buf) gst_pad_push ((GstPad*)realpad, buf);
+        gst_pad_push ((GstPad*)realpad, buf);
       }
     }
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING(element));
