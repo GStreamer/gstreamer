@@ -507,10 +507,14 @@ static int audiocast_init(GstGnomeVFSSrc *src)
 	GST_DEBUG ("audiocast: registering listener");
 	if (audiocast_register_listener(&src->audiocast_port, &src->audiocast_fd) < 0)
 	{
+		char *escaped;
+
+		escaped = gnome_vfs_unescape_string_for_display (src->filename);
 		gst_element_error(GST_ELEMENT(src),
 				  "opening vfs file \"%s\" (%s)",
-				  src->filename, 
+				  escaped,
 				  "unable to register UDP port");
+		g_free (escaped);
 		close(src->audiocast_fd);
 		return FALSE;
 	}
@@ -526,10 +530,13 @@ static int audiocast_init(GstGnomeVFSSrc *src)
 	GST_DEBUG ("audiocast: creating audiocast thread");
 	src->audiocast_thread = g_thread_create((GThreadFunc) audiocast_thread_run, src, TRUE, &error);
 	if (error != NULL) {
+		char *escaped;
+		escaped = gnome_vfs_unescape_string_for_display (src->filename);
 		gst_element_error(GST_ELEMENT(src),
 				  "opening vfs file \"%s\" (unable to create thread: %s)",
-				  src->filename, 
+				  escaped,
 				  error->message);
+		g_free (escaped);
 		close(src->audiocast_fd);
 		return FALSE;
 	}
@@ -1048,12 +1055,17 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 				    GNOME_VFS_OPEN_READ);
 	if (result != GNOME_VFS_OK)
 	{
+		char *escaped;
+		
 		gst_gnomevfssrc_pop_callbacks (src);
 		audiocast_thread_kill(src);
+
+		escaped = gnome_vfs_unescape_string_for_display (src->filename);
 		gst_element_error(GST_ELEMENT(src),
 				  "opening vfs file \"%s\" (%s)",
-				  src->filename, 
+				  escaped,
 				  gnome_vfs_result_to_string(result));
+		g_free (escaped);
 		return FALSE;
 	}
 	
