@@ -79,9 +79,7 @@ GST_PAD_TEMPLATE_FACTORY (src_template_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "wavparse_raw",
-    "audio/raw",
-      "format",            GST_PROPS_STRING ("int"),
-       "law",              GST_PROPS_INT (0),
+    "audio/x-raw-int",
        "endianness",       GST_PROPS_INT (G_LITTLE_ENDIAN),
        "signed",           GST_PROPS_LIST (
 				GST_PROPS_BOOLEAN (FALSE),
@@ -99,18 +97,21 @@ GST_PAD_TEMPLATE_FACTORY (src_template_factory,
        "channels",         GST_PROPS_INT_RANGE (1, 2)
   ),
   GST_CAPS_NEW (
-    "wavparse_mp3",
-    "audio/x-mp3",
-    NULL
+    "wavparse_mpeg",
+    "audio/mpeg",
+      "rate",              GST_PROPS_INT_RANGE (8000, 48000),
+      "channels",          GST_PROPS_INT_RANGE (1, 2),
+      "layer",             GST_PROPS_INT_RANGE (1, 3)
   ),
   GST_CAPS_NEW (
     "parsewav_law",
-    "audio/raw",
-      "format",            GST_PROPS_STRING ("int"),
-      "law",               GST_PROPS_INT_RANGE (1, 2),
-      "endianness",        GST_PROPS_INT (G_LITTLE_ENDIAN),
-      "width",             GST_PROPS_INT (8),
-      "depth",             GST_PROPS_INT (8),
+    "audio/x-alaw",
+      "rate",              GST_PROPS_INT_RANGE (8000, 48000),
+      "channels",          GST_PROPS_INT_RANGE (1, 2)
+  ),
+  GST_CAPS_NEW (
+    "parsewav_law",
+    "audio/x-mulaw",
       "rate",              GST_PROPS_INT_RANGE (8000, 48000),
       "channels",          GST_PROPS_INT_RANGE (1, 2)
   )
@@ -371,29 +372,26 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
       switch (wavparse->format)
       {
         case GST_RIFF_WAVE_FORMAT_ALAW:
-        case GST_RIFF_WAVE_FORMAT_MULAW:
+        case GST_RIFF_WAVE_FORMAT_MULAW: {
+          gchar *mime = (wavparse->format == GST_RIFF_WAVE_FORMAT_ALAW) ?
+				"audio/x-alaw" : "audio/x-mulaw";
 	  if (!(wavparse->width == 8)) {
-	    gst_element_error (GST_ELEMENT (wavparse), "wavparse: invalid wave file");
+	    g_warning("Ignoring invalid width %d",
+		      wavparse->width);
 	    return;
 	  }
           caps = GST_CAPS_NEW (
 			"parsewav_src",
-			"audio/raw",
-			"format",	GST_PROPS_STRING ("int"),
-			  "law",	GST_PROPS_INT (wavparse->format == GST_RIFF_WAVE_FORMAT_ALAW ? 2 : 1),
-			  "endianness",	GST_PROPS_INT (G_LITTLE_ENDIAN),
-			  "width",	GST_PROPS_INT (8),
-			  "depth",	GST_PROPS_INT (8),
+			mime,
 			  "rate",	GST_PROPS_INT (wavparse->rate),
 			  "channels",	GST_PROPS_INT (wavparse->channels)
 		);
+        }
 	  break;
         case GST_RIFF_WAVE_FORMAT_PCM:
           caps = GST_CAPS_NEW (
 			"parsewav_src",
-			"audio/raw",
-			"format",	GST_PROPS_STRING ("int"),
-			  "law",	GST_PROPS_INT (0),
+			"audio/x-raw-int",
 			  "endianness",	GST_PROPS_INT (G_LITTLE_ENDIAN),
 			  "signed",     GST_PROPS_BOOLEAN ((wavparse->width > 8) ? TRUE : FALSE),
 			  "width",	GST_PROPS_INT (wavparse->width),
@@ -403,13 +401,18 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
 		);
 	  break;
         case GST_RIFF_WAVE_FORMAT_MPEGL12:
-        case GST_RIFF_WAVE_FORMAT_MPEGL3:
+        case GST_RIFF_WAVE_FORMAT_MPEGL3: {
+          gint layer = (wavparse->format == GST_RIFF_WAVE_FORMAT_MPEGL12) ? 2 : 3;
 	  caps = GST_CAPS_NEW (
 			"parsewav_src",
-			"audio/x-mp3",
-			NULL
+			"audio/mpeg",
+			  "layer",	GST_PROPS_INT (layer),
+			  "rate",	GST_PROPS_INT (wavparse->rate),
+			  "channels",	GST_PROPS_INT (wavparse->channels)
 		);
+        }
 	  break;
+
 	default:
           gst_element_error (GST_ELEMENT (wavparse), "wavparse: format %d not handled", wavparse->format);
           return;

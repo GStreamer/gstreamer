@@ -68,138 +68,46 @@ GST_PAD_TEMPLATE_FACTORY (sink_templ,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "avidemux_sink",
-     "video/avi",
-      "format",    GST_PROPS_STRING ("AVI")
-  )
-)
-
-GST_PAD_TEMPLATE_FACTORY (src_video_templ,
-  "video_%02d",
-  GST_PAD_SRC,
-  GST_PAD_SOMETIMES,
-  GST_CAPS_NEW (
-    "avidemux_src_video_avi",
     "video/avi",
-      "format",  GST_PROPS_LIST (
-	           GST_PROPS_STRING ("strf_vids"),
-	           GST_PROPS_STRING ("strf_iavs")
-      		 ),
-      "width",   GST_PROPS_INT_RANGE (16, 4096),
-      "height",  GST_PROPS_INT_RANGE (16, 4096)
-
-  ),
-  GST_CAPS_NEW (
-    "avidemux_src_video_raw",
-    "video/raw",
-      "format",  GST_PROPS_LIST (
-                   GST_PROPS_FOURCC (GST_MAKE_FOURCC('Y','U','Y','2')),
-                   GST_PROPS_FOURCC (GST_MAKE_FOURCC('I','4','2','0'))
-                 ),
-      "width",          GST_PROPS_INT_RANGE (16, 4096),
-      "height",         GST_PROPS_INT_RANGE (16, 4096)
-  ),
-  GST_CAPS_NEW (
-    "avidemux_src_video_jpeg",
-    "video/jpeg",
-      "width",   GST_PROPS_INT_RANGE (16, 4096),
-      "height",  GST_PROPS_INT_RANGE (16, 4096)
-  ),
-  GST_CAPS_NEW (
-    "avidemux_src_video_dv",
-    "video/dv",
-      "format",  GST_PROPS_LIST (
-                   GST_PROPS_STRING ("NTSC"),
-                   GST_PROPS_STRING ("PAL")
-                 ),
-      "width",   GST_PROPS_INT_RANGE (16, 4096),
-      "height",  GST_PROPS_INT_RANGE (16, 4096)
-  ),
-  GST_CAPS_NEW (
-    "avidemux_src_video_divx",
-    "video/divx",
-      "width",   GST_PROPS_INT_RANGE (16, 4096),
-      "height",  GST_PROPS_INT_RANGE (16, 4096)
-  ),
-  GST_CAPS_NEW (
-    "avidemux_src_video_xvid",
-    "video/xvid",
-      "width",   GST_PROPS_INT_RANGE (16, 4096),
-      "height",  GST_PROPS_INT_RANGE (16, 4096)
-  )
-)
-
-GST_PAD_TEMPLATE_FACTORY (src_audio_templ,
-  "audio_%02d",
-  GST_PAD_SRC,
-  GST_PAD_SOMETIMES,
-  GST_CAPS_NEW (
-    "avidemux_src_audio_avi",
-    "video/avi",
-      "format",  GST_PROPS_STRING ("strf_auds")
-  ),
-  GST_CAPS_NEW (
-    "avidemux_src_audio_raw",
-    "audio/raw",
-      "format",           GST_PROPS_STRING ("int"),
-      "law",              GST_PROPS_INT (0),
-      "endianness",       GST_PROPS_INT (G_LITTLE_ENDIAN),
-      "signed",           GST_PROPS_LIST (
-      			    GST_PROPS_BOOLEAN (TRUE),
-      			    GST_PROPS_BOOLEAN (FALSE)
-			  ),
-      "width",            GST_PROPS_LIST (
-      			    GST_PROPS_INT (8),
-      			    GST_PROPS_INT (16)
-			  ),
-      "depth",            GST_PROPS_LIST (
-      			    GST_PROPS_INT (8),
-      			    GST_PROPS_INT (16)
-			  ),
-      "rate",             GST_PROPS_INT_RANGE (11025, 44100),
-      "channels",         GST_PROPS_INT_RANGE (1, 2)
-  ),
-  GST_CAPS_NEW (
-    "avidemux_src_audio_mp3",
-    "audio/x-mp3",
       NULL
-  ),
-  GST_CAPS_NEW (
-    "avidemux_src_audio_ac3",
-    "audio/a52",
-      NULL
-  ),
-  GST_CAPS_NEW (
-    "avidemux_src_audio_vorbis",
-    "application/x-ogg",
-    NULL
   )
-)
+);
 
-static void 		gst_avi_demux_class_init		(GstAviDemuxClass *klass);
-static void 		gst_avi_demux_init			(GstAviDemux *avi_demux);
+static void 	gst_avi_demux_class_init	(GstAviDemuxClass *klass);
+static void 	gst_avi_demux_init		(GstAviDemux *avi_demux);
 
-static void 		gst_avi_demux_loop 			(GstElement *element);
+static void 	gst_avi_demux_loop 		(GstElement  *element);
 
-static gboolean 	gst_avi_demux_send_event 		(GstElement *element, GstEvent *event);
+static gboolean gst_avi_demux_send_event 	(GstElement  *element,
+						 GstEvent    *event);
 
-static const GstEventMask*
-			gst_avi_demux_get_event_mask 		(GstPad *pad);
-static gboolean 	gst_avi_demux_handle_src_event 		(GstPad *pad, GstEvent *event);
-static const GstFormat* gst_avi_demux_get_src_formats 		(GstPad *pad); 
-static const GstQueryType*
-			gst_avi_demux_get_src_query_types 	(GstPad *pad);
-static gboolean 	gst_avi_demux_handle_src_query 		(GstPad *pad, GstQueryType type, 
-								 GstFormat *format, gint64 *value);
-static gboolean 	gst_avi_demux_src_convert 		(GstPad *pad, GstFormat src_format, gint64 src_value,
-	        	          				 GstFormat *dest_format, gint64 *dest_value);
+static const GstEventMask *
+		gst_avi_demux_get_event_mask 	(GstPad      *pad);
+static gboolean gst_avi_demux_handle_src_event 	(GstPad      *pad,
+						 GstEvent    *event);
+static const GstFormat *
+		gst_avi_demux_get_src_formats 	(GstPad      *pad); 
+static const GstQueryType *
+		gst_avi_demux_get_src_query_types (GstPad    *pad);
+static gboolean gst_avi_demux_handle_src_query 	(GstPad      *pad,
+						 GstQueryType type, 
+						 GstFormat   *format,
+						 gint64      *value);
+static gboolean gst_avi_demux_src_convert 	(GstPad      *pad,
+						 GstFormat    src_format,
+						 gint64       src_value,
+	        	          		 GstFormat   *dest_format,
+						 gint64      *dest_value);
 
 static GstElementStateReturn
-			gst_avi_demux_change_state 		(GstElement *element);
+		gst_avi_demux_change_state 	(GstElement  *element);
 
-static void     	gst_avi_demux_get_property      	(GObject *object, guint prop_id, 	
-								 GValue *value, GParamSpec *pspec);
+static void     gst_avi_demux_get_property      (GObject     *object,
+						 guint        prop_id, 	
+						 GValue      *value,
+						 GParamSpec  *pspec);
 
-
+static GstPadTemplate *videosrctempl, *audiosrctempl;
 static GstElementClass *parent_class = NULL;
 /*static guint gst_avi_demux_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -280,7 +188,7 @@ avi_type_find (GstBuffer *buf,
 
   new = GST_CAPS_NEW ("avi_type_find",
 		      "video/avi", 
-		        "format", GST_PROPS_STRING ("AVI"));
+		        NULL);
   return new;
 }
 
@@ -524,7 +432,7 @@ gst_avi_demux_metadata (GstAviDemux *avi_demux, gint len)
         type = "Subject";
         break;
       case GST_RIFF_INFO_ISFT:
-        type = "Encoder"; /* "Sotware" */
+        type = "Encoder"; /* "Software" */
         break;
       case GST_RIFF_INFO_ISHP:
         type = "Sharpness";
@@ -577,102 +485,91 @@ gst_avi_demux_streaminfo (GstAviDemux *avi_demux)
   /*g_object_notify(G_OBJECT(avi_demux), "streaminfo");*/
 }
 
-static void 
-gst_avi_demux_strf_vids (GstAviDemux *avi_demux)
+/* video/audio pad/caps stuff */
+
+#define GST_AVI_VID_CAPS_NEW(name, mimetype, props...)		\
+	(strf != NULL) ?					\
+	GST_CAPS_NEW (name,					\
+		      mimetype,					\
+		      "width",  GST_PROPS_INT (width),		\
+		      "height", GST_PROPS_INT (height),		\
+		      "framerate", GST_PROPS_FLOAT (framerate), \
+		      ##props)					\
+	:							\
+	GST_CAPS_NEW (name,					\
+		      mimetype,					\
+		      "width",  GST_PROPS_INT_RANGE (16, 4096),	\
+		      "height", GST_PROPS_INT_RANGE (16, 4096),	\
+		      "framerate", GST_PROPS_FLOAT_RANGE (0., G_MAXFLOAT), \
+		      ##props)
+
+static GstCaps *
+gst_avi_demux_video_caps (guint32 codec_fcc,
+			  gst_riff_strh *strh,
+			  gst_riff_strf_vids *strf,
+			  GstAviDemux *avi_demux)
 {
-  gst_riff_strf_vids *strf;
-  guint8 *strfdata;
-  GstPad *srcpad;
-  GstCaps *newcaps = NULL, *capslist = NULL;
-  avi_stream_context *stream;
-  GstByteStream  *bs = avi_demux->bs;
-  guint32 got_bytes;
-  gchar *codecname;
-  GstPropsEntry *entry;
+  GstCaps *caps = NULL;
+  gchar *codecname = NULL;
+  gint width = -1, height = -1;
+  gdouble framerate = 0.;
 
-  got_bytes = gst_bytestream_peek_bytes (bs, &strfdata, sizeof (gst_riff_strf_vids));
-  strf = (gst_riff_strf_vids *) strfdata;
-  if (got_bytes != sizeof (gst_riff_strf_vids))
-    return;
+  if (strf != NULL) {
+    width = GUINT32_FROM_LE (strf->width);
+    height = GUINT32_FROM_LE (strf->height);
+  }
+  if (strh != NULL) {
+    framerate = 1. * GUINT32_FROM_LE (strh->rate) /
+		GUINT32_FROM_LE (strh->scale); /* fps */
+  }
 
-  GST_INFO ( "gst_avi_demux: strf tag found in context vids");
-  GST_INFO ( "gst_avi_demux:  size        %d", GUINT32_FROM_LE (strf->size));
-  GST_INFO ( "gst_avi_demux:  width       %d", GUINT32_FROM_LE (strf->width));
-  GST_INFO ( "gst_avi_demux:  height      %d", GUINT32_FROM_LE (strf->height));
-  GST_INFO ( "gst_avi_demux:  planes      %d", GUINT16_FROM_LE (strf->planes));
-  GST_INFO ( "gst_avi_demux:  bit_cnt     %d", GUINT16_FROM_LE (strf->bit_cnt));
-  GST_INFO ( "gst_avi_demux:  compression 0x%08x (%s)", 
-		  GUINT32_FROM_LE (strf->compression), gst_riff_id_to_fourcc (strf->compression));
-  GST_INFO ( "gst_avi_demux:  image_size  %d", GUINT32_FROM_LE (strf->image_size));
-  GST_INFO ( "gst_avi_demux:  xpels_meter %d", GUINT32_FROM_LE (strf->xpels_meter));
-  GST_INFO ( "gst_avi_demux:  ypels_meter %d", GUINT32_FROM_LE (strf->ypels_meter));
-  GST_INFO ( "gst_avi_demux:  num_colors  %d", GUINT32_FROM_LE (strf->num_colors));
-  GST_INFO ( "gst_avi_demux:  imp_colors  %d", GUINT32_FROM_LE (strf->imp_colors));
-
-  srcpad =  gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (src_video_templ), g_strdup_printf ("video_%02d", 
-			  avi_demux->num_v_streams));
-
-  capslist = gst_caps_append(NULL, GST_CAPS_NEW (
-			  "avidemux_video_src",
-			  "video/avi",
-			    "format",    	GST_PROPS_STRING ("strf_vids"),
-			      "size", 		GST_PROPS_INT (GUINT32_FROM_LE (strf->size)),
-			      "width", 		GST_PROPS_INT (GUINT32_FROM_LE (strf->width)),
-			      "height", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->height)),
-			      "planes", 	GST_PROPS_INT (GUINT16_FROM_LE (strf->planes)),
-			      "bit_cnt", 	GST_PROPS_INT (GUINT16_FROM_LE (strf->bit_cnt)),
-			      "compression", 	GST_PROPS_FOURCC (GUINT32_FROM_LE (strf->compression)),
-			      "image_size", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->image_size)),
-			      "xpels_meter", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->xpels_meter)),
-			      "ypels_meter", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->ypels_meter)),
-			      "num_colors", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->num_colors)),
-			      "imp_colors", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->imp_colors))
-			      ));
-
-  /* let's try some gstreamer-like mime-type caps */
-  switch (GUINT32_FROM_LE(strf->compression))
-  {
+  switch (codec_fcc) {
     case GST_MAKE_FOURCC('I','4','2','0'):
     case GST_MAKE_FOURCC('Y','U','Y','2'):
-      newcaps = GST_CAPS_NEW (
-                  "avidemux_video_src",
-                  "video/raw",
-                    "format",  GST_PROPS_FOURCC(GUINT32_FROM_LE(strf->compression)),
-                    "width",   GST_PROPS_INT(strf->width),
-                    "height",  GST_PROPS_INT(strf->height)
+      caps = GST_AVI_VID_CAPS_NEW (
+                  "avidemux_video_src_raw",
+                  "video/x-raw-yuv",
+                    "format",  GST_PROPS_FOURCC (codec_fcc)
                 );
-      codecname = g_strdup_printf("Raw Video (%4.4s)",
-                                  (char *) &strf->compression);
+      codecname = g_strdup_printf("Raw Video (" GST_FOURCC_FORMAT ")",
+                                  GST_FOURCC_ARGS(codec_fcc));
       break;
+
     case GST_MAKE_FOURCC('M','J','P','G'): /* YUY2 MJPEG */
     case GST_MAKE_FOURCC('J','P','E','G'): /* generic (mostly RGB) MJPEG */
     case GST_MAKE_FOURCC('P','I','X','L'): /* Miro/Pinnacle fourccs */
     case GST_MAKE_FOURCC('V','I','X','L'): /* Miro/Pinnacle fourccs */
-      newcaps = GST_CAPS_NEW (
-                  "avidemux_video_src",
-                  "video/jpeg",
-                    "width",   GST_PROPS_INT(strf->width),
-                    "height",  GST_PROPS_INT(strf->height)
+      caps = GST_AVI_VID_CAPS_NEW (
+                  "avidemux_video_src_jpeg",
+                  "video/x-jpeg",
+                    NULL
                 );
-      codecname = g_strdup_printf("Motion-JPEG (%4.4s)",
-                                  (char *) &strf->compression);
+      codecname = g_strdup_printf("Motion-JPEG (" GST_FOURCC_FORMAT ")",
+                                  GST_FOURCC_ARGS(codec_fcc));
       break;
+
     case GST_MAKE_FOURCC('H','F','Y','U'):
-      codecname = g_strdup_printf("HuffYUV (%4.4s)",
-                                  (char *) &strf->compression);
+      caps = GST_AVI_VID_CAPS_NEW (
+                  "avidemux_video_src_hfyu",
+                  "video/x-huffyuv",
+                    NULL
+                );
+      codecname = g_strdup_printf("HuffYUV (" GST_FOURCC_FORMAT ")",
+                                  GST_FOURCC_ARGS(codec_fcc));
       break;
+
     case GST_MAKE_FOURCC('M','P','E','G'):
     case GST_MAKE_FOURCC('M','P','G','I'):
-      newcaps = GST_CAPS_NEW (
-                  "avidemux_video_src",
+      caps = GST_AVI_VID_CAPS_NEW (
+                  "avidemux_video_src_mpeg",
                   "video/mpeg",
-                    "width",   GST_PROPS_INT(strf->width),
-                    "height",  GST_PROPS_INT(strf->height)
+                    "systemstream", GST_PROPS_BOOLEAN (FALSE),
+		    "mpegversion", GST_PROPS_BOOLEAN (1)
                 );
-      codecname = g_strdup_printf("MPEG-1 (%4.4s)",
-                                  (char *) &strf->compression);
+      codecname = g_strdup_printf("MPEG-1 (" GST_FOURCC_FORMAT ")",
+                                  GST_FOURCC_ARGS(codec_fcc));
       break;
+
     case GST_MAKE_FOURCC('H','2','6','3'):
     case GST_MAKE_FOURCC('i','2','6','3'):
     case GST_MAKE_FOURCC('L','2','6','3'):
@@ -680,67 +577,174 @@ gst_avi_demux_strf_vids (GstAviDemux *avi_demux)
     case GST_MAKE_FOURCC('V','D','O','W'):
     case GST_MAKE_FOURCC('V','I','V','O'):
     case GST_MAKE_FOURCC('x','2','6','3'):
-      codecname = g_strdup_printf("H263-compatible (%4.4s)",
-                                  (char *) &strf->compression);
+      caps = GST_AVI_VID_CAPS_NEW (
+                  "avidemux_video_src_263",
+                  "video/x-h263",
+                    NULL
+                );
+      codecname = g_strdup_printf("H263-compatible (" GST_FOURCC_FORMAT ")",
+                                  GST_FOURCC_ARGS(codec_fcc));
       break;
-    case GST_MAKE_FOURCC('d','i','v','x'):
+
     case GST_MAKE_FOURCC('D','I','V','3'):
     case GST_MAKE_FOURCC('D','I','V','4'):
     case GST_MAKE_FOURCC('D','I','V','5'):
+      caps = GST_AVI_VID_CAPS_NEW (
+                  "avidemux_video_src_divx3",
+                  "video/x-divx",
+		    "divxversion", GST_PROPS_INT(3)
+                );
+      codecname = g_strdup_printf("DivX-3.x (" GST_FOURCC_FORMAT ")",
+                                  GST_FOURCC_ARGS(codec_fcc));
+      break;
+
+    case GST_MAKE_FOURCC('d','i','v','x'):
     case GST_MAKE_FOURCC('D','I','V','X'):
     case GST_MAKE_FOURCC('D','X','5','0'):
-      newcaps = GST_CAPS_NEW (
-                  "avidemux_video_src",
-                  "video/divx",
-                    "width",   GST_PROPS_INT(strf->width),
-                    "height",  GST_PROPS_INT(strf->height)
+      caps = GST_AVI_VID_CAPS_NEW (
+                  "avidemux_video_src_divx5",
+                  "video/x-divx",
+		    "divxversion", GST_PROPS_INT(5)
                 );
-      codecname = g_strdup_printf("DivX/MPEG-4 (%4.4s)",
-                                  (char *) &strf->compression);
+      codecname = g_strdup_printf("DivX 4.x/5.x (" GST_FOURCC_FORMAT ")",
+                                  GST_FOURCC_ARGS(codec_fcc));
       break;
+
     case GST_MAKE_FOURCC('X','V','I','D'):
     case GST_MAKE_FOURCC('x','v','i','d'):
-      newcaps = GST_CAPS_NEW (
+      caps = GST_AVI_VID_CAPS_NEW (
                   "avidemux_video_src",
-                  "video/xvid",
-                    "width",   GST_PROPS_INT(strf->width),
-                    "height",  GST_PROPS_INT(strf->height)
+                  "video/x-xvid",
+                    NULL
                 );
-      codecname = g_strdup_printf("XviD/MPEG-4 (%4.4s)",
-                                  (char *) &strf->compression);
+      codecname = g_strdup_printf("XviD (" GST_FOURCC_FORMAT ")",
+                                  GST_FOURCC_ARGS(codec_fcc));
       break;
+
     case GST_MAKE_FOURCC('M','P','G','4'):
-    case GST_MAKE_FOURCC('M','P','4','2'):
-    case GST_MAKE_FOURCC('M','P','4','3'):
-      codecname = g_strdup_printf("MS MPEG-4 (%4.4s)",
-                                  (char *) &strf->compression);
+      caps = GST_AVI_VID_CAPS_NEW (
+                  "avidemux_video_src",
+                  "video/x-msmpeg",
+		    "msmpegversion", GST_PROPS_INT (41)
+                );
+      codecname = g_strdup_printf("MS MPEG-4.1 (" GST_FOURCC_FORMAT ")",
+                                  GST_FOURCC_ARGS(codec_fcc));
       break;
+
+    case GST_MAKE_FOURCC('M','P','4','2'):
+      caps = GST_AVI_VID_CAPS_NEW (
+                  "avidemux_video_src",
+                  "video/x-msmpeg",
+		    "msmpegversion", GST_PROPS_INT (42)
+                );
+      codecname = g_strdup_printf("MS MPEG-4.2 (" GST_FOURCC_FORMAT ")",
+                                  GST_FOURCC_ARGS(codec_fcc));
+      break;
+
+    case GST_MAKE_FOURCC('M','P','4','3'):
+      caps = GST_AVI_VID_CAPS_NEW (
+                  "avidemux_video_src",
+                  "video/x-msmpeg",
+		    "msmpegversion", GST_PROPS_INT (43)
+                );
+      codecname = g_strdup_printf("MS MPEG-4.3 (" GST_FOURCC_FORMAT ")",
+                                  GST_FOURCC_ARGS(codec_fcc));
+      break;
+
+    case GST_MAKE_FOURCC('3','I','V','1'):
+    case GST_MAKE_FOURCC('3','I','V','2'):
+      caps = GST_AVI_VID_CAPS_NEW (
+		  "avidemux_video_src_3ivx",
+		  "video/x-3ivx",
+		    NULL
+		);
+      codecname = g_strdup_printf("3ivX (" GST_FOURCC_FORMAT ")",
+				  GST_FOURCC_ARGS(codec_fcc));
+      break;
+
     case GST_MAKE_FOURCC('D','V','S','D'):
     case GST_MAKE_FOURCC('d','v','s','d'):
-      newcaps = GST_CAPS_NEW (
+      caps = GST_AVI_VID_CAPS_NEW (
                   "avidemux_video_src",
-                  "video/dv",
-                    "format",  GST_PROPS_STRING("NTSC"), /* FIXME??? */
-                    "width",   GST_PROPS_INT(strf->width),
-                    "height",  GST_PROPS_INT(strf->height)
+                  "video/x-dv",
+                    "systemstream", GST_PROPS_BOOLEAN (FALSE)
                 );
-      codecname = g_strdup_printf("Digital Video (%4.4s)",
-                                  (char *) &strf->compression);
+      codecname = g_strdup_printf("Digital Video (" GST_FOURCC_FORMAT ")",
+                                  GST_FOURCC_ARGS(codec_fcc));
       break;
+
+    case GST_MAKE_FOURCC('W','M','V','1'):
+      caps = GST_AVI_VID_CAPS_NEW (
+                  "avidemux_video_src_wmv1",
+                  "video/x-wmv",
+                    "wmvversion", GST_PROPS_INT (1)
+                );
+      codecname = g_strdup_printf("Windows Media Format 1 ("
+				  GST_FOURCC_FORMAT ")",
+				  GST_FOURCC_ARGS(codec_fcc));
+      break;
+
+    case GST_MAKE_FOURCC('W','M','V','2'):
+      caps = GST_AVI_VID_CAPS_NEW (
+                  "avidemux_video_src_wmv2",
+                  "video/x-wmv",
+                    "wmvversion", GST_PROPS_INT (2)
+                );
+      codecname = g_strdup_printf("Windows Media Format 2 ("
+				  GST_FOURCC_FORMAT ")",
+				  GST_FOURCC_ARGS(codec_fcc));
+      break;
+
     default:
-      codecname = g_strdup_printf("Unknown (%4.4s)",
-                                  (char *) &strf->compression);
+      g_warning ("avidemux: unkown video format " GST_FOURCC_FORMAT,
+		 GST_FOURCC_ARGS(codec_fcc));
       break;
   }
 
-  if (newcaps) capslist = gst_caps_append (capslist, newcaps);
-
   /* set video codec info on streaminfo caps */
-  entry = gst_props_entry_new("videocodec", GST_PROPS_STRING(codecname));
-  gst_props_add_entry(avi_demux->streaminfo->properties, entry);
-  g_free(codecname);
+  if (strf != NULL && codecname != NULL) {
+    GstPropsEntry *entry;
+    entry = gst_props_entry_new("videocodec",
+				GST_PROPS_STRING(codecname));
+    gst_props_add_entry(avi_demux->streaminfo->properties, entry);
+  }
+  if (codecname != NULL) {
+    g_free(codecname);
+  }
 
-  gst_pad_try_set_caps (srcpad, capslist);
+  return caps;
+}
+
+static void 
+gst_avi_demux_strf_vids (GstAviDemux *avi_demux)
+{
+  gst_riff_strf_vids *strf;
+  gst_riff_strh *strh;
+  guint8 *strfdata;
+  GstPad *srcpad;
+  GstCaps *caps = NULL;
+  avi_stream_context *stream;
+  GstByteStream  *bs = avi_demux->bs;
+  guint32 got_bytes;
+  gchar *padname;
+
+  got_bytes = gst_bytestream_peek_bytes (bs, &strfdata, sizeof (gst_riff_strf_vids));
+  strf = (gst_riff_strf_vids *) strfdata;
+  if (got_bytes != sizeof (gst_riff_strf_vids))
+    return;
+
+  padname = g_strdup_printf ("video_%02d", avi_demux->num_v_streams);
+  srcpad =  gst_pad_new_from_template (videosrctempl, padname);
+  g_free (padname);
+
+  /* let's try some gstreamer-like mime-type caps */
+  strh = &avi_demux->stream[avi_demux->num_streams].strh;
+  caps = gst_avi_demux_video_caps (GUINT32_FROM_LE(strf->compression),
+				   strh, strf, avi_demux);
+
+  if (caps != NULL) {
+    gst_pad_try_set_caps (srcpad, caps);
+  }
   gst_pad_set_formats_function (srcpad, gst_avi_demux_get_src_formats);
   gst_pad_set_event_mask_function (srcpad, gst_avi_demux_get_event_mask);
   gst_pad_set_event_function (srcpad, gst_avi_demux_handle_src_event);
@@ -757,18 +761,170 @@ gst_avi_demux_strf_vids (GstAviDemux *avi_demux)
   gst_element_add_pad (GST_ELEMENT (avi_demux), srcpad);
 }
 
+#define GST_AVI_AUD_CAPS_NEW(name, mimetype, props...)			\
+	(strf != NULL) ?						\
+	GST_CAPS_NEW (name,						\
+		      mimetype,						\
+		      "rate",     GST_PROPS_INT (rate),			\
+		      "channels", GST_PROPS_INT (channels),		\
+		      ##props)						\
+	:								\
+	GST_CAPS_NEW (name,						\
+		      mimetype,						\
+		      "rate",     GST_PROPS_INT_RANGE (8000, 96000),	\
+		      "channels", GST_PROPS_INT_RANGE (1, 2),		\
+		      ##props)
+
+
+static GstCaps *
+gst_avi_demux_audio_caps (guint16 codec_id,
+			  gst_riff_strf_auds *strf,
+			  GstAviDemux *avi_demux)
+{
+  GstCaps *caps = NULL;
+  gchar *codecname = NULL;
+  gint rate = -1, channels = -1;
+
+  if (strf != NULL) {
+    rate = GUINT32_FROM_LE (strf->rate);
+    channels = GUINT16_FROM_LE (strf->channels);
+  }
+
+  switch (codec_id) {
+    case GST_RIFF_WAVE_FORMAT_MPEGL3: /* mp3 */
+      caps = GST_AVI_AUD_CAPS_NEW ("avi_demux_audio_src_mp3",
+				   "audio/mpeg",
+				     "layer", GST_PROPS_INT (3));
+      codecname = g_strdup_printf("MPEG-1 layer 3 audio (0x%04x)",
+                                  codec_id);
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_MPEGL12: /* mp1 or mp2 */
+      caps = GST_AVI_AUD_CAPS_NEW ("avi_demux_audio_src_mp12",
+				   "audio/mpeg",
+				     "layer", GST_PROPS_INT (2));
+      codecname = g_strdup_printf("MPEG-1 layer 1/2 audio (0x%04x)",
+                                  codec_id);
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_PCM: /* PCM/wav */ {
+      GstPropsEntry *width = NULL, *depth = NULL, *signedness = NULL;
+
+      if (strf != NULL) {
+        gint ba = GUINT16_FROM_LE (strf->blockalign);
+        gint ch = GUINT16_FROM_LE (strf->channels);
+        gint ws = GUINT16_FROM_LE (strf->size);
+
+        width = gst_props_entry_new ("width",
+				     GST_PROPS_INT (ba * 8 / ch));
+        depth = gst_props_entry_new ("depth",
+				     GST_PROPS_INT (ws));
+        signedness = gst_props_entry_new ("signed",
+					  GST_PROPS_BOOLEAN (ws != 8));
+      } else {
+        signedness = gst_props_entry_new ("signed",
+					  GST_PROPS_LIST (
+					    GST_PROPS_BOOLEAN (TRUE),
+					    GST_PROPS_BOOLEAN (FALSE)));
+        width = gst_props_entry_new ("width",
+				     GST_PROPS_LIST (
+				       GST_PROPS_INT (8),
+				       GST_PROPS_INT (16)));
+        depth = gst_props_entry_new ("depth",
+				     GST_PROPS_LIST (
+				       GST_PROPS_INT (8),
+				       GST_PROPS_INT (16)));
+      }
+
+      caps = GST_AVI_AUD_CAPS_NEW ("avi_demux_audio_src_pcm",
+				   "audio/x-raw-int",
+				     "endianness",
+				       GST_PROPS_INT (G_LITTLE_ENDIAN));
+      gst_props_add_entry (caps->properties, width);
+      gst_props_add_entry (caps->properties, depth);
+      gst_props_add_entry (caps->properties, signedness);
+
+      codecname = g_strdup_printf("Raw PCM/WAV (0x%04x)",
+                                  codec_id);
+    }
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_MULAW:
+      if (strf != NULL && strf->size != 8) {
+        g_warning ("invalid depth (%d) of mulaw audio, overwriting.",
+		   strf->size);
+      }
+      caps = GST_AVI_AUD_CAPS_NEW ("avidemux_audio_src",
+				   "audio/x-mulaw",
+				     NULL);
+      codecname = g_strdup_printf("A-law encoded (0x%04x)",
+                                  codec_id);
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_ALAW:
+      if (strf != NULL && strf->size != 8) {
+        g_warning ("invalid depth (%d) of alaw audio, overwriting.",
+		   strf->size);
+      }
+      caps = GST_AVI_AUD_CAPS_NEW ("avidemux_audio_src",
+				   "audio/x-alaw",
+				     NULL);
+      codecname = g_strdup_printf("A-law encoded (0x%04x)",
+                                  codec_id);
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_VORBIS1: /* ogg/vorbis mode 1 */
+    case GST_RIFF_WAVE_FORMAT_VORBIS2: /* ogg/vorbis mode 2 */
+    case GST_RIFF_WAVE_FORMAT_VORBIS3: /* ogg/vorbis mode 3 */
+    case GST_RIFF_WAVE_FORMAT_VORBIS1PLUS: /* ogg/vorbis mode 1+ */
+    case GST_RIFF_WAVE_FORMAT_VORBIS2PLUS: /* ogg/vorbis mode 2+ */
+    case GST_RIFF_WAVE_FORMAT_VORBIS3PLUS: /* ogg/vorbis mode 3+ */
+      caps = GST_AVI_AUD_CAPS_NEW ("asf_demux_audio_src_vorbis",
+				   "audio/x-vorbis",
+				     NULL);
+      codecname = g_strdup_printf("Vorbis (0x%04x)",
+                                  codec_id);
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_A52:
+      caps = GST_AVI_AUD_CAPS_NEW ("asf_demux_audio_src_ac3",
+				   "audio/x-ac3",
+				     NULL);
+      codecname = g_strdup_printf("AC-3 (0x%04x)",
+                                  codec_id);
+      break;
+
+    default:
+      g_warning ("avidemux: unkown audio format 0x%04x",
+		 codec_id);
+      break;
+  }
+
+  if (strf != NULL && codecname != NULL) {
+    /* set audio codec in streaminfo */
+    GstPropsEntry *entry;
+    entry = gst_props_entry_new("audiocodec",
+				GST_PROPS_STRING(codecname));
+    gst_props_add_entry(avi_demux->streaminfo->properties, entry);
+  }
+  if (codecname != NULL) {
+    g_free (codecname);
+  }
+
+  return caps;
+}
+
 static void 
 gst_avi_demux_strf_auds (GstAviDemux *avi_demux)
 {
   gst_riff_strf_auds *strf;
   guint8 *strfdata;
   GstPad *srcpad;
-  GstCaps *newcaps = NULL, *capslist = NULL;
+  GstCaps *caps = NULL;
   avi_stream_context *stream;
   GstByteStream  *bs = avi_demux->bs;
   guint32 got_bytes;
-  gchar *codecname;
-  GstPropsEntry *entry;
+  gchar *padname;
 
   got_bytes = gst_bytestream_peek_bytes (bs, &strfdata, sizeof (gst_riff_strf_auds));
   strf = (gst_riff_strf_auds *) strfdata;
@@ -783,104 +939,17 @@ gst_avi_demux_strf_auds (GstAviDemux *avi_demux)
   GST_INFO ( "gst_avi_demux:  blockalign  %d", GUINT16_FROM_LE (strf->blockalign));
   GST_INFO ( "gst_avi_demux:  size        %d", GUINT16_FROM_LE (strf->size));
 
-  srcpad =  gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (src_audio_templ), g_strdup_printf ("audio_%02d", 
-			  avi_demux->num_a_streams));
+  padname = g_strdup_printf ("audio_%02d", 
+			     avi_demux->num_a_streams);
+  srcpad =  gst_pad_new_from_template (audiosrctempl, padname);
+  g_free (padname);
 
-  capslist = gst_caps_append(NULL, GST_CAPS_NEW (
-			  "avidemux_audio_src",
-			  "video/avi",
-			    "format",    	GST_PROPS_STRING ("strf_auds"),
-			      "fmt", 		GST_PROPS_INT (GUINT16_FROM_LE (strf->format)),
-			      "channels", 	GST_PROPS_INT (GUINT16_FROM_LE (strf->channels)),
-			      "rate", 		GST_PROPS_INT (GUINT32_FROM_LE (strf->rate)),
-			      "av_bps",		GST_PROPS_INT (GUINT32_FROM_LE (strf->av_bps)),
-			      "blockalign",	GST_PROPS_INT (GUINT16_FROM_LE (strf->blockalign)),
-			      "size",		GST_PROPS_INT (GUINT16_FROM_LE (strf->size))
-			  ));
+  caps = gst_avi_demux_audio_caps (GUINT16_FROM_LE (strf->format),
+				   strf, avi_demux);
 
-  /* let's try some gstreamer-formatted mime types */
-  switch (GUINT16_FROM_LE(strf->format))
-  {
-    case GST_RIFF_WAVE_FORMAT_MPEGL3:
-    case GST_RIFF_WAVE_FORMAT_MPEGL12: /* mp3 */
-      newcaps = gst_caps_new ("avidemux_audio_src",
-                              "audio/x-mp3",
-                                NULL);
-      codecname = g_strdup_printf("MPEG/audio (0x%04x)",
-                                  strf->format);
-      break;
-    case GST_RIFF_WAVE_FORMAT_PCM: /* PCM/wav */
-      newcaps = gst_caps_new ("avidemux_audio_src",
-                              "audio/raw",
-                              gst_props_new (
-                                "format",     GST_PROPS_STRING ("int"),
-                                "law",        GST_PROPS_INT (0),
-                                "endianness", GST_PROPS_INT (G_LITTLE_ENDIAN),
-                                "signed",     GST_PROPS_BOOLEAN ((GUINT16_FROM_LE (strf->size) != 8)),
-                                "width",      GST_PROPS_INT ((GUINT16_FROM_LE (strf->blockalign)*8) /
-                                                              GUINT16_FROM_LE (strf->channels)),
-                                "depth",      GST_PROPS_INT (GUINT16_FROM_LE (strf->size)),
-                                "rate",       GST_PROPS_INT (GUINT32_FROM_LE (strf->rate)),
-                                "channels",   GST_PROPS_INT (GUINT16_FROM_LE (strf->channels)),
-                                NULL
-                              ));
-      codecname = g_strdup_printf("Raw PCM/WAV (0x%04x)",
-                                  strf->format);
-      break;
-    case GST_RIFF_WAVE_FORMAT_MULAW:
-    case GST_RIFF_WAVE_FORMAT_ALAW:
-      if (strf->size != 8)
-        g_warning ("invalid depth (%d) of mulaw/alaw audio, overwriting.", strf->size);
-      newcaps = gst_caps_new ("avidemux_audio_src",
-                              "audio/raw",
-                              gst_props_new (
-			        "format",	GST_PROPS_STRING ("int"),
-			        "law",		GST_PROPS_INT (GUINT16_FROM_LE(strf->format) == GST_RIFF_WAVE_FORMAT_ALAW ? 2 : 1),
-			      	"endianness",	GST_PROPS_INT (G_LITTLE_ENDIAN),
-			 	"width",	GST_PROPS_INT (8),
-			 	"depth",	GST_PROPS_INT (8),
-			  	"rate",		GST_PROPS_INT (GUINT32_FROM_LE (strf->rate)),
-                                "channels",	GST_PROPS_INT (GUINT16_FROM_LE (strf->channels)),
-                                NULL
-                              ));
-      codecname = g_strdup_printf("%s-law encoded (0x%04x)",
-                                  GUINT16_FROM_LE(strf->format) == GST_RIFF_WAVE_FORMAT_ALAW ? "A" : "Mu", strf->format);    
-      break;
-    case GST_RIFF_WAVE_FORMAT_VORBIS1: /* ogg/vorbis mode 1 */
-    case GST_RIFF_WAVE_FORMAT_VORBIS2: /* ogg/vorbis mode 2 */
-    case GST_RIFF_WAVE_FORMAT_VORBIS3: /* ogg/vorbis mode 3 */
-    case GST_RIFF_WAVE_FORMAT_VORBIS1PLUS: /* ogg/vorbis mode 1+ */
-    case GST_RIFF_WAVE_FORMAT_VORBIS2PLUS: /* ogg/vorbis mode 2+ */
-    case GST_RIFF_WAVE_FORMAT_VORBIS3PLUS: /* ogg/vorbis mode 3+ */
-      newcaps = gst_caps_new ("avidemux_audio_src",
-                              "application/x-ogg",
-                              NULL);
-      codecname = g_strdup_printf("Ogg/Vorbis (0x%04x)",
-                                  strf->format);
-      break;
-    case GST_RIFF_WAVE_FORMAT_A52:
-      newcaps = gst_caps_new ("avidemux_audio_src",
-                              "audio/a52",
-                              NULL);
-      codecname = g_strdup_printf("AC3/AC52 (0x%04x)",
-                                  strf->format);
-      break;
-    default:
-      g_warning ("avidemux: unkown audio format %d", GUINT16_FROM_LE(strf->format));
-      codecname = g_strdup_printf("Unknown (0x%04x)",
-                                  strf->format);
-      break;
+  if (caps != NULL) {
+    gst_pad_try_set_caps(srcpad, caps);
   }
-
-  if (newcaps) capslist = gst_caps_append(capslist, newcaps);
-
-  /* set audio codec in streaminfo */
-  entry = gst_props_entry_new("audiocodec", GST_PROPS_STRING(codecname));
-  gst_props_add_entry(avi_demux->streaminfo->properties, entry);
-  g_free(codecname);
-
-  gst_pad_try_set_caps(srcpad, capslist);
   gst_pad_set_formats_function (srcpad, gst_avi_demux_get_src_formats);
   gst_pad_set_event_mask_function (srcpad, gst_avi_demux_get_event_mask);
   gst_pad_set_event_function (srcpad, gst_avi_demux_handle_src_event);
@@ -897,16 +966,25 @@ gst_avi_demux_strf_auds (GstAviDemux *avi_demux)
   gst_element_add_pad (GST_ELEMENT (avi_demux), srcpad);
 }
 
+static GstCaps *
+gst_avi_demux_iavs_caps (void)
+{
+  return GST_CAPS_NEW ("avi_type_dv", 
+                       "video/x-dv", 
+                         "systemstream", GST_PROPS_BOOLEAN (TRUE));
+}
+
 static void 
 gst_avi_demux_strf_iavs (GstAviDemux *avi_demux)
 {
   gst_riff_strf_iavs *strf;
   guint8 *strfdata;
   GstPad *srcpad;
-  GstCaps *newcaps = NULL, *capslist = NULL;
+  GstCaps *caps = NULL;
   avi_stream_context *stream;
   GstByteStream  *bs = avi_demux->bs;
   guint32 got_bytes;
+  gchar *padname;
 
   got_bytes = gst_bytestream_peek_bytes (bs, &strfdata, sizeof (gst_riff_strf_iavs));
   strf = (gst_riff_strf_iavs *) strfdata;
@@ -923,33 +1001,16 @@ gst_avi_demux_strf_iavs (GstAviDemux *avi_demux)
   GST_INFO ( "gst_avi_demux:  DVReserved1 %08x", GUINT32_FROM_LE (strf->DVReserved1));
   GST_INFO ( "gst_avi_demux:  DVReserved2 %08x", GUINT32_FROM_LE (strf->DVReserved2));
 
-  srcpad =  gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (src_video_templ), g_strdup_printf ("video_%02d", 
-			  avi_demux->num_v_streams));
+  padname = g_strdup_printf ("video_%02d", 
+			     avi_demux->num_v_streams);
+  srcpad =  gst_pad_new_from_template (videosrctempl, padname);
+  g_free (padname);
 
-  capslist = gst_caps_append(NULL, GST_CAPS_NEW (
-			  "avidemux_video_src",
-			  "video/avi",
-			    "format",    	GST_PROPS_STRING ("strf_iavs"),
-                              "DVAAuxSrc", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->DVAAuxSrc)),
-                              "DVAAuxCtl", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->DVAAuxCtl)),
-                              "DVAAuxSrc1", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->DVAAuxSrc1)),
-                              "DVAAuxCtl1", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->DVAAuxCtl1)),
-                              "DVVAuxSrc", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->DVVAuxSrc)),
-                              "DVVAuxCtl", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->DVVAuxCtl)),
-                              "DVReserved1", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->DVReserved1)),
-                              "DVReserved2", 	GST_PROPS_INT (GUINT32_FROM_LE (strf->DVReserved2))
-			 ));
+  caps = gst_avi_demux_iavs_caps ();
 
-  newcaps = gst_caps_new ("avi_type_dv", 
-                          "video/dv", 
-                          gst_props_new (
-                            "format",		GST_PROPS_STRING ("NTSC"), /* FIXME??? */
-                            NULL));
-
-  if (newcaps) capslist = gst_caps_append(capslist, newcaps);
-
-  gst_pad_try_set_caps(srcpad, capslist);
+  if (caps != NULL) {
+    gst_pad_try_set_caps(srcpad, caps);
+  }
   gst_pad_set_formats_function (srcpad, gst_avi_demux_get_src_formats);
   gst_pad_set_event_mask_function (srcpad, gst_avi_demux_get_event_mask);
   gst_pad_set_event_function (srcpad, gst_avi_demux_handle_src_event);
@@ -1821,6 +1882,37 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
   GstTypeFactory *type;
+  gint i = 0;
+  GstCaps *audcaps = NULL, *vidcaps = NULL, *temp;
+  guint32 vid_list[] = {
+    GST_MAKE_FOURCC('I','4','2','0'),
+    GST_MAKE_FOURCC('Y','U','Y','2'),
+    GST_MAKE_FOURCC('M','J','P','G'),
+    GST_MAKE_FOURCC('D','V','S','D'),
+    GST_MAKE_FOURCC('W','M','V','1'),
+    GST_MAKE_FOURCC('W','M','V','2'),
+    GST_MAKE_FOURCC('M','P','G','4'),
+    GST_MAKE_FOURCC('M','P','4','2'),
+    GST_MAKE_FOURCC('M','P','4','3'),
+    GST_MAKE_FOURCC('H','F','Y','U'),
+    GST_MAKE_FOURCC('D','I','V','3'),
+    GST_MAKE_FOURCC('M','P','E','G'),
+    GST_MAKE_FOURCC('H','2','6','3'),
+    GST_MAKE_FOURCC('D','I','V','X'),
+    GST_MAKE_FOURCC('X','V','I','D'),
+    GST_MAKE_FOURCC('3','I','V','1'),
+    0 /* end */
+  };
+  gint aud_list[] = {
+    GST_RIFF_WAVE_FORMAT_MPEGL3,
+    GST_RIFF_WAVE_FORMAT_MPEGL12,
+    GST_RIFF_WAVE_FORMAT_PCM,
+    GST_RIFF_WAVE_FORMAT_VORBIS1,
+    GST_RIFF_WAVE_FORMAT_A52,
+    GST_RIFF_WAVE_FORMAT_ALAW,
+    GST_RIFF_WAVE_FORMAT_MULAW,
+    -1 /* end */
+  };
 
   /* this filter needs the riff parser */
   if (!gst_library_load ("gstbytestream"))
@@ -1835,9 +1927,28 @@ plugin_init (GModule *module, GstPlugin *plugin)
   g_return_val_if_fail (factory != NULL, FALSE);
   gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
 
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_audio_templ));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_video_templ));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_templ));
+  for (i = 0; aud_list[i] != -1; i++) {
+    temp = gst_avi_demux_audio_caps (aud_list[i], NULL, NULL);
+    audcaps = gst_caps_append (audcaps, temp);
+  }
+  audiosrctempl = gst_pad_template_new ("audio_%02d",
+					GST_PAD_SRC,
+					GST_PAD_SOMETIMES,
+					audcaps, NULL);
+  for (i = 0; vid_list[i] != 0; i++) {
+    temp = gst_avi_demux_video_caps (vid_list[i], NULL, NULL, NULL);
+    vidcaps = gst_caps_append (vidcaps, temp);
+  }
+  vidcaps = gst_caps_append (vidcaps,
+			     gst_avi_demux_iavs_caps ());
+  videosrctempl = gst_pad_template_new ("video_%02d",
+					GST_PAD_SRC,
+					GST_PAD_SOMETIMES,
+					vidcaps, NULL);
+  gst_element_factory_add_pad_template (factory, audiosrctempl);
+  gst_element_factory_add_pad_template (factory, videosrctempl);
+  gst_element_factory_add_pad_template (factory,
+	GST_PAD_TEMPLATE_GET (sink_templ));
 
   type = gst_type_factory_new (&avidefinition);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
@@ -1853,4 +1964,3 @@ GstPluginDesc plugin_desc = {
   "avidemux",
   plugin_init
 };
-

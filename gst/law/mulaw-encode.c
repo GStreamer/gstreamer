@@ -64,9 +64,7 @@ mulawenc_link (GstPad *pad, GstCaps *caps)
   
   tempcaps = GST_CAPS_NEW (
 	      "sinesrc_src_caps",
-	      "audio/raw",
-          "format",   GST_PROPS_STRING ("int"),
-          "law",      GST_PROPS_INT (1),
+	      "audio/x-mulaw",
           "depth",    GST_PROPS_INT (8),
           "width",    GST_PROPS_INT (8),
           "signed",   GST_PROPS_BOOLEAN (FALSE),

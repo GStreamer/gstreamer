@@ -131,7 +131,8 @@ gst_speexenc_sinkconnect (GstPad *pad, GstCaps *caps)
   if (gst_pad_try_set_caps (speexenc->srcpad, GST_CAPS_NEW (
                               "speex_speex",
                               "audio/x-speex",
-                                "rate",       GST_PROPS_INT (speexenc->rate)
+                                "rate",       GST_PROPS_INT (speexenc->rate),
+				"channels",   GST_PROPS_INT (1)
                                )))
   {
     speex_init_header(&speexenc->header, speexenc->rate, 1, speexenc->mode);
@@ -170,7 +171,8 @@ gst_speexenc_chain (GstPad *pad, GstBuffer *buf)
 		      GST_CAPS_NEW (
     			"speex_enc",
     			"audio/x-speex",
-    		 	"rate",  GST_PROPS_INT (speexenc->rate)
+    		 	"rate",     GST_PROPS_INT (speexenc->rate),
+			"channels", GST_PROPS_INT (1)
 		      )))
     {
       gst_element_error (GST_ELEMENT (speexenc), "could not negotiate");

@@ -20,6 +20,7 @@
 
 #include "gstjpegdec.h"
 #include "gstjpegenc.h"
+#include <gst/video/video.h>
 
 /* elementfactory information */
 extern GstElementDetails gst_jpegdec_details;
@@ -34,8 +35,12 @@ jpeg_caps_factory (void)
   return
     gst_caps_new (
   	"jpeg_jpeg",
-  	"video/jpeg",
-  	NULL);
+  	"video/x-jpeg",
+  	    gst_props_new (
+		"width",     GST_PROPS_INT_RANGE (16, 4096),
+		"height",    GST_PROPS_INT_RANGE (16, 4096),
+		"framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+                NULL));
 }
 
 static GstCaps*
@@ -44,14 +49,9 @@ raw_caps_factory (void)
   return
     gst_caps_new (
   	"jpeg_raw",
-  	"video/raw",
-	gst_props_new (
-  	  "format",    GST_PROPS_LIST (
-                 	 GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0'))
-               	       ),
-  	  "width",     GST_PROPS_INT_RANGE (16, 4096),
-  	  "height",    GST_PROPS_INT_RANGE (16, 4096),
-  	  NULL));
+  	"video/x-raw-yuv",
+	GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
+		GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0'))));
 }
 
 static gboolean

@@ -71,12 +71,15 @@ sink_template_factory (void)
       GST_PAD_ALWAYS,
       gst_caps_new (
         "shout2send_sink",
-        "application/x-ogg",
+        "application/ogg",
 	NULL),
       gst_caps_new (
         "shout2send_sink",
-        "audio/x-mp3",
-	NULL),
+        "audio/mpeg",
+	gst_props_new (
+	  "layer", GST_PROPS_INT_RANGE (1, 3),
+	  NULL
+	)),
       NULL);
   }
 
@@ -362,13 +365,13 @@ gst_shout2send_connect (GstPad *pad, GstCaps *caps)
 
 {
   
-  if (!strcmp(gst_caps_get_mime (caps), "audio/x-mp3"))
+  if (!strcmp(gst_caps_get_mime (caps), "audio/mpeg"))
     {
       audio_format = SHOUT_FORMAT_MP3;
       return GST_PAD_LINK_OK;
     }
 
-  if (!strcmp(gst_caps_get_mime (caps), "application/x-ogg"))
+  if (!strcmp(gst_caps_get_mime (caps), "application/ogg"))
     {
       audio_format = SHOUT_FORMAT_VORBIS;
       return GST_PAD_LINK_OK;

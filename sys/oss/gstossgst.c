@@ -79,10 +79,8 @@ ossgst_src_factory (void)
   	GST_PAD_ALWAYS,
   	gst_caps_new (
   	  "ossgst_src",
-    	  "audio/raw",
+    	  "audio/x-raw-int",
 	  gst_props_new (
-    	    "format",       GST_PROPS_STRING ("int"),
-      	      "law",        GST_PROPS_INT (0),
       	      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
       	      "signed",     GST_PROPS_LIST (
  		      	      GST_PROPS_BOOLEAN (FALSE),
@@ -99,7 +97,21 @@ ossgst_src_factory (void)
       	      "rate",       GST_PROPS_INT_RANGE (8000, 48000),
       	      "channels",   GST_PROPS_INT_RANGE (1, 2),
 	      NULL)),
-	NULL);
+	gst_caps_new (
+  	  "ossgst_src",
+    	  "audio/x-mulaw",
+	  gst_props_new (
+      	      "rate",       GST_PROPS_INT_RANGE (8000, 48000),
+      	      "channels",   GST_PROPS_INT_RANGE (1, 2),
+	      NULL)),
+	gst_caps_new (
+  	  "ossgst_src",
+    	  "audio/x-alaw",
+	  gst_props_new (
+      	      "rate",       GST_PROPS_INT_RANGE (8000, 48000),
+      	      "channels",   GST_PROPS_INT_RANGE (1, 2),
+	      NULL)),
+        NULL);
 }
 
 
@@ -224,12 +236,12 @@ gst_ossgst_format_to_caps (gint format, gint stereo, gint rate)
   }
 
   if (supported) {
-    caps = gst_caps_new (
+    switch (law) {
+      case 0:
+        caps = gst_caps_new (
 		  "ossgst_caps",
-		  "audio/raw",
+		  "audio/x-raw-int",
 		  gst_props_new (
-			  "format",   		GST_PROPS_STRING ("int"),
-			    "law",		GST_PROPS_INT (law),
 			    "endianness",	GST_PROPS_INT (endianness),
 			    "signed",		GST_PROPS_BOOLEAN (is_signed),
 			    "width",		GST_PROPS_INT (width),
@@ -237,6 +249,26 @@ gst_ossgst_format_to_caps (gint format, gint stereo, gint rate)
 			    "rate",		GST_PROPS_INT (rate),
 			    "channels",		GST_PROPS_INT (stereo?2:1),
 			    NULL));
+        break;
+      case 1:
+        caps = gst_caps_new (
+		  "ossgst_caps",
+		  "audio/x-mulaw",
+		  gst_props_new (
+			    "rate",		GST_PROPS_INT (rate),
+			    "channels",		GST_PROPS_INT (stereo?2:1),
+			    NULL));
+        break;
+      case 2:
+        caps = gst_caps_new (
+		  "ossgst_caps",
+		  "audio/x-alaw",
+		  gst_props_new (
+			    "rate",		GST_PROPS_INT (rate),
+			    "channels",		GST_PROPS_INT (stereo?2:1),
+			    NULL));
+        break;
+    }
   }
   else {
     g_warning ("gstossgst: program tried to use unsupported format %x\n", format);

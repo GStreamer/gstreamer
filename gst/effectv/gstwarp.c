@@ -163,7 +163,7 @@ gst_warptv_sinkconnect (GstPad * pad, GstCaps * caps)
 
   gst_warptv_initialize (filter);
 
-  return gst_pad_try_set_caps (filter->srcpad, caps);
+  return gst_pad_try_set_caps (filter->srcpad, gst_caps_ref (caps));
 }
 
 static void

@@ -56,7 +56,7 @@ au_type_find (GstBuffer *buf, gpointer private)
 /* typefactory for 'au' */
 static GstTypeDefinition audefinition = {
   "auparse_audio/au",
-  "audio/au",
+  "audio/x-au",
   ".au",
   au_type_find,
 };
@@ -67,7 +67,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_factory_templ,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "auparse_sink",
-    "audio/au",
+    "audio/x-au",
     NULL
   )
 )
@@ -79,10 +79,8 @@ GST_PAD_TEMPLATE_FACTORY (src_factory_templ,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "auparse_src",
-    "audio/raw",
-      "format",     GST_PROPS_STRING ("int"),
-      "law",        GST_PROPS_INT_RANGE (0, 1),
-      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+    "audio/x-raw-int",
+      "endianness", GST_PROPS_INT (G_BIG_ENDIAN),
       "signed",     GST_PROPS_LIST(
 		      GST_PROPS_BOOLEAN (FALSE),
 		      GST_PROPS_BOOLEAN (TRUE)
@@ -95,6 +93,12 @@ GST_PAD_TEMPLATE_FACTORY (src_factory_templ,
 		      GST_PROPS_INT (8),
 		      GST_PROPS_INT (16)
 		    ),
+      "rate",       GST_PROPS_INT_RANGE (8000,48000),
+      "channels",   GST_PROPS_INT_RANGE (1, 2)
+  ),
+  GST_CAPS_NEW (
+    "auparse_src_alaw",
+    "audio/x-alaw",
       "rate",       GST_PROPS_INT_RANGE (8000,48000),
       "channels",   GST_PROPS_INT_RANGE (1, 2)
   )
@@ -250,7 +254,7 @@ gst_auparse_chain (GstPad *pad, GstBuffer *buf)
       case 2:
 	law = 0;
 	depth = 8;
-	sign = TRUE;
+	sign = FALSE;
 	break;
       case 3:
 	law = 0;
@@ -262,16 +266,21 @@ gst_auparse_chain (GstPad *pad, GstBuffer *buf)
 	return;
     }
 
-    tempcaps = GST_CAPS_NEW ("auparse_src",
-		             "audio/raw",
-			       "format",  	GST_PROPS_STRING ("int"),
-      			       "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
-			       "rate",  	GST_PROPS_INT (auparse->frequency),
-			       "channels",  	GST_PROPS_INT (auparse->channels),
-			       "law",  		GST_PROPS_INT (law),
-			       "depth", 	GST_PROPS_INT (depth),
-			       "width", 	GST_PROPS_INT (depth),
-			       "signed", 	GST_PROPS_BOOLEAN (sign));
+    if (law) {
+      tempcaps = GST_CAPS_NEW ("auparse_src",
+			       "audio/x-alaw",
+				 "rate",     GST_PROPS_INT (auparse->frequency),
+				 "channels", GST_PROPS_INT (auparse->channels));
+    } else {
+      tempcaps = GST_CAPS_NEW ("auparse_src",
+			       "audio/x-raw-int",
+      				 "endianness", GST_PROPS_INT (G_BIG_ENDIAN),
+				 "rate",       GST_PROPS_INT (auparse->frequency),
+				 "channels",   GST_PROPS_INT (auparse->channels),
+				 "depth",      GST_PROPS_INT (depth),
+				 "width",      GST_PROPS_INT (depth),
+				 "signed",     GST_PROPS_BOOLEAN (sign));
+    }
 
     if (gst_pad_try_set_caps (auparse->srcpad, tempcaps) <= 0) {
       gst_buffer_unref (buf);

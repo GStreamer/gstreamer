@@ -22,7 +22,7 @@
 #endif
 #include <config.h>
 #include <gst/gst.h>
-
+#include <gst/video/video.h>
 #include "monoscope.h"
 
 #define GST_TYPE_MONOSCOPE (gst_monoscope_get_type())
@@ -46,7 +46,7 @@ struct _GstMonoscope {
   gint16 datain[512];
 
   /* video state */
-  gint fps;
+  gfloat fps;
   gint width;
   gint height;
   gboolean first_buffer;
@@ -81,9 +81,6 @@ enum {
 
 enum {
   ARG_0,
-  ARG_WIDTH,
-  ARG_HEIGHT,
-  ARG_FPS,
   /* FILL ME */
 };
 
@@ -93,16 +90,16 @@ GST_PAD_TEMPLATE_FACTORY (src_template,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "monoscopesrc",
-    "video/raw",
-      "format",		GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")),
+    "video/x-raw-rgb",
       "bpp",		GST_PROPS_INT (32),
       "depth",		GST_PROPS_INT (32),
       "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
-      "red_mask",   	GST_PROPS_INT (0xff0000),
-      "green_mask", 	GST_PROPS_INT (0xff00),
-      "blue_mask",  	GST_PROPS_INT (0xff),
+      "red_mask",   	GST_PROPS_INT (R_MASK_32),
+      "green_mask", 	GST_PROPS_INT (G_MASK_32),
+      "blue_mask",  	GST_PROPS_INT (B_MASK_32),
       "width",		GST_PROPS_INT_RANGE (16, 4096),
-      "height",		GST_PROPS_INT_RANGE (16, 4096)
+      "height",		GST_PROPS_INT_RANGE (16, 4096),
+      "framerate",	GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
   )
 )
 
@@ -112,10 +109,8 @@ GST_PAD_TEMPLATE_FACTORY (sink_template,
   GST_PAD_ALWAYS,				/* ALWAYS/SOMETIMES */
   GST_CAPS_NEW (
     "monoscopesink",				/* the name of the caps */
-    "audio/raw",				/* the mime type of the caps */
+    "audio/x-raw-int",				/* the mime type of the caps */
        /* Properties follow: */
-      "format",     GST_PROPS_STRING ("int"),
-      "law",        GST_PROPS_INT (0),
       "endianness", GST_PROPS_INT (G_BYTE_ORDER),
       "signed",     GST_PROPS_BOOLEAN (TRUE),
       "width",      GST_PROPS_INT (16),
@@ -126,18 +121,15 @@ GST_PAD_TEMPLATE_FACTORY (sink_template,
 )
 
 
-static void		gst_monoscope_class_init	(GstMonoscopeClass *klass);
-static void		gst_monoscope_init		(GstMonoscope *monoscope);
+static void	gst_monoscope_class_init	(GstMonoscopeClass *klass);
+static void	gst_monoscope_init		(GstMonoscope *monoscope);
 
-static void		gst_monoscope_set_property	(GObject *object, guint prop_id, 
-						 const GValue *value, GParamSpec *pspec);
-static void		gst_monoscope_get_property	(GObject *object, guint prop_id, 
-						 GValue *value, GParamSpec *pspec);
-
-static void		gst_monoscope_chain		(GstPad *pad, GstBuffer *buf);
+static void	gst_monoscope_chain		(GstPad *pad, GstBuffer *buf);
 
 static GstPadLinkReturn 
-			gst_monoscope_sinkconnect 	(GstPad *pad, GstCaps *caps);
+		gst_monoscope_sinkconnect 	(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn
+		gst_monoscope_srcconnect 	(GstPad *pad, GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
 
@@ -173,19 +165,6 @@ gst_monoscope_class_init(GstMonoscopeClass *klass)
   gstelement_class = (GstElementClass*) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
-
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WIDTH,
-    g_param_spec_int ("width","Width","The Width",
-                       1, 2048, 256, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HEIGHT,
-    g_param_spec_int ("height","Height","The height",
-                       1, 2048, 128, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FPS,
-    g_param_spec_int ("fps","FPS","Frames per second",
-                       1, 100, 25, G_PARAM_READWRITE));
-
-  gobject_class->set_property = gst_monoscope_set_property;
-  gobject_class->get_property = gst_monoscope_get_property;
 }
 
 static void
@@ -201,6 +180,7 @@ gst_monoscope_init (GstMonoscope *monoscope)
 
   gst_pad_set_chain_function (monoscope->sinkpad, gst_monoscope_chain);
   gst_pad_set_link_function (monoscope->sinkpad, gst_monoscope_sinkconnect);
+  gst_pad_set_link_function (monoscope->srcpad, gst_monoscope_srcconnect);
 
   monoscope->next_time = 0;
   monoscope->peerpool = NULL;
@@ -209,8 +189,7 @@ gst_monoscope_init (GstMonoscope *monoscope)
   monoscope->first_buffer = TRUE;
   monoscope->width = 256;
   monoscope->height = 128;
-  monoscope->fps = 25; /* desired frame rate */
-
+  monoscope->fps = 25.; /* desired frame rate */
 }
 
 static GstPadLinkReturn
@@ -224,6 +203,50 @@ gst_monoscope_sinkconnect (GstPad *pad, GstCaps *caps)
   }
 
   return GST_PAD_LINK_OK;
+}
+
+static GstPadLinkReturn
+gst_monoscope_negotiate (GstMonoscope *monoscope)
+{
+  GstCaps *caps;
+
+  caps = GST_CAPS_NEW (
+		     "monoscopesrc",
+		     "video/x-raw-rgb",
+		       "bpp", 		GST_PROPS_INT (32), 
+		       "depth", 	GST_PROPS_INT (32), 
+		       "endianness", 	GST_PROPS_INT (G_BYTE_ORDER), 
+		       "red_mask", 	GST_PROPS_INT (R_MASK_32), 
+		       "green_mask", 	GST_PROPS_INT (G_MASK_32), 
+		       "blue_mask", 	GST_PROPS_INT (B_MASK_32), 
+		       "width", 	GST_PROPS_INT (monoscope->width), 
+		       "height", 	GST_PROPS_INT (monoscope->height),
+                       "framerate",     GST_PROPS_FLOAT (monoscope->fps)
+		   );
+
+  return gst_pad_try_set_caps (monoscope->srcpad, caps);
+}
+
+static GstPadLinkReturn
+gst_monoscope_srcconnect (GstPad *pad, GstCaps *caps)
+{
+  GstPadLinkReturn ret;
+  GstMonoscope *monoscope = GST_MONOSCOPE (gst_pad_get_parent (pad));
+
+  if (gst_caps_has_property_typed (caps, "width", GST_PROPS_INT_TYPE)) {
+    gst_caps_get_int (caps, "width", &monoscope->width);
+  }
+  if (gst_caps_has_property_typed (caps, "height", GST_PROPS_INT_TYPE)) {
+    gst_caps_get_int (caps, "height", &monoscope->height);
+  }
+  if (gst_caps_has_property_typed (caps, "framerate", GST_PROPS_FLOAT_TYPE)) {
+    gst_caps_get_float (caps, "framerate", &monoscope->fps);
+  }
+
+  if ((ret = gst_monoscope_negotiate (monoscope)) <= 0)
+    return ret;
+
+  return GST_PAD_LINK_DONE;
 }
 
 static void
@@ -257,29 +280,14 @@ gst_monoscope_chain (GstPad *pad, GstBuffer *bufin)
   }
 
   if (monoscope->first_buffer) {
-    GstCaps *caps;
-
     monoscope->visstate = monoscope_init (monoscope->width, monoscope->height);
     g_assert(monoscope->visstate != 0);
     GST_DEBUG ("making new pad");
-
-    caps = GST_CAPS_NEW (
-		     "monoscopesrc",
-		     "video/raw",
-		       "format", 	GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")), 
-		       "bpp", 		GST_PROPS_INT (32), 
-		       "depth", 	GST_PROPS_INT (32), 
-		       "endianness", 	GST_PROPS_INT (G_BYTE_ORDER), 
-		       "red_mask", 	GST_PROPS_INT (0xff0000), 
-		       "green_mask", 	GST_PROPS_INT (0x00ff00), 
-		       "blue_mask", 	GST_PROPS_INT (0x0000ff), 
-		       "width", 	GST_PROPS_INT (monoscope->width), 
-		       "height", 	GST_PROPS_INT (monoscope->height)
-		   );
-
-    if (gst_pad_try_set_caps (monoscope->srcpad, caps) <= 0) {
-      gst_element_error (GST_ELEMENT (monoscope), "could not set caps");
-      return;
+    if (!GST_PAD_CAPS (monoscope->srcpad)) {
+      if (gst_monoscope_negotiate (monoscope) <= 0) {
+        gst_element_error (GST_ELEMENT (monoscope), "could not set caps");
+        return;
+      }
     }
     monoscope->first_buffer = FALSE;
   }
@@ -298,54 +306,6 @@ gst_monoscope_chain (GstPad *pad, GstBuffer *bufin)
 
   GST_DEBUG ("Monoscope: exiting chainfunc");
 
-}
-
-static void
-gst_monoscope_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
-{
-  GstMonoscope *monoscope;
-
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_MONOSCOPE (object));
-  monoscope = GST_MONOSCOPE (object);
-
-  switch (prop_id) {
-    case ARG_WIDTH:
-      monoscope->width = g_value_get_int (value);
-      break;
-    case ARG_HEIGHT:
-      monoscope->height = g_value_get_int (value);
-      break;
-    case ARG_FPS:
-      monoscope->fps = g_value_get_int (value);
-      break;
-    default:
-      break;
-  }
-}
-
-static void
-gst_monoscope_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
-{
-  GstMonoscope *monoscope;
-
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_MONOSCOPE (object));
-  monoscope = GST_MONOSCOPE (object);
-
-  switch (prop_id) {
-    case ARG_WIDTH:
-      g_value_set_int (value, monoscope->width);
-      break;
-    case ARG_HEIGHT:
-      g_value_set_int (value, monoscope->height);
-      break;
-    case ARG_FPS:
-      g_value_set_int (value, monoscope->fps);
-      break;
-    default:
-      break;
-  }
 }
 
 static gboolean

@@ -22,7 +22,7 @@
 #endif
 #include <config.h>
 #include <gst/gst.h>
-
+#include <gst/video/video.h>
 #include "goom_core.h"
 
 #define GST_TYPE_GOOM (gst_goom_get_type())
@@ -45,7 +45,7 @@ struct _GstGOOM {
   gint16 datain[2][512];
 
   /* video state */
-  gint fps;
+  gfloat fps;
   gint width;
   gint height;
   gint channels;
@@ -78,9 +78,6 @@ enum {
 
 enum {
   ARG_0,
-  ARG_WIDTH,
-  ARG_HEIGHT,
-  ARG_FPS,
   /* FILL ME */
 };
 
@@ -88,31 +85,21 @@ GST_PAD_TEMPLATE_FACTORY (src_template,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
+  gst_caps_new (
     "goomsrc",
-    "video/raw",
-      "format",		GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")),
-      "bpp",		GST_PROPS_INT (32),
-      "depth",		GST_PROPS_INT (32),
-      "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
-      "red_mask",   	GST_PROPS_INT (0xff0000),
-      "green_mask", 	GST_PROPS_INT (0xff00),
-      "blue_mask",  	GST_PROPS_INT (0xff),
-      "width",		GST_PROPS_INT_RANGE (16, 4096),
-      "height",		GST_PROPS_INT_RANGE (16, 4096)
+    "video/x-raw-rgb",
+    GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_32
   )
 )
 
 GST_PAD_TEMPLATE_FACTORY (sink_template,
-  "sink",					/* the name of the pads */
+  "sink",				/* the name of the pads */
   GST_PAD_SINK,				/* type of the pad */
-  GST_PAD_ALWAYS,				/* ALWAYS/SOMETIMES */
+  GST_PAD_ALWAYS,			/* ALWAYS/SOMETIMES */
   GST_CAPS_NEW (
     "goomsink",				/* the name of the caps */
-    "audio/raw",				/* the mime type of the caps */
+    "audio/x-raw-int",			/* the mime type of the caps */
        /* Properties follow: */
-      "format",     GST_PROPS_STRING ("int"),
-      "law",        GST_PROPS_INT (0),
       "endianness", GST_PROPS_INT (G_BYTE_ORDER),
       "signed",     GST_PROPS_BOOLEAN (TRUE),
       "width",      GST_PROPS_INT (16),
@@ -129,11 +116,6 @@ static void		gst_goom_dispose	(GObject *object);
 
 static GstElementStateReturn
 			gst_goom_change_state 	(GstElement *element);
-
-static void		gst_goom_set_property	(GObject *object, guint prop_id, 
-						 const GValue *value, GParamSpec *pspec);
-static void		gst_goom_get_property	(GObject *object, guint prop_id, 
-						 GValue *value, GParamSpec *pspec);
 
 static void		gst_goom_chain		(GstPad *pad, GstBuffer *buf);
 
@@ -175,19 +157,7 @@ gst_goom_class_init(GstGOOMClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WIDTH,
-    g_param_spec_int ("width","Width","The Width",
-                       0, 2048, 320, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HEIGHT,
-    g_param_spec_int ("height","Height","The height",
-                       0, 2048, 320, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FPS,
-    g_param_spec_int ("fps","FPS","Frames per second",
-                       1, 100, 25, G_PARAM_READWRITE));
-
   gobject_class->dispose	= gst_goom_dispose;
-  gobject_class->set_property 	= gst_goom_set_property;
-  gobject_class->get_property 	= gst_goom_get_property;
 
   gstelement_class->change_state = gst_goom_change_state;
 }
@@ -212,7 +182,7 @@ gst_goom_init (GstGOOM *goom)
 
   goom->width = 320;
   goom->height = 200;
-  goom->fps = 25; /* desired frame rate */
+  goom->fps = 25.; /* desired frame rate */
   goom->channels = 0;
   /* set to something */
   goom_init (50, 50);
@@ -251,8 +221,15 @@ gst_goom_srcconnect (GstPad *pad, GstCaps *caps)
     return GST_PAD_LINK_DELAYED;
   }
 
-  gst_caps_get_int (caps, "width", &goom->width);
-  gst_caps_get_int (caps, "height", &goom->height);
+  if (gst_caps_has_property_typed (caps, "width", GST_PROPS_INT_TYPE)) {
+    gst_caps_get_int (caps, "width", &goom->width);
+  }
+  if (gst_caps_has_property_typed (caps, "height", GST_PROPS_INT_TYPE)) {
+    gst_caps_get_int (caps, "height", &goom->height);
+  }
+  if (gst_caps_has_property_typed (caps, "framerate", GST_PROPS_FLOAT_TYPE)) {
+    gst_caps_get_float (caps, "framerate", &goom->fps);
+  }
 
   goom_set_resolution (goom->width, goom->height);
   goom->srcnegotiated = TRUE;
@@ -276,7 +253,8 @@ gst_goom_negotiate_default (GstGOOM *goom)
 	       "green_mask", 	GST_PROPS_INT (0x00ff00), 
 	       "blue_mask", 	GST_PROPS_INT (0x0000ff), 
 	       "width", 	GST_PROPS_INT (goom->width), 
-	       "height", 	GST_PROPS_INT (goom->height)
+	       "height", 	GST_PROPS_INT (goom->height),
+	       "framerate",	GST_PROPS_FLOAT (goom->fps)
 	   );
 
   if (gst_pad_try_set_caps (goom->srcpad, caps) <= 0) {
@@ -399,54 +377,6 @@ gst_goom_change_state (GstElement *element)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
   return GST_STATE_SUCCESS;
-}
-
-static void
-gst_goom_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
-{
-  GstGOOM *goom;
-
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_GOOM (object));
-  goom = GST_GOOM (object);
-
-  switch (prop_id) {
-    case ARG_WIDTH:
-      goom->width = g_value_get_int (value);
-      break;
-    case ARG_HEIGHT:
-      goom->height = g_value_get_int (value);
-      break;
-    case ARG_FPS:
-      goom->fps = g_value_get_int (value);
-      break;
-    default:
-      break;
-  }
-}
-
-static void
-gst_goom_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
-{
-  GstGOOM *goom;
-
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_GOOM (object));
-  goom = GST_GOOM (object);
-
-  switch (prop_id) {
-    case ARG_WIDTH:
-      g_value_set_int (value, goom->width);
-      break;
-    case ARG_HEIGHT:
-      g_value_set_int (value, goom->height);
-      break;
-    case ARG_FPS:
-      g_value_set_int (value, goom->fps);
-      break;
-    default:
-      break;
-  }
 }
 
 static gboolean

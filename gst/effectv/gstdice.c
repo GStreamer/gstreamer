@@ -175,7 +175,7 @@ gst_dicetv_sinkconnect (GstPad * pad, GstCaps * caps)
   filter->dicemap = (gchar *) g_malloc (filter->height * filter->width * sizeof(char));
   gst_dicetv_create_map (filter);
 
-  return gst_pad_try_set_caps (filter->srcpad, caps);
+  return gst_pad_try_set_caps (filter->srcpad, gst_caps_ref (caps));
 }
 
 static void

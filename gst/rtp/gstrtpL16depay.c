@@ -50,9 +50,7 @@ GST_PAD_TEMPLATE_FACTORY (src_factory,
 	GST_PAD_ALWAYS,
 	GST_CAPS_NEW (
 		 "audio_raw",
-		 "audio/raw",
-	         "format", 	GST_PROPS_STRING ("int"),
-		 "law", 	GST_PROPS_INT (0),
+		 "audio/x-raw-int",
 		 "endianness",  GST_PROPS_INT (G_BYTE_ORDER), 
 		 "signed", 	GST_PROPS_BOOLEAN (TRUE), 
 		 "width", 	GST_PROPS_INT (16), 
@@ -166,9 +164,7 @@ gst_rtpL16_caps_nego (GstRtpL16Parse *rtpL16parse)
 
   caps = GST_CAPS_NEW (
 		 "audio_raw",
-		 "audio/raw",
-	         "format", 	GST_PROPS_STRING ("int"),
-		 "law", 	GST_PROPS_INT (0),
+		 "audio/x-raw-int",
 		 "endianness",  GST_PROPS_INT (G_BYTE_ORDER), 
 		 "signed", 	GST_PROPS_BOOLEAN (TRUE), 
 		 "width", 	GST_PROPS_INT (16), 

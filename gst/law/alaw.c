@@ -32,14 +32,11 @@ alaw_factory (void)
   return
    gst_caps_new (
   	"test_src",
-    	"audio/raw",
+    	"audio/x-alaw",
 	gst_props_new (
-    	  "format",  GST_PROPS_STRING ("int"),
-    	    "law",   GST_PROPS_INT (2),
-    	    "width", GST_PROPS_INT(8),
-    	    "depth", GST_PROPS_INT(8),
-    	    "signed", GST_PROPS_BOOLEAN(FALSE),
-	    NULL));
+    	  "rate",     GST_PROPS_INT_RANGE (8000, 192000),
+          "channels", GST_PROPS_INT_RANGE (1, 2),
+	  NULL));
 }
 
 static GstCaps*
@@ -48,14 +45,14 @@ linear_factory (void)
   return
    gst_caps_new (
   	"test_sink",
-    	"audio/raw",
+    	"audio/x-raw-int",
 	gst_props_new (
-    	  "format",     GST_PROPS_STRING ("int"),
-      	    "law",      GST_PROPS_INT(0),
-      	    "width",    GST_PROPS_INT(16),
-      	    "depth",    GST_PROPS_INT(16),
-      	    "endianness",    GST_PROPS_INT(G_BYTE_ORDER),
-      	    "signed",   GST_PROPS_BOOLEAN(TRUE),
+      	    "width",      GST_PROPS_INT(16),
+      	    "depth",      GST_PROPS_INT(16),
+      	    "endianness", GST_PROPS_INT(G_BYTE_ORDER),
+      	    "signed",     GST_PROPS_BOOLEAN(TRUE),
+            "rate",       GST_PROPS_INT_RANGE (8000, 192000),
+            "channels",   GST_PROPS_INT_RANGE (1, 2),
 	    NULL));
 }
 

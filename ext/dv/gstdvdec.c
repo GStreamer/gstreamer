@@ -37,7 +37,7 @@
  */
 static GstElementDetails dvdec_details = {
   "DV (smpte314) decoder plugin",
-  "Codec/Video/Decoder/DV",
+  "Codec/Video/Decoder",
   "LGPL",
   "Uses libdv to decode DV video (libdv.sourceforge.net)",
   VERSION,
@@ -77,11 +77,8 @@ GST_PAD_TEMPLATE_FACTORY (sink_temp,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "dv_dec_sink",
-    "video/dv",
-    "format",   GST_PROPS_LIST (
-	          GST_PROPS_STRING ("PAL"),
-	          GST_PROPS_STRING ("NTSC")
-	       )
+    "video/x-dv",
+    "systemstream", GST_PROPS_BOOLEAN (TRUE)
   )
 )
 
@@ -92,36 +89,55 @@ GST_PAD_TEMPLATE_FACTORY (video_src_temp,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "dv_dec_src",
-    "video/raw",
+    "video/x-raw-yuv",
     "format",   	GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','U','Y','2')),
     "width",    	GST_PROPS_INT (720),
-    "height",  		GST_PROPS_INT_RANGE (NTSC_HEIGHT, PAL_HEIGHT)
+    "height",  		GST_PROPS_LIST (
+			  GST_PROPS_INT (NTSC_HEIGHT),
+			  GST_PROPS_INT (PAL_HEIGHT)
+			),
+    "framerate",	GST_PROPS_LIST (
+			  GST_PROPS_FLOAT (25.),
+			  GST_PROPS_FLOAT (30/1.001)
+			)
   ),
   GST_CAPS_NEW (
     "dv_dec_src",
-    "video/raw",
-    "format", 		GST_PROPS_FOURCC(GST_MAKE_FOURCC('R','G','B',' ')),
+    "video/x-raw-rgb",
     "bpp", 		GST_PROPS_INT(32),
     "depth", 		GST_PROPS_INT(32),
-    "endianness", 	GST_PROPS_INT (G_LITTLE_ENDIAN),
-    "red_mask", 	GST_PROPS_INT(0x00ff0000),
+    "endianness", 	GST_PROPS_INT (G_BIG_ENDIAN),
+    "red_mask", 	GST_PROPS_INT(0x000000ff),
     "green_mask", 	GST_PROPS_INT(0x0000ff00),
-    "blue_mask", 	GST_PROPS_INT(0x000000ff),
+    "blue_mask", 	GST_PROPS_INT(0x00ff00),
     "width",     	GST_PROPS_INT (720),
-    "height",    	GST_PROPS_INT_RANGE (NTSC_HEIGHT, PAL_HEIGHT)
+    "height",  		GST_PROPS_LIST (
+			  GST_PROPS_INT (NTSC_HEIGHT),
+			  GST_PROPS_INT (PAL_HEIGHT)
+			),
+    "framerate",	GST_PROPS_LIST (
+			  GST_PROPS_FLOAT (25.),
+			  GST_PROPS_FLOAT (30/1.001)
+			)
   ),
   GST_CAPS_NEW (
     "dv_dec_src",
-    "video/raw",
-    "format", 		GST_PROPS_FOURCC(GST_MAKE_FOURCC('R','G','B',' ')),
+    "video/x-raw-rgb",
     "bpp", 		GST_PROPS_INT(24),
     "depth", 		GST_PROPS_INT(24),
-    "endianness", 	GST_PROPS_INT (G_LITTLE_ENDIAN),
+    "endianness", 	GST_PROPS_INT (G_BIG_ENDIAN),
     "red_mask", 	GST_PROPS_INT(0x0000ff),
     "green_mask", 	GST_PROPS_INT(0x00ff00),
     "blue_mask", 	GST_PROPS_INT(0xff0000),
     "width",     	GST_PROPS_INT (720),
-    "height",    	GST_PROPS_INT_RANGE (NTSC_HEIGHT, PAL_HEIGHT)
+    "height",  		GST_PROPS_LIST (
+			  GST_PROPS_INT (NTSC_HEIGHT),
+			  GST_PROPS_INT (PAL_HEIGHT)
+			),
+    "framerate",	GST_PROPS_LIST (
+			  GST_PROPS_FLOAT (25.),
+			  GST_PROPS_FLOAT (30/1.001)
+			)
   )
 )
 
@@ -131,9 +147,7 @@ GST_PAD_TEMPLATE_FACTORY ( audio_src_temp,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "arts_sample",
-    "audio/raw",
-    "format",   	GST_PROPS_STRING ("int"),
-    "law",      	GST_PROPS_INT (0),
+    "audio/x-raw-int",
     "depth",   		GST_PROPS_INT (16),
     "width",    	GST_PROPS_INT (16),
     "signed",   	GST_PROPS_BOOLEAN (TRUE),
@@ -160,15 +174,15 @@ dv_type_find (GstBuffer *buf, gpointer private)
       format = "NTSC";
     
     new = GST_CAPS_NEW ("dv_type_find",
-                        "video/dv",
-                          "format",   GST_PROPS_STRING (format)
+                        "video/x-dv",
+                          "systemstream", GST_PROPS_BOOLEAN (TRUE)
 		       );
   }
   return new;
 }
 
 static GstTypeDefinition dv_definition = {
-  "dv_video/dv", "video/dv", ".dv", dv_type_find 
+  "dv_video/dv", "video/x-dv", ".dv", dv_type_find 
 };
 
 #define GST_TYPE_DVDEC_QUALITY (gst_dvdec_quality_get_type())
@@ -690,6 +704,7 @@ gst_dvdec_loop (GstElement *element)
   guint32 length, got_bytes;
   GstFormat format;
   guint64 ts;
+  gfloat fps;
 
   dvdec = GST_DVDEC (element);
 
@@ -704,6 +719,7 @@ gst_dvdec_loop (GstElement *element)
   dvdec->PAL = dv_system_50_fields (dvdec->decoder);
 
   dvdec->framerate = (dvdec->PAL ? 2500 : 2997);
+  fps = (dvdec->PAL ? 25. : 30/1.001);
   dvdec->height = height = (dvdec->PAL ? PAL_HEIGHT : NTSC_HEIGHT);
   length = (dvdec->PAL ? PAL_BUFFER : NTSC_BUFFER);
 
@@ -728,12 +744,18 @@ gst_dvdec_loop (GstElement *element)
     allowed = gst_pad_get_allowed_caps (dvdec->videosrcpad);
 
     /* try to fix our height */
-    trylist = gst_caps_intersect (allowed,
-	    GST_CAPS_NEW (
+    trylist = gst_caps_intersect (allowed, gst_caps_append (
+            GST_CAPS_NEW (
 	      "dvdec_negotiate",
-	      "video/raw",
-	        "height",  	GST_PROPS_INT (height)
-	    ));
+	      "video/x-raw-yuv",
+	        "height",  	GST_PROPS_INT (height),
+                "framerate",	GST_PROPS_FLOAT (fps)
+	    ), GST_CAPS_NEW (
+	      "dvdec_negotiate",
+	      "video/x-raw-rgb",
+	        "height",  	GST_PROPS_INT (height),
+                "framerate",	GST_PROPS_FLOAT (fps)
+            )));
     
     /* prepare for looping */
     trylist = gst_caps_normalize (trylist);
@@ -792,10 +814,8 @@ gst_dvdec_loop (GstElement *element)
       gst_pad_try_set_caps (dvdec->audiosrcpad,
 	GST_CAPS_NEW (
 	  "dvdec_audio_caps",
-	  "audio/raw",
-    	    "format",   	GST_PROPS_STRING ("int"),
+	  "audio/x-raw-int",
     	    "rate",   		GST_PROPS_INT (dvdec->decoder->audio->frequency),
-	    "law",      	GST_PROPS_INT (0),
 	    "depth",   		GST_PROPS_INT (16),
 	    "width",    	GST_PROPS_INT (16),
 	    "signed",   	GST_PROPS_BOOLEAN (TRUE),
@@ -1012,4 +1032,3 @@ GstPluginDesc plugin_desc = {
   "dvdec",
   plugin_init
 };
-

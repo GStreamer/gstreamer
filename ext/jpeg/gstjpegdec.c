@@ -54,6 +54,8 @@ static void	gst_jpegdec_class_init	(GstJpegDec *klass);
 static void	gst_jpegdec_init	(GstJpegDec *jpegdec);
 
 static void	gst_jpegdec_chain	(GstPad *pad, GstBuffer *buf);
+static GstPadLinkReturn
+		gst_jpegdec_link	(GstPad *pad, GstCaps *caps);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_jpegdec_signals[LAST_SIGNAL] = { 0 }; */
@@ -127,6 +129,7 @@ gst_jpegdec_init (GstJpegDec *jpegdec)
   jpegdec->sinkpad = gst_pad_new_from_template (jpegdec_sink_template, "sink");
   gst_element_add_pad(GST_ELEMENT(jpegdec),jpegdec->sinkpad);
   gst_pad_set_chain_function(jpegdec->sinkpad,gst_jpegdec_chain);
+  gst_pad_set_link_function(jpegdec->sinkpad, gst_jpegdec_link);
   jpegdec->srcpad = gst_pad_new_from_template (jpegdec_src_template, "src");
   gst_element_add_pad(GST_ELEMENT(jpegdec),jpegdec->srcpad);
 
@@ -155,6 +158,31 @@ gst_jpegdec_init (GstJpegDec *jpegdec)
   jpegdec->jsrc.term_source = gst_jpegdec_term_source;
   jpegdec->cinfo.src = &jpegdec->jsrc;
 
+}
+
+static GstPadLinkReturn
+gst_jpegdec_link (GstPad *pad, GstCaps *caps)
+{
+  GstJpegDec *jpegdec = GST_JPEGDEC (gst_pad_get_parent (pad));
+
+  if (!GST_CAPS_IS_FIXED (caps))
+    return GST_PAD_LINK_DELAYED;
+
+  gst_caps_get (caps,
+		"framerate", &jpegdec->fps,
+		"width",     &jpegdec->width,
+		"height",    &jpegdec->height,
+		NULL);
+
+  caps = GST_CAPS_NEW ("jpegdec_srccaps",
+		       "video/x-raw-yuv",
+			 "format",    GST_PROPS_FOURCC (
+			   GST_MAKE_FOURCC ('I','4','2','0')),
+			 "width",     GST_PROPS_INT (jpegdec->width),
+			 "height",    GST_PROPS_INT (jpegdec->height),
+			 "framerate", GST_PROPS_FLOAT (jpegdec->fps));
+
+  return gst_pad_try_set_caps (jpegdec->srcpad, caps);
 }
 
 /* shamelessly ripped from jpegutils.c in mjpegtools */
@@ -345,10 +373,12 @@ gst_jpegdec_chain (GstPad *pad, GstBuffer *buf)
     gst_pad_try_set_caps (jpegdec->srcpad, 
 		          GST_CAPS_NEW (
 			    "jpegdec_caps",
-			    "video/raw",
-			      "format",  GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
-			      "width",   GST_PROPS_INT (width),
-			      "height",  GST_PROPS_INT (height)
+			    "video/x-raw-yuv",
+			      "format",    GST_PROPS_FOURCC (
+				GST_MAKE_FOURCC ('I','4','2','0')),
+			      "width",     GST_PROPS_INT (width),
+			      "height",    GST_PROPS_INT (height),
+			      "framerate", GST_PROPS_FLOAT (jpegdec->fps) 
 			  ));
   }
 

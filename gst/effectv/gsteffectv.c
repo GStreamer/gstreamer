@@ -23,6 +23,7 @@
 
 #include <string.h>
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include "gsteffectv.h"
 
 
@@ -55,18 +56,10 @@ gst_effectv_src_factory (void)
   		"src",
   		GST_PAD_SRC,
   		GST_PAD_ALWAYS,
-  		GST_CAPS_NEW (
+  		gst_caps_new (
   		  "effectv_src",
-  		  "video/raw",
-  		    "format",         GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")),
-  		    "bpp",            GST_PROPS_INT (32),
-  		    "depth",          GST_PROPS_INT (32),
-  		    "endianness",     GST_PROPS_INT (G_BYTE_ORDER),
-  		    "red_mask",       GST_PROPS_INT (0xff0000),
-  		    "green_mask",     GST_PROPS_INT (0xff00),
-  		    "blue_mask",      GST_PROPS_INT (0xff),
-  		    "width",          GST_PROPS_INT_RANGE (16, 4096),
-  		    "height",         GST_PROPS_INT_RANGE (16, 4096)
+  		  "video/x-raw-rgb",
+  		  GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_32
 		)
   	     );
   }
@@ -82,18 +75,10 @@ gst_effectv_sink_factory (void)
   		"sink",
   		GST_PAD_SINK,
   		GST_PAD_ALWAYS,
-  		GST_CAPS_NEW (
+  		gst_caps_new (
   		  "effectv_sink",
-  		  "video/raw",
-  		    "format",         GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")),
-  		    "bpp",            GST_PROPS_INT (32),
-  		    "depth",          GST_PROPS_INT (32),
-  		    "endianness",     GST_PROPS_INT (G_BYTE_ORDER),
-  		    "red_mask",       GST_PROPS_INT (0xff0000),
-  		    "green_mask",     GST_PROPS_INT (0xff00),
-  		    "blue_mask",      GST_PROPS_INT (0xff),
-  		    "width",          GST_PROPS_INT_RANGE (16, 4096),
-  		    "height",         GST_PROPS_INT_RANGE (16, 4096)
+  		  "video/x-raw-rgb",
+  		  GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_32
 		)
   	     );
   }

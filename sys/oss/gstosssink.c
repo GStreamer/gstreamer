@@ -93,9 +93,7 @@ GST_PAD_TEMPLATE_FACTORY (osssink_sink_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "osssink_sink",
-    "audio/raw",
-      "format",     GST_PROPS_STRING ("int"),   /* hack */
-      "law",        GST_PROPS_INT (0),
+    "audio/x-raw-int",
       "endianness", GST_PROPS_INT (G_BYTE_ORDER),
       "signed",     GST_PROPS_LIST (
          	      GST_PROPS_BOOLEAN (FALSE),

@@ -83,9 +83,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "wavenc_raw",
-    "audio/raw",
-      "format",   GST_PROPS_STRING ("int"),
-      "law",         GST_PROPS_INT (0),
+    "audio/x-raw-int",
       "endianness",  GST_PROPS_INT (G_LITTLE_ENDIAN),
       "signed",      GST_PROPS_BOOLEAN (TRUE),
       "width",       GST_PROPS_LIST (

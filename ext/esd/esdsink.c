@@ -55,29 +55,27 @@ GST_PAD_TEMPLATE_FACTORY (sink_factory,
   GST_PAD_SINK,				/* type of the pad */
   GST_PAD_ALWAYS,			/* ALWAYS/SOMETIMES */
   GST_CAPS_NEW (
-    "esdsink_sink8",				/* the name of the caps */
-    "audio/raw",				/* the mime type of the caps */
+    "esdsink_sink",				/* the name of the caps */
+    "audio/x-raw-int",				/* the mime type of the caps */
       /* Properties follow: */
-      "format",       GST_PROPS_STRING ("int"),
-        "law",        GST_PROPS_INT (0),
         "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-        "width",      GST_PROPS_INT (8),
-	"depth",      GST_PROPS_INT (8),
+	"signed",     GST_PROPS_LIST (
+			GST_PROPS_BOOLEAN (TRUE),
+			GST_PROPS_BOOLEAN (FALSE)
+		      ),
+        "width",      GST_PROPS_LIST (
+			GST_PROPS_INT (8),
+			GST_PROPS_INT (16)
+		      ),
+	"depth",      GST_PROPS_LIST (
+			GST_PROPS_INT (8),
+			GST_PROPS_INT (16)
+		      ),
 	"rate",       GST_PROPS_INT_RANGE (8000, 96000),
-     	"channels",   GST_PROPS_LIST (GST_PROPS_INT (1), GST_PROPS_INT (2))
-  ),
-  GST_CAPS_NEW (
-    "esdsink_sink16",				/* the name of the caps */
-    "audio/raw",				/* the mime type of the caps */
-      /* Properties follow: */
-      "format",       GST_PROPS_STRING ("int"),
-        "law",        GST_PROPS_INT (0),
-        "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-        "signed",     GST_PROPS_BOOLEAN (TRUE),
-        "width",      GST_PROPS_INT (16),
-	"depth",      GST_PROPS_INT (16),
-	"rate",       GST_PROPS_INT_RANGE (8000, 96000),
-     	"channels",   GST_PROPS_LIST (GST_PROPS_INT (1), GST_PROPS_INT (2))
+     	"channels",   GST_PROPS_LIST (
+			GST_PROPS_INT (1),
+			GST_PROPS_INT (2)
+		      )
   )
 );
 
@@ -173,6 +171,7 @@ static GstPadLinkReturn
 gst_esdsink_sinkconnect (GstPad *pad, GstCaps *caps)
 {
   GstEsdsink *esdsink;
+  gboolean sign;
 
   esdsink = GST_ESDSINK (gst_pad_get_parent (pad));
 
@@ -180,8 +179,15 @@ gst_esdsink_sinkconnect (GstPad *pad, GstCaps *caps)
     return GST_PAD_LINK_DELAYED;
 
   gst_caps_get_int (caps, "depth", &esdsink->depth);
+  gst_caps_get_int (caps, "signed", &sign);
   gst_caps_get_int (caps, "channels", &esdsink->channels);
   gst_caps_get_int (caps, "rate", &esdsink->frequency);
+
+  /* only u8/s16 */
+  if ((sign == FALSE && esdsink->depth != 8) ||
+      (sign == TRUE  && esdsink->depth != 16)) {
+    return GST_PAD_LINK_REFUSED;
+  }
 
   gst_esdsink_close_audio (esdsink);
   if (gst_esdsink_open_audio (esdsink)) {

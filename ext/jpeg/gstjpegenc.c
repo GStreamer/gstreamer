@@ -52,6 +52,8 @@ static void		gst_jpegenc_class_init	(GstJpegEnc *klass);
 static void		gst_jpegenc_init	(GstJpegEnc *jpegenc);
 
 static void		gst_jpegenc_chain	(GstPad *pad,GstBuffer *buf);
+static GstPadLinkReturn	gst_jpegenc_link	(GstPad *pad, GstCaps *caps);
+
 static GstBuffer	*gst_jpegenc_get	(GstPad *pad);
 
 static void		gst_jpegenc_resync	(GstJpegEnc *jpegenc);
@@ -123,6 +125,7 @@ gst_jpegenc_init (GstJpegEnc *jpegenc)
   jpegenc->sinkpad = gst_pad_new("sink",GST_PAD_SINK);
   gst_element_add_pad(GST_ELEMENT(jpegenc),jpegenc->sinkpad);
   gst_pad_set_chain_function(jpegenc->sinkpad,gst_jpegenc_chain);
+  gst_pad_set_link_function(jpegenc->sinkpad, gst_jpegenc_link);
   gst_pad_set_get_function(jpegenc->sinkpad,gst_jpegenc_get);
   jpegenc->srcpad = gst_pad_new("src",GST_PAD_SRC);
   gst_element_add_pad(GST_ELEMENT(jpegenc),jpegenc->srcpad);
@@ -149,6 +152,29 @@ gst_jpegenc_init (GstJpegEnc *jpegenc)
   jpegenc->jdest.term_destination = gst_jpegenc_term_destination;
   jpegenc->cinfo.dest = &jpegenc->jdest;
 
+}
+
+static GstPadLinkReturn
+gst_jpegenc_link (GstPad *pad, GstCaps *caps)
+{
+  GstJpegEnc *jpegenc = GST_JPEGENC (gst_pad_get_parent (pad));
+
+  if (!GST_CAPS_IS_FIXED (caps))
+    return GST_PAD_LINK_DELAYED;
+
+  gst_caps_get (caps,
+		"framerate", &jpegenc->fps,
+		"width",     &jpegenc->width,
+		"height",    &jpegenc->height,
+		NULL);
+
+  caps = GST_CAPS_NEW ("jpegdec_srccaps",
+		       "video/x-jpeg",
+			 "width",     GST_PROPS_INT (jpegenc->width),
+			 "height",    GST_PROPS_INT (jpegenc->height),
+			 "framerate", GST_PROPS_FLOAT (jpegenc->fps));
+
+  return gst_pad_try_set_caps (jpegenc->srcpad, caps);
 }
 
 static void

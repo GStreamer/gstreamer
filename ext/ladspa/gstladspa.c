@@ -33,10 +33,10 @@ GST_PAD_TEMPLATE_FACTORY (ladspa_sink_factory,
   GST_PAD_REQUEST,
   GST_CAPS_NEW (
     "ladspa_sink",
-    "audio/raw",
+    "audio/x-raw-float",
+    "width",      GST_PROPS_INT (32),
+    "endianness", GST_PROPS_INT (G_BYTE_ORDER),
     "rate",       GST_PROPS_INT_RANGE (4000, 96000),
-    "format",     GST_PROPS_STRING ("float"),
-    "layout",     GST_PROPS_STRING ("gfloat"),
     "intercept",  GST_PROPS_FLOAT(0.0),
     "slope",      GST_PROPS_FLOAT(1.0),
     "channels",   GST_PROPS_INT (1)
@@ -49,10 +49,10 @@ GST_PAD_TEMPLATE_FACTORY (ladspa_src_factory,
   GST_PAD_REQUEST,
   GST_CAPS_NEW (
     "ladspa_src",
-    "audio/raw",
+    "audio/x-raw-float",
+    "width",      GST_PROPS_INT (32),
+    "endianness", GST_PROPS_INT (G_BYTE_ORDER),
     "rate",       GST_PROPS_INT_RANGE (4000, 96000),
-    "format",     GST_PROPS_STRING ("float"),
-    "layout",     GST_PROPS_STRING ("gfloat"),
     "intercept",  GST_PROPS_FLOAT (0.0),
     "slope",      GST_PROPS_FLOAT (1.0),
     "channels",   GST_PROPS_INT (1)
@@ -542,10 +542,10 @@ gst_ladspa_force_src_caps(GstLADSPA *ladspa, GstPad *pad)
   GST_DEBUG ("forcing caps with rate %d", ladspa->samplerate);
   gst_pad_try_set_caps (pad, gst_caps_new (
     "ladspa_src_caps",
-    "audio/raw",
+    "audio/x-raw-float",
     gst_props_new (
-      "format",     GST_PROPS_STRING ("float"),
-      "layout",     GST_PROPS_STRING ("gfloat"),
+      "width",      GST_PROPS_INT (32),
+      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
       "intercept",  GST_PROPS_FLOAT(0.0),
       "slope",      GST_PROPS_FLOAT(1.0),
       "rate",       GST_PROPS_INT (ladspa->samplerate),

@@ -52,15 +52,12 @@ enum {
   ARG_REVERB,
   ARG_SNDFXVOLUME,
   ARG_VOLUME,
-  ARG_MIXFREQ,
   ARG_INTERP,
   ARG_REVERSE,
   ARG_SURROUND,
-  ARG_16BIT,
   ARG_HQMIXER,
   ARG_SOFT_MUSIC,
-  ARG_SOFT_SNDFX,
-  ARG_STEREO
+  ARG_SOFT_SNDFX
 };
 
 
@@ -74,33 +71,11 @@ mikmod_src_factory (void)
       "src",
       GST_PAD_SRC,
       GST_PAD_ALWAYS,
-      gst_caps_new ( /* use16bit = TRUE */
+      gst_caps_new (
         "mikmod_src",
-        "audio/raw",
-        gst_props_new (
-          "format",     GST_PROPS_STRING ("int"),
-          "law",        GST_PROPS_INT (0),
-          "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-          "signed",     GST_PROPS_BOOLEAN (TRUE),
-          "width",      GST_PROPS_INT (16),
-          "depth",      GST_PROPS_INT (16),
-          "rate",       GST_PROPS_INT_RANGE (8000, 48000),
-          "channels",   GST_PROPS_INT_RANGE (1, 2),
-        NULL)),
-      gst_caps_new ( /* use16bit = FALSE */
-        "mikmod_src",
-        "audio/raw",
-        gst_props_new (
-          "format",     GST_PROPS_STRING ("int"),
-          "law",        GST_PROPS_INT (0),
-          "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-          "signed",     GST_PROPS_BOOLEAN (FALSE),
-          "width",      GST_PROPS_INT (8),
-          "depth",      GST_PROPS_INT (8),
-          "rate",       GST_PROPS_INT_RANGE (8000, 48000),
-          "channels",   GST_PROPS_INT_RANGE (1, 2),
-        NULL)),
-    NULL);
+        "audio/x-raw-int",
+          GST_AUDIO_INT_PAD_TEMPLATE_PROPS
+      ), NULL);
   }
   return template;
 }
@@ -118,7 +93,7 @@ mikmod_sink_factory (void)
       GST_PAD_ALWAYS,
       gst_caps_new (
         "mikmod_sink",
-        "audio/mod",
+        "audio/x-mod",
         NULL),NULL        
       );
   }
@@ -130,6 +105,7 @@ static void		gst_mikmod_class_init		(GstMikModClass *klass);
 static void		gst_mikmod_init			(GstMikMod *filter);
 static void		gst_mikmod_set_property 	(GObject *object, guint id, const GValue *value, GParamSpec *pspec );
 static void		gst_mikmod_get_property		(GObject *object, guint id, GValue *value, GParamSpec *pspec );
+static GstPadLinkReturn	gst_mikmod_srclink		(GstPad *pad, GstCaps *caps);
 static void             gst_mikmod_loop                 (GstElement *element);
 static gboolean		gst_mikmod_setup 		(GstMikMod *mikmod);
 static GstElementStateReturn  gst_mikmod_change_state 	(GstElement *element);
@@ -137,25 +113,6 @@ static GstElementStateReturn  gst_mikmod_change_state 	(GstElement *element);
 
 
 static GstElementClass *parent_class = NULL;
-
-#define GST_TYPE_MIKMOD_MIXFREQ (gst_mikmod_mixfreq_get_type())
-
-static GType 
-gst_mikmod_mixfreq_get_type (void)
-{
-  static GType mikmod_mixfreq_type = 0;
-  static GEnumValue mikmod_mixfreq[] = {
-    { 0, "8000",  "8000 Hz" },
-    { 1, "11025", "11025 Hz" },
-    { 2, "22100", "22100 Hz" },
-    { 3, "44100", "44100 Hz" },
-    { 0, NULL, NULL },
-  };
-  if (! mikmod_mixfreq_type ) {
-    mikmod_mixfreq_type = g_enum_register_static ("GstMikmodmixfreq", mikmod_mixfreq);
-  }
-  return mikmod_mixfreq_type;
-}
 
 GType
 gst_mikmod_get_type(void) {
@@ -211,9 +168,7 @@ gst_mikmod_class_init (GstMikModClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VOLUME,
     g_param_spec_int("volume", "volume", "volume",
     			0, 128, 96, G_PARAM_READWRITE ));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MIXFREQ,
-    g_param_spec_enum("mixfreq", "mixfreq", "mixfreq",
-    		       GST_TYPE_MIKMOD_MIXFREQ, 3,G_PARAM_READWRITE )); 			    			  
+			    			  
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_INTERP,
     g_param_spec_boolean("interp", "interp", "interp",
     		       FALSE, G_PARAM_READWRITE ));
@@ -223,9 +178,6 @@ gst_mikmod_class_init (GstMikModClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SURROUND,
     g_param_spec_boolean("surround", "surround", "surround",
     		       TRUE, G_PARAM_READWRITE ));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_16BIT,
-    g_param_spec_boolean("use16bit", "use16bit", "use16bit",
-    		       TRUE, G_PARAM_READWRITE ));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HQMIXER,
     g_param_spec_boolean("hqmixer", "hqmixer", "hqmixer",
     		       FALSE, G_PARAM_READWRITE ));
@@ -234,9 +186,6 @@ gst_mikmod_class_init (GstMikModClass *klass)
     		       TRUE, G_PARAM_READWRITE ));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SOFT_SNDFX,
     g_param_spec_boolean("soft_sndfx", "soft_sndfx", "soft_sndfx",
-    		       TRUE, G_PARAM_READWRITE ));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_STEREO,
-    g_param_spec_boolean("stereo", "stereo", "stereo",
     		       TRUE, G_PARAM_READWRITE ));
 
   
@@ -255,6 +204,7 @@ gst_mikmod_init (GstMikMod *filter)
 
   gst_element_add_pad(GST_ELEMENT(filter),filter->sinkpad);
   gst_element_add_pad(GST_ELEMENT(filter),filter->srcpad);
+  gst_pad_set_link_function (filter->srcpad, gst_mikmod_srclink);
   
   gst_element_set_loop_function (GST_ELEMENT (filter), gst_mikmod_loop);
   
@@ -276,12 +226,62 @@ gst_mikmod_init (GstMikMod *filter)
 }
 
 
+static GstPadLinkReturn
+gst_mikmod_negotiate (GstMikMod *mikmod)
+{
+  gint width, sign;
+
+  if ( mikmod->_16bit ) {
+    width = 16;
+    sign = TRUE;
+  } else {
+    width = 8;
+    sign = FALSE;
+  }
+
+  return gst_pad_try_set_caps (mikmod->srcpad, 
+		          GST_CAPS_NEW (
+			    "mikmod_src",
+			    "audio/x-raw-int",
+			      "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
+			      "signed",      GST_PROPS_BOOLEAN (sign),
+			      "width",       GST_PROPS_INT (width),
+			      "depth",       GST_PROPS_INT (width),
+			      "rate",        GST_PROPS_INT (mikmod->mixfreq),
+			      "channels",    GST_PROPS_INT (mikmod->stereo ? 2 : 1)));
+}
+
+
+static GstPadLinkReturn
+gst_mikmod_srclink (GstPad *pad, GstCaps *caps)
+{
+  GstMikMod *filter; 
+
+  filter = GST_MIKMOD (gst_pad_get_parent (pad));
+
+  if (gst_caps_has_property_typed (caps, "depth", GST_PROPS_INT_TYPE)) {
+    gint depth;
+    gst_caps_get_int (caps, "depth", &depth);
+    filter->_16bit = (depth == 16);
+  }
+  if (gst_caps_has_property_typed (caps, "channels", GST_PROPS_INT_TYPE)) {
+    gint channels;
+    gst_caps_get_int (caps, "channels", &channels);
+    filter->stereo = (channels == 2);
+  }
+  if (gst_caps_has_property_typed (caps, "rate", GST_PROPS_INT_TYPE)) {
+    gst_caps_get_int (caps, "rate", &filter->mixfreq);
+  }
+
+  return gst_mikmod_negotiate(filter);
+}
+
+
 static void
 gst_mikmod_loop (GstElement *element)
 {
   GstMikMod *mikmod;
   GstBuffer *buffer_in;
-  gint width, sign;
 
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_MIKMOD (element));
@@ -308,14 +308,13 @@ gst_mikmod_loop (GstElement *element)
     }
   }  
   
-  if ( mikmod->_16bit ) {
-    width = 16;
-    sign = TRUE;
-  } else {
-    width = 8;
-    sign = FALSE;
+  if (!GST_PAD_CAPS (mikmod->srcpad)) {
+    if (gst_mikmod_negotiate (mikmod) <= 0) {
+      gst_element_error (GST_ELEMENT (mikmod),
+			 "Failed to negotiate with next element in mikmod");
+      return;
+    }
   }
-
   gst_mikmod_setup( mikmod );
   
   MikMod_RegisterDriver(&drv_gst);
@@ -330,19 +329,6 @@ gst_mikmod_loop (GstElement *element)
   if ( ! Player_Active() )
     Player_Start(module);
 
-  gst_pad_try_set_caps (mikmod->srcpad, 
-		          GST_CAPS_NEW (
-			    "mikmod_src",
-			    "audio/raw",
-			      "format",      GST_PROPS_STRING ("int"),
-			      "law",         GST_PROPS_INT (0),
-			      "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
-			      "signed",      GST_PROPS_BOOLEAN (sign),
-			      "width",       GST_PROPS_INT (width),
-			      "depth",       GST_PROPS_INT (width),
-			      "rate",        GST_PROPS_INT (mikmod->mixfreq),
-			      "channels",    GST_PROPS_INT (2)));
-				    
   do {
     if ( Player_Active() ) {
 
@@ -482,9 +468,6 @@ gst_mikmod_set_property (GObject *object, guint id, const GValue *value, GParamS
     case ARG_VOLUME:
       filter->volume = g_value_get_int (value);
       break;
-    case ARG_MIXFREQ:
-      filter->mixfreq = g_value_get_enum (value);
-      break;
     case ARG_INTERP:
       filter->interp = g_value_get_boolean (value);
       break;
@@ -494,9 +477,6 @@ gst_mikmod_set_property (GObject *object, guint id, const GValue *value, GParamS
     case ARG_SURROUND:
       filter->surround = g_value_get_boolean (value);
       break;
-    case ARG_16BIT:
-      filter->_16bit = g_value_get_boolean (value);
-      break;
     case ARG_HQMIXER:
       filter->hqmixer = g_value_get_boolean (value);
       break;
@@ -505,9 +485,6 @@ gst_mikmod_set_property (GObject *object, guint id, const GValue *value, GParamS
       break;
     case ARG_SOFT_SNDFX:
       filter->soft_sndfx = g_value_get_boolean (value);
-      break;
-    case ARG_STEREO:
-      filter->stereo = g_value_get_boolean (value);
       break;
     default:
       break;
@@ -539,9 +516,6 @@ gst_mikmod_get_property (GObject *object, guint id, GValue *value, GParamSpec *p
     case ARG_VOLUME:
       g_value_set_int (value, filter->volume);
       break;
-    case ARG_MIXFREQ:
-      g_value_set_enum (value, filter->mixfreq);
-      break;
     case ARG_INTERP:
       g_value_set_boolean (value, filter->interp);
       break;
@@ -551,9 +525,6 @@ gst_mikmod_get_property (GObject *object, guint id, GValue *value, GParamSpec *p
     case ARG_SURROUND:
       g_value_set_boolean (value, filter->surround);
       break;
-    case ARG_16BIT:
-      g_value_set_boolean (value, filter->_16bit);
-      break;
     case ARG_HQMIXER:
       g_value_set_boolean (value, filter->hqmixer);
       break;
@@ -562,9 +533,6 @@ gst_mikmod_get_property (GObject *object, guint id, GValue *value, GParamSpec *p
       break;
     case ARG_SOFT_SNDFX:
       g_value_set_boolean (value, filter->soft_sndfx);
-      break;
-    case ARG_STEREO:
-      g_value_set_boolean (value, filter->stereo);
       break;
     default:
       break;

@@ -58,10 +58,15 @@ GST_PAD_TEMPLATE_FACTORY (cutter_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "test_src",
-    "audio/raw",
-      "channels", GST_PROPS_INT_RANGE (1, 2)
+  gst_caps_new (
+    "cutter_src_int",
+    "audio/x-raw-int",
+      GST_AUDIO_INT_PAD_TEMPLATE_PROPS
+  ),
+  gst_caps_new (
+    "cutter_src_float",
+    "audio/x-raw-float",
+      GST_AUDIO_INT_PAD_TEMPLATE_PROPS
   )
 );
 
@@ -69,10 +74,15 @@ GST_PAD_TEMPLATE_FACTORY (cutter_sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "test_src",
-    "audio/raw",
-      "channels", GST_PROPS_INT_RANGE (1, 2)
+  gst_caps_new (
+    "cutter_sink_int",
+    "audio/x-raw-int",
+      GST_AUDIO_INT_PAD_TEMPLATE_PROPS
+  ),
+  gst_caps_new (
+    "cutter_sink_float",
+    "audio/x-raw-float",
+      GST_AUDIO_INT_PAD_TEMPLATE_PROPS
   )
 );
 
@@ -126,7 +136,7 @@ gst_cutter_link (GstPad *pad, GstCaps *caps)
   otherpad = (pad == filter->srcpad ? filter->sinkpad : filter->srcpad);
 
   if (GST_CAPS_IS_FIXED (caps))
-    return gst_pad_try_set_caps (otherpad, caps);
+    return gst_pad_try_set_caps (otherpad, gst_caps_ref (caps));
   return GST_PAD_LINK_DELAYED;
 }
 
@@ -198,7 +208,7 @@ gst_cutter_init (GstCutter *filter)
   gst_pad_set_link_function (filter->sinkpad, gst_cutter_link);
   filter->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
-  gst_pad_set_link_function (filter->srcpad, gst_cutter_link);
+  /*gst_pad_set_link_function (filter->srcpad, gst_cutter_link);*/
 }
 
 static void

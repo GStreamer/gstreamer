@@ -67,9 +67,7 @@ GST_PAD_TEMPLATE_FACTORY (osssrc_src_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "osssrc_src",
-    "audio/raw",
-      "format",		GST_PROPS_STRING ("int"),
-      "law",     	GST_PROPS_INT (0),
+    "audio/x-raw-int",
       "endianness",     GST_PROPS_INT (G_BYTE_ORDER),
       "signed",   	GST_PROPS_LIST (
 			  GST_PROPS_BOOLEAN (TRUE),
@@ -265,15 +263,13 @@ gst_osssrc_negotiate (GstPad *pad)
   if (gst_pad_try_set_caps (src->srcpad, 
 	GST_CAPS_NEW (
     	  "oss_src",
-	  "audio/raw",
-            "format",       GST_PROPS_STRING ("int"),
-	      "law",        GST_PROPS_INT (src->common.law),
-	      "endianness", GST_PROPS_INT (src->common.endianness),
-	      "signed",     GST_PROPS_BOOLEAN (src->common.sign),
-	      "width",      GST_PROPS_INT (src->common.width),
-	      "depth",      GST_PROPS_INT (src->common.depth),
-	      "rate",       GST_PROPS_INT (src->common.rate),
-	      "channels",   GST_PROPS_INT (src->common.channels)
+	  "audio/x-raw-int",
+	    "endianness", GST_PROPS_INT (src->common.endianness),
+	    "signed",     GST_PROPS_BOOLEAN (src->common.sign),
+	    "width",      GST_PROPS_INT (src->common.width),
+	    "depth",      GST_PROPS_INT (src->common.depth),
+	    "rate",       GST_PROPS_INT (src->common.rate),
+	    "channels",   GST_PROPS_INT (src->common.channels)
         )) <= 0) 
   {
     return FALSE;

@@ -23,6 +23,7 @@
 #include <gst/gst.h>
 #include "gstlevel.h"
 #include "math.h"
+#include <gst/audio/audio.h>
 
 /* elementfactory information */
 static GstElementDetails level_details = {
@@ -58,11 +59,11 @@ level_src_factory (void)
       GST_PAD_ALWAYS,
       gst_caps_new (
         "test_src",
-        "audio/raw",
-	gst_props_new (
-          "channels", GST_PROPS_INT_RANGE (1, 2),
-	  NULL)),
-      NULL);
+        "audio/x-raw-int",
+	GST_AUDIO_INT_PAD_TEMPLATE_PROPS
+      ),
+      NULL
+    );
   }
   return template;
 }
@@ -79,11 +80,11 @@ level_sink_factory (void)
       GST_PAD_ALWAYS,
       gst_caps_new (
         "test_src",
-        "audio/raw",
-	gst_props_new (
-          "channels", GST_PROPS_INT_RANGE (1, 2),
-	  NULL)),
-      NULL);
+        "audio/x-raw-int",
+	GST_AUDIO_INT_PAD_TEMPLATE_PROPS
+      ),
+      NULL
+    );
   }
   return template;
 }
@@ -137,7 +138,7 @@ gst_level_connect (GstPad *pad, GstCaps *caps)
   if (GST_CAPS_IS_FIXED (caps)) 
   {
     /*if ( !volume_parse_caps (filter, caps) || */
-    return gst_pad_try_set_caps (otherpad, caps);
+    return gst_pad_try_set_caps (otherpad, gst_caps_ref (caps));
   }
   return GST_PAD_LINK_DELAYED;
 }

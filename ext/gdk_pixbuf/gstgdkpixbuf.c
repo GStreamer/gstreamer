@@ -81,10 +81,12 @@ GST_PAD_TEMPLATE_FACTORY (gst_gdk_pixbuf_src_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW(
     "gdk_pixbuf_src",
-    "video/raw",
-      "format", GST_PROPS_FOURCC(GST_MAKE_FOURCC('R','G','B',' ')),
+    "video/x-raw-rgb",
       "width", GST_PROPS_INT_RANGE(1,INT_MAX),
       "height", GST_PROPS_INT_RANGE(1,INT_MAX),
+      /* well, it's needed for connectivity but this
+       * doesn't really make sense... */
+      "framerate", GST_PROPS_FLOAT_RANGE(0, G_MAXFLOAT),
       "bpp", GST_PROPS_INT(32),
       "depth", GST_PROPS_INT(24),
       "endianness", GST_PROPS_INT(G_BIG_ENDIAN),
@@ -268,6 +270,7 @@ gst_gdk_pixbuf_chain (GstPad *pad, GstBuffer *buf)
     caps = gst_pad_get_caps(filter->srcpad);
     gst_caps_set(caps, "width", GST_PROPS_INT(filter->width));
     gst_caps_set(caps, "height", GST_PROPS_INT(filter->height));
+    gst_caps_set(caps, "framerate", GST_PROPS_FLOAT(0.));
 
     gst_pad_try_set_caps(filter->srcpad, caps);
   }

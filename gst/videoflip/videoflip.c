@@ -36,7 +36,6 @@ struct videoflip_format_struct videoflip_formats[] = {
 	/* planar */
 	{ "YV12", 12, gst_videoflip_planar411, },
 	{ "I420", 12, gst_videoflip_planar411, },
-	{ "IYUV", 12, gst_videoflip_planar411, },
 };
 
 int videoflip_n_formats = sizeof(videoflip_formats)/sizeof(videoflip_formats[0]);
@@ -53,8 +52,7 @@ videoflip_get_caps(struct videoflip_format_struct *format)
   fourcc = GST_MAKE_FOURCC(format->fourcc[0],format->fourcc[1],format->fourcc[2],format->fourcc[3]);
 
   if(format->bpp){
-    caps = GST_CAPS_NEW ("videoflip", "video/raw",
-		"format", GST_PROPS_FOURCC (fourcc),
+    caps = GST_CAPS_NEW ("videoflip", "video/x-raw-rgb",
 		"depth", GST_PROPS_INT(format->bpp),
 		"bpp", GST_PROPS_INT(format->depth),
 		"endianness", GST_PROPS_INT(format->endianness),
@@ -62,7 +60,7 @@ videoflip_get_caps(struct videoflip_format_struct *format)
 		"green_mask", GST_PROPS_INT(format->green_mask),
 		"blue_mask", GST_PROPS_INT(format->blue_mask));
   }else{
-    caps = GST_CAPS_NEW ("videoflip", "video/raw",
+    caps = GST_CAPS_NEW ("videoflip", "video/x-raw-yuv",
 		"format", GST_PROPS_FOURCC (fourcc));
   }
 

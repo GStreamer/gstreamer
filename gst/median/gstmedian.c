@@ -22,6 +22,7 @@
 #endif
 #include <string.h>
 #include <gstmedian.h>
+#include <gst/video/video.h>
 
 /* elementfactory information */
 static GstElementDetails median_details = {
@@ -38,10 +39,12 @@ GST_PAD_TEMPLATE_FACTORY (median_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
+  gst_caps_new (
    "median_src",
-   "video/raw",
-     "format",   GST_PROPS_FOURCC (GST_STR_FOURCC ("I420"))
+   "video/x-raw-yuv",
+    GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
+      GST_PROPS_FOURCC (GST_STR_FOURCC ("I420"))
+    )
   )
 )
 
@@ -49,10 +52,12 @@ GST_PAD_TEMPLATE_FACTORY (median_sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-   "median_src",
-   "video/raw",
-     "format",   GST_PROPS_FOURCC (GST_STR_FOURCC ("I420"))
+  gst_caps_new (
+    "median_src",
+    "video/x-raw-yuv",
+    GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
+      GST_PROPS_FOURCC (GST_STR_FOURCC ("I420"))
+    )
   )
 )
 

@@ -325,6 +325,7 @@ gst_flacenc_dispose (GObject *object)
 static GstPadLinkReturn
 gst_flacenc_sinkconnect (GstPad *pad, GstCaps *caps)
 {
+  GstPadLinkReturn ret;
   FlacEnc *flacenc;
 
   flacenc = GST_FLACENC (gst_pad_get_parent (pad));
@@ -336,6 +337,15 @@ gst_flacenc_sinkconnect (GstPad *pad, GstCaps *caps)
   gst_caps_get_int (caps, "depth", &flacenc->depth);
   gst_caps_get_int (caps, "rate", &flacenc->sample_rate);
   
+  caps = GST_CAPS_NEW ("flacenc_srccaps",
+                       "audio/x-flac",
+                         "channels", GST_PROPS_INT (flacenc->channels),
+                         "rate", GST_PROPS_INT (flacenc->sample_rate));
+  ret = gst_pad_try_set_caps (flacenc->srcpad, caps);
+  if (ret <= 0) {
+    return ret;
+  }
+
   FLAC__seekable_stream_encoder_set_bits_per_sample (flacenc->encoder, 
 		  			    flacenc->depth);
   FLAC__seekable_stream_encoder_set_sample_rate (flacenc->encoder, 
@@ -345,7 +355,7 @@ gst_flacenc_sinkconnect (GstPad *pad, GstCaps *caps)
 
   flacenc->negotiated = TRUE;
 
-  return GST_PAD_LINK_OK;
+  return ret;
 }
 
 static gboolean

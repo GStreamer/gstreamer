@@ -18,6 +18,7 @@
 
 #include <string.h>
 #include <gst/gst.h>
+#include <gst/video/video.h>
 
 #include "gstpngenc.h"
 
@@ -26,7 +27,13 @@ extern GstElementDetails gst_pngenc_details;
 static GstCaps*
 png_caps_factory (void)
 {
-  return gst_caps_new ( "png_png", "video/png", NULL);
+  return gst_caps_new ( "png_png",
+			"video/x-png",
+			gst_props_new (
+			  "width",     GST_PROPS_INT_RANGE (16, 4096),
+			  "height",    GST_PROPS_INT_RANGE (16, 4096),
+			  "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+			  NULL));
 }
 
 
@@ -34,17 +41,9 @@ static GstCaps*
 raw_caps_factory (void)
 { 
   return gst_caps_new ( "png_raw", 
-  			"video/raw",
-			 gst_props_new (
-			  "format",         GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB ")),
-	                  "bpp",            GST_PROPS_INT (24),
-			  "red_mask",       GST_PROPS_INT (0xff),
-			  "green_mask",     GST_PROPS_INT (0xff00),
-			  "blue_mask",      GST_PROPS_INT (0xff0000),
-			  "width",          GST_PROPS_INT_RANGE (16, 4096),
-			  "height",         GST_PROPS_INT_RANGE (16, 4096),
-			  NULL )
-	             );
+  			"video/x-raw-rgb",
+			 GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_24
+	              );
 }
 
 static gboolean

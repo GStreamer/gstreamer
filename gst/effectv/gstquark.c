@@ -180,7 +180,7 @@ gst_quarktv_sinkconnect (GstPad * pad, GstCaps * caps)
     filter->planetable[i] = NULL;
   }
 
-  return gst_pad_try_set_caps (filter->srcpad, caps);
+  return gst_pad_try_set_caps (filter->srcpad, gst_caps_ref (caps));
 }
 
 static void

@@ -107,6 +107,7 @@ static GstPadLinkReturn
 gst_pngenc_sinklink (GstPad *pad, GstCaps *caps)
 {
   GstPngEnc *pngenc;
+  gfloat fps;
 
   pngenc = GST_PNGENC (gst_pad_get_parent (pad));
 
@@ -115,7 +116,14 @@ gst_pngenc_sinklink (GstPad *pad, GstCaps *caps)
 
   gst_caps_get_int (caps, "width", &pngenc->width);
   gst_caps_get_int (caps, "height", &pngenc->height);
+  gst_caps_get_float (caps, "framerate", &fps);
   gst_caps_get_int (caps, "bpp", &pngenc->bpp);
+
+  caps = GST_CAPS_NEW ("png_src",
+		       "video/x-png",
+			 "framerate", GST_PROPS_FLOAT (fps),
+			 "width",     GST_PROPS_INT (pngenc->width),
+			 "height",    GST_PROPS_INT (pngenc->height));
 
   return gst_pad_try_set_caps (pngenc->srcpad, caps);
 }

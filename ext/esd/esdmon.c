@@ -103,30 +103,27 @@ GST_PAD_TEMPLATE_FACTORY (src_factory,
   GST_PAD_SRC,				/* type of the pad */
   GST_PAD_ALWAYS,			/* ALWAYS/SOMETIMES */
   GST_CAPS_NEW (
-    "esdmon_src8",				/* the name of the caps */
-    "audio/raw",				/* the mime type of the caps */
+    "esdmon_src",				/* the name of the caps */
+    "audio/x-raw-int",				/* the mime type of the caps */
       /* Properties follow: */
-      "format",       GST_PROPS_STRING ("int"),
-        "law",        GST_PROPS_INT (0),
         "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-        "signed",     GST_PROPS_BOOLEAN (TRUE),
-        "width",      GST_PROPS_INT (8),
-	"depth",      GST_PROPS_INT (8),
+	"signed",     GST_PROPS_LIST (
+			GST_PROPS_BOOLEAN (TRUE),
+			GST_PROPS_BOOLEAN (FALSE)
+		      ),
+        "width",      GST_PROPS_LIST (
+			GST_PROPS_INT (8),
+			GST_PROPS_INT (16)
+		      ),
+	"depth",      GST_PROPS_LIST (
+			GST_PROPS_INT (8),
+			GST_PROPS_INT (16)
+		      ),
 	"rate",       GST_PROPS_INT_RANGE (8000, 96000),
-     	"channels",   GST_PROPS_LIST (GST_PROPS_INT (1), GST_PROPS_INT (2))
-  ),
-  GST_CAPS_NEW (
-    "esdmon_src16",				/* the name of the caps */
-    "audio/raw",				/* the mime type of the caps */
-      /* Properties follow: */
-      "format",       GST_PROPS_STRING ("int"),
-        "law",        GST_PROPS_INT (0),
-        "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-        "signed",     GST_PROPS_BOOLEAN (TRUE),
-        "width",      GST_PROPS_INT (16),
-	"depth",      GST_PROPS_INT (16),
-	"rate",       GST_PROPS_INT_RANGE (8000, 96000),
-     	"channels",   GST_PROPS_LIST (GST_PROPS_INT (1), GST_PROPS_INT (2))
+     	"channels",   GST_PROPS_LIST (
+			GST_PROPS_INT (1),
+			GST_PROPS_INT (2)
+                      )
   )
 );
 
@@ -298,15 +295,14 @@ gst_esdmon_get (GstPad *pad)
       return NULL;
   }
   if (!GST_PAD_CAPS (pad)) {
+    gint sign = (esdmon->depth == 8 ? FALSE : TRUE);
     /* set caps on src pad */
     if (gst_pad_try_set_caps (esdmon->srcpad,
                     GST_CAPS_NEW (
                       "oss_src",
-                      "audio/raw",
-                        "format",       GST_PROPS_STRING ("int"),
-                          "law",        GST_PROPS_INT (0),              /*FIXME */
+                      "audio/x-raw-int",
                           "endianness", GST_PROPS_INT (G_BYTE_ORDER),   /*FIXME */
-                          "signed",     GST_PROPS_BOOLEAN (TRUE),       /*FIXME */
+                          "signed",     GST_PROPS_BOOLEAN (sign),       /*FIXME */
                           "width",      GST_PROPS_INT (esdmon->depth),
                           "depth",      GST_PROPS_INT (esdmon->depth),
                           "rate",       GST_PROPS_INT (esdmon->frequency),

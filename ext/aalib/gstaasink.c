@@ -26,6 +26,7 @@
 #include <sys/time.h>
 
 #include "gstaasink.h"
+#include <gst/video/video.h>
 
 /* elementfactory information */
 static GstElementDetails gst_aasink_details = {
@@ -65,10 +66,11 @@ GST_PAD_TEMPLATE_FACTORY (sink_template,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
+  gst_caps_new (
     "aasink_caps",
-    "video/raw",
-      "format", 	GST_PROPS_FOURCC (GST_STR_FOURCC ("I420"))
+    "video/x-raw-yuv",
+      GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
+	      GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")))
   )
 )
     
