@@ -1,5 +1,10 @@
 2004-06-25  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/sine/gstsinesrc.c: (gst_sinesrc_get):
+          fix wrong offsets
+
+2004-06-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* ext/alsa/gstalsasrc.c: (gst_alsa_src_init),
 	(gst_alsa_src_get_time), (gst_alsa_src_loop),
 	(gst_alsa_src_change_state):
