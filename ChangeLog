@@ -1,3 +1,9 @@
+2004-05-09  Benjamin Otte  <otte@gnome.org>
+
+	* ext/alsa/gstalsasrc.c: (gst_alsa_src_loop):
+	  don't use a fixed buffer size when writing variable length data to
+	  it. Fixes memory corruption and makes alsasrc work
+
 2004-05-09  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/gnomevfs/gstgnomevfssink.c:
