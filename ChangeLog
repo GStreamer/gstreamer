@@ -1,3 +1,13 @@
+2004-05-25  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/audioconvert/gstaudioconvert.c:
+	(gst_audio_convert_parse_caps):
+	  make sure we don't allow depth > width
+	* gst/audioconvert/gstaudioconvert.c: (gst_audio_convert_fixate):
+	  fixate endianness to G_BYTE_ORDER as default
+	* gst/audioscale/gstaudioscale.c:
+	  we don't handle another endianness as host-endianness
+
 2004-05-25  David Schleef  <ds@schleef.org>
 
 	* gst/ffmpegcolorspace/mem.c:  malloc() is in stdlib.h, not malloc.h
