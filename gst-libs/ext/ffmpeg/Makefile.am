@@ -1,5 +1,5 @@
 # this doesn't trigger the distdir target in the ffmpeg checkout
-DIST_SUBDIRS =
+DIST_SUBDIR=
 
 if USE_FFMPEG
 FFMPEG_DIR=ffmpeg
@@ -18,24 +18,23 @@ PATCHES = patch/function.patch
 
 patches:
 	@echo -n Patching ffmpeg if necessary ...
-	@patch -p0 -N -r rejects < patch/function.patch > /dev/null || true
+	@patch -p0 -N -r rejects <$(srcdir)/patch/function.patch > /dev/null || true
 	@rm -f rejects || true
 	@echo done.
 
 
-SUBDIRS = $(FFMPEG_DIR)
+SUBDIRS =
 
-DISTFILES = \
+EXTRA_DIST = \
 	$(PATCHES) \
 	Tag \
-	ffmpeg/COPYING \
+	ffmpeg/CVS
 	ffmpeg/CREDITS \
 	ffmpeg/INSTALL \
 	ffmpeg/README \
 	ffmpeg/VERSION \
 	ffmpeg/config.mak \
 	ffmpeg/configure \
-	ffmpeg/Makefile \
 	ffmpeg/cygwin_inttypes.h \
 	ffmpeg/ffserver.h \
 	ffmpeg/ffmpeg.c \
@@ -57,18 +56,13 @@ DISTFILES = \
 	ffmpeg/libavcodec/ps2/*.h \
 	ffmpeg/libavcodec/*.c \
 	ffmpeg/libavcodec/*.h \
-	ffmpeg/libavcodec/Makefile \
 	ffmpeg/libavformat/*.c \
 	ffmpeg/libavformat/*.h \
-	ffmpeg/libavformat/Makefile \
-	ffmpeg/tests/Makefile \
 	ffmpeg/tests/*.c \
 	ffmpeg/tests/*.ref \
 	ffmpeg/tests/*.sh \
 	ffmpeg/tests/test.conf \
-	ffmpeg/vhook/*.c \
-	ffmpeg/vhook/Makefile \
-	Makefile.in
+	ffmpeg/vhook/*.c
 
 
 checkout:
