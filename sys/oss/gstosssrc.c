@@ -92,6 +92,7 @@ static void 			gst_osssrc_get_property	(GObject *object, guint prop_id, GValue *
 static GstElementStateReturn 	gst_osssrc_change_state	(GstElement *element);
 
 static GstPadConnectReturn      gst_osssrc_connect (GstPad *pad, GstCaps *caps);
+static gboolean                 gst_osssrc_send_event (GstElement *element, GstEvent *event);
 static void 			gst_osssrc_close_audio	(GstOssSrc *src);
 static gboolean 		gst_osssrc_open_audio	(GstOssSrc *src);
 static void 			gst_osssrc_sync_parms	(GstOssSrc *osssrc);
@@ -157,6 +158,7 @@ gst_osssrc_class_init (GstOssSrcClass *klass)
   gobject_class->get_property = gst_osssrc_get_property;
 
   gstelement_class->change_state = gst_osssrc_change_state;
+  gstelement_class->send_event = gst_osssrc_send_event;
 }
 
 static void 
@@ -175,6 +177,9 @@ gst_osssrc_init (GstOssSrc *osssrc)
   osssrc->format = AFMT_S16_LE;
   osssrc->channels = 2;
   osssrc->frequency = 44100;
+
+  osssrc->need_eos = FALSE;
+  osssrc->need_sync = FALSE;
   
   osssrc->bytes_per_read = 4096;
   osssrc->curoffset = 0;
@@ -195,6 +200,12 @@ gst_osssrc_get (GstPad *pad)
 
   GST_DEBUG (GST_CAT_PLUGIN_INFO, "attempting to read something from the soundcard");
 
+  if (src->need_eos) {
+/*     gst_element_set_eos (GST_ELEMENT (src)); */
+    src->need_eos = FALSE;
+    return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
+  }
+  
   buf = gst_buffer_new ();
   g_return_val_if_fail (buf, NULL);
   
@@ -389,6 +400,29 @@ gst_osssrc_connect (GstPad *pad,
   return GST_PAD_CONNECT_OK;
 }
 
+static gboolean
+gst_osssrc_send_event (GstElement *element,
+		       GstEvent *event)
+{
+  gboolean retval = FALSE;
+  GstOssSrc *osssrc;
+
+  osssrc = GST_OSSSRC (element);
+
+  switch (GST_EVENT_TYPE (event)) {
+  case GST_EVENT_EOS:
+    osssrc->need_eos = TRUE;
+    retval = TRUE;
+    break;
+
+  default:
+    break;
+  }
+
+  gst_event_unref (event);
+  return retval;
+}
+
 static gboolean 
 gst_osssrc_open_audio (GstOssSrc *src) 
 {
@@ -473,4 +507,3 @@ gst_osssrc_factory_init (GstPlugin *plugin)
 
   return TRUE;
 }
-

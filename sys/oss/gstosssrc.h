@@ -70,8 +70,10 @@ struct _GstOssSrc {
   gint format;
   gint channels;
   gint frequency;
+
   gboolean need_sync; /* Do the parameters need resynced? */
-	
+  gboolean need_eos; /* Do we need to emit an EOS? */
+  
   /* blocking */
   guint64 basetime;
   guint64 samples_since_basetime;
