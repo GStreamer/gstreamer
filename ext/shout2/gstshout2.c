@@ -58,33 +58,20 @@ enum
   ARG_URL,                      /* Url of stream (I'm guessing) */
 };
 
-static GstPadTemplate *
-sink_template_factory (void)
-{
-  static GstPadTemplate *template = NULL;
-
-  if (!template) {
-    template = gst_pad_template_new ("sink",
-        GST_PAD_SINK,
-        GST_PAD_ALWAYS,
-        gst_caps_new ("shout2send_sink",
-            "application/ogg",
-            NULL),
-        gst_caps_new ("shout2send_sink",
-            "audio/mpeg",
-            gst_props_new ("mpegversion", GST_PROPS_INT (1),
-                "layer", GST_PROPS_INT_RANGE (1, 3), NULL)), NULL);
-  }
-
-  return template;
-}
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("application/x-ogg; "
+        "audio/mpeg, mpegversion = (int) 1, layer = (int) [ 1, 3 ]")
+    );
 
 static void gst_shout2send_class_init (GstShout2sendClass * klass);
 static void gst_shout2send_base_init (GstShout2sendClass * klass);
 static void gst_shout2send_init (GstShout2send * shout2send);
 
 static void gst_shout2send_chain (GstPad * pad, GstData * _data);
-static GstPadLinkReturn gst_shout2send_connect (GstPad * pad, GstCaps * caps);
+static GstPadLinkReturn gst_shout2send_connect (GstPad * pad,
+    const GstCaps * caps);
 
 static void gst_shout2send_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -103,11 +90,10 @@ gst_shout2send_protocol_get_type (void)
 {
   static GType shout2send_protocol_type = 0;
   static GEnumValue shout2send_protocol[] = {
-    {SHOUT2SEND_PROTOCOL_ICE, "1", "Ice Protocol"},
-    {SHOUT2SEND_PROTOCOL_XAUDIOCAST, "2",
+    {SHOUT2SEND_PROTOCOL_XAUDIOCAST, "1",
         "Xaudiocast Protocol (icecast 1.3.x)"},
-    {SHOUT2SEND_PROTOCOL_ICY, "3", "Icy Protocol (ShoutCast)"},
-    {SHOUT2SEND_PROTOCOL_HTTP, "4", "Http Protocol (icecast 2.x)"},
+    {SHOUT2SEND_PROTOCOL_ICY, "2", "Icy Protocol (ShoutCast)"},
+    {SHOUT2SEND_PROTOCOL_HTTP, "3", "Http Protocol (icecast 2.x)"},
     {0, NULL, NULL},
   };
 
@@ -148,7 +134,8 @@ gst_shout2send_base_init (GstShout2sendClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class, sink_template_factory ());
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
   gst_element_class_set_details (element_class, &shout2send_details);
 }
 
@@ -198,7 +185,8 @@ static void
 gst_shout2send_init (GstShout2send * shout2send)
 {
   shout2send->sinkpad =
-      gst_pad_new_from_template (sink_template_factory (), "sink");
+      gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
+      "sink");
   gst_element_add_pad (GST_ELEMENT (shout2send), shout2send->sinkpad);
   gst_pad_set_chain_function (shout2send->sinkpad, gst_shout2send_chain);
 
@@ -363,15 +351,17 @@ gst_shout2send_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static GstPadLinkReturn
-gst_shout2send_connect (GstPad * pad, GstCaps * caps)
+gst_shout2send_connect (GstPad * pad, const GstCaps * caps)
 {
+  const gchar *mimetype;
 
-  if (!strcmp (gst_caps_get_mime (caps), "audio/mpeg")) {
+  mimetype = gst_structure_get_name (gst_caps_get_structure (caps, 0));
+  if (!strcmp (mimetype, "audio/mpeg")) {
     audio_format = SHOUT_FORMAT_MP3;
     return GST_PAD_LINK_OK;
   }
 
-  if (!strcmp (gst_caps_get_mime (caps), "application/ogg")) {
+  if (!strcmp (mimetype, "application/ogg")) {
     audio_format = SHOUT_FORMAT_VORBIS;
     return GST_PAD_LINK_OK;
   } else {
@@ -402,9 +392,6 @@ gst_shout2send_change_state (GstElement * element)
       shout2send->conn = shout_new ();
 
       switch (shout2send->protocol) {
-        case SHOUT2SEND_PROTOCOL_ICE:
-          proto = SHOUT_PROTOCOL_ICE;
-          break;
         case SHOUT2SEND_PROTOCOL_XAUDIOCAST:
           proto = SHOUT_PROTOCOL_XAUDIOCAST;
           break;

@@ -1,3 +1,16 @@
+2004-05-12  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* configure.ac:
+	  enable shout2 by default
+	* ext/shout2/gstshout2.c: (gst_shout2send_protocol_get_type),
+	(gst_shout2send_base_init), (gst_shout2send_init),
+	(gst_shout2send_connect), (gst_shout2send_change_state):
+	* ext/shout2/gstshout2.h:
+	  make this work again. Based on a patch by Zaheer Merali (fixes
+	  #142262)
+	* ext/theora/theora.c: (plugin_init):
+	  don't set rank on encoders
+
 2004-05-11  Jeremy Simon  <jesimon@libertysurf.fr>
 
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_audio_caps):
