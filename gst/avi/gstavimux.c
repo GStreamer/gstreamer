@@ -491,9 +491,6 @@ gst_avimux_pad_unlink (GstPad   *pad,
   }
 
   GST_DEBUG(GST_CAT_PLUGIN_INFO, "pad '%s' unlinked", padname);
-
-  /* is this allowed? */
-  gst_pad_destroy(pad);
 }
 
 static GstPad*
