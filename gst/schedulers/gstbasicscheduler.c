@@ -1042,8 +1042,10 @@ gst_basic_scheduler_remove_element (GstScheduler * sched, GstElement * element)
     chain = gst_basic_scheduler_find_chain (bsched, element);
 
     /* remove it from its chain */
-    gst_basic_scheduler_chain_remove_element (chain, element);
-
+    if (chain != NULL) {
+      gst_basic_scheduler_chain_remove_element (chain, element);
+    }
+    
     /* remove it from the list of elements */
     bsched->elements = g_list_remove (bsched->elements, element);
     bsched->num_elements--;
