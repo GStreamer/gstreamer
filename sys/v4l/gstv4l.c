@@ -39,13 +39,13 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_element_register (plugin, "v4lelement",
-	  GST_RANK_NONE, GST_TYPE_V4LELEMENT) ||
+          GST_RANK_NONE, GST_TYPE_V4LELEMENT) ||
       !gst_element_register (plugin, "v4lsrc",
-	  GST_RANK_NONE, GST_TYPE_V4LSRC) ||
+          GST_RANK_NONE, GST_TYPE_V4LSRC) ||
       !gst_element_register (plugin, "v4lmjpegsrc",
-	  GST_RANK_NONE, GST_TYPE_V4LMJPEGSRC) ||
+          GST_RANK_NONE, GST_TYPE_V4LMJPEGSRC) ||
       !gst_element_register (plugin, "v4lmjpegsink",
-	  GST_RANK_NONE, GST_TYPE_V4LMJPEGSINK))
+          GST_RANK_NONE, GST_TYPE_V4LMJPEGSINK))
     return FALSE;
 
 #ifdef ENABLE_NLS

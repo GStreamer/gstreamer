@@ -52,24 +52,26 @@ typedef enum
   GST_OGG_STATE_SEEK,
   /* normal playback */
   GST_OGG_STATE_PLAY
-} GstOggState;
+}
+GstOggState;
 
 /* all information needed for one ogg stream */
 typedef struct
 {
-  GstPad *pad;			/* reference for this pad is held by element we belong to */
+  GstPad *pad;                  /* reference for this pad is held by element we belong to */
 
   gint serial;
   ogg_stream_state stream;
-  guint64 offset;		/* end offset of last buffer */
-  guint64 known_offset;		/* last known offset */
-  gint64 packetno;		/* number of next expected packet */
+  guint64 offset;               /* end offset of last buffer */
+  guint64 known_offset;         /* last known offset */
+  gint64 packetno;              /* number of next expected packet */
 
-  guint64 length;		/* length of stream or 0 */
-  glong pages;			/* number of pages in stream or 0 */
+  guint64 length;               /* length of stream or 0 */
+  glong pages;                  /* number of pages in stream or 0 */
 
   guint flags;
-} GstOggPad;
+}
+GstOggPad;
 
 typedef enum
 {
@@ -81,8 +83,9 @@ GstOggPadFlags;
 /* all information needed for one ogg chain (relevant for chained bitstreams) */
 typedef struct
 {
-  GSList *pads;			/* list of GstOggPad */
-} GstOggChain;
+  GSList *pads;                 /* list of GstOggPad */
+}
+GstOggChain;
 
 #define CURRENT_CHAIN(ogg) (&g_array_index ((ogg)->chains, GstOggChain, (ogg)->current_chain))
 #define FOR_PAD_IN_CURRENT_CHAIN(ogg, _pad, ...) G_STMT_START{			\
@@ -98,7 +101,8 @@ typedef enum
   GST_OGG_FLAG_BOS = GST_ELEMENT_FLAG_LAST,
   GST_OGG_FLAG_EOS,
   GST_OGG_FLAG_WAIT_FOR_DISCONT
-} GstOggFlag;
+}
+GstOggFlag;
 
 struct _GstOggDemux
 {
@@ -250,6 +254,7 @@ gst_ogg_demux_get_event_masks (GstPad * pad)
     {GST_EVENT_SEEK, GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH},
     {0,}
   };
+
   return gst_ogg_demux_src_event_masks;
 }
 static const GstQueryType *
@@ -260,6 +265,7 @@ gst_ogg_demux_get_query_types (GstPad * pad)
     GST_QUERY_POSITION,
     0
   };
+
   return gst_ogg_demux_src_query_types;
 }
 
@@ -295,15 +301,15 @@ gst_ogg_demux_src_query (GstPad * pad, GstQueryType type,
   switch (type) {
     case GST_QUERY_TOTAL:{
       if (*format == GST_FORMAT_DEFAULT) {
-	*value = cur->length;
-	res = TRUE;
+        *value = cur->length;
+        res = TRUE;
       }
       break;
     }
     case GST_QUERY_POSITION:
       if (*format == GST_FORMAT_DEFAULT && cur->length != 0) {
-	*value = cur->known_offset;
-	res = TRUE;
+        *value = cur->known_offset;
+        res = TRUE;
       }
       break;
     default:
@@ -337,40 +343,40 @@ gst_ogg_demux_src_event (GstPad * pad, GstEvent * event)
       gint64 offset;
 
       if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_DEFAULT)
-	goto error;
+        goto error;
       offset = GST_EVENT_SEEK_OFFSET (event);
       switch (GST_EVENT_SEEK_METHOD (event)) {
-	case GST_SEEK_METHOD_END:
-	  if (cur->length == 0 || offset > 0)
-	    goto error;
-	  offset = cur->length + offset;
-	  break;
-	case GST_SEEK_METHOD_CUR:
-	  offset += cur->known_offset;
-	  break;
-	case GST_SEEK_METHOD_SET:
-	  break;
-	default:
-	  g_warning ("invalid seek method in seek event");
-	  goto error;
+        case GST_SEEK_METHOD_END:
+          if (cur->length == 0 || offset > 0)
+            goto error;
+          offset = cur->length + offset;
+          break;
+        case GST_SEEK_METHOD_CUR:
+          offset += cur->known_offset;
+          break;
+        case GST_SEEK_METHOD_SET:
+          break;
+        default:
+          g_warning ("invalid seek method in seek event");
+          goto error;
       }
       if (offset < cur->known_offset) {
-	GstEvent *restart =
-	    gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_SET |
-	    GST_EVENT_SEEK_FLAGS (event), 0);
-	if (!gst_pad_send_event (GST_PAD_PEER (ogg->sinkpad), restart))
-	  goto error;
+        GstEvent *restart =
+            gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_SET |
+            GST_EVENT_SEEK_FLAGS (event), 0);
+        if (!gst_pad_send_event (GST_PAD_PEER (ogg->sinkpad), restart))
+          goto error;
       } else {
-	FOR_PAD_IN_CURRENT_CHAIN (ogg, pad, if (GST_PAD_IS_USABLE (pad->pad))
-	    gst_pad_push (pad->pad,
-		GST_DATA (gst_event_new (GST_EVENT_FLUSH))););
+        FOR_PAD_IN_CURRENT_CHAIN (ogg, pad, if (GST_PAD_IS_USABLE (pad->pad))
+            gst_pad_push (pad->pad,
+                GST_DATA (gst_event_new (GST_EVENT_FLUSH))););
       }
 
       GST_OGG_SET_STATE (ogg, GST_OGG_STATE_SEEK);
       FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-	  pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
       GST_DEBUG_OBJECT (ogg, "initiating seeking to offset %" G_GUINT64_FORMAT,
-	  offset);
+          offset);
       ogg->seek_pad = cur;
       ogg->seek_to = offset;
       gst_event_unref (event);
@@ -392,9 +398,9 @@ gst_ogg_start_playing (GstOggDemux * ogg)
 {
   GST_DEBUG_OBJECT (ogg, "got EOS in setup, changing to playback now");
   if (!gst_pad_send_event (GST_PAD_PEER (ogg->sinkpad),
-	  gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_SET, 0))) {
+          gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_SET, 0))) {
     GST_ELEMENT_ERROR (ogg, CORE, SEEK, (NULL),
-	("cannot seek to start after EOS"));
+        ("cannot seek to start after EOS"));
   }
   ogg->current_chain = 0;
   GST_FLAG_UNSET (ogg, GST_OGG_FLAG_EOS);
@@ -415,30 +421,30 @@ gst_ogg_demux_handle_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       GST_FLAG_UNSET (ogg, GST_OGG_FLAG_WAIT_FOR_DISCONT);
       FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-	  pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
       break;
     case GST_EVENT_EOS:
       if (ogg->state == GST_OGG_STATE_SETUP) {
-	gst_ogg_start_playing (ogg);
+        gst_ogg_start_playing (ogg);
       } else {
-	guint i;
-	GSList *walk;
+        guint i;
+        GSList *walk;
 
-	GST_DEBUG_OBJECT (ogg, "got EOS");
-	ogg->current_chain = -1;
-	for (i = 0; i < ogg->chains->len; i++) {
-	  GstOggChain *chain = &g_array_index (ogg->chains, GstOggChain, i);
+        GST_DEBUG_OBJECT (ogg, "got EOS");
+        ogg->current_chain = -1;
+        for (i = 0; i < ogg->chains->len; i++) {
+          GstOggChain *chain = &g_array_index (ogg->chains, GstOggChain, i);
 
-	  for (walk = chain->pads; walk; walk = g_slist_next (walk)) {
-	    GstOggPad *pad = (GstOggPad *) walk->data;
+          for (walk = chain->pads; walk; walk = g_slist_next (walk)) {
+            GstOggPad *pad = (GstOggPad *) walk->data;
 
-	    if (pad->pad && GST_PAD_IS_USABLE (pad->pad)) {
-	      gst_data_ref (GST_DATA (event));
-	      gst_pad_push (pad->pad, GST_DATA (event));
-	    }
-	  }
-	}
-	gst_element_set_eos (GST_ELEMENT (ogg));
+            if (pad->pad && GST_PAD_IS_USABLE (pad->pad)) {
+              gst_data_ref (GST_DATA (event));
+              gst_pad_push (pad->pad, GST_DATA (event));
+            }
+          }
+        }
+        gst_element_set_eos (GST_ELEMENT (ogg));
       }
       gst_event_unref (event);
       break;
@@ -505,7 +511,7 @@ gst_ogg_demux_chain (GstPad * pad, GstData * buffer)
   if (ogg_sync_wrote (&ogg->sync, GST_BUFFER_SIZE (buffer)) != 0) {
     gst_data_unref (buffer);
     GST_ELEMENT_ERROR (ogg, LIBRARY, TOO_LAZY, (NULL),
-	("ogg_sync_wrote failed"));
+        ("ogg_sync_wrote failed"));
     return;
   }
   offset_end = GST_BUFFER_OFFSET_IS_VALID (buffer) ?
@@ -517,99 +523,99 @@ gst_ogg_demux_chain (GstPad * pad, GstData * buffer)
     pageout_ret = ogg_sync_pageout (&ogg->sync, &page);
     switch (pageout_ret) {
       case -1:
-	/* FIXME: need some kind of discont here, we don't know any values to send though,
-	 * we only have the END_OFFSET */
-	break;
+        /* FIXME: need some kind of discont here, we don't know any values to send though,
+         * we only have the END_OFFSET */
+        break;
       case 0:
-	if (ogg->state == GST_OGG_STATE_SETUP) {
-	  guint64 length;
-	  GstFormat format = GST_FORMAT_BYTES;
+        if (ogg->state == GST_OGG_STATE_SETUP) {
+          guint64 length;
+          GstFormat format = GST_FORMAT_BYTES;
 
-	  if (!gst_pad_query (GST_PAD_PEER (ogg->sinkpad), GST_QUERY_TOTAL,
-		  &format, &length))
-	    length = 0;
-	  if (length <= offset_end) {
-	    gst_ogg_start_playing (ogg);
-	    goto out;
-	  }
-	}
-	break;
+          if (!gst_pad_query (GST_PAD_PEER (ogg->sinkpad), GST_QUERY_TOTAL,
+                  &format, &length))
+            length = 0;
+          if (length <= offset_end) {
+            gst_ogg_start_playing (ogg);
+            goto out;
+          }
+        }
+        break;
       case 1:
-	GST_LOG_OBJECT (ogg,
-	    "processing ogg page (serial %d, packet %ld, granule pos %llu",
-	    ogg_page_serialno (&page), ogg_page_pageno (&page),
-	    ogg_page_granulepos (&page));
-	switch (ogg->state) {
-	  case GST_OGG_STATE_SETUP:
-	    if (ogg_page_eos (&page)) {
-	      GstOggPad *cur = gst_ogg_pad_get_in_current_chain (ogg,
-		  ogg_page_serialno (&page));
+        GST_LOG_OBJECT (ogg,
+            "processing ogg page (serial %d, packet %ld, granule pos %llu",
+            ogg_page_serialno (&page), ogg_page_pageno (&page),
+            ogg_page_granulepos (&page));
+        switch (ogg->state) {
+          case GST_OGG_STATE_SETUP:
+            if (ogg_page_eos (&page)) {
+              GstOggPad *cur = gst_ogg_pad_get_in_current_chain (ogg,
+                  ogg_page_serialno (&page));
 
-	      GST_FLAG_SET (ogg, GST_OGG_FLAG_EOS);
-	      if (!cur) {
-		GST_ERROR_OBJECT (ogg, "unknown serial %d",
-		    ogg_page_serialno (&page));
-	      } else {
-		cur->pages = ogg_page_pageno (&page);
-		cur->length = ogg_page_granulepos (&page);
-	      }
-	    } else {
-	      if (GST_FLAG_IS_SET (ogg, GST_OGG_FLAG_EOS)
-		  && ogg_page_bos (&page)) {
-		gst_ogg_add_chain (ogg);
-	      }
-	      GST_FLAG_UNSET (ogg, GST_OGG_FLAG_EOS);
-	    }
-	    if (ogg_page_bos (&page)) {
-	      if (gst_ogg_pad_get_in_current_chain (ogg,
-		      ogg_page_serialno (&page))) {
-		GST_ERROR_OBJECT (ogg,
-		    "multiple BOS page for serial %d (page %ld)",
-		    ogg_page_serialno (&page), ogg_page_pageno (&page));
-	      } else {
-		GstOggPad *pad =
-		    gst_ogg_pad_new (ogg, ogg_page_serialno (&page));
-		CURRENT_CHAIN (ogg)->pads =
-		    g_slist_prepend (CURRENT_CHAIN (ogg)->pads, pad);
-	      }
-	      GST_FLAG_SET (ogg, GST_OGG_FLAG_BOS);
-	    } else {
-	      GST_FLAG_UNSET (ogg, GST_OGG_FLAG_BOS);
-	    }
-	    break;
-	  case GST_OGG_STATE_START:
-	    if (gst_pad_send_event (GST_PAD_PEER (ogg->sinkpad),
-		    gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_END,
-			0))) {
-	      GST_OGG_SET_STATE (ogg, GST_OGG_STATE_SETUP);
-	      GST_DEBUG_OBJECT (ogg, "stream can seek, try setup now");
-	      if (!gst_pad_send_event (GST_PAD_PEER (ogg->sinkpad),
-		      gst_event_new_seek (GST_FORMAT_BYTES |
-			  GST_SEEK_METHOD_SET, 0))) {
-		GST_ELEMENT_ERROR (ogg, CORE, SEEK, (NULL),
-		    ("stream can seek to end, but not to start. Can't handle that."));
-	      }
-	      gst_ogg_add_chain (ogg);
-	      GST_FLAG_SET (ogg, GST_OGG_FLAG_WAIT_FOR_DISCONT);
-	      goto out;
-	    }
-	    gst_ogg_add_chain (ogg);
-	    GST_OGG_SET_STATE (ogg, GST_OGG_STATE_PLAY);
-	    /* fall through */
-	  case GST_OGG_STATE_SEEK:
-	  case GST_OGG_STATE_PLAY:
-	    gst_ogg_demux_push (ogg, &page);
-	    break;
-	  default:
-	    g_assert_not_reached ();
-	    break;
-	}
-	break;
+              GST_FLAG_SET (ogg, GST_OGG_FLAG_EOS);
+              if (!cur) {
+                GST_ERROR_OBJECT (ogg, "unknown serial %d",
+                    ogg_page_serialno (&page));
+              } else {
+                cur->pages = ogg_page_pageno (&page);
+                cur->length = ogg_page_granulepos (&page);
+              }
+            } else {
+              if (GST_FLAG_IS_SET (ogg, GST_OGG_FLAG_EOS)
+                  && ogg_page_bos (&page)) {
+                gst_ogg_add_chain (ogg);
+              }
+              GST_FLAG_UNSET (ogg, GST_OGG_FLAG_EOS);
+            }
+            if (ogg_page_bos (&page)) {
+              if (gst_ogg_pad_get_in_current_chain (ogg,
+                      ogg_page_serialno (&page))) {
+                GST_ERROR_OBJECT (ogg,
+                    "multiple BOS page for serial %d (page %ld)",
+                    ogg_page_serialno (&page), ogg_page_pageno (&page));
+              } else {
+                GstOggPad *pad =
+                    gst_ogg_pad_new (ogg, ogg_page_serialno (&page));
+                CURRENT_CHAIN (ogg)->pads =
+                    g_slist_prepend (CURRENT_CHAIN (ogg)->pads, pad);
+              }
+              GST_FLAG_SET (ogg, GST_OGG_FLAG_BOS);
+            } else {
+              GST_FLAG_UNSET (ogg, GST_OGG_FLAG_BOS);
+            }
+            break;
+          case GST_OGG_STATE_START:
+            if (gst_pad_send_event (GST_PAD_PEER (ogg->sinkpad),
+                    gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_END,
+                        0))) {
+              GST_OGG_SET_STATE (ogg, GST_OGG_STATE_SETUP);
+              GST_DEBUG_OBJECT (ogg, "stream can seek, try setup now");
+              if (!gst_pad_send_event (GST_PAD_PEER (ogg->sinkpad),
+                      gst_event_new_seek (GST_FORMAT_BYTES |
+                          GST_SEEK_METHOD_SET, 0))) {
+                GST_ELEMENT_ERROR (ogg, CORE, SEEK, (NULL),
+                    ("stream can seek to end, but not to start. Can't handle that."));
+              }
+              gst_ogg_add_chain (ogg);
+              GST_FLAG_SET (ogg, GST_OGG_FLAG_WAIT_FOR_DISCONT);
+              goto out;
+            }
+            gst_ogg_add_chain (ogg);
+            GST_OGG_SET_STATE (ogg, GST_OGG_STATE_PLAY);
+            /* fall through */
+          case GST_OGG_STATE_SEEK:
+          case GST_OGG_STATE_PLAY:
+            gst_ogg_demux_push (ogg, &page);
+            break;
+          default:
+            g_assert_not_reached ();
+            break;
+        }
+        break;
       default:
-	GST_WARNING_OBJECT (ogg,
-	    "unknown return value %d from ogg_sync_pageout", pageout_ret);
-	pageout_ret = 0;
-	break;
+        GST_WARNING_OBJECT (ogg,
+            "unknown return value %d from ogg_sync_pageout", pageout_ret);
+        pageout_ret = 0;
+        break;
     }
   }
 out:
@@ -624,7 +630,7 @@ gst_ogg_pad_new (GstOggDemux * ogg, int serial)
   ret->serial = serial;
   if (ogg_stream_init (&ret->stream, serial) != 0) {
     GST_ERROR_OBJECT (ogg,
-	"Could not initialize ogg_stream struct for serial %d.", serial);
+        "Could not initialize ogg_stream struct for serial %d.", serial);
     g_free (ret);
     return NULL;
   }
@@ -649,8 +655,8 @@ gst_ogg_pad_remove (GstOggDemux * ogg, GstOggPad * pad)
   }
   if (ogg_stream_clear (&pad->stream) != 0)
     GST_ERROR_OBJECT (ogg,
-	"ogg_stream_clear (serial %d) did not return 0, ignoring this error",
-	pad->serial);
+        "ogg_stream_clear (serial %d) did not return 0, ignoring this error",
+        pad->serial);
   GST_LOG_OBJECT (ogg, "free ogg src %p for stream with serial %d", pad,
       pad->serial);
   g_free (pad);
@@ -674,53 +680,53 @@ br:
   if (ogg_page_bos (page)) {
     if (cur) {
       GST_DEBUG_OBJECT (ogg,
-	  "ogg page declared as BOS while stream %d already existed."
-	  "Possibly a seek happened.", cur->serial);
+          "ogg page declared as BOS while stream %d already existed."
+          "Possibly a seek happened.", cur->serial);
     } else if (cur) {
       GST_DEBUG_OBJECT (ogg, "reactivating deactivated stream %d.",
-	  cur->serial);
+          cur->serial);
     } else {
       /* FIXME: monitor if we are still in creation stage? */
       cur = gst_ogg_pad_new (ogg, ogg_page_serialno (page));
       if (!cur) {
-	GST_ELEMENT_ERROR (ogg, LIBRARY, TOO_LAZY, (NULL),
-	    ("Creating ogg_stream struct failed."));
-	return;
+        GST_ELEMENT_ERROR (ogg, LIBRARY, TOO_LAZY, (NULL),
+            ("Creating ogg_stream struct failed."));
+        return;
       }
       if (ogg->current_chain == -1) {
-	/* add new one at the end */
-	gst_ogg_add_chain (ogg);
+        /* add new one at the end */
+        gst_ogg_add_chain (ogg);
       }
       CURRENT_CHAIN (ogg)->pads =
-	  g_slist_prepend (CURRENT_CHAIN (ogg)->pads, cur);
+          g_slist_prepend (CURRENT_CHAIN (ogg)->pads, cur);
     }
   }
   if (cur == NULL) {
     GST_ELEMENT_ERROR (ogg, STREAM, DECODE, (NULL),
-	("invalid ogg stream serial no"));
+        ("invalid ogg stream serial no"));
     return;
   }
   if (ogg_stream_pagein (&cur->stream, page) != 0) {
     GST_WARNING_OBJECT (ogg,
-	"ogg stream choked on page (serial %d), resetting stream", cur->serial);
+        "ogg stream choked on page (serial %d), resetting stream", cur->serial);
     gst_ogg_pad_reset (ogg, cur);
     return;
   }
   switch (ogg->state) {
     case GST_OGG_STATE_SEEK:
       GST_LOG_OBJECT (ogg,
-	  "in seek - offset now: %" G_GUINT64_FORMAT
-	  " (pad %d) - desired offset %" G_GUINT64_FORMAT " (pad %d)",
-	  cur->known_offset, cur->serial, ogg->seek_to, ogg->seek_pad->serial);
+          "in seek - offset now: %" G_GUINT64_FORMAT
+          " (pad %d) - desired offset %" G_GUINT64_FORMAT " (pad %d)",
+          cur->known_offset, cur->serial, ogg->seek_to, ogg->seek_pad->serial);
       if (cur == ogg->seek_pad) {
-	if (ogg_page_granulepos (page) > ogg->seek_to) {
-	  GST_OGG_SET_STATE (ogg, GST_OGG_STATE_PLAY);
-	  GST_DEBUG_OBJECT (ogg,
-	      "ended seek at offset %" G_GUINT64_FORMAT " (requested  %"
-	      G_GUINT64_FORMAT, cur->known_offset, ogg->seek_to);
-	  ogg->seek_pad = NULL;
-	  ogg->seek_to = 0;
-	}
+        if (ogg_page_granulepos (page) > ogg->seek_to) {
+          GST_OGG_SET_STATE (ogg, GST_OGG_STATE_PLAY);
+          GST_DEBUG_OBJECT (ogg,
+              "ended seek at offset %" G_GUINT64_FORMAT " (requested  %"
+              G_GUINT64_FORMAT, cur->known_offset, ogg->seek_to);
+          ogg->seek_pad = NULL;
+          ogg->seek_to = 0;
+        }
       }
       /* fallthrough */
     case GST_OGG_STATE_PLAY:
@@ -733,7 +739,7 @@ br:
   }
   if (ogg_page_eos (page)) {
     GST_DEBUG_OBJECT (ogg, "got EOS for stream with serial %d, sending EOS now",
-	cur->serial);
+        cur->serial);
 #if 0
     /* Removing pads while PLAYING doesn't work with current schedulers */
     /* remove from list, as this will never be called again */
@@ -755,74 +761,74 @@ gst_ogg_pad_push (GstOggDemux * ogg, GstOggPad * pad)
     ret = ogg_stream_packetout (&pad->stream, &packet);
     switch (ret) {
       case 0:
-	return;
+        return;
       case -1:
-	gst_ogg_pad_reset (ogg, pad);
-	break;
+        gst_ogg_pad_reset (ogg, pad);
+        break;
       case 1:{
-	/* only push data when playing, not during seek or similar */
-	if (ogg->state != GST_OGG_STATE_PLAY)
-	  continue;
-	if (!pad->pad) {
-	  GstCaps *caps = gst_ogg_type_find (&packet);
-	  gchar *name = g_strdup_printf ("serial_%d", pad->serial);
+        /* only push data when playing, not during seek or similar */
+        if (ogg->state != GST_OGG_STATE_PLAY)
+          continue;
+        if (!pad->pad) {
+          GstCaps *caps = gst_ogg_type_find (&packet);
+          gchar *name = g_strdup_printf ("serial_%d", pad->serial);
 
-	  if (caps == NULL) {
-	    GST_WARNING_OBJECT (ogg,
-		"couldn't find caps for stream with serial %d", pad->serial);
-	    caps = gst_caps_new_simple ("application/octet-stream", NULL);
-	  }
-	  pad->pad =
-	      gst_pad_new_from_template (gst_static_pad_template_get
-	      (&ogg_demux_src_template_factory), name);
-	  g_free (name);
-	  gst_pad_set_event_function (pad->pad,
-	      GST_DEBUG_FUNCPTR (gst_ogg_demux_src_event));
-	  gst_pad_set_event_mask_function (pad->pad,
-	      GST_DEBUG_FUNCPTR (gst_ogg_demux_get_event_masks));
-	  gst_pad_set_query_function (pad->pad,
-	      GST_DEBUG_FUNCPTR (gst_ogg_demux_src_query));
-	  gst_pad_set_query_type_function (pad->pad,
-	      GST_DEBUG_FUNCPTR (gst_ogg_demux_get_query_types));
-	  gst_pad_use_explicit_caps (pad->pad);
-	  gst_pad_set_explicit_caps (pad->pad, caps);
-	  gst_pad_set_active (pad->pad, TRUE);
-	  gst_element_add_pad (GST_ELEMENT (ogg), pad->pad);
-	}
-	/* check for discont */
-	if (packet.packetno != pad->packetno++) {
-	  pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
-	  pad->packetno = packet.packetno + 1;
-	}
-	/* send discont if needed */
-	if ((pad->flags & GST_OGG_PAD_NEEDS_DISCONT)
-	    && GST_PAD_IS_USABLE (pad->pad)) {
-	  GstEvent *event = gst_event_new_discontinuous (FALSE,
-	      GST_FORMAT_DEFAULT, pad->known_offset);	/* FIXME: this might be wrong because we can only use the last known offset */
+          if (caps == NULL) {
+            GST_WARNING_OBJECT (ogg,
+                "couldn't find caps for stream with serial %d", pad->serial);
+            caps = gst_caps_new_simple ("application/octet-stream", NULL);
+          }
+          pad->pad =
+              gst_pad_new_from_template (gst_static_pad_template_get
+              (&ogg_demux_src_template_factory), name);
+          g_free (name);
+          gst_pad_set_event_function (pad->pad,
+              GST_DEBUG_FUNCPTR (gst_ogg_demux_src_event));
+          gst_pad_set_event_mask_function (pad->pad,
+              GST_DEBUG_FUNCPTR (gst_ogg_demux_get_event_masks));
+          gst_pad_set_query_function (pad->pad,
+              GST_DEBUG_FUNCPTR (gst_ogg_demux_src_query));
+          gst_pad_set_query_type_function (pad->pad,
+              GST_DEBUG_FUNCPTR (gst_ogg_demux_get_query_types));
+          gst_pad_use_explicit_caps (pad->pad);
+          gst_pad_set_explicit_caps (pad->pad, caps);
+          gst_pad_set_active (pad->pad, TRUE);
+          gst_element_add_pad (GST_ELEMENT (ogg), pad->pad);
+        }
+        /* check for discont */
+        if (packet.packetno != pad->packetno++) {
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
+          pad->packetno = packet.packetno + 1;
+        }
+        /* send discont if needed */
+        if ((pad->flags & GST_OGG_PAD_NEEDS_DISCONT)
+            && GST_PAD_IS_USABLE (pad->pad)) {
+          GstEvent *event = gst_event_new_discontinuous (FALSE,
+              GST_FORMAT_DEFAULT, pad->known_offset);   /* FIXME: this might be wrong because we can only use the last known offset */
 
-	  gst_pad_push (pad->pad, GST_DATA (event));
-	  pad->flags &= (~GST_OGG_PAD_NEEDS_DISCONT);
-	};
-	/* optimization: use a bufferpool containing the ogg packet? */
-	buf =
-	    gst_pad_alloc_buffer (pad->pad, GST_BUFFER_OFFSET_NONE,
-	    packet.bytes);
-	memcpy (buf->data, packet.packet, packet.bytes);
-	if (pad->offset != -1)
-	  GST_BUFFER_OFFSET (buf) = pad->offset;
-	if (packet.granulepos != -1)
-	  GST_BUFFER_OFFSET_END (buf) = packet.granulepos;
-	pad->offset = packet.granulepos;
-	if (GST_PAD_IS_USABLE (pad->pad))
-	  gst_pad_push (pad->pad, GST_DATA (buf));
-	break;
+          gst_pad_push (pad->pad, GST_DATA (event));
+          pad->flags &= (~GST_OGG_PAD_NEEDS_DISCONT);
+        };
+        /* optimization: use a bufferpool containing the ogg packet? */
+        buf =
+            gst_pad_alloc_buffer (pad->pad, GST_BUFFER_OFFSET_NONE,
+            packet.bytes);
+        memcpy (buf->data, packet.packet, packet.bytes);
+        if (pad->offset != -1)
+          GST_BUFFER_OFFSET (buf) = pad->offset;
+        if (packet.granulepos != -1)
+          GST_BUFFER_OFFSET_END (buf) = packet.granulepos;
+        pad->offset = packet.granulepos;
+        if (GST_PAD_IS_USABLE (pad->pad))
+          gst_pad_push (pad->pad, GST_DATA (buf));
+        break;
       }
       default:
-	GST_ERROR_OBJECT (ogg,
-	    "invalid return value %d for ogg_stream_packetout, resetting stream",
-	    ret);
-	gst_ogg_pad_reset (ogg, pad);
-	break;
+        GST_ERROR_OBJECT (ogg,
+            "invalid return value %d for ogg_stream_packetout, resetting stream",
+            ret);
+        gst_ogg_pad_reset (ogg, pad);
+        break;
     }
   }
 }
@@ -897,7 +903,8 @@ typedef struct
   ogg_packet *packet;
   guint best_probability;
   GstCaps *caps;
-} OggTypeFind;
+}
+OggTypeFind;
 static guint8 *
 ogg_find_peek (gpointer data, gint64 offset, guint size)
 {
@@ -975,7 +982,7 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GstOggChain *chain = &g_array_index (ogg->chains, GstOggChain, i);
 
     GST_INFO_OBJECT (ogg, "chain %d (%u streams):", i,
-	g_slist_length (chain->pads));
+        g_slist_length (chain->pads));
     for (walk = chain->pads; walk; walk = g_slist_next (walk)) {
       GstOggPad *pad = (GstOggPad *) walk->data;
 

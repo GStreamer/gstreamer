@@ -34,8 +34,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-yuv, "
-	"format = (fourcc) I420, "
-	"width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
+        "format = (fourcc) I420, "
+        "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
 
 static GstStaticPadTemplate video_sink_template_factory =
@@ -43,8 +43,8 @@ GST_STATIC_PAD_TEMPLATE ("video_sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-yuv, "
-	"format = (fourcc) I420, "
-	"width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
+        "format = (fourcc) I420, "
+        "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
 
 static GstStaticPadTemplate text_sink_template_factory =
@@ -88,9 +88,10 @@ gst_textoverlay_get_type (void)
       0,
       (GInstanceInitFunc) gst_textoverlay_init,
     };
+
     textoverlay_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstTextOverlay",
-	&textoverlay_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstTextOverlay",
+        &textoverlay_info, 0);
   }
   return textoverlay_type;
 }
@@ -129,35 +130,35 @@ gst_textoverlay_class_init (GstTextOverlayClass * klass)
   klass->pango_context = pango_ft2_get_context (72, 72);
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TEXT,
       g_param_spec_string ("text", "text",
-	  "Text to be display,"
-	  " in pango markup format.", "", G_PARAM_WRITABLE));
+          "Text to be display,"
+          " in pango markup format.", "", G_PARAM_WRITABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VALIGN,
       g_param_spec_string ("valign", "vertical alignment",
-	  "Vertical alignment of the text. "
-	  "Can be either 'baseline', 'bottom', or 'top'",
-	  "baseline", G_PARAM_WRITABLE));
+          "Vertical alignment of the text. "
+          "Can be either 'baseline', 'bottom', or 'top'",
+          "baseline", G_PARAM_WRITABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HALIGN,
       g_param_spec_string ("halign", "horizontal alignment",
-	  "Horizontal alignment of the text. "
-	  "Can be either 'left', 'right', or 'center'",
-	  "center", G_PARAM_WRITABLE));
+          "Horizontal alignment of the text. "
+          "Can be either 'left', 'right', or 'center'",
+          "center", G_PARAM_WRITABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_X0,
       g_param_spec_int ("x0", "X position",
-	  "Initial X position."
-	  " Horizontal aligment takes this point"
-	  " as reference.", G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));
+          "Initial X position."
+          " Horizontal aligment takes this point"
+          " as reference.", G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_Y0,
       g_param_spec_int ("y0", "Y position",
-	  "Initial Y position."
-	  " Vertical aligment takes this point"
-	  " as reference.", G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));
+          "Initial Y position."
+          " Vertical aligment takes this point"
+          " as reference.", G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FONT_DESC,
       g_param_spec_string ("font-desc", "font description",
-	  "Pango font description of font "
-	  "to be used for rendering. "
-	  "See documentation of "
-	  "pango_font_description_from_string"
-	  " for syntax.", "", G_PARAM_WRITABLE));
+          "Pango font description of font "
+          "to be used for rendering. "
+          "See documentation of "
+          "pango_font_description_from_string"
+          " for syntax.", "", G_PARAM_WRITABLE));
 }
 
 
@@ -231,22 +232,22 @@ static void
 gst_text_overlay_blit_yuv420 (GstTextOverlay * overlay, FT_Bitmap * bitmap,
     guchar * pixbuf, int x0, int y0)
 {
-  int y;			/* text bitmap coordinates */
-  int x1, y1;			/* video buffer coordinates */
+  int y;                        /* text bitmap coordinates */
+  int x1, y1;                   /* video buffer coordinates */
   int rowinc, bit_rowinc, uv_rowinc;
   guchar *p, *bitp, *u_p;
   int video_width = overlay->width, video_height = overlay->height;
-  int bitmap_x0 = x0 < 1 ? -(x0 - 1) : 1;	/* 1 pixel border */
-  int bitmap_y0 = y0 < 1 ? -(y0 - 1) : 1;	/* 1 pixel border */
+  int bitmap_x0 = x0 < 1 ? -(x0 - 1) : 1;       /* 1 pixel border */
+  int bitmap_y0 = y0 < 1 ? -(y0 - 1) : 1;       /* 1 pixel border */
   int bitmap_width = bitmap->width - bitmap_x0;
   int bitmap_height = bitmap->rows - bitmap_y0;
   int u_plane_size;
   int skip_y, skip_x;
   guchar v;
 
-  if (x0 + bitmap_x0 + bitmap_width > video_width - 1)	/* 1 pixel border */
+  if (x0 + bitmap_x0 + bitmap_width > video_width - 1)  /* 1 pixel border */
     bitmap_width -= x0 + bitmap_x0 + bitmap_width - video_width + 1;
-  if (y0 + bitmap_y0 + bitmap_height > video_height - 1)	/* 1 pixel border */
+  if (y0 + bitmap_y0 + bitmap_height > video_height - 1)        /* 1 pixel border */
     bitmap_height -= y0 + bitmap_y0 + bitmap_height - video_height + 1;
 
   rowinc = video_width - bitmap_width;
@@ -264,10 +265,10 @@ gst_text_overlay_blit_yuv420 (GstTextOverlay * overlay, FT_Bitmap * bitmap,
     for (n = bitmap_width; n > 0; --n) {
       v = *bitp;
       if (v) {
-	p[-1] = CLAMP (p[-1] - v, 0, 255);
-	p[1] = CLAMP (p[1] - v, 0, 255);
-	p[-video_width] = CLAMP (p[-video_width] - v, 0, 255);
-	p[video_width] = CLAMP (p[video_width] - v, 0, 255);
+        p[-1] = CLAMP (p[-1] - v, 0, 255);
+        p[1] = CLAMP (p[1] - v, 0, 255);
+        p[-video_width] = CLAMP (p[-video_width] - v, 0, 255);
+        p[video_width] = CLAMP (p[video_width] - v, 0, 255);
       }
       p++;
       bitp++;
@@ -295,15 +296,15 @@ gst_text_overlay_blit_yuv420 (GstTextOverlay * overlay, FT_Bitmap * bitmap,
     for (n = bitmap_width; n > 0; --n) {
       v = *bitp;
       if (v) {
-	*p = v;
-	if (!skip_y) {
-	  u_p[0] = u_p[u_plane_size] = 0x80;
-	}
+        *p = v;
+        if (!skip_y) {
+          u_p[0] = u_p[u_plane_size] = 0x80;
+        }
       }
       if (!skip_y) {
-	skip_x = !skip_x;
-	if (!skip_x)
-	  u_p++;
+        skip_x = !skip_x;
+        if (!skip_x)
+          u_p++;
       }
       p++;
       bitp++;
@@ -414,7 +415,7 @@ gst_textoverlay_loop (GstElement * element)
 
   if (overlay->next_buffer &&
       (GST_BUFFER_TIMESTAMP (overlay->next_buffer) <= now ||
-	  GST_BUFFER_TIMESTAMP (overlay->next_buffer) == GST_CLOCK_TIME_NONE)) {
+          GST_BUFFER_TIMESTAMP (overlay->next_buffer) == GST_CLOCK_TIME_NONE)) {
     GST_DEBUG ("using new buffer");
 
     if (overlay->current_buffer) {
@@ -424,11 +425,11 @@ gst_textoverlay_loop (GstElement * element)
     overlay->next_buffer = NULL;
 
     GST_DEBUG ("rendering '%*s'",
-	GST_BUFFER_SIZE (overlay->current_buffer),
-	GST_BUFFER_DATA (overlay->current_buffer));
+        GST_BUFFER_SIZE (overlay->current_buffer),
+        GST_BUFFER_DATA (overlay->current_buffer));
     pango_layout_set_markup (overlay->layout,
-	GST_BUFFER_DATA (overlay->current_buffer),
-	GST_BUFFER_SIZE (overlay->current_buffer));
+        GST_BUFFER_DATA (overlay->current_buffer),
+        GST_BUFFER_SIZE (overlay->current_buffer));
     render_text (overlay);
     overlay->need_render = FALSE;
   }
@@ -445,7 +446,7 @@ gst_textoverlay_loop (GstElement * element)
   if (overlay->need_render) {
     GST_DEBUG ("rendering '%s'", overlay->default_text);
     pango_layout_set_markup (overlay->layout,
-	overlay->default_text, strlen (overlay->default_text));
+        overlay->default_text, strlen (overlay->default_text));
     render_text (overlay);
 
     overlay->need_render = FALSE;
@@ -547,7 +548,7 @@ gst_textoverlay_set_property (GObject * object, guint prop_id,
 
     case ARG_TEXT:
       if (overlay->default_text) {
-	g_free (overlay->default_text);
+        g_free (overlay->default_text);
       }
       overlay->default_text = g_strdup (g_value_get_string (value));
       overlay->need_render = TRUE;
@@ -555,26 +556,26 @@ gst_textoverlay_set_property (GObject * object, guint prop_id,
 
     case ARG_VALIGN:
       if (strcasecmp (g_value_get_string (value), "baseline") == 0)
-	overlay->valign = GST_TEXT_OVERLAY_VALIGN_BASELINE;
+        overlay->valign = GST_TEXT_OVERLAY_VALIGN_BASELINE;
       else if (strcasecmp (g_value_get_string (value), "bottom") == 0)
-	overlay->valign = GST_TEXT_OVERLAY_VALIGN_BOTTOM;
+        overlay->valign = GST_TEXT_OVERLAY_VALIGN_BOTTOM;
       else if (strcasecmp (g_value_get_string (value), "top") == 0)
-	overlay->valign = GST_TEXT_OVERLAY_VALIGN_TOP;
+        overlay->valign = GST_TEXT_OVERLAY_VALIGN_TOP;
       else
-	g_warning ("Invalid 'valign' property value: %s",
-	    g_value_get_string (value));
+        g_warning ("Invalid 'valign' property value: %s",
+            g_value_get_string (value));
       break;
 
     case ARG_HALIGN:
       if (strcasecmp (g_value_get_string (value), "left") == 0)
-	overlay->halign = GST_TEXT_OVERLAY_HALIGN_LEFT;
+        overlay->halign = GST_TEXT_OVERLAY_HALIGN_LEFT;
       else if (strcasecmp (g_value_get_string (value), "right") == 0)
-	overlay->halign = GST_TEXT_OVERLAY_HALIGN_RIGHT;
+        overlay->halign = GST_TEXT_OVERLAY_HALIGN_RIGHT;
       else if (strcasecmp (g_value_get_string (value), "center") == 0)
-	overlay->halign = GST_TEXT_OVERLAY_HALIGN_CENTER;
+        overlay->halign = GST_TEXT_OVERLAY_HALIGN_CENTER;
       else
-	g_warning ("Invalid 'halign' property value: %s",
-	    g_value_get_string (value));
+        g_warning ("Invalid 'halign' property value: %s",
+            g_value_get_string (value));
       break;
 
     case ARG_X0:
@@ -591,13 +592,13 @@ gst_textoverlay_set_property (GObject * object, guint prop_id,
 
       desc = pango_font_description_from_string (g_value_get_string (value));
       if (desc) {
-	g_message ("font description set: %s", g_value_get_string (value));
-	pango_layout_set_font_description (overlay->layout, desc);
-	pango_font_description_free (desc);
-	render_text (overlay);
+        g_message ("font description set: %s", g_value_get_string (value));
+        pango_layout_set_font_description (overlay->layout, desc);
+        pango_font_description_free (desc);
+        render_text (overlay);
       } else
-	g_warning ("font description parse failed: %s",
-	    g_value_get_string (value));
+        g_warning ("font description parse failed: %s",
+            g_value_get_string (value));
       break;
     }
 
@@ -627,7 +628,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "textoverlay", GST_RANK_PRIMARY,
-	  GST_TYPE_TEXTOVERLAY))
+          GST_TYPE_TEXTOVERLAY))
     return FALSE;
 
   /*texttestsrc_plugin_init(module, plugin); */

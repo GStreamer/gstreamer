@@ -239,7 +239,7 @@ gst_audio_convert_chain (GstPad * pad, GstData * data)
 
   if (!gst_pad_is_negotiated (this->sink)) {
     GST_ELEMENT_ERROR (this, CORE, NEGOTIATION, (NULL),
-	("Sink pad not negotiated before chain function"));
+        ("Sink pad not negotiated before chain function"));
     return;
   }
   if (!gst_pad_is_negotiated (this->src)) {
@@ -327,13 +327,13 @@ gst_audio_convert_parse_caps (const GstCaps * gst_caps,
       || !gst_structure_get_int (structure, "width", &caps->width)
       || !gst_structure_get_int (structure, "rate", &caps->rate)
       || (caps->is_int
-	  && (!gst_structure_get_boolean (structure, "signed", &caps->sign)
-	      || !gst_structure_get_int (structure, "depth", &caps->depth)
-	      || (caps->width != 8
-		  && !gst_structure_get_int (structure, "endianness",
-		      &caps->endianness)))) || (!caps->is_int
-	  && !gst_structure_get_int (structure, "buffer-frames",
-	      &caps->buffer_frames))) {
+          && (!gst_structure_get_boolean (structure, "signed", &caps->sign)
+              || !gst_structure_get_int (structure, "depth", &caps->depth)
+              || (caps->width != 8
+                  && !gst_structure_get_int (structure, "endianness",
+                      &caps->endianness)))) || (!caps->is_int
+          && !gst_structure_get_int (structure, "buffer-frames",
+              &caps->buffer_frames))) {
     GST_DEBUG ("could not get some values from structure");
     return FALSE;
   }
@@ -379,10 +379,10 @@ gst_audio_convert_link (GstPad * pad, const GstCaps * caps)
     gst_structure_set (structure, "rate", G_TYPE_INT, ac_caps.rate, NULL);
     if (strcmp (gst_structure_get_name (structure), "audio/x-raw-float") == 0) {
       if (!ac_caps.is_int) {
-	gst_structure_set (structure, "buffer-frames", G_TYPE_INT,
-	    ac_caps.buffer_frames, NULL);
+        gst_structure_set (structure, "buffer-frames", G_TYPE_INT,
+            ac_caps.buffer_frames, NULL);
       } else {
-	gst_structure_set (structure, "buffer-frames", G_TYPE_INT, 0, NULL);
+        gst_structure_set (structure, "buffer-frames", G_TYPE_INT, 0, NULL);
       }
     }
   }
@@ -393,7 +393,7 @@ gst_audio_convert_link (GstPad * pad, const GstCaps * caps)
 
   /* woohoo, got it */
   if (!gst_audio_convert_parse_caps (gst_pad_get_negotiated_caps (otherpad),
-	  &other_ac_caps)) {
+          &other_ac_caps)) {
     g_critical ("internal negotiation error");
     return GST_PAD_LINK_REFUSED;
   }
@@ -446,15 +446,15 @@ gst_audio_convert_get_buffer (GstBuffer * buf, guint size)
     gst_buffer_ref (buf);
     buf->size = size;
     GST_LOG
-	("returning same buffer with adjusted values. data: %p - size: %u - maxsize: %u",
-	buf->data, buf->size, buf->maxsize);
+        ("returning same buffer with adjusted values. data: %p - size: %u - maxsize: %u",
+        buf->data, buf->size, buf->maxsize);
     return buf;
   } else {
     ret = gst_buffer_new_and_alloc (size);
     g_assert (ret);
     gst_buffer_stamp (ret, buf);
     GST_LOG ("returning new buffer. data: %p - size: %u - maxsize: %u",
-	ret->data, ret->size, ret->maxsize);
+        ret->data, ret->size, ret->maxsize);
     return ret;
   }
 }
@@ -496,48 +496,48 @@ gst_audio_convert_buffer_to_default_format (GstAudioConvert * this,
 
   if (this->sinkcaps.is_int) {
     if (this->sinkcaps.width == 32 && this->sinkcaps.depth == 32 &&
-	this->sinkcaps.endianness == G_BYTE_ORDER
-	&& this->sinkcaps.sign == TRUE)
+        this->sinkcaps.endianness == G_BYTE_ORDER
+        && this->sinkcaps.sign == TRUE)
       return buf;
 
     ret =
-	gst_audio_convert_get_buffer (buf,
-	buf->size * 32 / this->sinkcaps.width);
+        gst_audio_convert_get_buffer (buf,
+        buf->size * 32 / this->sinkcaps.width);
 
     count = ret->size / 4;
     src = buf->data + (count - 1) * (this->sinkcaps.width / 8);
     dest = (gint32 *) ret->data;
     for (i = count - 1; i >= 0; i--) {
       switch (this->sinkcaps.width) {
-	case 8:
-	  if (this->sinkcaps.sign) {
-	    CONVERT_TO (cur, src, gint8, this->sinkcaps.sign,
-		this->sinkcaps.endianness, GINT8_IDENTITY, GINT8_IDENTITY);
-	  } else {
-	    CONVERT_TO (cur, src, guint8, this->sinkcaps.sign,
-		this->sinkcaps.endianness, GUINT8_IDENTITY, GUINT8_IDENTITY);
-	  }
-	  break;
-	case 16:
-	  if (this->sinkcaps.sign) {
-	    CONVERT_TO (cur, src, gint16, this->sinkcaps.sign,
-		this->sinkcaps.endianness, GINT16_FROM_LE, GINT16_FROM_BE);
-	  } else {
-	    CONVERT_TO (cur, src, guint16, this->sinkcaps.sign,
-		this->sinkcaps.endianness, GUINT16_FROM_LE, GUINT16_FROM_BE);
-	  }
-	  break;
-	case 32:
-	  if (this->sinkcaps.sign) {
-	    CONVERT_TO (cur, src, gint32, this->sinkcaps.sign,
-		this->sinkcaps.endianness, GINT32_FROM_LE, GINT32_FROM_BE);
-	  } else {
-	    CONVERT_TO (cur, src, guint32, this->sinkcaps.sign,
-		this->sinkcaps.endianness, GUINT32_FROM_LE, GUINT32_FROM_BE);
-	  }
-	  break;
-	default:
-	  g_assert_not_reached ();
+        case 8:
+          if (this->sinkcaps.sign) {
+            CONVERT_TO (cur, src, gint8, this->sinkcaps.sign,
+                this->sinkcaps.endianness, GINT8_IDENTITY, GINT8_IDENTITY);
+          } else {
+            CONVERT_TO (cur, src, guint8, this->sinkcaps.sign,
+                this->sinkcaps.endianness, GUINT8_IDENTITY, GUINT8_IDENTITY);
+          }
+          break;
+        case 16:
+          if (this->sinkcaps.sign) {
+            CONVERT_TO (cur, src, gint16, this->sinkcaps.sign,
+                this->sinkcaps.endianness, GINT16_FROM_LE, GINT16_FROM_BE);
+          } else {
+            CONVERT_TO (cur, src, guint16, this->sinkcaps.sign,
+                this->sinkcaps.endianness, GUINT16_FROM_LE, GUINT16_FROM_BE);
+          }
+          break;
+        case 32:
+          if (this->sinkcaps.sign) {
+            CONVERT_TO (cur, src, gint32, this->sinkcaps.sign,
+                this->sinkcaps.endianness, GINT32_FROM_LE, GINT32_FROM_BE);
+          } else {
+            CONVERT_TO (cur, src, guint32, this->sinkcaps.sign,
+                this->sinkcaps.endianness, GUINT32_FROM_LE, GUINT32_FROM_BE);
+          }
+          break;
+        default:
+          g_assert_not_reached ();
       }
       cur = cur * ((gint64) 1 << (32 - this->sinkcaps.depth));
       cur = CLAMP (cur, -((gint64) 1 << 32), (gint64) 0x7FFFFFFF);
@@ -608,10 +608,10 @@ gst_audio_convert_buffer_from_default_format (GstAudioConvert * this,
   if (this->srccaps.is_int) {
     guint8 *dest;
 
-    count = buf->size / 4;	/* size is undefined after gst_audio_convert_get_buffer! */
+    count = buf->size / 4;      /* size is undefined after gst_audio_convert_get_buffer! */
     ret =
-	gst_audio_convert_get_buffer (buf,
-	buf->size * this->srccaps.width / 32);
+        gst_audio_convert_get_buffer (buf,
+        buf->size * this->srccaps.width / 32);
 
     dest = ret->data;
     src = (gint32 *) buf->data;
@@ -621,29 +621,29 @@ gst_audio_convert_buffer_from_default_format (GstAudioConvert * this,
 
       src++;
       switch (this->srccaps.width) {
-	case 8:
-	  if (this->srccaps.sign) {
-	    POPULATE (gint8, GINT8_IDENTITY, GINT8_IDENTITY);
-	  } else {
-	    POPULATE (guint8, GUINT8_IDENTITY, GUINT8_IDENTITY);
-	  }
-	  break;
-	case 16:
-	  if (this->srccaps.sign) {
-	    POPULATE (gint16, GINT16_TO_BE, GINT16_TO_LE);
-	  } else {
-	    POPULATE (guint16, GUINT16_TO_BE, GUINT16_TO_LE);
-	  }
-	  break;
-	case 32:
-	  if (this->srccaps.sign) {
-	    POPULATE (gint32, GINT32_TO_BE, GINT32_TO_LE);
-	  } else {
-	    POPULATE (guint32, GUINT32_TO_BE, GUINT32_TO_LE);
-	  }
-	  break;
-	default:
-	  g_assert_not_reached ();
+        case 8:
+          if (this->srccaps.sign) {
+            POPULATE (gint8, GINT8_IDENTITY, GINT8_IDENTITY);
+          } else {
+            POPULATE (guint8, GUINT8_IDENTITY, GUINT8_IDENTITY);
+          }
+          break;
+        case 16:
+          if (this->srccaps.sign) {
+            POPULATE (gint16, GINT16_TO_BE, GINT16_TO_LE);
+          } else {
+            POPULATE (guint16, GUINT16_TO_BE, GUINT16_TO_LE);
+          }
+          break;
+        case 32:
+          if (this->srccaps.sign) {
+            POPULATE (gint32, GINT32_TO_BE, GINT32_TO_LE);
+          } else {
+            POPULATE (guint32, GUINT32_TO_BE, GUINT32_TO_LE);
+          }
+          break;
+        default:
+          g_assert_not_reached ();
       }
     }
   } else {
@@ -651,10 +651,10 @@ gst_audio_convert_buffer_from_default_format (GstAudioConvert * this,
 
     /* 1 / (2^31-1) * i */
 #define INT2FLOAT(i) (4.6566128752457969e-10 * ((gfloat)i))
-    count = buf->size / 4;	/* size is undefined after gst_audio_convert_get_buffer! */
+    count = buf->size / 4;      /* size is undefined after gst_audio_convert_get_buffer! */
     ret =
-	gst_audio_convert_get_buffer (buf,
-	buf->size * this->srccaps.width / 32);
+        gst_audio_convert_get_buffer (buf,
+        buf->size * this->srccaps.width / 32);
 
     dest = (gfloat *) ret->data;
     src = (gint32 *) buf->data;
@@ -708,7 +708,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "audioconvert", GST_RANK_PRIMARY,
-	  GST_TYPE_AUDIO_CONVERT))
+          GST_TYPE_AUDIO_CONVERT))
     return FALSE;
 
   return TRUE;

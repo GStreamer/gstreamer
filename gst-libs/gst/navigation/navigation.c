@@ -46,7 +46,7 @@ gst_navigation_get_type (void)
     };
 
     gst_navigation_type = g_type_register_static (G_TYPE_INTERFACE,
-	"GstNavigation", &gst_navigation_info, 0);
+        "GstNavigation", &gst_navigation_info, 0);
   }
 
   return gst_navigation_type;
@@ -75,7 +75,7 @@ gst_navigation_send_key_event (GstNavigation * navigation, const char *event,
 {
   gst_navigation_send_event (navigation,
       gst_structure_new ("application/x-gst-navigation", "event", G_TYPE_STRING,
-	  event, "key", G_TYPE_STRING, key, NULL));
+          event, "key", G_TYPE_STRING, key, NULL));
 }
 
 void
@@ -84,6 +84,6 @@ gst_navigation_send_mouse_event (GstNavigation * navigation, const char *event,
 {
   gst_navigation_send_event (navigation,
       gst_structure_new ("application/x-gst-navigation", "event", G_TYPE_STRING,
-	  event, "button", G_TYPE_INT, button, "pointer_x", G_TYPE_DOUBLE, x,
-	  "pointer_y", G_TYPE_DOUBLE, y, NULL));
+          event, "button", G_TYPE_INT, button, "pointer_x", G_TYPE_DOUBLE, x,
+          "pointer_y", G_TYPE_DOUBLE, y, NULL));
 }

@@ -128,14 +128,14 @@ gst_vorbis_tag_get_type (void)
     };
 
     vorbis_tag_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstVorbisTag",
-	&vorbis_tag_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstVorbisTag",
+        &vorbis_tag_info, 0);
 
     g_type_add_interface_static (vorbis_tag_type, GST_TYPE_TAG_SETTER,
-	&tag_setter_info);
+        &tag_setter_info);
 
     GST_DEBUG_CATEGORY_INIT (gst_vorbis_tag_debug, "vorbistag", 0,
-	"vorbis tagging element");
+        "vorbis tagging element");
   }
   return vorbis_tag_type;
 }
@@ -267,56 +267,56 @@ gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)
   switch (gst_tag_get_type (gst_tag)) {
     case G_TYPE_UINT:
       if (strcmp (gst_tag, GST_TAG_DATE) == 0) {
-	GDate *date;
-	guint y, d = 1, m = 1;
-	gchar *check = (gchar *) value;
+        GDate *date;
+        guint y, d = 1, m = 1;
+        gchar *check = (gchar *) value;
 
-	y = strtoul (check, &check, 10);
-	if (*check == '-') {
-	  check++;
-	  m = strtoul (check, &check, 10);
-	  if (*check == '-') {
-	    check++;
-	    d = strtoul (check, &check, 10);
-	  }
-	}
-	if (*check != '\0')
-	  break;
-	if (y == 0)
-	  break;
-	date = g_date_new_dmy (d, m, y);
-	y = g_date_get_julian (date);
-	g_date_free (date);
-	gst_tag_list_add (list, GST_TAG_MERGE_APPEND, gst_tag, y, NULL);
-	break;
+        y = strtoul (check, &check, 10);
+        if (*check == '-') {
+          check++;
+          m = strtoul (check, &check, 10);
+          if (*check == '-') {
+            check++;
+            d = strtoul (check, &check, 10);
+          }
+        }
+        if (*check != '\0')
+          break;
+        if (y == 0)
+          break;
+        date = g_date_new_dmy (d, m, y);
+        y = g_date_get_julian (date);
+        g_date_free (date);
+        gst_tag_list_add (list, GST_TAG_MERGE_APPEND, gst_tag, y, NULL);
+        break;
       } else {
-	guint tmp;
-	gchar *check;
-	gboolean is_track_number_tag;
-	gboolean is_disc_number_tag;
+        guint tmp;
+        gchar *check;
+        gboolean is_track_number_tag;
+        gboolean is_disc_number_tag;
 
-	is_track_number_tag = (strcmp (gst_tag, GST_TAG_TRACK_NUMBER) == 0);
-	is_disc_number_tag =
-	    (strcmp (gst_tag, GST_TAG_ALBUM_VOLUME_NUMBER) == 0);
-	tmp = strtoul (value, &check, 10);
-	if (*check == '/' && (is_track_number_tag || is_disc_number_tag)) {
-	  guint count;
+        is_track_number_tag = (strcmp (gst_tag, GST_TAG_TRACK_NUMBER) == 0);
+        is_disc_number_tag =
+            (strcmp (gst_tag, GST_TAG_ALBUM_VOLUME_NUMBER) == 0);
+        tmp = strtoul (value, &check, 10);
+        if (*check == '/' && (is_track_number_tag || is_disc_number_tag)) {
+          guint count;
 
-	  check++;
-	  count = strtoul (check, &check, 10);
-	  if (*check != '\0' || count == 0)
-	    break;
-	  if (is_track_number_tag) {
-	    gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_TRACK_COUNT,
-		count, NULL);
-	  } else {
-	    gst_tag_list_add (list, GST_TAG_MERGE_APPEND,
-		GST_TAG_ALBUM_VOLUME_COUNT, count, NULL);
-	  }
-	}
-	if (*check != '\0')
-	  break;
-	gst_tag_list_add (list, GST_TAG_MERGE_APPEND, gst_tag, tmp, NULL);
+          check++;
+          count = strtoul (check, &check, 10);
+          if (*check != '\0' || count == 0)
+            break;
+          if (is_track_number_tag) {
+            gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_TRACK_COUNT,
+                count, NULL);
+          } else {
+            gst_tag_list_add (list, GST_TAG_MERGE_APPEND,
+                GST_TAG_ALBUM_VOLUME_COUNT, count, NULL);
+          }
+        }
+        if (*check != '\0')
+          break;
+        gst_tag_list_add (list, GST_TAG_MERGE_APPEND, gst_tag, tmp, NULL);
       }
       break;
     case G_TYPE_STRING:
@@ -324,7 +324,7 @@ gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)
       break;
     case G_TYPE_DOUBLE:
       gst_tag_list_add (list, GST_TAG_MERGE_APPEND, gst_tag, g_strtod (value,
-	      NULL), NULL);
+              NULL), NULL);
       break;
     default:
       break;
@@ -415,7 +415,8 @@ typedef struct
   guint count;
   guint data_count;
   GList *entries;
-} MyForEach;
+}
+MyForEach;
 
 GList *
 gst_tag_to_vorbis_comments (const GstTagList * list, const gchar * tag)
@@ -430,41 +431,41 @@ gst_tag_to_vorbis_comments (const GstTagList * list, const gchar * tag)
   for (i = 0; i < gst_tag_list_get_tag_size (list, tag); i++) {
     switch (gst_tag_get_type (tag)) {
       case G_TYPE_UINT:
-	if (strcmp (tag, GST_TAG_DATE) == 0) {
-	  GDate *date;
-	  guint u;
+        if (strcmp (tag, GST_TAG_DATE) == 0) {
+          GDate *date;
+          guint u;
 
-	  g_assert (gst_tag_list_get_uint_index (list, tag, i, &u));
-	  date = g_date_new_julian (u);
-	  /* vorbis suggests using ISO date formats */
-	  result =
-	      g_strdup_printf ("%s=%04d-%02d-%02d", vorbis_tag,
-	      (gint) g_date_get_year (date), (gint) g_date_get_month (date),
-	      (gint) g_date_get_day (date));
-	  g_date_free (date);
-	} else {
-	  guint u;
+          g_assert (gst_tag_list_get_uint_index (list, tag, i, &u));
+          date = g_date_new_julian (u);
+          /* vorbis suggests using ISO date formats */
+          result =
+              g_strdup_printf ("%s=%04d-%02d-%02d", vorbis_tag,
+              (gint) g_date_get_year (date), (gint) g_date_get_month (date),
+              (gint) g_date_get_day (date));
+          g_date_free (date);
+        } else {
+          guint u;
 
-	  g_assert (gst_tag_list_get_uint_index (list, tag, i, &u));
-	  result = g_strdup_printf ("%s=%u", vorbis_tag, u);
-	}
-	break;
+          g_assert (gst_tag_list_get_uint_index (list, tag, i, &u));
+          result = g_strdup_printf ("%s=%u", vorbis_tag, u);
+        }
+        break;
       case G_TYPE_STRING:{
-	gchar *str;
+        gchar *str;
 
-	g_assert (gst_tag_list_get_string_index (list, tag, i, &str));
-	result = g_strdup_printf ("%s=%s", vorbis_tag, str);
-	break;
+        g_assert (gst_tag_list_get_string_index (list, tag, i, &str));
+        result = g_strdup_printf ("%s=%s", vorbis_tag, str);
+        break;
       }
       case G_TYPE_DOUBLE:{
-	gdouble value;
+        gdouble value;
 
-	g_assert (gst_tag_list_get_double_index (list, tag, i, &value));
-	result = g_strdup_printf ("%s=%f", vorbis_tag, value);
+        g_assert (gst_tag_list_get_double_index (list, tag, i, &value));
+        result = g_strdup_printf ("%s=%f", vorbis_tag, value);
       }
       default:
-	GST_DEBUG ("Couldn't write tag %s", tag);
-	continue;
+        GST_DEBUG ("Couldn't write tag %s", tag);
+        continue;
     }
     l = g_list_prepend (l, result);
   }
@@ -567,44 +568,44 @@ gst_vorbis_tag_chain (GstPad * pad, GstData * data)
     /* caps nego */
     do {
       if (gst_pad_try_set_caps (tag->srcpad,
-	      gst_caps_new_simple ("audio/x-vorbis", NULL)) >= 0) {
-	tag->output = OUTPUT_DATA;
+              gst_caps_new_simple ("audio/x-vorbis", NULL)) >= 0) {
+        tag->output = OUTPUT_DATA;
       } else if (gst_pad_try_set_caps (tag->srcpad,
-	      gst_caps_new_simple ("application/x-gst-tags", NULL)) >= 0) {
-	tag->output = OUTPUT_TAGS;
+              gst_caps_new_simple ("application/x-gst-tags", NULL)) >= 0) {
+        tag->output = OUTPUT_TAGS;
       } else {
-	const GstCaps *caps =
-	    gst_static_caps_get (&gst_vorbis_tag_src_template.static_caps);
-	if (gst_pad_recover_caps_error (tag->srcpad, caps))
-	  continue;
-	return;
+        const GstCaps *caps =
+            gst_static_caps_get (&gst_vorbis_tag_src_template.static_caps);
+        if (gst_pad_recover_caps_error (tag->srcpad, caps))
+          continue;
+        return;
       }
     } while (FALSE);
   }
 
   if (GST_BUFFER_SIZE (buffer) == 0)
     GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL),
-	("empty buffers are not allowed in vorbis data"));
+        ("empty buffers are not allowed in vorbis data"));
 
   if (GST_BUFFER_DATA (buffer)[0] == 3) {
     gchar *vendor;
     GstTagList *list =
-	gst_tag_list_from_vorbiscomment_buffer (buffer, "\003vorbis", 7,
-	&vendor);
+        gst_tag_list_from_vorbiscomment_buffer (buffer, "\003vorbis", 7,
+        &vendor);
 
     gst_data_unref (data);
     if (list == NULL) {
       GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL),
-	  ("invalid data in vorbis comments"));
+          ("invalid data in vorbis comments"));
       return;
     }
     gst_element_found_tags_for_pad (GST_ELEMENT (tag), tag->srcpad, 0,
-	gst_tag_list_copy (list));
+        gst_tag_list_copy (list));
     gst_tag_list_merge (list, gst_tag_setter_get_list (GST_TAG_SETTER (tag)),
-	gst_tag_setter_get_merge_mode (GST_TAG_SETTER (tag)));
+        gst_tag_setter_get_merge_mode (GST_TAG_SETTER (tag)));
     data =
-	GST_DATA (gst_tag_list_to_vorbiscomment_buffer (list, "\003vorbis", 7,
-	    vendor));
+        GST_DATA (gst_tag_list_to_vorbiscomment_buffer (list, "\003vorbis", 7,
+            vendor));
     gst_tag_list_free (list);
     g_free (vendor);
   }

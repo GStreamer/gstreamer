@@ -303,7 +303,7 @@ struct fourcc_list_struct fourcc_list[] = {
   {"YUY2", "YUY2", 16, paint_setup_YUY2, paint_hline_YUY2},
   {"UYVY", "UYVY", 16, paint_setup_UYVY, paint_hline_YUY2},
   {"Y422", "Y422", 16, paint_setup_UYVY, paint_hline_YUY2},
-  {"UYNV", "UYNV", 16, paint_setup_UYVY, paint_hline_YUY2},	/* FIXME: UYNV? */
+  {"UYNV", "UYNV", 16, paint_setup_UYVY, paint_hline_YUY2},     /* FIXME: UYNV? */
   {"YVYU", "YVYU", 16, paint_setup_YVYU, paint_hline_YUY2},
 
   /* interlaced */
@@ -394,7 +394,7 @@ paintinfo_find_by_structure (const GstStructure * structure)
       //g_print("testing " GST_FOURCC_FORMAT " and %s\n", GST_FOURCC_ARGS(format), s);
       fourcc = GST_MAKE_FOURCC (s[0], s[1], s[2], s[3]);
       if (fourcc == format) {
-	return fourcc_list + i;
+        return fourcc_list + i;
       }
     }
   } else if (strcmp (media_type, "video/x-raw-rgb") == 0) {
@@ -412,11 +412,11 @@ paintinfo_find_by_structure (const GstStructure * structure)
 
     for (i = 0; i < n_fourccs; i++) {
       if (strcmp (fourcc_list[i].fourcc, "RGB ") == 0 &&
-	  fourcc_list[i].red_mask == red_mask &&
-	  fourcc_list[i].green_mask == green_mask &&
-	  fourcc_list[i].blue_mask == blue_mask &&
-	  fourcc_list[i].depth == depth && fourcc_list[i].bitspp == bpp) {
-	return fourcc_list + i;
+          fourcc_list[i].red_mask == red_mask &&
+          fourcc_list[i].green_mask == green_mask &&
+          fourcc_list[i].blue_mask == blue_mask &&
+          fourcc_list[i].depth == depth && fourcc_list[i].bitspp == bpp) {
+        return fourcc_list + i;
 
       }
     }
@@ -442,7 +442,7 @@ paintrect_find_fourcc (int find_fourcc)
     if (find_fourcc == fourcc) {
       /* If YUV format, it's good */
       if (!fourcc_list[i].ext_caps) {
-	return fourcc_list + i;
+        return fourcc_list + i;
       }
 
       return fourcc_list + i;
@@ -485,15 +485,15 @@ paint_get_structure (struct fourcc_list_struct * format)
       endianness = G_BIG_ENDIAN;
     }
     return gst_structure_new ("video/x-raw-rgb",
-	"bpp", G_TYPE_INT, format->bitspp,
-	"endianness", G_TYPE_INT, endianness,
-	"depth", G_TYPE_INT, format->depth,
-	"red_mask", G_TYPE_INT, format->red_mask,
-	"green_mask", G_TYPE_INT, format->green_mask,
-	"blue_mask", G_TYPE_INT, format->blue_mask, NULL);
+        "bpp", G_TYPE_INT, format->bitspp,
+        "endianness", G_TYPE_INT, endianness,
+        "depth", G_TYPE_INT, format->depth,
+        "red_mask", G_TYPE_INT, format->red_mask,
+        "green_mask", G_TYPE_INT, format->green_mask,
+        "blue_mask", G_TYPE_INT, format->blue_mask, NULL);
   } else {
     return gst_structure_new ("video/x-raw-yuv",
-	"format", GST_TYPE_FOURCC, fourcc, NULL);
+        "format", GST_TYPE_FOURCC, fourcc, NULL);
   }
 }
 
@@ -612,12 +612,12 @@ gst_videotestsrc_smpte (GstVideotestsrc * v, unsigned char *dest, int w, int h)
 
     for (i = x1; i < w; i++) {
       for (j = y2; j < h; j++) {
-	/* FIXME not strictly correct */
-	color.Y = random_char ();
-	color.R = color.Y;
-	color.G = color.Y;
-	color.B = color.Y;
-	p->paint_hline (p, i, j, 1);
+        /* FIXME not strictly correct */
+        color.Y = random_char ();
+        color.R = color.Y;
+        color.G = color.Y;
+        color.B = color.Y;
+        p->paint_hline (p, i, j, 1);
       }
     }
 

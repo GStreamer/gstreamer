@@ -62,11 +62,11 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) BYTE_ORDER, "
-	"signed = (boolean) true, "
-	"width = (int) 16, "
-	"depth = (int) 16, "
-	"rate = (int) [ 8000, 48000 ], " "channels = (int) 1")
+        "endianness = (int) BYTE_ORDER, "
+        "signed = (boolean) true, "
+        "width = (int) 16, "
+        "depth = (int) 16, "
+        "rate = (int) [ 8000, 48000 ], " "channels = (int) 1")
     );
 
 static void gst_sinesrc_class_init (GstSineSrcClass * klass);
@@ -109,8 +109,9 @@ gst_sinesrc_get_type (void)
       sizeof (GstSineSrc), 0,
       (GInstanceInitFunc) gst_sinesrc_init,
     };
+
     sinesrc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstSineSrc",
-	&sinesrc_info, 0);
+        &sinesrc_info, 0);
   }
   return sinesrc_type;
 }
@@ -138,21 +139,21 @@ gst_sinesrc_class_init (GstSineSrcClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TABLESIZE,
       g_param_spec_int ("tablesize", "tablesize", "tablesize",
-	  1, G_MAXINT, 1024, G_PARAM_READWRITE));
+          1, G_MAXINT, 1024, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       ARG_SAMPLES_PER_BUFFER,
       g_param_spec_int ("samplesperbuffer", "Samples per buffer",
-	  "Number of samples in each outgoing buffer",
-	  1, G_MAXINT, 1024, G_PARAM_READWRITE));
+          "Number of samples in each outgoing buffer",
+          1, G_MAXINT, 1024, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FREQ,
       g_param_spec_double ("freq", "Frequency", "Frequency of sine source",
-	  0.0, 20000.0, 440.0, G_PARAM_READWRITE));
+          0.0, 20000.0, 440.0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VOLUME,
       g_param_spec_double ("volume", "Volume", "Volume",
-	  0.0, 1.0, 0.8, G_PARAM_READWRITE));
+          0.0, 1.0, 0.8, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
       g_param_spec_boolean ("sync", "Sync", "Synchronize to clock",
-	  FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_sinesrc_set_property;
   gobject_class->get_property = gst_sinesrc_get_property;
@@ -192,12 +193,12 @@ gst_sinesrc_init (GstSineSrc * src)
 
   gst_dpman_add_required_dparam_callback (src->dpman,
       g_param_spec_double ("freq", "Frequency (Hz)", "Frequency of the tone",
-	  10.0, 10000.0, 350.0, G_PARAM_READWRITE),
+          10.0, 10000.0, 350.0, G_PARAM_READWRITE),
       "hertz", gst_sinesrc_update_freq, src);
 
   gst_dpman_add_required_dparam_direct (src->dpman,
       g_param_spec_double ("volume", "Volume", "Volume of the tone",
-	  0.0, 1.0, 0.8, G_PARAM_READWRITE), "scalar", &(src->volume)
+          0.0, 1.0, 0.8, G_PARAM_READWRITE), "scalar", &(src->volume)
       );
 
   gst_dpman_set_rate (src->dpman, src->samplerate);
@@ -289,20 +290,20 @@ gst_sinesrc_src_query (GstPad * pad,
   switch (type) {
     case GST_QUERY_POSITION:
       switch (*format) {
-	case GST_FORMAT_TIME:
-	  *value = src->timestamp;
-	  res = TRUE;
-	  break;
-	case GST_FORMAT_DEFAULT:	/* samples */
-	  *value = src->offset / 2;	/* 16bpp audio */
-	  res = TRUE;
-	  break;
-	case GST_FORMAT_BYTES:
-	  *value = src->offset;
-	  res = TRUE;
-	  break;
-	default:
-	  break;
+        case GST_FORMAT_TIME:
+          *value = src->timestamp;
+          res = TRUE;
+          break;
+        case GST_FORMAT_DEFAULT:       /* samples */
+          *value = src->offset / 2;     /* 16bpp audio */
+          res = TRUE;
+          break;
+        case GST_FORMAT_BYTES:
+          *value = src->offset;
+          res = TRUE;
+          break;
+        default:
+          break;
       }
       break;
     default:
@@ -332,7 +333,7 @@ gst_sinesrc_get (GstPad * pad)
     taglist = gst_tag_list_new ();
 
     gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND,
-	GST_TAG_DESCRIPTION, "sine wave", NULL);
+        GST_TAG_DESCRIPTION, "sine wave", NULL);
 
     gst_element_found_tags (GST_ELEMENT (src), taglist);
     event = gst_event_new_tag (taglist);
@@ -371,8 +372,8 @@ gst_sinesrc_get (GstPad * pad)
     if (src->table_lookup_next >= src->table_size) {
       src->table_lookup_next -= src->table_size;
       if (src->table_lookup >= src->table_size) {
-	src->table_lookup -= src->table_size;
-	src->table_pos -= src->table_size;
+        src->table_lookup -= src->table_size;
+        src->table_pos -= src->table_size;
       }
     }
 
@@ -384,10 +385,10 @@ gst_sinesrc_get (GstPad * pad)
 
     /*linear interpolation */
     samples[i] = ((src->table_interp * (src->table_data[src->table_lookup_next]
-		- src->table_data[src->table_lookup]
-	    )
-	) + src->table_data[src->table_lookup]
-	) * src->volume * 32767.0;
+                - src->table_data[src->table_lookup]
+            )
+        ) + src->table_data[src->table_lookup]
+        ) * src->volume * 32767.0;
 #endif
     src->accumulator += 2 * M_PI * src->freq / src->samplerate;
     if (src->accumulator >= 2 * M_PI) {
@@ -400,7 +401,7 @@ gst_sinesrc_get (GstPad * pad)
 
   if (!GST_PAD_CAPS (src->srcpad)) {
     if (gst_sinesrc_link (src->srcpad,
-	    gst_pad_get_allowed_caps (src->srcpad)) <= 0) {
+            gst_pad_get_allowed_caps (src->srcpad)) <= 0) {
       GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, (NULL), (NULL));
       return NULL;
     }

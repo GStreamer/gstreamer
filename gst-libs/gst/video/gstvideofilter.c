@@ -74,8 +74,9 @@ gst_videofilter_get_type (void)
       0,
       gst_videofilter_init,
     };
+
     videofilter_type = g_type_register_static (GST_TYPE_ELEMENT,
-	"GstVideofilter", &videofilter_info, G_TYPE_FLAG_ABSTRACT);
+        "GstVideofilter", &videofilter_info, G_TYPE_FLAG_ABSTRACT);
   }
   return videofilter_type;
 }
@@ -129,15 +130,15 @@ gst_videofilter_format_get_structure (GstVideofilterFormat * format)
 
   if (format->depth) {
     structure = gst_structure_new ("video/x-raw-rgb",
-	"depth", G_TYPE_INT, format->depth,
-	"bpp", G_TYPE_INT, format->bpp,
-	"endianness", G_TYPE_INT, format->endianness,
-	"red_mask", G_TYPE_INT, format->red_mask,
-	"green_mask", G_TYPE_INT, format->green_mask,
-	"blue_mask", G_TYPE_INT, format->blue_mask, NULL);
+        "depth", G_TYPE_INT, format->depth,
+        "bpp", G_TYPE_INT, format->bpp,
+        "endianness", G_TYPE_INT, format->endianness,
+        "red_mask", G_TYPE_INT, format->red_mask,
+        "green_mask", G_TYPE_INT, format->green_mask,
+        "blue_mask", G_TYPE_INT, format->blue_mask, NULL);
   } else {
     structure = gst_structure_new ("video/x-raw-yuv",
-	"format", GST_TYPE_FOURCC, fourcc, NULL);
+        "format", GST_TYPE_FOURCC, fourcc, NULL);
   }
 
   gst_structure_set (structure,
@@ -158,8 +159,8 @@ gst_videofilter_class_get_capslist (GstVideofilterClass * klass)
   caps = gst_caps_new_empty ();
   for (i = 0; i < klass->formats->len; i++) {
     structure =
-	gst_videofilter_format_get_structure (g_ptr_array_index (klass->formats,
-	    i));
+        gst_videofilter_format_get_structure (g_ptr_array_index (klass->formats,
+            i));
     gst_caps_append_structure (caps, structure);
   }
 
@@ -201,8 +202,8 @@ gst_videofilter_getcaps (GstPad * pad)
     GstCaps *fromcaps;
 
     fromcaps =
-	gst_caps_new_full (gst_videofilter_format_get_structure
-	(g_ptr_array_index (klass->formats, i)), NULL);
+        gst_caps_new_full (gst_videofilter_format_get_structure
+        (g_ptr_array_index (klass->formats, i)), NULL);
 
     icaps = gst_caps_intersect (fromcaps, peercaps);
     if (icaps != NULL) {
@@ -342,7 +343,7 @@ gst_videofilter_chain (GstPad * pad, GstData * _data)
 
   if (size > videofilter->from_buf_size) {
     GST_INFO ("buffer size %ld larger than expected (%d)",
-	size, videofilter->from_buf_size);
+        size, videofilter->from_buf_size);
   }
 
   outbuf = gst_pad_alloc_buffer (videofilter->srcpad, GST_BUFFER_OFFSET_NONE,
@@ -505,7 +506,7 @@ gst_videofilter_find_format_by_structure (GstVideofilter * videofilter,
       format = g_ptr_array_index (klass->formats, i);
       format_fourcc = GST_STR_FOURCC (format->fourcc);
       if (format->depth == 0 && format_fourcc == fourcc) {
-	return format;
+        return format;
       }
     }
   } else if (strcmp (gst_structure_get_name (structure), "video/x-raw-rgb")
@@ -528,9 +529,9 @@ gst_videofilter_find_format_by_structure (GstVideofilter * videofilter,
     for (i = 0; i < klass->formats->len; i++) {
       format = g_ptr_array_index (klass->formats, i);
       if (format->bpp == bpp && format->depth == depth &&
-	  format->endianness == endianness && format->red_mask == red_mask &&
-	  format->green_mask == green_mask && format->blue_mask == blue_mask) {
-	return format;
+          format->endianness == endianness && format->red_mask == red_mask &&
+          format->green_mask == green_mask && format->blue_mask == blue_mask) {
+        return format;
       }
     }
   }
@@ -553,11 +554,11 @@ gst_videofilter_class_add_pad_templates (GstVideofilterClass *
 
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-	  gst_videofilter_class_get_capslist (videofilter_class)));
+          gst_videofilter_class_get_capslist (videofilter_class)));
 
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-	  gst_videofilter_class_get_capslist (videofilter_class)));
+          gst_videofilter_class_get_capslist (videofilter_class)));
 }
 
 static gboolean

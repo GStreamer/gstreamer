@@ -108,7 +108,8 @@ static union
 {
   int i[4];
   float f[4];
-} av_tmp __attribute__ ((__aligned__ (16)));
+}
+av_tmp __attribute__ ((__aligned__ (16)));
 
 void
 conv_double_short_altivec (double *dest, short *src, int n)
@@ -122,7 +123,7 @@ conv_double_short_altivec (double *dest, short *src, int n)
     av_tmp.i[3] = src[3];
 
   asm ("	lvx 0,0,%0\n" "	vcfsx 1,0,0\n" "	stvx 1,0,%0\n": :"r" (&av_tmp)
-	);
+        );
 
     dest[0] = av_tmp.f[0];
     dest[1] = av_tmp.f[1];

@@ -115,9 +115,10 @@ gst_v4lsrc_get_type (void)
       (GInstanceInitFunc) gst_v4lsrc_init,
       NULL
     };
+
     v4lsrc_type =
-	g_type_register_static (GST_TYPE_V4LELEMENT, "GstV4lSrc", &v4lsrc_info,
-	0);
+        g_type_register_static (GST_TYPE_V4LELEMENT, "GstV4lSrc", &v4lsrc_info,
+        0);
   }
   return v4lsrc_type;
 }
@@ -151,15 +152,15 @@ gst_v4lsrc_class_init (GstV4lSrcClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUMBUFS,
       g_param_spec_int ("num_buffers", "Num Buffers", "Number of buffers",
-	  G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
+          G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFSIZE,
       g_param_spec_int ("buffer_size", "Buffer Size", "Size of buffers",
-	  G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
+          G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_USE_FIXED_FPS,
       g_param_spec_boolean ("use_fixed_fps", "Use Fixed FPS",
-	  "Drop/Insert frames to reach a certain FPS (TRUE) "
-	  "or adapt FPS to suit the number of frabbed frames",
-	  TRUE, G_PARAM_READWRITE));
+          "Drop/Insert frames to reach a certain FPS (TRUE) "
+          "or adapt FPS to suit the number of frabbed frames",
+          TRUE, G_PARAM_READWRITE));
 
   /* signals */
   gst_v4lsrc_signals[SIGNAL_FRAME_CAPTURE] =
@@ -196,7 +197,7 @@ gst_v4lsrc_init (GstV4lSrc * v4lsrc)
 
   v4lsrc->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
-	  "src"), "src");
+          "src"), "src");
   gst_element_add_pad (GST_ELEMENT (v4lsrc), v4lsrc->srcpad);
 
   gst_pad_set_get_function (v4lsrc->srcpad, gst_v4lsrc_get);
@@ -245,7 +246,7 @@ gst_v4lsrc_open (GstElement * element, const gchar * device)
     if (!gst_v4lsrc_try_palette (v4lsrc, palette[i]))
       continue;
     v4lsrc->colourspaces = g_list_append (v4lsrc->colourspaces,
-	GINT_TO_POINTER (palette[i]));
+        GINT_TO_POINTER (palette[i]));
   }
 }
 
@@ -267,7 +268,7 @@ gst_v4lsrc_get_fps (GstV4lSrc * v4lsrc)
   if (!v4lsrc->use_fixed_fps && v4lsrc->clock != NULL && v4lsrc->handled > 0) {
     /* try to get time from clock master and calculate fps */
     GstClockTime time =
-	gst_clock_get_time (v4lsrc->clock) - v4lsrc->substract_time;
+        gst_clock_get_time (v4lsrc->clock) - v4lsrc->substract_time;
     return v4lsrc->handled * GST_SECOND / time;
   }
 
@@ -303,21 +304,21 @@ gst_v4lsrc_src_convert (GstPad * pad,
   switch (src_format) {
     case GST_FORMAT_TIME:
       switch (*dest_format) {
-	case GST_FORMAT_DEFAULT:
-	  *dest_value = src_value * fps / GST_SECOND;
-	  break;
-	default:
-	  return FALSE;
+        case GST_FORMAT_DEFAULT:
+          *dest_value = src_value * fps / GST_SECOND;
+          break;
+        default:
+          return FALSE;
       }
       break;
 
     case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
-	case GST_FORMAT_TIME:
-	  *dest_value = src_value * GST_SECOND / fps;
-	  break;
-	default:
-	  return FALSE;
+        case GST_FORMAT_TIME:
+          *dest_value = src_value * GST_SECOND / fps;
+          break;
+        default:
+          return FALSE;
       }
       break;
 
@@ -342,15 +343,15 @@ gst_v4lsrc_src_query (GstPad * pad,
   switch (type) {
     case GST_QUERY_POSITION:
       switch (*format) {
-	case GST_FORMAT_TIME:
-	  *value = v4lsrc->handled * GST_SECOND / fps;
-	  break;
-	case GST_FORMAT_DEFAULT:
-	  *value = v4lsrc->handled;
-	  break;
-	default:
-	  res = FALSE;
-	  break;
+        case GST_FORMAT_TIME:
+          *value = v4lsrc->handled * GST_SECOND / fps;
+          break;
+        case GST_FORMAT_DEFAULT:
+          *value = v4lsrc->handled;
+          break;
+        default:
+          res = FALSE;
+          break;
       }
       break;
     default:
@@ -403,42 +404,42 @@ gst_v4lsrc_palette_to_caps (int palette)
   if (fourcc == GST_MAKE_FOURCC ('R', 'G', 'B', ' ')) {
     switch (palette) {
       case VIDEO_PALETTE_RGB555:
-	caps = gst_caps_from_string ("video/x-raw-rgb, "
-	    "bpp = (int) 16, "
-	    "depth = (int) 15, "
-	    "endianness = (int) BYTE_ORDER, "
-	    "red_mask = 0x7c00, " "green_mask = 0x03e0, " "blue_mask = 0x001f");
-	break;
+        caps = gst_caps_from_string ("video/x-raw-rgb, "
+            "bpp = (int) 16, "
+            "depth = (int) 15, "
+            "endianness = (int) BYTE_ORDER, "
+            "red_mask = 0x7c00, " "green_mask = 0x03e0, " "blue_mask = 0x001f");
+        break;
       case VIDEO_PALETTE_RGB565:
-	caps = gst_caps_from_string ("video/x-raw-rgb, "
-	    "bpp = (int) 16, "
-	    "depth = (int) 16, "
-	    "endianness = (int) BYTE_ORDER, "
-	    "red_mask = 0xf800, " "green_mask = 0x07f0, " "blue_mask = 0x001f");
-	break;
+        caps = gst_caps_from_string ("video/x-raw-rgb, "
+            "bpp = (int) 16, "
+            "depth = (int) 16, "
+            "endianness = (int) BYTE_ORDER, "
+            "red_mask = 0xf800, " "green_mask = 0x07f0, " "blue_mask = 0x001f");
+        break;
       case VIDEO_PALETTE_RGB24:
-	caps = gst_caps_from_string ("video/x-raw-rgb, "
-	    "bpp = (int) 24, "
-	    "depth = (int) 24, "
-	    "endianness = (int) BIG_ENDIAN, "
-	    "red_mask = 0xFF0000, "
-	    "green_mask = 0x00FF00, " "blue_mask = 0x0000FF");
-	break;
+        caps = gst_caps_from_string ("video/x-raw-rgb, "
+            "bpp = (int) 24, "
+            "depth = (int) 24, "
+            "endianness = (int) BIG_ENDIAN, "
+            "red_mask = 0xFF0000, "
+            "green_mask = 0x00FF00, " "blue_mask = 0x0000FF");
+        break;
       case VIDEO_PALETTE_RGB32:
-	caps = gst_caps_from_string ("video/x-raw-rgb, "
-	    "bpp = (int) 24, "
-	    "depth = (int) 32, "
-	    "endianness = (int) BIG_ENDIAN, "
-	    "red_mask = 0xFF000000, "
-	    "green_mask = 0x00FF0000, " "blue_mask = 0x0000FF00");
-	break;
+        caps = gst_caps_from_string ("video/x-raw-rgb, "
+            "bpp = (int) 24, "
+            "depth = (int) 32, "
+            "endianness = (int) BIG_ENDIAN, "
+            "red_mask = 0xFF000000, "
+            "green_mask = 0x00FF0000, " "blue_mask = 0x0000FF00");
+        break;
       default:
-	g_assert_not_reached ();
-	return NULL;
+        g_assert_not_reached ();
+        return NULL;
     }
   } else {
     caps = gst_caps_new_simple ("video/x-raw-yuv",
-	"format", GST_TYPE_FOURCC, fourcc, NULL);
+        "format", GST_TYPE_FOURCC, fourcc, NULL);
   }
 
   return caps;
@@ -463,7 +464,7 @@ gst_v4lsrc_srcconnect (GstPad * pad, const GstCaps * vscapslist)
   if (GST_V4L_IS_ACTIVE (GST_V4LELEMENT (v4lsrc))) {
     if (was_capturing) {
       if (!gst_v4lsrc_capture_stop (v4lsrc))
-	return GST_PAD_LINK_REFUSED;
+        return GST_PAD_LINK_REFUSED;
     }
     if (!gst_v4lsrc_capture_deinit (v4lsrc))
       return GST_PAD_LINK_REFUSED;
@@ -514,31 +515,31 @@ gst_v4lsrc_srcconnect (GstPad * pad, const GstCaps * vscapslist)
     case GST_MAKE_FOURCC ('R', 'G', 'B', ' '):
       gst_structure_get_int (structure, "depth", &depth);
       switch (depth) {
-	case 15:
-	  palette = VIDEO_PALETTE_RGB555;
-	  v4lsrc->buffer_size = w * h * 2;
-	  break;
-	case 16:
-	  palette = VIDEO_PALETTE_RGB565;
-	  v4lsrc->buffer_size = w * h * 2;
-	  break;
-	case 24:
-	  gst_structure_get_int (structure, "bpp", &bpp);
-	  switch (bpp) {
-	    case 24:
-	      palette = VIDEO_PALETTE_RGB24;
-	      v4lsrc->buffer_size = w * h * 3;
-	      break;
-	    case 32:
-	      palette = VIDEO_PALETTE_RGB32;
-	      v4lsrc->buffer_size = w * h * 4;
-	      break;
-	    default:
-	      break;
-	  }
-	  break;
-	default:
-	  break;
+        case 15:
+          palette = VIDEO_PALETTE_RGB555;
+          v4lsrc->buffer_size = w * h * 2;
+          break;
+        case 16:
+          palette = VIDEO_PALETTE_RGB565;
+          v4lsrc->buffer_size = w * h * 2;
+          break;
+        case 24:
+          gst_structure_get_int (structure, "bpp", &bpp);
+          switch (bpp) {
+            case 24:
+              palette = VIDEO_PALETTE_RGB24;
+              v4lsrc->buffer_size = w * h * 3;
+              break;
+            case 32:
+              palette = VIDEO_PALETTE_RGB32;
+              v4lsrc->buffer_size = w * h * 4;
+              break;
+            default:
+              break;
+          }
+          break;
+        default:
+          break;
       }
       break;
     default:
@@ -583,9 +584,9 @@ gst_v4lsrc_getcaps (GstPad * pad)
     if (!one)
       g_print ("Palette %d gave no caps\n", GPOINTER_TO_INT (item->data));
     gst_caps_set_simple (one,
-	"width", GST_TYPE_INT_RANGE, vcap->minwidth, vcap->maxwidth,
-	"height", GST_TYPE_INT_RANGE, vcap->minheight, vcap->maxheight,
-	"framerate", G_TYPE_DOUBLE, gst_v4lsrc_get_fps (v4lsrc), NULL);
+        "width", GST_TYPE_INT_RANGE, vcap->minwidth, vcap->maxwidth,
+        "height", GST_TYPE_INT_RANGE, vcap->minheight, vcap->maxheight,
+        "framerate", G_TYPE_DOUBLE, gst_v4lsrc_get_fps (v4lsrc), NULL);
     gst_caps_append (list, one);
   }
 
@@ -622,7 +623,7 @@ gst_v4lsrc_get (GstPad * pad)
 
       /* grab a frame from the device */
       if (!gst_v4lsrc_grab_frame (v4lsrc, &num))
-	return NULL;
+        return NULL;
 
       v4lsrc->last_frame = num;
       time = v4lsrc->timestamp_sync - v4lsrc->substract_time;
@@ -638,25 +639,25 @@ gst_v4lsrc_get (GstPad * pad)
        * we want to have written X*fps frames. If we've written
        * more - drop, if we've written less - dup... */
       if (v4lsrc->handled * (GST_SECOND / fps) - time >
-	  1.5 * (GST_SECOND / fps)) {
-	/* yo dude, we've got too many frames here! Drop! DROP! */
-	v4lsrc->need_writes--;	/* -= (v4lsrc->handled - (time / fps)); */
-	g_signal_emit (G_OBJECT (v4lsrc),
-	    gst_v4lsrc_signals[SIGNAL_FRAME_DROP], 0);
+          1.5 * (GST_SECOND / fps)) {
+        /* yo dude, we've got too many frames here! Drop! DROP! */
+        v4lsrc->need_writes--;  /* -= (v4lsrc->handled - (time / fps)); */
+        g_signal_emit (G_OBJECT (v4lsrc),
+            gst_v4lsrc_signals[SIGNAL_FRAME_DROP], 0);
       } else if (v4lsrc->handled * (GST_SECOND / fps) - time <
-	  -1.5 * (GST_SECOND / fps)) {
-	/* this means we're lagging far behind */
-	v4lsrc->need_writes++;	/* += ((time / fps) - v4lsrc->handled); */
-	g_signal_emit (G_OBJECT (v4lsrc),
-	    gst_v4lsrc_signals[SIGNAL_FRAME_INSERT], 0);
+          -1.5 * (GST_SECOND / fps)) {
+        /* this means we're lagging far behind */
+        v4lsrc->need_writes++;  /* += ((time / fps) - v4lsrc->handled); */
+        g_signal_emit (G_OBJECT (v4lsrc),
+            gst_v4lsrc_signals[SIGNAL_FRAME_INSERT], 0);
       }
 
       if (v4lsrc->need_writes > 0) {
-	have_frame = TRUE;
-	v4lsrc->use_num_times[num] = v4lsrc->need_writes;
-	v4lsrc->need_writes--;
+        have_frame = TRUE;
+        v4lsrc->use_num_times[num] = v4lsrc->need_writes;
+        v4lsrc->need_writes--;
       } else {
-	gst_v4lsrc_requeue_frame (v4lsrc, num);
+        gst_v4lsrc_requeue_frame (v4lsrc, num);
       }
     } while (!have_frame);
   } else {
@@ -669,16 +670,16 @@ gst_v4lsrc_get (GstPad * pad)
 
   buf = gst_buffer_new ();
   GST_BUFFER_FREE_DATA_FUNC (buf) = gst_v4lsrc_buffer_free;
-  GST_BUFFER_PRIVATE (buf) = v4lsrc;	/* hack to re-queue buffer on free */
+  GST_BUFFER_PRIVATE (buf) = v4lsrc;    /* hack to re-queue buffer on free */
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_READONLY | GST_BUFFER_DONTFREE);
   GST_BUFFER_DATA (buf) = gst_v4lsrc_get_buffer (v4lsrc, num);
   GST_BUFFER_MAXSIZE (buf) = v4lsrc->mbuf.size / v4lsrc->mbuf.frames;
   GST_BUFFER_SIZE (buf) = v4lsrc->buffer_size;
   if (v4lsrc->use_fixed_fps)
     GST_BUFFER_TIMESTAMP (buf) = v4lsrc->handled * GST_SECOND / fps;
-  else				/* calculate time based on our own clock */
+  else                          /* calculate time based on our own clock */
     GST_BUFFER_TIMESTAMP (buf) =
-	v4lsrc->timestamp_sync - v4lsrc->substract_time;
+        v4lsrc->timestamp_sync - v4lsrc->substract_time;
 
   v4lsrc->handled++;
   g_signal_emit (G_OBJECT (v4lsrc),
@@ -700,7 +701,7 @@ gst_v4lsrc_set_property (GObject * object,
   switch (prop_id) {
     case ARG_USE_FIXED_FPS:
       if (!GST_V4L_IS_ACTIVE (GST_V4LELEMENT (v4lsrc))) {
-	v4lsrc->use_fixed_fps = g_value_get_boolean (value);
+        v4lsrc->use_fixed_fps = g_value_get_boolean (value);
       }
       break;
 
@@ -727,10 +728,10 @@ gst_v4lsrc_get_property (GObject * object,
 
     case ARG_BUFSIZE:
       if (v4lsrc->mbuf.frames == 0)
-	g_value_set_int (value, 0);
+        g_value_set_int (value, 0);
       else
-	g_value_set_int (value,
-	    v4lsrc->mbuf.size / (v4lsrc->mbuf.frames * 1024));
+        g_value_set_int (value,
+            v4lsrc->mbuf.size / (v4lsrc->mbuf.frames * 1024));
       break;
 
     case ARG_USE_FIXED_FPS:
@@ -769,23 +770,23 @@ gst_v4lsrc_change_state (GstElement * element)
     case GST_STATE_PAUSED_TO_PLAYING:
       /* queue all buffer, start streaming capture */
       if (!gst_v4lsrc_capture_start (v4lsrc))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
       g_get_current_time (&time);
       v4lsrc->substract_time =
-	  GST_TIMEVAL_TO_TIME (time) - v4lsrc->substract_time;
+          GST_TIMEVAL_TO_TIME (time) - v4lsrc->substract_time;
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       /* de-queue all queued buffers */
       if (!gst_v4lsrc_capture_stop (v4lsrc))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
       g_get_current_time (&time);
       v4lsrc->substract_time =
-	  GST_TIMEVAL_TO_TIME (time) - v4lsrc->substract_time;
+          GST_TIMEVAL_TO_TIME (time) - v4lsrc->substract_time;
       break;
     case GST_STATE_PAUSED_TO_READY:
       /* stop capturing, unmap all buffers */
       if (!gst_v4lsrc_capture_deinit (v4lsrc))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
       break;
     case GST_STATE_READY_TO_NULL:
       break;
@@ -829,20 +830,20 @@ gst_v4lsrc_buffer_free (GstBuffer * buf)
   int n;
 
   if (gst_element_get_state (GST_ELEMENT (v4lsrc)) != GST_STATE_PLAYING)
-    return;			/* we've already cleaned up ourselves */
+    return;                     /* we've already cleaned up ourselves */
 
   for (n = 0; n < v4lsrc->mbuf.frames; n++)
     if (GST_BUFFER_DATA (buf) == gst_v4lsrc_get_buffer (v4lsrc, n)) {
       v4lsrc->use_num_times[n]--;
       if (v4lsrc->use_num_times[n] <= 0) {
-	gst_v4lsrc_requeue_frame (v4lsrc, n);
+        gst_v4lsrc_requeue_frame (v4lsrc, n);
       }
       break;
     }
 
   if (n == v4lsrc->mbuf.frames)
     GST_ELEMENT_ERROR (v4lsrc, RESOURCE, TOO_LAZY, (NULL),
-	("Couldn\'t find the buffer"));
+        ("Couldn\'t find the buffer"));
 }
 
 

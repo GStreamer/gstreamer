@@ -65,66 +65,66 @@ create_pipeline (void)
     sinesrc->type = SINE_SRC_INT;
     sinesrc->sign = ((last % 2) == 0) ? TRUE : FALSE;
     sinesrc->endianness =
-	((last / 2) % 2 == 0) ? G_LITTLE_ENDIAN : G_BIG_ENDIAN;
+        ((last / 2) % 2 == 0) ? G_LITTLE_ENDIAN : G_BIG_ENDIAN;
     switch ((last / 4) % 8) {
       case 0:
-	sinesrc->depth = 8;
-	sinesrc->width = 8;
-	break;
+        sinesrc->depth = 8;
+        sinesrc->width = 8;
+        break;
       case 1:
-	sinesrc->depth = 16;
-	sinesrc->width = 16;
-	break;
+        sinesrc->depth = 16;
+        sinesrc->width = 16;
+        break;
       case 2:
-	sinesrc->depth = 24;
-	sinesrc->width = 32;
-	break;
+        sinesrc->depth = 24;
+        sinesrc->width = 32;
+        break;
       case 3:
-	sinesrc->depth = 32;
-	sinesrc->width = 32;
-	break;
-	/* nomore tests below until i know what 24bit width means to alsa wrt endianness */
+        sinesrc->depth = 32;
+        sinesrc->width = 32;
+        break;
+        /* nomore tests below until i know what 24bit width means to alsa wrt endianness */
       case 4:
-	sinesrc->depth = 24;
-	sinesrc->width = 24;
-	break;
+        sinesrc->depth = 24;
+        sinesrc->width = 24;
+        break;
       case 5:
-	sinesrc->depth = 20;
-	sinesrc->width = 24;
-	break;
+        sinesrc->depth = 20;
+        sinesrc->width = 24;
+        break;
       case 6:
-	sinesrc->depth = 18;
-	sinesrc->width = 24;
-	break;
+        sinesrc->depth = 18;
+        sinesrc->width = 24;
+        break;
       case 7:
-	/* not used yet */
-	sinesrc->depth = 8;
-	sinesrc->width = 8;
-	break;
+        /* not used yet */
+        sinesrc->depth = 8;
+        sinesrc->width = 8;
+        break;
       default:
-	g_assert_not_reached ();
+        g_assert_not_reached ();
     }
 
     g_print ("Setting format to: format:     \"int\"\n"
-	"                   sign:       %s\n"
-	"                   endianness: %d\n"
-	"                   width:      %d\n"
-	"                   depth:      %d\n",
-	sinesrc->sign ? "TRUE" : "FALSE", sinesrc->endianness,
-	sinesrc->width, sinesrc->depth);
+        "                   sign:       %s\n"
+        "                   endianness: %d\n"
+        "                   width:      %d\n"
+        "                   depth:      %d\n",
+        sinesrc->sign ? "TRUE" : "FALSE", sinesrc->endianness,
+        sinesrc->width, sinesrc->depth);
   } else if (last < NUMBER_OF_INT_TESTS + NUMBER_OF_FLOAT_TESTS) {
     gint temp = last - NUMBER_OF_INT_TESTS;
 
     sinesrc->type = SINE_SRC_FLOAT;
     switch (temp) {
       case 0:
-	sinesrc->width = 32;
-	break;
+        sinesrc->width = 32;
+        break;
       case 1:
-	sinesrc->width = 64;
-	break;
+        sinesrc->width = 64;
+        break;
       default:
-	g_assert_not_reached ();
+        g_assert_not_reached ();
     }
     g_print ("Setting format to float width %d\n", sinesrc->width);
   } else if (last <

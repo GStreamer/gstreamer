@@ -72,7 +72,7 @@ main (gint argc, gchar * argv[])
   /* force RGB data passing between colorspace and xvideosink */
   res = gst_element_link_filtered (colorspace, "src", xvideosink, "sink",
       GST_CAPS_NEW ("filtercaps",
-	  "video/raw", "format", GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB "))
+          "video/raw", "format", GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB "))
       ));
   if (!res) {
     g_print ("could not connect colorspace and xvideosink\n");

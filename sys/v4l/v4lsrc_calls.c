@@ -47,23 +47,23 @@
 
 /* palette names */
 static const char *palette_name[] = {
-  "",				/* 0 */
-  "grayscale",			/* VIDEO_PALETTE_GREY */
-  "Hi-420",			/* VIDEO_PALETTE_HI420 */
-  "16-bit RGB (RGB-565)",	/* VIDEO_PALETTE_RB565 */
-  "24-bit RGB",			/* VIDEO_PALETTE_RGB24 */
-  "32-bit RGB",			/* VIDEO_PALETTE_RGB32 */
-  "15-bit RGB (RGB-555)",	/* VIDEO_PALETTE_RGB555 */
-  "YUV-4:2:2 (packed)",		/* VIDEO_PALETTE_YUV422 */
-  "YUYV",			/* VIDEO_PALETTE_YUYV */
-  "UYVY",			/* VIDEO_PALETTE_UYVY */
-  "YUV-4:2:0 (packed)",		/* VIDEO_PALETTE_YUV420 */
-  "YUV-4:1:1 (packed)",		/* VIDEO_PALETTE_YUV411 */
-  "Raw",			/* VIDEO_PALETTE_RAW */
-  "YUV-4:2:2 (planar)",		/* VIDEO_PALETTE_YUV422P */
-  "YUV-4:1:1 (planar)",		/* VIDEO_PALETTE_YUV411P */
-  "YUV-4:2:0 (planar)",		/* VIDEO_PALETTE_YUV420P */
-  "YUV-4:1:0 (planar)"		/* VIDEO_PALETTE_YUV410P */
+  "",                           /* 0 */
+  "grayscale",                  /* VIDEO_PALETTE_GREY */
+  "Hi-420",                     /* VIDEO_PALETTE_HI420 */
+  "16-bit RGB (RGB-565)",       /* VIDEO_PALETTE_RB565 */
+  "24-bit RGB",                 /* VIDEO_PALETTE_RGB24 */
+  "32-bit RGB",                 /* VIDEO_PALETTE_RGB32 */
+  "15-bit RGB (RGB-555)",       /* VIDEO_PALETTE_RGB555 */
+  "YUV-4:2:2 (packed)",         /* VIDEO_PALETTE_YUV422 */
+  "YUYV",                       /* VIDEO_PALETTE_YUYV */
+  "UYVY",                       /* VIDEO_PALETTE_UYVY */
+  "YUV-4:2:0 (packed)",         /* VIDEO_PALETTE_YUV420 */
+  "YUV-4:1:1 (packed)",         /* VIDEO_PALETTE_YUV411 */
+  "Raw",                        /* VIDEO_PALETTE_RAW */
+  "YUV-4:2:2 (planar)",         /* VIDEO_PALETTE_YUV422P */
+  "YUV-4:1:1 (planar)",         /* VIDEO_PALETTE_YUV411P */
+  "YUV-4:2:0 (planar)",         /* VIDEO_PALETTE_YUV420P */
+  "YUV-4:1:0 (planar)"          /* VIDEO_PALETTE_YUV410P */
 };
 
 /******************************************************
@@ -85,9 +85,9 @@ gst_v4lsrc_queue_frame (GstV4lSrc * v4lsrc, gint num)
   v4lsrc->mmap.frame = num;
 
   if (ioctl (GST_V4LELEMENT (v4lsrc)->video_fd,
-	  VIDIOCMCAPTURE, &(v4lsrc->mmap)) < 0) {
+          VIDIOCMCAPTURE, &(v4lsrc->mmap)) < 0) {
     GST_ELEMENT_ERROR (v4lsrc, RESOURCE, WRITE, (NULL),
-	("Error queueing a buffer (%d): %s", num, g_strerror (errno)));
+        ("Error queueing a buffer (%d): %s", num, g_strerror (errno)));
     return FALSE;
   }
 
@@ -176,16 +176,16 @@ gst_v4lsrc_capture_init (GstV4lSrc * v4lsrc)
 
   /* request buffer info */
   if (ioctl (GST_V4LELEMENT (v4lsrc)->video_fd, VIDIOCGMBUF,
-	  &(v4lsrc->mbuf)) < 0) {
+          &(v4lsrc->mbuf)) < 0) {
     GST_ELEMENT_ERROR (v4lsrc, RESOURCE, READ, (NULL),
-	("Error getting buffer information: %s", g_strerror (errno)));
+        ("Error getting buffer information: %s", g_strerror (errno)));
     return FALSE;
   }
 
   if (v4lsrc->mbuf.frames < MIN_BUFFERS_QUEUED) {
     GST_ELEMENT_ERROR (v4lsrc, RESOURCE, READ, (NULL),
-	("Not enough buffers. We got %d, we want at least %d",
-	    v4lsrc->mbuf.frames, MIN_BUFFERS_QUEUED));
+        ("Not enough buffers. We got %d, we want at least %d",
+            v4lsrc->mbuf.frames, MIN_BUFFERS_QUEUED));
     return FALSE;
   }
 
@@ -210,7 +210,7 @@ gst_v4lsrc_capture_init (GstV4lSrc * v4lsrc)
       PROT_READ | PROT_WRITE, MAP_SHARED, GST_V4LELEMENT (v4lsrc)->video_fd, 0);
   if (GST_V4LELEMENT (v4lsrc)->buffer == MAP_FAILED) {
     GST_ELEMENT_ERROR (v4lsrc, RESOURCE, TOO_LAZY, (NULL),
-	("Error mapping video buffers: %s", g_strerror (errno)));
+        ("Error mapping video buffers: %s", g_strerror (errno)));
     GST_V4LELEMENT (v4lsrc)->buffer = NULL;
     return FALSE;
   }
@@ -278,14 +278,14 @@ gst_v4lsrc_grab_frame (GstV4lSrc * v4lsrc, gint * num)
       v4lsrc->frame_queue_state[v4lsrc->queue_frame] ==
       QUEUE_STATE_READY_FOR_QUEUE) {
     while (v4lsrc->frame_queue_state[v4lsrc->queue_frame] !=
-	QUEUE_STATE_READY_FOR_QUEUE && !v4lsrc->quit) {
+        QUEUE_STATE_READY_FOR_QUEUE && !v4lsrc->quit) {
       GST_DEBUG ("Waiting for frames to become available (%d < %d)",
-	  v4lsrc->num_queued, MIN_BUFFERS_QUEUED);
+          v4lsrc->num_queued, MIN_BUFFERS_QUEUED);
       g_cond_wait (v4lsrc->cond_queue_state, v4lsrc->mutex_queue_state);
     }
     if (v4lsrc->quit) {
       g_mutex_unlock (v4lsrc->mutex_queue_state);
-      return TRUE;		/* it won't get through anyway */
+      return TRUE;              /* it won't get through anyway */
     }
     if (!gst_v4lsrc_queue_frame (v4lsrc, v4lsrc->queue_frame)) {
       g_mutex_unlock (v4lsrc->mutex_queue_state);
@@ -346,8 +346,8 @@ gst_v4lsrc_requeue_frame (GstV4lSrc * v4lsrc, gint num)
 
   if (v4lsrc->frame_queue_state[num] != QUEUE_STATE_SYNCED) {
     GST_ELEMENT_ERROR (v4lsrc, RESOURCE, TOO_LAZY, (NULL),
-	("Invalid state %d (expected %d), can't requeue",
-	    v4lsrc->frame_queue_state[num], QUEUE_STATE_SYNCED));
+        ("Invalid state %d (expected %d), can't requeue",
+            v4lsrc->frame_queue_state[num], QUEUE_STATE_SYNCED));
     return FALSE;
   }
 
@@ -458,7 +458,7 @@ gst_v4lsrc_try_palette (GstV4lSrc * v4lsrc, gint palette)
   /* let's start by requesting a buffer and mmap()'ing it */
   if (ioctl (GST_V4LELEMENT (v4lsrc)->video_fd, VIDIOCGMBUF, &vmbuf) < 0) {
     GST_ELEMENT_ERROR (v4lsrc, RESOURCE, READ, (NULL),
-	("Error getting buffer information: %s", g_strerror (errno)));
+        ("Error getting buffer information: %s", g_strerror (errno)));
     return FALSE;
   }
   /* Map the buffers */
@@ -466,7 +466,7 @@ gst_v4lsrc_try_palette (GstV4lSrc * v4lsrc, gint palette)
       MAP_SHARED, GST_V4LELEMENT (v4lsrc)->video_fd, 0);
   if (buffer == MAP_FAILED) {
     GST_ELEMENT_ERROR (v4lsrc, RESOURCE, TOO_LAZY, (NULL),
-	("Error mapping our try-out buffer: %s", g_strerror (errno)));
+        ("Error mapping our try-out buffer: %s", g_strerror (errno)));
     return FALSE;
   }
 
@@ -476,9 +476,9 @@ gst_v4lsrc_try_palette (GstV4lSrc * v4lsrc, gint palette)
   vmmap.format = palette;
   vmmap.frame = frame;
   if (ioctl (GST_V4LELEMENT (v4lsrc)->video_fd, VIDIOCMCAPTURE, &vmmap) < 0) {
-    if (errno != EINVAL)	/* our format failed! */
+    if (errno != EINVAL)        /* our format failed! */
       GST_ELEMENT_ERROR (v4lsrc, RESOURCE, TOO_LAZY, (NULL),
-	  ("Error queueing our try-out buffer: %s", g_strerror (errno)));
+          ("Error queueing our try-out buffer: %s", g_strerror (errno)));
     munmap (buffer, vmbuf.size);
     return FALSE;
   }

@@ -68,7 +68,7 @@ gst_videoscale_generate_rowbytes_x86 (unsigned char *copy_row, int src_w,
   for (i = 0; i < dst_w; ++i) {
     while (pos >= 0x10000L) {
       if (bpp == 2) {
-	*eip++ = PREFIX16;
+        *eip++ = PREFIX16;
       }
       *eip++ = load;
       pos -= 0x10000L;

@@ -100,33 +100,33 @@ gst_resample_reinit (gst_resample_t * r)
     switch (r->method) {
       default:
       case GST_RESAMPLE_NEAREST:
-	r->scale = gst_resample_nearest_s16;
-	break;
+        r->scale = gst_resample_nearest_s16;
+        break;
       case GST_RESAMPLE_BILINEAR:
-	r->scale = gst_resample_bilinear_s16;
-	break;
+        r->scale = gst_resample_bilinear_s16;
+        break;
       case GST_RESAMPLE_SINC_SLOW:
-	r->scale = gst_resample_sinc_s16;
-	break;
+        r->scale = gst_resample_sinc_s16;
+        break;
       case GST_RESAMPLE_SINC:
-	r->scale = gst_resample_sinc_ft_s16;
-	break;
+        r->scale = gst_resample_sinc_ft_s16;
+        break;
     }
   } else if (r->format == GST_RESAMPLE_FLOAT) {
     switch (r->method) {
       default:
       case GST_RESAMPLE_NEAREST:
-	r->scale = gst_resample_nearest_float;
-	break;
+        r->scale = gst_resample_nearest_float;
+        break;
       case GST_RESAMPLE_BILINEAR:
-	r->scale = gst_resample_bilinear_float;
-	break;
+        r->scale = gst_resample_bilinear_float;
+        break;
       case GST_RESAMPLE_SINC_SLOW:
-	r->scale = gst_resample_sinc_float;
-	break;
+        r->scale = gst_resample_sinc_float;
+        break;
       case GST_RESAMPLE_SINC:
-	r->scale = gst_resample_sinc_ft_float;
-	break;
+        r->scale = gst_resample_sinc_ft_float;
+        break;
     }
   } else {
     fprintf (stderr, "gst_resample: Unexpected format \"%d\"\n", r->format);
@@ -170,9 +170,9 @@ gst_resample_scale (gst_resample_t * r, void *i_buf, unsigned int i_size)
   if (r->verbose) {
     printf ("gst_resample_scale: i_buf=%p i_size=%d\n", i_buf, i_size);
     printf ("gst_resample_scale: i_samples=%d o_samples=%d i_inc=%g o_buf=%p\n",
-	r->i_samples, r->o_samples, r->i_inc, r->o_buf);
+        r->i_samples, r->o_samples, r->i_inc, r->o_buf);
     printf ("gst_resample_scale: i_start=%g i_end=%g o_start=%g\n",
-	r->i_start, r->i_end, r->o_start);
+        r->i_start, r->i_end, r->o_start);
   }
 
   if ((r->filter_length + r->i_samples) * sizeof (double) * 2 > r->buffer_len) {
@@ -191,20 +191,20 @@ gst_resample_scale (gst_resample_t * r, void *i_buf, unsigned int i_size)
   if (r->format == GST_RESAMPLE_S16) {
     if (r->channels == 2) {
       conv_double_short (r->buffer + r->filter_length * sizeof (double) * 2,
-	  r->i_buf, r->i_samples * 2);
+          r->i_buf, r->i_samples * 2);
     } else {
       conv_double_short_dstr (r->buffer +
-	  r->filter_length * sizeof (double) * 2, r->i_buf, r->i_samples,
-	  sizeof (double) * 2);
+          r->filter_length * sizeof (double) * 2, r->i_buf, r->i_samples,
+          sizeof (double) * 2);
     }
   } else if (r->format == GST_RESAMPLE_FLOAT) {
     if (r->channels == 2) {
       conv_double_float (r->buffer + r->filter_length * sizeof (double) * 2,
-	  r->i_buf, r->i_samples * 2);
+          r->i_buf, r->i_samples * 2);
     } else {
       conv_double_float_dstr (r->buffer +
-	  r->filter_length * sizeof (double) * 2, r->i_buf, r->i_samples,
-	  sizeof (double) * 2);
+          r->filter_length * sizeof (double) * 2, r->i_buf, r->i_samples,
+          sizeof (double) * 2);
     }
   }
 
@@ -358,15 +358,15 @@ gst_resample_sinc_slow_s16 (gst_resample_t * r)
       c0 = 0;
       c1 = 0;
       for (j = 0; j < r->filter_length; j++) {
-	weight = (x == 0) ? 1 : (sinx / x);
+        weight = (x == 0) ? 1 : (sinx / x);
 /*printf("j %d sin %g cos %g\n",j,sinx,cosx); */
 /*printf("j %d sin %g x %g sinc %g\n",j,sinx,x,weight); */
-	c0 += weight * GETBUF ((start + j), 0);
-	c1 += weight * GETBUF ((start + j), 1);
-	t = cosx * cosd - sinx * sind;
-	sinx = cosx * sind + sinx * cosd;
-	cosx = t;
-	x += d;
+        c0 += weight * GETBUF ((start + j), 0);
+        c1 += weight * GETBUF ((start + j), 1);
+        t = cosx * cosd - sinx * sind;
+        sinx = cosx * sind + sinx * cosd;
+        cosx = t;
+        x += d;
       }
       o_ptr[0] = rint (c0);
       o_ptr[1] = rint (c1);
@@ -494,7 +494,7 @@ gst_resample_sinc_ft_s16 (gst_resample_t * r)
   double scale;
   int n = 4;
 
-  scale = r->i_inc;		/* cutoff at 22050 */
+  scale = r->i_inc;             /* cutoff at 22050 */
   /*scale = 1.0;          // cutoff at 24000 */
   /*scale = r->i_inc * 0.5;       // cutoff at 11025 */
 
@@ -546,7 +546,7 @@ gst_resample_sinc_ft_s16 (gst_resample_t * r)
     }
 #else
     functable_fir2 (ft,
-	&c0, &c1, x, n, ptr + (start + r->filter_length) * 2, r->filter_length);
+        &c0, &c1, x, n, ptr + (start + r->filter_length) * 2, r->filter_length);
     c0 *= scale;
     c1 *= scale;
 #endif
@@ -566,7 +566,7 @@ gst_resample_sinc_ft_s16 (gst_resample_t * r)
     conv_short_double (r->o_buf, out_tmp, 2 * r->o_samples);
   } else {
     conv_short_double_sstr (r->o_buf, out_tmp, r->o_samples,
-	2 * sizeof (double));
+        2 * sizeof (double));
   }
 }
 
@@ -711,15 +711,15 @@ gst_resample_sinc_slow_float (gst_resample_t * r)
       c0 = 0;
       c1 = 0;
       for (j = 0; j < r->filter_length; j++) {
-	weight = (x == 0) ? 1 : (sinx / x);
+        weight = (x == 0) ? 1 : (sinx / x);
 /*printf("j %d sin %g cos %g\n",j,sinx,cosx); */
 /*printf("j %d sin %g x %g sinc %g\n",j,sinx,x,weight); */
-	c0 += weight * GETBUF ((start + j), 0);
-	c1 += weight * GETBUF ((start + j), 1);
-	t = cosx * cosd - sinx * sind;
-	sinx = cosx * sind + sinx * cosd;
-	cosx = t;
-	x += d;
+        c0 += weight * GETBUF ((start + j), 0);
+        c1 += weight * GETBUF ((start + j), 1);
+        t = cosx * cosd - sinx * sind;
+        sinx = cosx * sind + sinx * cosd;
+        cosx = t;
+        x += d;
       }
       o_ptr[0] = c0;
       o_ptr[1] = c1;
@@ -806,7 +806,7 @@ gst_resample_sinc_ft_float (gst_resample_t * r)
   double scale;
   int n = 4;
 
-  scale = r->i_inc;		/* cutoff at 22050 */
+  scale = r->i_inc;             /* cutoff at 22050 */
   /*scale = 1.0;          // cutoff at 24000 */
   /*scale = r->i_inc * 0.5;       // cutoff at 11025 */
 
@@ -858,7 +858,7 @@ gst_resample_sinc_ft_float (gst_resample_t * r)
     }
 #else
     functable_fir2 (ft,
-	&c0, &c1, x, n, ptr + (start + r->filter_length) * 2, r->filter_length);
+        &c0, &c1, x, n, ptr + (start + r->filter_length) * 2, r->filter_length);
     c0 *= scale;
     c1 *= scale;
 #endif
@@ -878,7 +878,7 @@ gst_resample_sinc_ft_float (gst_resample_t * r)
     conv_float_double (r->o_buf, out_tmp, 2 * r->o_samples);
   } else {
     conv_float_double_sstr (r->o_buf, out_tmp, r->o_samples,
-	2 * sizeof (double));
+        2 * sizeof (double));
   }
 }
 

@@ -60,8 +60,8 @@ gst_tuner_channel_get_type (void)
     };
 
     gst_tuner_channel_type =
-	g_type_register_static (G_TYPE_OBJECT,
-	"GstTunerChannel", &tuner_channel_info, 0);
+        g_type_register_static (G_TYPE_OBJECT,
+        "GstTunerChannel", &tuner_channel_info, 0);
   }
 
   return gst_tuner_channel_type;
@@ -78,13 +78,13 @@ gst_tuner_channel_class_init (GstTunerChannelClass * klass)
       g_signal_new ("frequency-changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstTunerChannelClass,
-	  frequency_changed),
+          frequency_changed),
       NULL, NULL, g_cclosure_marshal_VOID__ULONG, G_TYPE_NONE, 1, G_TYPE_ULONG);
   signals[SIGNAL_SIGNAL_CHANGED] =
       g_signal_new ("signal-changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstTunerChannelClass,
-	  signal_changed),
+          signal_changed),
       NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 
   object_klass->dispose = gst_tuner_channel_dispose;

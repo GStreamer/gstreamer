@@ -65,14 +65,14 @@ gst_v4l_set_overlay (GstV4lElement * v4lelement)
   switch (system (buff)) {
     case -1:
       GST_ELEMENT_ERROR (v4lelement, RESOURCE, FAILED,
-	  (_("Could not start v4l-conf.")), GST_ERROR_SYSTEM);
+          (_("Could not start v4l-conf.")), GST_ERROR_SYSTEM);
       g_free (buff);
       return FALSE;
     case 0:
       break;
     default:
       GST_ELEMENT_ERROR (v4lelement, RESOURCE, FAILED,
-	  (_("Executing v4l-conf failed.")), GST_ERROR_SYSTEM);
+          (_("Executing v4l-conf failed.")), GST_ERROR_SYSTEM);
       g_free (buff);
       return FALSE;
   }
@@ -108,7 +108,7 @@ gst_v4l_set_window (GstElement * element,
 
   if (clips && !(v4lelement->vcap.type & VID_TYPE_CLIPPING)) {
     DEBUG ("Device \'%s\' doesn't do clipping",
-	v4lelement->videodev ? v4lelement->videodev : "/dev/video");
+        v4lelement->videodev ? v4lelement->videodev : "/dev/video");
     vwin.clips = 0;
   } else {
     vwin.clips = clips;
@@ -117,7 +117,7 @@ gst_v4l_set_window (GstElement * element,
 
   if (ioctl (v4lelement->video_fd, VIDIOCSWIN, &vwin) < 0) {
     GST_ELEMENT_ERROR (v4lelement, RESOURCE, TOO_LAZY, (NULL),
-	("Failed to set the video window: %s", g_strerror (errno)));
+        ("Failed to set the video window: %s", g_strerror (errno)));
     return FALSE;
   }
 
@@ -142,8 +142,8 @@ gst_v4l_enable_overlay (GstV4lElement * v4lelement, gboolean enable)
 
   if (ioctl (v4lelement->video_fd, VIDIOCCAPTURE, &doit) < 0) {
     GST_ELEMENT_ERROR (v4lelement, RESOURCE, TOO_LAZY, (NULL),
-	("Failed to %s overlay display: %s",
-	    enable ? "enable" : "disable", g_strerror (errno)));
+        ("Failed to %s overlay display: %s",
+            enable ? "enable" : "disable", g_strerror (errno)));
     return FALSE;
   }
 

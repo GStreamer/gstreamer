@@ -56,8 +56,8 @@ gst_property_probe_get_type (void)
     };
 
     gst_property_probe_type =
-	g_type_register_static (G_TYPE_INTERFACE,
-	"GstPropertyProbe", &gst_property_probe_info, 0);
+        g_type_register_static (G_TYPE_INTERFACE,
+        "GstPropertyProbe", &gst_property_probe_info, 0);
   }
 
   return gst_property_probe_type;
@@ -70,10 +70,10 @@ gst_property_probe_iface_init (GstPropertyProbeInterface * iface)
 
   if (!initialized) {
     gst_property_probe_signals[SIGNAL_PROBE_NEEDED] =
-	g_signal_new ("probe-needed", G_TYPE_FROM_CLASS (iface),
-	G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstPropertyProbeInterface,
-	    probe_needed), NULL, NULL, g_cclosure_marshal_VOID__POINTER,
-	G_TYPE_NONE, 1, G_TYPE_POINTER);
+        g_signal_new ("probe-needed", G_TYPE_FROM_CLASS (iface),
+        G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstPropertyProbeInterface,
+            probe_needed), NULL, NULL, g_cclosure_marshal_VOID__POINTER,
+        G_TYPE_NONE, 1, G_TYPE_POINTER);
     initialized = TRUE;
   }
 

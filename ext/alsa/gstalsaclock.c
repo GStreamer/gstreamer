@@ -57,8 +57,9 @@ gst_alsa_clock_get_type (void)
       (GInstanceInitFunc) gst_alsa_clock_init,
       NULL
     };
+
     clock_type = g_type_register_static (GST_TYPE_CLOCK, "GstAlsaClock",
-	&clock_info, 0);
+        &clock_info, 0);
   }
   return clock_type;
 }
@@ -116,7 +117,7 @@ gst_alsa_clock_start (GstAlsaClock * clock)
 
   if (clock->owner->format) {
     clock->start_time = gst_clock_get_event_time (GST_CLOCK (clock))
-	- clock->get_time (clock->owner);
+        - clock->get_time (clock->owner);
   } else {
     clock->start_time = gst_clock_get_event_time (GST_CLOCK (clock));
   }
@@ -177,8 +178,8 @@ gst_alsa_clock_wait (GstClock * clock, GstClockEntry * entry)
 
   if (diff > clock->max_diff) {
     GST_INFO_OBJECT (this,
-	"GstAlsaClock: abnormal clock request diff: %" G_GINT64_FORMAT ") >"
-	"  %" G_GINT64_FORMAT, diff, clock->max_diff);
+        "GstAlsaClock: abnormal clock request diff: %" G_GINT64_FORMAT ") >"
+        "  %" G_GINT64_FORMAT, diff, clock->max_diff);
     return GST_CLOCK_ENTRY_EARLY;
   }
 
@@ -192,7 +193,7 @@ gst_alsa_clock_wait (GstClock * clock, GstClockEntry * entry)
   while (gst_alsa_clock_get_internal_time (clock) < target &&
       this->last_unlock < entry_time) {
     g_usleep (gst_alsa_clock_get_resolution (clock) * G_USEC_PER_SEC /
-	GST_SECOND);
+        GST_SECOND);
   }
 
   return entry->status;

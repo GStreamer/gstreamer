@@ -18,7 +18,7 @@ print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
       g_assert (gst_tag_list_get_string_index (list, tag, i, &str));
     } else {
       str =
-	  g_strdup_value_contents (gst_tag_list_get_value_index (list, tag, i));
+          g_strdup_value_contents (gst_tag_list_get_value_index (list, tag, i));
     }
 
     if (i == 0) {

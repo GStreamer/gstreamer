@@ -35,13 +35,13 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (alsa_debug, "alsa", 0, "alsa plugins");
 
   if (!gst_element_register (plugin, "alsamixer", GST_RANK_NONE,
-	  GST_TYPE_ALSA_MIXER))
+          GST_TYPE_ALSA_MIXER))
     return FALSE;
   if (!gst_element_register (plugin, "alsasrc", GST_RANK_NONE,
-	  GST_TYPE_ALSA_SRC))
+          GST_TYPE_ALSA_SRC))
     return FALSE;
   if (!gst_element_register (plugin, "alsasink", GST_RANK_NONE,
-	  GST_TYPE_ALSA_SINK))
+          GST_TYPE_ALSA_SINK))
     return FALSE;
 
   return TRUE;

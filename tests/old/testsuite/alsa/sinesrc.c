@@ -20,7 +20,7 @@
 
 #include "sinesrc.h"
 #include <math.h>
-#include <string.h>		/* memcpy */
+#include <string.h>             /* memcpy */
 
 #define SAMPLES_PER_WAVE 200
 
@@ -29,16 +29,16 @@ static GstStaticPadTemplate sinesrc_src_factory =
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-	"endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, "
-	"signed = (boolean) { FALSE, TRUE }, "
-	"width = (int) [8, 32], "
-	"depth = (int) [8, 32], "
-	"rate = (int) [8000, 192000], "
-	"channels = (int) [1, 16];"
-	"audio/x-raw-float, "
-	"endianness = (int) BYTE_ORDER, "
-	"width = (int) {32, 64}, "
-	"rate = (int) [8000, 192000], " "channels = (int) [1, 16]")
+        "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, "
+        "signed = (boolean) { FALSE, TRUE }, "
+        "width = (int) [8, 32], "
+        "depth = (int) [8, 32], "
+        "rate = (int) [8000, 192000], "
+        "channels = (int) [1, 16];"
+        "audio/x-raw-float, "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) {32, 64}, "
+        "rate = (int) [8000, 192000], " "channels = (int) [1, 16]")
     );
 
 static GstElementClass *parent_class = NULL;
@@ -62,8 +62,9 @@ sinesrc_get_type (void)
       sizeof (SineSrc), 0,
       (GInstanceInitFunc) sinesrc_init,
     };
+
     sinesrc_type = g_type_register_static (GST_TYPE_ELEMENT, "SineSrc",
-	&sinesrc_info, 0);
+        &sinesrc_info, 0);
   }
   return sinesrc_type;
 }
@@ -113,16 +114,16 @@ sinesrc_force_caps (SineSrc * src)
   switch (src->type) {
     case SINE_SRC_INT:
       caps = gst_caps_new_simple ("audio/x-raw-int",
-	  "signed", G_TYPE_BOOLEAN, src->sign,
-	  "depth", G_TYPE_INT, src->depth, NULL);
+          "signed", G_TYPE_BOOLEAN, src->sign,
+          "depth", G_TYPE_INT, src->depth, NULL);
       if (src->width > 8)
-	gst_caps_set_simple (caps,
-	    "endianness", G_TYPE_INT, src->endianness, NULL);
+        gst_caps_set_simple (caps,
+            "endianness", G_TYPE_INT, src->endianness, NULL);
       break;
     case SINE_SRC_FLOAT:
       g_assert (src->width == 32 || src->width == 64);
       caps = gst_caps_new_simple ("audio/x-raw-float",
-	  "endianness", G_TYPE_INT, src->endianness, NULL);
+          "endianness", G_TYPE_INT, src->endianness, NULL);
       break;
     default:
       caps = NULL;
@@ -187,113 +188,113 @@ sinesrc_get (GstPad * pad)
     src->pre_get_func (src);
 
   g_assert ((buf =
-	  gst_buffer_new_and_alloc ((src->width / 8) * src->channels *
-	      SAMPLES_PER_WAVE)));
+          gst_buffer_new_and_alloc ((src->width / 8) * src->channels *
+              SAMPLES_PER_WAVE)));
   g_assert ((data = GST_BUFFER_DATA (buf)));
 
   for (i = 0; i < SAMPLES_PER_WAVE; i++) {
     value = sin (i * 2 * M_PI / SAMPLES_PER_WAVE);
     switch (src->type) {
       case SINE_SRC_INT:{
-	gint64 int_value =
-	    (value + (src->sign ? 0 : 1)) * (((guint64) 1) << (src->depth - 1));
-	if (int_value ==
-	    (1 + (src->sign ? 0 : 1)) * (((guint64) 1) << (src->depth - 1)))
-	  int_value--;
-	switch (src->width) {
-	  case 8:
-	    if (src->sign)
-	      POPULATE (gint8, IDENTITY, IDENTITY);
-	    else
-	      POPULATE (guint8, UIDENTITY, UIDENTITY);
-	    break;
-	  case 16:
-	    if (src->sign)
-	      POPULATE (gint16, GINT16_TO_BE, GINT16_TO_LE);
-	    else
-	      POPULATE (guint16, GUINT16_TO_BE, GUINT16_TO_LE);
-	    break;
-	  case 24:
-	    if (src->sign) {
-	      gpointer p;
-	      gint32 val = (gint32) int_value;
+        gint64 int_value =
+            (value + (src->sign ? 0 : 1)) * (((guint64) 1) << (src->depth - 1));
+        if (int_value ==
+            (1 + (src->sign ? 0 : 1)) * (((guint64) 1) << (src->depth - 1)))
+          int_value--;
+        switch (src->width) {
+          case 8:
+            if (src->sign)
+              POPULATE (gint8, IDENTITY, IDENTITY);
+            else
+              POPULATE (guint8, UIDENTITY, UIDENTITY);
+            break;
+          case 16:
+            if (src->sign)
+              POPULATE (gint16, GINT16_TO_BE, GINT16_TO_LE);
+            else
+              POPULATE (guint16, GUINT16_TO_BE, GUINT16_TO_LE);
+            break;
+          case 24:
+            if (src->sign) {
+              gpointer p;
+              gint32 val = (gint32) int_value;
 
-	      switch (src->endianness) {
-		case G_LITTLE_ENDIAN:
-		  val = GINT32_TO_LE (val);
-		  break;
-		case G_BIG_ENDIAN:
-		  val = GINT32_TO_BE (val);
-		  break;
-		default:
-		  g_assert_not_reached ();
-	      };
-	      p = &val;
-	      if (src->endianness == G_BIG_ENDIAN)
-		p++;
-	      for (j = 0; j < src->channels; j++) {
-		memcpy (data, p, 3);
-		data += 3;
-	      }
-	    } else {
-	      gpointer p;
-	      guint32 val = (guint32) int_value;
+              switch (src->endianness) {
+                case G_LITTLE_ENDIAN:
+                  val = GINT32_TO_LE (val);
+                  break;
+                case G_BIG_ENDIAN:
+                  val = GINT32_TO_BE (val);
+                  break;
+                default:
+                  g_assert_not_reached ();
+              };
+              p = &val;
+              if (src->endianness == G_BIG_ENDIAN)
+                p++;
+              for (j = 0; j < src->channels; j++) {
+                memcpy (data, p, 3);
+                data += 3;
+              }
+            } else {
+              gpointer p;
+              guint32 val = (guint32) int_value;
 
-	      switch (src->endianness) {
-		case G_LITTLE_ENDIAN:
-		  val = GUINT32_TO_LE (val);
-		  break;
-		case G_BIG_ENDIAN:
-		  val = GUINT32_TO_BE (val);
-		  break;
-		default:
-		  g_assert_not_reached ();
-	      };
-	      p = &val;
-	      if (src->endianness == G_BIG_ENDIAN)
-		p++;
-	      for (j = 0; j < src->channels; j++) {
-		memcpy (data, p, 3);
-		data += 3;
-	      }
-	    }
-	    break;
-	  case 32:
-	    if (src->sign)
-	      POPULATE (gint32, GINT32_TO_BE, GINT32_TO_LE);
-	    else
-	      POPULATE (guint32, GUINT32_TO_BE, GUINT32_TO_LE);
-	    break;
-	  default:
-	    g_assert_not_reached ();
-	}
-	break;
+              switch (src->endianness) {
+                case G_LITTLE_ENDIAN:
+                  val = GUINT32_TO_LE (val);
+                  break;
+                case G_BIG_ENDIAN:
+                  val = GUINT32_TO_BE (val);
+                  break;
+                default:
+                  g_assert_not_reached ();
+              };
+              p = &val;
+              if (src->endianness == G_BIG_ENDIAN)
+                p++;
+              for (j = 0; j < src->channels; j++) {
+                memcpy (data, p, 3);
+                data += 3;
+              }
+            }
+            break;
+          case 32:
+            if (src->sign)
+              POPULATE (gint32, GINT32_TO_BE, GINT32_TO_LE);
+            else
+              POPULATE (guint32, GUINT32_TO_BE, GUINT32_TO_LE);
+            break;
+          default:
+            g_assert_not_reached ();
+        }
+        break;
       }
       case SINE_SRC_FLOAT:
-	if (src->width == 32) {
-	  gfloat *p = (gfloat *) data;
-	  gfloat fval = (gfloat) value;
+        if (src->width == 32) {
+          gfloat *p = (gfloat *) data;
+          gfloat fval = (gfloat) value;
 
-	  for (j = 0; j < src->channels; j++) {
-	    *p = fval;
-	    p++;
-	  }
-	  data = p;
-	  break;
-	}
-	if (src->width == 64) {
-	  gdouble *p = (gdouble *) data;
+          for (j = 0; j < src->channels; j++) {
+            *p = fval;
+            p++;
+          }
+          data = p;
+          break;
+        }
+        if (src->width == 64) {
+          gdouble *p = (gdouble *) data;
 
-	  for (j = 0; j < src->channels; j++) {
-	    *p = value;
-	    p++;
-	  }
-	  data = p;
-	  break;
-	}
-	g_assert_not_reached ();
+          for (j = 0; j < src->channels; j++) {
+            *p = value;
+            p++;
+          }
+          data = p;
+          break;
+        }
+        g_assert_not_reached ();
       default:
-	g_assert_not_reached ();
+        g_assert_not_reached ();
     }
   }
 

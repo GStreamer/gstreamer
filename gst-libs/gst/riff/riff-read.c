@@ -61,8 +61,8 @@ gst_riff_read_get_type (void)
     };
 
     gst_riff_read_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstRiffRead",
-	&gst_riff_read_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstRiffRead",
+        &gst_riff_read_info, 0);
   }
 
   return gst_riff_read_type;
@@ -94,16 +94,16 @@ gst_riff_read_change_state (GstElement * element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_READY_TO_PAUSED:
       if (!riff->sinkpad)
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
       riff->bs = gst_bytestream_new (riff->sinkpad);
       break;
     case GST_STATE_PAUSED_TO_READY:
       gst_bytestream_destroy (riff->bs);
       while (riff->level) {
-	GstRiffLevel *level = riff->level->data;
+        GstRiffLevel *level = riff->level->data;
 
-	riff->level = g_list_remove (riff->level, level);
-	g_free (level);
+        riff->level = g_list_remove (riff->level, level);
+        g_free (level);
       }
       break;
     default:
@@ -165,7 +165,7 @@ gst_riff_peek_head (GstRiffRead * riff,
     if (GST_IS_EVENT (event)) {
       gst_pad_event_default (riff->sinkpad, event);
       if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)
-	return FALSE;
+        return FALSE;
     } else {
       GST_ELEMENT_ERROR (riff, RESOURCE, READ, (NULL), (NULL));
       return FALSE;
@@ -257,7 +257,7 @@ gst_riff_read_seek (GstRiffRead * riff, guint64 offset)
     } else if (GST_EVENT_TYPE (event) != GST_EVENT_DISCONTINUOUS) {
       gst_pad_event_default (riff->sinkpad, event);
       if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)
-	return NULL;
+        return NULL;
       event = NULL;
     }
   }
@@ -341,7 +341,7 @@ gst_riff_read_skip (GstRiffRead * riff)
 
   /* no */
   if (!(event = gst_riff_read_seek (riff,
-	      gst_bytestream_tell (riff->bs) + length)))
+              gst_bytestream_tell (riff->bs) + length)))
     return FALSE;
 
   gst_event_unref (event);
@@ -407,7 +407,7 @@ gst_riff_read_strh (GstRiffRead * riff, gst_riff_strh ** header)
   }
   if (GST_BUFFER_SIZE (buf) < sizeof (gst_riff_strh)) {
     g_warning ("Too small strh (%d available, %d needed)",
-	GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_strh));
+        GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_strh));
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -474,7 +474,7 @@ gst_riff_read_strf_vids (GstRiffRead * riff, gst_riff_strf_vids ** header)
   }
   if (GST_BUFFER_SIZE (buf) < sizeof (gst_riff_strf_vids)) {
     g_warning ("Too small strf_vids (%d available, %d needed)",
-	GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_strf_vids));
+        GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_strf_vids));
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -498,7 +498,7 @@ gst_riff_read_strf_vids (GstRiffRead * riff, gst_riff_strf_vids ** header)
   /* size checking */
   if (strf->size > GST_BUFFER_SIZE (buf)) {
     g_warning ("strf_vids header gave %d bytes data, only %d available",
-	strf->size, GST_BUFFER_SIZE (buf));
+        strf->size, GST_BUFFER_SIZE (buf));
     strf->size = GST_BUFFER_SIZE (buf);
   }
 
@@ -541,7 +541,7 @@ gst_riff_read_strf_auds (GstRiffRead * riff, gst_riff_strf_auds ** header)
   }
   if (GST_BUFFER_SIZE (buf) < sizeof (gst_riff_strf_auds)) {
     g_warning ("Too small strf_auds (%d available, %d needed)",
-	GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_strf_auds));
+        GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_strf_auds));
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -564,7 +564,7 @@ gst_riff_read_strf_auds (GstRiffRead * riff, gst_riff_strf_auds ** header)
   GST_INFO (" rate        %d", strf->rate);
   GST_INFO (" av_bps      %d", strf->av_bps);
   GST_INFO (" blockalign  %d", strf->blockalign);
-  GST_INFO (" size        %d", strf->size);	/* wordsize, not extrasize! */
+  GST_INFO (" size        %d", strf->size);     /* wordsize, not extrasize! */
 
   gst_buffer_unref (buf);
 
@@ -590,7 +590,7 @@ gst_riff_read_strf_iavs (GstRiffRead * riff, gst_riff_strf_iavs ** header)
   }
   if (GST_BUFFER_SIZE (buf) < sizeof (gst_riff_strf_iavs)) {
     g_warning ("Too small strf_iavs (%d available, %d needed)",
-	GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_strf_iavs));
+        GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_strf_iavs));
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -694,102 +694,103 @@ gst_riff_read_info (GstRiffRead * riff)
     /* find out the type of metadata */
     switch (tag) {
       case GST_RIFF_INFO_IARL:
-	type = GST_TAG_LOCATION;
-	break;
+        type = GST_TAG_LOCATION;
+        break;
       case GST_RIFF_INFO_IART:
-	type = GST_TAG_ARTIST;
-	break;
+        type = GST_TAG_ARTIST;
+        break;
       case GST_RIFF_INFO_ICMS:
-	type = NULL;		/*"Commissioner"; */
-	break;
+        type = NULL;            /*"Commissioner"; */
+        break;
       case GST_RIFF_INFO_ICMT:
-	type = GST_TAG_COMMENT;
-	break;
+        type = GST_TAG_COMMENT;
+        break;
       case GST_RIFF_INFO_ICOP:
-	type = GST_TAG_COPYRIGHT;
-	break;
+        type = GST_TAG_COPYRIGHT;
+        break;
       case GST_RIFF_INFO_ICRD:
-	type = GST_TAG_DATE;
-	break;
+        type = GST_TAG_DATE;
+        break;
       case GST_RIFF_INFO_ICRP:
-	type = NULL;		/*"Cropped"; */
-	break;
+        type = NULL;            /*"Cropped"; */
+        break;
       case GST_RIFF_INFO_IDIM:
-	type = NULL;		/*"Dimensions"; */
-	break;
+        type = NULL;            /*"Dimensions"; */
+        break;
       case GST_RIFF_INFO_IDPI:
-	type = NULL;		/*"Dots per Inch"; */
-	break;
+        type = NULL;            /*"Dots per Inch"; */
+        break;
       case GST_RIFF_INFO_IENG:
-	type = NULL;		/*"Engineer"; */
-	break;
+        type = NULL;            /*"Engineer"; */
+        break;
       case GST_RIFF_INFO_IGNR:
-	type = GST_TAG_GENRE;
-	break;
+        type = GST_TAG_GENRE;
+        break;
       case GST_RIFF_INFO_IKEY:
-	type = NULL; /*"Keywords"; */ ;
-	break;
+        type = NULL; /*"Keywords"; */ ;
+        break;
       case GST_RIFF_INFO_ILGT:
-	type = NULL;		/*"Lightness"; */
-	break;
+        type = NULL;            /*"Lightness"; */
+        break;
       case GST_RIFF_INFO_IMED:
-	type = NULL;		/*"Medium"; */
-	break;
+        type = NULL;            /*"Medium"; */
+        break;
       case GST_RIFF_INFO_INAM:
-	type = GST_TAG_TITLE;
-	break;
+        type = GST_TAG_TITLE;
+        break;
       case GST_RIFF_INFO_IPLT:
-	type = NULL;		/*"Palette"; */
-	break;
+        type = NULL;            /*"Palette"; */
+        break;
       case GST_RIFF_INFO_IPRD:
-	type = NULL;		/*"Product"; */
-	break;
+        type = NULL;            /*"Product"; */
+        break;
       case GST_RIFF_INFO_ISBJ:
-	type = NULL;		/*"Subject"; */
-	break;
+        type = NULL;            /*"Subject"; */
+        break;
       case GST_RIFF_INFO_ISFT:
-	type = GST_TAG_ENCODER;
-	break;
+        type = GST_TAG_ENCODER;
+        break;
       case GST_RIFF_INFO_ISHP:
-	type = NULL;		/*"Sharpness"; */
-	break;
+        type = NULL;            /*"Sharpness"; */
+        break;
       case GST_RIFF_INFO_ISRC:
-	type = GST_TAG_ISRC;
-	break;
+        type = GST_TAG_ISRC;
+        break;
       case GST_RIFF_INFO_ISRF:
-	type = NULL;		/*"Source Form"; */
-	break;
+        type = NULL;            /*"Source Form"; */
+        break;
       case GST_RIFF_INFO_ITCH:
-	type = NULL;		/*"Technician"; */
-	break;
+        type = NULL;            /*"Technician"; */
+        break;
       default:
-	type = NULL;
-	GST_WARNING ("Unknown INFO (metadata) tag entry " GST_FOURCC_FORMAT,
-	    GST_FOURCC_ARGS (tag));
-	break;
+        type = NULL;
+        GST_WARNING ("Unknown INFO (metadata) tag entry " GST_FOURCC_FORMAT,
+            GST_FOURCC_ARGS (tag));
+        break;
     }
 
     if (type) {
       name = NULL;
       if (!gst_riff_read_ascii (riff, &tag, &name)) {
-	return FALSE;
+        return FALSE;
       }
 
       if (name && name[0] != '\0') {
-	GValue src = { 0 }
-	, dest = {
-	0};
-	GType dest_type = gst_tag_get_type (type);
+        GValue src = { 0 }
+        , dest =
+        {
+        0};
+        GType dest_type = gst_tag_get_type (type);
 
-	have_tags = TRUE;
-	g_value_init (&src, G_TYPE_STRING);
-	g_value_set_string (&src, name);
-	g_value_init (&dest, dest_type);
-	g_value_transform (&src, &dest);
-	g_value_unset (&src);
-	gst_tag_list_add_values (taglist, GST_TAG_MERGE_APPEND,
-	    type, &dest, NULL);
-	g_value_unset (&dest);
+        have_tags = TRUE;
+        g_value_init (&src, G_TYPE_STRING);
+        g_value_set_string (&src, name);
+        g_value_init (&dest, dest_type);
+        g_value_transform (&src, &dest);
+        g_value_unset (&src);
+        gst_tag_list_add_values (taglist, GST_TAG_MERGE_APPEND,
+            type, &dest, NULL);
+        g_value_unset (&dest);
       }
       g_free (name);
     } else {
@@ -804,10 +805,10 @@ gst_riff_read_info (GstRiffRead * riff)
 
     /* let the world know about this wonderful thing */
     for (padlist = gst_element_get_pad_list (element);
-	padlist != NULL; padlist = padlist->next) {
+        padlist != NULL; padlist = padlist->next) {
       if (GST_PAD_IS_SRC (padlist->data) && GST_PAD_IS_USABLE (padlist->data)) {
-	gst_event_ref (event);
-	gst_pad_push (GST_PAD (padlist->data), GST_DATA (event));
+        gst_event_ref (event);
+        gst_pad_push (GST_PAD (padlist->data), GST_DATA (event));
       }
     }
     gst_event_unref (event);

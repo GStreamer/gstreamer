@@ -36,11 +36,11 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_element_register (plugin, "vorbisenc", GST_RANK_NONE,
-	  GST_TYPE_VORBISENC))
+          GST_TYPE_VORBISENC))
     return FALSE;
 
   if (!gst_element_register (plugin, "vorbisdec", GST_RANK_PRIMARY,
-	  gst_vorbis_dec_get_type ()))
+          gst_vorbis_dec_get_type ()))
     return FALSE;
 
   GST_DEBUG_CATEGORY_INIT (vorbisdec_debug, "vorbisdec", 0,

@@ -42,8 +42,8 @@ set_state (GstElementState state)
     g_print (" DONE - iterating a bit...");
     for (i = 0; i < 400; i++) {
       if (!gst_bin_iterate (GST_BIN (pipeline))) {
-	g_print (" ERROR in iteration %d\n", i);
-	exit (-2);
+        g_print (" ERROR in iteration %d\n", i);
+        exit (-2);
       }
     }
   }

@@ -129,15 +129,15 @@ videoscale_get_structure (struct videoscale_format_struct *format)
 
   if (format->depth) {
     structure = gst_structure_new ("video/x-raw-rgb",
-	"depth", G_TYPE_INT, format->depth,
-	"bpp", G_TYPE_INT, format->bpp,
-	"endianness", G_TYPE_INT, format->endianness,
-	"red_mask", G_TYPE_INT, format->red_mask,
-	"green_mask", G_TYPE_INT, format->green_mask,
-	"blue_mask", G_TYPE_INT, format->blue_mask, NULL);
+        "depth", G_TYPE_INT, format->depth,
+        "bpp", G_TYPE_INT, format->bpp,
+        "endianness", G_TYPE_INT, format->endianness,
+        "red_mask", G_TYPE_INT, format->red_mask,
+        "green_mask", G_TYPE_INT, format->green_mask,
+        "blue_mask", G_TYPE_INT, format->blue_mask, NULL);
   } else {
     structure = gst_structure_new ("video/x-raw-yuv",
-	"format", GST_TYPE_FOURCC, format->fourcc, NULL);
+        "format", GST_TYPE_FOURCC, format->fourcc, NULL);
   }
 
   gst_structure_set (structure,
@@ -168,7 +168,7 @@ videoscale_find_by_structure (GstStructure * structure)
     for (i = 0; i < videoscale_n_formats; i++) {
       format = videoscale_formats + i;
       if (format->depth == 0 && format->fourcc == fourcc) {
-	return format;
+        return format;
       }
     }
   } else {
@@ -190,9 +190,9 @@ videoscale_find_by_structure (GstStructure * structure)
     for (i = 0; i < videoscale_n_formats; i++) {
       format = videoscale_formats + i;
       if (format->bpp == bpp && format->depth == depth &&
-	  format->endianness == endianness && format->red_mask == red_mask &&
-	  format->green_mask == green_mask && format->blue_mask == blue_mask) {
-	return format;
+          format->endianness == endianness && format->red_mask == red_mask &&
+          format->green_mask == green_mask && format->blue_mask == blue_mask) {
+        return format;
       }
     }
   }
@@ -216,8 +216,8 @@ gst_videoscale_setup (GstVideoscale * videoscale)
   if (videoscale->to_width == 0 || videoscale->to_height == 0 ||
       videoscale->from_width == 0 || videoscale->from_height == 0) {
     g_critical ("bad sizes %dx%d %dx%d",
-	videoscale->from_width, videoscale->from_height,
-	videoscale->to_width, videoscale->to_height);
+        videoscale->from_width, videoscale->from_height,
+        videoscale->to_width, videoscale->to_height);
     return;
   }
 
@@ -419,7 +419,7 @@ gst_videoscale_bilinear (unsigned char *src, double x, double y, int sw, int sh)
 
   color = rint (dest);
   if (color < 0)
-    color = abs (color);	/* cannot have negative values ! */
+    color = abs (color);        /* cannot have negative values ! */
   /*if (color<0) color=0;  // cannot have negative values ! */
   if (color > 255)
     color = 255;
@@ -464,7 +464,7 @@ gst_videoscale_bicubic (unsigned char *src, double x, double y, int sw, int sh)
 
   color = rint (dest);
   if (color < 0)
-    color = abs (color);	/* cannot have negative values ! */
+    color = abs (color);        /* cannot have negative values ! */
   if (color > 255)
     color = 255;
 
@@ -489,15 +489,15 @@ gst_videoscale_scale_plane_slow (GstVideoscale * scale, unsigned char *src,
       xr = ((double) x) / zoomx;
 
       GST_DEBUG_OBJECT (scale, "scale plane slow %g %g %p", xr, yr,
-	  (src + (int) (x) + (int) ((y) * sw)));
+          (src + (int) (x) + (int) ((y) * sw)));
 
       if (floor (xr) == xr && floor (yr) == yr) {
-	GST_DEBUG_OBJECT (scale, "scale plane %g %g %p %p", xr, yr,
-	    (src + (int) (x) + (int) ((y) * sw)), dest);
-	*dest++ = RC (xr, yr);
+        GST_DEBUG_OBJECT (scale, "scale plane %g %g %p %p", xr, yr,
+            (src + (int) (x) + (int) ((y) * sw)), dest);
+        *dest++ = RC (xr, yr);
       } else {
-	*dest++ = scale->filter (src, xr, yr, sw, sh);
-	/**dest++ = gst_videoscale_bicubic(src, xr, yr, sw, sh); */
+        *dest++ = scale->filter (src, xr, yr, sw, sh);
+        /**dest++ = gst_videoscale_bicubic(src, xr, yr, sw, sh); */
       }
     }
   }
@@ -536,15 +536,15 @@ gst_videoscale_scale_point_sample (GstVideoscale * scale, unsigned char *src,
       xcount = 0;
       sum = 0;
       while (xpos >= 0x10000L) {
-	loop = ycount;
-	srcp2 = srcp;
-	while (loop--) {
-	  sum += *srcp2;
-	  srcp2 += sw;
-	}
-	srcp++;
-	xcount++;
-	xpos -= 0x10000L;
+        loop = ycount;
+        srcp2 = srcp;
+        while (loop--) {
+          sum += *srcp2;
+          srcp2 += sw;
+        }
+        srcp++;
+        xcount++;
+        xpos -= 0x10000L;
       }
       *dest++ = sum / (xcount * ycount);
       xpos += xinc;
@@ -585,8 +585,8 @@ gst_videoscale_scale_nearest (GstVideoscale * scale,
 
     for (x = dw; x; x--) {
       while (xpos >= 0x10000L) {
-	srcp++;
-	xpos -= 0x10000L;
+        srcp++;
+        xpos -= 0x10000L;
       }
       *destp++ = *srcp;
       xpos += xinc;
@@ -627,8 +627,8 @@ gst_videoscale_scale_nearest_str2 (GstVideoscale * scale,
 
     for (x = dw; x; x--) {
       while (xpos >= 0x10000L) {
-	srcp += 2;
-	xpos -= 0x10000L;
+        srcp += 2;
+        xpos -= 0x10000L;
       }
       *destp = *srcp;
       destp += 2;
@@ -670,8 +670,8 @@ gst_videoscale_scale_nearest_str4 (GstVideoscale * scale,
 
     for (x = dw; x; x--) {
       while (xpos >= 0x10000L) {
-	srcp += 4;
-	xpos -= 0x10000L;
+        srcp += 4;
+        xpos -= 0x10000L;
       }
       *destp = *srcp;
       destp += 4;
@@ -713,8 +713,8 @@ gst_videoscale_scale_nearest_32bit (GstVideoscale * scale,
 
     for (x = dw; x; x--) {
       while (xpos >= 0x10000L) {
-	srcp += 4;
-	xpos -= 0x10000L;
+        srcp += 4;
+        xpos -= 0x10000L;
       }
       *(guint32 *) destp = *(guint32 *) srcp;
       destp += 4;
@@ -756,8 +756,8 @@ gst_videoscale_scale_nearest_24bit (GstVideoscale * scale,
 
     for (x = dw; x; x--) {
       while (xpos >= 0x10000L) {
-	srcp += 3;
-	xpos -= 0x10000L;
+        srcp += 3;
+        xpos -= 0x10000L;
       }
       destp[0] = srcp[0];
       destp[1] = srcp[1];
@@ -801,8 +801,8 @@ gst_videoscale_scale_nearest_16bit (GstVideoscale * scale,
 
     for (x = dw; x; x--) {
       while (xpos >= 0x10000L) {
-	srcp += 2;
-	xpos -= 0x10000L;
+        srcp += 2;
+        xpos -= 0x10000L;
       }
       destp[0] = srcp[0];
       destp[1] = srcp[1];

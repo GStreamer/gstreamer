@@ -83,7 +83,7 @@ gst_videosink_get_type (void)
     };
 
     videosink_type = g_type_register_static (GST_TYPE_ELEMENT,
-	"GstVideoSink", &videosink_info, 0);
+        "GstVideoSink", &videosink_info, 0);
   }
 
   return videosink_type;

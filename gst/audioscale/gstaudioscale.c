@@ -77,9 +77,10 @@ gst_audioscale_method_get_type (void)
     {GST_RESAMPLE_SINC, "2", "Sinc"},
     {0, NULL, NULL},
   };
+
   if (!audioscale_method_type) {
     audioscale_method_type = g_enum_register_static ("GstAudioscaleMethod",
-	audioscale_methods);
+        audioscale_methods);
   }
   return audioscale_method_type;
 }
@@ -116,9 +117,10 @@ audioscale_get_type (void)
       0,
       (GInstanceInitFunc) gst_audioscale_init,
     };
+
     audioscale_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "Audioscale",
-	&audioscale_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "Audioscale",
+        &audioscale_info, 0);
   }
   return audioscale_type;
 }
@@ -150,12 +152,12 @@ gst_audioscale_class_init (AudioscaleClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FILTERLEN,
       g_param_spec_int ("filter_length", "filter_length", "filter_length",
-	  0, G_MAXINT, 16, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, G_MAXINT, 16, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_METHOD,
       g_param_spec_enum ("method", "method", "method",
-	  GST_TYPE_AUDIOSCALE_METHOD, GST_RESAMPLE_SINC,
-	  G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          GST_TYPE_AUDIOSCALE_METHOD, GST_RESAMPLE_SINC,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 }
@@ -203,7 +205,7 @@ gst_audioscale_getcaps (GstPad * pad)
     }
 
     gst_structure_set (structure, "rate", GST_TYPE_INT_RANGE, rate_min,
-	rate_max, NULL);
+        rate_max, NULL);
   }
 
   return caps;
@@ -247,8 +249,8 @@ gst_audioscale_link (GstPad * pad, const GstCaps * caps)
     GstCaps *trycaps = gst_caps_copy (caps);
 
     gst_caps_set_simple (trycaps,
-	"rate", G_TYPE_INT,
-	(int) ((pad == audioscale->srcpad) ? r->i_rate : r->o_rate), NULL);
+        "rate", G_TYPE_INT,
+        (int) ((pad == audioscale->srcpad) ? r->i_rate : r->o_rate), NULL);
     link_ret = gst_pad_try_set_caps (otherpad, trycaps);
     if (GST_PAD_LINK_FAILED (link_ret)) {
       return link_ret;
@@ -368,7 +370,7 @@ gst_audioscale_set_property (GObject * object, guint prop_id,
     case ARG_FILTERLEN:
       r->filter_length = g_value_get_int (value);
       GST_DEBUG_OBJECT (GST_ELEMENT (src), "new filter length %d\n",
-	  r->filter_length);
+          r->filter_length);
       break;
     case ARG_METHOD:
       r->method = g_value_get_enum (value);
@@ -413,7 +415,7 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_element_register (plugin, "audioscale", GST_RANK_NONE,
-	  GST_TYPE_AUDIOSCALE)) {
+          GST_TYPE_AUDIOSCALE)) {
     return FALSE;
   }
 

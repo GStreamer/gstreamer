@@ -28,7 +28,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "tcpsink", GST_RANK_NONE,
-	  GST_TYPE_TCPSINK))
+          GST_TYPE_TCPSINK))
     return FALSE;
 
   if (!gst_element_register (plugin, "tcpsrc", GST_RANK_NONE, GST_TYPE_TCPSRC))

@@ -56,7 +56,8 @@ typedef enum
   GST_GNOMEVFSSINK_OPEN = GST_ELEMENT_FLAG_LAST,
 
   GST_GNOMEVFSSINK_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
-} GstGnomeVFSSinkFlags;
+}
+GstGnomeVFSSinkFlags;
 
 struct _GstGnomeVFSSink
 {
@@ -144,9 +145,10 @@ gst_gnomevfssink_get_type (void)
       0,
       (GInstanceInitFunc) gst_gnomevfssink_init,
     };
+
     gnomevfssink_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstGnomeVFSSink",
-	&gnomevfssink_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstGnomeVFSSink",
+        &gnomevfssink_info, 0);
   }
   return gnomevfssink_type;
 }
@@ -177,7 +179,7 @@ gst_gnomevfssink_class_init (GstGnomeVFSSinkClass * klass)
   g_object_class_install_property (gobject_class,
       ARG_HANDLE,
       g_param_spec_pointer ("handle",
-	  "GnomeVFSHandle", "Handle for GnomeVFS", G_PARAM_READWRITE));
+          "GnomeVFSHandle", "Handle for GnomeVFS", G_PARAM_READWRITE));
 
   gst_gnomevfssink_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -227,9 +229,9 @@ gst_gnomevfssink_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_LOCATION:
       if (sink->filename)
-	g_free (sink->filename);
+        g_free (sink->filename);
       if (sink->uri)
-	g_free (sink->uri);
+        g_free (sink->uri);
       sink->filename = g_strdup (g_value_get_string (value));
       sink->uri = gnome_vfs_uri_new (sink->filename);
       break;
@@ -280,18 +282,18 @@ gst_gnomevfssink_open_file (GstGnomeVFSSink * sink)
   if (sink->filename) {
     /* open the file */
     result = gnome_vfs_create_uri (&(sink->handle), sink->uri,
-	GNOME_VFS_OPEN_WRITE, sink->erase,
-	GNOME_VFS_PERM_USER_READ | GNOME_VFS_PERM_USER_WRITE
-	| GNOME_VFS_PERM_GROUP_READ);
+        GNOME_VFS_OPEN_WRITE, sink->erase,
+        GNOME_VFS_PERM_USER_READ | GNOME_VFS_PERM_USER_WRITE
+        | GNOME_VFS_PERM_GROUP_READ);
     GST_DEBUG ("open: %s", gnome_vfs_result_to_string (result));
     if (result != GNOME_VFS_OK) {
       if (sink->erase == FALSE) {
-	g_signal_emit (G_OBJECT (sink),
-	    gst_gnomevfssink_signals[SIGNAL_ERASE_ASK], 0, sink->erase);
+        g_signal_emit (G_OBJECT (sink),
+            gst_gnomevfssink_signals[SIGNAL_ERASE_ASK], 0, sink->erase);
       }
       GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
-	  (_("Could not open vfs file \"%s\" for writing."), sink->filename),
-	  GST_ERROR_SYSTEM);
+          (_("Could not open vfs file \"%s\" for writing."), sink->filename),
+          GST_ERROR_SYSTEM);
       return FALSE;
     }
   } else
@@ -315,8 +317,8 @@ gst_gnomevfssink_close_file (GstGnomeVFSSink * sink)
 
     if (result != GNOME_VFS_OK)
       GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
-	  (_("Could not close vfs file \"%s\"."), sink->filename),
-	  GST_ERROR_SYSTEM);
+          (_("Could not close vfs file \"%s\"."), sink->filename),
+          GST_ERROR_SYSTEM);
   }
 
   GST_FLAG_UNSET (sink, GST_GNOMEVFSSINK_OPEN);
@@ -345,14 +347,14 @@ gst_gnomevfssink_chain (GstPad * pad, GstData * _data)
 
   if (GST_FLAG_IS_SET (sink, GST_GNOMEVFSSINK_OPEN)) {
     result =
-	gnome_vfs_write (sink->handle, GST_BUFFER_DATA (buf),
-	GST_BUFFER_SIZE (buf), &bytes_written);
+        gnome_vfs_write (sink->handle, GST_BUFFER_DATA (buf),
+        GST_BUFFER_SIZE (buf), &bytes_written);
     GST_DEBUG ("write: %s, written_bytes: %" G_GUINT64_FORMAT,
-	gnome_vfs_result_to_string (result), bytes_written);
+        gnome_vfs_result_to_string (result), bytes_written);
     if (bytes_written < GST_BUFFER_SIZE (buf)) {
       printf ("gnomevfssink : Warning : %d bytes should be written, only %"
-	  G_GUINT64_FORMAT " bytes written\n", GST_BUFFER_SIZE (buf),
-	  bytes_written);
+          G_GUINT64_FORMAT " bytes written\n", GST_BUFFER_SIZE (buf),
+          bytes_written);
     }
   }
   gst_buffer_unref (buf);
@@ -372,7 +374,7 @@ gst_gnomevfssink_change_state (GstElement * element)
   } else {
     if (!GST_FLAG_IS_SET (element, GST_GNOMEVFSSINK_OPEN)) {
       if (!gst_gnomevfssink_open_file (GST_GNOMEVFSSINK (element)))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
     }
   }
 

@@ -32,9 +32,9 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "gnomevfssrc",
-	  GST_RANK_SECONDARY, gst_gnomevfssrc_get_type ()) ||
+          GST_RANK_SECONDARY, gst_gnomevfssrc_get_type ()) ||
       !gst_element_register (plugin, "gnomevfssink",
-	  GST_RANK_SECONDARY, gst_gnomevfssink_get_type ())) {
+          GST_RANK_SECONDARY, gst_gnomevfssink_get_type ())) {
     return FALSE;
   }
 #ifdef ENABLE_NLS

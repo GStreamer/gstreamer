@@ -29,7 +29,7 @@ get_position_info (GstElement * cdparanoia)
     if (format == GST_FORMAT_TIME) {
       position /= GST_SECOND;
       g_print ("%s: %lld:%02lld", definition->nick, position / 60,
-	  position % 60);
+          position % 60);
     } else {
       g_print ("%s: %lld", definition->nick, position);
     }
@@ -72,16 +72,16 @@ get_track_info (GstElement * cdparanoia)
     res = gst_pad_query (pad, GST_QUERY_TOTAL, &format, &total);
     if (res) {
       if (format == GST_FORMAT_TIME) {
-	total /= GST_SECOND;
-	g_print ("%s total: %lld:%02lld\n", definition->nick, total / 60,
-	    total % 60);
+        total /= GST_SECOND;
+        g_print ("%s total: %lld:%02lld\n", definition->nick, total / 60,
+            total % 60);
       } else
-	g_print ("%s total: %lld\n", definition->nick, total);
+        g_print ("%s total: %lld\n", definition->nick, total);
 
       if (format == track_format)
-	total_tracks = total;
+        total_tracks = total;
       else if (format == GST_FORMAT_TIME)
-	total_time = total;
+        total_time = total;
     } else
       g_print ("failed to get %s total\n", definition->nick);
 
@@ -110,12 +110,12 @@ get_track_info (GstElement * cdparanoia)
       /* for the first track (i==0) we wait until we have the
        * time of the next track */
       if (i > 0) {
-	gint64 length = time - time_count;
+        gint64 length = time - time_count;
 
-	g_print ("track %d: %lld:%02lld -> %lld:%02lld, length: %lld:%02lld\n",
-	    i - 1,
-	    time_count / 60, time_count % 60,
-	    time / 60, time % 60, length / 60, length % 60);
+        g_print ("track %d: %lld:%02lld -> %lld:%02lld, length: %lld:%02lld\n",
+            i - 1,
+            time_count / 60, time_count % 60,
+            time / 60, time % 60, length / 60, length % 60);
       }
     } else {
       g_print ("could not get time for track %d\n", i);

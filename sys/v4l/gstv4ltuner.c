@@ -75,8 +75,8 @@ gst_v4l_tuner_channel_get_type (void)
     };
 
     gst_v4l_tuner_channel_type =
-	g_type_register_static (GST_TYPE_TUNER_CHANNEL,
-	"GstV4lTunerChannel", &v4l_tuner_channel_info, 0);
+        g_type_register_static (GST_TYPE_TUNER_CHANNEL,
+        "GstV4lTunerChannel", &v4l_tuner_channel_info, 0);
   }
 
   return gst_v4l_tuner_channel_type;
@@ -116,8 +116,8 @@ gst_v4l_tuner_norm_get_type (void)
     };
 
     gst_v4l_tuner_norm_type =
-	g_type_register_static (GST_TYPE_TUNER_NORM,
-	"GstV4lTunerNorm", &v4l_tuner_norm_info, 0);
+        g_type_register_static (GST_TYPE_TUNER_NORM,
+        "GstV4lTunerNorm", &v4l_tuner_norm_info, 0);
   }
 
   return gst_v4l_tuner_norm_type;
@@ -271,7 +271,7 @@ gst_v4l_tuner_set_frequency (GstTuner * tuner,
   /* assert that we're opened and that we're using a known item */
   g_return_if_fail (GST_V4L_IS_OPEN (v4lelement));
   g_return_if_fail (GST_TUNER_CHANNEL_HAS_FLAG (channel,
-	  GST_TUNER_CHANNEL_FREQUENCY));
+          GST_TUNER_CHANNEL_FREQUENCY));
   g_return_if_fail (gst_v4l_tuner_contains_channel (v4lelement, v4lchannel));
 
   gst_v4l_get_chan_norm (v4lelement, &chan, NULL);
@@ -291,9 +291,9 @@ gst_v4l_tuner_get_frequency (GstTuner * tuner, GstTunerChannel * channel)
   /* assert that we're opened and that we're using a known item */
   g_return_val_if_fail (GST_V4L_IS_OPEN (v4lelement), 0);
   g_return_val_if_fail (GST_TUNER_CHANNEL_HAS_FLAG (channel,
-	  GST_TUNER_CHANNEL_FREQUENCY), 0);
+          GST_TUNER_CHANNEL_FREQUENCY), 0);
   g_return_val_if_fail (gst_v4l_tuner_contains_channel (v4lelement,
-	  v4lchannel), 0);
+          v4lchannel), 0);
 
   gst_v4l_get_chan_norm (v4lelement, &chan, NULL);
   if (chan == GST_V4L_TUNER_CHANNEL (channel)->index) {
@@ -314,9 +314,9 @@ gst_v4l_tuner_signal_strength (GstTuner * tuner, GstTunerChannel * channel)
   /* assert that we're opened and that we're using a known item */
   g_return_val_if_fail (GST_V4L_IS_OPEN (v4lelement), 0);
   g_return_val_if_fail (GST_TUNER_CHANNEL_HAS_FLAG (channel,
-	  GST_TUNER_CHANNEL_FREQUENCY), 0);
+          GST_TUNER_CHANNEL_FREQUENCY), 0);
   g_return_val_if_fail (gst_v4l_tuner_contains_channel (v4lelement,
-	  v4lchannel), 0);
+          v4lchannel), 0);
 
   gst_v4l_get_chan_norm (v4lelement, &chan, NULL);
   if (chan == GST_V4L_TUNER_CHANNEL (channel)->index &&

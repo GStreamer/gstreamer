@@ -92,9 +92,10 @@ gst_v4lmjpegsink_get_type (void)
       0,
       (GInstanceInitFunc) gst_v4lmjpegsink_init,
     };
+
     v4lmjpegsink_type =
-	g_type_register_static (GST_TYPE_V4LELEMENT, "GstV4lMjpegSink",
-	&v4lmjpegsink_info, 0);
+        g_type_register_static (GST_TYPE_V4LELEMENT, "GstV4lMjpegSink",
+        &v4lmjpegsink_info, 0);
   }
   return v4lmjpegsink_type;
 }
@@ -106,8 +107,8 @@ gst_v4lmjpegsink_base_init (gpointer g_class)
       GST_PAD_SINK,
       GST_PAD_ALWAYS,
       GST_STATIC_CAPS ("video/x-jpeg, "
-	  "width = (int) [ 1, MAX ], "
-	  "height = (int) [ 1, MAX ], " "framerate = (double) [ 0, MAX ]")
+          "width = (int) [ 1, MAX ], "
+          "height = (int) [ 1, MAX ], " "framerate = (double) [ 0, MAX ]")
       );
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
@@ -129,24 +130,24 @@ gst_v4lmjpegsink_class_init (GstV4lMjpegSinkClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUMBUFS,
       g_param_spec_int ("num_buffers", "num_buffers", "num_buffers",
-	  G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
+          G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFSIZE,
       g_param_spec_int ("buffer_size", "buffer_size", "buffer_size",
-	  G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
+          G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_X_OFFSET,
       g_param_spec_int ("x_offset", "x_offset", "x_offset",
-	  G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));
+          G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_Y_OFFSET,
       g_param_spec_int ("y_offset", "y_offset", "y_offset",
-	  G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));
+          G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAMES_DISPLAYED,
       g_param_spec_int ("frames_displayed", "frames_displayed",
-	  "frames_displayed", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
+          "frames_displayed", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAME_TIME,
       g_param_spec_int ("frame_time", "frame_time", "frame_time", G_MININT,
-	  G_MAXINT, 0, G_PARAM_READABLE));
+          G_MAXINT, 0, G_PARAM_READABLE));
 
   gobject_class->set_property = gst_v4lmjpegsink_set_property;
   gobject_class->get_property = gst_v4lmjpegsink_get_property;
@@ -154,7 +155,7 @@ gst_v4lmjpegsink_class_init (GstV4lMjpegSinkClass * klass)
   gst_v4lmjpegsink_signals[SIGNAL_FRAME_DISPLAYED] =
       g_signal_new ("frame-displayed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstV4lMjpegSinkClass,
-	  frame_displayed), NULL, NULL, g_cclosure_marshal_VOID__VOID,
+          frame_displayed), NULL, NULL, g_cclosure_marshal_VOID__VOID,
       G_TYPE_NONE, 0);
 
   gstelement_class->change_state = gst_v4lmjpegsink_change_state;
@@ -169,7 +170,7 @@ gst_v4lmjpegsink_init (GstV4lMjpegSink * v4lmjpegsink)
 
   v4lmjpegsink->sinkpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
-	  "sink"), "sink");
+          "sink"), "sink");
   gst_element_add_pad (GST_ELEMENT (v4lmjpegsink), v4lmjpegsink->sinkpad);
 
   gst_pad_set_chain_function (v4lmjpegsink->sinkpad, gst_v4lmjpegsink_chain);
@@ -210,12 +211,12 @@ gst_v4lmjpegsink_sinkconnect (GstPad * pad, const GstCaps * vscapslist)
   gst_structure_get_int (structure, "width", &v4lmjpegsink->width);
   gst_structure_get_int (structure, "height", &v4lmjpegsink->height);
 
-  if (!gst_v4lmjpegsink_set_playback (v4lmjpegsink, v4lmjpegsink->width, v4lmjpegsink->height, v4lmjpegsink->x_offset, v4lmjpegsink->y_offset, GST_V4LELEMENT (v4lmjpegsink)->vchan.norm, 0))	/* TODO: interlacing */
+  if (!gst_v4lmjpegsink_set_playback (v4lmjpegsink, v4lmjpegsink->width, v4lmjpegsink->height, v4lmjpegsink->x_offset, v4lmjpegsink->y_offset, GST_V4LELEMENT (v4lmjpegsink)->vchan.norm, 0))   /* TODO: interlacing */
     return GST_PAD_LINK_REFUSED;
 
   /* set buffer info */
   if (!gst_v4lmjpegsink_set_buffer (v4lmjpegsink,
-	  v4lmjpegsink->numbufs, v4lmjpegsink->bufsize))
+          v4lmjpegsink->numbufs, v4lmjpegsink->bufsize))
     return GST_PAD_LINK_REFUSED;
   if (!gst_v4lmjpegsink_playback_init (v4lmjpegsink))
     return GST_PAD_LINK_REFUSED;
@@ -249,7 +250,7 @@ gst_v4lmjpegsink_chain (GstPad * pad, GstData * _data)
 
   if (v4lmjpegsink->clock) {
     GST_DEBUG ("videosink: clock wait: %" G_GUINT64_FORMAT,
-	GST_BUFFER_TIMESTAMP (buf));
+        GST_BUFFER_TIMESTAMP (buf));
 
     gst_element_wait (GST_ELEMENT (v4lmjpegsink), GST_BUFFER_TIMESTAMP (buf));
   }
@@ -262,15 +263,15 @@ gst_v4lmjpegsink_chain (GstPad * pad, GstData * _data)
     /* check size */
     if (GST_BUFFER_SIZE (buf) > v4lmjpegsink->breq.size) {
       GST_ELEMENT_ERROR (v4lmjpegsink, RESOURCE, WRITE, (NULL),
-	  ("Buffer too big (%d KB), max. buffersize is %ld KB",
-	      GST_BUFFER_SIZE (buf) / 1024, v4lmjpegsink->breq.size / 1024));
+          ("Buffer too big (%d KB), max. buffersize is %ld KB",
+              GST_BUFFER_SIZE (buf) / 1024, v4lmjpegsink->breq.size / 1024));
       return;
     }
 
     /* put JPEG data to the device */
     gst_v4lmjpegsink_wait_frame (v4lmjpegsink, &num);
     memcpy (gst_v4lmjpegsink_get_buffer (v4lmjpegsink, num),
-	GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+        GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
     gst_v4lmjpegsink_play_frame (v4lmjpegsink, num);
 #if 0
   }
@@ -297,7 +298,7 @@ gst_v4lmjpegsink_buffer_new (GstBufferPool * pool,
     return NULL;
   if (v4lmjpegsink->breq.size < size) {
     GST_DEBUG ("Requested buffer size is too large (%d > %ld)",
-	size, v4lmjpegsink->breq.size);
+        size, v4lmjpegsink->breq.size);
     return NULL;
   }
   if (!gst_v4lmjpegsink_wait_frame (v4lmjpegsink, &num))
@@ -398,17 +399,17 @@ gst_v4lmjpegsink_change_state (GstElement * element)
     case GST_STATE_PAUSED_TO_PLAYING:
       /* start */
       if (!gst_v4lmjpegsink_playback_start (v4lmjpegsink))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       /* de-queue all queued buffers */
       if (!gst_v4lmjpegsink_playback_stop (v4lmjpegsink))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
       break;
     case GST_STATE_PAUSED_TO_READY:
       /* stop playback, unmap all buffers */
       if (!gst_v4lmjpegsink_playback_deinit (v4lmjpegsink))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
       break;
   }
 

@@ -73,7 +73,8 @@ typedef enum
   GST_GNOMEVFSSRC_OPEN = GST_ELEMENT_FLAG_LAST,
 
   GST_GNOMEVFSSRC_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
-} GstGnomeVFSSrcFlags;
+}
+GstGnomeVFSSrcFlags;
 
 typedef struct _GstGnomeVFSSrc GstGnomeVFSSrc;
 typedef struct _GstGnomeVFSSrcClass GstGnomeVFSSrcClass;
@@ -96,8 +97,8 @@ struct _GstGnomeVFSSrc
 
   /* details for fallback synchronous read */
   GnomeVFSFileSize size;
-  GnomeVFSFileOffset curoffset;	/* current offset in file */
-  gulong bytes_per_read;	/* bytes per read */
+  GnomeVFSFileOffset curoffset; /* current offset in file */
+  gulong bytes_per_read;        /* bytes per read */
   gboolean new_seek;
 
   /* icecast/audiocast metadata extraction handling */
@@ -142,6 +143,7 @@ gst_gnomevfssrc_get_formats (GstPad * pad)
     GST_FORMAT_BYTES,
     0,
   };
+
   return formats;
 }
 
@@ -153,6 +155,7 @@ gst_gnomevfssrc_get_query_types (GstPad * pad)
     GST_QUERY_POSITION,
     0,
   };
+
   return types;
 }
 
@@ -161,11 +164,12 @@ gst_gnomevfssrc_get_event_mask (GstPad * pad)
 {
   static const GstEventMask masks[] = {
     {GST_EVENT_SEEK, GST_SEEK_METHOD_CUR |
-	  GST_SEEK_METHOD_SET | GST_SEEK_METHOD_END | GST_SEEK_FLAG_FLUSH},
+          GST_SEEK_METHOD_SET | GST_SEEK_METHOD_END | GST_SEEK_FLAG_FLUSH},
     {GST_EVENT_FLUSH, 0},
     {GST_EVENT_SIZE, 0},
     {0, 0},
   };
+
   return masks;
 }
 
@@ -235,9 +239,10 @@ gst_gnomevfssrc_get_type (void)
       0,
       (GInstanceInitFunc) gst_gnomevfssrc_init,
     };
+
     gnomevfssrc_type =
-	g_type_register_static (GST_TYPE_ELEMENT,
-	"GstGnomeVFSSrc", &gnomevfssrc_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT,
+        "GstGnomeVFSSrc", &gnomevfssrc_info, 0);
   }
   return gnomevfssrc_type;
 }
@@ -270,37 +275,37 @@ gst_gnomevfssrc_class_init (GstGnomeVFSSrcClass * klass)
   g_object_class_install_property (gobject_class,
       ARG_HANDLE,
       g_param_spec_pointer ("handle",
-	  "GnomeVFSHandle", "Handle for GnomeVFS", G_PARAM_READWRITE));
+          "GnomeVFSHandle", "Handle for GnomeVFS", G_PARAM_READWRITE));
 
   /* icecast stuff */
   g_object_class_install_property (gobject_class,
       ARG_IRADIO_MODE,
       g_param_spec_boolean ("iradio-mode",
-	  "iradio-mode",
-	  "Enable internet radio mode (extraction of icecast/audiocast metadata)",
-	  FALSE, G_PARAM_READWRITE));
+          "iradio-mode",
+          "Enable internet radio mode (extraction of icecast/audiocast metadata)",
+          FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class,
       ARG_IRADIO_NAME,
       g_param_spec_string ("iradio-name",
-	  "iradio-name", "Name of the stream", NULL, G_PARAM_READABLE));
+          "iradio-name", "Name of the stream", NULL, G_PARAM_READABLE));
   g_object_class_install_property (gobject_class,
       ARG_IRADIO_GENRE,
       g_param_spec_string ("iradio-genre",
-	  "iradio-genre", "Genre of the stream", NULL, G_PARAM_READABLE));
+          "iradio-genre", "Genre of the stream", NULL, G_PARAM_READABLE));
   g_object_class_install_property (gobject_class,
       ARG_IRADIO_URL,
       g_param_spec_string ("iradio-url",
-	  "iradio-url",
-	  "Homepage URL for radio stream", NULL, G_PARAM_READABLE));
+          "iradio-url",
+          "Homepage URL for radio stream", NULL, G_PARAM_READABLE));
   g_object_class_install_property (gobject_class,
       ARG_IRADIO_TITLE,
       g_param_spec_string ("iradio-title",
-	  "iradio-title",
-	  "Name of currently playing song", NULL, G_PARAM_READABLE));
+          "iradio-title",
+          "Name of currently playing song", NULL, G_PARAM_READABLE));
   g_object_class_install_property (gobject_class,
       ARG_SEEKABLE,
       g_param_spec_boolean ("seekable",
-	  "seekable", "TRUE is stream is seekable", FALSE, G_PARAM_READABLE));
+          "seekable", "TRUE is stream is seekable", FALSE, G_PARAM_READABLE));
 
   gstelement_class->set_property = gst_gnomevfssrc_set_property;
   gstelement_class->get_property = gst_gnomevfssrc_get_property;
@@ -393,37 +398,37 @@ gst_gnomevfssrc_set_property (GObject * object, guint prop_id,
     case ARG_LOCATION:
       /* the element must be stopped or paused in order to do this */
       g_return_if_fail ((GST_STATE (src) < GST_STATE_PLAYING)
-	  || (GST_STATE (src) == GST_STATE_PAUSED));
+          || (GST_STATE (src) == GST_STATE_PAUSED));
 
       g_free (src->filename);
 
       /* clear the filename if we get a NULL */
       if (g_value_get_string (value) == NULL) {
-	gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
-	src->filename = NULL;
+        gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
+        src->filename = NULL;
       } else {
-	/* otherwise set the new filename */
-	location = g_value_get_string (value);
-	/* if it's not a proper uri, default to file: -- this
-	 * is a crude test */
-	if (!strchr (location, ':')) {
-	  gchar *newloc = gnome_vfs_escape_path_string (location);
+        /* otherwise set the new filename */
+        location = g_value_get_string (value);
+        /* if it's not a proper uri, default to file: -- this
+         * is a crude test */
+        if (!strchr (location, ':')) {
+          gchar *newloc = gnome_vfs_escape_path_string (location);
 
-	  if (*newloc == '/')
-	    src->filename = g_strdup_printf ("file://%s", newloc);
-	  else
-	    src->filename =
-		g_strdup_printf ("file://%s/%s", getcwd (cwd, PATH_MAX),
-		newloc);
-	  g_free (newloc);
-	} else
-	  src->filename = g_strdup (g_value_get_string (value));
+          if (*newloc == '/')
+            src->filename = g_strdup_printf ("file://%s", newloc);
+          else
+            src->filename =
+                g_strdup_printf ("file://%s/%s", getcwd (cwd, PATH_MAX),
+                newloc);
+          g_free (newloc);
+        } else
+          src->filename = g_strdup (g_value_get_string (value));
       }
 
       if ((GST_STATE (src) == GST_STATE_PAUSED)
-	  && (src->filename != NULL)) {
-	gst_gnomevfssrc_close_file (src);
-	gst_gnomevfssrc_open_file (src);
+          && (src->filename != NULL)) {
+        gst_gnomevfssrc_close_file (src);
+        gst_gnomevfssrc_open_file (src);
       }
       break;
     case ARG_HANDLE:
@@ -505,7 +510,7 @@ unicodify (const char *str, int len, ...)
       ret = g_locale_to_utf8 (str, len, &bytes_read, &bytes_written, NULL);
     else
       ret = g_convert (str, len, "UTF-8", cset,
-	  &bytes_read, &bytes_written, NULL);
+          &bytes_read, &bytes_written, NULL);
     if (ret)
       break;
   }
@@ -534,9 +539,9 @@ audiocast_init (GstGnomeVFSSrc * src)
     return TRUE;
   GST_DEBUG ("audiocast: registering listener");
   if (audiocast_register_listener (&src->audiocast_port,
-	  &src->audiocast_fd) < 0) {
+          &src->audiocast_fd) < 0) {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
-	("Unable to listen on UDP port %d", src->audiocast_port));
+        ("Unable to listen on UDP port %d", src->audiocast_port));
     close (src->audiocast_fd);
     return FALSE;
   }
@@ -553,7 +558,7 @@ audiocast_init (GstGnomeVFSSrc * src)
       g_thread_create ((GThreadFunc) audiocast_thread_run, src, TRUE, &error);
   if (error != NULL) {
     GST_ELEMENT_ERROR (src, RESOURCE, TOO_LAZY, (NULL),
-	("Unable to create thread: %s", error->message));
+        ("Unable to create thread: %s", error->message));
     close (src->audiocast_fd);
     return FALSE;
   }
@@ -644,8 +649,8 @@ audiocast_thread_run (GstGnomeVFSSrc * src)
     }
     GST_DEBUG ("audiocast thread: reading data");
     len =
-	recvfrom (src->audiocast_fd, buf, sizeof (buf) - 1, 0,
-	(struct sockaddr *) &from, &fromlen);
+        recvfrom (src->audiocast_fd, buf, sizeof (buf) - 1, 0,
+        (struct sockaddr *) &from, &fromlen);
     if (len < 0 && errno == EAGAIN)
       continue;
     else if (len >= 0) {
@@ -655,66 +660,66 @@ audiocast_thread_run (GstGnomeVFSSrc * src)
       buf[len] = '\0';
       lines = g_strsplit (buf, "\n", 0);
       if (!lines)
-	continue;
+        continue;
 
       for (i = 0; lines[i]; i++) {
-	while ((lines[i][strlen (lines[i]) - 1] == '\n') ||
-	    (lines[i][strlen (lines[i]) - 1] == '\r'))
-	  lines[i][strlen (lines[i]) - 1] = '\0';
+        while ((lines[i][strlen (lines[i]) - 1] == '\n') ||
+            (lines[i][strlen (lines[i]) - 1] == '\r'))
+          lines[i][strlen (lines[i]) - 1] = '\0';
 
-	valptr = strchr (lines[i], ':');
+        valptr = strchr (lines[i], ':');
 
-	if (!valptr)
-	  continue;
-	else
-	  valptr++;
+        if (!valptr)
+          continue;
+        else
+          valptr++;
 
-	g_strstrip (valptr);
-	if (!strlen (valptr))
-	  continue;
+        g_strstrip (valptr);
+        if (!strlen (valptr))
+          continue;
 
-	value = gst_gnomevfssrc_unicodify (valptr);
-	if (!value) {
-	  g_print ("Unable to convert \"%s\" to UTF-8!\n", valptr);
-	  continue;
-	}
+        value = gst_gnomevfssrc_unicodify (valptr);
+        if (!value) {
+          g_print ("Unable to convert \"%s\" to UTF-8!\n", valptr);
+          continue;
+        }
 
-	if (!strncmp (lines[i], "x-audiocast-streamtitle", 23)) {
-	  g_mutex_lock (src->audiocast_udpdata_mutex);
-	  g_free (src->iradio_title);
-	  src->iradio_title = value;
-	  g_mutex_unlock (src->audiocast_udpdata_mutex);
+        if (!strncmp (lines[i], "x-audiocast-streamtitle", 23)) {
+          g_mutex_lock (src->audiocast_udpdata_mutex);
+          g_free (src->iradio_title);
+          src->iradio_title = value;
+          g_mutex_unlock (src->audiocast_udpdata_mutex);
 
-	  g_mutex_lock (src->audiocast_queue_mutex);
-	  src->audiocast_notify_queue =
-	      g_list_append (src->audiocast_notify_queue, "iradio-title");
-	  GST_DEBUG ("audiocast title: %s\n", src->iradio_title);
-	  g_mutex_unlock (src->audiocast_queue_mutex);
-	} else if (!strncmp (lines[i], "x-audiocast-streamurl", 21)) {
-	  g_mutex_lock (src->audiocast_udpdata_mutex);
-	  g_free (src->iradio_url);
-	  src->iradio_url = value;
-	  g_mutex_unlock (src->audiocast_udpdata_mutex);
+          g_mutex_lock (src->audiocast_queue_mutex);
+          src->audiocast_notify_queue =
+              g_list_append (src->audiocast_notify_queue, "iradio-title");
+          GST_DEBUG ("audiocast title: %s\n", src->iradio_title);
+          g_mutex_unlock (src->audiocast_queue_mutex);
+        } else if (!strncmp (lines[i], "x-audiocast-streamurl", 21)) {
+          g_mutex_lock (src->audiocast_udpdata_mutex);
+          g_free (src->iradio_url);
+          src->iradio_url = value;
+          g_mutex_unlock (src->audiocast_udpdata_mutex);
 
-	  g_mutex_lock (src->audiocast_queue_mutex);
-	  src->audiocast_notify_queue =
-	      g_list_append (src->audiocast_notify_queue, "iradio-url");
-	  GST_DEBUG ("audiocast url: %s\n", src->iradio_title);
-	  g_mutex_unlock (src->audiocast_queue_mutex);
-	} else if (!strncmp (lines[i], "x-audiocast-udpseqnr", 20)) {
-	  gchar outbuf[120];
+          g_mutex_lock (src->audiocast_queue_mutex);
+          src->audiocast_notify_queue =
+              g_list_append (src->audiocast_notify_queue, "iradio-url");
+          GST_DEBUG ("audiocast url: %s\n", src->iradio_title);
+          g_mutex_unlock (src->audiocast_queue_mutex);
+        } else if (!strncmp (lines[i], "x-audiocast-udpseqnr", 20)) {
+          gchar outbuf[120];
 
-	  sprintf (outbuf, "x-audiocast-ack: %ld \r\n", atol (value));
-	  g_free (value);
+          sprintf (outbuf, "x-audiocast-ack: %ld \r\n", atol (value));
+          g_free (value);
 
-	  if (sendto (src->audiocast_fd, outbuf, strlen (outbuf), 0,
-		  (struct sockaddr *) &from, fromlen) <= 0) {
-	    g_print ("Error sending response to server: %s\n",
-		strerror (errno));
-	    continue;
-	  }
-	  GST_DEBUG ("sent audiocast ack: %s\n", outbuf);
-	}
+          if (sendto (src->audiocast_fd, outbuf, strlen (outbuf), 0,
+                  (struct sockaddr *) &from, fromlen) <= 0) {
+            g_print ("Error sending response to server: %s\n",
+                strerror (errno));
+            continue;
+          }
+          GST_DEBUG ("sent audiocast ack: %s\n", outbuf);
+        }
       }
       g_strfreev (lines);
     }
@@ -788,11 +793,11 @@ gst_gnomevfssrc_received_headers_callback (gconstpointer in,
       continue;
 
     /* Icecast stuff */
-    if (!strncmp (data, "icy-metaint:", 12)) {	/* ugh */
+    if (!strncmp (data, "icy-metaint:", 12)) {  /* ugh */
       sscanf (data + 12, "%d", &icy_metaint);
       src->icy_metaint = icy_metaint;
       GST_DEBUG ("got icy-metaint %d, killing audiocast thread",
-	  src->icy_metaint);
+          src->icy_metaint);
       audiocast_thread_kill (src);
       continue;
     }
@@ -809,17 +814,17 @@ gst_gnomevfssrc_received_headers_callback (gconstpointer in,
       g_free (src->iradio_name);
       src->iradio_name = gst_gnomevfssrc_unicodify (value);
       if (src->iradio_name)
-	g_object_notify (G_OBJECT (src), "iradio-name");
+        g_object_notify (G_OBJECT (src), "iradio-name");
     } else if (!strncmp (key, "genre", 5)) {
       g_free (src->iradio_genre);
       src->iradio_genre = gst_gnomevfssrc_unicodify (value);
       if (src->iradio_genre)
-	g_object_notify (G_OBJECT (src), "iradio-genre");
+        g_object_notify (G_OBJECT (src), "iradio-genre");
     } else if (!strncmp (key, "url", 3)) {
       g_free (src->iradio_url);
       src->iradio_url = gst_gnomevfssrc_unicodify (value);
       if (src->iradio_url)
-	g_object_notify (G_OBJECT (src), "iradio-url");
+        g_object_notify (G_OBJECT (src), "iradio-url");
     }
   }
 }
@@ -884,7 +889,7 @@ gst_gnomevfssrc_get_icy_metadata (GstGnomeVFSSrc * src)
 
   while (pos - data < metadata_length) {
     res = gnome_vfs_read (src->handle, pos,
-	metadata_length - (pos - data), &length);
+        metadata_length - (pos - data), &length);
     /* FIXME: better error handling here? */
     if (res != GNOME_VFS_OK) {
       g_free (data);
@@ -902,22 +907,22 @@ gst_gnomevfssrc_get_icy_metadata (GstGnomeVFSSrc * src)
       g_free (src->iradio_title);
       src->iradio_title = gst_gnomevfssrc_unicodify (tags[i] + 13);
       if (src->iradio_title) {
-	GST_DEBUG ("sending notification on icecast title");
-	g_object_notify (G_OBJECT (src), "iradio-title");
+        GST_DEBUG ("sending notification on icecast title");
+        g_object_notify (G_OBJECT (src), "iradio-title");
       } else
-	g_print ("Unable to convert icecast title \"%s\" to UTF-8!\n",
-	    tags[i] + 13);
+        g_print ("Unable to convert icecast title \"%s\" to UTF-8!\n",
+            tags[i] + 13);
 
     }
     if (!g_ascii_strncasecmp (tags[i], "StreamUrl=", 10)) {
       g_free (src->iradio_url);
       src->iradio_url = gst_gnomevfssrc_unicodify (tags[i] + 11);
       if (src->iradio_url) {
-	GST_DEBUG ("sending notification on icecast url");
-	g_object_notify (G_OBJECT (src), "iradio-url");
+        GST_DEBUG ("sending notification on icecast url");
+        g_object_notify (G_OBJECT (src), "iradio-url");
       } else
-	g_print ("Unable to convert icecast url \"%s\" to UTF-8!\n",
-	    tags[i] + 11);
+        g_print ("Unable to convert icecast url \"%s\" to UTF-8!\n",
+            tags[i] + 11);
     }
   }
 
@@ -966,7 +971,7 @@ gst_gnomevfssrc_get (GstPad * pad)
     GST_BUFFER_SIZE (buf) = 0;
     GST_DEBUG ("doing read: icy_count: %" G_GINT64_FORMAT, src->icy_count);
     result = gnome_vfs_read (src->handle, data,
-	src->icy_metaint - src->icy_count, &readbytes);
+        src->icy_metaint - src->icy_count, &readbytes);
 
     /* EOS? */
     if (readbytes == 0) {
@@ -1007,16 +1012,16 @@ gst_gnomevfssrc_get (GstPad * pad)
       src->new_seek = FALSE;
       GST_DEBUG ("gnomevfssrc sending discont");
       event =
-	  gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, src->curoffset,
-	  NULL);
+          gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, src->curoffset,
+          NULL);
       return GST_DATA (event);
     }
 
     result = gnome_vfs_read (src->handle, GST_BUFFER_DATA (buf),
-	src->bytes_per_read, &readbytes);
+        src->bytes_per_read, &readbytes);
 
     GST_DEBUG ("read: %s, readbytes: %" G_GINT64_FORMAT,
-	gnome_vfs_result_to_string (result), readbytes);
+        gnome_vfs_result_to_string (result), readbytes);
     /* deal with EOS */
     if (readbytes == 0) {
       gst_buffer_unref (buf);
@@ -1051,8 +1056,8 @@ gst_gnomevfssrc_open_file (GstGnomeVFSSrc * src)
     src->uri = gnome_vfs_uri_new (src->filename);
     if (!src->uri) {
       GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-	  (_("Could not open vfs file \"%s\" for reading."), src->filename),
-	  GST_ERROR_SYSTEM);
+          (_("Could not open vfs file \"%s\" for reading."), src->filename),
+          GST_ERROR_SYSTEM);
       return FALSE;
     }
   }
@@ -1074,15 +1079,15 @@ gst_gnomevfssrc_open_file (GstGnomeVFSSrc * src)
 
     escaped = gnome_vfs_unescape_string_for_display (src->filename);
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-	(_("Could not open vfs file \"%s\" for reading."), escaped),
-	(gnome_vfs_result_to_string (result)));
+        (_("Could not open vfs file \"%s\" for reading."), escaped),
+        (gnome_vfs_result_to_string (result)));
     g_free (escaped);
     return FALSE;
   }
 
   info = gnome_vfs_file_info_new ();
   if (gnome_vfs_get_file_info_from_handle (src->handle, info,
-	  GNOME_VFS_FILE_INFO_DEFAULT)
+          GNOME_VFS_FILE_INFO_DEFAULT)
       == GNOME_VFS_OK) {
     if (info->valid_fields & GNOME_VFS_FILE_INFO_FIELDS_SIZE)
       src->size = info->size;
@@ -1137,13 +1142,13 @@ gst_gnomevfssrc_change_state (GstElement * element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_READY_TO_PAUSED:
       if (!GST_FLAG_IS_SET (element, GST_GNOMEVFSSRC_OPEN)) {
-	if (!gst_gnomevfssrc_open_file (GST_GNOMEVFSSRC (element)))
-	  return GST_STATE_FAILURE;
+        if (!gst_gnomevfssrc_open_file (GST_GNOMEVFSSRC (element)))
+          return GST_STATE_FAILURE;
       }
       break;
     case GST_STATE_PAUSED_TO_READY:
       if (GST_FLAG_IS_SET (element, GST_GNOMEVFSSRC_OPEN))
-	gst_gnomevfssrc_close_file (GST_GNOMEVFSSRC (element));
+        gst_gnomevfssrc_close_file (GST_GNOMEVFSSRC (element));
       break;
     case GST_STATE_NULL_TO_READY:
     case GST_STATE_READY_TO_NULL:
@@ -1166,22 +1171,22 @@ gst_gnomevfssrc_srcpad_query (GstPad * pad, GstQueryType type,
   switch (type) {
     case GST_QUERY_TOTAL:
       if (*format != GST_FORMAT_BYTES) {
-	return FALSE;
+        return FALSE;
       }
       *value = src->size;
       break;
     case GST_QUERY_POSITION:
       switch (*format) {
-	case GST_FORMAT_BYTES:
-	  *value = src->curoffset;
-	  break;
-	case GST_FORMAT_PERCENT:
-	  if (src->size == 0)
-	    return FALSE;
-	  *value = src->curoffset * GST_FORMAT_PERCENT_MAX / src->size;
-	  break;
-	default:
-	  return FALSE;
+        case GST_FORMAT_BYTES:
+          *value = src->curoffset;
+          break;
+        case GST_FORMAT_PERCENT:
+          if (src->size == 0)
+            return FALSE;
+          *value = src->curoffset * GST_FORMAT_PERCENT_MAX / src->size;
+          break;
+        default:
+          return FALSE;
       }
       break;
     default:
@@ -1203,32 +1208,32 @@ gst_gnomevfssrc_srcpad_event (GstPad * pad, GstEvent * event)
       GnomeVFSResult result;
 
       if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_BYTES) {
-	gst_event_unref (event);
-	return FALSE;
+        gst_event_unref (event);
+        return FALSE;
       }
       switch (GST_EVENT_SEEK_METHOD (event)) {
-	case GST_SEEK_METHOD_SET:
-	  desired_offset = (guint64) GST_EVENT_SEEK_OFFSET (event);
-	  break;
-	case GST_SEEK_METHOD_CUR:
-	  desired_offset = src->curoffset + GST_EVENT_SEEK_OFFSET (event);
-	  break;
-	case GST_SEEK_METHOD_END:
-	  desired_offset = src->size - ABS (GST_EVENT_SEEK_OFFSET (event));
-	  break;
-	default:
-	  gst_event_unref (event);
-	  return FALSE;
-	  break;
+        case GST_SEEK_METHOD_SET:
+          desired_offset = (guint64) GST_EVENT_SEEK_OFFSET (event);
+          break;
+        case GST_SEEK_METHOD_CUR:
+          desired_offset = src->curoffset + GST_EVENT_SEEK_OFFSET (event);
+          break;
+        case GST_SEEK_METHOD_END:
+          desired_offset = src->size - ABS (GST_EVENT_SEEK_OFFSET (event));
+          break;
+        default:
+          gst_event_unref (event);
+          return FALSE;
+          break;
       }
 
       result = gnome_vfs_seek (src->handle,
-	  GNOME_VFS_SEEK_START, desired_offset);
+          GNOME_VFS_SEEK_START, desired_offset);
       GST_DEBUG ("new_seek: %s", gnome_vfs_result_to_string (result));
 
       if (result != GNOME_VFS_OK) {
-	gst_event_unref (event);
-	return FALSE;
+        gst_event_unref (event);
+        return FALSE;
       }
       src->curoffset = desired_offset;
       src->new_seek = TRUE;
@@ -1237,8 +1242,8 @@ gst_gnomevfssrc_srcpad_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_SIZE:
       if (GST_EVENT_SIZE_FORMAT (event) != GST_FORMAT_BYTES) {
-	gst_event_unref (event);
-	return FALSE;
+        gst_event_unref (event);
+        return FALSE;
       }
       src->bytes_per_read = GST_EVENT_SIZE_VALUE (event);
       g_object_notify (G_OBJECT (src), "bytesperread");

@@ -1,5 +1,9 @@
 2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* *.c, *.cc: don't mix tabs and spaces
+
+2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst-libs/gst/play/play.c: (gst_play_pipeline_setup):
           use the new ffmpegcolorspace
 	* gst-plugins.spec.in:

@@ -55,7 +55,7 @@ gst_alsa_src_pad_factory (void)
 
   if (!template)
     template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-	gst_alsa_caps (SND_PCM_FORMAT_UNKNOWN, -1, -1));
+        gst_alsa_caps (SND_PCM_FORMAT_UNKNOWN, -1, -1));
 
   return template;
 }
@@ -79,7 +79,7 @@ gst_alsa_src_get_type (void)
     };
 
     alsa_src_type =
-	g_type_register_static (GST_TYPE_ALSA, "GstAlsaSrc", &alsa_src_info, 0);
+        g_type_register_static (GST_TYPE_ALSA, "GstAlsaSrc", &alsa_src_info, 0);
   }
   return alsa_src_type;
 }
@@ -169,8 +169,8 @@ gst_alsa_src_mmap (GstAlsa * this, snd_pcm_sframes_t * avail)
   }
   if (*avail > 0
       && (err =
-	  snd_pcm_areas_copy (dst, 0, src, offset, this->format->channels,
-	      *avail, this->format->format)) < 0) {
+          snd_pcm_areas_copy (dst, 0, src, offset, this->format->channels,
+              *avail, this->format->format)) < 0) {
     snd_pcm_mmap_commit (this->handle, offset, 0);
     GST_ERROR_OBJECT (this, "data copy failed: %s", snd_strerror (err));
     return -1;
@@ -243,10 +243,10 @@ gst_alsa_src_set_caps (GstAlsaSrc * src, gboolean aggressive)
   /* now intersect this with all caps of the peers... */
   for (i = 0; i < GST_ELEMENT (src)->numpads; i++) {
     all_caps =
-	gst_caps_intersect (all_caps, gst_pad_get_allowed_caps (this->pad[i]));
+        gst_caps_intersect (all_caps, gst_pad_get_allowed_caps (this->pad[i]));
     if (all_caps == NULL) {
       GST_DEBUG ("No compatible caps found in alsasrc (%s)",
-	  GST_ELEMENT_NAME (this));
+          GST_ELEMENT_NAME (this));
       return FALSE;
     }
   }
@@ -260,8 +260,8 @@ gst_alsa_src_set_caps (GstAlsaSrc * src, gboolean aggressive)
   for (i = 0; i < gst_caps_get_size (all_caps); i++) {
     walk = gst_caps_get_structure (all_caps, i);
     if (!(gst_structure_get_int (walk, "signed", &sign) &&
-	    gst_structure_get_int (walk, "width", &width) &&
-	    gst_structure_get_int (walk, "depth", &depth))) {
+            gst_structure_get_int (walk, "width", &width) &&
+            gst_structure_get_int (walk, "depth", &depth))) {
       GST_ERROR_OBJECT (src, "couldn't parse my own format. Huh?");
       continue;
     }
@@ -269,37 +269,37 @@ gst_alsa_src_set_caps (GstAlsaSrc * src, gboolean aggressive)
       endian = G_BYTE_ORDER;
     }
     gst_structure_set (structure,
-	"endianness", G_TYPE_INT, endian,
-	"width", G_TYPE_INT, width,
-	"depth", G_TYPE_INT, depth, "signed", G_TYPE_BOOLEAN, sign, NULL);
+        "endianness", G_TYPE_INT, endian,
+        "width", G_TYPE_INT, width,
+        "depth", G_TYPE_INT, depth, "signed", G_TYPE_BOOLEAN, sign, NULL);
 
     min_rate =
-	gst_value_get_int_range_min (gst_structure_get_value (walk, "rate"));
+        gst_value_get_int_range_min (gst_structure_get_value (walk, "rate"));
     max_rate =
-	gst_value_get_int_range_max (gst_structure_get_value (walk, "rate"));
+        gst_value_get_int_range_max (gst_structure_get_value (walk, "rate"));
     min_channels =
-	gst_value_get_int_range_min (gst_structure_get_value (walk,
-	    "channels"));
+        gst_value_get_int_range_min (gst_structure_get_value (walk,
+            "channels"));
     max_channels =
-	gst_value_get_int_range_max (gst_structure_get_value (walk,
-	    "channels"));
+        gst_value_get_int_range_max (gst_structure_get_value (walk,
+            "channels"));
     for (rate = max_rate;; rate--) {
       if ((rate = gst_alsa_src_adjust_rate (rate, aggressive)) < min_rate)
-	break;
+        break;
       gst_structure_set (structure, "rate", G_TYPE_INT, rate, NULL);
       for (channels = aggressive ? max_channels : MIN (max_channels, 2);
-	  channels >= min_channels; channels--) {
-	gst_structure_set (structure, "channels", G_TYPE_INT, channels, NULL);
-	GST_DEBUG
-	    ("trying new caps: %ssigned, endianness: %d, width %d, depth %d, channels %d, rate %d",
-	    sign ? "" : "un", endian, width, depth, channels, rate);
-	if (gst_pad_try_set_caps (this->pad[0], caps) != GST_PAD_LINK_REFUSED)
-	  gst_alsa_link (this->pad[0], caps);
+          channels >= min_channels; channels--) {
+        gst_structure_set (structure, "channels", G_TYPE_INT, channels, NULL);
+        GST_DEBUG
+            ("trying new caps: %ssigned, endianness: %d, width %d, depth %d, channels %d, rate %d",
+            sign ? "" : "un", endian, width, depth, channels, rate);
+        if (gst_pad_try_set_caps (this->pad[0], caps) != GST_PAD_LINK_REFUSED)
+          gst_alsa_link (this->pad[0], caps);
 
-	if (this->format) {
-	  /* try to set caps here */
-	  return TRUE;
-	}
+        if (this->format) {
+          /* try to set caps here */
+          return TRUE;
+        }
       }
     }
   }
@@ -323,7 +323,7 @@ gst_alsa_src_loop (GstElement * element)
   if (!this->format) {
     if (!gst_alsa_src_set_caps (src, FALSE)) {
       GST_ELEMENT_ERROR (element, CORE, NEGOTIATION, (NULL),
-	  ("ALSA format not negotiated"));
+          ("ALSA format not negotiated"));
       return;
     }
   }
@@ -335,7 +335,7 @@ gst_alsa_src_loop (GstElement * element)
       return;
     if (snd_pcm_state (this->handle) != SND_PCM_STATE_RUNNING) {
       if (!gst_alsa_start (this))
-	return;
+        return;
       continue;
     };
     /* wait */
@@ -359,9 +359,9 @@ gst_alsa_src_loop (GstElement * element)
     if (copied != this->period_size)
       GST_BUFFER_SIZE (src->buf[i]) = gst_alsa_samples_to_bytes (this, copied);
     GST_BUFFER_TIMESTAMP (src->buf[i]) =
-	gst_alsa_samples_to_timestamp (this, this->transmitted);
+        gst_alsa_samples_to_timestamp (this, this->transmitted);
     GST_BUFFER_DURATION (src->buf[i]) =
-	gst_alsa_samples_to_timestamp (this, copied);
+        gst_alsa_samples_to_timestamp (this, copied);
     gst_pad_push (this->pad[i], GST_DATA (src->buf[i]));
     src->buf[i] = NULL;
   }

@@ -48,8 +48,8 @@ gst_alsa_mixer_track_get_type (void)
     };
 
     track_type =
-	g_type_register_static (GST_TYPE_MIXER_TRACK, "GstAlsaMixerTrack",
-	&track_info, 0);
+        g_type_register_static (GST_TYPE_MIXER_TRACK, "GstAlsaMixerTrack",
+        &track_info, 0);
   }
 
   return track_type;

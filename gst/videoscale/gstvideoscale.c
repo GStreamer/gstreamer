@@ -61,9 +61,10 @@ gst_videoscale_method_get_type (void)
     {GST_VIDEOSCALE_BICUBIC, "3", "Bicubic"},
     {0, NULL, NULL},
   };
+
   if (!videoscale_method_type) {
     videoscale_method_type =
-	g_enum_register_static ("GstVideoscaleMethod", videoscale_methods);
+        g_enum_register_static ("GstVideoscaleMethod", videoscale_methods);
   }
   return videoscale_method_type;
 }
@@ -77,7 +78,7 @@ gst_videoscale_get_capslist (void)
   caps = gst_caps_new_empty ();
   for (i = 0; i < videoscale_n_formats; i++) {
     gst_caps_append_structure (caps,
-	videoscale_get_structure (videoscale_formats + i));
+        videoscale_get_structure (videoscale_formats + i));
   }
 
   return caps;
@@ -132,9 +133,10 @@ gst_videoscale_get_type (void)
       0,
       (GInstanceInitFunc) gst_videoscale_init,
     };
+
     videoscale_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstVideoscale",
-	&videoscale_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstVideoscale",
+        &videoscale_info, 0);
   }
   return videoscale_type;
 }
@@ -160,7 +162,7 @@ gst_videoscale_class_init (GstVideoscaleClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_METHOD, g_param_spec_enum ("method", "method", "method", GST_TYPE_VIDEOSCALE_METHOD, 0, G_PARAM_READWRITE));	/* CHECKME! */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_METHOD, g_param_spec_enum ("method", "method", "method", GST_TYPE_VIDEOSCALE_METHOD, 0, G_PARAM_READWRITE));     /* CHECKME! */
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
@@ -192,8 +194,8 @@ gst_videoscale_getcaps (GstPad * pad)
     GstStructure *structure = gst_caps_get_structure (caps, i);
 
     gst_structure_set (structure,
-	"width", GST_TYPE_INT_RANGE, 16, G_MAXINT,
-	"height", GST_TYPE_INT_RANGE, 16, G_MAXINT, NULL);
+        "width", GST_TYPE_INT_RANGE, 16, G_MAXINT,
+        "height", GST_TYPE_INT_RANGE, 16, G_MAXINT, NULL);
   }
 
   GST_DEBUG ("returning caps: %" GST_PTR_FORMAT, caps);
@@ -247,12 +249,12 @@ gst_videoscale_link (GstPad * pad, const GstCaps * caps)
 
     if (pad == videoscale->srcpad) {
       gst_caps_set_simple (newcaps,
-	  "width", G_TYPE_INT, videoscale->from_width,
-	  "height", G_TYPE_INT, videoscale->from_height, NULL);
+          "width", G_TYPE_INT, videoscale->from_width,
+          "height", G_TYPE_INT, videoscale->from_height, NULL);
     } else {
       gst_caps_set_simple (newcaps,
-	  "width", G_TYPE_INT, videoscale->to_width,
-	  "height", G_TYPE_INT, videoscale->to_height, NULL);
+          "width", G_TYPE_INT, videoscale->to_width,
+          "height", G_TYPE_INT, videoscale->to_height, NULL);
     }
     ret = gst_pad_try_set_caps (otherpad, newcaps);
     if (GST_PAD_LINK_FAILED (ret)) {
@@ -319,14 +321,14 @@ gst_videoscale_handle_src_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_NAVIGATION:
       structure = gst_structure_copy (event->event_data.structure.structure);
       if (gst_structure_get_double (event->event_data.structure.structure,
-	      "pointer_x", &a)) {
-	gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
-	    a * videoscale->from_width / videoscale->to_width, NULL);
+              "pointer_x", &a)) {
+        gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
+            a * videoscale->from_width / videoscale->to_width, NULL);
       }
       if (gst_structure_get_double (event->event_data.structure.structure,
-	      "pointer_y", &a)) {
-	gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
-	    a * videoscale->from_height / videoscale->to_height, NULL);
+              "pointer_y", &a)) {
+        gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
+            a * videoscale->from_height / videoscale->to_height, NULL);
       }
       gst_event_unref (event);
       new_event = gst_event_new (GST_EVENT_NAVIGATION);
@@ -361,7 +363,7 @@ gst_videoscale_chain (GstPad * pad, GstData * _data)
 
   if (videoscale->passthru) {
     GST_LOG_OBJECT (videoscale, "passing through buffer of %ld bytes in '%s'",
-	size, GST_OBJECT_NAME (videoscale));
+        size, GST_OBJECT_NAME (videoscale));
     gst_pad_push (videoscale->srcpad, GST_DATA (buf));
     return;
   }
@@ -441,7 +443,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "videoscale", GST_RANK_NONE,
-	  GST_TYPE_VIDEOSCALE))
+          GST_TYPE_VIDEOSCALE))
     return FALSE;
 
   GST_DEBUG_CATEGORY_INIT (videoscale_debug, "videoscale", 0,

@@ -60,9 +60,10 @@ gst_tcpsrc_control_get_type (void)
     {CONTROL_TCP, "2", "tcp"},
     {CONTROL_ZERO, NULL, NULL}
   };
+
   if (!tcpsrc_control_type) {
     tcpsrc_control_type =
-	g_enum_register_static ("GstTCPSrcControl", tcpsrc_control);
+        g_enum_register_static ("GstTCPSrcControl", tcpsrc_control);
   }
   return tcpsrc_control_type;
 }
@@ -103,8 +104,9 @@ gst_tcpsrc_get_type (void)
       (GInstanceInitFunc) gst_tcpsrc_init,
       NULL
     };
+
     tcpsrc_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstTCPSrc", &tcpsrc_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstTCPSrc", &tcpsrc_info, 0);
   }
   return tcpsrc_type;
 }
@@ -130,10 +132,10 @@ gst_tcpsrc_class_init (GstTCPSrc * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
       g_param_spec_int ("port", "port", "The port to receive the packets from",
-	  0, 32768, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
+          0, 32768, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_CONTROL,
       g_param_spec_enum ("control", "control", "The type of control",
-	  GST_TYPE_TCPSRC_CONTROL, CONTROL_TCP, G_PARAM_READWRITE));
+          GST_TYPE_TCPSRC_CONTROL, CONTROL_TCP, G_PARAM_READWRITE));
 /*
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SOCKET_OPTIONS,
     g_param_spec_boolean ("socketop", "socketop", "Enable or disable socket options REUSEADDR and KEEPALIVE",
@@ -213,45 +215,45 @@ gst_tcpsrc_get (GstPad * pad)
 
   if (select (max_sock + 1, &read_fds, NULL, NULL, NULL) > 0) {
     if ((tcpsrc->control_sock != -1)
-	&& FD_ISSET (tcpsrc->control_sock, &read_fds)) {
+        && FD_ISSET (tcpsrc->control_sock, &read_fds)) {
       guchar *buf = NULL;
       xmlDocPtr doc;
       GstCaps *caps;
 
       switch (tcpsrc->control) {
-	case CONTROL_TCP:
+        case CONTROL_TCP:
 
 #ifndef GST_DISABLE_LOADSAVE
-	  buf = g_malloc (1024 * 10);
+          buf = g_malloc (1024 * 10);
 
-	  len = sizeof (struct sockaddr);
-	  client_sock = accept (tcpsrc->control_sock, &client_addr, &len);
+          len = sizeof (struct sockaddr);
+          client_sock = accept (tcpsrc->control_sock, &client_addr, &len);
 
-	  if (client_sock <= 0) {
-	    perror ("control_sock accept");
-	  }
+          if (client_sock <= 0) {
+            perror ("control_sock accept");
+          }
 
-	  else if ((ret = read (client_sock, buf, 1024 * 10)) <= 0) {
-	    perror ("control_sock read");
-	  }
+          else if ((ret = read (client_sock, buf, 1024 * 10)) <= 0) {
+            perror ("control_sock read");
+          }
 
-	  else {
-	    buf[ret] = '\0';
-	    doc = xmlParseMemory (buf, ret);
-	    caps = gst_caps_load_thyself (doc->xmlRootNode);
+          else {
+            buf[ret] = '\0';
+            doc = xmlParseMemory (buf, ret);
+            caps = gst_caps_load_thyself (doc->xmlRootNode);
 
-	    /* foward the connect, we don't signal back the result here... */
-	    gst_pad_try_set_caps (tcpsrc->srcpad, caps);
-	  }
+            /* foward the connect, we don't signal back the result here... */
+            gst_pad_try_set_caps (tcpsrc->srcpad, caps);
+          }
 
-	  g_free (buf);
+          g_free (buf);
 #endif
-	  break;
-	case CONTROL_NONE:
-	default:
-	  g_free (buf);
-	  return NULL;
-	  break;
+          break;
+        case CONTROL_NONE:
+        default:
+          g_free (buf);
+          return NULL;
+          break;
       }
 
       outbuf = NULL;
@@ -261,57 +263,57 @@ gst_tcpsrc_get (GstPad * pad)
       GST_BUFFER_SIZE (outbuf) = 24000;
 
       if (GST_FLAG_IS_SET (tcpsrc, GST_TCPSRC_1ST_BUF)) {
-	if (tcpsrc->clock) {
-	  GstClockTime current_time;
-	  GstEvent *discont;
+        if (tcpsrc->clock) {
+          GstClockTime current_time;
+          GstEvent *discont;
 
-	  current_time = gst_clock_get_time (tcpsrc->clock);
+          current_time = gst_clock_get_time (tcpsrc->clock);
 
-	  GST_BUFFER_TIMESTAMP (outbuf) = current_time;
+          GST_BUFFER_TIMESTAMP (outbuf) = current_time;
 
-	  discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
-	      current_time, NULL);
+          discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
+              current_time, NULL);
 
-	  gst_pad_push (tcpsrc->srcpad, GST_DATA (discont));
-	}
+          gst_pad_push (tcpsrc->srcpad, GST_DATA (discont));
+        }
 
-	GST_FLAG_UNSET (tcpsrc, GST_TCPSRC_1ST_BUF);
+        GST_FLAG_UNSET (tcpsrc, GST_TCPSRC_1ST_BUF);
       }
 
       else {
-	GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
+        GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
       }
 
       if (!GST_FLAG_IS_SET (tcpsrc, GST_TCPSRC_CONNECTED)) {
-	tcpsrc->client_sock = accept (tcpsrc->sock, &client_addr, &len);
+        tcpsrc->client_sock = accept (tcpsrc->sock, &client_addr, &len);
 
-	if (tcpsrc->client_sock <= 0) {
-	  perror ("accept");
-	}
+        if (tcpsrc->client_sock <= 0) {
+          perror ("accept");
+        }
 
-	else {
-	  GST_FLAG_SET (tcpsrc, GST_TCPSRC_CONNECTED);
-	}
+        else {
+          GST_FLAG_SET (tcpsrc, GST_TCPSRC_CONNECTED);
+        }
       }
 
       numbytes =
-	  read (tcpsrc->client_sock, GST_BUFFER_DATA (outbuf),
-	  GST_BUFFER_SIZE (outbuf));
+          read (tcpsrc->client_sock, GST_BUFFER_DATA (outbuf),
+          GST_BUFFER_SIZE (outbuf));
 
       if (numbytes > 0) {
-	GST_BUFFER_SIZE (outbuf) = numbytes;
+        GST_BUFFER_SIZE (outbuf) = numbytes;
       }
 
       else {
-	if (numbytes == -1) {
-	  perror ("read");
-	} else
-	  g_print ("End of Stream reached\n");
-	gst_buffer_unref (outbuf);
-	outbuf = NULL;
-	close (tcpsrc->client_sock);
-	tcpsrc->client_sock = -1;
-	GST_FLAG_UNSET (tcpsrc, GST_TCPSRC_CONNECTED);
+        if (numbytes == -1) {
+          perror ("read");
+        } else
+          g_print ("End of Stream reached\n");
+        gst_buffer_unref (outbuf);
+        outbuf = NULL;
+        close (tcpsrc->client_sock);
+        tcpsrc->client_sock = -1;
+        GST_FLAG_UNSET (tcpsrc, GST_TCPSRC_CONNECTED);
       }
     }
   }
@@ -383,8 +385,8 @@ gst_tcpsrc_init_receive (GstTCPSrc * src)
   guint val = 0;
 
   memset (&src->myaddr, 0, sizeof (src->myaddr));
-  src->myaddr.sin_family = AF_INET;	/* host byte order */
-  src->myaddr.sin_port = htons (src->port);	/* short, network byte order */
+  src->myaddr.sin_family = AF_INET;     /* host byte order */
+  src->myaddr.sin_port = htons (src->port);     /* short, network byte order */
   src->myaddr.sin_addr.s_addr = INADDR_ANY;
 
   if ((src->sock = socket (AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -408,7 +410,7 @@ gst_tcpsrc_init_receive (GstTCPSrc * src)
 /*  } */
 
   if (bind (src->sock, (struct sockaddr *) &src->myaddr,
-	  sizeof (src->myaddr)) == -1) {
+          sizeof (src->myaddr)) == -1) {
     perror ("stream_sock bind");
     return FALSE;
   }
@@ -423,20 +425,20 @@ gst_tcpsrc_init_receive (GstTCPSrc * src)
   switch (src->control) {
     case CONTROL_TCP:
       if ((src->control_sock = socket (AF_INET, SOCK_STREAM, 0)) == -1) {
-	perror ("control_socket");
-	return FALSE;
+        perror ("control_socket");
+        return FALSE;
       }
 
       src->myaddr.sin_port = htons (src->port + 1);
       if (bind (src->control_sock, (struct sockaddr *) &src->myaddr,
-	      sizeof (src->myaddr)) == -1) {
-	perror ("control bind");
-	return FALSE;
+              sizeof (src->myaddr)) == -1) {
+        perror ("control bind");
+        return FALSE;
       }
 
       if (listen (src->control_sock, 5) == -1) {
-	perror ("control listen");
-	return FALSE;
+        perror ("control listen");
+        return FALSE;
       }
 
       fcntl (src->control_sock, F_SETFL, O_NONBLOCK);
@@ -484,7 +486,7 @@ gst_tcpsrc_change_state (GstElement * element)
   } else {
     if (!GST_FLAG_IS_SET (element, GST_TCPSRC_OPEN)) {
       if (!gst_tcpsrc_init_receive (GST_TCPSRC (element)))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
     }
   }
 

@@ -51,7 +51,7 @@ static void *
 gst_v4lmjpegsink_sync_thread (void *arg)
 {
   GstV4lMjpegSink *v4lmjpegsink = GST_V4LMJPEGSINK (arg);
-  gint frame = 0;		/* frame that we're currently syncing on */
+  gint frame = 0;               /* frame that we're currently syncing on */
 
   DEBUG ("starting sync thread");
 
@@ -65,7 +65,7 @@ gst_v4lmjpegsink_sync_thread (void *arg)
     g_mutex_lock (v4lmjpegsink->mutex_queued_frames);
     if (!v4lmjpegsink->isqueued_queued_frames[frame]) {
       g_cond_wait (v4lmjpegsink->cond_queued_frames[frame],
-	  v4lmjpegsink->mutex_queued_frames);
+          v4lmjpegsink->mutex_queued_frames);
     }
     if (v4lmjpegsink->isqueued_queued_frames[frame] != 1) {
       g_mutex_unlock (v4lmjpegsink->mutex_queued_frames);
@@ -75,9 +75,9 @@ gst_v4lmjpegsink_sync_thread (void *arg)
 
     DEBUG ("thread-syncing on next frame");
     if (ioctl (GST_V4LELEMENT (v4lmjpegsink)->video_fd, MJPIOC_SYNC,
-	    &(v4lmjpegsink->bsync)) < 0) {
+            &(v4lmjpegsink->bsync)) < 0) {
       GST_ELEMENT_ERROR (v4lmjpegsink, RESOURCE, SYNC, (NULL),
-	  ("Failed to sync on frame %d: %s", frame, g_strerror (errno)));
+          ("Failed to sync on frame %d: %s", frame, g_strerror (errno)));
       g_mutex_lock (v4lmjpegsink->mutex_queued_frames);
       v4lmjpegsink->isqueued_queued_frames[frame] = -1;
       g_cond_broadcast (v4lmjpegsink->cond_queued_frames[frame]);
@@ -86,9 +86,9 @@ gst_v4lmjpegsink_sync_thread (void *arg)
     } else {
       /* be sure that we're not confusing */
       if (frame != v4lmjpegsink->bsync.frame) {
-	GST_ELEMENT_ERROR (v4lmjpegsink, CORE, TOO_LAZY, (NULL),
-	    ("Internal error: frame number confusion"));
-	goto end;
+        GST_ELEMENT_ERROR (v4lmjpegsink, CORE, TOO_LAZY, (NULL),
+            ("Internal error: frame number confusion"));
+        goto end;
       }
       g_mutex_lock (v4lmjpegsink->mutex_queued_frames);
       v4lmjpegsink->isqueued_queued_frames[frame] = 0;
@@ -119,9 +119,9 @@ gst_v4lmjpegsink_queue_frame (GstV4lMjpegSink * v4lmjpegsink, gint num)
 
   /* queue on this frame */
   if (ioctl (GST_V4LELEMENT (v4lmjpegsink)->video_fd, MJPIOC_QBUF_PLAY,
-	  &num) < 0) {
+          &num) < 0) {
     GST_ELEMENT_ERROR (v4lmjpegsink, RESOURCE, WRITE, (NULL),
-	("Failed to queue frame %d: %s", num, g_strerror (errno)));
+        ("Failed to queue frame %d: %s", num, g_strerror (errno)));
     return FALSE;
   }
 
@@ -153,7 +153,7 @@ gst_v4lmjpegsink_sync_frame (GstV4lMjpegSink * v4lmjpegsink, gint * num)
   g_mutex_lock (v4lmjpegsink->mutex_queued_frames);
   if (v4lmjpegsink->isqueued_queued_frames[*num] == 1) {
     g_cond_wait (v4lmjpegsink->cond_queued_frames[*num],
-	v4lmjpegsink->mutex_queued_frames);
+        v4lmjpegsink->mutex_queued_frames);
   }
   if (v4lmjpegsink->isqueued_queued_frames[*num] != 0) {
     g_mutex_unlock (v4lmjpegsink->mutex_queued_frames);
@@ -208,15 +208,15 @@ gst_v4lmjpegsink_set_playback (GstV4lMjpegSink * v4lmjpegsink,
   /*GST_V4L_CHECK_NOT_ACTIVE(GST_V4LELEMENT(v4lmjpegsink)); */
 
   if (ioctl (GST_V4LELEMENT (v4lmjpegsink)->video_fd, MJPIOC_G_PARAMS,
-	  &bparm) < 0) {
+          &bparm) < 0) {
     GST_ELEMENT_ERROR (v4lmjpegsink, RESOURCE, SETTINGS, (NULL),
-	GST_ERROR_SYSTEM);
+        GST_ERROR_SYSTEM);
     return FALSE;
   }
 
   bparm.input = 0;
   bparm.norm = norm;
-  bparm.decimation = 0;		/* we'll set proper values later on */
+  bparm.decimation = 0;         /* we'll set proper values later on */
 
   /* maxwidth is broken on marvel cards */
   mw = GST_V4LELEMENT (v4lmjpegsink)->vcap.maxwidth;
@@ -226,8 +226,8 @@ gst_v4lmjpegsink_set_playback (GstV4lMjpegSink * v4lmjpegsink,
 
   if (width > mw || height > mh) {
     GST_ELEMENT_ERROR (v4lmjpegsink, RESOURCE, TOO_LAZY, (NULL),
-	("Video dimensions (%dx%d) are larger than device max (%dx%d)",
-	    width, height, mw, mh));
+        ("Video dimensions (%dx%d) are larger than device max (%dx%d)",
+            width, height, mw, mh));
     return FALSE;
   }
 
@@ -253,8 +253,8 @@ gst_v4lmjpegsink_set_playback (GstV4lMjpegSink * v4lmjpegsink,
   {
     if (height > mh / 2) {
       GST_ELEMENT_ERROR (v4lmjpegsink, RESOURCE, TOO_LAZY, (NULL),
-	  ("Video dimensions (%dx%d) too large for non-interlaced playback (%dx%d)",
-	      width, height, mw, mh / 2));
+          ("Video dimensions (%dx%d) too large for non-interlaced playback (%dx%d)",
+              width, height, mw, mh / 2));
       return FALSE;
     }
 
@@ -296,9 +296,9 @@ gst_v4lmjpegsink_set_playback (GstV4lMjpegSink * v4lmjpegsink,
   }
 
   if (ioctl (GST_V4LELEMENT (v4lmjpegsink)->video_fd, MJPIOC_S_PARAMS,
-	  &bparm) < 0) {
+          &bparm) < 0) {
     GST_ELEMENT_ERROR (v4lmjpegsink, RESOURCE, SETTINGS, (NULL),
-	GST_ERROR_SYSTEM);
+        GST_ERROR_SYSTEM);
     return FALSE;
   }
 
@@ -323,7 +323,7 @@ gst_v4lmjpegsink_playback_init (GstV4lMjpegSink * v4lmjpegsink)
 
   /* Request buffers */
   if (ioctl (GST_V4LELEMENT (v4lmjpegsink)->video_fd, MJPIOC_REQBUFS,
-	  &(v4lmjpegsink->breq)) < 0) {
+          &(v4lmjpegsink->breq)) < 0) {
     GST_ELEMENT_ERROR (v4lmjpegsink, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
     return FALSE;
   }
@@ -338,7 +338,7 @@ gst_v4lmjpegsink_playback_init (GstV4lMjpegSink * v4lmjpegsink)
       GST_V4LELEMENT (v4lmjpegsink)->video_fd, 0);
   if (GST_V4LELEMENT (v4lmjpegsink)->buffer == MAP_FAILED) {
     GST_ELEMENT_ERROR (v4lmjpegsink, RESOURCE, TOO_LAZY, (NULL),
-	("Error mapping video buffers: %s", g_strerror (errno)));
+        ("Error mapping video buffers: %s", g_strerror (errno)));
     GST_V4LELEMENT (v4lmjpegsink)->buffer = NULL;
     return FALSE;
   }
@@ -349,14 +349,14 @@ gst_v4lmjpegsink_playback_init (GstV4lMjpegSink * v4lmjpegsink)
       malloc (sizeof (gint8) * v4lmjpegsink->breq.count);
   if (!v4lmjpegsink->isqueued_queued_frames) {
     GST_ELEMENT_ERROR (v4lmjpegsink, RESOURCE, TOO_LAZY, (NULL),
-	("Failed to create queue tracker: %s", g_strerror (errno)));
+        ("Failed to create queue tracker: %s", g_strerror (errno)));
     return FALSE;
   }
   v4lmjpegsink->cond_queued_frames = (GCond **)
       malloc (sizeof (GCond *) * v4lmjpegsink->breq.count);
   if (!v4lmjpegsink->cond_queued_frames) {
     GST_ELEMENT_ERROR (v4lmjpegsink, RESOURCE, TOO_LAZY, (NULL),
-	("Failed to create queue condition holders: %s", g_strerror (errno)));
+        ("Failed to create queue condition holders: %s", g_strerror (errno)));
     return FALSE;
   }
   for (n = 0; n < v4lmjpegsink->breq.count; n++)
@@ -394,7 +394,7 @@ gst_v4lmjpegsink_playback_start (GstV4lMjpegSink * v4lmjpegsink)
       TRUE, &error);
   if (!v4lmjpegsink->thread_queued_frames) {
     GST_ELEMENT_ERROR (v4lmjpegsink, RESOURCE, TOO_LAZY, (NULL),
-	("Failed to create sync thread: %s", error->message));
+        ("Failed to create sync thread: %s", error->message));
     return FALSE;
   }
 

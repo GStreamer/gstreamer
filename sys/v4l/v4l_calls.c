@@ -84,8 +84,8 @@ gst_v4l_get_capabilities (GstV4lElement * v4lelement)
 
   if (ioctl (v4lelement->video_fd, VIDIOCGCAP, &(v4lelement->vcap)) < 0) {
     GST_ELEMENT_ERROR (v4lelement, RESOURCE, SETTINGS, (NULL),
-	("error getting capabilities %s of from device %s",
-	    g_strerror (errno), v4lelement->videodev));
+        ("error getting capabilities %s of from device %s",
+            g_strerror (errno), v4lelement->videodev));
     return FALSE;
   }
 
@@ -111,7 +111,7 @@ gst_v4l_open (GstV4lElement * v4lelement)
   /* be sure we have a device */
   if (!v4lelement->videodev) {
     GST_ELEMENT_ERROR (v4lelement, RESOURCE, NOT_FOUND,
-	(_("No device specified.")), (NULL));
+        (_("No device specified.")), (NULL));
     return FALSE;
   }
 
@@ -119,8 +119,8 @@ gst_v4l_open (GstV4lElement * v4lelement)
   v4lelement->video_fd = open (v4lelement->videodev, O_RDWR);
   if (!GST_V4L_IS_OPEN (v4lelement)) {
     GST_ELEMENT_ERROR (v4lelement, RESOURCE, OPEN_READ_WRITE,
-	(_("Could not open device \"%s\" for reading and writing."),
-	    v4lelement->videodev), GST_ERROR_SYSTEM);
+        (_("Could not open device \"%s\" for reading and writing."),
+            v4lelement->videodev), GST_ERROR_SYSTEM);
     return FALSE;
   }
 
@@ -133,13 +133,13 @@ gst_v4l_open (GstV4lElement * v4lelement)
 
   /* device type check */
   if ((GST_IS_V4LSRC (v4lelement) &&
-	  !(v4lelement->vcap.type & VID_TYPE_CAPTURE)) ||
+          !(v4lelement->vcap.type & VID_TYPE_CAPTURE)) ||
       (GST_IS_V4LMJPEGSRC (v4lelement) &&
-	  !(v4lelement->vcap.type & VID_TYPE_MJPEG_ENCODER)) ||
+          !(v4lelement->vcap.type & VID_TYPE_MJPEG_ENCODER)) ||
       (GST_IS_V4LMJPEGSINK (v4lelement) &&
-	  !(v4lelement->vcap.type & VID_TYPE_MJPEG_DECODER))) {
+          !(v4lelement->vcap.type & VID_TYPE_MJPEG_DECODER))) {
     GST_ELEMENT_ERROR (v4lelement, RESOURCE, SETTINGS, (NULL),
-	("Device opened, but wrong type (0x%x)", v4lelement->vcap.type));
+        ("Device opened, but wrong type (0x%x)", v4lelement->vcap.type));
     close (v4lelement->video_fd);
     v4lelement->video_fd = -1;
     return FALSE;
@@ -151,7 +151,7 @@ gst_v4l_open (GstV4lElement * v4lelement)
   /* norms + inputs, for the tuner interface */
   for (num = 0; norm_name[num] != NULL; num++) {
     GstV4lTunerNorm *v4lnorm = g_object_new (GST_TYPE_V4L_TUNER_NORM,
-	NULL);
+        NULL);
     GstTunerNorm *norm = GST_TUNER_NORM (v4lnorm);
 
     norm->label = g_strdup (norm_name[num]);
@@ -163,7 +163,7 @@ gst_v4l_open (GstV4lElement * v4lelement)
 
   for (num = 0; picture_name[num] != NULL; num++) {
     GstV4lColorBalanceChannel *v4lchannel =
-	g_object_new (GST_TYPE_V4L_COLOR_BALANCE_CHANNEL, NULL);
+        g_object_new (GST_TYPE_V4L_COLOR_BALANCE_CHANNEL, NULL);
     GstColorBalanceChannel *channel = GST_COLOR_BALANCE_CHANNEL (v4lchannel);
 
     channel->label = g_strdup (picture_name[num]);
@@ -252,12 +252,12 @@ gst_v4l_get_chan_names (GstV4lElement * v4lelement)
 
   for (i = 0; i < gst_v4l_get_num_chans (v4lelement); i++) {
     GstV4lTunerChannel *v4lchannel = g_object_new (GST_TYPE_V4L_TUNER_CHANNEL,
-	NULL);
+        NULL);
     GstTunerChannel *channel = GST_TUNER_CHANNEL (v4lchannel);
 
     vchan.channel = i;
     if (ioctl (v4lelement->video_fd, VIDIOCGCHAN, &vchan) < 0)
-      return NULL;		/* memleak... */
+      return NULL;              /* memleak... */
     channel->label = g_strdup (vchan.name);
     channel->flags = GST_TUNER_CHANNEL_INPUT;
     v4lchannel->index = i;
@@ -266,18 +266,18 @@ gst_v4l_get_chan_names (GstV4lElement * v4lelement)
       gint n;
 
       for (n = 0;; n++) {
-	vtun.tuner = n;
-	if (ioctl (v4lelement->video_fd, VIDIOCGTUNER, &vtun) < 0)
-	  break;		/* no more tuners */
-	if (!strcmp (vtun.name, vchan.name)) {
-	  v4lchannel->tuner = n;
-	  channel->flags |= GST_TUNER_CHANNEL_FREQUENCY;
-	  channel->min_frequency = vtun.rangelow;
-	  channel->max_frequency = vtun.rangehigh;
-	  channel->min_signal = 0;
-	  channel->max_signal = 0xffff;
-	  break;
-	}
+        vtun.tuner = n;
+        if (ioctl (v4lelement->video_fd, VIDIOCGTUNER, &vtun) < 0)
+          break;                /* no more tuners */
+        if (!strcmp (vtun.name, vchan.name)) {
+          v4lchannel->tuner = n;
+          channel->flags |= GST_TUNER_CHANNEL_FREQUENCY;
+          channel->min_frequency = vtun.rangelow;
+          channel->max_frequency = vtun.rangehigh;
+          channel->min_signal = 0;
+          channel->max_signal = 0xffff;
+          break;
+        }
       }
     }
     if (vchan.flags & VIDEO_VC_AUDIO) {
@@ -285,14 +285,14 @@ gst_v4l_get_chan_names (GstV4lElement * v4lelement)
       gint n;
 
       for (n = 0; n < v4lelement->vcap.audios; n++) {
-	vaud.audio = n;
-	if (ioctl (v4lelement->video_fd, VIDIOCGAUDIO, &vaud) < 0)
-	  continue;
-	if (!strcmp (vaud.name, vchan.name)) {
-	  v4lchannel->audio = n;
-	  channel->flags |= GST_TUNER_CHANNEL_AUDIO;
-	  break;
-	}
+        vaud.audio = n;
+        if (ioctl (v4lelement->video_fd, VIDIOCGAUDIO, &vaud) < 0)
+          continue;
+        if (!strcmp (vaud.name, vchan.name)) {
+          v4lchannel->audio = n;
+          channel->flags |= GST_TUNER_CHANNEL_AUDIO;
+          break;
+        }
       }
     }
     list = g_list_append (list, (gpointer) channel);
@@ -344,13 +344,13 @@ gst_v4l_set_chan_norm (GstV4lElement * v4lelement, gint channel, gint norm)
 
   if (ioctl (v4lelement->video_fd, VIDIOCSCHAN, &(v4lelement->vchan)) < 0) {
     GST_ELEMENT_ERROR (v4lelement, RESOURCE, SETTINGS, (NULL),
-	("Error setting the channel/norm settings: %s", g_strerror (errno)));
+        ("Error setting the channel/norm settings: %s", g_strerror (errno)));
     return FALSE;
   }
 
   if (ioctl (v4lelement->video_fd, VIDIOCGCHAN, &(v4lelement->vchan)) < 0) {
     GST_ELEMENT_ERROR (v4lelement, RESOURCE, SETTINGS, (NULL),
-	("Error getting the channel/norm settings: %s", g_strerror (errno)));
+        ("Error getting the channel/norm settings: %s", g_strerror (errno)));
     return FALSE;
   }
 
@@ -375,7 +375,7 @@ gst_v4l_get_signal (GstV4lElement * v4lelement, gint tunernum, guint * signal)
   tuner.tuner = tunernum;
   if (ioctl (v4lelement->video_fd, VIDIOCGTUNER, &tuner) < 0) {
     GST_ELEMENT_ERROR (v4lelement, RESOURCE, SETTINGS, (NULL),
-	("Error getting tuner signal: %s", g_strerror (errno)));
+        ("Error getting tuner signal: %s", g_strerror (errno)));
     return FALSE;
   }
 
@@ -409,7 +409,7 @@ gst_v4l_get_frequency (GstV4lElement * v4lelement,
 
   if (ioctl (v4lelement->video_fd, VIDIOCGFREQ, frequency) < 0) {
     GST_ELEMENT_ERROR (v4lelement, RESOURCE, SETTINGS, (NULL),
-	("Error getting tuner frequency: %s", g_strerror (errno)));
+        ("Error getting tuner frequency: %s", g_strerror (errno)));
     return FALSE;
   }
 
@@ -441,7 +441,7 @@ gst_v4l_set_frequency (GstV4lElement * v4lelement,
 
   if (ioctl (v4lelement->video_fd, VIDIOCSFREQ, &frequency) < 0) {
     GST_ELEMENT_ERROR (v4lelement, RESOURCE, SETTINGS, (NULL),
-	("Error setting tuner frequency: %s", g_strerror (errno)));
+        ("Error setting tuner frequency: %s", g_strerror (errno)));
     return FALSE;
   }
 
@@ -466,7 +466,7 @@ gst_v4l_get_picture (GstV4lElement * v4lelement,
 
   if (ioctl (v4lelement->video_fd, VIDIOCGPICT, &vpic) < 0) {
     GST_ELEMENT_ERROR (v4lelement, RESOURCE, SETTINGS, (NULL),
-	("Error getting picture parameters: %s", g_strerror (errno)));
+        ("Error getting picture parameters: %s", g_strerror (errno)));
     return FALSE;
   }
 
@@ -485,7 +485,7 @@ gst_v4l_get_picture (GstV4lElement * v4lelement,
       break;
     default:
       GST_ELEMENT_ERROR (v4lelement, RESOURCE, SETTINGS, (NULL),
-	  ("Error getting picture parameters: unknown type %d", type));
+          ("Error getting picture parameters: unknown type %d", type));
       return FALSE;
   }
 
@@ -511,7 +511,7 @@ gst_v4l_set_picture (GstV4lElement * v4lelement,
 
   if (ioctl (v4lelement->video_fd, VIDIOCGPICT, &vpic) < 0) {
     GST_ELEMENT_ERROR (v4lelement, RESOURCE, SETTINGS, (NULL),
-	("Error getting picture parameters: %s", g_strerror (errno)));
+        ("Error getting picture parameters: %s", g_strerror (errno)));
     return FALSE;
   }
 
@@ -530,13 +530,13 @@ gst_v4l_set_picture (GstV4lElement * v4lelement,
       break;
     default:
       GST_ELEMENT_ERROR (v4lelement, RESOURCE, SETTINGS, (NULL),
-	  ("Error setting picture parameters: unknown type %d", type));
+          ("Error setting picture parameters: unknown type %d", type));
       return FALSE;
   }
 
   if (ioctl (v4lelement->video_fd, VIDIOCSPICT, &vpic) < 0) {
     GST_ELEMENT_ERROR (v4lelement, RESOURCE, SETTINGS, (NULL),
-	("Error setting picture parameters: %s", g_strerror (errno)));
+        ("Error setting picture parameters: %s", g_strerror (errno)));
     return FALSE;
   }
 
@@ -562,7 +562,7 @@ gst_v4l_get_audio (GstV4lElement * v4lelement,
   vau.audio = audionum;
   if (ioctl (v4lelement->video_fd, VIDIOCGAUDIO, &vau) < 0) {
     GST_ELEMENT_ERROR (v4lelement, RESOURCE, SETTINGS, (NULL),
-	("Error getting audio parameters: %s", g_strerror (errno)));
+        ("Error getting audio parameters: %s", g_strerror (errno)));
     return FALSE;
   }
 
@@ -578,7 +578,7 @@ gst_v4l_get_audio (GstV4lElement * v4lelement,
       break;
     default:
       GST_ELEMENT_ERROR (v4lelement, RESOURCE, SETTINGS, (NULL),
-	  ("Error getting audio parameters: unknown type %d", type));
+          ("Error getting audio parameters: unknown type %d", type));
       return FALSE;
   }
 
@@ -605,27 +605,27 @@ gst_v4l_set_audio (GstV4lElement * v4lelement,
   vau.audio = audionum;
   if (ioctl (v4lelement->video_fd, VIDIOCGAUDIO, &vau) < 0) {
     GST_ELEMENT_ERROR (v4lelement, RESOURCE, SETTINGS, (NULL),
-	("Error getting audio parameters: %s", g_strerror (errno)));
+        ("Error getting audio parameters: %s", g_strerror (errno)));
     return FALSE;
   }
 
   switch (type) {
     case V4L_AUDIO_MUTE:
       if (!(vau.flags & VIDEO_AUDIO_MUTABLE)) {
-	GST_ELEMENT_ERROR (v4lelement, CORE, NOT_IMPLEMENTED, (NULL),
-	    ("Error setting audio mute: (un)setting mute is not supported"));
-	return FALSE;
+        GST_ELEMENT_ERROR (v4lelement, CORE, NOT_IMPLEMENTED, (NULL),
+            ("Error setting audio mute: (un)setting mute is not supported"));
+        return FALSE;
       }
       if (value)
-	vau.flags |= VIDEO_AUDIO_MUTE;
+        vau.flags |= VIDEO_AUDIO_MUTE;
       else
-	vau.flags &= ~VIDEO_AUDIO_MUTE;
+        vau.flags &= ~VIDEO_AUDIO_MUTE;
       break;
     case V4L_AUDIO_VOLUME:
       if (!(vau.flags & VIDEO_AUDIO_VOLUME)) {
-	GST_ELEMENT_ERROR (v4lelement, CORE, NOT_IMPLEMENTED, (NULL),
-	    ("Error setting audio volume: setting volume is not supported"));
-	return FALSE;
+        GST_ELEMENT_ERROR (v4lelement, CORE, NOT_IMPLEMENTED, (NULL),
+            ("Error setting audio volume: setting volume is not supported"));
+        return FALSE;
       }
       vau.volume = value;
       break;
@@ -634,13 +634,13 @@ gst_v4l_set_audio (GstV4lElement * v4lelement,
       break;
     default:
       GST_ELEMENT_ERROR (v4lelement, RESOURCE, SETTINGS, (NULL),
-	  ("Error setting audio parameters: unknown type %d", type));
+          ("Error setting audio parameters: unknown type %d", type));
       return FALSE;
   }
 
   if (ioctl (v4lelement->video_fd, VIDIOCSAUDIO, &vau) < 0) {
     GST_ELEMENT_ERROR (v4lelement, RESOURCE, SETTINGS, (NULL),
-	("Error setting audio parameters: %s", g_strerror (errno)));
+        ("Error setting audio parameters: %s", g_strerror (errno)));
     return FALSE;
   }
 

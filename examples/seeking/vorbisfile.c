@@ -65,20 +65,20 @@ print_lbs_info (struct probe_context *context, gint stream)
 
     /* get start and end position of this stream */
     res = gst_pad_convert (context->pad,
-	context->ls_format, stream, &format, &value_start);
+        context->ls_format, stream, &format, &value_start);
     res &= gst_pad_convert (context->pad,
-	context->ls_format, stream + 1, &format, &value_end);
+        context->ls_format, stream + 1, &format, &value_end);
 
     if (res) {
       /* substract to get the length */
       value_end -= value_start;
 
       if (format == GST_FORMAT_TIME) {
-	value_end /= (GST_SECOND / 100);
-	g_print ("    %s: %lld:%02lld.%02lld\n", definition->nick,
-	    value_end / 6000, (value_end / 100) % 60, (value_end % 100));
+        value_end /= (GST_SECOND / 100);
+        g_print ("    %s: %lld:%02lld.%02lld\n", definition->nick,
+            value_end / 6000, (value_end / 100) % 60, (value_end % 100));
       } else {
-	g_print ("    %s: %lld\n", definition->nick, value_end);
+        g_print ("    %s: %lld\n", definition->nick, value_end);
       }
     } else
       g_print ("    could not get logical stream %s\n", definition->nick);
@@ -180,13 +180,13 @@ collect_stream_properties (struct probe_context *context)
 
     if (res) {
       if (format == GST_FORMAT_TIME) {
-	value /= (GST_SECOND / 100);
-	g_print ("  total %s: %lld:%02lld.%02lld\n", definition->nick,
-	    value / 6000, (value / 100) % 60, (value % 100));
+        value /= (GST_SECOND / 100);
+        g_print ("  total %s: %lld:%02lld.%02lld\n", definition->nick,
+            value / 6000, (value / 100) % 60, (value % 100));
       } else {
-	if (format == context->ls_format)
-	  context->total_ls = value;
-	g_print ("  total %s: %lld\n", definition->nick, value);
+        if (format == context->ls_format)
+          context->total_ls = value;
+        g_print ("  total %s: %lld\n", definition->nick, value);
       }
     }
   }

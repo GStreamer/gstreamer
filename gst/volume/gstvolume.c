@@ -32,9 +32,9 @@
 /* the volume factor is a range from 0.0 to (arbitrary) 4.0
  * we map 1.0 to VOLUME_UNITY_INT
  */
-#define VOLUME_UNITY_INT	8192	/* internal int for unity */
-#define VOLUME_UNITY_BIT_SHIFT	13	/* number of bits to shift
-					   for unity */
+#define VOLUME_UNITY_INT	8192    /* internal int for unity */
+#define VOLUME_UNITY_BIT_SHIFT	13      /* number of bits to shift
+                                           for unity */
 #define VOLUME_MAX_DOUBLE	4.0
 #define VOLUME_MAX_INT16	32767
 #define VOLUME_MIN_INT16	-32768
@@ -70,32 +70,32 @@ static GstStaticPadTemplate volume_sink_factory =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-float, "
-	"rate = (int) [ 1, MAX ], "
-	"channels = (int) [ 1, MAX ], "
-	"endianness = (int) BYTE_ORDER, "
-	"width = (int) 32, "
-	"buffer-frames = (int) [ 1, MAX]; "
-	"audio/x-raw-int, "
-	"channels = (int) [ 1, MAX ], "
-	"rate = (int) [ 1,  MAX ], "
-	"endianness = (int) BYTE_ORDER, "
-	"width = (int) 16, " "depth = (int) 16, " "signed = (bool) TRUE")
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, MAX ], "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) 32, "
+        "buffer-frames = (int) [ 1, MAX]; "
+        "audio/x-raw-int, "
+        "channels = (int) [ 1, MAX ], "
+        "rate = (int) [ 1,  MAX ], "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) 16, " "depth = (int) 16, " "signed = (bool) TRUE")
     );
 
 static GstStaticPadTemplate volume_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-float, "
-	"rate = (int) [ 1, MAX ], "
-	"channels = (int) [ 1, MAX ], "
-	"endianness = (int) BYTE_ORDER, "
-	"width = (int) 32, "
-	"buffer-frames = (int) [ 1, MAX]; "
-	"audio/x-raw-int, "
-	"channels = (int) [ 1, MAX ], "
-	"rate = (int) [ 1,  MAX ], "
-	"endianness = (int) BYTE_ORDER, "
-	"width = (int) 16, " "depth = (int) 16, " "signed = (bool) TRUE")
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, MAX ], "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) 32, "
+        "buffer-frames = (int) [ 1, MAX]; "
+        "audio/x-raw-int, "
+        "channels = (int) [ 1, MAX ], "
+        "rate = (int) [ 1,  MAX ], "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) 16, " "depth = (int) 16, " "signed = (bool) TRUE")
     );
 
 static void volume_base_init (gpointer g_class);
@@ -311,9 +311,9 @@ gst_volume_get_type (void)
     };
 
     volume_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstVolume", &volume_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstVolume", &volume_info, 0);
     g_type_add_interface_static (volume_type, GST_TYPE_IMPLEMENTS_INTERFACE,
-	&voliface_info);
+        &voliface_info);
     g_type_add_interface_static (volume_type, GST_TYPE_MIXER, &volmixer_info);
   }
   return volume_type;
@@ -345,7 +345,7 @@ volume_class_init (GstVolumeClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VOLUME,
       g_param_spec_double ("volume", "volume", "volume",
-	  0.0, VOLUME_MAX_DOUBLE, 1.0, G_PARAM_READWRITE));
+          0.0, VOLUME_MAX_DOUBLE, 1.0, G_PARAM_READWRITE));
 
   gobject_class->set_property = volume_set_property;
   gobject_class->get_property = volume_get_property;
@@ -384,10 +384,10 @@ volume_init (GstVolume * filter)
   filter->dpman = gst_dpman_new ("volume_dpman", GST_ELEMENT (filter));
   gst_dpman_add_required_dparam_callback (filter->dpman,
       g_param_spec_int ("mute", "Mute", "Mute the audio",
-	  0, 1, 0, G_PARAM_READWRITE), "int", volume_update_mute, filter);
+          0, 1, 0, G_PARAM_READWRITE), "int", volume_update_mute, filter);
   gst_dpman_add_required_dparam_callback (filter->dpman,
       g_param_spec_double ("volume", "Volume", "Volume of the audio",
-	  0.0, VOLUME_MAX_DOUBLE, 1.0, G_PARAM_READWRITE),
+          0.0, VOLUME_MAX_DOUBLE, 1.0, G_PARAM_READWRITE),
       "scalar", volume_update_volume, filter);
 
   track = g_object_new (GST_TYPE_MIXER_TRACK, NULL);
@@ -461,20 +461,20 @@ volume_chain_int16 (GstPad * pad, GstData * _data)
     /* only clamp if the gain is greater than 1.0 */
     if (filter->real_vol_i > VOLUME_UNITY_INT) {
       while (i < GST_DPMAN_NEXT_UPDATE_FRAME (filter->dpman)) {
-	/* we use bitshifting instead of dividing by UNITY_INT for speed */
-	data[i] =
-	    (gint16) CLAMP ((filter->real_vol_i *
-		(gint) data[i]) >> VOLUME_UNITY_BIT_SHIFT, VOLUME_MIN_INT16,
-	    VOLUME_MAX_INT16);
-	i++;
+        /* we use bitshifting instead of dividing by UNITY_INT for speed */
+        data[i] =
+            (gint16) CLAMP ((filter->real_vol_i *
+                (gint) data[i]) >> VOLUME_UNITY_BIT_SHIFT, VOLUME_MIN_INT16,
+            VOLUME_MAX_INT16);
+        i++;
       }
     } else {
       while (i < GST_DPMAN_NEXT_UPDATE_FRAME (filter->dpman)) {
-	/* we use bitshifting instead of dividing by UNITY_INT for speed */
-	data[i] =
-	    (gint16) ((filter->real_vol_i *
-		(gint) data[i]) >> VOLUME_UNITY_BIT_SHIFT);
-	i++;
+        /* we use bitshifting instead of dividing by UNITY_INT for speed */
+        data[i] =
+            (gint16) ((filter->real_vol_i *
+                (gint) data[i]) >> VOLUME_UNITY_BIT_SHIFT);
+        i++;
       }
     }
   }

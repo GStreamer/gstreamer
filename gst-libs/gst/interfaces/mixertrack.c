@@ -61,8 +61,8 @@ gst_mixer_track_get_type (void)
     };
 
     gst_mixer_track_type =
-	g_type_register_static (G_TYPE_OBJECT,
-	"GstMixerTrack", &mixer_track_info, 0);
+        g_type_register_static (G_TYPE_OBJECT,
+        "GstMixerTrack", &mixer_track_info, 0);
   }
 
   return gst_mixer_track_type;
@@ -79,21 +79,21 @@ gst_mixer_track_class_init (GstMixerTrackClass * klass)
       g_signal_new ("record_toggled", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstMixerTrackClass,
-	  record_toggled),
+          record_toggled),
       NULL, NULL, g_cclosure_marshal_VOID__BOOLEAN,
       G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
   signals[SIGNAL_MUTE_TOGGLED] =
       g_signal_new ("mute_toggled", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstMixerTrackClass,
-	  mute_toggled),
+          mute_toggled),
       NULL, NULL, g_cclosure_marshal_VOID__BOOLEAN,
       G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
   signals[SIGNAL_VOLUME_CHANGED] =
       g_signal_new ("volume_changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstMixerTrackClass,
-	  volume_changed),
+          volume_changed),
       NULL, NULL, g_cclosure_marshal_VOID__POINTER,
       G_TYPE_NONE, 1, G_TYPE_POINTER);
 

@@ -52,14 +52,14 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-float, "
-	"rate = (int) [ 11025, 48000 ], "
-	"channels = (int) [ 1, 2 ], " "endianness = (int) BYTE_ORDER, "
+        "rate = (int) [ 11025, 48000 ], "
+        "channels = (int) [ 1, 2 ], " "endianness = (int) BYTE_ORDER, "
 /* no ifdef in macros, please
 #ifdef GST_VORBIS_DEC_SEQUENTIAL
       "layout = \"sequential\", "
 #endif
 */
-	"width = (int) 32, " "buffer-frames = (int) 0")
+        "width = (int) 32, " "buffer-frames = (int) 0")
     );
 
 static GstStaticPadTemplate vorbis_dec_sink_factory =
@@ -114,6 +114,7 @@ vorbis_dec_get_formats (GstPad * pad)
     GST_FORMAT_TIME,
     0
   };
+
   return (GST_PAD_IS_SRC (pad) ? src_formats : sink_formats);
 }
 
@@ -224,7 +225,7 @@ vorbis_dec_src_query (GstPad * pad, GstQueryType query, GstFormat * format,
   GstFormat my_format = GST_FORMAT_DEFAULT;
 
   if (!gst_pad_query (GST_PAD_PEER (dec->sinkpad), query, &my_format,
-	  &granulepos))
+          &granulepos))
     return FALSE;
 
   if (!vorbis_dec_from_granulepos (dec, *format, granulepos, value))
@@ -247,14 +248,14 @@ vorbis_dec_src_event (GstPad * pad, GstEvent * event)
       guint64 value;
 
       res = vorbis_dec_to_granulepos (dec, GST_EVENT_SEEK_FORMAT (event),
-	  GST_EVENT_SEEK_OFFSET (event), &value);
+          GST_EVENT_SEEK_OFFSET (event), &value);
       if (res) {
-	GstEvent *real_seek = gst_event_new_seek (
-	    (GST_EVENT_SEEK_TYPE (event) & ~GST_SEEK_FORMAT_MASK) |
-	    GST_FORMAT_DEFAULT,
-	    value);
+        GstEvent *real_seek = gst_event_new_seek (
+            (GST_EVENT_SEEK_TYPE (event) & ~GST_SEEK_FORMAT_MASK) |
+            GST_FORMAT_DEFAULT,
+            value);
 
-	res = gst_pad_send_event (GST_PAD_PEER (dec->sinkpad), real_seek);
+        res = gst_pad_send_event (GST_PAD_PEER (dec->sinkpad), real_seek);
       }
       gst_event_unref (event);
       break;
@@ -275,41 +276,41 @@ vorbis_dec_event (GstVorbisDec * dec, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_DISCONTINUOUS:
       if (gst_event_discont_get_value (event, GST_FORMAT_DEFAULT, &value)) {
-	dec->granulepos = value;
-	GST_DEBUG_OBJECT (dec,
-	    "setting granuleposition to %" G_GUINT64_FORMAT " after discont",
-	    value);
+        dec->granulepos = value;
+        GST_DEBUG_OBJECT (dec,
+            "setting granuleposition to %" G_GUINT64_FORMAT " after discont",
+            value);
       } else {
-	GST_WARNING_OBJECT (dec,
-	    "discont event didn't include offset, we might set it wrong now");
+        GST_WARNING_OBJECT (dec,
+            "discont event didn't include offset, we might set it wrong now");
       }
       if (dec->packetno < 3) {
-	if (dec->granulepos != 0)
-	  GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
-	      ("can't handle discont before parsing first 3 packets"));
-	dec->packetno = 0;
-	gst_pad_push (dec->srcpad, GST_DATA (gst_event_new_discontinuous (FALSE,
-		    GST_FORMAT_TIME, (guint64) 0, GST_FORMAT_DEFAULT,
-		    (guint64) 0, GST_FORMAT_BYTES, (guint64) 0, 0)));
+        if (dec->granulepos != 0)
+          GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
+              ("can't handle discont before parsing first 3 packets"));
+        dec->packetno = 0;
+        gst_pad_push (dec->srcpad, GST_DATA (gst_event_new_discontinuous (FALSE,
+                    GST_FORMAT_TIME, (guint64) 0, GST_FORMAT_DEFAULT,
+                    (guint64) 0, GST_FORMAT_BYTES, (guint64) 0, 0)));
       } else {
-	dec->packetno = 3;
-	/* if one of them works, all of them work */
-	if (vorbis_dec_from_granulepos (dec, GST_FORMAT_TIME, dec->granulepos,
-		&time)
-	    && vorbis_dec_from_granulepos (dec, GST_FORMAT_DEFAULT,
-		dec->granulepos, &value)
-	    && vorbis_dec_from_granulepos (dec, GST_FORMAT_BYTES,
-		dec->granulepos, &bytes)) {
-	  gst_pad_push (dec->srcpad,
-	      GST_DATA (gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
-		      time, GST_FORMAT_DEFAULT, value, GST_FORMAT_BYTES, bytes,
-		      0)));
-	} else {
-	  GST_ERROR_OBJECT (dec,
-	      "failed to parse data for DISCONT event, not sending any");
-	}
+        dec->packetno = 3;
+        /* if one of them works, all of them work */
+        if (vorbis_dec_from_granulepos (dec, GST_FORMAT_TIME, dec->granulepos,
+                &time)
+            && vorbis_dec_from_granulepos (dec, GST_FORMAT_DEFAULT,
+                dec->granulepos, &value)
+            && vorbis_dec_from_granulepos (dec, GST_FORMAT_BYTES,
+                dec->granulepos, &bytes)) {
+          gst_pad_push (dec->srcpad,
+              GST_DATA (gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
+                      time, GST_FORMAT_DEFAULT, value, GST_FORMAT_BYTES, bytes,
+                      0)));
+        } else {
+          GST_ERROR_OBJECT (dec,
+              "failed to parse data for DISCONT event, not sending any");
+        }
 #ifdef HAVE_VORBIS_SYNTHESIS_RESTART
-	vorbis_synthesis_restart (&dec->vd);
+        vorbis_synthesis_restart (&dec->vd);
 #endif
       }
       break;
@@ -324,7 +325,7 @@ vorbis_dec_chain (GstPad * pad, GstData * data)
 {
   GstBuffer *buf;
   GstVorbisDec *vd;
-  ogg_packet packet;		/* lol */
+  ogg_packet packet;            /* lol */
 
   vd = GST_VORBIS_DEC (gst_pad_get_parent (pad));
   if (GST_IS_EVENT (data)) {
@@ -344,50 +345,50 @@ vorbis_dec_chain (GstPad * pad, GstData * data)
     if (packet.packet[0] / 2 != packet.packetno) {
       /* FIXME: just skip? */
       GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
-	  (NULL), ("unexpected packet type %d, expected %d",
-	      (gint) packet.packet[0], (gint) packet.packetno));
+          (NULL), ("unexpected packet type %d, expected %d",
+              (gint) packet.packet[0], (gint) packet.packetno));
       gst_data_unref (data);
       return;
     }
     if (vorbis_synthesis_headerin (&vd->vi, &vd->vc, &packet)) {
       GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
-	  (NULL), ("couldn't read header packet"));
+          (NULL), ("couldn't read header packet"));
       gst_data_unref (data);
       return;
     }
     if (packet.packetno == 1) {
       gchar *encoder = NULL;
       GstTagList *list =
-	  gst_tag_list_from_vorbiscomment_buffer (buf, "\003vorbis", 7,
-	  &encoder);
+          gst_tag_list_from_vorbiscomment_buffer (buf, "\003vorbis", 7,
+          &encoder);
 
       if (!list) {
-	GST_ERROR_OBJECT (vd, "couldn't decode comments");
-	list = gst_tag_list_new ();
+        GST_ERROR_OBJECT (vd, "couldn't decode comments");
+        list = gst_tag_list_new ();
       }
       if (encoder) {
-	gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-	    GST_TAG_ENCODER, encoder, NULL);
-	g_free (encoder);
+        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+            GST_TAG_ENCODER, encoder, NULL);
+        g_free (encoder);
       }
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-	  GST_TAG_ENCODER_VERSION, vd->vi.version, NULL);
+          GST_TAG_ENCODER_VERSION, vd->vi.version, NULL);
       if (vd->vi.bitrate_upper > 0)
-	gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-	    GST_TAG_MAXIMUM_BITRATE, (guint) vd->vi.bitrate_upper, NULL);
+        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+            GST_TAG_MAXIMUM_BITRATE, (guint) vd->vi.bitrate_upper, NULL);
       if (vd->vi.bitrate_nominal > 0)
-	gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-	    GST_TAG_NOMINAL_BITRATE, (guint) vd->vi.bitrate_nominal, NULL);
+        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+            GST_TAG_NOMINAL_BITRATE, (guint) vd->vi.bitrate_nominal, NULL);
       if (vd->vi.bitrate_lower > 0)
-	gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-	    GST_TAG_MINIMUM_BITRATE, (guint) vd->vi.bitrate_lower, NULL);
+        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+            GST_TAG_MINIMUM_BITRATE, (guint) vd->vi.bitrate_lower, NULL);
       gst_element_found_tags_for_pad (GST_ELEMENT (vd), vd->srcpad, 0, list);
     } else if (packet.packetno == 2) {
       /* done */
       vorbis_synthesis_init (&vd->vd, &vd->vi);
       vorbis_block_init (&vd->vd, &vd->vb);
       if (gst_pad_is_linked (vd->srcpad))
-	gst_pad_renegotiate (vd->srcpad);
+        gst_pad_renegotiate (vd->srcpad);
     }
   } else {
     float **pcm;
@@ -396,13 +397,13 @@ vorbis_dec_chain (GstPad * pad, GstData * data)
     /* normal data packet */
     if (vorbis_synthesis (&vd->vb, &packet)) {
       GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
-	  (NULL), ("couldn't read data packet"));
+          (NULL), ("couldn't read data packet"));
       gst_data_unref (data);
       return;
     }
     if (vorbis_synthesis_blockin (&vd->vd, &vd->vb) < 0) {
       GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
-	  (NULL), ("vorbis decoder did not accept data packet"));
+          (NULL), ("vorbis decoder did not accept data packet"));
       gst_data_unref (data);
       return;
     }
@@ -410,20 +411,20 @@ vorbis_dec_chain (GstPad * pad, GstData * data)
     if (sample_count > 0) {
       int i, j;
       GstBuffer *out = gst_pad_alloc_buffer (vd->srcpad, GST_BUFFER_OFFSET_NONE,
-	  sample_count * vd->vi.channels * sizeof (float));
+          sample_count * vd->vi.channels * sizeof (float));
       float *out_data = (float *) GST_BUFFER_DATA (out);
 
 #ifdef GST_VORBIS_DEC_SEQUENTIAL
       for (i = 0; i < vd->vi.channels; i++) {
-	memcpy (out_data, pcm[i], sample_count * sizeof (float));
-	out_data += sample_count;
+        memcpy (out_data, pcm[i], sample_count * sizeof (float));
+        out_data += sample_count;
       }
 #else
       for (j = 0; j < sample_count; j++) {
-	for (i = 0; i < vd->vi.channels; i++) {
-	  *out_data = pcm[i][j];
-	  out_data++;
-	}
+        for (i = 0; i < vd->vi.channels; i++) {
+          *out_data = pcm[i][j];
+          out_data++;
+        }
       }
 #endif
       GST_BUFFER_OFFSET (out) = vd->granulepos;

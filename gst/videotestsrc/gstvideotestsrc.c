@@ -111,8 +111,8 @@ gst_videotestsrc_get_type (void)
     };
 
     videotestsrc_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstVideotestsrc",
-	&videotestsrc_info, 0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstVideotestsrc",
+        &videotestsrc_info, 0);
   }
   return videotestsrc_type;
 }
@@ -131,7 +131,7 @@ gst_videotestsrc_pattern_get_type (void)
 
   if (!videotestsrc_pattern_type) {
     videotestsrc_pattern_type =
-	g_enum_register_static ("GstVideotestsrcPattern", pattern_types);
+        g_enum_register_static ("GstVideotestsrcPattern", pattern_types);
   }
   return videotestsrc_pattern_type;
 }
@@ -157,11 +157,11 @@ gst_videotestsrc_class_init (GstVideotestsrcClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TYPE,
       g_param_spec_enum ("pattern", "Pattern",
-	  "Type of test pattern to generate", GST_TYPE_VIDEOTESTSRC_PATTERN, 1,
-	  G_PARAM_READWRITE));
+          "Type of test pattern to generate", GST_TYPE_VIDEOTESTSRC_PATTERN, 1,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
       g_param_spec_boolean ("sync", "Sync", "Synchronize to clock", TRUE,
-	  G_PARAM_READWRITE));
+          G_PARAM_READWRITE));
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
@@ -203,7 +203,7 @@ gst_videotestsrc_src_fixate (GstPad * pad, const GstCaps * caps)
     return newcaps;
   }
   if (gst_caps_structure_fixate_field_nearest_double (structure, "framerate",
-	  30.0)) {
+          30.0)) {
     return newcaps;
   }
 
@@ -290,9 +290,9 @@ gst_videotestsrc_get_capslist (void)
   for (i = 0; i < n_fourccs; i++) {
     structure = paint_get_structure (fourcc_list + i);
     gst_structure_set (structure,
-	"width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-	"height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-	"framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
+        "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+        "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
     gst_caps_append_structure (caps, structure);
   }
 
@@ -311,8 +311,8 @@ gst_videotestsrc_get_capslist_size (int width, int height, double rate)
   for (i = 0; i < n_fourccs; i++) {
     structure = paint_get_structure (fourcc_list + i);
     gst_structure_set (structure,
-	"width", G_TYPE_INT, width,
-	"height", G_TYPE_INT, height, "framerate", G_TYPE_INT, rate, NULL);
+        "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height, "framerate", G_TYPE_INT, rate, NULL);
     gst_caps_append_structure (caps, structure);
   }
 
@@ -377,17 +377,17 @@ gst_videotestsrc_src_query (GstPad * pad,
   switch (type) {
     case GST_QUERY_POSITION:
       switch (*format) {
-	case GST_FORMAT_TIME:
-	  *value =
-	      videotestsrc->n_frames * GST_SECOND / (double) videotestsrc->rate;
-	  res = TRUE;
-	  break;
-	case GST_FORMAT_DEFAULT:	/* frames */
-	  *value = videotestsrc->n_frames;
-	  res = TRUE;
-	  break;
-	default:
-	  break;
+        case GST_FORMAT_TIME:
+          *value =
+              videotestsrc->n_frames * GST_SECOND / (double) videotestsrc->rate;
+          res = TRUE;
+          break;
+        case GST_FORMAT_DEFAULT:       /* frames */
+          *value = videotestsrc->n_frames;
+          res = TRUE;
+          break;
+        default:
+          break;
       }
       break;
     default:
@@ -414,7 +414,7 @@ gst_videotestsrc_get (GstPad * pad)
 
   if (videotestsrc->fourcc == NULL) {
     GST_ELEMENT_ERROR (videotestsrc, CORE, NEGOTIATION, (NULL),
-	("format wasn't negotiated before get function"));
+        ("format wasn't negotiated before get function"));
     return NULL;
   }
 
@@ -433,7 +433,7 @@ gst_videotestsrc_get (GstPad * pad)
 
   if (videotestsrc->sync) {
     GST_BUFFER_TIMESTAMP (buf) = videotestsrc->timestamp_offset +
-	(videotestsrc->n_frames * GST_SECOND) / (double) videotestsrc->rate;
+        (videotestsrc->n_frames * GST_SECOND) / (double) videotestsrc->rate;
     videotestsrc->n_frames++;
 
     /* FIXME this is not correct if we do QoS */
@@ -442,7 +442,7 @@ gst_videotestsrc_get (GstPad * pad)
     }
   } else {
     GST_BUFFER_TIMESTAMP (buf) = videotestsrc->timestamp_offset +
-	(videotestsrc->n_frames * GST_SECOND) / (double) videotestsrc->rate;
+        (videotestsrc->n_frames * GST_SECOND) / (double) videotestsrc->rate;
     videotestsrc->n_frames++;
   }
   GST_BUFFER_DURATION (buf) = GST_SECOND / (double) videotestsrc->rate;

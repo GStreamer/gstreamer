@@ -60,9 +60,10 @@ gst_tcpsink_control_get_type (void)
     {CONTROL_TCP, "2", "tcp"},
     {CONTROL_ZERO, NULL, NULL}
   };
+
   if (!tcpsink_control_type) {
     tcpsink_control_type =
-	g_enum_register_static ("GstTCPSinkControl", tcpsink_control);
+        g_enum_register_static ("GstTCPSinkControl", tcpsink_control);
   }
   return tcpsink_control_type;
 }
@@ -105,9 +106,10 @@ gst_tcpsink_get_type (void)
       (GInstanceInitFunc) gst_tcpsink_init,
       NULL
     };
+
     tcpsink_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstTCPSink", &tcpsink_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstTCPSink", &tcpsink_info,
+        0);
   }
   return tcpsink_type;
 }
@@ -133,14 +135,14 @@ gst_tcpsink_class_init (GstTCPSink * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HOST,
       g_param_spec_string ("host", "host", "The host/IP to send the packets to",
-	  TCP_DEFAULT_HOST, G_PARAM_READWRITE));
+          TCP_DEFAULT_HOST, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
       g_param_spec_int ("port", "port", "The port to send the packets to",
-	  0, 32768, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
+          0, 32768, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_CONTROL,
       g_param_spec_enum ("control", "control", "The type of control",
-	  GST_TYPE_TCPSINK_CONTROL, CONTROL_TCP, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_MTU, g_param_spec_int ("mtu", "mtu", "mtu", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
+          GST_TYPE_TCPSINK_CONTROL, CONTROL_TCP, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_MTU, g_param_spec_int ("mtu", "mtu", "mtu", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));   /* CHECKME */
   gobject_class->set_property = gst_tcpsink_set_property;
   gobject_class->get_property = gst_tcpsink_get_property;
 
@@ -170,24 +172,24 @@ gst_tcpsink_sink_link (GstPad * pad, const GstCaps * caps)
 
       /* if its an IP address */
       if (inet_aton (tcpsink->host, &addr)) {
-	memmove (&(serv_addr.sin_addr), &addr, sizeof (struct in_addr));
+        memmove (&(serv_addr.sin_addr), &addr, sizeof (struct in_addr));
       }
 
       /* we dont need to lookup for localhost */
       else if (strcmp (tcpsink->host, TCP_DEFAULT_HOST) == 0) {
-	if (inet_aton ("127.0.0.1", &addr)) {
-	  memmove (&(serv_addr.sin_addr), &addr, sizeof (struct in_addr));
-	}
+        if (inet_aton ("127.0.0.1", &addr)) {
+          memmove (&(serv_addr.sin_addr), &addr, sizeof (struct in_addr));
+        }
       }
 
       /* if its a hostname */
       else if ((he = gethostbyname (tcpsink->host))) {
-	memmove (&(serv_addr.sin_addr), he->h_addr, he->h_length);
+        memmove (&(serv_addr.sin_addr), he->h_addr, he->h_length);
       }
 
       else {
-	perror ("hostname lookup error?");
-	return GST_PAD_LINK_REFUSED;
+        perror ("hostname lookup error?");
+        return GST_PAD_LINK_REFUSED;
       }
 
       serv_addr.sin_family = AF_INET;
@@ -199,14 +201,14 @@ gst_tcpsink_sink_link (GstPad * pad, const GstCaps * caps)
       gst_caps_save_thyself (caps, doc->xmlRootNode);
 
       if ((fd = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
-	perror ("socket");
-	return GST_PAD_LINK_REFUSED;
+        perror ("socket");
+        return GST_PAD_LINK_REFUSED;
       }
 
       if (connect (fd, (struct sockaddr *) &serv_addr, sizeof (serv_addr)) != 0) {
-	g_printerr ("tcpsink: connect to %s port %d failed: %s\n",
-	    tcpsink->host, tcpsink->port + 1, g_strerror (errno));
-	return GST_PAD_LINK_REFUSED;
+        g_printerr ("tcpsink: connect to %s port %d failed: %s\n",
+            tcpsink->host, tcpsink->port + 1, g_strerror (errno));
+        return GST_PAD_LINK_REFUSED;
       }
 
       f = fdopen (dup (fd), "wb");
@@ -291,11 +293,11 @@ gst_tcpsink_set_property (GObject * object, guint prop_id, const GValue * value,
   switch (prop_id) {
     case ARG_HOST:
       if (tcpsink->host != NULL)
-	g_free (tcpsink->host);
+        g_free (tcpsink->host);
       if (g_value_get_string (value) == NULL)
-	tcpsink->host = NULL;
+        tcpsink->host = NULL;
       else
-	tcpsink->host = g_strdup (g_value_get_string (value));
+        tcpsink->host = g_strdup (g_value_get_string (value));
       break;
     case ARG_PORT:
       tcpsink->port = g_value_get_int (value);
@@ -349,8 +351,8 @@ gst_tcpsink_init_send (GstTCPSink * sink)
   struct in_addr addr;
 
   memset (&sink->theiraddr, 0, sizeof (sink->theiraddr));
-  sink->theiraddr.sin_family = AF_INET;	/* host byte order */
-  sink->theiraddr.sin_port = htons (sink->port);	/* short, network byte order */
+  sink->theiraddr.sin_family = AF_INET; /* host byte order */
+  sink->theiraddr.sin_port = htons (sink->port);        /* short, network byte order */
 
   /* if its an IP address */
   if (inet_aton (sink->host, &addr)) {
@@ -380,7 +382,7 @@ gst_tcpsink_init_send (GstTCPSink * sink)
   }
 
   if (connect (sink->sock, (struct sockaddr *) &(sink->theiraddr),
-	  sizeof (sink->theiraddr)) != 0) {
+          sizeof (sink->theiraddr)) != 0) {
     perror ("stream connect");
     return FALSE;
   }
@@ -409,7 +411,7 @@ gst_tcpsink_change_state (GstElement * element)
   } else {
     if (!GST_FLAG_IS_SET (element, GST_TCPSINK_OPEN)) {
       if (!gst_tcpsink_init_send (GST_TCPSINK (element)))
-	return GST_STATE_FAILURE;
+        return GST_STATE_FAILURE;
     }
   }
 

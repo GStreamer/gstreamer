@@ -199,9 +199,9 @@ gst_ffmpegcolorspace_pad_link (GstPad * pad, const GstCaps * caps)
     GstCaps *caps = gst_caps_copy (othercaps);
 
     gst_caps_set_simple (caps,
-	"width", G_TYPE_INT, width,
-	"height", G_TYPE_INT, height,
-	"framerate", G_TYPE_DOUBLE, framerate, NULL);
+        "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height,
+        "framerate", G_TYPE_DOUBLE, framerate, NULL);
     ret = gst_pad_try_set_caps (otherpad, caps);
     if (GST_PAD_LINK_FAILED (ret)) {
       return ret;
@@ -239,7 +239,7 @@ gst_ffmpegcolorspace_get_type (void)
     };
 
     ffmpegcolorspace_type = g_type_register_static (GST_TYPE_ELEMENT,
-	"GstFFMpegColorspace", &ffmpegcolorspace_info, 0);
+        "GstFFMpegColorspace", &ffmpegcolorspace_info, 0);
   }
 
   return ffmpegcolorspace_type;
@@ -316,19 +316,19 @@ gst_ffmpegcolorspace_chain (GstPad * pad, GstData * data)
   } else {
     /* use bufferpool here */
     guint size = avpicture_get_size (space->to_pixfmt,
-	space->width,
-	space->height);
+        space->width,
+        space->height);
 
     outbuf = gst_pad_alloc_buffer (space->srcpad, GST_BUFFER_OFFSET_NONE, size);
 
     /* convert */
     avpicture_fill ((AVPicture *) & space->from_frame, GST_BUFFER_DATA (inbuf),
-	space->from_pixfmt, space->width, space->height);
+        space->from_pixfmt, space->width, space->height);
     avpicture_fill ((AVPicture *) & space->to_frame, GST_BUFFER_DATA (outbuf),
-	space->to_pixfmt, space->width, space->height);
+        space->to_pixfmt, space->width, space->height);
     img_convert ((AVPicture *) & space->to_frame, space->to_pixfmt,
-	(AVPicture *) & space->from_frame, space->from_pixfmt,
-	space->width, space->height);
+        (AVPicture *) & space->from_frame, space->from_pixfmt,
+        space->width, space->height);
 
     GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
     GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);

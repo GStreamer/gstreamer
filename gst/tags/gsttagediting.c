@@ -30,7 +30,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "vorbistag",
-	  GST_RANK_PRIMARY, gst_vorbis_tag_get_type ())) {
+          GST_RANK_PRIMARY, gst_vorbis_tag_get_type ())) {
     return FALSE;
   }
 

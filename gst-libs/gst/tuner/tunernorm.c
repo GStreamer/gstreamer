@@ -59,8 +59,8 @@ gst_tuner_norm_get_type (void)
     };
 
     gst_tuner_norm_type =
-	g_type_register_static (G_TYPE_OBJECT,
-	"GstTunerNorm", &tuner_norm_info, 0);
+        g_type_register_static (G_TYPE_OBJECT,
+        "GstTunerNorm", &tuner_norm_info, 0);
   }
 
   return gst_tuner_norm_type;
