@@ -1,3 +1,9 @@
+2004-11-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_push):
+	  Actually always send a discont (cornercase when resending the
+	  same serial-tagged chain twice).
+
 2004-11-08  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_xcontext_clear),
