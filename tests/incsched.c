@@ -1,5 +1,3 @@
-<<<<<<< incsched.c
-<<<<<<< incsched.c
 #include <stdlib.h>
 #include <gst/gst.h>
 
@@ -49,11 +47,11 @@ int main(int argc,char *argv[]) {
 
   g_print("\nAdding sink to bin:\n");
   gst_bin_add(bin,sink);
-  gst_schedule_show(GST_ELEMENT_SCHED(bin));
+  gst_schedule_show(GST_ELEMENT_SCHED(thread));
 
   g_print("\nAdding bin to thread:\n");
   gst_bin_add(thread, GST_ELEMENT(bin));
-  gst_schedule_show(GST_ELEMENT_SCHED(bin));
+  gst_schedule_show(GST_ELEMENT_SCHED(thread));
 
   g_print("\nConnecting identity to sink:\n");
   gst_element_connect(identity,"src",sink,"sink");
@@ -111,6 +109,13 @@ int main(int argc,char *argv[]) {
 
   g_print("\nConnecting identity to sink:\n");
   gst_element_connect(identity,"src",sink,"sink");
+  gst_schedule_show(GST_ELEMENT_SCHED(thread));
+
+  g_print("\n\nNow setting identity2 to NULL:\n");
+  gst_element_set_state(identity2,GST_STATE_NULL);
+
+  g_print("\nRemoving identity2 from bin:\n");
+  gst_bin_remove(bin, identity2);
   gst_schedule_show(GST_ELEMENT_SCHED(thread));
 
   g_print("\n\nNow setting state from READY to PLAYING:\n");

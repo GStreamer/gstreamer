@@ -210,7 +210,7 @@ gst_bin_set_element_sched (GstElement *element,GstSchedule *sched)
 
   // otherwise, if it's just a regular old element
   } else {
-g_print("calling schedule_add_element (%p, \"%s\")\n",sched, GST_ELEMENT_NAME(element));
+//g_print("calling schedule_add_element (%p, \"%s\")\n",sched, GST_ELEMENT_NAME(element));
     GST_SCHEDULE_ADD_ELEMENT (sched, element);
   }
 }
@@ -264,10 +264,8 @@ gst_bin_add (GstBin *bin,
 
   GST_DEBUG_ENTER ("");
 
-  // must be NULL or PAUSED state in order to modify bin
-  // FIXME this isn't right any more
-  g_return_if_fail ((GST_STATE (bin) == GST_STATE_NULL) ||
-		    (GST_STATE (bin) == GST_STATE_PAUSED));
+  // must be not be in PLAYING state in order to modify bin
+  g_return_if_fail (GST_STATE (bin) != GST_STATE_PLAYING);
 
   // the element must not already have a parent
   g_return_if_fail (GST_ELEMENT_PARENT(element) == NULL);
@@ -311,9 +309,8 @@ gst_bin_remove (GstBin *bin,
   g_return_if_fail (GST_IS_ELEMENT (element));
   g_return_if_fail (bin->children != NULL);
 
-  // must be NULL or PAUSED state in order to modify bin
-  g_return_if_fail ((GST_STATE (bin) == GST_STATE_NULL) ||
-		    (GST_STATE (bin) == GST_STATE_PAUSED));
+  // must not be in PLAYING state in order to modify bin
+  g_return_if_fail (GST_STATE (bin) != GST_STATE_PLAYING);
 
   // the element must have its parent set to the current bin
   g_return_if_fail (GST_ELEMENT_PARENT(element) == (GstElement *)bin);

@@ -757,5 +757,6 @@ docs/manual/Makefile
 docs/fwg/Makefile
 stamp.h
 gstreamer-config
-gstreamer.spec])
+gstreamer.spec
+gstreamer.pc])
 AC_OUTPUT_COMMANDS([chmod +x gstreamer-config])

@@ -574,8 +574,11 @@ gst_pad_connect (GstPad *srcpad,
   gtk_signal_emit(GTK_OBJECT(realsrc), gst_real_pad_signals[REAL_CONNECTED], realsink);
   gtk_signal_emit(GTK_OBJECT(realsink), gst_real_pad_signals[REAL_CONNECTED], realsrc);
 
-  // now tell the scheduler
-  GST_SCHEDULE_PAD_CONNECT (realsrc->sched, realsrc, realsink);
+  // now tell the scheduler(s)
+  if (realsrc->sched)
+    GST_SCHEDULE_PAD_CONNECT (realsrc->sched, realsrc, realsink);
+  else if (realsink->sched)
+    GST_SCHEDULE_PAD_CONNECT (realsink->sched, realsrc, realsink);
 
   GST_INFO (GST_CAT_ELEMENT_PADS, "connected %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));

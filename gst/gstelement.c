@@ -700,6 +700,9 @@ gst_element_set_state (GstElement *element, GstElementState state)
   g_return_val_if_fail (element != NULL, GST_STATE_FAILURE);
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
 
+  GST_DEBUG (GST_CAT_STATES,"setting element '%s' to state %s\n",GST_ELEMENT_NAME (element),
+             _gst_print_statename(state));
+
   /* start with the current state */
   curpending = GST_STATE(element);
 
@@ -712,6 +715,8 @@ gst_element_set_state (GstElement *element, GstElementState state)
     /* set the pending state variable */
     // FIXME: should probably check to see that we don't already have one
     GST_STATE_PENDING (element) = curpending;
+    GST_DEBUG (GST_CAT_STATES,"intermediate: setting element '%s' to state %s\n",
+               GST_ELEMENT_NAME (element),_gst_print_statename(curpending));
 
     /* call the state change function so it can set the state */
     oclass = GST_ELEMENT_CLASS (GTK_OBJECT (element)->klass);
@@ -767,8 +772,8 @@ gst_element_change_state (GstElement *element)
   g_return_val_if_fail (element != NULL, GST_STATE_FAILURE);
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
 
-//  g_print("gst_element_change_state(\"%s\",%d)\n",
-//          element->name,state);
+  GST_DEBUG (GST_CAT_STATES, "default handler sets '%s' state to %s\n",
+             GST_ELEMENT_NAME (element), _gst_print_statename(GST_STATE_PENDING(element)));
 
   if (GST_STATE_TRANSITION(element) == GST_STATE_READY_TO_PLAYING)
     GST_SCHEDULE_ENABLE_ELEMENT (element->sched,element);

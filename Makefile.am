@@ -19,7 +19,11 @@ bin_SCRIPTS = gstreamer-config
 m4datadir = $(datadir)/aclocal
 m4data_DATA = gstreamer.m4
 
-EXTRA_DIST = gstreamer.spec.in gstreamer-config.in gstreamer.m4 LICENSE REQUIREMENTS ABOUT-NLS
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = gstreamer.pc
+
+EXTRA_DIST = gstreamer.spec.in gstreamer-config.in gstreamer.m4 gstreamer.pc.in \
+	     LICENSE REQUIREMENTS ABOUT-NLS
 
 dist-hook:
 	cp gstreamer.spec $(distdir)

@@ -25,6 +25,11 @@ main(int argc, char *argv[])
 
   gst_parse_launch (cmdline, GST_BIN (pipeline));
 
+  xmlSaveFile("launch.gst", gst_xml_write(GST_ELEMENT(pipeline)));
+
+  gst_schedule_show(GST_ELEMENT_SCHED(pipeline));
+  gst_schedule_show(GST_ELEMENT_SCHED(gst_bin_get_by_name(pipeline,"thread0")));
+
   fprintf(stderr,"RUNNING pipeline\n");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 

@@ -68,8 +68,7 @@ static GstElementStateReturn	gst_thread_change_state		(GstElement *element);
 static xmlNodePtr		gst_thread_save_thyself		(GstObject *object, xmlNodePtr parent);
 static void			gst_thread_restore_thyself	(GstObject *object, xmlNodePtr self);
 
-static void			gst_thread_signal_thread	(GstThread *thread, guint syncflag,gboolean set);
-static void			gst_thread_wait_thread		(GstThread *thread, guint syncflag,gboolean set);
+static void			gst_thread_signal_thread	(GstThread *thread, gboolean spinning);
 static void
 gst_thread_wait_two_thread (GstThread *thread, guint syncflag, gboolean set,guint syncflag2, gboolean set2);
 static void			gst_thread_schedule_dummy	(GstBin *bin);
@@ -255,13 +254,16 @@ gst_thread_change_state (GstElement *element)
         GST_DEBUG (GST_CAT_THREAD, "creating thread \"%s\"\n",
                    GST_ELEMENT_NAME (GST_ELEMENT (element)));
 
+        g_mutex_lock(thread->lock);
+
         // create the thread
         pthread_create (&thread->thread_id, NULL,
                         gst_thread_main_loop, thread);
 
         // wait for it to 'spin up'
         GST_DEBUG (GST_CAT_THREAD, "sync: waiting for spinup\n");
-        gst_thread_wait_thread (thread,GST_THREAD_STATE_STARTED,TRUE);
+        g_cond_wait(thread->cond,thread->lock);
+        g_mutex_unlock(thread->lock);
         GST_DEBUG (GST_CAT_THREAD, "sync: thread claims to be up\n");
       } else {
         GST_INFO (GST_CAT_THREAD, "NOT starting thread \"%s\"",
@@ -279,38 +281,23 @@ gst_thread_change_state (GstElement *element)
               GST_ELEMENT_NAME (GST_ELEMENT (element)));
 
       GST_DEBUG(0,"sync: telling thread to start spinning\n");
-      gst_thread_signal_thread (thread,GST_THREAD_STATE_SPINNING,TRUE);
-      GST_DEBUG(0,"sync: done telling thread to start spinning\n");
-      GST_INFO(GST_CAT_THREAD, "waiting for thread to start up");
-      gst_thread_wait_thread (thread,GST_THREAD_STATE_ELEMENT_CHANGED,TRUE);
-      g_mutex_lock(thread->lock);
-      GST_FLAG_UNSET(thread,GST_THREAD_STATE_ELEMENT_CHANGED);
-      g_mutex_unlock(thread->lock);
+      gst_thread_signal_thread(thread,TRUE);
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       GST_INFO (GST_CAT_THREAD,"pausing thread \"%s\"",
               GST_ELEMENT_NAME (GST_ELEMENT (element)));
 
-      //GST_FLAG_UNSET(thread,GST_THREAD_STATE_SPINNING);
-      gst_thread_signal_thread (thread,GST_THREAD_STATE_SPINNING,FALSE);
-      gst_thread_wait_thread (thread,GST_THREAD_STATE_ELEMENT_CHANGED,TRUE);
-      g_mutex_lock(thread->lock);
-      GST_FLAG_UNSET(thread,GST_THREAD_STATE_ELEMENT_CHANGED);
-      g_mutex_unlock(thread->lock);
+      gst_thread_signal_thread(thread,FALSE);
       break;
     case GST_STATE_PLAYING_TO_READY:
-      gst_thread_signal_thread (thread,GST_THREAD_STATE_SPINNING,FALSE);
-      gst_thread_wait_thread (thread,GST_THREAD_STATE_ELEMENT_CHANGED,TRUE);
-      g_mutex_lock(thread->lock);
-      GST_FLAG_UNSET(thread,GST_THREAD_STATE_ELEMENT_CHANGED);
-      g_mutex_unlock(thread->lock);
+      gst_thread_signal_thread(thread,FALSE);
       break;
     case GST_STATE_READY_TO_NULL:
       GST_INFO (GST_CAT_THREAD,"stopping thread \"%s\"",
               GST_ELEMENT_NAME (GST_ELEMENT (element)));
 
-      //GST_FLAG_SET (thread, GST_THREAD_STATE_REAPING);
-      gst_thread_signal_thread (thread,GST_THREAD_STATE_REAPING,TRUE);
+      GST_FLAG_SET (thread, GST_THREAD_STATE_REAPING);
+      gst_thread_signal_thread(thread,FALSE);
 
       pthread_join(thread->thread_id,NULL);
 
@@ -320,7 +307,7 @@ gst_thread_change_state (GstElement *element)
       GST_FLAG_UNSET(thread,GST_THREAD_STATE_ELEMENT_CHANGED);
 
       if (GST_ELEMENT_CLASS (parent_class)->change_state)
-        stateset = GST_ELEMENT_CLASS (parent_class)->change_state (thread);
+        stateset = GST_ELEMENT_CLASS (parent_class)->change_state (GST_ELEMENT(thread));
 
       break;
     default:
@@ -328,6 +315,16 @@ gst_thread_change_state (GstElement *element)
   }
 
   return stateset;
+}
+
+static void gst_thread_update_state (GstThread *thread)
+{
+  // check for state change
+  if (GST_STATE_PENDING(thread) != GST_STATE_NONE_PENDING) {
+    // punt and change state on all the children
+    if (GST_ELEMENT_CLASS (parent_class)->change_state)
+      GST_ELEMENT_CLASS (parent_class)->change_state (GST_ELEMENT(thread));
+  }
 }
 
 /**
@@ -341,8 +338,8 @@ static void *
 gst_thread_main_loop (void *arg)
 {
   GstThread *thread = GST_THREAD (arg);
+  gboolean first = 1;
   gint stateset;
-  gboolean isSpinning = FALSE;
 
   GST_INFO (GST_CAT_THREAD,"thread \"%s\" is running with PID %d",
 		  GST_ELEMENT_NAME (GST_ELEMENT (thread)), getpid ());
@@ -357,57 +354,47 @@ gst_thread_main_loop (void *arg)
   if (GST_BIN_CLASS (parent_class)->schedule)
     GST_BIN_CLASS (parent_class)->schedule (GST_BIN (thread));
 
-  GST_DEBUG(0, "sync: indicating spinup\n");
-  gst_thread_signal_thread (thread,GST_THREAD_STATE_STARTED,TRUE);
-  GST_DEBUG(0, "sync: done indicating spinup\n");
-
-  GST_INFO (GST_CAT_THREAD,"sync: thread has signaled to parent at startup");
+  GST_DEBUG (GST_CAT_THREAD, "sync: indicating spinup\n");
+  g_mutex_lock (thread->lock);
+  g_cond_signal (thread->cond);
+  // don't unlock the mutex because we hold it into the top of the while loop
+  GST_DEBUG (GST_CAT_THREAD, "sync: thread has indicated spinup to main process\n");
 
   while (!GST_FLAG_IS_SET (thread, GST_THREAD_STATE_REAPING)) {
-    if (GST_FLAG_IS_SET (thread, GST_THREAD_STATE_SPINNING)) {
-      isSpinning=TRUE;
+    // start out by waiting for a state change into spinning
+    GST_DEBUG (GST_CAT_THREAD, "sync: waiting at top of while for signal from main process\n");
+    g_cond_wait (thread->cond,thread->lock);
+    GST_DEBUG (GST_CAT_THREAD, "sync: main process has signaled at top of while\n");
+    // now is a good time to change the state of the children and the thread itself
+    gst_thread_update_state (thread);
+    GST_DEBUG (GST_CAT_THREAD, "sync: done changing state, signaling back\n");
+    g_cond_signal (thread->cond);
+    g_mutex_unlock (thread->lock);
+    GST_DEBUG (GST_CAT_THREAD, "sync: done syncing with main thread at top of while\n");
+
+    while (GST_FLAG_IS_SET (thread, GST_THREAD_STATE_SPINNING)) {
       if (!gst_bin_iterate (GST_BIN (thread))) {
-	/*g_mutex_lock(thread->lock);
 	GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
 	GST_DEBUG(0,"sync: removed spinning state due to failed iteration\n");
-	g_mutex_unlock(thread->lock);*/
-	gst_thread_wait_two_thread(thread,GST_THREAD_STATE_REAPING,TRUE,
-				   GST_THREAD_STATE_SPINNING,FALSE);
       }
     }
-    else {
-      if (isSpinning==TRUE) {
-	GST_DEBUG(0,"sync: got a pause or playing to ready transition");
-	isSpinning=FALSE;
-        // check for state change
-        if (GST_STATE_PENDING(thread)) {
-          // punt and change state on all the children
-          if (GST_ELEMENT_CLASS (parent_class)->change_state)
-            stateset = GST_ELEMENT_CLASS (parent_class)->change_state (thread);
-        }
-	gst_thread_signal_thread (thread,GST_THREAD_STATE_ELEMENT_CHANGED,TRUE);
-      }
 
-      GST_DEBUG (0, "sync: thread \"%s\" waiting\n", GST_ELEMENT_NAME (GST_ELEMENT (thread)));
-      gst_thread_wait_two_thread (thread,GST_THREAD_STATE_SPINNING,TRUE,
-				  GST_THREAD_STATE_REAPING,TRUE);
-      GST_DEBUG (0, "sync: done waiting\n");
-      isSpinning=TRUE;
-      // if reaping was returned, break outof while loop
-      if (GST_FLAG_IS_SET(thread,GST_THREAD_STATE_REAPING)) {
-	break;
-      }
-
-      // check for state change
-      if (GST_STATE_PENDING(thread)) {
-        // punt and change state on all the children
-        if (GST_ELEMENT_CLASS (parent_class)->change_state)
-          stateset = GST_ELEMENT_CLASS (parent_class)->change_state (thread);
-      }
-
-      gst_thread_signal_thread (thread,GST_THREAD_STATE_ELEMENT_CHANGED,TRUE);
-    }
+    GST_DEBUG (GST_CAT_THREAD, "sync: waiting at bottom of while for signal from main process\n");
+    g_mutex_lock (thread->lock);
+    GST_DEBUG (GST_CAT_THREAD, "sync: signaling that the thread is out of the SPINNING loop\n");
+    g_cond_signal (thread->cond);
+    g_cond_wait (thread->cond, thread->lock);
+    GST_DEBUG (GST_CAT_THREAD, "sync: main process has signaled at bottom of while\n");
+    // now change the children's and thread's state
+    gst_thread_update_state (thread);
+    GST_DEBUG (GST_CAT_THREAD, "sync: done changing state, signaling back\n");
+    g_cond_signal (thread->cond);
+    // don't release the mutex, we hold that into the top of the loop
+    GST_DEBUG (GST_CAT_THREAD, "sync: done syncning with main thread at bottom of while\n");
   }
+
+  // since we don't unlock at the end of the while loop, do it here
+  g_mutex_unlock (thread->lock);
 
   GST_INFO (GST_CAT_THREAD, "gstthread: thread \"%s\" is stopped",
 		  GST_ELEMENT_NAME (thread));
@@ -416,76 +403,27 @@ gst_thread_main_loop (void *arg)
 
 // the set flag is to say whether it should set TRUE or FALSE
 static void
-gst_thread_signal_thread (GstThread *thread, guint syncflag, gboolean set)
+gst_thread_signal_thread (GstThread *thread, gboolean spinning)
 {
-  g_mutex_lock (thread->lock);
-  GST_DEBUG (0,"sync: signaling thread setting %u to %d\n",syncflag,set);
-  if (set)
-    GST_FLAG_SET(thread,syncflag);
-  else
-    GST_FLAG_UNSET(thread,syncflag);
+  // set the spinning state
+  if (spinning) GST_FLAG_SET(thread,GST_THREAD_STATE_SPINNING);
+  else GST_FLAG_SET (thread, GST_THREAD_STATE_SPINNING);
+
+  GST_DEBUG (GST_CAT_THREAD, "sync-main: locking\n");
+  g_mutex_lock(thread->lock);
+
+  if (!spinning) {
+    GST_DEBUG (GST_CAT_THREAD, "sync-main: waiting for spindown\n");
+    g_cond_wait (thread->cond, thread->lock);
+  }
+  GST_DEBUG (GST_CAT_THREAD, "sync-main: signaling\n");
   g_cond_signal (thread->cond);
-  g_mutex_unlock (thread->lock);
-  GST_DEBUG (0,"sync: done signaling thread with %u set to %u..should be %d\n",syncflag,
-	     GST_FLAG_IS_SET(thread,syncflag),set);
-}
+  GST_DEBUG (GST_CAT_THREAD, "sync-main: waiting for ack\n");
+  g_cond_wait (thread->cond,thread->lock);
 
-// the set flag is to see what flag to wait for
-static void
-gst_thread_wait_thread (GstThread *thread, guint syncflag, gboolean set)
-{
-//  if (!thread->signaling) {
-  GTimeVal finaltime;  
-  g_mutex_lock (thread->lock);
-  GST_DEBUG (0,"sync: waiting for thread for %u to be set %d\n",
-	     syncflag,set);
-  while ((!GST_FLAG_IS_SET(thread,syncflag) && set==TRUE) ||
-	 (GST_FLAG_IS_SET(thread,syncflag) && set==FALSE)) {
-    g_get_current_time(&finaltime);
-    if (finaltime.tv_usec>995000) {
-      finaltime.tv_sec++;
-      finaltime.tv_usec=5000-(1000000-finaltime.tv_usec);
-    }
-    else {
-      finaltime.tv_usec+=5000;
-    }
-    g_cond_timed_wait (thread->cond, thread->lock,&finaltime);
-  }
-  g_mutex_unlock (thread->lock);
-  GST_DEBUG (0, "sync: done waiting for thread for %u to be set %d\n",
-	     syncflag,set);
-//  }
-}
-
-// the set flag is to see what flag to wait for
-static void
-gst_thread_wait_two_thread (GstThread *thread, guint syncflag, gboolean set,
-			    guint syncflag2, gboolean set2)
-{
-//  if (!thread->signaling) {
-  GTimeVal finaltime;  
-  g_mutex_lock (thread->lock);
-  GST_DEBUG (0,"sync: waiting for thread for %u to be set %d or %u to be set %d\n",
-	     syncflag,set,syncflag2,set);
-  while (((!GST_FLAG_IS_SET(thread,syncflag) && set==TRUE) ||
-	  (GST_FLAG_IS_SET(thread,syncflag) && set==FALSE)) &&
-	 ((!GST_FLAG_IS_SET(thread,syncflag2) && set2==TRUE) ||
-	  (GST_FLAG_IS_SET(thread,syncflag2) && set==FALSE)))
-  {
-    g_get_current_time(&finaltime);
-    if (finaltime.tv_usec>995000) {
-      finaltime.tv_sec++;
-      finaltime.tv_usec=5000-(1000000-finaltime.tv_usec);
-    }
-    else {
-      finaltime.tv_usec+=5000;
-    }
-    g_cond_timed_wait (thread->cond, thread->lock,&finaltime);
-  }
-  g_mutex_unlock (thread->lock);
-  GST_DEBUG (0, "sync: done waiting for thread for %u to be set %d or %u to be set %d\n",
-	     syncflag,set,syncflag2,set2);
-//  }
+  GST_DEBUG (GST_CAT_THREAD, "sync-main: unlocking\n");
+  g_mutex_unlock(thread->lock);
+  GST_DEBUG (GST_CAT_THREAD, "sync-main: unlocked\n");
 }
 
 
