@@ -54,6 +54,7 @@ struct _GstMad {
   guint64	 total_samples; /* the number of samples since the sync point */
 
   gboolean	 restart;
+  gboolean	 need_discont;
 
   /* info */
   struct mad_header header;
@@ -255,6 +256,7 @@ gst_mad_init (GstMad *mad)
   mad->vbr_average = 0;
   mad->vbr_rate = 0;
   mad->restart = FALSE;
+  mad->need_discont = FALSE;
 
   GST_FLAG_SET (mad, GST_ELEMENT_EVENT_AWARE);
 }
@@ -679,7 +681,6 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
             gint64 value = GST_EVENT_DISCONT_OFFSET (event, i).value;
 	    gint64 time;
 	    GstFormat format;
-	    GstEvent *new_event;
 
 	    /* see how long the input bytes take */
 	    format = GST_FORMAT_TIME;
@@ -691,10 +692,9 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 	    }
 
 	    mad->base_time = time;
+	    mad->need_discont = TRUE;
 
             gst_event_free (event);
-	    new_event = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, NULL);
-	    gst_pad_event_default (pad, new_event);
 	    break;
 	  }
 	}
@@ -822,6 +822,13 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       }
 
       if (GST_PAD_IS_CONNECTED (mad->srcpad)) {
+	if (mad->need_discont) {
+          GstEvent *discont;
+
+	  discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (outbuffer), NULL);
+          gst_pad_push (mad->srcpad, GST_BUFFER (discont));
+	  mad->need_discont = FALSE;
+        }
         gst_pad_push (mad->srcpad, outbuffer);
       }
       else {
