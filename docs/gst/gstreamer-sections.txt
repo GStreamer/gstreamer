@@ -595,6 +595,7 @@ GstTraceEntry
 gst_trace_new
 gst_trace_destroy
 gst_trace_flush
+gst_trace_text_flush
 gst_trace_get_size
 gst_trace_get_offset
 gst_trace_get_remaining
