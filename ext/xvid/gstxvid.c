@@ -147,9 +147,11 @@ gst_xvid_structure_to_csp (GstStructure *structure,
             case 0xff000000:
               xvid_cs = XVID_CSP_RGBA;
               break;
+#ifdef XVID_CSP_ARGB
             case 0x00ff0000:
               xvid_cs = XVID_CSP_ARGB;
               break;
+#endif
             case 0x0000ff00:
               xvid_cs = XVID_CSP_BGRA;
               break;
@@ -185,7 +187,9 @@ gst_xvid_csp_to_caps (gint csp, gint w, gint h, gdouble fps)
     case XVID_CSP_BGR:
     case XVID_CSP_ABGR:
     case XVID_CSP_BGRA:
+#ifdef XVID_CSP_ARGB
     case XVID_CSP_ARGB:
+#endif
     case XVID_CSP_RGBA: {
       gint r_mask = 0, b_mask = 0, g_mask = 0,
 	   endianness = 0, bpp = 0, depth = 0;
@@ -211,10 +215,12 @@ gst_xvid_csp_to_caps (gint csp, gint w, gint h, gdouble fps)
           r_mask = 0x0000ff00; g_mask = 0x00ff0000; b_mask = 0xff000000;
           endianness = G_BIG_ENDIAN; depth = 24; bpp = 32;
           break;
+#ifdef XVID_CSP_ARGB
         case XVID_CSP_ARGB:
           r_mask = 0x00ff0000; g_mask = 0x0000ff00; b_mask = 0x000000ff;
           endianness = G_BIG_ENDIAN; depth = 24; bpp = 32;
           break;
+#endif
         case XVID_CSP_RGBA:
           r_mask = 0xff000000; g_mask = 0x00ff0000; b_mask = 0x0000ff00;
           endianness = G_BIG_ENDIAN; depth = 24; bpp = 32;
