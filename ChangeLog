@@ -1,5 +1,14 @@
 2004-06-24  Wim Taymans  <wim@fluendo.com>
 
+	* ext/alsa/gstalsa.c: (gst_alsa_start), (gst_alsa_xrun_recovery):
+	* ext/alsa/gstalsa.h:
+	* ext/alsa/gstalsasrc.c: (gst_alsa_src_init),
+	(gst_alsa_src_update_avail), (gst_alsa_src_loop):
+	Use alsa trigger_tstamp to get the timestamp of the first
+	sample in the buffer for more precise sync. Some cleanups.
+
+2004-06-24  Wim Taymans  <wim@fluendo.com>
+
 	* gst/audiorate/gstaudiorate.c: (gst_audiorate_link),
 	(gst_audiorate_init), (gst_audiorate_chain),
 	(gst_audiorate_set_property), (gst_audiorate_get_property):
