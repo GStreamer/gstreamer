@@ -1,3 +1,10 @@
+2004-05-16  Arwed v. Merkatz  <v.merkatz@gmx.net>
+
+	reviewed by: Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst-libs/gst/audio/audioclock.c:
+	  Fix wrong return type (#142205).
+
 2004-05-16  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/mad/gstmad.c: (gst_mad_class_init), (gst_mad_init):
