@@ -230,11 +230,15 @@ gst_alsa_sink_check_event (GstAlsaSink * sink, gint pad_nr)
         if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
           gst_element_set_time_delay (GST_ELEMENT (this), value,
               MIN (value, delay));
-        } else if (this->format
-            && (gst_event_discont_get_value (event, GST_FORMAT_DEFAULT, &value)
-                || gst_event_discont_get_value (event, GST_FORMAT_BYTES,
-                    &value))) {
+        } else if (this->format && (gst_event_discont_get_value (event,
+                    GST_FORMAT_DEFAULT, &value))) {
           value = gst_alsa_samples_to_timestamp (this, value);
+          gst_element_set_time_delay (GST_ELEMENT (this), value, MIN (value,
+                  delay));
+        } else if (this->format
+            && (gst_event_discont_get_value (event, GST_FORMAT_BYTES,
+                    &value))) {
+          value = gst_alsa_bytes_to_timestamp (this, value);
           gst_element_set_time_delay (GST_ELEMENT (this), value, MIN (value,
                   delay));
         } else {
@@ -302,7 +306,11 @@ gst_alsa_sink_mmap (GstAlsa * this, snd_pcm_sframes_t * avail)
     goto out;
   }
   if ((err = snd_pcm_mmap_commit (this->handle, offset, *avail)) < 0) {
-    GST_ERROR_OBJECT (this, "mmap commit failed: %s", snd_strerror (err));
+    if (err == -EPIPE) {
+      gst_alsa_xrun_recovery (GST_ALSA (this));
+    } else {
+      GST_ERROR_OBJECT (this, "mmap commit failed: %s", snd_strerror (err));
+    }
     goto out;
   }
 
@@ -381,6 +389,7 @@ sink_restart:
         if (GST_IS_EVENT (sink->gst_data[i])) {
           GST_LOG_OBJECT (sink, "pulled data %p is an event, checking",
               sink->gst_data[i]);
+
           if (gst_alsa_sink_check_event (sink, i))
             continue;
           return;
