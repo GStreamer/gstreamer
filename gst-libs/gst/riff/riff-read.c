@@ -260,6 +260,8 @@ gst_riff_read_seek (GstRiffRead *riff,
       break;
     } else if (GST_EVENT_TYPE (event) != GST_EVENT_DISCONTINUOUS) {
       gst_pad_event_default (riff->sinkpad, event);
+      if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)
+        return NULL;
       event = NULL;
     }
   }

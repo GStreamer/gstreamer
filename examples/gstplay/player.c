@@ -77,6 +77,7 @@ got_video_size (GstPlay *play, gint width, gint height)
 static void
 got_eos (GstPlay *play)
 {
+  g_print ("End Of Stream\n");
   g_main_loop_quit (loop);
 }
 
@@ -157,10 +158,12 @@ main (int argc, char *argv[])
 
   g_main_loop_run (loop);
 
+  g_print ("setting pipeline to ready\n");
+
   gst_element_set_state (GST_ELEMENT (play), GST_STATE_READY);
   
-  /* unref */
-  gst_object_unref (GST_OBJECT (play));
+  /* unref 
+  gst_object_unref (GST_OBJECT (play)); */
 
   exit (0);
 }
