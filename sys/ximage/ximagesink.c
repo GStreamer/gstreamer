@@ -548,6 +548,22 @@ gst_ximagesink_xcontext_clear (GstXImageSink *ximagesink)
   ximagesink->xcontext = NULL;
 }
 
+static void
+gst_ximagesink_imagepool_clear (GstXImageSink *ximagesink)
+{
+  g_mutex_lock(ximagesink->pool_lock);
+  
+  while (ximagesink->image_pool)
+    {
+      GstXImage *ximage = ximagesink->image_pool->data;
+      ximagesink->image_pool = g_slist_delete_link (ximagesink->image_pool,
+                                                    ximagesink->image_pool);
+      gst_ximagesink_ximage_destroy (ximagesink, ximage);
+    }
+  
+  g_mutex_unlock(ximagesink->pool_lock);
+}
+
 /* Element stuff */
 
 static GstCaps *
@@ -693,6 +709,26 @@ gst_ximagesink_change_state (GstElement *element)
       GST_VIDEOSINK_HEIGHT (ximagesink) = 0;
       break;
     case GST_STATE_READY_TO_NULL:
+      if (ximagesink->ximage)
+        {
+          gst_ximagesink_ximage_destroy (ximagesink, ximagesink->ximage);
+          ximagesink->ximage = NULL;
+        }
+    
+      if (ximagesink->image_pool)
+        gst_ximagesink_imagepool_clear (ximagesink);
+  
+      if (ximagesink->xwindow)
+        {
+          gst_ximagesink_xwindow_destroy (ximagesink, ximagesink->xwindow);
+          ximagesink->xwindow = NULL;
+        }
+  
+      if (ximagesink->xcontext)
+        {
+          gst_ximagesink_xcontext_clear (ximagesink);
+          ximagesink->xcontext = NULL;
+        }
       break;
   }
 
@@ -849,22 +885,6 @@ gst_ximagesink_buffer_alloc (GstPad *pad, guint64 offset, guint size)
     }
   else
     return NULL;
-}
-
-static void
-gst_ximagesink_imagepool_clear (GstXImageSink *ximagesink)
-{
-  g_mutex_lock(ximagesink->pool_lock);
-  
-  while (ximagesink->image_pool)
-    {
-      GstXImage *ximage = ximagesink->image_pool->data;
-      ximagesink->image_pool = g_slist_delete_link (ximagesink->image_pool,
-                                                    ximagesink->image_pool);
-      gst_ximagesink_ximage_destroy (ximagesink, ximage);
-    }
-  
-  g_mutex_unlock(ximagesink->pool_lock);
 }
 
 /* Interfaces stuff */
@@ -1129,25 +1149,7 @@ gst_ximagesink_dispose (GObject *object)
       g_free (ximagesink->display_name);
       ximagesink->display_name = NULL;
     }
-    
-  if (ximagesink->ximage)
-    {
-      gst_ximagesink_ximage_destroy (ximagesink, ximagesink->ximage);
-      ximagesink->ximage = NULL;
-    }
-    
-  if (ximagesink->image_pool)
-    gst_ximagesink_imagepool_clear (ximagesink);
-  
-  if (ximagesink->xwindow)
-    {
-      gst_ximagesink_xwindow_destroy (ximagesink, ximagesink->xwindow);
-      ximagesink->xwindow = NULL;
-    }
-  
-  if (ximagesink->xcontext)
-    gst_ximagesink_xcontext_clear (ximagesink);
-    
+
   g_mutex_free (ximagesink->x_lock);
   g_mutex_free (ximagesink->pool_lock);
 

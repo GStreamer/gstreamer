@@ -733,6 +733,27 @@ gst_xvimagesink_xcontext_get (GstXvImageSink *xvimagesink)
         
         xcontext->channels_list = g_list_append (xcontext->channels_list,
                                                  channel);
+        
+        /* If the colorbalance settings have not been touched we get Xv values
+           as defaults and update our internal variables */
+        if (!xvimagesink->cb_changed) {
+          gint val;
+          XvGetPortAttribute (xcontext->disp, xcontext->xv_port_id,
+                              XInternAtom (xcontext->disp, channel->label, 1),
+                              &val);
+          /* Normalize val to [-1000, 1000] */
+          val = -1000 + 2000 * (val - channel->min_value) /
+                (channel->max_value - channel->min_value);
+          
+          if (!g_ascii_strcasecmp (channels[i], "XV_HUE"))
+            xvimagesink->hue = val;
+          else if (!g_ascii_strcasecmp (channels[i], "XV_SATURATION"))
+            xvimagesink->saturation = val;
+          else if (!g_ascii_strcasecmp (channels[i], "XV_BRIGHTNESS"))
+            xvimagesink->brightness = val;
+          else if (!g_ascii_strcasecmp (channels[i], "XV_CONTRAST"))
+            xvimagesink->contrast = val;
+        }
       }
     }
 
@@ -791,6 +812,22 @@ gst_xvimagesink_xcontext_clear (GstXvImageSink *xvimagesink)
   g_mutex_unlock (xvimagesink->x_lock);
   
   xvimagesink->xcontext = NULL;
+}
+
+static void
+gst_xvimagesink_imagepool_clear (GstXvImageSink *xvimagesink)
+{
+  g_mutex_lock(xvimagesink->pool_lock);
+  
+  while (xvimagesink->image_pool)
+    {
+      GstXvImage *xvimage = xvimagesink->image_pool->data;
+      xvimagesink->image_pool = g_slist_delete_link (xvimagesink->image_pool,
+                                                     xvimagesink->image_pool);
+      gst_xvimagesink_xvimage_destroy (xvimagesink, xvimage);
+    }
+  
+  g_mutex_unlock(xvimagesink->pool_lock);
 }
 
 /* Element stuff */
@@ -981,6 +1018,26 @@ gst_xvimagesink_change_state (GstElement *element)
       GST_VIDEOSINK_HEIGHT (xvimagesink) = 0;
       break;
     case GST_STATE_READY_TO_NULL:
+      if (xvimagesink->xvimage)
+        {
+          gst_xvimagesink_xvimage_destroy (xvimagesink, xvimagesink->xvimage);
+          xvimagesink->xvimage = NULL;
+        }
+    
+      if (xvimagesink->image_pool)
+        gst_xvimagesink_imagepool_clear (xvimagesink);
+  
+      if (xvimagesink->xwindow)
+        {
+          gst_xvimagesink_xwindow_destroy (xvimagesink, xvimagesink->xwindow);
+          xvimagesink->xwindow = NULL;
+        }
+  
+      if (xvimagesink->xcontext)
+        {
+          gst_xvimagesink_xcontext_clear (xvimagesink);
+          xvimagesink->xcontext = NULL;
+        }
       break;
   }
 
@@ -1138,22 +1195,6 @@ gst_xvimagesink_buffer_alloc (GstPad *pad, guint64 offset, guint size)
     }
   else
     return NULL;
-}
-
-static void
-gst_xvimagesink_imagepool_clear (GstXvImageSink *xvimagesink)
-{
-  g_mutex_lock(xvimagesink->pool_lock);
-  
-  while (xvimagesink->image_pool)
-    {
-      GstXvImage *xvimage = xvimagesink->image_pool->data;
-      xvimagesink->image_pool = g_slist_delete_link (xvimagesink->image_pool,
-                                                     xvimagesink->image_pool);
-      gst_xvimagesink_xvimage_destroy (xvimagesink, xvimage);
-    }
-  
-  g_mutex_unlock(xvimagesink->pool_lock);
 }
 
 /* Interfaces stuff */
@@ -1343,6 +1384,12 @@ gst_xvimagesink_colorbalance_set_value (GstColorBalance        *balance,
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
   g_return_if_fail (channel->label != NULL);
   
+  xvimagesink->cb_changed = TRUE;
+  
+  /* Normalize val to [-1000, 1000] */
+  value = -1000 + 2000 * (value - channel->min_value) /
+          (channel->max_value - channel->min_value);
+  
   if (g_ascii_strcasecmp (channel->label, "XV_HUE") == 0)
     {
       xvimagesink->hue = value;
@@ -1400,6 +1447,10 @@ gst_xvimagesink_colorbalance_get_value (GstColorBalance        *balance,
       g_warning ("got an unknown channel %s", channel->label);
     }
   
+  /* Normalize val to [channel->min_value, channel->max_value] */
+  value = channel->min_value + (channel->max_value - channel->min_value) *
+          (value + 1000) / 2000;
+  
   return value;
 }
 
@@ -1432,18 +1483,22 @@ gst_xvimagesink_set_property (GObject *object, guint prop_id,
     {
       case ARG_HUE:
         xvimagesink->hue = g_value_get_int (value);
+        xvimagesink->cb_changed = TRUE;
         gst_xvimagesink_update_colorbalance (xvimagesink);
         break;
       case ARG_CONTRAST:
         xvimagesink->contrast = g_value_get_int (value);
+        xvimagesink->cb_changed = TRUE;
         gst_xvimagesink_update_colorbalance (xvimagesink);
         break;
       case ARG_BRIGHTNESS:
         xvimagesink->brightness = g_value_get_int (value);
+        xvimagesink->cb_changed = TRUE;
         gst_xvimagesink_update_colorbalance (xvimagesink);
         break;
       case ARG_SATURATION:
         xvimagesink->saturation = g_value_get_int (value);
+        xvimagesink->cb_changed = TRUE;
         gst_xvimagesink_update_colorbalance (xvimagesink);
         break;
       case ARG_DISPLAY:
@@ -1510,25 +1565,7 @@ gst_xvimagesink_dispose (GObject *object)
       g_free (xvimagesink->display_name);
       xvimagesink->display_name = NULL;
     }
-    
-  if (xvimagesink->xvimage)
-    {
-      gst_xvimagesink_xvimage_destroy (xvimagesink, xvimagesink->xvimage);
-      xvimagesink->xvimage = NULL;
-    }
-    
-  if (xvimagesink->image_pool)
-    gst_xvimagesink_imagepool_clear (xvimagesink);
-  
-  if (xvimagesink->xwindow)
-    {
-      gst_xvimagesink_xwindow_destroy (xvimagesink, xvimagesink->xwindow);
-      xvimagesink->xwindow = NULL;
-    }
-  
-  if (xvimagesink->xcontext)
-    gst_xvimagesink_xcontext_clear (xvimagesink);
-    
+
   g_mutex_free (xvimagesink->x_lock);
   g_mutex_free (xvimagesink->pool_lock);
 
@@ -1563,6 +1600,7 @@ gst_xvimagesink_init (GstXvImageSink *xvimagesink)
   
   xvimagesink->hue = xvimagesink->saturation = 0;
   xvimagesink->contrast = xvimagesink->brightness = 0;
+  xvimagesink->cb_changed = FALSE;
   
   xvimagesink->framerate = 0;
   

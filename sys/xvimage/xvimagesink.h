@@ -134,6 +134,7 @@ struct _GstXvImageSink {
   gint contrast;
   gint hue;
   gint saturation;
+  gboolean cb_changed;
   
   GMutex *x_lock;
   
