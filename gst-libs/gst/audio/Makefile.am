@@ -1,6 +1,7 @@
 librarydir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
-library_LTLIBRARIES = libgstaudio.la libgstaudiofilter.la libgstaudiofilterexample.la
+library_LTLIBRARIES = libgstaudio.la libgstaudiofilter.la
+noinst_LTLIBRARIES = libgstaudiofilterexample.la
 
 EXTRA_DIST = gstaudiofiltertemplate.c make_filter
 CLEANFILES = gstaudiofilterexample.c
