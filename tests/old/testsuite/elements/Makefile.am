@@ -1,7 +1,7 @@
 include ../Rules
 
 # disable gst-compprep-check until it doesn't leave stray files for distcheck
-tests_pass = name tee property fake gst-inspect-check
+tests_pass = name tee property fake gst-inspect-check struct_size
 tests_fail =
 tests_ignore =
 

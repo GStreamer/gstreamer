@@ -1,3 +1,11 @@
+2004-07-28  David Schleef  <ds@schleef.org>
+
+	* testsuite/elements/Makefile.am:
+	* testsuite/elements/struct_i386.h:
+	* testsuite/elements/struct_size.c: (main):  A little test
+	to keep distcheck from working if someone changes a structure
+	size accidentally.
+
 2004-07-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/libs/Makefile.am:
