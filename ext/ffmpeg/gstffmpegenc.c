@@ -286,7 +286,6 @@ gst_ffmpegenc_connect (GstPad  *pad,
 		       const GstCaps *caps)
 {
   GstCaps *other_caps;
-  GstPadLinkReturn ret;
   enum PixelFormat pix_fmt;
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) gst_pad_get_parent (pad);
   GstFFMpegEncClass *oclass = (GstFFMpegEncClass *) G_OBJECT_GET_CLASS(ffmpegenc);
