@@ -35,11 +35,8 @@
 GstElementDetails gst_sinesrc_details = {
   "Sine-wave src",
   "Source/Audio",
-  "LGPL",
   "Create a sine wave of a given frequency and volume",
-  VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 1999",
+  "Erik Walthinsen <omega@cse.ogi.edu>"
 };
 
 
@@ -76,6 +73,7 @@ GST_PAD_TEMPLATE_FACTORY (sinesrc_src_factory,
 );
 
 static void 	    gst_sinesrc_class_init          (GstSineSrcClass *klass);
+static void 	    gst_sinesrc_base_init           (GstSineSrcClass *klass);
 static void 	    gst_sinesrc_init	            (GstSineSrc *src);
 static void 	    gst_sinesrc_set_property        (GObject *object, 
 		                                     guint prop_id, 
@@ -108,7 +106,8 @@ gst_sinesrc_get_type (void)
 
   if (!sinesrc_type) {
     static const GTypeInfo sinesrc_info = {
-      sizeof (GstSineSrcClass), NULL, NULL,
+      sizeof (GstSineSrcClass),
+      (GBaseInitFunc) gst_sinesrc_base_init, NULL,
       (GClassInitFunc) gst_sinesrc_class_init, NULL, NULL,
       sizeof (GstSineSrc), 0,
       (GInstanceInitFunc) gst_sinesrc_init,
@@ -117,6 +116,16 @@ gst_sinesrc_get_type (void)
 		                           &sinesrc_info, 0);
   }
   return sinesrc_type;
+}
+
+static void
+gst_sinesrc_base_init (GstSineSrcClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class, 
+		GST_PAD_TEMPLATE_GET (sinesrc_src_factory));
+  gst_element_class_set_details (element_class, &gst_sinesrc_details);
 }
 
 static void
@@ -441,28 +450,24 @@ gst_sinesrc_force_caps (GstSineSrc *src) {
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new ("sinesrc", GST_TYPE_SINESRC,
-                                     &gst_sinesrc_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-  
-  gst_element_factory_add_pad_template (factory, 
-		              GST_PAD_TEMPLATE_GET (sinesrc_src_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-  
   /* initialize dparam support library */
   gst_control_init(NULL,NULL);
-  
-  return TRUE;
+
+  return gst_element_register (plugin, "sinesrc",
+			       GST_RANK_NONE, GST_TYPE_SINESRC);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
-  "sinesrc",
-  plugin_init
-};
+  "sine",
+  "Sine audio wave generator",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
