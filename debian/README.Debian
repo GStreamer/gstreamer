@@ -6,11 +6,13 @@ More information can be found at http://gstreamer.net/
 
 GStreamer core is split into the following packages:
 
-   libgst2              shared core libs
-   libgst-dev           development libs and headers
-   gstreamer-runtime    tools required by the libs (gstreamer-register)
-   gstreamer-doc        documentation
-   gstreamer-tools      useful tools
-   gstreamer-core       core plugins and lib plugins
+   libgst2                 shared core libs
+   libgst-dev              development libs and headers
+   gstreamer-runtime       tools required by the libs (gstreamer-register)
+   gstreamer-doc           documentation
+   gstreamer-tools         useful tools
+   gstreamer-core          core plugins
+   gstreamer-lib-core      core lib plugins
+   gstreamer-lib-core-dev  development files for core lib plugins
 
 David I. Lehn <dlehn@vt.edu>  Fri, 19 Jan 2001 19:13:06 -0500

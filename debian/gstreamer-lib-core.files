@@ -1,0 +1,4 @@
+usr/lib/gst/libgstbytestream.*
+usr/lib/gst/libgstcontrol.*
+usr/lib/gst/libgstgetbits.*
+usr/lib/gst/libgstputbits.*

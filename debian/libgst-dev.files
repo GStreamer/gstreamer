@@ -1,5 +1,3 @@
-usr/include
+usr/include/gst/*.h
 usr/lib/pkgconfig
-usr/lib/libgst.a
-usr/lib/libgst.la
-usr/lib/libgst.so
+usr/lib/libgst.{a,la,so}

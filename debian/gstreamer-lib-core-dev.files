@@ -1,0 +1,4 @@
+usr/include/gst/bytestream
+usr/include/gst/control
+usr/include/gst/getbits
+usr/include/gst/putbits

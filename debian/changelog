@@ -10,8 +10,10 @@ gstreamer (0.3.1-1) unstable; urgency=low
   * Moved gstreamer-guilaunch to gst-editor source package
   * Removed gstreamer-config and .m4 in favor of pkg-config use
   * Build for glib2
+  * Change doc build system a bit
+  * Added -lib-core and -lib-core-dev packages for library plugins
 
- -- David I. Lehn <dlehn@vt.edu>  Tue,  8 Jan 2002 17:57:13 -0500
+ -- David I. Lehn <dlehn@vt.edu>  Thu, 10 Jan 2002 23:09:34 -0500
 
 gstreamer (0.3.0-3) unstable; urgency=low
 

@@ -18,6 +18,11 @@ export DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
+
+	# make sure we're using a ltmain.sh that can handle relinking
+	# in case autogen.sh (and libtoolize) was run
+	cp ltmain-fixed.sh ltmain.sh
+
 	# Add here commands to configure the package.
 	./configure \
 		--build=$(DEB_BUILD_GNU_TYPE) \
@@ -25,14 +30,14 @@ configure-stamp:
 		--prefix=/usr \
 		--mandir=\$${prefix}/share/man \
 		--infodir=\$${prefix}/share/info \
+		--with-html-dir=\$${prefix}/share/doc/gstreamer-doc \
 		--sysconfdir=/etc \
 		--with-configdir=/etc/gstreamer \
-		--with-win32-libdir=/usr/lib/win32 \
 		--enable-glib2 \
 		--disable-plugin-builddir \
 		--disable-tests \
 		--disable-examples \
-		--disable-docs-build \
+		--enable-docs-build \
 		--disable-plugin-docs \
 		--enable-DEBUG \
 		--enable-debug
@@ -48,6 +53,8 @@ build-stamp:
 	dh_testdir
 
 	# Add here commands to compile the package.
+	# FIXME missing upstream, diff doesn't include these 0 byte files:
+	touch docs/fwg/base.css docs/manual/base.css
 	$(MAKE)
 
 	touch build-stamp
@@ -64,14 +71,7 @@ clean:
 	dh_clean
 
 	# FIXME some extra clean up
-	rm -rf \
-		debian/gstreamer \
-		docs/gst/gstreamer-scan.o \
-		docs/gst/gstreamer-decl-list.txt \
-		docs/gst/gstreamer-decl.txt \
-		docs/gst/gstreamer.html \
-		docs/libs/tmpl \
-		docs/plugins/gstreamer-plugins.types
+	rm -rf debian/gstreamer
 	find . -name \*.stamp | xargs rm || true
 	find . -name Makefile | grep -v omega | xargs rm || true
 
@@ -87,12 +87,15 @@ install: build
 	$(MAKE) prefix=$(CURDIR)/debian/gstreamer/usr install
 
 	# move around the doc dirs
-	mkdir -p debian/gstreamer/usr/share/doc/gstreamer-doc/html
-	-mv debian/gstreamer/usr/share/gstreamer/gst-plugin-writers-guide \
-	   debian/gstreamer/usr/share/gstreamer/gstreamer-manual \
-	   debian/gstreamer/usr/share/gstreamer/html/gstreamer-libs \
-	   debian/gstreamer/usr/share/gst/html/gstreamer \
-	   debian/gstreamer/usr/share/doc/gstreamer-doc/html
+	mkdir -p debian/gstreamer/usr/share/doc/gstreamer-doc
+	#-mv debian/gstreamer/usr/share/gstreamer/gst-plugin-writers-guide \
+	#   debian/gstreamer/usr/share/gstreamer/gstreamer-manual \
+	#   debian/gstreamer/usr/share/gstreamer/html/gstreamer-libs \
+	#   debian/gstreamer/usr/share/gst/html/gstreamer \
+	#   debian/gstreamer/usr/share/doc/gstreamer-doc
+	-cp -r docs/fwg/gst-plugin-writers-guide \
+	   docs/manual/gstreamer-manual \
+	   debian/gstreamer/usr/share/doc/gstreamer-doc
 
 	dh_movefiles --sourcedir=debian/gstreamer
 
