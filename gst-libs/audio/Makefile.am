@@ -1,6 +1,6 @@
-filterdir = $(libdir)/gst
+libdir = $(libdir)/gst
 
-filter_LTLIBRARIES = libgstaudio.la
+lib_LTLIBRARIES = libgstaudio.la
 
 libgstaudio_la_SOURCES = gstaudio.c
 
