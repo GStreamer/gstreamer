@@ -115,7 +115,7 @@ main (int argc, char *argv[])
 
   /* Getting default audio and video plugins from GConf */
   audio_sink = gst_element_factory_make ("osssink", "audio_sink");
-  video_sink = gst_element_factory_make ("xvimagesink", "video_sink");
+  video_sink = gst_element_factory_make ("ximagesink", "video_sink");
   vis_element = gst_element_factory_make ("goom", "vis_element");
   data_src = gst_element_factory_make ("gnomevfssrc", "source");
 

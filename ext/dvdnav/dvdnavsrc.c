@@ -680,8 +680,8 @@ dvdnavsrc_user_op (DVDNavSrc *src, int op)
   }
   return;
 naverr:
-  gst_element_error(GST_ELEMENT(src), "user op %d failure: %d",
-      op, dvdnav_err_to_string(src->dvdnav));
+  gst_element_error (src, LIBRARY, TOO_LAZY, NULL,
+                     ("user op %d failure: %s", op, dvdnav_err_to_string(src->dvdnav)));
 
 }
 
@@ -851,15 +851,15 @@ dvdnavsrc_get (GstPad *pad)
   while (!have_buf) {
     buf = gst_buffer_new_and_alloc (DVD_VIDEO_LB_LEN);
     if (!buf) {
-      gst_element_error (GST_ELEMENT (src), "Failed to create a new GstBuffer");
+      gst_element_error (src, CORE, TOO_LAZY, NULL, ("Failed to create a new GstBuffer"));
       return NULL;
     }
     data = GST_BUFFER_DATA(buf);
 
     if (dvdnav_get_next_block (src->dvdnav, data, &event, &len) !=
         DVDNAV_STATUS_OK) {
-      gst_element_error (GST_ELEMENT (src), "dvdnav_get_next_block error: %s\n",
-          dvdnav_err_to_string(src->dvdnav));
+      gst_element_error (src, STREAM, DECODE, NULL,
+                         ("dvdnav_get_next_block error: %s\n", dvdnav_err_to_string(src->dvdnav)));
       return NULL;
     }
 
@@ -876,8 +876,8 @@ dvdnavsrc_get (GstPad *pad)
          * dvdnav_still_skip */
         dvdnavsrc_print_event (src, data, event, len);
         if (dvdnav_still_skip (src->dvdnav) != DVDNAV_STATUS_OK) {
-          gst_element_error (GST_ELEMENT (src), "dvdnav_still_skip error: %s\n",
-              dvdnav_err_to_string(src->dvdnav));
+          gst_element_error (src, STREAM, TOO_LAZY, NULL, ("dvdnav_still_skip error: %s\n",
+              dvdnav_err_to_string(src->dvdnav)));
           /* FIXME: close the stream??? */
         }
         break;

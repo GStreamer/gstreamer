@@ -476,7 +476,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstData *_data)
 		      info->sequence->transfer_characteristics, info->sequence->matrix_coefficients);
 
 	if (!gst_mpeg2dec_negotiate_format (mpeg2dec)) {
-          gst_element_error (GST_ELEMENT (mpeg2dec), "could not negotiate format");
+          gst_element_error (mpeg2dec, CORE, NEGOTIATION, NULL, NULL);
 	  goto exit;
 	}
 
