@@ -67,7 +67,7 @@ gst_v4lmjpegsrc_queue_frame (GstV4lMjpegSrc *v4lmjpegsrc,
 
   if (ioctl(GST_V4LELEMENT(v4lmjpegsrc)->video_fd, MJPIOC_QBUF_CAPT, &num) < 0)
   {
-    GST_ELEMENT_ERROR (v4lmjpegsrc, RESOURCE, READ, NULL,
+    GST_ELEMENT_ERROR (v4lmjpegsrc, RESOURCE, READ, (NULL),
       ("Error queueing a buffer (%d): %s",
       num, g_strerror(errno)));
     return FALSE;

@@ -811,6 +811,6 @@ gst_v4lmjpegsrc_buffer_free (GstBuffer *buf)
     }
 
   if (n == v4lmjpegsrc->breq.count)
-    GST_ELEMENT_ERROR (v4lmjpegsrc, RESOURCE, TOO_LAZY, NULL,
+    GST_ELEMENT_ERROR (v4lmjpegsrc, RESOURCE, TOO_LAZY, (NULL),
       ("Couldn't find the buffer"));
 }

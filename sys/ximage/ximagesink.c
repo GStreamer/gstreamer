@@ -530,7 +530,7 @@ gst_ximagesink_xcontext_get (GstXImageSink *ximagesink)
     {
       g_mutex_unlock (ximagesink->x_lock);
       g_free (xcontext);
-      GST_ELEMENT_ERROR (ximagesink, RESOURCE, TOO_LAZY, NULL,
+      GST_ELEMENT_ERROR (ximagesink, RESOURCE, TOO_LAZY, (NULL),
                          ("Could not open display"));
       return NULL;
     }
@@ -867,7 +867,7 @@ gst_ximagesink_chain (GstPad *pad, GstData *data)
       else /* No image available. Something went wrong during capsnego ! */
         {
           gst_buffer_unref (buf);
-          GST_ELEMENT_ERROR (ximagesink, CORE, NEGOTIATION, NULL, ("no format defined before chain function"));
+          GST_ELEMENT_ERROR (ximagesink, CORE, NEGOTIATION, (NULL), ("no format defined before chain function"));
           return;
         }
     }

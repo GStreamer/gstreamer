@@ -44,7 +44,7 @@ extern "C" {
   if (element->video_fd <= 0)					\
   {								\
     GST_ELEMENT_ERROR (element, RESOURCE, TOO_LAZY,		\
-      (_("Device is not open")), NULL);				\
+      (_("Device is not open.")), (NULL));			\
     return FALSE;						\
   }
 
@@ -53,7 +53,7 @@ extern "C" {
   if (element->video_fd != -1)					\
   {								\
     GST_ELEMENT_ERROR (element, RESOURCE, TOO_LAZY,		\
-      (_("Device is open")), NULL);				\
+      (_("Device is open.")), (NULL));				\
     return FALSE;						\
   }
 
@@ -62,7 +62,7 @@ extern "C" {
   if (!(element->vcap.type & VID_TYPE_OVERLAY))			\
   {								\
     GST_ELEMENT_ERROR (element, RESOURCE, TOO_LAZY,		\
-      NULL, ("Device cannot handle overlay"));			\
+      (NULL), ("Device cannot handle overlay"));		\
     return FALSE;						\
   }
 
@@ -71,7 +71,7 @@ extern "C" {
   if (element->buffer == NULL)					\
   {								\
     GST_ELEMENT_ERROR (element, RESOURCE, SETTINGS,		\
-      NULL, ("Device is not in streaming mode"));		\
+      (NULL), ("Device is not in streaming mode"));		\
     return FALSE;						\
   }
 
@@ -80,7 +80,7 @@ extern "C" {
   if (element->buffer != NULL)					\
   {								\
     GST_ELEMENT_ERROR (element, RESOURCE, SETTINGS,		\
-      NULL, ("Device is in streaming mode"));			\
+      (NULL), ("Device is in streaming mode"));			\
     return FALSE;						\
   }
 

@@ -1,5 +1,150 @@
 2004-02-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	reviewed by: <delete if not using a buddy>
+
+	* ext/aalib/gstaasink.c: (gst_aasink_open):
+	* ext/alsa/gstalsa.c: (gst_alsa_link), (gst_alsa_xrun_recovery):
+	* ext/alsa/gstalsasink.c: (gst_alsa_sink_loop):
+	* ext/alsa/gstalsasrc.c: (gst_alsa_src_loop):
+	* ext/audiofile/gstafsink.c: (gst_afsink_open_file),
+	(gst_afsink_close_file):
+	* ext/audiofile/gstafsrc.c: (gst_afsrc_open_file),
+	(gst_afsrc_close_file):
+	* ext/divx/gstdivxdec.c: (gst_divxdec_setup), (gst_divxdec_chain):
+	* ext/divx/gstdivxenc.c: (gst_divxenc_setup), (gst_divxenc_chain):
+	* ext/dv/gstdvdec.c: (gst_dvdec_loop):
+	* ext/dvdnav/dvdnavsrc.c: (dvdnavsrc_user_op), (dvdnavsrc_get):
+	* ext/esd/esdmon.c: (gst_esdmon_get):
+	* ext/esd/esdsink.c: (gst_esdsink_chain), (gst_esdsink_open_audio):
+	* ext/faac/gstfaac.c: (gst_faac_chain):
+	* ext/faad/gstfaad.c: (gst_faad_chain):
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_chain):
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_loop):
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_loop):
+	* ext/flac/gstflacdec.c: (gst_flacdec_error_callback),
+	(gst_flacdec_loop):
+	* ext/flac/gstflacenc.c: (gst_flacenc_chain):
+	* ext/flac/gstflactag.c: (gst_flac_tag_chain):
+	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_chain):
+	* ext/gnomevfs/gstgnomevfssink.c: (gst_gnomevfssink_open_file),
+	(gst_gnomevfssink_close_file):
+	* ext/gnomevfs/gstgnomevfssrc.c: (audiocast_init),
+	(gst_gnomevfssrc_open_file):
+	* ext/ivorbis/vorbisfile.c: (gst_ivorbisfile_loop):
+	* ext/lame/gstlame.c: (gst_lame_sink_link), (gst_lame_chain):
+	* ext/lcs/gstcolorspace.c: (gst_colorspace_srcconnect_func):
+	* ext/mad/gstid3tag.c: (gst_id3_tag_handle_event),
+	(gst_id3_tag_do_typefind), (gst_id3_tag_chain):
+	* ext/mad/gstmad.c: (gst_mad_chain):
+	* ext/mikmod/gstmikmod.c: (gst_mikmod_loop):
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* ext/mpeg2enc/gstmpeg2enc.cc:
+	* ext/mplex/gstmplex.cc:
+	* ext/mplex/gstmplexibitstream.cc:
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_chain),
+	(gst_ogg_demux_push):
+	* ext/raw1394/gstdv1394src.c:
+	* ext/sdl/sdlvideosink.c: (gst_sdlvideosink_lock),
+	(gst_sdlvideosink_initsdl), (gst_sdlvideosink_create):
+	* ext/sndfile/gstsf.c: (gst_sf_open_file), (gst_sf_close_file),
+	(gst_sf_loop):
+	* ext/speex/gstspeexenc.c: (gst_speexenc_chain):
+	* ext/swfdec/gstswfdec.c: (gst_swfdec_loop):
+	* ext/tarkin/gsttarkindec.c: (gst_tarkindec_chain):
+	* ext/tarkin/gsttarkinenc.c: (gst_tarkinenc_chain):
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_chain):
+	* ext/vorbis/vorbisfile.c: (gst_vorbisfile_loop):
+	* ext/xvid/gstxviddec.c: (gst_xviddec_setup), (gst_xviddec_chain):
+	* ext/xvid/gstxvidenc.c: (gst_xvidenc_setup), (gst_xvidenc_chain):
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_peek_head),
+	(gst_riff_read_element_data), (gst_riff_read_seek),
+	(gst_riff_peek_list), (gst_riff_read_list), (gst_riff_read_header):
+	* gst/adder/gstadder.c: (gst_adder_loop):
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_segment),
+	(gst_asf_demux_process_stream), (gst_asf_demux_get_stream):
+	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_init),
+	(gst_avi_demux_add_stream), (gst_avi_demux_stream_header):
+	* gst/avi/gstavimux.c: (gst_avimux_stop_file):
+	* gst/flx/gstflxdec.c: (gst_flxdec_loop):
+	* gst/goom/gstgoom.c: (gst_goom_chain):
+	* gst/id3/gstid3types.c: (gst_id3types_loop):
+	* gst/intfloat/float22int.c: (gst_float2_2_int_chain):
+	* gst/intfloat/gstfloat2int.c: (gst_float2int_loop):
+	* gst/intfloat/gstint2float.c: (gst_int2float_chain_gint16):
+	* gst/matroska/ebml-read.c: (gst_ebml_read_element_id),
+	(gst_ebml_read_element_length), (gst_ebml_read_element_data),
+	(gst_ebml_read_seek), (gst_ebml_read_uint), (gst_ebml_read_sint),
+	(gst_ebml_read_float), (gst_ebml_read_header):
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_init_stream),
+	(gst_matroska_demux_parse_blockgroup):
+	* gst/monoscope/gstmonoscope.c: (gst_monoscope_chain):
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_loop):
+	* gst/oneton/gstoneton.c: (gst_oneton_chain):
+	* gst/silence/gstsilence.c: (gst_silence_get):
+	* gst/sine/gstsinesrc.c: (gst_sinesrc_get):
+	* gst/smpte/gstsmpte.c: (gst_smpte_loop):
+	* gst/speed/gstspeed.c: (speed_loop):
+	* gst/tags/gstvorbistag.c: (gst_vorbis_tag_chain):
+	* gst/videotestsrc/gstvideotestsrc.c: (gst_videotestsrc_get):
+	* gst/volenv/gstvolenv.c: (gst_volenv_chain):
+	* gst/wavenc/gstwavenc.c: (gst_wavenc_chain):
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_parse_fmt),
+	(gst_wavparse_loop):
+	* sys/dxr3/dxr3audiosink.c: (dxr3audiosink_open),
+	(dxr3audiosink_set_mode_pcm), (dxr3audiosink_set_mode_ac3),
+	(dxr3audiosink_close):
+	* sys/dxr3/dxr3spusink.c: (dxr3spusink_open), (dxr3spusink_close):
+	* sys/dxr3/dxr3videosink.c: (dxr3videosink_open),
+	(dxr3videosink_close), (dxr3videosink_write_data):
+	* sys/oss/gstosselement.c: (gst_osselement_open_audio):
+	* sys/oss/gstosssink.c: (gst_osssink_chain):
+	* sys/oss/gstosssrc.c: (gst_osssrc_get):
+	* sys/v4l/gstv4lmjpegsink.c: (gst_v4lmjpegsink_chain):
+	* sys/v4l/gstv4lmjpegsrc.c: (gst_v4lmjpegsrc_buffer_free):
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_buffer_free):
+	* sys/v4l/v4l-overlay_calls.c: (gst_v4l_set_overlay),
+	(gst_v4l_set_window), (gst_v4l_enable_overlay):
+	* sys/v4l/v4l_calls.c: (gst_v4l_get_capabilities), (gst_v4l_open),
+	(gst_v4l_set_chan_norm), (gst_v4l_get_signal),
+	(gst_v4l_get_frequency), (gst_v4l_set_frequency),
+	(gst_v4l_get_picture), (gst_v4l_set_picture), (gst_v4l_get_audio),
+	(gst_v4l_set_audio):
+	* sys/v4l/v4l_calls.h:
+	* sys/v4l/v4lmjpegsink_calls.c: (gst_v4lmjpegsink_sync_thread),
+	(gst_v4lmjpegsink_queue_frame), (gst_v4lmjpegsink_set_playback),
+	(gst_v4lmjpegsink_playback_init),
+	(gst_v4lmjpegsink_playback_start):
+	* sys/v4l/v4lmjpegsrc_calls.c: (gst_v4lmjpegsrc_queue_frame):
+	* sys/v4l/v4lsrc_calls.c: (gst_v4lsrc_queue_frame),
+	(gst_v4lsrc_sync_frame), (gst_v4lsrc_capture_init),
+	(gst_v4lsrc_requeue_frame), (gst_v4lsrc_try_palette):
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_get):
+	* sys/v4l2/v4l2-overlay_calls.c: (gst_v4l2_set_display),
+	(gst_v4l2_set_window), (gst_v4l2_enable_overlay):
+	* sys/v4l2/v4l2_calls.c: (gst_v4l2_get_capabilities),
+	(gst_v4l2_fill_lists), (gst_v4l2_open), (gst_v4l2_get_norm),
+	(gst_v4l2_set_norm), (gst_v4l2_get_input), (gst_v4l2_set_input),
+	(gst_v4l2_get_output), (gst_v4l2_set_output),
+	(gst_v4l2_get_frequency), (gst_v4l2_set_frequency),
+	(gst_v4l2_signal_strength), (gst_v4l2_get_attribute),
+	(gst_v4l2_set_attribute):
+	* sys/v4l2/v4l2_calls.h:
+	* sys/v4l2/v4l2src_calls.c: (gst_v4l2src_fill_format_list),
+	(gst_v4l2src_queue_frame), (gst_v4l2src_grab_frame),
+	(gst_v4l2src_get_capture), (gst_v4l2src_set_capture),
+	(gst_v4l2src_capture_init), (gst_v4l2src_capture_start),
+	(gst_v4l2src_capture_stop):
+	* sys/vcd/vcdsrc.c: (vcdsrc_open_file):
+	* sys/ximage/ximagesink.c: (gst_ximagesink_xcontext_get),
+	(gst_ximagesink_chain):
+	* sys/xvideo/xvideosink.c: (gst_xvideosink_buffer_new),
+	(gst_xvideosink_sinkconnect), (gst_xvideosink_chain),
+	(gst_xvideosink_xwindow_new):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xcontext_get),
+	(gst_xvimagesink_chain):
+
+2004-02-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/volume/gstvolume.c: (gst_volume_set_volume),
 	(gst_volume_get_volume), (volume_class_init), (volume_init),
 	(volume_chain_int16), (volume_update_volume):

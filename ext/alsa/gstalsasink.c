@@ -351,7 +351,7 @@ sink_restart:
 	}
         /* caps nego failed somewhere */
         if (this->format == NULL) {
-          GST_ELEMENT_ERROR (this, CORE, NEGOTIATION, NULL,
+          GST_ELEMENT_ERROR (this, CORE, NEGOTIATION, (NULL),
                              ("ALSA format not negotiated"));
         }
         samplestamp = gst_alsa_timestamp_to_samples (this, GST_BUFFER_TIMESTAMP (sink->buf[i]));
