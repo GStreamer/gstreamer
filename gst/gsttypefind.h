@@ -44,7 +44,7 @@ typedef struct _GstTypeFindFactoryClass GstTypeFindFactoryClass;
 
 typedef void (* GstTypeFindFunction) (GstTypeFind *find, gpointer data);
 
-enum {
+typedef enum {
   GST_TYPE_FIND_MINIMUM = 1,
   GST_TYPE_FIND_POSSIBLE = 50,
   GST_TYPE_FIND_LIKELY = 80,
