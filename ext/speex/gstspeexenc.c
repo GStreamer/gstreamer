@@ -130,7 +130,7 @@ gst_speexenc_class_init (GstSpeexEnc *klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   gst_speexenc_signals[FRAME_ENCODED] =
-    g_signal_new ("frame_encoded", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("frame-encoded", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                    G_STRUCT_OFFSET (GstSpeexEncClass, frame_encoded), NULL, NULL,
                    g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 }

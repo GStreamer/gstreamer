@@ -226,11 +226,11 @@ gst_aasink_class_init (GstAASinkClass *klass)
   gobject_class->get_property = gst_aasink_get_property;
 
   gst_aasink_signals[SIGNAL_FRAME_DISPLAYED] =
-    g_signal_new ("frame_displayed", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("frame-displayed", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                    G_STRUCT_OFFSET (GstAASinkClass, frame_displayed), NULL, NULL,
                    g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
   gst_aasink_signals[SIGNAL_HAVE_SIZE] =
-    g_signal_new ("have_size", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("have-size", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                    G_STRUCT_OFFSET (GstAASinkClass, have_size), NULL, NULL,
                    gst_marshal_VOID__INT_INT, G_TYPE_NONE, 2,
                    G_TYPE_UINT, G_TYPE_UINT);

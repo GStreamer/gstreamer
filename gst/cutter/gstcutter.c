@@ -170,12 +170,12 @@ gst_cutter_class_init (GstCutterClass *klass)
 	                  "do we leak buffers when below threshold ?",
                           FALSE, G_PARAM_READWRITE));
   gst_cutter_signals[CUT_START] =
-	g_signal_new ("cut_start", G_TYPE_FROM_CLASS (klass),
+	g_signal_new ("cut-start", G_TYPE_FROM_CLASS (klass),
 		      G_SIGNAL_RUN_FIRST,
 		      G_STRUCT_OFFSET (GstCutterClass, cut_start), NULL, NULL,
 		      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
   gst_cutter_signals[CUT_STOP] =
-	g_signal_new ("cut_stop", G_TYPE_FROM_CLASS (klass),
+	g_signal_new ("cut-stop", G_TYPE_FROM_CLASS (klass),
 		      G_SIGNAL_RUN_FIRST,
 		      G_STRUCT_OFFSET (GstCutterClass, cut_stop), NULL, NULL,
 		      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);

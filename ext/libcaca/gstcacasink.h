@@ -22,7 +22,7 @@
 #define __GST_CACASINK_H__
 
 #include <gst/gst.h>
-#include <gst/video/gstvideosink.h>
+#include <gst/video/videosink.h>
 #include <gst/video/video.h>
 
 #include <caca.h>
