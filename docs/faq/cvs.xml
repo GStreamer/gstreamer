@@ -1,0 +1,46 @@
+<sect1 id="chapter-cvs">
+  <title id="title-cvs">Building GStreamer from CVS</title>
+  <qandaset>
+
+    <qandaentry>
+      <question id="cvs">
+        <para>
+I ran autogen.sh, but it fails with something like this:
+<programlisting>
++ running aclocal -I m4 -I common/m4 ...
+aclocal: configure.ac: 8: macro `AM_DISABLE_STATIC' not found in library
+aclocal: configure.ac: 17: macro `AM_PROG_LIBTOOL' not found in library
+aclocal failed
+</programlisting>
+What's wrong ?
+      </question>
+
+      <answer>
+        <para>
+aclocal is unable to find two macros installed by libtool in a file called
+libtool.m4.  Normally this would indicate that you don't have libtool, but
+that would mean autogen.sh would have failed on not finding libtool.
+        </para>
+        <para>
+It is more likely that you installed automake (which provides aclocal) in
+a different prefix than libtool.  You can check this by examining in what
+prefix both aclocal and libtool are installed.
+        </para>
+        <para>
+You can do three things to fix this :
+<orderedlist>
+<listitem>install automake in the same prefix as libtool
+<listitem>force use of the automake installed in the same prefix as libtool
+by using the --with-automake option
+<listitem>figure out what prefix libtool has been installed to and point
+aclocal to the right location by running
+<programlisting>
+export ACLOCAL_FLAGS="-I $(prefix)/share/aclocal"
+</programlisting>
+where you replace prefix with the prefix where libtool was installed.
+</orderedlist>
+       </para>
+      </answer>
+    </qandaentry>
+  </qandaset>
+</sect1>
