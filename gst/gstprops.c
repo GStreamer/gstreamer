@@ -1008,6 +1008,22 @@ gst_props_entry_get_safe (const GstPropsEntry *entry, ...)
   return result;
 }
 
+static gboolean
+gst_props_getv (GstProps *props, gboolean safe, gchar *first_name, va_list var_args)
+{
+  while (first_name) {
+    const GstPropsEntry *entry = gst_props_get_entry (props, first_name);
+    gboolean result;
+
+    if (!entry) return FALSE;
+    GST_PROPS_ENTRY_READ (entry, var_args, FALSE, &result);
+    if (!result) return FALSE;
+
+    first_name = va_arg (var_args, gchar *);
+  }
+  return TRUE;
+}
+
 /**
  * gst_props_get:
  * @props: the props to query
@@ -1022,22 +1038,36 @@ gboolean
 gst_props_get (GstProps *props, gchar *first_name, ...)
 {
   va_list var_args;
+  gboolean ret;
 
   va_start (var_args, first_name);
-
-  while (first_name) {
-    const GstPropsEntry *entry = gst_props_get_entry (props, first_name);
-    gboolean result;
-
-    if (!entry) return FALSE;
-    GST_PROPS_ENTRY_READ (entry, var_args, FALSE, &result);
-    if (!result) return FALSE;
-
-    first_name = va_arg (var_args, gchar *);
-  }
+  ret = gst_props_getv (props, FALSE, first_name, var_args);
   va_end (var_args);
   
-  return TRUE;
+  return ret;
+}
+
+/**
+ * gst_props_get_safe:
+ * @props: the props to query
+ * @first_name: the first key
+ * @...: a pointer to a datastructure that can hold the value.
+ *
+ * Gets the contents of the props into given key/value pairs.
+ *
+ * Returns: TRUE is the props entry could be fetched.
+ */
+gboolean
+gst_props_get_safe (GstProps *props, gchar *first_name, ...)
+{
+  va_list var_args;
+  gboolean ret;
+
+  va_start (var_args, first_name);
+  ret = gst_props_getv (props, TRUE, first_name, var_args);
+  va_end (var_args);
+  
+  return ret;
 }
 
 /**
@@ -1432,7 +1462,8 @@ gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
 
 	if (intersectentry) {
 	  if (intersectentry->propstype == GST_PROPS_LIST_TYPE) {
-	    intersection = g_list_concat (intersection, intersectentry->data.list_data.entries);
+	    intersection = g_list_concat (intersection, 
+			    g_list_copy (intersectentry->data.list_data.entries));
 	    /* set the list to NULL because the entries are concatenated to the above
 	     * list and we don't want to free them */
 	    intersectentry->data.list_data.entries = NULL;

@@ -106,6 +106,7 @@ GList* 			gst_props_normalize	 	(GstProps *props);
 
 GstProps*		gst_props_set			(GstProps *props, const gchar *name, ...);
 gboolean		gst_props_get			(GstProps *props, gchar *first_name, ...);
+gboolean		gst_props_get_safe		(GstProps *props, gchar *first_name, ...);
 
 gboolean 		gst_props_has_property		(GstProps *props, const gchar *name);
 gboolean 		gst_props_has_property_typed 	(GstProps *props, const gchar *name, GstPropsType type);
