@@ -156,7 +156,6 @@ static void
 gst_fakesrc_update_functions (GstFakeSrc *src)
 {
   GSList *pads;
-  GstPadGetFunction func;
 
   pads = src->srcpads;
   while (pads) {

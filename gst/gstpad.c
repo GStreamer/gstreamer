@@ -1045,7 +1045,7 @@ gst_pad_eos_func(GstPad *pad)
   GstElement *element;
   GList *pads;
   GstPad *srcpad;
-  gboolean result, success = TRUE;
+  gboolean result = TRUE, success;
 
   g_return_val_if_fail (pad != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PAD(pad), FALSE);

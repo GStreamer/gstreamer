@@ -566,7 +566,9 @@ gst_bin_create_plan_func (GstBin *bin)
   GstElement *manager;
   GList *elements;
   GstElement *element;
+#ifdef GST_DEBUG_ENABLED
   const gchar *elementname;
+#endif
   GSList *pending = NULL;
   GstBin *pending_bin;
 
@@ -706,7 +708,7 @@ gst_bin_iterate_func (GstBin *bin)
   GstElement *entry;
   GList *pads;
   GstPad *pad;
-  GstBuffer *buf;
+  GstBuffer *buf = NULL;
 
   DEBUG_SET_STRING("(\"%s\")", gst_element_get_name (GST_ELEMENT (bin)));
   DEBUG_ENTER_STRING;
