@@ -371,8 +371,8 @@ setup_source (GstPlayBaseBin * play_base_bin)
       g_warning ("can't link source to typefind element");
       return FALSE;
     }
-    sig1 = g_signal_connect (G_OBJECT (play_base_bin->decoder), "new_stream",
-        G_CALLBACK (new_stream), play_base_bin);
+    sig1 = g_signal_connect (G_OBJECT (play_base_bin->decoder),
+        "new-decoded-pad", G_CALLBACK (new_stream), play_base_bin);
     sig2 = g_signal_connect (G_OBJECT (play_base_bin->decoder), "no-more-pads",
         G_CALLBACK (no_more_pads), play_base_bin);
     sig3 = g_signal_connect (G_OBJECT (play_base_bin->decoder), "unknown-type",
