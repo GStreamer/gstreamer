@@ -2,6 +2,7 @@
 
 	* gst/interfaces.defs: Add proper fiels to GstTunerNorm. Also
 	remove parent property from all interfaces.
+	Revert, since we have code which depends on this "feature"
 
 2004-09-29  Johan Dahlin  <johan@gnome.org>
 

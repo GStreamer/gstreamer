@@ -473,8 +473,9 @@
    (gtype-id "GST_TYPE_COLOR_BALANCE")
 )
 
-(define-interface ColorBalanceChannel
+(define-object ColorBalanceChannel
   (in-module "Gst")
+  (parent "GstObject")
   (c-name "GstColorBalanceChannel")
   (gtype-id "GST_TYPE_COLOR_BALANCE_CHANNEL")
 )
@@ -488,8 +489,9 @@
     )
 )
 
-(define-interface MixerTrack
+(define-object MixerTrack
    (in-module "Gst")
+   (parent "GstObject")
    (c-name "GstMixerTrack")
    (gtype-id "GST_TYPE_MIXER_TRACK")
    (fields
@@ -519,8 +521,9 @@
    (gtype-id "GST_TYPE_TUNER")
 )
 
-(define-interface TunerChannel
+(define-object TunerChannel
    (in-module "Gst")
+   (parent "GstObject")
    (c-name "GstTunerChannel")
    (gtype-id "GST_TYPE_TUNER_CHANNEL")
    (fields
@@ -533,8 +536,9 @@
     '("gint" "max_signal"))
 )
 
-(define-interface TunerNorm
+(define-object TunerNorm
    (in-module "Gst")
+   (parent "GstObject")
    (c-name "GstTunerNorm")
    (gtype-id "GST_TYPE_TUNER_NORM")
    (fields
