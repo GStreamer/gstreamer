@@ -35,7 +35,6 @@ plugins.
 %{_libdir}/gst/libgstelements*.so*
 %{_libdir}/gst/libgsttypes*.so*
 %{_libdir}/gst/libgststaticautoplug*.so*
-%{_libdir}/gst/libgststaticautoplugrender*.so*
 %{_libdir}/gst/libgstcontrol*.so*
 %{_libdir}/gst/libgstbytestream*.so*
 %{_libdir}/gst/libgstgetbits*.so*
@@ -70,8 +69,13 @@ applications and plugins for GStreamer.
 %{_libdir}/libgstreamer.la
 %{_libdir}/libgstreamer.so
 %{_libdir}/pkgconfig/*
+%{_datadir}/gst/html/gstreamer/*
+%{_datadir}/gst/html/gstreamer-libs/alphaomega
 
 %changelog
+* Sat Mar 2 2002 Christian Schaller <Uraeus@linuxrising.org>
+- Added documentation to build
+
 * Mon Feb 11 2002 Thomas Vander Stichele <thomas@apestaart.org>
 - added libgstbasicscheduler
 - renamed libgst to libgstreamer
@@ -148,7 +152,8 @@ FFLAGS="${FFLAGS:-%optflags}" ; export FFLAGS ; \
   --mandir=%{_mandir} \
   --infodir=%{_infodir} \
   --with-configdir=/etc/gstreamer \
-  --disable-tests --disable-examples --disable-debug-color
+  --disable-tests --disable-examples --disable-debug-color \
+  --enable-docs-build
 if [ "$SMP" != "" ]; then
   (make "MAKE=make -k -j $SMP"; exit 0)
 else
