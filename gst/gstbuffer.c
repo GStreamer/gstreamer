@@ -147,7 +147,8 @@ gst_buffer_create_sub (GstBuffer *parent,
   g_mutex_lock (_gst_buffer_chunk_lock);
   buffer = g_mem_chunk_alloc (_gst_buffer_chunk);
   g_mutex_unlock (_gst_buffer_chunk_lock);
-  GST_INFO (GST_CAT_BUFFER,"creating new subbuffer %p from parent %p", buffer, parent);
+  GST_INFO (GST_CAT_BUFFER,"creating new subbuffer %p from parent %p (size %u, offset %u)", 
+		  buffer, parent, size, offset);
 
   buffer->lock = g_mutex_new ();
 #ifdef HAVE_ATOMIC_H
@@ -452,9 +453,9 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
   if (gst_buffer_is_span_fast(buf1,buf2)) {
     // we simply create a subbuffer of the common parent
     newbuf =  gst_buffer_create_sub(buf1->parent, buf1->data - (buf1->parent->data) + offset, len);
-    // FIXME unref buf1 and buf2 here?
   }
   else {
+    g_print ("slow path taken in buffer_span\n");
     // otherwise we simply have to brute-force copy the buffers
     newbuf = gst_buffer_new();
 
@@ -474,6 +475,9 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
     else newbuf->maxage = buf1->maxage;
 
   }
+  // FIXME unref buf1 and buf2 here?
+  gst_buffer_unref (buf1);
+  gst_buffer_unref (buf2);
 
   return newbuf;
 }
