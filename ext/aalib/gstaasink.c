@@ -350,7 +350,7 @@ gst_aasink_chain (GstPad *pad, GstBuffer *buf)
   		    aa_imgwidth (aasink->context),	/* dw */
   		    aa_imgheight (aasink->context));	/* dh */
 
-  GST_DEBUG (0,"videosink: clock wait: %llu", GST_BUFFER_TIMESTAMP(buf));
+  GST_DEBUG (0,"videosink: clock wait: %" G_GUINT64_FORMAT, GST_BUFFER_TIMESTAMP(buf));
 
   if (aasink->clock) {
     GstClockID id = gst_clock_new_single_shot_id (aasink->clock, GST_BUFFER_TIMESTAMP(buf));

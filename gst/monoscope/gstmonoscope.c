@@ -242,7 +242,7 @@ gst_monoscope_chain (GstPad *pad, GstBuffer *bufin)
 
   /* FIXME: should really select the first 1024 samples after the timestamp. */
   if (GST_BUFFER_TIMESTAMP (bufin) < monoscope->next_time || samples_in < 1024) {
-    GST_DEBUG (0, "timestamp is %llu: want >= %llu", GST_BUFFER_TIMESTAMP (bufin), monoscope->next_time);
+    GST_DEBUG (0, "timestamp is %" G_GUINT64_FORMAT ": want >= %" G_GUINT64_FORMAT, GST_BUFFER_TIMESTAMP (bufin), monoscope->next_time);
     gst_buffer_unref (bufin);
     return;
   }

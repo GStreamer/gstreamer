@@ -293,7 +293,7 @@ gst_osssrc_get (GstPad *pad)
 
   src->curoffset += readbytes;
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "pushed buffer from soundcard of %ld bytes, timestamp %lld", 
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, "pushed buffer from soundcard of %ld bytes, timestamp %" G_GINT64_FORMAT, 
 		  readbytes, GST_BUFFER_TIMESTAMP (buf));
 
   return buf;

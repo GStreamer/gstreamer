@@ -539,7 +539,7 @@ gst_wavparse_pad_query (GstPad *pad, GstQueryType type,
     g_warning ("Could not query sink pad's peer\n");
     return FALSE;
   }
-  g_print ("DEBUG: pad_query done, value %lld\n", *value);
+  g_print ("DEBUG: pad_query done, value %" G_GINT64_FORMAT "\n", *value);
   return TRUE;
 }
 

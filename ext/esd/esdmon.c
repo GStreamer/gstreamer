@@ -324,7 +324,7 @@ gst_esdmon_get (GstPad *pad)
   if (esdmon->depth == 16) readsamples /= 2;
   esdmon->samples_since_basetime += readsamples;
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "pushed buffer from esdmon of %ld bytes, timestamp %lld", readbytes, GST_BUFFER_TIMESTAMP (buf));
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, "pushed buffer from esdmon of %ld bytes, timestamp %" G_GINT64_FORMAT, readbytes, GST_BUFFER_TIMESTAMP (buf));
   return buf;
 }
 

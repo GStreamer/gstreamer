@@ -35,11 +35,11 @@ void goom_init (guint32 resx, guint32 resy)
 
     pixel = (guint32 *) malloc (buffsize * sizeof(guint32) + 128);
     back = (guint32 *) malloc (buffsize * sizeof(guint32) + 128);
-    RAND_INIT ((guint32)pixel) ;
+    RAND_INIT (GPOINTER_TO_INT(pixel));
     cycle = 0 ;
 
-    p1 = (guint32 *)((1+((unsigned int)(pixel))/128)*128);
-    p2 = (guint32 *)((1+((unsigned int)(back))/128)*128);
+    p1 = (void *)(((unsigned long)pixel + 0x7f)&(~0x7f));
+    p2 = (void *)(((unsigned long)back + 0x7f)&(~0x7f));
 }
 
 
@@ -53,11 +53,12 @@ void goom_set_resolution (guint32 resx, guint32 resy)
     buffsize = resx * resy;
 
     pixel = (guint32 *) malloc (buffsize * sizeof(guint32) + 128);
-    bzero(pixel,buffsize * sizeof(guint32) + 128);
+    memset(pixel,0,buffsize * sizeof(guint32) + 128);
     back = (guint32 *) malloc (buffsize * sizeof(guint32) + 128);
-    bzero(back,buffsize * sizeof(guint32) + 128);
-    p1 = (guint32 *)((1+((unsigned int)(pixel))/128)*128);
-    p2 = (guint32 *)((1+((unsigned int)(back))/128)*128);
+    memset(back,0,buffsize * sizeof(guint32) + 128);
+
+    p1 = (void *)(((unsigned long)pixel + 0x7f)&(~0x7f));
+    p2 = (void *)(((unsigned long)back + 0x7f)&(~0x7f));
 }
 
 

@@ -269,7 +269,7 @@ gst_udpsink_chain (GstPad *pad, GstBuffer *buf)
   if (udpsink->clock) {
     GstClockID id = gst_clock_new_single_shot_id (udpsink->clock, GST_BUFFER_TIMESTAMP (buf));
 
-    GST_DEBUG (0, "udpsink: clock wait: %llu\n", GST_BUFFER_TIMESTAMP (buf));
+    GST_DEBUG (0, "udpsink: clock wait: %" G_GUINT64_FORMAT "\n", GST_BUFFER_TIMESTAMP (buf));
     gst_element_clock_wait (GST_ELEMENT (udpsink), id, NULL);
     gst_clock_id_free (id);
   }

@@ -258,7 +258,7 @@ gst_osscommon_sync_parms (GstOssCommon *common)
 	    space.bytes, common->fragment);
 
   common->fragment_time = (GST_SECOND * common->fragment_size) / common->bps;
-  GST_INFO (GST_CAT_PLUGIN_INFO, "fragment time %u %llu\n", 
+  GST_INFO (GST_CAT_PLUGIN_INFO, "fragment time %u %" G_GUINT64_FORMAT "\n", 
             common->bps, common->fragment_time);
 
   if (target_format   != common->format   ||
