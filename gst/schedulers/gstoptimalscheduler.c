@@ -308,9 +308,15 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   gst_plugin_set_longname (plugin, "An optimal scheduler");
 
+#ifdef USE_COTHREADS
   factory = gst_scheduler_factory_new ("opt"COTHREADS_NAME,
                                        "An optimal scheduler using "COTHREADS_NAME" cothreads",
 		                      gst_opt_scheduler_get_type());
+#else
+  factory = gst_scheduler_factory_new ("opt",
+                                       "An optimal scheduler using no cothreads",
+		                      gst_opt_scheduler_get_type());
+#endif
 
   if (factory != NULL) {
     gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
