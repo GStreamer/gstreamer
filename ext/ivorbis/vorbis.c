@@ -21,7 +21,8 @@
 #include <config.h>
 #endif
 
-#include <vorbisenc.h>
+#include <gst/gst.h>
+#include <tremor/ivorbiscodec.h>
 
 extern GType ivorbisfile_get_type (void);
 
