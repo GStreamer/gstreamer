@@ -86,6 +86,33 @@ GST_CAPS_FACTORY (rawcaps5,
 );
 */
 
+GST_CAPS_FACTORY(rawcaps6,
+      GST_CAPS_NEW (
+        "videotestsrc_src",
+        "video/raw",
+          "format",		GST_PROPS_FOURCC(GST_MAKE_FOURCC('I','4','2','0'))
+      ),
+      GST_CAPS_NEW (
+        "videotestsrc_src",
+        "video/raw",
+          "format",		GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','U','Y','V'))
+      )
+)
+
+GST_CAPS_FACTORY(rawcaps7,
+      GST_CAPS_NEW (
+        "xvideosink_sink",
+        "video/raw",
+          "format",		GST_PROPS_FOURCC(GST_MAKE_FOURCC('I','4','2','0'))
+      ),
+      GST_CAPS_NEW (
+        "xvideosink_sink",
+        "video/raw",
+          "format",		GST_PROPS_FOURCC(GST_MAKE_FOURCC('Y','V','1','2'))
+      )
+)
+
+
 int 
 main (int argc, char *argv[]) 
 {
@@ -119,6 +146,9 @@ main (int argc, char *argv[])
 
   testret = gst_caps_is_always_compatible (GST_CAPS_GET (rawcaps), GST_CAPS_GET (rawcaps));
   g_print ("2 <-> 2 == %d (valid, same caps)\n", testret);
+
+  testret = gst_caps_is_always_compatible (GST_CAPS_GET (rawcaps6), GST_CAPS_GET (rawcaps7));
+  g_print ("6 <-> 7 == %d (invalid, second caps doesn't fit)\n", testret);
 
   return 0;
 }
