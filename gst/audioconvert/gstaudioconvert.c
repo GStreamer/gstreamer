@@ -385,10 +385,6 @@ gst_audio_convert_link (GstPad * pad, const GstCaps * caps)
   this = GST_AUDIO_CONVERT (GST_OBJECT_PARENT (pad));
   otherpad = (pad == this->src ? this->sink : this->src);
 
-  /* negotiate sinkpad first */
-  if (pad == this->src && !gst_pad_is_negotiated (this->sink))
-    return GST_PAD_LINK_DELAYED;
-
   if (!gst_audio_convert_parse_caps (caps, &ac_caps))
     return GST_PAD_LINK_REFUSED;
 
