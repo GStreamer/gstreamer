@@ -214,7 +214,7 @@ gst_videoscale_link (GstPad * pad, const GstCaps * caps)
   struct videoscale_format_struct *format;
   int height, width;
 
-  GST_DEBUG ("gst_videoscale_link %s\n", gst_caps_to_string (caps));
+  GST_DEBUG_OBJECT (pad, "_link with caps %" GST_PTR_FORMAT, caps);
   videoscale = GST_VIDEOSCALE (gst_pad_get_parent (pad));
 
   otherpad = (pad == videoscale->srcpad) ? videoscale->sinkpad :
@@ -366,18 +366,15 @@ gst_videoscale_chain (GstPad * pad, GstData * _data)
   size = GST_BUFFER_SIZE (buf);
 
   if (videoscale->passthru) {
-    GST_LOG_OBJECT (videoscale, "passing through buffer of %ld bytes in '%s'",
-        size, GST_OBJECT_NAME (videoscale));
+    GST_LOG_OBJECT (videoscale, "passing through buffer of %ld bytes", size);
     gst_pad_push (videoscale->srcpad, GST_DATA (buf));
     return;
   }
 
-  GST_LOG_OBJECT (videoscale, "got buffer of %ld bytes in '%s'", size,
-      GST_OBJECT_NAME (videoscale));
   GST_LOG_OBJECT (videoscale,
-      "size=%ld from=%dx%d to=%dx%d fromsize=%ld (should be %d) tosize=%d",
+      "buffersize=%ld from=%dx%d to=%dx%d fromsize=%ld tosize=%ld",
       size, videoscale->from_width, videoscale->from_height,
-      videoscale->to_width, videoscale->to_height, size,
+      videoscale->to_width, videoscale->to_height,
       videoscale->from_buf_size, videoscale->to_buf_size);
 
   g_return_if_fail (size == videoscale->from_buf_size);
@@ -394,8 +391,8 @@ gst_videoscale_chain (GstPad * pad, GstData * _data)
 
   videoscale->format->scale (videoscale, GST_BUFFER_DATA (outbuf), data);
 
-  GST_LOG_OBJECT (videoscale, "pushing buffer of %d bytes in '%s'",
-      GST_BUFFER_SIZE (outbuf), GST_OBJECT_NAME (videoscale));
+  GST_LOG_OBJECT (videoscale, "pushing buffer of %d bytes",
+      GST_BUFFER_SIZE (outbuf));
 
   gst_pad_push (videoscale->srcpad, GST_DATA (outbuf));
 

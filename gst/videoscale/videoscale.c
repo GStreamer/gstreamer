@@ -34,6 +34,7 @@
 #include "videoscale_x86.h"
 #endif
 
+#define ROUND_UP_2(x) (((x) + 1) & ~1)
 #define ROUND_UP_4(x) (((x) + 3) & ~3)
 #define ROUND_UP_8(x) (((x) + 7) & ~7)
 
@@ -50,6 +51,9 @@ static unsigned char gst_videoscale_bilinear (unsigned char *src, double x,
 static unsigned char gst_videoscale_bicubic (unsigned char *src, double x,
     double y, int sw, int sh);
 #endif
+static int
+gst_videoscale_get_size (struct videoscale_format_struct *format, int width,
+    int height);
 
 static void gst_videoscale_planar411 (GstVideoscale * scale,
     unsigned char *dest, unsigned char *src);
@@ -211,7 +215,6 @@ gst_videoscale_setup (GstVideoscale * videoscale)
 {
   g_return_if_fail (GST_IS_VIDEOSCALE (videoscale));
   g_return_if_fail (videoscale->format != NULL);
-  gint from_stride, to_stride;
 
   GST_DEBUG_OBJECT (videoscale, "format=%p " GST_FOURCC_FORMAT
       " from %dx%d to %dx%d, %d bpp",
@@ -238,17 +241,10 @@ gst_videoscale_setup (GstVideoscale * videoscale)
 
   GST_DEBUG_OBJECT (videoscale, "scaling method POINT_SAMPLE");
 
-  /* FIXME: we should get from and to strides from caps.  For now we conform
-   * to videotestsrc's idea of it, which is to round w * bytespp to nearest
-   * multiple of 4 */
-  from_stride = ROUND_UP_4 ((videoscale->from_width *
-          ROUND_UP_4 (videoscale->format->bpp)) / 8);
-  to_stride = ROUND_UP_4 ((videoscale->to_width *
-          ROUND_UP_4 (videoscale->format->bpp)) / 8);
-  GST_DEBUG_OBJECT (videoscale, "from_stride %d to_stride %d",
-      from_stride, to_stride);
-  videoscale->from_buf_size = from_stride * videoscale->from_height;
-  videoscale->to_buf_size = to_stride * videoscale->to_height;
+  videoscale->from_buf_size = gst_videoscale_get_size (videoscale->format,
+      videoscale->from_width, videoscale->from_height);
+  videoscale->to_buf_size = gst_videoscale_get_size (videoscale->format,
+      videoscale->to_width, videoscale->to_height);
 
   videoscale->passthru = FALSE;
   videoscale->inited = TRUE;
@@ -283,6 +279,52 @@ gst_videoscale_scale_rgb (GstVideoscale * scale, unsigned char *dest,
   //scale->scaler(scale, src, dest, sw, sh, dw, dh);
 }
 #endif
+/* calculate the total size needed for an image in the given format
+ * of the given width and height, taking stride into account */
+static int
+gst_videoscale_get_size (struct videoscale_format_struct *format, int width,
+    int height)
+{
+  int stride = 0;
+  int ustride = 0, vstride = 0;
+  int size = 0;
+
+  /* FIXME: we should get from and to strides from caps.  For now we conform
+   * to videotestsrc's idea of it, which is to round w * bytespp to nearest
+   * multiple of 4 */
+
+  switch (format->fourcc) {
+    case fourcc_RGB_:
+      stride = ROUND_UP_4 (width * ROUND_UP_4 (format->bpp)) / 8;
+      size = stride * height;
+      break;
+    case fourcc_YUY2:
+    case fourcc_UYVY:
+    case fourcc_YVYU:
+      stride = ROUND_UP_2 (width) * 2;
+      size = stride * height;
+      break;
+    case fourcc_I420:
+    case fourcc_YV12:
+      stride = ROUND_UP_4 (width);
+      ustride = ROUND_UP_8 (width) / 2;
+      vstride = ROUND_UP_8 (stride) / 2;
+      size = stride * ROUND_UP_2 (height) + ustride * ROUND_UP_2 (height) / 2 +
+          vstride * ROUND_UP_2 (height) / 2;
+      break;
+    case fourcc_Y422:
+    case fourcc_UYNV:
+    case fourcc_Y800:
+      g_warning ("unhandled known YUV fourcc");
+      break;
+    default:
+      g_warning ("unhandled unknown fourcc");
+      break;
+  }
+  GST_LOG ("image size for %dx%d in " GST_FOURCC_FORMAT " is %d bytes",
+      width, height, GST_FOURCC_ARGS (format->fourcc), size);
+  return size;
+}
 
 static void
 gst_videoscale_planar411 (GstVideoscale * scale, unsigned char *dest,
