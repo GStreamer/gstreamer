@@ -67,7 +67,8 @@ void 			 	gst_init_with_popt_table 	(int *argc, char **argv[],
 								 const struct poptOption *popt_options);
 const struct poptOption*	gst_init_get_popt_table 	(void);
 
-gboolean			gst_with_threads		(void);
+void				gst_use_threads			(gboolean use_threads);
+gboolean			gst_has_threads			(void);
 
 void 			 	gst_main		 	(void);
 void 			 	gst_main_quit		 	(void);

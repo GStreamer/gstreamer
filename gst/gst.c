@@ -41,7 +41,7 @@ gboolean _gst_registry_auto_load = TRUE;
 static GstRegistry *_global_registry;
 static GstRegistry *_user_registry;
 static gboolean _gst_registry_fixed = FALSE;
-static gboolean _nothreads = FALSE;
+static gboolean _gst_use_threads = TRUE;
 
 extern gint _gst_trace_on;
 
@@ -339,17 +339,17 @@ init_post (void)
 #endif
 
   if (!g_thread_supported ()) {
-    if (_nothreads)
-      g_thread_init (&gst_thread_dummy_functions);
-    else
+    if (_gst_use_threads)
       g_thread_init (NULL);
+    else
+      g_thread_init (&gst_thread_dummy_functions);
   }
   
   llf = G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL;
   g_log_set_handler(g_log_domain_gstreamer, llf, debug_log_handler, NULL);
   
   GST_INFO (GST_CAT_GST_INIT, "Initializing GStreamer Core Library version %s %s",
-            GST_VERSION, _nothreads?"(no threads)":"");
+            GST_VERSION, _gst_use_threads?"":"(no threads)");
   
   gst_object_get_type ();
   gst_pad_get_type ();
@@ -493,7 +493,7 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
       gst_scheduler_factory_set_default_name (arg);
       break;
     case ARG_NOTHREADS:
-      _nothreads = TRUE;
+      gst_use_threads (FALSE);
       break;
     case ARG_REGISTRY:
       g_object_set (G_OBJECT (_user_registry), "location", arg, NULL);
@@ -510,10 +510,16 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
   }
 }
 
-gboolean
-gst_with_threads (void)
+void
+gst_use_threads (gboolean use_threads)
 {
-  return !_nothreads;
+  _gst_use_threads = use_threads;
+}
+
+gboolean
+gst_has_threads (void)
+{
+  return _gst_use_threads;
 }
 
 

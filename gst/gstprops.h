@@ -57,8 +57,8 @@ typedef enum {
    GST_PROPS_LAST_TYPE = GST_PROPS_END_TYPE + 16,
 } GstPropsType;
 
-#define GST_MAKE_FOURCC(a,b,c,d) 	((a)|(b)<<8|(c)<<16|(d)<<24)
-#define GST_STR_FOURCC(f)		(((f)[0])|((f)[1]<<8)|((f)[2]<<16)|((f)[3]<<24))
+#define GST_MAKE_FOURCC(a,b,c,d) 	(guint32)((a)|(b)<<8|(c)<<16|(d)<<24)
+#define GST_STR_FOURCC(f)		(guint32)(((f)[0])|((f)[1]<<8)|((f)[2]<<16)|((f)[3]<<24))
 
 #define GST_PROPS_LIST(a...) 		GST_PROPS_LIST_TYPE,##a,NULL
 #define GST_PROPS_INT(a) 		GST_PROPS_INT_TYPE,(a)
