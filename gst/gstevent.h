@@ -86,6 +86,7 @@ typedef struct
   GstEventFlag 	flags;
 } GstEventMask;
 
+#ifndef GST_DISABLE_DEPRECATED
 #ifdef G_HAVE_ISO_VARARGS
 #define GST_EVENT_MASK_FUNCTION(type,functionname, ...)      \
 static const GstEventMask*                              \
@@ -108,6 +109,7 @@ functionname (type pad)                            	\
   };                                             	\
   return masks;                                  	\
 }
+#endif
 #endif
 
 /* seek events, extends GstEventFlag */

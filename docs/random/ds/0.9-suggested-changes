@@ -4,6 +4,7 @@ API:
 
  - replace object/structure set/get macros with actual functions.
 
+ - events should all use GstStructure
 
 
 caps:
@@ -27,6 +28,16 @@ caps:
 
   But that's 0.10 material."
 
+bugs with interesting info:
+ 
+ XML descriptions of plugin information:
+   http://bugzilla.gnome.org/show_bug.cgi?id=114216
+  
 
+
+
+- a method for elements to know when downstream elements are ignoring
+  the data stream.  This would allow automatic shutoff of pipelines
+  whose processing is being dumped.
 
 

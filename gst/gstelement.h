@@ -80,6 +80,7 @@ extern GType _gst_element_type;
 #define GST_ELEMENT_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_ELEMENT, GstElementClass))
 
 /* convenience functions */
+#ifndef GST_DISABLE_DEPRECATED
 #ifdef G_HAVE_ISO_VARARGS
 #define GST_ELEMENT_QUERY_TYPE_FUNCTION(functionname, ...) \
 	GST_QUERY_TYPE_FUNCTION (GstElement*, functionname, __VA_ARGS__);
@@ -94,6 +95,7 @@ extern GType _gst_element_type;
 	GST_FORMATS_FUNCTION (GstElement*, functionname, a);
 #define GST_ELEMENT_EVENT_MASK_FUNCTION(functionname, a...) \
 	GST_EVENT_MASK_FUNCTION (GstElement*, functionname, a);
+#endif
 #endif
 
 typedef enum {
@@ -285,7 +287,7 @@ gboolean		gst_element_requires_clock	(GstElement *element);
 gboolean		gst_element_provides_clock	(GstElement *element);
 GstClock*		gst_element_get_clock 		(GstElement *element);
 void			gst_element_set_clock 		(GstElement *element, GstClock *clock);
-#ifndef GST_DEISABLE_DEPRECATED
+#ifndef GST_DISABLE_DEPRECATED
 GstClockReturn		gst_element_clock_wait 		(GstElement *element, 
 							 GstClockID id, GstClockTimeDiff *jitter);
 #endif

@@ -1,3 +1,26 @@
+2004-02-04  David Schleef  <ds@schleef.org>
+
+	* docs/random/ds/0.9-suggested-changes: random notes
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_get_formats),
+	(gst_fakesrc_get_query_types), (gst_fakesrc_get_event_mask):
+	Replace GST_PAD_EVENT_MASK_FUNCTION() (et al.) with its
+	expansion.
+	* gst/elements/gstfilesink.c: (gst_filesink_get_formats),
+	(gst_filesink_get_query_types): same
+	* gst/elements/gstfilesrc.c: (gst_filesrc_get_event_mask),
+	(gst_filesrc_get_query_types), (gst_filesrc_get_formats): same
+	* gst/gstcaps.h: deprecate GST_DEBUG_CAPS(), and fix the macro
+	to use new GST_PTR_FORMAT.
+	* gst/gstelement.h: deprecate function factory macros
+	GST_ELEMENT_QUERY_TYPE_FUNCTION(), GST_ELEMENT_EVENT_MASK_FUNCTION().
+	These are our last variadic macros that can't be replaced with
+	inlines.  Celebrate!  Also fix a typo in an #ifdef that was
+	attempting to deprecate gst_element_clock_wait().
+	* gst/gstevent.h: same
+	* gst/gstpad.c: (gst_pad_link_intersect), (gst_pad_link_fixate),
+	(gst_pad_try_set_caps): replace GST_DEBUG_CAPS() with GST_DEBUG()
+	* gst/gstpad.h: deprecate function factory macros similar to above.
+
 2004-02-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

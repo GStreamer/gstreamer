@@ -94,6 +94,7 @@ typedef enum {
 #define GST_PAD_LINK_SUCCESSFUL(ret) (ret >= GST_PAD_LINK_OK)
 
 /* convenience functions */
+#ifndef GST_DISABLE_DEPRECATED
 #ifdef G_HAVE_ISO_VARARGS
 #define GST_PAD_QUERY_TYPE_FUNCTION(functionname, ...)  GST_QUERY_TYPE_FUNCTION (GstPad *, functionname, __VA_ARGS__);
 #define GST_PAD_FORMATS_FUNCTION(functionname, ...)  	GST_FORMATS_FUNCTION (GstPad *, functionname, __VA_ARGS__);
@@ -102,6 +103,7 @@ typedef enum {
 #define GST_PAD_QUERY_TYPE_FUNCTION(functionname, a...) GST_QUERY_TYPE_FUNCTION (GstPad *, functionname, a);
 #define GST_PAD_FORMATS_FUNCTION(functionname, a...)  	GST_FORMATS_FUNCTION (GstPad *, functionname, a);
 #define GST_PAD_EVENT_MASK_FUNCTION(functionname, a...) GST_EVENT_MASK_FUNCTION (GstPad *, functionname, a);
+#endif
 #endif
 
  

@@ -102,23 +102,41 @@ enum {
   ARG_TOUCH
 };
 
-GST_PAD_EVENT_MASK_FUNCTION (gst_filesrc_get_event_mask,
-  { GST_EVENT_SEEK, GST_SEEK_METHOD_CUR | 
-	  	    GST_SEEK_METHOD_SET | 
-		    GST_SEEK_METHOD_END | 
-		    GST_SEEK_FLAG_FLUSH },
-  { GST_EVENT_FLUSH, 0 },
-  { GST_EVENT_SIZE, 0 }
-)
+static const GstEventMask *
+gst_filesrc_get_event_mask (GstPad *pad)
+{
+  static const GstEventMask masks[] = {
+    { GST_EVENT_SEEK, GST_SEEK_METHOD_CUR | 
+                      GST_SEEK_METHOD_SET | 
+                      GST_SEEK_METHOD_END | 
+                      GST_SEEK_FLAG_FLUSH },
+    { GST_EVENT_FLUSH, 0 },
+    { GST_EVENT_SIZE, 0 },
+    { 0, 0 }
+  };
+  return masks;
+}
 
-GST_PAD_QUERY_TYPE_FUNCTION (gst_filesrc_get_query_types,
-  GST_QUERY_TOTAL,
-  GST_QUERY_POSITION
-)
+static const GstQueryType *
+gst_filesrc_get_query_types (GstPad *pad)
+{
+  static const GstQueryType types[] = {
+    GST_QUERY_TOTAL,
+    GST_QUERY_POSITION,
+    0
+  };
+  return types;
+}
 
-GST_PAD_FORMATS_FUNCTION (gst_filesrc_get_formats,
-  GST_FORMAT_BYTES
-)
+static const GstFormat *
+gst_filesrc_get_formats (GstPad *pad)
+{
+  static const GstFormat formats[] = {
+    GST_FORMAT_BYTES,
+    0,
+  };
+  return formats;
+}
 
 static void 		gst_filesrc_dispose 		(GObject *object);
 

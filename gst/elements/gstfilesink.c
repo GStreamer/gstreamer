@@ -59,15 +59,26 @@ enum {
   ARG_LOCATION
 };
 
-GST_PAD_QUERY_TYPE_FUNCTION (gst_filesink_get_query_types,
-  GST_QUERY_TOTAL,
-  GST_QUERY_POSITION
-)
+static const GstFormat *
+gst_filesink_get_formats (GstPad *pad)
+{
+  static const GstFormat formats[] = {
+    GST_FORMAT_BYTES,
+    0,
+  };
+  return formats;
+}
 
-GST_PAD_FORMATS_FUNCTION (gst_filesink_get_formats,
-  GST_FORMAT_BYTES
-)
-
+static const GstQueryType *
+gst_filesink_get_query_types (GstPad *pad)
+{
+  static const GstQueryType types[] = {
+    GST_QUERY_TOTAL,
+    GST_QUERY_POSITION,
+    0
+  };
+  return types;
+}
 
 static void	gst_filesink_dispose		(GObject *object);
 
