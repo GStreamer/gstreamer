@@ -58,6 +58,12 @@ arg_search (GstBin *bin, gchar *argname, found_handler handler, void *priv)
   g_free(ccargname);
 }
 
+gboolean
+idle_func (gpointer data)
+{
+  return gst_bin_iterate (GST_BIN (data));
+}
+
 void 
 handle_have_size (GstElement *element,int width,int height) 
 {
@@ -151,7 +157,12 @@ main(int argc, char *argv[])
     fprintf(stderr,"RUNNING pipeline\n");
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-    while (gst_bin_iterate (GST_BIN (pipeline)));
+    g_idle_add(idle_func,pipeline);
+#ifdef USE_GLIB2
+    g_main_loop_run (g_main_loop_new (NULL, FALSE));
+#else
+    gtk_main();
+#endif
 
     gst_element_set_state (pipeline, GST_STATE_NULL);
   }
