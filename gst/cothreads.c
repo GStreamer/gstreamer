@@ -81,16 +81,17 @@ static GPrivate *_cothread_ctx_key;
 cothread_context *
 cothread_context_init (void)
 {
-  /*
-   * initalize the whole of the cothreads context 
-   */
   cothread_context *ctx;
-  
+
   /* if there already is a cotread context for this thread,
    * just return it */
   ctx = g_private_get (_cothread_ctx_key);
-  if(ctx) return ctx;
+  if (ctx) 
+    return ctx;
 
+  /*
+   * initalize the whole of the cothreads context 
+   */
   ctx = (cothread_context *) g_malloc (sizeof (cothread_context));
 
   /* we consider the initiating process to be cothread 0 */
