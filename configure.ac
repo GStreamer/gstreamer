@@ -1021,6 +1021,14 @@ GST_CHECK_FEATURE(LIBDV, [libdv DV/video decoder], dvdec, [
   AC_SUBST(LIBDV_LIBS)
 ])
 
+dnl *** libcaca ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBCACA, true)
+GST_CHECK_FEATURE(LIBCACA, [libcaca], libcaca, [
+  GST_CHECK_CONFIGPROG(LIBCACA, caca-config)
+  AC_SUBST(LIBCACA_CFLAGS)
+  AC_SUBST(LIBCACA_LIBS)
+])
+
 dnl *** libfame ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBFAME, true)
 GST_CHECK_FEATURE(LIBFAME, [libfame MPEG1/4 encoder], libfame, [
@@ -1614,6 +1622,7 @@ ext/ladspa/Makefile
 ext/lame/Makefile
 ext/ivorbis/Makefile
 ext/lcs/Makefile
+ext/libcaca/Makefile
 ext/libfame/Makefile
 ext/libpng/Makefile
 ext/librfb/Makefile
