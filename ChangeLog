@@ -1,3 +1,10 @@
+2004-11-03  Wim Taymans  <wim@fluendo.com>
+
+	* gst/alpha/gstalpha.c: (gst_alpha_method_get_type),
+	(gst_alpha_chroma_key), (gst_alpha_chain):
+	Fix stride issues. Does not completely work for odd
+	heights.
+
 2004-11-03  Christophe Fergeau  <teuf@gnome.org>
 
 	* gst/videoscale/gstvideoscale.c: (gst_videoscale_getcaps):
