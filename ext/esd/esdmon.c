@@ -316,7 +316,7 @@ gst_esdmon_get (GstPad *pad)
   GST_BUFFER_SIZE (buf) = readbytes;
   GST_BUFFER_OFFSET (buf) = esdmon->curoffset;
   GST_BUFFER_TIMESTAMP (buf) = esdmon->basetime +
-	  esdmon->samples_since_basetime * 1000000LL / esdmon->frequency;
+	  esdmon->samples_since_basetime * GST_SECOND / esdmon->frequency;
 
   esdmon->curoffset += readbytes;
   readsamples = readbytes / esdmon->channels;
@@ -351,7 +351,7 @@ gst_esdmon_set_property (GObject *object, guint prop_id, const GValue *value, GP
       break;
     case ARG_RATE:
       /* Preserve the timestamps */
-      esdmon->basetime = esdmon->samples_since_basetime * 1000000LL / esdmon->frequency;
+      esdmon->basetime = esdmon->samples_since_basetime * GST_SECOND / esdmon->frequency;
       esdmon->samples_since_basetime = 0;
 
       /* Set the new frequency */

@@ -286,7 +286,7 @@ gst_monoscope_chain (GstPad *pad, GstBuffer *bufin)
   GST_BUFFER_TIMESTAMP (bufout) = monoscope->next_time;
   GST_BUFFER_FLAG_SET (bufout, GST_BUFFER_DONTFREE);
 
-  monoscope->next_time += 1000000LL / monoscope->fps;
+  monoscope->next_time += GST_SECOND / monoscope->fps;
 
   gst_pad_push (monoscope->srcpad, bufout);
 

@@ -281,7 +281,7 @@ gst_goom_chain (GstPad *pad, GstBuffer *bufin)
   GST_BUFFER_TIMESTAMP (bufout) = goom->next_time;
   GST_BUFFER_FLAG_SET (bufout, GST_BUFFER_DONTFREE);
 
-  goom->next_time += 1000000LL / goom->fps;
+  goom->next_time += GST_SECOND / goom->fps;
 
   gst_pad_push (goom->srcpad, bufout);
 

@@ -232,7 +232,7 @@ gst_osssrc_get (GstPad *pad)
   GST_BUFFER_SIZE (buf) = readbytes;
   GST_BUFFER_OFFSET (buf) = src->curoffset;
   GST_BUFFER_TIMESTAMP (buf) = src->basetime +
-	  src->samples_since_basetime * 1000000LL / src->frequency;
+	  src->samples_since_basetime * GST_SECOND / src->frequency;
 
   src->curoffset += readbytes;
   readsamples = readbytes / src->channels;
@@ -265,7 +265,7 @@ gst_osssrc_set_property (GObject *object, guint prop_id, const GValue *value, GP
       break;
     case ARG_FREQUENCY:
       /* Preserve the timestamps */
-      src->basetime = src->samples_since_basetime * 1000000LL / src->frequency;
+      src->basetime = src->samples_since_basetime * GST_SECOND / src->frequency;
       src->samples_since_basetime = 0;
 
       src->frequency = g_value_get_int (value);
