@@ -2,6 +2,13 @@
 #include <gnome.h>
 
 static void
+autoplug_have_size (GstElement *element, guint width, guint height,
+                   GtkWidget *socket)
+{
+  gtk_widget_set_usize(socket,width,height);
+}
+
+static void
 gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
 {
   GstElement *osssink, *videosink;
@@ -26,7 +33,7 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
   gst_bin_remove (GST_BIN (autobin), typefind);
       
   /* and an audio sink */
-  osssink = gst_elementfactory_make("osssink", "play_audio");
+  osssink = gst_elementfactory_make("esdsink", "play_audio");
   g_assert(osssink != NULL);
 
   /* and an video sink */
@@ -66,8 +73,12 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
   gtk_widget_realize (socket);
   gtk_socket_steal (GTK_SOCKET (socket), 
 		    gst_util_get_int_arg (GTK_OBJECT (videosink), "xid"));
+  gtk_widget_set_usize(socket,320,240);
 
   gtk_widget_show_all (appwindow);
+
+  gtk_signal_connect (GTK_OBJECT (videosink), "have_size",
+                      GTK_SIGNAL_FUNC (autoplug_have_size), socket);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
       
