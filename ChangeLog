@@ -1,3 +1,10 @@
+2004-01-06  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_loop):
+	  When we have received a new SCR right in the first buffer after
+	  a seek (so in the same cycle that handles the discont), we should
+	  handle the buffer instead of unreffing it, else we lose data.
+
 2004-01-06  Iain <iain@prettypeople.org>
 
 	* gst/intfloat/gstint2float.c (gst_int2float_link): Set the 
