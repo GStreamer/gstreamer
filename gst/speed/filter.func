@@ -1,5 +1,6 @@
 /* -*- Mode: c; c-basic-offset: 2 -*- */ 
     _FORMAT *in_data, *out_data;
+    static gint64 offset = 0, timestamp = 0;
 
     /* get a buffer here so that we can have something to interpolate
      * against for the first few samples if speed < 0.5 */
@@ -22,6 +23,9 @@
         out_data = (_FORMAT*) GST_BUFFER_DATA(out);
       }
       nout = GST_BUFFER_SIZE(out) / sizeof(_FORMAT);
+      GST_BUFFER_TIMESTAMP (out) = timestamp;
+      offset += nout;
+      timestamp = offset * GST_SECOND / filter->rate;
       
       for (j=0; j<nout; j++) {
         /* index of upper bounds of interpolation for
@@ -36,16 +40,9 @@
           gst_buffer_unref(in);
           in = gst_pad_pull (filter->sinkpad);
           
-          while (GST_IS_EVENT(in)) {
-            switch (GST_EVENT_TYPE(in)) {
-            case GST_EVENT_EOS:
-              gst_element_set_eos((GstElement*)filter);
-              gst_pad_push(filter->srcpad, in);
-              return;
-            default:
-              gst_pad_push(filter->srcpad, in);
-              in = gst_pad_pull (filter->sinkpad);
-            }
+          while (GST_IS_EVENT (in)) {
+            gst_pad_event_default (filter->srcpad, GST_EVENT (in));
+            in = gst_pad_pull (filter->sinkpad);
           }
           
           in_data = (_FORMAT*) GST_BUFFER_DATA(in);

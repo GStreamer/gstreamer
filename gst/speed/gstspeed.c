@@ -256,6 +256,11 @@ speed_loop (GstElement *element)
   
   in = gst_pad_pull(filter->sinkpad);
   
+  while (GST_IS_EVENT (in)) {
+    gst_pad_event_default (filter->srcpad, GST_EVENT (in));
+    in = gst_pad_pull (filter->sinkpad);
+  }
+
   /* this is a bit nasty, but hey, it's what you've got to do to keep the same
    * algorithm and multiple data types in c. */
   if (filter->format==GST_SPEED_FORMAT_FLOAT) {
@@ -272,8 +277,7 @@ speed_loop (GstElement *element)
 #undef _FORMAT
   } else {
     gst_element_error (element, "capsnego was never performed, bailing...");
-    gst_element_yield (element); /* this is necessary for some reason with loop
-                                    elements */
+    gst_element_yield (element);
   }
 }
 
