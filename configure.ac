@@ -1197,7 +1197,14 @@ GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
 ])
 dnl is lame presets available
 LAME_CFLAGS=""
-GST_CHECK_LIBHEADER(GSTLAME_PRESET, mp3lame, lame_set_preset, -lm, lame/lame.h, LAME_CFLAGS="-DGSTLAME_PRESET", LAME_CFLAGS="")
+AC_TRY_RUN([
+#include <lame/lame.h>
+int main (int argc, char *argv[])
+{
+  printf("%d\n", MEDIUM);
+  return 0;
+}
+],[LAME_CFLAGS="-DGSTLAME_PRESET"],[LAME_CFLAGS=""])
 AC_SUBST(LAME_CFLAGS)
 AC_SUBST(LAME_LIBS)
 

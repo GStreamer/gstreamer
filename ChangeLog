@@ -1,3 +1,8 @@
+2004-08-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  check to define LAMEPRESET.  Fixes #151232.
+
 2004-08-29  Ronald S. Bultje  <Ronald S. Bultje <rbultje@ronald.bitfreak.net>>
 
 	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_build_list):
