@@ -1,60 +1,93 @@
 #include <gst/gst.h>
 #include <string.h>
 
-/* this must be built within the gstreamer dir, else this will fail */
-#include <gst/gstpropsprivate.h>
-
 static void 
 print_prop (GstPropsEntry *prop, gboolean showname, gchar *pfx) 
 {
-  GList *list;
-  GstPropsEntry *listentry;
-  gchar *longprefix;
+  GstPropsType type;
 
   if (showname)
-    printf("%s%s: ",pfx,g_quark_to_string(prop->propid));
+    printf("%s%s: ", pfx, gst_props_entry_get_name (prop));
   else
     printf(pfx);
 
-  switch (prop->propstype) {
-    case GST_PROPS_INT_ID:
-      printf("Integer: %d\n",prop->data.int_data);
+  type = gst_props_entry_get_type (prop);
+
+  switch (type) {
+    case GST_PROPS_INT_TYPE:
+    {
+      gint val;
+      gst_props_entry_get_int (prop, &val);
+      printf("Integer: %d\n", val);
       break;
-    case GST_PROPS_INT_RANGE_ID:
-      printf("Integer range: %d - %d\n",prop->data.int_range_data.min,
-             prop->data.int_range_data.max);
+    }
+    case GST_PROPS_INT_RANGE_TYPE:
+    {
+      gint min, max;
+      gst_props_entry_get_int_range (prop, &min, &max);
+      printf("Integer range: %d - %d\n", min, max);
       break;
-    case GST_PROPS_FLOAT_ID:
-      printf("Float: %f\n",prop->data.float_data);
+    }
+    case GST_PROPS_FLOAT_TYPE:
+    {
+      gfloat val;
+      gst_props_entry_get_float (prop, &val);
+      printf("Float: %f\n", val);
       break;
-    case GST_PROPS_FLOAT_RANGE_ID:
-      printf("Float range: %f - %f\n",prop->data.float_range_data.min,
-             prop->data.float_range_data.max);
+    }
+    case GST_PROPS_FLOAT_RANGE_TYPE:
+    {
+      gfloat min, max;
+      gst_props_entry_get_float_range (prop, &min, &max);
+      printf("Float range: %f - %f\n", min, max);
       break;
-    case GST_PROPS_BOOL_ID:
-      printf("Boolean: %s\n",prop->data.bool_data ? "TRUE" : "FALSE");
+    }
+    case GST_PROPS_BOOL_TYPE:
+    {
+      gboolean val;
+      gst_props_entry_get_boolean (prop, &val);
+      printf("Boolean: %s\n", val ? "TRUE" : "FALSE");
       break;
-    case GST_PROPS_STRING_ID:
-      printf("String: %s\n",prop->data.string_data.string);
+    }
+    case GST_PROPS_STRING_TYPE:
+    {
+      const gchar *val;
+      gst_props_entry_get_string (prop, &val);
+      printf("String: %s\n", val);
       break;
-    case GST_PROPS_FOURCC_ID:
+    }
+    case GST_PROPS_FOURCC_TYPE:
+    {
+      guint32 val;
+      gst_props_entry_get_fourcc_int (prop, &val);
       printf("FourCC: '%c%c%c%c'\n",
-             prop->data.fourcc_data & 0xff,prop->data.fourcc_data>>8 & 0xff,
-             prop->data.fourcc_data>>16 & 0xff,prop->data.fourcc_data>>24 & 0xff);
+             (gchar)( val        & 0xff), 
+	     (gchar)((val >> 8)  & 0xff),
+             (gchar)((val >> 16) & 0xff), 
+	     (gchar)((val >> 24) & 0xff));
       break;
-    case GST_PROPS_LIST_ID:
-      printf("List:\n");
-      longprefix = g_strdup_printf("%s  ",pfx);
-      list = prop->data.list_data.entries;
+    }
+    case GST_PROPS_LIST_TYPE:
+    {
+      const GList *list;
+      gchar *longprefix;
+
+      gst_props_entry_get_list (prop, &list);
+      printf ("List:\n");
+      longprefix = g_strdup_printf ("%s  ", pfx);
       while (list) {
-        listentry = (GstPropsEntry*)(list->data);
-        list = g_list_next(list);
-        print_prop(listentry,FALSE,longprefix);
+        GstPropsEntry *listentry;
+
+        listentry = (GstPropsEntry*) (list->data);
+        print_prop (listentry, FALSE, longprefix);
+
+        list = g_list_next (list);
       }
-      g_free(longprefix);
+      g_free (longprefix);
       break;
+    }
     default:
-      printf("unknown props %d\n", prop->propstype);
+      printf("unknown props %d\n", type);
   }
 }
 
@@ -190,7 +223,7 @@ print_element_info (GstElementFactory *factory)
 
   have_flags = FALSE;
 
-  printf("Element Flags:\n");
+  printf("\nElement Flags:\n");
   if (GST_FLAG_IS_SET(element,GST_ELEMENT_COMPLEX)) {
     printf("  GST_ELEMENT_COMPLEX\n");
     have_flags = TRUE;
@@ -210,6 +243,24 @@ print_element_info (GstElementFactory *factory)
   if (!have_flags)
     printf("  no flags set\n");
 
+  if (GST_IS_BIN (element)) {
+    printf("\nBin Flags:\n");
+    if (GST_FLAG_IS_SET(element,GST_BIN_FLAG_MANAGER)) {
+      printf("  GST_BIN_FLAG_MANAGER\n");
+      have_flags = TRUE;
+    }
+    if (GST_FLAG_IS_SET(element,GST_BIN_SELF_SCHEDULABLE)) {
+      printf("  GST_BIN_SELF_SCHEDULABLE\n");
+      have_flags = TRUE;
+    }
+    if (GST_FLAG_IS_SET(element,GST_BIN_FLAG_PREFER_COTHREADS)) {
+      printf("  GST_BIN_FLAG_PREFER_COTHREADS\n");
+      have_flags = TRUE;
+    }
+    if (!have_flags)
+      printf("  no flags set\n");
+  }
+
 
 
   printf("\nElement Implementation:\n");
@@ -228,6 +279,23 @@ print_element_info (GstElementFactory *factory)
          GST_DEBUG_FUNCPTR_NAME(gstobject_class->restore_thyself));
 #endif
 
+  have_flags = FALSE;
+
+  printf("\nClocking Interaction:\n");
+  if (element->setclockfunc) {
+    printf("  element requires a clock\n");
+    have_flags = TRUE;
+  }
+  if (element->getclockfunc) {
+    GstClock *clock;
+
+    clock = gst_element_get_clock (element);
+    printf("  element provides a clock: %s\n", GST_OBJECT_NAME(clock));
+    have_flags = TRUE;
+  }
+  if (!have_flags) {
+    printf("  none\n");
+  }
 
 
   printf("\nPads:\n");
@@ -292,8 +360,10 @@ print_element_info (GstElementFactory *factory)
     GValue value = { 0, };
     GParamSpec *param = property_specs[i];
 
-    g_value_init (&value, param->value_type);
-    g_object_get_property (G_OBJECT (element), param->name, &value);
+    if (param->flags & G_PARAM_READABLE) {
+      g_value_init (&value, param->value_type);
+      g_object_get_property (G_OBJECT (element), param->name, &value);
+    }
 
     printf("  %-40.40s: ",param->name);
     switch (G_VALUE_TYPE (&value)) {
@@ -323,7 +393,7 @@ print_element_info (GstElementFactory *factory)
 	  /* g_type_class_unref (ec); */
 	}
         else
-          printf("unknown %d", param->value_type);
+          printf("unknown %ld", param->value_type);
         break;
     }
     printf("\n");

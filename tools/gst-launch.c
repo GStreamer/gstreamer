@@ -1,10 +1,6 @@
-#include <glib.h>
-#include <gst/gst.h>
-#include <gst/gstparse.h>
 #include <string.h>
 #include <stdlib.h>
-#include <gst/gstpropsprivate.h>
-#include <sys/time.h>
+#include <gst/gst.h>
 
 static int    launch_argc;
 static char **launch_argv;
@@ -18,16 +14,16 @@ gboolean
 idle_func (gpointer data)
 {
   gboolean busy;
-  struct timeval tfthen, tfnow;
-  guint64 diff;
+  GTimeVal tfthen, tfnow;
+  GstClockTimeDiff diff;
 
-  gettimeofday (&tfthen, (struct timezone *)NULL);
+  g_get_current_time (&tfthen);
   busy = gst_bin_iterate (GST_BIN (data));
   iterations++;
-  gettimeofday (&tfnow, (struct timezone *)NULL);
+  g_get_current_time (&tfnow);
 
-  diff = ((guint64)tfnow.tv_sec*1000000LL+tfnow.tv_usec) - 
-         ((guint64)tfthen.tv_sec*1000000LL+tfthen.tv_usec); 
+  diff = GST_TIMEVAL_TO_TIME (tfnow) -
+         GST_TIMEVAL_TO_TIME (tfthen);
 
   sum += diff; 
   min = MIN (min, diff);
@@ -165,6 +161,8 @@ main(int argc, char *argv[])
 
   launch_argc = argc;
   launch_argv = argv;
+
+  //gst_schedulerfactory_set_default_name ("fast");
 
   /* make a null-terminated version of argv */
   argvn = g_new0 (char *,argc);
