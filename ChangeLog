@@ -116,7 +116,6 @@
 	* gst/multifilesink/gstmultifilesink.h:
 	add support for streamheader in multifilesink
 
->>>>>>> 1.1087
 2004-09-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/asfdemux/gstasfdemux.c: (_read_var_length), (_read_guid),
@@ -1428,7 +1427,6 @@
 	* testsuite/alsa/srcstate.c:
 	add test for alsasrc changing state
 
->>>>>>> 1.958
 2004-07-27  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/silence/gstsilence.c: (gst_silence_init), (gst_silence_link),
