@@ -97,7 +97,7 @@ gst_dparam_new ()
 	dparam->do_update_func = gst_dparam_do_update_realtime;
 	dparam->get_point_func = gst_dparam_get_point_realtime;
 	
-	dparam->point = gst_dparam_new_point(0LL, G_TYPE_NONE, 0);	
+	dparam->point = gst_dparam_new_value_array(G_TYPE_NONE, 0);	
 	
 	return dparam;
 }
@@ -122,18 +122,17 @@ gst_dparam_set_parent (GstDParam *dparam, GstObject *parent)
 }
 
 /**
- * gst_dparam_new_point
- * @timestamp: timestamp where this point will be placed (or 0LL if not relavent)
- * @type: the type of the first GValue in the point
- * @...: the type of other GValues in the point
+ * gst_dparam_new_value_array
+ * @type: the type of the first GValue in the array
+ * @...: the type of other GValues in the array
  *
  * The list of types should be terminated with a 0.
  * If the type of a value is not yet known then use G_TYPE_NONE .
  *
- * Returns: an newly created point containing an array of GValues
+ * Returns: an newly created array of GValues
  */
 GValue**
-gst_dparam_new_point(gint64 timestamp, GType type, ...)
+gst_dparam_new_value_array(GType type, ...)
 {
 	GValue **point;
 	GValue *value;
@@ -162,7 +161,7 @@ gst_dparam_new_point(gint64 timestamp, GType type, ...)
 	point[values_length] = NULL;
 	va_end (var_args);
 	
-	GST_DEBUG(GST_CAT_PARAMS, "point with %d values created\n", values_length);
+	GST_DEBUG(GST_CAT_PARAMS, "array with %d values created\n", values_length);
 
 	return point;
 }

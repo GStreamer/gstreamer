@@ -112,7 +112,7 @@ struct _GstDParamClass {
 GType gst_dparam_get_type (void);
 GstDParam* gst_dparam_new ();
 void gst_dparam_set_parent (GstDParam *dparam, GstObject *parent);
-GValue** gst_dparam_new_point(gint64 timestamp, GType type, ...);
+GValue** gst_dparam_new_value_array(GType type, ...);
 
 #ifdef __cplusplus
 }
