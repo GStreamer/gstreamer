@@ -830,7 +830,6 @@ gst_riff_read_info (GstRiffRead *riff)
     gst_event_unref (event);
     gst_element_found_tags (GST_ELEMENT (riff), taglist);
   }
-  gst_tag_list_free (taglist);
 
   return TRUE;
 }
