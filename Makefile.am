@@ -16,8 +16,6 @@ else
 EXAMPLES_DIR=
 endif
 
-ACLOCAL_AMFLAGS = -I common/m4
-
 SUBDIRS=gst-libs \
 	gst sys $(EXT_DIR) \
 	$(EXAMPLES_DIR) \
