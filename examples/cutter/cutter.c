@@ -43,7 +43,7 @@ void cut_start (GstElement *element)
   g_print ("DEBUG: cut_start: main_bin paused\n");
 
   {
-    long seconds;
+    time_t seconds;
     struct tm *ct;
     time (&seconds);
     ct = localtime (&seconds);
