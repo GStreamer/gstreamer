@@ -1,4 +1,7 @@
-/* G-Streamer hardware MJPEG video source plugin
+/* GStreamer
+ *
+ * gstv4lmjpegsrc.c: hardware MJPEG video source plugin
+ *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -23,6 +26,9 @@
 
 #include <string.h>
 #include "v4lmjpegsrc_calls.h"
+
+GST_DEBUG_CATEGORY (v4lmjpegsrc_debug);
+#define GST_CAT_DEFAULT v4lmjpegsrc_debug
 
 /* elementfactory information */
 static GstElementDetails gst_v4lmjpegsrc_details = {
@@ -208,6 +214,8 @@ gst_v4lmjpegsrc_class_init (GstV4lMjpegSrcClass * klass)
       G_STRUCT_OFFSET (GstV4lMjpegSrcClass, frame_lost), NULL, NULL,
       g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 
+  GST_DEBUG_CATEGORY_INIT (v4lmjpegsrc_debug, "v4lmjpegsrc", 0,
+      "V4L MJPEG source element");
   gobject_class->set_property = gst_v4lmjpegsrc_set_property;
   gobject_class->get_property = gst_v4lmjpegsrc_get_property;
 

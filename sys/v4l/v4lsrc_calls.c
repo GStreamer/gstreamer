@@ -1,4 +1,7 @@
-/* G-Streamer BT8x8/V4L frame grabber plugin
+/* GStreamer
+ *
+ * v4lsrc_calls.c: generic V4L source functions
+ *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -44,16 +47,6 @@ GST_DEBUG_CATEGORY_EXTERN (v4l_debug);
 
 #define GST_CAT_DEFAULT v4l_debug
 
-#define DEBUG(format, args...) \
-	GST_DEBUG_OBJECT (\
-		GST_ELEMENT(v4lsrc), \
-		"V4LSRC: " format, ##args)
-#define LOG(format, args...) \
-	GST_LOG_OBJECT (\
-		GST_ELEMENT(v4lsrc), \
-		"V4LSRC: " format, ##args)
-
-
 /* palette names */
 static const char *palette_name[] = {
   "",                           /* 0 */
@@ -78,6 +71,7 @@ static const char *palette_name[] = {
 /******************************************************
  * gst_v4lsrc_queue_frame():
  *   queue a frame for capturing
+ *   (ie. instruct the hardware to start capture)
  *   Requires queue_state lock to be held!
  * return value: TRUE on success, FALSE on error
  ******************************************************/
@@ -85,14 +79,14 @@ static const char *palette_name[] = {
 static gboolean
 gst_v4lsrc_queue_frame (GstV4lSrc * v4lsrc, gint num)
 {
-  LOG ("queueing frame %d", num);
+  GST_LOG_OBJECT (v4lsrc, "queueing frame %d", num);
 
   if (v4lsrc->frame_queue_state[num] != QUEUE_STATE_READY_FOR_QUEUE) {
     return FALSE;
   }
 
+  /* instruct the driver to prepare capture using buffer frame num */
   v4lsrc->mmap.frame = num;
-
   if (ioctl (GST_V4LELEMENT (v4lsrc)->video_fd,
           VIDIOCMCAPTURE, &(v4lsrc->mmap)) < 0) {
     GST_ELEMENT_ERROR (v4lsrc, RESOURCE, WRITE, (NULL),
@@ -115,7 +109,7 @@ gst_v4lsrc_queue_frame (GstV4lSrc * v4lsrc, gint num)
 static gboolean
 gst_v4lsrc_sync_frame (GstV4lSrc * v4lsrc, gint num)
 {
-  LOG ("Syncing on frame %d", num);
+  GST_LOG_OBJECT (v4lsrc, "VIOIOCSYNC on frame %d", num);
 
   if (v4lsrc->frame_queue_state[num] != QUEUE_STATE_QUEUED) {
     return FALSE;
@@ -128,8 +122,9 @@ gst_v4lsrc_sync_frame (GstV4lSrc * v4lsrc, gint num)
       GST_ELEMENT_ERROR (v4lsrc, RESOURCE, SYNC, (NULL), GST_ERROR_SYSTEM);
       return FALSE;
     }
-    DEBUG ("Sync got interrupted");
+    GST_DEBUG_OBJECT (v4lsrc, "Sync got interrupted");
   }
+  GST_LOG_OBJECT (v4lsrc, "VIOIOCSYNC on frame %d done", num);
 
   if (v4lsrc->clock) {
     v4lsrc->timestamp_sync = gst_clock_get_time (v4lsrc->clock);
@@ -156,7 +151,8 @@ gboolean
 gst_v4lsrc_set_capture (GstV4lSrc * v4lsrc,
     gint width, gint height, gint palette)
 {
-  DEBUG ("capture properties set to width = %d, height = %d, palette = %d",
+  GST_DEBUG_OBJECT (v4lsrc,
+      "capture properties set to width = %d, height = %d, palette = %d",
       width, height, palette);
 
   /*GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lsrc)); */
@@ -179,11 +175,12 @@ gst_v4lsrc_set_capture (GstV4lSrc * v4lsrc,
 gboolean
 gst_v4lsrc_capture_init (GstV4lSrc * v4lsrc)
 {
-  DEBUG ("initting capture subsystem");
+  GST_DEBUG_OBJECT (v4lsrc, "initting capture subsystem");
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lsrc));
   GST_V4L_CHECK_NOT_ACTIVE (GST_V4LELEMENT (v4lsrc));
 
-  /* request buffer info */
+  /* request the mmap buffer info:
+   * total size of mmap buffer, number of frames, offsets of frames */
   if (ioctl (GST_V4LELEMENT (v4lsrc)->video_fd, VIDIOCGMBUF,
           &(v4lsrc->mbuf)) < 0) {
     GST_ELEMENT_ERROR (v4lsrc, RESOURCE, READ, (NULL),
@@ -198,7 +195,7 @@ gst_v4lsrc_capture_init (GstV4lSrc * v4lsrc)
     return FALSE;
   }
 
-  GST_INFO ("Got %d buffers (\'%s\') of size %d KB",
+  GST_INFO_OBJECT (v4lsrc, "Got %d buffers (\'%s\') with total size %d KB",
       v4lsrc->mbuf.frames, palette_name[v4lsrc->mmap.format],
       v4lsrc->mbuf.size / (v4lsrc->mbuf.frames * 1024));
 
@@ -218,7 +215,7 @@ gst_v4lsrc_capture_init (GstV4lSrc * v4lsrc)
   GST_V4LELEMENT (v4lsrc)->buffer = mmap (0, v4lsrc->mbuf.size,
       PROT_READ | PROT_WRITE, MAP_SHARED, GST_V4LELEMENT (v4lsrc)->video_fd, 0);
   if (GST_V4LELEMENT (v4lsrc)->buffer == MAP_FAILED) {
-    GST_ELEMENT_ERROR (v4lsrc, RESOURCE, TOO_LAZY, (NULL),
+    GST_ELEMENT_ERROR (v4lsrc, RESOURCE, OPEN_READ_WRITE, (NULL),
         ("Error mapping video buffers: %s", g_strerror (errno)));
     GST_V4LELEMENT (v4lsrc)->buffer = NULL;
     return FALSE;
@@ -239,7 +236,7 @@ gst_v4lsrc_capture_start (GstV4lSrc * v4lsrc)
 {
   int n;
 
-  DEBUG ("starting capture");
+  GST_DEBUG_OBJECT (v4lsrc, "starting capture");
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lsrc));
   GST_V4L_CHECK_ACTIVE (GST_V4LELEMENT (v4lsrc));
 
@@ -250,7 +247,8 @@ gst_v4lsrc_capture_start (GstV4lSrc * v4lsrc)
   v4lsrc->sync_frame = 0;
   v4lsrc->queue_frame = 0;
 
-  /* set all buffers ready to queue , this starts streaming capture */
+  /* set all buffers ready to queue, and queue captures to the device.
+   * This starts streaming capture */
   for (n = 0; n < v4lsrc->mbuf.frames; n++) {
     v4lsrc->frame_queue_state[n] = QUEUE_STATE_READY_FOR_QUEUE;
     if (!gst_v4lsrc_queue_frame (v4lsrc, n)) {
@@ -276,8 +274,7 @@ gst_v4lsrc_capture_start (GstV4lSrc * v4lsrc)
 gboolean
 gst_v4lsrc_grab_frame (GstV4lSrc * v4lsrc, gint * num)
 {
-  LOG ("(%" GST_TIME_FORMAT ") grabbing frame",
-      GST_TIME_ARGS (gst_clock_get_time (v4lsrc->clock)));
+  GST_LOG_OBJECT (v4lsrc, "grabbing frame");
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lsrc));
   GST_V4L_CHECK_ACTIVE (GST_V4LELEMENT (v4lsrc));
 
@@ -289,7 +286,8 @@ gst_v4lsrc_grab_frame (GstV4lSrc * v4lsrc, gint * num)
       QUEUE_STATE_READY_FOR_QUEUE) {
     while (v4lsrc->frame_queue_state[v4lsrc->queue_frame] !=
         QUEUE_STATE_READY_FOR_QUEUE && !v4lsrc->quit) {
-      GST_DEBUG ("Waiting for frames to become available (%d < %d)",
+      GST_DEBUG_OBJECT (v4lsrc,
+          "Waiting for frames to become available (%d < %d)",
           v4lsrc->num_queued, MIN_BUFFERS_QUEUED);
       g_cond_wait (v4lsrc->cond_queue_state, v4lsrc->mutex_queue_state);
     }
@@ -312,7 +310,7 @@ gst_v4lsrc_grab_frame (GstV4lSrc * v4lsrc, gint * num)
   }
   v4lsrc->sync_frame = (v4lsrc->sync_frame + 1) % v4lsrc->mbuf.frames;
 
-  LOG ("(%" GST_TIME_FORMAT ") grabbed frame %d",
+  GST_LOG_OBJECT (v4lsrc, "(%" GST_TIME_FORMAT ") grabbed frame %d",
       GST_TIME_ARGS (gst_clock_get_time (v4lsrc->clock)), *num);
 
   g_mutex_unlock (v4lsrc->mutex_queue_state);
@@ -323,7 +321,7 @@ gst_v4lsrc_grab_frame (GstV4lSrc * v4lsrc, gint * num)
 
 /******************************************************
  * gst_v4lsrc_get_buffer():
- *   get the address of the just-capture buffer
+ *   get the address of the given frame number in the mmap'd buffer
  * return value: the buffer's address or NULL
  ******************************************************/
 
@@ -350,7 +348,7 @@ gst_v4lsrc_get_buffer (GstV4lSrc * v4lsrc, gint num)
 gboolean
 gst_v4lsrc_requeue_frame (GstV4lSrc * v4lsrc, gint num)
 {
-  LOG ("requeueing frame %d", num);
+  GST_LOG_OBJECT (v4lsrc, "requeueing frame %d", num);
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lsrc));
   GST_V4L_CHECK_ACTIVE (GST_V4LELEMENT (v4lsrc));
 
@@ -384,7 +382,7 @@ gst_v4lsrc_requeue_frame (GstV4lSrc * v4lsrc, gint num)
 gboolean
 gst_v4lsrc_capture_stop (GstV4lSrc * v4lsrc)
 {
-  DEBUG ("stopping capture");
+  GST_DEBUG_OBJECT (v4lsrc, "stopping capture");
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lsrc));
   GST_V4L_CHECK_ACTIVE (GST_V4LELEMENT (v4lsrc));
 
@@ -420,18 +418,26 @@ gst_v4lsrc_capture_stop (GstV4lSrc * v4lsrc)
 gboolean
 gst_v4lsrc_capture_deinit (GstV4lSrc * v4lsrc)
 {
-  DEBUG ("quitting capture subsystem");
+  GST_DEBUG_OBJECT (v4lsrc, "quitting capture subsystem");
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lsrc));
   GST_V4L_CHECK_ACTIVE (GST_V4LELEMENT (v4lsrc));
 
   /* free buffer tracker */
   g_mutex_free (v4lsrc->mutex_queue_state);
+  v4lsrc->mutex_queue_state = NULL;
   g_cond_free (v4lsrc->cond_queue_state);
+  v4lsrc->cond_queue_state = NULL;
   g_free (v4lsrc->frame_queue_state);
+  v4lsrc->frame_queue_state = NULL;
   g_free (v4lsrc->use_num_times);
+  v4lsrc->use_num_times = NULL;
 
   /* unmap the buffer */
-  munmap (GST_V4LELEMENT (v4lsrc)->buffer, v4lsrc->mbuf.size);
+  if (munmap (GST_V4LELEMENT (v4lsrc)->buffer, v4lsrc->mbuf.size) == -1) {
+    GST_ELEMENT_ERROR (v4lsrc, RESOURCE, CLOSE, (NULL),
+        ("error munmap'ing capture buffer: %s", g_strerror (errno)));
+    return FALSE;
+  }
   GST_V4LELEMENT (v4lsrc)->buffer = NULL;
 
   return TRUE;
@@ -463,7 +469,7 @@ gst_v4lsrc_try_palette (GstV4lSrc * v4lsrc, gint palette)
   struct video_mbuf vmbuf;
   struct video_mmap vmmap;
 
-  DEBUG ("gonna try out palette format %d (%s)",
+  GST_DEBUG_OBJECT (v4lsrc, "gonna try out palette format %d (%s)",
       palette, palette_name[palette]);
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lsrc));
   GST_V4L_CHECK_NOT_ACTIVE (GST_V4LELEMENT (v4lsrc));
@@ -478,7 +484,7 @@ gst_v4lsrc_try_palette (GstV4lSrc * v4lsrc, gint palette)
   buffer = mmap (0, vmbuf.size, PROT_READ | PROT_WRITE,
       MAP_SHARED, GST_V4LELEMENT (v4lsrc)->video_fd, 0);
   if (buffer == MAP_FAILED) {
-    GST_ELEMENT_ERROR (v4lsrc, RESOURCE, TOO_LAZY, (NULL),
+    GST_ELEMENT_ERROR (v4lsrc, RESOURCE, OPEN_READ_WRITE, (NULL),
         ("Error mapping our try-out buffer: %s", g_strerror (errno)));
     return FALSE;
   }
@@ -490,7 +496,7 @@ gst_v4lsrc_try_palette (GstV4lSrc * v4lsrc, gint palette)
   vmmap.frame = frame;
   if (ioctl (GST_V4LELEMENT (v4lsrc)->video_fd, VIDIOCMCAPTURE, &vmmap) < 0) {
     if (errno != EINVAL)        /* our format failed! */
-      GST_ELEMENT_ERROR (v4lsrc, RESOURCE, TOO_LAZY, (NULL),
+      GST_ELEMENT_ERROR (v4lsrc, RESOURCE, OPEN_READ_WRITE, (NULL),
           ("Error queueing our try-out buffer: %s", g_strerror (errno)));
     munmap (buffer, vmbuf.size);
     return FALSE;

@@ -1,4 +1,7 @@
-/* G-Streamer generic V4L element - generic V4L calls handling
+/* GStreamer
+ *
+ * gstv4lelement.c: base class for V4L elements
+ *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or

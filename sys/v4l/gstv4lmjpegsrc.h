@@ -1,4 +1,7 @@
-/* G-Streamer hardware MJPEG video source plugin
+/* GStreamer
+ *
+ * gstv4lmjpegsrc.h: hardware MJPEG video source element
+ *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or

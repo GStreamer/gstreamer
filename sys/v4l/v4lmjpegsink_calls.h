@@ -1,4 +1,7 @@
-/* G-Streamer hardware MJPEG video sink plugin
+/* GStreamer
+ *
+ * v4lmjpegsink_calls.c: functions for hardware MJPEG video sink
+ *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or

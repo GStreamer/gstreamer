@@ -1,4 +1,7 @@
-/* G-Streamer generic V4L element - generic V4L calls handling
+/* GStreamer
+ *
+ * v4l_calls.h: header for generic V4L calls
+ *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -127,7 +130,7 @@ gboolean gst_v4l_set_frequency  (GstV4lElement *v4lelement,
 gboolean gst_v4l_get_picture    (GstV4lElement *v4lelement,
 				 GstV4lPictureType type,
 				 gint          *value);
-gboolean gst_v4l_set_picture    (GstV4lElement *v4lelement,	
+gboolean gst_v4l_set_picture    (GstV4lElement *v4lelement,
 				 GstV4lPictureType type,
 				 gint           value);
 

@@ -1,4 +1,7 @@
-/* G-Streamer BT8x8/V4L frame grabber plugin
+/* GStreamer
+ *
+ * gstv4lsrc.c: BT8x8/V4L source element
+ *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -316,7 +319,7 @@ gst_v4lsrc_get_fps_list (GstV4lSrc * v4lsrc)
     /* index of 16 corresponds to 15 fps */
     current_fps = fps_index * 15.0 / 16;
     GST_DEBUG_OBJECT (v4lsrc, "device reports fps of %.4f", current_fps);
-    for (i = 1; i < 63; ++i) {
+    for (i = 0; i < 63; ++i) {
       /* set bits 16 to 21 to 0 */
       vwin->flags &= (0x3F00 - 1);
       /* set bits 16 to 21 to the index */
@@ -359,7 +362,7 @@ gst_v4lsrc_get_fps (GstV4lSrc * v4lsrc)
 
     /* index of 16 corresponds to 15 fps */
     current_fps = fps_index * 15.0 / 16;
-    GST_LOG_OBJECT (v4lsrc, "device reports fps of %.3f", current_fps);
+    GST_LOG_OBJECT (v4lsrc, "device reports fps of %.4f", current_fps);
     return current_fps;
   }
 
@@ -774,8 +777,9 @@ gst_v4lsrc_get (GstPad * pad)
   g_return_val_if_fail (pad != NULL, NULL);
 
   v4lsrc = GST_V4LSRC (gst_pad_get_parent (pad));
+  fps = gst_v4lsrc_get_fps (v4lsrc);
 
-  if (v4lsrc->use_fixed_fps && (fps = gst_v4lsrc_get_fps (v4lsrc)) == 0)
+  if (v4lsrc->use_fixed_fps && fps == 0.0)
     return NULL;
 
   if (v4lsrc->need_writes > 0) {
@@ -868,8 +872,10 @@ gst_v4lsrc_get (GstPad * pad)
   g_signal_emit (G_OBJECT (v4lsrc),
       gst_v4lsrc_signals[SIGNAL_FRAME_CAPTURE], 0);
 
+  /* this is the current timestamp */
   now = gst_element_get_time (GST_ELEMENT (v4lsrc));
-  until = GST_BUFFER_TIMESTAMP (buf) + v4lsrc->last_discont;
+
+  until = GST_BUFFER_TIMESTAMP (buf);
 
   GST_LOG_OBJECT (v4lsrc, "Current time %" GST_TIME_FORMAT
       ", buffer timestamp %" GST_TIME_FORMAT,
@@ -878,7 +884,10 @@ gst_v4lsrc_get (GstPad * pad)
     GST_LOG_OBJECT (v4lsrc, "waiting until %" GST_TIME_FORMAT,
         GST_TIME_ARGS (until));
     if (!gst_element_wait (GST_ELEMENT (v4lsrc), until))
-      g_warning ("gst_element_wait failed");
+      g_warning ("waiting from now %" GST_TIME_FORMAT
+          " until %" GST_TIME_FORMAT " failed",
+          GST_TIME_ARGS (now), GST_TIME_ARGS (until));
+    GST_LOG_OBJECT (v4lsrc, "wait done.");
   }
   /* check for discont; we do it after grabbing so that we drop the
    * first frame grabbed, but get an accurate discont event  */

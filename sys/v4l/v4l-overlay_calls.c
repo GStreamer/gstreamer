@@ -1,4 +1,7 @@
-/* G-Streamer generic V4L element - generic V4L overlay handling
+/* GStreamer
+ *
+ * v4l-overlay_calls.c: calls for generic V4L overlay handling
+ *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -31,11 +34,8 @@
 #include <errno.h>
 #include "v4l_calls.h"
 
-#define DEBUG(format, args...) \
-	GST_DEBUG_OBJECT (\
-		GST_ELEMENT(v4lelement), \
-		"V4L-overlay: " format, ##args)
-
+GST_DEBUG_CATEGORY (v4loverlay_debug);
+#define GST_CAT_DEFAULT v4loverlay_debug
 
 /******************************************************
  * gst_v4l_set_overlay():
@@ -53,7 +53,7 @@ gst_v4l_set_overlay (GstV4lElement * v4lelement)
     g_free (v4lelement->display);
   v4lelement->display = g_strdup (g_getenv ("DISPLAY"));
 
-  DEBUG ("setting display to '%s'", v4lelement->display);
+  GST_DEBUG_OBJECT (v4lelement, "setting display to '%s'", v4lelement->display);
   GST_V4L_CHECK_NOT_OPEN (v4lelement);
 
   if (!v4lelement->display || v4lelement->display[0] != ':')
@@ -105,8 +105,8 @@ gst_v4l_set_window (GstElement * element,
   GstV4lElement *v4lelement = GST_V4LELEMENT (element);
   struct video_window vwin;
 
-  DEBUG ("setting video window to position (x,y/wxh) = %d,%d/%dx%d",
-      x, y, w, h);
+  GST_DEBUG_OBJECT (v4lelement,
+      "setting video window to position (x,y/wxh) = %d,%d/%dx%d", x, y, w, h);
   GST_V4L_CHECK_OPEN (v4lelement);
   GST_V4L_CHECK_OVERLAY (v4lelement);
 
@@ -117,7 +117,7 @@ gst_v4l_set_window (GstElement * element,
   vwin.flags = 0;
 
   if (clips && !(v4lelement->vcap.type & VID_TYPE_CLIPPING)) {
-    DEBUG ("Device \'%s\' doesn't do clipping",
+    GST_DEBUG_OBJECT (v4lelement, "Device \'%s\' doesn't do clipping",
         v4lelement->videodev ? v4lelement->videodev : "/dev/video");
     vwin.clips = 0;
   } else {
@@ -146,7 +146,8 @@ gst_v4l_enable_overlay (GstV4lElement * v4lelement, gboolean enable)
 {
   gint doit = enable ? 1 : 0;
 
-  DEBUG ("%s overlay", enable ? "enabling" : "disabling");
+  GST_DEBUG_OBJECT (v4lelement, "%s overlay",
+      enable ? "enabling" : "disabling");
   GST_V4L_CHECK_OPEN (v4lelement);
   GST_V4L_CHECK_OVERLAY (v4lelement);
 

@@ -1,4 +1,7 @@
-/* G-Streamer hardware MJPEG video sink plugin
+/* GStreamer
+ *
+ * v4lmjpegsink_calls.c: functions for hardware MJPEG video sink
+ *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -36,11 +39,8 @@
 #define MAP_FAILED ( (caddr_t) -1 )
 #endif
 
-#define DEBUG(format, args...) \
-	GST_DEBUG_OBJECT (\
-		GST_ELEMENT(v4lmjpegsink), \
-		"V4LMJPEGSINK: " format, ##args)
-
+GST_DEBUG_CATEGORY_EXTERN (v4lmjpegsink_debug);
+#define GST_CAT_DEFAULT v4lmjpegsink_debug
 
 /******************************************************
  * gst_v4lmjpegsink_sync_thread()
@@ -53,7 +53,7 @@ gst_v4lmjpegsink_sync_thread (void *arg)
   GstV4lMjpegSink *v4lmjpegsink = GST_V4LMJPEGSINK (arg);
   gint frame = 0;               /* frame that we're currently syncing on */
 
-  DEBUG ("starting sync thread");
+  GST_DEBUG_OBJECT (v4lmjpegsink, "starting sync thread");
 
 #if 0
   /* Allow easy shutting down by other processes... */
@@ -73,7 +73,7 @@ gst_v4lmjpegsink_sync_thread (void *arg)
     }
     g_mutex_unlock (v4lmjpegsink->mutex_queued_frames);
 
-    DEBUG ("thread-syncing on next frame");
+    GST_DEBUG_OBJECT (v4lmjpegsink, "thread-syncing on next frame");
     if (ioctl (GST_V4LELEMENT (v4lmjpegsink)->video_fd, MJPIOC_SYNC,
             &(v4lmjpegsink->bsync)) < 0) {
       GST_ELEMENT_ERROR (v4lmjpegsink, RESOURCE, SYNC, (NULL),
@@ -100,7 +100,7 @@ gst_v4lmjpegsink_sync_thread (void *arg)
   }
 
 end:
-  DEBUG ("Sync thread got signalled to exit");
+  GST_DEBUG_OBJECT (v4lmjpegsink, "Sync thread got signalled to exit");
   g_thread_exit (NULL);
   return NULL;
 }
@@ -115,7 +115,7 @@ end:
 static gboolean
 gst_v4lmjpegsink_queue_frame (GstV4lMjpegSink * v4lmjpegsink, gint num)
 {
-  DEBUG ("queueing frame %d", num);
+  GST_DEBUG_OBJECT (v4lmjpegsink, "queueing frame %d", num);
 
   /* queue on this frame */
   if (ioctl (GST_V4LELEMENT (v4lmjpegsink)->video_fd, MJPIOC_QBUF_PLAY,
@@ -143,7 +143,7 @@ gst_v4lmjpegsink_queue_frame (GstV4lMjpegSink * v4lmjpegsink, gint num)
 static gboolean
 gst_v4lmjpegsink_sync_frame (GstV4lMjpegSink * v4lmjpegsink, gint * num)
 {
-  DEBUG ("syncing on next frame");
+  GST_DEBUG_OBJECT (v4lmjpegsink, "syncing on next frame");
 
   /* calculate next frame */
   v4lmjpegsink->current_frame =
@@ -175,8 +175,8 @@ gboolean
 gst_v4lmjpegsink_set_buffer (GstV4lMjpegSink * v4lmjpegsink,
     gint numbufs, gint bufsize)
 {
-  DEBUG ("setting buffer info to numbufs = %d, bufsize = %d KB",
-      numbufs, bufsize);
+  GST_DEBUG_OBJECT (v4lmjpegsink,
+      "setting buffer info to numbufs = %d, bufsize = %d KB", numbufs, bufsize);
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lmjpegsink));
   GST_V4L_CHECK_NOT_ACTIVE (GST_V4LELEMENT (v4lmjpegsink));
 
@@ -201,8 +201,8 @@ gst_v4lmjpegsink_set_playback (GstV4lMjpegSink * v4lmjpegsink,
   gint mw, mh;
   struct mjpeg_params bparm;
 
-  DEBUG
-      ("setting size = %dx%d, X/Y-offsets = %d/%d, norm = %d, interlacing = %d\n",
+  GST_DEBUG_OBJECT (v4lmjpegsink,
+      "setting size=%dx%d, X/Y offsets=%d/%d, norm=%d, interlacing=%d\n",
       width, height, x_offset, y_offset, norm, interlacing);
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lmjpegsink));
   /*GST_V4L_CHECK_NOT_ACTIVE(GST_V4LELEMENT(v4lmjpegsink)); */
@@ -317,7 +317,7 @@ gst_v4lmjpegsink_playback_init (GstV4lMjpegSink * v4lmjpegsink)
 {
   gint n;
 
-  DEBUG ("initting playback subsystem");
+  GST_DEBUG_OBJECT (v4lmjpegsink, "initting playback subsystem");
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lmjpegsink));
   GST_V4L_CHECK_NOT_ACTIVE (GST_V4LELEMENT (v4lmjpegsink));
 
@@ -328,7 +328,7 @@ gst_v4lmjpegsink_playback_init (GstV4lMjpegSink * v4lmjpegsink)
     return FALSE;
   }
 
-  GST_INFO ("Got %ld buffers of size %ld KB",
+  GST_INFO_OBJECT (v4lmjpegsink, "Got %ld buffers of size %ld KB",
       v4lmjpegsink->breq.count, v4lmjpegsink->breq.size / 1024);
 
   /* Map the buffers */
@@ -378,7 +378,7 @@ gst_v4lmjpegsink_playback_start (GstV4lMjpegSink * v4lmjpegsink)
   GError *error;
   gint n;
 
-  DEBUG ("starting playback");
+  GST_DEBUG_OBJECT (v4lmjpegsink, "starting playback");
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lmjpegsink));
   GST_V4L_CHECK_ACTIVE (GST_V4LELEMENT (v4lmjpegsink));
 
@@ -411,7 +411,7 @@ gst_v4lmjpegsink_playback_start (GstV4lMjpegSink * v4lmjpegsink)
 guint8 *
 gst_v4lmjpegsink_get_buffer (GstV4lMjpegSink * v4lmjpegsink, gint num)
 {
-  /*DEBUG("gst_v4lmjpegsink_get_buffer(), num = %d", num); */
+  /*GST_DEBUG_OBJECT (v4lmjpegsink, gst_v4lmjpegsink_get_buffer(), num = %d", num); */
 
   if (!GST_V4L_IS_ACTIVE (GST_V4LELEMENT (v4lmjpegsink)) ||
       !GST_V4L_IS_OPEN (GST_V4LELEMENT (v4lmjpegsink)))
@@ -434,7 +434,7 @@ gst_v4lmjpegsink_get_buffer (GstV4lMjpegSink * v4lmjpegsink, gint num)
 gboolean
 gst_v4lmjpegsink_play_frame (GstV4lMjpegSink * v4lmjpegsink, gint num)
 {
-  DEBUG ("playing frame %d", num);
+  GST_DEBUG_OBJECT (v4lmjpegsink, "playing frame %d", num);
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lmjpegsink));
   GST_V4L_CHECK_ACTIVE (GST_V4LELEMENT (v4lmjpegsink));
 
@@ -454,7 +454,8 @@ gst_v4lmjpegsink_play_frame (GstV4lMjpegSink * v4lmjpegsink, gint num)
 gboolean
 gst_v4lmjpegsink_wait_frame (GstV4lMjpegSink * v4lmjpegsink, gint * num)
 {
-  DEBUG ("waiting for next frame to be finished playing");
+  GST_DEBUG_OBJECT (v4lmjpegsink,
+      "waiting for next frame to be finished playing");
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lmjpegsink));
   GST_V4L_CHECK_ACTIVE (GST_V4LELEMENT (v4lmjpegsink));
 
@@ -476,7 +477,7 @@ gst_v4lmjpegsink_playback_stop (GstV4lMjpegSink * v4lmjpegsink)
 {
   gint num;
 
-  DEBUG ("stopping playback");
+  GST_DEBUG_OBJECT (v4lmjpegsink, "stopping playback");
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lmjpegsink));
   GST_V4L_CHECK_ACTIVE (GST_V4LELEMENT (v4lmjpegsink));
 
@@ -504,7 +505,7 @@ gst_v4lmjpegsink_playback_deinit (GstV4lMjpegSink * v4lmjpegsink)
 {
   int n;
 
-  DEBUG ("quitting playback subsystem");
+  GST_DEBUG_OBJECT (v4lmjpegsink, "quitting playback subsystem");
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lmjpegsink));
   GST_V4L_CHECK_ACTIVE (GST_V4LELEMENT (v4lmjpegsink));
 

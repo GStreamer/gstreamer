@@ -1,4 +1,7 @@
-/* G-Streamer generic V4L element - generic V4L calls handling
+/* GStreamer
+ *
+ * v4l_calls.c: generic V4L calls
+ *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -43,7 +46,6 @@
 #include "gstv4lmjpegsink.h"
 
 GST_DEBUG_CATEGORY_EXTERN (v4l_debug);
-
 #define GST_CAT_DEFAULT v4l_debug
 
 static const char *picture_name[] = {
@@ -160,6 +162,11 @@ gst_v4l_open (GstV4lElement * v4lelement)
   /* open the device */
   v4lelement->video_fd = open (v4lelement->videodev, O_RDWR);
   if (!GST_V4L_IS_OPEN (v4lelement)) {
+    if (errno == ENODEV || errno == ENOENT) {
+      GST_ELEMENT_ERROR (v4lelement, RESOURCE, NOT_FOUND,
+          (_("Device \"%s\" does not exist."), v4lelement->videodev), (NULL));
+      return FALSE;
+    }
     GST_ELEMENT_ERROR (v4lelement, RESOURCE, OPEN_READ_WRITE,
         (_("Could not open device \"%s\" for reading and writing."),
             v4lelement->videodev), GST_ERROR_SYSTEM);
@@ -187,7 +194,7 @@ gst_v4l_open (GstV4lElement * v4lelement)
     return FALSE;
   }
 
-  GST_INFO ("Opened device \'%s\' (\'%s\') successfully\n",
+  GST_INFO_OBJECT (v4lelement, "Opened device \'%s\' (\'%s\') successfully\n",
       v4lelement->vcap.name, v4lelement->videodev);
 
   /* norms + inputs, for the tuner interface */
@@ -256,7 +263,7 @@ gst_v4l_close (GstV4lElement * v4lelement)
 
 /******************************************************
  * gst_v4l_get_num_chans()
- * return value: the numver of video input channels
+ * return value: the number of video input channels
  ******************************************************/
 
 gint

@@ -1,4 +1,7 @@
-/* G-Streamer hardware MJPEG video sink plugin
+/* GStreamer
+ *
+ * gstv4lmjpegsink.c: hardware MJPEG video sink plugin
+ *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -23,6 +26,9 @@
 
 #include <string.h>
 #include "v4lmjpegsink_calls.h"
+
+GST_DEBUG_CATEGORY (v4lmjpegsink_debug);
+#define GST_CAT_DEFAULT v4lmjpegsink_debug
 
 /* elementfactory information */
 static GstElementDetails gst_v4lmjpegsink_details = {
@@ -129,26 +135,28 @@ gst_v4lmjpegsink_class_init (GstV4lMjpegSinkClass * klass)
   parent_class = g_type_class_ref (GST_TYPE_V4LELEMENT);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUMBUFS,
-      g_param_spec_int ("num_buffers", "num_buffers", "num_buffers",
+      g_param_spec_int ("num-buffers", "num-buffers", "num-buffers",
           G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFSIZE,
-      g_param_spec_int ("buffer_size", "buffer_size", "buffer_size",
+      g_param_spec_int ("buffer-size", "buffer-size", "buffer-size",
           G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_X_OFFSET,
-      g_param_spec_int ("x_offset", "x_offset", "x_offset",
+      g_param_spec_int ("x-offset", "x-offset", "x-offset",
           G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_Y_OFFSET,
-      g_param_spec_int ("y_offset", "y_offset", "y_offset",
+      g_param_spec_int ("y-offset", "y-offset", "y-offset",
           G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAMES_DISPLAYED,
-      g_param_spec_int ("frames_displayed", "frames_displayed",
-          "frames_displayed", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
+      g_param_spec_int ("frames-displayed", "frames-displayed",
+          "frames-displayed", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAME_TIME,
-      g_param_spec_int ("frame_time", "frame_time", "frame_time", G_MININT,
+      g_param_spec_int ("frame-time", "frame-time", "frame-time", G_MININT,
           G_MAXINT, 0, G_PARAM_READABLE));
 
+  GST_DEBUG_CATEGORY_INIT (v4lmjpegsink_debug, "v4lmjpegsink", 0,
+      "V4L MJPEG sink element");
   gobject_class->set_property = gst_v4lmjpegsink_set_property;
   gobject_class->get_property = gst_v4lmjpegsink_get_property;
 

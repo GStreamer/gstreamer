@@ -1,4 +1,7 @@
-/* G-Streamer BT8x8/V4L frame grabber plugin
+/* GStreamer
+ *
+ * gstv4lsrc.h: BT8x8/V4L video source element
+ *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -39,9 +42,9 @@ typedef struct _GstV4lSrcClass GstV4lSrcClass;
 enum
 {
   QUEUE_STATE_ERROR = -1,
-  QUEUE_STATE_READY_FOR_QUEUE,
-  QUEUE_STATE_QUEUED,
-  QUEUE_STATE_SYNCED
+  QUEUE_STATE_READY_FOR_QUEUE, /* the frame is ready to be queued for capture */
+  QUEUE_STATE_QUEUED,          /* the frame is queued for capture */
+  QUEUE_STATE_SYNCED           /* the frame is captured */
 };
 
 struct _GstV4lSrc

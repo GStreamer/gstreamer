@@ -1,4 +1,7 @@
-/* G-Streamer hardware MJPEG video source plugin
+/* GStreamer
+ *
+ * v4lmjpegsrc_calls.h: functions for hardware MJPEG video source
+ *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or

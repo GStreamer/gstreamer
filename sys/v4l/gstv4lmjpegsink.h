@@ -1,4 +1,7 @@
-/* G-Streamer hardware MJPEG video sink plugin
+/* GStreamer
+ *
+ * gstv4lmjpegsink.h: hardware MJPEG video sink element
+ *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or

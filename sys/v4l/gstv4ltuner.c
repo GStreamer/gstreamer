@@ -1,7 +1,8 @@
-/* GStreamer Tuner interface implementation
- * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+/* GStreamer
  *
  * gstv4ltuner.c: tuner interface implementation for V4L
+ *
+ * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

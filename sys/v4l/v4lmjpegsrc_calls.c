@@ -1,4 +1,7 @@
-/* G-Streamer hardware MJPEG video source plugin
+/* GStreamer
+ *
+ * v4lmjpegsrc_calls.c: functions for hardware MJPEG video source
+ *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -37,10 +40,8 @@
 
 #define MIN_BUFFERS_QUEUED 2
 
-#define DEBUG(format, args...) \
-	GST_DEBUG_OBJECT (\
-		GST_ELEMENT(v4lmjpegsrc), \
-		"V4LMJPEGSRC: " format, ##args)
+GST_DEBUG_CATEGORY_EXTERN (v4lmjpegsrc_debug);
+#define GST_CAT_DEFAULT v4lmjpegsrc_debug
 
 enum
 {
@@ -59,7 +60,7 @@ enum
 static gboolean
 gst_v4lmjpegsrc_queue_frame (GstV4lMjpegSrc * v4lmjpegsrc, gint num)
 {
-  DEBUG ("queueing frame %d", num);
+  GST_DEBUG_OBJECT (v4lmjpegsrc, "queueing frame %d", num);
 
   if (v4lmjpegsrc->frame_queue_state[num] != QUEUE_STATE_READY_FOR_QUEUE) {
     return FALSE;
@@ -88,7 +89,7 @@ gst_v4lmjpegsrc_queue_frame (GstV4lMjpegSrc * v4lmjpegsrc, gint num)
 static gboolean
 gst_v4lmjpegsrc_sync_next_frame (GstV4lMjpegSrc * v4lmjpegsrc, gint * num)
 {
-  DEBUG ("syncing on next frame");
+  GST_DEBUG_OBJECT (v4lmjpegsrc, "syncing on next frame");
 
   if (v4lmjpegsrc->num_queued <= 0) {
     return FALSE;
@@ -100,7 +101,7 @@ gst_v4lmjpegsrc_sync_next_frame (GstV4lMjpegSrc * v4lmjpegsrc, gint * num)
       GST_ELEMENT_ERROR (v4lmjpegsrc, RESOURCE, SYNC, (NULL), GST_ERROR_SYSTEM);
       return FALSE;
     }
-    DEBUG ("Sync got interrupted");
+    GST_DEBUG_OBJECT (v4lmjpegsrc, "Sync got interrupted");
   }
 
   *num = v4lmjpegsrc->bsync.frame;
@@ -122,8 +123,8 @@ gboolean
 gst_v4lmjpegsrc_set_buffer (GstV4lMjpegSrc * v4lmjpegsrc,
     gint numbufs, gint bufsize)
 {
-  DEBUG ("setting buffer info to numbufs = %d, bufsize = %d KB",
-      numbufs, bufsize);
+  GST_DEBUG_OBJECT (v4lmjpegsrc,
+      "setting buffer info to numbufs = %d, bufsize = %d KB", numbufs, bufsize);
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lmjpegsrc));
   GST_V4L_CHECK_NOT_ACTIVE (GST_V4LELEMENT (v4lmjpegsrc));
 
@@ -147,7 +148,8 @@ gst_v4lmjpegsrc_set_capture (GstV4lMjpegSrc * v4lmjpegsrc,
   int norm, input, mw;
   struct mjpeg_params bparm;
 
-  DEBUG ("setting decimation = %d, quality = %d", decimation, quality);
+  GST_DEBUG_OBJECT (v4lmjpegsrc, "setting decimation = %d, quality = %d",
+      decimation, quality);
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lmjpegsrc));
   GST_V4L_CHECK_NOT_ACTIVE (GST_V4LELEMENT (v4lmjpegsrc));
 
@@ -207,7 +209,7 @@ gst_v4lmjpegsrc_set_capture_m (GstV4lMjpegSrc * v4lmjpegsrc,
   gint maxwidth;
   struct mjpeg_params bparm;
 
-  DEBUG ("setting x_offset = %d, y_offset = %d, "
+  GST_DEBUG_OBJECT (v4lmjpegsrc, "setting x_offset = %d, y_offset = %d, "
       "width = %d, height = %d, h_decimation = %d, v_decimation = %d, quality = %d\n",
       x_offset, y_offset, width, height, h_decimation, v_decimation, quality);
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lmjpegsrc));
@@ -318,7 +320,7 @@ gst_v4lmjpegsrc_set_capture_m (GstV4lMjpegSrc * v4lmjpegsrc,
 gboolean
 gst_v4lmjpegsrc_capture_init (GstV4lMjpegSrc * v4lmjpegsrc)
 {
-  DEBUG ("initting capture subsystem");
+  GST_DEBUG_OBJECT (v4lmjpegsrc, "initting capture subsystem");
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lmjpegsrc));
   GST_V4L_CHECK_NOT_ACTIVE (GST_V4LELEMENT (v4lmjpegsrc));
 
@@ -336,7 +338,7 @@ gst_v4lmjpegsrc_capture_init (GstV4lMjpegSrc * v4lmjpegsrc)
     return FALSE;
   }
 
-  GST_INFO ("Got %ld buffers of size %ld KB",
+  GST_INFO_OBJECT (v4lmjpegsrc, "Got %ld buffers of size %ld KB",
       v4lmjpegsrc->breq.count, v4lmjpegsrc->breq.size / 1024);
 
   /* keep track of queued buffers */
@@ -378,7 +380,7 @@ gst_v4lmjpegsrc_capture_start (GstV4lMjpegSrc * v4lmjpegsrc)
 {
   int n;
 
-  DEBUG ("starting capture");
+  GST_DEBUG_OBJECT (v4lmjpegsrc, "starting capture");
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lmjpegsrc));
   GST_V4L_CHECK_ACTIVE (GST_V4LELEMENT (v4lmjpegsrc));
 
@@ -414,7 +416,7 @@ gboolean
 gst_v4lmjpegsrc_grab_frame (GstV4lMjpegSrc * v4lmjpegsrc,
     gint * num, gint * size)
 {
-  DEBUG ("grabbing frame");
+  GST_DEBUG_OBJECT (v4lmjpegsrc, "grabbing frame");
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lmjpegsrc));
   GST_V4L_CHECK_ACTIVE (GST_V4LELEMENT (v4lmjpegsrc));
 
@@ -426,7 +428,8 @@ gst_v4lmjpegsrc_grab_frame (GstV4lMjpegSrc * v4lmjpegsrc,
       QUEUE_STATE_READY_FOR_QUEUE) {
     while (v4lmjpegsrc->frame_queue_state[v4lmjpegsrc->queue_frame] !=
         QUEUE_STATE_READY_FOR_QUEUE && !v4lmjpegsrc->quit) {
-      GST_DEBUG ("Waiting for frames to become available (%d < %d)",
+      GST_DEBUG_OBJECT (v4lmjpegsrc,
+          "Waiting for frames to become available (%d < %d)",
           v4lmjpegsrc->num_queued, MIN_BUFFERS_QUEUED);
       g_cond_wait (v4lmjpegsrc->cond_queue_state,
           v4lmjpegsrc->mutex_queue_state);
@@ -487,7 +490,7 @@ gst_v4lmjpegsrc_get_buffer (GstV4lMjpegSrc * v4lmjpegsrc, gint num)
 gboolean
 gst_v4lmjpegsrc_requeue_frame (GstV4lMjpegSrc * v4lmjpegsrc, gint num)
 {
-  DEBUG ("requeueing frame %d", num);
+  GST_DEBUG_OBJECT (v4lmjpegsrc, "requeueing frame %d", num);
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lmjpegsrc));
   GST_V4L_CHECK_ACTIVE (GST_V4LELEMENT (v4lmjpegsrc));
 
@@ -523,7 +526,7 @@ gst_v4lmjpegsrc_capture_stop (GstV4lMjpegSrc * v4lmjpegsrc)
 {
   int n;
 
-  DEBUG ("stopping capture");
+  GST_DEBUG_OBJECT (v4lmjpegsrc, "stopping capture");
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lmjpegsrc));
   GST_V4L_CHECK_ACTIVE (GST_V4LELEMENT (v4lmjpegsrc));
 
@@ -553,7 +556,7 @@ gst_v4lmjpegsrc_capture_stop (GstV4lMjpegSrc * v4lmjpegsrc)
 gboolean
 gst_v4lmjpegsrc_capture_deinit (GstV4lMjpegSrc * v4lmjpegsrc)
 {
-  DEBUG ("quitting capture subsystem");
+  GST_DEBUG_OBJECT (v4lmjpegsrc, "quitting capture subsystem");
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lmjpegsrc));
   GST_V4L_CHECK_ACTIVE (GST_V4LELEMENT (v4lmjpegsrc));
 

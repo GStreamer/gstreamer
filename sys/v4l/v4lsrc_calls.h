@@ -1,4 +1,7 @@
-/* G-Streamer BT8x8/V4L frame grabber plugin
+/* GStreamer
+ *
+ * v4lsrc_calls.h: functions for V4L video source
+ *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
