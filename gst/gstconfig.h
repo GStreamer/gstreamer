@@ -22,8 +22,8 @@
   #include <parser.h>
 #endif
  
-  // Include compatability defines: if libxml hasn't already defined these,
-  // we have an old version 1.x
+  /* Include compatability defines: if libxml hasn't already defined these, */
+  /* we have an old version 1.x */
   #ifndef xmlChildrenNode
     #define xmlChildrenNode childs
     #define xmlRootNode root

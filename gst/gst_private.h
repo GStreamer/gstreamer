@@ -33,10 +33,10 @@
 #define _(String) dgettext(PACKAGE,String)
 #ifdef gettext_noop
 #define N_(String) gettext_noop(String)
-#else // gettext_noop
+#else /* gettext_noop */
 #define N_(String) (String)
-#endif // gettext_noop
-#else // ENABLE_NLS
+#endif /* gettext_noop */
+#else /* ENABLE_NLS */
 #define _(String) (String)
 #define N_(String) (String)
 #define textdomain(String) (String)
@@ -44,7 +44,7 @@
 #define dgettext(Domain,String) (String)
 #define dcgettext(Domain,String,Type) (String)
 #define bindtextdomain(Domain,Directory) (Domain)
-#endif // ENABLE_NLS
+#endif /* ENABLE_NLS */
 *****/
 
 #endif /* HAVE_CONFIG_H */

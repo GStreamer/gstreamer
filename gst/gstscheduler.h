@@ -47,8 +47,8 @@ extern "C" {
 
 #define GST_SCHED_PARENT(sched)		((sched)->parent)
 
-//typedef struct _GstScheduler GstScheduler;
-//typedef struct _GstSchedulerClass GstSchedulerClass;
+/*typedef struct _GstScheduler GstScheduler; */
+/*typedef struct _GstSchedulerClass GstSchedulerClass; */
 
 struct _GstScheduler {
   GstObject object;

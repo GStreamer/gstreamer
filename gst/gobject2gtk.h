@@ -15,13 +15,13 @@
 #define G_PI_4  0.78539816339744830962E0
 #define G_SQRT2 1.4142135623730950488E0
 
-// lists functions not in glib 1.2
+/* lists functions not in glib 1.2 */
 GList *g_list_delete_link (GList *list, GList *llink);
 GSList *g_slist_delete_link (GSList *list, GSList *llink);
 
 #define g_string_append_printf g_string_printfa
 
-// string helper functions not in glib 1.2
+/* string helper functions not in glib 1.2 */
 #define G_CSET_A_2_Z       "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 #define G_CSET_a_2_z       "abcdefghijklmnopqrstuvwxyz"
 #define G_CSET_DIGITS      "0123456789"
@@ -30,7 +30,7 @@ gchar* g_strcanon (gchar *string, const gchar *valid_chars,
                    gchar substitutor);
 
 
-// GObject
+/* GObject */
 typedef struct _GObject GObject;
 typedef struct _GObjectClass GObjectClass;
 
@@ -40,7 +40,7 @@ typedef struct _GObjectClass GObjectClass;
 #define g_object_ref(obj)			gtk_object_ref((GtkObject *)(obj))
 #define g_object_unref(obj)			gtk_object_unref((GtkObject *)(obj))
 
-// the helper macros for type checking
+/* the helper macros for type checking */
 #define G_TYPE_CHECK_INSTANCE_CAST		GTK_CHECK_CAST
 #define G_TYPE_CHECK_INSTANCE_TYPE		GTK_CHECK_TYPE
 #define G_TYPE_INSTANCE_GET_CLASS(o,t,c)        (((c*)(GTK_OBJECT(o)->klass)))
@@ -51,7 +51,7 @@ typedef struct _GObjectClass GObjectClass;
 #define G_OBJECT_TYPE				GTK_OBJECT_TYPE
 #define G_OBJECT_CLASS_TYPE(gclass)		(gclass->type)
 
-// types
+/* types */
 #define G_TYPE_NONE				GTK_TYPE_NONE
 #define G_TYPE_CHAR				GTK_TYPE_CHAR
 #define G_TYPE_UCHAR				GTK_TYPE_UCHAR
@@ -70,7 +70,7 @@ typedef struct _GObjectClass GObjectClass;
 #define G_TYPE_BOXED				GTK_TYPE_BOXED
 #define G_TYPE_PARAM				GTK_TYPE_PARAM
 
-// marshallers
+/* marshallers */
 #define g_cclosure_marshal_VOID__VOID			gtk_marshal_NONE__NONE
 #define g_cclosure_marshal_VOID__BOOLEAN		gtk_marshal_NONE__BOOL
 #define g_cclosure_marshal_VOID__CHAR			gtk_marshal_NONE__CHAR
@@ -110,9 +110,9 @@ typedef struct _GObjectClass GObjectClass;
 # define G_END_DECLS
 #endif
 
-// args
-//#define set_property set_arg
-//#define get_property get_arg
+/* args */
+/*#define set_property set_arg*/
+/*#define get_property get_arg*/
 
 #define g_object_get_property(obj,argname,pspec)\
 G_STMT_START{ \
@@ -123,7 +123,7 @@ G_STMT_START{ \
 #define g_object_set(o,args...)		        gtk_object_set ((GtkObject *) (o), ## args)
 
 
-// type system
+/* type system */
 #define GType					GtkType
 #define GTypeFlags				guint
 #define GClassInitFunc				GtkClassInitFunc
@@ -148,7 +148,7 @@ GType g2g_object_get_type (void);
  ***********************************/
 
 
-// type registration
+/* type registration */
 typedef struct _GTypeInfo               GTypeInfo;
 struct _GTypeInfo
 {
@@ -180,11 +180,11 @@ guint g2g_type_register_static (GtkType parent_type, gchar *type_name,
 
 
 
-// object creation
+/* object creation */
 #define g_object_new					g2g_object_new
 gpointer g2g_object_new(GtkType type,gpointer blah_varargs_stuff);
 
-// disposal
+/* disposal */
 #define g_object_run_dispose				g2g_object_run_dispose
 void g2g_object_run_dispose (GObject *object);
 
@@ -195,7 +195,7 @@ void g2g_object_run_dispose (GObject *object);
 #define G_SIGNAL_NO_RECURSE				GTK_RUN_NO_RECURSE
 #define G_SIGNAL_NO_HOOKS				GTK_RUN_NO_HOOKS
 
-#define GCallback					gpointer	// FIXME?
+#define GCallback					gpointer	/* FIXME?*/
 #define G_CALLBACK(f)					((gpointer)(f))
 
 #define g_signal_new					g2g_signal_new
@@ -206,7 +206,7 @@ g2g_signal_new (const gchar       *signal_name,
 		GtkType            object_type,
 		GtkSignalRunType   signal_flags,
 		guint              function_offset,
-		gpointer           accumulator,  // GSignalAccumulator   
+		gpointer           accumulator,  /* GSignalAccumulator */ 
 		gpointer           accu_data,
 		GtkSignalMarshaller  marshaller,
 		GType              return_type,
@@ -243,13 +243,13 @@ gtk_signal_handler_pending ((GtkObject *)object,name,may_block)
 
 gint* g_signal_list_ids (GType type, guint *n_ids);
 
-// lists
+/* lists */
 GSList*		g_slist_delete_link	(GSList *list, GSList *link) __attribute__ ((no_instrument_function));
 
 
-// arguments/parameters
+/* arguments/parameters */
 
-// first define GValue and GParamSpec
+/* first define GValue and GParamSpec */
 #define GValue			GtkArg
 #define GParamFlags		gint
 #define G_VALUE_TYPE(v)		((v)->type)
@@ -340,18 +340,18 @@ GParamSpec *g2g_param_spec_string(gchar *name,gchar *nick,gchar *blurb,gchar *de
 #define G_VALUE_HOLDS_STRING(value) (((value)->type)==GTK_TYPE_STRING)
 #define G_VALUE_HOLDS_POINTER(value) (((value)->type)==GTK_TYPE_POINTER)
 
-// the object itself
-//#define GObject				GtkObject
-//#define GObjectClass				GtkObjectClass
+/* the object itself */
+/*#define GObject				GtkObject */
+/*#define GObjectClass				GtkObjectClass */
 #define G_OBJECT(obj)				((GObject *)(obj))
 #define G_OBJECT_CLASS(c)			((GObjectClass *)(c))
 
 #define G_TYPE_OBJECT \
   (g2g_object_get_type())
-//#define G_OBJECT(obj) 
-//  (GTK_CHECK_CAST((obj),G_TYPE_OBJECT,GObject))
-//#define G_OBJECT_CLASS(klass) 
-//  (GTK_CHECK_CLASS_CAST((klass),G_TYPE_OBJECT,GObjectClass)) 
+/*#define G_OBJECT(obj)  */
+/*  (GTK_CHECK_CAST((obj),G_TYPE_OBJECT,GObject)) */
+/*#define G_OBJECT_CLASS(klass)  */
+/*  (GTK_CHECK_CLASS_CAST((klass),G_TYPE_OBJECT,GObjectClass)) */
 #define G_IS_OBJECT(obj) \
   (GTK_CHECK_TYPE((obj),G_TYPE_OBJECT))
 #define G_IS_OBJECT_CLASS(obj) \

@@ -52,12 +52,13 @@ typedef enum {
 } GstElementStateReturn;
 
 
-// NOTE: this probably should be done with an #ifdef to decide whether to safe-cast
-// or to just do the non-checking cast.
+/* NOTE: this probably should be done with an #ifdef to decide 
+ * whether to safe-cast or to just do the non-checking cast.
+ */
 #define GST_STATE(obj)			(GST_ELEMENT(obj)->current_state)
 #define GST_STATE_PENDING(obj)		(GST_ELEMENT(obj)->pending_state)
 
-// Note: using 8 bit shift mostly "just because", it leaves us enough room to grow <g>
+/* Note: using 8 bit shift mostly "just because", it leaves us enough room to grow <g> */
 #define GST_STATE_TRANSITION(obj)	((GST_STATE(obj)<<8) | GST_STATE_PENDING(obj))
 #define GST_STATE_NULL_TO_READY		((GST_STATE_NULL<<8) | GST_STATE_READY)
 #define GST_STATE_READY_TO_PAUSED	((GST_STATE_READY<<8) | GST_STATE_PAUSED)
@@ -125,8 +126,8 @@ typedef enum {
 #define GST_ELEMENT_SCHED(obj)			(((GstElement*)(obj))->sched)
 #define GST_ELEMENT_PADS(obj)			((obj)->pads)
 
-//typedef struct _GstElement GstElement;
-//typedef struct _GstElementClass GstElementClass;
+/*typedef struct _GstElement GstElement;*/
+/*typedef struct _GstElementClass GstElementClass;*/
 typedef struct _GstElementFactory GstElementFactory;
 typedef struct _GstElementFactoryClass GstElementFactoryClass;
 

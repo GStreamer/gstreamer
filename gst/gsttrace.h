@@ -77,7 +77,7 @@ extern gint _gst_trace_on;
 #define gst_trace_add_entry(trace,seq,data,msg)
 #endif
 
-#else // GST_DISABLE_TRACE
+#else /* GST_DISABLE_TRACE */
 
 #pragma GCC poison 	gst_trace_new	
 #pragma GCC poison	gst_trace_destroy
@@ -91,6 +91,6 @@ extern gint _gst_trace_on;
 #pragma GCC poison 	gst_trace_read_tsc
 #pragma GCC poison 	gst_trace_add_entry
 
-#endif // GST_DISABLE_TRACE
+#endif /* GST_DISABLE_TRACE */
 
 #endif /* __GST_TRACE_H__ */
