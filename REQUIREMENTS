@@ -84,7 +84,8 @@ avifile		(for the avi windows decoder plugins)
 			from http://divx.euro.ru/ and put the .dll files 
 			in /usr/lib/win32/
 		>= 	0.6.0 (cvs)
-
+swfdec		(for the swfdec plugin)
+			ftp://ftp.comedi.org/pub/swfdec/
 
 flac		(for the FLAC lossless audio format)
 			http://flac.sourceforge.net
