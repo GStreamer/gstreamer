@@ -64,6 +64,8 @@ GST_DEBUG_FUNCPTR_NAME
 GST_DEBUG_PAD_NAME
 GST_ERROR
 GST_ERROR_OBJECT
+GST_DEBUG_CHAR_MODE
+
 gst_default_error_handler
 GstInfoHandler
 GstErrorHandler
@@ -147,6 +149,8 @@ GST_BUFFER_PARENT
 GST_BUFFER_MAXAGE
 
 
+GstBufferCopyFunc
+GstBufferFreeFunc
 GstBufferFlags
 GstBuffer
 gst_buffer_new
@@ -158,10 +162,6 @@ gst_buffer_ref
 gst_buffer_ref_by_count
 gst_buffer_unref
 gst_buffer_destroy
-gst_buffer_add_meta
-gst_buffer_get_first_meta
-gst_buffer_get_metas
-gst_buffer_remove_meta
 <SUBSECTION Standard>
 GST_BUFFER
 </SECTION>
@@ -658,6 +658,8 @@ gst_caps_get_by_name
 gst_caps_get_fourcc_int
 gst_caps_get_int
 gst_caps_get_string
+gst_caps_get_float
+
 
 gst_caps_save_thyself
 gst_caps_load_thyself
@@ -693,6 +695,7 @@ gst_props_get_boolean
 gst_props_get_fourcc_int
 gst_props_get_int
 gst_props_get_string
+gst_props_get_float
 gst_props_save_thyself
 gst_props_load_thyself
 <SUBSECTION Standard>
@@ -894,6 +897,7 @@ GST_IS_QUEUE_CLASS
 GstSineSrc
 GstSineSrcClass
 gst_sinesrc_get_type
+gst_sinesrc_factory_init
 GST_TYPE_SINESRC
 GST_SINESRC
 GST_SINESRC_CLASS

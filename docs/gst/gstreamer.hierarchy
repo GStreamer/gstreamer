@@ -1,4 +1,7 @@
 GtkObject
+  GtkWidget
+    GtkRange
+    GtkContainer
   GstObject
     GstXML
     GstElement
@@ -9,7 +12,6 @@ GtkObject
       GstFakeSrc
       GstFakeSink
       GstDiskSrc
-      GstDiskSink
       GstHttpSrc
       GstFdSrc
       GstSineSrc
