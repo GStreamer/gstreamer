@@ -44,7 +44,7 @@ enum
   ARG_0,
   ARG_WIDTH,
   ARG_HEIGHT,
-  ARG_WIDGET,
+  ARG_WIDGET
 };
 
 static void gst_smoothwave_base_init (gpointer g_class);

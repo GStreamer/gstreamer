@@ -48,7 +48,7 @@ enum
   ARG_0,
   ARG_BITRATE,
   ARG_S_MOMENTS,
-  ARG_A_MOMENTS,
+  ARG_A_MOMENTS
 };
 
 static void gst_tarkinenc_base_init (gpointer g_class);

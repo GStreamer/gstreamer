@@ -48,7 +48,7 @@ enum
 
 enum
 {
-  ARG_0,
+  ARG_0
 };
 
 /* added a src factory function to force audio/raw MIME type */

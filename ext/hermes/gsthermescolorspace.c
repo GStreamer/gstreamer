@@ -47,7 +47,7 @@ typedef enum
   GST_HERMES_COLORSPACE_YUY2_I420,
   GST_HERMES_COLORSPACE_RGB32_I420,
   GST_HERMES_COLORSPACE_RGB32_YV12,
-  GST_HERMES_COLORSPACE_420_SWAP,
+  GST_HERMES_COLORSPACE_420_SWAP
 }
 GstColorSpaceConverterType;
 
@@ -119,7 +119,7 @@ enum
 {
   ARG_0,
   ARG_SOURCE,
-  ARG_DEST,
+  ARG_DEST
 };
 
 static void gst_hermes_colorspace_base_init (gpointer g_class);

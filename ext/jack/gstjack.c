@@ -85,7 +85,7 @@ static void gst_jack_loop (GstElement * element);
 enum
 {
   ARG_0,
-  ARG_PORT_NAME_PREFIX,
+  ARG_PORT_NAME_PREFIX
 };
 
 

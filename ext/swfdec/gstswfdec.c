@@ -41,8 +41,8 @@ enum
 
 enum
 {
-  ARG_0,
-  /* FILL ME */
+  ARG_0
+      /* FILL ME */
 };
 
 static GstStaticPadTemplate video_template_factory =

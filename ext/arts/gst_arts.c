@@ -62,7 +62,7 @@ static GstStaticPadTemplate src_temp = GST_STATIC_PAD_TEMPLATE ("src",
 enum
 {
   ARG_0,
-  ARG_LAST,
+  ARG_LAST
 };
 
 static void gst_arts_base_init (gpointer g_class);

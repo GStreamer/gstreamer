@@ -69,14 +69,14 @@ enum
   ARG_VOLUME_FR,
   ARG_VOLUME_FL,
   ARG_VOLUME_BR,
-  ARG_VOLUME_BL,
+  ARG_VOLUME_BL
 };
 
 /* signals */
 enum
 {
   TRACK_CHANGE,
-  LAST_SIGNAL,
+  LAST_SIGNAL
 };
 
 static void gst_cdaudio_class_init (GstCDAudioClass * klass);

@@ -62,7 +62,7 @@ enum
   ARG_ICY,                      /* use icy headers for login? (for use with shoutcast) */
   ARG_AIM,                      /* AIM number (shoutcast only) */
   ARG_ICQ,                      /* ICQ number (shoutcast only) */
-  ARG_IRC,                      /* IRC server (shoutcast only) */
+  ARG_IRC                       /* IRC server (shoutcast only) */
 };
 
 static GstStaticPadTemplate sink_template_factory =

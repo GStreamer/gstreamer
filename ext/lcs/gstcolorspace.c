@@ -78,7 +78,7 @@ enum
 {
   ARG_0,
   ARG_SOURCE,
-  ARG_DEST,
+  ARG_DEST
 };
 
 static GType gst_colorspace_get_type (void);

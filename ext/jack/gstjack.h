@@ -67,7 +67,7 @@ typedef GstJackClass GstJackSrcClass;
 enum {
     GST_JACK_OPEN = GST_BIN_FLAG_LAST,
     GST_JACK_ACTIVE,
-    GST_JACK_FLAG_LAST = GST_BIN_FLAG_LAST + 3,
+    GST_JACK_FLAG_LAST = GST_BIN_FLAG_LAST + 3
 };
 
 

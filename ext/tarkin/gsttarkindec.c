@@ -46,7 +46,7 @@ enum
 enum
 {
   ARG_0,
-  ARG_BITRATE,
+  ARG_BITRATE
 };
 
 static void gst_tarkindec_base_init (gpointer g_class);

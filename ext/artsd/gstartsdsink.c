@@ -45,7 +45,7 @@ enum
 {
   ARG_0,
   ARG_MUTE,
-  ARG_NAME,
+  ARG_NAME
 };
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",

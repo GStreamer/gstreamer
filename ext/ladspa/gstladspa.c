@@ -71,7 +71,7 @@ enum
   ARG_0,
   ARG_SAMPLERATE,
   ARG_BUFFERSIZE,
-  ARG_LAST,
+  ARG_LAST
 };
 
 GST_DEBUG_CATEGORY_STATIC (ladspa_debug);
