@@ -40,6 +40,7 @@ enum {
 enum {
   ARG_0,
   ARG_LEVEL,
+  ARG_MAX_LEVEL,
 };
 
 
@@ -83,6 +84,8 @@ static void gst_queue_class_init(GstQueueClass *klass) {
 
   gtk_object_add_arg_type("GstQueue::level", GTK_TYPE_INT,
                           GTK_ARG_READABLE, ARG_LEVEL);
+  gtk_object_add_arg_type("GstQueue::max_level", GTK_TYPE_INT,
+                          GTK_ARG_READWRITE, ARG_LEVEL);
 
   gstconnection_class->push = gst_queue_push;
 
@@ -100,7 +103,7 @@ static void gst_queue_init(GstQueue *queue) {
   queue->queue = NULL;
   queue->tail = NULL;
   queue->level_buffers = 0;
-  queue->max_buffers = 5;
+  queue->max_buffers = 30;
   queue->level_bytes = 0;
   queue->size_buffers = 0;
   queue->size_bytes = 0;
@@ -220,6 +223,9 @@ static void gst_queue_set_arg(GtkObject *object,GtkArg *arg,guint id) {
   queue = GST_QUEUE(object);
 
   switch(id) {
+    case ARG_MAX_LEVEL:
+      queue->max_buffers = GTK_VALUE_INT(*arg);
+      break;
     default:
       break;
   }
@@ -235,6 +241,9 @@ static void gst_queue_get_arg(GtkObject *object,GtkArg *arg,guint id) {
   switch (id) {
     case ARG_LEVEL:
       GTK_VALUE_INT(*arg) = queue->level_buffers;
+      break;
+    case ARG_MAX_LEVEL:
+      GTK_VALUE_INT(*arg) = queue->max_buffers;
       break;
     default:
       arg->type = GTK_TYPE_INVALID;
