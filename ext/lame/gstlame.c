@@ -17,21 +17,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <dirent.h>
-#include <errno.h>
-
-#include <sys/soundcard.h>
-
 #include "gstlame.h"
 
 /* elementfactory information */
@@ -96,6 +81,7 @@ gst_lame_mode_get_type (void)
     { 1, "1", "Joint-Stereo" },
     { 2, "2", "Dual channel" },
     { 3, "3", "Mono" },
+    { 4, "4", "Auto" },
     { 0, NULL, NULL },
   };
   if (!lame_mode_type) {
@@ -179,7 +165,6 @@ enum {
   ARG_ATH_ONLY,
   ARG_ATH_SHORT,
   ARG_NO_ATH,
-  /*  ARG_ATH_TYPE,		note: CVS has this, 3.87 doesn't */
   ARG_ATH_LOWER,
   ARG_CWLIMIT,
   ARG_ALLOW_DIFF_SHORT,
@@ -237,96 +222,103 @@ gst_lame_class_init (GstLameClass *klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE,
     g_param_spec_int("bitrate", "Bitrate (kb/s)", "Bitrate in kbit/sec",
-                     8, 320, 128, G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_COMPRESSION_RATIO,
-    g_param_spec_float("compression_ratio","compression_ratio","compression_ratio",
-                       0.0,200.0,11.0,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_QUALITY,
-    g_param_spec_enum("quality","quality","quality",
-                      GST_TYPE_LAME_QUALITY,5,G_PARAM_READWRITE)); /* CHECKME! */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MODE,
-    g_param_spec_enum("mode","mode","mode",
-                      GST_TYPE_LAME_MODE,0,G_PARAM_READWRITE)); /* CHECKME! */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FORCE_MS,
-    g_param_spec_boolean("force_ms","force_ms","force_ms",
-                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FREE_FORMAT,
-    g_param_spec_boolean("free_format","free_format","free_format",
-                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_COPYRIGHT,
-    g_param_spec_boolean("copyright","copyright","copyright",
-                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
+                     8, 320, 128, G_PARAM_READWRITE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_COMPRESSION_RATIO,
+    g_param_spec_float ("compression_ratio", "Compression Ratio",
+			"choose bitrate to achive selected compression ratio",
+                        1.0, 200.0, 11.0, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_QUALITY,
+    g_param_spec_enum ("quality", "Quality", "Encoding Quality",
+                       GST_TYPE_LAME_QUALITY, 5, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MODE,
+    g_param_spec_enum ("mode", "Mode", "Encoding mode",
+                       GST_TYPE_LAME_MODE, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FORCE_MS,
+    g_param_spec_boolean ("force_ms","Force ms","Force ms_stereo on all frames",
+                          TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FREE_FORMAT,
+    g_param_spec_boolean ("free_format","Free format","Produce a free format bitstream",
+                          TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_COPYRIGHT,
+    g_param_spec_boolean ("copyright","Copyright","Mark as copyright",
+                          TRUE, G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ORIGINAL,
-    g_param_spec_boolean("original","original","original",
-                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ERROR_PROTECTION,
-    g_param_spec_boolean("error_protection","error_protection","error_protection",
-                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PADDING_TYPE,
-    g_param_spec_enum("padding_type","padding_type","padding_type",
-                      GST_TYPE_LAME_PADDING,0,G_PARAM_READWRITE)); /* CHECKME! */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_EXTENSION,
-    g_param_spec_boolean("extension","extension","extension",
-                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_STRICT_ISO,
-    g_param_spec_boolean("strict_iso","strict_iso","strict_iso",
-                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DISABLE_RESERVOIR,
-    g_param_spec_boolean("disable_reservoir","disable_reservoir","disable_reservoir",
-                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VBR,
-    g_param_spec_boolean("vbr","vbr","vbr",
-                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VBR_MEAN_BITRATE,
-    g_param_spec_int("vbr_mean_bitrate","vbr_mean_bitrate","vbr_mean_bitrate",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VBR_MIN_BITRATE,
-    g_param_spec_int("vbr_min_bitrate","vbr_min_bitrate","vbr_min_bitrate",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
+    g_param_spec_boolean("original", "Original", "Mark as non-original",
+                         TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ERROR_PROTECTION,
+    g_param_spec_boolean ("error_protection","Error protection",
+	    		  "Adds 16 bit checksum to every frame",
+                          TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PADDING_TYPE,
+    g_param_spec_enum ("padding_type", "Padding type", "Padding type",
+                       GST_TYPE_LAME_PADDING, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_EXTENSION,
+    g_param_spec_boolean ("extension", "Extension", "Extension",
+                          TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STRICT_ISO,
+    g_param_spec_boolean ("strict_iso", "Strict ISO",
+	    		  "Comply as much as possible to ISO MPEG spec",
+                          TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DISABLE_RESERVOIR,
+    g_param_spec_boolean ("disable_reservoir", "Disable reservoir", "Disable the bit reservoir",
+                          TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR,
+    g_param_spec_boolean ("vbr", "VBR", "Use variable bitrate",
+                          TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_MEAN_BITRATE,
+    g_param_spec_int ("vbr_mean_bitrate", "VBR mean bitrate", "Specify mean bitrate",
+                      0, G_MAXINT, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_MIN_BITRATE,
+    g_param_spec_int ("vbr_min_bitrate", "VBR min bitrate", "Specify min bitrate",
+                      0, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VBR_MAX_BITRATE,
-    g_param_spec_int("vbr_max_bitrate","vbr_max_bitrate","vbr_max_bitrate",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
+    g_param_spec_int ("vbr_max_bitrate", "VBR max bitrate", "Specify max bitrate",
+                      0, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VBR_HARD_MIN,
-    g_param_spec_int("vbr_hard_min","vbr_hard_min","vbr_hard_min",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOWPASS_FREQ,
-    g_param_spec_int("lowpass_freq","lowpass_freq","lowpass_freq",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOWPASS_WIDTH,
-    g_param_spec_int("lowpass_width","lowpass_width","lowpass_width",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HIGHPASS_FREQ,
-    g_param_spec_int("highpass_freq","highpass_freq","highpass_freq",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HIGHPASS_WIDTH,
-    g_param_spec_int("highpass_width","highpass_width","highpass_width",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ATH_ONLY,
-    g_param_spec_boolean("ath_only","ath_only","ath_only",
-                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ATH_SHORT,
-    g_param_spec_boolean("ath_short","ath_short","ath_short",
-                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NO_ATH,
-    g_param_spec_boolean("no_ath","no_ath","no_ath",
-                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
-/*  gtk_object_add_arg_type ("GstLame::ath_type", G_TYPE_INT,
-                               GTK_ARG_READWRITE, ARG_ATH_TYPE); */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ATH_LOWER,
-    g_param_spec_int("ath_lower","ath_lower","ath_lower",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CWLIMIT,
-    g_param_spec_int("cwlimit","cwlimit","cwlimit",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ALLOW_DIFF_SHORT,
-    g_param_spec_boolean("allow_diff_short","allow_diff_short","allow_diff_short",
-                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NO_SHORT_BLOCKS,
-    g_param_spec_boolean("no_short_blocks","no_short_blocks","no_short_blocks",
-                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_EMPHASIS,
-    g_param_spec_boolean("emphasis","emphasis","emphasis",
-                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
+    g_param_spec_int ("vbr_hard_min", "VBR hard min", "Specify hard min bitrate",
+                      0, G_MAXINT, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOWPASS_FREQ,
+    g_param_spec_int ("lowpass_freq", "Lowpass freq", 
+	                "frequency(kHz), lowpass filter cutoff above freq",
+                        0, 50000, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOWPASS_WIDTH,
+    g_param_spec_int ("lowpass_width", "Lowpass width", 
+	              "frequency(kHz) - default 15% of lowpass freq",
+                      0, G_MAXINT, 0, G_PARAM_READWRITE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HIGHPASS_FREQ,
+    g_param_spec_int ("highpass_freq", "Highpass freq", 
+	              "frequency(kHz), highpass filter cutoff below freq",
+                      0, 50000, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HIGHPASS_WIDTH,
+    g_param_spec_int ("highpass_width", "Highpass width",
+	              "frequency(kHz) - default 15% of highpass freq",
+                      0, G_MAXINT, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ATH_ONLY,
+    g_param_spec_boolean ("ath_only", "ATH only", 
+	                  "Ignore GPSYCHO completely, use ATH only",
+                          TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ATH_SHORT,
+    g_param_spec_boolean ("ath_short", "ATH short", 
+	                  "Ignore GPSYCHO for short blocks, use ATH only",
+                          TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NO_ATH,
+    g_param_spec_boolean ("no_ath", "No ath", "turns ATH down to a flat noise floor",
+                          TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ATH_LOWER,
+    g_param_spec_int ("ath_lower", "ATH lower", "lowers ATH by x dB",
+                      G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CWLIMIT,
+    g_param_spec_int ("cwlimit", "Cwlimit", "Compute tonality up to freq (in kHz) default 8.8717",
+                      0, 50000, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ALLOW_DIFF_SHORT,
+    g_param_spec_boolean ("allow_diff_short", "Allow diff short", "Allow diff short",
+                          TRUE, G_PARAM_READWRITE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NO_SHORT_BLOCKS,
+    g_param_spec_boolean ("no_short_blocks", "No short blocks", "Do not use short blocks",
+                          TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_EMPHASIS,
+    g_param_spec_boolean ("emphasis", "Emphasis", "Emphasis",
+                          TRUE, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_lame_set_property;
   gobject_class->get_property = gst_lame_get_property;
@@ -341,42 +333,22 @@ gst_lame_sinkconnect (GstPad *pad, GstCaps *caps)
 
   lame = GST_LAME (gst_pad_get_parent (pad));
 
-  if (!GST_CAPS_IS_FIXED (caps))
-  {
+  if (!GST_CAPS_IS_FIXED (caps)) {
     GST_DEBUG (GST_CAT_CAPS, "caps on lame pad %s:%s not fixed, delayed",
 	       GST_DEBUG_PAD_NAME (pad));
     return GST_PAD_CONNECT_DELAYED;
-  }
-  /*
-  GST_INFO (GST_CAT_CAPS, "dumping supplied caps %p\n", caps);
-  gst_caps_debug (caps);
-  GST_INFO (GST_CAT_CAPS, "dumping caps of own pad %s:%s\n", GST_DEBUG_PAD_NAME (pad));
-  */
-  gst_caps_debug (gst_pad_get_caps (pad), "original caps on sink pad");
-  /* check if the supplied caps of the peer element are compatible with our own      use gst_pad_get_caps because if caps aren't set yet we need the template */
-  if (!gst_caps_is_always_compatible (caps, gst_pad_get_caps (pad)))
-  {
-    GST_DEBUG (GST_CAT_CAPS, 
-	       "peer caps (%p) not compatible with caps of pad %s:%s!",
-	       caps, GST_DEBUG_PAD_NAME (pad));
-    return GST_PAD_CONNECT_REFUSED;
   }
 
   gst_caps_get_int (caps, "rate", &lame->samplerate);
   gst_caps_get_int (caps, "channels", &lame->num_channels);
 
-  if (gst_lame_setup (lame)) {
-    lame->initialized = TRUE;
-  }
-  else {
-    lame->initialized = FALSE;
+  if (!gst_lame_setup (lame)) {
     gst_element_error (GST_ELEMENT (lame), 
 	               "could not initialize encoder (wrong parameters?)");
+    return GST_PAD_CONNECT_REFUSED;
   }
-  if (lame->initialized)
-    return GST_PAD_CONNECT_OK;
 
-  return GST_PAD_CONNECT_REFUSED;
+  return GST_PAD_CONNECT_OK;
 }
 
 static void
@@ -523,9 +495,6 @@ gst_lame_set_property (GObject *object, guint prop_id, const GValue *value, GPar
     case ARG_NO_ATH:
       lame->no_ath = g_value_get_boolean (value);
       break;
-/*    case ARG_ATH_TYPE:
- *      lame->ath_type = G_VALUE_INT (*arg);
- *      break; */
     case ARG_ATH_LOWER:
       lame->ath_lower = g_value_get_int (value);
       break;
@@ -633,9 +602,6 @@ gst_lame_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec
     case ARG_NO_ATH:
       g_value_set_boolean (value, lame->no_ath);
       break;
-/*    case ARG_ATH_TYPE:
- *      G_VALUE_INT (*arg) = lame->ath_type;
- *      break; */
     case ARG_ATH_LOWER:
       g_value_set_int (value, lame->ath_lower);
       break;
@@ -711,7 +677,10 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
 		    mp3_data, mp3_buffer_size);
     }
 
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, "encoded %d bytes of audio to %d bytes of mp3", GST_BUFFER_SIZE (buf), mp3_size);
+    GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+	       "encoded %d bytes of audio to %d bytes of mp3", 
+	       GST_BUFFER_SIZE (buf), mp3_size);
+
     gst_buffer_unref (buf);
   }
   
@@ -776,7 +745,6 @@ gst_lame_setup (GstLame *lame)
   lame_set_ATHonly (lame->lgf, lame->ath_only);
   lame_set_ATHshort (lame->lgf, lame->ath_short);
   lame_set_noATH (lame->lgf, lame->no_ath);
-  /*  lame_set_ATHtype (lame->lgf, lame->ath_type); */
   lame_set_ATHlower (lame->lgf, lame->ath_lower);
   lame_set_cwlimit (lame->lgf, lame->cwlimit);
   lame_set_allow_diff_short (lame->lgf, lame->allow_diff_short);
@@ -785,8 +753,6 @@ gst_lame_setup (GstLame *lame)
 
   /* initialize the lame encoder */
   if (lame_init_params (lame->lgf) < 0) {
-    gst_element_error (GST_ELEMENT (lame), 
-	               "could not initialize encoder (wrong parameters?)");
     lame->initialized = FALSE;
   }
   else {
@@ -799,7 +765,7 @@ gst_lame_setup (GstLame *lame)
 
   GST_DEBUG_LEAVE ("");
 
-  return TRUE;
+  return lame->initialized;
 }
 
 static GstElementStateReturn
