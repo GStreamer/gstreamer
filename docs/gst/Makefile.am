@@ -92,6 +92,8 @@ scanobj: $(srcdir)/$(DOC_MODULE).types
 	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR)
 
 tmpl: scanobj gstreamer-decl.txt
+	# FIXME: this is nasty, we shouldn't have to do this, HELP
+	cp $(top_src_dir)/docs/gst/gstreamer-sections.txt .
 	gtkdoc-mktmpl --module=$(DOC_MODULE)
 
 sgml: tmpl
