@@ -13,7 +13,7 @@ dnl Defines LIBLAME_LIBS
 dnl FIXME: should define LIBLAME_VERSION
 dnl
 
-AC_DEFUN(AM_PATH_LIBLAME,
+AC_DEFUN([AM_PATH_LIBLAME],
 [
   dnl check for the library
   AC_CHECK_LIB(mp3lame, lame_init, HAVE_LIBLAME=yes, HAVE_LIBLAME=no, -lm)

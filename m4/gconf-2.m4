@@ -5,7 +5,7 @@ dnl Defines GCONF_SCHEMA_FILE_DIR which is a filesystem directory where
 dnl  you should install foo.schemas files
 dnl
 
-AC_DEFUN(AM_GCONF_SOURCE_2,
+AC_DEFUN([AM_GCONF_SOURCE_2],
 [
   if test "x$GCONF_SCHEMA_INSTALL_SOURCE" = "x"; then
     GCONF_SCHEMA_CONFIG_SOURCE=`gconftool-2 --get-default-source`

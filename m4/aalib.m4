@@ -10,7 +10,7 @@
 dnl AM_PATH_AALIB([MINIMUM-VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]])
 dnl Test for AALIB, and define AALIB_CFLAGS and AALIB_LIBS
 dnl
-AC_DEFUN(AM_PATH_AALIB,
+AC_DEFUN([AM_PATH_AALIB],
 [dnl 
 dnl Get the cflags and libraries from the aalib-config script
 dnl
