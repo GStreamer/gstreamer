@@ -2,6 +2,7 @@ TODO list (short term):
 =======================
 * as soon as we've trashed Gtk-1.2, change 'gint palette'
     to 'guint16 palette' in gstv4lsrc.[ch]
+* v4lsrc: actually try the format out on capsnego
 * all three: fix interlacing (not handled at all...)
 * libgstrec: build (a library for video recording)
 

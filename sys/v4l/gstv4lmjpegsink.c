@@ -184,6 +184,10 @@ gst_v4lmjpegsink_sinkconnect (GstPad  *pad,
 
   v4lmjpegsink = GST_V4LMJPEGSINK (gst_pad_get_parent (pad));
 
+  /* we are not going to act on variable caps */
+  if (!GST_CAPS_IS_FIXED (vscapslist))
+    return GST_PAD_CONNECT_DELAYED;
+
   for (caps = capslist; caps != NULL; caps = vscapslist = vscapslist->next)
   {
     v4lmjpegsink->width =  gst_caps_get_int (caps, "width");
