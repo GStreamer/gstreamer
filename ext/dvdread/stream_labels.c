@@ -216,7 +216,7 @@ dvdreadsrc_get_audio_stream_labels (ifo_handle_t * vts_file,
             channel_nb = g_strdup (_("5.1"));
             break;
           default:
-            format = g_strdup ("?");
+            channel_nb = g_strdup ("?");
         }
         streamlabel = g_string_new ("");
         g_string_printf (streamlabel, "%u : %s, %s %s", i + 1, language, format,
