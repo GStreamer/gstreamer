@@ -1,5 +1,12 @@
 2004-01-23  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_class_init),
+	(gst_riff_read_init), (gst_riff_read_change_state):
+	* gst-libs/gst/riff/riff-read.h:
+	  Remove stuff fromold metadata system.
+
+2004-01-23  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ogg/gstoggdemux.c:
 	  Fix wrong file comment.
 	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_info):
