@@ -46,7 +46,7 @@ extern "C" {
 typedef struct _GstCutter GstCutter;
 typedef struct _GstCutterClass GstCutterClass;
 
-struct _GstCutter 
+struct _GstCutter
 {
   GstElement element;
 
@@ -61,14 +61,15 @@ struct _GstCutter
 
   double pre_length;		/* how long can the pre-record buffer be ? */
   double pre_run_length;        /* how long is it currently ? */
-  GList *pre_buffer;
-  
+  GList *pre_buffer;		/* list of GstBuffers in pre-record buffer */
+  gboolean leaky;		/* do we leak an overflowing prebuffer ? */
+
   gboolean have_caps;		/* did we get the needed caps yet ? */
   gint width;			/* bit width of data */
   long max_sample;		/* maximum sample value */
 };
 
-struct _GstCutterClass 
+struct _GstCutterClass
 {
   GstElementClass parent_class;
   void (*cut_start) (GstCutter* filter);
