@@ -25,6 +25,9 @@
 static void		gst_wavparse_class_init		(GstWavParseClass *klass);
 static void		gst_wavparse_init		(GstWavParse *wavparse);
 
+static GstElementStateReturn
+			gst_wavparse_change_state 	(GstElement *element);
+
 static GstCaps*		wav_type_find			(GstBuffer *buf, gpointer private);
 
 static const GstFormat*	gst_wavparse_get_formats	(GstPad *pad);
@@ -164,6 +167,8 @@ gst_wavparse_class_init (GstWavParseClass *klass)
   gstelement_class = (GstElementClass*) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+
+  gstelement_class->change_state = gst_wavparse_change_state;
 }
 
 static void 
@@ -194,7 +199,6 @@ gst_wavparse_init (GstWavParse *wavparse)
 
 
   wavparse->riff = NULL;
-
   wavparse->state = GST_WAVPARSE_UNKNOWN;
   wavparse->riff = NULL;
   wavparse->riff_nextlikely = 0;
@@ -654,6 +658,39 @@ gst_wavparse_srcpad_event (GstPad *pad, GstEvent *event)
 
   gst_event_unref (event);
   return res;
+}
+
+static GstElementStateReturn
+gst_wavparse_change_state (GstElement *element)
+{
+  GstWavParse *wavparse = GST_WAVPARSE (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
+      break;
+    case GST_STATE_READY_TO_PAUSED:
+      break;
+    case GST_STATE_PAUSED_TO_PLAYING:
+      break;
+    case GST_STATE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      wavparse->riff = NULL;
+      wavparse->state = GST_WAVPARSE_UNKNOWN;
+      wavparse->riff_nextlikely = 0;
+      wavparse->size = 0;
+      wavparse->bps = 0;
+      wavparse->offset = 0;
+      wavparse->need_discont = FALSE;
+      break;
+    case GST_STATE_READY_TO_NULL:
+      break;
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  return GST_STATE_SUCCESS;
 }
 
 static gboolean
