@@ -546,12 +546,6 @@ gst_asf_demux_process_comment (GstASFDemux * asf_demux, guint64 * obj_size)
       if (gst_bytestream_peek_bytes (bs, &data, lengths[i]) != lengths[i])
         goto fail;
 
-      /* check null-termination (malicious input) */
-      if (data[lengths[i] - 1] != '\0' || data[lengths[i] - 2] != '\0') {
-        gst_bytestream_flush_fast (bs, lengths[i]);
-        continue;
-      }
-
       /* convert to UTF-8 */
       utf8_comments[i] = g_convert (data, lengths[i],
           "UTF-8", "UTF-16LE", &in, &out, NULL);
