@@ -64,13 +64,20 @@ static GstPlugin *	gst_plugin_register_func 	(GstPlugin *plugin,
 							 GModule *module,
 							 GstPluginDesc *desc);
 
+static GstPlugin *
+gst_plugin_copy (GstPlugin *plugin)
+{
+  return plugin;
+}
+
 GType
 gst_plugin_get_type (void)
 {
   static GType plugin_type;
 
   if (plugin_type == 0) {
-    plugin_type = g_boxed_type_register_static ("GstPlugin", NULL, g_free);
+    plugin_type = g_boxed_type_register_static ("GstPlugin",
+        (GBoxedCopyFunc) gst_plugin_copy, g_free);
   }
 
   return plugin_type;
