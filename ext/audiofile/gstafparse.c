@@ -149,8 +149,7 @@ gst_afparse_init (GstAFParse *afparse)
   afparse->vfile->seek = gst_afparse_vf_seek;
   afparse->vfile->tell = gst_afparse_vf_tell;
 
-  /* default to low latency */
-  afparse->frames_per_read = 64;
+  afparse->frames_per_read = 1024;
   afparse->curoffset = 0;
   afparse->seq = 0;
 
@@ -175,6 +174,7 @@ gst_afparse_loop(GstElement *element)
   guint8 *data;
   gboolean bypass_afread = TRUE;
   GstByteStream *bs;
+  int s_format, v_format, s_width, v_width;
 
   afparse = GST_AFPARSE(element);
 
@@ -191,15 +191,15 @@ gst_afparse_loop(GstElement *element)
   /* if audiofile changes the data in any way, we have to access
    * the audio data via afReadFrames. Otherwise we can just access
    * the data directly. */
+  afGetSampleFormat(afparse->file, AF_DEFAULT_TRACK, &s_format, &s_width);
+  afGetVirtualSampleFormat(afparse->file, AF_DEFAULT_TRACK, &v_format, &v_width);
   if (afGetCompression != AF_COMPRESSION_NONE ||
-      afGetByteOrder(afparse->file, AF_DEFAULT_TRACK) != afGetVirtualByteOrder(afparse->file, AF_DEFAULT_TRACK)){
-    int s_format, v_format, s_width, v_width;
-    afGetSampleFormat(afparse->file, AF_DEFAULT_TRACK, &s_format, &s_width);
-    afGetVirtualSampleFormat(afparse->file, AF_DEFAULT_TRACK, &v_format, &v_width);
-    if (s_format != v_format || s_width != v_width){
-      bypass_afread = FALSE;
-    }
+      afGetByteOrder(afparse->file, AF_DEFAULT_TRACK) != afGetVirtualByteOrder(afparse->file, AF_DEFAULT_TRACK) ||
+      s_format != v_format || 
+      s_width != v_width){
+    bypass_afread = FALSE;
   }
+
   if (bypass_afread){
     g_print("will bypass afReadFrames\n");
   }
@@ -226,9 +226,10 @@ gst_afparse_loop(GstElement *element)
           break;
         }
       }
-
-      gst_pad_push (afparse->srcpad, buf);
-      afparse->timestamp += numframes * 1E9 / afparse->rate;
+      else {
+        gst_pad_push (afparse->srcpad, buf);
+        afparse->timestamp += numframes * 1E9 / afparse->rate;
+      }
     }
     while (TRUE);
 
@@ -255,7 +256,6 @@ gst_afparse_loop(GstElement *element)
     }
     while (TRUE);
   }
-
   gst_afparse_close_file (afparse);
   gst_buffer_pool_unref(bufpool);
   
