@@ -151,69 +151,69 @@ print_element_properties (GstElement *element)
       g_object_get_property (G_OBJECT (element), param->name, &value);
     }
 
-    printf("  %-40.40s: %s\n", g_param_spec_get_name (param),
+    printf("  %-20.20s: %s\n", g_param_spec_get_name (param),
 		               g_param_spec_get_blurb (param));
 
     switch (G_VALUE_TYPE (&value)) {
       case G_TYPE_STRING: 
-	printf ("%-43.43s String (Default \"%s\")", "", g_value_get_string (&value));
+	printf ("%-23.23s String (Default \"%s\")", "", g_value_get_string (&value));
 	break;
       case G_TYPE_BOOLEAN: 
-	printf ("%-43.43s Boolean (Default %s)", "", (g_value_get_boolean (&value) ? "true" : "false"));
+	printf ("%-23.23s Boolean (Default %s)", "", (g_value_get_boolean (&value) ? "true" : "false"));
 	break;
       case G_TYPE_ULONG: 
       {
 	GParamSpecULong *pulong = G_PARAM_SPEC_ULONG (param);
-	printf("%-43.43s Unsigned Long. Range: %lu - %lu (Default %lu)", "", 
+	printf("%-23.23s Unsigned Long. Range: %lu - %lu (Default %lu)", "", 
 			pulong->minimum, pulong->maximum, g_value_get_ulong (&value));
 	break;
       }
       case G_TYPE_LONG: 
       {
 	GParamSpecLong *plong = G_PARAM_SPEC_LONG (param);
-	printf("%-43.43s Long. Range: %ld - %ld (Default %ld)", "", 
+	printf("%-23.23s Long. Range: %ld - %ld (Default %ld)", "", 
 			plong->minimum, plong->maximum, g_value_get_long (&value));
 	break;
       }
       case G_TYPE_UINT: 
       {
 	GParamSpecUInt *puint = G_PARAM_SPEC_UINT (param);
-	printf("%-43.43s Unsigned Integer. Range: %u - %u (Default %u)", "", 
+	printf("%-23.23s Unsigned Integer. Range: %u - %u (Default %u)", "", 
 			puint->minimum, puint->maximum, g_value_get_uint (&value));
 	break;
       }
       case G_TYPE_INT: 
       {
 	GParamSpecInt *pint = G_PARAM_SPEC_INT (param);
-	printf("%-43.43s Integer. Range: %d - %d (Default %d)", "", 
+	printf("%-23.23s Integer. Range: %d - %d (Default %d)", "", 
 			pint->minimum, pint->maximum, g_value_get_int (&value));
 	break;
       }
       case G_TYPE_UINT64: 
       {
 	GParamSpecUInt64 *puint64 = G_PARAM_SPEC_UINT64 (param);
-	printf("%-43.43s Unsigned Integer64. Range: %llu - %llu (Default %llu)", "", 
+	printf("%-23.23s Unsigned Integer64. Range: %llu - %llu (Default %llu)", "", 
 			puint64->minimum, puint64->maximum, g_value_get_uint64 (&value));
 	break;
       }
       case G_TYPE_INT64: 
       {
 	GParamSpecInt64 *pint64 = G_PARAM_SPEC_INT64 (param);
-	printf("%-43.43s Integer64. Range: %lld - %lld (Default %lld)", "", 
+	printf("%-23.23s Integer64. Range: %lld - %lld (Default %lld)", "", 
 			pint64->minimum, pint64->maximum, g_value_get_int64 (&value));
 	break;
       }
       case G_TYPE_FLOAT: 
       {
 	GParamSpecFloat *pfloat = G_PARAM_SPEC_FLOAT (param);
-	printf("%-43.43s Float. Range: %f - %f (Default %f)", "", 
+	printf("%-23.23s Float. Range: %f - %f (Default %f)", "", 
 			pfloat->minimum, pfloat->maximum, g_value_get_float (&value));
 	break;
       }
       case G_TYPE_DOUBLE: 
       {
 	GParamSpecDouble *pdouble = G_PARAM_SPEC_DOUBLE (param);
-	printf("%-43.43s Double. Range: %f - %f (Default %f)", "", 
+	printf("%-23.23s Double. Range: %f - %f (Default %f)", "", 
 			pdouble->minimum, pdouble->maximum, g_value_get_double (&value));
 	break;
       }
@@ -224,13 +224,13 @@ print_element_properties (GstElement *element)
           GEnumValue *values;
 	  guint j = 0;
 
-          printf("%-43.43s Enum \"%s\" (default %d)", "", 
+          printf("%-23.23s Enum \"%s\" (default %d)", "", 
 			  g_type_name (G_VALUE_TYPE (&value)),
 			  g_value_get_enum (&value));
 	  values = G_ENUM_CLASS (g_type_class_ref (param->value_type))->values;
 
 	  while (values[j].value_name) {
-            printf("\n%-43.43s    (%d): \t%s", "", values[j].value, values[j].value_nick);
+            printf("\n%-23.23s    (%d): \t%s", "", values[j].value, values[j].value_nick);
 	    j++; 
 	  }
 	  /* g_type_class_unref (ec); */
