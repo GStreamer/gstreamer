@@ -1,3 +1,12 @@
+2004-12-16  Toni Willberg  <toniw@iki.fi>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* sys/oss/gstosselement.c: (gst_osselement_probe_caps):
+	* sys/oss/oss_probe.c: (main):
+	  Check for mono/stereo support (similar to samplerate probing),
+	  fixes #159433. Also add missing copyright header to oss_probe.c.
+
 2004-12-15  David Schleef  <ds@schleef.org>
 
 	* configure.ac: add audioresample and cairo plugins.  Remove
