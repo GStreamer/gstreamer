@@ -116,7 +116,7 @@ gst_type_find_class_init (GstTypeFindClass *klass)
       g_signal_new ("have_type", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                      G_STRUCT_OFFSET (GstTypeFindClass, have_type), NULL, NULL,
                      g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-                     G_TYPE_OBJECT);
+                     G_TYPE_BOXED);
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_type_find_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_type_find_get_property);
