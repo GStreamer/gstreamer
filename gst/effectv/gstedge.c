@@ -70,19 +70,18 @@ enum
   ARG_0,
 };
 
-static void gst_edgetv_class_init (GstEdgeTVClass * klass);
-static void gst_edgetv_init (GstEdgeTV * filter);
+static void 	gst_edgetv_class_init 		(GstEdgeTVClass * klass);
+static void 	gst_edgetv_init 		(GstEdgeTV * filter);
 
-static void gst_edgetv_set_property (GObject * object, guint prop_id,
-					   const GValue * value, GParamSpec * pspec);
-static void gst_edgetv_get_property (GObject * object, guint prop_id,
-					   GValue * value, GParamSpec * pspec);
+static void 	gst_edgetv_set_property 	(GObject * object, guint prop_id,
+					  	 const GValue * value, GParamSpec * pspec);
+static void 	gst_edgetv_get_property 	(GObject * object, guint prop_id,
+					  	 GValue * value, GParamSpec * pspec);
 
-static void gst_edgetv_chain (GstPad * pad, GstBuffer * buf);
+static void 	gst_edgetv_chain 		(GstPad * pad, GstBuffer * buf);
 
 static GstElementClass *parent_class = NULL;
-
-/*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
+/*static guint gst_edgetv_signals[LAST_SIGNAL] = { 0 }; */
 
 GType gst_edgetv_get_type (void)
 {

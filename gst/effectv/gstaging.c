@@ -101,7 +101,7 @@ static void 	gst_agingtv_get_property 	(GObject * object, guint prop_id,
 static void 	gst_agingtv_chain 		(GstPad * pad, GstBuffer * buf);
 
 static GstElementClass *parent_class = NULL;
-/*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
+/*static guint gst_agingtv_signals[LAST_SIGNAL] = { 0 }; */
 
 GType gst_agingtv_get_type (void)
 {
