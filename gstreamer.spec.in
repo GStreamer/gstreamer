@@ -150,6 +150,7 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %{_libdir}/gst/libgstgetbits*.so*
 %{_libdir}/gst/libgstputbits*.so*
 %{_libdir}/gst/libgstspider*.so*
+%{_libdir}/gst/libgstcaches.so
 %{_mandir}/man1/gst-feedback.*
 %{_mandir}/man1/gst-xmllaunch.*
 %{_mandir}/man1/gst-complete.*
