@@ -753,7 +753,8 @@ schedule_group (GstOptSchedulerGroup *group)
 static void
 gst_opt_scheduler_schedule_run_queue (GstOptScheduler *osched)
 {
-  GST_INFO (GST_CAT_SCHEDULING, "entering scheduler run queue recursion %d", osched->recursion);
+  GST_INFO (GST_CAT_SCHEDULING, "entering scheduler run queue recursion %d %d", 
+		  osched->recursion, g_list_length (osched->runqueue));
 
   /* make sure we don't exceed max_recursion */
   if (osched->recursion > osched->max_recursion) {
@@ -813,13 +814,9 @@ schedule_chain (GstOptSchedulerChain *chain)
       schedule_group (group);
 #else
       osched->recursion = 0;
-      if (!schedule_group (group)) {
-        g_warning  ("error scheduling group %p", group);
-        group_error_handler (group);
-      }
-      else {
-        GST_INFO (GST_CAT_SCHEDULING, "done scheduling %p", group);
-      }
+      ref_group (group);
+      osched->runqueue = g_list_append (osched->runqueue, group);
+      gst_opt_scheduler_schedule_run_queue (osched);
 #endif
 
       GST_INFO (GST_CAT_SCHEDULING, "done scheduling group %p in chain %p", 
@@ -892,6 +889,9 @@ loop_group_schedule_function (int argc, char *argv[])
 
   entry->loopfunc (entry);
 
+  GST_INFO (GST_CAT_SCHEDULING, "loopfunc ended of element %s in group %p", 
+	    GST_ELEMENT_NAME (entry), group);
+
   group->flags &= ~GST_OPT_SCHEDULER_GROUP_RUNNING;
 
   return 0;
@@ -938,6 +938,7 @@ gst_opt_scheduler_loop_wrapper (GstPad *sinkpad, GstBuffer *buffer)
   GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad)) = g_list_append (GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad)), buffer);
   if (!(group->flags & GST_OPT_SCHEDULER_GROUP_RUNNING)) {
     ref_group (group);
+    GST_INFO (GST_CAT_SCHEDULING, "adding %p to runqueue", group);
     osched->runqueue = g_list_append (osched->runqueue, group);
   }
 #endif
