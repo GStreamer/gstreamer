@@ -43,21 +43,23 @@ class FakeSinkTest(ElementTest):
         assert self.element.get_state() == gst.STATE_NULL
         assert self.element.set_state(old_state)
         assert self.element.get_state() == old_state
-        
         self.element.set_property('state-error', name)
-        def error_cb(element, source, error, debug):
+        self.error = False
+        def error_cb(element, source, gerror, debug):
             assert isinstance(element, gst.Element)
             assert element == self.element
             assert isinstance(source, gst.Element)
             assert source == self.element
-            assert isinstance(error, gst.GError)
-
+            assert isinstance(gerror, gst.GError)
+            self.error = True
+            
         self.element.connect('error', error_cb)
-        error_message = common.run_silent(self.element.set_state, state)
+        common.run_silent(self.element.set_state, state)
+        assert self.error, 'error not set'
+        #assert error_message.find('ERROR') != -1
         
-        assert error_message.find('ERROR') != -1
         self.element.get_state() == old_state, 'state changed'
-
+        
     def testStateErrorNullReady(self):
         self.checkError(gst.STATE_NULL, gst.STATE_READY,
                         self.FAKESINK_STATE_ERROR_NULL_READY)
