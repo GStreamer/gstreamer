@@ -102,7 +102,7 @@ html: sgml
 	-cd html && gtkdoc-mkhtml $(DOC_MODULE) ../$(DOC_MAIN_SGML_FILE)
 
 clean-local:
-	rm -f *~ *.bak *.signals *-unused.txt *.args
+	rm -f *~ *.bak *.signals *-unused.txt *.args *.o *.lo
 
 maintainer-clean-local: clean
 	rm -rf sgml html $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt 
