@@ -539,7 +539,9 @@ md5_get_value (gpointer test, GValue * value)
 {
   MD5Test *ctx = test;
 
-  if (ctx->result[0] == 0) {
+  if (!ctx) {
+    g_value_set_string (value, "---");
+  } else if (ctx->result[0] == 0) {
     gchar *str = g_new (gchar, 33);
 
     str[32] = 0;

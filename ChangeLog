@@ -1,5 +1,10 @@
 2004-05-19  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* gst/debug/tests.c: (md5_get_value):
+	  fix segfault on gst-inspect
+
+2004-05-19  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* gst/debug/testplugin.c: 
 	* gst/debug/tests.c: 
 	* gst/debug/tests.h:
