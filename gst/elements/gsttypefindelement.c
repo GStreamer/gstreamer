@@ -510,9 +510,8 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
               off == typefind->waiting_for_discont_offset) {
             typefind->mode = MODE_NORMAL;
             push_buffer_store (typefind);
-          } else {
-            gst_event_unref (event);
           }
+          gst_event_unref (event);
         }
       } else if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
         push_buffer_store (typefind);
