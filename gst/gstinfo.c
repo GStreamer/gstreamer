@@ -487,7 +487,6 @@ gst_default_error_handler (gchar *file, gchar *function,
 
 /***** DEBUG system *****/
 #ifdef GST_DEBUG_ENABLED
-#ifdef GST_DEBUG_ENABLED
 GHashTable *__gst_function_pointers = NULL;
 /* FIXME make this thread specific */
 /* static GSList *stack_trace = NULL; */
@@ -507,7 +506,6 @@ _gst_debug_nameof_funcptr (void *ptr)
     return g_strdup_printf("%p",ptr);
   }
   return NULL;
-#endif
 }
 #endif
 
@@ -564,6 +562,7 @@ gst_debug_print_stack_trace (void)
 
 #endif /* GST_ENABLE_FUNC_INTSTRUMENTATION */
 
+#ifdef GST_DEBUG_ENABLED
 void *
 _gst_debug_register_funcptr (void *ptr, gchar *ptrname)
 {
@@ -573,4 +572,5 @@ _gst_debug_register_funcptr (void *ptr, gchar *ptrname)
     g_hash_table_insert (__gst_function_pointers, ptr, ptrname);
   return ptr;
 }
+#endif /* GST_DEBUG_ENABLED */
 
