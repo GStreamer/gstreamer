@@ -59,6 +59,18 @@ struct _GstV4lSrc {
   gboolean *frame_queued;
   guint buffer_size;
 
+  /* a seperate pthread for the sync() thread (improves correctness of timestamps) */
+  gint8 *isready_soft_sync; /* 1 = ok, 0 = waiting, -1 = error */
+  struct timeval *timestamp_soft_sync;
+  pthread_t thread_soft_sync;
+  pthread_mutex_t mutex_soft_sync;
+  pthread_cond_t *cond_soft_sync;
+
+  /* num of queued frames and some pthread stuff to wait if there's not enough */
+  guint16 num_queued_frames;
+  pthread_mutex_t mutex_queued_frames;
+  pthread_cond_t cond_queued_frames;
+
   /* caching values */
   gint width;
   gint height;

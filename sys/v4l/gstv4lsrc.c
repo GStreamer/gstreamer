@@ -340,7 +340,6 @@ gst_v4lsrc_get (GstPad *pad)
   GstV4lSrc *v4lsrc;
   GstBuffer *buf;
   gint num;
-  struct timeval timestamp;
 
   g_return_val_if_fail (pad != NULL, NULL);
 
@@ -368,10 +367,10 @@ gst_v4lsrc_get (GstPad *pad)
   /* grab a frame from the device */
   if (!gst_v4lsrc_grab_frame(v4lsrc, &num))
     return NULL;
-  gettimeofday(&timestamp, 0); /* TODO: threaded sync() */
   GST_BUFFER_DATA(buf) = gst_v4lsrc_get_buffer(v4lsrc, num);
   GST_BUFFER_SIZE(buf) = v4lsrc->buffer_size;
-  buf->timestamp = timestamp.tv_sec * 1000000000 + timestamp.tv_usec * 1000;
+  buf->timestamp = v4lsrc->timestamp_soft_sync[num].tv_sec * 1000000000 +
+    v4lsrc->timestamp_soft_sync[num].tv_usec * 1000;
 
   return buf;
 }

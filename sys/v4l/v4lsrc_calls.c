@@ -62,7 +62,88 @@ gst_v4lsrc_queue_frame (GstV4lSrc *v4lsrc,
 
   v4lsrc->frame_queued[num] = TRUE;
 
+  pthread_mutex_lock(&(v4lsrc->mutex_queued_frames));
+  v4lsrc->num_queued_frames++;
+  pthread_cond_broadcast(&(v4lsrc->cond_queued_frames));
+  pthread_mutex_unlock(&(v4lsrc->mutex_queued_frames));
+
   return TRUE;
+}
+
+
+/******************************************************
+ * gst_v4lsrc_soft_sync_thread()
+ *   syncs on frames and signals the main thread
+ * purpose: actually get the correct frame timestamps
+ ******************************************************/
+
+static void *
+gst_v4lsrc_soft_sync_thread (void *arg)
+{
+  GstV4lSrc *v4lsrc = GST_V4LSRC(arg);
+  guint16 frame = 0;
+
+#ifdef DEBUG
+  fprintf(stderr, "gst_v4lsrc_soft_sync_thread()\n");
+#endif
+
+  /* Allow easy shutting down by other processes... */
+  pthread_setcancelstate( PTHREAD_CANCEL_ENABLE, NULL );
+  pthread_setcanceltype( PTHREAD_CANCEL_ASYNCHRONOUS, NULL );
+
+  while (1)
+  {
+    /* are there queued frames left? */
+    pthread_mutex_lock(&(v4lsrc->mutex_queued_frames));
+    if (v4lsrc->num_queued_frames < 1)
+    {
+      pthread_cond_wait(&(v4lsrc->cond_queued_frames),
+        &(v4lsrc->mutex_queued_frames));
+    }
+    pthread_mutex_unlock(&(v4lsrc->mutex_queued_frames));
+
+    /* if still wrong, we got interrupted and we should exit */
+    if (v4lsrc->num_queued_frames < 1)
+    {
+      goto end;
+    }
+
+    /* sync on the frame */
+retry:
+    if (ioctl(GST_V4LELEMENT(v4lsrc)->video_fd, VIDIOCSYNC, &frame) < 0)
+    {
+      /* if the sync() got interrupted, we can retry */
+      if (errno == EINTR)
+        goto retry;
+      gst_element_error(GST_ELEMENT(v4lsrc),
+        "Error syncing on a buffer (%d): %s",
+        frame, sys_errlist[errno]);
+      pthread_mutex_lock(&(v4lsrc->mutex_soft_sync));
+      v4lsrc->isready_soft_sync[frame] = -1;
+      pthread_cond_broadcast(&(v4lsrc->cond_soft_sync[frame]));
+      pthread_mutex_unlock(&(v4lsrc->mutex_soft_sync));
+      goto end;
+    }
+    else
+    {
+      pthread_mutex_lock(&(v4lsrc->mutex_soft_sync));
+      gettimeofday(&(v4lsrc->timestamp_soft_sync[frame]), NULL);
+      v4lsrc->isready_soft_sync[frame] = 1;
+      pthread_cond_broadcast(&(v4lsrc->cond_soft_sync[frame]));
+      pthread_mutex_unlock(&(v4lsrc->mutex_soft_sync));
+    }
+
+    frame = (frame+1)%v4lsrc->mbuf.frames;
+
+    pthread_mutex_lock(&(v4lsrc->mutex_queued_frames));
+    v4lsrc->num_queued_frames--;
+    pthread_mutex_unlock(&(v4lsrc->mutex_queued_frames));
+  }
+
+end:
+  gst_element_info(GST_ELEMENT(v4lsrc),
+    "Software sync thread got signalled to exit");
+  pthread_exit(NULL);
 }
 
 
@@ -83,13 +164,19 @@ gst_v4lsrc_sync_next_frame (GstV4lSrc *v4lsrc,
 
   *num = (v4lsrc->sync_frame + 1)%v4lsrc->mbuf.frames;
 
-  if (ioctl(GST_V4LELEMENT(v4lsrc)->video_fd, VIDIOCSYNC, num) < 0)
+  /* "software sync()" on the frame */
+  pthread_mutex_lock(&(v4lsrc->mutex_soft_sync));
+  if (v4lsrc->isready_soft_sync[*num])
   {
-    gst_element_error(GST_ELEMENT(v4lsrc),
-      "Error syncing on a buffer (%d): %s",
-      *num, sys_errlist[errno]);
-    return FALSE;
+    pthread_cond_wait(&(v4lsrc->cond_soft_sync[*num]),
+      &(v4lsrc->mutex_soft_sync));
   }
+  pthread_mutex_unlock(&(v4lsrc->mutex_soft_sync));
+
+  if (v4lsrc->isready_soft_sync[*num] < 0)
+    return FALSE;
+
+  v4lsrc->isready_soft_sync[*num] = 0;
 
   v4lsrc->frame_queued[*num] = FALSE;
 
@@ -168,6 +255,42 @@ gst_v4lsrc_capture_init (GstV4lSrc *v4lsrc)
   for (n=0;n<v4lsrc->mbuf.frames;n++)
     v4lsrc->frame_queued[n] = FALSE;
 
+  /* init the pthread stuff */
+  pthread_mutex_init(&(v4lsrc->mutex_soft_sync), NULL);
+  v4lsrc->isready_soft_sync = (gint8 *) malloc(sizeof(gint8) * v4lsrc->mbuf.frames);
+  if (!v4lsrc->isready_soft_sync)
+  {
+    gst_element_error(GST_ELEMENT(v4lsrc),
+      "Error creating software-sync buffer tracker: %s",
+      sys_errlist[errno]);
+    return FALSE;
+  }
+  for (n=0;n<v4lsrc->mbuf.frames;n++)
+    v4lsrc->isready_soft_sync[n] = 0;
+  v4lsrc->timestamp_soft_sync = (struct timeval *)
+    malloc(sizeof(struct timeval) * v4lsrc->mbuf.frames);
+  if (!v4lsrc->timestamp_soft_sync)
+  {
+    gst_element_error(GST_ELEMENT(v4lsrc),
+      "Error creating software-sync timestamp tracker: %s",
+      sys_errlist[errno]);
+    return FALSE;
+  }
+  v4lsrc->cond_soft_sync = (pthread_cond_t *)
+    malloc(sizeof(pthread_cond_t) * v4lsrc->mbuf.frames);
+  if (!v4lsrc->cond_soft_sync)
+  {
+    gst_element_error(GST_ELEMENT(v4lsrc),
+      "Error creating software-sync condition tracker: %s",
+      sys_errlist[errno]);
+    return FALSE;
+  }
+  for (n=0;n<v4lsrc->mbuf.frames;n++)
+    pthread_cond_init(&(v4lsrc->cond_soft_sync[n]), NULL);
+
+  pthread_mutex_init(&(v4lsrc->mutex_queued_frames), NULL);
+  pthread_cond_init(&(v4lsrc->cond_queued_frames), NULL);
+
   /* Map the buffers */
   GST_V4LELEMENT(v4lsrc)->buffer = mmap(0, v4lsrc->mbuf.size, 
     PROT_READ, MAP_SHARED, GST_V4LELEMENT(v4lsrc)->video_fd, 0);
@@ -202,12 +325,24 @@ gst_v4lsrc_capture_start (GstV4lSrc *v4lsrc)
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lsrc));
   GST_V4L_CHECK_ACTIVE(GST_V4LELEMENT(v4lsrc));
 
+  v4lsrc->num_queued_frames = 0;
+
   /* queue all buffers, this starts streaming capture */
   for (n=0;n<v4lsrc->mbuf.frames;n++)
     if (!gst_v4lsrc_queue_frame(v4lsrc, n))
       return FALSE;
 
   v4lsrc->sync_frame = -1;
+
+  /* start the sync() thread (correct timestamps) */
+  if ( pthread_create( &(v4lsrc->thread_soft_sync), NULL,
+    gst_v4lsrc_soft_sync_thread, (void *) v4lsrc ) )
+  {
+    gst_element_error(GST_ELEMENT(v4lsrc),
+      "Failed to create software sync thread: %s",
+      sys_errlist[errno]);
+    return FALSE;
+  }
 
   return TRUE;
 }
@@ -240,7 +375,7 @@ gst_v4lsrc_grab_frame (GstV4lSrc *v4lsrc, gint *num)
 /******************************************************
  * gst_v4lsrc_get_buffer():
  *   get the address of the just-capture buffer
- * return value: TRUE on success, FALSE on error
+ * return value: the buffer's address or NULL
  ******************************************************/
 
 guint8 *
@@ -307,6 +442,9 @@ gst_v4lsrc_capture_stop (GstV4lSrc *v4lsrc)
       if (!gst_v4lsrc_sync_next_frame(v4lsrc, &num))
         return FALSE;
 
+  pthread_cancel(v4lsrc->thread_soft_sync);
+  pthread_join(v4lsrc->thread_soft_sync, NULL);
+
   return TRUE;
 }
 
@@ -329,6 +467,9 @@ gst_v4lsrc_capture_deinit (GstV4lSrc *v4lsrc)
 
   /* free buffer tracker */
   free(v4lsrc->frame_queued);
+  free(v4lsrc->cond_soft_sync);
+  free(v4lsrc->isready_soft_sync);
+  free(v4lsrc->timestamp_soft_sync);
 
   /* unmap the buffer */
   munmap(GST_V4LELEMENT(v4lsrc)->buffer, v4lsrc->mbuf.size);
