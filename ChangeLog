@@ -1,3 +1,11 @@
+2004-10-04  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_handle_sink_event),
+	(gst_rmdemux_loop), (gst_rmdemux_add_stream),
+	(gst_rmdemux_parse_mdpr), (gst_rmdemux_dump_mdpr):
+	  Don't hang on length=0 chunks. Some negotiation fixes. Signal
+	  no-more-pads.
+
 2004-10-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
