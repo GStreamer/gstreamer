@@ -234,6 +234,10 @@ Objects
   This means that all properties that require access beyond the scope of the
   critial section should be copied or refcounted before releasing the lock.
 
+  Most object provide a _get_<property>() method to get a copy or refcounted
+  instance of the property value. The caller should not wory about any locks
+  but should unref/free the object after usage.
+
   Example:
 
     the following example correctly gets the peer pad of an element. It is
@@ -254,6 +258,19 @@ Objects
     Note that after releasing the lock the peer might not actually be the peer
     anymore of the pad. If you need to be sure it is, you need to extend the
     critical section to include the operations on the peer.
+
+  Example:
+
+    Accessing the name of an object makes a copy of the name. The caller of the
+    function should g_free() the name after usage.
+
+      GST_LOCK (object)
+      name = g_strdup (object->name);
+      GST_UNLOCK (object)
+      ... use name ...
+
+      g_free (name);
+    
 
 * Accessor methods
 

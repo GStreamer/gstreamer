@@ -1,3 +1,20 @@
+2005-03-03  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-MT-refcounting.txt:
+	* gst/elements/gstidentity.c: (gst_identity_event):
+	* gst/gstobject.c: (gst_object_get_type), (gst_object_class_init),
+	(gst_object_init), (gst_object_ref), (gst_object_unref),
+	(gst_object_sink), (gst_object_dispose),
+	(gst_object_dispatch_properties_changed),
+	(gst_object_set_name_default), (gst_object_set_name),
+	(gst_object_set_name_prefix), (gst_object_set_parent),
+	(gst_object_unparent), (gst_object_check_uniqueness):
+	* gst/gstobject.h:
+	Preparing for merge to HEAD.
+	Backported some HEAD changes to the set_name_default
+	method.
+	Updated refcounting docs.
+
 2005-03-03  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstiterator.c (gst_iterator_find_custom) 

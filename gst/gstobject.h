@@ -123,8 +123,6 @@ struct _GstObjectClass {
   void 		(*deep_notify)   	(GstObject *object, GstObject *orig, GParamSpec *pspec);
 
   /* vtable */
-  void		(*destroy)		(GstObject *object);
-
   xmlNodePtr	(*save_thyself)		(GstObject *object, xmlNodePtr parent);
   void		(*restore_thyself)	(GstObject *object, xmlNodePtr self);
 
@@ -136,7 +134,7 @@ struct _GstObjectClass {
 GType		gst_object_get_type		(void);
 
 /* name routines */
-gboolean	gst_object_set_name		(GstObject *object, const gchar *name_prefix);
+gboolean	gst_object_set_name		(GstObject *object, const gchar *name);
 gchar*		gst_object_get_name		(GstObject *object);
 void		gst_object_set_name_prefix	(GstObject *object, const gchar *name_prefix);
 gchar*		gst_object_get_name_prefix	(GstObject *object);
