@@ -251,14 +251,15 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
 
     /* if we've got something, deal with it */
     if (fmt != NULL) {
+      GstCaps *caps;
+
 
       /* we can gather format information now */
       format = (GstWavParseFormat *)((guchar *) GST_BUFFER_DATA (buf) + fmt->offset);
 
       /* set the caps on the src pad */
-      gst_pad_try_set_caps (wavparse->srcpad, 
-		      GST_CAPS_NEW (
-			"wavparse_src",
+      caps = GST_CAPS_NEW (
+			"parsewav_src",
 			"audio/raw",
 			"format",	GST_PROPS_STRING ("int"),
 			  "law",	GST_PROPS_INT (0),		//FIXME
@@ -268,7 +269,9 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
 			  "depth",	GST_PROPS_INT (format->wBitsPerSample),
 			  "rate",	GST_PROPS_INT (format->dwSamplesPerSec),
 			  "channels",	GST_PROPS_INT (format->wChannels)
-		      ));
+		      );
+
+      gst_pad_try_set_caps (wavparse->srcpad, caps);
 
       wavparse->bps = format->wBlockAlign;
       GST_DEBUG (0, "frequency %d, channels %d\n",
