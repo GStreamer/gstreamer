@@ -773,8 +773,6 @@ gst_bin_iterate_func (GstBin *bin)
 static void
 gst_bin_eos_func (GstBin *bin, GstElement *element)
 {
-  g_print ("eos in bin \"%s\"\n", gst_element_get_name (GST_ELEMENT (bin)));
-
   gst_element_signal_eos (GST_ELEMENT (bin));
 }
 

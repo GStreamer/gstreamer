@@ -442,8 +442,8 @@ gst_element_set_state (GstElement *element, GstElementState state)
   /* loop until the final requested state is set */
   while (GST_STATE(element) != state) {
     /* move the curpending state in the correct direction */
-    if (curpending < state) curpending++;
-    else curpending--;
+    if (curpending < state) curpending<<=1;
+    else curpending>>=1;
 
     /* set the pending state variable */
     // FIXME: should probably check to see that we don't already have one
