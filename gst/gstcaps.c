@@ -23,9 +23,8 @@
 #include <string.h>
 #include <signal.h>
 
-#include <gst/gst.h>
-
 #include "gst_private.h"
+#include <gst/gst.h>
 
 #define CAPS_POISON(caps) G_STMT_START{ \
   if (caps) { \
@@ -291,6 +290,7 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
   CAPS_POISON (caps2);
 #endif
   if (gst_caps_is_any (caps1) || gst_caps_is_any (caps2)) {
+    /* FIXME: this leaks */
     caps1->flags |= GST_CAPS_FLAGS_ANY;
     for (i = 0; i < caps2->structs->len; i++) {
       structure = gst_caps_get_structure (caps2, i);

@@ -74,7 +74,7 @@ gst_trace_new (gchar * filename, gint size)
 #define S_IWUSR S_IWRITE
 #endif
 #ifndef S_IRUSR
-#define S_IDUSR S_IREAD
+#define S_IRUSR S_IREAD
 #endif
   trace->fd =
       open (trace->filename, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);

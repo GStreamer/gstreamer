@@ -6,6 +6,7 @@
 #include <gst/control/control.h>
 #include <string.h>
 #include <locale.h>
+#include <glib/gprintf.h>
 
 #define PUT_START_TAG(pfx,tag)                                  \
 G_STMT_START{                                                   \
@@ -42,6 +43,20 @@ G_STMT_START{                                                   \
 G_STMT_START{                                                   \
   g_print ("%*.*s"str"\n", pfx, pfx, "" , ##a);	   		\
 }G_STMT_END
+
+#else
+
+static inline void
+PUT_STRING (int pfx, const char *format, ...)
+{
+  va_list varargs;
+
+  g_print ("%*.*s", pfx, pfx, "");
+  va_start (varargs, format);
+  g_vprintf (format, varargs);
+  va_end (varargs);
+  g_print ("\n");
+}
 
 #endif
 

@@ -33,7 +33,9 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
 
 GST_DEBUG_CATEGORY_STATIC (gst_filesink_debug);

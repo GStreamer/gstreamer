@@ -25,11 +25,20 @@
 #  include "config.h"
 #endif
 
+/* FIXME: hack alert */
+#ifdef _MSC_VER
+#define DISABLE_FAULT_HANDLER
+#endif
+
 #include <string.h>
 #include <stdlib.h>
 #include <signal.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#ifndef DISABLE_FAULT_HANDLER
 #include <sys/wait.h>
+#endif
 #include <locale.h>             /* for LC_ALL */
 #include "gst/gst-i18n-app.h"
 
@@ -42,9 +51,12 @@
 #endif
 
 extern volatile gboolean glib_on_error_halt;
+
+#ifndef DISABLE_FAULT_HANDLER
 static void fault_restore (void);
 static void fault_spin (void);
 static void sigint_restore (void);
+#endif
 
 static gint max_iterations = 0;
 static guint64 iterations = 0;
@@ -156,6 +168,7 @@ xmllaunch_parse_cmdline (const gchar ** argv)
 }
 #endif
 
+#ifndef DISABLE_FAULT_HANDLER
 #ifndef USE_SIGINFO
 static void
 fault_handler_sighandler (int signum)
@@ -247,6 +260,7 @@ fault_setup (void)
   sigaction (SIGSEGV, &action, NULL);
   sigaction (SIGQUIT, &action, NULL);
 }
+#endif
 
 static void
 print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
@@ -282,6 +296,7 @@ found_tag (GObject * pipeline, GstElement * source, GstTagList * tags)
   gst_tag_list_foreach (tags, print_tag, NULL);
 }
 
+#ifndef DISABLE_FAULT_HANDLER
 /* we only use sighandler here because the registers are not important */
 static void
 sigint_handler_sighandler (int signum)
@@ -340,6 +355,7 @@ play_signal_setup (void)
   sigaction (SIGUSR1, &action, NULL);
   sigaction (SIGUSR2, &action, NULL);
 }
+#endif
 
 int
 main (int argc, char *argv[])
@@ -379,9 +395,11 @@ main (int argc, char *argv[])
 
   free (malloc (8));            /* -lefence */
 
+#ifdef GETTEXT_PACKAGE
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
   textdomain (GETTEXT_PACKAGE);
+#endif
 
   gst_alloc_trace_set_flags_all (GST_ALLOC_TRACE_LIVE);
 
@@ -406,11 +424,13 @@ main (int argc, char *argv[])
   }
   argc = j;
 
+#ifndef DISABLE_FAULT_HANDLER
   if (!no_fault)
     fault_setup ();
 
   sigint_setup ();
   play_signal_setup ();
+#endif
 
   if (trace) {
     if (!gst_alloc_trace_available ()) {

@@ -941,9 +941,11 @@ main (int argc, char *argv[])
     POPT_TABLEEND
   };
 
+#ifdef GETTEXT_PACKAGE
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
   textdomain (GETTEXT_PACKAGE);
+#endif
 
   gst_init_with_popt_table (&argc, &argv, options);
   gst_control_init (&argc, &argv);

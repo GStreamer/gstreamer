@@ -812,7 +812,7 @@ GST_LOG (const char *format, ...)
 void gst_debug_print_stack_trace (void);
 
 /* timestamp debugging macros */
-#define GST_TIME_FORMAT "u:%02u:%02u:%09u"
+#define GST_TIME_FORMAT "u:%02u:%02u.%09u"
 #define GST_TIME_ARGS(t) \
 	(guint) (t / (GST_SECOND * 60 * 60)), \
 	(guint) ((t / (GST_SECOND * 60)) % 60), \

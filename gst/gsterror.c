@@ -21,8 +21,8 @@
 #include "config.h"
 #endif
 
-#include <gst/gst.h>
 #include "gst_private.h"
+#include <gst/gst.h>
 #include "gst-i18n-lib.h"
 
 #define TABLE(t, d, a, b) t[GST_ ## d ## _ERROR_ ## a] = g_strdup (b)

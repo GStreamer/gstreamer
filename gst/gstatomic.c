@@ -20,5 +20,6 @@
 #define GST_IMPLEMENT_INLINES 1
 #define __GST_ATOMIC_C__
 
+#include "gst_private.h"
 #include "gstatomic.h"
 #include "gstatomic_impl.h"

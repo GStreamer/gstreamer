@@ -20,4 +20,5 @@
 #define GST_IMPLEMENT_INLINES 1
 #define __GST_TRASH_STACK_C__
 
+#include "gst_private.h"
 #include "gsttrashstack.h"

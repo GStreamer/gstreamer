@@ -1,3 +1,38 @@
+2004-05-06  David Schleef  <ds@schleef.org>
+
+	Changes to handle compilers that don't have variadic macro
+	support.  In particular, glib headers define some inlines
+	that need G_LOG_DOMAIN defined.  Additional fixes for MSVC
+	builds.
+	* gst/Makefile.am:
+	* gst/cothreads.c:
+	* gst/elements/gstfdsink.c:
+	* gst/elements/gstfdsrc.c:
+	* gst/elements/gstfilesink.c:
+	* gst/elements/gstfilesrc.c:
+	* gst/gst_private.h:
+	* gst/gstatomic.c:
+	* gst/gstcaps.c: (gst_caps_append):
+	* gst/gstcpu.c: (gst_cpuid_i386):
+	* gst/gstelement.c:
+	* gst/gsterror.c:
+	* gst/gstfilter.c:
+	* gst/gstinfo.h:
+	* gst/gstprobe.c:
+	* gst/gstquery.c:
+	* gst/gstregistry.c:
+	* gst/gststructure.c:
+	* gst/gsttaginterface.c:
+	* gst/gsttrace.c: (gst_trace_new):
+	* gst/gsttrashstack.c:
+	* gst/gsturi.c:
+	* gst/gstvalue.c:
+	* gst/parse/grammar.y:
+	* gst/parse/parse.l:
+	* tools/gst-inspect.c: (main):
+	* tools/gst-launch.c: (main):
+	* tools/gst-xmlinspect.c: (PUT_STRING):
+
 2004-05-06  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/elements/gstfilesrc.c: (gst_filesrc_get),

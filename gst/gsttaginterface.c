@@ -24,10 +24,10 @@
 #  include "config.h"
 #endif
 
+#include "gst_private.h"
 #include "gsttaginterface.h"
 #include <gobject/gvaluecollector.h>
 #include <string.h>
-#include "gst_private.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_tag_interface_debug);
 #define GST_CAT_DEFAULT tag_tag_interface_debug

@@ -22,8 +22,8 @@
 
 #include <string.h>
 
-#include "gstquery.h"
 #include "gst_private.h"
+#include "gstquery.h"
 
 static GList *_gst_queries = NULL;
 static GHashTable *_nick_to_query = NULL;

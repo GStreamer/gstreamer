@@ -14,7 +14,16 @@
 #elif defined(G_HAVE_GNUC_VARARGS)
 #define PRINT(args...) GST_CAT_DEBUG (GST_CAT_PIPELINE, "flex: " args)
 #else
-#define PRINT(args...)
+static inline void
+PRINT (const char *format, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (GST_CAT_PIPELINE, GST_LEVEL_DEBUG, NULL,
+    format, varargs);
+  va_end (varargs);
+}
 #endif
 
 #define YY_DECL int _gst_parse_yylex (YYSTYPE *lvalp)

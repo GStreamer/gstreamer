@@ -24,9 +24,9 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "gst_private.h"
 #include <gst/gst.h>
 #include <gobject/gvaluecollector.h>
-#include "gst_private.h"
 
 typedef struct _GstValueUnionInfo GstValueUnionInfo;
 struct _GstValueUnionInfo

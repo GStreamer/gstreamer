@@ -30,7 +30,9 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #ifdef HAVE_MMAP
 #include <sys/mman.h>
 #endif
@@ -39,6 +41,16 @@
 
 #include "../gst-i18n-lib.h"
 
+/* FIXME we should be using glib for this */
+#ifndef S_ISREG
+#define S_ISREG(mode) ((mode)&_S_IFREG)
+#endif
+#ifndef S_ISDIR
+#define S_ISDIR(mode) ((mode)&_S_IFDIR)
+#endif
+#ifndef S_ISSOCK
+#define S_ISSOCK(x) (0)
+#endif
 
 /**********************************************************************
  * GStreamer Default File Source

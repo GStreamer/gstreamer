@@ -28,12 +28,14 @@
 #  include "config.h"
 #endif
 
+/* This needs to be before glib.h, since it might be used in inline
+ * functions */
+extern const char             *g_log_domain_gstreamer;
+
 #include <glib.h>
 
 #include <stdlib.h>
 #include <string.h>
-
-extern const char             *g_log_domain_gstreamer;
 
 gboolean __gst_in_valgrind (void);
 
@@ -70,6 +72,36 @@ extern GstDebugCategory *GST_CAT_ERROR_SYSTEM;
 extern GstDebugCategory *GST_CAT_EVENT;
 extern GstDebugCategory *GST_CAT_PARAMS;
 extern GstDebugCategory *GST_CAT_CALL_TRACE;
+
+#else
+
+#define GST_CAT_GST_INIT         NULL
+#define GST_CAT_COTHREADS        NULL
+#define GST_CAT_COTHREAD_SWITCH  NULL
+#define GST_CAT_AUTOPLUG         NULL
+#define GST_CAT_AUTOPLUG_ATTEMPT NULL
+#define GST_CAT_PARENTAGE        NULL
+#define GST_CAT_STATES           NULL
+#define GST_CAT_PLANNING         NULL
+#define GST_CAT_SCHEDULING       NULL
+#define GST_CAT_DATAFLOW         NULL
+#define GST_CAT_BUFFER           NULL
+#define GST_CAT_CAPS             NULL
+#define GST_CAT_CLOCK            NULL
+#define GST_CAT_ELEMENT_PADS     NULL
+#define GST_CAT_PADS             NULL
+#define GST_CAT_PIPELINE         NULL
+#define GST_CAT_PLUGIN_LOADING   NULL
+#define GST_CAT_PLUGIN_INFO      NULL
+#define GST_CAT_PROPERTIES       NULL
+#define GST_CAT_THREAD           NULL
+#define GST_CAT_XML              NULL
+#define GST_CAT_NEGOTIATION      NULL
+#define GST_CAT_REFCOUNTING      NULL
+#define GST_CAT_ERROR_SYSTEM     NULL
+#define GST_CAT_EVENT            NULL
+#define GST_CAT_PARAMS           NULL
+#define GST_CAT_CALL_TRACE       NULL
 
 #endif
 

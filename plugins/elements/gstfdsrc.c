@@ -20,17 +20,20 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+#include "gst/gst_private.h"
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdio.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <stdlib.h>
 #include <errno.h>
-
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
 
 #include "gstfdsrc.h"
 

@@ -21,9 +21,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "gst_private.h"
 #include <glib.h>
 
-#include "gst_private.h"
 
 #include "gstcpu.h"
 #include "gstinfo.h"

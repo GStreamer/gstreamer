@@ -20,10 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "gst_private.h"
 #include <glib.h>
 #include <stdarg.h>
 #include <gobject/gvaluecollector.h>
-#include "gst_private.h"
 
 #include "gstelement.h"
 #include "gstbin.h"

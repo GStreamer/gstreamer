@@ -25,7 +25,9 @@
 #endif
 
 #include "gstfdsink.h"
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_fdsink_debug);
 #define GST_CAT_DEFAULT gst_fdsink_debug

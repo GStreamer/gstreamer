@@ -20,6 +20,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+
+#include "gst_private.h"
 #include <glib.h>
 
 #include <sys/time.h>
@@ -30,8 +32,6 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/mman.h>
-
-#include "gst_private.h"
 
 #include "cothreads.h"
 #include "gstarch.h"

@@ -227,8 +227,8 @@ gstmarshal.h: gstmarshal.list
 	mv gstmarshal.h.tmp gstmarshal.h
 
 gstmarshal.c: gstmarshal.list
-	echo "#include \"glib-object.h\"" >gstmarshal.c.tmp
-	echo "#include \"gst_private.h\"" >> gstmarshal.c.tmp
+	echo "#include \"gst_private.h\"" > gstmarshal.c.tmp
+	echo "#include \"glib-object.h\"" >> gstmarshal.c.tmp
 	echo "#include \"gstmarshal.h\"" >> gstmarshal.c.tmp
 	glib-genmarshal --body --prefix=gst_marshal $^ >> gstmarshal.c.tmp
 	mv gstmarshal.c.tmp gstmarshal.c
@@ -243,7 +243,7 @@ gstenumtypes.h: $(gst_headers)
 
 gstenumtypes.c: $(gst_headers)
 	glib-mkenums \
-	--fhead "#include <gst/gst.h>" \
+	--fhead "#include \"gst_private.h\"\n#include <gst/gst.h>" \
 	--fprod "\n/* enumerations from \"@filename@\" */" \
 	--vhead "GType\n@enum_name@_get_type (void)\n{\n  static GType etype = 0;\n  if (etype == 0) {\n    static const G@Type@Value values[] = {"     \
 	--vprod "      { @VALUENAME@, \"@VALUENAME@\", \"@valuenick@\" }," \
