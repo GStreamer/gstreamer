@@ -1,3 +1,18 @@
+2005-02-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_invert):
+	  Declare variables at beginning of block and make gcc-2.95 happy
+	  (fixes # 167482, patch by Gergely Nagy).
+	  
+	* gst/tcp/gsttcpclientsrc.c:
+	* gst/tcp/gsttcpclientsrc.h:
+	  Move some includes into the header, so that struct sockaddr_in is
+	  defined when it should be defined on FreeBSD as well (fixes
+	  #167483).
+	  
+	* gst/tcp/gsttcpserversrc.c: (gst_tcpserversrc_init_receive):
+	  Don't pass uninitialised values to setsockopt() here either.
+
 2005-02-17  Luca Ognibene  <luogni at tin dot it>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
