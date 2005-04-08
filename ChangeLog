@@ -1,15 +1,3 @@
-2005-04-08  Stefan Kost  <ensonic@users.sf.net>
-
-	* docs/gst/gstreamer-sections.txt:
-	* gst/Makefile.am:
-	* gst/gstparent.c: (gst_parent_get_child_by_name),
-	(gst_parent_get_child_by_index), (gst_parent_get_children_count),
-	(gst_parent_get_valist), (gst_parent_get), (gst_parent_set_valist),
-	(gst_parent_set), (gst_parent_base_init), (gst_parent_get_type):
-	* gst/gstparent.h:
-	* gst/gstvalue.c: (_gst_value_initialize):
-    a new interface for managing elements with multiple children
-
 2005-04-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* examples/helloworld/helloworld.c: (error_cb), (main):
