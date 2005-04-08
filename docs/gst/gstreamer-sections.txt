@@ -1114,6 +1114,29 @@ gst_pad_template_flags_get_type
 </SECTION>
 
 <SECTION>
+<FILE>gstparent</FILE>
+<TITLE>GstParent</TITLE>
+gst_parent_get_children_count
+gst_parent_get_child_by_name
+gst_parent_get_child_by_index
+gst_parent_get_valist
+gst_parent_get
+gst_parent_set_valist
+gst_parent_set
+<SUBSECTION Standard>
+GstParent
+GstParentClass
+GST_PARENT
+GST_IS_PARENT
+GST_IS_PARENT_CLASS
+GST_PARENT_CLASS
+GST_PARENT_GET_CLASS
+GST_TYPE_PARENT
+<SUBSECTION Private>
+gst_parent_get_type
+</SECTION>
+
+<SECTION>
 <FILE>gstparse</FILE>
 <TITLE>GstParse</TITLE>
 gst_parse_error_quark
