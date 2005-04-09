@@ -1,3 +1,9 @@
+2005-04-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstparent.c:
+	* gst/gstparent.h:
+	  Fix build.
+
 2005-04-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* examples/helloworld/helloworld.c: (error_cb), (main):
