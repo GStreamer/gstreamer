@@ -497,7 +497,10 @@ gst_object_dispatch_properties_changed (GObject * object,
   while (parent) {
     /* for debugging ... */
     gchar *parent_name = gst_object_get_name (parent);
+
+#ifndef GST_DISABLE_GST_DEBUG
     gchar *debug_parent_name = GST_STR_NULL (parent_name);
+#endif
 
     /* need own category? */
     for (i = 0; i < n_pspecs; i++) {
