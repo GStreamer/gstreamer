@@ -1737,7 +1737,9 @@ gst_element_abort_state (GstElement * element)
   pending = GST_STATE_PENDING (element);
 
   if (pending != GST_STATE_VOID_PENDING && !GST_STATE_ERROR (element)) {
+#ifndef GST_DISABLE_GST_DEBUG
     GstElementState old_state = GST_STATE (element);
+#endif
 
     GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
         "aborting state from %s to %s", gst_element_state_get_name (old_state),
