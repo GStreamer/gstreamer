@@ -18,7 +18,7 @@ install-pluginLTLIBRARIES:
 CLEANFILES = core.* test-registry.xml
 
 clean-local:
-	for i in find . -name .libs; do \
+	for i in find . -name ".libs" -type d; do \
 	  rm -rf $$i; \
 	done
 
