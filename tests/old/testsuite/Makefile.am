@@ -19,7 +19,7 @@ SUBDIRS = \
 	dlopen dynparams \
 	elements ghostpads indexers negotiation pad \
 	$(GST_PARSE_DIRS) \
-	plugin refcounting schedulers states tags threads
+	plugin refcounting schedulers states tags threads trigger
 
 DIST_SUBDIRS = \
 	bins bytestream caps cleanup clock \
@@ -27,7 +27,7 @@ DIST_SUBDIRS = \
 	dlopen dynparams \
 	elements ghostpads indexers negotiation pad \
 	parse \
-	plugin refcounting schedulers states tags threads
+	plugin refcounting schedulers states tags threads trigger
 
 tests_pass = test_gst_init
 tests_fail = 
