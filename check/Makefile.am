@@ -8,7 +8,7 @@ plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 $(TESTS): $(top_builddir)/tools/gst-register
 
 # rebuild gst-register-@GST_MAJORMINOR@ if needed
-$(top_builddir)/tools/gst-register:
+$(top_builddir)/tools/gst-register-@GST_MAJORMINOR@$(EXEEXT):
 	cd $(top_builddir)/tools && make
 
 # override to _not_ install the test plugins
@@ -19,12 +19,12 @@ CLEANFILES = core.* test-registry.xml
 
 clean-local:
 	for i in find . -name .libs; do \
-	  rm -rf $$i \
+	  rm -rf $$i; \
 	done
 
 TESTS = $(top_builddir)/tools/gst-register \
 	gst/gstbin	     	\
-        gst/gstbus          \
+        gst/gstbus		\
 	gst/gstcaps     	\
 	gst/gstdata		\
 	gst/gstiterator 	\
