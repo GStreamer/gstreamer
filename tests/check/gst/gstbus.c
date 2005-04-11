@@ -105,7 +105,7 @@ gstbus_suite (void)
   Suite *s = suite_create ("GstBus");
   TCase *tc_chain = tcase_create ("stresstest");
 
-  tcase_set_timeout (tc_chain, 0);
+  tcase_set_timeout (tc_chain, 20);
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_hammer_bus);

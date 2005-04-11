@@ -31,7 +31,6 @@
 
 #include <gst/gst.h>
 
-
 /* logging function for tests
  * a test uses g_message() to log a debug line
  * a gst unit test can be run with GST_TEST_DEBUG env var set to see the

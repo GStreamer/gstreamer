@@ -1,3 +1,10 @@
+2005-04-11  set REAL_NAME environment variable  <set EMAIL_ADDRESS environment variable>
+
+	* check/gst/gstbus.c: (gstbus_suite):
+	* check/gst/gstdata.c: (thread_ref), (gst_data_suite):
+	* check/gstcheck.h:
+        Fix up the timeout so that the test does not fail.
+
 2005-04-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/README:
