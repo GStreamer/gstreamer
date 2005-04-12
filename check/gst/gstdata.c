@@ -171,7 +171,7 @@ gst_data_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   /* turn off timeout */
-  tcase_set_timeout (tc_chain, 20);
+  tcase_set_timeout (tc_chain, 60);
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_copy);
