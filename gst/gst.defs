@@ -3756,6 +3756,12 @@
   (return-type "const-gchar*")
 )
 
+(define-method get_version
+  (of-object "GstPlugin")
+  (c-name "gst_plugin_get_version")
+  (return-type "const-gchar*")
+)
+
 (define-method get_module
   (of-object "GstPlugin")
   (c-name "gst_plugin_get_module")

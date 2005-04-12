@@ -1,5 +1,11 @@
 2005-04-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gst.defs:
+	* gst/gst.override:
+	  wrap gst_plugin_get_version so it returns a tuple
+
+2005-04-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* testsuite/test_probe.py:
 	  add test for probes
 

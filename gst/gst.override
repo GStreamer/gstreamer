@@ -99,7 +99,6 @@ ignore
   gst_alloc_trace_list
   gst_alloc_trace_get
   gst_error_get_message
-  gst_object_default_deep_notify
   gst_object_check_uniqueness
   gst_object_replace
   gst_parse_launchv
@@ -738,4 +737,30 @@ _wrap_gst_probe_perform(PyGBoxed *self, PyObject *args, PyObject *kwargs)
 	}
 
     	return PyBool_FromLong(gst_probe_perform(self->boxed, &data));
+}
+%%
+override gst_plugin_get_version
+static PyObject *
+_wrap_gst_plugin_get_version(PyGObject *self)
+{
+        PyObject *tuple;
+        const gchar *version;
+        gchar **items, **p;
+        gint i = 0;
+        gint count = 0;
+        
+        version = gst_plugin_get_version((GstPlugin *) self->obj);
+        items = g_strsplit(version, ".", 4);
+        for (p = items; *p; ++p) ++count;
+
+	tuple = PyTuple_New(count);
+        for (p = items; *p; ++p) {
+                PyObject *item;
+                item = PyInt_FromString(*p, NULL, 10);
+                PyTuple_SetItem(tuple, i, item);
+                i++;
+        }
+
+        g_strfreev(items);
+        return tuple;
 }
