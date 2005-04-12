@@ -206,7 +206,7 @@ gst_stream_info_dispose (GObject * object)
   g_free (stream_info->decoder);
   stream_info->decoder = NULL;
   if (stream_info->caps) {
-    gst_caps_free (stream_info->caps);
+    gst_caps_unref (stream_info->caps);
     stream_info->caps = NULL;
   }
 
@@ -225,7 +225,7 @@ stream_info_change_state (GstElement * element,
     /* state change will annoy us */
     g_return_if_fail (stream_info->mute == TRUE);
     GST_DEBUG_OBJECT (stream_info, "Re-muting pads after state-change");
-    gst_pad_set_active_recursive (GST_PAD (stream_info->object), FALSE);
+    //gst_pad_set_active_recursive (GST_PAD (stream_info->object), FALSE);
   }
 }
 
@@ -241,8 +241,8 @@ gst_stream_info_set_mute (GstStreamInfo * stream_info, gboolean mute)
 
   if (mute != stream_info->mute) {
     stream_info->mute = mute;
-    gst_pad_set_active_recursive ((GstPad *)
-        GST_PAD_REALIZE (stream_info->object), !mute);
+    //gst_pad_set_active_recursive ((GstPad *)
+    //    GST_PAD_REALIZE (stream_info->object), !mute);
 
     if (mute) {
       g_signal_connect (gst_pad_get_parent ((GstPad *)

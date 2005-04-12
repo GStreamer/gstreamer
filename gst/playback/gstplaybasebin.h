@@ -68,12 +68,14 @@ struct _GstPlayBaseBin {
   /* properties */
   gboolean	 threaded;
   guint64	 queue_size;
+  guint		 queue_threshold;
 
   gint		 current[NUM_TYPES];
 
   /* internal thread */
   GstElement	*thread;
   gchar 	*uri, *suburi;
+  gboolean	 is_stream;
   GstElement	*source;
   GstElement	*decoder;
   GstElement	*subtitle; /* additional filesrc ! subparse bin */
@@ -102,6 +104,10 @@ struct _GstPlayBaseBinClass {
   void (*buffering)		(GstPlayBaseBin *play_base_bin,
 				 gint            percentage);
   void (*group_switch)		(GstPlayBaseBin *play_base_bin);
+
+  /* Called on redirect */
+  void (*got_redirect)		(GstPlayBaseBin *play_base_bin,
+				 const gchar    *new_location);
 
   /* action signals */
   gboolean (*link_stream)	(GstPlayBaseBin *play_base_bin, 

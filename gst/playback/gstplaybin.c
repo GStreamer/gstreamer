@@ -49,6 +49,7 @@ struct _GstPlayBin
   GstElement *video_sink;
   GstElement *visualisation;
   GstElement *volume_element;
+  GstElement *textoverlay_element;
   gfloat volume;
 
   /* these are the currently active sinks */
@@ -65,6 +66,9 @@ struct _GstPlayBin
 
   /* boolean to see if we're currently switching groups */
   gboolean group_switch;
+
+  /* font description */
+  gchar *font_desc;
 };
 
 struct _GstPlayBinClass
@@ -80,7 +84,8 @@ enum
   ARG_VIDEO_SINK,
   ARG_VIS_PLUGIN,
   ARG_VOLUME,
-  ARG_FRAME
+  ARG_FRAME,
+  ARG_FONT_DESC
 };
 
 /* signals */
@@ -182,13 +187,18 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       g_param_spec_object ("vis-plugin", "Vis plugin",
           "the visualization element to use (NULL = none)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (gobject_klass), ARG_VOLUME,
+  g_object_class_install_property (gobject_klass, ARG_VOLUME,
       g_param_spec_double ("volume", "volume", "volume",
           0.0, VOLUME_MAX_DOUBLE, 1.0, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (gobject_klass), ARG_FRAME,
+  g_object_class_install_property (gobject_klass, ARG_FRAME,
       g_param_spec_boxed ("frame", "Frame",
           "The last frame (NULL = no video available)",
           GST_TYPE_BUFFER, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_klass, ARG_FONT_DESC,
+      g_param_spec_string ("subtitle-font-desc",
+          "Subtitle font description",
+          "Pango font description of font "
+          "to be used for subtitle rendering", NULL, G_PARAM_WRITABLE));
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_play_bin_dispose);
 
@@ -216,16 +226,15 @@ gst_play_bin_init (GstPlayBin * play_bin)
   play_bin->audio_sink = NULL;
   play_bin->visualisation = NULL;
   play_bin->volume_element = NULL;
+  play_bin->textoverlay_element = NULL;
   play_bin->volume = 1.0;
   play_bin->seekables = NULL;
   play_bin->sinks = NULL;
   play_bin->frame = NULL;
+  play_bin->font_desc = NULL;
   play_bin->cache = g_hash_table_new_full (g_str_hash, g_str_equal,
       NULL, (GDestroyNotify) gst_object_unref);
   play_bin->group_switch = FALSE;
-
-  /* no iterate is needed */
-  GST_FLAG_SET (play_bin, GST_BIN_SELF_SCHEDULABLE);
 }
 
 static void
@@ -253,7 +262,8 @@ gst_play_bin_dispose (GObject * object)
     gst_object_unref (GST_OBJECT (play_bin->visualisation));
     play_bin->visualisation = NULL;
   }
-
+  g_free (play_bin->font_desc);
+  play_bin->font_desc = NULL;
 
   if (G_OBJECT_CLASS (parent_class)->dispose) {
     G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -312,6 +322,14 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
         play_bin->volume = g_value_get_double (value);
         g_object_set (G_OBJECT (play_bin->volume_element), "volume",
             play_bin->volume, NULL);
+      }
+      break;
+    case ARG_FONT_DESC:
+      g_free (play_bin->font_desc);
+      play_bin->font_desc = g_strdup (g_value_get_string (value));
+      if (play_bin->textoverlay_element) {
+        g_object_set (G_OBJECT (play_bin->textoverlay_element),
+            "font-desc", g_value_get_string (value), NULL);
       }
       break;
     default:
@@ -406,7 +424,7 @@ gen_video_element (GstPlayBin * play_bin)
   if (play_bin->video_sink) {
     sink = play_bin->video_sink;
   } else {
-    sink = gst_element_factory_make (DEFAULT_VIDEOSINK, "sink");
+    sink = gst_element_factory_make ("autovideosink", "sink");
   }
   gst_object_ref (GST_OBJECT (sink));
   g_hash_table_insert (play_bin->cache, "video_sink", sink);
@@ -455,6 +473,11 @@ gen_text_element (GstPlayBin * play_bin)
   overlay = gst_element_factory_make ("textoverlay", "overlay");
   g_object_set (G_OBJECT (overlay),
       "halign", "center", "valign", "bottom", NULL);
+  play_bin->textoverlay_element = overlay;
+  if (play_bin->font_desc) {
+    g_object_set (G_OBJECT (play_bin->textoverlay_element),
+        "font-desc", play_bin->font_desc, NULL);
+  }
   vbin = gen_video_element (play_bin);
   if (!overlay) {
     g_warning ("No overlay (pango) element, subtitles disabled");
@@ -511,7 +534,7 @@ gen_audio_element (GstPlayBin * play_bin)
   if (play_bin->audio_sink) {
     sink = play_bin->audio_sink;
   } else {
-    sink = gst_element_factory_make (DEFAULT_AUDIOSINK, "sink");
+    sink = gst_element_factory_make ("autoaudiosink", "sink");
     play_bin->audio_sink = GST_ELEMENT (gst_object_ref (GST_OBJECT (sink)));
   }
 
@@ -674,6 +697,9 @@ remove_sinks (GstPlayBin * play_bin)
     gst_buffer_unref (play_bin->frame);
     play_bin->frame = NULL;
   }
+
+  play_bin->textoverlay_element = NULL;
+  play_bin->volume_element = NULL;
 }
 
 /* loop over the streams and set up the pipeline to play this
@@ -855,7 +881,7 @@ gst_play_bin_send_event (GstElement * element, GstEvent * event)
 
   play_bin = GST_PLAY_BIN (element);
 
-  state = gst_element_get_state (element);
+  gst_element_get_state (element, &state, NULL, NULL);
   /* we pause the pipeline first before sending the event. We only
    * do this if the pipeline was playing. */
   if (state == GST_STATE_PLAYING) {

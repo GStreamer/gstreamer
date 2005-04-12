@@ -28,7 +28,7 @@ gen_video_element ()
   GstElement *conv;
   GstElement *sink;
 
-  element = gst_thread_new ("vbin");
+  element = gst_bin_new ("vbin");
   conv = gst_element_factory_make ("ffmpegcolorspace", "conv");
   sink = gst_element_factory_make (DEFAULT_VIDEOSINK, "sink");
 
@@ -49,7 +49,7 @@ gen_audio_element ()
   GstElement *conv;
   GstElement *sink;
 
-  element = gst_thread_new ("abin");
+  element = gst_bin_new ("abin");
   conv = gst_element_factory_make ("audioconvert", "conv");
   sink = gst_element_factory_make (DEFAULT_AUDIOSINK, "sink");
 
@@ -130,8 +130,7 @@ main (gint argc, gchar * argv[])
     g_print ("could not play\n");
     return -1;
   }
-
-  gst_main ();
+  //gst_main ();
 
   return 0;
 }

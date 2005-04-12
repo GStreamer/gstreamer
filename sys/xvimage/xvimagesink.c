@@ -1183,8 +1183,6 @@ gst_xvimagesink_getcaps (GstBaseSink * bsink)
 
   xvimagesink = GST_XVIMAGESINK (bsink);
 
-  g_print ("getcaps\n");
-
   if (xvimagesink->xcontext)
     return gst_caps_ref (xvimagesink->xcontext->caps);
 

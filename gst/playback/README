@@ -12,6 +12,27 @@ decoderbin:
    - threading after demuxing?
    - new_media events should be handled.
    - caching of elements.
+   - abstract more elements, pads (typefind, ...);
+
+   The autoplugging happens as follows:
+
+   1) typefind is added internally to the bin.
+   2) the have_type signal is connected to typefind.
+   3) in the have_type callback the close_pad_link function is called
+   4) close_pad_link checks the type on the pad, if it is raw, a ghostpad
+      is created and autoplugging for that pad stops.
+   5) if the type of the pad is not raw, a list of possible elements that
+      can connect to this type is generated in find_compatibles.
+   6) try_to_link_1 with the element list is called. The function will loop
+      over the element list and will try to connect one of the elements to
+      the pad. If the link works, a call is made to close_link.
+   7) close_link loops over all the source pads of the element and 
+      recursively calls 4) for any ALWAYS pad. For elements with
+      a SOMETIMES pad, a structure is set up and is passed to the callback
+      of the new_pad signal.
+   8) in the new_pad callback, 4) is called to try to autoplug the
+      new pad.
+
 
 playbasebin:
 

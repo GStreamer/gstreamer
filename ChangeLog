@@ -1,3 +1,42 @@
+2005-04-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/README:
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_class_init),
+	(compare_ranks), (print_feature), (gst_decode_bin_init),
+	(dynamic_create), (dynamic_free), (find_compatibles),
+	(mimetype_is_raw), (close_pad_link), (got_redirect),
+	(try_to_link_1), (get_our_ghost_pad), (remove_element_chain),
+	(new_pad), (no_more_pads), (unlinked), (close_link), (type_found),
+	(gst_decode_bin_change_state):
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_class_init),
+	(gst_play_base_bin_init), (group_destroy), (group_commit),
+	(check_queue), (queue_overrun), (queue_threshold_reached),
+	(queue_out_of_data), (gen_preroll_element), (unknown_type),
+	(new_decoded_pad), (setup_subtitle), (gen_source_element),
+	(got_redirect), (setup_source), (play_base_eos),
+	(gst_play_base_bin_change_state), (gst_play_base_bin_add_element),
+	(gst_play_base_bin_remove_element):
+	* gst/playback/gstplaybasebin.h:
+	* gst/playback/gstplaybin.c: (gst_play_bin_class_init),
+	(gst_play_bin_init), (gst_play_bin_dispose),
+	(gst_play_bin_set_property), (gen_video_element),
+	(gen_text_element), (gen_audio_element), (remove_sinks),
+	(gst_play_bin_send_event):
+	* gst/playback/gststreaminfo.c: (gst_stream_info_dispose),
+	(stream_info_change_state), (gst_stream_info_set_mute):
+	* gst/playback/gststreamselector.c: (gst_stream_selector_init),
+	(gst_stream_selector_get_caps), (gst_stream_selector_setcaps),
+	(gst_stream_selector_request_new_pad), (gst_stream_selector_event),
+	(gst_stream_selector_chain):
+	* gst/playback/test.c: (gen_video_element), (gen_audio_element),
+	(main):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_getcaps),
+	(gst_xvimagesink_setcaps), (gst_xvimagesink_get_times),
+	(gst_xvimagesink_show_frame), (gst_xvimagesink_chain),
+	(gst_xvimagesink_buffer_alloc), (gst_xvimagesink_class_init):
+	Raw and crude port of decodebin. 
+	Make playbin compile.
+
 2005-04-06  Wim Taymans  <wim@fluendo.com>
 
 	* ext/gnomevfs/Makefile.am:
