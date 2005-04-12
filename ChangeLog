@@ -1,3 +1,8 @@
+2005-04-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* testsuite/test_probe.py:
+	  add test for probes
+
 2005-03-15  Richard Hult <richard@imendio.com>
 
 	* gst/gst.defs (element_factory_make): Caller owns return, fixes leak

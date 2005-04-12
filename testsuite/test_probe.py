@@ -50,5 +50,34 @@ class ProbeTest(unittest.TestCase):
         self._probe_result2 = result2
         return True
     
+    # this test checks if the probe can replace the probed GstData with
+    # another, FIXME: use return values on probe callback for this
+    def notestPerformChangeBuffer(self):
+        probe = gst.Probe(True, self._probe_callback_change_buffer)
+        buffer = gst.Buffer('changeme')
+        probe.perform(buffer)
+        self.assertEqual(str(buffer), 'changed')
+
+    def _probe_callback_change_buffer(self, probe, data):
+        data = gst.Buffer('changed')
+ 
+    def testFakeSrcProbe(self):
+        pipeline = gst.Pipeline()
+        fakesrc = gst.element_factory_make('fakesrc')
+        fakesrc.set_property('num-buffers', 1)
+        fakesink = gst.element_factory_make('fakesink')
+
+        pipeline.add_many(fakesrc, fakesink)
+        fakesrc.link(fakesink)
+        pad = fakesrc.get_pad('src')
+        probe = gst.Probe(True, self._probe_callback_fakesrc)
+        pad.add_probe(probe)
+        pipeline.set_state(gst.STATE_PLAYING)
+        while pipeline.iterate(): pass
+        self.assertEqual(self._got_fakesrc_buffer, True)
+
+    def _probe_callback_fakesrc(self, probe, data):
+        self._got_fakesrc_buffer = True
+
 if __name__ == "__main__":
     unittest.main()
