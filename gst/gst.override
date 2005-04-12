@@ -99,6 +99,7 @@ ignore
   gst_alloc_trace_list
   gst_alloc_trace_get
   gst_error_get_message
+  gst_object_default_deep_notify
   gst_object_check_uniqueness
   gst_object_replace
   gst_parse_launchv
