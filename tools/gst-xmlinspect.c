@@ -471,7 +471,7 @@ print_element_info (GstElementFactory * factory)
   GList *pads;
   GstPad *pad;
   GstRealPad *realpad;
-  GstPadTemplate *padtemplate;
+  GstStaticPadTemplate *padtemplate;
   gint maxlevel = 0;
 
   element = gst_element_factory_create (factory, "element");
@@ -496,9 +496,9 @@ print_element_info (GstElementFactory * factory)
 
   PUT_START_TAG (1, "pad-templates");
   if (factory->numpadtemplates) {
-    pads = factory->padtemplates;
+    pads = factory->staticpadtemplates;
     while (pads) {
-      padtemplate = (GstPadTemplate *) (pads->data);
+      padtemplate = (GstStaticPadTemplate *) (pads->data);
       pads = g_list_next (pads);
 
       PUT_START_TAG (2, "pad-template");
@@ -522,8 +522,8 @@ print_element_info (GstElementFactory * factory)
       } else
         PUT_ESCAPED (3, "presence", "unknown");
 
-      if (padtemplate->caps) {
-        print_caps (padtemplate->caps, 3);
+      if (padtemplate->static_caps.string) {
+        print_caps (gst_static_caps_get (&padtemplate->static_caps), 3);
       }
       PUT_END_TAG (2, "pad-template");
     }

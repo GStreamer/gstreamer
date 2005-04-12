@@ -1,3 +1,36 @@
+2005-04-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/gst/tmpl/gstelementfactory.sgml:
+	* gst/gstelement.h:
+	* gst/gstelementfactory.c: (gst_element_factory_init),
+	(gst_element_factory_cleanup), (gst_element_register),
+	(__gst_element_factory_add_static_pad_template),
+	(gst_element_factory_get_static_pad_templates),
+	(gst_element_factory_can_src_caps),
+	(gst_element_factory_can_sink_caps):
+	* gst/registries/Makefile.am:
+	* gst/registries/gstlibxmlregistry.c: (gst_xml_registry_get_type),
+	(gst_xml_registry_class_init), (gst_xml_registry_init),
+	(gst_xml_registry_new), (gst_xml_registry_set_property),
+	(gst_xml_registry_get_property), (get_time), (make_dir),
+	(gst_xml_registry_get_perms_func),
+	(plugin_times_older_than_recurse), (plugin_times_older_than),
+	(gst_xml_registry_open_func), (gst_xml_registry_load_func),
+	(gst_xml_registry_save_func), (gst_xml_registry_close_func),
+	(add_to_char_array), (read_string), (read_uint), (read_enum),
+	(load_pad_template), (load_feature), (load_plugin), (load_paths),
+	(gst_xml_registry_load), (gst_xml_registry_load_plugin),
+	(gst_xml_registry_save_caps), (gst_xml_registry_save_pad_template),
+	(gst_xml_registry_save_feature), (gst_xml_registry_save_plugin),
+	(gst_xml_registry_save), (gst_xml_registry_rebuild_recurse),
+	(gst_xml_registry_rebuild):
+	* gst/registries/gstlibxmlregistry.h:
+	* tools/gst-compprep.c: (main):
+	* tools/gst-inspect.c: (print_pad_templates_info):
+	* tools/gst-xmlinspect.c: (print_element_info):
+	  Use libxml2 for registry parsing, use staticpadtemplates in
+	  elementfactories. Makes gst_init() +/- 10x faster.
+
 2005-04-12  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/Makefile.am:

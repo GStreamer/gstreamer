@@ -137,15 +137,6 @@ so that the autopluggers can select a plugin more appropriatly
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_element_factory_get_pad_templates ##### -->
-<para>
-
-</para>
-
-@factory: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_element_factory_get_uri_type ##### -->
 <para>
 

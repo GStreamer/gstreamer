@@ -30,7 +30,7 @@ main (int argc, char *argv[])
   const GList *pads;
   GstElement *element;
   GstPad *pad;
-  GstPadTemplate *padtemplate;
+  GstStaticPadTemplate *padtemplate;
   GParamSpec **property_specs;
   guint num_properties, i;
 
@@ -76,9 +76,9 @@ main (int argc, char *argv[])
       }
 
       /* write out the padtemplates */
-      padtemplates = factory->padtemplates;
+      padtemplates = factory->staticpadtemplates;
       while (padtemplates) {
-        padtemplate = (GstPadTemplate *) (padtemplates->data);
+        padtemplate = (GstStaticPadTemplate *) (padtemplates->data);
         padtemplates = g_list_next (padtemplates);
 
         if (padtemplate->direction == GST_PAD_SRC)

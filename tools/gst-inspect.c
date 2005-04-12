@@ -455,7 +455,7 @@ print_pad_templates_info (GstElement * element, GstElementFactory * factory)
 {
   GstElementClass *gstelement_class;
   const GList *pads;
-  GstPadTemplate *padtemplate;
+  GstStaticPadTemplate *padtemplate;
 
   n_print ("Pad Templates:\n");
   if (!factory->numpadtemplates) {
@@ -465,9 +465,9 @@ print_pad_templates_info (GstElement * element, GstElementFactory * factory)
 
   gstelement_class = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
 
-  pads = factory->padtemplates;
+  pads = factory->staticpadtemplates;
   while (pads) {
-    padtemplate = (GstPadTemplate *) (pads->data);
+    padtemplate = (GstStaticPadTemplate *) (pads->data);
     pads = g_list_next (pads);
 
     if (padtemplate->direction == GST_PAD_SRC)
@@ -488,9 +488,9 @@ print_pad_templates_info (GstElement * element, GstElementFactory * factory)
     } else
       n_print ("    Availability: UNKNOWN!!!\n");
 
-    if (padtemplate->caps) {
+    if (padtemplate->static_caps.string) {
       n_print ("    Capabilities:\n");
-      print_caps (padtemplate->caps, "      ");
+      print_caps (gst_static_caps_get (&padtemplate->static_caps), "      ");
     }
 
     n_print ("\n");
