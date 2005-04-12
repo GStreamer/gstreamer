@@ -24,19 +24,20 @@ endif
 
 libgstelements_la_DEPENDENCIES = ../libgstreamer-@GST_MAJORMINOR@.la
 libgstelements_la_SOURCES =	\
+	gstbufferstore.c	\
 	gstfakesrc.c		\
 	gstfakesink.c		\
 	gstfilesrc.c		\
 	gstidentity.c		\
 	gstelements.c		\
-	gsttee.c
+	gsttee.c		\
+	gsttypefindelement.c
 
 # FIXME 0.9: mentioned by po/POTFILES.in, so we include them here --
 # this is a short-term hack, really we should just decide the fate of
 # these files above, then this will be unnecessary
 EXTRA_DIST +=			\
 	gstaggregator.c		\
-	gstbufferstore.c	\
 	gstfilesink.c		\
 	gstfdsink.c		\
 	gstfdsrc.c		\
@@ -44,8 +45,7 @@ EXTRA_DIST +=			\
 	gstmultifilesrc.c	\
 	gstpipefilter.c		\
 	gstshaper.c		\
-	gststatistics.c		\
-	gsttypefindelement.c
+	gststatistics.c
 
 
 libgstelements_la_CFLAGS = $(GST_OBJ_CFLAGS)

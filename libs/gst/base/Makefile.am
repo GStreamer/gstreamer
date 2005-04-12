@@ -7,9 +7,10 @@ noinst_DATA = $(as_libtool_noinst_DATA_files)
 libgstbase_@GST_MAJORMINOR@_la_DEPENDENCIES = \
 	../libgstreamer-@GST_MAJORMINOR@.la
 libgstbase_@GST_MAJORMINOR@_la_SOURCES =	\
-	gstbasesink.c	\
-	gstbasesrc.c	\
-	gstbasetransform.c	
+	gstbasesink.c		\
+	gstbasesrc.c		\
+	gstbasetransform.c	\
+	gsttypefindhelper.c	
 
 libgstbase_@GST_MAJORMINOR@_la_CFLAGS = $(GST_OBJ_CFLAGS)
 libgstbase_@GST_MAJORMINOR@_la_LIBADD = $(GST_OBJ_LIBS) \
@@ -20,9 +21,10 @@ libgstbase_@GST_MAJORMINOR@includedir =		\
 	$(includedir)/gstreamer-@GST_MAJORMINOR@/gst/base
 
 libgstbase_@GST_MAJORMINOR@include_HEADERS =	\
-	gstbasesink.h	\
-	gstbasesrc.h	\
-	gstbasetransform.h	
+	gstbasesink.h		\
+	gstbasesrc.h		\
+	gstbasetransform.h	\
+	gsttypefindhelper.h	
 
 install-data-local: as-libtool-install-data-local
 

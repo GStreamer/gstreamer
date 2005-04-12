@@ -318,6 +318,7 @@ pipeline_bus_handler (GstBus * bus, GstMessage * message,
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_EOS:
       if (GST_MESSAGE_SRC (message) != GST_OBJECT (pipeline)) {
+        GST_DEBUG ("got EOS message");
         GST_LOCK (bus);
         pipeline->eosed =
             g_list_prepend (pipeline->eosed, GST_MESSAGE_SRC (message));

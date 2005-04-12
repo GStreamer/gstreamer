@@ -135,6 +135,7 @@ static void gst_filesrc_get_property (GObject * object, guint prop_id,
 static gboolean gst_filesrc_start (GstBaseSrc * basesrc);
 static gboolean gst_filesrc_stop (GstBaseSrc * basesrc);
 
+static gboolean gst_filesrc_is_seekable (GstBaseSrc * src);
 static gboolean gst_filesrc_get_size (GstBaseSrc * src, guint64 * size);
 static GstFlowReturn gst_filesrc_create (GstBaseSrc * src, guint64 offset,
     guint length, GstBuffer ** buffer);
@@ -203,6 +204,7 @@ gst_filesrc_class_init (GstFileSrcClass * klass)
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_filesrc_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_filesrc_stop);
+  gstbasesrc_class->is_seekable = GST_DEBUG_FUNCPTR (gst_filesrc_is_seekable);
   gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_filesrc_get_size);
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_filesrc_create);
 }
@@ -710,6 +712,12 @@ gst_filesrc_create (GstBaseSrc * basesrc, guint64 offset, guint length,
 #endif
 
   return ret;
+}
+
+static gboolean
+gst_filesrc_is_seekable (GstBaseSrc * src)
+{
+  return TRUE;
 }
 
 static gboolean

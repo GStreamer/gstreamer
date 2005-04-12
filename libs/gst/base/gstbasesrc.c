@@ -29,6 +29,7 @@
 #endif
 
 #include "gstbasesrc.h"
+#include "gsttypefindhelper.h"
 #include <gst/gstmarshal.h>
 
 #define DEFAULT_BLOCKSIZE	4096
@@ -102,8 +103,6 @@ static void gst_basesrc_loop (GstPad * pad);
 static gboolean gst_basesrc_check_get_range (GstPad * pad);
 static GstFlowReturn gst_basesrc_get_range (GstPad * pad, guint64 offset,
     guint length, GstBuffer ** buf);
-
-static GstCaps *gst_basesrc_type_find (GstBaseSrc * src);
 
 static void
 gst_basesrc_base_init (gpointer g_class)
@@ -351,8 +350,14 @@ static gboolean
 gst_basesrc_event_handler (GstPad * pad, GstEvent * event)
 {
   GstBaseSrc *src;
+  GstBaseSrcClass *bclass;
+  gboolean result;
 
   src = GST_BASESRC (GST_PAD_PARENT (pad));
+  bclass = GST_BASESRC_GET_CLASS (src);
+
+  if (bclass->event)
+    result = bclass->event (src, event);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -594,12 +599,14 @@ gst_basesrc_start (GstBaseSrc * basesrc)
   basesrc->segment_start = 0;
 
   /* figure out the size */
-  if (bclass->get_size)
+  if (bclass->get_size) {
     result = bclass->get_size (basesrc, &basesrc->size);
-  else
+  } else {
     result = FALSE;
+    basesrc->size = -1;
+  }
 
-  GST_DEBUG ("size %lld", basesrc->size);
+  GST_DEBUG ("size %d %lld", result, basesrc->size);
 
   /* we always run to the end */
   basesrc->segment_end = -1;
@@ -611,12 +618,15 @@ gst_basesrc_start (GstBaseSrc * basesrc)
     basesrc->seekable = FALSE;
 
   /* run typefind */
+#if 0
   if (basesrc->seekable) {
     GstCaps *caps;
 
-    caps = gst_basesrc_type_find (basesrc);
+    caps = gst_type_find_helper (basesrc->srcpad, basesrc->size);
     gst_pad_set_caps (basesrc->srcpad, caps);
   }
+#endif
+
   return TRUE;
 
   /* ERROR */
@@ -747,103 +757,6 @@ gst_basesrc_change_state (GstElement * element)
     default:
       break;
   }
-
-  return result;
-}
-
-/**
- * typefind code here
- */
-typedef struct
-{
-  GstBaseSrc *src;
-  guint best_probability;
-  GstCaps *caps;
-
-  GstBuffer *buffer;
-}
-BaseSrcTypeFind;
-
-static guint8 *
-basesrc_find_peek (gpointer data, gint64 offset, guint size)
-{
-  BaseSrcTypeFind *find;
-  GstBuffer *buffer;
-  GstBaseSrc *src;
-  GstFlowReturn ret;
-
-  if (size == 0)
-    return NULL;
-
-  find = (BaseSrcTypeFind *) data;
-  src = find->src;
-
-  if (offset < 0) {
-    offset += src->size;
-  }
-
-  buffer = NULL;
-  ret = gst_basesrc_get_range_unlocked (src->srcpad, offset, size, &buffer);
-
-  if (find->buffer) {
-    gst_buffer_unref (find->buffer);
-    find->buffer = NULL;
-  }
-
-  if (ret != GST_FLOW_OK)
-    goto error;
-
-  find->buffer = buffer;
-
-  return GST_BUFFER_DATA (buffer);
-
-error:
-  {
-    return NULL;
-  }
-}
-
-static void
-basesrc_find_suggest (gpointer data, guint probability, const GstCaps * caps)
-{
-  BaseSrcTypeFind *find = (BaseSrcTypeFind *) data;
-
-  if (probability > find->best_probability) {
-    gst_caps_replace (&find->caps, gst_caps_copy (caps));
-    find->best_probability = probability;
-  }
-}
-
-static GstCaps *
-gst_basesrc_type_find (GstBaseSrc * src)
-{
-  GstTypeFind gst_find;
-  BaseSrcTypeFind find;
-  GList *walk, *type_list = NULL;
-  GstCaps *result = NULL;
-
-  walk = type_list = gst_type_find_factory_get_list ();
-
-  find.src = src;
-  find.best_probability = 0;
-  find.caps = NULL;
-  find.buffer = NULL;
-  gst_find.data = &find;
-  gst_find.peek = basesrc_find_peek;
-  gst_find.suggest = basesrc_find_suggest;
-  gst_find.get_length = NULL;
-
-  while (walk) {
-    GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (walk->data);
-
-    gst_type_find_factory_call_function (factory, &gst_find);
-    if (find.best_probability >= GST_TYPE_FIND_MAXIMUM)
-      break;
-    walk = g_list_next (walk);
-  }
-
-  if (find.best_probability > 0)
-    result = find.caps;
 
   return result;
 }

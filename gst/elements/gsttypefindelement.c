@@ -32,6 +32,19 @@
  *    requests
  * 7) goto 2
  * 8) take best available result and use its caps
+ *
+ * The element has two scheduling modes:
+ *
+ * 1) chain based, it will collect buffers and run the typefind function on
+ *    the buffer until something is found.
+ * 2) getrange based, it will proxy the getrange function to the sinkpad. It
+ *    is assumed that the peer element is happy with whatever format we 
+ *    eventually read.
+ *
+ * When the element has no connected srcpad, and the sinkpad can operate in
+ * getrange based mode, the element starts its own task to figure out the 
+ * type of the stream.
+ * 
  */
 
 #ifdef HAVE_CONFIG_H
@@ -41,6 +54,7 @@
 #include "gsttypefindelement.h"
 #include "gst/gst_private.h"
 #include "gst/gst-i18n-lib.h"
+#include "gst/base/gsttypefindhelper.h"
 
 #include <gst/gsttypefind.h>
 #include <gst/gstutils.h>
@@ -84,8 +98,6 @@ enum
 enum
 {
   MODE_NORMAL,                  /* act as identity */
-  MODE_TRANSITION,              /* wait for the discont between the two
-                                 * other modes */
   MODE_TYPEFIND                 /* do typefinding */
 };
 
@@ -108,11 +120,19 @@ static gboolean gst_type_find_element_src_event (GstPad * pad,
     GstEvent * event);
 static gboolean gst_type_find_handle_src_query (GstPad * pad,
     GstQueryType type, GstFormat * fmt, gint64 * value);
-static void push_buffer_store (GstTypeFindElement * typefind);
+static GstFlowReturn push_buffer_store (GstTypeFindElement * typefind);
 
-static void gst_type_find_element_chain (GstPad * sinkpad, GstData * data);
+static gboolean gst_type_find_element_handle_event (GstPad * pad,
+    GstEvent * event);
+static GstFlowReturn gst_type_find_element_chain (GstPad * sinkpad,
+    GstBuffer * buffer);
+static GstFlowReturn gst_type_find_element_getrange (GstPad * srcpad,
+    guint64 offset, guint length, GstBuffer ** buffer);
+static gboolean gst_type_find_element_checkgetrange (GstPad * srcpad);
 static GstElementStateReturn
 gst_type_find_element_change_state (GstElement * element);
+static gboolean
+gst_type_find_element_activate (GstPad * pad, GstActivateMode mode);
 
 static guint gst_type_find_element_signals[LAST_SIGNAL] = { 0 };
 
@@ -125,8 +145,9 @@ gst_type_find_element_have_type (GstTypeFindElement * typefind,
 
   GST_INFO_OBJECT (typefind, "found caps %" GST_PTR_FORMAT, caps);
   typefind->caps = gst_caps_copy (caps);
-  gst_pad_set_explicit_caps (typefind->src, caps);
+  gst_pad_set_caps (typefind->src, (GstCaps *) caps);
 }
+
 static void
 gst_type_find_element_base_init (gpointer g_class)
 {
@@ -182,18 +203,26 @@ gst_type_find_element_init (GstTypeFindElement * typefind)
   typefind->sink =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&type_find_element_sink_template), "sink");
+  gst_pad_set_activate_function (typefind->sink,
+      gst_type_find_element_activate);
   gst_pad_set_chain_function (typefind->sink, gst_type_find_element_chain);
+  gst_pad_set_event_function (typefind->sink,
+      gst_type_find_element_handle_event);
   gst_element_add_pad (GST_ELEMENT (typefind), typefind->sink);
   /* srcpad */
   typefind->src =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&type_find_element_src_template), "src");
+  gst_pad_set_activate_function (typefind->src, gst_type_find_element_activate);
+  gst_pad_set_checkgetrange_function (typefind->src,
+      gst_type_find_element_checkgetrange);
+  gst_pad_set_getrange_function (typefind->src, gst_type_find_element_getrange);
   gst_pad_set_event_function (typefind->src, gst_type_find_element_src_event);
   gst_pad_set_event_mask_function (typefind->src,
       gst_type_find_element_src_event_mask);
   gst_pad_set_query_function (typefind->src,
       GST_DEBUG_FUNCPTR (gst_type_find_handle_src_query));
-  gst_pad_use_explicit_caps (typefind->src);
+  gst_pad_use_fixed_caps (typefind->src);
   gst_element_add_pad (GST_ELEMENT (typefind), typefind->src);
 
   typefind->caps = NULL;
@@ -201,8 +230,6 @@ gst_type_find_element_init (GstTypeFindElement * typefind)
   typefind->max_probability = GST_TYPE_FIND_MAXIMUM;
 
   typefind->store = gst_buffer_store_new ();
-
-  GST_FLAG_SET (typefind, GST_ELEMENT_EVENT_AWARE);
 }
 static void
 gst_type_find_element_dispose (GObject * object)
@@ -359,7 +386,7 @@ start_typefinding (GstTypeFindElement * typefind)
   g_assert (typefind->possibilities == NULL);
 
   GST_DEBUG_OBJECT (typefind, "starting typefinding");
-  gst_pad_unnegotiate (typefind->src);
+  gst_pad_set_caps (typefind->src, NULL);
   if (typefind->caps) {
     gst_caps_replace (&typefind->caps, NULL);
   }
@@ -370,9 +397,14 @@ start_typefinding (GstTypeFindElement * typefind)
 static void
 stop_typefinding (GstTypeFindElement * typefind)
 {
+  GstElementState state;
+
   /* stop all typefinding and set mode back to normal */
-  gboolean push_cached_buffers =
-      gst_element_get_state (GST_ELEMENT (typefind)) == GST_STATE_PLAYING;
+  gboolean push_cached_buffers;
+
+  gst_element_get_state (GST_ELEMENT (typefind), &state, NULL, NULL);
+
+  push_cached_buffers = (state >= GST_STATE_PAUSED);
 
   GST_DEBUG_OBJECT (typefind, "stopping typefinding%s",
       push_cached_buffers ? " and pushing cached buffers" : "");
@@ -384,47 +416,35 @@ stop_typefinding (GstTypeFindElement * typefind)
     g_list_free (typefind->possibilities);
     typefind->possibilities = NULL;
   }
-
-  typefind->mode = MODE_TRANSITION;
+  //typefind->mode = MODE_TRANSITION;
 
   if (!push_cached_buffers) {
     gst_buffer_store_clear (typefind->store);
   } else {
-    guint size = gst_buffer_store_get_size (typefind->store, 0);
-
-    GST_DEBUG_OBJECT (typefind, "seeking back to current position %u", size);
-    if (!gst_pad_send_event (GST_PAD_PEER (typefind->sink),
-            gst_event_new_seek (GST_SEEK_METHOD_SET | GST_FORMAT_BYTES,
-                size))) {
-      GST_WARNING_OBJECT (typefind,
-          "could not seek to required position %u, hope for the best", size);
-      typefind->mode = MODE_NORMAL;
-      /* push out our queued buffers here */
-      push_buffer_store (typefind);
-    } else {
-      typefind->waiting_for_discont_offset = size;
-    }
+    typefind->mode = MODE_NORMAL;
+    /* push out our queued buffers here */
+    push_buffer_store (typefind);
   }
 }
 
-static void
+static GstFlowReturn
 push_buffer_store (GstTypeFindElement * typefind)
 {
   guint size = gst_buffer_store_get_size (typefind->store, 0);
   GstBuffer *buffer;
+  GstFlowReturn ret;
 
-  gst_pad_push (typefind->src, GST_DATA (gst_event_new_discontinuous (TRUE,
-              GST_FORMAT_DEFAULT, (guint64) 0, GST_FORMAT_BYTES, (guint64) 0,
-              GST_FORMAT_UNDEFINED)));
   if (size && (buffer = gst_buffer_store_get_buffer (typefind->store, 0, size))) {
     GST_DEBUG_OBJECT (typefind, "pushing cached data (%u bytes)", size);
-    gst_pad_push (typefind->src, GST_DATA (buffer));
+    ret = gst_pad_push (typefind->src, buffer);
   } else {
-    /* FIXME: shouldn't we throw an error here? */
     size = 0;
+    ret = GST_FLOW_ERROR;
   }
 
   gst_buffer_store_clear (typefind->store);
+
+  return ret;
 }
 
 static guint64
@@ -460,9 +480,11 @@ find_element_get_length (gpointer data)
 
   return entry->self->stream_length;
 }
-static void
+
+static gboolean
 gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
 {
+  gboolean res = FALSE;
   TypeFindEntry *entry;
   GstTypeFindElement *typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (pad));
 
@@ -485,9 +507,9 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
                 0, entry->probability, entry->caps);
             stop_typefinding (typefind);
             push_buffer_store (typefind);
-            gst_pad_event_default (pad, event);
+            res = gst_pad_event_default (pad, event);
           } else {
-            gst_pad_event_default (pad, event);
+            res = gst_pad_event_default (pad, event);
             GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND, (NULL),
                 (NULL));
             stop_typefinding (typefind);
@@ -495,44 +517,23 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
           break;
         default:
           gst_data_unref (GST_DATA (event));
+          res = TRUE;
           break;
       }
       break;
-    case MODE_TRANSITION:
-      if (GST_EVENT_TYPE (event) == GST_EVENT_DISCONTINUOUS) {
-        if (GST_EVENT_DISCONT_NEW_MEDIA (event)) {
-          start_typefinding (typefind);
-          gst_event_unref (event);
-        } else {
-          guint64 off;
-
-          if (gst_event_discont_get_value (event, GST_FORMAT_BYTES, &off) &&
-              off == typefind->waiting_for_discont_offset) {
-            typefind->mode = MODE_NORMAL;
-            push_buffer_store (typefind);
-          } else {
-            gst_event_unref (event);
-          }
-        }
-      } else if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
-        push_buffer_store (typefind);
-        gst_pad_event_default (pad, event);
-      } else {
-        gst_event_unref (event);
-      }
-      break;
     case MODE_NORMAL:
-      if (GST_EVENT_TYPE (event) == GST_EVENT_DISCONTINUOUS &&
-          GST_EVENT_DISCONT_NEW_MEDIA (event)) {
+      if (GST_EVENT_TYPE (event) == GST_EVENT_DISCONTINUOUS) {
         start_typefinding (typefind);
         gst_event_unref (event);
+        res = TRUE;
       } else {
-        gst_pad_event_default (pad, event);
+        res = gst_pad_event_default (pad, event);
       }
       break;
     default:
       g_assert_not_reached ();
   }
+  return res;
 }
 static guint8 *
 find_peek (gpointer data, gint64 offset, guint size)
@@ -583,6 +584,7 @@ find_suggest (gpointer data, guint probability, const GstCaps * caps)
     gst_caps_replace (&entry->caps, gst_caps_copy (caps));
   }
 }
+
 static gint
 compare_type_find_entry (gconstpointer a, gconstpointer b)
 {
@@ -596,40 +598,37 @@ compare_type_find_entry (gconstpointer a, gconstpointer b)
     return two->probability - one->probability;
   }
 }
+
 static gint
 compare_type_find_factory (gconstpointer fac1, gconstpointer fac2)
 {
   return GST_PLUGIN_FEATURE (fac1)->rank - GST_PLUGIN_FEATURE (fac2)->rank;
 }
-static void
-gst_type_find_element_chain (GstPad * pad, GstData * data)
+
+static GstFlowReturn
+gst_type_find_element_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstTypeFindElement *typefind;
   GList *entries;
   TypeFindEntry *entry;
   GList *walk;
+  GstFlowReturn res = GST_FLOW_OK;
   GstTypeFind find = { find_peek, find_suggest, NULL, find_element_get_length };
 
   typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (pad));
-  if (GST_IS_EVENT (data)) {
-    gst_type_find_element_handle_event (pad, GST_EVENT (data));
-    return;
-  }
+
   switch (typefind->mode) {
     case MODE_NORMAL:
-      gst_pad_push (typefind->src, data);
-      return;
-    case MODE_TRANSITION:
-      gst_data_unref (data);
-      return;
+      return gst_pad_push (typefind->src, buffer);
     case MODE_TYPEFIND:{
       guint64 current_offset;
 
-      gst_buffer_store_add_buffer (typefind->store, GST_BUFFER (data));
-      current_offset = GST_BUFFER_OFFSET_IS_VALID (data) ?
-          GST_BUFFER_OFFSET (data) + GST_BUFFER_SIZE (data) :
+      gst_buffer_store_add_buffer (typefind->store, buffer);
+      current_offset = GST_BUFFER_OFFSET_IS_VALID (buffer) ?
+          GST_BUFFER_OFFSET (buffer) + GST_BUFFER_SIZE (buffer) :
           gst_buffer_store_get_size (typefind->store, 0);
-      gst_data_unref (data);
+      gst_buffer_unref (buffer);
+
       if (typefind->possibilities == NULL) {
         /* not yet started, get all typefinding functions into our "queue" */
         GList *all_factories = gst_type_find_factory_get_list ();
@@ -800,27 +799,108 @@ gst_type_find_element_chain (GstPad * pad, GstData * data)
     }
     default:
       g_assert_not_reached ();
-      return;
+      return GST_FLOW_ERROR;
   }
+
+  return res;
 }
+
+static gboolean
+gst_type_find_element_checkgetrange (GstPad * srcpad)
+{
+  GstTypeFindElement *typefind;
+
+  typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (srcpad));
+
+  return gst_pad_check_pull_range (typefind->sink);
+}
+
+static GstFlowReturn
+gst_type_find_element_getrange (GstPad * srcpad,
+    guint64 offset, guint length, GstBuffer ** buffer)
+{
+  GstTypeFindElement *typefind;
+
+  typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (srcpad));
+
+  return gst_pad_pull_range (typefind->sink, offset, length, buffer);
+}
+
+static gboolean
+do_typefind (GstTypeFindElement * typefind)
+{
+  GstCaps *caps;
+  GstPad *peer;
+
+  peer = gst_pad_get_peer (typefind->sink);
+  if (peer) {
+    gst_pad_peer_set_active (typefind->sink, GST_ACTIVATE_PULL);
+
+    caps = gst_type_find_helper (peer, 0);
+    gst_pad_set_caps (typefind->src, caps);
+
+    if (caps) {
+      g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
+          0, 100, caps);
+    }
+
+    gst_object_unref (GST_OBJECT (peer));
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_type_find_element_activate (GstPad * pad, GstActivateMode mode)
+{
+  gboolean result;
+  GstTypeFindElement *typefind;
+
+  typefind = GST_TYPE_FIND_ELEMENT (GST_OBJECT_PARENT (pad));
+
+  switch (mode) {
+    case GST_ACTIVATE_PUSH:
+    case GST_ACTIVATE_PULL:
+      result = TRUE;
+      break;
+    default:
+      result = TRUE;
+      break;
+  }
+
+  return result;
+}
+
 static GstElementStateReturn
 gst_type_find_element_change_state (GstElement * element)
 {
+  GstElementState transition;
+  GstElementStateReturn ret;
   GstTypeFindElement *typefind;
 
   typefind = GST_TYPE_FIND_ELEMENT (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
+  transition = GST_STATE_TRANSITION (element);
+  switch (transition) {
     case GST_STATE_READY_TO_PAUSED:
-      start_typefinding (typefind);
+      do_typefind (typefind);
+
+      //start_typefinding (typefind);
       break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  switch (transition) {
     case GST_STATE_PAUSED_TO_READY:
-      stop_typefinding (typefind);
+      //stop_typefinding (typefind);
       gst_caps_replace (&typefind->caps, NULL);
       break;
     default:
       break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  return ret;
 }

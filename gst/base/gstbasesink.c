@@ -502,9 +502,7 @@ gst_basesink_event (GstPad * pad, GstEvent * event)
 
       GST_STREAM_LOCK (pad);
 
-      GST_PREROLL_LOCK (pad);
-      gst_basesink_preroll_queue_empty (basesink, pad);
-      GST_PREROLL_UNLOCK (pad);
+      gst_basesink_finish_preroll (basesink, pad, NULL);
 
       GST_LOCK (basesink);
       need_eos = basesink->eos = TRUE;
@@ -880,6 +878,8 @@ gst_basesink_change_state (GstElement * element)
       /* make sure the element is finished processing */
       GST_STREAM_LOCK (basesink->sinkpad);
       GST_STREAM_UNLOCK (basesink->sinkpad);
+      /* clear EOS state */
+      basesink->eos = FALSE;
       break;
     case GST_STATE_READY_TO_NULL:
       break;

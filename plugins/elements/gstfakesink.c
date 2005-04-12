@@ -278,7 +278,7 @@ gst_fakesink_event (GstBaseSink * bsink, GstEvent * event)
     g_free (sink->last_message);
 
     sink->last_message =
-        g_strdup_printf ("chain   ******* E (type: %d) %p",
+        g_strdup_printf ("event   ******* E (type: %d) %p",
         GST_EVENT_TYPE (event), event);
 
     g_object_notify (G_OBJECT (sink), "last_message");

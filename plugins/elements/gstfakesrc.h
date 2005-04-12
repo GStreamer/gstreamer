@@ -84,7 +84,6 @@ struct _GstFakeSrc {
   GstFakeSrcDataType   data;
   GstFakeSrcSizeType   sizetype;
   GstFakeSrcFillType   filltype;
-  GstActivateMode      pad_mode;
 
   guint 	 sizemin;
   guint 	 sizemax;
@@ -106,7 +105,6 @@ struct _GstFakeSrc {
   gboolean 	 silent;
   gboolean 	 signal_handoffs;
   gboolean 	 dump;
-  gboolean 	 need_flush;
 
   guint64        bytes_sent;
 

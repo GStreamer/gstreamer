@@ -1,4 +1,55 @@
-2005-04-11  set REAL_NAME environment variable  <set EMAIL_ADDRESS environment variable>
+2005-04-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/Makefile.am:
+	* gst/base/gstbasesink.c: (gst_basesink_base_init),
+	(gst_basesink_pad_getcaps), (gst_basesink_init),
+	(gst_basesink_event), (gst_basesink_change_state):
+	* gst/base/gstbasesrc.c: (gst_basesrc_get_type),
+	(gst_basesrc_init), (gst_basesrc_query),
+	(gst_basesrc_get_event_mask), (gst_basesrc_do_seek),
+	(gst_basesrc_event_handler), (gst_basesrc_get_range_unlocked),
+	(gst_basesrc_check_get_range), (gst_basesrc_loop),
+	(gst_basesrc_unlock), (gst_basesrc_get_size), (gst_basesrc_start),
+	(gst_basesrc_stop), (gst_basesrc_activate),
+	(gst_basesrc_change_state):
+	* gst/base/gsttypefindhelper.c: (helper_find_peek),
+	(helper_find_suggest), (gst_type_find_helper):
+	* gst/base/gsttypefindhelper.h:
+	* gst/elements/Makefile.am:
+	* gst/elements/gstelements.c:
+	* gst/elements/gstfakesink.c: (gst_fakesink_class_init),
+	(gst_fakesink_get_times), (gst_fakesink_event),
+	(gst_fakesink_preroll), (gst_fakesink_render):
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_class_init),
+	(gst_fakesrc_init), (gst_fakesrc_event_handler),
+	(gst_fakesrc_get_property), (gst_fakesrc_create),
+	(gst_fakesrc_start), (gst_fakesrc_stop):
+	* gst/elements/gstfakesrc.h:
+	* gst/elements/gstfilesrc.c: (gst_filesrc_class_init),
+	(gst_filesrc_free_parent_mmap), (gst_filesrc_map_region),
+	(gst_filesrc_map_small_region), (gst_filesrc_create_mmap),
+	(gst_filesrc_create_read), (gst_filesrc_create),
+	(gst_filesrc_is_seekable), (gst_filesrc_get_size),
+	(gst_filesrc_start):
+	* gst/elements/gsttypefindelement.c:
+	(gst_type_find_element_have_type), (gst_type_find_element_init),
+	(start_typefinding), (stop_typefinding), (push_buffer_store),
+	(gst_type_find_element_handle_event),
+	(gst_type_find_element_chain),
+	(gst_type_find_element_checkgetrange),
+	(gst_type_find_element_getrange), (do_typefind),
+	(gst_type_find_element_activate),
+	(gst_type_find_element_change_state):
+	* gst/elements/gsttypefindelement.h:
+	* gst/gstpipeline.c: (pipeline_bus_handler):
+	Added typefind helper.
+	Small preroll fix in the base sink.
+	Disable typefind code in basesrc.
+	Crude port of typefindelement.
+	Fakesrc cleanups.
+
+
+2005-04-11  Wim Taymans  <wim@fluendo.com>
 
 	* check/gst/gstbus.c: (gstbus_suite):
 	* check/gst/gstdata.c: (thread_ref), (gst_data_suite):
