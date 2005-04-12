@@ -726,9 +726,9 @@ _wrap_gst_probe_perform(PyGBoxed *self, PyObject *args, PyObject *kwargs)
 	/* FIXME: GstBuffer and GstEvent are not really "subclasses" so
 	   we hardcode checks for them here by hand.  Ugh. */
 	if (pyg_boxed_check(py_data, GST_TYPE_EVENT))
-        	data = pyg_boxed_get(py_data, GstEvent);
+        	data = GST_DATA(pyg_boxed_get(py_data, GstEvent));
 	if (pyg_boxed_check(py_data, GST_TYPE_BUFFER))
-        	data = pyg_boxed_get(py_data, GstBuffer);
+        	data = GST_DATA(pyg_boxed_get(py_data, GstBuffer));
 	if (pyg_boxed_check(py_data, GST_TYPE_DATA))
         	data = pyg_boxed_get(py_data, GstData);
 
@@ -750,7 +750,7 @@ _wrap_gst_plugin_get_version(PyGObject *self)
         gint i = 0;
         gint count = 0;
         
-        version = gst_plugin_get_version((GstPlugin *) self->obj);
+        version = gst_plugin_get_version(GST_PLUGIN(self->obj));
         items = g_strsplit(version, ".", 4);
         for (p = items; *p; ++p) ++count;
 
