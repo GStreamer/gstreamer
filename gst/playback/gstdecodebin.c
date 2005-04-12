@@ -412,17 +412,17 @@ find_compatibles (GstDecodeBin * decode_bin, const GstCaps * caps)
     GList *walk;
 
     /* get the templates from the element factory */
-    templates = gst_element_factory_get_pad_templates (factory);
+    templates = gst_element_factory_get_static_pad_templates (factory);
     for (walk = (GList *) templates; walk; walk = g_list_next (walk)) {
-      GstPadTemplate *templ = GST_PAD_TEMPLATE (walk->data);
+      GstStaticPadTemplate *templ = walk->data;
 
       /* we only care about the sink templates */
       if (templ->direction == GST_PAD_SINK) {
         GstCaps *intersect;
 
         /* try to intersect the caps with the caps of the template */
-        intersect =
-            gst_caps_intersect (caps, gst_pad_template_get_caps (templ));
+        intersect = gst_caps_intersect (caps,
+            gst_static_caps_get (&templ->static_caps));
         /* check if the intersection is empty */
         if (!gst_caps_is_empty (intersect)) {
           /* non empty intersection, we can use this element */
