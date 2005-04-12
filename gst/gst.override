@@ -740,7 +740,7 @@ _wrap_gst_probe_perform(PyGBoxed *self, PyObject *args, PyObject *kwargs)
     	return PyBool_FromLong(gst_probe_perform(self->boxed, &data));
 }
 %%
-override gst_plugin_get_version
+override gst_plugin_get_version noargs
 static PyObject *
 _wrap_gst_plugin_get_version(PyGObject *self)
 {
