@@ -849,15 +849,14 @@ load_plugin (xmlTextReaderPtr reader)
   return NULL;
 }
 
-static GstPlugin *
+static gboolean
 load_paths (xmlTextReaderPtr reader, GstXMLRegistry * registry)
 {
   int ret;
-  GstPlugin *plugin = g_new0 (GstPlugin, 1);
 
   while ((ret = xmlTextReaderRead (reader)) == 1) {
     if (xmlTextReaderDepth (reader) == 1) {
-      return plugin;
+      return TRUE;
     }
     if (xmlTextReaderNodeType (reader) == XML_READER_TYPE_ELEMENT &&
         xmlTextReaderDepth (reader) == 2) {
@@ -875,8 +874,7 @@ load_paths (xmlTextReaderPtr reader, GstXMLRegistry * registry)
     }
   }
 
-  g_free (plugin);
-  return NULL;
+  return FALSE;
 }
 
 static gboolean

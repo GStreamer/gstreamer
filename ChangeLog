@@ -1,3 +1,8 @@
+2005-04-13  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/registries/gstlibxmlregistry.c: (load_paths):
+	  Fix memleak.
+
 2005-04-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstparent.c:
