@@ -1,0 +1,76 @@
+Optional properties in caps:
+
+During the 0.8 series of GStreamer, we regularly felt the need to add
+properties to caps, thereby sometimes breaking specific caps negotiation
+cases or annoying developers. This document outlines problems it could
+lead to and tries to explain in which cases properties can be added and
+when they can't. It also explains when properties can be optional (both
+temporarily and permanently) and when they cannot.
+
+--
+
+There's two cases where optional properties could be added:
+1) to fix an issue that makes any case fail
+2) to fix an issue that makes some cases fail
+
+Case 1 can be compared to not providing extra_data in caps for WMA. The caps
+are defined, but it will never work because you cannot decode WMA audio
+without the sequence header. In this case, adding the property breaks
+caps compatibility, but it is still allowed because there is no regression
+and it fixes a bug. No optional property should be added here, it should be
+made a required property directly. Another example here is channel-positions
+for channels>2.
+
+Case 2 is more complex. There's various subcases:
+a] not providing this property means ANY (or don't care, or unknown, each
+   of which is another way of saying ANY)
+b] not providing this property means a specific value
+ .] adding this property will lead to unwanted behaviour
+ .] adding this property will not lead to unwanted behaviour
+
+An example case for 2a is the buffer-frames property in float audio or the
+frames property in MPEG audio. Buffer-frames is 0 (which should be removed)
+means ANY. The reason that it should not be zero is because connecting an
+element with buffer-frames=SOME_VALUE should be allowed to connect to any
+element out there that has no buffer-frames requirement. The opposite is
+true reversely: an element with no buffer-frames property should never be
+allowed to connect to any element requesting a specific buffer-frames value.
+For MPEG audio, it is TRUE likewise. Mathematically, buffer-frames=0 does not
+exist. It implies ANY. Similarly, framed=FALSE cannot exist, because it
+implies framed={FALSE,TRUE} (in words: an element cannot require non-framed
+MPEG audio, because framed MPEG audio is a subset of non-framed MPEG audio
+and thus valid input). In all those cases for 2a, optional properties are
+fine. Subtraction will not work, but as explained, values are subsets of
+another value and thus subtraction is irrelevant (because the mathematical
+value of the subtraction has no real value).
+This same principle is true for rate/channels on (for example) MPEG audio.
+Our caps negotiation already allows for all of this, and optional properties
+are already being used for this.
+
+2b is complex, since subtraction actually has a value here, and addition
+of such properties may lead to regressions or crashes. Let's give another
+two examples: stride (for raw video; not providing this value implies 4-byte
+aligned video) and pixel-aspect-ratio (default value being 1/1). Adding p-a-r
+was in this case an example of 2bII, whereas stride is 2bI. The reason for
+this is simple: adding pixel-aspect-ratio to some element and not to others
+could lead to misunderstanding size. However, this is not a regression,
+because not adding it alltogether would lead to the same misunderstanding.
+In both cases, the result would be wrongly sized video. Therefore, there
+is no regression and there is a bugfix, so this is fine. Obviously, the
+optional property is in this case very specifically a temporary solution.
+As soon as we can, this property should become obligatory.
+Stride is different, because elements have implicit associated behaviour
+based on the previous beahviour. This hebaviour could break if some elements
+do implement stride and others still don't. Therefore, adding an optional
+property as a temporary hack is, in this case, not a good idea and should
+be disallowed. A proper fix should be done in the same timeframe as 2bII. In
+this case, optional properties should not be added. Another example of this
+case was adding channel-positions to audio caps with channels=1,2, which
+was rejected for the same reason: it would break a perfectly-working set
+of rules in a stable series.
+
+--
+
+Obviously, with all of the above, people will start fighting about which
+group their specific properties change belongs to. General consensus is
+the only way to get around that problem. Long live politics.
