@@ -778,14 +778,15 @@ gst_ffmpegdec_handle_event (GstFFMpegDec * ffmpegdec, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS: {
-      gint have_data, len;
+      gint have_data, len, try = 0;
 
+      /* max. 10 times, for safety (see e.g. #300200) */
       do {
         len = gst_ffmpegdec_frame (ffmpegdec, NULL, 0, &have_data,
             &ffmpegdec->next_ts);
         if (len < 0 || have_data == 0)
           break;
-      } while (1);
+      } while (try++ < 10);
       goto forward;
     }
     case GST_EVENT_FLUSH:

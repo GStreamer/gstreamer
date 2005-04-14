@@ -1,3 +1,9 @@
+2005-04-14  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_handle_event):
+	  Safety bet to not completely crush the system on EOS. Fixes the
+	  bad behaviour of #300200 (doesn't fix the actual issue).
+
 2005-04-02  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_open),
