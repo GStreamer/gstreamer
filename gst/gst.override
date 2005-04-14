@@ -36,6 +36,8 @@ headers
 #include <gst/gsttaginterface.h>
 #include <gst/gstprobe.h>
 
+#include "pygstvalue.h"
+
 extern gboolean pygst_data_from_pyobject (PyObject *object, GstData **data);
 PyObject *PyGstExc_LinkError = NULL;
 
@@ -75,6 +77,10 @@ include
   gststructure.override
 %%
 init
+{
+    if (!pygst_value_init())
+        return;
+}
 %%
 modulename gst
 %%
@@ -126,7 +132,7 @@ tag_foreach_func_dict (const GstTagList *list,
 
 	for (i = 0; i < count; i++) {
 		gvalue = gst_tag_list_get_value_index(GST_TAG_LIST(list), tag, i);
-		value = pyg_value_as_pyobject(gvalue, TRUE);
+		value = pygst_value_as_pyobject(gvalue, TRUE);
 		key = g_strdup (tag);
 		PyDict_SetItemString(dict, key, value);
 		g_free (key);
@@ -184,7 +190,7 @@ _wrap_gst_tag_list_subscript(PyGObject *self, PyObject *py_key)
 	} else if (count == 1) {
 		const GValue *gvalue;
 		gvalue = gst_tag_list_get_value_index(GST_TAG_LIST(self->obj), key, 0);
-		v = pyg_value_as_pyobject(gvalue, TRUE);
+		v = pygst_value_as_pyobject(gvalue, TRUE);
 	} else {
 		PyErr_SetString(PyExc_TypeError, "lists are currently unspported");
 	}
@@ -235,7 +241,7 @@ _wrap_gst_tag_list_get(PyGObject *self, PyObject *args)
 			PyErr_SetString(PyExc_KeyError, key);
 		} else if (count == 1) {
 			gvalue = gst_tag_list_get_value_index(GST_TAG_LIST(self->obj), key, 0);
-			val = pyg_value_as_pyobject(gvalue, TRUE);
+			val = pygst_value_as_pyobject(gvalue, TRUE);
 		} else {
 			PyErr_SetString(PyExc_TypeError, "lists are currently unspported");
 		}
@@ -338,7 +344,7 @@ _wrap_gst_tag_list_get_value_index (PyGObject *self,
 					      tag,
 					      index);
 
-	return pyg_value_as_pyobject(gvalue, FALSE);
+	return pygst_value_as_pyobject(gvalue, FALSE);
 }
 %%
 override gst_type_find_factory_get_caps noargs

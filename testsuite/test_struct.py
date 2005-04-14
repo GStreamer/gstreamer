@@ -5,9 +5,6 @@ class StructureTest(unittest.TestCase):
     def setUp(self):
         self.struct = gst.structure_from_string('video/x-raw-yuv,width=10,foo="bar",pixel-aspect-ratio=1/2,framerate=5.0')
 
-    #def foo(self):
-    #    gst.structure_from_string("foo")
-        
     def testName(self):
         assert self.struct.get_name() == 'video/x-raw-yuv'
         self.struct.set_name('foobar')
@@ -37,30 +34,39 @@ class StructureTest(unittest.TestCase):
         assert isinstance(self.struct['integer'], int)
 	assert self.struct['integer'] == 5, self.struct['integer']
         
-    def testCreateFourCC(self):
-	self.struct['fourcc'] = "(fourcc)XVID"
-        #assert self.struct.has_key('fourcc')
-        #print self.struct.to_string()
-        #assert isinstance(self.struct['fourcc'], int)
-	#assert self.struct['integer'] == 5, self.struct['integer']
+    def testGstValue(self):
+        s = self.struct
+        s['fourcc'] = gst.Fourcc('XVID')
+        assert s['fourcc'].fourcc == 'XVID'
+        s['frac'] = gst.Fraction(3,4)
+        assert s['frac'].num == 3
+        assert s['frac'].denom == 4
+        s['intrange'] = gst.IntRange(5,21)
+        assert s['intrange'].low == 5
+        assert s['intrange'].high == 21
+        s['doublerange'] = gst.DoubleRange(6.,21.)
+        assert s['doublerange'].low == 6.
+        assert s['doublerange'].high == 21.
+        s['fixedlist'] = (4, 5, 6)
+        assert isinstance(s['fixedlist'], tuple)
+        assert s['fixedlist'] == (4, 5, 6)
+        s['list'] = [4, 5, 6]
+        assert isinstance(s['list'], list)
+        assert s['list'] == [4, 5, 6]
         
+        # finally, some recursive tests
+        s['rflist'] = ([(['a', 'b'], ['c', 'd']),'e'], ['f', 'g'])
+        assert s['rflist'] == ([(['a', 'b'], ['c', 'd']),'e'], ['f', 'g'])
+        s['rlist'] = [([(['a', 'b'], ['c', 'd']),'e'], ['f', 'g']), 'h']
+        assert s['rlist'] == [([(['a', 'b'], ['c', 'd']),'e'], ['f', 'g']), 'h']
+
     def testStructureChange(self):
-        #assert structure['pixel-aspect-ratio'].numerator == 1
-        #assert structure['pixel-aspect-ratio'].denominator == 2
-        #assert float(structure['pixel-aspect-ratio']) == 0.5
-	#structure['pixel-aspect-ratio'] = gst.Fraction(3, 4)
-        #assert structure['pixel-aspect-ratio'].numerator == 3
-        #assert structure['pixel-aspect-ratio'].denominator == 4
-        #assert float(structure['pixel-aspect-ratio']) == 0.75
-        
 	assert self.struct['framerate'] == 5.0
 	self.struct['framerate'] = 10.0
 	assert self.struct['framerate'] == 10.0
-
-	# a list of heights
-	#structure['height'] = (20, 40, 60)
-	#assert structure['width'] == (20, 40, 60)
-	# FIXME: add ranges
+        self.struct['pixel-aspect-ratio'] = gst.Fraction(4, 2)
+        assert self.struct['pixel-aspect-ratio'].num == 2
+        assert self.struct['pixel-aspect-ratio'].denom == 1
 
 if __name__ == "__main__":
     unittest.main()

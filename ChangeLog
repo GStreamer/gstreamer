@@ -1,3 +1,37 @@
+2005-04-14  Andy Wingo  <wingo@pobox.com>
+
+	* gst/__init__.py (Value, Fourcc, IntRange, DoubleRange)
+	(Fraction): New classes.
+
+	* gst/gst.override (_wrap_gst_tag_list_get)
+	(_wrap_gst_tag_list_get_value_index)
+	(tag_foreach_func_dict)
+	(_wrap_gst_tag_list_subscript): Use gstvalue procs.
+	(init): Initialize the pygstvalue stuff (which involves accessing
+	definitions from gst/__init__.py).
+
+	* gst/gststructure.override (_wrap_gst_structure_ass_subscript):
+	Just use the pygstvalue functions to do conversion. As it is right
+	now, it's an incompatible change with the previous behavior,
+	because it doesn't try to parse field values like "(fourcc)XVID".
+	We can restore that previous behaviour if there is a need for it.
+	(_wrap_gst_structure_subscript): Use gstvalue functions to do the
+	conversion.
+
+	* gst/Makefile.am: Add in pygstvalue.[ch].
+
+	* gst/pygstvalue.h:
+	* gst/pygstvalue.c: New files.
+	(pygst_value_as_pyobject): Wraps pyg_value_as_pyobject, handling
+	gstvalues as well.
+	(pygst_value_init_for_pyobject): Sniffs a pyobject for a type and
+	initializes a GValue appropriately.
+	(pygst_value_from_pyobject): Wraps pyg_value_from_pyobject,
+	handling gvalues as well.
+
+	* testsuite/test_struct.py (StructureTest.testStructureChange) 
+	(StructureTest.testGstValue): Add some tests for GstValue wrapping.
+
 2005-04-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gst.defs:

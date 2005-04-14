@@ -25,7 +25,7 @@ endif
 defs_DATA = gst-types.defs
 defsdir = $(pkgdatadir)/2.0/defs
 
-noinst_HEADERS = common.h
+noinst_HEADERS = common.h pygstvalue.h
 
 INCLUDES = $(PYTHON_INCLUDES)
 EXTRA_DIST = $(defs_DATA) common.h arg-types.py ltihooks.py
@@ -35,7 +35,7 @@ PYGTK_DEFSDIR = @PYGTK_DEFSDIR@
 _gst_la_CFLAGS = $(common_cflags)
 _gst_la_LIBADD = $(common_libadd)
 _gst_la_LDFLAGS = $(common_ldflags) -export-symbols-regex init_gst
-_gst_la_SOURCES = gst-argtypes.c gstmodule.c 
+_gst_la_SOURCES = gst-argtypes.c gstmodule.c pygstvalue.c
 nodist__gst_la_SOURCES = gst.c
 GST_OVERRIDES = 		\
 	gst.override 		\

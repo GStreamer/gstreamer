@@ -36,4 +36,40 @@ try:
 except ImportError:
    pass
 
+class Value:
+   def __init__(self, type):
+      assert type in ('fourcc', 'intrange', 'doublerange', 'fraction')
+      self.type = type
+
+class Fourcc(Value):
+   def __init__(self, string):
+      Value.__init__(self, 'fourcc')
+      self.fourcc = string
+   def __repr__(self):
+      return '<gst.Fourcc %s>' % self.fourcc
+
+class IntRange(Value):
+   def __init__(self, low, high):
+      Value.__init__(self, 'intrange')
+      self.low = low
+      self.high = high
+   def __repr__(self):
+      return '<gst.IntRange [%d, %d]>' % (self.low, self.high)
+
+class DoubleRange(Value):
+   def __init__(self, low, high):
+      Value.__init__(self, 'doublerange')
+      self.low = low
+      self.high = high
+   def __repr__(self):
+      return '<gst.DoubleRange [%f, %f]>' % (self.low, self.high)
+
+class Fraction(Value):
+   def __init__(self, num, denom):
+      Value.__init__(self, 'fraction')
+      self.num = num
+      self.denom = denom
+   def __repr__(self):
+      return '<gst.Fraction %d/%d>' % (self.num, self.denom)
+
 from _gst import *
