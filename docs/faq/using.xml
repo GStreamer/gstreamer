@@ -77,6 +77,16 @@ $ gst-launch sinesrc ! osssink
 and see if you hear something.  Make sure your volume is turned up,
 but also make sure it is not too loud and you are not wearing your headphones.
         </para>
+        <para>
+In GNOME, you can configure audio output for most applications by running
+<programlisting>
+$ gstreamer-properties
+</programlisting>
+which can also be found in the start menu (Applications -> Preferences ->
+Multimedia Systems Selector). In KDE, there is not yet a shared way of
+setting audio output for all applications; however, applications such
+as Amarok allow you to specify an audio output in their preferences dialog.
+        </para>
       </answer>
     </qandaentry>
 

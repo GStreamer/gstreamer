@@ -1,3 +1,8 @@
+2005-04-14  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/faq/using.xml:
+	  Add note on gstreamer-properties (#154996).
+
 2005-04-13  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/random/bbb/optional-properties:
