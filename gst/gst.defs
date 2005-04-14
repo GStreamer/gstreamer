@@ -207,7 +207,36 @@
   )
 )
 
+(define-virtual add_element
+ (of-object "GstBin")
+ (return-type "none")
+ (parameters
+  '("GstElement*" "element")
+ )
+)
 
+(define-virtual remove_element
+ (of-object "GstBin")
+ (return-type "none")
+ (parameters
+  '("GstElement*" "element")
+ )
+)
+
+(define-virtual child_state_change
+ (of-object "GstBin")
+ (return-type "none")
+ (parameters
+  '("GstElementState" "oldstate")
+  '("GstElementState" "newstate")
+  '("GstElement*" "element")
+ )
+)
+
+(define-virtual iterate
+ (of-object "GstBin")
+ (return-type "gboolean")
+)
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstbuffer.h
 
@@ -677,6 +706,71 @@
   (parameters
     '("GstClockTime" "start_time")
     '("GstClockTime" "interval")
+  )
+)
+
+(define-virtual change_speed
+  (of-object "GstClock")
+  (return-type "gdouble")
+  (parameters
+   '("gdouble" "oldspeed")
+   '("gdouble" "newspeed")
+  )
+)
+
+(define-virtual get_speed
+  (of-object "GstClock")
+  (return-type "gdouble")
+)
+
+(define-virtual change_resolution
+  (of-object "GstClock")
+  (return-type "guint64")
+  (parameters
+   '("guint64" "old_resolution")
+   '("guint64" "new_resolution")
+  )
+)
+
+(define-virtual get_resolution
+  (of-object "GstClock")
+  (return-type "guint64")
+)
+
+(define-virtual get_internal_time
+  (of-object "GstClock")
+  (return-type "GstClockTime")
+)
+
+(define-virtual wait
+  (of-object "GstClock")
+  (return-type "GstClockEntryStatus")
+  (parameters
+   '("GstClockEntry*" "entry")
+  )
+)
+
+(define-virtual wait_async
+  (of-object "GstClock")
+  (return-type "GstClockEntryStatus")
+  (parameters
+   '("GstClockEntry*" "entry")
+  )
+)
+
+(define-virtual unschedule
+  (of-object "GstClock")
+  (return-type "none")
+  (parameters
+   '("GstClockEntry" "entry")
+  )
+)
+
+(define-virtual unlock
+  (of-object "GstClock")
+  (return-type "none")
+  (parameters
+   '("GstClockEntry*" "entry")
   )
 )
 
@@ -1466,6 +1560,116 @@
   (of-object "GstElement")
   (c-name "gst_element_get_managing_bin")
   (return-type "GstBin*")
+)
+
+(define-virtual release_locks
+  (of-object "GstElement")
+  (return-type "gboolean")
+)
+
+(define-virtual get_event_masks
+  (of-object "GstElement")
+  (return-type "const-GstEventMask*")
+)
+
+(define-virtual send_event
+  (of-object "GstElement")
+  (return-type "gboolean")
+  (parameters
+    '("GstEvent*" "event")
+  )
+)
+
+(define-virtual get_formats
+  (of-object "GstElement")
+  (return-type "const-GstFormat*")
+)
+
+(define-virtual convert
+  (of-object "GstElement")
+  (return-type "gboolean")
+  (parameters
+    '("GstFormat" "src_format")
+    '("gint64" "src_value")
+    '("GstFormat*" "dest_format")
+    '("gint64*" "dest_value")
+  )
+)
+
+(define-virtual get_query_types
+  (of-object "GstElement")
+  (return-type "const-GstQueryType*")
+)
+
+(define-virtual query
+  (of-object "GstElement")
+  (return-type "gboolean")
+  (parameters
+    '("GstQueryType" "type")
+    '("GstFormat*" "format")
+    '("gint64*" "value")
+  )
+)
+
+(define-virtual change_state
+  (of-object "GstElement")
+  (return-type "GstElementStateReturn")
+)
+
+(define-virtual request_new_pad
+  (of-object "GstElement")
+  (return-type "GstPad*")
+  (parameters
+    '("GstPadTemplate*" "templ")
+    '("const-gchar*" "name")
+  )
+)
+
+(define-virtual release_pad
+  (of-object "GstElement")
+  (return-type "none")
+  (parameters
+    '("GstPad*" "pad")
+  )
+)
+
+(define-virtual get_clock
+  (of-object "GstElement")
+  (return-type "GstClock*")
+)
+
+(define-virtual set_clock
+  (of-object "GstElement")
+  (return-type "none")
+  (parameters
+    '("GstClock*" "clock")
+  )
+)
+
+(define-virtual get_index
+  (of-object "GstElement")
+  (return-type "GstIndex*")
+)
+
+(define-virtual set_index
+  (of-object "GstElement")
+  (return-type "none")
+  (parameters
+    '("GstIndex*" "index")
+  )
+)
+
+(define-virtual set_state
+  (of-object "GstElement")
+  (return-type "GstElementStateReturn")
+  (parameters
+    '("GstElementState" "state")
+  )
+)
+
+(define-virtual no_more_pads
+  (of-object "GstElement")
+  (return-type "none")
 )
 
 (define-function element_factory_get_type
@@ -2796,6 +3000,27 @@
   (of-object "GstObject")
   (c-name "gst_object_get_path_string")
   (return-type "gchar*")
+)
+
+(define-virtual destroy
+  (of-object "GstObject")
+  (return-type "none")
+)
+
+(define-virtual save_thyself
+  (of-object "GstObject")
+  (return-type "xmlNodePtr")
+  (parameters
+   '("xmlNodePtr" "parent")
+  )
+)
+
+(define-virtual restore_thyself
+  (of-object "GstObject")
+  (return-type "none")
+  (parameters
+   '("xmlNodePtr" "self")
+  )
 )
 
 (define-function class_signal_connect

@@ -1,3 +1,12 @@
+2005-04-14  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/gst.defs: 
+	Added definitions for methods of GstObject, GstElement, GstBin and Clock
+	so you can create derived classes with more functionnalities.
+
+	* configure.ac: (ACLOCAL):
+	bumped required version of PYGTK to 2.6.0
+
 2005-04-14  Andy Wingo  <wingo@pobox.com>
 
 	* gst/__init__.py (Value, Fourcc, IntRange, DoubleRange)
