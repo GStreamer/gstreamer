@@ -107,13 +107,14 @@ TODO :
     - release-specific docs should go in CVS
     - change docs/current symlink
   - remove the nano version number in configure.ac, AS_VERSION
+  - for core: run "make upload" from gstreamer/docs to get the new docs online
+    (make sure that they build)
   - cvs commit
   - tag tree
     for example for 0.6.3 :
            cvs tag RELEASE-0_6_3
   - run "make release", build rpms
   - install on gnome's ftp
-  - for core: run "make upload" from gstreamer/docs to get the new docs online
   - change www/src/htdocs/entities.gst with the new version numbers
   - change www/src/htdocs/bugs/bugs.xml and add a new milestone
   - possibly add new version and milestone to bugzilla
