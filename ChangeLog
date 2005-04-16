@@ -1,6 +1,12 @@
 2005-04-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame):
+	  Revert previous, we cannot call pad_alloc_buffer() before being
+	  negotiated.
+
+2005-04-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame):
 	  Use gst_pad_alloc_buffer().
 
 2005-04-14  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
