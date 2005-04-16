@@ -1,3 +1,12 @@
+2005-04-16  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  Bump GStreamer core requirement to 0.8.9 for
+	  gst_pad_set_active_recursive.
+
+	* gst/gst.defs:
+	  Wrap gst_pad_set_active_recursive
+
 2005-04-14  Edward Hervey  <bilboed@bilboed.com>
 
 	* gst/gst.defs: 

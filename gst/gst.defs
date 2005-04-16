@@ -3133,6 +3133,15 @@
   )
 )
 
+(define-method set_active_recursive
+  (of-object "GstPad")
+  (c-name "gst_pad_set_active_recursive")
+  (return-type "none")
+  (parameters
+    '("gboolean" "active")
+  )
+)
+
 (define-method is_active
   (of-object "GstPad")
   (c-name "gst_pad_is_active")
