@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-02-08 10:47+0100\n"
+"POT-Creation-Date: 2005-02-25 11:30+0100\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -842,6 +842,17 @@ msgstr "Error closing file \"%s\"."
 msgid "Loaded %d plugins with %d %s.\n"
 msgstr ""
 
+#~ msgid ""
+#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
+#~ msgstr ""
+#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
+
+#~ msgid "Show plugin details"
+#~ msgstr "Show plugin details"
+
+#~ msgid "Show scheduler details"
+#~ msgstr "Show scheduler details"
+
 #~ msgid "Execution ended after %"
 #~ msgstr "Execution ended after %"
 
@@ -859,17 +870,6 @@ msgstr ""
 
 #~ msgid " ns).\n"
 #~ msgstr " ns).\n"
-
-#~ msgid ""
-#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
-#~ msgstr ""
-#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
-
-#~ msgid "Show plugin details"
-#~ msgstr "Show plugin details"
-
-#~ msgid "Show scheduler details"
-#~ msgstr "Show scheduler details"
 
 #~ msgid "')"
 #~ msgstr "')"

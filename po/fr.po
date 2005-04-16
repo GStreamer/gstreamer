@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-02-08 10:47+0100\n"
+"POT-Creation-Date: 2005-02-25 11:30+0100\n"
 "PO-Revision-Date: 2004-01-13 16:52+0100\n"
 "Last-Translator: Julien Moutte <julien@moutte.net>\n"
 "Language-Team: French <fr@li.org>\n"
@@ -882,6 +882,18 @@ msgstr ""
 msgid "Loaded %d plugins with %d %s.\n"
 msgstr ""
 
+#~ msgid "')"
+#~ msgstr "')"
+
+#~ msgid "' is the default)"
+#~ msgstr "' est la valeur par defaut)"
+
+#~ msgid ""
+#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
+#~ msgstr ""
+#~ "impossible de convertir \"%s\" de manière a correspondre avec la "
+#~ "proprieté \"%s\" dans l'element \"%s\" "
+
 #~ msgid "Execution ended after %"
 #~ msgstr "L'execution s'est terminé après %"
 
@@ -899,18 +911,6 @@ msgstr ""
 
 #~ msgid " ns).\n"
 #~ msgstr "ns).\n"
-
-#~ msgid "')"
-#~ msgstr "')"
-
-#~ msgid "' is the default)"
-#~ msgstr "' est la valeur par defaut)"
-
-#~ msgid ""
-#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
-#~ msgstr ""
-#~ "impossible de convertir \"%s\" de manière a correspondre avec la "
-#~ "proprieté \"%s\" dans l'element \"%s\" "
 
 #~ msgid "CATEGORIES"
 #~ msgstr "CATEGORIES"

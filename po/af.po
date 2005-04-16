@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-02-08 10:47+0100\n"
+"POT-Creation-Date: 2005-02-25 11:30+0100\n"
 "PO-Revision-Date: 2004-03-24 11:28+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -854,24 +854,6 @@ msgstr "Fout met toemaak van lêer \"%s\"."
 msgid "Loaded %d plugins with %d %s.\n"
 msgstr ""
 
-#~ msgid "Execution ended after %"
-#~ msgstr "Uitvoering het geëindig na %"
-
-#~ msgid " iterations (sum %"
-#~ msgstr " iterasies (som %"
-
-#~ msgid " ns, average %"
-#~ msgstr " ns, gemiddelde %"
-
-#~ msgid " ns, min %"
-#~ msgstr " ns, min %"
-
-#~ msgid " ns, max %"
-#~ msgstr " ns, maks %"
-
-#~ msgid " ns).\n"
-#~ msgstr " ns).\n"
-
 #~ msgid "')"
 #~ msgstr "')"
 
@@ -889,3 +871,21 @@ msgstr ""
 
 #~ msgid "Show scheduler details"
 #~ msgstr "Vertoon details van skeduleerder"
+
+#~ msgid "Execution ended after %"
+#~ msgstr "Uitvoering het geëindig na %"
+
+#~ msgid " iterations (sum %"
+#~ msgstr " iterasies (som %"
+
+#~ msgid " ns, average %"
+#~ msgstr " ns, gemiddelde %"
+
+#~ msgid " ns, min %"
+#~ msgstr " ns, min %"
+
+#~ msgid " ns, max %"
+#~ msgstr " ns, maks %"
+
+#~ msgid " ns).\n"
+#~ msgstr " ns).\n"

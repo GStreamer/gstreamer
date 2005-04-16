@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-02-08 10:47+0100\n"
+"POT-Creation-Date: 2005-02-25 11:30+0100\n"
 "PO-Revision-Date: 2004-04-03 03:14+0300\n"
 "Last-Translator: Baris Cicek <baris@teamforce.name.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -850,24 +850,6 @@ msgstr "\"%s\" kapatılırken hata."
 msgid "Loaded %d plugins with %d %s.\n"
 msgstr ""
 
-#~ msgid "Execution ended after %"
-#~ msgstr "Çalıştırma % sonrası bitti"
-
-#~ msgid " iterations (sum %"
-#~ msgstr " tekrarlar (toplam %"
-
-#~ msgid " ns, average %"
-#~ msgstr " ns, ortalama %"
-
-#~ msgid " ns, min %"
-#~ msgstr " ns, dak %"
-
-#~ msgid " ns, max %"
-#~ msgstr " ns, en fazla %"
-
-#~ msgid " ns).\n"
-#~ msgstr " ns) \n"
-
 #~ msgid "')"
 #~ msgstr "')"
 
@@ -885,3 +867,21 @@ msgstr ""
 
 #~ msgid "Show scheduler details"
 #~ msgstr "Zamanlandırıcı detaylarını göster"
+
+#~ msgid "Execution ended after %"
+#~ msgstr "Çalıştırma % sonrası bitti"
+
+#~ msgid " iterations (sum %"
+#~ msgstr " tekrarlar (toplam %"
+
+#~ msgid " ns, average %"
+#~ msgstr " ns, ortalama %"
+
+#~ msgid " ns, min %"
+#~ msgstr " ns, dak %"
+
+#~ msgid " ns, max %"
+#~ msgstr " ns, en fazla %"
+
+#~ msgid " ns).\n"
+#~ msgstr " ns) \n"

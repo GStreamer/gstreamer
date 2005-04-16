@@ -5,15 +5,17 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.8.3\n"
+"Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-02-08 10:47+0100\n"
-"PO-Revision-Date: 2004-08-03 10:53+0200\n"
+"POT-Creation-Date: 2005-02-25 11:30+0100\n"
+"PO-Revision-Date: 2004-09-06 15:16+0300\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%"
+"10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 #: gst/gst.c:160
 msgid "Print the GStreamer version"
@@ -705,9 +707,8 @@ msgid "empty pipeline not allowed"
 msgstr "порожній канал не допускається"
 
 #: tools/gst-inspect.c:1130
-#, fuzzy
 msgid "Print all elements"
-msgstr "немає елементу \"%s\""
+msgstr "Вивести усі елементи"
 
 #: tools/gst-launch.c:114
 #, c-format
@@ -826,38 +827,39 @@ msgstr "ПОМИЛКА: канал не може почати відтворен
 #: tools/gst-register.c:49
 #, c-format
 msgid "Added plugin %s with %d %s.\n"
-msgstr ""
+msgstr "Додано модуль %s з %d %s.\n"
 
 #: tools/gst-register.c:51 tools/gst-register.c:169
 msgid "feature"
 msgid_plural "features"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "властивість"
+msgstr[1] "властивості"
+msgstr[2] "властивостей"
 
 #: tools/gst-register.c:112
 #, c-format
 msgid "Added path   %s to %s \n"
-msgstr ""
+msgstr "Додано шлях %s до %s \n"
 
 #: tools/gst-register.c:127
 #, c-format
 msgid "Rebuilding %s (%s) ...\n"
-msgstr ""
+msgstr "Перебудовується %s (%s) ...\n"
 
 #: tools/gst-register.c:132
 #, c-format
 msgid "Trying to load %s ...\n"
-msgstr ""
+msgstr "Спроба завантажити %s ...\n"
 
 #: tools/gst-register.c:134
-#, fuzzy, c-format
+#, c-format
 msgid "Error loading %s\n"
-msgstr "Помилка закривання файлу \"%s\"."
+msgstr "Помилка при завантаженні %s\n"
 
 #: tools/gst-register.c:168
 #, c-format
 msgid "Loaded %d plugins with %d %s.\n"
-msgstr ""
+msgstr "Завантажено %d модулів з %d %s.\n"
 
 #~ msgid "Execution ended after %"
 #~ msgstr "Виконання закінчено після %"
