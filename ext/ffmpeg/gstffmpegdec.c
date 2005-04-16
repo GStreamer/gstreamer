@@ -645,7 +645,8 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
             ffmpegdec->context->width, ffmpegdec->context->height);
 
         ffmpegdec->waiting_for_key = FALSE;
-        outbuf = gst_buffer_new_and_alloc (fsize);
+        outbuf = gst_pad_alloc_buffer (ffmpegdec->srcpad,
+            GST_BUFFER_OFFSET_NONE, fsize);
 
         /* original ffmpeg code does not handle odd sizes correctly.
          * This patched up version does */
