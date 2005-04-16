@@ -53,8 +53,8 @@ typedef gboolean (*GstPluginInitFunc) (GstPlugin *plugin);
 typedef void (*GstPluginExitFunc) (GstPlugin *plugin);
 
 struct _GstPluginDesc {
-  gint major_version;			/* major version of core that plugin was compiled for */
-  gint minor_version;			/* minor version of core that plugin was compiled for */
+  gint major_version;			/* major version of GStreamer that plugin was compiled for */
+  gint minor_version;			/* minor version of GStreamer that plugin was compiled for */
   gchar *name;				/* unique name of plugin */
   gchar *description;			/* description of plugin */
   GstPluginInitFunc plugin_init;	/* pointer to plugin_init function */

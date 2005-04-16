@@ -29,7 +29,7 @@ it can be used. You should pass a pointer to the main argc and argv variables so
 process its own command line options, as shown in the following example.
 
 <example>
-<title>Initializing the gstreamer library</title>
+<title>Initializing the GStreamer library</title>
   <programlisting>
   int 
   main (int argc, char *argv[])
@@ -50,7 +50,7 @@ line args to GStreamer.
 You can also use a popt table to initialize your own parameters as shown in the next code 
 fragment:
 <example>
-<title>Initializing own parameters when initializing gstreamer</title>
+<title>Initializing own parameters when initializing GStreamer</title>
   <programlisting>
   static gboolean stats = FALSE;
   ...

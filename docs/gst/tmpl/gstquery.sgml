@@ -6,7 +6,7 @@ Dynamically register new query types
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-GstQuery functions are used to register a new query types to the gstreamer core. 
+GstQuery functions are used to register a new query types to GStreamer's core. 
 Query types can be used to perform queries on pads and elements.
 </para>
 

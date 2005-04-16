@@ -273,7 +273,7 @@ gst_util_set_object_arg (GObject * object, const gchar * name,
 /* -----------------------------------------------------
  *
  *  The following code will be moved out of the main
- * gstreamer library someday.
+ * GStreamer library someday.
  */
 
 #include "gstpad.h"

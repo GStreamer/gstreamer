@@ -57,8 +57,8 @@ static gboolean _gst_plugin_fault_handler_is_setup = FALSE;
 #endif
 
 /* list of valid licenses.
- * One of these must be specified or the plugin won't be loaded 
- * Contact gstreamer-devel@lists.sourceforge.net if your license should be 
+ * One of these must be specified or the plugin won't be loaded
+ * Contact gstreamer-devel@lists.sourceforge.net if your license should be
  * added.
  *
  * GPL: http://www.gnu.org/copyleft/gpl.html
@@ -147,8 +147,9 @@ _gst_plugin_initialize (void)
       NULL);
 }
 
-/* this function could be extended to check if the plugin license matches the 
- * applications license (would require the app to register its license somehow).
+/* this function could be extended to check if the plugin license matches the
+ * application's license
+ * (would require the app to register its license somehow).
  * We'll wait for someone who's interested in it to code it :)
  */
 static gboolean
