@@ -24,8 +24,10 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <gst/gst.h>
-#include <avcodec.h>
+
+#include "avcodec.h"
 
 extern gboolean gst_ffmpegcolorspace_register (GstPlugin * plugin);
 
