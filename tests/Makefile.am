@@ -8,10 +8,11 @@ LAT = lat
 
 endif
 
-noinst_PROGRAMS = $(LAT) spidey_bench mass_elements complexity
+noinst_PROGRAMS = $(LAT) spidey_bench mass_elements speed complexity
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS)
-LIBS = $(GST_OBJ_LIBS)
+LIBS = $(GST_OBJ_LIBS) \
+	$(top_builddir)/gst/base/libgstbase-@GST_MAJORMINOR@.la
 
 EXTRA_DIST = README
 DIST_SUBDIRS= bufspeed instantiate memchunk muxing sched threadstate seeking
