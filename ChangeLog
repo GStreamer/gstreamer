@@ -1,3 +1,8 @@
+2005-04-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/gstreamer-sections.txt:
+	  add ronald's new tag and fix build
+
 2005-04-17  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/elements/gsttypefindelement.c: (gst_type_find_element_init),
