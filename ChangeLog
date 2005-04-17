@@ -1,3 +1,19 @@
+2005-04-17  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/elements/gsttypefindelement.c: (gst_type_find_element_init),
+	(push_buffer_store), (gst_type_find_element_handle_event),
+	(gst_type_find_element_change_state):
+	  Allow event caching while typefinding so we don't lose events.
+	* gst/elements/gsttypefindelement.h:
+	  Allow event caching while typefinding so we don't lose events.
+	* gst/gsttag.c: (_gst_tag_initialize):
+	* gst/gsttag.h:
+	  Add language-code tag.
+	* gst/registries/gstlibxmlregistry.c: (load_pad_template),
+	(load_feature), (load_paths):
+	  Fix memleaks (#300736), based on patch from Kjartan Maraas
+	  <kmaraas@gnome.org>.
+
 2005-04-14  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/faq/using.xml:

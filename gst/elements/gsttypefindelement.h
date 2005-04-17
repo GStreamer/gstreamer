@@ -51,6 +51,7 @@ struct _GstTypeFindElement {
   guint			min_probability;
   guint			max_probability;
   GstCaps *		caps;
+  GList *		pending_events;
 
   guint			mode;
   guint64		waiting_for_discont_offset;

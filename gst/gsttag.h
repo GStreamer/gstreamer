@@ -430,6 +430,12 @@ GstTagList *	gst_event_tag_get_list		(GstEvent *		tag_event);
  * peak of the album
  */
 #define GST_TAG_ALBUM_PEAK		"replaygain-album-peak"
+/**
+ * GST_TAG_LANGUAGE_CODE:
+ *
+ * Language code (ISO-639-1)
+ */
+#define GST_TAG_LANGUAGE_CODE		"language-code"
 
 G_END_DECLS
 

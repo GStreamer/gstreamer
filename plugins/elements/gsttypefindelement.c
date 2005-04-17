@@ -197,6 +197,7 @@ gst_type_find_element_init (GstTypeFindElement * typefind)
   gst_element_add_pad (GST_ELEMENT (typefind), typefind->src);
 
   typefind->caps = NULL;
+  typefind->pending_events = NULL;
   typefind->min_probability = 1;
   typefind->max_probability = GST_TYPE_FIND_MAXIMUM;
 
@@ -412,7 +413,18 @@ push_buffer_store (GstTypeFindElement * typefind)
 {
   guint size = gst_buffer_store_get_size (typefind->store, 0);
   GstBuffer *buffer;
+  const GList *item;
 
+  /* handle pending events */
+  for (item = typefind->pending_events; item; item = item->next) {
+    GstEvent *e = item->data;
+
+    gst_pad_push (typefind->src, GST_DATA (e));
+  }
+  g_list_free (typefind->pending_events);
+  typefind->pending_events = NULL;
+
+  /* data */
   gst_pad_push (typefind->src, GST_DATA (gst_event_new_discontinuous (TRUE,
               GST_FORMAT_DEFAULT, (guint64) 0, GST_FORMAT_BYTES, (guint64) 0,
               GST_FORMAT_UNDEFINED)));
@@ -494,7 +506,8 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
           }
           break;
         default:
-          gst_data_unref (GST_DATA (event));
+          typefind->pending_events = g_list_append (typefind->pending_events,
+              event);
           break;
       }
       break;
@@ -816,6 +829,9 @@ gst_type_find_element_change_state (GstElement * element)
     case GST_STATE_PAUSED_TO_READY:
       stop_typefinding (typefind);
       gst_caps_replace (&typefind->caps, NULL);
+      g_list_foreach (typefind->pending_events, (GFunc) gst_data_unref, NULL);
+      g_list_free (typefind->pending_events);
+      typefind->pending_events = NULL;
       break;
     default:
       break;

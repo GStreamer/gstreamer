@@ -680,11 +680,12 @@ load_pad_template (xmlTextReaderPtr reader)
       } else if (g_str_equal (tag, "presence")) {
         read_enum (reader, GST_TYPE_PAD_PRESENCE, &presence);
       } else if (!strncmp (tag, "caps", 4)) {
-        char *s = NULL;
+        gchar *s = NULL;
 
-        if (!caps && read_string (reader, &s))
+        if (!caps && read_string (reader, &s)) {
           caps = gst_caps_from_string (s);
-        g_free (s);
+          g_free (s);
+        }
       }
     }
   }
@@ -699,14 +700,15 @@ load_feature (xmlTextReaderPtr reader)
 {
   int ret;
   int depth = xmlTextReaderDepth (reader);
-  const gchar *feature_name =
-      (const gchar *) xmlTextReaderGetAttribute (reader, BAD_CAST "typename");
+  guchar *feature_name =
+      xmlTextReaderGetAttribute (reader, BAD_CAST "typename");
   GstPluginFeature *feature;
   GType type;
 
   if (!feature_name)
     return NULL;
-  type = g_type_from_name (feature_name);
+  type = g_type_from_name ((gchar *) feature_name);
+  xmlFree (feature_name);
   if (!type)
     return NULL;
   feature = g_object_new (type, NULL);
@@ -744,9 +746,10 @@ load_feature (xmlTextReaderPtr reader)
           if (read_string (reader, &s)) {
             if (g_ascii_strncasecmp (s, "sink", 4) == 0) {
               factory->uri_type = GST_URI_SINK;
-            } else if (g_ascii_strncasecmp (s, "source", 5) == 0) {
+            } else if (g_ascii_strncasecmp (s, "source", 6) == 0) {
               factory->uri_type = GST_URI_SRC;
             }
+            g_free (s);
           }
         } else if (g_str_equal (tag, "uri_protocol")) {
           gchar *s = NULL;
@@ -756,8 +759,10 @@ load_feature (xmlTextReaderPtr reader)
         } else if (g_str_equal (tag, "interface")) {
           gchar *s = NULL;
 
-          if (read_string (reader, &s))
+          if (read_string (reader, &s)) {
             __gst_element_factory_add_interface (factory, s);
+            g_free (s);
+          }
         } else if (g_str_equal (tag, "padtemplate")) {
           GstPadTemplate *template = load_pad_template (reader);
 
@@ -779,7 +784,7 @@ load_feature (xmlTextReaderPtr reader)
         } else if (g_str_equal (tag, "caps")) {
           gchar *s = NULL;
 
-          if (read_string (reader, &s)) {
+          if (!factory->caps && read_string (reader, &s)) {
             factory->caps = gst_caps_from_string (s);
             g_free (s);
           }
@@ -865,11 +870,12 @@ load_paths (xmlTextReaderPtr reader, GstXMLRegistry * registry)
       if (g_str_equal (tag, "path")) {
         gchar *s = NULL;
 
-        if (read_string (reader, &s) &&
-            !g_list_find_custom (GST_REGISTRY (registry)->paths, s,
-                (GCompareFunc) strcmp))
-          gst_registry_add_path (GST_REGISTRY (registry), s);
-        g_free (s);
+        if (read_string (reader, &s)) {
+          if (!g_list_find_custom (GST_REGISTRY (registry)->paths, s,
+                  (GCompareFunc) strcmp))
+            gst_registry_add_path (GST_REGISTRY (registry), s);
+          g_free (s);
+        }
       }
     }
   }
