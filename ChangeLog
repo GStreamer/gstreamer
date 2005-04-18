@@ -1,5 +1,7 @@
 2005-04-18  Andy Wingo  <wingo@pobox.com>
 
+	* gst/elements/gstfakesrc.c: s/ARG_/PROP_/.
+
 	* gst/base/gstbasesrc.c (gst_basesrc_set_property) 
 	(gst_basesrc_get_property): BLOCKSIZE is a ULONG. Rename ARG_...
 	to PROP_....

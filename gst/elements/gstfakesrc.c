@@ -72,23 +72,23 @@ enum
 
 enum
 {
-  ARG_0,
-  ARG_OUTPUT,
-  ARG_DATA,
-  ARG_SIZETYPE,
-  ARG_SIZEMIN,
-  ARG_SIZEMAX,
-  ARG_FILLTYPE,
-  ARG_DATARATE,
-  ARG_SYNC,
-  ARG_PATTERN,
-  ARG_NUM_BUFFERS,
-  ARG_EOS,
-  ARG_SIGNAL_HANDOFFS,
-  ARG_SILENT,
-  ARG_DUMP,
-  ARG_PARENTSIZE,
-  ARG_LAST_MESSAGE
+  PROP_0,
+  PROP_OUTPUT,
+  PROP_DATA,
+  PROP_SIZETYPE,
+  PROP_SIZEMIN,
+  PROP_SIZEMAX,
+  PROP_FILLTYPE,
+  PROP_DATARATE,
+  PROP_SYNC,
+  PROP_PATTERN,
+  PROP_NUM_BUFFERS,
+  PROP_EOS,
+  PROP_SIGNAL_HANDOFFS,
+  PROP_SILENT,
+  PROP_DUMP,
+  PROP_PARENTSIZE,
+  PROP_LAST_MESSAGE
 };
 
 #define GST_TYPE_FAKESRC_OUTPUT (gst_fakesrc_output_get_type())
@@ -219,59 +219,59 @@ gst_fakesrc_class_init (GstFakeSrcClass * klass)
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_fakesrc_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fakesrc_get_property);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_OUTPUT,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_OUTPUT,
       g_param_spec_enum ("output", "output", "Output method (currently unused)",
           GST_TYPE_FAKESRC_OUTPUT, DEFAULT_OUTPUT, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DATA,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DATA,
       g_param_spec_enum ("data", "data", "Data allocation method",
           GST_TYPE_FAKESRC_DATA, DEFAULT_DATA, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIZETYPE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SIZETYPE,
       g_param_spec_enum ("sizetype", "sizetype",
           "How to determine buffer sizes", GST_TYPE_FAKESRC_SIZETYPE,
           DEFAULT_SIZETYPE, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIZEMIN,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SIZEMIN,
       g_param_spec_int ("sizemin", "sizemin", "Minimum buffer size", 0,
           G_MAXINT, DEFAULT_SIZEMIN, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIZEMAX,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SIZEMAX,
       g_param_spec_int ("sizemax", "sizemax", "Maximum buffer size", 0,
           G_MAXINT, DEFAULT_SIZEMAX, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PARENTSIZE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PARENTSIZE,
       g_param_spec_int ("parentsize", "parentsize",
           "Size of parent buffer for sub-buffered allocation", 0, G_MAXINT,
           DEFAULT_PARENTSIZE, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FILLTYPE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FILLTYPE,
       g_param_spec_enum ("filltype", "filltype",
           "How to fill the buffer, if at all", GST_TYPE_FAKESRC_FILLTYPE,
           DEFAULT_FILLTYPE, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DATARATE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DATARATE,
       g_param_spec_int ("datarate", "Datarate",
           "Timestamps buffers with number of bytes per second (0 = none)", 0,
           G_MAXINT, DEFAULT_DATARATE, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SYNC,
       g_param_spec_boolean ("sync", "Sync", "Sync to the clock to the datarate",
           DEFAULT_SYNC, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PATTERN,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PATTERN,
       g_param_spec_string ("pattern", "pattern", "pattern", DEFAULT_PATTERN,
           G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_BUFFERS,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_NUM_BUFFERS,
       g_param_spec_int ("num-buffers", "num-buffers",
           "Number of buffers to output before sending EOS", -1, G_MAXINT,
           DEFAULT_NUM_BUFFERS, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_EOS,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_EOS,
       g_param_spec_boolean ("eos", "eos", "Send out the EOS event?",
           DEFAULT_EOS, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LAST_MESSAGE,
       g_param_spec_string ("last-message", "last-message",
           "The last status message", NULL, G_PARAM_READABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SILENT,
       g_param_spec_boolean ("silent", "Silent",
           "Don't produce last_message events", DEFAULT_SILENT,
           G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIGNAL_HANDOFFS,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SIGNAL_HANDOFFS,
       g_param_spec_boolean ("signal-handoffs", "Signal handoffs",
           "Send a signal before pushing the buffer", DEFAULT_SIGNAL_HANDOFFS,
           G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUMP,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DUMP,
       g_param_spec_boolean ("dump", "Dump", "Dump produced bytes to stdout",
           DEFAULT_DUMP, G_PARAM_READWRITE));
 
@@ -355,10 +355,10 @@ gst_fakesrc_set_property (GObject * object, guint prop_id, const GValue * value,
   src = GST_FAKESRC (object);
 
   switch (prop_id) {
-    case ARG_OUTPUT:
+    case PROP_OUTPUT:
       g_warning ("not yet implemented");
       break;
-    case ARG_DATA:
+    case PROP_DATA:
       src->data = g_value_get_enum (value);
 
       if (src->data == FAKESRC_DATA_SUBBUFFER) {
@@ -371,43 +371,43 @@ gst_fakesrc_set_property (GObject * object, guint prop_id, const GValue * value,
         }
       }
       break;
-    case ARG_SIZETYPE:
+    case PROP_SIZETYPE:
       src->sizetype = g_value_get_enum (value);
       break;
-    case ARG_SIZEMIN:
+    case PROP_SIZEMIN:
       src->sizemin = g_value_get_int (value);
       break;
-    case ARG_SIZEMAX:
+    case PROP_SIZEMAX:
       src->sizemax = g_value_get_int (value);
       break;
-    case ARG_PARENTSIZE:
+    case PROP_PARENTSIZE:
       src->parentsize = g_value_get_int (value);
       break;
-    case ARG_FILLTYPE:
+    case PROP_FILLTYPE:
       src->filltype = g_value_get_enum (value);
       break;
-    case ARG_DATARATE:
+    case PROP_DATARATE:
       src->datarate = g_value_get_int (value);
       break;
-    case ARG_SYNC:
+    case PROP_SYNC:
       src->sync = g_value_get_boolean (value);
       break;
-    case ARG_PATTERN:
+    case PROP_PATTERN:
       break;
-    case ARG_NUM_BUFFERS:
+    case PROP_NUM_BUFFERS:
       src->num_buffers = g_value_get_int (value);
       break;
-    case ARG_EOS:
+    case PROP_EOS:
       src->eos = g_value_get_boolean (value);
       GST_INFO ("will EOS on next buffer");
       break;
-    case ARG_SILENT:
+    case PROP_SILENT:
       src->silent = g_value_get_boolean (value);
       break;
-    case ARG_SIGNAL_HANDOFFS:
+    case PROP_SIGNAL_HANDOFFS:
       src->signal_handoffs = g_value_get_boolean (value);
       break;
-    case ARG_DUMP:
+    case PROP_DUMP:
       src->dump = g_value_get_boolean (value);
       break;
     default:
@@ -428,52 +428,52 @@ gst_fakesrc_get_property (GObject * object, guint prop_id, GValue * value,
   src = GST_FAKESRC (object);
 
   switch (prop_id) {
-    case ARG_OUTPUT:
+    case PROP_OUTPUT:
       g_value_set_enum (value, src->output);
       break;
-    case ARG_DATA:
+    case PROP_DATA:
       g_value_set_enum (value, src->data);
       break;
-    case ARG_SIZETYPE:
+    case PROP_SIZETYPE:
       g_value_set_enum (value, src->sizetype);
       break;
-    case ARG_SIZEMIN:
+    case PROP_SIZEMIN:
       g_value_set_int (value, src->sizemin);
       break;
-    case ARG_SIZEMAX:
+    case PROP_SIZEMAX:
       g_value_set_int (value, src->sizemax);
       break;
-    case ARG_PARENTSIZE:
+    case PROP_PARENTSIZE:
       g_value_set_int (value, src->parentsize);
       break;
-    case ARG_FILLTYPE:
+    case PROP_FILLTYPE:
       g_value_set_enum (value, src->filltype);
       break;
-    case ARG_DATARATE:
+    case PROP_DATARATE:
       g_value_set_int (value, src->datarate);
       break;
-    case ARG_SYNC:
+    case PROP_SYNC:
       g_value_set_boolean (value, src->sync);
       break;
-    case ARG_PATTERN:
+    case PROP_PATTERN:
       g_value_set_string (value, src->pattern);
       break;
-    case ARG_NUM_BUFFERS:
+    case PROP_NUM_BUFFERS:
       g_value_set_int (value, src->num_buffers);
       break;
-    case ARG_EOS:
+    case PROP_EOS:
       g_value_set_boolean (value, src->eos);
       break;
-    case ARG_SILENT:
+    case PROP_SILENT:
       g_value_set_boolean (value, src->silent);
       break;
-    case ARG_SIGNAL_HANDOFFS:
+    case PROP_SIGNAL_HANDOFFS:
       g_value_set_boolean (value, src->signal_handoffs);
       break;
-    case ARG_DUMP:
+    case PROP_DUMP:
       g_value_set_boolean (value, src->dump);
       break;
-    case ARG_LAST_MESSAGE:
+    case PROP_LAST_MESSAGE:
       g_value_set_string (value, src->last_message);
       break;
     default:
