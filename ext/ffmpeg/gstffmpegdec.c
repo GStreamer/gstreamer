@@ -645,7 +645,11 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
             ffmpegdec->context->width, ffmpegdec->context->height);
 
         ffmpegdec->waiting_for_key = FALSE;
-        outbuf = gst_buffer_new_and_alloc (fsize);
+
+	if (!gst_ffmpegdec_negotiate (ffmpegdec))
+	  return -1;	
+
+	outbuf = gst_pad_alloc_buffer (ffmpegdec->srcpad, GST_BUFFER_OFFSET_NONE, fsize);
 
         /* original ffmpeg code does not handle odd sizes correctly.
          * This patched up version does */
@@ -719,6 +723,12 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
           "Decode audio: len=%d, have_data=%d", len, have_data);
 
       if (len >= 0 && have_data > 0) {
+
+	if (!gst_ffmpegdec_negotiate (ffmpegdec)) {
+	  gst_buffer_unref (outbuf);
+	  return -1;
+	}
+
         GST_BUFFER_SIZE (outbuf) = have_data;
         if (GST_CLOCK_TIME_IS_VALID (*in_ts)) {
           ffmpegdec->next_ts = *in_ts;
@@ -755,11 +765,6 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
   if (have_data) {
     GST_DEBUG_OBJECT (ffmpegdec, "Decoded data, now pushing (%"
         GST_TIME_FORMAT ")", GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
-
-    if (!gst_ffmpegdec_negotiate (ffmpegdec)) {
-      gst_buffer_unref (outbuf);
-      return -1;
-    }
 
     if (GST_PAD_IS_USABLE (ffmpegdec->srcpad))
       gst_pad_push (ffmpegdec->srcpad, GST_DATA (outbuf));
