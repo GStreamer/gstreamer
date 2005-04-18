@@ -1,3 +1,9 @@
+2005-04-18  Andy Wingo  <wingo@pobox.com>
+
+	* gst/base/gstbasesrc.c (gst_basesrc_set_property) 
+	(gst_basesrc_get_property): BLOCKSIZE is a ULONG. Rename ARG_...
+	to PROP_....
+
 2005-04-14  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/faq/using.xml:

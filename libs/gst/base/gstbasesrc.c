@@ -46,8 +46,8 @@ enum
 
 enum
 {
-  ARG_0,
-  ARG_BLOCKSIZE,
+  PROP_0,
+  PROP_BLOCKSIZE,
 };
 
 static GstElementClass *parent_class = NULL;
@@ -124,7 +124,7 @@ gst_basesrc_class_init (GstBaseSrcClass * klass)
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_basesrc_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_basesrc_get_property);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BLOCKSIZE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BLOCKSIZE,
       g_param_spec_ulong ("blocksize", "Block size",
           "Size in bytes to read per buffer", 1, G_MAXULONG, DEFAULT_BLOCKSIZE,
           G_PARAM_READWRITE));
@@ -399,8 +399,8 @@ gst_basesrc_set_property (GObject * object, guint prop_id, const GValue * value,
   src = GST_BASESRC (object);
 
   switch (prop_id) {
-    case ARG_BLOCKSIZE:
-      src->blocksize = g_value_get_int (value);
+    case PROP_BLOCKSIZE:
+      src->blocksize = g_value_get_ulong (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -417,8 +417,8 @@ gst_basesrc_get_property (GObject * object, guint prop_id, GValue * value,
   src = GST_BASESRC (object);
 
   switch (prop_id) {
-    case ARG_BLOCKSIZE:
-      g_value_set_int (value, src->blocksize);
+    case PROP_BLOCKSIZE:
+      g_value_set_ulong (value, src->blocksize);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
