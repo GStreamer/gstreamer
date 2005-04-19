@@ -145,7 +145,7 @@ _wrap_gst_structure_get_double(PyObject *self, PyObject *args, PyObject *kwargs)
 		return NULL;
 
 	if (gst_structure_get_double(pyg_boxed_get(self, GstStructure), fieldname, &value))
-		return PyInt_FromLong(value);
+		return PyFloat_FromDouble(value);
 
 	/* XXX: Raise exception? */
 	Py_INCREF(Py_None);
