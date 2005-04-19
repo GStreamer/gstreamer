@@ -131,6 +131,27 @@ _wrap_gst_structure_get_int(PyObject *self, PyObject *args, PyObject *kwargs)
 	return Py_None;
 }
 %%
+override gst_structure_get_double kwargs
+static PyObject *
+_wrap_gst_structure_get_double(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+	static char *kwlist[] = { "fieldname", NULL };
+	char *fieldname;
+	gdouble value;
+	
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+					 "s:GstStructure.get_double",
+					 kwlist, &fieldname))
+		return NULL;
+
+	if (gst_structure_get_double(pyg_boxed_get(self, GstStructure), fieldname, &value))
+		return PyInt_FromLong(value);
+
+	/* XXX: Raise exception? */
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+%%
 define GstStructure.has_key args
 static PyObject*
 _wrap_gst_structure_has_key(PyGObject *self, PyObject *args)

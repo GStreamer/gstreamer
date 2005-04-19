@@ -1,3 +1,8 @@
+2005-04-19  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/gststructure.override: (_wrap_gst_structure_get_double):
+	Added overriding function for getting double values from a gst.Structure
+
 2005-04-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: bumped back required version of pygtk; we can backport
