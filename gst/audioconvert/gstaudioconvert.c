@@ -447,7 +447,7 @@ gst_audio_convert_setcaps (GstPad * pad, GstCaps * caps)
       *other_prefered = targetcaps;
       if (!gst_audio_convert_parse_caps (targetcaps, &other_ac_caps))
         return FALSE;
-      GST_RPAD_CAPS (otherpad) = targetcaps;
+      gst_caps_replace (&GST_RPAD_CAPS (otherpad), targetcaps);
     }
   }
   if (this->sink == pad) {

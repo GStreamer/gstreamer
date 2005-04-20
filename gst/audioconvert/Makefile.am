@@ -8,7 +8,7 @@ libgstaudioconvert_la_SOURCES = \
 
 libgstaudioconvert_la_CFLAGS = $(GST_CFLAGS)
 libgstaudioconvert_la_LIBADD =
-libgstaudioconvert_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstaudioconvert_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(top_builddir)/gst-libs/gst/audio/libgstaudio.la
 
 noinst_HEADERS = \
 	gstchannelmix.h \
