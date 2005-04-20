@@ -303,8 +303,8 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   /* center image if needed */
   if (enc->center) {
     /* make sure offset is even, for easier decoding */
-    enc->offset_x = ROUND_UP_2 (enc->info_width - enc->width) / 2;
-    enc->offset_y = ROUND_UP_2 (enc->info_height - enc->height) / 2;
+    enc->offset_x = ROUND_UP_2 ((enc->info_width - enc->width) / 2);
+    enc->offset_y = ROUND_UP_2 ((enc->info_height - enc->height) / 2);
   } else {
     enc->offset_x = 0;
     enc->offset_y = 0;
@@ -401,13 +401,16 @@ theora_push_packet (GstTheoraEnc * enc, ogg_packet * packet,
   theora_push_buffer (enc, buf);
 }
 
-static void
+static GstCaps *
 theora_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
     GstBuffer * buf2, GstBuffer * buf3)
 {
-  GstStructure *structure = gst_caps_get_structure (caps, 0);
+  GstStructure *structure;
   GValue list = { 0 };
   GValue value = { 0 };
+
+  caps = gst_caps_make_writable (caps);
+  structure = gst_caps_get_structure (caps, 0);
 
   /* mark buffers */
   GST_BUFFER_FLAG_SET (buf1, GST_BUFFER_IN_CAPS);
@@ -430,6 +433,8 @@ theora_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
   gst_structure_set_value (structure, "streamheader", &list);
   g_value_unset (&value);
   g_value_unset (&list);
+
+  return caps;
 }
 
 static gboolean
@@ -491,7 +496,8 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
 
     /* mark buffers and put on caps */
     caps = gst_pad_get_caps (enc->srcpad);
-    theora_set_header_on_caps (caps, buf1, buf2, buf3);
+    caps = theora_set_header_on_caps (caps, buf1, buf2, buf3);
+    gst_pad_set_caps (enc->srcpad, caps);
 
     /* negotiate with these caps */
     GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
