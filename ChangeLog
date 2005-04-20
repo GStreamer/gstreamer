@@ -1,3 +1,8 @@
+2005-04-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/building-boiler.xml:
+	  co login -> login (fixes #301128).
+
 2005-04-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/gstreamer-sections.txt:

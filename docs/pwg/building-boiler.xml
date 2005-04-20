@@ -32,7 +32,7 @@
       the internet, and type the following commands at a command console:
     </para>
     <screen>
-<prompt>shell $ </prompt><userinput>cvs -d:pserver:anoncvs@cvs.freedesktop.org/cvs/gstreamer co login</userinput>
+<prompt>shell $ </prompt><userinput>cvs -d:pserver:anoncvs@cvs.freedesktop.org/cvs/gstreamer login</userinput>
 Logging in to :pserver:anoncvs@cvs.freedesktop.org:/cvs/gstreamer
 CVS password: <keycap>[ENTER]</keycap>
 
