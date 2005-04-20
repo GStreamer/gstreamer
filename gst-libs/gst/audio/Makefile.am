@@ -17,7 +17,10 @@ CLEANFILES = gstaudiofilterexample.c \
 	$(BUILT_SOURCES)
 
 libgstaudio_la_SOURCES = audio.c audioclock.c \
-	multichannel.c
+	multichannel.c \
+	gstaudiosink.c \
+	gstbaseaudiosink.c \
+	gstringbuffer.c
 nodist_libgstaudio_la_SOURCES = $(built_sources)
 
 libgstaudioincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/audio
@@ -25,14 +28,15 @@ libgstaudioinclude_HEADERS = \
 	audio.h \
 	audioclock.h \
 	gstaudiofilter.h \
-	multichannel.h
-
-nodist_libgstaudioinclude_HEADERS = \
+	gstaudiosink.h \
+	gstbaseaudiosink.h \
+	gstringbuffer.h \
+	multichannel.h \
 	multichannel-enumtypes.h
 
 libgstaudio_la_LIBADD =
 libgstaudio_la_CFLAGS = $(GST_CFLAGS)
-libgstaudio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstaudio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GST_BASE_LIBS)
 
 libgstaudiofilter_la_SOURCES = gstaudiofilter.c gstaudiofilter.h
 libgstaudiofilter_la_CFLAGS = $(GST_CFLAGS)
@@ -44,5 +48,10 @@ libgstaudiofilterexample_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 gstaudiofilterexample.c: $(srcdir)/make_filter $(srcdir)/gstaudiofiltertemplate.c
 	$(srcdir)/make_filter AudiofilterExample $(srcdir)/gstaudiofiltertemplate.c
+
+noinst_PROGRAMS = testchannels
+testchannels_SOURCES = testchannels.c
+testchannels_CFLAGS = $(GST_CFLAGS)
+testchannels_LDFLAGS = $(GST_LIBS)
 
 include $(top_srcdir)/common/glib-gen.mak

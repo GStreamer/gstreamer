@@ -1,0 +1,13 @@
+TODO 
+----
+
+- audio base classes:
+   - GstBaseAudioSink
+      - parse caps into rinbuffer spec, also mase sure surround sound
+        is parsed correctly.
+      - implement seek/query/convert
+      - implement clocks
+      - implement getrange scheduling
+   - GstRingBuffer
+      - copy samples to right position in ringbuffer
+      

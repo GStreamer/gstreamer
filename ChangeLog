@@ -1,5 +1,43 @@
 2005-04-20  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design-audiosinks.txt:
+	* gst-libs/gst/audio/Makefile.am:
+	* gst-libs/gst/audio/TODO:
+	* gst-libs/gst/audio/gstaudiosink.c:
+	(gst_audioringbuffer_get_type), (gst_audioringbuffer_class_init),
+	(audioringbuffer_thread_func), (gst_audioringbuffer_init),
+	(gst_audioringbuffer_dispose), (gst_audioringbuffer_finalize),
+	(gst_audioringbuffer_acquire), (gst_audioringbuffer_release),
+	(gst_audioringbuffer_play), (gst_audioringbuffer_stop),
+	(gst_audioringbuffer_delay), (gst_audiosink_base_init),
+	(gst_audiosink_class_init), (gst_audiosink_init),
+	(gst_audiosink_create_ringbuffer):
+	* gst-libs/gst/audio/gstaudiosink.h:
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_baseaudiosink_base_init), (gst_baseaudiosink_class_init),
+	(gst_baseaudiosink_init), (gst_baseaudiosink_set_property),
+	(gst_baseaudiosink_get_property), (gst_baseaudiosink_setcaps),
+	(gst_baseaudiosink_get_times), (gst_baseaudiosink_event),
+	(gst_baseaudiosink_preroll), (gst_baseaudiosink_render),
+	(gst_baseaudiosink_create_ringbuffer),
+	(gst_baseaudiosink_callback), (gst_baseaudiosink_change_state):
+	* gst-libs/gst/audio/gstbaseaudiosink.h:
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ringbuffer_get_type),
+	(gst_ringbuffer_class_init), (gst_ringbuffer_init),
+	(gst_ringbuffer_dispose), (gst_ringbuffer_finalize),
+	(gst_ringbuffer_set_callback), (gst_ringbuffer_acquire),
+	(gst_ringbuffer_release), (gst_ringbuffer_play_unlocked),
+	(gst_ringbuffer_play), (gst_ringbuffer_pause),
+	(gst_ringbuffer_resume), (gst_ringbuffer_stop),
+	(gst_ringbuffer_callback), (gst_ringbuffer_delay),
+	(gst_ringbuffer_played_samples), (gst_ringbuffer_commit),
+	(gst_ringbuffer_prepare_read), (gst_ringbuffer_clear):
+	* gst-libs/gst/audio/gstringbuffer.h:
+	An attempt at a set of audio base classes together with some
+	design docs.
+
+2005-04-20  Wim Taymans  <wim@fluendo.com>
+
 	* gst/audioconvert/Makefile.am:
 	* gst/audioconvert/gstaudioconvert.c: (gst_audio_convert_chain),
 	(gst_audio_convert_caps_remove_format_info),
