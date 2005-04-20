@@ -1,3 +1,37 @@
+2005-04-20  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesink.c: (gst_basesink_base_init),
+	(gst_basesink_pad_getcaps), (gst_basesink_init),
+	(gst_basesink_chain_unlocked):
+	* gst/base/gsttypefindhelper.c: (helper_find_suggest),
+	(gst_type_find_helper):
+	* gst/elements/gsttypefindelement.c:
+	(gst_type_find_element_have_type), (gst_type_find_element_init),
+	(stop_typefinding), (gst_type_find_element_handle_event),
+	(find_suggest), (gst_type_find_element_chain),
+	(gst_type_find_element_checkgetrange),
+	(gst_type_find_element_getrange), (do_typefind),
+	(gst_type_find_element_activate):
+	* gst/gstbuffer.c: (_gst_buffer_sub_free),
+	(gst_buffer_default_free), (gst_buffer_default_copy),
+	(gst_buffer_set_caps):
+	* gst/gstcaps.c: (gst_caps_ref), (gst_caps_unref),
+	(gst_caps_replace):
+	* gst/gstmessage.c: (gst_message_new),
+	(gst_message_new_state_changed):
+	* gst/gstpad.c: (gst_pad_set_active), (gst_pad_peer_set_active),
+	(gst_pad_set_checkgetrange_function),
+	(gst_pad_link_prepare_filtered), (gst_pad_relink_filtered),
+	(gst_pad_set_caps), (gst_pad_check_pull_range),
+	(gst_pad_pull_range), (gst_static_pad_template_get_caps):
+	* gst/gstpad.h:
+	* gst/gsttypefind.c: (gst_type_find_register):
+	Make gst_caps_replace() work like other _replace() functions.
+	Use _caps_replace() where possible.
+	Make sure _message_new() initialises its field.
+	Add gst_static_pad_template_get_caps()
+
+
 2005-04-18  Andy Wingo  <wingo@pobox.com>
 
 	* gst/elements/gstfakesrc.c: s/ARG_/PROP_/.

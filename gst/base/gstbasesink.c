@@ -669,7 +669,7 @@ gst_basesink_chain_unlocked (GstPad * pad, GstBuffer * buf)
 
   result = gst_basesink_finish_preroll (basesink, pad, buf);
 
-  DEBUG ("chain_unlocked %p after\n", basesink);
+  DEBUG ("chain_unlocked %p after, result %d\n", basesink, result);
 
   switch (result) {
     case PREROLL_QUEUEING:

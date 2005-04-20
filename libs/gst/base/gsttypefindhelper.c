@@ -90,7 +90,10 @@ helper_find_suggest (gpointer data, guint probability, const GstCaps * caps)
   GstTypeFindHelper *find = (GstTypeFindHelper *) data;
 
   if (probability > find->best_probability) {
-    gst_caps_replace (&find->caps, gst_caps_copy (caps));
+    GstCaps *copy = gst_caps_copy (caps);
+
+    gst_caps_replace (&find->caps, copy);
+    gst_caps_unref (copy);
     find->best_probability = probability;
   }
 }

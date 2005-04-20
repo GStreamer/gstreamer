@@ -74,8 +74,7 @@ _gst_buffer_sub_free (GstBuffer * buffer)
 
   GST_BUFFER_DATA (buffer) = NULL;
   GST_BUFFER_SIZE (buffer) = 0;
-  if (GST_BUFFER_CAPS (buffer))
-    gst_caps_unref (GST_BUFFER_CAPS (buffer));
+  gst_caps_replace (&GST_BUFFER_CAPS (buffer), NULL);
 
   _GST_DATA_DISPOSE (GST_DATA (buffer));
 
@@ -106,8 +105,7 @@ gst_buffer_default_free (GstBuffer * buffer)
   /* set to safe values */
   GST_BUFFER_DATA (buffer) = NULL;
   GST_BUFFER_SIZE (buffer) = 0;
-  if (GST_BUFFER_CAPS (buffer))
-    gst_caps_unref (GST_BUFFER_CAPS (buffer));
+  gst_caps_replace (&GST_BUFFER_CAPS (buffer), NULL);
 
   _GST_DATA_DISPOSE (GST_DATA (buffer));
 
@@ -167,6 +165,8 @@ gst_buffer_default_copy (GstBuffer * buffer)
   GST_BUFFER_PRIVATE (copy) = NULL;
   if (GST_BUFFER_CAPS (buffer))
     GST_BUFFER_CAPS (copy) = gst_caps_ref (GST_BUFFER_CAPS (buffer));
+  else
+    GST_BUFFER_CAPS (copy) = NULL;
 
   return copy;
 }
@@ -297,22 +297,9 @@ gst_buffer_get_caps (GstBuffer * buffer)
 void
 gst_buffer_set_caps (GstBuffer * buffer, GstCaps * caps)
 {
-  GstCaps *oldcaps;
-
   g_return_if_fail (buffer != NULL);
 
-  /* get old caps */
-  oldcaps = GST_BUFFER_CAPS (buffer);
-  /* ref new caps if any */
-  if (caps)
-    caps = gst_caps_ref (caps);
-  /* set caps */
-  GST_BUFFER_CAPS (buffer) = caps;
-
-  /* unref old caps if any */
-  if (oldcaps) {
-    gst_caps_unref (oldcaps);
-  }
+  gst_caps_replace (&GST_BUFFER_CAPS (buffer), caps);
 }
 
 /**

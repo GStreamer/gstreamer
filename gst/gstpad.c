@@ -1459,10 +1459,10 @@ gst_pad_link_prepare_filtered (GstPad * srcpad, GstPad * sinkpad,
     GstCaps *filtercopy;
 
     filtercopy = gst_caps_copy (filtercaps);
-    filtercopy = gst_caps_ref (filtercopy);
 
     gst_caps_replace (&GST_PAD_APPFILTER (realsrc), filtercopy);
     gst_caps_replace (&GST_PAD_APPFILTER (realsink), filtercopy);
+    gst_caps_unref (filtercopy);
   } else {
     gst_caps_replace (&GST_PAD_APPFILTER (realsrc), NULL);
     gst_caps_replace (&GST_PAD_APPFILTER (realsink), NULL);
@@ -1776,10 +1776,10 @@ gst_pad_relink_filtered (GstPad * srcpad, GstPad * sinkpad,
     GstCaps *filtercopy;
 
     filtercopy = gst_caps_copy (filtercaps);
-    filtercopy = gst_caps_ref (filtercopy);
 
     gst_caps_replace (&GST_PAD_APPFILTER (realsrc), filtercopy);
     gst_caps_replace (&GST_PAD_APPFILTER (realsink), filtercopy);
+    gst_caps_unref (filtercopy);
   } else {
     gst_caps_replace (&GST_PAD_APPFILTER (realsrc), NULL);
     gst_caps_replace (&GST_PAD_APPFILTER (realsink), NULL);
@@ -2155,8 +2155,8 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
     }
   }
 
-  if (GST_PAD_CAPS (pad))
-    gst_caps_unref (GST_PAD_CAPS (pad));
+  if (GST_RPAD_CAPS (pad))
+    gst_caps_unref (GST_RPAD_CAPS (pad));
 
   if (caps)
     caps = gst_caps_ref (caps);
@@ -3310,6 +3310,23 @@ gst_pad_template_new (const gchar * name_template,
   GST_PAD_TEMPLATE_CAPS (new) = caps;
 
   return new;
+}
+
+/**
+ * gst_static_pad_template_get_caps:
+ * @templ: a #GstStaticPadTemplate to get capabilities of.
+ *
+ * Gets the capabilities of the static pad template.
+ *
+ * Returns: the #GstCaps of the static pad template. If you need to keep a 
+ * reference to the caps, take a ref (see gst_caps_ref ()).
+ */
+GstCaps *
+gst_static_pad_template_get_caps (GstStaticPadTemplate * templ)
+{
+  g_return_val_if_fail (templ, NULL);
+
+  return (GstCaps *) gst_static_caps_get (&templ->static_caps);
 }
 
 /**

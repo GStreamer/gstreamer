@@ -249,7 +249,7 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
     g_strfreev (factory->extensions);
 
   factory->extensions = g_strdupv (extensions);
-  gst_caps_replace (&factory->caps, gst_caps_copy (possible_caps));
+  gst_caps_replace (&factory->caps, (GstCaps *) possible_caps);
   factory->function = func;
   factory->user_data = data;
 

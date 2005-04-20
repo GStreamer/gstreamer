@@ -27,7 +27,7 @@
 #include "gstatomic_impl.h"
 #include <gst/gst.h>
 
-//#define DEBUG_REFCOUNT
+/* #define DEBUG_REFCOUNT */
 
 #define CAPS_POISON(caps) G_STMT_START{ \
   if (caps) { \
@@ -311,6 +311,7 @@ gst_caps_ref (GstCaps * caps)
   GST_CAT_LOG (GST_CAT_CAPS, "%p %d->%d", caps,
       GST_CAPS_REFCOUNT_VALUE (caps), GST_CAPS_REFCOUNT_VALUE (caps) + 1);
 #endif
+  g_return_val_if_fail (GST_CAPS_REFCOUNT_VALUE (caps) > 0, NULL);
 
   gst_atomic_int_inc (&caps->refcount);
 
@@ -328,12 +329,13 @@ void
 gst_caps_unref (GstCaps * caps)
 {
   g_return_if_fail (caps != NULL);
-  g_return_if_fail (GST_CAPS_REFCOUNT_VALUE (caps) > 0);
 
 #ifdef DEBUG_REFCOUNT
   GST_CAT_LOG (GST_CAT_CAPS, "%p %d->%d", caps,
       GST_CAPS_REFCOUNT_VALUE (caps), GST_CAPS_REFCOUNT_VALUE (caps) - 1);
 #endif
+
+  g_return_if_fail (GST_CAPS_REFCOUNT_VALUE (caps) > 0);
 
   /* if we ended up with the refcount at zero, free the caps */
   if (gst_atomic_int_dec_and_test (&caps->refcount)) {
@@ -1472,14 +1474,22 @@ gst_caps_load_thyself (xmlNodePtr parent)
 void
 gst_caps_replace (GstCaps ** caps, GstCaps * newcaps)
 {
+  GstCaps *oldcaps;
+
 #if 0                           /* disable this, since too many plugins rely on undefined behavior */
 #ifdef USE_POISONING
   //if (newcaps) CAPS_POISON (newcaps);
 #endif
 #endif
-  if (*caps)
-    gst_caps_unref (*caps);
+  oldcaps = *caps;
+
+  if (newcaps)
+    gst_caps_ref (newcaps);
+
   *caps = newcaps;
+
+  if (oldcaps)
+    gst_caps_unref (oldcaps);
 }
 
 /**

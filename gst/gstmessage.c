@@ -143,9 +143,11 @@ gst_message_new (GstMessageType type, GstObject * src)
   GST_MESSAGE_TYPE (message) = type;
   GST_MESSAGE_TIMESTAMP (message) = G_GINT64_CONSTANT (0);
   if (src) {
-    gst_object_ref (src);
-    GST_MESSAGE_SRC (message) = src;
+    GST_MESSAGE_SRC (message) = gst_object_ref (src);
+  } else {
+    GST_MESSAGE_SRC (message) = NULL;
   }
+  message->structure = NULL;
 
   return message;
 }
@@ -266,8 +268,9 @@ gst_message_new_state_changed (GstObject * src, GstElementState old,
   GstStructure *s;
 
   message = gst_message_new (GST_MESSAGE_STATE_CHANGED, src);
-  s = gst_structure_new ("GstMessageError", "old-state", G_TYPE_INT, old,
-      "new-state", G_TYPE_INT, new, NULL);
+
+  s = gst_structure_new ("GstMessageError", "old-state", G_TYPE_INT, (gint) old,
+      "new-state", G_TYPE_INT, (gint) new, NULL);
   message->structure = s;
 
   return message;

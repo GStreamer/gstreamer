@@ -601,6 +601,7 @@ GstPadTemplate*		gst_pad_template_new			(const gchar *name_template,
 								 GstCaps *caps);
 
 GstPadTemplate *	gst_static_pad_template_get             (GstStaticPadTemplate *pad_template);
+GstCaps*		gst_static_pad_template_get_caps	(GstStaticPadTemplate *templ);
 GstCaps*		gst_pad_template_get_caps		(GstPadTemplate *templ);
 
 #ifndef GST_DISABLE_LOADSAVE

@@ -581,7 +581,7 @@ find_suggest (gpointer data, guint probability, const GstCaps * caps)
       GST_PLUGIN_FEATURE_NAME (entry->factory), probability, caps);
   if (((gint) probability) > entry->probability) {
     entry->probability = probability;
-    gst_caps_replace (&entry->caps, gst_caps_copy (caps));
+    gst_caps_replace (&entry->caps, (GstCaps *) caps);
   }
 }
 
