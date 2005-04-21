@@ -704,8 +704,11 @@ gst_ffmpegenc_register (GstPlugin * plugin)
     }
 
     /* name */
-    if (!gst_ffmpeg_get_codecid_longname (in_plugin->id))
+    if (!gst_ffmpeg_get_codecid_longname (in_plugin->id)) {
+      g_warning ("Add encoder %s (%d) please",
+          in_plugin->name, in_plugin->id);
       goto next;
+    }
 
     /* first make sure we've got a supported type */
     srccaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, TRUE);

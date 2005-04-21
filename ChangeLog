@@ -1,5 +1,17 @@
 2005-04-21  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_with_codecid), (gst_ffmpeg_caps_to_codecid),
+	(gst_ffmpeg_get_codecid_longname):
+	  Add ALAC, shorten and some more in new FFMPEG snapshot of
+	  21/4, somewhere this afternoon.
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_register):
+	  Add warnings to decoder registration to easier add new ones
+	  during snapshot updates.
+
+2005-04-21  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ffmpeg/gstffmpegcodecmap.c:
 	(gst_ffmpeg_formatid_get_codecids):
 	  Enable MPEG muxer.

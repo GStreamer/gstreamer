@@ -395,6 +395,11 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           "indeoversion", G_TYPE_INT, 3, NULL);
       break;
 
+    case CODEC_ID_INDEO2:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-indeo",
+          "indeoversion", G_TYPE_INT, 2, NULL);
+      break;
+
     case CODEC_ID_VP3:
       caps = GST_FF_VID_CAPS_NEW ("video/x-vp3", NULL);
       break;
@@ -463,6 +468,12 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 	  "msvideoversion", G_TYPE_INT, 1, NULL);
       break;
 
+    case CODEC_ID_WMV3:
+    case CODEC_ID_VC9:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-wmv",
+          "wmvversion", G_TYPE_INT, 3, NULL);
+      break;
+
     case CODEC_ID_WS_VQA:
     case CODEC_ID_IDCIN:
     case CODEC_ID_8BPS:
@@ -490,6 +501,12 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_PGMYUV:
     case CODEC_ID_PAM:
     case CODEC_ID_FFVHUFF:
+    case CODEC_ID_LOCO:
+    case CODEC_ID_WNV1:
+    case CODEC_ID_AASC:
+    case CODEC_ID_MP3ADU:
+    case CODEC_ID_MP3ON4:
+    case CODEC_ID_WESTWOOD_SND1:
       buildcaps = TRUE;
       break;
 
@@ -575,6 +592,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_ADPCM_EA:
     case CODEC_ID_ADPCM_G726:
     case CODEC_ID_ADPCM_CT:
+    case CODEC_ID_ADPCM_SWF:
       do {
         gchar *layout = NULL;
 
@@ -617,6 +635,9 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
             break;
           case CODEC_ID_ADPCM_CT:
             layout = "ct";
+            break;
+          case CODEC_ID_ADPCM_SWF:
+            layout = "swf";
             break;
           default:
             g_assert (0);       /* don't worry, we never get here */
@@ -687,6 +708,18 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
               "block_align", G_TYPE_INT, context->block_align,
               "bitrate", G_TYPE_INT, context->bit_rate, NULL);
       } while (0);
+      break;
+
+    case CODEC_ID_SHORTEN:
+      caps = gst_caps_new_simple ("audio/x-shorten", NULL);
+      break;
+
+    case CODEC_ID_ALAC:
+      caps = GST_FF_AUD_CAPS_NEW ("audio/x-alac", NULL);
+      if (context) {
+        gst_caps_set_simple (caps,
+            "samplesize", G_TYPE_INT, context->bits_per_sample, NULL);
+      }
       break;
 
     case CODEC_ID_FLAC:
@@ -1247,6 +1280,10 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
       } while (0);
       break;
 
+    case CODEC_ID_ALAC:
+      gst_structure_get_int (str, "samplesize", &context->bits_per_sample);
+      break;
+
     default:
       break;
   }
@@ -1479,6 +1516,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
         case 2:
           id = CODEC_ID_WMV2;
           break;
+        case 3:
+          id = CODEC_ID_WMV3;
+          break;
       }
     }
     if (id != CODEC_ID_NONE)
@@ -1590,10 +1630,17 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
   } else if (!strcmp (mimetype, "video/x-indeo")) {
     gint indeoversion = 0;
 
-    if (gst_structure_get_int (structure, "indeoversion", &indeoversion) &&
-        indeoversion == 3) {
-      id = CODEC_ID_INDEO3;
-      video = TRUE;
+    if (gst_structure_get_int (structure, "indeoversion", &indeoversion)) {
+      switch (indeoversion) {
+        case 3:
+          id = CODEC_ID_INDEO3;
+          break;
+        case 2:
+          id = CODEC_ID_INDEO2;
+          break;
+      }
+      if (id != CODEC_ID_NONE)
+        video = TRUE;
     }
   } else if (!strcmp (mimetype, "video/x-divx")) {
     gint divxversion = 0;
@@ -1657,6 +1704,8 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
       id = CODEC_ID_ADPCM_G726;
     } else if (!strcmp (layout, "ct")) {
       id = CODEC_ID_ADPCM_CT;
+    } else if (!strcmp (layout, "swf")) {
+      id = CODEC_ID_ADPCM_SWF;
     }
     if (id != CODEC_ID_NONE)
       audio = TRUE;
@@ -1682,6 +1731,12 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
       audio = TRUE;
   } else if (!strcmp (mimetype, "audio/x-flac")) {
     id = CODEC_ID_FLAC;
+    audio = TRUE;
+  } else if (!strcmp (mimetype, "audio/x-shorten")) {
+    id = CODEC_ID_SHORTEN;
+    audio = TRUE;
+  } else if (!strcmp (mimetype, "audio/x-alac")) {
+    id = CODEC_ID_ALAC;
     audio = TRUE;
   } else if (!strcmp (mimetype, "video/x-cinepak")) {
     id = CODEC_ID_CINEPAK;
@@ -1854,6 +1909,12 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
     case CODEC_ID_WMV2:
       name = "Windows Media Video v8";
       break;
+    case CODEC_ID_WMV3:
+      name = "Windows Media Video v9";
+      break;
+    case CODEC_ID_VC9:
+      name = "Microsoft Video Codec v1";
+      break;
     case CODEC_ID_H263P:
       name = "H.263 (P) video";
       break;
@@ -1898,6 +1959,9 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       break;
     case CODEC_ID_INDEO3:
       name = "Indeo-3 video";
+      break;
+    case CODEC_ID_INDEO2:
+      name = "Indeo=2 video";
       break;
     case CODEC_ID_VP3:
       name = "VP3 video";
@@ -2035,6 +2099,24 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
     case CODEC_ID_FFVHUFF:
       name = "FFMPEG non-compliant Huffyuv video";
       break;
+    case CODEC_ID_LOCO:
+      name = "LOCO video";
+      break;
+    case CODEC_ID_WNV1:
+      name = "Winnov video 1";
+      break;
+    case CODEC_ID_AASC:
+      name = "Autodesk RLE video";
+      break;
+    case CODEC_ID_MP3ADU:
+      name = "ADU-formatted MPEG-1 layer 3 audio";
+      break;
+    case CODEC_ID_MP3ON4:
+      name = "MP3ON4";
+      break;
+    case CODEC_ID_WESTWOOD_SND1:
+      name = "Westwood Sound-1";
+      break;
     case CODEC_ID_PCM_MULAW:
       name = "Mu-law audio";
       break;
@@ -2080,6 +2162,9 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
     case CODEC_ID_ADPCM_CT:
       name = "CT ADPCM";
       break;
+    case CODEC_ID_ADPCM_SWF:
+      name = "Shockwave ADPCM";
+      break;
     case CODEC_ID_RA_144:
       name = "Realaudio 14k4bps";
       break;
@@ -2100,6 +2185,12 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       break;
     case CODEC_ID_FLAC:
       name = "FLAC lossless audio";
+      break;
+    case CODEC_ID_SHORTEN:
+      name = "Shorten lossless audio";
+      break;
+    case CODEC_ID_ALAC:
+      name = "Apple lossless audio";
       break;
     default:
       GST_WARNING ("Unknown codecID 0x%x", codec_id);
