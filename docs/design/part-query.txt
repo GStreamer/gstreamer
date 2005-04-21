@@ -1,0 +1,69 @@
+Query
+-----
+
+Queries are used to get information about the state of the stream.
+Various queries exist such as get the total length and the position
+
+A query can be performed on a pad or on an element. Both the element
+and the pad query have default behaviour unless a custom query handler
+is installed.
+
+The default pad query handler will forward the query to an internally
+linked pad. This internally linked pad is either obtained by calling
+the internal_links function of the pad or by using the default 
+function (which selects the pads with oposite directions from the parent
+element).
+
+The default element query function will select a random source pad to
+send the event to.
+
+The pad query function has the following prototype:
+
+    gboolean (*GstPadQueryFunction) (GstPad *pad, GstQueryType type,
+                                     GstFormat *format, gint64  *value);
+
+The query function can return a single value in one of the defined
+formats.
+
+The function returns TRUE if the query could be performed. The returned
+values are undefined when this function returns FALSE.
+
+
+Query types
+-----------
+
+ GST_QUERY_TOTAL:
+
+   get the total length of the stream in the given format.
+
+ GST_QUERY_POSITION:
+
+   get the current position in the stream in the given format.
+
+ GST_QUERY_LATENCY:
+
+   get the latency introduced in the stream in the given format.
+   This query can be used to retrieve how much data is queued in a
+   queue or in a hardware device such as an audio sink.
+
+ GST_QUERY_JITTER:
+
+   Get the jitter, this is the difference between the expected and real
+   time a buffer is captured or played.
+
+ GST_QUERY_START:
+
+   Query the position in the stream where the last start position was
+   configured. When a seek was performed to play a stream from A to B,
+   this query will return A.
+
+ GST_QUERY_SEGMENT_END:
+
+   Query the position in the stream where the last end position was
+   configured. When a seek was performed to play a stream from A to B,
+   this query will return B.
+
+ GST_QUERY_RATE:
+
+   Query the current playback rate of the stream.
+

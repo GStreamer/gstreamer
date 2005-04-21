@@ -106,6 +106,11 @@ Object locking:
   Object locking is used for all objects extending from GstObject such as
   GstElement, GstPad.
 
+  Object locking can be done with recursive locks or regular mutexes. Object
+  locks in GStreamer are implemented with mutexes which cause deadlocks when
+  locked recursively from the same thread. This is done because regular mutexes
+  are cheaper.
+
 Atomic operations
 
   Atomic operations are operations that are performed as one consistent
@@ -174,6 +179,8 @@ Objects
   then be placed under control of a parent. The floating ref keeps the object
   alive until it is parented, and once the object is parented you can forget
   about it.
+
+  also see part-relations.txt
   
 * parent-child relations
 
@@ -198,6 +205,7 @@ Objects
        object.
      - remove the object from the list.
 
+  also see part-relations.txt
 
 * Properties
   
@@ -332,8 +340,8 @@ Objects
   In some cases it is not a good idea to hold the lock for a long time while
   iterating the list. The state change code for a bin in GStreamer, for example,
   has to iterate over each element and perform a blocking call on each of them
-  causing infinite bin locking. In this case the cookie can be used to iterate a
-  list.
+  potentially causing infinite bin locking. In this case the cookie can be used 
+  to iterate a list.
 
   Example:
 

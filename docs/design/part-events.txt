@@ -103,7 +103,7 @@ A seek event is issued by the application to start playback of a new
 position in the stream. It is called form the application thread and
 travels upstream.
 
-The seek event contains the new start end end position of playback
+The seek event contains the new start and end position of playback
 after the seek is performed. Optionally the end position can be left
 at -1 to continue playback to the end of the stream.
 
@@ -131,7 +131,8 @@ The general flow of executing the seek is as follows:
  2) lock the STREAM_LOCK. This will work since the chain/loop function
     was unlocked in step 1).
 
- 3) perform the seek.
+ 3) perform the seek. since the STREAM_LOCK is held, the streaming thread
+    will wait for the seek to complete.
 
  4) send a flush event with the done flag set to allow streaming again.
 

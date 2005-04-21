@@ -4,3 +4,72 @@ Messages
 Messages are refcounted lightweight objects to signal the application
 of pipeline events. 
 
+Messages are implemented as a subclass of GstData with a generic 
+GstStructure as the content. This allows for writing custom messages without
+requiring an API change while allowing a wide range of different types
+of messages.
+
+Messages are posted by objects in the pipeline and are passed to the 
+application using the GstBus. 
+
+
+Message types
+-------------
+
+  GST_MESSAGE_EOS:
+
+    The pipeline went to EOS. This means that all the sink elements in the
+    pipeline posted the EOS message to the bus.
+  
+  GST_MESSAGE_ERROR:
+  
+    An element in the pipeline got into an error state. The message carries
+    a GError and a debug string describing the error. This usually means that
+    part of the pipeline is not streaming anymore.
+  
+  GST_MESSAGE_WARNING:
+  
+    An element in the pipeline encountered a condition that made it produce a
+    warning. This could be a recoverable decoding error or some other non fatal
+    event. The pipeline continues streaming after a warning.
+  
+  GST_MESSAGE_INFO:
+
+    An element produced an informational message.
+  
+  GST_MESSAGE_TAG:
+
+    An element decoded metadata about the stream. The message carries a GstTagList
+    with the tag information.
+  
+  GST_MESSAGE_BUFFERING:
+  
+    An element is buffering data and that could potentially take some time.
+  
+  GST_MESSAGE_STATE_CHANGED:
+
+    An element changed state in the pipeline. The message carries the old an new
+    state of the element.
+  
+  GST_MESSAGE_STEP_DONE:
+
+    An element stepping frames has finished.
+  
+  GST_MESSAGE_NEW_CLOCK:
+
+    A new clock was selected for the pipeline.
+
+  GST_MESSAGE_STRUCTURE_CHANGE:
+
+    The pipeline changed of structure, This means elements were added or removed or
+    pads were linked or unlinked.
+
+  GST_MESSAGE_STREAM_STATUS:
+
+   An element posted information about the stream it is handling. This could include
+   information about the length of the stream.
+    
+  GST_MESSAGE_APPLICATION:
+
+    An element posted an application specific message.
+

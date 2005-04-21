@@ -1,5 +1,19 @@
 2005-04-21  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design/draft-push-pull.txt:
+	* docs/design/part-MT-refcounting.txt:
+	* docs/design/part-TODO.txt:
+	* docs/design/part-caps.txt:
+	* docs/design/part-events.txt:
+	* docs/design/part-gstbus.txt:
+	* docs/design/part-gstpipeline.txt:
+	* docs/design/part-messages.txt:
+	* docs/design/part-push-pull.txt:
+	* docs/design/part-query.txt:
+	Some more docs.
+
+2005-04-21  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstmessage.c: (_gst_message_copy), (_gst_message_free),
 	(gst_message_new), (gst_message_new_error),
 	(gst_message_new_warning), (gst_message_new_tag),

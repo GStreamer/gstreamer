@@ -27,6 +27,23 @@ The application can retrieve the GstBus and integrate it in the
 mainloop or it can just _pop() messages off in its own thread.
 
 
+State changes
+-------------
+
+In addition to the normal state change procedure of its parent class
+GstBin, the pipeline performs the following actions during a state change:
+
+ - READY -> PAUSED:
+    - Select and set a clock.
+
+ - PAUSED -> PLAYING:
+    - calculate the stream time.
+
+The GstPipeline will also wait for any async state change to complete before
+proceeding to the next state change. This is usefull for the application because
+it does not have to deal with ASYNC state changes then.
+
+
 Clock selection
 ---------------
 
