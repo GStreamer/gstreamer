@@ -1,5 +1,10 @@
 2005-04-21  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
+	  Re-disable mov typefinding which breaks mov playback.
+
+2005-04-21  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
 	(gst_ffmpeg_caps_with_codecid), (gst_ffmpeg_caps_to_codecid),
 	(gst_ffmpeg_get_codecid_longname):

@@ -729,7 +729,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "mjpeg"))
       goto next;
 
-    if (!strcmp (in_plugin->name, "mov,mp4,m4a,3gp") ||
+    if (!strcmp (in_plugin->name, "mov,mp4,m4a,3gp,3g2") ||
         !strcmp (in_plugin->name, "avi") ||
         !strcmp (in_plugin->name, "asf") ||
         !strcmp (in_plugin->name, "mpegvideo") ||
