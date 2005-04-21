@@ -1,3 +1,9 @@
+2005-04-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/elements/gstelements.c:
+	  Give filesrc GST_RANK_PRIMARY, so that file:// URIs 
+	  get handled by filesrc instead of gnomevfssrc.
+	  
 2005-04-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/building-boiler.xml:

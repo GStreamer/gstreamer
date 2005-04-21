@@ -60,7 +60,7 @@ static struct _elements_entry _elements[] = {
   {"fakesink", GST_RANK_NONE, gst_fakesink_get_type},
   {"fdsink", GST_RANK_NONE, gst_fdsink_get_type},
   {"fdsrc", GST_RANK_NONE, gst_fdsrc_get_type},
-  {"filesrc", GST_RANK_NONE, gst_filesrc_get_type},
+  {"filesrc", GST_RANK_PRIMARY, gst_filesrc_get_type},
   {"filesink", GST_RANK_NONE, gst_filesink_get_type},
   {"identity", GST_RANK_NONE, gst_identity_get_type},
   {"md5sink", GST_RANK_NONE, gst_md5sink_get_type},
