@@ -1337,6 +1337,12 @@ gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
 
     *video_codec_list = mp4_video_list;
     *audio_codec_list = mp4_audio_list;
+  } else if (!strcmp (format_name, "mpeg")) {
+    static enum CodecID mpeg_video_list[] = { CODEC_ID_MPEG1VIDEO, CODEC_ID_NONE };
+    static enum CodecID mpeg_audio_list[] = { CODEC_ID_MP2, CODEC_ID_NONE };
+
+    *video_codec_list = mpeg_video_list;
+    *audio_codec_list = mpeg_audio_list;
   } else {
     GST_WARNING ("Format %s not found", format_name);
     return FALSE;
