@@ -14,6 +14,7 @@
 #include "../gsterror.h"
 #include "../gsturi.h"
 #include "../gstvalue.h"
+#include "../gstchildproxy.h"
 #include "types.h"
 
 /* All error messages in this file are user-visible and need to be translated.
@@ -236,6 +237,7 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
   gchar *pos = value;
   GValue v = { 0, }; 
   GValue v2 = { 0, };
+  GstObject *target;
   /* parse the string, so the property name is null-terminated an pos points
      to the beginning of the value */
   while (!g_ascii_isspace (*pos) && (*pos != '=')) pos++; 
@@ -253,11 +255,11 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
     pos[strlen (pos) - 1] = '\0';
   }
   gst_parse_unescape (pos); 
-  if ((pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (element), value))) { 
+  if (gst_child_proxy_lookup (GST_OBJECT (element), value, &target, &pspec)) { 
     g_value_init (&v, G_PARAM_SPEC_VALUE_TYPE(pspec)); 
     if (!gst_value_deserialize (&v, pos))
       goto error;
-    g_object_set_property (G_OBJECT (element), value, &v); 
+    g_object_set_property (G_OBJECT (target), pspec->name, &v); 
   } else { 
     SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_NO_SUCH_PROPERTY, _("no property \"%s\" in element \"%s\""), value, GST_ELEMENT_NAME (element)); 
   }

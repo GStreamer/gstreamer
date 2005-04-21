@@ -14,7 +14,7 @@ GST_DEBUG_DIRS = debug
 endif
 
 SUBDIRS = \
-	bins bytestream caps cleanup clock \
+	bins bytestream caps childproxy cleanup clock \
 	$(GST_DEBUG_DIRS) \
 	dlopen dynparams \
 	elements ghostpads indexers negotiation pad \
@@ -22,7 +22,7 @@ SUBDIRS = \
 	plugin refcounting schedulers states tags threads
 
 DIST_SUBDIRS = \
-	bins bytestream caps cleanup clock \
+	bins bytestream caps childproxy cleanup clock \
 	debug \
 	dlopen dynparams \
 	elements ghostpads indexers negotiation pad \

@@ -45,6 +45,7 @@
 #include <gst/gstmarshal.h>
 #include <gst/gstobject.h>
 #include <gst/gstpad.h>
+#include <gst/gstchildproxy.h>
 #include <gst/gstpipeline.h>
 #include <gst/gstplugin.h>
 #include <gst/gstscheduler.h>

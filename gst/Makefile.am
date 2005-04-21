@@ -100,6 +100,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstinterface.c		\
 	gstmemchunk.c		\
 	gstpad.c		\
+	gstchildproxy.c		\
 	gstpipeline.c		\
 	gstplugin.c		\
 	gstpluginfeature.c	\
@@ -174,6 +175,7 @@ gst_headers =			\
 	gstmacros.h		\
 	gstmemchunk.h		\
 	gstpad.h		\
+	gstchildproxy.h		\
 	gstpipeline.h		\
 	gstplugin.h		\
 	gstpluginfeature.h	\

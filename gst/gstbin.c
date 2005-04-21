@@ -33,6 +33,7 @@
 #include "gstscheduler.h"
 #include "gstindex.h"
 #include "gstutils.h"
+#include "gstchildproxy.h"
 
 GST_DEBUG_CATEGORY_STATIC (bin_debug);
 #define GST_CAT_DEFAULT bin_debug
@@ -97,6 +98,7 @@ enum
 static void gst_bin_base_init (gpointer g_class);
 static void gst_bin_class_init (GstBinClass * klass);
 static void gst_bin_init (GstBin * bin);
+static void gst_bin_child_proxy_init (gpointer g_iface, gpointer iface_data);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_bin_signals[LAST_SIGNAL] = { 0 };
@@ -123,8 +125,17 @@ gst_bin_get_type (void)
       NULL
     };
 
+    static const GInterfaceInfo child_proxy_info = {
+      gst_bin_child_proxy_init,
+      NULL,
+      NULL
+    };
+
     _gst_bin_type =
         g_type_register_static (GST_TYPE_ELEMENT, "GstBin", &bin_info, 0);
+
+    g_type_add_interface_static (_gst_bin_type, GST_TYPE_CHILD_PROXY,
+        &child_proxy_info);
 
     GST_DEBUG_CATEGORY_INIT (bin_debug, "bin", GST_DEBUG_BOLD,
         "debugging info for the 'bin' container element");
@@ -211,6 +222,28 @@ gst_bin_init (GstBin * bin)
 
   bin->numchildren = 0;
   bin->children = NULL;
+}
+
+static GstObject *
+gst_bin_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
+    guint index)
+{
+  return g_list_nth_data (GST_BIN (child_proxy)->children, index);
+}
+
+guint
+gst_bin_child_proxy_get_children_count (GstChildProxy * child_proxy)
+{
+  return GST_BIN (child_proxy)->numchildren;
+}
+
+static void
+gst_bin_child_proxy_init (gpointer g_iface, gpointer iface_data)
+{
+  GstChildProxyInterface *iface = g_iface;
+
+  iface->get_children_count = gst_bin_child_proxy_get_children_count;
+  iface->get_child_by_index = gst_bin_child_proxy_get_child_by_index;
 }
 
 /**
@@ -529,6 +562,7 @@ gst_bin_add (GstBin * bin, GstElement * element)
 
   if (bclass->add_element) {
     bclass->add_element (bin, element);
+    gst_child_proxy_child_added (GST_OBJECT (bin), GST_OBJECT (element));
   } else {
     GST_ELEMENT_ERROR (bin, CORE, FAILED, (NULL),
         ("cannot add element %s to bin %s",
@@ -620,6 +654,7 @@ gst_bin_remove (GstBin * bin, GstElement * element)
   bclass = GST_BIN_GET_CLASS (bin);
 
   if (bclass->remove_element) {
+    gst_child_proxy_child_removed (GST_OBJECT (bin), GST_OBJECT (element));
     bclass->remove_element (bin, element);
   } else {
     g_warning ("cannot remove elements from bin %s\n", GST_ELEMENT_NAME (bin));

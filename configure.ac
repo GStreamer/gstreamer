@@ -676,6 +676,7 @@ testsuite/Makefile
 testsuite/bins/Makefile
 testsuite/bytestream/Makefile
 testsuite/caps/Makefile
+testsuite/childproxy/Makefile
 testsuite/cleanup/Makefile
 testsuite/clock/Makefile
 testsuite/debug/Makefile

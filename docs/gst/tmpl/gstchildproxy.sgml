@@ -1,0 +1,140 @@
+<!-- ##### SECTION Title ##### -->
+GstChildProxy
+
+<!-- ##### SECTION Short_Description ##### -->
+interface for multi child element property access
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+This interface provides a uniform way to access child objects of elements.
+There are methods to get the children and methods to (recursivly) set and get
+their properties.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### FUNCTION gst_child_proxy_get_children_count ##### -->
+<para>
+
+</para>
+
+@parent: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_child_proxy_get_child_by_name ##### -->
+<para>
+
+</para>
+
+@parent: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_child_proxy_get_child_by_index ##### -->
+<para>
+
+</para>
+
+@parent: 
+@index: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_child_proxy_lookup ##### -->
+<para>
+
+</para>
+
+@object: 
+@name: 
+@target: 
+@pspec: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_child_proxy_get_property ##### -->
+<para>
+
+</para>
+
+@object: 
+@name: 
+@value: 
+
+
+<!-- ##### FUNCTION gst_child_proxy_get_valist ##### -->
+<para>
+
+</para>
+
+@object: 
+@first_property_name: 
+@var_args: 
+
+
+<!-- ##### FUNCTION gst_child_proxy_get ##### -->
+<para>
+
+</para>
+
+@object: 
+@first_property_name: 
+@Varargs: 
+
+
+<!-- ##### FUNCTION gst_child_proxy_set_property ##### -->
+<para>
+
+</para>
+
+@object: 
+@name: 
+@value: 
+
+
+<!-- ##### FUNCTION gst_child_proxy_set_valist ##### -->
+<para>
+
+</para>
+
+@object: 
+@first_property_name: 
+@var_args: 
+
+
+<!-- ##### FUNCTION gst_child_proxy_set ##### -->
+<para>
+
+</para>
+
+@object: 
+@first_property_name: 
+@Varargs: 
+
+
+<!-- ##### FUNCTION gst_child_proxy_child_added ##### -->
+<para>
+
+</para>
+
+@object: 
+@child: 
+
+
+<!-- ##### FUNCTION gst_child_proxy_child_removed ##### -->
+<para>
+
+</para>
+
+@object: 
+@child: 
+
+
