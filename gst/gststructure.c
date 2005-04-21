@@ -193,6 +193,10 @@ void
 gst_structure_set_parent_refcount (GstStructure * structure,
     GstAtomicInt * refcount)
 {
+  g_return_if_fail (structure != NULL);
+
+  /* if we have a parent_refcount already, we can only clear
+   * if with a NULL refcount */
   if (structure->parent_refcount)
     g_return_if_fail (refcount == NULL);
   else
@@ -240,7 +244,7 @@ gst_structure_copy (const GstStructure * structure)
  * @structure: the #GstStructure to free
  *
  * Frees a #GstStructure and all its fields and values. The structure must not
- * parent when this function is called.
+ * have a parent when this function is called.
  */
 void
 gst_structure_free (GstStructure * structure)

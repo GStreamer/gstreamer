@@ -1,3 +1,18 @@
+2005-04-21  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstmessage.c: (_gst_message_copy), (_gst_message_free),
+	(gst_message_new), (gst_message_new_error),
+	(gst_message_new_warning), (gst_message_new_tag),
+	(gst_message_new_state_changed), (gst_message_new_application),
+	(gst_message_get_structure):
+	* gst/gstmessage.h:
+	* gst/gststructure.c: (gst_structure_set_parent_refcount),
+	(gst_structure_copy_conditional):
+	Use parent refcount in GstMessage to ensure GstStructure
+	consistency.
+	Cleaned up headers a bit.
+	
+
 2005-04-20  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_basesink_base_init),

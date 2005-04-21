@@ -114,11 +114,12 @@ GType 		gst_message_get_type 		(void);
 GstMessage *	gst_message_new 		(GstMessageType type, GstObject * src);
 
 /* refcounting */
-#define         gst_message_ref(ev)		GST_MESSAGE (gst_data_ref (GST_DATA (ev)))
-#define         gst_message_ref_by_count(ev,c)	GST_MESSAGE (gst_data_ref_by_count (GST_DATA (ev), c))
-#define         gst_message_unref(ev)		gst_data_unref (GST_DATA (ev))
+#define         gst_message_ref(msg)		GST_MESSAGE (gst_data_ref (GST_DATA (msg)))
+#define         gst_message_ref_by_count(msg,c)	GST_MESSAGE (gst_data_ref_by_count (GST_DATA (msg), (c)))
+#define         gst_message_unref(msg)		gst_data_unref (GST_DATA (msg))
 /* copy message */
-#define         gst_message_copy(ev)		GST_MESSAGE (gst_data_copy (GST_DATA (ev)))
+#define         gst_message_copy(msg)		GST_MESSAGE (gst_data_copy (GST_DATA (msg)))
+#define         gst_message_copy_on_write(msg)	GST_MESSAGE (gst_data_copy_on_write (GST_DATA (msg)))
 
 GstMessage *	gst_message_new_eos 		(GstObject * src);
 GstMessage *	gst_message_new_error 		(GstObject * src, GError * error, gchar * debug);
@@ -128,13 +129,12 @@ GstMessage *	gst_message_new_state_changed 	(GstObject * src, GstElementState ol
                                                  GstElementState new_state);
 GstMessage *	gst_message_new_application 	(GstStructure *structure);
 
-const GstStructure *  gst_message_get_structure	(GstMessage *message);
-
+void		gst_message_parse_error		(GstMessage *message, GError **gerror, gchar **debug);
+void		gst_message_parse_warning	(GstMessage *message, GError **gerror, gchar **debug);
 void		gst_message_parse_tag		(GstMessage *message, GstTagList **tag_list);
 void		gst_message_parse_state_changed	(GstMessage *message, GstElementState *old_state,
                                                  GstElementState *new_state);
-void		gst_message_parse_error		(GstMessage *message, GError **gerror, gchar **debug);
-void		gst_message_parse_warning	(GstMessage *message, GError **gerror, gchar **debug);
+const GstStructure *  gst_message_get_structure	(GstMessage *message);
 
 
 G_END_DECLS

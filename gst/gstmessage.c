@@ -75,8 +75,11 @@ _gst_message_copy (GstMessage * message)
     gst_object_ref (GST_MESSAGE_SRC (copy));
   }
 
-  if (copy->structure)
-    copy->structure = gst_structure_copy (copy->structure);
+  if (message->structure) {
+    copy->structure = gst_structure_copy (message->structure);
+    gst_structure_set_parent_refcount (copy->structure,
+        &GST_DATA_REFCOUNT (message));
+  }
 
   return copy;
 }
@@ -96,8 +99,10 @@ _gst_message_free (GstMessage * message)
     GST_MESSAGE_UNLOCK (message);
   }
 
-  if (message->structure)
+  if (message->structure) {
+    gst_structure_set_parent_refcount (message->structure, NULL);
     gst_structure_free (message->structure);
+  }
 
   _GST_DATA_DISPOSE (GST_DATA (message));
 #ifndef GST_DISABLE_TRACE
@@ -194,6 +199,7 @@ gst_message_new_error (GstObject * src, GError * error, gchar * debug)
   message = gst_message_new (GST_MESSAGE_ERROR, src);
   s = gst_structure_new ("GstMessageError", "gerror", G_TYPE_POINTER, error,
       "debug", G_TYPE_STRING, debug, NULL);
+  gst_structure_set_parent_refcount (s, &GST_DATA_REFCOUNT (message));
   message->structure = s;
 
   return message;
@@ -221,6 +227,7 @@ gst_message_new_warning (GstObject * src, GError * error, gchar * debug)
   message = gst_message_new (GST_MESSAGE_WARNING, src);
   s = gst_structure_new ("GstMessageWarning", "gerror", G_TYPE_POINTER, error,
       "debug", G_TYPE_STRING, debug, NULL);
+  gst_structure_set_parent_refcount (s, &GST_DATA_REFCOUNT (message));
   message->structure = s;
 
   return message;
@@ -242,7 +249,10 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
 {
   GstMessage *message;
 
+  g_return_val_if_fail (GST_IS_STRUCTURE (tag_list), NULL);
+
   message = gst_message_new (GST_MESSAGE_TAG, src);
+  gst_structure_set_parent_refcount (tag_list, &GST_DATA_REFCOUNT (message));
   message->structure = tag_list;
 
   return message;
@@ -271,6 +281,7 @@ gst_message_new_state_changed (GstObject * src, GstElementState old,
 
   s = gst_structure_new ("GstMessageError", "old-state", G_TYPE_INT, (gint) old,
       "new-state", G_TYPE_INT, (gint) new, NULL);
+  gst_structure_set_parent_refcount (s, &GST_DATA_REFCOUNT (message));
   message->structure = s;
 
   return message;
@@ -293,7 +304,10 @@ gst_message_new_application (GstStructure * structure)
 {
   GstMessage *message;
 
+  g_return_val_if_fail (GST_IS_STRUCTURE (structure), NULL);
+
   message = gst_message_new (GST_MESSAGE_APPLICATION, NULL);
+  gst_structure_set_parent_refcount (structure, &GST_DATA_REFCOUNT (message));
   message->structure = structure;
 
   return message;
@@ -305,7 +319,9 @@ gst_message_new_application (GstStructure * structure)
  *
  * Access the structure of the message.
  *
- * Returns: The structure of the message, owned by the message.
+ * Returns: The structure of the message. The structure is still
+ * owned by the message, which means that you should not free it and 
+ * that the pointer becomes invalid when you free the message.
  *
  * MT safe.
  */
@@ -313,6 +329,7 @@ const GstStructure *
 gst_message_get_structure (GstMessage * message)
 {
   g_return_val_if_fail (GST_IS_MESSAGE (message), NULL);
+
   return message->structure;
 }
 
