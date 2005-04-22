@@ -1,6 +1,11 @@
 2005-04-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstpad.c: (gst_pad_event_default):
+	  Silly typo.
+
+2005-04-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstpad.c: (gst_pad_event_default):
 	  Fix one more signed/unsigned issue.
 
 2005-04-22  Luca Ognibene  <luogni@tin.it>
