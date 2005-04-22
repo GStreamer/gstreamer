@@ -4154,10 +4154,10 @@ gst_pad_event_default (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_DISCONTINUOUS:
     {
-      guint64 time;
+      gint64 time;
 
       if (gst_element_requires_clock (element) && element->clock) {
-        if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &time)) {
+        if (gst_event_discont_get_value (event, GST_FORMAT_TIME, time)) {
           gst_element_set_time (element, time);
         } else {
           GstFormat format = GST_FORMAT_TIME;
