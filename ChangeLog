@@ -1,3 +1,14 @@
+2005-04-22  Luca Ognibene  <luogni@tin.it>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstelement.h:
+	* gst/gstpad.c: (gst_pad_alloc_buffer):
+	  Add works-in-place flag, use for _pad_alloc().
+	* gst/elements/gstidentity.c: (gst_identity_init):
+	* gst/gstqueue.c: (gst_queue_init):
+	  Use works-in-place flag (#300932).
+
 2005-04-22  Kjartan Maraas  <kmaraas@gnome.org>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>

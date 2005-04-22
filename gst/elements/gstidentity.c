@@ -227,6 +227,8 @@ gst_identity_init (GstIdentity * identity)
   identity->srccaps = NULL;
 
   GST_FLAG_SET (identity, GST_ELEMENT_EVENT_AWARE);
+  GST_FLAG_SET (identity, GST_ELEMENT_WORK_IN_PLACE);
+
 }
 
 static void

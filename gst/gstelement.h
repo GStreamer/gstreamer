@@ -126,6 +126,9 @@ typedef enum {
   /* element is in error */
   GST_ELEMENT_IN_ERROR,
 
+  /* element doesn't change passed buffer or change it in place */
+  GST_ELEMENT_WORK_IN_PLACE,
+  
   /* use some padding for future expansion */
   GST_ELEMENT_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 16
 } GstElementFlags;

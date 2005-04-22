@@ -2979,20 +2979,56 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size)
 
   peer = GST_RPAD_PEER (pad);
 
-  if (peer && peer->bufferallocfunc) {
-    GstBuffer *ret;
+  while (peer) {
+    if (peer->bufferallocfunc) {
+      GstBuffer *ret;
 
-    GST_CAT_DEBUG (GST_CAT_BUFFER, "(%s:%s): getting buffer",
-        GST_DEBUG_PAD_NAME (pad));
-    GST_CAT_DEBUG (GST_CAT_PADS,
-        "calling bufferallocfunc &%s (@%p) of peer pad %s:%s",
-        GST_DEBUG_FUNCPTR_NAME (peer->bufferallocfunc),
-        &peer->bufferallocfunc, GST_DEBUG_PAD_NAME (((GstPad *) peer)));
+      GST_CAT_DEBUG (GST_CAT_BUFFER, "(%s:%s): getting buffer",
+          GST_DEBUG_PAD_NAME (pad));
+      GST_CAT_DEBUG (GST_CAT_PADS,
+          "calling bufferallocfunc &%s (@%p) of peer pad %s:%s",
+          GST_DEBUG_FUNCPTR_NAME (peer->bufferallocfunc),
+          &peer->bufferallocfunc, GST_DEBUG_PAD_NAME (((GstPad *) peer)));
 
-    ret = (peer->bufferallocfunc) (GST_PAD (peer), offset, size);
-    if (ret)
-      return ret;
+      ret = (peer->bufferallocfunc) (GST_PAD (peer), offset, size);
+      if (ret)
+        return ret;
+      else
+        break;
+    } else {
+      /* 
+         there is a peer but it doesn't have a bufferallocfunc.
+         Try to proxy the request if GST_ELEMENT_WORK_IN_PLACE
+         is setted (try only when there is a single src pad)
+       */
+      GstElement *parent = GST_PAD_PARENT (peer);
+
+      if (parent == NULL)
+        break;
+      if (GST_FLAG_IS_SET (parent, GST_ELEMENT_WORK_IN_PLACE)) {
+        /* get the src pad. don't proxy if src pad numbers != 1 */
+        const GList *pads;
+        GstPad *src = NULL;
+        gint src_pad_count = 0;
+
+        for (pads = gst_element_get_pad_list (parent);
+            pads != NULL; pads = pads->next) {
+          GstPad *t = GST_PAD (pads->data);
+
+          if (GST_PAD_DIRECTION (t) == GST_PAD_SRC) {
+            src = t;
+            src_pad_count++;
+          }
+        }
+
+        if ((src == NULL) || (src_pad_count != 1))
+          break;
+        peer = GST_RPAD_PEER (src);
+      } else
+        break;
+    }
   }
+
   return gst_buffer_new_and_alloc (size);
 }
 

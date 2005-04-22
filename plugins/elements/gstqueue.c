@@ -354,6 +354,8 @@ gst_queue_init (GstQueue * queue)
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_THREAD, queue,
       "initialized queue's not_empty & not_full conditions");
+
+  GST_FLAG_SET (queue, GST_ELEMENT_WORK_IN_PLACE);
 }
 
 /* called only once, as opposed to dispose */
@@ -918,8 +920,7 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
   GST_QUEUE_MUTEX_LOCK;
 
   if (gst_element_get_state (GST_ELEMENT (queue)) == GST_STATE_PLAYING) {
-    gboolean need_response =
-        GST_DATA_FLAG_IS_SET (GST_DATA (event),
+    gboolean need_response = GST_DATA_FLAG_IS_SET (GST_DATA (event),
         GST_EVENT_COMMON_FLAG_NEED_RESPONSE);
 
     er = g_new (GstQueueEventResponse, 1);
