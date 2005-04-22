@@ -455,7 +455,7 @@ find_element_get_length (gpointer data)
   if (entry->self->stream_length == 0) {
     typefind->stream_length_available =
         gst_pad_query (GST_PAD_PEER (entry->self->sink), GST_QUERY_TOTAL,
-        &format, &entry->self->stream_length);
+        &format, (gint64 *) & entry->self->stream_length);
     if (format != GST_FORMAT_BYTES)
       typefind->stream_length_available = FALSE;
     if (!typefind->stream_length_available) {
@@ -517,7 +517,7 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
           start_typefinding (typefind);
           gst_event_unref (event);
         } else {
-          guint64 off;
+          gint64 off;
 
           if (gst_event_discont_get_value (event, GST_FORMAT_BYTES, &off) &&
               off == typefind->waiting_for_discont_offset) {

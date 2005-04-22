@@ -333,7 +333,7 @@ gst_aggregator_loop (GstElement * element)
        */
       if (GST_PAD_IS_USABLE (pad)) {
         buf = GST_BUFFER (gst_pad_pull (pad));
-        debug = "loop";
+        debug = (guchar *) "loop";
 
         /* then push it forward */
         gst_aggregator_push (aggregator, pad, buf, debug);
@@ -343,7 +343,7 @@ gst_aggregator_loop (GstElement * element)
     if (aggregator->sched == AGGREGATOR_LOOP_SELECT) {
       GstPad *pad;
 
-      debug = "loop_select";
+      debug = (guchar *) "loop_select";
 
       buf = GST_BUFFER (gst_pad_collectv (&pad, aggregator->sinkpads));
 
@@ -374,5 +374,5 @@ gst_aggregator_chain (GstPad * pad, GstData * _data)
   aggregator = GST_AGGREGATOR (gst_pad_get_parent (pad));
 /*  gst_trace_add_entry (NULL, 0, buf, "aggregator buffer");*/
 
-  gst_aggregator_push (aggregator, pad, buf, "chain");
+  gst_aggregator_push (aggregator, pad, buf, (guchar *) "chain");
 }

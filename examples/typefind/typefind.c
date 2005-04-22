@@ -6,10 +6,10 @@ type_found (GstElement * typefind, const GstCaps * caps)
   xmlDocPtr doc;
   xmlNodePtr parent;
 
-  doc = xmlNewDoc ("1.0");
-  doc->xmlRootNode = xmlNewDocNode (doc, NULL, "Capabilities", NULL);
+  doc = xmlNewDoc ((guchar *) "1.0");
+  doc->xmlRootNode = xmlNewDocNode (doc, NULL, (guchar *) "Capabilities", NULL);
 
-  parent = xmlNewChild (doc->xmlRootNode, NULL, "Caps1", NULL);
+  parent = xmlNewChild (doc->xmlRootNode, NULL, (guchar *) "Caps1", NULL);
   /* FIXME */
   //gst_caps_save_thyself (caps, parent);
 

@@ -1,3 +1,33 @@
+2005-04-22  Kjartan Maraas  <kmaraas@gnome.org>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* examples/typefind/typefind.c: (type_found):
+	* examples/xml/createxml.c: (object_saved):
+	* examples/xml/runxml.c: (xml_loaded), (main):
+	* gst/elements/gstaggregator.c: (gst_aggregator_loop),
+	(gst_aggregator_chain):
+	* gst/elements/gstmd5sink.c: (gst_md5sink_get_property):
+	* gst/elements/gsttypefindelement.c: (find_element_get_length),
+	(gst_type_find_element_handle_event):
+	* gst/gsttrace.c: (gst_trace_flush), (gst_trace_text_flush):
+	* gst/gstxml.c: (gst_xml_write), (gst_xml_parse_doc),
+	(gst_xml_parse_file), (gst_xml_parse_memory),
+	(gst_xml_get_element), (gst_xml_make_element):
+	* gst/indexers/gstfileindex.c: (gst_file_index_load),
+	(_file_index_id_save_xml), (gst_file_index_commit):
+	* gst/schedulers/gstoptimalscheduler.c:
+	(group_inc_links_for_element):
+	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_packet_from_caps),
+	(gst_dp_packet_from_event), (gst_dp_caps_from_packet):
+	* tools/gst-complete.c: (main):
+	* tools/gst-compprep.c: (main):
+	* tools/gst-inspect.c: (print_element_properties_info):
+	* tools/gst-launch.c: (xmllaunch_parse_cmdline):
+	* tools/gst-xmlinspect.c: (print_element_properties):
+	  More GCC4 warning fixes. Basically all libxml-guchar* to
+	  sane-gchar* casts (and reverse).
+
 2005-04-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstpad.c: (gst_pad_event_default):

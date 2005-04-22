@@ -105,13 +105,25 @@ gst_trace_destroy (GstTrace * trace)
 void
 gst_trace_flush (GstTrace * trace)
 {
+  gint to_write, written;
+  guint8 *ptr;
+
   if (!trace) {
     trace = _gst_trace_default;
     if (!trace)
       return;
   }
 
-  write (trace->fd, trace->buf, trace->bufoffset * sizeof (GstTraceEntry));
+  to_write = trace->bufoffset * sizeof (GstTraceEntry);
+  ptr = (guint8 *) trace->buf;
+  while (to_write > 0) {
+    written = write (trace->fd, ptr, to_write);
+    if (written <= 0) {
+      GST_ERROR ("Trace flush failed");
+      break;
+    }
+    to_write -= written;
+  }
   trace->bufoffset = 0;
 }
 
@@ -121,7 +133,7 @@ gst_trace_text_flush (GstTrace * trace)
   int i;
 
 #define STRSIZE (20 + 1 + 10 + 1 + 10 + 1 + 112 + 1 + 1)
-  char str[STRSIZE];
+  char str[STRSIZE], *ptr;
 
   if (!trace) {
     trace = _gst_trace_default;
@@ -130,10 +142,21 @@ gst_trace_text_flush (GstTrace * trace)
   }
 
   for (i = 0; i < trace->bufoffset; i++) {
+    gint written, to_write;
+
     g_snprintf (str, STRSIZE, "%20" G_GINT64_FORMAT " %10d %10d %s\n",
         trace->buf[i].timestamp,
         trace->buf[i].sequence, trace->buf[i].data, trace->buf[i].message);
-    write (trace->fd, str, strlen (str));
+    to_write = strlen (str);
+    ptr = str;
+    while (to_write > 0) {
+      written = write (trace->fd, ptr, to_write);
+      if (written <= 0) {
+        GST_ERROR ("Text flush failed");
+        break;
+      }
+      to_write -= written;
+    }
   }
   trace->bufoffset = 0;
 #undef STRSIZE

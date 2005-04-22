@@ -464,7 +464,7 @@ gst_md5sink_get_property (GObject * object, guint prop_id, GValue * value,
        * md5_read_ctx (sink, sink->md5); */
       /* md5 is a guchar[16] */
       int i;
-      guchar *md5string = g_malloc0 (33);
+      gchar *md5string = g_malloc0 (33);
 
       for (i = 0; i < 16; ++i)
         sprintf (md5string + i * 2, "%02x", sink->md5[i]);

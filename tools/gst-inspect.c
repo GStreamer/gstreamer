@@ -259,7 +259,7 @@ static void
 print_element_properties_info (GstElement * element)
 {
   GParamSpec **property_specs;
-  gint num_properties, i;
+  guint num_properties, i;
   gboolean readable;
   const char *string_val;
 

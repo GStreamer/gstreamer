@@ -40,8 +40,9 @@ main (int argc, char *argv[])
   GST_DEBUG_CATEGORY_INIT (debug_compprep, "compprep", GST_DEBUG_BOLD,
       "gst-compprep application");
 
-  doc = xmlNewDoc ("1.0");
-  doc->xmlRootNode = xmlNewDocNode (doc, NULL, "GST-CompletionRegistry", NULL);
+  doc = xmlNewDoc ((guchar *) "1.0");
+  doc->xmlRootNode =
+      xmlNewDocNode (doc, NULL, (guchar *) "GST-CompletionRegistry", NULL);
 
   plugins = g_list_copy (gst_registry_pool_plugin_list ());
   while (plugins) {
@@ -63,9 +64,10 @@ main (int argc, char *argv[])
 
       factory = GST_ELEMENT_FACTORY (feature);
 
-      factorynode = xmlNewChild (doc->xmlRootNode, NULL, "element", NULL);
-      xmlNewChild (factorynode, NULL, "name",
-          GST_PLUGIN_FEATURE_NAME (factory));
+      factorynode =
+          xmlNewChild (doc->xmlRootNode, NULL, (guchar *) "element", NULL);
+      xmlNewChild (factorynode, NULL, (guchar *) "name",
+          (guchar *) GST_PLUGIN_FEATURE_NAME (factory));
 
       element = gst_element_factory_create (factory, NULL);
       GST_DEBUG ("adding factory %s", GST_PLUGIN_FEATURE_NAME (factory));
@@ -83,12 +85,12 @@ main (int argc, char *argv[])
 
         if (padtemplate->direction == GST_PAD_SRC)
           padnode =
-              xmlNewChild (factorynode, NULL, "srcpadtemplate",
-              padtemplate->name_template);
+              xmlNewChild (factorynode, NULL, (guchar *) "srcpadtemplate",
+              (guchar *) padtemplate->name_template);
         else if (padtemplate->direction == GST_PAD_SINK)
           padnode =
-              xmlNewChild (factorynode, NULL, "sinkpadtemplate",
-              padtemplate->name_template);
+              xmlNewChild (factorynode, NULL, (guchar *) "sinkpadtemplate",
+              (guchar *) padtemplate->name_template);
       }
 
       pads = gst_element_get_pad_list (element);
@@ -98,10 +100,12 @@ main (int argc, char *argv[])
 
         if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC)
           padnode =
-              xmlNewChild (factorynode, NULL, "srcpad", GST_PAD_NAME (pad));
+              xmlNewChild (factorynode, NULL, (guchar *) "srcpad",
+              (guchar *) GST_PAD_NAME (pad));
         else if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK)
           padnode =
-              xmlNewChild (factorynode, NULL, "sinkpad", GST_PAD_NAME (pad));
+              xmlNewChild (factorynode, NULL, (guchar *) "sinkpad",
+              (guchar *) GST_PAD_NAME (pad));
       }
 
       /* write out the args */
@@ -111,9 +115,11 @@ main (int argc, char *argv[])
       for (i = 0; i < num_properties; i++) {
         GParamSpec *param = property_specs[i];
 
-        argnode = xmlNewChild (factorynode, NULL, "argument", param->name);
+        argnode =
+            xmlNewChild (factorynode, NULL, (guchar *) "argument",
+            (guchar *) param->name);
         if (param->value_type == GST_TYPE_URI) {
-          xmlNewChild (argnode, NULL, "filename", NULL);
+          xmlNewChild (argnode, NULL, (guchar *) "filename", NULL);
         } else if (G_IS_PARAM_SPEC_ENUM (param) == G_TYPE_ENUM) {
           GEnumValue *values;
           gint j;
@@ -122,8 +128,11 @@ main (int argc, char *argv[])
           for (j = 0; values[j].value_name; j++) {
             gchar *value = g_strdup_printf ("%d", values[j].value);
 
-            optionnode = xmlNewChild (argnode, NULL, "option", value);
-            xmlNewChild (optionnode, NULL, "value_nick", values[j].value_nick);
+            optionnode =
+                xmlNewChild (argnode, NULL, (guchar *) "option",
+                (guchar *) value);
+            xmlNewChild (optionnode, NULL, (guchar *) "value_nick",
+                (guchar *) values[j].value_nick);
             g_free (value);
           }
         }

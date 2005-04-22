@@ -2468,11 +2468,12 @@ group_inc_links_for_element (GstOptSchedulerGroup * group, GstElement * element)
     pad = (GstPad *) l->data;
     if (GST_IS_REAL_PAD (pad) && GST_PAD_PEER (pad)) {
       get_group (GST_PAD_PARENT (GST_PAD_PEER (pad)), &peer_group);
-      if (peer_group && peer_group != group)
+      if (peer_group && peer_group != group) {
         if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC)
           group_inc_link (group, peer_group);
         else
           group_inc_link (peer_group, group);
+      }
     }
   }
 }
