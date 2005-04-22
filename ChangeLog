@@ -1,3 +1,11 @@
+2005-04-22  Wouter Paesen  <wouter@kangaroot.net>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstelement.c: (gst_element_unlink):
+	  Allow unlinking ghostpads using gst_element_unlink(), which
+	  fixes #301331.
+
 2005-04-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/elements/gsttypefindelement.c:
