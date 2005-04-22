@@ -505,6 +505,10 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
             stop_typefinding (typefind);
           }
           break;
+        case GST_EVENT_DISCONTINUOUS:
+        case GST_EVENT_FLUSH:
+          gst_event_unref (event);
+          break;
         default:
           typefind->pending_events = g_list_append (typefind->pending_events,
               event);
