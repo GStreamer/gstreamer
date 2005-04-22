@@ -3148,7 +3148,7 @@ gst_element_save_thyself (GstObject * object, xmlNodePtr parent)
   GList *pads;
   GstElementClass *oclass;
   GParamSpec **specs, *spec;
-  gint nspecs, i;
+  guint nspecs, i;
   GValue value = { 0, };
   GstElement *element;
 
@@ -3158,12 +3158,14 @@ gst_element_save_thyself (GstObject * object, xmlNodePtr parent)
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
-  xmlNewChild (parent, NULL, "name", GST_ELEMENT_NAME (element));
+  xmlNewChild (parent, NULL, (guchar *) "name",
+      (guchar *) GST_ELEMENT_NAME (element));
 
   if (oclass->elementfactory != NULL) {
     GstElementFactory *factory = (GstElementFactory *) oclass->elementfactory;
 
-    xmlNewChild (parent, NULL, "type", GST_PLUGIN_FEATURE (factory)->name);
+    xmlNewChild (parent, NULL, (guchar *) "type",
+        (guchar *) GST_PLUGIN_FEATURE (factory)->name);
   }
 
 /* FIXME: what is this? */
@@ -3182,8 +3184,8 @@ gst_element_save_thyself (GstObject * object, xmlNodePtr parent)
       g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (spec));
 
       g_object_get_property (G_OBJECT (element), spec->name, &value);
-      param = xmlNewChild (parent, NULL, "param", NULL);
-      xmlNewChild (param, NULL, "name", spec->name);
+      param = xmlNewChild (parent, NULL, (guchar *) "param", NULL);
+      xmlNewChild (param, NULL, (guchar *) "name", (guchar *) spec->name);
 
       if (G_IS_PARAM_SPEC_STRING (spec))
         contents = g_value_dup_string (&value);
@@ -3195,7 +3197,7 @@ gst_element_save_thyself (GstObject * object, xmlNodePtr parent)
       else
         contents = g_strdup_value_contents (&value);
 
-      xmlNewChild (param, NULL, "value", contents);
+      xmlNewChild (param, NULL, (guchar *) "value", (guchar *) contents);
       g_free (contents);
 
       g_value_unset (&value);
@@ -3209,7 +3211,7 @@ gst_element_save_thyself (GstObject * object, xmlNodePtr parent)
 
     /* figure out if it's a direct pad or a ghostpad */
     if (GST_ELEMENT (GST_OBJECT_PARENT (pad)) == element) {
-      xmlNodePtr padtag = xmlNewChild (parent, NULL, "pad", NULL);
+      xmlNodePtr padtag = xmlNewChild (parent, NULL, (guchar *) "pad", NULL);
 
       gst_object_save_thyself (GST_OBJECT (pad), padtag);
     }
@@ -3233,14 +3235,14 @@ gst_element_restore_thyself (GstObject * object, xmlNodePtr self)
   /* parameters */
   children = self->xmlChildrenNode;
   while (children) {
-    if (!strcmp (children->name, "param")) {
+    if (!strcmp ((char *) children->name, "param")) {
       xmlNodePtr child = children->xmlChildrenNode;
 
       while (child) {
-        if (!strcmp (child->name, "name")) {
-          name = xmlNodeGetContent (child);
-        } else if (!strcmp (child->name, "value")) {
-          value = xmlNodeGetContent (child);
+        if (!strcmp ((char *) child->name, "name")) {
+          name = (char *) xmlNodeGetContent (child);
+        } else if (!strcmp ((char *) child->name, "value")) {
+          value = (char *) xmlNodeGetContent (child);
         }
         child = child->next;
       }
@@ -3256,7 +3258,7 @@ gst_element_restore_thyself (GstObject * object, xmlNodePtr self)
   /* pads */
   children = self->xmlChildrenNode;
   while (children) {
-    if (!strcmp (children->name, "pad")) {
+    if (!strcmp ((char *) children->name, "pad")) {
       gst_pad_load_and_link (children, GST_OBJECT (element));
     }
     children = children->next;

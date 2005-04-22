@@ -1,3 +1,27 @@
+2005-04-22  Kjartan Maraas  <kmaraas@gnome.org>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/autoplug/spidertest.c: (property_change_callback):
+	* gst/gstbin.c: (gst_bin_save_thyself), (gst_bin_restore_thyself):
+	* gst/gstcaps.c: (gst_caps_do_simplify), (gst_caps_save_thyself),
+	(gst_caps_load_thyself):
+	* gst/gstelement.c: (gst_element_save_thyself),
+	(gst_element_restore_thyself):
+	* gst/gstpad.c: (gst_pad_load_and_link), (gst_pad_save_thyself),
+	(gst_ghost_pad_save_thyself):
+	* gst/registries/gstlibxmlregistry.c: (read_string), (read_uint),
+	(read_enum), (load_pad_template), (load_feature), (load_plugin),
+	(load_paths):
+	* libs/gst/control/dparammanager.c: (_gst_dpman_initialize):
+	* libs/gst/control/unitconvert.c: (gst_unitconv_new),
+	(gst_unitconv_unit_spec):
+	* libs/gst/dataprotocol/dataprotocol.c:
+	(gst_dp_buffer_from_header), (gst_dp_caps_from_packet),
+	(gst_dp_event_from_packet):
+	  Unsigned/signed case, missing void in no-argument functions
+	  and other small fixes to compile 100% clean on GCC4 (#301166).
+
 2005-04-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/elements/gstelements.c:
@@ -19,7 +43,6 @@
 	* gst/elements/gsttypefindelement.c: (gst_type_find_element_init),
 	(push_buffer_store), (gst_type_find_element_handle_event),
 	(gst_type_find_element_change_state):
-	  Allow event caching while typefinding so we don't lose events.
 	* gst/elements/gsttypefindelement.h:
 	  Allow event caching while typefinding so we don't lose events.
 	* gst/gsttag.c: (_gst_tag_initialize):

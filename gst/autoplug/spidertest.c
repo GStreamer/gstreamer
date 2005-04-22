@@ -34,7 +34,7 @@ property_change_callback (GObject * object, GstObject * orig,
     GParamSpec * pspec)
 {
   GValue value = { 0, };        /* the important thing is that value.type = 0 */
-  gchar *str = 0;
+  gchar *str = NULL;
 
   if (pspec->flags & G_PARAM_READABLE) {
     g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));

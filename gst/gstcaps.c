@@ -1228,7 +1228,7 @@ gst_caps_structure_simplify (GstStructure ** result,
 gboolean
 gst_caps_do_simplify (GstCaps * caps)
 {
-  GstStructure *simplify, *compare, *result;
+  GstStructure *simplify, *compare, *result = NULL;
   gint i, j, start;
   gboolean changed = FALSE;
 
@@ -1296,7 +1296,7 @@ gst_caps_save_thyself (const GstCaps * caps, xmlNodePtr parent)
 {
   char *s = gst_caps_to_string (caps);
 
-  xmlNewChild (parent, NULL, "caps", s);
+  xmlNewChild (parent, NULL, (guchar *) "caps", (guchar *) s);
   g_free (s);
   return parent;
 }
@@ -1312,8 +1312,8 @@ gst_caps_save_thyself (const GstCaps * caps, xmlNodePtr parent)
 GstCaps *
 gst_caps_load_thyself (xmlNodePtr parent)
 {
-  if (strcmp ("caps", parent->name) == 0) {
-    return gst_caps_from_string (xmlNodeGetContent (parent));
+  if (strcmp ("caps", (char *) parent->name) == 0) {
+    return gst_caps_from_string ((char *) xmlNodeGetContent (parent));
   }
 
   return NULL;

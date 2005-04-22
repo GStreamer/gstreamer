@@ -3079,12 +3079,12 @@ gst_pad_load_and_link (xmlNodePtr self, GstObject * parent)
   gchar *name = NULL;
 
   while (field) {
-    if (!strcmp (field->name, "name")) {
-      name = xmlNodeGetContent (field);
+    if (!strcmp ((char *) field->name, "name")) {
+      name = (char *) xmlNodeGetContent (field);
       pad = gst_element_get_pad (GST_ELEMENT (parent), name);
       g_free (name);
-    } else if (!strcmp (field->name, "peer")) {
-      peer = xmlNodeGetContent (field);
+    } else if (!strcmp ((char *) field->name, "peer")) {
+      peer = (char *) xmlNodeGetContent (field);
     }
     field = field->next;
   }
@@ -3148,7 +3148,8 @@ gst_pad_save_thyself (GstObject * object, xmlNodePtr parent)
 
   realpad = GST_REAL_PAD (object);
 
-  xmlNewChild (parent, NULL, "name", GST_PAD_NAME (realpad));
+  xmlNewChild (parent, NULL, (guchar *) "name",
+      (guchar *) GST_PAD_NAME (realpad));
   if (GST_RPAD_PEER (realpad) != NULL) {
     gchar *content;
 
@@ -3157,10 +3158,10 @@ gst_pad_save_thyself (GstObject * object, xmlNodePtr parent)
     /* we just save it off */
     content = g_strdup_printf ("%s.%s",
         GST_OBJECT_NAME (GST_PAD_PARENT (peer)), GST_PAD_NAME (peer));
-    xmlNewChild (parent, NULL, "peer", content);
+    xmlNewChild (parent, NULL, (guchar *) "peer", (guchar *) content);
     g_free (content);
   } else
-    xmlNewChild (parent, NULL, "peer", "");
+    xmlNewChild (parent, NULL, (guchar *) "peer", (guchar *) "");
 
   return parent;
 }
@@ -3184,9 +3185,10 @@ gst_ghost_pad_save_thyself (GstPad * pad, xmlNodePtr parent)
 
   g_return_val_if_fail (GST_IS_GHOST_PAD (pad), NULL);
 
-  self = xmlNewChild (parent, NULL, "ghostpad", NULL);
-  xmlNewChild (self, NULL, "name", GST_PAD_NAME (pad));
-  xmlNewChild (self, NULL, "parent", GST_OBJECT_NAME (GST_PAD_PARENT (pad)));
+  self = xmlNewChild (parent, NULL, (guchar *) "ghostpad", NULL);
+  xmlNewChild (self, NULL, (guchar *) "name", (guchar *) GST_PAD_NAME (pad));
+  xmlNewChild (self, NULL, (guchar *) "parent",
+      (guchar *) GST_OBJECT_NAME (GST_PAD_PARENT (pad)));
 
   /* FIXME FIXME FIXME! */
 

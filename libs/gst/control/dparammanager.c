@@ -67,7 +67,7 @@ static GObjectClass *parent_class;
 static guint gst_dpman_signals[LAST_SIGNAL] = { 0 };
 
 void
-_gst_dpman_initialize ()
+_gst_dpman_initialize (void)
 {
   if (_gst_dpman_init_done)
     return;

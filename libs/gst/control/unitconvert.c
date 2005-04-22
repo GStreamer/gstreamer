@@ -98,7 +98,7 @@ gst_unitconv_init (GstUnitConvert * unitconv)
 }
 
 GstUnitConvert *
-gst_unitconv_new ()
+gst_unitconv_new (void)
 {
   GstUnitConvert *unitconv;
 
@@ -194,10 +194,10 @@ gst_unitconv_unit_spec (gchar * unit_name)
 {
   GstUnit *unit;
 
-  g_return_val_if_fail (unit_name != NULL, FALSE);
+  g_return_val_if_fail (unit_name != NULL, NULL);
 
   unit = g_hash_table_lookup (_gst_units, unit_name);
-  g_return_val_if_fail (unit != NULL, FALSE);
+  g_return_val_if_fail (unit != NULL, NULL);
 
   return unit->unit_spec;
 }
