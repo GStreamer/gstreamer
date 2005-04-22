@@ -344,7 +344,6 @@ gst_init_check_with_popt_table (int *argc, char **argv[],
       return FALSE;
     if (!init_post ())
       return FALSE;
-    gst_initialized = TRUE;
     return TRUE;
   }
 
@@ -616,6 +615,7 @@ init_post (void)
   _gst_buffer_initialize ();
   _gst_tag_initialize ();
 
+  gst_initialized = TRUE;
 #ifndef GST_DISABLE_REGISTRY
   if (!_gst_registry_fixed) {
     /* don't override command-line options */
@@ -806,7 +806,6 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
     case POPT_CALLBACK_REASON_POST:
       if (!init_post ())
         _gst_initialization_failure = TRUE;
-      gst_initialized = TRUE;
       break;
   }
 }

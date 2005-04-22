@@ -1,3 +1,15 @@
+2005-04-23  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gst.c: (gst_init_check_with_popt_table), (init_post),
+	(init_popt_callback):
+	  declare gst initialized before eventually rebuilding the registry.
+	  Fixes issues with plugins calling gst_init
+	* gst/gstelementfactory.c: (gst_element_factory_cleanup),
+	(gst_element_register), (gst_element_factory_unload_thyself):
+	  warn and fail properly when element details aren't initialized. Also
+	  unref the class when we don't need it anymore instead of never/only
+	  on failure
+
 2005-04-22  Wouter Paesen  <wouter@kangaroot.net>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>

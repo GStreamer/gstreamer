@@ -170,7 +170,6 @@ gst_element_factory_cleanup (GstElementFactory * factory)
 {
   __gst_element_details_clear (&factory->details);
   if (factory->type) {
-    g_type_class_unref (g_type_class_peek (factory->type));
     factory->type = 0;
   }
 
@@ -231,6 +230,10 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
 
   klass = GST_ELEMENT_CLASS (g_type_class_ref (type));
   factory->type = type;
+  if (!GST_IS_ELEMENT_DETAILS (&klass->details)) {
+    g_warning ("invalid element details in class %s", g_type_name (type));
+    goto error;
+  }
   __gst_element_details_copy (&factory->details, &klass->details);
   factory->padtemplates = g_list_copy (klass->padtemplates);
   g_list_foreach (factory->padtemplates, (GFunc) gst_object_ref, NULL);
@@ -260,10 +263,12 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
 
   gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE (factory), rank);
 
+  g_type_class_unref (klass);
   return TRUE;
 
 error:
   gst_element_factory_cleanup (factory);
+  g_type_class_unref (klass);
   return FALSE;
 }
 
@@ -622,7 +627,6 @@ gst_element_factory_unload_thyself (GstPluginFeature * feature)
   factory = GST_ELEMENT_FACTORY (feature);
 
   if (factory->type) {
-    g_type_class_unref (g_type_class_peek (factory->type));
     factory->type = 0;
   }
 }
