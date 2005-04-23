@@ -2275,8 +2275,6 @@ gst_pad_link_prepare (GstPad * srcpad, GstPad * sinkpad,
         GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
   }
 
-  g_return_val_if_fail (GST_RPAD_PEER (realsrc) == NULL, NULL);
-  g_return_val_if_fail (GST_RPAD_PEER (realsink) == NULL, NULL);
   g_return_val_if_fail (GST_PAD_PARENT (realsrc) != NULL, NULL);
   g_return_val_if_fail (GST_PAD_PARENT (realsink) != NULL, NULL);
 

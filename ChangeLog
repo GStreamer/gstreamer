@@ -1,3 +1,8 @@
+2005-04-23  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstpad.c: (gst_pad_link_prepare):
+	  Fix gst_pad_relink_filtered(), which is #300339.
+
 2005-04-23  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gst.c: (gst_init_check_with_popt_table), (init_post),
