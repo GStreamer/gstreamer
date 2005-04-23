@@ -371,6 +371,38 @@ gst_print_element_args (GString * buf, gint indent, GstElement * element)
 }
 
 /**
+ * gst_element_create_all_pads:
+ * @element: a #GstElement to create pads for
+ *
+ * Creates a pad for each pad template that is always available.
+ * This function is only useful during object intialization of
+ * subclasses of #GstElement.
+ */
+void
+gst_element_create_all_pads (GstElement * element)
+{
+  GList *padlist;
+
+  /* FIXME: lock element */
+
+  padlist =
+      gst_element_class_get_pad_template_list (GST_ELEMENT_CLASS
+      (G_OBJECT_GET_CLASS (element)));
+
+  while (padlist) {
+    GstPadTemplate *padtempl = (GstPadTemplate *) padlist->data;
+
+    if (padtempl->presence == GST_PAD_ALWAYS) {
+      GstPad *pad;
+
+      pad = gst_pad_new_from_template (padtempl, padtempl->name_template);
+
+      gst_element_add_pad (element, pad);
+    }
+  }
+}
+
+/**
  * gst_element_get_compatible_pad_template:
  * @element: a #GstElement to get a compatible pad template for.
  * @compattempl: the #GstPadTemplate to find a compatible template for.

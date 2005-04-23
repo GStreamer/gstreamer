@@ -232,6 +232,7 @@ void 			gst_object_default_error 	(GstObject * source,
 GstFlowReturn 		gst_element_abort_preroll 	(GstElement *element);
 GstFlowReturn 		gst_element_finish_preroll 	(GstElement *element, GstPad *pad);
 
+void                    gst_element_create_all_pads     (GstElement *element);
 GstPad*                 gst_element_get_compatible_pad  (GstElement *element, GstPad *pad);
 GstPad*                 gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
 		                                         const GstCaps *filtercaps);

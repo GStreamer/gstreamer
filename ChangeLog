@@ -1,5 +1,19 @@
 2005-04-23  David Schleef  <ds@schleef.org>
 
+	* gst/elements/Makefile.am:
+	* gst/elements/gstcapsfilter.c: New element that acts like an
+	identity, but filters caps.  Will eventually replace filtered
+	caps in pad linking.
+	* gst/gstutils.c: (gst_element_create_all_pads): New function
+	to create all the ALWAYS pads that are registered with an
+	element class.  This functionality should eventually be
+	merged in with GstElement initialization.
+	* gst/gstutils.h:
+	* testsuite/trigger/README: part of trigger test code that should
+	have been checked in a long time ago.
+
+2005-04-23  David Schleef  <ds@schleef.org>
+
 	* gst/Makefile.am: Remove as-libtool stuff.  It's likely not
 	needed with new versions of libtool (nobody will confirm this),
 	and hard to carry around.

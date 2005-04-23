@@ -12,6 +12,7 @@ pipefilter = gstpipefilter.c
 libgstelements_la_DEPENDENCIES = ../libgstreamer-@GST_MAJORMINOR@.la
 libgstelements_la_SOURCES =	\
 	gstbufferstore.c	\
+	gstcapsfilter.c		\
 	gstfakesrc.c		\
 	gstfakesink.c		\
 	gstfilesrc.c		\
@@ -25,6 +26,7 @@ libgstelements_la_SOURCES =	\
 # these files above, then this will be unnecessary
 EXTRA_DIST =			\
 	gstaggregator.c		\
+	gstcapsfilter.c		\
 	gstfilesink.c		\
 	gstfdsink.c		\
 	gstfdsrc.c		\
