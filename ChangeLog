@@ -1,3 +1,19 @@
+2005-04-23  David Schleef  <ds@schleef.org>
+
+	* gst-libs/gst/Makefile.am: Remove idct.  It hasn't been used
+	in gst-plugins in a long time, and properly belongs in liboil.
+	* gst-libs/gst/idct/Makefile.am:
+	* gst-libs/gst/idct/README:
+	* gst-libs/gst/idct/dct.h:
+	* gst-libs/gst/idct/doieee:
+	* gst-libs/gst/idct/fastintidct.c:
+	* gst-libs/gst/idct/floatidct.c:
+	* gst-libs/gst/idct/idct.c:
+	* gst-libs/gst/idct/idct.h:
+	* gst-libs/gst/idct/idtc.vcproj:
+	* gst-libs/gst/idct/ieeetest.c:
+	* gst-libs/gst/idct/intidct.c:
+
 2005-04-20  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design-audiosinks.txt:

@@ -15,7 +15,6 @@ SUBDIRS = \
 	colorbalance \
 	floatcast \
 	$(GCONF_DIR) \
-	idct \
 	media-info \
 	mixer \
 	navigation \
@@ -35,7 +34,6 @@ DIST_SUBDIRS = \
 	colorbalance \
 	floatcast \
 	gconf \
-	idct \
 	media-info \
 	mixer \
 	navigation \
