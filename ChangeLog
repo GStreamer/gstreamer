@@ -1,3 +1,18 @@
+2005-04-23  David Schleef  <ds@schleef.org>
+
+	* gst/Makefile.am: Remove as-libtool stuff.  It's likely not
+	needed with new versions of libtool (nobody will confirm this),
+	and hard to carry around.
+	* gst/autoplug/Makefile.am:
+	* gst/base/Makefile.am:
+	* gst/elements/Makefile.am:
+	* gst/indexers/Makefile.am:
+	* gst/schedulers/Makefile.am:
+	* libs/gst/bytestream/Makefile.am:
+	* libs/gst/control/Makefile.am:
+	* libs/gst/dataprotocol/Makefile.am:
+	* libs/gst/getbits/Makefile.am:
+
 2005-04-21  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/draft-push-pull.txt:

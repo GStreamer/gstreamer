@@ -1,8 +1,4 @@
 plugin_LTLIBRARIES = libgstdataprotocol.la
-AS_LIBTOOL_LIB = libgstdataprotocol
-
-EXTRA_DIST = $(as_libtool_EXTRA_DIST)
-noinst_DATA = $(as_libtool_noinst_DATA_files)
 
 libgstdataprotocol_includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/dataprotocol
 libgstdataprotocol_include_HEADERS = \
@@ -14,11 +10,6 @@ libgstdataprotocol_la_SOURCES = \
 
 # remove GST_ENABLE_NEW when dataprotocol has been declared API-stable
 libgstdataprotocol_la_CFLAGS = $(GST_OBJ_CFLAGS) -I$(top_srcdir)/libs -DGST_ENABLE_NEW
-libgstdataprotocol_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(as_libtool_LDFLAGS)
+libgstdataprotocol_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstdataprotocol_la_LIBADD = $(GST_OBJ_LIBS)
 
-install-data-local: as-libtool-install-data-local
-
-uninstall-local: as-libtool-uninstall-local
-
-include $(top_srcdir)/common/as-libtool.mak

@@ -1,5 +1,4 @@
 lib_LTLIBRARIES = libgstreamer-@GST_MAJORMINOR@.la
-AS_LIBTOOL_LIB = libgstreamer-@GST_MAJORMINOR@
 noinst_LTLIBRARIES =
 
 #GST_INSTRUMENT_FLAGS = -finstrument-functions -DGST_ENABLE_FUNC_INSTRUMENTATION
@@ -145,8 +144,7 @@ libgstreamer_@GST_MAJORMINOR@_la_LIBADD = \
 	$(GST_LIB_LIBS) $(GST_PARSE_LIBADD) $(GST_REGISTRY_LIBADD)
 libgstreamer_@GST_MAJORMINOR@_la_LDFLAGS = \
 	@GST_LT_LDFLAGS@ -version-info @GST_LIBVERSION@ \
-	-export-symbols-regex [_]*\(gst_\|Gst\|GST_\).* \
-	$(as_libtool_LDFLAGS)
+	-export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*
 
 libgstreamer_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst
 
@@ -241,13 +239,5 @@ gstenumtypes.c: $(gst_headers)
 	--vtail "      { 0, NULL, NULL }\n    };\n    etype = g_@type@_register_static (\"@EnumName@\", values);\n  }\n  return etype;\n}\n" \
 	$^ > gstenumtypes.c
 
-noinst_DATA = $(as_libtool_noinst_DATA_files)
-
-EXTRA_DIST = ROADMAP $(as_libtool_EXTRA_DIST)
-
-install-data-local: as-libtool-install-data-local
-
-uninstall-local: as-libtool-uninstall-local
-
-include $(top_srcdir)/common/as-libtool.mak
+EXTRA_DIST = ROADMAP
 
