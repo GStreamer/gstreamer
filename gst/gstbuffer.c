@@ -22,11 +22,11 @@
 
 #include "gst_private.h"
 
-#include "gstatomic_impl.h"
 #include "gstdata_private.h"
 #include "gstbuffer.h"
 #include "gstmemchunk.h"
 #include "gstinfo.h"
+#include "gstutils.h"
 
 GType _gst_buffer_type = 0;
 

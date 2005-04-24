@@ -22,10 +22,10 @@
 
 #include "gst_private.h"
 
-#include "gstatomic_impl.h"
 #include "gstdata.h"
 #include "gstdata_private.h"
 #include "gstinfo.h"
+#include "gstutils.h"
 
 GType
 gst_data_get_type (void)
@@ -131,7 +131,7 @@ gst_data_is_writable (GstData * data)
 
   g_return_val_if_fail (data != NULL, FALSE);
 
-  refcount = gst_atomic_int_read (&data->refcount);
+  refcount = g_atomic_int_get (&data->refcount);
 
   /* if we have the only ref and the data is not readonly, we can
    * safely write */
@@ -164,7 +164,7 @@ gst_data_copy_on_write (GstData * data)
 
   g_return_val_if_fail (data != NULL, NULL);
 
-  refcount = gst_atomic_int_read (&data->refcount);
+  refcount = g_atomic_int_get (&data->refcount);
 
   /* if we have the only ref and the data is not readonly, we can
    * safely write, so we return the input data */
@@ -200,7 +200,7 @@ gst_data_ref (GstData * data)
   GST_CAT_LOG (GST_CAT_BUFFER, "%p %d->%d", data,
       GST_DATA_REFCOUNT_VALUE (data), GST_DATA_REFCOUNT_VALUE (data) + 1);
 
-  gst_atomic_int_inc (&data->refcount);
+  g_atomic_int_inc (&data->refcount);
 
   return data;
 }
@@ -226,7 +226,7 @@ gst_data_ref_by_count (GstData * data, gint count)
   GST_CAT_LOG (GST_CAT_BUFFER, "%p %d->%d", data,
       GST_DATA_REFCOUNT_VALUE (data), GST_DATA_REFCOUNT_VALUE (data) + count);
 
-  gst_atomic_int_add (&data->refcount, count);
+  g_atomic_int_add (&data->refcount, count);
 
   return data;
 }
@@ -256,7 +256,7 @@ gst_data_unref (GstData * data)
       GST_DATA_REFCOUNT_VALUE (data), GST_DATA_REFCOUNT_VALUE (data) - 1);
   g_return_if_fail (GST_DATA_REFCOUNT_VALUE (data) > 0);
 
-  zero = gst_atomic_int_dec_and_test (&data->refcount);
+  zero = g_atomic_int_dec_and_test (&data->refcount);
 
   /* if we ended up with the refcount at zero, free the data */
   if (zero) {

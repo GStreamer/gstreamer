@@ -28,7 +28,7 @@
 #include "gstclock.h"
 #include "gstinfo.h"
 #include "gstmemchunk.h"
-#include "gstatomic_impl.h"
+#include "gstutils.h"
 
 #ifndef GST_DISABLE_TRACE
 /* #define GST_WITH_ALLOC_TRACE */
@@ -76,7 +76,7 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
 #endif
   GST_CAT_DEBUG (GST_CAT_CLOCK, "created entry %p", entry);
 
-  gst_atomic_int_init (&entry->refcount, 1);
+  gst_atomic_int_set (&entry->refcount, 1);
   entry->clock = clock;
   entry->time = time;
   entry->interval = interval;
@@ -101,7 +101,7 @@ gst_clock_id_ref (GstClockID id)
 {
   g_return_val_if_fail (id != NULL, NULL);
 
-  gst_atomic_int_inc (&((GstClockEntry *) id)->refcount);
+  g_atomic_int_inc (&((GstClockEntry *) id)->refcount);
 
   return id;
 }
@@ -135,7 +135,7 @@ gst_clock_id_unref (GstClockID id)
 
   g_return_if_fail (id != NULL);
 
-  zero = gst_atomic_int_dec_and_test (&((GstClockEntry *) id)->refcount);
+  zero = g_atomic_int_dec_and_test (&((GstClockEntry *) id)->refcount);
   /* if we ended up with the refcount at zero, free the id */
   if (zero) {
     _gst_clock_id_free (id);

@@ -1662,3 +1662,20 @@ gst_pad_proxy_setcaps (GstPad * pad, GstCaps * caps)
   /* ok not to unset the gvalue */
   return g_value_get_boolean (&ret);
 }
+
+
+/**
+ * gst_atomic_int_set:
+ * @atomic_int: pointer to an atomic integer
+ * @value: value to set
+ *
+ * Unconditionally sets the atomic integer to @value.
+ */
+void
+gst_atomic_int_set (gint * atomic_int, gint value)
+{
+  int ignore;
+
+  *atomic_int = value;
+  ignore = g_atomic_int_get (atomic_int);
+}

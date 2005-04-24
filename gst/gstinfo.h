@@ -26,7 +26,6 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <gst/gstatomic.h>
 #include <gst/gstconfig.h>
 
 G_BEGIN_DECLS
@@ -96,7 +95,7 @@ typedef enum {
 typedef struct _GstDebugCategory GstDebugCategory;
 struct _GstDebugCategory {
   /*< private >*/
-  GstAtomicInt *	threshold;
+  gint                  threshold;
   guint			color;		/* see defines above */
 
   const gchar *		name;

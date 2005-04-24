@@ -42,7 +42,7 @@ struct _GstStructureField
 
 #define IS_MUTABLE(structure) \
     (!(structure)->parent_refcount || \
-     gst_atomic_int_read ((structure)->parent_refcount) == 1)
+     g_atomic_int_get ((structure)->parent_refcount) == 1)
 
 static void gst_structure_set_field (GstStructure * structure,
     GstStructureField * field);
@@ -180,7 +180,7 @@ gst_structure_new_valist (const gchar * name,
 /**
  * gst_structure_set_parent_refcount:
  * @structure: a #GstStructure
- * @refcount: a pointer to the parent's #GstAtomicInt refcount
+ * @refcount: a pointer to the parent's refcount
  *
  * Sets the parent_refcount field of #GstStructure. This field is used to
  * determine whether a structure is mutable or not. This function should only be
@@ -190,8 +190,7 @@ gst_structure_new_valist (const gchar * name,
  * Returns: a new #GstStructure.
  */
 void
-gst_structure_set_parent_refcount (GstStructure * structure,
-    GstAtomicInt * refcount)
+gst_structure_set_parent_refcount (GstStructure * structure, int *refcount)
 {
   g_return_if_fail (structure != NULL);
 

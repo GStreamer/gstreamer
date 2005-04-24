@@ -1,5 +1,32 @@
 2005-04-24  David Schleef  <ds@schleef.org>
 
+	Convert everything from GstAtomicInt to g_atomic_int_*, and
+	remove gstatomic.
+	* gst/Makefile.am:
+	* gst/gstatomic.c:
+	* gst/gstatomic.h:
+	* gst/gstatomic_impl.h:
+	* gst/gstbuffer.c:
+	* gst/gstcaps.c:
+	* gst/gstcaps.h:
+	* gst/gstclock.c:
+	* gst/gstclock.h:
+	* gst/gstdata.c:
+	* gst/gstdata.h:
+	* gst/gstdata_private.h:
+	* gst/gstevent.c:
+	* gst/gstinfo.c:
+	* gst/gstinfo.h:
+	* gst/gstmessage.c:
+	* gst/gstobject.c:
+	* gst/gstobject.h:
+	* gst/gststructure.c:
+	* gst/gststructure.h:
+	* gst/gstutils.c: Add gst_atomic_int_set() compaitibility function.
+	* gst/gstutils.h:
+
+2005-04-24  David Schleef  <ds@schleef.org>
+
 	* check/gst/gstpad.c: (START_TEST): Oh yeah, it's always nice to
 	make the regressions tests work.  Remove some code that is no
 	longer true.

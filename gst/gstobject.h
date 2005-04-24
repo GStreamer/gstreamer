@@ -28,7 +28,6 @@
 
 #include <glib-object.h>	/* note that this gets wrapped in __GST_OBJECT_H__ */
 
-#include <gst/gstatomic.h>
 #include <gst/gsttypes.h>
 
 G_BEGIN_DECLS
@@ -60,7 +59,7 @@ typedef enum
 } GstObjectFlags;
 
 #define GST_OBJECT_REFCOUNT(caps)               ((GST_OBJECT_CAST(caps))->refcount)
-#define GST_OBJECT_REFCOUNT_VALUE(caps)         (gst_atomic_int_read (&(GST_OBJECT_CAST(caps))->refcount))
+#define GST_OBJECT_REFCOUNT_VALUE(caps)         (g_atomic_int_get (&(GST_OBJECT_CAST(caps))->refcount))
 
 /* we do a GST_OBJECT_CAST to avoid type checking, better call these
  * function with a valid object! */
@@ -86,7 +85,7 @@ struct _GstObject {
   GObject 	 object;
 
   /*< public >*/
-  GstAtomicInt   refcount;
+  gint           refcount;
 
   /*< public >*/ /* with LOCK */
   GMutex        *lock;        /* object LOCK */

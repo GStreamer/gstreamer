@@ -105,7 +105,7 @@ typedef enum {
 #define GST_CLOCK_ENTRY_STATUS(entry)	((entry)->status)
 
 struct _GstClockEntry {
-  GstAtomicInt		 refcount;
+  gint  		 refcount;
   /*< protected >*/
   GstClock	 	*clock;
   GstClockEntryType 	 type;

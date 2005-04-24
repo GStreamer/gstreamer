@@ -56,14 +56,14 @@ typedef struct _GstStaticCaps GstStaticCaps;
 
 /* refcount */
 #define GST_CAPS_REFCOUNT(caps)                 ((GST_CAPS(caps))->refcount)
-#define GST_CAPS_REFCOUNT_VALUE(caps)           (gst_atomic_int_read (&(GST_CAPS(caps))->refcount))
+#define GST_CAPS_REFCOUNT_VALUE(caps)           (g_atomic_int_get (&(GST_CAPS(caps))->refcount))
 
 struct _GstCaps {
   GType type;
 
   /*< public >*/ /* with COW */
   /* refcounting */
-  GstAtomicInt           refcount;
+  gint           refcount;
 
   guint16 flags;
   GPtrArray *structs;

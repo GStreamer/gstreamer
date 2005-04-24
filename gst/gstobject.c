@@ -26,7 +26,7 @@
 #include "gstobject.h"
 #include "gstmarshal.h"
 #include "gstinfo.h"
-#include "gstatomic_impl.h"
+#include "gstutils.h"
 
 #ifndef GST_DISABLE_TRACE
 #include "gsttrace.h"
@@ -210,7 +210,7 @@ gst_object_init (GTypeInstance * instance, gpointer g_class)
   object->lock = g_mutex_new ();
   object->parent = NULL;
   object->name = NULL;
-  gst_atomic_int_init (&(object)->refcount, 1);
+  gst_atomic_int_set (&object->refcount, 1);
   PATCH_REFCOUNT (object);
   gst_object_set_name_default (object, G_OBJECT_CLASS_NAME (g_class));
 
@@ -271,7 +271,7 @@ gst_object_ref (GstObject * object)
 #endif
 
 #ifdef REFCOUNT_HACK
-  gst_atomic_int_inc (&object->refcount);
+  g_atomic_int_inc (&object->refcount);
   PATCH_REFCOUNT (object);
 #else
   /* FIXME, not MT safe because glib is not MT safe */
@@ -321,7 +321,7 @@ gst_object_unref (GstObject * object)
 #endif
 
 #ifdef REFCOUNT_HACK
-  if (G_UNLIKELY (gst_atomic_int_dec_and_test (&object->refcount))) {
+  if (G_UNLIKELY (g_atomic_int_dec_and_test (&object->refcount))) {
     PATCH_REFCOUNT1 (object);
     g_object_unref (object);
   } else {

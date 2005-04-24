@@ -47,7 +47,7 @@ struct _GstStructure {
   GQuark name;
 
   /* owned by parent structure, NULL if no parent */
-  GstAtomicInt *parent_refcount;
+  gint *parent_refcount;
 
   GArray *fields;
 
@@ -66,7 +66,7 @@ GstStructure *          gst_structure_new_valist           (const gchar *       
 							    va_list                  varargs);
 GstStructure *          gst_structure_copy                 (const GstStructure      *structure);
 void			gst_structure_set_parent_refcount  (GstStructure            *structure,
-                                                            GstAtomicInt            *refcount);
+                                                            gint            *refcount);
 void                    gst_structure_free                 (GstStructure            *structure);
 
 G_CONST_RETURN gchar *  gst_structure_get_name             (const GstStructure      *structure);

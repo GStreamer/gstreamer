@@ -24,7 +24,6 @@
 #include <signal.h>
 
 #include "gst_private.h"
-#include "gstatomic_impl.h"
 #include <gst/gst.h>
 
 /* #define DEBUG_REFCOUNT */
@@ -44,7 +43,7 @@
   } \
 } G_STMT_END
 #define IS_WRITABLE(caps) \
-  (gst_atomic_int_read(&(caps)->refcount) == 1)
+  (g_atomic_int_get (&(caps)->refcount) == 1)
 
 
 static void gst_caps_transform_to_string (const GValue * src_value,
@@ -85,7 +84,7 @@ gst_caps_new_empty (void)
 {
   GstCaps *caps = g_new0 (GstCaps, 1);
 
-  gst_atomic_int_init (&(caps)->refcount, 1);
+  g_atomic_int_inc (&caps->refcount);
   caps->type = GST_TYPE_CAPS;
   caps->structs = g_ptr_array_new ();
 
@@ -247,7 +246,6 @@ _gst_caps_free (GstCaps * caps)
 #ifdef USE_POISONING
   memset (caps, 0xff, sizeof (GstCaps));
 #endif
-  gst_atomic_int_destroy (&(caps)->refcount);
   g_free (caps);
 }
 
@@ -277,7 +275,7 @@ gst_caps_make_writable (GstCaps * caps)
   g_return_val_if_fail (caps != NULL, NULL);
 
   /* we are the only instance reffing this caps */
-  if (gst_atomic_int_read (&caps->refcount) == 1)
+  if (g_atomic_int_get (&caps->refcount) == 1)
     return caps;
 
   /* else copy */
@@ -313,7 +311,7 @@ gst_caps_ref (GstCaps * caps)
 #endif
   g_return_val_if_fail (GST_CAPS_REFCOUNT_VALUE (caps) > 0, NULL);
 
-  gst_atomic_int_inc (&caps->refcount);
+  g_atomic_int_inc (&caps->refcount);
 
   return caps;
 }
@@ -338,7 +336,7 @@ gst_caps_unref (GstCaps * caps)
   g_return_if_fail (GST_CAPS_REFCOUNT_VALUE (caps) > 0);
 
   /* if we ended up with the refcount at zero, free the caps */
-  if (gst_atomic_int_dec_and_test (&caps->refcount)) {
+  if (g_atomic_int_dec_and_test (&caps->refcount)) {
     _gst_caps_free (caps);
   }
 }
@@ -358,9 +356,14 @@ gst_static_caps_get (GstStaticCaps * static_caps)
   gboolean ret;
 
   if (caps->type == 0) {
+    if (static_caps->string == NULL) {
+      g_warning ("static caps is NULL");
+      return NULL;
+    }
+
     caps->type = GST_TYPE_CAPS;
     /* initialize the caps to a refcount of 1 so the caps can be writable... */
-    gst_atomic_int_init (&(caps)->refcount, 1);
+    gst_atomic_int_set (&caps->refcount, 1);
     caps->structs = g_ptr_array_new ();
     ret = gst_caps_from_string_inplace (caps, static_caps->string);
 

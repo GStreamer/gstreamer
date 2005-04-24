@@ -41,7 +41,7 @@
 #include "gstpad.h"
 #include "gstscheduler.h"
 #include "gst_private.h"
-#include "gstatomic_impl.h"
+#include "gstutils.h"
 #ifdef HAVE_VALGRIND
 #include <valgrind/valgrind.h>
 #endif
@@ -121,8 +121,8 @@ LogFuncEntry;
 static GStaticMutex __log_func_mutex = G_STATIC_MUTEX_INIT;
 static GSList *__log_functions = NULL;
 
-static GstAtomicInt __default_level;
-static GstAtomicInt __use_color;
+static gint __default_level;
+static gint __use_color;
 gboolean __gst_debug_enabled = TRUE;
 
 
@@ -209,8 +209,8 @@ _gst_debug_init (void)
 {
   GTimeVal current;
 
-  gst_atomic_int_init (&__default_level, GST_LEVEL_DEFAULT);
-  gst_atomic_int_init (&__use_color, 1);
+  gst_atomic_int_set (&__default_level, GST_LEVEL_DEFAULT);
+  gst_atomic_int_set (&__use_color, 1);
 
   /* get time we started for debugging messages */
   g_get_current_time (&current);
@@ -716,7 +716,7 @@ gst_debug_set_colored (gboolean colored)
 gboolean
 gst_debug_is_colored (void)
 {
-  return gst_atomic_int_read (&__use_color) == 0 ? FALSE : TRUE;
+  return g_atomic_int_get (&__use_color) == 0 ? FALSE : TRUE;
 }
 
 /**
@@ -772,7 +772,7 @@ gst_debug_set_default_threshold (GstDebugLevel level)
 GstDebugLevel
 gst_debug_get_default_threshold (void)
 {
-  return (GstDebugLevel) gst_atomic_int_read (&__default_level);
+  return (GstDebugLevel) g_atomic_int_get (&__default_level);
 }
 static void
 gst_debug_reset_threshold (gpointer category, gpointer unused)
@@ -895,8 +895,7 @@ _gst_debug_category_new (gchar * name, guint color, gchar * description)
   } else {
     cat->description = g_strdup ("no description");
   }
-  cat->threshold = g_new (GstAtomicInt, 1);
-  gst_atomic_int_init (cat->threshold, 0);
+  gst_atomic_int_set (&cat->threshold, 0);
   gst_debug_reset_threshold (cat, NULL);
 
   /* add to category list */
@@ -926,8 +925,6 @@ gst_debug_category_free (GstDebugCategory * category)
 
   g_free ((gpointer) category->name);
   g_free ((gpointer) category->description);
-  gst_atomic_int_destroy (category->threshold);
-  g_free (category->threshold);
   g_free (category);
 }
 
@@ -951,7 +948,7 @@ gst_debug_category_set_threshold (GstDebugCategory * category,
 {
   g_return_if_fail (category != NULL);
 
-  gst_atomic_int_set (category->threshold, level);
+  gst_atomic_int_set (&category->threshold, level);
 }
 
 /**
@@ -981,7 +978,7 @@ gst_debug_category_reset_threshold (GstDebugCategory * category)
 GstDebugLevel
 gst_debug_category_get_threshold (GstDebugCategory * category)
 {
-  return gst_atomic_int_read (category->threshold);
+  return g_atomic_int_get (&category->threshold);
 }
 
 /**
