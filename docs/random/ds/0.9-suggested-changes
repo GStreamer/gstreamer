@@ -94,6 +94,8 @@ API:
  - remove GST_FORMATS_FUNCTION().  It doesn't work with non-c99 
    compilers.
 
+ - do an audit to remove GtkObject-isms from gtk-1.2
+
 caps:
 
   (Company:)

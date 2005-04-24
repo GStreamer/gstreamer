@@ -183,7 +183,7 @@ gst_headers =			\
 	gstsystemclock.h	\
 	gsttag.h		\
 	gsttaginterface.h	\
-    gsttask.h			\
+	gsttask.h		\
 	gsttrace.h		\
 	gsttrashstack.h		\
 	gsttypefind.h		\

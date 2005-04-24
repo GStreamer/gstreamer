@@ -399,6 +399,7 @@ gst_element_create_all_pads (GstElement * element)
 
       gst_element_add_pad (element, pad);
     }
+    padlist = padlist->next;
   }
 }
 
@@ -566,7 +567,7 @@ gst_element_request_compatible_pad (GstElement * element,
 }
 
 /**
- * gst_element_get_compatible_pad_filtered:
+ * gst_element_get_compatible_pad:
  * @element: a #GstElement in which the pad should be found.
  * @pad: the #GstPad to find a compatible one for.
  * @filtercaps: the #GstCaps to use as a filter.
@@ -579,8 +580,8 @@ gst_element_request_compatible_pad (GstElement * element,
  * found.
  */
 GstPad *
-gst_element_get_compatible_pad_filtered (GstElement * element, GstPad * pad,
-    const GstCaps * filtercaps)
+gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
+    const GstCaps * caps)
 {
   GstIterator *pads;
   GstPadTemplate *templ;
@@ -588,12 +589,14 @@ gst_element_get_compatible_pad_filtered (GstElement * element, GstPad * pad,
   GstPad *foundpad = NULL;
   gboolean done;
 
+  /* FIXME check for caps compatibility */
+
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
-      "finding pad in %s compatible with %s:%s and filter %" GST_PTR_FORMAT,
-      GST_ELEMENT_NAME (element), GST_DEBUG_PAD_NAME (pad), filtercaps);
+      "finding pad in %s compatible with %s:%s",
+      GST_ELEMENT_NAME (element), GST_DEBUG_PAD_NAME (pad));
 
   /* let's use the real pad */
   pad = (GstPad *) GST_PAD_REALIZE (pad);
@@ -619,8 +622,7 @@ gst_element_get_compatible_pad_filtered (GstElement * element, GstPad * pad,
 
         peer = gst_pad_get_peer (current);
 
-        if (peer == NULL &&
-            gst_pad_can_link_filtered (pad, current, filtercaps)) {
+        if (peer == NULL && gst_pad_can_link (pad, current)) {
 
           GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
               "found existing unlinked pad %s:%s",
@@ -654,13 +656,6 @@ gst_element_get_compatible_pad_filtered (GstElement * element, GstPad * pad,
   /* try to create a new one */
   /* requesting is a little crazy, we need a template. Let's create one */
   templcaps = gst_pad_get_caps (pad);
-  if (filtercaps != NULL) {
-    GstCaps *temp;
-
-    temp = gst_caps_intersect (filtercaps, templcaps);
-    gst_caps_unref (templcaps);
-    templcaps = temp;
-  }
 
   templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad),
       GST_PAD_DIRECTION (pad), GST_PAD_ALWAYS, templcaps);
@@ -677,26 +672,6 @@ gst_element_get_compatible_pad_filtered (GstElement * element, GstPad * pad,
       "Could not find a compatible pad to link to %s:%s",
       GST_DEBUG_PAD_NAME (pad));
   return NULL;
-}
-
-
-
-/**
- * gst_element_get_compatible_pad:
- * @element: a #GstElement in which the pad should be found.
- * @pad: the #GstPad to find a compatible one for.
- *
- * Looks for an unlinked pad to which the given pad can link to.
- * It is not guaranteed that linking the pads will work, though
- * it should work in most cases.
- *
- * Returns: the #GstPad to which a link can be made, or %NULL if one
- * could not be found.
- */
-GstPad *
-gst_element_get_compatible_pad (GstElement * element, GstPad * pad)
-{
-  return gst_element_get_compatible_pad_filtered (element, pad, NULL);
 }
 
 /**
@@ -754,12 +729,11 @@ gst_element_state_get_name (GstElementState state)
 }
 
 /**
- * gst_element_link_pads_filtered:
+ * gst_element_link_pads:
  * @src: a #GstElement containing the source pad.
  * @srcpadname: the name of the #GstPad in source element or NULL for any pad.
  * @dest: the #GstElement containing the destination pad.
  * @destpadname: the name of the #GstPad in destination element or NULL for any pad.
- * @filtercaps: the #GstCaps to use as a filter.
  *
  * Links the two named pads of the source and destination elements.
  * Side effect is that if one of the pads has no parent, it becomes a
@@ -769,8 +743,8 @@ gst_element_state_get_name (GstElementState state)
  * Returns: TRUE if the pads could be linked, FALSE otherwise.
  */
 gboolean
-gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
-    GstElement * dest, const gchar * destpadname, const GstCaps * filtercaps)
+gst_element_link_pads (GstElement * src, const gchar * srcpadname,
+    GstElement * dest, const gchar * destpadname)
 {
   const GList *srcpads, *destpads, *srctempls, *desttempls, *l;
   GstPad *srcpad, *destpad;
@@ -853,7 +827,7 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
     gboolean result;
 
     /* two explicitly specified pads */
-    result = gst_pad_link_filtered (srcpad, destpad, filtercaps);
+    result = gst_pad_link (srcpad, destpad);
 
     gst_object_unref (GST_OBJECT (srcpad));
     gst_object_unref (GST_OBJECT (destpad));
@@ -871,12 +845,9 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
       if ((GST_PAD_DIRECTION (srcpad) == GST_PAD_SRC) &&
           (GST_PAD_PEER (srcpad) == NULL)) {
         GstPad *temp = destpadname ? destpad :
-            gst_element_get_compatible_pad_filtered (dest, srcpad,
-            filtercaps);
+            gst_element_get_compatible_pad (dest, srcpad, NULL);
 
-        if (temp
-            && gst_pad_link_filtered (srcpad, temp,
-                filtercaps) == GST_PAD_LINK_OK) {
+        if (temp && gst_pad_link (srcpad, temp) == GST_PAD_LINK_OK) {
           GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "linked pad %s:%s to pad %s:%s",
               GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (temp));
           if (destpad)
@@ -915,12 +886,9 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
           GST_DEBUG_PAD_NAME (destpad));
       if ((GST_PAD_DIRECTION (destpad) == GST_PAD_SINK) &&
           (GST_PAD_PEER (destpad) == NULL)) {
-        GstPad *temp = gst_element_get_compatible_pad_filtered (src, destpad,
-            filtercaps);
+        GstPad *temp = gst_element_get_compatible_pad (src, destpad, NULL);
 
-        if (temp
-            && gst_pad_link_filtered (temp, destpad,
-                filtercaps) == GST_PAD_LINK_OK) {
+        if (temp && gst_pad_link (temp, destpad) == GST_PAD_LINK_OK) {
           GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "linked pad %s:%s to pad %s:%s",
               GST_DEBUG_PAD_NAME (temp), GST_DEBUG_PAD_NAME (destpad));
           gst_object_unref (GST_OBJECT (temp));
@@ -974,8 +942,7 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
                   gst_element_get_request_pad (src, srctempl->name_template);
               destpad =
                   gst_element_get_request_pad (dest, desttempl->name_template);
-              if (gst_pad_link_filtered (srcpad, destpad,
-                      filtercaps) == GST_PAD_LINK_OK) {
+              if (gst_pad_link (srcpad, destpad) == GST_PAD_LINK_OK) {
                 GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
                     "linked pad %s:%s to pad %s:%s",
                     GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (destpad));
@@ -1000,12 +967,11 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
 }
 
 /**
- * gst_element_link_filtered:
+ * gst_element_link:
  * @src: a #GstElement containing the source pad.
  * @dest: the #GstElement containing the destination pad.
- * @filtercaps: the #GstCaps to use as a filter.
  *
- * Links @src to @dest, filtered by @filtercaps. The link must be from source to
+ * Links @src to @dest. The link must be from source to
  * destination; the other direction will not be tried. The function looks for
  * existing pads that aren't linked yet. It will request new pads if necessary.
  * If multiple links are possible, only one is established.
@@ -1013,10 +979,9 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
  * Returns: TRUE if the elements could be linked, FALSE otherwise.
  */
 gboolean
-gst_element_link_filtered (GstElement * src, GstElement * dest,
-    const GstCaps * filtercaps)
+gst_element_link (GstElement * src, GstElement * dest)
 {
-  return gst_element_link_pads_filtered (src, NULL, dest, NULL, filtercaps);
+  return gst_element_link_pads (src, NULL, dest, NULL);
 }
 
 /**
@@ -1050,44 +1015,6 @@ gst_element_link_many (GstElement * element_1, GstElement * element_2, ...)
   va_end (args);
 
   return TRUE;
-}
-
-/**
- * gst_element_link:
- * @src: a #GstElement containing the source pad.
- * @dest: the #GstElement containing the destination pad.
- *
- * Links @src to @dest with no filter caps. See gst_element_link_filtered() for
- * more information.
- *
- * Returns: TRUE if the elements could be linked, FALSE otherwise.
- */
-gboolean
-gst_element_link (GstElement * src, GstElement * dest)
-{
-  return gst_element_link_pads_filtered (src, NULL, dest, NULL, NULL);
-}
-
-/**
- * gst_element_link_pads:
- * @src: a #GstElement containing the source pad.
- * @srcpadname: the name of the #GstPad in the source element.
- * @dest: the #GstElement containing the destination pad.
- * @destpadname: the name of the #GstPad in destination element.
- *
- * Links the two named pads of the source and destination elements.
- * Side effect is that if one of the pads has no parent, it becomes a
- * child of the parent of the other element.  If they have different
- * parents, the link fails.
- *
- * Returns: TRUE if the pads could be linked, FALSE otherwise.
- */
-gboolean
-gst_element_link_pads (GstElement * src, const gchar * srcpadname,
-    GstElement * dest, const gchar * destpadname)
-{
-  return gst_element_link_pads_filtered (src, srcpadname, dest, destpadname,
-      NULL);
 }
 
 /**
@@ -1221,19 +1148,17 @@ gst_element_unlink (GstElement * src, GstElement * dest)
 }
 
 /**
- * gst_pad_can_link_filtered:
+ * gst_pad_can_link:
  * @srcpad: the source #GstPad to link.
  * @sinkpad: the sink #GstPad to link.
- * @filtercaps: the filter #GstCaps.
  *
- * Checks if the source pad and the sink pad can be linked when constrained
- * by the given filter caps. Both @srcpad and @sinkpad must be unlinked.
+ * Checks if the source pad and the sink pad can be linked.
+ * Both @srcpad and @sinkpad must be unlinked.
  *
  * Returns: TRUE if the pads can be linked, FALSE otherwise.
  */
 gboolean
-gst_pad_can_link_filtered (GstPad * srcpad, GstPad * sinkpad,
-    const GstCaps * filtercaps)
+gst_pad_can_link (GstPad * srcpad, GstPad * sinkpad)
 {
   GstRealPad *realsrc, *realsink;
 
@@ -1295,21 +1220,6 @@ gst_pad_can_link_filtered (GstPad * srcpad, GstPad * sinkpad,
   g_return_val_if_fail (realsink != NULL, GST_PAD_LINK_REFUSED);
 
   return TRUE;
-}
-
-/**
- * gst_pad_can_link:
- * @srcpad: the source #GstPad to link.
- * @sinkpad: the sink #GstPad to link.
- *
- * Checks if the source pad and the sink pad can be linked.
- *
- * Returns: TRUE if the pads can be linked, FALSE otherwise.
- */
-gboolean
-gst_pad_can_link (GstPad * srcpad, GstPad * sinkpad)
-{
-  return gst_pad_can_link_filtered (srcpad, sinkpad, NULL);
 }
 
 /**

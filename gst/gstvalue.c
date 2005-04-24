@@ -835,6 +835,29 @@ gst_value_get_caps (const GValue * value)
   return (GstCaps *) g_value_get_boxed (value);
 }
 
+static char *
+gst_value_serialize_caps (const GValue * value)
+{
+  GstCaps *caps = g_value_get_boxed (value);
+
+  return gst_caps_to_string (caps);
+}
+
+static gboolean
+gst_value_deserialize_caps (GValue * dest, const char *s)
+{
+  GstCaps *caps;
+
+  caps = gst_caps_from_string (s);
+
+  if (caps) {
+    g_value_set_boxed (dest, caps);
+    return TRUE;
+  }
+  return FALSE;
+}
+
+
 /*************
  * GstBuffer *
  *************/
@@ -3009,6 +3032,17 @@ _gst_value_initialize (void)
         g_type_register_fundamental (g_type_fundamental_next (), "GstFraction",
         &info, &finfo, 0);
     gst_value.type = gst_type_fraction;
+    gst_value_register (&gst_value);
+  }
+  {
+    static GstValueTable gst_value = {
+      0,
+      NULL,
+      gst_value_serialize_caps,
+      gst_value_deserialize_caps,
+    };
+
+    gst_value.type = GST_TYPE_CAPS;
     gst_value_register (&gst_value);
   }
 

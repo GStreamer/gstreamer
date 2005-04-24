@@ -233,9 +233,8 @@ GstFlowReturn 		gst_element_abort_preroll 	(GstElement *element);
 GstFlowReturn 		gst_element_finish_preroll 	(GstElement *element, GstPad *pad);
 
 void                    gst_element_create_all_pads     (GstElement *element);
-GstPad*                 gst_element_get_compatible_pad  (GstElement *element, GstPad *pad);
-GstPad*                 gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
-		                                         const GstCaps *filtercaps);
+GstPad*                 gst_element_get_compatible_pad  (GstElement *element, GstPad *pad,
+		                                         const GstCaps *caps);
 
 GstPadTemplate*         gst_element_get_compatible_pad_template (GstElement *element, GstPadTemplate *compattempl);
 
@@ -244,17 +243,12 @@ G_CONST_RETURN gchar*   gst_element_state_get_name      (GstElementState state);
 gboolean		gst_element_link                (GstElement *src, GstElement *dest);
 gboolean		gst_element_link_many           (GstElement *element_1,
 		                                         GstElement *element_2, ...);
-gboolean		gst_element_link_filtered       (GstElement *src, GstElement *dest,
-		                                         const GstCaps *filtercaps);
 void                    gst_element_unlink              (GstElement *src, GstElement *dest);
 void                    gst_element_unlink_many         (GstElement *element_1,
 		                                         GstElement *element_2, ...);
 
 gboolean		gst_element_link_pads           (GstElement *src, const gchar *srcpadname,
 		                                         GstElement *dest, const gchar *destpadname);
-gboolean		gst_element_link_pads_filtered  (GstElement *src, const gchar *srcpadname,
-		                                         GstElement *dest, const gchar *destpadname,
-							 const GstCaps *filtercaps);
 void                    gst_element_unlink_pads         (GstElement *src, const gchar *srcpadname,
 		                                         GstElement *dest, const gchar *destpadname);
 
@@ -264,7 +258,6 @@ void gst_element_class_install_std_props (GstElementClass * klass,
 
 /* pad functions */
 gboolean                gst_pad_can_link                (GstPad *srcpad, GstPad *sinkpad);
-gboolean                gst_pad_can_link_filtered       (GstPad *srcpad, GstPad *sinkpad, const GstCaps *filtercaps);
 
 void			gst_pad_use_fixed_caps		(GstPad *pad);
 GstCaps*		gst_pad_get_fixed_caps_func	(GstPad *pad);

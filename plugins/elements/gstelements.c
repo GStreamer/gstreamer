@@ -51,11 +51,13 @@ struct _elements_entry
 };
 
 
+extern GType gst_capsfilter_get_type (void);
 extern GType gst_filesrc_get_type (void);
 extern GstElementDetails gst_filesrc_details;
 
 static struct _elements_entry _elements[] = {
 //  {"aggregator", GST_RANK_NONE, gst_aggregator_get_type},
+  {"capsfilter", GST_RANK_NONE, gst_capsfilter_get_type},
   {"fakesrc", GST_RANK_NONE, gst_fakesrc_get_type},
   {"fakesink", GST_RANK_NONE, gst_fakesink_get_type},
   {"filesrc", GST_RANK_NONE, gst_filesrc_get_type},

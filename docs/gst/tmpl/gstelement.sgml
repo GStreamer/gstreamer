@@ -502,17 +502,7 @@ Sets the parent of an element.
 
 @element: 
 @pad: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_get_compatible_pad_filtered ##### -->
-<para>
-
-</para>
-
-@element: 
-@pad: 
-@filtercaps: 
+@caps: 
 @Returns: 
 
 
@@ -566,17 +556,6 @@ Sets the parent of an element.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_element_link_filtered ##### -->
-<para>
-
-</para>
-
-@src: 
-@dest: 
-@filtercaps: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_element_unlink ##### -->
 <para>
 
@@ -605,19 +584,6 @@ Sets the parent of an element.
 @srcpadname: 
 @dest: 
 @destpadname: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_link_pads_filtered ##### -->
-<para>
-
-</para>
-
-@src: 
-@srcpadname: 
-@dest: 
-@destpadname: 
-@filtercaps: 
 @Returns: 
 
 

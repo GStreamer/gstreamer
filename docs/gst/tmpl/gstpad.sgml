@@ -662,17 +662,6 @@ Checks if the pad is a sink pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_can_link_filtered ##### -->
-<para>
-
-</para>
-
-@srcpad: 
-@sinkpad: 
-@filtercaps: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_pad_set_unlink_function ##### -->
 <para>
 
@@ -689,17 +678,6 @@ Checks if the pad is a sink pad.
 
 @srcpad: 
 @sinkpad: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_link_filtered ##### -->
-<para>
-
-</para>
-
-@srcpad: 
-@sinkpad: 
-@filtercaps: 
 @Returns: 
 
 
@@ -773,17 +751,6 @@ Checks if the pad is a sink pad.
 </para>
 
 @pad: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_relink_filtered ##### -->
-<para>
-
-</para>
-
-@srcpad: 
-@sinkpad: 
-@filtercaps: 
 @Returns: 
 
 

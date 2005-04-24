@@ -1,3 +1,24 @@
+2005-04-24  David Schleef  <ds@schleef.org>
+
+	* gst/gstpad.c: Remove handling of filtered caps.  Fix/merge
+	functions that handle filtered links.
+	* gst/gstpad.h: Remove 'appfilter' field and prototypes of
+	removed functions.
+	* gst/gstutils.c: Fix/remove utility functions that handle
+	filtered caps.
+	* gst/gstutils.h:
+	* gst/gstvalue.c: Add serialization/deserialization of caps
+	* gst/parse/grammar.y: Ignore filtered caps when linking.  This
+	requires fixing so that the filter caps notation creates
+	a capsfilter element and sets the filter_caps property.  I
+	think everyone probably wants to keep the shorthand notation.
+	* docs/gst/tmpl/gstelement.sgml: updates for API changes.
+	* docs/gst/tmpl/gstpad.sgml:
+
+	* gst/elements/gstelements.c: Register capsfilter element.
+	* gst/Makefile.am: fix spacing
+	* docs/random/ds/0.9-suggested-changes: random
+
 2005-04-23  David Schleef  <ds@schleef.org>
 
 	* gst/elements/Makefile.am:

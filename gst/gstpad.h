@@ -222,7 +222,6 @@ struct _GstRealPad {
 
   /* the pad capabilities */
   GstCaps 			*caps;
-  GstCaps 			*appfilter;
   GstPadGetCapsFunction 	 getcapsfunc;
   GstPadSetCapsFunction 	 setcapsfunc;
   GstPadAcceptCapsFunction 	 acceptcapsfunc;
@@ -320,7 +319,6 @@ struct _GstGhostPadClass {
 #define GST_RPAD_UNLINKFUNC(pad)	(GST_REAL_PAD_CAST(pad)->unlinkfunc)
 
 #define GST_RPAD_CAPS(pad)		(GST_REAL_PAD_CAST(pad)->caps)
-#define GST_RPAD_APPFILTER(pad)		(GST_REAL_PAD_CAST(pad)->appfilter)
 #define GST_RPAD_GETCAPSFUNC(pad)	(GST_REAL_PAD_CAST(pad)->getcapsfunc)
 #define GST_RPAD_SETCAPSFUNC(pad)	(GST_REAL_PAD_CAST(pad)->setcapsfunc)
 #define GST_RPAD_ACCEPTCAPSFUNC(pad)	(GST_REAL_PAD_CAST(pad)->acceptcapsfunc)
@@ -366,7 +364,6 @@ struct _GstGhostPadClass {
 #define GST_PAD_REALIZE(pad)		(GST_IS_REAL_PAD(pad) ? ((GstRealPad *)(pad)) : GST_GPAD_REALPAD(pad))
 #define GST_PAD_DIRECTION(pad)		GST_RPAD_DIRECTION(GST_PAD_REALIZE(pad))
 #define GST_PAD_CAPS(pad)		GST_RPAD_CAPS(GST_PAD_REALIZE (pad))
-#define GST_PAD_APPFILTER(pad)		GST_RPAD_APPFILTER(GST_PAD_REALIZE (pad))
 #define GST_PAD_PEER(pad)		GST_PAD_CAST(GST_RPAD_PEER(GST_PAD_REALIZE(pad)))
 
 /* Some check functions (unused?) */
@@ -497,10 +494,6 @@ void			gst_pad_set_link_function		(GstPad *pad, GstPadLinkFunction link);
 void			gst_pad_set_unlink_function		(GstPad *pad, GstPadUnlinkFunction unlink);
 
 GstPadLinkReturn        gst_pad_link             		(GstPad *srcpad, GstPad *sinkpad);
-GstPadLinkReturn        gst_pad_link_filtered       		(GstPad *srcpad, GstPad *sinkpad, 
-								 const GstCaps *filtercaps);
-GstPadLinkReturn	gst_pad_relink_filtered			(GstPad *srcpad, GstPad *sinkpad, 
-								 const GstCaps *filtercaps);
 gboolean		gst_pad_unlink				(GstPad *srcpad, GstPad *sinkpad);
 gboolean		gst_pad_is_linked			(GstPad *pad);
 
@@ -527,7 +520,6 @@ gboolean  		gst_pad_peer_accept_caps 		(GstPad * pad, GstCaps *caps);
 /* capsnego for connected pads */
 GstCaps * 		gst_pad_get_allowed_caps 		(GstPad * srcpad);
 GstCaps * 		gst_pad_get_negotiated_caps 		(GstPad * pad);
-GstCaps * 		gst_pad_get_filter_caps	 		(GstPad * pad);
 
 /* data passing functions */
 GstFlowReturn		gst_pad_push				(GstPad *pad, GstBuffer *buffer);
