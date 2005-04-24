@@ -25,7 +25,6 @@ START_TEST (test_link)
 {
   GstPad *src, *sink;
   GstPadTemplate *srct;         //, *sinkt;
-  GstCaps *srcc;
 
   GstPadLinkReturn ret;
   gchar *name;
@@ -47,15 +46,6 @@ START_TEST (test_link)
 
   srct = gst_pad_get_pad_template (src);
   fail_unless (srct == NULL);
-
-  /* create caps */
-  srcc = gst_caps_new_any ();
-  gst_pad_set_caps (src, srcc);
-  gst_pad_set_caps (sink, srcc);
-
-  /* linking with any caps should succeed */
-  ret = gst_pad_link (src, sink);
-  fail_unless (ret == GST_PAD_LINK_OK);
 }
 
 END_TEST

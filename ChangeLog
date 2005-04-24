@@ -1,5 +1,13 @@
 2005-04-24  David Schleef  <ds@schleef.org>
 
+	* check/gst/gstpad.c: (START_TEST): Oh yeah, it's always nice to
+	make the regressions tests work.  Remove some code that is no
+	longer true.
+	* gst/gstpad.c: (gst_pad_link_check_templates_compatible_unlocked):
+	Disable warning for pads without templates.
+
+2005-04-24  David Schleef  <ds@schleef.org>
+
 	* gst/gstpad.c: Remove handling of filtered caps.  Fix/merge
 	functions that handle filtered links.
 	* gst/gstpad.h: Remove 'appfilter' field and prototypes of
