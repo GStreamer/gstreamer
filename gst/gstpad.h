@@ -530,10 +530,12 @@ gboolean		gst_pad_push_event			(GstPad *pad, GstEvent *event);
 gboolean		gst_pad_send_event			(GstPad *pad, GstEvent *event);
 gboolean		gst_pad_event_default			(GstPad *pad, GstEvent *event);
 
+#if 0
 /* pad tasks */
 gboolean		gst_pad_start_task 			(GstPad *pad);
 gboolean		gst_pad_pause_task 			(GstPad *pad);
 gboolean		gst_pad_stop_task 			(GstPad *pad);
+#endif
 
 /* convert/query/format functions */
 void			gst_pad_set_formats_function		(GstPad *pad,

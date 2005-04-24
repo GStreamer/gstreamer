@@ -1,5 +1,10 @@
 2005-04-24  David Schleef  <ds@schleef.org>
 
+	* gst/gstpad.h: Disable some unimplemented functions.  Wim,
+	please fix.
+
+2005-04-24  David Schleef  <ds@schleef.org>
+
 	Convert everything from GstAtomicInt to g_atomic_int_*, and
 	remove gstatomic.
 	* gst/Makefile.am:
