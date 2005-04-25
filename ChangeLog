@@ -1,6 +1,25 @@
 2005-04-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* configure.ac:
+	* gst-libs/gst/Makefile.am:
+	* gst-libs/gst/media-info/.cvsignore:
+	* gst-libs/gst/media-info/Makefile.am:
+	* gst-libs/gst/media-info/README:
+	* gst-libs/gst/media-info/media-info-priv.c:
+	* gst-libs/gst/media-info/media-info-priv.h:
+	* gst-libs/gst/media-info/media-info-test.c:
+	* gst-libs/gst/media-info/media-info.c:
+	* gst-libs/gst/media-info/media-info.h:
+	* gst-libs/gst/media-info/media-info.vcproj:
+	* pkgconfig/Makefile.am:
+	* pkgconfig/gstreamer-media-info-uninstalled.pc.in:
+	* pkgconfig/gstreamer-media-info.pc.in:
+	  Remove media-info, which is also successed by playbin (see Totem
+	  implementation).
+
+2005-04-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* configure.ac:
 	* examples/Makefile.am:
 	* examples/gstplay/.cvsignore:
 	* examples/gstplay/Makefile.am:

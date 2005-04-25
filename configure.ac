@@ -902,7 +902,6 @@ gst-libs/gst/audio/Makefile
 gst-libs/gst/colorbalance/Makefile
 gst-libs/gst/floatcast/Makefile
 gst-libs/gst/gconf/Makefile
-gst-libs/gst/media-info/Makefile
 gst-libs/gst/mixer/Makefile
 gst-libs/gst/navigation/Makefile
 gst-libs/gst/propertyprobe/Makefile
