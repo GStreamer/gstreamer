@@ -1,3 +1,8 @@
+2005-04-25  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstbuffer.override:
+	  handle the data correctly
+
 2005-04-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gst.defs:
