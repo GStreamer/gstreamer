@@ -912,7 +912,6 @@ gst-libs/gst/tag/Makefile
 gst-libs/gst/tuner/Makefile
 gst-libs/gst/video/Makefile
 gst-libs/gst/xoverlay/Makefile
-gst-libs/gst/xwindowlistener/Makefile
 gst-libs/ext/Makefile
 examples/dynparams/Makefile
 examples/capsfilter/Makefile

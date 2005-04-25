@@ -4,12 +4,6 @@ else
 GCONF_DIR =
 endif
 
-if USE_X
-X_DIR = xwindowlistener
-else
-X_DIR =
-endif
-
 SUBDIRS = \
 	audio \
 	colorbalance \
@@ -24,7 +18,6 @@ SUBDIRS = \
 	tuner \
 	video \
 	xoverlay \
-	$(X_DIR) \
 	. \
 	play
 
@@ -42,8 +35,7 @@ DIST_SUBDIRS = \
 	tag \
 	tuner \
 	video \
-	xoverlay \
-	xwindowlistener
+	xoverlay
 
 
 lib_LTLIBRARIES = libgstinterfaces-@GST_MAJORMINOR@.la

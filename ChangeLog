@@ -1,3 +1,13 @@
+2005-04-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* configure.ac:
+	* gst-libs/gst/Makefile.am:
+	* gst-libs/gst/xwindowlistener/Makefile.am:
+	* gst-libs/gst/xwindowlistener/xwindowlistener.c:
+	* gst-libs/gst/xwindowlistener/xwindowlistener.h:
+	  Remove deprecated xwindowlistener (I've moved xwindowlistening
+	  in the v4l/v4l2 plugins over to serverside).
+
 2005-04-25  David Schleef  <ds@schleef.org>
 
 	* examples/dynparams/Makefile.am: Move demo-dparams from gst/sine
