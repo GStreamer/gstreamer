@@ -1,3 +1,8 @@
+2005-04-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* tests/sched/runxml.c: (main):
+	  Fix GCC4 warning.
+
 2005-04-23  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstpad.c: (gst_pad_link_prepare):
