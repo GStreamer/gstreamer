@@ -1,3 +1,69 @@
+2005-04-24  David Schleef  <ds@schleef.org>
+
+	* configure.ac: Remove idct and resample libs
+	* gst-libs/gst/Makefile.am: same
+
+	Remove usage of gst_library_load():
+	* ext/alsa/gstalsaplugin.c: (plugin_init):
+	* ext/libvisual/visual.c: (plugin_init):
+	* ext/ogg/gstogg.c: (plugin_init):
+	* ext/theora/theora.c: (plugin_init):
+	* ext/vorbis/vorbis.c: (plugin_init):
+	* gst-libs/gst/audio/gstaudiofiltertemplate.c: (plugin_init):
+	* gst/audioscale/gstaudioscale.c:
+	* gst/adder/gstadder.c: (plugin_init):
+	* gst/audioconvert/plugin.c: (plugin_init):
+	* sys/ximage/ximagesink.c: (plugin_init):
+	* sys/xvimage/xvimagesink.c: (plugin_init):
+	* gst/tcp/gsttcpplugin.c: (plugin_init):
+
+	Link plugins against libraries:
+	* ext/ogg/Makefile.am:
+	* ext/theora/Makefile.am:
+	* ext/vorbis/Makefile.am:
+	* gst/audioconvert/Makefile.am:
+
+	Create proper libraries:
+	* gst-libs/gst/riff/Makefile.am:
+	* gst-libs/gst/audio/Makefile.am:
+	* gst-libs/gst/video/Makefile.am:
+
+	Move resample library to audioscale plugin directory:
+	* gst-libs/gst/resample/Makefile.am:
+	* gst-libs/gst/resample/README:
+	* gst-libs/gst/resample/dtof.c:
+	* gst-libs/gst/resample/dtos.c:
+	* gst-libs/gst/resample/functable.c:
+	* gst-libs/gst/resample/private.h:
+	* gst-libs/gst/resample/resample.c:
+	* gst-libs/gst/resample/resample.h:
+	* gst-libs/gst/resample/resample.vcproj:
+	* gst-libs/gst/resample/test.c:
+	* gst/audioscale/Makefile.am:
+	* gst/audioscale/README:
+	* gst/audioscale/dtof.c:
+	* gst/audioscale/dtos.c:
+	* gst/audioscale/functable.c:
+	* gst/audioscale/private.h:
+	* gst/audioscale/resample.c:
+	* gst/audioscale/resample.h:
+	* gst/audioscale/test.c:
+
+	Move tagedit library to gst-libs:
+	* gst-libs/gst/tag/Makefile.am:
+	* gst-libs/gst/tag/gstid3tag.c:
+	* gst-libs/gst/tag/gsttagediting.c:
+	* gst-libs/gst/tag/gsttageditingprivate.h:
+	* gst-libs/gst/tag/gstvorbistag.c:
+	* gst/tags/Makefile.am:
+	* gst/tags/gstid3tag.c:
+	* gst/tags/gstvorbistag.c:
+
+	Fix for core changes:
+	* gst/sine/gstsinesrc.c: (gst_sinesrc_class_init),
+	(gst_sinesrc_init), (gst_sinesrc_src_fixate), (gst_sinesrc_link),
+	(gst_sinesrc_getrange):
+
 2005-04-23  David Schleef  <ds@schleef.org>
 
 	* gst-libs/gst/Makefile.am: Remove idct.  It hasn't been used

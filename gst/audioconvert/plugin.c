@@ -28,9 +28,6 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_library_load ("gstaudio"))
-    return FALSE;
-
   if (!gst_element_register (plugin, "audioconvert",
           GST_RANK_PRIMARY, gst_audio_convert_get_type ()) ||
       !gst_element_register (plugin, "buffer-frames-convert",

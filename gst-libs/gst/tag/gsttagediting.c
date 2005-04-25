@@ -1,5 +1,7 @@
 /* GStreamer
- * Copyright (C) 2004 Benjamin Otte <in7y118@public.uni-hamburg.de>
+ * Copyright (C) 2003 Benjamin Otte <in7y118@public.uni-hamburg.de>
+ *
+ * gsttagediting.c: tag editing plugin
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,27 +23,22 @@
 #  include "config.h"
 #endif
 
+#include "gsttageditingprivate.h"
 #include <gst/gst.h>
-
-extern GType gst_theora_dec_get_type (void);
-extern GType gst_theora_enc_get_type (void);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "theoradec", GST_RANK_PRIMARY,
-          gst_theora_dec_get_type ()))
+  if (!gst_element_register (plugin, "vorbistag",
+          GST_RANK_PRIMARY, gst_vorbis_tag_get_type ())) {
     return FALSE;
-
-  if (!gst_element_register (plugin, "theoraenc", GST_RANK_NONE,
-          gst_theora_enc_get_type ()))
-    return FALSE;
+  }
 
   return TRUE;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "theora",
-    "Theora plugin library",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
+    "gsttags",
+    "elements for manipulating data from ogg streams",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)

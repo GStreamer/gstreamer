@@ -1767,10 +1767,6 @@ gst_ximagesink_get_type (void)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  /* Loading the library containing GstVideoSink, our parent object */
-  if (!gst_library_load ("gstvideo"))
-    return FALSE;
-
   if (!gst_element_register (plugin, "ximagesink",
           GST_RANK_SECONDARY, GST_TYPE_XIMAGESINK))
     return FALSE;

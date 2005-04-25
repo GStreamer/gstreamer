@@ -268,8 +268,7 @@ gst_resample_nearest_s16 (gst_resample_t * r)
       SCALE_LOOP (o_ptr[0] = i_ptr[0], 1);
       break;
     case 2:
-      SCALE_LOOP (o_ptr[0] = i_ptr[0];
-          o_ptr[1] = i_ptr[1], 2);
+      SCALE_LOOP (o_ptr[0] = i_ptr[0]; o_ptr[1] = i_ptr[1], 2);
       break;
     default:
     {
@@ -630,8 +629,7 @@ gst_resample_nearest_float (gst_resample_t * r)
       SCALE_LOOP (o_ptr[0] = i_ptr[0], 1);
       break;
     case 2:
-      SCALE_LOOP (o_ptr[0] = i_ptr[0];
-          o_ptr[1] = i_ptr[1], 2);
+      SCALE_LOOP (o_ptr[0] = i_ptr[0]; o_ptr[1] = i_ptr[1], 2);
       break;
     default:
     {

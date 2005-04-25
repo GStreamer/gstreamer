@@ -726,10 +726,6 @@ gst_audioscale_get_property (GObject * object, guint prop_id,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  /* load support library */
-  if (!gst_library_load ("gstresample"))
-    return FALSE;
-
   if (!gst_element_register (plugin, "audioscale", GST_RANK_SECONDARY,
           GST_TYPE_AUDIOSCALE)) {
     return FALSE;

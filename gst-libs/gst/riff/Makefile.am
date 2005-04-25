@@ -1,16 +1,16 @@
-plugin_LTLIBRARIES = libgstriff.la
+lib_LTLIBRARIES = libgstriff-@GST_MAJORMINOR@.la
 
-libgstriff_la_SOURCES = \
+libgstriff_@GST_MAJORMINOR@_la_SOURCES = \
 	riff.c \
 	riff-media.c \
 	riff-read.c
 
-libgstriffincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/riff
-libgstriffinclude_HEADERS = \
+libgstriff_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/riff
+libgstriff_@GST_MAJORMINOR@include_HEADERS = \
 	riff-ids.h \
 	riff-media.h \
 	riff-read.h
 
-libgstriff_la_LIBADD =
-libgstriff_la_CFLAGS = $(GST_CFLAGS)
-libgstriff_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstriff_@GST_MAJORMINOR@_la_LIBADD =
+libgstriff_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS)
+libgstriff_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

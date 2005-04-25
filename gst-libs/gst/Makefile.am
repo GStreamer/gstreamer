@@ -19,7 +19,6 @@ SUBDIRS = \
 	mixer \
 	navigation \
 	propertyprobe \
-	resample \
 	riff \
 	tag \
 	tuner \
@@ -39,7 +38,6 @@ DIST_SUBDIRS = \
 	navigation \
 	play \
 	propertyprobe \
-	resample \
 	riff \
 	tag \
 	tuner \

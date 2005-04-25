@@ -405,9 +405,6 @@ plugin_init (GstPlugin * plugin)
   guint i;
   VisList *list;
 
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
-
   if (!visual_is_initialized ())
     if (visual_init (NULL, NULL) != 0)
       return FALSE;

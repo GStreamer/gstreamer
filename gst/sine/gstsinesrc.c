@@ -76,7 +76,7 @@ static void gst_sinesrc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_sinesrc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-static GstPadLinkReturn gst_sinesrc_link (GstPad * pad, const GstCaps * caps);
+static GstPadLinkReturn gst_sinesrc_link (GstPad * pad, GstPad * peerpad);
 static GstElementStateReturn gst_sinesrc_change_state (GstElement * element);
 static void gst_sinesrc_set_clock (GstElement * element, GstClock * clock);
 
@@ -88,8 +88,9 @@ static const GstQueryType *gst_sinesrc_get_query_types (GstPad * pad);
 static gboolean gst_sinesrc_src_query (GstPad * pad,
     GstQueryType type, GstFormat * format, gint64 * value);
 
-static GstData *gst_sinesrc_get (GstPad * pad);
-static GstCaps *gst_sinesrc_src_fixate (GstPad * pad, const GstCaps * caps);
+static GstFlowReturn gst_sinesrc_getrange (GstPad * pad, guint64 offset,
+    guint length, GstBuffer ** buffer);
+static GstCaps *gst_sinesrc_src_fixate (GstPad * pad, GstCaps * caps);
 
 static GstElementClass *parent_class = NULL;
 
@@ -136,7 +137,11 @@ gst_sinesrc_class_init (GstSineSrcClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TABLESIZE,
+  gobject_class->set_property = gst_sinesrc_set_property;
+  gobject_class->get_property = gst_sinesrc_get_property;
+  gobject_class->dispose = gst_sinesrc_dispose;
+
+  g_object_class_install_property (gobject_class, ARG_TABLESIZE,
       g_param_spec_int ("tablesize", "tablesize", "tablesize",
           1, G_MAXINT, 1024, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
@@ -144,19 +149,15 @@ gst_sinesrc_class_init (GstSineSrcClass * klass)
       g_param_spec_int ("samplesperbuffer", "Samples per buffer",
           "Number of samples in each outgoing buffer",
           1, G_MAXINT, 1024, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FREQ,
+  g_object_class_install_property (gobject_class, ARG_FREQ,
       g_param_spec_double ("freq", "Frequency", "Frequency of sine source",
           0.0, 20000.0, 440.0, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VOLUME,
+  g_object_class_install_property (gobject_class, ARG_VOLUME,
       g_param_spec_double ("volume", "Volume", "Volume",
           0.0, 1.0, 0.8, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
+  g_object_class_install_property (gobject_class, ARG_SYNC,
       g_param_spec_boolean ("sync", "Sync", "Synchronize to clock",
           FALSE, G_PARAM_READWRITE));
-
-  gobject_class->set_property = gst_sinesrc_set_property;
-  gobject_class->get_property = gst_sinesrc_get_property;
-  gobject_class->dispose = gst_sinesrc_dispose;
 
   gstelement_class->change_state = gst_sinesrc_change_state;
   gstelement_class->set_clock = gst_sinesrc_set_clock;
@@ -169,8 +170,8 @@ gst_sinesrc_init (GstSineSrc * src)
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_sinesrc_src_template), "src");
   gst_pad_set_link_function (src->srcpad, gst_sinesrc_link);
-  gst_pad_set_fixate_function (src->srcpad, gst_sinesrc_src_fixate);
-  gst_pad_set_get_function (src->srcpad, gst_sinesrc_get);
+  gst_pad_set_fixatecaps_function (src->srcpad, gst_sinesrc_src_fixate);
+  gst_pad_set_getrange_function (src->srcpad, gst_sinesrc_getrange);
   gst_pad_set_query_function (src->srcpad, gst_sinesrc_src_query);
   gst_pad_set_query_type_function (src->srcpad, gst_sinesrc_get_query_types);
   gst_element_add_pad (GST_ELEMENT (src), src->srcpad);
@@ -227,7 +228,7 @@ gst_sinesrc_set_clock (GstElement * element, GstClock * clock)
 }
 
 static GstCaps *
-gst_sinesrc_src_fixate (GstPad * pad, const GstCaps * caps)
+gst_sinesrc_src_fixate (GstPad * pad, GstCaps * caps)
 {
   GstStructure *structure;
   GstCaps *newcaps;
@@ -242,13 +243,14 @@ gst_sinesrc_src_fixate (GstPad * pad, const GstCaps * caps)
     return newcaps;
   }
 
-  gst_caps_free (newcaps);
+  gst_caps_unref (newcaps);
   return NULL;
 }
 
 static GstPadLinkReturn
-gst_sinesrc_link (GstPad * pad, const GstCaps * caps)
+gst_sinesrc_link (GstPad * pad, GstPad * peerpad)
 {
+  GstCaps *caps;
   GstSineSrc *sinesrc;
   const GstStructure *structure;
   gboolean ret;
@@ -256,6 +258,7 @@ gst_sinesrc_link (GstPad * pad, const GstCaps * caps)
   GST_DEBUG ("gst_sinesrc_src_link");
   sinesrc = GST_SINESRC (gst_pad_get_parent (pad));
 
+  caps = gst_pad_get_caps (pad);
   structure = gst_caps_get_structure (caps, 0);
 
   ret = gst_structure_get_int (structure, "rate", &sinesrc->samplerate);
@@ -312,8 +315,9 @@ gst_sinesrc_src_query (GstPad * pad,
   return res;
 }
 
-static GstData *
-gst_sinesrc_get (GstPad * pad)
+static GstFlowReturn
+gst_sinesrc_getrange (GstPad * pad, guint64 offset,
+    guint length, GstBuffer ** buffer)
 {
   GstSineSrc *src;
   GstBuffer *buf;
@@ -322,7 +326,7 @@ gst_sinesrc_get (GstPad * pad)
   gint16 *samples;
   gint i = 0;
 
-  g_return_val_if_fail (pad != NULL, NULL);
+  g_return_val_if_fail (pad != NULL, GST_FLOW_ERROR);
   src = GST_SINESRC (gst_pad_get_parent (pad));
 
   if (!src->tags_pushed) {
@@ -334,10 +338,13 @@ gst_sinesrc_get (GstPad * pad)
     gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND,
         GST_TAG_DESCRIPTION, "sine wave", NULL);
 
+#if 0
     gst_element_found_tags (GST_ELEMENT (src), taglist);
+#endif
     event = gst_event_new_tag (taglist);
     src->tags_pushed = TRUE;
-    return GST_DATA (event);
+    *buffer = GST_BUFFER (event);
+    return GST_FLOW_OK;
   }
 
   tdiff = src->samples_per_buffer * GST_SECOND / src->samplerate;
@@ -348,7 +355,9 @@ gst_sinesrc_get (GstPad * pad)
   GST_BUFFER_TIMESTAMP (buf) = src->timestamp;
   if (src->sync) {
     if (src->clock) {
+#if 0
       gst_element_wait (GST_ELEMENT (src), GST_BUFFER_TIMESTAMP (buf));
+#endif
     }
   }
   /* offset is the number of samples */
@@ -400,6 +409,7 @@ gst_sinesrc_get (GstPad * pad)
     i++;
   }
 
+#if 0
   if (!GST_PAD_CAPS (src->srcpad)) {
     if (gst_sinesrc_link (src->srcpad,
             gst_pad_get_allowed_caps (src->srcpad)) <= 0) {
@@ -407,8 +417,10 @@ gst_sinesrc_get (GstPad * pad)
       return NULL;
     }
   }
+#endif
 
-  return GST_DATA (buf);
+  *buffer = buf;
+  return GST_FLOW_OK;
 }
 
 static void

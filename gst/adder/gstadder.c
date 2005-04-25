@@ -517,9 +517,6 @@ gst_adder_change_state (GstElement * element)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
-
   if (!gst_element_register (plugin, "adder", GST_RANK_NONE, GST_TYPE_ADDER)) {
     return FALSE;
   }

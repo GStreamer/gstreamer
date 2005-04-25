@@ -34,9 +34,6 @@ GST_DEBUG_CATEGORY (tcp_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_library_load ("gstdataprotocol"))
-    return FALSE;
-
   if (!gst_element_register (plugin, "tcpsink", GST_RANK_NONE,
           GST_TYPE_TCPSINK))
     return FALSE;

@@ -210,9 +210,6 @@ gst_audiofilter_template_get_property (GObject * object, guint prop_id,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_library_load ("gstaudiofilter"))
-    return FALSE;
-
   return gst_element_register (plugin, "audiofiltertemplate", GST_RANK_NONE,
       GST_TYPE_AUDIOFILTER_TEMPLATE);
 }

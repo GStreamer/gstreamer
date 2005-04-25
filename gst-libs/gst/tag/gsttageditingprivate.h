@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2004 Benjamin Otte <in7y118@public.uni-hamburg.de>
+ * Copyright (C) 2003 Benjamin Otte <in7y118@public.uni-hamburg.de>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,31 +17,25 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
 
-#include <gst/gst.h>
+#ifndef __GST_TAG_EDIT_PRIVATE_H__
+#define __GST_TAG_EDIT_PRIVATE_H__
 
-extern GType gst_theora_dec_get_type (void);
-extern GType gst_theora_enc_get_type (void);
+#include <gst/tag/tag.h>
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "theoradec", GST_RANK_PRIMARY,
-          gst_theora_dec_get_type ()))
-    return FALSE;
+G_BEGIN_DECLS
+  
 
-  if (!gst_element_register (plugin, "theoraenc", GST_RANK_NONE,
-          gst_theora_enc_get_type ()))
-    return FALSE;
+typedef struct _GstTagEntryMatch GstTagEntryMatch;
+struct _GstTagEntryMatch {
+  gchar *	gstreamer_tag;
+  gchar *	original_tag;
+};
 
-  return TRUE;
-}
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "theora",
-    "Theora plugin library",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
+GType gst_vorbis_tag_get_type (void);
+
+
+G_END_DECLS
+
+#endif /* __GST_TAG_EDIT_PRIVATE_H__ */

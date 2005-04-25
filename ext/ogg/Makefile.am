@@ -9,5 +9,7 @@ libgstogg_la_SOURCES = \
 	gstogmparse.c
 
 libgstogg_la_CFLAGS = $(GST_CFLAGS) $(OGG_CFLAGS)
-libgstogg_la_LIBADD = $(OGG_LIBS) $(top_builddir)/gst-libs/gst/riff/libgstriff.la
+libgstogg_la_LIBADD = $(OGG_LIBS) \
+	$(top_builddir)/gst-libs/gst/riff/libgstriff-@GST_MAJORMINOR@.la
 libgstogg_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+
