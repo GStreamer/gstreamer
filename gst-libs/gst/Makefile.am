@@ -18,8 +18,7 @@ SUBDIRS = \
 	tuner \
 	video \
 	xoverlay \
-	. \
-	play
+	.
 
 DIST_SUBDIRS = \
 	audio \
@@ -29,7 +28,6 @@ DIST_SUBDIRS = \
 	media-info \
 	mixer \
 	navigation \
-	play \
 	propertyprobe \
 	riff \
 	tag \

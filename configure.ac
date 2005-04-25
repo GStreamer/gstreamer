@@ -905,7 +905,6 @@ gst-libs/gst/gconf/Makefile
 gst-libs/gst/media-info/Makefile
 gst-libs/gst/mixer/Makefile
 gst-libs/gst/navigation/Makefile
-gst-libs/gst/play/Makefile
 gst-libs/gst/propertyprobe/Makefile
 gst-libs/gst/riff/Makefile
 gst-libs/gst/tag/Makefile
@@ -917,7 +916,6 @@ examples/dynparams/Makefile
 examples/capsfilter/Makefile
 examples/seeking/Makefile
 examples/indexing/Makefile
-examples/gstplay/Makefile
 examples/switch/Makefile
 examples/Makefile
 testsuite/embed/Makefile
@@ -935,8 +933,6 @@ pkgconfig/gstreamer-libs.pc
 pkgconfig/gstreamer-libs-uninstalled.pc
 pkgconfig/gstreamer-media-info.pc
 pkgconfig/gstreamer-media-info-uninstalled.pc
-pkgconfig/gstreamer-play.pc
-pkgconfig/gstreamer-play-uninstalled.pc
 pkgconfig/gstreamer-plugins.pc
 pkgconfig/gstreamer-plugins-uninstalled.pc
 po/Makefile.in

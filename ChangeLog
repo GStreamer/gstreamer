@@ -1,6 +1,24 @@
 2005-04-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* configure.ac:
+	* examples/Makefile.am:
+	* examples/gstplay/.cvsignore:
+	* examples/gstplay/Makefile.am:
+	* examples/gstplay/player.c:
+	* gst-libs/gst/Makefile.am:
+	* gst-libs/gst/play/.cvsignore:
+	* gst-libs/gst/play/Makefile.am:
+	* gst-libs/gst/play/play.c:
+	* gst-libs/gst/play/play.h:
+	* gst-libs/gst/play/play.vcproj:
+	* pkgconfig/Makefile.am:
+	* pkgconfig/gstreamer-play-uninstalled.pc.in:
+	* pkgconfig/gstreamer-play.pc.in:
+	  Remove libgstplay, playbin is now the official successor.
+
+2005-04-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* configure.ac:
 	* gst-libs/gst/Makefile.am:
 	* gst-libs/gst/xwindowlistener/Makefile.am:
 	* gst-libs/gst/xwindowlistener/xwindowlistener.c:
