@@ -3168,6 +3168,27 @@ gst_pad_get_element_private (GstPad * pad)
   return pad->element_private;
 }
 
+gboolean
+gst_pad_start_task (GstPad * pad)
+{
+  g_warning ("implement gst_pad_start_task()");
+  return FALSE;
+}
+
+gboolean
+gst_pad_pause_task (GstPad * pad)
+{
+  g_warning ("implement gst_pad_pause_task()");
+  return FALSE;
+}
+
+gboolean
+gst_pad_stop_task (GstPad * pad)
+{
+  g_warning ("implement gst_pad_stop_task()");
+  return FALSE;
+}
+
 
 /***** ghost pads *****/
 GType _gst_ghost_pad_type = 0;

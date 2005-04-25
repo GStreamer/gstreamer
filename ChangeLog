@@ -1,3 +1,12 @@
+2005-04-25  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstpad.c: (gst_pad_set_active), (gst_pad_peer_set_active),
+	(gst_pad_set_checkgetrange_function), (gst_pad_check_pull_range),
+	(gst_pad_pull_range), (gst_static_pad_template_get_caps),
+	(gst_pad_start_task), (gst_pad_pause_task), (gst_pad_stop_task):
+	* gst/gstpad.h:
+	Added stubs for unimplemented functions. 
+
 2005-04-24  David Schleef  <ds@schleef.org>
 
 	* gst/gstpad.h: Disable some unimplemented functions.  Wim,
