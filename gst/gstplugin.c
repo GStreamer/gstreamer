@@ -884,23 +884,3 @@ gst_plugin_load (const gchar * name)
   GST_DEBUG ("Could not find %s in registry pool", name);
   return FALSE;
 }
-
-/**
- * gst_library_load:
- * @name: name of library to load
- *
- * Load the named library.  Name should be given as
- * &quot;liblibrary.so&quot;. (exception to this rule is 'riff', which .so name is 'gstriff')
- *
- * Returns: whether the library was loaded or not (and returns TRUE if it was already loaded)
- */
-gboolean
-gst_library_load (const gchar * name)
-{
-  gboolean res;
-
-  /* for now this is the same */
-  res = gst_plugin_load (name);
-
-  return res;
-}

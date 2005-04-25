@@ -158,7 +158,6 @@ void			gst_plugin_add_feature		(GstPlugin *plugin, GstPluginFeature *feature);
 
 /* shortcuts to load from the registry pool */
 gboolean		gst_plugin_load			(const gchar *name);
-gboolean		gst_library_load		(const gchar *name);
 
 G_END_DECLS
 

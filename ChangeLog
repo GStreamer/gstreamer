@@ -1,3 +1,19 @@
+2005-04-25  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstpad.c: (gst_pad_set_active), (gst_pad_peer_set_active),
+	(gst_pad_set_checkgetrange_function),
+	(gst_pad_link_check_compatible_unlocked), (gst_pad_link_prepare),
+	(gst_pad_check_pull_range), (gst_pad_pull_range),
+	(gst_static_pad_template_get_caps), (gst_pad_start_task),
+	(gst_pad_pause_task), (gst_pad_stop_task):
+	* gst/gstplugin.c: (gst_plugin_load):
+	* gst/gstplugin.h:
+	Remove gst_library_load as it does more harm than good with
+	the new g_module flags.
+	Revert bogus caps template check in pad linking, pad caps
+	are important when linking not the template, which is more
+	general than the current caps.
+
 2005-04-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/autoplug/.cvsignore:

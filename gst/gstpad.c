@@ -1382,39 +1382,27 @@ lost_ghostpad:
 }
 
 static gboolean
-gst_pad_link_check_templates_compatible_unlocked (GstRealPad * src,
-    GstRealPad * sink)
+gst_pad_link_check_compatible_unlocked (GstRealPad * src, GstRealPad * sink)
 {
   GstCaps *srccaps;
   GstCaps *sinkcaps;
-  GstCaps *icaps;
-  gboolean ret;
 
-  if (!GST_PAD_PAD_TEMPLATE (src)) {
-    /* FIXME causes check failure */
-    //g_warning ("pad has no pad template");
-    return FALSE;
-  }
-  if (!GST_PAD_PAD_TEMPLATE (sink)) {
-    /* FIXME causes check failure */
-    //g_warning ("pad has no pad template");
-    return FALSE;
-  }
+  srccaps = gst_real_pad_get_caps_unlocked (src);
+  sinkcaps = gst_real_pad_get_caps_unlocked (sink);
+  GST_CAT_DEBUG (GST_CAT_CAPS, "got caps %p and %p", srccaps, sinkcaps);
 
-  srccaps = GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (src));
-  sinkcaps = GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (sink));
+  if (srccaps && sinkcaps) {
+    GstCaps *icaps;
 
-  icaps = gst_caps_intersect (srccaps, sinkcaps);
+    icaps = gst_caps_intersect (srccaps, sinkcaps);
+    GST_CAT_DEBUG (GST_CAT_CAPS,
+        "intersection caps %p %" GST_PTR_FORMAT, icaps, icaps);
 
-  if (gst_caps_is_empty (icaps)) {
-    ret = FALSE;
-  } else {
-    ret = TRUE;
+    if (!icaps || gst_caps_is_empty (icaps))
+      return FALSE;
   }
 
-  gst_caps_unref (icaps);
-
-  return ret;
+  return TRUE;
 }
 
 
@@ -1457,7 +1445,7 @@ gst_pad_link_prepare (GstPad * srcpad, GstPad * sinkpad,
   *outrealsink = realsink;
 
   /* check pad caps for non-empty intersection */
-  if (!gst_pad_link_check_templates_compatible_unlocked (realsrc, realsink)) {
+  if (!gst_pad_link_check_compatible_unlocked (realsrc, realsink)) {
     goto no_format;
   }
 
