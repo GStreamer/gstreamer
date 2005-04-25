@@ -7,4 +7,4 @@ libraryinclude_HEADERS = xwindowlistener.h
 
 libgstxwindowlistener_la_LIBADD =$(GST_LIBS) $(GST_PLUGIN_LIBS) $(X_LIBS)
 libgstxwindowlistener_la_CFLAGS = $(GST_CFLAGS) $(X_CFLAGS)
-libgstxwindowlistener_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstxwindowlistener_la_LDFLAGS = $(GST_LDFLAGS)

@@ -1,3 +1,16 @@
+2005-04-25  David Schleef  <ds@schleef.org>
+
+	Don't use GST_PLUGIN_LDFLAGS, because these aren't plugins.
+	* gst-libs/gst/audio/Makefile.am:
+	* gst-libs/gst/riff/Makefile.am:
+	* gst-libs/gst/tag/Makefile.am:
+	* gst-libs/gst/video/Makefile.am:
+	* gst-libs/gst/xwindowlistener/Makefile.am:
+
+	Convert to 0.9 API, seems to work:
+	* sys/ximage/Makefile.am:
+	* sys/ximage/ximagesink.c:
+
 2005-04-24  David Schleef  <ds@schleef.org>
 
 	Link plugins against libraries:

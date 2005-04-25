@@ -18,9 +18,8 @@ libgstaudio_@GST_MAJORMINOR@_la_SOURCES = audio.c audioclock.c \
 	multichannel.c \
 	gstaudiosink.c \
 	gstbaseaudiosink.c \
-	gstringbuffer.c \
-	multichannel-enumtypes.c
-nodist_libgstaudio_la_SOURCES = $(built_sources)
+	gstringbuffer.c
+nodist_libgstaudio_@GST_MAJORMINOR@_la_SOURCES = $(built_sources) $(built_headers)
 
 libgstaudio_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/audio
 libgstaudio_@GST_MAJORMINOR@include_HEADERS = \
@@ -30,16 +29,15 @@ libgstaudio_@GST_MAJORMINOR@include_HEADERS = \
 	gstaudiosink.h \
 	gstbaseaudiosink.h \
 	gstringbuffer.h \
-	multichannel.h \
-	multichannel-enumtypes.h
+	multichannel.h
 
 libgstaudio_@GST_MAJORMINOR@_la_LIBADD =
 libgstaudio_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS)
-libgstaudio_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GST_BASE_LIBS)
+libgstaudio_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LDFLAGS) $(GST_BASE_LIBS)
 
 libgstaudiofilter_@GST_MAJORMINOR@_la_SOURCES = gstaudiofilter.c gstaudiofilter.h
 libgstaudiofilter_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS)
-libgstaudiofilter_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstaudiofilter_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LDFLAGS)
 
 libgstaudiofilterexample_la_SOURCES = gstaudiofilterexample.c
 libgstaudiofilterexample_la_CFLAGS = $(GST_CFLAGS)
