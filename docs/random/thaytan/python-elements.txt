@@ -1,0 +1,134 @@
+Feb 22 01:45:36 <thaytan>       jdahlin: can I access GstXOverlay and friends from pygst?
+Feb 22 01:45:43 <jdahlin>       thaytan: indeed you can!
+Feb 22 01:46:05 <jdahlin>       thaytan: do not forget to import gst.interfaces
+Feb 22 01:46:20 <thaytan>       wheeeeee!
+Feb 22 01:46:28 *       thaytan hi5s jdahlin
+Feb 22 01:46:32 <jdahlin>       after that it's all magic
+Feb 22 01:46:46 <thaytan>       Company and I were discussing yesterday having a gst python element
+Feb 22 01:46:57 <jdahlin>       that'd be cool
+Feb 22 01:47:11 <jdahlin>       or just <any language except c>
+Feb 22 01:47:23 <thaytan>       that might do something like: instantiate a python interpreter, load python modules that implement gstreamer elements from a path location and register
+them
+Feb 22 01:47:39 <thaytan>       then for each instance of each element, start a new python interpreter instance to execute it
+Feb 22 01:47:48 <jdahlin>       thaytan: yes, but we need to have a loader api first
+Feb 22 01:47:50 <thaytan>       does that sound like the right approach?
+Feb 22 01:48:02 <jdahlin>       yes, that's what I had in mind too
+Feb 22 01:48:17 <jdahlin>       but the code should probably be separated from the rest of the core
+Feb 22 01:48:18 <thaytan>       loader api?
+Feb 22 01:48:29 <thaytan>       oh, I was thinking in gst-plugins
+Feb 22 01:48:34 <jdahlin>       so, we can have the python plugin loader in a separate .so
+Feb 22 01:48:42 <thaytan>       but I guess gst-python could install it
+Feb 22 01:48:52 <thaytan>       since you have to have gst-python to run such elements anyway
+Feb 22 01:49:00 <jdahlin>       nope
+Feb 22 01:49:10 <jdahlin>       or hmm
+Feb 22 01:49:24 <thaytan>       the python elements need to be able to call gstreamer functions
+Feb 22 01:49:30 <thaytan>       hence, they need the wrappers
+Feb 22 01:49:31 <jdahlin>       yeah, most likely a python plugin will use the gstreamer api
+Feb 22 01:49:51 <jdahlin>       so a GTypeModule loader would be fine for me
+Feb 22 01:50:06 <jdahlin>       similar to what nautilus does
+Feb 22 01:51:43 <thaytan>       erm, hrmn
+Feb 22 01:51:48 <thaytan>       I don't know what that implies
+Feb 22 01:52:13 <jdahlin>       so, we need to define a simple api, for a plugin loader
+Feb 22 01:52:29 <thaytan>       python api, you mean?
+Feb 22 01:52:31 <jdahlin>       and then on startup, we look in $libdir/gstreamer-x.y/loaders/ for *.so
+Feb 22 01:52:46 <thaytan>       oh, I see
+Feb 22 01:52:52 <jdahlin>       one for python, and maybe move the current one to be a dll too
+Feb 22 01:53:12 <jdahlin>       it probably has disadvantages to move, so I'm not making that decision
+Feb 22 01:53:40 <thaytan>       well, afaics, they can just be normal gst plugins that in the plugin_init, they instantiate their language binding, load the available elements and get
+them to register themselves
+Feb 22 01:53:45 <jdahlin>       and one for every language which wants to be able to write elements
+Feb 22 01:54:09 <jdahlin>       perhaps, I'm not sure how plugins work, but maybe it's possible
+Feb 22 01:54:31 <thaytan>       we want to get them in the registry with a factory function that knows how to instantiate the interpreter and create an instance of the element to run in it
+Feb 22 01:54:50 <thaytan>       and some way to shut down that instance when the element disappears
+Feb 22 01:55:18 <jdahlin>       would be a nice idea to only start the python interpretor on demand
+Feb 22 01:55:24 <thaytan>       for python, do we need a separate interpreter instance for every element?
+Feb 22 01:55:35 <thaytan>       so they can run properly in separate threads?
+Feb 22 01:55:56 <jdahlin>       no, that is not supported
+Feb 22 01:56:02 <jdahlin>       all elements are going to run in the same interpretor
+Feb 22 01:56:17 <jdahlin>       interpreter!
+Feb 22 01:56:18 <thaytan>       that might cause deadlocks?
+Feb 22 01:56:35 <thaytan>       my understanding is that the python interpreter is single-threaded only
+Feb 22 01:56:47 <jdahlin>       no, it can be multi-threaded
+Feb 22 01:56:59 <jdahlin>       but we'll probably have interesting issues
+Feb 22 01:57:16 <thaytan>       so nautilus already does something like this, you say?
+Feb 22 01:57:20 <jdahlin>       actually it's not supported to have multiple python interpreters in the same process
+Feb 22 01:57:33 <jdahlin>       yes, it reuses the interpreter state for all plugins/modules
+Feb 22 01:57:55 <thaytan>       we should check that out
+Feb 22 01:58:08 *       jdahlin wrote that code
+Feb 22 01:58:22 <jdahlin>       but it's mainly a proof of concept
+Feb 22 01:58:47 <thaytan>       oh, heh
+Feb 22 01:59:02 <thaytan>       I guess you already know the gist of it then
+Feb 22 01:59:23 <jdahlin>       actually, when it comes to threads I usually start crying
+Feb 22 01:59:32 <thaytan>       yah, but you're a sensitive man
+Feb 22 01:59:44 <jdahlin>       yes
+Feb 22 01:59:51 <thaytan>       I heard you cried over the bit in terminator 2 where arnie goes into the molten metal
+Feb 22 01:59:53 <jdahlin>       we need real men like wtay to help us
+Feb 22 02:00:14 <jdahlin>       yes, that is such a sad moment
+Feb 22 02:00:31 <thaytan>       *giggle*
+Feb 22 02:00:48 <thaytan>       and I'm all like 'hah! take that Eddie Furlong!'
+Feb 22 02:02:03 <jdahlin>       actually I can't remember, since it was a long time ago I saw the movie the first time
+Feb 22 02:23:17 <thaytan>       jdahlin: so python-nautilus seems to bail out if python is already instantiated?
+Feb 22 02:23:33 <jdahlin>       thaytan: perhaps, proof of concept :)
+Feb 22 02:37:41 <thaytan>       jdahlin: how do I physically register a python-implemented class from C?
+Feb 22 02:38:11 <thaytan>       sorry, I mean how do I get a GType that creates a python object?
+Feb 22 02:39:20 <thaytan>       or alternatively, load a python file in the interpreter and give it a GstPlugin * so it can call gst.element_register for each element it implements
+Feb 22 02:41:33 <jdahlin>       thaytan: you'll register the class in python (gobject.type_register)
+Feb 22 02:41:54 <jdahlin>       which will create a PyGType and a GType
+Feb 22 02:42:16 <thaytan>       ok, so we need the second method
+Feb 22 02:42:39 <thaytan>       the .py file implements a plugin_init function for us to pass a GstPlugin instance to
+Feb 22 02:43:31 <thaytan>       thomasvs: woah, how far behind am I?
+Feb 22 02:43:43 <thaytan>       thomasvs: in my stream, Uraeus just said the 'basically' stuff
+Feb 22 02:47:49 <jdahlin>       thaytan: no, it's fine to register the plugin in python, then we can just introspect and get a list of all classes subclassed from say gst.Element
+Feb 22 02:50:02 <thaytan>       jdahlin: I'm wondering how it works: I write a C plugin that instantiates a python interpreter in the plugin_init function, and then iterates a directory of .py files as python-nautilus does
+Feb 22 02:50:47 <thaytan>       it finds the plugin_init function inside each .py file, and needs to call it, passing a python-wrapper something or other for the GstPlugin * it was given
+Feb 22 02:51:11 <thaytan>       how do I go from an existing GstPlugin * to something I can pass to python?
+Feb 22 02:52:33 <thaytan>       is that what nautilus_python_object_get_type is doing?
+Feb 22 02:52:59 <thaytan>       ds: so you just have to carefully avoid symbol collisions between 0.3 and 0.4?
+Feb 22 02:53:38 <jdahlin>       thaytan: no, there is no plugin_init, that's the global part of the module in python
+Feb 22 02:55:05 <jdahlin>       thaytan: the GstPlugin would in this case never be seen from the python code; you would just have global variables, __plugin__, __version__ etc
+
+
+Feb 22 04:05:23 <jdahlin>       thaytan: no, the registration code is called from python
+Feb 22 04:06:02 <thaytan>       I'm trying to figure out a simpler problem
+Feb 22 04:06:17 <thaytan>       well, one earlier in the chain - how to allow GstElements that are implemented in python
+Feb 22 04:06:40 <jdahlin>       it's the same problem!
+Feb 22 04:06:42 <thaytan>       at the moment it seems I can't derive a GstElement in python and have it work?
+Feb 22 04:06:55 <jdahlin>       well, sort of
+Feb 22 04:07:02 <--     caro has quit ("using sirc version 2.211+KSIRC/1.3.10")
+Feb 22 04:07:08 <jdahlin>       that needs some work, without doubts
+Feb 22 04:07:13 <thaytan>       yes, sort of - creating a derived Gstelement is one problem
+Feb 22 04:07:18 <thaytan>       registering it is another
+Feb 22 04:07:41 <thaytan>       I was just reading through pygtk and trying to understand
+Feb 22 04:07:48 <jdahlin>       I did implement something that I used as a filesrc
+Feb 22 04:07:54 <jdahlin>       in pure python at some point
+Feb 22 04:08:03 <thaytan>       how do you specify, say, the state_change handler?
+Feb 22 04:08:05 <jdahlin>       but most of the functions in GstElement and GstPad are not implemented
+Feb 22 04:08:13 <jdahlin>       I didn't
+Feb 22 04:08:14 <jdahlin>       :D
+Feb 22 04:08:22 <thaytan>       aha :)
+Feb 22 04:08:37 <jdahlin>       thaytan: examples/gst/filesrc.py
+Feb 22 04:08:46 <thaytan>       I'm trying to figure out how GObject class function pointers get mapped to Python
+Feb 22 04:08:48 <jdahlin>       just a get_function on the source bad
+Feb 22 04:08:52 <jdahlin>       pad
+Feb 22 04:09:22 <thaytan>       gst_element_set_state becomes gst.Element.set_state, which is clear enough
+Feb 22 04:09:46 <thaytan>       but what happens if set_state is also a class method you want to override?
+Feb 22 04:10:18 <jdahlin>       in pygtk 2.5.x and higher you can do that
+Feb 22 04:10:27 <jdahlin>       It'll be prefixed by do_
+Feb 22 04:10:52 <thaytan>       and there's a gst_element_do_set_state() and a 'set_state' function ptr?
+Feb 22 04:10:58 <thaytan>       and _if_ theres...
+Feb 22 04:11:23 <jdahlin>       tough luck.
+Feb 22 04:11:48 <jdahlin>       well, seriously
+Feb 22 04:11:55 <jdahlin>       then do_set_state will be renamed in the python bindings.
+Feb 22 04:19:15 <thaytan>       jdahlin: so ok, our step 1 is to enhance pygst to support all the class methods
+Feb 22 04:22:30 <jdahlin>       thaytan: that is easy, we need to update the defs file and add virtuals methods. then we need to require pygtk 2.6.0 when it's out (in a few weeks, maximum)
+Feb 22 04:31:05 <thaytan>       jdahlin: what does a virtual defn look like in a .defs file?
+Feb 22 04:31:20 <jdahlin>       thaytan: not sure, look in pygtk cvs head
+Feb 22 04:31:24 *       jdahlin didn't write that code
+Feb 22 04:31:34 <thaytan>       I've got 2.5.3 - not recent enough?
+Feb 22 04:31:41 <jdahlin>       yeah, it is
+Feb 22 04:34:38 <thaytan>       jdahlin: aha found it. seems simple enough
+Feb 22 04:34:40 <thaytan>       (define-virtual pressed
+Feb 22 04:34:40 <thaytan>         (of-object "GtkButton")
+Feb 22 04:34:40 <thaytan>         (return-type "none")
+Feb 22 04:34:40 <thaytan>       )
+
