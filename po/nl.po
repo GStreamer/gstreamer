@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-02-23 13:35+0100\n"
+"POT-Creation-Date: 2005-04-22 13:33-0700\n"
 "PO-Revision-Date: 2004-08-05 16:26+0200\n"
 "Last-Translator: Elros Cyriatan <cyriatan@fastmail.fm>\n"
 "Language-Team: Dutch <vertaling@nl.linux.org>\n"
@@ -72,16 +72,6 @@ msgstr ""
 msgid "Could not open CD device for reading."
 msgstr "Kon het CD-apparaat niet openen om te lezen."
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1157
-#, c-format
-msgid "Could not open vfs file \"%s\" for reading."
-msgstr "Kon het VFS-bestand \"%s\" niet openen om te lezen."
-
-#: ext/gnomevfs/gstgnomevfssrc.c:1165
-#, fuzzy
-msgid "No filename given."
-msgstr "Geen bestandsnaam opgegeven"
-
 #: ext/gnomevfs/gstgnomevfssink.c:432
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
@@ -96,7 +86,7 @@ msgstr "Geen bestandsnaam opgegeven"
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kon het VFS-bestand \"%s\" niet sluiten."
 
-#: gst-libs/gst/play/play.c:719
+#: gst-libs/gst/play/play.c:731
 msgid "Failed to create playbin object"
 msgstr ""
 
@@ -121,6 +111,13 @@ msgstr "Apparaat is niet geopend."
 #: sys/v4l/v4l_calls.h:59
 msgid "Device is open."
 msgstr "Apparaat is geopend."
+
+#~ msgid "Could not open vfs file \"%s\" for reading."
+#~ msgstr "Kon het VFS-bestand \"%s\" niet openen om te lezen."
+
+#, fuzzy
+#~ msgid "No filename given."
+#~ msgstr "Geen bestandsnaam opgegeven"
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Kon \"%s\" niet openen om te schrijven."

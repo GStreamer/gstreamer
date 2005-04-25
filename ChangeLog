@@ -1,5 +1,31 @@
 2005-04-24  David Schleef  <ds@schleef.org>
 
+	Link plugins against libraries:
+	* ext/alsa/Makefile.am:
+	* gst/tcp/Makefile.am:
+
+	Remove asm code that should be in liboil
+	* gst/videoscale/Makefile.am:
+	* gst/videoscale/videoscale_x86_asm.s:
+
+	gettext wants these checked in:
+	* po/af.po:
+	* po/az.po:
+	* po/cs.po:
+	* po/en_GB.po:
+	* po/hu.po:
+	* po/it.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/uk.po:
+	* po/vi.po:
+
+2005-04-24  David Schleef  <ds@schleef.org>
+
 	Convert gst_main() to g_main_loop_run()
 	* gst/playback/decodetest.c: (main):
 	* gst/playback/test2.c: (main):

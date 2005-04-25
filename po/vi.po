@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-02-23 13:35+0100\n"
+"POT-Creation-Date: 2005-04-22 13:33-0700\n"
 "PO-Revision-Date: 2005-01-22 17:17+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net> \n"
@@ -73,16 +73,6 @@ msgstr ""
 msgid "Could not open CD device for reading."
 msgstr "Đã không mở được thiết bị CD để đọc"
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1157
-#, c-format
-msgid "Could not open vfs file \"%s\" for reading."
-msgstr "Đã không mở được tập tin vfs \"%s\" để đọc."
-
-#: ext/gnomevfs/gstgnomevfssrc.c:1165
-#, fuzzy
-msgid "No filename given."
-msgstr "Chưa nhập tên tập tin "
-
 #: ext/gnomevfs/gstgnomevfssink.c:432
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
@@ -97,7 +87,7 @@ msgstr "Chưa nhập tên tập tin "
 msgid "Could not close vfs file \"%s\"."
 msgstr "Đã không đóng được tập tin vfs \"%s\"."
 
-#: gst-libs/gst/play/play.c:719
+#: gst-libs/gst/play/play.c:731
 msgid "Failed to create playbin object"
 msgstr ""
 
@@ -122,6 +112,13 @@ msgstr "Thiết bị chưa mở"
 #: sys/v4l/v4l_calls.h:59
 msgid "Device is open."
 msgstr "Thiết bị mở rồi"
+
+#~ msgid "Could not open vfs file \"%s\" for reading."
+#~ msgstr "Đã không mở được tập tin vfs \"%s\" để đọc."
+
+#, fuzzy
+#~ msgid "No filename given."
+#~ msgstr "Chưa nhập tên tập tin "
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Đã không mở được tập tin \"%s\" để ghi."

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-02-23 13:35+0100\n"
+"POT-Creation-Date: 2005-04-22 13:33-0700\n"
 "PO-Revision-Date: 2004-10-04 15:54+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@broadpark.no>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -71,15 +71,6 @@ msgstr ""
 msgid "Could not open CD device for reading."
 msgstr "Kunne ikke åpne CD-enheten for lesing."
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1157
-#, c-format
-msgid "Could not open vfs file \"%s\" for reading."
-msgstr "Kunne ikke åpne VFS-fil «%s» for lesing."
-
-#: ext/gnomevfs/gstgnomevfssrc.c:1165
-msgid "No filename given."
-msgstr "Ingen filnavn oppgitt."
-
 #: ext/gnomevfs/gstgnomevfssink.c:432
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
@@ -94,7 +85,7 @@ msgstr "Ingen filnavn oppgitt"
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kunne ikke lukke VFS-fil «%s»."
 
-#: gst-libs/gst/play/play.c:719
+#: gst-libs/gst/play/play.c:731
 msgid "Failed to create playbin object"
 msgstr ""
 
@@ -119,6 +110,12 @@ msgstr "Enheten er ikke åpen."
 #: sys/v4l/v4l_calls.h:59
 msgid "Device is open."
 msgstr "Enheten er åpen."
+
+#~ msgid "Could not open vfs file \"%s\" for reading."
+#~ msgstr "Kunne ikke åpne VFS-fil «%s» for lesing."
+
+#~ msgid "No filename given."
+#~ msgstr "Ingen filnavn oppgitt."
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Kunne ikke åpne filen «%s» for skriving."

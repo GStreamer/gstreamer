@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-02-23 13:35+0100\n"
+"POT-Creation-Date: 2005-04-22 13:33-0700\n"
 "PO-Revision-Date: 2004-07-18 11:03+0200\n"
 "Last-Translator: Laszlo Dvornik <dvornik@invitel.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -71,16 +71,6 @@ msgstr ""
 msgid "Could not open CD device for reading."
 msgstr "Nem lehet olvasásra megnyitni a CD-eszközt."
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1157
-#, c-format
-msgid "Could not open vfs file \"%s\" for reading."
-msgstr "Nem lehet olvasásra megnyitni a(z) \"%s\" vfs-fájlt."
-
-#: ext/gnomevfs/gstgnomevfssrc.c:1165
-#, fuzzy
-msgid "No filename given."
-msgstr "Nincs fájlnév megadva"
-
 #: ext/gnomevfs/gstgnomevfssink.c:432
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
@@ -95,7 +85,7 @@ msgstr "Nincs fájlnév megadva"
 msgid "Could not close vfs file \"%s\"."
 msgstr "Nem lehet bezárni a(z) \"%s\" vfs-fájlt."
 
-#: gst-libs/gst/play/play.c:719
+#: gst-libs/gst/play/play.c:731
 msgid "Failed to create playbin object"
 msgstr ""
 
@@ -120,6 +110,13 @@ msgstr "Az eszköz nincs nyitva."
 #: sys/v4l/v4l_calls.h:59
 msgid "Device is open."
 msgstr "Az eszköz nyitva van."
+
+#~ msgid "Could not open vfs file \"%s\" for reading."
+#~ msgstr "Nem lehet olvasásra megnyitni a(z) \"%s\" vfs-fájlt."
+
+#, fuzzy
+#~ msgid "No filename given."
+#~ msgstr "Nincs fájlnév megadva"
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Nem lehet írásra megnyitni a(z) \"%s\" fájlt."
