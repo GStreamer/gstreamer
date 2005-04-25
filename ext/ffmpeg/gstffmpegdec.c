@@ -778,22 +778,24 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
 static void
 gst_ffmpegdec_handle_event (GstFFMpegDec * ffmpegdec, GstEvent * event)
 {
+  GstFFMpegDecClass *oclass =
+      (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+
   GST_DEBUG_OBJECT (ffmpegdec,
       "Handling event of type %d", GST_EVENT_TYPE (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_EOS: {
-      gint have_data, len, try = 0;
-
-      /* max. 10 times, for safety (see e.g. #300200) */
-      do {
-        len = gst_ffmpegdec_frame (ffmpegdec, NULL, 0, &have_data,
-            &ffmpegdec->next_ts);
-        if (len < 0 || have_data == 0)
-          break;
-      } while (try++ < 10);
+    case GST_EVENT_EOS:
+      if (oclass->in_plugin->capabilities & CODEC_CAP_DELAY) {
+        gint have_data, len, try = 0;
+        do {
+          len = gst_ffmpegdec_frame (ffmpegdec, NULL, 0, &have_data,
+              &ffmpegdec->next_ts);
+          if (len < 0 || have_data == 0)
+            break;
+        } while (try++ < 10);
+      }
       goto forward;
-    }
     case GST_EVENT_FLUSH:
       if (ffmpegdec->opened) {
         avcodec_flush_buffers (ffmpegdec->context);

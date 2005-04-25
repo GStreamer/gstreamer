@@ -1,3 +1,8 @@
+2005-04-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_handle_event):
+	  Use CODEC_CAP_DELAY and remove max-10-delayed-frames hack.
+
 2005-04-23  Luca Ognibene  <luogni@tin.it>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
