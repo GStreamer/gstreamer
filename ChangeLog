@@ -1,3 +1,16 @@
+2005-04-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/autoplug/.cvsignore:
+	* gst/autoplug/Makefile.am:
+	* gst/autoplug/gstsearchfuncs.c:
+	* gst/autoplug/gstsearchfuncs.h:
+	* gst/autoplug/gstspider.c:
+	* gst/autoplug/gstspider.h:
+	* gst/autoplug/gstspideridentity.c:
+	* gst/autoplug/gstspideridentity.h:
+	* gst/autoplug/spidertest.c:
+	  Die, spider, die.
+
 2005-04-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstpad.c: (gst_pad_set_active), (gst_pad_peer_set_active),
