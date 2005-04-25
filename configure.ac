@@ -930,8 +930,6 @@ pkgconfig/gstreamer-interfaces.pc
 pkgconfig/gstreamer-interfaces-uninstalled.pc
 pkgconfig/gstreamer-libs.pc
 pkgconfig/gstreamer-libs-uninstalled.pc
-pkgconfig/gstreamer-media-info.pc
-pkgconfig/gstreamer-media-info-uninstalled.pc
 pkgconfig/gstreamer-plugins.pc
 pkgconfig/gstreamer-plugins-uninstalled.pc
 po/Makefile.in

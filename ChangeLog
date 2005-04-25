@@ -1,3 +1,10 @@
+2005-04-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* gst/audioconvert/Makefile.am:
+	* gst/audioscale/Makefile.am:
+	  Fix part of the build.  Come on guys, autogen didn't even work :)
+
 2005-04-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* configure.ac:

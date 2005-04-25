@@ -18,7 +18,7 @@ noinst_HEADERS = \
 #TESTS = channelmixtest
 #noinst_PROGRAMS = channelmixtest
 
-channelmixtest_CFLAGS = $(GST_CFLAGS)
-channelmixtest_LDADD = libgstaudioconvert.la \
-	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la
-channelmixtest_LDFLAGS = $(GST_LIBS)
+#channelmixtest_CFLAGS = $(GST_CFLAGS)
+#channelmixtest_LDADD = libgstaudioconvert.la \
+#	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la
+#channelmixtest_LDFLAGS = $(GST_LIBS)
