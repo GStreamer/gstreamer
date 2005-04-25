@@ -1,5 +1,17 @@
 2005-04-24  David Schleef  <ds@schleef.org>
 
+	Convert gst_main() to g_main_loop_run()
+	* gst/playback/decodetest.c: (main):
+	* gst/playback/test2.c: (main):
+	* gst/playback/test3.c: (main):
+	* gst/playback/test4.c: (main):
+
+	Link plugins against libraries:
+	* ext/libvisual/Makefile.am:
+	* sys/xvimage/Makefile.am:
+
+2005-04-24  David Schleef  <ds@schleef.org>
+
 	* configure.ac: Remove idct and resample libs
 	* gst-libs/gst/Makefile.am: same
 

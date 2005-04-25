@@ -56,7 +56,7 @@ main (gint argc, gchar * argv[])
 
   g_timeout_add (UPDATE_INTERVAL, (GSourceFunc) update_scale, player);
 
-  gst_main ();
+  g_main_loop_run (g_main_loop_new (NULL, TRUE));
 
   return 0;
 }

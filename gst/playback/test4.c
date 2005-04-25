@@ -85,7 +85,7 @@ main (gint argc, gchar * argv[])
     return -1;
   }
 
-  gst_main ();
+  g_main_loop_run (g_main_loop_new (NULL, TRUE));
 
   return 0;
 }
