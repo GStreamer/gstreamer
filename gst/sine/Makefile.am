@@ -8,11 +8,3 @@ libgstsinesrc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstsinesrc.h
 
-if HAVE_GTK
-noinst_PROGRAMS = demo_dparams
-endif
-
-demo_dparams_SOURCES = demo-dparams.c
-## putting GTK in front solves a bad compilation problem
-demo_dparams_CFLAGS  = $(GTK_CFLAGS) $(GST_CFLAGS) 
-demo_dparams_LDFLAGS = $(GST_LIBS) $(GTK_LIBS) $(GST_CONTROL_LIBS)
