@@ -110,7 +110,9 @@ gst_trash_stack_pop (GstTrashStack *stack)
     "  incl %%ecx;              \n\t"	/* and increment */
     SMP_LOCK "cmpxchg8b %1;     \n\t"	/* if eax:edx == *stack, move ebx:ecx to *stack,
 					 * else *stack is moved into eax:edx again... */
-    "  jnz 10b;                 \n\t"	/* ... and we retry */
+    "  jz 20f;                  \n\t"   /* success */
+    "  testl %%eax, %%eax;      \n\t"   /* if (head == NULL) return */
+    "  jnz 10b;                 \n\t"   /* else we retry */
     "20:                        \n\t"
     "  popl %%ebx               \n"
       : "=a" (head)

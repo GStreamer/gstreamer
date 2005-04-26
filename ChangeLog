@@ -1,3 +1,10 @@
+2005-04-26  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gsttrashstack.h:
+	Ooohh. a nasty one! After having a failed pop() from the stack,
+	it's possible that the stack is empty. In that case, don't
+	follow the NULL pointer.
+
 2005-04-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstpad.c: (gst_pad_set_active), (gst_pad_peer_set_active),
