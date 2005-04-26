@@ -1,3 +1,7 @@
+2005-04-26  Johan Dahlin  <jdahlin@async.com.br>
+
+	* testsuite/runtests.py: Return exit code 1 if we have any failures
+
 2005-04-26  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstbuffer.override:

@@ -22,4 +22,6 @@ for name in gettestnames():
     suite.addTest(loader.loadTestsFromName(name))
     
 testRunner = unittest.TextTestRunner()
-testRunner.run(suite)
+result = testRunner.run(suite)
+if result.failures:
+    sys.exit(1)
