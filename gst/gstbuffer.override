@@ -53,10 +53,16 @@ _wrap_gst_buffer_new(PyGBoxed *self, PyObject *args, PyObject *kwargs)
 		PyErr_SetString(PyExc_TypeError, "buffer size must be >= 0");
 		return -1;
 	}
+	if (buf_size < 0)
+		buf_size = size;
+	if (buf_size < size) {
+		PyErr_SetString(PyExc_TypeError, "buffer size must be >= data size");
+		return -1;
+	}
 	self->gtype = GST_TYPE_BUFFER;
 	self->free_on_dealloc = FALSE;
 	
-	self->boxed = gst_buffer_new_and_alloc(buf_size > size ? buf_size : size);
+	self->boxed = gst_buffer_new_and_alloc(buf_size);
 	
 	if (!self->boxed) {
 		PyErr_SetString(PyExc_RuntimeError, "could not create GstBuffer object");
