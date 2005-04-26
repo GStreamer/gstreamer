@@ -324,12 +324,10 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
     oclass->elementfactory = factory;
 
   /* create an instance of the element */
-  element = GST_ELEMENT (g_object_new (factory->type, NULL));
+  element = GST_ELEMENT (g_object_new (factory->type, "name", name, NULL));
   g_assert (element != NULL);
 
   g_type_class_unref (oclass);
-
-  gst_object_set_name (GST_OBJECT (element), name);
 
   return element;
 }

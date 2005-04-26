@@ -1,3 +1,13 @@
+2005-04-26  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstelementfactory.c: (gst_element_factory_create):
+	* gst/gstobject.c: (gst_object_class_init):
+	  make the name property a construct property, so objects always have
+	  a proper name.
+	* gst/gstobject.c: (gst_object_set_name_default), 
+	(gst_object_set_name):
+	  fix potential doublefree when resetting a name to its default value
+
 2005-04-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* tests/sched/runxml.c: (main):

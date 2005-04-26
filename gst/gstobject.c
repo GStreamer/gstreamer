@@ -135,7 +135,7 @@ gst_object_class_init (GstObjectClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NAME,
       g_param_spec_string ("name", "Name", "The name of the object",
-          NULL, G_PARAM_READWRITE));
+          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   gst_object_signals[PARENT_SET] =
       g_signal_new ("parent-set", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -463,8 +463,7 @@ gst_object_set_name_default (GstObject * object)
   name = g_ascii_strdown (tmp, strlen (tmp));
   g_free (tmp);
 
-  gst_object_set_name (object, name);
-  g_free (name);
+  object->name = name;
 }
 
 /**
@@ -488,6 +487,8 @@ gst_object_set_name (GstObject * object, const gchar * name)
     object->name = g_strdup (name);
   else
     gst_object_set_name_default (object);
+
+  g_object_notify (G_OBJECT (object), "name");
 }
 
 /**
