@@ -1,3 +1,9 @@
+2005-04-27  Wim Taymans  <wim@fluendo.com>
+
+	* check/gst/gstobject.c: (START_TEST), (gst_object_suite):
+	* check/gst/gstpad.c: (gst_pad_suite):
+	Increase timeout for checks.
+
 2005-04-27  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* check/Makefile.am:

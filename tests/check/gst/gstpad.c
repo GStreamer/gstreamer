@@ -93,6 +93,9 @@ gst_pad_suite (void)
   Suite *s = suite_create ("GstPad");
   TCase *tc_chain = tcase_create ("general");
 
+  /* turn off timeout */
+  tcase_set_timeout (tc_chain, 60);
+
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_link);
   tcase_add_test (tc_chain, test_link_unlink_threaded);

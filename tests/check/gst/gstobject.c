@@ -438,6 +438,9 @@ END_TEST
   Suite *s = suite_create ("GstObject");
   TCase *tc_chain = tcase_create ("general");
 
+  /* turn off timeout */
+  tcase_set_timeout (tc_chain, 60);
+
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_fake_object_new);
   tcase_add_test (tc_chain, test_fake_object_name);
