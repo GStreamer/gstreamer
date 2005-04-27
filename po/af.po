@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-03-29 15:32+0200\n"
+"POT-Creation-Date: 2005-04-27 13:47+0200\n"
 "PO-Revision-Date: 2004-03-24 11:28+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -588,42 +588,47 @@ msgstr "Fout met toemaak van lêer \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Fout tydens skryf na lêer \"%s\"."
 
-#: gst/elements/gstfilesrc.c:800 gst/elements/gstmultifilesrc.c:295
+#: gst/elements/gstfilesrc.c:795 gst/elements/gstmultifilesrc.c:295
 msgid "No file name specified for reading."
 msgstr "Geen lêernaam om uit te lees nie."
 
-#: gst/elements/gstfilesrc.c:815 gst/elements/gstmultifilesrc.c:303
+#: gst/elements/gstfilesrc.c:807 gst/elements/gstmultifilesrc.c:303
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kon nie lêer \"%s\" oopmaak om te lees nie."
 
-#: gst/elements/gstfilesrc.c:826
+#: gst/elements/gstfilesrc.c:816
+#, fuzzy, c-format
+msgid "could not get info on \"%s\"."
+msgstr "Kon nie %s aan %s verbind nie"
+
+#: gst/elements/gstfilesrc.c:823
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr ""
 
-#: gst/elements/gstfilesrc.c:832
+#: gst/elements/gstfilesrc.c:830
 #, fuzzy, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Lêer \"%s\" is nie 'n gewone lêer nie."
 
-#: gst/elements/gstidentity.c:534
+#: gst/elements/gstidentity.c:282
 msgid "Failed after iterations as requested."
 msgstr "Mislukking na die vasgestelde aantal probeerslae."
 
-#: gst/elements/gsttypefindelement.c:157
+#: gst/elements/gsttypefindelement.c:178
 msgid "caps"
 msgstr "caps"
 
-#: gst/elements/gsttypefindelement.c:158
+#: gst/elements/gsttypefindelement.c:179
 msgid "detected capabilities in stream"
 msgstr "vermoëns wat bespeur kon word in die stroom"
 
-#: gst/elements/gsttypefindelement.c:161
+#: gst/elements/gsttypefindelement.c:182
 msgid "minimum"
 msgstr "minimum"
 
-#: gst/elements/gsttypefindelement.c:165
+#: gst/elements/gsttypefindelement.c:186
 msgid "maximum"
 msgstr "maksimum"
 
@@ -647,51 +652,51 @@ msgstr "Geen eienskap \"%s\" in element \"%s\""
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "kon nie eienskap \"%s\" in element \"%s\" stel na \"%s\" nie"
 
-#: gst/parse/grammar.y:489
+#: gst/parse/grammar.y:488
 #, c-format
 msgid "could not link %s to %s"
 msgstr "Kon nie %s aan %s verbind nie"
 
-#: gst/parse/grammar.y:534
+#: gst/parse/grammar.y:533
 #, c-format
 msgid "no element \"%s\""
 msgstr "geen element \"%s\""
 
-#: gst/parse/grammar.y:585
+#: gst/parse/grammar.y:584
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "kon nie caps \"%s\" ontleed nie"
 
-#: gst/parse/grammar.y:607 gst/parse/grammar.y:655 gst/parse/grammar.y:671
-#: gst/parse/grammar.y:729
+#: gst/parse/grammar.y:606 gst/parse/grammar.y:654 gst/parse/grammar.y:670
+#: gst/parse/grammar.y:728
 msgid "link without source element"
 msgstr "verbinding sonder bron-element"
 
-#: gst/parse/grammar.y:613 gst/parse/grammar.y:652 gst/parse/grammar.y:738
+#: gst/parse/grammar.y:612 gst/parse/grammar.y:651 gst/parse/grammar.y:737
 msgid "link without sink element"
 msgstr "verbinding sonder bestemming-element"
 
-#: gst/parse/grammar.y:689
+#: gst/parse/grammar.y:688
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "geen bronelement vir URI \"%s\""
 
-#: gst/parse/grammar.y:699
+#: gst/parse/grammar.y:698
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "geen element vir URI \"%s\" om heen te skakel nie"
 
-#: gst/parse/grammar.y:707
+#: gst/parse/grammar.y:706
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "geen bestemming-element vir URI \"%s\""
 
-#: gst/parse/grammar.y:711
+#: gst/parse/grammar.y:710
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "kon nie aan bestemming-element vir  URI \"%s\" verbind nie"
 
-#: gst/parse/grammar.y:723
+#: gst/parse/grammar.y:722
 msgid "empty pipeline not allowed"
 msgstr "leë pyplyn word nie toegelaat nie"
 

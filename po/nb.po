@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-03-29 15:32+0200\n"
+"POT-Creation-Date: 2005-04-27 13:47+0200\n"
 "PO-Revision-Date: 2005-02-17 12:00+0100\n"
 "Last-Translator: Kjartan Maraas <kmaraas@broadpark.no>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -568,42 +568,47 @@ msgstr "Feil ved lukking av fil «%s»."
 msgid "Error while writing to file \"%s\"."
 msgstr "Feil ved skriving til fil «%s»."
 
-#: gst/elements/gstfilesrc.c:800 gst/elements/gstmultifilesrc.c:295
+#: gst/elements/gstfilesrc.c:795 gst/elements/gstmultifilesrc.c:295
 msgid "No file name specified for reading."
 msgstr "Ingen filnavn oppgitt for lesing."
 
-#: gst/elements/gstfilesrc.c:815 gst/elements/gstmultifilesrc.c:303
+#: gst/elements/gstfilesrc.c:807 gst/elements/gstmultifilesrc.c:303
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunne ikke åpne fil «%s» for lesing."
 
-#: gst/elements/gstfilesrc.c:826
+#: gst/elements/gstfilesrc.c:816
+#, fuzzy, c-format
+msgid "could not get info on \"%s\"."
+msgstr "Kunne ikke hente/sette innstillinger fra/på ressurs."
+
+#: gst/elements/gstfilesrc.c:823
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "«%s» er en katalog."
 
-#: gst/elements/gstfilesrc.c:832
+#: gst/elements/gstfilesrc.c:830
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Fil «%s» er en plugg."
 
-#: gst/elements/gstidentity.c:534
+#: gst/elements/gstidentity.c:282
 msgid "Failed after iterations as requested."
 msgstr ""
 
-#: gst/elements/gsttypefindelement.c:157
+#: gst/elements/gsttypefindelement.c:178
 msgid "caps"
 msgstr ""
 
-#: gst/elements/gsttypefindelement.c:158
+#: gst/elements/gsttypefindelement.c:179
 msgid "detected capabilities in stream"
 msgstr ""
 
-#: gst/elements/gsttypefindelement.c:161
+#: gst/elements/gsttypefindelement.c:182
 msgid "minimum"
 msgstr "minimum"
 
-#: gst/elements/gsttypefindelement.c:165
+#: gst/elements/gsttypefindelement.c:186
 msgid "maximum"
 msgstr "maksimum"
 
@@ -627,51 +632,51 @@ msgstr ""
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr ""
 
-#: gst/parse/grammar.y:489
+#: gst/parse/grammar.y:488
 #, c-format
 msgid "could not link %s to %s"
 msgstr ""
 
-#: gst/parse/grammar.y:534
+#: gst/parse/grammar.y:533
 #, c-format
 msgid "no element \"%s\""
 msgstr "ingen element «%s»"
 
-#: gst/parse/grammar.y:585
+#: gst/parse/grammar.y:584
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr ""
 
-#: gst/parse/grammar.y:607 gst/parse/grammar.y:655 gst/parse/grammar.y:671
-#: gst/parse/grammar.y:729
+#: gst/parse/grammar.y:606 gst/parse/grammar.y:654 gst/parse/grammar.y:670
+#: gst/parse/grammar.y:728
 msgid "link without source element"
 msgstr ""
 
-#: gst/parse/grammar.y:613 gst/parse/grammar.y:652 gst/parse/grammar.y:738
+#: gst/parse/grammar.y:612 gst/parse/grammar.y:651 gst/parse/grammar.y:737
 msgid "link without sink element"
 msgstr ""
 
-#: gst/parse/grammar.y:689
+#: gst/parse/grammar.y:688
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr ""
 
-#: gst/parse/grammar.y:699
+#: gst/parse/grammar.y:698
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr ""
 
-#: gst/parse/grammar.y:707
+#: gst/parse/grammar.y:706
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr ""
 
-#: gst/parse/grammar.y:711
+#: gst/parse/grammar.y:710
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr ""
 
-#: gst/parse/grammar.y:723
+#: gst/parse/grammar.y:722
 msgid "empty pipeline not allowed"
 msgstr ""
 

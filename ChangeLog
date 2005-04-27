@@ -1,3 +1,10 @@
+2005-04-27  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* check/Makefile.am:
+	  fix the broken rule for cleanup.  Apparently this rule is
+	  only needed on FC2, so maybe this warrants further autotool
+	  inspection.
+
 2005-04-26  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gsttrashstack.h:
