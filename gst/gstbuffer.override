@@ -60,7 +60,7 @@ _wrap_gst_buffer_new(PyGBoxed *self, PyObject *args, PyObject *kwargs)
 		return -1;
 	}
 	self->gtype = GST_TYPE_BUFFER;
-	self->free_on_dealloc = FALSE;
+	self->free_on_dealloc = TRUE;
 	
 	self->boxed = gst_buffer_new_and_alloc(buf_size);
 	
