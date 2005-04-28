@@ -252,7 +252,7 @@ vorbis_dec_src_query (GstPad * pad, GstQueryType query, GstFormat * format,
     return FALSE;
 
   GST_LOG_OBJECT (dec,
-      "query %u: peer returned granulepos: %llu - we return %llu (format %u)\n",
+      "query %u: peer returned granulepos: %llu - we return %llu (format %u)",
       query, granulepos, *value, *format);
   return TRUE;
 }
@@ -308,9 +308,16 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
             "setting granuleposition to %" G_GUINT64_FORMAT " after discont",
             start_value);
       } else {
-        GST_WARNING_OBJECT (dec,
-            "discont event didn't include offset, we might set it wrong now");
+        if (gst_event_discont_get_value (event, GST_FORMAT_TIME,
+                (gint64 *) & start_value, &end_value)) {
+          dec->granulepos = start_value * dec->vi.rate / GST_SECOND;
+        } else {
+          GST_WARNING_OBJECT (dec,
+              "discont event didn't include offset, we might set it wrong now");
+        }
       }
+
+
       if (dec->packetno < 3) {
         if (dec->granulepos != 0)
           GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
@@ -354,206 +361,314 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static GstFlowReturn
+vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
+{
+  gchar *encoder = NULL;
+  GstTagList *list;
+  GstBuffer *buf;
+
+  GST_DEBUG ("parsing comment packet");
+
+  buf = gst_buffer_new_and_alloc (packet->bytes);
+  GST_BUFFER_DATA (buf) = packet->packet;
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
+
+  list = gst_tag_list_from_vorbiscomment_buffer (buf, "\003vorbis", 7,
+      &encoder);
+
+  gst_buffer_unref (buf);
+
+  if (!list) {
+    GST_ERROR_OBJECT (vd, "couldn't decode comments");
+    list = gst_tag_list_new ();
+  }
+  if (encoder) {
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+        GST_TAG_ENCODER, encoder, NULL);
+    g_free (encoder);
+  }
+  gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+      GST_TAG_ENCODER_VERSION, vd->vi.version,
+      GST_TAG_AUDIO_CODEC, "Vorbis", NULL);
+  if (vd->vi.bitrate_upper > 0)
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+        GST_TAG_MAXIMUM_BITRATE, (guint) vd->vi.bitrate_upper, NULL);
+  if (vd->vi.bitrate_nominal > 0)
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+        GST_TAG_NOMINAL_BITRATE, (guint) vd->vi.bitrate_nominal, NULL);
+  if (vd->vi.bitrate_lower > 0)
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+        GST_TAG_MINIMUM_BITRATE, (guint) vd->vi.bitrate_lower, NULL);
+
+  //gst_element_found_tags_for_pad (GST_ELEMENT (vd), vd->srcpad, 0, list);
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+vorbis_handle_type_packet (GstVorbisDec * vd, ogg_packet * packet)
+{
+  GstCaps *caps;
+  const GstAudioChannelPosition *pos = NULL;
+
+  /* done */
+  vorbis_synthesis_init (&vd->vd, &vd->vi);
+  vorbis_block_init (&vd->vd, &vd->vb);
+  caps = gst_caps_new_simple ("audio/x-raw-float",
+      "rate", G_TYPE_INT, vd->vi.rate,
+      "channels", G_TYPE_INT, vd->vi.channels,
+      "endianness", G_TYPE_INT, G_BYTE_ORDER,
+      "width", G_TYPE_INT, 32, "buffer-frames", G_TYPE_INT, 0, NULL);
+
+  switch (vd->vi.channels) {
+    case 1:
+    case 2:
+      /* nothing */
+      break;
+    case 3:{
+      static GstAudioChannelPosition pos3[] = {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
+      };
+      pos = pos3;
+      break;
+    }
+    case 4:{
+      static GstAudioChannelPosition pos4[] = {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT
+      };
+      pos = pos4;
+      break;
+    }
+    case 5:{
+      static GstAudioChannelPosition pos5[] = {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT
+      };
+      pos = pos5;
+      break;
+    }
+    case 6:{
+      static GstAudioChannelPosition pos6[] = {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_LFE
+      };
+      pos = pos6;
+      break;
+    }
+    default:
+      goto channel_count_error;
+  }
+  if (pos) {
+    gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
+  }
+  gst_pad_set_caps (vd->srcpad, caps);
+  gst_caps_unref (caps);
+
+  vd->initialized = TRUE;
+
+  return GST_FLOW_OK;
+
+  /* ERROR */
+channel_count_error:
+  {
+    gst_caps_unref (caps);
+    GST_ELEMENT_ERROR (vd, STREAM, NOT_IMPLEMENTED, (NULL),
+        ("Unsupported channel count %d", vd->vi.channels));
+    return GST_FLOW_ERROR;
+  }
+}
+
+static GstFlowReturn
+vorbis_handle_header_packet (GstVorbisDec * vd, ogg_packet * packet)
+{
+  GstFlowReturn res;
+
+  if (packet->packet[0] / 2 != packet->packetno)
+    goto unexpected_packet;
+
+  GST_DEBUG ("parsing header packet");
+
+  /* Packetno = 0 if the first byte is exactly 0x01 */
+  packet->b_o_s = (packet->packet[0] == 0x1) ? 1 : 0;
+
+  if (vorbis_synthesis_headerin (&vd->vi, &vd->vc, packet))
+    goto header_read_error;
+
+  switch (packet->packetno) {
+    case 1:
+      res = vorbis_handle_comment_packet (vd, packet);
+      break;
+    case 2:
+      res = vorbis_handle_type_packet (vd, packet);
+      break;
+    default:
+      /* ignore */
+      res = GST_FLOW_OK;
+      break;
+  }
+  return res;
+
+  /* ERRORS */
+unexpected_packet:
+  {
+    /* FIXME: just skip? */
+    GST_WARNING_OBJECT (GST_ELEMENT (vd),
+        "unexpected packet type %d, expected %d",
+        (gint) packet->packet[0], (gint) packet->packetno);
+    return GST_FLOW_UNEXPECTED;
+  }
+header_read_error:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
+        (NULL), ("couldn't read header packet"));
+    return GST_FLOW_ERROR;
+  }
+}
+
+static void
+copy_samples (float *out, float **in, guint samples, gint channels)
+{
+  gint i, j;
+
+#ifdef GST_VORBIS_DEC_SEQUENTIAL
+  for (i = 0; i < channels; i++) {
+    memcpy (out, in[i], samples * sizeof (float));
+    out += samples;
+  }
+#else
+  for (j = 0; j < samples; j++) {
+    for (i = 0; i < channels; i++) {
+      *out++ = in[i][j];
+    }
+  }
+#endif
+}
+
+static GstFlowReturn
+vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
+{
+  float **pcm;
+  guint sample_count;
+  GstFlowReturn result;
+
+  if (!vd->initialized)
+    goto not_initialized;
+
+  /* normal data packet */
+  if (vorbis_synthesis (&vd->vb, packet))
+    goto could_not_read;
+
+  if (vorbis_synthesis_blockin (&vd->vd, &vd->vb) < 0)
+    goto not_accepted;
+
+  sample_count = vorbis_synthesis_pcmout (&vd->vd, &pcm);
+  if (sample_count > 0) {
+    GstBuffer *out;
+
+    out = gst_pad_alloc_buffer (vd->srcpad, GST_BUFFER_OFFSET_NONE,
+        sample_count * vd->vi.channels * sizeof (float),
+        GST_PAD_CAPS (vd->srcpad));
+
+    if (out != NULL) {
+      float *out_data = (float *) GST_BUFFER_DATA (out);
+
+      copy_samples (out_data, pcm, sample_count, vd->vi.channels);
+
+      GST_BUFFER_OFFSET (out) = vd->granulepos;
+      GST_BUFFER_OFFSET_END (out) = vd->granulepos + sample_count;
+      GST_BUFFER_TIMESTAMP (out) = vd->granulepos * GST_SECOND / vd->vi.rate;
+      GST_BUFFER_DURATION (out) = sample_count * GST_SECOND / vd->vi.rate;
+
+      result = gst_pad_push (vd->srcpad, out);
+
+      vd->granulepos += sample_count;
+    } else {
+      /* no buffer.. */
+      result = GST_FLOW_OK;
+    }
+    vorbis_synthesis_read (&vd->vd, sample_count);
+  } else {
+    /* no samples.. */
+    result = GST_FLOW_OK;
+  }
+
+  return result;
+
+  /* ERRORS */
+not_initialized:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
+        (NULL), ("no header sent yet (packet no is %d)", packet->packetno));
+    return GST_FLOW_ERROR;
+  }
+could_not_read:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
+        (NULL), ("couldn't read data packet"));
+    return GST_FLOW_ERROR;
+  }
+not_accepted:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
+        (NULL), ("vorbis decoder did not accept data packet"));
+    return GST_FLOW_ERROR;
+  }
+}
+
+static GstFlowReturn
 vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
 {
-  GstBuffer *buf = GST_BUFFER (buffer);
   GstVorbisDec *vd;
   ogg_packet packet;
   GstFlowReturn result = GST_FLOW_OK;
 
+  GST_STREAM_LOCK (pad);
+
   vd = GST_VORBIS_DEC (GST_PAD_PARENT (pad));
 
   /* make ogg_packet out of the buffer */
-  packet.packet = GST_BUFFER_DATA (buf);
-  packet.bytes = GST_BUFFER_SIZE (buf);
-  packet.granulepos = GST_BUFFER_OFFSET_END (buf);
+  packet.packet = GST_BUFFER_DATA (buffer);
+  packet.bytes = GST_BUFFER_SIZE (buffer);
+  packet.granulepos = GST_BUFFER_OFFSET_END (buffer);
   packet.packetno = vd->packetno++;
-
-  if (GST_BUFFER_OFFSET_END_IS_VALID (buf))
-    vd->granulepos = GST_BUFFER_OFFSET_END (buf);;
-
   /* 
    * FIXME. Is there anyway to know that this is the last packet and
    * set e_o_s??
    */
   packet.e_o_s = 0;
 
+  GST_DEBUG ("vorbis granule: %lld", packet.granulepos);
+
   /* switch depending on packet type */
   if (packet.packet[0] & 1) {
-    /* header packet */
-    if (packet.packet[0] / 2 != packet.packetno) {
-      /* FIXME: just skip? */
-      GST_WARNING_OBJECT (GST_ELEMENT (vd),
-          "unexpected packet type %d, expected %d",
-          (gint) packet.packet[0], (gint) packet.packetno);
-      gst_buffer_unref (buffer);
-      return GST_FLOW_UNEXPECTED;
+    if (packet.packetno > 3) {
+      GST_WARNING_OBJECT (vd, "Ignoring header");
+      goto done;
     }
-    /* Packetno = 0 if the first byte is exactly 0x01 */
-    packet.b_o_s = (packet.packet[0] == 0x1) ? 1 : 0;
-    if (vorbis_synthesis_headerin (&vd->vi, &vd->vc, &packet)) {
-      GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
-          (NULL), ("couldn't read header packet"));
-      gst_buffer_unref (buffer);
-      return GST_FLOW_ERROR;
-    }
-    if (packet.packetno == 1) {
-      gchar *encoder = NULL;
-      GstTagList *list =
-          gst_tag_list_from_vorbiscomment_buffer (buf, "\003vorbis", 7,
-          &encoder);
-
-      if (!list) {
-        GST_ERROR_OBJECT (vd, "couldn't decode comments");
-        list = gst_tag_list_new ();
-      }
-      if (encoder) {
-        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-            GST_TAG_ENCODER, encoder, NULL);
-        g_free (encoder);
-      }
-      gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-          GST_TAG_ENCODER_VERSION, vd->vi.version,
-          GST_TAG_AUDIO_CODEC, "Vorbis", NULL);
-      if (vd->vi.bitrate_upper > 0)
-        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-            GST_TAG_MAXIMUM_BITRATE, (guint) vd->vi.bitrate_upper, NULL);
-      if (vd->vi.bitrate_nominal > 0)
-        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-            GST_TAG_NOMINAL_BITRATE, (guint) vd->vi.bitrate_nominal, NULL);
-      if (vd->vi.bitrate_lower > 0)
-        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-            GST_TAG_MINIMUM_BITRATE, (guint) vd->vi.bitrate_lower, NULL);
-      //gst_element_found_tags_for_pad (GST_ELEMENT (vd), vd->srcpad, 0, list);
-    } else if (packet.packetno == 2) {
-      GstCaps *caps;
-      const GstAudioChannelPosition *pos = NULL;
-
-      /* done */
-      vorbis_synthesis_init (&vd->vd, &vd->vi);
-      vorbis_block_init (&vd->vd, &vd->vb);
-      caps = gst_caps_new_simple ("audio/x-raw-float",
-          "rate", G_TYPE_INT, vd->vi.rate,
-          "channels", G_TYPE_INT, vd->vi.channels,
-          "endianness", G_TYPE_INT, G_BYTE_ORDER,
-          "width", G_TYPE_INT, 32, "buffer-frames", G_TYPE_INT, 0, NULL);
-      switch (vd->vi.channels) {
-        case 1:
-        case 2:
-          /* nothing */
-          break;
-        case 3:{
-          static GstAudioChannelPosition pos3[] = {
-            GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-            GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-            GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
-          };
-          pos = pos3;
-          break;
-        }
-        case 4:{
-          static GstAudioChannelPosition pos4[] = {
-            GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-            GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-            GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-            GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT
-          };
-          pos = pos4;
-          break;
-        }
-        case 5:{
-          static GstAudioChannelPosition pos5[] = {
-            GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-            GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-            GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-            GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-            GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT
-          };
-          pos = pos5;
-          break;
-        }
-        case 6:{
-          static GstAudioChannelPosition pos6[] = {
-            GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-            GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-            GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-            GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-            GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-            GST_AUDIO_CHANNEL_POSITION_LFE
-          };
-          pos = pos6;
-          break;
-        }
-        default:
-          gst_buffer_unref (buffer);
-          gst_caps_unref (caps);
-          GST_ELEMENT_ERROR (vd, STREAM, NOT_IMPLEMENTED, (NULL),
-              ("Unsupported channel count %d", vd->vi.channels));
-          return GST_FLOW_ERROR;
-      }
-      if (pos) {
-        gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
-      }
-      gst_pad_set_caps (vd->srcpad, caps);
-      gst_caps_unref (caps);
-    }
+    result = vorbis_handle_header_packet (vd, &packet);
   } else {
-    float **pcm;
-    guint sample_count;
-
-    if (packet.packetno < 3) {
-      GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
-          (NULL), ("no header sent yet (packet no is %d)", packet.packetno));
-      gst_buffer_unref (buffer);
-      return GST_FLOW_ERROR;
-    }
-    /* normal data packet */
-    if (vorbis_synthesis (&vd->vb, &packet)) {
-      GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
-          (NULL), ("couldn't read data packet"));
-      gst_buffer_unref (buffer);
-      return GST_FLOW_ERROR;
-    }
-    if (vorbis_synthesis_blockin (&vd->vd, &vd->vb) < 0) {
-      GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
-          (NULL), ("vorbis decoder did not accept data packet"));
-      gst_buffer_unref (buffer);
-      return GST_FLOW_ERROR;
-    }
-    sample_count = vorbis_synthesis_pcmout (&vd->vd, &pcm);
-    if (sample_count > 0) {
-      int i, j;
-      GstBuffer *out = gst_pad_alloc_buffer (vd->srcpad, GST_BUFFER_OFFSET_NONE,
-          sample_count * vd->vi.channels * sizeof (float),
-          GST_PAD_CAPS (vd->srcpad));
-      float *out_data;
-
-      if (out != NULL) {
-        out_data = (float *) GST_BUFFER_DATA (out);
-
-#ifdef GST_VORBIS_DEC_SEQUENTIAL
-        for (i = 0; i < vd->vi.channels; i++) {
-          memcpy (out_data, pcm[i], sample_count * sizeof (float));
-          out_data += sample_count;
-        }
-#else
-        for (j = 0; j < sample_count; j++) {
-          for (i = 0; i < vd->vi.channels; i++) {
-            *out_data = pcm[i][j];
-            out_data++;
-          }
-        }
-#endif
-        GST_BUFFER_OFFSET (out) = vd->granulepos;
-        GST_BUFFER_OFFSET_END (out) = vd->granulepos + sample_count;
-        GST_BUFFER_TIMESTAMP (out) = vd->granulepos * GST_SECOND / vd->vi.rate;
-        GST_BUFFER_DURATION (out) = sample_count * GST_SECOND / vd->vi.rate;
-        result = gst_pad_push (vd->srcpad, out);
-        vd->granulepos += sample_count;
-      }
-      vorbis_synthesis_read (&vd->vd, sample_count);
-    }
+    result = vorbis_handle_data_packet (vd, &packet);
   }
+
+  /* granulepos is the last sample in the packet */
+  if (GST_BUFFER_OFFSET_END_IS_VALID (buffer))
+    vd->granulepos = GST_BUFFER_OFFSET_END (buffer);;
+
+done:
+  GST_STREAM_UNLOCK (pad);
+
   gst_buffer_unref (buffer);
 
   return result;
@@ -574,6 +689,9 @@ vorbis_dec_change_state (GstElement * element)
     case GST_STATE_READY_TO_PAUSED:
       vorbis_info_init (&vd->vi);
       vorbis_comment_init (&vd->vc);
+      vd->initialized = FALSE;
+      vd->granulepos = 0;
+      vd->packetno = 0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
@@ -587,12 +705,14 @@ vorbis_dec_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
+      GST_STREAM_LOCK (vd->sinkpad);
       vorbis_block_clear (&vd->vb);
       vorbis_dsp_clear (&vd->vd);
       vorbis_comment_clear (&vd->vc);
       vorbis_info_clear (&vd->vi);
       vd->packetno = 0;
       vd->granulepos = 0;
+      GST_STREAM_UNLOCK (vd->sinkpad);
       break;
     case GST_STATE_READY_TO_NULL:
       break;
