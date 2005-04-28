@@ -1,5 +1,23 @@
 2005-04-28  Wim Taymans  <wim@fluendo.com>
 
+	* ext/alsa/Makefile.am:
+	* ext/alsa/gstalsa.c: (gst_alsa_init), (gst_alsa_get_caps),
+	(gst_alsa_fixate_to_mimetype), (gst_alsa_fixate_field_nearest_int),
+	(gst_alsa_link), (gst_alsa_close_audio):
+	* ext/alsa/gstalsaplugin.c: (plugin_init):
+	* ext/alsa/gstalsasink.c: (gst_alsasink_get_type),
+	(gst_alsasink_dispose), (gst_alsasink_base_init),
+	(gst_alsasink_class_init), (gst_alsasink_init),
+	(gst_alsasink_getcaps), (set_hwparams), (set_swparams),
+	(alsasink_parse_spec), (gst_alsasink_open), (gst_alsasink_close),
+	(xrun_recovery), (gst_alsasink_write), (gst_alsasink_delay),
+	(gst_alsasink_reset):
+	* ext/alsa/gstalsasink.h:
+	Implement alsasink with simple open/write/close API. 
+	Make alsa dir build by disabling compilation of code.
+
+2005-04-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst-libs/gst/audio/Makefile.am:
 	* gst-libs/gst/audio/audio.h:
 	* gst-libs/gst/audio/audioclock.c:

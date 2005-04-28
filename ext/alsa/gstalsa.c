@@ -215,9 +215,6 @@ gst_alsa_init (GstAlsa * this)
 {
   this->device = g_strdup ("default");
   this->cached_caps = NULL;
-
-  GST_FLAG_SET (this, GST_ELEMENT_EVENT_AWARE);
-  GST_FLAG_SET (this, GST_ELEMENT_THREAD_SUGGESTED);
 }
 
 static void
@@ -1108,7 +1105,7 @@ gst_alsa_get_caps (GstPad * pad)
             }
           }
         }
-        gst_caps_free (caps);
+        gst_caps_unref (caps);
       }
     }
   }
@@ -1133,14 +1130,14 @@ gst_alsa_fixate_to_mimetype (const GstCaps * caps, const gchar * mime)
 
   try = gst_caps_new_simple (mime, NULL);
   result = gst_caps_intersect (try, caps);
-  gst_caps_free (try);
+  gst_caps_unref (try);
   if (gst_caps_is_empty (result)) {
-    gst_caps_free (result);
+    gst_caps_unref (result);
     return NULL;
   }
   if (gst_caps_is_subset (caps, result)) {
     /* we didn't reduce caps */
-    gst_caps_free (result);
+    gst_caps_unref (result);
     return NULL;
   }
   return result;
@@ -1180,18 +1177,18 @@ gst_alsa_fixate_field_nearest_int (const GstCaps * caps,
     }
   }
   if (!gst_caps_is_empty (equal)) {
-    gst_caps_free (bigger);
-    gst_caps_free (smaller);
+    gst_caps_unref (bigger);
+    gst_caps_unref (smaller);
     result = equal;
   } else {
-    gst_caps_free (equal);
+    gst_caps_unref (equal);
     if (!gst_caps_is_empty (bigger)) {
-      gst_caps_free (smaller);
+      gst_caps_unref (smaller);
       result = bigger;
     } else {
-      gst_caps_free (bigger);
+      gst_caps_unref (bigger);
       if (gst_caps_is_empty (smaller)) {
-        gst_caps_free (smaller);
+        gst_caps_unref (smaller);
         return NULL;
       }
       result = smaller;
@@ -1199,7 +1196,7 @@ gst_alsa_fixate_field_nearest_int (const GstCaps * caps,
   }
   if (gst_caps_is_subset (caps, result)) {
     /* we didn't reduce caps */
-    gst_caps_free (result);
+    gst_caps_unref (result);
     return NULL;
   }
   return result;
@@ -1296,13 +1293,13 @@ gst_alsa_link (GstPad * pad, const GstCaps * caps)
                     old) == GST_PAD_LINK_REFUSED) {
               GST_ELEMENT_ERROR (this, CORE, NEGOTIATION, (NULL),
                   ("could not reset caps to a sane value"));
-              gst_caps_free (old);
+              gst_caps_unref (old);
               break;
             } else {
               /* FIXME: unset caps on pads somehow */
             }
           }
-          gst_caps_free (old);
+          gst_caps_unref (old);
           ret = GST_PAD_LINK_REFUSED;
           goto out;
         }
@@ -1928,7 +1925,7 @@ gst_alsa_close_audio (GstAlsa * this)
   GST_ALSA_CAPS_SET (this, GST_ALSA_CAPS_SYNC_START, 0);
   GST_FLAG_UNSET (this, GST_ALSA_OPEN);
   if (this->cached_caps) {
-    gst_caps_free (this->cached_caps);
+    gst_caps_unref (this->cached_caps);
     this->cached_caps = NULL;
   }
 

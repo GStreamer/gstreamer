@@ -1,8 +1,7 @@
-/*
- * Copyright (C) 2001 CodeFactory AB
- * Copyright (C) 2001 Thomas Nyberg <thomas@codefactory.se>
- * Copyright (C) 2001-2002 Andy Wingo <apwingo@eos.ncsu.edu>
- * Copyright (C) 2003 Benjamin Otte <in7y118@public.uni-hamburg.de>
+/* GStreamer
+ * Copyright (C)  2005 Wim Taymans <wim@fluendo.com>
+ *
+ * gstalsasink.h: 
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -11,49 +10,63 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the Free
- * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_ALSA_SINK_H__
-#define __GST_ALSA_SINK_H__
 
-#include "gstalsamixer.h"
+#ifndef __GST_ALSASINK_H__
+#define __GST_ALSASINK_H__
+
+
+#include <gst/gst.h>
+#include <gst/audio/gstaudiosink.h>
+#include <asoundlib.h>
+
 
 G_BEGIN_DECLS
 
-#define GST_ALSA_SINK(obj)            (G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_ALSA_SINK, GstAlsaSink))
-#define GST_ALSA_SINK_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST(klass, GST_TYPE_ALSA_SINK, GstAlsaSinkClass))
-#define GST_IS_ALSA_SINK(obj)         (G_TYPE_CHECK_INSTANCE_TYPE(obj, GST_TYPE_ALSA_SINK))
-#define GST_IS_ALSA_SINK_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE(klass, GST_TYPE_ALSA_SINK))
-#define GST_TYPE_ALSA_SINK            (gst_alsa_sink_get_type())
+#define GST_TYPE_ALSA_SINK          (gst_alsasink_get_type())
+#define GST_ALSA_SINK(obj)          (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALSA_SINK,GstAlsaSink))
+#define GST_ALSA_SINK_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALSA_SINK,GstAlsaSinkClass))
+#define GST_IS_ALSA_SINK(obj)       (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALSA_SINK))
+#define GST_IS_ALSA_SINK_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALSA_SINK))
 
 typedef struct _GstAlsaSink GstAlsaSink;
 typedef struct _GstAlsaSinkClass GstAlsaSinkClass;
 
 struct _GstAlsaSink {
-  GstAlsaMixer parent;
+  GstAudioSink    sink;
 
-  /* array of the data on the channels */
-  guint8    *buf_data[GST_ALSA_MAX_TRACKS];  /* pointer into buffer */
-  guint      size[GST_ALSA_MAX_TRACKS];      /* sink: bytes left in buffer */
-  GstData   *gst_data[GST_ALSA_MAX_TRACKS];  /* current data */
-  guint      behaviour[GST_ALSA_MAX_TRACKS]; /* 0 = data points into buffer (so unref when size == 0),
-                                                  1 = data should be freed, use buffer after that */
+  gchar			*device;
+
+  snd_pcm_t 		*handle;
+  snd_pcm_hw_params_t 	*hwparams;
+  snd_pcm_sw_params_t 	*swparams;
+
+  snd_pcm_access_t access;
+  snd_pcm_format_t format;
+  guint rate;
+  guint channels;
+  gint bytes_per_sample;
+
+  guint buffer_time;
+  guint period_time;
+  snd_pcm_sframes_t buffer_size;
+  snd_pcm_sframes_t period_size;
 };
 
 struct _GstAlsaSinkClass {
-  GstAlsaMixerClass parent_class;
+  GstAudioSinkClass parent_class;
 };
 
-GType gst_alsa_sink_get_type (void);
-
-gboolean gst_alsa_sink_factory_init (GstPlugin *plugin);
+GType gst_alsasink_get_type(void);
 
 G_END_DECLS
 
-#endif /* __GST_ALSA_SINK_H__ */
+#endif /* __GST_ALSASINK_H__ */
