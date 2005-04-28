@@ -1,5 +1,14 @@
 2005-04-28  Wim Taymans  <wim@fluendo.com>
 
+	* ext/theora/theoradec.c: (_inc_granulepos),
+	(theora_dec_sink_event), (theora_handle_comment_packet),
+	(theora_handle_type_packet), (theora_handle_header_packet),
+	(theora_handle_data_packet), (theora_dec_chain),
+	(theora_dec_change_state):
+	Refactor a bit, use STREAM_LOCK.
+
+2005-04-28  Wim Taymans  <wim@fluendo.com>
+
 	* ext/alsa/Makefile.am:
 	* ext/alsa/gstalsa.c: (gst_alsa_init), (gst_alsa_get_caps),
 	(gst_alsa_fixate_to_mimetype), (gst_alsa_fixate_field_nearest_int),

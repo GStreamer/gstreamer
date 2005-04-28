@@ -481,6 +481,7 @@ static gboolean
 theora_dec_sink_event (GstPad * pad, GstEvent * event)
 {
   guint64 start_value, end_value, time, bytes;
+  gboolean ret = TRUE;
   GstTheoraDec *dec;
 
   dec = GST_THEORA_DEC (GST_PAD_PARENT (pad));
@@ -534,11 +535,13 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
         /* sync to keyframe */
         dec->need_keyframe = TRUE;
       }
+      gst_event_unref (event);
       break;
     default:
+      ret = gst_pad_event_default (dec->sinkpad, event);
       break;
   }
-  return gst_pad_event_default (dec->sinkpad, event);
+  return ret;
 }
 
 #define ROUND_UP_2(x) (((x) + 1) & ~1)
@@ -546,9 +549,287 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
 #define ROUND_UP_8(x) (((x) + 7) & ~7)
 
 static GstFlowReturn
-theora_dec_chain (GstPad * pad, GstBuffer * buffer)
+theora_handle_comment_packet (GstTheoraDec * dec, ogg_packet * packet)
 {
+  gchar *encoder = NULL;
   GstBuffer *buf;
+  GstTagList *list;
+
+  GST_DEBUG ("parsing comment packet");
+
+  buf = gst_buffer_new_and_alloc (packet->bytes);
+  GST_BUFFER_DATA (buf) = packet->packet;
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
+
+  list = gst_tag_list_from_vorbiscomment_buffer (buf, "\201theora", 7,
+      &encoder);
+
+  gst_buffer_unref (buf);
+
+  if (!list) {
+    GST_ERROR_OBJECT (dec, "couldn't decode comments");
+    list = gst_tag_list_new ();
+  }
+  if (encoder) {
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+        GST_TAG_ENCODER, encoder, NULL);
+    g_free (encoder);
+  }
+  gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+      GST_TAG_ENCODER_VERSION, dec->info.version_major,
+      GST_TAG_NOMINAL_BITRATE, dec->info.target_bitrate,
+      GST_TAG_VIDEO_CODEC, "Theora", NULL);
+
+  //gst_element_found_tags_for_pad (GST_ELEMENT (dec), dec->srcpad, 0, list);
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
+{
+  GstCaps *caps;
+  gint par_num, par_den;
+
+  GST_DEBUG_OBJECT (dec, "fps %d/%d, PAR %d/%d",
+      dec->info.fps_numerator, dec->info.fps_denominator,
+      dec->info.aspect_numerator, dec->info.aspect_denominator);
+
+  /* calculate par
+   * the info.aspect_* values reflect PAR;
+   * 0:0 is allowed and can be interpreted as 1:1, so correct for it */
+  par_num = dec->info.aspect_numerator;
+  par_den = dec->info.aspect_denominator;
+  if (par_num == 0 && par_den == 0) {
+    par_num = par_den = 1;
+  }
+  /* theora has:
+   *
+   *  width/height : dimension of the encoded frame 
+   *  frame_width/frame_height : dimension of the visible part
+   *  offset_x/offset_y : offset in encoded frame where visible part starts
+   */
+  GST_DEBUG_OBJECT (dec, "dimension %dx%d, PAR %d/%d", dec->info.width,
+      dec->info.height, par_num, par_den);
+  GST_DEBUG_OBJECT (dec, "frame dimension %dx%d, offset %d:%d",
+      dec->info.frame_width, dec->info.frame_height,
+      dec->info.offset_x, dec->info.offset_y);
+
+  if (dec->crop) {
+    /* add black borders to make width/height/offsets even. we need this because
+     * we cannot express an offset to the peer plugin. */
+    dec->width = ROUND_UP_2 (dec->info.frame_width + (dec->info.offset_x & 1));
+    dec->height =
+        ROUND_UP_2 (dec->info.frame_height + (dec->info.offset_y & 1));
+    dec->offset_x = dec->info.offset_x & ~1;
+    dec->offset_y = dec->info.offset_y & ~1;
+  } else {
+    /* no cropping, use the encoded dimensions */
+    dec->width = dec->info.width;
+    dec->height = dec->info.height;
+    dec->offset_x = 0;
+    dec->offset_y = 0;
+  }
+
+  GST_DEBUG_OBJECT (dec, "after fixup frame dimension %dx%d, offset %d:%d",
+      dec->width, dec->height, dec->offset_x, dec->offset_y);
+
+  /* done */
+  theora_decode_init (&dec->state, &dec->info);
+
+  caps = gst_caps_new_simple ("video/x-raw-yuv",
+      "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
+      "framerate", G_TYPE_DOUBLE,
+      ((gdouble) dec->info.fps_numerator) / dec->info.fps_denominator,
+      "pixel-aspect-ratio", GST_TYPE_FRACTION, par_num, par_den,
+      "width", G_TYPE_INT, dec->width, "height", G_TYPE_INT, dec->height, NULL);
+  gst_pad_set_caps (dec->srcpad, caps);
+  gst_caps_unref (caps);
+
+  dec->initialized = TRUE;
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+theora_handle_header_packet (GstTheoraDec * dec, ogg_packet * packet)
+{
+  GstFlowReturn res;
+
+  GST_DEBUG ("parsing header packet");
+
+  if (theora_decode_header (&dec->info, &dec->comment, packet))
+    goto header_read_error;
+
+  switch (packet->packetno) {
+    case 1:
+      res = theora_handle_comment_packet (dec, packet);
+      break;
+    case 2:
+      res = theora_handle_type_packet (dec, packet);
+      break;
+    default:
+      /* ignore */
+      res = GST_FLOW_OK;
+      break;
+  }
+  return res;
+
+  /* ERRORS */
+header_read_error:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
+        (NULL), ("couldn't read header packet"));
+    return GST_FLOW_ERROR;
+  }
+}
+
+static GstFlowReturn
+theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
+    GstClockTime outtime)
+{
+  /* normal data packet */
+  yuv_buffer yuv;
+  GstBuffer *out;
+  guint i;
+  gboolean keyframe;
+  gint out_size;
+  gint stride_y, stride_uv;
+  gint width, height;
+  gint cwidth, cheight;
+  GstFlowReturn result;
+
+  if (!dec->initialized)
+    goto not_initialized;
+
+  /* the second most significant bit of the first data byte is cleared 
+   * for keyframes */
+  keyframe = (packet->packet[0] & 0x40) == 0;
+  if (keyframe) {
+    dec->need_keyframe = FALSE;
+  } else if (dec->need_keyframe) {
+    goto dropping;
+  }
+
+  if (theora_decode_packetin (&dec->state, packet))
+    goto could_not_read;
+
+  if (theora_decode_YUVout (&dec->state, &yuv) < 0)
+    goto decode_error;
+
+  if ((yuv.y_width != dec->info.width) || (yuv.y_height != dec->info.height))
+    goto wrong_dimensions;
+
+
+  width = dec->width;
+  height = dec->height;
+  cwidth = width / 2;
+  cheight = height / 2;
+
+  /* should get the stride from the caps, for now we round up to the nearest
+   * multiple of 4 because some element needs it. chroma needs special 
+   * treatment, see videotestsrc. */
+  stride_y = ROUND_UP_4 (width);
+  stride_uv = ROUND_UP_8 (width) / 2;
+
+  out_size = stride_y * height + stride_uv * cheight * 2;
+
+  /* now copy over the area contained in offset_x,offset_y,
+   * frame_width, frame_height */
+  out = gst_pad_alloc_buffer (dec->srcpad, GST_BUFFER_OFFSET_NONE, out_size,
+      GST_PAD_CAPS (dec->srcpad));
+  if (out == NULL)
+    goto no_buffer;
+
+  /* copy the visible region to the destination. This is actually pretty
+   * complicated and gstreamer doesn't support all the needed caps to do this
+   * correctly. For example, when we have an odd offset, we should only combine
+   * 1 row/column of luma samples with on chroma sample in colorspace conversion. 
+   * We compensate for this by adding a block border around the image when the
+   * offset of size is odd (see above).
+   */
+  {
+    guint8 *dest_y, *src_y;
+    guint8 *dest_u, *src_u;
+    guint8 *dest_v, *src_v;
+
+    dest_y = GST_BUFFER_DATA (out);
+    dest_u = dest_y + stride_y * height;
+    dest_v = dest_u + stride_uv * cheight;
+
+    src_y = yuv.y + dec->offset_x + dec->offset_y * yuv.y_stride;
+
+    for (i = 0; i < height; i++) {
+      memcpy (dest_y, src_y, width);
+
+      dest_y += stride_y;
+      src_y += yuv.y_stride;
+    }
+
+    src_u = yuv.u + dec->offset_x / 2 + dec->offset_y / 2 * yuv.uv_stride;
+    src_v = yuv.v + dec->offset_x / 2 + dec->offset_y / 2 * yuv.uv_stride;
+
+    for (i = 0; i < cheight; i++) {
+      memcpy (dest_u, src_u, cwidth);
+      memcpy (dest_v, src_v, cwidth);
+
+      dest_u += stride_uv;
+      src_u += yuv.uv_stride;
+      dest_v += stride_uv;
+      src_v += yuv.uv_stride;
+    }
+  }
+
+  GST_BUFFER_OFFSET (out) = dec->packetno - 4;
+  GST_BUFFER_OFFSET_END (out) = dec->packetno - 3;
+  GST_BUFFER_DURATION (out) =
+      GST_SECOND * ((gdouble) dec->info.fps_denominator) /
+      dec->info.fps_numerator;
+  GST_BUFFER_TIMESTAMP (out) = outtime;
+
+  result = gst_pad_push (dec->srcpad, out);
+
+  return result;
+
+  /* ERRORS */
+not_initialized:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
+        (NULL), ("no header sent yet (packet no is %d)", packet->packetno));
+    return GST_FLOW_ERROR;
+  }
+dropping:
+  {
+    GST_WARNING_OBJECT (dec, "dropping frame because we need a keyframe");
+    return GST_FLOW_OK;
+  }
+could_not_read:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
+        (NULL), ("theora decoder did not read data packet"));
+    return GST_FLOW_ERROR;
+  }
+decode_error:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
+        (NULL), ("couldn't read out YUV image"));
+    return GST_FLOW_ERROR;
+  }
+wrong_dimensions:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
+        (NULL), ("dimensions of image do not match header"));
+    return GST_FLOW_ERROR;
+  }
+no_buffer:
+  {
+    return GST_FLOW_OK;
+  }
+}
+
+static GstFlowReturn
+theora_dec_chain (GstPad * pad, GstBuffer * buf)
+{
   GstTheoraDec *dec;
   ogg_packet packet;
   guint64 offset_end;
@@ -557,7 +838,7 @@ theora_dec_chain (GstPad * pad, GstBuffer * buffer)
 
   dec = GST_THEORA_DEC (GST_PAD_PARENT (pad));
 
-  buf = GST_BUFFER (buffer);
+  GST_STREAM_LOCK (pad);
 
   if (dec->packetno >= 3) {
     /* try timestamp first */
@@ -583,6 +864,7 @@ theora_dec_chain (GstPad * pad, GstBuffer * buffer)
          * offset before we can generate valid timestamps */
         dec->queued = g_list_append (dec->queued, buf);
         GST_DEBUG_OBJECT (dec, "queued buffer");
+        GST_STREAM_UNLOCK (pad);
         return GST_FLOW_OK;
       } else {
         /* granulepos to time */
@@ -648,218 +930,17 @@ theora_dec_chain (GstPad * pad, GstBuffer * buffer)
       GST_WARNING_OBJECT (GST_OBJECT (dec), "Ignoring header");
       goto done;
     }
-    /* header packet */
-    if (theora_decode_header (&dec->info, &dec->comment, &packet)) {
-      GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
-          (NULL), ("couldn't read header packet"));
-      result = GST_FLOW_ERROR;
-      goto done;
-    }
-
-    if (packet.packetno == 0) {
-      dec->packetno++;
-    } else if (packet.packetno == 1) {
-      gchar *encoder = NULL;
-      GstTagList *list =
-          gst_tag_list_from_vorbiscomment_buffer (buf, "\201theora", 7,
-          &encoder);
-
-      if (!list) {
-        GST_ERROR_OBJECT (dec, "failed to parse tags");
-        list = gst_tag_list_new ();
-      }
-      if (encoder) {
-        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-            GST_TAG_ENCODER, encoder, NULL);
-        g_free (encoder);
-      }
-      gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-          GST_TAG_ENCODER_VERSION, dec->info.version_major,
-          GST_TAG_NOMINAL_BITRATE, dec->info.target_bitrate,
-          GST_TAG_VIDEO_CODEC, "Theora", NULL);
-      //gst_element_found_tags_for_pad (GST_ELEMENT (dec), dec->srcpad, 0, list);
-
-      dec->packetno++;
-    } else if (packet.packetno == 2) {
-      GstCaps *caps;
-      gint par_num, par_den;
-
-      GST_DEBUG_OBJECT (dec, "fps %d/%d, PAR %d/%d",
-          dec->info.fps_numerator, dec->info.fps_denominator,
-          dec->info.aspect_numerator, dec->info.aspect_denominator);
-
-      /* calculate par
-       * the info.aspect_* values reflect PAR;
-       * 0:0 is allowed and can be interpreted as 1:1, so correct for it */
-      par_num = dec->info.aspect_numerator;
-      par_den = dec->info.aspect_denominator;
-      if (par_num == 0 && par_den == 0) {
-        par_num = par_den = 1;
-
-      }
-      /* theora has:
-       *
-       *  width/height : dimension of the encoded frame 
-       *  frame_width/frame_height : dimension of the visible part
-       *  offset_x/offset_y : offset in encoded frame where visible part starts
-       */
-      GST_DEBUG_OBJECT (dec, "dimension %dx%d, PAR %d/%d", dec->info.width,
-          dec->info.height, par_num, par_den);
-      GST_DEBUG_OBJECT (dec, "frame dimension %dx%d, offset %d:%d",
-          dec->info.frame_width, dec->info.frame_height,
-          dec->info.offset_x, dec->info.offset_y);
-
-      if (dec->crop) {
-        /* add black borders to make width/height/offsets even. we need this because
-         * we cannot express an offset to the peer plugin. */
-        dec->width =
-            ROUND_UP_2 (dec->info.frame_width + (dec->info.offset_x & 1));
-        dec->height =
-            ROUND_UP_2 (dec->info.frame_height + (dec->info.offset_y & 1));
-        dec->offset_x = dec->info.offset_x & ~1;
-        dec->offset_y = dec->info.offset_y & ~1;
-      } else {
-        /* no cropping, use the encoded dimensions */
-        dec->width = dec->info.width;
-        dec->height = dec->info.height;
-        dec->offset_x = 0;
-        dec->offset_y = 0;
-      }
-
-      GST_DEBUG_OBJECT (dec, "after fixup frame dimension %dx%d, offset %d:%d",
-          dec->width, dec->height, dec->offset_x, dec->offset_y);
-
-      /* done */
-      theora_decode_init (&dec->state, &dec->info);
-
-      caps = gst_caps_new_simple ("video/x-raw-yuv",
-          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
-          "framerate", G_TYPE_DOUBLE,
-          ((gdouble) dec->info.fps_numerator) / dec->info.fps_denominator,
-          "pixel-aspect-ratio", GST_TYPE_FRACTION, par_num, par_den,
-          "width", G_TYPE_INT, dec->width, "height", G_TYPE_INT,
-          dec->height, NULL);
-      gst_pad_set_caps (dec->srcpad, caps);
-      gst_caps_unref (caps);
-
-      dec->initialized = TRUE;
-      dec->packetno++;
-    }
+    result = theora_handle_header_packet (dec, &packet);
   } else {
-    /* normal data packet */
-    yuv_buffer yuv;
-    GstBuffer *out;
-    guint i;
-    gboolean keyframe;
-    gint out_size;
-    gint stride_y, stride_uv;
-    gint width, height;
-    gint cwidth, cheight;
-
-    dec->packetno++;
-
-    if (!dec->initialized) {
-      result = GST_FLOW_ERROR;
-      goto done;
-    }
-
-    /* the second most significant bit of the first data byte is cleared 
-     * for keyframes */
-    keyframe = (packet.packet[0] & 0x40) == 0;
-    if (keyframe) {
-      dec->need_keyframe = FALSE;
-    } else if (dec->need_keyframe) {
-      GST_WARNING_OBJECT (dec, "dropping frame because we need a keyframe");
-      /* drop frames if we're looking for a keyframe */
-      goto done;
-    }
-    if (theora_decode_packetin (&dec->state, &packet)) {
-      GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
-          (NULL), ("theora decoder did not read data packet"));
-      result = GST_FLOW_ERROR;
-      goto done;
-    }
-    if (theora_decode_YUVout (&dec->state, &yuv) < 0) {
-      GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
-          (NULL), ("couldn't read out YUV image"));
-      result = GST_FLOW_ERROR;
-      goto done;
-    }
-
-    g_return_val_if_fail (yuv.y_width == dec->info.width, GST_FLOW_ERROR);
-    g_return_val_if_fail (yuv.y_height == dec->info.height, GST_FLOW_ERROR);
-
-    width = dec->width;
-    height = dec->height;
-    cwidth = width / 2;
-    cheight = height / 2;
-
-    /* should get the stride from the caps, for now we round up to the nearest
-     * multiple of 4 because some element needs it. chroma needs special 
-     * treatment, see videotestsrc. */
-    stride_y = ROUND_UP_4 (width);
-    stride_uv = ROUND_UP_8 (width) / 2;
-
-    out_size = stride_y * height + stride_uv * cheight * 2;
-
-    /* now copy over the area contained in offset_x,offset_y,
-     * frame_width, frame_height */
-    out = gst_pad_alloc_buffer (dec->srcpad, GST_BUFFER_OFFSET_NONE, out_size,
-        GST_PAD_CAPS (dec->srcpad));
-    if (out == NULL)
-      goto done;
-
-    /* copy the visible region to the destination. This is actually pretty
-     * complicated and gstreamer doesn't support all the needed caps to do this
-     * correctly. For example, when we have an odd offset, we should only combine
-     * 1 row/column of luma samples with on chroma sample in colorspace conversion. 
-     * We compensate for this by adding a block border around the image when the
-     * offset of size is odd (see above).
-     */
-    {
-      guint8 *dest_y, *src_y;
-      guint8 *dest_u, *src_u;
-      guint8 *dest_v, *src_v;
-
-      dest_y = GST_BUFFER_DATA (out);
-      dest_u = dest_y + stride_y * height;
-      dest_v = dest_u + stride_uv * cheight;
-
-      src_y = yuv.y + dec->offset_x + dec->offset_y * yuv.y_stride;
-
-      for (i = 0; i < height; i++) {
-        memcpy (dest_y, src_y, width);
-
-        dest_y += stride_y;
-        src_y += yuv.y_stride;
-      }
-
-      src_u = yuv.u + dec->offset_x / 2 + dec->offset_y / 2 * yuv.uv_stride;
-      src_v = yuv.v + dec->offset_x / 2 + dec->offset_y / 2 * yuv.uv_stride;
-
-      for (i = 0; i < cheight; i++) {
-        memcpy (dest_u, src_u, cwidth);
-        memcpy (dest_v, src_v, cwidth);
-
-        dest_u += stride_uv;
-        src_u += yuv.uv_stride;
-        dest_v += stride_uv;
-        src_v += yuv.uv_stride;
-      }
-    }
-
-    GST_BUFFER_OFFSET (out) = dec->packetno - 4;
-    GST_BUFFER_OFFSET_END (out) = dec->packetno - 3;
-    GST_BUFFER_DURATION (out) =
-        GST_SECOND * ((gdouble) dec->info.fps_denominator) /
-        dec->info.fps_numerator;
-    GST_BUFFER_TIMESTAMP (out) = outtime;
-
-    result = gst_pad_push (dec->srcpad, out);
+    result = theora_handle_data_packet (dec, &packet, outtime);
   }
+
 done:
-  gst_buffer_unref (buffer);
+  dec->packetno++;
   _inc_granulepos (dec);
+  GST_STREAM_UNLOCK (pad);
+
+  gst_buffer_unref (buf);
 
   return result;
 }
@@ -884,11 +965,13 @@ theora_dec_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
+      GST_STREAM_LOCK (dec->sinkpad);
       theora_clear (&dec->state);
       theora_comment_clear (&dec->comment);
       theora_info_clear (&dec->info);
       dec->packetno = 0;
       dec->granulepos = -1;
+      GST_STREAM_UNLOCK (dec->sinkpad);
       break;
     case GST_STATE_READY_TO_NULL:
       break;
