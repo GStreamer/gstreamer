@@ -180,7 +180,7 @@ vorbis_dec_convert (GstPad * pad,
   GstVorbisDec *dec;
   guint64 scale = 1;
 
-  dec = GST_VORBIS_DEC (gst_pad_get_parent (pad));
+  dec = GST_VORBIS_DEC (GST_PAD_PARENT (pad));
 
   if (dec->packetno < 1)
     return FALSE;
@@ -238,7 +238,7 @@ vorbis_dec_src_query (GstPad * pad, GstQueryType query, GstFormat * format,
     gint64 * value)
 {
   gint64 granulepos = 0;
-  GstVorbisDec *dec = GST_VORBIS_DEC (gst_pad_get_parent (pad));
+  GstVorbisDec *dec = GST_VORBIS_DEC (GST_PAD_PARENT (pad));
 
   if (query == GST_QUERY_POSITION) {
     granulepos = dec->granulepos;
@@ -261,7 +261,7 @@ static gboolean
 vorbis_dec_src_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
-  GstVorbisDec *dec = GST_VORBIS_DEC (gst_pad_get_parent (pad));
+  GstVorbisDec *dec = GST_VORBIS_DEC (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:{
@@ -311,6 +311,9 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
         if (gst_event_discont_get_value (event, GST_FORMAT_TIME,
                 (gint64 *) & start_value, &end_value)) {
           dec->granulepos = start_value * dec->vi.rate / GST_SECOND;
+          GST_DEBUG_OBJECT (dec,
+              "setting granuleposition to %" G_GUINT64_FORMAT " after discont",
+              dec->granulepos);
         } else {
           GST_WARNING_OBJECT (dec,
               "discont event didn't include offset, we might set it wrong now");
@@ -495,9 +498,6 @@ vorbis_handle_header_packet (GstVorbisDec * vd, ogg_packet * packet)
 {
   GstFlowReturn res;
 
-  if (packet->packet[0] / 2 != packet->packetno)
-    goto unexpected_packet;
-
   GST_DEBUG ("parsing header packet");
 
   /* Packetno = 0 if the first byte is exactly 0x01 */
@@ -521,14 +521,6 @@ vorbis_handle_header_packet (GstVorbisDec * vd, ogg_packet * packet)
   return res;
 
   /* ERRORS */
-unexpected_packet:
-  {
-    /* FIXME: just skip? */
-    GST_WARNING_OBJECT (GST_ELEMENT (vd),
-        "unexpected packet type %d, expected %d",
-        (gint) packet->packet[0], (gint) packet->packetno);
-    return GST_FLOW_UNEXPECTED;
-  }
 header_read_error:
   {
     GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
@@ -653,7 +645,7 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
 
   /* switch depending on packet type */
   if (packet.packet[0] & 1) {
-    if (packet.packetno > 3) {
+    if (vd->initialized) {
       GST_WARNING_OBJECT (vd, "Ignoring header");
       goto done;
     }

@@ -174,6 +174,12 @@ struct _GstOggDemuxClass
   GstElementClass parent_class;
 };
 
+static GstStaticPadTemplate internaltemplate =
+GST_STATIC_PAD_TEMPLATE ("internal",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
 static gboolean gst_ogg_demux_perform_seek (GstOggDemux * ogg, gint64 pos);
 
 static void gst_ogg_pad_class_init (GstOggPadClass * klass);
@@ -578,7 +584,9 @@ gst_ogg_pad_typefind (GstOggPad * pad, ogg_packet * packet)
           /* FIXME, it might not be named "sink" */
           pad->elem_pad = gst_element_get_pad (element, "sink");
           gst_element_set_state (element, GST_STATE_PAUSED);
-          pad->elem_out = gst_pad_new ("internal", GST_PAD_SINK);
+          pad->elem_out =
+              gst_pad_new_from_template (gst_static_pad_template_get
+              (&internaltemplate), "internal");
           gst_pad_set_chain_function (pad->elem_out,
               gst_ogg_pad_internal_chain);
           gst_pad_set_element_private (pad->elem_out, pad);
@@ -1284,7 +1292,7 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, gint64 pos)
       bisect = (target - begintime) / GST_MSECOND * rate + begin - CHUNKSIZE;
 
       if (bisect <= begin)
-        bisect = begin + 1;
+        bisect = begin;
     }
     gst_ogg_demux_seek (ogg, bisect);
 

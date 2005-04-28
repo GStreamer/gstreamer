@@ -1,5 +1,16 @@
 2005-04-28  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_typefind),
+	(gst_ogg_demux_perform_seek), (gst_ogg_demux_sink_activate):
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_convert),
+	(vorbis_dec_src_query), (vorbis_dec_src_event),
+	(vorbis_dec_sink_event), (vorbis_handle_comment_packet),
+	(vorbis_handle_type_packet), (vorbis_handle_header_packet),
+	(copy_samples), (vorbis_handle_data_packet), (vorbis_dec_chain):
+	Don't crap out when seeking back to position 0.
+
+2005-04-28  Wim Taymans  <wim@fluendo.com>
+
 	* examples/seeking/seek.c: (make_mod_pipeline), (make_dv_pipeline),
 	(make_wav_pipeline), (make_flac_pipeline), (make_sid_pipeline),
 	(make_vorbis_pipeline), (make_vorbis_theora_pipeline),
