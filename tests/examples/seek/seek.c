@@ -22,6 +22,8 @@ static gulong changed_id;
 
 //#define SOURCE "gnomevfssrc"
 #define SOURCE "gnomevfssrc"
+#define ASINK "alsasink"
+//#define ASINK "osssink"
 
 #define UPDATE_INTERVAL 500
 
@@ -94,7 +96,7 @@ make_mod_pipeline (const gchar * location)
 
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   decoder = gst_element_factory_make_or_warn ("modplug", "decoder");
-  audiosink = gst_element_factory_make_or_warn ("osssink", "sink");
+  audiosink = gst_element_factory_make_or_warn (ASINK, "sink");
   //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
@@ -126,7 +128,7 @@ make_dv_pipeline (const gchar * location)
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   decoder = gst_element_factory_make_or_warn ("dvdec", "decoder");
   videosink = gst_element_factory_make_or_warn ("ximagesink", "v_sink");
-  audiosink = gst_element_factory_make_or_warn ("osssink", "a_sink");
+  audiosink = gst_element_factory_make_or_warn (ASINK, "a_sink");
   //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
@@ -162,7 +164,7 @@ make_wav_pipeline (const gchar * location)
 
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   decoder = gst_element_factory_make_or_warn ("wavparse", "decoder");
-  audiosink = gst_element_factory_make_or_warn ("osssink", "sink");
+  audiosink = gst_element_factory_make_or_warn (ASINK, "sink");
   //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
@@ -193,7 +195,7 @@ make_flac_pipeline (const gchar * location)
 
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   decoder = gst_element_factory_make_or_warn ("flacdec", "decoder");
-  audiosink = gst_element_factory_make_or_warn ("osssink", "sink");
+  audiosink = gst_element_factory_make_or_warn (ASINK, "sink");
   g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
@@ -224,7 +226,7 @@ make_sid_pipeline (const gchar * location)
 
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   decoder = gst_element_factory_make_or_warn ("siddec", "decoder");
-  audiosink = gst_element_factory_make_or_warn ("osssink", "sink");
+  audiosink = gst_element_factory_make_or_warn (ASINK, "sink");
   //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
@@ -289,7 +291,7 @@ make_vorbis_pipeline (const gchar * location)
   demux = gst_element_factory_make_or_warn ("oggdemux", "demux");
   decoder = gst_element_factory_make_or_warn ("vorbisdec", "decoder");
   convert = gst_element_factory_make_or_warn ("audioconvert", "convert");
-  audiosink = gst_element_factory_make_or_warn ("osssink", "sink");
+  audiosink = gst_element_factory_make_or_warn (ASINK, "sink");
   g_object_set (G_OBJECT (audiosink), "sync", TRUE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
@@ -385,7 +387,7 @@ make_vorbis_theora_pipeline (const gchar * location)
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
   a_decoder = gst_element_factory_make_or_warn ("vorbisdec", "a_dec");
   a_convert = gst_element_factory_make_or_warn ("audioconvert", "a_convert");
-  audiosink = gst_element_factory_make_or_warn ("osssink", "a_sink");
+  audiosink = gst_element_factory_make_or_warn (ASINK, "a_sink");
 
   gst_element_link (a_queue, a_decoder);
   gst_element_link (a_decoder, a_convert);
@@ -450,7 +452,7 @@ make_avi_msmpeg4v3_mp3_pipeline (const gchar * location)
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
   a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
   a_convert = gst_element_factory_make_or_warn ("audioconvert", "a_convert");
-  audiosink = gst_element_factory_make_or_warn ("osssink", "a_sink");
+  audiosink = gst_element_factory_make_or_warn (ASINK, "a_sink");
 
   gst_element_link (a_queue, a_decoder);
   gst_element_link (a_decoder, a_convert);
@@ -503,7 +505,7 @@ make_mp3_pipeline (const gchar * location)
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   decoder = gst_element_factory_make_or_warn ("mad", "dec");
   queue = gst_element_factory_make_or_warn ("queue", "queue");
-  osssink = gst_element_factory_make_or_warn ("osssink", "sink");
+  osssink = gst_element_factory_make_or_warn (ASINK, "sink");
 
   seekable_elements = g_list_prepend (seekable_elements, osssink);
 
@@ -549,7 +551,7 @@ make_avi_pipeline (const gchar * location)
 
   audio_bin = gst_bin_new ("a_decoder_bin");
   a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
-  audiosink = gst_element_factory_make_or_warn ("osssink", "a_sink");
+  audiosink = gst_element_factory_make_or_warn (ASINK, "a_sink");
   //g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
   gst_element_link (a_decoder, a_queue);
@@ -623,7 +625,7 @@ make_mpeg_pipeline (const gchar * location)
   audio_bin = gst_bin_new ("a_decoder_bin");
   a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
-  audiosink = gst_element_factory_make_or_warn ("osssink", "a_sink");
+  audiosink = gst_element_factory_make_or_warn (ASINK, "a_sink");
   g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
   gst_element_link (a_decoder, a_queue);
   gst_element_link (a_queue, audiosink);
@@ -690,7 +692,7 @@ make_mpegnt_pipeline (const gchar * location)
   audio_bin = gst_bin_new ("a_decoder_bin");
   a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
-  audiosink = gst_element_factory_make_or_warn ("osssink", "a_sink");
+  audiosink = gst_element_factory_make_or_warn (ASINK, "a_sink");
   //g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
   g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
   gst_element_link (a_decoder, a_queue);
