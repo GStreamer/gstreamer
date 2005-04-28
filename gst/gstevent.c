@@ -298,15 +298,15 @@ gst_event_discont_get_value (GstEvent * event, GstFormat format,
   gint i, n;
 
   g_return_val_if_fail (event != NULL, FALSE);
-  g_return_val_if_fail (start_value != NULL, FALSE);
-  g_return_val_if_fail (end_value != NULL, FALSE);
 
   n = GST_EVENT_DISCONT_OFFSET_LEN (event);
 
   for (i = 0; i < n; i++) {
     if (GST_EVENT_DISCONT_OFFSET (event, i).format == format) {
-      *start_value = GST_EVENT_DISCONT_OFFSET (event, i).start_value;
-      *end_value = GST_EVENT_DISCONT_OFFSET (event, i).end_value;
+      if (start_value)
+        *start_value = GST_EVENT_DISCONT_OFFSET (event, i).start_value;
+      if (end_value)
+        *end_value = GST_EVENT_DISCONT_OFFSET (event, i).end_value;
       return TRUE;
     }
   }

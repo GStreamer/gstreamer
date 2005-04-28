@@ -388,8 +388,9 @@ gst_pipeline_change_state (GstElement * element)
         element->base_time = start_time -
             pipeline->stream_time + pipeline->delay;
         GST_DEBUG ("stream_time=%" GST_TIME_FORMAT ", start_time=%"
-            GST_TIME_FORMAT, GST_TIME_ARGS (pipeline->stream_time),
-            GST_TIME_ARGS (start_time));
+            GST_TIME_FORMAT ", base time %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (pipeline->stream_time),
+            GST_TIME_ARGS (start_time), GST_TIME_ARGS (element->base_time));
       } else {
         element->base_time = 0;
         GST_DEBUG ("no clock, using base time of 0");
@@ -411,11 +412,15 @@ gst_pipeline_change_state (GstElement * element)
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       if (element->clock) {
-        pipeline->stream_time = gst_clock_get_time (element->clock) -
-            element->base_time;
+        GstClockTime now;
+
+        now = gst_clock_get_time (element->clock);
+        pipeline->stream_time = now - element->base_time;
+        GST_DEBUG ("stream_time=%" GST_TIME_FORMAT ", now=%" GST_TIME_FORMAT
+            ", base time %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (pipeline->stream_time),
+            GST_TIME_ARGS (now), GST_TIME_ARGS (element->base_time));
       }
-      GST_DEBUG ("stream_time=%" GST_TIME_FORMAT,
-          GST_TIME_ARGS (pipeline->stream_time));
       break;
     case GST_STATE_PAUSED_TO_READY:
       break;

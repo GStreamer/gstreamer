@@ -74,7 +74,8 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_new (_gst_clock_entry_trace, entry);
 #endif
-  GST_CAT_DEBUG (GST_CAT_CLOCK, "created entry %p", entry);
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "created entry %p, time %" GST_TIME_FORMAT,
+      entry, GST_TIME_ARGS (time));
 
   gst_atomic_int_set (&entry->refcount, 1);
   entry->clock = clock;

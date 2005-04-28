@@ -322,25 +322,26 @@ gst_system_clock_get_resolution (GstClock * clock)
 static GstClockReturn
 gst_system_clock_id_wait_unlocked (GstClock * clock, GstClockEntry * entry)
 {
-  GstClockTime real, current, target;
+  GstClockTime entryt, real, now, target;
   GstClockTimeDiff diff;
 
   /* need to call the overridden method */
   real = GST_CLOCK_GET_CLASS (clock)->get_internal_time (clock);
-  target = GST_CLOCK_ENTRY_TIME (entry);
+  entryt = GST_CLOCK_ENTRY_TIME (entry);
 
-  current = gst_clock_adjust_unlocked (clock, real);
-  diff = target - current;
+  now = gst_clock_adjust_unlocked (clock, real);
+  diff = entryt - now;
   target = gst_system_clock_get_internal_time (clock) + diff;
 
   GST_CAT_DEBUG (GST_CAT_CLOCK, "entry %p"
       " target %" GST_TIME_FORMAT
+      " entry %" GST_TIME_FORMAT
       " now %" GST_TIME_FORMAT
       " real %" GST_TIME_FORMAT
       " diff %" G_GINT64_FORMAT,
       entry,
       GST_TIME_ARGS (target),
-      GST_TIME_ARGS (current), GST_TIME_ARGS (real), diff);
+      GST_TIME_ARGS (entryt), GST_TIME_ARGS (now), GST_TIME_ARGS (real), diff);
 
   if (diff > 0) {
     GTimeVal tv;

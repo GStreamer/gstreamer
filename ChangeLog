@@ -1,3 +1,16 @@
+2005-04-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesink.c: (gst_basesink_base_init),
+	(gst_basesink_pad_getcaps), (gst_basesink_init),
+	(gst_basesink_do_sync):
+	* gst/gstclock.c: (gst_clock_entry_new):
+	* gst/gstevent.c: (gst_event_discont_get_value):
+	* gst/gstpipeline.c: (pipeline_bus_handler),
+	(gst_pipeline_change_state):
+	* gst/gstsystemclock.c: (gst_system_clock_id_wait_unlocked):
+	Better debugging of clocking info.
+	Allow NULL values when getting discont values.
+
 2005-04-27  Wim Taymans  <wim@fluendo.com>
 
 	* check/gst/gstobject.c: (START_TEST), (gst_object_suite):

@@ -612,6 +612,9 @@ gst_basesink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
     if (bclass->get_times)
       bclass->get_times (basesink, buffer, &start, &end);
 
+    GST_DEBUG_OBJECT (basesink, "got times start: %" GST_TIME_FORMAT
+        ", end: %" GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (end));
+
     if (GST_CLOCK_TIME_IS_VALID (start)) {
       /* save clock id so that we can unlock it if needed */
       GST_LOCK (basesink);
