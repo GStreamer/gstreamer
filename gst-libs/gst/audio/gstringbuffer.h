@@ -38,7 +38,8 @@ typedef struct _GstRingBuffer GstRingBuffer;
 typedef struct _GstRingBufferClass GstRingBufferClass;
 typedef struct _GstRingBufferSpec GstRingBufferSpec;
 
-typedef void (*GstRingBufferCallback) (GstRingBuffer *rbuf, guint advance, gpointer data);
+/* called to fill data with len bytes of samples */
+typedef void (*GstRingBufferCallback) (GstRingBuffer *rbuf, guint8* data, guint len, gpointer user_data);
 
 typedef enum {
   GST_RINGBUFFER_STATE_STOPPED,
@@ -55,21 +56,64 @@ typedef enum {
 
 typedef enum
 {
-  GST_U8,
+  GST_BUFTYPE_LINEAR,
+  GST_BUFTYPE_FLOAT,
+  GST_BUFTYPE_MU_LAW,
+  GST_BUFTYPE_A_LAW,
+  GST_BUFTYPE_IMA_ADPCM,
+  GST_BUFTYPE_MPEG,
+  GST_BUFTYPE_GSM,
+} GstBufferFormatType;
+
+typedef enum
+{
+  GST_UNKNOWN,
+
   GST_S8,
+  GST_U8,
 
-  GST_U16_LE,
   GST_S16_LE,
-  GST_U16_BE,
   GST_S16_BE,
+  GST_U16_LE,
+  GST_U16_BE,
 
-  GST_U24_LE,
   GST_S24_LE,
-  GST_U24_BE,
   GST_S24_BE,
+  GST_U24_LE,
+  GST_U24_BE,
 
-  GST_FLOAT_LE,
-  GST_FLOAT_BE,
+  GST_S32_LE,
+  GST_S32_BE,
+  GST_U32_LE,
+  GST_U32_BE,
+
+  GST_S24_3LE,
+  GST_S24_3BE,
+  GST_U24_3LE,
+  GST_U24_3BE,
+  GST_S20_3LE,
+  GST_S20_3BE,
+  GST_U20_3LE,
+  GST_U20_3BE,
+  GST_S18_3LE,
+  GST_S18_3BE,
+  GST_U18_3LE,
+  GST_U18_3BE,
+
+  GST_FLOAT32_LE,
+  GST_FLOAT32_BE,
+
+  GST_FLOAT64_LE,
+  GST_FLOAT64_BE,
+
+  GST_MU_LAW,
+  GST_A_LAW,
+  GST_IMA_ADPCM,
+  GST_MPEG,
+  GST_GSM,
+
+  /* fill me */
+
 } GstBufferFormat;
 
 struct _GstRingBufferSpec
@@ -78,12 +122,17 @@ struct _GstRingBufferSpec
   GstCaps  *caps;		/* the caps of the buffer */
 
   /* in/out */
+  GstBufferFormatType   type;
   GstBufferFormat format;
+  gboolean  sign;
+  gboolean  bigend;
+  gint	    width;
+  gint	    depth;
   gint      rate;
   gint      channels;
   
-  GstClockTime latency;		/* the required/actual latency */
-  GstClockTime buffersize;	/* the required/actual size of the buffer */
+  GstClockTime latency_time;	/* the required/actual latency time */
+  GstClockTime buffer_time;	/* the required/actual time of the buffer */
   gint     segsize;		/* size of one buffer segement */
   gint     segtotal;		/* total number of segments */
 
@@ -107,18 +156,15 @@ struct _GstRingBuffer {
   GstRingBufferSpec      spec;
   GstRingBufferSegState *segstate;
   gint     		 samples_per_seg;     /* number of samples per segment */
+  guint8		*empty_seg;
 
   /*< public >*/ /* ATOMIC */
   gint			 state;		/* state of the buffer */
-  gint			 freeseg;	/* number of free segments */
   gint			 segplayed;     /* number of segments played since last start */
-
-  /*< protected >*/
-  gint                   playseg;	/* segment currently playing */
-  gint                   writeseg;	/* segment currently written */
-  gint                   segfilled;	/* bytes used in current write segment */
+  gint			 waiting;	/* when waiting for a segment to be freed */
 
   /*< private >*/
+  guint64		 next_sample;	/* the next sample we need to write */
   GstRingBufferCallback  callback;
   gpointer               cb_data;
 };
@@ -146,8 +192,7 @@ GType gst_ringbuffer_get_type(void);
 
 /* callback stuff */
 void     	gst_ringbuffer_set_callback   	(GstRingBuffer *buf, GstRingBufferCallback cb, 
-		                        	 gpointer data);
-void	 	gst_ringbuffer_callback 	(GstRingBuffer *buf, guint advance);
+						 gpointer user_data);
 
 /* allocate resources */
 gboolean 	gst_ringbuffer_acquire 		(GstRingBuffer *buf, GstRingBufferSpec *spec);
@@ -156,20 +201,22 @@ gboolean 	gst_ringbuffer_release 		(GstRingBuffer *buf);
 /* playback/pause */
 gboolean 	gst_ringbuffer_play 		(GstRingBuffer *buf);
 gboolean 	gst_ringbuffer_pause 		(GstRingBuffer *buf);
-gboolean 	gst_ringbuffer_resume 		(GstRingBuffer *buf);
 gboolean 	gst_ringbuffer_stop 		(GstRingBuffer *buf);
 
 /* get status */
 guint	 	gst_ringbuffer_delay 		(GstRingBuffer *buf);
 guint64	 	gst_ringbuffer_played_samples	(GstRingBuffer *buf);
 
+void	 	gst_ringbuffer_set_sample	(GstRingBuffer *buf, guint64 sample);
+
 /* commit samples */
 guint 		gst_ringbuffer_commit 		(GstRingBuffer *buf, guint64 sample, 
 						 guchar *data, guint len);
 
 /* mostly protected */
-guint8*		gst_ringbuffer_prepare_read	(GstRingBuffer *buf, gint segment);
+gboolean	gst_ringbuffer_prepare_read	(GstRingBuffer *buf, gint *segment, guint8 **readptr, gint *len);
 void		gst_ringbuffer_clear		(GstRingBuffer *buf, gint segment);
+void	 	gst_ringbuffer_advance	 	(GstRingBuffer *buf, guint advance);
 
 G_END_DECLS
 

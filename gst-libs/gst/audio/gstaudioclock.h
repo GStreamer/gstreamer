@@ -1,8 +1,8 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2005 Wim Taymans <wim@fluendo.com>
  *
- * audioclock.h: Clock for use by audio plugins
+ * gstaudioclock.h: Clock for use by audio plugins
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -44,21 +44,12 @@ typedef struct _GstAudioClockClass GstAudioClockClass;
 
 typedef GstClockTime (*GstAudioClockGetTimeFunc) (GstClock *clock, gpointer user_data);
 
-
 struct _GstAudioClock {
   GstSystemClock clock;
-
-  GstClockTime prev1, prev2;
 
   /* --- protected --- */
   GstAudioClockGetTimeFunc func;
   gpointer user_data;
-
-  GstClockTimeDiff adjust;
-
-  GSList *async_entries;
-
-  gboolean active;
 
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -72,9 +63,6 @@ struct _GstAudioClockClass {
 GType           gst_audio_clock_get_type 	(void);
 GstClock*	gst_audio_clock_new		(gchar *name, GstAudioClockGetTimeFunc func,
                                                  gpointer user_data);
-void		gst_audio_clock_set_active 	(GstAudioClock *aclock, gboolean active);
-
-void		gst_audio_clock_update_time	(GstAudioClock *aclock, GstClockTime time);
 
 G_END_DECLS
 

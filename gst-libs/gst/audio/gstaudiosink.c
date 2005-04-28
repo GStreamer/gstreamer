@@ -125,6 +125,7 @@ gst_audioringbuffer_class_init (GstAudioRingBufferClass * klass)
   gstringbuffer_class->release =
       GST_DEBUG_FUNCPTR (gst_audioringbuffer_release);
   gstringbuffer_class->play = GST_DEBUG_FUNCPTR (gst_audioringbuffer_play);
+  gstringbuffer_class->resume = GST_DEBUG_FUNCPTR (gst_audioringbuffer_play);
   gstringbuffer_class->stop = GST_DEBUG_FUNCPTR (gst_audioringbuffer_stop);
 
   gstringbuffer_class->delay = GST_DEBUG_FUNCPTR (gst_audioringbuffer_delay);
@@ -144,7 +145,6 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
   GstAudioSinkClass *csink;
   GstAudioRingBuffer *abuf = GST_AUDIORINGBUFFER (buf);
   WriteFunc writefunc;
-  gint segsize, segtotal;
 
   sink = GST_AUDIOSINK (GST_OBJECT_PARENT (buf));
   csink = GST_AUDIOSINK_GET_CLASS (sink);
@@ -155,53 +155,48 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
   if (writefunc == NULL)
     goto no_function;
 
-  segsize = buf->spec.segsize;
-  segtotal = buf->spec.segtotal;
-
   while (TRUE) {
-    if (g_atomic_int_get (&buf->state) == GST_RINGBUFFER_STATE_PLAYING) {
-      gint to_write, written;
-      guint8 *readptr;
-      gint readseg;
+    gint left, len;
+    guint8 *readptr;
+    gint readseg;
 
-      /* we write one segment */
-      to_write = segsize;
-      written = 0;
-      /* need to read and write the next segment */
-      readseg = (buf->playseg + 1) % segtotal;
-      /* get a pointer in the buffer to this segment */
-      readptr = gst_ringbuffer_prepare_read (buf, readseg);
+    if (gst_ringbuffer_prepare_read (buf, &readseg, &readptr, &len)) {
+      gint written = 0;
 
+      left = len;
       do {
-        written = writefunc (sink, readptr + written, to_write);
-        if (written < 0 || written > to_write) {
-          perror ("error writing data\n");
+        GST_DEBUG ("transfer %d bytes from segment %d", left, readseg);
+        written = writefunc (sink, readptr + written, left);
+        GST_DEBUG ("transfered %d bytes", written);
+        if (written < 0 || written > left) {
+          GST_WARNING ("error writing data (reason: %s), skipping segment\n",
+              strerror (errno));
           break;
         }
-        to_write -= written;
-      } while (to_write > 0);
+        left -= written;
+      } while (left > 0);
 
       /* clear written samples */
       gst_ringbuffer_clear (buf, readseg);
 
       /* we wrote one segment */
-      gst_ringbuffer_callback (buf, 1);
+      gst_ringbuffer_advance (buf, 1);
     } else {
       GST_LOCK (abuf);
       GST_DEBUG ("signal wait");
       GST_AUDIORINGBUFFER_SIGNAL (buf);
-      GST_DEBUG ("wait for play");
+      GST_DEBUG ("wait for action");
       GST_AUDIORINGBUFFER_WAIT (buf);
       GST_DEBUG ("got signal");
       if (!abuf->running) {
         GST_UNLOCK (abuf);
         GST_DEBUG ("stop running");
-        goto done;
+        break;
       }
+      GST_DEBUG ("continue running");
       GST_UNLOCK (abuf);
     }
   }
-done:
   GST_DEBUG ("exit thread");
 
   return;
@@ -305,7 +300,7 @@ gst_audioringbuffer_play (GstRingBuffer * buf)
 
   sink = GST_AUDIOSINK (GST_OBJECT_PARENT (buf));
 
-  GST_DEBUG ("play");
+  GST_DEBUG ("play, sending signal");
   GST_AUDIORINGBUFFER_SIGNAL (buf);
 
   return TRUE;
@@ -321,11 +316,15 @@ gst_audioringbuffer_stop (GstRingBuffer * buf)
   csink = GST_AUDIOSINK_GET_CLASS (sink);
 
   /* unblock any pending writes to the audio device */
-  if (csink->reset)
+  if (csink->reset) {
+    GST_DEBUG ("reset...");
     csink->reset (sink);
+    GST_DEBUG ("reset done");
+  }
 
-  GST_DEBUG ("stop");
+  GST_DEBUG ("stop, waiting...");
   GST_AUDIORINGBUFFER_WAIT (buf);
+  GST_DEBUG ("stoped");
 
   return TRUE;
 }
@@ -398,7 +397,9 @@ gst_audiosink_create_ringbuffer (GstBaseAudioSink * sink)
 {
   GstRingBuffer *buffer;
 
+  GST_DEBUG ("creating ringbuffer");
   buffer = g_object_new (GST_TYPE_AUDIORINGBUFFER, NULL);
+  GST_DEBUG ("created ringbuffer @%p", buffer);
 
   return buffer;
 }

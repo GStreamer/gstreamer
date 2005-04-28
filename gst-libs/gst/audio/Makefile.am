@@ -14,7 +14,7 @@ EXTRA_DIST = gstaudiofiltertemplate.c make_filter
 CLEANFILES = gstaudiofilterexample.c \
 	$(BUILT_SOURCES)
 
-libgstaudio_@GST_MAJORMINOR@_la_SOURCES = audio.c audioclock.c \
+libgstaudio_@GST_MAJORMINOR@_la_SOURCES = audio.c gstaudioclock.c \
 	multichannel.c \
 	gstaudiosink.c \
 	gstbaseaudiosink.c \
@@ -24,7 +24,7 @@ nodist_libgstaudio_@GST_MAJORMINOR@_la_SOURCES = $(built_sources) $(built_header
 libgstaudio_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/audio
 libgstaudio_@GST_MAJORMINOR@include_HEADERS = \
 	audio.h \
-	audioclock.h \
+	gstaudioclock.h \
 	gstaudiofilter.h \
 	gstaudiosink.h \
 	gstbaseaudiosink.h \

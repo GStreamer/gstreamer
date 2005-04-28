@@ -20,8 +20,6 @@
 
 #include <gst/gst.h>
 
-#include <gst/audio/audioclock.h>
-
 #ifndef __GST_AUDIO_AUDIO_H__
 #define __GST_AUDIO_AUDIO_H__
 

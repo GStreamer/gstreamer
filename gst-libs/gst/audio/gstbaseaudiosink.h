@@ -52,6 +52,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
 #include "gstringbuffer.h"
+#include "gstaudioclock.h"
 
 G_BEGIN_DECLS
 
@@ -75,8 +76,11 @@ struct _GstBaseAudioSink {
   GstRingBuffer *ringbuffer;
 
   /* required buffer and latency */
-  GstClockTime   buffer;
-  GstClockTime   latency;
+  GstClockTime   buffer_time;
+  GstClockTime   latency_time;
+
+  /* clock */
+  GstClock	*clock;
 };
 
 struct _GstBaseAudioSinkClass {
