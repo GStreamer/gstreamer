@@ -1,5 +1,12 @@
 2005-04-30  Benjamin Otte  <otte@gnome.org>
 
+	* gst/gst.override:
+	  pyg_register_class_init is new API, so only use it when available.
+	  If not available gst.element_register won't work either, but I just
+	  won't care about that right now.
+
+2005-04-30  Benjamin Otte  <otte@gnome.org>
+
 	* gst/arg-types.py:
 	  ref the GstData we get in conversions as pygst_data_from_pyobject
 	  doesn't do that

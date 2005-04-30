@@ -216,7 +216,10 @@ include
 %%
 init
 {
+/* FIXME: new in pygtk-2.6 */
+#ifdef pyg_register_class_init
     pyg_register_class_init (GST_TYPE_ELEMENT, _pygst_element_init);
+#endif
     if (!pygst_value_init())
         return;
 }
