@@ -26,7 +26,6 @@ headers
 static int gst_buffer_getreadbuffer (PyGObject   *self,
 				     int          index,
 				     const void **ptr);
-static int gst_buffer_length        (PyGObject   *self);
 static int gst_buffer_getwritebuf   (PyGObject   *self,
 				     int          index,
 				     const void **ptr);
@@ -184,8 +183,10 @@ override-slot GstBuffer.tp_str
 static PyObject *
 _wrap_gst_buffer_tp_str(PyGObject *self)
 {
-	return PyString_FromStringAndSize(GST_BUFFER_DATA(self->obj),
-					  GST_BUFFER_SIZE(self->obj));
+	GstBuffer *buf = pyg_boxed_get(self, GstBuffer);
+
+	return PyString_FromStringAndSize(GST_BUFFER_DATA(buf),
+					  GST_BUFFER_SIZE(buf));
 }
 %%
 override-slot GstBuffer.tp_as_buffer
@@ -199,64 +200,164 @@ static PyBufferProcs _wrap_gst_buffer_tp_as_buffer = {
 static int
 gst_buffer_getreadbuffer(PyGObject *self, int index, const void **ptr)
 {
+	GstBuffer *buf = pyg_boxed_get(self, GstBuffer);
+
 	if ( index != 0 ) {
 		PyErr_SetString(PyExc_SystemError,
 				"accessing non-existent GstBuffer segment");
 		return -1;
 	}
 	
-	*ptr = GST_BUFFER_DATA(self->obj);
-	return GST_BUFFER_SIZE(self->obj);
+	*ptr = GST_BUFFER_DATA(buf);
+	return GST_BUFFER_SIZE(buf);
 }
 
 static int
 gst_buffer_getsegcount(PyGObject *self, int *lenp)
 {
+	GstBuffer *buf = pyg_boxed_get(self, GstBuffer);
+
 	if (lenp)
-		*lenp = GST_BUFFER_SIZE(self->obj);
+		*lenp = GST_BUFFER_SIZE(buf);
 	return 1;
 }
 
 static int
 gst_buffer_getcharbuf(PyGObject *self, int index, const char **ptr)
 {
+	return gst_buffer_getreadbuffer (self, index, (const void **) ptr);
+}
+
+static int
+gst_buffer_getwritebuf(PyGObject *self, int index, const void **ptr)
+{
+	GstBuffer *buf = pyg_boxed_get(self, GstBuffer);
+
 	if ( index != 0 ) {
 		PyErr_SetString(PyExc_SystemError,
 				"accessing non-existent GstBuffer segment");
 		return -1;
 	}
 	
-	*ptr = GST_BUFFER_DATA(self->obj);
-	return GST_BUFFER_SIZE(self->obj);
-}
+	if (!gst_buffer_is_writable (buf)) {
+		PyErr_SetString(PyExc_TypeError,
+				"buffer is not writable");
+		return -1;
+	}
 
-static int
-gst_buffer_getwritebuf(PyGObject *self, int index, const void **ptr)
-{
-	PyErr_SetString(PyExc_TypeError,
-			"Cannot use GstBuffer as modifiable buffer");
-	return -1;
+	*ptr = GST_BUFFER_DATA(buf);
+	return GST_BUFFER_SIZE(buf);
 }
 
 %%
 override-slot GstBuffer.tp_as_sequence
+/* FIXME: should buffer parts be buffers or strings? */
+
+static int
+pygst_buffer_length(PyObject *self)
+{
+	return GST_BUFFER_SIZE(pygobject_get (self));
+}
+
+static PyObject *
+pygst_buffer_slice(PyObject *self, int start, int end)
+{
+  GstBuffer *buf = GST_BUFFER (pygobject_get (self));
+  if (start < 0)
+    start = 0;
+  if (end < 0)
+    end = 0;
+  if (end > GST_BUFFER_SIZE(buf))
+    end = GST_BUFFER_SIZE(buf);
+    
+  if (end <= start) {
+    PyErr_SetString(PyExc_IndexError, "buffer index out of range");
+    return NULL;
+  }
+  return PyString_FromStringAndSize(GST_BUFFER_DATA (buf) + start, end - start);
+}
+
+static PyObject *
+pygst_buffer_item(PyObject *self, int index)
+{
+  return pygst_buffer_slice (self, index, index + 1);
+}
+
+static int
+pygst_buffer_ass_slice (PyObject *self, int start, int end, PyObject *val)
+{
+  GstBuffer *buf = GST_BUFFER (pygobject_get (self));
+  const void *data;
+  int len;
+
+  if (!gst_buffer_is_writable (buf)) {
+    PyErr_SetString(PyExc_TypeError, "buffer is not writable");
+    return -1;
+  }
+  /* FIXME: policy? */
+  if (start < 0 || end <= start || end > GST_BUFFER_SIZE (buf)) {
+    PyErr_SetString(PyExc_IndexError, "buffer index out of range");
+    return -1;
+  }
+  end -= start;
+  if (PyObject_AsReadBuffer(val, &data, &len))
+    return -1;
+  if (len > end)
+    len = end;
+  memcpy (GST_BUFFER_DATA (buf) + start, data, len);
+  return 0;
+}
+
+static int
+pygst_buffer_ass_item (PyObject *self, int index, PyObject *val)
+{
+  GstBuffer *buf = GST_BUFFER (pygobject_get (self));
+  const void *data;
+  int len;
+
+  if (!gst_buffer_is_writable (buf)) {
+    PyErr_SetString(PyExc_TypeError, "buffer is not writable");
+    return -1;
+  }
+  if (index < 0 || index > GST_BUFFER_SIZE (buf)) {
+    PyErr_SetString(PyExc_IndexError, "buffer index out of range");
+    return -1;
+  }
+  if (PyObject_AsReadBuffer(val, &data, &len))
+    return -1;
+  /* FIXME: how do we handle this? */
+  if (len > GST_BUFFER_SIZE (buf) - index)
+    len = GST_BUFFER_SIZE (buf) - index;
+  memcpy (GST_BUFFER_DATA (buf) + index, data, len);
+  return 0;
+}
+
 static PySequenceMethods _wrap_gst_buffer_tp_as_sequence = {
-	(inquiry)gst_buffer_length,         /* sq_length */
+	pygst_buffer_length,                /* sq_length */
 	NULL,                               /* sq_concat */
 	NULL,                               /* sq_repeat */
-	NULL,                               /* sq_item */
-	NULL,                               /* sq_slice */
-	NULL,                               /* sq_ass_item */
-	NULL,                               /* sq_ass_slice */
+	pygst_buffer_item,		    /* sq_item */
+	pygst_buffer_slice,		    /* sq_slice */
+	pygst_buffer_ass_item,              /* sq_ass_item */
+	pygst_buffer_ass_slice,             /* sq_ass_slice */
 	NULL,                               /* sq_contains */
 	NULL,                               /* sq_inplace_concat */
 	NULL,                               /* sq_inplace_repeat */
 };
-
-static int
-gst_buffer_length(PyGObject *self)
+%%
+define GstBuffer.copy_on_write
+static PyObject *
+_wrap_gst_buffer_copy_on_write (PyObject *self)
 {
-	return GST_BUFFER_SIZE(self->obj);
+	GstBuffer *buf = pyg_boxed_get(self, GstBuffer);
+
+	if (gst_buffer_is_writable (buf)) {
+	  Py_INCREF (self);
+	  return self;
+	}
+	buf = gst_buffer_copy (buf);
+	self = pyg_boxed_new (GST_TYPE_BUFFER, buf, FALSE, TRUE);
+	return self;
 }
 
 /* %%

@@ -22,66 +22,169 @@
 %%
 headers
 
+/* we need to do this until PyClosures get exception handlers */
+#ifndef pyg_closure_set_exception_handler
+#  define pyg_closure_set_exception_handler(ig, nore)
+#  define EXCEPTION_HANDLER G_GNUC_UNUSED
+#else
+#  define EXCEPTION_HANDLER
+#endif
+#define SET_PAD_CLOSURE(self, args, kwargs, name) \
+	static char *kwlist[] = { G_STRINGIFY (name), NULL }; \
+	PyObject *function; \
+	GstPad *pad; \
+	GClosure *closure; \
+	PyGstPadPrivate *priv; \
+\
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, \
+					 "O:GstPad.set_" G_STRINGIFY (name), \
+					 kwlist, \
+					 &function)) { \
+		return NULL; \
+	} \
+\
+	if (!PyCallable_Check(function)) { \
+		PyErr_SetString(PyExc_TypeError, G_STRINGIFY (name) " not callable"); \
+		return NULL; \
+	} \
+\
+	closure = pyg_closure_new (function, NULL, NULL); \
+	pyg_closure_set_exception_handler (closure, handle_ ## name ## _exception); \
+	pygobject_watch_closure((PyObject *)self, closure); \
+	priv = py_pad_private(self);\
+	if (priv->name) { \
+	  g_closure_invalidate (priv->name); \
+	  g_closure_unref (priv->name); \
+	} \
+	priv->name = closure; \
+	pad = (GstPad*)pygobject_get(self); \
+	gst_pad_set_ ## name (pad, call_ ## name); \
+\
+	Py_INCREF(Py_None); \
+	return Py_None;
+	
+static void
+free_pad_private (gpointer data)
+{
+  PyGstPadPrivate *private = data;
+#define INVALIDATE_CLOSURE(closure) \
+  if (closure) { \
+    g_closure_invalidate (closure); \
+    g_closure_unref (closure); \
+    closure = NULL; \
+  } 
+  INVALIDATE_CLOSURE (private->link_function)
+  INVALIDATE_CLOSURE (private->event_function)
+  INVALIDATE_CLOSURE (private->chain_function)
+  INVALIDATE_CLOSURE (private->get_function)
+  INVALIDATE_CLOSURE (private->getcaps_function)
+#undef INVALIDATE_CLOSURE
+}
+
 static PyGstPadPrivate*
 pad_private(GstPad *pad)
 {
-	return (PyGstPadPrivate*)gst_pad_get_element_private(pad);
+	PyGstPadPrivate *private;
+	static GQuark padprivate = 0;
+
+	if (!padprivate)
+		padprivate = g_quark_from_static_string ("PyGst::PadPrivate");
+	private = g_object_get_qdata (G_OBJECT (pad), padprivate);
+	if (private == NULL) {
+		private = g_new0(PyGstPadPrivate, 1);
+		private->pad = (PyGObject *) pygobject_new (G_OBJECT (pad));
+		Py_DECREF (private->pad);
+		g_object_set_qdata_full (G_OBJECT (pad), padprivate, private, free_pad_private);
+	}
+	return private;
 }
 	
 static PyGstPadPrivate*
 py_pad_private(PyGObject *pad)
 {
-	PyGstPadPrivate *private;
-	GstPad *gpad;
-
-	gpad = (GstPad*)pygobject_get(pad);
-	private = (PyGstPadPrivate*)gst_pad_get_element_private(gpad);
-	if (private == NULL) {
-		/* FIXME need to free this somewhere */
-		private = g_new0(PyGstPadPrivate, 1);
-		Py_INCREF(pad);
-		private->pad = pad;
-		gst_pad_set_element_private(gpad, private);
-	}
-	return private;
+	return pad_private ((GstPad *)pygobject_get(pad));
 }
 
 %%
 ignore
   gst_pad_select
   gst_pad_selectv
+  gst_pad_new_from_template
   gst_pad_load_and_link
+%%
+override gst_pad_set_getcaps_function kwargs
+
+static void EXCEPTION_HANDLER
+handle_getcaps_function_exception (GValue *ret, guint n, const GValue *params)
+{
+  g_value_set_boxed (ret, gst_pad_get_pad_template_caps (
+      GST_PAD (g_value_get_object (&params[0]))));
+  PyErr_Clear ();
+}
+
+static GstCaps *
+call_getcaps_function (GstPad *pad)
+{
+	GClosure *closure;
+	GValue ret = { 0, };
+	GValue args = { 0, };
+	GstCaps *caps;
+	
+	g_value_init (&ret, GST_TYPE_CAPS);
+	g_value_init (&args, GST_TYPE_REAL_PAD);
+	g_value_set_object (&args, pad);
+	
+	closure = pad_private(pad)->getcaps_function;
+	
+	g_closure_invoke (closure, &ret, 1, &args, NULL);
+
+	caps = g_value_dup_boxed (&ret);
+	g_value_unset (&ret);
+	g_value_unset (&args);
+	return caps;
+}
+
+static PyObject*
+_wrap_gst_pad_set_getcaps_function (PyGObject *self,
+		PyObject  *args,
+		PyObject  *kwargs)
+{
+	SET_PAD_CLOSURE (self, args, kwargs, getcaps_function)
+}
+
 %%
 override gst_pad_set_link_function kwargs
 
-static GstPadLinkReturn
-call_link_function (GstPad *pad, GstCaps *caps)
+static void EXCEPTION_HANDLER
+handle_link_function_exception (GValue *ret, guint n, const GValue *params)
 {
-	PyObject *function;
-	PyObject *retval;
-	GstPadLinkReturn ret;
-	PyGILState_STATE state;
+  g_value_set_enum (ret, GST_PAD_LINK_REFUSED);
+  PyErr_Clear ();
+}
+
+static GstPadLinkReturn
+call_link_function (GstPad *pad, const GstCaps *caps)
+{
+	GClosure *closure;
+	GValue ret = { 0, };
+	GValue args[2] = { { 0, }, {0, } };
+	GstPadLinkReturn i;
 	
-	function = pad_private(pad)->link_function;
+	g_value_init (&ret, GST_TYPE_PAD_LINK_RETURN);
+	g_value_init (&args[0], GST_TYPE_REAL_PAD);
+	g_value_init (&args[1], GST_TYPE_CAPS);
+	g_value_set_object (&args[0], pad);
+	g_value_set_boxed (&args[1], caps);
 	
-	state = pyg_gil_state_ensure();
+	closure = pad_private(pad)->link_function;
+	
+	g_closure_invoke (closure, &ret, 2, args, NULL);
 
-	retval = (PyObject*)PyObject_CallFunction (function,
-			"OO",
-			pad_private(pad)->pad,
-    			pyg_boxed_new(GST_TYPE_CAPS, caps, TRUE, TRUE));
-
-	if (PyErr_Occurred ()) {
-		PyErr_Print ();
-        	pyg_gil_state_release(state);
-		return GST_PAD_LINK_REFUSED;
-	}
-
-	ret = PyInt_AsLong(retval);
-
-	pyg_gil_state_release(state);
-
-	return ret;
+	i = g_value_get_enum (&ret);
+	g_value_unset (&ret);
+	g_value_unset (&args[0]);
+	g_value_unset (&args[1]);
+	return i;
 }
 
 static PyObject*
@@ -89,55 +192,43 @@ _wrap_gst_pad_set_link_function (PyGObject *self,
 		PyObject  *args,
 		PyObject  *kwargs)
 {
-	static char *kwlist[] = { "link_function", NULL };
-	PyObject *link_function;
-	GstPad *pad;
-
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-				"O:GstPad.set_link_funcion",
-				kwlist,
-				&link_function)) {
-		return NULL;
-	}
-
-	if (!PyCallable_Check(link_function)) {
-		PyErr_SetString(PyExc_TypeError, "link_function not callable");
-		return NULL;
-	}
-
-	Py_INCREF(link_function);
-	py_pad_private(self)->link_function = link_function;
-	pad = (GstPad*)pygobject_get(self);
-	gst_pad_set_link_function(pad, (GstPadLinkFunction)call_link_function);
-
-	Py_INCREF(Py_None);
-	return Py_None;
+	SET_PAD_CLOSURE (self, args, kwargs, link_function)
 }
+
 %%
 override gst_pad_set_chain_function kwargs
 
-static void
-call_chain_function(GstPad *pad, GstBuffer *buf)
+static void EXCEPTION_HANDLER
+handle_chain_function_exception (GValue *ret, guint n, const GValue *params)
 {
-	PyObject *function;
-	PyGILState_STATE state;
+  GstElement *element = gst_pad_get_parent (g_value_get_object (&params[0]));
+  
+  if (!_pygst_element_check_error (element))
+    g_assert_not_reached (); /* only returns FALSE when there's no error */
+}
 
-	function = pad_private(pad)->chain_function;
-
-	state = pyg_gil_state_ensure();
-
-	PyObject_CallFunction (function,
-			"OO", 
-			pad_private(pad)->pad,
-			pyg_boxed_new(GST_TYPE_BUFFER, buf, TRUE, TRUE));
-
-	if (PyErr_Occurred ()) {
-		PyErr_Print ();
-		pyg_gil_state_release(state);
-		return;
+static void
+call_chain_function(GstPad *pad, GstData *data)
+{
+	GClosure *closure;
+	GValue args[2] = { { 0, }, { 0, } };
+	
+	g_value_init (&args[0], GST_TYPE_REAL_PAD);
+	if (GST_IS_BUFFER (data)) {
+	  g_value_init (&args[1], GST_TYPE_BUFFER);
+	} else if (GST_IS_EVENT (data)) {
+	  g_value_init (&args[1], GST_TYPE_EVENT);
+	} else {
+	  g_value_init (&args[1], GST_TYPE_DATA);
 	}
+	g_value_set_object (&args[0], pad);
+	g_value_take_boxed (&args[1], data);
+	closure = pad_private(pad)->chain_function;
+	
+	g_closure_invoke (closure, NULL, 2, args, NULL);
 
-	pyg_gil_state_release(state);
+	g_value_unset (&args[0]);
+	g_value_unset (&args[1]);
 }
 
 static PyObject*
@@ -145,61 +236,44 @@ _wrap_gst_pad_set_chain_function(PyGObject *self,
 				PyObject  *args,
 				PyObject  *kwargs)
 {
-	static char *kwlist[] = { "chain_function", NULL };
-	PyObject *chain_function;
-	GstPad *pad;
-
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-				"O:GstPad.set_chain_funcion",
-				kwlist,
-				&chain_function)) {
-		return NULL;
-	}
-
-	if (!PyCallable_Check(chain_function)) {
-		PyErr_SetString(PyExc_TypeError, "chain_function not callable");
-		return NULL;
-	}
-
-	Py_INCREF(chain_function);
-	py_pad_private(self)->chain_function = chain_function;
-	pad = (GstPad*)pygobject_get(self);
-	gst_pad_set_chain_function(pad, (GstPadChainFunction)call_chain_function);
-
-	Py_INCREF(Py_None);
-	return Py_None;
+	SET_PAD_CLOSURE (self, args, kwargs, chain_function)
 }
 %%
 override gst_pad_set_event_function kwargs
 
+static void EXCEPTION_HANDLER
+handle_event_function_exception (GValue *ret, guint n, const GValue *params)
+{
+  GstElement *element = gst_pad_get_parent (g_value_get_object (&params[0]));
+  
+  if (!_pygst_element_check_error (element))
+    g_assert_not_reached (); /* only returns FALSE when there's no error */
+}
+
 static gboolean
 call_event_function (GstPad *pad, GstEvent *event)
 {
-	PyObject *function;
-	PyObject *retval;
-	gboolean ret;
-	PyGILState_STATE state;
+	GClosure *closure;
+	GValue ret = { 0, };
+	GValue args[2] = { { 0, }, { 0, } };
+	gboolean bool;
 	
-	function = pad_private(pad)->event_function;
+	g_value_init (&ret, G_TYPE_BOOLEAN);
+	g_value_set_boolean (&ret, FALSE);
+	g_value_init (&args[0], GST_TYPE_REAL_PAD);
+	g_value_init (&args[1], GST_TYPE_EVENT);
+	g_value_set_object (&args[0], pad);
+	g_value_set_boxed (&args[1], event);
+	closure = pad_private(pad)->event_function;
 	
-	state = pyg_gil_state_ensure();
+	g_closure_invoke (closure, &ret, 2, args, NULL);
 
-	retval = PyObject_CallFunction (function,
-					"OO",
-					pad_private(pad)->pad,
-					pyg_boxed_new(GST_TYPE_EVENT, event, TRUE, TRUE));
+	bool = g_value_get_boolean (&ret);
 
-	if (PyErr_Occurred ()) {
-		PyErr_Print ();
-        	pyg_gil_state_release(state);
-		return FALSE;
-	}
-
-	ret = PyInt_AsLong(retval);
-
-	pyg_gil_state_release(state);
-
-	return ret;
+	g_value_unset (&ret);
+	g_value_unset (&args[0]);
+	g_value_unset (&args[1]);
+	return bool;
 }
 
 static PyObject*
@@ -207,58 +281,41 @@ _wrap_gst_pad_set_event_function (PyGObject *self,
 				  PyObject  *args,
 				  PyObject  *kwargs)
 {
-	static char *kwlist[] = { "event_function", NULL };
-	PyObject *event_function;
-	GstPad *pad;
-
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-				"O:GstPad.set_event_funcion",
-				kwlist,
-				&event_function)) {
-		return NULL;
-	}
-
-	if (!PyCallable_Check(event_function)) {
-		PyErr_SetString(PyExc_TypeError, "event_function not callable");
-		return NULL;
-	}
-
-	Py_INCREF(event_function);
-	py_pad_private(self)->event_function = event_function;
-	pad = (GstPad*)pygobject_get(self);
-	gst_pad_set_event_function(pad, (GstPadEventFunction)call_event_function);
-
-	Py_INCREF(Py_None);
-	return Py_None;
+	SET_PAD_CLOSURE (self, args, kwargs, event_function)
 }
+
 %%
 override gst_pad_set_get_function kwargs
+
+static void EXCEPTION_HANDLER
+handle_get_function_exception (GValue *ret, guint n, const GValue *params)
+{
+  GstElement *element = gst_pad_get_parent (g_value_get_object (&params[0]));
+  
+  if (!_pygst_element_check_error (element))
+    g_assert_not_reached (); /* only returns FALSE when there's no error */
+}
 
 static GstData*
 call_get_function (GstPad *pad)
 {
-	PyObject *function;
-	PyObject *retval;
+	GClosure *closure;
+	GValue ret = { 0, };
+	GValue args = { 0, };
 	GstData *data = NULL;
-	PyGILState_STATE state;
 	
-	function = pad_private(pad)->get_function;
+	g_value_init (&ret, GST_TYPE_DATA);
+	g_value_init (&args, GST_TYPE_REAL_PAD);
+	g_value_set_object (&args, pad);
+	closure = pad_private(pad)->get_function;
 	
-	state = pyg_gil_state_ensure();
+	g_closure_invoke (closure, &ret, 1, &args, NULL);
 
-	retval = PyObject_CallFunction(function, "O", pad_private(pad)->pad);
+	data = g_value_get_boxed (&ret);
+	gst_data_ref (data);
 
-	if (PyErr_Occurred()) {
-		PyErr_Print();
-		goto bail;
-	} else if (retval == Py_None) {
-	    goto bail;
-	}
-
-	pygst_data_from_pyobject(retval, &data);
-
-bail:
-	pyg_gil_state_release(state);
+	g_value_unset (&ret);
+	g_value_unset (&args);
 	return data;
 }
 
@@ -267,29 +324,7 @@ _wrap_gst_pad_set_get_function (PyGObject *self,
 				PyObject  *args,
 				PyObject  *kwargs)
 {
-	static char *kwlist[] = { "get_function", NULL };
-	PyObject *get_function;
-	GstPad *pad;
-
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-					 "O:GstPad.set_get_funcion",
-					 kwlist,
-					 &get_function)) {
-		return NULL;
-	}
-
-	if (!PyCallable_Check(get_function)) {
-		PyErr_SetString(PyExc_TypeError, "get_function not callable");
-		return NULL;
-	}
-
-	Py_INCREF(get_function);
-	py_pad_private(self)->get_function = get_function;
-	pad = (GstPad*)pygobject_get(self);
-	gst_pad_set_get_function(pad, (GstPadGetFunction)call_get_function);
-
-	Py_INCREF(Py_None);
-	return Py_None;
+	SET_PAD_CLOSURE (self, args, kwargs, get_function)
 }
 %%
 override-slot GstPad.tp_repr
@@ -305,7 +340,7 @@ _wrap_gst_pad_tp_repr (PyGObject *self)
 	parent = gst_pad_get_parent (pad);
 	    
 	buf = g_strdup_printf ("<GstPad (%s:%s) at %lx>",
-		gst_element_get_name (parent),
+		parent ? gst_element_get_name (parent) : "---",
 		gst_pad_get_name (pad), (long) self->obj);
 
 	retval = PyString_FromString(buf);
@@ -457,3 +492,35 @@ _wrap_gst_pad_template_get_caps_by_name(PyGObject *self, PyObject *args, PyObjec
     /* pyg_boxed_new handles NULL checking */
     return pyg_boxed_new(GST_TYPE_CAPS, ret, TRUE, TRUE);
 }
+%%
+override gst_pad_new kwargs
+static int
+_wrap_gst_pad_new(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", "direction", NULL };
+    static char *kwlist2[] = { "template", "name", NULL };
+    PyGObject *templ;
+    char *name = NULL;
+    PyObject *py_direction = NULL;
+    GstPadDirection direction;
+
+    if (PyArg_ParseTupleAndKeywords(args, kwargs, "sO:GstPad.__init__", kwlist, &name, &py_direction)) {
+      if (pyg_enum_get_value(GST_TYPE_PAD_DIRECTION, py_direction, (gint *)&direction))
+	  return -1;
+      self->obj = (GObject *)gst_pad_new(name, direction);
+    } else {
+      PyErr_Clear ();
+      if (PyArg_ParseTupleAndKeywords(args, kwargs, "O!|s:GstPad.__init__", kwlist2, &PyGstPadTemplate_Type, &templ, &name)) {
+	if (name == NULL) 
+	  name = GST_PAD_TEMPLATE_NAME_TEMPLATE (GST_PAD_TEMPLATE(templ->obj));
+	self->obj = (GObject *)gst_pad_new_from_template(GST_PAD_TEMPLATE(templ->obj), name);
+      }
+    }
+    if (!self->obj) {
+      PyErr_SetString(PyExc_RuntimeError, "could not create GstPad object");
+      return -1;
+    }
+    pygobject_register_wrapper((PyObject *)self);
+    return 0;
+}
+

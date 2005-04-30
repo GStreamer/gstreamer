@@ -33,6 +33,7 @@
 
 void pygst_register_classes (PyObject *d);
 void pygst_add_constants(PyObject *module, const gchar *strip_prefix);
+void _pygst_register_boxed_types(PyObject *moddict);
 		
 extern PyMethodDef pygst_functions[];
 extern GSList *mainloops;
@@ -114,6 +115,7 @@ init_gst (void)
 	  g_free (argv);
      }
 
+     _pygst_register_boxed_types (NULL);
      pygobject_register_sinkfunc(GST_TYPE_OBJECT, sink_gstobject);
 
      m = Py_InitModule ("_gst", pygst_functions);

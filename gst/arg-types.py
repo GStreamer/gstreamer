@@ -26,13 +26,15 @@ from argtypes import UInt64Arg, Int64Arg, PointerArg, ArgMatcher, ArgType, match
 
 class GstDataPtrArg(ArgType):
     normal = ('    if (!pygst_data_from_pyobject(py_%(name)s, &%(name)s))\n'
-              '        return NULL;\n')
+              '        return NULL;\n'
+              '    gst_data_ref (%(name)s);\n')
     null =   ('    if (py_%(name)s == Py_None)\n'
               '        %(name)s = NULL;\n'
               '    else if (pyst_data_from_pyobject(py_%(name)s, %(name)s_rect))\n'
               '        %(name)s = &%(name)s_rect;\n'
               '    else\n'
-              '            return NULL;\n')
+              '            return NULL;\n'
+              '    gst_data_ref (%(name)s);\n')
     def write_param(self, ptype, pname, pdflt, pnull, info):
         if pnull:
             info.varlist.add('GstData', pname + '_data')

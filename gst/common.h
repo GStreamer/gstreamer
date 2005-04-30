@@ -23,6 +23,7 @@
 #define __COMMON_H__
 
 #include <Python.h>
+#include <gst/gst.h>
 
 #include "pygobject.h"
 
@@ -32,14 +33,19 @@
 
 typedef struct {
      PyGObject *pad;
-     PyObject *link_function;
-     PyObject *event_function;
-     PyObject *chain_function;
-     PyObject *get_function; 
+     GClosure *link_function;
+     GClosure *event_function;
+     GClosure *chain_function;
+     GClosure *get_function; 
+     GClosure *getcaps_function; 
 } PyGstPadPrivate;
 
 typedef struct {
      PyObject *func, *data;
 } PyGstCustomNotify;
+
+gboolean pygst_data_from_pyobject(PyObject *object, GstData **data);
+PyObject *pygst_data_to_pyobject(GstData *data);
+
 
 #endif /* __COMMON_H__ */

@@ -38,7 +38,11 @@ headers
 
 #include "pygstvalue.h"
 
-extern gboolean pygst_data_from_pyobject (PyObject *object, GstData **data);
+/* These headers have been included directly to get around multiple 
+ * GetAttrString calls */
+#include <compile.h>
+#include <frameobject.h>
+
 PyObject *PyGstExc_LinkError = NULL;
 
 GSList *mainloops = NULL;
@@ -67,6 +71,140 @@ _pygst_main(void)
     g_main_loop_run (loop);
 }
 
+/* This function checks if a former Python code threw an exception and if
+ * so, transforms this exception into an error on the given GstElement.
+ * This allows code run on the element to just raise an exception instead of
+ * returning GStreamer specific return values.
+ * The exception is cleared afterwards.
+ */
+gboolean
+_pygst_element_check_error (GstElement *element)
+{
+  PyObject *type, *value, *traceback, *lineno, *msg, *typemsg;
+  PyFrameObject *frame;
+
+  if (!PyErr_Occurred())
+	  return FALSE;
+
+  PyErr_Fetch (&type, &value, &traceback);
+  if (traceback) {
+    frame = (PyFrameObject *) PyObject_GetAttrString (traceback, "tb_frame");
+    lineno = PyObject_GetAttrString (traceback, "tb_lineno");
+  } else {
+    frame = NULL;
+    lineno = NULL;
+  }
+  msg = PyObject_Str (value);
+  typemsg = PyObject_Str (type);
+  if (msg && PyString_Check (msg)) {
+	    gst_element_error_full (element, GST_LIBRARY_ERROR,
+		    GST_LIBRARY_ERROR_FAILED,
+		    g_strdup (PyString_AsString (msg)), 
+		    typemsg ? g_strconcat (PyString_AsString (typemsg), 
+			    ": ", PyString_AsString (msg), NULL)
+		    : g_strdup (PyString_AsString (msg)),
+		    frame ? PyString_AsString(frame->f_code->co_filename) : "???",
+		    frame ? PyString_AsString(frame->f_code->co_name) : "???",
+		    lineno ? PyInt_AsLong (lineno) : 0);
+  } else {
+	gst_element_error_full (element, GST_LIBRARY_ERROR,
+		    GST_LIBRARY_ERROR_TOO_LAZY,
+		    NULL, NULL,
+		    frame ? PyString_AsString(frame->f_code->co_filename) : "???",
+		    frame ? PyString_AsString(frame->f_code->co_name) : "???",
+		    lineno ? PyInt_AsLong (lineno) : 0);
+  }
+
+  PyErr_Clear ();
+  Py_XDECREF (frame);
+  Py_XDECREF (lineno);
+  Py_DECREF (msg);
+  Py_DECREF (typemsg);
+
+  return TRUE;
+}
+
+PyTypeObject PyGstPadTemplate_Type;
+static int
+add_templates (gpointer gclass, PyObject *templates)
+{
+  gint i, len;
+  PyGObject *templ;
+  
+  if (pygobject_check(templates, &PyGstPadTemplate_Type)) {
+    gst_element_class_add_pad_template (gclass, GST_PAD_TEMPLATE (pygobject_get (templates)));
+    return 0;
+  }
+  
+  if (!PyTuple_Check(templates)) {
+    PyErr_SetString(PyExc_TypeError, "__gsttemplates__ attribute neither a tuple nor a GstPadTemplate!");
+    return -1;
+  }
+  len = PyTuple_Size(templates);
+  if (len == 0)
+    return 0;
+  
+  for (i = 0; i < len; i++) {
+    templ = (PyGObject*) PyTuple_GetItem(templates, i);
+    if (!pygobject_check(templ, &PyGstPadTemplate_Type)) {
+      PyErr_SetString(PyExc_TypeError, "entries for __gsttemplates__ must be of type GstPadTemplate");
+      return -1;
+    }
+  }
+	
+  for (i = 0; i < len; i++) {
+    templ = (PyGObject*) PyTuple_GetItem(templates, i);
+    gst_element_class_add_pad_template (gclass, GST_PAD_TEMPLATE (templ->obj));
+  }
+  return 0;
+}
+
+static int
+_pygst_element_set_details (gpointer gclass, PyObject *details)
+{
+  GstElementDetails gstdetails = { 0, };
+  
+  if (!PyTuple_Check (details)) {
+    PyErr_SetString(PyExc_TypeError, "__gstdetails__ must be a tuple");
+    return -1;
+  }
+  if (PyTuple_Size (details) != 4) {
+    PyErr_SetString(PyExc_TypeError, "__gstdetails__ must be contain 4 elements");
+    return -1;
+  }
+  if (!PyArg_ParseTuple (details, "ssss", &gstdetails.longname, &gstdetails.klass,
+    &gstdetails.description, &gstdetails.author)) {
+    PyErr_SetString (PyExc_TypeError, "__gstdetails__ must be contain 4 strings");
+    return -1;
+  }
+  gst_element_class_set_details (gclass, &gstdetails);
+  return 0;
+}
+
+static int
+_pygst_element_init (gpointer gclass, PyTypeObject *pyclass)
+{
+  PyObject *templates, *details;
+  
+  templates = PyDict_GetItemString(pyclass->tp_dict, "__gsttemplates__");
+  if (templates) {
+    if (add_templates(gclass, templates) != 0)
+      return -1;
+  } else {
+    PyErr_Clear();
+  }
+  details = PyDict_GetItemString(pyclass->tp_dict, "__gstdetails__");
+  if (details) {
+    if (_pygst_element_set_details (gclass, details) != 0)
+      return -1;
+    PyDict_DelItemString(pyclass->tp_dict, "__gstdetails__");
+  } else {
+    PyErr_Clear();
+  }
+
+  return 0;
+}
+
 %%
 include
   gstbin.override
@@ -78,6 +216,7 @@ include
 %%
 init
 {
+    pyg_register_class_init (GST_TYPE_ELEMENT, _pygst_element_init);
     if (!pygst_value_init())
         return;
 }
@@ -771,3 +910,50 @@ _wrap_gst_plugin_get_version(PyGObject *self)
         g_strfreev(items);
         return tuple;
 }
+%%
+override gst_element_register kwargs
+
+static GstPlugin *
+_pygst_get_plugin(void)
+{
+  PyObject *dict = NULL, *module = NULL, *pyplugin = NULL;
+  GstPlugin *ret;
+  
+  if (!(module = PyImport_ImportModule ("gst")))
+    goto err;
+  if (!(dict = PyModule_GetDict (module)))
+    goto err;
+  if (!(pyplugin = PyDict_GetItemString (dict, "__plugin__")))
+    goto err;
+  ret = pyg_boxed_get (pyplugin, GstPlugin);
+  
+  Py_DECREF (module);
+  return ret;
+  
+err:
+  Py_XDECREF (module);
+  PyErr_Clear ();
+  return NULL;
+}
+
+static PyObject *
+_wrap_gst_element_register(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "type", "elementname", "rank", NULL };
+    PyObject *py_type = NULL;
+    guint rank = GST_RANK_NONE;
+    char *elementname = NULL;
+    int ret;
+    GType type;
+
+    /* FIXME: can we make the name optional, too? Anyone know a good default? */
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Os|I:element_register", kwlist,
+	&py_type, &elementname, &rank))
+        return NULL;
+    if ((type = pyg_type_from_object(py_type)) == 0)
+        return NULL;
+    
+    ret = gst_element_register(_pygst_get_plugin(), elementname, rank, type);
+    return PyBool_FromLong(ret);
+}
+

@@ -41,12 +41,24 @@ pygst_data_from_pyobject(PyObject *object, GstData **data)
   return FALSE;
 }
 
+PyObject *
+pygst_data_to_pyobject(GstData *data)
+{
+  gst_data_ref (data);
+  if (GST_IS_BUFFER (data))
+    return pyg_boxed_new(GST_TYPE_BUFFER, data, FALSE, TRUE);
+  else if (GST_IS_EVENT (data))
+    return pyg_boxed_new(GST_TYPE_EVENT, data, FALSE, TRUE);
+  else
+    return pyg_boxed_new(GST_TYPE_DATA, data, FALSE, TRUE);
+}
+
 static PyObject *
 PyGstData_from_value(const GValue *value)
 {
   GstData *data = (GstData *)g_value_get_boxed(value);
 
-  return pyg_boxed_new(GST_TYPE_DATA, data, TRUE, TRUE);
+  return pygst_data_to_pyobject(GST_TYPE_DATA, data);
 }
 
 static int
@@ -57,7 +69,8 @@ PyGstData_to_value(GValue *value, PyObject *object)
   if (!pygst_data_from_pyobject(object, &data))
     return -1;
   
-  g_value_set_boxed(value, data);
+  gst_data_ref (data);
+  g_value_take_boxed(value, data);
   return 0;
 }
 

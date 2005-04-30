@@ -1,3 +1,46 @@
+2005-04-30  Benjamin Otte  <otte@gnome.org>
+
+	* gst/arg-types.py:
+	  ref the GstData we get in conversions as pygst_data_from_pyobject
+	  doesn't do that
+	* gst/gst-types.c: (pygst_data_from_pyobject),
+	(pygst_data_to_pyobject), (PyGstData_from_value),
+	(PyGstData_to_value):
+	  make GstData <=> GValue conversions use the correct G_VALUE_TYPE and
+	  don't copy the values, but just ref them. Avoids mad buffer copying
+	* gst/common.h:
+	  include GstData <=> PyObject conversion funcs
+	* gst/gst.override:
+	  - wrap gst.element_register
+	  - add _pygst_get_plugin to query the plugin used by Python.
+	    Necessary preparation for a Python plugin loader. Returns NULL if
+	    no plugin, in that case gst.element_register registers the element
+	    as part of the running app.
+	  - add a class initializer for gst.Element subtypes, that checks the
+	    variables __gsttemplates__ and __gstdetails__ and makes the correct
+	    gst_element_class_set_element_details and
+	    gst_element_class_add_pad_templates calls from them. Note: This
+	    has issues when virtual methods are enabled.
+	  - add _pygst_element_check_error. This functions checks if Python
+	    code raised an exception and if so calls gst_element_error on the
+	    element and clears the error. Very useful in
+	    loop/chain/get-functions
+	* gst/gstbuffer.override:
+	  - implement buffer.copy_on_write()
+	  - implement sq_(ass_)[item|slice] functions for GstBuffer
+	  - fix PyBufferProcs to allow writing when buffer is writable
+	* gst/gstpad.override:
+	  - wrap gst.Pad to call gst_pad_new or gst_pad_new_from_template
+	    automatically based on arguments
+	  - don't attach private pad data to the element private, use
+	    g_object_set_data instead
+	  - make attaching functions to pads use closures. Allows garbage
+	    collecting pads where handlers have been set
+	  - fix _repr function to only print parent element's name if parent
+	    exists
+	* gst/gstmodule.c: (init_gst):
+	  register GstData <=> GValue conversion
+
 2005-04-28  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstbuffer.override:
