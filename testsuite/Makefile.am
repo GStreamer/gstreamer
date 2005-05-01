@@ -31,7 +31,7 @@ tests =  \
 	test_xml.py
 
 check-local: testhelper.la
-	@PYTHONPATH=$(PYTHONPATH):$(top_builddir):$(top_builddir)/gst/.libs $(PYTHON) $(srcdir)/runtests.py
+	@G_DEBUG=fatal_warnings PYTHONPATH=$(PYTHONPATH):$(top_builddir):$(top_builddir)/gst/.libs $(PYTHON) $(srcdir)/runtests.py
 	@rm -fr *.pyc
 
 EXTRA_DIST = $(tests) common.py runtests.py test-object.h

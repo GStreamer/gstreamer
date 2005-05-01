@@ -1,3 +1,21 @@
+2005-05-01  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gst-types.c:
+	  remove, it's called gst-argtypes.c these days
+	* gst/common.h:
+	* gst/gst-argtypes.c: (pygst_caps_from_pyobject):
+	  add function to transform a PyObject to a GstCaps*
+	* gst/gstcaps.override:
+	  implement more sequence functions, deprecate caps.get_structure() in
+	  favour of caps[i] and make the structure-by-reference stuff work
+	* gst/gststructure.override:
+	  make structures from caps work by reference but don't die a horrible
+	  death if the caps get removed before the structure is
+	* testsuite/Makefile.am:
+	  run with G_DEBUG=fatal_warnings so we crash on g_warnings in C code
+	* testsuite/test_caps.py:
+	  add some checks
+
 2005-04-30  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gst.override:

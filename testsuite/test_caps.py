@@ -61,6 +61,14 @@ class CapsTest(unittest.TestCase):
 	assert isinstance(struct['height'], float)
         assert struct['height'] == 20.0
 
+    def testCapsRefernceStructs(self):
+        'test that shows why it\'s not a good idea to use structures by reference'
+	caps = gst.Caps('hi/mom,width=0')
+	structure = caps.get_structure(0)
+	del caps
+	assert structure['width'] == 0
+	
+
     def testCapsStructureChange(self):
 	'test if changing the structure of the caps works by reference'
 	assert self.structure['width'] == 10
@@ -80,6 +88,13 @@ class CapsTest(unittest.TestCase):
         
         # This causes segfault!
         #self.assertRaises(TypeError, gst.Caps, struct, 10, None)
+
+    def testTrueFalse(self):
+        'test that comparisons using caps work the intended way'
+	#assert gst.Caps('ANY') # not empty even though it has no structures
+	assert not gst.Caps() # empty
+	assert not gst.Caps('EMPTY') # also empty
+	assert gst.Caps('your/mom')
         
 if __name__ == "__main__":
     unittest.main()

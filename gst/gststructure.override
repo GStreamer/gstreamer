@@ -328,3 +328,18 @@ _wrap_gst_structure_from_string(PyObject *self, PyObject *args, PyObject *kwargs
     /* pyg_boxed_new handles NULL checking */
     return pyg_boxed_new(GST_TYPE_STRUCTURE, ret, TRUE, TRUE);
 }
+%%
+override-slot GstStructure.tp_dealloc
+static void
+_wrap_gst_structure_tp_dealloc (PyObject *self)
+{
+  PyGBoxed *boxed = (PyGBoxed *) self;
+
+  if (boxed->free_on_dealloc && boxed->boxed) {
+    gst_structure_free (boxed->boxed);
+  } else if (boxed->boxed) {
+    pygst_caps_map_remove_structure (self);
+  }
+
+  self->ob_type->tp_free((PyObject *)self);
+}
