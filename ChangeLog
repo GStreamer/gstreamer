@@ -1,3 +1,11 @@
+2005-05-01  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/elements/gstfakesink.c: (gst_fakesink_change_state):
+	  don't error when we are in error already
+	  the correct fix would be to not allow erroring in downwards
+	  state changes, but I guess the API police would hunt me down if I
+	  did that
+
 2005-04-26  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gsttrashstack.h:

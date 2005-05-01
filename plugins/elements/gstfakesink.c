@@ -396,7 +396,8 @@ gst_fakesink_change_state (GstElement * element)
         goto error;
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
-      if (fakesink->state_error == FAKESINK_STATE_ERROR_PLAYING_PAUSED)
+      if (!GST_FLAG_IS_SET (fakesink, GST_ELEMENT_IN_ERROR) &&
+          fakesink->state_error == FAKESINK_STATE_ERROR_PLAYING_PAUSED)
         goto error;
       break;
     case GST_STATE_PAUSED_TO_READY:
