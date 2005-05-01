@@ -1,3 +1,9 @@
+2005-05-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* testsuite/test_interface.py:
+	  do not do stuff in a testsuite that isn't guaranteed to be there.
+	  could do with some way of detecting and skipping.
+
 2005-05-01  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gst-types.c:
