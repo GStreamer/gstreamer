@@ -1,3 +1,10 @@
+2005-05-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_class_init),
+	(gst_ffmpegmux_finalize), (gst_ffmpegmux_loop),
+	(gst_ffmpegmux_change_state):
+	  Fix possible segfaults (#302017).
+
 2005-04-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_handle_event):

@@ -97,7 +97,7 @@ static GHashTable *global_plugins;
 static void gst_ffmpegmux_class_init (GstFFMpegMuxClass * klass);
 static void gst_ffmpegmux_base_init (GstFFMpegMuxClass * klass);
 static void gst_ffmpegmux_init (GstFFMpegMux * ffmpegmux);
-static void gst_ffmpegmux_dispose (GObject * object);
+static void gst_ffmpegmux_finalize (GObject * object);
 
 static GstPadLinkReturn
 gst_ffmpegmux_connect (GstPad * pad, const GstCaps * caps);
@@ -167,7 +167,7 @@ gst_ffmpegmux_class_init (GstFFMpegMuxClass * klass)
 
   gstelement_class->request_new_pad = gst_ffmpegmux_request_new_pad;
   gstelement_class->change_state = gst_ffmpegmux_change_state;
-  gobject_class->dispose = gst_ffmpegmux_dispose;
+  gobject_class->finalize = gst_ffmpegmux_finalize;
 }
 
 static void
@@ -196,16 +196,14 @@ gst_ffmpegmux_init (GstFFMpegMux * ffmpegmux)
 }
 
 static void
-gst_ffmpegmux_dispose (GObject * object)
+gst_ffmpegmux_finalize (GObject * object)
 {
   GstFFMpegMux *ffmpegmux = (GstFFMpegMux *) object;
 
-  if (ffmpegmux->opened) {
-    url_fclose (&ffmpegmux->context->pb);
-    ffmpegmux->opened = FALSE;
-  }
-
   g_free (ffmpegmux->context);
+
+  if (G_OBJECT_CLASS (parent_class)->finalize)
+    G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstPad *
@@ -488,8 +486,8 @@ gst_ffmpegmux_loop (GstElement * element)
   } else {
     /* close down */
     av_write_trailer (ffmpegmux->context);
-    url_fclose (&ffmpegmux->context->pb);
     ffmpegmux->opened = FALSE;
+    url_fclose (&ffmpegmux->context->pb);
     gst_element_set_eos (element);
   }
 }
@@ -507,8 +505,8 @@ gst_ffmpegmux_change_state (GstElement * element)
         ffmpegmux->tags = NULL;
       }
       if (ffmpegmux->opened) {
-        url_fclose (&ffmpegmux->context->pb);
         ffmpegmux->opened = FALSE;
+        url_fclose (&ffmpegmux->context->pb);
       }
       break;
   }
