@@ -188,14 +188,23 @@ override gst_element_link kwargs
 static PyObject *
 _wrap_gst_element_link(PyGObject *self, PyObject *args, PyObject *kwargs)
 {
-    static char *kwlist[] = { "dest", NULL };
+    static char *kwlist[] = { "dest", "filtercaps", NULL };
     PyGObject *dest;
+    PyObject *py_caps = NULL;
     int ret;
+    GstCaps *caps = NULL;
+    gboolean caps_is_copy;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!:GstElement.link",
-                                     kwlist, &PyGstElement_Type, &dest))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!|O:GstElement.link",
+                                     kwlist, &PyGstElement_Type, &dest, &py_caps))
         return NULL;
-    ret = gst_element_link(GST_ELEMENT(self->obj), GST_ELEMENT(dest->obj));
+    if (py_caps == NULL)
+      caps = NULL;
+    else
+      caps = pygst_caps_from_pyobject (py_caps, &caps_is_copy);
+    ret = gst_element_link_filtered(GST_ELEMENT(self->obj), GST_ELEMENT(dest->obj), caps);
+    if (caps && caps_is_copy)
+        gst_caps_free (caps);
     if (!ret) {
 	PyErr_Format(PyGstExc_LinkError,
 		     "failed to link %s with %s",
@@ -217,30 +226,10 @@ _wrap_gst_element_link_filtered(PyGObject *self, PyObject *args,
     PyObject *py_filtercaps;
     int ret;
     GstCaps *filtercaps = NULL;
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-                                     "O!O:GstElement.link_filtered",
-                                     kwlist, &PyGstElement_Type,
-                                     &dest, &py_filtercaps))
-        return NULL;
-    if (pyg_boxed_check(py_filtercaps, GST_TYPE_CAPS))
-        filtercaps = pyg_boxed_get(py_filtercaps, GstCaps);
-    else {
-        PyErr_SetString(PyExc_TypeError, "filtercaps should be a GstCaps");
-        return NULL;
-    }
-    ret = gst_element_link_filtered(GST_ELEMENT(self->obj),
-                                    GST_ELEMENT(dest->obj),
-                                    filtercaps);
-    if (!ret) {
-	PyErr_Format(PyGstExc_LinkError,
-		     "failed to link %s with %s",
-		     GST_ELEMENT_NAME(self->obj),
-		     GST_ELEMENT_NAME(dest->obj));
-        return NULL;
-    }
-    return PyBool_FromLong(ret);
-
+    
+    if (PyErr_Warn(PyExc_DeprecationWarning, "element.link_filtered is deprecated, use element.link") < 0)
+	return NULL;
+    return _wrap_gst_element_link (self, args, kwargs);
 }
 
 %%

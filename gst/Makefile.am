@@ -30,6 +30,7 @@ noinst_HEADERS = common.h pygstvalue.h
 INCLUDES = $(PYTHON_INCLUDES)
 EXTRA_DIST = $(defs_DATA) common.h arg-types.py ltihooks.py
 PYGTK_DEFSDIR = @PYGTK_DEFSDIR@
+GEN_FILES = arg-types.py gst-types.defs
 
 # GStreamer bindings
 _gst_la_CFLAGS = $(common_cflags)
@@ -49,7 +50,7 @@ GST_OVERRIDES = 		\
 GST_DEFS = gst.defs gst-types.defs
 CLEANFILES = gst.c
 EXTRA_DIST += $(GST_DEFS) $(GST_OVERRIDES)
-gst.c: $(GST_DEFS) $(GST_OVERRIDES)
+gst.c: $(GST_DEFS) $(GST_OVERRIDES) $(GEN_FILES)
 
 # gst-play bindings
 play_la_CFLAGS = $(common_cflags) $(GST_PLAY_CFLAGS) 
@@ -61,7 +62,7 @@ PLAY_OVERRIDES = play.override
 PLAY_DEFS = play.defs
 CLEANFILES += play.c
 EXTRA_DIST += $(PLAY_DEFS) $(PLAY_OVERRIDES) 
-play.c: $(PLAY_DEFS) $(PLAY_OVERRIDES)
+play.c: $(PLAY_DEFS) $(PLAY_OVERRIDES) $(GEN_FILES)
 
 # GStreamer interfaces bindings
 interfaces_la_CFLAGS = $(common_cflags) $(GST_INTERFACES_CFLAGS) 
@@ -73,9 +74,9 @@ INTERFACES_OVERRIDES = interfaces.override xoverlay.override
 INTERFACES_DEFS = interfaces.defs xoverlay.defs xwindowlistener.defs
 CLEANFILES += interfaces.c
 EXTRA_DIST += $(INTERFACES_DEFS) $(INTERFACES_OVERRIDES) 
-interfaces.c: $(INTERFACES_DEFS) $(INTERFACES_OVERRIDES)
+interfaces.c: $(INTERFACES_DEFS) $(INTERFACES_OVERRIDES) $(GEN_FILES)
 
-.defs.c:
+.defs.c: 
 	(cd $(srcdir) \
 	&& $(PYGTK_CODEGEN) \
 		--load-types $(srcdir)/arg-types.py \

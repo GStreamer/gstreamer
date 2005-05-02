@@ -4,7 +4,7 @@ from common import gst, unittest
 class CapsTest(unittest.TestCase):
     def setUp(self):
 	self.caps = gst.caps_from_string('video/x-raw-yuv,width=10,framerate=5.0;video/x-raw-rgb,width=15,framerate=10.0')
-	self.structure = self.caps.get_structure(0)
+	self.structure = self.caps[0]
 
     def testCapsMime(self):
 	mime = self.structure.get_name()
@@ -64,7 +64,7 @@ class CapsTest(unittest.TestCase):
     def testCapsRefernceStructs(self):
         'test that shows why it\'s not a good idea to use structures by reference'
 	caps = gst.Caps('hi/mom,width=0')
-	structure = caps.get_structure(0)
+	structure = caps[0]
 	del caps
 	assert structure['width'] == 0
 	

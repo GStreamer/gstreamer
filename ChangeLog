@@ -1,3 +1,16 @@
+2005-05-02  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/Makefile.am:
+	  running the code generator depends on the files it uses
+	* gst/arg-types.py:
+	  add GstCaps parsing
+	* gst/gstelement.override:
+	  make element.link take an optional caps parameter, deprecate
+	  element.link_filtered
+	* testsuite/test_caps.py:
+	  replace caps.get_strcuture(i) calls with caps[i], the deprecation
+	  warnings are annoying
+
 2005-05-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* testsuite/test_interface.py:

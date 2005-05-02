@@ -86,7 +86,7 @@ class XmlNodeArg(ArgType):
 		info.add_parselist('O', ['&py'+pname], [pname])
 		info.arglist.append(pname)
 		self.names["name"] = pname
-		info.codebefore.append(self.parm %self.names)
+		info.codebefore.append(self.parm % self.names)
 		info.codeafter.append(self.parmp % self.names);
 	def write_return(self, ptype, ownsreturn, info):
 		info.varlist.add('PyObject', '*xml = _gst_get_libxml2_module()')
@@ -103,12 +103,64 @@ class XmlDocArg(XmlNodeArg):
 			"xptr":"xmlDocPtr",
 			"xwrap":"libxml_xmlDocPtrWrap"}
 			
+class GstCapsArg(ArgType):
+    """GstCaps node generator"""
+
+    before = ('    %(name)s = pygst_caps_from_pyobject (py_%(name)s, %(namecopy)s);\n')
+    beforenull = ('    if (py_%(name)s == Py_None)\n'
+                  '        %(name)s = NULL;\n'
+                  '    else\n'
+                  '  ' + before)
+    after = ('    if (%(name)s && %(name)s_is_copy)\n'
+             '        gst_caps_free (%(name)s);\n')
+
+    def write_param(self, ptype, pname, pdflt, pnull, info):
+        if ptype == 'const-GstCaps*':
+            self.write_const_param(pname, pdflt, pnull, info)
+        elif ptype == 'GstCaps*':
+            self.write_normal_param(pname, pdflt, pnull, info)
+        else:
+            raise RuntimeError, "write_param not implemented for %s" % ptype
+    def write_const_param(self, pname, pdflt, pnull, info):
+        info.varlist.add('PyObject', '*py_'+pname)
+        info.varlist.add('GstCaps', '*'+pname)
+        info.varlist.add('gboolean', pname+'_is_copy')
+		info.add_parselist('O', ['&py_'+pname], [pname])
+        info.arglist.append(pname)
+        if pnull:
+            info.codebefore.append (self.beforenull % { 'name' : pname, 'namecopy' : '&'+pname+'_is_copy' })
+        else:
+            info.codebefore.append (self.before % { 'name' : pname, 'namecopy' : '&'+pname+'_is_copy' })
+        info.codeafter.append (self.after % { 'name' : pname, 'namecopy' : '&'+pname+'_is_copy' })
+    def write_normal_param(self, pname, pdflt, pnull, info):
+        info.varlist.add('PyObject', '*py_'+pname)
+        info.varlist.add('GstCaps', '*'+pname)
+		info.add_parselist('O', ['&py_'+pname], [pname])
+        info.arglist.append(pname)
+        if pnull:
+            info.codebefore.append (self.beforenull % { 'name' : pname, 'namecopy' : 'NULL' })
+        else:
+            info.codebefore.append (self.before % { 'name' : pname, 'namecopy' : 'NULL' })
+
+	def write_return(self, ptype, ownsreturn, info):
+        if ptype == 'GstCaps*':
+		    info.varlist.add('GstCaps', '*ret')
+            copyval = 'FALSE'
+        elif ptype == 'const-GstCaps*':
+		    info.varlist.add('const GstCaps', '*ret')
+            copyval = 'TRUE'
+        else:
+            raise RuntimeError, "write_return not implemented for %s" % ptype
+		info.codeafter.append('    return pyg_boxed_new (GST_TYPE_CAPS, ret, '+copyval+', TRUE);')
 			
 matcher.register('GstData*', GstDataPtrArg())
 matcher.register('GstClockTime', UInt64Arg())
 matcher.register('GstClockTimeDiff', Int64Arg())
 matcher.register('xmlNodePtr', XmlNodeArg())
 matcher.register('xmlDocPtr', XmlDocArg())
+matcher.register('GstCaps', GstCapsArg()) #FIXME: does this work?
+matcher.register('GstCaps*', GstCapsArg()) #FIXME: does this work?
+matcher.register('const-GstCaps*', GstCapsArg())
 
 arg = PointerArg('gpointer', 'G_TYPE_POINTER')
 matcher.register('GstClockID', arg)
