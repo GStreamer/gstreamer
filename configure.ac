@@ -146,15 +146,23 @@ esac])
 
 AM_CONDITIONAL(BUILD_DOCS,          test "x$BUILD_DOCS" = "xyes")
 
+dnl decide on error flags
+dnl if we support -Wall, set it unconditionally
+AS_COMPILER_FLAG(-Wall,
+                 PYGST_ERROR_CFLAGS="-Wall",
+                 PYGST_ERROR_CFLAGS="")
+dnl if we're in nano >= 1, add -Werror if supported
+if test "x$GST_CVS" = "xyes"
+then
+  AS_COMPILER_FLAG(-Werror, PYGST_ERROR_CFLAGS="$PYGST_ERROR_CFLAGS -Werror")
+fi
+
+PYGST_CFLAGS="$PYGST_ERROR_CFLAGS"
+AC_SUBST(PYGST_CFLAGS)
 
 dnl add debugging options ...
 changequote(,)dnl
 if test "x$GCC" = xyes; then
-  case " $CFLAGS " in
-  *[\	\ ]-Wall[\	\ ]*) ;;
-  *) CFLAGS="$CFLAGS -Wall" ;;
-  esac
-
   case " $CFLAGS " in
   *[\	\ ]-std=c9x[\	\ ]*) ;;
   *) CFLAGS="$CFLAGS -std=c9x" ;;

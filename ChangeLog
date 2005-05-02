@@ -1,5 +1,20 @@
 2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	  add Wall and Werror just like other modules
+	* gst/gst.override:
+	* gst/gstelement.override:
+	  fix compile problems for Wall Werror
+	* testsuite/common.py:
+	* Makefile.am:
+	* gst/Makefile.am:
+	* gst/ltihooks.py:
+	* ltihooks.py:
+	  move ltihooks to root; having it in gst was a bad hack and
+	  breaks distcheck
+
+2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* testsuite/common.py: ltihooks only needed for uninstalled (?)
 
 2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>

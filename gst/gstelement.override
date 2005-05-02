@@ -221,12 +221,6 @@ static PyObject *
 _wrap_gst_element_link_filtered(PyGObject *self, PyObject *args,
                                 PyObject *kwargs)
 {
-    static char *kwlist[] = { "dest", "filtercaps", NULL };
-    PyGObject *dest;
-    PyObject *py_filtercaps;
-    int ret;
-    GstCaps *filtercaps = NULL;
-    
     if (PyErr_Warn(PyExc_DeprecationWarning, "element.link_filtered is deprecated, use element.link") < 0)
 	return NULL;
     return _wrap_gst_element_link (self, args, kwargs);

@@ -11,6 +11,7 @@ SUBDIRS = \
 DIST_SUBDIRS = $(UNCONDDIRS) docs
 
 EXTRA_DIST = \
+	ltihooks.py \
 	gst-python.spec.in \
 	gst-python.spec \
 	README-docs \
