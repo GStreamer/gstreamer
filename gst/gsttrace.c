@@ -42,7 +42,7 @@ static
   __inline__
 #endif
     void
-read_tsc (gint64 * dst)
+read_tsc (guint64 * dst)
 {
 #ifdef HAVE_RDTSC
   guint64 tsc;
@@ -55,7 +55,7 @@ read_tsc (gint64 * dst)
 }
 
 void
-gst_trace_read_tsc (gint64 * dst)
+gst_trace_read_tsc (guint64 * dst)
 {
   read_tsc (dst);
 }

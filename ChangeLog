@@ -1,5 +1,13 @@
 2005-05-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gsttrace.c: (read_tsc), (gst_trace_read_tsc):
+	* gst/gsttrace.h:
+	  tsc's are guint64's.
+	* tests/seeking/seeking1.c: (main):
+	  so use them that way.
+
+2005-05-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* testsuite/indexers/cache1.c: (lookup):
 	* testsuite/indexers/indexdump.c: (main):
 	  more print format fixes

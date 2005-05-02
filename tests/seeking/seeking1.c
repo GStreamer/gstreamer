@@ -27,7 +27,7 @@ main (gint argc, gchar * argv[])
   GstElement *pipeline;
   GstElement *fakesrc;
   GstElement *fakesink;
-  guint64 value;
+  gint64 value;
   GstFormat format;
 
   gst_init (&argc, &argv);
