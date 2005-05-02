@@ -1,3 +1,7 @@
+2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* testsuite/runtests.py: also return exit code 1 in case of errors
+
 2005-05-02  Edward Hervey  <bilboed@bilboed.com>
 
 	* testsuite/common.py: Added case for 64bit-system that don't have

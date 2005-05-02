@@ -23,5 +23,5 @@ for name in gettestnames():
     
 testRunner = unittest.TextTestRunner()
 result = testRunner.run(suite)
-if result.failures:
+if result.failures or result.errors:
     sys.exit(1)
