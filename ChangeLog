@@ -1,5 +1,11 @@
 2005-05-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* testsuite/indexers/cache1.c: (lookup):
+	* testsuite/indexers/indexdump.c: (main):
+	  more print format fixes
+
+2005-05-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* testsuite/elements/property.h:
 	  use correct printf format
 
