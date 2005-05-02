@@ -810,6 +810,7 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
   guint32 fmt = 0;
 
   switch (pix_fmt) {
+    case PIX_FMT_YUVJ420P:
     case PIX_FMT_YUV420P:
       fmt = GST_MAKE_FOURCC ('I', '4', '2', '0');
       break;
@@ -830,9 +831,11 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
       g_mask = 0x00ff00;
       b_mask = 0xff0000;
       break;
+    case PIX_FMT_YUVJ422P:
     case PIX_FMT_YUV422P:
       fmt = GST_MAKE_FOURCC ('Y', '4', '2', 'B');
       break;
+    case PIX_FMT_YUVJ444P:
     case PIX_FMT_YUV444P:
       /* .. */
       break;
