@@ -43,13 +43,18 @@ try:
 except ImportError:
    pass
 
-# testhelper needs ltihooks
-import gst.ltihooks
+# testhelper needs ltihooks when running uninstalled
+uninstalled = False
+try:
+    import gst.ltihooks
+except ImportError:
+    uninstalled = True
 
 import testhelper
 
-# finally remove ltihooks
-gst.ltihooks.uninstall()
+if uninstalled:
+    # finally remove ltihooks
+    gst.ltihooks.uninstall()
 
 _stderr = None
 

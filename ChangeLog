@@ -1,5 +1,9 @@
 2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* testsuite/common.py: ltihooks only needed for uninstalled (?)
+
+2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* testsuite/runtests.py: a much nicer way of getting all the tests
 
 2005-05-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
