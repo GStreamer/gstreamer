@@ -1,5 +1,10 @@
 2005-05-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* testsuite/elements/property.h:
+	  use correct printf format
+
+2005-05-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/gst/tmpl/gstconfig.sgml:
 	* gst/gstconfig.h.in:
 	  move documentation for some symbols.  Add doc for GST_PTR_FORMAT

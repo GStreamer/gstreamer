@@ -10,7 +10,7 @@ property_change_callback (GObject *object, GstObject *orig, GParamSpec *pspec)
     g_object_get_property (G_OBJECT (orig), pspec->name, &value);
     /* fix current bug with g_strdup_value_contents not working with gint64 */
     if (G_IS_PARAM_SPEC_INT64 (pspec))
-      str = g_strdup_printf ("%lld", g_value_get_int64 (&value));
+      str = g_strdup_printf ("%" G_GINT64_FORMAT, g_value_get_int64 (&value));
     else
       str = g_strdup_value_contents (&value);
     g_print ("%s: %s = %s\n", GST_OBJECT_NAME (orig), pspec->name, str);
