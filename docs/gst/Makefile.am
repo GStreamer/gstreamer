@@ -161,7 +161,8 @@ SCANOBJ_FILES =				\
 	.libs/$(DOC_MODULE)-scan.o	\
 	$(DOC_MODULE).signals
 
-CLEANFILES = $(SCANOBJ_FILES) $(DOC_MODULE)-unused.txt $(DOC_STAMPS)
+CLEANFILES = $(SCANOBJ_FILES) $(DOC_MODULE)-unused.txt $(DOC_STAMPS) \
+	$(DOC_MODULE)-overrides.txt
 
 if HAVE_GTK_DOC
 all-local: html-build.stamp
