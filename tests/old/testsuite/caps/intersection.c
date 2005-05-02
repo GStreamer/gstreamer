@@ -52,8 +52,9 @@ main (int argc, char *argv[])
 
   gst_init (&argc, &argv);
 
-  doc = xmlNewDoc ("1.0");
-  doc->xmlRootNode = xmlNewDocNode (doc, NULL, "Capabilities", NULL);
+  doc = xmlNewDoc ((const xmlChar *) "1.0");
+  doc->xmlRootNode =
+      xmlNewDocNode (doc, NULL, (const xmlChar *) "Capabilities", NULL);
 
   /*
      g_mem_chunk_info ();
@@ -66,28 +67,38 @@ main (int argc, char *argv[])
 
   caps = gst_caps_intersect (gst_static_caps_get (&sinkcaps),
       gst_static_caps_get (&mp1parsecaps));
-  parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities1", NULL);
+  parent =
+      xmlNewChild (doc->xmlRootNode, NULL, (const xmlChar *) "Capabilities1",
+      NULL);
   gst_caps_save_thyself (caps, parent);
 
   caps = gst_caps_intersect (gst_static_caps_get (&rawcaps),
       gst_static_caps_get (&rawcaps2));
-  parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities2", NULL);
+  parent =
+      xmlNewChild (doc->xmlRootNode, NULL, (const xmlChar *) "Capabilities2",
+      NULL);
   gst_caps_save_thyself (caps, parent);
 
   caps = gst_caps_intersect (gst_static_caps_get (&rawcaps3),
       gst_static_caps_get (&rawcaps4));
-  parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities3", NULL);
+  parent =
+      xmlNewChild (doc->xmlRootNode, NULL, (const xmlChar *) "Capabilities3",
+      NULL);
   gst_caps_save_thyself (caps, parent);
 
   caps = gst_caps_intersect (gst_static_caps_get (&rawcaps3),
       gst_static_caps_get (&rawcaps5));
-  parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities4", NULL);
+  parent =
+      xmlNewChild (doc->xmlRootNode, NULL, (const xmlChar *) "Capabilities4",
+      NULL);
   gst_caps_save_thyself (caps, parent);
 
   caps = gst_caps_intersect (gst_static_caps_get (&rawcaps6),
       gst_caps_new_full (gst_structure_copy (gst_caps_get_structure
               (gst_static_caps_get (&rawcaps6), 0)), NULL));
-  parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities5", NULL);
+  parent =
+      xmlNewChild (doc->xmlRootNode, NULL, (const xmlChar *) "Capabilities5",
+      NULL);
   gst_caps_save_thyself (caps, parent);
 
   caps = gst_caps_intersect (gst_static_caps_get (&rawcaps7),

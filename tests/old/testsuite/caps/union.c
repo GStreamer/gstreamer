@@ -17,12 +17,15 @@ main (int argc, char *argv[])
 
   gst_init (&argc, &argv);
 
-  doc = xmlNewDoc ("1.0");
-  doc->xmlRootNode = xmlNewDocNode (doc, NULL, "Capabilities", NULL);
+  doc = xmlNewDoc ((const xmlChar *) "1.0");
+  doc->xmlRootNode =
+      xmlNewDocNode (doc, NULL, (const xmlChar *) "Capabilities", NULL);
 
   caps = gst_caps_union (gst_static_caps_get (&sinkcaps),
       gst_static_caps_get (&mp1parsecaps));
-  parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities1", NULL);
+  parent =
+      xmlNewChild (doc->xmlRootNode, NULL, (const xmlChar *) "Capabilities1",
+      NULL);
   gst_caps_save_thyself (caps, parent);
 
   xmlDocDump (stdout, doc);

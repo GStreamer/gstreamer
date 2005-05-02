@@ -1,5 +1,11 @@
 2005-05-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* testsuite/caps/intersection.c: (main):
+	* testsuite/caps/union.c: (main):
+	  more gcc4 fixes by casting
+
+2005-05-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstregistry.h:
 	  win32/mingw obviously did not work
 	* gst/gsttag.h:
