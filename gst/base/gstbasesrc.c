@@ -455,7 +455,7 @@ gst_basesrc_get_range_unlocked (GstPad * pad, guint64 offset, guint length,
     }
   }
   if (length == 0)
-    return GST_FLOW_UNEXPECTED;
+    goto unexpected_length;
 
   ret = bclass->create (src, offset, length, buf);
 
@@ -471,6 +471,11 @@ no_function:
   {
     GST_DEBUG_OBJECT (src, "no create function");
     return GST_FLOW_ERROR;
+  }
+unexpected_length:
+  {
+    GST_DEBUG_OBJECT (src, "unexpected length %u", length);
+    return GST_FLOW_UNEXPECTED;
   }
 }
 
@@ -601,6 +606,8 @@ gst_basesrc_start (GstBaseSrc * basesrc)
   /* figure out the size */
   if (bclass->get_size) {
     result = bclass->get_size (basesrc, &basesrc->size);
+    if (result == FALSE)
+      basesrc->size = -1;
   } else {
     result = FALSE;
     basesrc->size = -1;

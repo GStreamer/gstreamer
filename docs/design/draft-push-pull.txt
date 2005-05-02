@@ -73,7 +73,8 @@ Proposition:
 
   - pads queries scheduling mode of peer pad. This query is rather
     finegrained and allows the element to know if the peer supports
-    offsets and sizes in the get_region function.
+    offsets and sizes in the get_region function. A proposition for
+    the query is outlined in draft-query.txt.
   
   - pad selects scheduling mode and informs the peer pad of this
     decision.

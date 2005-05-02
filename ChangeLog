@@ -1,3 +1,14 @@
+2005-05-02  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/draft-push-pull.txt:
+	* docs/design/draft-query.txt:
+	* gst/base/gstbasesrc.c: (gst_basesrc_get_range_unlocked),
+	(gst_basesrc_start):
+	Added draft for new query API.
+	Added draft for better selecting scheduling methods.
+	Make basesrc ignore length if the subclass does not support
+	it.
+
 2005-05-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/Makefile.am:
