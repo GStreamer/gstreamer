@@ -1,5 +1,10 @@
 2005-05-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/Makefile.am:
+	  possible fixes for automake-1.5 - _LIBADD is reserved
+
+2005-05-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/faq/Makefile.am:
 	* docs/manual/Makefile.am:
 	* docs/manuals.mak:

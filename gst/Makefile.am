@@ -12,11 +12,11 @@ endif
 if GST_DISABLE_PARSE
 GST_PARSE_SRC = 
 GST_PARSE_DIRS = 
-# GST_PARSE_LIBADD = 
+GST_PARSE_LA = 
 else
 GST_PARSE_SRC = gstparse.c
 GST_PARSE_DIRS = parse
-GST_PARSE_LIBADD = parse/libgstparse.la 
+GST_PARSE_LA = parse/libgstparse.la 
 endif
 
 if GST_DISABLE_TRACE
@@ -28,11 +28,11 @@ endif
 if GST_DISABLE_REGISTRY
 GST_REGISTRY_SRC = 
 GST_REGISTRY_DIRS =
-# GST_REGISTRY_LIBADD = 
+GST_REGISTRY_LA = 
 else
 GST_REGISTRY_SRC = gstregistry.c
 GST_REGISTRY_DIRS = registries
-GST_REGISTRY_LIBADD = registries/libgstxmlregistry.la
+GST_REGISTRY_LA = registries/libgstxmlregistry.la
 endif
 
 if GST_DISABLE_ENUMTYPES
@@ -140,7 +140,7 @@ libgstreamer_@GST_MAJORMINOR@_la_CFLAGS =	\
 	-DG_LOG_DOMAIN=g_log_domain_gstreamer 	\
 	-DGST_MAJORMINOR=\""$(GST_MAJORMINOR)"\" 
 libgstreamer_@GST_MAJORMINOR@_la_LIBADD = \
-	$(GST_LIB_LIBS) $(GST_PARSE_LIBADD) $(GST_REGISTRY_LIBADD)
+	$(GST_LIB_LIBS) $(GST_PARSE_LA) $(GST_REGISTRY_LA)
 libgstreamer_@GST_MAJORMINOR@_la_LDFLAGS = \
 	@GST_LT_LDFLAGS@ -version-info @GST_LIBVERSION@ \
 	-export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*
