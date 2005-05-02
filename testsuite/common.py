@@ -1,4 +1,11 @@
-import dl
+try:
+    from dl import RTLD_LAZY, RTLD_GLOBAL
+except ImportError:
+    # dl doesn't seem to be available on 64bit systems
+    try:
+        from DLFCN import RTLD_LAZY, RTLD_GLOBAL
+    except ImportError:
+        pass
 import os
 import sys
 import unittest
@@ -16,7 +23,7 @@ except:
 sys.path.insert(1, os.path.join('..'))
 
 # Load GST and make sure we load it from the current build
-sys.setdlopenflags(dl.RTLD_LAZY | dl.RTLD_GLOBAL)
+sys.setdlopenflags(RTLD_LAZY | RTLD_GLOBAL)
 
 # Hack
 sys.argv.append('--gst-debug-no-color')

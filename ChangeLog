@@ -1,3 +1,8 @@
+2005-05-02  Edward Hervey  <bilboed@bilboed.com>
+
+	* testsuite/common.py: Added case for 64bit-system that don't have
+	the dl module
+
 2005-05-02  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/Makefile.am:
