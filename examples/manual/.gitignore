@@ -26,6 +26,8 @@ ghostpad
 pad
 playbin
 query
+fakesrc
+typefind
 
 xml-mp3
 xml
