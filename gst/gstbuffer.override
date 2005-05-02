@@ -41,7 +41,7 @@ _wrap_gst_buffer_new(PyGBoxed *self, PyObject *args, PyObject *kwargs)
 {
 	static char *kwlist[] = { "data", "buffer_size", NULL };
 	char *data = NULL;
-	int size;
+	int size = 0;
 	int buf_size = -1;
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|z#i:GstBuffer.__init__", kwlist,

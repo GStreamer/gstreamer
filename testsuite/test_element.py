@@ -2,7 +2,6 @@
 #
 # testsuite for gstreamer.Element
 
-import common
 from common import gst, unittest
 
 class ElementTest(unittest.TestCase):
@@ -44,7 +43,7 @@ class FakeSinkTest(ElementTest):
             self.error = True
             
         self.element.connect('error', error_cb)
-        common.run_silent(self.element.set_state, state)
+        self.element.set_state (state)
         assert self.error, 'error not set'
         #assert error_message.find('ERROR') != -1
         
