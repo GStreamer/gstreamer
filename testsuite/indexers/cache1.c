@@ -33,9 +33,10 @@ lookup (GstIndex * index, GstIndexLookupMethod method,
     gst_index_entry_assoc_map (entry, dest_format, &result);
 
     if (result == expecting) {
-      g_print ("OK (%lld)\n", result);
+      g_print ("OK (%" G_GINT64_FORMAT ")\n", result);
     } else {
-      g_print ("FAIL - expecting %lld, got %lld\n", expecting, result);
+      g_print ("FAIL - expecting %" G_GINT64_FORMAT ", got %" G_GINT64_FORMAT
+          "\n", expecting, result);
     }
   } else {
     const GstFormatDefinition *def = gst_format_get_details (src_format);
@@ -43,8 +44,9 @@ lookup (GstIndex * index, GstIndexLookupMethod method,
     if (expecting == -1)
       g_print ("OK (not found)\n");
     else
-      g_print ("FAIL - no index entry found for %lld %s, expecting %lld\n",
-          src_value, def->nick, expecting);
+      g_print ("FAIL - no index entry found for %" G_GINT64_FORMAT
+          " %s, expecting %" G_GINT64_FORMAT "\n", src_value, def->nick,
+          expecting);
   }
 }
 
@@ -55,8 +57,7 @@ typedef struct _GstIndexTestCase
   gint64 src_value;
   GstFormat dest_format;
   gint64 expecting;
-}
-GstIndexTestCase;
+} GstIndexTestCase;
 
 const static GstIndexTestCase cases[] = {
   {GST_INDEX_LOOKUP_EXACT, GST_FORMAT_BYTES, 3, GST_FORMAT_TIME, 3000},

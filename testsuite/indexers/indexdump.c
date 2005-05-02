@@ -71,7 +71,8 @@ main (gint argc, gchar * argv[])
         g_print (" time %.4f",
             GST_INDEX_ASSOC_VALUE (entry, fx) / (double) GST_SECOND);
       } else
-        g_print (" %s %lld", def->nick, GST_INDEX_ASSOC_VALUE (entry, fx));
+        g_print (" %s %" G_GINT64_FORMAT, def->nick,
+            GST_INDEX_ASSOC_VALUE (entry, fx));
     }
     g_print ("\n");
   }
