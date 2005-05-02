@@ -2,68 +2,19 @@
 GstElement
 
 <!-- ##### SECTION Short_Description ##### -->
-Abstract base class for all pipeline elements
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-GstElement is the base class needed to construct an element that can be
-used in a GStreamer pipeline.  As such, it is not a functional entity, and
-cannot do anything when placed in a pipeline.
+
 </para>
 
-<para>
-The name of a GstElement can be get with gst_element_get_name() and set with
-gst_element_set_name().  For speed, GST_ELEMENT_NAME() can be used in the 
-core.
-Do not use this in plug-ins or applications in order to retain ABI 
-compatibility.
-</para>
-
-<para>
-All elements have pads (of the type #GstPad).  These pads link to pads on
-other elements.  Buffers flow between these linked pads.
-A GstElement has a GList of #GstPad structures for all their input (or sink)
-and output (or source) pads.  
-Core and plug-in writers can add and remove pads with gst_element_add_pad()
-and gst_element_remove_pad().
-Application writers can manipulate ghost pads (copies of real pads inside a bin)
-with gst_element_add_ghost_pad() and gst_element_remove_ghost_pad().
-A pad of an element can be retrieved by name with gst_element_get_pad().
-A GList of all pads can be retrieved with gst_element_get_pad_list().
-</para>
-
-<para>
-Elements can be linked through their pads.
-If the link is straightforward, use the gst_element_link() 
-convenience function to link two elements, or gst_element_link_many() 
-for more elements in a row.
-Use gst_element_link_filtered() to link two elements constrained by
-a specified set of #GstCaps.
-For finer control, use gst_element_link_pads() and 
-gst_element_link_pads_filtered() to specify the pads to link on 
-each element by name.
-</para>
-
-<para>
-Each element has a state (see #GstElementState).  You can get and set the state
-of an element with gst_element_get_state() and gst_element_set_state().  
-You can wait for an element to change it's state with gst_element_wait_state_change().
-To get a string representation of a #GstElementState, use 
-gst_element_state_get_name().
-</para>
-
-<para>
-You can get and set a #GstClock on an element using gst_element_get_clock()
-and gst_element_set_clock().  You can wait for the clock to reach a given
-#GstClockTime using gst_element_clock_wait().
-</para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-#GstElementFactory, #GstPad
+
 </para>
 
-<!-- basic object functions -->
 
 <!-- ##### STRUCT GstElement ##### -->
 <para>
@@ -131,107 +82,107 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 
 <!-- ##### MACRO GST_NUM_STATES ##### -->
 <para>
-The maximun number of states.
+
 </para>
 
 
 
 <!-- ##### MACRO GST_STATE ##### -->
 <para>
-This macro returns the current state of the element.
+
 </para>
 
-@obj: Element to return state for.
+@obj: 
 
 
 <!-- ##### MACRO GST_STATE_PENDING ##### -->
 <para>
-This macro returns the currently pending state of the element.
+
 </para>
 
-@obj: Element to return the pending state for.
+@obj: 
 
 
 <!-- ##### MACRO GST_STATE_TRANSITION ##### -->
 <para>
-Returns the state transition this object is going through.
+
 </para>
 
-@obj: the Element to return the state transition for
+@obj: 
 
 
 <!-- ##### MACRO GST_STATE_NULL_TO_READY ##### -->
 <para>
-The Element is going from the NULL state to the READY state.
+
 </para>
 
 
 
 <!-- ##### MACRO GST_STATE_READY_TO_PAUSED ##### -->
 <para>
-The Element is going from the READY state to the PAUSED state.
+
 </para>
 
 
 
 <!-- ##### MACRO GST_STATE_PAUSED_TO_PLAYING ##### -->
 <para>
-The Element is going from the PAUSED state to the PLAYING state.
+
 </para>
 
 
 
 <!-- ##### MACRO GST_STATE_PLAYING_TO_PAUSED ##### -->
 <para>
-The Element is going from the PLAYING state to the PAUSED state.
+
 </para>
 
 
 
 <!-- ##### MACRO GST_STATE_PAUSED_TO_READY ##### -->
 <para>
-The Element is going from the PAUSED state to the READY state.
+
 </para>
 
 
 
 <!-- ##### MACRO GST_STATE_READY_TO_NULL ##### -->
 <para>
-The Element is going from the READY state to the NULL state.
+
 </para>
 
 
 
 <!-- ##### MACRO GST_ELEMENT_QUERY_TYPE_FUNCTION ##### -->
 <para>
-Helper macro to create query type functions
+
 </para>
 
-@functionname: The function name
-@...: list of query types.
+@functionname: 
+@...: 
 
 
 <!-- ##### MACRO GST_ELEMENT_FORMATS_FUNCTION ##### -->
 <para>
-Halper macro to create element format functions
+
 </para>
 
-@functionname: The function name
-@...: formats
+@functionname: 
+@...: 
 
 
 <!-- ##### MACRO GST_ELEMENT_EVENT_MASK_FUNCTION ##### -->
 <para>
-A helper macro to create a mask function
+
 </para>
 
-@functionname: the name of the mask function
-@...: Masks
+@functionname: 
+@...: 
 
 
 <!-- ##### ENUM GstElementFlags ##### -->
 <para>
-This enum defines the standard flags that an element may have.
+
 </para>
 
 @GST_ELEMENT_COMPLEX: 
@@ -245,70 +196,71 @@ This enum defines the standard flags that an element may have.
 @GST_ELEMENT_SCHEDULER_PRIVATE2: 
 @GST_ELEMENT_LOCKED_STATE: 
 @GST_ELEMENT_IN_ERROR: 
+@GST_ELEMENT_WORK_IN_PLACE: 
 @GST_ELEMENT_FLAG_LAST: 
 
 <!-- ##### MACRO GST_ELEMENT_IS_THREAD_SUGGESTED ##### -->
 <para>
-Queries whether the Element should be placed in a thread.
+
 </para>
 
-@obj: a #GstElement to query
+@obj: 
 
 
 <!-- ##### MACRO GST_ELEMENT_IS_EVENT_AWARE ##### -->
 <para>
-Query wether this element can handle events.
+
 </para>
 
-@obj: a #GstElement to query
+@obj: 
 
 
 <!-- ##### MACRO GST_ELEMENT_IS_DECOUPLED ##### -->
 <para>
-Queries if the Element is decoupled.
+
 </para>
 
-@obj: a #GstElement to query
+@obj: 
 
 
 <!-- ##### MACRO GST_ELEMENT_NAME ##### -->
 <para>
-Gets the name of this element.  Used in the core.  Not ABI-compatible.
+
 </para>
 
-@obj: A #GstElement to query
+@obj: 
 
 
 <!-- ##### MACRO GST_ELEMENT_PARENT ##### -->
 <para>
-Get the parent object of this element.
+
 </para>
 
-@obj: a #GstElement to query
+@obj: 
 
 
 <!-- ##### MACRO GST_ELEMENT_SCHED ##### -->
 <para>
-Get the scheduler of this element.
+
 </para>
 
-@obj: a #GstElement to query
+@obj: 
 
 
 <!-- ##### MACRO GST_ELEMENT_CLOCK ##### -->
 <para>
-Get the clock of this element
+
 </para>
 
-@obj: a #GstElement to query
+@obj: 
 
 
 <!-- ##### MACRO GST_ELEMENT_PADS ##### -->
 <para>
-Get the pads of this elements.
+
 </para>
 
-@obj: a #GstElement to query
+@obj: 
 
 
 <!-- ##### MACRO GST_ELEMENT_ERROR ##### -->
@@ -325,30 +277,26 @@ Get the pads of this elements.
 
 <!-- ##### USER_FUNCTION GstElementLoopFunction ##### -->
 <para>
-This function type is used to specify a loop function for the element.  It
-is passed the element in question, and is expect to return only in error
-circumstances.
+
 </para>
 
-@element: The element in question.
+@element: 
 
 
 <!-- ##### USER_FUNCTION GstElementPreRunFunction ##### -->
 <para>
-The signature of the function to execute after this element
-is scheduled.
+
 </para>
 
-@element: The element
+@element: 
 
 
 <!-- ##### USER_FUNCTION GstElementPostRunFunction ##### -->
 <para>
-The signature of the function to execute before this element
-is scheduled.
+
 </para>
 
-@element: The element
+@element: 
 
 
 <!-- ##### FUNCTION gst_element_class_add_pad_template ##### -->
@@ -381,8 +329,7 @@ is scheduled.
 
 <!-- ##### MACRO gst_element_default_deep_notify ##### -->
 <para>
-The default deep notify handler that prints out the property change
-notifications to stdout.
+
 </para>
 
 
@@ -409,41 +356,36 @@ notifications to stdout.
 
 <!-- ##### MACRO gst_element_get_name ##### -->
 <para>
-Gets the name of the element.
+
 </para>
 
 @elem: 
-@Returns: the name of the element.
-
-
-<!-- link -->
 
 
 <!-- ##### MACRO gst_element_set_name ##### -->
 <para>
-Sets the name of the element, getting rid of the old name if there was one.
+
 </para>
 
-@elem: a #GstElement to set the name of.
-@name: the new name of the element.
+@elem: 
+@name: 
 
 
 <!-- ##### MACRO gst_element_get_parent ##### -->
 <para>
-Gets the parent of an element.
+
 </para>
 
-@elem: a #GstElement to get the parent of.
-@Returns: the #GstObject parent of the element.
+@elem: 
 
 
 <!-- ##### MACRO gst_element_set_parent ##### -->
 <para>
-Sets the parent of an element.
+
 </para>
 
-@elem: a #GstElement to set the parent of.
-@parent:  the new #GstObject parent of the object.
+@elem: 
+@parent: 
 
 
 <!-- ##### FUNCTION gst_element_set ##### -->
@@ -575,9 +517,6 @@ Sets the parent of an element.
 @id: 
 @jitter: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@clock: 
-@time: 
 
 
 <!-- ##### FUNCTION gst_element_get_time ##### -->
@@ -736,9 +675,6 @@ Sets the parent of an element.
 @pad: 
 
 
-<!-- pad template manipulation -->
-
-
 <!-- ##### FUNCTION gst_element_get_pad ##### -->
 <para>
 
@@ -746,7 +682,7 @@ Sets the parent of an element.
 
 @element: 
 @name: 
-@Returns: GList of #GstPads
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_element_get_static_pad ##### -->
@@ -846,10 +782,6 @@ Sets the parent of an element.
 @Returns: 
 
 
-
-<!-- scheduling -->
-
-
 <!-- ##### FUNCTION gst_element_get_compatible_pad_template ##### -->
 <para>
 
@@ -945,9 +877,6 @@ Sets the parent of an element.
 @srcpadname: 
 @dest: 
 @destpadname: 
-
-
-<!-- pad manipulation -->
 
 
 <!-- ##### FUNCTION gst_element_get_event_masks ##### -->
@@ -1145,8 +1074,6 @@ Sets the parent of an element.
 
 @element: 
 @Returns: 
-
-<!-- clocking -->
 
 
 <!-- ##### FUNCTION gst_element_no_more_pads ##### -->

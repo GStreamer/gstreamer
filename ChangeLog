@@ -1,5 +1,14 @@
 2005-05-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstregistry.h:
+	  win32/mingw obviously did not work
+	* gst/gsttag.h:
+	  remove some whitespace
+	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_dump_byte_array):
+	  put back a fix that accidentally got reverted in a backport
+
+2005-05-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gsttrace.c: (read_tsc), (gst_trace_read_tsc):
 	* gst/gsttrace.h:
 	  tsc's are guint64's.
@@ -1475,7 +1484,7 @@
 
 	* gst/gstplugin.c:
 	* gst/gstplugin.h:
-	  add accessor for version field
+	  API: add accessor for version field
 
 2004-12-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
@@ -8267,7 +8276,7 @@
 2004-01-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gsterror.h: reinstate GST_LIBRARY_ERROR_ENCODE until
-          policy is set
+	  policy is set
 
 2004-01-26  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 

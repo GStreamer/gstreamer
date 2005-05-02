@@ -2,17 +2,19 @@
 GstTagList
 
 <!-- ##### SECTION Short_Description ##### -->
-List of tags and values used to describe media metadata
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
 
 </para>
 
+
 <!-- ##### SECTION See_Also ##### -->
 <para>
 
 </para>
+
 
 <!-- ##### TYPEDEF GstTagList ##### -->
 <para>
@@ -848,6 +850,13 @@ List of tags and values used to describe media metadata
 
 
 <!-- ##### MACRO GST_TAG_ALBUM_PEAK ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_LANGUAGE_CODE ##### -->
 <para>
 
 </para>

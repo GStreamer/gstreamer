@@ -2,21 +2,18 @@
 GstChildProxy
 
 <!-- ##### SECTION Short_Description ##### -->
-interface for multi child element property access
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-This interface provides a uniform way to access child objects of elements.
-There are methods to get the children and methods to (recursivly) set and get
-their properties.
+
 </para>
+
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
 
 </para>
-
-<!-- ##### SECTION Stability_Level ##### -->
 
 
 <!-- ##### FUNCTION gst_child_proxy_get_children_count ##### -->
