@@ -17,7 +17,7 @@ PNG_SRC =
 FIG_SRC = $(notdir $(wildcard $(srcdir)/*.fig))
 
 # extra sources to copy in build directory
-EXTRA_SOURCES = 
+EXTRA_SRC = 
 
 ### this is the generic bit and you shouln't need to change this
 

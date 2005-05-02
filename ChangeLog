@@ -1,3 +1,12 @@
+2005-05-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/faq/Makefile.am:
+	* docs/manual/Makefile.am:
+	* docs/manuals.mak:
+	* docs/pwg/Makefile.am:
+	* gst/Makefile.am:
+	  possible fixes for automake-1.5
+
 2005-04-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_basesink_base_init),
