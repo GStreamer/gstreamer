@@ -54,6 +54,12 @@
 @GST_DISABLE_URI_DEFINE@
 
 /* printf extension format */
+/**
+ * GST_PTR_FORMAT:
+ *
+ * printf format type used to debug GStreamer types.
+ * This can only be used on types whose size is >= sizeof(gpointer).
+ */
 @GST_PRINTF_EXTENSION_FORMAT_DEFINE@
 
 /* whether or not the CPU supports unaligned access */
@@ -67,6 +73,22 @@
 # define GST_DISABLE_LOADSAVE_REGISTRY
 #endif
 
+/**
+ * GST_EXPORT:
+ *
+ * Export the given variable from the built shared object.
+ *
+ * On Windows, this exports the variable from the DLL.
+ * On other platforms, this gets defined to "extern".
+ */
+/**
+ * GST_PLUGIN_EXPORT:
+ *
+ * Export the plugin's definition.
+ *
+ * On Windows, this exports the plugin definition from the DLL.
+ * On other platforms, this gets defined as a no-op.
+ */
 #ifdef WIN32
 #define GST_PLUGIN_EXPORT __declspec(dllexport) extern
 #ifdef GST_EXPORTS
@@ -75,7 +97,7 @@
 #define GST_EXPORT __declspec(dllimport) extern
 #endif
 #else /* not WIN32 */
-#define GST_PLUGIN_EXPORT 
+#define GST_PLUGIN_EXPORT
 #define GST_EXPORT extern
 #endif
 

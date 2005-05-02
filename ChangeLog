@@ -1,3 +1,14 @@
+2005-05-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/tmpl/gstconfig.sgml:
+	* gst/gstconfig.h.in:
+	  move documentation for some symbols.  Add doc for GST_PTR_FORMAT
+	* testsuite/debug/printf_extension.c: (main):
+	  Do not use GST_PTR_FORMAT on pointers to types with
+	  sizeof < sizeof(gpointer).  Fixes test on 64-bit
+	* testsuite/elements/property.h:
+	  use correct printf format
+
 2005-05-02  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/draft-push-pull.txt:
