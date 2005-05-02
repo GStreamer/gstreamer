@@ -43,8 +43,8 @@ check_caps (GstCaps * caps)
       gst_caps_get_size (caps) < gst_caps_get_size (old) ||
       strlen (after) < strlen (before) ? "REDUCED" :
       (gst_caps_get_size (old) < 2 ? "  ---  " : "       "),
-      gst_caps_get_size (old), strlen (before),
-      gst_caps_get_size (caps), strlen (after));
+      gst_caps_get_size (old), (unsigned int) strlen (before),
+      gst_caps_get_size (caps), (unsigned int) strlen (after));
 
   size_before += gst_caps_get_size (old);
   size_after += gst_caps_get_size (caps);

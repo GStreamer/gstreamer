@@ -1,3 +1,10 @@
+2005-05-02  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* testsuite/caps/deserialize.c: (main):
+	* testsuite/caps/sets.c: (check_caps):
+	* testsuite/caps/simplify.c: (check_caps):
+	fix small things to prevent warnings on 64bit
+
 2005-05-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/faq/Makefile.am:

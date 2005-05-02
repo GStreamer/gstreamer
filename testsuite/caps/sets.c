@@ -27,8 +27,8 @@ check_caps (const gchar * eins, const gchar * zwei)
 
   one = gst_caps_from_string (eins);
   two = gst_caps_from_string (zwei);
-  g_print ("      A  =  %u\n", strlen (eins));
-  g_print ("      B  =  %u\n", strlen (zwei));
+  g_print ("      A  =  %u\n", (unsigned int) strlen (eins));
+  g_print ("      B  =  %u\n", (unsigned int) strlen (zwei));
 
   test = gst_caps_intersect (one, two);
   if (gst_caps_is_equal (one, two)) {
@@ -37,14 +37,16 @@ check_caps (const gchar * eins, const gchar * zwei)
     g_assert (gst_caps_is_equal (two, test));
   } else if (!gst_caps_is_any (one) || gst_caps_is_empty (two)) {
     test2 = gst_caps_subtract (one, test);
-    g_print ("  A - B  =  %u\n", strlen (gst_caps_to_string (test2)));
+    g_print ("  A - B  =  %u\n",
+        (unsigned int) strlen (gst_caps_to_string (test2)));
     /* test2 = one - (one A two) = one - two */
     test3 = gst_caps_intersect (test2, two);
     g_print ("  empty  =  %s\n", gst_caps_to_string (test3));
     g_assert (gst_caps_is_empty (test3));
     gst_caps_free (test3);
     test3 = gst_caps_union (test2, two);
-    g_print ("  A + B  =  %u\n", strlen (gst_caps_to_string (test3)));
+    g_print ("  A + B  =  %u\n",
+        (unsigned int) strlen (gst_caps_to_string (test3)));
     /* test3 = one - two + two = one + two */
     g_print ("  A + B  =  %s\n", gst_caps_to_string (gst_caps_subtract (one,
                 test3)));
