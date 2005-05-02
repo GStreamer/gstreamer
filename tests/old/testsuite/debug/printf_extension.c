@@ -23,7 +23,9 @@ main (gint argc, gchar * argv[])
 {
   GstCaps *caps;
   GstElement *element;
-  G_GNUC_UNUSED int zero = 0;
+  G_GNUC_UNUSED gpointer null = NULL;
+
+  /* G_GNUC_UNUSED int zero = 0; */
 
   gst_init (&argc, &argv);
 
@@ -34,8 +36,13 @@ main (gint argc, gchar * argv[])
   GST_ERROR ("This should print caps: %" GST_PTR_FORMAT, caps);
   GST_ERROR ("This should print an object: %" GST_PTR_FORMAT, element);
   GST_ERROR ("This should print null: %" GST_PTR_FORMAT, NULL);
-  GST_ERROR ("This should print a pointer: %" GST_PTR_FORMAT, &zero);
-  //GST_ERROR ("This should print a pointer: %" GST_PTR_FORMAT, (void *)1);
+  GST_ERROR ("This should print a pointer: %" GST_PTR_FORMAT, &null);
+  /* 64 bit address to a 32 bit int will cause the GObject interpretation
+   * to segfault; since GST_PTR_FORMAT only works on stuff with 
+   * sizeof(gpointer) */
+  /* GST_ERROR ("This should print a pointer: %" GST_PTR_FORMAT, &zero); */
+
+  /* GST_ERROR ("This should print a pointer: %" GST_PTR_FORMAT, (void *)1); */
 
   return 0;
 }

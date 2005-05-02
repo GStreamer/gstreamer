@@ -124,14 +124,14 @@ If this is defined, the <link linkend="gstreamer-gstinfo">debugging subsystem
 
 <!-- ##### MACRO GST_EXPORT ##### -->
 <para>
-Under Windows it permits to export variables from a DLL, otherwise it just means extern.
+
 </para>
 
 
 
 <!-- ##### MACRO GST_PLUGIN_EXPORT ##### -->
 <para>
-Under Windows it permits to automatically export the plugin definition, otherwise it just defines as nothing.
+
 </para>
 
 
