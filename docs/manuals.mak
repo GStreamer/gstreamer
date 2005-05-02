@@ -22,7 +22,7 @@ PNG_BUILT = $(foreach file, $(PNG), $(BUILDIMAGESDIR)/$(file))
 EPS_BUILT = $(foreach file, $(EPS), $(BUILDIMAGESDIR)/$(file))
 PDF_BUILT = $(foreach file, $(PDF), $(BUILDIMAGESDIR)/$(file))
 
-SRC = $(XML) $(PNG_SRC) $(FIG_SRC) $(CSS) $(EXTRA_SOURCES)
+SRC = $(XML) $(PNG_SRC) $(FIG_SRC) $(CSS) $(EXTRA_SRC)
 
 # generate A4 docs
 PAPER_LOCALE = nl_NL
@@ -79,9 +79,9 @@ debug:
 	@echo "PDF_DAT:  '$(PDF_DAT)'"
 
 # a rule to copy all of the source for docs into $(builddir)/build
-$(BUILDDIR)/$(MAIN): $(XML) $(CSS) $(EXTRA_SOURCES)
+$(BUILDDIR)/$(MAIN): $(XML) $(CSS) $(EXTRA_SRC)
 	@-mkdir -p $(BUILDDIR)
-	@if test "x$(EXTRA_SOURCES)" != "x"; then for a in $(EXTRA_SOURCES); do cp $(srcdir)/$$a $(BUILDDIR); done; fi
+	@if test "x$(EXTRA_SRC)" != "x"; then for a in $(EXTRA_SRC); do cp $(srcdir)/$$a $(BUILDDIR); done; fi
 	@for a in $(XML); do cp $(srcdir)/$$a $(BUILDDIR); done
 	@for a in $(CSS); do cp $(srcdir)/$$a $(BUILDDIR); done
 	@cp ../version.entities $(BUILDDIR)
