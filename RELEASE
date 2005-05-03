@@ -1,9 +1,9 @@
 
-GStreamer: Release notes for GStreamer 0.8.9 "Like Eating Glass"
+GStreamer: Release notes for GStreamer 0.8.10 "No Fun"
         
 
 The GStreamer team is happy to announce a new release
-in the 0.8.x stable series of the GStreamer streaming-media framework.
+in the 0.8.x stable series of the GStreamer streaming media framework.
 
 
 The 0.8.x series is a stable series aimed at end users.
@@ -22,30 +22,56 @@ Features of this release
     
       * Parallel installability with 0.6.x series
       * Internationalization
-      * Probe fixes
-      * Thread and queue fixes fixes
-      * Documentation updates
-      * New translation added: Vietnamese (Clytie Siddall)
-      * Important GstBin state change fix - see #166371 if you subclass
+      * Fixes for 64-bit platforms
+      * Fixes for gcc 4
+      * New translation added: Russian (Peter Astakhov)
+      * Registry now uses libxml for faster startup
 
 Bugs fixed in this release
     
-      * 94464 : [threads] gst_scheduler_add_scheduler() doesn't ref passe...
-      * 123775 : [PATCH] [api] setting state on element should force highe...
-      * 142588 : [threads] if all elements have been removed from a bin, s...
-      * 150546 : [api] Error for calling gst_pad_push in a get function is...
-      * 162276 : [build] gstregistry.h and gstxmlregistry.c don't build wi...
-      * 163234 : [PATCH] plugin loading isn't thread-safe
-      * 163383 : [PATCH] ogm plugins won't register
-      * 163801 : [PATCH] mem leak in xml registry loading
-      * 164062 : [PATCH] tee capsnego is broken
-      * 164261 : [PATCH] GST parsing doesn't recognise urls without a file...
-      * 165272 : [PATCH] Problem compiling gstreamer 0.8.8
-      * 165365 : [PATCH] gst_string_wrap() segfaults on NULL strings
-      * 165922 : add locking in opt
-      * 166269 : Typo in current .po file msgid string
-      * 166362 : data discarded by probes is leaked
-      * 166371 : GstBin derived classes not notified of state change
+      * 137485 : [strings] Please don't unnecessarily abbreviate in Gstrea...
+      * 147782 : [build] When compiling, CPPFLAGS don't propagate to GTKDO...
+      * 149791 : fdsrc w/o timeout can hang exiting threads
+      * 159676 : [playbin] audible click after 3s of playback using playbin
+      * 161991 : gst_init is slow
+      * 164479 : [cli-tools] gst_parse_launch can't handle spaces
+      * 164821 : [docs] GstLibraryError misses (proper) descriptions
+      * 165354 : Tests failure report for gstreamer 0.8.8
+      * 166073 : [threads] wrong error handling
+      * 166250 : [PATCH] [queue] When two threads are connected with queue...
+      * 166699 : Typo in gstreamer-0.8.9/tools/gst-launch.1.in
+      * 167701 : [PATCH, strings] Please do not split translatable strings...
+      * 168493 : [API] gst_index_factory_new() doesn't increase refcount o...
+      * 168659 : [build] Need to patch gst-element-check-0.8.m4 to check f...
+      * 168703 : [API] Add gst_index_add_associationv() to gstindex.h
+      * 169111 : [API] GstEvent NEED_RESPONSE flag
+      * 169123 : [build] false dependence on libxml2 if registry is enabled
+      * 169405 : [API] GST_TYPE_EVENT and gst_event_get_type unusable befo...
+      * 169732 : gstreamer (element) does not build on cygwin
+      * 170067 : Typefind leaks
+      * 170464 : Bad variable's name mp3player in sample source code
+      * 170499 : spider no decode some .mp3
+      * 171400 : mmapsize property on gstfilesrc borked.
+      * 172526 : gst-register fails on a lot of plugins on MacOSX
+      * 300339 : assertion with gst_pad_relink_filtered
+      * 300736 : Plug a bunch of leaks in the registry code
+      * 300932 : [PATCH] add a GST_ELEMENT_WORK_IN_PLACE flag to gstelement
+      * 301128 : cvs login command line is incorrect in PWG
+      * 301313 : [decodebin] seek while reading (non-existant) ID3v2 tag d...
+      * 301331 : gst_element_unlink only unlinks real pads
+
+API changed in this release
+     
+
+- API additions:
+    
+* GST_EVENT_COMMON_FLAGS_NEED_RESPONSE has been added, to indicate whether a reply is expected to an upstream event
+* GST_TAG_LANGUAGE_CODE has been added
+* GstChildProxy, a new interface to uniformly access elements' children and their properties, has been added
+
+- API depreciations:
+    
+* gst_buffer_set_data was deprecated
 
 Download
 
@@ -75,25 +101,36 @@ Applications
 
 Applications already ported to use GStreamer 0.8.x include the GNOME
 desktop components like gnome-media and nautilus-media, as well as other
-GNOME applications including sound-juicer, totem and RhythmBox.
+GNOME applications including sound-juicer, totem and rhythmbox.
+
+
+Users of Flumotion on 64-bit systems need to upgrade to this release, as it
+contains an important bug fix needed for the TCP elements.
+
+
+Users of Totem and Rhythmbox (development) having small pauses when playing
+MP3 files should also upgrade, as this is fixed in the queue element.
 
   
 Contributors to this release
     
-      * Andy Wingo
       * Benjamin Otte
-      * Clytie Siddall
       * David Schleef
-      * Edward Hervey
+      * Jamey Hicks
       * Jan Schmidt
+      * Jean de Largentaye
+      * Kjartan Maraas
       * Luca Ognibene
+      * Maciej Katafiasz
+      * Peter Astakhov
+      * Phil Blundell
       * Ronald Bultje
-      * Sebastien Cote
       * Stefan Kost
-      * Stephane Loeuillet
-      * Stephane Wirtel
       * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Vincent Torri
+      * Torsten Schoenfeld
+      * Tristan van Berkom
       * Wim Taymans
+      * Wouter Paesen
+      * Zaheer Abbas Merali
  

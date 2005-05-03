@@ -1,3 +1,12 @@
+=== release 0.8.10 ===
+
+2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac: Releasing 0.8.10, "No Fun"
+	* NEWS:
+	* RELEASE:
+	  updating news and release notes
+
 2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	Patch by:  jonathan at kaolin.hn.org  
@@ -242,7 +251,8 @@
 	* testsuite/childproxy/Makefile.am:
 	* testsuite/childproxy/childproxy.c: (my_child_added),
 	(my_child_removed), (main):
-      new iface to uniformly access elements children and their properties
+	new interface to uniformly access elements' children and their
+	properties
 
 2005-04-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 

@@ -9,12 +9,10 @@ GstChildProxy
 
 </para>
 
-
 <!-- ##### SECTION See_Also ##### -->
 <para>
 
 </para>
-
 
 <!-- ##### FUNCTION gst_child_proxy_get_children_count ##### -->
 <para>

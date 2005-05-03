@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-02-25 11:30+0100\n"
+"POT-Creation-Date: 2005-05-02 19:36+0200\n"
 "PO-Revision-Date: 2004-09-06 15:16+0300\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -129,7 +129,7 @@ msgstr ""
 msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer перехопив загальну помилку основної бібліотеки."
 
-#: gst/gsterror.c:58 gst/gsterror.c:95 gst/gsterror.c:115 gst/gsterror.c:145
+#: gst/gsterror.c:58 gst/gsterror.c:95 gst/gsterror.c:116 gst/gsterror.c:146
 msgid ""
 "GStreamer developers were too lazy to assign an error code to this error.  "
 "Please file a bug."
@@ -178,7 +178,8 @@ msgstr ""
 "Внутрішня помилка GStreamer: помилка позиціювання. Напишіть про помилку."
 
 #: gst/gsterror.c:77
-msgid "Internal GStreamer error: caps problem.  File a bug."
+#, fuzzy
+msgid "Internal GStreamer error: capabilities problem.  File a bug."
 msgstr ""
 "Внутрішня помилка GStreamer: помилка у можливостях. Напишіть про помилку."
 
@@ -194,107 +195,116 @@ msgstr "GStreamer перехопив загальну помилку основ�
 msgid "Could not initialize supporting library."
 msgstr "Не вдається ініціалізувати бібліотеку підтримки."
 
-#: gst/gsterror.c:98 gst/gsterror.c:99
+#: gst/gsterror.c:98
 msgid "Could not close supporting library."
 msgstr "Не вдається закрити бібліотеку підтримки."
 
-#: gst/gsterror.c:113
+#: gst/gsterror.c:99
+#, fuzzy
+msgid "Could not set settings."
+msgstr "Не вдається отримати/встановити параметри з/у ресурсі."
+
+#: gst/gsterror.c:100
+msgid "Failed to encode image."
+msgstr ""
+
+#: gst/gsterror.c:114
 #, fuzzy
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer перехопив загальну помилку основної бібліотеки."
 
-#: gst/gsterror.c:117
+#: gst/gsterror.c:118
 msgid "Resource not found."
 msgstr "Ресурс не існує."
 
-#: gst/gsterror.c:118
+#: gst/gsterror.c:119
 msgid "Resource busy or not available."
 msgstr "Ресурс зайнятий або недоступний."
 
-#: gst/gsterror.c:119
+#: gst/gsterror.c:120
 msgid "Could not open resource for reading."
 msgstr "Не вдається відкрити ресурс для читання."
 
-#: gst/gsterror.c:120
+#: gst/gsterror.c:121
 msgid "Could not open resource for writing."
 msgstr "Не вдається відкрити ресурс для запису."
 
-#: gst/gsterror.c:122
+#: gst/gsterror.c:123
 msgid "Could not open resource for reading and writing."
 msgstr "Не вдається відкрити ресурс для читання чи запису."
 
-#: gst/gsterror.c:123
+#: gst/gsterror.c:124
 msgid "Could not close resource."
 msgstr "Не вдається закрити ресурс."
 
-#: gst/gsterror.c:124
+#: gst/gsterror.c:125
 msgid "Could not read from resource."
 msgstr "Не вдається прочитати з ресурсу."
 
-#: gst/gsterror.c:125
+#: gst/gsterror.c:126
 msgid "Could not write to resource."
 msgstr "Не вдається записати у ресурс."
 
-#: gst/gsterror.c:126
+#: gst/gsterror.c:127
 msgid "Could not perform seek on resource."
 msgstr "Не вдається виконати позиціювання у ресурсі."
 
-#: gst/gsterror.c:127
+#: gst/gsterror.c:128
 msgid "Could not synchronize on resource."
 msgstr "Не вдається синхронізуватись з ресурсом."
 
-#: gst/gsterror.c:129
+#: gst/gsterror.c:130
 msgid "Could not get/set settings from/on resource."
 msgstr "Не вдається отримати/встановити параметри з/у ресурсі."
 
-#: gst/gsterror.c:143
+#: gst/gsterror.c:144
 #, fuzzy
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer перехопив загальну помилку основної бібліотеки."
 
-#: gst/gsterror.c:148
+#: gst/gsterror.c:149
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr ""
 "У елементі не реалізовано перехоплення цього потоку. Напишіть про помилку."
 
-#: gst/gsterror.c:150
+#: gst/gsterror.c:151
 msgid "Could not determine type of stream."
 msgstr "Не вдається визначити тип потоку."
 
-#: gst/gsterror.c:152
+#: gst/gsterror.c:153
 msgid "The stream is of a different type than handled by this element."
 msgstr "Потік іншого типу ніж тип, який обробляє цей елемент."
 
-#: gst/gsterror.c:154
+#: gst/gsterror.c:155
 msgid "There is no codec present that can handle the stream's type."
 msgstr "Відсутній кодек, який здатен обробляти цей тип потоку."
 
-#: gst/gsterror.c:155
+#: gst/gsterror.c:156
 msgid "Could not decode stream."
 msgstr "Не вдається розкодувати потік."
 
-#: gst/gsterror.c:156
+#: gst/gsterror.c:157
 msgid "Could not encode stream."
 msgstr "Не вдається закодувати потік."
 
-#: gst/gsterror.c:157
+#: gst/gsterror.c:158
 msgid "Could not demultiplex stream."
 msgstr "Не вдається демультиплексувати потік."
 
-#: gst/gsterror.c:158
+#: gst/gsterror.c:159
 msgid "Could not multiplex stream."
 msgstr "Не вдається мультиплексувати потік."
 
-#: gst/gsterror.c:159
+#: gst/gsterror.c:160
 msgid "Stream is of the wrong format."
 msgstr "Потік у неправильному форматі."
 
-#: gst/gsterror.c:207
+#: gst/gsterror.c:208
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Немає повідомлення про помилку для домену %s."
 
-#: gst/gsterror.c:215
+#: gst/gsterror.c:216
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Немає стандартного повідомлення про помилку для домену %s та коду %d."
@@ -569,7 +579,15 @@ msgstr "пік програвання альбому"
 msgid "peak of the album"
 msgstr "пік альбому"
 
-#: gst/gsttag.c:229
+#: gst/gsttag.c:192
+msgid "language code"
+msgstr ""
+
+#: gst/gsttag.c:193
+msgid "language code for this stream, conforming to ISO-639-1"
+msgstr ""
+
+#: gst/gsttag.c:232
 msgid ", "
 msgstr ", "
 
@@ -598,35 +616,36 @@ msgstr "Помилка закривання файлу \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Помилка при записуванні у файл \"%s\"."
 
-#: gst/elements/gstfilesrc.c:766 gst/elements/gstmultifilesrc.c:298
+#: gst/elements/gstfilesrc.c:764 gst/elements/gstmultifilesrc.c:298
 msgid "No file name specified for reading."
 msgstr "Не вказана назва файлу для читання."
 
-#: gst/elements/gstfilesrc.c:781 gst/elements/gstmultifilesrc.c:306
+#: gst/elements/gstfilesrc.c:779 gst/elements/gstmultifilesrc.c:306
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не вдається відкрити файл \"%s\" для читання."
 
-#: gst/elements/gstfilesrc.c:792
+#: gst/elements/gstfilesrc.c:790
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" є каталогом."
 
-#: gst/elements/gstfilesrc.c:798
+#: gst/elements/gstfilesrc.c:796
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Файл \"%s\" є сокетом."
 
-#: gst/elements/gstidentity.c:304
+#: gst/elements/gstidentity.c:306
 msgid "Failed after iterations as requested."
 msgstr "Помилка після ітерацій у запитаному порядку."
 
 #: gst/elements/gsttypefindelement.c:157
-msgid "caps"
-msgstr "можливості"
+msgid "stream type"
+msgstr ""
 
 #: gst/elements/gsttypefindelement.c:158
-msgid "detected capabilities in stream"
+#, fuzzy
+msgid "detected type of stream"
 msgstr "визначені можливості у потоці"
 
 #: gst/elements/gsttypefindelement.c:161
@@ -637,76 +656,76 @@ msgstr "мінімум"
 msgid "maximum"
 msgstr "максимум"
 
-#: gst/parse/grammar.y:186
+#: gst/parse/grammar.y:187
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "вказаний порожній контейнер \"%s\", не допускається"
 
-#: gst/parse/grammar.y:191
+#: gst/parse/grammar.y:192
 #, c-format
 msgid "no bin \"%s\", skipping"
 msgstr "немає контейнера \"%s\", пропускається"
 
-#: gst/parse/grammar.y:262
+#: gst/parse/grammar.y:264
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "немає властивості \"%s\" у елементі \"%s\""
 
-#: gst/parse/grammar.y:275
+#: gst/parse/grammar.y:277
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr ""
 "не вдається встановити властивість \"%s\" у елементі \"%s\" у значення \"%s\""
 
-#: gst/parse/grammar.y:460
+#: gst/parse/grammar.y:462
 #, c-format
 msgid "could not link %s to %s"
 msgstr "не вдається прив'язати %s до %s"
 
-#: gst/parse/grammar.y:505
+#: gst/parse/grammar.y:507
 #, c-format
 msgid "no element \"%s\""
 msgstr "немає елементу \"%s\""
 
-#: gst/parse/grammar.y:556
-#, c-format
-msgid "could not parse caps \"%s\""
+#: gst/parse/grammar.y:558
+#, fuzzy, c-format
+msgid "could not parse capabilities \"%s\""
 msgstr "не вдається проаналізувати можливості \"%s\""
 
-#: gst/parse/grammar.y:578 gst/parse/grammar.y:626 gst/parse/grammar.y:642
-#: gst/parse/grammar.y:700
+#: gst/parse/grammar.y:580 gst/parse/grammar.y:628 gst/parse/grammar.y:644
+#: gst/parse/grammar.y:702
 msgid "link without source element"
 msgstr "зв'язок без елемента-джерела"
 
-#: gst/parse/grammar.y:584 gst/parse/grammar.y:623 gst/parse/grammar.y:709
+#: gst/parse/grammar.y:586 gst/parse/grammar.y:625 gst/parse/grammar.y:711
 msgid "link without sink element"
 msgstr "зв'язок без елемента-споживача"
 
-#: gst/parse/grammar.y:660
+#: gst/parse/grammar.y:662
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "відсутній елемент-джерело для URI \"%s\""
 
-#: gst/parse/grammar.y:670
+#: gst/parse/grammar.y:672
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "відсутній елемент для зв'язку URI \"%s\" до"
 
-#: gst/parse/grammar.y:678
+#: gst/parse/grammar.y:680
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "відсутній елемент-споживач для URI \"%s\""
 
-#: gst/parse/grammar.y:682
+#: gst/parse/grammar.y:684
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "не вдається прив'язати елемент-споживач для URI \"%s\""
 
-#: gst/parse/grammar.y:694
+#: gst/parse/grammar.y:696
 msgid "empty pipeline not allowed"
 msgstr "порожній канал не допускається"
 
-#: tools/gst-inspect.c:1130
+#: tools/gst-inspect.c:1151
 msgid "Print all elements"
 msgstr "Вивести усі елементи"
 
@@ -825,16 +844,12 @@ msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ПОМИЛКА: канал не може почати відтворення.\n"
 
 #: tools/gst-register.c:49
-#, c-format
-msgid "Added plugin %s with %d %s.\n"
-msgstr "Додано модуль %s з %d %s.\n"
-
-#: tools/gst-register.c:51 tools/gst-register.c:169
-msgid "feature"
-msgid_plural "features"
-msgstr[0] "властивість"
-msgstr[1] "властивості"
-msgstr[2] "властивостей"
+#, fuzzy, c-format
+msgid "Added plugin %s with %d feature.\n"
+msgid_plural "Added plugin %s with %d features.\n"
+msgstr[0] "Додано модуль %s з %d %s.\n"
+msgstr[1] "Додано модуль %s з %d %s.\n"
+msgstr[2] "Додано модуль %s з %d %s.\n"
 
 #: tools/gst-register.c:112
 #, c-format
@@ -857,9 +872,21 @@ msgid "Error loading %s\n"
 msgstr "Помилка при завантаженні %s\n"
 
 #: tools/gst-register.c:168
-#, c-format
-msgid "Loaded %d plugins with %d %s.\n"
-msgstr "Завантажено %d модулів з %d %s.\n"
+#, fuzzy, c-format
+msgid "Loaded %d plugins with %d feature.\n"
+msgid_plural "Loaded %d plugins with %d features.\n"
+msgstr[0] "Завантажено %d модулів з %d %s.\n"
+msgstr[1] "Завантажено %d модулів з %d %s.\n"
+msgstr[2] "Завантажено %d модулів з %d %s.\n"
+
+#~ msgid "caps"
+#~ msgstr "можливості"
+
+#~ msgid "feature"
+#~ msgid_plural "features"
+#~ msgstr[0] "властивість"
+#~ msgstr[1] "властивості"
+#~ msgstr[2] "властивостей"
 
 #~ msgid "Execution ended after %"
 #~ msgstr "Виконання закінчено після %"
