@@ -1,3 +1,8 @@
+2005-05-03  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/pygstvalue.c: (pygst_value_from_pyobject):
+	stupid, stupid, stupid
+
 2005-05-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstcaps.override:

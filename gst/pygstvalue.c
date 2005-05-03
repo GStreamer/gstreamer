@@ -213,7 +213,7 @@ pygst_value_from_pyobject (GValue *value, PyObject *obj)
       if (!(pyval = PyObject_GetAttrString (obj, "num")))
         return -1;
       num = PyInt_AsLong (pyval);
-      g_assert (G_MININT <= num && denom <= G_MAXINT);
+      g_assert (G_MININT <= num && num <= G_MAXINT);
       if (!(pyval = PyObject_GetAttrString (obj, "denom")))
         return -1;
       denom = PyInt_AsLong (pyval);
