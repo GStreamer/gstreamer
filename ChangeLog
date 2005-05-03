@@ -217,6 +217,33 @@
 	  Give filesrc GST_RANK_PRIMARY, so that file:// URIs 
 	  get handled by filesrc instead of gnomevfssrc.
 	  
+2005-04-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstchildproxy.sgml:
+	* gst/Makefile.am:
+	* gst/gst.h:
+	* gst/gstbin.c: (gst_bin_get_type),
+	(gst_bin_child_proxy_get_child_by_index),
+	(gst_bin_child_proxy_get_children_count),
+	(gst_bin_child_proxy_init), (gst_bin_add), (gst_bin_remove):
+	* gst/gstchildproxy.c: (gst_child_proxy_get_child_by_name),
+	(gst_child_proxy_get_child_by_index),
+	(gst_child_proxy_get_children_count), (gst_child_proxy_lookup),
+	(gst_child_proxy_get_property), (gst_child_proxy_get_valist),
+	(gst_child_proxy_get), (gst_child_proxy_set_property),
+	(gst_child_proxy_set_valist), (gst_child_proxy_set),
+	(gst_child_proxy_child_added), (gst_child_proxy_child_removed),
+	(gst_child_proxy_base_init), (gst_child_proxy_get_type):
+	* gst/gstchildproxy.h:
+	* gst/parse/grammar.y:
+	* testsuite/Makefile.am:
+	* testsuite/childproxy/Makefile.am:
+	* testsuite/childproxy/childproxy.c: (my_child_added),
+	(my_child_removed), (main):
+      new iface to uniformly access elements children and their properties
+
 2005-04-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/building-boiler.xml:
