@@ -1,5 +1,12 @@
 2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* testsuite/Makefile.am:
+	* testsuite/common.py:
+	  rework common so that it behaves a bit more sanely
+	  make the inner workings more clear
+
+2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	  add Wall and Werror just like other modules
 	* gst/gst.override:

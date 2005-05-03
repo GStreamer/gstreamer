@@ -20,7 +20,7 @@ except:
     print "WARNING: gobject doesn't have threads_init, no threadsafety"
 
 # Don't insert before .
-sys.path.insert(1, os.path.join('..'))
+# sys.path.insert(1, os.path.join('..'))
 
 # Load GST and make sure we load it from the current build
 sys.setdlopenflags(RTLD_LAZY | RTLD_GLOBAL)
@@ -28,20 +28,38 @@ sys.setdlopenflags(RTLD_LAZY | RTLD_GLOBAL)
 # Hack
 sys.argv.append('--gst-debug-no-color')
 
-path = os.path.abspath(os.path.join('..', 'gst'))
-import gst
+topbuilddir = os.path.abspath(os.path.join('..'))
+topsrcdir = os.path.abspath(os.path.join('..'))
+if topsrcdir.endswith('_build'):
+    topsrcdir = os.path.dirname(topsrcdir)
 
+# gst's __init__.py is in topsrcdir/gst
+path = os.path.abspath(os.path.join(topsrcdir, 'gst'))
+import gst
+file = gst.__file__
+assert file.startswith(path), 'bad gst path: %s' % file
+
+# gst's interfaces and play are in topbuilddir/gst
+path = os.path.abspath(os.path.join(topbuilddir, 'gst'))
 try:
    import gst.interfaces
-   assert os.path.basename(gst.interfaces.__file__) != path, 'bad path'
 except ImportError:
-   pass
+   # hack: we import it from our builddir/gst/.libs instead; ugly
+   import interfaces
+   gst.interfaces = interfaces
+file = gst.interfaces.__file__
+assert file.startswith(path), 'bad gst.interfaces path: %s' % file
 
 try:
    import gst.play
    assert os.path.basename(gst.play.__file__) != path, 'bad path'
 except ImportError:
+   # hack: we import it from our builddir/gst/.libs instead; ugly
+   import play
+   gst.play = play
    pass
+file = gst.play.__file__
+assert file.startswith(path), 'bad gst.play path: %s' % file
 
 # testhelper needs ltihooks
 import ltihooks
