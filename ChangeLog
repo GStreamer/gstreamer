@@ -1,5 +1,10 @@
 2005-05-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* gst/gstcaps.override:
+	  fix uninitialized warning and refator function
+
+2005-05-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* gst/pygstvalue.c:
 	* gst/gst-argtypes.c:
 	* gst/gst.override:

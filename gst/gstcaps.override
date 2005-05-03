@@ -261,20 +261,15 @@ pygst_caps_nb_nonzero (PyObject *py_caps)
 static int
 pygst_caps_nb_coerce (PyObject **py_caps1, PyObject **py_caps2)
 {
-  GstCaps *caps1, *caps2;
+  GstCaps *caps1, *caps2 = NULL;
   gboolean caps1_is_copy, caps2_is_copy;
   
   caps1 = pygst_caps_from_pyobject (*py_caps1, &caps1_is_copy);
-  if (caps1)
-    caps2 = pygst_caps_from_pyobject (*py_caps2, &caps2_is_copy);
-  if (PyErr_Occurred ()) {
-    PyErr_Clear ();
-    if (caps1 && !caps1_is_copy)
-      gst_caps_free (caps1);
-    if (caps2 && !caps2_is_copy)
-      gst_caps_free (caps2);
-    return 1;
-  }
+  if (!caps1)
+    goto error;
+  caps2 = pygst_caps_from_pyobject (*py_caps2, &caps2_is_copy);
+  if (!caps2)
+    goto error;
   /* if they're not copies, they're caps already */
   if (caps1_is_copy)
     *py_caps1 = pyg_boxed_new (GST_TYPE_CAPS, caps1, FALSE, TRUE);
@@ -284,8 +279,16 @@ pygst_caps_nb_coerce (PyObject **py_caps1, PyObject **py_caps2)
     *py_caps2 = pyg_boxed_new (GST_TYPE_CAPS, caps2, FALSE, TRUE);
   else
     Py_INCREF (*py_caps2);
-
   return 0;
+
+error:
+  g_assert (PyErr_Occurred ());
+  PyErr_Clear ();
+  if (caps1 && !caps1_is_copy)
+    gst_caps_free (caps1);
+  if (caps2 && !caps2_is_copy)
+    gst_caps_free (caps2);
+  return 1;
 }
 
 static PyNumberMethods _wrap_gst_caps_tp_as_number = {
