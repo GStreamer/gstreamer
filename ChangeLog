@@ -1,3 +1,20 @@
+2005-05-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/pygstvalue.c:
+	* gst/gst-argtypes.c:
+	* gst/gst.override:
+	  define NO_IMPORT_PYGOBJECT to have a correct extern declaration
+	  reenable _pygst_element_init and ifdef it correctly
+	* gst/arg-types.py:
+	  check errors
+	* gst/gstcaps.override:
+	  - remove list append functionality. Sets don't support the +
+	    operator
+	  - implement richcompare and coerce, nonzero, or, xor and subtract
+	    number functions
+	* testsuite/test_caps.py:
+	  add tests for the new stuff
+
 2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* testsuite/Makefile.am:

@@ -106,7 +106,9 @@ class XmlDocArg(XmlNodeArg):
 class GstCapsArg(ArgType):
     """GstCaps node generator"""
 
-    before = ('    %(name)s = pygst_caps_from_pyobject (py_%(name)s, %(namecopy)s);\n')
+    before = ('    %(name)s = pygst_caps_from_pyobject (py_%(name)s, %(namecopy)s);\n'
+              '    if (PyErr_Occurred())\n'
+              '      return NULL;\n')
     beforenull = ('    if (py_%(name)s == Py_None)\n'
                   '        %(name)s = NULL;\n'
                   '    else\n'
