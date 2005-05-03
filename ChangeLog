@@ -1,5 +1,13 @@
 2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	Patch by:  jonathan at kaolin.hn.org  
+
+	* gst/gstplugin.c: (gst_plugin_check_module),
+	(gst_plugin_check_file), (gst_plugin_load_file):
+	  Fixes plugin registering on Mac OSX.  Fixes #172526
+
+2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	  prerelease
 
@@ -408,7 +416,7 @@
 	* gst/elements/gstfdsrc.c:
 	  Fix cygwin compile error (#169732).
 
-2005-03-10  Jan Schmidt,,,  <thaytan@mad.scientist.com>
+2005-03-10  Jan Schmidt  <thaytan@mad.scientist.com>
 	* gst/registries/gstlibxmlregistry.c: (load_plugin), (load_paths):
 	  g_free allocated GstPlugins, since they're not GstObjects.
 
