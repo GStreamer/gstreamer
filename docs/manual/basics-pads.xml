@@ -384,7 +384,7 @@ read_video_props (GstCaps *caps)
   gint width, height;
   const GstStructure *str;
 
-  str = gst_caps_get_structure (caps);
+  str = gst_caps_get_structure (caps, 0);
   if (!gst_structure_get_int (str, "width", &amp;width) ||
       !gst_structure_get_int (str, "height", &amp;height)) {
     g_print ("No width/height available\n");

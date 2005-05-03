@@ -1,3 +1,8 @@
+2005-05-03  Maciej Katafiasz  <mathrick@freedesktop.org>
+
+	* docs/manual/basics-pads.xml:
+	  trivial fix in example code, make it actually use our API
+	
 2005-05-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* testsuite/caps/intersection.c: (main):
