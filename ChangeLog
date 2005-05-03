@@ -1,3 +1,8 @@
+2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  prerelease
+
 2005-05-03  Maciej Katafiasz  <mathrick@freedesktop.org>
 
 	* docs/manual/basics-pads.xml:
