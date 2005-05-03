@@ -301,6 +301,46 @@ _gst_plugin_fault_handler_setup (void)
 static void _gst_plugin_fault_handler_setup ();
 
 /**
+ * gst_plugin_check_module:
+ * @module: GModule handle to check for pluginness
+ * @error: pointer to a NULL-valued GError
+ * @pptr: pointer to a gpointer used to return the gst_plugin_desc symbol
+ *        (can be NULL)
+ *
+ * Checks if the given module is a GStreamer plugin
+ *
+ * Returns: TRUE if the given module is a GStreamer plugin
+ */
+static gboolean
+gst_plugin_check_module (GModule * module, const char *filename,
+    GError ** error, gpointer * pptr)
+{
+  gpointer ptr;
+
+  if (pptr == NULL)
+    pptr = &ptr;
+
+  if (module == NULL) {
+    GST_DEBUG ("Error loading plugin %s, reason: %s", filename,
+        g_module_error ());
+    g_set_error (error, GST_PLUGIN_ERROR, GST_PLUGIN_ERROR_MODULE,
+        "Error loading plugin %s, reason: %s", filename, g_module_error ());
+    return FALSE;
+  }
+
+  if (!g_module_symbol (module, "gst_plugin_desc", pptr)) {
+    GST_DEBUG ("Could not find plugin entry point in \"%s\"", filename);
+    g_set_error (error,
+        GST_PLUGIN_ERROR,
+        GST_PLUGIN_ERROR_MODULE,
+        "Could not find plugin entry point in \"%s\"", filename);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
  * gst_plugin_check_file:
  * @filename: the plugin filename to check for pluginness
  * @error: pointer to a NULL-valued GError
@@ -314,7 +354,7 @@ gst_plugin_check_file (const gchar * filename, GError ** error)
 {
   GModule *module;
   struct stat file_status;
-  gpointer ptr;
+  gboolean check;
 
   g_return_val_if_fail (filename != NULL, FALSE);
 
@@ -334,28 +374,13 @@ gst_plugin_check_file (const gchar * filename, GError ** error)
   }
 
   module = g_module_open (filename, G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL);
-
-  if (module == NULL) {
-    GST_DEBUG ("Error loading plugin %s, reason: %s\n", filename,
-        g_module_error ());
-    g_set_error (error, GST_PLUGIN_ERROR, GST_PLUGIN_ERROR_MODULE,
-        "Error loading plugin %s, reason: %s\n", filename, g_module_error ());
-    return FALSE;
-  }
-
-  if (!g_module_symbol (module, "gst_plugin_desc", &ptr)) {
-    GST_DEBUG ("Could not find plugin entry point in \"%s\"", filename);
-    g_set_error (error,
-        GST_PLUGIN_ERROR,
-        GST_PLUGIN_ERROR_MODULE,
-        "Could not find plugin entry point in \"%s\"", filename);
-    g_module_close (module);
-    return FALSE;
-  }
-  /* it's a plugin */
-  GST_INFO ("looks like a gst plugin \"%s\"", filename);
+  check = gst_plugin_check_module (module, filename, error, NULL);
   g_module_close (module);
-  return TRUE;
+
+  GST_INFO ("file \"%s\" %s look like a gst plugin", filename,
+      check ? "does" : "doesn't");
+  return check;
+
 }
 
 /**
@@ -381,16 +406,11 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
   GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING, "attempt to load plugin \"%s\"",
       filename);
 
-  if (!gst_plugin_check_file (filename, error))
-    return NULL;
-
   module = g_module_open (filename, G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL);
 
-  if (module == NULL)
-    goto load_error;
-
-  if (!g_module_symbol (module, "gst_plugin_desc", &ptr))
-    goto load_error;
+  /* handle module == NULL case */
+  if (!gst_plugin_check_module (module, filename, error, &ptr))
+    return NULL;
 
   desc = (GstPluginDesc *) ptr;
 
@@ -403,6 +423,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
   } else {
     free_plugin = FALSE;
     if (gst_plugin_is_loaded (plugin)) {
+      g_module_close (module);
       if (plugin->filename && strcmp (plugin->filename, filename) != 0) {
         GST_WARNING
             ("plugin %p from file \"%s\" with same name %s is already "
@@ -455,15 +476,11 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
         GST_PLUGIN_ERROR,
         GST_PLUGIN_ERROR_MODULE,
         "gst_plugin_register_func failed for plugin \"%s\"", filename);
+    g_module_close (module);
     if (free_plugin)
       g_free (plugin);
     return NULL;
   }
-load_error:
-  g_set_error (error,
-      GST_PLUGIN_ERROR,
-      GST_PLUGIN_ERROR_MODULE, "generic load error for \"%s\"", filename);
-  return NULL;
 }
 
 static void

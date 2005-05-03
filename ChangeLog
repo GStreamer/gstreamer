@@ -1,9 +1,8 @@
-2005-05-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
-	reviewed by: <delete if not using a buddy>
-
-	* testsuite/indexers/cache1.c: (lookup):
-	* testsuite/indexers/indexdump.c: (main):
+	* gst/gstplugin.c: (gst_plugin_check_module),
+	(gst_plugin_check_file), (gst_plugin_load_file):
+	    apply patch from #172526 to make register work on MacOSX
 
 2005-05-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
