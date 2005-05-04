@@ -179,7 +179,8 @@ static void
 print_element_properties (GstElement * element, gint pfx)
 {
   GParamSpec **property_specs;
-  gint num_properties, i;
+  guint num_properties;
+  gint i;
   gboolean readable;
 
   property_specs = g_object_class_list_properties

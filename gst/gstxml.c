@@ -118,14 +118,16 @@ gst_xml_write (GstElement * element)
   xmlNodePtr elementnode;
   xmlNsPtr gst_ns;
 
-  doc = xmlNewDoc ("1.0");
+  doc = xmlNewDoc ((xmlChar *) "1.0");
 
-  doc->xmlRootNode = xmlNewDocNode (doc, NULL, "gstreamer", NULL);
+  doc->xmlRootNode = xmlNewDocNode (doc, NULL, (xmlChar *) "gstreamer", NULL);
 
   gst_ns =
-      xmlNewNs (doc->xmlRootNode, "http://gstreamer.net/gst-core/1.0/", "gst");
+      xmlNewNs (doc->xmlRootNode,
+      (xmlChar *) "http://gstreamer.net/gst-core/1.0/", (xmlChar *) "gst");
 
-  elementnode = xmlNewChild (doc->xmlRootNode, gst_ns, "element", NULL);
+  elementnode = xmlNewChild (doc->xmlRootNode, gst_ns, (xmlChar *) "element",
+      NULL);
 
   gst_object_save_thyself (GST_OBJECT (element), elementnode);
 
@@ -218,12 +220,13 @@ gst_xml_parse_doc (GstXML * xml, xmlDocPtr doc, const guchar * root)
     g_warning ("gstxml: empty document\n");
     return FALSE;
   }
-  ns = xmlSearchNsByHref (doc, cur, "http://gstreamer.net/gst-core/1.0/");
+  ns = xmlSearchNsByHref (doc, cur,
+      (xmlChar *) "http://gstreamer.net/gst-core/1.0/");
   if (ns == NULL) {
     g_warning ("gstxml: document of wrong type, core namespace not found\n");
     return FALSE;
   }
-  if (strcmp (cur->name, "gstreamer")) {
+  if (strcmp ((char *) cur->name, "gstreamer")) {
     g_warning ("gstxml: XML file is in wrong format\n");
     return FALSE;
   }
@@ -236,7 +239,7 @@ gst_xml_parse_doc (GstXML * xml, xmlDocPtr doc, const guchar * root)
   field = cur->xmlChildrenNode;
 
   while (field) {
-    if (!strcmp (field->name, "element") && (field->ns == xml->ns)) {
+    if (!strcmp ((char *) field->name, "element") && (field->ns == xml->ns)) {
       GstElement *element;
 
       element = gst_xml_make_element (field, NULL);
@@ -251,6 +254,7 @@ gst_xml_parse_doc (GstXML * xml, xmlDocPtr doc, const guchar * root)
   return TRUE;
 }
 
+/* FIXME 0.9: Why guchar*? */
 /**
  * gst_xml_parse_file:
  * @xml: a pointer to a GstXML object
@@ -275,7 +279,7 @@ gst_xml_parse_file (GstXML * xml, const guchar * fname, const guchar * root)
 
   g_return_val_if_fail (fname != NULL, FALSE);
 
-  doc = xmlParseFile (fname);
+  doc = xmlParseFile ((char *) fname);
 
   if (!doc) {
     g_warning ("gstxml: XML file \"%s\" could not be read\n", fname);
@@ -285,6 +289,7 @@ gst_xml_parse_file (GstXML * xml, const guchar * fname, const guchar * root)
   return gst_xml_parse_doc (xml, doc, root);
 }
 
+/* FIXME guchar* */
 /**
  * gst_xml_parse_memory:
  * @xml: a pointer to a GstXML object
@@ -305,9 +310,9 @@ gst_xml_parse_memory (GstXML * xml, guchar * buffer, guint size,
 
   g_return_val_if_fail (buffer != NULL, FALSE);
 
-  doc = xmlParseMemory (buffer, size);
+  doc = xmlParseMemory ((char *) buffer, size);
 
-  return gst_xml_parse_doc (xml, doc, root);
+  return gst_xml_parse_doc (xml, doc, (const xmlChar *) root);
 }
 
 static void
@@ -337,6 +342,7 @@ gst_xml_get_topelements (GstXML * xml)
   return xml->topelements;
 }
 
+/* FIXME 0.9: why is the arg guchar* instead of gchar*? */
 /**
  * gst_xml_get_element:
  * @xml: The GstXML to get the element from
@@ -365,11 +371,11 @@ gst_xml_get_element (GstXML * xml, const guchar * name)
     GstElement *top = GST_ELEMENT (topelements->data);
 
     GST_DEBUG ("gstxml: getting element \"%s\"", name);
-    if (!strcmp (GST_ELEMENT_NAME (top), name)) {
+    if (!strcmp (GST_ELEMENT_NAME (top), (char *) name)) {
       return top;
     } else {
       if (GST_IS_BIN (top)) {
-        element = gst_bin_get_by_name (GST_BIN (top), name);
+        element = gst_bin_get_by_name (GST_BIN (top), (gchar *) name);
 
         if (element)
           return element;
@@ -394,15 +400,15 @@ gst_xml_make_element (xmlNodePtr cur, GstObject * parent)
 {
   xmlNodePtr children = cur->xmlChildrenNode;
   GstElement *element;
-  guchar *name = NULL;
-  guchar *type = NULL;
+  gchar *name = NULL;
+  gchar *type = NULL;
 
   /* first get the needed tags to construct the element */
   while (children) {
-    if (!strcmp (children->name, "name")) {
-      name = xmlNodeGetContent (children);
-    } else if (!strcmp (children->name, "type")) {
-      type = xmlNodeGetContent (children);
+    if (!strcmp ((char *) children->name, "name")) {
+      name = (gchar *) xmlNodeGetContent (children);
+    } else if (!strcmp ((char *) children->name, "type")) {
+      type = (gchar *) xmlNodeGetContent (children);
     }
     children = children->next;
   }

@@ -48,6 +48,8 @@ enum
 {
   PROP_0,
   PROP_BLOCKSIZE,
+  PROP_HAS_LOOP,
+  PROP_HAS_GETRANGE
 };
 
 static GstElementClass *parent_class = NULL;
@@ -99,8 +101,10 @@ static gboolean gst_basesrc_stop (GstBaseSrc * basesrc);
 
 static GstElementStateReturn gst_basesrc_change_state (GstElement * element);
 
+static void gst_basesrc_set_dataflow_funcs (GstBaseSrc * this);
 static void gst_basesrc_loop (GstPad * pad);
-static gboolean gst_basesrc_check_get_range (GstPad * pad);
+static gboolean gst_basesrc_check_get_range (GstPad * pad,
+    gboolean * random_access);
 static GstFlowReturn gst_basesrc_get_range (GstPad * pad, guint64 offset,
     guint length, GstBuffer ** buf);
 
@@ -129,6 +133,16 @@ gst_basesrc_class_init (GstBaseSrcClass * klass)
           "Size in bytes to read per buffer", 1, G_MAXULONG, DEFAULT_BLOCKSIZE,
           G_PARAM_READWRITE));
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HAS_LOOP,
+      g_param_spec_boolean ("has-loop", "Has loop function",
+          "True if the element should expose a loop function", TRUE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HAS_GETRANGE,
+      g_param_spec_boolean ("has-getrange", "Has getrange function",
+          "True if the element should expose a getrange function", TRUE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_basesrc_change_state);
 }
 
@@ -150,9 +164,7 @@ gst_basesrc_init (GstBaseSrc * basesrc, gpointer g_class)
   gst_pad_set_query_function (pad, gst_basesrc_query);
   gst_pad_set_query_type_function (pad, gst_basesrc_get_query_types);
   gst_pad_set_formats_function (pad, gst_basesrc_get_formats);
-  gst_pad_set_loop_function (pad, gst_basesrc_loop);
   gst_pad_set_checkgetrange_function (pad, gst_basesrc_check_get_range);
-  gst_pad_set_getrange_function (pad, gst_basesrc_get_range);
   /* hold ref to pad */
   basesrc->srcpad = pad;
   gst_element_add_pad (GST_ELEMENT (basesrc), pad);
@@ -162,6 +174,20 @@ gst_basesrc_init (GstBaseSrc * basesrc, gpointer g_class)
   basesrc->blocksize = DEFAULT_BLOCKSIZE;
 
   GST_FLAG_UNSET (basesrc, GST_BASESRC_STARTED);
+}
+
+static void
+gst_basesrc_set_dataflow_funcs (GstBaseSrc * this)
+{
+  if (this->has_loop)
+    gst_pad_set_loop_function (this->srcpad, gst_basesrc_loop);
+  else
+    gst_pad_set_loop_function (this->srcpad, NULL);
+
+  if (this->has_getrange)
+    gst_pad_set_getrange_function (this->srcpad, gst_basesrc_get_range);
+  else
+    gst_pad_set_getrange_function (this->srcpad, NULL);
 }
 
 static const GstFormat *
@@ -206,7 +232,8 @@ gst_basesrc_query (GstPad * pad, GstQueryType type,
         {
           gboolean ret;
 
-          ret = gst_basesrc_get_size (src, value);
+          /* FIXME-wim: is this cast right? */
+          ret = gst_basesrc_get_size (src, (guint64 *) value);
           GST_DEBUG ("getting length %d %lld", ret, *value);
           return ret;
         }
@@ -223,7 +250,8 @@ gst_basesrc_query (GstPad * pad, GstQueryType type,
           *value = src->offset;
           break;
         case GST_FORMAT_PERCENT:
-          if (!gst_basesrc_get_size (src, value))
+          /* fixme */
+          if (!gst_basesrc_get_size (src, (guint64 *) value))
             return FALSE;
           *value = src->offset * GST_FORMAT_PERCENT_MAX / *value;
           return TRUE;
@@ -402,6 +430,14 @@ gst_basesrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_BLOCKSIZE:
       src->blocksize = g_value_get_ulong (value);
       break;
+    case PROP_HAS_LOOP:
+      src->has_loop = g_value_get_boolean (value);
+      gst_basesrc_set_dataflow_funcs (src);
+      break;
+    case PROP_HAS_GETRANGE:
+      src->has_getrange = g_value_get_boolean (value);
+      gst_basesrc_set_dataflow_funcs (src);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -419,6 +455,12 @@ gst_basesrc_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case PROP_BLOCKSIZE:
       g_value_set_ulong (value, src->blocksize);
+      break;
+    case PROP_HAS_LOOP:
+      g_value_set_boolean (value, src->has_loop);
+      break;
+    case PROP_HAS_GETRANGE:
+      g_value_set_boolean (value, src->has_getrange);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -495,7 +537,7 @@ gst_basesrc_get_range (GstPad * pad, guint64 offset, guint length,
 }
 
 static gboolean
-gst_basesrc_check_get_range (GstPad * pad)
+gst_basesrc_check_get_range (GstPad * pad, gboolean * random_access)
 {
   GstBaseSrc *src;
 
@@ -506,6 +548,7 @@ gst_basesrc_check_get_range (GstPad * pad)
     gst_basesrc_stop (src);
   }
 
+  *random_access = src->random_access;
   return src->seekable;
 }
 
@@ -675,6 +718,7 @@ gst_basesrc_activate (GstPad * pad, GstActivateMode mode)
   switch (mode) {
     case GST_ACTIVATE_PUSH:
     case GST_ACTIVATE_PULL:
+    case GST_ACTIVATE_PULL_RANGE:
       result = gst_basesrc_start (basesrc);
       break;
     default:
@@ -701,6 +745,7 @@ gst_basesrc_activate (GstPad * pad, GstActivateMode mode)
       }
       break;
     case GST_ACTIVATE_PULL:
+    case GST_ACTIVATE_PULL_RANGE:
       result = TRUE;
       break;
     case GST_ACTIVATE_NONE:

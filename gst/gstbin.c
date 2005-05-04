@@ -1268,7 +1268,7 @@ gst_bin_save_thyself (GstObject * object, xmlNodePtr parent)
   if (GST_OBJECT_CLASS (parent_class)->save_thyself)
     GST_OBJECT_CLASS (parent_class)->save_thyself (GST_OBJECT (bin), parent);
 
-  childlist = xmlNewChild (parent, NULL, "children", NULL);
+  childlist = xmlNewChild (parent, NULL, (xmlChar *) "children", NULL);
 
   GST_CAT_INFO (GST_CAT_XML, "[%s]: saving %d children",
       GST_ELEMENT_NAME (bin), bin->numchildren);
@@ -1276,7 +1276,7 @@ gst_bin_save_thyself (GstObject * object, xmlNodePtr parent)
   children = bin->children;
   while (children) {
     child = GST_ELEMENT (children->data);
-    elementnode = xmlNewChild (childlist, NULL, "element", NULL);
+    elementnode = xmlNewChild (childlist, NULL, (xmlChar *) "element", NULL);
     gst_object_save_thyself (GST_OBJECT (child), elementnode);
     children = g_list_next (children);
   }
@@ -1291,12 +1291,12 @@ gst_bin_restore_thyself (GstObject * object, xmlNodePtr self)
   xmlNodePtr childlist;
 
   while (field) {
-    if (!strcmp (field->name, "children")) {
+    if (!strcmp ((char *) field->name, "children")) {
       GST_CAT_INFO (GST_CAT_XML, "[%s]: loading children",
           GST_ELEMENT_NAME (object));
       childlist = field->xmlChildrenNode;
       while (childlist) {
-        if (!strcmp (childlist->name, "element")) {
+        if (!strcmp ((char *) childlist->name, "element")) {
           GstElement *element =
               gst_xml_make_element (childlist, GST_OBJECT (bin));
 

@@ -32,6 +32,7 @@ TESTS = $(top_builddir)/tools/gst-register \
 	gst/gstobject		\
 	gst/gstpad		\
 	gst/gstsystemclock	\
+	pipelines/simple_launch_lines	\
 	gst-libs/gdp	
 
 check_PROGRAMS = $(TESTS)

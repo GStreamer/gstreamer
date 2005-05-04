@@ -587,7 +587,7 @@ read_string (xmlTextReaderPtr reader, gchar ** write_to)
     if (xmlTextReaderNodeType (reader) == XML_READER_TYPE_TEXT) {
       if (found)
         return FALSE;
-      *write_to = g_strdup (xmlTextReaderConstValue (reader));
+      *write_to = g_strdup ((gchar *) xmlTextReaderConstValue (reader));
       found = TRUE;
     }
   }
@@ -610,7 +610,7 @@ read_uint (xmlTextReaderPtr reader, guint * write_to)
 
       if (found)
         return FALSE;
-      *write_to = strtol (xmlTextReaderConstValue (reader), &ret, 0);
+      *write_to = strtol ((char *) xmlTextReaderConstValue (reader), &ret, 0);
       if (ret != NULL)
         return FALSE;
       found = TRUE;
@@ -641,7 +641,7 @@ read_enum (xmlTextReaderPtr reader, GType enum_type, guint * write_to)
         return FALSE;
       value =
           g_enum_get_value_by_nick (enum_class,
-          xmlTextReaderConstValue (reader));
+          (gchar *) xmlTextReaderConstValue (reader));
       if (value) {
         *write_to = value->value;
         found = TRUE;
@@ -674,7 +674,7 @@ load_pad_template (xmlTextReaderPtr reader)
     }
     if (xmlTextReaderNodeType (reader) == XML_READER_TYPE_ELEMENT &&
         xmlTextReaderDepth (reader) == depth + 1) {
-      const gchar *tag = xmlTextReaderConstName (reader);
+      const gchar *tag = (gchar *) xmlTextReaderConstName (reader);
 
       if (g_str_equal (tag, "nametemplate")) {
         read_string (reader, &name);
@@ -720,7 +720,7 @@ load_feature (xmlTextReaderPtr reader)
       return feature;
     if (xmlTextReaderNodeType (reader) == XML_READER_TYPE_ELEMENT &&
         xmlTextReaderDepth (reader) == depth + 1) {
-      const gchar *tag = xmlTextReaderConstName (reader);
+      const gchar *tag = (gchar *) xmlTextReaderConstName (reader);
 
       if (g_str_equal (tag, "name"))
         read_string (reader, &feature->name);
@@ -812,7 +812,7 @@ load_plugin (xmlTextReaderPtr reader)
     }
     if (xmlTextReaderNodeType (reader) == XML_READER_TYPE_ELEMENT &&
         xmlTextReaderDepth (reader) == 2) {
-      const gchar *tag = xmlTextReaderConstName (reader);
+      const gchar *tag = (gchar *) xmlTextReaderConstName (reader);
 
       if (g_str_equal (tag, "name")) {
         if (!read_string (reader, &plugin->desc.name))
@@ -860,7 +860,7 @@ load_paths (xmlTextReaderPtr reader, GstXMLRegistry * registry)
     }
     if (xmlTextReaderNodeType (reader) == XML_READER_TYPE_ELEMENT &&
         xmlTextReaderDepth (reader) == 2) {
-      const gchar *tag = xmlTextReaderConstName (reader);
+      const gchar *tag = (gchar *) xmlTextReaderConstName (reader);
 
       if (g_str_equal (tag, "path")) {
         gchar *s = NULL;

@@ -74,7 +74,7 @@ static struct _elements_entry _elements[] = {
 //  {"statistics", GST_RANK_NONE, gst_statistics_get_type},
   {"tee", GST_RANK_NONE, gst_tee_get_type},
   {"typefind", GST_RANK_NONE, gst_type_find_element_get_type},
-//  {NULL, 0},
+  {NULL, 0},
 };
 
 static gboolean

@@ -1,3 +1,49 @@
+2005-05-04  Andy Wingo <wingo@pobox.com>
+
+	* check/Makefile.am:
+	* docs/gst/tmpl/gstatomic.sgml:
+	* docs/gst/tmpl/gstplugin.sgml:
+	* gst/base/gstbasesink.c: (gst_basesink_activate):
+	* gst/base/gstbasesrc.c: (gst_basesrc_class_init),
+	(gst_basesrc_init), (gst_basesrc_set_dataflow_funcs),
+	(gst_basesrc_query), (gst_basesrc_set_property),
+	(gst_basesrc_get_property), (gst_basesrc_check_get_range),
+	(gst_basesrc_activate):
+	* gst/base/gstbasesrc.h:
+	* gst/base/gstbasetransform.c: (gst_base_transform_sink_activate),
+	(gst_base_transform_src_activate):
+	* gst/elements/gstelements.c:
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_class_init),
+	(gst_fakesrc_set_property), (gst_fakesrc_get_property):
+	* gst/elements/gsttee.c: (gst_tee_sink_activate):
+	* gst/elements/gsttypefindelement.c: (find_element_get_length),
+	(gst_type_find_element_checkgetrange),
+	(gst_type_find_element_activate):
+	* gst/gstbin.c: (gst_bin_save_thyself), (gst_bin_restore_thyself):
+	* gst/gstcaps.c: (gst_caps_do_simplify), (gst_caps_save_thyself),
+	(gst_caps_load_thyself):
+	* gst/gstelement.c: (gst_element_pads_activate),
+	(gst_element_save_thyself), (gst_element_restore_thyself):
+	* gst/gstpad.c: (gst_pad_load_and_link), (gst_pad_save_thyself),
+	(gst_ghost_pad_save_thyself), (gst_pad_check_pull_range):
+	* gst/gstpad.h:
+	* gst/gstxml.c: (gst_xml_write), (gst_xml_parse_doc),
+	(gst_xml_parse_file), (gst_xml_parse_memory),
+	(gst_xml_get_element), (gst_xml_make_element):
+	* gst/indexers/gstfileindex.c: (gst_file_index_load),
+	(_file_index_id_save_xml), (gst_file_index_commit):
+	* gst/registries/gstlibxmlregistry.c: (read_string), (read_uint),
+	(read_enum), (load_pad_template), (load_feature), (load_plugin),
+	(load_paths):
+	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_packet_from_caps),
+	(gst_dp_packet_from_event), (gst_dp_caps_from_packet):
+	* tools/gst-complete.c: (main):
+	* tools/gst-compprep.c: (main):
+	* tools/gst-inspect.c: (print_element_properties_info):
+	* tools/gst-launch.c: (xmllaunch_parse_cmdline):
+	* tools/gst-xmlinspect.c: (print_element_properties):
+	GCC 4 fixen.
+	
 2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstplugin.c: (gst_plugin_check_module),
@@ -265,6 +311,11 @@
 
 
 2005-04-18  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstelement.c (gst_element_pads_activate): Check pull_range
+	on the peer, not the pad. I think that was a typo. Pass an extra
+	arg to see if random access is possible. Activate the pads as
+	PULL_RANGE if possible.
 
 	* gst/elements/gstfakesrc.c: s/ARG_/PROP_/.
 

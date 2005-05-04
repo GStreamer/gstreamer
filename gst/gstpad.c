@@ -2493,12 +2493,12 @@ gst_pad_load_and_link (xmlNodePtr self, GstObject * parent)
   gchar *name = NULL;
 
   while (field) {
-    if (!strcmp (field->name, "name")) {
-      name = xmlNodeGetContent (field);
+    if (!strcmp ((char *) field->name, "name")) {
+      name = (gchar *) xmlNodeGetContent (field);
       pad = gst_element_get_pad (GST_ELEMENT (parent), name);
       g_free (name);
-    } else if (!strcmp (field->name, "peer")) {
-      peer = xmlNodeGetContent (field);
+    } else if (!strcmp ((char *) field->name, "peer")) {
+      peer = (gchar *) xmlNodeGetContent (field);
     }
     field = field->next;
   }
@@ -2562,7 +2562,8 @@ gst_pad_save_thyself (GstObject * object, xmlNodePtr parent)
 
   realpad = GST_REAL_PAD (object);
 
-  xmlNewChild (parent, NULL, "name", GST_PAD_NAME (realpad));
+  xmlNewChild (parent, NULL, (xmlChar *) "name",
+      (xmlChar *) GST_PAD_NAME (realpad));
   if (GST_RPAD_PEER (realpad) != NULL) {
     gchar *content;
 
@@ -2571,10 +2572,10 @@ gst_pad_save_thyself (GstObject * object, xmlNodePtr parent)
     /* we just save it off */
     content = g_strdup_printf ("%s.%s",
         GST_OBJECT_NAME (GST_PAD_PARENT (peer)), GST_PAD_NAME (peer));
-    xmlNewChild (parent, NULL, "peer", content);
+    xmlNewChild (parent, NULL, (xmlChar *) "peer", (xmlChar *) content);
     g_free (content);
   } else
-    xmlNewChild (parent, NULL, "peer", "");
+    xmlNewChild (parent, NULL, (xmlChar *) "peer", (xmlChar *) "");
 
   return parent;
 }
@@ -2595,9 +2596,10 @@ gst_ghost_pad_save_thyself (GstPad * pad, xmlNodePtr parent)
 
   g_return_val_if_fail (GST_IS_GHOST_PAD (pad), NULL);
 
-  self = xmlNewChild (parent, NULL, "ghostpad", NULL);
-  xmlNewChild (self, NULL, "name", GST_PAD_NAME (pad));
-  xmlNewChild (self, NULL, "parent", GST_OBJECT_NAME (GST_PAD_PARENT (pad)));
+  self = xmlNewChild (parent, NULL, (xmlChar *) "ghostpad", NULL);
+  xmlNewChild (self, NULL, (xmlChar *) "name", (xmlChar *) GST_PAD_NAME (pad));
+  xmlNewChild (self, NULL, (xmlChar *) "parent",
+      (xmlChar *) GST_OBJECT_NAME (GST_PAD_PARENT (pad)));
 
   /* FIXME FIXME FIXME! */
 
@@ -2777,7 +2779,7 @@ no_function:
  * MT safe.
  */
 gboolean
-gst_pad_check_pull_range (GstPad * pad)
+gst_pad_check_pull_range (GstPad * pad, gboolean * random_access)
 {
   GstRealPad *peer;
   gboolean ret;
@@ -2797,13 +2799,14 @@ gst_pad_check_pull_range (GstPad * pad)
 
   /* see note in above function */
   if (G_LIKELY ((checkgetrangefunc = peer->checkgetrangefunc) == NULL)) {
+    *random_access = FALSE;
     ret = GST_RPAD_GETRANGEFUNC (peer) != NULL;
   } else {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "calling checkgetrangefunc %s of peer pad %s:%s",
         GST_DEBUG_FUNCPTR_NAME (checkgetrangefunc), GST_DEBUG_PAD_NAME (peer));
 
-    ret = checkgetrangefunc (GST_PAD_CAST (peer));
+    ret = checkgetrangefunc (GST_PAD_CAST (peer), random_access);
   }
 
   gst_object_unref (GST_OBJECT_CAST (peer));
@@ -2814,6 +2817,7 @@ gst_pad_check_pull_range (GstPad * pad)
 wrong_direction:
   {
     GST_UNLOCK (pad);
+    *random_access = FALSE;
     return FALSE;
   }
 not_connected:
@@ -2821,6 +2825,7 @@ not_connected:
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "checking pull range, but it was not linked");
     GST_UNLOCK (pad);
+    *random_access = FALSE;
     return FALSE;
   }
 }

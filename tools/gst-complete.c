@@ -108,44 +108,45 @@ main (int argc, char *argv[])
 
   elementnode = rootnode->xmlChildrenNode;
   while (elementnode) {
-    if (!strcmp (elementnode->name, "element")) {
+    if (!strcmp ((char *) elementnode->name, "element")) {
       element = g_new0 (comp_element, 1);
       propnode = elementnode->xmlChildrenNode;
       while (propnode) {
 
-        if (!strcmp (propnode->name, "name")) {
-          element->name = xmlNodeGetContent (propnode);
+        if (!strcmp ((char *) propnode->name, "name")) {
+          element->name = (gchar *) xmlNodeGetContent (propnode);
 /* fprintf(stderr,element->name); */
-        } else if (!strcmp (propnode->name, "srcpad")) {
+        } else if (!strcmp ((char *) propnode->name, "srcpad")) {
           element->srcpads =
               g_slist_prepend (element->srcpads, xmlNodeGetContent (propnode));
 /* fprintf(stderr,"."); */
-        } else if (!strcmp (propnode->name, "sinkpad")) {
+        } else if (!strcmp ((char *) propnode->name, "sinkpad")) {
           element->sinkpads =
               g_slist_prepend (element->sinkpads, xmlNodeGetContent (propnode));
-        } else if (!strcmp (propnode->name, "srcpadtemplate")) {
+        } else if (!strcmp ((char *) propnode->name, "srcpadtemplate")) {
           element->srcpadtemplates =
               g_slist_prepend (element->srcpadtemplates,
               xmlNodeGetContent (propnode));
 /* fprintf(stderr,"."); */
-        } else if (!strcmp (propnode->name, "sinkpad")) {
+        } else if (!strcmp ((char *) propnode->name, "sinkpad")) {
           element->sinkpadtemplates =
               g_slist_prepend (element->sinkpadtemplates,
               xmlNodeGetContent (propnode));
-        } else if (!strcmp (propnode->name, "argument")) {
+        } else if (!strcmp ((char *) propnode->name, "argument")) {
           argument = g_new0 (comp_argument, 1);
-          argument->name = xmlNodeGetContent (propnode);
+          argument->name = (gchar *) xmlNodeGetContent (propnode);
           argument->type = ARG_INT;
 
           /* walk through the values data */
           argnode = propnode->xmlChildrenNode;
           while (argnode) {
-            if (!strcmp (argnode->name, "filename")) {
+            if (!strcmp ((char *) argnode->name, "filename")) {
               argument->type = ARG_FILENAME;
-            } else if (!strcmp (argnode->name, "option")) {
+            } else if (!strcmp ((char *) argnode->name, "option")) {
               argument->type = ARG_ENUM;
               option = g_new0 (enum_value, 1);
-              sscanf (xmlNodeGetContent (argnode), "%d", &option->value);
+              sscanf ((char *) xmlNodeGetContent (argnode), "%d",
+                  &option->value);
               argument->enums = g_slist_prepend (argument->enums, option);
             }
             argnode = argnode->next;

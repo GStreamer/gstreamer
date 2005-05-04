@@ -334,6 +334,7 @@ gst_base_transform_sink_activate (GstPad * pad, GstActivateMode mode)
   switch (mode) {
     case GST_ACTIVATE_PUSH:
     case GST_ACTIVATE_PULL:
+    case GST_ACTIVATE_PULL_RANGE:
       if (bclass->start)
         result = bclass->start (trans);
       break;
@@ -357,6 +358,7 @@ gst_base_transform_src_activate (GstPad * pad, GstActivateMode mode)
       result = TRUE;
       break;
     case GST_ACTIVATE_PULL:
+    case GST_ACTIVATE_PULL_RANGE:
       result = gst_pad_set_active (trans->sinkpad, mode);
       result = gst_pad_peer_set_active (trans->sinkpad, mode);
       break;

@@ -84,7 +84,8 @@ xmllaunch_parse_cmdline (const gchar ** argv)
   }
 
   xml = gst_xml_new ();
-  err = gst_xml_parse_file (xml, arg, NULL);
+  /* FIXME guchar from gstxml.c */
+  err = gst_xml_parse_file (xml, (guchar *) arg, NULL);
 
   if (err != TRUE) {
     fprintf (stderr, _("ERROR: parse of xml file '%s' failed.\n"), arg);

@@ -19,81 +19,15 @@ as external methods.
 #GstMemChunk
 </para>
 
-<!-- ##### TYPEDEF gst_vgint ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GstAtomicInt ##### -->
-<para>
-A structure that contains an integer that can be modified
-atomically.
-</para>
-
-@counter: 
-@lock: 
-
-<!-- ##### FUNCTION gst_atomic_int_init ##### -->
-<para>
-Initialize an allocated #GstAtomicInt with a value. Call this method
-only once as it will allocate a mutex in the C-fallback case.
-</para>
-
-@aint: a #GstAtomicInt
-@val: a new value
-
-
-<!-- ##### FUNCTION gst_atomic_int_destroy ##### -->
-<para>
-Destroy a #GstAtomicInt. Call this method only once as it will
-free the mutex in the C-fallback case.
-</para>
-
-@aint: a #GstAtomicInt
-
-
 <!-- ##### FUNCTION gst_atomic_int_set ##### -->
 <para>
 Atomically set the value on the #GstAtomicInt.
 </para>
 
+@atomic_int: 
+@value: 
+<!-- # Unused Parameters # -->
 @aint: a #GstAtomicInt
 @val: The new value
-
-
-<!-- ##### FUNCTION gst_atomic_int_read ##### -->
-<para>
-Atomically read the contents of a #GstAtomicInt
-</para>
-
-@aint: a #GstAtomicInt
-@Returns: the value of the atomic int
-
-
-<!-- ##### FUNCTION gst_atomic_int_add ##### -->
-<para>
-Atomically add the given value to the #GstAtomicInt.
-</para>
-
-@aint: a #GstAtomicInt
-@val: the value to add
-
-
-<!-- ##### FUNCTION gst_atomic_int_inc ##### -->
-<para>
-Atomically increment the #GstAtomicInt
-</para>
-
-@aint: a #GstAtomicInt
-
-
-<!-- ##### FUNCTION gst_atomic_int_dec_and_test ##### -->
-<para>
-Atomically decrement the #GstAtomicInt and test if it is zero.
-</para>
-
-@aint: a #GstAtomicInt
-@Returns: TRUE if the atomic int is 0
 
 

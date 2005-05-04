@@ -752,6 +752,7 @@ gst_basesink_activate (GstPad * pad, GstActivateMode mode)
       result = TRUE;
       break;
     case GST_ACTIVATE_PULL:
+    case GST_ACTIVATE_PULL_RANGE:
       /* if we have a scheduler we can start the task */
       g_return_val_if_fail (basesink->has_loop, FALSE);
       gst_pad_peer_set_active (pad, mode);

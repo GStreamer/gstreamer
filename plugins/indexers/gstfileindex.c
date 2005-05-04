@@ -364,24 +364,24 @@ gst_file_index_load (GstFileIndex * index)
   //xmlDocFormatDump (stderr, doc, TRUE);
 
   root = doc->xmlRootNode;
-  if (strcmp (root->name, "gstfileindex") != 0) {
+  if (strcmp ((char *) root->name, "gstfileindex") != 0) {
     GST_ERROR_OBJECT (index, "root node isn't a gstfileindex");
     return;
   }
 
-  val = xmlGetProp (root, "version");
-  if (!val || atoi (val) != 1) {
+  val = xmlGetProp (root, (xmlChar *) "version");
+  if (!val || atoi ((char *) val) != 1) {
     GST_ERROR_OBJECT (index, "version != 1");
     return;
   }
   free (val);
 
   for (part = root->children; part; part = part->next) {
-    if (strcmp (part->name, "writers") == 0) {
+    if (strcmp ((char *) part->name, "writers") == 0) {
       xmlNodePtr writer;
 
       for (writer = part->children; writer; writer = writer->next) {
-        xmlChar *datafile = xmlGetProp (writer, "datafile");
+        xmlChar *datafile = xmlGetProp (writer, (xmlChar *) "datafile");
         gchar *path = g_strdup_printf ("%s/%s", index->location, datafile);
         int fd;
         GstFileIndexId *id_index;
@@ -400,22 +400,22 @@ gst_file_index_load (GstFileIndex * index)
         }
 
         id_index = g_new0 (GstFileIndexId, 1);
-        id_index->id_desc = xmlGetProp (writer, "id");
+        id_index->id_desc = (char *) xmlGetProp (writer, (xmlChar *) "id");
 
         for (wpart = writer->children; wpart; wpart = wpart->next) {
-          if (strcmp (wpart->name, "formats") == 0) {
-            xmlChar *count_str = xmlGetProp (wpart, "count");
+          if (strcmp ((char *) wpart->name, "formats") == 0) {
+            xmlChar *count_str = xmlGetProp (wpart, (xmlChar *) "count");
             gint fx = 0;
             xmlNodePtr format;
 
-            id_index->nformats = atoi (count_str);
+            id_index->nformats = atoi ((char *) count_str);
             free (count_str);
 
             id_index->format = g_new (GstFormat, id_index->nformats);
 
             for (format = wpart->children; format; format = format->next) {
-              xmlChar *nick = xmlGetProp (format, "nick");
-              GstFormat fmt = gst_format_get_by_nick (nick);
+              xmlChar *nick = xmlGetProp (format, (xmlChar *) "nick");
+              GstFormat fmt = gst_format_get_by_nick ((gchar *) nick);
 
               if (fmt == GST_FORMAT_UNDEFINED)
                 GST_ERROR_OBJECT (index, "format '%s' undefined", nick);
@@ -431,8 +431,8 @@ gst_file_index_load (GstFileIndex * index)
         _fc_alloc_array (id_index);
         g_assert (id_index->array->data == NULL);       /* little bit risky */
 
-        entries_str = xmlGetProp (writer, "entries");
-        id_index->array->len = atoi (entries_str);
+        entries_str = xmlGetProp (writer, (xmlChar *) "entries");
+        id_index->array->len = atoi ((char *) entries_str);
         free (entries_str);
 
         array_data =
@@ -505,22 +505,22 @@ _file_index_id_save_xml (gpointer _key, GstFileIndexId * ii, xmlNodePtr writers)
     return;
   }
 
-  writer = xmlNewChild (writers, NULL, "writer", NULL);
-  xmlSetProp (writer, "id", ii->id_desc);
+  writer = xmlNewChild (writers, NULL, (xmlChar *) "writer", NULL);
+  xmlSetProp (writer, (xmlChar *) "id", (xmlChar *) ii->id_desc);
   g_snprintf (buf, bufsize, "%d", ii->array->len);
-  xmlSetProp (writer, "entries", buf);
+  xmlSetProp (writer, (xmlChar *) "entries", (xmlChar *) buf);
   g_snprintf (buf, bufsize, "%d", ii->id);      /* any unique number is OK */
-  xmlSetProp (writer, "datafile", buf);
+  xmlSetProp (writer, (xmlChar *) "datafile", (xmlChar *) buf);
 
-  formats = xmlNewChild (writer, NULL, "formats", NULL);
+  formats = xmlNewChild (writer, NULL, (xmlChar *) "formats", NULL);
   g_snprintf (buf, bufsize, "%d", ii->nformats);
-  xmlSetProp (formats, "count", buf);
+  xmlSetProp (formats, (xmlChar *) "count", (xmlChar *) buf);
 
   for (xx = 0; xx < ii->nformats; xx++) {
-    xmlNodePtr format = xmlNewChild (formats, NULL, "format", NULL);
+    xmlNodePtr format = xmlNewChild (formats, NULL, (xmlChar *) "format", NULL);
     const GstFormatDefinition *def = gst_format_get_details (ii->format[xx]);
 
-    xmlSetProp (format, "nick", def->nick);
+    xmlSetProp (format, (xmlChar *) "nick", (xmlChar *) def->nick);
   }
 }
 
@@ -591,11 +591,12 @@ gst_file_index_commit (GstIndex * _index, gint _writer_id)
 
   GST_FLAG_UNSET (index, GST_INDEX_WRITABLE);
 
-  doc = xmlNewDoc ("1.0");
-  doc->xmlRootNode = xmlNewDocNode (doc, NULL, "gstfileindex", NULL);
-  xmlSetProp (doc->xmlRootNode, "version", "1");
+  doc = xmlNewDoc ((xmlChar *) "1.0");
+  doc->xmlRootNode =
+      xmlNewDocNode (doc, NULL, (xmlChar *) "gstfileindex", NULL);
+  xmlSetProp (doc->xmlRootNode, (xmlChar *) "version", (xmlChar *) "1");
 
-  writers = xmlNewChild (doc->xmlRootNode, NULL, "writers", NULL);
+  writers = xmlNewChild (doc->xmlRootNode, NULL, (xmlChar *) "writers", NULL);
   g_hash_table_foreach (index->id_index,
       (GHFunc) _file_index_id_save_xml, writers);
 
@@ -623,7 +624,7 @@ gst_file_index_commit (GstIndex * _index, gint _writer_id)
     int xmlsize;
 
     xmlDocDumpMemory (doc, &xmlmem, &xmlsize);
-    g_io_channel_write_chars (tocfile, xmlmem, xmlsize, NULL, &err);
+    g_io_channel_write_chars (tocfile, (gchar *) xmlmem, xmlsize, NULL, &err);
     if (err) {
       GST_ERROR_OBJECT (index, "%s", err->message);
       return;
