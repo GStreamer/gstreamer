@@ -228,19 +228,40 @@ _wrap_gst_element_link_filtered(PyGObject *self, PyObject *args,
 
 %%
 override gst_element_link_pads kwargs
+static gboolean
+pad_name_from_object (PyObject *object, const gchar **name)
+{
+  if (object == Py_None) {
+    *name = NULL;
+    return TRUE;
+  } else if (PyString_Check (object)) {
+    *name = PyString_AsString (object);
+    return TRUE;
+  } else if (pygobject_check (object, &PyGstPad_Type)) {
+    *name = gst_object_get_name (GST_OBJECT (pygobject_get (object)));
+    return TRUE;
+  }
+  PyErr_SetString(PyExc_TypeError, "argument could not be converted to a pad");
+  return FALSE;
+}
+
 static PyObject *
 _wrap_gst_element_link_pads(PyGObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = { "srcpadname", "dest", "destpadname", NULL };
-    char *srcpadname, *destpadname;
+    const char *srcpadname, *destpadname;
     PyGObject *dest;
+    PyObject *srcpad, *destpad;
     int ret;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-                                     "sO!s:GstElement.link_pads", kwlist,
-                                     &srcpadname, &PyGstElement_Type, &dest,
-                                     &destpadname))
+                                     "OO!O:GstElement.link_pads", kwlist,
+                                     &srcpad, &PyGstElement_Type, &dest,
+                                     &destpad))
         return NULL;
+    if (!pad_name_from_object (srcpad, &srcpadname) ||
+        !pad_name_from_object (destpad, &destpadname))
+	return NULL;
     ret = gst_element_link_pads(GST_ELEMENT(self->obj), srcpadname,
                                 GST_ELEMENT(dest->obj), destpadname);
     if (!ret) {
@@ -356,4 +377,20 @@ _wrap_gst_element_send_event(PyGObject *self, PyObject *args, PyObject *kwargs)
     ret = gst_element_send_event(GST_ELEMENT(self->obj), event);
     return PyBool_FromLong(ret);
 
+}
+%%
+override gst_element_factory_get_pad_templates
+static PyObject *
+_wrap_gst_element_factory_get_pad_templates(PyGObject *self)
+{
+	const GList *pads;
+	PyObject *list;
+	
+	pads = gst_element_factory_get_pad_templates(GST_ELEMENT_FACTORY(self->obj));
+
+	list = PyList_New(0);
+	for (; pads; pads = g_list_next (pads)) 
+		PyList_Append(list, pygobject_new(pads->data));
+		
+	return list;
 }

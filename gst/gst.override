@@ -495,6 +495,72 @@ _wrap_gst_tag_list_get_value_index (PyGObject *self,
 	return pygst_value_as_pyobject(gvalue, FALSE);
 }
 %%
+override-slot GstObject.tp_repr
+static PyObject *
+_wrap_gst_object_tp_repr(PyObject *self)
+{
+    gchar *repr;
+    PyObject *ret;
+    GstObject *object = GST_OBJECT (pygobject_get (self));
+
+    repr = g_strdup_printf ("<%s object (%s) at 0x%lx>",
+	       self->ob_type->tp_name,
+	       GST_OBJECT_NAME(object) ? GST_OBJECT_NAME(object) : "unnamed",
+	       (long)self);
+    ret = PyString_FromString(repr);
+    g_free (repr);
+    return ret;
+}
+%%
+override-slot GstObject.tp_str
+static PyObject *
+_wrap_gst_object_tp_str(PyObject *self)
+{
+    gchar *repr, *path;
+    PyObject *ret;
+    GstObject *object = GST_OBJECT (pygobject_get (self));
+
+    path = gst_object_get_path_string (object);
+    repr = g_strdup_printf ("%s (%s)",
+	       path, self->ob_type->tp_name);
+    ret = PyString_FromString(repr);
+    g_free (repr);
+    g_free (path);
+    return ret;
+}
+%%
+override-slot GstPluginFeature.tp_repr
+static PyObject *
+_wrap_gst_plugin_feature_tp_repr(PyObject *self)
+{
+    gchar *repr;
+    PyObject *ret;
+    GstPluginFeature *feature = GST_PLUGIN_FEATURE (pygobject_get (self));
+
+    repr = g_strdup_printf ("<%s %s @ 0x%lx>",
+	       self->ob_type->tp_name, gst_plugin_feature_get_name (feature),
+	       (long) self);
+    ret = PyString_FromString(repr);
+    g_free (repr);
+    return ret;
+}
+%%
+override-slot GstPluginFeature.tp_str
+static PyObject *
+_wrap_gst_plugin_feature_tp_str(PyObject *self)
+{
+    gchar *repr;
+    PyObject *ret;
+    GstPluginFeature *feature = GST_PLUGIN_FEATURE (pygobject_get (self));
+
+    repr = g_strdup_printf ("<%s %s (%d)>",
+	       self->ob_type->tp_name, gst_plugin_feature_get_name (feature),
+	       gst_plugin_feature_get_rank (feature));
+    ret = PyString_FromString(repr);
+    g_free (repr);
+    return ret;
+}
+%%
 override gst_type_find_factory_get_caps noargs
 static PyObject *
 _wrap_gst_type_find_factory_get_caps(PyGObject *self)

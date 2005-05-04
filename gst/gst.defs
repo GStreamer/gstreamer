@@ -1755,7 +1755,7 @@
   (c-name "gst_element_factory_create")
   (return-type "GstElement*")
   (parameters
-    '("const-gchar*" "name")
+    '("const-gchar*" "name" (null-ok) (default "NULL"))
   )
 )
 

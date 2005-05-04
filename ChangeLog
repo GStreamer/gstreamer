@@ -1,3 +1,15 @@
+2005-05-04  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gst.defs:
+	  factory.create doesn't need a name
+	* gst/gst.override:
+	  implement tp_str and tp_repr gst.Object and gst.PluginFeature
+	* gst/gstelement.override:
+	  implement factory.get_pad_templates and make element.link_pads
+	  take NULL, pads or strings as the pad argument
+	* gst/gstpad.override:
+	  implement tp_getattr for GstPadTemplate
+
 2005-05-03  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/pygstvalue.c: (pygst_value_from_pyobject):

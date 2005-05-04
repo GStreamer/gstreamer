@@ -523,4 +523,25 @@ _wrap_gst_pad_new(PyGObject *self, PyObject *args, PyObject *kwargs)
     pygobject_register_wrapper((PyObject *)self);
     return 0;
 }
+%%
+override-slot GstPadTemplate.tp_getattr
+#define IS_ATTR(name) (strcmp (name, attr) == 0)
+PyObject *
+_wrap_gst_pad_template_tp_getattr(PyObject *self, char *attr)
+{
+  GstPadTemplate *templ = GST_PAD_TEMPLATE (pygobject_get (self));
+  
+  if (IS_ATTR ("__members__")) {
+    return Py_BuildValue("[ssss]", "name_template", "direction", "presence", "caps" );
+  } else if (IS_ATTR ("name_template")) {
+    return PyString_FromString (GST_PAD_TEMPLATE_NAME_TEMPLATE(templ));
+  } else if (IS_ATTR ("direction")) {
+    return pyg_enum_from_gtype(GST_TYPE_PAD_DIRECTION, GST_PAD_TEMPLATE_DIRECTION(templ));
+  } else if (IS_ATTR ("presence")) {
+    return pyg_enum_from_gtype(GST_TYPE_PAD_PRESENCE, GST_PAD_TEMPLATE_PRESENCE(templ));
+  } else if (IS_ATTR ("caps")) {
+    return pyg_boxed_new (GST_TYPE_CAPS, GST_PAD_TEMPLATE_CAPS(templ), TRUE, TRUE);
+  }
+  return Py_FindMethod(_PyGstPadTemplate_methods, self, attr);
+}
 
