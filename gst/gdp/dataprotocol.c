@@ -237,7 +237,7 @@ gst_dp_packet_from_caps (const GstCaps * caps, GstDPHeaderFlag flags,
 {
   guint8 *h;
   guint16 crc;
-  gchar *string;
+  guchar *string;
 
   /* FIXME: GST_IS_CAPS doesn't work
      g_return_val_if_fail (GST_IS_CAPS (caps), FALSE); */
@@ -248,7 +248,7 @@ gst_dp_packet_from_caps (const GstCaps * caps, GstDPHeaderFlag flags,
   *length = GST_DP_HEADER_LENGTH;
   h = g_malloc (GST_DP_HEADER_LENGTH);
 
-  string = gst_caps_to_string (caps);
+  string = (guchar *) gst_caps_to_string (caps);
 
   /* version, flags, type */
   h[0] = (guint8) GST_DP_VERSION_MAJOR;
@@ -257,7 +257,7 @@ gst_dp_packet_from_caps (const GstCaps * caps, GstDPHeaderFlag flags,
   h[3] = GST_DP_PAYLOAD_CAPS;
 
   /* buffer properties */
-  GST_WRITE_UINT32_BE (h + 4, strlen (string) + 1);     /* include trailing 0 */
+  GST_WRITE_UINT32_BE (h + 4, strlen ((gchar *) string) + 1);   /* include trailing 0 */
   GST_WRITE_UINT64_BE (h + 8, (guint64) 0);
   GST_WRITE_UINT64_BE (h + 16, (guint64) 0);
   GST_WRITE_UINT64_BE (h + 24, (guint64) 0);
@@ -276,7 +276,7 @@ gst_dp_packet_from_caps (const GstCaps * caps, GstDPHeaderFlag flags,
 
   crc = 0;
   if (flags & GST_DP_HEADER_FLAG_CRC_PAYLOAD) {
-    crc = gst_dp_crc (string, strlen (string) + 1);
+    crc = gst_dp_crc (string, strlen ((gchar *) string) + 1);
   }
   GST_WRITE_UINT16_BE (h + 58, crc);
 
@@ -379,7 +379,7 @@ gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
   crc = 0;
   /* events can have a NULL payload */
   if (*payload && flags & GST_DP_HEADER_FLAG_CRC_PAYLOAD) {
-    crc = gst_dp_crc (*payload, strlen (*payload) + 1);
+    crc = gst_dp_crc (*payload, strlen ((gchar *) * payload) + 1);
   }
   GST_WRITE_UINT16_BE (h + 58, crc);
 
@@ -443,7 +443,7 @@ gst_dp_caps_from_packet (guint header_length, const guint8 * header,
   g_return_val_if_fail (GST_DP_HEADER_PAYLOAD_TYPE (header) ==
       GST_DP_PAYLOAD_CAPS, FALSE);
 
-  string = payload;
+  string = (gchar *) payload;
   caps = gst_caps_from_string (string);
   return caps;
 }
