@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-12-30 20:49+0100\n"
+"POT-Creation-Date: 2005-01-28 12:07+0100\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -121,22 +121,12 @@ msgstr "Geen lêernaam gespesifiseer."
 msgid "Could not write to file \"%s\"."
 msgstr "Kon nie skryf na lêer \"%s\" nie."
 
-#: gst/avi/gstavimux.c:1056
+#: gst/avi/gstavimux.c:1007
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Geen of ongeldige klanktoevoer, AVI-stroom sal korrup wees."
 
-#: gst-libs/gst/play/play.c:110
-#, c-format
-msgid ""
-"The %s element could not be found. This element is essential for playback. "
-"Please install the right plug-in and verify that it works by running 'gst-"
-"inspect %s'"
-msgstr ""
-
-#: gst-libs/gst/play/play.c:139
-msgid ""
-"No usable colorspace element could be found.\n"
-"Please install one and restart."
+#: gst-libs/gst/play/play.c:719
+msgid "Failed to create playbin object"
 msgstr ""
 
 #: sys/dxr3/dxr3audiosink.c:298

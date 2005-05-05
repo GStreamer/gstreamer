@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-12-30 20:49+0100\n"
+"POT-Creation-Date: 2005-01-28 12:07+0100\n"
 "PO-Revision-Date: 2004-11-07 19:11+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -120,28 +120,13 @@ msgstr "Nessun nome di file specificato."
 msgid "Could not write to file \"%s\"."
 msgstr "Impossibile scrivere sul file «%s»."
 
-#: gst/avi/gstavimux.c:1056
+#: gst/avi/gstavimux.c:1007
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Ingresso audio assente o non valido. Lo stream AVI risulterà corrotto."
 
-#: gst-libs/gst/play/play.c:110
-#, c-format
-msgid ""
-"The %s element could not be found. This element is essential for playback. "
-"Please install the right plug-in and verify that it works by running 'gst-"
-"inspect %s'"
+#: gst-libs/gst/play/play.c:719
+msgid "Failed to create playbin object"
 msgstr ""
-"Impossibile trovare l'elemento %s, essenziale per la riproduzione. "
-"Installare il plugin corretto e verificare che sia funzionante eseguendo "
-"«gst-inspect %s»"
-
-#: gst-libs/gst/play/play.c:139
-msgid ""
-"No usable colorspace element could be found.\n"
-"Please install one and restart."
-msgstr ""
-"Impossibile trovare un elemento colorspace utilizzabile.\n"
-"Installarne uno e riavviare."
 
 #: sys/dxr3/dxr3audiosink.c:298
 #, c-format
@@ -325,3 +310,19 @@ msgstr "Impossibile ottenere dei buffer dal device «%s»."
 #, c-format
 msgid "Could not get enough buffers from device \"%s\"."
 msgstr "Impossibile ottenere abbastanza buffer dal device «%s»."
+
+#~ msgid ""
+#~ "The %s element could not be found. This element is essential for "
+#~ "playback. Please install the right plug-in and verify that it works by "
+#~ "running 'gst-inspect %s'"
+#~ msgstr ""
+#~ "Impossibile trovare l'elemento %s, essenziale per la riproduzione. "
+#~ "Installare il plugin corretto e verificare che sia funzionante eseguendo "
+#~ "«gst-inspect %s»"
+
+#~ msgid ""
+#~ "No usable colorspace element could be found.\n"
+#~ "Please install one and restart."
+#~ msgstr ""
+#~ "Impossibile trovare un elemento colorspace utilizzabile.\n"
+#~ "Installarne uno e riavviare."
