@@ -223,6 +223,27 @@ fi
 
 AC_SUBST(GST_CONTROL_LIBS)
 
+dnl check for gstreamer-base; uninstalled is selected preferentially
+PKG_CHECK_MODULES(GST_BASE, gstreamer-base-$GST_MAJORMINOR >= $GST_REQ,
+  HAVE_GST_BASE="yes", HAVE_GST_BASE="no")
+
+if test "x$HAVE_GST_BASE" = "xno"; then
+  AC_MSG_ERROR(no GStreamer Base Libs found)
+fi
+
+AC_SUBST(GST_BASE_LIBS)
+
+dnl check for gstreamer-interfaces; uinstalled is selected preferentially
+PKG_CHECK_MODULES(GST_INTERFACES, gstreamer-interfaces-$GST_MAJORMINOR >= $GST_REQ,
+  HAVE_GST_INTERFACES="yes", HAVE_GST_INTERFACES="no")
+
+if test "x$HAVE_GST_INTERFACES" = "xno"; then
+  AC_MSG_ERROR(no GStreamer Interfaces Libs found)
+fi
+
+AC_SUBST(GST_INTERFACES_LIBS)
+
+
 dnl Determine endianness
 AC_C_BIGENDIAN
 
