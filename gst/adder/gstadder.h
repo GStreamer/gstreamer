@@ -24,11 +24,9 @@
 #define __GST_ADDER_H__
 
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
+#include <gst/base/gstcollectpads.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 extern GstElementDetails gst_adder_details;
 
@@ -54,19 +52,14 @@ enum _GstAdderFormat {
   GST_ADDER_FORMAT_FLOAT
 };
 
-struct _GstAdderInputChannel {
-  GstPad        *sinkpad;
-  GstByteStream *bytestream;
-};
+typedef void (*GstAdderFunction) (gpointer out, gpointer in, guint size);
 
 struct _GstAdder {
   GstElement      element;
 
   GstPad         *srcpad;
-
-  /* keep track of the sinkpads */
-  guint           numsinkpads;
-  GSList         *input_channels;
+  GstCollectPads *collect;
+  gint		  numpads;
 
   /* the next are valid for both int and float */
   GstAdderFormat  format;
@@ -78,6 +71,9 @@ struct _GstAdder {
   /* the next are valid only for format == GST_ADDER_FORMAT_INT */
   guint           depth;
   gboolean        is_signed;
+
+  /* function to add samples */
+  GstAdderFunction func;
 
   /* counters to keep track of timestamps */
   gint64     	  timestamp;
@@ -91,9 +87,7 @@ struct _GstAdderClass {
 GType    gst_adder_get_type (void);
 gboolean gst_adder_factory_init (GstElementFactory *factory);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 
 #endif /* __GST_ADDER_H__ */

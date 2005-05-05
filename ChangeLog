@@ -1,5 +1,16 @@
 2005-05-05  Wim Taymans  <wim@fluendo.com>
 
+	* gst/adder/Makefile.am:
+	* gst/adder/gstadder.c: (gst_adder_setcaps),
+	(gst_adder_class_init), (gst_adder_init),
+	(gst_adder_request_new_pad), (gst_adder_collected),
+	(gst_adder_change_state):
+	* gst/adder/gstadder.h:
+	Ported adder as an example of a mixer element using
+	collect pads. Needs more negotiation work.
+
+2005-05-05  Wim Taymans  <wim@fluendo.com>
+
 	* ext/theora/theoradec.c: (_inc_granulepos),
 	(theora_dec_src_event), (theora_dec_sink_event),
 	(theora_handle_comment_packet), (theora_handle_type_packet),
