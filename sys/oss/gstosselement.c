@@ -25,7 +25,7 @@
 #include "config.h"
 #endif
 
-#include "gst/gst-i18n-plugin.h"
+#include "gst-i18n-plugin.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>

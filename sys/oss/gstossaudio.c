@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include "gst/gst-i18n-plugin.h"
+#include "gst-i18n-plugin.h"
 
 #include "gstosselement.h"
 #include "gstosssink.h"

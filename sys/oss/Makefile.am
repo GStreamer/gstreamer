@@ -13,7 +13,8 @@ libgstossaudio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 noinst_HEADERS = gstosssink.h	\
 		gstosssrc.h	\
 		gstosselement.h\
-		gstossmixer.h
+		gstossmixer.h \
+		gst-i18n-plugin.h
 
 noinst_PROGRAMS = oss_probe
 

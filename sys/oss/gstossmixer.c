@@ -45,7 +45,7 @@
 
 #endif /* HAVE_OSS_INCLUDE_IN_SYS */
 
-#include <gst/gst-i18n-plugin.h>
+#include <gst-i18n-plugin.h>
 
 #include "gstossmixer.h"
 
@@ -88,8 +88,7 @@ fill_labels (void)
   {
     gchar *given, *wanted;
   }
-  cases[] =
-  {
+  cases[] = {
     /* Note: this list is simply ripped from soundcard.h. For
      * some people, some values might be missing (3D surround,
      * etc.) - feel free to add them. That's the reason why
