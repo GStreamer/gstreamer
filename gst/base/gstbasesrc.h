@@ -60,7 +60,6 @@ struct _GstBaseSrc {
   gboolean	 has_getrange;
 
   gboolean       seekable;
-  gboolean       random_access;
   guint64 	 offset;
   guint64        size;
 };

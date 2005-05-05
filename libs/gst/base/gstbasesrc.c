@@ -103,8 +103,7 @@ static GstElementStateReturn gst_basesrc_change_state (GstElement * element);
 
 static void gst_basesrc_set_dataflow_funcs (GstBaseSrc * this);
 static void gst_basesrc_loop (GstPad * pad);
-static gboolean gst_basesrc_check_get_range (GstPad * pad,
-    gboolean * random_access);
+static gboolean gst_basesrc_check_get_range (GstPad * pad);
 static GstFlowReturn gst_basesrc_get_range (GstPad * pad, guint64 offset,
     guint length, GstBuffer ** buf);
 
@@ -169,7 +168,6 @@ gst_basesrc_init (GstBaseSrc * basesrc, gpointer g_class)
   basesrc->srcpad = pad;
   gst_element_add_pad (GST_ELEMENT (basesrc), pad);
 
-  basesrc->random_access = TRUE;
   basesrc->segment_start = -1;
   basesrc->segment_end = -1;
   basesrc->blocksize = DEFAULT_BLOCKSIZE;
@@ -539,7 +537,7 @@ gst_basesrc_get_range (GstPad * pad, guint64 offset, guint length,
 }
 
 static gboolean
-gst_basesrc_check_get_range (GstPad * pad, gboolean * random_access)
+gst_basesrc_check_get_range (GstPad * pad)
 {
   GstBaseSrc *src;
 
@@ -550,7 +548,6 @@ gst_basesrc_check_get_range (GstPad * pad, gboolean * random_access)
     gst_basesrc_stop (src);
   }
 
-  *random_access = src->random_access;
   return src->seekable;
 }
 
@@ -720,7 +717,6 @@ gst_basesrc_activate (GstPad * pad, GstActivateMode mode)
   switch (mode) {
     case GST_ACTIVATE_PUSH:
     case GST_ACTIVATE_PULL:
-    case GST_ACTIVATE_PULL_RANGE:
       result = gst_basesrc_start (basesrc);
       break;
     default:
@@ -747,7 +743,6 @@ gst_basesrc_activate (GstPad * pad, GstActivateMode mode)
       }
       break;
     case GST_ACTIVATE_PULL:
-    case GST_ACTIVATE_PULL_RANGE:
       result = TRUE;
       break;
     case GST_ACTIVATE_NONE:
