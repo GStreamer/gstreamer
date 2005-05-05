@@ -2,13 +2,13 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # Christian Rose <menthos@menthos.com>, 2004.
 #
-# $Id: sv.po,v 1.18 2005/04/25 00:35:15 ds Exp $
+# $Id: sv.po,v 1.19 2005/05/05 14:57:20 wingo Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-04-22 13:33-0700\n"
+"POT-Creation-Date: 2005-05-05 10:25-0400\n"
 "PO-Revision-Date: 2004-08-03 20:53+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -89,10 +89,6 @@ msgstr "Inget filnamn angivet"
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kunde inte stänga vfs-filen \"%s\"."
-
-#: gst-libs/gst/play/play.c:731
-msgid "Failed to create playbin object"
-msgstr ""
 
 #: sys/v4l/v4l_calls.c:159
 msgid "No device specified."

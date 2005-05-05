@@ -331,10 +331,10 @@ gst_tag_list_new_from_id3v1 (const guint8 * data)
   if (data[0] != 'T' || data[1] != 'A' || data[2] != 'G')
     return NULL;
   list = gst_tag_list_new ();
-  gst_tag_extract_id3v1_string (list, GST_TAG_TITLE, &data[3], 30);
-  gst_tag_extract_id3v1_string (list, GST_TAG_ARTIST, &data[33], 30);
-  gst_tag_extract_id3v1_string (list, GST_TAG_ALBUM, &data[63], 30);
-  ystr = g_strndup (&data[93], 4);
+  gst_tag_extract_id3v1_string (list, GST_TAG_TITLE, (gchar *) & data[3], 30);
+  gst_tag_extract_id3v1_string (list, GST_TAG_ARTIST, (gchar *) & data[33], 30);
+  gst_tag_extract_id3v1_string (list, GST_TAG_ALBUM, (gchar *) & data[63], 30);
+  ystr = g_strndup ((gchar *) & data[93], 4);
   year = strtoul (ystr, NULL, 10);
   g_free (ystr);
   if (year > 0) {
@@ -345,11 +345,13 @@ gst_tag_list_new_from_id3v1 (const guint8 * data)
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_DATE, year, NULL);
   }
   if (data[125] == 0) {
-    gst_tag_extract_id3v1_string (list, GST_TAG_COMMENT, &data[97], 28);
+    gst_tag_extract_id3v1_string (list, GST_TAG_COMMENT, (gchar *) & data[97],
+        28);
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_TRACK_NUMBER,
         (guint) data[126], NULL);
   } else {
-    gst_tag_extract_id3v1_string (list, GST_TAG_COMMENT, &data[97], 30);
+    gst_tag_extract_id3v1_string (list, GST_TAG_COMMENT, (gchar *) & data[97],
+        30);
   }
   if (data[127] < gst_tag_id3_genre_count ()) {
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_GENRE,

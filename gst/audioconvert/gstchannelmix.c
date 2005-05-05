@@ -242,7 +242,7 @@ gst_audio_convert_fill_one_other (gfloat ** matrix,
     GstAudioChannelPosition to_pos_r,
     GstAudioChannelPosition to_pos_c, gfloat ratio)
 {
-  gfloat in_r, out_r[2];
+  gfloat in_r, out_r[2] = { 0.f, 0.f };
 
   /*
    * The idea is that we add up from the input (which means that if we

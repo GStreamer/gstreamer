@@ -63,13 +63,13 @@ struct _GstAdder {
 
   /* the next are valid for both int and float */
   GstAdderFormat  format;
-  guint           rate;
-  guint           channels;
-  guint           width;
-  guint           endianness;
+  gint            rate;
+  gint            channels;
+  gint            width;
+  gint            endianness;
 
   /* the next are valid only for format == GST_ADDER_FORMAT_INT */
-  guint           depth;
+  gint            depth;
   gboolean        is_signed;
 
   /* function to add samples */

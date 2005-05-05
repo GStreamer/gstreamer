@@ -103,7 +103,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 static void gst_audiorate_base_init (gpointer g_class);
 static void gst_audiorate_class_init (GstAudiorateClass * klass);
 static void gst_audiorate_init (GstAudiorate * audiorate);
-static void gst_audiorate_chain (GstPad * pad, GstData * _data);
+static GstFlowReturn gst_audiorate_chain (GstPad * pad, GstBuffer * buf);
 
 static void gst_audiorate_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -185,13 +185,12 @@ gst_audiorate_class_init (GstAudiorateClass * klass)
   element_class->change_state = gst_audiorate_change_state;
 }
 
-static GstPadLinkReturn
-gst_audiorate_link (GstPad * pad, const GstCaps * caps)
+static gboolean
+gst_audiorate_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstAudiorate *audiorate;
   GstStructure *structure;
   GstPad *otherpad;
-  GstPadLinkReturn res;
   gint ret, channels, depth;
 
   audiorate = GST_AUDIORATE (gst_pad_get_parent (pad));
@@ -199,41 +198,41 @@ gst_audiorate_link (GstPad * pad, const GstCaps * caps)
   otherpad = (pad == audiorate->srcpad) ? audiorate->sinkpad :
       audiorate->srcpad;
 
-  res = gst_pad_try_set_caps (otherpad, caps);
-  if (GST_PAD_LINK_FAILED (res))
-    return res;
+  if (!gst_pad_set_caps (otherpad, caps))
+    return FALSE;
 
   structure = gst_caps_get_structure (caps, 0);
 
   ret = gst_structure_get_int (structure, "channels", &channels);
   ret &= gst_structure_get_int (structure, "depth", &depth);
 
+  if (!ret)
+    return FALSE;
+
   audiorate->bytes_per_sample = channels * (depth / 8);
   if (audiorate->bytes_per_sample == 0)
     audiorate->bytes_per_sample = 1;
 
-  return GST_PAD_LINK_OK;
+  return TRUE;
 }
 
 static void
 gst_audiorate_init (GstAudiorate * audiorate)
 {
-  GST_FLAG_SET (audiorate, GST_ELEMENT_EVENT_AWARE);
-
   GST_DEBUG ("gst_audiorate_init");
   audiorate->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_audiorate_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (audiorate), audiorate->sinkpad);
   gst_pad_set_chain_function (audiorate->sinkpad, gst_audiorate_chain);
-  gst_pad_set_link_function (audiorate->sinkpad, gst_audiorate_link);
+  gst_pad_set_setcaps_function (audiorate->sinkpad, gst_audiorate_setcaps);
   gst_pad_set_getcaps_function (audiorate->sinkpad, gst_pad_proxy_getcaps);
 
   audiorate->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_audiorate_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (audiorate), audiorate->srcpad);
-  gst_pad_set_link_function (audiorate->srcpad, gst_audiorate_link);
+  gst_pad_set_setcaps_function (audiorate->srcpad, gst_audiorate_setcaps);
   gst_pad_set_getcaps_function (audiorate->srcpad, gst_pad_proxy_getcaps);
 
   audiorate->bytes_per_sample = 1;
@@ -244,27 +243,18 @@ gst_audiorate_init (GstAudiorate * audiorate)
   audiorate->silent = DEFAULT_SILENT;
 }
 
-static void
-gst_audiorate_chain (GstPad * pad, GstData * data)
+static GstFlowReturn
+gst_audiorate_chain (GstPad * pad, GstBuffer * buf)
 {
   GstAudiorate *audiorate;
-  GstBuffer *buf;
   GstClockTime in_time, in_duration;
   guint64 in_offset, in_offset_end;
   gint in_size;
 
   audiorate = GST_AUDIORATE (gst_pad_get_parent (pad));
 
-  if (GST_IS_EVENT (data)) {
-    GstEvent *event = GST_EVENT (data);
-
-    gst_pad_event_default (pad, event);
-    return;
-  }
-
   audiorate->in++;
 
-  buf = GST_BUFFER (data);
   in_time = GST_BUFFER_TIMESTAMP (buf);
   in_duration = GST_BUFFER_DURATION (buf);
   in_size = GST_BUFFER_SIZE (buf);
@@ -294,7 +284,7 @@ gst_audiorate_chain (GstPad * pad, GstData * data)
     GST_BUFFER_OFFSET (fill) = audiorate->next_offset;
     GST_BUFFER_OFFSET_END (fill) = in_offset;
 
-    gst_pad_push (audiorate->srcpad, GST_DATA (fill));
+    gst_pad_push (audiorate->srcpad, fill);
     audiorate->out++;
     audiorate->add += fillsamples;
 
@@ -315,7 +305,7 @@ gst_audiorate_chain (GstPad * pad, GstData * data)
       if (!audiorate->silent)
         g_object_notify (G_OBJECT (audiorate), "drop");
 
-      return;
+      return GST_FLOW_OK;
     } else {
       guint64 truncsamples, truncsize, leftsize;
       GstBuffer *trunc;
@@ -340,10 +330,11 @@ gst_audiorate_chain (GstPad * pad, GstData * data)
       audiorate->drop += truncsamples;
     }
   }
-  gst_pad_push (audiorate->srcpad, GST_DATA (buf));
+  gst_pad_push (audiorate->srcpad, buf);
   audiorate->out++;
 
   audiorate->next_offset = in_offset_end;
+  return GST_FLOW_OK;
 }
 
 static void

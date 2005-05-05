@@ -23,8 +23,8 @@
 static gboolean
 update_scale (GstElement * element)
 {
-  guint64 duration;
-  guint64 position;
+  gint64 duration;
+  gint64 position;
   GstFormat format = GST_FORMAT_TIME;
 
   gst_element_query (element, GST_QUERY_TOTAL, &format, &duration);

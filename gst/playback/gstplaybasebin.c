@@ -1156,6 +1156,7 @@ got_redirect (GstElement * element, const gchar * new_location, gpointer data)
 
 /* construct and run the source and decoder elements until we found
  * all the streams or until a preroll queue has been filled.
+ * jesus christ this is a long function!
 */
 static gboolean
 setup_source (GstPlayBaseBin * play_base_bin,
@@ -1164,7 +1165,7 @@ setup_source (GstPlayBaseBin * play_base_bin,
   GstElement *old_src;
   GstElement *old_dec;
   GstPad *srcpad = NULL;
-  GstElement *subbin;
+  GstElement *subbin = NULL;
 
   if (!play_base_bin->need_rebuild)
     return TRUE;

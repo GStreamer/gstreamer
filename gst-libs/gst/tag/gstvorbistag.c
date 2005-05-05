@@ -367,7 +367,7 @@ gst_tag_list_from_vorbiscomment_buffer (const GstBuffer * buffer,
   data += 4;									\
   size -= 4;									\
   if (cur_size > size) goto error;						\
-  cur = data;									\
+  cur = (gchar*)data;									\
 }G_STMT_END
   gchar *cur, *value;
   guint cur_size;
@@ -614,8 +614,8 @@ gst_vorbis_tag_chain (GstPad * pad, GstBuffer * buffer)
   if (GST_BUFFER_DATA (buffer)[0] == 3) {
     gchar *vendor;
     GstTagList *list =
-        gst_tag_list_from_vorbiscomment_buffer (buffer, "\003vorbis", 7,
-        &vendor);
+        gst_tag_list_from_vorbiscomment_buffer (buffer, (guchar *) "\003vorbis",
+        7, &vendor);
     const GstTagList *found_tags;
 
     gst_data_unref (GST_DATA (buffer));
@@ -631,7 +631,8 @@ gst_vorbis_tag_chain (GstPad * pad, GstBuffer * buffer)
     if (found_tags)
       gst_tag_list_insert (list, found_tags,
           gst_tag_setter_get_merge_mode (GST_TAG_SETTER (tag)));
-    out = gst_tag_list_to_vorbiscomment_buffer (list, "\003vorbis", 7, vendor);
+    out = gst_tag_list_to_vorbiscomment_buffer (list, (guchar *) "\003vorbis",
+        7, vendor);
     gst_tag_list_free (list);
     g_free (vendor);
   }
