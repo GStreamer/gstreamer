@@ -1988,11 +1988,11 @@ restart:
     if (GST_IS_REAL_PAD (pad)) {
       GstRealPad *peer;
       gboolean pad_loop, pad_get;
-      gboolean done = FALSE, pad_random = FALSE;
+      gboolean done = FALSE;
 
       /* see if the pad has a loop function and grab
        * the peer */
-      pad_get = gst_pad_check_pull_range (pad, &pad_random);
+      pad_get = gst_pad_check_pull_range (pad);
       GST_LOCK (pad);
       pad_loop = GST_RPAD_LOOPFUNC (pad) != NULL;
       peer = GST_RPAD_PEER (pad);
@@ -2000,21 +2000,20 @@ restart:
         gst_object_ref (GST_OBJECT (peer));
       GST_UNLOCK (pad);
 
-      GST_DEBUG ("pad %s:%s: get: %d, random: %d, loop: %d",
-          GST_DEBUG_PAD_NAME (pad), pad_get, pad_random, pad_loop);
+      GST_DEBUG ("pad %s:%s: get: %d, loop: %d",
+          GST_DEBUG_PAD_NAME (pad), pad_get, pad_loop);
 
       if (peer) {
         gboolean peer_loop, peer_get;
-        gboolean peer_random = FALSE;
         GstActivateMode mode;
 
         /* see if the peer has a getrange function */
-        peer_get = gst_pad_check_pull_range (GST_PAD_CAST (peer), &peer_random);
+        peer_get = gst_pad_check_pull_range (GST_PAD_CAST (peer));
         /* see if the peer has a loop function */
         peer_loop = GST_RPAD_LOOPFUNC (peer) != NULL;
 
-        GST_DEBUG ("peer %s:%s: get: %d, random: %d, loop: %d",
-            GST_DEBUG_PAD_NAME (peer), peer_get, peer_random, peer_loop);
+        GST_DEBUG ("peer %s:%s: get: %d, loop: %d",
+            GST_DEBUG_PAD_NAME (peer), peer_get, peer_loop);
 
         /* If the pad is a sink with loop and the peer has a get function,
          * we can activate the sinkpad,  FIXME, logic is reversed as
@@ -2025,8 +2024,7 @@ restart:
               "%sactivating pad %s pull mode", (active ? "" : "(de)"),
               GST_OBJECT_NAME (pad));
           /* only one of pad_random and peer_random can be true */
-          mode = (pad_random || peer_random)
-              ? GST_ACTIVATE_PULL_RANGE : GST_ACTIVATE_PULL;
+          mode = GST_ACTIVATE_PULL;
           result &= gst_pad_set_active (pad, active ? mode : GST_ACTIVATE_NONE);
           done = TRUE;
         }
