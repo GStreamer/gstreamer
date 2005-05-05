@@ -46,20 +46,6 @@ AM_PROG_AS
 AS="${CC}"
 AS_PROG_OBJC
 
-dnl the gettext stuff needed
-AM_GNU_GETTEXT_VERSION(0.11.5)
-AM_GNU_GETTEXT([external])
-                                                                                
-GETTEXT_PACKAGE=gst-plugins-$GST_MAJORMINOR
-AC_SUBST(GETTEXT_PACKAGE)
-AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], "$GETTEXT_PACKAGE",
-                   [gettext package name])
-                                                                                
-dnl define LOCALEDIR in config.h
-AS_AC_EXPAND(LOCALEDIR, $datadir/locale)
-AC_DEFINE_UNQUOTED([LOCALEDIR], "$LOCALEDIR",
-                   [gettext locale dir])
-
 dnl decide on error flags
 AS_COMPILER_FLAG(-Wall, GST_WALL="yes", GST_WALL="no")
 
