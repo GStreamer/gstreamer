@@ -342,6 +342,9 @@ gst_videotestsrc_activate (GstPad * pad, GstActivateMode mode)
 
       result = TRUE;
       break;
+    default:
+      result = FALSE;
+      break;
   }
   return result;
 }
@@ -676,7 +679,9 @@ gst_videotestsrc_loop (GstPad * pad)
   videotestsrc->n_frames++;
   videotestsrc->running_time += GST_BUFFER_DURATION (outbuf);
 
-  gst_pad_push (pad, outbuf);
+  if (gst_pad_push (pad, outbuf) != GST_FLOW_OK)
+    goto need_pause;
+
   return;
 
 need_pause:

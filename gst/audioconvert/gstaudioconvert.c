@@ -231,6 +231,7 @@ static GstFlowReturn
 gst_audio_convert_chain (GstPad * pad, GstBuffer * buf)
 {
   GstAudioConvert *this;
+  GstFlowReturn ret;
 
   this = GST_AUDIO_CONVERT (GST_OBJECT_PARENT (pad));
 
@@ -257,14 +258,17 @@ gst_audio_convert_chain (GstPad * pad, GstBuffer * buf)
    * - convert rate and channels
    * - convert back to output format
    */
+  GST_STREAM_LOCK (pad);
 
   buf = gst_audio_convert_buffer_to_default_format (this, buf);
-
   buf = gst_audio_convert_channels (this, buf);
-
   buf = gst_audio_convert_buffer_from_default_format (this, buf);
 
-  return gst_pad_push (this->src, buf);
+  ret = gst_pad_push (this->src, buf);
+
+  GST_STREAM_UNLOCK (pad);
+
+  return ret;
 }
 
 static GstCaps *
@@ -609,8 +613,10 @@ gst_audio_convert_change_state (GstElement * element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_PAUSED_TO_READY:
+      GST_STREAM_LOCK (this->sink);
       this->convert_internal = NULL;
       gst_audio_convert_unset_matrix (this);
+      GST_STREAM_UNLOCK (this->sink);
       break;
     default:
       break;
