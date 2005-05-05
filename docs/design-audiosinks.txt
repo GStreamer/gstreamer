@@ -49,8 +49,8 @@ Design:
   The ringbuffer is a contiguous piece of memory divided into segtotal
   pieces of segments. Each segment has segsize bytes.
 
-         play position                    write position
-           v                                 v
+         play position 
+           v          
    +---+---+---+-------------------------------------+----------+
    + 0 | 1 | 2 | ....                                | segtotal |
    +---+---+---+-------------------------------------+----------+
@@ -58,14 +58,9 @@ Design:
      segsize bytes = N samples * bytes_per_sample.
 
   
-  The ringbuffer has a play and write position, which is expressed in
+  The ringbuffer has a play position, which is expressed in
   segments. The play position is where the device is currently reading
-  samples and the write position is where new samples can be written
-  into the buffer.
-
-  The latency of the ringbuffer is the distance between the play and
-  write position. The lowest latency is the size of a segment, thus
-  smaller segment sizes allow for lower latency. 
+  samples from the buffer.
 
   The ringbuffer can be put to the PLAYING or STOPPED state. 
   
@@ -84,6 +79,12 @@ Design:
 
   The ringbuffer is implemented with lockfree atomic operations, especially
   on the reading side so that low-latency operations are possible.
+
+  Whenever new samples are to be put into the ringbuffer, the position of the
+  read pointer is taken. The required write position is taken and the diff
+  is made between the required qnd actual position. If the defference is <0,
+  the sample is too late. If the difference is bigger than segtotal, the
+  writing part has to wait for the play pointer to advance. 
 
 
 Scheduling:

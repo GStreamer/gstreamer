@@ -183,16 +183,15 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
       gst_ringbuffer_advance (buf, 1);
     } else {
       GST_LOCK (abuf);
+      if (!abuf->running)
+        goto stop_running;
       GST_DEBUG ("signal wait");
       GST_AUDIORINGBUFFER_SIGNAL (buf);
       GST_DEBUG ("wait for action");
       GST_AUDIORINGBUFFER_WAIT (buf);
       GST_DEBUG ("got signal");
-      if (!abuf->running) {
-        GST_UNLOCK (abuf);
-        GST_DEBUG ("stop running");
-        break;
-      }
+      if (!abuf->running)
+        goto stop_running;
       GST_DEBUG ("continue running");
       GST_UNLOCK (abuf);
     }
@@ -205,6 +204,12 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
 no_function:
   {
     GST_DEBUG ("no write function, exit thread");
+    return;
+  }
+stop_running:
+  {
+    GST_UNLOCK (abuf);
+    GST_DEBUG ("stop running, exit thread");
     return;
   }
 }

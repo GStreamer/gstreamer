@@ -222,6 +222,9 @@ gst_ringbuffer_release (GstRingBuffer * buf)
   if (rclass->release)
     res = rclass->release (buf);
 
+  /* signal any waiters */
+  GST_RINGBUFFER_SIGNAL (buf);
+
   if (!res) {
     buf->acquired = TRUE;
   } else {

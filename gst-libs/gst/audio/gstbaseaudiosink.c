@@ -65,7 +65,7 @@ static GstFlowReturn gst_baseaudiosink_preroll (GstBaseSink * bsink,
     GstBuffer * buffer);
 static GstFlowReturn gst_baseaudiosink_render (GstBaseSink * bsink,
     GstBuffer * buffer);
-static void gst_baseaudiosink_event (GstBaseSink * bsink, GstEvent * event);
+static gboolean gst_baseaudiosink_event (GstBaseSink * bsink, GstEvent * event);
 static void gst_baseaudiosink_get_times (GstBaseSink * bsink,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
 static gboolean gst_baseaudiosink_setcaps (GstBaseSink * bsink, GstCaps * caps);
@@ -425,7 +425,7 @@ gst_baseaudiosink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
   *end = GST_CLOCK_TIME_NONE;
 }
 
-static void
+static gboolean
 gst_baseaudiosink_event (GstBaseSink * bsink, GstEvent * event)
 {
   GstBaseAudioSink *sink = GST_BASEAUDIOSINK (bsink);
@@ -458,6 +458,7 @@ gst_baseaudiosink_event (GstBaseSink * bsink, GstEvent * event)
     default:
       break;
   }
+  return TRUE;
 }
 
 static GstFlowReturn
