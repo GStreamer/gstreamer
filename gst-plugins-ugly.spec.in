@@ -37,9 +37,6 @@ BuildRequires:	gstreamer-tools >= %{gst_minver}
 BuildRequires:  gcc-c++
 BuildRequires:  XFree86-devel
 
-@USE_ARTS_TRUE@Requires:      arts >= 1.1.4
-@USE_ARTS_TRUE@BuildRequires: arts-devel >= 1.1.4
-@USE_ARTS_TRUE@BuildRequires: gcc-c++
 @USE_AUDIOFILE_TRUE@Requires:      audiofile >= 0.2.1
 @USE_AUDIOFILE_TRUE@BuildRequires: audiofile-devel >= 0.2.1
 @USE_CDPARANOIA_TRUE@Requires:      cdparanoia-libs >= alpha9.7
