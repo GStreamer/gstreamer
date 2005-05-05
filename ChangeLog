@@ -1,5 +1,20 @@
 2005-05-05  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ogg/Makefile.am:
+	* ext/ogg/README:
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_typefind),
+	(gst_ogg_pad_submit_packet), (gst_ogg_demux_sink_activate),
+	(gst_ogg_print):
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_init),
+	(gst_ogg_mux_request_new_pad), (gst_ogg_mux_next_buffer),
+	(gst_ogg_mux_push_page), (gst_ogg_mux_queue_pads),
+	(gst_ogg_mux_get_headers), (gst_ogg_mux_set_header_on_caps),
+	(gst_ogg_mux_send_headers), (gst_ogg_mux_collected),
+	(gst_ogg_mux_change_state):
+	Ported ogg muxer.
+
+2005-05-05  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design-audiosinks.txt:
 	* gst-libs/gst/audio/TODO:
 	* gst-libs/gst/audio/gstaudiosink.c:

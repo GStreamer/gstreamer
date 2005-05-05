@@ -703,6 +703,9 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
     ret = GST_RPAD_CHAINFUNC (pad->elem_pad) (pad->elem_pad, buf);
   }
 
+#if 0
+done:
+#endif
   pad->packetno++;
 
   return ret;
@@ -1975,7 +1978,7 @@ gst_ogg_demux_sink_activate (GstPad * sinkpad, GstActivateMode mode)
       ogg->seekable = FALSE;
       result = TRUE;
       break;
-    case GST_ACTIVATE_PULL:
+    case GST_ACTIVATE_PULL_RANGE:
       /* if we have a scheduler we can start the task */
       if (GST_ELEMENT_SCHEDULER (ogg)) {
         gst_pad_peer_set_active (sinkpad, mode);
@@ -2006,6 +2009,9 @@ gst_ogg_demux_sink_activate (GstPad * sinkpad, GstActivateMode mode)
       GST_STREAM_UNLOCK (sinkpad);
 
       result = TRUE;
+      break;
+    case GST_ACTIVATE_PULL:
+      result = FALSE;
       break;
   }
   return result;
@@ -2142,7 +2148,7 @@ gst_ogg_print (GstOggDemux * ogg)
 {
   guint j, i;
 
-  GST_INFO_OBJECT (ogg, "%u chains, total time %" GST_TIME_FORMAT ":",
+  GST_INFO_OBJECT (ogg, "%u chains, total time: %" GST_TIME_FORMAT,
       ogg->chains->len, GST_TIME_ARGS (ogg->total_time));
 
   for (i = 0; i < ogg->chains->len; i++) {
@@ -2158,17 +2164,17 @@ gst_ogg_print (GstOggDemux * ogg)
       GstOggPad *stream = g_array_index (chain->streams, GstOggPad *, j);
 
       GST_INFO_OBJECT (ogg, "  stream %08lx:", stream->serialno);
-      GST_INFO_OBJECT (ogg, "   start time       %" GST_TIME_FORMAT ":",
+      GST_INFO_OBJECT (ogg, "   start time:       %" GST_TIME_FORMAT,
           GST_TIME_ARGS (stream->start_time));
-      GST_INFO_OBJECT (ogg, "   first granulepos %" G_GINT64_FORMAT ":",
+      GST_INFO_OBJECT (ogg, "   first granulepos: %" G_GINT64_FORMAT,
           stream->first_granule);
-      GST_INFO_OBJECT (ogg, "   first time       %" GST_TIME_FORMAT ":",
+      GST_INFO_OBJECT (ogg, "   first time:       %" GST_TIME_FORMAT,
           GST_TIME_ARGS (stream->first_time));
-      GST_INFO_OBJECT (ogg, "   last granulepos  %" G_GINT64_FORMAT ":",
+      GST_INFO_OBJECT (ogg, "   last granulepos:  %" G_GINT64_FORMAT,
           stream->last_granule);
-      GST_INFO_OBJECT (ogg, "   last time        %" GST_TIME_FORMAT ":",
+      GST_INFO_OBJECT (ogg, "   last time:        %" GST_TIME_FORMAT,
           GST_TIME_ARGS (stream->last_time));
-      GST_INFO_OBJECT (ogg, "   total time       %" GST_TIME_FORMAT ":",
+      GST_INFO_OBJECT (ogg, "   total time:       %" GST_TIME_FORMAT,
           GST_TIME_ARGS (stream->total_time));
     }
   }

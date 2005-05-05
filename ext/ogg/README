@@ -125,6 +125,8 @@ unique correct timestamp and a framenumber.
 
 in a raw theroa stream we use the granulepos as the offset field.
 
+The granulepos of an ogg page is the framenumber of the last frame in the page.
+
 
 vorbis and granulepos
 ---------------------
@@ -133,6 +135,8 @@ the granulepos in vorbis happens to be the same as the sample counter. conversio
 from granulepos is therefore easy.
 
 in a raw vorbis stream we use the granulepos as the offset field.
+
+The granulepos of an ogg page is the sample number of the next page in the ogg stream.
 
 
 What can ogg do?
@@ -183,4 +187,3 @@ TODO
 
 - use the OFFSET field in the GstBuffer to store/read the granulepos as 
   opposed to the OFFSET_END field.
-- Seeking should be implemented with a binary search.
