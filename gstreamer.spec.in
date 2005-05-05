@@ -134,12 +134,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libgstreamer-%{majorminor}.so.*
 %{_libdir}/gstreamer-%{majorminor}/libthreadscheduler.so
 %{_libdir}/libgstcontrol-%{majorminor}.so.*
+%{_libdir}/libgstbase-%{majorminor}.so.*
 %dir %{_libdir}/gstreamer-%{majorminor}
 %{_libdir}/gstreamer-%{majorminor}/libgstelements*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstgetbits*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstindexers.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstdataprotocol.so*
-%{_libdir}/libgstbase-%{majorminor}.so.0.0.0
 %{_bindir}/gst-xmlinspect-%{majorminor}
 %{_bindir}/gst-complete-%{majorminor}
 %{_bindir}/gst-compprep-%{majorminor}
@@ -189,8 +189,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/gstreamer-%{majorminor}/gst/base/gstbasetransform.h
 %{_includedir}/gstreamer-%{majorminor}/gst/base/gsttypefindhelper.h
 %{_includedir}/gstreamer-%{majorminor}/gst/dataprotocol/dataprotocol.h
+%{_includedir}/gstreamer-%{majorminor}/gst/base/gstcollectpads.h
 %{_libdir}/libgstreamer-%{majorminor}.so
 %{_libdir}/libgstcontrol-%{majorminor}.so
+%{_libdir}/libgstbase-%{majorminor}.so
 %{_datadir}/aclocal/gst-element-check-%{majorminor}.m4
 %{_libdir}/pkgconfig/gstreamer-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-control-%{majorminor}.pc
