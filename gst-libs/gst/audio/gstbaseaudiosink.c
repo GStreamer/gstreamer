@@ -409,10 +409,12 @@ gst_baseaudiosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   /* ERRORS */
 parse_error:
   {
+    GST_DEBUG ("could not parse caps");
     return FALSE;
   }
 acquire_error:
   {
+    GST_DEBUG ("could not acquire ringbuffer");
     return FALSE;
   }
 }
@@ -421,6 +423,9 @@ static void
 gst_baseaudiosink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end)
 {
+  /* ne need to sync to a clock here, we schedule the samples based
+   * on our own clock for the moment. FIXME, implement this when
+   * we are not using our own clock */
   *start = GST_CLOCK_TIME_NONE;
   *end = GST_CLOCK_TIME_NONE;
 }
@@ -439,7 +444,7 @@ gst_baseaudiosink_event (GstBaseSink * bsink, GstEvent * event)
       break;
     case GST_EVENT_DISCONTINUOUS:
     {
-      guint64 time, sample;
+      gint64 time, sample;
 
       if (gst_event_discont_get_value (event, GST_FORMAT_DEFAULT, &sample,
               NULL))
@@ -464,6 +469,9 @@ gst_baseaudiosink_event (GstBaseSink * bsink, GstEvent * event)
 static GstFlowReturn
 gst_baseaudiosink_preroll (GstBaseSink * bsink, GstBuffer * buffer)
 {
+  /* we don't really do anything when prerolling. We could make a
+   * property to play this buffer to have some sort of scrubbing
+   * support. */
   return GST_FLOW_OK;
 }
 
@@ -533,15 +541,12 @@ gst_baseaudiosink_change_state (GstElement * element)
   switch (transition) {
     case GST_STATE_PLAYING_TO_PAUSED:
       gst_ringbuffer_pause (sink->ringbuffer);
-      /*
-         while (gst_ringbuffer_delay (sink->ringbuffer) > 0)
-         g_usleep (100);
-       */
       break;
     case GST_STATE_PAUSED_TO_READY:
       gst_ringbuffer_stop (sink->ringbuffer);
       gst_ringbuffer_release (sink->ringbuffer);
       gst_object_unref (GST_OBJECT (sink->ringbuffer));
+      sink->ringbuffer = NULL;
       break;
     case GST_STATE_READY_TO_NULL:
       break;
