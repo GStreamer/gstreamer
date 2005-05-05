@@ -159,6 +159,8 @@ G_STMT_START {						\
 #define		gst_buffer_is_writable(buf)	gst_data_is_writable (GST_DATA (buf))
 #define		gst_buffer_copy_on_write(buf)   GST_BUFFER (gst_data_copy_on_write (GST_DATA (buf)))
 
+#define		gst_buffer_replace(obuf,nbuf)  	gst_data_replace ((GstData **)(obuf), GST_DATA (nbuf))
+
 GstCaps*	gst_buffer_get_caps		(GstBuffer *buffer);
 void		gst_buffer_set_caps		(GstBuffer *buffer, GstCaps *caps);
 

@@ -1996,7 +1996,7 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
   if (caps)
     caps = gst_caps_ref (caps);
 
-  GST_PAD_CAPS (pad) = caps;
+  gst_caps_replace (&GST_PAD_CAPS (pad), caps);
   GST_CAT_DEBUG (GST_CAT_CAPS, "%s:%s caps %" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
   GST_UNLOCK (pad);

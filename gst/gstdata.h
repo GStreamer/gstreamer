@@ -100,6 +100,9 @@ GstData*		gst_data_ref			(GstData* data);
 GstData*		gst_data_ref_by_count		(GstData* data, gint count);
 void			gst_data_unref			(GstData* data);
 
+/* replace data pointer */
+void			gst_data_replace		(GstData** olddata, GstData *newdata);
+
 /* GType for GstData */
 GType                   gst_data_get_type               (void);
 

@@ -1,3 +1,32 @@
+2005-05-05  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (gst_bin_send_event), (compare_name),
+	(gst_bin_get_by_name):
+	* gst/gstbuffer.h:
+	* gst/gstclock.c: (gst_clock_entry_new), (gst_clock_class_init),
+	(gst_clock_finalize):
+	* gst/gstdata.c: (gst_data_replace):
+	* gst/gstdata.h:
+	* gst/gstelement.c: (gst_element_request_pad),
+	(gst_element_pads_activate):
+	* gst/gstobject.c: (gst_object_init), (gst_object_ref),
+	(gst_object_unref):
+	* gst/gstpad.c: (gst_pad_set_active), (gst_pad_peer_set_active),
+	(gst_pad_set_checkgetrange_function),
+	(gst_pad_link_check_compatible_unlocked), (gst_pad_set_caps),
+	(gst_pad_check_pull_range), (gst_pad_pull_range),
+	(gst_static_pad_template_get_caps), (gst_pad_start_task),
+	(gst_pad_pause_task), (gst_pad_stop_task):
+	* gst/gstutils.c: (gst_element_get_compatible_pad_template),
+	(gst_element_request_pad), (gst_pad_proxy_getcaps):
+	Fix name lookup in GstBin.
+	Added _data_replace() function and _buffer_replace()
+	Use finalize method to clean up clock.
+	Fix refcounting on request pads.
+	Fix pad schedule mode error.
+	Some more object refcounting debug info,
+
+
 2005-05-04  Andy Wingo <wingo@pobox.com>
 
 	* check/Makefile.am:

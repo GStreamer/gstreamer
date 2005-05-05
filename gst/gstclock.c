@@ -51,7 +51,7 @@ static GstMemChunk *_gst_clock_entries_chunk;
 
 static void gst_clock_class_init (GstClockClass * klass);
 static void gst_clock_init (GstClock * clock);
-static void gst_clock_dispose (GObject * object);
+static void gst_clock_finalize (GObject * object);
 
 static void gst_clock_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -457,7 +457,7 @@ gst_clock_class_init (GstClockClass * klass)
       gst_alloc_trace_register (GST_CLOCK_ENTRY_TRACE_NAME);
 #endif
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_clock_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_clock_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_clock_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_clock_get_property);
 
@@ -478,13 +478,13 @@ gst_clock_init (GstClock * clock)
 }
 
 static void
-gst_clock_dispose (GObject * object)
+gst_clock_finalize (GObject * object)
 {
   GstClock *clock = GST_CLOCK (object);
 
   g_cond_free (clock->entries_changed);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 /**

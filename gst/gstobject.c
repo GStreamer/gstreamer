@@ -210,6 +210,7 @@ gst_object_init (GTypeInstance * instance, gpointer g_class)
   object->lock = g_mutex_new ();
   object->parent = NULL;
   object->name = NULL;
+  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p new", object);
   gst_atomic_int_set (&object->refcount, 1);
   PATCH_REFCOUNT (object);
   gst_object_set_name_default (object, G_OBJECT_CLASS_NAME (g_class));
@@ -261,11 +262,13 @@ gst_object_ref (GstObject * object)
 
 #ifdef DEBUG_REFCOUNT
 #ifdef REFCOUNT_HACK
-  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "ref %d->%d",
+  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p ref %d->%d",
+      object,
       GST_OBJECT_REFCOUNT_VALUE (object),
       GST_OBJECT_REFCOUNT_VALUE (object) + 1);
 #else
-  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "ref %d->%d",
+  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p ref %d->%d",
+      object,
       ((GObject *) object)->ref_count, ((GObject *) object)->ref_count + 1);
 #endif
 #endif
@@ -311,11 +314,13 @@ gst_object_unref (GstObject * object)
 
 #ifdef DEBUG_REFCOUNT
 #ifdef REFCOUNT_HACK
-  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unref %d->%d",
+  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p unref %d->%d",
+      object,
       GST_OBJECT_REFCOUNT_VALUE (object),
       GST_OBJECT_REFCOUNT_VALUE (object) - 1);
 #else
-  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unref %d->%d",
+  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p unref %d->%d",
+      object,
       ((GObject *) object)->ref_count, ((GObject *) object)->ref_count - 1);
 #endif
 #endif

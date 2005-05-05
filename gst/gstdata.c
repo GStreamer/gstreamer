@@ -264,3 +264,29 @@ gst_data_unref (GstData * data)
       data->free (data);
   }
 }
+
+/**
+ * gst_data_replace:
+ * @olddata: pointer to place of old GstData
+ * @newdata: new GstData
+ *
+ * Unrefs the data pointer to by olddata, refs the newdata and
+ * puts the newdata in *olddata. Be carefull when calling this
+ * function, it does not take any locks. You might want to lock
+ * the object owning the olddata pointer before calling this
+ * function.
+ *
+ * MT safe.
+ */
+void
+gst_data_replace (GstData ** olddata, GstData * newdata)
+{
+  if (G_LIKELY (*olddata != newdata)) {
+    if (newdata)
+      gst_data_ref (newdata);
+    if (*olddata)
+      gst_data_unref (*olddata);
+
+    *olddata = newdata;
+  }
+}

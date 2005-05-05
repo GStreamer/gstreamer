@@ -451,11 +451,16 @@ gst_element_get_compatible_pad_template (GstElement * element,
           padtempl->direction == GST_PAD_SRC ? "src" : "sink",
           padtempl->name_template);
 
+      GST_CAT_DEBUG (GST_CAT_CAPS,
+          "intersecting %" GST_PTR_FORMAT, GST_PAD_TEMPLATE_CAPS (compattempl));
+      GST_CAT_DEBUG (GST_CAT_CAPS,
+          "..and %" GST_PTR_FORMAT, GST_PAD_TEMPLATE_CAPS (padtempl));
+
       intersection = gst_caps_intersect (GST_PAD_TEMPLATE_CAPS (compattempl),
           GST_PAD_TEMPLATE_CAPS (padtempl));
 
-      GST_CAT_DEBUG (GST_CAT_CAPS, "caps are %scompatible",
-          (intersection ? "" : "not "));
+      GST_CAT_DEBUG (GST_CAT_CAPS, "caps are %scompatible %" GST_PTR_FORMAT,
+          (intersection ? "" : "not "), intersection);
 
       if (!gst_caps_is_empty (intersection))
         newtempl = padtempl;
@@ -486,6 +491,9 @@ gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
 
   if (oclass->request_new_pad)
     newpad = (oclass->request_new_pad) (element, templ, name);
+
+  if (newpad)
+    gst_object_ref (GST_OBJECT (newpad));
 
   return newpad;
 }
@@ -1571,6 +1579,8 @@ gst_pad_proxy_getcaps (GstPad * pad)
   GST_DEBUG ("proxying getcaps for %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   element = gst_pad_get_parent (pad);
+  if (element == NULL)
+    return NULL;
 
   iter = gst_element_iterate_pads (element);
 

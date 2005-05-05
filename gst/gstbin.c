@@ -1102,7 +1102,7 @@ compare_name (GstElement * element, const gchar * name)
   gint eq;
 
   GST_LOCK (element);
-  eq = strcmp (GST_ELEMENT_NAME (element), name) == 0;
+  eq = strcmp (GST_ELEMENT_NAME (element), name);
   GST_UNLOCK (element);
 
   if (eq != 0) {
@@ -1132,6 +1132,9 @@ gst_bin_get_by_name (GstBin * bin, const gchar * name)
   GstIterator *result;
 
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
+
+  GST_CAT_INFO (GST_CAT_PARENTAGE, "[%s]: looking up child element %s",
+      GST_ELEMENT_NAME (bin), name);
 
   children = gst_bin_iterate_recurse (bin);
   result = gst_iterator_find_custom (children,

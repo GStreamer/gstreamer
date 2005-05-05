@@ -754,6 +754,9 @@ gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
   if (oclass->request_new_pad)
     newpad = (oclass->request_new_pad) (element, templ, name);
 
+  if (newpad)
+    gst_object_ref (GST_OBJECT (newpad));
+
   return newpad;
 }
 
@@ -765,7 +768,7 @@ gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
  * Retrieves a pad from the element by name. This version only retrieves
  * request pads.
  *
- * Returns: requested #GstPad if found, otherwise NULL.
+ * Returns: requested #GstPad if found, otherwise NULL. Unref after usage.
  */
 GstPad *
 gst_element_get_request_pad (GstElement * element, const gchar * name)
@@ -1997,6 +2000,9 @@ restart:
         gst_object_ref (GST_OBJECT (peer));
       GST_UNLOCK (pad);
 
+      GST_DEBUG ("pad %s:%s: get: %d, random: %d, loop: %d",
+          GST_DEBUG_PAD_NAME (pad), pad_get, pad_random, pad_loop);
+
       if (peer) {
         gboolean peer_loop, peer_get;
         gboolean peer_random = FALSE;
@@ -2007,10 +2013,14 @@ restart:
         /* see if the peer has a loop function */
         peer_loop = GST_RPAD_LOOPFUNC (peer) != NULL;
 
+        GST_DEBUG ("peer %s:%s: get: %d, random: %d, loop: %d",
+            GST_DEBUG_PAD_NAME (peer), peer_get, peer_random, peer_loop);
+
         /* If the pad is a sink with loop and the peer has a get function,
-         * we can activate the sinkpad */
-        if ((GST_PAD_IS_SINK (pad) && pad_loop && peer_get) ||
-            (GST_PAD_IS_SRC (pad) && peer_loop && pad_get)) {
+         * we can activate the sinkpad,  FIXME, logic is reversed as
+         * check_pull_range() checks the peer of the given pad. */
+        if ((GST_PAD_IS_SINK (pad) && pad_get && peer_loop) ||
+            (GST_PAD_IS_SRC (pad) && peer_get && pad_loop)) {
           GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
               "%sactivating pad %s pull mode", (active ? "" : "(de)"),
               GST_OBJECT_NAME (pad));
