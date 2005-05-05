@@ -31,9 +31,8 @@ BuildRoot: 	%{_tmppath}/%{name}-%{version}-root
 
 Requires:       glib2 >= %_glib2
 BuildRequires:  glib2-devel >= %_glib2
-Requires: 	gstreamer >= %{gst_minver}
-BuildRequires: 	gstreamer-devel >= %{gst_minver}
-BuildRequires:	gstreamer-tools >= %{gst_minver}
+Requires: 	gstreamer09 >= %{gst_minver}
+BuildRequires: 	gstreamer09-devel >= %{gst_minver}
 BuildRequires:  gcc-c++
 BuildRequires:  XFree86-devel
 
@@ -117,8 +116,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstsinesrc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdecodebin.so
 %{_libdir}/gstreamer-%{majorminor}/libgstplaybin.so
-%{_libdir}/gstreamer-%{majorminor}/libgsttagedit.so
-%{_libdir}/gstreamer-%{majorminor}/libgsttcp.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttypefindfunctions.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideotestsrc.so
 @USE_THEORA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttheora.so
@@ -132,8 +129,7 @@ rm -rf $RPM_BUILD_ROOT
 %package -n gstreamer-plugins-base-devel
 Summary: 	GStreamer Plugin Library Headers.
 Group: 		Development/Libraries
-Requires: 	gstreamer-plugins = %{version}
-Provides:	gstreamer-play-devel = %{version}
+Requires: 	gstreamer-plugins-base = %{version}
 
 %description -n gstreamer-plugins-base-devel
 GStreamer support libraries header files.
@@ -199,7 +195,7 @@ GStreamer support libraries header files.
 # @USE_GST_V4L2_TRUE@%package -n gstreamer-plugins-v4l2
 # @USE_GST_V4L2_TRUE@Summary:       GStreamer Video for Linux 2 plug-in.
 # @USE_GST_V4L2_TRUE@Group:         Applications/Multimedia
-# @USE_GST_V4L2_TRUE@Requires:      gstreamer-plugins = %{version}
+# @USE_GST_V4L2_TRUE@Requires:      gstreamer-plugins09 = %{version}
 # @USE_GST_V4L2_TRUE@BuildRequires: glibc-devel
 # @USE_GST_V4L2_TRUE@Obsoletes:	  gstreamer-v4l2
 # @USE_GST_V4L2_TRUE@

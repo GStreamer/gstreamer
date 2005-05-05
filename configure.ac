@@ -375,8 +375,6 @@ GST_PLUGINS_ALL="\
 	ffmpegcolorspace \
 	playback \
 	sine \
-	tags \
-	tcp \
 	typefind \
 	videotestsrc \
 	"
@@ -870,8 +868,6 @@ gst/audioscale/Makefile
 gst/ffmpegcolorspace/Makefile
 gst/playback/Makefile
 gst/sine/Makefile
-gst/tags/Makefile
-gst/tcp/Makefile
 gst/typefind/Makefile
 gst/videotestsrc/Makefile
 sys/Makefile
