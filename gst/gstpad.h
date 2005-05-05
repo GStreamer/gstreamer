@@ -114,7 +114,6 @@ typedef enum {
   GST_ACTIVATE_NONE,
   GST_ACTIVATE_PUSH,
   GST_ACTIVATE_PULL,
-  GST_ACTIVATE_PULL_RANGE,
 } GstActivateMode;
 
 #define GST_PAD_MODE_ACTIVATE(mode) ((mode) != GST_ACTIVATE_NONE)
@@ -139,7 +138,7 @@ typedef void			(*GstPadLoopFunction) 		(GstPad *pad);
 typedef GstFlowReturn		(*GstPadChainFunction) 		(GstPad *pad, GstBuffer *buffer);
 typedef GstFlowReturn		(*GstPadGetRangeFunction)	(GstPad *pad, guint64 offset, 
 		                                                 guint length, GstBuffer **buffer);
-typedef gboolean		(*GstPadCheckGetRangeFunction)	(GstPad *pad, gboolean *random_access); 
+typedef gboolean		(*GstPadCheckGetRangeFunction)	(GstPad *pad); 
 typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstEvent *event);
 
 /* convert/query/format functions */
@@ -524,7 +523,7 @@ GstCaps * 		gst_pad_get_negotiated_caps 		(GstPad * pad);
 
 /* data passing functions */
 GstFlowReturn		gst_pad_push				(GstPad *pad, GstBuffer *buffer);
-gboolean		gst_pad_check_pull_range		(GstPad *pad, gboolean *random_access);
+gboolean		gst_pad_check_pull_range		(GstPad *pad);
 GstFlowReturn		gst_pad_pull_range			(GstPad *pad, guint64 offset, guint size,
 								 GstBuffer **buffer);
 gboolean		gst_pad_push_event			(GstPad *pad, GstEvent *event);
