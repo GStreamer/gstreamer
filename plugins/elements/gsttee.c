@@ -369,7 +369,6 @@ gst_tee_sink_activate (GstPad * pad, GstActivateMode mode)
       result = TRUE;
       break;
     case GST_ACTIVATE_PULL:
-    case GST_ACTIVATE_PULL_RANGE:
       g_return_val_if_fail (tee->has_sink_loop, FALSE);
       if (GST_ELEMENT_SCHEDULER (tee)) {
         GST_STREAM_LOCK (pad);

@@ -128,8 +128,8 @@ static GstFlowReturn gst_type_find_element_chain (GstPad * sinkpad,
     GstBuffer * buffer);
 static GstFlowReturn gst_type_find_element_getrange (GstPad * srcpad,
     guint64 offset, guint length, GstBuffer ** buffer);
-static gboolean gst_type_find_element_checkgetrange (GstPad * srcpad,
-    gboolean * random_access);
+static gboolean gst_type_find_element_checkgetrange (GstPad * srcpad);
+
 static GstElementStateReturn
 gst_type_find_element_change_state (GstElement * element);
 static gboolean
@@ -807,13 +807,13 @@ gst_type_find_element_chain (GstPad * pad, GstBuffer * buffer)
 }
 
 static gboolean
-gst_type_find_element_checkgetrange (GstPad * srcpad, gboolean * random_access)
+gst_type_find_element_checkgetrange (GstPad * srcpad)
 {
   GstTypeFindElement *typefind;
 
   typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (srcpad));
 
-  return gst_pad_check_pull_range (typefind->sink, random_access);
+  return gst_pad_check_pull_range (typefind->sink);
 }
 
 static GstFlowReturn
@@ -862,7 +862,6 @@ gst_type_find_element_activate (GstPad * pad, GstActivateMode mode)
   switch (mode) {
     case GST_ACTIVATE_PUSH:
     case GST_ACTIVATE_PULL:
-    case GST_ACTIVATE_PULL_RANGE:
       result = TRUE;
       break;
     default:
