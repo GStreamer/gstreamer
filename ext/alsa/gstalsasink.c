@@ -28,7 +28,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <getopt.h>
-#include <asoundlib.h>
+#include <alsa/asoundlib.h>
 
 
 #include "gstalsasink.h"

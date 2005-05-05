@@ -30,7 +30,6 @@ SUBDIRS = 			\
 	$(EXAMPLES_DIR) 	\
 	tools 			\
 	$(GCONF_DIR) 		\
-	testsuite 		\
 	po 			\
 	common 			\
 	m4 			\
@@ -44,7 +43,6 @@ DIST_SUBDIRS = 			\
 	examples		\
 	tools 			\
 	gconf 			\
-	testsuite 		\
 	po 			\
 	common 			\
 	m4 			\
@@ -54,7 +52,7 @@ DIST_SUBDIRS = 			\
 #	docs
 
 EXTRA_DIST = \
-	gst-plugins.spec depcomp \
+	gst-plugins-base.spec depcomp \
 	AUTHORS COPYING COPYING.LIB NEWS README RELEASE REQUIREMENTS \
 	ChangeLog autogen.sh
 

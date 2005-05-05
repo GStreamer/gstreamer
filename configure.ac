@@ -12,7 +12,7 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins, GST_PLUGINS_VERSION, 0, 8, 90, 1, GST_CVS="no", GST_CVS="yes")
+AS_VERSION(gst-plugins-base, GST_PLUGINS_VERSION, 0, 9, 0, 1, GST_CVS="no", GST_CVS="yes")
 
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 
@@ -50,7 +50,7 @@ dnl the gettext stuff needed
 AM_GNU_GETTEXT_VERSION(0.11.5)
 AM_GNU_GETTEXT([external])
                                                                                 
-GETTEXT_PACKAGE=gst-plugins-$GST_MAJORMINOR
+GETTEXT_PACKAGE=gst-plugins-base-$GST_MAJORMINOR
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], "$GETTEXT_PACKAGE",
                    [gettext package name])
@@ -66,9 +66,9 @@ AS_COMPILER_FLAG(-Wall, GST_WALL="yes", GST_WALL="no")
 if test "x$GST_WALL" = "xyes"; then
    GST_ERROR="$GST_ERROR -Wall"
 
-   if test "x$GST_CVS" = "xyes"; then
-     AS_COMPILER_FLAG(-Werror,GST_ERROR="$GST_ERROR -Werror",GST_ERROR="$GST_ERROR")
-   fi
+dnl   if test "x$GST_CVS" = "xyes"; then
+dnl     AS_COMPILER_FLAG(-Werror,GST_ERROR="$GST_ERROR -Werror",GST_ERROR="$GST_ERROR")
+dnl   fi
 fi
 
 dnl determine c++ compiler
@@ -372,18 +372,13 @@ GST_PLUGINS_ALL="\
 	adder \
 	audioconvert \
 	audioscale \
-	audiorate \
 	ffmpegcolorspace \
 	playback \
 	sine \
-	subparse \
 	tags \
 	tcp \
 	typefind \
-	videorate \
-	videoscale \
 	videotestsrc \
-	volume \
 	"
 
 dnl see if we can build C++ plug-ins
@@ -867,25 +862,19 @@ dnl #########################
 
 AC_CONFIG_FILES(
 Makefile
-gst-plugins.spec
+gst-plugins-base.spec
 gst/Makefile
 gst/adder/Makefile
 gst/audioconvert/Makefile
-gst/audiorate/Makefile
 gst/audioscale/Makefile
 gst/ffmpegcolorspace/Makefile
 gst/playback/Makefile
 gst/sine/Makefile
-gst/subparse/Makefile
 gst/tags/Makefile
 gst/tcp/Makefile
 gst/typefind/Makefile
-gst/videorate/Makefile
-gst/videoscale/Makefile
 gst/videotestsrc/Makefile
-gst/volume/Makefile
 sys/Makefile
-sys/v4l/Makefile
 sys/ximage/Makefile
 sys/xvimage/Makefile
 ext/Makefile
@@ -911,15 +900,8 @@ gst-libs/gst/tuner/Makefile
 gst-libs/gst/video/Makefile
 gst-libs/gst/xoverlay/Makefile
 gst-libs/ext/Makefile
-examples/dynparams/Makefile
-examples/capsfilter/Makefile
 examples/seeking/Makefile
-examples/indexing/Makefile
-examples/switch/Makefile
 examples/Makefile
-testsuite/embed/Makefile
-testsuite/alsa/Makefile
-testsuite/Makefile
 tools/Makefile
 gconf/Makefile
 gconf/gstreamer.schemas

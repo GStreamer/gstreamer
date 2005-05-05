@@ -4,11 +4,11 @@ else
 FT2_SUBDIRS=
 endif
 
-if HAVE_GTK
-GTK_SUBDIRS=dynparams $(FT2_SUBDIRS)
-else
-GTK_SUBDIRS=
-endif
+# if HAVE_GTK
+# GTK_SUBDIRS=dynparams $(FT2_SUBDIRS)
+# else
+# GTK_SUBDIRS=
+# endif
 
-SUBDIRS=$(GTK_SUBDIRS) switch
+SUBDIRS=$(GTK_SUBDIRS)
 DIST_SUBDIRS=capsfilter dynparams seeking indexing switch

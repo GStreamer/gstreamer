@@ -26,7 +26,7 @@
 
 #include <gst/gst.h>
 #include <gst/audio/gstaudiosink.h>
-#include <asoundlib.h>
+#include <alsa/asoundlib.h>
 
 
 G_BEGIN_DECLS

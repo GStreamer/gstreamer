@@ -4,17 +4,15 @@ else
 ALSA_DIR=
 endif
 
-if HAVE_GTK
-EMBED_DIR=embed
-else
-EMBED_DIR=
-endif
+# if HAVE_GTK
+# EMBED_DIR=embed
+# else
+# EMBED_DIR=
+# endif
 
 SUBDIRS = \
-	$(EMBED_DIR) \
 	$(ALSA_DIR) #seeking
 DIST_SUBDIRS = \
-	embed \
 	alsa
 
 GST_PLUGIN_PATH=$(shell cd $(top_builddir) && pwd)

@@ -1,8 +1,8 @@
-if USE_GST_V4L
-V4L_DIR=v4l
-else
-V4L_DIR=
-endif
+# if USE_GST_V4L
+# V4L_DIR=v4l
+# else
+# V4L_DIR=
+# endif
 
 if USE_X
 XIMAGE_DIR=ximage
@@ -17,12 +17,10 @@ XVIMAGE_DIR=
 endif
 
 SUBDIRS = \
-  $(V4L_DIR) \
   $(XIMAGE_DIR) \
   $(XVIMAGE_DIR)
 
 DIST_SUBDIRS = \
-  v4l \
   ximage \
   xvimage
 

@@ -1,3 +1,13 @@
+2005-05-05  Christian Schaller <christian@fluendo.com> 
+
+	* Makefile.am: remove stuff that is not building
+	* configure.ac: remove stuff that is not building
+	* examples/Makefile.am: remove stuff that is not building
+	* ext/alsa/gstalsasink.c: add alsa/ before the alsalib.h file
+	* ext/alsa/gstalsasink.h: add alsa/ before the alsalib.h file
+	* sys/Makefile.am: remove stuff that is not building
+	* testsuite/Makefile.am: remove stuff that is not building
+
 2005-05-05  Andy Wingo  <wingo@pobox.com>
 
 	* gst-libs/gst/tag/gstid3tag.c: (gst_tag_list_new_from_id3v1):

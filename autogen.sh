@@ -2,7 +2,7 @@
 # Run this to generate all the initial makefiles, etc.
 
 DIE=0
-package=gst-plugins
+package=gst-plugins-base
 srcfile=gst/sine/gstsinesrc.c
 
 # a quick cvs co if necessary to alleviate the pain - may remove this
