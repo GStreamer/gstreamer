@@ -64,7 +64,7 @@ static struct _elements_entry _elements[] = {
   {"identity", GST_RANK_NONE, gst_identity_get_type},
 //  {"fdsink", GST_RANK_NONE, gst_fdsink_get_type},
 //  {"fdsrc", GST_RANK_NONE, gst_fdsrc_get_type},
-//  {"filesink", GST_RANK_NONE, gst_filesink_get_type},
+  {"filesink", GST_RANK_NONE, gst_filesink_get_type},
 //  {"md5sink", GST_RANK_NONE, gst_md5sink_get_type},
 #ifndef HAVE_WIN32
 //  {"multifilesrc", GST_RANK_NONE, gst_multifilesrc_get_type},

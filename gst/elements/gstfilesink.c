@@ -99,17 +99,19 @@ static void gst_filesink_get_property (GObject * object, guint prop_id,
 static gboolean gst_filesink_open_file (GstFileSink * sink);
 static void gst_filesink_close_file (GstFileSink * sink);
 
-static gboolean gst_filesink_handle_event (GstPad * pad, GstEvent * event);
+static gboolean gst_filesink_event (GstBaseSink * sink, GstEvent * event);
+static GstFlowReturn gst_filesink_render (GstBaseSink * sink,
+    GstBuffer * buffer);
+
 static gboolean gst_filesink_pad_query (GstPad * pad, GstQueryType type,
     GstFormat * format, gint64 * value);
-static void gst_filesink_chain (GstPad * pad, GstData * _data);
 
 static void gst_filesink_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
 static GstElementStateReturn gst_filesink_change_state (GstElement * element);
 
-static guint gst_filesink_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_filesink_signals[LAST_SIGNAL] = { 0 };
 
 static void
 _do_init (GType filesink_type)
@@ -126,9 +128,8 @@ _do_init (GType filesink_type)
       "filesink element");
 }
 
-GST_BOILERPLATE_FULL (GstFileSink, gst_filesink, GstElement, GST_TYPE_ELEMENT,
+GST_BOILERPLATE_FULL (GstFileSink, gst_filesink, GstBaseSink, GST_TYPE_BASESINK,
     _do_init);
-
 
 static void
 gst_filesink_base_init (gpointer g_class)
@@ -144,6 +145,7 @@ static void
 gst_filesink_class_init (GstFileSinkClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstBaseSinkClass *gstbasesink_class = GST_BASESINK_CLASS (klass);
 
   gobject_class->set_property = gst_filesink_set_property;
   gobject_class->get_property = gst_filesink_get_property;
@@ -152,25 +154,17 @@ gst_filesink_class_init (GstFileSinkClass * klass)
       g_param_spec_string ("location", "File Location",
           "Location of the file to write", NULL, G_PARAM_READWRITE));
 
-  gst_filesink_signals[SIGNAL_HANDOFF] =
-      g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstFileSinkClass, handoff), NULL, NULL,
-      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-
   gobject_class->dispose = gst_filesink_dispose;
+
+  gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_filesink_render);
+  gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_filesink_event);
 }
 static void
 gst_filesink_init (GstFileSink * filesink)
 {
   GstPad *pad;
 
-  pad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sinktemplate),
-      "sink");
-  gst_element_add_pad (GST_ELEMENT (filesink), pad);
-  gst_pad_set_chain_function (pad, gst_filesink_chain);
-
-  GST_FLAG_SET (GST_ELEMENT (filesink), GST_ELEMENT_EVENT_AWARE);
+  pad = GST_BASESINK_PAD (filesink);
 
   gst_pad_set_query_function (pad, gst_filesink_pad_query);
   gst_pad_set_query_type_function (pad, gst_filesink_get_query_types);
@@ -196,10 +190,7 @@ static gboolean
 gst_filesink_set_location (GstFileSink * sink, const gchar * location)
 {
   /* the element must be stopped or paused in order to do this */
-  if (GST_STATE (sink) > GST_STATE_PAUSED)
-    return FALSE;
-  if (GST_STATE (sink) == GST_STATE_PAUSED &&
-      GST_FLAG_IS_SET (sink, GST_FILESINK_OPEN))
+  if (GST_STATE (sink) >= GST_STATE_PAUSED)
     return FALSE;
 
   g_free (sink->filename);
@@ -211,9 +202,6 @@ gst_filesink_set_location (GstFileSink * sink, const gchar * location)
     sink->filename = NULL;
     sink->uri = NULL;
   }
-
-  if (GST_STATE (sink) == GST_STATE_PAUSED)
-    gst_filesink_open_file (sink);
 
   return TRUE;
 }
@@ -260,8 +248,6 @@ gst_filesink_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 gst_filesink_open_file (GstFileSink * sink)
 {
-  g_return_val_if_fail (!GST_FLAG_IS_SET (sink, GST_FILESINK_OPEN), FALSE);
-
   /* open the file */
   if (sink->filename == NULL || sink->filename[0] == '\0') {
     GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND,
@@ -277,8 +263,6 @@ gst_filesink_open_file (GstFileSink * sink)
     return FALSE;
   }
 
-  GST_FLAG_SET (sink, GST_FILESINK_OPEN);
-
   sink->data_written = 0;
 
   return TRUE;
@@ -287,13 +271,9 @@ gst_filesink_open_file (GstFileSink * sink)
 static void
 gst_filesink_close_file (GstFileSink * sink)
 {
-  g_return_if_fail (GST_FLAG_IS_SET (sink, GST_FILESINK_OPEN));
-
   if (fclose (sink->file) != 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
         (_("Error closing file \"%s\"."), sink->filename), GST_ERROR_SYSTEM);
-  } else {
-    GST_FLAG_UNSET (sink, GST_FILESINK_OPEN);
   }
 }
 
@@ -307,11 +287,9 @@ gst_filesink_pad_query (GstPad * pad, GstQueryType type,
     case GST_QUERY_TOTAL:
       switch (*format) {
         case GST_FORMAT_BYTES:
-          if (GST_FLAG_IS_SET (GST_ELEMENT (sink), GST_FILESINK_OPEN)) {
-            *value = sink->data_written;        /* FIXME - doesn't the kernel provide
-                                                   such a function? */
-            break;
-          }
+          *value = sink->data_written;  /* FIXME - doesn't the kernel provide
+                                           such a function? */
+          break;
         default:
           return FALSE;
       }
@@ -319,10 +297,8 @@ gst_filesink_pad_query (GstPad * pad, GstQueryType type,
     case GST_QUERY_POSITION:
       switch (*format) {
         case GST_FORMAT_BYTES:
-          if (GST_FLAG_IS_SET (GST_ELEMENT (sink), GST_FILESINK_OPEN)) {
-            *value = ftell (sink->file);
-            break;
-          }
+          *value = ftell (sink->file);
+          break;
         default:
           return FALSE;
       }
@@ -336,30 +312,23 @@ gst_filesink_pad_query (GstPad * pad, GstQueryType type,
 
 /* handle events (search) */
 static gboolean
-gst_filesink_handle_event (GstPad * pad, GstEvent * event)
+gst_filesink_event (GstBaseSink * sink, GstEvent * event)
 {
   GstEventType type;
   GstFileSink *filesink;
 
-  filesink = GST_FILESINK (gst_pad_get_parent (pad));
-
-  if (!(GST_FLAG_IS_SET (filesink, GST_FILESINK_OPEN))) {
-    gst_event_unref (event);
-    return FALSE;
-  }
+  filesink = GST_FILESINK (sink);
 
   type = event ? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
 
   switch (type) {
     case GST_EVENT_SEEK:
       if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_BYTES) {
-        gst_event_unref (event);
         return FALSE;
       }
 
       if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH) {
         if (fflush (filesink->file)) {
-          gst_event_unref (event);
           GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
               (_("Error while writing to file \"%s\"."), filesink->filename),
               GST_ERROR_SYSTEM);
@@ -381,33 +350,24 @@ gst_filesink_handle_event (GstPad * pad, GstEvent * event)
           g_warning ("unknown seek method!");
           break;
       }
-      gst_event_unref (event);
       break;
     case GST_EVENT_DISCONTINUOUS:
     {
-      gint64 offset;
+      gint64 soffset, eoffset;
 
-      if (gst_event_discont_get_value (event, GST_FORMAT_BYTES, &offset))
-        fseek (filesink->file, offset, SEEK_SET);
-
-      gst_event_unref (event);
+      if (gst_event_discont_get_value (event, GST_FORMAT_BYTES, &soffset,
+              &eoffset))
+        fseek (filesink->file, soffset, SEEK_SET);
       break;
     }
     case GST_EVENT_FLUSH:
       if (fflush (filesink->file)) {
-        gst_event_unref (event);
         GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
             (_("Error while writing to file \"%s\"."), filesink->filename),
             GST_ERROR_SYSTEM);
       }
       break;
-    case GST_EVENT_EOS:
-      gst_event_unref (event);
-      gst_filesink_close_file (filesink);
-      gst_element_set_eos (GST_ELEMENT (filesink));
-      break;
     default:
-      gst_pad_event_default (pad, event);
       break;
   }
 
@@ -421,75 +381,80 @@ gst_filesink_handle_event (GstPad * pad, GstEvent * event)
  *
  * take the buffer from the pad and write to file if it's open
  */
-static void
-gst_filesink_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_filesink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
   GstFileSink *filesink;
+  guint bytes_written = 0, back_pending = 0;
+  guint size;
 
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
+  size = GST_BUFFER_SIZE (buffer);
 
-  filesink = GST_FILESINK (gst_pad_get_parent (pad));
+  filesink = GST_FILESINK (sink);
 
-  if (GST_IS_EVENT (buf)) {
-    gst_filesink_handle_event (pad, GST_EVENT (buf));
-    return;
-  }
+  if (ftell (filesink->file) < filesink->data_written)
+    back_pending = filesink->data_written - ftell (filesink->file);
 
-  if (GST_FLAG_IS_SET (filesink, GST_FILESINK_OPEN)) {
-    guint bytes_written = 0, back_pending = 0;
+  while (bytes_written < size) {
+    size_t wrote = fwrite (GST_BUFFER_DATA (buffer) + bytes_written, 1,
+        size - bytes_written, filesink->file);
 
-    if (ftell (filesink->file) < filesink->data_written)
-      back_pending = filesink->data_written - ftell (filesink->file);
-    while (bytes_written < GST_BUFFER_SIZE (buf)) {
-      size_t wrote = fwrite (GST_BUFFER_DATA (buf) + bytes_written, 1,
-          GST_BUFFER_SIZE (buf) - bytes_written,
-          filesink->file);
-
-      if (wrote <= 0) {
-        GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
-            (_("Error while writing to file \"%s\"."), filesink->filename),
-            ("Only %d of %d bytes written: %s",
-                bytes_written, GST_BUFFER_SIZE (buf), strerror (errno)));
-        break;
-      }
-      bytes_written += wrote;
+    if (wrote <= 0) {
+      GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
+          (_("Error while writing to file \"%s\"."), filesink->filename),
+          ("Only %d of %d bytes written: %s",
+              bytes_written, size, strerror (errno)));
+      break;
     }
-
-    filesink->data_written += bytes_written - back_pending;
+    bytes_written += wrote;
   }
 
-  gst_buffer_unref (buf);
+  filesink->data_written += bytes_written - back_pending;
 
-  g_signal_emit (G_OBJECT (filesink),
-      gst_filesink_signals[SIGNAL_HANDOFF], 0, filesink);
+  return GST_FLOW_OK;
 }
 
 static GstElementStateReturn
 gst_filesink_change_state (GstElement * element)
 {
-  g_return_val_if_fail (GST_IS_FILESINK (element), GST_STATE_FAILURE);
+  GstElementStateReturn ret;
+  gint transition;
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
-      if (GST_FLAG_IS_SET (element, GST_FILESINK_OPEN))
-        gst_filesink_close_file (GST_FILESINK (element));
+  transition = GST_STATE_TRANSITION (element);
+
+  switch (transition) {
+    case GST_STATE_NULL_TO_READY:
       break;
-
     case GST_STATE_READY_TO_PAUSED:
-      if (!GST_FLAG_IS_SET (element, GST_FILESINK_OPEN)) {
-        if (!gst_filesink_open_file (GST_FILESINK (element)))
-          return GST_STATE_FAILURE;
-      }
+      if (!gst_filesink_open_file (GST_FILESINK (element)))
+        goto open_error;
+      break;
+    case GST_STATE_PAUSED_TO_PLAYING:
+      break;
+    default:
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
-  return GST_STATE_SUCCESS;
+  switch (transition) {
+    case GST_STATE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      gst_filesink_close_file (GST_FILESINK (element));
+      break;
+    case GST_STATE_READY_TO_NULL:
+      break;
+    default:
+      break;
+  }
+
+  return ret;
+
+open_error:
+  {
+    return GST_STATE_FAILURE;
+  }
 }
 
 /*** GSTURIHANDLER INTERFACE *************************************************/

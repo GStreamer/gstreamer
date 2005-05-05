@@ -169,6 +169,7 @@ gst_basesrc_init (GstBaseSrc * basesrc, gpointer g_class)
   basesrc->srcpad = pad;
   gst_element_add_pad (GST_ELEMENT (basesrc), pad);
 
+  basesrc->random_access = TRUE;
   basesrc->segment_start = -1;
   basesrc->segment_end = -1;
   basesrc->blocksize = DEFAULT_BLOCKSIZE;
@@ -179,6 +180,8 @@ gst_basesrc_init (GstBaseSrc * basesrc, gpointer g_class)
 static void
 gst_basesrc_set_dataflow_funcs (GstBaseSrc * this)
 {
+  GST_DEBUG ("updating dataflow functions");
+
   if (this->has_loop)
     gst_pad_set_loop_function (this->srcpad, gst_basesrc_loop);
   else
@@ -232,7 +235,6 @@ gst_basesrc_query (GstPad * pad, GstQueryType type,
         {
           gboolean ret;
 
-          /* FIXME-wim: is this cast right? */
           ret = gst_basesrc_get_size (src, (guint64 *) value);
           GST_DEBUG ("getting length %d %lld", ret, *value);
           return ret;

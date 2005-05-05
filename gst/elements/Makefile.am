@@ -15,6 +15,7 @@ libgstelements_la_SOURCES =	\
 	gstcapsfilter.c		\
 	gstfakesrc.c		\
 	gstfakesink.c		\
+	gstfilesink.c		\
 	gstfilesrc.c		\
 	gstidentity.c		\
 	gstelements.c		\
@@ -27,7 +28,6 @@ libgstelements_la_SOURCES =	\
 EXTRA_DIST =			\
 	gstaggregator.c		\
 	gstcapsfilter.c		\
-	gstfilesink.c		\
 	gstfdsink.c		\
 	gstfdsrc.c		\
 	gstmd5sink.c		\

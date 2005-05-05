@@ -1,5 +1,38 @@
 2005-05-05  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/Makefile.am:
+	* gst/base/gstbasesink.h:
+	* gst/base/gstbasesrc.c: (gst_basesrc_init),
+	(gst_basesrc_set_dataflow_funcs), (gst_basesrc_query):
+	* gst/base/gstcollectpads.c: (gst_collectpads_get_type),
+	(gst_collectpads_class_init), (gst_collectpads_init),
+	(gst_collectpads_finalize), (gst_collectpads_new),
+	(gst_collectpads_set_function), (gst_collectpads_add_pad),
+	(find_pad), (gst_collectpads_remove_pad),
+	(gst_collectpads_is_active), (gst_collectpads_collect),
+	(gst_collectpads_collect_range), (gst_collectpads_start),
+	(gst_collectpads_stop), (gst_collectpads_peek),
+	(gst_collectpads_pop), (gst_collectpads_available),
+	(gst_collectpads_read), (gst_collectpads_flush),
+	(gst_collectpads_chain):
+	* gst/base/gstcollectpads.h:
+	* gst/elements/Makefile.am:
+	* gst/elements/gstelements.c:
+	* gst/elements/gstfakesink.c: (gst_fakesink_class_init),
+	(gst_fakesink_get_times), (gst_fakesink_event),
+	(gst_fakesink_preroll), (gst_fakesink_render):
+	* gst/elements/gstfilesink.c: (gst_filesink_class_init),
+	(gst_filesink_init), (gst_filesink_set_location),
+	(gst_filesink_open_file), (gst_filesink_close_file),
+	(gst_filesink_pad_query), (gst_filesink_event),
+	(gst_filesink_render), (gst_filesink_change_state):
+	* gst/elements/gstfilesink.h:
+	Added object to help in making collect pad based elements.
+	Ported filesink.
+	Make event function in sink baseclass return gboolean.
+
+2005-05-05  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbin.c: (gst_bin_send_event), (compare_name),
 	(gst_bin_get_by_name):
 	* gst/gstbuffer.h:

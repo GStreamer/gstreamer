@@ -75,7 +75,7 @@ struct _GstBaseSinkClass {
   void		(*get_times)    (GstBaseSink *sink, GstBuffer *buffer, 
 		                 GstClockTime *start, GstClockTime *end);
 
-  void          (*event)        (GstBaseSink *sink, GstEvent *event);
+  gboolean      (*event)        (GstBaseSink *sink, GstEvent *event);
   GstFlowReturn (*preroll)      (GstBaseSink *sink, GstBuffer *buffer);
   GstFlowReturn (*render)       (GstBaseSink *sink, GstBuffer *buffer);
 };

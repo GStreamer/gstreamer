@@ -6,6 +6,7 @@ libgstbase_@GST_MAJORMINOR@_la_SOURCES =	\
 	gstbasesink.c		\
 	gstbasesrc.c		\
 	gstbasetransform.c	\
+	gstcollectpads.c	\
 	gsttypefindhelper.c	
 
 libgstbase_@GST_MAJORMINOR@_la_CFLAGS = $(GST_OBJ_CFLAGS)
@@ -20,5 +21,6 @@ libgstbase_@GST_MAJORMINOR@include_HEADERS =	\
 	gstbasesink.h		\
 	gstbasesrc.h		\
 	gstbasetransform.h	\
+	gstcollectpads.h	\
 	gsttypefindhelper.h	
 

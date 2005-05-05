@@ -116,7 +116,7 @@ static GstFlowReturn gst_fakesink_preroll (GstBaseSink * bsink,
     GstBuffer * buffer);
 static GstFlowReturn gst_fakesink_render (GstBaseSink * bsink,
     GstBuffer * buffer);
-static void gst_fakesink_event (GstBaseSink * bsink, GstEvent * event);
+static gboolean gst_fakesink_event (GstBaseSink * bsink, GstEvent * event);
 static void gst_fakesink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end);
 
@@ -269,7 +269,7 @@ gst_fakesink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
   }
 }
 
-static void
+static gboolean
 gst_fakesink_event (GstBaseSink * bsink, GstEvent * event)
 {
   GstFakeSink *sink = GST_FAKESINK (bsink);
@@ -283,6 +283,8 @@ gst_fakesink_event (GstBaseSink * bsink, GstEvent * event)
 
     g_object_notify (G_OBJECT (sink), "last_message");
   }
+
+  return TRUE;
 }
 
 static GstFlowReturn
