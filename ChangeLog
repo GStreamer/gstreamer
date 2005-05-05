@@ -1,3 +1,8 @@
+2005-05-05  Andy Wingo  <wingo@pobox.com>
+
+	* check/pipelines/simple_launch_lines.c (test_2_elements): "Fix"
+	the test suite.
+
 2005-05-05  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/Makefile.am:
