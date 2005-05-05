@@ -1,5 +1,23 @@
 2005-05-05  Wim Taymans  <wim@fluendo.com>
 
+	* ext/theora/theoradec.c: (_inc_granulepos),
+	(theora_dec_src_event), (theora_dec_sink_event),
+	(theora_handle_comment_packet), (theora_handle_type_packet),
+	(theora_handle_header_packet), (theora_handle_data_packet),
+	(theora_dec_chain):
+	* ext/theora/theoraenc.c: (gst_theora_enc_class_init),
+	(gst_theora_enc_init), (theora_enc_sink_setcaps),
+	(theora_push_buffer), (theora_push_packet),
+	(theora_enc_sink_event), (theora_enc_chain),
+	(theora_enc_change_state), (theora_enc_set_property),
+	(theora_enc_get_property):
+	Added stream lock to decoder so that we can serialize
+	the discont event.
+	More theoraenc porting, recover from errors, do clean
+	shutdown.
+
+2005-05-05  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ogg/Makefile.am:
 	* ext/ogg/README:
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_typefind),

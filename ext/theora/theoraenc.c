@@ -95,6 +95,7 @@ struct _GstTheoraEnc
   gint keyframe_threshold;
   gint keyframe_mindistance;
   gint noise_sensitivity;
+  gint sharpness;
 
   gint info_width, info_height;
   gint width, height;
@@ -103,7 +104,7 @@ struct _GstTheoraEnc
 
   guint packetno;
   guint64 bytes_out;
-  guint64 next_ts;
+  guint64 initial_delay;
 };
 
 struct _GstTheoraEncClass
@@ -126,6 +127,7 @@ struct _GstTheoraEncClass
 #define THEORA_DEF_KEYFRAME_THRESHOLD	80
 #define THEORA_DEF_KEYFRAME_MINDISTANCE	8
 #define THEORA_DEF_NOISE_SENSITIVITY	1
+#define THEORA_DEF_SHARPNESS		0
 
 enum
 {
@@ -141,6 +143,7 @@ enum
   ARG_KEYFRAME_THRESHOLD,
   ARG_KEYFRAME_MINDISTANCE,
   ARG_NOISE_SENSITIVITY,
+  ARG_SHARPNESS,
   /* FILL ME */
 };
 
@@ -243,6 +246,10 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
       g_param_spec_int ("noise-sensitivity", "Noise sensitivity",
           "Noise sensitivity", 0, 32768, THEORA_DEF_NOISE_SENSITIVITY,
           (GParamFlags) G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_SHARPNESS,
+      g_param_spec_int ("sharpness", "Sharpness",
+          "Sharpness", 0, 2, THEORA_DEF_SHARPNESS,
+          (GParamFlags) G_PARAM_READWRITE));
 
   gstelement_class->change_state = theora_enc_change_state;
   GST_DEBUG_CATEGORY_INIT (theoraenc_debug, "theoraenc", 0, "Theora encoder");
@@ -276,6 +283,7 @@ gst_theora_enc_init (GstTheoraEnc * enc)
   enc->keyframe_threshold = THEORA_DEF_KEYFRAME_THRESHOLD;
   enc->keyframe_mindistance = THEORA_DEF_KEYFRAME_MINDISTANCE;
   enc->noise_sensitivity = THEORA_DEF_NOISE_SENSITIVITY;
+  enc->sharpness = THEORA_DEF_SHARPNESS;
 }
 
 static gboolean
@@ -344,6 +352,7 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   enc->info.keyframe_auto_threshold = enc->keyframe_threshold;
   enc->info.keyframe_mindistance = enc->keyframe_mindistance;
   enc->info.noise_sensitivity = enc->noise_sensitivity;
+  enc->info.sharpness = enc->sharpness;
 
   theora_encode_init (&enc->state, &enc->info);
 
@@ -379,26 +388,29 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
 }
 
 /* push out the buffer and do internal bookkeeping */
-static void
+static GstFlowReturn
 theora_push_buffer (GstTheoraEnc * enc, GstBuffer * buffer)
 {
+  GstFlowReturn ret;
+
   enc->bytes_out += GST_BUFFER_SIZE (buffer);
 
-  if (GST_PAD_IS_USABLE (enc->srcpad)) {
-    gst_pad_push (enc->srcpad, buffer);
-  } else {
-    gst_buffer_unref (buffer);
-  }
+  ret = gst_pad_push (enc->srcpad, buffer);
+
+  return ret;
 }
 
-static void
+static GstFlowReturn
 theora_push_packet (GstTheoraEnc * enc, ogg_packet * packet,
     GstClockTime timestamp, GstClockTime duration)
 {
   GstBuffer *buf;
+  GstFlowReturn ret;
 
   buf = theora_buffer_from_packet (enc, packet, timestamp, duration);
-  theora_push_buffer (enc, buf);
+  ret = theora_push_buffer (enc, buf);
+
+  return ret;
 }
 
 static GstCaps *
@@ -463,13 +475,14 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstTheoraEnc *enc;
   ogg_packet op;
-  GstBuffer *buf;
   GstClockTime in_time;
+  GstFlowReturn ret;
 
   enc = GST_THEORA_ENC (GST_PAD_PARENT (pad));
 
-  buf = GST_BUFFER (buffer);
-  in_time = GST_BUFFER_TIMESTAMP (buf);
+  in_time = GST_BUFFER_TIMESTAMP (buffer);
+
+  GST_STREAM_LOCK (pad);
 
   /* no packets written yet, setup headers */
   if (enc->packetno == 0) {
@@ -497,16 +510,20 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     /* mark buffers and put on caps */
     caps = gst_pad_get_caps (enc->srcpad);
     caps = theora_set_header_on_caps (caps, buf1, buf2, buf3);
-    gst_pad_set_caps (enc->srcpad, caps);
-
-    /* negotiate with these caps */
     GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
     gst_pad_set_caps (enc->srcpad, caps);
 
+    gst_buffer_set_caps (buf1, caps);
+    gst_buffer_set_caps (buf2, caps);
+    gst_buffer_set_caps (buf3, caps);
+
     /* push out the header buffers */
-    theora_push_buffer (enc, buf1);
-    theora_push_buffer (enc, buf2);
-    theora_push_buffer (enc, buf3);
+    if ((ret = theora_push_buffer (enc, buf1)) != GST_FLOW_OK)
+      goto header_push;
+    if ((ret = theora_push_buffer (enc, buf2)) != GST_FLOW_OK)
+      goto header_push;
+    if ((ret = theora_push_buffer (enc, buf3)) != GST_FLOW_OK)
+      goto header_push;
   }
 
   {
@@ -527,7 +544,7 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
 
     if (enc->width == enc->info_width && enc->height == enc->info_height) {
       /* easy case, no cropping/conversion needed */
-      pixels = GST_BUFFER_DATA (buf);
+      pixels = GST_BUFFER_DATA (buffer);
 
       yuv.y = pixels;
       yuv.u = yuv.y + y_size;
@@ -566,7 +583,7 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
       dest_u = yuv.u = yuv.y + y_size;
       dest_v = yuv.v = yuv.u + y_size / 4;
 
-      src_y = GST_BUFFER_DATA (buf);
+      src_y = GST_BUFFER_DATA (buffer);
       src_u = src_y + src_y_stride * ROUND_UP_2 (height);
       src_v = src_u + src_uv_stride * ROUND_UP_2 (height) / 2;
 
@@ -647,45 +664,78 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
         }
       }
 
-      gst_buffer_unref (buf);
-      buf = newbuf;
+      gst_buffer_unref (buffer);
+      buffer = newbuf;
     }
 
     res = theora_encode_YUVin (&enc->state, &yuv);
+
+    ret = GST_FLOW_OK;
     while (theora_encode_packetout (&enc->state, 0, &op)) {
       GstClockTime out_time;
 
       out_time = theora_granule_time (&enc->state, op.granulepos) * GST_SECOND;
-      theora_push_packet (enc, &op, out_time, GST_SECOND / enc->fps);
+      if ((ret = theora_push_packet (enc, &op, out_time, GST_SECOND / enc->fps))
+          != GST_FLOW_OK)
+        goto data_push;
     }
-
-    gst_buffer_unref (buf);
+    gst_buffer_unref (buffer);
   }
+  GST_STREAM_UNLOCK (pad);
 
-  return GST_FLOW_OK;
+  return ret;
+
+  /* ERRORS */
+header_push:
+  {
+    gst_buffer_unref (buffer);
+    GST_STREAM_UNLOCK (pad);
+    return ret;
+  }
+data_push:
+  {
+    gst_buffer_unref (buffer);
+    GST_STREAM_UNLOCK (pad);
+    return ret;
+  }
 }
 
 static GstElementStateReturn
 theora_enc_change_state (GstElement * element)
 {
-  GstTheoraEnc *enc = GST_THEORA_ENC (element);
+  GstTheoraEnc *enc;
+  gint transition;
+  GstElementStateReturn ret;
 
-  switch (GST_STATE_TRANSITION (element)) {
+  transition = GST_STATE_TRANSITION (element);
+  enc = GST_THEORA_ENC (element);
+
+  switch (transition) {
     case GST_STATE_NULL_TO_READY:
       break;
     case GST_STATE_READY_TO_PAUSED:
       theora_info_init (&enc->info);
       theora_comment_init (&enc->comment);
       enc->packetno = 0;
+      enc->initial_delay = 0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
+    default:
+      break;
+  }
+
+  ret = parent_class->change_state (element);
+
+  switch (transition) {
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
+      GST_STREAM_LOCK (enc->sinkpad);
       theora_clear (&enc->state);
       theora_comment_clear (&enc->comment);
       theora_info_clear (&enc->info);
+      GST_STREAM_UNLOCK (enc->sinkpad);
       break;
     case GST_STATE_READY_TO_NULL:
       break;
@@ -693,7 +743,7 @@ theora_enc_change_state (GstElement * element)
       break;
   }
 
-  return parent_class->change_state (element);
+  return ret;
 }
 
 static void
@@ -737,6 +787,9 @@ theora_enc_set_property (GObject * object, guint prop_id,
       break;
     case ARG_NOISE_SENSITIVITY:
       enc->noise_sensitivity = g_value_get_int (value);
+      break;
+    case ARG_SHARPNESS:
+      enc->sharpness = g_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -783,6 +836,9 @@ theora_enc_get_property (GObject * object, guint prop_id,
       break;
     case ARG_NOISE_SENSITIVITY:
       g_value_set_int (value, enc->noise_sensitivity);
+      break;
+    case ARG_SHARPNESS:
+      g_value_set_int (value, enc->sharpness);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

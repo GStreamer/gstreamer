@@ -462,9 +462,6 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
       if (!res)
         goto error;
 
-      /* all worked, make sure we sync to keyframe */
-      dec->need_keyframe = TRUE;
-
     error:
       gst_event_unref (event);
       break;
@@ -489,6 +486,7 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
   GST_LOG_OBJECT (dec, "handling event");
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_DISCONTINUOUS:
+      GST_STREAM_LOCK (pad);
       if (gst_event_discont_get_value (event, GST_FORMAT_DEFAULT,
               &start_value, &end_value)) {
         dec->granulepos = start_value;
@@ -535,6 +533,7 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
         /* sync to keyframe */
         dec->need_keyframe = TRUE;
       }
+      GST_STREAM_UNLOCK (pad);
       gst_event_unref (event);
       break;
     default:
@@ -744,9 +743,9 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
   /* copy the visible region to the destination. This is actually pretty
    * complicated and gstreamer doesn't support all the needed caps to do this
    * correctly. For example, when we have an odd offset, we should only combine
-   * 1 row/column of luma samples with on chroma sample in colorspace conversion. 
+   * 1 row/column of luma samples with one chroma sample in colorspace conversion. 
    * We compensate for this by adding a block border around the image when the
-   * offset of size is odd (see above).
+   * offset or size is odd (see above).
    */
   {
     guint8 *dest_y, *src_y;
