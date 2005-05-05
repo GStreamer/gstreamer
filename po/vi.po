@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-08-02 13:00+0200\n"
+"POT-Creation-Date: 2005-01-28 12:07+0100\n"
 "PO-Revision-Date: 2005-01-22 17:17+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net> \n"
@@ -16,69 +16,120 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:346 ext/sndfile/gstsf.c:621
+#: ext/alsa/gstalsamixertrack.c:83
+msgid "Master"
+msgstr ""
+
+#: ext/alsa/gstalsamixertrack.c:84 sys/oss/gstossmixer.c:100
+msgid "Bass"
+msgstr "Trầm"
+
+#: ext/alsa/gstalsamixertrack.c:85 sys/oss/gstossmixer.c:102
+msgid "Treble"
+msgstr "Cao"
+
+#: ext/alsa/gstalsamixertrack.c:86 sys/oss/gstossmixer.c:106
+msgid "PCM"
+msgstr "PCM"
+
+#: ext/alsa/gstalsamixertrack.c:87 sys/oss/gstossmixer.c:104
+msgid "Synth"
+msgstr "Tổng hợp"
+
+#: ext/alsa/gstalsamixertrack.c:88 sys/oss/gstossmixer.c:110
+msgid "Line-in"
+msgstr "Dây-vào"
+
+#: ext/alsa/gstalsamixertrack.c:89 sys/oss/gstossmixer.c:114
+msgid "CD"
+msgstr "CD"
+
+#: ext/alsa/gstalsamixertrack.c:90 sys/oss/gstossmixer.c:112
+msgid "Microphone"
+msgstr "Micrô"
+
+#: ext/alsa/gstalsamixertrack.c:91
+#, fuzzy
+msgid "PC Speaker"
+msgstr "Loa"
+
+#: ext/alsa/gstalsamixertrack.c:92
+msgid "Playback"
+msgstr ""
+
+#: ext/alsa/gstalsamixertrack.c:93
+msgid "Capture"
+msgstr ""
+
+#: ext/audiofile/gstafsink.c:344 ext/sndfile/gstsf.c:624
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Đã không mở được tập tin \"%s\" để ghi."
 
-#: ext/audiofile/gstafsink.c:368 ext/audiofile/gstafsrc.c:373
+#: ext/audiofile/gstafsink.c:366 ext/audiofile/gstafsrc.c:371
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Lỗi khi đóng tập tin \"%s\"."
 
-#: ext/audiofile/gstafsrc.c:320
+#: ext/audiofile/gstafsrc.c:318
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Đã không mở được tập tin \"%s\" để đọc."
 
-#: ext/cdparanoia/gstcdparanoia.c:657 ext/cdparanoia/gstcdparanoia.c:673
+#: ext/cdparanoia/gstcdparanoia.c:278
+msgid "discid"
+msgstr ""
+
+#: ext/cdparanoia/gstcdparanoia.c:278
+msgid "CDDA discid for metadata retrieval"
+msgstr ""
+
+#: ext/cdparanoia/gstcdparanoia.c:683 ext/cdparanoia/gstcdparanoia.c:699
 msgid "Could not open CD device for reading."
 msgstr "Đã không mở được thiết bị CD để đọc"
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1067 ext/gnomevfs/gstgnomevfssrc.c:1090
+#: ext/gnomevfs/gstgnomevfssrc.c:1157
 #, c-format
 msgid "Could not open vfs file \"%s\" for reading."
 msgstr "Đã không mở được tập tin vfs \"%s\" để đọc."
 
-#: ext/gnomevfs/gstgnomevfssink.c:344
+#: ext/gnomevfs/gstgnomevfssrc.c:1165
+#, fuzzy
+msgid "No filename given."
+msgstr "Chưa nhập tên tập tin "
+
+#: ext/gnomevfs/gstgnomevfssink.c:432
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Đã không mở được tập tin vfs \"%s\" để ghi: %s."
 
-#: ext/gnomevfs/gstgnomevfssink.c:351
+#: ext/gnomevfs/gstgnomevfssink.c:439
 msgid "No filename given"
 msgstr "Chưa nhập tên tập tin "
 
-#: ext/gnomevfs/gstgnomevfssink.c:377
+#: ext/gnomevfs/gstgnomevfssink.c:467
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Đã không đóng được tập tin vfs \"%s\"."
 
-#: ext/sndfile/gstsf.c:582
+#: ext/sndfile/gstsf.c:585
 msgid "No filename specified."
 msgstr "Chưa ghi rõ tên tập tin."
 
-#: ext/sndfile/gstsf.c:835
+#: ext/sndfile/gstsf.c:838
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Đã không ghi được vào tập tin \"%s\"."
 
-#: gst/avi/gstavimux.c:1052
+#: gst/avi/gstavimux.c:1007
 msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "Chưa có dữ liệu âm thanh nhập, hoặc dữ liệu âm thanh nhập không hợp lệ. Sẽ có dòng AVI hư."
-
-#: gst-libs/gst/play/play.c:110
-#, c-format
-msgid "The %s element could not be found. This element is essential for playback. Please install the right plug-in and verify that it works by running 'gst-inspect %s'"
-msgstr "Chưa tìm được yếu tố %s. Phải có yếu tố này để phát lại được.Hãy cài đặt trình cầm phít đúng và kiểm chứng nó hoạt động được bằng cách chạy lệnh 'gst-inspect %s'"
-
-#: gst-libs/gst/play/play.c:139
-msgid ""
-"No usable colorspace element could be found.\n"
-"Please install one and restart."
 msgstr ""
-"Chưa tìm được yếu tố colorspace (khoảng cách màu) có thể sử dụng.\n"
-"Hãy cài đặt nó rồi khởi động lại."
+"Chưa có dữ liệu âm thanh nhập, hoặc dữ liệu âm thanh nhập không hợp lệ. Sẽ "
+"có dòng AVI hư."
+
+#: gst-libs/gst/play/play.c:719
+msgid "Failed to create playbin object"
+msgstr ""
 
 #: sys/dxr3/dxr3audiosink.c:298
 #, c-format
@@ -120,37 +171,42 @@ msgstr "Đã không mở được thiết bị ảnh động \"%s\" để ghi."
 msgid "Could not close video device \"%s\"."
 msgstr "Đã không đóng được thiết bị ảnh động \"%s\"."
 
-#: sys/dxr3/dxr3videosink.c:453 sys/v4l2/v4l2src_calls.c:123
+#: sys/dxr3/dxr3videosink.c:453 sys/v4l2/v4l2src_calls.c:124
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Đã không ghi được vào thiết bị \"%s\"."
 
-#: sys/oss/gstosselement.c:725
+#: sys/oss/gstosselement.c:726
 #, c-format
 msgid "OSS device \"%s\" is already in use by another program."
 msgstr "Một chương trình khác đang sử dụng thiết bị OSS \"%s\"."
 
-#: sys/oss/gstosselement.c:732 sys/oss/gstosselement.c:736
+#: sys/oss/gstosselement.c:733 sys/oss/gstosselement.c:737
 #, c-format
 msgid "Could not access device \"%s\", check its permissions."
 msgstr "Đã không truy cập được thiết bị \"%s\", nên hãy kiểm tra quyền nó."
 
-#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:167
+#: sys/oss/gstosselement.c:744 sys/v4l/v4l_calls.c:168
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Không có thiết bị \"%s\" ."
 
-#: sys/oss/gstosselement.c:750
+#: sys/oss/gstosselement.c:751
 #, c-format
 msgid "Could not open device \"%s\" for writing."
 msgstr "Đã không mở được thiết bị \"%s\" để ghi."
 
-#: sys/oss/gstosselement.c:754
+#: sys/oss/gstosselement.c:755
 #, c-format
 msgid "Could not open device \"%s\" for reading."
 msgstr "Đã không mở được thiết bị \"%s\" để đọc."
 
-#: sys/oss/gstosselement.c:1131
+#: sys/oss/gstosselement.c:1153
+#, fuzzy
+msgid "Your OSS device doesn't support mono or stereo."
+msgstr "Đã không dò được cho đúng thiết bị OSS của bạn"
+
+#: sys/oss/gstosselement.c:1167
 msgid "Your OSS device could not be probed correctly"
 msgstr "Đã không dò được cho đúng thiết bị OSS của bạn"
 
@@ -158,37 +214,9 @@ msgstr "Đã không dò được cho đúng thiết bị OSS của bạn"
 msgid "Volume"
 msgstr "Âm lượng"
 
-#: sys/oss/gstossmixer.c:100
-msgid "Bass"
-msgstr "Trầm"
-
-#: sys/oss/gstossmixer.c:102
-msgid "Treble"
-msgstr "Cao"
-
-#: sys/oss/gstossmixer.c:104
-msgid "Synth"
-msgstr "Tổng hợp"
-
-#: sys/oss/gstossmixer.c:106
-msgid "PCM"
-msgstr "PCM"
-
 #: sys/oss/gstossmixer.c:108
 msgid "Speaker"
 msgstr "Loa"
-
-#: sys/oss/gstossmixer.c:110
-msgid "Line-in"
-msgstr "Dây-vào"
-
-#: sys/oss/gstossmixer.c:112
-msgid "Microphone"
-msgstr "Micrô"
-
-#: sys/oss/gstossmixer.c:114
-msgid "CD"
-msgstr "CD"
 
 #: sys/oss/gstossmixer.c:116
 msgid "Mixer"
@@ -254,11 +282,11 @@ msgstr "Thu thanh"
 msgid "Monitor"
 msgstr "Màn hình"
 
-#: sys/v4l/v4l_calls.c:158
+#: sys/v4l/v4l_calls.c:159
 msgid "No device specified."
 msgstr "Chưa ghi rõ thiết bị nào"
 
-#: sys/v4l/v4l_calls.c:171 sys/v4l2/v4l2_calls.c:397
+#: sys/v4l/v4l_calls.c:172 sys/v4l2/v4l2_calls.c:400
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Đã không mở được thiết bị \"%s\" để đọc và ghi."
@@ -271,17 +299,33 @@ msgstr "Thiết bị chưa mở"
 msgid "Device is open."
 msgstr "Thiết bị mở rồi"
 
-#: sys/v4l2/v4l2_calls.c:411
+#: sys/v4l2/v4l2_calls.c:414
 #, c-format
 msgid "Device \"%s\" is not a capture device."
 msgstr "Thiết bị \"%s\" không bắt gì được."
 
-#: sys/v4l2/v4l2src_calls.c:255
+#: sys/v4l2/v4l2src_calls.c:256
 #, c-format
 msgid "Could not get buffers from device \"%s\"."
 msgstr "Đã không gọi được bộ đệm nào từ thiết bị \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:264
+#: sys/v4l2/v4l2src_calls.c:265
 #, c-format
 msgid "Could not get enough buffers from device \"%s\"."
 msgstr "Đã không gọi được đủ bộ đệm từ thiết bị \"%s\"."
+
+#~ msgid ""
+#~ "The %s element could not be found. This element is essential for "
+#~ "playback. Please install the right plug-in and verify that it works by "
+#~ "running 'gst-inspect %s'"
+#~ msgstr ""
+#~ "Chưa tìm được yếu tố %s. Phải có yếu tố này để phát lại được.Hãy cài đặt "
+#~ "trình cầm phít đúng và kiểm chứng nó hoạt động được bằng cách chạy lệnh "
+#~ "'gst-inspect %s'"
+
+#~ msgid ""
+#~ "No usable colorspace element could be found.\n"
+#~ "Please install one and restart."
+#~ msgstr ""
+#~ "Chưa tìm được yếu tố colorspace (khoảng cách màu) có thể sử dụng.\n"
+#~ "Hãy cài đặt nó rồi khởi động lại."

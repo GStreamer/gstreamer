@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-12-30 20:49+0100\n"
+"POT-Creation-Date: 2005-01-28 12:07+0100\n"
 "PO-Revision-Date: 2004-08-05 16:26+0200\n"
 "Last-Translator: Elros Cyriatan <cyriatan@fastmail.fm>\n"
 "Language-Team: Dutch <vertaling@nl.linux.org>\n"
@@ -120,28 +120,13 @@ msgstr "Geen bestandsnaam opgegeven."
 msgid "Could not write to file \"%s\"."
 msgstr "Kon niet schrijven naar bestand \"%s\"."
 
-#: gst/avi/gstavimux.c:1056
+#: gst/avi/gstavimux.c:1007
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Geen of ongeldig invoergeluid, AVI-stroom zal slecht zijn."
 
-#: gst-libs/gst/play/play.c:110
-#, c-format
-msgid ""
-"The %s element could not be found. This element is essential for playback. "
-"Please install the right plug-in and verify that it works by running 'gst-"
-"inspect %s'"
+#: gst-libs/gst/play/play.c:719
+msgid "Failed to create playbin object"
 msgstr ""
-"Het %s element kon niet worden gevonden. Dit element is essentieel om af te "
-"spelen. Installeer alstublieft de juiste plug-in en controleer dat die werkt "
-"door 'gst-inspect %s' uit te voeren"
-
-#: gst-libs/gst/play/play.c:139
-msgid ""
-"No usable colorspace element could be found.\n"
-"Please install one and restart."
-msgstr ""
-"Er kon geen bruikbaar kleurruimte-element worden gevonden.\n"
-"Installeer er alstublieft een en start opnieuw dit programma."
 
 #: sys/dxr3/dxr3audiosink.c:298
 #, c-format
@@ -326,3 +311,19 @@ msgstr "Kon geen buffers opvragen van apparaat \"%s\"."
 #, c-format
 msgid "Could not get enough buffers from device \"%s\"."
 msgstr "Kon niet voldoende buffers opvragen van apparaat \"%s\"."
+
+#~ msgid ""
+#~ "The %s element could not be found. This element is essential for "
+#~ "playback. Please install the right plug-in and verify that it works by "
+#~ "running 'gst-inspect %s'"
+#~ msgstr ""
+#~ "Het %s element kon niet worden gevonden. Dit element is essentieel om af "
+#~ "te spelen. Installeer alstublieft de juiste plug-in en controleer dat die "
+#~ "werkt door 'gst-inspect %s' uit te voeren"
+
+#~ msgid ""
+#~ "No usable colorspace element could be found.\n"
+#~ "Please install one and restart."
+#~ msgstr ""
+#~ "Er kon geen bruikbaar kleurruimte-element worden gevonden.\n"
+#~ "Installeer er alstublieft een en start opnieuw dit programma."

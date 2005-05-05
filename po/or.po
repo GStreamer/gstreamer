@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-12-30 20:49+0100\n"
+"POT-Creation-Date: 2005-01-28 12:07+0100\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -121,27 +121,13 @@ msgstr "କୌଣସି ଫାଇଲନାମ ଉଲ୍ଲେଖିତ ହୋଇ
 msgid "Could not write to file \"%s\"."
 msgstr "\"%s\" ଫାଇଲ ଲେଖିହେଲା ନାହିଁ."
 
-#: gst/avi/gstavimux.c:1056
+#: gst/avi/gstavimux.c:1007
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "ନିବେଶ ଧ୍ବନି ନାହିଁ ବା ଅବୈଧ ଅଛି. ଏ.ଭି.ଆଇ. ଧାରା ଭ୍ରଷ୍ଟ ହୋଇଯିବ."
 
-#: gst-libs/gst/play/play.c:110
-#, c-format
-msgid ""
-"The %s element could not be found. This element is essential for playback. "
-"Please install the right plug-in and verify that it works by running 'gst-"
-"inspect %s'"
+#: gst-libs/gst/play/play.c:719
+msgid "Failed to create playbin object"
 msgstr ""
-"%s ଉପାଦାନ ମିଳିଲା ନାହିଁ. ପୁନଃପ୍ରଦର୍ଶନ ପାଇଁ ଏହି ଉପାଦାନଟି ଆବଶ୍ଯକ. ଦୟା କରି ସଠିକ ପ୍ଲଗ୍ଇନ୍ ସ୍ଥାପିତ "
-"କରନ୍ତୁ, ଓ 'gst-inspect %s' ଚଳାଇ ଯାଞ୍ଚ କରନ୍ତୁ କି ଏହା କାର୍ଯ୍ଯକାରୀ ଅଛି"
-
-#: gst-libs/gst/play/play.c:139
-msgid ""
-"No usable colorspace element could be found.\n"
-"Please install one and restart."
-msgstr ""
-"କୌଣସି ବ୍ଯବହାରଯୋଗ୍ଯ ରଙ୍ଗକ୍ଷେତ୍ର ଉପାଦାନ ମିଳିଲା ନାହିଁ.\n"
-"ଦୟା କରି ଗୋଟିଏ ଉପାଦାନ ସ୍ଥାପିତ କରି ପୁନଃପ୍ରାରମ୍ଭ କରନ୍ତୁ."
 
 #: sys/dxr3/dxr3audiosink.c:298
 #, c-format
@@ -325,3 +311,18 @@ msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ଅସ୍ଥାୟୀ ସଞ୍ଚୟ �
 #, c-format
 msgid "Could not get enough buffers from device \"%s\"."
 msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ପର୍ଯ୍ଯାପ୍ତ ଅସ୍ଥାୟୀ ସଞ୍ଚୟ ସ୍ଥାନ ଆଣିହେଲା ନାହିଁ."
+
+#~ msgid ""
+#~ "The %s element could not be found. This element is essential for "
+#~ "playback. Please install the right plug-in and verify that it works by "
+#~ "running 'gst-inspect %s'"
+#~ msgstr ""
+#~ "%s ଉପାଦାନ ମିଳିଲା ନାହିଁ. ପୁନଃପ୍ରଦର୍ଶନ ପାଇଁ ଏହି ଉପାଦାନଟି ଆବଶ୍ଯକ. ଦୟା କରି ସଠିକ ପ୍ଲଗ୍ଇନ୍ "
+#~ "ସ୍ଥାପିତ କରନ୍ତୁ, ଓ 'gst-inspect %s' ଚଳାଇ ଯାଞ୍ଚ କରନ୍ତୁ କି ଏହା କାର୍ଯ୍ଯକାରୀ ଅଛି"
+
+#~ msgid ""
+#~ "No usable colorspace element could be found.\n"
+#~ "Please install one and restart."
+#~ msgstr ""
+#~ "କୌଣସି ବ୍ଯବହାରଯୋଗ୍ଯ ରଙ୍ଗକ୍ଷେତ୍ର ଉପାଦାନ ମିଳିଲା ନାହିଁ.\n"
+#~ "ଦୟା କରି ଗୋଟିଏ ଉପାଦାନ ସ୍ଥାପିତ କରି ପୁନଃପ୍ରାରମ୍ଭ କରନ୍ତୁ."

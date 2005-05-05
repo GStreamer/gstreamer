@@ -6,49 +6,22 @@ else
 SUBDIRS_DOCS =
 endif
 
-if USE_GCONFTOOL
-GCONF_DIR = gconf
-else
-GCONF_DIR =
-endif
-
-if BUILD_EXTERNAL
-EXT_DIR = ext
-else
-EXT_DIR =
-endif
-
-if BUILD_EXAMPLES
-EXAMPLES_DIR = examples
-else
-EXAMPLES_DIR =
-endif
+# if USE_GCONFTOOL
+# GCONF_DIR = gconf
+# else
+# GCONF_DIR =
+# endif
 
 SUBDIRS = 			\
-	gst-libs 		\
-	gst sys $(EXT_DIR) 	\
-	$(EXAMPLES_DIR) 	\
-	tools 			\
+	gst sys 		\
 	$(GCONF_DIR) 		\
-	testsuite 		\
-	po 			\
-	common 			\
-	m4 			\
-	pkgconfig
+	m4 			
 # disabled
 #	$(SUBDIRS_DOCS)
 
 DIST_SUBDIRS = 			\
-	gst-libs		\
-	gst sys ext		\
-	examples		\
-	tools 			\
-	gconf 			\
-	testsuite 		\
-	po 			\
-	common 			\
-	m4 			\
-	pkgconfig
+	gst sys 		\
+	m4 
 
 # disabled
 #	docs
@@ -72,5 +45,5 @@ distcheck-hook:
           find $(distdir) -name \*-marshal.[ch] && \
           false )
 
-include $(top_srcdir)/common/release.mak
-include $(top_srcdir)/common/po.mak
+# include $(top_srcdir)/common/release.mak
+# include $(top_srcdir)/common/po.mak
