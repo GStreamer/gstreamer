@@ -1,3 +1,13 @@
+2005-05-05  Andy Wingo  <wingo@pobox.com>
+
+	* gst/audiorate/gstaudiorate.c (gst_audiorate_class_init): Pacify
+	GObject.
+	* configure.ac: Return audiorate and subparse from the ghetto.
+	Re-enable -Wall -Werror.
+	* gst/subparse/gstsubparse.c:
+	* gst/subparse/gstsubparse.h: Port to 0.9. Can operate loop-based
+	or chain-based. Cleaned up a bit. Not tested.
+	
 2005-05-05  Christian Schaller <christian@fluendo.com> 
 
 	* Makefile.am: remove stuff that is not building

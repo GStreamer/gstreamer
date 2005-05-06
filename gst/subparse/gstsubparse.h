@@ -39,11 +39,23 @@ G_BEGIN_DECLS
 typedef struct _GstSubparse GstSubparse;
 typedef struct _GstSubparseClass GstSubparseClass;
 
-typedef void    (* GstSubparseInit)   (GstSubparse *self);
-typedef gchar * (* GstSubparseParser) (GstSubparse *self,
-				       guint64     *out_start_time,
-				       guint64     *out_end_time,
-				       gboolean     after_seek);
+/* format enum */
+typedef enum
+{
+  GST_SUB_PARSE_FORMAT_UNKNOWN = 0,
+  GST_SUB_PARSE_FORMAT_MDVDSUB = 1,
+  GST_SUB_PARSE_FORMAT_SUBRIP = 2,
+  GST_SUB_PARSE_FORMAT_MPSUB = 3
+} GstSubParseFormat;
+
+typedef struct {
+  int      state;
+  GString *buf;
+  guint64  start_time;
+  guint64  duration;
+} ParserState;
+
+typedef gchar* (*Parser) (ParserState *state, const gchar *line);
 
 struct _GstSubparse {
   GstElement element;
@@ -51,29 +63,16 @@ struct _GstSubparse {
   GstPad *sinkpad,*srcpad;
 
   GString *textbuf;
-  struct {
-    GstSubparseInit deinit;
-    GstSubparseParser parse;
-    gint type;
-  } parser;
+
+  GstSubParseFormat parser_type;
   gboolean parser_detected;
 
-  union {
-    struct {
-      int      state;
-      GString *buf;
-      guint64  time1, time2;
-    } subrip;
-    struct {
-      int state;
-      GString *buf;
-      guint64 time;
-    } mpsub;
-  } state;
+  Parser parse_line;
+  ParserState state;
 
   /* seek */
-  guint64 seek_time;
-  gboolean flush;
+  guint64 offset;
+  guint64 next_offset;
 };
 
 struct _GstSubparseClass {

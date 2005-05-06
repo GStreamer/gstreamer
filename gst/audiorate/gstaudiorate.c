@@ -161,6 +161,9 @@ gst_audiorate_class_init (GstAudiorateClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  object_class->set_property = gst_audiorate_set_property;
+  object_class->get_property = gst_audiorate_get_property;
+
   g_object_class_install_property (object_class, ARG_IN,
       g_param_spec_uint64 ("in", "In",
           "Number of input samples", 0, G_MAXUINT64, 0, G_PARAM_READABLE));
@@ -177,10 +180,6 @@ gst_audiorate_class_init (GstAudiorateClass * klass)
       g_param_spec_boolean ("silent", "silent",
           "Don't emit notify for dropped and duplicated frames",
           DEFAULT_SILENT, G_PARAM_READWRITE));
-
-
-  object_class->set_property = gst_audiorate_set_property;
-  object_class->get_property = gst_audiorate_get_property;
 
   element_class->change_state = gst_audiorate_change_state;
 }

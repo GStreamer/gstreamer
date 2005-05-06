@@ -64,11 +64,11 @@ dnl decide on error flags
 AS_COMPILER_FLAG(-Wall, GST_WALL="yes", GST_WALL="no")
 
 if test "x$GST_WALL" = "xyes"; then
-   GST_ERROR="$GST_ERROR -Wall"
+  GST_ERROR="$GST_ERROR -Wall"
 
-dnl   if test "x$GST_CVS" = "xyes"; then
-dnl     AS_COMPILER_FLAG(-Werror,GST_ERROR="$GST_ERROR -Werror",GST_ERROR="$GST_ERROR")
-dnl   fi
+  if test "x$GST_CVS" = "xyes"; then
+    AS_COMPILER_FLAG(-Werror,GST_ERROR="$GST_ERROR -Werror",GST_ERROR="$GST_ERROR")
+  fi
 fi
 
 dnl determine c++ compiler
@@ -372,9 +372,11 @@ GST_PLUGINS_ALL="\
 	adder \
 	audioconvert \
 	audioscale \
+        audiorate \
 	ffmpegcolorspace \
 	playback \
 	sine \
+        subparse \
 	typefind \
 	videotestsrc \
 	"
@@ -865,9 +867,11 @@ gst/Makefile
 gst/adder/Makefile
 gst/audioconvert/Makefile
 gst/audioscale/Makefile
+gst/audiorate/Makefile
 gst/ffmpegcolorspace/Makefile
 gst/playback/Makefile
 gst/sine/Makefile
+gst/subparse/Makefile
 gst/typefind/Makefile
 gst/videotestsrc/Makefile
 sys/Makefile

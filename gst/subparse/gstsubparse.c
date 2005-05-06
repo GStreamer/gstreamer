@@ -32,15 +32,6 @@
 GST_DEBUG_CATEGORY_STATIC (subparse_debug);
 #define GST_CAT_DEFAULT subparse_debug
 
-/* format enum */
-typedef enum
-{
-  GST_SUB_PARSE_FORMAT_UNKNOWN = 0,
-  GST_SUB_PARSE_FORMAT_MDVDSUB = 1,
-  GST_SUB_PARSE_FORMAT_SUBRIP = 2,
-  GST_SUB_PARSE_FORMAT_MPSUB = 3
-} GstSubParseFormat;
-
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -58,11 +49,15 @@ static void gst_subparse_class_init (GstSubparseClass * klass);
 static void gst_subparse_init (GstSubparse * subparse);
 
 static const GstFormat *gst_subparse_formats (GstPad * pad);
-static const GstEventMask *gst_subparse_eventmask (GstPad * pad);
-static gboolean gst_subparse_event (GstPad * pad, GstEvent * event);
+static const GstEventMask *gst_subparse_src_eventmask (GstPad * pad);
+static gboolean gst_subparse_src_event (GstPad * pad, GstEvent * event);
 
 static GstElementStateReturn gst_subparse_change_state (GstElement * element);
-static void gst_subparse_loop (GstElement * element);
+
+#if 0
+static void gst_subparse_loop (GstPad * sinkpad);
+#endif
+static GstFlowReturn gst_subparse_chain (GstPad * sinkpad, GstBuffer * buf);
 
 #if 0
 static GstCaps *gst_subparse_type_find (GstBuffer * buf, gpointer private);
@@ -130,24 +125,20 @@ gst_subparse_init (GstSubparse * subparse)
   subparse->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&sink_templ),
       "sink");
+  gst_pad_set_chain_function (subparse->sinkpad, gst_subparse_chain);
   gst_element_add_pad (GST_ELEMENT (subparse), subparse->sinkpad);
 
   subparse->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&src_templ),
       "src");
-  gst_pad_use_explicit_caps (subparse->srcpad);
   gst_pad_set_formats_function (subparse->srcpad, gst_subparse_formats);
-  gst_pad_set_event_function (subparse->srcpad, gst_subparse_event);
-  gst_pad_set_event_mask_function (subparse->srcpad, gst_subparse_eventmask);
+  gst_pad_set_event_function (subparse->srcpad, gst_subparse_src_event);
+  gst_pad_set_event_mask_function (subparse->srcpad,
+      gst_subparse_src_eventmask);
   gst_element_add_pad (GST_ELEMENT (subparse), subparse->srcpad);
 
-  gst_element_set_loop_function (GST_ELEMENT (subparse), gst_subparse_loop);
-
   subparse->textbuf = g_string_new (NULL);
-  subparse->parser.type = GST_SUB_PARSE_FORMAT_UNKNOWN;
-  subparse->parser_detected = FALSE;
-  subparse->seek_time = GST_CLOCK_TIME_NONE;
-  subparse->flush = FALSE;
+  subparse->parser_type = GST_SUB_PARSE_FORMAT_UNKNOWN;
 }
 
 /*
@@ -166,7 +157,7 @@ gst_subparse_formats (GstPad * pad)
 }
 
 static const GstEventMask *
-gst_subparse_eventmask (GstPad * pad)
+gst_subparse_src_eventmask (GstPad * pad)
 {
   static const GstEventMask masks[] = {
     {GST_EVENT_SEEK, GST_SEEK_METHOD_SET},
@@ -177,51 +168,28 @@ gst_subparse_eventmask (GstPad * pad)
 }
 
 static gboolean
-gst_subparse_event (GstPad * pad, GstEvent * event)
+gst_subparse_src_event (GstPad * pad, GstEvent * event)
 {
   GstSubparse *self = GST_SUBPARSE (gst_pad_get_parent (pad));
-  gboolean res = FALSE;
 
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEEK:
-      if (!(GST_EVENT_SEEK_FORMAT (event) == GST_FORMAT_TIME &&
-              GST_EVENT_SEEK_METHOD (event) == GST_SEEK_METHOD_SET))
-        break;
-      self->seek_time = GST_EVENT_SEEK_OFFSET (event);
-      res = TRUE;
-      break;
-    default:
-      break;
-  }
+#define grvif(x,y) g_return_val_if_fail (x, y)
+
+  /* we guaranteed these with the eventmask */
+  grvif (GST_EVENT_TYPE (event) == GST_EVENT_SEEK, FALSE);
+  grvif (GST_EVENT_SEEK_FORMAT (event) == GST_FORMAT_TIME, FALSE);
+  grvif (GST_EVENT_SEEK_METHOD (event) == GST_SEEK_METHOD_SET, FALSE);
 
   gst_event_unref (event);
 
-  return res;
-}
+  GST_STREAM_LOCK (self->sinkpad);
 
-/*
- * TRUE = continue, FALSE = stop.
- */
+  /* just seek to 0, rely on the overlayer to throw away buffers until the right
+     time -- and his mother cried... */
+  self->next_offset = 0;
 
-static gboolean
-gst_subparse_handle_event (GstSubparse * self, GstEvent * event)
-{
-  gboolean res = TRUE;
+  GST_STREAM_UNLOCK (self->sinkpad);
 
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_INTERRUPT:
-      gst_event_unref (event);
-      res = FALSE;
-      break;
-    case GST_EVENT_EOS:
-      res = FALSE;
-      /* fall-through */
-    default:
-      gst_pad_event_default (self->sinkpad, event);
-      break;
-  }
-
-  return res;
+  return TRUE;
 }
 
 static gchar *
@@ -264,78 +232,58 @@ convert_encoding (GstSubparse * self, const gchar * str, gsize len)
 static gchar *
 get_next_line (GstSubparse * self)
 {
-  GstBuffer *buf;
+  char *line = NULL;
   const char *line_end;
   int line_len;
   gboolean have_r = FALSE;
-  gchar *line;
 
-  if ((line_end = strchr (self->textbuf->str, '\n')) == NULL) {
-    /* end-of-line not found; try to get more data */
-    buf = NULL;
-    do {
-      GstData *data = gst_pad_pull (self->sinkpad);
+  line_end = strchr (self->textbuf->str, '\n');
 
-      if (GST_IS_EVENT (data)) {
-        if (!gst_subparse_handle_event (self, GST_EVENT (data)))
-          return NULL;
-      } else {
-        buf = GST_BUFFER (data);
-      }
-    } while (!buf);
-    self->textbuf = g_string_append_len (self->textbuf,
-        GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
-    gst_buffer_unref (buf);
-    /* search for end-of-line again */
-    line_end = strchr (self->textbuf->str, '\n');
+  if (!line_end) {
+    /* end-of-line not found; return for more data */
+    return NULL;
   }
+
   /* get rid of '\r' */
-  if ((int) (line_end - self->textbuf->str) > 0 &&
-      self->textbuf->str[(int) (line_end - self->textbuf->str) - 1] == '\r') {
+  if (line_end != self->textbuf->str && *(line_end - 1) == '\r') {
     line_end--;
     have_r = TRUE;
   }
 
-  if (line_end) {
-    line_len = line_end - self->textbuf->str;
-    line = convert_encoding (self, self->textbuf->str, line_len);
-    self->textbuf = g_string_erase (self->textbuf, 0,
-        line_len + (have_r ? 2 : 1));
-    return line;
-  }
-  return NULL;
+  line_len = line_end - self->textbuf->str;
+  line = convert_encoding (self, self->textbuf->str, line_len);
+  self->textbuf = g_string_erase (self->textbuf, 0,
+      line_len + (have_r ? 2 : 1));
+  return line;
 }
 
 static gchar *
-parse_mdvdsub (GstSubparse * self, guint64 * out_start_time,
-    guint64 * out_end_time, gboolean after_seek)
+parse_mdvdsub (ParserState * state, const gchar * line)
 {
-  gchar *line, *line_start, *line_split, *line_chunk;
+  const gchar *line_split;
+  gchar *line_chunk;
   guint start_frame, end_frame;
 
   /* FIXME: hardcoded for now, but detecting the correct value is
    * not going to be easy, I suspect... */
   const double frames_per_sec = 24000 / 1001.;
   GString *markup;
-  gchar *rv;
+  gchar *ret;
 
   /* style variables */
   gboolean italic;
   gboolean bold;
   guint fontsize;
 
-  line = line_start = get_next_line (self);
-  if (!line)
-    return NULL;
-
   if (sscanf (line, "{%u}{%u}", &start_frame, &end_frame) != 2) {
     g_warning ("Parse of the following line, assumed to be in microdvd .sub"
         " format, failed:\n%s", line);
-    g_free (line_start);
     return NULL;
   }
-  *out_start_time = (start_frame - 1000) / frames_per_sec * GST_SECOND;
-  *out_end_time = (end_frame - 1000) / frames_per_sec * GST_SECOND;
+
+  state->start_time = (start_frame - 1000) / frames_per_sec * GST_SECOND;
+  state->duration = (end_frame - start_frame) / frames_per_sec * GST_SECOND;
+
   /* skip the {%u}{%u} part */
   line = strchr (line, '}') + 1;
   line = strchr (line, '}') + 1;
@@ -373,175 +321,118 @@ parse_mdvdsub (GstSubparse * self, guint64 * out_start_time,
     if (line_split) {
       g_string_append (markup, "\n");
       line = line_split + 1;
-    } else
+    } else {
       break;
+    }
   }
-  rv = markup->str;
+  ret = markup->str;
   g_string_free (markup, FALSE);
-  g_free (line_start);
-  GST_DEBUG ("parse_mdvdsub returning (start=%f, end=%f): %s",
-      *out_start_time / (double) GST_SECOND,
-      *out_end_time / (double) GST_SECOND, rv);
-  return rv;
-}
-
-static void
-parse_mdvdsub_init (GstSubparse * self)
-{
-  self->parser.deinit = NULL;
-  self->parser.parse = parse_mdvdsub;
+  GST_DEBUG ("parse_mdvdsub returning (%f+%f): %s",
+      state->start_time / (double) GST_SECOND,
+      state->duration / (double) GST_SECOND, ret);
+  return ret;
 }
 
 static gchar *
-parse_subrip (GstSubparse * self, guint64 * out_start_time,
-    guint64 * out_end_time, gboolean after_seek)
+parse_subrip (ParserState * state, const gchar * line)
 {
-  gchar *line;
   guint h1, m1, s1, ms1;
   guint h2, m2, s2, ms2;
   int subnum;
+  gchar *ret;
 
-  while (1) {
-    switch (self->state.subrip.state) {
-      case 0:
-        /* looking for a single integer */
-        line = get_next_line (self);
-        if (!line)
-          return NULL;
-        if (sscanf (line, "%u", &subnum) == 1)
-          self->state.subrip.state = 1;
-        g_free (line);
-        break;
-      case 1:
-        /* looking for start_time --> end_time */
-        line = get_next_line (self);
-        if (!line)
-          return NULL;
-        if (sscanf (line, "%u:%u:%u,%u --> %u:%u:%u,%u",
-                &h1, &m1, &s1, &ms1, &h2, &m2, &s2, &ms2) == 8) {
-          self->state.subrip.state = 2;
-          self->state.subrip.time1 =
-              (((guint64) h1) * 3600 + m1 * 60 + s1) * GST_SECOND +
-              ms1 * GST_MSECOND;
-          self->state.subrip.time2 =
-              (((guint64) h2) * 3600 + m2 * 60 + s2) * GST_SECOND +
-              ms2 * GST_MSECOND;
-        } else {
-          GST_DEBUG (0, "error parsing subrip time line");
-          self->state.subrip.state = 0;
-        }
-        g_free (line);
-        break;
-      case 2:
-        /* looking for subtitle text; empty line ends this
-         * subtitle entry */
-        line = get_next_line (self);
-        if (!line)
-          return NULL;
-        if (self->state.subrip.buf->len)
-          g_string_append_c (self->state.subrip.buf, '\n');
-        g_string_append (self->state.subrip.buf, line);
-        if (strlen (line) == 0) {
-          gchar *rv;
-
-          g_free (line);
-          *out_start_time = self->state.subrip.time1;
-          *out_end_time = self->state.subrip.time2;
-          rv = g_markup_escape_text (self->state.subrip.buf->str,
-              self->state.subrip.buf->len);
-          g_string_truncate (self->state.subrip.buf, 0);
-          self->state.subrip.state = 0;
-          return rv;
-        }
-        g_free (line);
-    }
+  switch (state->state) {
+    case 0:
+      /* looking for a single integer */
+      if (sscanf (line, "%u", &subnum) == 1)
+        state->state = 1;
+      return NULL;
+    case 1:
+      /* looking for start_time --> end_time */
+      if (sscanf (line, "%u:%u:%u,%u --> %u:%u:%u,%u",
+              &h1, &m1, &s1, &ms1, &h2, &m2, &s2, &ms2) == 8) {
+        state->state = 2;
+        state->start_time =
+            (((guint64) h1) * 3600 + m1 * 60 + s1) * GST_SECOND +
+            ms1 * GST_MSECOND;
+        state->duration =
+            (((guint64) h2) * 3600 + m2 * 60 + s2) * GST_SECOND +
+            ms2 * GST_MSECOND - state->start_time;
+      } else {
+        GST_DEBUG (0, "error parsing subrip time line");
+        state->state = 0;
+      }
+      return NULL;
+    case 2:
+      /* looking for subtitle text; empty line ends this
+       * subtitle entry */
+      if (state->buf->len)
+        g_string_append_c (state->buf, '\n');
+      g_string_append (state->buf, line);
+      if (strlen (line) == 0) {
+        ret = g_markup_escape_text (state->buf->str, state->buf->len);
+        g_string_truncate (state->buf, 0);
+        state->state = 0;
+        return ret;
+      }
+      return NULL;
+    default:
+      g_assert_not_reached ();
   }
 }
-
-static void
-parse_subrip_deinit (GstSubparse * self)
-{
-  g_string_free (self->state.subrip.buf, TRUE);
-}
-
-static void
-parse_subrip_init (GstSubparse * self)
-{
-  self->state.subrip.state = 0;
-  self->state.subrip.buf = g_string_new (NULL);
-  self->parser.parse = parse_subrip;
-  self->parser.deinit = parse_subrip_deinit;
-}
-
 
 static gchar *
-parse_mpsub (GstSubparse * self, guint64 * out_start_time,
-    guint64 * out_end_time, gboolean after_seek)
+parse_mpsub (ParserState * state, const gchar * line)
 {
-  gchar *line;
+  gchar *ret;
   float t1, t2;
 
-  if (after_seek) {
-    self->state.mpsub.time = 0;
+  switch (state->state) {
+    case 0:
+      /* looking for two floats (offset, duration) */
+      if (sscanf (line, "%f %f", &t1, &t2) == 2) {
+        state->state = 1;
+        state->start_time += state->duration + GST_SECOND * t1;
+        state->duration = GST_SECOND * t2;
+      }
+      return NULL;
+    case 1:
+      /* looking for subtitle text; empty line ends this
+       * subtitle entry */
+      if (state->buf->len)
+        g_string_append_c (state->buf, '\n');
+      g_string_append (state->buf, line);
+      if (strlen (line) == 0) {
+        ret = g_strdup (state->buf->str);
+        g_string_truncate (state->buf, 0);
+        state->state = 0;
+        return ret;
+      }
+      return NULL;
+    default:
+      g_assert_not_reached ();
   }
-
-  while (1) {
-    switch (self->state.mpsub.state) {
-      case 0:
-        /* looking for two floats (offset, duration) */
-        line = get_next_line (self);
-        if (!line)
-          return NULL;
-        if (sscanf (line, "%f %f", &t1, &t2) == 2) {
-          self->state.mpsub.state = 1;
-          self->state.mpsub.time += GST_SECOND * t1;
-        }
-        g_free (line);
-        break;
-      case 1:
-        /* looking for subtitle text; empty line ends this
-         * subtitle entry */
-        line = get_next_line (self);
-        if (!line)
-          return NULL;
-        if (self->state.mpsub.buf->len)
-          g_string_append_c (self->state.mpsub.buf, '\n');
-        g_string_append (self->state.mpsub.buf, line);
-        if (strlen (line) == 0) {
-          gchar *rv;
-
-          g_free (line);
-          *out_start_time = self->state.mpsub.time;
-          *out_end_time = self->state.mpsub.time + t2 * GST_SECOND;
-          self->state.mpsub.time += t2 * GST_SECOND;
-          rv = g_markup_escape_text (self->state.mpsub.buf->str,
-              self->state.mpsub.buf->len);
-          rv = g_strdup (self->state.mpsub.buf->str);
-          g_string_truncate (self->state.mpsub.buf, 0);
-          self->state.mpsub.state = 0;
-          return rv;
-        }
-        g_free (line);
-        break;
-    }
-  }
-
-  return NULL;
 }
 
 static void
-parse_mpsub_deinit (GstSubparse * self)
+parser_state_init (ParserState * state)
 {
-  g_string_free (self->state.mpsub.buf, TRUE);
+  if (state->buf) {
+    g_string_truncate (state->buf, 0);
+  } else {
+    state->buf = g_string_new (NULL);
+  }
+
+  state->start_time = state->duration = state->state = 0;
 }
 
 static void
-parse_mpsub_init (GstSubparse * self)
+parser_state_dispose (ParserState * state)
 {
-  self->state.mpsub.state = 0;
-  self->state.mpsub.buf = g_string_new (NULL);
-  self->parser.deinit = parse_mpsub_deinit;
-  self->parser.parse = parse_mpsub;
+  if (state->buf) {
+    g_string_free (state->buf, TRUE);
+    state->buf = NULL;
+  }
 }
 
 /*
@@ -551,20 +442,11 @@ parse_mpsub_init (GstSubparse * self)
  */
 
 static GstSubParseFormat
-gst_subparse_buffer_format_autodetect (GstBuffer * buf)
+gst_subparse_data_format_autodetect (gchar * match_str)
 {
   static gboolean need_init_regexps = TRUE;
   static regex_t mdvd_rx;
   static regex_t subrip_rx;
-
-  /* Copy out chars to guard against short non-null-terminated buffers */
-  const gint match_chars = 35;
-  gchar *match_str =
-      g_strndup ((const gchar *) GST_BUFFER_DATA (buf), MIN (match_chars,
-          GST_BUFFER_SIZE (buf)));
-
-  if (!match_str)
-    return GST_SUB_PARSE_FORMAT_UNKNOWN;
 
   /* initialize the regexps used the first time around */
   if (need_init_regexps) {
@@ -585,154 +467,161 @@ gst_subparse_buffer_format_autodetect (GstBuffer * buf)
 
   if (regexec (&mdvd_rx, match_str, 0, NULL, 0) == 0) {
     GST_LOG ("subparse: MicroDVD (frame based) format detected");
-    g_free (match_str);
     return GST_SUB_PARSE_FORMAT_MDVDSUB;
   }
   if (regexec (&subrip_rx, match_str, 0, NULL, 0) == 0) {
     GST_LOG ("subparse: SubRip (time based) format detected");
-    g_free (match_str);
     return GST_SUB_PARSE_FORMAT_SUBRIP;
   }
   if (!strncmp (match_str, "FORMAT=TIME", 11)) {
     GST_LOG ("subparse: MPSub (time based) format detected");
-    g_free (match_str);
     return GST_SUB_PARSE_FORMAT_MPSUB;
   }
 
   GST_WARNING ("subparse: subtitle format autodetection failed!");
-  g_free (match_str);
   return GST_SUB_PARSE_FORMAT_UNKNOWN;
 }
 
-static gboolean
+static GstCaps *
 gst_subparse_format_autodetect (GstSubparse * self)
 {
-  GstBuffer *buf = NULL;
+  gchar *data;
   GstSubParseFormat format;
-  gboolean res = TRUE;
 
-  do {
-    GstData *data = gst_pad_pull (self->sinkpad);
+  if (strlen (self->textbuf->str) < 35) {
+    GST_DEBUG ("File too small to be a subtitles file");
+    return NULL;
+  }
 
-    if (GST_IS_EVENT (data)) {
-      if (!gst_subparse_handle_event (self, GST_EVENT (data)))
-        return FALSE;
-    } else {
-      buf = GST_BUFFER (data);
-    }
-  } while (!buf);
-  self->textbuf = g_string_append_len (self->textbuf, GST_BUFFER_DATA (buf),
-      GST_BUFFER_SIZE (buf));
-  format = gst_subparse_buffer_format_autodetect (buf);
-  gst_buffer_unref (buf);
-  self->parser_detected = TRUE;
-  self->parser.type = format;
+  data = g_strndup (self->textbuf->str, 35);
+  format = gst_subparse_data_format_autodetect (data);
+  g_free (data);
+
+  self->parser_type = format;
+  parser_state_init (&self->state);
+
   switch (format) {
     case GST_SUB_PARSE_FORMAT_MDVDSUB:
-      GST_DEBUG ("MicroDVD format detected");
-      parse_mdvdsub_init (self);
-      res = gst_pad_set_explicit_caps (self->srcpad,
-          gst_caps_new_simple ("text/x-pango-markup", NULL));
-      break;
+      self->parse_line = parse_mdvdsub;
+      return gst_caps_new_simple ("text/x-pango-markup", NULL);
     case GST_SUB_PARSE_FORMAT_SUBRIP:
-      GST_DEBUG ("SubRip format detected");
-      parse_subrip_init (self);
-      res = gst_pad_set_explicit_caps (self->srcpad,
-          gst_caps_new_simple ("text/plain", NULL));
-      break;
+      self->parse_line = parse_subrip;
+      return gst_caps_new_simple ("text/plain", NULL);
     case GST_SUB_PARSE_FORMAT_MPSUB:
-      GST_DEBUG ("MPSub format detected");
-      parse_mpsub_init (self);
-      res = gst_pad_set_explicit_caps (self->srcpad,
-          gst_caps_new_simple ("text/plain", NULL));
-      break;
+      self->parse_line = parse_mpsub;
+      return gst_caps_new_simple ("text/plain", NULL);
     case GST_SUB_PARSE_FORMAT_UNKNOWN:
     default:
       GST_DEBUG ("no subtitle format detected");
       GST_ELEMENT_ERROR (self, STREAM, WRONG_TYPE,
           ("The input is not a valid/supported subtitle file"), (NULL));
-      res = FALSE;
-      break;
+      return NULL;
   }
-
-  return res;
 }
 
-/*
- * parse input, getting a start and end time
- * then parse next input, and if next start time > current end time, send
- * clear buffer.
- */
-
 static void
-gst_subparse_loop (GstElement * element)
+feed_textbuf (GstSubparse * self, GstBuffer * buf)
 {
-  GstSubparse *self;
-  GstBuffer *buf;
-  guint64 start_time, end_time, need_time = GST_CLOCK_TIME_NONE;
-  gchar *subtitle;
-  gboolean after_seek = FALSE;
+  if (GST_BUFFER_OFFSET (buf) != self->offset) {
+    /* flush the parser state */
+    parser_state_init (&self->state);
+    g_string_truncate (self->textbuf, 0);
+  }
 
-  GST_DEBUG ("gst_subparse_loop");
-  self = GST_SUBPARSE (element);
+  self->textbuf = g_string_append_len (self->textbuf,
+      (gchar *) GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  gst_buffer_unref (buf);
+
+  self->offset = GST_BUFFER_OFFSET (buf) + GST_BUFFER_SIZE (buf);
+  self->next_offset = self->offset;
+}
+
+static GstFlowReturn
+handle_buffer (GstSubparse * self, GstBuffer * buf)
+{
+  GstCaps *caps = NULL;
+  gchar *line, *subtitle;
+
+  feed_textbuf (self, buf);
 
   /* make sure we know the format */
-  if (!self->parser_detected) {
-    if (!gst_subparse_format_autodetect (self))
-      return;
-  }
-
-  /* handle seeks */
-  if (GST_CLOCK_TIME_IS_VALID (self->seek_time)) {
-    GstEvent *seek;
-
-    seek = gst_event_new_seek (GST_SEEK_FLAG_FLUSH | GST_FORMAT_BYTES |
-        GST_SEEK_METHOD_SET, 0);
-    if (gst_pad_send_event (GST_PAD_PEER (self->sinkpad), seek)) {
-      need_time = self->seek_time;
-      after_seek = TRUE;
-
-      if (self->flush) {
-        gst_pad_push (self->srcpad, GST_DATA (gst_event_new (GST_EVENT_FLUSH)));
-        self->flush = FALSE;
-      }
-      gst_pad_push (self->srcpad,
-          GST_DATA (gst_event_new_discontinuous (FALSE,
-                  GST_FORMAT_TIME, need_time, GST_FORMAT_UNDEFINED)));
+  if (G_UNLIKELY (self->parser_type == GST_SUB_PARSE_FORMAT_UNKNOWN)) {
+    if (!(caps = gst_subparse_format_autodetect (self))) {
+      return GST_FLOW_UNEXPECTED;
     }
-
-    self->seek_time = GST_CLOCK_TIME_NONE;
   }
 
-  /* get a next buffer */
-  GST_INFO ("getting text buffer");
-  if (!self->parser.parse || self->parser.type == GST_SUB_PARSE_FORMAT_UNKNOWN) {
-    GST_ELEMENT_ERROR (self, LIBRARY, INIT, (NULL), (NULL));
-    return;
-  }
+  while ((line = get_next_line (self))) {
+    subtitle = self->parse_line (&self->state, line);
+    g_free (line);
 
-  do {
-    subtitle = self->parser.parse (self, &start_time, &end_time, after_seek);
-    if (!subtitle)
-      return;
-    after_seek = FALSE;
-
-    if (GST_CLOCK_TIME_IS_VALID (need_time) && end_time < need_time) {
-      g_free (subtitle);
-    } else {
-      need_time = GST_CLOCK_TIME_NONE;
-      GST_DEBUG ("subparse: loop: text %s, start %lld, end %lld\n",
-          subtitle, start_time, end_time);
+    if (subtitle) {
+      GST_DEBUG ("subparse: loop: text %s, %lld+%lld\n",
+          subtitle, self->state.start_time, self->state.duration);
 
       buf = gst_buffer_new ();
-      GST_BUFFER_DATA (buf) = subtitle;
+      GST_BUFFER_DATA (buf) = (guint8 *) subtitle;
       GST_BUFFER_SIZE (buf) = strlen (subtitle);
-      GST_BUFFER_TIMESTAMP (buf) = start_time;
-      GST_BUFFER_DURATION (buf) = end_time - start_time;
-      GST_DEBUG ("sending text buffer %s at %lld", subtitle, start_time);
-      gst_pad_push (self->srcpad, GST_DATA (buf));
+      GST_BUFFER_TIMESTAMP (buf) = self->state.start_time;
+      GST_BUFFER_DURATION (buf) = self->state.duration;
+      GST_DEBUG ("sending text buffer %s at %lld", subtitle,
+          self->state.start_time);
+
+      if (G_UNLIKELY (caps)) {
+        /* set caps on the first buffer */
+        gst_buffer_set_caps (buf, caps);
+        gst_caps_unref (caps);
+        caps = NULL;
+      }
+
+      gst_pad_push (self->srcpad, buf);
     }
-  } while (GST_CLOCK_TIME_IS_VALID (need_time));
+  }
+
+  return GST_FLOW_OK;
+}
+
+#if 0
+static void
+gst_subparse_loop (GstPad * sinkpad)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstSubparse *self;
+  GstBuffer *buf;
+
+  GST_DEBUG ("gst_subparse_loop");
+  self = GST_SUBPARSE (GST_OBJECT_PARENT (sinkpad));
+
+  GST_STREAM_LOCK (sinkpad);
+
+  ret = gst_pad_pull_range (sinkpad, self->next_offset, 1024, &buf);
+
+  if (ret == GST_FLOW_OK)
+    ret = handle_buffer (self, buf);
+
+  if (ret != GST_FLOW_OK)
+    gst_task_pause (GST_RPAD_TASK (sinkpad));
+
+  GST_STREAM_UNLOCK (sinkpad);
+}
+#endif
+
+static GstFlowReturn
+gst_subparse_chain (GstPad * sinkpad, GstBuffer * buf)
+{
+  GstFlowReturn ret;
+  GstSubparse *self;
+
+  GST_DEBUG ("gst_subparse_chain");
+  self = GST_SUBPARSE (GST_OBJECT_PARENT (sinkpad));
+
+  GST_STREAM_LOCK (sinkpad);
+
+  ret = handle_buffer (self, buf);
+
+  GST_STREAM_UNLOCK (sinkpad);
+
+  return ret;
 }
 
 static GstElementStateReturn
@@ -742,12 +631,13 @@ gst_subparse_change_state (GstElement * element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_PAUSED_TO_READY:
-      if (self->parser.deinit)
-        self->parser.deinit (self);
-      self->parser.type = GST_SUB_PARSE_FORMAT_UNKNOWN;
-      self->parser_detected = FALSE;
-      self->seek_time = GST_CLOCK_TIME_NONE;
-      self->flush = FALSE;
+      parser_state_dispose (&self->state);
+      self->parser_type = GST_SUB_PARSE_FORMAT_UNKNOWN;
+      break;
+    case GST_STATE_READY_TO_PAUSED:
+      /* format detection will init the parser state */
+      self->offset = self->next_offset = 0;
+      self->parser_type = GST_SUB_PARSE_FORMAT_UNKNOWN;
       break;
     default:
       break;
@@ -769,7 +659,7 @@ gst_subparse_type_find (GstBuffer * buf, gpointer private)
 {
   GstSubParseFormat format;
 
-  format = gst_subparse_buffer_format_autodetect (buf);
+  format = gst_subparse_data_format_autodetect (buf);
   switch (format) {
     case GST_SUB_PARSE_FORMAT_MDVDSUB:
       GST_DEBUG (GST_CAT_PLUGIN_INFO, "MicroDVD format detected");
