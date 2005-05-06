@@ -1,3 +1,11 @@
+2005-05-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_getcaps), (gst_ffmpegcsp_configure_context),
+	(gst_ffmpegcsp_setcaps), (gst_ffmpegcsp_chain):
+	Well, unreffing a buffer right before pushing it is asking
+	for trouble..
+
 2005-05-06  Christian Schaller  <uraeus@gnome.org>
 
 	* pkgconfig/gstreamer-libs.pc.in: add missing library calls

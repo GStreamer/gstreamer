@@ -247,7 +247,7 @@ gst_ffmpegcsp_setcaps (GstPad * pad, GstCaps * caps)
   par = gst_structure_get_value (structure, "pixel-aspect-ratio");
 
   if (!gst_ffmpegcsp_configure_context (pad, caps, width, height))
-    return FALSE;
+    goto configure_error;
 
   *prefered = caps;
 
@@ -288,6 +288,12 @@ gst_ffmpegcsp_setcaps (GstPad * pad, GstCaps * caps)
   space->height = height;
 
   return TRUE;
+
+configure_error:
+  {
+    GST_DEBUG ("could not configure context");
+    return FALSE;
+  }
 }
 
 static GType
@@ -397,8 +403,9 @@ gst_ffmpegcsp_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   if (space->from_pixfmt == space->to_pixfmt) {
+    GST_DEBUG ("passthrough conversion %" GST_PTR_FORMAT,
+        GST_PAD_CAPS (space->srcpad));
     outbuf = inbuf;
-    gst_buffer_unref (outbuf);
   } else {
     /* convert */
     gst_ffmpegcsp_avpicture_fill (&space->from_frame,
