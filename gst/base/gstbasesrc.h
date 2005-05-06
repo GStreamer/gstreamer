@@ -41,7 +41,14 @@ typedef enum {
   GST_BASESRC_FLAG_LAST         = GST_ELEMENT_FLAG_LAST + 2
 } GstFileSrcFlags;
 
-
+/* base class for random access sources
+ *
+ * This class is mostly usefull for elements that do byte based
+ * access to a random access resource, like files.
+ *
+ * Seeking, flushing, scheduling and sync is all handled by this
+ * base class.
+ */
 typedef struct _GstBaseSrc GstBaseSrc;
 typedef struct _GstBaseSrcClass GstBaseSrcClass;
 
@@ -50,38 +57,54 @@ struct _GstBaseSrc {
 
   GstPad 	*srcpad;
 
-  gint 		 blocksize;
+  /*< protected >*/ /* with LOCK */
+  gint 		 blocksize;		/* size of buffers when operating push based */
+  gboolean	 has_loop;		/* some scheduling properties */
+  gboolean	 has_getrange;
+  gboolean       seekable;
+  gboolean       random_access;
 
-  gint64	 segment_start;
+  GstClockID     clock_id;		/* for syncing */
+  GstClockTime   end_time;
+
+  /* with STREAM_LOCK */
+  gint64	 segment_start;		/* start and end positions for seeking */
   gint64	 segment_end;
   gboolean	 segment_loop;
 
-  gboolean	 has_loop;
-  gboolean	 has_getrange;
-
-  gboolean       seekable;
-  guint64 	 offset;
-  guint64        size;
+  guint64 	 offset;		/* current offset in the resource */
+  guint64        size;			/* total size of the resource */
 };
 
 struct _GstBaseSrcClass {
   GstElementClass parent_class;
 
+  /* get caps from subclass */
   GstCaps*      (*get_caps)     (GstBaseSrc *src);
+  /* notify the subclass of new caps */
   gboolean      (*set_caps)     (GstBaseSrc *src, GstCaps *caps);
 
+  /* start and stop processing, ideal for opening/closing the resource */
   gboolean      (*start)        (GstBaseSrc *src);
   gboolean      (*stop)         (GstBaseSrc *src);
 
+  /* given a buffer, return start and stop time when it should be pushed
+   * out. The base class will sync on the clock using these times. */
   void          (*get_times)    (GstBaseSrc *src, GstBuffer *buffer,
                                  GstClockTime *start, GstClockTime *end);
 
+  /* get the total size of the resource in bytes */
   gboolean      (*get_size)     (GstBaseSrc *src, guint64 *size);
 
+  /* check if the resource is seekable */
   gboolean      (*is_seekable)  (GstBaseSrc *src);
+  /* unlock any pending access to the resource. subclasses should unlock
+   * any function ASAP. */
   gboolean      (*unlock)       (GstBaseSrc *src);
 
+  /* notify subclasses of an event */
   gboolean      (*event)        (GstBaseSrc *src, GstEvent *event);
+  /* ask the subclass to create a buffer */
   GstFlowReturn (*create)       (GstBaseSrc *src, guint64 offset, guint size, 
 		                 GstBuffer **buf);
 };

@@ -171,6 +171,7 @@ gst_basesrc_init (GstBaseSrc * basesrc, gpointer g_class)
   basesrc->segment_start = -1;
   basesrc->segment_end = -1;
   basesrc->blocksize = DEFAULT_BLOCKSIZE;
+  basesrc->clock_id = NULL;
 
   GST_FLAG_UNSET (basesrc, GST_BASESRC_STARTED);
 }
@@ -598,9 +599,17 @@ gst_basesrc_unlock (GstBaseSrc * basesrc)
   GstBaseSrcClass *bclass;
   gboolean result = FALSE;
 
+  /* unblock whatever the subclass is doing */
   bclass = GST_BASESRC_GET_CLASS (basesrc);
   if (bclass->unlock)
     result = bclass->unlock (basesrc);
+
+  /* and unblock the clock as well, if any */
+  GST_LOCK (basesrc);
+  if (basesrc->clock_id) {
+    gst_clock_id_unschedule (basesrc->clock_id);
+  }
+  GST_UNLOCK (basesrc);
 
   return result;
 }
@@ -747,6 +756,7 @@ gst_basesrc_activate (GstPad * pad, GstActivateMode mode)
       break;
     case GST_ACTIVATE_NONE:
       /* step 1, unblock clock sync (if any) */
+      gst_basesrc_unlock (basesrc);
 
       /* step 2, make sure streaming finishes */
       GST_STREAM_LOCK (pad);

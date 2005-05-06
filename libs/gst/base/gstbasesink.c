@@ -44,6 +44,7 @@ enum
   LAST_SIGNAL
 };
 
+/* FIXME, need to figure out a better way to handle the pull mode */
 #define DEFAULT_SIZE 1024
 #define DEFAULT_HAS_LOOP FALSE
 #define DEFAULT_HAS_CHAIN TRUE
@@ -140,6 +141,8 @@ gst_basesink_class_init (GstBaseSinkClass * klass)
       g_param_spec_boolean ("has-chain", "has-chain",
           "Enable chain-based operation", DEFAULT_HAS_CHAIN,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  /* FIXME, this next value should be configured using an event from the
+   * upstream element */
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_PREROLL_QUEUE_LEN,
       g_param_spec_uint ("preroll-queue-len", "preroll-queue-len",
@@ -502,6 +505,7 @@ gst_basesink_event (GstPad * pad, GstEvent * event)
 
       GST_STREAM_LOCK (pad);
 
+      /* EOS also finishes the preroll */
       gst_basesink_finish_preroll (basesink, pad, NULL);
 
       GST_LOCK (basesink);
@@ -743,8 +747,10 @@ gst_basesink_activate (GstPad * pad, GstActivateMode mode)
 {
   gboolean result = FALSE;
   GstBaseSink *basesink;
+  GstBaseSinkClass *bclass;
 
   basesink = GST_BASESINK (GST_OBJECT_PARENT (pad));
+  bclass = GST_BASESINK_GET_CLASS (basesink);
 
   switch (mode) {
     case GST_ACTIVATE_PUSH:
@@ -773,6 +779,10 @@ gst_basesink_activate (GstPad * pad, GstActivateMode mode)
         gst_clock_id_unschedule (basesink->clock_id);
       }
       GST_UNLOCK (basesink);
+
+      /* unlock any subclasses */
+      if (bclass->unlock)
+        bclass->unlock (basesink);
 
       /* unlock preroll */
       GST_PREROLL_LOCK (pad);

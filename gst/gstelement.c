@@ -2018,8 +2018,8 @@ restart:
         /* If the pad is a sink with loop and the peer has a get function,
          * we can activate the sinkpad,  FIXME, logic is reversed as
          * check_pull_range() checks the peer of the given pad. */
-        if ((GST_PAD_IS_SINK (pad) && pad_get && peer_loop) ||
-            (GST_PAD_IS_SRC (pad) && peer_get && pad_loop)) {
+        if ((GST_PAD_IS_SINK (pad) && pad_get && pad_loop) ||
+            (GST_PAD_IS_SRC (pad) && peer_get && peer_loop)) {
           GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
               "%sactivating pad %s pull mode", (active ? "" : "(de)"),
               GST_OBJECT_NAME (pad));

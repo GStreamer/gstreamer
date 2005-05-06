@@ -1,3 +1,17 @@
+2005-05-06  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-element-sink.txt:
+	* docs/design/part-element-source.txt:
+	* gst/base/gstbasesink.c: (gst_basesink_class_init),
+	(gst_basesink_event), (gst_basesink_activate):
+	* gst/base/gstbasesink.h:
+	* gst/base/gstbasesrc.c: (gst_basesrc_init), (gst_basesrc_unlock),
+	(gst_basesrc_activate):
+	* gst/base/gstbasesrc.h:
+	* gst/gstelement.c: (gst_element_pads_activate):
+	Some more documentation.
+	Fixed scheduling decision in _pads_activate().
+
 2005-05-05  Andy Wingo  <wingo@pobox.com>
 
 	* check/pipelines/simple_launch_lines.c (test_2_elements): "Fix"

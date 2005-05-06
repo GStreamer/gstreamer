@@ -41,14 +41,19 @@ G_BEGIN_DECLS
 typedef struct _GstBaseSink GstBaseSink;
 typedef struct _GstBaseSinkClass GstBaseSinkClass;
 
+/* a base class for implementing chain based sinks
+ *
+ * Preroll, EOS, state changes are all handled. 
+ */
 struct _GstBaseSink {
   GstElement 	 element;
 
   GstPad 	*sinkpad;
   GstActivateMode	pad_mode;
 
-  GQueue	*preroll_queue; /* with PREROLL_LOCK */
-  gint		 preroll_queue_max_len; /* with PREROLL_LOCK */
+  /*< protected >*/ /* with PREROLL_LOCK */
+  GQueue	*preroll_queue;
+  gint		 preroll_queue_max_len;
 
   guint64	 offset;
   gboolean 	 has_loop;
@@ -66,15 +71,24 @@ struct _GstBaseSink {
 struct _GstBaseSinkClass {
   GstElementClass parent_class;
 
+  /* get caps from subclass */
   GstCaps*      (*get_caps)     (GstBaseSink *sink);
+  /* notify subclass of new caps */
   gboolean      (*set_caps)     (GstBaseSink *sink, GstCaps *caps);
 
+  /* allocate a new buffer with given caps */
   GstBuffer*    (*buffer_alloc) (GstBaseSink *sink, guint64 offset, guint size,
 		                 GstCaps *caps);
 
+  /* get the start and end times for syncing on this buffer */
   void		(*get_times)    (GstBaseSink *sink, GstBuffer *buffer, 
 		                 GstClockTime *start, GstClockTime *end);
 
+  /* unlock any pending access to the resource. subclasses should unlock
+   * any function ASAP. */
+  gboolean      (*unlock)       (GstBaseSink *sink);
+
+  /* notify subclass of event, preroll buffer or real buffer */
   gboolean      (*event)        (GstBaseSink *sink, GstEvent *event);
   GstFlowReturn (*preroll)      (GstBaseSink *sink, GstBuffer *buffer);
   GstFlowReturn (*render)       (GstBaseSink *sink, GstBuffer *buffer);

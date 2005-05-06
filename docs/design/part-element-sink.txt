@@ -1,0 +1,15 @@
+Sink elements
+-------------
+
+Sink elements consume data. They normally have no source pads.
+
+typical sink elements include:
+
+ - audio/video renderers
+ - network sinks
+ - filesinks
+
+Sinks are harder to construct than other element types as they are 
+treated specially by the GStreamer core.
+
+

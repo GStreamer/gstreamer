@@ -1,0 +1,67 @@
+Source elements
+---------------
+
+A source element is an element that provides data to the pipeline. It
+does typically not have any sink (input) pads.
+
+Typical source elements include:
+
+ - file readers
+ - network elements
+ - capture elements (video/audio/...)
+ - generators (signals/video/audio/...)
+
+A source element can operate in three ways:
+
+  - it is fully seekable, this means that random access can be performed
+    on it in an efficient way. (a file reader,...). This also typically
+    means that the source is not live.
+
+  - data can be obtained from it with a variable size. This means that
+    the source can give N bytes of data. An example is an audio source.
+    A video source always provides the same amount of data (one video 
+    frame). Note that this is not a fully seekable source.
+
+  - it is a live source, this means that data arrives when it is ready.
+    An example of this is a video or network source.
+
+When writing a source, one has to look at how the source can operate to
+decide on the scheduling methods to implement on the source.
+
+  - fully seekable sources implement a getrange function on the source pad.
+
+  - sources that can give N bytes but cannot do seeking also  implement a
+    getrange function but state that they cannot do random access.
+
+  - sources that are purely live sources implement a task to push out
+    data.
+
+Any source that has a getrange function must also implement a push based
+scheduling mode. In this mode the source starts a task that gets N bytes
+and pushes them out. Whenever possible, the peer element will select the
+getrange based scheduling method of the source, though.
+
+A source with a getrange function must activate itself in the pad activate
+function. This is needed because the downstream peer element will decide
+and activate the source element in its state change function before the
+source's state change function is called.
+
+
+Source base classes
+-------------------
+
+GstBaseSource:
+
+  This base class provides an implementation of a random access source and
+  is very well suited for file reader like sources.
+
+
+
+
+
+
+
+
+
+
+
