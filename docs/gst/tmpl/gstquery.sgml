@@ -28,6 +28,9 @@ Standard predefined Query types
 @GST_QUERY_START: start of configured segment
 @GST_QUERY_SEGMENT_END: end of configured segment
 @GST_QUERY_RATE: current rate of the stream
+@GST_QUERY_SEEKING: 
+@GST_QUERY_CONVERT: 
+@GST_QUERY_FORMATS: 
 
 <!-- ##### MACRO GST_QUERY_TYPE_RATE_DEN ##### -->
 <para>

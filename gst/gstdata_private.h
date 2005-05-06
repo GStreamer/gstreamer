@@ -22,7 +22,7 @@
 
 #define _GST_DATA_INIT(data, ptype, pflags, pfree, pcopy) 	\
 G_STMT_START {							\
-  gst_atomic_int_set (&(data)->refcount, 1);			\
+  (data)->refcount = 1;						\
   (data)->type = ptype;						\
   (data)->flags = pflags;					\
   (data)->free = pfree;						\

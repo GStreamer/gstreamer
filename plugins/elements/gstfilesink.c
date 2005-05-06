@@ -66,29 +66,6 @@ enum
   ARG_LOCATION
 };
 
-static const GstFormat *
-gst_filesink_get_formats (GstPad * pad)
-{
-  static const GstFormat formats[] = {
-    GST_FORMAT_BYTES,
-    0,
-  };
-
-  return formats;
-}
-
-static const GstQueryType *
-gst_filesink_get_query_types (GstPad * pad)
-{
-  static const GstQueryType types[] = {
-    GST_QUERY_TOTAL,
-    GST_QUERY_POSITION,
-    0
-  };
-
-  return types;
-}
-
 static void gst_filesink_dispose (GObject * object);
 
 static void gst_filesink_set_property (GObject * object, guint prop_id,
@@ -103,8 +80,7 @@ static gboolean gst_filesink_event (GstBaseSink * sink, GstEvent * event);
 static GstFlowReturn gst_filesink_render (GstBaseSink * sink,
     GstBuffer * buffer);
 
-static gboolean gst_filesink_pad_query (GstPad * pad, GstQueryType type,
-    GstFormat * format, gint64 * value);
+static gboolean gst_filesink_query2 (GstPad * pad, GstQuery * query);
 
 static void gst_filesink_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -141,6 +117,7 @@ gst_filesink_base_init (gpointer g_class)
       gst_static_pad_template_get (&sinktemplate));
   gst_element_class_set_details (gstelement_class, &gst_filesink_details);
 }
+
 static void
 gst_filesink_class_init (GstFileSinkClass * klass)
 {
@@ -159,6 +136,7 @@ gst_filesink_class_init (GstFileSinkClass * klass)
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_filesink_render);
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_filesink_event);
 }
+
 static void
 gst_filesink_init (GstFileSink * filesink)
 {
@@ -166,13 +144,12 @@ gst_filesink_init (GstFileSink * filesink)
 
   pad = GST_BASESINK_PAD (filesink);
 
-  gst_pad_set_query_function (pad, gst_filesink_pad_query);
-  gst_pad_set_query_type_function (pad, gst_filesink_get_query_types);
-  gst_pad_set_formats_function (pad, gst_filesink_get_formats);
+  gst_pad_set_query2_function (pad, gst_filesink_query2);
 
   filesink->filename = NULL;
   filesink->file = NULL;
 }
+
 static void
 gst_filesink_dispose (GObject * object)
 {
@@ -278,36 +255,33 @@ gst_filesink_close_file (GstFileSink * sink)
 }
 
 static gboolean
-gst_filesink_pad_query (GstPad * pad, GstQueryType type,
-    GstFormat * format, gint64 * value)
+gst_filesink_query2 (GstPad * pad, GstQuery * query)
 {
-  GstFileSink *sink = GST_FILESINK (GST_PAD_PARENT (pad));
+  GstFileSink *self;
+  GstFormat format;
 
-  switch (type) {
-    case GST_QUERY_TOTAL:
-      switch (*format) {
-        case GST_FORMAT_BYTES:
-          *value = sink->data_written;  /* FIXME - doesn't the kernel provide
-                                           such a function? */
-          break;
-        default:
-          return FALSE;
-      }
-      break;
+  self = GST_FILESINK (GST_PAD_PARENT (pad));
+
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
-      switch (*format) {
+      gst_query_parse_position_query (query, &format);
+      switch (format) {
+        case GST_FORMAT_DEFAULT:
         case GST_FORMAT_BYTES:
-          *value = ftell (sink->file);
-          break;
+          gst_query_set_position (query, GST_FORMAT_BYTES,
+              self->data_written, self->data_written);
+          return TRUE;
         default:
           return FALSE;
       }
-      break;
-    default:
-      return FALSE;
-  }
 
-  return TRUE;
+    case GST_QUERY_FORMATS:
+      gst_query_set_formats (query, 2, GST_FORMAT_DEFAULT, GST_FORMAT_BYTES);
+      return TRUE;
+
+    default:
+      return gst_pad_query2_default (pad, query);
+  }
 }
 
 /* handle events (search) */

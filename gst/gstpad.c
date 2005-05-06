@@ -251,6 +251,8 @@ gst_real_pad_init (GstRealPad * pad)
   pad->queryfunc = gst_pad_query_default;
   pad->intlinkfunc = gst_pad_get_internal_links_default;
 
+  pad->query2func = gst_pad_query2_default;
+
   pad->eventmaskfunc = gst_pad_get_event_masks_default;
   pad->formatsfunc = gst_pad_get_formats_default;
   pad->querytypefunc = gst_pad_get_query_types_default;
@@ -984,6 +986,24 @@ gst_pad_set_query_function (GstPad * pad, GstPadQueryFunction query)
   GST_RPAD_QUERYFUNC (pad) = query;
 
   GST_CAT_DEBUG (GST_CAT_PADS, "queryfunc for %s:%s  set to %s",
+      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (query));
+}
+
+/**
+ * gst_pad_set_query2_function:
+ * @pad: a real #GstPad of either direction.
+ * @query: the #GstPadQueryFunction to set.
+ *
+ * Set the given query function for the pad.
+ */
+void
+gst_pad_set_query2_function (GstPad * pad, GstPadQuery2Function query)
+{
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
+
+  GST_RPAD_QUERY2FUNC (pad) = query;
+
+  GST_CAT_DEBUG (GST_CAT_PADS, "query2func for %s:%s  set to %s",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (query));
 }
 
@@ -3791,6 +3811,56 @@ gst_pad_query (GstPad * pad, GstQueryType type,
     return GST_RPAD_QUERYFUNC (rpad) (GST_PAD_CAST (rpad), type, format, value);
 
   return FALSE;
+}
+
+/**
+ * gst_pad_query2:
+ * @pad: a #GstPad to invoke the default query on.
+ * @query: the #GstQuery to perform.
+ *
+ * Dispatches a query to a pad. The query should have been allocated by the
+ * caller via one of the type-specific allocation functions in gstquery.h. The
+ * element is responsible for filling the query with an appropriate response,
+ * which should then be parsed with a type-specific query parsing function.
+ *
+ * Again, the caller is responsible for both the allocation and deallocation of
+ * the query structure.
+ *
+ * Returns: TRUE if the query could be performed.
+ */
+gboolean
+gst_pad_query2 (GstPad * pad, GstQuery * query)
+{
+  GstRealPad *rpad;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
+
+  rpad = GST_PAD_REALIZE (pad);
+
+  g_return_val_if_fail (rpad, FALSE);
+
+  if (GST_RPAD_QUERY2FUNC (rpad))
+    return GST_RPAD_QUERY2FUNC (rpad) (GST_PAD_CAST (rpad), query);
+
+  return FALSE;
+}
+
+gboolean
+gst_pad_query2_default (GstPad * pad, GstQuery * query)
+{
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+    case GST_QUERY_SEEKING:
+    case GST_QUERY_FORMATS:
+    case GST_QUERY_LATENCY:
+    case GST_QUERY_JITTER:
+    case GST_QUERY_RATE:
+    case GST_QUERY_CONVERT:
+    default:
+      return gst_pad_dispatcher
+          (pad, (GstPadDispatcherFunction) gst_pad_query2, query);
+  }
 }
 
 static gboolean

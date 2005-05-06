@@ -1,3 +1,47 @@
+2005-05-06  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstquery.h
+	* gst/gstquery.c (_gst_query_initialize): Extend GstQuery from
+	GstData, init a memchunk.
+	(standard_definitions): Add a few query types, deprecate a few.
+	(gst_query_get_type): New proc.
+	(_gst_query_copy, _gst_query_free, gst_query_new): GstData
+	implementation.
+	(gst_query_new_application, gst_query_get_structure): New public
+	procs.
+
+	* docs/design/draft-query.txt: Removed LINKS from the query types,
+	because all the rest can be dispatched to other pads -- seemed
+	ugly to have a query that couldn't be dispatched. internal_links
+	is fine as a pad method.
+
+	* gst/gstpad.h: Add query2 as a pad method, add the new functions
+	in gstpad.c, but maintain binary compatibility for the moment.
+	Will fix before 0.9 is out.
+
+	* gst/gstqueryutils.c: 
+	* gst/gstqueryutils.h: New files, implement 3 methods for each
+	query type: parse_query, parse_response, and set. Probably need an
+	allocator as well.
+
+	* gst/gst.h: Add gstquery.h and gstqueryutils.h to the list.
+
+	* gst/elements/gstfilesink.c (gst_filesink_query2):
+	* gst/base/gstbasesrc.c (gst_basesrc_query2): Replace old query,
+	query_types, and formats methods.
+
+	* gst/gstpad.c (gst_pad_query2, gst_pad_query2_default)
+	(gst_pad_set_query2_function): New functions.
+	(gst_real_pad_init): Set query2_default as the default query2
+	function. Basically just dispatches to internally linked pads.
+
+	Needs review!
+	
+	* gst/gstdata_private.h (_GST_DATA_INIT): Set data->refcount to 1
+	without using the atomic operations. Only one thread can possibly
+	be accessing the data at this point. Changed so as to avoid
+	gst_atomic operations.
+
 2005-05-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstpad.c: (gst_pad_alloc_buffer), (gst_pad_push):

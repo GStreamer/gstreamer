@@ -25,6 +25,12 @@
 
 #include "gst_private.h"
 #include "gstquery.h"
+#include "gstmemchunk.h"
+#include "gstdata_private.h"
+
+
+GType _gst_query_type;
+
 
 static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
 static GList *_gst_queries = NULL;
@@ -32,21 +38,28 @@ static GHashTable *_nick_to_query = NULL;
 static GHashTable *_query_type_to_nick = NULL;
 static guint32 _n_values = 1;   /* we start from 1 because 0 reserved for NONE */
 
+static GstMemChunk *chunk;
+
 static GstQueryTypeDefinition standard_definitions[] = {
-  {GST_QUERY_TOTAL, "total", "Total length"},
+  {GST_QUERY_TOTAL, "total", "Total length"},   /* deprecated */
   {GST_QUERY_POSITION, "position", "Current Position"},
   {GST_QUERY_LATENCY, "latency", "Latency"},
   {GST_QUERY_JITTER, "jitter", "Jitter"},
-  {GST_QUERY_START, "start", "Start position of stream"},
-  {GST_QUERY_SEGMENT_END, "segment_end", "End position of the stream"},
+  {GST_QUERY_START, "start", "Start position of stream"},       /* deprecated */
+  {GST_QUERY_SEGMENT_END, "segment_end", "End position of the stream"}, /* dep */
   {GST_QUERY_RATE, "rate", "Configured rate 1000000 = 1"},
+  {GST_QUERY_SEEKING, "seeking", "Seeking capabilities and parameters"},
+  {GST_QUERY_CONVERT, "convert", "Converting between formats"},
   {0, NULL, NULL}
 };
 
+
 void
-_gst_query_type_initialize (void)
+_gst_query_initialize (void)
 {
   GstQueryTypeDefinition *standards = standard_definitions;
+
+  GST_CAT_INFO (GST_CAT_GST_INIT, "init queries");
 
   g_static_mutex_lock (&mutex);
   if (_nick_to_query == NULL) {
@@ -64,6 +77,13 @@ _gst_query_type_initialize (void)
     _n_values++;
   }
   g_static_mutex_unlock (&mutex);
+
+  /* register the type */
+  _gst_query_type = g_boxed_type_register_static ("GstQuery",
+      (GBoxedCopyFunc) gst_data_copy, (GBoxedFreeFunc) gst_data_unref);
+
+  chunk = gst_mem_chunk_new ("GstQueryChunk", sizeof (GstQuery),
+      sizeof (GstQuery) * 20, 0);
 }
 
 /**
@@ -196,4 +216,87 @@ gst_query_type_iterate_definitions (void)
   g_static_mutex_unlock (&mutex);
 
   return result;
+}
+
+GType
+gst_query_get_type (void)
+{
+  return _gst_query_type;
+}
+
+static GstQuery *
+_gst_query_copy (GstQuery * query)
+{
+  GstQuery *copy;
+
+  GST_LOG ("copy query %p", query);
+
+  copy = gst_mem_chunk_alloc (chunk);
+
+  memcpy (copy, query, sizeof (GstQuery));
+
+  if (query->structure) {
+    copy->structure = gst_structure_copy (query->structure);
+    gst_structure_set_parent_refcount (copy->structure,
+        &GST_DATA_REFCOUNT (query));
+  }
+
+  return copy;
+}
+
+static void
+_gst_query_free (GstQuery * query)
+{
+  GST_LOG ("freeing query %p", query);
+
+  if (query->structure) {
+    gst_structure_set_parent_refcount (query->structure, NULL);
+    gst_structure_free (query->structure);
+  }
+
+  _GST_DATA_DISPOSE (GST_DATA (query));
+  gst_mem_chunk_free (chunk, query);
+}
+
+static GstQuery *
+gst_query_new (GstQueryType type, GstStructure * structure)
+{
+  GstQuery *query;
+
+  query = gst_mem_chunk_alloc0 (chunk);
+
+  GST_DEBUG ("creating new query %p %d", query, type);
+
+  _GST_DATA_INIT (GST_DATA (query),
+      _gst_query_type,
+      0,
+      (GstDataFreeFunction) _gst_query_free,
+      (GstDataCopyFunction) _gst_query_copy);
+
+  GST_QUERY_TYPE (query) = type;
+
+  if (structure) {
+    query->structure = structure;
+    gst_structure_set_parent_refcount (query->structure,
+        &GST_DATA_REFCOUNT (query));
+  }
+
+  return query;
+}
+
+GstQuery *
+gst_query_new_application (GstQueryType type, GstStructure * structure)
+{
+  g_return_val_if_fail (gst_query_type_get_details (type) != NULL, NULL);
+  g_return_val_if_fail (structure != NULL, NULL);
+
+  return gst_query_new (type, structure);
+}
+
+GstStructure *
+gst_query_get_structure (GstQuery * query)
+{
+  g_return_val_if_fail (GST_IS_QUERY (query), NULL);
+
+  return query->structure;
 }

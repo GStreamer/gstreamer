@@ -83,10 +83,6 @@ Proposed types
 
      - return list of supported formats.
 
- - GST_QUERY_LINKS:
-
-     - return list of internal link pads.
-
 Also????
 
  - GST_QUERY_CAPS:

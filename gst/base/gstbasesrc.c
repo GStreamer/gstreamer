@@ -88,11 +88,10 @@ static void gst_basesrc_set_property (GObject * object, guint prop_id,
 static void gst_basesrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static gboolean gst_basesrc_event_handler (GstPad * pad, GstEvent * event);
+
+static gboolean gst_basesrc_query2 (GstPad * pad, GstQuery * query);
+
 static const GstEventMask *gst_basesrc_get_event_mask (GstPad * pad);
-static const GstQueryType *gst_basesrc_get_query_types (GstPad * pad);
-static gboolean gst_basesrc_query (GstPad * pad, GstQueryType type,
-    GstFormat * format, gint64 * value);
-static const GstFormat *gst_basesrc_get_formats (GstPad * pad);
 
 static gboolean gst_basesrc_unlock (GstBaseSrc * basesrc);
 static gboolean gst_basesrc_get_size (GstBaseSrc * basesrc, guint64 * size);
@@ -160,10 +159,11 @@ gst_basesrc_init (GstBaseSrc * basesrc, gpointer g_class)
   gst_pad_set_activate_function (pad, gst_basesrc_activate);
   gst_pad_set_event_function (pad, gst_basesrc_event_handler);
   gst_pad_set_event_mask_function (pad, gst_basesrc_get_event_mask);
-  gst_pad_set_query_function (pad, gst_basesrc_query);
-  gst_pad_set_query_type_function (pad, gst_basesrc_get_query_types);
-  gst_pad_set_formats_function (pad, gst_basesrc_get_formats);
+
+  gst_pad_set_query2_function (pad, gst_basesrc_query2);
+
   gst_pad_set_checkgetrange_function (pad, gst_basesrc_check_get_range);
+
   /* hold ref to pad */
   basesrc->srcpad = pad;
   gst_element_add_pad (GST_ELEMENT (basesrc), pad);
@@ -192,84 +192,59 @@ gst_basesrc_set_dataflow_funcs (GstBaseSrc * this)
     gst_pad_set_getrange_function (this->srcpad, NULL);
 }
 
-static const GstFormat *
-gst_basesrc_get_formats (GstPad * pad)
-{
-  static const GstFormat formats[] = {
-    GST_FORMAT_DEFAULT,
-    GST_FORMAT_BYTES,
-    0,
-  };
-
-  return formats;
-}
-
-static const GstQueryType *
-gst_basesrc_get_query_types (GstPad * pad)
-{
-  static const GstQueryType types[] = {
-    GST_QUERY_TOTAL,
-    GST_QUERY_POSITION,
-    GST_QUERY_START,
-    GST_QUERY_SEGMENT_END,
-    0,
-  };
-
-  return types;
-}
-
 static gboolean
-gst_basesrc_query (GstPad * pad, GstQueryType type,
-    GstFormat * format, gint64 * value)
+gst_basesrc_query2 (GstPad * pad, GstQuery * query)
 {
-  GstBaseSrc *src = GST_BASESRC (GST_PAD_PARENT (pad));
+  gboolean b;
+  guint64 ui64;
+  gint64 i64;
+  GstBaseSrc *src;
 
-  if (*format == GST_FORMAT_DEFAULT)
-    *format = GST_FORMAT_BYTES;
+  src = GST_BASESRC (GST_PAD_PARENT (pad));
 
-  switch (type) {
-    case GST_QUERY_TOTAL:
-      switch (*format) {
-        case GST_FORMAT_BYTES:
-        {
-          gboolean ret;
-
-          ret = gst_basesrc_get_size (src, (guint64 *) value);
-          GST_DEBUG ("getting length %d %lld", ret, *value);
-          return ret;
-        }
-        case GST_FORMAT_PERCENT:
-          *value = GST_FORMAT_PERCENT_MAX;
-          return TRUE;
-        default:
-          return FALSE;
-      }
-      break;
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
-      switch (*format) {
+    {
+      GstFormat format;
+
+      gst_query_parse_position_query (query, &format);
+      switch (format) {
+        case GST_FORMAT_DEFAULT:
         case GST_FORMAT_BYTES:
-          *value = src->offset;
-          break;
+          b = gst_basesrc_get_size (src, &ui64);
+          /* better to make get_size take an int64 */
+          i64 = b ? (gint64) ui64 : -1;
+          gst_query_set_position (query, GST_FORMAT_BYTES, src->offset, i64);
+          return TRUE;
         case GST_FORMAT_PERCENT:
-          /* fixme */
-          if (!gst_basesrc_get_size (src, (guint64 *) value))
-            return FALSE;
-          *value = src->offset * GST_FORMAT_PERCENT_MAX / *value;
+          b = gst_basesrc_get_size (src, &ui64);
+          i64 = GST_FORMAT_PERCENT_MAX;
+          i64 *= b ? (src->offset / (gdouble) ui64) : 1.0;
+          gst_query_set_position (query, GST_FORMAT_PERCENT,
+              i64, GST_FORMAT_PERCENT_MAX);
           return TRUE;
         default:
           return FALSE;
       }
-      break;
-    case GST_QUERY_START:
-      *value = src->segment_start;
+    }
+
+    case GST_QUERY_SEEKING:
+      gst_query_set_seeking (query, GST_FORMAT_BYTES,
+          src->seekable, src->segment_start, src->segment_end);
       return TRUE;
-    case GST_QUERY_SEGMENT_END:
-      *value = src->segment_end;
+
+    case GST_QUERY_FORMATS:
+      gst_query_set_formats (query, 3, GST_FORMAT_DEFAULT,
+          GST_FORMAT_BYTES, GST_FORMAT_PERCENT);
       return TRUE;
+
+    case GST_QUERY_LATENCY:
+    case GST_QUERY_JITTER:
+    case GST_QUERY_RATE:
+    case GST_QUERY_CONVERT:
     default:
-      return FALSE;
+      return gst_pad_query2_default (pad, query);
   }
-  return FALSE;
 }
 
 static const GstEventMask *

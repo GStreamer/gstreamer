@@ -582,7 +582,7 @@ init_post (void)
   g_log_set_handler (g_log_domain_gstreamer, llf, debug_log_handler, NULL);
 
   _gst_format_initialize ();
-  _gst_query_type_initialize ();
+  _gst_query_initialize ();
   gst_object_get_type ();
   gst_probe_get_type ();
   gst_pad_get_type ();

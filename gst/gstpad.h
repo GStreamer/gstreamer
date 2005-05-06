@@ -141,7 +141,7 @@ typedef GstFlowReturn		(*GstPadGetRangeFunction)	(GstPad *pad, guint64 offset,
 typedef gboolean		(*GstPadCheckGetRangeFunction)	(GstPad *pad); 
 typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstEvent *event);
 
-/* convert/query/format functions */
+/* old, deprecated convert/query/format functions */
 typedef gboolean		(*GstPadConvertFunction)	(GstPad *pad,
 								 GstFormat src_format,  gint64  src_value,
 								 GstFormat *dest_format, gint64 *dest_value);
@@ -151,6 +151,9 @@ typedef GList*			(*GstPadIntLinkFunction)	(GstPad *pad);
 typedef const GstFormat*	(*GstPadFormatsFunction)	(GstPad *pad);
 typedef const GstEventMask*	(*GstPadEventMaskFunction)	(GstPad *pad);
 typedef const GstQueryType*	(*GstPadQueryTypeFunction)	(GstPad *pad);
+
+/* generic query function */
+typedef gboolean		(*GstPadQuery2Function)		(GstPad *pad, GstQuery *query);
 
 /* linking */
 typedef GstPadLinkReturn	(*GstPadLinkFunction) 		(GstPad *pad, GstPad *peer);
@@ -249,7 +252,7 @@ struct _GstRealPad {
   GList 			*ghostpads;
   guint32			 ghostpads_cookie;
 
-  /* query/convert/formats functions */
+  /* old, deprecated query/convert/formats functions */
   GstPadConvertFunction		 convertfunc;
   GstPadQueryFunction		 queryfunc;
   GstPadFormatsFunction		 formatsfunc;
@@ -260,8 +263,12 @@ struct _GstRealPad {
 
   GstProbeDispatcher		 probedisp;
 
+  /* generic query method */
+  GstPadQuery2Function		 query2func;
+  
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  /* fixme: bring back to gst_padding when old query functions go away */
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 struct _GstRealPadClass {
@@ -313,6 +320,7 @@ struct _GstGhostPadClass {
 #define GST_RPAD_FORMATSFUNC(pad)	(GST_REAL_PAD_CAST(pad)->formatsfunc)
 #define GST_RPAD_QUERYTYPEFUNC(pad)	(GST_REAL_PAD_CAST(pad)->querytypefunc)
 #define GST_RPAD_EVENTMASKFUNC(pad)	(GST_REAL_PAD_CAST(pad)->eventmaskfunc)
+#define GST_RPAD_QUERY2FUNC(pad)	(GST_REAL_PAD_CAST(pad)->query2func)
 
 #define GST_RPAD_PEER(pad)		(GST_REAL_PAD_CAST(pad)->peer)
 #define GST_RPAD_LINKFUNC(pad)		(GST_REAL_PAD_CAST(pad)->linkfunc)
@@ -565,6 +573,10 @@ gboolean		gst_pad_query_default			(GstPad *pad, GstQueryType type,
 void			gst_pad_set_internal_link_function	(GstPad *pad, GstPadIntLinkFunction intlink);
 GList*			gst_pad_get_internal_links		(GstPad *pad);
 GList*			gst_pad_get_internal_links_default	(GstPad *pad);
+
+gboolean		gst_pad_query2				(GstPad *pad, GstQuery *query);
+void			gst_pad_set_query2_function		(GstPad *pad, GstPadQuery2Function query);
+gboolean		gst_pad_query2_default			(GstPad *pad, GstQuery *query);
 
 /* misc helper functions */
 gboolean		gst_pad_dispatcher			(GstPad *pad, GstPadDispatcherFunction dispatch,

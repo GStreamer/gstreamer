@@ -48,6 +48,8 @@
 #include <gst/gstpad.h>
 #include <gst/gstpipeline.h>
 #include <gst/gstplugin.h>
+#include <gst/gstquery.h>
+#include <gst/gstqueryutils.h>
 #include <gst/gstscheduler.h>
 #include <gst/gststructure.h>
 #include <gst/gstsystemclock.h>
