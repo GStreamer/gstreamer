@@ -1,9 +1,9 @@
 
 plugin_LTLIBRARIES = libgstvideofilter.la libgstvideoflip.la \
-	libgstvideobalance.la libgstgamma.la
+	libgstgamma.la
 noinst_LTLIBRARIES = libgstvideoexample.la
 
-noinst_HEADERS = gstvideofilter.h gstvideoflip.h gstvideobalance.h
+noinst_HEADERS = gstvideofilter.h gstvideoflip.h
 
 EXTRA_DIST = gstvideotemplate.c make_filter
 CLEANFILES = gstvideoexample.c
@@ -23,10 +23,10 @@ libgstvideoflip_la_CFLAGS = $(GST_CFLAGS)
 libgstvideoflip_la_LIBADD =
 libgstvideoflip_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-libgstvideobalance_la_SOURCES = gstvideobalance.c
-libgstvideobalance_la_CFLAGS = $(GST_CFLAGS) $(LIBOIL_CFLAGS)
-libgstvideobalance_la_LIBADD = $(top_builddir)/gst-libs/gst/libgstinterfaces-$(GST_MAJORMINOR).la
-libgstvideobalance_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(LIBOIL_LIBS) -lm
+# libgstvideobalance_la_SOURCES = gstvideobalance.c
+# libgstvideobalance_la_CFLAGS = $(GST_CFLAGS) $(LIBOIL_CFLAGS)
+# libgstvideobalance_la_LIBADD = $(top_builddir)/gst-libs/gst/libgstinterfaces-$(GST_MAJORMINOR).la
+# libgstvideobalance_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(LIBOIL_LIBS) -lm
 
 libgstgamma_la_SOURCES = gstgamma.c
 libgstgamma_la_CFLAGS = $(GST_CFLAGS)

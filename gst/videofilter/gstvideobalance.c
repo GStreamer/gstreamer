@@ -198,6 +198,9 @@ gst_videobalance_class_init (gpointer g_class, gpointer class_data)
 
   parent_class = g_type_class_ref (GST_TYPE_VIDEOFILTER);
 
+  gobject_class->set_property = gst_videobalance_set_property;
+  gobject_class->get_property = gst_videobalance_get_property;
+
   g_object_class_install_property (gobject_class, ARG_CONTRAST,
       g_param_spec_double ("contrast", "Contrast", "contrast",
           0, 2, 1, G_PARAM_READWRITE));
@@ -210,8 +213,6 @@ gst_videobalance_class_init (gpointer g_class, gpointer class_data)
       g_param_spec_double ("saturation", "Saturation", "saturation",
           0, 2, 1, G_PARAM_READWRITE));
 
-  gobject_class->set_property = gst_videobalance_set_property;
-  gobject_class->get_property = gst_videobalance_get_property;
   gobject_class->dispose = gst_videobalance_dispose;
 
   videofilter_class->setup = gst_videobalance_setup;

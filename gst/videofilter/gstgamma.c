@@ -164,6 +164,9 @@ gst_gamma_class_init (gpointer g_class, gpointer class_data)
   gobject_class = G_OBJECT_CLASS (g_class);
   videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
 
+  gobject_class->set_property = gst_gamma_set_property;
+  gobject_class->get_property = gst_gamma_get_property;
+
   g_object_class_install_property (gobject_class, ARG_GAMMA,
       g_param_spec_double ("gamma", "Gamma", "gamma",
           0.01, 10, 1, G_PARAM_READWRITE));
@@ -176,9 +179,6 @@ gst_gamma_class_init (gpointer g_class, gpointer class_data)
   g_object_class_install_property (gobject_class, ARG_GAMMA_B,
       g_param_spec_double ("bluegamma", "Gamma_b",
           "gamma value for the blue channel", 0.01, 10, 1, G_PARAM_READWRITE));
-
-  gobject_class->set_property = gst_gamma_set_property;
-  gobject_class->get_property = gst_gamma_get_property;
 
   videofilter_class->setup = gst_gamma_setup;
 }

@@ -51,7 +51,7 @@ static void gst_videofilter_set_property (GObject * object, guint prop_id,
 static void gst_videofilter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void gst_videofilter_chain (GstPad * pad, GstData * _data);
+static GstFlowReturn gst_videofilter_chain (GstPad * pad, GstBuffer * buffer);
 GstCaps *gst_videofilter_class_get_capslist (GstVideofilterClass * klass);
 static void gst_videofilter_setup (GstVideofilter * videofilter);
 
@@ -172,70 +172,56 @@ gst_videofilter_getcaps (GstPad * pad)
 {
   GstVideofilter *videofilter;
   GstVideofilterClass *klass;
-
-  //GstCaps *caps;
-  GstCaps *othercaps;
-  GstPad *otherpad;
-
-  //int i;
+  GstCaps *caps;
+  GstPad *peer;
+  int i;
 
   GST_DEBUG ("gst_videofilter_getcaps");
-  videofilter = GST_VIDEOFILTER (gst_pad_get_parent (pad));
+  videofilter = GST_VIDEOFILTER (GST_PAD_PARENT (pad));
 
   klass = GST_VIDEOFILTER_CLASS (G_OBJECT_GET_CLASS (videofilter));
 
-  otherpad = (pad == videofilter->srcpad) ? videofilter->sinkpad :
-      videofilter->srcpad;
-
-  othercaps = gst_pad_get_allowed_caps (otherpad);
-
-  return othercaps;
-#if 0
-  /* FIXME videofilter doesn't allow passthru of video formats it
-   * doesn't understand. */
-  /* Look through our list of caps and find those that match with
-   * the peer's formats.  Create a list of them. */
-  /* FIXME optimize if peercaps == NULL */
+  /* we can handle anything that was registered */
   caps = gst_caps_new_empty ();
   for (i = 0; i < klass->formats->len; i++) {
-    GstCaps *icaps;
     GstCaps *fromcaps;
 
     fromcaps =
         gst_caps_new_full (gst_videofilter_format_get_structure
         (g_ptr_array_index (klass->formats, i)), NULL);
 
-    icaps = gst_caps_intersect (fromcaps, peercaps);
-    if (icaps != NULL) {
-      gst_caps_append (caps, fromcaps);
-    } else {
-      gst_caps_free (fromcaps);
-    }
-    if (icaps)
-      gst_caps_free (icaps);
+    gst_caps_append (caps, fromcaps);
   }
-  gst_caps_free (peercaps);
+
+  peer = gst_pad_get_peer (pad);
+  if (peer) {
+    GstCaps *peercaps;
+
+    peercaps = gst_pad_get_caps (peer);
+    if (peercaps) {
+      GstCaps *icaps;
+
+      icaps = gst_caps_intersect (peercaps, caps);
+      gst_caps_unref (peercaps);
+      gst_caps_unref (caps);
+      caps = icaps;
+    }
+    //gst_object_unref (peer);
+  }
 
   return caps;
-#endif
 }
 
-static GstPadLinkReturn
-gst_videofilter_link (GstPad * pad, const GstCaps * caps)
+static gboolean
+gst_videofilter_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstVideofilter *videofilter;
   GstStructure *structure;
-  gboolean ret;
   int width, height;
   double framerate;
-  GstPadLinkReturn lret;
-  GstPad *otherpad;
+  int ret;
 
-  GST_DEBUG ("gst_videofilter_src_link");
-  videofilter = GST_VIDEOFILTER (gst_pad_get_parent (pad));
-
-  otherpad = (pad == videofilter->srcpad) ? videofilter->sinkpad :
-      videofilter->srcpad;
+  videofilter = GST_VIDEOFILTER (GST_PAD_PARENT (pad));
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -248,11 +234,9 @@ gst_videofilter_link (GstPad * pad, const GstCaps * caps)
   ret &= gst_structure_get_double (structure, "framerate", &framerate);
 
   if (!ret)
-    return GST_PAD_LINK_REFUSED;
+    return FALSE;
 
-  lret = gst_pad_try_set_caps (otherpad, caps);
-  if (GST_PAD_LINK_FAILED (lret))
-    return lret;
+  gst_pad_set_caps (videofilter->srcpad, caps);
 
   GST_DEBUG ("width %d height %d", width, height);
 
@@ -273,7 +257,7 @@ gst_videofilter_link (GstPad * pad, const GstCaps * caps)
 
   gst_videofilter_setup (videofilter);
 
-  return GST_PAD_LINK_OK;
+  return TRUE;
 }
 
 static void
@@ -290,7 +274,7 @@ gst_videofilter_init (GTypeInstance * instance, gpointer g_class)
   videofilter->sinkpad = gst_pad_new_from_template (pad_template, "sink");
   gst_element_add_pad (GST_ELEMENT (videofilter), videofilter->sinkpad);
   gst_pad_set_chain_function (videofilter->sinkpad, gst_videofilter_chain);
-  gst_pad_set_link_function (videofilter->sinkpad, gst_videofilter_link);
+  gst_pad_set_setcaps_function (videofilter->sinkpad, gst_videofilter_setcaps);
   gst_pad_set_getcaps_function (videofilter->sinkpad, gst_videofilter_getcaps);
 
   pad_template =
@@ -298,16 +282,14 @@ gst_videofilter_init (GTypeInstance * instance, gpointer g_class)
   g_return_if_fail (pad_template != NULL);
   videofilter->srcpad = gst_pad_new_from_template (pad_template, "src");
   gst_element_add_pad (GST_ELEMENT (videofilter), videofilter->srcpad);
-  gst_pad_set_link_function (videofilter->srcpad, gst_videofilter_link);
   gst_pad_set_getcaps_function (videofilter->srcpad, gst_videofilter_getcaps);
 
   videofilter->inited = FALSE;
 }
 
-static void
-gst_videofilter_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_videofilter_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
   GstVideofilter *videofilter;
   guchar *data;
   gulong size;
@@ -315,19 +297,21 @@ gst_videofilter_chain (GstPad * pad, GstData * _data)
 
   GST_DEBUG ("gst_videofilter_chain");
 
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
+  g_return_val_if_fail (pad != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
 
-  videofilter = GST_VIDEOFILTER (gst_pad_get_parent (pad));
-  //g_return_if_fail (videofilter->inited);
+  videofilter = GST_VIDEOFILTER (GST_PAD_PARENT (pad));
 
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
 
   if (videofilter->passthru) {
-    gst_pad_push (videofilter->srcpad, GST_DATA (buf));
-    return;
+    return gst_pad_push (videofilter->srcpad, buf);
+  }
+
+  if (GST_PAD_CAPS (pad) == NULL) {
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 
   GST_DEBUG ("gst_videofilter_chain: got buffer of %ld bytes in '%s'", size,
@@ -339,19 +323,19 @@ gst_videofilter_chain (GstPad * pad, GstData * _data)
       videofilter->to_width, videofilter->to_height, size,
       videofilter->from_buf_size, videofilter->to_buf_size);
 
-  g_return_if_fail (size >= videofilter->from_buf_size);
 
   if (size > videofilter->from_buf_size) {
     GST_INFO ("buffer size %ld larger than expected (%d)",
         size, videofilter->from_buf_size);
+    return GST_FLOW_ERROR;
   }
 
   outbuf = gst_pad_alloc_buffer (videofilter->srcpad, GST_BUFFER_OFFSET_NONE,
-      videofilter->to_buf_size);
+      videofilter->to_buf_size, GST_RPAD_CAPS (videofilter->srcpad));
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
 
-  g_return_if_fail (videofilter->format);
+  g_return_val_if_fail (videofilter->format, GST_FLOW_ERROR);
   GST_DEBUG ("format %s", videofilter->format->fourcc);
 
   videofilter->in_buf = buf;
@@ -363,9 +347,11 @@ gst_videofilter_chain (GstPad * pad, GstData * _data)
   GST_DEBUG ("gst_videofilter_chain: pushing buffer of %d bytes in '%s'",
       GST_BUFFER_SIZE (outbuf), GST_OBJECT_NAME (videofilter));
 
-  gst_pad_push (videofilter->srcpad, GST_DATA (outbuf));
+  gst_pad_push (videofilter->srcpad, outbuf);
 
   gst_buffer_unref (buf);
+
+  return GST_FLOW_OK;
 }
 
 static void
@@ -422,7 +408,6 @@ void
 gst_videofilter_set_output_size (GstVideofilter * videofilter,
     int width, int height)
 {
-  int ret;
   GstCaps *srccaps;
   GstStructure *structure;
 
@@ -434,17 +419,14 @@ gst_videofilter_set_output_size (GstVideofilter * videofilter,
   videofilter->to_buf_size = (videofilter->to_width * videofilter->to_height
       * videofilter->format->bpp) / 8;
 
-  srccaps = gst_caps_copy (gst_pad_get_negotiated_caps (videofilter->srcpad));
+  //srccaps = gst_caps_copy (gst_pad_get_negotiated_caps (videofilter->srcpad));
+  srccaps = gst_caps_copy (GST_PAD_CAPS (videofilter->srcpad));
   structure = gst_caps_get_structure (srccaps, 0);
 
   gst_structure_set (structure, "width", G_TYPE_INT, width,
       "height", G_TYPE_INT, height, NULL);
 
-  ret = gst_pad_try_set_caps (videofilter->srcpad, srccaps);
-
-  if (ret < 0) {
-    g_critical ("could not set output size");
-  }
+  gst_pad_set_caps (videofilter->srcpad, srccaps);
 }
 
 static void
