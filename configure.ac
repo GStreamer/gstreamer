@@ -294,7 +294,8 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
 		effectv \
-		law"
+		law \
+		videofilter"
 
 dnl see if we can build C++ plug-ins
 if test "x$HAVE_CXX" = "xyes"; then
@@ -426,6 +427,7 @@ gst-plugins.spec
 gst/Makefile
 gst/effectv/Makefile
 gst/law/Makefile
+gst/videofilter/Makefile
 sys/Makefile
 ext/Makefile
 ext/mad/Makefile
