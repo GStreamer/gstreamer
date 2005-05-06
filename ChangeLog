@@ -1,3 +1,8 @@
+2005-05-06  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* configure.ac:
+	fix typo
+
 2005-05-05  Christian Schaller <uraeus@gnome.org>
 
 	* Update configure.ac and Makefiles to only build what is actually
