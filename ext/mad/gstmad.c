@@ -165,7 +165,8 @@ static gboolean gst_mad_convert_sink (GstPad * pad, GstFormat src_format,
 static gboolean gst_mad_convert_src (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 
-static void gst_mad_chain (GstPad * pad, GstData * _data);
+static gboolean gst_mad_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_mad_chain (GstPad * pad, GstBuffer * buffer);
 
 static GstElementStateReturn gst_mad_change_state (GstElement * element);
 
@@ -324,6 +325,8 @@ gst_mad_init (GstMad * mad)
       (&mad_sink_template_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (mad), mad->sinkpad);
   gst_pad_set_chain_function (mad->sinkpad, GST_DEBUG_FUNCPTR (gst_mad_chain));
+  gst_pad_set_event_function (mad->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_mad_sink_event));
   gst_pad_set_convert_function (mad->sinkpad,
       GST_DEBUG_FUNCPTR (gst_mad_convert_sink));
   gst_pad_set_formats_function (mad->sinkpad,
@@ -345,7 +348,6 @@ gst_mad_init (GstMad * mad)
       GST_DEBUG_FUNCPTR (gst_mad_convert_src));
   gst_pad_set_formats_function (mad->srcpad,
       GST_DEBUG_FUNCPTR (gst_mad_get_formats));
-  gst_pad_use_explicit_caps (mad->srcpad);
 
   mad->tempbuffer = g_malloc (MAD_BUFFER_MDLEN * 3);
   mad->tempsize = 0;
@@ -365,7 +367,6 @@ gst_mad_init (GstMad * mad)
   mad->half = FALSE;
   mad->ignore_crc = TRUE;
   mad->check_for_xing = TRUE;
-  GST_FLAG_SET (mad, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void
@@ -435,7 +436,7 @@ gst_mad_convert_sink (GstPad * pad, GstFormat src_format, gint64 src_value,
   gboolean res = TRUE;
   GstMad *mad;
 
-  mad = GST_MAD (gst_pad_get_parent (pad));
+  mad = GST_MAD (GST_PAD_PARENT (pad));
 
   if (mad->vbr_average == 0)
     return FALSE;
@@ -476,7 +477,7 @@ gst_mad_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
   gint bytes_per_sample;
   GstMad *mad;
 
-  mad = GST_MAD (gst_pad_get_parent (pad));
+  mad = GST_MAD (GST_PAD_PARENT (pad));
 
   bytes_per_sample = MAD_NCHANNELS (&mad->frame.header) << 1;
 
@@ -553,7 +554,7 @@ gst_mad_src_query (GstPad * pad, GstQueryType type,
   gboolean res = TRUE;
   GstMad *mad;
 
-  mad = GST_MAD (gst_pad_get_parent (pad));
+  mad = GST_MAD (GST_PAD_PARENT (pad));
 
   switch (type) {
     case GST_QUERY_TOTAL:
@@ -739,30 +740,15 @@ gst_mad_src_event (GstPad * pad, GstEvent * event)
   gboolean res = TRUE;
   GstMad *mad;
 
-  mad = GST_MAD (gst_pad_get_parent (pad));
+  mad = GST_MAD (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEEK_SEGMENT:
-      GST_DEBUG ("forwarding seek event to sink pad");
-      gst_event_ref (event);
-      if (gst_pad_send_event (GST_PAD_PEER (mad->sinkpad), event)) {
-        /* seek worked, we're done, loop will exit */
-        res = TRUE;
-      }
-      break;
       /* the all-formats seek logic */
     case GST_EVENT_SEEK:
-      GST_DEBUG ("forwarding seek event to sink pad");
-      gst_event_ref (event);
-      if (gst_pad_send_event (GST_PAD_PEER (mad->sinkpad), event)) {
-        /* seek worked, we're done, loop will exit */
-        res = TRUE;
-      } else {
-        if (mad->index)
-          res = index_seek (mad, pad, event);
-        else
-          res = normal_seek (mad, pad, event);
-      }
+      if (mad->index)
+        res = index_seek (mad, pad, event);
+      else
+        res = normal_seek (mad, pad, event);
       break;
 
     default:
@@ -887,18 +873,17 @@ G_STMT_START{							\
         GST_TAG_LAYER, mad->header.layer,
         GST_TAG_MODE, mode->value_nick,
         GST_TAG_EMPHASIS, emphasis->value_nick, NULL);
-    gst_element_found_tags (GST_ELEMENT (mad), list);
-    gst_tag_list_free (list);
+    gst_element_post_message (GST_ELEMENT (mad),
+        gst_message_new_tag (GST_OBJECT (mad), list));
   }
 #undef CHECK_HEADER
 
 }
 
-static void
-gst_mad_handle_event (GstPad * pad, GstBuffer * buffer)
+static gboolean
+gst_mad_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstEvent *event = GST_EVENT (buffer);
-  GstMad *mad = GST_MAD (gst_pad_get_parent (pad));
+  GstMad *mad = GST_MAD (GST_PAD_PARENT (pad));
 
   GST_DEBUG ("handling event %d", GST_EVENT_TYPE (event));
   switch (GST_EVENT_TYPE (event)) {
@@ -916,7 +901,9 @@ gst_mad_handle_event (GstPad * pad, GstBuffer * buffer)
 
         if (gst_formats_contains (formats, GST_EVENT_DISCONT_OFFSET (event,
                     i).format)) {
-          gint64 value = GST_EVENT_DISCONT_OFFSET (event, i).value;
+          gint64 start_value = GST_EVENT_DISCONT_OFFSET (event, i).start_value;
+
+          //gint64 end_value = GST_EVENT_DISCONT_OFFSET (event, i).end_value;
           gint64 time;
           GstFormat format;
           GstEvent *discont;
@@ -926,11 +913,11 @@ gst_mad_handle_event (GstPad * pad, GstBuffer * buffer)
             format = GST_FORMAT_TIME;
             if (!gst_pad_convert (pad,
                     GST_EVENT_DISCONT_OFFSET (event, i).format,
-                    value, &format, &time)) {
+                    start_value, &format, &time)) {
               continue;
             }
           } else {
-            time = value;
+            time = start_value;
           }
 
           /* for now, this is the best we can do to get the total number
@@ -946,7 +933,7 @@ gst_mad_handle_event (GstPad * pad, GstBuffer * buffer)
           if (GST_PAD_IS_USABLE (mad->srcpad)) {
             discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
                 time, NULL);
-            gst_pad_push (mad->srcpad, GST_DATA (discont));
+            gst_pad_push_event (mad->srcpad, discont);
           }
           gst_event_unref (event);
           goto done;
@@ -969,6 +956,7 @@ gst_mad_handle_event (GstPad * pad, GstBuffer * buffer)
       gst_pad_event_default (pad, event);
       break;
   }
+  return TRUE;
 }
 
 static gboolean
@@ -1133,7 +1121,7 @@ mpg123_parse_xing_header (struct mad_header *header,
 
 /* internal function to check if the header has changed and thus the
  * caps need to be reset.  Only call during normal mode, not resyncing */
-static gboolean
+static void
 gst_mad_check_caps_reset (GstMad * mad)
 {
   guint nchannels;
@@ -1146,12 +1134,6 @@ gst_mad_check_caps_reset (GstMad * mad)
 #else
   rate = mad->frame.header.samplerate;
 #endif
-  if (mad->stream.options & MAD_OPTION_HALFSAMPLERATE) {
-    GST_INFO_OBJECT (mad,
-        "MAD_OPTION_HALFSAMPLERATE is set, adapting rate from %u to %u", rate,
-        rate >> 1);
-    rate >>= 1;
-  }
 
   /* rate and channels are not supposed to change in a continuous stream,
    * so check this first before doing anything */
@@ -1170,16 +1152,19 @@ gst_mad_check_caps_reset (GstMad * mad)
         mad->pending_channels = nchannels;
         mad->pending_rate = rate;
       }
-      /* Now, we already have a valid caps set and will continue to use
-       * that for a while longer, so we cans afely return TRUE here. */
       if (++mad->times_pending < 3)
-        return TRUE;
+        return;
     }
   }
   gst_mad_update_info (mad);
 
   if (mad->channels != nchannels || mad->rate != rate) {
     GstCaps *caps;
+
+    if (mad->stream.options & MAD_OPTION_HALFSAMPLERATE)
+      rate >>= 1;
+
+    /* FIXME see if peer can accept the caps */
 
     /* we set the caps even when the pad is not connected so they
      * can be gotten for streaminfo */
@@ -1190,39 +1175,27 @@ gst_mad_check_caps_reset (GstMad * mad)
         "depth", G_TYPE_INT, 16,
         "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, nchannels, NULL);
 
-    if (gst_pad_set_explicit_caps (mad->srcpad, caps)) {
-      mad->caps_set = TRUE;     /* set back to FALSE on discont */
-      mad->channels = nchannels;
-      mad->rate = rate;
-    } else {
-      GST_ELEMENT_ERROR (mad, CORE, NEGOTIATION, (NULL),
-          ("Failed to negotiate %d Hz, %d channels", rate, nchannels));
-      return FALSE;
-    }
-    gst_caps_free (caps);
+    gst_pad_set_caps (mad->srcpad, caps);
+    mad->caps_set = TRUE;       /* set back to FALSE on discont */
+    mad->channels = nchannels;
+    mad->rate = rate;
   }
-
-  return TRUE;
 }
 
-static void
-gst_mad_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_mad_chain (GstPad * pad, GstBuffer * buffer)
 {
-  GstBuffer *buffer = GST_BUFFER (_data);
   GstMad *mad;
   gchar *data;
   glong size;
   gboolean new_pts = FALSE;
   GstClockTime timestamp;
+  GstFlowReturn result = GST_FLOW_OK;
 
-  mad = GST_MAD (gst_pad_get_parent (pad));
-  g_return_if_fail (GST_IS_MAD (mad));
+  mad = GST_MAD (GST_PAD_PARENT (pad));
+  g_return_val_if_fail (GST_IS_MAD (mad), GST_FLOW_ERROR);
 
-  /* handle events */
-  if (GST_IS_EVENT (buffer)) {
-    gst_mad_handle_event (pad, buffer);
-    return;
-  }
+  GST_STREAM_LOCK (pad);
 
   /* restarts happen on discontinuities, ie. seek, flush, PAUSED to PLAYING */
   if (gst_mad_check_restart (mad))
@@ -1266,7 +1239,8 @@ gst_mad_chain (GstPad * pad, GstData * _data)
       GST_ELEMENT_ERROR (mad, STREAM, DECODE, (NULL),
           ("mad claims to need more data than %u bytes, we don't have that much",
               MAD_BUFFER_MDLEN * 3));
-      return;
+      result = GST_FLOW_ERROR;
+      goto end;
     }
 
     /* append the chunk to process to our internal temporary buffer */
@@ -1287,7 +1261,7 @@ gst_mad_chain (GstPad * pad, GstData * _data)
       guint nsamples;
       guint64 time_offset;
       guint64 time_duration;
-      gboolean resync = TRUE;
+      unsigned char const *before_sync, *after_sync;
 
       mad->in_error = FALSE;
 
@@ -1295,6 +1269,12 @@ gst_mad_chain (GstPad * pad, GstData * _data)
 
       /* added separate header decoding to catch errors earlier, also fixes
        * some weird decoding errors... */
+      GST_LOG ("decoding the header now");
+      if (mad_header_decode (&mad->frame.header, &mad->stream) == -1) {
+        GST_DEBUG ("mad_frame_decode had an error: %s",
+            mad_stream_errorstr (&mad->stream));
+      }
+
       GST_LOG ("decoding one frame now");
 
       if (mad_frame_decode (&mad->frame, &mad->stream) == -1) {
@@ -1317,7 +1297,8 @@ gst_mad_chain (GstPad * pad, GstData * _data)
             mad_stream_errorstr (&mad->stream));
         if (!MAD_RECOVERABLE (mad->stream.error)) {
           GST_ELEMENT_ERROR (mad, STREAM, DECODE, (NULL), (NULL));
-          return;
+          result = GST_FLOW_ERROR;
+          goto end;
         } else if (mad->stream.error == MAD_ERROR_LOSTSYNC) {
           /* lost sync, force a resync */
           signed long tagsize;
@@ -1341,9 +1322,6 @@ gst_mad_chain (GstPad * pad, GstData * _data)
              * id3 tags, so we need to flush one byte less than the tagsize */
             mad_stream_skip (&mad->stream, tagsize - 1);
 
-            /* When we skip, we don't want to call sync */
-            resync = FALSE;
-
             tag = id3_tag_parse (data, tagsize);
             if (tag) {
               GstTagList *list;
@@ -1351,47 +1329,39 @@ gst_mad_chain (GstPad * pad, GstData * _data)
               list = gst_mad_id3_to_tag_list (tag);
               id3_tag_delete (tag);
               GST_DEBUG ("found tag");
-              gst_element_found_tags (GST_ELEMENT (mad), list);
+              gst_element_post_message (GST_ELEMENT (mad),
+                  gst_message_new_tag (GST_OBJECT (mad),
+                      gst_tag_list_copy (list)));
               if (mad->tags) {
                 gst_tag_list_insert (mad->tags, list, GST_TAG_MERGE_PREPEND);
               } else {
                 mad->tags = gst_tag_list_copy (list);
               }
               if (GST_PAD_IS_USABLE (mad->srcpad)) {
-                gst_pad_push (mad->srcpad, GST_DATA (gst_event_new_tag (list)));
+                gst_pad_push_event (mad->srcpad, gst_event_new_tag (list));
               } else {
                 gst_tag_list_free (list);
               }
             }
           }
         }
-        //Should not sync here if mad_skip has been used before, the offset
-        //is "pending" inside mad and will be applied on next call to decode.
-        if (resync) {
-          unsigned char const *before_sync, *after_sync;
 
-          before_sync = mad->stream.ptr.byte;
-          if (mad_stream_sync (&mad->stream) != 0) {
-            consumed = MAD_BUFFER_GUARD < mad->tempsize ?
-                mad->tempsize - MAD_BUFFER_GUARD : 0;
-            GST_DEBUG_OBJECT (mad,
-                "mad_stream_sync failed, skipping all %u bytes we have",
-                consumed);
-          } else {
-            after_sync = mad->stream.ptr.byte;
-            /* a succesful resync should make us drop bytes as consumed, so
-               calculate from the byte pointers before and after resync */
-            consumed = after_sync - before_sync;
-            GST_DEBUG_OBJECT (mad, "resynchronization consumes %d bytes",
-                consumed);
-            GST_DEBUG_OBJECT (mad, "synced to data: 0x%0x 0x%0x",
-                *mad->stream.ptr.byte, *(mad->stream.ptr.byte + 1));
+        mad_frame_mute (&mad->frame);
+        mad_synth_mute (&mad->synth);
+        before_sync = mad->stream.ptr.byte;
+        if (mad_stream_sync (&mad->stream) != 0)
+          GST_WARNING ("mad_stream_sync failed");
+        after_sync = mad->stream.ptr.byte;
+        /* a succesful resync should make us drop bytes as consumed, so
+           calculate from the byte pointers before and after resync */
+        consumed = after_sync - before_sync;
+        GST_DEBUG ("resynchronization consumes %d bytes", consumed);
+        GST_DEBUG ("synced to data: 0x%0x 0x%0x", *mad->stream.ptr.byte,
+            *(mad->stream.ptr.byte + 1));
 
-            /* recoverable errors pass */
-          }
-          resync = FALSE;
-        }
 
+        mad_stream_sync (&mad->stream);
+        /* recoverable errors pass */
         goto next;
       }
 
@@ -1407,9 +1377,10 @@ gst_mad_chain (GstPad * pad, GstData * _data)
           gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
               GST_TAG_DURATION, (gint64) time * 1000 * 1000 * 1000,
               GST_TAG_BITRATE, bitrate, NULL);
-          gst_element_found_tags (GST_ELEMENT (mad), list);
+          gst_element_post_message (GST_ELEMENT (mad),
+              gst_message_new_tag (GST_OBJECT (mad), gst_tag_list_copy (list)));
           if (GST_PAD_IS_USABLE (mad->srcpad)) {
-            gst_pad_push (mad->srcpad, GST_DATA (gst_event_new_tag (list)));
+            gst_pad_push_event (mad->srcpad, gst_event_new_tag (list));
           } else {
             gst_tag_list_free (list);
           }
@@ -1420,10 +1391,8 @@ gst_mad_chain (GstPad * pad, GstData * _data)
       }
 
       /* if we're not resyncing/in error, check if caps need to be set again */
-      if (!mad->in_error) {
-        if (!gst_mad_check_caps_reset (mad))
-          goto end;
-      }
+      if (!mad->in_error)
+        gst_mad_check_caps_reset (mad);
       nsamples = MAD_NSBSAMPLES (&mad->frame.header) *
           (mad->stream.options & MAD_OPTION_HALFSAMPLERATE ? 16 : 32);
 
@@ -1441,9 +1410,8 @@ gst_mad_chain (GstPad * pad, GstData * _data)
               &mad->total_samples);
           mad->last_ts = GST_CLOCK_TIME_NONE;
         }
-        time_offset =
-            mad->total_samples * GST_SECOND / mad->frame.header.samplerate;
-        time_duration = (nsamples * GST_SECOND / mad->frame.header.samplerate);
+        time_offset = mad->total_samples * GST_SECOND / mad->rate;
+        time_duration = (nsamples * GST_SECOND / mad->rate);
       }
 
       if (mad->index) {
@@ -1468,7 +1436,10 @@ gst_mad_chain (GstPad * pad, GstData * _data)
         left_ch = mad->synth.pcm.samples[0];
         right_ch = mad->synth.pcm.samples[1];
 
-        outbuffer = gst_buffer_new_and_alloc (nsamples * mad->channels * 2);
+        /* will attach the caps to the buffer */
+        outbuffer =
+            gst_pad_alloc_buffer (mad->srcpad, 0, nsamples * mad->channels * 2,
+            GST_PAD_CAPS (mad->srcpad));
         outdata = (gint16 *) GST_BUFFER_DATA (outbuffer);
 
         GST_BUFFER_TIMESTAMP (outbuffer) = time_offset;
@@ -1491,7 +1462,10 @@ gst_mad_chain (GstPad * pad, GstData * _data)
           }
         }
 
-        gst_pad_push (mad->srcpad, GST_DATA (outbuffer));
+        result = gst_pad_push (mad->srcpad, outbuffer);
+        if (result != GST_FLOW_OK) {
+          goto end;
+        }
       }
 
       mad->total_samples += nsamples;
@@ -1517,21 +1491,22 @@ gst_mad_chain (GstPad * pad, GstData * _data)
       if (consumed == 0)
         consumed = mad->stream.next_frame - mad_input_buffer;
 
-      if (mad->stream.skiplen > consumed)
-        consumed = mad->stream.skiplen;
       GST_LOG ("mad consumed %d bytes", consumed);
       /* move out pointer to where mad want the next data */
       mad_input_buffer += consumed;
       mad->tempsize -= consumed;
       mad->bytes_consumed += consumed;
-      mad->stream.skiplen = 0;
     }
     /* we only get here from breaks, tempsize never actually drops below 0 */
     memmove (mad->tempbuffer, mad_input_buffer, mad->tempsize);
   }
+  result = GST_FLOW_OK;
 
 end:
+  GST_STREAM_UNLOCK (pad);
   gst_buffer_unref (buffer);
+
+  return result;
 }
 
 static GstElementStateReturn
@@ -1577,6 +1552,7 @@ gst_mad_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
+      GST_STREAM_LOCK (mad->sinkpad);
       mad_synth_finish (&mad->synth);
       mad_frame_finish (&mad->frame);
       mad_stream_finish (&mad->stream);
@@ -1585,6 +1561,7 @@ gst_mad_change_state (GstElement * element)
         gst_tag_list_free (mad->tags);
         mad->tags = NULL;
       }
+      GST_STREAM_UNLOCK (mad->sinkpad);
       break;
     case GST_STATE_READY_TO_NULL:
       break;

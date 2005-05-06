@@ -1,3 +1,8 @@
+2005-05-06  Christian Schaller <uraeus@gnome.org>
+
+	* ext/mad: ported plugin from threaded branch
+	* gst/effectv: ported plugins from threaded branch
+
 2005-05-06  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* configure.ac:

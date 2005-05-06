@@ -345,9 +345,25 @@ dnl    ])
 dnl  ])
 dnl ])
 
-
-
-
+dnl *** mad ***
+dnl FIXME: we could use header checks here as well IMO
+translit(dnm, m, l) AM_CONDITIONAL(USE_MAD, true)
+GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
+  dnl check with pkg-config first
+  PKG_CHECK_MODULES(MAD, mad >= 0.15 id3tag >= 0.15, HAVE_MAD="yes", HAVE_MAD="no")
+  if test "x$HAVE_MAD" = "xno"; then
+    dnl fall back to oldskool detection
+    AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad")
+    if test "x$HAVE_MAD" = "xyes"; then
+      HAVE_MAD="no"
+      save_LIBS=$LIBS
+      LIBS="-lz"
+      AC_CHECK_LIB(id3tag, id3_tag_options, HAVE_MAD="yes" MAD_LIBS="-lmad -lid3tag -lz")
+      LIBS=$save_LIBS
+    fi
+  fi    
+])
+AC_SUBST(MAD_LIBS)
 
 
 AC_SUBST(GST_LIBS)
@@ -408,6 +424,8 @@ gst-plugins.spec
 gst/Makefile
 gst/effectv/Makefile
 sys/Makefile
+ext/Makefile
+ext/mad/Makefile
 common/Makefile
 common/m4/Makefile
 m4/Makefile
