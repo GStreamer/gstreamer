@@ -337,7 +337,7 @@ dnl      AC_DEFINE(HAVE_OSS_INCLUDE_IN_ROOT,, [Define if OSS includes are in /])
 dnl      ], [
       dnl Some old BSD versions :
 dnl      AC_CHECK_HEADER(machine/soundcard.h, [
-dnln        AC_DEFINE(HAVE_OSS_INCLUDE_IN_MACHINE,, [Define if OSS includes are in /machine/])
+dnl        AC_DEFINE(HAVE_OSS_INCLUDE_IN_MACHINE,, [Define if OSS includes are in /machine/])
 dnl        ], [
 dnl        HAVE_OSS="no"
 dnl      ])
