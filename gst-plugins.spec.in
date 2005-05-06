@@ -168,7 +168,7 @@ rm -rf $RPM_BUILD_ROOT
 Summary:        Additional audio plugins for GStreamer
 Group:          Applications/Multimedia
                                                                                 
-# @USE_SIDPLAY_TRUE@BuildRequires:  libsidplay-devel >= 1.36.0
+@USE_SIDPLAY_TRUE@BuildRequires:  libsidplay-devel >= 1.36.0
 # @USE_SHOUT_TRUE@BuildRequires:  libshout-devel <= 2.0
 # # @USE_SHOUT2_TRUE@BuildRequires: libshout-devel >= 2.0
 # @USE_LADSPA_TRUE@BuildRequires:  ladspa-devel
@@ -178,7 +178,7 @@ Requires(pre):  %{_bindir}/gst-register-%{majorminor}
 Requires(post): %{_bindir}/gst-register-%{majorminor}
 
 # @USE_LADSPA_TRUE@Provides:       gstreamer-ladspa = %{version}-%{release}
-# @USE_SIDPLAY_TRUE@Provides:       gstreamer-sid = %{version}-%{release}
+@USE_SIDPLAY_TRUE@Provides:       gstreamer-sid = %{version}-%{release}
 # @USE_SHOUT_TRUE@Provides:       gstreamer-shout = %{version}-%{release}
                                                                                 
 %description audio
@@ -191,7 +191,7 @@ This package contains additional audio plugins for GStreamer, including
 %files audio
 %defattr(-, root, root, -)
 # @USE_LADSPA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstladspa.so
-# @USE_SIDPLAY_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsid.so
+@USE_SIDPLAY_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsid.so
 # @USE_SHOUT_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstshout.so
 # # @USE_SHOUT2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstshout2.so
 
