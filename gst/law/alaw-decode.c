@@ -43,7 +43,7 @@ static void gst_alawdec_class_init (GstALawDecClass * klass);
 static void gst_alawdec_base_init (GstALawDecClass * klass);
 static void gst_alawdec_init (GstALawDec * alawdec);
 
-static void gst_alawdec_chain (GstPad * pad, GstData * _data);
+static GstFlowReturn gst_alawdec_chain (GstPad * pad, GstBuffer * buffer);
 
 static GstElementClass *parent_class = NULL;
 
@@ -74,78 +74,92 @@ alaw_to_s16 (guint8 a_val)
 static GstCaps *
 alawdec_getcaps (GstPad * pad)
 {
-  GstALawDec *alawdec = GST_ALAWDEC (gst_pad_get_parent (pad));
+  GstALawDec *alawdec;
   GstPad *otherpad;
   GstCaps *base_caps, *othercaps;
-  GstStructure *structure;
-  const GValue *rate, *chans;
+
+  alawdec = GST_ALAWDEC (GST_PAD_PARENT (pad));
+
+  /*  we can do what our template says */
+  base_caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
 
   if (pad == alawdec->sinkpad) {
     otherpad = alawdec->srcpad;
-    base_caps = gst_caps_new_simple ("audio/x-alaw", NULL);
   } else {
     otherpad = alawdec->sinkpad;
-    base_caps = gst_caps_new_simple ("audio/x-raw-int",
-        "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, 16,
-        "signed", G_TYPE_BOOLEAN, TRUE,
-        "endianness", G_TYPE_INT, G_BYTE_ORDER,
-        "signed", G_TYPE_BOOLEAN, TRUE, NULL);
   }
-  othercaps = gst_pad_get_allowed_caps (otherpad);
+  /* now intersect rate and channels from peer caps */
+  othercaps = gst_pad_peer_get_caps (otherpad);
+  if (othercaps) {
+    GstStructure *structure;
+    const GValue *orate, *ochans;
+    const GValue *rate, *chans;
+    GValue irate = { 0 }, ichans = {
+    0};
 
-  /* Not fully correct, but usually, all structures in a caps have
-   * the same samplerate and channels range. */
-  structure = gst_caps_get_structure (othercaps, 0);
-  rate = gst_structure_get_value (structure, "rate");
-  chans = gst_structure_get_value (structure, "channels");
-  if (!rate || !chans)
-    return gst_caps_new_empty ();
+    structure = gst_caps_get_structure (othercaps, 0);
+    orate = gst_structure_get_value (structure, "rate");
+    ochans = gst_structure_get_value (structure, "channels");
+    if (!rate || !chans)
+      goto done;
 
-  /* Set the samplerate/channels on the to-be-returned caps */
-  structure = gst_caps_get_structure (base_caps, 0);
-  gst_structure_set_value (structure, "rate", rate);
-  gst_structure_set_value (structure, "channels", chans);
-  gst_caps_free (othercaps);
+    structure = gst_caps_get_structure (base_caps, 0);
+    rate = gst_structure_get_value (structure, "rate");
+    chans = gst_structure_get_value (structure, "channels");
+    if (!rate || !chans)
+      goto done;
 
+    gst_value_intersect (&irate, orate, rate);
+    gst_value_intersect (&ichans, ochans, chans);
+
+    /* Set the samplerate/channels on the to-be-returned caps */
+    structure = gst_caps_get_structure (base_caps, 0);
+    gst_structure_set_value (structure, "rate", &irate);
+    gst_structure_set_value (structure, "channels", &ichans);
+
+    gst_caps_unref (othercaps);
+  }
+
+done:
   return base_caps;
 }
 
-static GstPadLinkReturn
-alawdec_link (GstPad * pad, const GstCaps * caps)
+static gboolean
+alawdec_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstALawDec *alawdec = GST_ALAWDEC (gst_pad_get_parent (pad));
+  GstALawDec *alawdec;
   GstPad *otherpad;
   GstStructure *structure;
   const GValue *rate, *chans;
   GstCaps *base_caps;
-  GstPadLinkReturn link_return;
 
+  alawdec = GST_ALAWDEC (GST_PAD_PARENT (pad));
+
+  /* take rate and channels */
   structure = gst_caps_get_structure (caps, 0);
   rate = gst_structure_get_value (structure, "rate");
   chans = gst_structure_get_value (structure, "channels");
   if (!rate || !chans)
-    return GST_PAD_LINK_REFUSED;
+    return FALSE;
 
   if (pad == alawdec->srcpad) {
     otherpad = alawdec->sinkpad;
-    base_caps = gst_caps_new_simple ("audio/x-alaw", NULL);
   } else {
     otherpad = alawdec->srcpad;
-    base_caps = gst_caps_new_simple ("audio/x-raw-int",
-        "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, 16,
-        "endianness", G_TYPE_INT, G_BYTE_ORDER,
-        "signed", G_TYPE_BOOLEAN, TRUE, NULL);
   }
 
+  /* fill in values for otherpad */
+  base_caps = gst_caps_copy (gst_pad_get_pad_template_caps (otherpad));
   structure = gst_caps_get_structure (base_caps, 0);
   gst_structure_set_value (structure, "rate", rate);
   gst_structure_set_value (structure, "channels", chans);
 
-  link_return = gst_pad_try_set_caps (otherpad, base_caps);
+  /* and set on otherpad */
+  gst_pad_set_caps (otherpad, base_caps);
 
-  gst_caps_free (base_caps);
+  gst_caps_unref (base_caps);
 
-  return link_return;
+  return TRUE;
 }
 
 GType
@@ -199,47 +213,41 @@ static void
 gst_alawdec_init (GstALawDec * alawdec)
 {
   alawdec->sinkpad = gst_pad_new_from_template (alawdec_sink_template, "sink");
-  gst_pad_set_link_function (alawdec->sinkpad, alawdec_link);
+  gst_pad_set_setcaps_function (alawdec->sinkpad, alawdec_setcaps);
   gst_pad_set_getcaps_function (alawdec->sinkpad, alawdec_getcaps);
   gst_pad_set_chain_function (alawdec->sinkpad, gst_alawdec_chain);
   gst_element_add_pad (GST_ELEMENT (alawdec), alawdec->sinkpad);
 
   alawdec->srcpad = gst_pad_new_from_template (alawdec_src_template, "src");
-  gst_pad_set_link_function (alawdec->srcpad, alawdec_link);
+  gst_pad_set_setcaps_function (alawdec->srcpad, alawdec_setcaps);
   gst_pad_set_getcaps_function (alawdec->srcpad, alawdec_getcaps);
   gst_element_add_pad (GST_ELEMENT (alawdec), alawdec->srcpad);
 }
 
-static void
-gst_alawdec_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_alawdec_chain (GstPad * pad, GstBuffer * buffer)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
   GstALawDec *alawdec;
   gint16 *linear_data;
   guint8 *alaw_data;
   GstBuffer *outbuf;
   gint i;
 
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
-
   alawdec = GST_ALAWDEC (GST_OBJECT_PARENT (pad));
-  g_return_if_fail (alawdec != NULL);
-  g_return_if_fail (GST_IS_ALAWDEC (alawdec));
 
-  alaw_data = (guint8 *) GST_BUFFER_DATA (buf);
-  outbuf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (buf) * 2);
-  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
-  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
+  alaw_data = (guint8 *) GST_BUFFER_DATA (buffer);
+  outbuf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (buffer) * 2);
+  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
+  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (alawdec->srcpad));
   linear_data = (gint16 *) GST_BUFFER_DATA (outbuf);
 
-  for (i = 0; i < GST_BUFFER_SIZE (buf); i++) {
+  for (i = 0; i < GST_BUFFER_SIZE (buffer); i++) {
     *linear_data = alaw_to_s16 (*alaw_data);
     linear_data++;
     alaw_data++;
   }
 
-  gst_buffer_unref (buf);
-  gst_pad_push (alawdec->srcpad, GST_DATA (outbuf));
+  gst_buffer_unref (buffer);
+  return gst_pad_push (alawdec->srcpad, outbuf);
 }
