@@ -253,6 +253,16 @@ fi
 
 AC_SUBST(GST_INTERFACES_LIBS)
 
+dnl check for gstreamer-interfaces; uinstalled is selected preferentially
+PKG_CHECK_MODULES(GST_PLUGINS_LIBS, gstreamer-libs-$GST_MAJORMINOR >= $GST_REQ,
+  HAVE_GST_PLUGINS="yes", HAVE_GST_PLUGINS="no")
+
+if test "x$HAVE_GST_PLUGINS" = "xno"; then
+  AC_MSG_ERROR(no GStreamer Plugins Libs found)
+fi
+
+AC_SUBST(GST_PLUGINS_LIBS)
+
 
 dnl Determine endianness
 AC_C_BIGENDIAN
