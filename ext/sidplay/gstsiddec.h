@@ -50,7 +50,6 @@ struct _GstSidDec {
   GstPad 	*sinkpad, 
   		*srcpad;
 
-  gint 		 state;
   guchar	*tune_buffer;
   gint		 tune_len;
   gint 		 tune_number;
