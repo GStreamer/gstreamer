@@ -295,7 +295,8 @@ dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
 		videofilter \
 		effectv \
-		law" 
+		law \
+		sidplay"
 
 dnl see if we can build C++ plug-ins
 if test "x$HAVE_CXX" = "xyes"; then
@@ -347,6 +348,12 @@ dnl      ])
 dnl    ])
 dnl  ])
 dnl ])
+
+dnl *** sidplay : works with libsidplay 1.36.x (not 2.x.x) ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SIDPLAY, true)
+GST_CHECK_FEATURE(SIDPLAY, [sidplay plug-in], sidplay, [
+  GST_PATH_SIDPLAY()
+  ])
 
 dnl *** mad ***
 dnl FIXME: we could use header checks here as well IMO
@@ -431,6 +438,7 @@ gst/videofilter/Makefile
 sys/Makefile
 ext/Makefile
 ext/mad/Makefile
+ext/sidplay/Makefile
 common/Makefile
 common/m4/Makefile
 m4/Makefile
