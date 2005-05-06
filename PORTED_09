@@ -1,6 +1,7 @@
 List of ported plugins (update when you commit a ported plugin):
-osssink (wim)
+osssink (wim) - partially done in threaded
 effectv (wim)
+mad	(wim)
 
 - Remember that some plugins are already ported and now in the gst-plugins-base module.
 
