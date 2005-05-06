@@ -1,3 +1,14 @@
+2005-05-06  Luca Ognibene  <luogni@tin.it>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_init),
+	(gst_ffmpegdec_open), (gst_ffmpegdec_connect),
+	(gst_ffmpegdec_get_buffer), (gst_ffmpegdec_release_buffer),
+	(gst_ffmpegdec_frame), (gst_ffmpegdec_change_state):
+	  Re-re-enable get_/release_buffer functions, removes a few more
+	  percent of our CPU usage (#301783).
+
 2005-05-02  Luca Ognibene  <luogni@tin.it>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>

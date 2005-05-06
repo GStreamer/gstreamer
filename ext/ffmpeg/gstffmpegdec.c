@@ -35,6 +35,8 @@
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
 
+//#define FORCE_OUR_GET_BUFFER
+
 typedef struct _GstFFMpegDec GstFFMpegDec;
 
 struct _GstFFMpegDec
@@ -63,6 +65,8 @@ struct _GstFFMpegDec
   /* parsing */
   AVCodecParserContext *pctx;
   GstBuffer *pcache;
+
+  GstBuffer *last_buffer;
 
   GValue *par;		/* pixel aspect ratio of incoming data */
 
@@ -128,13 +132,13 @@ static void gst_ffmpegdec_set_property (GObject * object,
 static void gst_ffmpegdec_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-#if 0
+static gboolean gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec);
+
 /* some sort of bufferpool handling, but different */
 static int gst_ffmpegdec_get_buffer (AVCodecContext * context,
     AVFrame * picture);
 static void gst_ffmpegdec_release_buffer (AVCodecContext * context,
     AVFrame * picture);
-#endif
 
 static GstElementClass *parent_class = NULL;
 
@@ -277,6 +281,8 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->waiting_for_key = FALSE;
   ffmpegdec->hurry_up = ffmpegdec->lowres = 0;
 
+  ffmpegdec->last_buffer = NULL;
+
   GST_FLAG_SET (ffmpegdec, GST_ELEMENT_EVENT_AWARE);
 }
 
@@ -416,6 +422,8 @@ gst_ffmpegdec_open (GstFFMpegDec *ffmpegdec)
       break;
   }
   ffmpegdec->next_ts = 0;
+  
+  ffmpegdec->last_buffer = NULL;
 
   return TRUE;
 }
@@ -435,12 +443,10 @@ gst_ffmpegdec_connect (GstPad * pad, const GstCaps * caps)
   /* set defaults */
   avcodec_get_context_defaults (ffmpegdec->context);
 
-#if 0
-  /* set buffer functions */
+  /* set buffer functions */  
   ffmpegdec->context->get_buffer = gst_ffmpegdec_get_buffer;
-  ffmpegdec->context->release_buffer = gst_ffmpegdec_release_buffer;
-#endif
-
+  ffmpegdec->context->release_buffer = gst_ffmpegdec_release_buffer;      
+  
   /* get size and so */
   gst_ffmpeg_caps_with_codecid (oclass->in_plugin->id,
       oclass->in_plugin->type, caps, ffmpegdec->context);
@@ -478,23 +484,51 @@ gst_ffmpegdec_connect (GstPad * pad, const GstCaps * caps)
   return GST_PAD_LINK_OK;
 }
 
-#if 0
 static int
 gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
 {
   GstBuffer *buf = NULL;
   gulong bufsize = 0;
+  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) context->opaque; 
+  int width  = context->width;
+  int height = context->height;
 
   switch (context->codec_type) {
     case CODEC_TYPE_VIDEO:
+      
+      avcodec_align_dimensions(context, &width, &height);
+      
       bufsize = avpicture_get_size (context->pix_fmt,
-          context->width, context->height);
-      buf = gst_buffer_new_and_alloc (bufsize);
+				    width, height);
+      
+      if((width != context->width) || (height != context->height)) {
+#ifdef FORCE_OUR_GET_BUFFER
+	context->width = width;
+	context->height = height;
+#else	
+	/* revert to ffmpeg's default functions */
+	ffmpegdec->context->get_buffer = avcodec_default_get_buffer;
+	ffmpegdec->context->release_buffer = avcodec_default_release_buffer;       	
+
+	return avcodec_default_get_buffer(context, picture);
+#endif
+	
+      } 
+      
+      if (!gst_ffmpegdec_negotiate (ffmpegdec)) {
+	GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
+			   ("Failed to link ffmpeg decoder to next element"));
+	return avcodec_default_get_buffer(context, picture);
+      }
+      
+      buf = gst_pad_alloc_buffer (ffmpegdec->srcpad, GST_BUFFER_OFFSET_NONE, bufsize);
+      ffmpegdec->last_buffer = buf;
+      
       gst_ffmpeg_avpicture_fill ((AVPicture *) picture,
           GST_BUFFER_DATA (buf),
           context->pix_fmt, context->width, context->height);
       break;
-
+      
     case CODEC_TYPE_AUDIO:
     default:
       g_assert (0);
@@ -509,7 +543,7 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
    * so that we don't need to copy data */
   picture->type = FF_BUFFER_TYPE_USER;
   picture->age = G_MAXINT;
-  picture->base[0] = (int8_t *) buf;
+  picture->opaque = buf;
   gst_buffer_ref (buf);
 
   return 0;
@@ -519,8 +553,13 @@ static void
 gst_ffmpegdec_release_buffer (AVCodecContext * context, AVFrame * picture)
 {
   gint i;
-  GstBuffer *buf = GST_BUFFER (picture->base[0]);
+  GstBuffer *buf = GST_BUFFER (picture->opaque);
+  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) context->opaque; 
+  
+  g_return_if_fail (buf != NULL);
+  g_return_if_fail (picture->type == FF_BUFFER_TYPE_USER);
 
+  ffmpegdec->last_buffer = NULL;
   gst_buffer_unref (buf);
 
   /* zero out the reference in ffmpeg */
@@ -529,7 +568,6 @@ gst_ffmpegdec_release_buffer (AVCodecContext * context, AVFrame * picture)
     picture->linesize[i] = 0;
   }
 }
-#endif
 
 static gboolean
 gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
@@ -622,12 +660,15 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
       (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
   GstBuffer *outbuf = NULL;
   gint have_data, len = 0;
-
+  
   ffmpegdec->context->frame_number++;
 
   switch (oclass->in_plugin->type) {
     case CODEC_TYPE_VIDEO:
       ffmpegdec->picture->pict_type = -1; /* in case we skip frames */
+
+      ffmpegdec->context->opaque = ffmpegdec;
+      
       len = avcodec_decode_video (ffmpegdec->context,
           ffmpegdec->picture, &have_data, data, size);
       GST_DEBUG_OBJECT (ffmpegdec,
@@ -640,31 +681,36 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
         /* libavcodec constantly crashes on stupid buffer allocation
          * errors inside. This drives me crazy, so we let it allocate
          * it's own buffers and copy to our own buffer afterwards... */
-        AVPicture pic;
-        gint fsize = gst_ffmpeg_avpicture_get_size (ffmpegdec->context->pix_fmt,
+
+	if (ffmpegdec->picture->opaque != NULL) {
+	  outbuf = (GstBuffer *) ffmpegdec->picture->opaque;
+	}else {
+	  AVPicture pic;
+	  gint fsize = gst_ffmpeg_avpicture_get_size (ffmpegdec->context->pix_fmt,
             ffmpegdec->context->width, ffmpegdec->context->height);
 
-        ffmpegdec->waiting_for_key = FALSE;
+	  if (!gst_ffmpegdec_negotiate (ffmpegdec))
+	    return -1;	
+	  
+	  outbuf = gst_pad_alloc_buffer (ffmpegdec->srcpad, GST_BUFFER_OFFSET_NONE, fsize);
 
-	if (!gst_ffmpegdec_negotiate (ffmpegdec))
-	  return -1;	
+	  /* original ffmpeg code does not handle odd sizes correctly.
+	   * This patched up version does */
+	  gst_ffmpeg_avpicture_fill (&pic, GST_BUFFER_DATA (outbuf),
+				     ffmpegdec->context->pix_fmt,
+				     ffmpegdec->context->width, ffmpegdec->context->height);
 
-	outbuf = gst_pad_alloc_buffer (ffmpegdec->srcpad, GST_BUFFER_OFFSET_NONE, fsize);
-
-        /* original ffmpeg code does not handle odd sizes correctly.
-         * This patched up version does */
-        gst_ffmpeg_avpicture_fill (&pic, GST_BUFFER_DATA (outbuf),
-            ffmpegdec->context->pix_fmt,
-            ffmpegdec->context->width, ffmpegdec->context->height);
-
-        /* the original convert function did not do the right thing, this
-         * is a patched up version that adjust widht/height so that the
-         * ffmpeg one works correctly. */
-        gst_ffmpeg_img_convert (&pic, ffmpegdec->context->pix_fmt,
-            (AVPicture *) ffmpegdec->picture,
-            ffmpegdec->context->pix_fmt,
-            ffmpegdec->context->width, 
-            ffmpegdec->context->height);
+	  /* the original convert function did not do the right thing, this
+	   * is a patched up version that adjust widht/height so that the
+	   * ffmpeg one works correctly. */
+	  gst_ffmpeg_img_convert (&pic, ffmpegdec->context->pix_fmt,
+				  (AVPicture *) ffmpegdec->picture,
+				  ffmpegdec->context->pix_fmt,
+				  ffmpegdec->context->width, 
+				  ffmpegdec->context->height);
+	}	
+	
+	ffmpegdec->waiting_for_key = FALSE;
 
         /* note that ffmpeg sometimes gets the FPS wrong.
          * For B-frame containing movies, we get all pictures delayed
@@ -747,7 +793,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
       g_assert (0);
       break;
   }
-
+  
   if (len < 0 || have_data < 0) {
     GST_ERROR_OBJECT (ffmpegdec,
         "ffdec_%s: decoding error (len: %d, have_data: %d)",
@@ -761,8 +807,9 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
     /* this is where I lost my last clue on ffmpeg... */
     *got_data = 1; //(ffmpegdec->pctx || have_data) ? 1 : 0;
   }
-
+  
   if (have_data) {
+
     GST_DEBUG_OBJECT (ffmpegdec, "Decoded data, now pushing (%"
         GST_TIME_FORMAT ")", GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
 
@@ -955,6 +1002,12 @@ gst_ffmpegdec_change_state (GstElement * element)
 
   switch (transition) {
     case GST_STATE_PAUSED_TO_READY:
+      if (ffmpegdec->last_buffer != NULL) {
+	gst_buffer_unref (ffmpegdec->last_buffer);
+      }
+
+      /* closing context.. unref buffers? */
+      
       gst_ffmpegdec_close (ffmpegdec);
       break;
   }
