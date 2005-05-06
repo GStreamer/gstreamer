@@ -328,12 +328,17 @@ gst_audio_convert_getcaps (GstPad * pad)
 
   /* we can do all our peer can */
   othercaps = gst_pad_peer_get_caps (otherpad);
-  /* without the format info even */
-  othercaps = gst_audio_convert_caps_remove_format_info (pad, othercaps);
-  /* but filtered against our template */
-  templcaps = gst_pad_get_pad_template_caps (pad);
-  caps = gst_caps_intersect (othercaps, templcaps);
-  gst_caps_unref (othercaps);
+  if (othercaps != NULL) {
+    /* without the format info even */
+    othercaps = gst_audio_convert_caps_remove_format_info (pad, othercaps);
+    /* but filtered against our template */
+    templcaps = gst_pad_get_pad_template_caps (pad);
+    caps = gst_caps_intersect (othercaps, templcaps);
+    gst_caps_unref (othercaps);
+  } else {
+    /* no peer, then our template is enough */
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  }
 
   /* Get the channel positions in as well. */
   gst_audio_set_caps_channel_positions_list (caps, supported_positions,

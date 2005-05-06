@@ -1138,7 +1138,7 @@ gst_multifdsink_recover_client (GstMultiFdSink * sink, GstTCPClient * client)
  * client->sending queue.
  *
  * After adding the buffer, we update all client positions in the queue. If
- * a client moves of the soft max, we start the recovery procedure for this
+ * a client moves over the soft max, we start the recovery procedure for this
  * slow client. If it goes over the hard max, it is put into the slow list
  * and removed.
  *

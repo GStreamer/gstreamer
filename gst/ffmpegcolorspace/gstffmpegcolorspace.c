@@ -157,11 +157,15 @@ gst_ffmpegcsp_getcaps (GstPad * pad)
   otherpad = (pad == space->srcpad) ? space->sinkpad : space->srcpad;
   /* we can do whatever the peer can */
   othercaps = gst_pad_peer_get_caps (otherpad);
-  /* without the format info */
-  othercaps = gst_ffmpegcsp_caps_remove_format_info (othercaps);
-  /* and filtered against our padtemplate */
-  caps = gst_caps_intersect (othercaps, gst_pad_get_pad_template_caps (pad));
-  gst_caps_unref (othercaps);
+  if (othercaps != NULL) {
+    /* without the format info */
+    othercaps = gst_ffmpegcsp_caps_remove_format_info (othercaps);
+    /* and filtered against our padtemplate */
+    caps = gst_caps_intersect (othercaps, gst_pad_get_pad_template_caps (pad));
+    gst_caps_unref (othercaps);
+  } else {
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  }
 
   return caps;
 }

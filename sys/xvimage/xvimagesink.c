@@ -1442,45 +1442,6 @@ gst_xvimagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
   return GST_FLOW_OK;
 }
 
-#if 0
-static GstFlowReturn
-gst_xvimagesink_chain (GstPad * pad, GstBuffer * buffer)
-{
-  GstBuffer *buf = NULL;
-  GstXvImageSink *xvimagesink;
-  GstCaps *caps;
-  GstFlowReturn result;
-
-  xvimagesink = GST_XVIMAGESINK (GST_PAD_PARENT (pad));
-
-  buf = GST_BUFFER (buffer);
-
-  caps = gst_buffer_get_caps (buffer);
-  if (caps && caps != GST_PAD_CAPS (pad)) {
-    if (gst_xvimagesink_parse_caps (pad, caps)) {
-      gst_pad_set_caps (pad, caps);
-    } else {
-      GST_ELEMENT_ERROR (xvimagesink, CORE, NEGOTIATION, (NULL),
-          ("received unkown format"));
-      gst_element_abort_preroll (GST_ELEMENT (xvimagesink));
-      gst_buffer_unref (buffer);
-      return GST_FLOW_NOT_NEGOTIATED;
-    }
-  }
-  if (!GST_PAD_CAPS (pad)) {
-    gst_buffer_unref (buffer);
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
-
-  gst_xvimagesink_show_frame (xvimagesink, buf);
-
-
-  gst_xvimagesink_handle_xevents (xvimagesink, pad);
-
-  return result;
-}
-#endif
-
 /* Buffer management */
 
 static void

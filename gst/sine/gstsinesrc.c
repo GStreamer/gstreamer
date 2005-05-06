@@ -72,13 +72,14 @@ static void gst_sinesrc_class_init (GstSineSrcClass * klass);
 static void gst_sinesrc_base_init (GstSineSrcClass * klass);
 static void gst_sinesrc_init (GstSineSrc * src);
 static void gst_sinesrc_dispose (GObject * object);
+
 static void gst_sinesrc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_sinesrc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-static GstPadLinkReturn gst_sinesrc_link (GstPad * pad, GstPad * peerpad);
-static GstElementStateReturn gst_sinesrc_change_state (GstElement * element);
-static void gst_sinesrc_set_clock (GstElement * element, GstClock * clock);
+
+static gboolean gst_sinesrc_setcaps (GstBaseSrc * basesrc, GstCaps * caps);
+static GstCaps *gst_sinesrc_src_fixate (GstPad * pad, GstCaps * caps);
 
 static void gst_sinesrc_update_freq (const GValue * value, gpointer data);
 static void gst_sinesrc_populate_sinetable (GstSineSrc * src);
@@ -88,9 +89,9 @@ static const GstQueryType *gst_sinesrc_get_query_types (GstPad * pad);
 static gboolean gst_sinesrc_src_query (GstPad * pad,
     GstQueryType type, GstFormat * format, gint64 * value);
 
-static GstFlowReturn gst_sinesrc_getrange (GstPad * pad, guint64 offset,
+static GstFlowReturn gst_sinesrc_create (GstBaseSrc * basesrc, guint64 offset,
     guint length, GstBuffer ** buffer);
-static GstCaps *gst_sinesrc_src_fixate (GstPad * pad, GstCaps * caps);
+static gboolean gst_sinesrc_start (GstBaseSrc * basesrc);
 
 static GstElementClass *parent_class = NULL;
 
@@ -110,7 +111,7 @@ gst_sinesrc_get_type (void)
       (GInstanceInitFunc) gst_sinesrc_init,
     };
 
-    sinesrc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstSineSrc",
+    sinesrc_type = g_type_register_static (GST_TYPE_BASESRC, "GstSineSrc",
         &sinesrc_info, 0);
   }
   return sinesrc_type;
@@ -131,11 +132,13 @@ gst_sinesrc_class_init (GstSineSrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstBaseSrcClass *gstbasesrc_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  gstbasesrc_class = (GstBaseSrcClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_BASESRC);
 
   gobject_class->set_property = gst_sinesrc_set_property;
   gobject_class->get_property = gst_sinesrc_get_property;
@@ -159,22 +162,20 @@ gst_sinesrc_class_init (GstSineSrcClass * klass)
       g_param_spec_boolean ("sync", "Sync", "Synchronize to clock",
           FALSE, G_PARAM_READWRITE));
 
-  gstelement_class->change_state = gst_sinesrc_change_state;
-  gstelement_class->set_clock = gst_sinesrc_set_clock;
+  //gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR ();
+  gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_sinesrc_setcaps);
+  gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_sinesrc_start);
+  gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_sinesrc_create);
 }
 
 static void
 gst_sinesrc_init (GstSineSrc * src)
 {
-  src->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_sinesrc_src_template), "src");
-  gst_pad_set_link_function (src->srcpad, gst_sinesrc_link);
+  src->srcpad = GST_BASESRC (src)->srcpad;
+
   gst_pad_set_fixatecaps_function (src->srcpad, gst_sinesrc_src_fixate);
-  gst_pad_set_getrange_function (src->srcpad, gst_sinesrc_getrange);
   gst_pad_set_query_function (src->srcpad, gst_sinesrc_src_query);
   gst_pad_set_query_type_function (src->srcpad, gst_sinesrc_get_query_types);
-  gst_element_add_pad (GST_ELEMENT (src), src->srcpad);
 
   src->samplerate = 44100;
   src->volume = 1.0;
@@ -219,14 +220,6 @@ gst_sinesrc_dispose (GObject * object)
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
 
-static void
-gst_sinesrc_set_clock (GstElement * element, GstClock * clock)
-{
-  GstSineSrc *sinesrc = GST_SINESRC (element);
-
-  gst_object_replace ((GstObject **) & sinesrc->clock, (GstObject *) clock);
-}
-
 static GstCaps *
 gst_sinesrc_src_fixate (GstPad * pad, GstCaps * caps)
 {
@@ -236,37 +229,27 @@ gst_sinesrc_src_fixate (GstPad * pad, GstCaps * caps)
   if (gst_caps_get_size (caps) > 1)
     return NULL;
 
-  newcaps = gst_caps_copy (caps);
+  newcaps = gst_caps_make_writable (caps);
   structure = gst_caps_get_structure (newcaps, 0);
 
-  if (gst_caps_structure_fixate_field_nearest_int (structure, "rate", 44100)) {
-    return newcaps;
-  }
+  gst_caps_structure_fixate_field_nearest_int (structure, "rate", 44100);
 
-  gst_caps_unref (newcaps);
-  return NULL;
+  return newcaps;
 }
 
-static GstPadLinkReturn
-gst_sinesrc_link (GstPad * pad, GstPad * peerpad)
+static gboolean
+gst_sinesrc_setcaps (GstBaseSrc * basesrc, GstCaps * caps)
 {
-  GstCaps *caps;
   GstSineSrc *sinesrc;
   const GstStructure *structure;
   gboolean ret;
 
-  GST_DEBUG ("gst_sinesrc_src_link");
-  sinesrc = GST_SINESRC (gst_pad_get_parent (pad));
+  sinesrc = GST_SINESRC (basesrc);
 
-  caps = gst_pad_get_caps (pad);
   structure = gst_caps_get_structure (caps, 0);
-
   ret = gst_structure_get_int (structure, "rate", &sinesrc->samplerate);
 
-  if (!ret)
-    return GST_PAD_LINK_REFUSED;
-
-  return GST_PAD_LINK_OK;
+  return ret;
 }
 
 static const GstQueryType *
@@ -287,7 +270,7 @@ gst_sinesrc_src_query (GstPad * pad,
   gboolean res = FALSE;
   GstSineSrc *src;
 
-  src = GST_SINESRC (gst_pad_get_parent (pad));
+  src = GST_SINESRC (GST_PAD_PARENT (pad));
 
   switch (type) {
     case GST_QUERY_POSITION:
@@ -316,7 +299,7 @@ gst_sinesrc_src_query (GstPad * pad,
 }
 
 static GstFlowReturn
-gst_sinesrc_getrange (GstPad * pad, guint64 offset,
+gst_sinesrc_create (GstBaseSrc * basesrc, guint64 offset,
     guint length, GstBuffer ** buffer)
 {
   GstSineSrc *src;
@@ -326,8 +309,7 @@ gst_sinesrc_getrange (GstPad * pad, guint64 offset,
   gint16 *samples;
   gint i = 0;
 
-  g_return_val_if_fail (pad != NULL, GST_FLOW_ERROR);
-  src = GST_SINESRC (gst_pad_get_parent (pad));
+  src = GST_SINESRC (basesrc);
 
   if (!src->tags_pushed) {
     GstTagList *taglist;
@@ -338,28 +320,31 @@ gst_sinesrc_getrange (GstPad * pad, guint64 offset,
     gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND,
         GST_TAG_DESCRIPTION, "sine wave", NULL);
 
-#if 0
-    gst_element_found_tags (GST_ELEMENT (src), taglist);
-#endif
     event = gst_event_new_tag (taglist);
+    gst_pad_push_event (basesrc->srcpad, event);
     src->tags_pushed = TRUE;
-    *buffer = GST_BUFFER (event);
-    return GST_FLOW_OK;
+  }
+
+  /* not negotiated, fixate and set */
+  if (GST_PAD_CAPS (basesrc->srcpad) == NULL) {
+    GstCaps *caps;
+
+    /* see whatever we are allowed to do */
+    caps = gst_pad_get_allowed_caps (basesrc->srcpad);
+    /* fix unfixed values */
+    caps = gst_sinesrc_src_fixate (basesrc->srcpad, caps);
+    /* and use those */
+    gst_pad_set_caps (basesrc->srcpad, caps);
+    gst_caps_unref (caps);
   }
 
   tdiff = src->samples_per_buffer * GST_SECOND / src->samplerate;
 
   /* note: the 2 is because of the format we use */
   buf = gst_buffer_new_and_alloc (src->samples_per_buffer * 2);
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (basesrc->srcpad));
 
   GST_BUFFER_TIMESTAMP (buf) = src->timestamp;
-  if (src->sync) {
-    if (src->clock) {
-#if 0
-      gst_element_wait (GST_ELEMENT (src), GST_BUFFER_TIMESTAMP (buf));
-#endif
-    }
-  }
   /* offset is the number of samples */
   GST_BUFFER_OFFSET (buf) = src->offset;
   GST_BUFFER_OFFSET_END (buf) = src->offset + src->samples_per_buffer;
@@ -409,17 +394,8 @@ gst_sinesrc_getrange (GstPad * pad, guint64 offset,
     i++;
   }
 
-#if 0
-  if (!GST_PAD_CAPS (src->srcpad)) {
-    if (gst_sinesrc_link (src->srcpad,
-            gst_pad_get_allowed_caps (src->srcpad)) <= 0) {
-      GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, (NULL), (NULL));
-      return NULL;
-    }
-  }
-#endif
-
   *buffer = buf;
+
   return GST_FLOW_OK;
 }
 
@@ -489,24 +465,15 @@ gst_sinesrc_get_property (GObject * object, guint prop_id,
   }
 }
 
-static GstElementStateReturn
-gst_sinesrc_change_state (GstElement * element)
+static gboolean
+gst_sinesrc_start (GstBaseSrc * basesrc)
 {
-  GstSineSrc *src = GST_SINESRC (element);
+  GstSineSrc *src = GST_SINESRC (basesrc);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
-      src->timestamp = G_GINT64_CONSTANT (0);
-      src->offset = G_GINT64_CONSTANT (0);
-      break;
-    default:
-      break;
-  }
+  src->timestamp = G_GINT64_CONSTANT (0);
+  src->offset = G_GINT64_CONSTANT (0);
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
+  return TRUE;
 }
 
 static void
@@ -534,7 +501,7 @@ gst_sinesrc_update_freq (const GValue * value, gpointer data)
   src->freq = g_value_get_double (value);
   src->table_inc = src->table_size * src->freq / src->samplerate;
 
-  /*GST_DEBUG ("freq %f", src->freq); */
+  GST_DEBUG ("freq %f", src->freq);
 }
 
 static inline void
@@ -542,34 +509,6 @@ gst_sinesrc_update_table_inc (GstSineSrc * src)
 {
   src->table_inc = src->table_size * src->freq / src->samplerate;
 }
-
-#if 0
-static gboolean
-gst_sinesrc_force_caps (GstSineSrc * src)
-{
-  static GstStaticCaps static_caps = GST_STATIC_CAPS ("audio/x-raw-int, "
-      "endianness = (int) BYTE_ORDER, "
-      "signed = (boolean) true, "
-      "width = (int) 16, "
-      "depth = (int) 16, "
-      "rate = (int) [ 8000, 48000 ], " "channels = (int) 1");
-  GstCaps *caps;
-  GstStructure *structure;
-
-  if (!src->newcaps)
-    return TRUE;
-
-  caps = gst_caps_copy (gst_static_caps_get (&static_caps));
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  gst_structure_set (structure, "rate", G_TYPE_INT, src->samplerate, NULL);
-
-  src->newcaps = gst_pad_try_set_caps (src->srcpad, caps) < GST_PAD_LINK_OK;
-
-  return !src->newcaps;
-}
-#endif
 
 static gboolean
 plugin_init (GstPlugin * plugin)

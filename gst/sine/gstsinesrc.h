@@ -26,6 +26,7 @@
 
 
 #include <gst/gst.h>
+#include <gst/base/gstbasesrc.h>
 
 G_BEGIN_DECLS
 
@@ -48,7 +49,7 @@ typedef struct _GstSineSrc GstSineSrc;
 typedef struct _GstSineSrcClass GstSineSrcClass;
 
 struct _GstSineSrc {
-  GstElement element;
+  GstBaseSrc parent;
 
   /* pads */
   GstPad *srcpad;
@@ -85,7 +86,7 @@ struct _GstSineSrc {
 };
 
 struct _GstSineSrcClass {
-  GstElementClass parent_class;
+  GstBaseSrcClass parent_class;
 };
 
 GType gst_sinesrc_get_type(void);
