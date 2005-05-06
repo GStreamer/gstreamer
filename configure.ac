@@ -292,7 +292,9 @@ GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '[_]*(gst_|Gst|
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl these are all the gst plug-ins, compilable without additional libs
-GST_PLUGINS_ALL="effectv"
+GST_PLUGINS_ALL="\
+		effectv \
+		law"
 
 dnl see if we can build C++ plug-ins
 if test "x$HAVE_CXX" = "xyes"; then
@@ -423,6 +425,7 @@ Makefile
 gst-plugins.spec
 gst/Makefile
 gst/effectv/Makefile
+gst/law/Makefile
 sys/Makefile
 ext/Makefile
 ext/mad/Makefile
