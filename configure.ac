@@ -242,6 +242,7 @@ if test "x$HAVE_GST_BASE" = "xno"; then
 fi
 
 AC_SUBST(GST_BASE_LIBS)
+AC_SUBST(GST_BASE_CFLAGS)
 
 dnl check for gstreamer-interfaces; uinstalled is selected preferentially
 PKG_CHECK_MODULES(GST_INTERFACES, gstreamer-interfaces-$GST_MAJORMINOR >= $GST_REQ,
@@ -252,6 +253,7 @@ if test "x$HAVE_GST_INTERFACES" = "xno"; then
 fi
 
 AC_SUBST(GST_INTERFACES_LIBS)
+AC_SUBST(GST_INTERFACES_CFLAGS)
 
 dnl check for gstreamer-interfaces; uinstalled is selected preferentially
 PKG_CHECK_MODULES(GST_PLUGINS_LIBS, gstreamer-libs-$GST_MAJORMINOR >= $GST_REQ,
@@ -262,7 +264,7 @@ if test "x$HAVE_GST_PLUGINS" = "xno"; then
 fi
 
 AC_SUBST(GST_PLUGINS_LIBS)
-
+AC_SUBST(GST_PLUGINS_CFLAGS)
 
 dnl Determine endianness
 AC_C_BIGENDIAN
@@ -305,8 +307,7 @@ dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
 		videofilter \
 		effectv \
-		law \
-		sidplay"
+		law"
 
 dnl see if we can build C++ plug-ins
 if test "x$HAVE_CXX" = "xyes"; then
@@ -359,6 +360,11 @@ dnl    ])
 dnl  ])
 dnl ])
 
+dnl ###########################
+dnl # Configure external libs #
+dnl ###########################
+
+
 dnl *** sidplay : works with libsidplay 1.36.x (not 2.x.x) ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SIDPLAY, true)
 GST_CHECK_FEATURE(SIDPLAY, [sidplay plug-in], sidplay, [
@@ -388,10 +394,6 @@ AC_SUBST(MAD_LIBS)
 
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
-
-dnl ###########################
-dnl # Configure external libs #
-dnl ###########################
 
 dnl ############################
 dnl # Set up some more defines #

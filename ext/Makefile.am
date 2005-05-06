@@ -316,11 +316,11 @@ endif
 # SHOUT2_DIR=
 # endif
 
-# if USE_SIDPLAY
-# SIDPLAY_DIR=sidplay
-# else
-# SIDDPLAY_DIR=
-# endif
+if USE_SIDPLAY
+SIDPLAY_DIR=sidplay
+else
+SIDDPLAY_DIR=
+endif
 
 # if USE_SMOOTHWAVE
 # SMOOTHWAVE_DIR=smoothwave
@@ -443,4 +443,5 @@ SUBDIRS=\
 	$(XVID_DIR)
 
 DIST_SUBDIRS=\
-	mad
+	mad \
+	sidplay
