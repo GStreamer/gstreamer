@@ -1,3 +1,7 @@
+2005-05-06  Christian Schaller  <uraeus@gnome.org>
+
+	* configure.ac: add gst-plugins-libs
+
 2005-05-06  Wim Taymans  <wim@fluendo.com>
 
 	* configure.ac:
