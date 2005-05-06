@@ -64,7 +64,6 @@ IGNORE_HFILES= \
 	gst-i18n-lib.h \
 	gst-i18n-app.h \
 	gst_private.h \
-	gstatomic_impl.h \
 	gstdata_private.h \
 	gstarch.h \
 	cothreads.h \

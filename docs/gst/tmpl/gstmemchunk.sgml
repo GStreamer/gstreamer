@@ -18,7 +18,7 @@ The GstMemChunk is used to allocate critical resources for #GstBuffer and
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-#GstAtomic, #GstBuffer, #GstEvent, #GstData
+#GstBuffer, #GstEvent, #GstData
 </para>
 
 <!-- ##### STRUCT GstMemChunk ##### -->

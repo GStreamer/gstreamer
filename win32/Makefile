@@ -18,7 +18,7 @@ GLIB_DIR=..\..\glib
 #
 CXX  = cl /Tp
 CC   = cl /Tc
-SRC  = dirent.c $(SRC_DIR)\parse\grammar.tab.c $(SRC_DIR)\gst.c $(SRC_DIR)\gstatomic.c $(SRC_DIR)\gstbin.c $(SRC_DIR)\gstbuffer.c \
+SRC  = dirent.c $(SRC_DIR)\parse\grammar.tab.c $(SRC_DIR)\gst.c $(SRC_DIR)\gstbin.c $(SRC_DIR)\gstbuffer.c \
 $(SRC_DIR)\gstcaps.c $(SRC_DIR)\gstclock.c $(SRC_DIR)\gstcpu.c $(SRC_DIR)\gstdata.c $(SRC_DIR)\gstelement.c $(SRC_DIR)\gstelementfactory.c \
 $(SRC_DIR)\gstenumtypes.c $(SRC_DIR)\gsterror.c $(SRC_DIR)\gstevent.c $(SRC_DIR)\gstfilter.c $(SRC_DIR)\gstformat.c $(SRC_DIR)\gstindex.c \
 $(SRC_DIR)\gstinfo.c $(SRC_DIR)\gstmarshal.c $(SRC_DIR)\gstmemchunk.c $(SRC_DIR)\gstobject.c $(SRC_DIR)\gstpad.c $(SRC_DIR)\gstparse.c \

@@ -4,7 +4,6 @@
 <!ENTITY % version-entities SYSTEM "version.entities">
 %version-entities;
 <!ENTITY Gst SYSTEM "xml/gst.xml">
-<!ENTITY GstAtomic SYSTEM "xml/gstatomic.xml">
 <!ENTITY GstBin SYSTEM "xml/gstbin.xml">
 <!ENTITY GstBuffer SYSTEM "xml/gstbuffer.xml">
 <!ENTITY GstCaps SYSTEM "xml/gstcaps.xml">
@@ -153,7 +152,6 @@
       Theses elements support the gstreamer core and applications using it.
     </para>
 
-    &GstAtomic;
     &GstMacros;
     &GstMemChunk;
 

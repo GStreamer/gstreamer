@@ -1,3 +1,15 @@
+2005-05-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/gst/Makefile.am:
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstatomic.sgml:
+	* docs/gst/tmpl/gstmemchunk.sgml:
+	* testsuite/elements/struct_i386.h:
+	* win32/GStreamer.vcproj:
+	* win32/Makefile:
+	  Purge GstAtomic stuff from docs and win32 makefiles as well
+
 2005-05-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasetransform.c: (gst_base_transform_proxy_getcaps):

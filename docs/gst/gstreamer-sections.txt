@@ -27,20 +27,6 @@ gst_main_quit
 </SECTION>
 
 <SECTION>
-<FILE>gstatomic</FILE>
-<TITLE>GstAtomic</TITLE>
-gst_vgint
-GstAtomicInt
-gst_atomic_int_init
-gst_atomic_int_destroy
-gst_atomic_int_set
-gst_atomic_int_read
-gst_atomic_int_add
-gst_atomic_int_inc
-gst_atomic_int_dec_and_test
-</SECTION>
-
-<SECTION>
 <FILE>gstbin</FILE>
 <TITLE>GstBin</TITLE>
 GstBin

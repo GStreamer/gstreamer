@@ -2,8 +2,6 @@
 Struct list[] = {
   {"GstPoptOption", sizeof (GstPoptOption), 28}
   ,
-  {"GstAtomicInt", sizeof (GstAtomicInt), 8}
-  ,
   {"GstBuffer", sizeof (GstBuffer), 108}
   ,
   {"GstCaps", sizeof (GstCaps), 28}

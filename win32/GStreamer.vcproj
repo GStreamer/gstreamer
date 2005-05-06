@@ -195,9 +195,6 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 				RelativePath="..\gst\gst.c">
 			</File>
 			<File
-				RelativePath="..\gst\gstatomic.c">
-			</File>
-			<File
 				RelativePath="..\gst\gstbin.c">
 			</File>
 			<File
@@ -348,9 +345,6 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 			</File>
 			<File
 				RelativePath="..\gst\gst.h">
-			</File>
-			<File
-				RelativePath="..\gst\gstatomic.h">
 			</File>
 			<File
 				RelativePath="..\gst\gstbufferpool-default.h">
