@@ -118,6 +118,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstplaybin.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttypefindfunctions.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideotestsrc.so
+%{_libdir}/gstreamer-%{majorminor}/libgstaudiorate.so
+%{_libdir}/gstreamer-%{majorminor}/libgstsubparse.so
 @USE_THEORA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttheora.so
 @USE_GNOME_VFS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgnomevfs.so
 @USE_VORBIS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvorbis.so
@@ -213,5 +215,8 @@ GStreamer support libraries header files.
 # @USE_GST_V4L2_TRUE@%{register}
 
 %changelog
+* Fri May 6 2005 Christian Schaller <christian at fluendo dot com>
+- Added libgstaudiorate and libgstsubparse to spec file
+
 * Thu May 5 2005 Christian Schaller <christian at fluendo dot com>
 - first attempt at spec file for gst-plugins-base
