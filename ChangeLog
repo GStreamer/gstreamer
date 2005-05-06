@@ -1,5 +1,13 @@
 2005-05-06  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasesink.c: (gst_basesink_preroll_queue_empty),
+	(gst_basesink_handle_buffer), (gst_basesink_chain_unlocked),
+	(gst_basesink_activate):
+	Actually do something with error codes returned from the push
+	functions.
+
+2005-05-06  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-element-sink.txt:
 	* docs/design/part-element-source.txt:
 	* gst/base/gstbasesink.c: (gst_basesink_class_init),

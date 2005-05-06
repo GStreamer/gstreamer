@@ -109,7 +109,7 @@ static void gst_basesink_loop (GstPad * pad);
 static GstFlowReturn gst_basesink_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_basesink_activate (GstPad * pad, GstActivateMode mode);
 static gboolean gst_basesink_event (GstPad * pad, GstEvent * event);
-static inline void gst_basesink_handle_buffer (GstBaseSink * basesink,
+static inline GstFlowReturn gst_basesink_handle_buffer (GstBaseSink * basesink,
     GstBuffer * buf);
 
 static void
@@ -382,20 +382,24 @@ gst_basesink_preroll_queue_push (GstBaseSink * basesink, GstPad * pad,
 }
 
 /* with PREROLL_LOCK */
-static void
+static GstFlowReturn
 gst_basesink_preroll_queue_empty (GstBaseSink * basesink, GstPad * pad)
 {
   GstBuffer *buf;
   GQueue *q = basesink->preroll_queue;
+  GstFlowReturn ret;
+
+  ret = GST_FLOW_OK;
 
   if (q) {
     DEBUG ("empty queue\n");
     while ((buf = g_queue_pop_head (q))) {
       DEBUG ("pop %p\n", buf);
-      gst_basesink_handle_buffer (basesink, buf);
+      ret = gst_basesink_handle_buffer (basesink, buf);
     }
     DEBUG ("queue len %p %d\n", basesink, q->length);
   }
+  return ret;
 }
 
 /* with PREROLL_LOCK */
@@ -649,19 +653,24 @@ gst_basesink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
  * 2) render the buffer
  * 3) unref the buffer
  */
-static inline void
+static inline GstFlowReturn
 gst_basesink_handle_buffer (GstBaseSink * basesink, GstBuffer * buf)
 {
   GstBaseSinkClass *bclass;
+  GstFlowReturn ret;
 
   gst_basesink_do_sync (basesink, buf);
 
   bclass = GST_BASESINK_GET_CLASS (basesink);
   if (bclass->render)
-    bclass->render (basesink, buf);
+    ret = bclass->render (basesink, buf);
+  else
+    ret = GST_FLOW_OK;
 
   DEBUG ("unref %p %p\n", basesink, buf);
   gst_buffer_unref (buf);
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -682,8 +691,7 @@ gst_basesink_chain_unlocked (GstPad * pad, GstBuffer * buf)
     case PREROLL_QUEUEING:
       return GST_FLOW_OK;
     case PREROLL_PLAYING:
-      gst_basesink_handle_buffer (basesink, buf);
-      return GST_FLOW_OK;
+      return gst_basesink_handle_buffer (basesink, buf);
     case PREROLL_FLUSHING:
       return GST_FLOW_UNEXPECTED;
     default:
