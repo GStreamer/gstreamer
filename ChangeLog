@@ -1,3 +1,8 @@
+2005-05-06  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* ext/Makefile.am:
+	Disable cdparanoia until someone ports it!
+
 2005-05-06  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_typefind),

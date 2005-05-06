@@ -5,7 +5,8 @@ ALSA_DIR=
 endif
 
 if USE_CDPARANOIA
-CDPARANOIA_DIR=cdparanoia
+#CDPARANOIA_DIR=cdparanoia
+CDPARANOIA_DIR=
 else
 CDPARANOIA_DIR=
 endif
