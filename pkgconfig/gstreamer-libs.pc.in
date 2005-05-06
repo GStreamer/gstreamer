@@ -7,5 +7,5 @@ Name: GStreamer Plugin Libraries
 Description: Streaming-media framework, plugin libraries
 Requires: gstreamer-@GST_MAJORMINOR@
 Version: @VERSION@
-Libs: 
+Libs: -L${libdir}/audio -L${libdir}/video
 Cflags: -I${includedir}
