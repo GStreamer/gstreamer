@@ -1,3 +1,15 @@
+2005-05-06  Christian Schaller <uraeus@gnome.org> 
+
+	* PORTED_09: update to add videofilter
+	* configure.ac: re-add videofilter
+	* gst/videofilter/Makefile.am: remove videobalance (not ported yet)
+	* gst/videofilter/gstgamma.c: (gst_gamma_class_init):
+	* gst/videofilter/gstvideobalance.c: (gst_videobalance_class_init):
+	* gst/videofilter/gstvideofilter.c: (gst_videofilter_getcaps),
+	(gst_videofilter_setcaps), (gst_videofilter_init),
+	(gst_videofilter_chain), (gst_videofilter_set_output_size):
+	* gst/videofilter/gstvideoflip.c: (gst_videoflip_class_init):
+
 2005-05-06  Christian Schaller <uraeus@gnome.org>
 
 	* ext/mad: ported plugin from threaded branch
