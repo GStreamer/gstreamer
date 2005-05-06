@@ -293,9 +293,9 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
+		videofilter \
 		effectv \
-		law \
-		videofilter"
+		law" 
 
 dnl see if we can build C++ plug-ins
 if test "x$HAVE_CXX" = "xyes"; then

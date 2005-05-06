@@ -1317,8 +1317,6 @@ gst_id3_tag_change_state (GstElement * element)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_library_load ("gsttags"))
-    return FALSE;
 
   if (!gst_element_register (plugin, "mad", GST_RANK_PRIMARY,
           gst_mad_get_type ())
