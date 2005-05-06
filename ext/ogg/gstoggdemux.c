@@ -1978,7 +1978,7 @@ gst_ogg_demux_sink_activate (GstPad * sinkpad, GstActivateMode mode)
       ogg->seekable = FALSE;
       result = TRUE;
       break;
-    case GST_ACTIVATE_PULL_RANGE:
+    case GST_ACTIVATE_PULL:
       /* if we have a scheduler we can start the task */
       if (GST_ELEMENT_SCHEDULER (ogg)) {
         gst_pad_peer_set_active (sinkpad, mode);
@@ -2009,9 +2009,6 @@ gst_ogg_demux_sink_activate (GstPad * sinkpad, GstActivateMode mode)
       GST_STREAM_UNLOCK (sinkpad);
 
       result = TRUE;
-      break;
-    case GST_ACTIVATE_PULL:
-      result = FALSE;
       break;
   }
   return result;
