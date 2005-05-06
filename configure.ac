@@ -307,7 +307,8 @@ dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
 		videofilter \
 		effectv \
-		law"
+		law \
+		smpte"
 
 dnl see if we can build C++ plug-ins
 if test "x$HAVE_CXX" = "xyes"; then
@@ -360,16 +361,27 @@ dnl    ])
 dnl  ])
 dnl ])
 
+<<<<<<< configure.ac
+dnl *** aalib ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_AALIB, true)
+GST_CHECK_FEATURE(AALIB, [aasink plug-in], aasink, [
+  AM_PATH_AALIB(, HAVE_AALIB=yes, HAVE_AALIB=no)
+  AS_SCRUB_INCLUDE(AALIB_CFLAGS)
+])
+
+
+=======
 dnl ###########################
 dnl # Configure external libs #
 dnl ###########################
 
 
+>>>>>>> 1.538
 dnl *** sidplay : works with libsidplay 1.36.x (not 2.x.x) ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SIDPLAY, true)
 GST_CHECK_FEATURE(SIDPLAY, [sidplay plug-in], sidplay, [
   GST_PATH_SIDPLAY()
-  ])
+])
 
 dnl *** mad ***
 dnl FIXME: we could use header checks here as well IMO
@@ -446,9 +458,11 @@ gst-plugins.spec
 gst/Makefile
 gst/effectv/Makefile
 gst/law/Makefile
+gst/smpte/Makefile
 gst/videofilter/Makefile
 sys/Makefile
 ext/Makefile
+ext/aalib/Makefile
 ext/mad/Makefile
 ext/sidplay/Makefile
 common/Makefile

@@ -22,6 +22,7 @@
 #define __GST_AASINK_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstbasesink.h>
 
 #include <aalib.h>
 
@@ -41,27 +42,17 @@ extern "C" {
 #define GST_IS_AASINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AASINK))
 
-typedef enum {
-  GST_AASINK_OPEN              = GST_ELEMENT_FLAG_LAST,
-
-  GST_AASINK_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
-} GstAASinkFlags;
-
 typedef struct _GstAASink GstAASink;
 typedef struct _GstAASinkClass GstAASinkClass;
 
 struct _GstAASink {
-  GstElement element;
-
-  GstPad *sinkpad;
+  GstBaseSink parent;
 
   gulong format;
   gint width, height;
 
   gint frames_displayed;
   guint64 frame_time;
-
-  GstClock *clock;
 
   aa_context *context;
   struct aa_hardware_params ascii_surf;
@@ -71,7 +62,7 @@ struct _GstAASink {
 };
 
 struct _GstAASinkClass {
-  GstElementClass parent_class;
+  GstBaseSinkClass parent_class;
 
   /* signals */
   void (*frame_displayed) (GstElement *element);

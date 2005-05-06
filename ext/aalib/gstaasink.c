@@ -70,8 +70,11 @@ static void gst_aasink_base_init (gpointer g_class);
 static void gst_aasink_class_init (GstAASinkClass * klass);
 static void gst_aasink_init (GstAASink * aasink);
 
-static void gst_aasink_set_clock (GstElement * element, GstClock * clock);
-static void gst_aasink_chain (GstPad * pad, GstData * _data);
+static gboolean gst_aasink_setcaps (GstBaseSink * pad, GstCaps * caps);
+static void gst_aasink_get_times (GstBaseSink * sink, GstBuffer * buffer,
+    GstClockTime * start, GstClockTime * end);
+static GstFlowReturn gst_aasink_render (GstBaseSink * basesink,
+    GstBuffer * buffer);
 
 static void gst_aasink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -102,7 +105,8 @@ gst_aasink_get_type (void)
     };
 
     aasink_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstAASink", &aasink_info, 0);
+        g_type_register_static (GST_TYPE_BASESINK, "GstAASink", &aasink_info,
+        0);
   }
   return aasink_type;
 }
@@ -186,11 +190,16 @@ gst_aasink_class_init (GstAASinkClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstBaseSinkClass *gstbasesink_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  gstbasesink_class = (GstBaseSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_BASESINK);
+
+  gobject_class->set_property = gst_aasink_set_property;
+  gobject_class->get_property = gst_aasink_get_property;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WIDTH, g_param_spec_int ("width", "width", "width", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));  /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HEIGHT, g_param_spec_int ("height", "height", "height", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
@@ -204,9 +213,6 @@ gst_aasink_class_init (GstAASinkClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAMES_DISPLAYED, g_param_spec_int ("frames_displayed", "frames_displayed", "frames_displayed", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));       /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAME_TIME, g_param_spec_int ("frame_time", "frame_time", "frame_time", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));       /* CHECKME */
 
-  gobject_class->set_property = gst_aasink_set_property;
-  gobject_class->get_property = gst_aasink_get_property;
-
   gst_aasink_signals[SIGNAL_FRAME_DISPLAYED] =
       g_signal_new ("frame-displayed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstAASinkClass, frame_displayed),
@@ -216,12 +222,16 @@ gst_aasink_class_init (GstAASinkClass * klass)
       G_STRUCT_OFFSET (GstAASinkClass, have_size), NULL, NULL,
       gst_marshal_VOID__INT_INT, G_TYPE_NONE, 2, G_TYPE_UINT, G_TYPE_UINT);
 
-  gstelement_class->change_state = gst_aasink_change_state;
-  gstelement_class->set_clock = gst_aasink_set_clock;
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_aasink_change_state);
+
+  gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_aasink_setcaps);
+  gstbasesink_class->get_times = GST_DEBUG_FUNCPTR (gst_aasink_get_times);
+  gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_aasink_render);
+  gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_aasink_render);
 }
 
 static GstCaps *
-gst_aasink_fixate (GstPad * pad, const GstCaps * caps)
+gst_aasink_fixate (GstPad * pad, GstCaps * caps)
 {
   GstStructure *structure;
   GstCaps *newcaps;
@@ -247,19 +257,20 @@ gst_aasink_fixate (GstPad * pad, const GstCaps * caps)
   return NULL;
 }
 
-static GstPadLinkReturn
-gst_aasink_sinkconnect (GstPad * pad, const GstCaps * caps)
+static gboolean
+gst_aasink_setcaps (GstBaseSink * basesink, GstCaps * caps)
 {
   GstAASink *aasink;
   GstStructure *structure;
 
-  aasink = GST_AASINK (gst_pad_get_parent (pad));
+  aasink = GST_AASINK (basesink);
 
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "width", &aasink->width);
   gst_structure_get_int (structure, "height", &aasink->height);
 
   /* FIXME aasink->format is never set */
+  g_print ("%d %d\n", aasink->width, aasink->height);
 
   GST_DEBUG ("aasink: setting %08lx (" GST_FOURCC_FORMAT ")",
       aasink->format, GST_FOURCC_ARGS (aasink->format));
@@ -267,27 +278,16 @@ gst_aasink_sinkconnect (GstPad * pad, const GstCaps * caps)
   g_signal_emit (G_OBJECT (aasink), gst_aasink_signals[SIGNAL_HAVE_SIZE], 0,
       aasink->width, aasink->height);
 
-  return GST_PAD_LINK_OK;
-}
-
-static void
-gst_aasink_set_clock (GstElement * element, GstClock * clock)
-{
-  GstAASink *aasink = GST_AASINK (element);
-
-  aasink->clock = clock;
+  return TRUE;
 }
 
 static void
 gst_aasink_init (GstAASink * aasink)
 {
-  aasink->sinkpad =
-      gst_pad_new_from_template (gst_element_get_pad_template (GST_ELEMENT
-          (aasink), "sink"), "sink");
-  gst_element_add_pad (GST_ELEMENT (aasink), aasink->sinkpad);
-  gst_pad_set_chain_function (aasink->sinkpad, gst_aasink_chain);
-  gst_pad_set_link_function (aasink->sinkpad, gst_aasink_sinkconnect);
-  gst_pad_set_fixate_function (aasink->sinkpad, gst_aasink_fixate);
+  GstPad *pad;
+
+  pad = GST_BASESINK_PAD (aasink);
+  gst_pad_set_fixatecaps_function (pad, gst_aasink_fixate);
 
   memcpy (&aasink->ascii_surf, &aa_defparams,
       sizeof (struct aa_hardware_params));
@@ -302,9 +302,6 @@ gst_aasink_init (GstAASink * aasink)
   aasink->width = -1;
   aasink->height = -1;
 
-  aasink->clock = NULL;
-
-  GST_FLAG_SET (aasink, GST_ELEMENT_THREAD_SUGGESTED);
 }
 
 static void
@@ -345,40 +342,35 @@ gst_aasink_scale (GstAASink * aasink, gchar * src, gchar * dest,
 }
 
 static void
-gst_aasink_chain (GstPad * pad, GstData * _data)
+gst_aasink_get_times (GstBaseSink * sink, GstBuffer * buffer,
+    GstClockTime * start, GstClockTime * end)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
+  *start = GST_BUFFER_TIMESTAMP (buffer);
+  *end = *start + GST_BUFFER_DURATION (buffer);
+}
+
+static GstFlowReturn
+gst_aasink_render (GstBaseSink * basesink, GstBuffer * buffer)
+{
   GstAASink *aasink;
 
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
+  aasink = GST_AASINK (basesink);
 
-  aasink = GST_AASINK (gst_pad_get_parent (pad));
+  GST_DEBUG ("render");
 
-  gst_aasink_scale (aasink, GST_BUFFER_DATA (buf),      /* src */
+  gst_aasink_scale (aasink, GST_BUFFER_DATA (buffer),   /* src */
       aa_image (aasink->context),       /* dest */
       aasink->width,            /* sw */
       aasink->height,           /* sh */
       aa_imgwidth (aasink->context),    /* dw */
       aa_imgheight (aasink->context));  /* dh */
 
-  GST_DEBUG ("videosink: clock wait: %" G_GUINT64_FORMAT,
-      GST_BUFFER_TIMESTAMP (buf));
-
-  if (aasink->clock && GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-    gst_element_wait (GST_ELEMENT (aasink), GST_BUFFER_TIMESTAMP (buf));
-  }
-
   aa_render (aasink->context, &aasink->ascii_parms,
       0, 0, aa_imgwidth (aasink->context), aa_imgheight (aasink->context));
   aa_flush (aasink->context);
   aa_getevent (aasink->context, FALSE);
 
-  g_signal_emit (G_OBJECT (aasink), gst_aasink_signals[SIGNAL_FRAME_DISPLAYED],
-      0);
-
-  gst_buffer_unref (buf);
+  return GST_FLOW_OK;
 }
 
 
@@ -387,9 +379,6 @@ gst_aasink_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
   GstAASink *aasink;
-
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_AASINK (object));
 
   aasink = GST_AASINK (object);
 
@@ -439,7 +428,6 @@ gst_aasink_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstAASink *aasink;
 
-  /* it's not null if we got it, but it might not be ours */
   aasink = GST_AASINK (object);
 
   switch (prop_id) {
@@ -497,8 +485,6 @@ gst_aasink_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 gst_aasink_open (GstAASink * aasink)
 {
-  g_return_val_if_fail (!GST_FLAG_IS_SET (aasink, GST_AASINK_OPEN), FALSE);
-
   aa_recommendhidisplay (aa_drivers[aasink->aa_driver]->shortname);
 
   aasink->context = aa_autoinit (&aasink->ascii_surf);
@@ -510,40 +496,58 @@ gst_aasink_open (GstAASink * aasink)
   aa_autoinitkbd (aasink->context, 0);
   aa_resizehandler (aasink->context, (void *) aa_resize);
 
-  GST_FLAG_SET (aasink, GST_AASINK_OPEN);
-
   return TRUE;
 }
 
-static void
+static gboolean
 gst_aasink_close (GstAASink * aasink)
 {
-  g_return_if_fail (GST_FLAG_IS_SET (aasink, GST_AASINK_OPEN));
-
   aa_close (aasink->context);
 
-  GST_FLAG_UNSET (aasink, GST_AASINK_OPEN);
+  return TRUE;
 }
 
 static GstElementStateReturn
 gst_aasink_change_state (GstElement * element)
 {
-  g_return_val_if_fail (GST_IS_AASINK (element), GST_STATE_FAILURE);
+  GstElementStateReturn ret;
+  gint transition;
 
-  if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
-    if (GST_FLAG_IS_SET (element, GST_AASINK_OPEN))
-      gst_aasink_close (GST_AASINK (element));
-  } else {
-    if (!GST_FLAG_IS_SET (element, GST_AASINK_OPEN)) {
+  transition = GST_STATE_TRANSITION (element);
+
+  switch (transition) {
+    case GST_STATE_NULL_TO_READY:
+      break;
+    case GST_STATE_READY_TO_PAUSED:
       if (!gst_aasink_open (GST_AASINK (element)))
-        return GST_STATE_FAILURE;
-    }
+        goto open_failed;
+      break;
+    case GST_STATE_PAUSED_TO_PLAYING:
+      break;
+    default:
+      break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
-  return GST_STATE_SUCCESS;
+  switch (transition) {
+    case GST_STATE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      break;
+    case GST_STATE_READY_TO_NULL:
+      gst_aasink_close (GST_AASINK (element));
+      break;
+    default:
+      break;
+  }
+
+  return ret;
+
+open_failed:
+  {
+    return GST_STATE_FAILURE;
+  }
 }
 
 static gboolean

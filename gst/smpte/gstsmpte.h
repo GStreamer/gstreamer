@@ -22,6 +22,8 @@
 #define __GST_SMPTE_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstcollectpads.h>
+
 #include "gstmask.h"
 
 #define GST_TYPE_SMPTE \
@@ -52,6 +54,8 @@ struct _GstSMPTE {
   GstPad 	*srcpad,
   		*sinkpad1,
   		*sinkpad2;
+
+  GstCollectPads *collect;
 
   gint 		 type;
   gint 		 border;
