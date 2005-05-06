@@ -1,3 +1,13 @@
+2005-05-06  Christian Schaller  <uraeus@gnome.org>
+
+	* configure.ac: 
+	* ext/mad/Makefile.am: add linking of gstinterfaces
+	* ext/mad/gstid3tag.c: (plugin_init): remove library_load
+	* gst-plugins.spec.in: 
+	* gst/effectv/Makefile.am: link to libgstvideofilter
+	* gst/effectv/gsteffectv.c: (plugin_init): same as for mad
+	* gst/videofilter/Makefile.am: make sure videoflip is not built
+
 2005-05-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/law/alaw-decode.c: (alawdec_getcaps), (alawdec_setcaps),
@@ -21,6 +31,7 @@
 	* gst/audioconvert:
 	* gst/ffmpegcolorspace:
 	* gst/typefind:
+	* gst/videofilter: comment out videoflip and gamma plugins
 
 2005-05-06  Christian Schaller  <uraeus@gnome.org>
 
