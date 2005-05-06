@@ -112,7 +112,8 @@ static void gst_smpte_class_init (GstSMPTEClass * klass);
 static void gst_smpte_base_init (GstSMPTEClass * klass);
 static void gst_smpte_init (GstSMPTE * smpte);
 
-static void gst_smpte_loop (GstElement * element);
+static GstFlowReturn gst_smpte_collected (GstCollectPads * pads,
+    GstSMPTE * smpte);
 
 static void gst_smpte_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -234,13 +235,13 @@ gst_smpte_update_mask (GstSMPTE * smpte, gint type, gint depth, gint width,
 }
 
 static gboolean
-gst_smpte_sinkconnect (GstPad * pad, const GstCaps * caps)
+gst_smpte_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstSMPTE *smpte;
   GstStructure *structure;
   gboolean ret;
 
-  smpte = GST_SMPTE (gst_pad_get_parent (pad));
+  smpte = GST_SMPTE (GST_PAD_PARENT (pad));
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -248,13 +249,13 @@ gst_smpte_sinkconnect (GstPad * pad, const GstCaps * caps)
   ret &= gst_structure_get_int (structure, "height", &smpte->height);
   ret &= gst_structure_get_double (structure, "framerate", &smpte->fps);
   if (!ret)
-    return GST_PAD_LINK_REFUSED;
+    return FALSE;
 
   gst_smpte_update_mask (smpte, smpte->type, smpte->depth, smpte->width,
       smpte->height);
 
   /* forward to the next plugin */
-  return gst_pad_try_set_caps (smpte->srcpad, caps);
+  return TRUE;
 }
 
 static void
@@ -263,13 +264,13 @@ gst_smpte_init (GstSMPTE * smpte)
   smpte->sinkpad1 =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_smpte_sink1_template), "sink1");
-  gst_pad_set_link_function (smpte->sinkpad1, gst_smpte_sinkconnect);
+  gst_pad_set_setcaps_function (smpte->sinkpad1, gst_smpte_setcaps);
   gst_element_add_pad (GST_ELEMENT (smpte), smpte->sinkpad1);
 
   smpte->sinkpad2 =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_smpte_sink2_template), "sink2");
-  gst_pad_set_link_function (smpte->sinkpad2, gst_smpte_sinkconnect);
+  gst_pad_set_setcaps_function (smpte->sinkpad2, gst_smpte_setcaps);
   gst_element_add_pad (GST_ELEMENT (smpte), smpte->sinkpad2);
 
   smpte->srcpad =
@@ -277,12 +278,20 @@ gst_smpte_init (GstSMPTE * smpte)
       (&gst_smpte_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (smpte), smpte->srcpad);
 
-  gst_element_set_loop_function (GST_ELEMENT (smpte), gst_smpte_loop);
+  smpte->collect = gst_collectpads_new ();
+  gst_collectpads_set_function (smpte->collect,
+      (GstCollectPadsFunction) gst_smpte_collected, smpte);
+  gst_collectpads_start (smpte->collect);
+
+  gst_collectpads_add_pad (smpte->collect, smpte->sinkpad1,
+      sizeof (GstCollectData));
+  gst_collectpads_add_pad (smpte->collect, smpte->sinkpad2,
+      sizeof (GstCollectData));
 
   smpte->width = 320;
   smpte->height = 200;
   smpte->fps = 25.;
-  smpte->duration = 64;
+  smpte->duration = 512;
   smpte->position = 0;
   smpte->type = 1;
   smpte->border = 0;
@@ -332,33 +341,25 @@ gst_smpte_blend_i420 (guint8 * in1, guint8 * in2, guint8 * out, GstMask * mask,
   }
 }
 
-static void
-gst_smpte_loop (GstElement * element)
+static GstFlowReturn
+gst_smpte_collected (GstCollectPads * pads, GstSMPTE * smpte)
 {
-  GstSMPTE *smpte;
   GstBuffer *outbuf;
   GstClockTime ts;
   GstBuffer *in1 = NULL, *in2 = NULL;
-
-  smpte = GST_SMPTE (element);
+  GSList *collected;
 
   ts = smpte->position * GST_SECOND / smpte->fps;
 
-  while (GST_PAD_IS_USABLE (smpte->sinkpad1) && in1 == NULL) {
-    in1 = GST_BUFFER (gst_pad_pull (smpte->sinkpad1));
-    if (GST_IS_EVENT (in1)) {
-      gst_pad_push (smpte->srcpad, GST_DATA (in1));
-      in1 = NULL;
-    } else
-      ts = GST_BUFFER_TIMESTAMP (in1);
-  }
-  if (GST_PAD_IS_USABLE (smpte->sinkpad2) && in2 == NULL) {
-    in2 = GST_BUFFER (gst_pad_pull (smpte->sinkpad2));
-    if (GST_IS_EVENT (in2)) {
-      gst_pad_push (smpte->srcpad, GST_DATA (in2));
-      in2 = NULL;
-    } else
-      ts = GST_BUFFER_TIMESTAMP (in2);
+  for (collected = pads->data; collected; collected = g_slist_next (collected)) {
+    GstCollectData *data;
+
+    data = (GstCollectData *) collected->data;
+
+    if (data->pad == smpte->sinkpad1)
+      in1 = gst_collectpads_pop (pads, data);
+    else if (data->pad == smpte->sinkpad2)
+      in2 = gst_collectpads_pop (pads, data);
   }
 
   if (in1 == NULL) {
@@ -373,6 +374,7 @@ gst_smpte_loop (GstElement * element)
   if (smpte->position < smpte->duration) {
     outbuf = gst_buffer_new_and_alloc (smpte->width * smpte->height * 3);
 
+    /* set caps if not done yet */
     if (!GST_PAD_CAPS (smpte->srcpad)) {
       GstCaps *caps;
 
@@ -383,11 +385,9 @@ gst_smpte_loop (GstElement * element)
           G_TYPE_INT, smpte->height, "framerate", G_TYPE_DOUBLE, smpte->fps,
           NULL);
 
-      if (!gst_pad_try_set_caps (smpte->srcpad, caps)) {
-        GST_ELEMENT_ERROR (smpte, CORE, NEGOTIATION, (NULL), (NULL));
-        return;
-      }
+      gst_pad_set_caps (smpte->srcpad, caps);
     }
+    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (smpte->srcpad));
 
     gst_smpte_blend_i420 (GST_BUFFER_DATA (in1),
         GST_BUFFER_DATA (in2),
@@ -396,6 +396,7 @@ gst_smpte_loop (GstElement * element)
         smpte->border,
         ((1 << smpte->depth) + smpte->border) *
         smpte->position / smpte->duration);
+
   } else {
     outbuf = in2;
     gst_buffer_ref (in2);
@@ -409,7 +410,8 @@ gst_smpte_loop (GstElement * element)
     gst_buffer_unref (in2);
 
   GST_BUFFER_TIMESTAMP (outbuf) = ts;
-  gst_pad_push (smpte->srcpad, GST_DATA (outbuf));
+
+  return gst_pad_push (smpte->srcpad, outbuf);
 }
 
 static void
