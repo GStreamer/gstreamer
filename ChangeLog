@@ -1,3 +1,20 @@
+2005-05-06  Wim Taymans  <wim@fluendo.com>
+
+	* configure.ac:
+	* ext/aalib/Makefile.am:
+	* ext/aalib/gstaasink.c: (gst_aasink_get_type),
+	(gst_aasink_class_init), (gst_aasink_fixate), (gst_aasink_setcaps),
+	(gst_aasink_init), (gst_aasink_get_times), (gst_aasink_render),
+	(gst_aasink_set_property), (gst_aasink_get_property),
+	(gst_aasink_open), (gst_aasink_close), (gst_aasink_change_state):
+	* ext/aalib/gstaasink.h:
+	* gst/smpte/Makefile.am:
+	* gst/smpte/gstsmpte.c: (gst_smpte_setcaps), (gst_smpte_init),
+	(gst_smpte_collected):
+	* gst/smpte/gstsmpte.h:
+	Ported 2 more plugins. usgly hack in the Makefile.am though, I'm
+	sure someone will fix it.
+
 2005-05-06  Christian Schaller  <uraeus@gnome.org>
 
 	* configure.ac: add sidplay
