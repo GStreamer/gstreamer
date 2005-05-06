@@ -1,3 +1,8 @@
+2005-05-06  Christian Schaller  <uraeus@gnome.org>
+
+	* gst-libs: Remove all files as this is in gst-plugins-base now
+	* gst-libs/README: add a remove informing of this move
+
 2005-05-06  Christian Schaller <uraeus@gnome.org> 
 
 	* PORTED_09: update to add videofilter
