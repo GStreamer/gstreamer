@@ -2,6 +2,7 @@
 
 	* ext/mad: ported plugin from threaded branch
 	* gst/effectv: ported plugins from threaded branch
+	* gst/law: enable law plugin as it compiles (Wim will fixor)
 
 2005-05-06  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
