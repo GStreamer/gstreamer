@@ -1,3 +1,35 @@
+2005-05-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstaudiosink.c:
+	(gst_audioringbuffer_get_type), (gst_audioringbuffer_class_init),
+	(audioringbuffer_thread_func), (gst_audioringbuffer_init),
+	(gst_audioringbuffer_acquire), (gst_audioringbuffer_release),
+	(gst_audioringbuffer_play), (gst_audioringbuffer_stop),
+	(gst_audioringbuffer_delay), (gst_audiosink_class_init),
+	(gst_audiosink_create_ringbuffer):
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_baseaudiosink_class_init), (gst_baseaudiosink_init),
+	(gst_baseaudiosink_get_clock), (gst_baseaudiosink_get_time),
+	(gst_baseaudiosink_set_property), (build_linear_format),
+	(debug_spec_caps), (debug_spec_buffer),
+	(gst_baseaudiosink_setcaps), (gst_baseaudiosink_get_times),
+	(gst_baseaudiosink_event), (gst_baseaudiosink_preroll),
+	(gst_baseaudiosink_render), (gst_baseaudiosink_create_ringbuffer),
+	(gst_baseaudiosink_callback), (gst_baseaudiosink_change_state):
+	* gst-libs/gst/audio/gstbaseaudiosink.h:
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ringbuffer_get_type),
+	(gst_ringbuffer_set_callback), (gst_ringbuffer_acquire),
+	(gst_ringbuffer_release), (gst_ringbuffer_is_acquired),
+	(gst_ringbuffer_play), (gst_ringbuffer_pause),
+	(gst_ringbuffer_stop), (gst_ringbuffer_delay),
+	(gst_ringbuffer_played_samples), (gst_ringbuffer_set_sample),
+	(wait_segment), (gst_ringbuffer_commit),
+	(gst_ringbuffer_prepare_read), (gst_ringbuffer_advance),
+	(gst_ringbuffer_clear):
+	* gst-libs/gst/audio/gstringbuffer.h:
+	Make the base audiosink return an error when there is no
+	audiobuffer negotiated.
+
 2005-05-06  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* ext/Makefile.am:

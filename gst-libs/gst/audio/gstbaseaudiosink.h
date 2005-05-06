@@ -72,6 +72,7 @@ typedef struct _GstBaseAudioSinkClass GstBaseAudioSinkClass;
 struct _GstBaseAudioSink {
   GstBaseSink 	 element;
 
+  /*< protected >*/ /* with LOCK */
   /* our ringbuffer */
   GstRingBuffer *ringbuffer;
 

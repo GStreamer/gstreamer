@@ -484,11 +484,19 @@ gst_baseaudiosink_render (GstBaseSink * bsink, GstBuffer * buf)
   offset = GST_BUFFER_OFFSET (buf);
 
   GST_DEBUG ("in offset %llu, time %lld", offset, GST_BUFFER_TIMESTAMP (buf));
+  if (!gst_ringbuffer_is_acquired (sink->ringbuffer))
+    goto wrong_state;
 
   gst_ringbuffer_commit (sink->ringbuffer, offset,
       GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
   return GST_FLOW_OK;
+
+wrong_state:
+  {
+    GST_DEBUG ("ringbuffer in wrong state");
+    return GST_FLOW_ERROR;
+  }
 }
 
 GstRingBuffer *

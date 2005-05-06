@@ -198,6 +198,8 @@ void     	gst_ringbuffer_set_callback   	(GstRingBuffer *buf, GstRingBufferCallb
 gboolean 	gst_ringbuffer_acquire 		(GstRingBuffer *buf, GstRingBufferSpec *spec);
 gboolean 	gst_ringbuffer_release 		(GstRingBuffer *buf);
 
+gboolean 	gst_ringbuffer_is_acquired	(GstRingBuffer *buf);
+
 /* playback/pause */
 gboolean 	gst_ringbuffer_play 		(GstRingBuffer *buf);
 gboolean 	gst_ringbuffer_pause 		(GstRingBuffer *buf);

@@ -239,6 +239,31 @@ done:
 }
 
 /**
+ * gst_ringbuffer_is_acquired:
+ * @buf: the #GstRingBuffer to check
+ *
+ * Check if the ringbuffer is acquired and ready to use.
+ *
+ * Returns: TRUE if the ringbuffer is acquired, FALSE on error.
+ *
+ * MT safe.
+ */
+gboolean
+gst_ringbuffer_is_acquired (GstRingBuffer * buf)
+{
+  gboolean res;
+
+  g_return_val_if_fail (buf != NULL, FALSE);
+
+  GST_LOCK (buf);
+  res = buf->acquired;
+  GST_UNLOCK (buf);
+
+  return res;
+}
+
+
+/**
  * gst_ringbuffer_play:
  * @buf: the #GstRingBuffer to play
  *
