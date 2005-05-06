@@ -22,9 +22,6 @@
 #endif
 
 #include <string.h>
-
-#include <gst/bytestream/bytestream.h>
-
 #include "gstsiddec.h"
 
 /* Sidec signals and args */

@@ -1,5 +1,12 @@
 2005-05-06  Christian Schaller  <uraeus@gnome.org>
 
+	* configure.ac: add sidplay
+	* ext/Makefile.am: add sidplay
+	* ext/sidplay/Makefile.am: add GST_PLUGINS_CFLAGS
+	* ext/sidplay/gstsiddec.cc: remove bytestream.h
+
+2005-05-06  Christian Schaller  <uraeus@gnome.org>
+
 	* configure.ac: add gst-plugins-libs
 
 2005-05-06  Wim Taymans  <wim@fluendo.com>
