@@ -4,11 +4,11 @@
 # A52DEC_DIR=
 # endif
 
-# if USE_AALIB
-# AALIB_DIR=aalib
-# else
-# AALIB_DIR=
-# endif
+if USE_AALIB
+ AALIB_DIR=aalib
+else
+ AALIB_DIR=
+endif
 
 # if USE_AMRNB
 # AMRNB_DIR=amrnb
@@ -444,4 +444,5 @@ SUBDIRS=\
 
 DIST_SUBDIRS=\
 	mad \
-	sidplay
+	sidplay \
+	aalib
