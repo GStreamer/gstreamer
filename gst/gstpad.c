@@ -2349,6 +2349,7 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps)
     goto fallback;
   }
 
+do_caps:
   /* FIXME, move capnego this into a base class? */
   caps = GST_BUFFER_CAPS (result);
   caps_changed = caps && caps != GST_RPAD_CAPS (pad);
@@ -2372,10 +2373,12 @@ no_peer:
   /* fallback case, allocate a buffer of our own, add pad caps. */
 fallback:
   {
+    GST_CAT_DEBUG (GST_CAT_PADS,
+        "%s:%s fallback buffer alloc", GST_DEBUG_PAD_NAME (pad));
     result = gst_buffer_new_and_alloc (size);
     gst_buffer_set_caps (result, caps);
 
-    return result;
+    goto do_caps;
   }
 not_negotiated:
   {
@@ -2699,6 +2702,7 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   /* FIXME, move capnego this into a base class? */
   caps = GST_BUFFER_CAPS (buffer);
   caps_changed = caps && caps != GST_RPAD_CAPS (peer);
+  GST_DEBUG ("caps changed %d %" GST_PTR_FORMAT "\n", caps_changed, caps);
   /* we got a new datatype on the peer pad, see if it can handle it */
   if (G_UNLIKELY (caps_changed)) {
     if (G_UNLIKELY (!gst_pad_configure_sink (GST_PAD_CAST (peer), caps)))

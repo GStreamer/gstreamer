@@ -1,3 +1,8 @@
+2005-05-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstpad.c: (gst_pad_alloc_buffer), (gst_pad_push):
+	Also set caps if we use the fallback buffer alloc.
+
 2005-05-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/Makefile.am:
