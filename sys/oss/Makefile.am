@@ -14,7 +14,8 @@ noinst_HEADERS = gstosssink.h	\
 		gstosssrc.h	\
 		gstosselement.h\
 		gstossmixer.h \
-		gst-i18n-plugin.h
+		gst-i18n-plugin.h \
+		gettext.h
 
 noinst_PROGRAMS = oss_probe
 

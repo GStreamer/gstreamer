@@ -4,11 +4,11 @@
 # DXR3_DIR=
 # endif
 
-if USE_OSS
-OSS_DIR=oss
-else
-OSS_DIR=
-endif
+# if USE_OSS
+# OSS_DIR=oss
+# else
+# OSS_DIR=
+# endif
 
 # if USE_OSX_AUDIO
 # OSX_AUDIO_DIR=osxaudio
