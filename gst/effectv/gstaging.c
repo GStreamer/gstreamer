@@ -172,14 +172,14 @@ gst_agingtv_class_init (gpointer g_class, gpointer class_data)
   gobject_class = G_OBJECT_CLASS (g_class);
   videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
 
+  gobject_class->set_property = gst_agingtv_set_property;
+  gobject_class->get_property = gst_agingtv_get_property;
+
 #if 0
   g_object_class_install_property (gobject_class, ARG_METHOD,
       g_param_spec_enum ("method", "method", "method",
           GST_TYPE_AGINGTV_METHOD, GST_AGINGTV_METHOD_1, G_PARAM_READWRITE));
 #endif
-
-  gobject_class->set_property = gst_agingtv_set_property;
-  gobject_class->get_property = gst_agingtv_get_property;
 
   videofilter_class->setup = gst_agingtv_setup;
 }

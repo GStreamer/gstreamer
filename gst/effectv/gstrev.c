@@ -171,6 +171,9 @@ gst_revtv_class_init (gpointer klass, gpointer class_data)
   gobject_class = G_OBJECT_CLASS (klass);
   videofilter_class = GST_VIDEOFILTER_CLASS (klass);
 
+  gobject_class->set_property = gst_revtv_set_property;
+  gobject_class->get_property = gst_revtv_get_property;
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DELAY,
       g_param_spec_int ("delay", "Delay", "Delay in frames between updates",
           1, 100, 1, G_PARAM_READWRITE));
@@ -180,9 +183,6 @@ gst_revtv_class_init (gpointer klass, gpointer class_data)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_GAIN,
       g_param_spec_int ("gain", "Gain", "Control gain",
           1, 200, 50, G_PARAM_READWRITE));
-
-  gobject_class->set_property = gst_revtv_set_property;
-  gobject_class->get_property = gst_revtv_get_property;
 
   videofilter_class->setup = gst_revtv_setup;
 }

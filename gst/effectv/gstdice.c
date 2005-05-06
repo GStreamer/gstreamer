@@ -173,12 +173,12 @@ gst_dicetv_class_init (gpointer g_class, gpointer class_data)
 
   dicetv_class->reset = gst_dicetv_reset_handler;
 
+  gobject_class->set_property = gst_dicetv_set_property;
+  gobject_class->get_property = gst_dicetv_get_property;
+
   g_object_class_install_property (gobject_class, ARG_CUBE_BITS,
       g_param_spec_int ("square_bits", "Square Bits", "The size of the Squares",
           MIN_CUBE_BITS, MAX_CUBE_BITS, DEFAULT_CUBE_BITS, G_PARAM_READWRITE));
-
-  gobject_class->set_property = gst_dicetv_set_property;
-  gobject_class->get_property = gst_dicetv_get_property;
 
   videofilter_class->setup = gst_dicetv_setup;
 }

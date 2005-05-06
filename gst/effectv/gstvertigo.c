@@ -169,15 +169,15 @@ gst_vertigotv_class_init (GstVertigoTVClass * klass, gpointer class_data)
 
   klass->reset = gst_vertigotv_reset_handler;
 
+  gobject_class->set_property = gst_vertigotv_set_property;
+  gobject_class->get_property = gst_vertigotv_get_property;
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SPEED,
       g_param_spec_float ("speed", "Speed", "Control the speed of movement",
           0.01, 100.0, 0.02, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ZOOM_SPEED,
       g_param_spec_float ("zoom_speed", "Zoom Speed",
           "Control the rate of zooming", 1.01, 1.1, 1.01, G_PARAM_READWRITE));
-
-  gobject_class->set_property = gst_vertigotv_set_property;
-  gobject_class->get_property = gst_vertigotv_get_property;
 
   videofilter_class->setup = gst_vertigotv_setup;
 }

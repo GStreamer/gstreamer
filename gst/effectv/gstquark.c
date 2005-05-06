@@ -94,9 +94,8 @@ static void gst_quarktv_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_quarktv_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_quarktv_dispose (GObject * object);
 
-static void gst_quarktv_chain (GstPad * pad, GstData * _data);
+static GstFlowReturn gst_quarktv_chain (GstPad * pad, GstBuffer * buffer);
 
 static GstElementClass *parent_class = NULL;
 
@@ -159,31 +158,32 @@ gst_quarktv_class_init (GstQuarkTVClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  gobject_class->set_property = gst_quarktv_set_property;
+  gobject_class->get_property = gst_quarktv_get_property;
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PLANES,
       g_param_spec_int ("planes", "Planes", "Number of frames in the buffer",
           1, 32, PLANES, G_PARAM_READWRITE));
-
-  gobject_class->set_property = gst_quarktv_set_property;
-  gobject_class->get_property = gst_quarktv_get_property;
-  gobject_class->dispose = gst_quarktv_dispose;
 
   gstelement_class->change_state = gst_quarktv_change_state;
 }
 
 static GstPadLinkReturn
-gst_quarktv_link (GstPad * pad, const GstCaps * caps)
+gst_quarktv_link (GstPad * pad, GstPad * peer)
 {
   GstQuarkTV *filter;
   GstPad *otherpad;
-  gint i;
-  GstStructure *structure;
-  GstPadLinkReturn res;
+
+  //gint i;
+  //GstStructure *structure;
+  //GstPadLinkReturn res;
 
   filter = GST_QUARKTV (gst_pad_get_parent (pad));
   g_return_val_if_fail (GST_IS_QUARKTV (filter), GST_PAD_LINK_REFUSED);
 
   otherpad = (pad == filter->srcpad ? filter->sinkpad : filter->srcpad);
 
+#if 0
   res = gst_pad_try_set_caps (otherpad, caps);
   if (GST_PAD_LINK_FAILED (res))
     return res;
@@ -200,6 +200,7 @@ gst_quarktv_link (GstPad * pad, const GstCaps * caps)
       gst_buffer_unref (filter->planetable[i]);
     filter->planetable[i] = NULL;
   }
+#endif
 
   return GST_PAD_LINK_OK;
 }
@@ -210,7 +211,7 @@ gst_quarktv_init (GstQuarkTV * filter)
   filter->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_effectv_sink_template), "sink");
-  gst_pad_set_getcaps_function (filter->sinkpad, gst_pad_proxy_getcaps);
+  //gst_pad_set_getcaps_function (filter->sinkpad, gst_pad_proxy_getcaps);
   gst_pad_set_chain_function (filter->sinkpad, gst_quarktv_chain);
   gst_pad_set_link_function (filter->sinkpad, gst_quarktv_link);
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
@@ -218,7 +219,7 @@ gst_quarktv_init (GstQuarkTV * filter)
   filter->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_effectv_src_template), "src");
-  gst_pad_set_getcaps_function (filter->srcpad, gst_pad_proxy_getcaps);
+  //gst_pad_set_getcaps_function (filter->srcpad, gst_pad_proxy_getcaps);
   gst_pad_set_link_function (filter->srcpad, gst_quarktv_link);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
@@ -229,10 +230,9 @@ gst_quarktv_init (GstQuarkTV * filter)
   memset (filter->planetable, 0, filter->planes * sizeof (GstBuffer *));
 }
 
-static void
-gst_quarktv_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_quarktv_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
   GstQuarkTV *filter;
   guint32 *src, *dest;
   GstBuffer *outbuf;
@@ -244,9 +244,7 @@ gst_quarktv_chain (GstPad * pad, GstData * _data)
 
   area = filter->area;
 
-  outbuf = gst_buffer_new ();
-  GST_BUFFER_SIZE (outbuf) = area * sizeof (guint32);
-  GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
+  outbuf = gst_pad_alloc_buffer (filter->srcpad, 0, area, GST_PAD_CAPS (pad));
   dest = (guint32 *) GST_BUFFER_DATA (outbuf);
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
 
@@ -266,12 +264,14 @@ gst_quarktv_chain (GstPad * pad, GstData * _data)
     dest[area] = (rand ? ((guint32 *) GST_BUFFER_DATA (rand))[area] : 0);
   }
 
-  gst_pad_push (filter->srcpad, GST_DATA (outbuf));
+  gst_pad_push (filter->srcpad, outbuf);
 
   filter->current_plane--;
 
   if (filter->current_plane < 0)
     filter->current_plane = filter->planes - 1;
+
+  return GST_FLOW_OK;
 }
 
 static GstElementStateReturn
@@ -289,6 +289,8 @@ gst_quarktv_change_state (GstElement * element)
           gst_buffer_unref (filter->planetable[i]);
         filter->planetable[i] = NULL;
       }
+      g_free (filter->planetable);
+      filter->planetable = NULL;
       break;
     }
     default:
@@ -361,21 +363,4 @@ gst_quarktv_get_property (GObject * object, guint prop_id, GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-static void
-gst_quarktv_dispose (GObject * object)
-{
-  GstQuarkTV *filter = GST_QUARKTV (object);
-  gint i;
-
-  for (i = 0; i < filter->planes; i++) {
-    if (filter->planetable[i])
-      gst_buffer_unref (filter->planetable[i]);
-    filter->planetable[i] = NULL;
-  }
-  g_free (filter->planetable);
-  filter->planetable = NULL;
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
