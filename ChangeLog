@@ -1,3 +1,16 @@
+2005-05-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/law/alaw-decode.c: (alawdec_getcaps), (alawdec_setcaps),
+	(gst_alawdec_init), (gst_alawdec_chain):
+	* gst/law/alaw-encode.c: (alawenc_getcaps), (alawenc_setcaps),
+	(gst_alawenc_init), (gst_alawenc_chain):
+	* gst/law/mulaw-decode.c: (mulawdec_getcaps), (mulawdec_setcaps),
+	(gst_mulawdec_init), (gst_mulawdec_chain):
+	* gst/law/mulaw-encode.c: (mulawenc_getcaps), (mulawenc_setcaps),
+	(gst_mulawenc_init), (gst_mulawenc_chain):
+	Ported alaw and mulaw plugins to 0.9, fixed the negotiation as
+	well.
+
 2005-05-06  Christian Schaller  <uraeus@gnome.org>
 
 	* ext/alsa: removed plugins that are now in gst-plugins-base
