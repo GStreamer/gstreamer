@@ -177,6 +177,9 @@ gst_capsfilter_getcaps (GstPad * pad)
       capsfilter->srcpad;
 
   caps = gst_pad_peer_get_caps (otherpad);
+  if (caps == NULL)
+    caps = gst_caps_new_any ();
+
   icaps = gst_caps_intersect (caps, capsfilter->filter_caps);
   gst_caps_unref (caps);
 

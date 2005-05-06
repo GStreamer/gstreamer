@@ -1,5 +1,20 @@
 2005-05-06  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasetransform.c: (gst_base_transform_proxy_getcaps):
+	* gst/elements/gstcapsfilter.c: (gst_capsfilter_getcaps):
+	* gst/gstpad.c: (gst_pad_peer_get_caps):
+	* gst/gstqueue.c: (gst_queue_init), (gst_queue_getcaps),
+	(gst_queue_bufferalloc), (gst_queue_handle_sink_event),
+	(gst_queue_src_activate), (gst_queue_change_state):
+	* gst/gstqueue.h:
+	* gst/gstutils.c: (gst_element_get_compatible_pad_template),
+	(intersect_caps_func):
+	Fix gst_pad_peer_get_caps(), make it return NULL if no peer.
+	Always take QUEUE_LOCK after STREAM_LOCK or we might deadlock.
+	Some fixes for the peer_get_caps() change.
+
+2005-05-06  Wim Taymans  <wim@fluendo.com>
+
 	* gst/base/gstbasesink.c: (gst_basesink_preroll_queue_empty),
 	(gst_basesink_handle_buffer), (gst_basesink_chain_unlocked),
 	(gst_basesink_activate):

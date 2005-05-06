@@ -339,7 +339,6 @@ gst_queue_init (GstQueue * queue)
   queue->leaky = GST_QUEUE_NO_LEAK;
   queue->may_deadlock = TRUE;
   queue->block_timeout = GST_CLOCK_TIME_NONE;
-  queue->interrupt = FALSE;
   queue->flush = FALSE;
 
   queue->qlock = g_mutex_new ();
@@ -386,6 +385,8 @@ gst_queue_getcaps (GstPad * pad)
 
   otherpad = (pad == queue->srcpad ? queue->sinkpad : queue->srcpad);
   result = gst_pad_peer_get_caps (otherpad);
+  if (result == NULL)
+    result = gst_caps_new_any ();
 
   return result;
 }
@@ -860,9 +861,10 @@ gst_queue_src_activate (GstPad * pad, GstActivateMode mode)
     }
   } else {
     /* step 1, unblock chain and loop functions */
-    queue->interrupt = TRUE;
+    GST_QUEUE_MUTEX_LOCK;
     g_cond_signal (queue->item_add);
     g_cond_signal (queue->item_del);
+    GST_QUEUE_MUTEX_UNLOCK;
 
     /* step 2, make sure streaming finishes */
     GST_STREAM_LOCK (pad);
@@ -889,16 +891,16 @@ gst_queue_change_state (GstElement * element)
 
   /* lock the queue so another thread (not in sync with this thread's state)
    * can't call this queue's _loop (or whatever) */
-  GST_QUEUE_MUTEX_LOCK;
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
+      GST_QUEUE_MUTEX_LOCK;
       gst_queue_locked_flush (queue);
+      GST_QUEUE_MUTEX_UNLOCK;
       break;
     case GST_STATE_READY_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
-      queue->interrupt = FALSE;
       break;
     default:
       break;
@@ -910,14 +912,15 @@ gst_queue_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
+      GST_QUEUE_MUTEX_LOCK;
       gst_queue_locked_flush (queue);
+      GST_QUEUE_MUTEX_UNLOCK;
       break;
     case GST_STATE_READY_TO_NULL:
       break;
     default:
       break;
   }
-  GST_QUEUE_MUTEX_UNLOCK;
 
   GST_CAT_LOG_OBJECT (GST_CAT_STATES, element, "done with state change");
 

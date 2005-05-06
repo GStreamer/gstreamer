@@ -1807,7 +1807,8 @@ was_dispatching:
  * Gets the capabilities of the peer connected to this pad.
  *
  * Returns: the #GstCaps of the peer pad. This function returns a new caps, so use 
- * gst_caps_unref to get rid of it.
+ * gst_caps_unref to get rid of it. this function returns NULL if there is no
+ * peer pad or when this function is called recursively from a getcaps function.
  */
 GstCaps *
 gst_pad_peer_get_caps (GstPad * pad)
@@ -1846,7 +1847,7 @@ lost_ghostpad:
 no_peer:
   {
     GST_UNLOCK (realpad);
-    return gst_caps_new_any ();
+    return NULL;
   }
 was_dispatching:
   {
