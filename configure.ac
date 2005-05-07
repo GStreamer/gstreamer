@@ -361,7 +361,10 @@ dnl    ])
 dnl  ])
 dnl ])
 
-<<<<<<< configure.ac
+dnl ###########################
+dnl # Configure external libs #
+dnl ###########################
+
 dnl *** aalib ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AALIB, true)
 GST_CHECK_FEATURE(AALIB, [aasink plug-in], aasink, [
@@ -369,14 +372,6 @@ GST_CHECK_FEATURE(AALIB, [aasink plug-in], aasink, [
   AS_SCRUB_INCLUDE(AALIB_CFLAGS)
 ])
 
-
-=======
-dnl ###########################
-dnl # Configure external libs #
-dnl ###########################
-
-
->>>>>>> 1.538
 dnl *** sidplay : works with libsidplay 1.36.x (not 2.x.x) ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SIDPLAY, true)
 GST_CHECK_FEATURE(SIDPLAY, [sidplay plug-in], sidplay, [
