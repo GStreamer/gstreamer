@@ -1,3 +1,12 @@
+2005-05-08  Zeeshan Ali  <zeenix@gmail.com>
+
+	* configure.ac:
+	* ext/mad/Makefile.am:
+	* effectv/Makefile.am:
+	Fixed a few things to enable the mad and effectv to be able to find the
+	headers in the gst-plugins-base/gst-libs and to link against the libs
+	in there.
+
 2005-05-07  Zeeshan Ali  <zeenix@gmail.com>
 
 	* configure.ac:
