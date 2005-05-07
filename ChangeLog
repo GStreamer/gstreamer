@@ -1,3 +1,8 @@
+2005-05-07  Zeeshan Ali  <zeenix@gmail.com>
+
+	* configure.ac:
+	Fixed the build by fixing a small mistake of Wim.
+	
 2005-05-06  Wim Taymans  <wim@fluendo.com>
 
 	* configure.ac:
