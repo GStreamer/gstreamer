@@ -372,6 +372,14 @@ GST_CHECK_FEATURE(AALIB, [aasink plug-in], aasink, [
   AS_SCRUB_INCLUDE(AALIB_CFLAGS)
 ])
 
+dnl *** libcaca ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBCACA, true)
+GST_CHECK_FEATURE(LIBCACA, [libcaca], libcaca, [
+  GST_CHECK_CONFIGPROG(LIBCACA, caca-config)
+  AC_SUBST(LIBCACA_CFLAGS)
+  AC_SUBST(LIBCACA_LIBS)
+])
+
 dnl *** sidplay : works with libsidplay 1.36.x (not 2.x.x) ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SIDPLAY, true)
 GST_CHECK_FEATURE(SIDPLAY, [sidplay plug-in], sidplay, [
@@ -458,6 +466,7 @@ gst/videofilter/Makefile
 sys/Makefile
 ext/Makefile
 ext/aalib/Makefile
+ext/libcaca/Makefile
 ext/mad/Makefile
 ext/sidplay/Makefile
 common/Makefile

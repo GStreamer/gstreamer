@@ -178,11 +178,11 @@ endif
 # LCS_DIR=
 # endif
 
-# if USE_LIBCACA
-# LIBCACA_DIR=libcaca
-# else
-# LIBCACA_DIR=
-# endif
+if USE_LIBCACA
+LIBCACA_DIR=libcaca
+else
+LIBCACA_DIR=
+endif
 
 # if USE_LIBDV
 # LIBDV_DIR=dv

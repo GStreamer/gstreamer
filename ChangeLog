@@ -1,3 +1,15 @@
+2005-05-08  Zeeshan Ali   <zeenix@gmail.com>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/libcaca/Makefile.am:
+	* ext/libcaca/gstcacasink.c: (gst_cacasink_get_type),
+	(gst_cacasink_class_init), (gst_cacasink_get_times),
+	(gst_cacasink_setcaps), (gst_cacasink_init), (gst_cacasink_render),
+	(plugin_init):
+	* ext/libcaca/gstcacasink.h:
+	Ported the libcaca plugin.
+
 2005-05-08  Zeeshan Ali  <zeenix@gmail.com>
 
 	* configure.ac:
