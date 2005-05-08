@@ -1,3 +1,9 @@
+2005-05-08  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/Makefile.am: (gst_headers):
+	Added gstqueryutils.h to the list of headers to install, that was
+	a 'nachty' move wingo :)
+
 2005-05-06  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstquery.h

@@ -175,6 +175,7 @@ gst_headers =			\
 	gstpluginfeature.h	\
 	gstprobe.h		\
 	gstquery.h		\
+	gstqueryutils.h		\
 	gstqueue.h		\
 	gstscheduler.h		\
 	gststructure.h		\
