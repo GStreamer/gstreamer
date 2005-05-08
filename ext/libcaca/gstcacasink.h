@@ -22,7 +22,7 @@
 #define __GST_CACASINK_H__
 
 #include <gst/gst.h>
-#include <gst/video/videosink.h>
+#include <gst/base/gstbasesink.h>
 #include <gst/video/video.h>
 
 #include <caca.h>
@@ -63,11 +63,12 @@ typedef struct _GstCACASink GstCACASink;
 typedef struct _GstCACASinkClass GstCACASinkClass;
 
 struct _GstCACASink {
-  GstVideoSink videosink;
+  GstBaseSink parent;
 
   GstPad *sinkpad;
 
   gulong format;
+  gint width, height;
   gint screen_width, screen_height;
   guint bpp;
   guint dither;
@@ -78,7 +79,7 @@ struct _GstCACASink {
 };
 
 struct _GstCACASinkClass {
-  GstVideoSinkClass parent_class;
+  GstBaseSinkClass parent_class;
 
   /* signals */
 };

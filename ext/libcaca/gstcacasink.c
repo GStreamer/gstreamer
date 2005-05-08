@@ -23,7 +23,6 @@
 
 #include <string.h>
 #include <sys/time.h>
-#include <gst/navigation/navigation.h>
 
 #include "gstcacasink.h"
 
@@ -61,14 +60,12 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 static void gst_cacasink_base_init (gpointer g_class);
 static void gst_cacasink_class_init (GstCACASinkClass * klass);
 static void gst_cacasink_init (GstCACASink * cacasink);
-static void gst_cacasink_interface_init (GstImplementsInterfaceClass * klass);
-static gboolean gst_cacasink_interface_supported (GstImplementsInterface *
-    iface, GType type);
-static void gst_cacasink_navigation_init (GstNavigationInterface * iface);
-static void gst_cacasink_navigation_send_event (GstNavigation * navigation,
-    GstStructure * structure);
 
-static void gst_cacasink_chain (GstPad * pad, GstData * _data);
+static gboolean gst_cacasink_setcaps (GstBaseSink * pad, GstCaps * caps);
+static void gst_cacasink_get_times (GstBaseSink * sink, GstBuffer * buffer,
+    GstClockTime * start, GstClockTime * end);
+static GstFlowReturn gst_cacasink_render (GstBaseSink * basesink,
+    GstBuffer * buffer);
 
 static void gst_cacasink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -97,26 +94,9 @@ gst_cacasink_get_type (void)
       (GInstanceInitFunc) gst_cacasink_init,
     };
 
-    static const GInterfaceInfo iface_info = {
-      (GInterfaceInitFunc) gst_cacasink_interface_init,
-      NULL,
-      NULL,
-    };
-
-    static const GInterfaceInfo navigation_info = {
-      (GInterfaceInitFunc) gst_cacasink_navigation_init,
-      NULL,
-      NULL,
-    };
-
     cacasink_type =
-        g_type_register_static (GST_TYPE_VIDEOSINK, "GstCACASink",
+        g_type_register_static (GST_TYPE_BASESINK, "GstCACASink",
         &cacasink_info, 0);
-
-    g_type_add_interface_static (cacasink_type, GST_TYPE_IMPLEMENTS_INTERFACE,
-        &iface_info);
-    g_type_add_interface_static (cacasink_type, GST_TYPE_NAVIGATION,
-        &navigation_info);
   }
   return cacasink_type;
 }
@@ -168,13 +148,17 @@ gst_cacasink_class_init (GstCACASinkClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstVideoSinkClass *gstvs_class;
+  GstBaseSinkClass *gstbasesink_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstvs_class = (GstVideoSinkClass *) klass;
+  gstbasesink_class = (GstBaseSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_BASESINK);
+
+  gobject_class->set_property = gst_cacasink_set_property;
+  gobject_class->get_property = gst_cacasink_get_property;
+  gstelement_class->change_state = gst_cacasink_change_state;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SCREEN_WIDTH, g_param_spec_int ("screen_width", "screen_width", "screen_width", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));       /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SCREEN_HEIGHT, g_param_spec_int ("screen_height", "screen_height", "screen_height", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));   /* CHECKME */
@@ -185,68 +169,37 @@ gst_cacasink_class_init (GstCACASinkClass * klass)
       g_param_spec_boolean ("anti_aliasing", "Anti-Aliasing",
           "Enables Anti-Aliasing", TRUE, G_PARAM_READWRITE));
 
-  gobject_class->set_property = gst_cacasink_set_property;
-  gobject_class->get_property = gst_cacasink_get_property;
-
-  gstelement_class->change_state = gst_cacasink_change_state;
+  gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_cacasink_setcaps);
+  gstbasesink_class->get_times = GST_DEBUG_FUNCPTR (gst_cacasink_get_times);
+  gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_cacasink_render);
+  gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_cacasink_render);
 }
 
 static void
-gst_cacasink_interface_init (GstImplementsInterfaceClass * klass)
+gst_cacasink_get_times (GstBaseSink * sink, GstBuffer * buffer,
+    GstClockTime * start, GstClockTime * end)
 {
-  klass->supported = gst_cacasink_interface_supported;
+  *start = GST_BUFFER_TIMESTAMP (buffer);
+  *end = *start + GST_BUFFER_DURATION (buffer);
 }
 
 static gboolean
-gst_cacasink_interface_supported (GstImplementsInterface * iface, GType type)
-{
-  g_assert (type == GST_TYPE_NAVIGATION);
-
-  return (GST_STATE (iface) != GST_STATE_NULL);
-}
-
-static void
-gst_cacasink_navigation_init (GstNavigationInterface * iface)
-{
-  iface->send_event = gst_cacasink_navigation_send_event;
-}
-
-static void
-gst_cacasink_navigation_send_event (GstNavigation * navigation,
-    GstStructure * structure)
-{
-  GstCACASink *cacasink = GST_CACASINK (navigation);
-  GstEvent *event;
-
-  event = gst_event_new (GST_EVENT_NAVIGATION);
-  /*GST_EVENT_TIMESTAMP (event) = 0; */
-  event->event_data.structure.structure = structure;
-
-  /* FIXME 
-   * Obviously, the pointer x,y coordinates need to be adjusted by the
-   * window size and relation to the bounding window. */
-
-  gst_pad_send_event (gst_pad_get_peer (GST_VIDEOSINK_PAD (cacasink)), event);
-}
-
-static GstPadLinkReturn
-gst_cacasink_sinkconnect (GstPad * pad, const GstCaps * caps)
+gst_cacasink_setcaps (GstBaseSink * basesink, GstCaps * caps)
 {
   GstCACASink *cacasink;
   GstStructure *structure;
 
-  cacasink = GST_CACASINK (gst_pad_get_parent (pad));
+  cacasink = GST_CACASINK (basesink);
 
   /* We cannot use library functions if the sink is not open */
   if (!GST_FLAG_IS_SET (GST_ELEMENT (cacasink), GST_CACASINK_OPEN))
-    return GST_PAD_LINK_DELAYED;
+    return FALSE;
   /*if (!GST_CAPS_IS_FIXED (caps))
-     return GST_PAD_LINK_DELAYED; */
+     return FALSE; */
 
   structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "width", &(GST_VIDEOSINK_WIDTH (cacasink)));
-  gst_structure_get_int (structure, "height",
-      &(GST_VIDEOSINK_HEIGHT (cacasink)));
+  gst_structure_get_int (structure, "width", &(cacasink->width));
+  gst_structure_get_int (structure, "height", &(cacasink->height));
   gst_structure_get_int (structure, "bpp", &cacasink->bpp);
   gst_structure_get_int (structure, "red_mask", &cacasink->red_mask);
   gst_structure_get_int (structure, "green_mask", &cacasink->green_mask);
@@ -275,28 +228,25 @@ gst_cacasink_sinkconnect (GstPad * pad, const GstCaps * caps)
   }
 
   cacasink->bitmap = caca_create_bitmap (cacasink->bpp,
-      GST_VIDEOSINK_WIDTH (cacasink),
-      GST_VIDEOSINK_HEIGHT (cacasink),
-      GST_VIDEOSINK_WIDTH (cacasink) * cacasink->bpp / 8,
+      cacasink->width,
+      cacasink->height,
+      cacasink->width * cacasink->bpp / 8,
       cacasink->red_mask, cacasink->green_mask, cacasink->blue_mask, 0);
 
   if (!cacasink->bitmap) {
-    return GST_PAD_LINK_DELAYED;
+    return FALSE;
   }
 
-  return GST_PAD_LINK_OK;
+  return TRUE;
 }
 
 static void
 gst_cacasink_init (GstCACASink * cacasink)
 {
-  GST_VIDEOSINK_PAD (cacasink) =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
-      "sink");
-  gst_element_add_pad (GST_ELEMENT (cacasink), GST_VIDEOSINK_PAD (cacasink));
-  gst_pad_set_chain_function (GST_VIDEOSINK_PAD (cacasink), gst_cacasink_chain);
-  gst_pad_set_link_function (GST_VIDEOSINK_PAD (cacasink),
-      gst_cacasink_sinkconnect);
+  GstPad *pad;
+
+  pad = GST_BASESINK_PAD (cacasink);
+  /* gst_pad_set_fixatecaps_function (pad, gst_cacasink_fixate); */
 
   cacasink->screen_width = GST_CACA_DEFAULT_SCREEN_WIDTH;
   cacasink->screen_height = GST_CACA_DEFAULT_SCREEN_HEIGHT;
@@ -304,38 +254,25 @@ gst_cacasink_init (GstCACASink * cacasink)
   cacasink->red_mask = GST_CACA_DEFAULT_RED_MASK;
   cacasink->green_mask = GST_CACA_DEFAULT_GREEN_MASK;
   cacasink->blue_mask = GST_CACA_DEFAULT_BLUE_MASK;
-
-  GST_FLAG_SET (cacasink, GST_ELEMENT_THREAD_SUGGESTED);
 }
 
-static void
-gst_cacasink_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_cacasink_render (GstBaseSink * basesink, GstBuffer * buffer)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
-  GstCACASink *cacasink;
+  GstCACASink *cacasink = GST_CACASINK (basesink);
 
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
-
-  cacasink = GST_CACASINK (gst_pad_get_parent (pad));
   /* We cannot use library functions if the sink is not open */
   if (!GST_FLAG_IS_SET (GST_ELEMENT (cacasink), GST_CACASINK_OPEN))
-    return;
+    return GST_FLOW_WRONG_STATE;
 
-  GST_DEBUG ("videosink: clock wait: %" G_GUINT64_FORMAT,
-      GST_BUFFER_TIMESTAMP (buf));
-
-  if (GST_VIDEOSINK_CLOCK (cacasink) && GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-    gst_element_wait (GST_ELEMENT (cacasink), GST_BUFFER_TIMESTAMP (buf));
-  }
+  GST_DEBUG ("render");
 
   caca_clear ();
   caca_draw_bitmap (0, 0, cacasink->screen_width - 1,
-      cacasink->screen_height - 1, cacasink->bitmap, GST_BUFFER_DATA (buf));
+      cacasink->screen_height - 1, cacasink->bitmap, GST_BUFFER_DATA (buffer));
   caca_refresh ();
 
-  gst_buffer_unref (buf);
+  return GST_FLOW_OK;
 }
 
 static void
@@ -463,10 +400,6 @@ gst_cacasink_change_state (GstElement * element)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  /* Loading the library containing GstVideoSink, our parent object */
-  if (!gst_library_load ("gstvideo"))
-    return FALSE;
-
   if (!gst_element_register (plugin, "cacasink", GST_RANK_NONE,
           GST_TYPE_CACASINK))
     return FALSE;
