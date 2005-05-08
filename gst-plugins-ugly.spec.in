@@ -126,6 +126,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgsteffectv.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmulaw.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideofilter.so
+%{_libdir}/gstreamer-%{majorminor}/libgstsmpte.so
 
 # gstreamer-plugins with external dependencies but in the main package
 # @USE_ARTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstarts.so
@@ -277,13 +278,13 @@ This package contains dvd plugins for GStreamer, including
 Summary:        Additional video plugins for GStreamer
 Group:          Applications/Multimedia
                                                                                 
-# @USE_AALIB_TRUE@BuildRequires:  aalib-devel >= 1.3
+@USE_AALIB_TRUE@BuildRequires:  aalib-devel >= 1.3
                                                                                 
 Requires:       gstreamer09-plugins >= %{gstp_minver}
 Requires(pre):  %{_bindir}/gst-register-%{majorminor}
 Requires(post): %{_bindir}/gst-register-%{majorminor}
                                                                                 
-# @USE_AALIB_TRUE@Provides:       gstreamer-aasink = %{version}-%{release}
+@USE_AALIB_TRUE@Provides:       gstreamer-aasink = %{version}-%{release}
                                                                                 
 %description video
 This package contains additional video plugins for GStreamer, including
@@ -295,7 +296,7 @@ This package contains additional video plugins for GStreamer, including
 
 %files video
 %defattr(-, root, root, -)
-# @USE_AALIB_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstaasink.so
+@USE_AALIB_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstaasink.so
 # @USE_LIBDV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdvdec.so
 # @USE_DV1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgst1394.so
 # @USE_LIBCACA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcacasink.so
