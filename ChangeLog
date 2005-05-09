@@ -1,5 +1,18 @@
 2005-05-09  Wim Taymans  <wim@fluendo.com>
 
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_sink_setcaps),
+	(gst_vorbisenc_src_query), (gst_vorbisenc_sink_query),
+	(gst_vorbisenc_set_header_on_caps), (gst_vorbisenc_sink_event),
+	(gst_vorbisenc_chain):
+	* gst/audioconvert/gstaudioconvert.c: (gst_audio_convert_chain),
+	(gst_audio_convert_caps_remove_format_info),
+	(gst_audio_convert_getcaps), (gst_audio_convert_setcaps),
+	(gst_audio_convert_fixate), (gst_audio_convert_channels):
+	Make caps writable before writing to it.
+	Fix negotiation in audioconvert some more.
+
+2005-05-09  Wim Taymans  <wim@fluendo.com>
+
 	* gst/videorate/gstvideorate.c: (gst_videorate_transformcaps),
 	(gst_videorate_getcaps), (gst_videorate_setcaps),
 	(gst_videorate_event), (gst_videorate_chain):

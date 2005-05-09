@@ -438,17 +438,19 @@ gst_audio_convert_setcaps (GstPad * pad, GstCaps * caps)
 
       gst_caps_unref (othercaps);
 
-      /* set the rate on the caps */
+      /* set the rate on the caps, this has to work */
       gst_structure_set (structure, "rate", G_TYPE_INT, ac_caps.rate, NULL);
       gst_structure_set (structure, "channels", G_TYPE_INT, ac_caps.channels,
           NULL);
+
       if (strcmp (gst_structure_get_name (structure), "audio/x-raw-float") == 0) {
         if (!ac_caps.is_int) {
+          /* copy over */
           gst_structure_set (structure, "buffer-frames", G_TYPE_INT,
               ac_caps.buffer_frames, NULL);
         } else {
-          gst_structure_set (structure, "buffer-frames", GST_TYPE_INT_RANGE, 0,
-              G_MAXINT, NULL);
+          /* set to anything */
+          gst_structure_set (structure, "buffer-frames", G_TYPE_INT, 0, NULL);
         }
       }
 

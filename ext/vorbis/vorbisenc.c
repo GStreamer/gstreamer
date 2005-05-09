@@ -241,7 +241,7 @@ gst_vorbisenc_sink_setcaps (GstPad * pad, GstCaps * caps)
   VorbisEnc *vorbisenc;
   GstStructure *structure;
 
-  vorbisenc = GST_VORBISENC (gst_pad_get_parent (pad));
+  vorbisenc = GST_VORBISENC (GST_PAD_PARENT (pad));
   vorbisenc->setup = FALSE;
 
   structure = gst_caps_get_structure (caps, 0);
@@ -783,13 +783,16 @@ gst_vorbisenc_push_packet (VorbisEnc * vorbisenc, ogg_packet * packet)
   gst_vorbisenc_push_buffer (vorbisenc, outbuf);
 }
 
-static void
+static GstCaps *
 gst_vorbisenc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
     GstBuffer * buf2, GstBuffer * buf3)
 {
-  GstStructure *structure = gst_caps_get_structure (caps, 0);
+  GstStructure *structure;
   GValue list = { 0 };
   GValue value = { 0 };
+
+  caps = gst_caps_make_writable (caps);
+  structure = gst_caps_get_structure (caps, 0);
 
   /* mark buffers */
   GST_BUFFER_FLAG_SET (buf1, GST_BUFFER_IN_CAPS);
@@ -812,6 +815,8 @@ gst_vorbisenc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
   gst_structure_set_value (structure, "streamheader", &list);
   g_value_unset (&value);
   g_value_unset (&list);
+
+  return caps;
 }
 
 static gboolean
@@ -895,7 +900,7 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer)
 
       /* mark and put on caps */
       caps = gst_pad_get_caps (vorbisenc->srcpad);
-      gst_vorbisenc_set_header_on_caps (caps, buf1, buf2, buf3);
+      caps = gst_vorbisenc_set_header_on_caps (caps, buf1, buf2, buf3);
 
       /* negotiate with these caps */
       GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
