@@ -110,7 +110,8 @@ static GstStaticPadTemplate gst_videorate_sink_template =
 static void gst_videorate_base_init (gpointer g_class);
 static void gst_videorate_class_init (GstVideorateClass * klass);
 static void gst_videorate_init (GstVideorate * videorate);
-static void gst_videorate_chain (GstPad * pad, GstData * _data);
+static gboolean gst_videorate_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_videorate_chain (GstPad * pad, GstBuffer * buffer);
 
 static void gst_videorate_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -168,6 +169,9 @@ gst_videorate_class_init (GstVideorateClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  object_class->set_property = gst_videorate_set_property;
+  object_class->get_property = gst_videorate_get_property;
+
   g_object_class_install_property (object_class, ARG_IN,
       g_param_spec_uint64 ("in", "In",
           "Number of input frames", 0, G_MAXUINT64, 0, G_PARAM_READABLE));
@@ -189,9 +193,6 @@ gst_videorate_class_init (GstVideorateClass * klass)
           "Value indicating how much to prefer new frames",
           0.0, 1.0, DEFAULT_NEW_PREF, G_PARAM_READWRITE));
 
-  object_class->set_property = gst_videorate_set_property;
-  object_class->get_property = gst_videorate_get_property;
-
   element_class->change_state = gst_videorate_change_state;
 }
 
@@ -200,90 +201,121 @@ gst_videorate_getcaps (GstPad * pad)
 {
   GstVideorate *videorate;
   GstPad *otherpad;
-  GstCaps *caps, *copy, *copy2 = NULL;
-  int i;
-  gdouble otherfps;
-  GstStructure *structure;
-  gboolean negotiated;
+  GstCaps *caps;
 
-  videorate = GST_VIDEORATE (gst_pad_get_parent (pad));
+  videorate = GST_VIDEORATE (GST_PAD_PARENT (pad));
 
   otherpad = (pad == videorate->srcpad) ? videorate->sinkpad :
       videorate->srcpad;
-  negotiated = gst_pad_is_negotiated (otherpad);
-  otherfps = (pad == videorate->srcpad) ? videorate->from_fps :
-      videorate->to_fps;
 
-  caps = gst_pad_get_allowed_caps (otherpad);
-  copy = gst_caps_copy (caps);
-  if (negotiated) {
-    copy2 = gst_caps_copy (caps);
-  }
-  for (i = 0; i < gst_caps_get_size (caps); i++) {
-    structure = gst_caps_get_structure (caps, i);
+  /* we can do what the peer can */
+  caps = gst_pad_peer_get_caps (otherpad);
+  if (caps) {
+    int i;
+    GstCaps *intersect;
 
-    gst_structure_set (structure,
-        "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
-  }
-  if ((negotiated)) {
-    for (i = 0; i < gst_caps_get_size (copy2); i++) {
-      structure = gst_caps_get_structure (copy2, i);
+    /* filter against our caps */
+    intersect = gst_caps_intersect (caps, gst_pad_get_pad_template_caps (pad));
+    gst_caps_unref (caps);
+    caps = intersect;
 
-      gst_structure_set (structure, "framerate", G_TYPE_DOUBLE, otherfps, NULL);
+    caps = gst_caps_make_writable (caps);
+
+    /* all possible framerates are allowed */
+    for (i = 0; i < gst_caps_get_size (caps); i++) {
+      GstStructure *structure;
+
+      structure = gst_caps_get_structure (caps, i);
+
+      gst_structure_set (structure,
+          "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
     }
-    gst_caps_append (copy2, copy);
-    copy = copy2;
+  } else {
+    /* no peer, our padtemplate is enough then */
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
   }
-  gst_caps_append (copy, caps);
 
-  return copy;
+  return caps;
 }
 
-static GstPadLinkReturn
-gst_videorate_link (GstPad * pad, const GstCaps * caps)
+static gboolean
+gst_videorate_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstVideorate *videorate;
   GstStructure *structure;
-  gboolean ret;
+  gboolean ret = TRUE;
   double fps;
-  GstPad *otherpad;
+  GstPad *otherpad, *opeer;
 
-  videorate = GST_VIDEORATE (gst_pad_get_parent (pad));
-
-  otherpad = (pad == videorate->srcpad) ? videorate->sinkpad :
-      videorate->srcpad;
+  videorate = GST_VIDEORATE (GST_PAD_PARENT (pad));
 
   structure = gst_caps_get_structure (caps, 0);
-  ret = gst_structure_get_double (structure, "framerate", &fps);
-  if (!ret)
-    return GST_PAD_LINK_REFUSED;
+  if (!(ret = gst_structure_get_double (structure, "framerate", &fps)))
+    goto done;
 
   if (pad == videorate->srcpad) {
     videorate->to_fps = fps;
+    otherpad = videorate->sinkpad;
   } else {
     videorate->from_fps = fps;
+    otherpad = videorate->srcpad;
   }
+  /* now try to find something for the peer */
+  opeer = gst_pad_get_peer (otherpad);
+  if (opeer) {
+    if (gst_pad_accept_caps (opeer, caps)) {
+      /* the peer accepts the caps as they are */
+      gst_pad_set_caps (otherpad, caps);
 
-  if (gst_pad_is_negotiated (otherpad)) {
-    /* 
-     * Ensure that the other side talks the format we're trying to set
-     */
-    GstCaps *newcaps = gst_caps_copy (caps);
-
-    if (pad == videorate->srcpad) {
-      gst_caps_set_simple (newcaps,
-          "framerate", G_TYPE_DOUBLE, videorate->from_fps, NULL);
+      ret = TRUE;
     } else {
-      gst_caps_set_simple (newcaps,
-          "framerate", G_TYPE_DOUBLE, videorate->to_fps, NULL);
-    }
-    ret = gst_pad_try_set_caps (otherpad, newcaps);
-    if (GST_PAD_LINK_FAILED (ret)) {
-      return GST_PAD_LINK_REFUSED;
-    }
-  }
+      GstCaps *peercaps;
+      GstCaps *intersect;
+      gint i;
 
-  return GST_PAD_LINK_OK;
+      /* the peer does not accept this caps, see what it can do */
+      peercaps = gst_pad_get_caps (opeer);
+
+      caps = gst_caps_make_writable (caps);
+      structure = gst_caps_get_structure (caps, 0);
+
+      /* remove the framerate */
+      gst_structure_remove_field (structure, "framerate");
+
+      /* get all possibilities without framerate */
+      intersect = gst_caps_intersect (peercaps, caps);
+      gst_caps_unref (peercaps);
+
+      if (gst_caps_is_empty (intersect)) {
+        /* nothing possible, we're done */
+        gst_caps_unref (intersect);
+        ret = FALSE;
+        goto done;
+      }
+
+      /* loop through the caps,  fixate the framerate */
+      for (i = 0; i < gst_caps_get_size (intersect); i++) {
+        GstStructure *istruct;
+
+        istruct = gst_caps_get_structure (intersect, i);
+        if (gst_caps_structure_fixate_field_nearest_int (istruct, "framerate",
+                fps)) {
+          gst_structure_get_double (structure, "framerate", &fps);
+          if (otherpad == videorate->srcpad) {
+            videorate->to_fps = fps;
+          } else {
+            videorate->from_fps = fps;
+          }
+          gst_pad_set_caps (otherpad, intersect);
+          break;
+        }
+      }
+      gst_caps_unref (intersect);
+    }
+    gst_object_unref (GST_OBJECT (opeer));
+  }
+done:
+  return ret;
 }
 
 static void
@@ -293,6 +325,9 @@ gst_videorate_blank_data (GstVideorate * videorate)
   if (videorate->prevbuf)
     gst_buffer_unref (videorate->prevbuf);
   videorate->prevbuf = NULL;
+
+  videorate->from_fps = 0;
+  videorate->to_fps = 0;
   videorate->in = 0;
   videorate->out = 0;
   videorate->drop = 0;
@@ -304,63 +339,83 @@ gst_videorate_blank_data (GstVideorate * videorate)
 static void
 gst_videorate_init (GstVideorate * videorate)
 {
-  GST_FLAG_SET (videorate, GST_ELEMENT_EVENT_AWARE);
-
   GST_DEBUG ("gst_videorate_init");
   videorate->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_videorate_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (videorate), videorate->sinkpad);
+  gst_pad_set_event_function (videorate->sinkpad, gst_videorate_event);
   gst_pad_set_chain_function (videorate->sinkpad, gst_videorate_chain);
   gst_pad_set_getcaps_function (videorate->sinkpad, gst_videorate_getcaps);
-  gst_pad_set_link_function (videorate->sinkpad, gst_videorate_link);
+  gst_pad_set_setcaps_function (videorate->sinkpad, gst_videorate_setcaps);
 
   videorate->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_videorate_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (videorate), videorate->srcpad);
   gst_pad_set_getcaps_function (videorate->srcpad, gst_videorate_getcaps);
-  gst_pad_set_link_function (videorate->srcpad, gst_videorate_link);
+  gst_pad_set_setcaps_function (videorate->srcpad, gst_videorate_setcaps);
 
   gst_videorate_blank_data (videorate);
   videorate->silent = DEFAULT_SILENT;
   videorate->new_pref = DEFAULT_NEW_PREF;
 }
 
-static void
-gst_videorate_chain (GstPad * pad, GstData * data)
+static GstFlowReturn
+gst_videorate_event (GstPad * pad, GstEvent * event)
 {
-  GstVideorate *videorate = GST_VIDEORATE (gst_pad_get_parent (pad));
-  GstBuffer *buf;
+  GstVideorate *videorate;
 
-  if (GST_IS_EVENT (data)) {
-    GstEvent *event = GST_EVENT (data);
+  videorate = GST_VIDEORATE (GST_PAD_PARENT (pad));
 
-    if (!videorate->prevbuf) {
-      gst_pad_event_default (pad, event);
-      return;
-    }
-    if (GST_EVENT_TYPE (event) == GST_EVENT_DISCONTINUOUS) {
-      gint64 etime;
+  if (!videorate->prevbuf)
+    goto done;
 
-      if (!(gst_event_discont_get_value (event, GST_FORMAT_TIME, &etime)))
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_DISCONTINUOUS:
+    {
+      gint64 start, end;
+
+      GST_STREAM_LOCK (pad);
+
+      if (!(gst_event_discont_get_value (event, GST_FORMAT_TIME, &start, &end)))
         GST_WARNING ("Got discont but doesn't have GST_FORMAT_TIME value");
       else {
         gst_videorate_blank_data (videorate);
-        videorate->first_ts = etime;
+        videorate->first_ts = start;
       }
-      gst_pad_event_default (pad, event);
-      return;
-    }
-  }
+      GST_STREAM_UNLOCK (pad);
 
-  buf = GST_BUFFER (data);
+      break;
+    }
+    default:
+      break;
+  }
+done:
+  return gst_pad_event_default (pad, event);
+}
+
+static GstFlowReturn
+gst_videorate_chain (GstPad * pad, GstBuffer * buffer)
+{
+  GstVideorate *videorate;
+  GstFlowReturn res = GST_FLOW_OK;
+
+  videorate = GST_VIDEORATE (GST_PAD_PARENT (pad));
+
+  if (videorate->from_fps == 0)
+    return GST_FLOW_NOT_NEGOTIATED;
+
+  if (videorate->to_fps == 0)
+    return GST_FLOW_NOT_NEGOTIATED;
+
+  GST_STREAM_LOCK (pad);
 
   /* pull in 2 buffers */
   if (videorate->prevbuf == NULL) {
     /* We're sure it's a GstBuffer here */
-    videorate->prevbuf = buf;
-    videorate->next_ts = videorate->first_ts = GST_BUFFER_TIMESTAMP (buf);
+    videorate->prevbuf = buffer;
+    videorate->next_ts = videorate->first_ts = GST_BUFFER_TIMESTAMP (buffer);
   } else {
     GstClockTime prevtime, intime;
     gint count = 0;
@@ -368,17 +423,19 @@ gst_videorate_chain (GstPad * pad, GstData * data)
 
     prevtime = GST_BUFFER_TIMESTAMP (videorate->prevbuf);
     /* If it's a GstEvent, we give him the time of the next outputed frame */
+#if 0
     intime = (GST_IS_EVENT (data))
         ? videorate->next_ts +
-        (1 / videorate->to_fps * GST_SECOND) : GST_BUFFER_TIMESTAMP (buf);
+        (1 / videorate->to_fps * GST_SECOND) : GST_BUFFER_TIMESTAMP (buffer);
+#endif
+    intime = GST_BUFFER_TIMESTAMP (buffer);
 
     GST_LOG_OBJECT (videorate,
         "prev buf %" GST_TIME_FORMAT " new buf %" GST_TIME_FORMAT
         " outgoing ts %" GST_TIME_FORMAT, GST_TIME_ARGS (prevtime),
         GST_TIME_ARGS (intime), GST_TIME_ARGS (videorate->next_ts));
 
-    if (GST_IS_BUFFER (data))
-      videorate->in++;
+    videorate->in++;
 
     /* got 2 buffers, see which one is the best */
     do {
@@ -412,7 +469,10 @@ gst_videorate_chain (GstPad * pad, GstData * data)
             (videorate->out / videorate->to_fps * GST_SECOND);
         GST_BUFFER_DURATION (outbuf) =
             videorate->next_ts - GST_BUFFER_TIMESTAMP (outbuf);
-        gst_pad_push (videorate->srcpad, GST_DATA (outbuf));
+        gst_buffer_set_caps (outbuf, GST_PAD_CAPS (videorate->srcpad));
+
+        if ((res = gst_pad_push (videorate->srcpad, outbuf)) != GST_FLOW_OK)
+          goto done;
 
         GST_LOG_OBJECT (videorate,
             "old is best, dup, outgoing ts %" GST_TIME_FORMAT,
@@ -444,13 +504,14 @@ gst_videorate_chain (GstPad * pad, GstData * data)
         GST_TIME_ARGS (diff2), GST_TIME_ARGS (videorate->next_ts),
         videorate->in, videorate->out, videorate->drop, videorate->dup);
 
-    if (GST_IS_BUFFER (data)) {
-      /* swap in new one when it's the best */
-      gst_buffer_unref (videorate->prevbuf);
-      videorate->prevbuf = buf;
-    } else
-      gst_pad_event_default (pad, GST_EVENT (data));
+    /* swap in new one when it's the best */
+    gst_buffer_unref (videorate->prevbuf);
+    videorate->prevbuf = buffer;
   }
+done:
+  GST_STREAM_UNLOCK (pad);
+
+  return res;
 }
 
 static void
@@ -506,20 +567,29 @@ gst_videorate_get_property (GObject * object,
 static GstElementStateReturn
 gst_videorate_change_state (GstElement * element)
 {
-  //GstVideorate *videorate = GST_VIDEORATE (element);
+  GstElementStateReturn ret;
+  GstVideorate *videorate;
+  gint transition;
 
-  switch (GST_STATE_TRANSITION (element)) {
+  videorate = GST_VIDEORATE (element);
+  transition = GST_STATE_TRANSITION (videorate);
+
+  switch (transition) {
+    default:
+      break;
+  }
+
+  ret = parent_class->change_state (element);
+
+  switch (transition) {
     case GST_STATE_PAUSED_TO_READY:
-      gst_videorate_blank_data (GST_VIDEORATE (element));
+      gst_videorate_blank_data (videorate);
       break;
     default:
       break;
   }
 
-  if (parent_class->change_state)
-    return parent_class->change_state (element);
-
-  return GST_STATE_SUCCESS;
+  return ret;
 }
 
 static gboolean

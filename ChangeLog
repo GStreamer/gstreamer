@@ -1,3 +1,13 @@
+2005-05-09  Wim Taymans  <wim@fluendo.com>
+
+	* gst/videorate/gstvideorate.c: (gst_videorate_class_init),
+	(gst_videorate_getcaps), (gst_videorate_setcaps),
+	(gst_videorate_blank_data), (gst_videorate_init),
+	(gst_videorate_event), (gst_videorate_chain),
+	(gst_videorate_change_state):
+	Port videorate, do a better job at negotiation while we're at
+	it.
+
 2005-05-09  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:
