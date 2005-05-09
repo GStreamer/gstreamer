@@ -52,7 +52,7 @@ enum
   ARG_PORT,                     /* the encoder port number on the server */
   ARG_PASSWORD,                 /* the encoder password on the server */
   ARG_PUBLIC,                   /* is this stream public? */
-  ARG_NAME,                     /* Name of the stream */
+  ARG_STREAMNAME,               /* Name of the stream */
   ARG_DESCRIPTION,              /* Description of the stream */
   ARG_GENRE,                    /* Genre of the stream */
 
@@ -63,20 +63,21 @@ enum
   ARG_SYNC                      /* Sync with clock */
 };
 
+static GstElementClass *parent_class = NULL;
+
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/ogg; "
         "audio/mpeg, mpegversion = (int) 1, layer = (int) [ 1, 3 ]")
     );
-static void gst_shout2send_set_clock (GstElement * element, GstClock * clock);
 static void gst_shout2send_class_init (GstShout2sendClass * klass);
 static void gst_shout2send_base_init (GstShout2sendClass * klass);
 static void gst_shout2send_init (GstShout2send * shout2send);
 
-static void gst_shout2send_chain (GstPad * pad, GstData * _data);
-static GstPadLinkReturn gst_shout2send_connect (GstPad * pad,
-    const GstCaps * caps);
+static gboolean gst_shout2send_event (GstBaseSink * sink, GstEvent * event);
+static GstFlowReturn gst_shout2send_render (GstBaseSink * sink,
+    GstBuffer * buffer);
 
 static void gst_shout2send_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -84,8 +85,7 @@ static void gst_shout2send_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstElementStateReturn gst_shout2send_change_state (GstElement * element);
-
-static GstElementClass *parent_class = NULL;
+static gboolean gst_shout2send_setcaps (GstPad * pad, GstCaps * caps);
 
 static guint gst_shout2send_signals[LAST_SIGNAL] = { 0 };
 
@@ -129,15 +129,15 @@ gst_shout2send_get_type (void)
       (GInstanceInitFunc) gst_shout2send_init,
     };
 
-    shout2send_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstShout2send",
-        &shout2send_info, 0);
-
     static const GInterfaceInfo tag_setter_info = {
       NULL,
       NULL,
       NULL
     };
+
+    shout2send_type =
+        g_type_register_static (GST_TYPE_BASESINK, "GstShout2send",
+        &shout2send_info, 0);
 
     g_type_add_interface_static (shout2send_type, GST_TYPE_TAG_SETTER,
         &tag_setter_info);
@@ -147,20 +147,11 @@ gst_shout2send_get_type (void)
 }
 
 static void
-gst_shout2send_set_clock (GstElement * element, GstClock * clock)
-{
-  GstShout2send *sink;
-
-  sink = GST_SHOUT2SEND (element);
-
-  sink->clock = clock;
-}
-
-static void
 gst_shout2send_base_init (GstShout2sendClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
+  element_class->change_state = gst_shout2send_change_state;
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
   gst_element_class_set_details (element_class, &shout2send_details);
@@ -170,12 +161,15 @@ static void
 gst_shout2send_class_init (GstShout2sendClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
+  GstBaseSinkClass *gstbasesink_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  gstbasesink_class = (GstBaseSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_BASESINK);
+
+  gobject_class->set_property = gst_shout2send_set_property;
+  gobject_class->get_property = gst_shout2send_get_property;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_IP, g_param_spec_string ("ip", "ip", "ip", NULL, G_PARAM_READWRITE));    /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT, g_param_spec_int ("port", "port", "port", 1, G_MAXUSHORT, 8000, G_PARAM_READWRITE));       /* CHECKME */
@@ -183,7 +177,7 @@ gst_shout2send_class_init (GstShout2sendClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PASSWORD, g_param_spec_string ("password", "password", "password", NULL, G_PARAM_READWRITE));    /* CHECKME */
 
   /* metadata */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NAME, g_param_spec_string ("name", "name", "name", NULL, G_PARAM_READWRITE));    /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STREAMNAME, g_param_spec_string ("streamname", "streamname", "name of the stream", NULL, G_PARAM_READWRITE));    /* CHECKME */
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DESCRIPTION, g_param_spec_string ("description", "description", "description", NULL, G_PARAM_READWRITE));        /* CHECKME */
 
@@ -211,30 +205,25 @@ gst_shout2send_class_init (GstShout2sendClass * klass)
       G_SIGNAL_RUN_CLEANUP, G_STRUCT_OFFSET (GstShout2sendClass,
           connection_problem), NULL, NULL, g_cclosure_marshal_VOID__INT,
       G_TYPE_NONE, 1, G_TYPE_INT);
-  gobject_class->set_property = gst_shout2send_set_property;
-  gobject_class->get_property = gst_shout2send_get_property;
 
-  gstelement_class->change_state = gst_shout2send_change_state;
-  gstelement_class->set_clock = gst_shout2send_set_clock;
-
+  gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_shout2send_render);
+  gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_shout2send_event);
   GST_DEBUG_CATEGORY_INIT (shout2_debug, "shout2", 0, "shout2send element");
 }
 
 static void
 gst_shout2send_init (GstShout2send * shout2send)
 {
-  shout2send->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
-      "sink");
-  gst_element_add_pad (GST_ELEMENT (shout2send), shout2send->sinkpad);
-  gst_pad_set_chain_function (shout2send->sinkpad, gst_shout2send_chain);
+  GstPad *pad;
 
-  gst_pad_set_link_function (shout2send->sinkpad, gst_shout2send_connect);
+  pad = GST_BASESINK_PAD (shout2send);
+
+  gst_pad_set_setcaps_function (pad, gst_shout2send_setcaps);
   shout2send->clock = NULL;
   shout2send->ip = g_strdup ("127.0.0.1");
   shout2send->port = 8000;
   shout2send->password = g_strdup ("hackme");
-  shout2send->name = g_strdup ("");
+  shout2send->streamname = g_strdup ("");
   shout2send->description = g_strdup ("");
   shout2send->genre = g_strdup ("");
   shout2send->mount = g_strdup ("");
@@ -246,7 +235,6 @@ gst_shout2send_init (GstShout2send * shout2send)
   shout2send->sync = FALSE;
   shout2send->started = FALSE;
 
-  GST_FLAG_SET (GST_ELEMENT (shout2send), GST_ELEMENT_EVENT_AWARE);
 }
 
 static void
@@ -325,99 +313,72 @@ gst_shout2send_set_metadata (GstShout2send * shout2send)
 #endif
 }
 
-static void
-gst_shout2send_chain (GstPad * pad, GstData * _data)
+
+static gboolean
+gst_shout2send_event (GstBaseSink * sink, GstEvent * event)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
   GstShout2send *shout2send;
-  glong ret;
   shout_metadata_t *pmetadata;
   char *tempmetadata;
 
+  shout2send = GST_SHOUT2SEND (sink);
 
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
-
-  shout2send = GST_SHOUT2SEND (GST_OBJECT_PARENT (pad));
-
-  g_return_if_fail (shout2send != NULL);
-  g_return_if_fail (GST_IS_SHOUT2SEND (shout2send));
-
-  /* This sets the format acording to the capabilities of what
-     we are being given as input. */
-  if (shout2send->started == FALSE) {
-    GST_DEBUG ("Connection format is: %s",
-        shout2send->audio_format == SHOUT_FORMAT_VORBIS ? "vorbis" :
-        (shout2send->audio_format == SHOUT_FORMAT_MP3 ? "mp3" : "unknown"));
-    if (shout_set_format (shout2send->conn,
-            shout2send->audio_format) != SHOUTERR_SUCCESS) {
-      GST_ERROR ("Error setting connection format: %s\n",
-          shout_get_error (shout2send->conn));
-    }
-
-    if (shout_open (shout2send->conn) == SHOUTERR_SUCCESS) {
-      g_print ("connected to server...\n");
-      /* lets set metadata */
-      gst_shout2send_set_metadata (shout2send);
-
-    } else {
-      GST_ERROR ("Couldn't connect to server: %s",
-          shout_get_error (shout2send->conn));
-      shout2send->conn = FALSE;
-      return;
-    }
-    shout2send->started = TRUE;
-  }
-
-  if (GST_IS_EVENT (buf)) {
-    switch (GST_EVENT_TYPE (buf)) {
-      case GST_EVENT_TAG:
-        GST_DEBUG ("tag event received");
-        /* vorbis audio doesnt need metadata setting on the icecast level, only mp3 */
-        if (shout2send->tags && shout2send->audio_format == SHOUT_FORMAT_MP3) {
-          gst_tag_list_insert (shout2send->tags,
-              gst_event_tag_get_list (GST_EVENT (buf)),
-              gst_tag_setter_get_merge_mode (GST_TAG_SETTER (shout2send)));
-          /* lets get the artist and song tags */
-          tempmetadata = NULL;
-          gst_tag_list_foreach ((GstTagList *) shout2send->tags,
-              set_shout_metadata, (gpointer) & tempmetadata);
-          if (tempmetadata) {
-            GST_DEBUG ("shout metadata now: %s", tempmetadata);
-            pmetadata = shout_metadata_new ();
-            shout_metadata_add (pmetadata, "song", tempmetadata);
-            shout_set_metadata (shout2send->conn, pmetadata);
-            shout_metadata_free (pmetadata);
-          }
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_TAG:
+      GST_DEBUG ("tag event received");
+      /* vorbis audio doesnt need metadata setting on the icecast level, only mp3 */
+      if (shout2send->tags && shout2send->audio_format == SHOUT_FORMAT_MP3) {
+        gst_tag_list_insert (shout2send->tags,
+            gst_event_tag_get_list (event),
+            gst_tag_setter_get_merge_mode (GST_TAG_SETTER (shout2send)));
+        /* lets get the artist and song tags */
+        tempmetadata = NULL;
+        gst_tag_list_foreach ((GstTagList *) shout2send->tags,
+            set_shout_metadata, (gpointer) & tempmetadata);
+        if (tempmetadata) {
+          GST_DEBUG ("shout metadata now: %s", tempmetadata);
+          pmetadata = shout_metadata_new ();
+          shout_metadata_add (pmetadata, "song", tempmetadata);
+          shout_set_metadata (shout2send->conn, pmetadata);
+          shout_metadata_free (pmetadata);
         }
-        break;
-      default:
-        GST_DEBUG ("some other event received");
-        gst_pad_event_default (pad, GST_EVENT (buf));
-        break;
-    }
-  } else {
-    if (shout2send->clock && shout2send->sync) {
-      //GST_DEBUG("using GStreamer clock to sync");
-      gst_element_wait (GST_ELEMENT (shout2send), GST_BUFFER_TIMESTAMP (buf));
-    } else {
-      //GST_DEBUG("using libshout to sync");
-      shout_sync (shout2send->conn);
-    }
-    ret = shout_send (shout2send->conn, GST_BUFFER_DATA (buf),
-        GST_BUFFER_SIZE (buf));
-    if (ret != SHOUTERR_SUCCESS) {
-      GST_WARNING ("send error: %s...\n", shout_get_error (shout2send->conn));
-      g_signal_emit (G_OBJECT (shout2send),
-          gst_shout2send_signals[SIGNAL_CONNECTION_PROBLEM], 0,
-          shout_get_errno (shout2send->conn));
-    }
-
-
-
-    gst_buffer_unref (buf);
+      }
+      break;
+    default:
+      GST_DEBUG ("some other event received");
+      break;
   }
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_shout2send_render (GstBaseSink * sink, GstBuffer * buf)
+{
+  GstShout2send *shout2send;
+  glong ret;
+
+
+  shout2send = GST_SHOUT2SEND (sink);
+
+
+  if (shout2send->clock && shout2send->sync) {
+    //GST_DEBUG("using GStreamer clock to sync");
+    gst_element_wait (GST_ELEMENT (shout2send), GST_BUFFER_TIMESTAMP (buf));
+  } else {
+    //GST_DEBUG("using libshout to sync");
+    shout_sync (shout2send->conn);
+  }
+  ret = shout_send (shout2send->conn, GST_BUFFER_DATA (buf),
+      GST_BUFFER_SIZE (buf));
+  if (ret != SHOUTERR_SUCCESS) {
+    GST_WARNING ("send error: %s...\n", shout_get_error (shout2send->conn));
+    g_signal_emit (G_OBJECT (shout2send),
+        gst_shout2send_signals[SIGNAL_CONNECTION_PROBLEM], 0,
+        shout_get_errno (shout2send->conn));
+  }
+
+  return GST_FLOW_OK;
 }
 
 static void
@@ -448,10 +409,10 @@ gst_shout2send_set_property (GObject * object, guint prop_id,
       shout2send->password = g_strdup (g_value_get_string (value));
       break;
 
-    case ARG_NAME:             /* Name of the stream */
-      if (shout2send->name)
-        g_free (shout2send->name);
-      shout2send->name = g_strdup (g_value_get_string (value));
+    case ARG_STREAMNAME:       /* Name of the stream */
+      if (shout2send->streamname)
+        g_free (shout2send->streamname);
+      shout2send->streamname = g_strdup (g_value_get_string (value));
       break;
 
     case ARG_DESCRIPTION:      /* Description of the stream */
@@ -511,8 +472,8 @@ gst_shout2send_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_string (value, shout2send->password);
       break;
 
-    case ARG_NAME:             /* Name of the stream */
-      g_value_set_string (value, shout2send->name);
+    case ARG_STREAMNAME:       /* Name of the stream */
+      g_value_set_string (value, shout2send->streamname);
       break;
 
     case ARG_DESCRIPTION:      /* Description of the stream */
@@ -543,29 +504,28 @@ gst_shout2send_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstPadLinkReturn
-gst_shout2send_connect (GstPad * pad, const GstCaps * caps)
+static gboolean
+gst_shout2send_setcaps (GstPad * pad, GstCaps * caps)
 {
   const gchar *mimetype;
   GstShout2send *shout2send;
-
-  g_return_val_if_fail (pad != NULL, GST_PAD_LINK_REFUSED);
-  g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_LINK_REFUSED);
+  gboolean ret = TRUE;
 
   shout2send = GST_SHOUT2SEND (GST_OBJECT_PARENT (pad));
   mimetype = gst_structure_get_name (gst_caps_get_structure (caps, 0));
-  GST_DEBUG ("in setlink function, mimetype of caps given is: %s", mimetype);
+  GST_DEBUG ("in setcaps function, mimetype of caps given is: %s", mimetype);
   if (!strcmp (mimetype, "audio/mpeg")) {
     shout2send->audio_format = SHOUT_FORMAT_MP3;
-    return GST_PAD_LINK_OK;
   }
 
   if (!strcmp (mimetype, "application/ogg")) {
     shout2send->audio_format = SHOUT_FORMAT_VORBIS;
-    return GST_PAD_LINK_OK;
   } else {
-    return GST_PAD_LINK_REFUSED;
+    ret = FALSE;
   }
+  gst_caps_unref (caps);
+
+  return ret;
 
 }
 
@@ -573,6 +533,7 @@ static GstElementStateReturn
 gst_shout2send_change_state (GstElement * element)
 {
   GstShout2send *shout2send;
+  GstElementStateReturn ret;
 
   guint major, minor, micro;
   gshort proto = 3;
@@ -632,8 +593,8 @@ gst_shout2send_change_state (GstElement * element)
       }
 
       if (shout_set_name (shout2send->conn,
-              shout2send->name) != SHOUTERR_SUCCESS) {
-        g_error ("Error setting name: %s\n",
+              shout2send->streamname) != SHOUTERR_SUCCESS) {
+        g_error ("Error setting stream name: %s\n",
             shout_get_error (shout2send->conn));
       }
 
@@ -678,20 +639,53 @@ gst_shout2send_change_state (GstElement * element)
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
+    case GST_STATE_READY_TO_PAUSED:
+
+      /* connect */
+      GST_DEBUG ("Connection format is: %s",
+          shout2send->audio_format == SHOUT_FORMAT_VORBIS ? "vorbis" :
+          (shout2send->audio_format == SHOUT_FORMAT_MP3 ? "mp3" : "unknown"));
+      if (shout_set_format (shout2send->conn,
+              shout2send->audio_format) != SHOUTERR_SUCCESS) {
+        GST_ERROR ("Error setting connection format: %s\n",
+            shout_get_error (shout2send->conn));
+      }
+
+      if (shout_open (shout2send->conn) == SHOUTERR_SUCCESS) {
+        g_print ("connected to server...\n");
+        /* lets set metadata */
+        gst_shout2send_set_metadata (shout2send);
+
+      } else {
+        GST_ERROR ("Couldn't connect to server: %s",
+            shout_get_error (shout2send->conn));
+        shout2send->conn = FALSE;
+        return GST_STATE_FAILURE;
+      }
+      break;
+
+
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_PLAYING_TO_PAUSED:
+      break;
     case GST_STATE_PAUSED_TO_READY:
       shout_close (shout2send->conn);
       shout_free (shout2send->conn);
       shout2send->started = FALSE;
       break;
+    case GST_STATE_READY_TO_NULL:
+      break;
     default:
       break;
   }
 
-  /* if we haven't failed already, give the parent class a chance to ;-) */
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
+  return ret;
 }
 
 static gboolean

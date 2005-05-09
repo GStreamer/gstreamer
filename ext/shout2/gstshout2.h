@@ -22,6 +22,7 @@
 #define __GST_SHOUT2SEND_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstbasesink.h>
 #include <shout/shout.h>
 
 #ifdef __cplusplus
@@ -39,9 +40,7 @@ typedef enum {
 /* Definition of structure storing data for this element. */
 typedef struct _GstShout2send GstShout2send;
 struct _GstShout2send {
-  GstElement element;
-
-  GstPad *sinkpad,*srcpad;
+  GstBaseSink parent;
 
   GstShout2SendProtocol protocol;
 
@@ -50,7 +49,7 @@ struct _GstShout2send {
   gchar *ip;
   guint port;
   gchar *password;
-  gchar *name;
+  gchar *streamname;
   gchar *description;
   gchar *genre;
   gchar *mount;
@@ -71,7 +70,7 @@ struct _GstShout2send {
 /* Standard definition defining a class for this element. */
 typedef struct _GstShout2sendClass GstShout2sendClass;
 struct _GstShout2sendClass {
-  GstElementClass parent_class;
+  GstBaseSinkClass parent_class;
 
   /* signal callbacks */
   void (*connection_problem) (GstElement *element,guint errno);
