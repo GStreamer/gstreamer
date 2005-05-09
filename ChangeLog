@@ -1,5 +1,12 @@
 2005-05-09  Wim Taymans  <wim@fluendo.com>
 
+	* gst/videorate/gstvideorate.c: (gst_videorate_transformcaps),
+	(gst_videorate_getcaps), (gst_videorate_setcaps),
+	(gst_videorate_event), (gst_videorate_chain):
+	Better negotiation.
+
+2005-05-09  Wim Taymans  <wim@fluendo.com>
+
 	* gst/videorate/gstvideorate.c: (gst_videorate_class_init),
 	(gst_videorate_getcaps), (gst_videorate_setcaps),
 	(gst_videorate_blank_data), (gst_videorate_init),
