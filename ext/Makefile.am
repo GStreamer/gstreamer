@@ -310,11 +310,11 @@ endif
 # SHOUT_DIR=
 # endif
 
-# if USE_SHOUT2
-# SHOUT2_DIR=shout2
-# else
-# SHOUT2_DIR=
-# endif
+if USE_SHOUT2
+SHOUT2_DIR=shout2
+else
+SHOUT2_DIR=
+endif
 
 if USE_SIDPLAY
 SIDPLAY_DIR=sidplay
@@ -444,6 +444,7 @@ SUBDIRS=\
 
 DIST_SUBDIRS=\
 	mad \
+	shout2 \
 	sidplay \
 	aalib \
 	libcaca
