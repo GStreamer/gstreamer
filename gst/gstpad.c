@@ -3863,6 +3863,39 @@ gst_pad_query2_default (GstPad * pad, GstQuery * query)
   }
 }
 
+/**
+ * gst_pad_query_position:
+ * @pad: a #GstPad to invoke the default query on.
+ * @format: a pointer to the #GstFormat asked for.
+ *          On return contains the #GstFormat used.
+ * @cur: A location in which to store the current position, or NULL.
+ * @end: A location in which to store the end position (length), or NULL.
+ *
+ * Queries a pad for the stream position and length.
+ *
+ * Returns: TRUE if the query could be performed.
+ */
+gboolean
+gst_pad_query_position (GstPad * pad, GstFormat * format, gint64 * cur,
+    gint64 * end)
+{
+  GstQuery *query;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (format != NULL, FALSE);
+
+  query = gst_query_new_position (*format);
+  ret = gst_pad_query2 (pad, query);
+
+  if (ret)
+    gst_query_parse_position_response (query, format, cur, end);
+
+  gst_query_unref (query);
+
+  return ret;
+}
+
 static gboolean
 gst_pad_get_formats_dispatcher (GstPad * pad, const GstFormat ** data)
 {

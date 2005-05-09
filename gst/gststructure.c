@@ -403,11 +403,8 @@ void
 gst_structure_set_valist (GstStructure * structure,
     const gchar * fieldname, va_list varargs)
 {
+  gchar *err = NULL;
   GType type;
-  int i;
-  double d;
-  char *s;
-  gpointer p;
 
   g_return_if_fail (structure != NULL);
   g_return_if_fail (IS_MUTABLE (structure));
@@ -418,77 +415,12 @@ gst_structure_set_valist (GstStructure * structure,
     field.name = g_quark_from_string (fieldname);
 
     type = va_arg (varargs, GType);
-
-    switch (type) {
-      case G_TYPE_INT:
-        i = va_arg (varargs, int);
-
-        g_value_init (&field.value, G_TYPE_INT);
-        g_value_set_int (&field.value, i);
-        break;
-      case G_TYPE_DOUBLE:
-        d = va_arg (varargs, double);
-
-        g_value_init (&field.value, G_TYPE_DOUBLE);
-        g_value_set_double (&field.value, d);
-        break;
-      case G_TYPE_BOOLEAN:
-        i = va_arg (varargs, int);
-
-        g_value_init (&field.value, G_TYPE_BOOLEAN);
-        g_value_set_boolean (&field.value, i);
-        break;
-      case G_TYPE_STRING:
-        s = va_arg (varargs, char *);
-
-        g_value_init (&field.value, G_TYPE_STRING);
-        g_value_set_string (&field.value, s);
-        break;
-      case G_TYPE_POINTER:
-        p = va_arg (varargs, gpointer);
-
-        g_value_init (&field.value, G_TYPE_POINTER);
-        g_value_set_pointer (&field.value, p);
-        break;
-      default:
-        if (type == GST_TYPE_FOURCC) {
-          i = va_arg (varargs, int);
-
-          g_value_init (&field.value, GST_TYPE_FOURCC);
-          gst_value_set_fourcc (&field.value, i);
-        } else if (type == GST_TYPE_INT_RANGE) {
-          int min, max;
-          min = va_arg (varargs, int);
-          max = va_arg (varargs, int);
-
-          g_value_init (&field.value, GST_TYPE_INT_RANGE);
-          gst_value_set_int_range (&field.value, min, max);
-        } else if (type == GST_TYPE_DOUBLE_RANGE) {
-          double min, max;
-          min = va_arg (varargs, double);
-          max = va_arg (varargs, double);
-
-          g_value_init (&field.value, GST_TYPE_DOUBLE_RANGE);
-          gst_value_set_double_range (&field.value, min, max);
-        } else if (type == GST_TYPE_BUFFER) {
-          GstBuffer *buffer = va_arg (varargs, GstBuffer *);
-
-          g_value_init (&field.value, GST_TYPE_BUFFER);
-          g_value_set_boxed (&field.value, buffer);
-        } else if (type == GST_TYPE_FRACTION) {
-          gint n, d;
-          n = va_arg (varargs, int);
-          d = va_arg (varargs, int);
-
-          g_value_init (&field.value, GST_TYPE_FRACTION);
-          gst_value_set_fraction (&field.value, n, d);
-        } else {
-          g_critical ("unimplemented vararg field type %d\n", (int) type);
-          return;
-        }
-        break;
+    g_value_init (&field.value, type);
+    G_VALUE_COLLECT (&field.value, varargs, 0, &err);
+    if (err) {
+      g_critical ("%s", err);
+      return;
     }
-
     gst_structure_set_field (structure, &field);
 
     fieldname = va_arg (varargs, gchar *);

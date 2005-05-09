@@ -20,9 +20,13 @@
  */
 
 
+#include <glib.h>
+
+#include <gst/gstformat.h>
 #include <gst/gstquery.h>
 
 
+GstQuery* gst_query_new_position        (GstFormat format);
 void gst_query_set_position		(GstQuery *query, GstFormat format,
                                          gint64 cur, gint64 end);
 void gst_query_parse_position_query	(GstQuery *query, GstFormat *format);

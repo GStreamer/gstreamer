@@ -23,9 +23,21 @@
 #include <stdarg.h>
 
 #include "gstqueryutils.h"
+#include "gstenumtypes.h"
+#include "gstvalue.h"
+#include "gst_private.h"
 
 /* some macros are just waiting to be defined here */
 
+
+GstQuery *
+gst_query_new_position (GstFormat format)
+{
+  GstStructure *structure = gst_structure_new ("query",
+      "format", GST_TYPE_FORMAT, format, NULL);
+
+  return gst_query_new_application (GST_QUERY_POSITION, structure);
+}
 
 void
 gst_query_set_position (GstQuery * query, GstFormat format, gint64 cur,
@@ -49,7 +61,8 @@ gst_query_parse_position_query (GstQuery * query, GstFormat * format)
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_POSITION);
 
   structure = gst_query_get_structure (query);
-  *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
+  if (format)
+    *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
 }
 
 void
@@ -61,9 +74,12 @@ gst_query_parse_position_response (GstQuery * query, GstFormat * format,
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_POSITION);
 
   structure = gst_query_get_structure (query);
-  *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
-  *cur = g_value_get_int64 (gst_structure_get_value (structure, "cur"));
-  *end = g_value_get_int64 (gst_structure_get_value (structure, "end"));
+  if (format)
+    *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
+  if (cur)
+    *cur = g_value_get_int64 (gst_structure_get_value (structure, "cur"));
+  if (end)
+    *end = g_value_get_int64 (gst_structure_get_value (structure, "end"));
 }
 
 void
@@ -74,7 +90,8 @@ gst_query_parse_seeking_query (GstQuery * query, GstFormat * format)
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_SEEKING);
 
   structure = gst_query_get_structure (query);
-  *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
+  if (format)
+    *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
 }
 
 void
@@ -102,13 +119,17 @@ gst_query_parse_seeking_response (GstQuery * query, GstFormat * format,
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_SEEKING);
 
   structure = gst_query_get_structure (query);
-  *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
-  *seekable = g_value_get_boolean (gst_structure_get_value
-      (structure, "seekable"));
-  *segment_start = g_value_get_int64 (gst_structure_get_value
-      (structure, "segment-start"));
-  *segment_end = g_value_get_int64 (gst_structure_get_value
-      (structure, "segment-end"));
+  if (format)
+    *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
+  if (seekable)
+    *seekable = g_value_get_boolean (gst_structure_get_value
+        (structure, "seekable"));
+  if (segment_start)
+    *segment_start = g_value_get_int64 (gst_structure_get_value
+        (structure, "segment-start"));
+  if (segment_end)
+    *segment_end = g_value_get_int64 (gst_structure_get_value
+        (structure, "segment-end"));
 }
 
 void

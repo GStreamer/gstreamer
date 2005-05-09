@@ -32,6 +32,7 @@
 #include <gst/gstevent.h>
 #include <gst/gstprobe.h>
 #include <gst/gstquery.h>
+#include <gst/gstqueryutils.h>
 #include <gst/gsttask.h>
 
 
@@ -577,6 +578,10 @@ GList*			gst_pad_get_internal_links_default	(GstPad *pad);
 gboolean		gst_pad_query2				(GstPad *pad, GstQuery *query);
 void			gst_pad_set_query2_function		(GstPad *pad, GstPadQuery2Function query);
 gboolean		gst_pad_query2_default			(GstPad *pad, GstQuery *query);
+
+/* util query functions */
+gboolean		gst_pad_query_position			(GstPad *pad, GstFormat *format,
+                                                                 gint64 *cur, gint64 *end);
 
 /* misc helper functions */
 gboolean		gst_pad_dispatcher			(GstPad *pad, GstPadDispatcherFunction dispatch,

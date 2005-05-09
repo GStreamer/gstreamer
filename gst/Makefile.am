@@ -101,6 +101,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstpluginfeature.c	\
 	gstprobe.c		\
 	gstquery.c		\
+	gstqueryutils.c		\
 	gstqueue.c		\
 	gstscheduler.c		\
 	gststructure.c		\

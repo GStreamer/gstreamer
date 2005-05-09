@@ -1,3 +1,24 @@
+2005-05-09  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstiterator.h: Add some includes.
+
+	* gst/gstqueryutils.h: Include more headers.
+
+	* gst/gstpad.h:
+	* gst/gstpad.c (gst_pad_query_position): New routine, replaces
+	some uses of gst_pad_query.
+
+	* gst/gstqueryutils.c: Build fixes. Make parse functions ignore
+	NULL out parameters.
+	(gst_query_new_position): New proc, allocates a new position
+	query.
+
+	* gst/Makefile.am (libgstreamer_@GST_MAJORMINOR@_la_SOURCES): Add
+	gstqueryutils.c to the build.
+
+	* gst/gststructure.c (gst_structure_set_valist): Implement with
+	the generic G_VALUE_COLLECT.
+	
 2005-05-08  Edward Hervey  <bilboed@bilboed.com>
 
 	* gst/Makefile.am: (gst_headers):
