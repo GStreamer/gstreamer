@@ -13,4 +13,4 @@ libgstriff_@GST_MAJORMINOR@include_HEADERS = \
 
 libgstriff_@GST_MAJORMINOR@_la_LIBADD =
 libgstriff_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS)
-libgstriff_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LDFLAGS)
+libgstriff_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIBS)

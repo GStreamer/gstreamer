@@ -7,7 +7,7 @@ endif
 # if HAVE_GTK
 # GTK_SUBDIRS=dynparams $(FT2_SUBDIRS)
 # else
-# GTK_SUBDIRS=
+GTK_SUBDIRS=
 # endif
 
 SUBDIRS=$(GTK_SUBDIRS)

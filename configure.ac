@@ -64,7 +64,7 @@ dnl decide on error flags
 AS_COMPILER_FLAG(-Wall, GST_WALL="yes", GST_WALL="no")
 
 if test "x$GST_WALL" = "xyes"; then
-  GST_ERROR="$GST_ERROR -Wall -Wno-pointer-sign"
+  GST_ERROR="$GST_ERROR -Wall"
 
   if test "x$GST_CVS" = "xyes"; then
     AS_COMPILER_FLAG(-Werror,GST_ERROR="$GST_ERROR -Werror",GST_ERROR="$GST_ERROR")
@@ -625,6 +625,7 @@ GST_CHECK_FEATURE(GNOME_VFS, [Gnome VFS], gnomevfssrc, [
 ])
 
 dnl *** libvisual ***
+USE_LIBVISUAL=no
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBVISUAL, true)
 GST_CHECK_FEATURE(LIBVISUAL, [libvisual visualization plugins], libvisual, [
   PKG_CHECK_MODULES(LIBVISUAL, libvisual = 0.2.0, HAVE_LIBVISUAL="yes", HAVE_LIBVISUAL="no")

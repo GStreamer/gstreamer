@@ -8,4 +8,4 @@ libgstvideoinclude_HEADERS = video.h videosink.h
 
 libgstvideo_@GST_MAJORMINOR@_la_LIBADD =
 libgstvideo_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS)
-libgstvideo_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LDFLAGS) $(GST_BASE_LIBS)
+libgstvideo_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIBS) $(GST_BASE_LIBS)

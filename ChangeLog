@@ -1,3 +1,15 @@
+2005-05-09  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  Disable libvisual
+
+	* examples/Makefile.am:
+	* gst-libs/gst/audio/Makefile.am:
+	* gst-libs/gst/riff/Makefile.am:
+	* gst-libs/gst/tag/Makefile.am:
+	* gst-libs/gst/video/Makefile.am:
+	  Fixups for missing variables.
+
 2005-05-09  Wim Taymans  <wim@fluendo.com>
 
 	* examples/seeking/seek.c: (make_theora_pipeline),
