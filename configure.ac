@@ -64,7 +64,7 @@ dnl decide on error flags
 AS_COMPILER_FLAG(-Wall, GST_WALL="yes", GST_WALL="no")
 
 if test "x$GST_WALL" = "xyes"; then
-  GST_ERROR="$GST_ERROR -Wall"
+  GST_ERROR="$GST_ERROR -Wall -Wno-pointer-sign"
 
   if test "x$GST_CVS" = "xyes"; then
     AS_COMPILER_FLAG(-Werror,GST_ERROR="$GST_ERROR -Werror",GST_ERROR="$GST_ERROR")
@@ -348,13 +348,11 @@ if test "x$HAVE_GDK_LOADERS" = "xyes"; then
 fi
 AM_CONDITIONAL(HAVE_GDK_LOADERS, test "x$HAVE_GDK_LOADERS" = "xyes")
 
-PKG_CHECK_MODULES(LIBOIL, liboil-0.2, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
-#PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.0, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
+PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.2, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
 AC_SUBST(LIBOIL_CFLAGS)
 AC_SUBST(LIBOIL_LIBS)
-if test "x${HAVE_LIBOIL}" = xyes ; then
-  #AC_DEFINE_UNQUOTED(HAVE_LIBOIL, 1, [Define if liboil is being used])
-  true
+if test "x${HAVE_LIBOIL}" != xyes ; then
+  AC_ERROR([liboil-0.3 is required])
 fi
 
 dnl ===========================================================================

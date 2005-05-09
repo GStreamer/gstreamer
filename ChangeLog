@@ -1,3 +1,11 @@
+2005-05-08  David Schleef  <ds@schleef.org>
+
+	* configure.ac: Require liboil.
+	* gst/videotestsrc/gstvideotestsrc.c: Fix up liboil calls, add
+	a few more.
+	* gst/videotestsrc/videotestsrc.c:
+	* gst/videotestsrc/videotestsrc.h:
+
 2005-05-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:

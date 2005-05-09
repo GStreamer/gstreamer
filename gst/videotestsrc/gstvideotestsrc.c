@@ -25,9 +25,7 @@
 
 #include <string.h>
 #include <stdlib.h>
-#ifdef HAVE_LIBOIL
 #include <liboil/liboil.h>
-#endif
 
 GST_DEBUG_CATEGORY (videotestsrc_debug);
 #define GST_CAT_DEFAULT videotestsrc_debug
@@ -766,9 +764,7 @@ gst_videotestsrc_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-#ifdef HAVE_LIBOIL
   oil_init ();
-#endif
 
   generate_capslist ();
 
