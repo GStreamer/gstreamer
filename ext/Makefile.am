@@ -445,4 +445,5 @@ SUBDIRS=\
 DIST_SUBDIRS=\
 	mad \
 	sidplay \
-	aalib
+	aalib \
+	libcaca
