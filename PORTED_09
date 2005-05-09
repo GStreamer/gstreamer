@@ -4,6 +4,9 @@ List of ported plugins (update when you commit a ported plugin):
 effectv (wim)
 mad	(wim)
 videofilter (wim)
+aalib	(wim)
+libcaca	(zeeshan)
+law	(wim)
 
 osssink is partially done in the threaded branch (wim)
 
