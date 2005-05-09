@@ -180,6 +180,7 @@ gst_base_transform_proxy_getcaps (GstPad * pad)
   GstPad *otherpad;
   GstBaseTransform *trans;
   GstCaps *caps;
+  const GstCaps *templcaps;
 
   trans = GST_BASE_TRANSFORM (GST_OBJECT_PARENT (pad));
 
@@ -187,11 +188,17 @@ gst_base_transform_proxy_getcaps (GstPad * pad)
 
   /* we can do whatever the peer can do */
   caps = gst_pad_peer_get_caps (otherpad);
+  templcaps = gst_pad_get_pad_template_caps (pad);
+
   if (caps == NULL) {
     /* no peer, then the padtemplate is enough */
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    return gst_caps_copy (templcaps);
+  } else {
+    GstCaps *ret = gst_caps_intersect (caps, templcaps);
+
+    gst_caps_unref (caps);
+    return ret;
   }
-  return caps;
 }
 
 static gboolean

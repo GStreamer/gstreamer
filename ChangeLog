@@ -1,3 +1,8 @@
+2005-05-09  Andy Wingo  <wingo@pobox.com>
+
+	* gst/base/gstbasetransform.c (gst_base_transform_proxy_getcaps):
+	Intersect the peer's caps with our caps.
+
 2005-05-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/base/gsttypefindhelper.c: (helper_find_peek):

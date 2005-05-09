@@ -139,29 +139,18 @@ Function signature to handle an event for the pad.
 @Returns: TRUE if the pad could handle the event.
 
 
-<!-- ##### USER_FUNCTION GstPadConvertFunction ##### -->
-<para>
-The signature of a convert function. 
-</para>
-
-@pad: the #GstPad to perform the convert on.
-@src_format: the source #GstFormat of the conversion.
-@src_value: the source value of the conversion.
-@dest_format: a pointer to the destination #GstFormat.
-@dest_value: a pointer to the destination value.
-@Returns: TRUE if the conversion could be performed.
-
-
 <!-- ##### USER_FUNCTION GstPadQueryFunction ##### -->
 <para>
 The signature of the query function.
 </para>
 
 @pad: the #GstPad to query.
+@query: 
+@Returns: TRUE if the query could be performed.
+<!-- # Unused Parameters # -->
 @type: the #GstPadQueryType.
 @format: a pointer to the target #GstFormat.
 @value: a pointer to the target value.
-@Returns: TRUE if the query could be performed.
 
 
 <!-- ##### USER_FUNCTION GstPadIntLinkFunction ##### -->
@@ -173,24 +162,6 @@ The signature of the internal pad link function.
 @Returns: a newly allocated #GList of pads that are linked to 
           the given pad on the inside of the parent element.  
           The caller must call g_list_free() on it after use.
-
-
-<!-- ##### USER_FUNCTION GstPadFormatsFunction ##### -->
-<para>
-The signature of the formats function.
-</para>
-
-@pad: a #GstPad to query
-@Returns: an array of formats
-
-
-<!-- ##### USER_FUNCTION GstPadEventMaskFunction ##### -->
-<para>
-The signature of the eventmask function.
-</para>
-
-@pad: the #GstPad to query
-@Returns: an array of event masks
 
 
 <!-- ##### USER_FUNCTION GstPadQueryTypeFunction ##### -->
@@ -391,28 +362,12 @@ Checks if the pad is active.
 @pad: a #GstPad to check
 
 
-<!-- ##### MACRO GST_PAD_IS_NEGOTIATING ##### -->
-<para>
-
-</para>
-
-@pad: 
-
-
 <!-- ##### MACRO GST_PAD_IS_USABLE ##### -->
 <para>
 Checks if a pad is usable. A usable pad is both linked and active.
 </para>
 
 @pad: a #GstPad to check
-
-
-<!-- ##### MACRO GST_PAD_CAN_PULL ##### -->
-<para>
-Checks if buffers can be pulled from this buffer.
-</para>
-
-@pad: a #GstPad to check on if a buffer can be pulled from it.
 
 
 <!-- ##### MACRO GST_PAD_IS_SRC ##### -->
@@ -616,33 +571,6 @@ Checks if the pad is a sink pad.
 @event: 
 
 
-<!-- ##### FUNCTION gst_pad_set_event_mask_function ##### -->
-<para>
-
-</para>
-
-@pad: 
-@mask_func: 
-
-
-<!-- ##### FUNCTION gst_pad_get_event_masks ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_get_event_masks_default ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_pad_set_link_function ##### -->
 <para>
 
@@ -798,68 +726,6 @@ Checks if the pad is a sink pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_set_formats_function ##### -->
-<para>
-
-</para>
-
-@pad: 
-@formats: 
-
-
-<!-- ##### FUNCTION gst_pad_get_formats ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_get_formats_default ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_set_convert_function ##### -->
-<para>
-
-</para>
-
-@pad: 
-@convert: 
-
-
-<!-- ##### FUNCTION gst_pad_convert ##### -->
-<para>
-
-</para>
-
-@pad: 
-@src_format: 
-@src_value: 
-@dest_format: 
-@dest_value: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_convert_default ##### -->
-<para>
-
-</para>
-
-@pad: 
-@src_format: 
-@src_value: 
-@dest_format: 
-@dest_value: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_pad_set_query_function ##### -->
 <para>
 
@@ -902,10 +768,12 @@ Checks if the pad is a sink pad.
 </para>
 
 @pad: 
+@query: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @type: 
 @format: 
 @value: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gst_pad_query_default ##### -->
@@ -914,10 +782,12 @@ Checks if the pad is a sink pad.
 </para>
 
 @pad: 
+@query: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @type: 
 @format: 
 @value: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gst_pad_set_internal_link_function ##### -->

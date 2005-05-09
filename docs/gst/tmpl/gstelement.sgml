@@ -601,15 +601,6 @@ Sets the parent of an element.
 <!-- pad manipulation -->
 
 
-<!-- ##### FUNCTION gst_element_get_event_masks ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_element_send_event ##### -->
 <para>
 
@@ -646,32 +637,12 @@ Sets the parent of an element.
 </para>
 
 @element: 
+@query: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @type: 
 @format: 
 @value: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_get_formats ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_convert ##### -->
-<para>
-
-</para>
-
-@element: 
-@src_format: 
-@src_value: 
-@dest_format: 
-@dest_value: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gst_element_is_locked_state ##### -->
