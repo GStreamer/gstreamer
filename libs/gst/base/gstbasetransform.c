@@ -216,6 +216,7 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
   GstBaseTransform *trans;
   GstBaseTransformClass *bclass;
   gboolean ret = FALSE;
+  gboolean unlock;
 
   trans = GST_BASE_TRANSFORM (GST_PAD_PARENT (pad));
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
@@ -223,20 +224,25 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
   if (bclass->event)
     bclass->event (trans, event);
 
+  unlock = FALSE;
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH:
       if (GST_EVENT_FLUSH_DONE (event)) {
       }
       GST_STREAM_LOCK (pad);
+      unlock = TRUE;
       break;
     case GST_EVENT_EOS:
       GST_STREAM_LOCK (pad);
+      unlock = TRUE;
       break;
     default:
       break;
   }
   ret = gst_pad_event_default (pad, event);
-  GST_STREAM_UNLOCK (pad);
+  if (unlock)
+    GST_STREAM_UNLOCK (pad);
 
   return ret;
 }

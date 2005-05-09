@@ -1,5 +1,13 @@
 2005-05-09  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasetransform.c: (gst_base_transform_proxy_getcaps),
+	(gst_base_transform_event):
+	* gst/gstpad.c: (gst_pad_accept_caps), (gst_pad_query):
+	Implement accept_caps.
+	Fix silly lock/unlock mismatch in base class.
+
+2005-05-09  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/draft-push-pull.txt:
 	* gst/base/gstbasesrc.c: (gst_basesrc_init), (gst_basesrc_query):
 	* gst/elements/gstfilesink.c: (gst_filesink_init),

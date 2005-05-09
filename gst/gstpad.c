@@ -1791,8 +1791,22 @@ gst_pad_accept_caps (GstPad * pad, GstCaps * caps)
   GST_CAT_DEBUG (GST_CAT_CAPS, "pad accept caps of %s:%s (%p)",
       GST_DEBUG_PAD_NAME (realpad), realpad);
 
-  /* FIXME, call accept function */
-  result = FALSE;
+  if (GST_RPAD_ACCEPTCAPSFUNC (pad)) {
+    /* we can call the function */
+    result = GST_RPAD_ACCEPTCAPSFUNC (realpad) (pad, caps);
+  } else {
+    /* else see get the caps and see if it intersects to something
+     * not empty */
+    GstCaps *intersect;
+    GstCaps *allowed;
+
+    allowed = gst_real_pad_get_caps_unlocked (realpad);
+    intersect = gst_caps_intersect (allowed, caps);
+    if (gst_caps_is_empty (intersect))
+      result = FALSE;
+    else
+      result = TRUE;
+  }
   GST_UNLOCK (realpad);
 
   return result;
