@@ -48,8 +48,10 @@ static void gst_subparse_base_init (GstSubparseClass * klass);
 static void gst_subparse_class_init (GstSubparseClass * klass);
 static void gst_subparse_init (GstSubparse * subparse);
 
+#if 0
 static const GstFormat *gst_subparse_formats (GstPad * pad);
 static const GstEventMask *gst_subparse_src_eventmask (GstPad * pad);
+#endif
 static gboolean gst_subparse_src_event (GstPad * pad, GstEvent * event);
 
 static GstElementStateReturn gst_subparse_change_state (GstElement * element);
@@ -131,10 +133,7 @@ gst_subparse_init (GstSubparse * subparse)
   subparse->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&src_templ),
       "src");
-  gst_pad_set_formats_function (subparse->srcpad, gst_subparse_formats);
   gst_pad_set_event_function (subparse->srcpad, gst_subparse_src_event);
-  gst_pad_set_event_mask_function (subparse->srcpad,
-      gst_subparse_src_eventmask);
   gst_element_add_pad (GST_ELEMENT (subparse), subparse->srcpad);
 
   subparse->textbuf = g_string_new (NULL);
@@ -145,6 +144,7 @@ gst_subparse_init (GstSubparse * subparse)
  * Source pad functions.
  */
 
+#if 0
 static const GstFormat *
 gst_subparse_formats (GstPad * pad)
 {
@@ -166,6 +166,7 @@ gst_subparse_src_eventmask (GstPad * pad)
 
   return masks;
 }
+#endif
 
 static gboolean
 gst_subparse_src_event (GstPad * pad, GstEvent * event)

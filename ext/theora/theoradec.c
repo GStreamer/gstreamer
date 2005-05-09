@@ -115,16 +115,21 @@ static gboolean theora_dec_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn theora_dec_chain (GstPad * pad, GstBuffer * buffer);
 static GstElementStateReturn theora_dec_change_state (GstElement * element);
 static gboolean theora_dec_src_event (GstPad * pad, GstEvent * event);
-static gboolean theora_dec_src_query (GstPad * pad,
-    GstQueryType query, GstFormat * format, gint64 * value);
+static gboolean theora_dec_src_query (GstPad * pad, GstQuery * query);
 static gboolean theora_dec_src_convert (GstPad * pad,
     GstFormat src_format, gint64 src_value,
     GstFormat * dest_format, gint64 * dest_value);
 static gboolean theora_dec_sink_convert (GstPad * pad,
     GstFormat src_format, gint64 src_value,
     GstFormat * dest_format, gint64 * dest_value);
+static gboolean theora_dec_sink_query (GstPad * pad, GstQuery * query);
+
+#if 0
 static const GstFormat *theora_get_formats (GstPad * pad);
+#endif
+#if 0
 static const GstEventMask *theora_get_event_masks (GstPad * pad);
+#endif
 static const GstQueryType *theora_get_query_types (GstPad * pad);
 
 
@@ -165,8 +170,7 @@ gst_theora_dec_init (GstTheoraDec * dec)
   dec->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&theora_dec_sink_factory), "sink");
-  gst_pad_set_formats_function (dec->sinkpad, theora_get_formats);
-  gst_pad_set_convert_function (dec->sinkpad, theora_dec_sink_convert);
+  gst_pad_set_query_function (dec->sinkpad, theora_dec_sink_query);
   gst_pad_set_event_function (dec->sinkpad, theora_dec_sink_event);
   gst_pad_set_chain_function (dec->sinkpad, theora_dec_chain);
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
@@ -174,12 +178,9 @@ gst_theora_dec_init (GstTheoraDec * dec)
   dec->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&theora_dec_src_factory), "src");
-  gst_pad_set_event_mask_function (dec->srcpad, theora_get_event_masks);
   gst_pad_set_event_function (dec->srcpad, theora_dec_src_event);
   gst_pad_set_query_type_function (dec->srcpad, theora_get_query_types);
   gst_pad_set_query_function (dec->srcpad, theora_dec_src_query);
-  gst_pad_set_formats_function (dec->srcpad, theora_get_formats);
-  gst_pad_set_convert_function (dec->srcpad, theora_dec_src_convert);
 
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
@@ -221,6 +222,7 @@ _inc_granulepos (GstTheoraDec * dec)
   dec->granulepos = (framecount << ilog);
 }
 
+#if 0
 static const GstFormat *
 theora_get_formats (GstPad * pad)
 {
@@ -238,7 +240,9 @@ theora_get_formats (GstPad * pad)
 
   return (GST_PAD_IS_SRC (pad) ? src_formats : sink_formats);
 }
+#endif
 
+#if 0
 static const GstEventMask *
 theora_get_event_masks (GstPad * pad)
 {
@@ -249,6 +253,7 @@ theora_get_event_masks (GstPad * pad)
 
   return theora_src_event_masks;
 }
+#endif
 
 static const GstQueryType *
 theora_get_query_types (GstPad * pad)
@@ -277,6 +282,11 @@ theora_dec_src_convert (GstPad * pad,
   /* we need the info part before we can done something */
   if (dec->packetno < 1)
     return FALSE;
+
+  if (src_format == *dest_format) {
+    *dest_value = src_value;
+    return TRUE;
+  }
 
   switch (src_format) {
     case GST_FORMAT_BYTES:
@@ -339,6 +349,11 @@ theora_dec_sink_convert (GstPad * pad,
   if (dec->packetno < 1)
     return FALSE;
 
+  if (src_format == *dest_format) {
+    *dest_value = src_value;
+    return TRUE;
+  }
+
   switch (src_format) {
     case GST_FORMAT_DEFAULT:
     {
@@ -395,36 +410,98 @@ theora_dec_sink_convert (GstPad * pad,
 }
 
 static gboolean
-theora_dec_src_query (GstPad * pad, GstQueryType query, GstFormat * format,
-    gint64 * value)
+theora_dec_src_query (GstPad * pad, GstQuery * query)
 {
-  gint64 granulepos;
   GstTheoraDec *dec = GST_THEORA_DEC (GST_PAD_PARENT (pad));
-  GstFormat my_format = GST_FORMAT_DEFAULT;
-  guint64 time;
+  gboolean res = FALSE;
 
-  if (query == GST_QUERY_POSITION) {
-    /* this is easy, we can convert a granule position to everything */
-    granulepos = dec->granulepos;
-  } else {
-    /* for the total, we just forward the query to the peer */
-    return gst_pad_query (GST_PAD_PEER (dec->sinkpad), query, format, value);
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+    {
+      gboolean res;
+      gint64 granulepos, total, value;
+      GstFormat my_format, format;
+      gint64 time;
+
+      /* forward to peer for total */
+      if (!(res = gst_pad_query (GST_PAD_PEER (dec->sinkpad), query)))
+        goto error;
+
+      /* we can convert a granule position to everything */
+      granulepos = dec->granulepos;
+
+      /* parse total time from peer and format */
+      gst_query_parse_position (query, &format, NULL, &total);
+
+      /* and convert to the final format in two steps with time as the 
+       * intermediate step */
+      my_format = GST_FORMAT_TIME;
+      if (!(res =
+              theora_dec_sink_convert (dec->sinkpad, GST_FORMAT_DEFAULT,
+                  granulepos, &my_format, &time)))
+        goto error;
+
+      if (!(res =
+              theora_dec_src_convert (pad, my_format, time, &format, &value)))
+        goto error;
+
+      gst_query_set_position (query, format, value, total);
+
+      GST_LOG_OBJECT (dec,
+          "query %u: peer returned granulepos: %llu - we return %llu (format %u)",
+          query, granulepos, value, format);
+
+      res = TRUE;
+      break;
+    }
+    case GST_QUERY_CONVERT:
+    {
+      GstFormat src_fmt, dest_fmt;
+      gint64 src_val, dest_val;
+
+      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
+      if ((res =
+              theora_dec_src_convert (pad, src_fmt, src_val, &dest_fmt,
+                  &dest_val)))
+        gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      break;
+    }
+    default:
+      res = FALSE;
+      break;
   }
 
-  /* and convert to the final format in two steps with time as the 
-   * intermediate step */
-  my_format = GST_FORMAT_TIME;
-  if (!theora_dec_sink_convert (dec->sinkpad, GST_FORMAT_DEFAULT, granulepos,
-          &my_format, (gint64 *) & time))
-    return FALSE;
-  if (!gst_pad_convert (pad, my_format, time, format, value))
-    return FALSE;
+error:
+  return res;
+}
 
-  GST_LOG_OBJECT (dec,
-      "query %u: peer returned granulepos: %llu - we return %llu (format %u)",
-      query, granulepos, *value, *format);
+static gboolean
+theora_dec_sink_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res = FALSE;
 
-  return TRUE;
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CONVERT:
+    {
+      GstFormat src_fmt, dest_fmt;
+      gint64 src_val, dest_val;
+
+      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
+      if (!(res =
+              theora_dec_sink_convert (pad, src_fmt, src_val, &dest_fmt,
+                  &dest_val)))
+        goto error;
+
+      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      break;
+    }
+    default:
+      res = FALSE;
+      break;
+  }
+
+error:
+  return res;
 }
 
 static gboolean
@@ -448,9 +525,8 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
        * First bring the requested format to time 
        */
       format = GST_FORMAT_TIME;
-      res = gst_pad_convert (pad, GST_EVENT_SEEK_FORMAT (event),
-          GST_EVENT_SEEK_OFFSET (event), &format, &value);
-      if (!res)
+      if (!(res = theora_dec_src_convert (pad, GST_EVENT_SEEK_FORMAT (event),
+                  GST_EVENT_SEEK_OFFSET (event), &format, &value)))
         goto error;
 
       /* then seek with time on the peer */

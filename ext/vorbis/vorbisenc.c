@@ -74,6 +74,7 @@ vorbis_granule_time_copy (vorbis_dsp_state * v, ogg_int64_t granulepos)
   return (-1);
 }
 
+#if 0
 static const GstFormat *
 gst_vorbisenc_get_formats (GstPad * pad)
 {
@@ -91,6 +92,7 @@ gst_vorbisenc_get_formats (GstPad * pad)
 
   return (GST_PAD_IS_SRC (pad) ? src_formats : sink_formats);
 }
+#endif
 
 #define MAX_BITRATE_DEFAULT 	-1
 #define BITRATE_DEFAULT 	-1
@@ -374,17 +376,17 @@ gst_vorbisenc_get_query_types (GstPad * pad)
 }
 
 static gboolean
-gst_vorbisenc_src_query (GstPad * pad, GstQueryType type,
-    GstFormat * format, gint64 * value)
+gst_vorbisenc_src_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = TRUE;
   VorbisEnc *vorbisenc;
 
-  vorbisenc = GST_VORBISENC (gst_pad_get_parent (pad));
+  vorbisenc = GST_VORBISENC (GST_PAD_PARENT (pad));
 
-  switch (type) {
-    case GST_QUERY_TOTAL:
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
     {
+#if 0
       switch (*format) {
         case GST_FORMAT_BYTES:
         case GST_FORMAT_TIME:
@@ -408,10 +410,10 @@ gst_vorbisenc_src_query (GstPad * pad, GstQueryType type,
 
               /* convert to TIME */
               conv_format = GST_FORMAT_TIME;
-              res = gst_pad_convert (vorbisenc->sinkpad,
+              res = gst_vorbisenc_convert_sink (vorbisenc->sinkpad,
                   peer_format, peer_value, &conv_format, value);
               /* and to final format */
-              res &= gst_pad_convert (pad,
+              res &= gst_vorbisenc_convert_src (pad,
                   GST_FORMAT_TIME, *value, format, value);
             }
             peer_formats++;
@@ -422,23 +424,60 @@ gst_vorbisenc_src_query (GstPad * pad, GstQueryType type,
           res = FALSE;
           break;
       }
+#endif
+      res = FALSE;
       break;
     }
-    case GST_QUERY_POSITION:
-      switch (*format) {
-        default:
-        {
-          /* we only know about our samples, convert to requested format */
-          res = gst_pad_convert (pad,
-              GST_FORMAT_BYTES, vorbisenc->bytes_out, format, value);
-          break;
-        }
-      }
+    case GST_QUERY_CONVERT:
+    {
+      GstFormat src_fmt, dest_fmt;
+      gint64 src_val, dest_val;
+
+      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
+      if (!(res =
+              gst_vorbisenc_convert_src (pad, src_fmt, src_val, &dest_fmt,
+                  &dest_val)))
+        goto error;
+      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       break;
+    }
     default:
       res = FALSE;
       break;
   }
+
+error:
+  return res;
+}
+
+static gboolean
+gst_vorbisenc_sink_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res = TRUE;
+  VorbisEnc *vorbisenc;
+
+  vorbisenc = GST_VORBISENC (GST_PAD_PARENT (pad));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CONVERT:
+    {
+      GstFormat src_fmt, dest_fmt;
+      gint64 src_val, dest_val;
+
+      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
+      if (!(res =
+              gst_vorbisenc_convert_sink (pad, src_fmt, src_val, &dest_fmt,
+                  &dest_val)))
+        goto error;
+      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      break;
+    }
+    default:
+      res = FALSE;
+      break;
+  }
+
+error:
   return res;
 }
 
@@ -451,10 +490,8 @@ gst_vorbisenc_init (VorbisEnc * vorbisenc)
   gst_pad_set_event_function (vorbisenc->sinkpad, gst_vorbisenc_sink_event);
   gst_pad_set_chain_function (vorbisenc->sinkpad, gst_vorbisenc_chain);
   gst_pad_set_setcaps_function (vorbisenc->sinkpad, gst_vorbisenc_sink_setcaps);
-  gst_pad_set_convert_function (vorbisenc->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_vorbisenc_convert_sink));
-  gst_pad_set_formats_function (vorbisenc->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_vorbisenc_get_formats));
+  gst_pad_set_query_function (vorbisenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_vorbisenc_sink_query));
 
   vorbisenc->srcpad =
       gst_pad_new_from_template (gst_vorbisenc_src_template, "src");
@@ -462,10 +499,6 @@ gst_vorbisenc_init (VorbisEnc * vorbisenc)
       GST_DEBUG_FUNCPTR (gst_vorbisenc_src_query));
   gst_pad_set_query_type_function (vorbisenc->srcpad,
       GST_DEBUG_FUNCPTR (gst_vorbisenc_get_query_types));
-  gst_pad_set_convert_function (vorbisenc->srcpad,
-      GST_DEBUG_FUNCPTR (gst_vorbisenc_convert_src));
-  gst_pad_set_formats_function (vorbisenc->srcpad,
-      GST_DEBUG_FUNCPTR (gst_vorbisenc_get_formats));
   gst_element_add_pad (GST_ELEMENT (vorbisenc), vorbisenc->srcpad);
 
   vorbisenc->channels = -1;

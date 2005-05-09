@@ -108,16 +108,10 @@ static void gst_play_bin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * spec);
 static GstElementStateReturn gst_play_bin_change_state (GstElement * element);
 
-static const GstEventMask *gst_play_bin_get_event_masks (GstElement * element);
 static gboolean gst_play_bin_send_event (GstElement * element,
     GstEvent * event);
-static const GstFormat *gst_play_bin_get_formats (GstElement * element);
-static gboolean gst_play_bin_convert (GstElement * element,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value);
 static const GstQueryType *gst_play_bin_get_query_types (GstElement * element);
-static gboolean gst_play_bin_query (GstElement * element, GstQueryType type,
-    GstFormat * format, gint64 * value);
+static gboolean gst_play_bin_query (GstElement * element, GstQuery * query);
 
 
 static GstElementClass *parent_class;
@@ -206,11 +200,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_play_bin_change_state);
-  gstelement_klass->get_event_masks =
-      GST_DEBUG_FUNCPTR (gst_play_bin_get_event_masks);
   gstelement_klass->send_event = GST_DEBUG_FUNCPTR (gst_play_bin_send_event);
-  gstelement_klass->get_formats = GST_DEBUG_FUNCPTR (gst_play_bin_get_formats);
-  gstelement_klass->convert = GST_DEBUG_FUNCPTR (gst_play_bin_convert);
   gstelement_klass->get_query_types =
       GST_DEBUG_FUNCPTR (gst_play_bin_get_query_types);
   gstelement_klass->query = GST_DEBUG_FUNCPTR (gst_play_bin_query);
@@ -862,12 +852,14 @@ gst_play_bin_change_state (GstElement * element)
 }
 
 
+#if 0
 static const GstEventMask *
 gst_play_bin_get_event_masks (GstElement * element)
 {
   /* FIXME, get the list from the number of installed sinks */
   return NULL;
 }
+#endif
 
 /* send an event to all the sinks */
 static gboolean
@@ -908,6 +900,7 @@ gst_play_bin_send_event (GstElement * element, GstEvent * event)
   return res;
 }
 
+#if 0
 static const GstFormat *
 gst_play_bin_get_formats (GstElement * element)
 {
@@ -919,30 +912,7 @@ gst_play_bin_get_formats (GstElement * element)
 
   return formats;
 }
-
-static gboolean
-gst_play_bin_convert (GstElement * element,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value)
-{
-  gboolean res = FALSE;
-  GList *s;
-  GstPlayBin *play_bin;
-
-  play_bin = GST_PLAY_BIN (element);
-
-  /* do a conversion, loop over all sinks, stop as soon as one of the
-   * sinks returns a successful result */
-  for (s = play_bin->seekables; s; s = g_list_next (s)) {
-    GstElement *element = GST_ELEMENT (s->data);
-
-    res = gst_element_convert (element, src_format, src_value,
-        dest_format, dest_value);
-    if (res)
-      break;
-  }
-  return res;
-}
+#endif
 
 static const GstQueryType *
 gst_play_bin_get_query_types (GstElement * element)
@@ -958,8 +928,7 @@ gst_play_bin_get_query_types (GstElement * element)
 }
 
 static gboolean
-gst_play_bin_query (GstElement * element, GstQueryType type,
-    GstFormat * format, gint64 * value)
+gst_play_bin_query (GstElement * element, GstQuery * query)
 {
   gboolean res = FALSE;
   GList *s;
@@ -970,7 +939,7 @@ gst_play_bin_query (GstElement * element, GstQueryType type,
   for (s = play_bin->seekables; s; s = g_list_next (s)) {
     GstElement *element = GST_ELEMENT (s->data);
 
-    res = gst_element_query (element, type, format, value);
+    res = gst_element_query (element, query);
     if (res)
       break;
   }

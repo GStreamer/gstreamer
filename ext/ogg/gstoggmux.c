@@ -240,6 +240,7 @@ gst_ogg_mux_class_init (GstOggMuxClass * klass)
 
 }
 
+#if 0
 static const GstEventMask *
 gst_ogg_mux_get_sink_event_masks (GstPad * pad)
 {
@@ -251,6 +252,7 @@ gst_ogg_mux_get_sink_event_masks (GstPad * pad)
 
   return gst_ogg_mux_sink_event_masks;
 }
+#endif
 
 static void
 gst_ogg_mux_init (GstOggMux * ogg_mux)
@@ -353,7 +355,6 @@ gst_ogg_mux_request_new_pad (GstElement * element,
 
   /* setup some pad functions */
   gst_pad_set_link_function (newpad, gst_ogg_mux_sinkconnect);
-  gst_pad_set_event_mask_function (newpad, gst_ogg_mux_get_sink_event_masks);
   /* dd the pad to the element */
   gst_element_add_pad (element, newpad);
 

@@ -1,3 +1,54 @@
+2005-05-09  Wim Taymans  <wim@fluendo.com>
+
+	* examples/seeking/seek.c: (make_theora_pipeline),
+	(make_vorbis_theora_pipeline), (make_avi_msmpeg4v3_mp3_pipeline),
+	(query_rates), (query_positions_elems), (query_positions_pads),
+	(update_scale), (play_cb), (pause_cb), (stop_cb), (main):
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_init),
+	(gst_ogg_pad_query_types), (gst_ogg_pad_src_query),
+	(gst_ogg_pad_typefind), (gst_ogg_demux_init),
+	(gst_ogg_demux_perform_seek), (gst_ogg_demux_read_chain),
+	(gst_ogg_demux_read_end_chain), (gst_ogg_demux_sink_activate):
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_init),
+	(gst_ogg_mux_request_new_pad), (gst_ogg_mux_next_buffer),
+	(gst_ogg_mux_push_page), (gst_ogg_mux_queue_pads),
+	(gst_ogg_mux_get_headers), (gst_ogg_mux_send_headers),
+	(gst_ogg_mux_collected), (gst_ogg_mux_change_state):
+	* ext/ogg/gstogmparse.c: (gst_ogm_audio_parse_init),
+	(gst_ogm_video_parse_init), (gst_ogm_text_parse_init),
+	(gst_ogm_parse_sink_query), (gst_ogm_parse_chain):
+	* ext/theora/theoradec.c: (gst_theora_dec_init), (_inc_granulepos),
+	(theora_dec_src_convert), (theora_dec_sink_convert),
+	(theora_dec_src_query), (theora_dec_sink_query),
+	(theora_dec_src_event), (theora_dec_sink_event),
+	(theora_handle_comment_packet), (theora_handle_type_packet),
+	(theora_handle_header_packet), (theora_handle_data_packet),
+	(theora_dec_chain):
+	* ext/vorbis/vorbisdec.c: (gst_vorbis_dec_init),
+	(vorbis_dec_convert), (vorbis_dec_src_query),
+	(vorbis_dec_sink_query), (vorbis_dec_src_event),
+	(vorbis_dec_sink_event), (vorbis_handle_comment_packet),
+	(vorbis_handle_type_packet), (vorbis_handle_header_packet),
+	(copy_samples), (vorbis_handle_data_packet), (vorbis_dec_chain):
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_src_query),
+	(gst_vorbisenc_sink_query), (gst_vorbisenc_init),
+	(gst_vorbisenc_sink_event), (gst_vorbisenc_chain):
+	* gst/playback/gstplaybin.c: (gst_play_bin_class_init),
+	(gst_play_bin_query):
+	* gst/playback/test3.c: (update_scale):
+	* gst/sine/gstsinesrc.c: (gst_sinesrc_setcaps),
+	(gst_sinesrc_src_query), (gst_sinesrc_create), (gst_sinesrc_start):
+	* gst/subparse/gstsubparse.c: (gst_subparse_init):
+	* gst/videotestsrc/gstvideotestsrc.c: (gst_videotestsrc_init),
+	(gst_videotestsrc_src_query):
+	* gst/videotestsrc/videotestsrc.c: (paint_hline_I420),
+	(paint_hline_Y41B), (paint_hline_Y42B), (paint_hline_Y800),
+	(paint_hline_YUV9):
+	* sys/ximage/ximagesink.c: (gst_ximagesink_show_frame):
+	Port to new query API.
+	Updated seek.
+	Cleanups in x[v]imagesink
+
 2005-05-09  Andy Wingo  <wingo@pobox.com>
 
 	* ext/alsa/gstalsasink.h:

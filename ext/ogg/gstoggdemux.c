@@ -186,14 +186,13 @@ static void gst_ogg_pad_class_init (GstOggPadClass * klass);
 static void gst_ogg_pad_init (GstOggPad * pad);
 static void gst_ogg_pad_dispose (GObject * object);
 static void gst_ogg_pad_finalize (GObject * object);
+
+#if 0
 static const GstFormat *gst_ogg_pad_formats (GstPad * pad);
 static const GstEventMask *gst_ogg_pad_event_masks (GstPad * pad);
+#endif
 static const GstQueryType *gst_ogg_pad_query_types (GstPad * pad);
-static gboolean gst_ogg_pad_src_convert (GstPad * pad,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value);
-static gboolean gst_ogg_pad_src_query (GstPad * pad, GstQueryType type,
-    GstFormat * format, gint64 * value);
+static gboolean gst_ogg_pad_src_query (GstPad * pad, GstQuery * query);
 static gboolean gst_ogg_pad_event (GstPad * pad, GstEvent * event);
 static GstCaps *gst_ogg_pad_getcaps (GstPad * pad);
 static GstCaps *gst_ogg_type_find (ogg_packet * packet);
@@ -243,16 +242,10 @@ gst_ogg_pad_init (GstOggPad * pad)
 {
   gst_pad_set_event_function (GST_PAD (pad),
       GST_DEBUG_FUNCPTR (gst_ogg_pad_event));
-  gst_pad_set_event_mask_function (GST_PAD (pad),
-      GST_DEBUG_FUNCPTR (gst_ogg_pad_event_masks));
   gst_pad_set_getcaps_function (GST_PAD (pad),
       GST_DEBUG_FUNCPTR (gst_ogg_pad_getcaps));
   gst_pad_set_query_type_function (GST_PAD (pad),
       GST_DEBUG_FUNCPTR (gst_ogg_pad_query_types));
-  gst_pad_set_formats_function (GST_PAD (pad),
-      GST_DEBUG_FUNCPTR (gst_ogg_pad_formats));
-  gst_pad_set_convert_function (GST_PAD (pad),
-      GST_DEBUG_FUNCPTR (gst_ogg_pad_src_convert));
   gst_pad_set_query_function (GST_PAD (pad),
       GST_DEBUG_FUNCPTR (gst_ogg_pad_src_query));
 
@@ -304,6 +297,7 @@ gst_ogg_pad_finalize (GObject * object)
   G_OBJECT_CLASS (ogg_pad_parent_class)->finalize (object);
 }
 
+#if 0
 static const GstFormat *
 gst_ogg_pad_formats (GstPad * pad)
 {
@@ -320,7 +314,9 @@ gst_ogg_pad_formats (GstPad * pad)
 
   return (GST_PAD_IS_SRC (pad) ? src_formats : sink_formats);
 }
+#endif
 
+#if 0
 static const GstEventMask *
 gst_ogg_pad_event_masks (GstPad * pad)
 {
@@ -331,13 +327,13 @@ gst_ogg_pad_event_masks (GstPad * pad)
 
   return src_event_masks;
 }
+#endif
 
 static const GstQueryType *
 gst_ogg_pad_query_types (GstPad * pad)
 {
   static const GstQueryType query_types[] = {
     GST_QUERY_POSITION,
-    GST_QUERY_TOTAL,
     0
   };
 
@@ -351,23 +347,7 @@ gst_ogg_pad_getcaps (GstPad * pad)
 }
 
 static gboolean
-gst_ogg_pad_src_convert (GstPad * pad,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value)
-{
-  gboolean res = FALSE;
-  GstOggDemux *ogg;
-
-  ogg = GST_OGG_DEMUX (GST_PAD_PARENT (pad));
-
-  /* fill me, not sure with what... */
-
-  return res;
-}
-
-static gboolean
-gst_ogg_pad_src_query (GstPad * pad, GstQueryType type,
-    GstFormat * format, gint64 * value)
+gst_ogg_pad_src_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = TRUE;
   GstOggDemux *ogg;
@@ -376,12 +356,13 @@ gst_ogg_pad_src_query (GstPad * pad, GstQueryType type,
   ogg = GST_OGG_DEMUX (GST_PAD_PARENT (pad));
   cur = GST_OGG_PAD (pad);
 
-  switch (type) {
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
-      *value = cur->current_granule;
+      gst_query_set_position (query, GST_FORMAT_TIME, -1, ogg->total_time);
       break;
-    case GST_QUERY_TOTAL:
-      *value = ogg->total_time;
+    case GST_QUERY_CONVERT:
+      /* hmm .. */
+      res = FALSE;
       break;
     default:
       res = FALSE;
@@ -940,7 +921,6 @@ gst_ogg_demux_init (GstOggDemux * ogg)
   ogg->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&ogg_demux_sink_template_factory), "sink");
-  gst_pad_set_formats_function (ogg->sinkpad, gst_ogg_pad_formats);
   gst_pad_set_loop_function (ogg->sinkpad,
       (GstPadLoopFunction) gst_ogg_demux_loop);
   gst_pad_set_event_function (ogg->sinkpad, gst_ogg_demux_handle_event);
@@ -1327,7 +1307,7 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, gint64 pos)
       } else {
         gint64 granulepos;
         GstClockTime granuletime;
-        GstFormat format = GST_FORMAT_TIME;
+        GstFormat format;
         GstOggPad *pad;
 
         granulepos = ogg_page_granulepos (&og);
@@ -1338,8 +1318,13 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, gint64 pos)
         if (pad == NULL)
           continue;
 
-        gst_pad_convert (pad->elem_pad,
-            GST_FORMAT_DEFAULT, granulepos, &format, (gint64 *) & granuletime);
+        format = GST_FORMAT_TIME;
+        if (!gst_pad_query_convert (pad->elem_pad,
+                GST_FORMAT_DEFAULT, granulepos, &format,
+                (gint64 *) & granuletime)) {
+          g_warning ("could not convert granulepos to time");
+          granuletime = target;
+        }
 
         GST_DEBUG_OBJECT (ogg,
             "found page with granule %" G_GINT64_FORMAT " and time %"
@@ -1575,11 +1560,14 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg)
   /* now we can fill in the missing info using queries */
   for (i = 0; i < chain->streams->len; i++) {
     GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
-    GstFormat target = GST_FORMAT_TIME;
+    GstFormat target;
 
-    gst_pad_convert (pad->elem_pad,
-        GST_FORMAT_DEFAULT, pad->first_granule, &target,
-        (gint64 *) & pad->first_time);
+    target = GST_FORMAT_TIME;
+    if (!gst_pad_query_convert (pad->elem_pad,
+            GST_FORMAT_DEFAULT, pad->first_granule, &target,
+            (gint64 *) & pad->first_time)) {
+      g_warning ("could not convert granule to time");
+    }
 
     pad->mode = GST_OGG_PAD_MODE_STREAMING;
     pad->packetno = 0;
@@ -1637,11 +1625,14 @@ gst_ogg_demux_read_end_chain (GstOggDemux * ogg, GstOggChain * chain)
   /* now we can fill in the missing info using queries */
   for (i = 0; i < chain->streams->len; i++) {
     GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
-    GstFormat target = GST_FORMAT_TIME;
+    GstFormat target;
 
-    gst_pad_convert (pad->elem_pad,
-        GST_FORMAT_DEFAULT, pad->last_granule, &target,
-        (gint64 *) & pad->last_time);
+    target = GST_FORMAT_TIME;
+    if (!gst_pad_query_convert (pad->elem_pad,
+            GST_FORMAT_DEFAULT, pad->last_granule, &target,
+            (gint64 *) & pad->last_time)) {
+      g_warning ("could not convert granule to time");
+    }
   }
   return 0;
 }

@@ -9,7 +9,8 @@ static GList *rate_pads = NULL;
 static GList *seekable_elements = NULL;
 
 static GstElement *pipeline;
-static guint64 duration;
+static gint64 position;
+static gint64 duration;
 static GtkAdjustment *adjustment;
 static GtkWidget *hscale;
 static gboolean stats = FALSE;
@@ -24,6 +25,9 @@ static gulong changed_id;
 #define SOURCE "gnomevfssrc"
 #define ASINK "alsasink"
 //#define ASINK "osssink"
+#define VSINK "xvimagesink"
+//#define VSINK "ximagesink"
+//#define VSINK "aasink"
 
 #define UPDATE_INTERVAL 500
 
@@ -334,7 +338,7 @@ make_theora_pipeline (const gchar * location)
   queue = gst_element_factory_make_or_warn ("queue", "queue");
   decoder = gst_element_factory_make_or_warn ("theoradec", "decoder");
   convert = gst_element_factory_make_or_warn ("ffmpegcolorspace", "convert");
-  videosink = gst_element_factory_make_or_warn ("xvimagesink", "sink");
+  videosink = gst_element_factory_make_or_warn (VSINK, "sink");
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
@@ -407,7 +411,7 @@ make_vorbis_theora_pipeline (const gchar * location)
   v_decoder = gst_element_factory_make_or_warn ("theoradec", "v_dec");
   v_convert =
       gst_element_factory_make_or_warn ("ffmpegcolorspace", "v_convert");
-  videosink = gst_element_factory_make_or_warn ("xvimagesink", "v_sink");
+  videosink = gst_element_factory_make_or_warn (VSINK, "v_sink");
   gst_element_link_many (v_queue, v_decoder, v_convert, videosink, NULL);
 
   gst_bin_add (GST_BIN (video_bin), v_queue);
@@ -472,7 +476,7 @@ make_avi_msmpeg4v3_mp3_pipeline (const gchar * location)
   v_decoder = gst_element_factory_make_or_warn ("ffdec_msmpeg4", "v_dec");
   v_convert =
       gst_element_factory_make_or_warn ("ffmpegcolorspace", "v_convert");
-  videosink = gst_element_factory_make_or_warn ("xvimagesink", "v_sink");
+  videosink = gst_element_factory_make_or_warn (VSINK, "v_sink");
   gst_element_link_many (v_queue, v_decoder, v_convert, videosink, NULL);
 
   gst_bin_add (GST_BIN (video_bin), v_queue);
@@ -794,72 +798,13 @@ query_rates (void)
 
       format = seek_formats[i].format;
 
-      if (gst_pad_convert (pad, GST_FORMAT_TIME, GST_SECOND, &format, &value)) {
+      if (gst_pad_query_convert (pad, GST_FORMAT_TIME, GST_SECOND, &format,
+              &value)) {
         g_print ("%s %13" G_GINT64_FORMAT " | ", seek_formats[i].name, value);
       } else {
         g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
       }
 
-      i++;
-    }
-    g_print (" %s:%s\n", GST_DEBUG_PAD_NAME (pad));
-
-    walk = g_list_next (walk);
-  }
-}
-
-G_GNUC_UNUSED static void
-query_durations_elems ()
-{
-  GList *walk = seekable_elements;
-
-  while (walk) {
-    GstElement *element = GST_ELEMENT (walk->data);
-    gint i = 0;
-
-    g_print ("durations %8.8s: ", GST_ELEMENT_NAME (element));
-    while (seek_formats[i].name) {
-      gboolean res;
-      gint64 value;
-      GstFormat format;
-
-      format = seek_formats[i].format;
-      res = gst_element_query (element, GST_QUERY_TOTAL, &format, &value);
-      if (res) {
-        g_print ("%s %13" G_GINT64_FORMAT " | ", seek_formats[i].name, value);
-      } else {
-        g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
-      }
-      i++;
-    }
-    g_print (" %s\n", GST_ELEMENT_NAME (element));
-
-    walk = g_list_next (walk);
-  }
-}
-
-G_GNUC_UNUSED static void
-query_durations_pads ()
-{
-  GList *walk = seekable_pads;
-
-  while (walk) {
-    GstPad *pad = GST_PAD (walk->data);
-    gint i = 0;
-
-    g_print ("durations %8.8s: ", GST_PAD_NAME (pad));
-    while (seek_formats[i].name) {
-      gboolean res;
-      gint64 value;
-      GstFormat format;
-
-      format = seek_formats[i].format;
-      res = gst_pad_query (pad, GST_QUERY_TOTAL, &format, &value);
-      if (res) {
-        g_print ("%s %13" G_GINT64_FORMAT " | ", seek_formats[i].name, value);
-      } else {
-        g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
-      }
       i++;
     }
     g_print (" %s:%s\n", GST_DEBUG_PAD_NAME (pad));
@@ -879,16 +824,17 @@ query_positions_elems ()
 
     g_print ("positions %8.8s: ", GST_ELEMENT_NAME (element));
     while (seek_formats[i].name) {
-      gboolean res;
-      gint64 value;
+      gint64 position, total;
       GstFormat format;
 
       format = seek_formats[i].format;
-      res = gst_element_query (element, GST_QUERY_POSITION, &format, &value);
-      if (res) {
-        g_print ("%s %13" G_GINT64_FORMAT " | ", seek_formats[i].name, value);
+
+      if (gst_element_query_position (element, &format, &position, &total)) {
+        g_print ("%s %13" G_GINT64_FORMAT " / %13" G_GINT64_FORMAT " | ",
+            seek_formats[i].name, position, total);
       } else {
-        g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
+        g_print ("%s %13.13s / %13.13s | ", seek_formats[i].name, "*NA*",
+            "*NA*");
       }
       i++;
     }
@@ -909,17 +855,19 @@ query_positions_pads ()
 
     g_print ("positions %8.8s: ", GST_PAD_NAME (pad));
     while (seek_formats[i].name) {
-      gboolean res;
-      gint64 value;
       GstFormat format;
+      gint64 position, total;
 
       format = seek_formats[i].format;
-      res = gst_pad_query (pad, GST_QUERY_POSITION, &format, &value);
-      if (res) {
-        g_print ("%s %13" G_GINT64_FORMAT " | ", seek_formats[i].name, value);
+
+      if (gst_pad_query_position (pad, &format, &position, &total)) {
+        g_print ("%s %13" G_GINT64_FORMAT " / %13" G_GINT64_FORMAT " | ",
+            seek_formats[i].name, position, total);
       } else {
-        g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
+        g_print ("%s %13.13s / %13.13s | ", seek_formats[i].name, "*NA*",
+            "*NA*");
       }
+
       i++;
     }
     g_print (" %s:%s\n", GST_DEBUG_PAD_NAME (pad));
@@ -932,34 +880,25 @@ static gboolean
 update_scale (gpointer data)
 {
   GstClock *clock;
-  guint64 position;
-  GstFormat format = GST_FORMAT_TIME;
-  gboolean res;
+  GstFormat format;
 
+  position = 0;
   duration = 0;
   clock = gst_pipeline_get_clock (GST_PIPELINE (pipeline));
+
+  format = GST_FORMAT_TIME;
 
   if (elem_seek) {
     if (seekable_elements) {
       GstElement *element = GST_ELEMENT (seekable_elements->data);
 
-      res = gst_element_query (element, GST_QUERY_TOTAL, &format, &duration);
-      if (!res)
-        duration = 0;
-      res = gst_element_query (element, GST_QUERY_POSITION, &format, &position);
-      if (!res)
-        position = 0;
+      gst_element_query_position (element, &format, &position, &duration);
     }
   } else {
     if (seekable_pads) {
       GstPad *pad = GST_PAD (seekable_pads->data);
 
-      res = gst_pad_query (pad, GST_QUERY_TOTAL, &format, &duration);
-      if (!res)
-        duration = 0;
-      res = gst_pad_query (pad, GST_QUERY_POSITION, &format, &position);
-      if (!res)
-        position = 0;
+      gst_pad_query_position (pad, &format, &position, &duration);
     }
   }
 
@@ -970,10 +909,8 @@ update_scale (gpointer data)
     }
 
     if (elem_seek) {
-      query_durations_elems ();
       query_positions_elems ();
     } else {
-      query_durations_pads ();
       query_positions_pads ();
     }
     query_rates ();
@@ -1107,6 +1044,7 @@ play_cb (GtkButton * button, gpointer data)
 
   gst_element_get_state (pipeline, &state, NULL, NULL);
   if (state != GST_STATE_PLAYING) {
+    g_print ("PLAY pipeline\n");
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
     update_id =
         gtk_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
@@ -1120,6 +1058,7 @@ pause_cb (GtkButton * button, gpointer data)
 
   gst_element_get_state (pipeline, &state, NULL, NULL);
   if (state != GST_STATE_PAUSED) {
+    g_print ("PAUSE pipeline\n");
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
     gtk_timeout_remove (update_id);
   }
@@ -1132,6 +1071,7 @@ stop_cb (GtkButton * button, gpointer data)
 
   gst_element_get_state (pipeline, &state, NULL, NULL);
   if (state != GST_STATE_READY) {
+    g_print ("READY pipeline\n");
     gst_element_set_state (pipeline, GST_STATE_READY);
     gtk_adjustment_set_value (adjustment, 0.0);
     gtk_timeout_remove (update_id);
@@ -1260,8 +1200,10 @@ main (int argc, char **argv)
   }
   gtk_main ();
 
+  g_print ("NULL pipeline\n");
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
+  g_print ("free pipeline\n");
   gst_object_unref (GST_OBJECT (pipeline));
 
   return 0;

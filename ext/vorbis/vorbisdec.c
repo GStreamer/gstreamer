@@ -75,15 +75,18 @@ GST_BOILERPLATE (GstVorbisDec, gst_vorbis_dec, GstElement, GST_TYPE_ELEMENT);
 static gboolean vorbis_dec_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn vorbis_dec_chain (GstPad * pad, GstBuffer * buffer);
 static GstElementStateReturn vorbis_dec_change_state (GstElement * element);
+
+#if 0
 static const GstFormat *vorbis_dec_get_formats (GstPad * pad);
+#endif
 
 static gboolean vorbis_dec_src_event (GstPad * pad, GstEvent * event);
-static gboolean vorbis_dec_src_query (GstPad * pad,
-    GstQueryType query, GstFormat * format, gint64 * value);
+static gboolean vorbis_dec_src_query (GstPad * pad, GstQuery * query);
 static gboolean vorbis_dec_convert (GstPad * pad,
     GstFormat src_format, gint64 src_value,
     GstFormat * dest_format, gint64 * dest_value);
 
+static gboolean vorbis_dec_sink_query (GstPad * pad, GstQuery * query);
 
 static void
 gst_vorbis_dec_base_init (gpointer g_class)
@@ -105,6 +108,7 @@ gst_vorbis_dec_class_init (GstVorbisDecClass * klass)
   gstelement_class->change_state = vorbis_dec_change_state;
 }
 
+#if 0
 static const GstFormat *
 vorbis_dec_get_formats (GstPad * pad)
 {
@@ -123,7 +127,9 @@ vorbis_dec_get_formats (GstPad * pad)
 
   return (GST_PAD_IS_SRC (pad) ? src_formats : sink_formats);
 }
+#endif
 
+#if 0
 static const GstEventMask *
 vorbis_get_event_masks (GstPad * pad)
 {
@@ -134,6 +140,7 @@ vorbis_get_event_masks (GstPad * pad)
 
   return vorbis_dec_src_event_masks;
 }
+#endif
 
 static const GstQueryType *
 vorbis_get_query_types (GstPad * pad)
@@ -155,19 +162,15 @@ gst_vorbis_dec_init (GstVorbisDec * dec)
       (&vorbis_dec_sink_factory), "sink");
   gst_pad_set_event_function (dec->sinkpad, vorbis_dec_sink_event);
   gst_pad_set_chain_function (dec->sinkpad, vorbis_dec_chain);
-  gst_pad_set_formats_function (dec->sinkpad, vorbis_dec_get_formats);
-  gst_pad_set_convert_function (dec->sinkpad, vorbis_dec_convert);
+  gst_pad_set_query_function (dec->sinkpad, vorbis_dec_sink_query);
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
 
   dec->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&vorbis_dec_src_factory), "src");
-  gst_pad_set_event_mask_function (dec->srcpad, vorbis_get_event_masks);
   gst_pad_set_event_function (dec->srcpad, vorbis_dec_src_event);
   gst_pad_set_query_type_function (dec->srcpad, vorbis_get_query_types);
   gst_pad_set_query_function (dec->srcpad, vorbis_dec_src_query);
-  gst_pad_set_formats_function (dec->srcpad, vorbis_dec_get_formats);
-  gst_pad_set_convert_function (dec->srcpad, vorbis_dec_convert);
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 }
 
@@ -184,6 +187,11 @@ vorbis_dec_convert (GstPad * pad,
 
   if (dec->packetno < 1)
     return FALSE;
+
+  if (src_format == *dest_format) {
+    *dest_value = src_value;
+    return TRUE;
+  }
 
   if (dec->sinkpad == pad &&
       (src_format == GST_FORMAT_BYTES || *dest_format == GST_FORMAT_BYTES))
@@ -234,27 +242,94 @@ vorbis_dec_convert (GstPad * pad,
 }
 
 static gboolean
-vorbis_dec_src_query (GstPad * pad, GstQueryType query, GstFormat * format,
-    gint64 * value)
+vorbis_dec_src_query (GstPad * pad, GstQuery * query)
 {
-  gint64 granulepos = 0;
-  GstVorbisDec *dec = GST_VORBIS_DEC (GST_PAD_PARENT (pad));
+  gint64 granulepos;
+  GstVorbisDec *dec;
+  gboolean res;
 
-  if (query == GST_QUERY_POSITION) {
-    granulepos = dec->granulepos;
-  } else {
-    /* query peer in default format */
-    return gst_pad_query (GST_PAD_PEER (dec->sinkpad), query, format, value);
+  dec = GST_VORBIS_DEC (GST_PAD_PARENT (pad));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+    {
+      GstFormat format;
+      gint64 value, total;
+
+      /* query peer for total length */
+      if (!(res = gst_pad_query (GST_PAD_PEER (dec->sinkpad), query)))
+        goto error;
+
+      granulepos = dec->granulepos;
+
+      gst_query_parse_position (query, &format, NULL, &total);
+
+      /* and convert to the final format */
+      if (!(res =
+              vorbis_dec_convert (pad, GST_FORMAT_DEFAULT, granulepos, &format,
+                  &value)))
+        goto error;
+
+      gst_query_set_position (query, format, value, total);
+
+      GST_LOG_OBJECT (dec,
+          "query %u: peer returned granulepos: %llu - we return %llu (format %u)",
+          query, granulepos, value, format);
+
+      break;
+    }
+    case GST_QUERY_CONVERT:
+    {
+      GstFormat src_fmt, dest_fmt;
+      gint64 src_val, dest_val;
+
+      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
+      if (!(res =
+              vorbis_dec_convert (pad, src_fmt, src_val, &dest_fmt, &dest_val)))
+        goto error;
+      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      break;
+    }
+    default:
+      res = FALSE;
+      break;
   }
+  return res;
 
-  /* and convert to the final format */
-  if (!gst_pad_convert (pad, GST_FORMAT_DEFAULT, granulepos, format, value))
-    return FALSE;
+error:
+  {
+    GST_DEBUG ("error handling event");
+    return res;
+  }
+}
 
-  GST_LOG_OBJECT (dec,
-      "query %u: peer returned granulepos: %llu - we return %llu (format %u)",
-      query, granulepos, *value, *format);
-  return TRUE;
+static gboolean
+vorbis_dec_sink_query (GstPad * pad, GstQuery * query)
+{
+  GstVorbisDec *dec;
+  gboolean res;
+
+  dec = GST_VORBIS_DEC (GST_PAD_PARENT (pad));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CONVERT:
+    {
+      GstFormat src_fmt, dest_fmt;
+      gint64 src_val, dest_val;
+
+      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
+      if (!(res =
+              vorbis_dec_convert (pad, src_fmt, src_val, &dest_fmt, &dest_val)))
+        goto error;
+      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      break;
+    }
+    default:
+      res = FALSE;
+      break;
+  }
+error:
+  return res;
 }
 
 static gboolean
@@ -269,7 +344,7 @@ vorbis_dec_src_event (GstPad * pad, GstEvent * event)
       GstFormat my_format = GST_FORMAT_TIME;
 
       /* convert to time */
-      res = gst_pad_convert (pad, GST_EVENT_SEEK_FORMAT (event),
+      res = vorbis_dec_convert (pad, GST_EVENT_SEEK_FORMAT (event),
           GST_EVENT_SEEK_OFFSET (event), &my_format, &value);
       if (res) {
         GstEvent *real_seek = gst_event_new_seek (

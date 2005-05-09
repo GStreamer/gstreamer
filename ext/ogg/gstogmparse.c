@@ -140,12 +140,14 @@ static void gst_ogm_video_parse_init (GstOgmParse * ogm);
 static void gst_ogm_audio_parse_init (GstOgmParse * ogm);
 static void gst_ogm_text_parse_init (GstOgmParse * ogm);
 
+#if 0
 static const GstFormat *gst_ogm_parse_get_sink_formats (GstPad * pad);
+#endif
+
 static const GstQueryType *gst_ogm_parse_get_sink_querytypes (GstPad * pad);
+static gboolean gst_ogm_parse_sink_query (GstPad * pad, GstQuery * query);
 static gboolean gst_ogm_parse_sink_convert (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
-static gboolean gst_ogm_parse_sink_query (GstPad * pad, GstQueryType type,
-    GstFormat * fmt, gint64 * val);
 
 static GstFlowReturn gst_ogm_parse_chain (GstPad * pad, GstBuffer * buffer);
 
@@ -343,8 +345,7 @@ gst_ogm_audio_parse_init (GstOgmParse * ogm)
   /* create the pads */
   templ = gst_static_pad_template_get (&ogm_audio_parse_sink_template_factory);
   ogm->sinkpad = gst_pad_new_from_template (templ, "sink");
-  gst_pad_set_convert_function (ogm->sinkpad, gst_ogm_parse_sink_convert);
-  gst_pad_set_formats_function (ogm->sinkpad, gst_ogm_parse_get_sink_formats);
+  gst_pad_set_query_function (ogm->sinkpad, gst_ogm_parse_sink_query);
   gst_pad_set_chain_function (ogm->sinkpad, gst_ogm_parse_chain);
   gst_element_add_pad (GST_ELEMENT (ogm), ogm->sinkpad);
 
@@ -364,8 +365,7 @@ gst_ogm_video_parse_init (GstOgmParse * ogm)
   /* create the pads */
   templ = gst_static_pad_template_get (&ogm_video_parse_sink_template_factory);
   ogm->sinkpad = gst_pad_new_from_template (templ, "sink");
-  gst_pad_set_convert_function (ogm->sinkpad, gst_ogm_parse_sink_convert);
-  gst_pad_set_formats_function (ogm->sinkpad, gst_ogm_parse_get_sink_formats);
+  gst_pad_set_query_function (ogm->sinkpad, gst_ogm_parse_sink_query);
   gst_pad_set_chain_function (ogm->sinkpad, gst_ogm_parse_chain);
   gst_element_add_pad (GST_ELEMENT (ogm), ogm->sinkpad);
 
@@ -385,8 +385,6 @@ gst_ogm_text_parse_init (GstOgmParse * ogm)
   /* create the pads */
   templ = gst_static_pad_template_get (&ogm_text_parse_sink_template_factory);
   ogm->sinkpad = gst_pad_new_from_template (templ, "sink");
-  gst_pad_set_convert_function (ogm->sinkpad, gst_ogm_parse_sink_convert);
-  gst_pad_set_formats_function (ogm->sinkpad, gst_ogm_parse_get_sink_formats);
   gst_pad_set_query_type_function (ogm->sinkpad,
       gst_ogm_parse_get_sink_querytypes);
   gst_pad_set_query_function (ogm->sinkpad, gst_ogm_parse_sink_query);
@@ -401,6 +399,7 @@ gst_ogm_text_parse_init (GstOgmParse * ogm)
   ogm->srcpadtempl = text_src_templ;
 }
 
+#if 0
 static const GstFormat *
 gst_ogm_parse_get_sink_formats (GstPad * pad)
 {
@@ -412,6 +411,7 @@ gst_ogm_parse_get_sink_formats (GstPad * pad)
 
   return formats;
 }
+#endif
 
 static const GstQueryType *
 gst_ogm_parse_get_sink_querytypes (GstPad * pad)
@@ -485,18 +485,47 @@ gst_ogm_parse_sink_convert (GstPad * pad,
 }
 
 static gboolean
-gst_ogm_parse_sink_query (GstPad * pad,
-    GstQueryType type, GstFormat * fmt, gint64 * val)
+gst_ogm_parse_sink_query (GstPad * pad, GstQuery * query)
 {
-  GstOgmParse *ogm = GST_OGM_PARSE (gst_pad_get_parent (pad));
+  GstOgmParse *ogm = GST_OGM_PARSE (GST_PAD_PARENT (pad));
+  GstFormat format;
+  gboolean res;
 
-  if (type != GST_QUERY_POSITION)
-    return FALSE;
-  if (*fmt != GST_FORMAT_DEFAULT && *fmt != GST_FORMAT_TIME)
-    return FALSE;
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+    {
+      gint64 val;
 
-  return gst_pad_convert (pad,
-      GST_FORMAT_DEFAULT, ogm->next_granulepos, fmt, val);
+      gst_query_parse_position (query, &format, NULL, NULL);
+
+      if (format != GST_FORMAT_DEFAULT && format != GST_FORMAT_TIME)
+        return FALSE;
+
+      if ((res = gst_ogm_parse_sink_convert (pad,
+                  GST_FORMAT_DEFAULT, ogm->next_granulepos, &format, &val))) {
+        /* don't know the total length here.. */
+        gst_query_set_position (query, format, val, -1);
+      }
+      break;
+    }
+    case GST_QUERY_CONVERT:
+    {
+      GstFormat src_fmt, dest_fmt;
+      gint64 src_val, dest_val;
+
+      /* peel off input */
+      gst_query_parse_convert (query, &src_fmt, &src_val, NULL, NULL);
+      if ((res = gst_ogm_parse_sink_convert (pad, src_fmt, src_val,
+                  &dest_fmt, &dest_val))) {
+        gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      }
+      break;
+    }
+    default:
+      res = FALSE;
+      break;
+  }
+  return res;
 }
 
 static GstFlowReturn

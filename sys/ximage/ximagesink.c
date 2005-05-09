@@ -1129,30 +1129,7 @@ gst_ximagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 
   ximagesink = GST_XIMAGESINK (bsink);
 
-#if 0
-  if (GST_IS_EVENT (data)) {
-    gst_pad_event_default (pad, GST_EVENT (data));
-    return;
-  }
-#endif
-
   g_mutex_lock (ximagesink->stream_lock);
-
-#if 0
-  /* update time */
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-    ximagesink->time = GST_BUFFER_TIMESTAMP (buf);
-  }
-  GST_LOG_OBJECT (ximagesink, "clock wait: %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (ximagesink->time));
-#endif
-
-  /* FIXME */
-#if 0
-  if (GST_VIDEOSINK_CLOCK (ximagesink)) {
-    gst_element_wait (GST_ELEMENT (ximagesink), ximagesink->time);
-  }
-#endif
 
   /* If this buffer has been allocated using our buffer management we simply
      put the ximage which is in the PRIVATE pointer */
@@ -1181,13 +1158,6 @@ gst_ximagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
         MIN (GST_BUFFER_SIZE (buf), ximagesink->ximage->size));
     gst_ximagesink_ximage_put (ximagesink, ximagesink->ximage);
   }
-
-#if 0
-  /* set correct time for next buffer */
-  if (!GST_BUFFER_TIMESTAMP_IS_VALID (buf) && ximagesink->framerate > 0) {
-    ximagesink->time += GST_SECOND / ximagesink->framerate;
-  }
-#endif
 
   gst_ximagesink_handle_xevents (ximagesink);
 #if 0

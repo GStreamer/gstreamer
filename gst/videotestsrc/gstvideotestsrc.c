@@ -72,9 +72,11 @@ static void gst_videotestsrc_get_property (GObject * object, guint prop_id,
 static void gst_videotestsrc_loop (GstPad * pad);
 
 static const GstQueryType *gst_videotestsrc_get_query_types (GstPad * pad);
-static gboolean gst_videotestsrc_src_query (GstPad * pad,
-    GstQueryType type, GstFormat * format, gint64 * value);
+static gboolean gst_videotestsrc_src_query (GstPad * pad, GstQuery * query);
+
+#if 0
 static const GstEventMask *gst_videotestsrc_get_event_masks (GstPad * pad);
+#endif
 static gboolean gst_videotestsrc_handle_src_event (GstPad * pad,
     GstEvent * event);
 
@@ -460,8 +462,6 @@ gst_videotestsrc_init (GstVideotestsrc * videotestsrc)
   gst_pad_set_query_function (videotestsrc->srcpad, gst_videotestsrc_src_query);
   gst_pad_set_query_type_function (videotestsrc->srcpad,
       gst_videotestsrc_get_query_types);
-  gst_pad_set_event_mask_function (videotestsrc->srcpad,
-      gst_videotestsrc_get_event_masks);
   gst_pad_set_event_function (videotestsrc->srcpad,
       gst_videotestsrc_handle_src_event);
 
@@ -491,27 +491,36 @@ gst_videotestsrc_get_query_types (GstPad * pad)
 }
 
 static gboolean
-gst_videotestsrc_src_query (GstPad * pad,
-    GstQueryType type, GstFormat * format, gint64 * value)
+gst_videotestsrc_src_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = FALSE;
   GstVideotestsrc *videotestsrc = GST_VIDEOTESTSRC (GST_PAD_PARENT (pad));
 
-  switch (type) {
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
-      switch (*format) {
+    {
+      GstFormat format;
+      gint64 current;
+
+      gst_query_parse_position (query, &format, NULL, NULL);
+
+      switch (format) {
         case GST_FORMAT_TIME:
-          *value = videotestsrc->running_time;
+          current = videotestsrc->running_time;
           res = TRUE;
           break;
         case GST_FORMAT_DEFAULT:       /* frames */
-          *value = videotestsrc->n_frames;
+          current = videotestsrc->n_frames;
           res = TRUE;
           break;
         default:
           break;
       }
+      if (res) {
+        gst_query_set_position (query, format, current, -1);
+      }
       break;
+    }
     default:
       break;
   }
@@ -519,6 +528,7 @@ gst_videotestsrc_src_query (GstPad * pad,
   return res;
 }
 
+#if 0
 static const GstEventMask *
 gst_videotestsrc_get_event_masks (GstPad * pad)
 {
@@ -529,6 +539,7 @@ gst_videotestsrc_get_event_masks (GstPad * pad)
 
   return src_event_masks;
 }
+#endif
 
 static gboolean
 gst_videotestsrc_handle_src_event (GstPad * pad, GstEvent * event)

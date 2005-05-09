@@ -86,8 +86,7 @@ static void gst_sinesrc_populate_sinetable (GstSineSrc * src);
 static inline void gst_sinesrc_update_table_inc (GstSineSrc * src);
 
 static const GstQueryType *gst_sinesrc_get_query_types (GstPad * pad);
-static gboolean gst_sinesrc_src_query (GstPad * pad,
-    GstQueryType type, GstFormat * format, gint64 * value);
+static gboolean gst_sinesrc_src_query (GstPad * pad, GstQuery * query);
 
 static GstFlowReturn gst_sinesrc_create (GstBaseSrc * basesrc, guint64 offset,
     guint length, GstBuffer ** buffer);
@@ -264,33 +263,43 @@ gst_sinesrc_get_query_types (GstPad * pad)
 }
 
 static gboolean
-gst_sinesrc_src_query (GstPad * pad,
-    GstQueryType type, GstFormat * format, gint64 * value)
+gst_sinesrc_src_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = FALSE;
   GstSineSrc *src;
 
   src = GST_SINESRC (GST_PAD_PARENT (pad));
 
-  switch (type) {
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
-      switch (*format) {
+    {
+      GstFormat format;
+      gint64 current;
+
+      gst_query_parse_position (query, &format, NULL, NULL);
+
+      switch (format) {
         case GST_FORMAT_TIME:
-          *value = src->timestamp;
+          current = src->timestamp;
           res = TRUE;
           break;
         case GST_FORMAT_DEFAULT:       /* samples */
-          *value = src->offset / 2;     /* 16bpp audio */
+          current = src->offset / 2;    /* 16bpp audio */
           res = TRUE;
           break;
         case GST_FORMAT_BYTES:
-          *value = src->offset;
+          current = src->offset;
           res = TRUE;
           break;
         default:
           break;
+
+          if (res) {
+            gst_query_set_position (query, format, current, -1);
+          }
       }
       break;
+    }
     default:
       break;
   }
