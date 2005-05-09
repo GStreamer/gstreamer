@@ -111,7 +111,6 @@ struct _GstMessage
 void 		_gst_message_initialize 	(void);
 
 GType 		gst_message_get_type 		(void);
-GstMessage *	gst_message_new 		(GstMessageType type, GstObject * src);
 
 /* refcounting */
 #define         gst_message_ref(msg)		GST_MESSAGE (gst_data_ref (GST_DATA (msg)))

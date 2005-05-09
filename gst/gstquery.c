@@ -26,11 +26,13 @@
 #include "gst_private.h"
 #include "gstquery.h"
 #include "gstmemchunk.h"
+#include "gstenumtypes.h"
 #include "gstdata_private.h"
 
+GST_DEBUG_CATEGORY_STATIC (gst_query_debug);
+#define GST_CAT_DEFAULT gst_query_debug
 
 GType _gst_query_type;
-
 
 static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
 static GList *_gst_queries = NULL;
@@ -60,6 +62,8 @@ _gst_query_initialize (void)
   GstQueryTypeDefinition *standards = standard_definitions;
 
   GST_CAT_INFO (GST_CAT_GST_INIT, "init queries");
+
+  GST_DEBUG_CATEGORY_INIT (gst_query_debug, "query", 0, "query system");
 
   g_static_mutex_lock (&mutex);
   if (_nick_to_query == NULL) {
@@ -279,10 +283,114 @@ gst_query_new (GstQueryType type, GstStructure * structure)
     query->structure = structure;
     gst_structure_set_parent_refcount (query->structure,
         &GST_DATA_REFCOUNT (query));
+  } else {
+    query->structure = NULL;
   }
 
   return query;
 }
+
+GstQuery *
+gst_query_new_position (GstFormat format)
+{
+  GstQuery *query;
+  GstStructure *structure;
+
+  structure = gst_structure_new ("GstQueryPosition",
+      "format", GST_TYPE_FORMAT, format,
+      "cur", G_TYPE_INT64, (gint64) - 1,
+      "end", G_TYPE_INT64, (gint64) - 1, NULL);
+  query = gst_query_new (GST_QUERY_POSITION, structure);
+
+  return query;
+}
+
+void
+gst_query_set_position (GstQuery * query, GstFormat format,
+    gint64 cur, gint64 end)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_POSITION);
+
+  structure = gst_query_get_structure (query);
+  gst_structure_set (structure,
+      "format", GST_TYPE_FORMAT, format,
+      "cur", G_TYPE_INT64, cur, "end", G_TYPE_INT64, end, NULL);
+}
+
+void
+gst_query_parse_position (GstQuery * query, GstFormat * format,
+    gint64 * cur, gint64 * end)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_POSITION);
+
+  structure = gst_query_get_structure (query);
+  if (format)
+    *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
+  if (cur)
+    *cur = g_value_get_int64 (gst_structure_get_value (structure, "cur"));
+  if (end)
+    *end = g_value_get_int64 (gst_structure_get_value (structure, "end"));
+}
+
+GstQuery *
+gst_query_new_convert (GstFormat src_fmt, gint64 value, GstFormat dest_fmt)
+{
+  GstQuery *query;
+  GstStructure *structure;
+
+  structure = gst_structure_new ("GstQueryConvert",
+      "src_format", GST_TYPE_FORMAT, src_fmt,
+      "src_value", G_TYPE_INT64, value,
+      "dest_format", GST_TYPE_FORMAT, dest_fmt,
+      "dest_value", G_TYPE_INT64, (gint64) - 1, NULL);
+  query = gst_query_new (GST_QUERY_CONVERT, structure);
+
+  return query;
+}
+
+void
+gst_query_set_convert (GstQuery * query, GstFormat src_format, gint64 src_value,
+    GstFormat dest_format, gint64 dest_value)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_CONVERT);
+
+  structure = gst_query_get_structure (query);
+  gst_structure_set (structure,
+      "src_format", GST_TYPE_FORMAT, src_format,
+      "src_value", G_TYPE_INT64, src_value,
+      "dest_format", GST_TYPE_FORMAT, dest_format,
+      "dest_value", G_TYPE_INT64, dest_value, NULL);
+}
+
+void
+gst_query_parse_convert (GstQuery * query, GstFormat * src_format,
+    gint64 * src_value, GstFormat * dest_format, gint64 * dest_value)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_CONVERT);
+
+  structure = gst_query_get_structure (query);
+  if (src_format)
+    *src_format =
+        g_value_get_enum (gst_structure_get_value (structure, "src_format"));
+  if (src_value)
+    *src_value =
+        g_value_get_int64 (gst_structure_get_value (structure, "src_value"));
+  if (dest_format)
+    *dest_format =
+        g_value_get_enum (gst_structure_get_value (structure, "dest_format"));
+  if (dest_value)
+    *dest_value =
+        g_value_get_int64 (gst_structure_get_value (structure, "dest_value"));
+}
+
 
 GstQuery *
 gst_query_new_application (GstQueryType type, GstStructure * structure)

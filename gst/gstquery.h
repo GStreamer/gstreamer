@@ -30,6 +30,7 @@
 #include <gst/gstiterator.h>
 #include <gst/gstdata.h>
 #include <gst/gststructure.h>
+#include <gst/gstformat.h>
 
 G_BEGIN_DECLS
 
@@ -129,8 +130,23 @@ GstIterator*    gst_query_type_iterate_definitions (void);
 #define         gst_query_copy(msg)		GST_QUERY (gst_data_copy (GST_DATA (msg)))
 #define         gst_query_copy_on_write(msg)	GST_QUERY (gst_data_copy_on_write (GST_DATA (msg)))
 
+/* position query */
+GstQuery*	gst_query_new_position		(GstFormat format);
+void		gst_query_set_position		(GstQuery *query, GstFormat format,
+						 gint64 cur, gint64 end);
+void		gst_query_parse_position	(GstQuery *query, GstFormat *format,
+						 gint64 *cur, gint64 *end);
+/* convert query */
+GstQuery*	gst_query_new_convert		(GstFormat src_fmt, gint64 value, GstFormat dest_fmt);
+void		gst_query_set_convert		(GstQuery *query, GstFormat src_format, gint64 src_value,
+						 GstFormat dest_format, gint64 dest_value);
+void		gst_query_parse_convert		(GstQuery *query, GstFormat *src_format, gint64 *src_value,
+						 GstFormat *dest_format, gint64 *dest_value);
+
+/* application specific query */
 GstQuery *	gst_query_new_application 	(GstQueryType type,
                                                  GstStructure *structure);
+
 
 GstStructure *  gst_query_get_structure		(GstQuery *query);
 

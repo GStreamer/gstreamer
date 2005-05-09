@@ -115,11 +115,13 @@ static void gst_type_find_element_set_property (GObject * object,
 static void gst_type_find_element_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
+#if 0
 static const GstEventMask *gst_type_find_element_src_event_mask (GstPad * pad);
+#endif
+
 static gboolean gst_type_find_element_src_event (GstPad * pad,
     GstEvent * event);
-static gboolean gst_type_find_handle_src_query (GstPad * pad,
-    GstQueryType type, GstFormat * fmt, gint64 * value);
+static gboolean gst_type_find_handle_src_query (GstPad * pad, GstQuery * query);
 static GstFlowReturn push_buffer_store (GstTypeFindElement * typefind);
 
 static gboolean gst_type_find_element_handle_event (GstPad * pad,
@@ -219,8 +221,6 @@ gst_type_find_element_init (GstTypeFindElement * typefind)
       gst_type_find_element_checkgetrange);
   gst_pad_set_getrange_function (typefind->src, gst_type_find_element_getrange);
   gst_pad_set_event_function (typefind->src, gst_type_find_element_src_event);
-  gst_pad_set_event_mask_function (typefind->src,
-      gst_type_find_element_src_event_mask);
   gst_pad_set_query_function (typefind->src,
       GST_DEBUG_FUNCPTR (gst_type_find_handle_src_query));
   gst_pad_use_fixed_caps (typefind->src);
@@ -295,32 +295,48 @@ gst_type_find_element_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_type_find_handle_src_query (GstPad * pad,
-    GstQueryType type, GstFormat * fmt, gint64 * value)
+gst_type_find_handle_src_query (GstPad * pad, GstQuery * query)
 {
-  GstTypeFindElement *typefind =
-      GST_TYPE_FIND_ELEMENT (gst_pad_get_parent (pad));
+  GstTypeFindElement *typefind;
   gboolean res;
 
-  res = gst_pad_query (GST_PAD_PEER (typefind->sink), type, fmt, value);
+  typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (pad));
+
+  res = gst_pad_query (GST_PAD_PEER (typefind->sink), query);
   if (!res)
     return FALSE;
 
-  if (type == GST_QUERY_POSITION && typefind->store != NULL) {
-    /* FIXME: this code assumes that there's no discont in the queue */
-    switch (*fmt) {
-      case GST_FORMAT_BYTES:
-        *value -= gst_buffer_store_get_size (typefind->store, 0);
-        break;
-      default:
-        /* FIXME */
-        break;
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+    {
+      gint64 peer_pos, peer_total;
+      GstFormat format;
+
+      if (typefind->store == NULL)
+        return TRUE;
+
+      gst_query_parse_position (query, &format, &peer_pos, &peer_total);
+
+      /* FIXME: this code assumes that there's no discont in the queue */
+      switch (format) {
+        case GST_FORMAT_BYTES:
+          peer_pos -= gst_buffer_store_get_size (typefind->store, 0);
+          break;
+        default:
+          /* FIXME */
+          break;
+      }
+      gst_query_set_position (query, format, peer_pos, peer_total);
+      break;
     }
+    default:
+      break;
   }
 
   return TRUE;
 }
 
+#if 0
 static const GstEventMask *
 gst_type_find_element_src_event_mask (GstPad * pad)
 {
@@ -334,6 +350,7 @@ gst_type_find_element_src_event_mask (GstPad * pad)
 
   return mask;
 }
+#endif
 
 static gboolean
 gst_type_find_element_src_event (GstPad * pad, GstEvent * event)
@@ -462,24 +479,29 @@ find_element_get_length (gpointer data)
     return 0;
   }
   if (entry->self->stream_length == 0) {
-    typefind->stream_length_available =
-        gst_pad_query (GST_PAD_PEER (entry->self->sink), GST_QUERY_TOTAL,
-        &format, (gint64 *) & entry->self->stream_length);
-    if (format != GST_FORMAT_BYTES)
+    if (!gst_pad_query_position (GST_PAD_PEER (entry->self->sink), &format,
+            NULL, (gint64 *) & entry->self->stream_length))
+      goto no_length;
+
+    if (format != GST_FORMAT_BYTES) {
       typefind->stream_length_available = FALSE;
-    if (!typefind->stream_length_available) {
-      GST_DEBUG_OBJECT (entry->self,
-          "'%s' called get_length () but it's not available",
-          GST_PLUGIN_FEATURE_NAME (entry->factory));
-      return 0;
+      entry->self->stream_length = 0;
     } else {
       GST_DEBUG_OBJECT (entry->self,
           "'%s' called get_length () and it's %" G_GUINT64_FORMAT " bytes",
           GST_PLUGIN_FEATURE_NAME (entry->factory), entry->self->stream_length);
     }
   }
-
   return entry->self->stream_length;
+
+no_length:
+  {
+    typefind->stream_length_available = FALSE;
+    GST_DEBUG_OBJECT (entry->self,
+        "'%s' called get_length () but it's not available",
+        GST_PLUGIN_FEATURE_NAME (entry->factory));
+    return 0;
+  }
 }
 
 static gboolean

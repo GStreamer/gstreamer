@@ -89,9 +89,11 @@ static void gst_basesrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static gboolean gst_basesrc_event_handler (GstPad * pad, GstEvent * event);
 
-static gboolean gst_basesrc_query2 (GstPad * pad, GstQuery * query);
+static gboolean gst_basesrc_query (GstPad * pad, GstQuery * query);
 
+#if 0
 static const GstEventMask *gst_basesrc_get_event_mask (GstPad * pad);
+#endif
 
 static gboolean gst_basesrc_unlock (GstBaseSrc * basesrc);
 static gboolean gst_basesrc_get_size (GstBaseSrc * basesrc, guint64 * size);
@@ -158,9 +160,7 @@ gst_basesrc_init (GstBaseSrc * basesrc, gpointer g_class)
 
   gst_pad_set_activate_function (pad, gst_basesrc_activate);
   gst_pad_set_event_function (pad, gst_basesrc_event_handler);
-  gst_pad_set_event_mask_function (pad, gst_basesrc_get_event_mask);
-
-  gst_pad_set_query2_function (pad, gst_basesrc_query2);
+  gst_pad_set_query_function (pad, gst_basesrc_query);
 
   gst_pad_set_checkgetrange_function (pad, gst_basesrc_check_get_range);
 
@@ -193,7 +193,7 @@ gst_basesrc_set_dataflow_funcs (GstBaseSrc * this)
 }
 
 static gboolean
-gst_basesrc_query2 (GstPad * pad, GstQuery * query)
+gst_basesrc_query (GstPad * pad, GstQuery * query)
 {
   gboolean b;
   guint64 ui64;
@@ -207,7 +207,7 @@ gst_basesrc_query2 (GstPad * pad, GstQuery * query)
     {
       GstFormat format;
 
-      gst_query_parse_position_query (query, &format);
+      gst_query_parse_position (query, &format, NULL, NULL);
       switch (format) {
         case GST_FORMAT_DEFAULT:
         case GST_FORMAT_BYTES:
@@ -243,10 +243,11 @@ gst_basesrc_query2 (GstPad * pad, GstQuery * query)
     case GST_QUERY_RATE:
     case GST_QUERY_CONVERT:
     default:
-      return gst_pad_query2_default (pad, query);
+      return gst_pad_query_default (pad, query);
   }
 }
 
+#if 0
 static const GstEventMask *
 gst_basesrc_get_event_mask (GstPad * pad)
 {
@@ -260,6 +261,7 @@ gst_basesrc_get_event_mask (GstPad * pad)
   };
   return masks;
 }
+#endif
 
 static gboolean
 gst_basesrc_do_seek (GstBaseSrc * src, GstEvent * event)

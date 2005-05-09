@@ -251,10 +251,15 @@ gboolean		gst_element_link_pads           (GstElement *src, const gchar *srcpadn
 		                                         GstElement *dest, const gchar *destpadname);
 void                    gst_element_unlink_pads         (GstElement *src, const gchar *srcpadname,
 		                                         GstElement *dest, const gchar *destpadname);
+/* util query functions */
+gboolean                gst_element_query_position      (GstElement *element, GstFormat *format,
+		                                         gint64 *cur, gint64 *end);
+gboolean                gst_element_query_convert       (GstElement *element, GstFormat src_format, gint64 src_val,
+		                                         GstFormat *dest_fmt, gint64 *dest_val);
 
 /* element class functions */
-void gst_element_class_install_std_props (GstElementClass * klass,
-    const gchar * first_name, ...);
+void 			gst_element_class_install_std_props (GstElementClass * klass,
+   							 const gchar * first_name, ...);
 
 /* pad functions */
 gboolean                gst_pad_can_link                (GstPad *srcpad, GstPad *sinkpad);
@@ -263,6 +268,12 @@ void			gst_pad_use_fixed_caps		(GstPad *pad);
 GstCaps*		gst_pad_get_fixed_caps_func	(GstPad *pad);
 GstCaps*		gst_pad_proxy_getcaps		(GstPad * pad);
 gboolean		gst_pad_proxy_setcaps		(GstPad * pad, GstCaps * caps);
+
+/* util query functions */
+gboolean                gst_pad_query_position          (GstPad *pad, GstFormat *format,
+		                                         gint64 *cur, gint64 *end);
+gboolean                gst_pad_query_convert           (GstPad *pad, GstFormat src_format, gint64 src_val,
+		                                         GstFormat *dest_fmt, gint64 *dest_val);
 
 /* bin functions */
 void            	gst_bin_add_many                (GstBin *bin, GstElement *element_1, ...);

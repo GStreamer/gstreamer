@@ -249,13 +249,13 @@ struct _GstElementClass
   void			(*release_pad)		(GstElement *element, GstPad *pad);
 
   /* state changes */
-  GstElementStateReturn (*get_state) 	(GstElement * element, GstElementState * state,
-      					 GstElementState * pending, GTimeVal * timeout);
+  GstElementStateReturn (*get_state) 		(GstElement * element, GstElementState * state,
+      						 GstElementState * pending, GTimeVal * timeout);
   GstElementStateReturn (*change_state)		(GstElement *element);
 
   /* manager */
-  void (*set_manager)      (GstElement * element, GstPipeline * pipeline);
-  void (*set_bus)          (GstElement * element, GstBus * bus);
+  void 			(*set_manager)      	(GstElement * element, GstPipeline * pipeline);
+  void 			(*set_bus)          	(GstElement * element, GstBus * bus);
   void			(*set_scheduler)	(GstElement *element, GstScheduler *scheduler);
 
   /* set/get clocks */
@@ -266,16 +266,11 @@ struct _GstElementClass
   GstIndex*		(*get_index)		(GstElement *element);
   void			(*set_index)		(GstElement *element, GstIndex *index);
 
-  /* query/convert/events functions */
-  const GstEventMask*   (*get_event_masks)     	(GstElement *element);
+  /* query functions */
   gboolean		(*send_event)		(GstElement *element, GstEvent *event);
-  const GstFormat*      (*get_formats)        	(GstElement *element);
-  gboolean              (*convert)        	(GstElement *element,
-		                                 GstFormat  src_format,  gint64  src_value,
-						 GstFormat *dest_format, gint64 *dest_value);
+
   const GstQueryType* 	(*get_query_types)    	(GstElement *element);
-  gboolean		(*query)		(GstElement *element, GstQueryType type,
-		  				 GstFormat *format, gint64 *value);
+  gboolean		(*query)		(GstElement *element, GstQuery *query);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -309,10 +304,10 @@ void			gst_element_set_index		(GstElement *element, GstIndex *index);
 GstIndex*		gst_element_get_index		(GstElement *element);
 
 /* manager and tasks */
-void gst_element_set_manager (GstElement * element, GstPipeline * pipeline);
-GstPipeline *gst_element_get_manager (GstElement * element);
-void gst_element_set_bus (GstElement * element, GstBus * bus);
-GstBus *gst_element_get_bus (GstElement * element);
+void 			gst_element_set_manager 	(GstElement * element, GstPipeline * pipeline);
+GstPipeline *		gst_element_get_manager 	(GstElement * element);
+void 			gst_element_set_bus 		(GstElement * element, GstBus * bus);
+GstBus *		gst_element_get_bus 		(GstElement * element);
 void			gst_element_set_scheduler	(GstElement *element, GstScheduler *sched);
 GstScheduler*		gst_element_get_scheduler	(GstElement *element);
 
@@ -330,44 +325,37 @@ void			gst_element_release_request_pad	(GstElement *element, GstPad *pad);
 GstIterator *		gst_element_iterate_pads 	(GstElement * element);
 
 /* event/query/format stuff */
-G_CONST_RETURN GstEventMask*
-			gst_element_get_event_masks	(GstElement *element);
 gboolean		gst_element_send_event		(GstElement *element, GstEvent *event);
 gboolean		gst_element_seek		(GstElement *element, GstSeekType seek_type,
 							 guint64 offset);
 G_CONST_RETURN GstQueryType*
 			gst_element_get_query_types	(GstElement *element);
-gboolean		gst_element_query		(GstElement *element, GstQueryType type,
-			                                 GstFormat *format, gint64 *value);
-G_CONST_RETURN GstFormat*
-			gst_element_get_formats		(GstElement *element);
-gboolean		gst_element_convert		(GstElement *element, 
-		 					 GstFormat  src_format,  gint64  src_value,
-							 GstFormat *dest_format, gint64 *dest_value);
+gboolean		gst_element_query		(GstElement *element, GstQuery *query);
 
 /* messages */
-gboolean gst_element_post_message (GstElement * element, GstMessage * message);
+gboolean 		gst_element_post_message 	(GstElement * element, GstMessage * message);
 
 /* error handling */
 gchar *			_gst_element_error_printf	(const gchar *format, ...);
-void gst_element_message_full (GstElement * element, GstMessageType type,
-    GQuark domain, gint code, gchar * text, gchar * debug, const gchar * file,
-    const gchar * function, gint line);
+void 			gst_element_message_full 	(GstElement * element, GstMessageType type,
+   							 GQuark domain, gint code, gchar * text, 
+							 gchar * debug, const gchar * file,
+   							 const gchar * function, gint line);
 
 /* state management */
 gboolean		gst_element_is_locked_state	(GstElement *element);
 gboolean		gst_element_set_locked_state	(GstElement *element, gboolean locked_state);
 gboolean		gst_element_sync_state_with_parent (GstElement *element);
 
-GstElementStateReturn 	gst_element_get_state 			(GstElement * element, 
-								 GstElementState * state,
-    								 GstElementState * pending, 
-								 GTimeVal * timeout);
+GstElementStateReturn 	gst_element_get_state 		(GstElement * element, 
+							 GstElementState * state,
+    							 GstElementState * pending, 
+							 GTimeVal * timeout);
 GstElementStateReturn	gst_element_set_state		(GstElement *element, GstElementState state);
 
-void 			gst_element_abort_state 		(GstElement * element);
-void 			gst_element_commit_state 		(GstElement * element);
-void 			gst_element_lost_state 		        (GstElement * element);
+void 			gst_element_abort_state 	(GstElement * element);
+void 			gst_element_commit_state 	(GstElement * element);
+void 			gst_element_lost_state 	        (GstElement * element);
 
 /* factory management */
 GstElementFactory*	gst_element_get_factory		(GstElement *element);

@@ -247,15 +247,9 @@ gst_real_pad_init (GstRealPad * pad)
   pad->getcapsfunc = NULL;
 
   pad->eventfunc = gst_pad_event_default;
-  pad->convertfunc = gst_pad_convert_default;
+  pad->querytypefunc = gst_pad_get_query_types_default;
   pad->queryfunc = gst_pad_query_default;
   pad->intlinkfunc = gst_pad_get_internal_links_default;
-
-  pad->query2func = gst_pad_query2_default;
-
-  pad->eventmaskfunc = gst_pad_get_event_masks_default;
-  pad->formatsfunc = gst_pad_get_formats_default;
-  pad->querytypefunc = gst_pad_get_query_types_default;
 
   GST_FLAG_UNSET (pad, GST_PAD_ACTIVE);
 
@@ -879,99 +873,6 @@ gst_pad_set_event_function (GstPad * pad, GstPadEventFunction event)
 }
 
 /**
- * gst_pad_set_event_mask_function:
- * @pad: a real #GstPad of either direction.
- * @mask_func: the #GstPadEventMaskFunction to set.
- *
- * Sets the given event mask function for the pad.
- */
-void
-gst_pad_set_event_mask_function (GstPad * pad,
-    GstPadEventMaskFunction mask_func)
-{
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
-
-  GST_RPAD_EVENTMASKFUNC (pad) = mask_func;
-
-  GST_CAT_DEBUG (GST_CAT_PADS, "eventmaskfunc for %s:%s  set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (mask_func));
-}
-
-/**
- * gst_pad_get_event_masks:
- * @pad: a #GstPad.
- *
- * Gets the array of eventmasks from the given pad.
- *
- * Returns: a zero-terminated array of #GstEventMask, or NULL if the pad does
- * not have an event mask function.
- */
-const GstEventMask *
-gst_pad_get_event_masks (GstPad * pad)
-{
-  GstRealPad *rpad;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  rpad = GST_PAD_REALIZE (pad);
-
-  g_return_val_if_fail (rpad, NULL);
-
-  if (GST_RPAD_EVENTMASKFUNC (rpad))
-    return GST_RPAD_EVENTMASKFUNC (rpad) (GST_PAD (pad));
-
-  return NULL;
-}
-
-static gboolean
-gst_pad_get_event_masks_dispatcher (GstPad * pad, const GstEventMask ** data)
-{
-  *data = gst_pad_get_event_masks (pad);
-
-  return TRUE;
-}
-
-/**
- * gst_pad_get_event_masks_default:
- * @pad: a #GstPad.
- *
- * Invokes the default event masks dispatcher on the pad.
- *
- * Returns: a zero-terminated array of #GstEventMask, or NULL if none of the
- * internally-linked pads have an event mask function.
- */
-const GstEventMask *
-gst_pad_get_event_masks_default (GstPad * pad)
-{
-  GstEventMask *result = NULL;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  gst_pad_dispatcher (pad, (GstPadDispatcherFunction)
-      gst_pad_get_event_masks_dispatcher, &result);
-
-  return result;
-}
-
-/**
- * gst_pad_set_convert_function:
- * @pad: a real #GstPad of either direction.
- * @convert: the #GstPadConvertFunction to set.
- *
- * Sets the given convert function for the pad.
- */
-void
-gst_pad_set_convert_function (GstPad * pad, GstPadConvertFunction convert)
-{
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
-
-  GST_RPAD_CONVERTFUNC (pad) = convert;
-
-  GST_CAT_DEBUG (GST_CAT_PADS, "convertfunc for %s:%s  set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (convert));
-}
-
-/**
  * gst_pad_set_query_function:
  * @pad: a real #GstPad of either direction.
  * @query: the #GstPadQueryFunction to set.
@@ -986,24 +887,6 @@ gst_pad_set_query_function (GstPad * pad, GstPadQueryFunction query)
   GST_RPAD_QUERYFUNC (pad) = query;
 
   GST_CAT_DEBUG (GST_CAT_PADS, "queryfunc for %s:%s  set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (query));
-}
-
-/**
- * gst_pad_set_query2_function:
- * @pad: a real #GstPad of either direction.
- * @query: the #GstPadQueryFunction to set.
- *
- * Set the given query function for the pad.
- */
-void
-gst_pad_set_query2_function (GstPad * pad, GstPadQuery2Function query)
-{
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
-
-  GST_RPAD_QUERY2FUNC (pad) = query;
-
-  GST_CAT_DEBUG (GST_CAT_PADS, "query2func for %s:%s  set to %s",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (query));
 }
 
@@ -1039,6 +922,7 @@ const GstQueryType *
 gst_pad_get_query_types (GstPad * pad)
 {
   GstRealPad *rpad;
+  GstPadQueryTypeFunction func;
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
@@ -1046,10 +930,15 @@ gst_pad_get_query_types (GstPad * pad)
 
   g_return_val_if_fail (rpad, NULL);
 
-  if (GST_RPAD_QUERYTYPEFUNC (rpad))
-    return GST_RPAD_QUERYTYPEFUNC (rpad) (GST_PAD (pad));
+  if (G_UNLIKELY ((func = GST_RPAD_QUERYTYPEFUNC (rpad)) == NULL))
+    goto no_func;
 
-  return NULL;
+  return func (GST_PAD (rpad));
+
+no_func:
+  {
+    return NULL;
+  }
 }
 
 static gboolean
@@ -1098,23 +987,6 @@ gst_pad_set_internal_link_function (GstPad * pad, GstPadIntLinkFunction intlink)
   GST_RPAD_INTLINKFUNC (pad) = intlink;
   GST_CAT_DEBUG (GST_CAT_PADS, "internal link for %s:%s  set to %s",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (intlink));
-}
-
-/**
- * gst_pad_set_formats_function:
- * @pad: a real #GstPad of either direction.
- * @formats: the #GstPadFormatsFunction to set.
- *
- * Sets the given formats function for the pad.
- */
-void
-gst_pad_set_formats_function (GstPad * pad, GstPadFormatsFunction formats)
-{
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
-
-  GST_RPAD_FORMATSFUNC (pad) = formats;
-  GST_CAT_DEBUG (GST_CAT_PADS, "formats function for %s:%s  set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (formats));
 }
 
 /**
@@ -1622,6 +1494,8 @@ gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ)
  *
  * Returns: the #GstPadTemplate from which this pad was instantiated, or %NULL
  * if this pad has no template.
+ *
+ * FIXME: currently returns an unrefcounted padtemplate.
  */
 GstPadTemplate *
 gst_pad_get_pad_template (GstPad * pad)
@@ -1641,7 +1515,7 @@ gst_pad_get_pad_template (GstPad * pad)
  * returned, as opposed to #gst_pad_get_parent().
  * Unref the object after use.
  *
- * Returns: the parent #GstElement.
+ * Returns: the parent #GstElement. unref after usage.
  *
  * MT safe.
  */
@@ -1717,7 +1591,7 @@ gst_real_pad_get_caps_unlocked (GstRealPad * realpad)
     GST_FLAG_UNSET (realpad, GST_PAD_IN_GETCAPS);
 
     if (result == NULL) {
-      g_critical ("pad %s:%s returned NULL caps from getcaps function\n",
+      g_critical ("pad %s:%s returned NULL caps from getcaps function",
           GST_DEBUG_PAD_NAME (realpad));
     } else {
 #ifndef G_DISABLE_ASSERT
@@ -2408,6 +2282,263 @@ not_negotiated:
   }
 }
 
+/**
+ * gst_pad_get_internal_links_default:
+ * @pad: the #GstPad to get the internal links of.
+ *
+ * Gets a list of pads to which the given pad is linked to
+ * inside of the parent element.
+ * This is the default handler, and thus returns a list of all of the
+ * pads inside the parent element with opposite direction.
+ * The caller must free this list after use.
+ *
+ * Returns: a newly allocated #GList of pads.
+ *
+ * Not MT safe.
+ */
+GList *
+gst_pad_get_internal_links_default (GstPad * pad)
+{
+  GList *res = NULL;
+  GstElement *parent;
+  GList *parent_pads;
+  GstPadDirection direction;
+  GstRealPad *rpad;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  rpad = GST_PAD_REALIZE (pad);
+  direction = rpad->direction;
+
+  parent = GST_PAD_PARENT (rpad);
+  parent_pads = parent->pads;
+
+  while (parent_pads) {
+    GstRealPad *parent_pad = GST_PAD_REALIZE (parent_pads->data);
+
+    if (parent_pad->direction != direction) {
+      res = g_list_prepend (res, parent_pad);
+    }
+
+    parent_pads = g_list_next (parent_pads);
+  }
+
+  return res;
+}
+
+/**
+ * gst_pad_get_internal_links:
+ * @pad: the #GstPad to get the internal links of.
+ *
+ * Gets a list of pads to which the given pad is linked to
+ * inside of the parent element.
+ * The caller must free this list after use.
+ *
+ * Returns: a newly allocated #GList of pads.
+ *
+ * Not MT safe.
+ */
+GList *
+gst_pad_get_internal_links (GstPad * pad)
+{
+  GList *res = NULL;
+  GstRealPad *rpad;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  rpad = GST_PAD_REALIZE (pad);
+
+  if (GST_RPAD_INTLINKFUNC (rpad))
+    res = GST_RPAD_INTLINKFUNC (rpad) (GST_PAD_CAST (rpad));
+
+  return res;
+}
+
+
+static gboolean
+gst_pad_event_default_dispatch (GstPad * pad, GstEvent * event)
+{
+  GList *orig, *pads;
+  gboolean result;
+
+  GST_INFO_OBJECT (pad, "Sending event %p to all internally linked pads",
+      event);
+
+  result = (GST_PAD_DIRECTION (pad) == GST_PAD_SINK);
+
+  orig = pads = gst_pad_get_internal_links (pad);
+
+  while (pads) {
+    GstPad *eventpad = GST_PAD (pads->data);
+
+    pads = g_list_next (pads);
+
+    /* for all of the internally-linked pads that are actually linked */
+    if (GST_PAD_IS_LINKED (eventpad)) {
+      if (GST_PAD_DIRECTION (eventpad) == GST_PAD_SRC) {
+        /* for each pad we send to, we should ref the event; it's up
+         * to downstream to unref again when handled. */
+        GST_LOG_OBJECT (pad, "Reffing and sending event %p to %s:%s", event,
+            GST_DEBUG_PAD_NAME (eventpad));
+        gst_event_ref (event);
+        gst_pad_push_event (eventpad, event);
+      } else {
+        /* we only send the event on one pad, multi-sinkpad elements
+         * should implement a handler */
+        GST_LOG_OBJECT (pad, "sending event %p to one sink pad %s:%s", event,
+            GST_DEBUG_PAD_NAME (eventpad));
+        result = gst_pad_push_event (eventpad, event);
+        goto done;
+      }
+    }
+  }
+  /* we handled the incoming event so we unref once */
+  GST_LOG_OBJECT (pad, "handled event %p, unreffing", event);
+  gst_event_unref (event);
+
+done:
+  g_list_free (orig);
+
+  return result;
+}
+
+/**
+ * gst_pad_event_default:
+ * @pad: a #GstPad to call the default event handler on.
+ * @event: the #GstEvent to handle.
+ *
+ * Invokes the default event handler for the given pad. End-of-stream and
+ * discontinuity events are handled specially, and then the event is sent to all
+ * pads internally linked to @pad. Note that if there are many possible sink
+ * pads that are internally linked to @pad, only one will be sent an event.
+ * Multi-sinkpad elements should implement custom event handlers.
+ *
+ * Returns: TRUE if the event was sent succesfully.
+ */
+gboolean
+gst_pad_event_default (GstPad * pad, GstEvent * event)
+{
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (event != NULL, FALSE);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+    {
+      GstRealPad *rpad = GST_PAD_REALIZE (pad);
+
+      if (GST_RPAD_TASK (rpad)) {
+        GST_DEBUG_OBJECT (rpad, "pausing task because of eos");
+        gst_task_pause (GST_RPAD_TASK (rpad));
+      }
+    }
+    default:
+      break;
+  }
+
+  return gst_pad_event_default_dispatch (pad, event);
+}
+
+/**
+ * gst_pad_dispatcher:
+ * @pad: a #GstPad to dispatch.
+ * @dispatch: the #GstDispatcherFunction to call.
+ * @data: gpointer user data passed to the dispatcher function.
+ *
+ * Invokes the given dispatcher function on all pads that are 
+ * internally linked to the given pad. 
+ * The GstPadDispatcherFunction should return TRUE when no further pads 
+ * need to be processed.
+ *
+ * Returns: TRUE if one of the dispatcher functions returned TRUE.
+ */
+gboolean
+gst_pad_dispatcher (GstPad * pad, GstPadDispatcherFunction dispatch,
+    gpointer data)
+{
+  gboolean res = FALSE;
+  GList *int_pads, *orig;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (dispatch != NULL, FALSE);
+
+  orig = int_pads = gst_pad_get_internal_links (pad);
+
+  while (int_pads) {
+    GstRealPad *int_rpad = GST_PAD_REALIZE (int_pads->data);
+    GstRealPad *int_peer = GST_RPAD_PEER (int_rpad);
+
+    if (int_peer) {
+      res = dispatch (GST_PAD (int_peer), data);
+      if (res)
+        break;
+    }
+    int_pads = g_list_next (int_pads);
+  }
+
+  g_list_free (orig);
+
+  return res;
+}
+
+/**
+ * gst_pad_query:
+ * @pad: a #GstPad to invoke the default query on.
+ * @query: the #GstQuery to perform.
+ *
+ * Dispatches a query to a pad. The query should have been allocated by the
+ * caller via one of the type-specific allocation functions in gstquery.h. The
+ * element is responsible for filling the query with an appropriate response,
+ * which should then be parsed with a type-specific query parsing function.
+ *
+ * Again, the caller is responsible for both the allocation and deallocation of
+ * the query structure.
+ *
+ * Returns: TRUE if the query could be performed.
+ */
+gboolean
+gst_pad_query (GstPad * pad, GstQuery * query)
+{
+  GstRealPad *rpad;
+  GstPadQueryFunction func;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
+
+  rpad = GST_PAD_REALIZE (pad);
+
+  g_return_val_if_fail (rpad, FALSE);
+
+  GST_DEBUG ("sending query %p to pad %s:%s", query, GST_DEBUG_PAD_NAME (pad));
+
+  if ((func = GST_RPAD_QUERYFUNC (rpad)) == NULL)
+    goto no_func;
+
+  return func (GST_PAD_CAST (rpad), query);
+
+no_func:
+  {
+    GST_DEBUG ("pad had no query function");
+    return FALSE;
+  }
+}
+
+gboolean
+gst_pad_query_default (GstPad * pad, GstQuery * query)
+{
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+    case GST_QUERY_SEEKING:
+    case GST_QUERY_FORMATS:
+    case GST_QUERY_LATENCY:
+    case GST_QUERY_JITTER:
+    case GST_QUERY_RATE:
+    case GST_QUERY_CONVERT:
+    default:
+      return gst_pad_dispatcher
+          (pad, (GstPadDispatcherFunction) gst_pad_query, query);
+  }
+}
+
 static void
 gst_real_pad_dispose (GObject * object)
 {
@@ -2676,6 +2807,11 @@ handle_pad_block (GstRealPad * pad)
   gst_object_unref (GST_OBJECT (pad));
 }
 
+/**********************************************************************
+ * Data passing functions
+ */
+
+
 /**
  * gst_pad_push:
  * @pad: a source #GstPad.
@@ -2722,7 +2858,7 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   /* FIXME, move capnego this into a base class? */
   caps = GST_BUFFER_CAPS (buffer);
   caps_changed = caps && caps != GST_RPAD_CAPS (peer);
-  GST_DEBUG ("caps changed %d %" GST_PTR_FORMAT "\n", caps_changed, caps);
+  GST_DEBUG ("caps changed %d %" GST_PTR_FORMAT, caps_changed, caps);
   /* we got a new datatype on the peer pad, see if it can handle it */
   if (G_UNLIKELY (caps_changed)) {
     if (G_UNLIKELY (!gst_pad_configure_sink (GST_PAD_CAST (peer), caps)))
@@ -2940,6 +3076,108 @@ no_function:
             GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer)));
     gst_object_unref (GST_OBJECT (peer));
     return GST_FLOW_ERROR;
+  }
+}
+
+/**
+ * gst_pad_push_event:
+ * @pad: a #GstPad to push the event to.
+ * @event: the #GstEvent to send to the pad.
+ *
+ * Sends the event to the peer of the given pad.
+ *
+ * Returns: TRUE if the event was handled.
+ *
+ * MT safe.
+ */
+gboolean
+gst_pad_push_event (GstPad * pad, GstEvent * event)
+{
+  GstRealPad *peerpad;
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_REAL_PAD (pad), FALSE);
+  g_return_val_if_fail (event != NULL, FALSE);
+
+  GST_LOCK (pad);
+  peerpad = GST_RPAD_PEER (pad);
+  if (peerpad == NULL)
+    goto not_linked;
+
+  gst_object_ref (GST_OBJECT_CAST (peerpad));
+  GST_UNLOCK (pad);
+
+  result = gst_pad_send_event (GST_PAD_CAST (peerpad), event);
+
+  gst_object_unref (GST_OBJECT_CAST (peerpad));
+
+  return result;
+
+  /* ERROR handling */
+not_linked:
+  {
+    GST_UNLOCK (pad);
+    return FALSE;
+  }
+}
+
+/**
+ * gst_pad_send_event:
+ * @pad: a #GstPad to send the event to.
+ * @event: the #GstEvent to send to the pad.
+ *
+ * Sends the event to the pad. This function can be used
+ * by applications to send events in the pipeline.
+ *
+ * Returns: TRUE if the event was handled.
+ */
+gboolean
+gst_pad_send_event (GstPad * pad, GstEvent * event)
+{
+  gboolean result = FALSE;
+  GstRealPad *rpad;
+  GstPadEventFunction eventfunc;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (event != NULL, FALSE);
+
+  rpad = GST_PAD_REALIZE (pad);
+
+  if (GST_EVENT_SRC (event) == NULL)
+    GST_EVENT_SRC (event) = gst_object_ref (GST_OBJECT (rpad));
+
+  GST_CAT_DEBUG (GST_CAT_EVENT, "have event type %d on pad %s:%s",
+      GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (rpad));
+
+  if (GST_PAD_IS_SINK (pad)) {
+    if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH) {
+      GST_CAT_DEBUG (GST_CAT_EVENT, "have flush event");
+      GST_LOCK (pad);
+      if (GST_EVENT_FLUSH_DONE (event)) {
+        GST_CAT_DEBUG (GST_CAT_EVENT, "clear flush flag");
+        GST_FLAG_UNSET (pad, GST_PAD_FLUSHING);
+      } else {
+        GST_CAT_DEBUG (GST_CAT_EVENT, "set flush flag");
+        GST_FLAG_SET (pad, GST_PAD_FLUSHING);
+      }
+      GST_UNLOCK (pad);
+    }
+  }
+
+  if ((eventfunc = GST_RPAD_EVENTFUNC (rpad)) == NULL)
+    goto no_function;
+
+  result = eventfunc (GST_PAD_CAST (rpad), event);
+
+  return result;
+
+  /* ERROR handling */
+no_function:
+  {
+    g_warning ("pad %s:%s has no event handler, file a bug.",
+        GST_DEBUG_PAD_NAME (rpad));
+    gst_event_unref (event);
+    return FALSE;
   }
 }
 
@@ -3344,606 +3582,4 @@ gst_ghost_pad_new (const gchar * name, GstPad * pad)
       GST_OBJECT_NAME (gpad), GST_DEBUG_PAD_NAME (pad));
 
   return gpad;
-}
-
-/**
- * gst_pad_get_internal_links_default:
- * @pad: the #GstPad to get the internal links of.
- *
- * Gets a list of pads to which the given pad is linked to
- * inside of the parent element.
- * This is the default handler, and thus returns a list of all of the
- * pads inside the parent element with opposite direction.
- * The caller must free this list after use.
- *
- * Returns: a newly allocated #GList of pads.
- *
- * Not MT safe.
- */
-GList *
-gst_pad_get_internal_links_default (GstPad * pad)
-{
-  GList *res = NULL;
-  GstElement *parent;
-  GList *parent_pads;
-  GstPadDirection direction;
-  GstRealPad *rpad;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  rpad = GST_PAD_REALIZE (pad);
-  direction = rpad->direction;
-
-  parent = GST_PAD_PARENT (rpad);
-  parent_pads = parent->pads;
-
-  while (parent_pads) {
-    GstRealPad *parent_pad = GST_PAD_REALIZE (parent_pads->data);
-
-    if (parent_pad->direction != direction) {
-      res = g_list_prepend (res, parent_pad);
-    }
-
-    parent_pads = g_list_next (parent_pads);
-  }
-
-  return res;
-}
-
-/**
- * gst_pad_get_internal_links:
- * @pad: the #GstPad to get the internal links of.
- *
- * Gets a list of pads to which the given pad is linked to
- * inside of the parent element.
- * The caller must free this list after use.
- *
- * Returns: a newly allocated #GList of pads.
- *
- * Not MT safe.
- */
-GList *
-gst_pad_get_internal_links (GstPad * pad)
-{
-  GList *res = NULL;
-  GstRealPad *rpad;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  rpad = GST_PAD_REALIZE (pad);
-
-  if (GST_RPAD_INTLINKFUNC (rpad))
-    res = GST_RPAD_INTLINKFUNC (rpad) (GST_PAD_CAST (rpad));
-
-  return res;
-}
-
-
-static gboolean
-gst_pad_event_default_dispatch (GstPad * pad, GstEvent * event)
-{
-  GList *orig, *pads;
-  gboolean result;
-
-  GST_INFO_OBJECT (pad, "Sending event %p to all internally linked pads",
-      event);
-
-  result = (GST_PAD_DIRECTION (pad) == GST_PAD_SINK);
-
-  orig = pads = gst_pad_get_internal_links (pad);
-
-  while (pads) {
-    GstPad *eventpad = GST_PAD (pads->data);
-
-    pads = g_list_next (pads);
-
-    /* for all of the internally-linked pads that are actually linked */
-    if (GST_PAD_IS_LINKED (eventpad)) {
-      if (GST_PAD_DIRECTION (eventpad) == GST_PAD_SRC) {
-        /* for each pad we send to, we should ref the event; it's up
-         * to downstream to unref again when handled. */
-        GST_LOG_OBJECT (pad, "Reffing and sending event %p to %s:%s", event,
-            GST_DEBUG_PAD_NAME (eventpad));
-        gst_event_ref (event);
-        gst_pad_push_event (eventpad, event);
-      } else {
-        /* we only send the event on one pad, multi-sinkpad elements
-         * should implement a handler */
-        GST_LOG_OBJECT (pad, "sending event %p to one sink pad %s:%s", event,
-            GST_DEBUG_PAD_NAME (eventpad));
-        result = gst_pad_push_event (eventpad, event);
-        goto done;
-      }
-    }
-  }
-  /* we handled the incoming event so we unref once */
-  GST_LOG_OBJECT (pad, "handled event %p, unreffing", event);
-  gst_event_unref (event);
-
-done:
-  g_list_free (orig);
-
-  return result;
-}
-
-/**
- * gst_pad_event_default:
- * @pad: a #GstPad to call the default event handler on.
- * @event: the #GstEvent to handle.
- *
- * Invokes the default event handler for the given pad. End-of-stream and
- * discontinuity events are handled specially, and then the event is sent to all
- * pads internally linked to @pad. Note that if there are many possible sink
- * pads that are internally linked to @pad, only one will be sent an event.
- * Multi-sinkpad elements should implement custom event handlers.
- *
- * Returns: TRUE if the event was sent succesfully.
- */
-gboolean
-gst_pad_event_default (GstPad * pad, GstEvent * event)
-{
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (event != NULL, FALSE);
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_EOS:
-    {
-      GstRealPad *rpad = GST_PAD_REALIZE (pad);
-
-      if (GST_RPAD_TASK (rpad)) {
-        GST_DEBUG_OBJECT (rpad, "pausing task because of eos");
-        gst_task_pause (GST_RPAD_TASK (rpad));
-      }
-    }
-    default:
-      break;
-  }
-
-  return gst_pad_event_default_dispatch (pad, event);
-}
-
-/**
- * gst_pad_dispatcher:
- * @pad: a #GstPad to dispatch.
- * @dispatch: the #GstDispatcherFunction to call.
- * @data: gpointer user data passed to the dispatcher function.
- *
- * Invokes the given dispatcher function on all pads that are 
- * internally linked to the given pad. 
- * The GstPadDispatcherFunction should return TRUE when no further pads 
- * need to be processed.
- *
- * Returns: TRUE if one of the dispatcher functions returned TRUE.
- */
-gboolean
-gst_pad_dispatcher (GstPad * pad, GstPadDispatcherFunction dispatch,
-    gpointer data)
-{
-  gboolean res = FALSE;
-  GList *int_pads, *orig;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (dispatch != NULL, FALSE);
-
-  orig = int_pads = gst_pad_get_internal_links (pad);
-
-  while (int_pads) {
-    GstRealPad *int_rpad = GST_PAD_REALIZE (int_pads->data);
-    GstRealPad *int_peer = GST_RPAD_PEER (int_rpad);
-
-    if (int_peer) {
-      res = dispatch (GST_PAD (int_peer), data);
-      if (res)
-        break;
-    }
-    int_pads = g_list_next (int_pads);
-  }
-
-  g_list_free (orig);
-
-  return res;
-}
-
-/**
- * gst_pad_push_event:
- * @pad: a #GstPad to push the event to.
- * @event: the #GstEvent to send to the pad.
- *
- * Sends the event to the peer of the given pad.
- *
- * Returns: TRUE if the event was handled.
- *
- * MT safe.
- */
-gboolean
-gst_pad_push_event (GstPad * pad, GstEvent * event)
-{
-  GstRealPad *peerpad;
-  gboolean result;
-
-  g_return_val_if_fail (GST_IS_REAL_PAD (pad), FALSE);
-  g_return_val_if_fail (event != NULL, FALSE);
-
-  GST_LOCK (pad);
-  peerpad = GST_RPAD_PEER (pad);
-  if (peerpad == NULL)
-    goto not_linked;
-
-  gst_object_ref (GST_OBJECT_CAST (peerpad));
-  GST_UNLOCK (pad);
-
-  result = gst_pad_send_event (GST_PAD_CAST (peerpad), event);
-
-  gst_object_unref (GST_OBJECT_CAST (peerpad));
-
-  return result;
-
-  /* ERROR handling */
-not_linked:
-  {
-    GST_UNLOCK (pad);
-    return FALSE;
-  }
-}
-
-/**
- * gst_pad_send_event:
- * @pad: a #GstPad to send the event to.
- * @event: the #GstEvent to send to the pad.
- *
- * Sends the event to the pad. This function can be used
- * by applications to send events in the pipeline.
- *
- * Returns: TRUE if the event was handled.
- */
-gboolean
-gst_pad_send_event (GstPad * pad, GstEvent * event)
-{
-  gboolean result = FALSE;
-  GstRealPad *rpad;
-  GstPadEventFunction eventfunc;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (event != NULL, FALSE);
-
-  rpad = GST_PAD_REALIZE (pad);
-
-  if (GST_EVENT_SRC (event) == NULL)
-    GST_EVENT_SRC (event) = gst_object_ref (GST_OBJECT (rpad));
-
-  GST_CAT_DEBUG (GST_CAT_EVENT, "have event type %d on pad %s:%s",
-      GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (rpad));
-
-  if (GST_PAD_IS_SINK (pad)) {
-    if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH) {
-      GST_CAT_DEBUG (GST_CAT_EVENT, "have flush event");
-      GST_LOCK (pad);
-      if (GST_EVENT_FLUSH_DONE (event)) {
-        GST_CAT_DEBUG (GST_CAT_EVENT, "clear flush flag");
-        GST_FLAG_UNSET (pad, GST_PAD_FLUSHING);
-      } else {
-        GST_CAT_DEBUG (GST_CAT_EVENT, "set flush flag");
-        GST_FLAG_SET (pad, GST_PAD_FLUSHING);
-      }
-      GST_UNLOCK (pad);
-    }
-  }
-
-  if ((eventfunc = GST_RPAD_EVENTFUNC (rpad)) == NULL)
-    goto no_function;
-
-  result = eventfunc (GST_PAD_CAST (rpad), event);
-
-  return result;
-
-  /* ERROR handling */
-no_function:
-  {
-    g_warning ("pad %s:%s has no event handler, file a bug.",
-        GST_DEBUG_PAD_NAME (rpad));
-    gst_event_unref (event);
-    return FALSE;
-  }
-}
-
-typedef struct
-{
-  GstFormat src_format;
-  gint64 src_value;
-  GstFormat *dest_format;
-  gint64 *dest_value;
-}
-GstPadConvertData;
-
-static gboolean
-gst_pad_convert_dispatcher (GstPad * pad, GstPadConvertData * data)
-{
-  return gst_pad_convert (pad, data->src_format, data->src_value,
-      data->dest_format, data->dest_value);
-}
-
-/**
- * gst_pad_convert_default:
- * @pad: a #GstPad to invoke the default converter on.
- * @src_format: the source #GstFormat.
- * @src_value: the source value.
- * @dest_format: a pointer to the destination #GstFormat.
- * @dest_value: a pointer to the destination value.
- *
- * Invokes the default converter on a pad. 
- * This will forward the call to the pad obtained 
- * using the internal link of
- * the element.
- *
- * Returns: TRUE if the conversion could be performed.
- */
-gboolean
-gst_pad_convert_default (GstPad * pad,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value)
-{
-  GstPadConvertData data;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (dest_format != NULL, FALSE);
-  g_return_val_if_fail (dest_value != NULL, FALSE);
-
-  data.src_format = src_format;
-  data.src_value = src_value;
-  data.dest_format = dest_format;
-  data.dest_value = dest_value;
-
-  return gst_pad_dispatcher (pad, (GstPadDispatcherFunction)
-      gst_pad_convert_dispatcher, &data);
-}
-
-/**
- * gst_pad_convert:
- * @pad: a #GstPad to invoke the default converter on.
- * @src_format: the source #GstFormat.
- * @src_value: the source value.
- * @dest_format: a pointer to the destination #GstFormat.
- * @dest_value: a pointer to the destination value.
- *
- * Invokes a conversion on the pad.
- *
- * Returns: TRUE if the conversion could be performed.
- */
-gboolean
-gst_pad_convert (GstPad * pad,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value)
-{
-  GstRealPad *rpad;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (dest_format != NULL, FALSE);
-  g_return_val_if_fail (dest_value != NULL, FALSE);
-
-  if (src_format == *dest_format) {
-    *dest_value = src_value;
-    return TRUE;
-  }
-
-  rpad = GST_PAD_REALIZE (pad);
-
-  if (GST_RPAD_CONVERTFUNC (rpad)) {
-    return GST_RPAD_CONVERTFUNC (rpad) (GST_PAD (rpad), src_format,
-        src_value, dest_format, dest_value);
-  }
-
-  return FALSE;
-}
-
-typedef struct
-{
-  GstQueryType type;
-  GstFormat *format;
-  gint64 *value;
-}
-GstPadQueryData;
-
-static gboolean
-gst_pad_query_dispatcher (GstPad * pad, GstPadQueryData * data)
-{
-  return gst_pad_query (pad, data->type, data->format, data->value);
-}
-
-/**
- * gst_pad_query_default:
- * @pad: a #GstPad to invoke the default query on.
- * @type: the #GstQueryType of the query to perform.
- * @format: a pointer to the #GstFormat of the result.
- * @value: a pointer to the result.
- *
- * Invokes the default query function on a pad. 
- *
- * Returns: TRUE if the query could be performed.
- */
-gboolean
-gst_pad_query_default (GstPad * pad, GstQueryType type,
-    GstFormat * format, gint64 * value)
-{
-  GstPadQueryData data;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (format != NULL, FALSE);
-  g_return_val_if_fail (value != NULL, FALSE);
-
-  data.type = type;
-  data.format = format;
-  data.value = value;
-
-  return gst_pad_dispatcher (pad, (GstPadDispatcherFunction)
-      gst_pad_query_dispatcher, &data);
-}
-
-/**
- * gst_pad_query:
- * @pad: a #GstPad to invoke the default query on.
- * @type: the #GstQueryType of the query to perform.
- * @format: a pointer to the #GstFormat asked for.
- *          On return contains the #GstFormat used.
- * @value: a pointer to the result.
- *
- * Queries a pad for one of the available properties. The format will be
- * adjusted to the actual format used when specifying formats such as 
- * GST_FORMAT_DEFAULT.
- * FIXME: Tell if the format can be adjusted when specifying a definite format.
- *
- * Returns: TRUE if the query could be performed.
- */
-gboolean
-gst_pad_query (GstPad * pad, GstQueryType type,
-    GstFormat * format, gint64 * value)
-{
-  GstRealPad *rpad;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (format != NULL, FALSE);
-  g_return_val_if_fail (value != NULL, FALSE);
-
-  rpad = GST_PAD_REALIZE (pad);
-
-  g_return_val_if_fail (rpad, FALSE);
-
-  if (GST_RPAD_QUERYFUNC (rpad))
-    return GST_RPAD_QUERYFUNC (rpad) (GST_PAD_CAST (rpad), type, format, value);
-
-  return FALSE;
-}
-
-/**
- * gst_pad_query2:
- * @pad: a #GstPad to invoke the default query on.
- * @query: the #GstQuery to perform.
- *
- * Dispatches a query to a pad. The query should have been allocated by the
- * caller via one of the type-specific allocation functions in gstquery.h. The
- * element is responsible for filling the query with an appropriate response,
- * which should then be parsed with a type-specific query parsing function.
- *
- * Again, the caller is responsible for both the allocation and deallocation of
- * the query structure.
- *
- * Returns: TRUE if the query could be performed.
- */
-gboolean
-gst_pad_query2 (GstPad * pad, GstQuery * query)
-{
-  GstRealPad *rpad;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
-
-  rpad = GST_PAD_REALIZE (pad);
-
-  g_return_val_if_fail (rpad, FALSE);
-
-  if (GST_RPAD_QUERY2FUNC (rpad))
-    return GST_RPAD_QUERY2FUNC (rpad) (GST_PAD_CAST (rpad), query);
-
-  return FALSE;
-}
-
-gboolean
-gst_pad_query2_default (GstPad * pad, GstQuery * query)
-{
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_POSITION:
-    case GST_QUERY_SEEKING:
-    case GST_QUERY_FORMATS:
-    case GST_QUERY_LATENCY:
-    case GST_QUERY_JITTER:
-    case GST_QUERY_RATE:
-    case GST_QUERY_CONVERT:
-    default:
-      return gst_pad_dispatcher
-          (pad, (GstPadDispatcherFunction) gst_pad_query2, query);
-  }
-}
-
-/**
- * gst_pad_query_position:
- * @pad: a #GstPad to invoke the default query on.
- * @format: a pointer to the #GstFormat asked for.
- *          On return contains the #GstFormat used.
- * @cur: A location in which to store the current position, or NULL.
- * @end: A location in which to store the end position (length), or NULL.
- *
- * Queries a pad for the stream position and length.
- *
- * Returns: TRUE if the query could be performed.
- */
-gboolean
-gst_pad_query_position (GstPad * pad, GstFormat * format, gint64 * cur,
-    gint64 * end)
-{
-  GstQuery *query;
-  gboolean ret;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (format != NULL, FALSE);
-
-  query = gst_query_new_position (*format);
-  ret = gst_pad_query2 (pad, query);
-
-  if (ret)
-    gst_query_parse_position_response (query, format, cur, end);
-
-  gst_query_unref (query);
-
-  return ret;
-}
-
-static gboolean
-gst_pad_get_formats_dispatcher (GstPad * pad, const GstFormat ** data)
-{
-  *data = gst_pad_get_formats (pad);
-
-  return TRUE;
-}
-
-/**
- * gst_pad_get_formats_default:
- * @pad: a #GstPad to query
- *
- * Invoke the default format dispatcher for the pad.
- *
- * Returns: An array of GstFormats ended with a 0 value.
- */
-const GstFormat *
-gst_pad_get_formats_default (GstPad * pad)
-{
-  GstFormat *result = NULL;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  gst_pad_dispatcher (pad, (GstPadDispatcherFunction)
-      gst_pad_get_formats_dispatcher, &result);
-
-  return result;
-}
-
-/**
- * gst_pad_get_formats:
- * @pad: a #GstPad to query
- *
- * Gets the list of supported formats from the pad.
- *
- * Returns: An array of GstFormats ended with a 0 value.
- */
-const GstFormat *
-gst_pad_get_formats (GstPad * pad)
-{
-  GstRealPad *rpad;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  rpad = GST_PAD_REALIZE (pad);
-
-  if (GST_RPAD_FORMATSFUNC (rpad))
-    return GST_RPAD_FORMATSFUNC (rpad) (GST_PAD (pad));
-
-  return NULL;
 }

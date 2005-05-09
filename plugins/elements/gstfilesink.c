@@ -80,7 +80,7 @@ static gboolean gst_filesink_event (GstBaseSink * sink, GstEvent * event);
 static GstFlowReturn gst_filesink_render (GstBaseSink * sink,
     GstBuffer * buffer);
 
-static gboolean gst_filesink_query2 (GstPad * pad, GstQuery * query);
+static gboolean gst_filesink_query (GstPad * pad, GstQuery * query);
 
 static void gst_filesink_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -144,7 +144,7 @@ gst_filesink_init (GstFileSink * filesink)
 
   pad = GST_BASESINK_PAD (filesink);
 
-  gst_pad_set_query2_function (pad, gst_filesink_query2);
+  gst_pad_set_query_function (pad, gst_filesink_query);
 
   filesink->filename = NULL;
   filesink->file = NULL;
@@ -255,7 +255,7 @@ gst_filesink_close_file (GstFileSink * sink)
 }
 
 static gboolean
-gst_filesink_query2 (GstPad * pad, GstQuery * query)
+gst_filesink_query (GstPad * pad, GstQuery * query)
 {
   GstFileSink *self;
   GstFormat format;
@@ -264,7 +264,7 @@ gst_filesink_query2 (GstPad * pad, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
-      gst_query_parse_position_query (query, &format);
+      gst_query_parse_position (query, &format, NULL, NULL);
       switch (format) {
         case GST_FORMAT_DEFAULT:
         case GST_FORMAT_BYTES:
@@ -280,7 +280,7 @@ gst_filesink_query2 (GstPad * pad, GstQuery * query)
       return TRUE;
 
     default:
-      return gst_pad_query2_default (pad, query);
+      return gst_pad_query_default (pad, query);
   }
 }
 

@@ -128,7 +128,7 @@ gst_message_get_type (void)
  *
  * MT safe.
  */
-GstMessage *
+static GstMessage *
 gst_message_new (GstMessageType type, GstObject * src)
 {
   GstMessage *message;

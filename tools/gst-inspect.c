@@ -87,6 +87,7 @@ print_caps (const GstCaps * caps, const gchar * pfx)
   }
 }
 
+#if 0
 static void
 print_formats (const GstFormat * formats)
 {
@@ -103,6 +104,7 @@ print_formats (const GstFormat * formats)
     formats++;
   }
 }
+#endif
 
 static void
 print_query_types (const GstQueryType * types)
@@ -122,6 +124,7 @@ print_query_types (const GstQueryType * types)
 }
 
 #ifndef GST_DISABLE_ENUMTYPES
+#if 0
 static void
 print_event_masks (const GstEventMask * masks)
 {
@@ -169,6 +172,7 @@ print_event_masks (const GstEventMask * masks)
     masks++;
   }
 }
+#endif
 #else
 static void
 print_event_masks (const GstEventMask * masks)
@@ -631,20 +635,9 @@ print_pad_info (GstElement * element)
     if (realpad->getrangefunc)
       n_print ("      Has getrangefunc(): %s\n",
           GST_DEBUG_FUNCPTR_NAME (realpad->getrangefunc));
-    if (realpad->formatsfunc != gst_pad_get_formats_default) {
-      n_print ("      Supports seeking/conversion/query formats:\n");
-      print_formats (gst_pad_get_formats (GST_PAD (realpad)));
-    }
-    if (realpad->convertfunc != gst_pad_convert_default)
-      n_print ("      Has custom convertfunc(): %s\n",
-          GST_DEBUG_FUNCPTR_NAME (realpad->convertfunc));
     if (realpad->eventfunc != gst_pad_event_default)
       n_print ("      Has custom eventfunc(): %s\n",
           GST_DEBUG_FUNCPTR_NAME (realpad->eventfunc));
-    if (realpad->eventmaskfunc != gst_pad_get_event_masks_default) {
-      n_print ("        Provides event masks:\n");
-      print_event_masks (gst_pad_get_event_masks (GST_PAD (realpad)));
-    }
     if (realpad->queryfunc != gst_pad_query_default)
       n_print ("      Has custom queryfunc(): %s\n",
           GST_DEBUG_FUNCPTR_NAME (realpad->queryfunc));

@@ -73,6 +73,7 @@ print_caps (const GstCaps * caps, gint pfx)
   g_free (s);
 }
 
+#if 0
 static void
 print_formats (const GstFormat * formats, gint pfx)
 {
@@ -89,6 +90,7 @@ print_formats (const GstFormat * formats, gint pfx)
     formats++;
   }
 }
+#endif
 
 static void
 print_query_types (const GstQueryType * types, gint pfx)
@@ -107,6 +109,7 @@ print_query_types (const GstQueryType * types, gint pfx)
   }
 }
 
+#if 0
 static void
 print_event_masks (const GstEventMask * masks, gint pfx)
 {
@@ -156,6 +159,7 @@ print_event_masks (const GstEventMask * masks, gint pfx)
   }
 #endif
 }
+#endif
 
 static void
 output_hierarchy (GType type, gint level, gint * maxlevel)
@@ -606,24 +610,9 @@ print_element_info (GstElementFactory * factory)
       if (realpad->getrangefunc)
         PUT_STRING (4, "<get-range-based function=\"%s\"/>",
             GST_DEBUG_FUNCPTR_NAME (realpad->getrangefunc));
-      if (realpad->formatsfunc != gst_pad_get_formats_default) {
-        PUT_STRING (4, "<formats-function function=\"%s\">",
-            GST_DEBUG_FUNCPTR_NAME (realpad->formatsfunc));
-        print_formats (gst_pad_get_formats (GST_PAD (realpad)), 5);
-        PUT_END_TAG (4, "formats-function");
-      }
-      if (realpad->convertfunc != gst_pad_convert_default)
-        PUT_STRING (4, "<convert-function function=\"%s\"/>",
-            GST_DEBUG_FUNCPTR_NAME (realpad->convertfunc));
       if (realpad->eventfunc != gst_pad_event_default)
         PUT_STRING (4, "<event-function function=\"%s\"/>",
             GST_DEBUG_FUNCPTR_NAME (realpad->eventfunc));
-      if (realpad->eventmaskfunc != gst_pad_get_event_masks_default) {
-        PUT_STRING (4, "<event-mask-func function=\"%s\">",
-            GST_DEBUG_FUNCPTR_NAME (realpad->eventmaskfunc));
-        print_event_masks (gst_pad_get_event_masks (GST_PAD (realpad)), 5);
-        PUT_END_TAG (4, "event-mask-func");
-      }
       if (realpad->queryfunc != gst_pad_query_default)
         PUT_STRING (4, "<query-function function=\"%s\"/>",
             GST_DEBUG_FUNCPTR_NAME (realpad->queryfunc));

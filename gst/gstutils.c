@@ -1155,6 +1155,55 @@ gst_element_unlink (GstElement * src, GstElement * dest)
   }
 }
 
+gboolean
+gst_element_query_position (GstElement * element, GstFormat * format,
+    gint64 * cur, gint64 * end)
+{
+  GstQuery *query;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_PAD (element), FALSE);
+  g_return_val_if_fail (format != NULL, FALSE);
+
+  query = gst_query_new_position (*format);
+  ret = gst_element_query (element, query);
+
+  if (ret)
+    gst_query_parse_position (query, format, cur, end);
+
+  gst_query_unref (query);
+
+  return ret;
+}
+
+gboolean
+gst_element_query_convert (GstElement * element, GstFormat src_format,
+    gint64 src_val, GstFormat * dest_fmt, gint64 * dest_val)
+{
+  GstQuery *query;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (dest_fmt != NULL, FALSE);
+  g_return_val_if_fail (dest_val != NULL, FALSE);
+
+  if (*dest_fmt == src_format) {
+    *dest_val = src_val;
+    return TRUE;
+  }
+
+  query = gst_query_new_convert (src_format, src_val, *dest_fmt);
+  ret = gst_element_query (element, query);
+
+  if (ret)
+    gst_query_parse_convert (query, NULL, NULL, dest_fmt, dest_val);
+
+  gst_query_unref (query);
+
+  return ret;
+}
+
+
 /**
  * gst_pad_can_link:
  * @srcpad: the source #GstPad to link.
@@ -1675,6 +1724,77 @@ gst_pad_proxy_setcaps (GstPad * pad, GstCaps * caps)
   return g_value_get_boolean (&ret);
 }
 
+/**
+ * gst_pad_query_position:
+ * @pad: a #GstPad to invoke the position query on.
+ * @format: a pointer to the #GstFormat asked for.
+ *          On return contains the #GstFormat used.
+ * @cur: A location in which to store the current position, or NULL.
+ * @end: A location in which to store the end position (length), or NULL.
+ *
+ * Queries a pad for the stream position and length.
+ *
+ * Returns: TRUE if the query could be performed.
+ */
+gboolean
+gst_pad_query_position (GstPad * pad, GstFormat * format, gint64 * cur,
+    gint64 * end)
+{
+  GstQuery *query;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (format != NULL, FALSE);
+
+  query = gst_query_new_position (*format);
+  ret = gst_pad_query (pad, query);
+
+  if (ret)
+    gst_query_parse_position (query, format, cur, end);
+
+  gst_query_unref (query);
+
+  return ret;
+}
+
+/**
+ * gst_pad_query_convert:
+ * @pad: a #GstPad to invoke the convert query on.
+ * @src_format: a #GstFormat to convert from.
+ * @src_val: a value to convert.
+ * @dest_format: a pointer to the #GstFormat to convert to. 
+ * @dest_val: a pointer to the result.
+ *
+ * Queries a pad to convert @src_val in @src_format to @dest_format.
+ *
+ * Returns: TRUE if the query could be performed.
+ */
+gboolean
+gst_pad_query_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
+    GstFormat * dest_fmt, gint64 * dest_val)
+{
+  GstQuery *query;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (dest_fmt != NULL, FALSE);
+  g_return_val_if_fail (dest_val != NULL, FALSE);
+
+  if (*dest_fmt == src_format) {
+    *dest_val = src_val;
+    return TRUE;
+  }
+
+  query = gst_query_new_convert (src_format, src_val, *dest_fmt);
+  ret = gst_pad_query (pad, query);
+
+  if (ret)
+    gst_query_parse_convert (query, NULL, NULL, dest_fmt, dest_val);
+
+  gst_query_unref (query);
+
+  return ret;
+}
 
 /**
  * gst_atomic_int_set:

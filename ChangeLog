@@ -1,3 +1,60 @@
+2005-05-09  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/draft-push-pull.txt:
+	* gst/base/gstbasesrc.c: (gst_basesrc_init), (gst_basesrc_query):
+	* gst/elements/gstfilesink.c: (gst_filesink_init),
+	(gst_filesink_query):
+	* gst/elements/gsttypefindelement.c: (gst_type_find_element_init),
+	(gst_type_find_handle_src_query), (find_element_get_length):
+	* gst/gstelement.c: (gst_element_seek), (gst_element_query):
+	* gst/gstelement.h:
+	* gst/gstmessage.c:
+	* gst/gstmessage.h:
+	* gst/gstpad.c: (gst_real_pad_init), (gst_pad_get_query_types),
+	(gst_real_pad_get_caps_unlocked),
+	(gst_pad_get_internal_links_default), (gst_pad_get_internal_links),
+	(gst_pad_event_default_dispatch), (gst_pad_event_default),
+	(gst_pad_dispatcher), (gst_pad_query), (gst_pad_query_default),
+	(gst_real_pad_dispose), (gst_real_pad_finalize),
+	(gst_pad_load_and_link), (gst_pad_save_thyself),
+	(gst_ghost_pad_save_thyself), (handle_pad_block), (gst_pad_push),
+	(gst_pad_check_pull_range), (gst_pad_pull_range),
+	(gst_pad_template_get_type), (gst_pad_template_class_init),
+	(gst_pad_template_init), (gst_pad_template_dispose),
+	(name_is_valid), (gst_static_pad_template_get),
+	(gst_pad_template_new), (gst_static_pad_template_get_caps),
+	(gst_pad_template_get_caps), (gst_pad_set_element_private),
+	(gst_pad_get_element_private), (gst_pad_start_task),
+	(gst_pad_pause_task), (gst_pad_stop_task),
+	(gst_ghost_pad_get_type), (gst_ghost_pad_class_init),
+	(gst_ghost_pad_init), (gst_ghost_pad_dispose),
+	(gst_ghost_pad_set_property), (gst_ghost_pad_get_property),
+	(gst_ghost_pad_new):
+	* gst/gstpad.h:
+	* gst/gstquery.c: (_gst_query_initialize), (gst_query_new),
+	(gst_query_new_position), (gst_query_set_position),
+	(gst_query_parse_position), (gst_query_new_convert),
+	(gst_query_set_convert), (gst_query_parse_convert):
+	* gst/gstquery.h:
+	* gst/gstqueryutils.c:
+	* gst/gstqueryutils.h:
+	* gst/gstqueue.c: (gst_queue_init), (gst_queue_getcaps),
+	(gst_queue_bufferalloc), (gst_queue_handle_sink_event),
+	(gst_queue_handle_src_query):
+	* gst/gstutils.c: (gst_element_get_compatible_pad_template),
+	(gst_element_query_position), (gst_element_query_convert),
+	(intersect_caps_func), (gst_pad_query_position),
+	(gst_pad_query_convert):
+	* gst/gstutils.h:
+	* tools/gst-inspect.c: (print_pad_info):
+	* tools/gst-xmlinspect.c: (print_element_info):
+	Remove old query functions. Ported old code.
+	Added position/convert helper functions to gstutils.
+	Reordered gstpad.c code, grouping relevant things.
+	Remove gst_message_new(), always need to speficy a specific
+	message.
+
+
 2005-05-09  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstiterator.h: Add some includes.

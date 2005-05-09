@@ -26,12 +26,6 @@
 #include <gst/gstquery.h>
 
 
-GstQuery* gst_query_new_position        (GstFormat format);
-void gst_query_set_position		(GstQuery *query, GstFormat format,
-                                         gint64 cur, gint64 end);
-void gst_query_parse_position_query	(GstQuery *query, GstFormat *format);
-void gst_query_parse_position_response	(GstQuery *query, GstFormat *format,
-                                         gint64 *cur, gint64 *end);
 void gst_query_parse_seeking_query	(GstQuery *query, GstFormat *format);
 void gst_query_set_seeking		(GstQuery *query, GstFormat format,
                                          gboolean seekable, gint64 segment_start,

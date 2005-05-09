@@ -133,8 +133,7 @@ static void gst_queue_loop (GstPad * pad);
 static gboolean gst_queue_handle_sink_event (GstPad * pad, GstEvent * event);
 
 static gboolean gst_queue_handle_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_queue_handle_src_query (GstPad * pad,
-    GstQueryType type, GstFormat * fmt, gint64 * value);
+static gboolean gst_queue_handle_src_query (GstPad * pad, GstQuery * query);
 
 static GstCaps *gst_queue_getcaps (GstPad * pad);
 static GstPadLinkReturn gst_queue_link_sink (GstPad * pad, GstPad * peer);
@@ -811,29 +810,42 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_queue_handle_src_query (GstPad * pad,
-    GstQueryType type, GstFormat * fmt, gint64 * value)
+gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
 {
   GstQueue *queue = GST_QUEUE (GST_PAD_PARENT (pad));
 
   if (!GST_PAD_PEER (queue->sinkpad))
     return FALSE;
-  if (!gst_pad_query (GST_PAD_PEER (queue->sinkpad), type, fmt, value))
+  if (!gst_pad_query (GST_PAD_PEER (queue->sinkpad), query))
     return FALSE;
 
-  if (type == GST_QUERY_POSITION) {
-    /* FIXME: this code assumes that there's no discont in the queue */
-    switch (*fmt) {
-      case GST_FORMAT_BYTES:
-        *value -= queue->cur_level.bytes;
-        break;
-      case GST_FORMAT_TIME:
-        *value -= queue->cur_level.time;
-        break;
-      default:
-        /* FIXME */
-        break;
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+    {
+      gint64 peer_pos, peer_total;
+      GstFormat format;
+
+      /* get peer position */
+      gst_query_parse_position (query, &format, &peer_pos, &peer_total);
+
+      /* FIXME: this code assumes that there's no discont in the queue */
+      switch (format) {
+        case GST_FORMAT_BYTES:
+          peer_pos -= queue->cur_level.bytes;
+          break;
+        case GST_FORMAT_TIME:
+          peer_pos -= queue->cur_level.time;
+          break;
+        default:
+          /* FIXME */
+          break;
+      }
+      /* set updated positions */
+      gst_query_set_position (query, format, peer_pos, peer_total);
+      break;
     }
+    default:
+      break;
   }
 
   return TRUE;

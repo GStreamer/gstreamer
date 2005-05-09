@@ -1050,48 +1050,6 @@ wrong_direction:
 }
 
 /**
- * gst_element_get_event_masks:
- * @element: a #GstElement to query
- *
- * Get an array of event masks from the element.
- * If the element doesn't implement an event masks function,
- * the query will be forwarded to a random linked sink pad.
- *
- * Returns: An array of #GstEventMask elements. The array 
- * cannot be modified or freed.
- *
- * MT safe.
- */
-const GstEventMask *
-gst_element_get_event_masks (GstElement * element)
-{
-  GstElementClass *oclass;
-  const GstEventMask *result = NULL;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-
-  oclass = GST_ELEMENT_GET_CLASS (element);
-
-  if (oclass->get_event_masks) {
-    result = oclass->get_event_masks (element);
-  } else {
-    GstPad *pad = gst_element_get_random_pad (element, GST_PAD_SINK);
-
-    if (pad) {
-      GstPad *peer = gst_pad_get_peer (pad);
-
-      if (peer) {
-        result = gst_pad_get_event_masks (peer);
-        gst_object_unref (GST_OBJECT (peer));
-      }
-      gst_object_unref (GST_OBJECT (pad));
-    }
-  }
-
-  return result;
-}
-
-/**
  * gst_element_send_event:
  * @element: a #GstElement to send the event to.
  * @event: the #GstEvent to send to the element.
@@ -1156,9 +1114,12 @@ gst_element_send_event (GstElement * element, GstEvent * event)
 gboolean
 gst_element_seek (GstElement * element, GstSeekType seek_type, guint64 offset)
 {
-  GstEvent *event = gst_event_new_seek (seek_type, offset);
+  GstEvent *event;
   gboolean result;
 
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+
+  event = gst_event_new_seek (seek_type, offset);
   result = gst_element_send_event (element, event);
 
   return result;
@@ -1224,25 +1185,23 @@ gst_element_get_query_types (GstElement * element)
  * MT safe.
  */
 gboolean
-gst_element_query (GstElement * element, GstQueryType type,
-    GstFormat * format, gint64 * value)
+gst_element_query (GstElement * element, GstQuery * query)
 {
   GstElementClass *oclass;
   gboolean result = FALSE;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
-  g_return_val_if_fail (format != NULL, FALSE);
-  g_return_val_if_fail (value != NULL, FALSE);
+  g_return_val_if_fail (query != NULL, FALSE);
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
   if (oclass->query) {
-    result = oclass->query (element, type, format, value);
+    result = oclass->query (element, query);
   } else {
     GstPad *pad = gst_element_get_random_pad (element, GST_PAD_SRC);
 
     if (pad) {
-      result = gst_pad_query (pad, type, format, value);
+      result = gst_pad_query (pad, query);
 
       gst_object_unref (GST_OBJECT (pad));
     } else {
@@ -1251,110 +1210,12 @@ gst_element_query (GstElement * element, GstQueryType type,
         GstPad *peer = gst_pad_get_peer (pad);
 
         if (peer) {
-          result = gst_pad_query (peer, type, format, value);
+          result = gst_pad_query (peer, query);
 
           gst_object_unref (GST_OBJECT (peer));
         }
         gst_object_unref (GST_OBJECT (pad));
       }
-    }
-  }
-  return result;
-}
-
-/**
- * gst_element_get_formats:
- * @element: a #GstElement to query
- *
- * Get an array of formats from the element.
- * If the element doesn't implement a formats function,
- * the query will be forwarded to a random sink pad.
- *
- * Returns: An array of #GstFormat elements.
- *
- * MT safe.
- */
-const GstFormat *
-gst_element_get_formats (GstElement * element)
-{
-  GstElementClass *oclass;
-  const GstFormat *result = NULL;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-
-  oclass = GST_ELEMENT_GET_CLASS (element);
-
-  if (oclass->get_formats) {
-    result = oclass->get_formats (element);
-  } else {
-    GstPad *pad = gst_element_get_random_pad (element, GST_PAD_SINK);
-
-    if (pad) {
-      GstPad *peer = gst_pad_get_peer (pad);
-
-      if (peer) {
-        result = gst_pad_get_formats (peer);
-
-        gst_object_unref (GST_OBJECT (peer));
-      }
-      gst_object_unref (GST_OBJECT (pad));
-    }
-  }
-
-  return result;
-}
-
-/**
- * gst_element_convert:
- * @element: a #GstElement to invoke the converter on.
- * @src_format: the source #GstFormat.
- * @src_value: the source value.
- * @dest_format: a pointer to the destination #GstFormat.
- * @dest_value: a pointer to the destination value.
- *
- * Invokes a conversion on the element.
- * If the element doesn't implement a convert function,
- * the query will be forwarded to a random sink pad.
- *
- * Returns: TRUE if the conversion could be performed.
- *
- * MT safe.
- */
-gboolean
-gst_element_convert (GstElement * element,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value)
-{
-  GstElementClass *oclass;
-  gboolean result = FALSE;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
-  g_return_val_if_fail (dest_format != NULL, FALSE);
-  g_return_val_if_fail (dest_value != NULL, FALSE);
-
-  if (src_format == *dest_format) {
-    *dest_value = src_value;
-    return TRUE;
-  }
-
-  oclass = GST_ELEMENT_GET_CLASS (element);
-
-  if (oclass->convert) {
-    result = oclass->convert (element,
-        src_format, src_value, dest_format, dest_value);
-  } else {
-    GstPad *pad = gst_element_get_random_pad (element, GST_PAD_SINK);
-
-    if (pad) {
-      GstPad *peer = gst_pad_get_peer (pad);
-
-      if (peer) {
-        result = gst_pad_convert (peer,
-            src_format, src_value, dest_format, dest_value);
-
-        gst_object_unref (GST_OBJECT (peer));
-      }
-      gst_object_unref (GST_OBJECT (pad));
     }
   }
   return result;

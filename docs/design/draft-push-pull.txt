@@ -80,9 +80,31 @@ Proposition:
     decision.
 
 
+Things to query:
 
+  - pad can do real random access (downstream peer can ask for offset != -1)
+     - min offset
+     - suggest sequential access
+     - max offset
+     - align: all offsets should be aligned with this value.
+  - pad can give ranges from A to B length (peer can ask for A <= length <= B)
+     - min length
+     - suggested length
+     - max length
 
+Use cases:
+
+  - An audio source can provide random access to the samples queued in its
+    DMA buffer, it however suggests sequential access method.
+    An audio source can provide a random number of samples but prefers 
+    reading from the hardware using a fixed segment size.
+
+  - A caching network source would suggest sequential access but is seekable
+    in the cached region. Applications can query for the already downloaded
+    portion and update the GUI, a seek can be done in that area.
     
+  - a live video source can only provide buffers sequentialy. It exposes
+    offsets as -1. lengths are also -1. 
 
   
 
