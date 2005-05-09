@@ -1,3 +1,9 @@
+2005-05-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/base/gsttypefindhelper.c: (helper_find_peek):
+	* gst/elements/gsttypefindelement.c: (find_peek):
+	  Handle negative offsets better. Fixes decodebin.
+
 2005-05-09  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasetransform.c: (gst_base_transform_proxy_getcaps),

@@ -57,7 +57,7 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
   src = find->src;
 
   if (offset < 0) {
-    if (find->size == -1)
+    if (find->size == -1 || find->size < -offset)
       return NULL;
 
     offset += find->size;

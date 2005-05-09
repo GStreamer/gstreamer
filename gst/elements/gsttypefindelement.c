@@ -572,7 +572,7 @@ find_peek (gpointer data, gint64 offset, guint size)
     /* FIXME: can we do this easily without querying length? */
     guint64 length = find_element_get_length (data);
 
-    if (length == 0) {
+    if (length < -offset) {
       buf = NULL;
     } else {
       buf =
