@@ -1,3 +1,11 @@
+2005-05-09  Andy Wingo  <wingo@pobox.com>
+
+	* gst/volume/Makefile.am:
+	* gst/volume/demo.c
+	* gst/volume/gstvolume.h
+	* gst/volume/gstvolume.c: Port to 0.9 API, derive from
+	basetransform. Probably need an audio filter base class.
+
 2005-05-09  Wim Taymans  <wim@fluendo.com>
 
 	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_sink_setcaps),

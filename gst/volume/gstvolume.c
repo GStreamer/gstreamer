@@ -23,6 +23,7 @@
 #endif
 #include <string.h>
 #include <gst/gst.h>
+#include <gst/base/gstbasetransform.h>
 #include <gst/audio/audio.h>
 #include <gst/control/control.h>
 #include <gst/mixer/mixer.h>
@@ -46,7 +47,7 @@ static GstElementDetails volume_details = {
   "Volume",
   "Filter/Effect/Audio",
   "Set volume on audio/raw streams",
-  "Andy Wingo <apwingo@eos.ncsu.edu>",
+  "Andy Wingo <wingo@pobox.com>",
 };
 
 
@@ -59,10 +60,10 @@ enum
 
 enum
 {
-  ARG_0,
-  ARG_SILENT,
-  ARG_MUTE,
-  ARG_VOLUME
+  PROP_0,
+  PROP_SILENT,
+  PROP_MUTE,
+  PROP_VOLUME
 };
 
 static GstStaticPadTemplate volume_sink_factory =
@@ -98,9 +99,30 @@ static GstStaticPadTemplate volume_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "width = (int) 16, " "depth = (int) 16, " "signed = (bool) TRUE")
     );
 
-static void volume_base_init (gpointer g_class);
-static void volume_class_init (GstVolumeClass * klass);
-static void volume_init (GstVolume * filter);
+static void gst_volume_interface_init (GstImplementsInterfaceClass * klass);
+static void gst_volume_mixer_init (GstMixerClass * iface);
+
+#define _init_interfaces(type) 							\
+  {                                                                             \
+    static const GInterfaceInfo voliface_info = {                               \
+      (GInterfaceInitFunc) gst_volume_interface_init,                           \
+      NULL,                                                                     \
+      NULL                                                                      \
+    };                                                                          \
+    static const GInterfaceInfo volmixer_info = {                               \
+      (GInterfaceInitFunc) gst_volume_mixer_init,                               \
+      NULL,                                                                     \
+      NULL                                                                      \
+    };                                                                          \
+                                                                                \
+    g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,           \
+        &voliface_info);                                                        \
+    g_type_add_interface_static (type, GST_TYPE_MIXER, &volmixer_info);         \
+  }
+
+GST_BOILERPLATE_FULL (GstVolume, gst_volume, GstBaseTransform,
+    GST_TYPE_BASE_TRANSFORM, _init_interfaces);
+
 
 static void volume_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -109,18 +131,12 @@ static void volume_get_property (GObject * object, guint prop_id,
 static void volume_update_volume (const GValue * value, gpointer data);
 static void volume_update_mute (const GValue * value, gpointer data);
 
-static gboolean volume_parse_caps (GstVolume * filter,
-    GstStructure * structure);
-
-static void volume_chain_float (GstPad * pad, GstData * _data);
-static void volume_chain_int16 (GstPad * pad, GstData * _data);
-
-static void gst_volume_interface_init (GstImplementsInterfaceClass * klass);
-static void gst_volume_mixer_init (GstMixerClass * iface);
-
-static GstElementClass *parent_class = NULL;
-
-/*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
+static GstFlowReturn volume_transform (GstBaseTransform * base,
+    GstBuffer * inbuf, GstBuffer ** outbuf);
+static void volume_process_float (GstVolume * filter, GstClockTime tstamp,
+    gpointer bytes, gint n_bytes);
+static void volume_process_int16 (GstVolume * filter, GstClockTime tstamp,
+    gpointer bytes, gint n_bytes);
 
 static gboolean
 gst_volume_interface_supported (GstImplementsInterface * iface, GType type)
@@ -233,97 +249,8 @@ gst_volume_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-static GstPadLinkReturn
-volume_connect (GstPad * pad, const GstCaps * caps)
-{
-  GstVolume *filter;
-  GstPad *otherpad;
-  gint rate;
-  GstPadLinkReturn link_ret;
-  GstStructure *structure;
-
-  filter = GST_VOLUME (gst_pad_get_parent (pad));
-  g_return_val_if_fail (GST_IS_VOLUME (filter), GST_PAD_LINK_REFUSED);
-  otherpad = (pad == filter->srcpad ? filter->sinkpad : filter->srcpad);
-
-  structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "rate", &rate);
-
-  link_ret = gst_pad_try_set_caps (otherpad, caps);
-  if (GST_PAD_LINK_FAILED (link_ret)) {
-    return link_ret;
-  }
-
-  if (!volume_parse_caps (filter, structure))
-    return GST_PAD_LINK_REFUSED;
-
-  gst_dpman_set_rate (filter->dpman, rate);
-
-  return GST_PAD_LINK_OK;
-}
-
-static gboolean
-volume_parse_caps (GstVolume * filter, GstStructure * structure)
-{
-  const gchar *mimetype;
-
-  g_return_val_if_fail (filter != NULL, FALSE);
-  g_return_val_if_fail (structure != NULL, FALSE);
-
-  mimetype = gst_structure_get_name (structure);
-
-  if (strcmp (mimetype, "audio/x-raw-int") == 0) {
-    gst_pad_set_chain_function (filter->sinkpad, volume_chain_int16);
-    return TRUE;
-  }
-
-  if (strcmp (mimetype, "audio/x-raw-float") == 0) {
-    gst_pad_set_chain_function (filter->sinkpad, volume_chain_float);
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
-
-GType
-gst_volume_get_type (void)
-{
-  static GType volume_type = 0;
-
-  if (!volume_type) {
-    static const GTypeInfo volume_info = {
-      sizeof (GstVolumeClass),
-      volume_base_init,
-      NULL,
-      (GClassInitFunc) volume_class_init,
-      NULL,
-      NULL,
-      sizeof (GstVolume),
-      0,
-      (GInstanceInitFunc) volume_init
-    };
-    static const GInterfaceInfo voliface_info = {
-      (GInterfaceInitFunc) gst_volume_interface_init,
-      NULL,
-      NULL
-    };
-    static const GInterfaceInfo volmixer_info = {
-      (GInterfaceInitFunc) gst_volume_mixer_init,
-      NULL,
-      NULL
-    };
-
-    volume_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstVolume", &volume_info, 0);
-    g_type_add_interface_static (volume_type, GST_TYPE_IMPLEMENTS_INTERFACE,
-        &voliface_info);
-    g_type_add_interface_static (volume_type, GST_TYPE_MIXER, &volmixer_info);
-  }
-  return volume_type;
-}
 static void
-volume_base_init (gpointer g_class)
+gst_volume_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
@@ -333,50 +260,31 @@ volume_base_init (gpointer g_class)
       gst_static_pad_template_get (&volume_sink_factory));
   gst_element_class_set_details (element_class, &volume_details);
 }
+
 static void
-volume_class_init (GstVolumeClass * klass)
+gst_volume_class_init (GstVolumeClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
-
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MUTE,
-      g_param_spec_boolean ("mute", "mute", "mute", FALSE, G_PARAM_READWRITE));
-
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VOLUME,
-      g_param_spec_double ("volume", "volume", "volume",
-          0.0, VOLUME_MAX_DOUBLE, 1.0, G_PARAM_READWRITE));
-
   gobject_class->set_property = volume_set_property;
   gobject_class->get_property = volume_get_property;
   gobject_class->dispose = gst_volume_dispose;
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MUTE,
+      g_param_spec_boolean ("mute", "mute", "mute", FALSE, G_PARAM_READWRITE));
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VOLUME,
+      g_param_spec_double ("volume", "volume", "volume",
+          0.0, VOLUME_MAX_DOUBLE, 1.0, G_PARAM_READWRITE));
+
+  GST_BASE_TRANSFORM_CLASS (klass)->transform = volume_transform;
 }
 
 static void
-volume_init (GstVolume * filter)
+gst_volume_init (GstVolume * filter)
 {
   GstMixerTrack *track = NULL;
-
-  filter->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&volume_sink_factory), "sink");
-  gst_pad_set_getcaps_function (filter->sinkpad, gst_pad_proxy_getcaps);
-  gst_pad_set_link_function (filter->sinkpad, volume_connect);
-
-  filter->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&volume_src_factory), "src");
-  gst_pad_set_getcaps_function (filter->srcpad, gst_pad_proxy_getcaps);
-  gst_pad_set_link_function (filter->srcpad, volume_connect);
-
-  gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
-  gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
-
-  gst_pad_set_chain_function (filter->sinkpad, volume_chain_int16);
 
   filter->mute = FALSE;
   filter->volume_i = VOLUME_UNITY_INT;
@@ -407,65 +315,77 @@ volume_init (GstVolume * filter)
 }
 
 static void
-volume_chain_float (GstPad * pad, GstData * _data)
+volume_typefind (GstVolume * filter, const GstStructure * structure)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
-  GstVolume *filter;
-  GstBuffer *out_buf;
-  gfloat *data;
-  gint i, num_samples;
+  const gchar *mimetype;
 
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
+  mimetype = gst_structure_get_name (structure);
 
-  filter = GST_VOLUME (GST_OBJECT_PARENT (pad));
-  g_return_if_fail (GST_IS_VOLUME (filter));
+  if (strcmp (mimetype, "audio/x-raw-int") == 0)
+    filter->process = volume_process_int16;
+  else if (strcmp (mimetype, "audio/x-raw-float") == 0)
+    filter->process = volume_process_float;
+}
 
-  GST_LOG_OBJECT (filter, "processing incoming float buffer with refcount %d",
-      GST_BUFFER_REFCOUNT_VALUE (buf));
-  out_buf = gst_buffer_copy_on_write (buf);
+static GstFlowReturn
+volume_transform (GstBaseTransform * base, GstBuffer * inbuf,
+    GstBuffer ** outbuf)
+{
+  GstVolume *filter = GST_VOLUME (base);
 
-  data = (gfloat *) GST_BUFFER_DATA (out_buf);
-  num_samples = GST_BUFFER_SIZE (out_buf) / sizeof (gfloat);
-  GST_DPMAN_PREPROCESS (filter->dpman, num_samples,
-      GST_BUFFER_TIMESTAMP (out_buf));
-  i = 0;
+  if (G_UNLIKELY (!filter->process)) {
+    GstCaps *caps = GST_BUFFER_CAPS (inbuf);
 
-  while (GST_DPMAN_PROCESS (filter->dpman, i)) {
-    data[i++] *= filter->real_vol_f;
+    if (gst_caps_get_size (caps) == 1)
+      volume_typefind (filter, gst_caps_get_structure (caps, 0));
+
+    if (!filter->process) {
+      GST_ELEMENT_ERROR (filter, CORE, NEGOTIATION,
+          ("Invalid caps on first buffer"), NULL);
+      return GST_FLOW_UNEXPECTED;
+    }
   }
 
-  gst_pad_push (filter->srcpad, GST_DATA (out_buf));
+  *outbuf = gst_buffer_copy_on_write (gst_buffer_ref (inbuf));
 
+  filter->process (filter, GST_BUFFER_TIMESTAMP (*outbuf),
+      GST_BUFFER_DATA (*outbuf), GST_BUFFER_SIZE (*outbuf));
+
+  return GST_FLOW_OK;
 }
 
 static void
-volume_chain_int16 (GstPad * pad, GstData * _data)
+volume_process_float (GstVolume * filter, GstClockTime tstamp,
+    gpointer bytes, gint n_bytes)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
-  GstVolume *filter;
-  GstBuffer *out_buf;
+  gfloat *data;
+  gint i, num_samples;
+
+  data = (gfloat *) bytes;
+  num_samples = n_bytes / sizeof (gfloat);
+
+  GST_DPMAN_PREPROCESS (filter->dpman, num_samples, tstamp);
+
+  i = 0;
+  while (GST_DPMAN_PROCESS (filter->dpman, i)) {
+    data[i++] *= filter->real_vol_f;
+  }
+}
+
+static void
+volume_process_int16 (GstVolume * filter, GstClockTime tstamp,
+    gpointer bytes, gint n_bytes)
+{
   gint16 *data;
   gint i, num_samples;
 
-  g_return_if_fail (_data);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
+  data = (gint16 *) bytes;
+  num_samples = n_bytes / sizeof (gint16);
 
-  filter = GST_VOLUME (GST_OBJECT_PARENT (pad));
-  g_return_if_fail (GST_IS_VOLUME (filter));
-
-  GST_LOG_OBJECT (filter, "processing incoming int16 buffer with refcount %d",
-      GST_BUFFER_REFCOUNT_VALUE (buf));
-  out_buf = gst_buffer_copy_on_write (buf);
-
-  data = (gint16 *) GST_BUFFER_DATA (out_buf);
-  g_assert (data);
-  num_samples = GST_BUFFER_SIZE (out_buf) / sizeof (gint16);
-  GST_DPMAN_PREPROCESS (filter->dpman, num_samples,
-      GST_BUFFER_TIMESTAMP (out_buf));
+  GST_DPMAN_PREPROCESS (filter->dpman, num_samples, tstamp);
   i = 0;
 
+  /* need... liboil... */
   while (GST_DPMAN_PROCESS (filter->dpman, i)) {
     /* only clamp if the gain is greater than 1.0 */
     if (filter->real_vol_i > VOLUME_UNITY_INT) {
@@ -487,8 +407,6 @@ volume_chain_int16 (GstPad * pad, GstData * _data)
       }
     }
   }
-
-  gst_pad_push (filter->srcpad, GST_DATA (out_buf));
 }
 
 static void
@@ -535,18 +453,14 @@ static void
 volume_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
-  GstVolume *filter;
-
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_VOLUME (object));
-  filter = GST_VOLUME (object);
+  GstVolume *filter = GST_VOLUME (object);
 
   switch (prop_id) {
-    case ARG_MUTE:
+    case PROP_MUTE:
       gst_dpman_bypass_dparam (filter->dpman, "mute");
       volume_update_mute (value, filter);
       break;
-    case ARG_VOLUME:
+    case PROP_VOLUME:
       gst_dpman_bypass_dparam (filter->dpman, "volume");
       volume_update_volume (value, filter);
       break;
@@ -560,17 +474,13 @@ static void
 volume_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstVolume *filter;
-
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_VOLUME (object));
-  filter = GST_VOLUME (object);
+  GstVolume *filter = GST_VOLUME (object);
 
   switch (prop_id) {
-    case ARG_MUTE:
+    case PROP_MUTE:
       g_value_set_boolean (value, filter->mute);
       break;
-    case ARG_VOLUME:
+    case PROP_VOLUME:
       g_value_set_double (value, filter->volume_f);
       break;
     default:

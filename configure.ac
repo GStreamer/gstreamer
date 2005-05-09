@@ -377,6 +377,7 @@ GST_PLUGINS_ALL="\
         subparse \
 	typefind \
 	videotestsrc \
+        volume \
 	"
 
 dnl see if we can build C++ plug-ins
@@ -873,6 +874,7 @@ gst/sine/Makefile
 gst/subparse/Makefile
 gst/typefind/Makefile
 gst/videotestsrc/Makefile
+gst/volume/Makefile
 sys/Makefile
 sys/ximage/Makefile
 sys/xvimage/Makefile

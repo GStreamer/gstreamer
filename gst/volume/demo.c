@@ -49,18 +49,6 @@ value_changed_callback (GtkWidget * widget, GstElement * volume)
   g_object_set (volume, "volume", level, NULL);
 }
 
-static gboolean
-idler (gpointer data)
-{
-  GstElement *pipeline = GST_ELEMENT (data);
-
-  g_print ("+");
-  if (gst_bin_iterate (GST_BIN (pipeline)))
-    return TRUE;
-  gtk_main_quit ();
-  return FALSE;
-}
-
 static void
 setup_gui (GstElement * volume)
 {
@@ -128,9 +116,9 @@ main (int argc, char *argv[])
 
   /* go to main loop */
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  g_idle_add (idler, pipeline);
-
-  gtk_main ();
+  gst_bus_poll (gst_element_get_bus (pipeline),
+      GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
 
   return 0;
 }

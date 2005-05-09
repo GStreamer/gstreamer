@@ -24,12 +24,9 @@
 
 
 #include <gst/gst.h>
-/* #include <gst/meta/audioraw.h> */
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 
 #define GST_TYPE_VOLUME \
@@ -37,7 +34,7 @@ extern "C" {
 #define GST_VOLUME(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VOLUME,GstVolume))
 #define GST_VOLUME_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ULAW,GstVolume))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VOLUME,GstVolume))
 #define GST_IS_VOLUME(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VOLUME))
 #define GST_IS_VOLUME_CLASS(obj) \
@@ -53,9 +50,10 @@ enum _GstVolumeFormat {
 };
 
 struct _GstVolume {
-  GstElement element;
+  GstBaseTransform element;
 
-  GstPad *sinkpad, *srcpad;
+  void (*process)(GstVolume*, GstClockTime, gpointer, gint);
+
   GstDParamManager *dpman;
 
   gboolean mute;
@@ -66,14 +64,13 @@ struct _GstVolume {
 };
 
 struct _GstVolumeClass {
-  GstElementClass parent_class;
+  GstBaseTransformClass parent_class;
 };
 
 GType gst_volume_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+
+G_END_DECLS
 
 
 #endif /* __GST_VOLUME_H__ */
