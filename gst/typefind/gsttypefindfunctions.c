@@ -420,7 +420,7 @@ mp3_type_find (GstTypeFind * tf, gpointer unused)
       }
       if (*data == 0xFF) {
         guint8 *head_data = NULL;
-        guint layer, bitrate, samplerate, channels;
+        guint layer = 0, bitrate, samplerate, channels;
         guint found = 0;        /* number of valid headers found */
         guint64 offset = skipped;
 
@@ -440,6 +440,7 @@ mp3_type_find (GstTypeFind * tf, gpointer unused)
           head = GST_READ_UINT32_BE (head_data);
           if (!(length = mp3_type_frame_length_from_header (head, &layer,
                       &channels, &bitrate, &samplerate))) {
+
             GST_LOG ("%d. header at offset %" G_GUINT64_FORMAT
                 " (0x%X) was not an mp3 header", found + 1, offset,
                 (guint) offset);
@@ -837,6 +838,8 @@ mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
 static GstStaticCaps qt_caps = GST_STATIC_CAPS ("video/quicktime");
 
 #define QT_CAPS gst_static_caps_get(&qt_caps)
+#define STRNCMP(x,y,z) (strncmp ((char*)(x), (char*)(y), z))
+
 static void
 qt_type_find (GstTypeFind * tf, gpointer unused)
 {
@@ -846,14 +849,14 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
   guint64 size;
 
   while ((data = gst_type_find_peek (tf, offset, 8)) != NULL) {
-    if (strncmp (&data[4], "wide", 4) != 0 &&
-        strncmp (&data[4], "moov", 4) != 0 &&
-        strncmp (&data[4], "mdat", 4) != 0 &&
-        strncmp (&data[4], "pnot", 4) != 0 &&
-        strncmp (&data[4], "PICT", 4) != 0 &&
-        strncmp (&data[4], "ftyp", 4) != 0 &&
-        strncmp (&data[4], "free", 4) != 0 &&
-        strncmp (&data[4], "skip", 4) != 0) {
+    if (STRNCMP (&data[4], "wide", 4) != 0 &&
+        STRNCMP (&data[4], "moov", 4) != 0 &&
+        STRNCMP (&data[4], "mdat", 4) != 0 &&
+        STRNCMP (&data[4], "pnot", 4) != 0 &&
+        STRNCMP (&data[4], "PICT", 4) != 0 &&
+        STRNCMP (&data[4], "ftyp", 4) != 0 &&
+        STRNCMP (&data[4], "free", 4) != 0 &&
+        STRNCMP (&data[4], "skip", 4) != 0) {
       tip = 0;
       break;
     }
@@ -1578,7 +1581,7 @@ start_with_type_find (GstTypeFind * tf, gpointer private)
 #define TYPE_FIND_REGISTER_START_WITH(plugin,name,rank,ext,_data,_size,_probability)\
 G_BEGIN_DECLS{									\
   GstTypeFindData *sw_data = g_new (GstTypeFindData, 1);			\
-  sw_data->data = _data;						      	\
+  sw_data->data = (gpointer)_data;						\
   sw_data->size = _size;						      	\
   sw_data->probability = _probability;						\
   sw_data->caps = gst_caps_new_simple (name, NULL);			\
@@ -1604,7 +1607,7 @@ riff_type_find (GstTypeFind * tf, gpointer private)
 #define TYPE_FIND_REGISTER_RIFF(plugin,name,rank,ext,_data)			\
 G_BEGIN_DECLS{									\
   GstTypeFindData *sw_data = g_new (GstTypeFindData, 1);			\
-  sw_data->data = _data;						      	\
+  sw_data->data = (gpointer)_data;						\
   sw_data->size = 4;							      	\
   sw_data->probability = GST_TYPE_FIND_MAXIMUM;					\
   sw_data->caps = gst_caps_new_simple (name, NULL);			\

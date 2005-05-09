@@ -876,7 +876,7 @@ gst_gnomevfssrc_get_icy_metadata (GstGnomeVFSSrc * src)
   if (metadata_length == 0)
     return;
 
-  data = g_new (gchar, metadata_length + 1);
+  data = g_new (guchar, metadata_length + 1);
   pos = data;
 
   while (pos - data < metadata_length) {
@@ -892,7 +892,7 @@ gst_gnomevfssrc_get_icy_metadata (GstGnomeVFSSrc * src)
   }
 
   data[metadata_length] = 0;
-  tags = g_strsplit (data, "';", 0);
+  tags = g_strsplit ((gchar *) data, "';", 0);
 
   for (i = 0; tags[i]; i++) {
     if (!g_ascii_strncasecmp (tags[i], "StreamTitle=", 12)) {

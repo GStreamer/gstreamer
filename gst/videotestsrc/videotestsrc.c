@@ -248,32 +248,32 @@ static int b_colors[] = { 255, 0, 255, 0, 255, 0, 255, 0, 128, 255, 0, 32 };
 #endif
 
 
-static void paint_setup_I420 (paintinfo * p, char *dest);
-static void paint_setup_YV12 (paintinfo * p, char *dest);
-static void paint_setup_YUY2 (paintinfo * p, char *dest);
-static void paint_setup_UYVY (paintinfo * p, char *dest);
-static void paint_setup_YVYU (paintinfo * p, char *dest);
-static void paint_setup_IYU2 (paintinfo * p, char *dest);
-static void paint_setup_Y41B (paintinfo * p, char *dest);
-static void paint_setup_Y42B (paintinfo * p, char *dest);
-static void paint_setup_Y800 (paintinfo * p, char *dest);
+static void paint_setup_I420 (paintinfo * p, unsigned char *dest);
+static void paint_setup_YV12 (paintinfo * p, unsigned char *dest);
+static void paint_setup_YUY2 (paintinfo * p, unsigned char *dest);
+static void paint_setup_UYVY (paintinfo * p, unsigned char *dest);
+static void paint_setup_YVYU (paintinfo * p, unsigned char *dest);
+static void paint_setup_IYU2 (paintinfo * p, unsigned char *dest);
+static void paint_setup_Y41B (paintinfo * p, unsigned char *dest);
+static void paint_setup_Y42B (paintinfo * p, unsigned char *dest);
+static void paint_setup_Y800 (paintinfo * p, unsigned char *dest);
 
 #if 0
-static void paint_setup_IMC1 (paintinfo * p, char *dest);
-static void paint_setup_IMC2 (paintinfo * p, char *dest);
-static void paint_setup_IMC3 (paintinfo * p, char *dest);
-static void paint_setup_IMC4 (paintinfo * p, char *dest);
+static void paint_setup_IMC1 (paintinfo * p, unsigned char *dest);
+static void paint_setup_IMC2 (paintinfo * p, unsigned char *dest);
+static void paint_setup_IMC3 (paintinfo * p, unsigned char *dest);
+static void paint_setup_IMC4 (paintinfo * p, unsigned char *dest);
 #endif
-static void paint_setup_YUV9 (paintinfo * p, char *dest);
-static void paint_setup_YVU9 (paintinfo * p, char *dest);
-static void paint_setup_xRGB8888 (paintinfo * p, char *dest);
-static void paint_setup_xBGR8888 (paintinfo * p, char *dest);
-static void paint_setup_RGBx8888 (paintinfo * p, char *dest);
-static void paint_setup_BGRx8888 (paintinfo * p, char *dest);
-static void paint_setup_RGB888 (paintinfo * p, char *dest);
-static void paint_setup_BGR888 (paintinfo * p, char *dest);
-static void paint_setup_RGB565 (paintinfo * p, char *dest);
-static void paint_setup_xRGB1555 (paintinfo * p, char *dest);
+static void paint_setup_YUV9 (paintinfo * p, unsigned char *dest);
+static void paint_setup_YVU9 (paintinfo * p, unsigned char *dest);
+static void paint_setup_xRGB8888 (paintinfo * p, unsigned char *dest);
+static void paint_setup_xBGR8888 (paintinfo * p, unsigned char *dest);
+static void paint_setup_RGBx8888 (paintinfo * p, unsigned char *dest);
+static void paint_setup_BGRx8888 (paintinfo * p, unsigned char *dest);
+static void paint_setup_RGB888 (paintinfo * p, unsigned char *dest);
+static void paint_setup_BGR888 (paintinfo * p, unsigned char *dest);
+static void paint_setup_RGB565 (paintinfo * p, unsigned char *dest);
+static void paint_setup_xRGB1555 (paintinfo * p, unsigned char *dest);
 
 static void paint_hline_I420 (paintinfo * p, int x, int y, int w);
 static void paint_hline_YUY2 (paintinfo * p, int x, int y, int w);
@@ -684,7 +684,7 @@ gst_videotestsrc_black (GstVideotestsrc * v, unsigned char *dest, int w, int h)
 #define ROUND_UP_8(x)  (((x)+7)&~7)
 
 static void
-paint_setup_I420 (paintinfo * p, char *dest)
+paint_setup_I420 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
   p->ystride = ROUND_UP_4 (p->width);
@@ -709,7 +709,7 @@ paint_hline_I420 (paintinfo * p, int x, int y, int w)
 }
 
 static void
-paint_setup_YV12 (paintinfo * p, char *dest)
+paint_setup_YV12 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
   p->ystride = ROUND_UP_4 (p->width);
@@ -721,7 +721,7 @@ paint_setup_YV12 (paintinfo * p, char *dest)
 }
 
 static void
-paint_setup_YUY2 (paintinfo * p, char *dest)
+paint_setup_YUY2 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
   p->up = dest + 1;
@@ -731,7 +731,7 @@ paint_setup_YUY2 (paintinfo * p, char *dest)
 }
 
 static void
-paint_setup_UYVY (paintinfo * p, char *dest)
+paint_setup_UYVY (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest + 1;
   p->up = dest;
@@ -741,7 +741,7 @@ paint_setup_UYVY (paintinfo * p, char *dest)
 }
 
 static void
-paint_setup_YVYU (paintinfo * p, char *dest)
+paint_setup_YVYU (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
   p->up = dest + 3;
@@ -764,7 +764,7 @@ paint_hline_YUY2 (paintinfo * p, int x, int y, int w)
 }
 
 static void
-paint_setup_IYU2 (paintinfo * p, char *dest)
+paint_setup_IYU2 (paintinfo * p, unsigned char *dest)
 {
   /* untested */
   p->yp = dest + 1;
@@ -786,7 +786,7 @@ paint_hline_IYU2 (paintinfo * p, int x, int y, int w)
 }
 
 static void
-paint_setup_Y41B (paintinfo * p, char *dest)
+paint_setup_Y41B (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
   p->ystride = ROUND_UP_4 (p->width);
@@ -811,7 +811,7 @@ paint_hline_Y41B (paintinfo * p, int x, int y, int w)
 }
 
 static void
-paint_setup_Y42B (paintinfo * p, char *dest)
+paint_setup_Y42B (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
   p->ystride = ROUND_UP_4 (p->width);
@@ -836,7 +836,7 @@ paint_hline_Y42B (paintinfo * p, int x, int y, int w)
 }
 
 static void
-paint_setup_Y800 (paintinfo * p, char *dest)
+paint_setup_Y800 (paintinfo * p, unsigned char *dest)
 {
   /* untested */
   p->yp = dest;
@@ -854,7 +854,7 @@ paint_hline_Y800 (paintinfo * p, int x, int y, int w)
 
 #if 0
 static void
-paint_setup_IMC1 (paintinfo * p, char *dest)
+paint_setup_IMC1 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
   p->up = dest + p->width * p->height;
@@ -862,7 +862,7 @@ paint_setup_IMC1 (paintinfo * p, char *dest)
 }
 
 static void
-paint_setup_IMC2 (paintinfo * p, char *dest)
+paint_setup_IMC2 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
   p->vp = dest + p->width * p->height;
@@ -870,7 +870,7 @@ paint_setup_IMC2 (paintinfo * p, char *dest)
 }
 
 static void
-paint_setup_IMC3 (paintinfo * p, char *dest)
+paint_setup_IMC3 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
   p->up = dest + p->width * p->height + p->width * p->height / 2;
@@ -878,7 +878,7 @@ paint_setup_IMC3 (paintinfo * p, char *dest)
 }
 
 static void
-paint_setup_IMC4 (paintinfo * p, char *dest)
+paint_setup_IMC4 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
   p->vp = dest + p->width * p->height + p->width / 2;
@@ -900,7 +900,7 @@ paint_hline_IMC1 (paintinfo * p, int x, int y, int w)
 #endif
 
 static void
-paint_setup_YVU9 (paintinfo * p, char *dest)
+paint_setup_YVU9 (paintinfo * p, unsigned char *dest)
 {
   int h = ROUND_UP_4 (p->height);
 
@@ -914,7 +914,7 @@ paint_setup_YVU9 (paintinfo * p, char *dest)
 }
 
 static void
-paint_setup_YUV9 (paintinfo * p, char *dest)
+paint_setup_YUV9 (paintinfo * p, unsigned char *dest)
 {
   /* untested */
   int h = ROUND_UP_4 (p->height);
@@ -942,7 +942,7 @@ paint_hline_YUV9 (paintinfo * p, int x, int y, int w)
 }
 
 static void
-paint_setup_xRGB8888 (paintinfo * p, char *dest)
+paint_setup_xRGB8888 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest + 1;
   p->up = dest + 2;
@@ -952,7 +952,7 @@ paint_setup_xRGB8888 (paintinfo * p, char *dest)
 }
 
 static void
-paint_setup_xBGR8888 (paintinfo * p, char *dest)
+paint_setup_xBGR8888 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest + 3;
   p->up = dest + 2;
@@ -962,7 +962,7 @@ paint_setup_xBGR8888 (paintinfo * p, char *dest)
 }
 
 static void
-paint_setup_RGBx8888 (paintinfo * p, char *dest)
+paint_setup_RGBx8888 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest + 0;
   p->up = dest + 1;
@@ -972,7 +972,7 @@ paint_setup_RGBx8888 (paintinfo * p, char *dest)
 }
 
 static void
-paint_setup_BGRx8888 (paintinfo * p, char *dest)
+paint_setup_BGRx8888 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest + 2;
   p->up = dest + 1;
@@ -982,7 +982,7 @@ paint_setup_BGRx8888 (paintinfo * p, char *dest)
 }
 
 static void
-paint_setup_RGB888 (paintinfo * p, char *dest)
+paint_setup_RGB888 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest + 0;
   p->up = dest + 1;
@@ -992,7 +992,7 @@ paint_setup_RGB888 (paintinfo * p, char *dest)
 }
 
 static void
-paint_setup_BGR888 (paintinfo * p, char *dest)
+paint_setup_BGR888 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest + 2;
   p->up = dest + 1;
@@ -1022,7 +1022,7 @@ paint_hline_str3 (paintinfo * p, int x, int y, int w)
 }
 
 static void
-paint_setup_RGB565 (paintinfo * p, char *dest)
+paint_setup_RGB565 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
   p->ystride = ROUND_UP_4 (p->width * 2);
@@ -1048,7 +1048,7 @@ paint_hline_RGB565 (paintinfo * p, int x, int y, int w)
 }
 
 static void
-paint_setup_xRGB1555 (paintinfo * p, char *dest)
+paint_setup_xRGB1555 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
   p->ystride = ROUND_UP_4 (p->width * 2);

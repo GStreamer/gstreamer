@@ -1282,7 +1282,7 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
     /* Storing some pointers in the buffer */
     GST_BUFFER_PRIVATE (buffer) = ximage;
 
-    GST_BUFFER_DATA (buffer) = ximage->ximage->data;
+    GST_BUFFER_DATA (buffer) = (guchar *) ximage->ximage->data;
     GST_BUFFER_FREE_DATA_FUNC (buffer) = gst_ximagesink_buffer_free;
     GST_BUFFER_SIZE (buffer) = ximage->size;
     return buffer;

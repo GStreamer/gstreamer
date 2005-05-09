@@ -265,7 +265,7 @@ vorbis_dec_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:{
-      guint64 value;
+      gint64 value;
       GstFormat my_format = GST_FORMAT_TIME;
 
       /* convert to time */
@@ -292,7 +292,7 @@ vorbis_dec_src_event (GstPad * pad, GstEvent * event)
 static gboolean
 vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
 {
-  guint64 start_value, end_value, time, bytes;
+  gint64 start_value, end_value, time, bytes;
   gboolean ret = TRUE;
   GstVorbisDec *dec;
 
@@ -376,7 +376,8 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
   GST_BUFFER_DATA (buf) = packet->packet;
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
 
-  list = gst_tag_list_from_vorbiscomment_buffer (buf, "\003vorbis", 7,
+  list =
+      gst_tag_list_from_vorbiscomment_buffer (buf, (guint8 *) "\003vorbis", 7,
       &encoder);
 
   gst_buffer_unref (buf);

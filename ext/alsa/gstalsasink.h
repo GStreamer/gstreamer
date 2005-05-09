@@ -57,8 +57,8 @@ struct _GstAlsaSink {
 
   guint buffer_time;
   guint period_time;
-  snd_pcm_sframes_t buffer_size;
-  snd_pcm_sframes_t period_size;
+  snd_pcm_uframes_t buffer_size;
+  snd_pcm_uframes_t period_size;
 };
 
 struct _GstAlsaSinkClass {

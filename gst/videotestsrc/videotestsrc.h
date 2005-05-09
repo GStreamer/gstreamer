@@ -48,7 +48,7 @@ struct fourcc_list_struct
   char *fourcc;
   char *name;
   int bitspp;
-  void (*paint_setup) (paintinfo * p, char *dest);
+  void (*paint_setup) (paintinfo * p, unsigned char *dest);
   void (*paint_hline) (paintinfo * p, int x, int y, int w);
   int ext_caps;
   int depth;

@@ -415,7 +415,7 @@ theora_dec_src_query (GstPad * pad, GstQueryType query, GstFormat * format,
    * intermediate step */
   my_format = GST_FORMAT_TIME;
   if (!theora_dec_sink_convert (dec->sinkpad, GST_FORMAT_DEFAULT, granulepos,
-          &my_format, &time))
+          &my_format, (gint64 *) & time))
     return FALSE;
   if (!gst_pad_convert (pad, my_format, time, format, value))
     return FALSE;
@@ -438,7 +438,7 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:{
-      guint64 value;
+      gint64 value;
       GstEvent *real_seek;
 
       /* we have to ask our peer to seek to time here as we know
@@ -477,7 +477,7 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
 static gboolean
 theora_dec_sink_event (GstPad * pad, GstEvent * event)
 {
-  guint64 start_value, end_value, time, bytes;
+  gint64 start_value, end_value, time, bytes;
   gboolean ret = TRUE;
   GstTheoraDec *dec;
 
@@ -560,7 +560,8 @@ theora_handle_comment_packet (GstTheoraDec * dec, ogg_packet * packet)
   GST_BUFFER_DATA (buf) = packet->packet;
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
 
-  list = gst_tag_list_from_vorbiscomment_buffer (buf, "\201theora", 7,
+  list =
+      gst_tag_list_from_vorbiscomment_buffer (buf, (guint8 *) "\201theora", 7,
       &encoder);
 
   gst_buffer_unref (buf);
@@ -748,11 +749,11 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
    * offset or size is odd (see above).
    */
   {
-    guint8 *dest_y, *src_y;
-    guint8 *dest_u, *src_u;
-    guint8 *dest_v, *src_v;
+    char *dest_y, *src_y;
+    char *dest_u, *src_u;
+    char *dest_v, *src_v;
 
-    dest_y = GST_BUFFER_DATA (out);
+    dest_y = (char *) GST_BUFFER_DATA (out);
     dest_u = dest_y + stride_y * height;
     dest_v = dest_u + stride_uv * cheight;
 

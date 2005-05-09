@@ -1,3 +1,37 @@
+2005-05-09  Andy Wingo  <wingo@pobox.com>
+
+	* ext/alsa/gstalsasink.h:
+	* ext/gnomevfs/gstgnomevfssrc.c:
+	(gst_gnomevfssrc_get_icy_metadata):
+	* ext/ogg/gstoggdemux.c (gst_ogg_demux_perform_seek)
+	(gst_ogg_demux_read_chain, gst_ogg_demux_read_end_chain)
+	* ext/theora/theoradec.c (theora_dec_src_query)
+	(theora_dec_src_event, theora_dec_sink_event)
+	(theora_handle_comment_packet, theora_handle_data_packet):
+	* ext/theora/theoraenc.c (theora_enc_chain):
+	* ext/vorbis/vorbisdec.c (vorbis_dec_src_event)
+	(vorbis_dec_sink_event, vorbis_handle_comment_packet):
+	* gst/audioconvert/gstaudioconvert.c (gst_audio_convert_getcaps):
+	* gst/typefind/gsttypefindfunctions.c (mp3_type_find)
+	(qt_type_find):
+	* gst/videotestsrc/videotestsrc.c (paint_setup_I420)
+	(paint_setup_YV12, paint_setup_YUY2, paint_setup_UYVY)
+	(paint_setup_YVYU, paint_setup_IYU2, paint_setup_Y41B)
+	(paint_setup_Y42B, paint_setup_Y800, paint_setup_IMC1)
+	(paint_setup_IMC2, paint_setup_IMC3, paint_setup_IMC4)
+	(paint_setup_YVU9, paint_setup_YUV9, paint_setup_xRGB8888)
+	(paint_setup_xBGR8888, paint_setup_RGBx8888)
+	(paint_setup_BGRx8888, paint_setup_RGB888, paint_setup_BGR888)
+	(paint_setup_RGB565, paint_setup_xRGB1555):
+	* gst/videotestsrc/videotestsrc.h:
+	* sys/ximage/ximagesink.c (gst_ximagesink_buffer_alloc):
+	* sys/xvimage/xvimagesink.c (gst_xvimagesink_get_xv_support)
+	(gst_xvimagesink_setcaps, gst_xvimagesink_buffer_alloc):
+	GCC4 fixes.
+	
+	* ext/ogg/gstoggdemux.c (gst_ogg_demux_find_chains): Use the new
+	gst_pad_query_position. Fixes oggdemux.
+
 2005-05-08  David Schleef  <ds@schleef.org>
 
 	* configure.ac: Require liboil.

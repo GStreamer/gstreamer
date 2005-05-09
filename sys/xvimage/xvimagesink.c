@@ -684,7 +684,8 @@ static GstCaps *
 gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
     GstXContext * xcontext)
 {
-  gint i, nb_adaptors;
+  gint i;
+  guint nb_adaptors;
   XvAdaptorInfo *adaptors;
   gint nb_formats;
   XvImageFormatValues *formats = NULL;
@@ -709,7 +710,7 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
 
   xcontext->xv_port_id = 0;
 
-  GST_DEBUG ("Found %d XV adaptor(s)", nb_adaptors);
+  GST_DEBUG ("Found %u XV adaptor(s)", nb_adaptors);
 
   /* Now search for an adaptor that supports XvImageMask */
   for (i = 0; i < nb_adaptors && !xcontext->xv_port_id; i++) {
@@ -1196,7 +1197,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstXvImageSink *xvimagesink;
   GstStructure *structure;
-  gint im_format = 0;
+  guint32 im_format = 0;
   gboolean ret;
   gint video_width, video_height;
   gint video_par_n, video_par_d;        /* video's PAR */
@@ -1527,7 +1528,7 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
     /* Storing some pointers in the buffer */
     GST_BUFFER_PRIVATE (buffer) = xvimage;
 
-    GST_BUFFER_DATA (buffer) = xvimage->xvimage->data;
+    GST_BUFFER_DATA (buffer) = (guchar *) xvimage->xvimage->data;
     GST_BUFFER_FREE_DATA_FUNC (buffer) = gst_xvimagesink_buffer_free;
     GST_BUFFER_SIZE (buffer) = xvimage->size;
     gst_buffer_set_caps (buffer, caps);

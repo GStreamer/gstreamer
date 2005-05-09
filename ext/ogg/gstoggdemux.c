@@ -1339,7 +1339,7 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, gint64 pos)
           continue;
 
         gst_pad_convert (pad->elem_pad,
-            GST_FORMAT_DEFAULT, granulepos, &format, &granuletime);
+            GST_FORMAT_DEFAULT, granulepos, &format, (gint64 *) & granuletime);
 
         GST_DEBUG_OBJECT (ogg,
             "found page with granule %" G_GINT64_FORMAT " and time %"
@@ -1578,7 +1578,8 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg)
     GstFormat target = GST_FORMAT_TIME;
 
     gst_pad_convert (pad->elem_pad,
-        GST_FORMAT_DEFAULT, pad->first_granule, &target, &pad->first_time);
+        GST_FORMAT_DEFAULT, pad->first_granule, &target,
+        (gint64 *) & pad->first_time);
 
     pad->mode = GST_OGG_PAD_MODE_STREAMING;
     pad->packetno = 0;
@@ -1639,7 +1640,8 @@ gst_ogg_demux_read_end_chain (GstOggDemux * ogg, GstOggChain * chain)
     GstFormat target = GST_FORMAT_TIME;
 
     gst_pad_convert (pad->elem_pad,
-        GST_FORMAT_DEFAULT, pad->last_granule, &target, &pad->last_time);
+        GST_FORMAT_DEFAULT, pad->last_granule, &target,
+        (gint64 *) & pad->last_time);
   }
   return 0;
 }
@@ -1703,7 +1705,7 @@ gst_ogg_demux_find_chains (GstOggDemux * ogg)
 
   /* find length to read last page, we store this for later use. */
   format = GST_FORMAT_BYTES;
-  res = gst_pad_query (peer, GST_QUERY_TOTAL, &format, &ogg->length);
+  res = gst_pad_query_position (peer, &format, NULL, &ogg->length);
   gst_object_unref (GST_OBJECT (peer));
   if (!res)
     goto no_length;
