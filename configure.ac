@@ -380,6 +380,20 @@ GST_CHECK_FEATURE(LIBCACA, [libcaca], libcaca, [
   AC_SUBST(LIBCACA_LIBS)
 ])
 
+dnl *** shout2 ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SHOUT2, true)
+GST_CHECK_FEATURE(SHOUT2, [shout2 plug-in], shout2send, [
+  PKG_CHECK_MODULES(SHOUT2, shout >= 2.0, [
+    HAVE_SHOUT2="yes"
+    AC_SUBST(SHOUT2_CFLAGS)
+    AC_SUBST(SHOUT2_LIBS)
+  ], [
+    AM_PATH_SHOUT2(HAVE_SHOUT2="yes", HAVE_SHOUT2="no")
+    AC_SUBST(SHOUT2_CFLAGS)
+    AC_SUBST(SHOUT2_LIBS)
+  ])
+])
+
 dnl *** sidplay : works with libsidplay 1.36.x (not 2.x.x) ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SIDPLAY, true)
 GST_CHECK_FEATURE(SIDPLAY, [sidplay plug-in], sidplay, [
@@ -468,6 +482,7 @@ ext/Makefile
 ext/aalib/Makefile
 ext/libcaca/Makefile
 ext/mad/Makefile
+ext/shout2/Makefile
 ext/sidplay/Makefile
 common/Makefile
 common/m4/Makefile

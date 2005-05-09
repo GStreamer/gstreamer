@@ -1,3 +1,19 @@
+2005-05-09  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* PORTED_09:
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/shout2/Makefile.am:
+	* ext/shout2/gstshout2.c: (gst_shout2send_get_type),
+	(gst_shout2send_base_init), (gst_shout2send_class_init),
+	(gst_shout2send_init), (gst_shout2send_event),
+	(gst_shout2send_render), (gst_shout2send_set_property),
+	(gst_shout2send_get_property), (gst_shout2send_setcaps),
+	(gst_shout2send_change_state):
+	* ext/shout2/gstshout2.h:
+
+	Port shout2 plugin
+
 2005-05-08  Zeeshan Ali   <zeenix@gmail.com>
 
 	* configure.ac:
