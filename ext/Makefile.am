@@ -94,11 +94,11 @@ endif
 # DVDNAV_DIR=
 # endif
 
-# if USE_ESD
-# ESD_DIR=esd
-# else
-# ESD_DIR=
-# endif
+if USE_ESD
+ESD_DIR=esd
+else
+ESD_DIR=
+endif
 
 # if USE_FAAC
 # FAAC_DIR=faac
