@@ -52,12 +52,6 @@ extern "C" {
 typedef struct _GstUDPSrc GstUDPSrc;
 typedef struct _GstUDPSrcClass GstUDPSrcClass;
 
-typedef enum {
-  GST_UDPSRC_OPEN             = GST_ELEMENT_FLAG_LAST,
-
-  GST_UDPSRC_FLAG_LAST        = GST_ELEMENT_FLAG_LAST + 2,
-} GstUDPSrcFlags;
-
 struct _GstUDPSrc {
   GstElement element;
 
@@ -66,16 +60,10 @@ struct _GstUDPSrc {
 
   int port;
   int sock;
-  int control_sock;
-  Gst_UDP_Control control;
   gchar *multi_group;
 
   struct sockaddr_in myaddr;
   struct ip_mreq multi_addr;
-  GstClock *clock;
-
-  gboolean first_buf;
-  GstData *defer_data;
 };
 
 struct _GstUDPSrcClass {

@@ -21,12 +21,10 @@
 #ifndef __GST_UDPSINK_H__
 #define __GST_UDPSINK_H__
 
-
 #include <gst/gst.h>
+#include <gst/base/gstbasesink.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,56 +41,33 @@ extern "C" {
 #include <arpa/inet.h>
 #include "gstudp.h"
 
-#define GST_TYPE_UDPSINK \
-  (gst_udpsink_get_type())
-#define GST_UDPSINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_UDPSINK,GstUDPSink))
-#define GST_UDPSINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_UDPSINK,GstUDPSink))
-#define GST_IS_UDPSINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_UDPSINK))
-#define GST_IS_UDPSINK_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_UDPSINK))
+#define GST_TYPE_UDPSINK 		(gst_udpsink_get_type())
+#define GST_UDPSINK(obj) 		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_UDPSINK,GstUDPSink))
+#define GST_UDPSINK_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_UDPSINK,GstUDPSink))
+#define GST_IS_UDPSINK(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_UDPSINK))
+#define GST_IS_UDPSINK_CLASS(obj) 	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_UDPSINK))
 
 typedef struct _GstUDPSink GstUDPSink;
 typedef struct _GstUDPSinkClass GstUDPSinkClass;
 
-typedef enum {
-  GST_UDPSINK_OPEN             = GST_ELEMENT_FLAG_LAST,
-
-  GST_UDPSINK_FLAG_LAST        = GST_ELEMENT_FLAG_LAST + 2,
-} GstUDPSinkFlags;
-
 struct _GstUDPSink {
-  GstElement element;
-
-  /* pads */
-  GstPad *sinkpad,*srcpad;
+  GstBaseSink parent;
 
   int sock;
   struct sockaddr_in theiraddr;
   struct ip_mreq multi_addr;
 
   gint port;
-  Gst_UDP_Control control;
   gchar *host;
-    
   guint mtu;
-    
-  GstClock *clock;
 };
 
 struct _GstUDPSinkClass {
-  GstElementClass parent_class;
-
+  GstBaseSinkClass parent_class;
 };
 
 GType gst_udpsink_get_type(void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_UDPSINK_H__ */

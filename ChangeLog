@@ -1,3 +1,21 @@
+2005-05-10  Wim Taymans  <wim@fluendo.com>
+
+	* gst/udp/Makefile.am:
+	* gst/udp/gstudpsink.c: (gst_udpsink_get_type),
+	(gst_udpsink_base_init), (gst_udpsink_class_init),
+	(gst_udpsink_init), (gst_udpsink_get_times), (gst_udpsink_render),
+	(gst_udpsink_set_property), (gst_udpsink_get_property),
+	(gst_udpsink_init_send), (gst_udpsink_close),
+	(gst_udpsink_change_state):
+	* gst/udp/gstudpsink.h:
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_base_init),
+	(gst_udpsrc_class_init), (gst_udpsrc_init), (gst_udpsrc_loop),
+	(gst_udpsrc_set_property), (gst_udpsrc_get_property),
+	(gst_udpsrc_init_receive), (gst_udpsrc_close),
+	(gst_udpsrc_activate), (gst_udpsrc_change_state):
+	* gst/udp/gstudpsrc.h:
+	Ported udp src/sink.
+
 2005-05-09  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* PORTED_09:
