@@ -1,3 +1,20 @@
+2005-05-10  Arwed v. Merkatz  <v.merkatz@gmx.net>>
+
+	* PORTED_09:
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/esd/Makefile.am:
+	* ext/esd/esdsink.c: (gst_esdsink_get_type),
+	(gst_esdsink_class_init), (gst_esdsink_init),
+	(gst_esdsink_dispose), (gst_esdsink_change_state),
+	(gst_caps_set_each), (gst_esdsink_getcaps), (gst_esdsink_open),
+	(gst_esdsink_close), (gst_esdsink_write), (gst_esdsink_delay),
+	(gst_esdsink_reset), (gst_esdsink_set_property),
+	(gst_esdsink_get_property), (gst_esdsink_factory_init):
+	* ext/esd/esdsink.h:
+	* ext/esd/gstesd.c: (plugin_init):
+	Ported esdsink plugin
+
 2005-05-10  Wim Taymans  <wim@fluendo.com>
 
 	* gst/udp/Makefile.am:
