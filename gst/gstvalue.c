@@ -1512,12 +1512,10 @@ gst_value_deserialize_flags (GValue * dest, const char *s)
   i = 0;
   /* loop over each part */
   while (split[i]) {
-    g_print ("check %s\n", split[i]);
     if (!(fl = g_flags_get_value_by_name (klass, split[i]))) {
       if (!(fl = g_flags_get_value_by_nick (klass, split[i]))) {
         gint val = strtol (split[i], &endptr, 0);
 
-        g_print ("strtol %d\n", val);
         /* just or numeric value */
         if (endptr && *endptr == '\0') {
           flags |= val;
@@ -1525,13 +1523,11 @@ gst_value_deserialize_flags (GValue * dest, const char *s)
       }
     }
     if (fl) {
-      g_print ("value %d\n", fl->value);
       flags |= fl->value;
     }
     i++;
   }
   g_strfreev (split);
-  g_print ("final value %d\n", flags);
   g_type_class_unref (klass);
   g_value_set_flags (dest, flags);
 
