@@ -1,3 +1,10 @@
+2005-05-10  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstvalue.c: (gst_value_compare_flags),
+	(gst_value_serialize_flags), (gst_value_deserialize_flags),
+	(_gst_value_initialize):
+	Added flags serialize/deserialize/compare code.
+
 2005-05-09  Andy Wingo  <wingo@pobox.com>
 
 	* gst/base/gstbasetransform.c (gst_base_transform_proxy_getcaps):

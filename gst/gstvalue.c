@@ -1435,6 +1435,109 @@ gst_value_deserialize_enum (GValue * dest, const char *s)
   return TRUE;
 }
 
+/********
+ * flags *
+ ********/
+
+/* we just compare the value here */
+static int
+gst_value_compare_flags (const GValue * value1, const GValue * value2)
+{
+  guint fl1, fl2;
+  GFlagsClass *klass1 =
+      (GFlagsClass *) g_type_class_ref (G_VALUE_TYPE (value1));
+  GFlagsClass *klass2 =
+      (GFlagsClass *) g_type_class_ref (G_VALUE_TYPE (value2));
+
+  g_return_val_if_fail (klass1, GST_VALUE_UNORDERED);
+  g_return_val_if_fail (klass2, GST_VALUE_UNORDERED);
+  fl1 = g_value_get_flags (value1);
+  fl2 = g_value_get_flags (value2);
+  g_type_class_unref (klass1);
+  g_type_class_unref (klass2);
+  if (fl1 < fl2)
+    return GST_VALUE_LESS_THAN;
+  if (fl1 > fl2)
+    return GST_VALUE_GREATER_THAN;
+
+  return GST_VALUE_EQUAL;
+}
+
+/* the different flags are serialized separated with a + */
+static char *
+gst_value_serialize_flags (const GValue * value)
+{
+  guint flags;
+  GFlagsValue *fl;
+  GFlagsClass *klass = (GFlagsClass *) g_type_class_ref (G_VALUE_TYPE (value));
+  gchar *result, *tmp;
+  gboolean first = TRUE;
+
+  g_return_val_if_fail (klass, NULL);
+
+  result = g_strdup ("");
+  flags = g_value_get_flags (value);
+  while (flags) {
+    fl = g_flags_get_first_value (klass, flags);
+    if (fl != NULL) {
+      tmp = g_strconcat (result, (first ? "" : "+"), fl->value_name, NULL);
+      g_free (result);
+      result = tmp;
+      first = FALSE;
+    }
+    /* clear flag */
+    flags &= ~fl->value;
+  }
+  g_type_class_unref (klass);
+
+  return result;
+}
+
+static gboolean
+gst_value_deserialize_flags (GValue * dest, const char *s)
+{
+  GFlagsValue *fl;
+  gchar *endptr = NULL;
+  GFlagsClass *klass = (GFlagsClass *) g_type_class_ref (G_VALUE_TYPE (dest));
+  gchar **split;
+  guint flags;
+  gint i;
+
+  g_return_val_if_fail (klass, FALSE);
+
+  /* split into parts delimited with + */
+  split = g_strsplit (s, "+", 0);
+
+  flags = 0;
+  i = 0;
+  /* loop over each part */
+  while (split[i]) {
+    g_print ("check %s\n", split[i]);
+    if (!(fl = g_flags_get_value_by_name (klass, split[i]))) {
+      if (!(fl = g_flags_get_value_by_nick (klass, split[i]))) {
+        gint val = strtol (split[i], &endptr, 0);
+
+        g_print ("strtol %d\n", val);
+        /* just or numeric value */
+        if (endptr && *endptr == '\0') {
+          flags |= val;
+        }
+      }
+    }
+    if (fl) {
+      g_print ("value %d\n", fl->value);
+      flags |= fl->value;
+    }
+    i++;
+  }
+  g_strfreev (split);
+  g_print ("final value %d\n", flags);
+  g_type_class_unref (klass);
+  g_value_set_flags (dest, flags);
+
+  return TRUE;
+}
+
 /*********
  * union *
  *********/
@@ -3053,6 +3156,8 @@ _gst_value_initialize (void)
   REGISTER_SERIALIZATION (G_TYPE_STRING, string);
   REGISTER_SERIALIZATION (G_TYPE_BOOLEAN, boolean);
   REGISTER_SERIALIZATION (G_TYPE_ENUM, enum);
+
+  REGISTER_SERIALIZATION (G_TYPE_FLAGS, flags);
 
   REGISTER_SERIALIZATION (G_TYPE_INT, int);
 
