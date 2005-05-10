@@ -22,7 +22,9 @@
 #include "config.h"
 #endif
 #include "esdsink.h"
+#if 0
 #include "esdmon.h"
+#endif
 
 GST_DEBUG_CATEGORY (esd_debug);
 
@@ -31,16 +33,20 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean ret;
 
+#if 0
   if (!gst_library_load ("gstaudio"))
     return FALSE;
+#endif
 
   ret = gst_esdsink_factory_init (plugin);
   if (ret == FALSE)
     return FALSE;
 
+#if 0
   ret = gst_esdmon_factory_init (plugin);
   if (ret == FALSE)
     return FALSE;
+#endif
 
   GST_DEBUG_CATEGORY_INIT (esd_debug, "esd", 0, "ESounD elements");
   return TRUE;

@@ -420,6 +420,18 @@ GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
 ])
 AC_SUBST(MAD_LIBS)
 
+dnl **** ESound ****
+translit(dnm, m, l) AM_CONDITIONAL(USE_ESD, true)
+GST_CHECK_FEATURE(ESD, [esound plug-ins], esdsink, [
+  PKG_CHECK_MODULES(ESD, esound >= 0.2.12, [
+    HAVE_ESD="yes"
+    AC_SUBST(ESD_CFLAGS)
+    AC_SUBST(ESD_LIBS)
+  ], [
+    AM_PATH_ESD(0.2.12, HAVE_ESD="yes", HAVE_ESD="no")
+    AS_SCRUB_INCLUDE(ESD_CFLAGS)
+  ])
+])
 
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
@@ -484,6 +496,7 @@ ext/libcaca/Makefile
 ext/mad/Makefile
 ext/shout2/Makefile
 ext/sidplay/Makefile
+ext/esd/Makefile
 common/Makefile
 common/m4/Makefile
 m4/Makefile

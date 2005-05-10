@@ -1,5 +1,7 @@
 /* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) <2005> Arwed v. Merkatz <v.merkatz@gmx.net>
+ *
+ * esdsink.h: an EsounD audio sink
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,50 +24,34 @@
 #define __GST_ESDSINK_H__
 
 #include <gst/gst.h>
-#include <gst/audio/audioclock.h>
+#include <gst/audio/gstaudiosink.h>
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_ESDSINK \
   (gst_esdsink_get_type())
 #define GST_ESDSINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ESDSINK,GstEsdsink))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ESDSINK,GstEsdSink))
 #define GST_ESDSINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ESDSINK,GstEsdsinkClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ESDSINK,GstEsdSinkClass))
 #define GST_IS_ESDSINK(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ESDSINK))
 #define GST_IS_ESDSINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ESDSINK))
 
-typedef struct _GstEsdsink GstEsdsink;
-typedef struct _GstEsdsinkClass GstEsdsinkClass;
+typedef struct _GstEsdSink GstEsdSink;
+typedef struct _GstEsdSinkClass GstEsdSinkClass;
 
-struct _GstEsdsink {
-  GstElement 	 element;
+struct _GstEsdSink {
+  GstAudioSink 	 sink;
 
-  GstPad 	*sinkpad;
-
-  GstClock	*provided_clock;
-  GstClock	*clock;
-
-  gboolean 	 mute;
   int 		 fd;
-  gint 		 format;
-  gint 		 depth;
-  gint 		 channels;
-  gint 		 frequency;
-  gboolean 	 negotiated;
+  int      ctrl_fd;
   gchar		*host;
-  int		 handled;
-  int		 bytes_per_sample;
-  gboolean       link_open;
-  gboolean	 sync;
-  gboolean	 resync;
-  gboolean	 fallback;
 };
 
-struct _GstEsdsinkClass {
-  GstElementClass parent_class;
+struct _GstEsdSinkClass {
+  GstAudioSinkClass parent_class;
 };
 
 GType gst_esdsink_get_type(void);
