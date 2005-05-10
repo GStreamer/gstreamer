@@ -8,6 +8,7 @@ aalib	(wim)
 libcaca	(zeeshan)
 law	(wim)
 shout2  (zaheer) - not fully tested
+esdsink (arwed)
 
 osssink is partially done in the threaded branch (wim)
 
