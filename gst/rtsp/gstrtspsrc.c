@@ -89,7 +89,6 @@ static void gst_rtspsrc_class_init (GstRTSPSrc * klass);
 static void gst_rtspsrc_init (GstRTSPSrc * rtspsrc);
 
 static GstElementStateReturn gst_rtspsrc_change_state (GstElement * element);
-static gboolean gst_rtspsrc_activate (GstPad * pad, GstActivateMode mode);
 
 static void gst_rtspsrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -167,7 +166,7 @@ gst_rtspsrc_class_init (GstRTSPSrc * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DEBUG,
       g_param_spec_boolean ("debug", "Debug",
-          "Dump request qnd response messages to stdout",
+          "Dump request and response messages to stdout",
           DEFAULT_DEBUG, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   gstelement_class->change_state = gst_rtspsrc_change_state;
@@ -176,14 +175,6 @@ gst_rtspsrc_class_init (GstRTSPSrc * klass)
 static void
 gst_rtspsrc_init (GstRTSPSrc * src)
 {
-  /*
-     src->srcpad =
-     gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
-     "src");
-     gst_pad_set_loop_function (src->srcpad, gst_rtspsrc_loop);
-     gst_pad_set_activate_function (src->srcpad, gst_rtspsrc_activate);
-     gst_element_add_pad (GST_ELEMENT (src), src->srcpad);
-   */
 }
 
 static void
@@ -242,6 +233,7 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src)
 
   s = g_new0 (GstRTSPStream, 1);
   s->parent = src;
+  s->id = src->numstreams++;
 
   src->streams = g_list_append (src->streams, s);
 
@@ -249,13 +241,49 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src)
 }
 
 static gboolean
-rtspsrc_add_element (GstRTSPSrc * src, GstElement * element)
+gst_rtspsrc_add_element (GstRTSPSrc * src, GstElement * element)
 {
   gst_object_set_parent (GST_OBJECT (element), GST_OBJECT (src));
   gst_element_set_manager (element, GST_ELEMENT_MANAGER (src));
   gst_element_set_scheduler (element, GST_ELEMENT_SCHEDULER (src));
 
   return TRUE;
+}
+
+static GstElementStateReturn
+gst_rtspsrc_set_state (GstRTSPSrc * src, GstElementState state)
+{
+  GstElementStateReturn ret;
+  GList *streams;
+
+  /* for all streams */
+  for (streams = src->streams; streams; streams = g_list_next (streams)) {
+    GstRTSPStream *stream;
+
+    stream = (GstRTSPStream *) streams->data;
+
+    /* first our rtp session manager */
+    if ((ret =
+            gst_element_set_state (stream->rtpdec, state)) != GST_STATE_SUCCESS)
+      goto done;
+
+    /* then our sources */
+    if (stream->rtpsrc) {
+      if ((ret =
+              gst_element_set_state (stream->rtpsrc,
+                  state)) != GST_STATE_SUCCESS)
+        goto done;
+    }
+    if (stream->rtcpsrc) {
+      if ((ret =
+              gst_element_set_state (stream->rtcpsrc,
+                  state)) != GST_STATE_SUCCESS)
+        goto done;
+    }
+  }
+
+done:
+  return ret;
 }
 
 static gboolean
@@ -273,7 +301,7 @@ gst_rtspsrc_stream_setup_rtp (GstRTSPStream * stream, gint * rtpport,
     goto no_udp_rtp_protocol;
 
   /* we manage this element */
-  rtspsrc_add_element (src, stream->rtpsrc);
+  gst_rtspsrc_add_element (src, stream->rtpsrc);
 
   if ((ret =
           gst_element_set_state (stream->rtpsrc,
@@ -285,7 +313,7 @@ gst_rtspsrc_stream_setup_rtp (GstRTSPStream * stream, gint * rtpport,
     goto no_udp_rtcp_protocol;
 
   /* we manage this element */
-  rtspsrc_add_element (src, stream->rtcpsrc);
+  gst_rtspsrc_add_element (src, stream->rtcpsrc);
 
   if ((ret =
           gst_element_set_state (stream->rtcpsrc,
@@ -325,33 +353,58 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     RTSPTransport * transport)
 {
   GstRTSPSrc *src;
+  GstPad *pad;
+  GstElementStateReturn ret;
+  gchar *name;
 
   src = stream->parent;
 
+  if (!(stream->rtpdec = gst_element_factory_make ("rtpdec", NULL)))
+    goto no_element;
+
+  /* we manage this element */
+  gst_rtspsrc_add_element (src, stream->rtpdec);
+
+  if ((ret =
+          gst_element_set_state (stream->rtpdec,
+              GST_STATE_PAUSED)) != GST_STATE_SUCCESS)
+    goto start_rtpdec_failure;
+
+  stream->rtpdecrtp = gst_element_get_pad (stream->rtpdec, "sinkrtp");
+  stream->rtpdecrtcp = gst_element_get_pad (stream->rtpdec, "sinkrtcp");
+
+  /* FIXME, make sure it outputs the caps */
+  pad = gst_element_get_pad (stream->rtpdec, "srcrtp");
+  name = g_strdup_printf ("rtp_stream%d", stream->id);
+  gst_element_add_ghost_pad (GST_ELEMENT (src), pad, name);
+  g_free (name);
+  gst_object_unref (GST_OBJECT (pad));
+
   if (transport->lower_transport == RTSP_LOWER_TRANS_TCP) {
-    GstPad *pad;
-
-    /* configure for interleaved delivery */
-    if (!(stream->rtpdec = gst_element_factory_make ("rtpdec", NULL)))
-      goto no_element;
-
-    /* we manage this element */
-    rtspsrc_add_element (src, stream->rtpdec);
-    stream->rtpdecrtp = gst_element_get_pad (stream->rtpdec, "sinkrtp");
-    stream->rtpdecrtcp = gst_element_get_pad (stream->rtpdec, "sinkrtcp");
-
-    /* FIXME, make sure it outputs the caps */
-    pad = gst_element_get_pad (stream->rtpdec, "srcrtp");
-    gst_element_add_ghost_pad (GST_ELEMENT (src), pad, "srcrtp");
-    gst_object_unref (GST_OBJECT (pad));
+    /* configure for interleaved delivery, nothing needs to be done
+     * here, the loop function will call the chain functions of the
+     * rtp session manager. */
   } else {
-    /* configure for UDP delivery, FIXME */
+    /* configure for UDP delivery, we need to connect the udp pads to
+     * the rtp session plugin. */
+    pad = gst_element_get_pad (stream->rtpsrc, "src");
+    gst_pad_link (pad, stream->rtpdecrtp);
+    gst_object_unref (GST_OBJECT (pad));
+
+    pad = gst_element_get_pad (stream->rtcpsrc, "src");
+    gst_pad_link (pad, stream->rtpdecrtcp);
+    gst_object_unref (GST_OBJECT (pad));
   }
   return TRUE;
 
 no_element:
   {
     GST_DEBUG ("no rtpdec element found");
+    return FALSE;
+  }
+start_rtpdec_failure:
+  {
+    GST_DEBUG ("could not start RTP session");
     return FALSE;
   }
 }
@@ -602,8 +655,6 @@ gst_rtspsrc_open (GstRTSPSrc * src)
       rtsp_message_add_header (&request, RTSP_HDR_TRANSPORT, transports);
       g_free (transports);
 
-      rtsp_message_dump (&request);
-
       if (!gst_rtspsrc_send (src, &request, &response))
         goto send_error;
 
@@ -614,8 +665,9 @@ gst_rtspsrc_open (GstRTSPSrc * src)
 
         rtsp_message_get_header (&response, RTSP_HDR_TRANSPORT, &resptrans);
 
-        /* update allowed transports for other streams */
+        /* parse transport */
         rtsp_transport_parse (resptrans, &transport);
+        /* update allowed transports for other streams */
         if (transport.lower_transport == RTSP_LOWER_TRANS_TCP) {
           protocols = GST_RTSP_PROTO_TCP;
           src->interleaved = TRUE;
@@ -628,7 +680,11 @@ gst_rtspsrc_open (GstRTSPSrc * src)
             protocols = GST_RTSP_PROTO_UDP_UNICAST;
           }
         }
-        gst_rtspsrc_stream_configure_transport (stream, &transport);
+        /* now configure the stream with the transport */
+        if (!gst_rtspsrc_stream_configure_transport (stream, &transport)) {
+          GST_DEBUG ("could not configure stream transport, skipping stream");
+        }
+        /* clean up our transport struct */
         rtsp_transport_init (&transport);
       }
     }
@@ -670,6 +726,14 @@ gst_rtspsrc_close (GstRTSPSrc * src)
   RTSPResult res;
 
   GST_DEBUG ("TEARDOWN...");
+
+  /* stop task if any */
+  if (src->task) {
+    gst_task_stop (src->task);
+    gst_object_unref (GST_OBJECT (src->task));
+    src->task = NULL;
+  }
+
   /* do TEARDOWN */
   if ((res =
           rtsp_message_init_request (RTSP_TEARDOWN, src->location,
@@ -713,6 +777,7 @@ gst_rtspsrc_play (GstRTSPSrc * src)
   RTSPResult res;
 
   GST_DEBUG ("PLAY...");
+
   /* do play */
   if ((res =
           rtsp_message_init_request (RTSP_PLAY, src->location, &request)) < 0)
@@ -777,52 +842,6 @@ send_error:
   }
 }
 
-static gboolean
-gst_rtspsrc_activate (GstPad * pad, GstActivateMode mode)
-{
-  gboolean result;
-  GstRTSPSrc *rtspsrc;
-
-  rtspsrc = GST_RTSPSRC (GST_OBJECT_PARENT (pad));
-
-  switch (mode) {
-    case GST_ACTIVATE_PUSH:
-      /* if we have a scheduler we can start the task */
-      if (GST_ELEMENT_SCHEDULER (rtspsrc) && rtspsrc->interleaved) {
-        GST_STREAM_LOCK (pad);
-        GST_RPAD_TASK (pad) =
-            gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (rtspsrc),
-            (GstTaskFunction) gst_rtspsrc_loop, pad);
-
-        gst_task_start (GST_RPAD_TASK (pad));
-        GST_STREAM_UNLOCK (pad);
-        result = TRUE;
-      }
-      break;
-    case GST_ACTIVATE_PULL:
-      result = FALSE;
-      break;
-    case GST_ACTIVATE_NONE:
-      /* step 1, unblock clock sync (if any) */
-
-      /* step 2, make sure streaming finishes */
-      GST_STREAM_LOCK (pad);
-      gst_rtspsrc_close (rtspsrc);
-
-      /* step 3, stop the task */
-      if (GST_RPAD_TASK (pad)) {
-        gst_task_stop (GST_RPAD_TASK (pad));
-        gst_object_unref (GST_OBJECT (GST_RPAD_TASK (pad)));
-        GST_RPAD_TASK (pad) = NULL;
-      }
-      GST_STREAM_UNLOCK (pad);
-
-      result = TRUE;
-      break;
-  }
-  return result;
-}
-
 static GstElementStateReturn
 gst_rtspsrc_change_state (GstElement * element)
 {
@@ -845,18 +864,22 @@ gst_rtspsrc_change_state (GstElement * element)
       gst_rtspsrc_play (rtspsrc);
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
+      gst_rtspsrc_play (rtspsrc);
       break;
     default:
       break;
   }
 
+  ret = gst_rtspsrc_set_state (rtspsrc, GST_STATE_PENDING (rtspsrc));
+  if (ret != GST_STATE_SUCCESS)
+    goto error;
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
   switch (transition) {
     case GST_STATE_PLAYING_TO_PAUSED:
+      gst_rtspsrc_pause (rtspsrc);
       break;
     case GST_STATE_PAUSED_TO_READY:
-      gst_rtspsrc_pause (rtspsrc);
       break;
     case GST_STATE_READY_TO_NULL:
       break;
@@ -864,5 +887,6 @@ gst_rtspsrc_change_state (GstElement * element)
       break;
   }
 
+error:
   return ret;
 }

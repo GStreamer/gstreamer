@@ -55,6 +55,8 @@ typedef enum
 typedef struct _GstRTSPStream GstRTSPStream;
 
 struct _GstRTSPStream {
+  gint	      id;
+
   gint 	      rtpchannel;
   gint 	      rtcpchannel;
 
@@ -79,6 +81,7 @@ struct _GstRTSPSrc {
   gboolean	 interleaved;
   GstTask     	*task;
 
+  gint		 numstreams;
   GList		*streams;
 
   gchar	 	*location;
