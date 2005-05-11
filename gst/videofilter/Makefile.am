@@ -1,5 +1,5 @@
 
-plugin_LTLIBRARIES = libgstvideofilter.la
+lib_LTLIBRARIES = libgstvideofilter-@GST_MAJORMINOR@.la
 noinst_LTLIBRARIES = libgstvideoexample.la
 
 noinst_HEADERS = gstvideofilter.h
@@ -7,10 +7,9 @@ noinst_HEADERS = gstvideofilter.h
 EXTRA_DIST = gstvideotemplate.c make_filter
 CLEANFILES = gstvideoexample.c
 
-libgstvideofilter_la_SOURCES = gstvideofilter.c
-libgstvideofilter_la_CFLAGS = $(GST_CFLAGS)
-libgstvideofilter_la_LIBADD =
-libgstvideofilter_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstvideofilter_@GST_MAJORMINOR@_la_SOURCES = gstvideofilter.c gstvideofilter.h
+libgstvideofilter_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS)
+libgstvideofilter_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIBS)
 
 libgstvideoexample_la_SOURCES = gstvideoexample.c
 libgstvideoexample_la_CFLAGS = $(GST_CFLAGS)
