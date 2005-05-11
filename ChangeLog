@@ -1,3 +1,35 @@
+2005-05-11  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/Makefile.am:
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_get_type),
+	(gst_multifdsink_base_init), (gst_multifdsink_class_init),
+	(gst_multifdsink_init), (gst_multifdsink_handle_client_write),
+	(gst_multifdsink_queue_buffer), (gst_multifdsink_render),
+	(gst_multifdsink_change_state):
+	* gst/tcp/gstmultifdsink.h:
+	* gst/tcp/gsttcp.c:
+	* gst/tcp/gsttcpclientsink.c: (gst_tcpclientsink_get_type),
+	(gst_tcpclientsink_base_init), (gst_tcpclientsink_class_init),
+	(gst_tcpclientsink_init), (gst_tcpclientsink_render),
+	(gst_tcpclientsink_set_property), (gst_tcpclientsink_get_property),
+	(gst_tcpclientsink_change_state):
+	* gst/tcp/gsttcpclientsink.h:
+	* gst/tcp/gsttcpclientsrc.c: (gst_tcpclientsrc_class_init),
+	(gst_tcpclientsrc_init_receive):
+	* gst/tcp/gsttcpplugin.c: (plugin_init):
+	* gst/tcp/gsttcpserversink.c: (gst_tcpserversink_class_init):
+	* gst/tcp/gsttcpserversink.h:
+	* gst/tcp/gsttcpserversrc.c: (gst_tcpserversrc_class_init):
+	* gst/tcp/gsttcpsink.c: (gst_tcpsink_get_type),
+	(gst_tcpsink_base_init), (gst_tcpsink_class_init),
+	(gst_tcpsink_setcaps), (gst_tcpsink_init), (gst_tcpsink_get_times),
+	(gst_tcpsink_render), (gst_tcpsink_set_property),
+	(gst_tcpsink_get_property):
+	* gst/tcp/gsttcpsink.h:
+	* gst/tcp/gsttcpsrc.c: (gst_tcpsrc_class_init), (gst_tcpsrc_get):
+	Ported over some sink elements.
+	Sources not ported yet as they require a PushSource base class.
+
 2005-05-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/effectv/Makefile.am:
