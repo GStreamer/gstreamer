@@ -949,6 +949,7 @@ restart:
             GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
                 "not adding element %s to queue, it is in another bin",
                 GST_ELEMENT_NAME (peer_elem));
+            gst_object_unref (GST_OBJECT_CAST (peer_elem));
           }
           if (parent) {
             gst_object_unref (GST_OBJECT_CAST (parent));

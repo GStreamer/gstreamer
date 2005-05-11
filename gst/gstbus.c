@@ -207,8 +207,16 @@ gst_bus_post (GstBus * bus, GstMessage * message)
   GST_DEBUG_OBJECT (bus, "posting message on bus");
 
   GST_LOCK (bus);
+
+  if (GST_FLAG_IS_SET (bus, GST_BUS_FLUSHING)) {
+    gst_message_unref (message);
+    GST_UNLOCK (bus);
+    return FALSE;
+  }
+
   handler = bus->sync_handler;
   handler_data = bus->sync_handler_data;
+
   GST_UNLOCK (bus);
 
   /* first call the sync handler if it is installed */
@@ -321,6 +329,36 @@ gst_bus_have_pending (GstBus * bus)
   g_mutex_unlock (bus->queue_lock);
 
   return (length > 0);
+}
+
+/**
+ * gst_bus_set_flushing:
+ * @bus: a #GstBus
+ * @flushing: whether or not to flush the bus
+ *
+ * If @flushing, flush out and unref any messages queued in the bus. Releases
+ * references to the message origin objects. Will flush future messages until
+ * gst_bus_set_flushing() sets @flushing to #FALSE.
+ *
+ * MT safe.
+ */
+void
+gst_bus_set_flushing (GstBus * bus, gboolean flushing)
+{
+  GstMessage *message;
+
+  GST_LOCK (bus);
+
+  if (flushing) {
+    GST_FLAG_SET (bus, GST_BUS_FLUSHING);
+
+    while ((message = gst_bus_pop (bus)))
+      gst_message_unref (message);
+  } else {
+    GST_FLAG_UNSET (bus, GST_BUS_FLUSHING);
+  }
+
+  GST_UNLOCK (bus);
 }
 
 /**

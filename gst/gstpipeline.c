@@ -370,6 +370,8 @@ gst_pipeline_change_state (GstElement * element)
 
   switch (transition) {
     case GST_STATE_NULL_TO_READY:
+      if (element->bus)
+        gst_bus_set_flushing (element->bus, FALSE);
       gst_scheduler_setup (GST_ELEMENT_SCHEDULER (pipeline));
       break;
     case GST_STATE_READY_TO_PAUSED:
@@ -425,6 +427,9 @@ gst_pipeline_change_state (GstElement * element)
     case GST_STATE_PAUSED_TO_READY:
       break;
     case GST_STATE_READY_TO_NULL:
+      if (element->bus) {
+        gst_bus_set_flushing (element->bus, TRUE);
+      }
       break;
   }
 

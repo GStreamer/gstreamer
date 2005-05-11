@@ -37,6 +37,12 @@ G_BEGIN_DECLS
 #define GST_BUS_GET_CLASS(bus)    (G_TYPE_INSTANCE_GET_CLASS ((bus), GST_TYPE_BUS, GstBusClass))
 #define GST_BUS_CAST(bus)         ((GstBus*)(bus))
 
+typedef enum {
+  GST_BUS_FLUSHING		= GST_OBJECT_FLAG_LAST,
+
+  GST_BUS_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 1
+} GstBusFlags;
+
 typedef enum
 {
   GST_BUS_DROP = 0,             /* drop message */
@@ -82,6 +88,7 @@ gboolean 		gst_bus_post 			(GstBus * bus, GstMessage * message);
 gboolean 		gst_bus_have_pending 		(GstBus * bus);
 GstMessage *		gst_bus_peek 			(GstBus * bus);
 GstMessage *		gst_bus_pop 			(GstBus * bus);
+void			gst_bus_set_flushing		(GstBus * bus, gboolean flushing);
 
 void 			gst_bus_set_sync_handler 	(GstBus * bus, GstBusSyncHandler func,
     							 gpointer data);

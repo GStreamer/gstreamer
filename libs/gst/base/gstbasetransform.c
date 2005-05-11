@@ -236,9 +236,9 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH:
       if (GST_EVENT_FLUSH_DONE (event)) {
+        GST_STREAM_LOCK (pad);
+        unlock = TRUE;
       }
-      GST_STREAM_LOCK (pad);
-      unlock = TRUE;
       break;
     case GST_EVENT_EOS:
       GST_STREAM_LOCK (pad);

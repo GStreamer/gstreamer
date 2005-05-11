@@ -323,7 +323,7 @@ gst_fakesink_render (GstBaseSink * bsink, GstBuffer * buf)
   }
   if (sink->signal_handoffs)
     g_signal_emit (G_OBJECT (sink), gst_fakesink_signals[SIGNAL_HANDOFF], 0,
-        buf);
+        buf, bsink->sinkpad);
 
   if (sink->dump) {
     gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));

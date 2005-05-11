@@ -1,3 +1,29 @@
+2005-05-10  Andy Wingo  <wingo@pobox.com>
+
+	* gst/elements/gstfakesink.c (gst_fakesink_render): Er, emit with
+	*all* the arguments.
+
+	* gst/base/gstbasetransform.c (gst_base_transform_event): Grab the
+	stream lock if it's a FLUSH_DONE; normal flushes don't get the
+	lock (according to the docs -- if this is wrong change the docs).
+
+	* gst/gstpipeline.c (gst_pipeline_change_state): Set the bus to
+	flush messages in the NULL state.
+
+	* gst/gstbus.c (gst_bus_post): If a bus is flushing, unref the
+	message immediately and return.
+	(gst_bus_set_flushing): New function. If a bus is flushing, it
+	flushes out any queued messages and immediately unrefs new
+	messages. This is so when an element goes to NULL, all of the
+	unhandled messages coming from it can be freed, and their
+	references to the element dropped. In other words: message source
+	ref considered harmful :P
+
+	* gst/gstbin.c (gst_bin_change_state): Unref peer element when
+	we're finished with it.
+
+	* gst/gstmessage.c (gst_message_new_state_changed): 
+
 2005-05-10  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstvalue.c: (gst_value_compare_flags),
