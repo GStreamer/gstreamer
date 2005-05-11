@@ -1,5 +1,30 @@
 2005-05-11  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/README:
+	* gst/rtsp/gstrtspsrc.c: (gst_rtsp_proto_get_type),
+	(gst_rtspsrc_class_init), (gst_rtspsrc_create_stream),
+	(gst_rtspsrc_add_element), (gst_rtspsrc_set_state),
+	(gst_rtspsrc_stream_setup_rtp),
+	(gst_rtspsrc_stream_configure_transport), (find_stream),
+	(gst_rtspsrc_loop), (gst_rtspsrc_open), (gst_rtspsrc_play):
+	* gst/rtsp/rtsp.h:
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_create),
+	(rtsp_connection_send), (read_line), (parse_request_line),
+	(parse_line), (read_body), (rtsp_connection_receive),
+	(rtsp_connection_free):
+	* gst/rtsp/rtspconnection.h:
+	* gst/rtsp/rtspdefs.c: (rtsp_find_method):
+	* gst/rtsp/rtspdefs.h:
+	* gst/rtsp/rtspmessage.c: (rtsp_message_set_body),
+	(rtsp_message_take_body):
+	* gst/rtsp/rtspmessage.h:
+	* gst/rtsp/rtspstream.h:
+	* gst/rtsp/sdpmessage.c: (sdp_parse_line):
+	Added README
+	Some cleanups.
+
+2005-05-11  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtsp_proto_get_type),
 	(gst_rtspsrc_class_init), (gst_rtspsrc_init),
 	(gst_rtspsrc_create_stream), (gst_rtspsrc_add_element),
