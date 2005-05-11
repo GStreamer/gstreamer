@@ -154,12 +154,15 @@ static void gst_mad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static gboolean gst_mad_src_event (GstPad * pad, GstEvent * event);
+
+#if 0
 static const GstFormat *gst_mad_get_formats (GstPad * pad);
+#endif
+
 static const GstEventMask *gst_mad_get_event_masks (GstPad * pad);
 static const GstQueryType *gst_mad_get_query_types (GstPad * pad);
 
-static gboolean gst_mad_src_query (GstPad * pad, GstQueryType type,
-    GstFormat * format, gint64 * value);
+static gboolean gst_mad_src_query (GstPad * pad, GstQuery * query);
 static gboolean gst_mad_convert_sink (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 static gboolean gst_mad_convert_src (GstPad * pad, GstFormat src_format,
@@ -327,28 +330,32 @@ gst_mad_init (GstMad * mad)
   gst_pad_set_chain_function (mad->sinkpad, GST_DEBUG_FUNCPTR (gst_mad_chain));
   gst_pad_set_event_function (mad->sinkpad,
       GST_DEBUG_FUNCPTR (gst_mad_sink_event));
+#if 0
   gst_pad_set_convert_function (mad->sinkpad,
       GST_DEBUG_FUNCPTR (gst_mad_convert_sink));
   gst_pad_set_formats_function (mad->sinkpad,
       GST_DEBUG_FUNCPTR (gst_mad_get_formats));
-
+#endif
   mad->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&mad_src_template_factory), "src");
   gst_element_add_pad (GST_ELEMENT (mad), mad->srcpad);
   gst_pad_set_event_function (mad->srcpad,
       GST_DEBUG_FUNCPTR (gst_mad_src_event));
+#if 0
   gst_pad_set_event_mask_function (mad->srcpad,
       GST_DEBUG_FUNCPTR (gst_mad_get_event_masks));
+#endif
   gst_pad_set_query_function (mad->srcpad,
       GST_DEBUG_FUNCPTR (gst_mad_src_query));
   gst_pad_set_query_type_function (mad->srcpad,
       GST_DEBUG_FUNCPTR (gst_mad_get_query_types));
+#if 0
   gst_pad_set_convert_function (mad->srcpad,
       GST_DEBUG_FUNCPTR (gst_mad_convert_src));
   gst_pad_set_formats_function (mad->srcpad,
       GST_DEBUG_FUNCPTR (gst_mad_get_formats));
-
+#endif
   mad->tempbuffer = g_malloc (MAD_BUFFER_MDLEN * 3);
   mad->tempsize = 0;
   mad->base_byte_offset = 0;
@@ -400,6 +407,7 @@ gst_mad_get_index (GstElement * element)
   return mad->index;
 }
 
+#if 0
 static const GstFormat *
 gst_mad_get_formats (GstPad * pad)
 {
@@ -417,6 +425,7 @@ gst_mad_get_formats (GstPad * pad)
 
   return (GST_PAD_IS_SRC (pad) ? src_formats : sink_formats);
 }
+#endif
 
 static const GstEventMask *
 gst_mad_get_event_masks (GstPad * pad)
@@ -548,15 +557,43 @@ gst_mad_get_query_types (GstPad * pad)
 }
 
 static gboolean
-gst_mad_src_query (GstPad * pad, GstQueryType type,
-    GstFormat * format, gint64 * value)
+gst_mad_src_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = TRUE;
   GstMad *mad;
 
   mad = GST_MAD (GST_PAD_PARENT (pad));
 
-  switch (type) {
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+    {
+      GstFormat format;
+      gint64 cur, total;
+
+      /* query peer for total length */
+      if (!gst_pad_query (GST_PAD_PEER (mad->sinkpad), query))
+        goto error;
+
+      gst_query_parse_position (query, &format, NULL, &total);
+
+      /* and convert to the final format */
+      if (format != GST_FORMAT_DEFAULT) {
+        if (!gst_mad_convert_src (pad, GST_FORMAT_DEFAULT, mad->total_samples,
+                &format, &cur))
+          goto error;
+      } else {
+        cur = mad->total_samples;
+      }
+
+      gst_query_set_position (query, format, cur, total);
+
+      GST_LOG_OBJECT (mad,
+          "position query: peer returned total: %llu - we return %llu (format %u)",
+          total, cur, format);
+
+      break;
+    }
+#if 0
     case GST_QUERY_TOTAL:
     {
       switch (*format) {
@@ -609,11 +646,17 @@ gst_mad_src_query (GstPad * pad, GstQueryType type,
         }
       }
       break;
+#endif
     default:
       res = FALSE;
       break;
   }
   return res;
+
+error:
+
+  GST_DEBUG ("error handling query");
+  return FALSE;
 }
 
 static gboolean
@@ -640,7 +683,11 @@ index_seek (GstMad * mad, GstPad * pad, GstEvent * event)
   if (!entry)
     return FALSE;
 
+#if 0
   peer_formats = gst_pad_get_formats (GST_PAD_PEER (mad->sinkpad));
+#else
+  peer_formats = try_all_formats;       /* FIXME */
+#endif
 
   while (gst_formats_contains (peer_formats, *try_formats)) {
     gint64 value;
@@ -675,33 +722,52 @@ index_seek (GstMad * mad, GstPad * pad, GstEvent * event)
 static gboolean
 normal_seek (GstMad * mad, GstPad * pad, GstEvent * event)
 {
-  gint64 src_offset;
-  gboolean flush;
+  GstQuery *query;
+  gint64 time_offset, bytes_offset;
   GstFormat format;
-  const GstFormat *peer_formats;
+  guint flush;
+
+  /* const GstFormat *peer_formats; */
   gboolean res;
 
   GST_DEBUG ("normal seek");
 
   format = GST_FORMAT_TIME;
-
-  /* first bring the src_format to TIME */
-  if (!gst_pad_convert (pad,
-          GST_EVENT_SEEK_FORMAT (event), GST_EVENT_SEEK_OFFSET (event),
-          &format, &src_offset)) {
-    /* didn't work, probably unsupported seek format then */
-    return FALSE;
+  if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_TIME) {
+    if (!gst_mad_convert_src (pad, GST_EVENT_SEEK_FORMAT (event),
+            GST_EVENT_SEEK_OFFSET (event), &format, &time_offset)) {
+      /* probably unsupported seek format */
+      GST_DEBUG ("failed to convert format %u into GST_FORMAT_TIME",
+          GST_EVENT_SEEK_FORMAT (event));
+      return FALSE;
+    }
+  } else {
+    time_offset = GST_EVENT_SEEK_OFFSET (event);
   }
 
-  GST_DEBUG ("seek to time %" GST_TIME_FORMAT, GST_TIME_ARGS (src_offset));
+  GST_DEBUG ("seek to time %" GST_TIME_FORMAT, GST_TIME_ARGS (time_offset));
+
   /* shave off the flush flag, we'll need it later */
   flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
 
   /* assume the worst */
   res = FALSE;
 
-  peer_formats = gst_pad_get_formats (GST_PAD_PEER (mad->sinkpad));
+  format = GST_FORMAT_BYTES;
+  if (gst_mad_convert_sink (pad, GST_FORMAT_TIME, time_offset,
+          &format, &bytes_offset)) {
+    GstEvent *seek_event;
 
+    /* conversion succeeded, create the seek */
+    seek_event =
+        gst_event_new_seek (format | GST_EVENT_SEEK_METHOD (event) | flush,
+        bytes_offset);
+
+    /* do the seek */
+    res = gst_pad_send_event (GST_PAD_PEER (mad->sinkpad), seek_event);
+  }
+#if 0
+  peer_formats = gst_pad_get_formats (GST_PAD_PEER (mad->sinkpad));
   /* while we did not exhaust our seek formats without result */
   while (peer_formats && *peer_formats && !res) {
     gint64 desired_offset;
@@ -730,6 +796,7 @@ normal_seek (GstMad * mad, GstPad * pad, GstEvent * event)
 
     peer_formats++;
   }
+#endif
 
   return res;
 }
@@ -895,9 +962,10 @@ gst_mad_sink_event (GstPad * pad, GstEvent * event)
       mad->total_samples = 0;
 
       for (i = 0; i < n; i++) {
-        const GstFormat *formats;
-
+        const GstFormat formats[] = { GST_FORMAT_BYTES, GST_FORMAT_TIME, 0 };
+#if 0
         formats = gst_pad_get_formats (pad);
+#endif
 
         if (gst_formats_contains (formats, GST_EVENT_DISCONT_OFFSET (event,
                     i).format)) {
@@ -911,7 +979,7 @@ gst_mad_sink_event (GstPad * pad, GstEvent * event)
           /* see how long the input bytes take */
           if (GST_EVENT_DISCONT_OFFSET (event, i).format != GST_FORMAT_TIME) {
             format = GST_FORMAT_TIME;
-            if (!gst_pad_convert (pad,
+            if (!gst_mad_convert_sink (pad,
                     GST_EVENT_DISCONT_OFFSET (event, i).format,
                     start_value, &format, &time)) {
               continue;
@@ -925,7 +993,7 @@ gst_mad_sink_event (GstPad * pad, GstEvent * event)
            * might contain this information already (although I believe
            * that this doesn't happen anywhere so far). */
           format = GST_FORMAT_DEFAULT;
-          if (!gst_pad_convert (mad->srcpad,
+          if (!gst_mad_convert_src (mad->srcpad,
                   GST_FORMAT_TIME, time, &format, &mad->total_samples)) {
             continue;
           }

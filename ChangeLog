@@ -1,3 +1,12 @@
+2005-05-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/mad/gstmad.c: (gst_mad_init), (gst_mad_src_query),
+	(index_seek), (normal_seek), (gst_mad_sink_event):
+	  Port to new query API and replace gst_pad_convert()
+	  and gst_pad_get_formats() usage. gstid3tag looks like
+	  it needs some more love before it will work again, if 
+	  not a rewrite.
+
 2005-05-12  Zeeshan Ali  <zeenix@gmail.com>
 
 	* gst/effectv/Makefile.am:
