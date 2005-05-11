@@ -637,7 +637,7 @@ gst_rtspsrc_open (GstRTSPSrc * src)
 
         new =
             g_strconcat (transports, transports[0] ? "," : "",
-            ",RTP/AVP/UDP;multicast", NULL);
+            "RTP/AVP/UDP;multicast", NULL);
         g_free (transports);
         transports = new;
       }
@@ -645,7 +645,7 @@ gst_rtspsrc_open (GstRTSPSrc * src)
         gchar *new;
 
         new =
-            g_strconcat (transports, transports[0] ? "," : "", ",RTP/AVP/TCP",
+            g_strconcat (transports, transports[0] ? "," : "", "RTP/AVP/TCP",
             NULL);
         g_free (transports);
         transports = new;

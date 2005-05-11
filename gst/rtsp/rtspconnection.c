@@ -20,6 +20,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <stdio.h>
+#include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -94,7 +95,7 @@ rtsp_connection_create (gint fd, RTSPConnection ** conn)
 {
   RTSPConnection *newconn;
 
-  /* FIXME check fd */
+  /* FIXME check fd, must be connected SOCK_STREAM */
 
   newconn = g_new (RTSPConnection, 1);
 
@@ -120,30 +121,70 @@ RTSPResult
 rtsp_connection_send (RTSPConnection * conn, RTSPMessage * message)
 {
   GString *str;
+  gint towrite;
+  gchar *data;
 
   if (conn == NULL || message == NULL)
     return RTSP_EINVAL;
 
   str = g_string_new ("");
 
+  /* create request string, add CSeq */
   g_string_append_printf (str, "%s %s RTSP/1.0\r\n"
       "CSeq: %d\r\n",
       rtsp_method_as_text (message->type_data.request.method),
       message->type_data.request.uri, conn->cseq);
 
+  /* append session id if we have one */
   if (conn->session_id[0] != '\0') {
     rtsp_message_add_header (message, RTSP_HDR_SESSION, conn->session_id);
   }
 
+  /* append headers */
   g_hash_table_foreach (message->hdr_fields, (GHFunc) append_header, str);
 
+  /* append Content-Length and body if needed */
+  if (message->body != NULL && message->body_size > 0) {
+    gchar *len;
 
-  g_string_append (str, "\r\n");
+    len = g_strdup_printf ("%d", message->body_size);
+    append_header (RTSP_HDR_CONTENT_LENGTH, len, str);
+    g_free (len);
+    /* header ends here */
+    g_string_append (str, "\r\n");
+    str = g_string_append_len (str, message->body, message->body_size);
+  } else {
+    /* just end headers */
+    g_string_append (str, "\r\n");
+  }
 
-  write (conn->fd, str->str, str->len);
+  /* write request */
+  towrite = str->len;
+  data = str->str;
+
+  while (towrite > 0) {
+    gint written;
+
+    written = write (conn->fd, data, towrite);
+    if (written < 0) {
+      if (errno != EAGAIN && errno != EINTR)
+        goto write_error;
+    } else {
+      towrite -= written;
+      data += written;
+    }
+  }
   g_string_free (str, TRUE);
 
+  conn->cseq++;
+
   return RTSP_OK;
+
+write_error:
+  {
+    g_string_free (str, TRUE);
+    return RTSP_ESYS;
+  }
 }
 
 static RTSPResult
@@ -151,29 +192,30 @@ read_line (gint fd, gchar * buffer, guint size)
 {
   gint idx;
   gchar c;
-  gint ret;
+  gint r;
 
   idx = 0;
   while (TRUE) {
-    ret = read (fd, &c, 1);
-    if (ret < 1)
-      goto error;
+    r = read (fd, &c, 1);
+    if (r < 1) {
+      if (errno != EAGAIN && errno != EINTR)
+        goto read_error;
+    } else {
+      if (c == '\n')            /* end on \n */
+        break;
+      if (c == '\r')            /* ignore \r */
+        continue;
 
-    if (c == '\n')              /* end on \n */
-      break;
-    if (c == '\r')              /* ignore \r */
-      continue;
-
-    if (idx < size - 1)
-      buffer[idx++] = c;
+      if (idx < size - 1)
+        buffer[idx++] = c;
+    }
   }
   buffer[idx] = '\0';
 
   return RTSP_OK;
 
-error:
+read_error:
   {
-    perror ("read");
     return RTSP_ESYS;
   }
 }
@@ -243,6 +285,43 @@ wrong_version:
 }
 
 static RTSPResult
+parse_request_line (gchar * buffer, RTSPMessage * msg)
+{
+  gchar versionstr[20];
+  gchar methodstr[20];
+  gchar urlstr[4096];
+  gchar *bptr;
+  RTSPMethod method;
+
+  bptr = buffer;
+
+  read_string (methodstr, sizeof (methodstr), &bptr);
+  method = rtsp_find_method (methodstr);
+  if (method == -1)
+    goto wrong_method;
+
+  read_string (urlstr, sizeof (urlstr), &bptr);
+
+  read_string (versionstr, sizeof (versionstr), &bptr);
+  if (strcmp (versionstr, "RTSP/1.0") != 0)
+    goto wrong_version;
+
+  rtsp_message_init_request (method, urlstr, msg);
+
+  return RTSP_OK;
+
+wrong_method:
+  {
+    return RTSP_EINVAL;
+  }
+wrong_version:
+  {
+    return RTSP_EINVAL;
+  }
+}
+
+/* parsing lines means reading a Key: Value pair */
+static RTSPResult
 parse_line (gchar * buffer, RTSPMessage * msg)
 {
   gchar key[32];
@@ -251,6 +330,7 @@ parse_line (gchar * buffer, RTSPMessage * msg)
 
   bptr = buffer;
 
+  /* read key */
   read_key (key, sizeof (key), &bptr);
   if (*bptr != ':')
     return RTSP_EINVAL;
@@ -259,7 +339,7 @@ parse_line (gchar * buffer, RTSPMessage * msg)
 
   field = rtsp_find_header_field (key);
   if (field == -1) {
-    g_warning ("unknown header field '%s'\n", key);
+    g_warning ("ignoring unknown header field '%s'\n", key);
   } else {
     while (g_ascii_isspace (*bptr))
       bptr++;
@@ -276,8 +356,9 @@ read_body (gint fd, glong content_length, RTSPMessage * msg)
   gint to_read, r;
 
   if (content_length <= 0) {
-    rtsp_message_set_body (msg, NULL, 0);
-    return RTSP_OK;
+    body = NULL;
+    content_length = 0;
+    goto done;
   }
 
   body = g_malloc (content_length);
@@ -285,14 +366,25 @@ read_body (gint fd, glong content_length, RTSPMessage * msg)
   to_read = content_length;
   while (to_read > 0) {
     r = read (fd, bodyptr, to_read);
-
-    to_read -= r;
-    bodyptr += r;
+    if (r < 0) {
+      if (errno != EAGAIN && errno != EINTR)
+        goto read_error;
+    } else {
+      to_read -= r;
+      bodyptr += r;
+    }
   }
 
+done:
   rtsp_message_set_body (msg, body, content_length);
 
   return RTSP_OK;
+
+read_error:
+  {
+    g_free (body);
+    return RTSP_ESYS;
+  }
 }
 
 RTSPResult
@@ -312,30 +404,36 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg)
 
   need_body = TRUE;
 
+  res = RTSP_OK;
   /* parse first line and headers */
-  while (TRUE) {
+  while (res == RTSP_OK) {
     gchar c;
     gint ret;
 
+    /* read first character, this identifies data messages */
     ret = read (conn->fd, &c, 1);
     if (ret < 0)
       goto read_error;
     if (ret < 1)
       break;
 
-    /* check for data packet */
+    /* check for data packet, first character is $ */
     if (c == '$') {
       guint16 size;
 
-      /* read channel */
+      /* data packets are $<1 byte channel><2 bytes length,BE><data bytes> */
+
+      /* read channel, which is the next char */
       ret = read (conn->fd, &c, 1);
       if (ret < 0)
         goto read_error;
       if (ret < 1)
         goto error;
 
+      /* now we create a data message */
       rtsp_message_init_data ((gint) c, msg);
 
+      /* next two bytes are the length of the data */
       ret = read (conn->fd, &size, 2);
       if (ret < 0)
         goto read_error;
@@ -344,12 +442,14 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg)
 
       size = GUINT16_FROM_BE (size);
 
-      read_body (conn->fd, size, msg);
+      /* and read the body */
+      res = read_body (conn->fd, size, msg);
       need_body = FALSE;
       break;
     } else {
       gint offset = 0;
 
+      /* we have a regular response */
       if (c != '\r') {
         buffer[0] = c;
         offset = 1;
@@ -358,46 +458,54 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg)
       if (c == '\n')
         break;
 
-      read_line (conn->fd, buffer + offset, sizeof (buffer) - offset);
+      /* read lines */
+      res = read_line (conn->fd, buffer + offset, sizeof (buffer) - offset);
+      if (res != RTSP_OK)
+        goto read_error;
 
       if (buffer[0] == '\0')
         break;
 
       if (line == 0) {
+        /* first line, check for response status */
         if (g_str_has_prefix (buffer, "RTSP")) {
-          parse_response_status (buffer, msg);
+          res = parse_response_status (buffer, msg);
         } else {
-          g_warning ("parsing request not implemented\n");
-          goto error;
+          res = parse_request_line (buffer, msg);
         }
       } else {
+        /* else just parse the line */
         parse_line (buffer, msg);
       }
     }
     line++;
   }
 
+  /* read the rest of the body if needed */
   if (need_body) {
-    /* parse body */
-    res = rtsp_message_get_header (msg, RTSP_HDR_CONTENT_LENGTH, &hdrval);
-    if (res == RTSP_OK) {
+    /* see if there is a Content-Length header */
+    if (rtsp_message_get_header (msg, RTSP_HDR_CONTENT_LENGTH,
+            &hdrval) == RTSP_OK) {
+      /* there is, read the body */
       content_length = atol (hdrval);
-      read_body (conn->fd, content_length, msg);
+      res = read_body (conn->fd, content_length, msg);
     }
 
-    /* save session id */
+    /* save session id in the connection for further use */
     {
       gchar *session_id;
 
       if (rtsp_message_get_header (msg, RTSP_HDR_SESSION,
               &session_id) == RTSP_OK) {
-        strncpy (conn->session_id, session_id, sizeof (conn->session_id) - 1);
-        conn->session_id[sizeof (conn->session_id) - 1] = '\0';
+        gint maxlen = sizeof (conn->session_id) - 1;
+
+        /* make sure to not overflow */
+        strncpy (conn->session_id, session_id, maxlen);
+        conn->session_id[maxlen] = '\0';
       }
     }
   }
-
-  return RTSP_OK;
+  return res;
 
 error:
   {
@@ -405,7 +513,6 @@ error:
   }
 read_error:
   {
-    perror ("read");
     return RTSP_ESYS;
   }
 }
@@ -429,4 +536,13 @@ sys_error:
   {
     return RTSP_ESYS;
   }
+}
+
+RTSPResult
+rtsp_connection_free (RTSPConnection * conn)
+{
+  if (conn == NULL)
+    return RTSP_EINVAL;
+
+  g_free (conn);
 }

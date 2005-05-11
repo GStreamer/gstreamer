@@ -73,13 +73,10 @@ RTSPResult	rtsp_message_free		(RTSPMessage *msg);
 RTSPResult	rtsp_message_add_header		(RTSPMessage *msg, RTSPHeaderField field, gchar *value);
 RTSPResult	rtsp_message_remove_header	(RTSPMessage *msg, RTSPHeaderField field);
 RTSPResult	rtsp_message_get_header		(RTSPMessage *msg, RTSPHeaderField field, gchar **value);
-RTSPResult	rtsp_message_get_header_copy	(RTSPMessage *msg, RTSPHeaderField field, gchar **value);
 
 RTSPResult	rtsp_message_set_body		(RTSPMessage *msg, guint8 *data, guint size);
-RTSPResult	rtsp_message_set_body_copy	(RTSPMessage *msg, guint8 *data, guint size);
-
+RTSPResult	rtsp_message_take_body		(RTSPMessage *msg, guint8 *data, guint size);
 RTSPResult	rtsp_message_get_body		(RTSPMessage *msg, guint8 **data, guint *size);
-RTSPResult	rtsp_message_get_body_copy	(RTSPMessage *msg, guint8 **data, guint *size);
 
 RTSPResult	rtsp_message_dump		(RTSPMessage *msg);
 

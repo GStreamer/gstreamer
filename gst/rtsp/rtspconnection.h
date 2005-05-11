@@ -24,32 +24,29 @@
 
 #include <rtspdefs.h>
 #include <rtspurl.h>
-#include <rtspstream.h>
 #include <rtspmessage.h>
 
 G_BEGIN_DECLS
 
 typedef struct _RTSPConnection
 {
-  gint          fd;
+  gint          fd;			/* our socket */
 
-  gint 		cseq;
-  gchar		session_id[512];
+  gint 		cseq;			/* sequence number */
+  gchar		session_id[512];	/* session id */
   
-  RTSPState     state;
-
-  int           num_streams;
-  RTSPStream  **streams;
-  
+  RTSPState     state;			/* state of the connection */
 } RTSPConnection;
 
+/* opening/closing a connection */
 RTSPResult	rtsp_connection_open 	(RTSPUrl *url, RTSPConnection **conn);
 RTSPResult	rtsp_connection_create 	(gint fd, RTSPConnection **conn);
+RTSPResult	rtsp_connection_close 	(RTSPConnection *conn);
+RTSPResult	rtsp_connection_free 	(RTSPConnection *conn);
 
+/* sending/receiving messages */
 RTSPResult	rtsp_connection_send    (RTSPConnection *conn, RTSPMessage *message);
 RTSPResult	rtsp_connection_receive (RTSPConnection *conn, RTSPMessage *message);
-
-RTSPResult	rtsp_connection_close 	(RTSPConnection *conn);
 
 G_END_DECLS
 

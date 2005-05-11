@@ -23,7 +23,6 @@
 #include <rtspconnection.h>
 #include <rtspdefs.h>
 #include <rtspmessage.h>
-#include <rtspstream.h>
 #include <rtsptransport.h>
 #include <rtspurl.h>
 

@@ -1,0 +1,156 @@
+RTSP source 
+-----------
+
+The RTSP source establishes a connection to an RTSP server and sets up
+the UDP sources and RTP session handlers.
+
+An RTSP session is created as follows:
+
+- Parse RTSP URL:
+
+   ex:
+     rtsp://thread:5454/south-rtsp.mp3
+
+- Open a connection to the server with the url. All further conversation with
+  the server should be done with this connection. Each request/reply has
+  a CSeq number added to the header.
+
+- Send a DESCRIBE request for the url. We currently support a response in
+  SDP.
+
+  ex:
+
+    >> DESCRIBE rtsp://thread:5454/south-rtsp.mp3 RTSP/1.0
+    >> Accept: application/sdp
+    >> CSeq: 0
+    >>
+    << RTSP/1.0 200 OK
+    << Content-Length: 84
+    << Content-Type: application/sdp
+    << CSeq: 0
+    << Date: Wed May 11 13:09:37 2005 GMT
+    <<
+    << v=0
+    << o=- 0 0 IN IP4 192.168.1.1
+    << s=No Title
+    << m=audio 0 RTP/AVP 14
+    << a=control:streamid=0
+
+- Parse the SDP message, for each stream (m=) we create an GstRTPStream. We need
+  to allocate two local UDP ports for receiving the RTP and RTCP data because we
+  need to send the port numbers to the server in the next request.
+
+  In RTSPSrc we create two elements that can handle the udp://0.0.0.0:0 uri. This
+  will create an udp source element. We get the port number by getting the "port"
+  property of the element after setting the element to PAUSED.
+
+    +-----------------+
+    | +------------+  |
+    | | udpsrc0    |  |
+    | |  port=5000 |  |
+    | +------------+  |
+    | +------------+  |
+    | | udpsrc1    |  |
+    | |  port=5001 |  |
+    | +------------+  |
+    +-----------------+
+
+- Send a SETUP message to the server with the RTP ports. We get the setup URI from
+  the a= attribute in the SDP message. This can be an absolute URL or a relative
+  url.
+
+  ex:
+
+    >> SETUP rtsp://thread:5454/south-rtsp.mp3/streamid=0 RTSP/1.0
+    >> CSeq: 1
+    >> Transport: RTP/AVP/UDP;unicast;client_port=5000-5001,RTP/AVP/UDP;multicast,RTP/AVP/TCP
+    >>
+    << RTSP/1.0 200 OK
+    << Transport: RTP/AVP/UDP;unicast;client_port=5000-5001;server_port=6000-6001
+    << CSeq: 1
+    << Date: Wed May 11 13:21:43 2005 GMT
+    << Session: 5d5cb94413288ccd
+    <<
+
+  The client needs to send the local ports to the server along with the supported 
+  transport types. The server selects the final transport which it returns in the
+  Transport header field. The server also includes its ports where RTP and RTCP
+  messages can be sent to.
+
+  In the above example UDP was choosen as a transport. At this point the RTSPSrc element
+  will furter configure its elements to process this stream.
+
+  The RTSPSrc will create and connect an RTP session manager element and will
+  connect it to the src pads of the udp element. The data pad from the RTP session 
+  manager is ghostpadded to RTPSrc.
+  The RTCP pad of the rtpdec is routed to a new udpsink that sends data to the RTCP
+  port of the server as returned in the Transport: header field.
+
+    +---------------------------------------------+
+    | +------------+                              |
+    | | udpsrc0    |   +--------+                 |
+    | |  port=5000 ----- rtpdec --------------------
+    | +------------+   |        |                 |
+    | +------------+   |        |  +------------+ |
+    | | udpsrc1    ----- RTCP   ---- udpsink    | |
+    | |  port=5001 |   +--------+  |  port=6001 | |
+    | +------------+               +------------+ |
+    +---------------------------------------------+
+
+  The output type of rtpdec is configured as the media type specified in the SDP
+  message. 
+
+- All the elements are set to PAUSED/PLAYING and the PLAY RTSP message is
+  sent.
+
+    >> PLAY rtsp://thread:5454/south-rtsp.mp3 RTSP/1.0
+    >> CSeq: 2
+    >>
+    << RTSP/1.0 200 OK
+    << CSeq: 2
+    << Date: Wed May 11 13:21:43 2005 GMT
+    << Session: 5d5cb94413288ccd
+    <<
+
+- The udp source elements receive data from that point and the RTP/RTCP messages
+  are processed by the elements.
+
+- In the case of interleaved mode, the SETUP method yields:
+
+    >> SETUP rtsp://thread:5454/south-rtsp.mp3/streamid=0 RTSP/1.0
+    >> CSeq: 1
+    >> Transport: RTP/AVP/UDP;unicast;client_port=5000-5001,RTP/AVP/UDP;multicast,RTP/AVP/TCP
+    >>
+    << RTSP/1.0 200 OK
+    << Transport: RTP/AVP/TCP;interleaved=0-1
+    << CSeq: 1
+    << Date: Wed May 11 13:21:43 2005 GMT
+    << Session: 5d5cb94413288ccd
+    <<
+
+  This means that RTP/RTCP messages will be send on channel 0/1 respectively and that
+  the data will be received on the same connection as the RTSP connection.
+
+  At this point, we remove the UDP source elements as we don't need them anymore. We
+  setup the rtpdec session manager element though as follows:
+
+    +---------------------------------------------+
+    | +------------+                              |
+    | | _loop()    |   +--------+                 |
+    | |            ----- rtpdec --------------------
+    | |            |   |        |                 |
+    | |            |   |        |  +------------+ |
+    | |            ----- RTCP   ---- udpsink    | |
+    | |            |   +--------+  |  port=6001 | |
+    | +------------+               +------------+ |
+    +---------------------------------------------+
+
+  We start an interal task to start reading from the RTSP connection waiting
+  for data. The received data is then pushed to the rtpdec element.
+
+  When reading from the RTSP connection we receive data packets in the
+  following layout (see also RFC2326)
+
+    $<1 byte channel><2 bytes length, big endian><length bytes of data>
+
+  

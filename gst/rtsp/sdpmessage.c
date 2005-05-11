@@ -462,7 +462,7 @@ sdp_parse_line (SDPContext * c, gchar type, guint8 * buffer)
   switch (type) {
     case 'v':
       if (buffer[0] != '0')
-        g_print ("wrong SDP version\n");
+        g_warning ("wrong SDP version");
       sdp_message_set_version (c->msg, buffer);
       break;
     case 'o':
@@ -550,11 +550,9 @@ sdp_parse_line (SDPContext * c, gchar type, guint8 * buffer)
         sdp_media_add_format (&nmedia, str);
       } while (*p != '\0');
 
-      g_print ("%p\n", &nmedia);
       sdp_message_add_media (c->msg, &nmedia);
       c->media =
           &g_array_index (c->msg->medias, SDPMedia, c->msg->medias->len - 1);
-      g_print ("%p\n", c->media);
       break;
     }
     default:

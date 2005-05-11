@@ -161,24 +161,16 @@ rtsp_message_get_header (RTSPMessage * msg, RTSPHeaderField field,
 }
 
 RTSPResult
-rtsp_message_get_header_copy (RTSPMessage * msg, RTSPHeaderField field,
-    gchar ** value)
+rtsp_message_set_body (RTSPMessage * msg, guint8 * data, guint size)
 {
-  gchar *val;
-
-  if (msg == NULL || value == NULL)
+  if (msg == NULL)
     return RTSP_EINVAL;
 
-  val = g_hash_table_lookup (msg->hdr_fields, GINT_TO_POINTER (field));
-
-  *value = g_strdup (val);
-
-  return RTSP_OK;
+  return rtsp_message_take_body (msg, g_memdup (data, size), size);
 }
 
-
 RTSPResult
-rtsp_message_set_body (RTSPMessage * msg, guint8 * data, guint size)
+rtsp_message_take_body (RTSPMessage * msg, guint8 * data, guint size)
 {
   if (msg == NULL)
     return RTSP_EINVAL;
@@ -193,31 +185,12 @@ rtsp_message_set_body (RTSPMessage * msg, guint8 * data, guint size)
 }
 
 RTSPResult
-rtsp_message_set_body_copy (RTSPMessage * msg, guint8 * data, guint size)
-{
-  return RTSP_ENOTIMPL;
-}
-
-
-RTSPResult
 rtsp_message_get_body (RTSPMessage * msg, guint8 ** data, guint * size)
 {
   if (msg == NULL || data == NULL || size == NULL)
     return RTSP_EINVAL;
 
   *data = msg->body;
-  *size = msg->body_size;
-
-  return RTSP_OK;
-}
-
-RTSPResult
-rtsp_message_get_body_copy (RTSPMessage * msg, guint8 ** data, guint * size)
-{
-  if (msg == NULL || data == NULL || size == NULL)
-    return RTSP_EINVAL;
-
-  *data = g_memdup (msg->body, msg->body_size);
   *size = msg->body_size;
 
   return RTSP_OK;

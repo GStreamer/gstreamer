@@ -169,3 +169,16 @@ rtsp_find_header_field (gchar * header)
   }
   return -1;
 }
+
+RTSPMethod
+rtsp_find_method (gchar * method)
+{
+  gint idx;
+
+  for (idx = 0; rtsp_methods[idx]; idx++) {
+    if (g_ascii_strcasecmp (rtsp_headers[idx], method) == 0) {
+      return idx;
+    }
+  }
+  return -1;
+}
