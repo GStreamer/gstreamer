@@ -852,8 +852,15 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
           GST_DEBUG_PAD_NAME (srcpad));
       if ((GST_PAD_DIRECTION (srcpad) == GST_PAD_SRC) &&
           (GST_PAD_PEER (srcpad) == NULL)) {
-        GstPad *temp = destpadname ? destpad :
-            gst_element_get_compatible_pad (dest, srcpad, NULL);
+        GstPad *temp;
+
+        if (destpadname) {
+          temp = destpad;
+          gst_object_ref (GST_OBJECT (temp));
+        } else {
+          temp = gst_element_get_compatible_pad (dest, srcpad, NULL);
+          gst_object_ref (GST_OBJECT (temp));
+        }
 
         if (temp && gst_pad_link (srcpad, temp) == GST_PAD_LINK_OK) {
           GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "linked pad %s:%s to pad %s:%s",
@@ -884,7 +891,8 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
       gst_object_unref (GST_OBJECT (destpad));
     return FALSE;
   } else {
-    gst_object_unref (GST_OBJECT (srcpad));
+    if (srcpad)
+      gst_object_unref (GST_OBJECT (srcpad));
     srcpad = NULL;
   }
   if (destpad) {

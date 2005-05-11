@@ -453,7 +453,8 @@ gst_element_get_index (GstElement * element)
  * Adds a pad (link point) to @element. @pad's parent will be set to @element;
  * see gst_object_set_parent() for refcounting information.
  *
- * Pads are automatically activated when the element is in state PLAYING.
+ * Pads are not automatically activated so elements should perform the needed
+ * steps to activate the pad. 
  *
  * The pad and the element should be unlocked when calling this function.
  *
@@ -507,13 +508,6 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
   element->numpads++;
   element->pads_cookie++;
   GST_UNLOCK (element);
-
-  GST_STATE_LOCK (element);
-  /* activate pad when we are playing */
-  if (GST_STATE (element) == GST_STATE_PLAYING)
-    /* FIXME, figure out mode */
-    gst_pad_set_active (pad, GST_ACTIVATE_PUSH);
-  GST_STATE_UNLOCK (element);
 
   /* emit the NEW_PAD signal */
   g_signal_emit (G_OBJECT (element), gst_element_signals[NEW_PAD], 0, pad);

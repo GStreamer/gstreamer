@@ -1,3 +1,15 @@
+2005-05-11  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstelement.c: (gst_element_add_pad), (gst_element_query):
+	* gst/gstutils.c: (gst_element_get_compatible_pad_template),
+	(gst_element_link_pads), (gst_element_query_position),
+	(gst_element_query_convert), (intersect_caps_func),
+	(gst_pad_query_position), (gst_pad_query_convert):
+	Fix refcounting in utils function.
+	No point in trying to activate a pad when it's added, it could
+	be added from the state change function and then we deadlock, the
+	element has to decide what to do.
+
 2005-05-10  Andy Wingo  <wingo@pobox.com>
 
 	* gst/elements/gstfakesink.c (gst_fakesink_render): Er, emit with
