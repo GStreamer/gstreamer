@@ -442,6 +442,7 @@ static GstFlowReturn
 vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
 {
   gchar *encoder = NULL;
+  GstMessage *message;
   GstTagList *list;
   GstBuffer *buf;
 
@@ -479,7 +480,8 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
         GST_TAG_MINIMUM_BITRATE, (guint) vd->vi.bitrate_lower, NULL);
 
-  //gst_element_found_tags_for_pad (GST_ELEMENT (vd), vd->srcpad, 0, list);
+  message = gst_message_new_tag ((GstObject *) vd, list);
+  gst_element_post_message (GST_ELEMENT (vd), message);
 
   return GST_FLOW_OK;
 }

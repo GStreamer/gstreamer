@@ -671,9 +671,11 @@ get_our_ghost_pad (GstDecodeBin * decode_bin, GstPad * pad)
 
     if (parent == GST_ELEMENT (decode_bin)) {
       GST_DEBUG_OBJECT (decode_bin, "pad is our ghostpad");
+      gst_object_unref (GST_OBJECT_CAST (parent));
       return pad;
     } else {
       GST_DEBUG_OBJECT (decode_bin, "pad is ghostpad but not ours");
+      gst_object_unref (GST_OBJECT_CAST (parent));
       return NULL;
     }
   }
@@ -702,7 +704,7 @@ static void
 remove_element_chain (GstDecodeBin * decode_bin, GstPad * pad)
 {
   GList *int_links;
-  GstElement *elem = gst_pad_get_parent (pad);
+  GstElement *elem = GST_ELEMENT (GST_OBJECT_PARENT (pad));
 
   while (GST_OBJECT_PARENT (elem) &&
       GST_OBJECT_PARENT (elem) != GST_OBJECT (decode_bin))
@@ -743,13 +745,18 @@ remove_element_chain (GstDecodeBin * decode_bin, GstPad * pad)
     GST_DEBUG_OBJECT (decode_bin, "internal pad %s:%s linked to pad %s:%s",
         GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer));
 
-    if (gst_pad_get_real_parent (peer) != GST_ELEMENT (decode_bin)) {
-      GST_DEBUG_OBJECT (decode_bin, "dead end pad %s:%s",
-          GST_DEBUG_PAD_NAME (peer));
-    } else {
-      GST_DEBUG_OBJECT (decode_bin, "recursing element %s on pad %s:%s",
-          gst_element_get_name (elem), GST_DEBUG_PAD_NAME (pad));
-      remove_element_chain (decode_bin, peer);
+    {
+      GstElement *parent = gst_pad_get_real_parent (peer);
+
+      if (parent != GST_ELEMENT (decode_bin)) {
+        GST_DEBUG_OBJECT (decode_bin, "dead end pad %s:%s",
+            GST_DEBUG_PAD_NAME (peer));
+      } else {
+        GST_DEBUG_OBJECT (decode_bin, "recursing element %s on pad %s:%s",
+            gst_element_get_name (elem), GST_DEBUG_PAD_NAME (pad));
+        remove_element_chain (decode_bin, peer);
+      }
+      gst_object_unref (GST_OBJECT_CAST (parent));
     }
   }
   GST_DEBUG_OBJECT (decode_bin, "removing %s", gst_element_get_name (elem));

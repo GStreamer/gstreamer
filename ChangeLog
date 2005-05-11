@@ -1,3 +1,13 @@
+2005-05-10  Andy Wingo  <wingo@pobox.com>
+
+	* ext/vorbis/vorbisdec.c (vorbis_handle_comment_packet): Post a
+	message to the bus with the tags. Still not sent downstream tho.
+
+	* gst/playback/gstdecodebin.c (remove_element_chain): Unref after
+	get_parent.
+	(remove_element_chain): Use OBJECT_PARENT instead of get_parent to
+	avoid refcounting hassles.
+
 2005-05-09  Andy Wingo  <wingo@pobox.com>
 
 	* gst/volume/Makefile.am:
