@@ -1,4 +1,4 @@
-2005-05-11  Luca Ognibene  <luogni@luogni@tin.it>
+2005-05-11  Luca Ognibene  <luogni@tin.it>
 
 	* ext/ffmpeg/gstffmpegenc.c (gst_ffmpegenc_chain_video): 
 	* ext/ffmpeg/gstffmpegdec.c (gst_ffmpegdec_chain): 
