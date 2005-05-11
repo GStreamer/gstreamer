@@ -1,3 +1,8 @@
+2005-05-12  Zeeshan Ali  <zeenix@gmail.com>
+
+	* gst/effectv/Makefile.am:
+	Fixed the effectv build again.
+
 2005-05-11  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/Makefile.am:
