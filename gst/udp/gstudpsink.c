@@ -161,26 +161,27 @@ static GstFlowReturn
 gst_udpsink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
   GstUDPSink *udpsink;
-  guint tolen, i;
   gint tosend;
   guint8 *data;
 
   udpsink = GST_UDPSINK (sink);
-
-  tolen = sizeof (udpsink->theiraddr);
 
   tosend = GST_BUFFER_SIZE (buffer);
   data = GST_BUFFER_DATA (buffer);
 
   /* send in chunks of MTU */
   while (tosend > 0) {
-    if (sendto (udpsink->sock, data, udpsink->mtu,
-            0, (struct sockaddr *) &udpsink->theiraddr, tolen) == -1) {
+    gint psize;
+
+    psize = MIN (udpsink->mtu, tosend);
+    if (sendto (udpsink->sock, data, psize, 0,
+            (struct sockaddr *) &udpsink->theiraddr,
+            sizeof (udpsink->theiraddr)) == -1) {
       perror ("sending");
     }
 
-    data += udpsink->mtu;
-    tosend -= udpsink->mtu;
+    data += psize;
+    tosend -= psize;
   }
 
   return GST_FLOW_OK;

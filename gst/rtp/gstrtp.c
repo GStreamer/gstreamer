@@ -1,4 +1,4 @@
-/* Gnome-Streamer
+/* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
  * This library is free software; you can redistribute it and/or
@@ -21,18 +21,12 @@
 #include "config.h"
 #endif
 
-#include "gstrtpL16enc.h"
-#include "gstrtpL16parse.h"
-#include "gstrtpgsmenc.h"
-#include "gstrtpgsmparse.h"
+#include "gstrtpdec.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_rtpL16enc_plugin_init (plugin) ||
-      !gst_rtpL16parse_plugin_init (plugin) ||
-      !gst_rtpgsmenc_plugin_init (plugin) ||
-      !gst_rtpgsmparse_plugin_init (plugin))
+  if (!gst_rtpdec_plugin_init (plugin))
     return FALSE;
 
   return TRUE;

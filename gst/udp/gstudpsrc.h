@@ -56,11 +56,18 @@ struct _GstUDPSrc {
   GstElement element;
 
   /* pads */
-  GstPad *sinkpad,*srcpad;
+  GstPad *sinkpad,
+	 *srcpad;
+
+  gchar *uri;
 
   int port;
   int sock;
   gchar *multi_group;
+  gboolean multicast;
+  gint ttl;
+
+  int control;
 
   struct sockaddr_in myaddr;
   struct ip_mreq multi_addr;
