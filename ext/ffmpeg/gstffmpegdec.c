@@ -944,11 +944,10 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
     /* parse, if at all possible */
     if (ffmpegdec->pctx) {
       gint res;
-      gint64 ffpts = AV_NOPTS_VALUE;
+      gint64 ffpts;
+      
+      ffpts = gst_ffmpeg_pts_gst_to_ffmpeg (in_ts);
 
-      if (GST_CLOCK_TIME_IS_VALID (in_ts))
-	ffpts = in_ts / (GST_SECOND / AV_TIME_BASE);
-    
       res = av_parser_parse (ffmpegdec->pctx, ffmpegdec->context,
           &data, &size, bdata, bsize,
           ffpts, ffpts);
@@ -956,8 +955,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
       GST_DEBUG_OBJECT (ffmpegdec, "Parsed video frame, res=%d, size=%d",
           res, size);
       
-      if (ffmpegdec->pctx->pts != AV_NOPTS_VALUE)
-        in_ts = ffmpegdec->pctx->pts * (GST_SECOND / AV_TIME_BASE);
+      in_ts = gst_ffmpeg_pts_ffmpeg_to_gst (ffmpegdec->pctx->pts);
 
       if (res == 0 || size == 0)
         break;
@@ -1005,9 +1003,6 @@ gst_ffmpegdec_change_state (GstElement * element)
       if (ffmpegdec->last_buffer != NULL) {
 	gst_buffer_unref (ffmpegdec->last_buffer);
       }
-
-      /* closing context.. unref buffers? */
-      
       gst_ffmpegdec_close (ffmpegdec);
       break;
   }

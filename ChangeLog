@@ -1,3 +1,14 @@
+2005-05-11  Luca Ognibene  <luogni@luogni@tin.it>
+
+	* ext/ffmpeg/gstffmpegenc.c (gst_ffmpegenc_chain_video): 
+	* ext/ffmpeg/gstffmpegdec.c (gst_ffmpegdec_chain): 
+	  Makes ffmpegdec and ffmpegenc use these functions
+	  and remove a comment from a previuos patch
+
+	* ext/ffmpeg/gstffmpegcodecmap.h: 
+	  Add two utility functions to convert the pts from/to
+	  the ffmpeg format
+
 2005-05-06  Luca Ognibene  <luogni@tin.it>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>

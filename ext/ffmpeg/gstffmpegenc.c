@@ -468,7 +468,7 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data)
       ffmpegenc->context->width, ffmpegenc->context->height);
   g_return_if_fail (frame_size == GST_BUFFER_SIZE (inbuf));
 
-  ffmpegenc->picture->pts = GST_BUFFER_TIMESTAMP (inbuf) / 1000;
+  ffmpegenc->picture->pts = gst_ffmpeg_pts_gst_to_ffmpeg (GST_BUFFER_TIMESTAMP (inbuf));
 
   outbuf = gst_buffer_new_and_alloc (ffmpegenc->buffer_size);
   ret_size = avcodec_encode_video (ffmpegenc->context,
