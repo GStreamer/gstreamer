@@ -1,3 +1,28 @@
+2005-05-11  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpdec.c: (gst_rtpdec_get_type),
+	(gst_rtpdec_class_init), (gst_rtpdec_init), (gst_rtpdec_chain_rtp),
+	(gst_rtpdec_chain_rtcp), (gst_rtpdec_set_property),
+	(gst_rtpdec_get_property), (gst_rtpdec_change_state),
+	(gst_rtpdec_plugin_init):
+	* gst/rtp/gstrtpdec.h:
+	* gst/udp/gstudpsink.c: (gst_udpsink_base_init),
+	(gst_udpsink_get_times), (gst_udpsink_render),
+	(gst_udpsink_change_state):
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_get_type),
+	(gst_udpsrc_base_init), (gst_udpsrc_class_init), (gst_udpsrc_init),
+	(gst_udpsrc_loop), (gst_udpsrc_set_uri), (gst_udpsrc_set_property),
+	(gst_udpsrc_get_property), (gst_udpsrc_init_receive),
+	(gst_udpsrc_activate), (gst_udpsrc_change_state),
+	(gst_udpsrc_uri_get_type), (gst_udpsrc_uri_get_protocols),
+	(gst_udpsrc_uri_get_uri), (gst_udpsrc_uri_set_uri),
+	(gst_udpsrc_uri_handler_init):
+	* gst/udp/gstudpsrc.h:
+	UDP fixes, added uri handler.
+	Added rtpdec that will manage the RTP session in the future.
+
 2005-05-10  Arwed v. Merkatz  <v.merkatz@gmx.net>>
 
 	* PORTED_09:
