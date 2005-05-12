@@ -1,5 +1,12 @@
 2005-05-12  Wim Taymans  <wim@fluendo.com>
 
+	* configure.ac:
+	* ext/sidplay/gstsiddec.cc:
+	Add working plugins to build.
+	Make sidplay compile again.
+
+2005-05-12  Wim Taymans  <wim@fluendo.com>
+
 	* ext/mad/gstid3tag.c: (gst_id3_tag_src_query):
 	* ext/mad/gstmad.c: (gst_mad_chain):
 	Fix mad and id3tag compilation again.

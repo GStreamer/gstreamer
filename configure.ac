@@ -308,7 +308,11 @@ GST_PLUGINS_ALL="\
 		videofilter \
 		effectv \
 		law \
-		smpte"
+		rtp	\
+		rtsp	\
+		smpte	\
+		tcp	\
+		udp"
 
 dnl see if we can build C++ plug-ins
 if test "x$HAVE_CXX" = "xyes"; then
@@ -487,7 +491,11 @@ gst-plugins.spec
 gst/Makefile
 gst/effectv/Makefile
 gst/law/Makefile
+gst/rtp/Makefile
+gst/rtsp/Makefile
 gst/smpte/Makefile
+gst/tcp/Makefile
+gst/udp/Makefile
 gst/videofilter/Makefile
 sys/Makefile
 ext/Makefile
