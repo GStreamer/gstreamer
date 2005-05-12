@@ -1494,8 +1494,8 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         if (GST_CLOCK_TIME_IS_VALID (mad->last_ts)) {
           GstFormat format = GST_FORMAT_DEFAULT;
 
-          gst_pad_convert (mad->srcpad, GST_FORMAT_TIME, mad->last_ts, &format,
-              &mad->total_samples);
+          gst_pad_query_convert (mad->srcpad, GST_FORMAT_TIME, mad->last_ts,
+              &format, &mad->total_samples);
           mad->last_ts = GST_CLOCK_TIME_NONE;
         }
         time_offset = mad->total_samples * GST_SECOND / mad->rate;

@@ -163,8 +163,7 @@ static gboolean gst_id3_tag_src_event (GstPad * pad, GstEvent * event);
 static const GstEventMask *gst_id3_tag_get_event_masks (GstPad * pad);
 static const GstQueryType *gst_id3_tag_get_query_types (GstPad * pad);
 
-static gboolean gst_id3_tag_src_query (GstPad * pad,
-    GstQueryType type, GstFormat * format, gint64 * value);
+static gboolean gst_id3_tag_src_query (GstPad * pad, GstQuery * query);
 
 static gboolean gst_id3_tag_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer);
@@ -429,24 +428,34 @@ gst_id3_tag_get_query_types (GstPad * pad)
 }
 
 static gboolean
-gst_id3_tag_src_query (GstPad * pad, GstQueryType type,
-    GstFormat * format, gint64 * value)
+gst_id3_tag_src_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = FALSE;
   GstID3Tag *tag;
 
   tag = GST_ID3_TAG (gst_pad_get_parent (pad));
 
-  switch (type) {
-    case GST_QUERY_TOTAL:{
-      switch (*format) {
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:{
+      GstFormat format;
+      gint64 current, total;
+
+      gst_query_parse_position (query, &format, NULL, NULL);
+      switch (format) {
         case GST_FORMAT_BYTES:
           if (GST_PAD_PEER (tag->sinkpad) &&
               tag->state == GST_ID3_TAG_STATE_NORMAL &&
-              gst_pad_query (GST_PAD_PEER (tag->sinkpad), GST_QUERY_TOTAL,
-                  format, value)) {
-            *value -= tag->v2tag_size + tag->v1tag_size;
-            *value += tag->v2tag_size_new + tag->v1tag_size_new;
+              gst_pad_query_position (GST_PAD_PEER (tag->sinkpad),
+                  &format, &current, &total)) {
+            total -= tag->v2tag_size + tag->v1tag_size;
+            total += tag->v2tag_size_new + tag->v1tag_size_new;
+            if (tag->state == GST_ID3_TAG_STATE_NORMAL) {
+              current -= tag->v2tag_size + tag->v2tag_size_new;
+            } else {
+              current = 0;
+            }
+            gst_query_set_position (query, format, current, total);
+
             res = TRUE;
           }
           break;
@@ -455,24 +464,6 @@ gst_id3_tag_src_query (GstPad * pad, GstQueryType type,
       }
       break;
     }
-    case GST_QUERY_POSITION:
-      switch (*format) {
-        case GST_FORMAT_BYTES:
-          if (GST_PAD_PEER (tag->sinkpad) &&
-              gst_pad_query (GST_PAD_PEER (tag->sinkpad), GST_QUERY_POSITION,
-                  format, value)) {
-            if (tag->state == GST_ID3_TAG_STATE_NORMAL) {
-              *value -= tag->v2tag_size + tag->v2tag_size_new;
-            } else {
-              *value = 0;
-            }
-            res = TRUE;
-          }
-          break;
-        default:
-          break;
-      }
-      break;
     default:
       break;
   }
