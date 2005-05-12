@@ -1,3 +1,8 @@
+2005-05-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_activate_chain):
+	  Do no-more-pads (needed for autoplugging).
+
 2005-05-10  Andy Wingo  <wingo@pobox.com>
 
 	* ext/vorbis/vorbisdec.c (vorbis_handle_comment_packet): Post a

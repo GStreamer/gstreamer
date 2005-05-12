@@ -1171,6 +1171,7 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain)
       gst_pad_push (GST_PAD_CAST (pad), buffer);
     }
   }
+  gst_element_no_more_pads (GST_ELEMENT (ogg));
 
   ogg->current_chain = chain;
 
