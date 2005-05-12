@@ -78,8 +78,6 @@ struct _GstDecodeBinClass
   void (*removed_decoded_pad) (GstElement * element, GstPad * pad);
   /* signal fired when we found a pad that we cannot decode */
   void (*unknown_type) (GstElement * element, GstPad * pad, GstCaps * caps);
-  /* signal fired when we got a redirect attempt */
-  void (*got_redirect) (GstElement * element, const gchar * new_location);
 };
 
 #define DEFAULT_THREADED	FALSE
@@ -209,11 +207,6 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, unknown_type),
       NULL, NULL, gst_marshal_VOID__OBJECT_BOXED, G_TYPE_NONE, 2,
       GST_TYPE_PAD, GST_TYPE_CAPS);
-  gst_decode_bin_signals[SIGNAL_REDIRECT] =
-      g_signal_new ("got-redirect", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, got_redirect),
-      NULL, NULL, g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1,
-      G_TYPE_STRING);
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_decode_bin_dispose);
 
@@ -549,17 +542,6 @@ many_types:
   }
 }
 
-/*
- * Called when we're redirected to a new URI.
- */
-static void
-got_redirect (GstElement * element,
-    const gchar * new_location, GstDecodeBin * decode_bin)
-{
-  g_signal_emit (decode_bin, gst_decode_bin_signals[SIGNAL_REDIRECT], 0,
-      new_location);
-}
-
 /** 
  * given a list of element factories, try to link one of the factories
  * to the given pad.
@@ -623,11 +605,6 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
            * on encoded data from the muxer than on raw encoded streams
            * because that would consume less memory. */
         }
-      }
-      /* catch redirects */
-      if (g_signal_lookup ("got-redirect", G_OBJECT_TYPE (element))) {
-        g_signal_connect (element, "got-redirect",
-            G_CALLBACK (got_redirect), decode_bin);
       }
 
       /* make sure we catch unlink signals */

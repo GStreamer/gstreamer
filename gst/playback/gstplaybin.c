@@ -62,9 +62,6 @@ struct _GstPlayBin
   /* our cache for the sinks */
   GHashTable *cache;
 
-  /* boolean to see if we're currently switching groups */
-  gboolean group_switch;
-
   /* font description */
   gchar *font_desc;
 };
@@ -96,8 +93,8 @@ static void gst_play_bin_class_init (GstPlayBinClass * klass);
 static void gst_play_bin_init (GstPlayBin * play_bin);
 static void gst_play_bin_dispose (GObject * object);
 
-static void group_switch (GstPlayBaseBin * play_base_bin);
-static void setup_sinks (GstPlayBaseBin * play_base_bin);
+static void setup_sinks (GstPlayBaseBin * play_base_bin,
+    GstPlayBaseGroup * group);
 static void remove_sinks (GstPlayBin * play_bin);
 
 static void gst_play_bin_set_property (GObject * object, guint prop_id,
@@ -194,7 +191,6 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       GST_DEBUG_FUNCPTR (gst_play_bin_change_state);
 
   playbasebin_klass->setup_output_pads = setup_sinks;
-  playbasebin_klass->group_switch = group_switch;
 }
 
 static void
@@ -211,7 +207,6 @@ gst_play_bin_init (GstPlayBin * play_bin)
   play_bin->font_desc = NULL;
   play_bin->cache = g_hash_table_new_full (g_str_hash, g_str_equal,
       NULL, (GDestroyNotify) gst_object_unref);
-  play_bin->group_switch = FALSE;
 }
 
 static void
@@ -624,13 +619,6 @@ gen_vis_element (GstPlayBin * play_bin)
   return element;
 }
 
-/* set for group switch */
-static void
-group_switch (GstPlayBaseBin * play_base_bin)
-{
-  GST_PLAY_BIN (play_base_bin)->group_switch = TRUE;
-}
-
 /* get rid of all installed sinks */
 static void
 remove_sinks (GstPlayBin * play_bin)
@@ -640,7 +628,6 @@ remove_sinks (GstPlayBin * play_bin)
   GstElement *element;
 
   GST_DEBUG ("removesinks");
-  play_bin->group_switch = FALSE;
   element = g_hash_table_lookup (play_bin->cache, "abin");
   if (element != NULL) {
     parent = gst_element_get_parent (element);
@@ -730,10 +717,9 @@ add_sink (GstPlayBin * play_bin, GstElement * sink, GstPad * srcpad)
 }
 
 static void
-setup_sinks (GstPlayBaseBin * play_base_bin)
+setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
 {
   GstPlayBin *play_bin = GST_PLAY_BIN (play_base_bin);
-  GstPlayBaseGroup *group;
   GList *streaminfo = NULL, *s;
   gboolean need_vis = FALSE;
   gboolean need_text = FALSE;
@@ -747,7 +733,6 @@ setup_sinks (GstPlayBaseBin * play_base_bin)
   GST_DEBUG ("setupsinks");
 
   /* find out what to do */
-  group = play_base_bin->queued_groups->data;
   if (group->type[GST_STREAM_TYPE_VIDEO - 1].npads > 0 &&
       group->type[GST_STREAM_TYPE_TEXT - 1].npads > 0) {
     need_text = TRUE;
@@ -838,7 +823,7 @@ gst_play_bin_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       /* Set audio sink state to NULL to release the sound device,
        * but only if we own it (else we might be in chain-transition). */
-      //if (play_bin->audio_sink != NULL && !play_bin->group_switch &&
+      //if (play_bin->audio_sink != NULL &&
       //    GST_STATE (play_bin->audio_sink) == GST_STATE_PAUSED) {
       //  gst_element_set_state (play_bin->audio_sink, GST_STATE_NULL);
       //}

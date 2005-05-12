@@ -56,10 +56,7 @@ enum
 /* signals */
 enum
 {
-  SIGNAL_SETUP_OUTPUT_PADS,
   SIGNAL_BUFFERING,
-  SIGNAL_GROUP_SWITCH,
-  SIGNAL_REDIRECT,
   LAST_SIGNAL
 };
 
@@ -175,27 +172,11 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
       "playbasebin");
 
   /* signals */
-  gst_play_base_bin_signals[SIGNAL_SETUP_OUTPUT_PADS] =
-      g_signal_new ("setup-output-pads", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstPlayBaseBinClass, setup_output_pads),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
   gst_play_base_bin_signals[SIGNAL_BUFFERING] =
       g_signal_new ("buffering", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstPlayBaseBinClass, buffering),
       NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
-  gst_play_base_bin_signals[SIGNAL_GROUP_SWITCH] =
-      g_signal_new ("group-switch", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstPlayBaseBinClass, group_switch),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-  gst_play_base_bin_signals[SIGNAL_REDIRECT] =
-      g_signal_new ("got-redirect", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstPlayBaseBinClass, got_redirect),
-      NULL, NULL, g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1,
-      G_TYPE_STRING);
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_play_base_bin_dispose);
   gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_play_base_bin_finalize);
@@ -437,8 +418,8 @@ group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal, gboolean subtitle)
 
     setup_substreams (play_base_bin);
     GST_DEBUG ("Emitting signal");
-    g_signal_emit (play_base_bin,
-        gst_play_base_bin_signals[SIGNAL_SETUP_OUTPUT_PADS], 0);
+    GST_PLAY_BASE_BIN_GET_CLASS (play_base_bin)->
+        setup_output_pads (play_base_bin, group);
     GST_DEBUG ("done");
 
     GROUP_UNLOCK (play_base_bin);
@@ -846,13 +827,12 @@ probe_triggered (GstProbe * probe, GstData ** data, gpointer user_data)
         GST_DEBUG ("switching to next group %p - emitting signal",
             play_base_bin->queued_groups->data);
         /* and signal the new group */
-        g_signal_emit (play_base_bin,
-            gst_play_base_bin_signals[SIGNAL_SETUP_OUTPUT_PADS], 0);
+        GST_PLAY_BASE_BIN_GET_CLASS (play_base_bin)->
+            setup_output_pads (play_base_bin, group);
 
         GROUP_UNLOCK (play_base_bin);
 
-        g_signal_emit (play_base_bin,
-            gst_play_base_bin_signals[SIGNAL_GROUP_SWITCH], 0);
+        g_object_notify (G_OBJECT (play_base_bin), "streaminfo");
 
         /* get rid of the EOS event */
         return FALSE;
@@ -1122,18 +1102,6 @@ setup_substreams (GstPlayBaseBin * play_base_bin)
   }
 }
 
-/*
- * Called when we're redirected to a new URI.
- */
-static void
-got_redirect (GstElement * element, const gchar * new_location, gpointer data)
-{
-  gchar **location = data;
-
-  if (!*location)
-    *location = g_strdup (new_location);
-}
-
 /* construct and run the source and decoder elements until we found
  * all the streams or until a preroll queue has been filled.
 */
@@ -1328,8 +1296,6 @@ setup_source (GstPlayBaseBin * play_base_bin,
 
   /* set up callbacks to create the links between decoded data
    * and video/audio/subtitle rendering/output. */
-  g_signal_connect (play_base_bin->decoder, "got_redirect",
-      G_CALLBACK (got_redirect), new_location);
   g_signal_connect (G_OBJECT (play_base_bin->decoder),
       "new-decoded-pad", G_CALLBACK (new_decoded_pad), play_base_bin);
   g_signal_connect (G_OBJECT (play_base_bin->decoder), "no-more-pads",
@@ -1714,16 +1680,9 @@ gst_play_base_bin_change_state (GstElement * element)
 
   switch (transition) {
     case GST_STATE_READY_TO_PAUSED:
-      if (new_location) {
-        g_signal_emit (play_base_bin,
-            gst_play_base_bin_signals[SIGNAL_REDIRECT], 0, new_location);
-        g_free (new_location);
-        ret = GST_STATE_FAILURE;
-      } else if (ret == GST_STATE_SUCCESS) {
+      if (ret == GST_STATE_SUCCESS) {
         finish_source (play_base_bin);
-      }
-
-      if (ret != GST_STATE_SUCCESS) {
+      } else {
         /* clean up leftover groups */
         remove_groups (play_base_bin);
         play_base_bin->need_rebuild = TRUE;

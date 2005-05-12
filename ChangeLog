@@ -1,5 +1,20 @@
 2005-05-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_class_init),
+	(try_to_link_1):
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_class_init),
+	(group_commit), (probe_triggered), (setup_source),
+	(gst_play_base_bin_change_state):
+	* gst/playback/gstplaybasebin.h:
+	* gst/playback/gstplaybin.c: (gst_play_bin_class_init),
+	(gst_play_bin_init), (remove_sinks), (setup_sinks),
+	(gst_play_bin_change_state):
+	  Move setup_output_pads into a virtual function, remove
+	  group-switch (no longer needed) and redirect (handled by bus
+	  now) signals.
+
+2005-05-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_get_type),
 	(gst_play_base_bin_class_init), (gst_play_base_bin_finalize),
 	(get_active_group), (get_building_group), (group_destroy),

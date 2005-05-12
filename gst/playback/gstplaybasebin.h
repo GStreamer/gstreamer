@@ -30,6 +30,9 @@ G_BEGIN_DECLS
 #define GST_PLAY_BASE_BIN_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PLAY_BASE_BIN,GstPlayBaseBinClass))
 #define GST_IS_PLAY_BASE_BIN(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PLAY_BASE_BIN))
 #define GST_IS_PLAY_BASE_BIN_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PLAY_BASE_BIN))
+#define GST_PLAY_BASE_BIN_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PLAY_BASE_BIN, \
+			      GstPlayBaseBinClass))
 
 typedef struct _GstPlayBaseBin GstPlayBaseBin;
 typedef struct _GstPlayBaseBinClass GstPlayBaseBinClass;
@@ -88,20 +91,15 @@ struct _GstPlayBaseBin {
 struct _GstPlayBaseBinClass {
   GstPipelineClass parent_class;
 
-  /* signals */
-  void (*setup_output_pads)	(GstPlayBaseBin *play_base_bin);
-  void (*removed_output_pad)	(GstPlayBaseBin *play_base_bin,
-				 GstStreamInfo *info);
+  /* virtual fuctions */
+  void (*setup_output_pads)	(GstPlayBaseBin *play_base_bin,
+				 GstPlayBaseGroup *group);
 
+  /* signals */
   /* 0: buf=empty (underrun) - will re-cache,
    * 100: buf=full (overrun) - will flush head of cache (latency) */
   void (*buffering)		(GstPlayBaseBin *play_base_bin,
 				 gint            percentage);
-  void (*group_switch)		(GstPlayBaseBin *play_base_bin);
-
-  /* Called on redirect */
-  void (*got_redirect)		(GstPlayBaseBin *play_base_bin,
-				 const gchar    *new_location);
 };
 
 GType gst_play_base_bin_get_type (void);
