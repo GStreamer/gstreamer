@@ -59,7 +59,6 @@ struct _GstUDPSink {
 
   gint port;
   gchar *host;
-  guint mtu;
 };
 
 struct _GstUDPSinkClass {

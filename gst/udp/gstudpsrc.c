@@ -63,9 +63,9 @@ static void gst_udpsrc_init (GstUDPSrc * udpsrc);
 
 static void gst_udpsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
 
-static void gst_udpsrc_loop (GstPad * pad);
-static GstElementStateReturn gst_udpsrc_change_state (GstElement * element);
-static gboolean gst_udpsrc_activate (GstPad * pad, GstActivateMode mode);
+static GstFlowReturn gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf);
+static gboolean gst_udpsrc_start (GstBaseSrc * bsrc);
+static gboolean gst_udpsrc_stop (GstBaseSrc * bsrc);
 
 static void gst_udpsrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -101,7 +101,7 @@ gst_udpsrc_get_type (void)
     };
 
     udpsrc_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstUDPSrc", &udpsrc_info, 0);
+        g_type_register_static (GST_TYPE_PUSHSRC, "GstUDPSrc", &udpsrc_info, 0);
 
     g_type_add_interface_static (udpsrc_type, GST_TYPE_URI_HANDLER,
         &urihandler_info);
@@ -125,11 +125,15 @@ gst_udpsrc_class_init (GstUDPSrc * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstBaseSrcClass *gstbasesrc_class;
+  GstPushSrcClass *gstpushsrc_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  gstbasesrc_class = (GstBaseSrcClass *) klass;
+  gstpushsrc_class = (GstPushSrcClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_PUSHSRC);
 
   gobject_class->set_property = gst_udpsrc_set_property;
   gobject_class->get_property = gst_udpsrc_get_property;
@@ -147,27 +151,22 @@ gst_udpsrc_class_init (GstUDPSrc * klass)
           "URI in the form of udp://hostname:port", UDP_DEFAULT_URI,
           G_PARAM_READWRITE));
 
-  gstelement_class->change_state = gst_udpsrc_change_state;
+  gstbasesrc_class->start = gst_udpsrc_start;
+  gstbasesrc_class->stop = gst_udpsrc_stop;
+  gstpushsrc_class->create = gst_udpsrc_create;
 }
 
 static void
 gst_udpsrc_init (GstUDPSrc * udpsrc)
 {
-  /* create the src and src pads */
-  udpsrc->srcpad = gst_pad_new_from_template
-      (gst_static_pad_template_get (&src_template), "src");
-  gst_pad_set_activate_function (udpsrc->srcpad, gst_udpsrc_activate);
-  gst_pad_set_loop_function (udpsrc->srcpad, gst_udpsrc_loop);
-  gst_element_add_pad (GST_ELEMENT (udpsrc), udpsrc->srcpad);
-
   udpsrc->port = UDP_DEFAULT_PORT;
   udpsrc->sock = -1;
   udpsrc->multi_group = g_strdup (UDP_DEFAULT_MULTICAST_GROUP);
   udpsrc->uri = g_strdup (UDP_DEFAULT_URI);
 }
 
-static void
-gst_udpsrc_loop (GstPad * pad)
+static GstFlowReturn
+gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
 {
   GstUDPSrc *udpsrc;
   GstBuffer *outbuf;
@@ -176,55 +175,51 @@ gst_udpsrc_loop (GstPad * pad)
   gint numbytes;
   fd_set read_fds;
   guint max_sock;
+  gchar *pktdata;
+  gint pktsize;
 
-  udpsrc = GST_UDPSRC (GST_OBJECT_PARENT (pad));
+  udpsrc = GST_UDPSRC (psrc);
 
   FD_ZERO (&read_fds);
   FD_SET (udpsrc->sock, &read_fds);
   max_sock = udpsrc->sock;
 
-  GST_STREAM_LOCK (pad);
-
   /* FIXME, add another socket to unblock */
   if (select (max_sock + 1, &read_fds, NULL, NULL, NULL) < 0)
     goto select_error;
 
-  outbuf = gst_buffer_new ();
-  GST_BUFFER_DATA (outbuf) = g_malloc (24000);
-  GST_BUFFER_SIZE (outbuf) = 24000;
+  pktdata = g_malloc (24000);
+  pktsize = 24000;
 
   len = sizeof (struct sockaddr);
-  if ((numbytes = recvfrom (udpsrc->sock, GST_BUFFER_DATA (outbuf),
-              GST_BUFFER_SIZE (outbuf), 0, (struct sockaddr *) &tmpaddr,
-              &len)) == -1)
-    goto receive_error;
+  while (TRUE) {
+    numbytes = recvfrom (udpsrc->sock, pktdata, pktsize,
+        0, (struct sockaddr *) &tmpaddr, &len);
+    if (numbytes < 0) {
+      if (errno != EAGAIN && errno != EINTR)
+        goto receive_error;
+    } else
+      break;
+  }
 
+  outbuf = gst_buffer_new ();
+  GST_BUFFER_DATA (outbuf) = pktdata;
   GST_BUFFER_SIZE (outbuf) = numbytes;
-  if (gst_pad_push (udpsrc->srcpad, outbuf) != GST_FLOW_OK)
-    goto need_pause;
 
-  GST_STREAM_UNLOCK (pad);
+  *buf = outbuf;
 
-  return;
+  return GST_FLOW_OK;
 
 select_error:
   {
-    GST_STREAM_UNLOCK (pad);
     GST_DEBUG ("got select error");
-    return;
+    return GST_FLOW_ERROR;
   }
 receive_error:
   {
-    GST_STREAM_UNLOCK (pad);
     gst_buffer_unref (outbuf);
     GST_DEBUG ("got receive error");
-    return;
-  }
-need_pause:
-  {
-    gst_task_pause (GST_RPAD_TASK (pad));
-    GST_STREAM_UNLOCK (pad);
-    return;
+    return GST_FLOW_ERROR;
   }
 }
 
@@ -315,12 +310,15 @@ gst_udpsrc_get_property (GObject * object, guint prop_id, GValue * value,
 
 /* create a socket for sending to remote machine */
 static gboolean
-gst_udpsrc_init_receive (GstUDPSrc * src)
+gst_udpsrc_start (GstBaseSrc * bsrc)
 {
   guint bc_val;
   gint reuse = 1;
   struct sockaddr_in my_addr;
   int len, port;
+  GstUDPSrc *src;
+
+  src = GST_UDPSRC (bsrc);
 
   memset (&src->myaddr, 0, sizeof (src->myaddr));
   src->myaddr.sin_family = AF_INET;     /* host byte order */
@@ -328,15 +326,15 @@ gst_udpsrc_init_receive (GstUDPSrc * src)
   src->myaddr.sin_addr.s_addr = INADDR_ANY;
 
   if ((src->sock = socket (AF_INET, SOCK_DGRAM, 0)) < 0)
-    goto error;
+    goto no_socket;
 
   if (setsockopt (src->sock, SOL_SOCKET, SO_REUSEADDR, &reuse,
           sizeof (reuse)) < 0)
-    goto error;
+    goto setsockopt_error;
 
   if (bind (src->sock, (struct sockaddr *) &src->myaddr,
           sizeof (src->myaddr)) < 0)
-    goto error;
+    goto bind_error;
 
   if (inet_aton (src->multi_group, &(src->multi_addr.imr_multiaddr))) {
     if (src->multi_addr.imr_multiaddr.s_addr) {
@@ -347,7 +345,9 @@ gst_udpsrc_init_receive (GstUDPSrc * src)
   }
 
   len = sizeof (my_addr);
-  getsockname (src->sock, (struct sockaddr *) &my_addr, &len);
+  if (getsockname (src->sock, (struct sockaddr *) &my_addr, &len) < 0)
+    goto getsockname_error;
+
   port = ntohs (my_addr.sin_port);
   if (port != src->port) {
     src->port = port;
@@ -360,102 +360,41 @@ gst_udpsrc_init_receive (GstUDPSrc * src)
 
   return TRUE;
 
-error:
+  /* ERRORS */
+no_socket:
   {
-    perror ("open");
+    GST_DEBUG ("no_socket");
+    return FALSE;
+  }
+setsockopt_error:
+  {
+    GST_DEBUG ("setsockopt failed");
+    return FALSE;
+  }
+bind_error:
+  {
+    GST_DEBUG ("bind failed");
+    return FALSE;
+  }
+getsockname_error:
+  {
+    GST_DEBUG ("getsockname failed");
     return FALSE;
   }
 }
 
-static void
-gst_udpsrc_close (GstUDPSrc * src)
+static gboolean
+gst_udpsrc_stop (GstBaseSrc * bsrc)
 {
+  GstUDPSrc *src;
+
+  src = GST_UDPSRC (bsrc);
+
   if (src->sock != -1) {
     close (src->sock);
     src->sock = -1;
   }
-}
-
-static gboolean
-gst_udpsrc_activate (GstPad * pad, GstActivateMode mode)
-{
-  gboolean result;
-  GstUDPSrc *udpsrc;
-
-  udpsrc = GST_UDPSRC (GST_OBJECT_PARENT (pad));
-
-  switch (mode) {
-    case GST_ACTIVATE_PUSH:
-      /* if we have a scheduler we can start the task */
-      if (GST_ELEMENT_SCHEDULER (udpsrc)) {
-        GST_STREAM_LOCK (pad);
-        GST_RPAD_TASK (pad) =
-            gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (udpsrc),
-            (GstTaskFunction) gst_udpsrc_loop, pad);
-
-        gst_task_start (GST_RPAD_TASK (pad));
-        GST_STREAM_UNLOCK (pad);
-        result = TRUE;
-      }
-      break;
-    case GST_ACTIVATE_PULL:
-      result = FALSE;
-      break;
-    case GST_ACTIVATE_NONE:
-      /* step 1, unblock clock sync (if any) */
-
-      /* step 2, make sure streaming finishes */
-      GST_STREAM_LOCK (pad);
-      gst_udpsrc_close (udpsrc);
-
-      /* step 3, stop the task */
-      if (GST_RPAD_TASK (pad)) {
-        gst_task_stop (GST_RPAD_TASK (pad));
-        gst_object_unref (GST_OBJECT (GST_RPAD_TASK (pad)));
-        GST_RPAD_TASK (pad) = NULL;
-      }
-      GST_STREAM_UNLOCK (pad);
-
-      result = TRUE;
-      break;
-  }
-  return result;
-}
-
-static GstElementStateReturn
-gst_udpsrc_change_state (GstElement * element)
-{
-  GstElementStateReturn ret;
-  GstUDPSrc *src;
-  gint transition;
-
-  src = GST_UDPSRC (element);
-
-  transition = GST_STATE_TRANSITION (element);
-
-  switch (transition) {
-    case GST_STATE_READY_TO_PAUSED:
-      if (!gst_udpsrc_init_receive (src))
-        goto no_init;
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  switch (transition) {
-    default:
-      break;
-  }
-
-  return ret;
-
-no_init:
-  {
-    GST_DEBUG ("could not init udp socket");
-    return GST_STATE_FAILURE;
-  }
+  return TRUE;
 }
 
 /*** GSTURIHANDLER INTERFACE *************************************************/

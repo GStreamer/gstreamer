@@ -22,10 +22,9 @@
 #define __GST_UDPSRC_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstpushsrc.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #include <errno.h>
 #include <string.h>
@@ -53,14 +52,9 @@ typedef struct _GstUDPSrc GstUDPSrc;
 typedef struct _GstUDPSrcClass GstUDPSrcClass;
 
 struct _GstUDPSrc {
-  GstElement element;
-
-  /* pads */
-  GstPad *sinkpad,
-	 *srcpad;
+  GstPushSrc parent;
 
   gchar *uri;
-
   int port;
   int sock;
   gchar *multi_group;
@@ -74,15 +68,12 @@ struct _GstUDPSrc {
 };
 
 struct _GstUDPSrcClass {
-  GstElementClass parent_class;
+  GstPushSrcClass parent_class;
 };
 
 GType gst_udpsrc_get_type(void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 
 #endif /* __GST_UDPSRC_H__ */

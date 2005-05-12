@@ -50,8 +50,7 @@ enum
   ARG_0,
   ARG_HOST,
   ARG_PORT,
-  ARG_MTU
-      /* FILL ME */
+  /* FILL ME */
 };
 
 static void gst_udpsink_base_init (gpointer g_class);
@@ -146,7 +145,6 @@ gst_udpsink_init (GstUDPSink * udpsink)
 {
   udpsink->host = g_strdup (UDP_DEFAULT_HOST);
   udpsink->port = UDP_DEFAULT_PORT;
-  udpsink->mtu = 1024;
 }
 
 static void
@@ -161,30 +159,31 @@ static GstFlowReturn
 gst_udpsink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
   GstUDPSink *udpsink;
-  gint tosend;
+  gint ret, size;
   guint8 *data;
 
   udpsink = GST_UDPSINK (sink);
 
-  tosend = GST_BUFFER_SIZE (buffer);
+  size = GST_BUFFER_SIZE (buffer);
   data = GST_BUFFER_DATA (buffer);
 
-  /* send in chunks of MTU */
-  while (tosend > 0) {
-    gint psize;
+  while (TRUE) {
+    ret = sendto (udpsink->sock, data, size, 0,
+        (struct sockaddr *) &udpsink->theiraddr, sizeof (udpsink->theiraddr));
 
-    psize = MIN (udpsink->mtu, tosend);
-    if (sendto (udpsink->sock, data, psize, 0,
-            (struct sockaddr *) &udpsink->theiraddr,
-            sizeof (udpsink->theiraddr)) == -1) {
-      perror ("sending");
-    }
-
-    data += psize;
-    tosend -= psize;
+    if (ret < 0) {
+      if (errno != EINTR && errno != EAGAIN)
+        goto send_error;
+    } else
+      break;
   }
-
   return GST_FLOW_OK;
+
+send_error:
+  {
+    GST_DEBUG ("got send error");
+    return GST_FLOW_ERROR;
+  }
 }
 
 static void
@@ -207,9 +206,6 @@ gst_udpsink_set_property (GObject * object, guint prop_id, const GValue * value,
     case ARG_PORT:
       udpsink->port = g_value_get_int (value);
       break;
-    case ARG_MTU:
-      udpsink->mtu = g_value_get_int (value);
-      break;
     default:
       break;
   }
@@ -229,9 +225,6 @@ gst_udpsink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_PORT:
       g_value_set_int (value, udpsink->port);
-      break;
-    case ARG_MTU:
-      g_value_set_int (value, udpsink->mtu);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
