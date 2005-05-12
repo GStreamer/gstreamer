@@ -1,3 +1,34 @@
+2005-05-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/README:
+	* gst/tcp/gsttcpclientsrc.c: (gst_tcpclientsrc_get_type),
+	(gst_tcpclientsrc_base_init), (gst_tcpclientsrc_class_init),
+	(gst_tcpclientsrc_init), (gst_tcpclientsrc_getcaps),
+	(gst_tcpclientsrc_stop), (gst_tcpclientsrc_eos),
+	(gst_tcpclientsrc_create), (gst_tcpclientsrc_start):
+	* gst/tcp/gsttcpclientsrc.h:
+	* gst/tcp/gsttcpserversrc.c: (gst_tcpserversrc_get_type),
+	(gst_tcpserversrc_base_init), (gst_tcpserversrc_class_init),
+	(gst_tcpserversrc_init), (gst_tcpserversrc_create),
+	(gst_tcpserversrc_start), (gst_tcpserversrc_stop):
+	* gst/tcp/gsttcpserversrc.h:
+	* gst/tcp/gsttcpsrc.c: (gst_tcpsrc_get_type),
+	(gst_tcpsrc_base_init), (gst_tcpsrc_class_init), (gst_tcpsrc_init),
+	(gst_tcpsrc_create), (gst_tcpsrc_start), (gst_tcpsrc_stop):
+	* gst/tcp/gsttcpsrc.h:
+	* gst/udp/gstudpsink.c: (gst_udpsink_base_init),
+	(gst_udpsink_init), (gst_udpsink_get_times), (gst_udpsink_render),
+	(gst_udpsink_set_property), (gst_udpsink_get_property),
+	(gst_udpsink_change_state):
+	* gst/udp/gstudpsink.h:
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_get_type),
+	(gst_udpsrc_base_init), (gst_udpsrc_class_init), (gst_udpsrc_init),
+	(gst_udpsrc_create), (gst_udpsrc_set_uri), (gst_udpsrc_start),
+	(gst_udpsrc_stop):
+	* gst/udp/gstudpsrc.h:
+	Make UDP and TCP elements use PushSrc.
+
+
 2005-05-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mad/gstmad.c: (gst_mad_init), (gst_mad_src_query),
