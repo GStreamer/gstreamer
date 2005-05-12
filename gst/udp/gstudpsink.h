@@ -22,7 +22,7 @@
 #define __GST_UDPSINK_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstbasesink.h>
+#include "gstmultiudpsink.h"
 
 G_BEGIN_DECLS
 
@@ -51,18 +51,15 @@ typedef struct _GstUDPSink GstUDPSink;
 typedef struct _GstUDPSinkClass GstUDPSinkClass;
 
 struct _GstUDPSink {
-  GstBaseSink parent;
+  GstMultiUDPSink parent;
 
-  int sock;
-  struct sockaddr_in theiraddr;
-  struct ip_mreq multi_addr;
-
+  gchar *uri;
   gint port;
   gchar *host;
 };
 
 struct _GstUDPSinkClass {
-  GstBaseSinkClass parent_class;
+  GstMultiUDPSinkClass parent_class;
 };
 
 GType gst_udpsink_get_type(void);

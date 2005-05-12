@@ -1,3 +1,37 @@
+2005-05-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/udp/.cvsignore:
+	* gst/udp/Makefile.am:
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_get_type),
+	(gst_multiudpsink_base_init), (gst_multiudpsink_class_init),
+	(gst_multiudpsink_init), (gst_multiudpsink_finalize),
+	(gst_multiudpsink_get_times), (gst_multiudpsink_render),
+	(gst_multiudpsink_set_property), (gst_multiudpsink_get_property),
+	(gst_multiudpsink_init_send), (gst_multiudpsink_close),
+	(gst_multiudpsink_add), (gst_multiudpsink_remove),
+	(gst_multiudpsink_clear), (gst_multiudpsink_get_stats),
+	(gst_multiudpsink_change_state):
+	* gst/udp/gstmultiudpsink.h:
+	* gst/udp/gstudp-marshal.list:
+	* gst/udp/gstudp.c: (plugin_init):
+	* gst/udp/gstudp.h:
+	* gst/udp/gstudpsink.c: (gst_udpsink_get_type),
+	(gst_udpsink_base_init), (gst_udpsink_class_init),
+	(gst_udpsink_init), (gst_udpsink_set_uri),
+	(gst_udpsink_set_property), (gst_udpsink_get_property),
+	(gst_udpsink_uri_get_type), (gst_udpsink_uri_get_protocols),
+	(gst_udpsink_uri_get_uri), (gst_udpsink_uri_set_uri),
+	(gst_udpsink_uri_handler_init):
+	* gst/udp/gstudpsink.h:
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_get_type),
+	(gst_udpsrc_base_init), (gst_udpsrc_class_init),
+	(gst_udpsrc_create), (gst_udpsrc_set_uri), (gst_udpsrc_start),
+	(gst_udpsrc_unlock), (gst_udpsrc_stop):
+	* gst/udp/gstudpsrc.h:
+	Added multifdsink to send UDP to multiple addresses.
+	Cleaned up UDP source/sink elements some more.
+	Make UDP sink extends from multiudpsink.
+
 2005-05-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mad/gstmad.c: (gst_mad_src_query), (gst_mad_sink_event):

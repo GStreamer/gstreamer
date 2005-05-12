@@ -56,12 +56,12 @@ struct _GstUDPSrc {
 
   gchar *uri;
   int port;
-  int sock;
+
   gchar *multi_group;
-  gboolean multicast;
   gint ttl;
 
-  int control;
+  int sock;
+  int control_sock[2];
 
   struct sockaddr_in myaddr;
   struct ip_mreq multi_addr;

@@ -5,3 +5,8 @@ Makefile.in
 *.la
 .deps
 .libs
+gstudp-enumtypes.c
+gstudp-enumtypes.h
+gstudp-marshal.c
+gstudp-marshal.h
+

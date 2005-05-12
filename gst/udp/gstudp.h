@@ -17,26 +17,23 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "gstudp-enumtypes.h"
+#include <glib.h>
 
 #ifndef __GST_UDP_H__
 #define __GST_UDP_H__
 
-#ifdef __cplusplus
-extern "C"
+G_BEGIN_DECLS
+
+typedef enum
 {
-#endif				/* __cplusplus */
+  CONTROL_ZERO,
+  CONTROL_NONE,
+  CONTROL_UDP,
+  CONTROL_TCP
+} GstUDPControl;
 
-  typedef enum
-  {
-    CONTROL_ZERO,
-    CONTROL_NONE,
-    CONTROL_UDP,
-    CONTROL_TCP
-  } Gst_UDP_Control;
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_UDP_H__ */
 

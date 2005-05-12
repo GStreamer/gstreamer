@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,7 +17,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -26,17 +25,12 @@
 #define UDP_DEFAULT_HOST	"localhost"
 #define UDP_DEFAULT_PORT	4951
 
-static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS_ANY);
-
 /* elementfactory information */
 static GstElementDetails gst_udpsink_details =
 GST_ELEMENT_DETAILS ("UDP packet sender",
     "Sink/Network",
     "Send data over the network via UDP",
-    "Wim Taymans <wim.taymans@chello.be>");
+    "Wim Taymans <wim@fluendo.com>");
 
 /* UDPSink signals and args */
 enum
@@ -47,21 +41,16 @@ enum
 
 enum
 {
-  ARG_0,
-  ARG_HOST,
-  ARG_PORT,
+  PROP_0,
+  PROP_HOST,
+  PROP_PORT,
+  PROP_URI,
   /* FILL ME */
 };
 
 static void gst_udpsink_base_init (gpointer g_class);
 static void gst_udpsink_class_init (GstUDPSink * klass);
 static void gst_udpsink_init (GstUDPSink * udpsink);
-
-static void gst_udpsink_get_times (GstBaseSink * sink, GstBuffer * buffer,
-    GstClockTime * start, GstClockTime * end);
-static GstFlowReturn gst_udpsink_render (GstBaseSink * sink,
-    GstBuffer * buffer);
-static GstElementStateReturn gst_udpsink_change_state (GstElement * element);
 
 static void gst_udpsink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -92,8 +81,8 @@ gst_udpsink_get_type (void)
     };
 
     udpsink_type =
-        g_type_register_static (GST_TYPE_BASESINK, "GstUDPSink", &udpsink_info,
-        0);
+        g_type_register_static (GST_TYPE_MULTIUDPSINK, "GstUDPSink",
+        &udpsink_info, 0);
   }
   return udpsink_type;
 }
@@ -102,9 +91,6 @@ static void
 gst_udpsink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
 
   gst_element_class_set_details (element_class, &gst_udpsink_details);
 }
@@ -120,23 +106,18 @@ gst_udpsink_class_init (GstUDPSink * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASESINK);
+  parent_class = g_type_class_ref (GST_TYPE_MULTIUDPSINK);
 
   gobject_class->set_property = gst_udpsink_set_property;
   gobject_class->get_property = gst_udpsink_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HOST,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HOST,
       g_param_spec_string ("host", "host",
           "The host/IP/Multicast group to send the packets to",
           UDP_DEFAULT_HOST, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
       g_param_spec_int ("port", "port", "The port to send the packets to",
           0, 32768, UDP_DEFAULT_PORT, G_PARAM_READWRITE));
-
-  gstelement_class->change_state = gst_udpsink_change_state;
-
-  gstbasesink_class->get_times = gst_udpsink_get_times;
-  gstbasesink_class->render = gst_udpsink_render;
 }
 
 
@@ -145,45 +126,14 @@ gst_udpsink_init (GstUDPSink * udpsink)
 {
   udpsink->host = g_strdup (UDP_DEFAULT_HOST);
   udpsink->port = UDP_DEFAULT_PORT;
+  gst_multiudpsink_add (GST_MULTIUDPSINK (udpsink), udpsink->host,
+      udpsink->port);
 }
 
-static void
-gst_udpsink_get_times (GstBaseSink * sink, GstBuffer * buffer,
-    GstClockTime * start, GstClockTime * end)
+static gboolean
+gst_udpsink_set_uri (GstUDPSink * sink, const gchar * uri)
 {
-  *start = GST_BUFFER_TIMESTAMP (buffer);
-  *end = *start + GST_BUFFER_DURATION (buffer);
-}
-
-static GstFlowReturn
-gst_udpsink_render (GstBaseSink * sink, GstBuffer * buffer)
-{
-  GstUDPSink *udpsink;
-  gint ret, size;
-  guint8 *data;
-
-  udpsink = GST_UDPSINK (sink);
-
-  size = GST_BUFFER_SIZE (buffer);
-  data = GST_BUFFER_DATA (buffer);
-
-  while (TRUE) {
-    ret = sendto (udpsink->sock, data, size, 0,
-        (struct sockaddr *) &udpsink->theiraddr, sizeof (udpsink->theiraddr));
-
-    if (ret < 0) {
-      if (errno != EINTR && errno != EAGAIN)
-        goto send_error;
-    } else
-      break;
-  }
-  return GST_FLOW_OK;
-
-send_error:
-  {
-    GST_DEBUG ("got send error");
-    return GST_FLOW_ERROR;
-  }
+  return FALSE;
 }
 
 static void
@@ -194,21 +144,25 @@ gst_udpsink_set_property (GObject * object, guint prop_id, const GValue * value,
 
   udpsink = GST_UDPSINK (object);
 
+  /* remove old host */
+  gst_multiudpsink_remove (GST_MULTIUDPSINK (udpsink),
+      udpsink->host, udpsink->port);
+
   switch (prop_id) {
-    case ARG_HOST:
-      if (udpsink->host != NULL)
-        g_free (udpsink->host);
-      if (g_value_get_string (value) == NULL)
-        udpsink->host = NULL;
-      else
-        udpsink->host = g_strdup (g_value_get_string (value));
+    case PROP_HOST:
+      g_free (udpsink->host);
+      udpsink->host = g_value_dup_string (value);
       break;
-    case ARG_PORT:
+    case PROP_PORT:
       udpsink->port = g_value_get_int (value);
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  /* add new host */
+  gst_multiudpsink_add (GST_MULTIUDPSINK (udpsink),
+      udpsink->host, udpsink->port);
 }
 
 static void
@@ -220,10 +174,10 @@ gst_udpsink_get_property (GObject * object, guint prop_id, GValue * value,
   udpsink = GST_UDPSINK (object);
 
   switch (prop_id) {
-    case ARG_HOST:
+    case PROP_HOST:
       g_value_set_string (value, udpsink->host);
       break;
-    case ARG_PORT:
+    case PROP_PORT:
       g_value_set_int (value, udpsink->port);
       break;
     default:
@@ -232,104 +186,47 @@ gst_udpsink_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
+/*** GSTURIHANDLER INTERFACE *************************************************/
 
-/* create a socket for sending to remote machine */
-static gboolean
-gst_udpsink_init_send (GstUDPSink * sink)
+static guint
+gst_udpsink_uri_get_type (void)
 {
-  struct hostent *he;
-  struct in_addr addr;
-  guint bc_val;
+  return GST_URI_SINK;
+}
+static gchar **
+gst_udpsink_uri_get_protocols (void)
+{
+  static gchar *protocols[] = { "udp", NULL };
 
-  memset (&sink->theiraddr, 0, sizeof (sink->theiraddr));
-  sink->theiraddr.sin_family = AF_INET; /* host byte order */
-  sink->theiraddr.sin_port = htons (sink->port);        /* short, network byte order */
+  return protocols;
+}
 
-  /* if its an IP address */
-  if (inet_aton (sink->host, &addr)) {
-    /* check if its a multicast address */
-    if ((ntohl (addr.s_addr) & 0xe0000000) == 0xe0000000) {
-      sink->multi_addr.imr_multiaddr.s_addr = addr.s_addr;
-      sink->multi_addr.imr_interface.s_addr = INADDR_ANY;
+static const gchar *
+gst_udpsink_uri_get_uri (GstURIHandler * handler)
+{
+  GstUDPSink *sink = GST_UDPSINK (handler);
 
-      sink->theiraddr.sin_addr = sink->multi_addr.imr_multiaddr;
+  return g_strdup (sink->uri);
+}
 
-      /* Joining the multicast group */
-      setsockopt (sink->sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &sink->multi_addr,
-          sizeof (sink->multi_addr));
-    }
+static gboolean
+gst_udpsink_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+{
+  gboolean ret;
+  GstUDPSink *sink = GST_UDPSINK (handler);
 
-    else {
-      sink->theiraddr.sin_addr = *((struct in_addr *) &addr);
-    }
-  }
+  ret = gst_udpsink_set_uri (sink, uri);
 
-  /* we dont need to lookup for localhost */
-  else if (strcmp (sink->host, UDP_DEFAULT_HOST) == 0 &&
-      inet_aton ("127.0.0.1", &addr)) {
-    sink->theiraddr.sin_addr = *((struct in_addr *) &addr);
-  }
-
-  /* if its a hostname */
-  else if ((he = gethostbyname (sink->host))) {
-    sink->theiraddr.sin_addr = *((struct in_addr *) he->h_addr);
-  }
-
-  else {
-    perror ("hostname lookup error?");
-    return FALSE;
-  }
-
-  if ((sink->sock = socket (AF_INET, SOCK_DGRAM, 0)) == -1) {
-    perror ("socket");
-    return FALSE;
-  }
-
-  bc_val = 1;
-  setsockopt (sink->sock, SOL_SOCKET, SO_BROADCAST, &bc_val, sizeof (bc_val));
-
-  return TRUE;
+  return ret;
 }
 
 static void
-gst_udpsink_close (GstUDPSink * sink)
+gst_udpsink_uri_handler_init (gpointer g_iface, gpointer iface_data)
 {
-  close (sink->sock);
-}
+  GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
 
-static GstElementStateReturn
-gst_udpsink_change_state (GstElement * element)
-{
-  GstElementStateReturn ret;
-  GstUDPSink *sink;
-  gint transition;
-
-  sink = GST_UDPSINK (element);
-  transition = GST_STATE_TRANSITION (element);
-
-  switch (transition) {
-    case GST_STATE_READY_TO_PAUSED:
-      if (!gst_udpsink_init_send (sink))
-        goto no_init;
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  switch (transition) {
-    case GST_STATE_PAUSED_TO_READY:
-      gst_udpsink_close (sink);
-      break;
-    default:
-      break;
-  }
-
-  return ret;
-
-no_init:
-  {
-    return GST_STATE_FAILURE;
-  }
+  iface->get_type = gst_udpsink_uri_get_type;
+  iface->get_protocols = gst_udpsink_uri_get_protocols;
+  iface->get_uri = gst_udpsink_uri_get_uri;
+  iface->set_uri = gst_udpsink_uri_set_uri;
 }
