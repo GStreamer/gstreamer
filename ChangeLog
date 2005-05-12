@@ -1,3 +1,8 @@
+2005-05-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/mad/gstmad.c: (gst_mad_src_query), (gst_mad_sink_event):
+	  Make queries actually work (update core first).
+
 2005-05-12  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/README:
