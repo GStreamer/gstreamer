@@ -1,3 +1,8 @@
+2005-05-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (gst_bin_remove_func), (gst_bin_get_state):
+	Same fix as Ronald's but without the signal. 
+
 2005-05-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstutils.c: (gst_element_query_position):

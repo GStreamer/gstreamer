@@ -496,6 +496,14 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   gst_element_set_bus (element, NULL);
   gst_element_set_scheduler (element, NULL);
 
+  /* unlock any waiters for the state change. It is possible that
+   * we are waiting for an ASYNC state change on this element. The
+   * element cannot be added to another bin yet as it is not yet
+   * unparented. */
+  GST_STATE_LOCK (element);
+  GST_STATE_BROADCAST (element);
+  GST_STATE_UNLOCK (element);
+
   /* we ref here because after the _unparent() the element can be disposed
    * and we still need it to fire a signal. */
   gst_object_ref (GST_OBJECT_CAST (element));
@@ -760,19 +768,6 @@ gst_bin_iterate_sinks (GstBin * bin)
   return result;
 }
 
-/*
- * This function will be called if the child is removed from the bin
- * while we try to get its state. We should abort the _get_state()
- * immediately to prevent pointless further blocking.
- */
-static void
-cb_parent_unset (GstElement * child, GstElement * parent, gpointer data)
-{
-  GST_STATE_LOCK (child);
-  GST_STATE_BROADCAST (child);
-  GST_STATE_UNLOCK (child);
-}
-
 /* this functions loops over all children, as soon as one does
  * not return SUCCESS, we return that value.
  *
@@ -799,16 +794,12 @@ restart:
   children_cookie = bin->children_cookie;
   while (children) {
     GstElement *child = GST_ELEMENT_CAST (children->data);
-    gulong sig;
 
     gst_object_ref (GST_OBJECT_CAST (child));
     GST_UNLOCK (bin);
 
     /* ret is ASYNC if some child is still performing the state change */
-    sig = g_signal_connect (child, "parent-unset",
-        G_CALLBACK (cb_parent_unset), NULL);
     ret = gst_element_get_state (child, NULL, NULL, timeout);
-    g_signal_handler_disconnect (child, sig);
 
     gst_object_unref (GST_OBJECT_CAST (child));
 
