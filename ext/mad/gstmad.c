@@ -568,21 +568,40 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_POSITION:
     {
       GstFormat format;
-      gint64 cur, total;
+      gint64 cur, total, total_bytes;
 
-      /* query peer for total length */
-      if (!gst_pad_query (GST_PAD_PEER (mad->sinkpad), query))
+      /* save requested format */
+      gst_query_parse_position (query, &format, NULL, NULL);
+
+      /* query peer for total length in bytes */
+      gst_query_set_position (query, GST_FORMAT_BYTES, -1, -1);
+      if (!gst_pad_query (GST_PAD_PEER (mad->sinkpad), query)) {
+        GST_LOG_OBJECT (mad, "query on peer pad failed");
         goto error;
+      }
 
-      gst_query_parse_position (query, &format, NULL, &total);
+      gst_query_parse_position (query, NULL, NULL, &total_bytes);
+      GST_LOG_OBJECT (mad, "peer pad returned total=%lld bytes", total_bytes);
 
-      /* and convert to the final format */
+      /* and convert to the requested format */
       if (format != GST_FORMAT_DEFAULT) {
         if (!gst_mad_convert_src (pad, GST_FORMAT_DEFAULT, mad->total_samples,
                 &format, &cur))
           goto error;
       } else {
         cur = mad->total_samples;
+      }
+
+      if (total_bytes != -1) {
+        if (format != GST_FORMAT_BYTES) {
+          if (!gst_mad_convert_sink (pad, GST_FORMAT_BYTES, total_bytes,
+                  &format, &total))
+            goto error;
+        } else {
+          total = total_bytes;
+        }
+      } else {
+        total = -1;
       }
 
       gst_query_set_position (query, format, cur, total);
@@ -995,6 +1014,7 @@ gst_mad_sink_event (GstPad * pad, GstEvent * event)
           format = GST_FORMAT_DEFAULT;
           if (!gst_mad_convert_src (mad->srcpad,
                   GST_FORMAT_TIME, time, &format, &mad->total_samples)) {
+            GST_DEBUG ("Failed to convert time to total_samples");
             continue;
           }
 
