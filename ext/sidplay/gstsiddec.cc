@@ -110,8 +110,7 @@ static gboolean gst_siddec_sink_event (GstPad * pad, GstEvent * event);
 
 static gboolean gst_siddec_src_convert (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
-static gboolean gst_siddec_src_query (GstPad * pad, GstQueryType type,
-    GstFormat * format, gint64 * value);
+static gboolean gst_siddec_src_query (GstPad * pad, GstQuery * query);
 
 static void gst_siddec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -220,7 +219,6 @@ gst_siddec_init (GstSidDec * siddec)
       gst_pad_new_from_template (gst_static_pad_template_get (&sink_templ),
       "sink");
   gst_pad_set_query_function (siddec->sinkpad, NULL);
-  gst_pad_set_convert_function (siddec->sinkpad, NULL);
   gst_pad_set_event_function (siddec->sinkpad, gst_siddec_sink_event);
   gst_pad_set_chain_function (siddec->sinkpad, gst_siddec_chain);
   gst_element_add_pad (GST_ELEMENT (siddec), siddec->sinkpad);
@@ -229,7 +227,6 @@ gst_siddec_init (GstSidDec * siddec)
       gst_pad_new_from_template (gst_static_pad_template_get (&src_templ),
       "src");
   gst_pad_set_event_function (siddec->srcpad, NULL);
-  gst_pad_set_convert_function (siddec->srcpad, gst_siddec_src_convert);
   gst_pad_set_query_function (siddec->srcpad, gst_siddec_src_query);
   gst_element_add_pad (GST_ELEMENT (siddec), siddec->srcpad);
 
@@ -369,8 +366,8 @@ play_loop (GstPad * pad)
   GstFlowReturn ret;
   GstSidDec *siddec;
   GstBuffer *out;
-  GstFormat format;
   gint64 value, offset, time;
+  GstFormat format;
 
   siddec = GST_SIDDEC (GST_PAD_PARENT (pad));
 
@@ -383,12 +380,13 @@ play_loop (GstPad * pad)
 
   /* get offset in samples */
   format = GST_FORMAT_DEFAULT;
-  gst_siddec_src_query (siddec->srcpad, GST_QUERY_POSITION, &format, &offset);
+  gst_siddec_src_convert (siddec->srcpad,
+      GST_FORMAT_BYTES, siddec->total_bytes, &format, &offset);
   GST_BUFFER_OFFSET (out) = offset;
 
   /* get current timestamp */
-  format = GST_FORMAT_TIME;
-  gst_siddec_src_query (siddec->srcpad, GST_QUERY_POSITION, &format, &time);
+  gst_siddec_src_convert (siddec->srcpad,
+      GST_FORMAT_BYTES, siddec->total_bytes, &format, &time);
   GST_BUFFER_TIMESTAMP (out) = time;
 
   /* update position and get new timestamp to calculate duration */
@@ -396,11 +394,13 @@ play_loop (GstPad * pad)
 
   /* get offset in samples */
   format = GST_FORMAT_DEFAULT;
-  gst_siddec_src_query (siddec->srcpad, GST_QUERY_POSITION, &format, &value);
+  gst_siddec_src_convert (siddec->srcpad,
+      GST_FORMAT_BYTES, siddec->total_bytes, &format, &value);
   GST_BUFFER_OFFSET_END (out) = value;
 
   format = GST_FORMAT_TIME;
-  gst_siddec_src_query (siddec->srcpad, GST_QUERY_POSITION, &format, &value);
+  gst_siddec_src_convert (siddec->srcpad,
+      GST_FORMAT_BYTES, siddec->total_bytes, &format, &value);
   GST_BUFFER_DURATION (out) = value - time;
 
   if ((ret = gst_pad_push (siddec->srcpad, out)) != GST_FLOW_OK)
@@ -531,6 +531,11 @@ gst_siddec_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
 
   siddec = GST_SIDDEC (GST_PAD_PARENT (pad));
 
+  if (src_format == *dest_format) {
+    *dest_value = src_value;
+    return TRUE;
+  }
+
   bytes_per_sample =
       (siddec->config->bitsPerSample >> 3) * siddec->config->channels;
 
@@ -590,20 +595,29 @@ gst_siddec_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
 }
 
 static gboolean
-gst_siddec_src_query (GstPad * pad, GstQueryType type,
-    GstFormat * format, gint64 * value)
+gst_siddec_src_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = TRUE;
   GstSidDec *siddec;
 
   siddec = GST_SIDDEC (GST_PAD_PARENT (pad));
 
-  switch (type) {
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
+    {
+      GstFormat format;
+      gint64 current;
+
+      gst_query_parse_position (query, &format, NULL, NULL);
+
       /* we only know about our bytes, convert to requested format */
       res &= gst_siddec_src_convert (pad,
-          GST_FORMAT_BYTES, siddec->total_bytes, format, value);
+          GST_FORMAT_BYTES, siddec->total_bytes, &format, &current);
+      if (res) {
+        gst_query_set_position (query, format, current, -1);
+      }
       break;
+    }
     default:
       res = FALSE;
       break;
