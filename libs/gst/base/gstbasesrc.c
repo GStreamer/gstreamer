@@ -326,7 +326,7 @@ gst_basesrc_do_seek (GstBaseSrc * src, GstEvent * event)
     GstEvent *event;
 
     event = gst_event_new_discontinuous (1.0,
-        GST_FORMAT_TIME,
+        GST_FORMAT_BYTES,
         (gint64) src->segment_start, (gint64) src->segment_end, NULL);
 
     gst_pad_push_event (src->srcpad, event);

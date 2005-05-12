@@ -1,3 +1,9 @@
+2005-05-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/base/gstbasesrc.c: (gst_basesrc_do_seek):
+	  Discont event offset format should be GST_FORMAT_BYTES,
+	  not GST_FORMAT_TIME.
+
 2005-05-12  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (gst_bin_remove_func), (gst_bin_get_state):
