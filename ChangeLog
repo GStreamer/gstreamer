@@ -1,3 +1,16 @@
+2005-05-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/Makefile.am:
+	* gst/base/gstbasesrc.c: (gst_basesrc_is_seekable),
+	(gst_basesrc_start):
+	* gst/base/gstbasesrc.h:
+	* gst/base/gstpushsrc.c: (gst_pushsrc_get_type),
+	(gst_pushsrc_base_init), (gst_pushsrc_class_init),
+	(gst_pushsrc_init), (gst_pushsrc_create):
+	* gst/base/gstpushsrc.h:
+	Added is_seekable to BaseSrc
+	Added simple PushSrc.
+
 2005-05-11  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstelement.c: (gst_element_add_pad), (gst_element_query):

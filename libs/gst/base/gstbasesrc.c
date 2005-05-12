@@ -608,6 +608,22 @@ gst_basesrc_get_size (GstBaseSrc * basesrc, guint64 * size)
 }
 
 static gboolean
+gst_basesrc_is_seekable (GstBaseSrc * basesrc)
+{
+  GstBaseSrcClass *bclass;
+
+  bclass = GST_BASESRC_GET_CLASS (basesrc);
+
+  /* check if we can seek */
+  if (bclass->is_seekable)
+    basesrc->seekable = bclass->is_seekable (basesrc);
+  else
+    basesrc->seekable = FALSE;
+
+  return basesrc->seekable;
+}
+
+static gboolean
 gst_basesrc_start (GstBaseSrc * basesrc)
 {
   GstBaseSrcClass *bclass;
@@ -646,11 +662,8 @@ gst_basesrc_start (GstBaseSrc * basesrc)
   /* we always run to the end */
   basesrc->segment_end = -1;
 
-  /* check if we can seek */
-  if (bclass->is_seekable)
-    basesrc->seekable = bclass->is_seekable (basesrc);
-  else
-    basesrc->seekable = FALSE;
+  /* check if we can seek, updates ->seekable */
+  gst_basesrc_is_seekable (basesrc);
 
   /* run typefind */
 #if 0

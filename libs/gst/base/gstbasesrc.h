@@ -39,7 +39,7 @@ typedef enum {
   GST_BASESRC_STARTED           = GST_ELEMENT_FLAG_LAST,
 
   GST_BASESRC_FLAG_LAST         = GST_ELEMENT_FLAG_LAST + 2
-} GstFileSrcFlags;
+} GstBaseSrcFlags;
 
 /* base class for random access sources
  *
@@ -51,6 +51,8 @@ typedef enum {
  */
 typedef struct _GstBaseSrc GstBaseSrc;
 typedef struct _GstBaseSrcClass GstBaseSrcClass;
+
+#define GST_BASESRC_PAD(obj)           (GST_BASESRC (obj)->srcpad)
 
 struct _GstBaseSrc {
   GstElement     element;
@@ -104,7 +106,8 @@ struct _GstBaseSrcClass {
 
   /* notify subclasses of an event */
   gboolean      (*event)        (GstBaseSrc *src, GstEvent *event);
-  /* ask the subclass to create a buffer */
+
+  /* ask the subclass to create a buffer with offset and size */
   GstFlowReturn (*create)       (GstBaseSrc *src, guint64 offset, guint size, 
 		                 GstBuffer **buf);
 };
