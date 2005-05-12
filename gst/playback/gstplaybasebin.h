@@ -94,12 +94,6 @@ struct _GstPlayBaseBinClass {
   /* virtual fuctions */
   void (*setup_output_pads)	(GstPlayBaseBin *play_base_bin,
 				 GstPlayBaseGroup *group);
-
-  /* signals */
-  /* 0: buf=empty (underrun) - will re-cache,
-   * 100: buf=full (overrun) - will flush head of cache (latency) */
-  void (*buffering)		(GstPlayBaseBin *play_base_bin,
-				 gint            percentage);
 };
 
 GType gst_play_base_bin_get_type (void);

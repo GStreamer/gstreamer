@@ -1,5 +1,13 @@
 2005-05-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_class_init),
+	(fill_buffer), (check_queue), (queue_threshold_reached),
+	(queue_out_of_data):
+	* gst/playback/gstplaybasebin.h:
+	  Post buffer-fullness on the bus.
+
+2005-05-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/playback/gstdecodebin.c: (gst_decode_bin_class_init),
 	(try_to_link_1):
 	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_class_init),

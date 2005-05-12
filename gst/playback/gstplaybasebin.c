@@ -53,13 +53,6 @@ enum
   ARG_TEXT
 };
 
-/* signals */
-enum
-{
-  SIGNAL_BUFFERING,
-  LAST_SIGNAL
-};
-
 static void gst_play_base_bin_class_init (GstPlayBaseBinClass * klass);
 static void gst_play_base_bin_init (GstPlayBaseBin * play_base_bin);
 static void gst_play_base_bin_dispose (GObject * object);
@@ -81,7 +74,6 @@ static gboolean probe_triggered (GstProbe * probe, GstData ** data,
 static void setup_substreams (GstPlayBaseBin * play_base_bin);
 
 static GstPipelineClass *parent_class;
-static guint gst_play_base_bin_signals[LAST_SIGNAL] = { 0 };
 
 /*
  * GObject playbasebin wrappers.
@@ -170,13 +162,6 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_play_base_bin_debug, "playbasebin", 0,
       "playbasebin");
-
-  /* signals */
-  gst_play_base_bin_signals[SIGNAL_BUFFERING] =
-      g_signal_new ("buffering", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstPlayBaseBinClass, buffering),
-      NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_play_base_bin_dispose);
   gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_play_base_bin_finalize);
@@ -452,6 +437,14 @@ group_is_muted (GstPlayBaseGroup * group)
  * Buffer/cache checking.
  */
 
+static inline void
+fill_buffer (GstPlayBaseBin * play_base_bin, gint percent)
+{
+  gst_element_post_message (GST_ELEMENT (play_base_bin),
+      gst_message_new_application (gst_structure_new ("GstMessageBuffering",
+              "buffer-percent", G_TYPE_INT, percent, NULL)));
+}
+
 static gboolean
 check_queue (GstProbe * probe, GstData ** data, gpointer user_data)
 {
@@ -464,9 +457,7 @@ check_queue (GstProbe * probe, GstData ** data, gpointer user_data)
   level = level * 100 / play_base_bin->queue_threshold;
   if (level > 100)
     level = 100;
-
-  g_signal_emit (play_base_bin,
-      gst_play_base_bin_signals[SIGNAL_BUFFERING], 0, level);
+  fill_buffer (play_base_bin, level);
 
   /* continue! */
   return TRUE;
@@ -505,8 +496,7 @@ queue_threshold_reached (GstElement * queue, GstPlayBaseBin * play_base_bin)
         "Removing buffer probe %p from pad %s:%s (%p)",
         probe, GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
 
-    g_signal_emit (play_base_bin,
-        gst_play_base_bin_signals[SIGNAL_BUFFERING], 0, 100);
+    fill_buffer (play_base_bin, 100);
 
     g_object_set_data (G_OBJECT (queue), "probe", NULL);
     gst_pad_remove_probe (sinkpad, probe);
@@ -542,8 +532,7 @@ queue_out_of_data (GstElement * queue, GstPlayBaseBin * play_base_bin)
         probe, GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
     g_object_unref (G_OBJECT (sinkpad));
 
-    g_signal_emit (play_base_bin,
-        gst_play_base_bin_signals[SIGNAL_BUFFERING], 0, 0);
+    fill_buffer (play_base_bin, 0);
   }
 }
 
