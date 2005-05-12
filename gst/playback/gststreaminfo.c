@@ -36,7 +36,9 @@ enum
   ARG_TYPE,
   ARG_DECODER,
   ARG_MUTE,
-  ARG_CAPS
+  ARG_CAPS,
+  ARG_LANG_CODE,
+  ARG_CODEC
 };
 
 /* signals */
@@ -139,6 +141,13 @@ gst_stream_info_class_init (GstStreamInfoClass * klass)
       g_param_spec_boxed ("caps", "Capabilities",
           "Capabilities (or type) of this stream", GST_TYPE_CAPS,
           G_PARAM_READABLE));
+  g_object_class_install_property (gobject_klass, ARG_LANG_CODE,
+      g_param_spec_string ("language-code", "Language code",
+          "Language code for this stream, conforming to ISO-639-1",
+          NULL, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_klass, ARG_CODEC,
+      g_param_spec_string ("codec", "Codec",
+          "Codec used to encode the stream", NULL, G_PARAM_READABLE));
 
   gst_stream_info_signals[SIGNAL_MUTED] =
       g_signal_new ("muted", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -163,6 +172,40 @@ gst_stream_info_init (GstStreamInfo * stream_info)
   stream_info->caps = NULL;
 }
 
+static gboolean
+cb_probe (GstProbe * probe, GstData ** data, gpointer user_data)
+{
+  GstStreamInfo *info = user_data;
+
+  if (GST_IS_EVENT (*data)) {
+    GstEvent *e = GST_EVENT (*data);
+
+    if (GST_EVENT_TYPE (e) == GST_EVENT_TAG) {
+      gchar *codec;             //, *lang;
+      GstTagList *list = gst_event_tag_get_list (e);
+
+      if (gst_tag_list_get_string (list, GST_TAG_VIDEO_CODEC, &codec)) {
+        g_free (info->codec);
+        info->codec = codec;
+        g_object_notify (G_OBJECT (info), "codec");
+      } else if (gst_tag_list_get_string (list, GST_TAG_AUDIO_CODEC, &codec)) {
+        g_free (info->codec);
+        info->codec = codec;
+        g_object_notify (G_OBJECT (info), "codec");
+      }
+#if 0
+      if (gst_tag_list_get_string (list, GST_TAG_LANGUAGE_CODE, &lang)) {
+        g_free (info->langcode);
+        info->langcode = lang;
+        g_object_notify (G_OBJECT (info), "language-code");
+      }
+#endif
+    }
+  }
+
+  return TRUE;
+}
+
 GstStreamInfo *
 gst_stream_info_new (GstObject * object,
     GstStreamType type, const gchar * decoder, const GstCaps * caps)
@@ -172,6 +215,12 @@ gst_stream_info_new (GstObject * object,
   info = g_object_new (GST_TYPE_STREAM_INFO, NULL);
 
   gst_object_ref (object);
+  if (GST_IS_PAD (object)) {
+    GstProbe *probe;
+
+    probe = gst_probe_new (FALSE, cb_probe, info);
+    gst_pad_add_probe (GST_PAD_REALIZE (object), probe);
+  }
   info->object = object;
   info->type = type;
   info->decoder = g_strdup (decoder);
@@ -191,11 +240,14 @@ gst_stream_info_dispose (GObject * object)
   stream_info = GST_STREAM_INFO (object);
 
   if (stream_info->object) {
-    if (GST_PAD_REALIZE (stream_info->object) && gst_pad_get_parent ((GstPad *)
-            GST_PAD_REALIZE (stream_info->object))) {
-      g_signal_handlers_disconnect_by_func (gst_pad_get_parent ((GstPad *)
-              GST_PAD_REALIZE (stream_info->object)),
+    GstElement *parent;
+
+    parent = gst_pad_get_parent ((GstPad *)
+        GST_PAD_REALIZE (stream_info->object));
+    if (parent != NULL) {
+      g_signal_handlers_disconnect_by_func (parent,
           G_CALLBACK (stream_info_change_state), stream_info);
+      g_object_unref (G_OBJECT (parent));
     }
 
     gst_object_unref (stream_info->object);
@@ -205,6 +257,10 @@ gst_stream_info_dispose (GObject * object)
   stream_info->type = GST_STREAM_TYPE_UNKNOWN;
   g_free (stream_info->decoder);
   stream_info->decoder = NULL;
+  g_free (stream_info->langcode);
+  stream_info->langcode = NULL;
+  g_free (stream_info->codec);
+  stream_info->codec = NULL;
   if (stream_info->caps) {
     gst_caps_unref (stream_info->caps);
     stream_info->caps = NULL;
@@ -226,6 +282,7 @@ stream_info_change_state (GstElement * element,
     g_return_if_fail (stream_info->mute == TRUE);
     GST_DEBUG_OBJECT (stream_info, "Re-muting pads after state-change");
     //gst_pad_set_active_recursive (GST_PAD (stream_info->object), FALSE);
+    g_warning ("FIXME");
   }
 }
 
@@ -240,19 +297,23 @@ gst_stream_info_set_mute (GstStreamInfo * stream_info, gboolean mute)
   }
 
   if (mute != stream_info->mute) {
+    GstElement *element;
+
     stream_info->mute = mute;
     //gst_pad_set_active_recursive ((GstPad *)
-    //    GST_PAD_REALIZE (stream_info->object), !mute);
+    //GST_PAD_REALIZE (stream_info->object), !mute);
+    g_warning ("FIXME");
 
+    element = gst_pad_get_parent ((GstPad *)
+        GST_PAD_REALIZE (stream_info->object));
     if (mute) {
-      g_signal_connect (gst_pad_get_parent ((GstPad *)
-              GST_PAD_REALIZE (stream_info->object)), "state-change",
+      g_signal_connect (element, "state-change",
           G_CALLBACK (stream_info_change_state), stream_info);
     } else {
-      g_signal_handlers_disconnect_by_func (gst_pad_get_parent ((GstPad *)
-              GST_PAD_REALIZE (stream_info->object)),
+      g_signal_handlers_disconnect_by_func (element,
           G_CALLBACK (stream_info_change_state), stream_info);
     }
+    g_object_unref (G_OBJECT (element));
   }
   return TRUE;
 }
@@ -310,6 +371,12 @@ gst_stream_info_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_CAPS:
       g_value_set_boxed (value, stream_info->caps);
+      break;
+    case ARG_LANG_CODE:
+      g_value_set_string (value, stream_info->langcode);
+      break;
+    case ARG_CODEC:
+      g_value_set_string (value, stream_info->codec);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

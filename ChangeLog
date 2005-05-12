@@ -1,5 +1,45 @@
 2005-05-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_get_type),
+	(gst_play_base_bin_class_init), (gst_play_base_bin_finalize),
+	(get_active_group), (get_building_group), (group_destroy),
+	(group_commit), (check_queue), (queue_overrun),
+	(queue_threshold_reached), (queue_out_of_data),
+	(gen_preroll_element), (remove_groups), (unknown_type),
+	(add_element_stream), (no_more_pads), (probe_triggered),
+	(preroll_unlinked), (new_decoded_pad), (setup_subtitle),
+	(setup_substreams), (setup_source), (finish_source),
+	(prepare_output), (muted_group_change_state),
+	(gst_play_base_bin_set_property), (gst_play_base_bin_get_property),
+	(gst_play_base_bin_change_state):
+	* gst/playback/gstplaybasebin.h:
+	* gst/playback/gstplaybin.c: (gst_play_bin_class_init),
+	(gst_play_bin_init), (gst_play_bin_set_property),
+	(gen_video_element), (gen_text_element), (gen_audio_element),
+	(gen_vis_element), (remove_sinks), (add_sink), (setup_sinks),
+	(gst_play_bin_change_state):
+	* gst/playback/gststreaminfo.c: (gst_stream_info_class_init),
+	(cb_probe), (gst_stream_info_new), (gst_stream_info_dispose),
+	(stream_info_change_state), (gst_stream_info_set_mute),
+	(gst_stream_info_get_property):
+	* gst/playback/gststreaminfo.h:
+	* gst/playback/gststreamselector.c: (gst_stream_selector_init),
+	(gst_stream_selector_get_linked_pad),
+	(gst_stream_selector_getcaps),
+	(gst_stream_selector_get_linked_pads),
+	(gst_stream_selector_request_new_pad), (gst_stream_selector_chain):
+	* gst/playback/gststreamselector.h:
+	  Rough port of playbin. Needs some more work, but is mostly done,
+	  and uses a few locks in important places, which should make stuff
+	  like chain-switches clean. Still uses GST_STATE() in a few places,
+	  which isn't all that good an idea, subtitles/elements disabled
+	  because no elements to test with and thus probably broken, query
+	  and event handling moved to GstBin, internal thread removed
+	  alltogether because the pipeline does that for us now. Can play
+	  Ogg/Vorbis files. Haven't tested anything else yet.
+
+2005-05-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_activate_chain):
 	  Do no-more-pads (needed for autoplugging).
 

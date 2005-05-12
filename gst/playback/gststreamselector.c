@@ -57,14 +57,11 @@ static void gst_stream_selector_init (GstStreamSelector * sel);
 static void gst_stream_selector_base_init (GstStreamSelectorClass * klass);
 static void gst_stream_selector_class_init (GstStreamSelectorClass * klass);
 
-static GstCaps *gst_stream_selector_get_caps (GstPad * pad);
-static gboolean gst_stream_selector_setcaps (GstPad * pad, GstCaps * caps);
+static GstCaps *gst_stream_selector_getcaps (GstPad * pad);
 static GList *gst_stream_selector_get_linked_pads (GstPad * pad);
 static GstPad *gst_stream_selector_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * unused);
-static gboolean gst_stream_selector_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_stream_selector_chain (GstPad * pad,
-    GstBuffer * buffer);
+static GstFlowReturn gst_stream_selector_chain (GstPad * pad, GstBuffer * buf);
 
 static GstElementClass *parent_class = NULL;
 
@@ -135,16 +132,15 @@ gst_stream_selector_init (GstStreamSelector * sel)
   sel->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_pad_set_internal_link_function (sel->srcpad,
       GST_DEBUG_FUNCPTR (gst_stream_selector_get_linked_pads));
-  gst_pad_set_setcaps_function (sel->srcpad,
-      GST_DEBUG_FUNCPTR (gst_stream_selector_setcaps));
   gst_pad_set_getcaps_function (sel->srcpad,
-      GST_DEBUG_FUNCPTR (gst_stream_selector_get_caps));
+      GST_DEBUG_FUNCPTR (gst_stream_selector_getcaps));
   gst_element_add_pad (GST_ELEMENT (sel), sel->srcpad);
 
   /* sinkpad management */
   sel->last_active_sinkpad = NULL;
   sel->nb_sinkpads = 0;
-  sel->in_chain = FALSE;
+
+  //GST_FLAG_SET (sel, GST_ELEMENT_WORK_IN_PLACE);
 }
 
 static void
@@ -158,23 +154,23 @@ gst_stream_selector_dispose (GObject * object)
 }
 
 static GstPad *
-gst_stream_selector_get_linked_pad (GstPad * pad)
+gst_stream_selector_get_linked_pad (GstPad * pad, gboolean strict)
 {
   GstStreamSelector *sel = GST_STREAM_SELECTOR (gst_pad_get_parent (pad));
   GstPad *otherpad = NULL;
 
   if (pad == sel->srcpad)
     otherpad = sel->last_active_sinkpad;
-  else if (pad == sel->last_active_sinkpad)
+  else if (pad == sel->last_active_sinkpad || !strict)
     otherpad = sel->srcpad;
 
   return otherpad;
 }
 
 static GstCaps *
-gst_stream_selector_get_caps (GstPad * pad)
+gst_stream_selector_getcaps (GstPad * pad)
 {
-  GstPad *otherpad = gst_stream_selector_get_linked_pad (pad);
+  GstPad *otherpad = gst_stream_selector_get_linked_pad (pad, FALSE);
 
   if (!otherpad) {
     GST_DEBUG_OBJECT (gst_pad_get_parent (pad),
@@ -184,38 +180,16 @@ gst_stream_selector_get_caps (GstPad * pad)
   }
 
   GST_DEBUG_OBJECT (gst_pad_get_parent (pad),
-      "Pad %s is linked (to %s), returning peer-caps",
+      "Pad %s is linked (to %s), returning allowed-caps",
       gst_pad_get_name (pad), gst_pad_get_name (otherpad));
 
   return gst_pad_peer_get_caps (otherpad);
 }
 
-static gboolean
-gst_stream_selector_setcaps (GstPad * pad, GstCaps * caps)
-{
-  GstPad *otherpad = gst_stream_selector_get_linked_pad (pad);
-
-  if (!otherpad) {
-    GST_DEBUG_OBJECT (gst_pad_get_parent (pad),
-        "Pad %s not linked, returning %s",
-        gst_pad_get_name (pad), GST_PAD_IS_SINK (pad) ? "ok" : "delayed");
-
-    return FALSE;
-  }
-
-  GST_DEBUG_OBJECT (gst_pad_get_parent (pad),
-      "Pad %s is linked (to %s), returning other-trysetcaps",
-      gst_pad_get_name (pad), gst_pad_get_name (otherpad));
-
-  gst_pad_set_caps (otherpad, caps);
-
-  return TRUE;
-}
-
 static GList *
 gst_stream_selector_get_linked_pads (GstPad * pad)
 {
-  GstPad *otherpad = gst_stream_selector_get_linked_pad (pad);
+  GstPad *otherpad = gst_stream_selector_get_linked_pad (pad, TRUE);
 
   if (!otherpad)
     return NULL;
@@ -242,34 +216,29 @@ gst_stream_selector_request_new_pad (GstElement * element,
   g_free (name);
 
   gst_pad_set_getcaps_function (sinkpad,
-      GST_DEBUG_FUNCPTR (gst_stream_selector_get_caps));
+      GST_DEBUG_FUNCPTR (gst_stream_selector_getcaps));
   gst_pad_set_chain_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_stream_selector_chain));
-  gst_pad_set_event_function (sinkpad,
-      GST_DEBUG_FUNCPTR (gst_stream_selector_event));
   gst_pad_set_internal_link_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_stream_selector_get_linked_pads));
   gst_element_add_pad (GST_ELEMENT (sel), sinkpad);
 
+  GST_STATE_LOCK (sel);
+  if (GST_STATE (sel) >= GST_STATE_PAUSED) {
+    gst_pad_set_active (sinkpad, GST_ACTIVATE_PUSH);
+  }
+  GST_STATE_UNLOCK (sel);
+
   return sinkpad;
 }
 
-static gboolean
-gst_stream_selector_event (GstPad * pad, GstEvent * event)
-{
-  GstStreamSelector *sel = GST_STREAM_SELECTOR (GST_PAD_PARENT (pad));
-
-  /* forward */
-  GST_DEBUG_OBJECT (sel, "Forwarding event %p from pad %s",
-      event, GST_OBJECT_NAME (pad));
-
-  return gst_pad_push_event (sel->srcpad, event);
-}
-
 static GstFlowReturn
-gst_stream_selector_chain (GstPad * pad, GstBuffer * buffer)
+gst_stream_selector_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstStreamSelector *sel = GST_STREAM_SELECTOR (GST_PAD_PARENT (pad));
+  GstStreamSelector *sel = GST_STREAM_SELECTOR (gst_pad_get_parent (pad));
+  GstFlowReturn res;
+
+  GST_STREAM_LOCK (pad);
 
   /* first, check if the active pad changed. If so, redo
    * negotiation and fail if that fails. */
@@ -283,7 +252,10 @@ gst_stream_selector_chain (GstPad * pad, GstBuffer * buffer)
 
   /* forward */
   GST_DEBUG_OBJECT (sel, "Forwarding buffer %p from pad %s",
-      buffer, GST_OBJECT_NAME (pad));
+      "buf", gst_pad_get_name (pad));
+  res = gst_pad_push (sel->srcpad, buf);
 
-  return gst_pad_push (sel->srcpad, buffer);
+  GST_STREAM_UNLOCK (pad);
+
+  return res;
 }

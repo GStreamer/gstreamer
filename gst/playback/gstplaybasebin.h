@@ -17,7 +17,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef __GST_PLAYBASEBIN_H__
 #define __GST_PLAYBASEBIN_H__
 
@@ -52,6 +51,7 @@ typedef struct
   gint		 nstreams;
   GList		*streaminfo;
 
+  /* contained decoded elementary streams */
   struct {
     gint	 npads;
     GstBin      *bin;
@@ -63,17 +63,14 @@ typedef struct
 } GstPlayBaseGroup;
 
 struct _GstPlayBaseBin {
-  GstBin 	 bin;
+  GstPipeline	 pipeline;
 	
   /* properties */
-  gboolean	 threaded;
   guint64	 queue_size;
   guint		 queue_threshold;
 
+  /* currently loaded media */
   gint		 current[NUM_TYPES];
-
-  /* internal thread */
-  GstElement	*thread;
   gchar 	*uri, *suburi;
   gboolean	 is_stream;
   GstElement	*source;
@@ -81,18 +78,15 @@ struct _GstPlayBaseBin {
   GstElement	*subtitle; /* additional filesrc ! subparse bin */
   gboolean	 need_rebuild;
 
-  /* group management */
+  /* group management - using own lock */
   GMutex	*group_lock;		/* lock and mutex to signal availability of new group */
   GCond		*group_cond;
   GstPlayBaseGroup *building_group; 	/* the group that we are constructing */
   GList		*queued_groups;      	/* the constructed groups, head is the active one */
-
-  /* list of usable factories */
-  GList		*factories;
 };
 
 struct _GstPlayBaseBinClass {
-  GstBinClass 	 parent_class;
+  GstPipelineClass parent_class;
 
   /* signals */
   void (*setup_output_pads)	(GstPlayBaseBin *play_base_bin);
@@ -108,27 +102,9 @@ struct _GstPlayBaseBinClass {
   /* Called on redirect */
   void (*got_redirect)		(GstPlayBaseBin *play_base_bin,
 				 const gchar    *new_location);
-
-  /* action signals */
-  gboolean (*link_stream)	(GstPlayBaseBin *play_base_bin, 
-				 GstStreamInfo *info,
-				 GstPad *pad);
-  void	(*unlink_stream)	(GstPlayBaseBin *play_base_bin, 
-				 GstStreamInfo *info);
 };
 
 GType gst_play_base_bin_get_type (void);
-
-gint		gst_play_base_bin_get_nstreams		(GstPlayBaseBin *play_base_bin);
-const GList*	gst_play_base_bin_get_streaminfo	(GstPlayBaseBin *play_base_bin);
-gint		gst_play_base_bin_get_nstreams_of_type	(GstPlayBaseBin *play_base_bin,
-							 GstStreamType type);
-
-gboolean	gst_play_base_bin_link_stream		(GstPlayBaseBin *play_base_bin, 
-							 GstStreamInfo *info,
-							 GstPad *pad);
-void		gst_play_base_bin_unlink_stream		(GstPlayBaseBin *play_base_bin, 
-							 GstStreamInfo *info);
 
 G_END_DECLS
 

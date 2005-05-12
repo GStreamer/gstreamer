@@ -32,6 +32,11 @@ GST_DEBUG_CATEGORY_STATIC (gst_play_base_bin_debug);
 #define DEFAULT_QUEUE_THRESHOLD (2 * GST_SECOND)
 #define DEFAULT_QUEUE_SIZE  (3 * GST_SECOND)
 
+#define GROUP_LOCK(pbb) g_mutex_lock (pbb->group_lock)
+#define GROUP_UNLOCK(pbb) g_mutex_unlock (pbb->group_lock)
+#define GROUP_WAIT(pbb) g_cond_wait (pbb->group_cond, pbb->group_lock)
+#define GROUP_SIGNAL(pbb) g_cond_signal (pbb->group_cond)
+
 /* props */
 enum
 {
@@ -51,19 +56,17 @@ enum
 /* signals */
 enum
 {
-  SETUP_OUTPUT_PADS_SIGNAL,
-  REMOVED_OUTPUT_PAD_SIGNAL,
-  BUFFERING_SIGNAL,
-  GROUP_SWITCH_SIGNAL,
-  LINK_STREAM_SIGNAL,
-  UNLINK_STREAM_SIGNAL,
-  REDIRECT,
+  SIGNAL_SETUP_OUTPUT_PADS,
+  SIGNAL_BUFFERING,
+  SIGNAL_GROUP_SWITCH,
+  SIGNAL_REDIRECT,
   LAST_SIGNAL
 };
 
 static void gst_play_base_bin_class_init (GstPlayBaseBinClass * klass);
 static void gst_play_base_bin_init (GstPlayBaseBin * play_base_bin);
 static void gst_play_base_bin_dispose (GObject * object);
+static void gst_play_base_bin_finalize (GObject * object);
 
 static void gst_play_base_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
@@ -71,29 +74,21 @@ static void gst_play_base_bin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * spec);
 static GstElementStateReturn gst_play_base_bin_change_state (GstElement *
     element);
+const GList *gst_play_base_bin_get_streaminfo (GstPlayBaseBin * play_base_bin);
 
-static gboolean gst_play_base_bin_add_element (GstBin * bin,
-    GstElement * element);
-static gboolean gst_play_base_bin_remove_element (GstBin * bin,
-    GstElement * element);
-
-extern GstElementStateReturn gst_element_set_state_func (GstElement * element,
-    GstElementState state);
-
-static void gst_play_base_bin_error (GstElement * element,
-    GstElement * source, GError * error, gchar * debug, gpointer data);
-static void gst_play_base_bin_found_tag (GstElement * element,
-    GstElement * source, const GstTagList * taglist, gpointer data);
-
+static gboolean prepare_output (GstPlayBaseBin * play_base_bin);
 static void set_active_source (GstPlayBaseBin * play_base_bin,
     GstStreamType type, gint source_num);
 static gboolean probe_triggered (GstProbe * probe, GstData ** data,
     gpointer user_data);
 static void setup_substreams (GstPlayBaseBin * play_base_bin);
 
-static GstElementClass *element_class;
-static GstElementClass *parent_class;
+static GstPipelineClass *parent_class;
 static guint gst_play_base_bin_signals[LAST_SIGNAL] = { 0 };
+
+/*
+ * GObject playbasebin wrappers.
+ */
 
 GType
 gst_play_base_bin_get_type (void)
@@ -114,7 +109,7 @@ gst_play_base_bin_get_type (void)
       NULL
     };
 
-    gst_play_base_bin_type = g_type_register_static (GST_TYPE_BIN,
+    gst_play_base_bin_type = g_type_register_static (GST_TYPE_PIPELINE,
         "GstPlayBaseBin", &gst_play_base_bin_info, 0);
   }
 
@@ -132,8 +127,7 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
   gstelement_klass = (GstElementClass *) klass;
   gstbin_klass = (GstBinClass *) klass;
 
-  element_class = g_type_class_ref (gst_element_get_type ());
-  parent_class = g_type_class_ref (gst_bin_get_type ());
+  parent_class = g_type_class_ref (GST_TYPE_PIPELINE);
 
   gobject_klass->set_property = gst_play_base_bin_set_property;
   gobject_klass->get_property = gst_play_base_bin_get_property;
@@ -181,58 +175,33 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
       "playbasebin");
 
   /* signals */
-  gst_play_base_bin_signals[SETUP_OUTPUT_PADS_SIGNAL] =
+  gst_play_base_bin_signals[SIGNAL_SETUP_OUTPUT_PADS] =
       g_signal_new ("setup-output-pads", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstPlayBaseBinClass, setup_output_pads),
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-  gst_play_base_bin_signals[REMOVED_OUTPUT_PAD_SIGNAL] =
-      g_signal_new ("removed-output-pad", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstPlayBaseBinClass, removed_output_pad),
-      NULL, NULL, gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
-  gst_play_base_bin_signals[BUFFERING_SIGNAL] =
+  gst_play_base_bin_signals[SIGNAL_BUFFERING] =
       g_signal_new ("buffering", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstPlayBaseBinClass, buffering),
       NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
-  gst_play_base_bin_signals[GROUP_SWITCH_SIGNAL] =
+  gst_play_base_bin_signals[SIGNAL_GROUP_SWITCH] =
       g_signal_new ("group-switch", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstPlayBaseBinClass, group_switch),
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-  gst_play_base_bin_signals[REDIRECT] =
+  gst_play_base_bin_signals[SIGNAL_REDIRECT] =
       g_signal_new ("got-redirect", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstPlayBaseBinClass, got_redirect),
       NULL, NULL, g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1,
       G_TYPE_STRING);
 
-  /* action signals */
-  gst_play_base_bin_signals[LINK_STREAM_SIGNAL] =
-      g_signal_new ("link-stream", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstPlayBaseBinClass, link_stream),
-      NULL, NULL, gst_play_marshal_BOOLEAN__OBJECT_OBJECT, G_TYPE_BOOLEAN, 2,
-      G_TYPE_OBJECT, GST_TYPE_PAD);
-  gst_play_base_bin_signals[UNLINK_STREAM_SIGNAL] =
-      g_signal_new ("unlink-stream", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstPlayBaseBinClass, unlink_stream),
-      NULL, NULL, gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
-
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_play_base_bin_dispose);
+  gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_play_base_bin_finalize);
 
-  /* we handle state changes like an element */
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_play_base_bin_change_state);
-
-  gstbin_klass->add_element = GST_DEBUG_FUNCPTR (gst_play_base_bin_add_element);
-  gstbin_klass->remove_element =
-      GST_DEBUG_FUNCPTR (gst_play_base_bin_remove_element);
-
-  klass->link_stream = gst_play_base_bin_link_stream;
-  klass->unlink_stream = gst_play_base_bin_unlink_stream;
 }
 
 static void
@@ -272,6 +241,21 @@ gst_play_base_bin_dispose (GObject * object)
   }
 }
 
+static void
+gst_play_base_bin_finalize (GObject * object)
+{
+  GstPlayBaseBin *play_base_bin = GST_PLAY_BASE_BIN (object);
+
+  g_mutex_free (play_base_bin->group_lock);
+  g_cond_free (play_base_bin->group_cond);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+/*
+ * playbasebingroup stuff.
+ */
+
 static GstPlayBaseGroup *
 group_create (GstPlayBaseBin * play_base_bin)
 {
@@ -283,17 +267,28 @@ group_create (GstPlayBaseBin * play_base_bin)
   return group;
 }
 
+/*
+ * Gets the currently playing group.
+ *
+ * Callers must have group-lock held when calling this.
+ */
+
 static GstPlayBaseGroup *
 get_active_group (GstPlayBaseBin * play_base_bin)
 {
-  if (play_base_bin->queued_groups) {
-    return (GstPlayBaseGroup *) play_base_bin->queued_groups->data;
-  }
-  return NULL;
+  GstPlayBaseGroup *group = NULL;
+
+  if (play_base_bin->queued_groups)
+    group = play_base_bin->queued_groups->data;
+
+  return group;
 }
 
-/* get the group used for discovering the different streams.
+/*
+ * get the group used for discovering the different streams.
  * This function creates a group is there is none.
+ *
+ * Callers must have group-lock held when calling this.
  */
 static GstPlayBaseGroup *
 get_building_group (GstPlayBaseBin * play_base_bin)
@@ -301,19 +296,22 @@ get_building_group (GstPlayBaseBin * play_base_bin)
   GstPlayBaseGroup *group;
 
   group = play_base_bin->building_group;
-
   if (group == NULL) {
     group = group_create (play_base_bin);
     play_base_bin->building_group = group;
   }
+
   return group;
 }
+
+/*
+ * Callers must have lock held when calling this!
+ */
 
 static void
 group_destroy (GstPlayBaseGroup * group)
 {
   GstPlayBaseBin *play_base_bin = group->bin;
-  GList *infos;
   gint n;
 
   GST_LOG ("removing group %p", group);
@@ -350,7 +348,7 @@ group_destroy (GstPlayBaseGroup * group)
         GST_LOG ("removing fakesrc from %s:%s",
             gst_pad_get_name (pad),
             GST_ELEMENT_NAME (gst_pad_get_parent (pad)));
-        gst_bin_remove (GST_BIN (play_base_bin->thread), fakesrc);
+        gst_bin_remove (GST_BIN (play_base_bin), fakesrc);
       }
     }
 
@@ -372,33 +370,37 @@ group_destroy (GstPlayBaseGroup * group)
   }
 
   /* free the streaminfo too */
-  for (infos = group->streaminfo; infos; infos = g_list_next (infos)) {
-    GstStreamInfo *info = GST_STREAM_INFO (infos->data);
-
-    g_object_unref (info);
-  }
+  g_list_foreach (group->streaminfo, (GFunc) g_object_unref, NULL);
   g_list_free (group->streaminfo);
   g_free (group);
 }
 
-/* is called when the current building group is completely finished 
+/*
+ * is called when the current building group is completely finished 
  * and ready for playback
+ *
+ * This function grabs lock, so take care when calling.
  */
 static void
-group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal)
+group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal, gboolean subtitle)
 {
-  GstPlayBaseGroup *group = play_base_bin->building_group;
-  gboolean had_active_group = (get_active_group (play_base_bin) != NULL);
+  GstPlayBaseGroup *group;
+  gboolean had_active_group;
+
+  GROUP_LOCK (play_base_bin);
+  group = play_base_bin->building_group;
+  had_active_group = (get_active_group (play_base_bin) != NULL);
 
   /* if an element signalled a no-more-pads after we stopped due
    * to preroll, the group is NULL. This is not an error */
   if (group == NULL) {
     if (!fatal) {
+      GROUP_UNLOCK (play_base_bin);
       return;
     } else {
       GST_DEBUG ("Group loading failed, bailing out");
     }
-  } else {
+  } else if (!subtitle) {
     gint n;
 
     GST_DEBUG ("group %p done", group);
@@ -425,23 +427,33 @@ group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal)
     }
   }
 
-  g_mutex_lock (play_base_bin->group_lock);
   GST_DEBUG ("signal group done");
-  g_cond_signal (play_base_bin->group_cond);
+  GROUP_SIGNAL (play_base_bin);
   GST_DEBUG ("signaled group done");
-  g_mutex_unlock (play_base_bin->group_lock);
 
-  if (group && !had_active_group && GST_STATE (play_base_bin) > GST_STATE_READY) {
+  if (!subtitle && !had_active_group) {
+    if (!prepare_output (play_base_bin))
+      return;
+
     setup_substreams (play_base_bin);
     GST_DEBUG ("Emitting signal");
     g_signal_emit (play_base_bin,
-        gst_play_base_bin_signals[SETUP_OUTPUT_PADS_SIGNAL], 0);
+        gst_play_base_bin_signals[SIGNAL_SETUP_OUTPUT_PADS], 0);
     GST_DEBUG ("done");
+
+    GROUP_UNLOCK (play_base_bin);
+
     g_object_notify (G_OBJECT (play_base_bin), "stream-info");
+  } else {
+    GROUP_UNLOCK (play_base_bin);
   }
 }
 
-/* check if there are streams in the group that are not muted */
+/*
+ * check if there are streams in the group that are not muted
+ *
+ * Callers must have group-lock held when calling this.
+ */
 static gboolean
 group_is_muted (GstPlayBaseGroup * group)
 {
@@ -473,7 +485,7 @@ check_queue (GstProbe * probe, GstData ** data, gpointer user_data)
     level = 100;
 
   g_signal_emit (play_base_bin,
-      gst_play_base_bin_signals[BUFFERING_SIGNAL], 0, level);
+      gst_play_base_bin_signals[SIGNAL_BUFFERING], 0, level);
 
   /* continue! */
   return TRUE;
@@ -487,7 +499,7 @@ queue_overrun (GstElement * element, GstPlayBaseBin * play_base_bin)
 {
   GST_DEBUG ("queue %s overrun", gst_element_get_name (element));
 
-  group_commit (play_base_bin, FALSE);
+  group_commit (play_base_bin, FALSE, FALSE);
 
   g_signal_handlers_disconnect_by_func (element,
       G_CALLBACK (queue_overrun), play_base_bin);
@@ -513,14 +525,13 @@ queue_threshold_reached (GstElement * queue, GstPlayBaseBin * play_base_bin)
         probe, GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
 
     g_signal_emit (play_base_bin,
-        gst_play_base_bin_signals[BUFFERING_SIGNAL], 0, 100);
+        gst_play_base_bin_signals[SIGNAL_BUFFERING], 0, 100);
 
     g_object_set_data (G_OBJECT (queue), "probe", NULL);
     gst_pad_remove_probe (sinkpad, probe);
     gst_probe_destroy (probe);
 
-    g_signal_emit (play_base_bin,
-        gst_play_base_bin_signals[BUFFERING_SIGNAL], 0, 100);
+    g_object_unref (G_OBJECT (sinkpad));
   }
 }
 
@@ -548,16 +559,20 @@ queue_out_of_data (GstElement * queue, GstPlayBaseBin * play_base_bin)
     GST_DEBUG_OBJECT (play_base_bin,
         "Re-attaching buffering probe %p to pad %s:%s (%p)",
         probe, GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
+    g_object_unref (G_OBJECT (sinkpad));
 
     g_signal_emit (play_base_bin,
-        gst_play_base_bin_signals[BUFFERING_SIGNAL], 0, 0);
+        gst_play_base_bin_signals[SIGNAL_BUFFERING], 0, 0);
   }
 }
 
-/* generate a preroll element which is simply a queue. While there
+/*
+ * generate a preroll element which is simply a queue. While there
  * are still dynamic elements in the pipeline, we wait for one
  * of the queues to fill. The assumption is that all the dynamic
- * streams will be detected by that time. 
+ * streams will be detected by that time.
+ *
+ * Callers must have the group-lock held when calling this.
  */
 static void
 gen_preroll_element (GstPlayBaseBin * play_base_bin,
@@ -613,6 +628,7 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
     gst_pad_add_probe (sinkpad, probe);
     GST_DEBUG_OBJECT (play_base_bin, "Attaching probe %p to pad %s:%s (%p)",
         probe, GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
+    g_object_unref (G_OBJECT (sinkpad));
     g_object_set_data (G_OBJECT (preroll), "pbb", play_base_bin);
     g_object_set_data (G_OBJECT (preroll), "probe", probe);
 
@@ -638,27 +654,27 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
     group->type[type - 1].bin = GST_BIN (play_base_bin->subtitle);
     gst_bin_add (GST_BIN (play_base_bin->subtitle), selector);
     gst_bin_add (GST_BIN (play_base_bin->subtitle), preroll);
-    gst_element_set_state (selector, GST_STATE_PAUSED);
+    gst_element_set_state (selector,
+        GST_STATE (play_base_bin) == GST_STATE_PLAYING ?
+        GST_STATE_PLAYING : GST_STATE_PAUSED);
   } else {
-    group->type[type - 1].bin = GST_BIN (play_base_bin->thread);
-    gst_bin_add (GST_BIN (play_base_bin->thread), selector);
-    gst_bin_add (GST_BIN (play_base_bin->thread), preroll);
-    gst_element_set_state (selector, GST_STATE_PLAYING);
-  }
-  if (GST_STATE (play_base_bin) == GST_STATE_PLAYING &&
-      !get_active_group (play_base_bin)) {
-    gst_element_set_state (preroll, GST_STATE_PLAYING);
-  } else {
-    gst_element_set_state (preroll, GST_STATE_PAUSED);
+    group->type[type - 1].bin = GST_BIN (play_base_bin);
+    gst_bin_add (GST_BIN (play_base_bin), selector);
+    gst_bin_add (GST_BIN (play_base_bin), preroll);
+    gst_element_set_state (selector,
+        GST_STATE (play_base_bin) == GST_STATE_PLAYING ?
+        GST_STATE_PLAYING : GST_STATE_PAUSED);
   }
 
-  play_base_bin->threaded = TRUE;
+  gst_element_set_state (preroll,
+      GST_STATE (play_base_bin) == GST_STATE_PLAYING ?
+      GST_STATE_PLAYING : GST_STATE_PAUSED);
 }
 
 static void
 remove_groups (GstPlayBaseBin * play_base_bin)
 {
-  GList *groups;
+  GROUP_LOCK (play_base_bin);
 
   /* first destroy the group we were building if any */
   if (play_base_bin->building_group) {
@@ -667,23 +683,23 @@ remove_groups (GstPlayBaseBin * play_base_bin)
   }
 
   /* remove the queued groups */
-  for (groups = play_base_bin->queued_groups; groups;
-      groups = g_list_next (groups)) {
-    GstPlayBaseGroup *group = (GstPlayBaseGroup *) groups->data;
-
-    group_destroy (group);
-  }
+  g_list_foreach (play_base_bin->queued_groups, (GFunc) group_destroy, NULL);
   g_list_free (play_base_bin->queued_groups);
   play_base_bin->queued_groups = NULL;
 
   /* clear subs */
   if (play_base_bin->subtitle) {
-    gst_bin_remove (GST_BIN (play_base_bin->thread), play_base_bin->subtitle);
+    gst_bin_remove (GST_BIN (play_base_bin), play_base_bin->subtitle);
     play_base_bin->subtitle = NULL;
   }
+
+  GROUP_UNLOCK (play_base_bin);
 }
 
-/* Add/remove a single stream to current  building group.
+/* 
+ * Add/remove a single stream to current  building group.
+ *
+ * Must be called with group-lock held.
  */
 static void
 add_stream (GstPlayBaseGroup * group, GstStreamInfo * info)
@@ -699,8 +715,9 @@ add_stream (GstPlayBaseGroup * group, GstStreamInfo * info)
   }
 }
 
-/* signal fired when an unknown stream is found. We create a new
- * UNKNOWN streaminfo object 
+/*
+ * signal fired when an unknown stream is found. We create a new
+ * UNKNOWN streaminfo object.
  */
 static void
 unknown_type (GstElement * element, GstPad * pad, GstCaps * caps,
@@ -708,10 +725,14 @@ unknown_type (GstElement * element, GstPad * pad, GstCaps * caps,
 {
   gchar *capsstr;
   GstStreamInfo *info;
-  GstPlayBaseGroup *group = get_building_group (play_base_bin);
+  GstPlayBaseGroup *group;
 
   capsstr = gst_caps_to_string (caps);
   g_message ("don't know how to handle %s", capsstr);
+
+  GROUP_LOCK (play_base_bin);
+
+  group = get_building_group (play_base_bin);
 
   /* add the stream to the list */
   info = gst_stream_info_new (GST_OBJECT (pad), GST_STREAM_TYPE_UNKNOWN,
@@ -719,9 +740,12 @@ unknown_type (GstElement * element, GstPad * pad, GstCaps * caps,
   info->origin = GST_OBJECT (pad);
   add_stream (group, info);
 
+  GROUP_UNLOCK (play_base_bin);
+
   g_free (capsstr);
 }
 
+#if 0
 /* add a streaminfo that indicates that the stream is handled by the
  * given element. This usually means that a stream without actual data is
  * produced but one that is sunken by an element. Examples of this are:
@@ -731,7 +755,11 @@ static void
 add_element_stream (GstElement * element, GstPlayBaseBin * play_base_bin)
 {
   GstStreamInfo *info;
-  GstPlayBaseGroup *group = get_building_group (play_base_bin);
+  GstPlayBaseGroup *group;
+
+  GROUP_LOCK (play_base_bin);
+
+  group = get_building_group (play_base_bin);
 
   /* add the stream to the list */
   info =
@@ -739,7 +767,10 @@ add_element_stream (GstElement * element, GstPlayBaseBin * play_base_bin)
       NULL, NULL);
   info->origin = GST_OBJECT (element);
   add_stream (group, info);
+
+  GROUP_UNLOCK (play_base_bin);
 }
+#endif
 
 /* when the decoder element signals that no more pads will be generated, we
  * can commit the current group.
@@ -749,8 +780,11 @@ no_more_pads (GstElement * element, GstPlayBaseBin * play_base_bin)
 {
   /* setup phase */
   GST_DEBUG ("no more pads");
+
   /* we can commit this group for playback now */
-  group_commit (play_base_bin, FALSE);
+  group_commit (play_base_bin, play_base_bin->is_stream,
+      gst_object_get_parent (GST_OBJECT (element)) ==
+      GST_OBJECT (play_base_bin->subtitle));
 }
 
 static gboolean
@@ -771,6 +805,8 @@ probe_triggered (GstProbe * probe, GstData ** data, gpointer user_data)
       gboolean have_left;
 
       GST_DEBUG ("probe got EOS in group %p", group);
+
+      GROUP_LOCK (play_base_bin);
 
       /* mute this stream */
       //g_object_set (G_OBJECT (info), "mute", TRUE, NULL);
@@ -794,60 +830,36 @@ probe_triggered (GstProbe * probe, GstData ** data, gpointer user_data)
       }
 
       if (have_left) {
-        /* error? */
-        if (GST_STATE (play_base_bin->thread) != GST_STATE_PLAYING)
-          return TRUE;
-
-        GST_DEBUG ("changing state for group change");
-        gst_element_set_state (play_base_bin->thread, GST_STATE_PAUSED);
         /* ok, get rid of the current group then */
         group_destroy (group);
-        g_signal_emit (play_base_bin,
-            gst_play_base_bin_signals[GROUP_SWITCH_SIGNAL], 0);
         /* removing the current group brings the next group
          * active */
         play_base_bin->queued_groups =
             g_list_remove (play_base_bin->queued_groups, group);
-        if (play_base_bin->queued_groups) {
-          setup_substreams (play_base_bin);
-          GST_DEBUG ("switching to next group %p",
-              play_base_bin->queued_groups->data);
-          /* and signal the new group */
-          GST_DEBUG ("emit signal");
-          g_signal_emit (play_base_bin,
-              gst_play_base_bin_signals[SETUP_OUTPUT_PADS_SIGNAL], 0);
+        /* and wait for the next one to be ready */
+        while (!play_base_bin->queued_groups) {
+          GROUP_WAIT (play_base_bin);
         }
-        /* else, it'll be handled in commit_group */
-        GST_DEBUG ("Syncing state from %d", GST_STATE (play_base_bin->thread));
-        gst_element_set_state (play_base_bin->thread, GST_STATE_PLAYING);
-        GST_DEBUG ("done");
+
+        /* now activate the next one */
+        setup_substreams (play_base_bin);
+        GST_DEBUG ("switching to next group %p - emitting signal",
+            play_base_bin->queued_groups->data);
+        /* and signal the new group */
+        g_signal_emit (play_base_bin,
+            gst_play_base_bin_signals[SIGNAL_SETUP_OUTPUT_PADS], 0);
+
+        GROUP_UNLOCK (play_base_bin);
+
+        g_signal_emit (play_base_bin,
+            gst_play_base_bin_signals[SIGNAL_GROUP_SWITCH], 0);
 
         /* get rid of the EOS event */
         return FALSE;
       } else {
+        GROUP_UNLOCK (play_base_bin);
         GST_LOG ("Last group done, EOS");
       }
-    } else if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
-      GstTagList *taglist;
-      GstObject *source;
-
-      /* ref some to be sure.. */
-      gst_event_ref (event);
-      gst_object_ref (GST_OBJECT (play_base_bin));
-      taglist = gst_event_tag_get_list (event);
-      /* now try to find the source of this tag */
-      source = event->src;
-      if (source == NULL || !GST_IS_ELEMENT (source)) {
-        /* no source, just use playbasebin then. This happens almost
-         * all the time, it seems the source is never filled in... */
-        source = GST_OBJECT (play_base_bin);
-      }
-      /* emit the signal now */
-      g_signal_emit_by_name (G_OBJECT (play_base_bin),
-          "found-tag", source, taglist);
-      /* and unref */
-      gst_object_unref (GST_OBJECT (play_base_bin));
-      gst_event_unref (event);
     }
   }
   return TRUE;
@@ -871,7 +883,7 @@ preroll_unlinked (GstPad * pad, GstPad * peerpad,
   GST_DEBUG ("patching unlinked pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   gst_pad_link (gst_element_get_pad (fakesrc, "src"), pad);
-  gst_bin_add (GST_BIN (play_base_bin->thread), fakesrc);
+  gst_bin_add (GST_BIN (play_base_bin), fakesrc);
 
   /* keep track of these patch elements */
   g_object_set_data (G_OBJECT (pad), "fakesrc", fakesrc);
@@ -943,13 +955,19 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
   structure = gst_caps_get_structure (caps, 0);
   mimetype = gst_structure_get_name (structure);
 
+  GROUP_LOCK (play_base_bin);
+
   group = get_building_group (play_base_bin);
 
   group->nstreams++;
 
-  if (g_str_has_prefix (mimetype, "audio/")) {
+  if (g_str_has_prefix (mimetype, "audio/") &&
+      gst_object_get_parent (GST_OBJECT (element)) !=
+      GST_OBJECT (play_base_bin->subtitle)) {
     type = GST_STREAM_TYPE_AUDIO;
-  } else if (g_str_has_prefix (mimetype, "video/")) {
+  } else if (g_str_has_prefix (mimetype, "video/") &&
+      gst_object_get_parent (GST_OBJECT (element)) !=
+      GST_OBJECT (play_base_bin->subtitle)) {
     type = GST_STREAM_TYPE_VIDEO;
   } else if (g_str_has_prefix (mimetype, "text/")) {
     type = GST_STREAM_TYPE_TEXT;
@@ -974,6 +992,7 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
   /* keep a ref to the signal id so that we can disconnect the signal callback */
   g_object_set_data (G_OBJECT (sinkpad), "unlinked_id", GINT_TO_POINTER (sig));
   gst_pad_link (pad, sinkpad);
+  g_object_unref (G_OBJECT (sinkpad));
 
   /* add the stream to the list */
   gst_caps_unref (caps);
@@ -988,50 +1007,13 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
 
   add_stream (group, info);
 
+  GROUP_UNLOCK (play_base_bin);
+
   /* signal the no more pads after adding the stream */
   if (last)
-    no_more_pads (NULL, play_base_bin);
+    no_more_pads (element, play_base_bin);
 }
 
-
-/* nothing, really... We have already dealt with this because
- * we have the EOS padprobe installed on each pad */
-static void
-removed_decoded_pad (GstElement * element, GstPad * pad,
-    GstPlayBaseBin * play_base_bin)
-{
-  return;
-}
-
-/*
- * Cache errors...
- */
-static void
-thread_error (GstElement * element,
-    GstElement * orig, GError * error, const gchar * debug, gpointer data)
-{
-  GError **_error = data;
-
-  if (!*_error)
-    *_error = g_error_copy (error);
-}
-
-/* signal fired when the internal thread performed an unexpected  
- * state change. This usually indicated an error occured. We stop the
- * preroll stage.
- */
-static void
-state_change (GstElement * element,
-    GstElementState old_state, GstElementState new_state, gpointer data)
-{
-  GstPlayBaseBin *play_base_bin = GST_PLAY_BASE_BIN (data);
-
-  if (old_state > new_state) {
-    /* EOS or error occurred, we have to commit the current group */
-    GST_DEBUG ("state changed downwards");
-    group_commit (play_base_bin, TRUE);
-  }
-}
 
 /*
  * Generate source ! subparse bins.
@@ -1041,24 +1023,15 @@ static GstElement *
 setup_subtitle (GstPlayBaseBin * play_base_bin, gchar * sub_uri)
 {
   GstElement *source, *subparse, *subbin;
-  gchar *name;
 
   source = gst_element_make_from_uri (GST_URI_SRC, sub_uri, NULL);
   if (!source)
     return NULL;
+  subparse = gst_element_factory_make ("decodebin", "subtitle-decoder");
 
-  if (!(subparse = gst_element_factory_make ("subparse", NULL))) {
-    gst_object_unref (GST_OBJECT (source));
-    return NULL;
-  }
-  name = g_strdup_printf ("subbin");
-  subbin = gst_bin_new (name);
-  g_free (name);
-
+  subbin = gst_bin_new ("subbin");
   gst_bin_add_many (GST_BIN (subbin), source, subparse, NULL);
   gst_element_link (source, subparse);
-  gst_element_add_ghost_pad (subbin,
-      gst_element_get_pad (subparse, "src"), "src");
 
   /* return the subtitle GstElement object */
   return subbin;
@@ -1098,16 +1071,23 @@ gen_source_element (GstPlayBaseBin * play_base_bin, GstElement ** subbin)
   return source;
 }
 
-/* Setup the substreams (to be called right after group_commit ()) */
+/*
+ * Setup the substreams (is called right after group_commit () when
+ * loading a new group, or after switching groups).
+ *
+ * Should be called with group-lock held.
+ */
+
 static void
 setup_substreams (GstPlayBaseBin * play_base_bin)
 {
-  GstPlayBaseGroup *group = get_active_group (play_base_bin);
+  GstPlayBaseGroup *group;
   GstProbe *probe;
   gint n;
   const GList *item;
 
   /* Remove the eat probes */
+  group = get_active_group (play_base_bin);
   for (item = group->streaminfo; item; item = item->next) {
     GstStreamInfo *info = item->data;
 
@@ -1156,61 +1136,50 @@ got_redirect (GstElement * element, const gchar * new_location, gpointer data)
 
 /* construct and run the source and decoder elements until we found
  * all the streams or until a preroll queue has been filled.
- * jesus christ this is a long function!
 */
 static gboolean
 setup_source (GstPlayBaseBin * play_base_bin,
     gchar ** new_location, GError ** error)
 {
-  GstElement *old_src;
-  GstElement *old_dec;
-  GstPad *srcpad = NULL;
   GstElement *subbin = NULL;
 
   if (!play_base_bin->need_rebuild)
     return TRUE;
 
-  play_base_bin->threaded = FALSE;
-
-  /* keep ref to old souce in case creating the new source fails */
-  old_src = play_base_bin->source;
+  /* delete old src */
+  if (play_base_bin->source) {
+    GST_LOG ("removing old src element");
+    gst_element_set_state (play_base_bin->source, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN (play_base_bin), play_base_bin->source);
+  }
 
   /* create and configure an element that can handle the uri */
   play_base_bin->source = gen_source_element (play_base_bin, &subbin);
-
   if (!play_base_bin->source) {
-    /* whoops, could not create the source element */
-    g_set_error (error, 0, 0,
-        "No URI handler implemented for \"%s\"", play_base_bin->uri);
-    GST_WARNING ("don't know how to read %s", play_base_bin->uri);
-    play_base_bin->source = old_src;
-    return FALSE;
-  } else {
-    if (old_src) {
-      GST_LOG ("removing old src element %s", gst_element_get_name (old_src));
-      gst_element_set_state (old_src, GST_STATE_NULL);
-      gst_bin_remove (GST_BIN (play_base_bin->thread), old_src);
-    }
-    gst_bin_add (GST_BIN (play_base_bin->thread), play_base_bin->source);
-    g_object_notify (G_OBJECT (play_base_bin), "source");
+    gchar *prot;
 
-    /* make sure the new element has the same state as the parent */
-#if 0
-    if (gst_bin_sync_children_state (GST_BIN (play_base_bin->thread)) ==
-        GST_STATE_FAILURE) {
-      return FALSE;
+    /* whoops, could not create the source element */
+    prot = gst_uri_get_protocol (play_base_bin->uri);
+    if (prot) {
+      g_set_error (error, 0, 0, "No URI handler implemented for \"%s\"", prot);
+      g_free (prot);
+    } else {
+      g_set_error (error, 0, 0, "Invalid URI \"%s\"", play_base_bin->uri);
     }
-#endif
+    GST_WARNING ("don't know how to read %s", play_base_bin->uri);
+    return FALSE;
   }
 
+  gst_bin_add (GST_BIN (play_base_bin), play_base_bin->source);
+  g_object_notify (G_OBJECT (play_base_bin), "source");
+  /* state will be merged later - if file is not found, error will be
+   * handled by the application right after. */
+
   /* remove the old decoder now, if any */
-  old_dec = play_base_bin->decoder;
-  if (old_dec) {
-    GST_LOG ("removing old decoder element %s", gst_element_get_name (old_dec));
-    /* keep a ref to the old decoder as we might need to add it again
-     * to the bin if we can't find a new decoder */
-    gst_object_ref (GST_OBJECT (old_dec));
-    gst_bin_remove (GST_BIN (play_base_bin->thread), old_dec);
+  if (play_base_bin->decoder) {
+    GST_LOG ("removing old decoder element");
+    gst_bin_remove (GST_BIN (play_base_bin), play_base_bin->decoder);
+    play_base_bin->decoder = NULL;
   }
 
   /* remove our previous preroll queues */
@@ -1218,13 +1187,71 @@ setup_source (GstPlayBaseBin * play_base_bin,
 
   /* do subs */
   if (subbin) {
+#if 0
+    gint sig4, sig5, sig6;
+    GstElement *db;
+
     play_base_bin->subtitle = subbin;
+    db = gst_bin_get_by_name (GST_BIN (subbin), "subtitle-decoder");
 
     /* don't add yet, because we will preroll, and subs shouldn't
      * preroll (we shouldn't preroll more than once source). */
     gst_element_set_state (subbin, GST_STATE_PAUSED);
-    new_decoded_pad (subbin, gst_element_get_pad (subbin, "src"), FALSE,
-        play_base_bin);
+
+    /* do type detection, without adding (so no preroll) */
+    g_signal_connect (G_OBJECT (db),
+        "new-decoded-pad", G_CALLBACK (new_decoded_pad), play_base_bin);
+    g_signal_connect (G_OBJECT (db), "no-more-pads",
+        G_CALLBACK (no_more_pads), play_base_bin);
+
+    if (!play_base_bin->is_stream) {
+      sig4 = g_signal_connect (G_OBJECT (db),
+          "unknown-type", G_CALLBACK (unknown_type), play_base_bin);
+      sig5 = g_signal_connect (G_OBJECT (subbin), "error",
+          G_CALLBACK (thread_error), error);
+
+      /* either when the queues are filled or when the decoder element
+       * has no more dynamic streams, the cond is unlocked. We can remove
+       * the signal handlers then
+       */
+      g_mutex_lock (play_base_bin->group_lock);
+      if (gst_element_set_state (subbin, GST_STATE_PLAYING) ==
+          GST_STATE_SUCCESS) {
+        GST_DEBUG ("waiting for first group...");
+        sig6 = g_signal_connect (G_OBJECT (subbin),
+            "state-change", G_CALLBACK (state_change), play_base_bin);
+        g_cond_wait (play_base_bin->group_cond, play_base_bin->group_lock);
+        GST_DEBUG ("group done !");
+      } else {
+        GST_DEBUG ("state change failed, subtitle cannot be loaded");
+        sig6 = 0;
+      }
+      g_mutex_unlock (play_base_bin->group_lock);
+
+      if (sig6 != 0)
+        g_signal_handler_disconnect (G_OBJECT (subbin), sig6);
+
+      g_signal_handler_disconnect (G_OBJECT (subbin), sig5);
+      g_signal_handler_disconnect (G_OBJECT (db), sig4);
+
+      gst_element_set_state (subbin, GST_STATE_PAUSED);
+
+      if (!play_base_bin->building_group ||
+          play_base_bin->building_group->type[GST_STREAM_TYPE_TEXT - 1].npads ==
+          0) {
+        if (*error) {
+          g_error_free (*error);
+          *error = NULL;
+        }
+
+        GST_DEBUG ("No subtitle found - ignoring");
+        gst_object_unref (GST_OBJECT (play_base_bin->subtitle));
+        play_base_bin->subtitle = NULL;
+      } else {
+        GST_DEBUG ("Subtitle set-up successful");
+      }
+    }
+#endif
   }
 
   /* now see if the source element emits raw audio/video all by itself,
@@ -1233,13 +1260,11 @@ setup_source (GstPlayBaseBin * play_base_bin,
    * do everything itself.
    */
   {
+#if 0
     const GList *pads;
-    gboolean is_raw = FALSE;
+    gboolean is_raw = FALSE, no_out = TRUE;
 
-    /* assume we are going to have no output streams */
-    gboolean no_out = TRUE;
-
-    for (pads = GST_ELEMENT (play_base_bin->source)->pads;
+    for (pads = gst_element_get_pad_list (play_base_bin->source);
         pads; pads = g_list_next (pads)) {
       GstPad *pad = GST_PAD (pads->data);
       GstStructure *structure;
@@ -1257,7 +1282,7 @@ setup_source (GstPlayBaseBin * play_base_bin,
       if (caps == NULL || gst_caps_is_empty (caps) ||
           gst_caps_get_size (caps) == 0) {
         if (caps != NULL)
-          gst_caps_unref (caps);
+          gst_caps_free (caps);
         continue;
       }
 
@@ -1271,7 +1296,7 @@ setup_source (GstPlayBaseBin * play_base_bin,
         is_raw = TRUE;
       }
 
-      gst_caps_unref (caps);
+      gst_caps_free (caps);
     }
     if (is_raw) {
       no_more_pads (play_base_bin->source, play_base_bin);
@@ -1284,86 +1309,101 @@ setup_source (GstPlayBaseBin * play_base_bin,
       no_more_pads (play_base_bin->source, play_base_bin);
       return TRUE;
     }
+#endif
   }
 
-  {
-    gboolean res;
-    gint sig1, sig2, sig3, sig4, sig5, sig6;
-
-    /* now create the decoder element */
-    play_base_bin->decoder = gst_element_factory_make ("decodebin", "decoder");
-    if (!play_base_bin->decoder) {
-      g_warning ("can't find decoder element");
-      play_base_bin->decoder = old_dec;
-      return FALSE;
-    } else {
-      /* ref decoder so that the bin does not take ownership */
-      gst_object_ref (GST_OBJECT (play_base_bin->decoder));
-      gst_bin_add (GST_BIN (play_base_bin->thread), play_base_bin->decoder);
-      /* now we can really get rid of the old decoder */
-      if (old_dec)
-        gst_object_unref (GST_OBJECT (old_dec));
-    }
-
-    g_signal_connect (play_base_bin->decoder, "got_redirect",
-        G_CALLBACK (got_redirect), new_location);
-    res = gst_pad_link (srcpad,
-        gst_element_get_pad (play_base_bin->decoder, "sink"));
-    if (!res) {
-      g_warning ("can't link source to decoder element");
-      return FALSE;
-    }
-    sig1 = g_signal_connect (G_OBJECT (play_base_bin->decoder),
-        "new-decoded-pad", G_CALLBACK (new_decoded_pad), play_base_bin);
-    sig2 = g_signal_connect (G_OBJECT (play_base_bin->decoder),
-        "removed-decoded-pad", G_CALLBACK (removed_decoded_pad), play_base_bin);
-    sig3 = g_signal_connect (G_OBJECT (play_base_bin->decoder), "no-more-pads",
-        G_CALLBACK (no_more_pads), play_base_bin);
-
-    if (!play_base_bin->is_stream) {
-      sig4 = g_signal_connect (G_OBJECT (play_base_bin->decoder),
-          "unknown-type", G_CALLBACK (unknown_type), play_base_bin);
-      sig5 = g_signal_connect (G_OBJECT (play_base_bin->thread), "error",
-          G_CALLBACK (thread_error), error);
-
-      /* either when the queues are filled or when the decoder element
-       * has no more dynamic streams, the cond is unlocked. We can remove
-       * the signal handlers then
-       */
-      g_mutex_lock (play_base_bin->group_lock);
-      if (gst_element_set_state (play_base_bin->thread, GST_STATE_PAUSED) ==
-          GST_STATE_SUCCESS) {
-        GST_DEBUG ("waiting for first group...");
-        sig6 = g_signal_connect (G_OBJECT (play_base_bin->thread),
-            "state-change", G_CALLBACK (state_change), play_base_bin);
-        g_cond_wait (play_base_bin->group_cond, play_base_bin->group_lock);
-        GST_DEBUG ("group done !");
-      } else {
-        GST_DEBUG ("state change failed, media cannot be loaded");
-        sig6 = 0;
-      }
-      g_mutex_unlock (play_base_bin->group_lock);
-
-      if (sig6 != 0)
-        g_signal_handler_disconnect (G_OBJECT (play_base_bin->thread), sig6);
-
-      g_signal_handler_disconnect (G_OBJECT (play_base_bin->thread), sig5);
-      g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig4);
-    } else {
-      GST_DEBUG ("Source is a stream, delaying stream initialization");
-    }
-
-    play_base_bin->need_rebuild = FALSE;
+  /* now create the decoder element */
+  play_base_bin->decoder = gst_element_factory_make ("decodebin", "decoder");
+  if (!play_base_bin->decoder) {
+    g_set_error (error, 0, 0, "Could not create autoplugger element");
+    GST_WARNING ("can't find decoder element");
+    return FALSE;
+  }
+  gst_bin_add (GST_BIN (play_base_bin), play_base_bin->decoder);
+  if (!gst_element_link (play_base_bin->source, play_base_bin->decoder)) {
+    g_set_error (error, 0, 0, "Could not link source and autoplugger");
+    GST_WARNING ("can't link source to decoder element");
+    return FALSE;
   }
 
+  /* set up callbacks to create the links between decoded data
+   * and video/audio/subtitle rendering/output. */
+  g_signal_connect (play_base_bin->decoder, "got_redirect",
+      G_CALLBACK (got_redirect), new_location);
+  g_signal_connect (G_OBJECT (play_base_bin->decoder),
+      "new-decoded-pad", G_CALLBACK (new_decoded_pad), play_base_bin);
+  g_signal_connect (G_OBJECT (play_base_bin->decoder), "no-more-pads",
+      G_CALLBACK (no_more_pads), play_base_bin);
+  g_signal_connect (G_OBJECT (play_base_bin->decoder),
+      "unknown-type", G_CALLBACK (unknown_type), play_base_bin);
+
+  play_base_bin->need_rebuild = FALSE;
+
+  return TRUE;
+}
+
+static void
+finish_source (GstPlayBaseBin * play_base_bin)
+{
   if (get_active_group (play_base_bin) != NULL) {
     if (play_base_bin->subtitle) {
       /* make subs iterate from now on */
-      gst_bin_add (GST_BIN (play_base_bin->thread), play_base_bin->subtitle);
+      gst_bin_add (GST_BIN (play_base_bin), play_base_bin->subtitle);
     }
-    if (!play_base_bin->is_stream) {
-      setup_substreams (play_base_bin);
+  }
+}
+
+/*
+ * Caller must have group-lock held.
+ */
+
+static gboolean
+prepare_output (GstPlayBaseBin * play_base_bin)
+{
+  const GList *item;
+  gboolean stream_found = FALSE, no_media = FALSE;
+  GstPlayBaseGroup *group;
+
+  group = get_active_group (play_base_bin);
+
+  /* check if we found any supported stream... if not, then
+   * we detected stream type (or the above would've failed),
+   * but linking/decoding failed - plugin probably missing. */
+  for (item = group ? group->streaminfo : NULL; item != NULL; item = item->next) {
+    GstStreamInfo *info = GST_STREAM_INFO (item->data);
+
+    if (info->type != GST_STREAM_TYPE_UNKNOWN) {
+      stream_found = TRUE;
+      break;
+    } else if (!item->prev && !item->next) {
+      /* We're no audio/video and the only stream... We could
+       * be something not-media that's detected because then our
+       * typefind doesn't mess up with mp3 (bz2, gz, elf, ...) */
+      if (info->caps && !gst_caps_is_empty (info->caps)) {
+        const gchar *mime =
+            gst_structure_get_name (gst_caps_get_structure (info->caps, 0));
+
+        if (!strcmp (mime, "application/x-executable") ||
+            !strcmp (mime, "application/x-bzip") ||
+            !strcmp (mime, "application/x-gzip") ||
+            !strcmp (mime, "application/zip") ||
+            !strcmp (mime, "application/x-compress")) {
+          no_media = TRUE;
+        }
+      }
     }
+  }
+
+  if (!stream_found) {
+    if (!no_media) {
+      GST_ELEMENT_ERROR (play_base_bin, STREAM, CODEC_NOT_FOUND,
+          ("You do not have decoders installed to handle this media file, "
+              "you might need to install the corresponding plugins"), (NULL));
+    } else {
+      GST_ELEMENT_ERROR (play_base_bin, STREAM, WRONG_TYPE,
+          ("This is not a media file"), (NULL));
+    }
+    return FALSE;
   }
 
   return TRUE;
@@ -1371,6 +1411,8 @@ setup_source (GstPlayBaseBin * play_base_bin,
 
 /*
  * Multi-stream management. -1 = none.
+ *
+ * Caller has group-lock held.
  */
 static gint
 get_active_source (GstPlayBaseBin * play_base_bin, GstStreamType type)
@@ -1430,6 +1472,8 @@ muted_group_change_state (GstElement * element,
 {
   GstPlayBaseGroup *group = data;
 
+  GROUP_LOCK (group->bin);
+
   if (new_state == GST_STATE_PLAYING) {
     gint n;
 
@@ -1439,7 +1483,13 @@ muted_group_change_state (GstElement * element,
       }
     }
   }
+
+  GROUP_UNLOCK (group->bin);
 }
+
+/*
+ * Caller has group-lock held.
+ */
 
 static void
 set_active_source (GstPlayBaseBin * play_base_bin,
@@ -1524,17 +1574,26 @@ gst_play_base_bin_set_property (GObject * object, guint prop_id,
     case ARG_QUEUE_SIZE:
       play_base_bin->queue_size = g_value_get_uint64 (value);
       break;
+    case ARG_QUEUE_THRESHOLD:
+      play_base_bin->queue_threshold = g_value_get_uint64 (value);
+      break;
     case ARG_VIDEO:
+      GROUP_LOCK (play_base_bin);
       set_active_source (play_base_bin,
           GST_STREAM_TYPE_VIDEO, g_value_get_int (value));
+      GROUP_UNLOCK (play_base_bin);
       break;
     case ARG_AUDIO:
+      GROUP_LOCK (play_base_bin);
       set_active_source (play_base_bin,
           GST_STREAM_TYPE_AUDIO, g_value_get_int (value));
+      GROUP_UNLOCK (play_base_bin);
       break;
     case ARG_TEXT:
+      GROUP_LOCK (play_base_bin);
       set_active_source (play_base_bin,
           GST_STREAM_TYPE_TEXT, g_value_get_int (value));
+      GROUP_UNLOCK (play_base_bin);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1561,42 +1620,49 @@ gst_play_base_bin_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_NSTREAMS:
     {
-      GstPlayBaseGroup *group = get_active_group (play_base_bin);
+      GstPlayBaseGroup *group;
 
+      GROUP_LOCK (play_base_bin);
+      group = get_active_group (play_base_bin);
       if (group) {
         g_value_set_int (value, group->nstreams);
       } else {
         g_value_set_int (value, 0);
       }
+      GROUP_UNLOCK (play_base_bin);
       break;
     }
     case ARG_QUEUE_SIZE:
       g_value_set_uint64 (value, play_base_bin->queue_size);
       break;
+    case ARG_QUEUE_THRESHOLD:
+      g_value_set_uint64 (value, play_base_bin->queue_threshold);
+      break;
     case ARG_STREAMINFO:
+      /* FIXME: hold some kind of lock here, use iterator */
       g_value_set_pointer (value,
           (gpointer) gst_play_base_bin_get_streaminfo (play_base_bin));
       break;
     case ARG_SOURCE:
-      if (GST_IS_BIN (play_base_bin->source)) {
-        GstElement *kid;
-
-        kid = gst_bin_get_by_name (GST_BIN (play_base_bin->source), "source");
-        g_value_set_object (value, kid);
-      } else
-        g_value_set_object (value, play_base_bin->source);
+      g_value_set_object (value, play_base_bin->source);
       break;
     case ARG_VIDEO:
+      GROUP_LOCK (play_base_bin);
       g_value_set_int (value, get_active_source (play_base_bin,
               GST_STREAM_TYPE_VIDEO));
+      GROUP_UNLOCK (play_base_bin);
       break;
     case ARG_AUDIO:
+      GROUP_LOCK (play_base_bin);
       g_value_set_int (value, get_active_source (play_base_bin,
               GST_STREAM_TYPE_AUDIO));
+      GROUP_UNLOCK (play_base_bin);
       break;
     case ARG_TEXT:
+      GROUP_LOCK (play_base_bin);
       g_value_set_int (value, get_active_source (play_base_bin,
               GST_STREAM_TYPE_TEXT));
+      GROUP_UNLOCK (play_base_bin);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1604,39 +1670,20 @@ gst_play_base_bin_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static void
-play_base_eos (GstBin * bin, GstPlayBaseBin * play_base_bin)
-{
-  no_more_pads (GST_ELEMENT (bin), play_base_bin);
-
-  GST_LOG ("forwarding EOS");
-
-  //gst_element_set_eos (GST_ELEMENT (play_base_bin));
-}
-
 static GstElementStateReturn
 gst_play_base_bin_change_state (GstElement * element)
 {
   GstElementStateReturn ret = GST_STATE_SUCCESS;
   GstPlayBaseBin *play_base_bin;
+  gint transition = GST_STATE_TRANSITION (element);
+  gchar *new_location = NULL;
 
   play_base_bin = GST_PLAY_BASE_BIN (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
-    {
-      play_base_bin->thread = gst_bin_new ("internal_thread");
-
-      gst_element_set_state (play_base_bin->thread, GST_STATE_READY);
-
-      g_signal_connect (play_base_bin->thread, "found_tag",
-          G_CALLBACK (gst_play_base_bin_found_tag), play_base_bin);
-      break;
-    }
+  switch (transition) {
     case GST_STATE_READY_TO_PAUSED:
     {
       GError *error = NULL;
-      gchar *new_location = NULL;
 
       if (!setup_source (play_base_bin, &new_location, &error) || error != NULL) {
         if (!error) {
@@ -1651,301 +1698,46 @@ gst_play_base_bin_change_state (GstElement * element)
           g_error_free (error);
         }
         ret = GST_STATE_FAILURE;
-      } else if (new_location) {
-        g_signal_emit (play_base_bin, gst_play_base_bin_signals[REDIRECT],
-            0, new_location);
-        g_free (new_location);
-        ret = GST_STATE_FAILURE;
-      } else if (play_base_bin->is_stream) {
-        ret = gst_element_set_state (play_base_bin->thread, GST_STATE_PAUSED);
-      } else {
-        const GList *item;
-        gboolean stream_found = FALSE, no_media = FALSE;
-        GstPlayBaseGroup *group;
-
-        group = get_active_group (play_base_bin);
-
-        /* check if we found any supported stream... if not, then
-         * we detected stream type (or the above would've failed),
-         * but linking/decoding failed - plugin probably missing. */
-        for (item = group ? group->streaminfo : NULL;
-            item != NULL; item = item->next) {
-          GstStreamInfo *info = GST_STREAM_INFO (item->data);
-
-          if (info->type != GST_STREAM_TYPE_UNKNOWN) {
-            stream_found = TRUE;
-            break;
-          } else if (!item->prev && !item->next) {
-            /* We're no audio/video and the only stream... We could
-             * be something not-media that's detected because then our
-             * typefind doesn't mess up with mp3 (bz2, gz, elf, ...) */
-            if (info->caps && !gst_caps_is_empty (info->caps)) {
-              const gchar *mime =
-                  gst_structure_get_name (gst_caps_get_structure (info->caps,
-                      0));
-
-              if (!strcmp (mime, "application/x-executable") ||
-                  !strcmp (mime, "application/x-bzip") ||
-                  !strcmp (mime, "application/x-gzip") ||
-                  !strcmp (mime, "application/zip") ||
-                  !strcmp (mime, "application/x-compress")) {
-                no_media = TRUE;
-              }
-            }
-          }
-        }
-
-        if (!stream_found) {
-          if (!no_media) {
-            GST_ELEMENT_ERROR (play_base_bin, STREAM, CODEC_NOT_FOUND,
-                ("There were no decoders found to handle the stream in file "
-                    "\"%s\", you might need to install the corresponding plugins",
-                    play_base_bin->uri), (NULL));
-          } else {
-            GST_ELEMENT_ERROR (play_base_bin, STREAM, WRONG_TYPE,
-                ("File \"%s\" is not a media file", play_base_bin->uri),
-                (NULL));
-          }
-          gst_element_set_state (play_base_bin->thread, GST_STATE_READY);
-          ret = GST_STATE_FAILURE;
-        } else {
-          ret = gst_element_set_state (play_base_bin->thread, GST_STATE_PAUSED);
-        }
-      }
-      if (ret == GST_STATE_SUCCESS) {
-        /* error forwarding:
-         * we only connect after the stream has been set up. If that failed,
-         * we simply emit our own error. This also prevents us from failing
-         * because one stream was unrecognized. */
-        g_signal_connect (play_base_bin->thread, "error",
-            G_CALLBACK (gst_play_base_bin_error), play_base_bin);
-        g_signal_connect (G_OBJECT (play_base_bin->thread), "eos",
-            G_CALLBACK (play_base_eos), play_base_bin);
-        if (!play_base_bin->is_stream) {
-          GST_DEBUG ("emit signal");
-          g_signal_emit (play_base_bin,
-              gst_play_base_bin_signals[SETUP_OUTPUT_PADS_SIGNAL], 0);
-          GST_DEBUG ("done");
-        }
-      } else {
-        /* clean up leftover groups */
-        remove_groups (play_base_bin);
+        play_base_bin->need_rebuild = TRUE;
       }
       break;
     }
-    case GST_STATE_PAUSED_TO_PLAYING:
-      ret = gst_element_set_state (play_base_bin->thread, GST_STATE_PLAYING);
+    default:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
-      ret = gst_element_set_state (play_base_bin->thread, GST_STATE_PAUSED);
+  }
+
+  if (ret != GST_STATE_SUCCESS) {
+    return ret;
+  } else {
+    ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  }
+
+  switch (transition) {
+    case GST_STATE_READY_TO_PAUSED:
+      if (new_location) {
+        g_signal_emit (play_base_bin,
+            gst_play_base_bin_signals[SIGNAL_REDIRECT], 0, new_location);
+        g_free (new_location);
+        ret = GST_STATE_FAILURE;
+      } else if (ret == GST_STATE_SUCCESS) {
+        finish_source (play_base_bin);
+      }
+
+      if (ret != GST_STATE_SUCCESS) {
+        /* clean up leftover groups */
+        remove_groups (play_base_bin);
+        play_base_bin->need_rebuild = TRUE;
+      }
       break;
     case GST_STATE_PAUSED_TO_READY:
-      g_signal_handlers_disconnect_by_func (play_base_bin->thread,
-          G_CALLBACK (gst_play_base_bin_error), play_base_bin);
-      g_signal_handlers_disconnect_by_func (play_base_bin->thread,
-          G_CALLBACK (play_base_eos), play_base_bin);
-      ret = gst_element_set_state (play_base_bin->thread, GST_STATE_READY);
       play_base_bin->need_rebuild = TRUE;
       remove_groups (play_base_bin);
-      break;
-    case GST_STATE_READY_TO_NULL:
-      gst_element_set_state (play_base_bin->thread, GST_STATE_NULL);
-      gst_object_unref (GST_OBJECT (play_base_bin->thread));
-      play_base_bin->source = NULL;
-      play_base_bin->decoder = NULL;
       break;
     default:
       break;
   }
 
-  if (ret == GST_STATE_SUCCESS) {
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-  }
-
   return ret;
-}
-
-/* virtual function to add elements to this bin. The idea is to
- * wrap the element in a thread automatically.
- */
-static gboolean
-gst_play_base_bin_add_element (GstBin * bin, GstElement * element)
-{
-  GstPlayBaseBin *play_base_bin;
-
-  play_base_bin = GST_PLAY_BASE_BIN (bin);
-
-  if (play_base_bin->thread) {
-    if (play_base_bin->threaded) {
-      gchar *name;
-      GstElement *thread;
-
-      name = g_strdup_printf ("thread_%s", gst_element_get_name (element));
-      thread = gst_bin_new (name);
-      g_free (name);
-
-      gst_bin_add (GST_BIN (thread), element);
-      element = thread;
-    }
-    gst_bin_add (GST_BIN (play_base_bin->thread), element);
-    if (GST_STATE (play_base_bin) > GST_STATE_READY) {
-      gst_element_set_state (element, GST_STATE (play_base_bin));
-    }
-  } else {
-    g_warning ("adding elements is not allowed in NULL");
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-/* virtual function to remove an element from this bin. We have to make
- * sure that we also remove the thread that we used as a container for
- * this element.
- */
-static gboolean
-gst_play_base_bin_remove_element (GstBin * bin, GstElement * element)
-{
-  GstPlayBaseBin *play_base_bin;
-
-  play_base_bin = GST_PLAY_BASE_BIN (bin);
-
-  if (play_base_bin->thread) {
-    if (play_base_bin->threaded) {
-      gchar *name;
-      GstElement *thread;
-
-      name = g_strdup_printf ("thread_%s", gst_element_get_name (element));
-      thread = gst_bin_get_by_name (GST_BIN (play_base_bin->thread), name);
-      g_free (name);
-
-      if (!thread) {
-        g_warning ("cannot find element to remove");
-      } else {
-        if (gst_element_get_parent (element) == GST_OBJECT (thread)) {
-          /* we remove the element from the thread first so that the
-           * state is not affected when someone holds a reference to it */
-          gst_bin_remove (GST_BIN (thread), element);
-        }
-        element = thread;
-      }
-    }
-    if (gst_element_get_parent (element) == GST_OBJECT (play_base_bin->thread)) {
-      GST_LOG ("removing element %s", gst_element_get_name (element));
-      gst_bin_remove (GST_BIN (play_base_bin->thread), element);
-    }
-  } else {
-    g_warning ("removing elements is not allowed in NULL");
-    return FALSE;
-  }
-  return TRUE;
-}
-
-static void
-gst_play_base_bin_error (GstElement * element,
-    GstElement * _source, GError * error, gchar * debug, gpointer data)
-{
-  GstObject *source, *parent;
-
-  source = GST_OBJECT (_source);
-  parent = GST_OBJECT (data);
-
-  /* tell ourselves */
-  gst_object_ref (source);
-  gst_object_ref (parent);
-  GST_DEBUG ("forwarding error \"%s\" from %s to %s", error->message,
-      GST_ELEMENT_NAME (source), GST_OBJECT_NAME (parent));
-
-  g_signal_emit_by_name (G_OBJECT (parent), "error", source, error, debug);
-
-  GST_DEBUG ("forwarded error \"%s\" from %s to %s", error->message,
-      GST_ELEMENT_NAME (source), GST_OBJECT_NAME (parent));
-  gst_object_unref (source);
-  gst_object_unref (parent);
-}
-
-/* this code does not do anything usefull as it catches the tags
- * in the preroll and playback stage so that it is very difficult
- * to link them to the actual playback point. 
- *
- * An alternative codepath can be found in the probe_triggered function
- * where the tag is signaled when it is found inside the stream. The
- * drawback is that we don't know the source anymore at that point because
- * the event->src field appears to be left empty most of the time...
- */
-static void
-gst_play_base_bin_found_tag (GstElement * element,
-    GstElement * _source, const GstTagList * taglist, gpointer data)
-{
-  GstObject *source;
-  GstPlayBaseBin *play_base_bin;
-
-  source = GST_OBJECT (_source);
-  play_base_bin = GST_PLAY_BASE_BIN (data);
-
-  /* tell ourselves */
-  gst_object_ref (source);
-  gst_object_ref (GST_OBJECT (play_base_bin));
-  GST_DEBUG ("forwarding taglist %p from %s to %s", taglist,
-      GST_ELEMENT_NAME (source), GST_OBJECT_NAME (play_base_bin));
-
-  /* this would signal completely out-of-band */
-  //g_signal_emit_by_name (G_OBJECT (play_base_bin), "found-tag", source, taglist);
-
-  GST_DEBUG ("forwarded taglist %p from %s to %s", taglist,
-      GST_ELEMENT_NAME (source), GST_OBJECT_NAME (play_base_bin));
-  gst_object_unref (source);
-  gst_object_unref (GST_OBJECT (play_base_bin));
-}
-
-gboolean
-gst_play_base_bin_link_stream (GstPlayBaseBin * play_base_bin,
-    GstStreamInfo * info, GstPad * pad)
-{
-  GST_DEBUG ("link stream");
-
-  if (info == NULL) {
-    GList *streams;
-    GstPlayBaseGroup *group = get_active_group (play_base_bin);
-
-    if (group == NULL) {
-      GST_DEBUG ("no current group");
-      return FALSE;
-    }
-
-    for (streams = group->streaminfo; streams; streams = g_list_next (streams)) {
-      GstStreamInfo *sinfo = (GstStreamInfo *) streams->data;
-
-      if (sinfo->type == GST_STREAM_TYPE_ELEMENT)
-        continue;
-
-      if (gst_pad_is_linked (GST_PAD (sinfo->object)))
-        continue;
-
-      if (gst_pad_can_link (GST_PAD (sinfo->object), pad)) {
-        info = sinfo;
-        break;
-      }
-    }
-  }
-  if (info) {
-    if (!gst_pad_link (GST_PAD (info->object), pad)) {
-      GST_DEBUG ("could not link");
-      g_object_set (G_OBJECT (info), "mute", TRUE, NULL);
-      return FALSE;
-    }
-  } else {
-    GST_DEBUG ("could not find pad to link");
-    return FALSE;
-  }
-  return TRUE;
-}
-
-void
-gst_play_base_bin_unlink_stream (GstPlayBaseBin * play_base_bin,
-    GstStreamInfo * info)
-{
-  GST_DEBUG ("unlink");
 }
 
 const GList *

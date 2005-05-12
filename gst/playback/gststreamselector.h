@@ -45,7 +45,6 @@ struct _GstStreamSelector {
   GstPad *last_active_sinkpad;
   GstPad *srcpad;
   guint nb_sinkpads;
-  gboolean in_chain;
 };
 
 struct _GstStreamSelectorClass {

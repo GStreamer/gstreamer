@@ -45,6 +45,7 @@ struct _GstPlayBin
   GstPlayBaseBin parent;
 
   /* the configurable elements */
+  GstElement *fakesink;
   GstElement *audio_sink;
   GstElement *video_sink;
   GstElement *visualisation;
@@ -54,9 +55,6 @@ struct _GstPlayBin
 
   /* these are the currently active sinks */
   GList *sinks;
-
-  /* these are the sink elements used for seeking/query etc.. */
-  GList *seekables;
 
   /* the last captured frame for snapshots */
   GstBuffer *frame;
@@ -107,12 +105,6 @@ static void gst_play_bin_set_property (GObject * object, guint prop_id,
 static void gst_play_bin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * spec);
 static GstElementStateReturn gst_play_bin_change_state (GstElement * element);
-
-static gboolean gst_play_bin_send_event (GstElement * element,
-    GstEvent * event);
-static const GstQueryType *gst_play_bin_get_query_types (GstElement * element);
-static gboolean gst_play_bin_query (GstElement * element, GstQuery * query);
-
 
 static GstElementClass *parent_class;
 
@@ -200,10 +192,6 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_play_bin_change_state);
-  gstelement_klass->send_event = GST_DEBUG_FUNCPTR (gst_play_bin_send_event);
-  gstelement_klass->get_query_types =
-      GST_DEBUG_FUNCPTR (gst_play_bin_get_query_types);
-  gstelement_klass->query = GST_DEBUG_FUNCPTR (gst_play_bin_query);
 
   playbasebin_klass->setup_output_pads = setup_sinks;
   playbasebin_klass->group_switch = group_switch;
@@ -218,7 +206,6 @@ gst_play_bin_init (GstPlayBin * play_bin)
   play_bin->volume_element = NULL;
   play_bin->textoverlay_element = NULL;
   play_bin->volume = 1.0;
-  play_bin->seekables = NULL;
   play_bin->sinks = NULL;
   play_bin->frame = NULL;
   play_bin->font_desc = NULL;
@@ -308,8 +295,8 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       }
       break;
     case ARG_VOLUME:
+      play_bin->volume = g_value_get_double (value);
       if (play_bin->volume_element) {
-        play_bin->volume = g_value_get_double (value);
         g_object_set (G_OBJECT (play_bin->volume_element), "volume",
             play_bin->volume, NULL);
       }
@@ -393,42 +380,42 @@ gen_video_element (GstPlayBin * play_bin)
 {
   GstElement *element;
   GstElement *conv;
-  GstElement *scale;
+
+  //GstElement *scale;
   GstElement *sink;
   GstElement *identity;
+  GstPad *pad;
 
   /* first see if we have it in the cache */
   element = g_hash_table_lookup (play_bin->cache, "vbin");
   if (element != NULL) {
-    /* need to get the video sink element as we need to add it to the
-     * list of seekable elements */
-    sink = g_hash_table_lookup (play_bin->cache, "video_sink");
-    goto done;
+    return element;
   }
 
   element = gst_bin_new ("vbin");
   identity = gst_element_factory_make ("identity", "id");
   g_signal_connect (identity, "handoff", G_CALLBACK (handoff), play_bin);
   conv = gst_element_factory_make ("ffmpegcolorspace", "vconv");
-  scale = gst_element_factory_make ("videoscale", "vscale");
+  //scale = gst_element_factory_make ("videoscale", "vscale");
   if (play_bin->video_sink) {
     sink = play_bin->video_sink;
   } else {
-    sink = gst_element_factory_make ("autovideosink", "sink");
+    sink = gst_element_factory_make ("xvimagesink", "sink");
   }
   gst_object_ref (GST_OBJECT (sink));
   g_hash_table_insert (play_bin->cache, "video_sink", sink);
 
   gst_bin_add (GST_BIN (element), identity);
   gst_bin_add (GST_BIN (element), conv);
-  gst_bin_add (GST_BIN (element), scale);
+  //gst_bin_add (GST_BIN (element), scale);
   gst_bin_add (GST_BIN (element), sink);
   gst_element_link_pads (identity, "src", conv, "sink");
-  gst_element_link_pads (conv, "src", scale, "sink");
-  gst_element_link_pads (scale, "src", sink, "sink");
+  gst_element_link_pads (conv, "src",   /*scale, "sink");
+                                           gst_element_link_pads (scale, "src", */ sink, "sink");
 
-  gst_element_add_ghost_pad (element, gst_element_get_pad (identity, "sink"),
-      "sink");
+  pad = gst_element_get_pad (identity, "sink");
+  gst_element_add_ghost_pad (element, pad, "sink");
+  g_object_unref (G_OBJECT (pad));
 
   gst_element_set_state (element, GST_STATE_READY);
 
@@ -436,9 +423,6 @@ gen_video_element (GstPlayBin * play_bin)
    * we keep a reference. */
   gst_object_ref (GST_OBJECT (element));
   g_hash_table_insert (play_bin->cache, "vbin", element);
-
-done:
-  play_bin->seekables = g_list_append (play_bin->seekables, sink);
 
   return element;
 }
@@ -459,6 +443,7 @@ static GstElement *
 gen_text_element (GstPlayBin * play_bin)
 {
   GstElement *element, *csp, *overlay, *vbin;
+  GstPad *pad;
 
   overlay = gst_element_factory_make ("textoverlay", "overlay");
   g_object_set (G_OBJECT (overlay),
@@ -478,10 +463,13 @@ gen_text_element (GstPlayBin * play_bin)
   gst_element_link_many (csp, overlay, vbin, NULL);
   gst_bin_add_many (GST_BIN (element), csp, overlay, vbin, NULL);
 
-  gst_element_add_ghost_pad (element,
-      gst_element_get_pad (overlay, "text_sink"), "text_sink");
-  gst_element_add_ghost_pad (element,
-      gst_element_get_pad (csp, "sink"), "sink");
+  pad = gst_element_get_pad (overlay, "text_sink");
+  gst_element_add_ghost_pad (element, pad, "text_sink");
+  g_object_unref (G_OBJECT (pad));
+
+  pad = gst_element_get_pad (csp, "sink");
+  gst_element_add_ghost_pad (element, pad, "sink");
+  g_object_unref (G_OBJECT (pad));
 
   return element;
 }
@@ -507,11 +495,11 @@ gen_audio_element (GstPlayBin * play_bin)
   GstElement *sink;
   GstElement *volume;
   GstElement *scale;
+  GstPad *pad;
 
   element = g_hash_table_lookup (play_bin->cache, "abin");
   if (element != NULL) {
-    sink = g_hash_table_lookup (play_bin->cache, "audio_sink");
-    goto done;
+    return element;
   }
   element = gst_bin_new ("abin");
   conv = gst_element_factory_make ("audioconvert", "aconv");
@@ -524,7 +512,7 @@ gen_audio_element (GstPlayBin * play_bin)
   if (play_bin->audio_sink) {
     sink = play_bin->audio_sink;
   } else {
-    sink = gst_element_factory_make ("autoaudiosink", "sink");
+    sink = gst_element_factory_make ("alsasink", "sink");
     play_bin->audio_sink = GST_ELEMENT (gst_object_ref (GST_OBJECT (sink)));
   }
 
@@ -532,16 +520,17 @@ gen_audio_element (GstPlayBin * play_bin)
   g_hash_table_insert (play_bin->cache, "audio_sink", sink);
 
   gst_bin_add (GST_BIN (element), conv);
-  gst_bin_add (GST_BIN (element), scale);
-  gst_bin_add (GST_BIN (element), volume);
+  //gst_bin_add (GST_BIN (element), scale);
+  //gst_bin_add (GST_BIN (element), volume);
   gst_bin_add (GST_BIN (element), sink);
 
-  gst_element_link_pads (conv, "src", scale, "sink");
-  gst_element_link_pads (scale, "src", volume, "sink");
-  gst_element_link_pads (volume, "src", sink, "sink");
+  gst_element_link_pads (conv, "src",   /*scale, "sink");
+                                           gst_element_link_pads (scale, "src", volume, "sink");
+                                           gst_element_link_pads (volume, "src", */ sink, "sink");
 
-  gst_element_add_ghost_pad (element,
-      gst_element_get_pad (conv, "sink"), "sink");
+  pad = gst_element_get_pad (conv, "sink");
+  gst_element_add_ghost_pad (element, pad, "sink");
+  g_object_unref (G_OBJECT (pad));
 
   gst_element_set_state (element, GST_STATE_READY);
 
@@ -549,9 +538,6 @@ gen_audio_element (GstPlayBin * play_bin)
    * we keep a reference. */
   gst_object_ref (GST_OBJECT (element));
   g_hash_table_insert (play_bin->cache, "abin", element);
-
-done:
-  play_bin->seekables = g_list_prepend (play_bin->seekables, sink);
 
   return element;
 }
@@ -590,6 +576,7 @@ gen_vis_element (GstPlayBin * play_bin)
   GstElement *vis;
   GstElement *vqueue;
   GstElement *vthread;
+  GstPad *pad;
 
   element = gst_bin_new ("visbin");
   tee = gst_element_factory_make ("tee", "tee");
@@ -622,14 +609,17 @@ gen_vis_element (GstPlayBin * play_bin)
 
   gst_element_link_pads (vqueue, "src", vsink, "sink");
 
-  gst_pad_link (gst_element_get_request_pad (tee, "src%d"),
-      gst_element_get_pad (asink, "sink"));
+  pad = gst_element_get_pad (asink, "sink");
+  gst_pad_link (gst_element_get_request_pad (tee, "src%d"), pad);
+  g_object_unref (G_OBJECT (pad));
 
-  gst_pad_link (gst_element_get_request_pad (tee, "src%d"),
-      gst_element_get_pad (conv, "sink"));
+  pad = gst_element_get_pad (conv, "sink");
+  gst_pad_link (gst_element_get_request_pad (tee, "src%d"), pad);
+  g_object_unref (G_OBJECT (pad));
 
-  gst_element_add_ghost_pad (element,
-      gst_element_get_pad (tee, "sink"), "sink");
+  pad = gst_element_get_pad (tee, "sink");
+  gst_element_add_ghost_pad (element, pad, "sink");
+  g_object_unref (G_OBJECT (pad));
 
   return element;
 }
@@ -659,6 +649,7 @@ remove_sinks (GstPlayBin * play_bin)
        * there is no unwanted state change when the parent
        * is disposed */
       gst_bin_remove (GST_BIN (parent), element);
+      g_object_unref (G_OBJECT (parent));
     }
   }
   element = g_hash_table_lookup (play_bin->cache, "vbin");
@@ -666,6 +657,7 @@ remove_sinks (GstPlayBin * play_bin)
     parent = gst_element_get_parent (element);
     if (parent != NULL) {
       gst_bin_remove (GST_BIN (parent), element);
+      g_object_unref (G_OBJECT (parent));
     }
   }
 
@@ -676,12 +668,11 @@ remove_sinks (GstPlayBin * play_bin)
     GST_LOG ("removing sink %p", element);
     if (GST_PAD_PEER (pad))
       gst_pad_unlink (GST_PAD_PEER (pad), pad);
+    g_object_unref (G_OBJECT (pad));
     gst_bin_remove (GST_BIN (play_bin), element);
   }
   g_list_free (play_bin->sinks);
-  g_list_free (play_bin->seekables);
   play_bin->sinks = NULL;
-  play_bin->seekables = NULL;
 
   if (play_bin->frame) {
     gst_buffer_unref (play_bin->frame);
@@ -689,7 +680,6 @@ remove_sinks (GstPlayBin * play_bin)
   }
 
   play_bin->textoverlay_element = NULL;
-  play_bin->volume_element = NULL;
 }
 
 /* loop over the streams and set up the pipeline to play this
@@ -705,17 +695,21 @@ static gboolean
 add_sink (GstPlayBin * play_bin, GstElement * sink, GstPad * srcpad)
 {
   GstPad *sinkpad;
-  gboolean res;
+  GstPadLinkReturn res;
+  GstElement *parent;
 
   /* we found a sink for this stream, now try to install it */
   sinkpad = gst_element_get_pad (sink, "sink");
   res = gst_pad_link (srcpad, sinkpad);
+  g_object_unref (G_OBJECT (sinkpad));
+
+  parent = gst_pad_get_parent (srcpad);
   GST_DEBUG ("Adding sink with state %d (parent: %d, peer: %d)\n",
-      GST_STATE (sink), GST_STATE (play_bin),
-      GST_STATE (gst_pad_get_parent (srcpad)));
+      GST_STATE (sink), GST_STATE (play_bin), GST_STATE (parent));
+  g_object_unref (G_OBJECT (parent));
 
   /* try to link the pad of the sink to the stream */
-  if (!res) {
+  if (res < 0) {
     gchar *capsstr;
 
     /* could not link this stream */
@@ -726,6 +720,9 @@ add_sink (GstPlayBin * play_bin, GstElement * sink, GstPad * srcpad)
     /* we got the sink succesfully linked, now keep the sink
      * in out internal list */
     play_bin->sinks = g_list_prepend (play_bin->sinks, sink);
+    gst_element_set_state (sink,
+        (GST_STATE (play_bin) == GST_STATE_PLAYING) ?
+        GST_STATE_PLAYING : GST_STATE_PAUSED);
     gst_bin_add (GST_BIN (play_bin), sink);
   }
 
@@ -740,7 +737,7 @@ setup_sinks (GstPlayBaseBin * play_base_bin)
   GList *streaminfo = NULL, *s;
   gboolean need_vis = FALSE;
   gboolean need_text = FALSE;
-  GstPad *textsrcpad = NULL, *textsinkpad = NULL;
+  GstPad *textsrcpad = NULL, *textsinkpad = NULL, *pad;
   GstElement *sink;
 
   /* get rid of existing sinks */
@@ -769,11 +766,6 @@ setup_sinks (GstPlayBaseBin * play_base_bin)
 
     g_object_get (obj, "type", &type, NULL);
     g_object_get (obj, "object", &object, NULL);
-
-    /* use the sink elements as seek entry point */
-    if (type == 4) {
-      play_bin->seekables = g_list_prepend (play_bin->seekables, object);
-    }
   }
 
   /* link audio */
@@ -783,9 +775,10 @@ setup_sinks (GstPlayBaseBin * play_base_bin)
     } else {
       sink = gen_audio_element (play_bin);
     }
-    add_sink (play_bin, sink,
-        gst_element_get_pad (group->type[GST_STREAM_TYPE_AUDIO - 1].preroll,
-            "src"));
+    pad = gst_element_get_pad (group->type[GST_STREAM_TYPE_AUDIO - 1].preroll,
+        "src");
+    add_sink (play_bin, sink, pad);
+    g_object_unref (G_OBJECT (pad));
   }
 
   /* link video */
@@ -797,15 +790,21 @@ setup_sinks (GstPlayBaseBin * play_base_bin)
       textsrcpad =
           gst_element_get_pad (group->type[GST_STREAM_TYPE_TEXT - 1].preroll,
           "src");
-      if (textsinkpad && textsrcpad) {
-        gst_pad_link (textsrcpad, textsinkpad);
-      }
+      gst_pad_link (textsrcpad, textsinkpad);
+      g_object_unref (G_OBJECT (textsinkpad));
+      g_object_unref (G_OBJECT (textsrcpad));
     } else {
       sink = gen_video_element (play_bin);
     }
-    add_sink (play_bin, sink,
-        gst_element_get_pad (group->type[GST_STREAM_TYPE_VIDEO - 1].preroll,
-            "src"));
+    pad = gst_element_get_pad (group->type[GST_STREAM_TYPE_VIDEO - 1].preroll,
+        "src");
+    add_sink (play_bin, sink, pad);
+    g_object_unref (G_OBJECT (pad));
+  }
+
+  if (play_bin->fakesink) {
+    gst_bin_remove (GST_BIN (play_bin), play_bin->fakesink);
+    play_bin->fakesink = NULL;
   }
 }
 
@@ -820,6 +819,17 @@ gst_play_bin_change_state (GstElement * element)
 
   transition = GST_STATE_TRANSITION (element);
 
+  switch (transition) {
+    case GST_STATE_READY_TO_PAUSED:
+      if (!play_bin->fakesink) {
+        play_bin->fakesink = gst_element_factory_make ("fakesink", "test");
+        gst_bin_add (GST_BIN (play_bin), play_bin->fakesink);
+      }
+      break;
+    default:
+      break;
+  }
+
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
   if (ret == GST_STATE_FAILURE)
     return ret;
@@ -828,10 +838,10 @@ gst_play_bin_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       /* Set audio sink state to NULL to release the sound device,
        * but only if we own it (else we might be in chain-transition). */
-      if (play_bin->audio_sink != NULL && !play_bin->group_switch &&
-          GST_STATE (play_bin->audio_sink) == GST_STATE_PAUSED) {
-        gst_element_set_state (play_bin->audio_sink, GST_STATE_NULL);
-      }
+      //if (play_bin->audio_sink != NULL && !play_bin->group_switch &&
+      //    GST_STATE (play_bin->audio_sink) == GST_STATE_PAUSED) {
+      //  gst_element_set_state (play_bin->audio_sink, GST_STATE_NULL);
+      //}
       break;
     case GST_STATE_PAUSED_TO_READY:
       /* Check for NULL because the state transition may be done by
@@ -843,107 +853,16 @@ gst_play_bin_change_state (GstElement * element)
       if (play_bin->cache != NULL) {
         remove_sinks (play_bin);
       }
+      if (play_bin->fakesink) {
+        gst_bin_remove (GST_BIN (play_bin), play_bin->fakesink);
+        play_bin->fakesink = NULL;
+      }
       break;
     default:
       break;
   }
 
   return ret;
-}
-
-
-#if 0
-static const GstEventMask *
-gst_play_bin_get_event_masks (GstElement * element)
-{
-  /* FIXME, get the list from the number of installed sinks */
-  return NULL;
-}
-#endif
-
-/* send an event to all the sinks */
-static gboolean
-gst_play_bin_send_event (GstElement * element, GstEvent * event)
-{
-  gboolean res = FALSE;
-  GList *s;
-  GstPlayBin *play_bin;
-  GstElementState state;
-  gboolean need_pause = FALSE;
-
-  play_bin = GST_PLAY_BIN (element);
-
-  gst_element_get_state (element, &state, NULL, NULL);
-  /* we pause the pipeline first before sending the event. We only
-   * do this if the pipeline was playing. */
-  if (state == GST_STATE_PLAYING) {
-    need_pause = TRUE;
-    gst_element_set_state (element, GST_STATE_PAUSED);
-  }
-
-  /* loop over all seekables and send the event to them */
-  for (s = play_bin->seekables; s; s = g_list_next (s)) {
-    GstElement *element = GST_ELEMENT (s->data);
-    gboolean ok;
-
-    /* ref each event before sending it */
-    gst_event_ref (event);
-    ok = gst_element_send_event (element, event);
-    res |= ok;
-  }
-  gst_event_unref (event);
-
-  /* and restart the pipeline if we paused it */
-  if (need_pause)
-    gst_element_set_state (element, GST_STATE_PLAYING);
-
-  return res;
-}
-
-#if 0
-static const GstFormat *
-gst_play_bin_get_formats (GstElement * element)
-{
-  /* FIXME, compile this list from the installed sinks */
-  static GstFormat formats[] = {
-    GST_FORMAT_TIME,
-    0,
-  };
-
-  return formats;
-}
-#endif
-
-static const GstQueryType *
-gst_play_bin_get_query_types (GstElement * element)
-{
-  /* FIXME, compile from the installed sinks */
-  static const GstQueryType query_types[] = {
-    GST_QUERY_TOTAL,
-    GST_QUERY_POSITION,
-    0
-  };
-
-  return query_types;
-}
-
-static gboolean
-gst_play_bin_query (GstElement * element, GstQuery * query)
-{
-  gboolean res = FALSE;
-  GList *s;
-  GstPlayBin *play_bin;
-
-  play_bin = GST_PLAY_BIN (element);
-
-  for (s = play_bin->seekables; s; s = g_list_next (s)) {
-    GstElement *element = GST_ELEMENT (s->data);
-
-    res = gst_element_query (element, query);
-    if (res)
-      break;
-  }
-  return res;
 }
 
 static gboolean

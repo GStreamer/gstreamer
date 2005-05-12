@@ -53,6 +53,11 @@ struct _GstStreamInfo {
 				   be different from the object as the object can be
 				   a queue pad, inserted for preroll. */
   GstCaps	*caps;		/* the caps of the stream */
+
+  /* this is tream information cached here because the streaminfo may be
+   * created before the app can know about it. */
+  gchar		*langcode,
+		*codec;
 };
 
 struct _GstStreamInfoClass {
