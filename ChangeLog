@@ -1,3 +1,21 @@
+2005-05-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesink.c: (gst_basesink_init),
+	(gst_basesink_activate):
+	* gst/base/gstbasesrc.c: (gst_basesrc_unlock),
+	(gst_basesrc_is_seekable):
+	* gst/gstbin.c: (gst_bin_add_func), (gst_bin_remove_func),
+	(bin_element_is_sink), (gst_bin_change_state):
+	* gst/gstelement.c: (gst_element_add_pad), (gst_element_query):
+	* gst/gstelement.h:
+	Identify sinks by their flag to avoid overly complicated
+	checks (fow now).
+	Do state changes even for elements not reachable from the
+	sinks.
+	BaseSink is a sink now :)
+	Some more debugging info in the basesrc.
+
+
 2005-05-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_query):

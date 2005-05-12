@@ -502,6 +502,8 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
       break;
     default:
       /* can happen for ghost pads */
+      g_warning ("adding pad %s:%s wothout direction",
+          GST_DEBUG_PAD_NAME (pad));
       break;
   }
   element->pads = g_list_prepend (element->pads, pad);

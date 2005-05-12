@@ -238,6 +238,8 @@ gst_basesink_init (GstBaseSink * basesink, gpointer g_class)
 
   basesink->pad_mode = GST_ACTIVATE_NONE;
   GST_RPAD_TASK (basesink->sinkpad) = NULL;
+
+  GST_FLAG_SET (basesink, GST_ELEMENT_IS_SINK);
 }
 
 static void

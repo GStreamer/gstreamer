@@ -79,6 +79,8 @@ static xmlNodePtr gst_bin_save_thyself (GstObject * object, xmlNodePtr parent);
 static void gst_bin_restore_thyself (GstObject * object, xmlNodePtr self);
 #endif
 
+static gint bin_element_is_sink (GstElement * child, GstBin * bin);
+
 /* Bin signals and args */
 enum
 {
@@ -379,6 +381,9 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
               GST_OBJECT_CAST (bin))))
     goto had_parent;
 
+  if (GST_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK))
+    GST_FLAG_SET (bin, GST_ELEMENT_IS_SINK);
+
   bin->children = g_list_prepend (bin->children, element);
   bin->numchildren++;
   bin->children_cookie++;
@@ -488,6 +493,20 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   bin->children = g_list_remove (bin->children, element);
   bin->numchildren--;
   bin->children_cookie++;
+
+  /* check if we a sink */
+  if (GST_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK)) {
+    GList *other_sink;
+
+    /* check if we removed the last sink */
+    other_sink = g_list_find_custom (bin->children,
+        bin, (GCompareFunc) bin_element_is_sink);
+    if (!other_sink) {
+      /* yups, we're not a sink anymore */
+      GST_FLAG_UNSET (bin, GST_ELEMENT_IS_SINK);
+    }
+  }
+
   GST_UNLOCK (bin);
 
   GST_CAT_INFO_OBJECT (GST_CAT_PARENTAGE, bin, "removed child \"%s\"",
@@ -674,70 +693,22 @@ gst_bin_iterate_recurse (GstBin * bin)
 static gint
 bin_element_is_sink (GstElement * child, GstBin * bin)
 {
-  gint ret = 1;
+  gint ret;
 
   /* we lock the child here for the remainder of the function to
-   * get its pads and name safely. */
+   * get its name safely. */
   GST_LOCK (child);
-
-  /* check if this is a sink element, these are the elements
-   * without (linked) source pads. */
-  if (child->numsrcpads == 0) {
-    /* shortcut */
+  if (GST_FLAG_IS_SET (child, GST_ELEMENT_IS_SINK)) {
     GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
-        "adding child %s as sink", GST_OBJECT_NAME (child));
+        "finding child %s as sink", GST_OBJECT_NAME (child));
+    GST_UNLOCK (child);
     ret = 0;
   } else {
-    /* loop over all pads, try to figure out if this element
-     * is a sink because it has no linked source pads */
-    GList *pads;
-    gboolean connected_src = FALSE;
-
-    for (pads = child->srcpads; pads; pads = g_list_next (pads)) {
-      GstPad *peer;
-
-      peer = gst_pad_get_peer (GST_PAD_CAST (pads->data));
-      if (peer) {
-        GstElement *parent;
-
-        parent = gst_pad_get_parent (peer);
-        if (parent) {
-          GstObject *grandparent;
-
-          grandparent = gst_object_get_parent (GST_OBJECT_CAST (parent));
-          if (grandparent == GST_OBJECT_CAST (bin)) {
-            connected_src = TRUE;
-          }
-          if (grandparent) {
-            gst_object_unref (GST_OBJECT_CAST (grandparent));
-          }
-          gst_object_unref (GST_OBJECT_CAST (parent));
-        }
-        gst_object_unref (GST_OBJECT_CAST (peer));
-        if (connected_src) {
-          break;
-        }
-      }
-    }
-
-    if (connected_src) {
-      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
-          "not adding child %s as sink: linked source pads",
-          GST_OBJECT_NAME (child));
-    } else {
-      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
-          "adding child %s as sink since it has unlinked source pads in this bin",
-          GST_OBJECT_NAME (child));
-      ret = 0;
-    }
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
+        "child %s is not a sink", GST_OBJECT_NAME (child));
+    GST_UNLOCK (child);
+    ret = 1;
   }
-  GST_UNLOCK (child);
-
-  /* we did not find the element, need to release the ref
-   * added by the iterator */
-  if (ret == 1)
-    gst_object_unref (GST_OBJECT (child));
-
   return ret;
 }
 
@@ -872,6 +843,7 @@ gst_bin_change_state (GstElement * element)
   GList *children;
   guint32 children_cookie;
   GQueue *elem_queue;           /* list of elements waiting for a state change */
+  GQueue *temp;                 /* temp queue of non sinks */
 
   bin = GST_BIN (element);
 
@@ -890,6 +862,7 @@ gst_bin_change_state (GstElement * element)
   /* all elements added to this queue should have their refcount
    * incremented */
   elem_queue = g_queue_new ();
+  temp = g_queue_new ();
 
   /* first step, find all sink elements, these are the elements
    * without (linked) source pads. */
@@ -908,13 +881,17 @@ restart:
        * the _is_sink function unrefs the element when it is not
        * a sink. */
       g_queue_push_tail (elem_queue, child);
+    } else {
+      g_queue_push_tail (temp, child);
     }
 
     GST_LOCK (bin);
     if (G_UNLIKELY (children_cookie != bin->children_cookie)) {
       /* undo what we had */
       g_queue_foreach (elem_queue, (GFunc) gst_object_unref, NULL);
+      g_queue_foreach (temp, (GFunc) gst_object_unref, NULL);
       while (g_queue_pop_head (elem_queue));
+      while (g_queue_pop_head (temp));
       goto restart;
     }
 
@@ -924,9 +901,26 @@ restart:
 
   /* second step, change state of elements in the queue */
   while (!g_queue_is_empty (elem_queue)) {
-    GstElement *qelement = g_queue_pop_head (elem_queue);
+    GstElement *qelement;
     GList *pads;
     gboolean locked;
+
+    /* take element */
+    qelement = g_queue_pop_head (elem_queue);
+    /* we don't need it in the temp anymore */
+    g_queue_remove_all (temp, qelement);
+
+    /* if queue is empty now, continue with a non-sink */
+    if (g_queue_is_empty (elem_queue)) {
+      GstElement *non_sink;
+
+      GST_DEBUG ("sinks and upstream elements exhausted");
+      non_sink = g_queue_pop_head (temp);
+      if (non_sink) {
+        GST_DEBUG ("found lefover non-sink %s", GST_OBJECT_NAME (non_sink));
+        g_queue_push_tail (elem_queue, non_sink);
+      }
+    }
 
     /* queue all elements connected to the sinkpads of this element */
     GST_LOCK (qelement);
@@ -1036,6 +1030,8 @@ exit:
   /* release refcounts in queue, should normally be empty */
   g_queue_foreach (elem_queue, (GFunc) gst_object_unref, NULL);
   g_queue_free (elem_queue);
+  g_queue_foreach (temp, (GFunc) gst_object_unref, NULL);
+  g_queue_free (temp);
 
   return ret;
 }

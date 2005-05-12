@@ -576,17 +576,21 @@ gst_basesrc_unlock (GstBaseSrc * basesrc)
   GstBaseSrcClass *bclass;
   gboolean result = FALSE;
 
+  GST_DEBUG ("unlock");
   /* unblock whatever the subclass is doing */
   bclass = GST_BASESRC_GET_CLASS (basesrc);
   if (bclass->unlock)
     result = bclass->unlock (basesrc);
 
+  GST_DEBUG ("unschedule clock");
   /* and unblock the clock as well, if any */
   GST_LOCK (basesrc);
   if (basesrc->clock_id) {
     gst_clock_id_unschedule (basesrc->clock_id);
   }
   GST_UNLOCK (basesrc);
+
+  GST_DEBUG ("unlock done");
 
   return result;
 }
