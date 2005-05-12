@@ -1,5 +1,10 @@
 2005-05-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/gstutils.c: (gst_element_query_position):
+	  No, an element is not a pad.
+
+2005-05-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/gstbin.c: (gst_bin_add_func), (cb_parent_unset),
 	(gst_bin_get_state):
 	  If a child is removed from a bin while we remove the child from

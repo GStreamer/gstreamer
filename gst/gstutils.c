@@ -1170,7 +1170,7 @@ gst_element_query_position (GstElement * element, GstFormat * format,
   GstQuery *query;
   gboolean ret;
 
-  g_return_val_if_fail (GST_IS_PAD (element), FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (format != NULL, FALSE);
 
   query = gst_query_new_position (*format);
