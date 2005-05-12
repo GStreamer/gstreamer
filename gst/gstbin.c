@@ -72,6 +72,7 @@ static void gst_bin_set_bus (GstElement * element, GstBus * bus);
 static void gst_bin_set_scheduler (GstElement * element, GstScheduler * sched);
 
 static gboolean gst_bin_send_event (GstElement * element, GstEvent * event);
+static gboolean gst_bin_query (GstElement * element, GstQuery * query);
 
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr gst_bin_save_thyself (GstObject * object, xmlNodePtr parent);
@@ -180,6 +181,7 @@ gst_bin_class_init (GstBinClass * klass)
   gstelement_class->set_scheduler = GST_DEBUG_FUNCPTR (gst_bin_set_scheduler);
 
   gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_bin_send_event);
+  gstelement_class->query = GST_DEBUG_FUNCPTR (gst_bin_query);
 
   klass->add_element = GST_DEBUG_FUNCPTR (gst_bin_add_func);
   klass->remove_element = GST_DEBUG_FUNCPTR (gst_bin_remove_func);
@@ -1102,6 +1104,43 @@ gst_bin_send_event (GstElement * element, GstEvent * event)
   }
   gst_iterator_free (iter);
   gst_event_unref (event);
+
+  return res;
+}
+
+static gboolean
+gst_bin_query (GstElement * element, GstQuery * query)
+{
+  GstBin *bin = GST_BIN (element);
+  GstIterator *iter;
+  gboolean res = FALSE, done = FALSE;
+
+  iter = gst_bin_iterate_sinks (bin);
+  GST_DEBUG_OBJECT (bin, "Sending event to sink children");
+
+  while (!(res || done)) {
+    gpointer data;
+
+    switch (gst_iterator_next (iter, &data)) {
+      case GST_ITERATOR_OK:
+      {
+        GstElement *sink;
+
+        sink = GST_ELEMENT_CAST (data);
+        res = gst_element_query (sink, query);
+        gst_object_unref (GST_OBJECT (sink));
+        break;
+      }
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (iter);
+        break;
+      default:
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (iter);
 
   return res;
 }
