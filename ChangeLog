@@ -1,3 +1,12 @@
+2005-05-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstbin.c: (gst_bin_add_func), (cb_parent_unset),
+	(gst_bin_get_state):
+	  If a child is removed from a bin while we remove the child from
+	  the bin and while we're retrieving its state, signal this to the
+	  get_state function so we abort the wait (instead of waiting for
+	  a timeout) and can immediately re-iterate over all other elements.
+
 2005-05-12  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/Makefile.am:

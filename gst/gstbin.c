@@ -364,6 +364,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   GST_UNLOCK (element);
 
   GST_LOCK (bin);
+
   /* then check to see if the element's name is already taken in the bin,
    * we can safely take the lock here. This check is probably bogus because
    * you can safely change the element name after adding it to the bin. */
@@ -759,6 +760,19 @@ gst_bin_iterate_sinks (GstBin * bin)
   return result;
 }
 
+/*
+ * This function will be called if the child is removed from the bin
+ * while we try to get its state. We should abort the _get_state()
+ * immediately to prevent pointless further blocking.
+ */
+static void
+cb_parent_unset (GstElement * child, GstElement * parent, gpointer data)
+{
+  GST_STATE_LOCK (child);
+  GST_STATE_BROADCAST (child);
+  GST_STATE_UNLOCK (child);
+}
+
 /* this functions loops over all children, as soon as one does
  * not return SUCCESS, we return that value.
  *
@@ -785,31 +799,35 @@ restart:
   children_cookie = bin->children_cookie;
   while (children) {
     GstElement *child = GST_ELEMENT_CAST (children->data);
+    gulong sig;
 
     gst_object_ref (GST_OBJECT_CAST (child));
     GST_UNLOCK (bin);
 
     /* ret is ASYNC if some child is still performing the state change */
+    sig = g_signal_connect (child, "parent-unset",
+        G_CALLBACK (cb_parent_unset), NULL);
     ret = gst_element_get_state (child, NULL, NULL, timeout);
+    g_signal_handler_disconnect (child, sig);
 
     gst_object_unref (GST_OBJECT_CAST (child));
 
-    if (ret != GST_STATE_SUCCESS) {
-      /* some child is still busy or in error, we can report that
-       * right away. */
-      goto done;
-    }
     /* now grab the lock to iterate to the next child */
     GST_LOCK (bin);
     if (G_UNLIKELY (children_cookie != bin->children_cookie))
       /* child added/removed during state change, restart */
       goto restart;
 
+    if (ret != GST_STATE_SUCCESS) {
+      /* some child is still busy or in error, we can report that
+       * right away. */
+      break;
+    }
+
     children = g_list_next (children);
   }
   GST_UNLOCK (bin);
 
-done:
   /* now we can take the state lock */
   GST_STATE_LOCK (bin);
   switch (ret) {
