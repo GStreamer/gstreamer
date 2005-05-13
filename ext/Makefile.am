@@ -226,11 +226,11 @@ endif
 # LIBMMS_DIR=
 # endif
 
-if USE_MAD
-MAD_DIR=mad
-else
-MAD_DIR=
-endif
+# if USE_MAD
+# MAD_DIR=mad
+# else
+# MAD_DIR=
+# endif
 
 # if USE_MIKMOD
 # MIKMOD_DIR=mikmod
@@ -447,4 +447,5 @@ DIST_SUBDIRS=\
 	shout2 \
 	sidplay \
 	aalib \
-	libcaca
+	libcaca \
+	esd

@@ -40,12 +40,12 @@ BuildRequires:  XFree86-devel
 # @USE_AUDIOFILE_TRUE@BuildRequires: audiofile-devel >= 0.2.1
 # @USE_CDPARANOIA_TRUE@Requires:      cdparanoia-libs >= alpha9.7
 # @USE_CDPARANOIA_TRUE@BuildRequires: cdparanoia-devel >= alpha9.7
-# @USE_ESD_TRUE@Requires:      esound >= 0.2.8
-# @USE_ESD_TRUE@BuildRequires: esound-devel >= 0.2.8
-# @USE_ESD_TRUE@Obsoletes:     gstreamer-esd
-# @USE_ESD_TRUE@
-# @USE_ESD_TRUE@Provides:		gstreamer-audiosrc
-# @USE_ESD_TRUE@Provides:		gstreamer-audiosink
+@USE_ESD_TRUE@Requires:      esound >= 0.2.8
+@USE_ESD_TRUE@BuildRequires: esound-devel >= 0.2.8
+@USE_ESD_TRUE@Obsoletes:     gstreamer-esd
+@USE_ESD_TRUE@
+@USE_ESD_TRUE@Provides:		gstreamer-audiosrc
+@USE_ESD_TRUE@Provides:		gstreamer-audiosink
 # @USE_FLAC_TRUE@Requires:      flac >= 1.0.3
 # @USE_FLAC_TRUE@BuildRequires: flac-devel >= 1.0.3
 # @USE_GCONF_TRUE@Requires: 	GConf2
@@ -125,15 +125,18 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstalaw.so
 %{_libdir}/gstreamer-%{majorminor}/libgsteffectv.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmulaw.so
-%{_libdir}/gstreamer-%{majorminor}/libgstvideofilter.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsmpte.so
+%{_libdir}/gstreamer-%{majorminor}/libgstrtp.so
+%{_libdir}/gstreamer-%{majorminor}/libgstrtsp.so
+%{_libdir}/gstreamer-%{majorminor}/libgsttcp.so
+%{_libdir}/gstreamer-%{majorminor}/libgstudp.so
 
 # gstreamer-plugins with external dependencies but in the main package
 # @USE_ARTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstarts.so
 # @USE_ARTSC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstartsdsink.so
 # @USE_AUDIOFILE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstaudiofile.so
 # @USE_CDPARANOIA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcdparanoia.so
-# @USE_ESD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstesd.so
+@USE_ESD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstesd.so
 # @USE_POLYP_TRUE@%{_libdir}/gstreamer-%{majorminor}/libpolypaudio.so
 # @USE_FLAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstflac.so
 # @USE_GNOME_VFS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgnomevfs.so
@@ -153,12 +156,14 @@ rm -rf $RPM_BUILD_ROOT
 # @USE_PANGO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttextoverlay.so
 # @USE_PANGO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttimeoverlay.so
 # @USE_SPEEX_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstspeex.so
-# @USE_LIBCACA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcacasink.so
+@USE_LIBCACA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcacasink.so
 # @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstximagesink.so
 # @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvimagesink.so
 # @USE_SNDFILE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsndfile.so
 # @USE_MUSICBRAINZ_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttrm.so
 
+## Libraries
+%{_libdir}/libgstvideofilter-%{majorminor}.*
 
 %post
 # @USE_GCONF_TRUE@export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
@@ -208,8 +213,8 @@ Group:          Applications/Multimedia
 # @USE_FAAD_TRUE@BuildRequires:  faad2-devel >= 2.0
 # @USE_GSM_TRUE@BuildRequires:  gsm-devel >= 1.0.10
 # @USE_LAME_TRUE@BuildRequires:  lame-devel >= 3.89
-@USE_MAD_TRUE@BuildRequires:  libid3tag-devel >= 0.15.0
-@USE_MAD_TRUE@BuildRequires:  libmad-devel >= 0.15.0
+# @USE_MAD_TRUE@BuildRequires:  libid3tag-devel >= 0.15.0
+# @USE_MAD_TRUE@BuildRequires:  libmad-devel >= 0.15.0
                                                                                 
 Requires:       gstreamer09-plugins >= %{gstp_minver}
 Requires(pre):  %{_bindir}/gst-register-%{majorminor}
@@ -237,7 +242,7 @@ This package contains extra audio plugins for GStreamer, including
 # @USE_FAAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaad.so
 # @USE_GSM_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgsm.so
 # @USE_LAME_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstlame.so
-@USE_MAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmad.so
+# @USE_MAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmad.so
 
 %package extra-dvd
 Summary:        DVD plugins for GStreamer
@@ -299,7 +304,7 @@ This package contains additional video plugins for GStreamer, including
 @USE_AALIB_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstaasink.so
 # @USE_LIBDV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdvdec.so
 # @USE_DV1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgst1394.so
-# @USE_LIBCACA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcacasink.so
+@USE_LIBCACA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcacasink.so
 # @USE_DIRAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdirac.so
 # @USE_OPENGL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstglimagesink.so
 
