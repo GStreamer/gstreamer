@@ -190,6 +190,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/gstreamer-%{majorminor}/gst/base/gsttypefindhelper.h
 %{_includedir}/gstreamer-%{majorminor}/gst/dataprotocol/dataprotocol.h
 %{_includedir}/gstreamer-%{majorminor}/gst/base/gstcollectpads.h
+%{_includedir}/gstreamer-%{majorminor}/gst/base/gstpushsrc.h
 %{_libdir}/libgstreamer-%{majorminor}.so
 %{_libdir}/libgstcontrol-%{majorminor}.so
 %{_libdir}/libgstbase-%{majorminor}.so
