@@ -1,3 +1,11 @@
+2005-05-13  Christian Schaller  <uraeus@gnome.org>
+
+	* ext/Makefile.am: dist esd directory
+	* gst-plugins.spec.in: add rtp plugins and esd plugin
+	* gst/effectv/Makefile.am: fix videofilter linking
+	* gst/rtp/Makefile.am: add missing headers 
+	* gst/rtsp/Makefile.am: add missing headers
+
 2005-05-12  Wim Taymans  <wim@fluendo.com>
 
 	* configure.ac:
