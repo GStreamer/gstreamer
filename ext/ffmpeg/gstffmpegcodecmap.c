@@ -808,7 +808,7 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
   int bpp = 0, depth = 0, endianness = 0;
   gulong g_mask = 0, r_mask = 0, b_mask = 0, a_mask = 0;
   guint32 fmt = 0;
-
+  
   switch (pix_fmt) {
     case PIX_FMT_YUVJ420P:
     case PIX_FMT_YUV420P:
@@ -880,35 +880,43 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
       bpp = depth = 8;
       endianness = G_BYTE_ORDER;
       break;
+    case PIX_FMT_GRAY8:
+      bpp = depth = 8;
+      caps = GST_FF_VID_CAPS_NEW ("video/x-raw-gray",
+				  "bpp", G_TYPE_INT, bpp,
+				  "depth", G_TYPE_INT, depth, NULL);
+      break;
     default:
       /* give up ... */
       break;
   }
-
-  if (bpp != 0) {
-    if (r_mask != 0) {
-      caps = GST_FF_VID_CAPS_NEW ("video/x-raw-rgb",
-          "bpp", G_TYPE_INT, bpp,
-          "depth", G_TYPE_INT, depth,
-          "red_mask", G_TYPE_INT, r_mask,
-          "green_mask", G_TYPE_INT, g_mask,
-          "blue_mask", G_TYPE_INT, b_mask,
-          "endianness", G_TYPE_INT, endianness, NULL);
-      if (a_mask) {
-        gst_caps_set_simple (caps, "alpha_mask", G_TYPE_INT, a_mask, NULL);
+  
+  if (caps == NULL) {
+    if (bpp != 0) {
+      if (r_mask != 0) {
+	caps = GST_FF_VID_CAPS_NEW ("video/x-raw-rgb",
+				    "bpp", G_TYPE_INT, bpp,
+				    "depth", G_TYPE_INT, depth,
+				    "red_mask", G_TYPE_INT, r_mask,
+				    "green_mask", G_TYPE_INT, g_mask,
+				    "blue_mask", G_TYPE_INT, b_mask,
+				    "endianness", G_TYPE_INT, endianness, NULL);
+	if (a_mask) {
+	  gst_caps_set_simple (caps, "alpha_mask", G_TYPE_INT, a_mask, NULL);
+	}
+      } else {
+	caps = GST_FF_VID_CAPS_NEW ("video/x-raw-rgb",
+				    "bpp", G_TYPE_INT, bpp,
+				    "depth", G_TYPE_INT, depth,
+				    "endianness", G_TYPE_INT, endianness, NULL);
+	if (context) {
+	  gst_ffmpeg_set_palette (caps, context);
+	}
       }
-    } else {
-      caps = GST_FF_VID_CAPS_NEW ("video/x-raw-rgb",
-          "bpp", G_TYPE_INT, bpp,
-          "depth", G_TYPE_INT, depth,
-          "endianness", G_TYPE_INT, endianness, NULL);
-      if (context) {
-        gst_ffmpeg_set_palette (caps, context);
-      }
+    } else if (fmt) {
+      caps = GST_FF_VID_CAPS_NEW ("video/x-raw-yuv",
+				  "format", GST_TYPE_FOURCC, fmt, NULL);
     }
-  } else if (fmt) {
-    caps = GST_FF_VID_CAPS_NEW ("video/x-raw-yuv",
-        "format", GST_TYPE_FOURCC, fmt, NULL);
   }
 
   if (caps != NULL) {
