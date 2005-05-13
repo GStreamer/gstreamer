@@ -82,6 +82,7 @@ plugin_init (GstPlugin * plugin)
   gst_ffmpegdemux_register (plugin);
   gst_ffmpegmux_register (plugin);
   gst_ffmpegcsp_register (plugin);
+  gst_ffmpegscale_register (plugin);
 
   register_protocol (&gstreamer_protocol);
 

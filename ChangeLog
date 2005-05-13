@@ -1,5 +1,13 @@
 2005-05-13  Luca Ognibene  <luogni@tin.it>
 
+	* ext/ffmpeg/gstffmpeg.c (plugin_init): 
+	* ext/ffmpeg/Makefile.am: 
+	* ext/ffmpeg/gstffmpegscale.c: 
+	  Add ffvideoscale element (#303727)
+
+	* TODO: 
+	  update TODO	
+
 	* ext/ffmpeg/gstffmpegcodecmap.c (gst_ffmpeg_pixfmt_to_caps): 
 	  Add support for GRAY8 colorspace
 
