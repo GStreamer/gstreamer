@@ -1,5 +1,10 @@
 2005-05-14  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstbin.c (gst_bin_iterate_sinks): Use sink_iterator_filter
+	so as to get the refs right.
+	(sink_iterator_filter): New function, wraps bin_element_is_sink,
+	unreffing objects that don't pass the filter.
+
 	* gst/gstpipeline.c (gst_pipeline_init): Drop ref on bus after
 	gst_element_set_bus.
 	(gst_pipeline_dispose): Set the bus on the pipeline to NULL. In

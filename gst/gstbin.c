@@ -685,16 +685,10 @@ gst_bin_iterate_recurse (GstBin * bin)
   return result;
 }
 
-/* returns 0 if the element is a sink, this is made so that
- * we can use this function as a filter 
- *
- * MT safe
- */
+/* MT safe */
 static gint
 bin_element_is_sink (GstElement * child, GstBin * bin)
 {
-  gint ret;
-
   /* we lock the child here for the remainder of the function to
    * get its name safely. */
   GST_LOCK (child);
@@ -702,14 +696,28 @@ bin_element_is_sink (GstElement * child, GstBin * bin)
     GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
         "finding child %s as sink", GST_OBJECT_NAME (child));
     GST_UNLOCK (child);
-    ret = 0;
+    /* returns 0 because this is a GCompareFunc */
+    return 0;
   } else {
     GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
         "child %s is not a sink", GST_OBJECT_NAME (child));
     GST_UNLOCK (child);
-    ret = 1;
+    return 1;
   }
-  return ret;
+}
+
+static gint
+sink_iterator_filter (GstElement * child, GstBin * bin)
+{
+  if (bin_element_is_sink (child, bin)) {
+    /* returns 0 because this is a GCompareFunc */
+    return 0;
+  } else {
+    /* child carries a ref from gst_bin_iterate_elements -- drop if not passing
+       through */
+    gst_object_unref ((GstObject *) child);
+    return 1;
+  }
 }
 
 /**
@@ -736,7 +744,7 @@ gst_bin_iterate_sinks (GstBin * bin)
 
   children = gst_bin_iterate_elements (bin);
   result = gst_iterator_filter (children,
-      (GCompareFunc) bin_element_is_sink, bin);
+      (GCompareFunc) sink_iterator_filter, bin);
 
   return result;
 }
@@ -877,9 +885,6 @@ restart:
     GST_UNLOCK (bin);
 
     if (bin_element_is_sink (child, bin) == 0) {
-      /* this also keeps the refcount on the element, note that
-       * the _is_sink function unrefs the element when it is not
-       * a sink. */
       g_queue_push_tail (elem_queue, child);
     } else {
       g_queue_push_tail (temp, child);
