@@ -1,3 +1,12 @@
+2005-05-14  David Schleef  <ds@schleef.org>
+
+	* configure.ac: Set G_LOG_DOMAIN in config.h to a string literal.
+	We should have done this all along.  Fixes #301646
+	* gst/Makefile.am:
+	* gst/gst.c: (init_post):
+	* gst/gst_private.h:
+	* gst/parse/grammar.y:
+
 2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

@@ -1,11 +1,12 @@
 %{
+#include "../gst_private.h"
+
 #include <glib-object.h>
 #include <glib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
-#include "../gst_private.h"
 #include "../gst-i18n-lib.h"
 
 #include "../gstconfig.h"

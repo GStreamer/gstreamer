@@ -514,6 +514,7 @@ dnl ############################
 
 dnl set license and copyright notice
 AC_DEFINE(GST_LICENSE, "LGPL", [GStreamer license])
+AC_DEFINE(G_LOG_DOMAIN, "GStreamer", [Glib log domain])
 
 dnl package name in plugins
 AC_ARG_WITH(package-name,

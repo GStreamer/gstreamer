@@ -67,8 +67,6 @@ static gboolean init_post (void);
 
 static GSList *preload_plugins = NULL;
 
-const gchar *g_log_domain_gstreamer = "GStreamer";
-
 static void
 debug_log_handler (const gchar * log_domain,
     GLogLevelFlags log_level, const gchar * message, gpointer user_data)
@@ -576,7 +574,7 @@ init_post (void)
 #endif /* GST_DISABLE_TRACE */
 
   llf = G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL;
-  g_log_set_handler (g_log_domain_gstreamer, llf, debug_log_handler, NULL);
+  g_log_set_handler (G_LOG_DOMAIN, llf, debug_log_handler, NULL);
 
   _gst_format_initialize ();
   _gst_query_type_initialize ();
