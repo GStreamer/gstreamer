@@ -1,3 +1,8 @@
+2005-05-14  Luca Ognibene  <luogni@tin.it>
+
+	* ext/ffmpeg/gstffmpegscale.c (gst_ffmpegscale_change_state): 
+	  Don't segfault if using passthrough
+
 2005-05-13  Luca Ognibene  <luogni@tin.it>
 
 	* ext/ffmpeg/gstffmpeg.c (plugin_init): 

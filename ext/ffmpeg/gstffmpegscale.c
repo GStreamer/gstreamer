@@ -397,7 +397,8 @@ gst_ffmpegscale_change_state (GstElement * element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_READY_TO_NULL:
-      img_resample_close (scale->res);
+      if (scale->res != NULL)
+	img_resample_close (scale->res);
       break;
   }
 
