@@ -899,6 +899,14 @@ restart:
   }
   GST_UNLOCK (bin);
 
+  /* can be the case for a bin like ( identity ) */
+  if (g_queue_is_empty (elem_queue) && !g_queue_is_empty (temp)) {
+    GQueue *q = elem_queue;
+
+    elem_queue = temp;
+    temp = q;
+  }
+
   /* second step, change state of elements in the queue */
   while (!g_queue_is_empty (elem_queue)) {
     GstElement *qelement;

@@ -1,3 +1,8 @@
+2005-05-14  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstbin.c (gst_bin_change_state): Fix state changes if a bin
+	has no sinks.
+
 2005-05-13  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstutils.c (gst_element_link_pads): Instead of calling
