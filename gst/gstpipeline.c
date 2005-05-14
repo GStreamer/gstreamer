@@ -163,6 +163,8 @@ gst_pipeline_init (GTypeInstance * instance, gpointer g_class)
   /* we are our own manager */
   GST_ELEMENT_MANAGER (pipeline) = pipeline;
   gst_element_set_bus (GST_ELEMENT (pipeline), bus);
+  /* set_bus refs the bus via gst_object_replace, we drop our ref */
+  gst_object_unref ((GstObject *) bus);
   gst_element_set_scheduler (GST_ELEMENT (pipeline), scheduler);
 }
 
@@ -171,6 +173,7 @@ gst_pipeline_dispose (GObject * object)
 {
   GstPipeline *pipeline = GST_PIPELINE (object);
 
+  gst_element_set_bus (GST_ELEMENT (pipeline), NULL);
   gst_scheduler_reset (GST_ELEMENT_SCHEDULER (object));
   gst_object_replace ((GstObject **) & pipeline->fixed_clock, NULL);
 

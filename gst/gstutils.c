@@ -879,10 +879,12 @@ prepare_link_maybe_ghosting (GstPad ** src, GstPad ** sink,
     pads_created_local = g_slist_prepend (pads_created_local, *sink);
   }
 
+  gst_object_unref (root);
   *pads_created = g_slist_concat (*pads_created, pads_created_local);
   return TRUE;
 
 cleanup_fail:
+  gst_object_unref (root);
   g_slist_foreach (pads_created_local, remove_pad, NULL);
   g_slist_free (pads_created_local);
   return FALSE;

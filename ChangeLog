@@ -1,5 +1,13 @@
 2005-05-14  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstpipeline.c (gst_pipeline_init): Drop ref on bus after
+	gst_element_set_bus.
+	(gst_pipeline_dispose): Set the bus on the pipeline to NULL. In
+	normal cases, this will destroy the bus.
+
+	* gst/gstutils.c (prepare_link_maybe_ghosting): Drop ref on root
+	object.
+
 	* gst/gstbin.c (gst_bin_change_state): Fix state changes if a bin
 	has no sinks.
 
