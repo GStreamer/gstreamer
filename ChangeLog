@@ -1,3 +1,12 @@
+2005-05-13  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstutils.c (gst_element_link_pads): Instead of calling
+	gst_pad_link, call pad_link_maybe_ghosting,
+	(pad_link_maybe_ghosting): Links pads, making sure that the
+	elements being linked are in the same bin.
+	(find_common_root, object_has_ancestor, ghost_up, remove_pad):
+	Helpers for pad_link_maybe_ghosting.
+
 2005-05-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

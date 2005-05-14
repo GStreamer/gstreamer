@@ -736,6 +736,178 @@ gst_element_state_get_name (GstElementState state)
   return "";
 }
 
+/* if return val is true, *direct_child is a caller-owned ref on the direct
+ * child of ancestor that is part of object's ancestry */
+static gboolean
+object_has_ancestor (GstObject * object, GstObject * ancestor,
+    GstObject ** direct_child)
+{
+  GstObject *child, *parent;
+
+  if (direct_child)
+    *direct_child = NULL;
+
+  child = gst_object_ref (object);
+  parent = gst_object_get_parent (object);
+
+  while (parent) {
+    if (ancestor == parent) {
+      if (direct_child)
+        *direct_child = child;
+      else
+        gst_object_unref (child);
+      gst_object_unref (parent);
+      return TRUE;
+    }
+
+    gst_object_unref (child);
+    child = parent;
+    parent = gst_object_get_parent (parent);
+  }
+
+  gst_object_unref (child);
+
+  return FALSE;
+}
+
+/* caller owns return */
+static GstObject *
+find_common_root (GstObject * o1, GstObject * o2)
+{
+  GstObject *top = o1;
+  GstObject *kid1, *kid2;
+  GstObject *root = NULL;
+
+  while (GST_OBJECT_PARENT (top))
+    top = GST_OBJECT_PARENT (top);
+
+  /* the itsy-bitsy spider... */
+
+  if (!object_has_ancestor (o2, top, &kid2))
+    return NULL;
+
+  root = gst_object_ref (top);
+  while (TRUE) {
+    if (!object_has_ancestor (o1, kid2, &kid1)) {
+      gst_object_unref (kid2);
+      return root;
+    }
+    root = kid2;
+    if (!object_has_ancestor (o2, kid1, &kid2)) {
+      gst_object_unref (kid1);
+      return root;
+    }
+    root = kid1;
+  }
+}
+
+/* caller does not own return */
+static GstPad *
+ghost_up (GstElement * e, GstPad * pad)
+{
+  static gint ghost_pad_index = 0;
+  GstPad *gpad;
+  gchar *name;
+
+  name = g_strdup_printf ("ghost%d", ghost_pad_index++);
+  gpad = gst_ghost_pad_new (name, pad);
+  g_free (name);
+
+  if (!gst_element_add_pad ((GstElement *) GST_OBJECT_PARENT (e), gpad)) {
+    g_warning ("Pad named %s already exists in element %s\n",
+        GST_OBJECT_NAME (gpad), GST_OBJECT_NAME (GST_OBJECT_PARENT (e)));
+    gst_object_unref ((GstObject *) gpad);
+    return NULL;
+  }
+
+  return gpad;
+}
+
+static void
+remove_pad (gpointer ppad, gpointer unused)
+{
+  GstPad *pad = ppad;
+
+  if (!gst_element_remove_pad ((GstElement *) GST_OBJECT_PARENT (pad), pad))
+    g_warning ("Couldn't remove pad %s from element %s",
+        GST_OBJECT_NAME (pad), GST_OBJECT_NAME (GST_OBJECT_PARENT (pad)));
+}
+
+static gboolean
+prepare_link_maybe_ghosting (GstPad ** src, GstPad ** sink,
+    GSList ** pads_created)
+{
+  GstObject *root;
+  GstObject *e1, *e2;
+  GSList *pads_created_local = NULL;
+
+  g_assert (pads_created);
+
+  e1 = GST_OBJECT_PARENT (*src);
+  e2 = GST_OBJECT_PARENT (*sink);
+
+  if (GST_OBJECT_PARENT (e1) == GST_OBJECT_PARENT (e2)) {
+    GST_CAT_INFO (GST_CAT_PADS, "%s and %s in same bin, no need for ghost pads",
+        GST_OBJECT_NAME (e1), GST_OBJECT_NAME (e2));
+    return TRUE;
+  }
+
+  GST_CAT_INFO (GST_CAT_PADS, "%s and %s not in same bin, making ghost pads",
+      GST_OBJECT_NAME (e1), GST_OBJECT_NAME (e2));
+
+  /* we need to setup some ghost pads */
+  root = find_common_root (e1, e2);
+  if (!root) {
+    g_warning
+        ("Trying to connect elements that don't share a common ancestor: %s and %s\n",
+        GST_ELEMENT_NAME (e1), GST_ELEMENT_NAME (e2));
+    return FALSE;
+  }
+
+  while (GST_OBJECT_PARENT (e1) != root) {
+    *src = ghost_up ((GstElement *) e1, *src);
+    if (!*src)
+      goto cleanup_fail;
+    e1 = GST_OBJECT_PARENT (*src);
+    pads_created_local = g_slist_prepend (pads_created_local, *src);
+  }
+  while (GST_OBJECT_PARENT (e2) != root) {
+    *sink = ghost_up ((GstElement *) e2, *sink);
+    if (!*sink)
+      goto cleanup_fail;
+    e2 = GST_OBJECT_PARENT (*sink);
+    pads_created_local = g_slist_prepend (pads_created_local, *sink);
+  }
+
+  *pads_created = g_slist_concat (*pads_created, pads_created_local);
+  return TRUE;
+
+cleanup_fail:
+  g_slist_foreach (pads_created_local, remove_pad, NULL);
+  g_slist_free (pads_created_local);
+  return FALSE;
+}
+
+static gboolean
+pad_link_maybe_ghosting (GstPad * src, GstPad * sink)
+{
+  GSList *pads_created = NULL;
+  gboolean ret;
+
+  if (!prepare_link_maybe_ghosting (&src, &sink, &pads_created)) {
+    ret = FALSE;
+  } else {
+    ret = (gst_pad_link (src, sink) == GST_PAD_LINK_OK);
+  }
+
+  if (!ret) {
+    g_slist_foreach (pads_created, remove_pad, NULL);
+  }
+  g_slist_free (pads_created);
+
+  return ret;
+}
+
 /**
  * gst_element_link_pads:
  * @src: a #GstElement containing the source pad.
@@ -835,7 +1007,7 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
     gboolean result;
 
     /* two explicitly specified pads */
-    result = gst_pad_link (srcpad, destpad);
+    result = pad_link_maybe_ghosting (srcpad, destpad);
 
     gst_object_unref (GST_OBJECT (srcpad));
     gst_object_unref (GST_OBJECT (destpad));
@@ -862,7 +1034,7 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
           gst_object_ref (GST_OBJECT (temp));
         }
 
-        if (temp && gst_pad_link (srcpad, temp) == GST_PAD_LINK_OK) {
+        if (temp && pad_link_maybe_ghosting (srcpad, temp)) {
           GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "linked pad %s:%s to pad %s:%s",
               GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (temp));
           if (destpad)
@@ -904,7 +1076,7 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
           (GST_PAD_PEER (destpad) == NULL)) {
         GstPad *temp = gst_element_get_compatible_pad (src, destpad, NULL);
 
-        if (temp && gst_pad_link (temp, destpad) == GST_PAD_LINK_OK) {
+        if (temp && pad_link_maybe_ghosting (temp, destpad)) {
           GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "linked pad %s:%s to pad %s:%s",
               GST_DEBUG_PAD_NAME (temp), GST_DEBUG_PAD_NAME (destpad));
           gst_object_unref (GST_OBJECT (temp));
@@ -958,7 +1130,7 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
                   gst_element_get_request_pad (src, srctempl->name_template);
               destpad =
                   gst_element_get_request_pad (dest, desttempl->name_template);
-              if (gst_pad_link (srcpad, destpad) == GST_PAD_LINK_OK) {
+              if (pad_link_maybe_ghosting (srcpad, destpad)) {
                 GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
                     "linked pad %s:%s to pad %s:%s",
                     GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (destpad));
