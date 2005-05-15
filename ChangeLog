@@ -1,3 +1,27 @@
+2005-05-15  David Schleef  <ds@schleef.org>
+
+	Move core plugins out of core.  I don't mind fdsrc/fdsink
+	going back into the core; they were just disabled there, so
+	I moved them.  Some of this stuff could (should) be deleted.
+	* gst/oldcore/Makefile.am:
+	* gst/oldcore/gstaggregator.c:
+	* gst/oldcore/gstaggregator.h:
+	* gst/oldcore/gstelements.c:
+	* gst/oldcore/gstfdsink.c:
+	* gst/oldcore/gstfdsink.h:
+	* gst/oldcore/gstfdsrc.c:
+	* gst/oldcore/gstfdsrc.h:
+	* gst/oldcore/gstmd5sink.c:
+	* gst/oldcore/gstmd5sink.h:
+	* gst/oldcore/gstmultifilesrc.c:
+	* gst/oldcore/gstmultifilesrc.h:
+	* gst/oldcore/gstpipefilter.c:
+	* gst/oldcore/gstpipefilter.h:
+	* gst/oldcore/gstshaper.c:
+	* gst/oldcore/gstshaper.h:
+	* gst/oldcore/gststatistics.c:
+	* gst/oldcore/gststatistics.h:
+
 2005-05-13  Christian Schaller  <uraeus@gnome.org>
 
 	* ext/Makefile.am: dist esd directory
