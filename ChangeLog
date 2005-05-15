@@ -1,3 +1,12 @@
+2005-05-15  Luca Ognibene  <luogni@tin.it>
+
+	* ext/ffmpeg/Makefile.am: 
+	* ext/ffmpeg/gstffmpegdeinterlace.c: 
+	* ext/ffmpeg/gstffmpeg.c (plugin_init): 
+	  Add ffdeinterlace element
+	* TODO: 
+	  yo, another thing removed from the TODO
+
 2005-05-14  Luca Ognibene  <luogni@tin.it>
 
 	* ext/ffmpeg/gstffmpegscale.c (gst_ffmpegscale_change_state): 

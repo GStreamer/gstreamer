@@ -9,7 +9,7 @@ The never-ending story of new features:
    - correct caps sets on the pad templates
    - event handling in the loop function (mux)
    - prevent data copying
-* ffdeinterlace and other filter elements
+* other filter elements
 * can we wrap URLProtocol as a source/sink?
 
 If you have cool ideas, add them here or contact the mailinglist:
