@@ -1,5 +1,10 @@
 2005-05-15  David Schleef  <ds@schleef.org>
 
+	* gst/elements/gstelements.c: Don't include headers that were
+	just removed.
+
+2005-05-15  David Schleef  <ds@schleef.org>
+
 	* gst/elements/Makefile.am: Remove some elements that don't
 	need to be in the core (or even exist at all).
 	* gst/elements/gstaggregator.c:
