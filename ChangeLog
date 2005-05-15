@@ -1,3 +1,21 @@
+2005-05-15  David Schleef  <ds@schleef.org>
+
+	* gst/elements/Makefile.am: Remove some elements that don't
+	need to be in the core (or even exist at all).
+	* gst/elements/gstaggregator.c:
+	* gst/elements/gstaggregator.h:
+	* gst/elements/gstmd5sink.c:
+	* gst/elements/gstmd5sink.h:
+	* gst/elements/gstmultifilesrc.c:
+	* gst/elements/gstmultifilesrc.h:
+	* gst/elements/gstpipefilter.c:
+	* gst/elements/gstpipefilter.h:
+	* gst/elements/gstshaper.c:
+	* gst/elements/gstshaper.h:
+	* gst/elements/gststatistics.c:
+	* gst/elements/gststatistics.h:
+	* po/POTFILES.in: Remove above files.
+
 2005-05-14  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstbin.c (gst_bin_iterate_sinks): Use sink_iterator_filter
