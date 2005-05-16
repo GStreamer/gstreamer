@@ -102,10 +102,6 @@ Struct list[] = {
   ,
   {"GstAllocTrace", sizeof (GstAllocTrace), 16}
   ,
-  {"GstTrashStack", sizeof (GstTrashStack), 12}
-  ,
-  {"GstTrashStackElement", sizeof (GstTrashStackElement), 4}
-  ,
   {"GstTypeFind", sizeof (GstTypeFind), 32}
   ,
   {"GstTypeFindFactory", sizeof (GstTypeFindFactory), 72}

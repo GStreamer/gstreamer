@@ -1,5 +1,21 @@
 2005-05-16  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* gst/gsttrashstack.[ch]:
+	* gst/gstmemchunk.[ch]:
+	  remove these
+	* gst/Makefile.am:
+	* gst/gstbuffer.c: (_gst_buffer_initialize),
+	(gst_buffer_alloc_chunk), (gst_buffer_free_chunk):
+	* gst/gstclock.c: (gst_clock_entry_new), (gst_clock_id_free),
+	(gst_clock_class_init):
+	* gst/gstevent.c: (_gst_event_initialize), (_gst_event_copy),
+	(_gst_event_free), (gst_event_new):
+	* testsuite/elements/struct_i386.h:
+	* testsuite/elements/struct_size.c:
+	  remove all references to GstMemChunk
+
+2005-05-16  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* configure.ac:
 	  set some variables right for parrallel installability , so we don't
 	  conflict with installed Gstreamer

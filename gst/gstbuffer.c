@@ -25,7 +25,6 @@
 #include "gstatomic_impl.h"
 #include "gstdata_private.h"
 #include "gstbuffer.h"
-#include "gstmemchunk.h"
 #include "gstinfo.h"
 
 GType _gst_buffer_type;
@@ -36,8 +35,6 @@ GType _gst_buffer_type;
 
 static GstAllocTrace *_gst_buffer_trace;
 #endif
-
-static GstMemChunk *chunk;
 
 static GstBuffer *gst_buffer_alloc_chunk (void);
 static void gst_buffer_free_chunk (GstBuffer * buffer);
@@ -50,9 +47,6 @@ _gst_buffer_initialize (void)
 #ifndef GST_DISABLE_TRACE
   _gst_buffer_trace = gst_alloc_trace_register (GST_BUFFER_TRACE_NAME);
 #endif
-
-  chunk = gst_mem_chunk_new ("GstBufferChunk", sizeof (GstBuffer),
-      sizeof (GstBuffer) * 200, 0);
 
   GST_CAT_LOG (GST_CAT_BUFFER, "Buffers are initialized now");
 }
@@ -177,7 +171,7 @@ gst_buffer_alloc_chunk (void)
 {
   GstBuffer *newbuf;
 
-  newbuf = gst_mem_chunk_alloc (chunk);
+  newbuf = g_new (GstBuffer, 1);
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_new (_gst_buffer_trace, newbuf);
 #endif
@@ -188,7 +182,7 @@ gst_buffer_alloc_chunk (void)
 static void
 gst_buffer_free_chunk (GstBuffer * buffer)
 {
-  gst_mem_chunk_free (chunk, GST_DATA (buffer));
+  g_free (buffer);
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_free (_gst_buffer_trace, buffer);
 #endif

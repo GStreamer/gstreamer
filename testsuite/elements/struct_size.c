@@ -5,7 +5,6 @@
 
 #include <gst/gst.h>
 #include <gst/gstqueue.h>
-#include <gst/gsttrashstack.h>
 #include <stdlib.h>
 
 typedef struct
@@ -16,7 +15,7 @@ typedef struct
 }
 Struct;
 
-#ifdef HAVE_CPU_I386
+#if 0
 #include "struct_i386.h"
 #define HAVE_ABI_SIZES
 #else
