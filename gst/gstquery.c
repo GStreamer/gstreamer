@@ -27,12 +27,15 @@
 #include "gstquery.h"
 #include "gstmemchunk.h"
 #include "gstenumtypes.h"
-#include "gstdata_private.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_query_debug);
 #define GST_CAT_DEFAULT gst_query_debug
 
-GType _gst_query_type;
+static void gst_query_init (GTypeInstance * instance, gpointer g_class);
+static void gst_query_class_init (gpointer g_class, gpointer class_data);
+static void gst_query_finalize (GstQuery * query);
+static GstQuery *_gst_query_copy (GstQuery * query);
+
 
 static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
 static GList *_gst_queries = NULL;
@@ -82,13 +85,85 @@ _gst_query_initialize (void)
   }
   g_static_mutex_unlock (&mutex);
 
-  /* register the type */
-  _gst_query_type = g_boxed_type_register_static ("GstQuery",
-      (GBoxedCopyFunc) gst_data_copy, (GBoxedFreeFunc) gst_data_unref);
+  gst_query_get_type ();
 
   chunk = gst_mem_chunk_new ("GstQueryChunk", sizeof (GstQuery),
       sizeof (GstQuery) * 20, 0);
 }
+
+GType
+gst_query_get_type (void)
+{
+  static GType _gst_query_type;
+
+  if (G_UNLIKELY (_gst_query_type == 0)) {
+    static const GTypeInfo query_info = {
+      sizeof (GstQueryClass),
+      NULL,
+      NULL,
+      gst_query_class_init,
+      NULL,
+      NULL,
+      sizeof (GstQuery),
+      0,
+      gst_query_init,
+      NULL
+    };
+
+    _gst_query_type = g_type_register_static (GST_TYPE_MINI_OBJECT,
+        "GstQuery", &query_info, 0);
+  }
+  return _gst_query_type;
+}
+
+static void
+gst_query_class_init (gpointer g_class, gpointer class_data)
+{
+  GstQueryClass *query_class = GST_QUERY_CLASS (g_class);
+
+  query_class->mini_object_class.copy =
+      (GstMiniObjectCopyFunction) _gst_query_copy;
+  query_class->mini_object_class.finalize =
+      (GstMiniObjectFinalizeFunction) gst_query_finalize;
+
+}
+
+static void
+gst_query_finalize (GstQuery * query)
+{
+  g_return_if_fail (query != NULL);
+
+  if (query->structure) {
+    gst_structure_set_parent_refcount (query->structure, NULL);
+    gst_structure_free (query->structure);
+  }
+}
+
+static void
+gst_query_init (GTypeInstance * instance, gpointer g_class)
+{
+
+}
+
+static GstQuery *
+_gst_query_copy (GstQuery * query)
+{
+  GstQuery *copy;
+
+  copy = (GstQuery *) gst_mini_object_new (GST_TYPE_QUERY);
+
+  copy->type = query->type;
+
+  if (query->structure) {
+    copy->structure = gst_structure_copy (query->structure);
+    gst_structure_set_parent_refcount (copy->structure,
+        &query->mini_object.refcount);
+  }
+
+  return copy;
+}
+
+
 
 /**
  * gst_query_type_register:
@@ -222,67 +297,21 @@ gst_query_type_iterate_definitions (void)
   return result;
 }
 
-GType
-gst_query_get_type (void)
-{
-  return _gst_query_type;
-}
-
-static GstQuery *
-_gst_query_copy (GstQuery * query)
-{
-  GstQuery *copy;
-
-  GST_LOG ("copy query %p", query);
-
-  copy = gst_mem_chunk_alloc (chunk);
-
-  memcpy (copy, query, sizeof (GstQuery));
-
-  if (query->structure) {
-    copy->structure = gst_structure_copy (query->structure);
-    gst_structure_set_parent_refcount (copy->structure,
-        &GST_DATA_REFCOUNT (query));
-  }
-
-  return copy;
-}
-
-static void
-_gst_query_free (GstQuery * query)
-{
-  GST_LOG ("freeing query %p", query);
-
-  if (query->structure) {
-    gst_structure_set_parent_refcount (query->structure, NULL);
-    gst_structure_free (query->structure);
-  }
-
-  _GST_DATA_DISPOSE (GST_DATA (query));
-  gst_mem_chunk_free (chunk, query);
-}
-
 static GstQuery *
 gst_query_new (GstQueryType type, GstStructure * structure)
 {
   GstQuery *query;
 
-  query = gst_mem_chunk_alloc0 (chunk);
+  query = (GstQuery *) gst_mini_object_new (GST_TYPE_QUERY);
 
   GST_DEBUG ("creating new query %p %d", query, type);
 
-  _GST_DATA_INIT (GST_DATA (query),
-      _gst_query_type,
-      0,
-      (GstDataFreeFunction) _gst_query_free,
-      (GstDataCopyFunction) _gst_query_copy);
-
-  GST_QUERY_TYPE (query) = type;
+  query->type = type;
 
   if (structure) {
     query->structure = structure;
     gst_structure_set_parent_refcount (query->structure,
-        &GST_DATA_REFCOUNT (query));
+        &query->mini_object.refcount);
   } else {
     query->structure = NULL;
   }

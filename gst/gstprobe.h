@@ -25,7 +25,7 @@
 #define __GST_PROBE_H__
 
 #include <glib.h>
-#include <gst/gstdata.h>
+#include <gst/gstminiobject.h>
 
 G_BEGIN_DECLS
 
@@ -38,7 +38,7 @@ GType                    gst_probe_get_type		(void);
 
 /* the callback should return FALSE if the data should be discarded */
 typedef gboolean	(*GstProbeCallback)		(GstProbe *probe,
-							 GstData **data,
+							 GstMiniObject **data,
 							 gpointer user_data);
 
 struct _GstProbe {
@@ -54,7 +54,7 @@ GstProbe*		gst_probe_new			(gboolean single_shot,
 							 gpointer user_data);
 void			gst_probe_destroy		(GstProbe *probe);
 
-gboolean		gst_probe_perform		(GstProbe *probe, GstData **data);
+gboolean		gst_probe_perform		(GstProbe *probe, GstMiniObject **data);
 
 typedef struct _GstProbeDispatcher GstProbeDispatcher;
 
@@ -72,7 +72,7 @@ void			gst_probe_dispatcher_set_active		(GstProbeDispatcher *disp, gboolean acti
 void			gst_probe_dispatcher_add_probe		(GstProbeDispatcher *disp, GstProbe *probe);
 void			gst_probe_dispatcher_remove_probe	(GstProbeDispatcher *disp, GstProbe *probe);
 
-gboolean		gst_probe_dispatcher_dispatch		(GstProbeDispatcher *disp, GstData **data);
+gboolean		gst_probe_dispatcher_dispatch		(GstProbeDispatcher *disp, GstMiniObject **data);
 
 G_END_DECLS
 

@@ -23,14 +23,12 @@
 #define __GST_MESSAGE_H__
 
 #include <gst/gsttypes.h>
-#include <gst/gstdata.h>
+#include <gst/gstminiobject.h>
 #include <gst/gstobject.h>
 #include <gst/gsttag.h>
 #include <gst/gststructure.h>
 
 G_BEGIN_DECLS 
-
-GST_EXPORT GType _gst_message_type;
 
 /**
  * GstMessageType:
@@ -71,9 +69,15 @@ typedef enum
 
 #define GST_MESSAGE_TRACE_NAME	"GstMessage"
 
-#define GST_TYPE_MESSAGE	(_gst_message_type)
-#define GST_MESSAGE(message)	((GstMessage*)(message))
-#define GST_IS_MESSAGE(message)	(GST_DATA_TYPE(message) == GST_TYPE_MESSAGE)
+typedef struct _GstMessage GstMessage;
+typedef struct _GstMessageClass GstMessageClass;
+
+#define GST_TYPE_MESSAGE				(gst_message_get_type())
+#define GST_IS_MESSAGE(obj)                      (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MESSAGE))
+#define GST_IS_MESSAGE_CLASS(klass)              (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MESSAGE))
+#define GST_MESSAGE_GET_CLASS(obj)               (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MESSAGE, GstMessageClass))
+#define GST_MESSAGE(obj)                         (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MESSAGE, GstMessage))
+#define GST_MESSAGE_CLASS(klass)                 (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MESSAGE, GstMessageClass))
 
 /* the lock is used to handle the synchronous handling of messages,
  * the emiting thread is block until the handling thread processed
@@ -91,7 +95,7 @@ typedef enum
 
 struct _GstMessage
 {
-  GstData data;
+  GstMiniObject mini_object;
 
   /*< public > *//* with MESSAGE_LOCK */
   GMutex *lock;                 /* lock and cond for async delivery */
@@ -108,17 +112,20 @@ struct _GstMessage
   gpointer _gst_reserved[GST_PADDING];
 };
 
+struct _GstMessageClass {
+  GstMiniObjectClass mini_object_class;
+};
+
 void 		_gst_message_initialize 	(void);
 
 GType 		gst_message_get_type 		(void);
 
 /* refcounting */
-#define         gst_message_ref(msg)		GST_MESSAGE (gst_data_ref (GST_DATA (msg)))
-#define         gst_message_ref_by_count(msg,c)	GST_MESSAGE (gst_data_ref_by_count (GST_DATA (msg), (c)))
-#define         gst_message_unref(msg)		gst_data_unref (GST_DATA (msg))
+#define         gst_message_ref(msg)		GST_MESSAGE (gst_mini_object_ref (GST_MINI_OBJECT (msg)))
+#define         gst_message_unref(msg)		gst_mini_object_unref (GST_MINI_OBJECT (msg))
 /* copy message */
-#define         gst_message_copy(msg)		GST_MESSAGE (gst_data_copy (GST_DATA (msg)))
-#define         gst_message_copy_on_write(msg)	GST_MESSAGE (gst_data_copy_on_write (GST_DATA (msg)))
+#define         gst_message_copy(msg)		GST_MESSAGE (gst_mini_object_copy (GST_MINI_OBJECT (msg)))
+#define         gst_message_make_writable(msg)	GST_MESSAGE (gst_mini_object_make_writable (GST_MINI_OBJECT (msg)))
 
 GstMessage *	gst_message_new_eos 		(GstObject * src);
 GstMessage *	gst_message_new_error 		(GstObject * src, GError * error, gchar * debug);

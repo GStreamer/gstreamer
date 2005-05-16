@@ -24,7 +24,6 @@
 #ifndef __GST_DATA_PROTOCOL_H__
 #define __GST_DATA_PROTOCOL_H__
 
-#include <gst/gstdata.h>
 #include <gst/gstbuffer.h>
 #include <gst/gstevent.h>
 #include <gst/gstcaps.h>

@@ -288,8 +288,7 @@ gst_fakesrc_class_init (GstFakeSrcClass * klass)
   gst_fakesrc_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstFakeSrcClass, handoff), NULL, NULL,
-      gst_marshal_VOID__BOXED_OBJECT, G_TYPE_NONE, 1,
-      GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE);
+      gst_marshal_VOID__OBJECT_OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
 
   /*gstbasesrc_class->is_seekable = GST_DEBUG_FUNCPTR (gst_fakesrc_is_seekable); */
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_fakesrc_start);

@@ -82,7 +82,6 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstbus.c		\
 	gstcaps.c		\
 	gstclock.c		\
-	gstdata.c		\
 	gstelement.c		\
 	gstelementfactory.c	\
 	gsterror.c		\
@@ -95,6 +94,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstiterator.c		\
 	gstmemchunk.c		\
 	gstmessage.c		\
+	gstminiobject.c		\
 	gstpad.c		\
 	gstpipeline.c		\
 	gstplugin.c		\
@@ -157,7 +157,6 @@ gst_headers =			\
 	gstcaps.h		\
 	gstclock.h		\
 	gstcompat.h		\
-	gstdata.h		\
 	gstelement.h		\
 	gsterror.h		\
 	gstevent.h		\
@@ -170,6 +169,7 @@ gst_headers =			\
 	gstmacros.h		\
 	gstmemchunk.h		\
 	gstmessage.h		\
+	gstminiobject.h		\
 	gstpad.h		\
 	gstpipeline.h		\
 	gstplugin.h		\
@@ -206,7 +206,6 @@ noinst_HEADERS = 		\
 	gst-i18n-lib.h		\
 	gst-i18n-app.h		\
 	gst_private.h		\
-	gstdata_private.h	\
 	gstarch.h		\
 	cothreads.h		
 

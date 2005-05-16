@@ -1245,7 +1245,7 @@ gst_element_post_message (GstElement * element, GstMessage * message)
   if (G_UNLIKELY (bus == NULL)) {
     GST_DEBUG ("... but I won't because I have no bus");
     GST_UNLOCK (element);
-    gst_data_unref (GST_DATA (message));
+    gst_message_unref (message);
     return FALSE;
   }
   gst_object_ref (GST_OBJECT (bus));

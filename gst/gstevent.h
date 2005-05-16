@@ -25,14 +25,12 @@
 #define __GST_EVENT_H__
 
 #include <gst/gsttypes.h>
-#include <gst/gstdata.h>
+#include <gst/gstminiobject.h>
 #include <gst/gstformat.h>
 #include <gst/gstobject.h>
 #include <gst/gststructure.h>
 
 G_BEGIN_DECLS
-
-GST_EXPORT GType _gst_event_type;
 
 /**
  * GstEventType:
@@ -63,9 +61,15 @@ typedef enum {
 
 #define GST_EVENT_TRACE_NAME	"GstEvent"
 
-#define GST_TYPE_EVENT		(_gst_event_type)
-#define GST_EVENT(event)	((GstEvent*)(event))
-#define GST_IS_EVENT(event)	(GST_DATA_TYPE(event) == GST_TYPE_EVENT)
+typedef struct _GstEvent GstEvent;
+typedef struct _GstEventClass GstEventClass;
+
+#define GST_TYPE_EVENT			       (gst_event_get_type())
+#define GST_IS_EVENT(obj)                      (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_EVENT))
+#define GST_IS_EVENT_CLASS(klass)              (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_EVENT))
+#define GST_EVENT_GET_CLASS(obj)               (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_EVENT, GstEventClass))
+#define GST_EVENT(obj)                         (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_EVENT, GstEvent))
+#define GST_EVENT_CLASS(klass)                 (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_EVENT, GstEventClass))
 
 #define GST_EVENT_TYPE(event)		(GST_EVENT(event)->type)
 #define GST_EVENT_TIMESTAMP(event)	(GST_EVENT(event)->timestamp)
@@ -166,7 +170,7 @@ typedef struct
 #define GST_EVENT_RATE_VALUE(event)		(GST_EVENT(event)->event_data.rate.value)
 
 struct _GstEvent {
-  GstData data;
+  GstMiniObject mini_object;
 
   /*< public >*/ /* with COW */
   GstEventType  type;
@@ -204,17 +208,21 @@ struct _GstEvent {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+struct _GstEventClass {
+  GstMiniObjectClass mini_object_class;
+
+};
+
 void		_gst_event_initialize		(void);
 	
 GType		gst_event_get_type		(void);
 GstEvent*	gst_event_new			(GstEventType type);
 
 /* refcounting */
-#define         gst_event_ref(ev)		GST_EVENT (gst_data_ref (GST_DATA (ev)))
-#define         gst_event_ref_by_count(ev,c)	GST_EVENT (gst_data_ref_by_count (GST_DATA (ev), c))
-#define         gst_event_unref(ev)		gst_data_unref (GST_DATA (ev))
+#define         gst_event_ref(ev)		GST_EVENT (gst_mini_object_ref (GST_MINI_OBJECT (ev)))
+#define         gst_event_unref(ev)		gst_mini_object_unref (GST_MINI_OBJECT (ev))
 /* copy buffer */
-#define         gst_event_copy(ev)		GST_EVENT (gst_data_copy (GST_DATA (ev)))
+#define         gst_event_copy(ev)		GST_EVENT (gst_mini_object_copy (GST_MINI_OBJECT (ev)))
 
 gboolean	gst_event_masks_contains	(const GstEventMask *masks, GstEventMask *mask);
 

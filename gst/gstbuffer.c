@@ -22,13 +22,10 @@
 
 #include "gst_private.h"
 
-#include "gstdata_private.h"
 #include "gstbuffer.h"
-#include "gstmemchunk.h"
 #include "gstinfo.h"
 #include "gstutils.h"
-
-GType _gst_buffer_type = 0;
+#include "gstminiobject.h"
 
 #ifndef GST_DISABLE_TRACE
 /* #define GST_WITH_ALLOC_TRACE  */
@@ -37,10 +34,11 @@ GType _gst_buffer_type = 0;
 static GstAllocTrace *_gst_buffer_trace;
 #endif
 
-static GstMemChunk *chunk;
+static void gst_buffer_init (GTypeInstance * instance, gpointer g_class);
+static void gst_buffer_class_init (gpointer g_class, gpointer class_data);
+static void gst_buffer_finalize (GstBuffer * buffer);
+static GstBuffer *_gst_buffer_copy (GstBuffer * buffer);
 
-static GstBuffer *gst_buffer_alloc_chunk (void);
-static void gst_buffer_free_chunk (GstBuffer * buffer);
 
 void
 _gst_buffer_initialize (void)
@@ -50,119 +48,89 @@ _gst_buffer_initialize (void)
 #ifndef GST_DISABLE_TRACE
   _gst_buffer_trace = gst_alloc_trace_register (GST_BUFFER_TRACE_NAME);
 #endif
-
-  chunk = gst_mem_chunk_new ("GstBufferChunk", sizeof (GstBuffer),
-      sizeof (GstBuffer) * 200, 0);
-
-  GST_CAT_LOG (GST_CAT_BUFFER, "Buffers are initialized now");
 }
 
 GType
 gst_buffer_get_type (void)
 {
+  static GType _gst_buffer_type;
+
   if (G_UNLIKELY (_gst_buffer_type == 0)) {
-    _gst_buffer_type = g_boxed_type_register_static ("GstBuffer",
-        (GBoxedCopyFunc) gst_data_copy, (GBoxedFreeFunc) gst_data_unref);
+    static const GTypeInfo buffer_info = {
+      sizeof (GstBufferClass),
+      NULL,
+      NULL,
+      gst_buffer_class_init,
+      NULL,
+      NULL,
+      sizeof (GstBuffer),
+      0,
+      gst_buffer_init,
+      NULL
+    };
+
+    _gst_buffer_type = g_type_register_static (GST_TYPE_MINI_OBJECT,
+        "GstBuffer", &buffer_info, 0);
   }
   return _gst_buffer_type;
 }
 
 static void
-_gst_buffer_sub_free (GstBuffer * buffer)
+gst_buffer_class_init (gpointer g_class, gpointer class_data)
 {
-  gst_data_unref (GST_DATA (buffer->buffer_private));
+  GstBufferClass *buffer_class = GST_BUFFER_CLASS (g_class);
 
-  GST_BUFFER_DATA (buffer) = NULL;
-  GST_BUFFER_SIZE (buffer) = 0;
-  gst_caps_replace (&GST_BUFFER_CAPS (buffer), NULL);
+  buffer_class->mini_object_class.copy =
+      (GstMiniObjectCopyFunction) _gst_buffer_copy;
+  buffer_class->mini_object_class.finalize =
+      (GstMiniObjectFinalizeFunction) gst_buffer_finalize;
 
-  _GST_DATA_DISPOSE (GST_DATA (buffer));
-
-  gst_buffer_free_chunk (buffer);
 }
 
-/**
- * gst_buffer_default_free:
- * @buffer: a #GstBuffer to free.
- *
- * Frees the memory associated with the buffer including the buffer data,
- * unless the GST_BUFFER_DONTFREE flags was set or the buffer data is NULL.
- * 
- * MT safe.
- */
-void
-gst_buffer_default_free (GstBuffer * buffer)
+static void
+gst_buffer_finalize (GstBuffer * buffer)
 {
   g_return_if_fail (buffer != NULL);
 
   /* free our data */
-  if (GST_BUFFER_FREE_DATA_FUNC (buffer)) {
-    GST_BUFFER_FREE_DATA_FUNC (buffer) (buffer);
-  } else if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_DONTFREE)) {
-    g_free (GST_BUFFER_DATA (buffer));
+  if (buffer->malloc_data) {
+    g_free (buffer->malloc_data);
   }
 
-  /* set to safe values */
-  GST_BUFFER_DATA (buffer) = NULL;
-  GST_BUFFER_SIZE (buffer) = 0;
   gst_caps_replace (&GST_BUFFER_CAPS (buffer), NULL);
-
-  _GST_DATA_DISPOSE (GST_DATA (buffer));
-
-  gst_buffer_free_chunk (buffer);
 }
 
-
-/**
- * gst_buffer_default_copy:
- * @buffer: a #GstBuffer to make a copy of.
- *
- * Make a full newly allocated copy of the given buffer, data and all.
- * Note that the caps on the buffer are not copied but their refcount
- * is increased.
- *
- * Returns: the new #GstBuffer.
- * 
- * MT safe.
- */
-GstBuffer *
-gst_buffer_default_copy (GstBuffer * buffer)
+static GstBuffer *
+_gst_buffer_copy (GstBuffer * buffer)
 {
   GstBuffer *copy;
-  guint16 flags;
+  guint mask;
 
   g_return_val_if_fail (buffer != NULL, NULL);
 
   /* create a fresh new buffer */
-  copy = gst_buffer_alloc_chunk ();
+  copy = gst_buffer_new ();
 
   GST_CAT_LOG (GST_CAT_BUFFER, "copy %p to %p", buffer, copy);
 
   /* copy relevant flags */
-  flags = GST_DATA_FLAG_SHIFT (GST_BUFFER_PREROLL) |
-      GST_DATA_FLAG_SHIFT (GST_BUFFER_IN_CAPS) |
-      GST_DATA_FLAG_SHIFT (GST_BUFFER_DELTA_UNIT);
-  flags = GST_BUFFER_FLAGS (buffer) & flags;
-
-  _GST_DATA_INIT (GST_DATA (copy),
-      _gst_buffer_type,
-      flags,
-      (GstDataFreeFunction) gst_buffer_default_free,
-      (GstDataCopyFunction) gst_buffer_default_copy);
+  mask = GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_IN_CAPS |
+      GST_BUFFER_FLAG_DELTA_UNIT;
+  GST_MINI_OBJECT (copy)->flags |= GST_MINI_OBJECT (buffer)->flags & mask;
 
   /* we simply copy everything from our parent */
-  GST_BUFFER_DATA (copy) = g_memdup (GST_BUFFER_DATA (buffer),
-      GST_BUFFER_SIZE (buffer));
-  GST_BUFFER_SIZE (copy) = GST_BUFFER_SIZE (buffer);
-  GST_BUFFER_MAXSIZE (copy) = GST_BUFFER_SIZE (buffer);
+  if (buffer->malloc_data) {
+    copy->malloc_data = g_memdup (buffer->data, buffer->size);
+    copy->data = copy->malloc_data;
+  }
+
+  copy->size = buffer->size;
 
   GST_BUFFER_TIMESTAMP (copy) = GST_BUFFER_TIMESTAMP (buffer);
   GST_BUFFER_DURATION (copy) = GST_BUFFER_DURATION (buffer);
   GST_BUFFER_OFFSET (copy) = GST_BUFFER_OFFSET (buffer);
   GST_BUFFER_OFFSET_END (copy) = GST_BUFFER_OFFSET_END (buffer);
 
-  GST_BUFFER_FREE_DATA_FUNC (copy) = NULL;
-  GST_BUFFER_PRIVATE (copy) = NULL;
   if (GST_BUFFER_CAPS (buffer))
     GST_BUFFER_CAPS (copy) = gst_caps_ref (GST_BUFFER_CAPS (buffer));
   else
@@ -171,26 +139,22 @@ gst_buffer_default_copy (GstBuffer * buffer)
   return copy;
 }
 
-static GstBuffer *
-gst_buffer_alloc_chunk (void)
-{
-  GstBuffer *newbuf;
-
-  newbuf = gst_mem_chunk_alloc (chunk);
-#ifndef GST_DISABLE_TRACE
-  gst_alloc_trace_new (_gst_buffer_trace, newbuf);
-#endif
-
-  return newbuf;
-}
-
 static void
-gst_buffer_free_chunk (GstBuffer * buffer)
+gst_buffer_init (GTypeInstance * instance, gpointer g_class)
 {
-  gst_mem_chunk_free (chunk, GST_DATA (buffer));
-#ifndef GST_DISABLE_TRACE
-  gst_alloc_trace_free (_gst_buffer_trace, buffer);
-#endif
+  GstBuffer *buffer;
+
+  buffer = (GstBuffer *) instance;
+
+  GST_CAT_LOG (GST_CAT_BUFFER, "init %p", buffer);
+
+  //GST_BUFFER_DATA (buffer) = NULL;
+  //GST_BUFFER_SIZE (buffer) = 0;
+  GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET_NONE;
+  GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET_NONE;
+  //GST_BUFFER_CAPS (buffer) = NULL;
 }
 
 /**
@@ -207,26 +171,9 @@ gst_buffer_new (void)
 {
   GstBuffer *newbuf;
 
-  newbuf = gst_buffer_alloc_chunk ();
+  newbuf = (GstBuffer *) gst_mini_object_new (GST_TYPE_BUFFER);
 
   GST_CAT_LOG (GST_CAT_BUFFER, "new %p", newbuf);
-
-  _GST_DATA_INIT (GST_DATA (newbuf),
-      _gst_buffer_type,
-      0,
-      (GstDataFreeFunction) gst_buffer_default_free,
-      (GstDataCopyFunction) gst_buffer_default_copy);
-
-  GST_BUFFER_DATA (newbuf) = NULL;
-  GST_BUFFER_SIZE (newbuf) = 0;
-  GST_BUFFER_MAXSIZE (newbuf) = GST_BUFFER_MAXSIZE_NONE;
-  GST_BUFFER_TIMESTAMP (newbuf) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_DURATION (newbuf) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_OFFSET (newbuf) = GST_BUFFER_OFFSET_NONE;
-  GST_BUFFER_OFFSET_END (newbuf) = GST_BUFFER_OFFSET_NONE;
-  GST_BUFFER_FREE_DATA_FUNC (newbuf) = NULL;
-  GST_BUFFER_PRIVATE (newbuf) = NULL;
-  GST_BUFFER_CAPS (newbuf) = NULL;
 
   return newbuf;
 }
@@ -248,9 +195,9 @@ gst_buffer_new_and_alloc (guint size)
 
   newbuf = gst_buffer_new ();
 
-  GST_BUFFER_DATA (newbuf) = g_malloc (size);
+  newbuf->malloc_data = g_malloc (size);
+  GST_BUFFER_DATA (newbuf) = newbuf->malloc_data;
   GST_BUFFER_SIZE (newbuf) = size;
-  GST_BUFFER_MAXSIZE (newbuf) = size;
 
   return newbuf;
 }
@@ -302,8 +249,62 @@ gst_buffer_set_caps (GstBuffer * buffer, GstCaps * caps)
   gst_caps_replace (&GST_BUFFER_CAPS (buffer), caps);
 }
 
+
+typedef struct _GstSubBuffer GstSubBuffer;
+typedef struct _GstSubBufferClass GstSubBufferClass;
+
+#define GST_TYPE_SUBBUFFER                         (gst_subbuffer_get_type())
+
+#define GST_IS_SUBBUFFER(obj)  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_BUFFER))
+#define GST_SUBBUFFER(obj)     (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_SUBBUFFER, GstSubBuffer))
+
+struct _GstSubBuffer
+{
+  GstBuffer buffer;
+
+  GstBuffer *parent;
+};
+
+struct _GstSubBufferClass
+{
+  GstBufferClass buffer_class;
+};
+
+static void gst_subbuffer_init (GTypeInstance * instance, gpointer g_class);
+
+static GType
+gst_subbuffer_get_type (void)
+{
+  static GType _gst_subbuffer_type;
+
+  if (G_UNLIKELY (_gst_subbuffer_type == 0)) {
+    static const GTypeInfo subbuffer_info = {
+      sizeof (GstSubBufferClass),
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      sizeof (GstSubBuffer),
+      0,
+      gst_subbuffer_init,
+      NULL
+    };
+
+    _gst_subbuffer_type = g_type_register_static (GST_TYPE_BUFFER,
+        "GstSubBuffer", &subbuffer_info, 0);
+  }
+  return _gst_subbuffer_type;
+}
+
+static void
+gst_subbuffer_init (GTypeInstance * instance, gpointer g_class)
+{
+
+}
+
 /**
- * gst_buffer_create_sub:
+ * gst_buffer_create_subbuffer:
  * @parent: a parent #GstBuffer to create a subbuffer from.
  * @offset: the offset into parent #GstBuffer.
  * @size: the size of the new #GstBuffer sub-buffer (with size > 0).
@@ -319,64 +320,51 @@ gst_buffer_set_caps (GstBuffer * buffer, GstCaps * caps)
  * MT safe.
  */
 GstBuffer *
-gst_buffer_create_sub (GstBuffer * parent, guint offset, guint size)
+gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
 {
-  GstBuffer *buffer;
-  gpointer buffer_data;
+  GstSubBuffer *subbuffer;
+  GstBuffer *parent;
 
-  g_return_val_if_fail (parent != NULL, NULL);
-  g_return_val_if_fail (GST_BUFFER_REFCOUNT_VALUE (parent) > 0, NULL);
+  g_return_val_if_fail (buffer != NULL, NULL);
+  g_return_val_if_fail (buffer->mini_object.refcount > 0, NULL);
   g_return_val_if_fail (size > 0, NULL);
-  g_return_val_if_fail (parent->size >= offset + size, NULL);
+  g_return_val_if_fail (buffer->size >= offset + size, NULL);
 
-  /* remember the data for the new buffer */
-  buffer_data = parent->data + offset;
-  /* make sure we're child not child from a child buffer */
-  while (GST_BUFFER_FLAG_IS_SET (parent, GST_BUFFER_SUBBUFFER)) {
-    parent = GST_BUFFER (parent->buffer_private);
+  /* find real parent */
+  if (GST_IS_SUBBUFFER (buffer)) {
+    parent = GST_SUBBUFFER (buffer)->parent;
+  } else {
+    parent = buffer;
   }
-  /* ref the real parent */
-  gst_data_ref (GST_DATA (parent));
+  gst_buffer_ref (parent);
 
   /* create the new buffer */
-  buffer = gst_buffer_alloc_chunk ();
+  subbuffer = (GstSubBuffer *) gst_mini_object_new (GST_TYPE_SUBBUFFER);
+  subbuffer->parent = parent;
 
-  GST_CAT_LOG (GST_CAT_BUFFER, "new subbuffer %p (parent %p)", buffer, parent);
-
-  /* make sure nobody overwrites data in the new buffer 
-   * by setting the READONLY flag */
-  _GST_DATA_INIT (GST_DATA (buffer),
-      _gst_buffer_type,
-      GST_DATA_FLAG_SHIFT (GST_BUFFER_SUBBUFFER) |
-      GST_DATA_FLAG_SHIFT (GST_DATA_READONLY),
-      (GstDataFreeFunction) _gst_buffer_sub_free,
-      (GstDataCopyFunction) gst_buffer_default_copy);
+  GST_CAT_LOG (GST_CAT_BUFFER, "new subbuffer %p (parent %p)", subbuffer,
+      parent);
 
   /* set the right values in the child */
-  GST_BUFFER_DATA (buffer) = buffer_data;
-  GST_BUFFER_SIZE (buffer) = size;
-  GST_BUFFER_MAXSIZE (buffer) = size;
-  GST_BUFFER_FREE_DATA_FUNC (buffer) = NULL;
-  GST_BUFFER_PRIVATE (buffer) = parent;
+  GST_BUFFER_DATA (GST_BUFFER (subbuffer)) = buffer->data + offset;
+  GST_BUFFER_SIZE (GST_BUFFER (subbuffer)) = size;
+
   /* we can copy the timestamp and offset if the new buffer starts at
    * offset 0 */
   if (offset == 0) {
-    GST_BUFFER_TIMESTAMP (buffer) = GST_BUFFER_TIMESTAMP (parent);
-    GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET (parent);
+    GST_BUFFER_TIMESTAMP (subbuffer) = GST_BUFFER_TIMESTAMP (buffer);
+    GST_BUFFER_OFFSET (subbuffer) = GST_BUFFER_OFFSET (buffer);
   } else {
-    GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
-    GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET_NONE;
+    GST_BUFFER_TIMESTAMP (subbuffer) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_OFFSET (subbuffer) = GST_BUFFER_OFFSET_NONE;
   }
 
-  GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET_NONE;
+  GST_BUFFER_DURATION (subbuffer) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_OFFSET_END (subbuffer) = GST_BUFFER_OFFSET_NONE;
 
-  if (GST_BUFFER_FLAG_IS_SET (parent, GST_BUFFER_READONLY)) {
-    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_READONLY);
-  }
-  GST_BUFFER_CAPS (buffer) = NULL;
+  GST_BUFFER_CAPS (subbuffer) = NULL;
 
-  return buffer;
+  return GST_BUFFER (subbuffer);
 }
 
 /**
@@ -395,6 +383,8 @@ gst_buffer_create_sub (GstBuffer * parent, guint offset, guint size)
 gboolean
 gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
 {
+  return FALSE;
+#if 0
   g_return_val_if_fail (buf1 != NULL && buf2 != NULL, FALSE);
   g_return_val_if_fail (GST_BUFFER_REFCOUNT_VALUE (buf1) > 0, FALSE);
   g_return_val_if_fail (GST_BUFFER_REFCOUNT_VALUE (buf2) > 0, FALSE);
@@ -404,6 +394,7 @@ gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
       (GST_BUFFER_FLAG_IS_SET (buf2, GST_BUFFER_SUBBUFFER)) &&
       (buf1->buffer_private == buf2->buffer_private) &&
       ((buf1->data + buf1->size) == buf2->data));
+#endif
 }
 
 /**
@@ -432,6 +423,8 @@ GstBuffer *
 gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,
     guint32 len)
 {
+  return NULL;
+#if 0
   GstBuffer *newbuf;
 
   g_return_val_if_fail (buf1 != NULL && buf2 != NULL, NULL);
@@ -481,4 +474,5 @@ gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,
   }
 
   return newbuf;
+#endif
 }

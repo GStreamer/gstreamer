@@ -350,22 +350,92 @@ gst_filesrc_get_property (GObject * object, guint prop_id, GValue * value,
  */
 
 #ifdef HAVE_MMAP
+
+/* GstMmapBuffer */
+
+typedef struct _GstMmapBuffer GstMmapBuffer;
+typedef struct _GstMmapBufferClass GstMmapBufferClass;
+
+#define GST_TYPE_MMAP_BUFFER                         (gst_mmap_buffer_get_type())
+
+#define GST_IS_MMAP_BUFFER(obj)  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MMAP_BUFFER))
+#define GST_IS_MMAP_BUFFER_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MMAP_BUFFER))
+#define GST_MMAP_BUFFER_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MMAP_BUFFER, GstMmapBufferClass))
+#define GST_MMAP_BUFFER(obj)     (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MMAP_BUFFER, GstMmapBuffer))
+#define GST_MMAP_BUFFER_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MMAP_BUFFER, GstMmapBufferClass))
+
+
+
+struct _GstMmapBuffer
+{
+  GstBuffer buffer;
+
+  GstFileSrc *filesrc;
+};
+
+struct _GstMmapBufferClass
+{
+  GstBufferClass buffer_class;
+};
+
+static void gst_mmap_buffer_init (GTypeInstance * instance, gpointer g_class);
+static void gst_mmap_buffer_class_init (gpointer g_class, gpointer class_data);
+static void gst_mmap_buffer_finalize (GstMmapBuffer * mmap_buffer);
+
+static GType
+gst_mmap_buffer_get_type (void)
+{
+  static GType _gst_mmap_buffer_type;
+
+  if (G_UNLIKELY (_gst_mmap_buffer_type == 0)) {
+    static const GTypeInfo mmap_buffer_info = {
+      sizeof (GstMmapBufferClass),
+      NULL,
+      NULL,
+      gst_mmap_buffer_class_init,
+      NULL,
+      NULL,
+      sizeof (GstMmapBuffer),
+      0,
+      gst_mmap_buffer_init,
+      NULL
+    };
+
+    _gst_mmap_buffer_type = g_type_register_static (GST_TYPE_BUFFER,
+        "GstMmapBuffer", &mmap_buffer_info, 0);
+  }
+  return _gst_mmap_buffer_type;
+}
+
 static void
-gst_filesrc_free_parent_mmap (GstBuffer * buf)
+gst_mmap_buffer_class_init (gpointer g_class, gpointer class_data)
+{
+  GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
+
+  mini_object_class->finalize =
+      (GstMiniObjectFinalizeFunction) gst_mmap_buffer_finalize;
+}
+
+static void
+gst_mmap_buffer_init (GTypeInstance * instance, gpointer g_class)
+{
+
+}
+
+static void
+gst_mmap_buffer_finalize (GstMmapBuffer * mmap_buffer)
 {
   guint size;
-  guint64 offset;
   gpointer data;
-  GstBaseSrc *src;
+  guint64 offset;
+  GstFileSrc *src;
+  GstBuffer *buffer = GST_BUFFER (mmap_buffer);
 
   /* get info */
-  size = GST_BUFFER_MAXSIZE (buf);
-  offset = GST_BUFFER_OFFSET (buf);
-  data = GST_BUFFER_DATA (buf);
-  src = (GstBaseSrc *) GST_BUFFER_PRIVATE (buf);
-
-  if (!GST_IS_BASESRC (src))
-    goto wrong_buffer;
+  size = GST_BUFFER_SIZE (buffer);
+  offset = GST_BUFFER_OFFSET (buffer);
+  data = GST_BUFFER_DATA (buffer);
+  src = mmap_buffer->filesrc;
 
   GST_LOG ("freeing mmap()d buffer at %" G_GUINT64_FORMAT "+%u", offset, size);
 
@@ -385,15 +455,6 @@ gst_filesrc_free_parent_mmap (GstBuffer * buf)
    * guint64 as hex */
   GST_LOG ("unmapped region %08lx+%08lx at %p",
       (gulong) offset, (gulong) size, data);
-
-  GST_BUFFER_DATA (buf) = NULL;
-  return;
-
-wrong_buffer:
-  {
-    GST_WARNING ("freeing wrong mmap buffer");
-    return;
-  }
 }
 
 static GstBuffer *
@@ -416,9 +477,10 @@ gst_filesrc_map_region (GstFileSrc * src, off_t offset, size_t size)
       (gulong) offset, (gulong) size, mmapregion);
 
   /* time to allocate a new mapbuf */
-  buf = gst_buffer_new ();
+  buf = (GstBuffer *) gst_mini_object_new (GST_TYPE_MMAP_BUFFER);
   /* mmap() the data into this new buffer */
   GST_BUFFER_DATA (buf) = mmapregion;
+  GST_MMAP_BUFFER (buf)->filesrc = src;
 
 #ifdef MADV_SEQUENTIAL
   /* madvise to tell the kernel what to do with it */
@@ -428,15 +490,13 @@ gst_filesrc_map_region (GstFileSrc * src, off_t offset, size_t size)
 #endif
 
   /* fill in the rest of the fields */
-  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_READONLY);
-  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_ORIGINAL);
+  /* FIXME */
+  //GST_BUFFER_FLAG_SET (buf, GST_BUFFER_READONLY);
+  //GST_BUFFER_FLAG_SET (buf, GST_BUFFER_ORIGINAL);
   GST_BUFFER_SIZE (buf) = size;
-  GST_BUFFER_MAXSIZE (buf) = size;
   GST_BUFFER_OFFSET (buf) = offset;
   GST_BUFFER_OFFSET_END (buf) = offset + size;
   GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_PRIVATE (buf) = src;
-  GST_BUFFER_FREE_DATA_FUNC (buf) = gst_filesrc_free_parent_mmap;
 
   return buf;
 
@@ -661,7 +721,6 @@ gst_filesrc_create_read (GstFileSrc * src, guint64 offset, guint length,
   length = ret;
 
   GST_BUFFER_SIZE (buf) = length;
-  GST_BUFFER_MAXSIZE (buf) = length;
   GST_BUFFER_OFFSET (buf) = offset;
   GST_BUFFER_OFFSET_END (buf) = offset + length;
 

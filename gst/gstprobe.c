@@ -95,14 +95,14 @@ gst_probe_destroy (GstProbe * probe)
 /**
  * gst_probe_perform:
  * @probe: The probe to trigger
- * @data: the GstData that triggered the probe.
+ * @mini_object: the GstMiniObject that triggered the probe.
  *
  * Perform the callback associated with the given probe.
  *
  * Returns: the result of the probe callback function.
  */
 gboolean
-gst_probe_perform (GstProbe * probe, GstData ** data)
+gst_probe_perform (GstProbe * probe, GstMiniObject ** mini_object)
 {
   gboolean res = TRUE;
 
@@ -111,7 +111,7 @@ gst_probe_perform (GstProbe * probe, GstData ** data)
   GST_CAT_DEBUG (GST_CAT_PROBE, "performing probe %p", probe);
 
   if (probe->callback)
-    res = probe->callback (probe, data, probe->user_data);
+    res = probe->callback (probe, mini_object, probe->user_data);
 
   return res;
 }
@@ -235,7 +235,7 @@ gst_probe_dispatcher_remove_probe (GstProbeDispatcher * disp, GstProbe * probe)
  * Returns: TRUE if all callbacks returned TRUE.
  */
 gboolean
-gst_probe_dispatcher_dispatch (GstProbeDispatcher * disp, GstData ** data)
+gst_probe_dispatcher_dispatch (GstProbeDispatcher * disp, GstMiniObject ** data)
 {
   GSList *walk;
   gboolean res = TRUE;

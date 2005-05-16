@@ -23,7 +23,6 @@
 #include <string.h>             /* memcpy */
 
 #include "gst_private.h"
-#include "gstdata_private.h"
 
 #include "gstinfo.h"
 #include "gstmemchunk.h"
@@ -37,62 +36,74 @@
 static GstAllocTrace *_event_trace;
 #endif
 
-static GstMemChunk *chunk;
-
-/* #define MEMPROF */
-
-GType _gst_event_type;
+static void gst_event_init (GTypeInstance * instance, gpointer g_class);
+static void gst_event_class_init (gpointer g_class, gpointer class_data);
+static void gst_event_finalize (GstEvent * event);
+static GstEvent *_gst_event_copy (GstEvent * event);
 
 void
 _gst_event_initialize (void)
 {
-  /* register the type */
-  _gst_event_type = g_boxed_type_register_static ("GstEvent",
-      (GBoxedCopyFunc) gst_data_copy, (GBoxedFreeFunc) gst_data_unref);
+  gst_event_get_type ();
 
 #ifndef GST_DISABLE_TRACE
   _event_trace = gst_alloc_trace_register (GST_EVENT_TRACE_NAME);
 #endif
-
-  chunk = gst_mem_chunk_new ("GstEventChunk", sizeof (GstEvent),
-      sizeof (GstEvent) * 50, 0);
 }
 
-static GstEvent *
-_gst_event_copy (GstEvent * event)
+GType
+gst_event_get_type (void)
 {
-  GstEvent *copy;
+  static GType _gst_event_type;
 
-  copy = gst_mem_chunk_alloc (chunk);
-#ifndef GST_DISABLE_TRACE
-  gst_alloc_trace_new (_event_trace, copy);
-#endif
+  if (G_UNLIKELY (_gst_event_type == 0)) {
+    static const GTypeInfo event_info = {
+      sizeof (GstEventClass),
+      NULL,
+      NULL,
+      gst_event_class_init,
+      NULL,
+      NULL,
+      sizeof (GstEvent),
+      0,
+      gst_event_init,
+      NULL
+    };
 
-  memcpy (copy, event, sizeof (GstEvent));
-  if (GST_EVENT_SRC (copy)) {
-    gst_object_ref (GST_EVENT_SRC (copy));
+    _gst_event_type = g_type_register_static (GST_TYPE_MINI_OBJECT,
+        "GstEvent", &event_info, 0);
   }
 
-  /* FIXME copy/ref additional fields */
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_TAG:
-      copy->event_data.structure.structure =
-          gst_tag_list_copy ((GstTagList *) event->event_data.structure.
-          structure);
-      break;
-    case GST_EVENT_NAVIGATION:
-      copy->event_data.structure.structure =
-          gst_structure_copy (event->event_data.structure.structure);
-    default:
-      break;
-  }
-
-  return copy;
+  return _gst_event_type;
 }
 
 static void
-_gst_event_free (GstEvent * event)
+gst_event_class_init (gpointer g_class, gpointer class_data)
 {
+  GstEventClass *event_class = GST_EVENT_CLASS (g_class);
+
+  event_class->mini_object_class.copy =
+      (GstMiniObjectCopyFunction) _gst_event_copy;
+  event_class->mini_object_class.finalize =
+      (GstMiniObjectFinalizeFunction) gst_event_finalize;
+}
+
+static void
+gst_event_init (GTypeInstance * instance, gpointer g_class)
+{
+  GstEvent *event;
+
+  event = GST_EVENT (instance);
+
+  GST_EVENT_TIMESTAMP (event) = GST_CLOCK_TIME_NONE;
+}
+
+static void
+gst_event_finalize (GstEvent * event)
+{
+  g_return_if_fail (event != NULL);
+  g_return_if_fail (GST_IS_EVENT (event));
+
   GST_CAT_INFO (GST_CAT_EVENT, "freeing event %p", event);
 
   if (GST_EVENT_SRC (event)) {
@@ -113,11 +124,38 @@ _gst_event_free (GstEvent * event)
     default:
       break;
   }
-  _GST_DATA_DISPOSE (GST_DATA (event));
-#ifndef GST_DISABLE_TRACE
-  gst_alloc_trace_free (_event_trace, event);
-#endif
-  gst_mem_chunk_free (chunk, event);
+}
+
+
+static GstEvent *
+_gst_event_copy (GstEvent * event)
+{
+  GstEvent *copy;
+
+  copy = gst_event_new (event->type);
+
+  copy->timestamp = event->timestamp;
+  if (event->src) {
+    copy->src = gst_object_ref (event->src);
+  }
+
+  memcpy (&copy->event_data, &event->event_data, sizeof (event->event_data));
+
+  /* FIXME copy/ref additional fields */
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_TAG:
+      copy->event_data.structure.structure =
+          gst_tag_list_copy ((GstTagList *) event->event_data.structure.
+          structure);
+      break;
+    case GST_EVENT_NAVIGATION:
+      copy->event_data.structure.structure =
+          gst_structure_copy (event->event_data.structure.structure);
+    default:
+      break;
+  }
+
+  return copy;
 }
 
 /**
@@ -148,12 +186,6 @@ gst_event_masks_contains (const GstEventMask * masks, GstEventMask * mask)
   return FALSE;
 }
 
-GType
-gst_event_get_type (void)
-{
-  return _gst_event_type;
-}
-
 /**
  * gst_event_new:
  * @type: The type of the new event
@@ -167,22 +199,11 @@ gst_event_new (GstEventType type)
 {
   GstEvent *event;
 
-  event = gst_mem_chunk_alloc0 (chunk);
-#ifndef GST_DISABLE_TRACE
-  gst_alloc_trace_new (_event_trace, event);
-#endif
+  event = (GstEvent *) gst_mini_object_new (GST_TYPE_EVENT);
 
   GST_CAT_INFO (GST_CAT_EVENT, "creating new event type %d: %p", type, event);
 
-  _GST_DATA_INIT (GST_DATA (event),
-      _gst_event_type,
-      0,
-      (GstDataFreeFunction) _gst_event_free,
-      (GstDataCopyFunction) _gst_event_copy);
-
   GST_EVENT_TYPE (event) = type;
-  GST_EVENT_TIMESTAMP (event) = G_GINT64_CONSTANT (0);
-  GST_EVENT_SRC (event) = NULL;
 
   return event;
 }

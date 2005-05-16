@@ -358,9 +358,9 @@ gst_queue_finalize (GObject * object)
   GST_DEBUG_OBJECT (queue, "finalizing queue");
 
   while (!g_queue_is_empty (queue->queue)) {
-    GstData *data = g_queue_pop_head (queue->queue);
+    GstMiniObject *data = g_queue_pop_head (queue->queue);
 
-    gst_data_unref (data);
+    gst_mini_object_unref (data);
   }
   g_queue_free (queue->queue);
   GST_CAT_DEBUG_OBJECT (GST_CAT_THREAD, queue, "free mutex");
@@ -436,11 +436,11 @@ static void
 gst_queue_locked_flush (GstQueue * queue)
 {
   while (!g_queue_is_empty (queue->queue)) {
-    GstData *data = g_queue_pop_head (queue->queue);
+    GstMiniObject *data = g_queue_pop_head (queue->queue);
 
     /* Then loose another reference because we are supposed to destroy that
        data when flushing */
-    gst_data_unref (data);
+    gst_mini_object_unref (data);
   }
   queue->cur_level.buffers = 0;
   queue->cur_level.bytes = 0;
@@ -586,7 +586,7 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
          * and find the first buffer from the head on. We'll
          * unref that and "fix up" the GQueue object... */
         GList *item;
-        GstData *leak = NULL;
+        GstMiniObject *leak = NULL;
 
         GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
             "queue is full, leaking buffer on downstream end");
@@ -690,7 +690,7 @@ static void
 gst_queue_loop (GstPad * pad)
 {
   GstQueue *queue;
-  GstData *data;
+  GstMiniObject *data;
   gboolean restart = TRUE;
 
   queue = GST_QUEUE (GST_PAD_PARENT (pad));

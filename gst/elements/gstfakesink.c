@@ -172,8 +172,8 @@ gst_fakesink_class_init (GstFakeSinkClass * klass)
   gst_fakesink_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstFakeSinkClass, handoff), NULL, NULL,
-      gst_marshal_VOID__BOXED_OBJECT, G_TYPE_NONE, 2,
-      GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE, GST_TYPE_PAD);
+      gst_marshal_VOID__OBJECT_OBJECT, G_TYPE_NONE, 2,
+      G_TYPE_OBJECT, GST_TYPE_PAD);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_fakesink_change_state);
@@ -317,7 +317,7 @@ gst_fakesink_render (GstBaseSink * bsink, GstBuffer * buf)
         GST_BUFFER_SIZE (buf),
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_OFFSET (buf),
-        GST_BUFFER_OFFSET_END (buf), GST_BUFFER_FLAGS (buf), buf);
+        GST_BUFFER_OFFSET_END (buf), GST_MINI_OBJECT (buf)->flags, buf);
 
     g_object_notify (G_OBJECT (sink), "last_message");
   }

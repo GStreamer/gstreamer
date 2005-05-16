@@ -28,7 +28,7 @@
 #include <glib.h>
 
 #include <gst/gstiterator.h>
-#include <gst/gstdata.h>
+#include <gst/gstminiobject.h>
 #include <gst/gststructure.h>
 #include <gst/gstformat.h>
 
@@ -53,6 +53,7 @@ typedef enum {
 
 typedef struct _GstQueryTypeDefinition GstQueryTypeDefinition;
 typedef struct _GstQuery GstQuery;
+typedef struct _GstQueryClass GstQueryClass;
 
 struct _GstQueryTypeDefinition
 {
@@ -85,16 +86,18 @@ functionname (type object)                          	\
 }
 #endif
 
-GST_EXPORT GType _gst_query_type;
+#define GST_TYPE_QUERY				(gst_query_get_type())
+#define GST_IS_QUERY(obj)                      (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_QUERY))
+#define GST_IS_QUERY_CLASS(klass)              (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_QUERY))
+#define GST_QUERY_GET_CLASS(obj)               (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_QUERY, GstQueryClass))
+#define GST_QUERY(obj)                         (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_QUERY, GstQuery))
+#define GST_QUERY_CLASS(klass)                 (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_QUERY, GstQueryClass))
 
-#define GST_TYPE_QUERY	(_gst_query_type)
-#define GST_QUERY(query)	((GstQuery*)(query))
-#define GST_IS_QUERY(query)	(GST_DATA_TYPE(query) == GST_TYPE_QUERY)
-#define GST_QUERY_TYPE(query)	(((GstQuery*)(query))->type)
+#define GST_QUERY_TYPE(query)  (((GstQuery*)(query))->type)
 
 struct _GstQuery
 {
-  GstData data;
+  GstMiniObject mini_object;
 
   /*< public > */
   GstQueryType type;
@@ -103,6 +106,10 @@ struct _GstQuery
   
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];
+};
+
+struct _GstQueryClass {
+  GstMiniObjectClass mini_object_class;
 };
 
 void            _gst_query_initialize          (void);
@@ -123,12 +130,11 @@ G_CONST_RETURN GstQueryTypeDefinition*
 GstIterator*    gst_query_type_iterate_definitions (void);
 
 /* refcounting */
-#define         gst_query_ref(msg)		GST_QUERY (gst_data_ref (GST_DATA (msg)))
-#define         gst_query_ref_by_count(msg,c)	GST_QUERY (gst_data_ref_by_count (GST_DATA (msg), (c)))
-#define         gst_query_unref(msg)		gst_data_unref (GST_DATA (msg))
+#define         gst_query_ref(msg)		GST_QUERY (gst_mini_object_ref (GST_MINI_OBJECT (msg)))
+#define         gst_query_unref(msg)		gst_mini_object_unref (GST_MINI_OBJECT (msg))
 /* copy query */
-#define         gst_query_copy(msg)		GST_QUERY (gst_data_copy (GST_DATA (msg)))
-#define         gst_query_copy_on_write(msg)	GST_QUERY (gst_data_copy_on_write (GST_DATA (msg)))
+#define         gst_query_copy(msg)		GST_QUERY (gst_mini_object_copy (GST_MINI_OBJECT (msg)))
+#define         gst_query_make_writable(msg)	GST_QUERY (gst_mini_object_make_writable (GST_MINI_OBJECT (msg)))
 
 /* position query */
 GstQuery*	gst_query_new_position		(GstFormat format);

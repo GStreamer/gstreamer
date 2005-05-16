@@ -359,7 +359,7 @@ gst_type_find_element_src_event (GstPad * pad, GstEvent * event)
 
   if (typefind->mode != MODE_NORMAL) {
     /* need to do more? */
-    gst_data_unref (GST_DATA (event));
+    gst_mini_object_unref (GST_MINI_OBJECT (event));
     return FALSE;
   }
   return gst_pad_event_default (pad, event);
@@ -385,7 +385,7 @@ new_entry (void)
 static void
 free_entry_buffers (TypeFindEntry * entry)
 {
-  g_list_foreach (entry->buffers, (GFunc) gst_data_unref, NULL);
+  g_list_foreach (entry->buffers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (entry->buffers);
   entry->buffers = NULL;
 }
@@ -539,7 +539,7 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
           }
           break;
         default:
-          gst_data_unref (GST_DATA (event));
+          gst_mini_object_unref (GST_MINI_OBJECT (event));
           res = TRUE;
           break;
       }

@@ -23,7 +23,6 @@
 #include <string.h>             /* memcpy */
 
 #include "gst_private.h"
-#include "gstdata_private.h"
 #include "gstinfo.h"
 #include "gstmemchunk.h"
 #include "gstmessage.h"
@@ -36,59 +35,72 @@
 static GstAllocTrace *_message_trace;
 #endif
 
-static GstMemChunk *chunk;
-
-/* #define MEMPROF */
-
-GType _gst_message_type;
+static void gst_message_init (GTypeInstance * instance, gpointer g_class);
+static void gst_message_class_init (gpointer g_class, gpointer class_data);
+static void gst_message_finalize (GstMessage * message);
+static GstMessage *_gst_message_copy (GstMessage * message);
 
 void
 _gst_message_initialize (void)
 {
   GST_CAT_INFO (GST_CAT_GST_INIT, "init messages");
 
-  /* register the type */
-  _gst_message_type = g_boxed_type_register_static ("GstMessage",
-      (GBoxedCopyFunc) gst_data_copy, (GBoxedFreeFunc) gst_data_unref);
+  gst_message_get_type ();
 
 #ifndef GST_DISABLE_TRACE
   _message_trace = gst_alloc_trace_register (GST_MESSAGE_TRACE_NAME);
 #endif
-
-  chunk = gst_mem_chunk_new ("GstMessageChunk", sizeof (GstMessage),
-      sizeof (GstMessage) * 50, 0);
 }
 
-static GstMessage *
-_gst_message_copy (GstMessage * message)
+GType
+gst_message_get_type (void)
 {
-  GstMessage *copy;
+  static GType _gst_message_type;
 
-  GST_CAT_INFO (GST_CAT_MESSAGE, "copy message %p", message);
+  if (G_UNLIKELY (_gst_message_type == 0)) {
+    static const GTypeInfo message_info = {
+      sizeof (GstMessageClass),
+      NULL,
+      NULL,
+      gst_message_class_init,
+      NULL,
+      NULL,
+      sizeof (GstMessage),
+      0,
+      gst_message_init,
+      NULL
+    };
 
-  copy = gst_mem_chunk_alloc (chunk);
-#ifndef GST_DISABLE_TRACE
-  gst_alloc_trace_new (_message_trace, copy);
-#endif
-
-  memcpy (copy, message, sizeof (GstMessage));
-  if (GST_MESSAGE_SRC (copy)) {
-    gst_object_ref (GST_MESSAGE_SRC (copy));
+    _gst_message_type = g_type_register_static (GST_TYPE_MINI_OBJECT,
+        "GstMessage", &message_info, 0);
   }
-
-  if (message->structure) {
-    copy->structure = gst_structure_copy (message->structure);
-    gst_structure_set_parent_refcount (copy->structure,
-        &GST_DATA_REFCOUNT (message));
-  }
-
-  return copy;
+  return _gst_message_type;
 }
 
 static void
-_gst_message_free (GstMessage * message)
+gst_message_class_init (gpointer g_class, gpointer class_data)
 {
-  GST_CAT_INFO (GST_CAT_MESSAGE, "freeing message %p", message);
+  GstMessageClass *message_class = GST_MESSAGE_CLASS (g_class);
+
+  message_class->mini_object_class.copy =
+      (GstMiniObjectCopyFunction) _gst_message_copy;
+  message_class->mini_object_class.finalize =
+      (GstMiniObjectFinalizeFunction) gst_message_finalize;
+}
+
+static void
+gst_message_init (GTypeInstance * instance, gpointer g_class)
+{
+  GstMessage *message = GST_MESSAGE (instance);
+
+  message->timestamp = GST_CLOCK_TIME_NONE;
+
+}
+
+static void
+gst_message_finalize (GstMessage * message)
+{
+  g_return_if_fail (message != NULL);
 
   if (GST_MESSAGE_SRC (message)) {
     gst_object_unref (GST_MESSAGE_SRC (message));
@@ -104,18 +116,36 @@ _gst_message_free (GstMessage * message)
     gst_structure_set_parent_refcount (message->structure, NULL);
     gst_structure_free (message->structure);
   }
-
-  _GST_DATA_DISPOSE (GST_DATA (message));
-#ifndef GST_DISABLE_TRACE
-  gst_alloc_trace_free (_message_trace, message);
-#endif
-  gst_mem_chunk_free (chunk, message);
 }
 
-GType
-gst_message_get_type (void)
+static GstMessage *
+_gst_message_copy (GstMessage * message)
 {
-  return _gst_message_type;
+  GstMessage *copy;
+
+  GST_CAT_INFO (GST_CAT_MESSAGE, "copy message %p", message);
+
+  copy = (GstMessage *) gst_mini_object_new (GST_TYPE_MESSAGE);
+
+  /* FIXME */
+  //memcpy (copy, message, sizeof (GstMessage));
+
+  copy->lock = message->lock;
+  copy->cond = message->cond;
+  copy->type = message->type;
+  copy->timestamp = message->timestamp;
+
+  if (GST_MESSAGE_SRC (message)) {
+    GST_MESSAGE_SRC (copy) = gst_object_ref (GST_MESSAGE_SRC (message));
+  }
+
+  if (message->structure) {
+    copy->structure = gst_structure_copy (message->structure);
+    gst_structure_set_parent_refcount (copy->structure,
+        &message->mini_object.refcount);
+  }
+
+  return copy;
 }
 
 /**
@@ -133,31 +163,20 @@ gst_message_new (GstMessageType type, GstObject * src)
 {
   GstMessage *message;
 
-  message = gst_mem_chunk_alloc0 (chunk);
-#ifndef GST_DISABLE_TRACE
-  gst_alloc_trace_new (_message_trace, message);
-#endif
+  message = (GstMessage *) gst_mini_object_new (GST_TYPE_MESSAGE);
 
   GST_CAT_INFO (GST_CAT_MESSAGE, "creating new message %p %d", message, type);
 
-  _GST_DATA_INIT (GST_DATA (message),
-      _gst_message_type,
-      0,
-      (GstDataFreeFunction) _gst_message_free,
-      (GstDataCopyFunction) _gst_message_copy);
-
-  GST_MESSAGE_TYPE (message) = type;
-  GST_MESSAGE_TIMESTAMP (message) = G_GINT64_CONSTANT (0);
+  message->type = type;
   if (src) {
-    GST_MESSAGE_SRC (message) = gst_object_ref (src);
+    message->src = gst_object_ref (src);
   } else {
-    GST_MESSAGE_SRC (message) = NULL;
+    message->src = NULL;
   }
   message->structure = NULL;
 
   return message;
 }
-
 
 /**
  * gst_message_new_eos:
@@ -200,7 +219,7 @@ gst_message_new_error (GstObject * src, GError * error, gchar * debug)
   message = gst_message_new (GST_MESSAGE_ERROR, src);
   s = gst_structure_new ("GstMessageError", "gerror", G_TYPE_POINTER, error,
       "debug", G_TYPE_STRING, debug, NULL);
-  gst_structure_set_parent_refcount (s, &GST_DATA_REFCOUNT (message));
+  gst_structure_set_parent_refcount (s, &message->mini_object.refcount);
   message->structure = s;
 
   return message;
@@ -228,7 +247,7 @@ gst_message_new_warning (GstObject * src, GError * error, gchar * debug)
   message = gst_message_new (GST_MESSAGE_WARNING, src);
   s = gst_structure_new ("GstMessageWarning", "gerror", G_TYPE_POINTER, error,
       "debug", G_TYPE_STRING, debug, NULL);
-  gst_structure_set_parent_refcount (s, &GST_DATA_REFCOUNT (message));
+  gst_structure_set_parent_refcount (s, &message->mini_object.refcount);
   message->structure = s;
 
   return message;
@@ -253,7 +272,7 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
   g_return_val_if_fail (GST_IS_STRUCTURE (tag_list), NULL);
 
   message = gst_message_new (GST_MESSAGE_TAG, src);
-  gst_structure_set_parent_refcount (tag_list, &GST_DATA_REFCOUNT (message));
+  gst_structure_set_parent_refcount (tag_list, &message->mini_object.refcount);
   message->structure = tag_list;
 
   return message;
@@ -282,7 +301,7 @@ gst_message_new_state_changed (GstObject * src, GstElementState old,
 
   s = gst_structure_new ("GstMessageError", "old-state", G_TYPE_INT, (gint) old,
       "new-state", G_TYPE_INT, (gint) new, NULL);
-  gst_structure_set_parent_refcount (s, &GST_DATA_REFCOUNT (message));
+  gst_structure_set_parent_refcount (s, &message->mini_object.refcount);
   message->structure = s;
 
   return message;
@@ -308,7 +327,7 @@ gst_message_new_application (GstStructure * structure)
   g_return_val_if_fail (GST_IS_STRUCTURE (structure), NULL);
 
   message = gst_message_new (GST_MESSAGE_APPLICATION, NULL);
-  gst_structure_set_parent_refcount (structure, &GST_DATA_REFCOUNT (message));
+  gst_structure_set_parent_refcount (structure, &message->mini_object.refcount);
   message->structure = structure;
 
   return message;

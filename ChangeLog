@@ -1,5 +1,71 @@
 2005-05-15  David Schleef  <ds@schleef.org>
 
+	* check/Makefile.am: remove GstData checks
+	* check/gst-libs/gdp.c: (START_TEST): fix for API changes
+	* gst/Makefile.am: add miniobject, remove data
+	* gst/gst.h: add miniobject, remove data
+	* gst/gstdata.c: remove
+	* gst/gstdata.h: remove
+	* gst/gstdata_private.h: remove
+	* gst/gsttypes.h: remove GstEvent and GstMessage
+	* gst/gstelement.c: (gst_element_post_message): fix for API changes
+	* gst/gstmarshal.list: change BOXED -> OBJECT
+
+	Implement GstMiniObject.
+	* gst/gstminiobject.c:
+	* gst/gstminiobject.h:
+
+	Modify to be subclasses of GstMiniObject.
+	* gst/gstbuffer.c: (_gst_buffer_initialize), (gst_buffer_get_type),
+	(gst_buffer_class_init), (gst_buffer_finalize), (_gst_buffer_copy),
+	(gst_buffer_init), (gst_buffer_new), (gst_buffer_new_and_alloc),
+	(gst_subbuffer_get_type), (gst_subbuffer_init),
+	(gst_buffer_create_sub), (gst_buffer_is_span_fast),
+	(gst_buffer_span):
+	* gst/gstbuffer.h:
+	* gst/gstevent.c: (_gst_event_initialize), (gst_event_get_type),
+	(gst_event_class_init), (gst_event_init), (gst_event_finalize),
+	(_gst_event_copy), (gst_event_new):
+	* gst/gstevent.h:
+	* gst/gstmessage.c: (_gst_message_initialize),
+	(gst_message_get_type), (gst_message_class_init),
+	(gst_message_init), (gst_message_finalize), (_gst_message_copy),
+	(gst_message_new), (gst_message_new_error),
+	(gst_message_new_warning), (gst_message_new_tag),
+	(gst_message_new_state_changed), (gst_message_new_application):
+	* gst/gstmessage.h:
+	* gst/gstprobe.c: (gst_probe_perform),
+	(gst_probe_dispatcher_dispatch):
+	* gst/gstprobe.h:
+	* gst/gstquery.c: (_gst_query_initialize), (gst_query_get_type),
+	(gst_query_class_init), (gst_query_finalize), (gst_query_init),
+	(_gst_query_copy), (gst_query_new):
+
+	Update elements for GstData -> GstMiniObject changes
+	* gst/gstquery.h:
+	* gst/gstqueue.c: (gst_queue_finalize), (gst_queue_locked_flush),
+	(gst_queue_chain), (gst_queue_loop):
+	* gst/elements/gstbufferstore.c:
+	(gst_buffer_store_add_buffer_func),
+	(gst_buffer_store_cleared_func), (gst_buffer_store_get_buffer):
+	* gst/elements/gstfakesink.c: (gst_fakesink_class_init),
+	(gst_fakesink_render):
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_class_init):
+	* gst/elements/gstfilesrc.c: (gst_mmap_buffer_get_type),
+	(gst_mmap_buffer_class_init), (gst_mmap_buffer_init),
+	(gst_mmap_buffer_finalize), (gst_filesrc_map_region),
+	(gst_filesrc_create_read):
+	* gst/elements/gstidentity.c: (gst_identity_class_init):
+	* gst/elements/gsttypefindelement.c:
+	(gst_type_find_element_src_event), (free_entry_buffers),
+	(gst_type_find_element_handle_event):
+	* libs/gst/dataprotocol/dataprotocol.c:
+	(gst_dp_header_from_buffer):
+	* libs/gst/dataprotocol/dataprotocol.h:
+	* libs/gst/dataprotocol/dp-private.h:
+
+2005-05-15  David Schleef  <ds@schleef.org>
+
 	* gst/elements/gstelements.c: Don't include headers that were
 	just removed.
 

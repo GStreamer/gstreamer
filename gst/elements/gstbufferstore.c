@@ -135,7 +135,7 @@ gst_buffer_store_add_buffer_func (GstBufferStore * store, GstBuffer * buffer)
     /* the starting buffer had an invalid offset, in that case we assume continuous buffers */
     GST_LOG_OBJECT (store, "adding buffer %p with invalid offset and size %u",
         buffer, GST_BUFFER_SIZE (buffer));
-    gst_data_ref (GST_DATA (buffer));
+    gst_mini_object_ref (GST_MINI_OBJECT (buffer));
     store->buffers = g_list_append (store->buffers, buffer);
     return TRUE;
   } else {
@@ -176,14 +176,14 @@ gst_buffer_store_add_buffer_func (GstBufferStore * store, GstBuffer * buffer)
             g_assert (sub);
             buffer = sub;
           } else {
-            gst_data_ref (GST_DATA (buffer));
+            gst_mini_object_ref (GST_MINI_OBJECT (buffer));
           }
           /* replace current buffer with new one */
           GST_INFO_OBJECT (store,
               "replacing buffer %p with buffer %p with offset %" G_GINT64_FORMAT
               " and size %u", current_list->data, buffer,
               GST_BUFFER_OFFSET (buffer), GST_BUFFER_SIZE (buffer));
-          gst_data_unref (GST_DATA (current_list->data));
+          gst_mini_object_unref (GST_MINI_OBJECT (current_list->data));
           current_list->data = buffer;
           buffer = NULL;
           break;
@@ -215,7 +215,7 @@ gst_buffer_store_add_buffer_func (GstBufferStore * store, GstBuffer * buffer)
             GST_BUFFER_OFFSET (sub) = start_offset + GST_BUFFER_OFFSET (buffer);
             buffer = sub;
           } else {
-            gst_data_ref (GST_DATA (buffer));
+            gst_mini_object_ref (GST_MINI_OBJECT (buffer));
           }
           GST_INFO_OBJECT (store,
               "adding buffer %p with offset %" G_GINT64_FORMAT " and size %u",
@@ -228,7 +228,7 @@ gst_buffer_store_add_buffer_func (GstBufferStore * store, GstBuffer * buffer)
       }
     }
     if (buffer) {
-      gst_data_ref (GST_DATA (buffer));
+      gst_mini_object_ref (GST_MINI_OBJECT (buffer));
       GST_INFO_OBJECT (store,
           "adding buffer %p with offset %" G_GINT64_FORMAT " and size %u",
           buffer, GST_BUFFER_OFFSET (buffer), GST_BUFFER_SIZE (buffer));
@@ -245,7 +245,7 @@ gst_buffer_store_add_buffer_func (GstBufferStore * store, GstBuffer * buffer)
 static void
 gst_buffer_store_cleared_func (GstBufferStore * store)
 {
-  g_list_foreach (store->buffers, (GFunc) gst_data_unref, NULL);
+  g_list_foreach (store->buffers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (store->buffers);
   store->buffers = NULL;
 }
@@ -355,8 +355,8 @@ gst_buffer_store_get_buffer (GstBufferStore * store, guint64 offset, guint size)
           "found matching buffer %p for offset %" G_GUINT64_FORMAT
           " and size %u", current, offset, size);
       ret = current;
-      gst_data_ref (GST_DATA (ret));
-      GST_LOG_OBJECT (store, "refcount %d", GST_DATA_REFCOUNT_VALUE (ret));
+      gst_mini_object_ref (GST_MINI_OBJECT (ret));
+      GST_LOG_OBJECT (store, "refcount %d", GST_MINI_OBJECT (ret)->refcount);
       break;
     } else if (cur_offset + GST_BUFFER_SIZE (current) > offset) {
       if (cur_offset + GST_BUFFER_SIZE (current) >= offset + size) {
@@ -384,7 +384,7 @@ gst_buffer_store_get_buffer (GstBufferStore * store, guint64 offset, guint size)
           GST_DEBUG_OBJECT (store,
               "not all data for offset %" G_GUINT64_FORMAT
               " and remaining size %u available, aborting", offset, size);
-          gst_data_unref (GST_DATA (ret));
+          gst_mini_object_unref (GST_MINI_OBJECT (ret));
           ret = NULL;
           goto out;
         }

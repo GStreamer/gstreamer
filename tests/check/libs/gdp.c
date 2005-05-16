@@ -98,8 +98,7 @@ START_TEST (test_buffer)
   GST_BUFFER_DURATION (buffer) = (GstClockTime) GST_SECOND;
   GST_BUFFER_OFFSET (buffer) = (guint64) 10;
   GST_BUFFER_OFFSET_END (buffer) = (guint64) 19;
-  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_IN_CAPS);
-  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_SUBBUFFER);
+  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_IN_CAPS);
   memmove (GST_BUFFER_DATA (buffer), "a buffer", 8);
 
   /* create a buffer with CRC checking */
@@ -136,9 +135,7 @@ START_TEST (test_buffer)
       "Offsets don't match !");
   fail_unless (GST_BUFFER_OFFSET_END (newbuffer) ==
       GST_BUFFER_OFFSET_END (buffer), "Offset ends don't match !");
-  fail_if (GST_BUFFER_FLAG_IS_SET (newbuffer, GST_BUFFER_SUBBUFFER),
-      "GST_BUFFER_SUBBUFFER flag should not have been copied !");
-  fail_unless (GST_BUFFER_FLAG_IS_SET (newbuffer, GST_BUFFER_IN_CAPS),
+  fail_unless (GST_BUFFER_FLAG_IS_SET (newbuffer, GST_BUFFER_FLAG_IN_CAPS),
       "GST_BUFFER_IN_CAPS flag should have been copied !");
 
   g_free (header);
