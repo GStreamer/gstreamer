@@ -37,8 +37,6 @@ extern const char             *g_log_domain_gstreamer;
 #include <stdlib.h>
 #include <string.h>
 
-gboolean __gst_in_valgrind (void);
-
 /*** debugging categories *****************************************************/
 
 #ifndef GST_DISABLE_GST_DEBUG

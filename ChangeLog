@@ -1,5 +1,13 @@
 2005-05-16  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* configure.ac:
+	* gst/gst_private.h:
+	* gst/gstinfo.c: (_gst_debug_init):
+	  remove valgrind stuff. Without memchunks there's no need for it
+	  anymore.
+
+2005-05-16  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* gst/gstprobe.[ch]:
 	* gst/Makefile.am:
 	* gst/gst.c: (init_post):
