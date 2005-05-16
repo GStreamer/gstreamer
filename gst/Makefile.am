@@ -82,7 +82,6 @@ EXTRA_libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gst.c			\
 	gstobject.c		\
-	gstatomic.c		\
 	gstbin.c		\
 	gstbuffer.c		\
 	gstcaps.c		\
@@ -152,7 +151,6 @@ libgstreamer_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINO
 
 gst_headers =			\
 	gst.h			\
-	gstatomic.h		\
 	gstobject.h		\
 	gstbin.h		\
 	gstbuffer.h		\
@@ -204,7 +202,6 @@ noinst_HEADERS = 		\
 	gst-i18n-lib.h		\
 	gst-i18n-app.h		\
 	gst_private.h		\
-	gstatomic_impl.h	\
 	gstdata_private.h	\
 	gstarch.h		\
 	cothreads.h		

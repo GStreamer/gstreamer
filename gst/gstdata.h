@@ -25,7 +25,6 @@
 #define __GST_DATA_H__
 
 #include <glib-object.h>
-#include <gst/gstatomic.h>
 #include <gst/gsttypes.h>
 
 G_BEGIN_DECLS
@@ -58,8 +57,7 @@ typedef enum
 } GstDataFlags;
 
 /* refcount */
-#define GST_DATA_REFCOUNT(data)			((GST_DATA(data))->refcount)
-#define GST_DATA_REFCOUNT_VALUE(data)		(gst_atomic_int_read (&(GST_DATA(data))->refcount))
+#define GST_DATA_REFCOUNT_VALUE(data)		((GST_DATA(data))->refcount)
 
 /* copy/free functions */
 #define GST_DATA_COPY_FUNC(data) 		(GST_DATA(data)->copy)
@@ -70,7 +68,7 @@ struct _GstData {
   GType 		 type;
 
   /* refcounting */
-  GstAtomicInt		 refcount;
+  guint			 refcount;
 
   guint16		 flags;
  

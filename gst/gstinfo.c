@@ -118,8 +118,8 @@ LogFuncEntry;
 static GStaticMutex __log_func_mutex = G_STATIC_MUTEX_INIT;
 static GSList *__log_functions = NULL;
 
-static GstAtomicInt __default_level;
-static GstAtomicInt __use_color;
+static GstDebugLevel __default_level;
+static gboolean __use_color;
 gboolean __gst_debug_enabled = TRUE;
 
 
@@ -168,8 +168,8 @@ GstDebugCategory *GST_CAT_PROBE = NULL;
 void
 _gst_debug_init (void)
 {
-  gst_atomic_int_init (&__default_level, GST_LEVEL_DEFAULT);
-  gst_atomic_int_init (&__use_color, 1);
+  __default_level = GST_LEVEL_DEFAULT;
+  __use_color = TRUE;
 
 #ifdef HAVE_PRINTF_EXTENSION
   register_printf_function (GST_PTR_FORMAT[0], _gst_info_printf_extension,
@@ -650,7 +650,7 @@ gst_debug_remove_log_function_by_data (gpointer data)
 void
 gst_debug_set_colored (gboolean colored)
 {
-  gst_atomic_int_set (&__use_color, colored ? 1 : 0);
+  __use_color = colored;
 }
 
 /**
@@ -663,7 +663,7 @@ gst_debug_set_colored (gboolean colored)
 gboolean
 gst_debug_is_colored (void)
 {
-  return gst_atomic_int_read (&__use_color) == 0 ? FALSE : TRUE;
+  return __use_color;
 }
 
 /**
@@ -705,7 +705,7 @@ gst_debug_is_active (void)
 void
 gst_debug_set_default_threshold (GstDebugLevel level)
 {
-  gst_atomic_int_set (&__default_level, level);
+  __default_level = level;
   gst_debug_reset_all_thresholds ();
 }
 
@@ -719,7 +719,7 @@ gst_debug_set_default_threshold (GstDebugLevel level)
 GstDebugLevel
 gst_debug_get_default_threshold (void)
 {
-  return (GstDebugLevel) gst_atomic_int_read (&__default_level);
+  return __default_level;
 }
 static void
 gst_debug_reset_threshold (gpointer category, gpointer unused)
@@ -842,8 +842,7 @@ _gst_debug_category_new (gchar * name, guint color, gchar * description)
   } else {
     cat->description = g_strdup ("no description");
   }
-  cat->threshold = g_new (GstAtomicInt, 1);
-  gst_atomic_int_init (cat->threshold, 0);
+  cat->threshold = 0;
   gst_debug_reset_threshold (cat, NULL);
 
   /* add to category list */
@@ -873,8 +872,6 @@ gst_debug_category_free (GstDebugCategory * category)
 
   g_free ((gpointer) category->name);
   g_free ((gpointer) category->description);
-  gst_atomic_int_destroy (category->threshold);
-  g_free (category->threshold);
   g_free (category);
 }
 
@@ -898,7 +895,7 @@ gst_debug_category_set_threshold (GstDebugCategory * category,
 {
   g_return_if_fail (category != NULL);
 
-  gst_atomic_int_set (category->threshold, level);
+  category->threshold = level;
 }
 
 /**
@@ -928,7 +925,7 @@ gst_debug_category_reset_threshold (GstDebugCategory * category)
 GstDebugLevel
 gst_debug_category_get_threshold (GstDebugCategory * category)
 {
-  return gst_atomic_int_read (category->threshold);
+  return category->threshold;
 }
 
 /**

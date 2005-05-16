@@ -1,5 +1,25 @@
 2005-05-16  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* gst/Makefile.am:
+	* gst/gstatomic.c:
+	* gst/gstatomic.h:
+	* gst/gstatomic_impl.h:
+	* gst/gstbuffer.c:
+	* gst/gstdata.c: (gst_data_is_writable), (gst_data_copy_on_write),
+	(gst_data_ref), (gst_data_ref_by_count), (gst_data_unref):
+	* gst/gstdata.h:
+	* gst/gstdata_private.h:
+	* gst/gstinfo.c: (_gst_debug_init), (gst_debug_set_colored),
+	(gst_debug_is_colored), (gst_debug_set_default_threshold),
+	(gst_debug_get_default_threshold), (_gst_debug_category_new),
+	(gst_debug_category_free), (gst_debug_category_set_threshold),
+	(gst_debug_category_get_threshold):
+	* gst/gstinfo.h:
+	* testsuite/elements/struct_i386.h:
+	  remove GstAtomic. Use plain ints instead for the time being
+
+2005-05-16  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* configure.ac:
 	* gst/gst_private.h:
 	* gst/gstinfo.c: (_gst_debug_init):

@@ -20,19 +20,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "gstatomic_impl.h"
-
 #define _GST_DATA_INIT(data, ptype, pflags, pfree, pcopy) 	\
 G_STMT_START {							\
-  gst_atomic_int_init (&(data)->refcount, 1);			\
+  (data)->refcount = 1;						\
   (data)->type = ptype;						\
   (data)->flags = pflags;					\
   (data)->free = pfree;						\
   (data)->copy = pcopy;						\
 } G_STMT_END;
 
-#define _GST_DATA_DISPOSE(data)				 	\
-G_STMT_START {							\
-  gst_atomic_int_destroy (&(data)->refcount);			\
-} G_STMT_END;
+#define _GST_DATA_DISPOSE(data)
 

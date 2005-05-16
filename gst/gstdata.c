@@ -22,7 +22,6 @@
 
 #include "gst_private.h"
 
-#include "gstatomic_impl.h"
 #include "gstdata.h"
 #include "gstdata_private.h"
 #include "gstinfo.h"
@@ -122,13 +121,9 @@ gst_data_copy (const GstData * data)
 gboolean
 gst_data_is_writable (GstData * data)
 {
-  gint refcount;
-
   g_return_val_if_fail (data != NULL, FALSE);
 
-  refcount = gst_atomic_int_read (&data->refcount);
-
-  if (refcount > 1)
+  if (data->refcount > 1)
     return FALSE;
   if (GST_DATA_FLAG_IS_SET (data, GST_DATA_READONLY))
     return FALSE;
@@ -152,13 +147,9 @@ gst_data_is_writable (GstData * data)
 GstData *
 gst_data_copy_on_write (GstData * data)
 {
-  gint refcount;
-
   g_return_val_if_fail (data != NULL, NULL);
 
-  refcount = gst_atomic_int_read (&data->refcount);
-
-  if (refcount == 1 && !GST_DATA_FLAG_IS_SET (data, GST_DATA_READONLY))
+  if (data->refcount == 1 && !GST_DATA_FLAG_IS_SET (data, GST_DATA_READONLY))
     return GST_DATA (data);
 
   if (data->copy) {
@@ -188,7 +179,7 @@ gst_data_ref (GstData * data)
   GST_CAT_LOG (GST_CAT_BUFFER, "%p %d->%d", data,
       GST_DATA_REFCOUNT_VALUE (data), GST_DATA_REFCOUNT_VALUE (data) + 1);
 
-  gst_atomic_int_inc (&data->refcount);
+  data->refcount++;
 
   return data;
 }
@@ -212,7 +203,7 @@ gst_data_ref_by_count (GstData * data, gint count)
   GST_CAT_LOG (GST_CAT_BUFFER, "%p %d->%d", data,
       GST_DATA_REFCOUNT_VALUE (data), GST_DATA_REFCOUNT_VALUE (data) + count);
 
-  gst_atomic_int_add (&data->refcount, count);
+  data->refcount += count;
 
   return data;
 }
@@ -231,18 +222,16 @@ gst_data_ref_by_count (GstData * data, gint count)
 void
 gst_data_unref (GstData * data)
 {
-  gint zero;
-
   g_return_if_fail (data != NULL);
 
   GST_CAT_LOG (GST_CAT_BUFFER, "%p %d->%d", data,
       GST_DATA_REFCOUNT_VALUE (data), GST_DATA_REFCOUNT_VALUE (data) - 1);
   g_return_if_fail (GST_DATA_REFCOUNT_VALUE (data) > 0);
 
-  zero = gst_atomic_int_dec_and_test (&data->refcount);
+  data->refcount--;
 
   /* if we ended up with the refcount at zero, free the data */
-  if (zero) {
+  if (data->refcount == 0) {
     if (data->free)
       data->free (data);
   }
