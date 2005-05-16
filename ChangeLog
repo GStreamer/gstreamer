@@ -1,3 +1,10 @@
+2005-05-16  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstbin.c (sink_iterator_filter): Err... um...
+
+	* check/gst/gstbin.c (test_ghost_pads): New test for the
+	ghosting-if-elements-not-in-same-bin behavior.
+
 2005-05-16  David Schleef  <ds@schleef.org>
 
 	* gst/gstminiobject.c: Use g_atomic_int_get() instead of

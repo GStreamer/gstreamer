@@ -89,10 +89,9 @@ Last reviewed on August 12th, 2004 (0.8.5)
 The basic structure of a buffer.
 </para>
 
-@data_type: 
+@mini_object: 
 @data: 
 @size: 
-@maxsize: 
 @timestamp: 
 @duration: 
 @caps: 
@@ -121,15 +120,13 @@ The basic structure of a buffer.
 
 </para>
 
-@GST_BUFFER_READONLY: 
-@GST_BUFFER_SUBBUFFER: 
-@GST_BUFFER_ORIGINAL: 
-@GST_BUFFER_DONTFREE: 
-@GST_BUFFER_PREROLL: 
-@GST_BUFFER_DISCONT: 
-@GST_BUFFER_IN_CAPS: 
-@GST_BUFFER_GAP: 
-@GST_BUFFER_DELTA_UNIT: 
+@GST_BUFFER_FLAG_READONLY: 
+@GST_BUFFER_FLAG_ORIGINAL: 
+@GST_BUFFER_FLAG_PREROLL: 
+@GST_BUFFER_FLAG_DISCONT: 
+@GST_BUFFER_FLAG_IN_CAPS: 
+@GST_BUFFER_FLAG_GAP: 
+@GST_BUFFER_FLAG_DELTA_UNIT: 
 @GST_BUFFER_FLAG_LAST: 
 
 <!-- ##### MACRO GST_BUFFER_FLAGS ##### -->
@@ -194,14 +191,6 @@ Gets the size of the data in this buffer.
 @buf: a #GstBuffer to get data size of.
 
 
-<!-- ##### MACRO GST_BUFFER_MAXSIZE ##### -->
-<para>
-Gets the maximum size of this buffer.
-</para>
-
-@buf: a #GstBuffer to get maximum size of.
-
-
 <!-- ##### MACRO GST_BUFFER_TIMESTAMP ##### -->
 <para>
 Gets the timestamp for this buffer.
@@ -243,15 +232,6 @@ Increases the refcount of the given buffer by one.
 @buf: a #GstBuffer to increase the refcount of.
 
 
-<!-- ##### MACRO gst_buffer_ref_by_count ##### -->
-<para>
-Increases the refcount of the buffer by the given value. 
-</para>
-
-@buf: a #GstBuffer to increase the refcount of.
-@c: the value to add to the refcount.
-
-
 <!-- ##### MACRO gst_buffer_unref ##### -->
 <para>
 Decreases the refcount of the buffer. If the refcount reaches 0, the buffer
@@ -285,18 +265,6 @@ Tests if you can safely write data into a buffer's data array.
 </para>
 
 @buf: a #GstBuffer to check
-
-
-<!-- ##### MACRO gst_buffer_copy_on_write ##### -->
-<para>
-This function returns a buffer that is safe to write to.
-Copy the buffer if the refcount > 1 so that the newly 
-created buffer can be safely written to. 
-If the refcount is 1, this function just returns the original buffer.
-</para>
-
-@buf: a #GstBuffer to copy
-@Returns: the #GstBuffer that can safely be written to.
 
 
 <!-- ##### FUNCTION gst_buffer_create_sub ##### -->
@@ -364,71 +332,6 @@ If the refcount is 1, this function just returns the original buffer.
 The name used for tracing memory allocations
 </para>
 
-
-
-<!-- ##### MACRO GST_BUFFER_REFCOUNT ##### -->
-<para>
-Gets a handle to the refcount structure of the buffer.
-</para>
-
-@buf: a #GstBuffer to get the refcount structure of.
-
-
-<!-- ##### MACRO GST_BUFFER_REFCOUNT_VALUE ##### -->
-<para>
-Gets the current refcount value of the buffer.
-</para>
-
-@buf: a #GstBuffer to get the refcount value of.
-
-
-<!-- ##### MACRO GST_BUFFER_COPY_FUNC ##### -->
-<para>
-Calls the buffer-specific copy function on the given buffer.
-</para>
-
-@buf: a #GstBuffer to copy.
-
-
-<!-- ##### MACRO GST_BUFFER_FREE_FUNC ##### -->
-<para>
-Calls the buffer-specific free function on the given buffer.
-</para>
-
-@buf: a #GstBuffer to free.
-
-
-<!-- ##### MACRO GST_BUFFER_FREE_DATA_FUNC ##### -->
-<para>
-A function that should be called if the buffer has no more references left.
-Elements that utilize hardware memory could use this to re-queue
-the buffer after it's been unreferenced. If no free_data_func has been
-provided, the default will be used which simply deallocates the memory
-region and the GstBuffer object. Manual implementations that want to
-free their own memory but don't do anything special otherwise are
-suggested to set the GST_BUFFER_DONTFREE flag on the buffer and call the
-default data free function (gst_buffer_default_free()) from their manual
-implementation.
-</para>
-
-@buf: the #GstBuffer this function belongs to
-
-
-<!-- ##### USER_FUNCTION GstBufferFreeDataFunc ##### -->
-<para>
-the type for the GST_BUFFER_FREE_DATA_FUNC
-</para>
-
-@buffer: the #GstBuffer on which it will operate, when called
-
-
-<!-- ##### MACRO GST_BUFFER_PRIVATE ##### -->
-<para>
-Private data for the buffer. This can be used to store a pointer to the
-object that can then be retrieved in something like the BUFFER_FREE_DATA_FUNC.
-</para>
-
-@buf: the #GstBuffer this data belongs to
 
 
 <!-- ##### MACRO GST_BUFFER_OFFSET_NONE ##### -->

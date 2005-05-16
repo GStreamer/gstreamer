@@ -709,7 +709,7 @@ bin_element_is_sink (GstElement * child, GstBin * bin)
 static gint
 sink_iterator_filter (GstElement * child, GstBin * bin)
 {
-  if (bin_element_is_sink (child, bin)) {
+  if (bin_element_is_sink (child, bin) == 0) {
     /* returns 0 because this is a GCompareFunc */
     return 0;
   } else {

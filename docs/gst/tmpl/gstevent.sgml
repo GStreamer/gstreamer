@@ -32,7 +32,7 @@ gst_event_new_flush() creates a new flush event.
 
 </para>
 
-@data: 
+@mini_object: 
 @type: 
 @timestamp: 
 @src: 
@@ -317,15 +317,6 @@ Increase the refcount of this event
 </para>
 
 @ev: The event to refcount
-
-
-<!-- ##### MACRO gst_event_ref_by_count ##### -->
-<para>
-Increase the refcount of the event with the given value
-</para>
-
-@ev: The event to refcount
-@c: The value to add to the refcount
 
 
 <!-- ##### MACRO gst_event_unref ##### -->
