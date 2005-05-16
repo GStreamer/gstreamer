@@ -46,8 +46,6 @@ static GstRegistry *_user_registry;
 static gboolean _gst_registry_fixed = FALSE;
 #endif
 
-static gboolean _gst_enable_cpu_opt = TRUE;
-
 static gboolean gst_initialized = FALSE;
 
 /* this will be set in popt callbacks when a problem has been encountered */
@@ -90,7 +88,6 @@ enum
   ARG_DEBUG_NO_COLOR,
   ARG_DEBUG_HELP,
 #endif
-  ARG_DISABLE_CPU_OPT,
   ARG_PLUGIN_SPEW,
   ARG_PLUGIN_PATH,
   ARG_PLUGIN_LOAD,
@@ -180,8 +177,6 @@ gst_init_get_popt_table (void)
         ARG_DEBUG_DISABLE, N_("Disable debugging")},
 #endif
 
-    {"gst-disable-cpu-opt", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
-        ARG_DISABLE_CPU_OPT, N_("Disable accelerated CPU instructions"), NULL},
     {"gst-plugin-spew", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
         ARG_PLUGIN_SPEW, N_("Enable verbose plugin loading diagnostics"), NULL},
     {"gst-plugin-path", NUL, POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL,
@@ -605,7 +600,6 @@ init_post (void)
   /* register core plugins */
   _gst_plugin_register_static (&plugin_desc);
 
-  _gst_cpu_initialize (_gst_enable_cpu_opt);
   gst_structure_get_type ();
   _gst_value_initialize ();
   gst_caps_get_type ();
@@ -771,9 +765,6 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
           gst_debug_help ();
           exit (0);
 #endif
-        case ARG_DISABLE_CPU_OPT:
-          _gst_enable_cpu_opt = FALSE;
-          break;
         case ARG_PLUGIN_SPEW:
           break;
         case ARG_PLUGIN_PATH:
