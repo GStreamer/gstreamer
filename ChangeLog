@@ -1,3 +1,11 @@
+2005-05-16  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* configure.ac:
+	  set some variables right for parrallel installability , so we don't
+	  conflict with installed Gstreamer
+
+=== new branch ===
+
 === release 0.8.10 ===
 
 2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
