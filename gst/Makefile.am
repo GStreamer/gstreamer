@@ -66,8 +66,8 @@ else
 GST_URI_SRC = gsturi.c
 endif
 
-SUBDIRS = $(GST_PARSE_DIRS) $(GST_REGISTRY_DIRS) . autoplug elements schedulers $(GST_INDEX_DIRS) 
-DIST_SUBDIRS = autoplug elements parse registries schedulers indexers
+SUBDIRS = $(GST_PARSE_DIRS) $(GST_REGISTRY_DIRS) . elements schedulers $(GST_INDEX_DIRS) 
+DIST_SUBDIRS = elements parse registries schedulers indexers
 
 # make variables for all generated source and header files to make the
 # distinction clear

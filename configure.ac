@@ -630,7 +630,6 @@ include/Makefile
 gst/Makefile
 gst/gstconfig.h
 gst/gstversion.h
-gst/autoplug/Makefile
 gst/indexers/Makefile
 gst/elements/Makefile
 gst/parse/Makefile

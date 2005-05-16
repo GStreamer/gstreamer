@@ -1,5 +1,20 @@
 2005-05-16  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* gst/autoplug/.cvsignore
+	* gst/autoplug/Makefile.am
+	* gst/autoplug/gstsearchfuncs.c
+	* gst/autoplug/gstsearchfuncs.h
+	* gst/autoplug/gstspider.c
+	* gst/autoplug/gstspider.h
+	* gst/autoplug/gstspideridentity.c
+	* gst/autoplug/gstspideridentity.h
+	* gst/autoplug/spidertest.c
+	* configure.ac:
+	* gst/Makefile.am:
+	  remove spider
+
+2005-05-16  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* gst/Makefile.am:
 	* gst/gstatomic.c:
 	* gst/gstatomic.h:
