@@ -1,3 +1,8 @@
+2005-05-16  David Schleef  <ds@schleef.org>
+
+	* gst/gstminiobject.c: Use g_atomic_int_get() instead of
+	accessing refcount directly.
+
 2005-05-15  David Schleef  <ds@schleef.org>
 
 	* check/Makefile.am: remove GstData checks
