@@ -30,7 +30,6 @@
 #include <gst/gstbuffer.h>
 #include <gst/gstcaps.h>
 #include <gst/gstevent.h>
-#include <gst/gstprobe.h>
 #include <gst/gstquery.h>
 
 
@@ -204,8 +203,6 @@ struct _GstRealPad {
   GstPadIntLinkFunction		 intlinkfunc;
 
   GstPadBufferAllocFunction        bufferallocfunc;
-
-  GstProbeDispatcher		 probedisp;
 
   GstPadLink                    *link;
   GstCaps			*explicit_caps;
@@ -496,11 +493,6 @@ GList*			gst_pad_get_internal_links_default	(GstPad *pad);
 /* misc helper functions */
 gboolean		gst_pad_dispatcher			(GstPad *pad, GstPadDispatcherFunction dispatch,
 								 gpointer data);
-
-#define			gst_pad_add_probe(pad, probe) \
-			(gst_probe_dispatcher_add_probe (&(GST_PAD_REALIZE (pad)->probedisp), probe))
-#define			gst_pad_remove_probe(pad, probe) \
-			(gst_probe_dispatcher_remove_probe (&(GST_PAD_REALIZE (pad)->probedisp), probe))
 
 #ifndef GST_DISABLE_LOADSAVE
 void			gst_pad_load_and_link			(xmlNodePtr self, GstObject *parent);

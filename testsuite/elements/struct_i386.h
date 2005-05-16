@@ -64,10 +64,6 @@ Struct list[] = {
   ,
   {"GstPluginFeatureClass", sizeof (GstPluginFeatureClass), 88}
   ,
-  {"GstProbe", sizeof (GstProbe), 12}
-  ,
-  {"GstProbeDispatcher", sizeof (GstProbeDispatcher), 8}
-  ,
   {"GstQueryTypeDefinition", sizeof (GstQueryTypeDefinition), 12}
   ,
   {"GstQueue", sizeof (GstQueue), 252}

@@ -1,5 +1,16 @@
 2005-05-16  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* gst/gstprobe.[ch]:
+	* gst/Makefile.am:
+	* gst/gst.c: (init_post):
+	* gst/gstpad.c: (gst_real_pad_init), (gst_pad_push),
+	(gst_pad_pull):
+	* gst/gstpad.h:
+	* testsuite/elements/struct_i386.h:
+	  remove probes
+
+2005-05-16  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* gst/gsttrashstack.[ch]:
 	* gst/gstmemchunk.[ch]:
 	  remove these
