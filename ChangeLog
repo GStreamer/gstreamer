@@ -1,3 +1,37 @@
+2005-05-16  David Schleef  <ds@schleef.org>
+
+	Port from GstData to GstMiniObject.
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_dispose):
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_buffer_from_page),
+	(gst_ogg_mux_queue_pads), (gst_ogg_mux_set_header_on_caps),
+	(gst_ogg_mux_collected):
+	* ext/ogg/gstogmparse.c: (gst_ogm_parse_chain):
+	* ext/theora/theoradec.c: (theora_handle_comment_packet),
+	(theora_handle_data_packet):
+	* ext/theora/theoraenc.c: (theora_buffer_from_packet),
+	(theora_set_header_on_caps), (theora_enc_chain):
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_sink_event),
+	(vorbis_handle_comment_packet):
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_set_header_on_caps):
+	* ext/vorbis/vorbisparse.c: (vorbis_parse_set_header_on_caps):
+	* gst-libs/gst/audio/gstaudiofilter.c: (gst_audiofilter_chain):
+	* gst-libs/gst/tag/gstvorbistag.c: (gst_vorbis_tag_chain):
+	* gst/audioconvert/gstaudioconvert.c:
+	(gst_audio_convert_get_buffer):
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_class_init):
+	* gst/playback/gstplaybasebin.c: (check_queue), (probe_triggered),
+	(mute_stream), (silence_stream):
+	* gst/playback/gstplaybin.c: (gst_play_bin_class_init):
+	* gst/volume/gstvolume.c: (volume_transform):
+	* sys/ximage/ximagesink.c: (gst_ximage_buffer_finalize),
+	(gst_ximage_buffer_init), (gst_ximage_buffer_class_init),
+	(gst_ximage_buffer_get_type), (gst_ximagesink_check_xshm_calls),
+	(gst_ximagesink_ximage_new), (gst_ximagesink_ximage_destroy),
+	(gst_ximagesink_ximage_put), (gst_ximagesink_imagepool_clear),
+	(gst_ximagesink_show_frame), (gst_ximagesink_buffer_free),
+	(gst_ximagesink_buffer_alloc):
+	* sys/ximage/ximagesink.h:
+
 2005-05-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_class_init),

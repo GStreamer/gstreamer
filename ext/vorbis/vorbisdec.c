@@ -429,7 +429,7 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
         vorbis_synthesis_restart (&dec->vd);
 #endif
       }
-      gst_data_unref (GST_DATA (event));
+      gst_event_unref (event);
       break;
     default:
       ret = gst_pad_event_default (dec->sinkpad, event);
@@ -450,7 +450,6 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
 
   buf = gst_buffer_new_and_alloc (packet->bytes);
   GST_BUFFER_DATA (buf) = packet->packet;
-  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
 
   list =
       gst_tag_list_from_vorbiscomment_buffer (buf, (guint8 *) "\003vorbis", 7,

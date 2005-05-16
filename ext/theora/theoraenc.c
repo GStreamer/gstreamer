@@ -377,9 +377,9 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
   /* the second most significant bit of the first data byte is cleared
    * for keyframes */
   if ((packet->packet[0] & 0x40) == 0) {
-    GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_DELTA_UNIT);
+    GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
   } else {
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DELTA_UNIT);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
   }
 
   enc->packetno++;
@@ -425,9 +425,9 @@ theora_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
   structure = gst_caps_get_structure (caps, 0);
 
   /* mark buffers */
-  GST_BUFFER_FLAG_SET (buf1, GST_BUFFER_IN_CAPS);
-  GST_BUFFER_FLAG_SET (buf2, GST_BUFFER_IN_CAPS);
-  GST_BUFFER_FLAG_SET (buf3, GST_BUFFER_IN_CAPS);
+  GST_BUFFER_FLAG_SET (buf1, GST_BUFFER_FLAG_IN_CAPS);
+  GST_BUFFER_FLAG_SET (buf2, GST_BUFFER_FLAG_IN_CAPS);
+  GST_BUFFER_FLAG_SET (buf3, GST_BUFFER_FLAG_IN_CAPS);
 
   /* put buffers in a fixed list */
   g_value_init (&list, GST_TYPE_FIXED_LIST);
@@ -546,15 +546,15 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
       /* easy case, no cropping/conversion needed */
       pixels = GST_BUFFER_DATA (buffer);
 
-      yuv.y = (char *) pixels;
+      yuv.y = (guint8 *) pixels;
       yuv.u = yuv.y + y_size;
       yuv.v = yuv.u + y_size / 4;
     } else {
       GstBuffer *newbuf;
       gint i;
-      char *dest_y, *src_y;
-      char *dest_u, *src_u;
-      char *dest_v, *src_v;
+      guint8 *dest_y, *src_y;
+      guint8 *dest_u, *src_u;
+      guint8 *dest_v, *src_v;
       gint src_y_stride, src_uv_stride;
       gint dst_y_stride, dst_uv_stride;
       gint width, height;
@@ -579,11 +579,11 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
       newbuf = gst_pad_alloc_buffer (enc->srcpad,
           GST_BUFFER_OFFSET_NONE, y_size * 3 / 2, GST_PAD_CAPS (enc->srcpad));
 
-      dest_y = yuv.y = (char *) GST_BUFFER_DATA (newbuf);
+      dest_y = yuv.y = (guint8 *) GST_BUFFER_DATA (newbuf);
       dest_u = yuv.u = yuv.y + y_size;
       dest_v = yuv.v = yuv.u + y_size / 4;
 
-      src_y = (char *) GST_BUFFER_DATA (buffer);
+      src_y = (guint8 *) GST_BUFFER_DATA (buffer);
       src_u = src_y + src_y_stride * ROUND_UP_2 (height);
       src_v = src_u + src_uv_stride * ROUND_UP_2 (height) / 2;
 

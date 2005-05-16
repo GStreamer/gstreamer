@@ -174,7 +174,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       g_param_spec_double ("volume", "volume", "volume",
           0.0, VOLUME_MAX_DOUBLE, 1.0, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_klass, ARG_FRAME,
-      g_param_spec_boxed ("frame", "Frame",
+      gst_param_spec_mini_object ("frame", "Frame",
           "The last frame (NULL = no video available)",
           GST_TYPE_BUFFER, G_PARAM_READABLE));
   g_object_class_install_property (gobject_klass, ARG_FONT_DESC,

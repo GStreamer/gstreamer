@@ -485,7 +485,7 @@ gst_ogg_mux_buffer_from_page (GstOggMux * mux, ogg_page * page, gboolean delta)
   mux->offset += GST_BUFFER_SIZE (buffer);
   GST_BUFFER_OFFSET_END (buffer) = mux->offset;
   if (delta)
-    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_DELTA_UNIT);
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
   return buffer;
 }
@@ -577,7 +577,7 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
 
       buf = gst_collectpads_pop (ogg_mux->collect, data);
 
-      incaps = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_IN_CAPS);
+      incaps = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
       /* if we need headers */
       if (pad->state == GST_OGG_PAD_STATE_CONTROL) {
         /* and we have one */
@@ -682,7 +682,7 @@ gst_ogg_mux_set_header_on_caps (GstCaps * caps, GList * buffers)
     walk = walk->next;
 
     /* mark buffer */
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_IN_CAPS);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
 
     g_value_init (&value, GST_TYPE_BUFFER);
     g_value_set_boxed (&value, buf);
@@ -959,7 +959,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
     /* now see if we have a buffer */
     buf = pad->buffer;
 
-    delta_unit = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_DELTA_UNIT);
+    delta_unit = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
     duration = GST_BUFFER_DURATION (buf);
 
     /* create a packet from the buffer */

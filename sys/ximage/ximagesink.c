@@ -45,9 +45,9 @@ MotifWmHints, MwmHints;
 
 #define MWM_HINTS_DECORATIONS   (1L << 1)
 
-static void gst_ximagesink_buffer_free (GstBuffer * buffer);
+//static void gst_ximagesink_buffer_free (GstBuffer * buffer);
 static void gst_ximagesink_ximage_destroy (GstXImageSink * ximagesink,
-    GstXImage * ximage);
+    GstXImageBuffer * ximage);
 #if 0
 static void gst_ximagesink_send_pending_navigation (GstXImageSink * ximagesink);
 #endif
@@ -88,6 +88,96 @@ static gboolean error_caught = FALSE;
 /*                                                               */
 /* ============================================================= */
 
+/* ximage buffers */
+
+#define GST_TYPE_XIMAGE_BUFFER (gst_ximage_buffer_get_type())
+
+#define GST_IS_XIMAGE_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_XIMAGE_BUFFER))
+#define GST_XIMAGE_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_XIMAGE_BUFFER, GstXImageBuffer))
+
+
+static void
+gst_ximage_buffer_finalize (GstXImageBuffer * ximage_buffer)
+{
+  GstXImageSink *ximagesink;
+
+  g_return_if_fail (ximage_buffer != NULL);
+
+  if (ximage_buffer->ximagesink == NULL) {
+    return;
+  }
+  ximagesink = ximage_buffer->ximagesink;
+
+  /* If the destroyed image is the current one we destroy our reference too */
+  if (ximagesink->cur_image == ximage_buffer)
+    ximagesink->cur_image = NULL;
+
+  g_mutex_lock (ximagesink->x_lock);
+
+#ifdef HAVE_XSHM
+  if (ximagesink->xcontext->use_xshm) {
+    if (ximage_buffer->SHMInfo.shmaddr != ((void *) -1)) {
+      XShmDetach (ximagesink->xcontext->disp, &ximage_buffer->SHMInfo);
+      XSync (ximagesink->xcontext->disp, 0);
+      shmdt (ximage_buffer->SHMInfo.shmaddr);
+    }
+    if (ximage_buffer->SHMInfo.shmid > 0)
+      shmctl (ximage_buffer->SHMInfo.shmid, IPC_RMID, 0);
+    if (ximage_buffer->ximage)
+      XDestroyImage (ximage_buffer->ximage);
+
+  } else
+#endif /* HAVE_XSHM */
+  {
+    if (ximage_buffer->ximage) {
+      XDestroyImage (ximage_buffer->ximage);
+    }
+  }
+
+  XSync (ximagesink->xcontext->disp, FALSE);
+
+  g_mutex_unlock (ximagesink->x_lock);
+}
+
+static void
+gst_ximage_buffer_init (GTypeInstance * instance, gpointer g_class)
+{
+
+}
+
+static void
+gst_ximage_buffer_class_init (gpointer g_class, gpointer class_data)
+{
+  GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
+
+  mini_object_class->finalize = (GstMiniObjectFinalizeFunction)
+      gst_ximage_buffer_finalize;
+}
+
+GType
+gst_ximage_buffer_get_type (void)
+{
+  static GType _gst_ximage_buffer_type;
+
+  if (G_UNLIKELY (_gst_ximage_buffer_type == 0)) {
+    static const GTypeInfo ximage_buffer_info = {
+      sizeof (GstBufferClass),
+      NULL,
+      NULL,
+      gst_ximage_buffer_class_init,
+      NULL,
+      NULL,
+      sizeof (GstXImageBuffer),
+      0,
+      gst_ximage_buffer_init,
+      NULL
+    };
+    _gst_ximage_buffer_type = g_type_register_static (GST_TYPE_BUFFER,
+        "GstXImageBuffer", &ximage_buffer_info, 0);
+  }
+  return _gst_ximage_buffer_type;
+}
+
 /* X11 stuff */
 
 static int
@@ -109,13 +199,13 @@ gst_ximagesink_check_xshm_calls (GstXContext * xcontext)
 #ifndef HAVE_XSHM
   return FALSE;
 #else
-  GstXImage *ximage = NULL;
+  GstXImageBuffer *ximage = NULL;
   int (*handler) (Display *, XErrorEvent *);
   gboolean result = FALSE;
 
   g_return_val_if_fail (xcontext != NULL, FALSE);
 
-  ximage = g_new0 (GstXImage, 1);
+  ximage = (GstXImageBuffer *) gst_mini_object_new (GST_TYPE_XIMAGE_BUFFER);
   g_return_val_if_fail (ximage != NULL, FALSE);
 
   /* Setting an error handler to catch failure */
@@ -170,25 +260,25 @@ gst_ximagesink_check_xshm_calls (GstXContext * xcontext)
 
 beach:
   XSetErrorHandler (handler);
-  if (ximage->ximage)
-    XFree (ximage->ximage);
-  g_free (ximage);
+
+  gst_buffer_unref (GST_BUFFER (ximage));
+
   XSync (xcontext->disp, FALSE);
   return result;
 #endif /* HAVE_XSHM */
 }
 
-/* This function handles GstXImage creation depending on XShm availability */
-static GstXImage *
+/* This function handles GstXImageBuffer creation depending on XShm availability */
+static GstXImageBuffer *
 gst_ximagesink_ximage_new (GstXImageSink * ximagesink, gint width, gint height)
 {
-  GstXImage *ximage = NULL;
+  GstXImageBuffer *ximage = NULL;
   gboolean succeeded = FALSE;
 
   g_return_val_if_fail (GST_IS_XIMAGESINK (ximagesink), NULL);
   GST_DEBUG_OBJECT (ximagesink, "creating %dx%d", width, height);
 
-  ximage = g_new0 (GstXImage, 1);
+  ximage = (GstXImageBuffer *) gst_mini_object_new (GST_TYPE_XIMAGE_BUFFER);
 
   ximage->width = width;
   ximage->height = height;
@@ -263,16 +353,17 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, gint width, gint height)
 
 beach:
   if (!succeeded) {
-    gst_ximagesink_ximage_destroy (ximagesink, ximage);
+    gst_buffer_unref (GST_BUFFER (ximage));
     ximage = NULL;
   }
 
   return ximage;
 }
 
-/* This function destroys a GstXImage handling XShm availability */
+/* This function destroys a GstXImageBuffer handling XShm availability */
 static void
-gst_ximagesink_ximage_destroy (GstXImageSink * ximagesink, GstXImage * ximage)
+gst_ximagesink_ximage_destroy (GstXImageSink * ximagesink,
+    GstXImageBuffer * ximage)
 {
   g_return_if_fail (ximage != NULL);
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
@@ -310,9 +401,9 @@ gst_ximagesink_ximage_destroy (GstXImageSink * ximagesink, GstXImage * ximage)
   g_free (ximage);
 }
 
-/* This function puts a GstXImage on a GstXImageSink's window */
+/* This function puts a GstXImageBuffer on a GstXImageSink's window */
 static void
-gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstXImage * ximage)
+gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstXImageBuffer * ximage)
 {
   gint x, y;
   gint w, h;
@@ -887,7 +978,7 @@ gst_ximagesink_imagepool_clear (GstXImageSink * ximagesink)
   g_mutex_lock (ximagesink->pool_lock);
 
   while (ximagesink->image_pool) {
-    GstXImage *ximage = ximagesink->image_pool->data;
+    GstXImageBuffer *ximage = ximagesink->image_pool->data;
 
     ximagesink->image_pool = g_slist_delete_link (ximagesink->image_pool,
         ximagesink->image_pool);
@@ -1133,9 +1224,9 @@ gst_ximagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 
   /* If this buffer has been allocated using our buffer management we simply
      put the ximage which is in the PRIVATE pointer */
-  if (GST_BUFFER_FREE_DATA_FUNC (buf) == gst_ximagesink_buffer_free) {
+  if (GST_IS_XIMAGE_BUFFER (buf)) {
     GST_LOG_OBJECT (ximagesink, "buffer from our pool, writing directly");
-    gst_ximagesink_ximage_put (ximagesink, GST_BUFFER_PRIVATE (buf));
+    gst_ximagesink_ximage_put (ximagesink, GST_XIMAGE_BUFFER (buf));
   } else {
     /* Else we have to copy the data into our private image, */
     /* if we have one... */
@@ -1171,11 +1262,12 @@ gst_ximagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 
 /* Buffer management */
 
+#if 0
 static void
 gst_ximagesink_buffer_free (GstBuffer * buffer)
 {
   GstXImageSink *ximagesink;
-  GstXImage *ximage;
+  GstXImageBuffer *ximage;
 
   ximage = GST_BUFFER_PRIVATE (buffer);
 
@@ -1193,14 +1285,14 @@ gst_ximagesink_buffer_free (GstBuffer * buffer)
     g_mutex_unlock (ximagesink->pool_lock);
   }
 }
+#endif
 
 static GstBuffer *
 gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
     GstCaps * caps)
 {
   GstXImageSink *ximagesink;
-  GstBuffer *buffer;
-  GstXImage *ximage = NULL;
+  GstXImageBuffer *ximage = NULL;
   gboolean not_found = TRUE;
 
   ximagesink = GST_XIMAGESINK (bsink);
@@ -1246,18 +1338,7 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
         GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
   }
 
-  if (ximage) {
-    buffer = gst_buffer_new ();
-
-    /* Storing some pointers in the buffer */
-    GST_BUFFER_PRIVATE (buffer) = ximage;
-
-    GST_BUFFER_DATA (buffer) = (guchar *) ximage->ximage->data;
-    GST_BUFFER_FREE_DATA_FUNC (buffer) = gst_ximagesink_buffer_free;
-    GST_BUFFER_SIZE (buffer) = ximage->size;
-    return buffer;
-  } else
-    return NULL;
+  return GST_BUFFER (ximage);
 }
 
 /* Interfaces stuff */

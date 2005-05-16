@@ -618,7 +618,7 @@ gst_vorbis_tag_chain (GstPad * pad, GstBuffer * buffer)
         7, &vendor);
     const GstTagList *found_tags;
 
-    gst_data_unref (GST_DATA (buffer));
+    gst_buffer_unref (buffer);
     if (list == NULL) {
       GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL),
           ("invalid data in vorbis comments"));
@@ -640,7 +640,7 @@ gst_vorbis_tag_chain (GstPad * pad, GstBuffer * buffer)
   if (tag->output == OUTPUT_DATA) {
     gst_pad_push (tag->srcpad, out);
   } else {
-    gst_data_unref (GST_DATA (out));
+    gst_buffer_unref (out);
   }
   return GST_FLOW_OK;
 }

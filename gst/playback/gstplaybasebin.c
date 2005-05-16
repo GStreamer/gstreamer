@@ -69,7 +69,7 @@ const GList *gst_play_base_bin_get_streaminfo (GstPlayBaseBin * play_base_bin);
 static gboolean prepare_output (GstPlayBaseBin * play_base_bin);
 static void set_active_source (GstPlayBaseBin * play_base_bin,
     GstStreamType type, gint source_num);
-static gboolean probe_triggered (GstProbe * probe, GstData ** data,
+static gboolean probe_triggered (GstProbe * probe, GstMiniObject ** data,
     gpointer user_data);
 static void setup_substreams (GstPlayBaseBin * play_base_bin);
 
@@ -446,7 +446,7 @@ fill_buffer (GstPlayBaseBin * play_base_bin, gint percent)
 }
 
 static gboolean
-check_queue (GstProbe * probe, GstData ** data, gpointer user_data)
+check_queue (GstProbe * probe, GstMiniObject ** data, gpointer user_data)
 {
   GstElement *queue = GST_ELEMENT (user_data);
   GstPlayBaseBin *play_base_bin = g_object_get_data (G_OBJECT (queue), "pbb");
@@ -758,7 +758,7 @@ no_more_pads (GstElement * element, GstPlayBaseBin * play_base_bin)
 }
 
 static gboolean
-probe_triggered (GstProbe * probe, GstData ** data, gpointer user_data)
+probe_triggered (GstProbe * probe, GstMiniObject ** data, gpointer user_data)
 {
   GstPlayBaseGroup *group;
   GstPlayBaseBin *play_base_bin;
@@ -869,7 +869,7 @@ preroll_unlinked (GstPad * pad, GstPad * peerpad,
 /* Mute stream on first data - for header-is-in-stream-stuff
  * (vorbis, ogmtext). */
 static gboolean
-mute_stream (GstProbe * probe, GstData ** d, gpointer data)
+mute_stream (GstProbe * probe, GstMiniObject ** d, gpointer data)
 {
   GstStreamInfo *info = GST_STREAM_INFO (data);
 
@@ -885,7 +885,7 @@ mute_stream (GstProbe * probe, GstData ** d, gpointer data)
 
 /* Eat data. */
 static gboolean
-silence_stream (GstProbe * probe, GstData ** d, gpointer data)
+silence_stream (GstProbe * probe, GstMiniObject ** d, gpointer data)
 {
   /* no data */
   return FALSE;

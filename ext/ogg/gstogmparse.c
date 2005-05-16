@@ -667,7 +667,7 @@ gst_ogm_parse_chain (GstPad * pad, GstBuffer * buffer)
             gint samples = (ogm->hdr.streamtype[0] == 'v') ? 1 : xsize;
 
             if (!keyframe)
-              GST_BUFFER_FLAG_SET (sbuf, GST_BUFFER_DELTA_UNIT);
+              GST_BUFFER_FLAG_SET (sbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
             GST_BUFFER_TIMESTAMP (sbuf) = (GST_SECOND / 10000000) *
                 ogm->next_granulepos * ogm->hdr.time_unit;

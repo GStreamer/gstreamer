@@ -222,7 +222,7 @@ gst_audiofilter_chain (GstPad * pad, GstBuffer * buffer)
   audiofilter->size = GST_BUFFER_SIZE (inbuf);
   audiofilter->n_samples = audiofilter->size / audiofilter->bytes_per_sample;
 
-  if (gst_data_is_writable (GST_DATA (buffer))) {
+  if (gst_buffer_is_writable (buffer)) {
     if (audiofilter_class->filter_inplace) {
       (audiofilter_class->filter_inplace) (audiofilter, inbuf);
       outbuf = inbuf;

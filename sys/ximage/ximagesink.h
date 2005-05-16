@@ -53,7 +53,9 @@ G_BEGIN_DECLS
 
 typedef struct _GstXContext GstXContext;
 typedef struct _GstXWindow GstXWindow;
-typedef struct _GstXImage GstXImage;
+
+typedef struct _GstXImageBuffer GstXImageBuffer;
+typedef struct _GstXImageBufferClass GstXImageBufferClass;
 
 typedef struct _GstXImageSink GstXImageSink;
 typedef struct _GstXImageSinkClass GstXImageSinkClass;
@@ -93,7 +95,9 @@ struct _GstXWindow {
 };
 
 /* XImage stuff */
-struct _GstXImage {
+struct _GstXImageBuffer {
+  GstBuffer buffer;
+
   /* Reference to the ximagesink we belong to */
   GstXImageSink *ximagesink;
 
@@ -114,8 +118,8 @@ struct _GstXImageSink {
 
   GstXContext *xcontext;
   GstXWindow *xwindow;
-  GstXImage *ximage;
-  GstXImage *cur_image;
+  GstXImageBuffer *ximage;
+  GstXImageBuffer *cur_image;
 
   gdouble framerate;
   GMutex *x_lock;

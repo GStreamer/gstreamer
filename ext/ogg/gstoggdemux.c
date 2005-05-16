@@ -274,7 +274,7 @@ gst_ogg_pad_dispose (GObject * object)
   pad->chain = NULL;
   pad->ogg = NULL;
 
-  g_list_foreach (pad->headers, (GFunc) gst_data_unref, NULL);
+  g_list_foreach (pad->headers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (pad->headers);
   pad->headers = NULL;
 

@@ -647,21 +647,20 @@ gst_audio_convert_get_buffer (GstBuffer * buf, guint size)
   g_assert (GST_IS_BUFFER (buf));
 
   GST_LOG
-      ("new buffer of size %u requested. Current is: data: %p - size: %u - maxsize: %u",
-      size, buf->data, buf->size, buf->maxsize);
-  if (buf->maxsize >= size && gst_buffer_is_writable (buf)) {
+      ("new buffer of size %u requested. Current is: data: %p - size: %u",
+      size, buf->data, buf->size);
+  if (buf->size >= size && gst_buffer_is_writable (buf)) {
     gst_buffer_ref (buf);
     buf->size = size;
     GST_LOG
-        ("returning same buffer with adjusted values. data: %p - size: %u - maxsize: %u",
-        buf->data, buf->size, buf->maxsize);
+        ("returning same buffer with adjusted values. data: %p - size: %u",
+        buf->data, buf->size);
     return buf;
   } else {
     ret = gst_buffer_new_and_alloc (size);
     g_assert (ret);
     //gst_buffer_stamp (ret, buf);
-    GST_LOG ("returning new buffer. data: %p - size: %u - maxsize: %u",
-        ret->data, ret->size, ret->maxsize);
+    GST_LOG ("returning new buffer. data: %p - size: %u", ret->data, ret->size);
     return ret;
   }
 }

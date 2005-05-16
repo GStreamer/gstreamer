@@ -634,7 +634,6 @@ theora_handle_comment_packet (GstTheoraDec * dec, ogg_packet * packet)
 
   buf = gst_buffer_new_and_alloc (packet->bytes);
   GST_BUFFER_DATA (buf) = packet->packet;
-  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
 
   list =
       gst_tag_list_from_vorbiscomment_buffer (buf, (guint8 *) "\201theora", 7,
@@ -825,11 +824,11 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
    * offset or size is odd (see above).
    */
   {
-    char *dest_y, *src_y;
-    char *dest_u, *src_u;
-    char *dest_v, *src_v;
+    guint8 *dest_y, *src_y;
+    guint8 *dest_u, *src_u;
+    guint8 *dest_v, *src_v;
 
-    dest_y = (char *) GST_BUFFER_DATA (out);
+    dest_y = (guint8 *) GST_BUFFER_DATA (out);
     dest_u = dest_y + stride_y * height;
     dest_v = dest_u + stride_uv * cheight;
 
