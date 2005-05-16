@@ -167,7 +167,6 @@ gst_dp_header_from_buffer (const GstBuffer * buffer, GstDPHeaderFlag flags,
   guint16 flags_mask;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
-  g_return_val_if_fail (GST_BUFFER_REFCOUNT_VALUE (buffer) > 0, FALSE);
   g_return_val_if_fail (header, FALSE);
 
   *length = GST_DP_HEADER_LENGTH;
@@ -188,9 +187,8 @@ gst_dp_header_from_buffer (const GstBuffer * buffer, GstDPHeaderFlag flags,
 
   /* data flags */
   /* we only copy KEY_UNIT,DELTA_UNIT and IN_CAPS flags */
-  flags_mask = GST_DATA_FLAG_SHIFT (GST_BUFFER_PREROLL) |
-      GST_DATA_FLAG_SHIFT (GST_BUFFER_IN_CAPS) |
-      GST_DATA_FLAG_SHIFT (GST_BUFFER_DELTA_UNIT);
+  flags_mask = GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_IN_CAPS |
+      GST_BUFFER_FLAG_DELTA_UNIT;
 
   GST_WRITE_UINT16_BE (h + 40, GST_BUFFER_FLAGS (buffer) & flags_mask);
 
