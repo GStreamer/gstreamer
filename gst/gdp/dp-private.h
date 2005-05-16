@@ -23,7 +23,6 @@
 #ifndef __GST_DP_PRIVATE_H__
 #define __GST_DP_PRIVATE_H__
 
-#include <gst/gstdata.h>
 #include <gst/gstbuffer.h>
 #include <gst/gstevent.h>
 #include <gst/gstcaps.h>
