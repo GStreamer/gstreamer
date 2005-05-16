@@ -1,5 +1,10 @@
 2005-05-16  David Schleef  <ds@schleef.org>
 
+	* gst/playback/gststreaminfo.c: (cb_probe): Port from GstData
+	to GstMiniObject.
+
+2005-05-16  David Schleef  <ds@schleef.org>
+
 	Port from GstData to GstMiniObject.
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_dispose):
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_buffer_from_page),

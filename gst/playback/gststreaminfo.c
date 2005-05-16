@@ -173,7 +173,7 @@ gst_stream_info_init (GstStreamInfo * stream_info)
 }
 
 static gboolean
-cb_probe (GstProbe * probe, GstData ** data, gpointer user_data)
+cb_probe (GstProbe * probe, GstMiniObject ** data, gpointer user_data)
 {
   GstStreamInfo *info = user_data;
 
