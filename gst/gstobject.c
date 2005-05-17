@@ -218,14 +218,14 @@ gst_object_constructor (GType type, guint n_construct_properties,
  * Returns: A pointer to the object
  */
 GstObject *
-gst_object_ref (GstObject * object)
+gst_object_ref (gpointer object)
 {
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "ref %d->%d",
       G_OBJECT (object)->ref_count, G_OBJECT (object)->ref_count + 1);
 
-  g_object_ref (G_OBJECT (object));
+  g_object_ref (object);
   return object;
 }
 
@@ -237,7 +237,7 @@ gst_object_ref (GstObject * object)
  * zero, destroy the object.
  */
 void
-gst_object_unref (GstObject * object)
+gst_object_unref (gpointer object)
 {
   g_return_if_fail (GST_IS_OBJECT (object));
   g_return_if_fail (G_OBJECT (object)->ref_count > 0);
@@ -245,7 +245,7 @@ gst_object_unref (GstObject * object)
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unref %d->%d",
       G_OBJECT (object)->ref_count, G_OBJECT (object)->ref_count - 1);
 
-  g_object_unref (G_OBJECT (object));
+  g_object_unref (object);
 }
 
 /**

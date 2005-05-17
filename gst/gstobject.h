@@ -139,8 +139,8 @@ void		gst_object_restore_thyself	(GstObject *object, xmlNodePtr self);
 #endif
 
 /* refcounting + life cycle */
-GstObject *	gst_object_ref			(GstObject *object);
-void 		gst_object_unref		(GstObject *object);
+GstObject *	gst_object_ref			(gpointer object);
+void 		gst_object_unref		(gpointer object);
 void 		gst_object_sink			(GstObject *object);
 
 /* replace object pointer */

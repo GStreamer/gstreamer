@@ -1,3 +1,10 @@
+2005-05-17  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstobject.c: (gst_object_ref), (gst_object_unref):
+	* gst/gstobject.h:
+	  s/GstObject */gpointer/ for the arguments of those 2 functions.
+	  Mimicing GObject here.
+
 2005-05-16  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/Makefile.am:
