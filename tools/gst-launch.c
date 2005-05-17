@@ -391,13 +391,15 @@ event_loop (GstElement * pipeline, gboolean blocking)
         GstElementState old, new;
 
         gst_message_parse_state_changed (message, &old, &new);
-        gst_message_unref (message);
-        if (!(old == GST_STATE_PLAYING && new == GST_STATE_PAUSED))
+        if (!(old == GST_STATE_PLAYING && new == GST_STATE_PAUSED)) {
+          gst_message_unref (message);
           break;
+        }
         g_print (_
             ("Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"),
             GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))));
         /* cut out of the event loop if check_intr set us to PAUSED */
+        gst_message_unref (message);
         return FALSE;
       }
       default:

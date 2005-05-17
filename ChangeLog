@@ -1,3 +1,8 @@
+2005-05-17  Wim Taymans  <wim@fluendo.com>
+
+	* tools/gst-launch.c: (event_loop):
+	Message was unreffed too soon.
+
 2005-05-16  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstbin.c (sink_iterator_filter): Err... um...
