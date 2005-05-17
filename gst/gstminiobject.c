@@ -46,7 +46,7 @@ static gchar *gst_value_mini_object_lcopy (const GValue * value,
 GType
 gst_mini_object_get_type (void)
 {
-  static GType _gst_mini_object_type;
+  static GType _gst_mini_object_type = 0;
 
   if (!_gst_mini_object_type) {
     GTypeValueTable value_table = {
@@ -178,7 +178,10 @@ gst_mini_object_free (GstMiniObject * mini_object)
   mo_class = GST_MINI_OBJECT_GET_CLASS (mini_object);
   mo_class->finalize (mini_object);
 
-  g_type_free_instance ((GTypeInstance *) mini_object);
+  /* if the refcount is still 0 we can really free the
+   * object, else the finalize method recycled the object */
+  if (g_atomic_int_get (&mini_object->refcount) == 0)
+    g_type_free_instance ((GTypeInstance *) mini_object);
 }
 
 void

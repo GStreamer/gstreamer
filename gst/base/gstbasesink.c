@@ -446,13 +446,13 @@ gst_basesink_finish_preroll (GstBaseSink * basesink, GstPad * pad,
   gst_element_commit_state (GST_ELEMENT (basesink));
   GST_STATE_UNLOCK (basesink);
 
-  gst_basesink_preroll_queue_push (basesink, pad, buffer);
-
   GST_LOCK (pad);
   usable = !GST_RPAD_IS_FLUSHING (pad) && GST_RPAD_IS_ACTIVE (pad);
   GST_UNLOCK (pad);
   if (!usable)
     goto unusable;
+
+  gst_basesink_preroll_queue_push (basesink, pad, buffer);
 
   if (basesink->need_preroll)
     goto still_queueing;
@@ -695,6 +695,7 @@ gst_basesink_chain_unlocked (GstPad * pad, GstBuffer * buf)
     case PREROLL_PLAYING:
       return gst_basesink_handle_buffer (basesink, buf);
     case PREROLL_FLUSHING:
+      gst_buffer_unref (buf);
       return GST_FLOW_UNEXPECTED;
     default:
       g_assert_not_reached ();

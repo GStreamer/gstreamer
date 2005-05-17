@@ -2902,6 +2902,7 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   /* ERROR recovery here */
 not_linked:
   {
+    gst_buffer_unref (buffer);
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pushing, but it was not linked");
     GST_UNLOCK (pad);
@@ -2909,6 +2910,7 @@ not_linked:
   }
 not_active:
   {
+    gst_buffer_unref (buffer);
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pushing, but it was inactive");
     GST_UNLOCK (pad);
@@ -2916,6 +2918,7 @@ not_active:
   }
 flushing:
   {
+    gst_buffer_unref (buffer);
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pushing, but pad was flushing");
     GST_UNLOCK (pad);
@@ -2923,12 +2926,14 @@ flushing:
   }
 not_negotiated:
   {
+    gst_buffer_unref (buffer);
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pushing buffer but peer did not accept");
     return GST_FLOW_NOT_NEGOTIATED;
   }
 no_function:
   {
+    gst_buffer_unref (buffer);
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pushing, but not chainhandler");
     GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
@@ -3132,6 +3137,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   /* ERROR handling */
 not_linked:
   {
+    gst_event_unref (event);
     GST_UNLOCK (pad);
     return FALSE;
   }

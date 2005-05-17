@@ -906,11 +906,11 @@ gst_queue_change_state (GstElement * element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
+      break;
+    case GST_STATE_READY_TO_PAUSED:
       GST_QUEUE_MUTEX_LOCK;
       gst_queue_locked_flush (queue);
       GST_QUEUE_MUTEX_UNLOCK;
-      break;
-    case GST_STATE_READY_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
