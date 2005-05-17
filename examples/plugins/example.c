@@ -76,7 +76,7 @@ GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 
-/* A number of functon prototypes are given so we can refer to them later. */
+/* A number of function prototypes are given so we can refer to them later. */
 static void gst_example_class_init (GstExampleClass * klass);
 static void gst_example_init (GstExample * example);
 
@@ -120,7 +120,6 @@ gst_example_get_type (void)
       0,
       (GInstanceInitFunc) gst_example_init,
     };
-
     example_type =
         g_type_register_static (GST_TYPE_ELEMENT, "GstExample", &example_info,
         0);
@@ -155,7 +154,7 @@ gst_example_class_init (GstExampleClass * klass)
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ACTIVE, g_param_spec_int ("active", "active", "active", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
 
-  /* Here we add a signal to the object. This is avery useless signal
+  /* Here we add a signal to the object. This is a very useless signal
    * called asdf. The signal will also pass a pointer to the listeners
    * which happens to be the example element itself */
   gst_example_signals[ASDF] =
@@ -238,7 +237,7 @@ gst_example_chain (GstPad * pad, GstData * _data)
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
 
-  /* We need to get a pointer to the element this pad belogs to. */
+  /* We need to get a pointer to the element this pad belongs to. */
   example = GST_EXAMPLE (gst_pad_get_parent (pad));
 
   /* A few more sanity checks to make sure that the element that owns
@@ -249,7 +248,7 @@ gst_example_chain (GstPad * pad, GstData * _data)
 
   /* If we are supposed to be doing something, here's where it happens. */
   if (example->active) {
-    /* In this example we're going to copy the buffer to another one, 
+    /* In this example we're going to copy the buffer to another one,
      * so we need to allocate a new buffer first. */
     outbuf = gst_buffer_new ();
 
@@ -283,8 +282,8 @@ gst_example_chain (GstPad * pad, GstData * _data)
   }
 }
 
-/* Arguments are part of the Gtk+ object system, and these functions
- * enable the element to respond to various arguments.
+/* Properties are part of the GLib+ object system, and these functions
+ * enable the element to respond to various properties.
  */
 static void
 gst_example_set_property (GObject * object, guint prop_id, const GValue * value,
@@ -292,7 +291,6 @@ gst_example_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstExample *example;
 
-  /* It's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_EXAMPLE (object));
 
   /* Get a pointer of the right type. */
@@ -321,8 +319,8 @@ gst_example_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstExample *example;
 
-  /* It's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_EXAMPLE (object));
+
   example = GST_EXAMPLE (object);
 
   switch (prop_id) {
@@ -352,11 +350,9 @@ gst_example_change_state (GstElement * element)
    * of the element */
   switch (GST_STATE_TRANSITION (element)) {
       /* The NULL to READY transition is used to
-       * create threads (if any) */
+       * create threads (if any), and/or open devices */
     case GST_STATE_NULL_TO_READY:
       break;
-      /* In the READY to PAUSED state, the element should
-       * open devices (if any) */
     case GST_STATE_READY_TO_PAUSED:
       break;
       /* In the PAUSED to PLAYING state, the element should
@@ -388,8 +384,8 @@ gst_example_change_state (GstElement * element)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  /* We need to register each element we provide with the plugin. This consists 
-   * of the name of the element, a rank that gives the importance of the element 
+  /* We need to register each element we provide with the plugin. This consists
+   * of the name of the element, a rank that gives the importance of the element
    * when compared to similar plugins and the GType identifier.
    */
   if (!gst_element_register (plugin, "example", GST_RANK_MARGINAL,
@@ -419,7 +415,7 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,   /* The major version of the core that th
     "an example plugin",        /* a short description of the plugin in English */
     plugin_init,                /* Pointer to the initialisation function for the plugin. */
     "0.1",                      /* The version number of the plugin */
-    "LGPL",                     /* ieffective license the plugin can be shipped with. Must be 
+    "LGPL",                     /* effective license the plugin can be shipped with. Must be
                                  * valid for all libraries it links to, too. */
     "my nifty plugin package",
     /* package this plugin belongs to. */

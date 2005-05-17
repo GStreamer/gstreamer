@@ -119,7 +119,7 @@
     </para>
     <para>
       The default &GStreamer; scheduler, <quote>opt</quote>, uses a concept
-      of chains and groups. A group is a series of elements that can that
+      of chains and groups. A group is a series of elements that
       do not require any context switches or intermediate data stores to
       be executed. In practice, this implies zero or one loop-based elements,
       one get-based element (at the beginning) and an infinite amount of

@@ -457,7 +457,7 @@ gst_my_filter_tuner_interface_init (GstTunerClass *iface)
       enumeration lists and probing. Firstly, enumerations only allow strings
       as values; property probing works for any value type. Secondly, the
       contents of a probed list of allowed values may change during the life
-      of an element. The contents of a enumeraiton list are static. Crrently,
+      of an element. The contents of an enumeration list are static. Currently,
       property probing is being used for detection of devices (e.g. for OSS
       elements, Video4linux elements, etc.). It could - in theory - be used
       for any property, though.

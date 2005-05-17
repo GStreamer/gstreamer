@@ -11,7 +11,7 @@
     <title> Types of time </title>
 
     <para>
-      There are kinds of time in GStreamer. <emphasis
+      There are two kinds of time in GStreamer. <emphasis
 	role="strong">Clock time</emphasis> is an absolute time. By contrast,
       <emphasis role="strong">element time</emphasis> is the relative time,
       usually to the start of the current media stream. The element time
@@ -99,10 +99,11 @@
       <title>Source elements </title>
       <para>
 	Source elements (or parsers of formats that provide notion of time, such
-	as MPEG, as explained above). must place a timestamp in each buffer that
-	they deliver. The origin of the time used is arbitrary, but it must match
-	the time delivered in the discontinous event (see bellow). However, it is 
-	expected that the origin is the origin of the media stream.
+	as MPEG, as explained above) must place a timestamp in each buffer that
+	they deliver. The origin of the time used is arbitrary, but it must
+	match the time delivered in the discontinous event (see below).
+	However, it is expected that the origin is the origin of the media
+	stream.
       </para>
       <para>
 	In order to initialize the element time of the rest of the pipeline, a

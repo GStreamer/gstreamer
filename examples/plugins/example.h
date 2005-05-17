@@ -56,7 +56,7 @@ struct _GstExampleClass {
   void (*asdf) (GstElement *element, GstExample *example);
 };
 
-/* Five standard preprocessing macros are used in the Gtk+ object system.
+/* Five standard preprocessing macros are used in the GLib object system.
  * The first uses the object's _get_type function to return the GType
  * of the object.
  */

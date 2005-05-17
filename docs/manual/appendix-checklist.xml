@@ -152,7 +152,7 @@
       <para>
         <command>gst-inspect</command> can be used to inspect all properties,
         signals, dynamic parameters and the object hierarchy of an element.
-        This acn be very useful to see which <classname>GObject</classname>
+        This can be very useful to see which <classname>GObject</classname>
         properties or which signals (and using what arguments) an element
         supports. Run <command>gst-inspect fakesrc</command> to get an idea
         of what it does. See the manual page of <command>gst-inspect</command>
