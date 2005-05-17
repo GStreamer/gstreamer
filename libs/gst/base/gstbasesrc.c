@@ -803,7 +803,8 @@ gst_basesrc_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
-      result = gst_basesrc_stop (basesrc);
+      if (!gst_basesrc_stop (basesrc))
+        result = GST_STATE_FAILURE;
       break;
     case GST_STATE_READY_TO_NULL:
       break;
