@@ -379,6 +379,7 @@ parse_subrip (ParserState * state, const gchar * line)
       return NULL;
     default:
       g_assert_not_reached ();
+      return NULL;
   }
 }
 
@@ -412,6 +413,7 @@ parse_mpsub (ParserState * state, const gchar * line)
       return NULL;
     default:
       g_assert_not_reached ();
+      return NULL;
   }
 }
 
