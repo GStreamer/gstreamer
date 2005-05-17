@@ -1,3 +1,11 @@
+2005-05-17  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstpad.c: (gst_pad_accept_caps), (gst_pad_set_caps),
+	(gst_pad_alloc_buffer), (gst_pad_query), (gst_pad_push):
+	* gst/gstqueue.c: (gst_queue_change_state):
+	Clear queue when going to READY.
+	Remove IN_SETCAPS flag too.
+
 2005-05-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gstbasesrc.c: (gst_basesrc_change_state):

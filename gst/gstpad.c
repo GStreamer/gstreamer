@@ -1893,6 +1893,7 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
       if (!setcaps (pad, caps))
         goto could_not_set;
       GST_LOCK (pad);
+      GST_FLAG_UNSET (pad, GST_PAD_IN_SETCAPS);
     } else {
       GST_CAT_DEBUG (GST_CAT_CAPS, "pad %s:%s was dispatching",
           GST_DEBUG_PAD_NAME (pad));
@@ -2263,6 +2264,7 @@ do_caps:
   caps_changed = caps && caps != GST_RPAD_CAPS (pad);
   /* we got a new datatype on the pad, see if it can handle it */
   if (G_UNLIKELY (caps_changed)) {
+    GST_DEBUG ("caps changed to %" GST_PTR_FORMAT, caps);
     if (G_UNLIKELY (!gst_pad_configure_src (GST_PAD_CAST (pad), caps)))
       goto not_negotiated;
   }
@@ -2872,9 +2874,9 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   /* FIXME, move capnego this into a base class? */
   caps = GST_BUFFER_CAPS (buffer);
   caps_changed = caps && caps != GST_RPAD_CAPS (peer);
-  GST_DEBUG ("caps changed %d %" GST_PTR_FORMAT, caps_changed, caps);
   /* we got a new datatype on the peer pad, see if it can handle it */
   if (G_UNLIKELY (caps_changed)) {
+    GST_DEBUG ("caps changed to %" GST_PTR_FORMAT, caps);
     if (G_UNLIKELY (!gst_pad_configure_sink (GST_PAD_CAST (peer), caps)))
       goto not_negotiated;
   }
