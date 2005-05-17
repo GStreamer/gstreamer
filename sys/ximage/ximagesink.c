@@ -349,6 +349,10 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, gint width, gint height)
     XSync (ximagesink->xcontext->disp, FALSE);
   }
   succeeded = TRUE;
+
+  GST_BUFFER_DATA (ximage) = (guchar *) ximage->ximage->data;
+  GST_BUFFER_SIZE (ximage) = ximage->size;
+
   g_mutex_unlock (ximagesink->x_lock);
 
 beach:
