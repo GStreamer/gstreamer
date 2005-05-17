@@ -191,12 +191,6 @@ gst_cacasink_setcaps (GstBaseSink * basesink, GstCaps * caps)
 
   cacasink = GST_CACASINK (basesink);
 
-  /* We cannot use library functions if the sink is not open */
-  if (!GST_FLAG_IS_SET (GST_ELEMENT (cacasink), GST_CACASINK_OPEN))
-    return FALSE;
-  /*if (!GST_CAPS_IS_FIXED (caps))
-     return FALSE; */
-
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "width", &(cacasink->width));
   gst_structure_get_int (structure, "height", &(cacasink->height));
@@ -260,10 +254,6 @@ static GstFlowReturn
 gst_cacasink_render (GstBaseSink * basesink, GstBuffer * buffer)
 {
   GstCACASink *cacasink = GST_CACASINK (basesink);
-
-  /* We cannot use library functions if the sink is not open */
-  if (!GST_FLAG_IS_SET (GST_ELEMENT (cacasink), GST_CACASINK_OPEN))
-    return GST_FLOW_WRONG_STATE;
 
   GST_DEBUG ("render");
 
@@ -344,8 +334,6 @@ gst_cacasink_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 gst_cacasink_open (GstCACASink * cacasink)
 {
-  g_return_val_if_fail (!GST_FLAG_IS_SET (cacasink, GST_CACASINK_OPEN), FALSE);
-
   cacasink->bitmap = NULL;
   caca_init ();
 
@@ -356,45 +344,46 @@ gst_cacasink_open (GstCACASink * cacasink)
   cacasink->dither = 0;
   caca_set_dithering (CACA_DITHERING_NONE);
 
-
-  GST_FLAG_SET (cacasink, GST_CACASINK_OPEN);
-
   return TRUE;
 }
 
 static void
 gst_cacasink_close (GstCACASink * cacasink)
 {
-  g_return_if_fail (GST_FLAG_IS_SET (cacasink, GST_CACASINK_OPEN));
-
   if (cacasink->bitmap) {
     caca_free_bitmap (cacasink->bitmap);
     cacasink->bitmap = NULL;
   }
   caca_end ();
-
-  GST_FLAG_UNSET (cacasink, GST_CACASINK_OPEN);
 }
 
 static GstElementStateReturn
 gst_cacasink_change_state (GstElement * element)
 {
-  g_return_val_if_fail (GST_IS_CACASINK (element), GST_STATE_FAILURE);
+  GstElementStateReturn ret;
+  gint transition;
 
-  if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
-    if (GST_FLAG_IS_SET (element, GST_CACASINK_OPEN))
-      gst_cacasink_close (GST_CACASINK (element));
-  } else {
-    if (!GST_FLAG_IS_SET (element, GST_CACASINK_OPEN)) {
+  transition = GST_STATE_TRANSITION (element);
+
+  switch (transition) {
+    case GST_STATE_READY_TO_PAUSED:
       if (!gst_cacasink_open (GST_CACASINK (element)))
         return GST_STATE_FAILURE;
-    }
+      break;
+    default:
+      break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
-  return GST_STATE_SUCCESS;
+  switch (transition) {
+    case GST_STATE_PAUSED_TO_READY:
+      gst_cacasink_close (GST_CACASINK (element));
+      break;
+    default:
+      break;
+  }
+  return ret;
 }
 
 static gboolean

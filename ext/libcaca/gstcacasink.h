@@ -53,12 +53,6 @@ extern "C" {
 #define GST_IS_CACASINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CACASINK))
 
-typedef enum {
-  GST_CACASINK_OPEN              = GST_ELEMENT_FLAG_LAST,
-
-  GST_CACASINK_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
-} GstCACASinkFlags;
-
 typedef struct _GstCACASink GstCACASink;
 typedef struct _GstCACASinkClass GstCACASinkClass;
 
