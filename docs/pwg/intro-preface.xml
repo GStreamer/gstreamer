@@ -180,7 +180,7 @@
           The last chapter, <xref linkend="chapter-advanced-events"/>, will
           discuss the concept of events in &GStreamer;. Events are, on the
           one hand, another way of doing application-element interaction. It
-          atkes care of seeking, for example. On the other hand, it is also
+          takes care of seeking, for example. On the other hand, it is also
           a way in which elements interact with each other, such as letting
           each other know about media stream discontinuities, forwarding tags
           inside a pipeline and so on.

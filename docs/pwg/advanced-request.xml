@@ -6,7 +6,7 @@
     the application requests the pad. The first is called a
     <emphasis>sometimes</emphasis>; the second is called a
     <emphasis>request</emphasis> pad. The availability of a pad (always,
-    sometimes or request) can be seen in a pad's template. This chapted will
+    sometimes or request) can be seen in a pad's template. This chapter will
     discuss when each of the two is useful, how they are created and when
     they should be disposed.
   </para>
