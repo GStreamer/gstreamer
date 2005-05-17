@@ -1,3 +1,11 @@
+2005-05-17  Wim Taymans  <wim@fluendo.com>
+
+	* ext/libcaca/gstcacasink.c: (gst_cacasink_setcaps),
+	(gst_cacasink_render), (gst_cacasink_open), (gst_cacasink_close),
+	(gst_cacasink_change_state):
+	* ext/libcaca/gstcacasink.h:
+	Cleanups.
+
 2005-05-15  David Schleef  <ds@schleef.org>
 
 	Move core plugins out of core.  I don't mind fdsrc/fdsink
