@@ -103,16 +103,13 @@ static gboolean error_caught = FALSE;
 
 /* This function destroys a GstXvImage handling XShm availability */
 static void
-gst_xvimage_buffer_finalize (GstXvImageBuffer * xvimage)
+gst_xvimage_buffer_destroy (GstXvImageBuffer * xvimage)
 {
   GstXvImageSink *xvimagesink;
 
-  g_return_if_fail (xvimage != NULL);
-
-  if (xvimage->xvimagesink == NULL)
-    return;
-
   xvimagesink = xvimage->xvimagesink;
+  if (xvimagesink == NULL)
+    goto no_sink;
 
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
 
@@ -147,8 +144,59 @@ gst_xvimage_buffer_finalize (GstXvImageBuffer * xvimage)
   XSync (xvimagesink->xcontext->disp, FALSE);
 
   g_mutex_unlock (xvimagesink->x_lock);
+
+  return;
+
+no_sink:
+  {
+    GST_WARNING ("no sink found");
+    return;
+  }
 }
 
+static void
+gst_xvimage_buffer_finalize (GstXvImageBuffer * xvimage)
+{
+  GstXvImageSink *xvimagesink;
+
+  xvimagesink = xvimage->xvimagesink;
+  if (xvimagesink == NULL)
+    goto no_sink;
+
+  /* If our geometry changed we can't reuse that image. */
+  if ((xvimage->width != xvimagesink->video_width) ||
+      (xvimage->height != xvimagesink->video_height)) {
+    GST_DEBUG ("destroy image as its size changed %dx%d vs current %dx%d",
+        xvimage->width, xvimage->height,
+        xvimagesink->video_width, xvimagesink->video_height);
+    gst_xvimage_buffer_destroy (xvimage);
+  } else {
+    /* In that case we can reuse the image and add it to our image pool. */
+    GST_DEBUG ("recycling image in pool");
+    /* need to increment the refcount again to recycle */
+    gst_buffer_ref (GST_BUFFER (xvimage));
+    g_mutex_lock (xvimagesink->pool_lock);
+    xvimagesink->image_pool = g_slist_prepend (xvimagesink->image_pool,
+        xvimage);
+    g_mutex_unlock (xvimagesink->pool_lock);
+  }
+  return;
+
+no_sink:
+  {
+    GST_WARNING ("no sink found");
+    return;
+  }
+}
+
+static void
+gst_xvimage_buffer_free (GstXvImageBuffer * xvimage)
+{
+  /* make sure it is not recycled */
+  xvimage->width = -1;
+  xvimage->height = -1;
+  gst_buffer_unref (GST_BUFFER (xvimage));
+}
 
 static void
 gst_xvimage_buffer_init (GTypeInstance * instance, gpointer g_class)
@@ -270,7 +318,7 @@ gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
 
 beach:
   XSetErrorHandler (handler);
-  gst_buffer_unref (GST_BUFFER (xvimage));
+  gst_xvimage_buffer_free (xvimage);
   XSync (xcontext->disp, FALSE);
   return result;
 #endif /* HAVE_XSHM */
@@ -363,7 +411,7 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink,
 
 beach:
   if (!succeeded) {
-    gst_buffer_unref (GST_BUFFER (xvimage));
+    gst_xvimage_buffer_free (xvimage);
     xvimage = NULL;
   }
 
@@ -1164,7 +1212,7 @@ gst_xvimagesink_imagepool_clear (GstXvImageSink * xvimagesink)
 
     xvimagesink->image_pool = g_slist_delete_link (xvimagesink->image_pool,
         xvimagesink->image_pool);
-    gst_buffer_unref (GST_BUFFER (xvimage));
+    gst_xvimage_buffer_free (xvimage);
   }
 
   g_mutex_unlock (xvimagesink->pool_lock);
@@ -1363,7 +1411,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
         GST_FOURCC_ARGS (xvimagesink->xcontext->im_format),
         GST_FOURCC_ARGS (im_format));
     GST_DEBUG_OBJECT (xvimagesink, "renewing xvimage");
-    gst_buffer_unref (GST_BUFFER (xvimagesink->xvimage));
+    gst_xvimage_buffer_free (xvimagesink->xvimage);
     xvimagesink->xvimage = NULL;
   }
 
@@ -1415,7 +1463,7 @@ gst_xvimagesink_change_state (GstElement * element)
       break;
     case GST_STATE_READY_TO_NULL:
       if (xvimagesink->xvimage) {
-        gst_buffer_unref (GST_BUFFER (xvimagesink->xvimage));
+        gst_xvimage_buffer_free (xvimagesink->xvimage);
         xvimagesink->xvimage = NULL;
       }
 
@@ -1467,32 +1515,42 @@ gst_xvimagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
   /* If this buffer has been allocated using our buffer management we simply
      put the ximage which is in the PRIVATE pointer */
   if (GST_IS_XVIMAGE_BUFFER (buf)) {
+    GST_DEBUG ("fast put of bufferpool buffer");
     gst_xvimagesink_xvimage_put (xvimagesink, GST_XVIMAGE_BUFFER (buf));
   } else {
+    GST_DEBUG ("slow copy into bufferpool buffer");
     /* Else we have to copy the data into our private image, */
     /* if we have one... */
     if (!xvimagesink->xvimage) {
       GST_DEBUG_OBJECT (xvimagesink, "creating our xvimage");
+
       xvimagesink->xvimage = gst_xvimagesink_xvimage_new (xvimagesink,
           xvimagesink->video_width, xvimagesink->video_height);
-      if (!xvimagesink->xvimage) {
-        /* No image available. That's very bad ! */
-        gst_buffer_unref (buf);
-        GST_ELEMENT_ERROR (xvimagesink, CORE, NEGOTIATION, (NULL),
-            ("Failed creating an XvImage in xvimagesink chain function."));
-        return GST_FLOW_ERROR;
-      }
+
+      if (!xvimagesink->xvimage)
+        goto no_image;
     }
 
     memcpy (xvimagesink->xvimage->xvimage->data,
         GST_BUFFER_DATA (buf),
         MIN (GST_BUFFER_SIZE (buf), xvimagesink->xvimage->size));
+
     gst_xvimagesink_xvimage_put (xvimagesink, xvimagesink->xvimage);
   }
 
   gst_xvimagesink_handle_xevents (xvimagesink, GST_VIDEOSINK_PAD (xvimagesink));
 
   return GST_FLOW_OK;
+
+  /* ERRORS */
+no_image:
+  {
+    /* No image available. That's very bad ! */
+    gst_buffer_unref (buf);
+    GST_ELEMENT_ERROR (xvimagesink, CORE, NEGOTIATION, (NULL),
+        ("Failed creating an XvImage in xvimagesink chain function."));
+    return GST_FLOW_ERROR;
+  }
 }
 
 /* Buffer management */
@@ -1501,25 +1559,6 @@ gst_xvimagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 static void
 gst_xvimagesink_buffer_free (GstBuffer * buffer)
 {
-  GstXvImageSink *xvimagesink;
-  GstXvImageBuffer *xvimage;
-
-  xvimage = GST_BUFFER_PRIVATE (buffer);
-
-  g_assert (GST_IS_XVIMAGESINK (xvimage->xvimagesink));
-  xvimagesink = xvimage->xvimagesink;
-
-  /* If our geometry changed we can't reuse that image. */
-  if ((xvimage->width != GST_VIDEOSINK_WIDTH (xvimagesink)) ||
-      (xvimage->height != GST_VIDEOSINK_HEIGHT (xvimagesink)))
-    gst_xvimagesink_xvimage_destroy (xvimagesink, xvimage);
-  else {
-    /* In that case we can reuse the image and add it to our image pool. */
-    g_mutex_lock (xvimagesink->pool_lock);
-    xvimagesink->image_pool = g_slist_prepend (xvimagesink->image_pool,
-        xvimage);
-    g_mutex_unlock (xvimagesink->pool_lock);
-  }
 }
 #endif
 
@@ -1553,14 +1592,15 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
           xvimagesink->image_pool);
 
       /* We check for geometry or image format changes */
-      if ((xvimage->width != GST_VIDEOSINK_WIDTH (xvimagesink)) ||
-          (xvimage->height != GST_VIDEOSINK_HEIGHT (xvimagesink)) ||
+      if ((xvimage->width != xvimagesink->video_width) ||
+          (xvimage->height != xvimagesink->video_height) ||
           (xvimage->im_format != xvimagesink->xcontext->im_format)) {
         /* This image is unusable. Destroying... */
-        gst_buffer_unref (GST_BUFFER (xvimage));
+        gst_xvimage_buffer_free (xvimage);
         xvimage = NULL;
       } else {
         /* We found a suitable image */
+        GST_DEBUG_OBJECT (xvimagesink, "found usable image in pool");
         break;
       }
     }
@@ -1707,7 +1747,7 @@ gst_xvimagesink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
 
   /* Clear the xvimage */
   if (xvimagesink->xvimage) {
-    gst_buffer_unref (GST_BUFFER (xvimagesink->xvimage));
+    gst_xvimage_buffer_free (xvimagesink->xvimage);
     xvimagesink->xvimage = NULL;
   }
 

@@ -512,6 +512,8 @@ gst_ogg_pad_internal_chain (GstPad * pad, GstBuffer * buffer)
   if (oggpad->start_time == -1)
     oggpad->start_time = timestamp;
 
+  gst_buffer_unref (buffer);
+
   return GST_FLOW_OK;
 }
 
@@ -981,6 +983,7 @@ gst_ogg_demux_submit_buffer (GstOggDemux * ogg, GstBuffer * buffer)
   oggbuffer = ogg_sync_buffer (&ogg->sync, size);
   memcpy (oggbuffer, data, size);
   ogg_sync_wrote (&ogg->sync, size);
+  gst_buffer_unref (buffer);
 
   return size;
 }
@@ -1019,7 +1022,6 @@ gst_ogg_demux_get_data (GstOggDemux * ogg)
     return -1;
 
   size = gst_ogg_demux_submit_buffer (ogg, buffer);
-  gst_buffer_unref (buffer);
 
   return size;
 }
@@ -1862,7 +1864,6 @@ gst_ogg_demux_chain_unlocked (GstPad * pad, GstBuffer * buffer)
       }
     }
   }
-  gst_buffer_unref (buffer);
 
   return result;
 }

@@ -98,6 +98,8 @@ static void gst_ffmpegcsp_set_property (GObject * object,
 static void gst_ffmpegcsp_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
+static GstBuffer *gst_ffmpegcsp_bufferalloc (GstPad * pad, guint64 offset,
+    guint size, GstCaps * caps);
 static GstFlowReturn gst_ffmpegcsp_chain (GstPad * pad, GstBuffer * buffer);
 static GstElementStateReturn gst_ffmpegcsp_change_state (GstElement * element);
 
@@ -247,15 +249,17 @@ gst_ffmpegcsp_setcaps (GstPad * pad, GstCaps * caps)
   par = gst_structure_get_value (structure, "pixel-aspect-ratio");
 
   if (!gst_ffmpegcsp_configure_context (pad, caps, width, height))
-    goto configure_error;
+    goto configure_error_source;
 
-  *prefered = caps;
+  gst_caps_replace (prefered, caps);
 
   otherpeer = gst_pad_get_peer (otherpad);
   if (otherpeer) {
     /* check passthrough */
     if (gst_pad_accept_caps (otherpeer, caps)) {
-      *other_prefered = gst_caps_ref (caps);
+      if (!gst_ffmpegcsp_configure_context (otherpad, caps, width, height))
+        goto configure_error_target;
+      gst_caps_replace (other_prefered, caps);
     } else {
       GstCaps *othercaps;
 
@@ -277,7 +281,13 @@ gst_ffmpegcsp_setcaps (GstPad * pad, GstCaps * caps)
               gst_value_get_fraction_numerator (par),
               gst_value_get_fraction_denominator (par), NULL);
         }
-        *other_prefered = targetcaps;
+        if (!gst_ffmpegcsp_configure_context (otherpad, targetcaps, width,
+                height)) {
+          gst_caps_unref (targetcaps);
+          goto configure_error_target;
+        }
+        gst_caps_replace (other_prefered, targetcaps);
+        gst_caps_unref (targetcaps);
       }
     }
     gst_object_unref (GST_OBJECT (otherpeer));
@@ -288,9 +298,15 @@ gst_ffmpegcsp_setcaps (GstPad * pad, GstCaps * caps)
 
   return TRUE;
 
-configure_error:
+configure_error_source:
   {
-    GST_DEBUG ("could not configure context");
+    GST_DEBUG ("could not configure context for source");
+    return FALSE;
+  }
+configure_error_target:
+  {
+    gst_object_unref (GST_OBJECT (otherpeer));
+    GST_DEBUG ("could not configure context for target");
     return FALSE;
   }
 }
@@ -357,6 +373,7 @@ gst_ffmpegcsp_init (GstFFMpegCsp * space)
   gst_pad_set_getcaps_function (space->sinkpad, gst_ffmpegcsp_getcaps);
   gst_pad_set_setcaps_function (space->sinkpad, gst_ffmpegcsp_setcaps);
   gst_pad_set_chain_function (space->sinkpad, gst_ffmpegcsp_chain);
+  gst_pad_set_bufferalloc_function (space->sinkpad, gst_ffmpegcsp_bufferalloc);
   gst_element_add_pad (GST_ELEMENT (space), space->sinkpad);
 
   space->srcpad = gst_pad_new_from_template (srctempl, "src");
@@ -368,83 +385,126 @@ gst_ffmpegcsp_init (GstFFMpegCsp * space)
   space->palette = NULL;
 }
 
-static GstFlowReturn
-gst_ffmpegcsp_chain (GstPad * pad, GstBuffer * buffer)
+static GstBuffer *
+gst_ffmpegcsp_bufferalloc (GstPad * pad, guint64 offset, guint size,
+    GstCaps * caps)
 {
-  GstBuffer *inbuf = GST_BUFFER (buffer);
+  GstBuffer *buf;
   GstFFMpegCsp *space;
-  GstBuffer *outbuf = NULL;
-
-  //GstCaps *outcaps;
 
   space = GST_FFMPEGCSP (GST_PAD_PARENT (pad));
 
-  if (!GST_PAD_IS_USABLE (space->srcpad)) {
-    gst_buffer_unref (inbuf);
-    return GST_FLOW_ERROR;
-  }
+  buf = gst_pad_alloc_buffer (space->srcpad, offset, size, caps);
+  return buf;
+}
 
-  /* asume passthrough */
-  guint size =
-      avpicture_get_size (space->from_pixfmt, space->width, space->height);
+static GstFlowReturn
+gst_ffmpegcsp_chain (GstPad * pad, GstBuffer * buffer)
+{
+  GstFFMpegCsp *space;
+  GstFlowReturn res;
+  GstBuffer *outbuf = NULL;
 
-  outbuf = gst_pad_alloc_buffer (space->srcpad, GST_BUFFER_OFFSET_NONE, size,
-      space->src_prefered);
-  if (outbuf == NULL) {
-    return GST_FLOW_ERROR;
-  }
+  space = GST_FFMPEGCSP (GST_PAD_PARENT (pad));
 
-  if (space->from_pixfmt == PIX_FMT_NB || space->to_pixfmt == PIX_FMT_NB) {
-    GST_ELEMENT_ERROR (space, CORE, NOT_IMPLEMENTED, (NULL),
-        ("attempting to convert colorspaces between unknown formats"));
-    gst_buffer_unref (inbuf);
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
+  GST_STREAM_LOCK (pad);
+
+  if (space->from_pixfmt == PIX_FMT_NB || space->to_pixfmt == PIX_FMT_NB)
+    goto unkown_format;
 
   if (space->from_pixfmt == space->to_pixfmt) {
-    GST_DEBUG ("passthrough conversion %" GST_PTR_FORMAT,
-        GST_PAD_CAPS (space->srcpad));
-    outbuf = inbuf;
+    GST_DEBUG ("passthrough conversion");
+    /* use input as output buffer */
+    outbuf = buffer;
   } else {
-    /* convert */
+    /* get size of our suggested output format */
+    guint size =
+        avpicture_get_size (space->to_pixfmt, space->width, space->height);
+
+    /* get buffer in prefered format, setcaps will be called when it is different */
+    outbuf = gst_pad_alloc_buffer (space->srcpad, GST_BUFFER_OFFSET_NONE, size,
+        space->src_prefered);
+    if (outbuf == NULL)
+      goto no_buffer;
+
+    /* fill from from with source data */
     gst_ffmpegcsp_avpicture_fill (&space->from_frame,
-        GST_BUFFER_DATA (inbuf),
+        GST_BUFFER_DATA (buffer),
         space->from_pixfmt, space->width, space->height);
+
+    /* fill optional palette */
     if (space->palette)
       space->from_frame.data[1] = (uint8_t *) space->palette;
+
+    /* fill target frame */
     gst_ffmpegcsp_avpicture_fill (&space->to_frame,
         GST_BUFFER_DATA (outbuf),
         space->to_pixfmt, space->width, space->height);
+
+    /* and convert */
     img_convert (&space->to_frame, space->to_pixfmt,
         &space->from_frame, space->from_pixfmt, space->width, space->height);
 
-    GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
-    GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
-    gst_buffer_unref (inbuf);
+    /* copy timestamps */
+    GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
+    GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
+
+    /* we don't need source anymore */
+    gst_buffer_unref (buffer);
   }
 
-  return gst_pad_push (space->srcpad, outbuf);
+  res = gst_pad_push (space->srcpad, outbuf);
+  GST_STREAM_UNLOCK (pad);
+
+  return res;
+
+  /* ERRORS */
+no_buffer:
+  {
+    GST_STREAM_UNLOCK (pad);
+    gst_buffer_unref (buffer);
+    return GST_FLOW_ERROR;
+  }
+unkown_format:
+  {
+    GST_STREAM_UNLOCK (pad);
+    GST_ELEMENT_ERROR (space, CORE, NOT_IMPLEMENTED, (NULL),
+        ("attempting to convert colorspaces between unknown formats"));
+    gst_buffer_unref (buffer);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 static GstElementStateReturn
 gst_ffmpegcsp_change_state (GstElement * element)
 {
   GstFFMpegCsp *space;
+  GstElementStateReturn ret;
+  gint transition;
 
   space = GST_FFMPEGCSP (element);
+  transition = GST_STATE_TRANSITION (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
-      if (space->palette)
-        av_free (space->palette);
-      space->palette = NULL;
+  switch (transition) {
+    default:
       break;
   }
 
-  if (parent_class->change_state)
-    return parent_class->change_state (element);
+  ret = parent_class->change_state (element);
 
-  return GST_STATE_SUCCESS;
+  switch (transition) {
+    case GST_STATE_PAUSED_TO_READY:
+      GST_STREAM_LOCK (space->sinkpad);
+      if (space->palette)
+        av_free (space->palette);
+      space->palette = NULL;
+      GST_STREAM_UNLOCK (space->sinkpad);
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 static void
@@ -453,12 +513,11 @@ gst_ffmpegcsp_set_property (GObject * object,
 {
   GstFFMpegCsp *space;
 
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_FFMPEGCSP (object));
   space = GST_FFMPEGCSP (object);
 
   switch (prop_id) {
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -469,8 +528,6 @@ gst_ffmpegcsp_get_property (GObject * object,
 {
   GstFFMpegCsp *space;
 
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_FFMPEGCSP (object));
   space = GST_FFMPEGCSP (object);
 
   switch (prop_id) {

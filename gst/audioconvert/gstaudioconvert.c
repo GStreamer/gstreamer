@@ -616,24 +616,32 @@ gst_audio_convert_fixate (GstPad * pad, GstCaps * caps)
 static GstElementStateReturn
 gst_audio_convert_change_state (GstElement * element)
 {
+  GstElementStateReturn ret;
   GstAudioConvert *this = GST_AUDIO_CONVERT (element);
+  gint transition;
 
-  switch (GST_STATE_TRANSITION (element)) {
+  transition = GST_STATE_TRANSITION (element);
+
+  switch (transition) {
+    default:
+      break;
+  }
+
+  ret = parent_class->change_state (element);
+
+  switch (transition) {
     case GST_STATE_PAUSED_TO_READY:
       GST_STREAM_LOCK (this->sink);
       this->convert_internal = NULL;
       gst_audio_convert_unset_matrix (this);
+      gst_caps_replace (&GST_RPAD_CAPS (this->sink), NULL);
+      gst_caps_replace (&GST_RPAD_CAPS (this->src), NULL);
       GST_STREAM_UNLOCK (this->sink);
       break;
     default:
       break;
   }
-
-  if (parent_class->change_state) {
-    return parent_class->change_state (element);
-  } else {
-    return GST_STATE_SUCCESS;
-  }
+  return ret;
 }
 
 /* return a writable buffer of size which ideally is the same as before
