@@ -837,7 +837,7 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
       break;
     case PIX_FMT_YUVJ444P:
     case PIX_FMT_YUV444P:
-      /* .. */
+      fmt = GST_MAKE_FOURCC ('Y', '4', '4', '4');
       break;
     case PIX_FMT_RGBA32:
       bpp = 32;
