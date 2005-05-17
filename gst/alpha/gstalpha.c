@@ -156,9 +156,8 @@ static void gst_alpha_set_property (GObject * object, guint prop_id,
 static void gst_alpha_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstPadLinkReturn
-gst_alpha_sink_link (GstPad * pad, const GstCaps * caps);
-static void gst_alpha_chain (GstPad * pad, GstData * _data);
+static gboolean gst_alpha_sink_setcaps (GstPad * pad, GstCaps * caps);
+static GstFlowReturn gst_alpha_chain (GstPad * pad, GstBuffer * buffer);
 
 static GstElementStateReturn gst_alpha_change_state (GstElement * element);
 
@@ -233,6 +232,9 @@ gst_alpha_class_init (GstAlphaClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  gobject_class->set_property = gst_alpha_set_property;
+  gobject_class->get_property = gst_alpha_get_property;
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_METHOD,
       g_param_spec_enum ("method", "Method",
           "How the alpha channels should be created", GST_TYPE_ALPHA_METHOD,
@@ -256,9 +258,6 @@ gst_alpha_class_init (GstAlphaClass * klass)
       g_param_spec_float ("noise_level", "Noise Level", "Size of noise radius",
           0.0, 64.0, DEFAULT_NOISE_LEVEL, (GParamFlags) G_PARAM_READWRITE));
 
-  gobject_class->set_property = gst_alpha_set_property;
-  gobject_class->get_property = gst_alpha_get_property;
-
   gstelement_class->change_state = gst_alpha_change_state;
 }
 
@@ -271,7 +270,7 @@ gst_alpha_init (GstAlpha * alpha)
       (&gst_alpha_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (alpha), alpha->sinkpad);
   gst_pad_set_chain_function (alpha->sinkpad, gst_alpha_chain);
-  gst_pad_set_link_function (alpha->sinkpad, gst_alpha_sink_link);
+  gst_pad_set_setcaps_function (alpha->sinkpad, gst_alpha_sink_setcaps);
 
   alpha->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
@@ -285,8 +284,6 @@ gst_alpha_init (GstAlpha * alpha)
   alpha->target_b = DEFAULT_TARGET_B;
   alpha->angle = DEFAULT_ANGLE;
   alpha->noise_level = DEFAULT_NOISE_LEVEL;
-
-  GST_FLAG_SET (alpha, GST_ELEMENT_EVENT_AWARE);
 }
 
 /* do we need this function? */
@@ -387,15 +384,15 @@ gst_alpha_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstPadLinkReturn
-gst_alpha_sink_link (GstPad * pad, const GstCaps * caps)
+static gboolean
+gst_alpha_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstAlpha *alpha;
   GstStructure *structure;
   gboolean ret;
   guint32 fourcc;
 
-  alpha = GST_ALPHA (gst_pad_get_parent (pad));
+  alpha = GST_ALPHA (GST_PAD_PARENT (pad));
   structure = gst_caps_get_structure (caps, 0);
 
   if (gst_structure_get_fourcc (structure, "format", &fourcc)) {
@@ -407,16 +404,16 @@ gst_alpha_sink_link (GstPad * pad, const GstCaps * caps)
         alpha->ayuv = TRUE;
         break;
       default:
-        return GST_PAD_LINK_REFUSED;
+        return FALSE;
     }
   } else {
-    return GST_PAD_LINK_REFUSED;
+    return FALSE;
   }
 
   ret = gst_structure_get_int (structure, "width", &alpha->in_width);
   ret &= gst_structure_get_int (structure, "height", &alpha->in_height);
 
-  return GST_PAD_LINK_OK;
+  return TRUE;
 }
 
 static void
@@ -791,34 +788,23 @@ gst_alpha_init_params (GstAlpha * alpha)
   alpha->kg = MIN (kgl, 127);
 }
 
-static void
-gst_alpha_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_alpha_chain (GstPad * pad, GstBuffer * buffer)
 {
-  GstBuffer *buffer;
   GstAlpha *alpha;
   GstBuffer *outbuf;
   gint new_width, new_height;
+  GstFlowReturn ret;
 
-  alpha = GST_ALPHA (gst_pad_get_parent (pad));
+  alpha = GST_ALPHA (GST_PAD_PARENT (pad));
 
-  if (GST_IS_EVENT (_data)) {
-    GstEvent *event = GST_EVENT (_data);
-
-    switch (GST_EVENT_TYPE (event)) {
-      default:
-        gst_pad_event_default (pad, event);
-        break;
-    }
-    return;
-  }
-
-  buffer = GST_BUFFER (_data);
+  GST_STREAM_LOCK (pad);
 
   new_width = alpha->in_width;
   new_height = alpha->in_height;
 
   if (new_width != alpha->out_width ||
-      new_height != alpha->out_height || !GST_PAD_CAPS (alpha->srcpad)) {
+      new_height != alpha->out_height || !GST_RPAD_CAPS (alpha->srcpad)) {
     GstCaps *newcaps;
 
     newcaps = gst_caps_copy (gst_pad_get_negotiated_caps (alpha->sinkpad));
@@ -826,10 +812,7 @@ gst_alpha_chain (GstPad * pad, GstData * _data)
         "format", GST_TYPE_FOURCC, GST_STR_FOURCC ("AYUV"),
         "width", G_TYPE_INT, new_width, "height", G_TYPE_INT, new_height, NULL);
 
-    if (!gst_pad_try_set_caps (alpha->srcpad, newcaps)) {
-      GST_ELEMENT_ERROR (alpha, CORE, NEGOTIATION, (NULL), (NULL));
-      return;
-    }
+    gst_pad_set_caps (alpha->srcpad, newcaps);
 
     alpha->out_width = new_width;
     alpha->out_height = new_height;
@@ -838,6 +821,7 @@ gst_alpha_chain (GstPad * pad, GstData * _data)
   outbuf =
       gst_buffer_new_and_alloc (ROUND_UP_2 (new_width) *
       ROUND_UP_2 (new_height) * 4);
+  gst_buffer_set_caps (outbuf, GST_RPAD_CAPS (alpha->srcpad));
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
 
@@ -868,7 +852,11 @@ gst_alpha_chain (GstPad * pad, GstData * _data)
 
   gst_buffer_unref (buffer);
 
-  gst_pad_push (alpha->srcpad, GST_DATA (outbuf));
+  ret = gst_pad_push (alpha->srcpad, outbuf);
+
+  GST_STREAM_UNLOCK (pad);
+
+  return ret;
 }
 
 static GstElementStateReturn
