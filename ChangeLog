@@ -1,3 +1,24 @@
+2005-05-17  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstaudiofilter.c: (gst_audiofilter_link),
+	(gst_audiofilter_chain):
+	* gst-libs/gst/audio/gstaudiosink.c:
+	(gst_audioringbuffer_get_type), (gst_audioringbuffer_class_init),
+	(audioringbuffer_thread_func), (gst_audioringbuffer_init),
+	(gst_audioringbuffer_acquire), (gst_audioringbuffer_release),
+	(gst_audioringbuffer_play), (gst_audioringbuffer_stop),
+	(gst_audioringbuffer_delay), (gst_audiosink_class_init),
+	(gst_audiosink_create_ringbuffer):
+	* gst/audioconvert/gstaudioconvert.c: (gst_audio_convert_chain),
+	(gst_audio_convert_caps_remove_format_info),
+	(gst_audio_convert_getcaps), (gst_audio_convert_setcaps),
+	(gst_audio_convert_fixate), (gst_audio_convert_channels):
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_getcaps), (gst_ffmpegcsp_configure_context),
+	(gst_ffmpegcsp_setcaps), (gst_ffmpegcsp_chain):
+	Fix passthrough in ffmpegcolorspace.
+	Fix memset in audiosink on wrong memory.
+
 2005-05-16  David Schleef  <ds@schleef.org>
 
 	* gst/playback/gststreaminfo.c: (cb_probe): Port from GstData

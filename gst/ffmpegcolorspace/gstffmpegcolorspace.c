@@ -254,8 +254,7 @@ gst_ffmpegcsp_setcaps (GstPad * pad, GstCaps * caps)
   otherpeer = gst_pad_get_peer (otherpad);
   if (otherpeer) {
     /* check passthrough */
-    //if (gst_pad_accept_caps (otherpeer, caps)) {
-    if (FALSE) {
+    if (gst_pad_accept_caps (otherpeer, caps)) {
       *other_prefered = gst_caps_ref (caps);
     } else {
       GstCaps *othercaps;

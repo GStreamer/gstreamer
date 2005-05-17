@@ -255,7 +255,7 @@ gst_audioringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   spec->segtotal++;
 
   buf->data = gst_buffer_new_and_alloc (spec->segtotal * spec->segsize);
-  memset (GST_BUFFER_DATA (buf), 0, GST_BUFFER_SIZE (buf));
+  memset (GST_BUFFER_DATA (buf->data), 0, GST_BUFFER_SIZE (buf->data));
 
   sink->thread =
       g_thread_create ((GThreadFunc) audioringbuffer_thread_func, buf, TRUE,
