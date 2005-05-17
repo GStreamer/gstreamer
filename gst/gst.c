@@ -593,6 +593,7 @@ init_post (void)
   gst_scheduler_factory_get_type ();
   gst_type_find_factory_get_type ();
   gst_bin_get_type ();
+
 #ifndef GST_DISABLE_INDEX
   gst_index_factory_get_type ();
 #endif /* GST_DISABLE_INDEX */
