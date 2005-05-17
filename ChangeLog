@@ -1,5 +1,14 @@
 2005-05-17  Wim Taymans  <wim@fluendo.com>
 
+	* configure.ac:
+	* gst/alpha/Makefile.am:
+	* gst/alpha/gstalpha.c: (gst_alpha_class_init), (gst_alpha_init),
+	(gst_alpha_sink_setcaps), (gst_alpha_chain):
+	Ported alpha,  remove alphacolor as functionality is in
+	ffmpegcolorspace.
+
+2005-05-17  Wim Taymans  <wim@fluendo.com>
+
 	* ext/libcaca/gstcacasink.c: (gst_cacasink_setcaps),
 	(gst_cacasink_render), (gst_cacasink_open), (gst_cacasink_close),
 	(gst_cacasink_change_state):
