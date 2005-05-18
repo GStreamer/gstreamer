@@ -1,5 +1,28 @@
 2005-05-18  Wim Taymans  <wim@fluendo.com>
 
+	* ext/amrnb/Makefile.am:
+	* ext/amrnb/amrnb.c: (plugin_init):
+	* ext/amrnb/amrnbdec.c: (gst_amrnbdec_init),
+	(gst_amrnbdec_setcaps), (gst_amrnbdec_chain),
+	(gst_amrnbdec_state_change):
+	* ext/amrnb/amrnbdec.h:
+	* ext/amrnb/amrnbenc.c: (gst_amrnbenc_get_type),
+	(gst_amrnbenc_base_init), (gst_amrnbenc_class_init),
+	(gst_amrnbenc_init), (gst_amrnbenc_finalize),
+	(gst_amrnbenc_setcaps), (gst_amrnbenc_chain),
+	(gst_amrnbenc_state_change):
+	* ext/amrnb/amrnbenc.h:
+	* ext/amrnb/amrnbparse.c: (gst_amrnbparse_init),
+	(gst_amrnbparse_query), (gst_amrnbparse_event),
+	(gst_amrnbparse_chain), (gst_amrnbparse_read_header),
+	(gst_amrnbparse_loop), (gst_amrnbparse_sink_activate),
+	(gst_amrnbparse_state_change):
+	* ext/amrnb/amrnbparse.h:
+	Ported AMR decoder/parse.
+	Added AMR encoder.
+
+2005-05-18  Wim Taymans  <wim@fluendo.com>
+
 	* configure.ac:
 	* gst/goom/Makefile.am:
 	* gst/goom/gstgoom.c: (gst_goom_init), (gst_goom_sink_setcaps),
