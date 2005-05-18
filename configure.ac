@@ -305,8 +305,10 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
+		alpha \
 		videofilter \
 		effectv \
+		goom \
 		law \
 		rtp	\
 		rtsp	\
@@ -489,7 +491,9 @@ AC_CONFIG_FILES(
 Makefile
 gst-plugins.spec
 gst/Makefile
+gst/alpha/Makefile
 gst/effectv/Makefile
+gst/goom/Makefile
 gst/law/Makefile
 gst/rtp/Makefile
 gst/rtsp/Makefile
