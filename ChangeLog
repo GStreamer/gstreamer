@@ -1,3 +1,13 @@
+2005-05-18  Wim Taymans  <wim@fluendo.com>
+
+	* configure.ac:
+	* gst/goom/Makefile.am:
+	* gst/goom/gstgoom.c: (gst_goom_init), (gst_goom_sink_setcaps),
+	(gst_goom_src_setcaps), (gst_goom_src_negotiate), (gst_goom_event),
+	(gst_goom_chain), (gst_goom_change_state), (plugin_init):
+	Ported goom.
+	Added goom and alpha to build.
+
 2005-05-17  Wim Taymans  <wim@fluendo.com>
 
 	* configure.ac:
