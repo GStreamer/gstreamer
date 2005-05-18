@@ -1,3 +1,8 @@
+2005-05-18  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbuffer.c: (gst_buffer_is_span_fast), (gst_buffer_span):
+	Port _span() functions to new subbuffers.
+
 2005-05-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstbin.c: (gst_bin_add_func):

@@ -383,18 +383,15 @@ gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
 gboolean
 gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
 {
-  return FALSE;
-#if 0
   g_return_val_if_fail (buf1 != NULL && buf2 != NULL, FALSE);
-  g_return_val_if_fail (GST_BUFFER_REFCOUNT_VALUE (buf1) > 0, FALSE);
-  g_return_val_if_fail (GST_BUFFER_REFCOUNT_VALUE (buf2) > 0, FALSE);
+  g_return_val_if_fail (buf1->mini_object.refcount > 0, FALSE);
+  g_return_val_if_fail (buf2->mini_object.refcount > 0, FALSE);
 
   /* it's only fast if we have subbuffers of the same parent */
-  return ((GST_BUFFER_FLAG_IS_SET (buf1, GST_BUFFER_SUBBUFFER)) &&
-      (GST_BUFFER_FLAG_IS_SET (buf2, GST_BUFFER_SUBBUFFER)) &&
-      (buf1->buffer_private == buf2->buffer_private) &&
+  return (GST_IS_SUBBUFFER (buf1) &&
+      GST_IS_SUBBUFFER (buf2) &&
+      (GST_SUBBUFFER (buf1)->parent == GST_SUBBUFFER (buf2)->parent) &&
       ((buf1->data + buf1->size) == buf2->data));
-#endif
 }
 
 /**
@@ -423,19 +420,17 @@ GstBuffer *
 gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,
     guint32 len)
 {
-  return NULL;
-#if 0
   GstBuffer *newbuf;
 
   g_return_val_if_fail (buf1 != NULL && buf2 != NULL, NULL);
-  g_return_val_if_fail (GST_BUFFER_REFCOUNT_VALUE (buf1) > 0, NULL);
-  g_return_val_if_fail (GST_BUFFER_REFCOUNT_VALUE (buf2) > 0, NULL);
+  g_return_val_if_fail (buf1->mini_object.refcount > 0, FALSE);
+  g_return_val_if_fail (buf2->mini_object.refcount > 0, FALSE);
   g_return_val_if_fail (len > 0, NULL);
   g_return_val_if_fail (len <= buf1->size + buf2->size - offset, NULL);
 
   /* if the two buffers have the same parent and are adjacent */
   if (gst_buffer_is_span_fast (buf1, buf2)) {
-    GstBuffer *parent = GST_BUFFER (buf1->buffer_private);
+    GstBuffer *parent = GST_SUBBUFFER (buf1)->parent;
 
     /* we simply create a subbuffer of the common parent */
     newbuf = gst_buffer_create_sub (parent,
@@ -474,5 +469,4 @@ gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,
   }
 
   return newbuf;
-#endif
 }
