@@ -182,7 +182,7 @@ gst_identity_class_init (GstIdentityClass * klass)
   gst_identity_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstIdentityClass, handoff), NULL, NULL,
-      gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
+      gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_POINTER);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_identity_finalize);
 

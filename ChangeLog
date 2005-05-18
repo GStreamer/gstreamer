@@ -1,3 +1,8 @@
+2005-05-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/elements/gstidentity.c: (gst_identity_class_init):
+	  Workaround until signals support GstMiniObject.
+
 2005-05-18  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstbuffer.c:
