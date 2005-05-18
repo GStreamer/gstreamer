@@ -22,18 +22,18 @@
 #endif
 
 #include "amrnbdec.h"
+#include "amrnbenc.h"
 #include "amrnbparse.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
-
   return gst_element_register (plugin, "amrnbdec",
       GST_RANK_PRIMARY, GST_TYPE_AMRNBDEC) &&
       gst_element_register (plugin, "amrnbparse",
-      GST_RANK_PRIMARY, GST_TYPE_AMRNBPARSE);
+      GST_RANK_PRIMARY, GST_TYPE_AMRNBPARSE) &&
+      gst_element_register (plugin, "amrnbenc",
+      GST_RANK_NONE, GST_TYPE_AMRNBENC);
 }
 
 

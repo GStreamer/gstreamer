@@ -27,7 +27,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-amr-nb, "
-        "rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2 ]")
+        "rate = (int) 8000, " "channels = (int) 1")
     );
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -38,15 +38,19 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         "depth = (int) 16, "
         "signed = (boolean) TRUE, "
         "endianness = (int) BYTE_ORDER, "
-        "rate = (int) [ 1000, 96000 ]," "channels = (int) [ 1, 2 ]")
+        "rate = (int) 8000," "channels = (int) 1")
     );
+
+static const gint block_size[16] = { 12, 13, 15, 17, 19, 20, 26, 31, 5,
+  0, 0, 0, 0, 0, 0, 0
+};
 
 static void gst_amrnbdec_base_init (GstAmrnbDecClass * klass);
 static void gst_amrnbdec_class_init (GstAmrnbDecClass * klass);
 static void gst_amrnbdec_init (GstAmrnbDec * amrnbdec);
 
-static void gst_amrnbdec_chain (GstPad * pad, GstData * data);
-static GstPadLinkReturn gst_amrnbdec_link (GstPad * pad, const GstCaps * caps);
+static GstFlowReturn gst_amrnbdec_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_amrnbdec_setcaps (GstPad * pad, GstCaps * caps);
 static GstElementStateReturn gst_amrnbdec_state_change (GstElement * element);
 
 static GstElementClass *parent_class = NULL;
@@ -112,7 +116,7 @@ gst_amrnbdec_init (GstAmrnbDec * amrnbdec)
   amrnbdec->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
       "sink");
-  gst_pad_set_link_function (amrnbdec->sinkpad, gst_amrnbdec_link);
+  gst_pad_set_setcaps_function (amrnbdec->sinkpad, gst_amrnbdec_setcaps);
   gst_pad_set_chain_function (amrnbdec->sinkpad, gst_amrnbdec_chain);
   gst_element_add_pad (GST_ELEMENT (amrnbdec), amrnbdec->sinkpad);
 
@@ -120,8 +124,10 @@ gst_amrnbdec_init (GstAmrnbDec * amrnbdec)
   amrnbdec->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
       "src");
-  gst_pad_use_explicit_caps (amrnbdec->srcpad);
+  gst_pad_use_fixed_caps (amrnbdec->srcpad);
   gst_element_add_pad (GST_ELEMENT (amrnbdec), amrnbdec->srcpad);
+
+  amrnbdec->adapter = gst_adapter_new ();
 
   /* init rest */
   amrnbdec->handle = NULL;
@@ -130,12 +136,16 @@ gst_amrnbdec_init (GstAmrnbDec * amrnbdec)
   amrnbdec->ts = 0;
 }
 
-static GstPadLinkReturn
-gst_amrnbdec_link (GstPad * pad, const GstCaps * caps)
+static gboolean
+gst_amrnbdec_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstStructure *structure = gst_caps_get_structure (caps, 0);
-  GstAmrnbDec *amrnbdec = GST_AMRNBDEC (gst_pad_get_parent (pad));
+  GstStructure *structure;
+  GstAmrnbDec *amrnbdec;
   GstCaps *copy;
+
+  amrnbdec = GST_AMRNBDEC (GST_PAD_PARENT (pad));
+
+  structure = gst_caps_get_structure (caps, 0);
 
   /* get channel count */
   gst_structure_get_int (structure, "channels", &amrnbdec->channels);
@@ -148,32 +158,49 @@ gst_amrnbdec_link (GstPad * pad, const GstCaps * caps)
       "depth", G_TYPE_INT, 16,
       "endianness", G_TYPE_INT, G_BYTE_ORDER,
       "rate", G_TYPE_INT, amrnbdec->rate, "signed", G_TYPE_BOOLEAN, TRUE, NULL);
-  if (!gst_pad_set_explicit_caps (amrnbdec->srcpad, copy))
-    return GST_PAD_LINK_REFUSED;
 
-  return GST_PAD_LINK_OK;
+  gst_pad_set_caps (amrnbdec->srcpad, copy);
+  gst_caps_unref (copy);
+
+  return TRUE;
 }
 
-static void
-gst_amrnbdec_chain (GstPad * pad, GstData * in_data)
+static GstFlowReturn
+gst_amrnbdec_chain (GstPad * pad, GstBuffer * buffer)
 {
-  const gint block_size[16] = { 12, 13, 15, 17, 19, 20, 26, 31, 5,
-    0, 0, 0, 0, 0, 0, 0
-  };
-  GstAmrnbDec *amrnbdec = GST_AMRNBDEC (GST_OBJECT_PARENT (pad));
-  GstBuffer *buf = gst_buffer_copy_on_write (in_data), *out;
-  guint8 *data = GST_BUFFER_DATA (buf);
-  gint size = GST_BUFFER_SIZE (buf), block, mode;
+  GstAmrnbDec *amrnbdec;
+  GstFlowReturn ret;
 
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf))
-    amrnbdec->ts = GST_BUFFER_TIMESTAMP (buf);
+  amrnbdec = GST_AMRNBDEC (GST_PAD_PARENT (pad));
 
-  while (size >= 1) {
+  GST_STREAM_LOCK (pad);
+
+  if (amrnbdec->rate == 0 || amrnbdec->channels == 0)
+    goto not_negotiated;
+
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
+    amrnbdec->ts = GST_BUFFER_TIMESTAMP (buffer);
+
+  gst_adapter_push (amrnbdec->adapter, buffer);
+
+  ret = GST_FLOW_OK;
+
+  while (TRUE) {
+    GstBuffer *out;
+    guint8 *data;
+    gint block, mode;
+
+    if (gst_adapter_available (amrnbdec->adapter) < 1)
+      break;
+    data = (guint8 *) gst_adapter_peek (amrnbdec->adapter, 1);
+
     /* get size */
     mode = (data[0] >> 3) & 0x0F;
     block = block_size[mode] + 1;
-    if (size < block)
+
+    if (gst_adapter_available (amrnbdec->adapter) < block)
       break;
+    data = (guint8 *) gst_adapter_peek (amrnbdec->adapter, block);
 
     /* get output */
     out = gst_buffer_new_and_alloc (160 * 2);
@@ -181,33 +208,54 @@ gst_amrnbdec_chain (GstPad * pad, GstData * in_data)
         (amrnbdec->rate * amrnbdec->channels);
     GST_BUFFER_TIMESTAMP (out) = amrnbdec->ts;
     amrnbdec->ts += GST_BUFFER_DURATION (out);
+    gst_buffer_set_caps (out, GST_RPAD_CAPS (amrnbdec->srcpad));
 
     /* decode */
     Decoder_Interface_Decode (amrnbdec->handle, data,
         (short *) GST_BUFFER_DATA (out), 0);
-    data += block;
-    size -= block;
+
+    gst_adapter_flush (amrnbdec->adapter, block);
 
     /* play */
-    gst_pad_push (amrnbdec->srcpad, GST_DATA (out));
+    ret = gst_pad_push (amrnbdec->srcpad, out);
   }
+  GST_STREAM_UNLOCK (pad);
 
-  gst_buffer_unref (buf);
+  return ret;
+
+not_negotiated:
+  {
+    GST_STREAM_UNLOCK (pad);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 static GstElementStateReturn
 gst_amrnbdec_state_change (GstElement * element)
 {
-  GstAmrnbDec *amrnbdec = GST_AMRNBDEC (element);
+  GstAmrnbDec *amrnbdec;
+  GstElementStateReturn ret;
+  gint transition;
 
-  switch (GST_STATE_TRANSITION (element)) {
+  amrnbdec = GST_AMRNBDEC (element);
+  transition = GST_STATE_TRANSITION (element);
+
+  switch (transition) {
     case GST_STATE_NULL_TO_READY:
       if (!(amrnbdec->handle = Decoder_Interface_init ()))
         return GST_STATE_FAILURE;
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_READY_TO_PAUSED:
+      gst_adapter_clear (amrnbdec->adapter);
       amrnbdec->ts = 0;
       break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  switch (transition) {
     case GST_STATE_READY_TO_NULL:
       Decoder_Interface_exit (amrnbdec->handle);
       break;
@@ -215,8 +263,5 @@ gst_amrnbdec_state_change (GstElement * element)
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
+  return ret;
 }

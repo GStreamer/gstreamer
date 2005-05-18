@@ -17,30 +17,30 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_AMRNBDEC_H__
-#define __GST_AMRNBDEC_H__
+#ifndef __GST_AMRNBENC_H__
+#define __GST_AMRNBENC_H__
 
 #include <gst/gst.h>
+#include <amrnb/interf_enc.h>
 #include <gst/base/gstadapter.h>
-#include <amrnb/interf_dec.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_AMRNBDEC \
-  (gst_amrnbdec_get_type())
-#define GST_AMRNBDEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_AMRNBDEC, GstAmrnbDec))
-#define GST_AMRNBDEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_AMRNBDEC, GstAmrnbDec))
-#define GST_IS_AMRNBDEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_AMRNBDEC))
-#define GST_IS_AMRNBDEC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_AMRNBDEC))
+#define GST_TYPE_AMRNBENC \
+  (gst_amrnbenc_get_type())
+#define GST_AMRNBENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_AMRNBENC, GstAmrnbEnc))
+#define GST_AMRNBENC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_AMRNBENC, GstAmrnbEnc))
+#define GST_IS_AMRNBENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_AMRNBENC))
+#define GST_IS_AMRNBENC_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_AMRNBENC))
 
-typedef struct _GstAmrnbDec GstAmrnbDec;
-typedef struct _GstAmrnbDecClass GstAmrnbDecClass;
+typedef struct _GstAmrnbEnc GstAmrnbEnc;
+typedef struct _GstAmrnbEncClass GstAmrnbEncClass;
 
-struct _GstAmrnbDec {
+struct _GstAmrnbEnc {
   GstElement element;
 
   /* pads */
@@ -52,16 +52,16 @@ struct _GstAmrnbDec {
   /* library handle */
   void *handle;
 
-  /* output settings */
+  /* input settings */
   gint channels, rate;
 };
 
-struct _GstAmrnbDecClass {
+struct _GstAmrnbEncClass {
   GstElementClass parent_class;
 };
 
-GType gst_amrnbdec_get_type (void);
+GType gst_amrnbenc_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_AMRNBDEC_H__ */
+#endif /* __GST_AMRNBENC_H__ */

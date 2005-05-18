@@ -21,7 +21,7 @@
 #define __GST_AMRNBPARSE_H__
 
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
+#include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 
@@ -44,7 +44,13 @@ struct _GstAmrnbParse {
 
   /* pads */
   GstPad *sinkpad, *srcpad;
-  GstByteStream *bs;
+
+  GstAdapter *adapter;
+
+  gboolean seekable;
+  gboolean need_header;
+  gint64 offset;
+
   guint64 ts;
 };
 
