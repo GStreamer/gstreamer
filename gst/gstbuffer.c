@@ -255,7 +255,7 @@ typedef struct _GstSubBufferClass GstSubBufferClass;
 
 #define GST_TYPE_SUBBUFFER                         (gst_subbuffer_get_type())
 
-#define GST_IS_SUBBUFFER(obj)  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_BUFFER))
+#define GST_IS_SUBBUFFER(obj)  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_SUBBUFFER))
 #define GST_SUBBUFFER(obj)     (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_SUBBUFFER, GstSubBuffer))
 
 struct _GstSubBuffer

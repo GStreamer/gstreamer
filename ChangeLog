@@ -1,3 +1,8 @@
+2005-05-18  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstbuffer.c:
+	Oops, fix a typo GST_TYPE_BUFFER -> GST_TYPE_SUBBUFFER.
+
 2005-05-18  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/Makefile.am:
