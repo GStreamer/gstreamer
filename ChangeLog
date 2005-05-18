@@ -1,5 +1,11 @@
 2005-05-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/gstbin.c: (gst_bin_add_func):
+	  Fix clock settery in bins when adding kids after the clock has
+	  been selected.
+
+2005-05-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/elements/gstidentity.c: (gst_identity_class_init):
 	  Workaround until signals support GstMiniObject.
 

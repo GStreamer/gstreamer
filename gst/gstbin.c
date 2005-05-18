@@ -391,6 +391,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   gst_element_set_manager (element, GST_ELEMENT (bin)->manager);
   gst_element_set_bus (element, GST_ELEMENT (bin)->bus);
   gst_element_set_scheduler (element, GST_ELEMENT_SCHEDULER (bin));
+  gst_element_set_clock (element, GST_ELEMENT_CLOCK (bin));
 
   GST_UNLOCK (bin);
 
