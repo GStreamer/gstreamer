@@ -67,14 +67,14 @@ gst_bin_find_unconnected_pad (GstBin * bin, GstPadDirection direction)
 
       /* check if the direction matches */
       if (GST_PAD_DIRECTION (testpad) == direction) {
-        GST_LOCK (pad);
+        GST_LOCK (testpad);
         if (GST_PAD_PEER (testpad) == NULL) {
-          GST_UNLOCK (pad);
+          GST_UNLOCK (testpad);
           /* found it ! */
           pad = testpad;
           break;
         }
-        GST_UNLOCK (pad);
+        GST_UNLOCK (testpad);
       }
       pads = g_list_next (pads);
     }
