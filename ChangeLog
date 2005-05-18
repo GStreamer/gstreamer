@@ -1,3 +1,11 @@
+2005-05-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/playback/gstplaybasebin.c: (gen_preroll_element):
+	  Increase buffer for video, decrease buffer for other media types.
+	* gst/playback/gstplaybin.c: (gen_video_element),
+	(gen_audio_element):
+	  Change names for debugging purposes.
+
 2005-05-18  Wim Taymans  <wim@fluendo.com>
 
 	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:

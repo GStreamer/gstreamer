@@ -575,7 +575,8 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
   name = g_strdup_printf ("preroll_%s_%s", prename, gst_pad_get_name (pad));
   preroll = gst_element_factory_make ("queue", name);
   g_object_set (G_OBJECT (preroll),
-      "max-size-buffers", 0, "max-size-bytes", 10 * 1024 * 1024,
+      "max-size-buffers", 0, "max-size-bytes",
+      ((type == GST_STREAM_TYPE_VIDEO) ? 25 : 1) * 1024 * 1024,
       "max-size-time", play_base_bin->queue_size, NULL);
   sig = g_signal_connect (G_OBJECT (preroll), "overrun",
       G_CALLBACK (queue_overrun), play_base_bin);
