@@ -1,3 +1,15 @@
+2005-05-18  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/Makefile.am:
+	* gst/base/gstadapter.c: (gst_adapter_base_init),
+	(gst_adapter_class_init), (gst_adapter_init),
+	(gst_adapter_dispose), (gst_adapter_finalize), (gst_adapter_new),
+	(gst_adapter_clear), (gst_adapter_push), (gst_adapter_peek),
+	(gst_adapter_flush), (gst_adapter_available),
+	(gst_adapter_available_fast):
+	* gst/base/gstadapter.h:
+	Ported and added adapter to the base classes.
+
 2005-05-17  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* gst/gst.c:
