@@ -62,7 +62,6 @@ struct _GstGOOM
   gint width;
   gint height;
   gint channels;
-  gboolean srcnegotiated;
 
   gboolean disposed;
 };
@@ -121,13 +120,10 @@ static void gst_goom_dispose (GObject * object);
 
 static GstElementStateReturn gst_goom_change_state (GstElement * element);
 
-static void gst_goom_chain (GstPad * pad, GstData * _data);
+static GstFlowReturn gst_goom_chain (GstPad * pad, GstBuffer * buffer);
 
-static GstPadLinkReturn gst_goom_sinkconnect (GstPad * pad,
-    const GstCaps * caps);
-static GstPadLinkReturn gst_goom_srcconnect (GstPad * pad,
-    const GstCaps * caps);
-static GstCaps *gst_goom_src_fixate (GstPad * pad, const GstCaps * caps);
+static GstPadLinkReturn gst_goom_sink_setcaps (GstPad * pad, GstCaps * caps);
+static GstPadLinkReturn gst_goom_src_setcaps (GstPad * pad, GstCaps * caps);
 
 static GstElementClass *parent_class = NULL;
 
@@ -197,13 +193,9 @@ gst_goom_init (GstGOOM * goom)
   gst_element_add_pad (GST_ELEMENT (goom), goom->sinkpad);
   gst_element_add_pad (GST_ELEMENT (goom), goom->srcpad);
 
-  GST_FLAG_SET (goom, GST_ELEMENT_EVENT_AWARE);
-
   gst_pad_set_chain_function (goom->sinkpad, gst_goom_chain);
-  gst_pad_set_link_function (goom->sinkpad, gst_goom_sinkconnect);
-
-  gst_pad_set_link_function (goom->srcpad, gst_goom_srcconnect);
-  gst_pad_set_fixate_function (goom->srcpad, gst_goom_src_fixate);
+  gst_pad_set_setcaps_function (goom->sinkpad, gst_goom_sink_setcaps);
+  gst_pad_set_setcaps_function (goom->srcpad, gst_goom_src_setcaps);
 
   goom->adapter = gst_adapter_new ();
 
@@ -216,8 +208,7 @@ gst_goom_init (GstGOOM * goom)
   goom->samples_consumed = 0;
   goom->disposed = FALSE;
 
-  /* set to something */
-  goom_init (50, 50);
+  goom_init (goom->width, goom->height);
 }
 
 static void
@@ -236,28 +227,29 @@ gst_goom_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-static GstPadLinkReturn
-gst_goom_sinkconnect (GstPad * pad, const GstCaps * caps)
+static gboolean
+gst_goom_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstGOOM *goom;
   GstStructure *structure;
 
-  goom = GST_GOOM (gst_pad_get_parent (pad));
+  goom = GST_GOOM (GST_PAD_PARENT (pad));
 
   structure = gst_caps_get_structure (caps, 0);
 
   gst_structure_get_int (structure, "channels", &goom->channels);
   gst_structure_get_int (structure, "rate", &goom->sample_rate);
-  return GST_PAD_LINK_OK;
+
+  return TRUE;
 }
 
-static GstPadLinkReturn
-gst_goom_srcconnect (GstPad * pad, const GstCaps * caps)
+static gboolean
+gst_goom_src_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstGOOM *goom;
   GstStructure *structure;
 
-  goom = GST_GOOM (gst_pad_get_parent (pad));
+  goom = GST_GOOM (GST_PAD_PARENT (pad));
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -266,81 +258,93 @@ gst_goom_srcconnect (GstPad * pad, const GstCaps * caps)
   gst_structure_get_double (structure, "framerate", &goom->fps);
 
   goom_set_resolution (goom->width, goom->height);
-  goom->srcnegotiated = TRUE;
 
-  return GST_PAD_LINK_OK;
+  return TRUE;
 }
 
-static GstCaps *
-gst_goom_src_fixate (GstPad * pad, const GstCaps * caps)
+static gboolean
+gst_goom_src_negotiate (GstGOOM * goom)
 {
-  GstCaps *newcaps;
+  GstCaps *othercaps, *target, *intersect;
   GstStructure *structure;
+  const GstCaps *templ;
 
-  if (!gst_caps_is_simple (caps))
-    return NULL;
+  templ = gst_pad_get_pad_template_caps (goom->srcpad);
 
-  newcaps = gst_caps_copy (caps);
-  structure = gst_caps_get_structure (newcaps, 0);
+  /* see what the peer can do */
+  othercaps = gst_pad_peer_get_caps (goom->srcpad);
+  if (othercaps) {
+    intersect = gst_caps_intersect (othercaps, templ);
+    gst_caps_unref (othercaps);
 
-  if (gst_caps_structure_fixate_field_nearest_int (structure, "width", 320)) {
-    return newcaps;
+    if (gst_caps_is_empty (intersect))
+      goto no_format;
+
+    target = gst_caps_copy_nth (intersect, 0);
+    gst_caps_unref (intersect);
+  } else {
+    target = gst_caps_ref ((GstCaps *) templ);
   }
-  if (gst_caps_structure_fixate_field_nearest_int (structure, "height", 240)) {
-    return newcaps;
-  }
-  if (gst_caps_structure_fixate_field_nearest_double (structure, "framerate",
-          30.0)) {
-    return newcaps;
-  }
 
-  /* failed to fixate */
-  gst_caps_free (newcaps);
-  return NULL;
+  structure = gst_caps_get_structure (target, 0);
+  gst_caps_structure_fixate_field_nearest_int (structure, "width", 320);
+  gst_caps_structure_fixate_field_nearest_int (structure, "height", 240);
+  gst_caps_structure_fixate_field_nearest_double (structure, "framerate", 30.0);
+
+  gst_pad_set_caps (goom->srcpad, target);
+  gst_caps_unref (target);
+
+  return TRUE;
+
+no_format:
+  {
+    gst_caps_unref (intersect);
+    gst_caps_unref (othercaps);
+    return FALSE;
+  }
 }
 
-static void
-gst_goom_chain (GstPad * pad, GstData * _data)
+static gboolean
+gst_goom_event (GstPad * pad, GstEvent * event)
 {
-  GstBuffer *bufin = GST_BUFFER (_data);
+  gboolean res;
+  GstGOOM *goom;
+
+  goom = GST_GOOM (GST_PAD_PARENT (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_DISCONTINUOUS:
+    {
+      gint64 start = 0, stop = 0;
+
+      gst_event_discont_get_value (event, GST_FORMAT_TIME, &start, &stop);
+      gst_adapter_clear (goom->adapter);
+      goom->audio_basetime = start;
+      goom->samples_consumed = 0;
+      GST_DEBUG ("Got discont. Adjusting time to=%" G_GUINT64_FORMAT, start);
+    }
+    default:
+      res = gst_pad_event_default (pad, event);
+      break;
+  }
+  return res;
+}
+
+static GstFlowReturn
+gst_goom_chain (GstPad * pad, GstBuffer * bufin)
+{
   GstGOOM *goom;
   guint32 bytesperread;
   gint16 *data;
   gint samples_per_frame;
+  GstFlowReturn ret;
 
-  goom = GST_GOOM (gst_pad_get_parent (pad));
-  if (GST_IS_EVENT (bufin)) {
-    GstEvent *event = GST_EVENT (bufin);
+  goom = GST_GOOM (GST_PAD_PARENT (pad));
 
-    switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_DISCONTINUOUS:
-      {
-        gint64 value = 0;
+  GST_STREAM_LOCK (pad);
 
-        gst_event_discont_get_value (event, GST_FORMAT_TIME, &value);
-        gst_adapter_clear (goom->adapter);
-        goom->audio_basetime = value;
-        goom->samples_consumed = 0;
-        GST_DEBUG ("Got discont. Adjusting time to=%" G_GUINT64_FORMAT, value);
-      }
-      default:
-        gst_pad_event_default (pad, event);
-        break;
-    }
-    return;
-  }
-
-  if (goom->channels == 0) {
-    GST_ELEMENT_ERROR (goom, CORE, NEGOTIATION, (NULL),
-        ("Format wasn't negotiated before chain function"));
-    gst_buffer_unref (bufin);
-    return;
-  }
-
-  if (!GST_PAD_IS_USABLE (goom->srcpad)) {
-    gst_buffer_unref (bufin);
-    return;
-  }
+  if (goom->channels == 0)
+    goto not_negotiated;
 
   if (goom->audio_basetime == GST_CLOCK_TIME_NONE)
     goom->audio_basetime = GST_BUFFER_TIMESTAMP (bufin);
@@ -358,15 +362,24 @@ gst_goom_chain (GstPad * pad, GstData * _data)
       GST_BUFFER_SIZE (bufin) * sizeof (gint16) * goom->channels,
       GST_BUFFER_TIMESTAMP (bufin));
 
+  ret = GST_FLOW_OK;
+
+  if (GST_RPAD_CAPS (goom->srcpad) == NULL) {
+    if (!gst_goom_src_negotiate (goom))
+      goto no_format;
+  }
+
   /* Collect samples until we have enough for an output frame */
   while (gst_adapter_available (goom->adapter) > MAX (bytesperread,
           samples_per_frame * goom->channels * sizeof (gint16))) {
-    const guint16 *data =
-        (const guint16 *) gst_adapter_peek (goom->adapter, bytesperread);
+    const guint16 *data;
     GstBuffer *bufout;
     guchar *out_frame;
-    GstClockTimeDiff frame_duration = GST_SECOND / goom->fps;
+    GstClockTimeDiff frame_duration;
     gint i;
+
+    frame_duration = GST_SECOND / goom->fps;
+    data = (const guint16 *) gst_adapter_peek (goom->adapter, bytesperread);
 
     if (goom->channels == 2) {
       for (i = 0; i < GOOM_SAMPLES; i++) {
@@ -380,7 +393,8 @@ gst_goom_chain (GstPad * pad, GstData * _data)
       }
     }
 
-    bufout = gst_buffer_new_and_alloc (goom->width * goom->height * 4);
+    bufout = gst_pad_alloc_buffer (goom->srcpad, GST_BUFFER_OFFSET_NONE,
+        goom->width * goom->height * 4, GST_RPAD_CAPS (goom->srcpad));
     GST_BUFFER_TIMESTAMP (bufout) =
         goom->audio_basetime +
         (GST_SECOND * goom->samples_consumed / goom->sample_rate);
@@ -393,11 +407,35 @@ gst_goom_chain (GstPad * pad, GstData * _data)
     GST_DEBUG ("Pushing frame with time=%" G_GUINT64_FORMAT ", duration=%"
         G_GUINT64_FORMAT, GST_BUFFER_TIMESTAMP (bufout),
         GST_BUFFER_DURATION (bufout));
-    gst_pad_push (goom->srcpad, GST_DATA (bufout));
+    ret = gst_pad_push (goom->srcpad, bufout);
 
     goom->samples_consumed += samples_per_frame;
     gst_adapter_flush (goom->adapter,
         samples_per_frame * goom->channels * sizeof (gint16));
+
+    if (ret != GST_FLOW_OK)
+      break;
+  }
+  GST_STREAM_UNLOCK (pad);
+
+  return ret;
+
+  /* ERRORS */
+not_negotiated:
+  {
+    GST_ELEMENT_ERROR (goom, CORE, NEGOTIATION, (NULL),
+        ("Format wasn't negotiated before chain function"));
+    gst_buffer_unref (bufin);
+    GST_STREAM_UNLOCK (pad);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+no_format:
+  {
+    GST_ELEMENT_ERROR (goom, CORE, NEGOTIATION, (NULL),
+        ("Could not negotiate format"));
+    gst_buffer_unref (bufin);
+    GST_STREAM_UNLOCK (pad);
+    return GST_FLOW_ERROR;
   }
 }
 
@@ -405,35 +443,40 @@ static GstElementStateReturn
 gst_goom_change_state (GstElement * element)
 {
   GstGOOM *goom = GST_GOOM (element);
+  gint transition;
+  GstElementStateReturn ret;
 
-  switch (GST_STATE_TRANSITION (element)) {
+  transition = GST_STATE_TRANSITION (element);
+
+  switch (transition) {
     case GST_STATE_NULL_TO_READY:
-      break;
-    case GST_STATE_READY_TO_NULL:
       break;
     case GST_STATE_READY_TO_PAUSED:
       goom->audio_basetime = GST_CLOCK_TIME_NONE;
-      goom->srcnegotiated = FALSE;
       gst_adapter_clear (goom->adapter);
-      break;
-    case GST_STATE_PAUSED_TO_READY:
       goom->channels = 0;
       break;
     default:
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
-  return GST_STATE_SUCCESS;
+  switch (transition) {
+    case GST_STATE_PAUSED_TO_READY:
+      break;
+    case GST_STATE_READY_TO_NULL:
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
   return gst_element_register (plugin, "goom", GST_RANK_NONE, GST_TYPE_GOOM);
 }
 
