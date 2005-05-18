@@ -394,7 +394,12 @@ gst_ffmpegcsp_bufferalloc (GstPad * pad, guint64 offset, guint size,
 
   space = GST_FFMPEGCSP (GST_PAD_PARENT (pad));
 
-  buf = gst_pad_alloc_buffer (space->srcpad, offset, size, caps);
+  if ((space->from_pixfmt == space->to_pixfmt) &&
+      space->from_pixfmt != PIX_FMT_NB) {
+    buf = gst_pad_alloc_buffer (space->srcpad, offset, size, caps);
+  } else {
+    buf = NULL;
+  }
   return buf;
 }
 
@@ -409,6 +414,7 @@ gst_ffmpegcsp_chain (GstPad * pad, GstBuffer * buffer)
 
   GST_STREAM_LOCK (pad);
 
+  GST_DEBUG ("from %d -> to %d", space->from_pixfmt, space->to_pixfmt);
   if (space->from_pixfmt == PIX_FMT_NB || space->to_pixfmt == PIX_FMT_NB)
     goto unkown_format;
 
