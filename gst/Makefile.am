@@ -236,6 +236,3 @@ gstenumtypes.c: $(gst_headers)
 	--vprod "      { @VALUENAME@, \"@VALUENAME@\", \"@valuenick@\" }," \
 	--vtail "      { 0, NULL, NULL }\n    };\n    etype = g_@type@_register_static (\"@EnumName@\", values);\n  }\n  return etype;\n}\n" \
 	$^ > gstenumtypes.c
-
-EXTRA_DIST = ROADMAP
-
