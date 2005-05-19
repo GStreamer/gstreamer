@@ -62,6 +62,7 @@ static GstElementClass *parent_class = NULL;
 static void gst_basesink_base_init (gpointer g_class);
 static void gst_basesink_class_init (GstBaseSinkClass * klass);
 static void gst_basesink_init (GstBaseSink * trans, gpointer g_class);
+static void gst_basesink_finalize (GObject * object);
 
 GType
 gst_basesink_get_type (void)
@@ -130,6 +131,7 @@ gst_basesink_class_init (GstBaseSinkClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_basesink_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_basesink_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_basesink_get_property);
 
@@ -238,8 +240,21 @@ gst_basesink_init (GstBaseSink * basesink, gpointer g_class)
 
   basesink->pad_mode = GST_ACTIVATE_NONE;
   GST_RPAD_TASK (basesink->sinkpad) = NULL;
+  basesink->preroll_queue = g_queue_new ();
 
   GST_FLAG_SET (basesink, GST_ELEMENT_IS_SINK);
+}
+
+static void
+gst_basesink_finalize (GObject * object)
+{
+  GstBaseSink *basesink;
+
+  basesink = GST_BASESINK (object);
+
+  g_queue_free (basesink->preroll_queue);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -835,7 +850,6 @@ gst_basesink_change_state (GstElement * element)
        * is no data flow in READY so we can safely assume we need to preroll. */
       basesink->offset = 0;
       GST_PREROLL_LOCK (basesink->sinkpad);
-      basesink->preroll_queue = g_queue_new ();
       basesink->need_preroll = TRUE;
       basesink->have_preroll = FALSE;
       GST_PREROLL_UNLOCK (basesink->sinkpad);
@@ -889,8 +903,6 @@ gst_basesink_change_state (GstElement * element)
       GST_PREROLL_LOCK (basesink->sinkpad);
 
       gst_basesink_preroll_queue_flush (basesink);
-      g_queue_free (basesink->preroll_queue);
-      basesink->preroll_queue = NULL;
 
       if (basesink->have_preroll)
         GST_PREROLL_SIGNAL (basesink->sinkpad);
