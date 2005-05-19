@@ -1,3 +1,9 @@
+2005-05-19  Wim Taymans  <wim@fluendo.com>
+
+	* tools/gst-inspect.c: (print_plugin_features):
+	A plugin feature does unfortunatly not use the
+	object name yet...
+
 2005-05-18  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbuffer.c: (gst_buffer_is_span_fast), (gst_buffer_span):

@@ -943,7 +943,7 @@ print_plugin_features (GstPlugin * plugin)
       GstElementFactory *factory;
 
       factory = GST_ELEMENT_FACTORY (feature);
-      n_print ("  %s: %s\n", GST_OBJECT_NAME (factory),
+      n_print ("  %s: %s\n", GST_PLUGIN_FEATURE_NAME (factory),
           factory->details.longname);
       num_elements++;
     }
