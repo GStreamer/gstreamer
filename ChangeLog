@@ -1,3 +1,10 @@
+2005-05-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/playback/gstplaybasebin.c: (probe_triggered):
+	  Fix missing unlock.
+	* gst/playback/gstplaybin.c: (add_sink):
+	  First add, then link (otherwise pad link fails).
+
 2005-05-19  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* examples/Makefile.am:

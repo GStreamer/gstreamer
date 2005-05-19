@@ -796,6 +796,9 @@ probe_triggered (GstProbe * probe, GstMiniObject ** data, gpointer user_data)
          * and continue, eventually the other streams will be EOSed and
          * we can switch out this group. */
         GST_DEBUG ("group %p not completely muted", group);
+
+        GROUP_UNLOCK (play_base_bin);
+
         /* remove the EOS if we have something left */
         return !have_left;
       }
