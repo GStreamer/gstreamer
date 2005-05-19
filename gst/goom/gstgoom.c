@@ -24,7 +24,7 @@
 #include <string.h>
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <gst/bytestream/adapter.h>
+#include <gst/base/gstadapter.h>
 #include "goom_core.h"
 
 GST_DEBUG_CATEGORY_STATIC (goom_debug);
