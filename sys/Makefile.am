@@ -7,7 +7,7 @@
 # if USE_OSS
 # OSS_DIR=oss
 # else
-# OSS_DIR=
+OSS_DIR=
 # endif
 
 # if USE_OSX_AUDIO

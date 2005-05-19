@@ -9,7 +9,7 @@ endif
 # if USE_GCONFTOOL
 # GCONF_DIR = gconf
 # else
-# GCONF_DIR =
+GCONF_DIR =
 # endif
 
 SUBDIRS = 			\
