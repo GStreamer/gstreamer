@@ -313,7 +313,6 @@ GST_PLUGINS_ALL="\
 		rtp	\
 		rtsp	\
 		smpte	\
-		tcp	\
 		udp"
 
 dnl see if we can build C++ plug-ins
