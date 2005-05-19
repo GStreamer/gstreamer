@@ -10,8 +10,6 @@
 <!ENTITY GstClock SYSTEM "xml/gstclock.xml">
 <!ENTITY GstCompat SYSTEM "xml/gstcompat.xml">
 <!ENTITY GstConfig SYSTEM "xml/gstconfig.xml">
-<!ENTITY GstCpu SYSTEM "xml/gstcpu.xml">
-<!ENTITY GstData SYSTEM "xml/gstdata.xml">
 <!ENTITY GstElement SYSTEM "xml/gstelement.xml">
 <!ENTITY GstElementDetails SYSTEM "xml/gstelementdetails.xml">
 <!ENTITY GstElementFactory SYSTEM "xml/gstelementfactory.xml">
@@ -45,7 +43,6 @@
 <!ENTITY GstSystemClock SYSTEM "xml/gstsystemclock.xml">
 <!ENTITY GstTagList SYSTEM "xml/gsttaglist.xml">
 <!ENTITY GstTagSetter SYSTEM "xml/gsttagsetter.xml">
-<!ENTITY GstThread SYSTEM "xml/gstthread.xml">
 <!ENTITY GstTrace SYSTEM "xml/gsttrace.xml">
 <!ENTITY GstTrashStack SYSTEM "xml/gsttrashstack.xml">
 <!ENTITY GstTypeFind SYSTEM "xml/gsttypefind.xml">
@@ -100,8 +97,6 @@
     &GstCaps;
     &GstClock;
     &GstConfig;
-    &GstCpu;
-    &GstData;
     &GstElement;
     &GstElementDetails;
     &GstElementFactory;
@@ -133,7 +128,6 @@
     &GstSystemClock;
     &GstTagList;
     &GstTagSetter;
-    &GstThread;
     &GstTypeFind;
     &GstTypeFindFactory;
     &GstTypes;

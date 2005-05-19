@@ -300,52 +300,6 @@ GST_PLUGIN_EXPORT
 </SECTION>
 
 <SECTION>
-<FILE>gstcpu</FILE>
-<TITLE>GstCPU</TITLE>
-GstCPUFlags
-gst_cpu_get_flags
-<SUBSECTION Standard>
-GST_TYPE_CPU_FLAGS
-<SUBSECTION Private>
-gst_cpu_flags_get_type
-</SECTION>
-
-<SECTION>
-<FILE>gstdata</FILE>
-<TITLE>GstData</TITLE>
-GST_DATA
-GST_DATA_TYPE
-GST_DATA_FLAGS
-GST_DATA_FLAG_SHIFT
-GST_DATA_FLAG_UNSET
-GstData
-GstDataFreeFunction
-GstDataCopyFunction
-GstDataFlags
-GST_DATA_REFCOUNT
-GST_DATA_REFCOUNT_VALUE
-GST_DATA_COPY_FUNC
-GST_DATA_FREE_FUNC
-gst_data_init
-gst_data_dispose
-gst_data_copy_into
-gst_data_copy
-gst_data_is_writable
-gst_data_copy_on_write
-gst_data_ref
-gst_data_ref_by_count
-gst_data_unref
-<SUBSECTION Standard>
-GST_TYPE_DATA
-GST_DATA_FLAG_SET
-GST_DATA_FLAG_IS_SET
-GST_TYPE_DATA_FLAGS
-<SUBSECTION Private>
-gst_data_get_type
-gst_data_flags_get_type
-</SECTION>
-
-<SECTION>
 <FILE>gstelement</FILE>
 <TITLE>GstElement</TITLE>
 GstElement
@@ -1622,29 +1576,6 @@ GST_TAG_SETTER_GET_IFACE
 GST_TYPE_TAG_SETTER
 <SUBSECTION Private>
 gst_tag_setter_get_type
-</SECTION>
-
-<SECTION>
-<FILE>gstthread</FILE>
-<TITLE>GstThread</TITLE>
-GstThread
-gst_thread_current
-GstThreadState
-gst_thread_new
-gst_thread_set_priority
-gst_thread_get_current
-<SUBSECTION Standard>
-GstThreadClass
-GST_THREAD
-GST_IS_THREAD
-GST_THREAD_CLASS
-GST_IS_THREAD_CLASS
-GST_THREAD_GET_CLASS
-GST_TYPE_THREAD
-GST_TYPE_THREAD_STATE
-<SUBSECTION Private>
-gst_thread_get_type
-gst_thread_state_get_type
 </SECTION>
 
 <SECTION>

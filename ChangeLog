@@ -1,5 +1,16 @@
 2005-05-19  David Schleef  <ds@schleef.org>
 
+	* configure.ac: Use -no-common everywhere.  In a sane world, it
+	  would be the default in libtool, because without it, you can't
+	  build DLLs on Windows.
+	* docs/gst/gstreamer-docs.sgml: Remove GstCpu, GstData, GstThread
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstcpu.sgml:
+	* docs/gst/tmpl/gstdata.sgml:
+	* docs/gst/tmpl/gstthread.sgml:
+
+2005-05-19  David Schleef  <ds@schleef.org>
+
 	* gst/gstminiobject.c: (gst_value_set_mini_object),
 	(gst_value_take_mini_object), (gst_value_get_mini_object):
 	* gst/gstminiobject.h: Add GValue set/get functions.
