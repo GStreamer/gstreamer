@@ -11,4 +11,5 @@ GTK_SUBDIRS=
 # endif
 
 SUBDIRS=$(GTK_SUBDIRS)
-DIST_SUBDIRS=capsfilter dynparams seeking indexing switch
+#DIST_SUBDIRS=capsfilter dynparams seeking indexing switch
+DIST_SUBDIRS=seeking

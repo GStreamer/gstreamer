@@ -1,3 +1,8 @@
+2005-05-19  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* examples/Makefile.am:
+	fix buildbot (make distcheck)
+
 2005-05-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/playback/gstplaybin.c: (gen_vis_element):
