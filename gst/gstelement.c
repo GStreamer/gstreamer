@@ -1040,7 +1040,7 @@ gst_element_get_random_pad (GstElement * element, GstPadDirection dir)
   /* ERROR handling */
 wrong_direction:
   {
-    g_warning ("unknown pad direction");
+    g_warning ("unknown pad direction %d", dir);
     return NULL;
   }
 }

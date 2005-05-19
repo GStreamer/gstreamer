@@ -148,13 +148,10 @@ gst_buffer_init (GTypeInstance * instance, gpointer g_class)
 
   GST_CAT_LOG (GST_CAT_BUFFER, "init %p", buffer);
 
-  //GST_BUFFER_DATA (buffer) = NULL;
-  //GST_BUFFER_SIZE (buffer) = 0;
   GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET_NONE;
   GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET_NONE;
-  //GST_BUFFER_CAPS (buffer) = NULL;
 }
 
 /**
@@ -270,19 +267,23 @@ struct _GstSubBufferClass
   GstBufferClass buffer_class;
 };
 
+static GstBufferClass *sub_parent_class;
+
 static void gst_subbuffer_init (GTypeInstance * instance, gpointer g_class);
+static void gst_subbuffer_class_init (gpointer g_class, gpointer class_data);
+static void gst_subbuffer_finalize (GstSubBuffer * buffer);
 
 static GType
 gst_subbuffer_get_type (void)
 {
-  static GType _gst_subbuffer_type;
+  static GType _gst_subbuffer_type = 0;
 
   if (G_UNLIKELY (_gst_subbuffer_type == 0)) {
     static const GTypeInfo subbuffer_info = {
       sizeof (GstSubBufferClass),
       NULL,
       NULL,
-      NULL,
+      gst_subbuffer_class_init,
       NULL,
       NULL,
       sizeof (GstSubBuffer),
@@ -298,9 +299,27 @@ gst_subbuffer_get_type (void)
 }
 
 static void
+gst_subbuffer_class_init (gpointer g_class, gpointer class_data)
+{
+  GstBufferClass *buffer_class = GST_BUFFER_CLASS (g_class);
+
+  sub_parent_class = g_type_class_ref (GST_TYPE_BUFFER);
+
+  buffer_class->mini_object_class.finalize =
+      (GstMiniObjectFinalizeFunction) gst_subbuffer_finalize;
+}
+
+static void
+gst_subbuffer_finalize (GstSubBuffer * buffer)
+{
+  gst_buffer_unref (buffer->parent);
+
+  GST_MINI_OBJECT_CLASS (sub_parent_class)->finalize (GST_MINI_OBJECT (buffer));
+}
+
+static void
 gst_subbuffer_init (GTypeInstance * instance, gpointer g_class)
 {
-
 }
 
 /**

@@ -203,8 +203,8 @@ gst_bus_post (GstBus * bus, GstMessage * message)
   g_return_val_if_fail (GST_IS_BUS (bus), FALSE);
   g_return_val_if_fail (GST_IS_MESSAGE (message), FALSE);
 
-  //g_print ("posting message on bus, type %d\n", GST_MESSAGE_TYPE (message));
-  GST_DEBUG_OBJECT (bus, "posting message on bus");
+  GST_DEBUG_OBJECT (bus, "posting message on bus, type %d",
+      GST_MESSAGE_TYPE (message));
 
   GST_LOCK (bus);
 

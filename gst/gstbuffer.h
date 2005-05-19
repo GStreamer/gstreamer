@@ -160,9 +160,6 @@ GstBuffer*	gst_buffer_span			(GstBuffer *buf1, guint32 offset, GstBuffer *buf2, 
 /* --- protected --- */
 void		_gst_buffer_initialize		(void);
 
-void		gst_buffer_default_free		(GstBuffer *buffer);
-GstBuffer*	gst_buffer_default_copy		(GstBuffer *buffer);
-
 G_END_DECLS
 
 #endif /* __GST_BUFFER_H__ */

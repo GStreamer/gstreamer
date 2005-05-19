@@ -102,13 +102,14 @@ gst_message_init (GTypeInstance * instance, gpointer g_class)
   GstMessage *message = GST_MESSAGE (instance);
 
   message->timestamp = GST_CLOCK_TIME_NONE;
-
 }
 
 static void
 gst_message_finalize (GstMessage * message)
 {
   g_return_if_fail (message != NULL);
+
+  GST_CAT_INFO (GST_CAT_MESSAGE, "finalize message %p", message);
 
   if (GST_MESSAGE_SRC (message)) {
     gst_object_unref (GST_MESSAGE_SRC (message));
