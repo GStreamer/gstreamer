@@ -1,3 +1,9 @@
+2005-05-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* configure.ac:
+	* ext/esd/Makefile.am:
+	  Disable tcp elements and esdmon (they don't compile).
+
 2005-05-19  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* Makefile.am:
