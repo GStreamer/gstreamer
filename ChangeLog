@@ -1,3 +1,8 @@
+2005-05-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstpipeline.c: (gst_pipeline_send_event):
+	  Do not access variables after they have been deleted.
+
 2005-05-19  Wim Taymans  <wim@fluendo.com>
 
 	* tools/gst-inspect.c: (print_plugin_features):

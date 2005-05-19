@@ -289,6 +289,7 @@ gst_pipeline_send_event (GstElement * element, GstEvent * event)
   gboolean was_playing;
   gboolean res;
   GstElementState state;
+  GstEventType event_type = GST_EVENT_TYPE (event);
 
   /* need to call _get_state() since a bin state is only updated
    * with this call. FIXME, we should probably not block but just
@@ -296,12 +297,12 @@ gst_pipeline_send_event (GstElement * element, GstEvent * event)
   gst_element_get_state (element, &state, NULL, NULL);
   was_playing = state == GST_STATE_PLAYING;
 
-  if (was_playing && GST_EVENT_TYPE (event) == GST_EVENT_SEEK)
+  if (was_playing && event_type == GST_EVENT_SEEK)
     gst_element_set_state (element, GST_STATE_PAUSED);
 
   res = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
 
-  if (was_playing && GST_EVENT_TYPE (event) == GST_EVENT_SEEK)
+  if (was_playing && event_type == GST_EVENT_SEEK)
     gst_element_set_state (element, GST_STATE_PLAYING);
 
   return res;
