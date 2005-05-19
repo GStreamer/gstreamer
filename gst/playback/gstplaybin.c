@@ -569,23 +569,22 @@ gen_vis_element (GstPlayBin * play_bin)
   GstElement *vsink;
   GstElement *conv;
   GstElement *vis;
-  GstElement *vqueue;
-  GstElement *vthread;
-  GstPad *pad;
+  GstElement *vqueue, *aqueue;
+  GstPad *pad, *rpad;
 
   element = gst_bin_new ("visbin");
   tee = gst_element_factory_make ("tee", "tee");
 
   vqueue = gst_element_factory_make ("queue", "vqueue");
-  vthread = gst_element_factory_make ("thread", "vthread");
+  aqueue = gst_element_factory_make ("queue", "aqueue");
 
   asink = gen_audio_element (play_bin);
   vsink = gen_video_element (play_bin);
 
   gst_bin_add (GST_BIN (element), asink);
   gst_bin_add (GST_BIN (element), vqueue);
-  gst_bin_add (GST_BIN (vthread), vsink);
-  gst_bin_add (GST_BIN (element), vthread);
+  gst_bin_add (GST_BIN (element), aqueue);
+  gst_bin_add (GST_BIN (element), vsink);
   gst_bin_add (GST_BIN (element), tee);
 
   conv = gst_element_factory_make ("audioconvert", "aconv");
@@ -604,12 +603,17 @@ gen_vis_element (GstPlayBin * play_bin)
 
   gst_element_link_pads (vqueue, "src", vsink, "sink");
 
-  pad = gst_element_get_pad (asink, "sink");
-  gst_pad_link (gst_element_get_request_pad (tee, "src%d"), pad);
+  pad = gst_element_get_pad (aqueue, "sink");
+  rpad = gst_element_get_request_pad (tee, "src%d");
+  gst_pad_link (rpad, pad);
+  g_object_unref (G_OBJECT (rpad));
   g_object_unref (G_OBJECT (pad));
+  gst_element_link_pads (aqueue, "src", asink, "sink");
 
   pad = gst_element_get_pad (conv, "sink");
-  gst_pad_link (gst_element_get_request_pad (tee, "src%d"), pad);
+  rpad = gst_element_get_request_pad (tee, "src%d");
+  gst_pad_link (rpad, pad);
+  g_object_unref (G_OBJECT (rpad));
   g_object_unref (G_OBJECT (pad));
 
   pad = gst_element_get_pad (tee, "sink");

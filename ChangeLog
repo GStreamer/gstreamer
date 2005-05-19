@@ -1,3 +1,8 @@
+2005-05-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/playback/gstplaybin.c: (gen_vis_element):
+	  Remove some wrong code. Doesn't work yet.
+
 2005-05-19  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/net/Makefile.am:
