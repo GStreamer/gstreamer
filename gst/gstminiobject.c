@@ -270,6 +270,35 @@ gst_value_mini_object_lcopy (const GValue * value, guint n_collect_values,
   return NULL;
 }
 
+void
+gst_value_set_mini_object (GValue * value, GstMiniObject * mini_object)
+{
+  g_return_if_fail (GST_VALUE_HOLDS_MINI_OBJECT (value));
+  g_return_if_fail (mini_object == NULL || GST_IS_MINI_OBJECT (mini_object));
+
+  gst_mini_object_replace ((GstMiniObject **) & value->data[0].v_pointer,
+      mini_object);
+}
+
+void
+gst_value_take_mini_object (GValue * value, GstMiniObject * mini_object)
+{
+  g_return_if_fail (GST_VALUE_HOLDS_MINI_OBJECT (value));
+  g_return_if_fail (mini_object == NULL || GST_IS_MINI_OBJECT (mini_object));
+
+  gst_mini_object_replace ((GstMiniObject **) & value->data[0].v_pointer,
+      mini_object);
+  gst_mini_object_unref (mini_object);
+}
+
+GstMiniObject *
+gst_value_get_mini_object (const GValue * value)
+{
+  g_return_val_if_fail (GST_VALUE_HOLDS_MINI_OBJECT (value), NULL);
+
+  return value->data[0].v_pointer;
+}
+
 /* param spec */
 
 static GType gst_param_spec_mini_object_get_type (void);

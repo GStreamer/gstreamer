@@ -46,6 +46,8 @@ typedef void (*GstMiniObjectFinalizeFunction) (GstMiniObject *);
 #define GST_MINI_OBJECT_FLAG_SET(obj,flag)           (GST_MINI_OBJECT_FLAGS (obj) |= (flag))
 #define GST_MINI_OBJECT_FLAG_UNSET(obj,flag)         (GST_MINI_OBJECT_FLAGS (obj) &= ~(flag))
 
+#define GST_VALUE_HOLDS_MINI_OBJECT(value)  (G_VALUE_HOLDS(value, GST_TYPE_MINI_OBJECT))
+
 typedef enum
 {
   GST_MINI_OBJECT_FLAG_READONLY = (1<<0),
@@ -85,6 +87,11 @@ void gst_mini_object_replace (GstMiniObject **olddata, GstMiniObject *newdata);
 
 GParamSpec * gst_param_spec_mini_object (const char *name, const char *nick,
     const char *blurb, GType object_type, GParamFlags flags);
+
+void gst_value_set_mini_object (GValue *value, GstMiniObject *mini_object);
+void gst_value_take_mini_object (GValue *value, GstMiniObject *mini_object);
+GstMiniObject * gst_value_get_mini_object (const GValue *value);
+
 
 G_END_DECLS
 

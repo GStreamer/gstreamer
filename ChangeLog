@@ -1,3 +1,9 @@
+2005-05-19  David Schleef  <ds@schleef.org>
+
+	* gst/gstminiobject.c: (gst_value_set_mini_object),
+	(gst_value_take_mini_object), (gst_value_get_mini_object):
+	* gst/gstminiobject.h: Add GValue set/get functions.
+
 2005-05-19  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbuffer.c: (gst_buffer_init), (gst_subbuffer_get_type),
