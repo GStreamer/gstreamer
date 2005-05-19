@@ -1,0 +1,9 @@
+The network libraries
+---------------------
+
+GstNetBuffer:
+
+  A GstBuffer subclass that can be used by network sources or sinks to
+  store additional to and from addresses. This is required for plugins
+  that operate on this data like RTP.
+

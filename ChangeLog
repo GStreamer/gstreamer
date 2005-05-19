@@ -1,3 +1,17 @@
+2005-05-19  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/net/Makefile.am:
+	* gst-libs/gst/net/README:
+	* gst-libs/gst/net/gstnetbuffer.c: (gst_netbuffer_get_type),
+	(gst_netbuffer_class_init), (gst_netbuffer_init),
+	(gst_netbuffer_finalize), (gst_netbuffer_copy),
+	(gst_netbuffer_new), (gst_netaddress_set_ip4_address),
+	(gst_netaddress_set_ip6_address), (gst_netaddress_get_net_type),
+	(gst_netaddress_get_ip4_address), (gst_netaddress_get_ip6_address):
+	* gst-libs/gst/net/gstnetbuffer.h:
+	Added buffer subclass to store extra to/from addresses for
+	network sources/sinks.
+
 2005-05-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst-libs/gst/gconf/gconf.c: (gst_bin_find_unconnected_pad):
