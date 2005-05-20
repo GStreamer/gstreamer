@@ -2,5 +2,3 @@ ext/alsa/gstalsamixertrack.c
 ext/cdparanoia/gstcdparanoia.c
 ext/gnomevfs/gstgnomevfssrc.c
 ext/gnomevfs/gstgnomevfssink.c
-sys/v4l/v4l_calls.c
-sys/v4l/v4l_calls.h
