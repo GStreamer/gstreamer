@@ -183,6 +183,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_includedir}/gstreamer-%{majorminor}/gst/control
 %{_includedir}/gstreamer-%{majorminor}/gst/control/*.h
 %dir %{_includedir}/gstreamer-%{majorminor}/gst/getbits
+%{_includedir}/gstreamer-%{majorminor}/gst/base/gstadapter.h
 %{_includedir}/gstreamer-%{majorminor}/gst/getbits/getbits.h
 %{_includedir}/gstreamer-%{majorminor}/gst/base/gstbasesink.h
 %{_includedir}/gstreamer-%{majorminor}/gst/base/gstbasesrc.h
