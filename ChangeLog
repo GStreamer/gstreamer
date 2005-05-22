@@ -1,3 +1,62 @@
+2005-05-21  David Schleef  <ds@schleef.org>
+
+	* docs/gst/tmpl/old/GstBin.sgml:
+	* docs/gst/tmpl/old/GstBuffer.sgml:
+	* docs/gst/tmpl/old/GstCaps.sgml:
+	* docs/gst/tmpl/old/GstClock.sgml:
+	* docs/gst/tmpl/old/GstCompat.sgml:
+	* docs/gst/tmpl/old/GstData.sgml:
+	* docs/gst/tmpl/old/GstElement.sgml:
+	* docs/gst/tmpl/old/GstEvent.sgml:
+	* docs/gst/tmpl/old/GstIndex.sgml:
+	* docs/gst/tmpl/old/GstStructure.sgml:
+	* docs/gst/tmpl/old/GstTag.sgml:
+	* docs/gst/tmpl/old/cothreads.sgml:
+	* docs/gst/tmpl/old/cothreads_compat.sgml:
+	* docs/gst/tmpl/old/gettext.sgml:
+	* docs/gst/tmpl/old/gobject2gtk.sgml:
+	* docs/gst/tmpl/old/grammar.tab.sgml:
+	* docs/gst/tmpl/old/gst-i18n-app.sgml:
+	* docs/gst/tmpl/old/gst-i18n-lib.sgml:
+	* docs/gst/tmpl/old/gst_private.sgml:
+	* docs/gst/tmpl/old/gstaggregator.sgml:
+	* docs/gst/tmpl/old/gstarch.sgml:
+	* docs/gst/tmpl/old/gstatomic_impl.sgml:
+	* docs/gst/tmpl/old/gstbufferstore.sgml:
+	* docs/gst/tmpl/old/gstdata_private.sgml:
+	* docs/gst/tmpl/old/gstdisksink.sgml:
+	* docs/gst/tmpl/old/gstdisksrc.sgml:
+	* docs/gst/tmpl/old/gstelementfactory.sgml:
+	* docs/gst/tmpl/old/gstextratypes.sgml:
+	* docs/gst/tmpl/old/gstfakesink.sgml:
+	* docs/gst/tmpl/old/gstfakesrc.sgml:
+	* docs/gst/tmpl/old/gstfdsink.sgml:
+	* docs/gst/tmpl/old/gstfdsrc.sgml:
+	* docs/gst/tmpl/old/gstfilesink.sgml:
+	* docs/gst/tmpl/old/gstfilesrc.sgml:
+	* docs/gst/tmpl/old/gsthttpsrc.sgml:
+	* docs/gst/tmpl/old/gstidentity.sgml:
+	* docs/gst/tmpl/old/gstindexfactory.sgml:
+	* docs/gst/tmpl/old/gstmarshal.sgml:
+	* docs/gst/tmpl/old/gstmd5sink.sgml:
+	* docs/gst/tmpl/old/gstmultidisksrc.sgml:
+	* docs/gst/tmpl/old/gstmultifilesrc.sgml:
+	* docs/gst/tmpl/old/gstpadtemplate.sgml:
+	* docs/gst/tmpl/old/gstpipefilter.sgml:
+	* docs/gst/tmpl/old/gstschedulerfactory.sgml:
+	* docs/gst/tmpl/old/gstsearchfuncs.sgml:
+	* docs/gst/tmpl/old/gstshaper.sgml:
+	* docs/gst/tmpl/old/gstspider.sgml:
+	* docs/gst/tmpl/old/gstspideridentity.sgml:
+	* docs/gst/tmpl/old/gststatistics.sgml:
+	* docs/gst/tmpl/old/gsttee.sgml:
+	* docs/gst/tmpl/old/gsttimecache.sgml:
+	* docs/gst/tmpl/old/gsttypefindfactory.sgml:
+	* docs/gst/tmpl/old/gstxmlregistry.sgml:
+	* docs/gst/tmpl/old/gthread-cothreads.sgml:
+	* docs/gst/tmpl/old/types.sgml:
+	  I didn't intend to add these or check them in.
+
 2005-05-19  David Schleef  <ds@schleef.org>
 
 	* configure.ac: Use -no-common everywhere.  In a sane world, it
