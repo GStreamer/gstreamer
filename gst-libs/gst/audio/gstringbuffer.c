@@ -762,8 +762,9 @@ gst_ringbuffer_clear (GstRingBuffer * buf, gint segment)
   g_return_if_fail (buf->empty_seg != NULL);
 
   data = GST_BUFFER_DATA (buf->data);
-  data += (segment % buf->spec.segtotal) * buf->spec.segsize,
-      GST_DEBUG ("clear segment %d @%p", segment, data);
+  data += (segment % buf->spec.segtotal) * buf->spec.segsize;
+
+  GST_DEBUG ("clear segment %d @%p", segment, data);
 
   memcpy (data, buf->empty_seg, buf->spec.segsize);
 }
