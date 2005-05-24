@@ -383,6 +383,8 @@ gst_ffmpegscale_chain (GstPad * pad, GstData * data)
   
   img_resample (scale->res, &scale->to_frame, &scale->from_frame);    
   
+  gst_buffer_stamp (outbuf, (const GstBuffer *) inbuf);
+
   gst_buffer_unref (inbuf);
   gst_pad_push (scale->srcpad, GST_DATA (outbuf));
   

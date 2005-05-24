@@ -1,3 +1,8 @@
+2005-05-24  Edward Hervey  <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegscale.c: (gst_ffmpegscale_chain):
+	Always stamp your buffers !
+
 2005-05-17  Luca Ognibene  <luogni@tin.it>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c (gst_ffmpeg_pixfmt_to_caps): 
