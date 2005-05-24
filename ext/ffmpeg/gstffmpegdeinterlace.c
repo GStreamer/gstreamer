@@ -302,6 +302,8 @@ gst_ffmpegdeinterlace_chain (GstPad * pad, GstData * data)
 
   avpicture_deinterlace (&deinterlace->to_frame, &deinterlace->from_frame,
 			 deinterlace->pixfmt, deinterlace->width, deinterlace->height);
+
+  gst_buffer_stamp (outbuf, (const GstBuffer *) inbuf);
   
   gst_buffer_unref (inbuf);
   gst_pad_push (deinterlace->srcpad, GST_DATA (outbuf));
