@@ -1,3 +1,11 @@
+2005-05-24  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/draft-ghostpads.txt:
+	* docs/design/draft-push-pull.txt:
+	* docs/design/draft-query.txt:
+	* docs/design/part-overview.txt:
+	Docs updates, added general overview doc.
+
 2005-05-21  David Schleef  <ds@schleef.org>
 
 	* docs/gst/tmpl/old/GstBin.sgml:

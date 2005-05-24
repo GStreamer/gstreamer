@@ -1,6 +1,10 @@
 DRAFT push-pull scheduling
 --------------------------
 
+Status
+
+  DRAFT
+
 Observations:
 
   - The main scheduling mode is chain based scheduling where the source
@@ -34,12 +38,13 @@ Types of pull based scheduling:
   - some sources can do random access (file source, ...)
 
   - some sources can read a random number of bytes but not at a random
-    offset. (audio cards, ...)
+    offset. (audio cards, ...) Audio cards using a ringbuffer can
+    however do random access in the ringbuffer.
 
   - some sources can do random access in a range of bytes but not in
     another range. (a caching network source).
 
-  - some sources can do a fixed size data but without an offset. 
+  - some sources can do a fixed size data and without an offset. 
     (video sources, ...)
   
       
@@ -54,7 +59,8 @@ Current scheduling decision:
 Problems:
 
   - core makes a touch desicion without knowing anything about the 
-    element. 
+    element. Some elements are able to deal with a pull_range()
+    without offset while others need full random  access.
     
 
 Requirements:

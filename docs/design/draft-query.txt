@@ -1,6 +1,10 @@
 DRAFT Query
 -----------
 
+Status
+
+  Implemented, move me to design...
+
 Purpose
 
   Queries are used to get information about the stream. 
