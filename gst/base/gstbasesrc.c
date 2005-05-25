@@ -716,7 +716,9 @@ gst_basesrc_activate (GstPad * pad, GstActivateMode mode)
           gst_pad_start_task (pad, (GstTaskFunction) gst_basesrc_loop, pad);
       break;
     case GST_ACTIVATE_PULL:
-      result = TRUE;
+      result = basesrc->seekable;
+      if (!result)
+        gst_basesrc_stop (basesrc);
       break;
     case GST_ACTIVATE_NONE:
       /* step 1, unblock clock sync (if any) */

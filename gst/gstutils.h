@@ -281,6 +281,7 @@ void            	gst_bin_remove_many             (GstBin *bin, GstElement *eleme
 
 /* buffer functions */
 GstBuffer *		gst_buffer_merge		(GstBuffer * buf1, GstBuffer * buf2);
+GstBuffer *		gst_buffer_join			(GstBuffer * buf1, GstBuffer * buf2);
 void			gst_buffer_stamp		(GstBuffer * dest, const GstBuffer * src);
 
 /* atomic functions */

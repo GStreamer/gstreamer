@@ -1,3 +1,19 @@
+2005-05-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/base/gstbasesrc.c: (gst_basesrc_activate):
+	  Don't go in pull mode for non-seekable sources.
+	* gst/elements/gsttypefindelement.c: (gst_type_find_element_init),
+	(gst_type_find_element_dispose), (gst_type_find_handle_src_query),
+	(free_entry), (stop_typefinding),
+	(gst_type_find_element_handle_event), (find_peek),
+	(gst_type_find_element_chain), (do_pull_typefind),
+	(gst_type_find_element_change_state):
+	  Allow typefinding (w/o seeking) in push-mode, simplified version
+	  of what was in 0.8.
+	* gst/gstutils.c: (gst_buffer_join):
+	* gst/gstutils.h:
+	  gst_buffer_join() from 0.8.
+
 2005-05-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstpad.c: (gst_pad_set_active), (gst_pad_link_prepare),
