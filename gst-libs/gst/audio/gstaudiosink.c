@@ -294,6 +294,7 @@ gst_audioringbuffer_release (GstRingBuffer * buf)
 
   /* free the buffer */
   gst_buffer_unref (buf->data);
+  buf->data = NULL;
 
   if (csink->close)
     result = csink->close (sink);

@@ -618,11 +618,7 @@ gst_subparse_chain (GstPad * sinkpad, GstBuffer * buf)
   GST_DEBUG ("gst_subparse_chain");
   self = GST_SUBPARSE (GST_OBJECT_PARENT (sinkpad));
 
-  GST_STREAM_LOCK (sinkpad);
-
   ret = handle_buffer (self, buf);
-
-  GST_STREAM_UNLOCK (sinkpad);
 
   return ret;
 }

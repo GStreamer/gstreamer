@@ -244,8 +244,6 @@ gst_audio_convert_chain (GstPad * pad, GstBuffer * buf)
    * - convert rate and channels
    * - convert back to output format
    */
-  GST_STREAM_LOCK (pad);
-
   if (!GST_RPAD_CAPS (this->sink)) {
     goto not_negotiated;
   } else if (!GST_RPAD_CAPS (this->src)) {
@@ -262,8 +260,6 @@ gst_audio_convert_chain (GstPad * pad, GstBuffer * buf)
 
   ret = gst_pad_push (this->src, buf);
 
-  GST_STREAM_UNLOCK (pad);
-
   return ret;
 
 not_negotiated:
@@ -271,7 +267,6 @@ not_negotiated:
     GST_ELEMENT_ERROR (this, CORE, NEGOTIATION, (NULL),
         ("Pad not negotiated before chain function was called"));
     gst_buffer_unref (buf);
-    GST_STREAM_UNLOCK (pad);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 no_format:
@@ -279,7 +274,6 @@ no_format:
     GST_ELEMENT_ERROR (this, CORE, NEGOTIATION, (NULL),
         ("Could not negotiate format"));
     gst_buffer_unref (buf);
-    GST_STREAM_UNLOCK (pad);
     return GST_FLOW_ERROR;
   }
 }
@@ -648,12 +642,10 @@ gst_audio_convert_change_state (GstElement * element)
 
   switch (transition) {
     case GST_STATE_PAUSED_TO_READY:
-      GST_STREAM_LOCK (this->sink);
       this->convert_internal = NULL;
       gst_audio_convert_unset_matrix (this);
       gst_caps_replace (&GST_RPAD_CAPS (this->sink), NULL);
       gst_caps_replace (&GST_RPAD_CAPS (this->src), NULL);
-      GST_STREAM_UNLOCK (this->sink);
       break;
     default:
       break;

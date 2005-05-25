@@ -457,6 +457,7 @@ gst_baseaudiosink_event (GstBaseSink * bsink, GstEvent * event)
       sample = 0;
 
     have_value:
+      GST_DEBUG ("discont now at %lld", sample);
       gst_ringbuffer_set_sample (sink->ringbuffer, sample);
       break;
     }
@@ -483,7 +484,8 @@ gst_baseaudiosink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   offset = GST_BUFFER_OFFSET (buf);
 
-  GST_DEBUG ("in offset %llu, time %lld", offset, GST_BUFFER_TIMESTAMP (buf));
+  GST_DEBUG ("in offset %llu, time %" GST_TIME_FORMAT, offset,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
   if (!gst_ringbuffer_is_acquired (sink->ringbuffer))
     goto wrong_state;
 
