@@ -1,3 +1,16 @@
+2005-05-25  Wim Taymans  <wim@fluendo.com>
+
+	* ext/amrnb/amrnbdec.c: (gst_amrnbdec_init), (gst_amrnbdec_chain),
+	(gst_amrnbdec_state_change):
+	* ext/amrnb/amrnbenc.c: (gst_amrnbenc_base_init),
+	(gst_amrnbenc_finalize), (gst_amrnbenc_chain),
+	(gst_amrnbenc_state_change):
+	* ext/amrnb/amrnbparse.c: (gst_amrnbparse_init),
+	(gst_amrnbparse_query), (gst_amrnbparse_chain),
+	(gst_amrnbparse_read_header), (gst_amrnbparse_loop),
+	(gst_amrnbparse_sink_activate), (gst_amrnbparse_state_change):
+	Core already took the lock.
+
 2005-05-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* configure.ac:
