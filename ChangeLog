@@ -1,3 +1,8 @@
+2005-05-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_packet):
+	  Work with streaming input.
+
 2005-05-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:

@@ -664,6 +664,12 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
       GST_DEBUG_OBJECT (ogg,
           "%p could not get buffer from peer %08lx, packetno %lld", pad,
           pad->serialno, pad->packetno);
+      buf = gst_buffer_new_and_alloc (packet->bytes);
+      memcpy (buf->data, packet->packet, packet->bytes);
+      pad->offset = packet->granulepos;
+      GST_BUFFER_OFFSET (buf) = -1;
+      GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
+      pad->headers = g_list_append (pad->headers, buf);
     }
   } else {
     /* initialize our internal decoder with packets */
