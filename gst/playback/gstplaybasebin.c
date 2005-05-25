@@ -202,9 +202,7 @@ gst_play_base_bin_dispose (GObject * object)
   g_free (play_base_bin->suburi);
   play_base_bin->suburi = NULL;
 
-  if (G_OBJECT_CLASS (parent_class)->dispose) {
-    G_OBJECT_CLASS (parent_class)->dispose (object);
-  }
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -312,8 +310,7 @@ group_destroy (GstPlayBaseGroup * group)
       fakesrc = (GstElement *) g_object_get_data (G_OBJECT (pad), "fakesrc");
       if (fakesrc != NULL) {
         GST_LOG ("removing fakesrc from %s:%s",
-            gst_pad_get_name (pad),
-            GST_ELEMENT_NAME (gst_pad_get_parent (pad)));
+            GST_PAD_NAME (pad), GST_ELEMENT_NAME (gst_pad_get_parent (pad)));
         gst_bin_remove (GST_BIN (play_base_bin), fakesrc);
       }
     }
@@ -321,7 +318,7 @@ group_destroy (GstPlayBaseGroup * group)
     /* if the group is currently being played, we have to remove the element 
      * from the thread */
     if (get_active_group (play_base_bin) == group) {
-      GST_LOG ("removing preroll element %s", gst_element_get_name (element));
+      GST_LOG ("removing preroll element %s", GST_ELEMENT_NAME (element));
       gst_bin_remove (group->type[n].bin, element);
       gst_bin_remove (group->type[n].bin, group->type[n].selector);
     } else {
@@ -388,7 +385,7 @@ group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal, gboolean subtitle)
       sig_id =
           GPOINTER_TO_INT (g_object_get_data (G_OBJECT (element), "signal_id"));
 
-      GST_LOG ("removing preroll signal %s", gst_element_get_name (element));
+      GST_LOG ("removing preroll signal %s", GST_ELEMENT_NAME (element));
       g_signal_handler_disconnect (G_OBJECT (element), sig_id);
     }
   }
@@ -469,7 +466,7 @@ check_queue (GstProbe * probe, GstMiniObject ** data, gpointer user_data)
 static void
 queue_overrun (GstElement * element, GstPlayBaseBin * play_base_bin)
 {
-  GST_DEBUG ("queue %s overrun", gst_element_get_name (element));
+  GST_DEBUG ("queue %s overrun", GST_ELEMENT_NAME (element));
 
   group_commit (play_base_bin, FALSE, FALSE);
 
@@ -550,7 +547,7 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
     GstStreamInfo * info)
 {
   GstElement *selector, *preroll;
-  gchar *name;
+  gchar *name, *padname;
   const gchar *prename;
   guint sig;
   GstPad *preroll_pad;
@@ -566,20 +563,26 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
     g_return_if_reached ();
 
   /* create stream selector */
-  name = g_strdup_printf ("selector_%s_%s", prename, gst_pad_get_name (pad));
+  padname = gst_pad_get_name (pad);
+  name = g_strdup_printf ("selector_%s_%s", prename, padname);
   selector = g_object_new (GST_TYPE_STREAM_SELECTOR, NULL);
   gst_object_set_name (GST_OBJECT (selector), name);
   g_free (name);
 
   /* create preroll queue */
-  name = g_strdup_printf ("preroll_%s_%s", prename, gst_pad_get_name (pad));
+  name = g_strdup_printf ("preroll_%s_%s", prename, padname);
   preroll = gst_element_factory_make ("queue", name);
+  g_free (padname);
+  g_free (name);
+
   g_object_set (G_OBJECT (preroll),
       "max-size-buffers", 0, "max-size-bytes",
       ((type == GST_STREAM_TYPE_VIDEO) ? 25 : 1) * 1024 * 1024,
       "max-size-time", play_base_bin->queue_size, NULL);
+
   sig = g_signal_connect (G_OBJECT (preroll), "overrun",
       G_CALLBACK (queue_overrun), play_base_bin);
+
   if (play_base_bin->is_stream &&
       ((type == GST_STREAM_TYPE_VIDEO &&
               group->type[GST_STREAM_TYPE_AUDIO - 1].npads == 0) ||
@@ -609,34 +612,32 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
   /* keep a ref to the signal id so that we can disconnect the signal callback
    * when we are done with the preroll */
   g_object_set_data (G_OBJECT (preroll), "signal_id", GINT_TO_POINTER (sig));
-  g_free (name);
 
   /* listen for EOS */
   preroll_pad = gst_element_get_pad (preroll, "src");
   probe = gst_probe_new (FALSE, probe_triggered, info);
   /* have to REALIZE the pad as we cannot attach a padprobe to a ghostpad */
   gst_pad_add_probe (preroll_pad, probe);
+  gst_object_unref (GST_OBJECT_CAST (preroll_pad));
 
   /* add to group list */
-  gst_element_link (selector, preroll);
+  /* FIXME refcount elements */
   group->type[type - 1].selector = selector;
   group->type[type - 1].preroll = preroll;
   if (type == GST_STREAM_TYPE_TEXT && play_base_bin->subtitle) {
     group->type[type - 1].bin = GST_BIN (play_base_bin->subtitle);
     gst_bin_add (GST_BIN (play_base_bin->subtitle), selector);
     gst_bin_add (GST_BIN (play_base_bin->subtitle), preroll);
-    gst_element_set_state (selector,
-        GST_STATE (play_base_bin) == GST_STATE_PLAYING ?
-        GST_STATE_PLAYING : GST_STATE_PAUSED);
   } else {
     group->type[type - 1].bin = GST_BIN (play_base_bin);
     gst_bin_add (GST_BIN (play_base_bin), selector);
     gst_bin_add (GST_BIN (play_base_bin), preroll);
-    gst_element_set_state (selector,
-        GST_STATE (play_base_bin) == GST_STATE_PLAYING ?
-        GST_STATE_PLAYING : GST_STATE_PAUSED);
   }
+  gst_element_link (selector, preroll);
 
+  gst_element_set_state (selector,
+      GST_STATE (play_base_bin) == GST_STATE_PLAYING ?
+      GST_STATE_PLAYING : GST_STATE_PAUSED);
   gst_element_set_state (preroll,
       GST_STATE (play_base_bin) == GST_STATE_PLAYING ?
       GST_STATE_PLAYING : GST_STATE_PAUSED);
@@ -754,7 +755,7 @@ no_more_pads (GstElement * element, GstPlayBaseBin * play_base_bin)
 
   /* we can commit this group for playback now */
   group_commit (play_base_bin, play_base_bin->is_stream,
-      gst_object_get_parent (GST_OBJECT (element)) ==
+      GST_OBJECT_PARENT (GST_OBJECT_CAST (element)) ==
       GST_OBJECT (play_base_bin->subtitle));
 }
 
@@ -848,6 +849,7 @@ preroll_unlinked (GstPad * pad, GstPad * peerpad,
 {
   GstElement *fakesrc;
   guint sig_id;
+  GstPad *srcpad;
 
   /* make a fakesrc that will just emit one EOS */
   fakesrc = gst_element_factory_make ("fakesrc", NULL);
@@ -855,8 +857,10 @@ preroll_unlinked (GstPad * pad, GstPad * peerpad,
 
   GST_DEBUG ("patching unlinked pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
-  gst_pad_link (gst_element_get_pad (fakesrc, "src"), pad);
+  srcpad = gst_element_get_pad (fakesrc, "src");
   gst_bin_add (GST_BIN (play_base_bin), fakesrc);
+  gst_pad_link (srcpad, pad);
+  gst_object_unref (GST_OBJECT_CAST (srcpad));
 
   /* keep track of these patch elements */
   g_object_set_data (G_OBJECT (pad), "fakesrc", fakesrc);
@@ -879,7 +883,7 @@ mute_stream (GstProbe * probe, GstMiniObject ** d, gpointer data)
 
   if (GST_IS_BUFFER (*d)) {
     g_object_set (G_OBJECT (info), "mute", TRUE, NULL);
-    gst_pad_remove_probe ((GstPad *) GST_PAD_REALIZE (info->object), probe);
+    gst_pad_remove_probe (GST_PAD_CAST (info->object), probe);
     gst_probe_destroy (probe);
   }
 
@@ -911,18 +915,14 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
   GstPlayBaseGroup *group;
   GstProbe *probe;
   guint sig;
+  GstObject *parent;
 
   GST_DEBUG ("play base: new decoded pad %d", last);
 
   /* first see if this pad has interesting caps */
   caps = gst_pad_get_caps (pad);
-  if (caps == NULL || gst_caps_is_empty (caps) || gst_caps_is_any (caps)) {
-    g_warning ("no type on pad %s:%s",
-        GST_DEBUG_PAD_NAME (GST_PAD_REALIZE (pad)));
-    if (caps)
-      gst_caps_unref (caps);
-    return;
-  }
+  if (caps == NULL || gst_caps_is_empty (caps) || gst_caps_is_any (caps))
+    goto no_type;
 
   /* get the mime type */
   structure = gst_caps_get_structure (caps, 0);
@@ -934,19 +934,19 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
 
   group->nstreams++;
 
+  parent = gst_object_get_parent (GST_OBJECT (element));
   if (g_str_has_prefix (mimetype, "audio/") &&
-      gst_object_get_parent (GST_OBJECT (element)) !=
-      GST_OBJECT (play_base_bin->subtitle)) {
+      parent != GST_OBJECT_CAST (play_base_bin->subtitle)) {
     type = GST_STREAM_TYPE_AUDIO;
   } else if (g_str_has_prefix (mimetype, "video/") &&
-      gst_object_get_parent (GST_OBJECT (element)) !=
-      GST_OBJECT (play_base_bin->subtitle)) {
+      parent != GST_OBJECT_CAST (play_base_bin->subtitle)) {
     type = GST_STREAM_TYPE_VIDEO;
   } else if (g_str_has_prefix (mimetype, "text/")) {
     type = GST_STREAM_TYPE_TEXT;
   } else {
     type = GST_STREAM_TYPE_UNKNOWN;
   }
+  gst_object_unref (parent);
 
   info = gst_stream_info_new (GST_OBJECT (pad), type, NULL, caps);
   if (type > 0 && type <= NUM_TYPES) {
@@ -974,7 +974,7 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
   /* select 1st for now - we'll select a preferred one after preroll */
   if (type == GST_STREAM_TYPE_UNKNOWN || group->type[type - 1].npads > 0) {
     probe = gst_probe_new (FALSE, silence_stream, info);
-    gst_pad_add_probe (GST_PAD_REALIZE (pad), probe);
+    gst_pad_add_probe (GST_PAD_CAST (pad), probe);
     g_object_set_data (G_OBJECT (pad), "eat_probe", probe);
   }
 
@@ -985,6 +985,16 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
   /* signal the no more pads after adding the stream */
   if (last)
     no_more_pads (element, play_base_bin);
+
+  return;
+
+no_type:
+  {
+    g_warning ("no type on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+    if (caps)
+      gst_caps_unref (caps);
+    return;
+  }
 }
 
 
@@ -1066,7 +1076,7 @@ setup_substreams (GstPlayBaseBin * play_base_bin)
 
     probe = g_object_get_data (G_OBJECT (info->object), "eat_probe");
     if (probe) {
-      gst_pad_remove_probe (GST_PAD_REALIZE (info->object), probe);
+      gst_pad_remove_probe (GST_PAD_CAST (info->object), probe);
       gst_probe_destroy (probe);
     }
 
@@ -1075,7 +1085,7 @@ setup_substreams (GstPlayBaseBin * play_base_bin)
       GstProbe *probe;
 
       probe = gst_probe_new (FALSE, mute_stream, info);
-      gst_pad_add_probe (GST_PAD_REALIZE (info->object), probe);
+      gst_pad_add_probe (GST_PAD_CAST (info->object), probe);
     }
   }
 
@@ -1115,24 +1125,12 @@ setup_source (GstPlayBaseBin * play_base_bin,
   }
 
   /* create and configure an element that can handle the uri */
-  play_base_bin->source = gen_source_element (play_base_bin, &subbin);
-  if (!play_base_bin->source) {
-    gchar *prot;
-
-    /* whoops, could not create the source element */
-    prot = gst_uri_get_protocol (play_base_bin->uri);
-    if (prot) {
-      g_set_error (error, 0, 0, "No URI handler implemented for \"%s\"", prot);
-      g_free (prot);
-    } else {
-      g_set_error (error, 0, 0, "Invalid URI \"%s\"", play_base_bin->uri);
-    }
-    GST_WARNING ("don't know how to read %s", play_base_bin->uri);
-    return FALSE;
-  }
+  if (!(play_base_bin->source = gen_source_element (play_base_bin, &subbin)))
+    goto no_source;
 
   gst_bin_add (GST_BIN (play_base_bin), play_base_bin->source);
   g_object_notify (G_OBJECT (play_base_bin), "source");
+
   /* state will be merged later - if file is not found, error will be
    * handled by the application right after. */
 
@@ -1274,18 +1272,14 @@ setup_source (GstPlayBaseBin * play_base_bin,
   }
 
   /* now create the decoder element */
-  play_base_bin->decoder = gst_element_factory_make ("decodebin", "decoder");
-  if (!play_base_bin->decoder) {
-    g_set_error (error, 0, 0, "Could not create autoplugger element");
-    GST_WARNING ("can't find decoder element");
-    return FALSE;
-  }
+  if (!(play_base_bin->decoder =
+          gst_element_factory_make ("decodebin", "decoder")))
+    goto no_decodebin;
+
   gst_bin_add (GST_BIN (play_base_bin), play_base_bin->decoder);
-  if (!gst_element_link (play_base_bin->source, play_base_bin->decoder)) {
-    g_set_error (error, 0, 0, "Could not link source and autoplugger");
-    GST_WARNING ("can't link source to decoder element");
-    return FALSE;
-  }
+
+  if (!gst_element_link (play_base_bin->source, play_base_bin->decoder))
+    goto could_not_link;
 
   /* set up callbacks to create the links between decoded data
    * and video/audio/subtitle rendering/output. */
@@ -1299,6 +1293,35 @@ setup_source (GstPlayBaseBin * play_base_bin,
   play_base_bin->need_rebuild = FALSE;
 
   return TRUE;
+
+  /* ERRORS */
+no_source:
+  {
+    gchar *prot;
+
+    /* whoops, could not create the source element */
+    prot = gst_uri_get_protocol (play_base_bin->uri);
+    if (prot) {
+      g_set_error (error, 0, 0, "No URI handler implemented for \"%s\"", prot);
+      g_free (prot);
+    } else {
+      g_set_error (error, 0, 0, "Invalid URI \"%s\"", play_base_bin->uri);
+    }
+    GST_WARNING ("don't know how to read %s", play_base_bin->uri);
+    return FALSE;
+  }
+no_decodebin:
+  {
+    g_set_error (error, 0, 0, "Could not create autoplugger element");
+    GST_WARNING ("can't find decoder element");
+    return FALSE;
+  }
+could_not_link:
+  {
+    g_set_error (error, 0, 0, "Could not link source and autoplugger");
+    GST_WARNING ("can't link source to decoder element");
+    return FALSE;
+  }
 }
 
 static void
@@ -1408,13 +1431,17 @@ static void
 mute_group_type (GstPlayBaseGroup * group, GstStreamType type, gboolean mute)
 {
   gboolean active = !mute;
+  GstPad *pad;
 
-  gst_pad_set_active (gst_element_get_pad (group->type[type - 1].preroll,
-          "src"), active);
-  gst_pad_set_active (gst_element_get_pad (group->type[type - 1].preroll,
-          "sink"), active);
-  gst_pad_set_active (gst_element_get_pad (group->type[type - 1].selector,
-          "src"), active);
+  pad = gst_element_get_pad (group->type[type - 1].preroll, "src");
+  gst_pad_set_active (pad, active);
+  gst_object_unref (GST_OBJECT_CAST (pad));
+  pad = gst_element_get_pad (group->type[type - 1].preroll, "sink");
+  gst_pad_set_active (pad, active);
+  gst_object_unref (GST_OBJECT_CAST (pad));
+  pad = gst_element_get_pad (group->type[type - 1].selector, "src");
+  gst_pad_set_active (pad, active);
+  gst_object_unref (GST_OBJECT_CAST (pad));
 
   if (mute) {
     g_signal_connect (group->type[type - 1].preroll, "state-change",
@@ -1477,7 +1504,7 @@ set_active_source (GstPlayBaseBin * play_base_bin,
         GstProbe *probe;
 
         probe = gst_probe_new (FALSE, mute_stream, info);
-        gst_pad_add_probe (GST_PAD_REALIZE (info->object), probe);
+        gst_pad_add_probe (GST_PAD_CAST (info->object), probe);
       }
       num++;
     }
@@ -1632,44 +1659,24 @@ gst_play_base_bin_get_property (GObject * object, guint prop_id, GValue * value,
 static GstElementStateReturn
 gst_play_base_bin_change_state (GstElement * element)
 {
-  GstElementStateReturn ret = GST_STATE_SUCCESS;
+  GstElementStateReturn ret;
   GstPlayBaseBin *play_base_bin;
   gint transition = GST_STATE_TRANSITION (element);
   gchar *new_location = NULL;
+  GError *error = NULL;
 
   play_base_bin = GST_PLAY_BASE_BIN (element);
 
   switch (transition) {
     case GST_STATE_READY_TO_PAUSED:
-    {
-      GError *error = NULL;
-
-      if (!setup_source (play_base_bin, &new_location, &error) || error != NULL) {
-        if (!error) {
-          /* opening failed but no error - hellup */
-          GST_ELEMENT_ERROR (GST_ELEMENT (play_base_bin), STREAM,
-              NOT_IMPLEMENTED,
-              ("cannot open file \"%s\"", play_base_bin->uri), (NULL));
-        } else {
-          /* just copy the cached error - type doesn't matter */
-          GST_ELEMENT_ERROR (play_base_bin, STREAM, TOO_LAZY,
-              (error->message), (NULL));
-          g_error_free (error);
-        }
-        ret = GST_STATE_FAILURE;
-        play_base_bin->need_rebuild = TRUE;
-      }
+      if (!setup_source (play_base_bin, &new_location, &error) || error != NULL)
+        goto source_failed;
       break;
-    }
     default:
       break;
   }
 
-  if (ret != GST_STATE_SUCCESS) {
-    return ret;
-  } else {
-    ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
-  }
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
   switch (transition) {
     case GST_STATE_READY_TO_PAUSED:
@@ -1688,8 +1695,26 @@ gst_play_base_bin_change_state (GstElement * element)
     default:
       break;
   }
-
   return ret;
+
+  /* ERRORS */
+source_failed:
+  {
+    if (!error) {
+      /* opening failed but no error - hellup */
+      GST_ELEMENT_ERROR (GST_ELEMENT (play_base_bin), STREAM,
+          NOT_IMPLEMENTED,
+          ("cannot open file \"%s\"", play_base_bin->uri), (NULL));
+    } else {
+      /* just copy the cached error - type doesn't matter */
+      GST_ELEMENT_ERROR (play_base_bin, STREAM, TOO_LAZY,
+          (error->message), (NULL));
+      g_error_free (error);
+    }
+    play_base_bin->need_rebuild = TRUE;
+
+    return GST_STATE_FAILURE;
+  }
 }
 
 const GList *

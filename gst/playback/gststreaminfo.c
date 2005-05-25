@@ -219,7 +219,7 @@ gst_stream_info_new (GstObject * object,
     GstProbe *probe;
 
     probe = gst_probe_new (FALSE, cb_probe, info);
-    gst_pad_add_probe (GST_PAD_REALIZE (object), probe);
+    gst_pad_add_probe (GST_PAD_CAST (object), probe);
   }
   info->object = object;
   info->type = type;
@@ -243,7 +243,7 @@ gst_stream_info_dispose (GObject * object)
     GstElement *parent;
 
     parent = gst_pad_get_parent ((GstPad *)
-        GST_PAD_REALIZE (stream_info->object));
+        GST_PAD_CAST (stream_info->object));
     if (parent != NULL) {
       g_signal_handlers_disconnect_by_func (parent,
           G_CALLBACK (stream_info_change_state), stream_info);
@@ -301,11 +301,11 @@ gst_stream_info_set_mute (GstStreamInfo * stream_info, gboolean mute)
 
     stream_info->mute = mute;
     //gst_pad_set_active_recursive ((GstPad *)
-    //GST_PAD_REALIZE (stream_info->object), !mute);
+    //GST_PAD_CAST (stream_info->object), !mute);
     g_warning ("FIXME");
 
     element = gst_pad_get_parent ((GstPad *)
-        GST_PAD_REALIZE (stream_info->object));
+        GST_PAD_CAST (stream_info->object));
     if (mute) {
       g_signal_connect (element, "state-change",
           G_CALLBACK (stream_info_change_state), stream_info);

@@ -238,8 +238,6 @@ gst_stream_selector_chain (GstPad * pad, GstBuffer * buf)
   GstStreamSelector *sel = GST_STREAM_SELECTOR (gst_pad_get_parent (pad));
   GstFlowReturn res;
 
-  GST_STREAM_LOCK (pad);
-
   /* first, check if the active pad changed. If so, redo
    * negotiation and fail if that fails. */
   if (pad != sel->last_active_sinkpad) {
@@ -254,8 +252,6 @@ gst_stream_selector_chain (GstPad * pad, GstBuffer * buf)
   GST_DEBUG_OBJECT (sel, "Forwarding buffer %p from pad %s",
       "buf", gst_pad_get_name (pad));
   res = gst_pad_push (sel->srcpad, buf);
-
-  GST_STREAM_UNLOCK (pad);
 
   return res;
 }

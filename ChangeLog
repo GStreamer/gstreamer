@@ -1,3 +1,23 @@
+2005-05-25  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_init),
+	(gst_decode_bin_dispose), (try_to_link_1), (get_our_ghost_pad),
+	(remove_element_chain), (no_more_pads), (unlinked), (close_link),
+	(type_found):
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_dispose),
+	(group_destroy), (group_commit), (queue_overrun),
+	(gen_preroll_element), (no_more_pads), (preroll_unlinked),
+	(mute_stream), (new_decoded_pad), (setup_substreams),
+	(setup_source), (mute_group_type), (set_active_source),
+	(gst_play_base_bin_change_state):
+	* gst/playback/gstplaybin.c: (gst_play_bin_dispose),
+	(gen_video_element), (gen_text_element), (gen_audio_element),
+	(gen_vis_element), (remove_sinks), (add_sink), (setup_sinks):
+	* gst/playback/gststreaminfo.c: (gst_stream_info_new),
+	(gst_stream_info_dispose), (gst_stream_info_set_mute):
+	* gst/playback/gststreamselector.c: (gst_stream_selector_chain):
+	Some playbin cleanups mostly refcounting sloppyness.
+
 2005-05-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_packet):

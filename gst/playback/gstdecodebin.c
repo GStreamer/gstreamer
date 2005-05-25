@@ -309,11 +309,18 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
   if (!decode_bin->typefind) {
     g_warning ("can't find typefind element, decodebin will not work");
   } else {
+    GstPad *pad;
+
     /* add the typefind element */
     gst_bin_add (GST_BIN (decode_bin), decode_bin->typefind);
+
+    /* get the sinkpad */
+    pad = gst_element_get_pad (decode_bin->typefind, "sink");
+
     /* ghost the sink pad to ourself */
-    gst_element_add_ghost_pad (GST_ELEMENT (decode_bin),
-        gst_element_get_pad (decode_bin->typefind, "sink"), "sink");
+    gst_element_add_ghost_pad (GST_ELEMENT (decode_bin), pad, "sink");
+
+    gst_object_unref (GST_OBJECT_CAST (pad));
 
     /* connect a signal to find out when the typefind element found
      * a type */
@@ -325,6 +332,8 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
   decode_bin->threaded = DEFAULT_THREADED;
   decode_bin->dynamics = NULL;
 }
+
+static void dynamic_free (GstDynamic * dyn);
 
 static void
 gst_decode_bin_dispose (GObject * object)
@@ -344,14 +353,12 @@ gst_decode_bin_dispose (GObject * object)
   for (dyns = decode_bin->dynamics; dyns; dyns = g_list_next (dyns)) {
     GstDynamic *dynamic = (GstDynamic *) dyns->data;
 
-    g_free (dynamic);
+    dynamic_free (dynamic);
   }
   g_list_free (decode_bin->dynamics);
   decode_bin->dynamics = NULL;
 
-  if (G_OBJECT_CLASS (parent_class)->dispose) {
-    G_OBJECT_CLASS (parent_class)->dispose (object);
-  }
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static GstDynamic *
@@ -553,27 +560,37 @@ static GstElement *
 try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
 {
   GList *walk;
+  GstElement *result = NULL;
 
   /* loop over the factories */
   for (walk = factories; walk; walk = g_list_next (walk)) {
     GstElementFactory *factory = GST_ELEMENT_FACTORY (walk->data);
     GstElement *element;
     GstPadLinkReturn ret;
+    GstPad *sinkpad;
 
     GST_DEBUG_OBJECT (decode_bin, "trying to link %s",
         gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
 
     /* make an element from the factory first */
-    element = gst_element_factory_create (factory, NULL);
-    if (element == NULL) {
+    if ((element = gst_element_factory_create (factory, NULL)) == NULL) {
       /* hmm, strange. Like with all things in live, let's move on.. */
       GST_WARNING_OBJECT (decode_bin, "could not create  an element from %s",
           gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
       continue;
     }
 
+    /* try to link the given pad to a sinkpad */
+    /* FIXME, find the sinkpad by looping over the pads instead of 
+     * looking it up by name */
+    if ((sinkpad = gst_element_get_pad (element, "sink")) == NULL) {
+      /* if no pad is found we can't do anything */
+      GST_WARNING_OBJECT (decode_bin, "could not find sinkpad in element");
+      continue;
+    }
+
     /* now add the element to the bin first */
-    GST_DEBUG_OBJECT (decode_bin, "adding %s", gst_element_get_name (element));
+    GST_DEBUG_OBJECT (decode_bin, "adding %s", GST_OBJECT_NAME (element));
     gst_bin_add (GST_BIN (decode_bin), element);
 
     /* set to ready first so it is ready */
@@ -582,11 +599,15 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
     /* keep our own list of elements */
     decode_bin->elements = g_list_prepend (decode_bin->elements, element);
 
-    /* try to link the given pad to a sinkpad */
-    /* FIXME, find the sinkpad by looping over the pads instead of 
-     * looking it up by name */
-    ret = gst_pad_link (pad, gst_element_get_pad (element, "sink"));
-    if (ret == GST_PAD_LINK_OK) {
+    if ((ret = gst_pad_link (pad, sinkpad)) != GST_PAD_LINK_OK) {
+      GST_DEBUG_OBJECT (decode_bin, "link failed on pad %s:%s, reason %d",
+          GST_DEBUG_PAD_NAME (pad), ret);
+      /* get rid of the sinkpad */
+      gst_object_unref (GST_OBJECT_CAST (sinkpad));
+      /* this element did not work, remove it again and continue trying
+       * other elements, the element will be disposed. */
+      gst_bin_remove (GST_BIN (decode_bin), element);
+    } else {
       const gchar *klass;
       GstElementFactory *factory;
       guint sig;
@@ -597,6 +618,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
       /* The link worked, now figure out what it was that we connected */
       factory = gst_element_get_factory (element);
       klass = gst_element_factory_get_klass (factory);
+
       /* check if we can use threads */
       if (decode_bin->threaded) {
         if (strstr (klass, "Demux") != NULL) {
@@ -608,8 +630,9 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
       }
 
       /* make sure we catch unlink signals */
-      sig = g_signal_connect (G_OBJECT (GST_PAD_REALIZE (pad)), "unlinked",
+      sig = g_signal_connect (G_OBJECT (pad), "unlinked",
           G_CALLBACK (unlinked), decode_bin);
+
       /* keep a ref to the signal id so that we can disconnect the signal callback */
       g_object_set_data (G_OBJECT (pad), "unlinked_id", GINT_TO_POINTER (sig));
 
@@ -618,21 +641,24 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
       close_link (element, decode_bin);
       /* change the state of the element to that of the parent */
       gst_element_set_state (element, GST_STATE_PAUSED);
-      return element;
-    } else {
-      GST_DEBUG_OBJECT (decode_bin, "link failed on pad %s:%s",
-          GST_DEBUG_PAD_NAME (pad));
-      /* this element did not work, remove it again and continue trying
-       * other elements */
-      gst_bin_remove (GST_BIN (decode_bin), element);
+
+      result = element;
+
+      /* get rid of the sinkpad now */
+      gst_object_unref (GST_OBJECT_CAST (sinkpad));
+
+      /* and exit */
+      goto done;
     }
   }
-  return NULL;
+done:
+  return result;
 }
 
 static GstPad *
 get_our_ghost_pad (GstDecodeBin * decode_bin, GstPad * pad)
 {
+#if 0
   GList *ghostpads;
 
   if (pad == NULL || !GST_PAD_IS_SRC (pad)) {
@@ -643,8 +669,7 @@ get_our_ghost_pad (GstDecodeBin * decode_bin, GstPad * pad)
   if (GST_IS_GHOST_PAD (pad)) {
     GstElement *parent = gst_pad_get_parent (pad);
 
-    GST_DEBUG_OBJECT (decode_bin, "pad parent %s",
-        gst_element_get_name (parent));
+    GST_DEBUG_OBJECT (decode_bin, "pad parent %s", GST_ELEMENT_NAME (parent));
 
     if (parent == GST_ELEMENT (decode_bin)) {
       GST_DEBUG_OBJECT (decode_bin, "pad is our ghostpad");
@@ -669,6 +694,7 @@ get_our_ghost_pad (GstDecodeBin * decode_bin, GstPad * pad)
     ghostpads = g_list_next (ghostpads);
   }
   GST_DEBUG_OBJECT (decode_bin, "done looping over ghostpads, nothing found");
+#endif
 
   return NULL;
 }
@@ -680,7 +706,7 @@ get_our_ghost_pad (GstDecodeBin * decode_bin, GstPad * pad)
 static void
 remove_element_chain (GstDecodeBin * decode_bin, GstPad * pad)
 {
-  GList *int_links;
+  GList *int_links, *walk;
   GstElement *elem = GST_ELEMENT (GST_OBJECT_PARENT (pad));
 
   while (GST_OBJECT_PARENT (elem) &&
@@ -688,16 +714,16 @@ remove_element_chain (GstDecodeBin * decode_bin, GstPad * pad)
     elem = GST_ELEMENT (GST_OBJECT_PARENT (elem));
 
   GST_DEBUG_OBJECT (decode_bin, "%s:%s", GST_DEBUG_PAD_NAME (pad));
+  int_links = gst_pad_get_internal_links (pad);
 
   /* remove all elements linked to this pad up to the ghostpad 
    * that we created for this stream */
-  for (int_links = gst_pad_get_internal_links (pad);
-      int_links; int_links = g_list_next (int_links)) {
+  for (walk = int_links; walk; walk = g_list_next (walk)) {
     GstPad *pad;
     GstPad *ghostpad;
     GstPad *peer;
 
-    pad = GST_PAD (int_links->data);
+    pad = GST_PAD (walk->data);
     GST_DEBUG_OBJECT (decode_bin, "inspecting internal pad %s:%s",
         GST_DEBUG_PAD_NAME (pad));
 
@@ -723,20 +749,24 @@ remove_element_chain (GstDecodeBin * decode_bin, GstPad * pad)
         GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer));
 
     {
-      GstElement *parent = gst_pad_get_real_parent (peer);
+      GstElement *parent = gst_pad_get_parent (peer);
 
       if (parent != GST_ELEMENT (decode_bin)) {
         GST_DEBUG_OBJECT (decode_bin, "dead end pad %s:%s",
             GST_DEBUG_PAD_NAME (peer));
       } else {
         GST_DEBUG_OBJECT (decode_bin, "recursing element %s on pad %s:%s",
-            gst_element_get_name (elem), GST_DEBUG_PAD_NAME (pad));
+            GST_ELEMENT_NAME (elem), GST_DEBUG_PAD_NAME (pad));
         remove_element_chain (decode_bin, peer);
       }
       gst_object_unref (GST_OBJECT_CAST (parent));
     }
+    gst_object_unref (GST_OBJECT_CAST (peer));
   }
-  GST_DEBUG_OBJECT (decode_bin, "removing %s", gst_element_get_name (elem));
+  GST_DEBUG_OBJECT (decode_bin, "removing %s", GST_ELEMENT_NAME (elem));
+
+  g_list_free (int_links);
+
   gst_bin_remove (GST_BIN (decode_bin), elem);
 }
 
@@ -768,7 +798,7 @@ no_more_pads (GstElement * element, GstDynamic * dynamic)
   GstDecodeBin *decode_bin = dynamic->decode_bin;
 
   GST_DEBUG_OBJECT (decode_bin, "no more pads on element %s",
-      gst_element_get_name (element));
+      GST_ELEMENT_NAME (element));
 
   /* remove the element from the list of dynamic elements */
   decode_bin->dynamics = g_list_remove (decode_bin->dynamics, dynamic);
@@ -793,7 +823,7 @@ unlinked (GstPad * pad, GstPad * peerpad, GstDecodeBin * decode_bin)
   GstElement *element;
 
   /* inactivate pad */
-  gst_pad_set_active (pad, FALSE);
+  gst_pad_set_active (pad, GST_ACTIVATE_NONE);
 
   /* remove all elements linked to the peerpad */
   remove_element_chain (decode_bin, peerpad);
@@ -825,7 +855,7 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
   gboolean more;
 
   GST_DEBUG_OBJECT (decode_bin, "closing links with element %s",
-      gst_element_get_name (element));
+      GST_ELEMENT_NAME (element));
 
   /* loop over all the padtemplates */
   for (pads = GST_ELEMENT_GET_CLASS (element)->padtemplates; pads;
@@ -905,7 +935,7 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
 
   /* now loop over all the pads we need to connect */
   for (pads = to_connect; pads; pads = g_list_next (pads)) {
-    GstPad *pad = GST_PAD (pads->data);
+    GstPad *pad = GST_PAD_CAST (pads->data);
     GstCaps *caps;
 
     /* we have more pads if we have more than 1 pad to connect or
@@ -915,15 +945,16 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
     more |= gst_decode_bin_is_dynamic (decode_bin);
 
     GST_DEBUG_OBJECT (decode_bin, "closing pad link for %s",
-        gst_pad_get_name (pad));
+        GST_OBJECT_NAME (pad));
 
     /* continue autoplugging on the pads */
     caps = gst_pad_get_caps (pad);
     close_pad_link (element, pad, caps, decode_bin, more);
     if (caps)
       gst_caps_unref (caps);
-  }
 
+    gst_object_unref (GST_OBJECT_CAST (pad));
+  }
   g_list_free (to_connect);
 }
 
@@ -941,7 +972,7 @@ type_found (GstElement * typefind, guint probability, GstCaps * caps,
   /* autoplug the new pad with the caps that the signal gave us. */
   pad = gst_element_get_pad (typefind, "src");
   close_pad_link (typefind, pad, caps, decode_bin, FALSE);
-  gst_object_unref (GST_OBJECT (pad));
+  gst_object_unref (GST_OBJECT_CAST (pad));
 
   dynamic = gst_decode_bin_is_dynamic (decode_bin);
   if (dynamic == FALSE) {
