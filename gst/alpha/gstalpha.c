@@ -798,13 +798,11 @@ gst_alpha_chain (GstPad * pad, GstBuffer * buffer)
 
   alpha = GST_ALPHA (GST_PAD_PARENT (pad));
 
-  GST_STREAM_LOCK (pad);
-
   new_width = alpha->in_width;
   new_height = alpha->in_height;
 
   if (new_width != alpha->out_width ||
-      new_height != alpha->out_height || !GST_RPAD_CAPS (alpha->srcpad)) {
+      new_height != alpha->out_height || !GST_PAD_CAPS (alpha->srcpad)) {
     GstCaps *newcaps;
 
     newcaps = gst_caps_copy (gst_pad_get_negotiated_caps (alpha->sinkpad));
@@ -821,7 +819,7 @@ gst_alpha_chain (GstPad * pad, GstBuffer * buffer)
   outbuf =
       gst_buffer_new_and_alloc (ROUND_UP_2 (new_width) *
       ROUND_UP_2 (new_height) * 4);
-  gst_buffer_set_caps (outbuf, GST_RPAD_CAPS (alpha->srcpad));
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (alpha->srcpad));
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
 
@@ -853,8 +851,6 @@ gst_alpha_chain (GstPad * pad, GstBuffer * buffer)
   gst_buffer_unref (buffer);
 
   ret = gst_pad_push (alpha->srcpad, outbuf);
-
-  GST_STREAM_UNLOCK (pad);
 
   return ret;
 }

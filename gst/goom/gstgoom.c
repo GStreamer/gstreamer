@@ -341,8 +341,6 @@ gst_goom_chain (GstPad * pad, GstBuffer * bufin)
 
   goom = GST_GOOM (GST_PAD_PARENT (pad));
 
-  GST_STREAM_LOCK (pad);
-
   if (goom->channels == 0)
     goto not_negotiated;
 
@@ -364,7 +362,7 @@ gst_goom_chain (GstPad * pad, GstBuffer * bufin)
 
   ret = GST_FLOW_OK;
 
-  if (GST_RPAD_CAPS (goom->srcpad) == NULL) {
+  if (GST_PAD_CAPS (goom->srcpad) == NULL) {
     if (!gst_goom_src_negotiate (goom))
       goto no_format;
   }
@@ -394,7 +392,7 @@ gst_goom_chain (GstPad * pad, GstBuffer * bufin)
     }
 
     bufout = gst_pad_alloc_buffer (goom->srcpad, GST_BUFFER_OFFSET_NONE,
-        goom->width * goom->height * 4, GST_RPAD_CAPS (goom->srcpad));
+        goom->width * goom->height * 4, GST_PAD_CAPS (goom->srcpad));
     GST_BUFFER_TIMESTAMP (bufout) =
         goom->audio_basetime +
         (GST_SECOND * goom->samples_consumed / goom->sample_rate);
@@ -416,8 +414,6 @@ gst_goom_chain (GstPad * pad, GstBuffer * bufin)
     if (ret != GST_FLOW_OK)
       break;
   }
-  GST_STREAM_UNLOCK (pad);
-
   return ret;
 
   /* ERRORS */
@@ -426,7 +422,6 @@ not_negotiated:
     GST_ELEMENT_ERROR (goom, CORE, NEGOTIATION, (NULL),
         ("Format wasn't negotiated before chain function"));
     gst_buffer_unref (bufin);
-    GST_STREAM_UNLOCK (pad);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 no_format:
@@ -434,7 +429,6 @@ no_format:
     GST_ELEMENT_ERROR (goom, CORE, NEGOTIATION, (NULL),
         ("Could not negotiate format"));
     gst_buffer_unref (bufin);
-    GST_STREAM_UNLOCK (pad);
     return GST_FLOW_ERROR;
   }
 }
