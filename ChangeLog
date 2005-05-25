@@ -1,5 +1,14 @@
 2005-05-25  Wim Taymans  <wim@fluendo.com>
 
+	* ext/mad/gstmad.c: (gst_mad_chain), (gst_mad_change_state):
+	* ext/sidplay/gstsiddec.cc:
+	* gst/alpha/gstalpha.c: (gst_alpha_chain):
+	* gst/goom/gstgoom.c: (gst_goom_chain):
+	No need to take the lock anymore,  core already did
+	that before calling us.
+
+2005-05-25  Wim Taymans  <wim@fluendo.com>
+
 	* ext/amrnb/amrnbdec.c: (gst_amrnbdec_init), (gst_amrnbdec_chain),
 	(gst_amrnbdec_state_change):
 	* ext/amrnb/amrnbenc.c: (gst_amrnbenc_base_init),

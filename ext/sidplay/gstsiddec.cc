@@ -371,7 +371,6 @@ play_loop (GstPad * pad)
 
   siddec = GST_SIDDEC (GST_PAD_PARENT (pad));
 
-  GST_STREAM_LOCK (pad);
   out = gst_buffer_new_and_alloc (siddec->blocksize);
   gst_buffer_set_caps (out, GST_PAD_CAPS (pad));
 
@@ -406,14 +405,11 @@ play_loop (GstPad * pad)
   if ((ret = gst_pad_push (siddec->srcpad, out)) != GST_FLOW_OK)
     goto pause;
 
-  GST_STREAM_UNLOCK (pad);
-
   return;
 
 pause:
   {
-    gst_task_pause (GST_RPAD_TASK (pad));
-    GST_STREAM_UNLOCK (pad);
+    gst_pad_pause_task (pad);
   }
 }
 
@@ -434,16 +430,8 @@ start_play_tune (GstSidDec * siddec)
           siddec->tune_number))
     goto could_not_init;
 
-  if (GST_ELEMENT_SCHEDULER (siddec)) {
-    GST_STREAM_LOCK (siddec->srcpad);
-    GST_RPAD_TASK (siddec->srcpad) =
-        gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (siddec),
-        (GstTaskFunction) play_loop, siddec->srcpad);
-
-    gst_task_start (GST_RPAD_TASK (siddec->srcpad));
-    GST_STREAM_UNLOCK (siddec->srcpad);
-    res = TRUE;
-  }
+  res = gst_pad_start_task (siddec->srcpad,
+      (GstTaskFunction) play_loop, siddec->srcpad);
   return res;
 
   /* ERRORS */
@@ -502,13 +490,9 @@ gst_siddec_chain (GstPad * pad, GstBuffer * buffer)
   if (siddec->tune_len + size > maxSidtuneFileLen)
     goto overflow;
 
-  GST_STREAM_LOCK (pad);
-
   memcpy (siddec->tune_buffer + siddec->tune_len, GST_BUFFER_DATA (buffer),
       size);
   siddec->tune_len += size;
-
-  GST_STREAM_UNLOCK (pad);
 
   gst_buffer_unref (buffer);
 

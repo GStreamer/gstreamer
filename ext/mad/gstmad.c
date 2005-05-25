@@ -1283,8 +1283,6 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
   mad = GST_MAD (GST_PAD_PARENT (pad));
   g_return_val_if_fail (GST_IS_MAD (mad), GST_FLOW_ERROR);
 
-  GST_STREAM_LOCK (pad);
-
   /* restarts happen on discontinuities, ie. seek, flush, PAUSED to PLAYING */
   if (gst_mad_check_restart (mad))
     GST_DEBUG ("mad restarted");
@@ -1591,7 +1589,6 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
   result = GST_FLOW_OK;
 
 end:
-  GST_STREAM_UNLOCK (pad);
   gst_buffer_unref (buffer);
 
   return result;
@@ -1601,10 +1598,13 @@ static GstElementStateReturn
 gst_mad_change_state (GstElement * element)
 {
   GstMad *mad;
+  GstElementStateReturn ret;
+  gint transition;
 
   mad = GST_MAD (element);
+  transition = GST_STATE_TRANSITION (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
+  switch (transition) {
     case GST_STATE_NULL_TO_READY:
       break;
     case GST_STATE_READY_TO_PAUSED:
@@ -1635,12 +1635,17 @@ gst_mad_change_state (GstElement * element)
       break;
     }
     case GST_STATE_PAUSED_TO_PLAYING:
-      /* do something to get out of the chain function faster */
       break;
+    default:
+      break;
+  }
+
+  ret = parent_class->change_state (element);
+
+  switch (transition) {
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
-      GST_STREAM_LOCK (mad->sinkpad);
       mad_synth_finish (&mad->synth);
       mad_frame_finish (&mad->frame);
       mad_stream_finish (&mad->stream);
@@ -1649,11 +1654,11 @@ gst_mad_change_state (GstElement * element)
         gst_tag_list_free (mad->tags);
         mad->tags = NULL;
       }
-      GST_STREAM_UNLOCK (mad->sinkpad);
       break;
     case GST_STATE_READY_TO_NULL:
       break;
+    default:
+      break;
   }
-
-  return parent_class->change_state (element);
+  return ret;
 }
