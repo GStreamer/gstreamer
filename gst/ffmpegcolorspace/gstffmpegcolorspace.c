@@ -412,8 +412,6 @@ gst_ffmpegcsp_chain (GstPad * pad, GstBuffer * buffer)
 
   space = GST_FFMPEGCSP (GST_PAD_PARENT (pad));
 
-  GST_STREAM_LOCK (pad);
-
   GST_DEBUG ("from %d -> to %d", space->from_pixfmt, space->to_pixfmt);
   if (space->from_pixfmt == PIX_FMT_NB || space->to_pixfmt == PIX_FMT_NB)
     goto unkown_format;
@@ -460,20 +458,17 @@ gst_ffmpegcsp_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   res = gst_pad_push (space->srcpad, outbuf);
-  GST_STREAM_UNLOCK (pad);
 
   return res;
 
   /* ERRORS */
 no_buffer:
   {
-    GST_STREAM_UNLOCK (pad);
     gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
   }
 unkown_format:
   {
-    GST_STREAM_UNLOCK (pad);
     GST_ELEMENT_ERROR (space, CORE, NOT_IMPLEMENTED, (NULL),
         ("attempting to convert colorspaces between unknown formats"));
     gst_buffer_unref (buffer);
@@ -500,11 +495,9 @@ gst_ffmpegcsp_change_state (GstElement * element)
 
   switch (transition) {
     case GST_STATE_PAUSED_TO_READY:
-      GST_STREAM_LOCK (space->sinkpad);
       if (space->palette)
         av_free (space->palette);
       space->palette = NULL;
-      GST_STREAM_UNLOCK (space->sinkpad);
       break;
     default:
       break;

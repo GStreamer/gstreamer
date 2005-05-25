@@ -1,5 +1,13 @@
 2005-05-25  Wim Taymans  <wim@fluendo.com>
 
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_getcaps), (gst_ffmpegcsp_configure_context),
+	(gst_ffmpegcsp_setcaps), (gst_ffmpegcsp_bufferalloc),
+	(gst_ffmpegcsp_chain), (gst_ffmpegcsp_change_state):
+	No need to take the STREAM lock anymore.
+
+2005-05-25  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_dispose),
 	(gst_ogg_pad_typefind), (gst_ogg_pad_submit_packet),
 	(gst_ogg_chain_new_stream), (gst_ogg_demux_perform_seek),
