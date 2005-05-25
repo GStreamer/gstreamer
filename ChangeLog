@@ -2,6 +2,7 @@
 
 	* gst/base/gstbasesrc.c: (gst_basesrc_activate):
 	  Don't go in pull mode for non-seekable sources.
+	* gst/elements/gsttypefindelement.h:
 	* gst/elements/gsttypefindelement.c: (gst_type_find_element_init),
 	(gst_type_find_element_dispose), (gst_type_find_handle_src_query),
 	(free_entry), (stop_typefinding),

@@ -53,7 +53,7 @@ struct _GstTypeFindElement {
   GstCaps *		caps;
 
   guint			mode;
-  GstBufferStore *	store;
+  GstBuffer *		store;
   guint64		stream_length;
   gboolean		stream_length_available;
   
