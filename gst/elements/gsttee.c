@@ -370,27 +370,10 @@ gst_tee_sink_activate (GstPad * pad, GstActivateMode mode)
       break;
     case GST_ACTIVATE_PULL:
       g_return_val_if_fail (tee->has_sink_loop, FALSE);
-      if (GST_ELEMENT_SCHEDULER (tee)) {
-        GST_STREAM_LOCK (pad);
-        GST_RPAD_TASK (pad) =
-            gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (tee),
-            (GstTaskFunction) gst_tee_loop, pad);
-
-        gst_pad_start_task (pad);
-        GST_STREAM_UNLOCK (pad);
-        result = TRUE;
-      }
+      result = gst_pad_start_task (pad, (GstTaskFunction) gst_tee_loop, pad);
       break;
     case GST_ACTIVATE_NONE:
-      GST_STREAM_LOCK (pad);
-      if (GST_RPAD_TASK (pad)) {
-        gst_pad_stop_task (pad);
-        gst_object_unref (GST_OBJECT (GST_RPAD_TASK (pad)));
-        GST_RPAD_TASK (pad) = NULL;
-      }
-      GST_STREAM_UNLOCK (pad);
-
-      result = TRUE;
+      result = gst_pad_stop_task (pad);
       break;
   }
   tee->sink_mode = mode;

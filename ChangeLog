@@ -1,5 +1,48 @@
 2005-05-25  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstadapter.c: (gst_adapter_peek), (gst_adapter_flush):
+	* gst/base/gstbasesink.c: (gst_basesink_preroll_queue_push),
+	(gst_basesink_finish_preroll), (gst_basesink_chain),
+	(gst_basesink_loop), (gst_basesink_activate),
+	(gst_basesink_change_state):
+	* gst/base/gstbasesrc.c: (gst_basesrc_do_seek),
+	(gst_basesrc_get_range), (gst_basesrc_loop),
+	(gst_basesrc_activate):
+	* gst/elements/gsttee.c: (gst_tee_sink_activate):
+	* gst/gstpad.c: (gst_pad_dispose), (gst_real_pad_class_init),
+	(gst_real_pad_init), (gst_real_pad_set_property),
+	(gst_real_pad_get_property), (gst_pad_set_active),
+	(gst_pad_is_active), (gst_pad_get_query_types), (gst_pad_unlink),
+	(gst_pad_link_prepare), (gst_pad_link), (gst_pad_get_real_parent),
+	(gst_real_pad_get_caps_unlocked), (gst_pad_peer_get_caps),
+	(gst_pad_accept_caps), (gst_pad_get_peer), (gst_pad_realize),
+	(gst_pad_event_default_dispatch), (gst_pad_event_default),
+	(gst_pad_dispatcher), (gst_pad_query), (gst_real_pad_dispose),
+	(gst_pad_save_thyself), (handle_pad_block), (gst_pad_chain),
+	(gst_pad_push), (gst_pad_get_range), (gst_pad_pull_range),
+	(gst_pad_send_event), (gst_pad_start_task), (gst_pad_pause_task),
+	(gst_pad_stop_task):
+	* gst/gstpad.h:
+	* gst/gstqueue.c: (gst_queue_handle_sink_event), (gst_queue_chain),
+	(gst_queue_loop), (gst_queue_src_activate):
+	* gst/gsttask.c: (gst_task_init), (gst_task_set_lock),
+	(gst_task_get_state):
+	* gst/gsttask.h:
+	* gst/schedulers/threadscheduler.c:
+	(gst_thread_scheduler_task_start), (gst_thread_scheduler_func):
+	Implement gst_pad_pause/start/stop_task(), take STREAM lock
+	in task function.
+	Remove ACTIVE pad flag, use FLUSHING everywhere
+	Added _pad_chain(), _pad_get_range() to call chain/getrange 
+	functions.
+	Add locks around IS_FLUSHING when reading.
+	Take STREAM lock in chain(), get_range() functions so plugins
+	don't need to take it anymore.
+	
+
+
+2005-05-25  Wim Taymans  <wim@fluendo.com>
+
 	* tools/gst-launch.c: (event_loop):
 	Unref message after using its contents instead of
 	before.

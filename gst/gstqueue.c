@@ -483,9 +483,8 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
       /* forward event */
       gst_pad_event_default (pad, event);
       if (GST_EVENT_FLUSH_DONE (event)) {
-        GST_STREAM_LOCK (queue->srcpad);
-        gst_task_start (GST_RPAD_TASK (queue->srcpad));
-        GST_STREAM_UNLOCK (queue->srcpad);
+        gst_pad_start_task (queue->srcpad, (GstTaskFunction) gst_queue_loop,
+            queue->srcpad);
       } else {
         /* now unblock the chain function */
         GST_QUEUE_MUTEX_LOCK;
@@ -498,10 +497,8 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
         g_cond_signal (queue->item_add);
 
         /* make sure it stops */
-        GST_STREAM_LOCK (queue->srcpad);
-        gst_task_pause (GST_RPAD_TASK (queue->srcpad));
+        gst_pad_pause_task (queue->srcpad);
         GST_CAT_LOG_OBJECT (queue_dataflow, queue, "loop stopped");
-        GST_STREAM_UNLOCK (queue->srcpad);
       }
       goto done;
     case GST_EVENT_EOS:
@@ -554,8 +551,6 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
   GstQueue *queue;
 
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
-
-  GST_STREAM_LOCK (pad);
 
   /* we have to lock the queue since we span threads */
   GST_QUEUE_MUTEX_LOCK;
@@ -633,6 +628,9 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
           STATUS (queue, "waiting for item_del signal from thread using qlock");
           g_cond_wait (queue->item_del, queue->qlock);
 
+          if (GST_RPAD_IS_FLUSHING (pad))
+            goto out_flushing;
+
           /* if there's a pending state change for this queue
            * or its manager, switch back to iterator so bottom
            * half of state change executes */
@@ -663,13 +661,11 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
   GST_CAT_LOG_OBJECT (queue_dataflow, queue, "signalling item_add");
   g_cond_signal (queue->item_add);
   GST_QUEUE_MUTEX_UNLOCK;
-  GST_STREAM_UNLOCK (pad);
 
   return GST_FLOW_OK;
 
 out_unref:
   GST_QUEUE_MUTEX_UNLOCK;
-  GST_STREAM_UNLOCK (pad);
 
   gst_buffer_unref (buffer);
 
@@ -678,8 +674,7 @@ out_unref:
 out_flushing:
   GST_CAT_LOG_OBJECT (queue_dataflow, queue, "exit because of flush");
   GST_QUEUE_MUTEX_UNLOCK;
-  gst_task_pause (GST_RPAD_TASK (queue->srcpad));
-  GST_STREAM_UNLOCK (pad);
+  gst_pad_pause_task (queue->srcpad);
 
   gst_buffer_unref (buffer);
 
@@ -694,8 +689,6 @@ gst_queue_loop (GstPad * pad)
   gboolean restart = TRUE;
 
   queue = GST_QUEUE (GST_PAD_PARENT (pad));
-
-  GST_STREAM_LOCK (pad);
 
   /* have to lock for thread-safety */
   GST_QUEUE_MUTEX_LOCK;
@@ -770,14 +763,12 @@ restart:
   GST_CAT_LOG_OBJECT (queue_dataflow, queue, "signalling item_del");
   g_cond_signal (queue->item_del);
   GST_QUEUE_MUTEX_UNLOCK;
-  GST_STREAM_UNLOCK (pad);
   return;
 
 out_flushing:
   GST_CAT_LOG_OBJECT (queue_dataflow, queue, "exit because of flush");
-  gst_task_pause (GST_RPAD_TASK (pad));
+  gst_pad_pause_task (pad);
   GST_QUEUE_MUTEX_UNLOCK;
-  GST_STREAM_UNLOCK (pad);
   return;
 }
 
@@ -860,17 +851,7 @@ gst_queue_src_activate (GstPad * pad, GstActivateMode mode)
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
   if (mode == GST_ACTIVATE_PUSH) {
-    /* if we have a scheduler we can start the task */
-    if (GST_ELEMENT_SCHEDULER (queue)) {
-      GST_STREAM_LOCK (pad);
-      GST_RPAD_TASK (pad) =
-          gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (queue),
-          (GstTaskFunction) gst_queue_loop, pad);
-
-      gst_task_start (GST_RPAD_TASK (pad));
-      GST_STREAM_UNLOCK (pad);
-      result = TRUE;
-    }
+    result = gst_pad_start_task (pad, (GstTaskFunction) gst_queue_loop, pad);
   } else {
     /* step 1, unblock chain and loop functions */
     GST_QUEUE_MUTEX_LOCK;
@@ -879,13 +860,7 @@ gst_queue_src_activate (GstPad * pad, GstActivateMode mode)
     GST_QUEUE_MUTEX_UNLOCK;
 
     /* step 2, make sure streaming finishes */
-    GST_STREAM_LOCK (pad);
-    /* step 3, stop the task */
-    gst_task_stop (GST_RPAD_TASK (pad));
-    gst_object_unref (GST_OBJECT (GST_RPAD_TASK (pad)));
-    GST_STREAM_UNLOCK (pad);
-
-    result = TRUE;
+    result = gst_pad_stop_task (pad);
   }
   return result;
 }

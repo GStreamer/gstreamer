@@ -333,9 +333,8 @@ gst_basesrc_do_seek (GstBaseSrc * src, GstEvent * event)
   }
 
   /* and restart the task */
-  if (GST_RPAD_TASK (src->srcpad)) {
-    gst_task_start (GST_RPAD_TASK (src->srcpad));
-  }
+  gst_pad_start_task (src->srcpad, (GstTaskFunction) gst_basesrc_loop,
+      src->srcpad);
   GST_STREAM_UNLOCK (src->srcpad);
 
   gst_event_unref (event);
@@ -447,7 +446,7 @@ gst_basesrc_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static GstFlowReturn
-gst_basesrc_get_range_unlocked (GstPad * pad, guint64 offset, guint length,
+gst_basesrc_get_range (GstPad * pad, guint64 offset, guint length,
     GstBuffer ** buf)
 {
   GstFlowReturn ret;
@@ -499,21 +498,6 @@ unexpected_length:
   }
 }
 
-static GstFlowReturn
-gst_basesrc_get_range (GstPad * pad, guint64 offset, guint length,
-    GstBuffer ** ret)
-{
-  GstFlowReturn fret;
-
-  GST_STREAM_LOCK (pad);
-
-  fret = gst_basesrc_get_range_unlocked (pad, offset, length, ret);
-
-  GST_STREAM_UNLOCK (pad);
-
-  return fret;
-}
-
 static gboolean
 gst_basesrc_check_get_range (GstPad * pad)
 {
@@ -538,9 +522,7 @@ gst_basesrc_loop (GstPad * pad)
 
   src = GST_BASESRC (GST_OBJECT_PARENT (pad));
 
-  GST_STREAM_LOCK (pad);
-
-  ret = gst_basesrc_get_range_unlocked (pad, src->offset, src->blocksize, &buf);
+  ret = gst_basesrc_get_range (pad, src->offset, src->blocksize, &buf);
   if (ret != GST_FLOW_OK)
     goto eos;
 
@@ -550,22 +532,19 @@ gst_basesrc_loop (GstPad * pad)
   if (ret != GST_FLOW_OK)
     goto pause;
 
-  GST_STREAM_UNLOCK (pad);
   return;
 
 eos:
   {
     GST_DEBUG_OBJECT (src, "going to EOS");
-    gst_task_pause (GST_RPAD_TASK (pad));
+    gst_pad_pause_task (pad);
     gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
-    GST_STREAM_UNLOCK (pad);
     return;
   }
 pause:
   {
     GST_DEBUG_OBJECT (src, "pausing task");
-    gst_task_pause (GST_RPAD_TASK (pad));
-    GST_STREAM_UNLOCK (pad);
+    gst_pad_pause_task (pad);
     return;
   }
 }
@@ -733,17 +712,8 @@ gst_basesrc_activate (GstPad * pad, GstActivateMode mode)
   result = FALSE;
   switch (mode) {
     case GST_ACTIVATE_PUSH:
-      /* if we have a scheduler we can start the task */
-      if (GST_ELEMENT_SCHEDULER (basesrc)) {
-        GST_STREAM_LOCK (pad);
-        GST_RPAD_TASK (pad) =
-            gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (basesrc),
-            (GstTaskFunction) gst_basesrc_loop, pad);
-
-        gst_task_start (GST_RPAD_TASK (pad));
-        GST_STREAM_UNLOCK (pad);
-        result = TRUE;
-      }
+      result =
+          gst_pad_start_task (pad, (GstTaskFunction) gst_basesrc_loop, pad);
       break;
     case GST_ACTIVATE_PULL:
       result = TRUE;
@@ -753,16 +723,7 @@ gst_basesrc_activate (GstPad * pad, GstActivateMode mode)
       gst_basesrc_unlock (basesrc);
 
       /* step 2, make sure streaming finishes */
-      GST_STREAM_LOCK (pad);
-      /* step 3, stop the task */
-      if (GST_RPAD_TASK (pad)) {
-        gst_task_stop (GST_RPAD_TASK (pad));
-        gst_object_unref (GST_OBJECT (GST_RPAD_TASK (pad)));
-        GST_RPAD_TASK (pad) = NULL;
-      }
-      GST_STREAM_UNLOCK (pad);
-
-      result = TRUE;
+      result = gst_pad_stop_task (pad);
       break;
   }
   return result;

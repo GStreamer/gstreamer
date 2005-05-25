@@ -378,6 +378,8 @@ gst_basesink_preroll_queue_push (GstBaseSink * basesink, GstPad * pad,
   if (basesink->preroll_queue->length == 0) {
     GstBaseSinkClass *bclass = GST_BASESINK_GET_CLASS (basesink);
 
+    GST_DEBUG ("preroll buffer with TS: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
     if (bclass->preroll)
       bclass->preroll (basesink, buffer);
   }
@@ -448,7 +450,7 @@ PrerollReturn
 gst_basesink_finish_preroll (GstBaseSink * basesink, GstPad * pad,
     GstBuffer * buffer)
 {
-  gboolean usable;
+  gboolean flushing;
 
   DEBUG ("finish preroll %p <\n", basesink);
   /* lock order is important */
@@ -461,13 +463,13 @@ gst_basesink_finish_preroll (GstBaseSink * basesink, GstPad * pad,
   gst_element_commit_state (GST_ELEMENT (basesink));
   GST_STATE_UNLOCK (basesink);
 
-  GST_LOCK (pad);
-  usable = !GST_RPAD_IS_FLUSHING (pad) && GST_RPAD_IS_ACTIVE (pad);
-  GST_UNLOCK (pad);
-  if (!usable)
-    goto unusable;
-
   gst_basesink_preroll_queue_push (basesink, pad, buffer);
+
+  GST_LOCK (pad);
+  flushing = GST_RPAD_IS_FLUSHING (pad);
+  GST_UNLOCK (pad);
+  if (flushing)
+    goto flushing;
 
   if (basesink->need_preroll)
     goto still_queueing;
@@ -490,7 +492,7 @@ no_preroll:
     GST_STATE_UNLOCK (basesink);
     return PREROLL_PLAYING;
   }
-unusable:
+flushing:
   {
     GST_DEBUG ("pad is flushing");
     GST_PREROLL_UNLOCK (pad);
@@ -726,11 +728,7 @@ gst_basesink_chain (GstPad * pad, GstBuffer * buf)
   g_assert (GST_BASESINK (GST_OBJECT_PARENT (pad))->pad_mode ==
       GST_ACTIVATE_PUSH);
 
-  GST_STREAM_LOCK (pad);
-
   result = gst_basesink_chain_unlocked (pad, buf);
-
-  GST_STREAM_UNLOCK (pad);
 
   return result;
 }
@@ -748,8 +746,6 @@ gst_basesink_loop (GstPad * pad)
 
   g_assert (basesink->pad_mode == GST_ACTIVATE_PULL);
 
-  GST_STREAM_LOCK (pad);
-
   result = gst_pad_pull_range (pad, basesink->offset, DEFAULT_SIZE, &buf);
   if (result != GST_FLOW_OK)
     goto paused;
@@ -759,12 +755,10 @@ gst_basesink_loop (GstPad * pad)
     goto paused;
 
   /* default */
-  GST_STREAM_UNLOCK (pad);
   return;
 
 paused:
-  gst_task_pause (GST_RPAD_TASK (pad));
-  GST_STREAM_UNLOCK (pad);
+  gst_pad_pause_task (pad);
   return;
 }
 
@@ -787,16 +781,8 @@ gst_basesink_activate (GstPad * pad, GstActivateMode mode)
       /* if we have a scheduler we can start the task */
       g_return_val_if_fail (basesink->has_loop, FALSE);
       gst_pad_peer_set_active (pad, mode);
-      if (GST_ELEMENT_SCHEDULER (basesink)) {
-        GST_STREAM_LOCK (pad);
-        GST_RPAD_TASK (pad) =
-            gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (basesink),
-            (GstTaskFunction) gst_basesink_loop, pad);
-
-        gst_task_start (GST_RPAD_TASK (pad));
-        GST_STREAM_UNLOCK (pad);
-        result = TRUE;
-      }
+      result =
+          gst_pad_start_task (pad, (GstTaskFunction) gst_basesink_loop, pad);
       break;
     case GST_ACTIVATE_NONE:
       /* step 1, unblock clock sync (if any) or any other blocking thing */
@@ -816,16 +802,7 @@ gst_basesink_activate (GstPad * pad, GstActivateMode mode)
       GST_PREROLL_UNLOCK (pad);
 
       /* step 2, make sure streaming finishes */
-      GST_STREAM_LOCK (pad);
-      /* step 3, stop the task */
-      if (GST_RPAD_TASK (pad)) {
-        gst_task_stop (GST_RPAD_TASK (pad));
-        gst_object_unref (GST_OBJECT (GST_RPAD_TASK (pad)));
-        GST_RPAD_TASK (pad) = NULL;
-      }
-      GST_STREAM_UNLOCK (pad);
-
-      result = TRUE;
+      result = gst_pad_stop_task (pad);
       break;
   }
   basesink->pad_mode = mode;
@@ -911,9 +888,6 @@ gst_basesink_change_state (GstElement * element)
       basesink->have_preroll = FALSE;
       GST_PREROLL_UNLOCK (basesink->sinkpad);
 
-      /* make sure the element is finished processing */
-      GST_STREAM_LOCK (basesink->sinkpad);
-      GST_STREAM_UNLOCK (basesink->sinkpad);
       /* clear EOS state */
       basesink->eos = FALSE;
       break;

@@ -142,8 +142,15 @@ gst_thread_scheduler_task_start (GstTask * task)
   GstThreadScheduler *tsched =
       GST_THREAD_SCHEDULER (GST_OBJECT_PARENT (GST_OBJECT (task)));
   GstTaskState old;
+  GStaticRecMutex *lock;
 
   GST_DEBUG_OBJECT (task, "Starting task %p", task);
+
+  if ((lock = GST_TASK_GET_LOCK (task)) == NULL) {
+    lock = g_new (GStaticRecMutex, 1);
+    g_static_rec_mutex_init (lock);
+    GST_TASK_GET_LOCK (task) = lock;
+  }
 
   GST_LOCK (ttask);
   old = GST_TASK_CAST (ttask)->state;
@@ -269,11 +276,18 @@ gst_thread_scheduler_func (GstThreadSchedulerTask * ttask,
   GST_DEBUG_OBJECT (sched, "Entering task %p, thread %p", task,
       g_thread_self ());
 
+  /* locking order is TASK_LOCK, LOCK */
+  GST_TASK_LOCK (task);
   GST_LOCK (task);
   while (G_LIKELY (task->state != GST_TASK_STOPPED)) {
     while (G_UNLIKELY (task->state == GST_TASK_PAUSED)) {
+      GST_TASK_UNLOCK (task);
       GST_TASK_SIGNAL (task);
       GST_TASK_WAIT (task);
+      GST_UNLOCK (task);
+      /* locking order.. */
+      GST_TASK_LOCK (task);
+      GST_LOCK (task);
       if (task->state == GST_TASK_STOPPED)
         goto done;
     }
@@ -285,6 +299,7 @@ gst_thread_scheduler_func (GstThreadSchedulerTask * ttask,
   }
 done:
   GST_UNLOCK (task);
+  GST_TASK_UNLOCK (task);
 
   GST_DEBUG_OBJECT (sched, "Exit task %p, thread %p", task, g_thread_self ());
 

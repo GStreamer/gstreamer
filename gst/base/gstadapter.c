@@ -160,7 +160,7 @@ gst_adapter_peek (GstAdapter * adapter, guint size)
 
   if (adapter->assembled_size < size) {
     adapter->assembled_size = (size / DEFAULT_SIZE + 1) * DEFAULT_SIZE;
-    GST_DEBUG_OBJECT (adapter, "setting size of internal buffer to %u\n",
+    GST_DEBUG_OBJECT (adapter, "setting size of internal buffer to %u",
         adapter->assembled_size);
     adapter->assembled_data =
         g_realloc (adapter->assembled_data, adapter->assembled_size);
@@ -198,7 +198,7 @@ gst_adapter_flush (GstAdapter * adapter, guint flush)
   g_return_if_fail (flush > 0);
   g_return_if_fail (flush <= adapter->size);
 
-  GST_LOG_OBJECT (adapter, "flushing %u bytes\n", flush);
+  GST_LOG_OBJECT (adapter, "flushing %u bytes", flush);
   adapter->size -= flush;
   adapter->assembled_len = 0;
   while (flush > 0) {

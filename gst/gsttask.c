@@ -72,6 +72,7 @@ gst_task_class_init (GstTaskClass * klass)
 static void
 gst_task_init (GstTask * task)
 {
+  task->lock = NULL;
   task->cond = g_cond_new ();
   task->state = GST_TASK_STOPPED;
 }
@@ -106,6 +107,24 @@ gst_task_create (GstTaskFunction func, gpointer data)
 {
   return NULL;
 }
+
+/**
+ * gst_task_set_lock:
+ * @task: The #GstTask to use
+ * @mutex: The GMutex to use
+ *
+ * Set the mutex used by the task.
+ *
+ * MT safe.
+ */
+void
+gst_task_set_lock (GstTask * task, GStaticRecMutex * mutex)
+{
+  GST_LOCK (task);
+  task->lock = mutex;
+  GST_UNLOCK (task);
+}
+
 
 /**
  * gst_task_get_state:

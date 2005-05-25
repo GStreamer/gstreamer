@@ -54,15 +54,22 @@ typedef enum {
 #define GST_TASK_SIGNAL(task)		g_cond_signal(GST_TASK_GET_COND (task))
 #define GST_TASK_BROADCAST(task)	g_cond_breadcast(GST_TASK_GET_COND (task))
 
+#define GST_TASK_GET_LOCK(task)		(GST_TASK_CAST(task)->lock)
+#define GST_TASK_LOCK(task)		g_static_rec_mutex_lock(GST_TASK_GET_LOCK(task))
+#define GST_TASK_UNLOCK(task)		g_static_rec_mutex_unlock(GST_TASK_GET_LOCK(task))
+
 struct _GstTask {
   GstObject      object;
 
-  /*< public >*/ /* with TASK_LOCK */
-  GstTaskState state;
-  GCond *cond;
+
+  /*< public >*/ /* with LOCK */
+  GstTaskState     state;
+  GCond 	  *cond;
+
+  GStaticRecMutex *lock;
 
   GstTaskFunction func;
-  gpointer data;
+  gpointer 	 data;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -83,6 +90,7 @@ struct _GstTaskClass {
 GType           gst_task_get_type       (void);
 
 GstTask*	gst_task_create		(GstTaskFunction func, gpointer data);
+void		gst_task_set_lock	(GstTask *task, GStaticRecMutex *mutex);
 
 GstTaskState	gst_task_get_state	(GstTask *task);
 
