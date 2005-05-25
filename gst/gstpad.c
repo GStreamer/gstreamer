@@ -506,10 +506,9 @@ gst_pad_set_active (GstPad * pad, GstActivateMode mode)
     GST_LOCK (realpad);
     if (result == FALSE)
       goto activate_error;
-
-    /* store the mode */
-    GST_RPAD_ACTIVATE_MODE (realpad) = mode;
   }
+  /* store the mode */
+  GST_RPAD_ACTIVATE_MODE (realpad) = mode;
 
   /* when going to active allow data passing now */
   if (active) {
@@ -529,7 +528,8 @@ gst_pad_set_active (GstPad * pad, GstActivateMode mode)
 was_ok:
   {
     GST_CAT_DEBUG (GST_CAT_PADS,
-        "pad %s:%s was active", GST_DEBUG_PAD_NAME (realpad));
+        "pad %s:%s was active, old %d, new %d",
+        GST_DEBUG_PAD_NAME (realpad), old, mode);
     GST_UNLOCK (realpad);
     return TRUE;
   }

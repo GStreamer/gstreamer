@@ -141,6 +141,7 @@ static GstPadLinkReturn gst_queue_link_src (GstPad * pad, GstPad * peer);
 static void gst_queue_locked_flush (GstQueue * queue);
 
 static gboolean gst_queue_src_activate (GstPad * pad, GstActivateMode mode);
+static gboolean gst_queue_sink_activate (GstPad * pad, GstActivateMode mode);
 static GstElementStateReturn gst_queue_change_state (GstElement * element);
 
 
@@ -299,6 +300,8 @@ gst_queue_init (GstQueue * queue)
       "sink");
   gst_pad_set_chain_function (queue->sinkpad,
       GST_DEBUG_FUNCPTR (gst_queue_chain));
+  gst_pad_set_activate_function (queue->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_queue_sink_activate));
   gst_pad_set_event_function (queue->sinkpad,
       GST_DEBUG_FUNCPTR (gst_queue_handle_sink_event));
   gst_pad_set_link_function (queue->sinkpad,
@@ -338,7 +341,7 @@ gst_queue_init (GstQueue * queue)
   queue->leaky = GST_QUEUE_NO_LEAK;
   queue->may_deadlock = TRUE;
   queue->block_timeout = GST_CLOCK_TIME_NONE;
-  queue->flush = FALSE;
+  queue->flushing = FALSE;
 
   queue->qlock = g_mutex_new ();
   queue->item_add = g_cond_new ();
@@ -446,9 +449,6 @@ gst_queue_locked_flush (GstQueue * queue)
   queue->cur_level.bytes = 0;
   queue->cur_level.time = 0;
 
-  /* make sure any pending buffers to be added are flushed too */
-  queue->flush = TRUE;
-
   /* we deleted something... */
   g_cond_signal (queue->item_del);
 }
@@ -483,18 +483,21 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
       /* forward event */
       gst_pad_event_default (pad, event);
       if (GST_EVENT_FLUSH_DONE (event)) {
+        GST_QUEUE_MUTEX_LOCK;
+        queue->flushing = FALSE;
         gst_pad_start_task (queue->srcpad, (GstTaskFunction) gst_queue_loop,
             queue->srcpad);
+        GST_QUEUE_MUTEX_UNLOCK;
       } else {
         /* now unblock the chain function */
         GST_QUEUE_MUTEX_LOCK;
+        queue->flushing = TRUE;
         gst_queue_locked_flush (queue);
+        /* unblock the loop function */
+        g_cond_signal (queue->item_add);
         GST_QUEUE_MUTEX_UNLOCK;
 
         STATUS (queue, "after flush");
-
-        /* unblock the loop function */
-        g_cond_signal (queue->item_add);
 
         /* make sure it stops */
         gst_pad_pause_task (queue->srcpad);
@@ -628,8 +631,11 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
           STATUS (queue, "waiting for item_del signal from thread using qlock");
           g_cond_wait (queue->item_del, queue->qlock);
 
-          if (GST_RPAD_IS_FLUSHING (pad))
-            goto out_flushing;
+          if (queue->flushing)
+#if 0
+            if (GST_RPAD_IS_FLUSHING (pad))
+#endif
+              goto out_flushing;
 
           /* if there's a pending state change for this queue
            * or its manager, switch back to iterator so bottom
@@ -644,9 +650,11 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
         break;
     }
   }
+#if 0
   /* we are flushing */
   if (GST_RPAD_IS_FLUSHING (pad))
     goto out_flushing;
+#endif
 
   g_queue_push_tail (queue->queue, buffer);
 
@@ -703,17 +711,30 @@ restart:
     while (gst_queue_is_empty (queue)) {
       STATUS (queue, "waiting for item_add");
 
+#if 0
       /* we are flushing */
+      if (GST_RPAD_IS_FLUSHING (pad))
+        goto out_flushing;
       if (GST_RPAD_IS_FLUSHING (queue->sinkpad))
+        goto out_flushing;
+#endif
+
+      if (queue->flushing)
         goto out_flushing;
 
       GST_LOG_OBJECT (queue, "doing g_cond_wait using qlock from thread %p",
           g_thread_self ());
       g_cond_wait (queue->item_add, queue->qlock);
 
+      if (queue->flushing)
+        goto out_flushing;
+#if 0
       /* we got unlocked because we are flushing */
+      if (GST_RPAD_IS_FLUSHING (pad))
+        goto out_flushing;
       if (GST_RPAD_IS_FLUSHING (queue->sinkpad))
         goto out_flushing;
+#endif
 
       GST_LOG_OBJECT (queue, "done g_cond_wait using qlock from thread %p",
           g_thread_self ());
@@ -843,6 +864,37 @@ gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
 }
 
 static gboolean
+gst_queue_sink_activate (GstPad * pad, GstActivateMode mode)
+{
+  gboolean result = FALSE;
+  GstQueue *queue;
+
+  queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
+
+  switch (mode) {
+    case GST_ACTIVATE_PUSH:
+      queue->flushing = FALSE;
+      result = TRUE;
+      break;
+    case GST_ACTIVATE_PULL:
+      result = FALSE;
+      break;
+    case GST_ACTIVATE_NONE:
+      /* step 1, unblock chain and loop functions */
+      GST_QUEUE_MUTEX_LOCK;
+      queue->flushing = TRUE;
+      gst_queue_locked_flush (queue);
+      g_cond_signal (queue->item_del);
+      GST_QUEUE_MUTEX_UNLOCK;
+
+      /* step 2, make sure streaming finishes */
+      result = gst_pad_stop_task (pad);
+      break;
+  }
+  return result;
+}
+
+static gboolean
 gst_queue_src_activate (GstPad * pad, GstActivateMode mode)
 {
   gboolean result = FALSE;
@@ -850,21 +902,29 @@ gst_queue_src_activate (GstPad * pad, GstActivateMode mode)
 
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
-  if (mode == GST_ACTIVATE_PUSH) {
-    result = gst_pad_start_task (pad, (GstTaskFunction) gst_queue_loop, pad);
-  } else {
-    /* step 1, unblock chain and loop functions */
-    GST_QUEUE_MUTEX_LOCK;
-    g_cond_signal (queue->item_add);
-    g_cond_signal (queue->item_del);
-    GST_QUEUE_MUTEX_UNLOCK;
+  switch (mode) {
+    case GST_ACTIVATE_PUSH:
+      GST_QUEUE_MUTEX_LOCK;
+      queue->flushing = FALSE;
+      result = gst_pad_start_task (pad, (GstTaskFunction) gst_queue_loop, pad);
+      GST_QUEUE_MUTEX_UNLOCK;
+      break;
+    case GST_ACTIVATE_PULL:
+      result = FALSE;
+      break;
+    case GST_ACTIVATE_NONE:
+      /* step 1, unblock chain and loop functions */
+      GST_QUEUE_MUTEX_LOCK;
+      queue->flushing = TRUE;
+      g_cond_signal (queue->item_add);
+      GST_QUEUE_MUTEX_UNLOCK;
 
-    /* step 2, make sure streaming finishes */
-    result = gst_pad_stop_task (pad);
+      /* step 2, make sure streaming finishes */
+      result = gst_pad_stop_task (pad);
+      break;
   }
   return result;
 }
-
 
 static GstElementStateReturn
 gst_queue_change_state (GstElement * element)
@@ -883,9 +943,6 @@ gst_queue_change_state (GstElement * element)
     case GST_STATE_NULL_TO_READY:
       break;
     case GST_STATE_READY_TO_PAUSED:
-      GST_QUEUE_MUTEX_LOCK;
-      gst_queue_locked_flush (queue);
-      GST_QUEUE_MUTEX_UNLOCK;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
@@ -899,9 +956,6 @@ gst_queue_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
-      GST_QUEUE_MUTEX_LOCK;
-      gst_queue_locked_flush (queue);
-      GST_QUEUE_MUTEX_UNLOCK;
       break;
     case GST_STATE_READY_TO_NULL:
       break;

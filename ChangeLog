@@ -1,3 +1,21 @@
+2005-05-25  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (bin_element_is_sink), (has_ancestor),
+	(bin_element_is_semi_sink), (append_child), (gst_bin_change_state):
+	* gst/gstpad.c: (gst_pad_set_active), (gst_pad_link_prepare),
+	(gst_pad_link), (gst_pad_accept_caps), (gst_pad_query),
+	(gst_pad_send_event), (gst_pad_start_task):
+	* gst/gstqueue.c: (gst_queue_init), (gst_queue_locked_flush),
+	(gst_queue_handle_sink_event), (gst_queue_chain), (gst_queue_loop),
+	(gst_queue_sink_activate), (gst_queue_src_activate),
+	(gst_queue_change_state):
+	* gst/gstqueue.h:
+	Fix state changes for non sinks. We now change sinks, then elements
+	with unconnected srcpads, then the rest.
+	More efficient queue unlocking in flush and state changes.
+	Set the pad activate mode even if it does not have an activate
+	function.
+
 2005-05-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/base/gstbasesrc.c: (gst_basesrc_activate):

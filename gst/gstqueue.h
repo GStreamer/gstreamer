@@ -79,7 +79,7 @@ struct _GstQueue {
 
   /* it the queue should fail on possible deadlocks */
   gboolean may_deadlock;
-  gboolean flush;
+  gboolean flushing;
 
   GMutex *qlock;	/* lock for queue (vs object lock) */
   GCond *item_add;	/* signals buffers now available for reading */
