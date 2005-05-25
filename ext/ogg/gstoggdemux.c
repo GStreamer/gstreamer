@@ -89,10 +89,15 @@ typedef enum
   GST_OGG_PAD_MODE_STREAMING,   /* we are streaming buffers to the outside */
 } GstOggPadMode;
 
+//#define PARENT                GstPad
+//#define PARENTCLASS   GstPadClass
+#define PARENT		GstRealPad
+#define PARENTCLASS	GstRealPadClass
+
 /* all information needed for one ogg stream */
 struct _GstOggPad
 {
-  GstRealPad pad;               /* subclass GstRealPad */
+  PARENT pad;                   /* subclass GstPad */
 
   GstOggPadMode mode;
 
@@ -109,7 +114,6 @@ struct _GstOggPad
   gint64 packetno;
   gint64 offset;
 
-  GstEvent *new_segment;
   gint64 start;
   gint64 stop;
 
@@ -130,7 +134,7 @@ struct _GstOggPad
 
 struct _GstOggPadClass
 {
-  GstRealPadClass parent_class;
+  PARENTCLASS parent_class;
 };
 
 typedef enum
@@ -197,7 +201,7 @@ static gboolean gst_ogg_pad_event (GstPad * pad, GstEvent * event);
 static GstCaps *gst_ogg_pad_getcaps (GstPad * pad);
 static GstCaps *gst_ogg_type_find (ogg_packet * packet);
 
-static GstRealPadClass *ogg_pad_parent_class = NULL;
+static GstPadClass *ogg_pad_parent_class = NULL;
 
 static GType
 gst_ogg_pad_get_type (void)
@@ -278,10 +282,6 @@ gst_ogg_pad_dispose (GObject * object)
   g_list_free (pad->headers);
   pad->headers = NULL;
 
-  if (pad->new_segment) {
-    gst_event_unref (pad->new_segment);
-    pad->new_segment = NULL;
-  }
   ogg_stream_reset (&pad->stream);
 
   G_OBJECT_CLASS (ogg_pad_parent_class)->dispose (object);
@@ -560,6 +560,8 @@ gst_ogg_pad_typefind (GstOggPad * pad, ogg_packet * packet)
             gst_element_factory_create (GST_ELEMENT_FACTORY (factories->data),
             NULL);
         if (element) {
+          GstCaps *any;
+
           /* this is ours */
           gst_object_ref (GST_OBJECT (element));
           gst_object_sink (GST_OBJECT (element));
@@ -573,7 +575,9 @@ gst_ogg_pad_typefind (GstOggPad * pad, ogg_packet * packet)
           gst_pad_set_chain_function (pad->elem_out,
               gst_ogg_pad_internal_chain);
           gst_pad_set_element_private (pad->elem_out, pad);
-          gst_pad_set_caps (pad->elem_out, gst_caps_new_any ());
+          any = gst_caps_new_any ();
+          gst_pad_set_caps (pad->elem_out, any);
+          gst_caps_unref (any);
           gst_pad_set_active (pad->elem_out, TRUE);
 
           /* and this pad may not be named src.. */
@@ -648,10 +652,6 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
         "%p streaming to peer serial %08lx, packetno %lld", pad, pad->serialno,
         pad->packetno);
 
-    if (pad->new_segment) {
-      ret = gst_pad_push_event (GST_PAD (pad), pad->new_segment);
-      pad->new_segment = NULL;
-    }
     if (buf) {
       memcpy (buf->data, packet->packet, packet->bytes);
 
@@ -683,7 +683,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
     GST_BUFFER_OFFSET (buf) = -1;
     GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
 
-    ret = GST_RPAD_CHAINFUNC (pad->elem_pad) (pad->elem_pad, buf);
+    ret = gst_pad_chain (pad->elem_pad, buf);
   }
 
 #if 0
@@ -795,7 +795,7 @@ gst_ogg_chain_new_stream (GstOggChain * chain, glong serialno)
   list = gst_tag_list_new ();
   name = g_strdup_printf ("serial_%08lx", serialno);
 
-  GST_RPAD_DIRECTION (ret) = GST_PAD_SRC;
+  GST_PAD_DIRECTION (ret) = GST_PAD_SRC;
   ret->chain = chain;
   ret->ogg = chain->ogg;
   gst_object_set_name (GST_OBJECT (ret), name);
@@ -1381,16 +1381,18 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, gint64 pos)
       for (j = 0; j < chain->streams->len; j++) {
         GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, j);
 
-        gst_event_ref (event);
-        /* queue the event for the streaming thread */
-        pad->new_segment = event;
         gst_pad_push_event (GST_PAD (pad), gst_event_new_flush (TRUE));
+
+        /* and the discont */
+        gst_event_ref (event);
+        gst_pad_push_event (GST_PAD (pad), event);
       }
     }
     gst_event_unref (event);
     /* restart our task since it might have been stopped when we did the 
      * flush. */
-    gst_task_start (GST_RPAD_TASK (ogg->sinkpad));
+    gst_pad_start_task (ogg->sinkpad, (GstTaskFunction) gst_ogg_demux_loop,
+        ogg->sinkpad);
   }
 
   /* switch to different chain */
@@ -1792,7 +1794,7 @@ no_first_chain:
  * the serialno, submit pages and packets to the oggpads
  */
 static GstFlowReturn
-gst_ogg_demux_chain_unlocked (GstPad * pad, GstBuffer * buffer)
+gst_ogg_demux_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstOggDemux *ogg;
   gint ret = -1;
@@ -1868,18 +1870,6 @@ gst_ogg_demux_chain_unlocked (GstPad * pad, GstBuffer * buffer)
   return result;
 }
 
-static GstFlowReturn
-gst_ogg_demux_chain (GstPad * pad, GstBuffer * buffer)
-{
-  GstFlowReturn ret;
-
-  GST_STREAM_LOCK (pad);
-  ret = gst_ogg_demux_chain_unlocked (pad, buffer);
-  GST_STREAM_UNLOCK (pad);
-
-  return ret;
-}
-
 static void
 gst_ogg_demux_send_eos (GstOggDemux * ogg)
 {
@@ -1914,7 +1904,6 @@ gst_ogg_demux_loop (GstOggPad * pad)
 
   ogg = GST_OGG_DEMUX (GST_OBJECT_PARENT (pad));
 
-  GST_STREAM_LOCK (pad);
   if (ogg->need_chains) {
     gboolean got_chains;
 
@@ -1944,19 +1933,16 @@ gst_ogg_demux_loop (GstOggPad * pad)
 
   ogg->offset += GST_BUFFER_SIZE (buffer);
 
-  ret = gst_ogg_demux_chain_unlocked (ogg->sinkpad, buffer);
+  ret = gst_ogg_demux_chain (ogg->sinkpad, buffer);
   if (ret != GST_FLOW_OK) {
     GST_LOG_OBJECT (ogg, "got unexpected %d, pausing", ret);
     goto pause;
   }
-
-  GST_STREAM_UNLOCK (pad);
   return;
 
 pause:
   GST_LOG_OBJECT (ogg, "pausing task");
-  gst_task_pause (GST_RPAD_TASK (ogg->sinkpad));
-  GST_STREAM_UNLOCK (pad);
+  gst_pad_pause_task (ogg->sinkpad);
   return;
 }
 
@@ -1975,35 +1961,18 @@ gst_ogg_demux_sink_activate (GstPad * sinkpad, GstActivateMode mode)
       break;
     case GST_ACTIVATE_PULL:
       /* if we have a scheduler we can start the task */
-      if (GST_ELEMENT_SCHEDULER (ogg)) {
-        gst_pad_peer_set_active (sinkpad, mode);
-        GST_STREAM_LOCK (sinkpad);
-        GST_RPAD_TASK (sinkpad) =
-            gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (ogg),
-            (GstTaskFunction) gst_ogg_demux_loop, sinkpad);
-
-        ogg->need_chains = TRUE;
-        ogg->seekable = TRUE;
-        gst_task_start (GST_RPAD_TASK (sinkpad));
-        GST_STREAM_UNLOCK (sinkpad);
-        result = TRUE;
-      }
+      gst_pad_peer_set_active (sinkpad, mode);
+      ogg->need_chains = TRUE;
+      ogg->seekable = TRUE;
+      result =
+          gst_pad_start_task (sinkpad, (GstTaskFunction) gst_ogg_demux_loop,
+          sinkpad);
       break;
     case GST_ACTIVATE_NONE:
       /* step 1, unblock clock sync (if any) */
 
       /* step 2, make sure streaming finishes */
-      GST_STREAM_LOCK (sinkpad);
-
-      /* step 3, stop the task */
-      if (GST_RPAD_TASK (sinkpad)) {
-        gst_task_stop (GST_RPAD_TASK (sinkpad));
-        gst_object_unref (GST_OBJECT (GST_RPAD_TASK (sinkpad)));
-        GST_RPAD_TASK (sinkpad) = NULL;
-      }
-      GST_STREAM_UNLOCK (sinkpad);
-
-      result = TRUE;
+      result = gst_pad_stop_task (sinkpad);
       break;
   }
   return result;

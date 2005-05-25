@@ -1,5 +1,22 @@
 2005-05-25  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_dispose),
+	(gst_ogg_pad_typefind), (gst_ogg_pad_submit_packet),
+	(gst_ogg_chain_new_stream), (gst_ogg_demux_perform_seek),
+	(gst_ogg_demux_chain), (gst_ogg_demux_loop),
+	(gst_ogg_demux_sink_activate):
+	* ext/theora/theoradec.c: (theora_dec_src_event),
+	(theora_handle_comment_packet), (theora_dec_chain),
+	(theora_dec_change_state):
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_sink_event),
+	(vorbis_handle_data_packet), (vorbis_dec_chain),
+	(vorbis_dec_change_state):
+	Remove STREAM locks as they are taken in core now.
+	Never set bogus granulepos on vorbis/theora.
+	Fix leaks in theoradec tag parsing.
+
+2005-05-25  Wim Taymans  <wim@fluendo.com>
+
 	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnomevfssrc_create):
 	Fix memleaks, GST_BUFFER_DATA() is not freed.
 

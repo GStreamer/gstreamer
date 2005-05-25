@@ -376,6 +376,7 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
   GST_LOG_OBJECT (dec, "handling event");
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_DISCONTINUOUS:
+      GST_STREAM_LOCK (pad);
       if (gst_event_discont_get_value (event, GST_FORMAT_DEFAULT,
               (gint64 *) & start_value, &end_value)) {
         dec->granulepos = start_value;
@@ -392,18 +393,25 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
         } else {
           GST_WARNING_OBJECT (dec,
               "discont event didn't include offset, we might set it wrong now");
+          dec->granulepos = -1;
         }
       }
+      GST_DEBUG ("vd: discont %lld", dec->granulepos);
 
+      dec->granulepos = -1;
 
       if (dec->packetno < 3) {
         if (dec->granulepos != 0)
           GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
               ("can't handle discont before parsing first 3 packets"));
         dec->packetno = 0;
+#if 0
         gst_pad_push_event (dec->srcpad, gst_event_new_discontinuous (FALSE,
                 GST_FORMAT_TIME, (guint64) 0, GST_FORMAT_DEFAULT,
                 (guint64) 0, GST_FORMAT_BYTES, (guint64) 0, 0));
+#endif
+        gst_event_ref (event);
+        gst_pad_push_event (dec->srcpad, event);
       } else {
         GstFormat time_format, default_format, bytes_format;
 
@@ -417,22 +425,30 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
                 dec->granulepos, &time_format, &time)
             && vorbis_dec_convert (dec->srcpad, GST_FORMAT_DEFAULT,
                 dec->granulepos, &bytes_format, &bytes)) {
-          gst_pad_push_event (dec->srcpad,
-              gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
-                  time, GST_FORMAT_DEFAULT, dec->granulepos,
-                  GST_FORMAT_BYTES, bytes, 0));
+
+          gst_event_ref (event);
+          gst_pad_push_event (dec->srcpad, event);
+          /*
+             gst_pad_push_event (dec->srcpad,
+             gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
+             time, GST_FORMAT_DEFAULT, dec->granulepos,
+             GST_FORMAT_BYTES, bytes, 0));
+           */
         } else {
           GST_ERROR_OBJECT (dec,
               "failed to parse data for DISCONT event, not sending any");
+          gst_event_ref (event);
+          gst_pad_push_event (dec->srcpad, event);
         }
 #ifdef HAVE_VORBIS_SYNTHESIS_RESTART
         vorbis_synthesis_restart (&dec->vd);
 #endif
       }
+      GST_STREAM_UNLOCK (pad);
       gst_event_unref (event);
       break;
     default:
-      ret = gst_pad_event_default (dec->sinkpad, event);
+      ret = gst_pad_event_default (pad, event);
       break;
   }
   return ret;
@@ -657,12 +673,16 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
 
       GST_BUFFER_OFFSET (out) = vd->granulepos;
       GST_BUFFER_OFFSET_END (out) = vd->granulepos + sample_count;
-      GST_BUFFER_TIMESTAMP (out) = vd->granulepos * GST_SECOND / vd->vi.rate;
+      if (vd->granulepos != -1)
+        GST_BUFFER_TIMESTAMP (out) = vd->granulepos * GST_SECOND / vd->vi.rate;
+      else
+        GST_BUFFER_TIMESTAMP (out) = -1;
       GST_BUFFER_DURATION (out) = sample_count * GST_SECOND / vd->vi.rate;
 
       result = gst_pad_push (vd->srcpad, out);
 
-      vd->granulepos += sample_count;
+      if (vd->granulepos != -1)
+        vd->granulepos += sample_count;
     } else {
       /* no buffer.. */
       result = GST_FLOW_OK;
@@ -703,14 +723,12 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
   ogg_packet packet;
   GstFlowReturn result = GST_FLOW_OK;
 
-  GST_STREAM_LOCK (pad);
-
   vd = GST_VORBIS_DEC (GST_PAD_PARENT (pad));
 
   /* make ogg_packet out of the buffer */
   packet.packet = GST_BUFFER_DATA (buffer);
   packet.bytes = GST_BUFFER_SIZE (buffer);
-  packet.granulepos = GST_BUFFER_OFFSET_END (buffer);
+  packet.granulepos = vd->granulepos;
   packet.packetno = vd->packetno++;
   /* 
    * FIXME. Is there anyway to know that this is the last packet and
@@ -731,13 +749,13 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
     result = vorbis_handle_data_packet (vd, &packet);
   }
 
+  GST_DEBUG ("offset end: %lld", GST_BUFFER_OFFSET_END (buffer));
+
   /* granulepos is the last sample in the packet */
   if (GST_BUFFER_OFFSET_END_IS_VALID (buffer))
     vd->granulepos = GST_BUFFER_OFFSET_END (buffer);;
 
 done:
-  GST_STREAM_UNLOCK (pad);
-
   gst_buffer_unref (buffer);
 
   return result;
@@ -759,7 +777,7 @@ vorbis_dec_change_state (GstElement * element)
       vorbis_info_init (&vd->vi);
       vorbis_comment_init (&vd->vc);
       vd->initialized = FALSE;
-      vd->granulepos = 0;
+      vd->granulepos = -1;
       vd->packetno = 0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
@@ -774,14 +792,10 @@ vorbis_dec_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
-      GST_STREAM_LOCK (vd->sinkpad);
       vorbis_block_clear (&vd->vb);
       vorbis_dsp_clear (&vd->vd);
       vorbis_comment_clear (&vd->vc);
       vorbis_info_clear (&vd->vi);
-      vd->packetno = 0;
-      vd->granulepos = 0;
-      GST_STREAM_UNLOCK (vd->sinkpad);
       break;
     case GST_STATE_READY_TO_NULL:
       break;

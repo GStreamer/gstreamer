@@ -535,10 +535,7 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
           format, value);
 
       res = gst_pad_send_event (GST_PAD_PEER (dec->sinkpad), real_seek);
-      if (!res)
-        goto error;
 
-    error:
       gst_event_unref (event);
       break;
     }
@@ -547,6 +544,10 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
+  return res;
+
+error:
+  gst_event_unref (event);
   return res;
 }
 
@@ -633,7 +634,7 @@ theora_handle_comment_packet (GstTheoraDec * dec, ogg_packet * packet)
   GST_DEBUG ("parsing comment packet");
 
   buf = gst_buffer_new_and_alloc (packet->bytes);
-  GST_BUFFER_DATA (buf) = packet->packet;
+  memcpy (GST_BUFFER_DATA (buf), packet->packet, packet->bytes);
 
   list =
       gst_tag_list_from_vorbiscomment_buffer (buf, (guint8 *) "\201theora", 7,
@@ -656,6 +657,7 @@ theora_handle_comment_packet (GstTheoraDec * dec, ogg_packet * packet)
       GST_TAG_VIDEO_CODEC, "Theora", NULL);
 
   //gst_element_found_tags_for_pad (GST_ELEMENT (dec), dec->srcpad, 0, list);
+  gst_tag_list_free (list);
 
   return GST_FLOW_OK;
 }
@@ -913,8 +915,6 @@ theora_dec_chain (GstPad * pad, GstBuffer * buf)
 
   dec = GST_THEORA_DEC (GST_PAD_PARENT (pad));
 
-  GST_STREAM_LOCK (pad);
-
   if (dec->packetno >= 3) {
     /* try timestamp first */
     outtime = GST_BUFFER_TIMESTAMP (buf);
@@ -939,7 +939,6 @@ theora_dec_chain (GstPad * pad, GstBuffer * buf)
          * offset before we can generate valid timestamps */
         dec->queued = g_list_append (dec->queued, buf);
         GST_DEBUG_OBJECT (dec, "queued buffer");
-        GST_STREAM_UNLOCK (pad);
         return GST_FLOW_OK;
       } else {
         /* granulepos to time */
@@ -1013,7 +1012,6 @@ theora_dec_chain (GstPad * pad, GstBuffer * buf)
 done:
   dec->packetno++;
   _inc_granulepos (dec);
-  GST_STREAM_UNLOCK (pad);
 
   gst_buffer_unref (buf);
 
@@ -1040,13 +1038,11 @@ theora_dec_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
-      GST_STREAM_LOCK (dec->sinkpad);
       theora_clear (&dec->state);
       theora_comment_clear (&dec->comment);
       theora_info_clear (&dec->info);
       dec->packetno = 0;
       dec->granulepos = -1;
-      GST_STREAM_UNLOCK (dec->sinkpad);
       break;
     case GST_STATE_READY_TO_NULL:
       break;
