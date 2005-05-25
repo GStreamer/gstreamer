@@ -958,13 +958,12 @@ gst_gnomevfssrc_create (GstBaseSrc * basesrc, guint64 offset, guint size,
     }
   }
 
-  /* create the buffer */
-  buf = gst_buffer_new ();
-
   audiocast_do_notifications (src);
 
   if (src->iradio_mode && src->icy_metaint > 0) {
-    data = g_malloc (src->icy_metaint);
+    buf = gst_buffer_new_and_alloc (src->icy_metaint);
+
+    data = GST_BUFFER_DATA (buf);
 
     /* try to read */
     GST_DEBUG ("doing read: icy_count: %" G_GINT64_FORMAT, src->icy_count);
@@ -980,8 +979,7 @@ gst_gnomevfssrc_create (GstBaseSrc * basesrc, guint64 offset, guint size,
 
     src->icy_count += readbytes;
     GST_BUFFER_OFFSET (buf) = src->curoffset;
-    GST_BUFFER_SIZE (buf) += readbytes;
-    GST_BUFFER_DATA (buf) = data;
+    GST_BUFFER_SIZE (buf) = readbytes;
     src->curoffset += readbytes;
 
     if (src->icy_count == src->icy_metaint) {
@@ -989,19 +987,20 @@ gst_gnomevfssrc_create (GstBaseSrc * basesrc, guint64 offset, guint size,
       src->icy_count = 0;
     }
   } else {
-    data = g_malloc (size);
+    buf = gst_buffer_new_and_alloc (size);
+
+    data = GST_BUFFER_DATA (buf);
+    GST_BUFFER_OFFSET (buf) = src->curoffset;
 
     res = gnome_vfs_read (src->handle, data, size, &readbytes);
+
+    GST_BUFFER_SIZE (buf) = readbytes;
 
     if (res != GNOME_VFS_OK)
       goto read_failed;
 
     if (readbytes == 0)
       goto eos;
-
-    GST_BUFFER_OFFSET (buf) = src->curoffset;
-    GST_BUFFER_SIZE (buf) = readbytes;
-    GST_BUFFER_DATA (buf) = data;
 
     src->curoffset += readbytes;
   }

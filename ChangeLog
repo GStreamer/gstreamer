@@ -1,5 +1,10 @@
 2005-05-25  Wim Taymans  <wim@fluendo.com>
 
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnomevfssrc_create):
+	Fix memleaks, GST_BUFFER_DATA() is not freed.
+
+2005-05-25  Wim Taymans  <wim@fluendo.com>
+
 	* ext/alsa/gstalsasink.c: (gst_alsasink_open):
 	Open non-blocking, set to blocking mode afterwards to avoid
 	lockups when audio device is busy.
