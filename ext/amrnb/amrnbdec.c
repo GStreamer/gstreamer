@@ -173,8 +173,6 @@ gst_amrnbdec_chain (GstPad * pad, GstBuffer * buffer)
 
   amrnbdec = GST_AMRNBDEC (GST_PAD_PARENT (pad));
 
-  GST_STREAM_LOCK (pad);
-
   if (amrnbdec->rate == 0 || amrnbdec->channels == 0)
     goto not_negotiated;
 
@@ -219,13 +217,11 @@ gst_amrnbdec_chain (GstPad * pad, GstBuffer * buffer)
     /* play */
     ret = gst_pad_push (amrnbdec->srcpad, out);
   }
-  GST_STREAM_UNLOCK (pad);
 
   return ret;
 
 not_negotiated:
   {
-    GST_STREAM_UNLOCK (pad);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 }

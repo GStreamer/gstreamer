@@ -266,8 +266,6 @@ gst_amrnbparse_chain (GstPad * pad, GstBuffer * buffer)
 
   amrnbparse = GST_AMRNBPARSE (GST_PAD_PARENT (pad));
 
-  GST_STREAM_LOCK (pad);
-
   gst_adapter_push (amrnbparse->adapter, buffer);
 
   res = GST_FLOW_OK;
@@ -317,7 +315,6 @@ gst_amrnbparse_chain (GstPad * pad, GstBuffer * buffer)
     gst_adapter_flush (amrnbparse->adapter, block);
   }
 done:
-  GST_STREAM_UNLOCK (pad);
 
   return res;
 }
@@ -373,7 +370,6 @@ gst_amrnbparse_loop (GstPad * pad)
 
   amrnbparse = GST_AMRNBPARSE (GST_PAD_PARENT (pad));
 
-  GST_STREAM_LOCK (pad);
   /* init */
   if (amrnbparse->need_header) {
     gboolean got_header;
@@ -424,23 +420,19 @@ gst_amrnbparse_loop (GstPad * pad)
   if (ret != GST_FLOW_OK)
     goto need_pause;
 
-  GST_STREAM_UNLOCK (pad);
-
   return;
 
 need_pause:
   {
     GST_LOG_OBJECT (amrnbparse, "pausing task");
-    gst_task_pause (GST_RPAD_TASK (pad));
-    GST_STREAM_UNLOCK (pad);
+    gst_pad_pause_task (pad);
     return;
   }
 eos:
   {
     GST_LOG_OBJECT (amrnbparse, "pausing task");
     gst_pad_push_event (amrnbparse->srcpad, gst_event_new (GST_EVENT_EOS));
-    gst_task_pause (GST_RPAD_TASK (pad));
-    GST_STREAM_UNLOCK (pad);
+    gst_pad_pause_task (pad);
     return;
   }
 }
@@ -459,37 +451,20 @@ gst_amrnbparse_sink_activate (GstPad * sinkpad, GstActivateMode mode)
       result = TRUE;
       break;
     case GST_ACTIVATE_PULL:
-      /* if we have a scheduler we can start the task */
-      if (GST_ELEMENT_SCHEDULER (amrnbparse)) {
-        gst_pad_peer_set_active (sinkpad, mode);
-        GST_STREAM_LOCK (sinkpad);
-        GST_RPAD_TASK (sinkpad) =
-            gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (amrnbparse),
-            (GstTaskFunction) gst_amrnbparse_loop, sinkpad);
+      gst_pad_peer_set_active (sinkpad, mode);
 
-        amrnbparse->need_header = TRUE;
-        amrnbparse->seekable = TRUE;
-        amrnbparse->ts = 0;
-        gst_task_start (GST_RPAD_TASK (sinkpad));
-        GST_STREAM_UNLOCK (sinkpad);
-        result = TRUE;
-      }
+      amrnbparse->need_header = TRUE;
+      amrnbparse->seekable = TRUE;
+      amrnbparse->ts = 0;
+
+      result = gst_pad_start_task (sinkpad,
+          (GstTaskFunction) gst_amrnbparse_loop, sinkpad);
       break;
     case GST_ACTIVATE_NONE:
       /* step 1, unblock clock sync (if any) */
 
       /* step 2, make sure streaming finishes */
-      GST_STREAM_LOCK (sinkpad);
-
-      /* step 3, stop the task */
-      if (GST_RPAD_TASK (sinkpad)) {
-        gst_task_stop (GST_RPAD_TASK (sinkpad));
-        gst_object_unref (GST_OBJECT (GST_RPAD_TASK (sinkpad)));
-        GST_RPAD_TASK (sinkpad) = NULL;
-      }
-      GST_STREAM_UNLOCK (sinkpad);
-
-      result = TRUE;
+      result = gst_pad_stop_task (sinkpad);
       break;
   }
   return result;

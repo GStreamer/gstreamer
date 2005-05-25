@@ -192,7 +192,6 @@ gst_amrnbenc_chain (GstPad * pad, GstBuffer * buffer)
 
   amrnbenc = GST_AMRNBENC (GST_PAD_PARENT (pad));
 
-  GST_STREAM_LOCK (pad);
   if (amrnbenc->rate == 0 || amrnbenc->channels == 0)
     goto not_negotiated;
 
@@ -230,13 +229,10 @@ gst_amrnbenc_chain (GstPad * pad, GstBuffer * buffer)
     ret = gst_pad_push (amrnbenc->srcpad, out);
   }
 
-  GST_STREAM_UNLOCK (pad);
-
   return ret;
 
 not_negotiated:
   {
-    GST_STREAM_UNLOCK (pad);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 }
