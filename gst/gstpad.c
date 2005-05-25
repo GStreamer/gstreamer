@@ -442,7 +442,7 @@ gst_pad_set_active (GstPad * pad, GstActivateMode mode)
   GstRealPad *realpad;
   GstActivateMode old;
   GstPadActivateFunction activatefunc;
-  gboolean active;
+  gboolean active, oldactive;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
@@ -450,10 +450,17 @@ gst_pad_set_active (GstPad * pad, GstActivateMode mode)
 
   active = GST_PAD_MODE_ACTIVATE (mode);
   old = GST_RPAD_ACTIVATE_MODE (realpad);
+  oldactive = GST_PAD_MODE_ACTIVATE (old);
 
   /* if nothing changed, we can just exit */
+  if (G_UNLIKELY (oldactive == active))
+    goto was_ok;
+
+  /* FIXME, no mode switching yet, need more design docs first */
+#if 0
   if (G_UNLIKELY (old == mode))
     goto was_ok;
+#endif
 
   /* make sure data is disallowed when going inactive */
   if (!active) {

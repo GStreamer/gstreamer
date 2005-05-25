@@ -1,5 +1,12 @@
 2005-05-25  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstpad.c: (gst_pad_set_active), (gst_pad_link_prepare),
+	(gst_pad_link), (gst_pad_accept_caps), (gst_pad_query),
+	(gst_pad_send_event), (gst_pad_start_task):
+	Disable attempt at mode switching until it is figured out.
+
+2005-05-25  Wim Taymans  <wim@fluendo.com>
+
 	* gst/base/gstadapter.c: (gst_adapter_peek), (gst_adapter_flush):
 	* gst/base/gstbasesink.c: (gst_basesink_preroll_queue_push),
 	(gst_basesink_finish_preroll), (gst_basesink_chain),
