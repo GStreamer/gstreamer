@@ -1,3 +1,9 @@
+2005-05-25  Wim Taymans  <wim@fluendo.com>
+
+	* ext/alsa/gstalsasink.c: (gst_alsasink_open):
+	Open non-blocking, set to blocking mode afterwards to avoid
+	lockups when audio device is busy.
+
 2005-05-23  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst-libs/gst/audio/gstringbuffer.c: (gst_ringbuffer_clear):

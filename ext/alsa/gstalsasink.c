@@ -429,8 +429,10 @@ gst_alsasink_open (GstAudioSink * asink, GstRingBufferSpec * spec)
   if (!alsasink_parse_spec (alsa, spec))
     goto spec_parse;
 
-  CHECK (snd_pcm_open (&alsa->handle, alsa->device, SND_PCM_STREAM_PLAYBACK, 0),
-      open_error);
+  CHECK (snd_pcm_open (&alsa->handle, alsa->device, SND_PCM_STREAM_PLAYBACK,
+          SND_PCM_NONBLOCK), open_error);
+
+  CHECK (snd_pcm_nonblock (alsa->handle, 0), non_block);
 
   CHECK (set_hwparams (alsa), hw_params_failed);
   CHECK (set_swparams (alsa), sw_params_failed);
@@ -457,6 +459,12 @@ open_error:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
         ("Playback open error: %s", snd_strerror (err)), (NULL));
+    return FALSE;
+  }
+non_block:
+  {
+    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+        ("Could not set device to blocking: %s", snd_strerror (err)), (NULL));
     return FALSE;
   }
 hw_params_failed:
