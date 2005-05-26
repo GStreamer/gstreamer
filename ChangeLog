@@ -1,5 +1,12 @@
 2005-05-26  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstpad.c: (gst_pad_set_active), (gst_pad_link_prepare),
+	(gst_pad_link), (gst_pad_accept_caps), (gst_pad_alloc_buffer),
+	(gst_pad_query), (gst_pad_send_event), (gst_pad_start_task):
+	A flushing pad cannot be used to alloc_buffer from.
+
+2005-05-26  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbus.c: (gst_bus_init), (gst_bus_dispose), (gst_bus_post),
 	(gst_bus_pop), (gst_bus_source_prepare), (gst_bus_source_check),
 	(gst_bus_source_dispatch), (gst_bus_source_finalize),

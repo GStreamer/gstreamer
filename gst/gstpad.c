@@ -2244,18 +2244,23 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps)
   if (G_UNLIKELY ((peer = GST_RPAD_PEER (pad)) == NULL))
     goto no_peer;
 
+  gst_object_ref (GST_OBJECT_CAST (peer));
+  GST_UNLOCK (pad);
+
   if (G_LIKELY ((bufferallocfunc = peer->bufferallocfunc) == NULL)) {
-    GST_UNLOCK (pad);
     goto fallback;
   }
 
-  gst_object_ref (GST_OBJECT_CAST (peer));
-  GST_UNLOCK (pad);
+  GST_LOCK (peer);
+  /* when the peer is flushing we cannot give a buffer */
+  if (G_UNLIKELY (GST_RPAD_IS_FLUSHING (peer)))
+    goto flushing;
 
   GST_CAT_DEBUG (GST_CAT_PADS,
       "calling bufferallocfunc &%s (@%p) of peer pad %s:%s",
       GST_DEBUG_FUNCPTR_NAME (bufferallocfunc),
       &bufferallocfunc, GST_DEBUG_PAD_NAME (peer));
+  GST_UNLOCK (peer);
 
   result = bufferallocfunc (GST_PAD_CAST (peer), offset, size, caps);
 
@@ -2285,6 +2290,15 @@ no_peer:
         "%s:%s called bufferallocfunc but had no peer, returning NULL",
         GST_DEBUG_PAD_NAME (pad));
     GST_UNLOCK (pad);
+    return NULL;
+  }
+flushing:
+  {
+    /* pad has no peer */
+    GST_UNLOCK (peer);
+    GST_CAT_DEBUG (GST_CAT_PADS,
+        "%s:%s called bufferallocfunc but peer was flushing, returning NULL",
+        GST_DEBUG_PAD_NAME (pad));
     return NULL;
   }
   /* fallback case, allocate a buffer of our own, add pad caps. */
