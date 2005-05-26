@@ -664,12 +664,17 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
       GST_DEBUG_OBJECT (ogg,
           "%p could not get buffer from peer %08lx, packetno %lld", pad,
           pad->serialno, pad->packetno);
-      buf = gst_buffer_new_and_alloc (packet->bytes);
-      memcpy (buf->data, packet->packet, packet->bytes);
-      pad->offset = packet->granulepos;
-      GST_BUFFER_OFFSET (buf) = -1;
-      GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
-      pad->headers = g_list_append (pad->headers, buf);
+
+      /* if we are still building a chain, we have to queue this buffer and
+       * push it when we activate the chain */
+      if (ogg->building_chain) {
+        buf = gst_buffer_new_and_alloc (packet->bytes);
+        memcpy (buf->data, packet->packet, packet->bytes);
+        pad->offset = packet->granulepos;
+        GST_BUFFER_OFFSET (buf) = -1;
+        GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
+        pad->headers = g_list_append (pad->headers, buf);
+      }
     }
   } else {
     /* initialize our internal decoder with packets */
@@ -1159,6 +1164,7 @@ static gboolean
 gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain)
 {
   gint i;
+  GstFlowReturn ret;
 
   if (chain == ogg->current_chain)
     return TRUE;
@@ -1176,7 +1182,9 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain)
     for (headers = pad->headers; headers; headers = g_list_next (headers)) {
       GstBuffer *buffer = GST_BUFFER (headers->data);
 
-      gst_pad_push (GST_PAD_CAST (pad), buffer);
+      ret = gst_pad_push (GST_PAD_CAST (pad), buffer);
+      if (ret != GST_FLOW_OK)
+        goto flow_error;
     }
   }
   gst_element_no_more_pads (GST_ELEMENT (ogg));
@@ -1184,6 +1192,11 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain)
   ogg->current_chain = chain;
 
   return TRUE;
+
+flow_error:
+  {
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -1838,7 +1851,7 @@ gst_ogg_demux_chain (GstPad * pad, GstBuffer * buffer)
         /* see if we know about the chain already */
         chain = gst_ogg_demux_find_chain (ogg, serialno);
         if (chain) {
-          /* we do, activate it */
+          /* we do, activate it as it means we have a non-header */
           gst_ogg_demux_activate_chain (ogg, chain);
           pad = gst_ogg_demux_find_pad (ogg, serialno);
         } else {
@@ -1952,6 +1965,23 @@ pause:
   return;
 }
 
+static void
+gst_ogg_demux_clear_chains (GstOggDemux * ogg)
+{
+  gint i;
+
+  gst_ogg_demux_deactivate_current_chain (ogg);
+
+  GST_CHAIN_LOCK (ogg);
+  for (i = 0; i < ogg->chains->len; i++) {
+    GstOggChain *chain = g_array_index (ogg->chains, GstOggChain *, i);
+
+    gst_ogg_chain_free (chain);
+  }
+  ogg->chains = g_array_set_size (ogg->chains, 0);
+  GST_CHAIN_UNLOCK (ogg);
+}
+
 static gboolean
 gst_ogg_demux_sink_activate (GstPad * sinkpad, GstActivateMode mode)
 {
@@ -2009,6 +2039,7 @@ gst_ogg_demux_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
+      gst_ogg_demux_clear_chains (ogg);
       break;
     case GST_STATE_READY_TO_NULL:
       ogg_sync_clear (&ogg->sync);

@@ -1,3 +1,11 @@
+2005-05-26  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_packet),
+	(gst_ogg_demux_activate_chain), (gst_ogg_demux_chain),
+	(gst_ogg_demux_clear_chains), (gst_ogg_demux_change_state):
+	Clear chains in READY
+	Queue packets until the chain is activated.
+
 2005-05-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstaudiosink.c:
