@@ -64,9 +64,6 @@ struct _GstBus
   GstBusSyncHandler sync_handler;
   gpointer 	    sync_handler_data;
 
-  gint 		    control_socket[2];
-  GIOChannel       *io_channel;
-
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -105,6 +102,6 @@ guint 			gst_bus_add_watch 		(GstBus * bus,
 GstMessageType		gst_bus_poll			(GstBus *bus, GstMessageType events,
                                                          GstClockTimeDiff timeout);
 
-
 G_END_DECLS
+
 #endif /* __GST_BUS_H__ */

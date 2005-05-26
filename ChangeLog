@@ -1,3 +1,13 @@
+2005-05-26  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbus.c: (gst_bus_init), (gst_bus_dispose), (gst_bus_post),
+	(gst_bus_pop), (gst_bus_source_prepare), (gst_bus_source_check),
+	(gst_bus_source_dispatch), (gst_bus_source_finalize),
+	(gst_bus_create_watch), (gst_bus_add_watch_full):
+	* gst/gstbus.h:
+	Implement a real GSource and use g_main_context_wakeup() to
+	signal new messages instead of the socketpair.
+
 2005-05-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (bin_element_is_sink), (has_ancestor),
