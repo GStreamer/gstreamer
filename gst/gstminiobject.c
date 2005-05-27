@@ -249,7 +249,7 @@ static gchar *
 gst_value_mini_object_collect (GValue * value, guint n_collect_values,
     GTypeCValue * collect_values, guint collect_flags)
 {
-  value->data[0].v_pointer = collect_values[0].v_pointer;
+  gst_value_set_mini_object (value, collect_values[0].v_pointer);
 
   return NULL;
 }

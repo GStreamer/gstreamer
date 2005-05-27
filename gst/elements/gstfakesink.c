@@ -173,7 +173,7 @@ gst_fakesink_class_init (GstFakeSinkClass * klass)
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstFakeSinkClass, handoff), NULL, NULL,
       gst_marshal_VOID__OBJECT_OBJECT, G_TYPE_NONE, 2,
-      G_TYPE_OBJECT, GST_TYPE_PAD);
+      GST_TYPE_BUFFER, GST_TYPE_PAD);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_fakesink_change_state);

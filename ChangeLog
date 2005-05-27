@@ -1,3 +1,16 @@
+2005-05-26  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstminiobject.c (gst_value_mini_object_collect): Use
+	gst_value_set_mini_object so as to add a ref on the object (which
+	will be removed when the value is unset).
+
+	* gst/elements/gstfakesink.c (gst_fakesink_class_init): Fix signal
+	arg type in ::handoff.
+
+	* gst/gstelement.c (gst_element_change_state): Also deactivate
+	pads in READY->NULL, just in case the element didn't make it to
+	PAUSED. Wingo tested, Wim approved.
+
 2005-05-26  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstpad.c: (gst_pad_set_active), (gst_pad_link_prepare),

@@ -243,7 +243,6 @@ The direction of a pad.
 
 </para>
 
-@GST_PAD_ACTIVE: 
 @GST_PAD_BLOCKED: 
 @GST_PAD_FLUSHING: 
 @GST_PAD_IN_GETCAPS: 
@@ -352,14 +351,6 @@ Checks if the pad is linked.
 </para>
 
 @pad: a #GstPad to check.
-
-
-<!-- ##### MACRO GST_PAD_IS_ACTIVE ##### -->
-<para>
-Checks if the pad is active.
-</para>
-
-@pad: a #GstPad to check
 
 
 <!-- ##### MACRO GST_PAD_IS_USABLE ##### -->

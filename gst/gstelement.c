@@ -1956,13 +1956,15 @@ gst_element_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_READY_TO_NULL:
+      /* deactivate pads in both cases, since they are activated on
+         ready->paused but the element might not have made it to paused */
       if (!gst_element_pads_activate (element, FALSE)) {
         result = GST_STATE_FAILURE;
       } else {
         element->base_time = 0;
       }
       break;
-    case GST_STATE_READY_TO_NULL:
       break;
     default:
       /* this will catch real but unhandled state changes;

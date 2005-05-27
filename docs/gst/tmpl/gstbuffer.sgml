@@ -278,6 +278,16 @@ Tests if you can safely write data into a buffer's data array.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_buffer_join ##### -->
+<para>
+
+</para>
+
+@buf1: 
+@buf2: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_buffer_merge ##### -->
 <para>
 
@@ -307,23 +317,6 @@ Tests if you can safely write data into a buffer's data array.
 
 @buf1: 
 @buf2: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_buffer_default_free ##### -->
-<para>
-
-</para>
-
-@buffer: 
-
-
-<!-- ##### FUNCTION gst_buffer_default_copy ##### -->
-<para>
-
-</para>
-
-@buffer: 
 @Returns: 
 
 
