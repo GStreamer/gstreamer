@@ -3868,7 +3868,6 @@
 	* gst/elements/gstidentity.h:
 	Added datarate properties to limit the datarate.
 
->>>>>>> 1.808
 2004-08-25  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/autoplug/gstspider.c: (plugin_init):
