@@ -25,6 +25,7 @@
 #include "gstpipeline.h"
 #include "gstinfo.h"
 #include "gstscheduler.h"
+#include "gstschedulerfactory.h"
 
 static GstElementDetails gst_pipeline_details =
 GST_ELEMENT_DETAILS ("Pipeline object",
@@ -51,8 +52,6 @@ static void gst_pipeline_class_init (gpointer g_class, gpointer class_data);
 static void gst_pipeline_init (GTypeInstance * instance, gpointer g_class);
 
 static void gst_pipeline_dispose (GObject * object);
-
-static GstElementStateReturn gst_pipeline_change_state (GstElement * element);
 
 static GstBinClass *parent_class = NULL;
 
@@ -95,15 +94,11 @@ static void
 gst_pipeline_class_init (gpointer g_class, gpointer class_data)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
   GstPipelineClass *klass = GST_PIPELINE_CLASS (g_class);
 
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_pipeline_dispose);
-
-  gstelement_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_pipeline_change_state);
 }
 
 static void
@@ -137,7 +132,6 @@ gst_pipeline_dispose (GObject * object)
   g_assert (GST_IS_SCHEDULER (GST_ELEMENT_SCHED (pipeline)));
   sched = GST_ELEMENT_SCHED (pipeline);
 
-  gst_scheduler_reset (sched);
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -153,25 +147,4 @@ GstElement *
 gst_pipeline_new (const gchar * name)
 {
   return gst_element_factory_make ("pipeline", name);
-}
-
-static GstElementStateReturn
-gst_pipeline_change_state (GstElement * element)
-{
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
-      gst_scheduler_setup (GST_ELEMENT_SCHED (element));
-      break;
-    case GST_STATE_READY_TO_PAUSED:
-    case GST_STATE_PAUSED_TO_PLAYING:
-    case GST_STATE_PLAYING_TO_PAUSED:
-    case GST_STATE_PAUSED_TO_READY:
-    case GST_STATE_READY_TO_NULL:
-      break;
-  }
-
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
 }

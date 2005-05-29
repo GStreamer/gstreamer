@@ -31,6 +31,7 @@ main (gint argc, gchar * argv[])
   pipeline = gst_element_factory_make ("pipeline", NULL);
   bin = gst_element_factory_make ("bin", NULL);
   fakesrc = gst_element_factory_make ("fakesrc", NULL);
+  g_object_set (fakesrc, "num-buffers", 100, NULL);
   fakesink = gst_element_factory_make ("fakesink", NULL);
   identity = gst_element_factory_make ("identity", NULL);
 
@@ -45,9 +46,7 @@ main (gint argc, gchar * argv[])
   gst_element_link_many (fakesrc, bin, fakesink, NULL);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-  if (!gst_bin_iterate (GST_BIN (pipeline)))
-    g_assert_not_reached ();
-
+  gst_bin_iterate (GST_BIN (pipeline));
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
   /* test the cleanup */

@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
+ *               2004,2005 Benjamin Otte <otte@gnome.org>
  *
  * gstqueue.h: 
  *
@@ -52,9 +53,10 @@ typedef struct _GstQueueSize GstQueueSize;
 typedef struct _GstQueueClass GstQueueClass;
 
 struct _GstQueueSize {
-    guint   buffers;	/* no. of buffers */
-    guint   bytes;	/* no. of bytes */
-    guint64 time;	/* amount of time */
+  guint		items;	  	/* no. of items */
+  guint		buffers;	/* no. of buffers */
+  guint		bytes;		/* no. of bytes */
+  GstClockTime	time;	        /* amount of time */
 };
 
 struct _GstQueue {
@@ -69,32 +71,16 @@ struct _GstQueue {
   GstQueueSize
     cur_level,		/* currently in the queue */
     max_size,		/* max. amount of data allowed in the queue */
-    min_threshold;	/* min. amount of data required to wake reader */
+    min_threshold,	/* min. amount of data required to wake reader */
+    max_threshold;	/* min. amount of data required to wake writer */
 
   /* whether we leak data, and at which end */
   gint leaky;
-
-  /* number of nanoseconds until a blocked queue 'times out'
-   * to receive data and returns a filler event. -1 = disable */
-  guint64 block_timeout;
-
-  /* it the queue should fail on possible deadlocks */
-  gboolean may_deadlock;
-
-  gboolean interrupt;
-  gboolean flush;
+  gboolean got_eos;
 
   GMutex *qlock;	/* lock for queue (vs object lock) */
-  GCond *item_add;	/* signals buffers now available for reading */
-  GCond *item_del;	/* signals space now available for writing */
-  GCond *event_done;	/* upstream event signaller */
-
-  GTimeVal *timeval;	/* the timeout for the queue locking */
-  GQueue *events;	/* upstream events get decoupled here */
 
   GstCaps *negotiated_caps;
-
-  GMutex *event_lock;	/* lock when handling the events queue */
 
   gpointer _gst_reserved[GST_PADDING - 1];
 };
@@ -102,6 +88,8 @@ struct _GstQueue {
 struct _GstQueueClass {
   GstElementClass parent_class;
 
+  /* vtable */
+  
   /* signals - 'running' is called from both sides
    * which might make it sort of non-useful... */
   void (*underrun)	(GstQueue *queue);

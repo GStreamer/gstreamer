@@ -24,10 +24,13 @@
 
 G_BEGIN_DECLS
 
+typedef union _GstAction GstAction;
 typedef struct _GstObject GstObject;
 typedef struct _GstObjectClass GstObjectClass;
 typedef struct _GstPad GstPad;
 typedef struct _GstPadClass GstPadClass;
+typedef struct _GstRealPad GstRealPad;
+typedef struct _GstRealPadClass GstRealPadClass;
 typedef struct _GstPadTemplate GstPadTemplate;
 typedef struct _GstPadTemplateClass GstPadTemplateClass;
 typedef struct _GstElement GstElement;
@@ -37,6 +40,8 @@ typedef struct _GstBinClass GstBinClass;
 typedef struct _GstScheduler GstScheduler;
 typedef struct _GstSchedulerClass GstSchedulerClass;
 typedef struct _GstEvent GstEvent;
+typedef guint64 	GstClockTime;
+typedef gint64 		GstClockTimeDiff;
 
 typedef enum {
   GST_STATE_VOID_PENDING        = 0,

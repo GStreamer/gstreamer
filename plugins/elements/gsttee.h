@@ -48,6 +48,9 @@ struct _GstTee {
 
   GstPad *sinkpad;
 
+  GstData *current; /* current data peers should pull */
+  gint missing_pads; /* number of pads that haven't pulled yet */
+  
   gboolean silent;
   gchar    *last_message;
 };

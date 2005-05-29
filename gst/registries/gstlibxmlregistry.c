@@ -54,7 +54,7 @@
 #include <gst/gst_private.h>
 #include <gst/gstelement.h>
 #include <gst/gsttypefind.h>
-#include <gst/gstscheduler.h>
+#include <gst/gstschedulerfactory.h>
 #include <gst/gsturi.h>
 #include <gst/gstinfo.h>
 #include <gst/gstenumtypes.h>

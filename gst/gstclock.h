@@ -35,8 +35,6 @@ G_BEGIN_DECLS
 #define GST_IS_CLOCK_CLASS(cclass) 	(G_TYPE_CHECK_CLASS_TYPE ((cclass), GST_TYPE_CLOCK))
 #define GST_CLOCK_GET_CLASS(clock) 	(G_TYPE_INSTANCE_GET_CLASS ((clock), GST_TYPE_CLOCK, GstClockClass))
 	
-typedef guint64 	GstClockTime;
-typedef gint64 		GstClockTimeDiff;
 typedef gpointer 	GstClockID;
 
 #define GST_CLOCK_TIME_NONE  		((GstClockTime)-1)

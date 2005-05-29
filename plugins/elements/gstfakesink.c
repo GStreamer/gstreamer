@@ -113,7 +113,8 @@ static void gst_fakesink_get_property (GObject * object, guint prop_id,
 
 static GstElementStateReturn gst_fakesink_change_state (GstElement * element);
 
-static void gst_fakesink_chain (GstPad * pad, GstData * _data);
+static void gst_fakesink_chain (GstAction * action, GstRealPad * pad,
+    GstData * _data);
 
 static guint gst_fakesink_signals[LAST_SIGNAL] = { 0 };
 
@@ -187,8 +188,8 @@ gst_fakesink_init (GstFakeSink * fakesink)
   pad =
       gst_pad_new_from_template (gst_static_pad_template_get (&sinktemplate),
       "sink");
+  gst_sink_pad_set_action_handler (pad, GST_DEBUG_FUNCPTR (gst_fakesink_chain));
   gst_element_add_pad (GST_ELEMENT (fakesink), pad);
-  gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_fakesink_chain));
 
   fakesink->silent = FALSE;
   fakesink->dump = FALSE;
@@ -231,7 +232,8 @@ gst_fakesink_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   sinkpad = gst_pad_new_from_template (templ, name);
   g_free (name);
-  gst_pad_set_chain_function (sinkpad, GST_DEBUG_FUNCPTR (gst_fakesink_chain));
+  gst_sink_pad_set_action_handler (sinkpad,
+      GST_DEBUG_FUNCPTR (gst_fakesink_chain));
 
   gst_element_add_pad (GST_ELEMENT (fakesink), sinkpad);
 
@@ -309,7 +311,7 @@ gst_fakesink_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-gst_fakesink_chain (GstPad * pad, GstData * _data)
+gst_fakesink_chain (GstAction * action, GstRealPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstFakeSink *fakesink;
@@ -341,7 +343,7 @@ gst_fakesink_chain (GstPad * pad, GstData * _data)
           gst_element_set_time (GST_ELEMENT (fakesink), value);
         }
       default:
-        gst_pad_event_default (pad, event);
+        gst_pad_event_default (GST_PAD (pad), event);
         break;
     }
     return;

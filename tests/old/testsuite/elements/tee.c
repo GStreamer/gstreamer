@@ -64,7 +64,7 @@ main (int argc, char *argv[])
     return 1;
   if (!(src = element_create ("src", "fakesrc")))
     return 1;
-  g_object_set (G_OBJECT (src), "sizetype", 2, NULL);
+  g_object_set (G_OBJECT (src), "sizetype", 2, "num-buffers", 100, NULL);
   if (!(sink1 = element_create ("sink1", "fakesink")))
     return 1;
   if (!(sink2 = element_create ("sink2", "fakesink")))
@@ -103,54 +103,9 @@ main (int argc, char *argv[])
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   gst_bin_iterate (GST_BIN (pipeline));
 
-  /* We don't allow apps to call gst_pad_try_set_caps(). */
-#if 0
-  /* now we try setting caps on the src pad */
-  /* FIXME: should we set to pause here ? */
-  src_caps = gst_caps_from_string ("audio/raw, format=(s)\"int\", "
-      "rate=(i)44100");
-
-  g_assert (src_caps != NULL);
-  g_print ("Setting caps on fakesrc's src pad\n");
-  pad = gst_element_get_pad (src, "src");
-  if ((gst_pad_try_set_caps (pad, src_caps)) <= 0) {
-    g_print ("Could not set caps !\n");
-  }
-
-  /* now iterate and see if it proxies caps ok */
-  gst_bin_iterate (GST_BIN (pipeline));
-  sink_caps = gst_pad_get_caps (gst_element_get_pad (sink1, "sink"));
-  if (sink_caps && gst_caps_is_fixed (sink_caps)) {
-    structure = gst_caps_get_structure (sink_caps, 0);
-  } else {
-    structure = NULL;
-    g_print ("sink_caps is not fixed\n");
-  }
-  if (structure == NULL || !(gst_structure_has_field (structure, "rate"))) {
-    g_print ("Hm, rate has not been propagated to sink1.\n");
-    return 1;
-  } else {
-    int rate;
-
-    gst_structure_get_int (structure, "rate", &rate);
-    g_print ("Rate of pad on sink1 : %d\n", rate);
-  }
-  sink_caps = gst_pad_get_caps (gst_element_get_pad (sink2, "sink"));
-  structure = gst_caps_get_structure (sink_caps, 0);
-  if (structure != NULL && !(gst_structure_has_field (structure, "rate"))) {
-    g_print ("Hm, rate has not been propagated to sink2.\n");
-    return 1;
-  } else {
-    int rate;
-
-    gst_structure_get_int (structure, "rate", &rate);
-    g_print ("Rate of pad on sink2 : %d\n", rate);
-  }
-#endif
-
   /* remove the first one, iterate */
   g_print ("Removing first sink\n");
-  gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  gst_element_set_state (pipeline, GST_STATE_READY);
   gst_pad_unlink (tee_src1, gst_element_get_pad (sink1, "sink"));
   gst_bin_remove (GST_BIN (pipeline), sink1);
 
@@ -161,7 +116,7 @@ main (int argc, char *argv[])
 
   /* request another pad */
   g_print ("Requesting third pad\n");
-  gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  gst_element_set_state (pipeline, GST_STATE_READY);
   /* in 0.3.2 the next statement gives an assert error */
   tee_src1 = gst_element_get_request_pad (tee, "src%d");
 

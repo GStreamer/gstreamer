@@ -32,7 +32,7 @@ gint
 main (gint argc, gchar ** argv)
 {
   GstElement *pipeline, *src, *sink, *id;
-  guint i = 0, j;
+  guint i = 0;
 
   gst_init (&argc, &argv);
 
@@ -42,20 +42,20 @@ main (gint argc, gchar ** argv)
   g_assert (pipeline);
   src = gst_element_factory_make ("fakesrc", NULL);
   g_assert (src);
+  g_object_set (src, "num-buffers", 10, NULL);
   id = gst_element_factory_make ("identity", NULL);
   g_assert (id);
   sink = gst_element_factory_make ("fakesink", NULL);
   g_assert (sink);
 
   gst_bin_add_many (GST_BIN (pipeline), src, id, sink, NULL);
-  while (i < 100) {
+  while (i < 10) {
     g_print ("running... (%d iterations)\n", i);
     if (gst_element_set_state (pipeline,
             GST_STATE_PLAYING) != GST_STATE_SUCCESS)
       g_assert_not_reached ();
     gst_element_link_many (src, id, sink, NULL);
-    for (j = 0; j < i; j++)
-      gst_bin_iterate (GST_BIN (pipeline));
+    gst_bin_iterate (GST_BIN (pipeline));
     if (gst_element_set_state (pipeline, GST_STATE_PAUSED) != GST_STATE_SUCCESS)
       g_assert_not_reached ();
     gst_element_unlink_many (src, id, sink, NULL);
@@ -63,7 +63,7 @@ main (gint argc, gchar ** argv)
   }
 
   g_print ("cleaning up...\n");
-  g_assert (i == 100);
+  g_assert (i == 10);
   gst_object_unref (GST_OBJECT (pipeline));
   src = id = sink = pipeline = NULL;
 

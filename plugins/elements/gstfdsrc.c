@@ -102,7 +102,7 @@ static void gst_fdsrc_get_property (GObject * object, guint prop_id,
 
 static GstElementStateReturn gst_fdsrc_change_state (GstElement * element);
 static gboolean gst_fdsrc_release_locks (GstElement * element);
-static GstData *gst_fdsrc_get (GstPad * pad);
+static GstData *gst_fdsrc_get (GstAction * action, GstRealPad * pad);
 
 
 static void
@@ -164,7 +164,8 @@ gst_fdsrc_init (GstFdSrc * fdsrc)
       gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
       "src");
 
-  gst_pad_set_get_function (fdsrc->srcpad, gst_fdsrc_get);
+  gst_src_pad_set_action_handler (fdsrc->srcpad, gst_fdsrc_get);
+  gst_real_pad_set_initially_active (GST_REAL_PAD (fdsrc->srcpad), TRUE);
   gst_element_add_pad (GST_ELEMENT (fdsrc), fdsrc->srcpad);
 
   fdsrc->fd = 0;
@@ -265,7 +266,7 @@ gst_fdsrc_release_locks (GstElement * element)
 }
 
 static GstData *
-gst_fdsrc_get (GstPad * pad)
+gst_fdsrc_get (GstAction * action, GstRealPad * pad)
 {
   GstFdSrc *src;
   GstBuffer *buf;
@@ -277,7 +278,7 @@ gst_fdsrc_get (GstPad * pad)
   gint retval;
 #endif
 
-  src = GST_FDSRC (gst_pad_get_parent (pad));
+  src = GST_FDSRC (gst_pad_get_parent (GST_PAD (pad)));
 
   /* create the buffer */
   buf = gst_buffer_new_and_alloc (src->blocksize);

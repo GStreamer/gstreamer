@@ -45,6 +45,7 @@
 #include <gst/gsttypefind.h>
 #include <gst/gstutils.h>
 #include <gst/gsterror.h>
+#include <gst/gstaction.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_type_find_element_debug);
 #define GST_CAT_DEFAULT gst_type_find_element_debug
@@ -103,16 +104,17 @@ static void gst_type_find_element_set_property (GObject * object,
 static void gst_type_find_element_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static const GstEventMask *gst_type_find_element_src_event_mask (GstPad * pad);
 static gboolean gst_type_find_element_src_event (GstPad * pad,
     GstEvent * event);
 static gboolean gst_type_find_handle_src_query (GstPad * pad,
     GstQueryType type, GstFormat * fmt, gint64 * value);
-static void push_buffer_store (GstTypeFindElement * typefind);
 
-static void gst_type_find_element_chain (GstPad * sinkpad, GstData * data);
-static GstElementStateReturn
-gst_type_find_element_change_state (GstElement * element);
+static void gst_type_find_element_wakeup (GstAction * action,
+    GstElement * element, gpointer unused);
+static void gst_type_find_element_chain (GstAction * action,
+    GstRealPad * sinkpad, GstData * data);
+static GstElementStateReturn gst_type_find_element_change_state (GstElement *
+    element);
 
 static guint gst_type_find_element_signals[LAST_SIGNAL] = { 0 };
 
@@ -178,33 +180,35 @@ gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
 static void
 gst_type_find_element_init (GstTypeFindElement * typefind)
 {
+  GST_FLAG_SET (typefind, GST_ELEMENT_EVENT_AWARE);
+  GST_FLAG_SET (typefind, GST_ELEMENT_PUSHING);
+
   /* sinkpad */
   typefind->sink =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&type_find_element_sink_template), "sink");
-  gst_pad_set_chain_function (typefind->sink, gst_type_find_element_chain);
+  gst_sink_pad_set_action_handler (typefind->sink, gst_type_find_element_chain);
   gst_element_add_pad (GST_ELEMENT (typefind), typefind->sink);
   /* srcpad */
   typefind->src =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&type_find_element_src_template), "src");
   gst_pad_set_event_function (typefind->src, gst_type_find_element_src_event);
-  gst_pad_set_event_mask_function (typefind->src,
-      gst_type_find_element_src_event_mask);
   gst_pad_set_query_function (typefind->src,
       GST_DEBUG_FUNCPTR (gst_type_find_handle_src_query));
   gst_pad_use_explicit_caps (typefind->src);
   gst_element_add_pad (GST_ELEMENT (typefind), typefind->src);
 
+  typefind->wakeup = gst_element_add_wakeup (GST_ELEMENT (typefind), FALSE,
+      gst_type_find_element_wakeup, NULL);
   typefind->caps = NULL;
   typefind->pending_events = NULL;
   typefind->min_probability = 1;
   typefind->max_probability = GST_TYPE_FIND_MAXIMUM;
 
   typefind->store = gst_buffer_store_new ();
-
-  GST_FLAG_SET (typefind, GST_ELEMENT_EVENT_AWARE);
 }
+
 static void
 gst_type_find_element_dispose (GObject * object)
 {
@@ -294,20 +298,6 @@ gst_type_find_handle_src_query (GstPad * pad,
   return TRUE;
 }
 
-static const GstEventMask *
-gst_type_find_element_src_event_mask (GstPad * pad)
-{
-  static const GstEventMask mask[] = {
-    {GST_EVENT_SEEK,
-        GST_SEEK_METHOD_SET | GST_SEEK_METHOD_CUR | GST_SEEK_METHOD_END |
-          GST_SEEK_FLAG_FLUSH},
-    /* add more if you want, event masks suck and need to die anyway */
-    {0,}
-  };
-
-  return mask;
-}
-
 static gboolean
 gst_type_find_element_src_event (GstPad * pad, GstEvent * event)
 {
@@ -368,6 +358,19 @@ start_typefinding (GstTypeFindElement * typefind)
   typefind->stream_length_available = TRUE;
   typefind->stream_length = 0;
 }
+
+static void
+push_buffer_store (GstTypeFindElement * typefind, GstEvent * event)
+{
+  if (!event)
+    event = gst_event_new_discontinuous (TRUE,
+        GST_FORMAT_DEFAULT, (guint64) 0, GST_FORMAT_BYTES, (guint64) 0,
+        GST_FORMAT_UNDEFINED);
+  typefind->pending_events = g_list_append (typefind->pending_events, event);
+  gst_real_pad_set_active (GST_REAL_PAD (typefind->sink), FALSE);
+  gst_action_set_active (typefind->wakeup, TRUE);
+}
+
 static void
 stop_typefinding (GstTypeFindElement * typefind)
 {
@@ -401,7 +404,7 @@ stop_typefinding (GstTypeFindElement * typefind)
           "could not seek to required position %u, hope for the best", size);
       typefind->mode = MODE_NORMAL;
       /* push out our queued buffers here */
-      push_buffer_store (typefind);
+      push_buffer_store (typefind, NULL);
     } else {
       typefind->waiting_for_discont_offset = size;
     }
@@ -409,25 +412,26 @@ stop_typefinding (GstTypeFindElement * typefind)
 }
 
 static void
-push_buffer_store (GstTypeFindElement * typefind)
+gst_type_find_element_wakeup (GstAction * action, GstElement * element,
+    gpointer unused)
 {
-  guint size = gst_buffer_store_get_size (typefind->store, 0);
+  guint size;
   GstBuffer *buffer;
   const GList *item;
+  GstTypeFindElement *typefind = GST_TYPE_FIND_ELEMENT (element);
 
   /* handle pending events */
-  for (item = typefind->pending_events; item; item = item->next) {
+  if (typefind->pending_events) {
     GstEvent *e = item->data;
 
+    typefind->pending_events = g_list_remove (typefind->pending_events,
+        typefind->pending_events->data);
     gst_pad_push (typefind->src, GST_DATA (e));
+    return;
   }
-  g_list_free (typefind->pending_events);
-  typefind->pending_events = NULL;
 
   /* data */
-  gst_pad_push (typefind->src, GST_DATA (gst_event_new_discontinuous (TRUE,
-              GST_FORMAT_DEFAULT, (guint64) 0, GST_FORMAT_BYTES, (guint64) 0,
-              GST_FORMAT_UNDEFINED)));
+  size = gst_buffer_store_get_size (typefind->store, 0);
   if (size && (buffer = gst_buffer_store_get_buffer (typefind->store, 0, size))) {
     GST_DEBUG_OBJECT (typefind, "pushing cached data (%u bytes)", size);
     gst_pad_push (typefind->src, GST_DATA (buffer));
@@ -437,6 +441,8 @@ push_buffer_store (GstTypeFindElement * typefind)
   }
 
   gst_buffer_store_clear (typefind->store);
+  gst_action_set_active (action, FALSE);
+  gst_real_pad_set_active (GST_REAL_PAD (typefind->sink), TRUE);
 }
 
 static guint64
@@ -496,8 +502,7 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
             g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
                 0, entry->probability, entry->caps);
             stop_typefinding (typefind);
-            push_buffer_store (typefind);
-            gst_pad_event_default (pad, event);
+            push_buffer_store (typefind, event);
           } else {
             gst_pad_event_default (pad, event);
             GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND, (NULL),
@@ -526,13 +531,11 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
           if (gst_event_discont_get_value (event, GST_FORMAT_BYTES, &off) &&
               off == typefind->waiting_for_discont_offset) {
             typefind->mode = MODE_NORMAL;
-            push_buffer_store (typefind);
+            push_buffer_store (typefind, NULL);
           }
-          gst_event_unref (event);
         }
       } else if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
-        push_buffer_store (typefind);
-        gst_pad_event_default (pad, event);
+        push_buffer_store (typefind, event);
       } else {
         gst_event_unref (event);
       }
@@ -618,7 +621,8 @@ compare_type_find_factory (gconstpointer fac1, gconstpointer fac2)
   return GST_PLUGIN_FEATURE (fac1)->rank - GST_PLUGIN_FEATURE (fac2)->rank;
 }
 static void
-gst_type_find_element_chain (GstPad * pad, GstData * data)
+gst_type_find_element_chain (GstAction * action, GstRealPad * pad,
+    GstData * data)
 {
   GstTypeFindElement *typefind;
   GList *entries;
@@ -626,9 +630,9 @@ gst_type_find_element_chain (GstPad * pad, GstData * data)
   GList *walk;
   GstTypeFind find = { find_peek, find_suggest, NULL, find_element_get_length };
 
-  typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (pad));
+  typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (GST_PAD (pad)));
   if (GST_IS_EVENT (data)) {
-    gst_type_find_element_handle_event (pad, GST_EVENT (data));
+    gst_type_find_element_handle_event (GST_PAD (pad), GST_EVENT (data));
     return;
   }
   switch (typefind->mode) {

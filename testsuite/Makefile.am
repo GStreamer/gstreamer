@@ -19,7 +19,7 @@ SUBDIRS = \
 	dlopen dynparams \
 	elements ghostpads indexers negotiation pad \
 	$(GST_PARSE_DIRS) \
-	plugin refcounting schedulers states tags threads
+	plugin refcounting schedulers states tags 
 
 DIST_SUBDIRS = \
 	bins bytestream caps childproxy cleanup clock \

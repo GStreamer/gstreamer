@@ -1,3 +1,227 @@
+2005-05-29  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	ORGANIZATIONAL CHANGES:
+	
+	* configure.ac:
+	  remove leftover valgrind stuff, fix GST_OBJ_*FLAGS
+	* gst/cothreads.c:
+	* gst/cothreads.h:
+	  remove cothreads
+	* gst/thread.h:
+	* gst/thread.c:
+	  remove GstThread
+	* gst/gstschedulerfactory.h:
+	* gst/gstschedulerfactory.c:
+	* gst/registries/gstlibxmlregistry.c:
+	  split out registry specific stuff from gstscheduler.[ch]
+	* gst/Makefile.am:
+	* gst/gst.h:
+	  remove cothread.[ch] and gstthread.[ch], add gstaction.[ch] and
+	  gstschedulerfactory.[ch]
+	* gst/gstcompat.h:
+	  add a gst_bin_iterate macro, remove old 0.5 macros
+	* gst/gst.c: (gst_register_core_elements):
+	  remove registering GstThread
+	* gst/gst_private.h:
+	  add some functions here that shouldn't be exported
+	* gst/gstclock.c: (gst_clock_class_init):
+	  remove thread initing, it's done in gst.c
+	* gst/gstclock.h:
+	* gst/gsttypes.h:
+	  move some more types to gsttypes.h: GstRealPad(Class),
+	  GstClockTime and GstAction
+	
+	NEW SCHEDULING MODEL:
+
+	* gst/gstaction.h:
+	* gst/gstaction.c:
+	  implement actions. These were formally known as triggers. They
+	  implement the different callback types used by elements.
+	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_set_element_sched),
+	(gst_bin_unset_element_sched), (gst_bin_iterate):
+	* gst/gstbin.h:
+	  - remove gst_bin_iterate
+	  - remove code for decoupled elements
+	* gst/gstelement.c: (gst_element_add_pad), (gst_element_remove_pad),
+	(gst_element_reset_actions), (gst_element_change_state),
+	(gst_element_found_tags_for_pad):
+	  add action support. Adding/removing pads adds/removes their actions
+	  from the element automatically. Allow resetting actions which sets
+	  all actions to their initial state.
+	* gst/gstelement.c:
+	* gst/gstelement.h:
+	  remove lots of functions related to the old scheduling code, like
+	  _yield, _interrupt etc
+	* gst/gstpad.c: (gst_pad_push), (gst_real_pad_set_active),
+	(gst_real_pad_is_active), (gst_real_pad_set_initially_active),
+	(gst_src_pad_set_action_handler),
+	(gst_sink_pad_set_action_handler):
+	  add functions to interact with pad actions.
+	* gst/gstpad.c:
+	* gst/gstpad.h:
+	  remove lots of stuff related to old scheduling, like DECOUPLED, the
+	  active property, chainhandlers etc
+	* gst/gstpipeline.c: (gst_pipeline_class_init),
+	(gst_pipeline_dispose):
+	  remove old scheduling specific calls
+	* gst/gstscheduler.c: (gst_scheduler_class_init),
+	(gst_scheduler_init), (gst_scheduler_dispose),
+	(gst_scheduler_real_add_element),
+	(gst_scheduler_real_remove_element), (gst_scheduler_marshal),
+	(gst_scheduler_add_element), (gst_scheduler_remove_element),
+	(gst_scheduler_state_transition), (gst_scheduler_get_clock),
+	(gst_scheduler_set_clock), (gst_scheduler_auto_clock),
+	(gst_scheduler_pad_push):
+	* gst/gstscheduler.h:
+	  remove old scheduling code and add new one, which is basically
+	  add_action, remove_action (obvious), toggle_active (to indicate
+	  changing the activity state of an action) and update_values (to
+	  indicate that an action changed the values it was configured with
+
+	ELEMENTS:
+	
+	* gst/gstqueue.c: 
+	* gst/gstqueue.h:
+	  nearly reimplement. Throw out all the threading specific code.
+	* gst/elements/gstfakesink.c: (gst_fakesink_init),
+	(gst_fakesink_request_new_pad), (gst_fakesink_chain):
+	* gst/elements/gstfdsink.c: (gst_fdsink_init), (gst_fdsink_chain):
+	* gst/elements/gstfdsrc.c: (gst_fdsrc_init), (gst_fdsrc_get):
+	* gst/elements/gstfilesink.c: (gst_filesink_init),
+	(gst_filesink_handle_event), (gst_filesink_chain):
+	* gst/elements/gstfilesrc.c: (gst_filesrc_init), (gst_filesrc_get):
+	  replace get/chainfunction with a src/sinkpad action.
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_class_init),
+	(gst_fakesrc_init), (gst_fakesrc_request_new_pad),
+	(gst_fakesrc_update_functions), (gst_fakesrc_set_property),
+	(gst_fakesrc_get_property), (gst_fakesrc_get):
+	* gst/elements/gstfakesrc.h:
+	  replace getfunction with a srcpad action. Remove "loopbased"
+	  property.
+	* gst/elements/gstidentity.c: (gst_identity_base_init),
+	(gst_identity_class_init), (gst_identity_init),
+	(gst_identity_push), (gst_identity_chain), (gst_identity_wakeup),
+	(gst_identity_set_property), (gst_identity_get_property),
+	(gst_identity_change_state):
+	* gst/elements/gstidentity.h:
+	  make this a PUSH-based element. Remove "loopbased" property and
+	  other scheduling specific stuff.
+	* gst/elements/gsttee.c: (gst_tee_base_init), (gst_tee_class_init),
+	(gst_tee_init), (gst_tee_request_new_pad), (gst_tee_get),
+	(gst_tee_chain), (gst_tee_change_state):
+	* gst/elements/gsttee.h:
+	  implement using pad actions
+	* gst/elements/gsttypefindelement.c: (gst_type_find_element_init),
+	(push_buffer_store), (stop_typefinding),
+	(gst_type_find_element_wakeup),
+	(gst_type_find_element_handle_event),
+	(gst_type_find_element_chain):
+	* gst/elements/gsttypefindelement.h:
+	  make this a push-based element
+	
+	SCHEDULERS:
+
+	* gst/schedulers/Makefile.am:
+	* gst/schedulers/cothreads_compat.h:
+	* gst/schedulers/entryscheduler.c:
+	* gst/schedulers/faircothreads.c:
+	* gst/schedulers/faircothreads.h:
+	* gst/schedulers/fairscheduler.c:
+	* gst/schedulers/gstbasicscheduler.c:
+	* gst/schedulers/gstoptimalscheduler.c:
+	* gst/schedulers/gthread-cothreads.h:
+	  remove 
+	* gst/schedulers/gstsimplescheduler.c: 
+	  implement a simple scheduler. It's supposed to be as simple as
+	  possible (code-size). It's as fast as opt in 0.8.
+
+	LIBS:
+	
+	* libs/gst/bytestream/Makefile.am:
+	* libs/gst/bytestream/gstbytestream.c:
+	* libs/gst/bytestream/gstbytestream.h:
+	  remove bytestream
+	* libs/gst/bytestream/filepad.c: (gst_file_pad_init),
+	(gst_file_pad_chain), (gst_file_pad_parent_set):
+	  make this a sinkpad-action using pad.
+
+	TOOLS:
+
+	* tools/Makefile.am:
+	* tools/gst-md5sum.1.in:
+	* tools/gst-md5sum.c:
+	* tools/gst-xmlinspect.1.in:
+	* tools/gst-xmlinspect.c:
+	* tools/gst-xmllaunch.1.in:
+	  remove gst-xml-* tools and gst-md5sum.
+	* tools/gst-inspect.c: (print_element_flag_info),
+	(print_implementation_info), (print_pad_info):
+	  fix to show current scheduling information.
+	* tools/gst-launch.c: (fault_handler_sighandler),
+	(fault_handler_sigaction), (fault_spin), (print_tag),
+	(play_handler), (should_quit), (quit_cb), (launch_poll), (main):
+	  implement new scheduling.
+	* tools/gst-typefind.c: (have_type_handler), (main):
+	  make work with new scheduling
+	
+	TESTSUITE:
+
+	* tests/Makefile.am:
+	* tests/lat.c:
+	* tests/muxing/Makefile.am:
+	* tests/muxing/case1.c:
+	* tests/sched/.cvsignore:
+	* tests/sched/Makefile.am:
+	* tests/sched/dynamic-pipeline.c:
+	* tests/sched/interrupt1.c:
+	* tests/sched/interrupt2.c:
+	* tests/sched/interrupt3.c:
+	* tests/sched/runtestcases:
+	* tests/sched/runxml.c:
+	* tests/sched/sched-stress.c:
+	* tests/sched/testcases:
+	* tests/sched/testcases1.tc:
+	* tests/threadstate/.cvsignore:
+	* tests/threadstate/Makefile.am:
+	* tests/threadstate/test1.c:
+	* tests/threadstate/test2.c:
+	* tests/threadstate/threadstate1.c:
+	* tests/threadstate/threadstate2.c:
+	* tests/threadstate/threadstate3.c:
+	* tests/threadstate/threadstate4.c:
+	* tests/threadstate/threadstate5.c:
+	* testsuite/Makefile.am:
+	* testsuite/bytestream/Makefile.am:
+	* testsuite/cleanup/Makefile.am:
+	* testsuite/clock/Makefile.am:
+	* testsuite/clock/clock1.c: (main):
+	* testsuite/dlopen/loadgst.c: (do_test):
+	* testsuite/elements/fake.c: (main):
+	* testsuite/elements/struct_i386.h:
+	* testsuite/elements/tee.c: (main):
+	* testsuite/ghostpads/ghostpads.c: (main):
+	* testsuite/pad/Makefile.am:
+	* testsuite/pad/getnopush.c: (gst_test_src_get),
+	(gst_test_src_init), (main):
+	* testsuite/parse/parse1.c:
+	* testsuite/schedulers/142183-2.c: (main):
+	* testsuite/schedulers/143777-2.c: (main):
+	* testsuite/schedulers/143777.c: (main):
+	* testsuite/schedulers/147819.c: (handoff_identity1),
+	(handoff_identity2), (main):
+	* testsuite/schedulers/Makefile.am:
+	* testsuite/schedulers/group_link.c: (main):
+	* testsuite/schedulers/queue_link.c: (main):
+	* testsuite/schedulers/relink.c: (cb_handoff), (main):
+	* testsuite/schedulers/unlink.c: (main):
+	* testsuite/schedulers/unref.c: (cb_handoff), (main):
+	* testsuite/schedulers/useless_iteration.c: (main):
+	  - make work with new scheduling (mostly by making fakesrc only send
+	    a fixed number of buffers so we hit EOS and uising the _iterate
+	    compat macro.
+	  - remove tests that test the old scheduling model
+	  - remove tests that test threading
+
 2005-05-17  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstobject.c: (gst_object_ref), (gst_object_unref):

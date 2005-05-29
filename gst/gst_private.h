@@ -36,6 +36,10 @@ extern const char             *g_log_domain_gstreamer;
 
 #include <stdlib.h>
 #include <string.h>
+#include "gstaction.h"
+
+GstAction *gst_action_new (GstActionType type);
+#define gst_action_free(action) g_free (action)
 
 /*** debugging categories *****************************************************/
 

@@ -46,9 +46,9 @@ main (int argc, char *argv[])
   g_print ("Creating elements\n");
   if (!(src = element_create ("src", "fakesrc")))
     return 1;
-  g_object_set (G_OBJECT (src), "sizetype", 2, NULL);
   if (!(sink = element_create ("sink", "fakesink")))
     return 1;
+  g_object_set (G_OBJECT (src), "sizetype", 2, "num-buffers", 100, NULL);
 
   /* add */
   g_print ("Adding elements to bin\n");
@@ -59,13 +59,6 @@ main (int argc, char *argv[])
   g_print ("Linking elements\n");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-  /* we expect this to give an error */
-  if (gst_bin_iterate (GST_BIN (pipeline)) != FALSE) {
-    g_warning
-        ("Iterating a bin with unlinked elements should return FALSE !\n");
-    retval = 1;
-  }
-
   gst_pad_link (gst_element_get_pad (src, "src"),
       gst_element_get_pad (sink, "sink"));
 
@@ -73,12 +66,7 @@ main (int argc, char *argv[])
   g_print ("Doing 1 iteration\n");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-  /* we expect this to work */
-  if (gst_bin_iterate (GST_BIN (pipeline)) != TRUE) {
-    g_error ("Iterating a bin with linked elements should return TRUE !\n");
-    retval = 1;
-  }
-
+  gst_bin_iterate (GST_BIN (pipeline));
   g_print ("Done !\n");
   return retval;
 }

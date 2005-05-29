@@ -6,14 +6,13 @@ main (int argc, char **argv)
 {
   GstElement *src, *sink, *enc, *tee;
   GstElement *pipeline;
-  int i;
-
 
   gst_init (&argc, &argv);
   pipeline = gst_element_factory_make ("pipeline", "pipeline");
 
   src = gst_element_factory_make ("fakesrc", "src");
   g_assert (src);
+  g_object_set (src, "num-buffers", 10, NULL);
   tee = gst_element_factory_make ("tee", "tee1");
   g_assert (tee);
   enc = gst_element_factory_make ("identity", "enc");
@@ -27,11 +26,7 @@ main (int argc, char **argv)
   if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
     g_assert_not_reached ();
 
-  for (i = 0; i < 5; i++) {
-    if (!gst_bin_iterate (GST_BIN (pipeline)))
-      g_assert_not_reached ();
-    g_print ("%d\n", i);
-  }
+  gst_bin_iterate (GST_BIN (pipeline));
 
   if (gst_element_set_state (pipeline, GST_STATE_PAUSED) != GST_STATE_SUCCESS)
     g_assert_not_reached ();
@@ -48,11 +43,7 @@ main (int argc, char **argv)
   if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
     g_assert_not_reached ();
 
-  for (i = 5; i < 10; i++) {
-    if (!gst_bin_iterate (GST_BIN (pipeline)))
-      g_assert_not_reached ();
-    g_print ("%d\n", i);
-  }
+  gst_bin_iterate (GST_BIN (pipeline));
   g_print ("cleaning up...\n");
   gst_object_unref (GST_OBJECT (pipeline));
 

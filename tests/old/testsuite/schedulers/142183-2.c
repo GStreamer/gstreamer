@@ -43,11 +43,11 @@ main (gint argc, gchar ** argv)
   g_assert (pipeline);
   src = gst_element_factory_make ("fakesrc", NULL);
   g_assert (src);
+  g_object_set (src, "num-buffers", 10, NULL);
   id = gst_element_factory_make ("identity", NULL);
   g_assert (id);
   g_signal_connect (G_OBJECT (id), "handoff", (GCallback) handoff_identity,
       NULL);
-  g_object_set (G_OBJECT (id), "loop-based", TRUE, NULL);
 
   sink = gst_element_factory_make ("fakesink", NULL);
   g_assert (sink);
@@ -59,7 +59,6 @@ main (gint argc, gchar ** argv)
   if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
     g_assert_not_reached ();
 
-  gst_bin_iterate (GST_BIN (pipeline));
   gst_bin_iterate (GST_BIN (pipeline));
   g_print ("got past iteration, scheduler refs elements correctly\n");
 

@@ -11,26 +11,22 @@ if GST_DISABLE_LOADSAVE
 GST_LOADSAVE_SRC = 
 GST_LOADSAVE_SRC_V = 
 else
-GST_LOADSAVE_SRC = gst-complete gst-compprep gst-xmllaunch
+GST_LOADSAVE_SRC = gst-complete gst-compprep 
 GST_LOADSAVE_SRC_V = \
 	gst-complete-@GST_MAJORMINOR@ \
-	gst-compprep-@GST_MAJORMINOR@ \
-	gst-xmllaunch-@GST_MAJORMINOR@
+	gst-compprep-@GST_MAJORMINOR@
 endif
 
 GST_OTHER_SRC = \
 	gst-feedback \
 	gst-inspect \
 	gst-launch \
-	gst-md5sum \
-	gst-typefind \
-	gst-xmlinspect
+	gst-typefind
+
 GST_OTHER_SRC_V = \
 	gst-inspect-@GST_MAJORMINOR@ \
 	gst-launch-@GST_MAJORMINOR@ \
-	gst-md5sum-@GST_MAJORMINOR@ \
-	gst-typefind-@GST_MAJORMINOR@ \
-	gst-xmlinspect-@GST_MAJORMINOR@
+	gst-typefind-@GST_MAJORMINOR@
 
 ### so all of the programs we want to build
 bin_PROGRAMS = \
@@ -52,9 +48,6 @@ gst_complete_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 gst_compprep_@GST_MAJORMINOR@_SOURCES = gst-compprep.c
 gst_compprep_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
 gst_compprep_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
-gst_xmllaunch_@GST_MAJORMINOR@_SOURCES = gst-launch.c
-gst_xmllaunch_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
-gst_xmllaunch_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 endif
 gst_inspect_@GST_MAJORMINOR@_SOURCES = gst-inspect.c
 gst_inspect_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
@@ -62,15 +55,9 @@ gst_inspect_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 gst_launch_@GST_MAJORMINOR@_SOURCES = gst-launch.c
 gst_launch_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
 gst_launch_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
-gst_md5sum_@GST_MAJORMINOR@_SOURCES = gst-md5sum.c
-gst_md5sum_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
-gst_md5sum_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 gst_typefind_@GST_MAJORMINOR@_SOURCES = gst-typefind.c
 gst_typefind_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
 gst_typefind_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
-gst_xmlinspect_@GST_MAJORMINOR@_SOURCES = gst-xmlinspect.c
-gst_xmlinspect_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
-gst_xmlinspect_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 
 gst-feedback-@GST_MAJORMINOR@: gst-feedback-m.m
 	cp $(srcdir)/gst-feedback-m.m $@
@@ -83,18 +70,14 @@ endif
 if !GST_DISABLE_LOADSAVE
 gst_complete_SOURCES = gst-run.c
 gst_compprep_SOURCES = gst-run.c
-gst_xmllaunch_SOURCES = gst-run.c
 endif
 gst_feedback_SOURCES = gst-run.c
 gst_inspect_SOURCES = gst-run.c
 gst_launch_SOURCES = gst-run.c
-gst_md5sum_SOURCES = gst-run.c
 gst_typefind_SOURCES = gst-run.c
-gst_xmlinspect_SOURCES = gst-run.c
 
 gst_inspect_@GST_MAJORMINOR@_LDADD = ../libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
 
-gst_xmlinspect_@GST_MAJORMINOR@_LDADD = ../libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
 
 # CFLAGS and libs for nonversioned frontend binaries
 AM_CFLAGS = $(GLIB_ONLY_CFLAGS) $(POPT_CFLAGS)
@@ -114,17 +97,14 @@ GST_LOADSAVE_MAN=
 else
 GST_LOADSAVE_MAN = \
 	gst-complete-@GST_MAJORMINOR@.1 \
-	gst-compprep-@GST_MAJORMINOR@.1 \
-	gst-xmllaunch-@GST_MAJORMINOR@.1
+	gst-compprep-@GST_MAJORMINOR@.1
 endif
 
 GST_OTHER_MAN = \
 	gst-feedback-@GST_MAJORMINOR@.1 \
 	gst-inspect-@GST_MAJORMINOR@.1 \
 	gst-launch-@GST_MAJORMINOR@.1 \
-	gst-md5sum-@GST_MAJORMINOR@.1 \
-	gst-typefind-@GST_MAJORMINOR@.1 \
-	gst-xmlinspect-@GST_MAJORMINOR@.1
+	gst-typefind-@GST_MAJORMINOR@.1
 
 manpages = $(GST_REGISTRY_MAN) $(GST_LOADSAVE_MAN) $(GST_OTHER_MAN)
 
@@ -141,11 +121,8 @@ EXTRA_DIST = \
 	gst-feedback.1.in \
 	gst-inspect.1.in \
 	gst-launch.1.in \
-	gst-md5sum.1.in \
 	gst-register.1.in \
 	gst-typefind.1.in \
-	gst-xmlinspect.1.in \
-	gst-xmllaunch.1.in \
 	gst-feedback-m.m
 
 %-@GST_MAJORMINOR@.1: %.1.in
@@ -155,10 +132,7 @@ EXTRA_DIST = \
 		-e s,gst-feedback,gst-feedback-@GST_MAJORMINOR@,g \
 		-e s,gst-inspect,gst-inspect-@GST_MAJORMINOR@,g \
 		-e s,gst-launch,gst-launch-@GST_MAJORMINOR@,g \
-		-e s,gst-md5sum,gst-md5sum-@GST_MAJORMINOR@,g \
 		-e s,gst-register,gst-register-@GST_MAJORMINOR@,g \
 		-e s,gst-typefind,gst-typefind-@GST_MAJORMINOR@,g \
-		-e s,gst-xmlinspect,gst-xmlinspect-@GST_MAJORMINOR@,g \
-		-e s,gst-xmllaunch,gst-xmllaunch-@GST_MAJORMINOR@,g \
 		$< >$@
 

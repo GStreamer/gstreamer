@@ -69,7 +69,8 @@ static void gst_fdsink_set_property (GObject * object, guint prop_id,
 static void gst_fdsink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void gst_fdsink_chain (GstPad * pad, GstData * _data);
+static void gst_fdsink_chain (GstAction * action, GstRealPad * pad,
+    GstData * _data);
 
 
 static void
@@ -103,14 +104,14 @@ gst_fdsink_init (GstFdSink * fdsink)
   fdsink->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&sinktemplate),
       "sink");
+  gst_sink_pad_set_action_handler (fdsink->sinkpad, gst_fdsink_chain);
   gst_element_add_pad (GST_ELEMENT (fdsink), fdsink->sinkpad);
-  gst_pad_set_chain_function (fdsink->sinkpad, gst_fdsink_chain);
 
   fdsink->fd = 1;
 }
 
 static void
-gst_fdsink_chain (GstPad * pad, GstData * _data)
+gst_fdsink_chain (GstAction * action, GstRealPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstFdSink *fdsink;
@@ -119,7 +120,7 @@ gst_fdsink_chain (GstPad * pad, GstData * _data)
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
 
-  fdsink = GST_FDSINK (gst_pad_get_parent (pad));
+  fdsink = GST_FDSINK (gst_pad_get_parent (GST_PAD (pad)));
 
   g_return_if_fail (fdsink->fd >= 0);
 

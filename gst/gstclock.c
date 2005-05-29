@@ -362,9 +362,6 @@ gst_clock_class_init (GstClockClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_OBJECT);
 
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
-
 #ifndef GST_DISABLE_TRACE
   _gst_clock_entry_trace =
       gst_alloc_trace_register (GST_CLOCK_ENTRY_TRACE_NAME);

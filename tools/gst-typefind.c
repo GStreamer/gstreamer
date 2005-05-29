@@ -11,8 +11,9 @@
  * find the type of a media file and display it's properties
  **/
 
-gboolean FOUND = FALSE;
 gchar *filename = NULL;
+gboolean FOUND = FALSE;
+GMainLoop *loop;
 
 void
 gst_caps_print (const char *filename, const GstCaps * caps)
@@ -25,9 +26,10 @@ gst_caps_print (const char *filename, const GstCaps * caps)
 
 void
 have_type_handler (GstElement * typefind, guint probability,
-    const GstCaps * caps, gpointer unused)
+    const GstCaps * caps, gpointer loop)
 {
   gst_caps_print (filename, caps);
+  g_main_loop_quit (loop);
   FOUND = TRUE;
 }
 
@@ -57,6 +59,11 @@ main (int argc, char *argv[])
   g_signal_connect (G_OBJECT (typefind), "have-type",
       G_CALLBACK (have_type_handler), NULL);
 
+  loop = g_main_loop_new (NULL, FALSE);
+  g_signal_connect_swapped (pipeline, "eos", G_CALLBACK (g_main_loop_quit),
+      loop);
+  g_signal_connect_swapped (pipeline, "error", G_CALLBACK (g_main_loop_quit),
+      loop);
   while (i < argc) {
     FOUND = FALSE;
     gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
@@ -65,15 +72,13 @@ main (int argc, char *argv[])
     /* set to play */
     gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
-    while (!FOUND) {
-      if (!gst_bin_iterate (GST_BIN (pipeline)))
-        break;
-    }
+    g_main_loop_run (loop);
     if (!FOUND) {
       g_print ("%s - No type found\n", argv[i]);
     }
     i++;
   }
+  g_main_loop_unref (loop);
   g_object_unref (pipeline);
   return 0;
 }

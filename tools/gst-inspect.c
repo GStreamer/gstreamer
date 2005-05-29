@@ -87,95 +87,6 @@ print_caps (const GstCaps * caps, const gchar * pfx)
   }
 }
 
-static void
-print_formats (const GstFormat * formats)
-{
-  while (formats && *formats) {
-    const GstFormatDefinition *definition;
-
-    definition = gst_format_get_details (*formats);
-    if (definition)
-      n_print ("\t\t(%d):\t%s (%s)\n", *formats,
-          definition->nick, definition->description);
-    else
-      n_print ("\t\t(%d):\tUnknown format\n", *formats);
-
-    formats++;
-  }
-}
-
-static void
-print_query_types (const GstQueryType * types)
-{
-  while (types && *types) {
-    const GstQueryTypeDefinition *definition;
-
-    definition = gst_query_type_get_details (*types);
-    if (definition)
-      n_print ("\t\t(%d):\t%s (%s)\n", *types,
-          definition->nick, definition->description);
-    else
-      n_print ("\t\t(%d):\tUnknown query format\n", *types);
-
-    types++;
-  }
-}
-
-#ifndef GST_DISABLE_ENUMTYPES
-static void
-print_event_masks (const GstEventMask * masks)
-{
-  GType event_type;
-  GEnumClass *klass;
-  GType event_flags;
-  GFlagsClass *flags_class = NULL;
-
-  event_type = gst_event_type_get_type ();
-  klass = (GEnumClass *) g_type_class_ref (event_type);
-
-  while (masks && masks->type) {
-    GEnumValue *value;
-    gint flags = 0, index = 0;
-
-    switch (masks->type) {
-      case GST_EVENT_SEEK:
-        flags = masks->flags;
-        event_flags = gst_seek_type_get_type ();
-        flags_class = (GFlagsClass *) g_type_class_ref (event_flags);
-        break;
-      default:
-        break;
-    }
-
-    value = g_enum_get_value (klass, masks->type);
-    g_print ("\t\t%s ", value->value_nick);
-
-    while (flags) {
-      GFlagsValue *value;
-
-      if (flags & 1) {
-        value = g_flags_get_first_value (flags_class, 1 << index);
-
-        if (value)
-          g_print ("| %s ", value->value_nick);
-        else
-          g_print ("| ? ");
-      }
-      flags >>= 1;
-      index++;
-    }
-    g_print ("\n");
-
-    masks++;
-  }
-}
-#else
-static void
-print_event_masks (const GstEventMask * masks)
-{
-}
-#endif
-
 static char *
 get_rank_name (gint rank)
 {
@@ -525,16 +436,8 @@ print_element_flag_info (GstElement * element)
   n_print ("\n");
   n_print ("Element Flags:\n");
 
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_COMPLEX)) {
-    n_print ("  GST_ELEMENT_COMPLEX\n");
-    have_flags = TRUE;
-  }
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_DECOUPLED)) {
-    n_print ("  GST_ELEMENT_DECOUPLED\n");
-    have_flags = TRUE;
-  }
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_THREAD_SUGGESTED)) {
-    n_print ("  GST_ELEMENT_THREADSUGGESTED\n");
+  if (GST_FLAG_IS_SET (element, GST_ELEMENT_PUSHING)) {
+    n_print ("  GST_ELEMENT_PUSHING\n");
     have_flags = TRUE;
   }
   if (GST_FLAG_IS_SET (element, GST_ELEMENT_EVENT_AWARE)) {
@@ -551,14 +454,6 @@ print_element_flag_info (GstElement * element)
       n_print ("  GST_BIN_FLAG_MANAGER\n");
       have_flags = TRUE;
     }
-    if (GST_FLAG_IS_SET (element, GST_BIN_SELF_SCHEDULABLE)) {
-      n_print ("  GST_BIN_SELF_SCHEDULABLE\n");
-      have_flags = TRUE;
-    }
-    if (GST_FLAG_IS_SET (element, GST_BIN_FLAG_PREFER_COTHREADS)) {
-      n_print ("  GST_BIN_FLAG_PREFER_COTHREADS\n");
-      have_flags = TRUE;
-    }
     if (!have_flags)
       n_print ("  no flags set\n");
   }
@@ -569,6 +464,7 @@ print_implementation_info (GstElement * element)
 {
   GstObjectClass *gstobject_class;
   GstElementClass *gstelement_class;
+  GSList *list;
 
   gstobject_class = GST_OBJECT_CLASS (G_OBJECT_GET_CLASS (element));
   gstelement_class = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
@@ -576,12 +472,14 @@ print_implementation_info (GstElement * element)
   n_print ("\n");
   n_print ("Element Implementation:\n");
 
-  if (element->loopfunc)
-    n_print ("  loopfunc()-based element: %s\n",
-        GST_DEBUG_FUNCPTR_NAME (element->loopfunc));
-  else
-    n_print ("  No loopfunc(), must be chain-based or not configured yet\n");
+  n_print ("Element Actions:\n");
+  for (list = element->actions; list; list = g_slist_next (list)) {
+    GstAction *action = list->data;
+    gchar *str = gst_action_to_string (action);
 
+    n_print ("  %s  %s\n",
+        gst_action_is_initially_active (action) ? "ACTIVE" : "      ", str);
+  }
   n_print ("  Has change_state() function: %s\n",
       GST_DEBUG_FUNCPTR_NAME (gstelement_class->change_state));
 #ifndef GST_DISABLE_LOADSAVE
@@ -676,33 +574,15 @@ print_pad_info (GstElement * element)
       g_print ("\n");
 
     n_print ("    Implementation:\n");
-    if (realpad->chainfunc)
-      n_print ("      Has chainfunc(): %s\n",
-          GST_DEBUG_FUNCPTR_NAME (realpad->chainfunc));
-    if (realpad->getfunc)
-      n_print ("      Has getfunc(): %s\n",
-          GST_DEBUG_FUNCPTR_NAME (realpad->getfunc));
-    if (realpad->formatsfunc != gst_pad_get_formats_default) {
-      n_print ("      Supports seeking/conversion/query formats:\n");
-      print_formats (gst_pad_get_formats (GST_PAD (realpad)));
-    }
     if (realpad->convertfunc != gst_pad_convert_default)
       n_print ("      Has custom convertfunc(): %s\n",
           GST_DEBUG_FUNCPTR_NAME (realpad->convertfunc));
-    if (realpad->eventfunc != gst_pad_event_default)
-      n_print ("      Has custom eventfunc(): %s\n",
-          GST_DEBUG_FUNCPTR_NAME (realpad->eventfunc));
-    if (realpad->eventmaskfunc != gst_pad_get_event_masks_default) {
-      n_print ("        Provides event masks:\n");
-      print_event_masks (gst_pad_get_event_masks (GST_PAD (realpad)));
-    }
+    if (realpad->eventhandler != gst_pad_event_default)
+      n_print ("      Has custom eventhandler(): %s\n",
+          GST_DEBUG_FUNCPTR_NAME (realpad->eventhandler));
     if (realpad->queryfunc != gst_pad_query_default)
       n_print ("      Has custom queryfunc(): %s\n",
           GST_DEBUG_FUNCPTR_NAME (realpad->queryfunc));
-    if (realpad->querytypefunc != gst_pad_get_query_types_default) {
-      n_print ("        Provides query types:\n");
-      print_query_types (gst_pad_get_query_types (GST_PAD (realpad)));
-    }
 
     if (realpad->intlinkfunc != gst_pad_get_internal_links_default)
       n_print ("      Has custom intconnfunc(): %s\n",

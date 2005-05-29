@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-05-02 19:36+0200\n"
+"POT-Creation-Date: 2005-05-17 18:37+0200\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -15,30 +15,30 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: gst/gst.c:160
+#: gst/gst.c:157
 msgid "Print the GStreamer version"
 msgstr "Printo versionin e GStreamer"
 
-#: gst/gst.c:162
+#: gst/gst.c:159
 msgid "Make all warnings fatal"
 msgstr "Bëj që të gjithë paralajmërimet të jenë fatale"
 
-#: gst/gst.c:166
+#: gst/gst.c:163
 msgid "Print available debug categories and exit"
 msgstr "Printo kategoritë e debug në dispozicion dhe dil"
 
-#: gst/gst.c:169
+#: gst/gst.c:166
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Niveli i prezgjedhur i debug nga 1 (vetëm gabimi) në 5 (gjithçka) ose 0 për "
 "jo output"
 
-#: gst/gst.c:171
+#: gst/gst.c:168
 msgid "LEVEL"
 msgstr "NIVELI"
 
-#: gst/gst.c:173
+#: gst/gst.c:170
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -47,31 +47,27 @@ msgstr ""
 "etiketa specifike për kategoritë individuale. Shembull: GST_AUTOPLUG:5,"
 "GST_ELEMENT_*:3"
 
-#: gst/gst.c:176
+#: gst/gst.c:173
 msgid "LIST"
 msgstr "LISTË"
 
-#: gst/gst.c:178
+#: gst/gst.c:175
 msgid "Disable colored debugging output"
 msgstr "Ç'aktivo output shumëngjyrësh të debug"
 
-#: gst/gst.c:180
+#: gst/gst.c:177
 msgid "Disable debugging"
 msgstr "Ç'aktivo debug"
 
-#: gst/gst.c:184
-msgid "Disable accelerated CPU instructions"
-msgstr "Ç'aktivo instruksionet e përshpejtimit të CPU"
-
-#: gst/gst.c:186
+#: gst/gst.c:181
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Aktivo kërkesën e plugin të ngarkimit të diagnostikimeve"
 
-#: gst/gst.c:188
+#: gst/gst.c:183
 msgid "PATHS"
 msgstr "POZICIONET"
 
-#: gst/gst.c:191
+#: gst/gst.c:186
 #, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -80,33 +76,33 @@ msgstr ""
 "Lista e plugin, të ndarë me presje, që duhen parangarkuar në plotësim të "
 "listës së regjistruar tek e ndryshueshmja e ambientit GST_PLUGIN_PATH"
 
-#: gst/gst.c:193
+#: gst/gst.c:188
 msgid "PLUGINS"
 msgstr "PLUGINS"
 
-#: gst/gst.c:196
+#: gst/gst.c:191
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 "Ç'aktivo regjistrimin e dështimeve të segmentuara gjatë ngarkimit të plugin"
 
-#: gst/gst.c:199
+#: gst/gst.c:194
 msgid "SCHEDULER"
 msgstr "PLANIFIKUES"
 
-#: gst/gst.c:201
+#: gst/gst.c:196
 msgid "Registry to use"
 msgstr "Regjistri që duhet përdorur"
 
-#: gst/gst.c:201
+#: gst/gst.c:196
 msgid "REGISTRY"
 msgstr "REGJISTRI"
 
-#: gst/gst.c:214
+#: gst/gst.c:209
 #, c-format
 msgid "path list for loading plugins (separated by '%s')"
 msgstr "pozicioni i listës për ngarkimin e plugins (ndarë me '%s')"
 
-#: gst/gst.c:218
+#: gst/gst.c:213
 #, c-format
 msgid "Scheduler to use (default is '%s')"
 msgstr "Planifikuesi që duhet përdorur (i prezgjedhuri është '%s')"
@@ -582,51 +578,46 @@ msgstr ""
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:466
-#, c-format
-msgid "There is no element present to handle the stream's mime type %s."
-msgstr "Nuk ekziston asnjë element për të trajtuar llojin mime %s të fluksit."
-
-#: gst/elements/gstfilesink.c:268
+#: gst/elements/gstfilesink.c:243
 msgid "No file name specified for writing."
 msgstr "Nuk është përcaktuar asnjë emër file për tu shkruar."
 
-#: gst/elements/gstfilesink.c:275
+#: gst/elements/gstfilesink.c:250
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "E pamundur hapja e file \"%s\" në shkrim."
 
-#: gst/elements/gstfilesink.c:294
+#: gst/elements/gstfilesink.c:269
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Gabim gjatë mbylljes së file \"%s\"."
 
-#: gst/elements/gstfilesink.c:364 gst/elements/gstfilesink.c:400
-#: gst/elements/gstfilesink.c:453
+#: gst/elements/gstfilesink.c:339 gst/elements/gstfilesink.c:375
+#: gst/elements/gstfilesink.c:428
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Gabim gjatë shkrimit tek file \"%s\"."
 
-#: gst/elements/gstfilesrc.c:764 gst/elements/gstmultifilesrc.c:298
+#: gst/elements/gstfilesrc.c:725
 msgid "No file name specified for reading."
 msgstr "Nuk është përcaktuar asnjë emër file për tu lexuar."
 
-#: gst/elements/gstfilesrc.c:779 gst/elements/gstmultifilesrc.c:306
+#: gst/elements/gstfilesrc.c:740
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "E pamundur hapja e file \"%s\" për lexim."
 
-#: gst/elements/gstfilesrc.c:790
+#: gst/elements/gstfilesrc.c:751
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" është një directory."
 
-#: gst/elements/gstfilesrc.c:796
+#: gst/elements/gstfilesrc.c:757
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "File \"%s\" është një socket."
 
-#: gst/elements/gstidentity.c:306
+#: gst/elements/gstidentity.c:276
 msgid "Failed after iterations as requested."
 msgstr "Dështoi mbas përsëritjeve sikurse të kërkuara."
 
@@ -715,122 +706,77 @@ msgstr "e pamundur lidhja e elementit sink për URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "nuk lejohet konduktori bosh"
 
-#: tools/gst-inspect.c:1151
+#: tools/gst-inspect.c:1032
 msgid "Print all elements"
 msgstr "Printo të gjithë elementët"
 
-#: tools/gst-launch.c:114
-#, c-format
-msgid ""
-"Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
-"max %s ns).\n"
-msgstr ""
-
-#: tools/gst-launch.c:141
-msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr "Përdorimi: gst-xmllaunch <file.xml> [ element.property=vlera ... ]\n"
-
-#: tools/gst-launch.c:149
-#, c-format
-msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "GABIM: analizimi i file xml '%s' dështoi.\n"
-
-#: tools/gst-launch.c:155
-#, c-format
-msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr "GABIM: asnjë element i pipline të toplevel tek file '%s'.\n"
-
-#: tools/gst-launch.c:162
-#, c-format
-msgid "WARNING: only one toplevel element is supported at this time."
-msgstr "KUJDES: vetëm një element toplevel suportohet aktualisht."
-
-#: tools/gst-launch.c:173
-#, c-format
-msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr ""
-"GABIM: i pamundur analizimi i argumentit %d të rreshtit të komandës: %s.\n"
-
-#: tools/gst-launch.c:184
-#, c-format
-msgid "WARNING: element named '%s' not found.\n"
-msgstr "KUJDES: elementi me emrin '%s' nuk u gjet.\n"
-
-#: tools/gst-launch.c:327
+#: tools/gst-launch.c:190
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "NDRYSHIM I GJETUR      : u gjet nga elementi \"%s\".\n"
 
-#: tools/gst-launch.c:412
+#: tools/gst-launch.c:304
 msgid "Output tags (also known as metadata)"
 msgstr "Tags e output (njohur gjithashtu si metadata)"
 
-#: tools/gst-launch.c:414
+#: tools/gst-launch.c:306
 msgid "Output status information and property notifications"
 msgstr "Njoftime të informacioneve dhe pronësisë së kondicionit të daljes"
 
-#: tools/gst-launch.c:416
+#: tools/gst-launch.c:308
 msgid "Do not output status information of TYPE"
 msgstr "Mos jep informacionin e gjendjes së LLOJIT"
 
-#: tools/gst-launch.c:416
+#: tools/gst-launch.c:308
 msgid "TYPE1,TYPE2,..."
 msgstr "LLOJI1,LLOJI2,..."
 
-#: tools/gst-launch.c:419
-msgid "Save xml representation of pipeline to FILE and exit"
-msgstr "Ruaj prezantimin xml të pipeline tek FILE dhe dil"
-
-#: tools/gst-launch.c:419
-msgid "FILE"
-msgstr "FILE"
-
-#: tools/gst-launch.c:422
+#: tools/gst-launch.c:310
 msgid "Do not install a fault handler"
 msgstr "Mos instalo një ushqyes të dëmtuar"
 
-#: tools/gst-launch.c:424
+#: tools/gst-launch.c:312
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Printo shenjat e alloc (nëse aktivuar në kohën e kompilimit)"
 
-#: tools/gst-launch.c:426
+#: tools/gst-launch.c:314
 msgid "Number of times to iterate pipeline"
 msgstr "Numri i herëve të përsëritjes së kanalit"
 
-#: tools/gst-launch.c:496
+#: tools/gst-launch.c:379
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "GABIM: i pamundur ndërtimi i pipeline: %s.\n"
 
-#: tools/gst-launch.c:500
-#, c-format
+#: tools/gst-launch.c:383
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "GABIM: i pamundur ndërtimi i pipeline.\n"
 
-#: tools/gst-launch.c:504
+#: tools/gst-launch.c:387
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "KUJDES: pipline e gabuar: %s\n"
 
-#: tools/gst-launch.c:505
-#, c-format
+#: tools/gst-launch.c:388
 msgid "         Trying to run anyway.\n"
 msgstr "         Duke u përpjekur të zbatohet sidoqoftë.\n"
 
-#: tools/gst-launch.c:532
-#, c-format
+#: tools/gst-launch.c:408
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "GABIM: elementi 'konduktor' nuk u gjet.\n"
 
-#: tools/gst-launch.c:539
-#, c-format
+#: tools/gst-launch.c:417
 msgid "RUNNING pipeline ...\n"
 msgstr "DUKE ZBATUAR pipeline ...\n"
 
-#: tools/gst-launch.c:542
-#, c-format
+#: tools/gst-launch.c:421
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "GABIM: pipeline nuk dëshiron të luajë.\n"
+
+#: tools/gst-launch.c:445
+#, c-format
+msgid "Execution ended after %.2fs (%.2fs or %.2f%% idling).\n"
+msgstr ""
 
 #: tools/gst-register.c:49
 #, fuzzy, c-format
@@ -865,6 +811,39 @@ msgid "Loaded %d plugins with %d feature.\n"
 msgid_plural "Loaded %d plugins with %d features.\n"
 msgstr[0] "U ngarkuan %d plugins me %d %s.\n"
 msgstr[1] "U ngarkuan %d plugins me %d %s.\n"
+
+#~ msgid "Disable accelerated CPU instructions"
+#~ msgstr "Ç'aktivo instruksionet e përshpejtimit të CPU"
+
+#~ msgid "There is no element present to handle the stream's mime type %s."
+#~ msgstr ""
+#~ "Nuk ekziston asnjë element për të trajtuar llojin mime %s të fluksit."
+
+#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+#~ msgstr ""
+#~ "Përdorimi: gst-xmllaunch <file.xml> [ element.property=vlera ... ]\n"
+
+#~ msgid "ERROR: parse of xml file '%s' failed.\n"
+#~ msgstr "GABIM: analizimi i file xml '%s' dështoi.\n"
+
+#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+#~ msgstr "GABIM: asnjë element i pipline të toplevel tek file '%s'.\n"
+
+#~ msgid "WARNING: only one toplevel element is supported at this time."
+#~ msgstr "KUJDES: vetëm një element toplevel suportohet aktualisht."
+
+#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
+#~ msgstr ""
+#~ "GABIM: i pamundur analizimi i argumentit %d të rreshtit të komandës: %s.\n"
+
+#~ msgid "WARNING: element named '%s' not found.\n"
+#~ msgstr "KUJDES: elementi me emrin '%s' nuk u gjet.\n"
+
+#~ msgid "Save xml representation of pipeline to FILE and exit"
+#~ msgstr "Ruaj prezantimin xml të pipeline tek FILE dhe dil"
+
+#~ msgid "FILE"
+#~ msgstr "FILE"
 
 #~ msgid "caps"
 #~ msgstr "mbrojtëse"

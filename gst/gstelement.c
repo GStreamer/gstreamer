@@ -26,6 +26,7 @@
 #include <gobject/gvaluecollector.h>
 
 #include "gstelement.h"
+#include "gstaction.h"
 #include "gstbin.h"
 #include "gstmarshal.h"
 #include "gsterror.h"
@@ -263,7 +264,6 @@ gst_element_init (GstElement * element)
   element->numsrcpads = 0;
   element->numsinkpads = 0;
   element->pads = NULL;
-  element->loopfunc = NULL;
   element->sched = NULL;
   element->clock = NULL;
   element->sched_private = NULL;
@@ -834,37 +834,6 @@ gst_element_get_clock (GstElement * element)
   return NULL;
 }
 
-/**
- * gst_element_clock_wait:
- * @element: a #GstElement.
- * @id: the #GstClock to use.
- * @jitter: the difference between requested time and actual time.
- *
- * Waits for a specific time on the clock.
- *
- * Returns: the #GstClockReturn result of the wait operation.
- */
-GstClockReturn
-gst_element_clock_wait (GstElement * element, GstClockID id,
-    GstClockTimeDiff * jitter)
-{
-  GstClockReturn res;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (element), GST_CLOCK_ERROR);
-
-  if (GST_ELEMENT_SCHED (element)) {
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "waiting on scheduler clock with id %d");
-    res =
-        gst_scheduler_clock_wait (GST_ELEMENT_SCHED (element), element, id,
-        jitter);
-  } else {
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "no scheduler, returning GST_CLOCK_TIMEOUT");
-    res = GST_CLOCK_TIMEOUT;
-  }
-
-  return res;
-}
-
 #undef GST_CAT_DEFAULT
 #define GST_CAT_DEFAULT GST_CAT_CLOCK
 /**
@@ -905,51 +874,6 @@ gst_element_get_time (GstElement * element)
       g_assert_not_reached ();
       return GST_CLOCK_TIME_NONE;
   }
-}
-
-/**
- * gst_element_wait:
- * @element: element that should wait
- * @timestamp: what timestamp to wait on
- *
- * Waits until the given relative time stamp for the element has arrived.
- * When this function returns successfully, the relative time point specified
- * in the timestamp has passed for this element.
- * <note>This function can only be called on elements in
- * #GST_STATE_PLAYING</note>
- *
- * Returns: TRUE on success.
- */
-gboolean
-gst_element_wait (GstElement * element, GstClockTime timestamp)
-{
-  GstClockID id;
-  GstClockReturn ret;
-  GstClockTime time;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
-  g_return_val_if_fail (GST_IS_CLOCK (element->clock), FALSE);
-  g_return_val_if_fail (element->current_state == GST_STATE_PLAYING, FALSE);
-  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
-
-  /* shortcut when we're already late... */
-  time = gst_element_get_time (element);
-  GST_CAT_LOG_OBJECT (GST_CAT_CLOCK, element, "element time %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (time));
-  if (time >= timestamp) {
-    GST_CAT_INFO_OBJECT (GST_CAT_CLOCK, element,
-        "called gst_element_wait (%" GST_TIME_FORMAT ") and was late (%"
-        GST_TIME_FORMAT, GST_TIME_ARGS (timestamp),
-        GST_TIME_ARGS (gst_element_get_time (element)));
-    return TRUE;
-  }
-
-  id = gst_clock_new_single_shot_id (element->clock,
-      element->base_time + timestamp);
-  ret = gst_element_clock_wait (element, id, NULL);
-  gst_clock_id_free (id);
-
-  return ret == GST_CLOCK_STOPPED;
 }
 
 /**
@@ -1171,6 +1095,16 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
   g_return_if_fail (gst_object_check_uniqueness (element->pads,
           GST_PAD_NAME (pad)) == TRUE);
 
+  if (GST_IS_REAL_PAD (pad)) {
+    /* append the pad's action to the element */
+    if (GST_ELEMENT_IS_PUSHING (element) && GST_PAD_IS_SRC (pad)) {
+      g_return_if_fail (GST_REAL_PAD (pad)->action == NULL);
+    } else {
+      g_return_if_fail (GST_REAL_PAD (pad)->action != NULL);
+      gst_element_add_action (element, GST_REAL_PAD (pad)->action);
+    }
+  }
+
   GST_CAT_INFO_OBJECT (GST_CAT_ELEMENT_PADS, element, "adding pad '%s'",
       GST_STR_NULL (GST_OBJECT_NAME (pad)));
 
@@ -1192,10 +1126,6 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
       /* can happen for ghost pads */
       break;
   }
-
-  /* activate element when we are playing */
-  if (GST_STATE (element) == GST_STATE_PLAYING)
-    gst_pad_set_active (pad, TRUE);
 
   /* emit the NEW_PAD signal */
   g_signal_emit (G_OBJECT (element), gst_element_signals[NEW_PAD], 0, pad);
@@ -1257,6 +1187,9 @@ gst_element_remove_pad (GstElement * element, GstPad * pad)
       gst_pad_unlink (pad, GST_PAD (GST_RPAD_PEER (pad)));
     }
     gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), NULL);
+
+    if (GST_REAL_PAD (pad)->action)
+      gst_element_remove_action (GST_REAL_PAD (pad)->action);
   } else if (GST_IS_GHOST_PAD (pad)) {
     g_object_set (pad, "real-pad", NULL, NULL);
   }
@@ -2298,37 +2231,6 @@ gst_element_get_random_pad (GstElement * element, GstPadDirection dir)
 }
 
 /**
- * gst_element_get_event_masks:
- * @element: a #GstElement to query
- *
- * Get an array of event masks from the element.
- * If the element doesn't implement an event masks function,
- * the query will be forwarded to a random linked sink pad.
- *
- * Returns: An array of #GstEventMask elements.
- */
-const GstEventMask *
-gst_element_get_event_masks (GstElement * element)
-{
-  GstElementClass *oclass;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-
-  oclass = GST_ELEMENT_GET_CLASS (element);
-
-  if (oclass->get_event_masks)
-    return oclass->get_event_masks (element);
-  else {
-    GstPad *pad = gst_element_get_random_pad (element, GST_PAD_SINK);
-
-    if (pad)
-      return gst_pad_get_event_masks (GST_PAD_PEER (pad));
-  }
-
-  return NULL;
-}
-
-/**
  * gst_element_send_event:
  * @element: a #GstElement to send the event to.
  * @event: the #GstEvent to send to the element.
@@ -2384,37 +2286,6 @@ gst_element_seek (GstElement * element, GstSeekType seek_type, guint64 offset)
 }
 
 /**
- * gst_element_get_query_types:
- * @element: a #GstElement to query
- *
- * Get an array of query types from the element.
- * If the element doesn't implement a query types function,
- * the query will be forwarded to a random sink pad.
- *
- * Returns: An array of #GstQueryType elements.
- */
-const GstQueryType *
-gst_element_get_query_types (GstElement * element)
-{
-  GstElementClass *oclass;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-
-  oclass = GST_ELEMENT_GET_CLASS (element);
-
-  if (oclass->get_query_types)
-    return oclass->get_query_types (element);
-  else {
-    GstPad *pad = gst_element_get_random_pad (element, GST_PAD_SINK);
-
-    if (pad)
-      return gst_pad_get_query_types (GST_PAD_PEER (pad));
-  }
-
-  return NULL;
-}
-
-/**
  * gst_element_query:
  * @element: a #GstElement to perform the query on.
  * @type: the #GstQueryType.
@@ -2454,37 +2325,6 @@ gst_element_query (GstElement * element, GstQueryType type,
   }
 
   return FALSE;
-}
-
-/**
- * gst_element_get_formats:
- * @element: a #GstElement to query
- *
- * Get an array of formats from the element.
- * If the element doesn't implement a formats function,
- * the query will be forwarded to a random sink pad.
- *
- * Returns: An array of #GstFormat elements.
- */
-const GstFormat *
-gst_element_get_formats (GstElement * element)
-{
-  GstElementClass *oclass;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-
-  oclass = GST_ELEMENT_GET_CLASS (element);
-
-  if (oclass->get_formats)
-    return oclass->get_formats (element);
-  else {
-    GstPad *pad = gst_element_get_random_pad (element, GST_PAD_SINK);
-
-    if (pad)
-      return gst_pad_get_formats (GST_PAD_PEER (pad));
-  }
-
-  return NULL;
 }
 
 /**
@@ -2934,20 +2774,18 @@ gst_element_clear_pad_caps (GstElement * element)
   }
 }
 
-static void
-gst_element_pads_activate (GstElement * element, gboolean active)
+void
+gst_element_reset_actions (GstElement * element)
 {
-  GList *pads = element->pads;
+  GSList *walk;
+  GstAction *action;
 
-  while (pads) {
-    GstPad *pad = GST_PAD (pads->data);
-
-    pads = g_list_next (pads);
-
-    if (!GST_IS_REAL_PAD (pad))
-      continue;
-
-    gst_pad_set_active (pad, active);
+  for (walk = element->actions; walk; walk = g_slist_next (walk)) {
+    action = walk->data;
+    if (gst_action_is_coupled (action)) {
+      //g_print ("resetting %s to %s\n", gst_action_to_string (action), action->any.initially_active ? "TRUE" : "FALSE");
+      gst_action_set_active (action, action->any.initially_active);
+    }
   }
 }
 
@@ -2957,6 +2795,7 @@ gst_element_change_state (GstElement * element)
   GstElementState old_state, old_pending;
   GstObject *parent;
   gint old_transition;
+  GSList *walk;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
 
@@ -2995,10 +2834,8 @@ gst_element_change_state (GstElement * element)
         GST_CAT_LOG_OBJECT (GST_CAT_CLOCK, element, "setting base time to %"
             G_GINT64_FORMAT, element->base_time);
       }
-      gst_element_pads_activate (element, FALSE);
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
-      gst_element_pads_activate (element, TRUE);
       if (element->clock) {
         GstClockTime time = gst_clock_get_event_time (element->clock);
 
@@ -3015,12 +2852,19 @@ gst_element_change_state (GstElement * element)
             "failed state change, could not negotiate pads");
         goto failure;
       }
+      gst_element_reset_actions (element);
       break;
       /* going to the READY state clears all pad caps */
       /* FIXME: Why doesn't this happen on READY => NULL? -- Company */
     case GST_STATE_PAUSED_TO_READY:
       element->base_time = 0;
       gst_element_clear_pad_caps (element);
+      for (walk = element->actions; walk; walk = g_slist_next (walk)) {
+        GstAction *action = walk->data;
+
+        if (gst_action_is_coupled (action))
+          gst_action_set_active (action, FALSE);
+      }
       break;
     case GST_STATE_NULL_TO_READY:
     case GST_STATE_READY_TO_NULL:
@@ -3270,40 +3114,6 @@ gst_element_restore_thyself (GstObject * object, xmlNodePtr self)
 #endif /* GST_DISABLE_LOADSAVE */
 
 /**
- * gst_element_yield:
- * @element: a #GstElement to yield.
- *
- * Requests a yield operation for the element. The scheduler will typically
- * give control to another element.
- */
-void
-gst_element_yield (GstElement * element)
-{
-  if (GST_ELEMENT_SCHED (element)) {
-    gst_scheduler_yield (GST_ELEMENT_SCHED (element), element);
-  }
-}
-
-/**
- * gst_element_interrupt:
- * @element: a #GstElement to interrupt.
- *
- * Requests the scheduler of this element to interrupt the execution of
- * this element and scheduler another one.
- *
- * Returns: TRUE if the element should exit its chain/loop/get
- * function ASAP, depending on the scheduler implementation.
- */
-gboolean
-gst_element_interrupt (GstElement * element)
-{
-  if (GST_ELEMENT_SCHED (element)) {
-    return gst_scheduler_interrupt (GST_ELEMENT_SCHED (element), element);
-  } else
-    return TRUE;
-}
-
-/**
  * gst_element_set_scheduler:
  * @element: a #GstElement to set the scheduler of.
  * @sched: the #GstScheduler to set.
@@ -3339,46 +3149,6 @@ gst_element_get_scheduler (GstElement * element)
   return GST_ELEMENT_SCHED (element);
 }
 
-/**
- * gst_element_set_loop_function:
- * @element: a #GstElement to set the loop function of.
- * @loop: Pointer to #GstElementLoopFunction.
- *
- * This sets the loop function for the element.  The function pointed to
- * can deviate from the GstElementLoopFunction definition in type of
- * pointer only.
- *
- * NOTE: in order for this to take effect, the current loop function *must*
- * exit.  Assuming the loop function itself is the only one who will cause
- * a new loopfunc to be assigned, this should be no problem.
- */
-void
-gst_element_set_loop_function (GstElement * element,
-    GstElementLoopFunction loop)
-{
-  gboolean need_notify = FALSE;
-
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  /* if the element changed from loop based to chain/get based
-   * or vice versa, we need to inform the scheduler about that */
-  if ((element->loopfunc == NULL && loop != NULL) ||
-      (element->loopfunc != NULL && loop == NULL)) {
-    need_notify = TRUE;
-  }
-
-  /* set the loop function */
-  element->loopfunc = loop;
-
-  if (need_notify) {
-    /* set the NEW_LOOPFUNC flag so everyone knows to go try again */
-    GST_FLAG_SET (element, GST_ELEMENT_NEW_LOOPFUNC);
-
-    if (GST_ELEMENT_SCHED (element)) {
-      gst_scheduler_scheduling_change (GST_ELEMENT_SCHED (element), element);
-    }
-  }
-}
 static inline void
 gst_element_emit_found_tag (GstElement * element, GstElement * source,
     const GstTagList * tag_list)
@@ -3387,6 +3157,7 @@ gst_element_emit_found_tag (GstElement * element, GstElement * source,
   g_signal_emit (element, gst_element_signals[FOUND_TAG], 0, source, tag_list);
   gst_object_unref (GST_OBJECT (element));
 }
+
 static void
 gst_element_found_tag_func (GstElement * element, GstElement * source,
     const GstTagList * tag_list)
@@ -3448,11 +3219,7 @@ gst_element_found_tags_for_pad (GstElement * element, GstPad * pad,
   GST_EVENT_SRC (tag_event) = gst_object_ref (GST_OBJECT (element));
   GST_EVENT_TIMESTAMP (tag_event) = timestamp;
   gst_element_found_tags (element, gst_event_tag_get_list (tag_event));
-  if (GST_PAD_IS_USABLE (pad)) {
-    gst_pad_push (pad, GST_DATA (tag_event));
-  } else {
-    gst_data_unref (GST_DATA (tag_event));
-  }
+  gst_pad_push (pad, GST_DATA (tag_event));
 }
 
 static inline void

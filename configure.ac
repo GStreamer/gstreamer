@@ -560,15 +560,14 @@ AC_SUBST(GST_PKG_DEPS)
 
 dnl flags shared for all internal objects (core libs, elements, applications)
 dnl we disable deprecated internally
-dnl XML, GLib, popt, GST_INT, VALGRIND, and the right include for CFLAGS
+dnl XML, GLib, popt, GST_INT, and the right include for CFLAGS
 dnl no need to add XML, GLib, popt explicitly since libgstreamer pulls them in
 GST_INT_CFLAGS="$GLIB_CFLAGS $XML_CFLAGS $GST_PKG_CFLAGS \
  $GST_INT_CFLAGS $GST_ERROR_CFLAGS -DGST_DISABLE_DEPRECATED"
 
 dnl Private vars for libgst only
-GST_LIB_CFLAGS="$GST_PKG_CFLAGS $GST_INT_CFLAGS \
-  $VALGRIND_CFLAGS -I\$(top_srcdir)"
-GST_LIB_LIBS="$XML_LIBS $GLIB_LIBS -lpopt $GST_PKG_LIBS $LTLIBINTL $VALGRIND_LIBS -lm"
+GST_LIB_CFLAGS="$GST_PKG_CFLAGS $GST_INT_CFLAGS -I\$(top_srcdir)"
+GST_LIB_LIBS="$XML_LIBS $GLIB_LIBS -lpopt $GST_PKG_LIBS $LTLIBINTL -lm"
 GST_LIB_LDFLAGS="$GST_LT_LDFLAGS -version-info $GST_LIBVERSION $EXPORT_LDFLAGS"
 AC_SUBST(GST_LIB_CFLAGS)
 AC_SUBST(GST_LIB_LIBS)
@@ -576,10 +575,11 @@ AC_SUBST(GST_LIB_LDFLAGS)
 
 dnl Vars for all internal objects built on libgstreamer
 GST_OBJ_CFLAGS="$GST_INT_CFLAGS -I\$(top_srcdir)/libs -I\$(top_srcdir)"
-GST_OBJ_LIBS="\$(top_builddir)/gst/libgstreamer-$GST_MAJORMINOR.la"
-
-AC_SUBST(GST_OBJ_CFLAGS, "$GST_OBJ_CFLAGS")
-AC_SUBST(GST_OBJ_LIBS, "$GST_OBJ_LIBS")
+GST_OBJ_LIBS="\$(top_builddir)/gst/libgstreamer-$GST_MAJORMINOR.la $GLIB_LIBS $LTLIBINTL"
+GST_OBJ_LDFLAGS="$GST_LT_LDFLAGS -version-info $GST_LIBVERSION $EXPORT_LDFLAGS"
+AC_SUBST(GST_OBJ_CFLAGS)
+AC_SUBST(GST_OBJ_LIBS)
+AC_SUBST(GST_OBJ_LDFLAGS)
 
 dnl specific additional LDFLAGS for plugins
 GST_PLUGIN_LDFLAGS="-module -avoid-version $EXPORT_LDFLAGS"
@@ -646,10 +646,7 @@ tests/Makefile
 tests/bufspeed/Makefile
 tests/instantiate/Makefile
 tests/memchunk/Makefile
-tests/muxing/Makefile
 tests/seeking/Makefile
-tests/sched/Makefile
-tests/threadstate/Makefile
 testsuite/Makefile
 testsuite/bins/Makefile
 testsuite/bytestream/Makefile

@@ -31,6 +31,7 @@
 #include <gst/gsttypes.h>
 #include <gst/gstversion.h>
 
+#include <gst/gstaction.h>
 #include <gst/gstbin.h>
 #include <gst/gstbuffer.h>
 #include <gst/gstcaps.h>
@@ -48,11 +49,11 @@
 #include <gst/gstpipeline.h>
 #include <gst/gstplugin.h>
 #include <gst/gstscheduler.h>
+#include <gst/gstschedulerfactory.h>
 #include <gst/gststructure.h>
 #include <gst/gstsystemclock.h>
 #include <gst/gsttag.h>
 #include <gst/gsttaginterface.h>
-#include <gst/gstthread.h>
 #include <gst/gsttrace.h>
 #include <gst/gsttypefind.h>
 #include <gst/gsturi.h>

@@ -66,29 +66,6 @@ enum
   ARG_LOCATION
 };
 
-static const GstFormat *
-gst_filesink_get_formats (GstPad * pad)
-{
-  static const GstFormat formats[] = {
-    GST_FORMAT_BYTES,
-    0,
-  };
-
-  return formats;
-}
-
-static const GstQueryType *
-gst_filesink_get_query_types (GstPad * pad)
-{
-  static const GstQueryType types[] = {
-    GST_QUERY_TOTAL,
-    GST_QUERY_POSITION,
-    0
-  };
-
-  return types;
-}
-
 static void gst_filesink_dispose (GObject * object);
 
 static void gst_filesink_set_property (GObject * object, guint prop_id,
@@ -99,10 +76,11 @@ static void gst_filesink_get_property (GObject * object, guint prop_id,
 static gboolean gst_filesink_open_file (GstFileSink * sink);
 static void gst_filesink_close_file (GstFileSink * sink);
 
-static gboolean gst_filesink_handle_event (GstPad * pad, GstEvent * event);
+static gboolean gst_filesink_handle_event (GstRealPad * pad, GstEvent * event);
 static gboolean gst_filesink_pad_query (GstPad * pad, GstQueryType type,
     GstFormat * format, gint64 * value);
-static void gst_filesink_chain (GstPad * pad, GstData * _data);
+static void gst_filesink_chain (GstAction * action, GstRealPad * pad,
+    GstData * _data);
 
 static void gst_filesink_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -167,14 +145,12 @@ gst_filesink_init (GstFileSink * filesink)
   pad =
       gst_pad_new_from_template (gst_static_pad_template_get (&sinktemplate),
       "sink");
+  gst_sink_pad_set_action_handler (pad, gst_filesink_chain);
   gst_element_add_pad (GST_ELEMENT (filesink), pad);
-  gst_pad_set_chain_function (pad, gst_filesink_chain);
 
   GST_FLAG_SET (GST_ELEMENT (filesink), GST_ELEMENT_EVENT_AWARE);
 
   gst_pad_set_query_function (pad, gst_filesink_pad_query);
-  gst_pad_set_query_type_function (pad, gst_filesink_get_query_types);
-  gst_pad_set_formats_function (pad, gst_filesink_get_formats);
 
   filesink->filename = NULL;
   filesink->file = NULL;
@@ -336,12 +312,12 @@ gst_filesink_pad_query (GstPad * pad, GstQueryType type,
 
 /* handle events (search) */
 static gboolean
-gst_filesink_handle_event (GstPad * pad, GstEvent * event)
+gst_filesink_handle_event (GstRealPad * pad, GstEvent * event)
 {
   GstEventType type;
   GstFileSink *filesink;
 
-  filesink = GST_FILESINK (gst_pad_get_parent (pad));
+  filesink = GST_FILESINK (gst_pad_get_parent (GST_PAD (pad)));
 
   if (!(GST_FLAG_IS_SET (filesink, GST_FILESINK_OPEN))) {
     gst_event_unref (event);
@@ -407,7 +383,7 @@ gst_filesink_handle_event (GstPad * pad, GstEvent * event)
       gst_element_set_eos (GST_ELEMENT (filesink));
       break;
     default:
-      gst_pad_event_default (pad, event);
+      gst_pad_event_default (GST_PAD (pad), event);
       break;
   }
 
@@ -422,7 +398,7 @@ gst_filesink_handle_event (GstPad * pad, GstEvent * event)
  * take the buffer from the pad and write to file if it's open
  */
 static void
-gst_filesink_chain (GstPad * pad, GstData * _data)
+gst_filesink_chain (GstAction * action, GstRealPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstFileSink *filesink;
@@ -431,7 +407,7 @@ gst_filesink_chain (GstPad * pad, GstData * _data)
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
 
-  filesink = GST_FILESINK (gst_pad_get_parent (pad));
+  filesink = GST_FILESINK (gst_pad_get_parent (GST_PAD (pad)));
 
   if (GST_IS_EVENT (buf)) {
     gst_filesink_handle_event (pad, GST_EVENT (buf));

@@ -64,7 +64,6 @@ enum
 {
   ARG_0,
   ARG_NUM_SOURCES,
-  ARG_LOOP_BASED,
   ARG_OUTPUT,
   ARG_DATA,
   ARG_SIZETYPE,
@@ -179,7 +178,7 @@ GST_BOILERPLATE_FULL (GstFakeSrc, gst_fakesrc, GstElement, GST_TYPE_ELEMENT,
 
 static GstPad *gst_fakesrc_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * unused);
-static void gst_fakesrc_update_functions (GstFakeSrc * src);
+static void gst_fakesrc_update_functions (GstFakeSrc * src, GstPad * pad);
 static void gst_fakesrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_fakesrc_get_property (GObject * object, guint prop_id,
@@ -188,8 +187,7 @@ static void gst_fakesrc_set_clock (GstElement * element, GstClock * clock);
 
 static GstElementStateReturn gst_fakesrc_change_state (GstElement * element);
 
-static GstData *gst_fakesrc_get (GstPad * pad);
-static void gst_fakesrc_loop (GstElement * element);
+static GstData *gst_fakesrc_get (GstAction * action, GstRealPad * pad);
 
 static guint gst_fakesrc_signals[LAST_SIGNAL] = { 0 };
 
@@ -214,13 +212,9 @@ gst_fakesrc_class_init (GstFakeSrcClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_SOURCES,
       g_param_spec_int ("num-sources", "num-sources", "Number of sources",
           1, G_MAXINT, 1, G_PARAM_READABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOOP_BASED,
-      g_param_spec_boolean ("loop-based", "loop-based",
-          "Enable loop-based operation", FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_OUTPUT,
       g_param_spec_enum ("output", "output", "Output method (currently unused)",
           GST_TYPE_FAKESRC_OUTPUT, FAKESRC_FIRST_LAST_LOOP, G_PARAM_READWRITE));
@@ -299,10 +293,8 @@ gst_fakesrc_init (GstFakeSrc * fakesrc)
   pad =
       gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
       "src");
+  gst_fakesrc_update_functions (fakesrc, pad);
   gst_element_add_pad (GST_ELEMENT (fakesrc), pad);
-
-  fakesrc->loop_based = FALSE;
-  gst_fakesrc_update_functions (fakesrc);
 
   fakesrc->output = FAKESRC_FIRST_LAST_LOOP;
   fakesrc->segment_start = -1;
@@ -358,37 +350,12 @@ gst_fakesrc_request_new_pad (GstElement * element, GstPadTemplate * templ,
   name = g_strdup_printf ("src%d", GST_ELEMENT (fakesrc)->numsrcpads);
 
   srcpad = gst_pad_new_from_template (templ, name);
+  gst_fakesrc_update_functions (fakesrc, srcpad);
   gst_element_add_pad (GST_ELEMENT (fakesrc), srcpad);
-  gst_fakesrc_update_functions (fakesrc);
 
   g_free (name);
 
   return srcpad;
-}
-
-static const GstFormat *
-gst_fakesrc_get_formats (GstPad * pad)
-{
-  static const GstFormat formats[] = {
-    GST_FORMAT_DEFAULT,
-    0,
-  };
-
-  return formats;
-}
-
-static const GstQueryType *
-gst_fakesrc_get_query_types (GstPad * pad)
-{
-  static const GstQueryType types[] = {
-    GST_QUERY_TOTAL,
-    GST_QUERY_POSITION,
-    GST_QUERY_START,
-    GST_QUERY_SEGMENT_END,
-    0,
-  };
-
-  return types;
 }
 
 static gboolean
@@ -414,19 +381,6 @@ gst_fakesrc_query (GstPad * pad, GstQueryType type,
       return FALSE;
   }
   return TRUE;
-}
-
-static const GstEventMask *
-gst_fakesrc_get_event_mask (GstPad * pad)
-{
-  static const GstEventMask masks[] = {
-    {GST_EVENT_SEEK, GST_SEEK_FLAG_FLUSH},
-    {GST_EVENT_SEEK_SEGMENT, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SEGMENT_LOOP},
-    {GST_EVENT_FLUSH, 0},
-    {0, 0},
-  };
-
-  return masks;
 }
 
 static gboolean
@@ -463,34 +417,12 @@ gst_fakesrc_event_handler (GstPad * pad, GstEvent * event)
 }
 
 static void
-gst_fakesrc_update_functions (GstFakeSrc * src)
+gst_fakesrc_update_functions (GstFakeSrc * src, GstPad * pad)
 {
-  GList *pads;
-
-  if (src->loop_based) {
-    gst_element_set_loop_function (GST_ELEMENT (src),
-        GST_DEBUG_FUNCPTR (gst_fakesrc_loop));
-  } else {
-    gst_element_set_loop_function (GST_ELEMENT (src), NULL);
-  }
-
-  pads = GST_ELEMENT (src)->pads;
-  while (pads) {
-    GstPad *pad = GST_PAD (pads->data);
-
-    if (src->loop_based) {
-      gst_pad_set_get_function (pad, NULL);
-    } else {
-      gst_pad_set_get_function (pad, GST_DEBUG_FUNCPTR (gst_fakesrc_get));
-    }
-
-    gst_pad_set_event_function (pad, gst_fakesrc_event_handler);
-    gst_pad_set_event_mask_function (pad, gst_fakesrc_get_event_mask);
-    gst_pad_set_query_function (pad, gst_fakesrc_query);
-    gst_pad_set_query_type_function (pad, gst_fakesrc_get_query_types);
-    gst_pad_set_formats_function (pad, gst_fakesrc_get_formats);
-    pads = g_list_next (pads);
-  }
+  gst_src_pad_set_action_handler (pad, gst_fakesrc_get);
+  gst_real_pad_set_initially_active (GST_REAL_PAD (pad), TRUE);
+  gst_pad_set_event_function (pad, gst_fakesrc_event_handler);
+  gst_pad_set_query_function (pad, gst_fakesrc_query);
 }
 
 static void
@@ -516,10 +448,6 @@ gst_fakesrc_set_property (GObject * object, guint prop_id, const GValue * value,
   src = GST_FAKESRC (object);
 
   switch (prop_id) {
-    case ARG_LOOP_BASED:
-      src->loop_based = g_value_get_boolean (value);
-      gst_fakesrc_update_functions (src);
-      break;
     case ARG_OUTPUT:
       g_warning ("not yet implemented");
       break;
@@ -595,9 +523,6 @@ gst_fakesrc_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case ARG_NUM_SOURCES:
       g_value_set_int (value, GST_ELEMENT (src)->numsrcpads);
-      break;
-    case ARG_LOOP_BASED:
-      g_value_set_boolean (value, src->loop_based);
       break;
     case ARG_OUTPUT:
       g_value_set_enum (value, src->output);
@@ -791,7 +716,7 @@ gst_fakesrc_create_buffer (GstFakeSrc * src)
 }
 
 static GstData *
-gst_fakesrc_get (GstPad * pad)
+gst_fakesrc_get (GstAction * action, GstRealPad * pad)
 {
   GstFakeSrc *src;
   GstBuffer *buf;
@@ -868,40 +793,6 @@ gst_fakesrc_get (GstPad * pad)
   src->bytes_sent += GST_BUFFER_SIZE (buf);
 
   return GST_DATA (buf);
-}
-
-/**
- * gst_fakesrc_loop:
- * @element: the faksesrc to loop
- * 
- * generate an empty buffer and push it to the next element.
- */
-static void
-gst_fakesrc_loop (GstElement * element)
-{
-  GstFakeSrc *src;
-  const GList *pads;
-
-  g_return_if_fail (element != NULL);
-  g_return_if_fail (GST_IS_FAKESRC (element));
-
-  src = GST_FAKESRC (element);
-
-  pads = gst_element_get_pad_list (element);
-
-  while (pads) {
-    GstPad *pad = GST_PAD (pads->data);
-    GstData *data;
-
-    data = gst_fakesrc_get (pad);
-    gst_pad_push (pad, data);
-
-    if (src->eos) {
-      return;
-    }
-
-    pads = g_list_next (pads);
-  }
 }
 
 static GstElementStateReturn

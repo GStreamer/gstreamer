@@ -47,27 +47,27 @@ typedef struct _GstIdentityClass GstIdentityClass;
 struct _GstIdentity {
   GstElement 	 element;
 
-  GstPad 	*sinkpad;
-  GstPad 	*srcpad;
+  GstPad *	sinkpad;
+  GstPad *	srcpad;
+
+  GstAction *	wakeup;
 
   gboolean 	 loop_based;
   guint 	 duplicate;
   gint 	 	 error_after;
   gfloat 	 drop_probability;
-  gint		 datarate;
   guint 	 sleep_time;
   gboolean 	 silent;
   gboolean 	 dump;
-  gboolean 	 sync;
   gboolean 	 check_perfect;
   GstClockTime   prev_timestamp;
   GstClockTime   prev_duration;
   guint64        prev_offset_end;
-  GstClock	*clock;
   gchar 	*last_message;
   GstCaps	*srccaps;
 
-  guint64	 bytes_handled;
+  GstBuffer *	 current;
+  guint		 missing;
 };
 
 struct _GstIdentityClass {

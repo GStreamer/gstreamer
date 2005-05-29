@@ -79,38 +79,9 @@ GST_EXPORT GType _gst_element_type;
 #define GST_ELEMENT(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_ELEMENT, GstElement))
 #define GST_ELEMENT_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_ELEMENT, GstElementClass))
 
-/* convenience functions */
-#ifndef GST_DISABLE_DEPRECATED
-#ifdef G_HAVE_ISO_VARARGS
-#define GST_ELEMENT_QUERY_TYPE_FUNCTION(functionname, ...) \
-	GST_QUERY_TYPE_FUNCTION (GstElement*, functionname, __VA_ARGS__);
-#define GST_ELEMENT_FORMATS_FUNCTION(functionname, ...)    \
-	GST_FORMATS_FUNCTION (GstElement*, functionname, __VA_ARGS__);
-#define GST_ELEMENT_EVENT_MASK_FUNCTION(functionname, ...) \
-	GST_EVENT_MASK_FUNCTION (GstElement*, functionname, __VA_ARGS__);
-#elif defined(G_HAVE_GNUC_VARARGS)
-#define GST_ELEMENT_QUERY_TYPE_FUNCTION(functionname, a...) \
-	GST_QUERY_TYPE_FUNCTION (GstElement*, functionname, a);
-#define GST_ELEMENT_FORMATS_FUNCTION(functionname, a...)    \
-	GST_FORMATS_FUNCTION (GstElement*, functionname, a);
-#define GST_ELEMENT_EVENT_MASK_FUNCTION(functionname, a...) \
-	GST_EVENT_MASK_FUNCTION (GstElement*, functionname, a);
-#endif
-#endif
-
 typedef enum {
-  /* element is complex (for some def.) and generally require a cothread */
-  GST_ELEMENT_COMPLEX		= GST_OBJECT_FLAG_LAST,
-  /* input and output pads aren't directly coupled to each other
-     examples: queues, multi-output async readers, etc. */
-  GST_ELEMENT_DECOUPLED,
-  /* this element should be placed in a thread if at all possible */
-  GST_ELEMENT_THREAD_SUGGESTED,
-  /* this element, for some reason, has a loop function that performs
-   * an infinite loop without calls to gst_element_yield () */
-  GST_ELEMENT_INFINITE_LOOP,
-  /* there is a new loopfunction ready for placement */
-  GST_ELEMENT_NEW_LOOPFUNC,
+  /* element pushes new data, srcpads aren't scheduled */
+  GST_ELEMENT_PUSHING		= GST_OBJECT_FLAG_LAST,
   /* if this element can handle events */
   GST_ELEMENT_EVENT_AWARE,
   /* use threadsafe property get/set implementation */
@@ -133,9 +104,8 @@ typedef enum {
   GST_ELEMENT_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 16
 } GstElementFlags;
 
-#define GST_ELEMENT_IS_THREAD_SUGGESTED(obj)	(GST_FLAG_IS_SET(obj,GST_ELEMENT_THREAD_SUGGESTED))
+#define GST_ELEMENT_IS_PUSHING(obj)		(GST_FLAG_IS_SET(obj,GST_ELEMENT_PUSHING))
 #define GST_ELEMENT_IS_EVENT_AWARE(obj)		(GST_FLAG_IS_SET(obj,GST_ELEMENT_EVENT_AWARE))
-#define GST_ELEMENT_IS_DECOUPLED(obj)		(GST_FLAG_IS_SET(obj,GST_ELEMENT_DECOUPLED))
 
 #define GST_ELEMENT_NAME(obj)			(GST_OBJECT_NAME(obj))
 #define GST_ELEMENT_PARENT(obj)			(GST_OBJECT_PARENT(obj))
@@ -170,7 +140,6 @@ typedef enum {
 typedef struct _GstElementFactory GstElementFactory;
 typedef struct _GstElementFactoryClass GstElementFactoryClass;
 
-typedef void 		(*GstElementLoopFunction) 	(GstElement *element);
 typedef void 		(*GstElementPreRunFunction) 	(GstElement *element);
 typedef void 		(*GstElementPostRunFunction) 	(GstElement *element);
 
@@ -180,10 +149,10 @@ struct _GstElement {
   /* element state  and scheduling */
   guint8 		current_state;
   guint8 		pending_state;
-  GstElementLoopFunction loopfunc;
 
   GstScheduler 		*sched;
   gpointer		sched_private;
+  GSList *		actions;
 
   /* allocated clock */
   GstClock		*clock;
@@ -235,7 +204,6 @@ struct _GstElementClass {
   gboolean		(*release_locks)	(GstElement *element);
 
   /* query/convert/events functions */
-  const GstEventMask*   (*get_event_masks)     	(GstElement *element);
   gboolean		(*send_event)		(GstElement *element, GstEvent *event);
   const GstFormat*      (*get_formats)        	(GstElement *element);
   gboolean              (*convert)        	(GstElement *element,
@@ -279,8 +247,6 @@ void			gst_element_class_set_details		(GstElementClass *klass,
 void 			gst_element_default_error		(GObject *object, GstObject *orig, GError *error, gchar *debug);
 
 GType			gst_element_get_type		(void);
-void			gst_element_set_loop_function	(GstElement *element,
-							 GstElementLoopFunction loop);
 
 #define			gst_element_get_name(elem)	gst_object_get_name(GST_OBJECT(elem))
 #define			gst_element_set_name(elem,name)	gst_object_set_name(GST_OBJECT(elem),name)
@@ -372,17 +338,11 @@ gboolean		gst_element_link_pads_filtered 	(GstElement *src, const gchar *srcpadn
 void			gst_element_unlink_pads		(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname);
 
-G_CONST_RETURN GstEventMask*
-			gst_element_get_event_masks	(GstElement *element);
 gboolean		gst_element_send_event		(GstElement *element, GstEvent *event);
 gboolean		gst_element_seek		(GstElement *element, GstSeekType seek_type,
 							 guint64 offset);
-G_CONST_RETURN GstQueryType*
-			gst_element_get_query_types	(GstElement *element);
 gboolean		gst_element_query		(GstElement *element, GstQueryType type,
 			                                 GstFormat *format, gint64 *value);
-G_CONST_RETURN GstFormat*
-			gst_element_get_formats		(GstElement *element);
 gboolean		gst_element_convert		(GstElement *element, 
 		 					 GstFormat  src_format,  gint64  src_value,
 							 GstFormat *dest_format, gint64 *dest_value);

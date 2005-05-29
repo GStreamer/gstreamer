@@ -125,43 +125,6 @@ enum
   ARG_TOUCH
 };
 
-static const GstEventMask *
-gst_filesrc_get_event_mask (GstPad * pad)
-{
-  static const GstEventMask masks[] = {
-    {GST_EVENT_SEEK, GST_SEEK_METHOD_CUR |
-          GST_SEEK_METHOD_SET | GST_SEEK_METHOD_END | GST_SEEK_FLAG_FLUSH},
-    {GST_EVENT_FLUSH, 0},
-    {GST_EVENT_SIZE, 0},
-    {0, 0}
-  };
-
-  return masks;
-}
-
-static const GstQueryType *
-gst_filesrc_get_query_types (GstPad * pad)
-{
-  static const GstQueryType types[] = {
-    GST_QUERY_TOTAL,
-    GST_QUERY_POSITION,
-    0
-  };
-
-  return types;
-}
-
-static const GstFormat *
-gst_filesrc_get_formats (GstPad * pad)
-{
-  static const GstFormat formats[] = {
-    GST_FORMAT_BYTES,
-    0,
-  };
-
-  return formats;
-}
-
 static void gst_filesrc_dispose (GObject * object);
 
 static void gst_filesrc_set_property (GObject * object, guint prop_id,
@@ -170,7 +133,7 @@ static void gst_filesrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static gboolean gst_filesrc_check_filesize (GstFileSrc * src);
-static GstData *gst_filesrc_get (GstPad * pad);
+static GstData *gst_filesrc_get (GstAction * action, GstRealPad * pad);
 static gboolean gst_filesrc_srcpad_event (GstPad * pad, GstEvent * event);
 static gboolean gst_filesrc_srcpad_query (GstPad * pad, GstQueryType type,
     GstFormat * format, gint64 * value);
@@ -247,12 +210,10 @@ gst_filesrc_init (GstFileSrc * src)
   src->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
       "src");
-  gst_pad_set_get_function (src->srcpad, gst_filesrc_get);
+  gst_src_pad_set_action_handler (src->srcpad, gst_filesrc_get);
+  gst_real_pad_set_initially_active (GST_REAL_PAD (src->srcpad), TRUE);
   gst_pad_set_event_function (src->srcpad, gst_filesrc_srcpad_event);
-  gst_pad_set_event_mask_function (src->srcpad, gst_filesrc_get_event_mask);
   gst_pad_set_query_function (src->srcpad, gst_filesrc_srcpad_query);
-  gst_pad_set_query_type_function (src->srcpad, gst_filesrc_get_query_types);
-  gst_pad_set_formats_function (src->srcpad, gst_filesrc_get_formats);
   gst_element_add_pad (GST_ELEMENT (src), src->srcpad);
 
 #ifdef HAVE_MMAP
@@ -686,12 +647,12 @@ gst_filesrc_get_read (GstFileSrc * src)
 }
 
 static GstData *
-gst_filesrc_get (GstPad * pad)
+gst_filesrc_get (GstAction * action, GstRealPad * pad)
 {
   GstFileSrc *src;
 
   g_return_val_if_fail (pad != NULL, NULL);
-  src = GST_FILESRC (gst_pad_get_parent (pad));
+  src = GST_FILESRC (gst_pad_get_parent (GST_PAD (pad)));
   g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_FILESRC_OPEN), NULL);
 
   /* check for flush */

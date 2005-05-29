@@ -86,10 +86,6 @@ Struct list[] = {
   ,
   {"GstTagSetterIFace", sizeof (GstTagSetterIFace), 8}
   ,
-  {"GstThread", sizeof (GstThread), 196}
-  ,
-  {"GstThreadClass", sizeof (GstThreadClass), 332}
-  ,
   {"GstTrace", sizeof (GstTrace), 20}
   ,
   {"GstTraceEntry", sizeof (GstTraceEntry), 128}

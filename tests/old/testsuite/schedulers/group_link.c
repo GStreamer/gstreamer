@@ -33,11 +33,11 @@ main (gint argc, gchar ** argv)
   g_assert (pipeline);
   src = gst_element_factory_make ("fakesrc", NULL);
   g_assert (src);
+  g_object_set (G_OBJECT (src), "num-buffers", 10, NULL);
   id1 = gst_element_factory_make ("identity", NULL);
   g_assert (id1);
   id2 = gst_element_factory_make ("identity", NULL);
   g_assert (id2);
-  g_object_set (G_OBJECT (id2), "loop-based", TRUE, NULL);
 
   sink = gst_element_factory_make ("fakesink", NULL);
   g_assert (sink);

@@ -23,13 +23,14 @@ main (gint argc, gchar ** argv)
 {
   GstElement *pipeline;
   GError *error = NULL;
-  guint i = 0;
 
   gst_init (&argc, &argv);
 
   g_print ("setting up...\n");
   /* setup pipeline */
-  pipeline = gst_parse_launch ("pipeline.( { fakesrc ! fakesink } )", &error);
+  pipeline =
+      gst_parse_launch
+      ("pipeline.( pipeline.( fakesrc num-buffers=1000 ! fakesink ) )", &error);
   g_assert (error == NULL);
   g_assert (pipeline);
 
@@ -37,11 +38,9 @@ main (gint argc, gchar ** argv)
   g_print ("running...\n");
   if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
     g_assert_not_reached ();
-  while (i < 100 && gst_bin_iterate (GST_BIN (pipeline)))
-    i++;
+  gst_bin_iterate (GST_BIN (pipeline));
 
-  g_print ("cleaning up... (%d iterations)\n", i);
-  g_assert (i == 100);
+  g_print ("cleaning up...\n");
   gst_object_unref (GST_OBJECT (pipeline));
   pipeline = NULL;
 

@@ -91,7 +91,7 @@ static gchar *s;
 #define PIPELINE3  "fakesrc identity fakesink"
 #define PIPELINE4  "fakesrc num-buffers=4 .src ! identity !.sink identity .src ! .sink fakesink"
 #define PIPELINE5  "fakesrc num-buffers=4 name=src identity name=id1 identity name = id2 fakesink name =sink src. ! id1. id1.! id2.sink id2.src!sink.sink"
-#define PIPELINE6  "pipeline.(name=\"john\" fakesrc num-buffers=4 ( thread. ( ! queue ! identity !{ queue ! fakesink }) ))"
+#define PIPELINE6  "pipeline.(name=\"john\" fakesrc num-buffers=4 ( bin. ( ! queue ! identity !( queue ! fakesink )) ))"
 #define PIPELINE7  "fakesrc num-buffers=4 ! tee name=tee .src%d! fakesink tee.src%d ! fakesink fakesink name =\"foo\" tee.src%d ! foo."
 /* aggregator is borked
 #define PIPELINE8  "fakesrc num-buffers=4 ! tee name=tee1 .src0,src1 ! .sink0, sink1 aggregator ! fakesink"

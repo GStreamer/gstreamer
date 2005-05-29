@@ -1,10 +1,5 @@
 lib_LTLIBRARIES = libgstreamer-@GST_MAJORMINOR@.la
 AS_LIBTOOL_LIB = libgstreamer-@GST_MAJORMINOR@
-if GST_DISABLE_OMEGA_COTHREADS
-noinst_LTLIBRARIES =
-else
-noinst_LTLIBRARIES = libcothreads.la
-endif
 
 #GST_INSTRUMENT_FLAGS = -finstrument-functions -DGST_ENABLE_FUNC_INSTRUMENTATION
 
@@ -82,6 +77,7 @@ EXTRA_libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gst.c			\
 	gstobject.c		\
+	gstaction.c		\
 	gstbin.c		\
 	gstbuffer.c		\
 	gstcaps.c		\
@@ -104,11 +100,11 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstqueue.c		\
 	gstquery.c		\
 	gstscheduler.c		\
+	gstschedulerfactory.c	\
 	gststructure.c		\
 	gstsystemclock.c	\
 	gsttag.c		\
 	gsttaginterface.c	\
-	gstthread.c		\
 	$(GST_TRACE_SRC)	\
 	gsttypefind.c		\
 	$(GST_URI_SRC)		\
@@ -150,6 +146,7 @@ libgstreamer_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINO
 
 gst_headers =			\
 	gst.h			\
+	gstaction.h		\
 	gstobject.h		\
 	gstbin.h		\
 	gstbuffer.h		\
@@ -174,11 +171,11 @@ gst_headers =			\
 	gstqueue.h		\
 	gstquery.h		\
 	gstscheduler.h		\
+	gstschedulerfactory.h	\
 	gststructure.h		\
 	gstsystemclock.h	\
 	gsttag.h		\
 	gsttaginterface.h	\
-	gstthread.h		\
 	gsttrace.h		\
 	gsttypefind.h		\
 	gsttypes.h		\
@@ -201,16 +198,7 @@ noinst_HEADERS = 		\
 	gst-i18n-app.h		\
 	gst_private.h		\
 	gstdata_private.h	\
-	gstarch.h		\
-	cothreads.h		
-
-if GST_DISABLE_OMEGA_COTHREADS
-#libcothreads_la_SOURCES =
-#libcothreads_la_CFLAGS =
-else
-libcothreads_la_SOURCES = cothreads.c
-libcothreads_la_CFLAGS = $(libgstreamer_@GST_MAJORMINOR@_la_CFLAGS) 
-endif
+	gstarch.h
 
 
 gstmarshal.h: gstmarshal.list

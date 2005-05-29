@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-05-02 19:36+0200\n"
+"POT-Creation-Date: 2005-05-17 18:37+0200\n"
 "PO-Revision-Date: 2004-06-05 09:32+0100\n"
 "Last-Translator: Roland Illig <roland.illig@gmx.de>\n"
 "Language-Team: German <de@li.org>\n"
@@ -15,30 +15,30 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:160
+#: gst/gst.c:157
 msgid "Print the GStreamer version"
 msgstr "Die Version von GStreamer ausgeben"
 
-#: gst/gst.c:162
+#: gst/gst.c:159
 msgid "Make all warnings fatal"
 msgstr "Alle Warnungen wie Fehler behandeln"
 
-#: gst/gst.c:166
+#: gst/gst.c:163
 msgid "Print available debug categories and exit"
 msgstr "Verfügbare Debuggingkategorien ausgeben und Programm beenden"
 
-#: gst/gst.c:169
+#: gst/gst.c:166
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Standarddebugginglevel von 1 (nur Fehler) bis 5 (Alles) oder 0 für keine "
 "Ausgabe"
 
-#: gst/gst.c:171
+#: gst/gst.c:168
 msgid "LEVEL"
 msgstr "LEVEL"
 
-#: gst/gst.c:173
+#: gst/gst.c:170
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -47,31 +47,27 @@ msgstr ""
 "Meldungsarten individuelle Level zuzuordnen. Beispiel: GST_AUTOPLUG:5,"
 "GST_ELEMENT_*:3"
 
-#: gst/gst.c:176
+#: gst/gst.c:173
 msgid "LIST"
 msgstr "LIST"
 
-#: gst/gst.c:178
+#: gst/gst.c:175
 msgid "Disable colored debugging output"
 msgstr "Farbige Debuggingausgabe deaktivieren"
 
-#: gst/gst.c:180
+#: gst/gst.c:177
 msgid "Disable debugging"
 msgstr "Debugging deaktivieren"
 
-#: gst/gst.c:184
-msgid "Disable accelerated CPU instructions"
-msgstr "Beschleunigte CPU-Befehle deaktivieren"
-
-#: gst/gst.c:186
+#: gst/gst.c:181
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Gesprächige Meldungen beim Laden von Plugins aktivieren"
 
-#: gst/gst.c:188
+#: gst/gst.c:183
 msgid "PATHS"
 msgstr "PATHS"
 
-#: gst/gst.c:191
+#: gst/gst.c:186
 #, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -80,32 +76,32 @@ msgstr ""
 "Kommagetrennte Liste von Plugins, die zusätzliche zu den Plugins in der "
 "Umgebungsvariable GST_PLUGIN_PATH geladen werden"
 
-#: gst/gst.c:193
+#: gst/gst.c:188
 msgid "PLUGINS"
 msgstr "PLUGINS"
 
-#: gst/gst.c:196
+#: gst/gst.c:191
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Verfolgen von Speicherfehlern beim Laden von Plugins deaktivieren"
 
-#: gst/gst.c:199
+#: gst/gst.c:194
 msgid "SCHEDULER"
 msgstr "SCHEDULER"
 
-#: gst/gst.c:201
+#: gst/gst.c:196
 msgid "Registry to use"
 msgstr "Zu benutzende Registry"
 
-#: gst/gst.c:201
+#: gst/gst.c:196
 msgid "REGISTRY"
 msgstr "REGISTRY"
 
-#: gst/gst.c:214
+#: gst/gst.c:209
 #, c-format
 msgid "path list for loading plugins (separated by '%s')"
 msgstr "Pfadliste zum Laden von Plugins (Durch »%s« getrennt)"
 
-#: gst/gst.c:218
+#: gst/gst.c:213
 #, c-format
 msgid "Scheduler to use (default is '%s')"
 msgstr "Zu benutzender Scheduler (Standard: »%s«)"
@@ -615,53 +611,46 @@ msgstr ""
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:466
-#, c-format
-msgid "There is no element present to handle the stream's mime type %s."
-msgstr ""
-"Es gibt kein Element, das den MIME-Typ »%s« dieses Datenstroms verarbeiten "
-"kann."
-
-#: gst/elements/gstfilesink.c:268
+#: gst/elements/gstfilesink.c:243
 msgid "No file name specified for writing."
 msgstr "Kein Dateiname zum Schreiben angegeben."
 
-#: gst/elements/gstfilesink.c:275
+#: gst/elements/gstfilesink.c:250
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Konnte Datei »%s« nicht zum Schreiben öffnen."
 
-#: gst/elements/gstfilesink.c:294
+#: gst/elements/gstfilesink.c:269
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Fehler beim Schließen der Datei »%s«."
 
-#: gst/elements/gstfilesink.c:364 gst/elements/gstfilesink.c:400
-#: gst/elements/gstfilesink.c:453
+#: gst/elements/gstfilesink.c:339 gst/elements/gstfilesink.c:375
+#: gst/elements/gstfilesink.c:428
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Fehler beim Schreiben der Daten »%s«."
 
-#: gst/elements/gstfilesrc.c:764 gst/elements/gstmultifilesrc.c:298
+#: gst/elements/gstfilesrc.c:725
 msgid "No file name specified for reading."
 msgstr "Kein Dateiname zum Lesen angegeben."
 
-#: gst/elements/gstfilesrc.c:779 gst/elements/gstmultifilesrc.c:306
+#: gst/elements/gstfilesrc.c:740
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Konnte die Datei »%s« nicht zum Lesen öffnen."
 
-#: gst/elements/gstfilesrc.c:790
+#: gst/elements/gstfilesrc.c:751
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr ""
 
-#: gst/elements/gstfilesrc.c:796
+#: gst/elements/gstfilesrc.c:757
 #, fuzzy, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Die Datei »%s« ist keine normale Datei."
 
-#: gst/elements/gstidentity.c:306
+#: gst/elements/gstidentity.c:276
 msgid "Failed after iterations as requested."
 msgstr "Nach dem Durchlaufen fehlgeschlagen. Wie gewünscht."
 
@@ -750,123 +739,79 @@ msgstr "Konnte Zielelement für URI »%s« nicht verbinden"
 msgid "empty pipeline not allowed"
 msgstr "Leere Leitung ist nicht erlaubt"
 
-#: tools/gst-inspect.c:1151
+#: tools/gst-inspect.c:1032
 #, fuzzy
 msgid "Print all elements"
 msgstr "Kein Element »%s«"
 
-#: tools/gst-launch.c:114
-#, c-format
-msgid ""
-"Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
-"max %s ns).\n"
-msgstr ""
-
-#: tools/gst-launch.c:141
-msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr "Aufruf: gst-xmllaunch <file.xml> [ element.eigenschaft=wert ...]\n"
-
-#: tools/gst-launch.c:149
-#, c-format
-msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "FEHLER: Parsen der XML-Datei »%s« fehlgeschlagen.\n"
-
-#: tools/gst-launch.c:155
-#, c-format
-msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr "FEHLER: Kein Hauptleitungselement in Datei »%s«.\n"
-
-#: tools/gst-launch.c:162
-#, c-format
-msgid "WARNING: only one toplevel element is supported at this time."
-msgstr "WARNUNG: Zur Zeit wird nur ein Hauptleitungselement unterstützt."
-
-#: tools/gst-launch.c:173
-#, c-format
-msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr "FEHLER: Konnte das Kommandozeilenargument %d nicht parsen: %s.\n"
-
-#: tools/gst-launch.c:184
-#, c-format
-msgid "WARNING: element named '%s' not found.\n"
-msgstr "WARNUNG: Element namens »%s« nicht gefunden.\n"
-
-#: tools/gst-launch.c:327
+#: tools/gst-launch.c:190
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "KENNZEICHEN GEFUNDEN: Von Element »%s« gefunden.\n"
 
-#: tools/gst-launch.c:412
+#: tools/gst-launch.c:304
 msgid "Output tags (also known as metadata)"
 msgstr "Kennzeichen (auch bekannt als Metadaten) ausgeben"
 
-#: tools/gst-launch.c:414
+#: tools/gst-launch.c:306
 msgid "Output status information and property notifications"
 msgstr "Zustandsinformation und Eigenschaftsmitteilungen ausgeben"
 
-#: tools/gst-launch.c:416
+#: tools/gst-launch.c:308
 msgid "Do not output status information of TYPE"
 msgstr "Zustandsinformation der Art ART nicht ausgeben"
 
-#: tools/gst-launch.c:416
+#: tools/gst-launch.c:308
 msgid "TYPE1,TYPE2,..."
 msgstr "ART1,ART2,..."
 
-#: tools/gst-launch.c:419
-msgid "Save xml representation of pipeline to FILE and exit"
-msgstr "XML-Repräsentation der Pipeline in DATEI speichern und beenden"
-
-#: tools/gst-launch.c:419
-msgid "FILE"
-msgstr "DATEI"
-
-#: tools/gst-launch.c:422
+#: tools/gst-launch.c:310
 msgid "Do not install a fault handler"
 msgstr "Keine Routine zum Abfangen von Fehlern installieren"
 
-#: tools/gst-launch.c:424
+#: tools/gst-launch.c:312
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr ""
 "Speicherzuordnungsverfolgung ausgeben (falls zur Compilierzeit aktiviert)"
 
-#: tools/gst-launch.c:426
+#: tools/gst-launch.c:314
 msgid "Number of times to iterate pipeline"
 msgstr "Anzahl, wie oft die Leitung durchlaufen wird"
 
-#: tools/gst-launch.c:496
+#: tools/gst-launch.c:379
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FEHLER: Leitung konnte nicht konstruiert werden: %s.\n"
 
-#: tools/gst-launch.c:500
-#, c-format
+#: tools/gst-launch.c:383
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "FEHLER: Leitung konnte nicht konstruiert werden.\n"
 
-#: tools/gst-launch.c:504
+#: tools/gst-launch.c:387
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "WARNUNG: Fehlerhafte Leitung: %s\n"
 
-#: tools/gst-launch.c:505
-#, c-format
+#: tools/gst-launch.c:388
 msgid "         Trying to run anyway.\n"
 msgstr "         Versuche trotzdem zu laufen.\n"
 
-#: tools/gst-launch.c:532
-#, c-format
+#: tools/gst-launch.c:408
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FEHLER: Das »pipeline«-Element wurde nicht gefunden.\n"
 
-#: tools/gst-launch.c:539
-#, c-format
+#: tools/gst-launch.c:417
 msgid "RUNNING pipeline ...\n"
 msgstr "FÜHRE Leitung AUS ...\n"
 
-#: tools/gst-launch.c:542
-#, c-format
+#: tools/gst-launch.c:421
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FEHLER: Leitung möchte nicht abgespielt werden.\n"
+
+#: tools/gst-launch.c:445
+#, c-format
+msgid "Execution ended after %.2fs (%.2fs or %.2f%% idling).\n"
+msgstr ""
 
 #: tools/gst-register.c:49
 #, c-format
@@ -901,6 +846,38 @@ msgid "Loaded %d plugins with %d feature.\n"
 msgid_plural "Loaded %d plugins with %d features.\n"
 msgstr[0] ""
 msgstr[1] ""
+
+#~ msgid "Disable accelerated CPU instructions"
+#~ msgstr "Beschleunigte CPU-Befehle deaktivieren"
+
+#~ msgid "There is no element present to handle the stream's mime type %s."
+#~ msgstr ""
+#~ "Es gibt kein Element, das den MIME-Typ »%s« dieses Datenstroms "
+#~ "verarbeiten kann."
+
+#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+#~ msgstr "Aufruf: gst-xmllaunch <file.xml> [ element.eigenschaft=wert ...]\n"
+
+#~ msgid "ERROR: parse of xml file '%s' failed.\n"
+#~ msgstr "FEHLER: Parsen der XML-Datei »%s« fehlgeschlagen.\n"
+
+#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+#~ msgstr "FEHLER: Kein Hauptleitungselement in Datei »%s«.\n"
+
+#~ msgid "WARNING: only one toplevel element is supported at this time."
+#~ msgstr "WARNUNG: Zur Zeit wird nur ein Hauptleitungselement unterstützt."
+
+#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
+#~ msgstr "FEHLER: Konnte das Kommandozeilenargument %d nicht parsen: %s.\n"
+
+#~ msgid "WARNING: element named '%s' not found.\n"
+#~ msgstr "WARNUNG: Element namens »%s« nicht gefunden.\n"
+
+#~ msgid "Save xml representation of pipeline to FILE and exit"
+#~ msgstr "XML-Repräsentation der Pipeline in DATEI speichern und beenden"
+
+#~ msgid "FILE"
+#~ msgstr "DATEI"
 
 #~ msgid "caps"
 #~ msgstr "Fähigkeiten"

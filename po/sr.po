@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-05-02 19:36+0200\n"
+"POT-Creation-Date: 2005-05-17 18:37+0200\n"
 "PO-Revision-Date: 2005-01-27 16:58+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -16,30 +16,30 @@ msgstr ""
 "Plural-Forms: nplurals=3;    plural=n%10==1 && n%100!=11 ? 0 :    n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
 
-#: gst/gst.c:160
+#: gst/gst.c:157
 msgid "Print the GStreamer version"
 msgstr "Испиши издање Гстримера"
 
-#: gst/gst.c:162
+#: gst/gst.c:159
 msgid "Make all warnings fatal"
 msgstr "Учини сва упозорења кобним"
 
-#: gst/gst.c:166
+#: gst/gst.c:163
 msgid "Print available debug categories and exit"
 msgstr "Испиши доступне категорије за налажење грешака и заврши"
 
-#: gst/gst.c:169
+#: gst/gst.c:166
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Подразумевани ниво опширности од 1 (само грешке) до 5 (све) или 0 (без "
 "излаза)"
 
-#: gst/gst.c:171
+#: gst/gst.c:168
 msgid "LEVEL"
 msgstr "НИВО"
 
-#: gst/gst.c:173
+#: gst/gst.c:170
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -47,31 +47,27 @@ msgstr ""
 "Запетом раздвојени списак парова име_категорије:ниво за постављање нарочитих "
 "нивоа за појединачне категорије. Пример: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:176
+#: gst/gst.c:173
 msgid "LIST"
 msgstr "СПИСАК"
 
-#: gst/gst.c:178
+#: gst/gst.c:175
 msgid "Disable colored debugging output"
 msgstr "Искључи обојени излаз за исправљање грешака"
 
-#: gst/gst.c:180
+#: gst/gst.c:177
 msgid "Disable debugging"
 msgstr "Искључи исправљање грешака"
 
-#: gst/gst.c:184
-msgid "Disable accelerated CPU instructions"
-msgstr "Искључи убрзане инструкције процесора"
-
-#: gst/gst.c:186
+#: gst/gst.c:181
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Укључи опширну дијагностику при учитавању додатка"
 
-#: gst/gst.c:188
+#: gst/gst.c:183
 msgid "PATHS"
 msgstr "ПУТАЊЕ"
 
-#: gst/gst.c:191
+#: gst/gst.c:186
 #, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -80,32 +76,32 @@ msgstr ""
 "Запетом раздвојен списак додатака који се предучитавају поред списка из "
 "променљиве окружења GST_PLUGIN_PATH"
 
-#: gst/gst.c:193
+#: gst/gst.c:188
 msgid "PLUGINS"
 msgstr "ДОДАЦИ"
 
-#: gst/gst.c:196
+#: gst/gst.c:191
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Искључи пресретање погрешних приступа меморији при учитавању додатака"
 
-#: gst/gst.c:199
+#: gst/gst.c:194
 msgid "SCHEDULER"
 msgstr "РАСПОРЕЂИВАЧ"
 
-#: gst/gst.c:201
+#: gst/gst.c:196
 msgid "Registry to use"
 msgstr "Користи регистар"
 
-#: gst/gst.c:201
+#: gst/gst.c:196
 msgid "REGISTRY"
 msgstr "РЕГИСТАР"
 
-#: gst/gst.c:214
+#: gst/gst.c:209
 #, c-format
 msgid "path list for loading plugins (separated by '%s')"
 msgstr "списак путања за учитавање додатака (раздвојених са '%s')"
 
-#: gst/gst.c:218
+#: gst/gst.c:213
 #, c-format
 msgid "Scheduler to use (default is '%s')"
 msgstr "Користи распоређивач (подразумева се '%s')"
@@ -591,51 +587,46 @@ msgstr ""
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:466
-#, c-format
-msgid "There is no element present to handle the stream's mime type %s."
-msgstr "Није присутан елемент за баратање током МИМЕ врсте %s."
-
-#: gst/elements/gstfilesink.c:268
+#: gst/elements/gstfilesink.c:243
 msgid "No file name specified for writing."
 msgstr "Није наведено име датотеке за упис."
 
-#: gst/elements/gstfilesink.c:275
+#: gst/elements/gstfilesink.c:250
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Не могу да отворим датотеку „%s“ ради уписа."
 
-#: gst/elements/gstfilesink.c:294
+#: gst/elements/gstfilesink.c:269
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Грешка при затварању датотеке „%s“."
 
-#: gst/elements/gstfilesink.c:364 gst/elements/gstfilesink.c:400
-#: gst/elements/gstfilesink.c:453
+#: gst/elements/gstfilesink.c:339 gst/elements/gstfilesink.c:375
+#: gst/elements/gstfilesink.c:428
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Грешка при упису у датотеку „%s“."
 
-#: gst/elements/gstfilesrc.c:764 gst/elements/gstmultifilesrc.c:298
+#: gst/elements/gstfilesrc.c:725
 msgid "No file name specified for reading."
 msgstr "Није наведено име датотеке за читање."
 
-#: gst/elements/gstfilesrc.c:779 gst/elements/gstmultifilesrc.c:306
+#: gst/elements/gstfilesrc.c:740
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не могу да отворим датотеку „%s“ ради читања."
 
-#: gst/elements/gstfilesrc.c:790
+#: gst/elements/gstfilesrc.c:751
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" је директоријум."
 
-#: gst/elements/gstfilesrc.c:796
+#: gst/elements/gstfilesrc.c:757
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Датотека „%s“ је сокет."
 
-#: gst/elements/gstidentity.c:306
+#: gst/elements/gstidentity.c:276
 msgid "Failed after iterations as requested."
 msgstr "Неуспех након траженог броја покушаја."
 
@@ -724,124 +715,77 @@ msgstr "не могу да вежем завршни елемент за адр�
 msgid "empty pipeline not allowed"
 msgstr "није допуштен празан цевовод"
 
-#: tools/gst-inspect.c:1151
+#: tools/gst-inspect.c:1032
 msgid "Print all elements"
 msgstr "Испиши све елементе"
 
-#: tools/gst-launch.c:114
-#, c-format
-msgid ""
-"Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
-"max %s ns).\n"
-msgstr ""
-"Извршавање завршено након %s покушаја (збир %s ns, просек %s ns, мин %s ns, "
-"макс %s ns).\n"
-
-#: tools/gst-launch.c:141
-msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr ""
-"Употреба: gst-xmllaunch <датотека.xml> [ елемент.особина=вредност ... ]\n"
-
-#: tools/gst-launch.c:149
-#, c-format
-msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "ГРЕШКА: неуспешно рашчлањивање xml датотеке „%s“.\n"
-
-#: tools/gst-launch.c:155
-#, c-format
-msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr "ГРЕШКА: нема врховног елемента цевовода у датотеци „%s“.\n"
-
-#: tools/gst-launch.c:162
-#, c-format
-msgid "WARNING: only one toplevel element is supported at this time."
-msgstr "УПОЗОРЕЊЕ: тренутно је подржан само један врховни елемент."
-
-#: tools/gst-launch.c:173
-#, c-format
-msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr "ГРЕШКА: не могу да рашчланим %d. аргумент наредбе: %s.\n"
-
-#: tools/gst-launch.c:184
-#, c-format
-msgid "WARNING: element named '%s' not found.\n"
-msgstr "УПОЗОРЕЊЕ: елемент са именом „%s“ није нађен.\n"
-
-#: tools/gst-launch.c:327
+#: tools/gst-launch.c:190
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "НАЂОХ ОЗНАКУ   : нашао је елемент „%s“.\n"
 
-#: tools/gst-launch.c:412
+#: tools/gst-launch.c:304
 msgid "Output tags (also known as metadata)"
 msgstr "Излазне ознаке (такође познато и као метаподаци)"
 
-#: tools/gst-launch.c:414
+#: tools/gst-launch.c:306
 msgid "Output status information and property notifications"
 msgstr "Испиши податке о стању и обавештења о особинама"
 
-#: tools/gst-launch.c:416
+#: tools/gst-launch.c:308
 msgid "Do not output status information of TYPE"
 msgstr "Не исписуј податке о стању за ВРСТУ"
 
-#: tools/gst-launch.c:416
+#: tools/gst-launch.c:308
 msgid "TYPE1,TYPE2,..."
 msgstr "ВРСТА1,ВРСТА2,..."
 
-#: tools/gst-launch.c:419
-msgid "Save xml representation of pipeline to FILE and exit"
-msgstr "Сачувај xml облик цевовода у ДАТОТЕКУ и заврши"
-
-#: tools/gst-launch.c:419
-msgid "FILE"
-msgstr "ДАТОТЕКА"
-
-#: tools/gst-launch.c:422
+#: tools/gst-launch.c:310
 msgid "Do not install a fault handler"
 msgstr "Не постављај руковаоца грешкама"
 
-#: tools/gst-launch.c:424
+#: tools/gst-launch.c:312
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Испиши траг доделе меморије (ако је укључено при превођењу)"
 
-#: tools/gst-launch.c:426
+#: tools/gst-launch.c:314
 msgid "Number of times to iterate pipeline"
 msgstr "Број покушаја пуштања цевовода"
 
-#: tools/gst-launch.c:496
+#: tools/gst-launch.c:379
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ГРЕШКА: не могу да саставим цевовод: %s.\n"
 
-#: tools/gst-launch.c:500
-#, c-format
+#: tools/gst-launch.c:383
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ГРЕШКА: не могу да саставим цевовод.\n"
 
-#: tools/gst-launch.c:504
+#: tools/gst-launch.c:387
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "УПОЗОРЕЊЕ: неисправан цевовод: %s\n"
 
-#: tools/gst-launch.c:505
-#, c-format
+#: tools/gst-launch.c:388
 msgid "         Trying to run anyway.\n"
 msgstr "         Ипак покушавам да покренем.\n"
 
-#: tools/gst-launch.c:532
-#, c-format
+#: tools/gst-launch.c:408
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ГРЕШКА: елемент „pipeline“ није нађен.\n"
 
-#: tools/gst-launch.c:539
-#, c-format
+#: tools/gst-launch.c:417
 msgid "RUNNING pipeline ...\n"
 msgstr "Покрећем цевовод...\n"
 
-#: tools/gst-launch.c:542
-#, c-format
+#: tools/gst-launch.c:421
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ГРЕШКА: цевовод не жели да пусти.\n"
+
+#: tools/gst-launch.c:445
+#, c-format
+msgid "Execution ended after %.2fs (%.2fs or %.2f%% idling).\n"
+msgstr ""
 
 #: tools/gst-register.c:49
 #, fuzzy, c-format
@@ -878,6 +822,44 @@ msgid_plural "Loaded %d plugins with %d features.\n"
 msgstr[0] "Учитано %d додатака са %d %s.\n"
 msgstr[1] "Учитано %d додатака са %d %s.\n"
 msgstr[2] "Учитано %d додатака са %d %s.\n"
+
+#~ msgid "Disable accelerated CPU instructions"
+#~ msgstr "Искључи убрзане инструкције процесора"
+
+#~ msgid "There is no element present to handle the stream's mime type %s."
+#~ msgstr "Није присутан елемент за баратање током МИМЕ врсте %s."
+
+#~ msgid ""
+#~ "Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
+#~ "max %s ns).\n"
+#~ msgstr ""
+#~ "Извршавање завршено након %s покушаја (збир %s ns, просек %s ns, мин %s "
+#~ "ns, макс %s ns).\n"
+
+#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+#~ msgstr ""
+#~ "Употреба: gst-xmllaunch <датотека.xml> [ елемент.особина=вредност ... ]\n"
+
+#~ msgid "ERROR: parse of xml file '%s' failed.\n"
+#~ msgstr "ГРЕШКА: неуспешно рашчлањивање xml датотеке „%s“.\n"
+
+#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+#~ msgstr "ГРЕШКА: нема врховног елемента цевовода у датотеци „%s“.\n"
+
+#~ msgid "WARNING: only one toplevel element is supported at this time."
+#~ msgstr "УПОЗОРЕЊЕ: тренутно је подржан само један врховни елемент."
+
+#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
+#~ msgstr "ГРЕШКА: не могу да рашчланим %d. аргумент наредбе: %s.\n"
+
+#~ msgid "WARNING: element named '%s' not found.\n"
+#~ msgstr "УПОЗОРЕЊЕ: елемент са именом „%s“ није нађен.\n"
+
+#~ msgid "Save xml representation of pipeline to FILE and exit"
+#~ msgstr "Сачувај xml облик цевовода у ДАТОТЕКУ и заврши"
+
+#~ msgid "FILE"
+#~ msgstr "ДАТОТЕКА"
 
 # bug: this should be full word
 #~ msgid "caps"

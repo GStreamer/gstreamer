@@ -4,15 +4,13 @@ tests_pass = \
 	unlink_src unlink_sink \
 	relink_src relink_sink \
 	unref_src unref_sink \
-	142183 142183-2 \
+	142183-2 \
 	143777 143777-2 \
-        147713 \
         147819 \
-        147894 147894-2 group_link \
-	queue_link
+        group_link \
+	queue_link \
+	useless_iteration
 
-# don't enable this one unless it actually works.
-#	useless_iteration
 tests_fail =
 tests_ignore =
 

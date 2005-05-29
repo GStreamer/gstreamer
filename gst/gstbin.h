@@ -41,7 +41,6 @@ GST_EXPORT GType _gst_bin_type;
  * GstBinFlags:
  * @GST_BIN_FLAG_MANAGER: this bin is a manager of child elements, i.e.
  * a pipeline or thread.
- * @GST_BIN_SELF_SCHEDULABLE: the bin iterates itself.
  * @GST_BIN_FLAG_PREFER_COTHREADS: we prefer to have cothreads when its
  * an option, over chain-based.
  * @GST_BIN_FLAG_FIXED_CLOCK: bin has one clock that cannot be changed.
@@ -59,7 +58,6 @@ GST_EXPORT GType _gst_bin_type;
  */
 typedef enum {
   GST_BIN_FLAG_MANAGER		= GST_ELEMENT_FLAG_LAST,
-  GST_BIN_SELF_SCHEDULABLE,
   GST_BIN_FLAG_PREFER_COTHREADS,
   GST_BIN_FLAG_FIXED_CLOCK,
   GST_BIN_STATE_LOCKED,
@@ -90,9 +88,6 @@ struct _GstBinClass {
   void		(*child_state_change)	(GstBin *bin, GstElementState oldstate, 
 					 GstElementState newstate, GstElement *element);
 
-  /* run a full iteration of operation */
-  gboolean	(*iterate)		(GstBin *bin);
-
   /* signals */
   void		(*element_added)	(GstBin *bin, GstElement *child);
   void		(*element_removed)	(GstBin *bin, GstElement *child);
@@ -116,8 +111,6 @@ G_CONST_RETURN GList*
 		gst_bin_get_list		(GstBin *bin);
 GstElement*	gst_bin_get_by_interface	(GstBin *bin, GType interface);
 GList *		gst_bin_get_all_by_interface	(GstBin *bin, GType interface);
-
-gboolean	gst_bin_iterate			(GstBin *bin);
 
 void		gst_bin_use_clock		(GstBin *bin, GstClock *clock);
 GstClock*	gst_bin_get_clock		(GstBin *bin);

@@ -163,8 +163,7 @@ enum
 enum
 {
   REAL_ARG_0,
-  REAL_ARG_CAPS,
-  REAL_ARG_ACTIVE
+  REAL_ARG_CAPS
       /* FILL ME */
 };
 
@@ -232,9 +231,6 @@ gst_real_pad_class_init (GstRealPadClass * klass)
       gst_marshal_BOXED__BOXED, GST_TYPE_CAPS, 1,
       GST_TYPE_CAPS | G_SIGNAL_TYPE_STATIC_SCOPE);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), REAL_ARG_ACTIVE,
-      g_param_spec_boolean ("active", "Active", "Whether the pad is active.",
-          TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), REAL_ARG_CAPS,
       g_param_spec_boxed ("caps", "Caps", "The capabilities of the pad",
           GST_TYPE_CAPS, G_PARAM_READABLE));
@@ -261,31 +257,11 @@ static void
 gst_real_pad_init (GstRealPad * pad)
 {
   pad->direction = GST_PAD_UNKNOWN;
-  pad->peer = NULL;
 
-  pad->chainfunc = NULL;
-  pad->getfunc = NULL;
-
-  pad->chainhandler = NULL;
-  pad->gethandler = NULL;
-
-  pad->ghostpads = NULL;
-  pad->caps = NULL;
-
-  pad->linkfunc = NULL;
-  pad->getcapsfunc = NULL;
-
-  pad->eventfunc = gst_pad_event_default;
+  pad->eventhandler = gst_pad_event_default;
   pad->convertfunc = gst_pad_convert_default;
   pad->queryfunc = gst_pad_query_default;
   pad->intlinkfunc = gst_pad_get_internal_links_default;
-
-  pad->eventmaskfunc = gst_pad_get_event_masks_default;
-  pad->formatsfunc = gst_pad_get_formats_default;
-  pad->querytypefunc = gst_pad_get_query_types_default;
-
-  GST_FLAG_SET (pad, GST_PAD_DISABLED);
-  GST_FLAG_UNSET (pad, GST_PAD_NEGOTIATING);
 }
 
 static void
@@ -295,9 +271,6 @@ gst_real_pad_set_property (GObject * object, guint prop_id,
   g_return_if_fail (GST_IS_PAD (object));
 
   switch (prop_id) {
-    case REAL_ARG_ACTIVE:
-      gst_pad_set_active (GST_PAD (object), g_value_get_boolean (value));
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -311,9 +284,6 @@ gst_real_pad_get_property (GObject * object, guint prop_id,
   g_return_if_fail (GST_IS_PAD (object));
 
   switch (prop_id) {
-    case REAL_ARG_ACTIVE:
-      g_value_set_boolean (value, !GST_FLAG_IS_SET (object, GST_PAD_DISABLED));
-      break;
     case REAL_ARG_CAPS:
       g_value_set_boxed (value, GST_PAD_CAPS (GST_REAL_PAD (object)));
       break;
@@ -321,6 +291,44 @@ gst_real_pad_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+/**
+ * gst_pad_push:
+ * @pad: a source #GstPad.
+ * @data: the #GstData to push.
+ *
+ * Pushes a buffer or an event to the peer of @pad. @pad must be negotiated. 
+ * May only be called by @pad's parent and only if the parent has the 
+ * GST_ELEMENT_PUSHING flag set.
+ */
+void
+gst_pad_push (GstPad * pad, GstData * data)
+{
+  GstElement *parent;
+  GstScheduler *sched;
+
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (GST_PAD_IS_SRC (pad));
+  g_return_if_fail (data != NULL);
+
+  parent = gst_pad_get_parent (pad);
+  g_return_if_fail (GST_IS_ELEMENT (parent));
+  g_return_if_fail (GST_ELEMENT_IS_PUSHING (parent));
+  //DEBUG_DATA (pad, data, "gst_pad_push");
+
+  if (!gst_pad_is_negotiated (pad)) {
+    g_warning ("pushing data on non-negotiated pad %s:%s, not allowed.",
+        GST_DEBUG_PAD_NAME (pad));
+    gst_data_unref (data);
+    return;
+  }
+
+  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "pushing");
+
+  sched = GST_ELEMENT_SCHED (parent);
+  g_return_if_fail (sched);
+  gst_scheduler_pad_push (sched, GST_REAL_PAD (pad), data);
 }
 
 /* FIXME-0.9: Replace these custom functions with proper inheritance via _init
@@ -433,99 +441,23 @@ gst_pad_get_direction (GstPad * pad)
 }
 
 /**
- * gst_pad_set_active:
+ * gst_real_pad_set_active:
  * @pad: the #GstPad to activate or deactivate.
  * @active: TRUE to activate the pad.
  *
  * Activates or deactivates the given pad.
  */
 void
-gst_pad_set_active (GstPad * pad, gboolean active)
+gst_real_pad_set_active (GstRealPad * pad, gboolean active)
 {
-  GstRealPad *realpad;
-  gboolean old;
-  GstPadLink *link;
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
 
-  g_return_if_fail (GST_IS_PAD (pad));
-
-  old = GST_PAD_IS_ACTIVE (pad);
-
-  if (old == active)
-    return;
-
-  realpad = GST_PAD_REALIZE (pad);
-
-  if (active) {
-    GST_CAT_DEBUG (GST_CAT_PADS, "activating pad %s:%s",
-        GST_DEBUG_PAD_NAME (realpad));
-    GST_FLAG_UNSET (realpad, GST_PAD_DISABLED);
-  } else {
-    GST_CAT_DEBUG (GST_CAT_PADS, "de-activating pad %s:%s",
-        GST_DEBUG_PAD_NAME (realpad));
-    GST_FLAG_SET (realpad, GST_PAD_DISABLED);
-  }
-  link = GST_RPAD_LINK (realpad);
-  if (link) {
-    if (link->temp_store) {
-      GST_CAT_INFO (GST_CAT_PADS,
-          "deleting cached data %p from bufpen of pad %s:%s", link->temp_store,
-          GST_DEBUG_PAD_NAME (realpad));
-      gst_data_unref (link->temp_store);
-      link->temp_store = NULL;
-    }
-  }
-
-  g_object_notify (G_OBJECT (realpad), "active");
+  g_return_if_fail (pad->action != NULL);
+  gst_action_set_active (pad->action, active);
 }
 
 /**
- * gst_pad_set_active_recursive:
- * @pad: the #GstPad to activate or deactivate.
- * @active: TRUE to activate the pad.
- *
- * Activates or deactivates the given pad and all internally linked
- * pads upstream until it finds an element with multiple source pads.
- */
-void
-gst_pad_set_active_recursive (GstPad * pad, gboolean active)
-{
-  GstElement *parent;
-  const GList *int_links;
-
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (GST_PAD_IS_SRC (pad));
-
-  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
-      "Recursively %s pad %s:%s", active ? "activating" : "deactivating",
-      GST_DEBUG_PAD_NAME (pad));
-
-  gst_pad_set_active (pad, active);
-
-  /* If we have more than one sourcepad, then the other pads should
-   * possibly be kept active. FIXME: maybe we should recurse
-   * activation if any one pad is active and recurse deactivation
-   * if no single pad is active? */
-  parent = gst_pad_get_parent (pad);
-  if (!parent || parent->numsrcpads > 1)
-    return;
-
-  for (int_links = gst_pad_get_internal_links (pad);
-      int_links; int_links = g_list_next (int_links)) {
-    GstPad *sinkpad = GST_PAD (int_links->data);
-    GstPad *peer = GST_PAD_PEER (sinkpad);
-
-    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, sinkpad,
-        "Recursing %s on pad %s:%s",
-        active ? "activation" : "deactivation", GST_DEBUG_PAD_NAME (sinkpad));
-
-    gst_pad_set_active (sinkpad, active);
-    if (peer)
-      gst_pad_set_active_recursive (peer, active);
-  }
-}
-
-/**
- * gst_pad_is_active:
+ * gst_real_pad_is_active:
  * @pad: the #GstPad to query
  *
  * Query if a pad is active
@@ -533,11 +465,35 @@ gst_pad_set_active_recursive (GstPad * pad, gboolean active)
  * Returns: TRUE if the pad is active.
  */
 gboolean
-gst_pad_is_active (GstPad * pad)
+gst_real_pad_is_active (GstRealPad * pad)
 {
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (GST_IS_REAL_PAD (pad), FALSE);
 
-  return !GST_FLAG_IS_SET (pad, GST_PAD_DISABLED);
+  if (pad->action == NULL)
+    return FALSE;
+
+  return gst_action_is_active (pad->action);
+}
+
+/**
+ * gst_real_pad_set_initially_active:
+ * @pad: a #GstPad
+ * @active: whether the pad should be initially active or not
+ *
+ * Sets if the pad should be initially active. This sets the pad's action to 
+ * initially active. See gst_action_set_initially_active() for details. The 
+ * default behaviour is that sink pads are initially active while source pads
+ * are not, since this works for most general purpose elements. Other elements,
+ * most likely sources, will need to call this function on its pads.
+ * <note>The pad must have an action handler set when calling this function.</note>
+ **/
+void
+gst_real_pad_set_initially_active (GstRealPad * pad, gboolean active)
+{
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
+
+  g_return_if_fail (pad->action != NULL);
+  gst_action_set_initially_active (pad->action, active);
 }
 
 /**
@@ -575,46 +531,6 @@ gst_pad_get_name (GstPad * pad)
 }
 
 /**
- * gst_pad_set_chain_function:
- * @pad: a real sink #GstPad.
- * @chain: the #GstPadChainFunction to set.
- *
- * Sets the given chain function for the pad. The chain function is called to
- * process a #GstData input buffer.
- */
-void
-gst_pad_set_chain_function (GstPad * pad, GstPadChainFunction chain)
-{
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
-  g_return_if_fail (GST_RPAD_DIRECTION (pad) == GST_PAD_SINK);
-
-  GST_RPAD_CHAINFUNC (pad) = chain;
-  GST_CAT_DEBUG (GST_CAT_PADS, "chainfunc for %s:%s set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (chain));
-}
-
-/**
- * gst_pad_set_get_function:
- * @pad: a real source #GstPad.
- * @get: the #GstPadGetFunction to set.
- *
- * Sets the given get function for the pad. The get function is called to
- * produce a new #GstData to start the processing pipeline. Get functions cannot
- * return %NULL.
- */
-void
-gst_pad_set_get_function (GstPad * pad, GstPadGetFunction get)
-{
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
-  g_return_if_fail (GST_RPAD_DIRECTION (pad) == GST_PAD_SRC);
-
-  GST_RPAD_GETFUNC (pad) = get;
-
-  GST_CAT_DEBUG (GST_CAT_PADS, "getfunc for %s:%s  set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (get));
-}
-
-/**
  * gst_pad_set_event_function:
  * @pad: a real source #GstPad.
  * @event: the #GstPadEventFunction to set.
@@ -624,88 +540,16 @@ gst_pad_set_get_function (GstPad * pad, GstPadGetFunction get)
 void
 gst_pad_set_event_function (GstPad * pad, GstPadEventFunction event)
 {
+  GstRealPad *real;
+
   g_return_if_fail (GST_IS_REAL_PAD (pad));
   g_return_if_fail (GST_RPAD_DIRECTION (pad) == GST_PAD_SRC);
 
-  GST_RPAD_EVENTFUNC (pad) = event;
+  real = GST_REAL_PAD (pad);
+  real->eventhandler = event;
 
   GST_CAT_DEBUG (GST_CAT_PADS, "eventfunc for %s:%s  set to %s",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (event));
-}
-
-/**
- * gst_pad_set_event_mask_function:
- * @pad: a real #GstPad of either direction.
- * @mask_func: the #GstPadEventMaskFunction to set.
- *
- * Sets the given event mask function for the pad.
- */
-void
-gst_pad_set_event_mask_function (GstPad * pad,
-    GstPadEventMaskFunction mask_func)
-{
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
-
-  GST_RPAD_EVENTMASKFUNC (pad) = mask_func;
-
-  GST_CAT_DEBUG (GST_CAT_PADS, "eventmaskfunc for %s:%s  set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (mask_func));
-}
-
-/**
- * gst_pad_get_event_masks:
- * @pad: a #GstPad.
- *
- * Gets the array of eventmasks from the given pad.
- *
- * Returns: a zero-terminated array of #GstEventMask, or NULL if the pad does
- * not have an event mask function.
- */
-const GstEventMask *
-gst_pad_get_event_masks (GstPad * pad)
-{
-  GstRealPad *rpad;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  rpad = GST_PAD_REALIZE (pad);
-
-  g_return_val_if_fail (rpad, NULL);
-
-  if (GST_RPAD_EVENTMASKFUNC (rpad))
-    return GST_RPAD_EVENTMASKFUNC (rpad) (GST_PAD (pad));
-
-  return NULL;
-}
-
-static gboolean
-gst_pad_get_event_masks_dispatcher (GstPad * pad, const GstEventMask ** data)
-{
-  *data = gst_pad_get_event_masks (pad);
-
-  return TRUE;
-}
-
-/**
- * gst_pad_get_event_masks_default:
- * @pad: a #GstPad.
- *
- * Invokes the default event masks dispatcher on the pad.
- *
- * Returns: a zero-terminated array of #GstEventMask, or NULL if none of the
- * internally-linked pads have an event mask function.
- */
-const GstEventMask *
-gst_pad_get_event_masks_default (GstPad * pad)
-{
-  GstEventMask *result = NULL;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  gst_pad_dispatcher (pad, (GstPadDispatcherFunction)
-      gst_pad_get_event_masks_dispatcher, &result);
-
-  return result;
 }
 
 /**
@@ -745,82 +589,6 @@ gst_pad_set_query_function (GstPad * pad, GstPadQueryFunction query)
 }
 
 /**
- * gst_pad_set_query_type_function:
- * @pad: a real #GstPad of either direction.
- * @type_func: the #GstPadQueryTypeFunction to set.
- *
- * Set the given query type function for the pad.
- */
-void
-gst_pad_set_query_type_function (GstPad * pad,
-    GstPadQueryTypeFunction type_func)
-{
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
-
-  GST_RPAD_QUERYTYPEFUNC (pad) = type_func;
-
-  GST_CAT_DEBUG (GST_CAT_PADS, "querytypefunc for %s:%s  set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (type_func));
-}
-
-/**
- * gst_pad_get_query_types:
- * @pad: a #GstPad.
- *
- * Get an array of supported queries that can be performed
- * on this pad.
- *
- * Returns: a zero-terminated array of #GstQueryType.
- */
-const GstQueryType *
-gst_pad_get_query_types (GstPad * pad)
-{
-  GstRealPad *rpad;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  rpad = GST_PAD_REALIZE (pad);
-
-  g_return_val_if_fail (rpad, NULL);
-
-  if (GST_RPAD_QUERYTYPEFUNC (rpad))
-    return GST_RPAD_QUERYTYPEFUNC (rpad) (GST_PAD (pad));
-
-  return NULL;
-}
-
-static gboolean
-gst_pad_get_query_types_dispatcher (GstPad * pad, const GstQueryType ** data)
-{
-  *data = gst_pad_get_query_types (pad);
-
-  return TRUE;
-}
-
-/**
- * gst_pad_get_query_types_default:
- * @pad: a #GstPad.
- *
- * Invoke the default dispatcher for the query types on
- * the pad.
- *
- * Returns: an zero-terminated array of #GstQueryType, or NULL if none of the
- * internally-linked pads has a query types function.
- */
-const GstQueryType *
-gst_pad_get_query_types_default (GstPad * pad)
-{
-  GstQueryType *result = NULL;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  gst_pad_dispatcher (pad, (GstPadDispatcherFunction)
-      gst_pad_get_query_types_dispatcher, &result);
-
-  return result;
-}
-
-/**
  * gst_pad_set_internal_link_function:
  * @pad: a real #GstPad of either direction.
  * @intlink: the #GstPadIntLinkFunction to set.
@@ -835,23 +603,6 @@ gst_pad_set_internal_link_function (GstPad * pad, GstPadIntLinkFunction intlink)
   GST_RPAD_INTLINKFUNC (pad) = intlink;
   GST_CAT_DEBUG (GST_CAT_PADS, "internal link for %s:%s  set to %s",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (intlink));
-}
-
-/**
- * gst_pad_set_formats_function:
- * @pad: a real #GstPad of either direction.
- * @formats: the #GstPadFormatsFunction to set.
- *
- * Sets the given formats function for the pad.
- */
-void
-gst_pad_set_formats_function (GstPad * pad, GstPadFormatsFunction formats)
-{
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
-
-  GST_RPAD_FORMATSFUNC (pad) = formats;
-  GST_CAT_DEBUG (GST_CAT_PADS, "formats function for %s:%s  set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (formats));
 }
 
 /**
@@ -1092,18 +843,12 @@ static gboolean
 gst_pad_check_schedulers (GstRealPad * realsrc, GstRealPad * realsink)
 {
   GstScheduler *src_sched, *sink_sched;
-  gint num_decoupled = 0;
 
   src_sched = gst_pad_get_scheduler (GST_PAD (realsrc));
   sink_sched = gst_pad_get_scheduler (GST_PAD (realsink));
 
   if (src_sched && sink_sched) {
-    if (GST_FLAG_IS_SET (GST_PAD_PARENT (realsrc), GST_ELEMENT_DECOUPLED))
-      num_decoupled++;
-    if (GST_FLAG_IS_SET (GST_PAD_PARENT (realsink), GST_ELEMENT_DECOUPLED))
-      num_decoupled++;
-
-    if (src_sched != sink_sched && num_decoupled != 1) {
+    if (src_sched != sink_sched) {
       return FALSE;
     }
   }
@@ -2014,18 +1759,8 @@ gst_pad_get_scheduler (GstPad * pad)
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   parent = gst_pad_get_parent (pad);
-  if (parent) {
-    if (GST_FLAG_IS_SET (parent, GST_ELEMENT_DECOUPLED)) {
-      GstRealPad *peer = GST_RPAD_PEER (pad);
-
-      if (peer) {
-        scheduler =
-            gst_element_get_scheduler (gst_pad_get_parent (GST_PAD (peer)));
-      }
-    } else {
-      scheduler = gst_element_get_scheduler (parent);
-    }
-  }
+  if (parent)
+    scheduler = gst_element_get_scheduler (parent);
 
   return scheduler;
 }
@@ -3079,6 +2814,11 @@ gst_real_pad_dispose (GObject * object)
     gst_element_remove_pad (GST_ELEMENT (GST_OBJECT_PARENT (pad)), pad);
   }
 
+  if (GST_REAL_PAD (pad)->action) {
+    gst_action_free (GST_REAL_PAD (pad)->action);
+    GST_REAL_PAD (pad)->action = NULL;
+  }
+
   if (GST_RPAD_EXPLICIT_CAPS (pad)) {
     GST_ERROR_OBJECT (pad, "still explicit caps %" GST_PTR_FORMAT " set",
         GST_RPAD_EXPLICIT_CAPS (pad));
@@ -3088,6 +2828,43 @@ gst_real_pad_dispose (GObject * object)
   G_OBJECT_CLASS (real_pad_parent_class)->dispose (object);
 }
 
+void
+gst_src_pad_set_action_handler (GstPad * pad, GstActionSrcPadFunc func)
+{
+  GstRealPad *real;
+
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (func != NULL);
+
+  real = GST_REAL_PAD (pad);
+  if (!real->action) {
+    /* actions may only be set (not reset) before being added to an element */
+    g_return_if_fail (GST_OBJECT_PARENT (pad) == NULL);
+    real->action = gst_action_new (GST_ACTION_SRC_PAD);
+    real->action->any.initially_active = FALSE;
+    real->action->srcpad.pad = GST_REAL_PAD (pad);
+  }
+  real->action->srcpad.release = func;
+}
+
+void
+gst_sink_pad_set_action_handler (GstPad * pad, GstActionSinkPadFunc func)
+{
+  GstRealPad *real;
+
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (func != NULL);
+
+  real = GST_REAL_PAD (pad);
+  if (!real->action) {
+    /* actions may only be set (not reset) before being added to an element */
+    g_return_if_fail (GST_OBJECT_PARENT (pad) == NULL);
+    real->action = gst_action_new (GST_ACTION_SINK_PAD);
+    real->action->any.initially_active = TRUE;
+    real->action->sinkpad.pad = GST_REAL_PAD (pad);
+  }
+  real->action->sinkpad.release = func;
+}
 
 #ifndef GST_DISABLE_LOADSAVE
 /* FIXME: why isn't this on a GstElement ? */
@@ -3227,388 +3004,6 @@ gst_ghost_pad_save_thyself (GstPad * pad, xmlNodePtr parent)
   return self;
 }
 #endif /* GST_DISABLE_LOADSAVE */
-
-static GstData *
-_invent_event (GstPad * pad, GstBuffer * buffer)
-{
-  GstEvent *event;
-  GstEventType event_type;
-  guint64 offset;
-
-  if (GST_BUFFER_OFFSET_IS_VALID (buffer))
-    event_type = GST_FORMAT_DEFAULT;
-  else
-    event_type = GST_FORMAT_UNDEFINED;
-
-  offset = GST_BUFFER_OFFSET (buffer);
-
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
-    GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
-
-    event = gst_event_new_discontinuous (TRUE,
-        GST_FORMAT_TIME, timestamp, event_type, offset, GST_FORMAT_UNDEFINED);
-    GST_CAT_WARNING (GST_CAT_SCHEDULING,
-        "needed to invent a DISCONT %p (time %" G_GUINT64_FORMAT
-        ") for %s:%s => %s:%s", event, timestamp,
-        GST_DEBUG_PAD_NAME (GST_PAD_PEER (pad)), GST_DEBUG_PAD_NAME (pad));
-  } else {
-    event = gst_event_new_discontinuous (TRUE,
-        event_type, offset, GST_FORMAT_UNDEFINED);
-    GST_CAT_WARNING (GST_CAT_SCHEDULING,
-        "needed to invent a DISCONT %p (no time) for %s:%s => %s:%s", event,
-        GST_DEBUG_PAD_NAME (GST_PAD_PEER (pad)), GST_DEBUG_PAD_NAME (pad));
-  }
-
-  return GST_DATA (event);
-}
-
-/**
- * gst_pad_push:
- * @pad: a source #GstPad.
- * @data: the #GstData to push.
- *
- * Pushes a buffer or an event to the peer of @pad. @pad must be linked. May
- * only be called by @pad's parent.
- */
-void
-gst_pad_push (GstPad * pad, GstData * data)
-{
-  GstRealPad *peer;
-
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC);
-  g_return_if_fail (!GST_FLAG_IS_SET (GST_PAD_REALIZE (pad),
-          GST_RPAD_IN_GETFUNC));
-  g_return_if_fail (data != NULL);
-
-  DEBUG_DATA (pad, data, "gst_pad_push");
-
-  if (!GST_PAD_IS_LINKED (pad)) {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "not pushing data %p as pad is unconnected", data);
-    gst_data_unref (data);
-    return;
-  }
-
-  if (GST_IS_BUFFER (data) && !gst_pad_is_negotiated (pad)) {
-    g_warning ("pushing data on non-negotiated pad %s:%s, not allowed.",
-        GST_DEBUG_PAD_NAME (pad));
-    gst_data_unref (data);
-    return;
-  }
-
-  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "pushing");
-  peer = GST_RPAD_PEER (pad);
-
-  if (!peer) {
-    g_warning ("push on pad %s:%s but it is unlinked",
-        GST_DEBUG_PAD_NAME (pad));
-  } else {
-    if (!GST_IS_EVENT (data) && !GST_PAD_IS_ACTIVE (peer)) {
-      g_warning ("push on peer of pad %s:%s but peer is not active",
-          GST_DEBUG_PAD_NAME (pad));
-      return;
-    }
-
-    if (peer->chainhandler) {
-      if (data) {
-        GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-            "calling chainhandler &%s of peer pad %s:%s",
-            GST_DEBUG_FUNCPTR_NAME (peer->chainhandler),
-            GST_DEBUG_PAD_NAME (GST_PAD (peer)));
-        (peer->chainhandler) (GST_PAD (peer), data);
-        return;
-      } else {
-        g_warning ("trying to push a NULL buffer on pad %s:%s",
-            GST_DEBUG_PAD_NAME (peer));
-        return;
-      }
-    } else {
-      g_warning ("internal error: push on pad %s:%s but it has no chainhandler",
-          GST_DEBUG_PAD_NAME (peer));
-    }
-  }
-  /* clean up the mess here */
-  if (data != NULL)
-    gst_data_unref (data);
-}
-
-/**
- * gst_pad_pull:
- * @pad: a sink #GstPad.
- *
- * Pulls an event or a buffer from the peer pad. May only be called by @pad's
- * parent.
- *
- * Returns: a new #GstData from the peer pad.
- */
-GstData *
-gst_pad_pull (GstPad * pad)
-{
-  GstRealPad *peer;
-  GstData *data;
-
-  g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK,
-      GST_DATA (gst_event_new (GST_EVENT_INTERRUPT)));
-  g_return_val_if_fail (!GST_FLAG_IS_SET (GST_PAD_REALIZE (pad),
-          GST_RPAD_IN_CHAINFUNC),
-      GST_DATA (gst_event_new (GST_EVENT_INTERRUPT)));
-
-  peer = GST_RPAD_PEER (pad);
-
-  if (!peer) {
-    GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
-        ("pull on pad %s:%s but it was unlinked", GST_DEBUG_PAD_NAME (pad)));
-  } else {
-    if (peer->gethandler) {
-      GstPadLink *link = GST_RPAD_LINK (pad);
-
-      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-          "calling gethandler %s of peer pad %s:%s",
-          GST_DEBUG_FUNCPTR_NAME (peer->gethandler), GST_DEBUG_PAD_NAME (peer));
-
-      if (link->temp_store) {
-        g_assert (link->engaged);
-        GST_DEBUG ("moving temp_store %p to data", link->temp_store);
-        data = link->temp_store;
-        link->temp_store = NULL;
-      } else {
-        data = (peer->gethandler) (GST_PAD (peer));
-        /* refetch - we might have been relinked */
-        link = GST_RPAD_LINK (pad);
-        peer = GST_RPAD_PEER (pad);
-        if (!peer) {
-          /* Our peer disa-peer-ed ;) */
-          goto int_out;
-        }
-      }
-
-      if (data) {
-        if (!link->engaged) {
-          g_assert (link->temp_store == NULL);
-          if (GST_IS_BUFFER (data)) {
-            GST_DEBUG ("moving data buffer %p back to temp_store", data);
-            link->temp_store = data;
-            link->engaged = TRUE;
-            data = _invent_event (pad, GST_BUFFER (data));
-          } else if (GST_IS_EVENT (data) &&
-              GST_EVENT_TYPE (data) == GST_EVENT_DISCONTINUOUS &&
-              GST_EVENT_DISCONT_NEW_MEDIA (data)) {
-            link->engaged = TRUE;
-            GST_CAT_LOG (GST_CAT_SCHEDULING,
-                "link engaged by discont event %p for pad %s:%s", data,
-                GST_DEBUG_PAD_NAME (pad));
-          }
-        }
-        DEBUG_DATA (pad, data, "gst_pad_pull returned");
-        return data;
-      }
-
-      /* no null buffers allowed */
-      GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
-          ("NULL buffer during pull on %s:%s", GST_DEBUG_PAD_NAME (pad)));
-    } else {
-      GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
-          ("pull on pad %s:%s but the peer pad %s:%s has no gethandler",
-              GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer)));
-    }
-  }
-
-int_out:
-  data = GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
-  DEBUG_DATA (pad, data, "gst_pad_pull returning INTERRUPT");
-  return data;
-}
-
-GstData *
-gst_pad_collect_array (GstScheduler * scheduler, GstPad ** selected,
-    GstPad ** padlist)
-{
-  GstSchedulerClass *klass = GST_SCHEDULER_GET_CLASS (scheduler);
-
-  if (!GST_FLAG_IS_SET (scheduler, GST_SCHEDULER_FLAG_NEW_API) ||
-      !klass->pad_select) {
-    /* better randomness? */
-    if (selected)
-      *selected = padlist[0];
-    return gst_pad_pull (padlist[0]);
-  } else {
-    GstPad *select;
-
-    return klass->pad_select (scheduler, selected ? selected : &select,
-        padlist);
-  }
-}
-
-/**
- * gst_pad_collectv:
- * @selected: set to the pad the buffer comes from if not NULL
- * @padlist: a #GList of sink pads.
- *
- * Waits for a buffer on any of the list of pads. Each #GstPad in @padlist must
- * belong to the same element and be owned by the caller.
- *
- * Returns: the #GstData that was available
- */
-GstData *
-gst_pad_collectv (GstPad ** selected, const GList * padlist)
-{
-  /* need to use alloca here because we must not leak data */
-  GstPad **pads;
-  GstPad *test;
-  GstElement *element = NULL;
-  int i = 0;
-
-  g_return_val_if_fail (padlist != NULL, NULL);
-  pads = g_alloca (sizeof (gpointer) * (g_list_length ((GList *) padlist) + 1));
-  for (; padlist; padlist = g_list_next (padlist)) {
-    test = GST_PAD (padlist->data);
-    g_return_val_if_fail (GST_IS_PAD (test), NULL);
-    g_return_val_if_fail (GST_PAD_IS_SINK (test), NULL);
-    if (element) {
-      g_return_val_if_fail (element == gst_pad_get_parent (test), NULL);
-    } else {
-      element = gst_pad_get_parent (test);
-    }
-    pads[i++] = test;
-  }
-  pads[i] = NULL;
-
-  return gst_pad_collect_array (GST_ELEMENT_SCHED (element), selected, pads);
-}
-
-/**
- * gst_pad_collect:
- * @selected: set to the pad the buffer comes from if not NULL
- * @pad: first pad
- * @...: more sink pads.
- *
- * Waits for a buffer on the given set of pads.
- *
- * Returns: the #GstData that was available.
- */
-GstData *
-gst_pad_collect (GstPad ** selected, GstPad * pad, ...)
-{
-  GstData *result;
-  va_list var_args;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  va_start (var_args, pad);
-
-  result = gst_pad_collect_valist (selected, pad, var_args);
-
-  va_end (var_args);
-
-  return result;
-}
-
-/**
- * gst_pad_collect_valist:
- * @selected: set to the pad the buffer comes from if not NULL
- * @pad: first pad
- * @...: more sink pads.
- *
- * Waits for a buffer on the given set of pads.
- *
- * Returns: the #GstData that was available.
- */
-GstData *
-gst_pad_collect_valist (GstPad ** selected, GstPad * pad, va_list var_args)
-{
-  GstPad **padlist;
-  GstElement *element = NULL;
-  gint i = 0, maxlength;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  element = gst_pad_get_parent (pad);
-  maxlength = element->numsinkpads;
-  /* can we make this list a bit smaller than this upper limit? */
-  padlist = g_alloca (sizeof (gpointer) * (maxlength + 1));
-  while (pad) {
-    g_return_val_if_fail (i < maxlength, NULL);
-    g_return_val_if_fail (element == gst_pad_get_parent (pad), NULL);
-    padlist[i++] = pad;
-    pad = va_arg (var_args, GstPad *);
-  }
-  padlist[i] = NULL;
-  return gst_pad_collect_array (GST_ELEMENT_SCHED (element), selected, padlist);
-}
-
-/**
- * gst_pad_selectv:
- * @padlist: a #GList of sink pads.
- *
- * Waits for a buffer on any of the list of pads. Each #GstPad in @padlist must
- * be owned by the calling code.
- *
- * Returns: the #GstPad that has a buffer available. 
- * Use #gst_pad_pull() to get the buffer.
- */
-GstPad *
-gst_pad_selectv (GList * padlist)
-{
-  return NULL;
-}
-
-/**
- * gst_pad_select_valist:
- * @pad: a first #GstPad to perform the select on.
- * @varargs: A va_list of more pads to select on.
- *
- * Waits for a buffer on the given set of pads.
- *
- * Returns: the #GstPad that has a buffer available.
- * Use #gst_pad_pull() to get the buffer.
- */
-GstPad *
-gst_pad_select_valist (GstPad * pad, va_list var_args)
-{
-  GstPad *result;
-  GList *padlist = NULL;
-
-  if (pad == NULL)
-    return NULL;
-
-  while (pad) {
-    padlist = g_list_prepend (padlist, pad);
-    pad = va_arg (var_args, GstPad *);
-  }
-  result = gst_pad_selectv (padlist);
-  g_list_free (padlist);
-
-  return result;
-}
-
-/**
- * gst_pad_select:
- * @pad: a first sink #GstPad to perform the select on.
- * @...: A NULL-terminated list of more pads to select on.
- *
- * Waits for a buffer on the given set of pads.
- *
- * Returns: the #GstPad that has a buffer available.
- * Use #gst_pad_pull() to get the buffer.
- */
-GstPad *
-gst_pad_select (GstPad * pad, ...)
-{
-  GstPad *result;
-  va_list var_args;
-
-  if (pad == NULL)
-    return NULL;
-
-  va_start (var_args, pad);
-
-  result = gst_pad_select_valist (pad, var_args);
-
-  va_end (var_args);
-
-  return result;
-}
 
 /************************************************************************
  *
@@ -4404,139 +3799,4 @@ gst_pad_query (GstPad * pad, GstQueryType type,
     return GST_RPAD_QUERYFUNC (rpad) (GST_PAD (rpad), type, format, value);
 
   return FALSE;
-}
-
-static gboolean
-gst_pad_get_formats_dispatcher (GstPad * pad, const GstFormat ** data)
-{
-  *data = gst_pad_get_formats (pad);
-
-  return TRUE;
-}
-
-/**
- * gst_pad_get_formats_default:
- * @pad: a #GstPad to query
- *
- * Invoke the default format dispatcher for the pad.
- *
- * Returns: An array of GstFormats ended with a 0 value.
- */
-const GstFormat *
-gst_pad_get_formats_default (GstPad * pad)
-{
-  GstFormat *result = NULL;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  gst_pad_dispatcher (pad, (GstPadDispatcherFunction)
-      gst_pad_get_formats_dispatcher, &result);
-
-  return result;
-}
-
-/**
- * gst_pad_get_formats:
- * @pad: a #GstPad to query
- *
- * Gets the list of supported formats from the pad.
- *
- * Returns: An array of GstFormats ended with a 0 value.
- */
-const GstFormat *
-gst_pad_get_formats (GstPad * pad)
-{
-  GstRealPad *rpad;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  rpad = GST_PAD_REALIZE (pad);
-
-  if (GST_RPAD_FORMATSFUNC (rpad))
-    return GST_RPAD_FORMATSFUNC (rpad) (GST_PAD (pad));
-
-  return NULL;
-}
-
-#define CALL_CHAINFUNC(pad, data) G_STMT_START {\
-  GstData *__temp = (data); \
-  DEBUG_DATA (pad, __temp, "calling chain function with "); \
-  if (GST_IS_EVENT (__temp) && \
-      !GST_FLAG_IS_SET (gst_pad_get_parent (pad), GST_ELEMENT_EVENT_AWARE)) { \
-    gst_pad_send_event (pad, GST_EVENT (__temp)); \
-  } else { \
-    GST_FLAG_SET (pad, GST_RPAD_IN_CHAINFUNC); \
-    GST_RPAD_CHAINFUNC (pad) (pad, __temp); \
-    GST_FLAG_UNSET (pad, GST_RPAD_IN_CHAINFUNC); \
-  } \
-}G_STMT_END
-/**
- * gst_pad_call_chain_function:
- * @pad: sink pad to call chain function on
- * @data: data to call the chain function with
- *
- * Calls the chain function of the given pad while making sure the internal
- * consistency is kept. Use this function inside schedulers instead of calling
- * the chain function yourself.
- */
-void
-gst_pad_call_chain_function (GstPad * pad, GstData * data)
-{
-  GstPadLink *link;
-
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
-  g_return_if_fail (GST_PAD_IS_SINK (pad));
-  g_return_if_fail (data != NULL);
-  g_return_if_fail (GST_RPAD_CHAINFUNC (pad) != NULL);
-  g_return_if_fail (GST_RPAD_LINK (pad) != NULL);
-
-  link = GST_RPAD_LINK (pad);
-  if (!link->engaged) {
-    g_assert (link->temp_store == NULL);
-    if (GST_IS_BUFFER (data)) {
-      GST_DEBUG ("moving data buffer %p back to temp_store", data);
-      link->temp_store = data;
-      link->engaged = TRUE;
-      CALL_CHAINFUNC (pad, _invent_event (pad, GST_BUFFER (data)));
-      link = GST_RPAD_LINK (pad);
-      if (link->temp_store == NULL)     /* happens after relinking in chainfunc */
-        return;
-      g_assert (link->temp_store == data);
-      link->temp_store = NULL;
-    } else if (GST_IS_EVENT (data) &&
-        GST_EVENT_TYPE (data) == GST_EVENT_DISCONTINUOUS &&
-        GST_EVENT_DISCONT_NEW_MEDIA (data)) {
-      link->engaged = TRUE;
-      GST_CAT_LOG (GST_CAT_SCHEDULING,
-          "link engaged by discont event %p for pad %s:%s", data,
-          GST_DEBUG_PAD_NAME (pad));
-    }
-  }
-  CALL_CHAINFUNC (pad, data);
-}
-
-/**
- * gst_pad_call_get_function:
- * @pad: sink pad to call chain function on
- *
- * Calls the get function of the given pad while making sure the internal
- * consistency is kept. Use this function inside schedulers instead of calling
- * the get function yourself.
- *
- * Returns: the data provided by the pad or NULL if no data was available.
- */
-GstData *
-gst_pad_call_get_function (GstPad * pad)
-{
-  GstData *data;
-
-  g_return_val_if_fail (GST_IS_REAL_PAD (pad), NULL);
-  g_return_val_if_fail (GST_PAD_IS_SRC (pad), NULL);
-  g_return_val_if_fail (GST_RPAD_GETFUNC (pad) != NULL, NULL);
-
-  GST_FLAG_SET (pad, GST_RPAD_IN_GETFUNC);
-  data = GST_RPAD_GETFUNC (pad) (pad);
-  GST_FLAG_UNSET (pad, GST_RPAD_IN_GETFUNC);
-  DEBUG_DATA (pad, data, "getfunction returned");
-  return data;
 }

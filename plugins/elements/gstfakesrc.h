@@ -76,7 +76,6 @@ typedef struct _GstFakeSrcClass GstFakeSrcClass;
 struct _GstFakeSrc {
   GstElement     element;
 
-  gboolean 	 loop_based;
   gboolean 	 eos;
 
   GstFakeSrcOutputType output;

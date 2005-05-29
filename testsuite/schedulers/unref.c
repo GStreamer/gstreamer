@@ -19,6 +19,7 @@
 #include <gst/gst.h>
 
 GstElement *pipeline, *src, *sink;
+GMainLoop *loop;
 
 static void
 cb_handoff (GstElement * element, GstBuffer * buffer, GstPad * pad,
@@ -28,6 +29,7 @@ cb_handoff (GstElement * element, GstBuffer * buffer, GstPad * pad,
     g_print ("unreffing...\n");
     gst_object_unref (GST_OBJECT (pipeline));
     pipeline = NULL;
+    g_main_loop_quit (loop);
   }
 }
 
@@ -42,6 +44,7 @@ main (gint argc, gchar ** argv)
   g_assert (pipeline);
   src = gst_element_factory_make ("fakesrc", NULL);
   g_assert (src);
+  g_object_set (src, "num-buffers", 10, NULL);
   sink = gst_element_factory_make ("fakesink", NULL);
   g_assert (sink);
   gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
@@ -54,7 +57,9 @@ main (gint argc, gchar ** argv)
   g_print ("running...\n");
   if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
     g_assert_not_reached ();
-  while (pipeline && gst_bin_iterate (GST_BIN (pipeline)));
+  loop = g_main_loop_new (NULL, TRUE);
+  g_main_loop_run (loop);
+  g_main_loop_unref (loop);
 
   g_print ("done.\n");
   return 0;

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-05-02 19:36+0200\n"
+"POT-Creation-Date: 2005-05-17 18:37+0200\n"
 "PO-Revision-Date: 2004-08-05 16:56+0200\n"
 "Last-Translator: Elros Cyriatan <cyriatan@fastmail.fm>\n"
 "Language-Team: Dutch <vertaling@nl.linux.org>\n"
@@ -17,30 +17,30 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: gst/gst.c:160
+#: gst/gst.c:157
 msgid "Print the GStreamer version"
 msgstr "Geeft de GStreamer versie weer"
 
-#: gst/gst.c:162
+#: gst/gst.c:159
 msgid "Make all warnings fatal"
 msgstr "Alle waarschuwingen fataal maken"
 
-#: gst/gst.c:166
+#: gst/gst.c:163
 msgid "Print available debug categories and exit"
 msgstr "Beschikbare debug-categorieën weergeven en afsluiten"
 
-#: gst/gst.c:169
+#: gst/gst.c:166
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Standaard debug-niveau van 1 (enkel fouten) tot 5 (alles) of 0 voor geen "
 "uitvoer"
 
-#: gst/gst.c:171
+#: gst/gst.c:168
 msgid "LEVEL"
 msgstr "NIVEAU"
 
-#: gst/gst.c:173
+#: gst/gst.c:170
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -49,31 +49,27 @@ msgstr ""
 "niveau's in te stellen voor de individuele categorieën. Voorbeeld: "
 "GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:176
+#: gst/gst.c:173
 msgid "LIST"
 msgstr "LIJST"
 
-#: gst/gst.c:178
+#: gst/gst.c:175
 msgid "Disable colored debugging output"
 msgstr "Kleuren uit zetten in debug-uitvoer"
 
-#: gst/gst.c:180
+#: gst/gst.c:177
 msgid "Disable debugging"
 msgstr "Debugging uit zetten"
 
-#: gst/gst.c:184
-msgid "Disable accelerated CPU instructions"
-msgstr "Versnelde CPU-instructies uit zetten"
-
-#: gst/gst.c:186
+#: gst/gst.c:181
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Uitgebreide diagnostiek voor het laden van plugins aan zetten"
 
-#: gst/gst.c:188
+#: gst/gst.c:183
 msgid "PATHS"
 msgstr "PADEN"
 
-#: gst/gst.c:191
+#: gst/gst.c:186
 #, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -82,33 +78,33 @@ msgstr ""
 "Komma-gescheiden lijst van plugins om voor te laden naast de lijst "
 "opgeslagen in omgevingsvariable GST_PLUGIN_PATH"
 
-#: gst/gst.c:193
+#: gst/gst.c:188
 msgid "PLUGINS"
 msgstr "PLUGINS"
 
-#: gst/gst.c:196
+#: gst/gst.c:191
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 "Het opvangen van segmentatiefouten uit zetten tijdens laden van plugins"
 
-#: gst/gst.c:199
+#: gst/gst.c:194
 msgid "SCHEDULER"
 msgstr "PLANNER"
 
-#: gst/gst.c:201
+#: gst/gst.c:196
 msgid "Registry to use"
 msgstr "Register om te gebruiken"
 
-#: gst/gst.c:201
+#: gst/gst.c:196
 msgid "REGISTRY"
 msgstr "REGISTER"
 
-#: gst/gst.c:214
+#: gst/gst.c:209
 #, c-format
 msgid "path list for loading plugins (separated by '%s')"
 msgstr "padlijst voor het laden van plugins (gescheiden door '%s')"
 
-#: gst/gst.c:218
+#: gst/gst.c:213
 #, c-format
 msgid "Scheduler to use (default is '%s')"
 msgstr "Planner om te gebruiken (standaard is '%s')"
@@ -585,52 +581,46 @@ msgstr ""
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:466
-#, c-format
-msgid "There is no element present to handle the stream's mime type %s."
-msgstr ""
-"Er is geen element aanwezig dat de MIME-soort %s van de stroom kan verwerken."
-
-#: gst/elements/gstfilesink.c:268
+#: gst/elements/gstfilesink.c:243
 msgid "No file name specified for writing."
 msgstr "Geen bestandsnaam gegeven om te schrijven."
 
-#: gst/elements/gstfilesink.c:275
+#: gst/elements/gstfilesink.c:250
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Kon bestand \"%s\" niet openen om te schrijven."
 
-#: gst/elements/gstfilesink.c:294
+#: gst/elements/gstfilesink.c:269
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Fout bij het sluiten van bestand \"%s\"."
 
-#: gst/elements/gstfilesink.c:364 gst/elements/gstfilesink.c:400
-#: gst/elements/gstfilesink.c:453
+#: gst/elements/gstfilesink.c:339 gst/elements/gstfilesink.c:375
+#: gst/elements/gstfilesink.c:428
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Fout bij het schrijven naar bestand \"%s\"."
 
-#: gst/elements/gstfilesrc.c:764 gst/elements/gstmultifilesrc.c:298
+#: gst/elements/gstfilesrc.c:725
 msgid "No file name specified for reading."
 msgstr "Geen bestandsnaam gegeven om te lezen."
 
-#: gst/elements/gstfilesrc.c:779 gst/elements/gstmultifilesrc.c:306
+#: gst/elements/gstfilesrc.c:740
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kon bestand \"%s\" niet openen om te lezen."
 
-#: gst/elements/gstfilesrc.c:790
+#: gst/elements/gstfilesrc.c:751
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" is een map."
 
-#: gst/elements/gstfilesrc.c:796
+#: gst/elements/gstfilesrc.c:757
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Bestand \"%s\" is een socket."
 
-#: gst/elements/gstidentity.c:306
+#: gst/elements/gstidentity.c:276
 msgid "Failed after iterations as requested."
 msgstr "Mislukt na iteraties zoals gevraagd."
 
@@ -719,124 +709,77 @@ msgstr "kon doelelement niet verbinden voor URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "lege pijplijn niet toegelaten"
 
-#: tools/gst-inspect.c:1151
+#: tools/gst-inspect.c:1032
 msgid "Print all elements"
 msgstr "Alle elementen weergeven"
 
-#: tools/gst-launch.c:114
-#, c-format
-msgid ""
-"Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
-"max %s ns).\n"
-msgstr ""
-
-#: tools/gst-launch.c:141
-msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr ""
-"Gebruik: gst-xmllaunch <bestand.xml> [ element.eigenschap=waarde ... ]\n"
-
-#: tools/gst-launch.c:149
-#, c-format
-msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "FOUT: verwerken van xml-bestand '%s' mislukt.\n"
-
-#: tools/gst-launch.c:155
-#, c-format
-msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr "FOUT: geen bovenste pijplijn-element gevonden in file '%s'.\n"
-
-#: tools/gst-launch.c:162
-#, c-format
-msgid "WARNING: only one toplevel element is supported at this time."
-msgstr ""
-"WAARSCHUWING: slechts één element op het hoogste niveau ondersteund op dit "
-"moment."
-
-#: tools/gst-launch.c:173
-#, c-format
-msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr "FOUT: kon argument %d op opdrachtregel niet verwerken: %s.\n"
-
-#: tools/gst-launch.c:184
-#, c-format
-msgid "WARNING: element named '%s' not found.\n"
-msgstr "WAARSCHUWING: element met naam '%s' niet gevonden.\n"
-
-#: tools/gst-launch.c:327
+#: tools/gst-launch.c:190
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "TAG GEVONDEN   : gevonden door element \"%s\".\n"
 
-#: tools/gst-launch.c:412
+#: tools/gst-launch.c:304
 msgid "Output tags (also known as metadata)"
 msgstr "Tags (ook bekend als metadata) weergeven"
 
-#: tools/gst-launch.c:414
+#: tools/gst-launch.c:306
 msgid "Output status information and property notifications"
 msgstr "Statusinformatie en eigenschapswaarschuwingen weergeven"
 
-#: tools/gst-launch.c:416
+#: tools/gst-launch.c:308
 msgid "Do not output status information of TYPE"
 msgstr "Statusinformatie van soort SOORT niet weergeven"
 
-#: tools/gst-launch.c:416
+#: tools/gst-launch.c:308
 msgid "TYPE1,TYPE2,..."
 msgstr "SOORT1,SOORT2,..."
 
-#: tools/gst-launch.c:419
-msgid "Save xml representation of pipeline to FILE and exit"
-msgstr "XML-representatie van pijplijn in BESTAND opslaan en afsluiten"
-
-#: tools/gst-launch.c:419
-msgid "FILE"
-msgstr "BESTAND"
-
-#: tools/gst-launch.c:422
+#: tools/gst-launch.c:310
 msgid "Do not install a fault handler"
 msgstr "Geen foutafhandelaar installeren"
 
-#: tools/gst-launch.c:424
+#: tools/gst-launch.c:312
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Toewijzingsspoor weergeven (indien aangezet tijdens compileren)"
 
-#: tools/gst-launch.c:426
+#: tools/gst-launch.c:314
 msgid "Number of times to iterate pipeline"
 msgstr "Aantal keren om de pijplijn te herhalen"
 
-#: tools/gst-launch.c:496
+#: tools/gst-launch.c:379
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FOUT: pijplijn kon niet gemaakt worden: %s.\n"
 
-#: tools/gst-launch.c:500
-#, c-format
+#: tools/gst-launch.c:383
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "FOUT: pijplijn kon niet gemaakt worden.\n"
 
-#: tools/gst-launch.c:504
+#: tools/gst-launch.c:387
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "WAARSCHUWING: foutieve pijplijn: %s\n"
 
-#: tools/gst-launch.c:505
-#, c-format
+#: tools/gst-launch.c:388
 msgid "         Trying to run anyway.\n"
 msgstr "              Probeer toch uit te voeren.\n"
 
-#: tools/gst-launch.c:532
-#, c-format
+#: tools/gst-launch.c:408
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FOUT: het 'pijplijn' element werd niet gevonden.\n"
 
-#: tools/gst-launch.c:539
-#, c-format
+#: tools/gst-launch.c:417
 msgid "RUNNING pipeline ...\n"
 msgstr "BEZIG met pijplijn ...\n"
 
-#: tools/gst-launch.c:542
-#, c-format
+#: tools/gst-launch.c:421
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FOUT: pijplijn wil niet spelen.\n"
+
+#: tools/gst-launch.c:445
+#, c-format
+msgid "Execution ended after %.2fs (%.2fs or %.2f%% idling).\n"
+msgstr ""
 
 #: tools/gst-register.c:49
 #, fuzzy, c-format
@@ -871,6 +814,41 @@ msgid "Loaded %d plugins with %d feature.\n"
 msgid_plural "Loaded %d plugins with %d features.\n"
 msgstr[0] "%d plugins geladen met %d %s.\n"
 msgstr[1] "%d plugins geladen met %d %s.\n"
+
+#~ msgid "Disable accelerated CPU instructions"
+#~ msgstr "Versnelde CPU-instructies uit zetten"
+
+#~ msgid "There is no element present to handle the stream's mime type %s."
+#~ msgstr ""
+#~ "Er is geen element aanwezig dat de MIME-soort %s van de stroom kan "
+#~ "verwerken."
+
+#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+#~ msgstr ""
+#~ "Gebruik: gst-xmllaunch <bestand.xml> [ element.eigenschap=waarde ... ]\n"
+
+#~ msgid "ERROR: parse of xml file '%s' failed.\n"
+#~ msgstr "FOUT: verwerken van xml-bestand '%s' mislukt.\n"
+
+#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+#~ msgstr "FOUT: geen bovenste pijplijn-element gevonden in file '%s'.\n"
+
+#~ msgid "WARNING: only one toplevel element is supported at this time."
+#~ msgstr ""
+#~ "WAARSCHUWING: slechts één element op het hoogste niveau ondersteund op "
+#~ "dit moment."
+
+#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
+#~ msgstr "FOUT: kon argument %d op opdrachtregel niet verwerken: %s.\n"
+
+#~ msgid "WARNING: element named '%s' not found.\n"
+#~ msgstr "WAARSCHUWING: element met naam '%s' niet gevonden.\n"
+
+#~ msgid "Save xml representation of pipeline to FILE and exit"
+#~ msgstr "XML-representatie van pijplijn in BESTAND opslaan en afsluiten"
+
+#~ msgid "FILE"
+#~ msgstr "BESTAND"
 
 #~ msgid "caps"
 #~ msgstr "mogelijkheden"

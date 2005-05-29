@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wim.taymans@chello.be>
+ *                    2004 Benjamin Otte <otte@gnomee.org>
  *
  * gstscheduler.c: Default scheduling code for most cases
  *
@@ -27,13 +28,22 @@
 #include "gstinfo.h"
 #include "gstregistrypool.h"
 
+/*
+GST_DEBUG_CATEGORY_STATIC (sched_debug, "GST_SCHEDULER", 
+    GST_DEBUG_BOLD | GST_DEBUG_FG_BLUE, "scheduler base class");
+#define GST_CAT_DEFAULT sched_debug
+*/
+
 static void gst_scheduler_class_init (GstSchedulerClass * klass);
 static void gst_scheduler_init (GstScheduler * sched);
 static void gst_scheduler_dispose (GObject * object);
 
-static GstObjectClass *parent_class = NULL;
+static void gst_scheduler_real_add_element (GstScheduler * scheduler,
+    GstElement * element);
+static void gst_scheduler_real_remove_element (GstScheduler * scheduler,
+    GstElement * element);
 
-static gchar *_default_name = NULL;
+static GstObjectClass *parent_class = NULL;
 
 GType
 gst_scheduler_get_type (void)
@@ -64,13 +74,14 @@ gst_scheduler_get_type (void)
 static void
 gst_scheduler_class_init (GstSchedulerClass * klass)
 {
-  GObjectClass *gobject_class;
+  GObjectClass *gobject = G_OBJECT_CLASS (klass);
 
-  gobject_class = (GObjectClass *) klass;
+  parent_class = g_type_class_peek_parent (klass);
 
-  parent_class = g_type_class_ref (GST_TYPE_OBJECT);
+  gobject->dispose = gst_scheduler_dispose;
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_scheduler_dispose);
+  klass->add_element = gst_scheduler_real_add_element;
+  klass->remove_element = gst_scheduler_real_remove_element;
 }
 
 static void
@@ -78,10 +89,6 @@ gst_scheduler_init (GstScheduler * sched)
 {
   sched->clock_providers = NULL;
   sched->clock_receivers = NULL;
-  sched->schedulers = NULL;
-  sched->state = GST_SCHEDULER_STATE_NONE;
-  sched->parent = NULL;
-  sched->parent_sched = NULL;
   sched->clock = NULL;
 }
 
@@ -91,58 +98,62 @@ gst_scheduler_dispose (GObject * object)
   GstScheduler *sched = GST_SCHEDULER (object);
 
   /* thse lists should all be NULL */
-  GST_DEBUG ("scheduler %p dispose %p %p %p",
-      object,
-      sched->clock_providers, sched->clock_receivers, sched->schedulers);
+  GST_DEBUG ("scheduler %p dispose %p %p",
+      object, sched->clock_providers, sched->clock_receivers);
 
   gst_object_replace ((GstObject **) & sched->current_clock, NULL);
   gst_object_replace ((GstObject **) & sched->clock, NULL);
 
-  /* kids are held reference to, so dereference here. */
-  while (sched->schedulers != NULL) {
-    gst_scheduler_remove_scheduler (sched,
-        GST_SCHEDULER (sched->schedulers->data));
-  }
-
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-/**
- * gst_scheduler_setup:
- * @sched: the scheduler
- *
- * Prepare the scheduler.
- */
-void
-gst_scheduler_setup (GstScheduler * sched)
+static void
+gst_scheduler_real_add_element (GstScheduler * scheduler, GstElement * element)
 {
-  GstSchedulerClass *sclass;
+  GSList *walk;
+  GstSchedulerClass *klass = GST_SCHEDULER_GET_CLASS (scheduler);
 
-  g_return_if_fail (GST_IS_SCHEDULER (sched));
+  g_assert (klass->add_element);
+  for (walk = element->actions; walk; walk = g_slist_next (walk)) {
+    klass->add_action (scheduler, walk->data);
+  }
+}
 
-  sclass = GST_SCHEDULER_GET_CLASS (sched);
+static void
+gst_scheduler_real_remove_element (GstScheduler * scheduler,
+    GstElement * element)
+{
+  GSList *walk;
+  GstSchedulerClass *klass = GST_SCHEDULER_GET_CLASS (scheduler);
 
-  if (sclass->setup)
-    sclass->setup (sched);
+  g_assert (klass->remove_element);
+  for (walk = element->actions; walk; walk = g_slist_next (walk)) {
+    klass->remove_action (scheduler, walk->data);
+  }
 }
 
 /**
- * gst_scheduler_reset:
- * @sched: a #GstScheduler to reset.
+ * gst_scheduler_marshal:
+ * @sched: #GstScheduler to marshal to
+ * @func: function to be called
+ * @data: user data provided to the function
  *
- * Reset the schedulers.
- */
+ * This function is meant to be used from a different thread. Use this whenever
+ * you need to marshal function calls into the thread this scheduler is running 
+ * in. Note that there are no guarantees made as to when the provided function
+ * will be exected, though schedulers will make a best effort to execute it as
+ * soon as possible.
+ **/
 void
-gst_scheduler_reset (GstScheduler * sched)
+gst_scheduler_marshal (GstScheduler * sched, GstMarshalFunc func, gpointer data)
 {
-  GstSchedulerClass *sclass;
+  GstSchedulerClass *klass;
 
   g_return_if_fail (GST_IS_SCHEDULER (sched));
-
-  sclass = GST_SCHEDULER_GET_CLASS (sched);
-
-  if (sclass->reset)
-    sclass->reset (sched);
+  g_return_if_fail (func != NULL);
+  klass = GST_SCHEDULER_GET_CLASS (sched);
+  g_return_if_fail (klass->marshal != NULL);
+  klass->marshal (sched, func, data);
 }
 
 /**
@@ -221,7 +232,6 @@ void
 gst_scheduler_add_element (GstScheduler * sched, GstElement * element)
 {
   GstSchedulerClass *sclass;
-  gboolean redistribute_clock = FALSE;
 
   g_return_if_fail (GST_IS_SCHEDULER (sched));
   g_return_if_fail (GST_IS_ELEMENT (element));
@@ -240,23 +250,14 @@ gst_scheduler_add_element (GstScheduler * sched, GstElement * element)
     sched->clock_providers = g_list_prepend (sched->clock_providers, element);
     GST_CAT_DEBUG (GST_CAT_CLOCK, "added clock provider %s",
         GST_ELEMENT_NAME (element));
-    redistribute_clock = TRUE;
   }
   if (gst_element_requires_clock (element)) {
     sched->clock_receivers = g_list_prepend (sched->clock_receivers, element);
     GST_CAT_DEBUG (GST_CAT_CLOCK, "added clock receiver %s",
         GST_ELEMENT_NAME (element));
-    redistribute_clock = TRUE;
   }
 
   gst_element_set_scheduler (element, sched);
-
-  if (redistribute_clock) {
-    GstClock *clock;
-
-    clock = gst_scheduler_get_clock (sched);
-    gst_scheduler_set_clock (sched, clock);
-  }
 
   sclass = GST_SCHEDULER_GET_CLASS (sched);
 
@@ -275,33 +276,12 @@ void
 gst_scheduler_remove_element (GstScheduler * sched, GstElement * element)
 {
   GstSchedulerClass *sclass;
-  GList *link;
-  gboolean redistribute_clock = FALSE;
 
   g_return_if_fail (GST_IS_SCHEDULER (sched));
   g_return_if_fail (GST_IS_ELEMENT (element));
 
-  link = g_list_find (sched->clock_providers, element);
-  if (link) {
-    sched->clock_providers = g_list_delete_link (sched->clock_providers, link);
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "removed clock provider %s",
-        GST_ELEMENT_NAME (element));
-    redistribute_clock = TRUE;
-  }
-  link = g_list_find (sched->clock_receivers, element);
-  if (link) {
-    sched->clock_receivers = g_list_delete_link (sched->clock_receivers, link);
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "removed clock receiver %s",
-        GST_ELEMENT_NAME (element));
-    redistribute_clock = TRUE;
-  }
-
-  if (redistribute_clock) {
-    GstClock *clock;
-
-    clock = gst_scheduler_get_clock (sched);
-    gst_scheduler_set_clock (sched, clock);
-  }
+  sched->clock_providers = g_list_remove (sched->clock_providers, element);
+  sched->clock_receivers = g_list_remove (sched->clock_receivers, element);
 
   sclass = GST_SCHEDULER_GET_CLASS (sched);
 
@@ -331,9 +311,7 @@ gst_scheduler_state_transition (GstScheduler * sched, GstElement * element,
   g_return_val_if_fail (GST_IS_SCHEDULER (sched), GST_STATE_FAILURE);
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
 
-  if (element == sched->parent && sched->parent_sched == NULL) {
-    /* FIXME is distributing the clock in the state change still needed
-     * when we distribute as soon as we add/remove elements? I think not.*/
+  if (GST_OBJECT (element) == gst_object_get_parent (GST_OBJECT (sched))) {
     switch (transition) {
       case GST_STATE_READY_TO_PAUSED:
       {
@@ -358,121 +336,6 @@ gst_scheduler_state_transition (GstScheduler * sched, GstElement * element,
 }
 
 /**
- * gst_scheduler_scheduling_change:
- * @sched: the scheduler
- * @element: the element that changed its scheduling strategy
- *
- * Tell the scheduler that an element changed its scheduling strategy.
- * An element could, for example, change its loop function or changes
- * from a loop based element to a chain based element.
- */
-void
-gst_scheduler_scheduling_change (GstScheduler * sched, GstElement * element)
-{
-  GstSchedulerClass *sclass;
-
-  g_return_if_fail (GST_IS_SCHEDULER (sched));
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  sclass = GST_SCHEDULER_GET_CLASS (sched);
-
-  if (sclass->scheduling_change)
-    sclass->scheduling_change (sched, element);
-}
-
-/**
- * gst_scheduler_add_scheduler:
- * @sched: a  #GstScheduler to add to
- * @sched2: the #GstScheduler to add
- *
- * Notifies the scheduler that it has to monitor this scheduler.
- */
-void
-gst_scheduler_add_scheduler (GstScheduler * sched, GstScheduler * sched2)
-{
-  GstSchedulerClass *sclass;
-
-  g_return_if_fail (GST_IS_SCHEDULER (sched));
-  g_return_if_fail (GST_IS_SCHEDULER (sched2));
-  g_return_if_fail (sched2->parent_sched == NULL);
-
-  GST_DEBUG ("gstscheduler: %p add scheduler %p", sched, sched2);
-
-  gst_object_ref (GST_OBJECT (sched2));
-  gst_object_ref (GST_OBJECT (sched));
-
-  sched->schedulers = g_list_prepend (sched->schedulers, sched2);
-  sched2->parent_sched = sched;
-
-  sclass = GST_SCHEDULER_GET_CLASS (sched);
-
-  if (sclass->add_scheduler)
-    sclass->add_scheduler (sched, sched2);
-}
-
-/**
- * gst_scheduler_remove_scheduler:
- * @sched: the scheduler
- * @sched2: the scheduler to remove
- *
- a Notifies the scheduler that it can stop monitoring this scheduler.
- */
-void
-gst_scheduler_remove_scheduler (GstScheduler * sched, GstScheduler * sched2)
-{
-  GstSchedulerClass *sclass;
-
-  g_return_if_fail (GST_IS_SCHEDULER (sched));
-  g_return_if_fail (GST_IS_SCHEDULER (sched2));
-  g_return_if_fail (sched2->parent_sched == sched);
-
-  GST_DEBUG ("gstscheduler: %p remove scheduler %p", sched, sched2);
-
-  sclass = GST_SCHEDULER_GET_CLASS (sched);
-
-  if (sclass->remove_scheduler)
-    sclass->remove_scheduler (sched, sched2);
-
-  sched->schedulers = g_list_remove (sched->schedulers, sched2);
-  sched2->parent_sched = NULL;
-
-  gst_object_unref (GST_OBJECT (sched2));
-  gst_object_unref (GST_OBJECT (sched));
-}
-
-/**
- * gst_scheduler_lock_element:
- * @sched: the scheduler
- * @element: the element to lock
- *
- * Acquire a lock on the given element in the given scheduler.
- */
-void
-gst_scheduler_lock_element (GstScheduler * sched, GstElement * element)
-{
-  g_return_if_fail (GST_IS_SCHEDULER (sched));
-  g_return_if_fail (GST_IS_ELEMENT (element));
-}
-
-/**
- * gst_scheduler_unlock_element:
- * @sched: the scheduler
- * @element: the element to unlock
- *
- * Release the lock on the given element in the given scheduler.
- */
-void
-gst_scheduler_unlock_element (GstScheduler * sched, GstElement * element)
-{
-  GstSchedulerClass *sclass;
-
-  g_return_if_fail (GST_IS_SCHEDULER (sched));
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  sclass = GST_SCHEDULER_GET_CLASS (sched);
-}
-
-/**
  * gst_scheduler_error:
  * @sched: the scheduler
  * @element: the element with the error
@@ -491,58 +354,6 @@ gst_scheduler_error (GstScheduler * sched, GstElement * element)
 
   if (sclass->error)
     sclass->error (sched, element);
-}
-
-/**
- * gst_scheduler_yield:
- * @sched: the scheduler
- * @element: the element requesting a yield
- *
- * Tell the scheduler to schedule another element.
- *
- * Returns: TRUE if the element should save its state, FALSE
- * if the scheduler can perform this action itself.
- */
-gboolean
-gst_scheduler_yield (GstScheduler * sched, GstElement * element)
-{
-  GstSchedulerClass *sclass;
-
-  g_return_val_if_fail (GST_IS_SCHEDULER (sched), TRUE);
-  g_return_val_if_fail (GST_IS_ELEMENT (element), TRUE);
-
-  sclass = GST_SCHEDULER_GET_CLASS (sched);
-
-  if (sclass->yield)
-    return sclass->yield (sched, element);
-
-  return TRUE;
-}
-
-/**
- * gst_scheduler_interrupt:
- * @sched: the scheduler
- * @element: the element requesting an interrupt
- *
- * Tell the scheduler to interrupt execution of this element.
- *
- * Returns: TRUE if the element should return NULL from the chain/get
- * function.
- */
-gboolean
-gst_scheduler_interrupt (GstScheduler * sched, GstElement * element)
-{
-  GstSchedulerClass *sclass;
-
-  g_return_val_if_fail (GST_IS_SCHEDULER (sched), FALSE);
-  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
-
-  sclass = GST_SCHEDULER_GET_CLASS (sched);
-
-  if (sclass->interrupt)
-    return sclass->interrupt (sched, element);
-
-  return FALSE;
 }
 
 /**
@@ -565,23 +376,8 @@ gst_scheduler_get_clock (GstScheduler * sched)
     GST_CAT_DEBUG (GST_CAT_CLOCK, "scheduler using fixed clock %p (%s)",
         clock, clock ? GST_STR_NULL (GST_OBJECT_NAME (clock)) : "-");
   } else {
-    GList *schedulers = sched->schedulers;
     GList *providers = sched->clock_providers;
 
-    /* try to get a clock from one of the schedulers we manage first */
-    while (schedulers) {
-      GstScheduler *scheduler = GST_SCHEDULER (schedulers->data);
-
-      clock = gst_scheduler_get_clock (scheduler);
-      if (clock) {
-        GST_CAT_DEBUG (GST_CAT_CLOCK,
-            "scheduler found managed sched clock %p (%s)",
-            clock, clock ? GST_STR_NULL (GST_OBJECT_NAME (clock)) : "-");
-        break;
-      }
-
-      schedulers = g_list_next (schedulers);
-    }
     /* still no clock, try to find one in the providers */
     while (!clock && providers) {
       clock = gst_element_get_clock (GST_ELEMENT (providers->data));
@@ -591,7 +387,7 @@ gst_scheduler_get_clock (GstScheduler * sched)
       providers = g_list_next (providers);
     }
     /* still no clock, use a system clock */
-    if (!clock && sched->parent_sched == NULL) {
+    if (!clock) {
       clock = gst_system_clock_obtain ();
       /* we unref since this function is not supposed to increase refcount
        * of clock object returned; this is ok since the systemclock always
@@ -640,14 +436,11 @@ void
 gst_scheduler_set_clock (GstScheduler * sched, GstClock * clock)
 {
   GList *receivers;
-  GList *schedulers;
 
   g_return_if_fail (sched != NULL);
   g_return_if_fail (GST_IS_SCHEDULER (sched));
 
   receivers = sched->clock_receivers;
-  schedulers = sched->schedulers;
-
   gst_object_replace ((GstObject **) & sched->current_clock,
       (GstObject *) clock);
 
@@ -660,15 +453,6 @@ gst_scheduler_set_clock (GstScheduler * sched, GstClock * clock)
 
     gst_element_set_clock (element, clock);
     receivers = g_list_next (receivers);
-  }
-  while (schedulers) {
-    GstScheduler *scheduler = GST_SCHEDULER (schedulers->data);
-
-    GST_CAT_DEBUG (GST_CAT_CLOCK,
-        "scheduler setting clock %p (%s) on scheduler %p", clock,
-        (clock ? GST_OBJECT_NAME (clock) : "nil"), scheduler);
-    gst_scheduler_set_clock (scheduler, clock);
-    schedulers = g_list_next (schedulers);
   }
 }
 
@@ -688,65 +472,23 @@ gst_scheduler_auto_clock (GstScheduler * sched)
 
   gst_object_replace ((GstObject **) & sched->clock, NULL);
 
-  GST_CAT_DEBUG (GST_CAT_CLOCK, "scheduler using automatic clock");
+  GST_DEBUG_OBJECT (sched, "using automatic clock");
 }
 
-GstClockReturn gst_clock_id_wait (GstClockID id, GstClockTimeDiff * jitter);
-
-/**
- * gst_scheduler_clock_wait:
- * @sched: the scheduler
- * @element: the element that wants to wait
- * @id: the clockid to use
- * @jitter: the time difference between requested time and actual time
- *
- * Wait till the clock reaches a specific time. The ClockID can
- * be obtained from #gst_clock_new_single_shot_id. 
- *
- * Returns: the status of the operation
- */
-GstClockReturn
-gst_scheduler_clock_wait (GstScheduler * sched, GstElement * element,
-    GstClockID id, GstClockTimeDiff * jitter)
+void
+gst_scheduler_pad_push (GstScheduler * sched, GstRealPad * pad, GstData * data)
 {
-  GstSchedulerClass *sclass;
+  GstSchedulerClass *klass;
 
-  g_return_val_if_fail (GST_IS_SCHEDULER (sched), GST_CLOCK_ERROR);
-  g_return_val_if_fail (id != NULL, GST_CLOCK_ERROR);
+  g_return_if_fail (GST_IS_SCHEDULER (sched));
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (GST_PAD_IS_SRC (pad));
+  g_return_if_fail (data != NULL);
 
-  sclass = GST_SCHEDULER_GET_CLASS (sched);
-
-  if (sclass->clock_wait)
-    return sclass->clock_wait (sched, element, id, jitter);
-  else
-    return gst_clock_id_wait (id, jitter);
+  klass = GST_SCHEDULER_GET_CLASS (sched);
+  g_return_if_fail (klass->pad_push);
+  klass->pad_push (sched, pad, data);
 }
-
-/**
- * gst_scheduler_iterate:
- * @sched: the scheduler
- *
- * Perform one iteration on the scheduler.
- *
- * Returns: a boolean indicating something usefull has happened.
- */
-gboolean
-gst_scheduler_iterate (GstScheduler * sched)
-{
-  GstSchedulerClass *sclass;
-  gboolean res = FALSE;
-
-  g_return_val_if_fail (GST_IS_SCHEDULER (sched), FALSE);
-
-  sclass = GST_SCHEDULER_GET_CLASS (sched);
-
-  if (sclass->iterate) {
-    res = sclass->iterate (sched);
-  }
-
-  return res;
-}
-
 
 /**
  * gst_scheduler_show:
@@ -765,278 +507,4 @@ gst_scheduler_show (GstScheduler * sched)
 
   if (sclass->show)
     sclass->show (sched);
-}
-
-/*
- * Factory stuff starts here
- *
- */
-static void gst_scheduler_factory_class_init (GstSchedulerFactoryClass * klass);
-static void gst_scheduler_factory_init (GstSchedulerFactory * factory);
-
-static GstPluginFeatureClass *factory_parent_class = NULL;
-
-/* static guint gst_scheduler_factory_signals[LAST_SIGNAL] = { 0 }; */
-
-GType
-gst_scheduler_factory_get_type (void)
-{
-  static GType schedulerfactory_type = 0;
-
-  if (!schedulerfactory_type) {
-    static const GTypeInfo schedulerfactory_info = {
-      sizeof (GstSchedulerFactoryClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_scheduler_factory_class_init,
-      NULL,
-      NULL,
-      sizeof (GstSchedulerFactory),
-      0,
-      (GInstanceInitFunc) gst_scheduler_factory_init,
-      NULL
-    };
-
-    schedulerfactory_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE,
-        "GstSchedulerFactory", &schedulerfactory_info, 0);
-  }
-  return schedulerfactory_type;
-}
-
-static void
-gst_scheduler_factory_class_init (GstSchedulerFactoryClass * klass)
-{
-  GObjectClass *gobject_class;
-  GstObjectClass *gstobject_class;
-  GstPluginFeatureClass *gstpluginfeature_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstobject_class = (GstObjectClass *) klass;
-  gstpluginfeature_class = (GstPluginFeatureClass *) klass;
-
-  factory_parent_class = g_type_class_ref (GST_TYPE_PLUGIN_FEATURE);
-
-  if (!_default_name) {
-    if (g_getenv ("GST_SCHEDULER")) {
-      _default_name = g_strdup (g_getenv ("GST_SCHEDULER"));
-    } else {
-      _default_name = g_strdup (GST_SCHEDULER_DEFAULT_NAME);
-    }
-  }
-  g_assert (_default_name);
-}
-
-static void
-gst_scheduler_factory_init (GstSchedulerFactory * factory)
-{
-}
-
-
-/**
- * gst_scheduler_register:
- * @plugin: a #GstPlugin
- * @name: name of the scheduler to register
- * @longdesc: description of the scheduler
- * @type: #GType of the scheduler to register
- *
- * Registers a scheduler with GStreamer.
- *
- * Returns: TRUE, if the registering succeeded, FALSE on error.
- *
- * Since: 0.8.5
- **/
-gboolean
-gst_scheduler_register (GstPlugin * plugin, const gchar * name,
-    const gchar * longdesc, GType type)
-{
-  GstSchedulerFactory *factory;
-
-  g_return_val_if_fail (plugin != NULL, FALSE);
-  g_return_val_if_fail (name != NULL, FALSE);
-  g_return_val_if_fail (longdesc != NULL, FALSE);
-  g_return_val_if_fail (g_type_is_a (type, GST_TYPE_SCHEDULER), FALSE);
-
-  factory = gst_scheduler_factory_find (name);
-  if (factory) {
-    g_return_val_if_fail (factory->type == 0, FALSE);
-    g_free (factory->longdesc);
-    factory->longdesc = g_strdup (longdesc);
-    factory->type = type;
-  } else {
-    factory = gst_scheduler_factory_new (name, longdesc, type);
-    g_return_val_if_fail (factory, FALSE);
-    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-  }
-
-  return TRUE;
-}
-
-/**
- * gst_scheduler_factory_new:
- * @name: name of schedulerfactory to create
- * @longdesc: long description of schedulerfactory to create
- * @type: the gtk type of the GstScheduler element of this factory
- *
- * Create a new schedulerfactory with the given parameters
- *
- * Returns: a new #GstSchedulerFactory.
- */
-GstSchedulerFactory *
-gst_scheduler_factory_new (const gchar * name, const gchar * longdesc,
-    GType type)
-{
-  GstSchedulerFactory *factory;
-
-  g_return_val_if_fail (name != NULL, NULL);
-
-  factory = gst_scheduler_factory_find (name);
-
-  if (!factory) {
-    factory =
-        GST_SCHEDULER_FACTORY (g_object_new (GST_TYPE_SCHEDULER_FACTORY, NULL));
-    GST_PLUGIN_FEATURE_NAME (factory) = g_strdup (name);
-  } else {
-    g_free (factory->longdesc);
-  }
-
-  factory->longdesc = g_strdup (longdesc);
-  factory->type = type;
-
-  return factory;
-}
-
-/**
- * gst_scheduler_factory_destroy:
- * @factory: factory to destroy
- *
- * Removes the scheduler from the global list.
- */
-void
-gst_scheduler_factory_destroy (GstSchedulerFactory * factory)
-{
-  g_return_if_fail (factory != NULL);
-
-  /* we don't free the struct bacause someone might  have a handle to it.. */
-}
-
-/**
- * gst_scheduler_factory_find:
- * @name: name of schedulerfactory to find
- *
- * Search for an schedulerfactory of the given name.
- *
- * Returns: #GstSchedulerFactory if found, NULL otherwise
- */
-GstSchedulerFactory *
-gst_scheduler_factory_find (const gchar * name)
-{
-  GstPluginFeature *feature;
-
-  g_return_val_if_fail (name != NULL, NULL);
-
-  GST_DEBUG ("gstscheduler: find \"%s\"", name);
-
-  feature = gst_registry_pool_find_feature (name, GST_TYPE_SCHEDULER_FACTORY);
-
-  if (feature)
-    return GST_SCHEDULER_FACTORY (feature);
-
-  return NULL;
-}
-
-/**
- * gst_scheduler_factory_create:
- * @factory: the factory used to create the instance
- * @parent: the parent element of this scheduler
- *
- * Create a new #GstScheduler instance from the 
- * given schedulerfactory with the given parent. @parent will
- * have its scheduler set to the returned #GstScheduler instance.
- *
- * Returns: A new #GstScheduler instance with a reference count of %1.
- */
-GstScheduler *
-gst_scheduler_factory_create (GstSchedulerFactory * factory,
-    GstElement * parent)
-{
-  GstScheduler *sched = NULL;
-
-  g_return_val_if_fail (factory != NULL, NULL);
-  g_return_val_if_fail (GST_IS_ELEMENT (parent), NULL);
-
-  if (gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory))) {
-    g_return_val_if_fail (factory->type != 0, NULL);
-
-    sched = GST_SCHEDULER (g_object_new (factory->type, NULL));
-    sched->parent = parent;
-
-    GST_ELEMENT_SCHED (parent) = sched;
-
-    /* let's refcount the scheduler */
-    gst_object_ref (GST_OBJECT (sched));
-    gst_object_sink (GST_OBJECT (sched));
-  }
-
-  return sched;
-}
-
-/**
- * gst_scheduler_factory_make:
- * @name: the name of the factory used to create the instance
- * @parent: the parent element of this scheduler
- *
- * Create a new #GstScheduler instance from the 
- * schedulerfactory with the given name and parent. @parent will
- * have its scheduler set to the returned #GstScheduler instance.
- * If %NULL is passed as @name, the default scheduler name will
- * be used.
- *
- * Returns: A new #GstScheduler instance with a reference count of %1.
- */
-GstScheduler *
-gst_scheduler_factory_make (const gchar * name, GstElement * parent)
-{
-  GstSchedulerFactory *factory;
-  const gchar *default_name = gst_scheduler_factory_get_default_name ();
-
-  if (name)
-    factory = gst_scheduler_factory_find (name);
-  else {
-    /* FIXME: do better error handling */
-    if (default_name == NULL)
-      g_error ("No default scheduler name - do you have a registry ?");
-    factory = gst_scheduler_factory_find (default_name);
-  }
-
-  if (factory == NULL)
-    return NULL;
-
-  return gst_scheduler_factory_create (factory, parent);
-}
-
-/**
- * gst_scheduler_factory_set_default_name:
- * @name: the name of the factory used as a default
- *
- * Set the default schedulerfactory name.
- */
-void
-gst_scheduler_factory_set_default_name (const gchar * name)
-{
-  g_free (_default_name);
-
-  _default_name = g_strdup (name);
-}
-
-/**
- * gst_scheduler_factory_get_default_name:
- *
- * Get the default schedulerfactory name.
- *
- * Returns: the name of the default scheduler.
- */
-const gchar *
-gst_scheduler_factory_get_default_name (void)
-{
-  return _default_name;
 }

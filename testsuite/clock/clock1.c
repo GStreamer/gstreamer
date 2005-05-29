@@ -26,6 +26,7 @@ main (int argc, char *argv[])
     g_print ("Could not create a fakesrc element !\n");
     return 1;
   }
+  g_object_set (G_OBJECT (src), "num-buffers", 1, NULL);
   if ((id = gst_element_factory_make ("identity", "filter")) == NULL) {
     g_print ("Could not create a identity element !\n");
     return 1;

@@ -30,6 +30,9 @@ cb_handoff (GstElement * element, GstBuffer * buffer, GstPad * pad,
     gst_bin_remove (GST_BIN (pipeline), OTHER_ELEMENT);
     OTHER_ELEMENT =
         gst_element_factory_make ("fake" G_STRINGIFY (OTHER_ELEMENT), NULL);
+    if (g_str_equal (G_OBJECT_CLASS_NAME (G_OBJECT_GET_CLASS (OTHER_ELEMENT)),
+            "GstFakeSrc"))
+      g_object_set (OTHER_ELEMENT, "num-buffers", 10, NULL);
     g_assert (OTHER_ELEMENT);
     gst_bin_add (GST_BIN (pipeline), OTHER_ELEMENT);
     gst_element_sync_state_with_parent (OTHER_ELEMENT);
@@ -40,8 +43,6 @@ cb_handoff (GstElement * element, GstBuffer * buffer, GstPad * pad,
 gint
 main (gint argc, gchar ** argv)
 {
-  guint i = 0;
-
   gst_init (&argc, &argv);
 
   g_print ("setting up...\n");
@@ -50,6 +51,7 @@ main (gint argc, gchar ** argv)
   g_assert (pipeline);
   src = gst_element_factory_make ("fakesrc", NULL);
   g_assert (src);
+  g_object_set (src, "num-buffers", 10, NULL);
   sink = gst_element_factory_make ("fakesink", NULL);
   g_assert (sink);
   gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
@@ -62,7 +64,7 @@ main (gint argc, gchar ** argv)
   g_print ("running...\n");
   if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
     g_assert_not_reached ();
-  while (i++ < 10 && gst_bin_iterate (GST_BIN (pipeline)));
+  gst_bin_iterate (GST_BIN (pipeline));
 
   g_print ("cleaning up...\n");
   gst_object_unref (GST_OBJECT (pipeline));

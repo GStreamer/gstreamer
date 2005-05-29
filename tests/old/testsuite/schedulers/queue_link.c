@@ -33,10 +33,11 @@ main (gint argc, gchar ** argv)
   g_assert (pipeline);
   src = gst_element_factory_make ("fakesrc", NULL);
   g_assert (src);
+  g_object_set (src, "num-buffers", 10, NULL);
   queue = gst_element_factory_make ("queue", NULL);
   g_assert (queue);
 
-  thread = gst_element_factory_make ("thread", NULL);
+  thread = gst_element_factory_make ("bin", NULL);
   g_assert (thread);
   bin = gst_element_factory_make ("bin", NULL);
   g_assert (bin);

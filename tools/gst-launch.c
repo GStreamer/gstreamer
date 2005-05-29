@@ -59,141 +59,9 @@ static void sigint_restore (void);
 #endif
 
 static gint max_iterations = 0;
-static guint64 iterations = 0;
-static guint64 sum = 0;
-static guint64 min = G_MAXINT64;
-static guint64 max = 0;
-static GstClock *s_clock;
 static GstElement *pipeline;
-static gboolean caught_intr = FALSE;
-static gboolean caught_error = FALSE;
-static gboolean need_new_state = FALSE;
-static GstElementState new_state;
-
-gboolean
-idle_func (gpointer data)
-{
-  gboolean busy;
-  GTimeVal tfthen, tfnow;
-  GstClockTimeDiff diff;
-
-  g_get_current_time (&tfthen);
-  busy = gst_bin_iterate (GST_BIN (data));
-  iterations++;
-  g_get_current_time (&tfnow);
-
-  diff = GST_TIMEVAL_TO_TIME (tfnow) - GST_TIMEVAL_TO_TIME (tfthen);
-
-  sum += diff;
-  min = MIN (min, diff);
-  max = MAX (max, diff);
-
-  if (need_new_state) {
-    gst_element_set_state (pipeline, new_state);
-    need_new_state = FALSE;
-  }
-
-  if (!busy || caught_intr || caught_error ||
-      (max_iterations > 0 && iterations >= max_iterations)) {
-    char *s_iterations;
-    char *s_sum;
-    char *s_ave;
-    char *s_min;
-    char *s_max;
-
-    gst_main_quit ();
-
-    /* We write these all to strings first because 
-     * G_GUINT64_FORMAT and gettext mix very poorly */
-    s_iterations = g_strdup_printf ("%" G_GUINT64_FORMAT, iterations);
-    s_sum = g_strdup_printf ("%" G_GUINT64_FORMAT, sum);
-    s_ave = g_strdup_printf ("%" G_GUINT64_FORMAT, sum / iterations);
-    s_min = g_strdup_printf ("%" G_GUINT64_FORMAT, min);
-    s_max = g_strdup_printf ("%" G_GUINT64_FORMAT, max);
-
-    g_print (_("Execution ended after %s iterations (sum %s ns, "
-            "average %s ns, min %s ns, max %s ns).\n"),
-        s_iterations, s_sum, s_ave, s_min, s_max);
-    g_free (s_iterations);
-    g_free (s_sum);
-    g_free (s_ave);
-    g_free (s_min);
-    g_free (s_max);
-  }
-
-  return busy;
-}
-
-#ifndef GST_DISABLE_LOADSAVE
-static GstElement *
-xmllaunch_parse_cmdline (const gchar ** argv)
-{
-  GstElement *pipeline = NULL, *e;
-  GstXML *xml;
-  gboolean err;
-  const gchar *arg;
-  gchar *element, *property, *value;
-  GList *l;
-  gint i = 0;
-
-  if (!(arg = argv[0])) {
-    g_print (_
-        ("Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"));
-    exit (1);
-  }
-
-  xml = gst_xml_new ();
-  err = gst_xml_parse_file (xml, (guchar *) arg, NULL);
-
-  if (err != TRUE) {
-    fprintf (stderr, _("ERROR: parse of xml file '%s' failed.\n"), arg);
-    exit (1);
-  }
-
-  l = gst_xml_get_topelements (xml);
-  if (!l) {
-    fprintf (stderr, _("ERROR: no toplevel pipeline element in file '%s'.\n"),
-        arg);
-    exit (1);
-  }
-
-  if (l->next)
-    fprintf (stderr,
-        _("WARNING: only one toplevel element is supported at this time."));
-
-  pipeline = GST_ELEMENT (l->data);
-
-  while ((arg = argv[++i])) {
-    element = g_strdup (arg);
-    property = strchr (element, '.');
-    value = strchr (element, '=');
-
-    if (!(element < property && property < value)) {
-      fprintf (stderr,
-          _("ERROR: could not parse command line argument %d: %s.\n"), i,
-          element);
-      g_free (element);
-      exit (1);
-    }
-
-    *property++ = '\0';
-    *value++ = '\0';
-
-    e = gst_bin_get_by_name (GST_BIN (pipeline), element);
-    if (!e) {
-      fprintf (stderr, _("WARNING: element named '%s' not found.\n"), element);
-    } else {
-      gst_util_set_object_arg (G_OBJECT (e), property, value);
-    }
-    g_free (element);
-  }
-
-  if (!l)
-    return NULL;
-  else
-    return l->data;
-}
-#endif
+gboolean caught_intr = FALSE;
+gboolean caught_quit = FALSE;
 
 #ifndef DISABLE_FAULT_HANDLER
 #ifndef USE_SIGINFO
@@ -202,17 +70,15 @@ fault_handler_sighandler (int signum)
 {
   fault_restore ();
 
-  /* printf is used instead of g_print(), since it's less likely to
-   * deadlock */
   switch (signum) {
     case SIGSEGV:
-      printf ("Caught SIGSEGV\n");
+      g_print ("Caught SIGSEGV\n");
       break;
     case SIGQUIT:
-      printf ("Caught SIGQUIT\n");
+      g_print ("Caught SIGQUIT\n");
       break;
     default:
-      printf ("signo:  %d\n", signum);
+      g_print ("signo:  %d\n", signum);
       break;
   }
 
@@ -226,19 +92,17 @@ fault_handler_sigaction (int signum, siginfo_t * si, void *misc)
 {
   fault_restore ();
 
-  /* printf is used instead of g_print(), since it's less likely to
-   * deadlock */
   switch (si->si_signo) {
     case SIGSEGV:
-      printf ("Caught SIGSEGV accessing address %p\n", si->si_addr);
+      g_print ("Caught SIGSEGV accessing address %p\n", si->si_addr);
       break;
     case SIGQUIT:
-      printf ("Caught SIGQUIT\n");
+      g_print ("Caught SIGQUIT\n");
       break;
     default:
-      printf ("signo:  %d\n", si->si_signo);
-      printf ("errno:  %d\n", si->si_errno);
-      printf ("code:   %d\n", si->si_code);
+      g_print ("signo:  %d\n", si->si_signo);
+      g_print ("errno:  %d\n", si->si_errno);
+      g_print ("code:   %d\n", si->si_code);
       break;
   }
 
@@ -257,7 +121,7 @@ fault_spin (void)
   wait (NULL);
 
   /* FIXME how do we know if we were run by libtool? */
-  printf ("Spinning.  Please run 'gdb gst-launch %d' to continue debugging, "
+  g_print ("Spinning.  Please run 'gdb gst-launch %d' to continue debugging, "
       "Ctrl-C to quit, or Ctrl-\\ to dump core.\n", (gint) getpid ());
   while (spinning)
     g_usleep (1000000);
@@ -320,20 +184,12 @@ print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
     g_free (str);
   }
 }
-
 static void
 found_tag (GObject * pipeline, GstElement * source, GstTagList * tags)
 {
   g_print (_("FOUND TAG      : found by element \"%s\".\n"),
       GST_STR_NULL (GST_ELEMENT_NAME (source)));
   gst_tag_list_foreach (tags, print_tag, NULL);
-}
-
-static void
-error_cb (GObject * object, GstObject * source, GError * error, gchar * debug)
-{
-  gst_element_default_error (object, source, error, debug);
-  caught_error = TRUE;
 }
 
 #ifndef DISABLE_FAULT_HANDLER
@@ -373,12 +229,12 @@ play_handler (int signum)
 {
   switch (signum) {
     case SIGUSR1:
-      new_state = GST_STATE_PLAYING;
-      need_new_state = TRUE;
+      g_print ("Caught SIGUSR1 - Play request.\n");
+      gst_element_set_state (pipeline, GST_STATE_PLAYING);
       break;
     case SIGUSR2:
-      new_state = GST_STATE_NULL;
-      need_new_state = TRUE;
+      g_print ("Caught SIGUSR2 - Stop request.\n");
+      gst_element_set_state (pipeline, GST_STATE_NULL);
       break;
   }
 }
@@ -395,6 +251,43 @@ play_signal_setup (void)
 }
 #endif
 
+static gboolean
+should_quit (gpointer loop)
+{
+  if (!caught_intr && !caught_quit)
+    return TRUE;
+
+  g_main_loop_quit (loop);
+  if (caught_intr)
+    g_print ("Caught interrupt.\n");
+  return FALSE;
+}
+
+static void
+quit_cb (void)
+{
+  caught_quit = TRUE;
+}
+
+static GPollFunc gpoll;
+static GTimer *poll_timer = NULL;
+
+static gint
+launch_poll (GPollFD * ufds, guint nfds, gint timeout_)
+{
+  gint ret;
+
+  if (G_LIKELY (poll_timer)) {
+    g_timer_continue (poll_timer);
+  } else {
+    poll_timer = g_timer_new ();
+    g_timer_start (poll_timer);
+  }
+  ret = gpoll (ufds, nfds, timeout_);
+  g_timer_stop (poll_timer);
+  return ret;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -405,7 +298,6 @@ main (int argc, char *argv[])
   gboolean tags = FALSE;
   gboolean no_fault = FALSE;
   gboolean trace = FALSE;
-  gchar *savefile = NULL;
   gchar *exclude_args = NULL;
   struct poptOption options[] = {
     {"tags", 't', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &tags, 0,
@@ -414,10 +306,6 @@ main (int argc, char *argv[])
         N_("Output status information and property notifications"), NULL},
     {"exclude", 'X', POPT_ARG_STRING | POPT_ARGFLAG_STRIP, &exclude_args, 0,
         N_("Do not output status information of TYPE"), N_("TYPE1,TYPE2,...")},
-#ifndef GST_DISABLE_LOADSAVE
-    {"output", 'o', POPT_ARG_STRING | POPT_ARGFLAG_STRIP, &savefile, 0,
-        N_("Save xml representation of pipeline to FILE and exit"), N_("FILE")},
-#endif
     {"no-fault", 'f', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &no_fault, 0,
         N_("Do not install a fault handler"), NULL},
     {"trace", 'T', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &trace, 0,
@@ -480,11 +368,6 @@ main (int argc, char *argv[])
   /* make a null-terminated version of argv */
   argvn = g_new0 (char *, argc);
   memcpy (argvn, argv + 1, sizeof (char *) * (argc - 1));
-#ifndef GST_DISABLE_LOADSAVE
-  if (strstr (argv[0], "gst-xmllaunch")) {
-    pipeline = xmllaunch_parse_cmdline ((const gchar **) argvn);
-  } else
-#endif
   {
     pipeline =
         (GstElement *) gst_parse_launchv ((const gchar **) argvn, &error);
@@ -493,16 +376,16 @@ main (int argc, char *argv[])
 
   if (!pipeline) {
     if (error) {
-      fprintf (stderr, _("ERROR: pipeline could not be constructed: %s.\n"),
+      g_printerr (_("ERROR: pipeline could not be constructed: %s.\n"),
           error->message);
       g_error_free (error);
     } else {
-      fprintf (stderr, _("ERROR: pipeline could not be constructed.\n"));
+      g_printerr (_("ERROR: pipeline could not be constructed.\n"));
     }
-    return 1;
+    exit (1);
   } else if (error) {
-    fprintf (stderr, _("WARNING: erroneous pipeline: %s\n"), error->message);
-    fprintf (stderr, _("         Trying to run anyway.\n"));
+    g_printerr (_("WARNING: erroneous pipeline: %s\n"), error->message);
+    g_printerr (_("         Trying to run anyway.\n"));
     g_error_free (error);
   }
 
@@ -515,56 +398,52 @@ main (int argc, char *argv[])
   if (tags) {
     g_signal_connect (pipeline, "found-tag", G_CALLBACK (found_tag), NULL);
   }
-  g_signal_connect (pipeline, "error", G_CALLBACK (error_cb), NULL);
+  g_signal_connect (pipeline, "error", G_CALLBACK (gst_element_default_error),
+      NULL);
 
-#ifndef GST_DISABLE_LOADSAVE
-  if (savefile) {
-    gst_xml_write_file (GST_ELEMENT (pipeline), fopen (savefile, "w"));
+  if (!GST_IS_BIN (pipeline)) {
+    GstElement *real_pipeline = gst_element_factory_make ("pipeline", NULL);
+
+    if (real_pipeline == NULL) {
+      g_printerr (_("ERROR: the 'pipeline' element wasn't found.\n"));
+      return 1;
+    }
+    gst_bin_add (GST_BIN (real_pipeline), pipeline);
+    pipeline = real_pipeline;
   }
-#endif
 
-  if (!savefile) {
+  g_signal_connect_swapped (pipeline, "eos", G_CALLBACK (quit_cb), NULL);
+  g_signal_connect_swapped (pipeline, "error", G_CALLBACK (quit_cb), NULL);
+  g_print (_("RUNNING pipeline ...\n"));
 
-    if (!GST_IS_BIN (pipeline)) {
-      GstElement *real_pipeline = gst_element_factory_make ("pipeline", NULL);
+  if (gst_element_set_state (pipeline, GST_STATE_PLAYING) == GST_STATE_FAILURE) {
+    g_printerr (_("ERROR: pipeline doesn't want to play.\n"));
+    res = -1;
+  } else {
+    GTimer *timer = g_timer_new ();
+    GMainLoop *loop = g_main_loop_new (NULL, FALSE);
+    gdouble in_poll = 0, duration;
 
-      if (real_pipeline == NULL) {
-        fprintf (stderr, _("ERROR: the 'pipeline' element wasn't found.\n"));
-        return 1;
-      }
-      gst_bin_add (GST_BIN (real_pipeline), pipeline);
-      pipeline = real_pipeline;
+    g_timeout_add (1000, should_quit, loop);
+
+    gpoll = g_main_context_get_poll_func (NULL);
+    g_main_context_set_poll_func (NULL, launch_poll);
+    g_timer_start (timer);
+    g_main_loop_run (loop);
+    g_timer_stop (timer);
+    g_main_loop_unref (loop);
+    if (poll_timer) {
+      in_poll = g_timer_elapsed (poll_timer, NULL);
+      g_timer_destroy (poll_timer);
     }
-
-    fprintf (stderr, _("RUNNING pipeline ...\n"));
-    if (gst_element_set_state (pipeline,
-            GST_STATE_PLAYING) == GST_STATE_FAILURE) {
-      fprintf (stderr, _("ERROR: pipeline doesn't want to play.\n"));
-      res = -1;
-      goto end;
-    }
-
-    s_clock = gst_bin_get_clock (GST_BIN (pipeline));
-
-    if (!GST_FLAG_IS_SET (GST_OBJECT (pipeline), GST_BIN_SELF_SCHEDULABLE)) {
-      g_idle_add (idle_func, pipeline);
-      gst_main ();
-    } else {
-      g_print ("Waiting for the state change... ");
-      gst_element_wait_state_change (pipeline);
-      g_print ("got the state change.\n");
-    }
-    if (caught_intr) {
-      g_print ("Caught interrupt.\n");
-      res = 2;
-    }
-    if (caught_error)
-      res = 3;
+    duration = g_timer_elapsed (timer, NULL);
+    g_timer_destroy (timer);
 
     gst_element_set_state (pipeline, GST_STATE_NULL);
-  }
 
-end:
+    g_print (_("Execution ended after %.2fs (%.2fs or %.2f%% idling).\n"),
+        duration, in_poll, in_poll * 100 / duration);
+  }
 
   gst_object_unref (GST_OBJECT (pipeline));
 

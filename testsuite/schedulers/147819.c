@@ -20,20 +20,16 @@
 
 #include <gst/gst.h>
 
-static gboolean handoff;
-
 static void
 handoff_identity1 (GstElement * element)
 {
   g_print ("identity1 handoff\n");
-  handoff = TRUE;
 }
 
 static void
 handoff_identity2 (GstElement * element)
 {
   g_print ("identity2 handoff\n");
-  handoff = TRUE;
 }
 
 gint
@@ -49,16 +45,15 @@ main (gint argc, gchar ** argv)
   g_assert (pipeline);
   src = gst_element_factory_make ("fakesrc", NULL);
   g_assert (src);
+  g_object_set (G_OBJECT (src), "num-buffers", 10, NULL);
   id1 = gst_element_factory_make ("identity", NULL);
   g_assert (id1);
-  g_object_set (G_OBJECT (id1), "loop-based", TRUE, NULL);
   g_object_set (G_OBJECT (id1), "duplicate", 3, NULL);
   g_signal_connect (G_OBJECT (id1), "handoff", (GCallback) handoff_identity1,
       NULL);
 
   id2 = gst_element_factory_make ("identity", NULL);
   g_assert (id2);
-  g_object_set (G_OBJECT (id2), "loop-based", TRUE, NULL);
   g_signal_connect (G_OBJECT (id2), "handoff", (GCallback) handoff_identity2,
       NULL);
 
@@ -75,20 +70,6 @@ main (gint argc, gchar ** argv)
     g_assert_not_reached ();
 
   g_print ("running...\n");
-  gst_bin_iterate (GST_BIN (pipeline));
-  gst_bin_iterate (GST_BIN (pipeline));
-  gst_bin_iterate (GST_BIN (pipeline));
-
-  /* do ugly stuff here */
-  gst_object_ref (GST_OBJECT (id1));
-  gst_bin_remove (GST_BIN (pipeline), id1);
-  gst_element_link_pads (src, "src", id1, "sink");
-  gst_element_link_pads (id1, "src", id2, "sink");
-
-  gst_bin_iterate (GST_BIN (pipeline));
-  gst_bin_iterate (GST_BIN (pipeline));
-  gst_bin_iterate (GST_BIN (pipeline));
-  gst_bin_iterate (GST_BIN (pipeline));
   gst_bin_iterate (GST_BIN (pipeline));
 
   g_print ("cleaning up...\n");

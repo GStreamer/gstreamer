@@ -48,6 +48,8 @@ struct _GstTypeFindElement {
   GstPad *		sink;
   GstPad *		src;
 
+  GstAction *		wakeup;
+
   guint			min_probability;
   guint			max_probability;
   GstCaps *		caps;
