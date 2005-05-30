@@ -215,11 +215,13 @@ gst_identity_event (GstBaseTransform * trans, GstEvent * event)
   identity = GST_IDENTITY (trans);
 
   if (!identity->silent) {
+    GST_LOCK (identity);
     g_free (identity->last_message);
 
     identity->last_message =
         g_strdup_printf ("chain   ******* (%s:%s)E (type: %d) %p",
         GST_DEBUG_PAD_NAME (trans->sinkpad), GST_EVENT_TYPE (event), event);
+    GST_UNLOCK (identity);
 
     g_object_notify (G_OBJECT (identity), "last_message");
   }
@@ -285,6 +287,7 @@ gst_identity_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
   if (identity->drop_probability > 0.0) {
     if ((gfloat) (1.0 * rand () / (RAND_MAX)) < identity->drop_probability) {
+      GST_LOCK (identity);
       g_free (identity->last_message);
       identity->last_message =
           g_strdup_printf ("dropping   ******* (%s:%s)i (%d bytes, timestamp: %"
@@ -295,6 +298,7 @@ gst_identity_transform (GstBaseTransform * trans, GstBuffer * inbuf,
           GST_TIME_ARGS (GST_BUFFER_DURATION (inbuf)),
           GST_BUFFER_OFFSET (inbuf), GST_BUFFER_OFFSET_END (inbuf),
           GST_BUFFER_FLAGS (inbuf), inbuf);
+      GST_UNLOCK (identity);
       g_object_notify (G_OBJECT (identity), "last-message");
       return GST_FLOW_OK;
     }
@@ -308,6 +312,7 @@ gst_identity_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     GstClockTime time;
 
     if (!identity->silent) {
+      GST_LOCK (identity);
       g_free (identity->last_message);
       identity->last_message =
           g_strdup_printf ("chain   ******* (%s:%s)i (%d bytes, timestamp: %"
@@ -318,6 +323,7 @@ gst_identity_transform (GstBaseTransform * trans, GstBuffer * inbuf,
           GST_TIME_ARGS (GST_BUFFER_DURATION (inbuf)),
           GST_BUFFER_OFFSET (inbuf), GST_BUFFER_OFFSET_END (inbuf),
           GST_BUFFER_FLAGS (inbuf), inbuf);
+      GST_UNLOCK (identity);
       g_object_notify (G_OBJECT (identity), "last-message");
     }
 
@@ -428,7 +434,9 @@ gst_identity_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, identity->dump);
       break;
     case PROP_LAST_MESSAGE:
+      GST_LOCK (identity);
       g_value_set_string (value, identity->last_message);
+      GST_UNLOCK (identity);
       break;
     case PROP_SYNC:
       g_value_set_boolean (value, identity->sync);

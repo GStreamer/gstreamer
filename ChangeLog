@@ -1,5 +1,12 @@
 2005-05-30  Wim Taymans  <wim@fluendo.com>
 
+	* gst/elements/gstidentity.c: (gst_identity_event),
+	(gst_identity_transform), (gst_identity_get_property):
+	Protect last_message property as it is accessed from
+	multiple threads.
+
+2005-05-30  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstelement.c: (gst_element_init),
 	(gst_element_pads_activate), (gst_element_change_state):
 	Slicker pad activation code.
