@@ -206,16 +206,6 @@ gst_element_init (GstElement * element)
 {
   element->current_state = GST_STATE_NULL;
   element->pending_state = GST_STATE_VOID_PENDING;
-  element->numpads = 0;
-  element->numsrcpads = 0;
-  element->numsinkpads = 0;
-  element->pads_cookie = 0;
-  element->pads = NULL;
-  element->srcpads = NULL;
-  element->sinkpads = NULL;
-  element->manager = NULL;
-  element->clock = NULL;
-  element->sched_private = NULL;
   element->state_lock = g_mutex_new ();
   element->state_cond = g_cond_new ();
 }
@@ -1847,58 +1837,61 @@ restart:
       gboolean pad_loop, pad_get;
       gboolean done = FALSE;
 
-      /* see if the pad has a loop function and grab
-       * the peer */
-      pad_get = gst_pad_check_pull_range (pad);
-      GST_LOCK (pad);
-      pad_loop = GST_RPAD_LOOPFUNC (pad) != NULL;
-      peer = GST_RPAD_PEER (pad);
-      if (peer)
-        gst_object_ref (GST_OBJECT (peer));
-      GST_UNLOCK (pad);
+      if (active) {
+        pad_get = GST_RPAD_IS_SINK (pad) && gst_pad_check_pull_range (pad);
 
-      GST_DEBUG ("pad %s:%s: get: %d, loop: %d",
-          GST_DEBUG_PAD_NAME (pad), pad_get, pad_loop);
+        /* see if the pad has a loop function and grab
+         * the peer */
+        GST_LOCK (pad);
+        pad_loop = GST_RPAD_LOOPFUNC (pad) != NULL;
+        peer = GST_RPAD_PEER (pad);
+        if (peer)
+          gst_object_ref (GST_OBJECT_CAST (peer));
+        GST_UNLOCK (pad);
 
-      if (peer) {
-        gboolean peer_loop, peer_get;
-        GstActivateMode mode;
+        GST_DEBUG ("pad %s:%s: get: %d, loop: %d",
+            GST_DEBUG_PAD_NAME (pad), pad_get, pad_loop);
 
-        /* see if the peer has a getrange function */
-        peer_get = gst_pad_check_pull_range (GST_PAD_CAST (peer));
-        /* see if the peer has a loop function */
-        peer_loop = GST_RPAD_LOOPFUNC (peer) != NULL;
+        if (peer) {
+          gboolean peer_loop, peer_get;
 
-        GST_DEBUG ("peer %s:%s: get: %d, loop: %d",
-            GST_DEBUG_PAD_NAME (peer), peer_get, peer_loop);
+          /* see if the peer has a getrange function */
+          peer_get = GST_RPAD_IS_SINK (peer)
+              && gst_pad_check_pull_range (GST_PAD_CAST (peer));
+          /* see if the peer has a loop function */
+          peer_loop = GST_RPAD_LOOPFUNC (peer) != NULL;
 
-        /* If the pad is a sink with loop and the peer has a get function,
-         * we can activate the sinkpad,  FIXME, logic is reversed as
-         * check_pull_range() checks the peer of the given pad. */
-        if ((GST_PAD_IS_SINK (pad) && pad_get && pad_loop) ||
-            (GST_PAD_IS_SRC (pad) && peer_get && peer_loop)) {
-          GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-              "%sactivating pad %s pull mode", (active ? "" : "(de)"),
-              GST_OBJECT_NAME (pad));
-          /* only one of pad_random and peer_random can be true */
-          mode = GST_ACTIVATE_PULL;
-          result &= gst_pad_set_active (pad, active ? mode : GST_ACTIVATE_NONE);
-          done = TRUE;
+          GST_DEBUG ("peer %s:%s: get: %d, loop: %d",
+              GST_DEBUG_PAD_NAME (peer), peer_get, peer_loop);
+
+          /* If the pad is a sink with loop and the peer has a get function,
+           * we can activate the sinkpad,  FIXME, logic is reversed as
+           * check_pull_range() checks the peer of the given pad. */
+          if ((pad_get && pad_loop) || (peer_get && peer_loop)) {
+            GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+                "activating pad %s in pull mode", GST_OBJECT_NAME (pad));
+
+            result &= gst_pad_set_active (pad, GST_ACTIVATE_PULL);
+            done = TRUE;
+          }
+          gst_object_unref (GST_OBJECT_CAST (peer));
         }
-        gst_object_unref (GST_OBJECT (peer));
-      }
 
-      if (!done) {
-        /* all other conditions are just push based pads */
+        if (!done) {
+          /* all other conditions are just push based pads */
+          GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+              "activating pad %s in push mode", GST_OBJECT_NAME (pad));
+
+          result &= gst_pad_set_active (pad, GST_ACTIVATE_PUSH);
+        }
+      } else {
         GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-            "%sactivating pad %s push mode", (active ? "" : "(de)"),
-            GST_OBJECT_NAME (pad));
+            "deactivating pad %s", GST_OBJECT_NAME (pad));
 
-        result &= gst_pad_set_active (pad,
-            (active ? GST_ACTIVATE_PUSH : GST_ACTIVATE_NONE));
+        result &= gst_pad_set_active (pad, GST_ACTIVATE_NONE);
       }
     }
-    gst_object_unref (GST_OBJECT (pad));
+    gst_object_unref (GST_OBJECT_CAST (pad));
 
     GST_LOCK (element);
     if (cookie != element->pads_cookie)
@@ -1964,7 +1957,6 @@ gst_element_change_state (GstElement * element)
       } else {
         element->base_time = 0;
       }
-      break;
       break;
     default:
       /* this will catch real but unhandled state changes;

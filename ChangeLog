@@ -1,5 +1,11 @@
 2005-05-30  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstelement.c: (gst_element_init),
+	(gst_element_pads_activate), (gst_element_change_state):
+	Slicker pad activation code.
+
+2005-05-30  Wim Taymans  <wim@fluendo.com>
+
 	* gst/Makefile.am:
 	* gst/gstelement.h:
 	* gst/gstelementfactory.h:
