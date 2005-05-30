@@ -1,5 +1,11 @@
 2005-05-30  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gst.c: (gst_init_get_popt_table), (init_post),
+	(init_popt_callback):
+	Remove cpu-opt flag.
+
+2005-05-30  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbuffer.c: (gst_subbuffer_finalize),
 	(gst_buffer_create_sub), (gst_buffer_is_span_fast):
 	* gst/gstbuffer.h:
