@@ -1,5 +1,13 @@
 2005-05-30  Wim Taymans  <wim@fluendo.com>
 
+	* gst/Makefile.am:
+	* gst/gstelement.h:
+	* gst/gstelementfactory.h:
+	* gst/gsttypes.h:
+	Move elementfactory methods to separate .h file.
+
+2005-05-30  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-overview.txt:
 	* gst/gstsystemclock.h:
 	Small typo fixes, doc updates.

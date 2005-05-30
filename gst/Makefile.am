@@ -158,6 +158,7 @@ gst_headers =			\
 	gstclock.h		\
 	gstcompat.h		\
 	gstelement.h		\
+	gstelementfactory.h	\
 	gsterror.h		\
 	gstevent.h		\
 	gstfilter.h		\

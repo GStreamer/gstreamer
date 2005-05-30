@@ -24,20 +24,23 @@
 
 G_BEGIN_DECLS 
 
+typedef struct _GstBin GstBin;
+typedef struct _GstBinClass GstBinClass;
+typedef struct _GstBus GstBus;
+typedef struct _GstBusClass GstBusClass;
+typedef struct _GstElement GstElement;
+typedef struct _GstElementClass GstElementClass;
+typedef struct _GstElementDetails GstElementDetails;
+typedef struct _GstElementFactory GstElementFactory;
+typedef struct _GstElementFactoryClass GstElementFactoryClass;
 typedef struct _GstObject GstObject;
 typedef struct _GstObjectClass GstObjectClass;
 typedef struct _GstPad GstPad;
 typedef struct _GstPadClass GstPadClass;
 typedef struct _GstPadTemplate GstPadTemplate;
 typedef struct _GstPadTemplateClass GstPadTemplateClass;
-typedef struct _GstElement GstElement;
-typedef struct _GstElementClass GstElementClass;
-typedef struct _GstBin GstBin;
-typedef struct _GstBinClass GstBinClass;
 typedef struct _GstPipeline GstPipeline;
 typedef struct _GstPipelineClass GstPipelineClass;
-typedef struct _GstBus GstBus;
-typedef struct _GstBusClass GstBusClass;
 typedef struct _GstScheduler GstScheduler;
 typedef struct _GstSchedulerClass GstSchedulerClass;
 
@@ -54,12 +57,6 @@ typedef enum {
   GST_STATE_SUCCESS             = 1,
   GST_STATE_ASYNC               = 2
 } GstElementStateReturn;
-
-typedef enum {
-  GST_RESULT_OK,
-  GST_RESULT_NOK,
-  GST_RESULT_NOT_IMPL
-} GstResult;
 
 typedef enum {
   GST_RANK_NONE                 = 0,
