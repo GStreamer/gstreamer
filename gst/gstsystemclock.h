@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gstclock.h: Header for clock subsystem
+ * gstsystemclock.h: A clock implementation based on system time
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

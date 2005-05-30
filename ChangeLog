@@ -1,5 +1,11 @@
 2005-05-30  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design/part-overview.txt:
+	* gst/gstsystemclock.h:
+	Small typo fixes, doc updates.
+
+2005-05-30  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gst.c: (gst_init_get_popt_table), (init_post),
 	(init_popt_callback):
 	Remove cpu-opt flag.

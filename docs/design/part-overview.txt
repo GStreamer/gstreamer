@@ -374,7 +374,8 @@ Pipeline EOS
  elements to inform them of the EOS. The element is not supposed to accept any more
  data after receiving an EOS event on a sinkpad.
 
- The source element stops sending data after sending the EOS message.
+ The element providing the streaming thread stops sending data after sending the 
+ EOS message.
 
  The EOS even will eventually arrive in the sink element. The sink will then post
  an EOS message on the bus to inform the pipeline that a particular stream has
@@ -398,7 +399,8 @@ Pipeline READY
    filesrc to PAUSED:   nothing
 
  Going to the intermediate PAUSED state will block all elements in the _push()
- functions.
+ functions. This happens because the sink element blocks on the first buffer
+ it receives.
 
  Some elements might be performing blocking operations in the PLAYING state that
  must be unblocked when they go into the PAUSED state. This makes sure that the
@@ -412,7 +414,7 @@ Pipeline READY
 			deactivated and becomes unusable for sending more data. 
    mp3dec to READY:     the pads are deactivated and the state change completes when
                         mp3dec leaves its _chain() function.
-   filesrc to PAUSED:   the pads are deactivated and the thread is paused.
+   filesrc to READY:    the pads are deactivated and the thread is paused.
 
  The upstream elements finish their chain() function because the downstream element
  returned an error code from the _push() functions. These error codes are eventually
