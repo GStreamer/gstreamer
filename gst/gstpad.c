@@ -256,8 +256,6 @@ gst_real_pad_init (GstRealPad * pad)
   g_static_rec_mutex_init (pad->stream_rec_lock);
 
   pad->block_cond = g_cond_new ();
-
-  gst_probe_dispatcher_init (&pad->probedisp);
 }
 
 static void
@@ -1938,6 +1936,7 @@ gst_pad_configure_sink (GstPad * pad, GstCaps * caps)
 {
   GstPadAcceptCapsFunction acceptcaps;
   GstPadSetCapsFunction setcaps;
+  gboolean res;
 
   acceptcaps = GST_RPAD_ACCEPTCAPSFUNC (pad);
   setcaps = GST_RPAD_SETCAPSFUNC (pad);
@@ -1949,11 +1948,11 @@ gst_pad_configure_sink (GstPad * pad, GstCaps * caps)
       goto not_accepted;
   }
   /* set caps on pad if call succeeds */
-  gst_pad_set_caps (pad, caps);
+  res = gst_pad_set_caps (pad, caps);
   /* no need to unref the caps here, set_caps takes a ref and
    * our ref goes away when we leave this function. */
 
-  return TRUE;
+  return res;
 
 not_accepted:
   {
@@ -1967,6 +1966,7 @@ gst_pad_configure_src (GstPad * pad, GstCaps * caps)
 {
   GstPadAcceptCapsFunction acceptcaps;
   GstPadSetCapsFunction setcaps;
+  gboolean res;
 
   acceptcaps = GST_RPAD_ACCEPTCAPSFUNC (pad);
   setcaps = GST_RPAD_SETCAPSFUNC (pad);
@@ -1978,11 +1978,11 @@ gst_pad_configure_src (GstPad * pad, GstCaps * caps)
       goto not_accepted;
   }
   /* set caps on pad if call succeeds */
-  gst_pad_set_caps (pad, caps);
+  res = gst_pad_set_caps (pad, caps);
   /* no need to unref the caps here, set_caps takes a ref and
    * our ref goes away when we leave this function. */
 
-  return TRUE;
+  return res;
 
 not_accepted:
   {
@@ -2294,7 +2294,7 @@ no_peer:
   }
 flushing:
   {
-    /* pad has no peer */
+    /* peer was flushing */
     GST_UNLOCK (peer);
     GST_CAT_DEBUG (GST_CAT_PADS,
         "%s:%s called bufferallocfunc but peer was flushing, returning NULL",
@@ -3245,26 +3245,24 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
   GST_CAT_DEBUG (GST_CAT_EVENT, "have event type %d on pad %s:%s",
       GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (realpad));
 
-  if (GST_PAD_IS_SINK (realpad)) {
-    switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_FLUSH:
-        GST_CAT_DEBUG (GST_CAT_EVENT, "have flush event");
-        if (GST_EVENT_FLUSH_DONE (event)) {
-          GST_RPAD_UNSET_FLUSHING (realpad);
-          GST_CAT_DEBUG (GST_CAT_EVENT, "cleared flush flag");
-        } else {
-          /* can't even accept a flush begin event when flushing */
-          if (GST_RPAD_IS_FLUSHING (realpad))
-            goto flushing;
-          GST_RPAD_SET_FLUSHING (realpad);
-          GST_CAT_DEBUG (GST_CAT_EVENT, "set flush flag");
-        }
-        break;
-      default:
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH:
+      GST_CAT_DEBUG (GST_CAT_EVENT, "have flush event");
+      if (GST_EVENT_FLUSH_DONE (event)) {
+        GST_RPAD_UNSET_FLUSHING (realpad);
+        GST_CAT_DEBUG (GST_CAT_EVENT, "cleared flush flag");
+      } else {
+        /* can't even accept a flush begin event when flushing */
         if (GST_RPAD_IS_FLUSHING (realpad))
           goto flushing;
-        break;
-    }
+        GST_RPAD_SET_FLUSHING (realpad);
+        GST_CAT_DEBUG (GST_CAT_EVENT, "set flush flag");
+      }
+      break;
+    default:
+      if (GST_RPAD_IS_FLUSHING (realpad))
+        goto flushing;
+      break;
   }
 
   if ((eventfunc = GST_RPAD_EVENTFUNC (realpad)) == NULL)
