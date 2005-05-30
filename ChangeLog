@@ -1,3 +1,10 @@
+2005-05-30  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstqueue.c: (gst_queue_handle_sink_event), (gst_queue_chain),
+	(gst_queue_loop), (gst_queue_handle_src_event):
+	Remove old pieces of code
+	Flushing the queue in an upstream event is a very bad idea.
+
 2005-05-26  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstminiobject.c (gst_value_mini_object_collect): Use

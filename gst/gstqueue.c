@@ -632,10 +632,7 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
           g_cond_wait (queue->item_del, queue->qlock);
 
           if (queue->flushing)
-#if 0
-            if (GST_RPAD_IS_FLUSHING (pad))
-#endif
-              goto out_flushing;
+            goto out_flushing;
 
           /* if there's a pending state change for this queue
            * or its manager, switch back to iterator so bottom
@@ -650,11 +647,6 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
         break;
     }
   }
-#if 0
-  /* we are flushing */
-  if (GST_RPAD_IS_FLUSHING (pad))
-    goto out_flushing;
-#endif
 
   g_queue_push_tail (queue->queue, buffer);
 
@@ -711,14 +703,6 @@ restart:
     while (gst_queue_is_empty (queue)) {
       STATUS (queue, "waiting for item_add");
 
-#if 0
-      /* we are flushing */
-      if (GST_RPAD_IS_FLUSHING (pad))
-        goto out_flushing;
-      if (GST_RPAD_IS_FLUSHING (queue->sinkpad))
-        goto out_flushing;
-#endif
-
       if (queue->flushing)
         goto out_flushing;
 
@@ -728,13 +712,6 @@ restart:
 
       if (queue->flushing)
         goto out_flushing;
-#if 0
-      /* we got unlocked because we are flushing */
-      if (GST_RPAD_IS_FLUSHING (pad))
-        goto out_flushing;
-      if (GST_RPAD_IS_FLUSHING (queue->sinkpad))
-        goto out_flushing;
-#endif
 
       GST_LOG_OBJECT (queue, "done g_cond_wait using qlock from thread %p",
           g_thread_self ());
@@ -803,20 +780,7 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
   GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "got event %p (%d)",
       event, GST_EVENT_TYPE (event));
 
-  gst_event_ref (event);
   res = gst_pad_event_default (pad, event);
-  GST_QUEUE_MUTEX_LOCK;
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEEK:
-      if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH) {
-        gst_queue_locked_flush (queue);
-      }
-    default:
-      break;
-  }
-  GST_QUEUE_MUTEX_UNLOCK;
-  gst_event_unref (event);
 
   return res;
 }
