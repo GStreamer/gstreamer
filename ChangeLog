@@ -1,5 +1,11 @@
 2005-05-30  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasesink.c: (gst_basesink_preroll_queue_push),
+	(gst_basesink_activate):
+	Handle EOS in preroll.
+
+2005-05-30  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstqueue.c: (gst_queue_handle_sink_event), (gst_queue_chain),
 	(gst_queue_loop), (gst_queue_handle_src_event):
 	Remove old pieces of code

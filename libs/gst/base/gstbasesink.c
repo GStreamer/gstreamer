@@ -375,6 +375,11 @@ static void
 gst_basesink_preroll_queue_push (GstBaseSink * basesink, GstPad * pad,
     GstBuffer * buffer)
 {
+  /* if we don't have a buffer we just start blocking */
+  if (buffer == NULL)
+    goto block;
+
+  /* first buffer */
   if (basesink->preroll_queue->length == 0) {
     GstBaseSinkClass *bclass = GST_BASESINK_GET_CLASS (basesink);
 
@@ -387,17 +392,19 @@ gst_basesink_preroll_queue_push (GstBaseSink * basesink, GstPad * pad,
   if (basesink->preroll_queue->length < basesink->preroll_queue_max_len) {
     DEBUG ("push %p %p\n", basesink, buffer);
     g_queue_push_tail (basesink->preroll_queue, buffer);
-  } else {
-    /* block until the state changes, or we get a flush, or something */
-    DEBUG ("block %p %p\n", basesink, buffer);
-    GST_DEBUG ("element %s waiting to finish preroll",
-        GST_ELEMENT_NAME (basesink));
-    basesink->need_preroll = FALSE;
-    basesink->have_preroll = TRUE;
-    GST_PREROLL_WAIT (pad);
-    GST_DEBUG ("done preroll");
-    basesink->have_preroll = FALSE;
+    return;
   }
+
+block:
+  /* block until the state changes, or we get a flush, or something */
+  DEBUG ("block %p %p\n", basesink, buffer);
+  GST_DEBUG ("element %s waiting to finish preroll",
+      GST_ELEMENT_NAME (basesink));
+  basesink->need_preroll = FALSE;
+  basesink->have_preroll = TRUE;
+  GST_PREROLL_WAIT (pad);
+  GST_DEBUG ("done preroll");
+  basesink->have_preroll = FALSE;
 }
 
 /* with PREROLL_LOCK */
