@@ -41,6 +41,7 @@ typedef struct _GstBufferClass GstBufferClass;
 #define GST_BUFFER_GET_CLASS(obj)               (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BUFFER, GstBufferClass))
 #define GST_BUFFER(obj)                         (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_BUFFER, GstBuffer))
 #define GST_BUFFER_CLASS(klass)                 (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_BUFFER, GstBufferClass))
+#define GST_BUFFER_CAST(obj)                    ((GstBuffer *)(obj))
 
 #define GST_BUFFER_FLAGS(buf)                   GST_MINI_OBJECT_FLAGS(buf)
 #define GST_BUFFER_FLAG_IS_SET(buf,flag)        GST_MINI_OBJECT_FLAG_IS_SET (buf, flag)
@@ -54,6 +55,7 @@ typedef struct _GstBufferClass GstBufferClass;
 #define GST_BUFFER_CAPS(buf)			(GST_BUFFER(buf)->caps)
 #define GST_BUFFER_OFFSET(buf)			(GST_BUFFER(buf)->offset)
 #define GST_BUFFER_OFFSET_END(buf)		(GST_BUFFER(buf)->offset_end)
+#define GST_BUFFER_MALLOCDATA(buf)		(GST_BUFFER(buf)->malloc_data)
 
 #define GST_BUFFER_OFFSET_NONE	((guint64)-1)
 #define GST_BUFFER_MAXSIZE_NONE	((guint)0)

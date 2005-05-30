@@ -1,5 +1,13 @@
 2005-05-30  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbuffer.c: (gst_subbuffer_finalize),
+	(gst_buffer_create_sub), (gst_buffer_is_span_fast):
+	* gst/gstbuffer.h:
+	Avoid typechecking in places where not needed.
+	Added accessor for malloc_data.
+
+2005-05-30  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstpad.c: (gst_real_pad_init), (gst_pad_set_active),
 	(gst_pad_link_prepare), (gst_pad_link), (gst_pad_accept_caps),
 	(gst_pad_configure_sink), (gst_pad_configure_src),

@@ -365,8 +365,8 @@ gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
       parent);
 
   /* set the right values in the child */
-  GST_BUFFER_DATA (GST_BUFFER (subbuffer)) = buffer->data + offset;
-  GST_BUFFER_SIZE (GST_BUFFER (subbuffer)) = size;
+  GST_BUFFER_DATA (GST_BUFFER_CAST (subbuffer)) = buffer->data + offset;
+  GST_BUFFER_SIZE (GST_BUFFER_CAST (subbuffer)) = size;
 
   /* we can copy the timestamp and offset if the new buffer starts at
    * offset 0 */
@@ -383,7 +383,7 @@ gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
 
   GST_BUFFER_CAPS (subbuffer) = NULL;
 
-  return GST_BUFFER (subbuffer);
+  return GST_BUFFER_CAST (subbuffer);
 }
 
 /**
