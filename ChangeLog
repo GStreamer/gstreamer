@@ -1,3 +1,16 @@
+2005-05-30  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_activate_chain),
+	(gst_ogg_demux_perform_seek), (gst_ogg_demux_clear_chains):
+	Also FLUSH upstream, makes the loop function exit faster.
+	
+	* ext/theora/theoradec.c: (theora_dec_src_query):
+	Some more debug info in the query.
+	
+	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_new),
+	(gst_ximagesink_setcaps):
+	Release lock on par error, better error reporting.
+
 2005-05-26  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_packet),

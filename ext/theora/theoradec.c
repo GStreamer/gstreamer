@@ -418,7 +418,6 @@ theora_dec_src_query (GstPad * pad, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
-      gboolean res;
       gint64 granulepos, total, value;
       GstFormat my_format, format;
       gint64 time;
@@ -430,8 +429,15 @@ theora_dec_src_query (GstPad * pad, GstQuery * query)
       /* we can convert a granule position to everything */
       granulepos = dec->granulepos;
 
+      GST_LOG_OBJECT (dec,
+          "query %p: we have current granule: %lld", query, granulepos);
+
       /* parse total time from peer and format */
       gst_query_parse_position (query, &format, NULL, &total);
+
+      GST_LOG_OBJECT (dec,
+          "query %p: peer returned total: %lld (format %u)",
+          query, total, format);
 
       /* and convert to the final format in two steps with time as the 
        * intermediate step */
@@ -441,6 +447,9 @@ theora_dec_src_query (GstPad * pad, GstQuery * query)
                   granulepos, &my_format, &time)))
         goto error;
 
+      GST_LOG_OBJECT (dec,
+          "query %p: our time: %" GST_TIME_FORMAT, query, GST_TIME_ARGS (time));
+
       if (!(res =
               theora_dec_src_convert (pad, my_format, time, &format, &value)))
         goto error;
@@ -448,10 +457,9 @@ theora_dec_src_query (GstPad * pad, GstQuery * query)
       gst_query_set_position (query, format, value, total);
 
       GST_LOG_OBJECT (dec,
-          "query %u: peer returned granulepos: %llu - we return %llu (format %u)",
-          query, granulepos, value, format);
+          "query %p: we return %lld and %lld (format %u)",
+          query, value, total, format);
 
-      res = TRUE;
       break;
     }
     case GST_QUERY_CONVERT:
@@ -460,18 +468,22 @@ theora_dec_src_query (GstPad * pad, GstQuery * query)
       gint64 src_val, dest_val;
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-      if ((res =
+      if (!(res =
               theora_dec_src_convert (pad, src_fmt, src_val, &dest_fmt,
                   &dest_val)))
-        gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+        goto error;
+
+      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       break;
     }
     default:
       res = FALSE;
       break;
   }
+  return res;
 
 error:
+  GST_DEBUG ("query failed");
   return res;
 }
 

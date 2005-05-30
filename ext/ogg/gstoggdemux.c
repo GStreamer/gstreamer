@@ -1225,10 +1225,13 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, gint64 pos)
   {
     gint i;
 
+    gst_pad_push_event (ogg->sinkpad, gst_event_new_flush (FALSE));
+
     GST_CHAIN_LOCK (ogg);
     for (i = 0; i < ogg->chains->len; i++) {
       GstOggChain *chain = g_array_index (ogg->chains, GstOggChain *, i);
       gint j;
+
 
       for (j = 0; j < chain->streams->len; j++) {
         GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, j);
@@ -1241,6 +1244,11 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, gint64 pos)
 
   /* now grab the stream lock so that streaming cannot continue */
   GST_STREAM_LOCK (ogg->sinkpad);
+
+  /* we need to stop flushing on the srcpad as w're going to use it
+   * next. We can do this as we have the STREAM lock now. */
+  gst_pad_push_event (ogg->sinkpad, gst_event_new_flush (TRUE));
+
 
   {
     gint i;
