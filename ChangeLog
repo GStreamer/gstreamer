@@ -1,5 +1,11 @@
 2005-05-31  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ringbuffer_delay):
+	Don't try to call the delay method when the device is not
+	opened.
+
+2005-05-31  Wim Taymans  <wim@fluendo.com>
+
 	* ext/alsa/gstalsasink.c: (set_hwparams), (gst_alsasink_open):
 	Get actual segment size and buffer size after opening
 	the device.

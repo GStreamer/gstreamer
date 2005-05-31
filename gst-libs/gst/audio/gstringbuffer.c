@@ -431,6 +431,9 @@ gst_ringbuffer_delay (GstRingBuffer * buf)
 
   g_return_val_if_fail (buf != NULL, 0);
 
+  if (!gst_ringbuffer_is_acquired (buf))
+    return 0;
+
   rclass = GST_RINGBUFFER_GET_CLASS (buf);
   if (rclass->delay)
     res = rclass->delay (buf);
