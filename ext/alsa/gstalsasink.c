@@ -206,19 +206,20 @@ set_hwparams (GstAlsaSink * alsa)
     CHECK (snd_pcm_hw_params_set_buffer_time_near (alsa->handle, params,
             &alsa->buffer_time, &dir), buffer_time);
   }
-  CHECK (snd_pcm_hw_params_get_buffer_size (params, &alsa->buffer_size),
-      buffer_size);
-
   if (alsa->period_time != -1) {
     /* set the period time */
     CHECK (snd_pcm_hw_params_set_period_time_near (alsa->handle, params,
             &alsa->period_time, &dir), period_time);
   }
-  CHECK (snd_pcm_hw_params_get_period_size (params, &alsa->period_size, &dir),
-      period_size);
 
   /* write the parameters to device */
   CHECK (snd_pcm_hw_params (alsa->handle, params), set_hw_params);
+
+  CHECK (snd_pcm_hw_params_get_buffer_size (params, &alsa->buffer_size),
+      buffer_size);
+
+  CHECK (snd_pcm_hw_params_get_period_size (params, &alsa->period_size, &dir),
+      period_size);
 
   return 0;
 
@@ -437,9 +438,8 @@ gst_alsasink_open (GstAudioSink * asink, GstRingBufferSpec * spec)
   CHECK (set_hwparams (alsa), hw_params_failed);
   CHECK (set_swparams (alsa), sw_params_failed);
 
-  spec->bytes_per_sample = 4;
-  alsa->bytes_per_sample = 4;
-  spec->segsize = alsa->period_size * 4;
+  alsa->bytes_per_sample = spec->bytes_per_sample;
+  spec->segsize = alsa->period_size * spec->bytes_per_sample;
   spec->segtotal = alsa->buffer_size / alsa->period_size;
   spec->silence_sample[0] = 0;
   spec->silence_sample[1] = 0;
