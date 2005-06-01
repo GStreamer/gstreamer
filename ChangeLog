@@ -1,3 +1,9 @@
+2005-06-01  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstvalue.c: (gst_value_list_append_value):
+	  print a g_warning when someone ties to add the same value (as per
+	  gst_value_compare) to a list twice.
+
 2005-05-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/manual/advanced-schedulers.xml:

@@ -242,6 +242,25 @@ gst_value_list_append_value (GValue * value, const GValue * append_value)
 
   g_return_if_fail (GST_VALUE_HOLDS_LIST (value)
       || GST_VALUE_HOLDS_FIXED_LIST (value));
+#ifndef G_DISABLE_CHECKS
+  G_STMT_START {
+    guint i;
+
+    for (i = 0; i < gst_value_list_get_size (value); i++) {
+      const GValue *v = gst_value_list_get_value (value, i);
+
+      if (gst_value_compare (v, append_value) == GST_VALUE_EQUAL) {
+        gchar *s = gst_value_serialize (append_value);
+
+        g_warning ("attempting to add value %s to list twice",
+            GST_STR_NULL (s));
+        g_free (s);
+        return;
+      }
+    }
+  }
+  G_STMT_END;
+#endif
 
   gst_value_init_and_copy (&val, append_value);
   g_array_append_vals ((GArray *) value->data[0].v_pointer, &val, 1);
