@@ -1,5 +1,10 @@
 2005-06-02  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstpipeline.c: (gst_pipeline_send_event):
+	Take snapshot of state without blocking.
+
+2005-06-02  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-TODO.txt:
 	* docs/design/part-caps.txt:
 	* docs/design/part-clocks.txt:

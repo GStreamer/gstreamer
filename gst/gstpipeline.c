@@ -290,11 +290,13 @@ gst_pipeline_send_event (GstElement * element, GstEvent * event)
   gboolean res;
   GstElementState state;
   GstEventType event_type = GST_EVENT_TYPE (event);
+  GTimeVal timeout;
 
   /* need to call _get_state() since a bin state is only updated
-   * with this call. FIXME, we should probably not block but just
-   * take a snapshot. */
-  gst_element_get_state (element, &state, NULL, NULL);
+   * with this call. */
+  GST_TIME_TO_TIMEVAL (0, timeout);
+
+  gst_element_get_state (element, &state, NULL, &timeout);
   was_playing = state == GST_STATE_PLAYING;
 
   if (was_playing && event_type == GST_EVENT_SEEK)
