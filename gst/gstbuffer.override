@@ -82,7 +82,7 @@ static PyObject*
 _wrap_gst_buffer_get_data(PyObject *self)
 {
 	GstBuffer *buf = pyg_boxed_get(self, GstBuffer);
-	return PyString_FromStringAndSize(GST_BUFFER_DATA(buf),
+	return PyString_FromStringAndSize((gchar *) GST_BUFFER_DATA(buf),
 					  GST_BUFFER_SIZE(buf));
 }
 %%
@@ -108,7 +108,7 @@ _wrap_gst_buffer_set_data(PyObject *self, PyObject *args, PyObject *kwargs)
 		return NULL;
 	}
 	GST_BUFFER_SIZE(buf) = PyString_Size(data);
-	GST_BUFFER_DATA(buf) = g_new0(char, GST_BUFFER_SIZE(buf));
+	GST_BUFFER_DATA(buf) = (guint8 *) g_new0(char, GST_BUFFER_SIZE(buf));
 
 	memcpy(GST_BUFFER_DATA(buf),
 	       PyString_AsString(data),
@@ -185,8 +185,8 @@ _wrap_gst_buffer_tp_str(PyGObject *self)
 {
 	GstBuffer *buf = pyg_boxed_get(self, GstBuffer);
 
-	return PyString_FromStringAndSize(GST_BUFFER_DATA(buf),
-					  GST_BUFFER_SIZE(buf));
+	return PyString_FromStringAndSize((const gchar*) GST_BUFFER_DATA(buf),
+					  (gint) GST_BUFFER_SIZE(buf));
 }
 %%
 override-slot GstBuffer.tp_as_buffer
@@ -274,7 +274,7 @@ pygst_buffer_slice(PyObject *self, int start, int end)
     PyErr_SetString(PyExc_IndexError, "buffer index out of range");
     return NULL;
   }
-  return PyString_FromStringAndSize(GST_BUFFER_DATA (buf) + start, end - start);
+  return PyString_FromStringAndSize((gchar *) GST_BUFFER_DATA (buf) + start, end - start);
 }
 
 static PyObject *
