@@ -12,7 +12,7 @@ negotiation.
 
 The basics of negotiation are as follows:
 
- - GstCaps (see part-caps.txt) are attached and refcounted before they
+ - GstCaps (see part-caps.txt) are refcounted before they
    are attached to a buffer to describe the contents of the buffer.
    It is possible to add a NULL caps to a buffer, this means that the
    buffer type did not change relative to the previous buffer. If no
@@ -22,7 +22,8 @@ The basics of negotiation are as follows:
  - Before receiving a buffer, an element must check if the datatype of
    the buffer has changed. The element should reconfigure itself to the
    new format before processing the buffer data. If the data type on
-   the buffer is not acceptable, the element should refuse the buffer.
+   the buffer is not acceptable, the element should refuse the buffer by 
+   returning an appropriate return value from the chain function.
 
  - When requesting a buffer from a bufferpool, the prefered type should
    be passed to the buffer allocation function. After receiving a buffer
@@ -102,7 +103,7 @@ The general flow for a sink pad starting a renegotiation.
               |                 |
  get buffer   |  alloc_buf      |
  from pool    |---------------->| 
- with type    |                 | Create buffer of new type B.
+ with type A  |                 | Create buffer of new type B.
               |                 |
  check type   |<----------------|
  and          |                 |

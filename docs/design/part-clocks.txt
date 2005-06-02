@@ -81,7 +81,7 @@ It is possible to perform a blocking wait on the same ID from multiple
 threads. However, registering the same ID for multiple async notifications is 
 not possible, the callback will only be called once.
 
-None of the wait operations unref the GstClockID, the application is 
+None of the wait operations unref the GstClockID, the owner is 
 responsible for unreffing the ids itself. This holds for both periodic and
 single shot notifications. 
 

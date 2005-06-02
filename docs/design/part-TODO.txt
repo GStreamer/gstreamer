@@ -14,9 +14,6 @@
   done by making the event contain a GstStructure with input/output values, similar
   to GstMessage.
 
-- implement query ala events as opposed to the current return value of only a 
-  guint64. I don't have a use case where this a problem yet, though.
-
 - implement state change order on get<->loop-get<->loop elements. This probably 
   requires a backtracking algorithm.
 

@@ -6,6 +6,9 @@ has been queued on the input pad or pads. This process is called prerolling
 and is needed to fill the pipeline with buffers so that the transition to
 PLAYING goes as fast as possible with no visual delay for the user.
 
+Preroll is also crucial in maintaining correct audio and video synchronsation
+and ensuring that no buffers are dropped in the sinks.
+
 After receiving a buffer (or EOS) on a pad the chain/event function should
 wait to render the buffers or in the EOS case, wait to post the EOS
 message.
@@ -37,6 +40,9 @@ The following conditions unlock the preroll:
 
  - a state change
  - a flush event
+
+When the preroll is unlocked by one of these events, a return value of
+GST_FLOW_WRONG_STATE is to be returned to the peer pad.
  
 
 Result of the preroll
