@@ -1,5 +1,23 @@
 2005-06-02  Wim Taymans  <wim@fluendo.com>
 
+	* gst/udp/Makefile.am:
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_get_type),
+	(gst_multiudpsink_base_init), (gst_multiudpsink_class_init),
+	(gst_multiudpsink_init), (gst_multiudpsink_finalize),
+	(gst_multiudpsink_get_times), (gst_multiudpsink_render),
+	(gst_multiudpsink_set_property), (gst_multiudpsink_init_send),
+	(gst_multiudpsink_add), (client_compare), (free_client),
+	(gst_multiudpsink_remove), (gst_multiudpsink_clear),
+	(gst_multiudpsink_get_stats):
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_get_type),
+	(gst_udpsrc_base_init), (gst_udpsrc_class_init),
+	(gst_udpsrc_create), (gst_udpsrc_set_uri), (gst_udpsrc_start),
+	(gst_udpsrc_unlock), (gst_udpsrc_stop):
+	Use NetBuffer and small cleanups.
+	Implement client removal in multiudpsink.
+
+2005-06-02  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/README:
 	* gst/rtsp/gstrtspsrc.c: (gst_rtsp_proto_get_type),
 	(gst_rtspsrc_class_init), (gst_rtspsrc_create_stream),
