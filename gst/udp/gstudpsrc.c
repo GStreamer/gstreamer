@@ -25,6 +25,7 @@
 #include "gstudpsrc.h"
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <gst/net/gstnetbuffer.h>
 
 #ifdef HAVE_FIONREAD_IN_SYS_FILIO
 #include <sys/filio.h>
@@ -201,7 +202,7 @@ static GstFlowReturn
 gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
 {
   GstUDPSrc *udpsrc;
-  GstBuffer *outbuf;
+  GstNetBuffer *outbuf;
   struct sockaddr_in tmpaddr;
   socklen_t len;
   fd_set read_fds;
@@ -286,11 +287,16 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
       break;
   }
 
-  outbuf = gst_buffer_new ();
+  outbuf = gst_netbuffer_new ();
   GST_BUFFER_DATA (outbuf) = pktdata;
   GST_BUFFER_SIZE (outbuf) = ret;
 
-  *buf = outbuf;
+  gst_netaddress_set_ip4_address (&outbuf->from, tmpaddr.sin_addr.s_addr,
+      tmpaddr.sin_port);
+
+  GST_LOG_OBJECT (udpsrc, "read %d bytes", readsize);
+
+  *buf = GST_BUFFER (outbuf);
 
   return GST_FLOW_OK;
 

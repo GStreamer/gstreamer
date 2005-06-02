@@ -382,14 +382,54 @@ host_error:
   }
 }
 
+static gint
+client_compare (GstUDPClient * a, GstUDPClient * b)
+{
+  if ((a->port == b->port) && (strcmp (a->host, b->host) == 0))
+    return 0;
+
+  return 1;
+}
+
+static void
+free_client (GstUDPClient * client)
+{
+  g_free (client->host);
+  g_free (client);
+}
+
 void
 gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
 {
+  GList *find;
+  GstUDPClient udpclient;
+
+  udpclient.host = (gchar *) host;
+  udpclient.port = port;
+
+  g_mutex_lock (sink->client_lock);
+  find = g_list_find_custom (sink->clients, &udpclient,
+      (GCompareFunc) client_compare);
+  if (find) {
+    GstUDPClient *client;
+
+    client = (GstUDPClient *) find->data;
+
+    sink->clients = g_list_delete_link (sink->clients, find);
+
+    free_client (client);
+  }
+  g_mutex_unlock (sink->client_lock);
 }
 
 void
 gst_multiudpsink_clear (GstMultiUDPSink * sink)
 {
+  g_mutex_lock (sink->client_lock);
+  g_list_foreach (sink->clients, (GFunc) free_client, sink);
+  g_list_free (sink->clients);
+  sink->clients = NULL;
+  g_mutex_unlock (sink->client_lock);
 }
 
 GValueArray *
