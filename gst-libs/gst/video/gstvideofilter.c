@@ -294,17 +294,11 @@ gst_videofilter_chain (GstPad * pad, GstBuffer * buf)
   guchar *data;
   gulong size;
   GstBuffer *outbuf;
+  GstFlowReturn ret;
 
   GST_DEBUG ("gst_videofilter_chain");
 
-  g_return_val_if_fail (pad != NULL, GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
-  g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
-
   videofilter = GST_VIDEOFILTER (GST_PAD_PARENT (pad));
-
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
 
   if (videofilter->passthru) {
     return gst_pad_push (videofilter->srcpad, buf);
@@ -313,6 +307,9 @@ gst_videofilter_chain (GstPad * pad, GstBuffer * buf)
   if (GST_PAD_CAPS (pad) == NULL) {
     return GST_FLOW_NOT_NEGOTIATED;
   }
+
+  data = GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf);
 
   GST_DEBUG ("gst_videofilter_chain: got buffer of %ld bytes in '%s'", size,
       GST_OBJECT_NAME (videofilter));
@@ -330,8 +327,11 @@ gst_videofilter_chain (GstPad * pad, GstBuffer * buf)
     return GST_FLOW_ERROR;
   }
 
-  outbuf = gst_pad_alloc_buffer (videofilter->srcpad, GST_BUFFER_OFFSET_NONE,
-      videofilter->to_buf_size, GST_RPAD_CAPS (videofilter->srcpad));
+  ret = gst_pad_alloc_buffer (videofilter->srcpad, GST_BUFFER_OFFSET_NONE,
+      videofilter->to_buf_size, GST_PAD_CAPS (videofilter->srcpad), &outbuf);
+  if (ret != GST_FLOW_OK)
+    goto no_buffer;
+
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
 
@@ -343,15 +343,19 @@ gst_videofilter_chain (GstPad * pad, GstBuffer * buf)
 
   videofilter->format->filter_func (videofilter, GST_BUFFER_DATA (outbuf),
       data);
+  gst_buffer_unref (buf);
 
   GST_DEBUG ("gst_videofilter_chain: pushing buffer of %d bytes in '%s'",
       GST_BUFFER_SIZE (outbuf), GST_OBJECT_NAME (videofilter));
 
-  gst_pad_push (videofilter->srcpad, outbuf);
+  ret = gst_pad_push (videofilter->srcpad, outbuf);
 
-  gst_buffer_unref (buf);
+  return ret;
 
-  return GST_FLOW_OK;
+no_buffer:
+  {
+    return ret;
+  }
 }
 
 static void
