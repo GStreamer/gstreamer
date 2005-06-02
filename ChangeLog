@@ -1,6 +1,11 @@
 2005-06-02  Wim Taymans  <wim@fluendo.com>
 
 	* gst/udp/Makefile.am:
+	Use versioned net lib.
+
+2005-06-02  Wim Taymans  <wim@fluendo.com>
+
+	* gst/udp/Makefile.am:
 	Fix hack in makefile.
 
 2005-06-02  Andy Wingo  <wingo@pobox.com>
