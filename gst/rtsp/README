@@ -132,7 +132,7 @@ An RTSP session is created as follows:
   the data will be received on the same connection as the RTSP connection.
 
   At this point, we remove the UDP source elements as we don't need them anymore. We
-  setup the rtpdec session manager element though as follows:
+  set up the rtpsess session manager element though as follows:
 
     +---------------------------------------------+
     | +------------+                              |

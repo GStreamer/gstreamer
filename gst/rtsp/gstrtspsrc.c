@@ -256,6 +256,8 @@ gst_rtspsrc_set_state (GstRTSPSrc * src, GstElementState state)
   GstElementStateReturn ret;
   GList *streams;
 
+  ret = GST_STATE_SUCCESS;
+
   /* for all streams */
   for (streams = src->streams; streams; streams = g_list_next (streams)) {
     GstRTSPStream *stream;
@@ -462,13 +464,14 @@ gst_rtspsrc_loop (GstRTSPSrc * src)
     outpad = stream->rtpdecrtcp;
   }
 
-  if ((chainfunc = GST_RPAD_CHAINFUNC (outpad))) {
+  /* and chain buffer to internal element */
+  {
     GstBuffer *buf;
 
     buf = gst_buffer_new_and_alloc (size);
     memcpy (GST_BUFFER_DATA (buf), data, size);
 
-    if (chainfunc (outpad, buf) != GST_FLOW_OK)
+    if (gst_pad_chain (outpad, buf) != GST_FLOW_OK)
       goto need_pause;
   }
 
@@ -689,9 +692,9 @@ gst_rtspsrc_open (GstRTSPSrc * src)
       }
     }
   }
-
   return TRUE;
 
+  /* ERRORS */
 invalid_url:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
@@ -858,7 +861,8 @@ gst_rtspsrc_change_state (GstElement * element)
       break;
     case GST_STATE_READY_TO_PAUSED:
       rtspsrc->interleaved = FALSE;
-      gst_rtspsrc_open (rtspsrc);
+      if (!gst_rtspsrc_open (rtspsrc))
+        goto open_failed;
       /* need to play now for the preroll, might delay that to
        * next state when we have NO_PREROLL as a return value */
       gst_rtspsrc_play (rtspsrc);
@@ -872,7 +876,7 @@ gst_rtspsrc_change_state (GstElement * element)
 
   ret = gst_rtspsrc_set_state (rtspsrc, GST_STATE_PENDING (rtspsrc));
   if (ret != GST_STATE_SUCCESS)
-    goto error;
+    goto done;
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
   switch (transition) {
@@ -887,6 +891,11 @@ gst_rtspsrc_change_state (GstElement * element)
       break;
   }
 
-error:
+done:
   return ret;
+
+open_failed:
+  {
+    return GST_STATE_FAILURE;
+  }
 }

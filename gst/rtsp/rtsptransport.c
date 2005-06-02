@@ -55,14 +55,8 @@ rtsp_transport_init (RTSPTransport * transport)
 static void
 parse_mode (RTSPTransport * transport, gchar * str)
 {
-  if (strstr (str, "\"PLAY\""))
-    transport->mode_play = TRUE;
-  else
-    transport->mode_play = FALSE;
-  if (strstr (str, "\"RECORD\""))
-    transport->mode_record = TRUE;
-  else
-    transport->mode_record = FALSE;
+  transport->mode_play = (strstr (str, "\"PLAY\"") != NULL);
+  transport->mode_record = (strstr (str, "\"RECORD\"") != NULL);
 }
 
 static void
