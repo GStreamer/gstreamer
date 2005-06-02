@@ -343,11 +343,6 @@ gst_decode_bin_dispose (GObject * object)
 
   decode_bin = GST_DECODE_BIN (object);
 
-  g_signal_handler_disconnect (G_OBJECT (decode_bin->typefind),
-      decode_bin->have_type_id);
-
-  gst_bin_remove (GST_BIN (decode_bin), decode_bin->typefind);
-
   g_list_free (decode_bin->factories);
 
   for (dyns = decode_bin->dynamics; dyns; dyns = g_list_next (dyns)) {
@@ -815,21 +810,41 @@ no_more_pads (GstElement * element, GstDynamic * dynamic)
   }
 }
 
+static gboolean
+is_our_kid (GstElement * e, GstDecodeBin * decode_bin)
+{
+  gboolean ret;
+  GstElement *parent;
+
+  parent = (GstElement *) gst_object_get_parent ((GstObject *) e);
+  ret = (parent == (GstElement *) decode_bin);
+
+  if (parent)
+    gst_object_unref ((GstObject *) parent);
+
+  return ret;
+}
+
 /* This function will be called when a pad is disconnected for some reason */
 static void
 unlinked (GstPad * pad, GstPad * peerpad, GstDecodeBin * decode_bin)
 {
   GstDynamic *dyn;
-  GstElement *element;
+  GstElement *element, *peer;
 
   /* inactivate pad */
   gst_pad_set_active (pad, GST_ACTIVATE_NONE);
+
+  element = gst_pad_get_parent (pad);
+  peer = gst_pad_get_parent (peerpad);
+
+  if (!is_our_kid (peer, decode_bin))
+    goto exit;
 
   /* remove all elements linked to the peerpad */
   remove_element_chain (decode_bin, peerpad);
 
   /* if an element removes two pads, then we don't want this twice */
-  element = gst_pad_get_parent (pad);
   if (g_list_find (decode_bin->dynamics, element) != NULL)
     goto exit;
 
@@ -841,6 +856,7 @@ unlinked (GstPad * pad, GstPad * peerpad, GstDecodeBin * decode_bin)
 
 exit:
   gst_object_unref (GST_OBJECT (element));
+  gst_object_unref (GST_OBJECT (peer));
 }
 
 /* this function inspects the given element and tries to connect something

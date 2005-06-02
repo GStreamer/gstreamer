@@ -1,3 +1,17 @@
+2005-06-02  Andy Wingo  <wingo@pobox.com>
+
+	* pkgconfig/gstreamer-libs-uninstalled.pc.in (prefix):
+	* pkgconfig/gstreamer-libs.pc.in (prefix): Add gst/tag to the -L
+	list.
+
+	* gst/playback/gstdecodebin.c (gst_decode_bin_dispose): Don't
+	remove the typefind, the bin dispose will do it for us. When it's
+	removed and unreffed, the signal handler will be disconnected,
+	too.
+	(unlinked): It's too difficult to disconnect from unlinked
+	handlers, as they are on pads not elements. Just punt if the pads
+	aren't grandkids of the bin.
+
 2005-06-02  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/README:
