@@ -1,3 +1,18 @@
+2005-06-02  Wim Taymans  <wim@fluendo.com>
+
+	* gst/effectv/gstquark.c: (gst_quarktv_chain):
+	* gst/goom/gstgoom.c: (gst_goom_chain):
+	* gst/videobox/Makefile.am:
+	* gst/videobox/gstvideobox.c: (gst_video_box_class_init),
+	(gst_video_box_init), (gst_video_box_sink_setcaps),
+	(gst_video_box_chain):
+	* gst/videofilter/gstvideofilter.c: (gst_videofilter_chain):
+	* gst/videorate/gstvideorate.c: (gst_videorate_class_init),
+	(gst_videorate_getcaps), (gst_videorate_setcaps),
+	(gst_videorate_init), (gst_videorate_event), (gst_videorate_chain),
+	(gst_videorate_change_state):
+	Bufferalloc changes.
+
 2005-05-25  Wim Taymans  <wim@fluendo.com>
 
 	* ext/mad/gstmad.c: (gst_mad_chain), (gst_mad_change_state):
