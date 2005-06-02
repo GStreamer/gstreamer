@@ -1,3 +1,8 @@
+2005-06-02  Wim Taymans  <wim@fluendo.com>
+
+	* gst/udp/Makefile.am:
+	Fix hack in makefile.
+
 2005-06-02  Andy Wingo  <wingo@pobox.com>
 
 	* ext/mad/gstid3tag.c: Finish porting to 0.9: no more gstdata,
