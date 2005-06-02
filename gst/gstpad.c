@@ -2216,6 +2216,7 @@ no_peer:
  * @offset: the offset of the new buffer in the stream
  * @size: the size of the new buffer
  * @caps: the caps of the new buffer
+ * @buf: a newly allocated buffer
  *
  * Allocates a new, empty buffer optimized to push to pad @pad.  This
  * function only works if @pad is a source pad and a GST_REAL_PAD and
@@ -2223,22 +2224,28 @@ no_peer:
  * You need to check the caps of the buffer after performing this 
  * function and renegotiate to the format if needed.
  *
- * Returns: a new, empty #GstBuffer, or NULL if wrong parameters
- * were provided or the peer pad is not able to provide a buffer
- * that can be handled by the caller.
+ * A new, empty #GstBuffer will be put in the @buf argument.
+ *
+ * Returns: a result code indicating success of the operation. Any
+ * result code other than GST_FLOW_OK is an error and @buf should
+ * not be used.
+ * An error can occur if the pad is not connected or when the downstream
+ * peer elements cannot provide an acceptable buffer.
  *
  * MT safe.
  */
-GstBuffer *
-gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps)
+GstFlowReturn
+gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps,
+    GstBuffer ** buf)
 {
   GstRealPad *peer;
-  GstBuffer *result = NULL;
+  GstFlowReturn ret;
   GstPadBufferAllocFunction bufferallocfunc;
   gboolean caps_changed;
 
-  g_return_val_if_fail (GST_IS_REAL_PAD (pad), NULL);
-  g_return_val_if_fail (GST_PAD_IS_SRC (pad), NULL);
+  g_return_val_if_fail (GST_IS_REAL_PAD (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
 
   GST_LOCK (pad);
   if (G_UNLIKELY ((peer = GST_RPAD_PEER (pad)) == NULL))
@@ -2247,9 +2254,8 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps)
   gst_object_ref (GST_OBJECT_CAST (peer));
   GST_UNLOCK (pad);
 
-  if (G_LIKELY ((bufferallocfunc = peer->bufferallocfunc) == NULL)) {
+  if (G_LIKELY ((bufferallocfunc = peer->bufferallocfunc) == NULL))
     goto fallback;
-  }
 
   GST_LOCK (peer);
   /* when the peer is flushing we cannot give a buffer */
@@ -2262,17 +2268,18 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps)
       &bufferallocfunc, GST_DEBUG_PAD_NAME (peer));
   GST_UNLOCK (peer);
 
-  result = bufferallocfunc (GST_PAD_CAST (peer), offset, size, caps);
+  ret = bufferallocfunc (GST_PAD_CAST (peer), offset, size, caps, buf);
 
-  gst_object_unref (GST_OBJECT_CAST (peer));
-
-  if (G_UNLIKELY (result == NULL)) {
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto peer_error;
+  if (G_UNLIKELY (*buf == NULL))
     goto fallback;
-  }
 
 do_caps:
+  gst_object_unref (GST_OBJECT_CAST (peer));
+
   /* FIXME, move capnego this into a base class? */
-  caps = GST_BUFFER_CAPS (result);
+  caps = GST_BUFFER_CAPS (*buf);
   caps_changed = caps && caps != GST_RPAD_CAPS (pad);
   /* we got a new datatype on the pad, see if it can handle it */
   if (G_UNLIKELY (caps_changed)) {
@@ -2280,8 +2287,7 @@ do_caps:
     if (G_UNLIKELY (!gst_pad_configure_src (GST_PAD_CAST (pad), caps)))
       goto not_negotiated;
   }
-
-  return result;
+  return ret;
 
 no_peer:
   {
@@ -2290,24 +2296,27 @@ no_peer:
         "%s:%s called bufferallocfunc but had no peer, returning NULL",
         GST_DEBUG_PAD_NAME (pad));
     GST_UNLOCK (pad);
-    return NULL;
+    return GST_FLOW_NOT_CONNECTED;
   }
 flushing:
   {
     /* peer was flushing */
     GST_UNLOCK (peer);
+    gst_object_unref (GST_OBJECT_CAST (peer));
     GST_CAT_DEBUG (GST_CAT_PADS,
         "%s:%s called bufferallocfunc but peer was flushing, returning NULL",
         GST_DEBUG_PAD_NAME (pad));
-    return NULL;
+    return GST_FLOW_WRONG_STATE;
   }
   /* fallback case, allocate a buffer of our own, add pad caps. */
 fallback:
   {
     GST_CAT_DEBUG (GST_CAT_PADS,
         "%s:%s fallback buffer alloc", GST_DEBUG_PAD_NAME (pad));
-    result = gst_buffer_new_and_alloc (size);
-    gst_buffer_set_caps (result, caps);
+    *buf = gst_buffer_new_and_alloc (size);
+    gst_buffer_set_caps (*buf, caps);
+
+    ret = GST_FLOW_OK;
 
     goto do_caps;
   }
@@ -2315,7 +2324,14 @@ not_negotiated:
   {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "alloc function retured unacceptable buffer");
-    return NULL;
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+peer_error:
+  {
+    gst_object_unref (GST_OBJECT_CAST (peer));
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "alloc function retured error %d", ret);
+    return ret;
   }
 }
 

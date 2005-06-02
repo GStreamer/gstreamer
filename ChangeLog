@@ -1,5 +1,20 @@
 2005-06-02  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasesink.c: (gst_basesink_pad_buffer_alloc),
+	(gst_base_sink_buffer_alloc), (gst_basesink_preroll_queue_push),
+	(gst_basesink_activate):
+	* gst/base/gstbasesink.h:
+	* gst/gstpad.c: (gst_pad_set_active), (gst_pad_link_prepare),
+	(gst_pad_link), (gst_pad_accept_caps), (gst_pad_alloc_buffer),
+	(gst_pad_query), (gst_pad_start_task):
+	* gst/gstpad.h:
+	* gst/gstqueue.c: (gst_queue_bufferalloc),
+	(gst_queue_handle_sink_event), (gst_queue_chain):
+	Bufferalloc: return GstFlowReturn to more accuratly report
+	why allocation failed.
+
+2005-06-02  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstpipeline.c: (gst_pipeline_send_event):
 	Take snapshot of state without blocking.
 

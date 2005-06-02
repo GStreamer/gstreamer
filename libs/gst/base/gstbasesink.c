@@ -97,8 +97,8 @@ static void gst_basesink_get_property (GObject * object, guint prop_id,
 
 static GstCaps *gst_base_sink_get_caps (GstBaseSink * sink);
 static gboolean gst_base_sink_set_caps (GstBaseSink * sink, GstCaps * caps);
-static GstBuffer *gst_base_sink_buffer_alloc (GstBaseSink * sink,
-    guint64 offset, guint size, GstCaps * caps);
+static GstFlowReturn gst_base_sink_buffer_alloc (GstBaseSink * sink,
+    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 static void gst_basesink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end);
 
@@ -202,21 +202,23 @@ gst_basesink_pad_setcaps (GstPad * pad, GstCaps * caps)
   return res;
 }
 
-static GstBuffer *
+static GstFlowReturn
 gst_basesink_pad_buffer_alloc (GstPad * pad, guint64 offset, guint size,
-    GstCaps * caps)
+    GstCaps * caps, GstBuffer ** buf)
 {
   GstBaseSinkClass *bclass;
   GstBaseSink *bsink;
-  GstBuffer *buffer = NULL;
+  GstFlowReturn result = GST_FLOW_OK;
 
   bsink = GST_BASESINK (GST_PAD_PARENT (pad));
   bclass = GST_BASESINK_GET_CLASS (bsink);
 
   if (bclass->buffer_alloc)
-    buffer = bclass->buffer_alloc (bsink, offset, size, caps);
+    result = bclass->buffer_alloc (bsink, offset, size, caps, buf);
+  else
+    *buf = NULL;
 
-  return buffer;
+  return result;
 }
 
 static void
@@ -363,11 +365,12 @@ gst_base_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   return TRUE;
 }
 
-static GstBuffer *
+static GstFlowReturn
 gst_base_sink_buffer_alloc (GstBaseSink * sink, guint64 offset, guint size,
-    GstCaps * caps)
+    GstCaps * caps, GstBuffer ** buf)
 {
-  return NULL;
+  *buf = NULL;
+  return GST_FLOW_OK;
 }
 
 /* with PREROLL_LOCK */

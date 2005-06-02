@@ -160,8 +160,8 @@ typedef GstCaps*		(*GstPadGetCapsFunction) 	(GstPad *pad);
 typedef gboolean		(*GstPadSetCapsFunction) 	(GstPad *pad, GstCaps *caps);
 typedef gboolean		(*GstPadAcceptCapsFunction) 	(GstPad *pad, GstCaps *caps);
 typedef GstCaps*		(*GstPadFixateCapsFunction) 	(GstPad *pad, GstCaps *caps);
-typedef GstBuffer*		(*GstPadBufferAllocFunction) 	(GstPad *pad, guint64 offset, guint size,
-								 GstCaps *caps);
+typedef GstFlowReturn		(*GstPadBufferAllocFunction) 	(GstPad *pad, guint64 offset, guint size,
+								 GstCaps *caps, GstBuffer **buf);
 /* misc */
 typedef gboolean 		(*GstPadDispatcherFunction) 	(GstPad *pad, gpointer data);
 
@@ -256,7 +256,7 @@ struct _GstRealPad {
 
   GstPadBufferAllocFunction      bufferallocfunc;
 
-  GstProbeDispatcher		 probedisp;
+  GstProbeDispatcher            probedisp;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -471,8 +471,8 @@ gpointer		gst_pad_get_element_private		(GstPad *pad);
 GstPadTemplate*		gst_pad_get_pad_template		(GstPad *pad);
 
 void			gst_pad_set_bufferalloc_function	(GstPad *pad, GstPadBufferAllocFunction bufalloc);
-GstBuffer*		gst_pad_alloc_buffer			(GstPad *pad, guint64 offset, gint size, 
-								 GstCaps *caps);
+GstFlowReturn		gst_pad_alloc_buffer			(GstPad *pad, guint64 offset, gint size, 
+								 GstCaps *caps, GstBuffer **buf);
 
 /* data passing setup functions */
 void			gst_pad_set_activate_function		(GstPad *pad, GstPadActivateFunction activate);
@@ -553,12 +553,11 @@ gboolean		gst_pad_query_default			(GstPad *pad, GstQuery *query);
 /* misc helper functions */
 gboolean		gst_pad_dispatcher			(GstPad *pad, GstPadDispatcherFunction dispatch,
 								 gpointer data);
-
 /* probes */
-#define			gst_pad_add_probe(pad, probe) \
-			(gst_probe_dispatcher_add_probe (&(GST_PAD_REALIZE (pad)->probedisp), probe))
-#define			gst_pad_remove_probe(pad, probe) \
-			(gst_probe_dispatcher_remove_probe (&(GST_PAD_REALIZE (pad)->probedisp), probe))
+#define                        gst_pad_add_probe(pad, probe) \
+                       (gst_probe_dispatcher_add_probe (&(GST_PAD_REALIZE (pad)->probedisp), probe))
+#define                        gst_pad_remove_probe(pad, probe) \
+                       (gst_probe_dispatcher_remove_probe (&(GST_PAD_REALIZE (pad)->probedisp), probe))
 
 #ifndef GST_DISABLE_LOADSAVE
 void			gst_pad_load_and_link			(xmlNodePtr self, GstObject *parent);

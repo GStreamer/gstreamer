@@ -77,8 +77,8 @@ struct _GstBaseSinkClass {
   gboolean      (*set_caps)     (GstBaseSink *sink, GstCaps *caps);
 
   /* allocate a new buffer with given caps */
-  GstBuffer*    (*buffer_alloc) (GstBaseSink *sink, guint64 offset, guint size,
-		                 GstCaps *caps);
+  GstFlowReturn (*buffer_alloc) (GstBaseSink *sink, guint64 offset, guint size,
+		                 GstCaps *caps, GstBuffer **buf);
 
   /* get the start and end times for syncing on this buffer */
   void		(*get_times)    (GstBaseSink *sink, GstBuffer *buffer, 

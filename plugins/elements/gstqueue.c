@@ -126,8 +126,8 @@ static void gst_queue_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn gst_queue_chain (GstPad * pad, GstBuffer * buffer);
-static GstBuffer *gst_queue_bufferalloc (GstPad * pad, guint64 offset,
-    guint size, GstCaps * caps);
+static GstFlowReturn gst_queue_bufferalloc (GstPad * pad, guint64 offset,
+    guint size, GstCaps * caps, GstBuffer ** buf);
 static void gst_queue_loop (GstPad * pad);
 
 static gboolean gst_queue_handle_sink_event (GstPad * pad, GstEvent * event);
@@ -411,25 +411,16 @@ gst_queue_link_src (GstPad * pad, GstPad * peer)
   return result;
 }
 
-static GstBuffer *
-gst_queue_bufferalloc (GstPad * pad, guint64 offset, guint size, GstCaps * caps)
+static GstFlowReturn
+gst_queue_bufferalloc (GstPad * pad, guint64 offset, guint size, GstCaps * caps,
+    GstBuffer ** buf)
 {
   GstQueue *queue;
-  GstPad *otherpeer;
-  GstBuffer *result = NULL;
+  GstFlowReturn result;
 
   queue = GST_QUEUE (GST_PAD_PARENT (pad));
 
-  otherpeer = gst_pad_get_peer (queue->srcpad);
-  if (otherpeer == NULL || GST_RPAD_BUFFERALLOCFUNC (otherpeer) == NULL) {
-    /* let the default aloc function do the work */
-    result = NULL;
-  } else {
-    result =
-        GST_RPAD_BUFFERALLOCFUNC (otherpeer) (otherpeer, offset, size, caps);
-  }
-  if (otherpeer)
-    gst_object_unref (GST_OBJECT (otherpeer));
+  result = gst_pad_alloc_buffer (queue->srcpad, offset, size, caps, buf);
 
   return result;
 }
