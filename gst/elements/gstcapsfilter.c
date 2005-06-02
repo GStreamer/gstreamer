@@ -205,9 +205,17 @@ gst_capsfilter_set_property (GObject * object, guint prop_id,
   capsfilter = GST_CAPSFILTER (object);
 
   switch (prop_id) {
-    case PROP_FILTER_CAPS:
-      capsfilter->filter_caps = gst_caps_copy (gst_value_get_caps (value));
+    case PROP_FILTER_CAPS:{
+      GstCaps *new_caps = gst_caps_copy (gst_value_get_caps (value));
+
+      g_return_if_fail (new_caps != NULL);
+
+      gst_caps_unref (capsfilter->filter_caps);
+      capsfilter->filter_caps = new_caps;
+
+      /* FIXME: Need to activate these caps on the pads */
       break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

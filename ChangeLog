@@ -1,3 +1,15 @@
+2005-06-03  Jan Schmidt  <thaytan@mad.scientist.com>
+
+  * gst/elements/gstcapsfilter.c: (gst_capsfilter_set_property):
+    Free existing caps if the capsfilter changes. Add a FIXME about
+    setting those caps on the pads.
+
+  * gst/gstutils.c: (gst_element_get_compatible_pad), (ghost_up):
+    Before adding a ghost pad to a parent bin, check that there isn't
+    already one for the element on the bin. Prevents infinite recursion
+    when using decodebin in parse pipelines. Andy says he'll rewrite the
+    way this works anyway, so ignore the hack.
+
 2005-06-02  Andy Wingo  <wingo@pobox.com>
 
 	* gst/elements/gsttypefindelement.c (do_pull_typefind): Query the

@@ -625,7 +625,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
 
         current = GST_PAD (padptr);
 
-        GST_CAT_LOG (GST_CAT_ELEMENT_PADS, "examing pad %s:%s",
+        GST_CAT_LOG (GST_CAT_ELEMENT_PADS, "examining pad %s:%s",
             GST_DEBUG_PAD_NAME (current));
 
         peer = gst_pad_get_peer (current);
@@ -808,14 +808,26 @@ ghost_up (GstElement * e, GstPad * pad)
   static gint ghost_pad_index = 0;
   GstPad *gpad;
   gchar *name;
+  GList *gpads;
+  GstObject *parent = GST_OBJECT_PARENT (e);
+
+  /* Check if the pad already has a ghost on the element */
+  for (gpads = g_list_first (GST_PAD_REALIZE (pad)->ghostpads); gpads != NULL;
+      gpads = g_list_next (gpads)) {
+    if (GST_OBJECT_PARENT (GST_PAD (gpads->data)) == parent) {
+      GST_DEBUG ("Found existing ghost pad of %s on element %s\n",
+          GST_OBJECT_NAME (pad), GST_OBJECT_NAME (parent));
+      return GST_PAD (gpads->data);
+    }
+  }
 
   name = g_strdup_printf ("ghost%d", ghost_pad_index++);
   gpad = gst_ghost_pad_new (name, pad);
   g_free (name);
 
-  if (!gst_element_add_pad ((GstElement *) GST_OBJECT_PARENT (e), gpad)) {
+  if (!gst_element_add_pad ((GstElement *) parent, gpad)) {
     g_warning ("Pad named %s already exists in element %s\n",
-        GST_OBJECT_NAME (gpad), GST_OBJECT_NAME (GST_OBJECT_PARENT (e)));
+        GST_OBJECT_NAME (gpad), GST_OBJECT_NAME (parent));
     gst_object_unref ((GstObject *) gpad);
     return NULL;
   }
