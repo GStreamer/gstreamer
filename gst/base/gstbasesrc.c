@@ -280,9 +280,39 @@ gst_basesrc_do_seek (GstBaseSrc * src, GstEvent * event)
 
   /* get seek positions */
   offset = GST_EVENT_SEEK_OFFSET (event);
-  src->segment_start = offset;
-  src->segment_end = GST_EVENT_SEEK_ENDOFFSET (event);
   src->segment_loop = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_SEGMENT_LOOP;
+
+  switch (GST_EVENT_SEEK_METHOD (event)) {
+    case GST_SEEK_METHOD_SET:
+      if (offset < 0)
+        goto error;
+      src->offset = MIN (offset, src->size);
+      src->segment_start = src->offset;
+      src->segment_end = MIN (GST_EVENT_SEEK_ENDOFFSET (event), src->size);
+      GST_DEBUG_OBJECT (src, "seek set pending to %" G_GINT64_FORMAT,
+          src->offset);
+      break;
+    case GST_SEEK_METHOD_CUR:
+      offset += src->offset;
+      src->offset = CLAMP (offset, 0, src->size);
+      src->segment_start = src->offset;
+      src->segment_end = GST_EVENT_SEEK_ENDOFFSET (event);
+      GST_DEBUG_OBJECT (src, "seek cur pending to %" G_GINT64_FORMAT,
+          src->offset);
+      break;
+    case GST_SEEK_METHOD_END:
+      if (offset > 0)
+        goto error;
+      offset = src->size + offset;
+      src->offset = MAX (0, offset);
+      src->segment_start = src->offset;
+      src->segment_end = GST_EVENT_SEEK_ENDOFFSET (event);
+      GST_DEBUG_OBJECT (src, "seek end pending to %" G_GINT64_FORMAT,
+          src->offset);
+      break;
+    default:
+      goto error;
+  }
 
   /* send flush start */
   gst_pad_push_event (src->srcpad, gst_event_new_flush (FALSE));
@@ -293,31 +323,6 @@ gst_basesrc_do_seek (GstBaseSrc * src, GstEvent * event)
   /* grab streaming lock */
   GST_STREAM_LOCK (src->srcpad);
 
-  switch (GST_EVENT_SEEK_METHOD (event)) {
-    case GST_SEEK_METHOD_SET:
-      if (offset < 0)
-        goto error;
-      src->offset = MIN (offset, src->size);
-      GST_DEBUG_OBJECT (src, "seek set pending to %" G_GINT64_FORMAT,
-          src->offset);
-      break;
-    case GST_SEEK_METHOD_CUR:
-      offset += src->offset;
-      src->offset = CLAMP (offset, 0, src->size);
-      GST_DEBUG_OBJECT (src, "seek cur pending to %" G_GINT64_FORMAT,
-          src->offset);
-      break;
-    case GST_SEEK_METHOD_END:
-      if (offset > 0)
-        goto error;
-      offset = src->size + offset;
-      src->offset = MAX (0, offset);
-      GST_DEBUG_OBJECT (src, "seek end pending to %" G_GINT64_FORMAT,
-          src->offset);
-      break;
-    default:
-      goto error;
-  }
   /* send flush end */
   gst_pad_push_event (src->srcpad, gst_event_new_flush (TRUE));
 
@@ -345,7 +350,6 @@ gst_basesrc_do_seek (GstBaseSrc * src, GstEvent * event)
 error:
   {
     GST_DEBUG_OBJECT (src, "seek error");
-    GST_STREAM_UNLOCK (src->srcpad);
     gst_event_unref (event);
     return FALSE;
   }

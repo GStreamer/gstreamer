@@ -758,7 +758,11 @@ do_pull_typefind (GstTypeFindElement * typefind)
   peer = gst_pad_get_peer (typefind->sink);
   if (peer) {
     if (gst_pad_peer_set_active (typefind->sink, GST_ACTIVATE_PULL)) {
-      caps = gst_type_find_helper (peer, 0);
+      gint64 size;
+      GstFormat format = GST_FORMAT_BYTES;
+
+      gst_pad_query_position (peer, &format, NULL, &size);
+      caps = gst_type_find_helper (peer, (guint64) size);
       if (caps) {
         g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
             0, 100, caps);

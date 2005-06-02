@@ -78,7 +78,6 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 @manager: 
 @bus: 
 @scheduler: 
-@sched_private: 
 @clock: 
 @base_time: 
 @numpads: 

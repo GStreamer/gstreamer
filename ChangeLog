@@ -1,3 +1,14 @@
+2005-06-02  Andy Wingo  <wingo@pobox.com>
+
+	* gst/elements/gsttypefindelement.c (do_pull_typefind): Query the
+	file size, pass it on to the type find helper.
+
+	* gst/base/gstbasesrc.c (gst_basesrc_do_seek): Set the
+	segment_start and segment_end properly according to the seek
+	method. Segment_end is still a bit flaky because offset can be
+	negative for CUR and END cases, but it takes -1 as an "unset"
+	value.
+
 2005-06-02  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_basesink_pad_buffer_alloc),

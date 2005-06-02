@@ -36,15 +36,6 @@ against the GstElementStateReturn value.
 @GST_STATE_SUCCESS: the state of the element has already be changed
 @GST_STATE_ASYNC: the state of the element will change in the near future
 
-<!-- ##### ENUM GstResult ##### -->
-<para>
-
-</para>
-
-@GST_RESULT_OK: 
-@GST_RESULT_NOK: 
-@GST_RESULT_NOT_IMPL: 
-
 <!-- ##### ENUM GstRank ##### -->
 <para>
 Element priority ranks. Defines the order in which the autoplugger (or similar
