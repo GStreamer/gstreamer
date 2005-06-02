@@ -391,8 +391,11 @@ gst_goom_chain (GstPad * pad, GstBuffer * bufin)
       }
     }
 
-    bufout = gst_pad_alloc_buffer (goom->srcpad, GST_BUFFER_OFFSET_NONE,
-        goom->width * goom->height * 4, GST_PAD_CAPS (goom->srcpad));
+    ret = gst_pad_alloc_buffer (goom->srcpad, GST_BUFFER_OFFSET_NONE,
+        goom->width * goom->height * 4, GST_PAD_CAPS (goom->srcpad), &bufout);
+    if (ret != GST_FLOW_OK)
+      break;
+
     GST_BUFFER_TIMESTAMP (bufout) =
         goom->audio_basetime +
         (GST_SECOND * goom->samples_consumed / goom->sample_rate);

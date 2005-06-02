@@ -129,9 +129,8 @@ static void gst_video_box_set_property (GObject * object, guint prop_id,
 static void gst_video_box_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstPadLinkReturn
-gst_video_box_sink_link (GstPad * pad, const GstCaps * caps);
-static void gst_video_box_chain (GstPad * pad, GstData * _data);
+static gboolean gst_video_box_sink_setcaps (GstPad * pad, GstCaps * caps);
+static GstFlowReturn gst_video_box_chain (GstPad * pad, GstBuffer * buffer);
 
 static GstElementStateReturn gst_video_box_change_state (GstElement * element);
 
@@ -207,6 +206,9 @@ gst_video_box_class_init (GstVideoBoxClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  gobject_class->set_property = gst_video_box_set_property;
+  gobject_class->get_property = gst_video_box_get_property;
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FILL_TYPE,
       g_param_spec_enum ("fill", "Fill", "How to fill the borders",
           GST_TYPE_VIDEO_BOX_FILL, DEFAULT_FILL_TYPE,
@@ -235,9 +237,6 @@ gst_video_box_class_init (GstVideoBoxClass * klass)
           "Alpha value of the border", 0.0, 1.0, DEFAULT_BORDER_ALPHA,
           G_PARAM_READWRITE));
 
-  gobject_class->set_property = gst_video_box_set_property;
-  gobject_class->get_property = gst_video_box_get_property;
-
   gstelement_class->change_state = gst_video_box_change_state;
 }
 
@@ -250,7 +249,7 @@ gst_video_box_init (GstVideoBox * video_box)
       (&gst_video_box_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (video_box), video_box->sinkpad);
   gst_pad_set_chain_function (video_box->sinkpad, gst_video_box_chain);
-  gst_pad_set_link_function (video_box->sinkpad, gst_video_box_sink_link);
+  gst_pad_set_setcaps_function (video_box->sinkpad, gst_video_box_sink_setcaps);
 
   video_box->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
@@ -264,8 +263,6 @@ gst_video_box_init (GstVideoBox * video_box)
   video_box->fill_type = DEFAULT_FILL_TYPE;
   video_box->alpha = DEFAULT_ALPHA;
   video_box->border_alpha = DEFAULT_BORDER_ALPHA;
-
-  GST_FLAG_SET (video_box, GST_ELEMENT_EVENT_AWARE);
 }
 
 /* do we need this function? */
@@ -374,20 +371,20 @@ gst_video_box_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstPadLinkReturn
-gst_video_box_sink_link (GstPad * pad, const GstCaps * caps)
+static gboolean
+gst_video_box_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstVideoBox *video_box;
   GstStructure *structure;
   gboolean ret;
 
-  video_box = GST_VIDEO_BOX (gst_pad_get_parent (pad));
+  video_box = GST_VIDEO_BOX (GST_PAD_PARENT (pad));
   structure = gst_caps_get_structure (caps, 0);
 
   ret = gst_structure_get_int (structure, "width", &video_box->in_width);
   ret &= gst_structure_get_int (structure, "height", &video_box->in_height);
 
-  return GST_PAD_LINK_OK;
+  return ret;
 }
 
 #define ROUND_UP_2(x)  (((x)+1)&~1)
@@ -603,28 +600,15 @@ gst_video_box_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
   }
 }
 
-static void
-gst_video_box_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_video_box_chain (GstPad * pad, GstBuffer * buffer)
 {
-  GstBuffer *buffer;
   GstVideoBox *video_box;
   GstBuffer *outbuf;
   gint new_width, new_height;
+  GstFlowReturn ret;
 
   video_box = GST_VIDEO_BOX (gst_pad_get_parent (pad));
-
-  if (GST_IS_EVENT (_data)) {
-    GstEvent *event = GST_EVENT (_data);
-
-    switch (GST_EVENT_TYPE (event)) {
-      default:
-        gst_pad_event_default (pad, event);
-        break;
-    }
-    return;
-  }
-
-  buffer = GST_BUFFER (_data);
 
   new_width =
       video_box->in_width - (video_box->box_left + video_box->box_right);
@@ -665,14 +649,20 @@ gst_video_box_chain (GstPad * pad, GstData * _data)
   }
 
   if (video_box->use_alpha) {
-    outbuf = gst_pad_alloc_buffer (video_box->srcpad,
-        GST_BUFFER_OFFSET_NONE, new_width * new_height * 4);
+    ret = gst_pad_alloc_buffer (video_box->srcpad,
+        GST_BUFFER_OFFSET_NONE, new_width * new_height * 4,
+        GST_RPAD_CAPS (video_box->srcpad), &outbuf);
+    if (ret != GST_FLOW_OK)
+      goto done;
 
     gst_video_box_ayuv (video_box,
         GST_BUFFER_DATA (buffer), GST_BUFFER_DATA (outbuf));
   } else {
-    outbuf = gst_pad_alloc_buffer (video_box->srcpad,
-        GST_BUFFER_OFFSET_NONE, GST_VIDEO_I420_SIZE (new_width, new_height));
+    ret = gst_pad_alloc_buffer (video_box->srcpad,
+        GST_BUFFER_OFFSET_NONE, GST_VIDEO_I420_SIZE (new_width, new_height),
+        GST_RPAD_CAPS (video_box->srcpad), &outbuf);
+    if (ret != GST_FLOW_OK)
+      goto done;
 
     gst_video_box_i420 (video_box,
         GST_BUFFER_DATA (buffer), GST_BUFFER_DATA (outbuf));
@@ -680,10 +670,12 @@ gst_video_box_chain (GstPad * pad, GstData * _data)
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
 
+  ret = gst_pad_push (video_box->srcpad, outbuf);
 
+done:
   gst_buffer_unref (buffer);
 
-  gst_pad_push (video_box->srcpad, GST_DATA (outbuf));
+  return ret;
 }
 
 static GstElementStateReturn

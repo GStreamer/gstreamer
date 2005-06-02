@@ -237,6 +237,7 @@ gst_quarktv_chain (GstPad * pad, GstBuffer * buf)
   guint32 *src, *dest;
   GstBuffer *outbuf;
   gint area;
+  GstFlowReturn ret;
 
   filter = GST_QUARKTV (gst_pad_get_parent (pad));
 
@@ -244,7 +245,12 @@ gst_quarktv_chain (GstPad * pad, GstBuffer * buf)
 
   area = filter->area;
 
-  outbuf = gst_pad_alloc_buffer (filter->srcpad, 0, area, GST_PAD_CAPS (pad));
+  ret =
+      gst_pad_alloc_buffer (filter->srcpad, 0, area, GST_PAD_CAPS (pad),
+      &outbuf);
+  if (ret != GST_FLOW_OK)
+    goto no_buffer;
+
   dest = (guint32 *) GST_BUFFER_DATA (outbuf);
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
 
@@ -264,14 +270,18 @@ gst_quarktv_chain (GstPad * pad, GstBuffer * buf)
     dest[area] = (rand ? ((guint32 *) GST_BUFFER_DATA (rand))[area] : 0);
   }
 
-  gst_pad_push (filter->srcpad, outbuf);
+  ret = gst_pad_push (filter->srcpad, outbuf);
 
   filter->current_plane--;
-
   if (filter->current_plane < 0)
     filter->current_plane = filter->planes - 1;
 
-  return GST_FLOW_OK;
+  return ret;
+
+no_buffer:
+  {
+    return ret;
+  }
 }
 
 static GstElementStateReturn
