@@ -1,3 +1,14 @@
+2005-06-02  Andy Wingo  <wingo@pobox.com>
+
+	* ext/mad/gstid3tag.c: Finish porting to 0.9: no more gstdata,
+	check for link functions before calling them, give
+	gst_message_new_tag its own copy of the tag list, set the parser
+	state before sending the event (because in 0.9 events are
+	processed immediately), casting fixes.
+
+	* ext/mad/Makefile.am (libgstmad_la_LDFLAGS): Link with
+	gsttagedit.
+
 2005-06-02  Wim Taymans  <wim@fluendo.com>
 
 	* gst/udp/Makefile.am:
