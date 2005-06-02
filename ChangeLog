@@ -1,3 +1,10 @@
+2005-06-02  Wim Taymans  <wim@fluendo.com>
+
+	* examples/seeking/seek.c: (make_vorbis_theora_pipeline),
+	(query_rates), (query_positions_elems), (query_positions_pads),
+	(do_seek):
+	Updated seek example.
+
 2005-06-02  Andy Wingo  <wingo@pobox.com>
 
 	* pkgconfig/gstreamer-libs-uninstalled.pc.in (prefix):

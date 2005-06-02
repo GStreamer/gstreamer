@@ -28,6 +28,7 @@ static gulong changed_id;
 #define VSINK "xvimagesink"
 //#define VSINK "ximagesink"
 //#define VSINK "aasink"
+//#define VSINK "cacasink"
 
 #define UPDATE_INTERVAL 500
 
@@ -393,18 +394,22 @@ make_vorbis_theora_pipeline (const gchar * location)
   a_convert = gst_element_factory_make_or_warn ("audioconvert", "a_convert");
   audiosink = gst_element_factory_make_or_warn (ASINK, "a_sink");
 
-  gst_element_link (a_queue, a_decoder);
-  gst_element_link (a_decoder, a_convert);
-  gst_element_link (a_convert, audiosink);
+  gst_bin_add (GST_BIN (pipeline), audio_bin);
 
   gst_bin_add (GST_BIN (audio_bin), a_queue);
   gst_bin_add (GST_BIN (audio_bin), a_decoder);
   gst_bin_add (GST_BIN (audio_bin), a_convert);
   gst_bin_add (GST_BIN (audio_bin), audiosink);
 
-  gst_bin_add (GST_BIN (pipeline), audio_bin);
+  gst_element_link (a_queue, a_decoder);
+  gst_element_link (a_decoder, a_convert);
+  gst_element_link (a_convert, audiosink);
 
-  setup_dynamic_link (demux, NULL, gst_element_get_pad (a_queue, "sink"), NULL);
+  gst_element_add_ghost_pad (audio_bin, gst_element_get_pad (a_queue, "sink"),
+      "sink");
+
+  setup_dynamic_link (demux, NULL, gst_element_get_pad (audio_bin, "sink"),
+      NULL);
 
   video_bin = gst_bin_new ("v_decoder_bin");
   v_queue = gst_element_factory_make_or_warn ("queue", "v_queue");
@@ -412,16 +417,21 @@ make_vorbis_theora_pipeline (const gchar * location)
   v_convert =
       gst_element_factory_make_or_warn ("ffmpegcolorspace", "v_convert");
   videosink = gst_element_factory_make_or_warn (VSINK, "v_sink");
-  gst_element_link_many (v_queue, v_decoder, v_convert, videosink, NULL);
+
+  gst_bin_add (GST_BIN (pipeline), video_bin);
 
   gst_bin_add (GST_BIN (video_bin), v_queue);
   gst_bin_add (GST_BIN (video_bin), v_decoder);
   gst_bin_add (GST_BIN (video_bin), v_convert);
   gst_bin_add (GST_BIN (video_bin), videosink);
 
-  gst_bin_add (GST_BIN (pipeline), video_bin);
+  gst_element_link_many (v_queue, v_decoder, v_convert, videosink, NULL);
 
-  setup_dynamic_link (demux, NULL, gst_element_get_pad (v_queue, "sink"), NULL);
+  gst_element_add_ghost_pad (video_bin, gst_element_get_pad (v_queue, "sink"),
+      "sink");
+
+  setup_dynamic_link (demux, NULL, gst_element_get_pad (video_bin, "sink"),
+      NULL);
 
   seekable = gst_element_get_pad (a_decoder, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -943,7 +953,7 @@ static void
 do_seek (GtkWidget * widget)
 {
   gint64 real = gtk_range_get_value (GTK_RANGE (widget)) * duration / 100;
-  gboolean res;
+  gboolean res = FALSE;
   GstEvent *s_event;
 
   if (!elem_seek) {
@@ -968,8 +978,9 @@ do_seek (GtkWidget * widget)
     while (walk) {
       GstElement *seekable = GST_ELEMENT (walk->data);
 
-      g_print ("seek to %" G_GINT64_FORMAT " on element %s\n", real,
-          gst_element_get_name (seekable));
+      g_print ("seek to %" GST_TIME_FORMAT " on element %s\n",
+          GST_TIME_ARGS (real), GST_ELEMENT_NAME (seekable));
+
       s_event =
           gst_event_new_seek (GST_FORMAT_TIME | GST_SEEK_METHOD_SET |
           GST_SEEK_FLAG_FLUSH, real);
@@ -980,7 +991,10 @@ do_seek (GtkWidget * widget)
     }
   }
 
-  GST_PIPELINE (pipeline)->stream_time = real;
+  if (res)
+    GST_PIPELINE (pipeline)->stream_time = real;
+  else
+    g_print ("seek failed\n");
 }
 
 static void
