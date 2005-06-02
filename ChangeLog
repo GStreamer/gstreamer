@@ -1,5 +1,20 @@
 2005-06-02  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/README:
+	* gst/rtsp/gstrtspsrc.c: (gst_rtsp_proto_get_type),
+	(gst_rtspsrc_class_init), (gst_rtspsrc_create_stream),
+	(gst_rtspsrc_add_element), (gst_rtspsrc_set_state),
+	(gst_rtspsrc_stream_setup_rtp),
+	(gst_rtspsrc_stream_configure_transport), (find_stream),
+	(gst_rtspsrc_loop), (gst_rtspsrc_open), (gst_rtspsrc_play),
+	(gst_rtspsrc_change_state):
+	* gst/rtsp/rtsptransport.c: (rtsp_transport_new),
+	(rtsp_transport_init), (parse_mode), (parse_range),
+	(rtsp_transport_parse), (rtsp_transport_free):
+	RTSP cleanups.
+
+2005-06-02  Wim Taymans  <wim@fluendo.com>
+
 	* gst/effectv/gstquark.c: (gst_quarktv_chain):
 	* gst/goom/gstgoom.c: (gst_goom_chain):
 	* gst/videobox/Makefile.am:
