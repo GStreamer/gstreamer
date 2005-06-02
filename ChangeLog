@@ -1,3 +1,8 @@
+2005-06-02  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstbuffer.override (_wrap_gst_buffer_set_data): 
+	gcc 4.x bugfixes
+
 2005-05-04  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gst.defs:
