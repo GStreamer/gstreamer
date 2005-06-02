@@ -414,8 +414,6 @@ gst_videorate_chain (GstPad * pad, GstBuffer * buffer)
   if (videorate->to_fps == 0)
     return GST_FLOW_NOT_NEGOTIATED;
 
-  GST_STREAM_LOCK (pad);
-
   /* pull in 2 buffers */
   if (videorate->prevbuf == NULL) {
     /* We're sure it's a GstBuffer here */
@@ -514,7 +512,6 @@ gst_videorate_chain (GstPad * pad, GstBuffer * buffer)
     videorate->prevbuf = buffer;
   }
 done:
-  GST_STREAM_UNLOCK (pad);
 
   return res;
 }

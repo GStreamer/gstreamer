@@ -1088,12 +1088,8 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   /* if the caps contain pixel-aspect-ratio, they have to match ours,
    * otherwise linking should fail */
   par = gst_structure_get_value (structure, "pixel-aspect-ratio");
-  if (par) {
-    if (gst_value_compare (par, ximagesink->par) != GST_VALUE_EQUAL) {
-      GST_INFO_OBJECT (ximagesink, "pixel aspect ratio does not match");
-      return FALSE;
-    }
-  }
+  if (par && gst_value_compare (par, ximagesink->par) != GST_VALUE_EQUAL)
+    goto wrong_aspect;
 
   /* Creating our window and our image */
   g_assert (GST_VIDEOSINK_WIDTH (ximagesink) > 0);
@@ -1123,6 +1119,14 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
       GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
 
   return TRUE;
+
+  /* ERRORS */
+wrong_aspect:
+  {
+    g_mutex_unlock (ximagesink->stream_lock);
+    GST_INFO_OBJECT (ximagesink, "pixel aspect ratio does not match");
+    return FALSE;
+  }
 }
 
 static GstElementStateReturn
@@ -1291,9 +1295,9 @@ gst_ximagesink_buffer_free (GstBuffer * buffer)
 }
 #endif
 
-static GstBuffer *
+static GstFlowReturn
 gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
-    GstCaps * caps)
+    GstCaps * caps, GstBuffer ** buf)
 {
   GstXImageSink *ximagesink;
   GstXImageBuffer *ximage = NULL;
@@ -1305,7 +1309,7 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
    * we should not just reconfigure ourselves yet */
   if (caps && caps != GST_PAD_CAPS (GST_VIDEOSINK_PAD (ximagesink))) {
     if (!gst_ximagesink_setcaps (bsink, caps)) {
-      return NULL;
+      return GST_FLOW_NOT_NEGOTIATED;
     }
   }
 
@@ -1342,7 +1346,9 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
         GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
   }
 
-  return GST_BUFFER (ximage);
+  *buf = GST_BUFFER (ximage);
+
+  return GST_FLOW_OK;
 }
 
 /* Interfaces stuff */

@@ -98,8 +98,8 @@ static void gst_ffmpegcsp_set_property (GObject * object,
 static void gst_ffmpegcsp_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static GstBuffer *gst_ffmpegcsp_bufferalloc (GstPad * pad, guint64 offset,
-    guint size, GstCaps * caps);
+static GstFlowReturn gst_ffmpegcsp_bufferalloc (GstPad * pad, guint64 offset,
+    guint size, GstCaps * caps, GstBuffer ** buf);
 static GstFlowReturn gst_ffmpegcsp_chain (GstPad * pad, GstBuffer * buffer);
 static GstElementStateReturn gst_ffmpegcsp_change_state (GstElement * element);
 
@@ -385,22 +385,23 @@ gst_ffmpegcsp_init (GstFFMpegCsp * space)
   space->palette = NULL;
 }
 
-static GstBuffer *
+static GstFlowReturn
 gst_ffmpegcsp_bufferalloc (GstPad * pad, guint64 offset, guint size,
-    GstCaps * caps)
+    GstCaps * caps, GstBuffer ** buf)
 {
-  GstBuffer *buf;
+  GstFlowReturn ret;
   GstFFMpegCsp *space;
 
   space = GST_FFMPEGCSP (GST_PAD_PARENT (pad));
 
   if ((space->from_pixfmt == space->to_pixfmt) &&
       space->from_pixfmt != PIX_FMT_NB) {
-    buf = gst_pad_alloc_buffer (space->srcpad, offset, size, caps);
+    ret = gst_pad_alloc_buffer (space->srcpad, offset, size, caps, buf);
   } else {
-    buf = NULL;
+    *buf = NULL;
+    ret = GST_FLOW_OK;
   }
-  return buf;
+  return ret;
 }
 
 static GstFlowReturn
@@ -426,9 +427,9 @@ gst_ffmpegcsp_chain (GstPad * pad, GstBuffer * buffer)
         avpicture_get_size (space->to_pixfmt, space->width, space->height);
 
     /* get buffer in prefered format, setcaps will be called when it is different */
-    outbuf = gst_pad_alloc_buffer (space->srcpad, GST_BUFFER_OFFSET_NONE, size,
-        space->src_prefered);
-    if (outbuf == NULL)
+    res = gst_pad_alloc_buffer (space->srcpad, GST_BUFFER_OFFSET_NONE, size,
+        space->src_prefered, &outbuf);
+    if (res != GST_FLOW_OK)
       goto no_buffer;
 
     /* fill from from with source data */
@@ -452,6 +453,8 @@ gst_ffmpegcsp_chain (GstPad * pad, GstBuffer * buffer)
     /* copy timestamps */
     GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
     GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
+    GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buffer);
+    GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET_END (buffer);
 
     /* we don't need source anymore */
     gst_buffer_unref (buffer);
@@ -462,17 +465,17 @@ gst_ffmpegcsp_chain (GstPad * pad, GstBuffer * buffer)
   return res;
 
   /* ERRORS */
-no_buffer:
-  {
-    gst_buffer_unref (buffer);
-    return GST_FLOW_ERROR;
-  }
 unkown_format:
   {
     GST_ELEMENT_ERROR (space, CORE, NOT_IMPLEMENTED, (NULL),
         ("attempting to convert colorspaces between unknown formats"));
     gst_buffer_unref (buffer);
     return GST_FLOW_NOT_NEGOTIATED;
+  }
+no_buffer:
+  {
+    gst_buffer_unref (buffer);
+    return res;
   }
 }
 

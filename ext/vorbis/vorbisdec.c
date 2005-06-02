@@ -662,11 +662,11 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
   if (sample_count > 0) {
     GstBuffer *out;
 
-    out = gst_pad_alloc_buffer (vd->srcpad, GST_BUFFER_OFFSET_NONE,
+    result = gst_pad_alloc_buffer (vd->srcpad, GST_BUFFER_OFFSET_NONE,
         sample_count * vd->vi.channels * sizeof (float),
-        GST_PAD_CAPS (vd->srcpad));
+        GST_PAD_CAPS (vd->srcpad), &out);
 
-    if (out != NULL) {
+    if (result == GST_FLOW_OK) {
       float *out_data = (float *) GST_BUFFER_DATA (out);
 
       copy_samples (out_data, pcm, sample_count, vd->vi.channels);

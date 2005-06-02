@@ -473,8 +473,7 @@ gst_ogg_mux_buffer_from_page (GstOggMux * mux, ogg_page * page, gboolean delta)
   GstBuffer *buffer;
 
   /* allocate space for header and body */
-  buffer = gst_pad_alloc_buffer (mux->srcpad, GST_BUFFER_OFFSET_NONE,
-      page->header_len + page->body_len, NULL);
+  buffer = gst_buffer_new_and_alloc (page->header_len + page->body_len);
   memcpy (GST_BUFFER_DATA (buffer), page->header, page->header_len);
   memcpy (GST_BUFFER_DATA (buffer) + page->header_len,
       page->body, page->body_len);

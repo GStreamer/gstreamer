@@ -299,6 +299,8 @@ buffer_frames_convert_chain (GstPad * pad, GstBuffer * buf)
   gfloat *data_out;
   gint i, samples_in, samples_in_remaining, samples_out_remaining,
       out_buffer_samples;
+  GstFlowReturn ret;
+
 
   this = (BufferFramesConvert *) GST_OBJECT_PARENT (pad);
 
@@ -358,9 +360,13 @@ buffer_frames_convert_chain (GstPad * pad, GstBuffer * buf)
   } else {
     /* otherwise make a leftover buffer if it's necessary */
     if (samples_in_remaining) {
-      buf_out =
+      ret =
           gst_pad_alloc_buffer (this->srcpad, 0,
-          out_buffer_samples * sizeof (gfloat), GST_PAD_CAPS (this->srcpad));
+          out_buffer_samples * sizeof (gfloat), GST_PAD_CAPS (this->srcpad),
+          &buf_out);
+      if (ret != GST_FLOW_OK)
+        goto done;
+
       data_out = (gfloat *) GST_BUFFER_DATA (buf_out);
       this->buf_out = buf_out;
       this->samples_out_remaining = out_buffer_samples - samples_in_remaining;
@@ -368,8 +374,10 @@ buffer_frames_convert_chain (GstPad * pad, GstBuffer * buf)
         *(data_out++) = *(data_in++);
     }
   }
+  ret = GST_FLOW_OK;
 
+done:
   gst_buffer_unref (buf_in);
 
-  return GST_FLOW_OK;
+  return ret;
 }

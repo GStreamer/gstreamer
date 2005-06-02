@@ -365,9 +365,13 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
     GstClockTime timestamp, GstClockTime duration)
 {
   GstBuffer *buf;
+  GstFlowReturn ret;
 
-  buf = gst_pad_alloc_buffer (enc->srcpad,
-      GST_BUFFER_OFFSET_NONE, packet->bytes, GST_PAD_CAPS (enc->srcpad));
+  ret = gst_pad_alloc_buffer (enc->srcpad,
+      GST_BUFFER_OFFSET_NONE, packet->bytes, GST_PAD_CAPS (enc->srcpad), &buf);
+  if (ret != GST_FLOW_OK)
+    goto no_buffer;
+
   memcpy (GST_BUFFER_DATA (buf), packet->packet, packet->bytes);
   GST_BUFFER_OFFSET (buf) = enc->bytes_out;
   GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
@@ -381,10 +385,14 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
   } else {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
   }
-
   enc->packetno++;
 
   return buf;
+
+no_buffer:
+  {
+    return NULL;
+  }
 }
 
 /* push out the buffer and do internal bookkeeping */
@@ -482,8 +490,6 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
 
   in_time = GST_BUFFER_TIMESTAMP (buffer);
 
-  GST_STREAM_LOCK (pad);
-
   /* no packets written yet, setup headers */
   if (enc->packetno == 0) {
     GstCaps *caps;
@@ -576,8 +582,11 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
       dst_y_stride = enc->info_width;
       dst_uv_stride = enc->info_width / 2;
 
-      newbuf = gst_pad_alloc_buffer (enc->srcpad,
-          GST_BUFFER_OFFSET_NONE, y_size * 3 / 2, GST_PAD_CAPS (enc->srcpad));
+      ret = gst_pad_alloc_buffer (enc->srcpad,
+          GST_BUFFER_OFFSET_NONE, y_size * 3 / 2, GST_PAD_CAPS (enc->srcpad),
+          &newbuf);
+      if (ret != GST_FLOW_OK)
+        goto no_buffer;
 
       dest_y = yuv.y = (guint8 *) GST_BUFFER_DATA (newbuf);
       dest_u = yuv.u = yuv.y + y_size;
@@ -681,7 +690,6 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     }
     gst_buffer_unref (buffer);
   }
-  GST_STREAM_UNLOCK (pad);
 
   return ret;
 
@@ -689,13 +697,16 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
 header_push:
   {
     gst_buffer_unref (buffer);
-    GST_STREAM_UNLOCK (pad);
+    return ret;
+  }
+no_buffer:
+  {
+    gst_buffer_unref (buffer);
     return ret;
   }
 data_push:
   {
     gst_buffer_unref (buffer);
-    GST_STREAM_UNLOCK (pad);
     return ret;
   }
 }

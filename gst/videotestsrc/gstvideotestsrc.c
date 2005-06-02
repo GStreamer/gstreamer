@@ -318,29 +318,14 @@ gst_videotestsrc_activate (GstPad * pad, GstActivateMode mode)
     case GST_ACTIVATE_PULL:
       break;
     case GST_ACTIVATE_PUSH:
-      /* if we have a scheduler we can start the task */
-      if (GST_ELEMENT_SCHEDULER (videotestsrc)) {
-        GST_STREAM_LOCK (pad);
-        GST_RPAD_TASK (pad) =
-            gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (videotestsrc),
-            (GstTaskFunction) gst_videotestsrc_loop, pad);
-
-        gst_task_start (GST_RPAD_TASK (pad));
-        GST_STREAM_UNLOCK (pad);
-        result = TRUE;
-      }
+      result = gst_pad_start_task (pad,
+          (GstTaskFunction) gst_videotestsrc_loop, pad);
       break;
     case GST_ACTIVATE_NONE:
       /* step 1, unblock clock sync (if any) */
 
       /* step 2, make sure streaming finishes */
-      GST_STREAM_LOCK (pad);
-      /* step 3, stop the task */
-      gst_task_stop (GST_RPAD_TASK (pad));
-      gst_object_unref (GST_OBJECT (GST_RPAD_TASK (pad)));
-      GST_STREAM_UNLOCK (pad);
-
-      result = TRUE;
+      result = gst_pad_stop_task (pad);
       break;
     default:
       result = FALSE;
@@ -602,6 +587,7 @@ gst_videotestsrc_loop (GstPad * pad)
   GstVideotestsrc *videotestsrc;
   gulong newsize;
   GstBuffer *outbuf;
+  GstFlowReturn res;
 
   videotestsrc = GST_VIDEOTESTSRC (GST_PAD_PARENT (pad));
   GST_LOG_OBJECT (videotestsrc, "get");
@@ -660,18 +646,11 @@ gst_videotestsrc_loop (GstPad * pad)
   GST_LOG_OBJECT (videotestsrc, "creating buffer of %ld bytes for %dx%d image",
       newsize, videotestsrc->width, videotestsrc->height);
 
-  outbuf =
+  res =
       gst_pad_alloc_buffer (pad, GST_BUFFER_OFFSET_NONE, newsize,
-      GST_RPAD_CAPS (pad));
-
-  if (GST_BUFFER_CAPS (outbuf) != GST_PAD_CAPS (pad)) {
-    if (!gst_pad_set_caps (pad, GST_BUFFER_CAPS (outbuf))) {
-      GST_ELEMENT_ERROR (videotestsrc, CORE, NEGOTIATION, (NULL),
-          ("format wasn't accepted"));
-      gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
-      goto need_pause;
-    }
-  }
+      GST_PAD_CAPS (pad), &outbuf);
+  if (res != GST_FLOW_OK)
+    goto need_pause;
 
   videotestsrc->make_image (videotestsrc, (void *) GST_BUFFER_DATA (outbuf),
       videotestsrc->width, videotestsrc->height);
@@ -695,7 +674,7 @@ gst_videotestsrc_loop (GstPad * pad)
 
 need_pause:
   {
-    gst_task_pause (GST_RPAD_TASK (pad));
+    gst_task_pause (GST_PAD_TASK (pad));
   }
 }
 

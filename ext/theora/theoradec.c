@@ -825,16 +825,16 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
 
   /* now copy over the area contained in offset_x,offset_y,
    * frame_width, frame_height */
-  out = gst_pad_alloc_buffer (dec->srcpad, GST_BUFFER_OFFSET_NONE, out_size,
-      GST_PAD_CAPS (dec->srcpad));
-  if (out == NULL)
+  result = gst_pad_alloc_buffer (dec->srcpad, GST_BUFFER_OFFSET_NONE, out_size,
+      GST_PAD_CAPS (dec->srcpad), &out);
+  if (result != GST_FLOW_OK)
     goto no_buffer;
 
   /* copy the visible region to the destination. This is actually pretty
    * complicated and gstreamer doesn't support all the needed caps to do this
    * correctly. For example, when we have an odd offset, we should only combine
    * 1 row/column of luma samples with one chroma sample in colorspace conversion. 
-   * We compensate for this by adding a block border around the image when the
+   * We compensate for this by adding a black border around the image when the
    * offset or size is odd (see above).
    */
   {

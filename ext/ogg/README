@@ -187,3 +187,31 @@ TODO
 
 - use the OFFSET field in the GstBuffer to store/read the granulepos as 
   opposed to the OFFSET_END field.
+
+
+Ogg media mapping
+-----------------
+
+Ogg defines a mapping for each media type that it embeds.
+
+For Vorbis:
+
+  - 3 header pages, with granulepos 0.
+     - 1 page with 1 packet header identification
+     - N pages with 2 packets comments and codebooks
+  - granulepos is samplenumber of next page
+  - one packet can contain a variable number of samples
+  
+For Theora
+     
+  - 3 header pages, with granulepos 0.
+     - 1 page with 1 packet header identification
+     - N pages with 2 packets comments and codebooks
+  - granulepos is framenumber of last packet in page, where framenumber
+    is a combination of keyframe number and p frames since keyframe.
+  - one packet contains 1 frame
+  
+  
+
+
+

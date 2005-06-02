@@ -1,3 +1,35 @@
+2005-06-02  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/README:
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_packet),
+	(gst_ogg_demux_activate_chain), (gst_ogg_demux_clear_chains):
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_buffer_from_page):
+	* ext/theora/theoradec.c: (theora_dec_src_query),
+	(theora_handle_data_packet):
+	* ext/theora/theoraenc.c: (theora_buffer_from_packet),
+	(theora_enc_chain):
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_sink_event),
+	(vorbis_handle_data_packet):
+	* gst/audioconvert/bufferframesconvert.c:
+	(buffer_frames_convert_chain):
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_getcaps), (gst_ffmpegcsp_configure_context),
+	(gst_ffmpegcsp_setcaps), (gst_ffmpegcsp_bufferalloc),
+	(gst_ffmpegcsp_chain):
+	* gst/videorate/gstvideorate.c: (gst_videorate_transformcaps),
+	(gst_videorate_getcaps), (gst_videorate_setcaps),
+	(gst_videorate_event), (gst_videorate_chain):
+	* gst/videotestsrc/gstvideotestsrc.c: (gst_videotestsrc_activate),
+	(gst_videotestsrc_src_query), (gst_videotestsrc_loop):
+	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_new),
+	(gst_ximagesink_setcaps), (gst_ximagesink_buffer_alloc):
+	* sys/xvimage/xvimagesink.c: (gst_xvimage_buffer_destroy),
+	(gst_xvimage_buffer_finalize), (gst_xvimage_buffer_free),
+	(gst_xvimage_buffer_class_init), (gst_xvimage_buffer_get_type),
+	(gst_xvimagesink_xvimage_new), (gst_xvimagesink_xvimage_put),
+	(gst_xvimagesink_show_frame), (gst_xvimagesink_buffer_alloc):
+	Cleanups and buffer alloc.
+
 2005-05-31  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstringbuffer.c: (gst_ringbuffer_delay):

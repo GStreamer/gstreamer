@@ -625,34 +625,18 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
   if (pad->packetno == 0) {
     gst_ogg_pad_typefind (pad, packet);
   }
-#if 0
-  if (ogg->state != OGG_STATE_STREAMING) {
-    GST_DEBUG_OBJECT (ogg, "%p collecting headers, state %d", pad, ogg->state);
-
-    buf = gst_buffer_new_and_alloc (packet->bytes);
-    memcpy (GST_BUFFER_DATA (buf), packet->packet, packet->bytes);
-    gst_buffer_set_caps (buf, GST_PAD_CAPS (pad));
-    GST_BUFFER_OFFSET (buf) = -1;
-    GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
-
-    /* we are collecting the chain info, just need to queue the buffers */
-    pad->headers = g_list_append (pad->headers, buf);
-
-    goto done;
-  }
-#endif
 
   /* stream packet to peer plugin */
   if (pad->mode == GST_OGG_PAD_MODE_STREAMING) {
-    buf =
+    ret =
         gst_pad_alloc_buffer (GST_PAD (pad), GST_BUFFER_OFFSET_NONE,
-        packet->bytes, GST_PAD_CAPS (pad));
+        packet->bytes, GST_PAD_CAPS (pad), &buf);
 
     GST_DEBUG_OBJECT (ogg,
         "%p streaming to peer serial %08lx, packetno %lld", pad, pad->serialno,
         pad->packetno);
 
-    if (buf) {
+    if (ret == GST_FLOW_OK) {
       memcpy (buf->data, packet->packet, packet->bytes);
 
       pad->offset = packet->granulepos;
@@ -678,11 +662,8 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
     }
   } else {
     /* initialize our internal decoder with packets */
-    if (!pad->elem_pad) {
-      GST_WARNING_OBJECT (ogg,
-          "pad %08lx does not have elem_pad, no decoder ?", pad);
-      return GST_FLOW_OK;
-    }
+    if (!pad->elem_pad)
+      goto no_decoder;
 
     GST_DEBUG_OBJECT (ogg,
         "%p init decoder serial %08lx, packetno %lld", pad, pad->serialno,
@@ -696,13 +677,16 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
 
     ret = gst_pad_chain (pad->elem_pad, buf);
   }
-
-#if 0
-done:
-#endif
   pad->packetno++;
 
   return ret;
+
+no_decoder:
+  {
+    GST_WARNING_OBJECT (ogg,
+        "pad %08lx does not have elem_pad, no decoder ?", pad);
+    return GST_FLOW_OK;
+  }
 }
 
 /* submit a page to an oggpad, this function will then submit all

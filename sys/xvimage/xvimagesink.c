@@ -1562,9 +1562,9 @@ gst_xvimagesink_buffer_free (GstBuffer * buffer)
 }
 #endif
 
-static GstBuffer *
+static GstFlowReturn
 gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
-    GstCaps * caps)
+    GstCaps * caps, GstBuffer ** buf)
 {
   GstXvImageSink *xvimagesink;
   GstXvImageBuffer *xvimage = NULL;
@@ -1575,7 +1575,7 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
    * we should not just reconfigure ourselves yet */
   if (caps && caps != GST_PAD_CAPS (GST_VIDEOSINK_PAD (xvimagesink))) {
     if (!gst_xvimagesink_setcaps (bsink, caps)) {
-      return NULL;
+      return GST_FLOW_NOT_NEGOTIATED;
     }
   }
 
@@ -1617,7 +1617,9 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
   if (xvimage) {
     gst_buffer_set_caps (GST_BUFFER (xvimage), caps);
   }
-  return GST_BUFFER (xvimage);
+  *buf = GST_BUFFER (xvimage);
+
+  return GST_FLOW_OK;
 }
 
 /* Interfaces stuff */
