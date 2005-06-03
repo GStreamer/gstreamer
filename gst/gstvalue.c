@@ -243,7 +243,7 @@ gst_value_list_append_value (GValue * value, const GValue * append_value)
   g_return_if_fail (GST_VALUE_HOLDS_LIST (value)
       || GST_VALUE_HOLDS_FIXED_LIST (value));
 #ifndef G_DISABLE_CHECKS
-  G_STMT_START {
+  if (GST_VALUE_HOLDS_LIST (value)) {
     guint i;
 
     for (i = 0; i < gst_value_list_get_size (value); i++) {
@@ -259,7 +259,6 @@ gst_value_list_append_value (GValue * value, const GValue * append_value)
       }
     }
   }
-  G_STMT_END;
 #endif
 
   gst_value_init_and_copy (&val, append_value);

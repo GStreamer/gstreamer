@@ -1,3 +1,10 @@
+2005-06-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstvalue.c: (gst_value_list_append_value):
+	  Limit check for whether a list contains a value already to
+	  a normal list only (since this is allowed for a fixed-list).
+	  Should fix testsuite.
+
 2005-06-03  Andreas Schwab  <schwab@suse.de>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
