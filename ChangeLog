@@ -1,5 +1,11 @@
 2005-06-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_open),
+	(gst_ffmpegdec_handle_event), (gst_ffmpegdec_register):
+	  Disable parsing on h264 for now, seems to break avc decoding.
+
+2005-06-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* configure.ac:
 	  scale requires -libs (video.h).
 	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_getcaps):

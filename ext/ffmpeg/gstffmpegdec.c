@@ -403,7 +403,8 @@ gst_ffmpegdec_open (GstFFMpegDec *ffmpegdec)
    * of $(see mpeg4)... */
   if (oclass->in_plugin->id != CODEC_ID_MPEG4 &&
       oclass->in_plugin->id != CODEC_ID_MJPEG &&
-      oclass->in_plugin->id != CODEC_ID_MP3) {
+      oclass->in_plugin->id != CODEC_ID_MP3 &&
+      oclass->in_plugin->id != CODEC_ID_H264) {
     ffmpegdec->pctx = av_parser_init (oclass->in_plugin->id);
   }
 
@@ -875,7 +876,8 @@ gst_ffmpegdec_handle_event (GstFFMpegDec * ffmpegdec, GstEvent * event)
         avcodec_flush_buffers (ffmpegdec->context);
 
         if (ffmpegdec->context->codec_id == CODEC_ID_MPEG2VIDEO ||
-            ffmpegdec->context->codec_id == CODEC_ID_MPEG4) {
+            ffmpegdec->context->codec_id == CODEC_ID_MPEG4 ||
+            ffmpegdec->context->codec_id == CODEC_ID_H264) {
           ffmpegdec->waiting_for_key = TRUE;
         }
       }
@@ -1138,6 +1140,7 @@ gst_ffmpegdec_register (GstPlugin * plugin)
     switch (in_plugin->id) {
       case CODEC_ID_MPEG4:
       case CODEC_ID_MSMPEG4V3:
+      case CODEC_ID_H264:
         rank = GST_RANK_PRIMARY;
         break;
       default:
