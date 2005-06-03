@@ -428,7 +428,8 @@ gst_filesrc_map_region (GstFileSrc * src, off_t offset, size_t size)
     return NULL;
   } else if (mmapregion == MAP_FAILED) {
     GST_WARNING_OBJECT (src, "mmap (0x%08lx, %d, 0x%llx) failed: %s",
-        (unsigned long) size, src->fd, offset, strerror (errno));
+        (unsigned long) size, src->fd, (unsigned long long) offset,
+        strerror (errno));
     return NULL;
   }
   GST_LOG_OBJECT (src, "mapped region %08lx+%08lx from file into memory at %p",
