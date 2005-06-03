@@ -2,6 +2,13 @@
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/gstatomic_impl.h:
+	  Add IA64 atomic operations (#305653).
+
+2005-06-03  Andreas Schwab  <schwab@suse.de>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/elements/gstfilesrc.c: (gst_filesrc_map_region):
 	  Formatting fix (long/longlong), see #305653.
 

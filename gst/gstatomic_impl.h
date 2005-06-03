@@ -422,6 +422,33 @@ gst_atomic_int_dec_and_test (GstAtomicInt *aint)
   return new_val == 0;
 }
 
+/***** IA64 *****/
+#elif defined(HAVE_CPU_IA64) && defined(__GNUC__)
+#include <ia64intrin.h>
+
+GST_INLINE_FUNC void 	gst_atomic_int_init 	(GstAtomicInt *aint, gint val) { aint->counter = val; }
+GST_INLINE_FUNC void 	gst_atomic_int_destroy 	(GstAtomicInt *aint) { } 
+GST_INLINE_FUNC void 	gst_atomic_int_set 	(GstAtomicInt *aint, gint val) { aint->counter = val; }
+GST_INLINE_FUNC gint 	gst_atomic_int_read 	(GstAtomicInt *aint) { return aint->counter; }
+
+GST_INLINE_FUNC void 
+gst_atomic_int_add (GstAtomicInt *aint, gint val)
+{
+  __sync_fetch_and_add(&aint->counter, val);
+}
+
+GST_INLINE_FUNC void
+gst_atomic_int_inc (GstAtomicInt *aint)
+{
+  __sync_fetch_and_add(&aint->counter, 1);
+}
+
+GST_INLINE_FUNC gboolean
+gst_atomic_int_dec_and_test (GstAtomicInt *aint)
+{
+  return __sync_fetch_and_add(&aint->counter, -1) == 0;
+}
+
 #else 
 
 /* no need warning about this if we can't do inline assembly */
