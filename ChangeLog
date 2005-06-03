@@ -1,3 +1,7 @@
+2005-06-03  Stefan Kost  <ensonic@users.sf.net>
+
+	* Makefile.am: added support for html unit test coverage reports
+
 2005-06-03  Jan Schmidt  <thaytan@mad.scientist.com>
 
   * gst/elements/gstcapsfilter.c: (gst_capsfilter_set_property):
