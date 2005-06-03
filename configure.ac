@@ -61,7 +61,8 @@ AC_HEADER_STDC([])
 
 
 dnl check for gstreamer; uninstalled is selected preferentially -- see pkg-config(1)
-PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ,
+PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ \
+		       gstreamer-libs-$GST_MAJORMINOR,
   HAVE_GST="yes", HAVE_GST="no")
                                                                                 
 if test "x$HAVE_GST" = "xno"; then

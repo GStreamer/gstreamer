@@ -333,6 +333,8 @@ gst_ffmpegenc_getcaps (GstPad * pad)
           gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type, ctx));
       avcodec_close (ctx);
     }
+    if (ctx->priv_data)
+      avcodec_close (ctx);
   }
   av_free (ctx);
 
