@@ -1,5 +1,5 @@
 /* GStreamer
- * 
+ *
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
@@ -298,7 +298,7 @@ gst_bin_get_clock (GstBin * bin)
  * @bin: the bin to set the clock for
  * @clock: the clock to use.
  *
- * Force the bin to use the given clock. Use NULL to 
+ * Force the bin to use the given clock. Use NULL to
  * force it to use no clock at all.
  */
 void
@@ -466,7 +466,7 @@ gst_bin_unset_element_sched (GstElement * element, GstScheduler * sched)
  * @bin: the bin to add the elements to
  * @element_1: the first element to add to the bin
  * @...: additional elements to add to the bin
- * 
+ *
  * Adds a NULL-terminated list of elements to a bin.  This function is
  * equivalent to calling #gst_bin_add() for each member of the list.
  */
@@ -525,8 +525,8 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
     state_idx++;
   bin->child_states[state_idx]++;
 
-  /* now we have to deal with manager stuff 
-   * we can only do this if there's a scheduler: 
+  /* now we have to deal with manager stuff
+   * we can only do this if there's a scheduler:
    * if we're not a manager, and aren't attached to anything, we have no sched (yet) */
   sched = GST_ELEMENT_SCHED (bin);
   if (sched) {
@@ -666,7 +666,7 @@ gst_bin_remove (GstBin * bin, GstElement * element)
  * @bin: the bin to remove the elements from
  * @element_1: the first element to remove from the bin
  * @...: NULL-terminated list of elements to remove from the bin
- * 
+ *
  * Remove a list of elements from a bin. This function is equivalent
  * to calling #gst_bin_remove with each member of the list.
  */
@@ -780,7 +780,7 @@ typedef gboolean (*GstBinForeachFunc) (GstBin * bin, GstElement * element,
  * @func: function to call on each child
  * @data: user data handed to each function call
  *
- * Calls @func on each child of the bin. If @func returns FALSE, 
+ * Calls @func on each child of the bin. If @func returns FALSE,
  * gst_bin_foreach() immediately returns.
  * It is assumed that calling @func may alter the set of @bin's children. @func
  * will only be called on children that were in @bin when gst_bin_foreach() was
@@ -1157,7 +1157,7 @@ gst_bin_get_all_by_interface (GstBin * bin, GType interface)
  *
  * Tries to set the state of the children of this bin to the same state of the
  * bin by calling gst_element_set_state for each child not already having a
- * synchronized state. 
+ * synchronized state.
  *
  * Returns: The worst return value of any gst_element_set_state. So if one child
  *          returns #GST_STATE_FAILURE while all others return #GST_STATE_SUCCESS
