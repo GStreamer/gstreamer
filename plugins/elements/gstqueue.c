@@ -724,6 +724,7 @@ restart:
             g_cond_wait (queue->item_del, queue->qlock);
             STATUS (queue, "received item_del signal from thread using qlock");
           } else {
+            queue->interrupt = FALSE;
             GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
                 "Not waiting, just adding buffer, after interrupt (bad!)");
             break;
@@ -809,6 +810,7 @@ restart:
         GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "interrupted");
         GST_QUEUE_MUTEX_UNLOCK;
         sched = gst_pad_get_scheduler (queue->srcpad);
+        queue->interrupt = FALSE;
         if (!sched || gst_scheduler_interrupt (sched, GST_ELEMENT (queue)))
           return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
         goto restart;

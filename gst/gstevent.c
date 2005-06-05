@@ -185,7 +185,7 @@ gst_event_new (GstEventType type)
       (GstDataCopyFunction) _gst_event_copy);
 
   GST_EVENT_TYPE (event) = type;
-  GST_EVENT_TIMESTAMP (event) = G_GINT64_CONSTANT (0);
+  GST_EVENT_TIMESTAMP (event) = GST_CLOCK_TIME_NONE;
   GST_EVENT_SRC (event) = NULL;
   GST_DATA_FLAG_SET (GST_DATA (event), GST_EVENT_COMMON_FLAG_NEED_RESPONSE);
 
