@@ -1,3 +1,10 @@
+2005-06-07  Edward Hervey  <bilboed@bilboed.com>
+
+	* examples/gst/Makefile.am:
+	* examples/gst/gst-file.py: 
+	New example that shows how to use gst-python in an object-oriented way,
+	and how to override existing methods
+
 2005-06-02  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstbuffer.override (_wrap_gst_buffer_set_data): 
