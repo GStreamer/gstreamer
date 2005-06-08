@@ -3,7 +3,7 @@ AC_CANONICAL_TARGET
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gstreamer, GST_VERSION, 0, 9, 0, 1, GST_CVS="no", GST_CVS="yes")
+AS_VERSION(gstreamer, GST_VERSION, 0, 9, 0, 2, GST_CVS="no", GST_CVS="yes")
 
 dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
 AM_MAINTAINER_MODE
@@ -12,7 +12,7 @@ AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 dnl our libraries and install dirs use major.minor as a version
 GST_MAJORMINOR=$GST_VERSION_MAJOR.$GST_VERSION_MINOR
 dnl we override it here for release candidates for a new series
-GST_MAJORMINOR=0.9
+# GST_MAJORMINOR=0.9
 AC_SUBST(GST_MAJORMINOR)
 
 AC_PROG_CC
