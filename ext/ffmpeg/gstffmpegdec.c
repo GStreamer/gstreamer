@@ -1002,10 +1002,10 @@ gst_ffmpegdec_change_state (GstElement * element)
 
   switch (transition) {
     case GST_STATE_PAUSED_TO_READY:
+      gst_ffmpegdec_close (ffmpegdec);
       if (ffmpegdec->last_buffer != NULL) {
 	gst_buffer_unref (ffmpegdec->last_buffer);
       }
-      gst_ffmpegdec_close (ffmpegdec);
       break;
   }
 

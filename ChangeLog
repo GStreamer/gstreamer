@@ -1,3 +1,9 @@
+2005-06-08  Luca Ognibene  <luogni@tin.it>
+
+	* ext/ffmpeg/gstffmpegdec.c (gst_ffmpegdec_change_state): 
+	  First close the ffmpeg context than try to free last_buffer.
+	  fix #306893
+
 2005-06-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_open),
