@@ -98,14 +98,6 @@ template.
 @presence: 
 @static_caps: 
 
-<!-- ##### MACRO GST_IS_GHOST_PAD_FAST ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
 <!-- ##### MACRO GST_IS_PAD_FAST ##### -->
 <para>
 

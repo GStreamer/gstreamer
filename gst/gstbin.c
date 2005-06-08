@@ -1037,9 +1037,9 @@ restart:
 
       peer = gst_pad_get_peer (pad);
       if (peer) {
-        GstObject *peer_elem;
+        GstElement *peer_elem;
 
-        peer_elem = gst_object_get_parent (GST_OBJECT_CAST (peer));
+        peer_elem = gst_pad_get_parent (peer);
 
         if (peer_elem) {
           GstObject *parent;
@@ -1060,7 +1060,7 @@ restart:
             gst_object_unref (GST_OBJECT_CAST (peer_elem));
           }
           if (parent) {
-            gst_object_unref (GST_OBJECT_CAST (parent));
+            gst_object_unref (parent);
           }
         }
         gst_object_unref (GST_OBJECT_CAST (peer));

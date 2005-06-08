@@ -475,7 +475,6 @@ print_element_info (GstElementFactory * factory)
   GstElementClass *gstelement_class;
   GList *pads;
   GstPad *pad;
-  GstRealPad *realpad;
   GstStaticPadTemplate *padtemplate;
   gint maxlevel = 0;
 
@@ -585,7 +584,6 @@ print_element_info (GstElementFactory * factory)
     while (pads) {
       pad = GST_PAD (pads->data);
       pads = g_list_next (pads);
-      realpad = GST_PAD_REALIZE (pad);
 
       PUT_START_TAG (2, "pad");
       PUT_ESCAPED (3, "name", gst_pad_get_name (pad));
@@ -597,43 +595,40 @@ print_element_info (GstElementFactory * factory)
       else
         PUT_ESCAPED (3, "direction", "unknown");
 
-      if (GST_IS_GHOST_PAD (pad))
-        PUT_ESCAPED (3, "ghost", gst_pad_get_name (pad));
-
       if (pad->padtemplate)
         PUT_ESCAPED (3, "template", pad->padtemplate->name_template);
 
       PUT_START_TAG (3, "implementation");
-      if (realpad->chainfunc)
+      if (pad->chainfunc)
         PUT_STRING (4, "<chain-based function=\"%s\"/>",
-            GST_DEBUG_FUNCPTR_NAME (realpad->chainfunc));
-      if (realpad->getrangefunc)
+            GST_DEBUG_FUNCPTR_NAME (pad->chainfunc));
+      if (pad->getrangefunc)
         PUT_STRING (4, "<get-range-based function=\"%s\"/>",
-            GST_DEBUG_FUNCPTR_NAME (realpad->getrangefunc));
-      if (realpad->eventfunc != gst_pad_event_default)
+            GST_DEBUG_FUNCPTR_NAME (pad->getrangefunc));
+      if (pad->eventfunc != gst_pad_event_default)
         PUT_STRING (4, "<event-function function=\"%s\"/>",
-            GST_DEBUG_FUNCPTR_NAME (realpad->eventfunc));
-      if (realpad->queryfunc != gst_pad_query_default)
+            GST_DEBUG_FUNCPTR_NAME (pad->eventfunc));
+      if (pad->queryfunc != gst_pad_query_default)
         PUT_STRING (4, "<query-function function=\"%s\"/>",
-            GST_DEBUG_FUNCPTR_NAME (realpad->queryfunc));
-      if (realpad->querytypefunc != gst_pad_get_query_types_default) {
+            GST_DEBUG_FUNCPTR_NAME (pad->queryfunc));
+      if (pad->querytypefunc != gst_pad_get_query_types_default) {
         PUT_STRING (4, "<query-type-func function=\"%s\">",
-            GST_DEBUG_FUNCPTR_NAME (realpad->querytypefunc));
-        print_query_types (gst_pad_get_query_types (GST_PAD (realpad)), 5);
+            GST_DEBUG_FUNCPTR_NAME (pad->querytypefunc));
+        print_query_types (gst_pad_get_query_types (pad), 5);
         PUT_END_TAG (4, "query-type-func");
       }
 
-      if (realpad->intlinkfunc != gst_pad_get_internal_links_default)
+      if (pad->intlinkfunc != gst_pad_get_internal_links_default)
         PUT_STRING (4, "<intlink-function function=\"%s\"/>",
-            GST_DEBUG_FUNCPTR_NAME (realpad->intlinkfunc));
+            GST_DEBUG_FUNCPTR_NAME (pad->intlinkfunc));
 
-      if (realpad->bufferallocfunc)
+      if (pad->bufferallocfunc)
         PUT_STRING (4, "<bufferalloc-function function=\"%s\"/>",
-            GST_DEBUG_FUNCPTR_NAME (realpad->bufferallocfunc));
+            GST_DEBUG_FUNCPTR_NAME (pad->bufferallocfunc));
       PUT_END_TAG (3, "implementation");
 
-      if (realpad->caps) {
-        print_caps (realpad->caps, 3);
+      if (pad->caps) {
+        print_caps (pad->caps, 3);
       }
       PUT_END_TAG (2, "pad");
     }

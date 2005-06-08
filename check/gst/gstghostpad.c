@@ -1,0 +1,120 @@
+/* GStreamer
+ * Copyright (C) 2005 Wim Taymans <wim@fluendo.com>
+ *
+ * gstghostpad.c: Unit test for GstGhostPad
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+#include "../gstcheck.h"
+
+static void
+assert_gstrefcount (gpointer p, gint i)
+{
+  if (GST_OBJECT_REFCOUNT_VALUE (p) != i)
+    g_critical ("Expected refcount %d for %s, got %d", i, GST_OBJECT_NAME (p),
+        GST_OBJECT_REFCOUNT_VALUE (p));
+}
+
+START_TEST (test_ghost_pads)
+{
+  GstElement *b1, *b2, *src, *i1, *sink;
+  GstPad *gsink, *gsrc, *gisrc, *gisink, *isink, *isrc, *fsrc, *fsink;
+
+  b1 = gst_element_factory_make ("pipeline", NULL);
+  b2 = gst_element_factory_make ("bin", NULL);
+  src = gst_element_factory_make ("fakesrc", NULL);
+  g_object_set (src, "num-buffers", (int) 10, NULL);
+  i1 = gst_element_factory_make ("identity", NULL);
+  sink = gst_element_factory_make ("fakesink", NULL);
+
+  fail_unless (gst_bin_add (GST_BIN (b2), i1));
+  fail_unless (gst_bin_add (GST_BIN (b1), src));
+  fail_unless (gst_bin_add (GST_BIN (b1), b2));
+  fail_unless (gst_bin_add (GST_BIN (b1), sink));
+  fail_unless (gst_element_link_pads (src, NULL, i1, NULL));
+  fail_unless (gst_element_link_pads (i1, NULL, sink, NULL));
+  GST_LOCK (b2);
+  fail_unless (b2->numsinkpads == 1);
+  fail_unless (GST_IS_GHOST_PAD (b2->sinkpads->data));
+  fail_unless (b2->numsrcpads == 1);
+  fail_unless (GST_IS_GHOST_PAD (b2->srcpads->data));
+  GST_UNLOCK (b2);
+
+  fsrc = gst_element_get_pad (src, "src");
+  fail_unless (fsrc != NULL);
+  gsink = GST_PAD (gst_object_ref (GST_OBJECT (b2->sinkpads->data)));
+  fail_unless (gsink != NULL);
+  gsrc = GST_PAD (gst_object_ref (GST_OBJECT (b2->srcpads->data)));
+  fail_unless (gsrc != NULL);
+  fsink = gst_element_get_pad (sink, "sink");
+  fail_unless (fsink != NULL);
+
+  isink = gst_element_get_pad (i1, "sink");
+  fail_unless (isink != NULL);
+  isrc = gst_element_get_pad (i1, "src");
+  fail_unless (isrc != NULL);
+  gisrc = gst_pad_get_peer (isink);
+  fail_unless (gisrc != NULL);
+  gisink = gst_pad_get_peer (isrc);
+  fail_unless (gisink != NULL);
+
+  /* all objects above have one refcount owned by us as well */
+
+  assert_gstrefcount (fsrc, 3); /* parent and gisrc */
+  assert_gstrefcount (gsink, 2);        /* parent */
+  assert_gstrefcount (gsrc, 2); /* parent */
+  assert_gstrefcount (fsink, 3);        /* parent and gisink */
+
+  assert_gstrefcount (gisrc, 2);        /* parent */
+  assert_gstrefcount (isink, 3);        /* parent and gsink */
+  assert_gstrefcount (gisink, 2);       /* parent */
+  assert_gstrefcount (isrc, 3); /* parent and gsrc */
+
+  fail_unless (gst_element_set_state (b1,
+          GST_STATE_PLAYING) == GST_STATE_SUCCESS);
+
+  fail_unless (gst_element_set_state (b1, GST_STATE_NULL) == GST_STATE_SUCCESS);
+
+  gst_object_unref (GST_OBJECT (b1));
+}
+END_TEST Suite * gst_ghost_pad_suite (void)
+{
+  Suite *s = suite_create ("GstGhostPad");
+  TCase *tc_chain = tcase_create ("ghost pad tests");
+
+  suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_ghost_pads);
+
+  return s;
+}
+
+int
+main (int argc, char **argv)
+{
+  int nf;
+
+  Suite *s = gst_ghost_pad_suite ();
+  SRunner *sr = srunner_create (s);
+
+  gst_check_init (&argc, &argv);
+
+  srunner_run_all (sr, CK_NORMAL);
+  nf = srunner_ntests_failed (sr);
+  srunner_free (sr);
+
+  return nf;
+}

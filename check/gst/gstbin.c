@@ -81,37 +81,6 @@ START_TEST (test_interface)
 
   gst_object_unref (GST_OBJECT (bin));
 }
-
-END_TEST
-START_TEST (test_ghost_pads)
-{
-  GstElement *b1, *b2, *src, *i1, *sink;
-
-  b1 = gst_element_factory_make ("pipeline", NULL);
-  b2 = gst_element_factory_make ("bin", NULL);
-  src = gst_element_factory_make ("fakesrc", NULL);
-  i1 = gst_element_factory_make ("identity", NULL);
-  sink = gst_element_factory_make ("fakesink", NULL);
-
-  fail_unless (gst_bin_add (GST_BIN (b2), i1));
-  fail_unless (gst_bin_add (GST_BIN (b1), src));
-  fail_unless (gst_bin_add (GST_BIN (b1), b2));
-  fail_unless (gst_bin_add (GST_BIN (b1), sink));
-  fail_unless (gst_element_link_pads (src, NULL, i1, NULL));
-  fail_unless (gst_element_link_pads (i1, NULL, sink, NULL));
-  GST_LOCK (b2);
-  fail_unless (b2->numsinkpads == 1);
-  fail_unless (GST_IS_GHOST_PAD (b2->sinkpads->data));
-  fail_unless (b2->numsrcpads == 1);
-  fail_unless (GST_IS_GHOST_PAD (b2->srcpads->data));
-  GST_UNLOCK (b2);
-
-  fail_unless (gst_element_set_state (b1,
-          GST_STATE_PLAYING) == GST_STATE_SUCCESS);
-  fail_unless (gst_element_set_state (b1, GST_STATE_NULL) == GST_STATE_SUCCESS);
-
-  gst_object_unref (GST_OBJECT (b1));
-}
 END_TEST Suite * gst_bin_suite (void)
 {
   Suite *s = suite_create ("GstBin");
@@ -119,7 +88,6 @@ END_TEST Suite * gst_bin_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_interface);
-  tcase_add_test (tc_chain, test_ghost_pads);
 
   return s;
 }

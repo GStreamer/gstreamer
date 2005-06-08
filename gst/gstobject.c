@@ -160,7 +160,7 @@ gst_object_class_init (GstObjectClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NAME,
       g_param_spec_string ("name", "Name", "The name of the object",
-          NULL, G_PARAM_READWRITE));
+          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   gst_object_signals[PARENT_SET] =
       g_signal_new ("parent-set", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -213,7 +213,6 @@ gst_object_init (GTypeInstance * instance, gpointer g_class)
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p new", object);
   gst_atomic_int_set (&object->refcount, 1);
   PATCH_REFCOUNT (object);
-  gst_object_set_name_default (object, G_OBJECT_CLASS_NAME (g_class));
 
   object->flags = 0;
   GST_FLAG_SET (object, GST_OBJECT_FLOATING);

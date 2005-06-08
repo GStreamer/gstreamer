@@ -581,8 +581,6 @@ init_post (void)
   _gst_query_initialize ();
   gst_object_get_type ();
   gst_pad_get_type ();
-  gst_real_pad_get_type ();
-  gst_ghost_pad_get_type ();
   gst_element_factory_get_type ();
   gst_element_get_type ();
   gst_scheduler_factory_get_type ();

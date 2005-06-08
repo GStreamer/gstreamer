@@ -313,7 +313,6 @@ gst_parse_element_lock (GstElement *element, gboolean lock)
       {
         GstPad *pad = GST_PAD_CAST (data);
 
-	pad = gst_pad_realize (pad);
         if (GST_PAD_IS_SINK (pad) && GST_PAD_PEER (pad) &&
             !gst_element_is_locked_state (GST_PAD_PARENT (GST_PAD_PEER (pad)))) {
           unlocked_peer = TRUE;
@@ -355,7 +354,7 @@ gst_parse_element_lock (GstElement *element, gboolean lock)
   /* check if there are other pads to (un)lock */
   walk = (GList *) element->pads;
   for  (; walk; walk = walk->next) {
-    pad = (GstPad *) GST_PAD_REALIZE (walk->data);
+    pad = GST_PAD_CAST (walk->data);
     if (GST_PAD_IS_SRC (pad) && GST_PAD_PEER (pad)) {
       GstElement *next = GST_ELEMENT (GST_OBJECT_PARENT (GST_PAD_PEER (pad)));
       if (gst_element_is_locked_state (next) != lock)

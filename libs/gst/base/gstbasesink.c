@@ -241,7 +241,7 @@ gst_basesink_init (GstBaseSink * basesink, gpointer g_class)
   gst_element_add_pad (GST_ELEMENT (basesink), basesink->sinkpad);
 
   basesink->pad_mode = GST_ACTIVATE_NONE;
-  GST_RPAD_TASK (basesink->sinkpad) = NULL;
+  GST_PAD_TASK (basesink->sinkpad) = NULL;
   basesink->preroll_queue = g_queue_new ();
 
   GST_FLAG_SET (basesink, GST_ELEMENT_IS_SINK);
@@ -476,7 +476,7 @@ gst_basesink_finish_preroll (GstBaseSink * basesink, GstPad * pad,
   gst_basesink_preroll_queue_push (basesink, pad, buffer);
 
   GST_LOCK (pad);
-  flushing = GST_RPAD_IS_FLUSHING (pad);
+  flushing = GST_PAD_IS_FLUSHING (pad);
   GST_UNLOCK (pad);
   if (flushing)
     goto flushing;

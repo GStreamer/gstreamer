@@ -405,8 +405,8 @@ gst_queue_link_src (GstPad * pad, GstPad * peer)
   GstPadLinkReturn result = GST_PAD_LINK_OK;
 
   /* FIXME, see if we need to push or get pulled */
-  if (GST_RPAD_LINKFUNC (peer))
-    result = GST_RPAD_LINKFUNC (peer) (peer, pad);
+  if (GST_PAD_LINKFUNC (peer))
+    result = GST_PAD_LINKFUNC (peer) (peer, pad);
 
   return result;
 }
@@ -733,11 +733,11 @@ restart:
     result = gst_pad_push (pad, GST_BUFFER (data));
     GST_QUEUE_MUTEX_LOCK;
     if (result != GST_FLOW_OK) {
-      gst_task_pause (GST_RPAD_TASK (queue->srcpad));
+      gst_task_pause (GST_PAD_TASK (queue->srcpad));
     }
   } else {
     if (GST_EVENT_TYPE (data) == GST_EVENT_EOS) {
-      gst_task_pause (GST_RPAD_TASK (queue->srcpad));
+      gst_task_pause (GST_PAD_TASK (queue->srcpad));
       restart = FALSE;
     }
     GST_QUEUE_MUTEX_UNLOCK;

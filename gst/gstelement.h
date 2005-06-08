@@ -291,7 +291,6 @@ GstScheduler*		gst_element_get_scheduler	(GstElement *element);
 /* pad management */
 gboolean		gst_element_add_pad		(GstElement *element, GstPad *pad);
 gboolean		gst_element_remove_pad		(GstElement *element, GstPad *pad);
-GstPad *		gst_element_add_ghost_pad	(GstElement *element, GstPad *pad, const gchar *name);
 void			gst_element_no_more_pads	(GstElement *element);
 
 GstPad*			gst_element_get_pad		(GstElement *element, const gchar *name);

@@ -23,6 +23,7 @@
 #include "gst_private.h"
 
 #include "gstpad.h"
+#include "gstenumtypes.h"
 #include "gstmarshal.h"
 #include "gstutils.h"
 #include "gstelement.h"
@@ -47,19 +48,6 @@ GST_DEBUG_CATEGORY_STATIC (debug_dataflow);
 }G_STMT_END
 #define GST_CAT_DEFAULT GST_CAT_PADS
 
-/* realize and pad and grab the lock of the realized pad. */
-#define GST_PAD_REALIZE_AND_LOCK(pad, realpad, lost_ghostpad) 	\
-  GST_LOCK (pad);						\
-  realpad = GST_PAD_REALIZE (pad);				\
-  if (G_UNLIKELY (realpad == NULL)) {				\
-    GST_UNLOCK (pad);						\
-    goto lost_ghostpad;						\
-  }								\
-  if (G_UNLIKELY (pad != GST_PAD_CAST (realpad))) {		\
-    GST_LOCK (realpad);						\
-    GST_UNLOCK (pad);						\
-  }
-
 enum
 {
   TEMPL_PAD_CREATED,
@@ -70,20 +58,45 @@ enum
 static GstObject *padtemplate_parent_class = NULL;
 static guint gst_pad_template_signals[TEMPL_LAST_SIGNAL] = { 0 };
 
+/* Pad signals and args */
+enum
+{
+  PAD_LINKED,
+  PAD_UNLINKED,
+  PAD_REQUEST_LINK,
+  /* FILL ME */
+  PAD_LAST_SIGNAL
+};
+
+enum
+{
+  PAD_PROP_0,
+  PAD_PROP_CAPS,
+  PAD_PROP_DIRECTION,
+  PAD_PROP_TEMPLATE,
+  /* FILL ME */
+};
+
 GType _gst_pad_type = 0;
 
-/***** Start with the base GstPad class *****/
 static void gst_pad_class_init (GstPadClass * klass);
 static void gst_pad_init (GstPad * pad);
 static void gst_pad_dispose (GObject * object);
+static void gst_pad_finalize (GObject * object);
+static void gst_pad_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_pad_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
+static GstCaps *gst_pad_get_caps_unlocked (GstPad * pad);
 static void gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ);
 
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr gst_pad_save_thyself (GstObject * object, xmlNodePtr parent);
 #endif
 
-static GstObject *pad_parent_class = NULL;
+static GstObjectClass *pad_parent_class = NULL;
+static guint gst_pad_signals[PAD_LAST_SIGNAL] = { 0 };
 
 GType
 gst_pad_get_type (void)
@@ -111,116 +124,43 @@ gst_pad_class_init (GstPadClass * klass)
 {
   GObjectClass *gobject_class;
 
-  gobject_class = (GObjectClass *) klass;
 
-  pad_parent_class = g_type_class_ref (GST_TYPE_OBJECT);
-
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_pad_dispose);
-}
-
-static void
-gst_pad_init (GstPad * pad)
-{
-  /* all structs are initialized to NULL by glib */
-}
-static void
-gst_pad_dispose (GObject * object)
-{
-  GstPad *pad = GST_PAD_CAST (object);
-
-  gst_pad_set_pad_template (pad, NULL);
-  /* FIXME, we have links to many other things like caps
-   * and the peer pad... */
-
-  G_OBJECT_CLASS (pad_parent_class)->dispose (object);
-}
-
-
-
-/***** Then do the Real Pad *****/
-/* Pad signals and args */
-enum
-{
-  REAL_LINKED,
-  REAL_UNLINKED,
-  REAL_REQUEST_LINK,
-  /* FILL ME */
-  REAL_LAST_SIGNAL
-};
-
-enum
-{
-  REAL_ARG_0,
-  REAL_ARG_CAPS,
-  /* FILL ME */
-};
-
-static void gst_real_pad_class_init (GstRealPadClass * klass);
-static void gst_real_pad_init (GstRealPad * pad);
-static void gst_real_pad_dispose (GObject * object);
-static void gst_real_pad_finalize (GObject * object);
-
-static void gst_real_pad_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_real_pad_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-static GstCaps *gst_real_pad_get_caps_unlocked (GstRealPad * realpad);
-
-GType _gst_real_pad_type = 0;
-
-static GstPad *real_pad_parent_class = NULL;
-static guint gst_real_pad_signals[REAL_LAST_SIGNAL] = { 0 };
-
-GType
-gst_real_pad_get_type (void)
-{
-  if (!_gst_real_pad_type) {
-    static const GTypeInfo pad_info = {
-      sizeof (GstRealPadClass), NULL, NULL,
-      (GClassInitFunc) gst_real_pad_class_init, NULL, NULL,
-      sizeof (GstRealPad),
-      0,
-      (GInstanceInitFunc) gst_real_pad_init, NULL
-    };
-
-    _gst_real_pad_type = g_type_register_static (GST_TYPE_PAD, "GstRealPad",
-        &pad_info, 0);
-  }
-  return _gst_real_pad_type;
-}
-
-static void
-gst_real_pad_class_init (GstRealPadClass * klass)
-{
-  GObjectClass *gobject_class;
   GstObjectClass *gstobject_class;
 
   gobject_class = (GObjectClass *) klass;
   gstobject_class = (GstObjectClass *) klass;
 
-  real_pad_parent_class = g_type_class_ref (GST_TYPE_PAD);
+  pad_parent_class = g_type_class_ref (GST_TYPE_OBJECT);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_real_pad_dispose);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_real_pad_finalize);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_real_pad_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_real_pad_get_property);
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_pad_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_pad_finalize);
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_pad_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_pad_get_property);
 
-  gst_real_pad_signals[REAL_LINKED] =
+  gst_pad_signals[PAD_LINKED] =
       g_signal_new ("linked", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstRealPadClass, linked), NULL, NULL,
+      G_STRUCT_OFFSET (GstPadClass, linked), NULL, NULL,
       gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_PAD);
-  gst_real_pad_signals[REAL_UNLINKED] =
+  gst_pad_signals[PAD_UNLINKED] =
       g_signal_new ("unlinked", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstRealPadClass, unlinked), NULL, NULL,
+      G_STRUCT_OFFSET (GstPadClass, unlinked), NULL, NULL,
       gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_PAD);
-  gst_real_pad_signals[REAL_REQUEST_LINK] =
+  gst_pad_signals[PAD_REQUEST_LINK] =
       g_signal_new ("request_link", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRealPadClass, request_link), NULL,
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstPadClass, request_link), NULL,
       NULL, gst_marshal_VOID__OBJECT, G_TYPE_NONE, 0);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), REAL_ARG_CAPS,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PAD_PROP_CAPS,
       g_param_spec_boxed ("caps", "Caps", "The capabilities of the pad",
           GST_TYPE_CAPS, G_PARAM_READABLE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PAD_PROP_DIRECTION,
+      g_param_spec_enum ("direction", "Direction", "The direction of the pad",
+          GST_TYPE_PAD_DIRECTION, GST_PAD_UNKNOWN,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PAD_PROP_TEMPLATE,
+      g_param_spec_object ("template", "Template",
+          "The GstPadTemplate of this pad", GST_TYPE_PAD_TEMPLATE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
 #ifndef GST_DISABLE_LOADSAVE
   gstobject_class->save_thyself = GST_DEBUG_FUNCPTR (gst_pad_save_thyself);
@@ -229,14 +169,13 @@ gst_real_pad_class_init (GstRealPadClass * klass)
 }
 
 static void
-gst_real_pad_init (GstRealPad * pad)
+gst_pad_init (GstPad * pad)
 {
   pad->direction = GST_PAD_UNKNOWN;
   pad->peer = NULL;
 
   pad->chainfunc = NULL;
 
-  pad->ghostpads = NULL;
   pad->caps = NULL;
 
   pad->linkfunc = NULL;
@@ -247,7 +186,7 @@ gst_real_pad_init (GstRealPad * pad)
   pad->queryfunc = gst_pad_query_default;
   pad->intlinkfunc = gst_pad_get_internal_links_default;
 
-  GST_RPAD_UNSET_FLUSHING (pad);
+  GST_PAD_UNSET_FLUSHING (pad);
 
   pad->preroll_lock = g_mutex_new ();
   pad->preroll_cond = g_cond_new ();
@@ -259,12 +198,75 @@ gst_real_pad_init (GstRealPad * pad)
 }
 
 static void
-gst_real_pad_set_property (GObject * object, guint prop_id,
+gst_pad_dispose (GObject * object)
+{
+  GstPad *pad = GST_PAD (object);
+
+  gst_pad_set_pad_template (pad, NULL);
+  /* FIXME, we have links to many other things like caps
+   * and the peer pad... */
+
+  /* No linked pad can ever be disposed.
+   * It has to have a parent to be linked 
+   * and a parent would hold a reference */
+  /* FIXME: what about if g_object_dispose is explicitly called on the pad? Is
+     that legal? otherwise we could assert GST_OBJECT_PARENT (pad) == NULL as
+     well... */
+  g_assert (GST_PAD_PEER (pad) == NULL);
+
+  GST_CAT_DEBUG (GST_CAT_REFCOUNTING, "dispose %s:%s",
+      GST_DEBUG_PAD_NAME (pad));
+
+  /* clear the caps */
+  gst_caps_replace (&GST_PAD_CAPS (pad), NULL);
+
+  if (GST_IS_ELEMENT (GST_OBJECT_PARENT (pad))) {
+    GST_CAT_DEBUG (GST_CAT_REFCOUNTING, "removing pad from element '%s'",
+        GST_OBJECT_NAME (GST_OBJECT (GST_ELEMENT (GST_OBJECT_PARENT (pad)))));
+
+    gst_element_remove_pad (GST_ELEMENT (GST_OBJECT_PARENT (pad)), pad);
+  }
+
+  G_OBJECT_CLASS (pad_parent_class)->dispose (object);
+}
+
+static void
+gst_pad_finalize (GObject * object)
+{
+  GstPad *pad = GST_PAD (object);
+
+  if (pad->stream_rec_lock) {
+    g_static_rec_mutex_free (pad->stream_rec_lock);
+    pad->stream_rec_lock = NULL;
+  }
+  if (pad->preroll_lock) {
+    g_mutex_free (pad->preroll_lock);
+    g_cond_free (pad->preroll_cond);
+    pad->preroll_lock = NULL;
+    pad->preroll_cond = NULL;
+  }
+  if (pad->block_cond) {
+    g_cond_free (pad->block_cond);
+    pad->block_cond = NULL;
+  }
+
+  G_OBJECT_CLASS (pad_parent_class)->finalize (object);
+}
+
+static void
+gst_pad_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   g_return_if_fail (GST_IS_PAD (object));
 
   switch (prop_id) {
+    case PAD_PROP_DIRECTION:
+      GST_PAD_DIRECTION (object) = g_value_get_enum (value);
+      break;
+    case PAD_PROP_TEMPLATE:
+      gst_pad_set_pad_template (GST_PAD_CAST (object),
+          (GstPadTemplate *) g_value_dup_object (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -272,14 +274,20 @@ gst_real_pad_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_real_pad_get_property (GObject * object, guint prop_id,
+gst_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   g_return_if_fail (GST_IS_PAD (object));
 
   switch (prop_id) {
-    case REAL_ARG_CAPS:
-      g_value_set_boxed (value, GST_PAD_CAPS (GST_REAL_PAD (object)));
+    case PAD_PROP_CAPS:
+      g_value_set_boxed (value, GST_PAD_CAPS (object));
+      break;
+    case PAD_PROP_DIRECTION:
+      g_value_set_enum (value, GST_PAD_DIRECTION (object));
+      break;
+    case PAD_PROP_TEMPLATE:
+      g_value_set_object (value, GST_PAD_TEMPLATE (object));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -287,41 +295,12 @@ gst_real_pad_get_property (GObject * object, guint prop_id,
   }
 }
 
-/* FIXME-0.9: Replace these custom functions with proper inheritance via _init
-   functions and object properties. update: probably later in the cycle. */
-/**
- * gst_pad_custom_new:
- * @type: the #Gtype of the pad.
- * @name: the name of the new pad.
- * @direction: the #GstPadDirection of the pad.
- *
- * Creates a new pad with the given name and type in the given direction.
- * If name is NULL, a guaranteed unique name (across all pads) 
- * will be assigned. 
- * This function makes a copy of the name so you can safely free the name.
- *
- * Returns: a new #GstPad, or NULL in case of an error.
- *
- * MT safe.
- */
-GstPad *
-gst_pad_custom_new (GType type, const gchar * name, GstPadDirection direction)
-{
-  GstRealPad *pad;
-
-  pad = g_object_new (type, NULL);
-  gst_object_set_name (GST_OBJECT (pad), name);
-  GST_RPAD_DIRECTION (pad) = direction;
-
-  return GST_PAD_CAST (pad);
-}
-
 /**
  * gst_pad_new:
  * @name: the name of the new pad.
  * @direction: the #GstPadDirection of the pad.
  *
- * Creates a new real pad with the given name in the given direction.
+ * Creates a new pad with the given name in the given direction.
  * If name is NULL, a guaranteed unique name (across all pads) 
  * will be assigned.
  * This function makes a copy of the name so you can safely free the name.
@@ -333,34 +312,8 @@ gst_pad_custom_new (GType type, const gchar * name, GstPadDirection direction)
 GstPad *
 gst_pad_new (const gchar * name, GstPadDirection direction)
 {
-  return gst_pad_custom_new (gst_real_pad_get_type (), name, direction);
-}
-
-/**
- * gst_pad_custom_new_from_template:
- * @type: the custom #GType of the pad.
- * @templ: the #GstPadTemplate to instantiate from.
- * @name: the name of the new pad.
- *
- * Creates a new custom pad with the given name from the given template.
- * If name is NULL, a guaranteed unique name (across all pads) 
- * will be assigned.
- * This function makes a copy of the name so you can safely free the name.
- *
- * Returns: a new #GstPad, or NULL in case of an error.
- */
-GstPad *
-gst_pad_custom_new_from_template (GType type, GstPadTemplate * templ,
-    const gchar * name)
-{
-  GstPad *pad;
-
-  g_return_val_if_fail (GST_IS_PAD_TEMPLATE (templ), NULL);
-
-  pad = gst_pad_custom_new (type, name, templ->direction);
-  gst_pad_set_pad_template (pad, templ);
-
-  return pad;
+  return g_object_new (GST_TYPE_PAD,
+      "name", name, "direction", direction, NULL);
 }
 
 /**
@@ -368,7 +321,7 @@ gst_pad_custom_new_from_template (GType type, GstPadTemplate * templ,
  * @templ: the pad template to use
  * @name: the name of the element
  *
- * Creates a new real pad with the given name from the given template.
+ * Creates a new pad with the given name from the given template.
  * If name is NULL, a guaranteed unique name (across all pads) 
  * will be assigned.
  * This function makes a copy of the name so you can safely free the name.
@@ -378,8 +331,39 @@ gst_pad_custom_new_from_template (GType type, GstPadTemplate * templ,
 GstPad *
 gst_pad_new_from_template (GstPadTemplate * templ, const gchar * name)
 {
-  return gst_pad_custom_new_from_template (gst_real_pad_get_type (),
-      templ, name);
+  g_return_val_if_fail (GST_IS_PAD_TEMPLATE (templ), NULL);
+
+  return g_object_new (GST_TYPE_PAD,
+      "name", name, "direction", templ->direction, "template", templ, NULL);
+}
+
+/**
+ * gst_pad_get_parent:
+ * @pad: a pad
+ *
+ * Gets the parent of @pad, cast to a #GstElement. If a @pad has no parent or
+ * its parent is not an element, return NULL.
+ *
+ * Returns: The parent of the pad. The caller has a reference on the parent, so
+ * unref when you're finished with it.
+ *
+ * MT safe.
+ */
+GstElement *
+gst_pad_get_parent (GstPad * pad)
+{
+  GstObject *p;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  p = gst_object_get_parent (GST_OBJECT_CAST (pad));
+
+  if (p && !GST_IS_ELEMENT (p)) {
+    gst_object_unref (p);
+    p = NULL;
+  }
+
+  return GST_ELEMENT_CAST (p);
 }
 
 /**
@@ -398,23 +382,16 @@ GstPadDirection
 gst_pad_get_direction (GstPad * pad)
 {
   GstPadDirection result;
-  GstRealPad *realpad;
 
   /* PAD_UNKNOWN is a little silly but we need some sort of
    * error return value */
   g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_UNKNOWN);
 
-  GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
-  result = GST_RPAD_DIRECTION (realpad);
-  GST_UNLOCK (realpad);
+  GST_LOCK (pad);
+  result = GST_PAD_DIRECTION (pad);
+  GST_UNLOCK (pad);
 
   return result;
-
-  /* errors */
-lost_ghostpad:
-  {
-    return GST_PAD_UNKNOWN;
-  }
 }
 
 /**
@@ -437,17 +414,16 @@ lost_ghostpad:
 gboolean
 gst_pad_set_active (GstPad * pad, GstActivateMode mode)
 {
-  GstRealPad *realpad;
   GstActivateMode old;
   GstPadActivateFunction activatefunc;
   gboolean active, oldactive;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
-  GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
+  GST_LOCK (pad);
 
   active = GST_PAD_MODE_ACTIVATE (mode);
-  old = GST_RPAD_ACTIVATE_MODE (realpad);
+  old = GST_PAD_ACTIVATE_MODE (pad);
   oldactive = GST_PAD_MODE_ACTIVATE (old);
 
   /* if nothing changed, we can just exit */
@@ -463,16 +439,16 @@ gst_pad_set_active (GstPad * pad, GstActivateMode mode)
   /* make sure data is disallowed when going inactive */
   if (!active) {
     GST_CAT_DEBUG (GST_CAT_PADS, "de-activating pad %s:%s",
-        GST_DEBUG_PAD_NAME (realpad));
-    GST_RPAD_SET_FLUSHING (realpad);
+        GST_DEBUG_PAD_NAME (pad));
+    GST_PAD_SET_FLUSHING (pad);
     /* unlock blocked pads so element can resume and stop */
-    GST_PAD_BLOCK_SIGNAL (realpad);
+    GST_PAD_BLOCK_SIGNAL (pad);
   }
 
   if (active) {
-    if (GST_RPAD_DIRECTION (realpad) == GST_PAD_SRC) {
+    if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC) {
       if (mode == GST_ACTIVATE_PULL) {
-        if (!realpad->getrangefunc)
+        if (!pad->getrangefunc)
           goto wrong_mode;
       } else {
         /* we can push if driven by a chain or loop on the sink pad.
@@ -483,43 +459,43 @@ gst_pad_set_active (GstPad * pad, GstActivateMode mode)
       if (mode == GST_ACTIVATE_PULL) {
         /* the src can drive us with getrange */
       } else {
-        if (!realpad->chainfunc)
+        if (!pad->chainfunc)
           goto wrong_mode;
       }
     }
   }
 
-  activatefunc = realpad->activatefunc;
+  activatefunc = pad->activatefunc;
   if (activatefunc) {
     gboolean result;
 
     GST_CAT_DEBUG (GST_CAT_PADS,
         "calling activate function on pad %s:%s with mode %d",
-        GST_DEBUG_PAD_NAME (realpad), mode);
+        GST_DEBUG_PAD_NAME (pad), mode);
 
     /* unlock so element can sync */
-    GST_UNLOCK (realpad);
-    result = activatefunc (GST_PAD_CAST (realpad), mode);
+    GST_UNLOCK (pad);
+    result = activatefunc (pad, mode);
     /* and lock again */
-    GST_LOCK (realpad);
+    GST_LOCK (pad);
     if (result == FALSE)
       goto activate_error;
   }
   /* store the mode */
-  GST_RPAD_ACTIVATE_MODE (realpad) = mode;
+  GST_PAD_ACTIVATE_MODE (pad) = mode;
 
   /* when going to active allow data passing now */
   if (active) {
     GST_CAT_DEBUG (GST_CAT_PADS, "activating pad %s:%s in mode %d",
-        GST_DEBUG_PAD_NAME (realpad), mode);
-    GST_RPAD_UNSET_FLUSHING (realpad);
-    GST_UNLOCK (realpad);
+        GST_DEBUG_PAD_NAME (pad), mode);
+    GST_PAD_UNSET_FLUSHING (pad);
+    GST_UNLOCK (pad);
   } else {
-    GST_UNLOCK (realpad);
+    GST_UNLOCK (pad);
 
     /* and make streaming finish */
-    GST_STREAM_LOCK (realpad);
-    GST_STREAM_UNLOCK (realpad);
+    GST_STREAM_LOCK (pad);
+    GST_STREAM_UNLOCK (pad);
   }
   return TRUE;
 
@@ -527,29 +503,25 @@ was_ok:
   {
     GST_CAT_DEBUG (GST_CAT_PADS,
         "pad %s:%s was active, old %d, new %d",
-        GST_DEBUG_PAD_NAME (realpad), old, mode);
-    GST_UNLOCK (realpad);
+        GST_DEBUG_PAD_NAME (pad), old, mode);
+    GST_UNLOCK (pad);
     return TRUE;
   }
   /* errors */
-lost_ghostpad:
-  {
-    return FALSE;
-  }
 wrong_mode:
   {
     GST_CAT_DEBUG (GST_CAT_PADS,
         "pad %s:%s lacks functions to be active in mode %d",
-        GST_DEBUG_PAD_NAME (realpad), mode);
-    GST_UNLOCK (realpad);
+        GST_DEBUG_PAD_NAME (pad), mode);
+    GST_UNLOCK (pad);
     return FALSE;
   }
 activate_error:
   {
     GST_CAT_DEBUG (GST_CAT_PADS,
         "activate function returned FALSE for pad %s:%s",
-        GST_DEBUG_PAD_NAME (realpad));
-    GST_UNLOCK (realpad);
+        GST_DEBUG_PAD_NAME (pad));
+    GST_UNLOCK (pad);
     return FALSE;
   }
 }
@@ -604,20 +576,14 @@ gboolean
 gst_pad_is_active (GstPad * pad)
 {
   gboolean result = FALSE;
-  GstRealPad *realpad;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
-  GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
-  result = GST_PAD_MODE_ACTIVATE (GST_RPAD_ACTIVATE_MODE (realpad));
-  GST_UNLOCK (realpad);
+  GST_LOCK (pad);
+  result = GST_PAD_MODE_ACTIVATE (GST_PAD_ACTIVATE_MODE (pad));
+  GST_UNLOCK (pad);
 
   return result;
-
-lost_ghostpad:
-  {
-    return FALSE;
-  }
 }
 
 /**
@@ -648,60 +614,55 @@ gst_pad_set_blocked_async (GstPad * pad, gboolean blocked,
     GstPadBlockCallback callback, gpointer user_data)
 {
   gboolean was_blocked;
-  GstRealPad *realpad;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
-  GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
+  GST_LOCK (pad);
 
-  was_blocked = GST_RPAD_IS_BLOCKED (realpad);
+  was_blocked = GST_PAD_IS_BLOCKED (pad);
 
   if (G_UNLIKELY (was_blocked == blocked))
     goto had_right_state;
 
   if (blocked) {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, realpad, "blocking pad %s:%s",
-        GST_DEBUG_PAD_NAME (realpad));
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "blocking pad %s:%s",
+        GST_DEBUG_PAD_NAME (pad));
 
-    GST_FLAG_SET (realpad, GST_PAD_BLOCKED);
-    realpad->block_callback = callback;
-    realpad->block_data = user_data;
+    GST_FLAG_SET (pad, GST_PAD_BLOCKED);
+    pad->block_callback = callback;
+    pad->block_data = user_data;
     if (!callback) {
-      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, realpad, "waiting for block");
-      GST_PAD_BLOCK_WAIT (realpad);
-      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, realpad, "blocked");
+      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "waiting for block");
+      GST_PAD_BLOCK_WAIT (pad);
+      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "blocked");
     }
   } else {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, realpad, "unblocking pad %s:%s",
-        GST_DEBUG_PAD_NAME (realpad));
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "unblocking pad %s:%s",
+        GST_DEBUG_PAD_NAME (pad));
 
-    GST_FLAG_UNSET (realpad, GST_PAD_BLOCKED);
+    GST_FLAG_UNSET (pad, GST_PAD_BLOCKED);
 
-    realpad->block_callback = callback;
-    realpad->block_data = user_data;
+    pad->block_callback = callback;
+    pad->block_data = user_data;
 
     if (callback) {
-      GST_PAD_BLOCK_SIGNAL (realpad);
+      GST_PAD_BLOCK_SIGNAL (pad);
     } else {
-      GST_PAD_BLOCK_SIGNAL (realpad);
-      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, realpad, "waiting for unblock");
-      GST_PAD_BLOCK_WAIT (realpad);
-      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, realpad, "unblocked");
+      GST_PAD_BLOCK_SIGNAL (pad);
+      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "waiting for unblock");
+      GST_PAD_BLOCK_WAIT (pad);
+      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "unblocked");
     }
   }
-  GST_UNLOCK (realpad);
+  GST_UNLOCK (pad);
 
   return TRUE;
 
-lost_ghostpad:
-  {
-    return FALSE;
-  }
 had_right_state:
   {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, realpad,
-        "pad %s:%s was in right state", GST_DEBUG_PAD_NAME (realpad));
-    GST_UNLOCK (realpad);
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "pad %s:%s was in right state", GST_DEBUG_PAD_NAME (pad));
+    GST_UNLOCK (pad);
     return FALSE;
   }
 }
@@ -743,25 +704,19 @@ gboolean
 gst_pad_is_blocked (GstPad * pad)
 {
   gboolean result = FALSE;
-  GstRealPad *realpad;
 
   g_return_val_if_fail (GST_IS_PAD (pad), result);
 
-  GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
-  result = GST_FLAG_IS_SET (realpad, GST_PAD_BLOCKED);
-  GST_UNLOCK (realpad);
+  GST_LOCK (pad);
+  result = GST_FLAG_IS_SET (pad, GST_PAD_BLOCKED);
+  GST_UNLOCK (pad);
 
   return result;
-
-lost_ghostpad:
-  {
-    return FALSE;
-  }
 }
 
 /**
  * gst_pad_set_activate_function:
- * @pad: a real sink #GstPad.
+ * @pad: a sink #GstPad.
  * @chain: the #GstPadActivateFunction to set.
  *
  * Sets the given activate function for the pad. The activate function is called to
@@ -770,16 +725,16 @@ lost_ghostpad:
 void
 gst_pad_set_activate_function (GstPad * pad, GstPadActivateFunction activate)
 {
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (GST_IS_PAD (pad));
 
-  GST_RPAD_ACTIVATEFUNC (pad) = activate;
+  GST_PAD_ACTIVATEFUNC (pad) = activate;
   GST_CAT_DEBUG (GST_CAT_PADS, "activatefunc for %s:%s set to %s",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (activate));
 }
 
 /**
  * gst_pad_set_loop_function:
- * @pad: a real sink #GstPad.
+ * @pad: a sink #GstPad.
  * @chain: the #GstPadLoopFunction to set.
  *
  * Sets the given loop function for the pad. The loop function is called 
@@ -788,16 +743,16 @@ gst_pad_set_activate_function (GstPad * pad, GstPadActivateFunction activate)
 void
 gst_pad_set_loop_function (GstPad * pad, GstPadLoopFunction loop)
 {
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (GST_IS_PAD (pad));
 
-  GST_RPAD_LOOPFUNC (pad) = loop;
+  GST_PAD_LOOPFUNC (pad) = loop;
   GST_CAT_DEBUG (GST_CAT_PADS, "loopfunc for %s:%s set to %s",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (loop));
 }
 
 /**
  * gst_pad_set_chain_function:
- * @pad: a real sink #GstPad.
+ * @pad: a sink #GstPad.
  * @chain: the #GstPadChainFunction to set.
  *
  * Sets the given chain function for the pad. The chain function is called to
@@ -806,17 +761,17 @@ gst_pad_set_loop_function (GstPad * pad, GstPadLoopFunction loop)
 void
 gst_pad_set_chain_function (GstPad * pad, GstPadChainFunction chain)
 {
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
-  g_return_if_fail (GST_RPAD_DIRECTION (pad) == GST_PAD_SINK);
+  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK);
 
-  GST_RPAD_CHAINFUNC (pad) = chain;
+  GST_PAD_CHAINFUNC (pad) = chain;
   GST_CAT_DEBUG (GST_CAT_PADS, "chainfunc for %s:%s set to %s",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (chain));
 }
 
 /**
  * gst_pad_set_getrange_function:
- * @pad: a real source #GstPad.
+ * @pad: a source #GstPad.
  * @get: the #GstPadGetRangeFunction to set.
  *
  * Sets the given getrange function for the pad. The getrange function is called to
@@ -826,10 +781,10 @@ gst_pad_set_chain_function (GstPad * pad, GstPadChainFunction chain)
 void
 gst_pad_set_getrange_function (GstPad * pad, GstPadGetRangeFunction get)
 {
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
-  g_return_if_fail (GST_RPAD_DIRECTION (pad) == GST_PAD_SRC);
+  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC);
 
-  GST_RPAD_GETRANGEFUNC (pad) = get;
+  GST_PAD_GETRANGEFUNC (pad) = get;
 
   GST_CAT_DEBUG (GST_CAT_PADS, "getrangefunc for %s:%s  set to %s",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (get));
@@ -837,7 +792,7 @@ gst_pad_set_getrange_function (GstPad * pad, GstPadGetRangeFunction get)
 
 /**
  * gst_pad_set_checkgetrange_function:
- * @pad: a real source #GstPad.
+ * @pad: a source #GstPad.
  * @check: the #GstPadCheckGetRangeFunction to set.
  *
  * Sets the given checkgetrange function for the pad. Implement this function on
@@ -847,10 +802,10 @@ void
 gst_pad_set_checkgetrange_function (GstPad * pad,
     GstPadCheckGetRangeFunction check)
 {
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
-  g_return_if_fail (GST_RPAD_DIRECTION (pad) == GST_PAD_SRC);
+  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC);
 
-  GST_RPAD_CHECKGETRANGEFUNC (pad) = check;
+  GST_PAD_CHECKGETRANGEFUNC (pad) = check;
 
   GST_CAT_DEBUG (GST_CAT_PADS, "checkgetrangefunc for %s:%s  set to %s",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (check));
@@ -858,7 +813,7 @@ gst_pad_set_checkgetrange_function (GstPad * pad,
 
 /**
  * gst_pad_set_event_function:
- * @pad: a real source #GstPad.
+ * @pad: a source #GstPad.
  * @event: the #GstPadEventFunction to set.
  *
  * Sets the given event handler for the pad.
@@ -866,9 +821,9 @@ gst_pad_set_checkgetrange_function (GstPad * pad,
 void
 gst_pad_set_event_function (GstPad * pad, GstPadEventFunction event)
 {
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (GST_IS_PAD (pad));
 
-  GST_RPAD_EVENTFUNC (pad) = event;
+  GST_PAD_EVENTFUNC (pad) = event;
 
   GST_CAT_DEBUG (GST_CAT_PADS, "eventfunc for %s:%s  set to %s",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (event));
@@ -876,7 +831,7 @@ gst_pad_set_event_function (GstPad * pad, GstPadEventFunction event)
 
 /**
  * gst_pad_set_query_function:
- * @pad: a real #GstPad of either direction.
+ * @pad: a #GstPad of either direction.
  * @query: the #GstPadQueryFunction to set.
  *
  * Set the given query function for the pad.
@@ -884,9 +839,9 @@ gst_pad_set_event_function (GstPad * pad, GstPadEventFunction event)
 void
 gst_pad_set_query_function (GstPad * pad, GstPadQueryFunction query)
 {
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (GST_IS_PAD (pad));
 
-  GST_RPAD_QUERYFUNC (pad) = query;
+  GST_PAD_QUERYFUNC (pad) = query;
 
   GST_CAT_DEBUG (GST_CAT_PADS, "queryfunc for %s:%s  set to %s",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (query));
@@ -894,7 +849,7 @@ gst_pad_set_query_function (GstPad * pad, GstPadQueryFunction query)
 
 /**
  * gst_pad_set_query_type_function:
- * @pad: a real #GstPad of either direction.
+ * @pad: a #GstPad of either direction.
  * @type_func: the #GstPadQueryTypeFunction to set.
  *
  * Set the given query type function for the pad.
@@ -903,9 +858,9 @@ void
 gst_pad_set_query_type_function (GstPad * pad,
     GstPadQueryTypeFunction type_func)
 {
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (GST_IS_PAD (pad));
 
-  GST_RPAD_QUERYTYPEFUNC (pad) = type_func;
+  GST_PAD_QUERYTYPEFUNC (pad) = type_func;
 
   GST_CAT_DEBUG (GST_CAT_PADS, "querytypefunc for %s:%s  set to %s",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (type_func));
@@ -923,19 +878,14 @@ gst_pad_set_query_type_function (GstPad * pad,
 const GstQueryType *
 gst_pad_get_query_types (GstPad * pad)
 {
-  GstRealPad *rpad;
   GstPadQueryTypeFunction func;
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  rpad = GST_PAD_REALIZE (pad);
-
-  g_return_val_if_fail (rpad, NULL);
-
-  if (G_UNLIKELY ((func = GST_RPAD_QUERYTYPEFUNC (rpad)) == NULL))
+  if (G_UNLIKELY ((func = GST_PAD_QUERYTYPEFUNC (pad)) == NULL))
     goto no_func;
 
-  return func (GST_PAD_CAST (rpad));
+  return func (pad);
 
 no_func:
   {
@@ -976,7 +926,7 @@ gst_pad_get_query_types_default (GstPad * pad)
 
 /**
  * gst_pad_set_internal_link_function:
- * @pad: a real #GstPad of either direction.
+ * @pad: a #GstPad of either direction.
  * @intlink: the #GstPadIntLinkFunction to set.
  *
  * Sets the given internal link function for the pad.
@@ -984,16 +934,16 @@ gst_pad_get_query_types_default (GstPad * pad)
 void
 gst_pad_set_internal_link_function (GstPad * pad, GstPadIntLinkFunction intlink)
 {
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (GST_IS_PAD (pad));
 
-  GST_RPAD_INTLINKFUNC (pad) = intlink;
+  GST_PAD_INTLINKFUNC (pad) = intlink;
   GST_CAT_DEBUG (GST_CAT_PADS, "internal link for %s:%s  set to %s",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (intlink));
 }
 
 /**
  * gst_pad_set_link_function:
- * @pad: a real #GstPad.
+ * @pad: a #GstPad.
  * @link: the #GstPadLinkFunction to set.
  * 
  * Sets the given link function for the pad. It will be called when the pad is
@@ -1009,16 +959,16 @@ gst_pad_set_internal_link_function (GstPad * pad, GstPadIntLinkFunction intlink)
 void
 gst_pad_set_link_function (GstPad * pad, GstPadLinkFunction link)
 {
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (GST_IS_PAD (pad));
 
-  GST_RPAD_LINKFUNC (pad) = link;
+  GST_PAD_LINKFUNC (pad) = link;
   GST_CAT_DEBUG (GST_CAT_PADS, "linkfunc for %s:%s set to %s",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (link));
 }
 
 /**
  * gst_pad_set_unlink_function:
- * @pad: a real #GstPad.
+ * @pad: a #GstPad.
  * @unlink: the #GstPadUnlinkFunction to set.
  *
  * Sets the given unlink function for the pad. It will be called
@@ -1027,16 +977,16 @@ gst_pad_set_link_function (GstPad * pad, GstPadLinkFunction link)
 void
 gst_pad_set_unlink_function (GstPad * pad, GstPadUnlinkFunction unlink)
 {
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (GST_IS_PAD (pad));
 
-  GST_RPAD_UNLINKFUNC (pad) = unlink;
+  GST_PAD_UNLINKFUNC (pad) = unlink;
   GST_CAT_DEBUG (GST_CAT_PADS, "unlinkfunc for %s:%s set to %s",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (unlink));
 }
 
 /**
  * gst_pad_set_getcaps_function:
- * @pad: a real #GstPad.
+ * @pad: a #GstPad.
  * @getcaps: the #GstPadGetCapsFunction to set.
  * 
  * Sets the given getcaps function for the pad. @getcaps should return the
@@ -1063,16 +1013,16 @@ gst_pad_set_unlink_function (GstPad * pad, GstPadUnlinkFunction unlink)
 void
 gst_pad_set_getcaps_function (GstPad * pad, GstPadGetCapsFunction getcaps)
 {
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (GST_IS_PAD (pad));
 
-  GST_RPAD_GETCAPSFUNC (pad) = getcaps;
+  GST_PAD_GETCAPSFUNC (pad) = getcaps;
   GST_CAT_DEBUG (GST_CAT_PADS, "getcapsfunc for %s:%s set to %s",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (getcaps));
 }
 
 /**
  * gst_pad_set_acceptcaps_function:
- * @pad: a real #GstPad.
+ * @pad: a #GstPad.
  * @acceptcaps: the #GstPadAcceptCapsFunction to set.
  *
  * Sets the given acceptcaps function for the pad.  The acceptcaps function
@@ -1082,16 +1032,16 @@ void
 gst_pad_set_acceptcaps_function (GstPad * pad,
     GstPadAcceptCapsFunction acceptcaps)
 {
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (GST_IS_PAD (pad));
 
-  GST_RPAD_ACCEPTCAPSFUNC (pad) = acceptcaps;
+  GST_PAD_ACCEPTCAPSFUNC (pad) = acceptcaps;
   GST_CAT_DEBUG (GST_CAT_PADS, "acceptcapsfunc for %s:%s set to %s",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (acceptcaps));
 }
 
 /**
  * gst_pad_set_fixatecaps_function:
- * @pad: a real #GstPad.
+ * @pad: a #GstPad.
  * @fixatecaps: the #GstPadFixateCapsFunction to set.
  *
  * Sets the given fixatecaps function for the pad.  The fixatecaps function
@@ -1102,16 +1052,16 @@ void
 gst_pad_set_fixatecaps_function (GstPad * pad,
     GstPadFixateCapsFunction fixatecaps)
 {
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (GST_IS_PAD (pad));
 
-  GST_RPAD_FIXATECAPSFUNC (pad) = fixatecaps;
+  GST_PAD_FIXATECAPSFUNC (pad) = fixatecaps;
   GST_CAT_DEBUG (GST_CAT_PADS, "fixatecapsfunc for %s:%s set to %s",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (fixatecaps));
 }
 
 /**
  * gst_pad_set_setcaps_function:
- * @pad: a real #GstPad.
+ * @pad: a #GstPad.
  * @setcaps: the #GstPadSetCapsFunction to set.
  *
  * Sets the given setcaps function for the pad.  The setcaps function
@@ -1123,16 +1073,16 @@ gst_pad_set_fixatecaps_function (GstPad * pad,
 void
 gst_pad_set_setcaps_function (GstPad * pad, GstPadSetCapsFunction setcaps)
 {
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (GST_IS_PAD (pad));
 
-  GST_RPAD_SETCAPSFUNC (pad) = setcaps;
+  GST_PAD_SETCAPSFUNC (pad) = setcaps;
   GST_CAT_DEBUG (GST_CAT_PADS, "setcapsfunc for %s:%s set to %s",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (setcaps));
 }
 
 /**
  * gst_pad_set_bufferalloc_function:
- * @pad: a real sink #GstPad.
+ * @pad: a sink #GstPad.
  * @bufalloc: the #GstPadBufferAllocFunction to set.
  *
  * Sets the given bufferalloc function for the pad. Note that the
@@ -1142,10 +1092,10 @@ void
 gst_pad_set_bufferalloc_function (GstPad * pad,
     GstPadBufferAllocFunction bufalloc)
 {
-  g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (GST_PAD_IS_SINK (pad));
 
-  GST_RPAD_BUFFERALLOCFUNC (pad) = bufalloc;
+  GST_PAD_BUFFERALLOCFUNC (pad) = bufalloc;
   GST_CAT_DEBUG (GST_CAT_PADS, "bufferallocfunc for %s:%s set to %s",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (bufalloc));
 }
@@ -1166,8 +1116,6 @@ gst_pad_set_bufferalloc_function (GstPad * pad,
 gboolean
 gst_pad_unlink (GstPad * srcpad, GstPad * sinkpad)
 {
-  GstRealPad *realsrc, *realsink;
-
   g_return_val_if_fail (GST_IS_PAD (srcpad), FALSE);
   g_return_val_if_fail (GST_IS_PAD (sinkpad), FALSE);
 
@@ -1175,73 +1123,62 @@ gst_pad_unlink (GstPad * srcpad, GstPad * sinkpad)
       GST_DEBUG_PAD_NAME (srcpad), srcpad,
       GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
 
-  GST_PAD_REALIZE_AND_LOCK (srcpad, realsrc, lost_src_ghostpad);
+  GST_LOCK (srcpad);
 
-  if (G_UNLIKELY (GST_RPAD_DIRECTION (realsrc) != GST_PAD_SRC))
+  if (G_UNLIKELY (GST_PAD_DIRECTION (srcpad) != GST_PAD_SRC))
     goto not_srcpad;
 
-  GST_PAD_REALIZE_AND_LOCK (sinkpad, realsink, lost_sink_ghostpad);
+  GST_LOCK (sinkpad);
 
-  if (G_UNLIKELY (GST_RPAD_DIRECTION (realsink) != GST_PAD_SINK))
+  if (G_UNLIKELY (GST_PAD_DIRECTION (sinkpad) != GST_PAD_SINK))
     goto not_sinkpad;
 
-  if (G_UNLIKELY (GST_RPAD_PEER (realsrc) != realsink))
+  if (G_UNLIKELY (GST_PAD_PEER (srcpad) != sinkpad))
     goto not_linked_together;
 
-  if (GST_RPAD_UNLINKFUNC (realsrc)) {
-    GST_RPAD_UNLINKFUNC (realsrc) (GST_PAD_CAST (realsrc));
+  if (GST_PAD_UNLINKFUNC (srcpad)) {
+    GST_PAD_UNLINKFUNC (srcpad) (srcpad);
   }
-  if (GST_RPAD_UNLINKFUNC (realsink)) {
-    GST_RPAD_UNLINKFUNC (realsink) (GST_PAD_CAST (realsink));
+  if (GST_PAD_UNLINKFUNC (sinkpad)) {
+    GST_PAD_UNLINKFUNC (sinkpad) (sinkpad);
   }
 
   /* first clear peers */
-  GST_RPAD_PEER (realsrc) = NULL;
-  GST_RPAD_PEER (realsink) = NULL;
+  GST_PAD_PEER (srcpad) = NULL;
+  GST_PAD_PEER (sinkpad) = NULL;
 
-  GST_UNLOCK (realsink);
-  GST_UNLOCK (realsrc);
+  GST_UNLOCK (sinkpad);
+  GST_UNLOCK (srcpad);
 
   /* fire off a signal to each of the pads telling them 
    * that they've been unlinked */
-  g_signal_emit (G_OBJECT (realsrc), gst_real_pad_signals[REAL_UNLINKED],
-      0, realsink);
-  g_signal_emit (G_OBJECT (realsink), gst_real_pad_signals[REAL_UNLINKED],
-      0, realsrc);
+  g_signal_emit (G_OBJECT (srcpad), gst_pad_signals[PAD_UNLINKED], 0, sinkpad);
+  g_signal_emit (G_OBJECT (sinkpad), gst_pad_signals[PAD_UNLINKED], 0, srcpad);
 
   GST_CAT_INFO (GST_CAT_ELEMENT_PADS, "unlinked %s:%s and %s:%s",
-      GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
+      GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
   return TRUE;
 
-lost_src_ghostpad:
-  {
-    return FALSE;
-  }
 not_srcpad:
   {
-    g_critical ("pad %s is not a source pad", GST_PAD_NAME (realsrc));
-    GST_UNLOCK (realsrc);
-    return FALSE;
-  }
-lost_sink_ghostpad:
-  {
-    GST_UNLOCK (realsrc);
+    g_critical ("pad %s is not a source pad", GST_PAD_NAME (srcpad));
+    GST_UNLOCK (srcpad);
     return FALSE;
   }
 not_sinkpad:
   {
-    g_critical ("pad %s is not a sink pad", GST_PAD_NAME (realsink));
-    GST_UNLOCK (realsink);
-    GST_UNLOCK (realsrc);
+    g_critical ("pad %s is not a sink pad", GST_PAD_NAME (sinkpad));
+    GST_UNLOCK (sinkpad);
+    GST_UNLOCK (srcpad);
     return FALSE;
   }
 not_linked_together:
   {
     /* we do not emit a warning in this case because unlinking cannot
      * be made MT safe.*/
-    GST_UNLOCK (realsink);
-    GST_UNLOCK (realsrc);
+    GST_UNLOCK (sinkpad);
+    GST_UNLOCK (srcpad);
     return FALSE;
   }
 }
@@ -1260,29 +1197,24 @@ gboolean
 gst_pad_is_linked (GstPad * pad)
 {
   gboolean result;
-  GstRealPad *realpad;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
-  GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
-  result = (GST_PAD_PEER (realpad) != NULL);
-  GST_UNLOCK (realpad);
-  return result;
+  GST_LOCK (pad);
+  result = (GST_PAD_PEER (pad) != NULL);
+  GST_UNLOCK (pad);
 
-lost_ghostpad:
-  {
-    return FALSE;
-  }
+  return result;
 }
 
 static gboolean
-gst_pad_link_check_compatible_unlocked (GstRealPad * src, GstRealPad * sink)
+gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink)
 {
   GstCaps *srccaps;
   GstCaps *sinkcaps;
 
-  srccaps = gst_real_pad_get_caps_unlocked (src);
-  sinkcaps = gst_real_pad_get_caps_unlocked (sink);
+  srccaps = gst_pad_get_caps_unlocked (src);
+  sinkcaps = gst_pad_get_caps_unlocked (sink);
   GST_CAT_DEBUG (GST_CAT_CAPS, "got caps %p and %p", srccaps, sinkcaps);
 
   if (srccaps && sinkcaps) {
@@ -1302,10 +1234,8 @@ gst_pad_link_check_compatible_unlocked (GstRealPad * src, GstRealPad * sink)
 
 /* FIXME leftover from an attempt at refactoring... */
 static GstPadLinkReturn
-gst_pad_link_prepare (GstPad * srcpad, GstPad * sinkpad,
-    GstRealPad ** outrealsrc, GstRealPad ** outrealsink)
+gst_pad_link_prepare (GstPad * srcpad, GstPad * sinkpad)
 {
-  GstRealPad *realsrc, *realsink;
 
   /* generic checks */
   g_return_val_if_fail (GST_IS_PAD (srcpad), GST_PAD_LINK_REFUSED);
@@ -1314,33 +1244,24 @@ gst_pad_link_prepare (GstPad * srcpad, GstPad * sinkpad,
   GST_CAT_INFO (GST_CAT_PADS, "trying to link %s:%s and %s:%s",
       GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
-  /* now we need to deal with the real/ghost stuff */
-  GST_PAD_REALIZE_AND_LOCK (srcpad, realsrc, lost_src_ghostpad);
+  GST_LOCK (srcpad);
 
-  if (G_UNLIKELY (GST_RPAD_DIRECTION (realsrc) != GST_PAD_SRC))
+  if (G_UNLIKELY (GST_PAD_DIRECTION (srcpad) != GST_PAD_SRC))
     goto not_srcpad;
 
-  if (G_UNLIKELY (GST_RPAD_PEER (realsrc) != NULL))
+  if (G_UNLIKELY (GST_PAD_PEER (srcpad) != NULL))
     goto src_was_linked;
 
-  GST_PAD_REALIZE_AND_LOCK (sinkpad, realsink, lost_sink_ghostpad);
+  GST_LOCK (sinkpad);
 
-  if (G_UNLIKELY (GST_RPAD_DIRECTION (realsink) != GST_PAD_SINK))
+  if (G_UNLIKELY (GST_PAD_DIRECTION (sinkpad) != GST_PAD_SINK))
     goto not_sinkpad;
 
-  if (G_UNLIKELY (GST_RPAD_PEER (realsink) != NULL))
+  if (G_UNLIKELY (GST_PAD_PEER (sinkpad) != NULL))
     goto sink_was_linked;
 
-  if ((GST_PAD_CAST (realsrc) != srcpad)
-      || (GST_PAD_CAST (realsink) != sinkpad)) {
-    GST_CAT_INFO (GST_CAT_PADS, "*actually* linking %s:%s and %s:%s",
-        GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
-  }
-  *outrealsrc = realsrc;
-  *outrealsink = realsink;
-
   /* check pad caps for non-empty intersection */
-  if (!gst_pad_link_check_compatible_unlocked (realsrc, realsink)) {
+  if (!gst_pad_link_check_compatible_unlocked (srcpad, sinkpad)) {
     goto no_format;
   }
 
@@ -1348,53 +1269,43 @@ gst_pad_link_prepare (GstPad * srcpad, GstPad * sinkpad,
 
   return GST_PAD_LINK_OK;
 
-lost_src_ghostpad:
-  {
-    return GST_PAD_LINK_REFUSED;
-  }
 not_srcpad:
   {
-    g_critical ("pad %s is not a source pad", GST_PAD_NAME (realsrc));
-    GST_UNLOCK (realsrc);
+    g_critical ("pad %s is not a source pad", GST_PAD_NAME (srcpad));
+    GST_UNLOCK (srcpad);
     return GST_PAD_LINK_WRONG_DIRECTION;
   }
 src_was_linked:
   {
     GST_CAT_INFO (GST_CAT_PADS, "src %s:%s was linked",
-        GST_DEBUG_PAD_NAME (realsrc));
+        GST_DEBUG_PAD_NAME (srcpad));
     /* we do not emit a warning in this case because unlinking cannot
      * be made MT safe.*/
-    GST_UNLOCK (realsrc);
+    GST_UNLOCK (srcpad);
     return GST_PAD_LINK_WAS_LINKED;
-  }
-lost_sink_ghostpad:
-  {
-    GST_DEBUG ("lost sink ghostpad");
-    GST_UNLOCK (realsrc);
-    return GST_PAD_LINK_REFUSED;
   }
 not_sinkpad:
   {
-    g_critical ("pad %s is not a sink pad", GST_PAD_NAME (realsink));
-    GST_UNLOCK (realsink);
-    GST_UNLOCK (realsrc);
+    g_critical ("pad %s is not a sink pad", GST_PAD_NAME (sinkpad));
+    GST_UNLOCK (sinkpad);
+    GST_UNLOCK (srcpad);
     return GST_PAD_LINK_WRONG_DIRECTION;
   }
 sink_was_linked:
   {
     GST_CAT_INFO (GST_CAT_PADS, "sink %s:%s was linked",
-        GST_DEBUG_PAD_NAME (realsink));
+        GST_DEBUG_PAD_NAME (sinkpad));
     /* we do not emit a warning in this case because unlinking cannot
      * be made MT safe.*/
-    GST_UNLOCK (realsink);
-    GST_UNLOCK (realsrc);
+    GST_UNLOCK (sinkpad);
+    GST_UNLOCK (srcpad);
     return GST_PAD_LINK_WAS_LINKED;
   }
 no_format:
   {
     GST_CAT_INFO (GST_CAT_PADS, "caps are incompatible");
-    GST_UNLOCK (realsink);
-    GST_UNLOCK (realsrc);
+    GST_UNLOCK (sinkpad);
+    GST_UNLOCK (srcpad);
     return GST_PAD_LINK_NOFORMAT;
   }
 }
@@ -1414,58 +1325,52 @@ no_format:
 GstPadLinkReturn
 gst_pad_link (GstPad * srcpad, GstPad * sinkpad)
 {
-  GstRealPad *realsrc, *realsink;
   GstPadLinkReturn result;
 
-  result = gst_pad_link_prepare (srcpad, sinkpad, &realsrc, &realsink);
+  result = gst_pad_link_prepare (srcpad, sinkpad);
 
   if (result != GST_PAD_LINK_OK)
     goto prepare_failed;
 
-  GST_UNLOCK (realsink);
-  GST_UNLOCK (realsrc);
+  GST_UNLOCK (sinkpad);
+  GST_UNLOCK (srcpad);
 
   /* FIXME released the locks here, concurrent thread might link
    * something else. */
-  if (GST_RPAD_LINKFUNC (realsrc)) {
+  if (GST_PAD_LINKFUNC (srcpad)) {
     /* this one will call the peer link function */
-    result =
-        GST_RPAD_LINKFUNC (realsrc) (GST_PAD_CAST (realsrc),
-        GST_PAD_CAST (realsink));
-  } else if (GST_RPAD_LINKFUNC (realsink)) {
+    result = GST_PAD_LINKFUNC (srcpad) (srcpad, sinkpad);
+  } else if (GST_PAD_LINKFUNC (sinkpad)) {
     /* if no source link function, we need to call the sink link
      * function ourselves. */
-    result =
-        GST_RPAD_LINKFUNC (realsink) (GST_PAD_CAST (realsink),
-        GST_PAD_CAST (realsrc));
+    result = GST_PAD_LINKFUNC (sinkpad) (sinkpad, srcpad);
   } else {
     result = GST_PAD_LINK_OK;
   }
 
-  GST_LOCK (realsrc);
-  GST_LOCK (realsink);
-  if (result == GST_PAD_LINK_OK) {
-    GST_RPAD_PEER (realsrc) = GST_REAL_PAD (realsink);
-    GST_RPAD_PEER (realsink) = GST_REAL_PAD (realsrc);
+  GST_LOCK (srcpad);
+  GST_LOCK (sinkpad);
 
-    GST_UNLOCK (realsink);
-    GST_UNLOCK (realsrc);
+  if (result == GST_PAD_LINK_OK) {
+    GST_PAD_PEER (srcpad) = sinkpad;
+    GST_PAD_PEER (sinkpad) = srcpad;
+
+    GST_UNLOCK (sinkpad);
+    GST_UNLOCK (srcpad);
 
     /* fire off a signal to each of the pads telling them 
      * that they've been linked */
-    g_signal_emit (G_OBJECT (realsrc), gst_real_pad_signals[REAL_LINKED],
-        0, realsink);
-    g_signal_emit (G_OBJECT (realsink), gst_real_pad_signals[REAL_LINKED],
-        0, realsrc);
+    g_signal_emit (G_OBJECT (srcpad), gst_pad_signals[PAD_LINKED], 0, sinkpad);
+    g_signal_emit (G_OBJECT (sinkpad), gst_pad_signals[PAD_LINKED], 0, srcpad);
 
     GST_CAT_INFO (GST_CAT_PADS, "linked %s:%s and %s:%s, successful",
-        GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
+        GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
   } else {
     GST_CAT_INFO (GST_CAT_PADS, "link between %s:%s and %s:%s failed",
-        GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
+        GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
-    GST_UNLOCK (realsink);
-    GST_UNLOCK (realsrc);
+    GST_UNLOCK (sinkpad);
+    GST_UNLOCK (srcpad);
   }
   return result;
 
@@ -1511,109 +1416,43 @@ gst_pad_get_pad_template (GstPad * pad)
 }
 
 
-/**
- * gst_pad_get_real_parent:
- * @pad: a #GstPad to get the real parent of.
- *
- * Gets the real parent object of this pad. If the pad
- * is a ghost pad, the actual owner of the real pad is
- * returned, as opposed to #gst_pad_get_parent().
- * Unref the object after use.
- *
- * Returns: the parent #GstElement. unref after usage.
- *
- * MT safe.
- */
-GstElement *
-gst_pad_get_real_parent (GstPad * pad)
-{
-  GstRealPad *realpad;
-  GstElement *element;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
-  element = GST_PAD_PARENT (realpad);
-  if (element)
-    gst_object_ref (GST_OBJECT_CAST (element));
-  GST_UNLOCK (realpad);
-
-  return element;
-
-lost_ghostpad:
-  {
-    return NULL;
-  }
-}
-
-/* FIXME not MT safe */
-static void
-gst_pad_add_ghost_pad (GstPad * pad, GstPad * ghostpad)
-{
-  GstRealPad *realpad;
-
-  /* if we're ghosting a ghost pad, drill down to find the real pad */
-  realpad = (GstRealPad *) pad;
-  while (GST_IS_GHOST_PAD (realpad))
-    realpad = GST_GPAD_REALPAD (realpad);
-  g_return_if_fail (GST_IS_REAL_PAD (realpad));
-
-  /* will ref the pad template */
-  GST_GPAD_REALPAD (ghostpad) = realpad;
-  realpad->ghostpads = g_list_prepend (realpad->ghostpads, ghostpad);
-  gst_pad_set_pad_template (GST_PAD (ghostpad), GST_PAD_PAD_TEMPLATE (pad));
-}
-
-static void
-gst_pad_remove_ghost_pad (GstPad * pad, GstPad * ghostpad)
-{
-  GstRealPad *realpad;
-
-  realpad = GST_PAD_REALIZE (pad);
-  g_return_if_fail (GST_GPAD_REALPAD (ghostpad) == realpad);
-
-  gst_pad_set_pad_template (GST_PAD (ghostpad), NULL);
-  realpad->ghostpads = g_list_remove (realpad->ghostpads, ghostpad);
-  GST_GPAD_REALPAD (ghostpad) = NULL;
-}
-
 /* should be called with the pad LOCK held */
 static GstCaps *
-gst_real_pad_get_caps_unlocked (GstRealPad * realpad)
+gst_pad_get_caps_unlocked (GstPad * pad)
 {
   GstCaps *result = NULL;
 
   GST_CAT_DEBUG (GST_CAT_CAPS, "get pad caps of %s:%s (%p)",
-      GST_DEBUG_PAD_NAME (realpad), realpad);
+      GST_DEBUG_PAD_NAME (pad), pad);
 
-  if (GST_RPAD_GETCAPSFUNC (realpad)) {
+  if (GST_PAD_GETCAPSFUNC (pad)) {
     GST_CAT_DEBUG (GST_CAT_CAPS, "dispatching to pad getcaps function");
 
-    GST_FLAG_SET (realpad, GST_PAD_IN_GETCAPS);
-    GST_UNLOCK (realpad);
-    result = GST_RPAD_GETCAPSFUNC (realpad) (GST_PAD_CAST (realpad));
-    GST_LOCK (realpad);
-    GST_FLAG_UNSET (realpad, GST_PAD_IN_GETCAPS);
+    GST_FLAG_SET (pad, GST_PAD_IN_GETCAPS);
+    GST_UNLOCK (pad);
+    result = GST_PAD_GETCAPSFUNC (pad) (pad);
+    GST_LOCK (pad);
+    GST_FLAG_UNSET (pad, GST_PAD_IN_GETCAPS);
 
     if (result == NULL) {
       g_critical ("pad %s:%s returned NULL caps from getcaps function",
-          GST_DEBUG_PAD_NAME (realpad));
+          GST_DEBUG_PAD_NAME (pad));
     } else {
 #ifndef G_DISABLE_ASSERT
       /* check that the returned caps are a real subset of the template caps */
-      if (GST_PAD_PAD_TEMPLATE (realpad)) {
+      if (GST_PAD_PAD_TEMPLATE (pad)) {
         const GstCaps *templ_caps =
-            GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (realpad));
+            GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (pad));
         if (!gst_caps_is_subset (result, templ_caps)) {
           GstCaps *temp;
 
-          GST_CAT_ERROR_OBJECT (GST_CAT_CAPS, realpad,
+          GST_CAT_ERROR_OBJECT (GST_CAT_CAPS, pad,
               "pad returned caps %" GST_PTR_FORMAT
               " which are not a real subset of its template caps %"
               GST_PTR_FORMAT, result, templ_caps);
           g_warning
               ("pad %s:%s returned caps that are not a real subset of its template caps",
-              GST_DEBUG_PAD_NAME (realpad));
+              GST_DEBUG_PAD_NAME (pad));
           temp = gst_caps_intersect (templ_caps, result);
           gst_caps_unref (result);
           result = temp;
@@ -1623,8 +1462,8 @@ gst_real_pad_get_caps_unlocked (GstRealPad * realpad)
       goto done;
     }
   }
-  if (GST_PAD_PAD_TEMPLATE (realpad)) {
-    GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (realpad);
+  if (GST_PAD_PAD_TEMPLATE (pad)) {
+    GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (pad);
 
     result = GST_PAD_TEMPLATE_CAPS (templ);
     GST_CAT_DEBUG (GST_CAT_CAPS,
@@ -1634,8 +1473,8 @@ gst_real_pad_get_caps_unlocked (GstRealPad * realpad)
     result = gst_caps_ref (result);
     goto done;
   }
-  if (GST_RPAD_CAPS (realpad)) {
-    result = GST_RPAD_CAPS (realpad);
+  if (GST_PAD_CAPS (pad)) {
+    result = GST_PAD_CAPS (pad);
 
     GST_CAT_DEBUG (GST_CAT_CAPS,
         "using pad caps %p %" GST_PTR_FORMAT, result, result);
@@ -1665,36 +1504,30 @@ done:
 GstCaps *
 gst_pad_get_caps (GstPad * pad)
 {
-  GstRealPad *realpad;
   GstCaps *result = NULL;
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  /* now we need to deal with the real/ghost stuff */
-  GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
+  GST_LOCK (pad);
 
   GST_CAT_DEBUG (GST_CAT_CAPS, "get pad caps of %s:%s (%p)",
-      GST_DEBUG_PAD_NAME (realpad), realpad);
+      GST_DEBUG_PAD_NAME (pad), pad);
 
-  if (G_UNLIKELY (GST_RPAD_IS_IN_GETCAPS (realpad)))
+  if (G_UNLIKELY (GST_PAD_IS_IN_GETCAPS (pad)))
     goto was_dispatching;
 
-  result = gst_real_pad_get_caps_unlocked (realpad);
-  GST_UNLOCK (realpad);
+  result = gst_pad_get_caps_unlocked (pad);
+  GST_UNLOCK (pad);
 
   return result;
 
-lost_ghostpad:
-  {
-    return NULL;
-  }
 was_dispatching:
   {
     GST_CAT_DEBUG (GST_CAT_CAPS,
-        "pad %s:%s is already dispatching!", GST_DEBUG_PAD_NAME (realpad));
+        "pad %s:%s is already dispatching!", GST_DEBUG_PAD_NAME (pad));
     g_warning ("pad %s:%s recursively called getcaps!",
-        GST_DEBUG_PAD_NAME (realpad));
-    GST_UNLOCK (realpad);
+        GST_DEBUG_PAD_NAME (pad));
+    GST_UNLOCK (pad);
     return NULL;
   }
 }
@@ -1712,49 +1545,44 @@ was_dispatching:
 GstCaps *
 gst_pad_peer_get_caps (GstPad * pad)
 {
-  GstRealPad *realpad, *peerpad;
+  GstPad *peerpad;
   GstCaps *result = NULL;
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  /* now we need to deal with the real/ghost stuff */
-  GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
+  GST_LOCK (pad);
 
   GST_CAT_DEBUG (GST_CAT_CAPS, "get peer caps of %s:%s (%p)",
-      GST_DEBUG_PAD_NAME (realpad), realpad);
+      GST_DEBUG_PAD_NAME (pad), pad);
 
-  peerpad = GST_RPAD_PEER (realpad);
+  peerpad = GST_PAD_PEER (pad);
   if (G_UNLIKELY (peerpad == NULL))
     goto no_peer;
 
-  if (G_UNLIKELY (GST_RPAD_IS_IN_GETCAPS (peerpad)))
+  if (G_UNLIKELY (GST_PAD_IS_IN_GETCAPS (peerpad)))
     goto was_dispatching;
 
   gst_object_ref (GST_OBJECT_CAST (peerpad));
-  GST_UNLOCK (realpad);
+  GST_UNLOCK (pad);
 
-  result = gst_pad_get_caps (GST_PAD_CAST (peerpad));
+  result = gst_pad_get_caps (peerpad);
 
-  gst_object_unref (GST_OBJECT_CAST (peerpad));
+  gst_object_unref (GST_OBJECT (peerpad));
 
   return result;
 
-lost_ghostpad:
-  {
-    return NULL;
-  }
 no_peer:
   {
-    GST_UNLOCK (realpad);
+    GST_UNLOCK (pad);
     return NULL;
   }
 was_dispatching:
   {
     GST_CAT_DEBUG (GST_CAT_CAPS,
-        "pad %s:%s is already dispatching!", GST_DEBUG_PAD_NAME (realpad));
+        "pad %s:%s is already dispatching!", GST_DEBUG_PAD_NAME (pad));
     g_warning ("pad %s:%s recursively called getcaps!",
-        GST_DEBUG_PAD_NAME (realpad));
-    GST_UNLOCK (realpad);
+        GST_DEBUG_PAD_NAME (pad));
+    GST_UNLOCK (pad);
     return NULL;
   }
 }
@@ -1785,41 +1613,34 @@ gst_pad_fixate_caps (GstPad * pad, GstCaps * caps)
 gboolean
 gst_pad_accept_caps (GstPad * pad, GstCaps * caps)
 {
-  GstRealPad *realpad;
   gboolean result;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
-  /* now we need to deal with the real/ghost stuff */
-  GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
+  GST_LOCK (pad);
 
   GST_CAT_DEBUG (GST_CAT_CAPS, "pad accept caps of %s:%s (%p)",
-      GST_DEBUG_PAD_NAME (realpad), realpad);
+      GST_DEBUG_PAD_NAME (pad), pad);
 
-  if (GST_RPAD_ACCEPTCAPSFUNC (pad)) {
+  if (GST_PAD_ACCEPTCAPSFUNC (pad)) {
     /* we can call the function */
-    result = GST_RPAD_ACCEPTCAPSFUNC (realpad) (pad, caps);
+    result = GST_PAD_ACCEPTCAPSFUNC (pad) (pad, caps);
   } else {
     /* else see get the caps and see if it intersects to something
      * not empty */
     GstCaps *intersect;
     GstCaps *allowed;
 
-    allowed = gst_real_pad_get_caps_unlocked (realpad);
+    allowed = gst_pad_get_caps_unlocked (pad);
     intersect = gst_caps_intersect (allowed, caps);
     if (gst_caps_is_empty (intersect))
       result = FALSE;
     else
       result = TRUE;
   }
-  GST_UNLOCK (realpad);
+  GST_UNLOCK (pad);
 
   return result;
-
-lost_ghostpad:
-  {
-    return FALSE;
-  }
 }
 
 /**
@@ -1833,33 +1654,28 @@ lost_ghostpad:
 gboolean
 gst_pad_peer_accept_caps (GstPad * pad, GstCaps * caps)
 {
-  GstRealPad *realpad, *peerpad;
+  GstPad *peerpad;
   gboolean result;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
-  /* now we need to deal with the real/ghost stuff */
-  GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
+  GST_LOCK (pad);
 
   GST_CAT_DEBUG (GST_CAT_CAPS, "peer accept caps of %s:%s (%p)",
-      GST_DEBUG_PAD_NAME (realpad), realpad);
+      GST_DEBUG_PAD_NAME (pad), pad);
 
-  peerpad = GST_RPAD_PEER (realpad);
+  peerpad = GST_PAD_PEER (pad);
   if (G_UNLIKELY (peerpad == NULL))
     goto no_peer;
 
-  result = gst_pad_accept_caps (GST_PAD_CAST (peerpad), caps);
-  GST_UNLOCK (realpad);
+  result = gst_pad_accept_caps (peerpad, caps);
+  GST_UNLOCK (pad);
 
   return result;
 
-lost_ghostpad:
-  {
-    return FALSE;
-  }
 no_peer:
   {
-    GST_UNLOCK (realpad);
+    GST_UNLOCK (pad);
     return TRUE;
   }
 }
@@ -1885,14 +1701,14 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
 {
   GstPadSetCapsFunction setcaps;
 
-  g_return_val_if_fail (GST_IS_REAL_PAD (pad), FALSE);
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   GST_LOCK (pad);
-  setcaps = GST_RPAD_SETCAPSFUNC (pad);
+  setcaps = GST_PAD_SETCAPSFUNC (pad);
 
   /* call setcaps function to configure the pad */
   if (setcaps != NULL) {
-    if (!GST_RPAD_IS_IN_SETCAPS (pad)) {
+    if (!GST_PAD_IS_IN_SETCAPS (pad)) {
       GST_FLAG_SET (pad, GST_PAD_IN_SETCAPS);
       GST_UNLOCK (pad);
       if (!setcaps (pad, caps))
@@ -1905,8 +1721,8 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
     }
   }
 
-  if (GST_RPAD_CAPS (pad))
-    gst_caps_unref (GST_RPAD_CAPS (pad));
+  if (GST_PAD_CAPS (pad))
+    gst_caps_unref (GST_PAD_CAPS (pad));
 
   if (caps)
     caps = gst_caps_ref (caps);
@@ -1938,8 +1754,8 @@ gst_pad_configure_sink (GstPad * pad, GstCaps * caps)
   GstPadSetCapsFunction setcaps;
   gboolean res;
 
-  acceptcaps = GST_RPAD_ACCEPTCAPSFUNC (pad);
-  setcaps = GST_RPAD_SETCAPSFUNC (pad);
+  acceptcaps = GST_PAD_ACCEPTCAPSFUNC (pad);
+  setcaps = GST_PAD_SETCAPSFUNC (pad);
 
   /* See if pad accepts the caps, by calling acceptcaps, only
    * needed if no setcaps function */
@@ -1968,8 +1784,8 @@ gst_pad_configure_src (GstPad * pad, GstCaps * caps)
   GstPadSetCapsFunction setcaps;
   gboolean res;
 
-  acceptcaps = GST_RPAD_ACCEPTCAPSFUNC (pad);
-  setcaps = GST_RPAD_SETCAPSFUNC (pad);
+  acceptcaps = GST_PAD_ACCEPTCAPSFUNC (pad);
+  setcaps = GST_PAD_SETCAPSFUNC (pad);
 
   /* See if pad accepts the caps, by calling acceptcaps, only
    * needed if no setcaps function */
@@ -2028,67 +1844,17 @@ gst_pad_get_pad_template_caps (GstPad * pad)
 GstPad *
 gst_pad_get_peer (GstPad * pad)
 {
-  GstRealPad *realpad;
-  GstRealPad *result;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
-  result = GST_RPAD_PEER (realpad);
-  if (result)
-    gst_object_ref (GST_OBJECT_CAST (result));
-  GST_UNLOCK (realpad);
-
-  return GST_PAD_CAST (result);
-
-lost_ghostpad:
-  {
-    return NULL;
-  }
-}
-
-/**
- * gst_pad_realize:
- * @pad: a #GstPad to realize
- *
- * If the pad is a #GstRealPad, it is simply returned, else
- * the #GstGhostPad will be dereffed to the real pad.
- *
- * After this function you always receive the real pad of
- * the provided pad.
- *
- * This function unrefs the input pad and refs the result so
- * that you can write constructs like:
- *
- *   pad = gst_pad_realize(pad)
- *
- * without having to unref the old pad.
- *
- * Returns: the real #GstPad or NULL when an old reference to a
- * ghostpad is used.
- *
- * MT safe.
- */
-GstPad *
-gst_pad_realize (GstPad * pad)
-{
-  GstRealPad *result;
+  GstPad *result;
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   GST_LOCK (pad);
-  result = GST_PAD_REALIZE (pad);
-  if (result && pad != GST_PAD_CAST (result)) {
-    gst_object_ref (GST_OBJECT_CAST (result));
-    GST_UNLOCK (pad);
-    /* no other thread could dispose this since we
-     * hold at least one ref */
-    gst_object_unref (GST_OBJECT_CAST (pad));
-  } else {
-    GST_UNLOCK (pad);
-  }
+  result = GST_PAD_PEER (pad);
+  if (result)
+    gst_object_ref (GST_OBJECT (result));
+  GST_UNLOCK (pad);
 
-  return GST_PAD_CAST (result);
+  return result;
 }
 
 /**
@@ -2111,23 +1877,23 @@ gst_pad_get_allowed_caps (GstPad * srcpad)
   GstCaps *mycaps;
   GstCaps *caps;
   GstCaps *peercaps;
-  GstRealPad *realpad, *peer;
+  GstPad *peer;
 
   g_return_val_if_fail (GST_IS_PAD (srcpad), NULL);
 
-  GST_PAD_REALIZE_AND_LOCK (srcpad, realpad, lost_ghostpad);
+  GST_LOCK (srcpad);
 
-  if (G_UNLIKELY ((peer = GST_RPAD_PEER (realpad)) == NULL))
+  if (G_UNLIKELY ((peer = GST_PAD_PEER (srcpad)) == NULL))
     goto no_peer;
 
   GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%s:%s: getting allowed caps",
-      GST_DEBUG_PAD_NAME (realpad));
+      GST_DEBUG_PAD_NAME (srcpad));
 
   gst_object_ref (GST_OBJECT_CAST (peer));
-  GST_UNLOCK (realpad);
-  mycaps = gst_pad_get_caps (GST_PAD_CAST (realpad));
+  GST_UNLOCK (srcpad);
+  mycaps = gst_pad_get_caps (srcpad);
 
-  peercaps = gst_pad_get_caps (GST_PAD_CAST (peer));
+  peercaps = gst_pad_get_caps (peer);
   gst_object_unref (GST_OBJECT_CAST (peer));
 
   caps = gst_caps_intersect (mycaps, peercaps);
@@ -2138,16 +1904,11 @@ gst_pad_get_allowed_caps (GstPad * srcpad)
 
   return caps;
 
-lost_ghostpad:
-  {
-    GST_UNLOCK (srcpad);
-    return NULL;
-  }
 no_peer:
   {
     GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%s:%s: no peer",
-        GST_DEBUG_PAD_NAME (realpad));
-    GST_UNLOCK (realpad);
+        GST_DEBUG_PAD_NAME (srcpad));
+    GST_UNLOCK (srcpad);
 
     return NULL;
   }
@@ -2174,19 +1935,19 @@ GstCaps *
 gst_pad_get_negotiated_caps (GstPad * pad)
 {
   GstCaps *caps;
-  GstRealPad *realpad, *peer;
+  GstPad *peer;
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
+  GST_LOCK (pad);
 
-  if (G_UNLIKELY ((peer = GST_RPAD_PEER (realpad)) == NULL))
+  if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
     goto no_peer;
 
   GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%s:%s: getting negotiated caps",
-      GST_DEBUG_PAD_NAME (realpad));
+      GST_DEBUG_PAD_NAME (pad));
 
-  caps = GST_RPAD_CAPS (realpad);
+  caps = GST_PAD_CAPS (pad);
   if (caps)
     gst_caps_ref (caps);
   GST_UNLOCK (pad);
@@ -2195,16 +1956,11 @@ gst_pad_get_negotiated_caps (GstPad * pad)
 
   return caps;
 
-lost_ghostpad:
-  {
-    GST_UNLOCK (pad);
-    return NULL;
-  }
 no_peer:
   {
     GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%s:%s: no peer",
-        GST_DEBUG_PAD_NAME (realpad));
-    GST_UNLOCK (realpad);
+        GST_DEBUG_PAD_NAME (pad));
+    GST_UNLOCK (pad);
 
     return NULL;
   }
@@ -2219,8 +1975,8 @@ no_peer:
  * @buf: a newly allocated buffer
  *
  * Allocates a new, empty buffer optimized to push to pad @pad.  This
- * function only works if @pad is a source pad and a GST_REAL_PAD and
- * has a peer. 
+ * function only works if @pad is a source pad and has a peer. 
+ *
  * You need to check the caps of the buffer after performing this 
  * function and renegotiate to the format if needed.
  *
@@ -2238,17 +1994,17 @@ GstFlowReturn
 gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps,
     GstBuffer ** buf)
 {
-  GstRealPad *peer;
+  GstPad *peer;
   GstFlowReturn ret;
   GstPadBufferAllocFunction bufferallocfunc;
   gboolean caps_changed;
 
-  g_return_val_if_fail (GST_IS_REAL_PAD (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
 
   GST_LOCK (pad);
-  if (G_UNLIKELY ((peer = GST_RPAD_PEER (pad)) == NULL))
+  if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
     goto no_peer;
 
   gst_object_ref (GST_OBJECT_CAST (peer));
@@ -2259,7 +2015,7 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps,
 
   GST_LOCK (peer);
   /* when the peer is flushing we cannot give a buffer */
-  if (G_UNLIKELY (GST_RPAD_IS_FLUSHING (peer)))
+  if (G_UNLIKELY (GST_PAD_IS_FLUSHING (peer)))
     goto flushing;
 
   GST_CAT_DEBUG (GST_CAT_PADS,
@@ -2268,7 +2024,7 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps,
       &bufferallocfunc, GST_DEBUG_PAD_NAME (peer));
   GST_UNLOCK (peer);
 
-  ret = bufferallocfunc (GST_PAD_CAST (peer), offset, size, caps, buf);
+  ret = bufferallocfunc (peer, offset, size, caps, buf);
 
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto peer_error;
@@ -2280,11 +2036,11 @@ do_caps:
 
   /* FIXME, move capnego this into a base class? */
   caps = GST_BUFFER_CAPS (*buf);
-  caps_changed = caps && caps != GST_RPAD_CAPS (pad);
+  caps_changed = caps && caps != GST_PAD_CAPS (pad);
   /* we got a new datatype on the pad, see if it can handle it */
   if (G_UNLIKELY (caps_changed)) {
     GST_DEBUG ("caps changed to %" GST_PTR_FORMAT, caps);
-    if (G_UNLIKELY (!gst_pad_configure_src (GST_PAD_CAST (pad), caps)))
+    if (G_UNLIKELY (!gst_pad_configure_src (pad, caps)))
       goto not_negotiated;
   }
   return ret;
@@ -2356,18 +2112,16 @@ gst_pad_get_internal_links_default (GstPad * pad)
   GstElement *parent;
   GList *parent_pads;
   GstPadDirection direction;
-  GstRealPad *rpad;
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  rpad = GST_PAD_REALIZE (pad);
-  direction = rpad->direction;
+  direction = pad->direction;
 
-  parent = GST_PAD_PARENT (rpad);
+  parent = GST_PAD_PARENT (pad);
   parent_pads = parent->pads;
 
   while (parent_pads) {
-    GstRealPad *parent_pad = GST_PAD_REALIZE (parent_pads->data);
+    GstPad *parent_pad = GST_PAD_CAST (parent_pads->data);
 
     if (parent_pad->direction != direction) {
       res = g_list_prepend (res, parent_pad);
@@ -2395,14 +2149,11 @@ GList *
 gst_pad_get_internal_links (GstPad * pad)
 {
   GList *res = NULL;
-  GstRealPad *rpad;
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  rpad = GST_PAD_REALIZE (pad);
-
-  if (GST_RPAD_INTLINKFUNC (rpad))
-    res = GST_RPAD_INTLINKFUNC (rpad) (GST_PAD_CAST (rpad));
+  if (GST_PAD_INTLINKFUNC (pad))
+    res = GST_PAD_INTLINKFUNC (pad) (pad);
 
   return res;
 }
@@ -2477,11 +2228,9 @@ gst_pad_event_default (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
     {
-      GstRealPad *rpad = GST_PAD_REALIZE (pad);
-
-      if (GST_RPAD_TASK (rpad)) {
-        GST_DEBUG_OBJECT (rpad, "pausing task because of eos");
-        gst_pad_pause_task (GST_PAD_CAST (rpad));
+      if (GST_PAD_TASK (pad)) {
+        GST_DEBUG_OBJECT (pad, "pausing task because of eos");
+        gst_pad_pause_task (pad);
       }
     }
     default:
@@ -2517,11 +2266,11 @@ gst_pad_dispatcher (GstPad * pad, GstPadDispatcherFunction dispatch,
   orig = int_pads = gst_pad_get_internal_links (pad);
 
   while (int_pads) {
-    GstRealPad *int_rpad = GST_PAD_REALIZE (int_pads->data);
-    GstRealPad *int_peer = GST_RPAD_PEER (int_rpad);
+    GstPad *int_pad = GST_PAD_CAST (int_pads->data);
+    GstPad *int_peer = GST_PAD_PEER (int_pad);
 
     if (int_peer) {
-      res = dispatch (GST_PAD_CAST (int_peer), data);
+      res = dispatch (int_peer, data);
       if (res)
         break;
     }
@@ -2551,22 +2300,17 @@ gst_pad_dispatcher (GstPad * pad, GstPadDispatcherFunction dispatch,
 gboolean
 gst_pad_query (GstPad * pad, GstQuery * query)
 {
-  GstRealPad *rpad;
   GstPadQueryFunction func;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
 
-  rpad = GST_PAD_REALIZE (pad);
-
-  g_return_val_if_fail (rpad, FALSE);
-
   GST_DEBUG ("sending query %p to pad %s:%s", query, GST_DEBUG_PAD_NAME (pad));
 
-  if ((func = GST_RPAD_QUERYFUNC (rpad)) == NULL)
+  if ((func = GST_PAD_QUERYFUNC (pad)) == NULL)
     goto no_func;
 
-  return func (GST_PAD_CAST (rpad), query);
+  return func (pad, query);
 
 no_func:
   {
@@ -2591,93 +2335,6 @@ gst_pad_query_default (GstPad * pad, GstQuery * query)
           (pad, (GstPadDispatcherFunction) gst_pad_query, query);
   }
 }
-
-static void
-gst_real_pad_dispose (GObject * object)
-{
-  GstPad *pad;
-  GstRealPad *rpad;
-
-  pad = GST_PAD_CAST (object);
-  rpad = GST_REAL_PAD (object);
-
-  /* No linked pad can ever be disposed.
-   * It has to have a parent to be linked 
-   * and a parent would hold a reference */
-  /* FIXME: what about if g_object_dispose is explicitly called on the pad? Is
-     that legal? otherwise we could assert GST_OBJECT_PARENT (pad) == NULL as
-     well... */
-  g_assert (GST_PAD_PEER (pad) == NULL);
-
-  GST_CAT_DEBUG (GST_CAT_REFCOUNTING, "dispose %s:%s",
-      GST_DEBUG_PAD_NAME (pad));
-
-  /* we destroy the ghostpads, because they are nothing without the real pad */
-  if (rpad->ghostpads) {
-    GList *orig, *ghostpads;
-
-    orig = ghostpads = g_list_copy (rpad->ghostpads);
-
-    while (ghostpads) {
-      GstPad *ghostpad = GST_PAD_CAST (ghostpads->data);
-
-      if (GST_IS_ELEMENT (GST_OBJECT_PARENT (ghostpad))) {
-        GstElement *parent = GST_ELEMENT (GST_OBJECT_PARENT (ghostpad));
-
-        GST_CAT_DEBUG (GST_CAT_REFCOUNTING,
-            "removing ghost pad from element '%s'", GST_OBJECT_NAME (parent));
-        gst_element_remove_pad (parent, ghostpad);
-      } else {
-        /* handle the case where we have some floating ghost pad that was never
-           added to an element */
-        g_object_set (ghostpad, "real-pad", NULL, NULL);
-      }
-      ghostpads = g_list_next (ghostpads);
-    }
-    g_list_free (orig);
-    /* as the ghost pads are removed, they remove themselves from ->ghostpads.
-       So it should be empty now. Let's assert that. */
-    g_assert (rpad->ghostpads == NULL);
-  }
-
-  /* clear the caps */
-  gst_caps_replace (&GST_RPAD_CAPS (pad), NULL);
-
-  if (GST_IS_ELEMENT (GST_OBJECT_PARENT (pad))) {
-    GST_CAT_DEBUG (GST_CAT_REFCOUNTING, "removing pad from element '%s'",
-        GST_OBJECT_NAME (GST_OBJECT (GST_ELEMENT (GST_OBJECT_PARENT (pad)))));
-
-    gst_element_remove_pad (GST_ELEMENT (GST_OBJECT_PARENT (pad)), pad);
-  }
-
-  G_OBJECT_CLASS (real_pad_parent_class)->dispose (object);
-}
-
-static void
-gst_real_pad_finalize (GObject * object)
-{
-  GstRealPad *rpad;
-
-  rpad = GST_REAL_PAD (object);
-
-  if (rpad->stream_rec_lock) {
-    g_static_rec_mutex_free (rpad->stream_rec_lock);
-    rpad->stream_rec_lock = NULL;
-  }
-  if (rpad->preroll_lock) {
-    g_mutex_free (rpad->preroll_lock);
-    g_cond_free (rpad->preroll_cond);
-    rpad->preroll_lock = NULL;
-    rpad->preroll_cond = NULL;
-  }
-  if (rpad->block_cond) {
-    g_cond_free (rpad->block_cond);
-    rpad->block_cond = NULL;
-  }
-
-  G_OBJECT_CLASS (real_pad_parent_class)->finalize (object);
-}
-
 
 #ifndef GST_DISABLE_LOADSAVE
 /* FIXME: why isn't this on a GstElement ? */
@@ -2763,19 +2420,19 @@ cleanup:
 static xmlNodePtr
 gst_pad_save_thyself (GstObject * object, xmlNodePtr parent)
 {
-  GstRealPad *realpad;
+  GstPad *pad;
   GstPad *peer;
 
-  g_return_val_if_fail (GST_IS_REAL_PAD (object), NULL);
+  g_return_val_if_fail (GST_IS_PAD (object), NULL);
 
-  realpad = GST_REAL_PAD (object);
+  pad = GST_PAD (object);
 
   xmlNewChild (parent, NULL, (xmlChar *) "name",
-      (xmlChar *) GST_PAD_NAME (realpad));
-  if (GST_RPAD_PEER (realpad) != NULL) {
+      (xmlChar *) GST_PAD_NAME (pad));
+  if (GST_PAD_PEER (pad) != NULL) {
     gchar *content;
 
-    peer = GST_PAD_CAST (GST_RPAD_PEER (realpad));
+    peer = GST_PAD_PEER (pad);
     /* first check to see if the peer's parent's parent is the same */
     /* we just save it off */
     content = g_strdup_printf ("%s.%s",
@@ -2788,6 +2445,7 @@ gst_pad_save_thyself (GstObject * object, xmlNodePtr parent)
   return parent;
 }
 
+#if 0
 /**
  * gst_ghost_pad_save_thyself:
  * @pad: a ghost #GstPad to save.
@@ -2813,6 +2471,7 @@ gst_ghost_pad_save_thyself (GstPad * pad, xmlNodePtr parent)
 
   return self;
 }
+#endif /* 0 */
 #endif /* GST_DISABLE_LOADSAVE */
 
 /* 
@@ -2821,7 +2480,7 @@ gst_ghost_pad_save_thyself (GstPad * pad, xmlNodePtr parent)
  * MT safe.
  */
 static void
-handle_pad_block (GstRealPad * pad)
+handle_pad_block (GstPad * pad)
 {
   GstPadBlockCallback callback;
   gpointer user_data;
@@ -2836,13 +2495,13 @@ handle_pad_block (GstRealPad * pad)
   if (callback) {
     user_data = pad->block_data;
     GST_UNLOCK (pad);
-    callback (GST_PAD_CAST (pad), TRUE, user_data);
+    callback (pad, TRUE, user_data);
     GST_LOCK (pad);
   } else {
     GST_PAD_BLOCK_SIGNAL (pad);
   }
 
-  while (GST_RPAD_IS_BLOCKED (pad))
+  while (GST_PAD_IS_BLOCKED (pad))
     GST_PAD_BLOCK_WAIT (pad);
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "got unblocked");
@@ -2851,7 +2510,7 @@ handle_pad_block (GstRealPad * pad)
   if (callback) {
     user_data = pad->block_data;
     GST_UNLOCK (pad);
-    callback (GST_PAD_CAST (pad), FALSE, user_data);
+    callback (pad, FALSE, user_data);
     GST_LOCK (pad);
   } else {
     GST_PAD_BLOCK_SIGNAL (pad);
@@ -2869,7 +2528,7 @@ handle_pad_block (GstRealPad * pad)
  * @pad: a sink #GstPad.
  * @buffer: the #GstBuffer to send.
  *
- * Chain a buffer to @pad. The pad has to be a GstRealPad.
+ * Chain a buffer to @pad.
  *
  * Returns: a #GstFlowReturn from the pad.
  *
@@ -2883,8 +2542,8 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
   GstPadChainFunction chainfunc;
   GstFlowReturn ret;
 
-  g_return_val_if_fail (GST_IS_REAL_PAD (pad), GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_RPAD_DIRECTION (pad) == GST_PAD_SINK,
+  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK,
       GST_FLOW_ERROR);
   g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
@@ -2892,11 +2551,11 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
   GST_STREAM_LOCK (pad);
 
   GST_LOCK (pad);
-  if (G_UNLIKELY (GST_RPAD_IS_FLUSHING (pad)))
+  if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
 
   caps = GST_BUFFER_CAPS (buffer);
-  caps_changed = caps && caps != GST_RPAD_CAPS (pad);
+  caps_changed = caps && caps != GST_PAD_CAPS (pad);
   GST_UNLOCK (pad);
 
   /* we got a new datatype on the pad, see if it can handle it */
@@ -2911,7 +2570,7 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
    * the data to the wrong function. This is not really a
    * problem since functions are assigned at creation time
    * and don't change that often... */
-  if (G_UNLIKELY ((chainfunc = GST_RPAD_CHAINFUNC (pad)) == NULL))
+  if (G_UNLIKELY ((chainfunc = GST_PAD_CHAINFUNC (pad)) == NULL))
     goto no_function;
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
@@ -2968,26 +2627,25 @@ no_function:
 GstFlowReturn
 gst_pad_push (GstPad * pad, GstBuffer * buffer)
 {
-  GstRealPad *peer;
+  GstPad *peer;
   GstFlowReturn ret;
 
-  g_return_val_if_fail (GST_IS_REAL_PAD (pad), GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_RPAD_DIRECTION (pad) == GST_PAD_SRC,
-      GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC, GST_FLOW_ERROR);
   g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
   GST_LOCK (pad);
-  while (G_UNLIKELY (GST_RPAD_IS_BLOCKED (pad)))
-    handle_pad_block (GST_REAL_PAD_CAST (pad));
+  while (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad)))
+    handle_pad_block (pad);
 
-  if (G_UNLIKELY ((peer = GST_RPAD_PEER (pad)) == NULL))
+  if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
     goto not_linked;
 
   gst_object_ref (GST_OBJECT_CAST (peer));
   GST_UNLOCK (pad);
 
-  ret = gst_pad_chain (GST_PAD_CAST (peer), buffer);
+  ret = gst_pad_chain (peer, buffer);
 
   gst_object_unref (GST_OBJECT_CAST (peer));
 
@@ -3006,7 +2664,7 @@ not_linked:
 
 /**
  * gst_pad_check_pull_range:
- * @pad: a sink #GstRealPad.
+ * @pad: a sink #GstPad.
  *
  * Checks if a #gst_pad_pull_range() can be performed on the peer
  * source pad. This function is used by plugins that want to check
@@ -3023,17 +2681,17 @@ not_linked:
 gboolean
 gst_pad_check_pull_range (GstPad * pad)
 {
-  GstRealPad *peer;
+  GstPad *peer;
   gboolean ret;
   GstPadCheckGetRangeFunction checkgetrangefunc;
 
-  g_return_val_if_fail (GST_IS_REAL_PAD (pad), FALSE);
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   GST_LOCK (pad);
-  if (GST_RPAD_DIRECTION (pad) != GST_PAD_SINK)
+  if (GST_PAD_DIRECTION (pad) != GST_PAD_SINK)
     goto wrong_direction;
 
-  if (G_UNLIKELY ((peer = GST_RPAD_PEER (pad)) == NULL))
+  if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
     goto not_connected;
 
   gst_object_ref (GST_OBJECT_CAST (peer));
@@ -3041,13 +2699,13 @@ gst_pad_check_pull_range (GstPad * pad)
 
   /* see note in above function */
   if (G_LIKELY ((checkgetrangefunc = peer->checkgetrangefunc) == NULL)) {
-    ret = GST_RPAD_GETRANGEFUNC (peer) != NULL;
+    ret = GST_PAD_GETRANGEFUNC (peer) != NULL;
   } else {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "calling checkgetrangefunc %s of peer pad %s:%s",
         GST_DEBUG_FUNCPTR_NAME (checkgetrangefunc), GST_DEBUG_PAD_NAME (peer));
 
-    ret = checkgetrangefunc (GST_PAD_CAST (peer));
+    ret = checkgetrangefunc (peer);
   }
 
   gst_object_unref (GST_OBJECT_CAST (peer));
@@ -3089,19 +2747,18 @@ gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
   GstFlowReturn ret;
   GstPadGetRangeFunction getrangefunc;
 
-  g_return_val_if_fail (GST_IS_REAL_PAD (pad), GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_RPAD_DIRECTION (pad) == GST_PAD_SRC,
-      GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC, GST_FLOW_ERROR);
   g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
 
   GST_STREAM_LOCK (pad);
 
   GST_LOCK (pad);
-  if (G_UNLIKELY (GST_RPAD_IS_FLUSHING (pad)))
+  if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
   GST_UNLOCK (pad);
 
-  if (G_UNLIKELY ((getrangefunc = GST_RPAD_GETRANGEFUNC (pad)) == NULL))
+  if (G_UNLIKELY ((getrangefunc = GST_PAD_GETRANGEFUNC (pad)) == NULL))
     goto no_function;
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
@@ -3153,26 +2810,26 @@ GstFlowReturn
 gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
     GstBuffer ** buffer)
 {
-  GstRealPad *peer;
+  GstPad *peer;
   GstFlowReturn ret;
 
-  g_return_val_if_fail (GST_IS_REAL_PAD (pad), GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_RPAD_DIRECTION (pad) == GST_PAD_SINK,
+  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK,
       GST_FLOW_ERROR);
   g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
 
   GST_LOCK (pad);
 
-  while (G_UNLIKELY (GST_RPAD_IS_BLOCKED (pad)))
-    handle_pad_block (GST_REAL_PAD_CAST (pad));
+  while (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad)))
+    handle_pad_block (pad);
 
-  if (G_UNLIKELY ((peer = GST_RPAD_PEER (pad)) == NULL))
+  if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
     goto not_connected;
 
   gst_object_ref (GST_OBJECT_CAST (peer));
   GST_UNLOCK (pad);
 
-  ret = gst_pad_get_range (GST_PAD_CAST (peer), offset, size, buffer);
+  ret = gst_pad_get_range (peer, offset, size, buffer);
 
   gst_object_unref (GST_OBJECT_CAST (peer));
 
@@ -3204,21 +2861,21 @@ not_connected:
 gboolean
 gst_pad_push_event (GstPad * pad, GstEvent * event)
 {
-  GstRealPad *peerpad;
+  GstPad *peerpad;
   gboolean result;
 
-  g_return_val_if_fail (GST_IS_REAL_PAD (pad), FALSE);
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
 
   GST_LOCK (pad);
-  peerpad = GST_RPAD_PEER (pad);
+  peerpad = GST_PAD_PEER (pad);
   if (peerpad == NULL)
     goto not_linked;
 
   gst_object_ref (GST_OBJECT_CAST (peerpad));
   GST_UNLOCK (pad);
 
-  result = gst_pad_send_event (GST_PAD_CAST (peerpad), event);
+  result = gst_pad_send_event (peerpad, event);
 
   gst_object_unref (GST_OBJECT_CAST (peerpad));
 
@@ -3247,70 +2904,63 @@ gboolean
 gst_pad_send_event (GstPad * pad, GstEvent * event)
 {
   gboolean result = FALSE;
-  GstRealPad *realpad;
   GstPadEventFunction eventfunc;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
 
-  GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
+  GST_LOCK (pad);
 
   if (GST_EVENT_SRC (event) == NULL)
-    GST_EVENT_SRC (event) = gst_object_ref (GST_OBJECT_CAST (realpad));
+    GST_EVENT_SRC (event) = gst_object_ref (GST_OBJECT (pad));
 
   GST_CAT_DEBUG (GST_CAT_EVENT, "have event type %d on pad %s:%s",
-      GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (realpad));
+      GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH:
       GST_CAT_DEBUG (GST_CAT_EVENT, "have flush event");
       if (GST_EVENT_FLUSH_DONE (event)) {
-        GST_RPAD_UNSET_FLUSHING (realpad);
+        GST_PAD_UNSET_FLUSHING (pad);
         GST_CAT_DEBUG (GST_CAT_EVENT, "cleared flush flag");
       } else {
         /* can't even accept a flush begin event when flushing */
-        if (GST_RPAD_IS_FLUSHING (realpad))
+        if (GST_PAD_IS_FLUSHING (pad))
           goto flushing;
-        GST_RPAD_SET_FLUSHING (realpad);
+        GST_PAD_SET_FLUSHING (pad);
         GST_CAT_DEBUG (GST_CAT_EVENT, "set flush flag");
       }
       break;
     default:
-      if (GST_RPAD_IS_FLUSHING (realpad))
+      if (GST_PAD_IS_FLUSHING (pad))
         goto flushing;
       break;
   }
 
-  if ((eventfunc = GST_RPAD_EVENTFUNC (realpad)) == NULL)
+  if ((eventfunc = GST_PAD_EVENTFUNC (pad)) == NULL)
     goto no_function;
 
-  gst_object_ref (GST_OBJECT_CAST (realpad));
-  GST_UNLOCK (realpad);
+  gst_object_ref (GST_OBJECT_CAST (pad));
+  GST_UNLOCK (pad);
 
-  result = eventfunc (GST_PAD_CAST (realpad), event);
+  result = eventfunc (GST_PAD_CAST (pad), event);
 
-  gst_object_unref (GST_OBJECT_CAST (realpad));
+  gst_object_unref (GST_OBJECT_CAST (pad));
 
   return result;
 
   /* ERROR handling */
-lost_ghostpad:
-  {
-    GST_CAT_DEBUG (GST_CAT_EVENT, "lost ghostpad");
-    gst_event_unref (event);
-    return FALSE;
-  }
 no_function:
   {
     g_warning ("pad %s:%s has no event handler, file a bug.",
-        GST_DEBUG_PAD_NAME (realpad));
-    GST_UNLOCK (realpad);
+        GST_DEBUG_PAD_NAME (pad));
+    GST_UNLOCK (pad);
     gst_event_unref (event);
     return FALSE;
   }
 flushing:
   {
-    GST_UNLOCK (realpad);
+    GST_UNLOCK (pad);
     GST_CAT_DEBUG (GST_CAT_EVENT, "received event on flushing pad");
     gst_event_unref (event);
     return FALSE;
@@ -3577,12 +3227,12 @@ gst_pad_start_task (GstPad * pad, GstTaskFunction func, gpointer data)
   if (sched == NULL)
     goto no_sched;
 
-  task = GST_RPAD_TASK (pad);
+  task = GST_PAD_TASK (pad);
   if (task == NULL) {
     task = gst_scheduler_create_task (sched, func, data);
     gst_task_set_lock (task, GST_STREAM_GET_LOCK (pad));
 
-    GST_RPAD_TASK (pad) = task;
+    GST_PAD_TASK (pad) = task;
   }
   GST_UNLOCK (pad);
 
@@ -3613,7 +3263,7 @@ gst_pad_pause_task (GstPad * pad)
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   GST_LOCK (pad);
-  task = GST_RPAD_TASK (pad);
+  task = GST_PAD_TASK (pad);
   if (task == NULL)
     goto no_task;
   gst_task_pause (task);
@@ -3639,10 +3289,10 @@ gst_pad_stop_task (GstPad * pad)
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   GST_LOCK (pad);
-  task = GST_RPAD_TASK (pad);
+  task = GST_PAD_TASK (pad);
   if (task == NULL)
     goto no_task;
-  GST_RPAD_TASK (pad) = NULL;
+  GST_PAD_TASK (pad) = NULL;
   GST_UNLOCK (pad);
 
   gst_task_stop (task);
@@ -3659,146 +3309,4 @@ no_task:
     GST_UNLOCK (pad);
     return TRUE;
   }
-}
-
-
-/***** ghost pads *****/
-GType _gst_ghost_pad_type = 0;
-
-static void gst_ghost_pad_class_init (GstGhostPadClass * klass);
-static void gst_ghost_pad_init (GstGhostPad * pad);
-static void gst_ghost_pad_dispose (GObject * object);
-static void gst_ghost_pad_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-static void gst_ghost_pad_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-
-static GstPad *ghost_pad_parent_class = NULL;
-
-/* static guint gst_ghost_pad_signals[LAST_SIGNAL] = { 0 }; */
-enum
-{
-  GPAD_ARG_0,
-  GPAD_ARG_REAL_PAD
-      /* fill me */
-};
-
-GType
-gst_ghost_pad_get_type (void)
-{
-  if (!_gst_ghost_pad_type) {
-    static const GTypeInfo pad_info = {
-      sizeof (GstGhostPadClass), NULL, NULL,
-      (GClassInitFunc) gst_ghost_pad_class_init, NULL, NULL,
-      sizeof (GstGhostPad),
-      0,
-      (GInstanceInitFunc) gst_ghost_pad_init,
-      NULL
-    };
-
-    _gst_ghost_pad_type = g_type_register_static (GST_TYPE_PAD, "GstGhostPad",
-        &pad_info, 0);
-  }
-  return _gst_ghost_pad_type;
-}
-
-static void
-gst_ghost_pad_class_init (GstGhostPadClass * klass)
-{
-  GObjectClass *gobject_class;
-
-  gobject_class = (GObjectClass *) klass;
-
-  ghost_pad_parent_class = g_type_class_ref (GST_TYPE_PAD);
-
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_ghost_pad_dispose);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_ghost_pad_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_ghost_pad_get_property);
-
-  g_object_class_install_property (gobject_class, GPAD_ARG_REAL_PAD,
-      g_param_spec_object ("real-pad", "Real pad",
-          "The real pad for the ghost pad", GST_TYPE_PAD, G_PARAM_READWRITE));
-}
-
-static void
-gst_ghost_pad_init (GstGhostPad * pad)
-{
-  /* zeroed by glib */
-}
-
-static void
-gst_ghost_pad_dispose (GObject * object)
-{
-  g_object_set (object, "real-pad", NULL, NULL);
-
-  G_OBJECT_CLASS (ghost_pad_parent_class)->dispose (object);
-}
-
-static void
-gst_ghost_pad_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstPad *ghostpad = (GstPad *) object;
-  GstPad *oldrealpad = (GstPad *) GST_GPAD_REALPAD (ghostpad);
-  GstPad *realpad = NULL;
-
-  switch (prop_id) {
-    case GPAD_ARG_REAL_PAD:
-      realpad = g_value_get_object (value);
-
-      if (oldrealpad) {
-        if (realpad == oldrealpad)
-          return;
-        else
-          gst_pad_remove_ghost_pad (oldrealpad, ghostpad);
-      }
-
-      if (realpad)
-        gst_pad_add_ghost_pad (realpad, ghostpad);
-      break;
-
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_ghost_pad_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  switch (prop_id) {
-    case GPAD_ARG_REAL_PAD:
-      g_value_set_object (value, GST_GPAD_REALPAD (object));
-      break;
-
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-/**
- * gst_ghost_pad_new:
- * @name: the name of the new ghost pad.
- * @pad: the #GstPad to create a ghost pad for.
- *
- * Creates a new ghost pad associated with @pad, and named @name. If @name is
- * %NULL, a guaranteed unique name (across all ghost pads) will be assigned.
- *
- * Returns: a new ghost #GstPad, or %NULL in case of an error.
- */
-GstPad *
-gst_ghost_pad_new (const gchar * name, GstPad * pad)
-{
-  GstPad *gpad;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  gpad = g_object_new (GST_TYPE_GHOST_PAD, "name", name, "real-pad", pad, NULL);
-
-  GST_CAT_DEBUG (GST_CAT_PADS, "created ghost pad \"%s\" for pad %s:%s",
-      GST_OBJECT_NAME (gpad), GST_DEBUG_PAD_NAME (pad));
-
-  return gpad;
 }

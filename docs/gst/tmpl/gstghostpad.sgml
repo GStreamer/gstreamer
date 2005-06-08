@@ -20,18 +20,10 @@ Pseudo link pads
 </para>
 
 
-<!-- ##### ARG GstGhostPad:real-pad ##### -->
+<!-- ##### ARG GstGhostPad:internal ##### -->
 <para>
 
 </para>
-
-<!-- ##### MACRO GST_GPAD_REALPAD ##### -->
-<para>
-Get the real pad of this ghost pad.
-</para>
-
-@pad: the real pad to query.
-
 
 <!-- ##### FUNCTION gst_ghost_pad_new ##### -->
 <para>
@@ -39,17 +31,9 @@ Get the real pad of this ghost pad.
 </para>
 
 @name: 
-@pad: 
+@target: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_ghost_pad_save_thyself ##### -->
-<para>
-
-</para>
-
+<!-- # Unused Parameters # -->
 @pad: 
-@parent: 
-@Returns: 
 
 

@@ -598,7 +598,6 @@ print_pad_info (GstElement * element)
 {
   const GList *pads;
   GstPad *pad;
-  GstRealPad *realpad;
 
   n_print ("\n");
   n_print ("Pads:\n");
@@ -612,54 +611,50 @@ print_pad_info (GstElement * element)
   while (pads) {
     pad = GST_PAD (pads->data);
     pads = g_list_next (pads);
-    realpad = GST_PAD_REALIZE (pad);
 
     n_print ("");
 
-    if (gst_pad_get_direction (GST_PAD (realpad)) == GST_PAD_SRC)
+    if (gst_pad_get_direction (pad) == GST_PAD_SRC)
       g_print ("  SRC: '%s'", gst_pad_get_name (pad));
-    else if (gst_pad_get_direction (GST_PAD (realpad)) == GST_PAD_SINK)
+    else if (gst_pad_get_direction (pad) == GST_PAD_SINK)
       g_print ("  SINK: '%s'", gst_pad_get_name (pad));
     else
       g_print ("  UNKNOWN!!!: '%s'", gst_pad_get_name (pad));
 
-    if (GST_IS_GHOST_PAD (pad))
-      g_print (", ghost of real pad %s:%s\n", GST_DEBUG_PAD_NAME (realpad));
-    else
-      g_print ("\n");
+    g_print ("\n");
 
     n_print ("    Implementation:\n");
-    if (realpad->chainfunc)
+    if (pad->chainfunc)
       n_print ("      Has chainfunc(): %s\n",
-          GST_DEBUG_FUNCPTR_NAME (realpad->chainfunc));
-    if (realpad->getrangefunc)
+          GST_DEBUG_FUNCPTR_NAME (pad->chainfunc));
+    if (pad->getrangefunc)
       n_print ("      Has getrangefunc(): %s\n",
-          GST_DEBUG_FUNCPTR_NAME (realpad->getrangefunc));
-    if (realpad->eventfunc != gst_pad_event_default)
+          GST_DEBUG_FUNCPTR_NAME (pad->getrangefunc));
+    if (pad->eventfunc != gst_pad_event_default)
       n_print ("      Has custom eventfunc(): %s\n",
-          GST_DEBUG_FUNCPTR_NAME (realpad->eventfunc));
-    if (realpad->queryfunc != gst_pad_query_default)
+          GST_DEBUG_FUNCPTR_NAME (pad->eventfunc));
+    if (pad->queryfunc != gst_pad_query_default)
       n_print ("      Has custom queryfunc(): %s\n",
-          GST_DEBUG_FUNCPTR_NAME (realpad->queryfunc));
-    if (realpad->querytypefunc != gst_pad_get_query_types_default) {
+          GST_DEBUG_FUNCPTR_NAME (pad->queryfunc));
+    if (pad->querytypefunc != gst_pad_get_query_types_default) {
       n_print ("        Provides query types:\n");
-      print_query_types (gst_pad_get_query_types (GST_PAD (realpad)));
+      print_query_types (gst_pad_get_query_types (pad));
     }
 
-    if (realpad->intlinkfunc != gst_pad_get_internal_links_default)
+    if (pad->intlinkfunc != gst_pad_get_internal_links_default)
       n_print ("      Has custom intconnfunc(): %s\n",
-          GST_DEBUG_FUNCPTR_NAME (realpad->intlinkfunc));
+          GST_DEBUG_FUNCPTR_NAME (pad->intlinkfunc));
 
-    if (realpad->bufferallocfunc)
+    if (pad->bufferallocfunc)
       n_print ("      Has bufferallocfunc(): %s\n",
-          GST_DEBUG_FUNCPTR_NAME (realpad->bufferallocfunc));
+          GST_DEBUG_FUNCPTR_NAME (pad->bufferallocfunc));
 
     if (pad->padtemplate)
       n_print ("    Pad Template: '%s'\n", pad->padtemplate->name_template);
 
-    if (realpad->caps) {
+    if (pad->caps) {
       n_print ("    Capabilities:\n");
-      print_caps (realpad->caps, "      ");
+      print_caps (pad->caps, "      ");
     }
   }
 }

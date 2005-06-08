@@ -27,6 +27,7 @@ TESTS = $(top_builddir)/tools/gst-register 	\
         gst/gstbuffer				\
         gst/gstbus				\
 	gst/gstcaps     			\
+	gst/gstghostpad				\
 	gst/gstiterator 			\
 	gst/gstmessage	 			\
 	gst/gstobject				\

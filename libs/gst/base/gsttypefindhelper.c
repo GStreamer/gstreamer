@@ -64,7 +64,7 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
   }
 
   buffer = NULL;
-  ret = GST_RPAD_GETRANGEFUNC (src) (src, offset, size, &buffer);
+  ret = GST_PAD_GETRANGEFUNC (src) (src, offset, size, &buffer);
 
   if (find->buffer) {
     gst_buffer_unref (find->buffer);

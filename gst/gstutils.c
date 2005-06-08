@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "gst_private.h"
+#include "gstghostpad.h"
 #include "gstutils.h"
 #include "gsturitype.h"
 #include "gstinfo.h"
@@ -301,11 +302,9 @@ string_append_indent (GString * str, gint count)
 void
 gst_print_pad_caps (GString * buf, gint indent, GstPad * pad)
 {
-  GstRealPad *realpad;
   GstCaps *caps;
 
-  realpad = GST_PAD_REALIZE (pad);
-  caps = realpad->caps;
+  caps = pad->caps;
 
   if (!caps) {
     string_append_indent (buf, indent);
@@ -606,10 +605,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
       "finding pad in %s compatible with %s:%s",
       GST_ELEMENT_NAME (element), GST_DEBUG_PAD_NAME (pad));
 
-  /* let's use the real pad */
-  pad = (GstPad *) GST_PAD_REALIZE (pad);
-  g_return_val_if_fail (pad != NULL, NULL);
-  g_return_val_if_fail (GST_RPAD_PEER (pad) == NULL, NULL);
+  g_return_val_if_fail (GST_PAD_PEER (pad) == NULL, NULL);
 
   done = FALSE;
   /* try to get an existing unlinked pad */
@@ -808,18 +804,7 @@ ghost_up (GstElement * e, GstPad * pad)
   static gint ghost_pad_index = 0;
   GstPad *gpad;
   gchar *name;
-  GList *gpads;
   GstObject *parent = GST_OBJECT_PARENT (e);
-
-  /* Check if the pad already has a ghost on the element */
-  for (gpads = g_list_first (GST_PAD_REALIZE (pad)->ghostpads); gpads != NULL;
-      gpads = g_list_next (gpads)) {
-    if (GST_OBJECT_PARENT (GST_PAD (gpads->data)) == parent) {
-      GST_DEBUG ("Found existing ghost pad of %s on element %s\n",
-          GST_OBJECT_NAME (pad), GST_OBJECT_NAME (parent));
-      return GST_PAD (gpads->data);
-    }
-  }
 
   name = g_strdup_printf ("ghost%d", ghost_pad_index++);
   gpad = gst_ghost_pad_new (name, pad);
@@ -982,7 +967,7 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
   } else {
     GST_LOCK (src);
     srcpads = GST_ELEMENT_PADS (src);
-    srcpad = srcpads ? (GstPad *) GST_PAD_REALIZE (srcpads->data) : NULL;
+    srcpad = srcpads ? GST_PAD_CAST (srcpads->data) : NULL;
     if (srcpad)
       gst_object_ref (GST_OBJECT (srcpad));
     GST_UNLOCK (src);
@@ -1011,7 +996,7 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
   } else {
     GST_LOCK (dest);
     destpads = GST_ELEMENT_PADS (dest);
-    destpad = destpads ? (GstPad *) GST_PAD_REALIZE (destpads->data) : NULL;
+    destpad = destpads ? GST_PAD_CAST (destpads->data) : NULL;
     if (destpad)
       gst_object_ref (GST_OBJECT (destpad));
     GST_UNLOCK (dest);
@@ -1045,7 +1030,6 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
           gst_object_ref (GST_OBJECT (temp));
         } else {
           temp = gst_element_get_compatible_pad (dest, srcpad, NULL);
-          gst_object_ref (GST_OBJECT (temp));
         }
 
         if (temp && pad_link_maybe_ghosting (srcpad, temp)) {
@@ -1057,13 +1041,17 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
           gst_object_unref (GST_OBJECT (temp));
           return TRUE;
         }
+
+        if (temp) {
+          gst_object_unref (GST_OBJECT (temp));
+        }
       }
       /* find a better way for this mess */
       if (srcpads) {
         srcpads = g_list_next (srcpads);
         if (srcpads) {
           gst_object_unref (GST_OBJECT (srcpad));
-          srcpad = (GstPad *) GST_PAD_REALIZE (srcpads->data);
+          srcpad = GST_PAD_CAST (srcpads->data);
           gst_object_ref (GST_OBJECT (srcpad));
         }
       }
@@ -1099,12 +1087,15 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
             gst_object_unref (GST_OBJECT (srcpad));
           return TRUE;
         }
+        if (temp) {
+          gst_object_unref (GST_OBJECT (temp));
+        }
       }
       if (destpads) {
         destpads = g_list_next (destpads);
         if (destpads) {
           gst_object_unref (GST_OBJECT (destpad));
-          destpad = (GstPad *) GST_PAD_REALIZE (destpads->data);
+          destpad = GST_PAD_CAST (destpads->data);
           gst_object_ref (GST_OBJECT (destpad));
         }
       }
@@ -1315,8 +1306,7 @@ gst_element_unlink (GstElement * src, GstElement * dest)
       {
         GstPad *pad = GST_PAD_CAST (data);
 
-        /* we only care about real src pads */
-        if (GST_IS_REAL_PAD (pad) && GST_PAD_IS_SRC (pad)) {
+        if (GST_PAD_IS_SRC (pad)) {
           GstPad *peerpad = gst_pad_get_peer (pad);
 
           /* see if the pad is connected and is really a pad
@@ -1411,64 +1401,49 @@ gst_element_query_convert (GstElement * element, GstFormat src_format,
 gboolean
 gst_pad_can_link (GstPad * srcpad, GstPad * sinkpad)
 {
-  GstRealPad *realsrc, *realsink;
-
   /* FIXME This function is gross.  It's almost a direct copy of
    * gst_pad_link_filtered().  Any decent programmer would attempt
    * to merge the two functions, which I will do some day. --ds
    */
 
   /* generic checks */
-  g_return_val_if_fail (srcpad != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PAD (srcpad), FALSE);
-  g_return_val_if_fail (sinkpad != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PAD (sinkpad), FALSE);
 
   GST_CAT_INFO (GST_CAT_PADS, "trying to link %s:%s and %s:%s",
       GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
-  /* now we need to deal with the real/ghost stuff */
-  realsrc = GST_PAD_REALIZE (srcpad);
-  realsink = GST_PAD_REALIZE (sinkpad);
-
-  if ((GST_PAD (realsrc) != srcpad) || (GST_PAD (realsink) != sinkpad)) {
-    GST_CAT_INFO (GST_CAT_PADS, "*actually* linking %s:%s and %s:%s",
-        GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
-  }
   /* FIXME: shouldn't we convert this to g_return_val_if_fail? */
-  if (GST_RPAD_PEER (realsrc) != NULL) {
-    GST_CAT_INFO (GST_CAT_PADS, "Real source pad %s:%s has a peer, failed",
-        GST_DEBUG_PAD_NAME (realsrc));
+  if (GST_PAD_PEER (srcpad) != NULL) {
+    GST_CAT_INFO (GST_CAT_PADS, "Source pad %s:%s has a peer, failed",
+        GST_DEBUG_PAD_NAME (srcpad));
     return FALSE;
   }
-  if (GST_RPAD_PEER (realsink) != NULL) {
-    GST_CAT_INFO (GST_CAT_PADS, "Real sink pad %s:%s has a peer, failed",
-        GST_DEBUG_PAD_NAME (realsink));
+  if (GST_PAD_PEER (sinkpad) != NULL) {
+    GST_CAT_INFO (GST_CAT_PADS, "Sink pad %s:%s has a peer, failed",
+        GST_DEBUG_PAD_NAME (sinkpad));
     return FALSE;
   }
-  if (!GST_PAD_IS_SRC (realsrc)) {
-    GST_CAT_INFO (GST_CAT_PADS, "Real src pad %s:%s is not source pad, failed",
-        GST_DEBUG_PAD_NAME (realsrc));
+  if (!GST_PAD_IS_SRC (srcpad)) {
+    GST_CAT_INFO (GST_CAT_PADS, "Src pad %s:%s is not source pad, failed",
+        GST_DEBUG_PAD_NAME (srcpad));
     return FALSE;
   }
-  if (!GST_PAD_IS_SINK (realsink)) {
-    GST_CAT_INFO (GST_CAT_PADS, "Real sink pad %s:%s is not sink pad, failed",
-        GST_DEBUG_PAD_NAME (realsink));
+  if (!GST_PAD_IS_SINK (sinkpad)) {
+    GST_CAT_INFO (GST_CAT_PADS, "Sink pad %s:%s is not sink pad, failed",
+        GST_DEBUG_PAD_NAME (sinkpad));
     return FALSE;
   }
-  if (GST_PAD_PARENT (realsrc) == NULL) {
-    GST_CAT_INFO (GST_CAT_PADS, "Real src pad %s:%s has no parent, failed",
-        GST_DEBUG_PAD_NAME (realsrc));
+  if (GST_PAD_PARENT (srcpad) == NULL) {
+    GST_CAT_INFO (GST_CAT_PADS, "Src pad %s:%s has no parent, failed",
+        GST_DEBUG_PAD_NAME (srcpad));
     return FALSE;
   }
-  if (GST_PAD_PARENT (realsink) == NULL) {
-    GST_CAT_INFO (GST_CAT_PADS, "Real sink pad %s:%s has no parent, failed",
-        GST_DEBUG_PAD_NAME (realsrc));
+  if (GST_PAD_PARENT (sinkpad) == NULL) {
+    GST_CAT_INFO (GST_CAT_PADS, "Sink pad %s:%s has no parent, failed",
+        GST_DEBUG_PAD_NAME (srcpad));
     return FALSE;
   }
-
-  g_return_val_if_fail (realsrc != NULL, GST_PAD_LINK_REFUSED);
-  g_return_val_if_fail (realsink != NULL, GST_PAD_LINK_REFUSED);
 
   return TRUE;
 }
@@ -1502,14 +1477,11 @@ GstCaps *
 gst_pad_get_fixed_caps_func (GstPad * pad)
 {
   GstCaps *result;
-  GstRealPad *realpad;
 
-  g_return_val_if_fail (GST_IS_REAL_PAD (pad), NULL);
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  realpad = GST_REAL_PAD_CAST (pad);
-
-  if (GST_RPAD_CAPS (realpad)) {
-    result = GST_RPAD_CAPS (realpad);
+  if (GST_PAD_CAPS (pad)) {
+    result = GST_PAD_CAPS (pad);
 
     GST_CAT_DEBUG (GST_CAT_CAPS,
         "using pad caps %p %" GST_PTR_FORMAT, result, result);
@@ -1517,8 +1489,8 @@ gst_pad_get_fixed_caps_func (GstPad * pad)
     result = gst_caps_ref (result);
     goto done;
   }
-  if (GST_PAD_PAD_TEMPLATE (realpad)) {
-    GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (realpad);
+  if (GST_PAD_PAD_TEMPLATE (pad)) {
+    GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (pad);
 
     result = GST_PAD_TEMPLATE_CAPS (templ);
     GST_CAT_DEBUG (GST_CAT_CAPS,

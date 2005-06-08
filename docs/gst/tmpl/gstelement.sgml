@@ -445,17 +445,6 @@ Sets the parent of an element.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_element_add_ghost_pad ##### -->
-<para>
-
-</para>
-
-@element: 
-@pad: 
-@name: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_element_get_pad ##### -->
 <para>
 

@@ -38,6 +38,7 @@
 #include <gst/gstelement.h>
 #include <gst/gsterror.h>
 #include <gst/gstevent.h>
+#include <gst/gstghostpad.h>
 #include <gst/gstindex.h>
 #include <gst/gstinfo.h>
 #include <gst/gstinterface.h>

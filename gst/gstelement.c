@@ -491,10 +491,7 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
       element->numsinkpads++;
       break;
     default:
-      /* can happen for ghost pads */
-      g_warning ("adding pad %s:%s wothout direction",
-          GST_DEBUG_PAD_NAME (pad));
-      break;
+      goto no_direction;
   }
   element->pads = g_list_prepend (element->pads, pad);
   element->numpads++;
@@ -524,39 +521,16 @@ had_parent:
     g_free (pad_name);
     return FALSE;
   }
-}
-
-/**
- * gst_element_add_ghost_pad:
- * @element: a #GstElement to add the ghost pad to.
- * @pad: the #GstPad from which the new ghost pad will be created.
- * @name: the name of the new ghost pad, or NULL to assign a unique name
- * automatically.
- *
- * Creates a ghost pad from @pad, and adds it to @element via
- * gst_element_add_pad().
- *
- * Returns: the added ghost #GstPad, or NULL on error.
- *
- * MT safe.
- */
-GstPad *
-gst_element_add_ghost_pad (GstElement * element, GstPad * pad,
-    const gchar * name)
-{
-  GstPad *ghostpad;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  ghostpad = gst_ghost_pad_new (name, pad);
-
-  if (!gst_element_add_pad (element, ghostpad)) {
-    gst_object_unref (GST_OBJECT (ghostpad));
-    ghostpad = NULL;
+no_direction:
+  {
+    GST_LOCK (pad);
+    g_critical
+        ("Trying to add pad %s to element %s, but it has no direction",
+        GST_OBJECT_NAME (pad), GST_ELEMENT_NAME (element));
+    GST_UNLOCK (pad);
+    GST_UNLOCK (element);
+    return FALSE;
   }
-
-  return ghostpad;
 }
 
 /**
@@ -576,6 +550,7 @@ gst_element_add_ghost_pad (GstElement * element, GstPad * pad,
 gboolean
 gst_element_remove_pad (GstElement * element, GstPad * pad)
 {
+  GstPad *peer;
   gchar *pad_name;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
@@ -594,24 +569,19 @@ gst_element_remove_pad (GstElement * element, GstPad * pad)
 
   g_free (pad_name);
 
-  /* FIXME, is this redundant with pad disposal? */
-  if (GST_IS_REAL_PAD (pad)) {
-    GstPad *peer = gst_pad_get_peer (pad);
+  peer = gst_pad_get_peer (pad);
 
-    /* unlink */
-    if (peer != NULL) {
-      /* window for MT unsafeness, someone else could unlink here
-       * and then we call unlink with wrong pads. The unlink
-       * function would catch this and safely return failed. */
-      if (GST_PAD_IS_SRC (pad))
-        gst_pad_unlink (pad, GST_PAD_CAST (peer));
-      else
-        gst_pad_unlink (GST_PAD_CAST (peer), pad);
+  /* unlink */
+  if (peer != NULL) {
+    /* window for MT unsafeness, someone else could unlink here
+     * and then we call unlink with wrong pads. The unlink
+     * function would catch this and safely return failed. */
+    if (GST_PAD_IS_SRC (pad))
+      gst_pad_unlink (pad, GST_PAD_CAST (peer));
+    else
+      gst_pad_unlink (GST_PAD_CAST (peer), pad);
 
-      gst_object_unref (GST_OBJECT (peer));
-    }
-  } else if (GST_IS_GHOST_PAD (pad)) {
-    g_object_set (pad, "real-pad", NULL, NULL);
+    gst_object_unref (GST_OBJECT (peer));
   }
 
   GST_LOCK (element);
@@ -626,7 +596,7 @@ gst_element_remove_pad (GstElement * element, GstPad * pad)
       element->numsinkpads--;
       break;
     default:
-      /* can happen for ghost pads */
+      g_critical ("Removing pad without direction???");
       break;
   }
   element->pads = g_list_remove (element->pads, pad);
@@ -1826,73 +1796,69 @@ restart:
   pads = element->pads;
   cookie = element->pads_cookie;
   for (; pads && result; pads = g_list_next (pads)) {
-    GstPad *pad = GST_PAD (pads->data);
+    GstPad *pad, *peer;
+    gboolean pad_loop, pad_get;
+    gboolean done = FALSE;
 
+    pad = GST_PAD (pads->data);
     gst_object_ref (GST_OBJECT (pad));
     GST_UNLOCK (element);
 
-    /* we only care about real pads */
-    if (GST_IS_REAL_PAD (pad)) {
-      GstRealPad *peer;
-      gboolean pad_loop, pad_get;
-      gboolean done = FALSE;
+    if (active) {
+      pad_get = GST_PAD_IS_SINK (pad) && gst_pad_check_pull_range (pad);
 
-      if (active) {
-        pad_get = GST_RPAD_IS_SINK (pad) && gst_pad_check_pull_range (pad);
+      /* see if the pad has a loop function and grab
+       * the peer */
+      GST_LOCK (pad);
+      pad_loop = GST_PAD_LOOPFUNC (pad) != NULL;
+      peer = GST_PAD_PEER (pad);
+      if (peer)
+        gst_object_ref (GST_OBJECT_CAST (peer));
+      GST_UNLOCK (pad);
 
-        /* see if the pad has a loop function and grab
-         * the peer */
-        GST_LOCK (pad);
-        pad_loop = GST_RPAD_LOOPFUNC (pad) != NULL;
-        peer = GST_RPAD_PEER (pad);
-        if (peer)
-          gst_object_ref (GST_OBJECT_CAST (peer));
-        GST_UNLOCK (pad);
+      GST_DEBUG ("pad %s:%s: get: %d, loop: %d",
+          GST_DEBUG_PAD_NAME (pad), pad_get, pad_loop);
 
-        GST_DEBUG ("pad %s:%s: get: %d, loop: %d",
-            GST_DEBUG_PAD_NAME (pad), pad_get, pad_loop);
+      if (peer) {
+        gboolean peer_loop, peer_get;
 
-        if (peer) {
-          gboolean peer_loop, peer_get;
+        /* see if the peer has a getrange function */
+        peer_get = GST_PAD_IS_SINK (peer)
+            && gst_pad_check_pull_range (GST_PAD_CAST (peer));
+        /* see if the peer has a loop function */
+        peer_loop = GST_PAD_LOOPFUNC (peer) != NULL;
 
-          /* see if the peer has a getrange function */
-          peer_get = GST_RPAD_IS_SINK (peer)
-              && gst_pad_check_pull_range (GST_PAD_CAST (peer));
-          /* see if the peer has a loop function */
-          peer_loop = GST_RPAD_LOOPFUNC (peer) != NULL;
+        GST_DEBUG ("peer %s:%s: get: %d, loop: %d",
+            GST_DEBUG_PAD_NAME (peer), peer_get, peer_loop);
 
-          GST_DEBUG ("peer %s:%s: get: %d, loop: %d",
-              GST_DEBUG_PAD_NAME (peer), peer_get, peer_loop);
-
-          /* If the pad is a sink with loop and the peer has a get function,
-           * we can activate the sinkpad,  FIXME, logic is reversed as
-           * check_pull_range() checks the peer of the given pad. */
-          if ((pad_get && pad_loop) || (peer_get && peer_loop)) {
-            GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-                "activating pad %s in pull mode", GST_OBJECT_NAME (pad));
-
-            result &= gst_pad_set_active (pad, GST_ACTIVATE_PULL);
-            done = TRUE;
-          }
-          gst_object_unref (GST_OBJECT_CAST (peer));
-        }
-
-        if (!done) {
-          /* all other conditions are just push based pads */
+        /* If the pad is a sink with loop and the peer has a get function,
+         * we can activate the sinkpad,  FIXME, logic is reversed as
+         * check_pull_range() checks the peer of the given pad. */
+        if ((pad_get && pad_loop) || (peer_get && peer_loop)) {
           GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-              "activating pad %s in push mode", GST_OBJECT_NAME (pad));
+              "activating pad %s in pull mode", GST_OBJECT_NAME (pad));
 
-          result &= gst_pad_set_active (pad, GST_ACTIVATE_PUSH);
+          result &= gst_pad_set_active (pad, GST_ACTIVATE_PULL);
+          done = TRUE;
         }
-      } else {
-        GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-            "deactivating pad %s", GST_OBJECT_NAME (pad));
-
-        result &= gst_pad_set_active (pad, GST_ACTIVATE_NONE);
+        gst_object_unref (GST_OBJECT_CAST (peer));
       }
-    }
-    gst_object_unref (GST_OBJECT_CAST (pad));
 
+      if (!done) {
+        /* all other conditions are just push based pads */
+        GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+            "activating pad %s in push mode", GST_OBJECT_NAME (pad));
+
+        result &= gst_pad_set_active (pad, GST_ACTIVATE_PUSH);
+      }
+    } else {
+      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+          "deactivating pad %s", GST_OBJECT_NAME (pad));
+
+      result &= gst_pad_set_active (pad, GST_ACTIVATE_NONE);
+    }
+
+    gst_object_unref (GST_OBJECT_CAST (pad));
     GST_LOCK (element);
     if (cookie != element->pads_cookie)
       goto restart;

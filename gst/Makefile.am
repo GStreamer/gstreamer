@@ -88,6 +88,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstevent.c		\
 	gstfilter.c		\
 	gstformat.c		\
+	gstghostpad.c		\
 	$(GST_INDEX_SRC)	\
 	gstinfo.c		\
 	gstinterface.c		\
@@ -163,6 +164,7 @@ gst_headers =			\
 	gstevent.h		\
 	gstfilter.h		\
 	gstformat.h		\
+	gstghostpad.h		\
 	gstindex.h		\
 	gstinfo.h		\
 	gstinterface.h		\

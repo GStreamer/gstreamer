@@ -1,3 +1,66 @@
+2005-06-08  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstutils.c: RPAD fixes all around.
+	(gst_element_link_pads): Refcounting fixes.
+
+	* tools/gst-inspect.c:
+	* tools/gst-xmlinspect.c:
+	* parse/grammar.y:
+	* gst/base/gsttypefindhelper.c:
+	* gst/base/gstbasesink.c:
+	* gst/gstqueue.c: RPAD fixes.
+
+	* gst/gstghostpad.h:
+	* gst/gstghostpad.c: New ghost pad implementation as full proxy
+	pads. The tricky thing is they provide both source and sink
+	interfaces, since they proxy the internal pad for the external
+	pad, and vice versa. Implement with lower-level ProxyPad objects,
+	with the interior proxy pad as a child of the exterior ghost pad.
+	Should write a doc on this.
+	
+	* gst/gstpad.h: s/RPAD/PAD/, s/RealPad/Pad/.
+	(gst_pad_set_name, gst_pad_set_parent): Macros removed, use
+	gst_object API.
+	
+	* gst/gstpad.c: Big changes. No more stub base GstPad, now all
+	pads are real pads. No ghost pads in this file. Not documenting
+	the myriad s/RPAD/PAD/ and REALIZE fixes.
+	(gst_pad_class_init): Add properties for "direction" and
+	"template". Both are construct-only, so they can't change during
+	the life of the pad. Fixes properly deriving from GstPad.
+	(gst_pad_custom_new, gst_pad_custom_new_from_template): Gone. For
+	derived objects, just set properties when creating the objects via
+	g_object_new.
+	(gst_pad_get_parent): Implement as a function, return NULL if the
+	parent is not an element.
+	(gst_pad_get_real_parent, gst_pad_add_ghost_pad)
+	(gst_pad_remove_ghost_pad, gst_pad_realize): Removed.
+	
+	* gst/gstobject.c (gst_object_class_init): Make name a construct
+	property. Don't set it in the object init.
+
+	* gst/gstelement.c (gst_element_add_pad): Don't allow adding pads
+	with UNKNOWN direction.
+	(gst_element_add_ghost_pad): Remove non-orthogonal API. Replace
+	with gst_element_add_pad (e, gst_ghost_pad_new (name, pad)).
+	(gst_element_remove_pad): Remove ghost-pad special cases.
+	(gst_element_pads_activate): Remove rpad cruft.
+
+	* gst/gstbin.c (gst_bin_change_state): Use gst_pad_get_parent to
+	catch the pad's-parent-not-an-element case.
+
+	* gst/gst.h: Include gstghostpad.h.
+
+	* gst/gst.c (init_post): No more real, ghost pads.
+
+	* gst/Makefile.am: Add gstghostpad.[ch].
+
+	* check/Makefile.am:
+	* check/gst/gstbin.c:
+	* check/gst/gstghostpad.c (test_ghost_pads): Check that linking
+	into a bin creates ghost pads, and that the refcounts are right.
+	Partly moved from gstbin.c.
+
 2005-06-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/gst-libs/.cvsignore:

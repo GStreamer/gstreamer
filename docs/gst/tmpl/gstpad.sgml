@@ -62,12 +62,72 @@ Last reviewed on December 13th, 2002 (0.5.0.1)
 
 </para>
 
+@stream_rec_lock: 
+@task: 
+@preroll_lock: 
+@preroll_cond: 
+@block_cond: 
+@block_callback: 
+@block_data: 
+@caps: 
+@getcapsfunc: 
+@setcapsfunc: 
+@acceptcapsfunc: 
+@fixatecapsfunc: 
+@activatefunc: 
+@linkfunc: 
+@unlinkfunc: 
+@peer: 
+@sched_private: 
+@loopfunc: 
+@chainfunc: 
+@checkgetrangefunc: 
+@getrangefunc: 
+@eventfunc: 
+@mode: 
+@querytypefunc: 
+@queryfunc: 
+@intlinkfunc: 
+@bufferallocfunc: 
+@probedisp: 
 
-<!-- ##### STRUCT GstPadLink ##### -->
+<!-- ##### SIGNAL GstPad::linked ##### -->
 <para>
 
 </para>
 
+@gstpad: the object which received the signal.
+@arg1: 
+
+<!-- ##### SIGNAL GstPad::request-link ##### -->
+<para>
+
+</para>
+
+@gstpad: the object which received the signal.
+
+<!-- ##### SIGNAL GstPad::unlinked ##### -->
+<para>
+
+</para>
+
+@gstpad: the object which received the signal.
+@arg1: 
+
+<!-- ##### ARG GstPad:caps ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstPad:direction ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstPad:template ##### -->
+<para>
+
+</para>
 
 <!-- ##### MACRO GST_PAD_LINK_FAILED ##### -->
 <para>
@@ -85,35 +145,6 @@ successfull negotiation step (OK/DONE).
 </para>
 
 @ret: the #GstPadLinkReturn value
-
-
-<!-- ##### MACRO GST_PAD_QUERY_TYPE_FUNCTION ##### -->
-<para>
-A convenience macro to construct query type functions
-</para>
-
-@functionname: the name of the function
-@...: query types, 0 to mark the last element
-
-
-<!-- ##### MACRO GST_PAD_FORMATS_FUNCTION ##### -->
-<para>
-Convenience function to define an array of formats that can be used
-as #GstPadGetFormatsFunction.
-</para>
-
-@functionname: The name of the function
-@...: comma separated list of formats, 0 to mark the end
-
-
-<!-- ##### MACRO GST_PAD_EVENT_MASK_FUNCTION ##### -->
-<para>
-Convenience function to define an array of event masks that can be used
-as #GstPadGetEventMaskFunction.
-</para>
-
-@functionname: The name of the function
-@...: comma separated list of event maks, { 0, } to mark the end
 
 
 <!-- ##### USER_FUNCTION GstPadChainFunction ##### -->
@@ -215,6 +246,7 @@ be overridden.
 @offset: 
 @size: 
 @caps: 
+@buf: 
 @Returns: 
 
 
@@ -308,15 +340,6 @@ Gets the pad template that was used to create this pad.
 used.
 
 
-<!-- ##### MACRO GST_PAD_REALIZE ##### -->
-<para>
-Returns the real pad of this pad.
-</para>
-
-@pad: a #GstPad to realize.
-@Returns: the actual #GstPad.
-
-
 <!-- ##### MACRO GST_PAD_DIRECTION ##### -->
 <para>
 Gets the pad's direction.
@@ -397,37 +420,6 @@ Checks if the pad is a sink pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_custom_new ##### -->
-<para>
-
-</para>
-
-@type: 
-@name: 
-@direction: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_custom_new_from_template ##### -->
-<para>
-
-</para>
-
-@type: 
-@templ: 
-@name: 
-@Returns: 
-
-
-<!-- ##### MACRO gst_pad_set_name ##### -->
-<para>
-
-</para>
-
-@pad: 
-@name: 
-
-
 <!-- ##### MACRO gst_pad_get_name ##### -->
 <para>
 
@@ -485,25 +477,7 @@ Checks if the pad is a sink pad.
 @Returns: 
 
 
-<!-- ##### MACRO gst_pad_set_parent ##### -->
-<para>
-
-</para>
-
-@pad: 
-@parent: 
-
-
-<!-- ##### MACRO gst_pad_get_parent ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_get_real_parent ##### -->
+<!-- ##### FUNCTION gst_pad_get_parent ##### -->
 <para>
 
 </para>
@@ -541,6 +515,7 @@ Checks if the pad is a sink pad.
 @offset: 
 @size: 
 @caps: 
+@buf: 
 @Returns: 
 
 
