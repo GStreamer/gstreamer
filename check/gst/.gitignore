@@ -1,3 +1,11 @@
-gstobject
+.dirstamp
+gstbin
+gstbuffer
+gstbus
 gstcaps
 gstdata
+gstiterator
+gstmessage
+gstobject
+gstpad
+gstsystemclock

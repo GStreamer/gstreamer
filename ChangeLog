@@ -1,5 +1,15 @@
 2005-06-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* check/gst-libs/.cvsignore:
+	* check/gst/.cvsignore:
+	* check/pipelines/.cvsignore:
+	  ignore more
+	* check/pipelines/cleanup.c: (setup_pipeline), (run_pipeline),
+	(START_TEST), (cleanup_suite), (main):
+	  add some tests related to cleanup after running pipelines
+
+2005-06-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* check/gst/gstbuffer.c: (START_TEST), (gst_test_suite), (main):
 	  add a testsuite for GstBuffer
 
