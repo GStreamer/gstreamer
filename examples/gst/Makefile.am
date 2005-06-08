@@ -7,6 +7,7 @@ examples_DATA = 	\
 	gst123		\
 	play.py		\
 	vorbisplay.py	\
-	gst-file.py
+	gstfile.py	\
+	audioconcat.py
 
 EXTRA_DIST = $(examples_DATA)

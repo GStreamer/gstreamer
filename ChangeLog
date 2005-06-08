@@ -1,3 +1,14 @@
+2005-06-08  Edward Hervey  <bilboed@bilboed.com>
+
+	* examples/gst/Makefile.am:
+	* examples/gst/gstfile.py:
+	renamed gst-file.py to gstfile.py and made the Discoverer class useable
+	in other applications/scripts
+
+	* examples/gst/audioconcat.py:
+	Example application that uses the Discoverer and the gnonlin elements to
+	concatenate several audio files to one single one
+
 2005-06-07  Edward Hervey  <bilboed@bilboed.com>
 
 	* examples/gst/Makefile.am:
