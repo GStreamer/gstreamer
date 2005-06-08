@@ -58,8 +58,8 @@ typedef enum
   GST_OBJECT_FLAG_LAST   = 4
 } GstObjectFlags;
 
-#define GST_OBJECT_REFCOUNT(caps)               ((GST_OBJECT_CAST(caps))->refcount)
-#define GST_OBJECT_REFCOUNT_VALUE(caps)         (g_atomic_int_get (&(GST_OBJECT_CAST(caps))->refcount))
+#define GST_OBJECT_REFCOUNT(obj)                ((GST_OBJECT_CAST(obj))->refcount)
+#define GST_OBJECT_REFCOUNT_VALUE(obj)          (g_atomic_int_get (&(GST_OBJECT_CAST(obj))->refcount))
 
 /* we do a GST_OBJECT_CAST to avoid type checking, better call these
  * function with a valid object! */
