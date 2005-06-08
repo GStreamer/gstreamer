@@ -1,5 +1,10 @@
 2005-06-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* check/gst/gstbuffer.c: (START_TEST), (gst_test_suite), (main):
+	  add a testsuite for GstBuffer
+
+2005-06-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstminiobject.h:
 	  add defines for accessing the refcount
 
