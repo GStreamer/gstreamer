@@ -22,16 +22,18 @@ clean-local:
 	  rm -rf $$i; \
 	done
 
-TESTS = $(top_builddir)/tools/gst-register \
-	gst/gstbin	     	\
-        gst/gstbus		\
-	gst/gstcaps     	\
-	gst/gstiterator 	\
-	gst/gstmessage	 	\
-	gst/gstobject		\
-	gst/gstpad		\
-	gst/gstsystemclock	\
-	pipelines/simple_launch_lines	\
+TESTS = $(top_builddir)/tools/gst-register 	\
+	gst/gstbin			     	\
+        gst/gstbuffer				\
+        gst/gstbus				\
+	gst/gstcaps     			\
+	gst/gstiterator 			\
+	gst/gstmessage	 			\
+	gst/gstobject				\
+	gst/gstpad				\
+	gst/gstsystemclock			\
+	pipelines/simple_launch_lines		\
+	pipelines/cleanup			\
 	gst-libs/gdp	
 
 check_PROGRAMS = $(TESTS)

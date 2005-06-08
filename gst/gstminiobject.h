@@ -34,6 +34,7 @@ G_BEGIN_DECLS
 #define GST_MINI_OBJECT_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MINI_OBJECT, GstMiniObjectClass))
 #define GST_MINI_OBJECT(obj)          (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MINI_OBJECT, GstMiniObject))
 #define GST_MINI_OBJECT_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MINI_OBJECT, GstMiniObjectClass))
+#define GST_MINI_OBJECT_CAST(obj)     ((GstMiniObject*)(obj))
 
 typedef struct _GstMiniObject GstMiniObject;
 typedef struct _GstMiniObjectClass GstMiniObjectClass;
@@ -55,6 +56,8 @@ typedef enum
   GST_MINI_OBJECT_FLAG_LAST = (1<<4)
 } GstMiniObjectFlags;
 
+#define GST_MINI_OBJECT_REFCOUNT(obj)           ((GST_MINI_OBJECT_CAST(obj))->refcount)
+#define GST_MINI_OBJECT_REFCOUNT_VALUE(obj)     (g_atomic_int_get (&(GST_MINI_OBJECT_CAST(obj))->refcount))
 
 struct _GstMiniObject {
   GTypeInstance instance;
