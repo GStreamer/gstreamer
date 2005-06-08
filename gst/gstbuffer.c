@@ -160,7 +160,7 @@ gst_buffer_init (GTypeInstance * instance, gpointer g_class)
  * Creates a newly allocated buffer without any data.
  *
  * Returns: the new #GstBuffer.
- * 
+ *
  * MT safe.
  */
 GstBuffer *
@@ -182,7 +182,7 @@ gst_buffer_new (void)
  * Creates a newly allocated buffer with data of the given size.
  *
  * Returns: the new #GstBuffer.
- * 
+ *
  * MT safe.
  */
 GstBuffer *
@@ -209,7 +209,7 @@ gst_buffer_new_and_alloc (guint size)
  * type is the same as the previous received buffer.
  *
  * This function does not increment the refcount of the caps. The
- * caps pointer will therefore remain valid until the buffer is 
+ * caps pointer will therefore remain valid until the buffer is
  * unreffed.
  *
  * Returns: the #GstCaps, or NULL if there was an error or there
@@ -234,7 +234,7 @@ gst_buffer_get_caps (GstBuffer * buffer)
  * be increased and any previous caps on the buffer will be
  * unreffed.
  */
-/* FIXME can we make this threadsafe without a lock on the buffer? 
+/* FIXME can we make this threadsafe without a lock on the buffer?
  * We can use compare and swap and atomic reads. Another idea is to
  * not attach the caps to the buffer but use an event to signal a caps
  * change. */
@@ -394,9 +394,9 @@ gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
  * Determines whether a gst_buffer_span() can be done without copying
  * the contents, that is, whether the data areas are contiguous.
  *
- * Returns: TRUE if the buffers are contiguous, 
+ * Returns: TRUE if the buffers are contiguous,
  * FALSE if a copy would be required.
- * 
+ *
  * MT safe.
  */
 gboolean

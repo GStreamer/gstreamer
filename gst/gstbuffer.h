@@ -70,7 +70,7 @@ typedef struct _GstBufferClass GstBufferClass;
  * GstBufferFlag:
  * @GST_BUFFER_FLAG_READONLY: the buffer is read-only.
  * @GST_BUFFER_FLAG_ORIGINAL: buffer is not a copy of another buffer.
- * @GST_BUFFER_FLAG_PREROLL: the buffer is part of a preroll and should not be 
+ * @GST_BUFFER_FLAG_PREROLL: the buffer is part of a preroll and should not be
  * displayed.
  * @GST_BUFFER_FLAG_DISCONT: the buffer marks a discontinuity in the stream.
  * @GST_BUFFER_FLAG_IN_CAPS: the buffer has been added as a field in a #GstCaps.
@@ -147,7 +147,7 @@ G_STMT_START {						\
 #define		gst_buffer_is_writable(buf)	gst_mini_object_is_writable (GST_MINI_OBJECT (buf))
 #define		gst_buffer_make_writable(buf)   GST_BUFFER (gst_mini_object_make_writable (GST_MINI_OBJECT (buf)))
 
-#define		gst_buffer_replace(obuf,nbuf)  	gst_mini_object_replace ((GstMiniObject **)(obuf), GST_MINI_OBJECT (nbuf))
+#define		gst_buffer_replace(obuf,nbuf)	gst_mini_object_replace ((GstMiniObject **)(obuf), GST_MINI_OBJECT (nbuf))
 
 GstCaps*	gst_buffer_get_caps		(GstBuffer *buffer);
 void		gst_buffer_set_caps		(GstBuffer *buffer, GstCaps *caps);
