@@ -318,7 +318,8 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
     pad = gst_element_get_pad (decode_bin->typefind, "sink");
 
     /* ghost the sink pad to ourself */
-    gst_element_add_ghost_pad (GST_ELEMENT (decode_bin), pad, "sink");
+    gst_element_add_pad (GST_ELEMENT (decode_bin),
+        gst_ghost_pad_new ("sink", pad));
 
     gst_object_unref (GST_OBJECT_CAST (pad));
 
@@ -497,7 +498,8 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
     decode_bin->numpads++;
 
     /* make it a ghostpad */
-    ghost = gst_element_add_ghost_pad (GST_ELEMENT (decode_bin), pad, padname);
+    ghost = gst_ghost_pad_new (padname, pad);
+    gst_element_add_pad (GST_ELEMENT (decode_bin), ghost);
 
     GST_LOG_OBJECT (element, "closed pad %s", padname);
 
@@ -746,15 +748,17 @@ remove_element_chain (GstDecodeBin * decode_bin, GstPad * pad)
     {
       GstElement *parent = gst_pad_get_parent (peer);
 
-      if (parent != GST_ELEMENT (decode_bin)) {
-        GST_DEBUG_OBJECT (decode_bin, "dead end pad %s:%s",
-            GST_DEBUG_PAD_NAME (peer));
-      } else {
-        GST_DEBUG_OBJECT (decode_bin, "recursing element %s on pad %s:%s",
-            GST_ELEMENT_NAME (elem), GST_DEBUG_PAD_NAME (pad));
-        remove_element_chain (decode_bin, peer);
+      if (parent) {
+        if (parent != GST_ELEMENT (decode_bin)) {
+          GST_DEBUG_OBJECT (decode_bin, "dead end pad %s:%s",
+              GST_DEBUG_PAD_NAME (peer));
+        } else {
+          GST_DEBUG_OBJECT (decode_bin, "recursing element %s on pad %s:%s",
+              GST_ELEMENT_NAME (elem), GST_DEBUG_PAD_NAME (pad));
+          remove_element_chain (decode_bin, peer);
+        }
+        gst_object_unref (GST_OBJECT_CAST (parent));
       }
-      gst_object_unref (GST_OBJECT_CAST (parent));
     }
     gst_object_unref (GST_OBJECT_CAST (peer));
   }

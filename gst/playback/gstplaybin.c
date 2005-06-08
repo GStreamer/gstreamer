@@ -407,7 +407,7 @@ gen_video_element (GstPlayBin * play_bin)
                                            gst_element_link_pads (scale, "src", */ sink, "sink");
 
   pad = gst_element_get_pad (identity, "sink");
-  gst_element_add_ghost_pad (element, pad, "sink");
+  gst_element_add_pad (element, gst_ghost_pad_new ("sink", pad));
   gst_object_unref (GST_OBJECT (pad));
 
   gst_element_set_state (element, GST_STATE_READY);
@@ -457,6 +457,8 @@ gen_text_element (GstPlayBin * play_bin)
   gst_bin_add_many (GST_BIN (element), csp, overlay, vbin, NULL);
 
   pad = gst_element_get_pad (overlay, "text_sink");
+#define gst_element_add_ghost_pad(element, pad, name) \
+    gst_element_add_pad (element, gst_ghost_pad_new (name, pad))
   gst_element_add_ghost_pad (element, pad, "text_sink");
   gst_object_unref (GST_OBJECT (pad));
 

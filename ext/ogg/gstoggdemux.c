@@ -89,10 +89,8 @@ typedef enum
   GST_OGG_PAD_MODE_STREAMING,   /* we are streaming buffers to the outside */
 } GstOggPadMode;
 
-//#define PARENT                GstPad
-//#define PARENTCLASS   GstPadClass
-#define PARENT		GstRealPad
-#define PARENTCLASS	GstRealPadClass
+#define PARENT                GstPad
+#define PARENTCLASS   GstPadClass
 
 /* all information needed for one ogg stream */
 struct _GstOggPad
@@ -222,8 +220,7 @@ gst_ogg_pad_get_type (void)
     };
 
     ogg_pad_type =
-        g_type_register_static (GST_TYPE_REAL_PAD, "GstOggPad", &ogg_pad_info,
-        0);
+        g_type_register_static (GST_TYPE_PAD, "GstOggPad", &ogg_pad_info, 0);
   }
   return ogg_pad_type;
 }

@@ -552,15 +552,15 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
       /* easy case, no cropping/conversion needed */
       pixels = GST_BUFFER_DATA (buffer);
 
-      yuv.y = (guint8 *) pixels;
+      yuv.y = pixels;
       yuv.u = yuv.y + y_size;
       yuv.v = yuv.u + y_size / 4;
     } else {
       GstBuffer *newbuf;
       gint i;
-      guint8 *dest_y, *src_y;
-      guint8 *dest_u, *src_u;
-      guint8 *dest_v, *src_v;
+      guchar *dest_y, *src_y;
+      guchar *dest_u, *src_u;
+      guchar *dest_v, *src_v;
       gint src_y_stride, src_uv_stride;
       gint dst_y_stride, dst_uv_stride;
       gint width, height;
@@ -588,11 +588,11 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
       if (ret != GST_FLOW_OK)
         goto no_buffer;
 
-      dest_y = yuv.y = (guint8 *) GST_BUFFER_DATA (newbuf);
+      dest_y = yuv.y = GST_BUFFER_DATA (newbuf);
       dest_u = yuv.u = yuv.y + y_size;
       dest_v = yuv.v = yuv.u + y_size / 4;
 
-      src_y = (guint8 *) GST_BUFFER_DATA (buffer);
+      src_y = GST_BUFFER_DATA (buffer);
       src_u = src_y + src_y_stride * ROUND_UP_2 (height);
       src_v = src_u + src_uv_stride * ROUND_UP_2 (height) / 2;
 

@@ -838,11 +838,11 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
    * offset or size is odd (see above).
    */
   {
-    guint8 *dest_y, *src_y;
-    guint8 *dest_u, *src_u;
-    guint8 *dest_v, *src_v;
+    guchar *dest_y, *src_y;
+    guchar *dest_u, *src_u;
+    guchar *dest_v, *src_v;
 
-    dest_y = (guint8 *) GST_BUFFER_DATA (out);
+    dest_y = GST_BUFFER_DATA (out);
     dest_u = dest_y + stride_y * height;
     dest_v = dest_u + stride_uv * cheight;
 

@@ -36,8 +36,8 @@ gen_video_element ()
   gst_bin_add (GST_BIN (element), sink);
   gst_element_link_pads (conv, "src", sink, "sink");
 
-  gst_element_add_ghost_pad (element, gst_element_get_pad (conv, "sink"),
-      "sink");
+  gst_element_add_pad (element,
+      gst_ghost_pad_new ("sink", gst_element_get_pad (conv, "sink")));
 
   return element;
 }
@@ -57,8 +57,8 @@ gen_audio_element ()
   gst_bin_add (GST_BIN (element), sink);
   gst_element_link_pads (conv, "src", sink, "sink");
 
-  gst_element_add_ghost_pad (element,
-      gst_element_get_pad (conv, "sink"), "sink");
+  gst_element_add_pad (element,
+      gst_ghost_pad_new ("sink", gst_element_get_pad (conv, "sink")));
 
   return element;
 }

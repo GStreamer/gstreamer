@@ -167,10 +167,10 @@ gst_gconf_render_bin_from_description (const gchar * description)
 
   /* find pads and ghost them if necessary */
   if ((pad = gst_bin_find_unconnected_pad (GST_BIN (bin), GST_PAD_SRC))) {
-    gst_element_add_ghost_pad (bin, pad, "src");
+    gst_element_add_pad (bin, gst_ghost_pad_new ("src", pad));
   }
   if ((pad = gst_bin_find_unconnected_pad (GST_BIN (bin), GST_PAD_SINK))) {
-    gst_element_add_ghost_pad (bin, pad, "sink");
+    gst_element_add_pad (bin, gst_ghost_pad_new ("sink", pad));
   }
   return bin;
 }
