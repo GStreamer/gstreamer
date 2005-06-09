@@ -1,3 +1,11 @@
+2005-06-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/schedulers/entryscheduler.c:
+	(gst_entry_scheduler_loop_wrapper),
+	(gst_entry_scheduler_chain_wrapper),
+	(gst_entry_scheduler_get_wrapper):
+	  Remove translateable strings (shouldn't be user-visible).
+
 2005-06-05  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstevent.c: (gst_event_new):

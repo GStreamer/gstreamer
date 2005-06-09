@@ -25,7 +25,6 @@
 
 #include <gst/gst.h>
 #include "cothreads_compat.h"
-#include "../gst-i18n-lib.h"
 
 GST_DEBUG_CATEGORY_STATIC (debug_scheduler);
 #define GST_CAT_DEFAULT debug_scheduler
@@ -285,7 +284,7 @@ gst_entry_scheduler_loop_wrapper (int argc, char **argv)
     if (element->loopfunc) {
       element->loopfunc (element);
     } else {
-      GST_ELEMENT_ERROR (element, CORE, SCHEDULER, (_("badly behaving plugin")),
+      GST_ELEMENT_ERROR (element, CORE, SCHEDULER, (NULL),
           ("loop-based element %s removed loopfunc during processing",
               GST_OBJECT_NAME (element)));
     }
@@ -350,7 +349,7 @@ gst_entry_scheduler_chain_wrapper (int argc, char **argv)
       /* don't do anything after here with the pad, it might already be dead! 
          the element is still alive though */
     } else {
-      GST_ELEMENT_ERROR (element, CORE, SCHEDULER, (_("badly behaving plugin")),
+      GST_ELEMENT_ERROR (element, CORE, SCHEDULER, (NULL),
           ("chain-based element %s removed chainfunc of pad during processing",
               GST_OBJECT_NAME (element)));
       gst_data_unref (PAD_PRIVATE (pad)->bufpen);
@@ -413,14 +412,12 @@ gst_entry_scheduler_get_wrapper (int argc, char **argv)
 
       /* make sure the pad still exists and is linked */
       if (!g_list_find (element->pads, pad)) {
-        GST_ELEMENT_ERROR (element, CORE, SCHEDULER,
-            (_("badly behaving plugin")),
+        GST_ELEMENT_ERROR (element, CORE, SCHEDULER, (NULL),
             ("get-based element %s removed pad during getfunc",
                 GST_OBJECT_NAME (element)));
         gst_data_unref (data);
       } else if (!GST_PAD_PEER (pad)) {
-        GST_ELEMENT_ERROR (element, CORE, SCHEDULER,
-            (_("badly behaving plugin")),
+        GST_ELEMENT_ERROR (element, CORE, SCHEDULER, (NULL),
             ("get-based element %s unlinked pad during getfunc",
                 GST_OBJECT_NAME (element)));
         gst_data_unref (data);
@@ -430,7 +427,7 @@ gst_entry_scheduler_get_wrapper (int argc, char **argv)
             g_list_prepend (priv->sched->schedule_now, PAD_PRIVATE (pad));
       }
     } else {
-      GST_ELEMENT_ERROR (element, CORE, SCHEDULER, (_("badly behaving plugin")),
+      GST_ELEMENT_ERROR (element, CORE, SCHEDULER, (NULL),
           ("get-based element %s removed getfunc during processing",
               GST_OBJECT_NAME (element)));
     }
