@@ -691,9 +691,13 @@ gst_fakesrc_create (GstBaseSrc * basesrc, guint64 offset, guint length,
     g_free (src->last_message);
 
     src->last_message =
-        g_strdup_printf ("get      ******* > (%d bytes, %"
-        G_GUINT64_FORMAT " ) %p",
-        GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf), buf);
+        g_strdup_printf ("get      ******* > (%d bytes, timestamp: %"
+        GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %"
+        G_GINT64_FORMAT ", offset_end: %" G_GINT64_FORMAT ", flags: %d) %p",
+        GST_BUFFER_SIZE (buf),
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_OFFSET (buf),
+        GST_BUFFER_OFFSET_END (buf), GST_MINI_OBJECT (buf)->flags, buf);
 
     g_object_notify (G_OBJECT (src), "last_message");
   }

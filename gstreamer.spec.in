@@ -140,7 +140,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstgetbits.so
 %{_libdir}/gstreamer-%{majorminor}/libgstindexers.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdataprotocol.so
-%{_libdir}/gstreamer-%{majorminor}/libthreadscheduler.so
+%{_libdir}/gstreamer-%{majorminor}/libgstthreadscheduler.so
 
 %{_bindir}/gst-complete-%{majorminor}
 %{_bindir}/gst-compprep-%{majorminor}

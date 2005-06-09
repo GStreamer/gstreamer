@@ -1,11 +1,11 @@
 
 plugin_LTLIBRARIES = \
-	libthreadscheduler.la
+	libgstthreadscheduler.la
 
-libthreadscheduler_la_SOURCES = threadscheduler.c 
-libthreadscheduler_la_CFLAGS = $(GST_OBJ_CFLAGS) 
-libthreadscheduler_la_LIBADD = $(GST_OBJ_LIBS)
-libthreadscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstthreadscheduler_la_SOURCES = threadscheduler.c 
+libgstthreadscheduler_la_CFLAGS = $(GST_OBJ_CFLAGS) 
+libgstthreadscheduler_la_LIBADD = $(GST_OBJ_LIBS)
+libgstthreadscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = 
 
