@@ -1,5 +1,12 @@
 2005-06-09  Andy Wingo  <wingo@pobox.com>
 
+	* configure.ac:
+	* gst-libs/gst/Makefile.am:
+	* gst-libs/gst/net/Makefile.am:
+	Add gstnet to build.
+	
+2005-06-09  Andy Wingo  <wingo@pobox.com>
+
 	* gst-libs/gst/gconf/gconf.c:
 	* gst/playback/test.c:
 	* gst/playback/gstplaybin.c (gen_video_element): Ghost pad API

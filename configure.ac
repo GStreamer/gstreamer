@@ -894,6 +894,7 @@ gst-libs/gst/floatcast/Makefile
 gst-libs/gst/gconf/Makefile
 gst-libs/gst/mixer/Makefile
 gst-libs/gst/navigation/Makefile
+gst-libs/gst/net/Makefile
 gst-libs/gst/propertyprobe/Makefile
 gst-libs/gst/riff/Makefile
 gst-libs/gst/tag/Makefile

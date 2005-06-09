@@ -11,6 +11,7 @@ SUBDIRS = \
 	$(GCONF_DIR) \
 	mixer \
 	navigation \
+	net \
 	propertyprobe \
 	riff \
 	tag \
@@ -26,6 +27,7 @@ DIST_SUBDIRS = \
 	gconf \
 	mixer \
 	navigation \
+	net \
 	propertyprobe \
 	riff \
 	tag \
