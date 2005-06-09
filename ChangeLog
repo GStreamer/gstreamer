@@ -1,3 +1,8 @@
+2005-06-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gstreamer.spec.in:
+	  clean up
+
 2005-06-08  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstutils.c: RPAD fixes all around.
@@ -1474,7 +1479,7 @@
 	* check/gst/gstbus.c: (gstbus_suite):
 	* check/gst/gstdata.c: (thread_ref), (gst_data_suite):
 	* check/gstcheck.h:
-        Fix up the timeout so that the test does not fail.
+	  Fix up the timeout so that the test does not fail.
 
 2005-04-06  Wim Taymans  <wim@fluendo.com>
 
@@ -2506,15 +2511,15 @@
 
 	* docs/pwg/building-pads.xml:
 	* docs/pwg/intro-basics.xml:
-      fixed a few typos, relabeled introductionary list of types
+	  fixed a few typos, relabeled introductionary list of types
 	* docs/random/ensonic/dparams.txt:
-      more notes abut dparam changes
+	  more notes abut dparam changes
 	* libs/gst/control/dparam.c: (gst_dparam_attach):
 	* libs/gst/control/dparammanager.c:
 	* libs/gst/control/dparammanager.h:
-      - many comments and notes on dparam implementation
-      - new dparams are were not initialized to the default value
-        from param spec
+	  - many comments and notes on dparam implementation
+	  - new dparams are were not initialized to the default value
+	    from param spec
 
 2005-02-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 

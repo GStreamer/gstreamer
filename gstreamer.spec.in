@@ -132,34 +132,37 @@ rm -rf $RPM_BUILD_ROOT
 %doc AUTHORS COPYING NEWS README TODO RELEASE
 %doc ABOUT-NLS REQUIREMENTS DOCBUILDING
 %{_libdir}/libgstreamer-%{majorminor}.so.*
-%{_libdir}/gstreamer-%{majorminor}/libthreadscheduler.so
-%{_libdir}/libgstcontrol-%{majorminor}.so.*
 %{_libdir}/libgstbase-%{majorminor}.so.*
+%{_libdir}/libgstcontrol-%{majorminor}.so.*
+
 %dir %{_libdir}/gstreamer-%{majorminor}
-%{_libdir}/gstreamer-%{majorminor}/libgstelements*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstgetbits*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstindexers.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstdataprotocol.so*
-%{_bindir}/gst-xmlinspect-%{majorminor}
+%{_libdir}/gstreamer-%{majorminor}/libgstelements.so
+%{_libdir}/gstreamer-%{majorminor}/libgstgetbits.so
+%{_libdir}/gstreamer-%{majorminor}/libgstindexers.so
+%{_libdir}/gstreamer-%{majorminor}/libgstdataprotocol.so
+%{_libdir}/gstreamer-%{majorminor}/libthreadscheduler.so
+
 %{_bindir}/gst-complete-%{majorminor}
 %{_bindir}/gst-compprep-%{majorminor}
+%{_bindir}/gst-feedback-%{majorminor}
 %{_bindir}/gst-inspect-%{majorminor}
 %{_bindir}/gst-launch-%{majorminor}
 %{_bindir}/gst-md5sum-%{majorminor}
 %{_bindir}/gst-register-%{majorminor}
-%{_bindir}/gst-xmllaunch-%{majorminor}
 %{_bindir}/gst-typefind-%{majorminor}
-%{_bindir}/gst-feedback-%{majorminor}
-%{_mandir}/man1/gst-xmlinspect-%{majorminor}.*
-%{_mandir}/man1/gst-xmllaunch-%{majorminor}.*
+%{_bindir}/gst-xmlinspect-%{majorminor}
+%{_bindir}/gst-xmllaunch-%{majorminor}
 %{_mandir}/man1/gst-complete-%{majorminor}.*
 %{_mandir}/man1/gst-compprep-%{majorminor}.*
+%{_mandir}/man1/gst-feedback-%{majorminor}.*
 %{_mandir}/man1/gst-inspect-%{majorminor}.*
 %{_mandir}/man1/gst-launch-%{majorminor}.*
 %{_mandir}/man1/gst-md5sum-%{majorminor}.*
 %{_mandir}/man1/gst-register-%{majorminor}.*
 %{_mandir}/man1/gst-typefind-%{majorminor}.*
-%{_mandir}/man1/gst-feedback-%{majorminor}.*
+%{_mandir}/man1/gst-xmlinspect-%{majorminor}.*
+%{_mandir}/man1/gst-xmllaunch-%{majorminor}.*
+
 %dir %{_localstatedir}/cache/gstreamer-%{majorminor}
 
 %files -n gstreamer09-tools
@@ -180,30 +183,28 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_includedir}/gstreamer-%{majorminor}
 %dir %{_includedir}/gstreamer-%{majorminor}/gst
 %{_includedir}/gstreamer-%{majorminor}/gst/*.h
-%dir %{_includedir}/gstreamer-%{majorminor}/gst/control
-%{_includedir}/gstreamer-%{majorminor}/gst/control/*.h
-%dir %{_includedir}/gstreamer-%{majorminor}/gst/getbits
-%{_includedir}/gstreamer-%{majorminor}/gst/base/gstadapter.h
-%{_includedir}/gstreamer-%{majorminor}/gst/getbits/getbits.h
-%{_includedir}/gstreamer-%{majorminor}/gst/base/gstbasesink.h
-%{_includedir}/gstreamer-%{majorminor}/gst/base/gstbasesrc.h
-%{_includedir}/gstreamer-%{majorminor}/gst/base/gstbasetransform.h
-%{_includedir}/gstreamer-%{majorminor}/gst/base/gsttypefindhelper.h
-%{_includedir}/gstreamer-%{majorminor}/gst/dataprotocol/dataprotocol.h
-%{_includedir}/gstreamer-%{majorminor}/gst/base/gstcollectpads.h
-%{_includedir}/gstreamer-%{majorminor}/gst/base/gstpushsrc.h
+
+%{_includedir}/gstreamer-%{majorminor}/gst/base
+%{_includedir}/gstreamer-%{majorminor}/gst/control
+%{_includedir}/gstreamer-%{majorminor}/gst/dataprotocol
+%{_includedir}/gstreamer-%{majorminor}/gst/getbits
+
 %{_libdir}/libgstreamer-%{majorminor}.so
-%{_libdir}/libgstcontrol-%{majorminor}.so
 %{_libdir}/libgstbase-%{majorminor}.so
+%{_libdir}/libgstcontrol-%{majorminor}.so
+
 %{_datadir}/aclocal/gst-element-check-%{majorminor}.m4
 %{_libdir}/pkgconfig/gstreamer-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-control-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-base-%{majorminor}.pc
                                                                                 
-# %doc %{_datadir}/gtk-doc/html/gstreamer-%{majorminor}
-# %doc %{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}
+%doc %{_datadir}/gtk-doc/html/gstreamer-%{majorminor}
+%doc %{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}
                                                                                 
 %changelog
+* Thu Jun 09 2005 Thomas Vander Stichele <thomas at apestaart dot org>
+- clean up spec for 0.9 builds
+
 * Thu Feb 12 2004 Thomas Vander Stichele <thomas at apestaart dot org>
 - sync with 0.7.4 fedora spec
 
