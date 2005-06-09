@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-04-27 13:47+0200\n"
+"POT-Creation-Date: 2005-06-08 20:30+0200\n"
 "PO-Revision-Date: 2004-08-03 10:53+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -15,30 +15,30 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:160
+#: gst/gst.c:158
 msgid "Print the GStreamer version"
 msgstr "Вивести версію GStreamer"
 
-#: gst/gst.c:162
+#: gst/gst.c:160
 msgid "Make all warnings fatal"
 msgstr "Вважати всі попередження помилками"
 
-#: gst/gst.c:166
+#: gst/gst.c:164
 msgid "Print available debug categories and exit"
 msgstr "Вивести наявні категорії налагодження та вийти"
 
-#: gst/gst.c:169
+#: gst/gst.c:167
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Типовий рівень налагодження від 1 (лише помилки) до 5 (усе), або 0 - без "
 "налагодження"
 
-#: gst/gst.c:171
+#: gst/gst.c:169
 msgid "LEVEL"
 msgstr "РІВЕНЬ"
 
-#: gst/gst.c:173
+#: gst/gst.c:171
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -46,31 +46,27 @@ msgstr ""
 "Перелік розділених комою пар \"назва_категорії:рівень\" для встановлення "
 "певних рівнів окремим категоріям. Наприклад: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:176
+#: gst/gst.c:174
 msgid "LIST"
 msgstr "ПЕРЕЛІК"
 
-#: gst/gst.c:178
+#: gst/gst.c:176
 msgid "Disable colored debugging output"
 msgstr "Вимкнути оформлення кольором налагоджувальних повідомлень"
 
-#: gst/gst.c:180
+#: gst/gst.c:178
 msgid "Disable debugging"
 msgstr "Вимкнути налагодження"
 
-#: gst/gst.c:184
-msgid "Disable accelerated CPU instructions"
-msgstr "Вимкнути прискорені інструкції процесора"
-
-#: gst/gst.c:186
+#: gst/gst.c:182
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Вимкнути докладну діагностику завантаження модулів"
 
-#: gst/gst.c:188
+#: gst/gst.c:184
 msgid "PATHS"
 msgstr "ШЛЯХИ"
 
-#: gst/gst.c:191
+#: gst/gst.c:187
 #, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -79,42 +75,42 @@ msgstr ""
 "Перелік розділених комою назв модулів, додаткових до переліку, що "
 "зберігається у змінній оточення GST_PLUGIN_PATH"
 
-#: gst/gst.c:193
+#: gst/gst.c:189
 msgid "PLUGINS"
 msgstr "МОДУЛІ"
 
-#: gst/gst.c:196
+#: gst/gst.c:192
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Вимкнути перехоплення помилок сегментації при завантаженні модулів"
 
-#: gst/gst.c:199
+#: gst/gst.c:195
 msgid "SCHEDULER"
 msgstr "ПЛАНУВАЛЬНИК"
 
-#: gst/gst.c:201
+#: gst/gst.c:197
 msgid "Registry to use"
 msgstr "Реєстр, що використовується"
 
-#: gst/gst.c:201
+#: gst/gst.c:197
 msgid "REGISTRY"
 msgstr "РЕЄСТР"
 
-#: gst/gst.c:214
+#: gst/gst.c:210
 #, c-format
 msgid "path list for loading plugins (separated by '%s')"
 msgstr "перелік шляхів у яких шукаються модулі (розділюються символом '%s')"
 
-#: gst/gst.c:218
+#: gst/gst.c:214
 #, c-format
 msgid "Scheduler to use (default is '%s')"
 msgstr "Планувальник, що використовується (типовий '%s')"
 
-#: gst/gstelement.c:243
+#: gst/gstelement.c:233
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "ПОМИЛКА: у елементі %s: %s\n"
 
-#: gst/gstelement.c:245
+#: gst/gstelement.c:235
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -571,67 +567,67 @@ msgstr "пік альбому"
 msgid ", "
 msgstr ", "
 
-#: gst/elements/gstfilesink.c:268
+#: gst/elements/gstfilesink.c:231
 msgid "No file name specified for writing."
 msgstr "Не вказана назва файлу для запису."
 
-#: gst/elements/gstfilesink.c:275
+#: gst/elements/gstfilesink.c:238
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Не вдається відкрити файл \"%s\" для запису."
 
-#: gst/elements/gstfilesink.c:294
+#: gst/elements/gstfilesink.c:253
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Помилка закривання файлу \"%s\"."
 
-#: gst/elements/gstfilesink.c:364 gst/elements/gstfilesink.c:400
-#: gst/elements/gstfilesink.c:453
+#: gst/elements/gstfilesink.c:307 gst/elements/gstfilesink.c:340
+#: gst/elements/gstfilesink.c:378
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Помилка при записуванні у файл \"%s\"."
 
-#: gst/elements/gstfilesrc.c:795 gst/elements/gstmultifilesrc.c:295
+#: gst/elements/gstfilesrc.c:854
 msgid "No file name specified for reading."
 msgstr "Не вказана назва файлу для читання."
 
-#: gst/elements/gstfilesrc.c:807 gst/elements/gstmultifilesrc.c:303
+#: gst/elements/gstfilesrc.c:866
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не вдається відкрити файл \"%s\" для читання."
 
-#: gst/elements/gstfilesrc.c:816
+#: gst/elements/gstfilesrc.c:875
 #, fuzzy, c-format
 msgid "could not get info on \"%s\"."
 msgstr "не вдається прив'язати %s до %s"
 
-#: gst/elements/gstfilesrc.c:823
+#: gst/elements/gstfilesrc.c:882
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" є каталогом."
 
-#: gst/elements/gstfilesrc.c:830
+#: gst/elements/gstfilesrc.c:889
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Файл \"%s\" є сокетом."
 
-#: gst/elements/gstidentity.c:282
+#: gst/elements/gstidentity.c:283
 msgid "Failed after iterations as requested."
 msgstr "Помилка після ітерацій у запитаному порядку."
 
-#: gst/elements/gsttypefindelement.c:178
+#: gst/elements/gsttypefindelement.c:180
 msgid "caps"
 msgstr "можливості"
 
-#: gst/elements/gsttypefindelement.c:179
+#: gst/elements/gsttypefindelement.c:181
 msgid "detected capabilities in stream"
 msgstr "визначені можливості у потоці"
 
-#: gst/elements/gsttypefindelement.c:182
+#: gst/elements/gsttypefindelement.c:184
 msgid "minimum"
 msgstr "мінімум"
 
-#: gst/elements/gsttypefindelement.c:186
+#: gst/elements/gsttypefindelement.c:188
 msgid "maximum"
 msgstr "максимум"
 
@@ -704,7 +700,7 @@ msgstr "не вдається прив'язати елемент-спожива�
 msgid "empty pipeline not allowed"
 msgstr "порожній канал не допускається"
 
-#: tools/gst-inspect.c:1098
+#: tools/gst-inspect.c:1092
 #, fuzzy
 msgid "Print all elements"
 msgstr "немає елементу \"%s\""
@@ -714,153 +710,153 @@ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 msgstr ""
 "Використання: gst-xmllaunch <file.xml> [ елемент.властивість=значення ... ]\n"
 
-#: tools/gst-launch.c:90
+#: tools/gst-launch.c:91
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
 msgstr "ПОМИЛКА: помилка при аналізі xml файлу \"%s\".\n"
 
-#: tools/gst-launch.c:96
+#: tools/gst-launch.c:97
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "ПОМИЛКА: немає верхнього елементу каналу у файлі \"%s\".\n"
 
-#: tools/gst-launch.c:103
+#: tools/gst-launch.c:104
 #, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr "ПОПЕРЕДЖЕННЯ: наразі підтримується лише один верхній елемент."
 
-#: tools/gst-launch.c:114
+#: tools/gst-launch.c:115
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
 msgstr ""
 "ПОМИЛКА: не вдається проаналізувати аргумент командного рядка %d: %s.\n"
 
-#: tools/gst-launch.c:125
+#: tools/gst-launch.c:126
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "ПОПЕРЕДЖЕННЯ: елемент з назвою \"%s\" не існує.\n"
 
-#: tools/gst-launch.c:370
+#: tools/gst-launch.c:371
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "ЗНАЙДЕНО ТЕГ  : знайдено у елементі \"%s\".\n"
 
-#: tools/gst-launch.c:397
+#: tools/gst-launch.c:399
 #, c-format
 msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
 msgstr ""
 
-#: tools/gst-launch.c:426
+#: tools/gst-launch.c:429
 msgid "Output tags (also known as metadata)"
 msgstr "Вивести теги (також відомі як метадані)"
 
-#: tools/gst-launch.c:428
+#: tools/gst-launch.c:431
 msgid "Output status information and property notifications"
 msgstr "Вивести інформацію про статус та сповіщення властивостей"
 
-#: tools/gst-launch.c:430
+#: tools/gst-launch.c:433
 msgid "Do not output status information of TYPE"
 msgstr "Не виводити інформацію про статус типу ТИП"
 
-#: tools/gst-launch.c:430
+#: tools/gst-launch.c:433
 msgid "TYPE1,TYPE2,..."
 msgstr "ТИП1,ТИП2,..."
 
-#: tools/gst-launch.c:433
+#: tools/gst-launch.c:436
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Зберегти xml представлення каналу у файл ФАЙЛ та завершитись"
 
-#: tools/gst-launch.c:433
+#: tools/gst-launch.c:436
 msgid "FILE"
 msgstr "ФАЙЛ"
 
-#: tools/gst-launch.c:436
+#: tools/gst-launch.c:439
 msgid "Do not install a fault handler"
 msgstr "Не встановлювати обробник збоїв"
 
-#: tools/gst-launch.c:438
+#: tools/gst-launch.c:441
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Вивести трасу розподілу (якщо ввімкнено при компіляції)"
 
-#: tools/gst-launch.c:440
+#: tools/gst-launch.c:443
 msgid "Number of times to iterate pipeline"
 msgstr "Кількість ітерацій каналу"
 
-#: tools/gst-launch.c:510
+#: tools/gst-launch.c:513
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ПОМИЛКА: канал не може бути сконструйований: %s.\n"
 
-#: tools/gst-launch.c:514
+#: tools/gst-launch.c:517
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ПОМИЛКА: канал не може бути сконструйований.\n"
 
-#: tools/gst-launch.c:518
+#: tools/gst-launch.c:521
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "ПОПЕРЕДЖЕННЯ: помилковий канал: %s\n"
 
-#: tools/gst-launch.c:519
+#: tools/gst-launch.c:522
 #, c-format
 msgid "         Trying to run anyway.\n"
 msgstr "         Спроба запуститись у будь-якому разі.\n"
 
-#: tools/gst-launch.c:542
+#: tools/gst-launch.c:545
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ПОМИЛКА: не знайдений елемент \"pipeline\".\n"
 
-#: tools/gst-launch.c:549
+#: tools/gst-launch.c:552
 #, fuzzy, c-format
 msgid "PREROLL pipeline ...\n"
 msgstr "ЗАПУСКАЄТЬСЯ канал ...\n"
 
-#: tools/gst-launch.c:551
+#: tools/gst-launch.c:554
 #, fuzzy, c-format
 msgid "ERROR: pipeline doesn't want to pause.\n"
 msgstr "ПОМИЛКА: канал не може почати відтворення.\n"
 
-#: tools/gst-launch.c:563
+#: tools/gst-launch.c:566
 #, fuzzy, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "ПОМИЛКА: канал не може почати відтворення.\n"
 
-#: tools/gst-launch.c:568
+#: tools/gst-launch.c:571
 #, c-format
 msgid "RUNNING pipeline ...\n"
 msgstr "ЗАПУСКАЄТЬСЯ канал ...\n"
 
-#: tools/gst-launch.c:571
+#: tools/gst-launch.c:574
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ПОМИЛКА: канал не може почати відтворення.\n"
 
-#: tools/gst-launch.c:582
+#: tools/gst-launch.c:585
 msgid "Execution ended after %"
 msgstr "Виконання закінчено після %"
 
-#: tools/gst-launch.c:582
+#: tools/gst-launch.c:585
 #, fuzzy
 msgid " ns.\n"
 msgstr " нс).\n"
 
-#: tools/gst-launch.c:584
+#: tools/gst-launch.c:587
 #, fuzzy, c-format
 msgid "PAUSE pipeline ...\n"
 msgstr "ЗАПУСКАЄТЬСЯ канал ...\n"
 
-#: tools/gst-launch.c:587
+#: tools/gst-launch.c:590
 #, fuzzy, c-format
 msgid "READY pipeline ...\n"
 msgstr "ЗАПУСКАЄТЬСЯ канал ...\n"
 
-#: tools/gst-launch.c:590
+#: tools/gst-launch.c:593
 #, fuzzy, c-format
 msgid "NULL pipeline ...\n"
 msgstr "ЗАПУСКАЄТЬСЯ канал ...\n"
 
-#: tools/gst-launch.c:597
+#: tools/gst-launch.c:600
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "ЗАПУСКАЄТЬСЯ канал ...\n"
@@ -900,6 +896,9 @@ msgstr "Помилка закривання файлу \"%s\"."
 #, c-format
 msgid "Loaded %d plugins with %d %s.\n"
 msgstr ""
+
+#~ msgid "Disable accelerated CPU instructions"
+#~ msgstr "Вимкнути прискорені інструкції процесора"
 
 #~ msgid "There is no element present to handle the stream's mime type %s."
 #~ msgstr "Немає елементу для обробки потоку з MIME типом %s."

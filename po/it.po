@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.7pre2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-04-27 13:47+0200\n"
+"POT-Creation-Date: 2005-06-08 20:30+0200\n"
 "PO-Revision-Date: 2004-12-21 08:23+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -117,30 +117,30 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: gst/gst.c:160
+#: gst/gst.c:158
 msgid "Print the GStreamer version"
 msgstr "Stampa la versione di GStreamer"
 
-#: gst/gst.c:162
+#: gst/gst.c:160
 msgid "Make all warnings fatal"
 msgstr "Rende tutti i warning fatali"
 
-#: gst/gst.c:166
+#: gst/gst.c:164
 msgid "Print available debug categories and exit"
 msgstr "Stampa le categorie di debug disponibili ed esce"
 
-#: gst/gst.c:169
+#: gst/gst.c:167
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Livello di debug predefinito da 1 (solo errori) a 5 (tutto), oppure 0 per "
 "nessun output"
 
-#: gst/gst.c:171
+#: gst/gst.c:169
 msgid "LEVEL"
 msgstr "LIVELLO"
 
-#: gst/gst.c:173
+#: gst/gst.c:171
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -149,31 +149,27 @@ msgstr ""
 "impostare i livelli specifici per ogni singola categoria. Esempio: "
 "GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:176
+#: gst/gst.c:174
 msgid "LIST"
 msgstr "ELENCO"
 
-#: gst/gst.c:178
+#: gst/gst.c:176
 msgid "Disable colored debugging output"
 msgstr "Disabilita output di debug colorato"
 
-#: gst/gst.c:180
+#: gst/gst.c:178
 msgid "Disable debugging"
 msgstr "Disabilita debug"
 
-#: gst/gst.c:184
-msgid "Disable accelerated CPU instructions"
-msgstr "Disabilita istruzioni accelerate CPU"
-
-#: gst/gst.c:186
+#: gst/gst.c:182
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Abilita diagnostica prolissa del caricamento plugin"
 
-#: gst/gst.c:188
+#: gst/gst.c:184
 msgid "PATHS"
 msgstr "PERCORSI"
 
-#: gst/gst.c:191
+#: gst/gst.c:187
 #, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -182,42 +178,42 @@ msgstr ""
 "Elenco separato da virgole dei plugin da pre-caricare in aggiunta all'elenco "
 "memorizzato nella variabile d'ambiente GST_PLUGIN_PATH"
 
-#: gst/gst.c:193
+#: gst/gst.c:189
 msgid "PLUGINS"
 msgstr "PLUGIN"
 
-#: gst/gst.c:196
+#: gst/gst.c:192
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Disabilita il trapping dei segfault durante il caricamento dei plugin"
 
-#: gst/gst.c:199
+#: gst/gst.c:195
 msgid "SCHEDULER"
 msgstr "SCHEDULER"
 
-#: gst/gst.c:201
+#: gst/gst.c:197
 msgid "Registry to use"
 msgstr "Registro da usare"
 
-#: gst/gst.c:201
+#: gst/gst.c:197
 msgid "REGISTRY"
 msgstr "REGISTRO"
 
-#: gst/gst.c:214
+#: gst/gst.c:210
 #, c-format
 msgid "path list for loading plugins (separated by '%s')"
 msgstr "elenco dei percorsi per caricare i plugin (separati da '%s')"
 
-#: gst/gst.c:218
+#: gst/gst.c:214
 #, c-format
 msgid "Scheduler to use (default is '%s')"
 msgstr "Scheduler da usare (predefinito è '%s')"
 
-#: gst/gstelement.c:243
+#: gst/gstelement.c:233
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "ERRORE: dall'elemento %s: %s\n"
 
-#: gst/gstelement.c:245
+#: gst/gstelement.c:235
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -675,67 +671,67 @@ msgstr "il picco dell'album"
 msgid ", "
 msgstr ", "
 
-#: gst/elements/gstfilesink.c:268
+#: gst/elements/gstfilesink.c:231
 msgid "No file name specified for writing."
 msgstr "Nessun nome di file specificato per la scrittura."
 
-#: gst/elements/gstfilesink.c:275
+#: gst/elements/gstfilesink.c:238
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Impossibile aprire il file «%s» in scrittura."
 
-#: gst/elements/gstfilesink.c:294
+#: gst/elements/gstfilesink.c:253
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Errore nel chiudere il file «%s»."
 
-#: gst/elements/gstfilesink.c:364 gst/elements/gstfilesink.c:400
-#: gst/elements/gstfilesink.c:453
+#: gst/elements/gstfilesink.c:307 gst/elements/gstfilesink.c:340
+#: gst/elements/gstfilesink.c:378
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Errore durante la scrittura sul file «%s»."
 
-#: gst/elements/gstfilesrc.c:795 gst/elements/gstmultifilesrc.c:295
+#: gst/elements/gstfilesrc.c:854
 msgid "No file name specified for reading."
 msgstr "Nessun nome di file specificato per la lettura."
 
-#: gst/elements/gstfilesrc.c:807 gst/elements/gstmultifilesrc.c:303
+#: gst/elements/gstfilesrc.c:866
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Impossibile aprire il file «%s» in lettura."
 
-#: gst/elements/gstfilesrc.c:816
+#: gst/elements/gstfilesrc.c:875
 #, fuzzy, c-format
 msgid "could not get info on \"%s\"."
 msgstr "impossibile collegare %s a %s"
 
-#: gst/elements/gstfilesrc.c:823
+#: gst/elements/gstfilesrc.c:882
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "«%s» è una directory."
 
-#: gst/elements/gstfilesrc.c:830
+#: gst/elements/gstfilesrc.c:889
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Il file «%s» è un socket."
 
-#: gst/elements/gstidentity.c:282
+#: gst/elements/gstidentity.c:283
 msgid "Failed after iterations as requested."
 msgstr "Fallito dopo le iterazioni come richiesto."
 
-#: gst/elements/gsttypefindelement.c:178
+#: gst/elements/gsttypefindelement.c:180
 msgid "caps"
 msgstr "caps"
 
-#: gst/elements/gsttypefindelement.c:179
+#: gst/elements/gsttypefindelement.c:181
 msgid "detected capabilities in stream"
 msgstr "capabilities rilevate nello stream"
 
-#: gst/elements/gsttypefindelement.c:182
+#: gst/elements/gsttypefindelement.c:184
 msgid "minimum"
 msgstr "minimo"
 
-#: gst/elements/gsttypefindelement.c:186
+#: gst/elements/gsttypefindelement.c:188
 msgid "maximum"
 msgstr "massimo"
 
@@ -807,7 +803,7 @@ msgstr "impossibile collegare l'elemento sink per l'URI «%s»"
 msgid "empty pipeline not allowed"
 msgstr "pipeline vuota non consentito"
 
-#: tools/gst-inspect.c:1098
+#: tools/gst-inspect.c:1092
 msgid "Print all elements"
 msgstr "Stampa tutti gli elementi"
 
@@ -815,153 +811,153 @@ msgstr "Stampa tutti gli elementi"
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 msgstr "Uso: gst-xmllaunch <FILE.XML> [ ELEMENTO.PROPRIETA=VALORE ... ]\n"
 
-#: tools/gst-launch.c:90
+#: tools/gst-launch.c:91
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
 msgstr "ERRORE: analisi del file xml «%s» fallita.\n"
 
-#: tools/gst-launch.c:96
+#: tools/gst-launch.c:97
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "ERRORE: nessun elemento pipeline toplevel nel file «%s».\n"
 
-#: tools/gst-launch.c:103
+#: tools/gst-launch.c:104
 #, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr "AVVISO: al momento è supportato sono un elemento toplevel."
 
-#: tools/gst-launch.c:114
+#: tools/gst-launch.c:115
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
 msgstr ""
 "ERRORE: impossibile analizzare l'argomento %d della riga di comando: %s.\n"
 
-#: tools/gst-launch.c:125
+#: tools/gst-launch.c:126
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "AVVISO: elemento di nome «%s» non trovato.\n"
 
-#: tools/gst-launch.c:370
+#: tools/gst-launch.c:371
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "TAG TROVATO    : trovato dall'elemento «%s».\n"
 
-#: tools/gst-launch.c:397
+#: tools/gst-launch.c:399
 #, c-format
 msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
 msgstr ""
 
-#: tools/gst-launch.c:426
+#: tools/gst-launch.c:429
 msgid "Output tags (also known as metadata)"
 msgstr "Stampa i tag (anche noti come metadati)"
 
-#: tools/gst-launch.c:428
+#: tools/gst-launch.c:431
 msgid "Output status information and property notifications"
 msgstr "Stampa informazioni di stato e notifiche delle proprietà"
 
-#: tools/gst-launch.c:430
+#: tools/gst-launch.c:433
 msgid "Do not output status information of TYPE"
 msgstr "Non fornisce informazioni di stato per TIPO"
 
-#: tools/gst-launch.c:430
+#: tools/gst-launch.c:433
 msgid "TYPE1,TYPE2,..."
 msgstr "TIPO1,TIPO2,..."
 
-#: tools/gst-launch.c:433
+#: tools/gst-launch.c:436
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Salva su FILE una rappresentazione xml della pipeline ed esce"
 
-#: tools/gst-launch.c:433
+#: tools/gst-launch.c:436
 msgid "FILE"
 msgstr "FILE"
 
-#: tools/gst-launch.c:436
+#: tools/gst-launch.c:439
 msgid "Do not install a fault handler"
 msgstr "Non installa un gestore di fault"
 
-#: tools/gst-launch.c:438
+#: tools/gst-launch.c:441
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Stampa traccia di alloc (se abilitato in compilazione)"
 
-#: tools/gst-launch.c:440
+#: tools/gst-launch.c:443
 msgid "Number of times to iterate pipeline"
 msgstr "Numero di iterazioni della pipeline"
 
-#: tools/gst-launch.c:510
+#: tools/gst-launch.c:513
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ERRORE: impossibile costruire la pipeline: %s.\n"
 
-#: tools/gst-launch.c:514
+#: tools/gst-launch.c:517
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ERRORE: impossibile costruire la pipeline.\n"
 
-#: tools/gst-launch.c:518
+#: tools/gst-launch.c:521
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "AVVISO: pipeline errata: %s.\n"
 
-#: tools/gst-launch.c:519
+#: tools/gst-launch.c:522
 #, c-format
 msgid "         Trying to run anyway.\n"
 msgstr "         Tentata esecuzione in ogni caso.\n"
 
-#: tools/gst-launch.c:542
+#: tools/gst-launch.c:545
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ERRORE: l'elemento «pipeline» non è stato trovato.\n"
 
-#: tools/gst-launch.c:549
+#: tools/gst-launch.c:552
 #, fuzzy, c-format
 msgid "PREROLL pipeline ...\n"
 msgstr "ESECUZIONE della pipeline...\n"
 
-#: tools/gst-launch.c:551
+#: tools/gst-launch.c:554
 #, fuzzy, c-format
 msgid "ERROR: pipeline doesn't want to pause.\n"
 msgstr "ERRORE: la pipeline non vuole riprodurre.\n"
 
-#: tools/gst-launch.c:563
+#: tools/gst-launch.c:566
 #, fuzzy, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "ERRORE: la pipeline non vuole riprodurre.\n"
 
-#: tools/gst-launch.c:568
+#: tools/gst-launch.c:571
 #, c-format
 msgid "RUNNING pipeline ...\n"
 msgstr "ESECUZIONE della pipeline...\n"
 
-#: tools/gst-launch.c:571
+#: tools/gst-launch.c:574
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ERRORE: la pipeline non vuole riprodurre.\n"
 
-#: tools/gst-launch.c:582
+#: tools/gst-launch.c:585
 msgid "Execution ended after %"
 msgstr "Esecuzione terminata dopo %"
 
-#: tools/gst-launch.c:582
+#: tools/gst-launch.c:585
 #, fuzzy
 msgid " ns.\n"
 msgstr " ns).\n"
 
-#: tools/gst-launch.c:584
+#: tools/gst-launch.c:587
 #, fuzzy, c-format
 msgid "PAUSE pipeline ...\n"
 msgstr "ESECUZIONE della pipeline...\n"
 
-#: tools/gst-launch.c:587
+#: tools/gst-launch.c:590
 #, fuzzy, c-format
 msgid "READY pipeline ...\n"
 msgstr "ESECUZIONE della pipeline...\n"
 
-#: tools/gst-launch.c:590
+#: tools/gst-launch.c:593
 #, fuzzy, c-format
 msgid "NULL pipeline ...\n"
 msgstr "ESECUZIONE della pipeline...\n"
 
-#: tools/gst-launch.c:597
+#: tools/gst-launch.c:600
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "ESECUZIONE della pipeline...\n"
@@ -1001,6 +997,9 @@ msgstr "Errore nel caricare %s\n"
 #, c-format
 msgid "Loaded %d plugins with %d %s.\n"
 msgstr "Caricati %d plugin con %d %s.\n"
+
+#~ msgid "Disable accelerated CPU instructions"
+#~ msgstr "Disabilita istruzioni accelerate CPU"
 
 #~ msgid "There is no element present to handle the stream's mime type %s."
 #~ msgstr ""
