@@ -101,20 +101,20 @@ gst_trash_stack_pop (GstTrashStack *stack)
    * inlikely that we manage to grab the wrong head->next value.
    */
   __asm__ __volatile__ (
-    "  pushl %%ebx;             \n\t"
-    "  testl %%eax, %%eax;      \n\t"	/* if (head == NULL) return */
-    "  jz 20f;                  \n\t"
-    "10:                        \n\t"
-    "  movl (%%eax), %%ebx;     \n\t"	/* take value pointed to by head (head->next) */
-    "  movl %%edx, %%ecx;       \n\t"	/* take counter */
-    "  incl %%ecx;              \n\t"	/* and increment */
-    SMP_LOCK "cmpxchg8b %1;     \n\t"	/* if eax:edx == *stack, move ebx:ecx to *stack,
+    "\tpushl %%ebx;             \n"
+    "\ttestl %%eax, %%eax;      \n"	/* if (head == NULL) return */
+    "\tjz 2f;                   \n"
+    "1:                         \n"
+    "\tmovl (%%eax), %%ebx;     \n"	/* take value pointed to by head (head->next) */
+    "\tmovl %%edx, %%ecx;       \n"	/* take counter */
+    "\tincl %%ecx;              \n"	/* and increment */
+    "\t" SMP_LOCK "cmpxchg8b %1;\n"	/* if eax:edx == *stack, move ebx:ecx to *stack,
 					 * else *stack is moved into eax:edx again... */
-    "  jz 20f;                  \n\t"   /* success */
-    "  testl %%eax, %%eax;      \n\t"   /* if (head == NULL) return */
-    "  jnz 10b;                 \n\t"   /* else we retry */
-    "20:                        \n\t"
-    "  popl %%ebx               \n"
+    "\tjz 2f;                   \n"     /* success */
+    "\ttestl %%eax, %%eax;      \n"     /* if (head == NULL) return */
+    "\tjnz 1b;                  \n"     /* else we retry */
+    "2:                         \n"
+    "\tpopl %%ebx               \n"
       : "=a" (head)
       :  "m" (*stack),
          "a" (stack->head),
