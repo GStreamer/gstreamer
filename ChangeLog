@@ -1,3 +1,7 @@
+2005-06-09  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* examples/gst/gstfile.py: fix typo
+
 2005-06-08  Edward Hervey  <bilboed@bilboed.com>
 
 	* examples/gst/Makefile.am:

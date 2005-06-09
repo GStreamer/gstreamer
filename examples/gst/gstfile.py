@@ -122,7 +122,7 @@ class Discoverer(gst.Pipeline):
         if not self.finished:
             self.discover()
         if not self.mimetype:
-            print "Unknow media type"
+            print "Unknown media type"
             return
         print "Mime Type :\t", self.mimetype
         if not self.is_video and not self.is_audio:
