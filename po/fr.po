@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-06-08 20:30+0200\n"
+"POT-Creation-Date: 2005-06-09 13:34+0200\n"
 "PO-Revision-Date: 2004-01-13 16:52+0100\n"
 "Last-Translator: Julien Moutte <julien@moutte.net>\n"
 "Language-Team: French <fr@li.org>\n"
@@ -671,55 +671,55 @@ msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr ""
 "impossible de definir la proprieté \"%s\" dans l'element \"%s\" comme \"%s\""
 
-#: gst/parse/grammar.y:488
+#: gst/parse/grammar.y:487
 #, c-format
 msgid "could not link %s to %s"
 msgstr "impossible de connecter %s a %s"
 
-#: gst/parse/grammar.y:533
+#: gst/parse/grammar.y:532
 #, c-format
 msgid "no element \"%s\""
 msgstr "pas d'element \"%s\""
 
-#: gst/parse/grammar.y:584
+#: gst/parse/grammar.y:583
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "impossible d'interpreter les capacités \"%s\""
 
-#: gst/parse/grammar.y:606 gst/parse/grammar.y:654 gst/parse/grammar.y:670
-#: gst/parse/grammar.y:728
+#: gst/parse/grammar.y:605 gst/parse/grammar.y:653 gst/parse/grammar.y:669
+#: gst/parse/grammar.y:727
 msgid "link without source element"
 msgstr "lien sans element source"
 
-#: gst/parse/grammar.y:612 gst/parse/grammar.y:651 gst/parse/grammar.y:737
+#: gst/parse/grammar.y:611 gst/parse/grammar.y:650 gst/parse/grammar.y:736
 msgid "link without sink element"
 msgstr "lien sans element destination"
 
-#: gst/parse/grammar.y:688
+#: gst/parse/grammar.y:687
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "pas d'element source pour l'URI \"%s\""
 
-#: gst/parse/grammar.y:698
+#: gst/parse/grammar.y:697
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "pas d'element avec lequel lier l'URI \"%s\""
 
-#: gst/parse/grammar.y:706
+#: gst/parse/grammar.y:705
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "pas d'element destination pour l'URI \"%s\""
 
-#: gst/parse/grammar.y:710
+#: gst/parse/grammar.y:709
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "impossible de lier un element destination pour l'URI \"%s\""
 
-#: gst/parse/grammar.y:722
+#: gst/parse/grammar.y:721
 msgid "empty pipeline not allowed"
 msgstr "tube vide non autorisé"
 
-#: tools/gst-inspect.c:1092
+#: tools/gst-inspect.c:1087
 #, fuzzy
 msgid "Print all elements"
 msgstr "pas d'element \"%s\""

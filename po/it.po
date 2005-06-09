@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.7pre2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-06-08 20:30+0200\n"
+"POT-Creation-Date: 2005-06-09 13:34+0200\n"
 "PO-Revision-Date: 2004-12-21 08:23+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -755,55 +755,55 @@ msgstr "nessuna proprietà «%s» nell'elemento «%s»"
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "impossibile impostare la proprietà «%s» nell'elemento «%s» a «%s»"
 
-#: gst/parse/grammar.y:488
+#: gst/parse/grammar.y:487
 #, c-format
 msgid "could not link %s to %s"
 msgstr "impossibile collegare %s a %s"
 
-#: gst/parse/grammar.y:533
+#: gst/parse/grammar.y:532
 #, c-format
 msgid "no element \"%s\""
 msgstr "nessun elemento «%s»"
 
-#: gst/parse/grammar.y:584
+#: gst/parse/grammar.y:583
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "impossibile analizzare caps «%s»"
 
-#: gst/parse/grammar.y:606 gst/parse/grammar.y:654 gst/parse/grammar.y:670
-#: gst/parse/grammar.y:728
+#: gst/parse/grammar.y:605 gst/parse/grammar.y:653 gst/parse/grammar.y:669
+#: gst/parse/grammar.y:727
 msgid "link without source element"
 msgstr "collegamento senza elemento d'origine"
 
-#: gst/parse/grammar.y:612 gst/parse/grammar.y:651 gst/parse/grammar.y:737
+#: gst/parse/grammar.y:611 gst/parse/grammar.y:650 gst/parse/grammar.y:736
 msgid "link without sink element"
 msgstr "collegamento senza elemento sink"
 
-#: gst/parse/grammar.y:688
+#: gst/parse/grammar.y:687
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "elemento d'origine mancante per l'URI «%s»"
 
-#: gst/parse/grammar.y:698
+#: gst/parse/grammar.y:697
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "elemento mancante per collegare l'URI «%s» a"
 
-#: gst/parse/grammar.y:706
+#: gst/parse/grammar.y:705
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "elemento sink mancante per l'URI «%s»"
 
-#: gst/parse/grammar.y:710
+#: gst/parse/grammar.y:709
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "impossibile collegare l'elemento sink per l'URI «%s»"
 
-#: gst/parse/grammar.y:722
+#: gst/parse/grammar.y:721
 msgid "empty pipeline not allowed"
 msgstr "pipeline vuota non consentito"
 
-#: tools/gst-inspect.c:1092
+#: tools/gst-inspect.c:1087
 msgid "Print all elements"
 msgstr "Stampa tutti gli elementi"
 
