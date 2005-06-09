@@ -94,6 +94,7 @@ class Discoverer(gst.Pipeline):
         # the initial elements of the pipeline
         self.src = gst.element_factory_make("filesrc")
         self.src.set_property("location", filename)
+        self.src.set_property("blocksize", 1000000)
         self.dbin = gst.element_factory_make("decodebin")
         self.add_many(self.src, self.dbin)
         self.src.link(self.dbin)
@@ -116,6 +117,7 @@ class Discoverer(gst.Pipeline):
             if not self.iterate():
                 break
         self.set_state(gst.STATE_NULL)
+        self.finished = True
 
     def print_info(self):
         """prints out the information on the given file"""
@@ -128,7 +130,7 @@ class Discoverer(gst.Pipeline):
         if not self.is_video and not self.is_audio:
             return
         print "Length :\t", time_to_string(max(self.audiolength, self.videolength))
-        print "Audio:", time_to_string(self.audiolength), "\tVideo:", time_to_string(self.videolength)
+        print "\tAudio:", time_to_string(self.audiolength), "\tVideo:", time_to_string(self.videolength)
         if self.is_video:
             print "Video :"
             print "\t%d x %d @ %.2f fps" % (self.videowidth,
@@ -197,6 +199,9 @@ class Discoverer(gst.Pipeline):
             self.is_audio = True
         elif "video" in pad.get_caps().to_string():
             self.is_video = True
+        if is_last and not self.is_video and not self.is_audio:
+            self.finished = True
+            return
         # we connect a fakesink to the new pad...
         fakesink = gst.element_factory_make("fakesink")
         self.add(fakesink)
