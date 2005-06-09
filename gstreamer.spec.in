@@ -195,9 +195,9 @@ rm -rf $RPM_BUILD_ROOT
 
 %{_datadir}/aclocal/gst-element-check-%{majorminor}.m4
 %{_libdir}/pkgconfig/gstreamer-%{majorminor}.pc
-%{_libdir}/pkgconfig/gstreamer-control-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-base-%{majorminor}.pc
-                                                                                
+%{_libdir}/pkgconfig/gstreamer-control-%{majorminor}.pc
+
 %doc %{_datadir}/gtk-doc/html/gstreamer-%{majorminor}
 %doc %{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}
                                                                                 
