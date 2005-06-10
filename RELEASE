@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer FFmpeg 0.8.4 "Mellow on my fingers"
+GStreamer: Release notes for GStreamer FFmpeg 0.8.5 "For the better of the world"
         
 
 The GStreamer team is happy to announce a new stable release of the
@@ -17,15 +17,32 @@ Features of this release
     
       * codecs for most popular formats
       * stability fixes
+      * gcc4 support
+      * snapshot update to 21/4
+      * timestamp smoothing
+      * deinterlacer and scaler elements added
+      * new codecs for alac, shorten
+      * much improved h264 support
+      * some muxers added (mpeg, mp4)
+      * decoder performance improvements
 
 Bugs fixed in this release
     
-      * 162905 : SEGV when using ffenc_msmpeg4
-      * 163340 : [PATCH] [ffdec_mjpeg] ffdec_mjpeg doesn't work anymore 
-      * 163437 : [ffenc_*] Encoders segfault on exit
-      * 163467 : [ffdec_mpeg2video] causes 'lag'
-      * 165250 : Problem compiling gst-ffmpeg 0.8.3
-      * 165501 : ffmpeg flac decoder fails on testsuite flac
+      * 149097 : Internal GStreamer error: pad problem. File a bug.
+      * 169082 : segfault with invalid pipeline
+      * 169823 : [enhancement] add alac decoding support :)
+      * 172668 : gst-ffmpeg 0.8.4 doesn't compile with gcc4
+      * 172961 : valgrind gives a lot of errors on gst-ffmpeg elements
+      * 173044 : [PATCH to ffmpeg] Memory error in mjpeg_decode_frame
+      * 300200 : cpu usage on certain .mov file goes to 100% once file has...
+      * 300923 : [PATCH] make ffdec_* elements use gst_pad_alloc_buffer
+      * 301717 : [PATCH] ffenc_mpeg4 segfaults in _get_caps
+      * 301783 : [PATCH] enable our get/release_buffer functions in ffmpegdec
+      * 302017 : possible segfault
+      * 302147 : [PATCH] support YUVJ(420|422|444)P colorspace format in f...
+      * 306530 : quicktime files encoded with "Sorensen video v.3" have fr...
+      * 306770 : [PATCH] only do timestamp interpolation for delayed streams
+      * 306893 : Unreffing already unreffed buffer when going from PAUSED-...
 
 Download
 
@@ -54,6 +71,6 @@ will create more lists as necessary.
 Contributors to this release
     
       * Ronald Bultje
-      * Jan Schmidt
+      * Edward Hervey
       * Luca Ognibene
  

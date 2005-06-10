@@ -2,13 +2,12 @@ The never-ending story of new features:
 * add more codecs into our codec map
 * encoding support lacks:
    - event handling (particularly discont/flush and EOS)
-* encoding lacks:
    - prevent data copying
 * demux/mux support lacks:
-   - good testing of exotic formats
    - correct caps sets on the pad templates
    - event handling in the loop function (mux)
    - prevent data copying
+   - better timestamp handling (particularly in demuxers)
 * other filter elements
 * can we wrap URLProtocol as a source/sink?
 

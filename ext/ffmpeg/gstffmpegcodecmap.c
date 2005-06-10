@@ -1237,6 +1237,39 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
       } while (0);
       break;
 
+     case CODEC_ID_SVQ3:
+       /* FIXME: this is a workaround for older gst-plugins releases
+        * (<= 0.8.9). This should be removed at some point, because
+        * it causes wrong decoded frame order. */
+       if (!context->extradata) {
+         gint halfpel_flag, thirdpel_flag, low_delay, unknown_svq3_flag;
+         guint16 flags;
+  	 
+         if (gst_structure_get_int (str, "halfpel_flag", &halfpel_flag) ||
+             gst_structure_get_int (str, "thirdpel_flag", &thirdpel_flag) ||
+             gst_structure_get_int (str, "low_delay", &low_delay) ||
+             gst_structure_get_int (str, "unknown_svq3_flag",
+                 &unknown_svq3_flag)) {
+           context->extradata = (guint8 *) av_mallocz (0x64);
+           g_stpcpy (context->extradata, "SVQ3");
+           flags = 1 << 3;
+           flags |= low_delay;
+           flags = flags << 2;
+           flags |= unknown_svq3_flag;
+           flags = flags << 6;
+           flags |= halfpel_flag;
+           flags = flags << 1;
+           flags |= thirdpel_flag;
+           flags = flags << 3;
+
+           flags = GUINT16_FROM_LE (flags);
+ 
+           memcpy (context->extradata + 0x62, &flags, 2);
+           context->extradata_size = 0x64;
+         }
+       }
+       break;
+
     case CODEC_ID_MSRLE:
     case CODEC_ID_QTRLE:
       do {
