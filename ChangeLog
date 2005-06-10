@@ -1,5 +1,12 @@
 2005-06-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* configure.ac:
+	  Dev mode.
+
+=== release 0.8.5 ===
+
+2005-06-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* NEWS:
 	* RELEASE:
 	* TODO:
