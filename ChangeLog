@@ -1,7 +1,7 @@
 2005-06-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
-  * gst/gstqueue.c: (gst_queue_chain), (gst_queue_get):
-    Add filler event handling.
+	* gst/gstqueue.c: (gst_queue_chain), (gst_queue_get):
+	  Add filler event handling.
 
 2005-06-09  David Schleef  <ds@schleef.org>
 
