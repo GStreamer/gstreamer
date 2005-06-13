@@ -588,15 +588,18 @@ restart:
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (data)));
 
   /* We make space available if we're "full" according to whatever
-   * the user defined as "full". Note that this only applies to buffers.
+   * the user defined as "full". Note that this only applies to buffers,
+   * and filler events with a duration
    * We always handle events and they don't count in our statistics. */
-  if (GST_IS_BUFFER (data) &&
-      ((queue->max_size.buffers > 0 &&
-              queue->cur_level.buffers >= queue->max_size.buffers) ||
-          (queue->max_size.bytes > 0 &&
-              queue->cur_level.bytes >= queue->max_size.bytes) ||
-          (queue->max_size.time > 0 &&
-              queue->cur_level.time >= queue->max_size.time))) {
+  if ((GST_IS_BUFFER (data) ||
+          (GST_IS_EVENT (data) && GST_EVENT_TYPE (data) == GST_EVENT_FILLER &&
+              gst_event_filler_get_duration (GST_EVENT (data)) !=
+              GST_CLOCK_TIME_NONE)) && ((queue->max_size.buffers > 0
+              && queue->cur_level.buffers >= queue->max_size.buffers)
+          || (queue->max_size.bytes > 0
+              && queue->cur_level.bytes >= queue->max_size.bytes)
+          || (queue->max_size.time > 0
+              && queue->cur_level.time >= queue->max_size.time))) {
     GST_QUEUE_MUTEX_UNLOCK;
     g_signal_emit (G_OBJECT (queue), gst_queue_signals[SIGNAL_OVERRUN], 0);
     GST_QUEUE_MUTEX_LOCK;
@@ -753,6 +756,14 @@ restart:
     if (GST_BUFFER_DURATION (data) != GST_CLOCK_TIME_NONE)
       queue->cur_level.time += GST_BUFFER_DURATION (data);
   }
+  if (GST_IS_EVENT (data) && GST_EVENT_TYPE (data) == GST_EVENT_FILLER) {
+    gint64 dur = gst_event_filler_get_duration (GST_EVENT (data));
+
+    if (dur != GST_CLOCK_TIME_NONE) {
+      queue->cur_level.time += dur;
+    }
+  }
+
 
   STATUS (queue, "+ level");
 
@@ -877,6 +888,13 @@ restart:
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "Got buffer of time %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (data)));
+  }
+  if (GST_IS_EVENT (data) && GST_EVENT_TYPE (data) == GST_EVENT_FILLER) {
+    gint64 dur = gst_event_filler_get_duration (GST_EVENT (data));
+
+    if (dur != GST_CLOCK_TIME_NONE) {
+      queue->cur_level.time -= dur;
+    }
   }
 
   /* Now that we're done, we can lose our own reference to
