@@ -1,5 +1,8 @@
 2005-06-14  Edward Hervey  <bilboed@bilboed.com>
 
+	* gst/gstcaps.override: (_wrap_gst_caps_tp_str): 
+	reverting previous fix, was incorrect
+
 	* configure.ac:
 	0.8.1.2 pre-release
 
