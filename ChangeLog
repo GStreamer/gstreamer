@@ -1,3 +1,8 @@
+2005-06-14  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/gstcaps.override: (_wrap_gst_caps_tp_str): 
+	proper repr of GstCaps : <GstCaps at <adress> : '<caps.to_string>'>
+
 2005-06-09  Edward Hervey  <bilboed@bilboed.com>
 
 	* examples/gst/gstfile.py: (Discoverer.discover): 

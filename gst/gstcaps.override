@@ -417,7 +417,7 @@ _wrap_gst_caps_tp_str(PyGObject *self)
     PyObject *retval;
     
     tmp = gst_caps_to_string((GstCaps*)self->obj);
-    retval = PyString_FromString(tmp);
+    retval = PyString_FromString(g_strdup_printf("<GstCaps at %p : '%s'>", self, tmp));
     g_free(tmp);
 
     return retval;
