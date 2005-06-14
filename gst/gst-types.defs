@@ -172,6 +172,7 @@
      '("guint64" "offset")
      '("guint64" "offset_end")
      '("GstClockTime" "timestamp")
+     '("GstClockTime" "duration")
   )
 )
 
@@ -200,6 +201,17 @@
   (in-module "Gst")
   (c-name "GstEvent")
   (gtype-id "GST_TYPE_EVENT")
+  (copy-func "gst_event_copy")
+  (release-func "gst_event_unref")
+  (fields
+    ;; GstData fields
+    '("GType" "data_type")
+    '("guint16" "flags")
+
+    ;; GstEvent fields
+    '("GstEventType" "type")
+    '("GstClockTime" "timestamp")
+  )
 )
 
 (define-boxed GError

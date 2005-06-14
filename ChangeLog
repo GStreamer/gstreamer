@@ -1,3 +1,16 @@
+2005-06-14  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/Makefile.am: (defs_DATA) (GST_OVERRIDES): 
+	* gst/gst.defs:
+	* gst/gst.override:
+	* gst/gst-extrafuncs.defs:
+	* gst/gstbuffer.override:
+	* gst/gstevent.override:
+	* gst/gst-types.defs: (Buffer) (Event): 
+	Added support for element flags (list, set, unset)
+	Added gst.Buffer duration field
+	Added gst.Event fields
+
 2005-06-14  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstcaps.override (_wrap_gst_caps_tp_richcompare): Fixes for

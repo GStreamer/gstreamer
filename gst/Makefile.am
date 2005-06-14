@@ -22,7 +22,8 @@ else
 play_lib =
 endif
 
-defs_DATA = gst-types.defs
+defs_DATA = gst-types.defs \
+	gst-extrafuncs.defs
 defsdir = $(pkgdatadir)/2.0/defs
 
 noinst_HEADERS = common.h pygstvalue.h
@@ -44,10 +45,11 @@ GST_OVERRIDES = 		\
 	gstbuffer.override 	\
 	gstcaps.override 	\
 	gstelement.override 	\
+	gstevent.override	\
 	gstpad.override		\
 	gststructure.override
 
-GST_DEFS = gst.defs gst-types.defs
+GST_DEFS = gst.defs gst-types.defs gst-extrafuncs.defs
 CLEANFILES = gst.c
 EXTRA_DIST += $(GST_DEFS) $(GST_OVERRIDES)
 gst.c: $(GST_DEFS) $(GST_OVERRIDES) $(GEN_FILES)

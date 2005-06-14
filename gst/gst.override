@@ -217,6 +217,7 @@ include
   gstbuffer.override
   gstcaps.override
   gstelement.override
+  gstevent.override
   gstpad.override
   gststructure.override
 %%

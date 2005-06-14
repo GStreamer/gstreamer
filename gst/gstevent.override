@@ -1,0 +1,49 @@
+/* -*- Mode: C; ; c-file-style: "python" -*- */
+/* gst-python
+ * Copyright (C) 2005 Edward Hervey
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ * 
+ * Author: Johan Dahlin <johan@gnome.org>
+ */
+%%
+override-attr GstEvent.data_type
+static PyObject*
+_wrap_gst_event__get_data_type(PyGObject *self, void *closure)
+{
+  return pyg_type_wrapper_new(GST_DATA_TYPE(GST_DATA(self->obj)));
+}
+%%
+override-attr GstEvent.flags
+static PyObject*
+_wrap_gst_event__get_flags(PyGObject *self, void *closure)
+{
+  return PyInt_FromLong(GST_DATA_FLAGS(self->obj));
+}
+%%
+override-attr GstEvent.type
+static PyObject*
+_wrap_gst_event__get_type(PyGObject *self, void *closure)
+{
+  return pyg_enum_from_gtype(GST_TYPE_EVENT_TYPE, GST_EVENT_TYPE(GST_EVENT(self->obj)));
+}
+%%
+override-attr GstEvent.timestamp
+static PyObject *
+_wrap_gst_event__get_timestamp(PyGObject *self, void *closure)
+{
+  return PyInt_FromLong(GST_EVENT(self->obj)->timestamp);
+}
