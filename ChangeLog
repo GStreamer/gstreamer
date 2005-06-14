@@ -1,3 +1,10 @@
+2005-06-14  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstcaps.override (_wrap_gst_caps_tp_richcompare): Fixes for
+	== and != when the second arg is not a caps.
+
+	* testsuite/test_caps.py (CapsTest.testComparisons): Fix name.
+
 2005-06-14  Edward Hervey  <bilboed@bilboed.com>
 
 	* gst/gstcaps.override: (_wrap_gst_caps_tp_str): 

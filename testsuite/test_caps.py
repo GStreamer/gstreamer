@@ -98,7 +98,7 @@ class CapsTest(unittest.TestCase):
 	assert not gst.Caps('EMPTY') # also empty
 	assert gst.Caps('your/mom')
 
-    def testComaprisons(self):
+    def testComparisons(self):
 	assert self.empty < self.any
 	assert self.empty < self.structure
 	assert self.empty < self.caps

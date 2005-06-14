@@ -172,8 +172,20 @@ _wrap_gst_caps_tp_richcompare (PyObject *py_caps1, PyObject *py_caps2, int compa
 
   caps1 = pyg_boxed_get (py_caps1, GstCaps);
   caps2 = pygst_caps_from_pyobject (py_caps2, &caps2_is_copy);
-  if (PyErr_Occurred())
-    return NULL;
+  if (PyErr_Occurred()) {
+    /* the second arg is not a caps */
+    switch (comparison) {
+      case Py_EQ:
+        PyErr_Clear();
+        return Py_False;
+      case Py_NE:
+        PyErr_Clear();
+        return Py_True;
+      default:
+        return NULL;
+    }
+  }
+
   switch (comparison) {
     case Py_LT:
       ret = pygst_caps_is_true_subset (caps1, caps2) ? Py_True : Py_False;
