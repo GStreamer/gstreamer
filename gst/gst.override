@@ -848,6 +848,7 @@ probe_handler_marshal(GstProbe *probe, GstData **data, gpointer user_data)
     PyGILState_STATE state;
     PyObject *callback, *args;
     PyObject *ret;
+    PyObject *py_data;
     PyObject *py_user_data;
     gboolean res;
     gint len, i;
@@ -858,10 +859,17 @@ probe_handler_marshal(GstProbe *probe, GstData **data, gpointer user_data)
 
     py_user_data = (PyObject *) user_data;
 
+    if (GST_IS_BUFFER(*data))
+	py_data = pyg_boxed_new(GST_TYPE_BUFFER, *data, TRUE, TRUE);
+    else if (GST_IS_EVENT(*data))
+	py_data = pyg_boxed_new(GST_TYPE_EVENT, *data, TRUE, TRUE);
+    else
+	py_data = pyg_boxed_new(GST_TYPE_DATA, *data, TRUE, TRUE);
+
     callback = PyTuple_GetItem(py_user_data, 0);
     args = Py_BuildValue("(NN)",
         pyg_boxed_new(GST_TYPE_PROBE, probe, TRUE, TRUE),
-        pyg_boxed_new(GST_TYPE_DATA, *data, TRUE, TRUE));
+	py_data);
 
     len = PyTuple_Size(py_user_data);
     for (i = 1; i < len; ++i) {
@@ -878,6 +886,7 @@ probe_handler_marshal(GstProbe *probe, GstData **data, gpointer user_data)
         res = PyObject_IsTrue(ret);
         Py_DECREF(ret);
     }
+    Py_DECREF(args);
     pyg_gil_state_release(state);
 
     return res;

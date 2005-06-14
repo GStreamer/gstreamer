@@ -1,5 +1,10 @@
 2005-06-14  Edward Hervey  <bilboed@bilboed.com>
 
+	* gst/gst.override: (probe_handler_marshal):
+	bye bye probe memleak
+	
+2005-06-14  Edward Hervey  <bilboed@bilboed.com>
+
 	* gst/Makefile.am: (defs_DATA) (GST_OVERRIDES): 
 	* gst/gst.defs:
 	* gst/gst.override:
