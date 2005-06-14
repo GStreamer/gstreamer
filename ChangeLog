@@ -1,5 +1,8 @@
 2005-06-14  Edward Hervey  <bilboed@bilboed.com>
 
+	* configure.ac:
+	0.8.1.2 pre-release
+
 	* gst/gst.override: (probe_handler_marshal):
 	bye bye probe memleak
 	
