@@ -1,5 +1,15 @@
 2005-06-16  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstelement.c: (gst_element_link_pads_filtered):
+          add more debug statements
+          better docs
+	* gst/gstinfo.c: (gst_debug_log_default):
+          make category column as wide as our widest known (internal) category
+	* gst/registries/gstlibxmlregistry.c:
+          typo in comment
+
+2005-06-16  Stefan Kost  <ensonic@users.sf.net>
+
 	* configure.ac:
           we require a newer libxml2 version that 2.4.X
 

@@ -1962,7 +1962,14 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
           GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "linked pad %s:%s to pad %s:%s",
               GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (temp));
           return TRUE;
+        } else {
+          GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
+              "no temp %p or link failed", temp);
         }
+      } else {
+        GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
+            "invalid source pad dir=%d, peer=%p", GST_PAD_DIRECTION (srcpad),
+            GST_PAD_PEER (srcpad));
       }
       /* find a better way for this mess */
       if (srcpads) {
@@ -1991,7 +1998,14 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
           GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "linked pad %s:%s to pad %s:%s",
               GST_DEBUG_PAD_NAME (temp), GST_DEBUG_PAD_NAME (destpad));
           return TRUE;
+        } else {
+          GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
+              "no temp %p or link failed", temp);
         }
+      } else {
+        GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
+            "invalid destination pad dir=%d, peer=%p",
+            GST_PAD_DIRECTION (destpad), GST_PAD_PEER (destpad));
       }
       if (destpads) {
         destpads = g_list_next (destpads);
@@ -2074,6 +2088,8 @@ gst_element_link_filtered (GstElement * src, GstElement * dest,
  * @...: the NULL-terminated list of elements to link in order.
  *
  * Chain together a series of elements. Uses gst_element_link().
+ * Does not unlink partially linked elements in the case of an error
+ * (use gst_element_link_many() ). 
  *
  * Returns: TRUE on success, FALSE otherwise.
  */

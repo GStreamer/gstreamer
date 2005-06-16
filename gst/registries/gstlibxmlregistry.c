@@ -402,7 +402,7 @@ plugin_times_older_than_recurse (gchar * path, time_t regtime)
   return TRUE;
 }
 
-/* return TRUE iff regtime is more recent than the times of all the .so files
+/* return TRUE if regtime is more recent than the times of all the .so files
  * in the plugin dirs; ie return TRUE if registry is up to date.
  */
 static gboolean
