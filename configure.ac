@@ -280,7 +280,7 @@ then
   AC_MSG_NOTICE([Load/save is disabled, not checking for libxml2])
 else
   dnl check for libxml2 with minimum req version
-  GST_LIBXML2_CHECK(2.4.9)
+  GST_LIBXML2_CHECK(2.6.0)
 fi
 
 dnl popt checks
