@@ -145,7 +145,7 @@ gst_capsfilter_class_init (GstCapsFilterClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FILTER_CAPS,
       g_param_spec_boxed ("filter_caps", _("Filter caps"),
-          _("Caps to use to filter the possible allowed formats"),
+          _("Restrict the possible allowed formats"),
           GST_TYPE_CAPS, G_PARAM_READWRITE));
 }
 
@@ -207,11 +207,15 @@ gst_capsfilter_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_FILTER_CAPS:{
       GstCaps *new_caps = gst_caps_copy (gst_value_get_caps (value));
+      GstCaps *old_caps;
 
-      g_return_if_fail (new_caps != NULL);
+      if (new_caps == NULL) {
+        new_caps = gst_caps_new_any ();
+      }
 
-      gst_caps_unref (capsfilter->filter_caps);
+      old_caps = capsfilter->filter_caps;
       capsfilter->filter_caps = new_caps;
+      gst_caps_unref (old_caps);
 
       /* FIXME: Need to activate these caps on the pads */
       break;
