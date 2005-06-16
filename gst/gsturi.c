@@ -488,6 +488,7 @@ gst_element_make_from_uri (const GstURIType type, const gchar * uri,
       gst_object_unref (GST_OBJECT (ret));
       ret = NULL;
     }
+    walk = walk->next;
   }
   g_list_free (possibilities);
 

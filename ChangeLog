@@ -1,3 +1,13 @@
+2005-06-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gsturi.c: (gst_element_make_from_uri):
+	  The show must go on, even if the element did not accept
+	  the uri. Fixes endless loop as witnessed in #307804.
+	  
+	* tools/gst-launch.1.in:
+	  Update mp3->ogg transcoding pipeline in examples section
+	  to use rawvorbisenc and oggmux.
+	  
 2005-06-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstelement.c: (gst_element_link_pads_filtered):

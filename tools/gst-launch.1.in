@@ -247,7 +247,7 @@ Use GNOME\-VFS to play an mp3 file located on an SMB server
 .B Format conversion
 
 .B
-        gst\-launch filesrc location=music.mp3 ! mad ! vorbisenc ! filesink location=music.ogg
+        gst\-launch filesrc location=music.mp3 ! mad ! audioscale ! audioconvert ! rawvorbisenc ! oggmux ! filesink location=music.ogg
 .br
 Convert an mp3 music file to an Ogg Vorbis file
 
