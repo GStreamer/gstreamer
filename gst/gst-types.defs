@@ -6,9 +6,6 @@
   (parent "GObject")
   (c-name "GstObject")
   (gtype-id "GST_TYPE_OBJECT")
-  (fields 
-     '("guint32" "flags")
-  )
 )
 
 (define-object Index
@@ -39,18 +36,18 @@
   (gtype-id "GST_TYPE_CLOCK")
 )
 
+(define-object Bus
+  (in-module "Gst")
+  (parent "GstObject")
+  (c-name "GstBus")
+  (gtype-id "GST_TYPE_BUS")
+)
+
 (define-object Pad
   (in-module "Gst")
   (parent "GstObject")
   (c-name "GstPad")
   (gtype-id "GST_TYPE_PAD")
-)
-
-(define-object GhostPad
-  (in-module "Gst")
-  (parent "GstPad")
-  (c-name "GstGhostPad")
-  (gtype-id "GST_TYPE_GHOST_PAD")
 )
 
 (define-object PadTemplate
@@ -95,13 +92,6 @@
   (gtype-id "GST_TYPE_QUEUE")
 )
 
-(define-object RealPad
-  (in-module "Gst")
-  (parent "GstPad")
-  (c-name "GstRealPad")
-  (gtype-id "GST_TYPE_REAL_PAD")
-)
-
 (define-object Registry
   (in-module "Gst")
   (parent "GObject")
@@ -130,11 +120,11 @@
   (gtype-id "GST_TYPE_SYSTEM_CLOCK")
 )
 
-(define-object Thread
+(define-object Task
   (in-module "Gst")
-  (parent "GstBin")
-  (c-name "GstThread")
-  (gtype-id "GST_TYPE_THREAD")
+  (parent "GstObject")
+  (c-name "GstTask")
+  (gtype-id "GST_TYPE_TASK")
 )
 
 (define-object TypeFindFactory
@@ -151,67 +141,47 @@
   (gtype-id "GST_TYPE_XML")
 )
 
+::
+:: MiniObject types
+::
+
+(define-object Buffer
+  (in-module "Gst")
+  (parent "GstMiniObject")
+  (c-name "GstBuffer")
+  (gtype-id "GST_TYPE_BUFFER")
+)
+
+(define-object Event
+  (in-module "Gst")
+  (parent "GstMiniObject")
+  (c-name "GstEvent")
+  (gtype-id "GST_TYPE_EVENT")
+)
+
+(define-object Message
+  (in-module "Gst")
+  (parent "GstMiniObject")
+  (c-name "GstMessage")
+  (gtype-id "GST_TYPE_MESSAGE")
+)
+
+(define-object Query
+  (in-module "Gst")
+  (parent "GstMiniObject")
+  (c-name "GstQuery")
+  (gtype-id "GST_TYPE_QUERY")
+)
+
+
 ;;
 ;; Boxed types
 ;;
-
-(define-boxed Buffer
-  (in-module "Gst")
-  (c-name "GstBuffer")
-  (gtype-id "GST_TYPE_BUFFER")
-  (copy-func "gst_buffer_copy")
-  (release-func "gst_data_unref")
-  (fields 
-     ;; GstData fields
-     '("GType" "data_type")
-     '("guint16" "flags")
-     
-     ;; GstBuffer fields
-     '("guint" "size")
-     '("guint" "maxsize")
-     '("guint64" "offset")
-     '("guint64" "offset_end")
-     '("GstClockTime" "timestamp")
-  )
-)
 
 (define-boxed Caps
   (in-module "Gst")
   (c-name "GstCaps")
   (gtype-id "GST_TYPE_CAPS")
-)
-
-(define-boxed Probe
-  (in-module "Gst")
-  (c-name "GstProbe")
-  (gtype-id "GST_TYPE_PROBE")
-)
-
-; Defined in arg-types.py
-;(define-boxed Data
-;  (in-module "Gst")
-;  (c-name "GstData")
-;  (gtype-id "GST_TYPE_DATA")
-;  (copy-func "gst_data_copy")
-;  (release-func "gst_data_free")
-;)
-
-(define-boxed Event
-  (in-module "Gst")
-  (c-name "GstEvent")
-  (gtype-id "GST_TYPE_EVENT")
-)
-
-(define-boxed GError
-  (in-module "Gst")
-  (c-name "GError")
-  (gtype-id "GST_TYPE_G_ERROR")
-  (copy-func "g_error_copy")
-  (release-func "g_error_free")
-  (fields
-   '("GQuark" "domain")
-   '("gint"   "code")
-   '("gchar*" "message"))
 )
 
 (define-boxed Plugin
@@ -235,7 +205,6 @@
   (gtype-id "GST_TYPE_TAG_LIST")
 )
 
-
 ;; Enumerations and flags ...
 
 (define-enum BinFlags
@@ -243,37 +212,59 @@
   (c-name "GstBinFlags")
   (gtype-id "GST_TYPE_BIN_FLAGS")
   (values
-    '("flag-manager" "GST_BIN_FLAG_MANAGER")
-    '("self-schedulable" "GST_BIN_SELF_SCHEDULABLE")
-    '("flag-prefer-cothreads" "GST_BIN_FLAG_PREFER_COTHREADS")
-    '("flag-fixed-clock" "GST_BIN_FLAG_FIXED_CLOCK")
-    '("flag-last" "GST_BIN_FLAG_LAST")
+    '("t" "GST_BIN_FLAG_LAST")
   )
 )
 
-(define-enum BufferFlag
+(define-flags BufferFlag
   (in-module "Gst")
   (c-name "GstBufferFlag")
   (gtype-id "GST_TYPE_BUFFER_FLAG")
   (values
-    '("readonly" "GST_BUFFER_READONLY")
-    '("subbuffer" "GST_BUFFER_SUBBUFFER")
-    '("original" "GST_BUFFER_ORIGINAL")
-    '("dontfree" "GST_BUFFER_DONTFREE")
-    '("key-unit" "GST_BUFFER_KEY_UNIT")
-    '("dontkeep" "GST_BUFFER_DONTKEEP")
-    '("flag-last" "GST_BUFFER_FLAG_LAST")
+    '("readonly" "GST_BUFFER_FLAG_READONLY")
+    '("original" "GST_BUFFER_FLAG_ORIGINAL")
+    '("preroll" "GST_BUFFER_FLAG_PREROLL")
+    '("discont" "GST_BUFFER_FLAG_DISCONT")
+    '("in-caps" "GST_BUFFER_FLAG_IN_CAPS")
+    '("gap" "GST_BUFFER_FLAG_GAP")
+    '("delta-unit" "GST_BUFFER_FLAG_DELTA_UNIT")
+    '("last" "GST_BUFFER_FLAG_LAST")
   )
 )
 
-(define-enum ClockEntryStatus
+(define-enum BusFlags
   (in-module "Gst")
-  (c-name "GstClockEntryStatus")
-  (gtype-id "GST_TYPE_CLOCK_ENTRY_STATUS")
+  (c-name "GstBusFlags")
+  (gtype-id "GST_TYPE_BUS_FLAGS")
   (values
-    '("ok" "GST_CLOCK_ENTRY_OK")
-    '("early" "GST_CLOCK_ENTRY_EARLY")
-    '("restart" "GST_CLOCK_ENTRY_RESTART")
+    '("ushing" "GST_BUS_FLUSHING")
+    '("ag-last" "GST_BUS_FLAG_LAST")
+  )
+)
+
+(define-enum BusSyncReply
+  (in-module "Gst")
+  (c-name "GstBusSyncReply")
+  (gtype-id "GST_TYPE_BUS_SYNC_REPLY")
+  (values
+    '("drop" "GST_BUS_DROP")
+    '("pass" "GST_BUS_PASS")
+    '("async" "GST_BUS_ASYNC")
+  )
+)
+
+(define-enum ClockReturn
+  (in-module "Gst")
+  (c-name "GstClockReturn")
+  (gtype-id "GST_TYPE_CLOCK_RETURN")
+  (values
+    '("ok" "GST_CLOCK_OK")
+    '("early" "GST_CLOCK_EARLY")
+    '("unscheduled" "GST_CLOCK_UNSCHEDULED")
+    '("busy" "GST_CLOCK_BUSY")
+    '("badtime" "GST_CLOCK_BADTIME")
+    '("error" "GST_CLOCK_ERROR")
+    '("unsupported" "GST_CLOCK_UNSUPPORTED")
   )
 )
 
@@ -287,19 +278,6 @@
   )
 )
 
-(define-enum ClockReturn
-  (in-module "Gst")
-  (c-name "GstClockReturn")
-  (gtype-id "GST_TYPE_CLOCK_RETURN")
-  (values
-    '("stopped" "GST_CLOCK_STOPPED")
-    '("timeout" "GST_CLOCK_TIMEOUT")
-    '("early" "GST_CLOCK_EARLY")
-    '("error" "GST_CLOCK_ERROR")
-    '("unsupported" "GST_CLOCK_UNSUPPORTED")
-  )
-)
-
 (define-flags ClockFlags
   (in-module "Gst")
   (c-name "GstClockFlags")
@@ -310,29 +288,6 @@
     '("do-periodic-sync" "GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC")
     '("do-periodic-async" "GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC")
     '("set-resolution" "GST_CLOCK_FLAG_CAN_SET_RESOLUTION")
-    '("set-speed" "GST_CLOCK_FLAG_CAN_SET_SPEED")
-  )
-)
-
-(define-flags CPUFlags
-  (in-module "Gst")
-  (c-name "GstCPUFlags")
-  (gtype-id "GST_TYPE_CPU_FLAGS")
-  (values
-    '("mmx" "GST_CPU_FLAG_MMX")
-    '("sse" "GST_CPU_FLAG_SSE")
-    '("mmxext" "GST_CPU_FLAG_MMXEXT")
-    '("3dnow" "GST_CPU_FLAG_3DNOW")
-  )
-)
-
-(define-enum DataFlags
-  (in-module "Gst")
-  (c-name "GstDataFlags")
-  (gtype-id "GST_TYPE_DATA_FLAGS")
-  (values
-    '("readonly" "GST_DATA_READONLY")
-    '("flag-last" "GST_DATA_FLAG_LAST")
   )
 )
 
@@ -341,17 +296,10 @@
   (c-name "GstElementFlags")
   (gtype-id "GST_TYPE_ELEMENT_FLAGS")
   (values
-    '("complex" "GST_ELEMENT_COMPLEX")
-    '("decoupled" "GST_ELEMENT_DECOUPLED")
-    '("thread-suggested" "GST_ELEMENT_THREAD_SUGGESTED")
-    '("infinite-loop" "GST_ELEMENT_INFINITE_LOOP")
-    '("new-loopfunc" "GST_ELEMENT_NEW_LOOPFUNC")
-    '("event-aware" "GST_ELEMENT_EVENT_AWARE")
-    '("use-threadsafe-properties" "GST_ELEMENT_USE_THREADSAFE_PROPERTIES")
     '("scheduler-private1" "GST_ELEMENT_SCHEDULER_PRIVATE1")
     '("scheduler-private2" "GST_ELEMENT_SCHEDULER_PRIVATE2")
     '("locked-state" "GST_ELEMENT_LOCKED_STATE")
-    '("in-error" "GST_ELEMENT_IN_ERROR")
+    '("is-sink" "GST_ELEMENT_IS_SINK")
     '("flag-last" "GST_ELEMENT_FLAG_LAST")
   )
 )
@@ -442,17 +390,11 @@
     '("unknown" "GST_EVENT_UNKNOWN")
     '("eos" "GST_EVENT_EOS")
     '("flush" "GST_EVENT_FLUSH")
-    '("empty" "GST_EVENT_EMPTY")
     '("discontinuous" "GST_EVENT_DISCONTINUOUS")
     '("qos" "GST_EVENT_QOS")
     '("seek" "GST_EVENT_SEEK")
-    '("seek-segment" "GST_EVENT_SEEK_SEGMENT")
-    '("segment-done" "GST_EVENT_SEGMENT_DONE")
     '("size" "GST_EVENT_SIZE")
     '("rate" "GST_EVENT_RATE")
-    '("filler" "GST_EVENT_FILLER")
-    '("ts-offset" "GST_EVENT_TS_OFFSET")
-    '("interrupt" "GST_EVENT_INTERRUPT")
     '("navigation" "GST_EVENT_NAVIGATION")
     '("tag" "GST_EVENT_TAG")
   )
@@ -548,6 +490,7 @@
   (values
     '("none" "GST_ASSOCIATION_FLAG_NONE")
     '("key-unit" "GST_ASSOCIATION_FLAG_KEY_UNIT")
+    '("delta-unit" "GST_ASSOCIATION_FLAG_DELTA_UNIT")
     '("last" "GST_ASSOCIATION_FLAG_LAST")
   )
 )
@@ -615,14 +558,71 @@
   )
 )
 
+(define-enum IteratorResult
+  (in-module "Gst")
+  (c-name "GstIteratorResult")
+  (gtype-id "GST_TYPE_ITERATOR_RESULT")
+  (values
+    '("done" "GST_ITERATOR_DONE")
+    '("ok" "GST_ITERATOR_OK")
+    '("resync" "GST_ITERATOR_RESYNC")
+    '("error" "GST_ITERATOR_ERROR")
+  )
+)
+
+(define-enum IteratorItem
+  (in-module "Gst")
+  (c-name "GstIteratorItem")
+  (gtype-id "GST_TYPE_ITERATOR_ITEM")
+  (values
+    '("skip" "GST_ITERATOR_ITEM_SKIP")
+    '("pass" "GST_ITERATOR_ITEM_PASS")
+    '("end" "GST_ITERATOR_ITEM_END")
+  )
+)
+
+(define-flags MessageType
+  (in-module "Gst")
+  (c-name "GstMessageType")
+  (gtype-id "GST_TYPE_MESSAGE_TYPE")
+  (values
+    '("unknown" "GST_MESSAGE_UNKNOWN")
+    '("eos" "GST_MESSAGE_EOS")
+    '("error" "GST_MESSAGE_ERROR")
+    '("warning" "GST_MESSAGE_WARNING")
+    '("info" "GST_MESSAGE_INFO")
+    '("tag" "GST_MESSAGE_TAG")
+    '("buffering" "GST_MESSAGE_BUFFERING")
+    '("state-changed" "GST_MESSAGE_STATE_CHANGED")
+    '("step-done" "GST_MESSAGE_STEP_DONE")
+    '("new-clock" "GST_MESSAGE_NEW_CLOCK")
+    '("structure-change" "GST_MESSAGE_STRUCTURE_CHANGE")
+    '("stream-status" "GST_MESSAGE_STREAM_STATUS")
+    '("application" "GST_MESSAGE_APPLICATION")
+    '("any" "GST_MESSAGE_ANY")
+  )
+)
+
+(define-flags MiniObjectFlags
+  (in-module "Gst")
+  (c-name "GstMiniObjectFlags")
+  (gtype-id "GST_TYPE_MINI_OBJECT_FLAGS")
+  (values
+    '("readonly" "GST_MINI_OBJECT_FLAG_READONLY")
+    '("static" "GST_MINI_OBJECT_FLAG_STATIC")
+    '("last" "GST_MINI_OBJECT_FLAG_LAST")
+  )
+)
+
 (define-enum ObjectFlags
   (in-module "Gst")
   (c-name "GstObjectFlags")
   (gtype-id "GST_TYPE_OBJECT_FLAGS")
   (values
-    '("destroyed" "GST_DESTROYED")
-    '("floating" "GST_FLOATING")
-    '("object-flag-last" "GST_OBJECT_FLAG_LAST")
+    '("disposing" "GST_OBJECT_DISPOSING")
+    '("destroyed" "GST_OBJECT_DESTROYED")
+    '("floating" "GST_OBJECT_FLOATING")
+    '("flag-last" "GST_OBJECT_FLAG_LAST")
   )
 )
 
@@ -631,10 +631,39 @@
   (c-name "GstPadLinkReturn")
   (gtype-id "GST_TYPE_PAD_LINK_RETURN")
   (values
+    '("nosched" "GST_PAD_LINK_NOSCHED")
+    '("noformat" "GST_PAD_LINK_NOFORMAT")
     '("refused" "GST_PAD_LINK_REFUSED")
-    '("delayed" "GST_PAD_LINK_DELAYED")
+    '("wrong-direction" "GST_PAD_LINK_WRONG_DIRECTION")
+    '("was-linked" "GST_PAD_LINK_WAS_LINKED")
     '("ok" "GST_PAD_LINK_OK")
-    '("done" "GST_PAD_LINK_DONE")
+  )
+)
+
+(define-enum FlowReturn
+  (in-module "Gst")
+  (c-name "GstFlowReturn")
+  (gtype-id "GST_TYPE_FLOW_RETURN")
+  (values
+    '("ok" "GST_FLOW_OK")
+    '("resend" "GST_FLOW_RESEND")
+    '("error" "GST_FLOW_ERROR")
+    '("not-connected" "GST_FLOW_NOT_CONNECTED")
+    '("not-negotiated" "GST_FLOW_NOT_NEGOTIATED")
+    '("wrong-state" "GST_FLOW_WRONG_STATE")
+    '("unexpected" "GST_FLOW_UNEXPECTED")
+    '("not-supported" "GST_FLOW_NOT_SUPPORTED")
+  )
+)
+
+(define-enum ActivateMode
+  (in-module "Gst")
+  (c-name "GstActivateMode")
+  (gtype-id "GST_TYPE_ACTIVATE_MODE")
+  (values
+    '("none" "GST_ACTIVATE_NONE")
+    '("push" "GST_ACTIVATE_PUSH")
+    '("pull" "GST_ACTIVATE_PULL")
   )
 )
 
@@ -654,8 +683,10 @@
   (c-name "GstPadFlags")
   (gtype-id "GST_TYPE_PAD_FLAGS")
   (values
-    '("disabled" "GST_PAD_DISABLED")
-    '("negotiating" "GST_PAD_NEGOTIATING")
+    '("blocked" "GST_PAD_BLOCKED")
+    '("flushing" "GST_PAD_FLUSHING")
+    '("in-getcaps" "GST_PAD_IN_GETCAPS")
+    '("in-setcaps" "GST_PAD_IN_SETCAPS")
     '("flag-last" "GST_PAD_FLAG_LAST")
   )
 )
@@ -696,6 +727,16 @@
   )
 )
 
+(define-enum PipelineFlags
+  (in-module "Gst")
+  (c-name "GstPipelineFlags")
+  (gtype-id "GST_TYPE_PIPELINE_FLAGS")
+  (values
+    '("fixed-clock" "GST_PIPELINE_FLAG_FIXED_CLOCK")
+    '("last" "GST_PIPELINE_FLAG_LAST")
+  )
+)
+
 (define-enum PluginError
   (in-module "Gst")
   (c-name "GstPluginError")
@@ -720,6 +761,9 @@
     '("start" "GST_QUERY_START")
     '("segment-end" "GST_QUERY_SEGMENT_END")
     '("rate" "GST_QUERY_RATE")
+    '("seeking" "GST_QUERY_SEEKING")
+    '("convert" "GST_QUERY_CONVERT")
+    '("formats" "GST_QUERY_FORMATS")
   )
 )
 
@@ -754,20 +798,7 @@
   (c-name "GstSchedulerFlags")
   (gtype-id "GST_TYPE_SCHEDULER_FLAGS")
   (values
-    '("fixed-clock" "GST_SCHEDULER_FLAG_FIXED_CLOCK")
-    '("last" "GST_SCHEDULER_FLAG_LAST")
-  )
-)
-
-(define-enum SchedulerState
-  (in-module "Gst")
-  (c-name "GstSchedulerState")
-  (gtype-id "GST_TYPE_SCHEDULER_STATE")
-  (values
-    '("none" "GST_SCHEDULER_STATE_NONE")
-    '("running" "GST_SCHEDULER_STATE_RUNNING")
-    '("stopped" "GST_SCHEDULER_STATE_STOPPED")
-    '("error" "GST_SCHEDULER_STATE_ERROR")
+    '("t" "GST_SCHEDULER_FLAG_LAST")
   )
 )
 
@@ -800,15 +831,14 @@
   )
 )
 
-(define-enum ThreadState
+(define-enum TaskState
   (in-module "Gst")
-  (c-name "GstThreadState")
-  (gtype-id "GST_TYPE_THREAD_STATE")
+  (c-name "GstTaskState")
+  (gtype-id "GST_TYPE_TASK_STATE")
   (values
-    '("state-spinning" "GST_THREAD_STATE_SPINNING")
-    '("state-reaping" "GST_THREAD_STATE_REAPING")
-    '("mutex-locked" "GST_THREAD_MUTEX_LOCKED")
-    '("flag-last" "GST_THREAD_FLAG_LAST")
+    '("started" "GST_TASK_STARTED")
+    '("stopped" "GST_TASK_STOPPED")
+    '("paused" "GST_TASK_PAUSED")
   )
 )
 
@@ -859,14 +889,15 @@
   )
 )
 
-(define-enum Result
+(define-enum Rank
   (in-module "Gst")
-  (c-name "GstResult")
-  (gtype-id "GST_TYPE_RESULT")
+  (c-name "GstRank")
+  (gtype-id "GST_TYPE_RANK")
   (values
-    '("ok" "GST_RESULT_OK")
-    '("nok" "GST_RESULT_NOK")
-    '("not-impl" "GST_RESULT_NOT_IMPL")
+    '("none" "GST_RANK_NONE")
+    '("marginal" "GST_RANK_MARGINAL")
+    '("secondary" "GST_RANK_SECONDARY")
+    '("primary" "GST_RANK_PRIMARY")
   )
 )
 

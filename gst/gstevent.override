@@ -1,6 +1,6 @@
 /* -*- Mode: C; ; c-file-style: "python" -*- */
 /* gst-python
- * Copyright (C) 2004 Johan Dahlin
+ * Copyright (C) 2005 Edward Hervey
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,35 +19,31 @@
  * 
  * Author: Johan Dahlin <johan@gnome.org>
  */
-#ifndef __COMMON_H__
-#define __COMMON_H__
-
-#include <Python.h>
-#include <gst/gst.h>
-
-#include "pygobject.h"
-
-#if (defined HAVE_OLD_PYGTK && (PY_VERSION_HEX < 0x02030000))
-  typedef destructor freefunc;
-#endif
-
-typedef struct {
-     PyGObject *pad;
-     GClosure *link_function;
-     GClosure *event_function;
-     GClosure *chain_function;
-     GClosure *get_function; 
-     GClosure *getcaps_function; 
-} PyGstPadPrivate;
-
-typedef struct {
-     PyObject *func, *data;
-} PyGstCustomNotify;
-
-/* from gst-types.c */
-gboolean pygst_data_from_pyobject(PyObject *object, GstData **data);
-PyObject *pygst_data_to_pyobject(GstData *data);
-GstCaps *pygst_caps_from_pyobject (PyObject *object, gboolean *copy);
-
-
-#endif /* __COMMON_H__ */
+%%
+override-attr GstEvent.data_type
+static PyObject*
+_wrap_gst_event__get_data_type(PyGObject *self, void *closure)
+{
+  return pyg_type_wrapper_new(GST_DATA_TYPE(GST_DATA(self->obj)));
+}
+%%
+override-attr GstEvent.flags
+static PyObject*
+_wrap_gst_event__get_flags(PyGObject *self, void *closure)
+{
+  return PyInt_FromLong(GST_DATA_FLAGS(self->obj));
+}
+%%
+override-attr GstEvent.type
+static PyObject*
+_wrap_gst_event__get_type(PyGObject *self, void *closure)
+{
+  return pyg_enum_from_gtype(GST_TYPE_EVENT_TYPE, GST_EVENT_TYPE(GST_EVENT(self->obj)));
+}
+%%
+override-attr GstEvent.timestamp
+static PyObject *
+_wrap_gst_event__get_timestamp(PyGObject *self, void *closure)
+{
+  return PyInt_FromLong(GST_EVENT(self->obj)->timestamp);
+}

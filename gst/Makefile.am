@@ -1,4 +1,4 @@
-common_cflags = $(PYGTK_CFLAGS) $(GST_CFLAGS) -fno-strict-aliasing
+common_cflags = $(PYGTK_CFLAGS) $(GST_CFLAGS) $(PYGST_CFLAGS) -fno-strict-aliasing
 common_libadd = $(GST_LIBS)
 common_ldflags = -module -avoid-version
 
@@ -22,20 +22,22 @@ else
 play_lib =
 endif
 
-defs_DATA = gst-types.defs
+defs_DATA = gst-types.defs \
+	gst-extrafuncs.defs
 defsdir = $(pkgdatadir)/2.0/defs
 
-noinst_HEADERS = common.h
+noinst_HEADERS = common.h pygstvalue.h
 
 INCLUDES = $(PYTHON_INCLUDES)
-EXTRA_DIST = $(defs_DATA) common.h arg-types.py ltihooks.py
+EXTRA_DIST = $(defs_DATA) common.h arg-types.py
 PYGTK_DEFSDIR = @PYGTK_DEFSDIR@
+GEN_FILES = arg-types.py gst-types.defs
 
 # GStreamer bindings
 _gst_la_CFLAGS = $(common_cflags)
 _gst_la_LIBADD = $(common_libadd)
 _gst_la_LDFLAGS = $(common_ldflags) -export-symbols-regex init_gst
-_gst_la_SOURCES = gst-argtypes.c gstmodule.c 
+_gst_la_SOURCES = gst-argtypes.c gstmodule.c pygstvalue.c
 nodist__gst_la_SOURCES = gst.c
 GST_OVERRIDES = 		\
 	gst.override 		\
@@ -43,13 +45,14 @@ GST_OVERRIDES = 		\
 	gstbuffer.override 	\
 	gstcaps.override 	\
 	gstelement.override 	\
+	gstevent.override	\
 	gstpad.override		\
 	gststructure.override
 
-GST_DEFS = gst.defs gst-types.defs
+GST_DEFS = gst.defs gst-types.defs gst-extrafuncs.defs
 CLEANFILES = gst.c
 EXTRA_DIST += $(GST_DEFS) $(GST_OVERRIDES)
-gst.c: $(GST_DEFS) $(GST_OVERRIDES)
+gst.c: $(GST_DEFS) $(GST_OVERRIDES) $(GEN_FILES)
 
 # gst-play bindings
 play_la_CFLAGS = $(common_cflags) $(GST_PLAY_CFLAGS) 
@@ -61,7 +64,7 @@ PLAY_OVERRIDES = play.override
 PLAY_DEFS = play.defs
 CLEANFILES += play.c
 EXTRA_DIST += $(PLAY_DEFS) $(PLAY_OVERRIDES) 
-play.c: $(PLAY_DEFS) $(PLAY_OVERRIDES)
+play.c: $(PLAY_DEFS) $(PLAY_OVERRIDES) $(GEN_FILES)
 
 # GStreamer interfaces bindings
 interfaces_la_CFLAGS = $(common_cflags) $(GST_INTERFACES_CFLAGS) 
@@ -73,9 +76,9 @@ INTERFACES_OVERRIDES = interfaces.override xoverlay.override
 INTERFACES_DEFS = interfaces.defs xoverlay.defs xwindowlistener.defs
 CLEANFILES += interfaces.c
 EXTRA_DIST += $(INTERFACES_DEFS) $(INTERFACES_OVERRIDES) 
-interfaces.c: $(INTERFACES_DEFS) $(INTERFACES_OVERRIDES)
+interfaces.c: $(INTERFACES_DEFS) $(INTERFACES_OVERRIDES) $(GEN_FILES)
 
-.defs.c:
+.defs.c: 
 	(cd $(srcdir) \
 	&& $(PYGTK_CODEGEN) \
 		--load-types $(srcdir)/arg-types.py \

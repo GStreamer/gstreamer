@@ -100,7 +100,7 @@ _wrap_gst_structure_set_value(PyObject *self, PyObject *args, PyObject *kwargs)
         }
 
 	g_value_init(&value, type);
-	if (pyg_value_from_pyobject(&value, py_value) != 0) {
+	if (pygst_value_from_pyobject(&value, py_value) != 0) {
 		return NULL;
 	}
 	gst_structure_set_value(pyg_boxed_get(self, GstStructure), field,
@@ -125,6 +125,27 @@ _wrap_gst_structure_get_int(PyObject *self, PyObject *args, PyObject *kwargs)
 
 	if (gst_structure_get_int(pyg_boxed_get(self, GstStructure), fieldname, &value))
 		return PyInt_FromLong(value);
+
+	/* XXX: Raise exception? */
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+%%
+override gst_structure_get_double kwargs
+static PyObject *
+_wrap_gst_structure_get_double(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+	static char *kwlist[] = { "fieldname", NULL };
+	char *fieldname;
+	gdouble value;
+	
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+					 "s:GstStructure.get_double",
+					 kwlist, &fieldname))
+		return NULL;
+
+	if (gst_structure_get_double(pyg_boxed_get(self, GstStructure), fieldname, &value))
+		return PyFloat_FromDouble(value);
 
 	/* XXX: Raise exception? */
 	Py_INCREF(Py_None);
@@ -163,7 +184,7 @@ _wrap_gst_structure_subscript(PyGObject *self, PyObject *py_key)
 		const GValue *gvalue;
 		gvalue = gst_structure_get_value((GstStructure*)self->obj, field);
 		g_assert(gvalue != NULL);
-		v = pyg_value_as_pyobject(gvalue, TRUE);
+		v = pygst_value_as_pyobject(gvalue, TRUE);
 	} else {
 		PyErr_SetString(PyExc_KeyError, field);
 	}
@@ -184,37 +205,13 @@ _wrap_gst_structure_ass_subscript(PyGObject *self,
 	structure = (GstStructure*)self->obj;
 	key = PyString_AsString(py_key);
 	if (py_value != NULL) {
-	    if (PyString_Check(py_value)) {
-#if 0		
-		GValue *value = NULL;
-		gst_structure_field_from_string(PyString_AsString(py_value), value);
-		g_print ("gvalue: %s %s %s\n",
-			 PyString_AsString(py_value),
-			 gst_value_serialize(value),
-			 G_VALUE_TYPE_NAME(value));
-		gst_structure_set_value(structure, key, value);
-#else
-		GValue value = { 0, };
-		g_value_init (&value, G_TYPE_STRING);
-		gst_value_deserialize(&value, PyString_AsString(py_value));
-		gst_structure_set_value(structure, key, &value);
-		g_value_unset(&value);
-#endif		
-		// gst_structure_set(structure, key, G_TYPE_STRING, PyString_AsString(py_value), NULL);
-	    } else if (PyInt_Check(py_value))
-		gst_structure_set(structure, key, G_TYPE_INT, PyInt_AsLong(py_value), NULL);
-	    else if (PyFloat_Check(py_value))
-		gst_structure_set(structure, key, G_TYPE_DOUBLE, PyFloat_AsDouble(py_value), NULL);
-#if 0	    
-	    g_value_init(&value, g_type_from_name("PyObject"));
-	    if (pyg_value_from_pyobject(&value, py_value)) {
-		PyErr_SetString(PyExc_TypeError, "can't convert value");
+            GValue v = { 0, };
+            if (!pygst_value_init_for_pyobject (&v, py_value))
+                return -1;
+	    if (pygst_value_from_pyobject(&v, py_value))
 		return -1;
-	    }
-	    
-	    gst_structure_set_value(structure, key, &value);
-	    g_value_unset(&value);
-#endif	    
+	    gst_structure_set_value(structure, key, &v);
+	    g_value_unset(&v);
 	} else {
 	    gst_structure_remove_field(structure, key);
 	}
@@ -245,7 +242,7 @@ pygst_structure_foreach_marshal(GQuark field_id,
 	state = pyg_gil_state_ensure();
 
 	py_field = Py_BuildValue("s", g_quark_to_string(field_id));
-	py_value = pyg_value_as_pyobject(value, FALSE);
+	py_value = pygst_value_as_pyobject(value, FALSE);
 	if (cunote->data)
 		retobj = PyEval_CallFunction(cunote->func, "(NNO)",
 					     py_field, py_value,
@@ -330,4 +327,19 @@ _wrap_gst_structure_from_string(PyObject *self, PyObject *args, PyObject *kwargs
     
     /* pyg_boxed_new handles NULL checking */
     return pyg_boxed_new(GST_TYPE_STRUCTURE, ret, TRUE, TRUE);
+}
+%%
+override-slot GstStructure.tp_dealloc
+static void
+_wrap_gst_structure_tp_dealloc (PyObject *self)
+{
+  PyGBoxed *boxed = (PyGBoxed *) self;
+
+  if (boxed->free_on_dealloc && boxed->boxed) {
+    gst_structure_free (boxed->boxed);
+  } else if (boxed->boxed) {
+    pygst_caps_map_remove_structure (self);
+  }
+
+  self->ob_type->tp_free((PyObject *)self);
 }

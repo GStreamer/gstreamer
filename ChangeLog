@@ -1,3 +1,350 @@
+2005-06-17  Edward Hervey  <bilboed@bilboed.com>
+
+    * Backport of bugfixes/new features from 0.8 branch to HEAD
+
+    * gst/gst.defs:
+	* gst/gst-types.defs:
+	New defs files generated from 0.9 GStreamer
+
+    PORTING-TODO will follow
+
+2005-06-17  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstcaps.override (_wrap_gst_caps_tp_richcompare): Increment
+	the refcount of the return value in all cases, even for Py_True
+	and Py_False. Lines of code per day hovering around 1.3.
+
+2005-06-14  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/gstcaps.override: (_wrap_gst_caps_tp_str): 
+	reverting previous fix, was incorrect
+
+	* configure.ac:
+	0.8.1.2 pre-release
+
+	* gst/gst.override: (probe_handler_marshal):
+	bye bye probe memleak
+	
+2005-06-14  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/Makefile.am: (defs_DATA) (GST_OVERRIDES): 
+	* gst/gst.defs:
+	* gst/gst.override:
+	* gst/gst-extrafuncs.defs:
+	* gst/gstbuffer.override:
+	* gst/gstevent.override:
+	* gst/gst-types.defs: (Buffer) (Event): 
+	Added support for element flags (list, set, unset)
+	Added gst.Buffer duration field
+	Added gst.Event fields
+
+2005-06-14  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstcaps.override (_wrap_gst_caps_tp_richcompare): Fixes for
+	== and != when the second arg is not a caps.
+
+	* testsuite/test_caps.py (CapsTest.testComparisons): Fix name.
+
+2005-06-14  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/gstcaps.override: (_wrap_gst_caps_tp_str): 
+	proper repr of GstCaps : <GstCaps at <adress> : '<caps.to_string>'>
+
+2005-06-09  Edward Hervey  <bilboed@bilboed.com>
+
+	* examples/gst/gstfile.py: (Discoverer.discover): 
+	whoops, pipeline was being run twice :)
+
+2005-06-09  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* examples/gst/gstfile.py: fix typo
+
+2005-06-08  Edward Hervey  <bilboed@bilboed.com>
+
+	* examples/gst/Makefile.am:
+	* examples/gst/gstfile.py:
+	renamed gst-file.py to gstfile.py and made the Discoverer class useable
+	in other applications/scripts
+
+	* examples/gst/audioconcat.py:
+	Example application that uses the Discoverer and the gnonlin elements to
+	concatenate several audio files to one single one
+
+2005-06-07  Edward Hervey  <bilboed@bilboed.com>
+
+	* examples/gst/Makefile.am:
+	* examples/gst/gst-file.py: 
+	New example that shows how to use gst-python in an object-oriented way,
+	and how to override existing methods
+
+2005-06-02  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstbuffer.override (_wrap_gst_buffer_set_data): 
+	gcc 4.x bugfixes
+
+2005-05-04  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gst.defs:
+	  factory.create doesn't need a name
+	* gst/gst.override:
+	  implement tp_str and tp_repr gst.Object and gst.PluginFeature
+	* gst/gstelement.override:
+	  implement factory.get_pad_templates and make element.link_pads
+	  take NULL, pads or strings as the pad argument
+	* gst/gstpad.override:
+	  implement tp_getattr for GstPadTemplate
+
+2005-05-03  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/pygstvalue.c: (pygst_value_from_pyobject):
+	stupid, stupid, stupid
+
+2005-05-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstcaps.override:
+	  fix uninitialized warning and refator function
+
+2005-05-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/pygstvalue.c:
+	* gst/gst-argtypes.c:
+	* gst/gst.override:
+	  define NO_IMPORT_PYGOBJECT to have a correct extern declaration
+	  reenable _pygst_element_init and ifdef it correctly
+	* gst/arg-types.py:
+	  check errors
+	* gst/gstcaps.override:
+	  - remove list append functionality. Sets don't support the +
+	    operator
+	  - implement richcompare and coerce, nonzero, or, xor and subtract
+	    number functions
+	* testsuite/test_caps.py:
+	  add tests for the new stuff
+
+2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* testsuite/Makefile.am:
+	* testsuite/common.py:
+	  rework common so that it behaves a bit more sanely
+	  make the inner workings more clear
+
+2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  add Wall and Werror just like other modules
+	* gst/gst.override:
+	* gst/gstelement.override:
+	  fix compile problems for Wall Werror
+	* testsuite/common.py:
+	* Makefile.am:
+	* gst/Makefile.am:
+	* gst/ltihooks.py:
+	* ltihooks.py:
+	  move ltihooks to root; having it in gst was a bad hack and
+	  breaks distcheck
+
+2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* testsuite/common.py: ltihooks only needed for uninstalled (?)
+
+2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* testsuite/runtests.py: a much nicer way of getting all the tests
+
+2005-05-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* testsuite/Makefile.am:
+	  run tests with GST_DEBUG=*:0 so they don't produce any debugging
+	  output
+	* testsuite/test_element.py:
+	  don't disable stderr
+	* gst/gstbuffer.override:
+	  initialize size correctly
+
+2005-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* testsuite/runtests.py: also return exit code 1 in case of errors
+
+2005-05-02  Edward Hervey  <bilboed@bilboed.com>
+
+	* testsuite/common.py: Added case for 64bit-system that don't have
+	the dl module
+
+2005-05-02  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/Makefile.am:
+	  running the code generator depends on the files it uses
+	* gst/arg-types.py:
+	  add GstCaps parsing
+	* gst/gstelement.override:
+	  make element.link take an optional caps parameter, deprecate
+	  element.link_filtered
+	* testsuite/test_caps.py:
+	  replace caps.get_strcuture(i) calls with caps[i], the deprecation
+	  warnings are annoying
+
+2005-05-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* testsuite/test_interface.py:
+	  do not do stuff in a testsuite that isn't guaranteed to be there.
+	  could do with some way of detecting and skipping.
+
+2005-05-01  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gst-types.c:
+	  remove, it's called gst-argtypes.c these days
+	* gst/common.h:
+	* gst/gst-argtypes.c: (pygst_caps_from_pyobject):
+	  add function to transform a PyObject to a GstCaps*
+	* gst/gstcaps.override:
+	  implement more sequence functions, deprecate caps.get_structure() in
+	  favour of caps[i] and make the structure-by-reference stuff work
+	* gst/gststructure.override:
+	  make structures from caps work by reference but don't die a horrible
+	  death if the caps get removed before the structure is
+	* testsuite/Makefile.am:
+	  run with G_DEBUG=fatal_warnings so we crash on g_warnings in C code
+	* testsuite/test_caps.py:
+	  add some checks
+
+2005-04-30  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gst.override:
+	  pyg_register_class_init is new API, so only use it when available.
+	  If not available gst.element_register won't work either, but I just
+	  won't care about that right now.
+
+2005-04-30  Benjamin Otte  <otte@gnome.org>
+
+	* gst/arg-types.py:
+	  ref the GstData we get in conversions as pygst_data_from_pyobject
+	  doesn't do that
+	* gst/gst-types.c: (pygst_data_from_pyobject),
+	(pygst_data_to_pyobject), (PyGstData_from_value),
+	(PyGstData_to_value):
+	  make GstData <=> GValue conversions use the correct G_VALUE_TYPE and
+	  don't copy the values, but just ref them. Avoids mad buffer copying
+	* gst/common.h:
+	  include GstData <=> PyObject conversion funcs
+	* gst/gst.override:
+	  - wrap gst.element_register
+	  - add _pygst_get_plugin to query the plugin used by Python.
+	    Necessary preparation for a Python plugin loader. Returns NULL if
+	    no plugin, in that case gst.element_register registers the element
+	    as part of the running app.
+	  - add a class initializer for gst.Element subtypes, that checks the
+	    variables __gsttemplates__ and __gstdetails__ and makes the correct
+	    gst_element_class_set_element_details and
+	    gst_element_class_add_pad_templates calls from them. Note: This
+	    has issues when virtual methods are enabled.
+	  - add _pygst_element_check_error. This functions checks if Python
+	    code raised an exception and if so calls gst_element_error on the
+	    element and clears the error. Very useful in
+	    loop/chain/get-functions
+	* gst/gstbuffer.override:
+	  - implement buffer.copy_on_write()
+	  - implement sq_(ass_)[item|slice] functions for GstBuffer
+	  - fix PyBufferProcs to allow writing when buffer is writable
+	* gst/gstpad.override:
+	  - wrap gst.Pad to call gst_pad_new or gst_pad_new_from_template
+	    automatically based on arguments
+	  - don't attach private pad data to the element private, use
+	    g_object_set_data instead
+	  - make attaching functions to pads use closures. Allows garbage
+	    collecting pads where handlers have been set
+	  - fix _repr function to only print parent element's name if parent
+	    exists
+	* gst/gstmodule.c: (init_gst):
+	  register GstData <=> GValue conversion
+
+2005-04-28  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstbuffer.override:
+	  Let's unref the buffer we created - prevents gst.Buffer from leaking
+
+2005-04-27  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstbuffer.override:
+	  throw TypeError if bufsize < data size. Fixes testsuite
+
+2005-04-26  Johan Dahlin  <jdahlin@async.com.br>
+
+	* testsuite/runtests.py: Return exit code 1 if we have any failures
+
+2005-04-26  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstbuffer.override:
+	  make Buffer() not use memory it doesn't own
+	* testsuite/test_buffer.py:
+	  check that it doesn't
+
+2005-04-19  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/gststructure.override: (_wrap_gst_structure_get_double):
+	Forgot to convert the returned value to a PyFloat...
+
+2005-04-19  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/gststructure.override: (_wrap_gst_structure_get_double):
+	Added overriding function for getting double values from a gst.Structure
+
+2005-04-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac: bumped back required version of pygtk; we can backport
+	  or copy over the code generator for what we need
+
+2005-04-16  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  Bump GStreamer core requirement to 0.8.9 for
+	  gst_pad_set_active_recursive.
+
+	* gst/gst.defs:
+	  Wrap gst_pad_set_active_recursive
+
+2005-04-14  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/gst.defs: 
+	Added definitions for methods of GstObject, GstElement, GstBin and Clock
+	so you can create derived classes with more functionnalities.
+
+	* configure.ac: (ACLOCAL):
+	bumped required version of PYGTK to 2.6.0
+
+2005-04-14  Andy Wingo  <wingo@pobox.com>
+
+	* gst/__init__.py (Value, Fourcc, IntRange, DoubleRange)
+	(Fraction): New classes.
+
+	* gst/gst.override (_wrap_gst_tag_list_get)
+	(_wrap_gst_tag_list_get_value_index)
+	(tag_foreach_func_dict)
+	(_wrap_gst_tag_list_subscript): Use gstvalue procs.
+	(init): Initialize the pygstvalue stuff (which involves accessing
+	definitions from gst/__init__.py).
+
+	* gst/gststructure.override (_wrap_gst_structure_ass_subscript):
+	Just use the pygstvalue functions to do conversion. As it is right
+	now, it's an incompatible change with the previous behavior,
+	because it doesn't try to parse field values like "(fourcc)XVID".
+	We can restore that previous behaviour if there is a need for it.
+	(_wrap_gst_structure_subscript): Use gstvalue functions to do the
+	conversion.
+
+	* gst/Makefile.am: Add in pygstvalue.[ch].
+
+	* gst/pygstvalue.h:
+	* gst/pygstvalue.c: New files.
+	(pygst_value_as_pyobject): Wraps pyg_value_as_pyobject, handling
+	gstvalues as well.
+	(pygst_value_init_for_pyobject): Sniffs a pyobject for a type and
+	initializes a GValue appropriately.
+	(pygst_value_from_pyobject): Wraps pyg_value_from_pyobject,
+	handling gvalues as well.
+
+	* testsuite/test_struct.py (StructureTest.testStructureChange) 
+	(StructureTest.testGstValue): Add some tests for GstValue wrapping.
+
 2005-04-25  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstbuffer.override:

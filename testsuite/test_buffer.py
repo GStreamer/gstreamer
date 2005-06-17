@@ -1,4 +1,5 @@
 import sys
+import gc
 from common import gobject, gst, unittest
 
 class BufferTest(unittest.TestCase):
@@ -9,7 +10,13 @@ class BufferTest(unittest.TestCase):
     def testBufferStr(self):
         buffer = gst.Buffer('test')
         assert str(buffer) == 'test'
-        
+
+    def testBufferAlloc(self):
+	bla = 'mooooooo'
+	buffer = gst.Buffer(bla + '12345')
+	gc.collect ()
+	assert str(buffer) == 'mooooooo12345'
+		
     def testBufferBadConstructor(self):
         self.assertRaises(TypeError, gst.Buffer, 'test', 0)
         

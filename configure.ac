@@ -26,7 +26,8 @@ dnl required versions of other packages
 AC_SUBST(PYGTK_REQ, 2.4.0)
 AC_SUBST(GLIB_REQ,  2.0.0)
 AC_SUBST(GTK_REQ,   2.0.0)
-AC_SUBST(GST_REQ,   0.8.8.1)
+AC_SUBST(GST_REQ,   0.8.9)
+
 
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
@@ -145,6 +146,19 @@ esac])
 
 AM_CONDITIONAL(BUILD_DOCS,          test "x$BUILD_DOCS" = "xyes")
 
+dnl decide on error flags
+dnl if we support -Wall, set it unconditionally
+AS_COMPILER_FLAG(-Wall,
+                 PYGST_ERROR_CFLAGS="-Wall",
+                 PYGST_ERROR_CFLAGS="")
+dnl if we're in nano >= 1, add -Werror if supported
+if test "x$GST_CVS" = "xyes"
+then
+  AS_COMPILER_FLAG(-Werror, PYGST_ERROR_CFLAGS="$PYGST_ERROR_CFLAGS -Werror")
+fi
+
+PYGST_CFLAGS="$PYGST_ERROR_CFLAGS"
+AC_SUBST(PYGST_CFLAGS)
 
 dnl add debugging options ...
 changequote(,)dnl

@@ -1,6 +1,7 @@
 /* -*- Mode: C; c-basic-offset: 4 -*- */
 /* gst-python
  * Copyright (C) 2005 Johan Dahlin
+ *		 2005 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,12 +19,77 @@
  * Boston, MA 02111-1307, USA.
  * 
  * Author: Johan Dahlin <johan@gnome.org>
+ *	   Benjamin Otte <otte@gnome.org>
  */
+%%
+headers
+/* This is a (hopefully) smart hack to allow access to a caps' 
+ * structures without falling into traps when the caps get destroyed
+ * before the structures get.
+ * This Hash Table uses the structure PyObjects as keys and the caps 
+ * PyObjects as values. No clue if this is a fast data structure but it
+ * probably doesn't matter anyway.
+ */
+static GHashTable *structure_caps_map = NULL;
+
+static void
+pygst_caps_map_add (PyObject *structure, PyObject *caps)
+{
+  /* we can't have free_on_dealloc stuff in here */
+  g_assert (((PyGBoxed *)structure)->free_on_dealloc == FALSE);
+  g_hash_table_insert (structure_caps_map, structure, caps);
+}
+
+static void
+pygst_caps_map_remove_structure (PyObject *structure)
+{
+  g_hash_table_remove (structure_caps_map, structure);
+}
+
+static gboolean
+pygst_caps_map_foreach (gpointer structure, gpointer caps, gpointer match)
+{
+  PyGBoxed *boxed = structure;
+  
+  if (match != caps)
+    return FALSE;
+
+  /* we can't have free_on_dealloc stuff in here */
+  g_assert (boxed->free_on_dealloc == FALSE);
+  boxed->boxed = gst_structure_copy (boxed->boxed);
+  boxed->free_on_dealloc = TRUE;
+  return TRUE;
+}
+
+static void
+pygst_caps_map_modified (PyObject *caps)
+{
+  g_hash_table_foreach_remove (structure_caps_map, pygst_caps_map_foreach, caps);
+}
+
+%%
+init
+  structure_caps_map = g_hash_table_new (g_direct_hash, g_direct_equal);
 %%
 ignore
   gst_caps_new_simple
   gst_caps_new_full
   gst_caps_set_simple
+%%
+override gst_caps_get_structure kwargs
+static PyObject *pygst_caps_sq_item(PyObject *self, int i);
+static PyObject *
+_wrap_gst_caps_get_structure(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+	static char *kwlist[] = { "index", NULL };
+	int index;
+
+	if (PyErr_Warn(PyExc_DeprecationWarning, "caps.get_structure(i) is deprecated, use caps[i]") < 0)
+		return NULL;
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "i:GstCaps.get_structure", kwlist, &index))
+		return NULL;
+	return pygst_caps_sq_item (self, index);
+}
 %%
 override gst_caps_new_empty kwargs
 static int
@@ -40,88 +106,324 @@ _wrap_gst_caps_new_empty(PyGBoxed *self, PyObject *args, PyObject *kwargs)
         if (len == 0) {
 		/* 0 length creates a new empty caps */
 		self->boxed = gst_caps_new_empty();
-		goto beach;
 	} else if (len == 1) {
-		/* 1 length is either a string or a structure */
 		item = PyTuple_GetItem(args, 0);
-		if (PyString_Check(item)) {
-			self->boxed = gst_caps_from_string(PyString_AsString(item));
-			goto beach;
-		} else if (!pyg_boxed_check(item, GST_TYPE_STRUCTURE)) {
-                        PyErr_SetString(PyExc_TypeError, "argument must be a string or a GstStructure");
-			return -1;
-		}		
-	}
-	/* it's either one GstStructure or several whatevers */
-	self->boxed = gst_caps_new_empty();
-       	for (i = 0; i < len; i++)
-       	{
-               	item = PyTuple_GetItem(args, i);
-               	if (!pyg_boxed_check(item, GST_TYPE_STRUCTURE))
-               	{
-                       	PyErr_SetString(PyExc_TypeError, "argument must be a GstStructure");
-			gst_caps_free(self->boxed);
-			return -1;
+		/* 1 length is either a string or a structure */
+		self->boxed = pygst_caps_from_pyobject (item, NULL);
+	} else {
+		/* it's multiple arguments that can all be made to caps */
+		GstCaps *append;
+		self->boxed = gst_caps_new_empty();
+		for (i = 0; i < len; i++)
+		{
+			item = PyTuple_GetItem(args, i);
+			append = pygst_caps_from_pyobject (item, NULL);
+			if (!append) {
+			      gst_caps_free (self->boxed);
+			      self->boxed = NULL;
+			      break;
+			}
+			gst_caps_append (self->boxed, append);
 		}
-		gst_caps_append_structure(self->boxed, pyg_boxed_get(item, GstStructure));
 	}
-
-beach:
 	if (!self->boxed) {
-		PyErr_SetString(PyExc_RuntimeError, "could not create GstCaps object");
+		PyErr_SetString(PyExc_TypeError, "wrong arguemntes when creating GstCaps object");
 		return -1;
 	}
 	return 0;
 }
-%%
-override gst_caps_get_structure kwargs
-static PyObject *
-_wrap_gst_caps_get_structure(PyObject *self, PyObject *args, PyObject *kwargs)
-{
-    static char *kwlist[] = { "index", NULL };
-    int index;
-    GstStructure *ret;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "i:GstCaps.get_structure", kwlist, &index))
-        return NULL;
-    ret = gst_caps_get_structure(pyg_boxed_get(self, GstCaps), index);
-    
-    /* pyg_boxed_new handles NULL checking */
-    return pyg_boxed_new(GST_TYPE_STRUCTURE, ret, FALSE, FALSE);
+%%
+override-slot GstCaps.tp_richcompare
+
+static gboolean
+pygst_caps_is_true_subset (GstCaps *caps1, GstCaps *caps2)
+{
+  GstCaps *tmp;
+  gboolean ret;
+  
+  /* order is important here */
+  if (gst_caps_is_any (caps1))
+    return FALSE;
+  if (gst_caps_is_any (caps2))
+    return TRUE;
+  if (gst_caps_is_empty (caps2))
+    return FALSE;
+  if (gst_caps_is_empty (caps1))
+    return TRUE;
+
+  tmp = gst_caps_subtract (caps1, caps2);
+  ret = gst_caps_is_empty (tmp);
+  gst_caps_free (tmp);
+  if (!ret)
+    return FALSE;
+  tmp = gst_caps_subtract (caps2, caps1);
+  ret = gst_caps_is_empty (tmp);
+  gst_caps_free (tmp);
+  return !ret;
 }
+
+static PyObject *
+_wrap_gst_caps_tp_richcompare (PyObject *py_caps1, PyObject *py_caps2, int comparison)
+{
+  GstCaps *caps1, *caps2; 
+  gboolean caps2_is_copy;
+  PyObject *ret;
+
+  caps1 = pyg_boxed_get (py_caps1, GstCaps);
+  caps2 = pygst_caps_from_pyobject (py_caps2, &caps2_is_copy);
+  if (PyErr_Occurred()) {
+    /* the second arg is not a caps */
+    switch (comparison) {
+      case Py_EQ:
+        PyErr_Clear();
+        ret = Py_False;
+        Py_INCREF (ret);
+        return ret;
+      case Py_NE:
+        PyErr_Clear();
+        ret = Py_True;
+        Py_INCREF (ret);
+        return ret;
+      default:
+        return NULL;
+    }
+  }
+
+  switch (comparison) {
+    case Py_LT:
+      ret = pygst_caps_is_true_subset (caps1, caps2) ? Py_True : Py_False;
+      break;
+    case Py_LE:
+      ret = gst_caps_is_subset (caps1, caps2) ? Py_True : Py_False;
+      break;
+    case Py_NE:
+      ret = gst_caps_is_equal (caps1, caps2) ? Py_False : Py_True;
+      break;
+    case Py_EQ:
+      ret = gst_caps_is_equal (caps1, caps2) ? Py_True : Py_False;
+      break;
+    case Py_GE:
+      ret = gst_caps_is_subset (caps2, caps1) ? Py_True : Py_False;
+      break;
+    case Py_GT:
+      ret = pygst_caps_is_true_subset (caps2, caps1) ? Py_True : Py_False;
+      break;
+    default:
+      PyErr_SetString (PyExc_RuntimeError, "invalid comparison operation");
+      if (caps2 && caps2_is_copy)
+	gst_caps_free (caps2);
+      return NULL;
+  }
+  if (caps2 && caps2_is_copy)
+    gst_caps_free (caps2);
+  
+  Py_INCREF (ret);
+  return ret;
+}
+
+%%
+override-slot GstCaps.tp_as_number
+
+/* In this number code, we mimic the Python set.Set datatype.
+ * The same operations are supported. If you want to have an operation
+ * supported for caps, add it to Python's Set type first.
+ */
+#define BINARY_FUNC(name,func) \
+static PyObject * \
+name (PyObject *py_caps1, PyObject *py_caps2) \
+{ \
+  GstCaps *caps1, *caps2, *ret; \
+  gboolean caps2_is_copy; \
+\
+  caps1 = pyg_boxed_get (py_caps1, GstCaps); \
+  caps2 = pygst_caps_from_pyobject (py_caps2, &caps2_is_copy); \
+  if (PyErr_Occurred()) \
+    return NULL; \
+  ret = func (caps1, caps2); \
+  if (caps2 && caps2_is_copy) \
+    gst_caps_free (caps2); \
+  return pyg_boxed_new (GST_TYPE_CAPS, ret, FALSE, TRUE); \
+}
+
+BINARY_FUNC (pygst_caps_nb_subtract, gst_caps_subtract)
+BINARY_FUNC (pygst_caps_nb_and, gst_caps_intersect)
+BINARY_FUNC (pygst_caps_nb_or, gst_caps_union)
+static GstCaps *
+pygst_caps_xor (const GstCaps *caps1, const GstCaps *caps2)
+{
+  GstCaps *intersect, *_union, *ret;
+  intersect = gst_caps_intersect (caps1, caps2);
+  _union = gst_caps_union (caps1, caps2);
+  ret = gst_caps_subtract (_union, intersect);
+  gst_caps_free (_union);
+  gst_caps_free (intersect);
+  gst_caps_do_simplify (ret);
+  return ret;
+}
+BINARY_FUNC (pygst_caps_nb_xor, pygst_caps_xor)
+
+static int
+pygst_caps_nb_nonzero (PyObject *py_caps)
+{
+  GstCaps *caps = pyg_boxed_get (py_caps, GstCaps);
+
+  if (gst_caps_is_empty (caps))
+    return 0;
+  else
+    return 1;
+}
+
+static int
+pygst_caps_nb_coerce (PyObject **py_caps1, PyObject **py_caps2)
+{
+  GstCaps *caps1, *caps2 = NULL;
+  gboolean caps1_is_copy, caps2_is_copy;
+  
+  caps1 = pygst_caps_from_pyobject (*py_caps1, &caps1_is_copy);
+  if (!caps1)
+    goto error;
+  caps2 = pygst_caps_from_pyobject (*py_caps2, &caps2_is_copy);
+  if (!caps2)
+    goto error;
+  /* if they're not copies, they're caps already */
+  if (caps1_is_copy)
+    *py_caps1 = pyg_boxed_new (GST_TYPE_CAPS, caps1, FALSE, TRUE);
+  else
+    Py_INCREF (*py_caps1);
+  if (caps2_is_copy)
+    *py_caps2 = pyg_boxed_new (GST_TYPE_CAPS, caps2, FALSE, TRUE);
+  else
+    Py_INCREF (*py_caps2);
+  return 0;
+
+error:
+  g_assert (PyErr_Occurred ());
+  PyErr_Clear ();
+  if (caps1 && !caps1_is_copy)
+    gst_caps_free (caps1);
+  if (caps2 && !caps2_is_copy)
+    gst_caps_free (caps2);
+  return 1;
+}
+
+static PyNumberMethods _wrap_gst_caps_tp_as_number = {
+	0,			      		/* nb_add */
+	pygst_caps_nb_subtract,			/* nb_subtract */
+	0,					/* nb_multiply */
+	0,	  				/* nb_divide */
+	0,					/* nb_remainder */
+	0,					/* nb_divmod */
+	0,			  		/* nb_power */
+	0,					/* nb_negative */
+	0,					/* nb_positive */
+	0,					/* nb_absolute */
+	pygst_caps_nb_nonzero,	      		/* nb_nonzero */
+	0,					/* nb_invert */
+	0,					/* nb_lshift */
+	0,					/* nb_rshift */
+	pygst_caps_nb_and,			/* nb_and */
+	pygst_caps_nb_xor,			/* nb_xor */
+	pygst_caps_nb_or,			/* nb_or */
+	pygst_caps_nb_coerce,	      		/* nb_coerce */
+	0,					/* nb_int */
+	0,					/* nb_long */
+	0,					/* nb_float */
+	0,					/* nb_oct */
+	0,		 			/* nb_hex */
+	0,					/* nb_inplace_add */
+	0,					/* nb_inplace_subtract */
+	0,					/* nb_inplace_multiply */
+	0,					/* nb_inplace_divide */
+	0,					/* nb_inplace_remainder */
+	0,					/* nb_inplace_power */
+	0,					/* nb_inplace_lshift */
+	0,					/* nb_inplace_rshift */
+	0,					/* nb_inplace_and */
+	0,					/* nb_inplace_xor */
+	0,					/* nb_inplace_or */
+	0,					/* nb_floor_divide */
+	0,					/* nb_true_divide */
+	0,					/* nb_inplace_floor_divide */
+	0,					/* nb_inplace_true_divide */
+};
 %%
 override-slot GstCaps.tp_as_sequence
 static int
-caps_length(PyGObject *self)
+pygst_caps_sq_length(PyObject *self)
 {
-	return gst_caps_get_size((GstCaps*)self->obj);
+	GstCaps *caps = pyg_boxed_get (self, GstCaps);
+	return gst_caps_get_size(caps);
 }
 
 static PyObject *
-caps_item(PyGObject *self, int i)
-			
+pygst_caps_sq_item(PyObject *self, int i)
 {
+	GstCaps *caps = pyg_boxed_get (self, GstCaps);
 	GstStructure *structure;
+	PyObject *ret;
 	
-	if (i < 0 || i >= gst_caps_get_size((GstCaps*)self->obj)) {
+	if (i < 0 || i >= gst_caps_get_size(caps)) {
 		PyErr_SetString(PyExc_IndexError, "list index out of range");
 		return NULL;
 	}
 	
-	structure = gst_caps_get_structure((GstCaps*)self->obj, i);
-	return pyg_boxed_new(GST_TYPE_STRUCTURE, structure, TRUE, TRUE);
+	structure = gst_caps_get_structure(caps, i);
+				    
+	/* pyg_boxed_new handles NULL checking */
+	ret = pyg_boxed_new(GST_TYPE_STRUCTURE, 
+	                    gst_caps_get_structure(pyg_boxed_get(self, GstCaps), i), 
+			    FALSE, FALSE);
+	if (ret)
+	  pygst_caps_map_add (ret, self);
+	return ret;
+}
+
+/* FIXME: This syntax sucks */
+static PyObject *
+pygst_caps_sq_slice(PyObject *self, int start, int end)
+{
+	GstCaps *caps = pyg_boxed_get (self, GstCaps);
+	GstCaps *ret = gst_caps_new_empty ();
+	int i;
+
+	if (start < 0)
+	  start = 0;
+	if (end > gst_caps_get_size (caps))
+	  end = gst_caps_get_size (caps);
+
+	for (i = start; i < end; i++)
+	  gst_caps_append_structure (ret, gst_structure_copy (gst_caps_get_structure (caps, i)));
+	
+	return pyg_boxed_new(GST_TYPE_CAPS, ret, FALSE, TRUE);
 }
 
 static PySequenceMethods _wrap_gst_caps_tp_as_sequence = {
-	(inquiry)caps_length,         /* mp_length */
-        NULL,
-        NULL,
-	(intargfunc)caps_item,
-        NULL,
-	NULL,
-	NULL,
-        NULL,
+	pygst_caps_sq_length,
+        NULL, /* not allowed for sets, use | instead of + */
+        NULL, /* doesn't make sense, because it'd still be the same */
+	pygst_caps_sq_item,
+        pygst_caps_sq_slice, 
+	NULL, /* doesn't make sense, you can only append */
+	NULL, /* doesn't make sense, you can only append */
+        NULL, /* doesn't make sense really, unless you use is_subset */
+        NULL, /* not allowed for sets, use | instead of + */
+	NULL /* doesn't make sense, because it'd still be the same */
 };
+%%
+override-slot GstCaps.tp_dealloc
+static void
+_wrap_gst_caps_tp_dealloc (PyObject *self)
+{
+  PyGBoxed *boxed = (PyGBoxed *) self;
+
+  if (boxed->free_on_dealloc && boxed->boxed) {
+    pygst_caps_map_modified (self);
+    gst_caps_free (boxed->boxed);
+  }
+
+  self->ob_type->tp_free((PyObject *)self);
+}
 %%
 override-slot GstCaps.tp_str
 static PyObject *

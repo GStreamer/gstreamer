@@ -188,14 +188,23 @@ override gst_element_link kwargs
 static PyObject *
 _wrap_gst_element_link(PyGObject *self, PyObject *args, PyObject *kwargs)
 {
-    static char *kwlist[] = { "dest", NULL };
+    static char *kwlist[] = { "dest", "filtercaps", NULL };
     PyGObject *dest;
+    PyObject *py_caps = NULL;
     int ret;
+    GstCaps *caps = NULL;
+    gboolean caps_is_copy;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!:GstElement.link",
-                                     kwlist, &PyGstElement_Type, &dest))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!|O:GstElement.link",
+                                     kwlist, &PyGstElement_Type, &dest, &py_caps))
         return NULL;
-    ret = gst_element_link(GST_ELEMENT(self->obj), GST_ELEMENT(dest->obj));
+    if (py_caps == NULL)
+      caps = NULL;
+    else
+      caps = pygst_caps_from_pyobject (py_caps, &caps_is_copy);
+    ret = gst_element_link_filtered(GST_ELEMENT(self->obj), GST_ELEMENT(dest->obj), caps);
+    if (caps && caps_is_copy)
+        gst_caps_free (caps);
     if (!ret) {
 	PyErr_Format(PyGstExc_LinkError,
 		     "failed to link %s with %s",
@@ -212,52 +221,47 @@ static PyObject *
 _wrap_gst_element_link_filtered(PyGObject *self, PyObject *args,
                                 PyObject *kwargs)
 {
-    static char *kwlist[] = { "dest", "filtercaps", NULL };
-    PyGObject *dest;
-    PyObject *py_filtercaps;
-    int ret;
-    GstCaps *filtercaps = NULL;
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-                                     "O!O:GstElement.link_filtered",
-                                     kwlist, &PyGstElement_Type,
-                                     &dest, &py_filtercaps))
-        return NULL;
-    if (pyg_boxed_check(py_filtercaps, GST_TYPE_CAPS))
-        filtercaps = pyg_boxed_get(py_filtercaps, GstCaps);
-    else {
-        PyErr_SetString(PyExc_TypeError, "filtercaps should be a GstCaps");
-        return NULL;
-    }
-    ret = gst_element_link_filtered(GST_ELEMENT(self->obj),
-                                    GST_ELEMENT(dest->obj),
-                                    filtercaps);
-    if (!ret) {
-	PyErr_Format(PyGstExc_LinkError,
-		     "failed to link %s with %s",
-		     GST_ELEMENT_NAME(self->obj),
-		     GST_ELEMENT_NAME(dest->obj));
-        return NULL;
-    }
-    return PyBool_FromLong(ret);
-
+    if (PyErr_Warn(PyExc_DeprecationWarning, "element.link_filtered is deprecated, use element.link") < 0)
+	return NULL;
+    return _wrap_gst_element_link (self, args, kwargs);
 }
 
 %%
 override gst_element_link_pads kwargs
+static gboolean
+pad_name_from_object (PyObject *object, const gchar **name)
+{
+  if (object == Py_None) {
+    *name = NULL;
+    return TRUE;
+  } else if (PyString_Check (object)) {
+    *name = PyString_AsString (object);
+    return TRUE;
+  } else if (pygobject_check (object, &PyGstPad_Type)) {
+    *name = gst_object_get_name (GST_OBJECT (pygobject_get (object)));
+    return TRUE;
+  }
+  PyErr_SetString(PyExc_TypeError, "argument could not be converted to a pad");
+  return FALSE;
+}
+
 static PyObject *
 _wrap_gst_element_link_pads(PyGObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = { "srcpadname", "dest", "destpadname", NULL };
-    char *srcpadname, *destpadname;
+    const char *srcpadname, *destpadname;
     PyGObject *dest;
+    PyObject *srcpad, *destpad;
     int ret;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-                                     "sO!s:GstElement.link_pads", kwlist,
-                                     &srcpadname, &PyGstElement_Type, &dest,
-                                     &destpadname))
+                                     "OO!O:GstElement.link_pads", kwlist,
+                                     &srcpad, &PyGstElement_Type, &dest,
+                                     &destpad))
         return NULL;
+    if (!pad_name_from_object (srcpad, &srcpadname) ||
+        !pad_name_from_object (destpad, &destpadname))
+	return NULL;
     ret = gst_element_link_pads(GST_ELEMENT(self->obj), srcpadname,
                                 GST_ELEMENT(dest->obj), destpadname);
     if (!ret) {
@@ -373,4 +377,20 @@ _wrap_gst_element_send_event(PyGObject *self, PyObject *args, PyObject *kwargs)
     ret = gst_element_send_event(GST_ELEMENT(self->obj), event);
     return PyBool_FromLong(ret);
 
+}
+%%
+override gst_element_factory_get_pad_templates
+static PyObject *
+_wrap_gst_element_factory_get_pad_templates(PyGObject *self)
+{
+	const GList *pads;
+	PyObject *list;
+	
+	pads = gst_element_factory_get_pad_templates(GST_ELEMENT_FACTORY(self->obj));
+
+	list = PyList_New(0);
+	for (; pads; pads = g_list_next (pads)) 
+		PyList_Append(list, pygobject_new(pads->data));
+		
+	return list;
 }
