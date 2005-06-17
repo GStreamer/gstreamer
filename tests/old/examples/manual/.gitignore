@@ -11,6 +11,7 @@ dynamic
 elementget
 elementmake
 gnome
+fakesrc
 helloworld
 helloworld2
 init
@@ -26,6 +27,7 @@ ghostpad
 pad
 playbin
 query
+typefind
 
 xml-mp3
 xml

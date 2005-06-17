@@ -6,6 +6,15 @@
 
 2005-06-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_create):
+	  fix debug output
+	* gst/schedulers/Makefile.am:
+	  use libgst prefix
+	* gstreamer.spec.in:
+	  fix spec for it
+
+2005-06-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gstreamer.spec.in:
 	  clean up
 

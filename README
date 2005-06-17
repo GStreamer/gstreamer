@@ -1,15 +1,46 @@
 WHAT IT IS
 ----------
-This is GStreamer, a framework for streaming media.  The
-fundamental design comes from the video pipeline at Oregon Graduate
-Institute, as well as some ideas from DirectMedia.  It's based on plug-ins
-that will provide the various codec and other functionality.  The
-interface hopefully is generic enough for various companies (ahem, Apple)
-to release binary codecs for Linux, until such time as they get a clue and
-release the source.
+This is GStreamer, a framework for streaming media.
 
-COMPILING FROM SOURCE
----------------------
+This package is in the 0.9.x series.  This means that this is a
+development series leading up to a stable 0.10.x series.
+You have been warned.
+
+OVERVIEW
+--------
+GStreamer is split up over a number of modules, tarballs and packages:
+
+- gstreamer:
+  The core.  It contains the main library and header files, as well as
+  some fundamental elements.  Every GStreamer project needs at least this
+  installed.
+- gst-plugins-base:
+  A base set of plugins.  This set is the set we actively keep synchronized
+  with the core and are also meant to serve as examples on how to write
+  GStreamer elements.  It also contains a number of base classes for writing
+  GStreamer elements.
+
+INSTALLING FROM PACKAGES
+------------------------
+You should always prefer installing from packages first.  GStreamer is
+well-maintained for a number of distributions, including Fedora, Debian,
+Ubuntu, Mandrake, Gentoo, ...
+
+Only in cases where you:
+- want to hack on GStreamer
+- want to verify that a bug has been fixed
+- do not have a sane distribution
+should you choose to build from source tarballs or CVS.
+
+Find more information about the various packages at
+http://gstreamer.freedesktop.org/download/
+
+COMPILING FROM SOURCE TARBALLS
+------------------------------
+- again, make sure that you really need to install from source !
+  If GStreamer is one of your first projects ever that you build from source,
+  consider taking on an easier project.
+
 - check output of ./configure --help to see if any options apply to you
 - run
   ./configure
@@ -43,17 +74,13 @@ COMPILING FROM CVS
 When building from CVS sources, you will need to run autogen.sh to generate 
 the build system files.
 
-GStreamer is cutting-edge stuff.  To be a CVS developer, you need 
-what used to be considered cutting-edge tools.
+You will need a set of additional tools typical for building from CVS,
+including:
+- autoconf
+- automake
+- libtool
 
-ATM, most of us have at least these versions :
-
-* autoconf	2.52	(NOT 2.52d)
-* automake	1.5
-* libtool	1.4     (NOT Gentoo's genetic failure 1.4.2)
-* pkg-config    0.8.0
-
-autogen.sh will check for these versions and complain if you don't have 
+autogen.sh will check for recent enough versions and complain if you don't have
 them.  You can also specify specific versions of automake and autoconf with
 --with-automake and --with-autoconf
 
@@ -70,3 +97,11 @@ the last passed options as a handy shortcut.  Use it.
 After the autogen.sh stage, you can follow the directions listed in
 "COMPILING FROM SOURCE"
 
+HISTORY
+-------
+The fundamental design comes from the video pipeline at Oregon Graduate
+Institute, as well as some ideas from DirectMedia.  It's based on plug-ins that
+will provide the various codec and other functionality.  The interface
+hopefully is generic enough for various companies (ahem, Apple) to release
+binary codecs for Linux, until such time as they get a clue and release the
+source.

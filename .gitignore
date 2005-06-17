@@ -34,3 +34,4 @@ install-sh
 mkinstalldirs
 py-compile
 registry.xml
+coverage-report.txt
