@@ -1,2 +1,3 @@
 libgstdataprotocol.def
 dataprotocol-test
+*.gcno

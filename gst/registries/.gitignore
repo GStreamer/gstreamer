@@ -2,3 +2,4 @@ registrytest
 *.bb
 *.bbg
 *.da
+*.gcno

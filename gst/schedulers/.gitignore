@@ -1,3 +1,4 @@
 *.bb
 *.bbg
 *.da
+*.gcno

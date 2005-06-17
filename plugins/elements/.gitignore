@@ -9,3 +9,4 @@ Makefile.in
 *.bbg
 *.da
 *.def
+*.gcno

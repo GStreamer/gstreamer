@@ -8,3 +8,4 @@ lex._gst_parse_yy.c
 *.bb
 *.bbg
 *.da
+*.gcno
