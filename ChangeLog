@@ -1,3 +1,9 @@
+2005-06-17  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstcaps.override (_wrap_gst_caps_tp_richcompare): Increment
+	the refcount of the return value in all cases, even for Py_True
+	and Py_False. Lines of code per day hovering around 1.3.
+
 2005-06-14  Edward Hervey  <bilboed@bilboed.com>
 
 	* gst/gstcaps.override: (_wrap_gst_caps_tp_str): 

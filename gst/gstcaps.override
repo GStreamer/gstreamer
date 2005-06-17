@@ -175,12 +175,15 @@ _wrap_gst_caps_tp_richcompare (PyObject *py_caps1, PyObject *py_caps2, int compa
   if (PyErr_Occurred()) {
     /* the second arg is not a caps */
     switch (comparison) {
-      case Py_EQ:
         PyErr_Clear();
-        return Py_False;
+        ret = Py_False;
+        Py_INCREF (ret);
+        return ret;
       case Py_NE:
         PyErr_Clear();
-        return Py_True;
+        ret = Py_True;
+        Py_INCREF (ret);
+        return ret;
       default:
         return NULL;
     }
