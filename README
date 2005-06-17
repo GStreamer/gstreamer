@@ -97,6 +97,20 @@ the last passed options as a handy shortcut.  Use it.
 After the autogen.sh stage, you can follow the directions listed in
 "COMPILING FROM SOURCE"
 
+You can also run your whole cvs stack uninstalled.  The script in
+the gstreamer module /docs/faq/gst-uninstalled) is helpful in setting
+up your environment for this.
+
+PLUG-IN DEPENDENCIES AND LICENSES
+---------------------------------
+GStreamer is developed under the terms of the LGPL (see LICENSE file for
+details). Some of our plug-ins however rely on libraries which are available
+under other licenses. This means that if you are using an application which
+has a non-GPL compatible license (for instance a closed-source application)
+with GStreamer, you have to make sure not to use GPL-linked plug-ins.
+When using GPL-linked plug-ins, GStreamer is for all practical reasons
+under the GPL itself.
+
 HISTORY
 -------
 The fundamental design comes from the video pipeline at Oregon Graduate
