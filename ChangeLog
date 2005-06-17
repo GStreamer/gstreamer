@@ -1,5 +1,11 @@
 2005-06-17  Andy Wingo  <wingo@pobox.com>
 
+	* gst/base/gstbasesink.c (gst_basesink_chain): Remove bogus
+	assert; it's always possible that the pad gets deactivated in
+	between the checks in gstpad.c and the implementation. Rely on
+	finish_preroll() to return a FLUSHING or similar instead of on the
+	assert.
+	
 	* gst/base/gstbasesink.c (gst_basesink_event): Only wait for the
 	clock and post an EOS message if we come out of finish_preroll in
 	the playing state.
