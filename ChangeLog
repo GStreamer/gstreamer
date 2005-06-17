@@ -1,3 +1,9 @@
+2005-06-17  Andy Wingo  <wingo@pobox.com>
+
+	* gst/base/gstbasesink.c (gst_basesink_event): Only wait for the
+	clock and post an EOS message if we come out of finish_preroll in
+	the playing state.
+
 2005-06-16  David Schleef  <ds@schleef.org>
 
 	* gst/elements/gstcapsfilter.c: (gst_capsfilter_class_init),

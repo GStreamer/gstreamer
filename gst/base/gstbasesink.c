@@ -534,41 +534,45 @@ gst_basesink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
     {
+      PrerollReturn pre_ret;
       gboolean need_eos;
 
       GST_STREAM_LOCK (pad);
 
       /* EOS also finishes the preroll */
-      gst_basesink_finish_preroll (basesink, pad, NULL);
+      pre_ret = gst_basesink_finish_preroll (basesink, pad, NULL);
 
-      GST_LOCK (basesink);
-      need_eos = basesink->eos = TRUE;
-      if (basesink->clock) {
-        /* wait for last buffer to finish if we have a valid end time */
-        if (GST_CLOCK_TIME_IS_VALID (basesink->end_time)) {
-          basesink->clock_id = gst_clock_new_single_shot_id (basesink->clock,
-              basesink->end_time + GST_ELEMENT (basesink)->base_time);
+      if (pre_ret == PREROLL_PLAYING) {
+        GST_LOCK (basesink);
+        need_eos = basesink->eos = TRUE;
+        if (basesink->clock) {
+          /* wait for last buffer to finish if we have a valid end time */
+          if (GST_CLOCK_TIME_IS_VALID (basesink->end_time)) {
+            basesink->clock_id = gst_clock_new_single_shot_id (basesink->clock,
+                basesink->end_time + GST_ELEMENT (basesink)->base_time);
+            GST_UNLOCK (basesink);
+
+            gst_clock_id_wait (basesink->clock_id, NULL);
+
+            GST_LOCK (basesink);
+            if (basesink->clock_id) {
+              gst_clock_id_unref (basesink->clock_id);
+              basesink->clock_id = NULL;
+            }
+            basesink->end_time = GST_CLOCK_TIME_NONE;
+            need_eos = basesink->eos;
+          }
           GST_UNLOCK (basesink);
 
-          gst_clock_id_wait (basesink->clock_id, NULL);
-
-          GST_LOCK (basesink);
-          if (basesink->clock_id) {
-            gst_clock_id_unref (basesink->clock_id);
-            basesink->clock_id = NULL;
+          /* if we are still EOS, we can post the EOS message */
+          if (need_eos) {
+            /* ok, now we can post the message */
+            gst_element_post_message (GST_ELEMENT (basesink),
+                gst_message_new_eos (GST_OBJECT (basesink)));
           }
-          basesink->end_time = GST_CLOCK_TIME_NONE;
-          need_eos = basesink->eos;
-        }
-        GST_UNLOCK (basesink);
-
-        /* if we are still EOS, we can post the EOS message */
-        if (need_eos) {
-          /* ok, now we can post the message */
-          gst_element_post_message (GST_ELEMENT (basesink),
-              gst_message_new_eos (GST_OBJECT (basesink)));
         }
       }
+
       GST_STREAM_UNLOCK (pad);
       break;
     }
