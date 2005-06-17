@@ -739,9 +739,6 @@ gst_basesink_chain (GstPad * pad, GstBuffer * buf)
 {
   GstFlowReturn result;
 
-  g_assert (GST_BASESINK (GST_OBJECT_PARENT (pad))->pad_mode ==
-      GST_ACTIVATE_PUSH);
-
   result = gst_basesink_chain_unlocked (pad, buf);
 
   return result;
