@@ -2,13 +2,13 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # Christian Rose <menthos@menthos.com>, 2004.
 #
-# $Id: sv.po,v 1.20 2005/05/05 15:06:37 uraeus Exp $
+# $Id: sv.po,v 1.21 2005/06/18 22:43:51 thomasvs Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-05-05 17:01+0200\n"
+"POT-Creation-Date: 2005-05-26 19:15+0200\n"
 "PO-Revision-Date: 2004-08-03 20:53+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -90,27 +90,20 @@ msgstr "Inget filnamn angivet"
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kunde inte stänga vfs-filen \"%s\"."
 
-#: sys/v4l/v4l_calls.c:159
-msgid "No device specified."
-msgstr "Ingen enheten angiven."
+#~ msgid "No device specified."
+#~ msgstr "Ingen enheten angiven."
 
-#: sys/v4l/v4l_calls.c:168
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Enheten \"%s\" finns inte."
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Enheten \"%s\" finns inte."
 
-#: sys/v4l/v4l_calls.c:172
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Kunde inte öppna enheten \"%s\" för läsning och skrivning."
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Kunde inte öppna enheten \"%s\" för läsning och skrivning."
 
-#: sys/v4l/v4l_calls.h:50
-msgid "Device is not open."
-msgstr "Enheten är inte öppen."
+#~ msgid "Device is not open."
+#~ msgstr "Enheten är inte öppen."
 
-#: sys/v4l/v4l_calls.h:59
-msgid "Device is open."
-msgstr "Enheten är öppen."
+#~ msgid "Device is open."
+#~ msgstr "Enheten är öppen."
 
 #~ msgid "Could not open vfs file \"%s\" for reading."
 #~ msgstr "Kunde inte öppna vfs-filen \"%s\" för läsning."

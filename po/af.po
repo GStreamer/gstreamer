@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-05-05 17:01+0200\n"
+"POT-Creation-Date: 2005-05-26 19:15+0200\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -87,27 +87,20 @@ msgstr "Geen lêernaam gespesifiseer."
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kon nie vfs-lêer \"%s\" toemaak nie."
 
-#: sys/v4l/v4l_calls.c:159
-msgid "No device specified."
-msgstr "Geen toestel gespesifiseer"
+#~ msgid "No device specified."
+#~ msgstr "Geen toestel gespesifiseer"
 
-#: sys/v4l/v4l_calls.c:168
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Toestel \"%s\" bestaan nie."
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Toestel \"%s\" bestaan nie."
 
-#: sys/v4l/v4l_calls.c:172
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Kon nie toestel \"%s\" oopmaak vir lees en skryf nie."
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Kon nie toestel \"%s\" oopmaak vir lees en skryf nie."
 
-#: sys/v4l/v4l_calls.h:50
-msgid "Device is not open."
-msgstr "Toestel is nie oop nie."
+#~ msgid "Device is not open."
+#~ msgstr "Toestel is nie oop nie."
 
-#: sys/v4l/v4l_calls.h:59
-msgid "Device is open."
-msgstr "Toestel is oop."
+#~ msgid "Device is open."
+#~ msgstr "Toestel is oop."
 
 #~ msgid "Could not open vfs file \"%s\" for reading."
 #~ msgstr "Kon nie vfs-lêer \"%s\" oopmaak vir lees nie."

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-05-05 17:01+0200\n"
+"POT-Creation-Date: 2005-05-26 19:15+0200\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -88,27 +88,20 @@ msgstr "Име датотеке није задато."
 msgid "Could not close vfs file \"%s\"."
 msgstr "Не могу да затворим ВСД датотеку „%s“."
 
-#: sys/v4l/v4l_calls.c:159
-msgid "No device specified."
-msgstr "Уређај није наведен."
+#~ msgid "No device specified."
+#~ msgstr "Уређај није наведен."
 
-#: sys/v4l/v4l_calls.c:168
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Не постоји уређај „%s“."
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Не постоји уређај „%s“."
 
-#: sys/v4l/v4l_calls.c:172
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Не могу да отворим уређај „%s“ ради читања и уписа."
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Не могу да отворим уређај „%s“ ради читања и уписа."
 
-#: sys/v4l/v4l_calls.h:50
-msgid "Device is not open."
-msgstr "Уређај није отворен."
+#~ msgid "Device is not open."
+#~ msgstr "Уређај није отворен."
 
-#: sys/v4l/v4l_calls.h:59
-msgid "Device is open."
-msgstr "Уређај је отворен."
+#~ msgid "Device is open."
+#~ msgstr "Уређај је отворен."
 
 # Виртуелни Систем Датотека
 #~ msgid "Could not open vfs file \"%s\" for reading."

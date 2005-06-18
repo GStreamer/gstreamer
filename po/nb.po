@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-05-05 17:01+0200\n"
+"POT-Creation-Date: 2005-05-26 19:15+0200\n"
 "PO-Revision-Date: 2004-10-04 15:54+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@broadpark.no>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -85,27 +85,20 @@ msgstr "Ingen filnavn oppgitt"
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kunne ikke lukke VFS-fil «%s»."
 
-#: sys/v4l/v4l_calls.c:159
-msgid "No device specified."
-msgstr "Ingen enhet oppgitt."
+#~ msgid "No device specified."
+#~ msgstr "Ingen enhet oppgitt."
 
-#: sys/v4l/v4l_calls.c:168
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Enhet «%s» eksisterer ikke."
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Enhet «%s» eksisterer ikke."
 
-#: sys/v4l/v4l_calls.c:172
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Kunne ikke åpne enhet «%s» for lesing og skriving."
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Kunne ikke åpne enhet «%s» for lesing og skriving."
 
-#: sys/v4l/v4l_calls.h:50
-msgid "Device is not open."
-msgstr "Enheten er ikke åpen."
+#~ msgid "Device is not open."
+#~ msgstr "Enheten er ikke åpen."
 
-#: sys/v4l/v4l_calls.h:59
-msgid "Device is open."
-msgstr "Enheten er åpen."
+#~ msgid "Device is open."
+#~ msgstr "Enheten er åpen."
 
 #~ msgid "Could not open vfs file \"%s\" for reading."
 #~ msgstr "Kunne ikke åpne VFS-fil «%s» for lesing."

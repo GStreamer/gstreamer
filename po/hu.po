@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-05-05 17:01+0200\n"
+"POT-Creation-Date: 2005-05-26 19:15+0200\n"
 "PO-Revision-Date: 2004-07-18 11:03+0200\n"
 "Last-Translator: Laszlo Dvornik <dvornik@invitel.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -85,27 +85,20 @@ msgstr "Nincs fájlnév megadva"
 msgid "Could not close vfs file \"%s\"."
 msgstr "Nem lehet bezárni a(z) \"%s\" vfs-fájlt."
 
-#: sys/v4l/v4l_calls.c:159
-msgid "No device specified."
-msgstr "Nincs megadva eszköz."
+#~ msgid "No device specified."
+#~ msgstr "Nincs megadva eszköz."
 
-#: sys/v4l/v4l_calls.c:168
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "A(z) \"%s\" eszköz nem létezik."
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "A(z) \"%s\" eszköz nem létezik."
 
-#: sys/v4l/v4l_calls.c:172
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Nem lehet olvasásra és írásra megnyitni a(z) \"%s\" eszközt."
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Nem lehet olvasásra és írásra megnyitni a(z) \"%s\" eszközt."
 
-#: sys/v4l/v4l_calls.h:50
-msgid "Device is not open."
-msgstr "Az eszköz nincs nyitva."
+#~ msgid "Device is not open."
+#~ msgstr "Az eszköz nincs nyitva."
 
-#: sys/v4l/v4l_calls.h:59
-msgid "Device is open."
-msgstr "Az eszköz nyitva van."
+#~ msgid "Device is open."
+#~ msgstr "Az eszköz nyitva van."
 
 #~ msgid "Could not open vfs file \"%s\" for reading."
 #~ msgstr "Nem lehet olvasásra megnyitni a(z) \"%s\" vfs-fájlt."

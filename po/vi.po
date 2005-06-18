@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-05-05 17:01+0200\n"
+"POT-Creation-Date: 2005-05-26 19:15+0200\n"
 "PO-Revision-Date: 2005-01-22 17:17+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net> \n"
@@ -87,27 +87,20 @@ msgstr "Chưa nhập tên tập tin "
 msgid "Could not close vfs file \"%s\"."
 msgstr "Đã không đóng được tập tin vfs \"%s\"."
 
-#: sys/v4l/v4l_calls.c:159
-msgid "No device specified."
-msgstr "Chưa ghi rõ thiết bị nào"
+#~ msgid "No device specified."
+#~ msgstr "Chưa ghi rõ thiết bị nào"
 
-#: sys/v4l/v4l_calls.c:168
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Không có thiết bị \"%s\" ."
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Không có thiết bị \"%s\" ."
 
-#: sys/v4l/v4l_calls.c:172
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Đã không mở được thiết bị \"%s\" để đọc và ghi."
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Đã không mở được thiết bị \"%s\" để đọc và ghi."
 
-#: sys/v4l/v4l_calls.h:50
-msgid "Device is not open."
-msgstr "Thiết bị chưa mở"
+#~ msgid "Device is not open."
+#~ msgstr "Thiết bị chưa mở"
 
-#: sys/v4l/v4l_calls.h:59
-msgid "Device is open."
-msgstr "Thiết bị mở rồi"
+#~ msgid "Device is open."
+#~ msgstr "Thiết bị mở rồi"
 
 #~ msgid "Could not open vfs file \"%s\" for reading."
 #~ msgstr "Đã không mở được tập tin vfs \"%s\" để đọc."

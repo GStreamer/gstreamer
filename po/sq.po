@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-05-05 17:01+0200\n"
+"POT-Creation-Date: 2005-05-26 19:15+0200\n"
 "PO-Revision-Date: 2004-08-07 20:29+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -85,27 +85,20 @@ msgstr "Nuk është dhënë asnjë emër file"
 msgid "Could not close vfs file \"%s\"."
 msgstr "E pamundur mbyllja e file vfs \"%s\"."
 
-#: sys/v4l/v4l_calls.c:159
-msgid "No device specified."
-msgstr "Nuk është përcaktuar asnjë dispozitiv."
+#~ msgid "No device specified."
+#~ msgstr "Nuk është përcaktuar asnjë dispozitiv."
 
-#: sys/v4l/v4l_calls.c:168
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Dispozitivi \"%s\" nuk ekziston."
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Dispozitivi \"%s\" nuk ekziston."
 
-#: sys/v4l/v4l_calls.c:172
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "E pamundur hapja e dispozitivit \"%s\" për lexim dhe shkrim."
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "E pamundur hapja e dispozitivit \"%s\" për lexim dhe shkrim."
 
-#: sys/v4l/v4l_calls.h:50
-msgid "Device is not open."
-msgstr "Dispozitivi nuk është hapur."
+#~ msgid "Device is not open."
+#~ msgstr "Dispozitivi nuk është hapur."
 
-#: sys/v4l/v4l_calls.h:59
-msgid "Device is open."
-msgstr "Dispozitivi është i hapur."
+#~ msgid "Device is open."
+#~ msgstr "Dispozitivi është i hapur."
 
 #~ msgid "Could not open vfs file \"%s\" for reading."
 #~ msgstr "E pamundur hapja e file vfs \"%s\" për lexim."

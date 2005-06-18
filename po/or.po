@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-05-05 17:01+0200\n"
+"POT-Creation-Date: 2005-05-26 19:15+0200\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -87,27 +87,20 @@ msgstr "କୌଣସି ଫାଇଲନାମ ଦିଆଯାଇ ନାହିଁ
 msgid "Could not close vfs file \"%s\"."
 msgstr "ଭି.ଏଫ.ଏସ. ଫାଇଲ \"%s\" ବନ୍ଦ କରିହେଲା ନାହିଁ."
 
-#: sys/v4l/v4l_calls.c:159
-msgid "No device specified."
-msgstr "କୌଣସି ଯନ୍ତ୍ର ଉଲ୍ଲେଖିତ କରାଯାଇ ନାହିଁ."
+#~ msgid "No device specified."
+#~ msgstr "କୌଣସି ଯନ୍ତ୍ର ଉଲ୍ଲେଖିତ କରାଯାଇ ନାହିଁ."
 
-#: sys/v4l/v4l_calls.c:168
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "\"%s\" ଯନ୍ତ୍ର ଅବସ୍ଥିତ ନାହିଁ."
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "\"%s\" ଯନ୍ତ୍ର ଅବସ୍ଥିତ ନାହିଁ."
 
-#: sys/v4l/v4l_calls.c:172
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "\"%s\" ଯନ୍ତ୍ର ପଢ଼ିବା ଓ ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "\"%s\" ଯନ୍ତ୍ର ପଢ଼ିବା ଓ ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
-#: sys/v4l/v4l_calls.h:50
-msgid "Device is not open."
-msgstr "ଯନ୍ତ୍ର ଖୋଲାଯାଇ ନାହିଁ."
+#~ msgid "Device is not open."
+#~ msgstr "ଯନ୍ତ୍ର ଖୋଲାଯାଇ ନାହିଁ."
 
-#: sys/v4l/v4l_calls.h:59
-msgid "Device is open."
-msgstr "ଯନ୍ତ୍ର ଖୋଲାଯାଇଚ୍ଛି."
+#~ msgid "Device is open."
+#~ msgstr "ଯନ୍ତ୍ର ଖୋଲାଯାଇଚ୍ଛି."
 
 #~ msgid "Could not open vfs file \"%s\" for reading."
 #~ msgstr "ଭି.ଏଫ.ଏସ. ଫାଇଲ \"%s\" ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."

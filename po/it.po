@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-05-05 17:01+0200\n"
+"POT-Creation-Date: 2005-05-26 19:15+0200\n"
 "PO-Revision-Date: 2004-11-07 19:11+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -86,27 +86,20 @@ msgstr "Nessun nome di file fornito"
 msgid "Could not close vfs file \"%s\"."
 msgstr "Impossibile chiudere il file vfs «%s»."
 
-#: sys/v4l/v4l_calls.c:159
-msgid "No device specified."
-msgstr "Nessun device specificato."
+#~ msgid "No device specified."
+#~ msgstr "Nessun device specificato."
 
-#: sys/v4l/v4l_calls.c:168
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Il device «%s» non esiste."
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Il device «%s» non esiste."
 
-#: sys/v4l/v4l_calls.c:172
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Impossibile aprire il device «%s» in lettura e scrittura."
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Impossibile aprire il device «%s» in lettura e scrittura."
 
-#: sys/v4l/v4l_calls.h:50
-msgid "Device is not open."
-msgstr "Il device non è aperto."
+#~ msgid "Device is not open."
+#~ msgstr "Il device non è aperto."
 
-#: sys/v4l/v4l_calls.h:59
-msgid "Device is open."
-msgstr "Il device è aperto."
+#~ msgid "Device is open."
+#~ msgstr "Il device è aperto."
 
 #~ msgid "Could not open vfs file \"%s\" for reading."
 #~ msgstr "Impossibile aprire il file vfs «%s» in lettura."

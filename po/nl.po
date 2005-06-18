@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-05-05 17:01+0200\n"
+"POT-Creation-Date: 2005-05-26 19:15+0200\n"
 "PO-Revision-Date: 2004-08-05 16:26+0200\n"
 "Last-Translator: Elros Cyriatan <cyriatan@fastmail.fm>\n"
 "Language-Team: Dutch <vertaling@nl.linux.org>\n"
@@ -86,27 +86,20 @@ msgstr "Geen bestandsnaam opgegeven"
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kon het VFS-bestand \"%s\" niet sluiten."
 
-#: sys/v4l/v4l_calls.c:159
-msgid "No device specified."
-msgstr "Geen apparaat opgegeven."
+#~ msgid "No device specified."
+#~ msgstr "Geen apparaat opgegeven."
 
-#: sys/v4l/v4l_calls.c:168
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Apparaat \"%s\" bestaat niet."
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Apparaat \"%s\" bestaat niet."
 
-#: sys/v4l/v4l_calls.c:172
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Kon apparaat \"%s\" niet openen voor lezen en schrijven."
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Kon apparaat \"%s\" niet openen voor lezen en schrijven."
 
-#: sys/v4l/v4l_calls.h:50
-msgid "Device is not open."
-msgstr "Apparaat is niet geopend."
+#~ msgid "Device is not open."
+#~ msgstr "Apparaat is niet geopend."
 
-#: sys/v4l/v4l_calls.h:59
-msgid "Device is open."
-msgstr "Apparaat is geopend."
+#~ msgid "Device is open."
+#~ msgstr "Apparaat is geopend."
 
 #~ msgid "Could not open vfs file \"%s\" for reading."
 #~ msgstr "Kon het VFS-bestand \"%s\" niet openen om te lezen."

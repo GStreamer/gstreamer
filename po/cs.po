@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-05-05 17:01+0200\n"
+"POT-Creation-Date: 2005-05-26 19:15+0200\n"
 "PO-Revision-Date: 2004-08-08 22:58+0200\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -89,27 +89,20 @@ msgstr "Nezadán název souboru"
 msgid "Could not close vfs file \"%s\"."
 msgstr "Nemohu zavřít soubor vfs \"%s\"."
 
-#: sys/v4l/v4l_calls.c:159
-msgid "No device specified."
-msgstr "Nezadáno zařízení."
+#~ msgid "No device specified."
+#~ msgstr "Nezadáno zařízení."
 
-#: sys/v4l/v4l_calls.c:168
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Zařízení \"%s\" neexistuje."
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Zařízení \"%s\" neexistuje."
 
-#: sys/v4l/v4l_calls.c:172
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Nemohu otevřít zařízení \"%s\" pro čtení a zápis."
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Nemohu otevřít zařízení \"%s\" pro čtení a zápis."
 
-#: sys/v4l/v4l_calls.h:50
-msgid "Device is not open."
-msgstr "Zařízení není otevřeno."
+#~ msgid "Device is not open."
+#~ msgstr "Zařízení není otevřeno."
 
-#: sys/v4l/v4l_calls.h:59
-msgid "Device is open."
-msgstr "Zařízení je otevřeno."
+#~ msgid "Device is open."
+#~ msgstr "Zařízení je otevřeno."
 
 #~ msgid "Could not open vfs file \"%s\" for reading."
 #~ msgstr "Nemohu otevřít soubor vfs \"%s\" pro čtení."

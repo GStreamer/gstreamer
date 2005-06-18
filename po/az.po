@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-05-05 17:01+0200\n"
+"POT-Creation-Date: 2005-05-26 19:15+0200\n"
 "PO-Revision-Date: 2004-03-19 18:29+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -88,27 +88,20 @@ msgstr "Fayl adı verilməyib."
 msgid "Could not close vfs file \"%s\"."
 msgstr "\"%s\" vfs faylı bağlana bilmədi."
 
-#: sys/v4l/v4l_calls.c:159
-msgid "No device specified."
-msgstr "Avadanlıq bildirilməyib."
+#~ msgid "No device specified."
+#~ msgstr "Avadanlıq bildirilməyib."
 
-#: sys/v4l/v4l_calls.c:168
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "\"%s\" avadanlığı mövcud deyil."
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "\"%s\" avadanlığı mövcud deyil."
 
-#: sys/v4l/v4l_calls.c:172
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "\"%s\" avadanlığı oxuma və yazma üçün açıla bilmədi."
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "\"%s\" avadanlığı oxuma və yazma üçün açıla bilmədi."
 
-#: sys/v4l/v4l_calls.h:50
-msgid "Device is not open."
-msgstr "Avadanlıq açıq deyil."
+#~ msgid "Device is not open."
+#~ msgstr "Avadanlıq açıq deyil."
 
-#: sys/v4l/v4l_calls.h:59
-msgid "Device is open."
-msgstr "Avadanlıq açıqdır."
+#~ msgid "Device is open."
+#~ msgstr "Avadanlıq açıqdır."
 
 #~ msgid "Could not open vfs file \"%s\" for reading."
 #~ msgstr "\"%s\" vfs faylı oxuma üçün açıla bilmədi."
