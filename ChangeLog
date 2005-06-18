@@ -1,3 +1,15 @@
+2005-06-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac: back to HEAD
+
+=== release 0.9.1 ===
+
+2005-06-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* NEWS:
+	* RELEASE:
+	  updated
+
 2005-06-17  Andy Wingo  <wingo@pobox.com>
 
 	* gst/base/gstbasesink.c (gst_basesink_chain): Remove bogus

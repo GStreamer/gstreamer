@@ -1,51 +1,34 @@
 
-GStreamer: Release notes for GStreamer 0.8.9 "Like Eating Glass"
+GStreamer: Release notes for GStreamer 0.9.1 "Left"
         
 
-The GStreamer team is happy to announce a new release
-in the 0.8.x stable series of the GStreamer streaming-media framework.
+The GStreamer team is petrified to announce a new release
+in the 0.9.x development series of the
+core of the GStreamer streaming media framework.
 
 
-The 0.8.x series is a stable series aimed at end users.
-It is not API or ABI compatible with the stable 0.6.x series.
-It is, however, parallel installable with the 0.6.x series.
+The 0.9.x series is a development series and not recommended for end users.
+It is not API or ABI compatible with the stable 0.8.x series.
+It is, however, parallel installable with the 0.8.x series.
 
 
-This module only contains core functionality.  For actual media playback,
-you will need other modules.  GStreamer Plugins contains a huge set of
-additional plugins.  GStreamer FFmpeg contains a plugin based on the popular
-FFmpeg decoding library.  These modules need not have the same source version
-as the core, as long as they are in the 0.8.x series.
+The main focus of the 0.9 series is to make GStreamer threadsafe.
+
+
+This module, gstreamer, only contains core functionality.
+For actual media playback, you will need other modules.
+gst-plugins-base contains a basic set of well-supported plugins.
+
+Other modules will be released later on when they are ready.
 
   
 Features of this release
     
-      * Parallel installability with 0.6.x series
-      * Internationalization
-      * Probe fixes
-      * Thread and queue fixes fixes
-      * Documentation updates
-      * New translation added: Vietnamese (Clytie Siddall)
-      * Important GstBin state change fix - see #166371 if you subclass
+      * Parallel installability with 0.8.x series
+      * Threadsafe design and API
 
 Bugs fixed in this release
     
-      * 94464 : [threads] gst_scheduler_add_scheduler() doesn't ref passe...
-      * 123775 : [PATCH] [api] setting state on element should force highe...
-      * 142588 : [threads] if all elements have been removed from a bin, s...
-      * 150546 : [api] Error for calling gst_pad_push in a get function is...
-      * 162276 : [build] gstregistry.h and gstxmlregistry.c don't build wi...
-      * 163234 : [PATCH] plugin loading isn't thread-safe
-      * 163383 : [PATCH] ogm plugins won't register
-      * 163801 : [PATCH] mem leak in xml registry loading
-      * 164062 : [PATCH] tee capsnego is broken
-      * 164261 : [PATCH] GST parsing doesn't recognise urls without a file...
-      * 165272 : [PATCH] Problem compiling gstreamer 0.8.8
-      * 165365 : [PATCH] gst_string_wrap() segfaults on NULL strings
-      * 165922 : add locking in opt
-      * 166269 : Typo in current .po file msgid string
-      * 166362 : data discarded by probes is leaked
-      * 166371 : GstBin derived classes not notified of state change
 
 Download
 
@@ -73,27 +56,19 @@ will create more lists as necessary.
         
 Applications
 
-Applications already ported to use GStreamer 0.8.x include the GNOME
-desktop components like gnome-media and nautilus-media, as well as other
-GNOME applications including sound-juicer, totem and RhythmBox.
+At this point, ports of existing applications to 0.9 are still experimental.
+There are patches for totem and jamboree.
 
   
 Contributors to this release
     
       * Andy Wingo
-      * Benjamin Otte
-      * Clytie Siddall
       * David Schleef
       * Edward Hervey
       * Jan Schmidt
-      * Luca Ognibene
       * Ronald Bultje
-      * Sebastien Cote
       * Stefan Kost
-      * Stephane Loeuillet
-      * Stephane Wirtel
       * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Vincent Torri
       * Wim Taymans
  
