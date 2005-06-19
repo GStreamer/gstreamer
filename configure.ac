@@ -669,7 +669,6 @@ libs/gst/getbits/Makefile
 po/Makefile.in
 check/Makefile
 tests/Makefile
-tests/bufspeed/Makefile
 tests/instantiate/Makefile
 tests/memchunk/Makefile
 tests/muxing/Makefile
