@@ -24,7 +24,7 @@
 START_TEST (test_link)
 {
   GstPad *src, *sink;
-  GstPadTemplate *srct;         //, *sinkt;
+  GstPadTemplate *srct;
 
   GstPadLinkReturn ret;
   gchar *name;
@@ -38,7 +38,7 @@ START_TEST (test_link)
   sink = gst_pad_new ("sink", GST_PAD_SINK);
   fail_if (sink == NULL);
 
-  /* linking without templates should fail */
+  /* linking without templates or caps should fail */
   ret = gst_pad_link (src, sink);
   fail_unless (ret == GST_PAD_LINK_NOFORMAT);
 
@@ -87,8 +87,103 @@ START_TEST (test_link_unlink_threaded)
   }
   MAIN_STOP_THREADS ();
 }
-END_TEST Suite *
-gst_pad_suite (void)
+
+END_TEST
+START_TEST (test_refcount)
+{
+  GstPad *src, *sink;
+  GstCaps *caps;
+  GstPadLinkReturn plr;
+
+  sink = gst_pad_new ("sink", GST_PAD_SINK);
+  fail_if (sink == NULL);
+
+  src = gst_pad_new ("src", GST_PAD_SRC);
+  fail_if (src == NULL);
+
+  caps = gst_caps_new_any ();
+  /* one for me */
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+
+  gst_pad_set_caps (src, caps);
+  gst_caps_unref (caps);
+  gst_pad_set_caps (sink, caps);
+  gst_caps_unref (caps);
+  /* one for me and one for each set_caps */
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+
+  plr = gst_pad_link (src, sink);
+  fail_unless (GST_PAD_LINK_SUCCESSFUL (plr));
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+
+  gst_pad_unlink (src, sink);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+
+  /* cleanup */
+  gst_object_unref (GST_OBJECT (src));
+  gst_object_unref (GST_OBJECT (sink));
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+
+  gst_caps_unref (caps);
+}
+
+END_TEST
+START_TEST (test_get_allowed_caps)
+{
+  GstPad *src, *sink;
+  GstCaps *caps, *gotcaps;
+  GstBuffer *buffer;
+  GstPadLinkReturn plr;
+  int rc;
+
+  ASSERT_CRITICAL (gst_pad_get_allowed_caps (NULL));
+
+  buffer = gst_buffer_new ();
+  ASSERT_CRITICAL (gst_pad_get_allowed_caps ((GstPad *) buffer));
+  gst_buffer_unref (buffer);
+
+  sink = gst_pad_new ("sink", GST_PAD_SINK);
+  ASSERT_CRITICAL (gst_pad_get_allowed_caps (sink));
+
+  src = gst_pad_new ("src", GST_PAD_SRC);
+  fail_if (src == NULL);
+  caps = gst_pad_get_allowed_caps (src);
+  fail_unless (caps == NULL);
+
+  caps = gst_caps_new_any ();
+  rc = GST_MINI_OBJECT_REFCOUNT_VALUE (caps);
+
+  gst_pad_set_caps (src, caps);
+  gst_caps_unref (caps);
+  gst_pad_set_caps (sink, caps);
+  gst_caps_unref (caps);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+
+  plr = gst_pad_link (src, sink);
+  fail_unless (GST_PAD_LINK_SUCCESSFUL (plr));
+
+  gotcaps = gst_pad_get_allowed_caps (src);
+  fail_if (gotcaps == NULL);
+  fail_unless (gst_caps_is_equal (gotcaps, caps));
+
+  ASSERT_CAPS_REFCOUNT (gotcaps, "gotcaps", 1);
+  gst_caps_unref (gotcaps);
+
+  gst_pad_unlink (src, sink);
+
+  /* cleanup */
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
+
+  gst_object_unref (GST_OBJECT (src));
+  gst_object_unref (GST_OBJECT (sink));
+
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+  gst_caps_unref (caps);
+}
+
+END_TEST Suite * gst_pad_suite (void)
 {
   Suite *s = suite_create ("GstPad");
   TCase *tc_chain = tcase_create ("general");
@@ -98,6 +193,8 @@ gst_pad_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_link);
+  tcase_add_test (tc_chain, test_refcount);
+  tcase_add_test (tc_chain, test_get_allowed_caps);
   tcase_add_test (tc_chain, test_link_unlink_threaded);
   return s;
 }

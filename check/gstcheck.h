@@ -144,6 +144,22 @@ G_STMT_START {							\
   _gst_check_expecting_log = FALSE;				\
 } G_STMT_END
 
+#define ASSERT_OBJECT_REFCOUNT(object, name, value)		\
+G_STMT_START {							\
+  int rc;							\
+  rc = GST_OBJECT_REFCOUNT_VALUE (object);			\
+  fail_unless (rc == value,					\
+               name " refcount is %d instead of %d", rc, value);\
+} G_STMT_END
+
+#define ASSERT_CAPS_REFCOUNT(caps, name, value)			\
+G_STMT_START {							\
+  int rc;							\
+  rc = GST_MINI_OBJECT_REFCOUNT_VALUE (caps);			\
+  fail_unless (rc == value,					\
+               name " refcount is %d instead of %d", rc, value);\
+} G_STMT_END
+
 
 #endif /* __GST_CHECK_H__ */
 

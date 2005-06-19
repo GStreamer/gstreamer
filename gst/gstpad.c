@@ -1221,6 +1221,9 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink)
     GstCaps *icaps;
 
     icaps = gst_caps_intersect (srccaps, sinkcaps);
+    gst_caps_unref (srccaps);
+    gst_caps_unref (sinkcaps);
+
     GST_CAT_DEBUG (GST_CAT_CAPS,
         "intersection caps %p %" GST_PTR_FORMAT, icaps, icaps);
 
@@ -1233,10 +1236,10 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink)
 
 
 /* FIXME leftover from an attempt at refactoring... */
+/* call with the two pads unlocked */
 static GstPadLinkReturn
 gst_pad_link_prepare (GstPad * srcpad, GstPad * sinkpad)
 {
-
   /* generic checks */
   g_return_val_if_fail (GST_IS_PAD (srcpad), GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (GST_IS_PAD (sinkpad), GST_PAD_LINK_REFUSED);
@@ -1327,6 +1330,7 @@ gst_pad_link (GstPad * srcpad, GstPad * sinkpad)
 {
   GstPadLinkReturn result;
 
+  /* prepare will also lock the two pads */
   result = gst_pad_link_prepare (srcpad, sinkpad);
 
   if (result != GST_PAD_LINK_OK)
@@ -1358,7 +1362,7 @@ gst_pad_link (GstPad * srcpad, GstPad * sinkpad)
     GST_UNLOCK (sinkpad);
     GST_UNLOCK (srcpad);
 
-    /* fire off a signal to each of the pads telling them 
+    /* fire off a signal to each of the pads telling them
      * that they've been linked */
     g_signal_emit (G_OBJECT (srcpad), gst_pad_signals[PAD_LINKED], 0, sinkpad);
     g_signal_emit (G_OBJECT (sinkpad), gst_pad_signals[PAD_LINKED], 0, srcpad);
@@ -1417,6 +1421,7 @@ gst_pad_get_pad_template (GstPad * pad)
 
 
 /* should be called with the pad LOCK held */
+/* refs the caps, so caller is responsible for getting it unreffed */
 static GstCaps *
 gst_pad_get_caps_unlocked (GstPad * pad)
 {
@@ -1496,7 +1501,7 @@ done:
  *
  * Gets the capabilities of this pad.
  *
- * Returns: the #GstCaps of this pad. This function returns a new caps, so use 
+ * Returns: the #GstCaps of this pad. This function returns a new caps, so use
  * gst_caps_unref to get rid of it.
  *
  * MT safe.
@@ -1861,12 +1866,12 @@ gst_pad_get_peer (GstPad * pad)
  * gst_pad_get_allowed_caps:
  * @srcpad: a #GstPad, it must a a source pad.
  *
- * Gets the capabilities of the allowed media types that can flow through @pad
- * and its peer. The pad must be a source pad.
+ * Gets the capabilities of the allowed media types that can flow through
+ * @srcpad and its peer. The pad must be a source pad.
  * The caller must free the resulting caps.
  *
  * Returns: the allowed #GstCaps of the pad link.  Free the caps when
- * you no longer need it. This function returns NULL when the @pad has no
+ * you no longer need it. This function returns NULL when the @srcpad has no
  * peer.
  *
  * MT safe.
@@ -1880,10 +1885,12 @@ gst_pad_get_allowed_caps (GstPad * srcpad)
   GstPad *peer;
 
   g_return_val_if_fail (GST_IS_PAD (srcpad), NULL);
+  g_return_val_if_fail (GST_PAD_IS_SRC (srcpad), NULL);
 
   GST_LOCK (srcpad);
 
-  if (G_UNLIKELY ((peer = GST_PAD_PEER (srcpad)) == NULL))
+  peer = GST_PAD_PEER (srcpad);
+  if (G_UNLIKELY (peer == NULL))
     goto no_peer;
 
   GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%s:%s: getting allowed caps",
@@ -1918,15 +1925,15 @@ no_peer:
  * gst_pad_get_negotiated_caps:
  * @pad: a #GstPad.
  *
- * Gets the capabilities of the media type that currently flows through @pad 
+ * Gets the capabilities of the media type that currently flows through @pad
  * and its peer.
  *
  * This function can be used on both src and sinkpads. Note that srcpads are
- * always negotiated before sinkpads so it is possible that the negotiated caps 
+ * always negotiated before sinkpads so it is possible that the negotiated caps
  * on the srcpad do not match the negotiated caps of the peer.
  *
  * Returns: the negotiated #GstCaps of the pad link.  Free the caps when
- * you no longer need it. This function returns NULL when the @pad has no 
+ * you no longer need it. This function returns NULL when the @pad has no
  * peer or is not negotiated yet.
  *
  * MT safe.

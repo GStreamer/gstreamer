@@ -1,5 +1,17 @@
 2005-06-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* check/gstcheck.h:
+	  add macros for checking refcounts on objects and caps
+	* check/gst/gstpad.c: (START_TEST), (gst_pad_suite):
+	  add some more unit tests
+	* gst/gstpad.c: (gst_pad_link_check_compatible_unlocked),
+	(gst_pad_link_prepare), (gst_pad_link), (gst_pad_get_allowed_caps):
+	  fix leaked refcounts (I hope :)) so unittest works
+	* gst/gstpad.h:
+	  whitespace removal
+
+2005-06-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac: back to HEAD
 
 === release 0.9.1 ===

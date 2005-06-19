@@ -72,9 +72,9 @@ typedef enum {
 #define GST_PAD_LINK_SUCCESSFUL(ret) ((ret) >= GST_PAD_LINK_OK)
 
 typedef enum {
-  GST_FLOW_OK 		  =  0,		/* data passing was ok */
+  GST_FLOW_OK		  =  0,		/* data passing was ok */
   GST_FLOW_RESEND	  =  1,		/* resend buffer, possibly with new caps */
-  GST_FLOW_ERROR 	  = -1,		/* some (fatal) error occured */
+  GST_FLOW_ERROR	  = -1,		/* some (fatal) error occured */
   GST_FLOW_NOT_CONNECTED  = -2,		/* pad is not connected */
   GST_FLOW_NOT_NEGOTIATED = -3,		/* pad is not negotiated */
   GST_FLOW_WRONG_STATE    = -4,		/* pad is in wrong state */
@@ -90,19 +90,18 @@ typedef enum {
 
 #define GST_PAD_MODE_ACTIVATE(mode) ((mode) != GST_ACTIVATE_NONE)
 
- 
 /* pad states */
-typedef gboolean		(*GstPadActivateFunction) 	(GstPad *pad, GstActivateMode mode);
+typedef gboolean		(*GstPadActivateFunction)	(GstPad *pad, GstActivateMode mode);
 
 /* data passing */
-typedef GstFlowReturn		(*GstPadChainFunction) 		(GstPad *pad, GstBuffer *buffer);
-typedef GstFlowReturn		(*GstPadGetRangeFunction)	(GstPad *pad, guint64 offset, 
+typedef GstFlowReturn		(*GstPadChainFunction)		(GstPad *pad, GstBuffer *buffer);
+typedef GstFlowReturn		(*GstPadGetRangeFunction)	(GstPad *pad, guint64 offset,
 		                                                 guint length, GstBuffer **buffer);
 typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstEvent *event);
 
 /* deprecate me, check range should use seeking query, loop function is internal */
-typedef gboolean		(*GstPadCheckGetRangeFunction)	(GstPad *pad); 
-typedef void			(*GstPadLoopFunction) 		(GstPad *pad);
+typedef gboolean		(*GstPadCheckGetRangeFunction)	(GstPad *pad);
+typedef void			(*GstPadLoopFunction)		(GstPad *pad);
 
 /* internal links */
 typedef GList*			(*GstPadIntLinkFunction)	(GstPad *pad);
@@ -112,20 +111,20 @@ typedef const GstQueryType*	(*GstPadQueryTypeFunction)	(GstPad *pad);
 typedef gboolean		(*GstPadQueryFunction)		(GstPad *pad, GstQuery *query);
 
 /* linking */
-typedef GstPadLinkReturn	(*GstPadLinkFunction) 		(GstPad *pad, GstPad *peer);
-typedef void			(*GstPadUnlinkFunction) 	(GstPad *pad);
+typedef GstPadLinkReturn	(*GstPadLinkFunction)		(GstPad *pad, GstPad *peer);
+typedef void			(*GstPadUnlinkFunction)		(GstPad *pad);
 
 /* caps nego */
-typedef GstCaps*		(*GstPadGetCapsFunction) 	(GstPad *pad);
-typedef gboolean		(*GstPadSetCapsFunction) 	(GstPad *pad, GstCaps *caps);
-typedef gboolean		(*GstPadAcceptCapsFunction) 	(GstPad *pad, GstCaps *caps);
-typedef GstCaps*		(*GstPadFixateCapsFunction) 	(GstPad *pad, GstCaps *caps);
-typedef GstFlowReturn		(*GstPadBufferAllocFunction) 	(GstPad *pad, guint64 offset, guint size,
+typedef GstCaps*		(*GstPadGetCapsFunction)	(GstPad *pad);
+typedef gboolean		(*GstPadSetCapsFunction)	(GstPad *pad, GstCaps *caps);
+typedef gboolean		(*GstPadAcceptCapsFunction)	(GstPad *pad, GstCaps *caps);
+typedef GstCaps*		(*GstPadFixateCapsFunction)	(GstPad *pad, GstCaps *caps);
+typedef GstFlowReturn		(*GstPadBufferAllocFunction)	(GstPad *pad, guint64 offset, guint size,
 								 GstCaps *caps, GstBuffer **buf);
 /* misc */
-typedef gboolean 		(*GstPadDispatcherFunction) 	(GstPad *pad, gpointer data);
+typedef gboolean		(*GstPadDispatcherFunction)	(GstPad *pad, gpointer data);
 
-typedef void 			(*GstPadBlockCallback)		(GstPad *pad, gboolean blocked, gpointer user_data);
+typedef void			(*GstPadBlockCallback)		(GstPad *pad, gboolean blocked, gpointer user_data);
 
 typedef enum {
   GST_PAD_UNKNOWN,
@@ -143,14 +142,14 @@ typedef enum {
 } GstPadFlags;
 
 struct _GstPad {
-  GstObject		object;
+  GstObject			object;
 
-  gpointer		element_private;
+  gpointer			element_private;
 
-  GstPadTemplate	*padtemplate;	/* the template for this pad */
+  GstPadTemplate		*padtemplate;
 
   /* direction cannot change after creating the pad */
-  GstPadDirection 		 direction;
+  GstPadDirection		 direction;
 
   /*< public >*/ /* with STREAM_LOCK */
   /* streaming rec_lock */
@@ -167,26 +166,26 @@ struct _GstPad {
   gpointer			 block_data;
 
   /* the pad capabilities */
-  GstCaps 			*caps;
-  GstPadGetCapsFunction 	 getcapsfunc;
-  GstPadSetCapsFunction 	 setcapsfunc;
-  GstPadAcceptCapsFunction 	 acceptcapsfunc;
-  GstPadFixateCapsFunction 	 fixatecapsfunc;
+  GstCaps			*caps;
+  GstPadGetCapsFunction		getcapsfunc;
+  GstPadSetCapsFunction		setcapsfunc;
+  GstPadAcceptCapsFunction	 acceptcapsfunc;
+  GstPadFixateCapsFunction	 fixatecapsfunc;
 
   GstPadActivateFunction	 activatefunc;
 
   /* pad link */
-  GstPadLinkFunction 		 linkfunc;
-  GstPadUnlinkFunction 		 unlinkfunc;
-  GstPad 			*peer;
+  GstPadLinkFunction		 linkfunc;
+  GstPadUnlinkFunction		 unlinkfunc;
+  GstPad			*peer;
 
-  gpointer 			 sched_private;
+  gpointer			 sched_private;
 
   /* data transport functions */
-  GstPadLoopFunction 		 loopfunc;
-  GstPadChainFunction 		 chainfunc;
-  GstPadCheckGetRangeFunction 	 checkgetrangefunc;
-  GstPadGetRangeFunction 	 getrangefunc;
+  GstPadLoopFunction		 loopfunc;
+  GstPadChainFunction		 chainfunc;
+  GstPadCheckGetRangeFunction	 checkgetrangefunc;
+  GstPadGetRangeFunction	 getrangefunc;
   GstPadEventFunction		 eventfunc;
 
   GstActivateMode		 mode;
@@ -212,7 +211,7 @@ struct _GstPadClass {
   /* signal callbacks */
   void		(*linked)		(GstPad *pad, GstPad *peer);
   void		(*unlinked)		(GstPad *pad, GstPad *peer);
-  void 		(*request_link)		(GstPad *pad);
+  void		(*request_link)		(GstPad *pad);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -371,7 +370,7 @@ gpointer		gst_pad_get_element_private		(GstPad *pad);
 GstPadTemplate*		gst_pad_get_pad_template		(GstPad *pad);
 
 void			gst_pad_set_bufferalloc_function	(GstPad *pad, GstPadBufferAllocFunction bufalloc);
-GstFlowReturn		gst_pad_alloc_buffer			(GstPad *pad, guint64 offset, gint size, 
+GstFlowReturn		gst_pad_alloc_buffer			(GstPad *pad, guint64 offset, gint size,
 								 GstCaps *caps, GstBuffer **buf);
 
 /* data passing setup functions */
@@ -386,7 +385,7 @@ void			gst_pad_set_event_function		(GstPad *pad, GstPadEventFunction event);
 void			gst_pad_set_link_function		(GstPad *pad, GstPadLinkFunction link);
 void			gst_pad_set_unlink_function		(GstPad *pad, GstPadUnlinkFunction unlink);
 
-GstPadLinkReturn        gst_pad_link             		(GstPad *srcpad, GstPad *sinkpad);
+GstPadLinkReturn        gst_pad_link				(GstPad *srcpad, GstPad *sinkpad);
 gboolean		gst_pad_unlink				(GstPad *srcpad, GstPad *sinkpad);
 gboolean		gst_pad_is_linked			(GstPad *pad);
 
@@ -401,17 +400,17 @@ void			gst_pad_set_setcaps_function		(GstPad *pad, GstPadSetCapsFunction setcaps
 G_CONST_RETURN GstCaps*	gst_pad_get_pad_template_caps		(GstPad *pad);
 
 /* capsnego function for connected/unconnected pads */
-GstCaps * 		gst_pad_get_caps 			(GstPad * pad);
-GstCaps*  		gst_pad_fixate_caps 			(GstPad * pad, GstCaps *caps);
-gboolean  		gst_pad_accept_caps 			(GstPad * pad, GstCaps *caps);
-gboolean  		gst_pad_set_caps 			(GstPad * pad, GstCaps *caps);
+GstCaps *		gst_pad_get_caps			(GstPad * pad);
+GstCaps*		gst_pad_fixate_caps			(GstPad * pad, GstCaps *caps);
+gboolean		gst_pad_accept_caps			(GstPad * pad, GstCaps *caps);
+gboolean		gst_pad_set_caps			(GstPad * pad, GstCaps *caps);
 
-GstCaps * 		gst_pad_peer_get_caps 			(GstPad * pad);
-gboolean  		gst_pad_peer_accept_caps 		(GstPad * pad, GstCaps *caps);
+GstCaps *		gst_pad_peer_get_caps			(GstPad * pad);
+gboolean		gst_pad_peer_accept_caps		(GstPad * pad, GstCaps *caps);
 
 /* capsnego for connected pads */
-GstCaps * 		gst_pad_get_allowed_caps 		(GstPad * srcpad);
-GstCaps * 		gst_pad_get_negotiated_caps 		(GstPad * pad);
+GstCaps *		gst_pad_get_allowed_caps		(GstPad * srcpad);
+GstCaps *		gst_pad_get_negotiated_caps		(GstPad * pad);
 
 /* data passing functions to peer */
 GstFlowReturn		gst_pad_push				(GstPad *pad, GstBuffer *buffer);
@@ -428,10 +427,10 @@ GstFlowReturn		gst_pad_get_range			(GstPad *pad, guint64 offset, guint size,
 gboolean		gst_pad_send_event			(GstPad *pad, GstEvent *event);
 
 /* pad tasks */
-gboolean		gst_pad_start_task 			(GstPad *pad, GstTaskFunction func,
+gboolean		gst_pad_start_task			(GstPad *pad, GstTaskFunction func,
 								 gpointer data);
-gboolean		gst_pad_pause_task 			(GstPad *pad);
-gboolean		gst_pad_stop_task 			(GstPad *pad);
+gboolean		gst_pad_pause_task			(GstPad *pad);
+gboolean		gst_pad_stop_task			(GstPad *pad);
 
 /* internal links */
 void			gst_pad_set_internal_link_function	(GstPad *pad, GstPadIntLinkFunction intlink);
