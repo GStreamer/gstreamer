@@ -33,6 +33,7 @@ TESTS = $(top_builddir)/tools/gst-register 	\
 	gst/gstobject				\
 	gst/gstpad				\
 	gst/gstsystemclock			\
+	gst/gsttag				\
 	pipelines/simple_launch_lines		\
 	pipelines/cleanup			\
 	gst-libs/gdp	

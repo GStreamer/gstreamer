@@ -195,7 +195,7 @@ _gst_tag_initialize (void)
  * @dest: uninitialized GValue to store result in
  * @src: GValue to copy from
  *
- * This is a convenience function for the func argument of gst_tag_register(). 
+ * This is a convenience function for the func argument of gst_tag_register().
  * It creates a copy of the first value from the list.
  */
 void
@@ -211,7 +211,7 @@ gst_tag_merge_use_first (GValue * dest, const GValue * src)
  * gst_tag_merge_strings_with_comma:
  * @dest: uninitialized GValue to store result in
  * @src: GValue to copy from
- * 
+ *
  * This is a convenience function for the func argument of gst_tag_register().
  * It concatenates all given strings using a comma. The tag must be registered
  * as a G_TYPE_STRING or this function will fail.
@@ -331,7 +331,7 @@ gst_tag_get_type (const gchar * tag)
  * gst_tag_get_nick
  * @tag: the tag
  *
- * Returns the human-readable name of this tag, You must not change or free 
+ * Returns the human-readable name of this tag, You must not change or free
  * this string.
  *
  * Returns: the human-readable name of this tag
@@ -352,7 +352,7 @@ gst_tag_get_nick (const gchar * tag)
  * gst_tag_get_description:
  * @tag: the tag
  *
- * Returns the human-readable description of this tag, You must not change or 
+ * Returns the human-readable description of this tag, You must not change or
  * free this string.
  *
  * Returns: the human-readable description of this tag
@@ -514,7 +514,7 @@ gst_tag_list_copy_foreach (GQuark tag, const GValue * value, gpointer user_data)
  * @into: list to merge into
  * @from: list to merge from
  * @mode: the mode to use
- * 
+ *
  * Inserts the tags of the second list into the first list using the given mode.
  */
 void
@@ -834,7 +834,7 @@ gst_event_new_tag (GstTagList * list)
  * @tag_event: a tagging #GstEvent
  *
  * Gets the taglist from a given tagging event.
- * 
+ *
  * Returns: The #GstTagList of the event
  */
 GstTagList *
@@ -852,11 +852,11 @@ gst_event_tag_get_list (GstEvent * tag_event)
  * @tag: tag to read out
  * @index: number of entry to read out
  *
- * Gets the value that is at the given index for the given tag in the given 
+ * Gets the value that is at the given index for the given tag in the given
  * list.
- * 
- * Returns: The GValue for the specified entry or NULL if the tag wasn't available
- *	    or the tag doesn't have as many entries
+ *
+ * Returns: The GValue for the specified entry or NULL if the tag wasn't
+ *          available or the tag doesn't have as many entries
  */
 G_CONST_RETURN GValue *
 gst_tag_list_get_value_index (const GstTagList * list, const gchar * tag,
@@ -888,11 +888,12 @@ gst_tag_list_get_value_index (const GstTagList * list, const gchar * tag,
  * @list: list to get the tag from
  * @tag: tag to read out
  *
- * Copies the contents for the given tag into the value, merging multiple values 
- * into one if multiple values are associated with the tag.
+ * Copies the contents for the given tag into the value,
+ * merging multiple values into one if multiple values are associated
+ * with the tag.
  * You must g_value_unset() the value after use.
  *
- * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the 
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *	    given list.
  */
 gboolean
@@ -925,38 +926,39 @@ gst_tag_list_copy_value (GValue * dest, const GstTagList * list,
 
 /***** evil macros to get all the gst_tag_list_get_*() functions right *****/
 
-#define TAG_MERGE_FUNCS(name,type)						\
-gboolean									\
-gst_tag_list_get_ ## name (const GstTagList *list, const gchar *tag,		\
-			   type *value)						\
-{										\
-  GValue v = { 0, };								\
-										\
-  g_return_val_if_fail (GST_IS_TAG_LIST (list), FALSE);				\
-  g_return_val_if_fail (tag != NULL, FALSE);					\
-  g_return_val_if_fail (value != NULL, FALSE);					\
-										\
-  if (!gst_tag_list_copy_value (&v, list, tag))					\
-      return FALSE;								\
-  *value = COPY_FUNC (g_value_get_ ## name (&v));				\
-  g_value_unset (&v);								\
-  return TRUE;									\
-}										\
-										\
-gboolean									\
-gst_tag_list_get_ ## name ## _index (const GstTagList *list, const gchar *tag, 	\
-			   guint index, type *value)			  	\
-{										\
-  const GValue *v;    								\
-										\
-  g_return_val_if_fail (GST_IS_TAG_LIST (list), FALSE);				\
-  g_return_val_if_fail (tag != NULL, FALSE);					\
-  g_return_val_if_fail (value != NULL, FALSE);					\
-										\
-  if ((v = gst_tag_list_get_value_index (list, tag, index)) == NULL)		\
-      return FALSE;								\
-  *value = COPY_FUNC (g_value_get_ ## name (v));			      	\
-  return TRUE;									\
+#define TAG_MERGE_FUNCS(name,type)					\
+gboolean								\
+gst_tag_list_get_ ## name (const GstTagList *list, const gchar *tag,	\
+			   type *value)					\
+{									\
+  GValue v = { 0, };							\
+									\
+  g_return_val_if_fail (GST_IS_TAG_LIST (list), FALSE);			\
+  g_return_val_if_fail (tag != NULL, FALSE);				\
+  g_return_val_if_fail (value != NULL, FALSE);				\
+									\
+  if (!gst_tag_list_copy_value (&v, list, tag))				\
+      return FALSE;							\
+  *value = COPY_FUNC (g_value_get_ ## name (&v));			\
+  g_value_unset (&v);							\
+  return TRUE;								\
+}									\
+									\
+gboolean								\
+gst_tag_list_get_ ## name ## _index (const GstTagList *list,		\
+				     const gchar *tag,			\
+				     guint index, type *value)		\
+{									\
+  const GValue *v;							\
+									\
+  g_return_val_if_fail (GST_IS_TAG_LIST (list), FALSE);			\
+  g_return_val_if_fail (tag != NULL, FALSE);				\
+  g_return_val_if_fail (value != NULL, FALSE);				\
+									\
+  if ((v = gst_tag_list_get_value_index (list, tag, index)) == NULL)	\
+      return FALSE;							\
+  *value = COPY_FUNC (g_value_get_ ## name (v));			\
+  return TRUE;								\
 }
 
 #define COPY_FUNC /**/

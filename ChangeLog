@@ -1,5 +1,20 @@
 2005-06-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* check/Makefile.am:
+	  add gsttag
+	* check/gst/gsttag.c: (check_tags), (START_TEST), (gst_tag_suite),
+	(main):
+	  move over from testsuite dir and clean up
+	* configure.ac:
+	* gst/gsttag.c:
+	* testsuite/Makefile.am:
+	* testsuite/tags/.cvsignore:
+	* testsuite/tags/Makefile.am:
+	* testsuite/tags/merge.c:
+	  remove testsuite/tags
+
+2005-06-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/gst/gstreamer-sections.txt:
 	* docs/gst/tmpl/gstenumtypes.sgml:
 	* win32/gstenumtypes.c:
