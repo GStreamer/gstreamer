@@ -764,25 +764,6 @@ gst_scheduler_flags_get_type (void)
   return etype;
 }
 
-GType
-gst_scheduler_state_get_type (void)
-{
-  static GType etype = 0;
-
-  if (etype == 0) {
-    static const GEnumValue values[] = {
-      {GST_SCHEDULER_STATE_NONE, "GST_SCHEDULER_STATE_NONE", "none"},
-      {GST_SCHEDULER_STATE_RUNNING, "GST_SCHEDULER_STATE_RUNNING", "running"},
-      {GST_SCHEDULER_STATE_STOPPED, "GST_SCHEDULER_STATE_STOPPED", "stopped"},
-      {GST_SCHEDULER_STATE_ERROR, "GST_SCHEDULER_STATE_ERROR", "error"},
-      {0, NULL, NULL}
-    };
-    etype = g_enum_register_static ("GstSchedulerState", values);
-  }
-  return etype;
-}
-
-
 /* enumerations from "gsttag.h" */
 GType
 gst_tag_merge_mode_get_type (void)

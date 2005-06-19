@@ -1,6 +1,6 @@
 # GStreamer API reference sections
 
-# please add section in the alpahbetical order using the following template
+# please add sections in alphabetical order using the following template
 # <SECTION>
 # <FILE>gstxxx</FILE>
 # <TITLE>GstXxx</TITLE>
@@ -1850,5 +1850,10 @@ GST_XML_GET_CLASS
 GST_TYPE_XML
 <SUBSECTION Private>
 gst_xml_get_type
+</SECTION>
+
+<SECTION>
+<FILE>gstenumtypes</FILE>
+<TITLE>GstEnumTypes</TITLE>
 </SECTION>
 

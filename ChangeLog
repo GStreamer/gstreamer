@@ -1,5 +1,12 @@
 2005-06-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstenumtypes.sgml:
+	* win32/gstenumtypes.c:
+	  clean up documentation build a little
+
+2005-06-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* check/gstcheck.h:
 	  add macros for checking refcounts on objects and caps
 	* check/gst/gstpad.c: (START_TEST), (gst_pad_suite):
