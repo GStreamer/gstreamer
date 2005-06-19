@@ -4,6 +4,10 @@
 # <SECTION>
 # <FILE>gstxxx</FILE>
 # <TITLE>GstXxx</TITLE>
+# typedefs
+# macros
+# constructor
+# methods
 # <SUBSECTION Standard>
 # <SUBSECTION Private>
 # </SECTION>
@@ -18,10 +22,6 @@ gst_init_check
 gst_init_with_popt_table
 gst_init_check_with_popt_table
 gst_init_get_popt_table
-gst_use_threads
-gst_has_threads
-gst_main
-gst_main_quit
 <SUBSECTION Private>
 #GstPoptOption
 </SECTION>
@@ -31,22 +31,24 @@ gst_main_quit
 <TITLE>GstBin</TITLE>
 GstBin
 GstBinFlags
+
 gst_bin_new
 gst_bin_add
-gst_bin_add_many
 gst_bin_remove
-gst_bin_remove_many
+
 gst_bin_get_by_name
 gst_bin_get_by_name_recurse_up
-gst_bin_get_list
 gst_bin_get_by_interface
-gst_bin_get_all_by_interface
-gst_bin_iterate
-gst_bin_use_clock
-gst_bin_get_clock
-gst_bin_auto_clock
-gst_bin_sync_children_state
-gst_bin_child_state_change
+
+gst_bin_iterate_elements
+gst_bin_iterate_recurse
+gst_bin_iterate_sinks
+gst_bin_iterate_all_by_interface
+
+<SUBSECTION>
+gst_bin_add_many
+gst_bin_remove_many
+
 <SUBSECTION Standard>
 GstBinClass
 GST_BIN
@@ -56,15 +58,18 @@ GST_BIN_CLASS
 GST_IS_BIN_CLASS
 GST_BIN_GET_CLASS
 GST_TYPE_BIN_FLAGS
+
 <SUBSECTION Private>
 gst_bin_get_type
 gst_bin_flags_get_type
+
 </SECTION>
 
 <SECTION>
 <FILE>gstbuffer</FILE>
 <TITLE>GstBuffer</TITLE>
 GstBuffer
+
 gst_buffer_new
 gst_buffer_new_and_alloc
 
@@ -77,42 +82,37 @@ GST_BUFFER_FLAG_UNSET
 gst_buffer_set_data
 GST_BUFFER_DATA
 GST_BUFFER_SIZE
-GST_BUFFER_MAXSIZE
 GST_BUFFER_TIMESTAMP
 GST_BUFFER_DURATION
 GST_BUFFER_OFFSET
 GST_BUFFER_OFFSET_END
 
 gst_buffer_ref
-gst_buffer_ref_by_count
 gst_buffer_unref
-gst_buffer_stamp
+
 gst_buffer_copy
 gst_buffer_is_writable
-gst_buffer_copy_on_write
+gst_buffer_make_writable
+gst_buffer_replace
+
+gst_buffer_get_caps
+gst_buffer_set_caps
+
 gst_buffer_create_sub
-gst_buffer_join
-gst_buffer_merge
-gst_buffer_span
 gst_buffer_is_span_fast
-gst_buffer_default_free
-gst_buffer_default_copy
+gst_buffer_span
 
 GST_BUFFER_TRACE_NAME
-GST_BUFFER_REFCOUNT
-GST_BUFFER_REFCOUNT_VALUE
-GST_BUFFER_COPY_FUNC
-GST_BUFFER_FREE_FUNC
-GST_BUFFER_FREE_DATA_FUNC
-GstBufferFreeDataFunc
-GST_BUFFER_PRIVATE
 GST_BUFFER_OFFSET_NONE
-GST_BUFFER_MAXSIZE_NONE
 GST_BUFFER_DURATION_IS_VALID
 GST_BUFFER_TIMESTAMP_IS_VALID
 GST_BUFFER_OFFSET_IS_VALID
 GST_BUFFER_OFFSET_END_IS_VALID
-GST_BUFFER_MAXSIZE_IS_VALID
+
+<SUBSECTION>
+gst_buffer_stamp
+gst_buffer_join
+gst_buffer_merge
 
 <SUBSECTION Standard>
 GST_BUFFER
@@ -127,6 +127,9 @@ gst_buffer_flag_get_type
 <SECTION>
 <FILE>gstcaps</FILE>
 <TITLE>GstCaps</TITLE>
+GstCaps
+GstStaticCaps
+
 GST_CAPS_FLAGS_ANY
 GST_CAPS_ANY
 GST_CAPS_NONE
@@ -136,44 +139,34 @@ GST_CAPS_IS_SIMPLE
 gst_caps_is_simple
 GST_DEBUG_CAPS
 GST_STATIC_CAPS
-GstCaps
-GstStaticCaps
 gst_caps_new_empty
 gst_caps_new_any
 gst_caps_new_simple
 gst_caps_new_full
 gst_caps_new_full_valist
 gst_caps_copy
-gst_caps_free
 gst_static_caps_get
 gst_caps_append
 gst_caps_append_structure
-gst_caps_split_one
 gst_caps_get_size
 gst_caps_get_structure
-gst_caps_copy_1
 gst_caps_set_simple
 gst_caps_set_simple_valist
 gst_caps_is_any
 gst_caps_is_empty
-gst_caps_is_chained
 gst_caps_is_fixed
 gst_caps_is_equal
-gst_caps_is_equal_fixed
 gst_caps_is_always_compatible
 gst_caps_is_subset
 gst_caps_intersect
 gst_caps_union
 gst_caps_normalize
-gst_caps_simplify
 gst_caps_do_simplify
 gst_caps_save_thyself
 gst_caps_load_thyself
 gst_caps_replace
 gst_caps_to_string
 gst_caps_from_string
-gst_caps_structure_fixate_field_nearest_int
-gst_caps_structure_fixate_field_nearest_double
 gst_caps_subtract
 <SUBSECTION Standard>
 GST_CAPS
@@ -1423,6 +1416,8 @@ gst_structure_get_double
 gst_structure_get_string
 gst_structure_to_string
 gst_structure_from_string
+gst_caps_structure_fixate_field_nearest_int
+gst_caps_structure_fixate_field_nearest_double
 <SUBSECTION Standard>
 GST_STRUCTURE
 GST_IS_STRUCTURE

@@ -106,16 +106,6 @@ Will be emmited if an element was removed from this bin.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_bin_add_many ##### -->
-<para>
-
-</para>
-
-@bin: 
-@element_1: 
-@Varargs: 
-
-
 <!-- ##### FUNCTION gst_bin_remove ##### -->
 <para>
 
@@ -124,16 +114,6 @@ Will be emmited if an element was removed from this bin.
 @bin: 
 @element: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_bin_remove_many ##### -->
-<para>
-
-</para>
-
-@bin: 
-@element_1: 
-@Varargs: 
 
 
 <!-- ##### FUNCTION gst_bin_get_by_name ##### -->
@@ -164,5 +144,62 @@ Will be emmited if an element was removed from this bin.
 @bin: 
 @interface: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gst_bin_iterate_elements ##### -->
+<para>
+
+</para>
+
+@bin: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_bin_iterate_recurse ##### -->
+<para>
+
+</para>
+
+@bin: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_bin_iterate_sinks ##### -->
+<para>
+
+</para>
+
+@bin: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_bin_iterate_all_by_interface ##### -->
+<para>
+
+</para>
+
+@bin: 
+@interface: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_bin_add_many ##### -->
+<para>
+
+</para>
+
+@bin: 
+@element_1: 
+@Varargs: 
+
+
+<!-- ##### FUNCTION gst_bin_remove_many ##### -->
+<para>
+
+</para>
+
+@bin: 
+@element_1: 
+@Varargs: 
 
 

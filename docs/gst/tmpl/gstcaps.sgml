@@ -14,6 +14,24 @@ Structure describing sets of media formats
 
 </para>
 
+<!-- ##### STRUCT GstCaps ##### -->
+<para>
+
+</para>
+
+@type: 
+@refcount: 
+@flags: 
+@structs: 
+
+<!-- ##### STRUCT GstStaticCaps ##### -->
+<para>
+
+</para>
+
+@caps: 
+@string: 
+
 <!-- ##### MACRO GST_CAPS_FLAGS_ANY ##### -->
 <para>
 Flags that this caps has no specific content, but can contain anything.
@@ -90,24 +108,6 @@ templates.
 @string: the string describing the caps.
 @Returns: a new #GstCaps instance
 
-
-<!-- ##### STRUCT GstCaps ##### -->
-<para>
-
-</para>
-
-@type: 
-@refcount: 
-@flags: 
-@structs: 
-
-<!-- ##### STRUCT GstStaticCaps ##### -->
-<para>
-
-</para>
-
-@caps: 
-@string: 
 
 <!-- ##### FUNCTION gst_caps_new_empty ##### -->
 <para>
@@ -373,28 +373,6 @@ templates.
 </para>
 
 @string: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_structure_fixate_field_nearest_int ##### -->
-<para>
-
-</para>
-
-@structure: 
-@field_name: 
-@target: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_structure_fixate_field_nearest_double ##### -->
-<para>
-
-</para>
-
-@structure: 
-@field_name: 
-@target: 
 @Returns: 
 
 

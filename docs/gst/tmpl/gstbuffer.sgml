@@ -241,15 +241,6 @@ will be freed.
 @buf: a #GstBuffer to unref.
 
 
-<!-- ##### FUNCTION gst_buffer_stamp ##### -->
-<para>
-
-</para>
-
-@dest: 
-@src: 
-
-
 <!-- ##### MACRO gst_buffer_copy ##### -->
 <para>
 Copies the given buffer using the copy function of the parent GstData structure.
@@ -267,6 +258,41 @@ Tests if you can safely write data into a buffer's data array.
 @buf: a #GstBuffer to check
 
 
+<!-- ##### MACRO gst_buffer_make_writable ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+
+<!-- ##### MACRO gst_buffer_replace ##### -->
+<para>
+
+</para>
+
+@obuf: 
+@nbuf: 
+
+
+<!-- ##### FUNCTION gst_buffer_get_caps ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_buffer_set_caps ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@caps: 
+
+
 <!-- ##### FUNCTION gst_buffer_create_sub ##### -->
 <para>
 
@@ -278,17 +304,7 @@ Tests if you can safely write data into a buffer's data array.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_buffer_join ##### -->
-<para>
-
-</para>
-
-@buf1: 
-@buf2: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_buffer_merge ##### -->
+<!-- ##### FUNCTION gst_buffer_is_span_fast ##### -->
 <para>
 
 </para>
@@ -310,16 +326,6 @@ Tests if you can safely write data into a buffer's data array.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_buffer_is_span_fast ##### -->
-<para>
-
-</para>
-
-@buf1: 
-@buf2: 
-@Returns: 
-
-
 <!-- ##### MACRO GST_BUFFER_TRACE_NAME ##### -->
 <para>
 The name used for tracing memory allocations
@@ -328,13 +334,6 @@ The name used for tracing memory allocations
 
 
 <!-- ##### MACRO GST_BUFFER_OFFSET_NONE ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GST_BUFFER_MAXSIZE_NONE ##### -->
 <para>
 
 </para>
@@ -373,11 +372,32 @@ Tests if the timestamp is known.
 @buffer: 
 
 
-<!-- ##### MACRO GST_BUFFER_MAXSIZE_IS_VALID ##### -->
+<!-- ##### FUNCTION gst_buffer_stamp ##### -->
 <para>
 
 </para>
 
-@buffer: 
+@dest: 
+@src: 
+
+
+<!-- ##### FUNCTION gst_buffer_join ##### -->
+<para>
+
+</para>
+
+@buf1: 
+@buf2: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_buffer_merge ##### -->
+<para>
+
+</para>
+
+@buf1: 
+@buf2: 
+@Returns: 
 
 

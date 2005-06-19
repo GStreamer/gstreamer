@@ -368,3 +368,25 @@ Generic structure containing fields of names and values
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_caps_structure_fixate_field_nearest_int ##### -->
+<para>
+
+</para>
+
+@structure: 
+@field_name: 
+@target: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_structure_fixate_field_nearest_double ##### -->
+<para>
+
+</para>
+
+@structure: 
+@field_name: 
+@target: 
+@Returns: 
+
+

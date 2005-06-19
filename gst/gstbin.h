@@ -72,13 +72,13 @@ typedef enum {
 #define GST_BIN_CHILDREN_COOKIE(bin)	(GST_BIN_CAST(bin)->children_cookie);
 
 struct _GstBin {
-  GstElement 	 element;
+  GstElement	 element;
 
   /*< public >*/ /* with LOCK */
   /* our children, subclass are supposed to update these
    * fields to reflect their state with _iterate_*() */
-  gint 		 numchildren;
-  GList 	*children;
+  gint		 numchildren;
+  GList		*children;
   guint32	 children_cookie;
 
   /*< private >*/
@@ -118,7 +118,7 @@ GstElement*	gst_bin_get_by_interface	 (GstBin *bin, GType interface);
 GstIterator*    gst_bin_iterate_elements	 (GstBin *bin);
 GstIterator*    gst_bin_iterate_recurse		 (GstBin *bin);
 
-GstIterator*	gst_bin_iterate_sinks	 	 (GstBin *bin);
+GstIterator*	gst_bin_iterate_sinks		 (GstBin *bin);
 GstIterator*	gst_bin_iterate_all_by_interface (GstBin *bin, GType interface);
 
 G_END_DECLS
