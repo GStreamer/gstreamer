@@ -1,3 +1,8 @@
+2005-06-19  Luca Ognibene  <luogni@tin.it>
+
+	* gst/registries/gstlibxmlregistry.c (gst_xml_registry_get_property): 
+	  Fix memory leak. g_value_set_string already does g_strdup.
+
 2005-06-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gsturi.c: (gst_element_make_from_uri):

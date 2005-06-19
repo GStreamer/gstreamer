@@ -241,7 +241,7 @@ gst_xml_registry_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_LOCATION:
-      g_value_set_string (value, g_strdup (registry->location));
+      g_value_set_string (value, registry->location);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
