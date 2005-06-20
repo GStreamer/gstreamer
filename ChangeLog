@@ -1,5 +1,16 @@
 2005-06-20  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstpad.c:
+	Small doc updates.
+	
+	* gst/gstvalue.c: (gst_value_compare_buffer),
+	(gst_value_serialize_buffer), (gst_value_deserialize_buffer),
+	(gst_value_compare_flags), (gst_value_serialize_flags),
+	(gst_value_deserialize_flags), (_gst_value_initialize):
+	Fix serialisation of buffers, they are not boxed types anymore
+
+2005-06-20  Wim Taymans  <wim@fluendo.com>
+
 	* check/gst/gstcaps.c: (START_TEST), (gst_caps_suite):
 	Testcase to show error in buffer-on-caps serialisation.
 

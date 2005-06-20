@@ -3214,6 +3214,20 @@ gst_pad_get_element_private (GstPad * pad)
   return pad->element_private;
 }
 
+/**
+ * gst_pad_start_task:
+ * @pad: the #GstPad to start the task of
+ * @func: the task function to call
+ * @data: data passed to the task function
+ *
+ * Starts a task that repeadedly calls @func with @data. This function
+ * is nostly used in the pad activation function to start the
+ * dataflow. This function will automatically acauire the STREAM_LOCK of
+ * the pad before calling @func.
+ *
+ * Returns: a TRUE if the task could be started. FALSE when the pad has
+ * no parent or the parent has no scheduler.
+ */
 gboolean
 gst_pad_start_task (GstPad * pad, GstTaskFunction func, gpointer data)
 {
@@ -3262,6 +3276,16 @@ no_sched:
   }
 }
 
+/**
+ * gst_pad_pause_task:
+ * @pad: the #GstPad to pause the task of
+ *
+ * Pause the task of @pad. This function will also make sure that the 
+ * function executed by the task will effectively stop.
+ *
+ * Returns: a TRUE if the task could be paused or FALSE when the pad
+ * has no task.
+ */
 gboolean
 gst_pad_pause_task (GstPad * pad)
 {
@@ -3288,6 +3312,16 @@ no_task:
   }
 }
 
+/**
+ * gst_pad_stop_task:
+ * @pad: the #GstPad to stop the task of
+ *
+ * Stop the task of @pad. This function will also make sure that the 
+ * function executed by the task will effectively stop.
+ *
+ * Returns: a TRUE if the task could be stopped or FALSE when the pad
+ * has no task.
+ */
 gboolean
 gst_pad_stop_task (GstPad * pad)
 {

@@ -865,8 +865,8 @@ gst_value_deserialize_caps (GValue * dest, const char *s)
 static int
 gst_value_compare_buffer (const GValue * value1, const GValue * value2)
 {
-  GstBuffer *buf1 = g_value_get_boxed (value1);
-  GstBuffer *buf2 = g_value_get_boxed (value2);
+  GstBuffer *buf1 = GST_BUFFER (gst_value_get_mini_object (value1));
+  GstBuffer *buf2 = GST_BUFFER (gst_value_get_mini_object (value2));
 
   if (GST_BUFFER_SIZE (buf1) != GST_BUFFER_SIZE (buf2))
     return GST_VALUE_UNORDERED;
@@ -888,7 +888,7 @@ gst_value_serialize_buffer (const GValue * value)
   int i;
   int size;
   char *string;
-  GstBuffer *buffer = g_value_get_boxed (value);
+  GstBuffer *buffer = GST_BUFFER (gst_value_get_mini_object (value));
 
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
@@ -930,7 +930,7 @@ gst_value_deserialize_buffer (GValue * dest, const char *s)
   }
 
   if (ret) {
-    g_value_set_boxed (dest, buffer);
+    gst_value_set_mini_object (dest, GST_MINI_OBJECT (buffer));
     return TRUE;
   } else {
     gst_buffer_unref (buffer);
