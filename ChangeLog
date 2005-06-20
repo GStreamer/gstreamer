@@ -1,5 +1,8 @@
 2005-06-20  Andy Wingo  <wingo@pobox.com>
 
+	* docs/random/wingo/porting-plugins-to-0.9: A pitiful document I
+	will be adding to later.
+
 	* gst/gstsystemclock.c (gst_system_clock_init): Unlock the clock
 	if its socks fill with rocks.
 	(gst_system_clock_obtain): Set the name on object construction.

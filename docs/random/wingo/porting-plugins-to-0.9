@@ -1,0 +1,32 @@
+-*- outline -*-
+
+
+Some collected notes porting plugins to GStreamer 0.9.
+
+
+* General notes
+
+Consider using the base classes. There are base classes for sources,
+sinks, and "transformers", which are plugins that have the same caps on
+their source and sink sides.
+
+These base classes offer interfaces that are much more appropriate to
+the function of specific plugins than the general GstElement interface.
+
+
+* Functions that changed
+
+** gst_pad_use_explicit_caps
+** gst_pad_set_explicit_caps
+
+Not needed; just set the caps on the first buffer you push out.
+
+** gst_element_set_loop_function
+
+Use gst_pad_set_loop_function. Note that loop-based elements participate
+more in the scheduling process in 0.9, so you'll need to add hooks to
+the activate function to start up a task.
+
+refcounting:
+_get_ accessors
+GValue, GstObject, and refcounts (arrrrgh)
