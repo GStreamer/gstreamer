@@ -1,3 +1,8 @@
+2005-06-20  Wim Taymans  <wim@fluendo.com>
+
+	* check/gst/gstcaps.c: (START_TEST), (gst_caps_suite):
+	Testcase to show error in buffer-on-caps serialisation.
+
 2005-06-20  Andy Wingo  <wingo@pobox.com>
 
 	* docs/random/wingo/porting-plugins-to-0.9: A pitiful document I

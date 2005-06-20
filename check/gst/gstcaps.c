@@ -23,6 +23,21 @@
 #include "../gstcheck.h"
 
 
+START_TEST (test_buffer)
+{
+  GstCaps *c1;
+  GstBuffer *buffer;
+
+  buffer = gst_buffer_new_and_alloc (1000);
+  c1 = gst_caps_new_simple ("audio/x-raw-int",
+      "buffer", GST_TYPE_BUFFER, buffer, NULL);
+
+  GST_DEBUG ("caps: %" GST_PTR_FORMAT, c1);
+
+  gst_buffer_unref (buffer);
+}
+
+END_TEST
 START_TEST (test_double_append)
 {
   GstStructure *s1;
@@ -70,6 +85,7 @@ gst_caps_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_double_append);
   tcase_add_test (tc_chain, test_mutability);
+  tcase_add_test (tc_chain, test_buffer);
   return s;
 }
 
