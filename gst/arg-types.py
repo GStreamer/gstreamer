@@ -114,7 +114,7 @@ class GstCapsArg(ArgType):
                   '    else\n'
                   '  ' + before)
     after = ('    if (%(name)s && %(name)s_is_copy)\n'
-             '        gst_caps_free (%(name)s);\n')
+             '        gst_caps_unref (%(name)s);\n')
 
     def write_param(self, ptype, pname, pdflt, pnull, info):
         if ptype == 'const-GstCaps*':

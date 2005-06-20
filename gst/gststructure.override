@@ -229,7 +229,7 @@ static PyMappingMethods _wrap_gst_structure_tp_as_mapping = {
 override gst_structure_foreach kwargs
 static gboolean
 pygst_structure_foreach_marshal(GQuark field_id,
-				GValue *value,
+				const GValue *value,
 				gpointer user_data)
 {
 	PyGstCustomNotify *cunote = user_data;

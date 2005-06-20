@@ -1,6 +1,7 @@
 ;; -*- scheme -*-
 
 ; object definitions ...
+
 (define-object Object
   (in-module "Gst")
   (parent "GObject")
@@ -141,9 +142,15 @@
   (gtype-id "GST_TYPE_XML")
 )
 
-::
-:: MiniObject types
-::
+;;
+;; MiniObject types
+;;
+
+(define-boxed MiniObject
+  (in-module "Gst")
+  (c-name "GstMiniObject")
+  (gtype-id "GST_TYPE_MINI_OBJECT")
+)
 
 (define-object Buffer
   (in-module "Gst")

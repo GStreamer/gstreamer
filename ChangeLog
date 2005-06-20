@@ -1,3 +1,22 @@
+2005-06-20  Edward Hervey  <edward@fluendo.com>
+
+	* gst/arg-types.py: 
+	* gst/common.h:
+	* gst/gst-argtypes.c:
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	* gst/gst.override:
+	* gst/gstelement.override:
+	* gst/gstmodule.c:
+	* gst/gstpad.override:
+	* gst/gststructure.override:
+	commented-out deprecated code,
+	compiles at last, and works for pipeline creation and state change
+
+	* configure.ac:
+	updated requirement of GStream (0.9.0), pygtk (2.6.1)
+	bumped version number (0.9.0.1)
+
 2005-06-17  Edward Hervey  <bilboed@bilboed.com>
 
     * Backport of bugfixes/new features from 0.8 branch to HEAD

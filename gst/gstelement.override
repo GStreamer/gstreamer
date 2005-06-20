@@ -85,25 +85,25 @@ _wrap_gst_element_set_state(PyGObject *self, PyObject *args, PyObject *kwargs)
 	return PyInt_FromLong(ret);
 }
 %%
-override gst_element_query kwargs
-static PyObject *
-_wrap_gst_element_query(PyGObject *self, PyObject *args, PyObject *kwargs)
-{
-	static char *kwlist[] = { "type", "format", NULL };
-	GstQueryType type;
-	GstFormat format;
-	gint64 value = 0;
-	gboolean ret;
+/* override gst_element_query kwargs */
+/* static PyObject * */
+/* _wrap_gst_element_query(PyGObject *self, PyObject *args, PyObject *kwargs) */
+/* { */
+/* 	static char *kwlist[] = { "type", "format", NULL }; */
+/* 	GstQueryType type; */
+/* 	GstFormat format; */
+/* 	gint64 value = 0; */
+/* 	gboolean ret; */
 
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-					 "ii:GstElement.query", kwlist,
-					 &type, &format))
-		return NULL;
+/* 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, */
+/* 					 "ii:GstElement.query", kwlist, */
+/* 					 &type, &format)) */
+/* 		return NULL; */
 	
-	ret = gst_element_query(GST_ELEMENT(self->obj), type, &format, &value);
-	return PyLong_FromLongLong(value);
-}
-%%
+/* 	ret = gst_element_query(GST_ELEMENT(self->obj), type, &format, &value); */
+/* 	return PyLong_FromLongLong(value); */
+/* } */
+/* %% */
 override gst_element_convert kwargs
 static PyObject *
 _wrap_gst_element_convert(PyGObject *self, PyObject *args, PyObject *kwargs)
@@ -183,48 +183,48 @@ _wrap_gst_element_link_many(PyObject *self, PyObject *args)
 }
 
 
-%%
-override gst_element_link kwargs
-static PyObject *
-_wrap_gst_element_link(PyGObject *self, PyObject *args, PyObject *kwargs)
-{
-    static char *kwlist[] = { "dest", "filtercaps", NULL };
-    PyGObject *dest;
-    PyObject *py_caps = NULL;
-    int ret;
-    GstCaps *caps = NULL;
-    gboolean caps_is_copy;
+/* %% */
+/* override gst_element_link kwargs */
+/* static PyObject * */
+/* _wrap_gst_element_link(PyGObject *self, PyObject *args, PyObject *kwargs) */
+/* { */
+/*     static char *kwlist[] = { "dest", "filtercaps", NULL }; */
+/*     PyGObject *dest; */
+/*     PyObject *py_caps = NULL; */
+/*     int ret; */
+/*     GstCaps *caps = NULL; */
+/*     gboolean caps_is_copy; */
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!|O:GstElement.link",
-                                     kwlist, &PyGstElement_Type, &dest, &py_caps))
-        return NULL;
-    if (py_caps == NULL)
-      caps = NULL;
-    else
-      caps = pygst_caps_from_pyobject (py_caps, &caps_is_copy);
-    ret = gst_element_link_filtered(GST_ELEMENT(self->obj), GST_ELEMENT(dest->obj), caps);
-    if (caps && caps_is_copy)
-        gst_caps_free (caps);
-    if (!ret) {
-	PyErr_Format(PyGstExc_LinkError,
-		     "failed to link %s with %s",
-		     GST_ELEMENT_NAME(self->obj),
-		     GST_ELEMENT_NAME(dest->obj));
-        return NULL;
-    }
-    return PyBool_FromLong(ret);
-}
+/*     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!|O:GstElement.link", */
+/*                                      kwlist, &PyGstElement_Type, &dest, &py_caps)) */
+/*         return NULL; */
+/*     if (py_caps == NULL) */
+/*       caps = NULL; */
+/*     else */
+/*       caps = pygst_caps_from_pyobject (py_caps, &caps_is_copy); */
+/*     ret = gst_element_link_filtered(GST_ELEMENT(self->obj), GST_ELEMENT(dest->obj), caps); */
+/*     if (caps && caps_is_copy) */
+/*         gst_caps_unref (caps); */
+/*     if (!ret) { */
+/* 	PyErr_Format(PyGstExc_LinkError, */
+/* 		     "failed to link %s with %s", */
+/* 		     GST_ELEMENT_NAME(self->obj), */
+/* 		     GST_ELEMENT_NAME(dest->obj)); */
+/*         return NULL; */
+/*     } */
+/*     return PyBool_FromLong(ret); */
+/* } */
 
-%%
-override gst_element_link_filtered kwargs
-static PyObject *
-_wrap_gst_element_link_filtered(PyGObject *self, PyObject *args,
-                                PyObject *kwargs)
-{
-    if (PyErr_Warn(PyExc_DeprecationWarning, "element.link_filtered is deprecated, use element.link") < 0)
-	return NULL;
-    return _wrap_gst_element_link (self, args, kwargs);
-}
+/* %% */
+/* override gst_element_link_filtered kwargs */
+/* static PyObject * */
+/* _wrap_gst_element_link_filtered(PyGObject *self, PyObject *args, */
+/*                                 PyObject *kwargs) */
+/* { */
+/*     if (PyErr_Warn(PyExc_DeprecationWarning, "element.link_filtered is deprecated, use element.link") < 0) */
+/* 	return NULL; */
+/*     return _wrap_gst_element_link (self, args, kwargs); */
+/* } */
 
 %%
 override gst_element_link_pads kwargs

@@ -64,14 +64,14 @@ python_do_pending_calls(gpointer data)
     return TRUE;
 }
 
-static void
-sink_gstobject(GObject *object)
-{
-     if (GST_OBJECT_FLOATING(object)) {
-	  g_object_ref(object);
-	  gst_object_sink(GST_OBJECT(object));
-     }
-}
+/* static void */
+/* sink_gstobject(GObject *object) */
+/* { */
+/*      if (GST_OBJECT_FLOATING(object)) { */
+/* 	  g_object_ref(object); */
+/* 	  gst_object_sink(GST_OBJECT(object)); */
+/*      } */
+/* } */
 
 DL_EXPORT(void)
 init_gst (void)
@@ -115,8 +115,8 @@ init_gst (void)
 	  g_free (argv);
      }
 
-     _pygst_register_boxed_types (NULL);
-     pygobject_register_sinkfunc(GST_TYPE_OBJECT, sink_gstobject);
+/*      _pygst_register_boxed_types (NULL); */
+ /*     pygobject_register_sinkfunc(GST_TYPE_OBJECT, sink_gstobject); */
 
      m = Py_InitModule ("_gst", pygst_functions);
      d = PyModule_GetDict (m);

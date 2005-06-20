@@ -131,7 +131,7 @@ call_getcaps_function (GstPad *pad)
 	GstCaps *caps;
 	
 	g_value_init (&ret, GST_TYPE_CAPS);
-	g_value_init (&args, GST_TYPE_REAL_PAD);
+	g_value_init (&args, GST_TYPE_PAD);
 	g_value_set_object (&args, pad);
 	
 	closure = pad_private(pad)->getcaps_function;
@@ -163,7 +163,7 @@ handle_link_function_exception (GValue *ret, guint n, const GValue *params)
 }
 
 static GstPadLinkReturn
-call_link_function (GstPad *pad, const GstCaps *caps)
+call_link_function (GstPad *pad, GstPad *peer)
 {
 	GClosure *closure;
 	GValue ret = { 0, };
@@ -171,10 +171,10 @@ call_link_function (GstPad *pad, const GstCaps *caps)
 	GstPadLinkReturn i;
 	
 	g_value_init (&ret, GST_TYPE_PAD_LINK_RETURN);
-	g_value_init (&args[0], GST_TYPE_REAL_PAD);
-	g_value_init (&args[1], GST_TYPE_CAPS);
+	g_value_init (&args[0], GST_TYPE_PAD);
+	g_value_init (&args[1], GST_TYPE_PAD);
 	g_value_set_object (&args[0], pad);
-	g_value_set_boxed (&args[1], caps);
+	g_value_set_boxed (&args[1], peer);
 	
 	closure = pad_private(pad)->link_function;
 	
@@ -207,28 +207,35 @@ handle_chain_function_exception (GValue *ret, guint n, const GValue *params)
     g_assert_not_reached (); /* only returns FALSE when there's no error */
 }
 
-static void
-call_chain_function(GstPad *pad, GstData *data)
+static GstFlowReturn
+call_chain_function(GstPad *pad, GstBuffer *data)
 {
 	GClosure *closure;
+	GValue ret = { 0, };
 	GValue args[2] = { { 0, }, { 0, } };
+	GstFlowReturn	flow;
 	
-	g_value_init (&args[0], GST_TYPE_REAL_PAD);
+	g_value_init (&ret, G_TYPE_ENUM);
+	g_value_set_enum (&ret, GST_FLOW_ERROR);
+	g_value_init (&args[0], GST_TYPE_PAD);
 	if (GST_IS_BUFFER (data)) {
 	  g_value_init (&args[1], GST_TYPE_BUFFER);
 	} else if (GST_IS_EVENT (data)) {
 	  g_value_init (&args[1], GST_TYPE_EVENT);
-	} else {
-	  g_value_init (&args[1], GST_TYPE_DATA);
 	}
+
 	g_value_set_object (&args[0], pad);
 	g_value_take_boxed (&args[1], data);
 	closure = pad_private(pad)->chain_function;
 	
-	g_closure_invoke (closure, NULL, 2, args, NULL);
+	g_closure_invoke (closure, &ret, 2, args, NULL);
+	flow = g_value_get_enum (&ret);
 
+	g_value_unset (&ret);
 	g_value_unset (&args[0]);
 	g_value_unset (&args[1]);
+
+	return flow;
 }
 
 static PyObject*
@@ -260,7 +267,7 @@ call_event_function (GstPad *pad, GstEvent *event)
 	
 	g_value_init (&ret, G_TYPE_BOOLEAN);
 	g_value_set_boolean (&ret, FALSE);
-	g_value_init (&args[0], GST_TYPE_REAL_PAD);
+	g_value_init (&args[0], GST_TYPE_PAD);
 	g_value_init (&args[1], GST_TYPE_EVENT);
 	g_value_set_object (&args[0], pad);
 	g_value_set_boxed (&args[1], event);
@@ -349,25 +356,25 @@ _wrap_gst_pad_tp_repr (PyGObject *self)
 }
 
 %%
-override gst_pad_query kwargs
-static PyObject *
-_wrap_gst_pad_query(PyGObject *self, PyObject *args, PyObject *kwargs)
-{
-	static char *kwlist[] = { "type", "format", NULL };
-	GstQueryType type;
-	GstFormat format;
-	gint64 value = 0;
-	gboolean ret;
+/* override gst_pad_query kwargs */
+/* static PyObject * */
+/* _wrap_gst_pad_query(PyGObject *self, PyObject *args, PyObject *kwargs) */
+/* { */
+/* 	static char *kwlist[] = { "type", "format", NULL }; */
+/* 	GstQueryType type; */
+/* 	GstFormat format; */
+/* 	gint64 value = 0; */
+/* 	gboolean ret; */
 
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-					 "ii:GstPad.query", kwlist,
-					 &type, &format))
-		return NULL;
+/* 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, */
+/* 					 "ii:GstPad.query", kwlist, */
+/* 					 &type, &format)) */
+/* 		return NULL; */
 	
-	ret = gst_pad_query(GST_PAD(self->obj), type, &format, &value);
-	return PyLong_FromLongLong(value);
-}
-%%
+/* 	ret = gst_pad_query(GST_PAD(self->obj), type, &format, &value); */
+/* 	return PyLong_FromLongLong(value); */
+/* } */
+/* %% */
 override gst_pad_convert kwargs
 static PyObject *
 _wrap_gst_pad_convert(PyGObject *self, PyObject *args, PyObject *kwargs)

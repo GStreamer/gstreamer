@@ -101,7 +101,8 @@ _pygst_element_check_error (GstElement *element)
   msg = PyObject_Str (value);
   typemsg = PyObject_Str (type);
   if (msg && PyString_Check (msg)) {
-	    gst_element_error_full (element, GST_LIBRARY_ERROR,
+	    gst_element_message_full (element, GST_MESSAGE_ERROR,
+                    GST_LIBRARY_ERROR,
 		    GST_LIBRARY_ERROR_FAILED,
 		    g_strdup (PyString_AsString (msg)), 
 		    typemsg ? g_strconcat (PyString_AsString (typemsg), 
@@ -111,7 +112,8 @@ _pygst_element_check_error (GstElement *element)
 		    frame ? PyString_AsString(frame->f_code->co_name) : "???",
 		    lineno ? PyInt_AsLong (lineno) : 0);
   } else {
-	gst_element_error_full (element, GST_LIBRARY_ERROR,
+	gst_element_message_full (element, GST_MESSAGE_ERROR,
+                    GST_LIBRARY_ERROR,
 		    GST_LIBRARY_ERROR_TOO_LAZY,
 		    NULL, NULL,
 		    frame ? PyString_AsString(frame->f_code->co_filename) : "???",
