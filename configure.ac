@@ -86,7 +86,7 @@ dnl ###########################
 
 AC_DEFINE_UNQUOTED(HAVE_FFMPEG_UNINSTALLED, 1,
                    [Defined if building against uninstalled FFmpeg source])
-ac_configure_args="$ac_configure_args --disable-v4l --disable-audio-oss --disable-dv1394 --disable-vhook --disable-ffmpeg --disable-ffserver"
+ac_configure_args="$ac_configure_args --disable-v4l --disable-audio-oss --disable-dv1394 --disable-vhook --disable-ffmpeg --disable-ffserver --enable-pp"
 AC_CONFIG_SUBDIRS(gst-libs/ext/ffmpeg)
 
 AC_CONFIG_FILES(
@@ -94,6 +94,7 @@ Makefile
 gst-ffmpeg.spec
 ext/Makefile
 ext/ffmpeg/Makefile
+ext/libpostproc/Makefile
 gst-libs/Makefile
 gst-libs/ext/Makefile
 )

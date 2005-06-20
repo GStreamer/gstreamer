@@ -1,1 +1,1 @@
-SUBDIRS = ffmpeg
+SUBDIRS = ffmpeg libpostproc

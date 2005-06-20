@@ -1,3 +1,15 @@
+2005-06-20  Edward Hervey  <edward@fluendo.com>
+
+	* ext/Makefile.am: (SUBDIRS):
+	* ext/libpostproc:
+	* ext/libpostproc/Makefile.am:
+	* ext/libpostproc/gstpostproc.c:
+	* ext/libpostproc/gstpostproc.h:
+	ffmpeg's libpostproc wrapper plugins
+
+	* configure.ac: 
+	added --enable-pp to ffmpeg configure arguments
+
 2005-06-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* configure.ac:
