@@ -679,7 +679,6 @@ testsuite/Makefile
 testsuite/bytestream/Makefile
 testsuite/caps/Makefile
 testsuite/cleanup/Makefile
-testsuite/clock/Makefile
 testsuite/debug/Makefile
 testsuite/dlopen/Makefile
 testsuite/dynparams/Makefile
