@@ -1,5 +1,10 @@
 2005-06-20  Edward Hervey  <edward@fluendo.com>
 
+	* ext/libpostproc/gstpostproc.c: (gst_postproc_register):
+	It works better when filing the hash_table BEFORE registering the element.
+	
+2005-06-20  Edward Hervey  <edward@fluendo.com>
+
 	* ext/Makefile.am: (SUBDIRS):
 	* ext/libpostproc:
 	* ext/libpostproc/Makefile.am:

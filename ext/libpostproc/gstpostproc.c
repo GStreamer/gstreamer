@@ -470,6 +470,10 @@ gst_postproc_register(GstPlugin * plugin)
   for (i = 0; filterdetails[i].shortname; i++) {
     gchar	*type_name;
 
+    g_hash_table_insert (global_plugins,
+			 GINT_TO_POINTER (0),
+			 GINT_TO_POINTER (i));
+
     /* create type_name */
     type_name = g_strdup_printf("postproc_%s", filterdetails[i].longname);
     if (g_type_from_name (type_name)) {
@@ -480,6 +484,10 @@ gst_postproc_register(GstPlugin * plugin)
     /* create gtype */
     type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
 
+    g_hash_table_insert (global_plugins,
+			 GINT_TO_POINTER (type),
+			 GINT_TO_POINTER (i));
+
     /* register element */
     if (!gst_element_register (plugin, type_name, GST_RANK_PRIMARY, type)) {
       g_free(type_name);
@@ -487,9 +495,6 @@ gst_postproc_register(GstPlugin * plugin)
     }
 
     g_free(type_name);
-    g_hash_table_insert (global_plugins,
-			 GINT_TO_POINTER (type),
-			 GINT_TO_POINTER (i));
   }
   g_hash_table_remove (global_plugins, GINT_TO_POINTER (0));
   return TRUE;
