@@ -6,6 +6,7 @@
 	* gst/gst-types.defs:
 	* gst/gst.defs:
 	* gst/gst.override:
+	* gst/gstcaps.override:
 	* gst/gstelement.override:
 	* gst/gstmodule.c:
 	* gst/gstpad.override:

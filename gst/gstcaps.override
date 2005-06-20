@@ -119,7 +119,7 @@ _wrap_gst_caps_new_empty(PyGBoxed *self, PyObject *args, PyObject *kwargs)
 			item = PyTuple_GetItem(args, i);
 			append = pygst_caps_from_pyobject (item, NULL);
 			if (!append) {
-			      gst_caps_free (self->boxed);
+			      gst_caps_unref (self->boxed);
 			      self->boxed = NULL;
 			      break;
 			}
@@ -154,12 +154,12 @@ pygst_caps_is_true_subset (GstCaps *caps1, GstCaps *caps2)
 
   tmp = gst_caps_subtract (caps1, caps2);
   ret = gst_caps_is_empty (tmp);
-  gst_caps_free (tmp);
+  gst_caps_unref (tmp);
   if (!ret)
     return FALSE;
   tmp = gst_caps_subtract (caps2, caps1);
   ret = gst_caps_is_empty (tmp);
-  gst_caps_free (tmp);
+  gst_caps_unref (tmp);
   return !ret;
 }
 
@@ -212,11 +212,11 @@ _wrap_gst_caps_tp_richcompare (PyObject *py_caps1, PyObject *py_caps2, int compa
     default:
       PyErr_SetString (PyExc_RuntimeError, "invalid comparison operation");
       if (caps2 && caps2_is_copy)
-	gst_caps_free (caps2);
+	gst_caps_unref (caps2);
       return NULL;
   }
   if (caps2 && caps2_is_copy)
-    gst_caps_free (caps2);
+    gst_caps_unref (caps2);
   
   Py_INCREF (ret);
   return ret;
@@ -242,7 +242,7 @@ name (PyObject *py_caps1, PyObject *py_caps2) \
     return NULL; \
   ret = func (caps1, caps2); \
   if (caps2 && caps2_is_copy) \
-    gst_caps_free (caps2); \
+    gst_caps_unref (caps2); \
   return pyg_boxed_new (GST_TYPE_CAPS, ret, FALSE, TRUE); \
 }
 
@@ -256,8 +256,8 @@ pygst_caps_xor (const GstCaps *caps1, const GstCaps *caps2)
   intersect = gst_caps_intersect (caps1, caps2);
   _union = gst_caps_union (caps1, caps2);
   ret = gst_caps_subtract (_union, intersect);
-  gst_caps_free (_union);
-  gst_caps_free (intersect);
+  gst_caps_unref (_union);
+  gst_caps_unref (intersect);
   gst_caps_do_simplify (ret);
   return ret;
 }
@@ -301,9 +301,9 @@ error:
   g_assert (PyErr_Occurred ());
   PyErr_Clear ();
   if (caps1 && !caps1_is_copy)
-    gst_caps_free (caps1);
+    gst_caps_unref (caps1);
   if (caps2 && !caps2_is_copy)
-    gst_caps_free (caps2);
+    gst_caps_unref (caps2);
   return 1;
 }
 
@@ -419,7 +419,7 @@ _wrap_gst_caps_tp_dealloc (PyObject *self)
 
   if (boxed->free_on_dealloc && boxed->boxed) {
     pygst_caps_map_modified (self);
-    gst_caps_free (boxed->boxed);
+    gst_caps_unref (boxed->boxed);
   }
 
   self->ob_type->tp_free((PyObject *)self);
