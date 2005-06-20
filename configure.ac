@@ -683,7 +683,6 @@ testsuite/debug/Makefile
 testsuite/dlopen/Makefile
 testsuite/dynparams/Makefile
 testsuite/elements/Makefile
-testsuite/ghostpads/Makefile
 testsuite/indexers/Makefile
 testsuite/negotiation/Makefile
 testsuite/pad/Makefile
