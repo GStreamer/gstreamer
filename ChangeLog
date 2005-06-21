@@ -1,3 +1,13 @@
+2005-06-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
+	* check/gst/gstvalue.c: (START_TEST), (gst_value_suite), (main):
+	* testsuite/Makefile.am:
+	* testsuite/caps/Makefile.am:
+	* testsuite/caps/value_serialize.c:
+	* testsuite/test_gst_init.c:
+	  move a value_serialize test over
+
 2005-06-20  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstpad.c:

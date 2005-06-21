@@ -23,6 +23,7 @@ clean-local:
 	done
 
 TESTS = $(top_builddir)/tools/gst-register 	\
+	gst/gst				     	\
 	gst/gstbin			     	\
         gst/gstbuffer				\
         gst/gstbus				\
@@ -34,6 +35,7 @@ TESTS = $(top_builddir)/tools/gst-register 	\
 	gst/gstpad				\
 	gst/gstsystemclock			\
 	gst/gsttag				\
+	gst/gstvalue				\
 	pipelines/simple_launch_lines		\
 	pipelines/cleanup			\
 	gst-libs/gdp	

@@ -16,7 +16,6 @@ tests_pass = \
 	caps \
 	value_compare \
 	value_intersect \
-	value_serialize \
 	audioscale \
 	filtercaps \
 	eratosthenes \

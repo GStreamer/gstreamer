@@ -29,7 +29,7 @@ DIST_SUBDIRS = \
 	parse \
 	plugin refcounting schedulers states threads trigger
 
-tests_pass = test_gst_init
+tests_pass =
 tests_fail = 
 tests_ignore =
 
