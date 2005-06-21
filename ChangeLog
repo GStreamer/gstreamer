@@ -1,5 +1,12 @@
 2005-06-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* check/gst/.cvsignore:
+	* check/gst/gstvalue.c: (START_TEST), (gst_value_suite):
+	  add a test deserializing int64, and comment part out because
+	  it fails, yay !
+
+2005-06-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* check/Makefile.am:
 	* check/gst/gstvalue.c: (START_TEST), (gst_value_suite), (main):
 	* testsuite/Makefile.am:

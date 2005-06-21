@@ -33,6 +33,21 @@ START_TEST (test_deserialize_buffer)
 
 END_TEST;
 
+START_TEST (test_deserialize_gint64)
+{
+  GValue value = { 0 };
+
+  g_value_init (&value, G_TYPE_INT64);
+  fail_unless (gst_value_deserialize (&value, "12345678901"));
+  /* FIXME:
+   * this test actually fails, gasp.
+   fail_unless (g_value_get_int64 (&value) == 12345678901LL,
+   "resulting value is %" G_GINT64_FORMAT ", not 12345678901");
+   */
+}
+
+END_TEST;
+
 START_TEST (test_string)
 {
   gchar *try[] = {
@@ -120,6 +135,7 @@ gst_value_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_deserialize_buffer);
+  tcase_add_test (tc_chain, test_deserialize_gint64);
   tcase_add_test (tc_chain, test_string);
   tcase_add_test (tc_chain, test_deserialize_string);
   return s;

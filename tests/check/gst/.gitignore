@@ -1,4 +1,5 @@
 .dirstamp
+gst
 gstbin
 gstbuffer
 gstbus
@@ -10,3 +11,5 @@ gstmessage
 gstobject
 gstpad
 gstsystemclock
+gsttag
+gstvalue
