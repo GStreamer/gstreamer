@@ -68,7 +68,7 @@ _gst_query_type_initialize (void)
  * @description: The description of the new query
  *
  * Create a new GstQueryType based on the nick or return an
- * allrady registered query with that nick
+ * already registered query with that nick
  *
  * Returns: A new GstQueryType or an already registered query
  * with the same nick.

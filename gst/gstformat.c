@@ -66,7 +66,7 @@ _gst_format_initialize (void)
  * @description: The description of the new format
  *
  * Create a new GstFormat based on the nick or return an
- * allrady registered format with that nick
+ * already registered format with that nick
  *
  * Returns: A new GstFormat or an already registered format
  * with the same nick.

@@ -1,3 +1,14 @@
+2005-06-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstformat.c:
+	* gst/gstquery.c:
+	  Fix two typos in the inline documentation.
+
+	* gst/gsttag.c: (gst_tag_register):
+	  Don't spew out an assertion warning if a tag is
+	  already registered, unless the new type differs
+	  from the old one (fixes #308438).
+
 2005-06-19  Luca Ognibene  <luogni@tin.it>
 
 	* gst/registries/gstlibxmlregistry.c (gst_xml_registry_get_property): 

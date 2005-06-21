@@ -280,7 +280,11 @@ gst_tag_register (const gchar * name, GstTagFlag flag, GType type,
 
   key = g_quark_from_string (name);
   info = gst_tag_lookup (key);
-  g_return_if_fail (info == NULL);
+
+  if (info) {
+    g_return_if_fail (info->type == type);
+    return;
+  }
 
   info = g_new (GstTagInfo, 1);
   info->flag = flag;
