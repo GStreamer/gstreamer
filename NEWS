@@ -1,1 +1,11 @@
 This is GStreamer Python 0.8.2, "Another one bites the dust".
+
+Changes since 0.8.1:
+
+      * Fixes for gcc 4
+      * Dict-like access to Structure and Caps
+      * Access to Buffer and Event fields
+      * Access to Element flags
+      * Access to Probes
+      * Overriding of Object, Element and Bin virtual methods posssible
+      * Many memleak fixes
