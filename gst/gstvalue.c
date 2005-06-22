@@ -979,7 +979,7 @@ gst_value_deserialize_boolean (GValue * dest, const char *s)
  * int *
  *******/
 
-static int
+static long long
 gst_strtoll (const char *s, char **end, int base)
 {
   long long i;
