@@ -1,5 +1,17 @@
 2005-06-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstcaps.c: (gst_caps_from_string_inplace):
+	* gst/gststructure.c:
+	* gst/gstvalue.c: (gst_value_deserialize_int_helper):
+	  fix deserialization to have similar semantics to cast's,
+	  and check if the value is fittable into the target size,
+	  instead of doing a G_MIN/G_MAX comparison
+	* testsuite/caps/Makefile.am:
+	* testsuite/caps/caps.h:
+	  add caps that specify rgb bit masks using 0xFF...
+
+2005-06-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstvalue.c:
 	  fix for #308599 - fixes deserializing gint64 types
 	* gst/parse/grammar.y:

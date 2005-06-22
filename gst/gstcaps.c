@@ -1413,6 +1413,7 @@ gst_caps_from_string_inplace (GstCaps * caps, const gchar * string)
 
   structure = gst_structure_from_string (string, &s);
   if (structure == NULL) {
+    GST_LOG ("no structure parsed from string %s\n", string);
     return FALSE;
   }
   gst_caps_append_structure (caps, structure);
@@ -1423,6 +1424,7 @@ gst_caps_from_string_inplace (GstCaps * caps, const gchar * string)
       s++;
     structure = gst_structure_from_string (s, &s);
     if (structure == NULL) {
+      GST_LOG ("no structure parsed from string %s\n", s);
       return FALSE;
     }
     gst_caps_append_structure (caps, structure);
@@ -1431,6 +1433,7 @@ gst_caps_from_string_inplace (GstCaps * caps, const gchar * string)
   }
 
   if (*s != 0) {
+    GST_LOG ("string %s is not at 0 byte after parsing\n", s);
     return FALSE;
   }
 

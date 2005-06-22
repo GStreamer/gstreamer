@@ -1469,7 +1469,7 @@ gst_structure_parse_value (gchar * str,
  * @end: FIXME, deduce from code
  *
  * Creates a #GstStructure from a string representation.
- * 
+ *
  * Returns: a new #GstStructure
  */
 GstStructure *

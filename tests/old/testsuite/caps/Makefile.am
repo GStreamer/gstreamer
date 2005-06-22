@@ -12,6 +12,7 @@ tests_pass = \
 	fixed \
 	fraction-convert \
 	fraction-multiply-and-zero \
+	fromstring \
 	intersect2 \
 	caps \
 	value_compare \
