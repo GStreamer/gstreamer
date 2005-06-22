@@ -47,7 +47,7 @@ noinst_LTLIBRARIES = libgstcheck.la
 
 libgstcheck_la_SOURCES = gstcheck.c
 libgstcheck_la_LIBADD = $(GST_OBJ_LIBS)
-noinst_HEADERS = gstcheck.h
+noinst_HEADERS = gstcheck.h gst/capslist.h
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(CHECK_CFLAGS)
 LDADD = $(GST_OBJ_LIBS) $(CHECK_LIBS) libgstcheck.la
