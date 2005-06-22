@@ -157,6 +157,10 @@ GstBuffer*	gst_buffer_create_sub		(GstBuffer *parent, guint offset, guint size);
 gboolean	gst_buffer_is_span_fast		(GstBuffer *buf1, GstBuffer *buf2);
 GstBuffer*	gst_buffer_span			(GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len);
 
+#define		gst_value_set_buffer(v,b)	gst_value_set_mini_object(v, GST_MINI_OBJECT(b))
+#define		gst_value_take_buffer(v,b)	gst_value_take_mini_object(v, GST_MINI_OBJECT(b))
+#define		gst_value_get_buffer(v)		GST_BUFFER (gst_value_get_mini_object(v))
+
 /* --- protected --- */
 void		_gst_buffer_initialize		(void);
 

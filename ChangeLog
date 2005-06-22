@@ -1,3 +1,8 @@
+2005-06-22  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbuffer.h:
+	Added convenience macros for setting buffers in GValue.
+
 2005-06-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/gst/.cvsignore:
