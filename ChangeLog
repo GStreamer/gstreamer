@@ -1,5 +1,10 @@
 2005-06-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/parse/grammar.y:
+	  add a log line for type deserialization
+
+2005-06-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* check/gst/gstvalue.c: (START_TEST):
 	* gst/gstvalue.c: (gst_value_deserialize):
 	  return long long, not int, so gint64 deserialization actually
