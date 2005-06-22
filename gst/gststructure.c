@@ -686,6 +686,21 @@ gst_structure_n_fields (const GstStructure * structure)
 }
 
 /**
+ * gst_structure_nth_field_name:
+ * @structure: a #GstStructure
+ *
+ * Returns: the name of the given field number, counting from 0 onwards.
+ */
+const gchar *
+gst_structure_nth_field_name (const GstStructure * structure, guint index)
+{
+  GstStructureField *field;
+
+  field = GST_STRUCTURE_FIELD (structure, index);
+  return g_quark_to_string (field->name);
+}
+
+/**
  * gst_structure_foreach:
  * @structure: a #GstStructure
  * @func: a function to call for each field
@@ -1459,10 +1474,12 @@ gst_structure_parse_value (gchar * str,
 /**
  * gst_structure_from_string:
  * @string: a string representation of a #GstStructure.
- * @end: FIXME, deduce from code
+ * @end: pointer to store the end of the string in.
  *
  * Creates a #GstStructure from a string representation.
- * 
+ * If end is not NULL, a pointer to the place inside the given string
+ * where parsing ended will be returned.
+ *
  * Returns: a new #GstStructure
  */
 GstStructure *

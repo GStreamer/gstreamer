@@ -1,5 +1,29 @@
 2005-06-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* check/Makefile.am:
+	* check/gst/capslist.h:
+	  copy over from 0.8, and add two with bitmasks specified with
+	  (int) 0xFF...
+	* check/gst/gstcaps.c: (START_TEST), (gst_caps_suite):
+	  add test to parse everything from capslist.h
+	* check/gst/gststructure.c: (START_TEST), (gst_value_suite),
+	(main):
+	  add test for structure deserialization
+	* check/gst/gstvalue.c: (START_TEST), (gst_value_suite):
+	  add tests for deserialization of strings to int types
+	* gst/gststructure.c: (gst_structure_nth_field_name):
+	* gst/gststructure.h:
+	  add a way to get the name of a field referenced by index
+	* gst/gstvalue.c: (gst_value_deserialize_int_helper):
+	  instead of checking if the resulting long long lies between
+	  min and max, we check if the long long would fit into
+	  a number of bytes for the final type.
+	  This fixes cases where a string represents 2^32 - 1, which
+	  when cast to int would be the (valid) -1, but is bigger than
+	  G_MAXINT
+
+2005-06-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/parse/grammar.y:
 	  add a log line for type deserialization
 

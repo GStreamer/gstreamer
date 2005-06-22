@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2005 Andy Wingo <wingo@pobox.com>
+ * Copyright (C) <2005> Thomas Vander Stichele <thomas at apestaart dot org>
  *
  * gstcaps.c: Unit test for GstCaps
  *
@@ -21,7 +22,22 @@
 
 
 #include "../gstcheck.h"
+#include "capslist.h"
 
+START_TEST (test_from_string)
+{
+  GstCaps *caps;
+  int i;
+
+  for (i = 0; i < G_N_ELEMENTS (caps_list); i++) {
+    caps = gst_caps_from_string (caps_list[i]);
+    fail_if (caps == NULL,
+        "Could not create caps from string %s\n", caps_list[i]);
+    g_free (caps);
+  }
+}
+
+END_TEST;
 
 START_TEST (test_buffer)
 {
@@ -37,7 +53,8 @@ START_TEST (test_buffer)
   gst_buffer_unref (buffer);
 }
 
-END_TEST
+END_TEST;
+
 START_TEST (test_double_append)
 {
   GstStructure *s1;
@@ -49,7 +66,8 @@ START_TEST (test_double_append)
   ASSERT_CRITICAL (gst_caps_append_structure (c1, s1));
 }
 
-END_TEST
+END_TEST;
+
 START_TEST (test_mutability)
 {
   GstStructure *s1;
@@ -76,13 +94,17 @@ START_TEST (test_mutability)
   fail_unless (gst_structure_get_int (s1, "rate", &ret));
   fail_unless (ret == 1);
 }
-END_TEST Suite *
+
+END_TEST;
+
+Suite *
 gst_caps_suite (void)
 {
   Suite *s = suite_create ("GstCaps");
   TCase *tc_chain = tcase_create ("mutability");
 
   suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_from_string);
   tcase_add_test (tc_chain, test_double_append);
   tcase_add_test (tc_chain, test_mutability);
   tcase_add_test (tc_chain, test_buffer);

@@ -1022,12 +1022,17 @@ gst_value_serialize_ ## _type (const GValue * value) \
   return (char *) g_value_get_string (&val); \
 }
 
+/* deserialize the given s into to as a long long.
+ * check if the result is actually storeable in the given size number of
+ * bytes.
+ */
 static gboolean
 gst_value_deserialize_int_helper (long long *to, const char *s, long long min,
-    long long max)
+    long long max, int size)
 {
   gboolean ret = FALSE;
   char *end;
+  long long mask = -1;
 
   *to = gst_strtoll (s, &end, 0);
   if (*end == 0) {
@@ -1051,8 +1056,23 @@ gst_value_deserialize_int_helper (long long *to, const char *s, long long min,
     }
   }
   if (ret) {
-    if (*to < min || *to > max) {
-      ret = FALSE;
+    /* by definition, a long long fits into a long long; so ignore those */
+    if (size != sizeof (mask)) {
+      if (*to >= 0) {
+        /* for positive numbers, we create a mask of 1's outside of the range
+         * and 0's inside the range.  An and will thus keep only 1 bits
+         * outside of the range */
+        mask <<= (size * 8);
+        if ((mask & *to) != 0) {
+          ret = FALSE;
+        }
+      } else {
+        /* for negative numbers, we do a 2's complement version */
+        mask <<= ((size * 8) - 1);
+        if ((mask & *to) != mask) {
+          ret = FALSE;
+        }
+      }
     }
   }
   return ret;
@@ -1067,8 +1087,8 @@ gst_value_deserialize_ ## _type (GValue * dest, const char *s)		\
   long long x;								\
 									\
   if (gst_value_deserialize_int_helper (&x, s, G_MIN ## _macro,		\
-      G_MAX ## _macro)) {						\
-    g_value_set_ ## _type (dest, x);					\
+      G_MAX ## _macro, sizeof (g ## _type))) {				\
+    g_value_set_ ## _type (dest, /*(g ## _type)*/ x);			\
     return TRUE;							\
   } else {								\
     return FALSE;							\

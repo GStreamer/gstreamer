@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <2004> David Schleef <david at schleef dot org>
+ * Copyright (C) <2005> Thomas Vander Stichele <thomas at apestaart dot org>
  *
  * gstvalue.c: Unit tests for GstValue
  *
@@ -36,13 +37,97 @@ END_TEST;
 START_TEST (test_deserialize_gint64)
 {
   GValue value = { 0 };
-  const char *string = "12345678901";
-
+  const char *strings[] = {
+    "12345678901",
+    "-12345678901",
+  };
+  gint64 results[] = {
+    12345678901LL,
+    -12345678901LL,
+  };
+  int i;
 
   g_value_init (&value, G_TYPE_INT64);
-  fail_unless (gst_value_deserialize (&value, string));
-  fail_unless (g_value_get_int64 (&value) == 12345678901LL,
-      "resulting value is %" G_GINT64_FORMAT ", not %s", value, string);
+
+  for (i = 0; i < G_N_ELEMENTS (strings); ++i) {
+    fail_unless (gst_value_deserialize (&value, strings[i]),
+        "could not deserialize %s (%d)", strings[i], i);
+    fail_unless (g_value_get_int64 (&value) == results[i],
+        "resulting value is %" G_GINT64_FORMAT ", not %" G_GINT64_FORMAT
+        ", for string %s (%d)", value, results[i], strings[i], i);
+  }
+}
+
+END_TEST;
+
+START_TEST (test_deserialize_gint)
+{
+  GValue value = { 0 };
+  const char *strings[] = {
+    "-",
+    "123456",
+    "-123456",
+    "0xFFFF",
+    "0x0000FFFF",
+    /* a positive long long, serializing to highest possible positive sint */
+    "0x7FFFFFFF",
+    /* a positive long long, serializing to lowest possible negative sint */
+    "0x80000000",
+    /* a negative long long, serializing to lowest possible negative sint */
+    "0xFFFFFFFF80000000",
+    "0xFF000000",
+    /* a positive long long serializing to -1 */
+    "0xFFFFFFFF",
+    /* a negative long long serializing to -1 */
+    "0xFFFFFFFFFFFFFFFF",
+    "0xEFFFFFFF",
+  };
+  gint results[] = {
+    0,
+    123456,
+    -123456,
+    0xFFFF,
+    0xFFFF,
+    0x7FFFFFFF,
+    0x80000000,
+    0x80000000,
+    0xFF000000,
+    -1,
+    -1,
+    0xEFFFFFFF,
+  };
+  int i;
+
+  g_value_init (&value, G_TYPE_INT);
+
+  for (i = 0; i < G_N_ELEMENTS (strings); ++i) {
+    fail_unless (gst_value_deserialize (&value, strings[i]),
+        "could not deserialize %s (%d)", strings[i], i);
+    fail_unless (g_value_get_int (&value) == results[i],
+        "resulting value is %d, not %d, for string %s (%d)",
+        g_value_get_int (&value), results[i], strings[i], i);
+  }
+}
+
+END_TEST;
+
+START_TEST (test_deserialize_gint_failures)
+{
+  GValue value = { 0 };
+  const char *strings[] = {
+    "0x0000000100000000",       /* lowest long long that cannot fit in 32 bits */
+    "0xF000000000000000",
+    "0xFFFFFFF000000000",
+    "0xFFFFFFFF00000000",
+  };
+  int i;
+
+  g_value_init (&value, G_TYPE_INT);
+
+  for (i = 0; i < G_N_ELEMENTS (strings); ++i) {
+    fail_if (gst_value_deserialize (&value, strings[i]),
+        "deserialized %s (%d), while it should have failed", strings[i], i);
+  }
 }
 
 END_TEST;
@@ -134,6 +219,8 @@ gst_value_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_deserialize_buffer);
+  tcase_add_test (tc_chain, test_deserialize_gint);
+  tcase_add_test (tc_chain, test_deserialize_gint_failures);
   tcase_add_test (tc_chain, test_deserialize_gint64);
   tcase_add_test (tc_chain, test_string);
   tcase_add_test (tc_chain, test_deserialize_string);
