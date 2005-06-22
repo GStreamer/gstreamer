@@ -1,3 +1,9 @@
+2005-06-22  Wim Taymans  <wim@fluendo.com>
+
+	* ext/theora/theoraenc.c: (theora_set_header_on_caps):
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_set_header_on_caps):
+	Set buffers on caps as miniobjects and not as boxed.
+
 2005-06-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

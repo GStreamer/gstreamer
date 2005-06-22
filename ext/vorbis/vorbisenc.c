@@ -802,15 +802,15 @@ gst_vorbisenc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
   /* put buffers in a fixed list */
   g_value_init (&list, GST_TYPE_FIXED_LIST);
   g_value_init (&value, GST_TYPE_BUFFER);
-  g_value_set_boxed (&value, buf1);
+  gst_value_set_buffer (&value, buf1);
   gst_value_list_append_value (&list, &value);
   g_value_unset (&value);
   g_value_init (&value, GST_TYPE_BUFFER);
-  g_value_set_boxed (&value, buf2);
+  gst_value_set_buffer (&value, buf2);
   gst_value_list_append_value (&list, &value);
   g_value_unset (&value);
   g_value_init (&value, GST_TYPE_BUFFER);
-  g_value_set_boxed (&value, buf3);
+  gst_value_set_buffer (&value, buf3);
   gst_value_list_append_value (&list, &value);
   gst_structure_set_value (structure, "streamheader", &list);
   g_value_unset (&value);
