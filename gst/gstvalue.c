@@ -984,7 +984,7 @@ gst_value_deserialize_boolean (GValue * dest, const char *s)
  * int *
  *******/
 
-static int
+static long long
 gst_strtoll (const char *s, char **end, int base)
 {
   long long i;
@@ -1058,72 +1058,74 @@ gst_value_deserialize_int_helper (long long *to, const char *s, long long min,
   return ret;
 }
 
-#define CREATE_SERIALIZATION(_type,_macro) \
-CREATE_SERIALIZATION_START(_type,_macro) \
-\
-static gboolean \
-gst_value_deserialize_ ## _type (GValue * dest, const char *s) \
-{ \
-  long long x; \
-\
-  if (gst_value_deserialize_int_helper (&x, s, G_MIN ## _macro, G_MAX ## _macro)) { \
-    g_value_set_ ## _type (dest, x); \
-    return TRUE; \
-  } else { \
-    return FALSE; \
-  } \
+#define CREATE_SERIALIZATION(_type,_macro)				\
+CREATE_SERIALIZATION_START(_type,_macro)				\
+									\
+static gboolean								\
+gst_value_deserialize_ ## _type (GValue * dest, const char *s)		\
+{									\
+  long long x;								\
+									\
+  if (gst_value_deserialize_int_helper (&x, s, G_MIN ## _macro,		\
+      G_MAX ## _macro)) {						\
+    g_value_set_ ## _type (dest, x);					\
+    return TRUE;							\
+  } else {								\
+    return FALSE;							\
+  }									\
 }
 
-#define CREATE_USERIALIZATION(_type,_macro) \
-CREATE_SERIALIZATION_START(_type,_macro) \
-\
-static gboolean \
-gst_value_deserialize_ ## _type (GValue * dest, const char *s) \
-{ \
-  unsigned long long x; \
-  char *end; \
-  gboolean ret = FALSE; \
-\
-  x = g_ascii_strtoull (s, &end, 0); \
-  if (*end == 0) { \
-    ret = TRUE; \
-  } else { \
-    if (g_ascii_strcasecmp (s, "little_endian") == 0) { \
-      x = G_LITTLE_ENDIAN; \
-      ret = TRUE; \
-    } else if (g_ascii_strcasecmp (s, "big_endian") == 0) { \
-      x = G_BIG_ENDIAN; \
-      ret = TRUE; \
-    } else if (g_ascii_strcasecmp (s, "byte_order") == 0) { \
-      x = G_BYTE_ORDER; \
-      ret = TRUE; \
-    } else if (g_ascii_strcasecmp (s, "min") == 0) { \
-      x = 0; \
-      ret = TRUE; \
-    } else if (g_ascii_strcasecmp (s, "max") == 0) { \
-      x = G_MAX ## _macro; \
-      ret = TRUE; \
-    } \
-  } \
-  if (ret) { \
-    if (x > G_MAX ## _macro) {\
-      ret = FALSE; \
-    } else { \
-      g_value_set_ ## _type (dest, x); \
-    } \
-  } \
-  return ret; \
+#define CREATE_USERIALIZATION(_type,_macro)				\
+CREATE_SERIALIZATION_START(_type,_macro)				\
+									\
+static gboolean								\
+gst_value_deserialize_ ## _type (GValue * dest, const char *s)		\
+{									\
+  unsigned long long x;							\
+  char *end;								\
+  gboolean ret = FALSE;							\
+									\
+  x = g_ascii_strtoull (s, &end, 0);					\
+  if (*end == 0) {							\
+    ret = TRUE;								\
+  } else {								\
+    if (g_ascii_strcasecmp (s, "little_endian") == 0) {			\
+      x = G_LITTLE_ENDIAN;						\
+      ret = TRUE;							\
+    } else if (g_ascii_strcasecmp (s, "big_endian") == 0) {		\
+      x = G_BIG_ENDIAN;							\
+      ret = TRUE;							\
+    } else if (g_ascii_strcasecmp (s, "byte_order") == 0) {		\
+      x = G_BYTE_ORDER;							\
+      ret = TRUE;							\
+    } else if (g_ascii_strcasecmp (s, "min") == 0) {			\
+      x = 0;								\
+      ret = TRUE;							\
+    } else if (g_ascii_strcasecmp (s, "max") == 0) {			\
+      x = G_MAX ## _macro;						\
+      ret = TRUE;							\
+    }									\
+  }									\
+  if (ret) {								\
+    if (x > G_MAX ## _macro) {						\
+      ret = FALSE;							\
+    } else {								\
+      g_value_set_ ## _type (dest, x);					\
+    }									\
+  }									\
+  return ret;								\
 }
 
-#define REGISTER_SERIALIZATION(_gtype, _type) G_STMT_START{ \
-  static const GstValueTable gst_value = { \
-    _gtype, \
-    gst_value_compare_ ## _type, \
-    gst_value_serialize_ ## _type, \
-    gst_value_deserialize_ ## _type, \
-  }; \
-\
-  gst_value_register (&gst_value); \
+#define REGISTER_SERIALIZATION(_gtype, _type)				\
+G_STMT_START {								\
+  static const GstValueTable gst_value = {				\
+    _gtype,								\
+    gst_value_compare_ ## _type,					\
+    gst_value_serialize_ ## _type,					\
+    gst_value_deserialize_ ## _type,					\
+  };									\
+									\
+  gst_value_register (&gst_value);					\
 } G_STMT_END
 
 CREATE_SERIALIZATION (int, INT)
@@ -2478,7 +2480,7 @@ gst_value_serialize (const GValue * value)
  *
  * Tries to deserialize a string into the type specified by the given GValue.
  * If the operation succeeds, TRUE is returned, FALSE otherwise.
- * 
+ *
  * Returns: TRUE on success
  */
 gboolean
@@ -2494,17 +2496,20 @@ gst_value_deserialize (GValue * dest, const gchar * src)
     table = &g_array_index (gst_value_table, GstValueTable, i);
     if (table->serialize == NULL)
       continue;
+
     if (table->type == G_VALUE_TYPE (dest)) {
       best = table;
       break;
     }
+
     if (g_type_is_a (G_VALUE_TYPE (dest), table->type)) {
       if (!best || g_type_is_a (table->type, best->type))
         best = table;
     }
   }
-  if (best)
+  if (best) {
     return best->deserialize (dest, src);
+  }
 
   return FALSE;
 }

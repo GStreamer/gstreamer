@@ -1,3 +1,11 @@
+2005-06-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/gst/gstvalue.c: (START_TEST):
+	* gst/gstvalue.c: (gst_value_deserialize):
+	  return long long, not int, so gint64 deserialization actually
+	  works.  Is there any flag that makes the compiler check this ?
+	  Fixes #308559
+
 2005-06-22  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbuffer.h:

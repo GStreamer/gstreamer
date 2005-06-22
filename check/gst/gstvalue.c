@@ -36,14 +36,13 @@ END_TEST;
 START_TEST (test_deserialize_gint64)
 {
   GValue value = { 0 };
+  const char *string = "12345678901";
+
 
   g_value_init (&value, G_TYPE_INT64);
-  fail_unless (gst_value_deserialize (&value, "12345678901"));
-  /* FIXME:
-   * this test actually fails, gasp.
-   fail_unless (g_value_get_int64 (&value) == 12345678901LL,
-   "resulting value is %" G_GINT64_FORMAT ", not 12345678901");
-   */
+  fail_unless (gst_value_deserialize (&value, string));
+  fail_unless (g_value_get_int64 (&value) == 12345678901LL,
+      "resulting value is %" G_GINT64_FORMAT ", not %s", value, string);
 }
 
 END_TEST;
