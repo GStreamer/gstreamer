@@ -1,5 +1,11 @@
 2005-06-23  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstpad.c: (gst_pad_event_default):
+	* gst/gstqueue.c: (gst_queue_loop):
+	No unsafe task pausing please.
+
+2005-06-23  Wim Taymans  <wim@fluendo.com>
+
 	* gst/schedulers/threadscheduler.c:
 	(gst_thread_scheduler_task_start),
 	(gst_thread_scheduler_task_pause), (gst_thread_scheduler_func):

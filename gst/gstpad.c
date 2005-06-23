@@ -2231,10 +2231,8 @@ gst_pad_event_default (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
     {
-      if (GST_PAD_TASK (pad)) {
-        GST_DEBUG_OBJECT (pad, "pausing task because of eos");
-        gst_pad_pause_task (pad);
-      }
+      GST_DEBUG_OBJECT (pad, "pausing task because of eos");
+      gst_pad_pause_task (pad);
     }
     default:
       break;

@@ -733,11 +733,11 @@ restart:
     result = gst_pad_push (pad, GST_BUFFER (data));
     GST_QUEUE_MUTEX_LOCK;
     if (result != GST_FLOW_OK) {
-      gst_task_pause (GST_PAD_TASK (queue->srcpad));
+      gst_pad_pause_task (queue->srcpad);
     }
   } else {
     if (GST_EVENT_TYPE (data) == GST_EVENT_EOS) {
-      gst_task_pause (GST_PAD_TASK (queue->srcpad));
+      gst_pad_pause_task (queue->srcpad);
       restart = FALSE;
     }
     GST_QUEUE_MUTEX_UNLOCK;
