@@ -39,6 +39,7 @@ TESTS = $(top_builddir)/tools/gst-register 	\
 	gst/gstvalue				\
 	pipelines/simple_launch_lines		\
 	pipelines/cleanup			\
+	states/sinks				\
 	gst-libs/gdp	
 
 check_PROGRAMS = $(TESTS)

@@ -822,8 +822,13 @@ gst_bin_iterate_sinks (GstBin * bin)
   return result;
 }
 
-/* this functions loops over all children, as soon as one does
- * not return SUCCESS, we return that value.
+/* 2 phases:
+ *  1) check state of all children with 0 timeout to find ERROR and
+ *     NO_PREROLL elements. return if found.
+ *  2) perform full blocking wait with requested timeout.
+ * 
+ * 2) cannot be performed when 1) returns results as the sinks might
+ *    not be able to complete the state change making 2) block forever.
  *
  * MT safe
  */
@@ -832,18 +837,76 @@ gst_bin_get_state (GstElement * element, GstElementState * state,
     GstElementState * pending, GTimeVal * timeout)
 {
   GstBin *bin = GST_BIN (element);
-  GstElementStateReturn ret;
+  GstElementStateReturn ret = GST_STATE_SUCCESS;
   GList *children;
   guint32 children_cookie;
+  gboolean zero_timeout;
 
-  /* we cannot take the state lock yet as we might block when querying
-   * the children, holding the lock too long for no reason. */
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "getting state");
+
+  zero_timeout = timeout != NULL && timeout->tv_sec == 0
+      && timeout->tv_usec == 0;
+
+  /* if we have a non zero timeout we must make sure not to block
+   * on the sinks when we have NO_PREROLL elements. This is why we do
+   * a quick check if there are still NO_PREROLL elements. We also
+   * catch the error elements this way. */
+  GST_STATE_LOCK (bin);
+  if (!zero_timeout) {
+    GST_LOCK (bin);
+    GTimeVal tv;
+    gboolean have_no_preroll = FALSE;
+    gboolean have_async = FALSE;
+
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "checking for NO_PREROLL");
+    /* use 0 timeout so we don't block on the sinks */
+    GST_TIME_TO_TIMEVAL (0, tv);
+    children = bin->children;
+    while (children) {
+      GstElement *child = GST_ELEMENT_CAST (children->data);
+
+      ret = gst_element_get_state (child, NULL, NULL, &tv);
+      switch (ret) {
+          /* report FAILURE or NO_PREROLL immediatly */
+        case GST_STATE_FAILURE:
+          GST_UNLOCK (bin);
+          goto report;
+        case GST_STATE_NO_PREROLL:
+          /* we have to continue scanning as there might be
+           * ERRORS too */
+          have_no_preroll = TRUE;
+          break;
+        case GST_STATE_ASYNC:
+          have_async = TRUE;
+          break;
+        default:
+          break;
+      }
+      children = g_list_next (children);
+    }
+    GST_UNLOCK (bin);
+    /* if we get here, we have no FAILURES, check for any NO_PREROLL
+     * elements then. */
+    if (have_no_preroll)
+      goto report;
+
+    /* if we get here, no NO_PREROLL elements are in the pipeline */
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "no NO_PREROLL elements");
+    GST_STATE_NO_PREROLL (element) = FALSE;
+
+    /* if no ASYNC elements exist we don't even have to poll with a
+     * timeout again */
+    if (!have_async)
+      goto report;
+  }
+  /* we have to release the state lock as we might block when querying
+   * the children, holding the lock for too long for no reason. */
+  GST_STATE_UNLOCK (bin);
 
   /* next we poll all children for their state to see if one of them
    * is still busy with its state change. */
   GST_LOCK (bin);
 restart:
-  ret = GST_STATE_SUCCESS;
   children = bin->children;
   children_cookie = bin->children_cookie;
   while (children) {
@@ -863,18 +926,33 @@ restart:
       /* child added/removed during state change, restart */
       goto restart;
 
-    if (ret != GST_STATE_SUCCESS) {
-      /* some child is still busy or in error, we can report that
-       * right away. */
-      break;
+    switch (ret) {
+      case GST_STATE_SUCCESS:
+        break;
+      case GST_STATE_FAILURE:
+      case GST_STATE_NO_PREROLL:
+        /* report FAILURE and NO_PREROLL immediatly */
+        goto done;
+        break;
+      case GST_STATE_ASYNC:
+        /* since we checked for non prerollable elements before,
+         * the first ASYNC return is the real return value */
+        if (!zero_timeout)
+          goto done;
+        break;
+      default:
+        g_assert_not_reached ();
     }
-
     children = g_list_next (children);
   }
+  /* if we got here, all elements can to preroll */
+  GST_STATE_NO_PREROLL (element) = FALSE;
+done:
   GST_UNLOCK (bin);
 
   /* now we can take the state lock */
   GST_STATE_LOCK (bin);
+report:
   switch (ret) {
     case GST_STATE_SUCCESS:
       /* we can commit the state */
@@ -895,6 +973,12 @@ restart:
   if (pending)
     *pending = GST_STATE_PENDING (element);
 
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+      "state current: %s, pending: %s, error: %d, no_preroll: %d, result: %d",
+      gst_element_state_get_name (GST_STATE (element)),
+      gst_element_state_get_name (GST_STATE_PENDING (element)),
+      GST_STATE_ERROR (element), GST_STATE_NO_PREROLL (element), ret);
+
   GST_STATE_UNLOCK (bin);
 
   return ret;
@@ -910,8 +994,9 @@ append_child (gpointer child, GQueue * queue)
  * as follows:
  *
  * 1) put all sink elements on the queue.
- * 2) change state of elements in queue, put linked elements to queue.
- * 3) while queue not empty goto 2)
+ * 2) put all semisink elements on the queue.
+ * 3) change state of elements in queue, put linked elements to queue.
+ * 4) while queue not empty goto 3)
  *
  * This will effectively change the state of all elements in the bin
  * from the sinks to the sources. We have to change the states this
@@ -927,6 +1012,7 @@ gst_bin_change_state (GstElement * element)
   GstElementStateReturn ret;
   GstElementState old_state, pending;
   gboolean have_async = FALSE;
+  gboolean have_no_preroll = FALSE;
   GList *children;
   guint32 children_cookie;
   GQueue *elem_queue;           /* list of elements waiting for a state change */
@@ -1047,9 +1133,20 @@ restart:
           /* see if this element is in the bin we are currently handling */
           parent = gst_object_get_parent (GST_OBJECT_CAST (peer_elem));
           if (parent && parent == GST_OBJECT_CAST (bin)) {
+            GList *oldelem;
+
             GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
                 "adding element %s to queue", GST_ELEMENT_NAME (peer_elem));
 
+            /* make sure we don't have duplicates */
+            while ((oldelem = g_queue_find (semi_queue, peer_elem))) {
+              gst_object_unref (GST_OBJECT (peer_elem));
+              g_queue_delete_link (semi_queue, oldelem);
+            }
+            while ((oldelem = g_queue_find (elem_queue, peer_elem))) {
+              gst_object_unref (GST_OBJECT (peer_elem));
+              g_queue_delete_link (elem_queue, oldelem);
+            }
             /* was reffed before pushing on the queue by the 
              * gst_object_get_parent() call we used to get the element. */
             g_queue_push_tail (elem_queue, peer_elem);
@@ -1101,6 +1198,13 @@ restart:
         /* release refcount of element we popped off the queue */
         gst_object_unref (GST_OBJECT (qelement));
         goto exit;
+      case GST_STATE_NO_PREROLL:
+        GST_CAT_DEBUG (GST_CAT_STATES,
+            "child '%s' changed state to %d(%s) successfully without preroll",
+            GST_ELEMENT_NAME (qelement), pending,
+            gst_element_state_get_name (pending));
+        have_no_preroll = TRUE;
+        break;
       default:
         g_assert_not_reached ();
         break;
@@ -1109,15 +1213,12 @@ restart:
     gst_object_unref (GST_OBJECT (qelement));
   }
 
-  if (have_async) {
+  if (have_no_preroll) {
+    ret = GST_STATE_NO_PREROLL;
+  } else if (have_async) {
     ret = GST_STATE_ASYNC;
   } else {
-    if (parent_class->change_state) {
-      ret = parent_class->change_state (element);
-    } else {
-      ret = GST_STATE_SUCCESS;
-    }
-    if (ret == GST_STATE_SUCCESS) {
+    if ((ret = parent_class->change_state (element)) == GST_STATE_SUCCESS) {
       /* we can commit the state change now */
       gst_element_commit_state (element);
     }
@@ -1130,7 +1231,8 @@ restart:
       gst_element_state_get_name (GST_STATE (element)));
 
 exit:
-  /* release refcounts in queue, should normally be empty */
+  /* release refcounts in queue, should normally be empty unless we
+   * had an error. */
   g_queue_foreach (elem_queue, (GFunc) gst_object_unref, NULL);
   g_queue_free (elem_queue);
   g_queue_foreach (semi_queue, (GFunc) gst_object_unref, NULL);

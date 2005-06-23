@@ -537,6 +537,7 @@ main (int argc, char *argv[])
 
   if (!savefile) {
     GstElementState state, pending;
+    GstElementStateReturn ret;
 
     if (!GST_IS_BIN (pipeline)) {
       GstElement *real_pipeline = gst_element_factory_make ("pipeline", NULL);
@@ -549,14 +550,26 @@ main (int argc, char *argv[])
       pipeline = real_pipeline;
     }
 
-    fprintf (stderr, _("PREROLL pipeline ...\n"));
-    if (gst_element_set_state (pipeline, GST_STATE_PAUSED) == GST_STATE_FAILURE) {
-      fprintf (stderr, _("ERROR: pipeline doesn't want to pause.\n"));
-      res = -1;
-      goto end;
+    fprintf (stderr, _("PAUSE pipeline ...\n"));
+    ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
+
+    switch (ret) {
+      case GST_STATE_FAILURE:
+        fprintf (stderr, _("ERROR: pipeline doesn't want to pause.\n"));
+        res = -1;
+        goto end;
+      case GST_STATE_NO_PREROLL:
+        fprintf (stderr, _("NO_PREROLL pipeline ...\n"));
+        break;
+      case GST_STATE_ASYNC:
+        fprintf (stderr, _("PREROLL pipeline ...\n"));
+        gst_element_get_state (pipeline, &state, &pending, NULL);
+        /* fallthrough */
+      case GST_STATE_SUCCESS:
+        fprintf (stderr, _("PREROLLED pipeline ...\n"));
+        break;
     }
 
-    gst_element_get_state (pipeline, &state, &pending, NULL);
     caught_error = event_loop (pipeline, FALSE);
 
     /* see if we got any messages */

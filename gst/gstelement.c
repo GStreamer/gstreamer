@@ -1432,14 +1432,20 @@ gst_element_get_state_func (GstElement * element,
   GstElementStateReturn ret = GST_STATE_FAILURE;
   GstElementState old_pending;
 
-  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
-
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "getting state");
 
   GST_STATE_LOCK (element);
   /* we got an error, report immediatly */
-  if (GST_STATE_ERROR (element))
+  if (GST_STATE_NO_PREROLL (element)) {
+    ret = GST_STATE_NO_PREROLL;
     goto done;
+  }
+
+  /* we got an error, report immediatly */
+  if (GST_STATE_ERROR (element)) {
+    ret = GST_STATE_FAILURE;
+    goto done;
+  }
 
   old_pending = GST_STATE_PENDING (element);
   if (old_pending != GST_STATE_VOID_PENDING) {
@@ -1484,9 +1490,10 @@ done:
     *pending = GST_STATE_PENDING (element);
 
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
-      "state current: %s, pending: %s",
+      "state current: %s, pending: %s, error: %d, no_preroll: %d, result: %d",
       gst_element_state_get_name (GST_STATE (element)),
-      gst_element_state_get_name (GST_STATE_PENDING (element)));
+      gst_element_state_get_name (GST_STATE_PENDING (element)),
+      GST_STATE_ERROR (element), GST_STATE_NO_PREROLL (element), ret);
 
   GST_STATE_UNLOCK (element);
 
@@ -1666,21 +1673,27 @@ gst_element_set_state (GstElement * element, GstElementState state)
   GstElementClass *oclass;
   GstElementState current;
   GstElementStateReturn return_val = GST_STATE_SUCCESS;
+  GstElementStateReturn ret;
+  GstElementState pending;
+  GTimeVal tv;
+
+
+  /* get current element state,  need to call the method so that
+   * we call the virtual method and subclasses can implement their
+   * own algorithms */
+  GST_TIME_TO_TIMEVAL (0, tv);
+  ret = gst_element_get_state (element, &current, &pending, &tv);
 
   /* get the element state lock */
   GST_STATE_LOCK (element);
-
-#if 0
-  /* a state change is pending and we are not in error, the element is busy
-   * with a state change and we cannot proceed. 
-   * FIXME, does not work for a bin.*/
-  if (G_UNLIKELY (GST_STATE_PENDING (element) != GST_STATE_VOID_PENDING &&
-          !GST_STATE_ERROR (element)))
-    goto was_busy;
-#endif
+  if (ret == GST_STATE_ASYNC) {
+    gst_element_commit_state (element);
+  }
 
   /* clear the error flag */
   GST_STATE_ERROR (element) = FALSE;
+  /* clear the no_preroll flag */
+  GST_STATE_NO_PREROLL (element) = FALSE;
 
   /* start with the current state */
   current = GST_STATE (element);
@@ -1739,6 +1752,14 @@ gst_element_set_state (GstElement * element, GstElementState state)
         gst_element_commit_state (element);
         GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "commited state");
         break;
+      case GST_STATE_NO_PREROLL:
+        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+            "element changed state successfuly and can't preroll");
+        /* we can commit the state now and proceed to the next state */
+        gst_element_commit_state (element);
+        GST_STATE_NO_PREROLL (element) = TRUE;
+        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "commited state");
+        break;
       default:
         goto invalid_return;
     }
@@ -1756,16 +1777,6 @@ exit:
   return return_val;
 
   /* ERROR */
-#if 0
-was_busy:
-  {
-    GST_STATE_UNLOCK (element);
-    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
-        "was busy with a state change");
-
-    return GST_STATE_BUSY;
-  }
-#endif
 invalid_return:
   {
     GST_STATE_UNLOCK (element);

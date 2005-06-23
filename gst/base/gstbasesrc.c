@@ -49,7 +49,7 @@ enum
   PROP_0,
   PROP_BLOCKSIZE,
   PROP_HAS_LOOP,
-  PROP_HAS_GETRANGE
+  PROP_HAS_GETRANGE,
 };
 
 static GstElementClass *parent_class = NULL;
@@ -164,6 +164,10 @@ gst_basesrc_init (GstBaseSrc * basesrc, gpointer g_class)
 
   gst_pad_set_checkgetrange_function (pad, gst_basesrc_check_get_range);
 
+  basesrc->is_live = FALSE;
+  basesrc->live_lock = g_mutex_new ();
+  basesrc->live_cond = g_cond_new ();
+
   /* hold ref to pad */
   basesrc->srcpad = pad;
   gst_element_add_pad (GST_ELEMENT (basesrc), pad);
@@ -174,6 +178,26 @@ gst_basesrc_init (GstBaseSrc * basesrc, gpointer g_class)
   basesrc->clock_id = NULL;
 
   GST_FLAG_UNSET (basesrc, GST_BASESRC_STARTED);
+}
+
+void
+gst_basesrc_set_live (GstBaseSrc * src, gboolean live)
+{
+  GST_LIVE_LOCK (src);
+  src->is_live = live;
+  GST_LIVE_UNLOCK (src);
+}
+
+gboolean
+gst_basesrc_is_live (GstBaseSrc * src)
+{
+  gboolean result;
+
+  GST_LIVE_LOCK (src);
+  result = src->is_live;
+  GST_LIVE_UNLOCK (src);
+
+  return result;
 }
 
 static void
@@ -460,6 +484,16 @@ gst_basesrc_get_range (GstPad * pad, guint64 offset, guint length,
   src = GST_BASESRC (GST_OBJECT_PARENT (pad));
   bclass = GST_BASESRC_GET_CLASS (src);
 
+  GST_LIVE_LOCK (src);
+  if (src->is_live) {
+    while (!src->live_running) {
+      GST_DEBUG ("live source waiting for running state");
+      GST_LIVE_WAIT (src);
+      GST_DEBUG ("live source unlocked");
+    }
+  }
+  GST_LIVE_UNLOCK (src);
+
   if (!GST_FLAG_IS_SET (src, GST_BASESRC_STARTED))
     goto not_started;
 
@@ -725,6 +759,11 @@ gst_basesrc_activate (GstPad * pad, GstActivateMode mode)
         gst_basesrc_stop (basesrc);
       break;
     case GST_ACTIVATE_NONE:
+      GST_LIVE_LOCK (basesrc);
+      basesrc->live_running = TRUE;
+      GST_LIVE_SIGNAL (basesrc);
+      GST_LIVE_UNLOCK (basesrc);
+
       /* step 1, unblock clock sync (if any) */
       gst_basesrc_unlock (basesrc);
 
@@ -746,7 +785,8 @@ static GstElementStateReturn
 gst_basesrc_change_state (GstElement * element)
 {
   GstBaseSrc *basesrc;
-  GstElementStateReturn result = GST_STATE_FAILURE;
+  GstElementStateReturn result = GST_STATE_SUCCESS;
+  GstElementStateReturn presult;
   GstElementState transition;
 
   basesrc = GST_BASESRC (element);
@@ -757,17 +797,35 @@ gst_basesrc_change_state (GstElement * element)
     case GST_STATE_NULL_TO_READY:
       break;
     case GST_STATE_READY_TO_PAUSED:
+      GST_LIVE_LOCK (element);
+      if (basesrc->is_live) {
+        result = GST_STATE_NO_PREROLL;
+        basesrc->live_running = FALSE;
+      }
+      GST_LIVE_UNLOCK (element);
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
+      GST_LIVE_LOCK (element);
+      basesrc->live_running = TRUE;
+      GST_LIVE_SIGNAL (element);
+      GST_LIVE_UNLOCK (element);
       break;
     default:
       break;
   }
 
-  result = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  if ((presult = GST_ELEMENT_CLASS (parent_class)->change_state (element)) !=
+      GST_STATE_SUCCESS)
+    return presult;
 
   switch (transition) {
     case GST_STATE_PLAYING_TO_PAUSED:
+      GST_LIVE_LOCK (element);
+      if (basesrc->is_live) {
+        result = GST_STATE_NO_PREROLL;
+        basesrc->live_running = FALSE;
+      }
+      GST_LIVE_UNLOCK (element);
       break;
     case GST_STATE_PAUSED_TO_READY:
       if (!gst_basesrc_stop (basesrc))

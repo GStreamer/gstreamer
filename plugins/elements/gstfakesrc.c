@@ -90,7 +90,8 @@ enum
   PROP_PARENTSIZE,
   PROP_LAST_MESSAGE,
   PROP_HAS_LOOP,
-  PROP_HAS_GETRANGE
+  PROP_HAS_GETRANGE,
+  PROP_IS_LIVE
 };
 
 #define GST_TYPE_FAKESRC_OUTPUT (gst_fakesrc_output_get_type())
@@ -284,6 +285,10 @@ gst_fakesrc_class_init (GstFakeSrcClass * klass)
       g_param_spec_boolean ("has-getrange", "Has getrange function",
           "True if the element exposes a getrange function", TRUE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_IS_LIVE,
+      g_param_spec_boolean ("is-live", "Is this a live source",
+          "True if the element cannot produce data in PAUSED", FALSE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   gst_fakesrc_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -361,8 +366,10 @@ gst_fakesrc_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
   GstFakeSrc *src;
+  GstBaseSrc *basesrc;
 
   src = GST_FAKESRC (object);
+  basesrc = GST_BASESRC (object);
 
   switch (prop_id) {
     case PROP_OUTPUT:
@@ -428,6 +435,9 @@ gst_fakesrc_set_property (GObject * object, guint prop_id, const GValue * value,
       g_return_if_fail (!GST_FLAG_IS_SET (object, GST_BASESRC_STARTED));
       src->has_getrange = g_value_get_boolean (value);
       break;
+    case PROP_IS_LIVE:
+      gst_basesrc_set_live (basesrc, g_value_get_boolean (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -439,11 +449,13 @@ gst_fakesrc_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
   GstFakeSrc *src;
+  GstBaseSrc *basesrc;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_FAKESRC (object));
 
   src = GST_FAKESRC (object);
+  basesrc = GST_BASESRC (object);
 
   switch (prop_id) {
     case PROP_OUTPUT:
@@ -499,6 +511,9 @@ gst_fakesrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_HAS_GETRANGE:
       g_value_set_boolean (value, src->has_getrange);
+      break;
+    case PROP_IS_LIVE:
+      g_value_set_boolean (value, gst_basesrc_is_live (basesrc));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -1,3 +1,33 @@
+2005-06-23  Wim Taymans  <wim@fluendo.com>
+
+	* check/Makefile.am:
+	* check/states/sinks.c: (START_TEST), (gst_object_suite), (main):
+	* docs/design/part-live-source.txt:
+	* docs/design/part-states.txt:
+	* gst/base/gstbasesrc.c: (gst_basesrc_init),
+	(gst_basesrc_set_live), (gst_basesrc_is_live),
+	(gst_basesrc_get_range), (gst_basesrc_activate),
+	(gst_basesrc_change_state):
+	* gst/base/gstbasesrc.h:
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_class_init),
+	(gst_fakesrc_set_property), (gst_fakesrc_get_property):
+	* gst/gstbin.c: (gst_bin_get_state), (gst_bin_change_state):
+	* gst/gstelement.c: (gst_element_get_state_func),
+	(gst_element_set_state):
+	* gst/gstelement.h:
+	* gst/gsttypes.h:
+	* tools/gst-launch.c: (event_loop), (main):
+	Added support for live sources and other elements that
+	cannot do preroll.
+	Updated design docs, added live-source design doc.
+	Implemented live source functionality in basesrc
+	Fix error condition in _bin_get_state()
+	Implement live source handling in -launch.
+	Added check for live sources.
+	Fixed case in GstBin where elements were changed state
+	multiple times.
+
+
 2005-06-23  Andy Wingo  <wingo@pobox.com>
 
 	* check/gst/gstpad.c (test_get_allowed_caps, test_refcount): Fix

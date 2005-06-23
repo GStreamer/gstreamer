@@ -56,6 +56,7 @@ GST_EXPORT GType _gst_element_type;
 #define GST_STATE(obj)			(GST_ELEMENT(obj)->current_state)
 #define GST_STATE_PENDING(obj)		(GST_ELEMENT(obj)->pending_state)
 #define GST_STATE_ERROR(obj)		(GST_ELEMENT(obj)->state_error)
+#define GST_STATE_NO_PREROLL(obj)	(GST_ELEMENT(obj)->no_preroll)
 
 /* Note: using 8 bit shift mostly "just because", it leaves us enough room to grow <g> */
 #define GST_STATE_TRANSITION(obj)	((GST_STATE(obj)<<8) | GST_STATE_PENDING(obj))
@@ -172,6 +173,7 @@ struct _GstElement
   guint8                pending_state;
   gboolean              state_error; /* flag is set when the element has an error in the last state
                                         change. it is cleared when doing another state change. */
+  gboolean		no_preroll;  /* flag is set when the element cannot preroll */
   /*< public >*/ /* with LOCK */
   /* element manager */
   GstPipeline  	       *manager;

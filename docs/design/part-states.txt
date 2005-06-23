@@ -60,8 +60,11 @@ The _set_state() function can return 3 possible values:
 		     change or for sinks that need to receive the first buffer
 		     before they can complete the state change (preroll).
 
-In the case of an async state change, it is not possible to proceed to the next
-state until the current state change completed. After receiving an ASYNC return
+  GST_STATE_NO_PREROLL: The state change is completed successfully but the element
+                     will not be able to produce data in the PAUSED state.
+
+In the case of an async state change, it is possible to proceed to the next
+state before the current state change completed. After receiving an ASYNC return
 value, you can use _element_get_state() to poll the status of the element.
 
 When setting the state of an element, the PENDING_STATE is set to the required 
@@ -129,14 +132,24 @@ on the elements.
 If after calling the state function on all children, one of the children returned
 ASYNC, the function returns ASYNC as well. 
 
+If after calling the state function on all children, one of the children returned
+NO_PREROLL, the function returns NO_PREROLL as well. 
+
 The current state of the bin can be retrieved with _get_state(). This function will
-call the _get_state() function on all the elements. If one of the children returns
-FAILURE or ASYNC, the bin reports FAILURE or ASYNC respectively. The bin also
-updates its state variables after polling its children, this means that the state
-variables of the bin are only updated after calling _get_state() on the bin.
+call the _get_state() function on all the elements. 
+
+First the bin will perform a _get_state() on all children with a 0 timeout. This
+is to find any children with an ERROR/NO_PREROLL result value.
+
+Then the bin performs the _get_state() with the requested timeout. The reason for
+the 2 phases is that when an ERROR or NO_PREROLL result is found, a blocking 
+wait on the sinks might never return.
 
 The _get_state() function will be called on the children with the same timout value
 so the function can potentially block timeout*num_children.
+
+The bin also updates its state variables after polling its children, this means that 
+the state variables of the bin are only updated after calling _get_state() on the bin.
 
 
 Implementing states in elements
