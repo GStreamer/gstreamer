@@ -35,6 +35,9 @@ rtsp_url_parse (const gchar * urlstr, RTSPUrl ** url)
 
   res = g_new0 (RTSPUrl, 1);
 
+  if (urlstr == NULL)
+    return RTSP_EINVAL;
+
   p = (gchar *) urlstr;
   if (g_str_has_prefix (p, RTSP_PROTO)) {
     res->protocol = RTSP_PROTO_TCP;

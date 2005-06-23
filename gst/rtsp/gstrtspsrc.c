@@ -266,20 +266,20 @@ gst_rtspsrc_set_state (GstRTSPSrc * src, GstElementState state)
 
     /* first our rtp session manager */
     if ((ret =
-            gst_element_set_state (stream->rtpdec, state)) != GST_STATE_SUCCESS)
+            gst_element_set_state (stream->rtpdec, state)) == GST_STATE_FAILURE)
       goto done;
 
     /* then our sources */
     if (stream->rtpsrc) {
       if ((ret =
               gst_element_set_state (stream->rtpsrc,
-                  state)) != GST_STATE_SUCCESS)
+                  state)) == GST_STATE_FAILURE)
         goto done;
     }
     if (stream->rtcpsrc) {
       if ((ret =
               gst_element_set_state (stream->rtcpsrc,
-                  state)) != GST_STATE_SUCCESS)
+                  state)) == GST_STATE_FAILURE)
         goto done;
     }
   }
@@ -305,9 +305,8 @@ gst_rtspsrc_stream_setup_rtp (GstRTSPStream * stream, gint * rtpport,
   /* we manage this element */
   gst_rtspsrc_add_element (src, stream->rtpsrc);
 
-  if ((ret =
-          gst_element_set_state (stream->rtpsrc,
-              GST_STATE_PAUSED)) != GST_STATE_SUCCESS)
+  ret = gst_element_set_state (stream->rtpsrc, GST_STATE_PAUSED);
+  if (ret == GST_STATE_FAILURE)
     goto start_rtp_failure;
 
   if (!(stream->rtcpsrc =
@@ -317,9 +316,8 @@ gst_rtspsrc_stream_setup_rtp (GstRTSPStream * stream, gint * rtpport,
   /* we manage this element */
   gst_rtspsrc_add_element (src, stream->rtcpsrc);
 
-  if ((ret =
-          gst_element_set_state (stream->rtcpsrc,
-              GST_STATE_PAUSED)) != GST_STATE_SUCCESS)
+  ret = gst_element_set_state (stream->rtcpsrc, GST_STATE_PAUSED);
+  if (ret == GST_STATE_FAILURE)
     goto start_rtcp_failure;
 
   g_object_get (G_OBJECT (stream->rtpsrc), "port", rtpport, NULL);
@@ -378,7 +376,7 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
   /* FIXME, make sure it outputs the caps */
   pad = gst_element_get_pad (stream->rtpdec, "srcrtp");
   name = g_strdup_printf ("rtp_stream%d", stream->id);
-  gst_element_add_ghost_pad (GST_ELEMENT (src), pad, name);
+  gst_element_add_pad (GST_ELEMENT (src), gst_ghost_pad_new (name, pad));
   g_free (name);
   gst_object_unref (GST_OBJECT (pad));
 
@@ -625,9 +623,11 @@ gst_rtspsrc_open (GstRTSPSrc * src)
         gchar *new;
         gint rtpport, rtcpport;
         gchar *trxparams;
+        gboolean res;
 
         /* allocate two udp ports */
-        gst_rtspsrc_stream_setup_rtp (stream, &rtpport, &rtcpport);
+        if (!gst_rtspsrc_stream_setup_rtp (stream, &rtpport, &rtcpport))
+          goto setup_rtp_failed;
 
         trxparams = g_strdup_printf ("client_port=%d-%d", rtpport, rtcpport);
         new = g_strconcat (transports, "RTP/AVP/UDP;unicast;", trxparams, NULL);
@@ -717,6 +717,11 @@ send_error:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE,
         ("Could not send message."), (NULL));
+    return FALSE;
+  }
+setup_rtp_failed:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, WRITE, ("Could not setup rtp."), (NULL));
     return FALSE;
   }
 }
@@ -863,9 +868,6 @@ gst_rtspsrc_change_state (GstElement * element)
       rtspsrc->interleaved = FALSE;
       if (!gst_rtspsrc_open (rtspsrc))
         goto open_failed;
-      /* need to play now for the preroll, might delay that to
-       * next state when we have NO_PREROLL as a return value */
-      gst_rtspsrc_play (rtspsrc);
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       gst_rtspsrc_play (rtspsrc);
@@ -874,10 +876,13 @@ gst_rtspsrc_change_state (GstElement * element)
       break;
   }
 
-  ret = gst_rtspsrc_set_state (rtspsrc, GST_STATE_PENDING (rtspsrc));
-  if (ret != GST_STATE_SUCCESS)
-    goto done;
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  if (ret == GST_STATE_FAILURE)
+    goto done;
+
+  ret = gst_rtspsrc_set_state (rtspsrc, GST_STATE_PENDING (rtspsrc));
+  if (ret == GST_STATE_FAILURE)
+    goto done;
 
   switch (transition) {
     case GST_STATE_PLAYING_TO_PAUSED:
