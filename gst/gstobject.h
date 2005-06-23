@@ -98,9 +98,9 @@ struct _GstObject {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-#define GST_CLASS_LOCK(obj)             (g_mutex_lock(GST_OBJECT_CLASS_CAST(obj)->lock))
-#define GST_CLASS_TRYLOCK(obj)          (g_mutex_trylock(GST_OBJECT_CLASS_CAST(obj)->lock))
-#define GST_CLASS_UNLOCK(obj)           (g_mutex_unlock(GST_OBJECT_CLASS_CAST(obj)->lock))
+#define GST_CLASS_LOCK(obj)             (g_static_rec_mutex_lock(GST_OBJECT_CLASS_CAST(obj)->lock))
+#define GST_CLASS_TRYLOCK(obj)          (g_static_rec_mutex_trylock(GST_OBJECT_CLASS_CAST(obj)->lock))
+#define GST_CLASS_UNLOCK(obj)           (g_static_rec_mutex_unlock(GST_OBJECT_CLASS_CAST(obj)->lock))
 #define GST_CLASS_GET_LOCK(obj)         (GST_OBJECT_CLASS_CAST(obj)->lock)
 
 /* signal_object is used to signal to the whole class */
@@ -110,7 +110,7 @@ struct _GstObjectClass {
   gchar		*path_string_separator;
   GObject	*signal_object;
 
-  GMutex        *lock;
+  GStaticRecMutex *lock;
 
   /* signals */
   void		(*parent_set)		(GstObject *object, GstObject *parent);

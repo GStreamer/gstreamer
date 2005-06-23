@@ -187,7 +187,8 @@ gst_object_class_init (GstObjectClass * klass)
       G_TYPE_PARAM);
 
   klass->path_string_separator = "/";
-  klass->lock = g_mutex_new ();
+  klass->lock = g_new0 (GStaticRecMutex, 1);
+  g_static_rec_mutex_init (klass->lock);
 
   klass->signal_object = g_object_new (gst_signal_object_get_type (), NULL);
 
