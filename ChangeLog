@@ -1,5 +1,18 @@
 2005-06-23  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtsp_proto_get_type),
+	(gst_rtspsrc_class_init), (gst_rtspsrc_create_stream),
+	(gst_rtspsrc_add_element), (gst_rtspsrc_set_state),
+	(gst_rtspsrc_stream_setup_rtp),
+	(gst_rtspsrc_stream_configure_transport), (find_stream),
+	(gst_rtspsrc_loop), (gst_rtspsrc_open), (gst_rtspsrc_play),
+	(gst_rtspsrc_change_state):
+	* gst/rtsp/rtspurl.c: (rtsp_url_parse):
+	Make rtspsrc a live source.
+	Don't try to parse NULL urls.
+
+2005-06-23  Wim Taymans  <wim@fluendo.com>
+
 	* gst/udp/gstudpsrc.c: (gst_udpsrc_init):
 	Make udpsrc a live source.
 
