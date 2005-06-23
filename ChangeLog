@@ -1,3 +1,9 @@
+2005-06-23  Andy Wingo  <wingo@pobox.com>
+
+	* tests/network-clock.scm: 
+	* tests/network-clock-utils.scm: A network clock simulator.
+	Something of an algorithmic testbed before doing something in C.
+
 2005-06-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:
