@@ -1,3 +1,12 @@
+2005-06-23  Wim Taymans  <wim@fluendo.com>
+
+	* gst/schedulers/threadscheduler.c:
+	(gst_thread_scheduler_task_start),
+	(gst_thread_scheduler_task_pause), (gst_thread_scheduler_func):
+	Ref the task before pushing it on the threadpool. This
+	makes sure that we have a ref when the threadfunction is
+	actually called.
+
 2005-06-23  Andy Wingo  <wingo@pobox.com>
 
 	* gst/base/gstbasesrc.c (gst_basesrc_get_range): Check if the
