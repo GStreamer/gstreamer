@@ -1,3 +1,8 @@
+2005-06-23  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/manual/advanced-autoplugging.xml:
+	  Oops, a g_strdup() is not const.
+
 2005-06-23  Akos Maroy  <darkeye@tyrell.hu>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>

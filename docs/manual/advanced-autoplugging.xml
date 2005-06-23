@@ -418,7 +418,7 @@ try_to_plug (GstPad        *pad,
       res = gst_caps_intersect (caps, templ->caps);
       if (res &amp;&amp; !gst_caps_is_empty (res)) {
         GstElement *element;
-        const gchar *name_template = g_strdup (templ->name_template);
+        gchar *name_template = g_strdup (templ->name_template);
 
         /* close link and return */
         gst_caps_free (res);
