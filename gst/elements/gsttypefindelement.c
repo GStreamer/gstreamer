@@ -514,7 +514,7 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
       }
       break;
     case MODE_NORMAL:
-      if (GST_EVENT_TYPE (event) == GST_EVENT_DISCONTINUOUS) {
+      if (FALSE) {              // GST_EVENT_TYPE (event) == GST_EVENT_DISCONTINUOUS) {
         start_typefinding (typefind);
         gst_event_unref (event);
         res = TRUE;

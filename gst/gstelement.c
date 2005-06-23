@@ -1781,7 +1781,8 @@ invalid_return:
   {
     GST_STATE_UNLOCK (element);
     /* somebody added a GST_STATE_ and forgot to do stuff here ! */
-    g_critical ("unkown return value from a state change function");
+    g_critical ("unknown return value %d from a state change function",
+        return_val);
     return GST_STATE_FAILURE;
   }
 }

@@ -1,3 +1,16 @@
+2005-06-23  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/elements/gsttypefindelement.c:
+	(gst_type_find_element_handle_event):
+	  Don't restart typefinding on a discont.
+	* gst/gstelement.c: (gst_element_set_state):
+	  Debug spelling fix.
+	* gst/gstpad.c: (gst_pad_set_active), (gst_pad_send_event):
+	  Allow changing mode of an active pad.
+	  Debug output fixes.
+	* gst/registries/gstlibxmlregistry.c: (load_feature):
+	  Don't cast a static pad template to a normal pad template.
+
 2005-06-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/gst/gstvalue.c: (START_TEST), (gst_value_suite):

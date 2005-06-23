@@ -427,7 +427,7 @@ gst_pad_set_active (GstPad * pad, GstActivateMode mode)
   oldactive = GST_PAD_MODE_ACTIVATE (old);
 
   /* if nothing changed, we can just exit */
-  if (G_UNLIKELY (oldactive == active))
+  if (G_UNLIKELY (oldactive == active && old == mode))
     goto was_ok;
 
   /* FIXME, no mode switching yet, need more design docs first */
@@ -436,8 +436,10 @@ gst_pad_set_active (GstPad * pad, GstActivateMode mode)
     goto was_ok;
 #endif
 
-  /* make sure data is disallowed when going inactive */
-  if (!active) {
+  /* make sure data is disallowed when going inactive or changing
+   * mode
+   */
+  if (!active || oldactive) {
     GST_CAT_DEBUG (GST_CAT_PADS, "de-activating pad %s:%s",
         GST_DEBUG_PAD_NAME (pad));
     GST_PAD_SET_FLUSHING (pad);
@@ -2915,12 +2917,11 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
   if (GST_EVENT_SRC (event) == NULL)
     GST_EVENT_SRC (event) = gst_object_ref (GST_OBJECT (pad));
 
-  GST_CAT_DEBUG (GST_CAT_EVENT, "have event type %d on pad %s:%s",
-      GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (pad));
-
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH:
-      GST_CAT_DEBUG (GST_CAT_EVENT, "have flush event");
+      GST_CAT_DEBUG (GST_CAT_EVENT, "have event type %d (FLUSH) on pad %s:%s",
+          GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (pad));
+
       if (GST_EVENT_FLUSH_DONE (event)) {
         GST_PAD_UNSET_FLUSHING (pad);
         GST_CAT_DEBUG (GST_CAT_EVENT, "cleared flush flag");
@@ -2933,6 +2934,9 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
       }
       break;
     default:
+      GST_CAT_DEBUG (GST_CAT_EVENT, "have event type %d on pad %s:%s",
+          GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (pad));
+
       if (GST_PAD_IS_FLUSHING (pad))
         goto flushing;
       break;
@@ -2962,7 +2966,7 @@ no_function:
 flushing:
   {
     GST_UNLOCK (pad);
-    GST_CAT_DEBUG (GST_CAT_EVENT, "received event on flushing pad");
+    GST_CAT_DEBUG (GST_CAT_EVENT, "Received event on flushing pad. Discarding");
     gst_event_unref (event);
     return FALSE;
   }
