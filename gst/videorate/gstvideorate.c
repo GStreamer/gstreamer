@@ -294,10 +294,15 @@ gst_videorate_setcaps (GstPad * pad, GstCaps * caps)
       /* see what the peer can do */
       peercaps = gst_pad_get_caps (opeer);
 
+      GST_DEBUG ("icaps %" GST_PTR_FORMAT, peercaps);
+      GST_DEBUG ("transform %" GST_PTR_FORMAT, transform);
+
       /* filter against our possibilities */
       intersect = gst_caps_intersect (peercaps, transform);
       gst_caps_unref (peercaps);
       gst_caps_unref (transform);
+
+      GST_DEBUG ("intersect %" GST_PTR_FORMAT, intersect);
 
       /* take first possibility */
       caps = gst_caps_copy_nth (intersect, 0);
@@ -305,17 +310,17 @@ gst_videorate_setcaps (GstPad * pad, GstCaps * caps)
       structure = gst_caps_get_structure (caps, 0);
 
       /* and fixate */
-      if (gst_caps_structure_fixate_field_nearest_int (structure, "framerate",
-              fps)) {
-        gst_structure_get_double (structure, "framerate", &fps);
-        if (otherpad == videorate->srcpad) {
-          videorate->to_fps = fps;
-        } else {
-          videorate->from_fps = fps;
-        }
-        gst_pad_set_caps (otherpad, caps);
-        ret = TRUE;
+      gst_caps_structure_fixate_field_nearest_int (structure, "framerate", fps);
+
+      gst_structure_get_double (structure, "framerate", &fps);
+
+      if (otherpad == videorate->srcpad) {
+        videorate->to_fps = fps;
+      } else {
+        videorate->from_fps = fps;
       }
+      gst_pad_set_caps (otherpad, caps);
+      ret = TRUE;
     }
     gst_object_unref (GST_OBJECT (opeer));
   }

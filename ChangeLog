@@ -1,5 +1,13 @@
 2005-06-23  Wim Taymans  <wim@fluendo.com>
 
+	* gst/videorate/gstvideorate.c: (gst_videorate_transformcaps),
+	(gst_videorate_getcaps), (gst_videorate_setcaps),
+	(gst_videorate_event), (gst_videorate_chain):
+	Fixed videorate, fixating an already fixated caps is not
+	an error.
+
+2005-06-23  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ogg/README:
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_set_header_on_caps):
 	Buffer on caps is not boxed anymore.
