@@ -1,3 +1,16 @@
+2005-06-23  Andy Wingo  <wingo@pobox.com>
+
+	* tests/network-clock.scm (plot-simulation): Pipe data to the
+	elite python skript.
+
+	* tests/network-clock-utils.scm (define-parameter): New macro,
+	defines a parameter that can be set via the command line.
+	(set-parameter!, parse-parameter-arguments): Command line args
+	parser.
+
+	* tests/plot-data: Simple matplotlib-based plotter, takes input on
+	stdin.
+
 2005-06-23  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/elements/gsttypefindelement.c:

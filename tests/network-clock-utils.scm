@@ -108,7 +108,7 @@
   (stream-cons start (arithmetic-series (+ start step) step)))
 
 (define (scale-stream stream factor)
-  (stream-map (lambda (t) (* t factor)) *absolute-time*))
+  (stream-map (lambda (t) (* t factor)) stream))
 
 (define (stream-while pred proc . streams)
   (if (apply pred (map stream-car streams))
@@ -129,8 +129,6 @@
 
 ;; Queues with a maximum length.
 
-(define *q-length* 32)
-
 (define (make-q l)
   (cons l (last-pair l)))
 
@@ -145,6 +143,66 @@
     (if (null? (q-tail q))
         (make-q tail)
         (let ((l (append! (q-head q) tail)))
-          (if (> (length (q-head q)) *q-length*)
+          (if (> (length (q-head q)) *queue-length*)
               (make-q (cdr (q-head q)))
               q)))))
+
+
+;; Parameters, settable via command line arguments.
+
+(define %parameters '())
+(define-macro (define-parameter name val)
+  (let ((str (symbol->string name)))
+    (or (and (eqv? (string-ref str 0) #\*)
+             (eqv? (string-ref str (1- (string-length str))) #\*))
+        (error "Invalid parameter name" name))
+    (let ((param (string->symbol
+                  (substring str 1 (1- (string-length str)))))
+          (val-sym (gensym)))
+      `(begin
+         (define ,name #f)
+         (let ((,val-sym ,val))
+           (set! ,name ,val-sym)
+           (set! %parameters (cons (cons ',param ,val-sym)
+                                   %parameters)))))))
+(define (set-parameter! name val)
+  (define (symbol-append . args)
+    (string->symbol (apply string-append (map symbol->string args))))
+  (or (assq name %parameters)
+      (error "Unknown parameter" name))
+  (module-set! (current-module) (symbol-append '* name '*) val))
+
+(define (parse-parameter-arguments args)
+  (define (usage)
+    (format #t "Usage: ~a ARG1...\n\n" "network-clock.scm")
+    (for-each
+     (lambda (pair)
+       (format #t "\t--~a=VAL \t(default: ~a)\n" (car pair) (cdr pair)))
+     %parameters))
+  (define (unknown-arg arg)
+    (with-output-to-port (current-error-port)
+      (lambda ()
+        (format #t "\nUnknown argument: ~a\n\n" arg)
+        (usage)
+        (quit))))
+  (define (parse-arguments args)
+    (let lp ((in args) (out '()))
+      (cond
+       ((null? in)
+        (reverse! out))
+       ((not (string=? (substring (car in) 0 2) "--"))
+        (unknown-arg (car in)))
+       (else
+        (let ((divider (or (string-index (car in) #\=)
+                           (unknown-arg (car in)))))
+          (or (> divider 2) (unknown-arg (car in)))
+          (let ((param (string->symbol (substring (car in) 2 divider)))
+                (val (with-input-from-string (substring (car in) (1+ divider))
+                       read)))
+            (lp (cdr in) (acons param val out))))))))
+  (for-each
+   (lambda (pair)
+     (or (false-if-exception
+          (set-parameter! (car pair) (cdr pair)))
+         (unknown-arg (format #f "--~a=~a" (car pair) (cdr pair)))))
+   (parse-arguments args)))

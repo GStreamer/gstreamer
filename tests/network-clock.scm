@@ -1,6 +1,6 @@
 #!/bin/bash
 # -*- scheme -*-
-exec guile -l $0 -e main "$@"
+exec guile -l $0 -e main -- "$@"
 !#
 
 ;; GStreamer
@@ -55,26 +55,22 @@ exec guile -l $0 -e main "$@"
 ;; is called. In that way all times are actually infinite series.
 ;;
 ;; Knobs: sample rate, send delay, receive delay, send noise, receive
-;; noise, queue length, rate of remote clock, rate of local clock.
-;; Fixme: Make knobs more accesible tomorrow; also make graphs.
+;; noise, queue length, rate of remote clock, rate of local clock. See
+;; network-clock.scm --help.
 ;;
 ;;; Code:
 
 
-(use-modules (ice-9 slib))
+(use-modules (ice-9 slib)
+             (ice-9 popen))
 (require 'printf)
 
 (load "network-clock-utils.scm")
 
 
-(define *sample-frequency* 40)
-
 (define (time->samples t)
   (iround (* t *sample-frequency*)))
 
-(define *absolute-time* (arithmetic-series 0.0 (/ 1.0 *sample-frequency*)))
-
-(define *empty-event-stream* (stream-of #f))
 
 (define (schedule-event events e time)
   (let lp ((response-time (time->samples time))
@@ -89,10 +85,13 @@ exec guile -l $0 -e main "$@"
   (schedule-event events (list 'send-time-query) time))
 
 (define (schedule-time-query events l)
-  (schedule-event events (list 'time-query l) (+ 0.20 (random 0.20))))
+  (schedule-event events (list 'time-query l)
+                  (+ *send-delay* (random *send-noise*))))
 
 (define (schedule-time-response events l r)
-  (schedule-event events (list 'time-response l r) (+ 0.20 (random 0.20))))
+  (schedule-event events (list 'time-response l r)
+                  (+ *receive-delay* (random *receive-noise*))))
+
 
 (define (network-time remote-time local-time events m b x y)
   (let ((r (stream-car remote-time))
@@ -108,11 +107,11 @@ exec guile -l $0 -e main "$@"
 
     (case (and=> event car)
       ((send-time-query)
-       (format #t "sending time query: ~a\n" l)
+       (format #t "; sending time query: ~a\n" l)
        (next (schedule-time-query events l) m b x y))
 
       ((time-query)
-       (format #t "time query received, replying with ~a\n" r)
+       (format #t "; time query received, replying with ~a\n" r)
        (next (schedule-time-response events (cadr event) r) m b x y))
 
       ((time-response)
@@ -123,34 +122,36 @@ exec guile -l $0 -e main "$@"
            (lambda (m b r-squared)
              (define (next-time) 
                (max
-                (if (< (length (q-head x)) *q-length*)
+                (if (< (length (q-head x)) *queue-length*)
                     0
                     (/ 1 (- 1 (min r-squared 0.99999)) 1000))
                 0.10))
-             (format #t "new slope and offset: ~a ~a (~a)\n" m b r-squared)
+             (format #t "; new slope and offset: ~a ~a (~a)\n" m b r-squared)
              (next (schedule-send-time-query events (next-time)) m b x y)))))
 
       (else
        (next events m b x y)))))
 
 (define (run-simulation remote-speed local-speed)
-  (let ((remote-time (scale-stream *absolute-time* remote-speed))
-        (local-time (scale-stream *absolute-time* local-speed)))
-    (values
-     *absolute-time*
-     remote-time
-     local-time
-     (network-time
-      remote-time
-      local-time
-      (schedule-send-time-query *empty-event-stream* 0.0)
-      1.0
-      (stream-car local-time)
-      (make-q (list (stream-car local-time)))
-      (make-q (list (stream-car remote-time)))))))
+  (let ((absolute-time (arithmetic-series 0.0 (/ 1.0 *sample-frequency*)))
+        (event-stream (stream-of #f)))
+    (let ((remote-time (scale-stream absolute-time remote-speed))
+          (local-time (scale-stream absolute-time local-speed)))
+      (values
+       absolute-time
+       remote-time
+       local-time
+       (network-time
+        remote-time
+        local-time
+        (schedule-send-time-query event-stream 0.0)
+        1.0
+        (stream-car local-time)
+        (make-q (list (stream-car local-time)))
+        (make-q (list (stream-car remote-time))))))))
 
 (define (print-simulation total-time sample-rate remote-speed local-speed)
-  (display ";; absolute remote local network\n")
+  (display "Absolute time; Remote time; Local time; Network time\n")
   (call-with-values
       (lambda () (run-simulation remote-speed local-speed))
     (lambda streams
@@ -160,5 +161,26 @@ exec guile -l $0 -e main "$@"
        (lambda (a r l n) (printf "%.3f %.3f %.3f %.3f\n" a r l n))
        streams))))
 
-(define (main . args)
-  (print-simulation 20 #f 2.0 1.1))
+(define (plot-simulation)
+  (let ((port (open-output-pipe "./plot-data Network Clock Simulation")))
+    (with-output-to-port port
+      (lambda ()
+        (print-simulation *total-time* #f *remote-rate* *local-rate*)))
+    (close-pipe port)))
+
+     
+(define-parameter *sample-frequency* 40)
+(define-parameter *send-delay* 0.1)
+(define-parameter *receive-delay* 0.1)
+(define-parameter *send-noise* 0.1)
+(define-parameter *receive-noise* 0.1)
+(define-parameter *queue-length* 32)
+(define-parameter *local-rate* 1.0)
+(define-parameter *remote-rate* 1.1)
+(define-parameter *total-time* 5.0)
+
+
+(define (main args)
+  (parse-parameter-arguments (cdr args))
+  (plot-simulation)
+  (quit))
