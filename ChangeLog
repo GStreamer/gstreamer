@@ -1,5 +1,8 @@
 2005-06-23  Andy Wingo  <wingo@pobox.com>
 
+	* gst/base/gstbasesrc.c (gst_basesrc_get_range): Check if the
+	offset is greater than the file's size.
+
 	* gst/gstobject.h (GST_CLASS_LOCK, GST_CLASS_TRYLOCK) 
 	(GST_CLASS_UNLOCK, GST_CLASS_GET_LOCK, GstObjectClass)
 	* gst/gstobject.c (gst_object_class_init): Make the class lock

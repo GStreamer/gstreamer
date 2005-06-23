@@ -502,6 +502,9 @@ gst_basesrc_get_range (GstPad * pad, guint64 offset, guint length,
 
   /* check size */
   if (src->size != -1) {
+    if (offset > src->size)
+      goto unexpected_length;
+
     if (offset + length > src->size) {
       if (bclass->get_size)
         bclass->get_size (src, &src->size);
