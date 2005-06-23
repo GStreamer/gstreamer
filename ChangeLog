@@ -1,3 +1,12 @@
+2005-06-23  Akos Maroy  <darkeye@tyrell.hu>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/manual/advanced-autoplugging.xml:
+	* gst/gstelementfactory.c:
+	  Documentation patch indicating that factory information may
+	  be overridden after a plugin is loaded (#308766).
+
 2005-06-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstcaps.c: (gst_caps_from_string_inplace):

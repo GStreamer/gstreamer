@@ -280,6 +280,9 @@ error:
  * Create a new element of the type defined by the given elementfactory.
  * It will be given the name supplied, since all elements require a name as
  * their first argument.
+ * This call may invalidate properties of the factory it works on, so
+ * make sure not to use any previously aquired properties of the factory
+ * after the call.
  *
  * Returns: new #GstElement or NULL if the element couldn't be created
  */

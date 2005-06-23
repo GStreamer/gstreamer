@@ -418,12 +418,14 @@ try_to_plug (GstPad        *pad,
       res = gst_caps_intersect (caps, templ->caps);
       if (res &amp;&amp; !gst_caps_is_empty (res)) {
         GstElement *element;
+        const gchar *name_template = g_strdup (templ->name_template);
 
         /* close link and return */
         gst_caps_free (res);
         element = gst_element_factory_create (factory, NULL);
-        close_link (pad, element, templ->name_template,
+        close_link (pad, element, name_template,
 		    gst_element_factory_get_pad_templates (factory));
+        g_free (name_template);
         return;
       }
       gst_caps_free (res);
