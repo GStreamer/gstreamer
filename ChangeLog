@@ -1,5 +1,12 @@
 2005-06-23  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstelement.c: (gst_element_get_state_func),
+	(gst_element_set_state), (gst_element_change_state):
+	When the state did not change, also report NO_PREROLL
+	when it matters.
+
+2005-06-23  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstpad.c: (gst_pad_event_default):
 	* gst/gstqueue.c: (gst_queue_loop):
 	No unsafe task pausing please.

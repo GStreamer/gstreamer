@@ -1690,11 +1690,6 @@ gst_element_set_state (GstElement * element, GstElementState state)
     gst_element_commit_state (element);
   }
 
-  /* clear the error flag */
-  GST_STATE_ERROR (element) = FALSE;
-  /* clear the no_preroll flag */
-  GST_STATE_NO_PREROLL (element) = FALSE;
-
   /* start with the current state */
   current = GST_STATE (element);
 
@@ -1731,6 +1726,12 @@ gst_element_set_state (GstElement * element, GstElementState state)
       return_val = (oclass->change_state) (element);
     else
       return_val = GST_STATE_FAILURE;
+
+    /* clear the error and preroll flag, we need to do that after
+     * calling the virtual change_state function so that it can use the
+     * old previous value. */
+    GST_STATE_ERROR (element) = FALSE;
+    GST_STATE_NO_PREROLL (element) = FALSE;
 
     switch (return_val) {
       case GST_STATE_FAILURE:
@@ -1900,7 +1901,10 @@ gst_element_change_state (GstElement * element)
     GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
         "element is already in the %s state",
         gst_element_state_get_name (old_state));
-    return GST_STATE_SUCCESS;
+    if (GST_STATE_NO_PREROLL (element))
+      return GST_STATE_NO_PREROLL;
+    else
+      return GST_STATE_SUCCESS;
   }
 
   GST_CAT_LOG_OBJECT (GST_CAT_STATES, element,
