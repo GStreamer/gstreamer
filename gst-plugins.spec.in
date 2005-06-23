@@ -128,8 +128,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstsmpte.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrtp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrtsp.so
-%{_libdir}/gstreamer-%{majorminor}/libgsttcp.so
+# %{_libdir}/gstreamer-%{majorminor}/libgsttcp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstudp.so
+%{_libdir}/gstreamer-%{majorminor}/libgstalpha.so
+%{_libdir}/gstreamer-%{majorminor}/libgstgoom.so
 
 # gstreamer-plugins with external dependencies but in the main package
 # @USE_ARTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstarts.so

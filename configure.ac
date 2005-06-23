@@ -497,7 +497,6 @@ gst/law/Makefile
 gst/rtp/Makefile
 gst/rtsp/Makefile
 gst/smpte/Makefile
-gst/tcp/Makefile
 gst/udp/Makefile
 gst/videofilter/Makefile
 sys/Makefile
