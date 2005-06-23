@@ -1,3 +1,9 @@
+2005-06-23  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/README:
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_set_header_on_caps):
+	Buffer on caps is not boxed anymore.
+
 2005-06-22  Wim Taymans  <wim@fluendo.com>
 
 	* ext/theora/theoraenc.c: (theora_set_header_on_caps):

@@ -200,7 +200,8 @@ For Vorbis:
      - 1 page with 1 packet header identification
      - N pages with 2 packets comments and codebooks
   - granulepos is samplenumber of next page
-  - one packet can contain a variable number of samples
+  - one packet can contain a variable number of samples but one frame
+    that should be handed to the vorbis decoder.
   
 For Theora
      
@@ -210,7 +211,6 @@ For Theora
   - granulepos is framenumber of last packet in page, where framenumber
     is a combination of keyframe number and p frames since keyframe.
   - one packet contains 1 frame
-  
   
 
 

@@ -684,7 +684,7 @@ gst_ogg_mux_set_header_on_caps (GstCaps * caps, GList * buffers)
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
 
     g_value_init (&value, GST_TYPE_BUFFER);
-    g_value_set_boxed (&value, buf);
+    gst_value_set_buffer (&value, buf);
     gst_value_list_append_value (&list, &value);
     g_value_unset (&value);
   }
