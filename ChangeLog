@@ -1,3 +1,8 @@
+2005-06-23  Wim Taymans  <wim@fluendo.com>
+
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_init):
+	Make udpsrc a live source.
+
 2005-06-02  Wim Taymans  <wim@fluendo.com>
 
 	* gst/udp/Makefile.am:
