@@ -1,3 +1,8 @@
+2005-06-23  Christian Schaller  <uraeus@gnome.org>
+
+	* configure.ac: add videorate
+	* gst-plugins-base.spec.in: add videorate
+
 2005-06-23  Wim Taymans  <wim@fluendo.com>
 
 	* gst/videorate/gstvideorate.c: (gst_videorate_transformcaps),
