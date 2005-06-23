@@ -64,7 +64,6 @@ START_TEST (test_deserialize_gint)
 {
   GValue value = { 0 };
   const char *strings[] = {
-    "-",
     "123456",
     "-123456",
     "0xFFFF",
@@ -78,12 +77,13 @@ START_TEST (test_deserialize_gint)
     "0xFF000000",
     /* a positive long long serializing to -1 */
     "0xFFFFFFFF",
+    "0xFFFFFFFF",
     /* a negative long long serializing to -1 */
+    "0xFFFFFFFFFFFFFFFF",
     "0xFFFFFFFFFFFFFFFF",
     "0xEFFFFFFF",
   };
   gint results[] = {
-    0,
     123456,
     -123456,
     0xFFFF,
@@ -93,7 +93,10 @@ START_TEST (test_deserialize_gint)
     0x80000000,
     0xFF000000,
     -1,
+    0xFFFFFFFF,
     -1,
+    /* cast needs to be explicit because of unsigned -> signed */
+    (gint) 0xFFFFFFFFFFFFFFFFLL,
     0xEFFFFFFF,
   };
   int i;
@@ -115,10 +118,15 @@ START_TEST (test_deserialize_gint_failures)
 {
   GValue value = { 0 };
   const char *strings[] = {
+    "-",                        /* not a complete number */
+    "- TEST",                   /* not a complete number */
     "0x0000000100000000",       /* lowest long long that cannot fit in 32 bits */
     "0xF000000000000000",
     "0xFFFFFFF000000000",
     "0xFFFFFFFF00000000",
+    "0x10000000000000000",      /* first number too long to fit into a long long */
+    /* invent a new processor first before trying to make this one pass */
+    "0x10000000000000000000000000000000000000000000",
   };
   int i;
 
@@ -131,6 +139,91 @@ START_TEST (test_deserialize_gint_failures)
 }
 
 END_TEST;
+
+START_TEST (test_deserialize_guint)
+{
+  GValue value = { 0 };
+  const char *strings[] = {
+    "123456",
+    "-123456",
+    "0xFFFF",
+    "0x0000FFFF",
+    /* a positive long long, serializing to highest possible positive sint */
+    "0x7FFFFFFF",
+    /* a positive long long, serializing to lowest possible negative sint */
+    "0x80000000",
+    "2147483648",
+    /* a negative long long, serializing to lowest possible negative sint */
+    "0xFFFFFFFF80000000",
+    /* a value typically used for rgb masks */
+    "0xFF000000",
+    /* a positive long long serializing to highest possible positive uint */
+    "0xFFFFFFFF",
+    "0xFFFFFFFF",
+    /* a negative long long serializing to highest possible positive uint */
+    "0xFFFFFFFFFFFFFFFF",
+    "0xEFFFFFFF",
+  };
+  guint results[] = {
+    123456,
+    -123456,
+    0xFFFF,
+    0xFFFF,
+    0x7FFFFFFF,
+    0x80000000,
+    (guint) 2147483648LL,
+    0x80000000,
+    0xFF000000,
+    0xFFFFFFFF,
+    G_MAXUINT,
+    (guint) 0xFFFFFFFFFFFFFFFFLL,
+    0xEFFFFFFF,
+  };
+  int i;
+
+  g_value_init (&value, G_TYPE_UINT);
+
+  for (i = 0; i < G_N_ELEMENTS (strings); ++i) {
+    fail_unless (gst_value_deserialize (&value, strings[i]),
+        "could not deserialize %s (%d)", strings[i], i);
+    fail_unless (g_value_get_uint (&value) == results[i],
+        "resulting value is %d, not %d, for string %s (%d)",
+        g_value_get_uint (&value), results[i], strings[i], i);
+  }
+}
+
+END_TEST;
+
+START_TEST (test_deserialize_guint_failures)
+{
+  GValue value = { 0 };
+  const char *strings[] = {
+    "-",                        /* not a complete number */
+    "- TEST",                   /* not a complete number */
+#if 0
+/* FIXME: these values should not be deserializable, since they overflow
+ * the target format */
+    "0x0000000100000000",       /* lowest long long that cannot fit in 32 bits */
+    "0xF000000000000000",
+    "0xFFFFFFF000000000",
+    "0xFFFFFFFF00000000",
+    "0x10000000000000000",      /* first number too long to fit into a long long */
+    /* invent a new processor first before trying to make this one pass */
+    "0x10000000000000000000000000000000000000000000",
+#endif
+  };
+  int i;
+
+  g_value_init (&value, G_TYPE_UINT);
+
+  for (i = 0; i < G_N_ELEMENTS (strings); ++i) {
+    fail_if (gst_value_deserialize (&value, strings[i]),
+        "deserialized %s (%d), while it should have failed", strings[i], i);
+  }
+}
+
+END_TEST;
+
 
 START_TEST (test_string)
 {
@@ -221,6 +314,8 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_deserialize_buffer);
   tcase_add_test (tc_chain, test_deserialize_gint);
   tcase_add_test (tc_chain, test_deserialize_gint_failures);
+  tcase_add_test (tc_chain, test_deserialize_guint);
+  tcase_add_test (tc_chain, test_deserialize_guint_failures);
   tcase_add_test (tc_chain, test_deserialize_gint64);
   tcase_add_test (tc_chain, test_string);
   tcase_add_test (tc_chain, test_deserialize_string);

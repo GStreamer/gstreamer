@@ -1,3 +1,15 @@
+2005-06-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/gst/gstvalue.c: (START_TEST), (gst_value_suite):
+	* gst/gstvalue.c: (gst_value_deserialize_int_helper):
+	  remove gst_strtoll completely, since it didn't actually do
+	  anything more than what g_ascii_strtoull already does.
+	  check for range errors when deserializing
+	  do a cast for the unsigned cases; but further fixing needs
+	  a decision on what the interpretation of "(int)" and
+	  deserialization should be for values that fall outside the
+	  type's boundaries (ie, refuse, or interpret as casting)
+
 2005-06-23  Wim Taymans  <wim@fluendo.com>
 
 	* check/Makefile.am:
