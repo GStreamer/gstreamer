@@ -106,9 +106,7 @@ START_TEST (test_refcount)
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
 
   gst_pad_set_caps (src, caps);
-  gst_caps_unref (caps);
   gst_pad_set_caps (sink, caps);
-  gst_caps_unref (caps);
   /* one for me and one for each set_caps */
   ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
 
@@ -134,7 +132,6 @@ START_TEST (test_get_allowed_caps)
   GstCaps *caps, *gotcaps;
   GstBuffer *buffer;
   GstPadLinkReturn plr;
-  int rc;
 
   ASSERT_CRITICAL (gst_pad_get_allowed_caps (NULL));
 
@@ -151,12 +148,9 @@ START_TEST (test_get_allowed_caps)
   fail_unless (caps == NULL);
 
   caps = gst_caps_new_any ();
-  rc = GST_MINI_OBJECT_REFCOUNT_VALUE (caps);
 
   gst_pad_set_caps (src, caps);
-  gst_caps_unref (caps);
   gst_pad_set_caps (sink, caps);
-  gst_caps_unref (caps);
   ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
 
   plr = gst_pad_link (src, sink);
@@ -183,7 +177,8 @@ START_TEST (test_get_allowed_caps)
   gst_caps_unref (caps);
 }
 
-END_TEST Suite * gst_pad_suite (void)
+END_TEST Suite *
+gst_pad_suite (void)
 {
   Suite *s = suite_create ("GstPad");
   TCase *tc_chain = tcase_create ("general");

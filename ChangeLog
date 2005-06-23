@@ -1,5 +1,8 @@
 2005-06-23  Andy Wingo  <wingo@pobox.com>
 
+	* check/gst/gstpad.c (test_get_allowed_caps, test_refcount): Fix
+	borken refcounting.
+
 	* gst/gstpad.c (gst_pad_set_caps): Remove needless refs,
 	gst_caps_replace takes care of this for us.
 
