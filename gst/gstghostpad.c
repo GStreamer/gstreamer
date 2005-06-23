@@ -386,9 +386,10 @@ struct _GstGhostPad
   GstProxyPad pad;
 
   GstPad *internal;
+  gulong notify_id;
 
   /*< private > */
-  gpointer _gst_reserved[1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstGhostPadClass
@@ -396,7 +397,7 @@ struct _GstGhostPadClass
   GstProxyPadClass parent_class;
 
   /*< private > */
-  gpointer _gst_reserved[1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 
@@ -478,6 +479,22 @@ gst_ghost_pad_do_unlink (GstPad * pad)
 }
 
 static void
+on_int_notify (GstPad * internal, GParamSpec * unused, GstGhostPad * pad)
+{
+  GstCaps *caps;
+
+  g_object_get (internal, "caps", &caps, NULL);
+
+  GST_LOCK (pad);
+  gst_caps_replace (&(GST_PAD_CAPS (pad)), caps);
+  GST_UNLOCK (pad);
+
+  g_object_notify (G_OBJECT (pad), "caps");
+  if (caps)
+    gst_caps_unref (caps);
+}
+
+static void
 gst_ghost_pad_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -491,6 +508,8 @@ gst_ghost_pad_set_property (GObject * object, guint prop_id,
 
       if (pad->internal) {
         GstPad *intpeer;
+
+        g_signal_handler_disconnect (pad->internal, pad->notify_id);
 
         intpeer = gst_pad_get_peer (pad->internal);
         if (intpeer) {
@@ -521,6 +540,13 @@ gst_ghost_pad_set_property (GObject * object, guint prop_id,
           g_mutex_unlock (GST_PROXY_PAD (pad)->property_lock);
           return;
         }
+
+        /* could be more general here, iterating over all writable properties...
+         * taking the short road for now tho */
+        pad->notify_id = g_signal_connect (internal, "notify::caps",
+            G_CALLBACK (on_int_notify), pad);
+        on_int_notify (internal, NULL, pad);
+
         /* a ref was taken by set_parent */
       }
 

@@ -1,5 +1,12 @@
 2005-06-23  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstghostpad.c (on_int_notify): Catches notify::caps on the
+	internal pad, and hacks accordingly. Doesn't do it on the target
+	pad because we change its caps. Probably catches all cases of
+	interest tho.
+	(gst_ghost_pad_set_property): Connect to notify::caps as
+	appropritate.
+
 	* tests/network-clock.scm (plot-simulation): Pipe data to the
 	elite python skript.
 
