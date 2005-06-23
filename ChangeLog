@@ -1,5 +1,8 @@
 2005-06-23  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstghostpad.c (gst_proxy_pad_do_setcaps): Call the full
+	gst_pad_set_caps on the target, not just its setcaps() function.
+
 	* tests/network-clock.scm: 
 	* tests/network-clock-utils.scm: A network clock simulator.
 	Something of an algorithmic testbed before doing something in C.

@@ -247,7 +247,7 @@ gst_proxy_pad_do_setcaps (GstPad * pad, GstCaps * caps)
 
   g_return_val_if_fail (target != NULL, FALSE);
 
-  return target->setcapsfunc (target, caps);
+  return gst_pad_set_caps (target, caps);
 }
 
 #define SETFUNC(member, kind) \
