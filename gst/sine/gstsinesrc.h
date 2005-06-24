@@ -83,6 +83,9 @@ struct _GstSineSrc {
   gboolean tags_pushed;
 
   GstClock *clock;
+  GstClockTimeDiff timestamp_offset;
+  gint num_buffers, num_buffers_left;
+
 };
 
 struct _GstSineSrcClass {

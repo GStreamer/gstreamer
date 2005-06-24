@@ -49,8 +49,9 @@ enum
   ARG_0,
   ARG_TYPE,
   ARG_SYNC,
-  ARG_NUM_BUFFERS
-      /* FILL ME */
+  ARG_NUM_BUFFERS,
+  ARG_TIMESTAMP_OFFSET,
+  /* FILL ME */
 };
 
 static GstCaps *capslist = NULL;
@@ -174,6 +175,10 @@ gst_videotestsrc_class_init (GstVideotestsrcClass * klass)
       g_param_spec_int ("num-buffers", "num-buffers",
           "Number of buffers to output before sending EOS", -1, G_MAXINT,
           0, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TIMESTAMP_OFFSET,
+      g_param_spec_int64 ("timestamp-offset", "Timestamp offset",
+          "An offset added to timestamps set on buffers (in ns)",
+          G_MININT64, G_MAXINT64, 0, G_PARAM_READWRITE));
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
@@ -719,6 +724,9 @@ gst_videotestsrc_set_property (GObject * object, guint prop_id,
     case ARG_NUM_BUFFERS:
       videotestsrc->num_buffers = g_value_get_int (value);
       break;
+    case ARG_TIMESTAMP_OFFSET:
+      videotestsrc->timestamp_offset = g_value_get_int64 (value);
+      break;
     default:
       break;
   }
@@ -743,6 +751,9 @@ gst_videotestsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_NUM_BUFFERS:
       g_value_set_int (value, videotestsrc->num_buffers);
+      break;
+    case ARG_TIMESTAMP_OFFSET:
+      g_value_set_int64 (value, videotestsrc->timestamp_offset);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -54,7 +54,9 @@ enum
   ARG_SAMPLES_PER_BUFFER,
   ARG_FREQ,
   ARG_VOLUME,
-  ARG_SYNC
+  ARG_SYNC,
+  ARG_NUM_BUFFERS,
+  ARG_TIMESTAMP_OFFSET,
 };
 
 static GstStaticPadTemplate gst_sinesrc_src_template =
@@ -160,6 +162,16 @@ gst_sinesrc_class_init (GstSineSrcClass * klass)
   g_object_class_install_property (gobject_class, ARG_SYNC,
       g_param_spec_boolean ("sync", "Sync", "Synchronize to clock",
           FALSE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_BUFFERS,
+      g_param_spec_int ("num-buffers", "num-buffers",
+          "Number of buffers to output before sending EOS", -1, G_MAXINT,
+          0, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TIMESTAMP_OFFSET,
+      g_param_spec_int64 ("timestamp-offset", "Timestamp offset",
+          "An offset added to timestamps set on buffers (in ns)", G_MININT64,
+          G_MAXINT64, 0, G_PARAM_READWRITE));
+
+
 
   //gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR ();
   gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_sinesrc_setcaps);
@@ -186,6 +198,9 @@ gst_sinesrc_init (GstSineSrc * src)
   src->samples_per_buffer = 1024;
   src->timestamp = G_GINT64_CONSTANT (0);
   src->offset = G_GINT64_CONSTANT (0);
+  src->timestamp_offset = G_GINT64_CONSTANT (0);
+  src->num_buffers = -1;
+  src->num_buffers_left = -1;
 
   src->seq = 0;
 
@@ -353,7 +368,16 @@ gst_sinesrc_create (GstBaseSrc * basesrc, guint64 offset,
   buf = gst_buffer_new_and_alloc (src->samples_per_buffer * 2);
   gst_buffer_set_caps (buf, GST_PAD_CAPS (basesrc->srcpad));
 
-  GST_BUFFER_TIMESTAMP (buf) = src->timestamp;
+  if (src->num_buffers_left == 0) {
+    /* FIXME: there's no GST_FLOW_ applicable for EOS, so we return ERROR
+     * even though nothing's wrong */
+    return GST_FLOW_ERROR;
+  } else {
+    if (src->num_buffers_left > 0)
+      src->num_buffers_left--;
+  }
+
+  GST_BUFFER_TIMESTAMP (buf) = src->timestamp + src->timestamp_offset;
   /* offset is the number of samples */
   GST_BUFFER_OFFSET (buf) = src->offset;
   GST_BUFFER_OFFSET_END (buf) = src->offset + src->samples_per_buffer;
@@ -437,6 +461,12 @@ gst_sinesrc_set_property (GObject * object, guint prop_id,
     case ARG_SYNC:
       src->sync = g_value_get_boolean (value);
       break;
+    case ARG_NUM_BUFFERS:
+      src->num_buffers = g_value_get_int (value);
+      break;
+    case ARG_TIMESTAMP_OFFSET:
+      src->timestamp_offset = g_value_get_int64 (value);
+      break;
     default:
       break;
   }
@@ -468,6 +498,12 @@ gst_sinesrc_get_property (GObject * object, guint prop_id,
     case ARG_SYNC:
       g_value_set_boolean (value, src->sync);
       break;
+    case ARG_NUM_BUFFERS:
+      g_value_set_int (value, src->num_buffers);
+      break;
+    case ARG_TIMESTAMP_OFFSET:
+      g_value_set_int64 (value, src->timestamp_offset);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -481,6 +517,7 @@ gst_sinesrc_start (GstBaseSrc * basesrc)
 
   src->timestamp = G_GINT64_CONSTANT (0);
   src->offset = G_GINT64_CONSTANT (0);
+  src->num_buffers_left = src->num_buffers;
 
   return TRUE;
 }

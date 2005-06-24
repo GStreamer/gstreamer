@@ -1,3 +1,16 @@
+2005-06-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/sine/gstsinesrc.c: (gst_sinesrc_class_init),
+	(gst_sinesrc_init), (gst_sinesrc_create),
+	(gst_sinesrc_set_property), (gst_sinesrc_get_property),
+	(gst_sinesrc_start):
+	* gst/sine/gstsinesrc.h:
+	  add num-buffers and timestamp-offset properties
+	* gst/videotestsrc/gstvideotestsrc.c:
+	(gst_videotestsrc_class_init), (gst_videotestsrc_set_property),
+	(gst_videotestsrc_get_property):
+	  add timestamp-offset property
+
 2005-06-23  Christian Schaller  <uraeus@gnome.org>
 
 	* configure.ac: add videorate
