@@ -55,12 +55,15 @@
 <!ENTITY GstVersion SYSTEM "xml/gstversion.xml">
 <!ENTITY GstXML SYSTEM "xml/gstxml.xml">
 
-<!--
-<!ENTITY GstAggregator SYSTEM "xml/gstaggregator.xml">
+<!ENTITY GstBaseSrc SYSTEM "xml/gstbasesrc.xml">
+<!ENTITY GstBaseSink SYSTEM "xml/gstbasesink.xml">
+
 <!ENTITY GstFakeSrc SYSTEM "xml/gstfakesrc.xml">
 <!ENTITY GstFakeSink SYSTEM "xml/gstfakesink.xml">
 <!ENTITY GstFileSrc SYSTEM "xml/gstfilesrc.xml">
-<!ENTITY GstDiskSink SYSTEM "xml/gstdisksink.xml">
+<!ENTITY GstFileSink SYSTEM "xml/gstfilesink.xml">
+<!--
+<!ENTITY GstAggregator SYSTEM "xml/gstaggregator.xml">
 <!ENTITY GstFdSrc SYSTEM "xml/gstfdsrc.xml">
 <!ENTITY GstFdSink SYSTEM "xml/gstfdsink.xml">
 <!ENTITY GstIdentity SYSTEM "xml/gstidentity.xml">
@@ -154,32 +157,31 @@
   <chapter id="gstreamer-compat">
     <title>GStreamer Core Compatibility</title>
     <para>
-      Theses elements are defined for compatibillity with older code.
-      The must not be use in new code!
+      These elements are defined for compatibility with older code.
+      They must not be used in new code!
     </para>
 
     &GstCompat;
 
   </chapter>
 
-  <!--
-  FIXME: why is this commented out (reason #1: no public API)
   <chapter id="element-types">
-    <title>GStreamer Standard Elements</title>
+    <title>GStreamer Core Elements</title>
 
     <para>
-      libgstelements.la provide some basic elements like a disk source
+      libgstelements.so provide some basic elements like a file source
       and sink. The use of these elements is strictly though the g_object_get() and
       g_object_set() functions and the GStreamer Core Library functions.
     </para>
 
-    &GstAggregator;
 
     &GstFakeSrc;
     &GstFakeSink;
-
     &GstFileSrc;
-    &GstDiskSink;
+    &GstFileSink;
+<!--
+
+    &GstAggregator;
 
     &GstFdSrc;
     &GstFdSink;
@@ -191,8 +193,19 @@
     &GstMD5Sink;
 
     &GstTee;
+-->
   </chapter>
-    -->
+
+  <chapter id="gstreamer-base">
+    <title>GStreamer Base Classes</title>
+    <para>
+      These base classes are provided to be extended by elements.
+    </para>
+
+    &GstBaseSrc;
+    &GstBaseSink;
+
+  </chapter>
 
 
   <chapter id="gstreamer-hierarchy">

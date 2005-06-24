@@ -23,7 +23,7 @@ in a pipeline.
 
 <!-- ##### SIGNAL GstIndex::entry-added ##### -->
 <para>
-Is emited when a new entry is added to the index.
+Is emitted when a new entry is added to the index.
 </para>
 
 @gstindex: the object which received the signal.

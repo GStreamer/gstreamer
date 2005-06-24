@@ -1,0 +1,120 @@
+<!-- ##### SECTION Title ##### -->
+GstFakeSrc
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GstFakeSrc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SIGNAL GstFakeSrc::handoff ##### -->
+<para>
+
+</para>
+
+@gstfakesrc: the object which received the signal.
+@arg1: 
+
+<!-- ##### ARG GstFakeSrc:data ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:datarate ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:dump ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:eos ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:filltype ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:has-getrange ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:has-loop ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:last-message ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:num-buffers ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:output ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:parentsize ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:pattern ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:signal-handoffs ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:silent ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:sizemax ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:sizemin ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:sizetype ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:sync ##### -->
+<para>
+
+</para>
+

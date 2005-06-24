@@ -43,7 +43,7 @@ G_BEGIN_DECLS
  * @GST_MESSAGE_STEP_DONE: a framestep finished.
  * @GST_MESSAGE_NEW_CLOCK: a new clock was selected in the pipeline
  * @GST_MESSAGE_STRUCTURE_CHANGE: the structure of the pipeline changed.
- * @GST_MESSAGE_STREAM_STATUS: status about a stream, emited when it starts,
+ * @GST_MESSAGE_STREAM_STATUS: status about a stream, emitted when it starts,
  *                             stops, errors, etc..
  * @GST_MESSAGE_APPLICATION: message posted by the application, possibly
  *                           via an application-specific element.

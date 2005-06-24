@@ -1,8 +1,29 @@
+2005-06-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/Makefile.am:
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/gstreamer.types:
+	* docs/gst/tmpl/gstbasesink.sgml:
+	* docs/gst/tmpl/gstbasesrc.sgml:
+	* docs/gst/tmpl/gstbin.sgml:
+	* docs/gst/tmpl/gstcompat.sgml:
+	* docs/gst/tmpl/gstfakesink.sgml:
+	* docs/gst/tmpl/gstfakesrc.sgml:
+	* docs/gst/tmpl/gstfilesink.sgml:
+	* docs/gst/tmpl/gstfilesrc.sgml:
+	* docs/gst/tmpl/gstindex.sgml:
+	* docs/manual/appendix-quotes.xml:
+	* gst/base/gstbasesrc.h:
+	* gst/elements/gstfakesrc.h:
+	* gst/gstmessage.h:
+	  start pulling in base classes and elements in our docs
+
 2005-06-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/Makefile.am:
 	* docs/libs/Makefile.am:
-          fixed make distcheck with gtk-doc 1.3
+	  fixed make distcheck with gtk-doc 1.3
 
 2005-06-23  Wim Taymans  <wim@fluendo.com>
 

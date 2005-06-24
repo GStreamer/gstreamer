@@ -1,0 +1,37 @@
+<!-- ##### SECTION Title ##### -->
+GstBaseSrc
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GstBaseSrc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstBaseSrc:blocksize ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstBaseSrc:has-getrange ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstBaseSrc:has-loop ##### -->
+<para>
+
+</para>
+

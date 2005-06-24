@@ -76,6 +76,7 @@ typedef struct _GstFakeSrcClass GstFakeSrcClass;
 struct _GstFakeSrc {
   GstBaseSrc     element;
 
+  /*< private >*/
   gboolean 	 has_loop;
   gboolean 	 has_getrange;
   gboolean 	 eos;
@@ -114,6 +115,7 @@ struct _GstFakeSrc {
 struct _GstFakeSrcClass {
   GstBaseSrcClass parent_class;
 
+  /*< public >*/
   /* signals */
   void (*handoff) (GstElement *element, GstBuffer *buf, GstPad *pad);
 };

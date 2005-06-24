@@ -1,0 +1,61 @@
+<!-- ##### SECTION Title ##### -->
+GstFakeSink
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GstFakeSink ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SIGNAL GstFakeSink::handoff ##### -->
+<para>
+
+</para>
+
+@gstfakesink: the object which received the signal.
+@arg1: 
+@arg2: 
+
+<!-- ##### ARG GstFakeSink:dump ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSink:last-message ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSink:signal-handoffs ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSink:silent ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSink:state-error ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSink:sync ##### -->
+<para>
+
+</para>
+

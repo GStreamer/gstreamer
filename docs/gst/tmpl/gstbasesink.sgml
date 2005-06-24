@@ -1,0 +1,37 @@
+<!-- ##### SECTION Title ##### -->
+GstBaseSink
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GstBaseSink ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstBaseSink:has-chain ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstBaseSink:has-loop ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstBaseSink:preroll-queue-len ##### -->
+<para>
+
+</para>
+

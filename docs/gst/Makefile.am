@@ -57,6 +57,9 @@ CFILE_GLOB=$(DOC_SOURCE_DIR)/*.c
 
 #SCANOBJ_DEPS = $(top_builddir)/gst/elements/libgstelements.la \
 #	$(top_builddir)/gst/schedulers/libgstbasicomegascheduler.la
+SCANOBJ_DEPS = \
+	$(top_builddir)/gst/elements/libgstelements.la \
+	$(top_builddir)/gst/base/libgstbase-@GST_MAJORMINOR@.la
 
 # Header files to ignore when scanning. Use base file name, no paths
 IGNORE_HFILES= \
@@ -75,12 +78,8 @@ IGNORE_HFILES= \
 	gstmarshal.h \
 	gstaggregator.h \
 	gstbufferstore.h \
-	gstfakesink.h \
-	gstfakesrc.h \
 	gstfdsink.h \
 	gstfdsrc.h \
-	gstfilesink.h \
-	gstfilesrc.h \
 	gstidentity.h \
 	gstmd5sink.h \
 	gstmultifilesrc.h \

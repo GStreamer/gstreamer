@@ -98,6 +98,7 @@ struct _GstBaseSrc {
 struct _GstBaseSrcClass {
   GstElementClass parent_class;
 
+  /*< public >*/
   /* get caps from subclass */
   GstCaps*      (*get_caps)     (GstBaseSrc *src);
   /* notify the subclass of new caps */

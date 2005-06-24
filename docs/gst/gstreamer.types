@@ -1,3 +1,11 @@
+% add a _get_type for every GObject whose properties and signals you want
+% documented
+% add the relevant includes to be able to call those _get_type functions
+
+% adding a get_type here will:
+% - change output file name from gstreamer-(whatever).html to (whatever).html
+% - document properties and signals
+
 #include <gst/gst.h>
 #include <gst/gstqueue.h>
 
@@ -21,3 +29,22 @@ gst_tag_setter_get_type
 gst_type_find_factory_get_type
 gst_xml_get_type
 
+% base classes
+
+#include <gst/base/gstbasesrc.h>
+#include <gst/base/gstbasesink.h>
+
+gst_basesrc_get_type
+gst_basesink_get_type
+
+% elements
+
+#include <gst/elements/gstfakesrc.h>
+#include <gst/elements/gstfakesink.h>
+#include <gst/elements/gstfilesrc.h>
+#include <gst/elements/gstfilesink.h>
+
+gst_fakesrc_get_type
+gst_fakesink_get_type
+gst_filesrc_get_type
+gst_filesink_get_type

@@ -66,19 +66,19 @@ clock providers in the bin.
 
 <!-- ##### SIGNAL GstBin::element-added ##### -->
 <para>
-Will be emmited if a new element was removed/added to this bin.
+Will be emitted if a new element was removed/added to this bin.
 </para>
 
 @gstbin: the object which received the signal.
-@arg1: the element that was added to the bin
+@arg1: the element that was added to the bin.
 
 <!-- ##### SIGNAL GstBin::element-removed ##### -->
 <para>
-Will be emmited if an element was removed from this bin.
+Will be emitted if an element was removed from this bin.
 </para>
 
 @gstbin: the object which received the signal.
-@arg1: the element that was removed from the bin
+@arg1: the element that was removed from the bin.
 
 <!-- ##### ENUM GstBinFlags ##### -->
 <para>

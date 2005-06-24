@@ -1,17 +1,26 @@
 <!-- ##### SECTION Title ##### -->
-GstCompat
+GstFileSink
 
 <!-- ##### SECTION Short_Description ##### -->
-Deprecated API entries.
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-Please do not use these in new code.
-These symbols are only available by defining GST_DISABLE_DEPRECATED.
-This can be done in CFLAGS for compiling old code.
+
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GstFileSink ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstFileSink:location ##### -->
 <para>
 
 </para>

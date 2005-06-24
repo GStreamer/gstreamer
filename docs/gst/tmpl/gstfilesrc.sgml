@@ -1,0 +1,42 @@
+<!-- ##### SECTION Title ##### -->
+GstFileSrc
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GstFileSrc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstFileSrc:fd ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFileSrc:location ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFileSrc:mmapsize ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFileSrc:touch ##### -->
+<para>
+
+</para>
+
