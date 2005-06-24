@@ -240,6 +240,7 @@ gst_audioringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 {
   GstAudioSink *sink;
   GstAudioSinkClass *csink;
+  GstAudioRingBuffer *abuf;
   gboolean result = FALSE;
 
   sink = GST_AUDIOSINK (GST_OBJECT_PARENT (buf));
@@ -256,6 +257,9 @@ gst_audioringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 
   buf->data = gst_buffer_new_and_alloc (spec->segtotal * spec->segsize);
   memset (GST_BUFFER_DATA (buf->data), 0, GST_BUFFER_SIZE (buf->data));
+
+  abuf = GST_AUDIORINGBUFFER (buf);
+  abuf->running = TRUE;
 
   sink->thread =
       g_thread_create ((GThreadFunc) audioringbuffer_thread_func, buf, TRUE,

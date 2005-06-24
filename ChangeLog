@@ -1,3 +1,10 @@
+2005-06-25  Jan Schmidt  <thaytan@mad.scientist.com>
+	* gst-libs/gst/audio/gstaudiosink.c: (gst_audioringbuffer_acquire):
+	  Set the worker thread's running flag to TRUE before starting the
+	  thread.
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_init):
+	  Catch a failure to add typefind to the bin.
+
 2005-06-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/sine/gstsinesrc.c: (gst_sinesrc_class_init),

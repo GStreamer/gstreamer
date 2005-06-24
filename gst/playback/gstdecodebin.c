@@ -312,7 +312,11 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
     GstPad *pad;
 
     /* add the typefind element */
-    gst_bin_add (GST_BIN (decode_bin), decode_bin->typefind);
+    if (!gst_bin_add (GST_BIN (decode_bin), decode_bin->typefind)) {
+      g_warning ("Could not add typefind element, decodebin will not work");
+      gst_object_unref (GST_OBJECT (decode_bin->typefind));
+      decode_bin->typefind = NULL;
+    }
 
     /* get the sinkpad */
     pad = gst_element_get_pad (decode_bin->typefind, "sink");
