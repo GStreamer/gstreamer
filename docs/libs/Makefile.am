@@ -236,10 +236,10 @@ maintainer-clean-local: clean
 # FIXME : thomas added all sgml files and some other things to make
 # make distcheck work
 distclean-local: clean
-	rm -rf $(DOC_MODULE)-decl-list.txt
-	rm -rf $(DOC_MODULE)-decl.txt
-	rm -rf $(DOC_MODULE)-undocumented.txt
-	rm -rf $(DOC_MODULE)-unused.txt
+	rm -f $(DOC_MODULE)-decl-list.txt
+	rm -f $(DOC_MODULE)-decl.txt
+	rm -f $(DOC_MODULE)-undocumented.txt
+	rm -f $(DOC_MODULE)-unused.txt
 	rm -rf tmpl/*.sgml.bak
 	rm -f $(DOC_MODULE).hierarchy
 	rm -f *.stamp || true
@@ -247,6 +247,7 @@ distclean-local: clean
 	    rm -f $(DOC_MODULE)-docs.sgml ; \
 	    rm -f $(DOC_MODULE).types ; \
 	    rm -f $(DOC_MODULE).interfaces ; \
+	    rm -f $(DOC_MODULE)-overrides.txt ; \
 	    rm -f $(DOC_MODULE).prerequisites ; \
 	    rm -f $(DOC_MODULE)-sections.txt ; \
 	    rm -rf tmpl/*.sgml ; \
