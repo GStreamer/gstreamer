@@ -67,6 +67,7 @@ START_TEST (test_src_sink)
   gst_object_unref (GST_OBJECT (sinkpad));
 
   ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  ret = gst_element_get_state (pipeline, NULL, NULL, NULL);
   fail_unless (ret == GST_STATE_SUCCESS, "no success state return");
 
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);

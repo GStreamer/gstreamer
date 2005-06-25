@@ -1,5 +1,19 @@
 2005-06-25  Wim Taymans  <wim@fluendo.com>
 
+	* check/states/sinks.c: (START_TEST), (gst_object_suite):
+	Have to check for completion now...
+
+2005-06-25  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesink.c: (gst_basesink_preroll_queue_empty),
+	(gst_basesink_handle_object), (gst_basesink_event),
+	(gst_basesink_do_sync), (gst_basesink_handle_event),
+	(gst_basesink_change_state):
+	* gst/gstpad.h:
+	Unlock STREAM_LOCK whatever the recursion was.
+
+2005-06-25  Wim Taymans  <wim@fluendo.com>
+
 	* gst/base/gstbasesink.c: (gst_basesink_set_property),
 	(gst_basesink_preroll_queue_empty),
 	(gst_basesink_preroll_queue_flush), (gst_basesink_handle_object),
