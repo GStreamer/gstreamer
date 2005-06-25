@@ -110,8 +110,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 			 GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV("I420"))
 			 );
 			 
-GST_DEBUG_CATEGORY (postproc);
-#define GST_CAT_DEFAULT postproc
+GST_DEBUG_CATEGORY (postproc_debug);
+#define GST_CAT_DEFAULT postproc_debug
 
 static void	gst_postproc_class_init (GstPostProcClass * klass);
 static void	gst_postproc_base_init (GstPostProcClass * klass);
@@ -156,7 +156,7 @@ gst_ffmpeg_log_callback (void * ptr, int level, const char * fmt, va_list vl)
       break;
   }
 
-  gst_debug_log_valist (postproc, gst_level, "", "", 0, NULL, fmt, vl);
+  gst_debug_log_valist (postproc_debug, gst_level, "", "", 0, NULL, fmt, vl);
 }
 #endif
 
@@ -503,7 +503,7 @@ gst_postproc_register(GstPlugin * plugin)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (postproc, "postproc", 0, "video postprocessing elements");
+  GST_DEBUG_CATEGORY_INIT (postproc_debug, "postproc", 0, "video postprocessing elements");
 #ifndef GST_DISABLE_GST_DEBUG
   av_log_set_callback (gst_ffmpeg_log_callback);
 #endif

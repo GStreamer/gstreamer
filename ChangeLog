@@ -1,3 +1,10 @@
+2005-06-25  Luca Ognibene  <luogni@tin.it>
+
+	* ext/libpostproc/gstpostproc.c: (gst_ffmpeg_log_callback),
+	(plugin_init):
+	* ext/libpostproc/gstpostproc.h:
+	fix debug output
+
 2005-06-25  Sebastien Cote <sc5@hermes.usherb.ca>
 
 	Reviewed by: Luca Ognibene <luogni@tin.it>

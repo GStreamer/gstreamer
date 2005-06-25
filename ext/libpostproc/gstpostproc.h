@@ -29,8 +29,8 @@
 
 #include <gst/gst.h>
 
-GST_DEBUG_CATEGORY_EXTERN (postproc);
-#define GST_CAT_DEFAULT postproc
+GST_DEBUG_CATEGORY_EXTERN (postproc_debug);
+#define GST_CAT_DEFAULT postproc_debug
 
 G_BEGIN_DECLS
 
