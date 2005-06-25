@@ -428,6 +428,7 @@ gst_basesink_handle_object (GstBaseSink * basesink, GstPad * pad,
 {
   gint length;
   gboolean have_event;
+  guint t;
 
   GST_PREROLL_LOCK (pad);
   /* push object on the queue */
@@ -464,7 +465,7 @@ gst_basesink_handle_object (GstBaseSink * basesink, GstPad * pad,
 
   /* have to release STREAM_LOCK as we cannot take the STATE_LOCK
    * inside the STREAM_LOCK */
-  GST_STREAM_UNLOCK (pad);
+  t = GST_STREAM_UNLOCK_FULL (pad);
 
   /* now we commit our state */
   GST_STATE_LOCK (basesink);
@@ -473,7 +474,7 @@ gst_basesink_handle_object (GstBaseSink * basesink, GstPad * pad,
   GST_STATE_UNLOCK (basesink);
 
   /* reacquire stream lock, pad could be flushing now */
-  GST_STREAM_LOCK (pad);
+  GST_STREAM_LOCK_FULL (pad, t);
 
   GST_LOCK (pad);
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))

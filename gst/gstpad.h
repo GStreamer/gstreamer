@@ -267,6 +267,8 @@ struct _GstPadClass {
 #define GST_STREAM_LOCK(pad)            (g_static_rec_mutex_lock(GST_STREAM_GET_LOCK(pad)))
 #define GST_STREAM_TRYLOCK(pad)         (g_static_rec_mutex_trylock(GST_STREAM_GET_LOCK(pad)))
 #define GST_STREAM_UNLOCK(pad)          (g_static_rec_mutex_unlock(GST_STREAM_GET_LOCK(pad)))
+#define GST_STREAM_UNLOCK_FULL(pad)     (g_static_rec_mutex_unlock_full(GST_STREAM_GET_LOCK(pad)))
+#define GST_STREAM_LOCK_FULL(pad,t)     (g_static_rec_mutex_lock_full(GST_STREAM_GET_LOCK(pad), t))
 
 #define GST_PREROLL_GET_LOCK(pad)       (GST_PAD_CAST(pad)->preroll_lock)
 #define GST_PREROLL_LOCK(pad)           (g_mutex_lock(GST_PREROLL_GET_LOCK(pad)))
