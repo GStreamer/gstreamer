@@ -1,5 +1,18 @@
 2005-06-25  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasesink.c: (gst_basesink_set_property),
+	(gst_basesink_preroll_queue_empty),
+	(gst_basesink_preroll_queue_flush), (gst_basesink_handle_object),
+	(gst_basesink_event), (gst_basesink_do_sync),
+	(gst_basesink_handle_event), (gst_basesink_handle_buffer),
+	(gst_basesink_chain), (gst_basesink_loop), (gst_basesink_activate),
+	(gst_basesink_change_state):
+	Reworked the base sink, handle event and buffer serialisation
+	correctly and removed possible deadlock.
+	Handle EOS correctly.
+
+2005-06-25  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstpipeline.c: (is_eos), (pipeline_bus_handler),
 	(gst_pipeline_change_state):
 	* tools/gst-launch.c: (check_intr), (event_loop), (main):
