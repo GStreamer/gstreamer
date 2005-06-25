@@ -1,5 +1,11 @@
 2005-06-25  Wim Taymans  <wim@fluendo.com>
 
+	* gst/elements/gsttee.c: (gst_tee_chain), (gst_tee_loop),
+	(gst_tee_sink_activate):
+	Core takes STREAM_LOCK for us now.
+
+2005-06-25  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstelement.c: (gst_element_get_state_func),
 	(gst_element_set_state):
 	* gst/gstelement.h:

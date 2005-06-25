@@ -306,21 +306,15 @@ gst_tee_handle_buffer (GstTee * tee, GstBuffer * buffer)
   return g_value_get_enum (&ret);
 }
 
-#define WITH_STREAM_LOCK(pad, expr) G_STMT_START {\
-  GST_STREAM_LOCK (pad); \
-  expr; \
-  GST_STREAM_UNLOCK (pad); \
-}G_STMT_END
-
 static GstFlowReturn
 gst_tee_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstFlowReturn res;
   GstTee *tee;
 
-  tee = GST_TEE (gst_pad_get_parent (pad));
+  tee = GST_TEE (GST_PAD_PARENT (pad));
 
-  WITH_STREAM_LOCK (pad, res = gst_tee_handle_buffer (tee, buffer));
+  res = gst_tee_handle_buffer (tee, buffer);
 
   return res;
 }
@@ -334,9 +328,7 @@ gst_tee_loop (GstPad * pad)
   GstFlowReturn res;
   GstTee *tee;
 
-  GST_STREAM_LOCK (pad);
-
-  tee = GST_TEE (gst_pad_get_parent (pad));
+  tee = GST_TEE (GST_PAD_PARENT (pad));
 
   res = gst_pad_pull_range (pad, tee->offset, DEFAULT_SIZE, &buffer);
   if (res != GST_FLOW_OK)
@@ -346,13 +338,13 @@ gst_tee_loop (GstPad * pad)
   if (res != GST_FLOW_OK)
     goto pause_task;
 
-  GST_STREAM_UNLOCK (pad);
   return;
 
 pause_task:
-  gst_pad_pause_task (pad);
-  GST_STREAM_UNLOCK (pad);
-  return;
+  {
+    gst_pad_pause_task (pad);
+    return;
+  }
 }
 
 static gboolean
