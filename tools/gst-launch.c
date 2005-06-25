@@ -281,9 +281,21 @@ check_intr (GstElement * pipeline)
   if (!caught_intr) {
     return TRUE;
   } else {
+    GstBus *bus;
+    GstMessage *message;
+
     caught_intr = FALSE;
     g_print ("Pausing pipeline.\n");
+
+    bus = gst_element_get_bus (GST_ELEMENT (pipeline));
+    message = gst_message_new_warning (GST_OBJECT (pipeline),
+        NULL, "pipeline interrupted");
+    gst_bus_post (bus, message);
+
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
+    gst_element_get_state (pipeline, NULL, NULL, NULL);
+    g_print ("Pipeline paused.\n");
+
 
     return FALSE;
   }
@@ -361,6 +373,9 @@ event_loop (GstElement * pipeline, gboolean blocking)
 
     switch (revent) {
       case GST_MESSAGE_EOS:
+        g_print (_
+            ("GOT EOS from element \"%s\".\n"),
+            GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))));
         gst_message_unref (message);
         return FALSE;
       case GST_MESSAGE_TAG:
@@ -375,7 +390,22 @@ event_loop (GstElement * pipeline, gboolean blocking)
         }
         gst_message_unref (message);
         break;
-      case GST_MESSAGE_WARNING:
+      case GST_MESSAGE_WARNING:{
+        GError *gerror;
+        gchar *debug;
+
+        gst_message_parse_warning (message, &gerror, &debug);
+        if (debug) {
+          g_print ("WARNING: Element \"%s\" warns: %s\n",
+              GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))),
+              debug);
+        }
+        gst_message_unref (message);
+        if (gerror)
+          g_error_free (gerror);
+        g_free (debug);
+        break;
+      }
       case GST_MESSAGE_ERROR:{
         GError *gerror;
         gchar *debug;
@@ -383,7 +413,8 @@ event_loop (GstElement * pipeline, gboolean blocking)
         gst_message_parse_error (message, &gerror, &debug);
         gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
         gst_message_unref (message);
-        g_error_free (gerror);
+        if (gerror)
+          g_error_free (gerror);
         g_free (debug);
         return TRUE;
       }
@@ -391,7 +422,8 @@ event_loop (GstElement * pipeline, gboolean blocking)
         GstElementState old, new;
 
         gst_message_parse_state_changed (message, &old, &new);
-        if (!(old == GST_STATE_PLAYING && new == GST_STATE_PAUSED)) {
+        if (!(old == GST_STATE_PLAYING && new == GST_STATE_PAUSED &&
+                GST_MESSAGE_SRC (message) == GST_OBJECT (pipeline))) {
           gst_message_unref (message);
           break;
         }
@@ -571,9 +603,6 @@ main (int argc, char *argv[])
     }
 
     caught_error = event_loop (pipeline, FALSE);
-
-    /* see if we got any messages */
-    while (g_main_context_iteration (NULL, FALSE));
 
     if (caught_error) {
       fprintf (stderr, _("ERROR: pipeline doesn't want to preroll.\n"));

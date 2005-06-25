@@ -1,5 +1,15 @@
 2005-06-25  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstpipeline.c: (is_eos), (pipeline_bus_handler),
+	(gst_pipeline_change_state):
+	* tools/gst-launch.c: (check_intr), (event_loop), (main):
+	Allow elements to post EOS in the state change function.
+	Fix up -launch, make it exit the poll loop when the
+	pipeline actually changed state.
+	Fix up warning parsing in -launch.
+
+2005-06-25  Wim Taymans  <wim@fluendo.com>
+
 	* gst/elements/gsttee.c: (gst_tee_chain), (gst_tee_loop),
 	(gst_tee_sink_activate):
 	Core takes STREAM_LOCK for us now.

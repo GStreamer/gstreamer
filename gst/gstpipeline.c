@@ -238,28 +238,17 @@ is_eos (GstPipeline * pipeline)
       {
         GstElement *element = GST_ELEMENT (data);
         GList *eosed;
-        GstElementState state, pending;
-        GstElementStateReturn complete;
         gchar *name;
 
-        complete = gst_element_get_state (element, &state, &pending, NULL);
         name = gst_element_get_name (element);
-
-        if (complete == GST_STATE_ASYNC) {
-          GST_DEBUG ("element %s still performing state change", name);
-          result = FALSE;
-          done = TRUE;
-          goto done;
-        } else if (state != GST_STATE_PLAYING) {
-          GST_DEBUG ("element %s not playing %d %d", name, state, pending);
-          goto done;
-        }
         eosed = g_list_find (pipeline->eosed, element);
         if (!eosed) {
+          GST_DEBUG ("element %s did not post EOS yet", name);
           result = FALSE;
           done = TRUE;
+        } else {
+          GST_DEBUG ("element %s posted EOS", name);
         }
-      done:
         g_free (name);
         gst_object_unref (GST_OBJECT (element));
         break;
@@ -331,6 +320,7 @@ pipeline_bus_handler (GstBus * bus, GstMessage * message,
         GST_UNLOCK (bus);
         if (is_eos (pipeline)) {
           posteos = TRUE;
+          GST_DEBUG ("all sinks posted EOS");
         }
         /* we drop all EOS messages */
         result = GST_BUS_DROP;
@@ -439,10 +429,12 @@ gst_pipeline_change_state (GstElement * element)
       break;
   }
 
-  /* we wait for async state changes ourselves.
+  /* we wait for async state changes ourselves when we are in an
+   * intermediate state.
    * FIXME this can block forever, better do this in a worker
    * thread or use a timeout? */
-  if (result == GST_STATE_ASYNC) {
+  if (result == GST_STATE_ASYNC &&
+      (GST_STATE_FINAL (pipeline) != GST_STATE_PENDING (pipeline))) {
     GTimeVal *timeval, timeout;
 
     GST_STATE_UNLOCK (pipeline);
