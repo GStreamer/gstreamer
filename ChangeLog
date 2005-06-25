@@ -1,3 +1,14 @@
+2005-06-25  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstelement.c: (gst_element_get_state_func),
+	(gst_element_set_state):
+	* gst/gstelement.h:
+	* gst/gstmessage.c: (gst_message_parse_error),
+	(gst_message_parse_warning):
+	Keep track of current target state while performing a state
+	change so that subclasses can do something interesting.
+	Fix parsing of warning/error messages when GError is NULL.
+
 2005-06-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/Makefile.am:

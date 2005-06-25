@@ -414,6 +414,7 @@ void
 gst_message_parse_error (GstMessage * message, GError ** gerror, gchar ** debug)
 {
   const GValue *error_gvalue;
+  GError *error_val;
 
   g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR);
@@ -422,7 +423,11 @@ gst_message_parse_error (GstMessage * message, GError ** gerror, gchar ** debug)
   g_return_if_fail (error_gvalue != NULL);
   g_return_if_fail (G_VALUE_TYPE (error_gvalue) == G_TYPE_POINTER);
 
-  *gerror = g_error_copy (g_value_get_pointer (error_gvalue));
+  error_val = g_value_get_pointer (error_gvalue);
+  if (error_val)
+    *gerror = g_error_copy (error_val);
+  else
+    *gerror = NULL;
   *debug = g_strdup (gst_structure_get_string (message->structure, "debug"));
 }
 
@@ -440,6 +445,7 @@ gst_message_parse_warning (GstMessage * message, GError ** gerror,
     gchar ** debug)
 {
   const GValue *error_gvalue;
+  GError *error_val;
 
   g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_WARNING);
@@ -448,6 +454,11 @@ gst_message_parse_warning (GstMessage * message, GError ** gerror,
   g_return_if_fail (error_gvalue != NULL);
   g_return_if_fail (G_VALUE_TYPE (error_gvalue) == G_TYPE_POINTER);
 
-  *gerror = g_error_copy (g_value_get_pointer (error_gvalue));
+  error_val = g_value_get_pointer (error_gvalue);
+  if (error_val)
+    *gerror = g_error_copy (error_val);
+  else
+    *gerror = NULL;
+
   *debug = g_strdup (gst_structure_get_string (message->structure, "debug"));
 }

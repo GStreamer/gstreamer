@@ -1686,6 +1686,8 @@ gst_element_set_state (GstElement * element, GstElementState state)
 
   /* get the element state lock */
   GST_STATE_LOCK (element);
+  /* this is the state we should go to */
+  GST_STATE_FINAL (element) = state;
   if (ret == GST_STATE_ASYNC) {
     gst_element_commit_state (element);
   }
@@ -1771,6 +1773,7 @@ gst_element_set_state (GstElement * element, GstElementState state)
   while (current != state);
 
 exit:
+  GST_STATE_FINAL (element) = GST_STATE_VOID_PENDING;
   GST_STATE_UNLOCK (element);
 
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "exit state change");
@@ -1780,6 +1783,7 @@ exit:
   /* ERROR */
 invalid_return:
   {
+    GST_STATE_FINAL (element) = GST_STATE_VOID_PENDING;
     GST_STATE_UNLOCK (element);
     /* somebody added a GST_STATE_ and forgot to do stuff here ! */
     g_critical ("unknown return value %d from a state change function",

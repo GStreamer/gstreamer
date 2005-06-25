@@ -55,6 +55,7 @@ GST_EXPORT GType _gst_element_type;
  */
 #define GST_STATE(obj)			(GST_ELEMENT(obj)->current_state)
 #define GST_STATE_PENDING(obj)		(GST_ELEMENT(obj)->pending_state)
+#define GST_STATE_FINAL(obj)		(GST_ELEMENT(obj)->final_state)
 #define GST_STATE_ERROR(obj)		(GST_ELEMENT(obj)->state_error)
 #define GST_STATE_NO_PREROLL(obj)	(GST_ELEMENT(obj)->no_preroll)
 
@@ -171,6 +172,7 @@ struct _GstElement
   GCond                *state_cond;
   guint8                current_state;
   guint8                pending_state;
+  guint8                final_state;
   gboolean              state_error; /* flag is set when the element has an error in the last state
                                         change. it is cleared when doing another state change. */
   gboolean		no_preroll;  /* flag is set when the element cannot preroll */
