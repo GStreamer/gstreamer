@@ -1,5 +1,11 @@
 2005-06-25  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstghostpad.c: (gst_proxy_pad_do_chain):
+	At least get the chain function correct, needs more
+	fixing.
+
+2005-06-25  Wim Taymans  <wim@fluendo.com>
+
 	* gst/base/gstbasesink.c: (gst_basesink_preroll_queue_empty),
 	(gst_basesink_handle_object), (gst_basesink_event),
 	(gst_basesink_do_sync), (gst_basesink_handle_event),

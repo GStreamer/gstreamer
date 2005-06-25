@@ -186,7 +186,7 @@ gst_proxy_pad_do_chain (GstPad * pad, GstBuffer * buffer)
 
   g_return_val_if_fail (target != NULL, GST_FLOW_UNEXPECTED);
 
-  return target->chainfunc (target, buffer);
+  return gst_pad_chain (target, buffer);
 }
 
 static GstFlowReturn
