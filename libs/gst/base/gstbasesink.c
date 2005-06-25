@@ -466,6 +466,11 @@ gst_basesink_handle_object (GstBaseSink * basesink, GstPad * pad,
   /* have to release STREAM_LOCK as we cannot take the STATE_LOCK
    * inside the STREAM_LOCK */
   t = GST_STREAM_UNLOCK_FULL (pad);
+  GST_DEBUG ("released stream lock %d times", t);
+  if (t == 0) {
+    GST_WARNING ("STREAM_LOCK should have been locked !!");
+    g_warning ("STREAM_LOCK should have been locked !!");
+  }
 
   /* now we commit our state */
   GST_STATE_LOCK (basesink);
@@ -474,7 +479,9 @@ gst_basesink_handle_object (GstBaseSink * basesink, GstPad * pad,
   GST_STATE_UNLOCK (basesink);
 
   /* reacquire stream lock, pad could be flushing now */
-  GST_STREAM_LOCK_FULL (pad, t);
+  /* FIXME in glib, if t==0, the lock is still taken... hmmm */
+  if (t > 0)
+    GST_STREAM_LOCK_FULL (pad, t);
 
   GST_LOCK (pad);
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))

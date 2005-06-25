@@ -57,6 +57,8 @@ typedef enum {
 #define GST_TASK_GET_LOCK(task)		(GST_TASK_CAST(task)->lock)
 #define GST_TASK_LOCK(task)		g_static_rec_mutex_lock(GST_TASK_GET_LOCK(task))
 #define GST_TASK_UNLOCK(task)		g_static_rec_mutex_unlock(GST_TASK_GET_LOCK(task))
+#define GST_TASK_UNLOCK_FULL(task)	g_static_rec_mutex_unlock_full(GST_TASK_GET_LOCK(task))
+#define GST_TASK_LOCK_FULL(task,t)	g_static_rec_mutex_lock_full(GST_TASK_GET_LOCK(task),(t))
 
 struct _GstTask {
   GstObject      object;

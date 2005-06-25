@@ -1,5 +1,16 @@
 2005-06-25  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasesink.c: (gst_basesink_preroll_queue_empty),
+	(gst_basesink_handle_object), (gst_basesink_event),
+	(gst_basesink_do_sync), (gst_basesink_handle_event),
+	(gst_basesink_change_state):
+	* gst/gsttask.h:
+	Right, two problems here: ghostpads don't take locks and
+	glib _rec_mutex_lock_full() with depth==0 still locks.
+	Catch illegal locking and g_warn them.
+
+2005-06-25  Wim Taymans  <wim@fluendo.com>
+
 	* check/states/sinks.c: (START_TEST), (gst_object_suite):
 	Have to check for completion now...
 
