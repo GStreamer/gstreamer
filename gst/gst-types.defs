@@ -151,6 +151,15 @@
   (parent "GstMiniObject")
   (c-name "GstBuffer")
   (gtype-id "GST_TYPE_BUFFER")
+  (fields
+   '("guint8*" "data")
+   '("guint" "size")
+   '("GstClockTime" "timestamp")
+   '("GstClockTime" "duration")
+   '("GstCaps*" "caps")
+   '("guint64" "offset")
+   '("guint64" "offset_end")
+  )
 )
 
 (define-miniobject Event
@@ -158,6 +167,11 @@
   (parent "GstMiniObject")
   (c-name "GstEvent")
   (gtype-id "GST_TYPE_EVENT")
+  (fields
+   '("GstEventType" "type")
+   '("guint64" "timestamp")
+   '("GstObject*" "src")
+  )
 )
 
 (define-miniobject Message
@@ -165,6 +179,12 @@
   (parent "GstMiniObject")
   (c-name "GstMessage")
   (gtype-id "GST_TYPE_MESSAGE")
+  (fields
+   '("GstMessageType" "type")
+   '("guint64" "timestamp")
+   '("GstObject*" "src")
+   '("GstStructure*" "structure")
+  )
 )
 
 (define-miniobject Query
@@ -172,6 +192,10 @@
   (parent "GstMiniObject")
   (c-name "GstQuery")
   (gtype-id "GST_TYPE_QUERY")
+  (fields
+   '("GstQueryType" "type")
+   '("GstStructure*" "structure")
+  )
 )
 
 
@@ -887,6 +911,7 @@
     '("failure" "GST_STATE_FAILURE")
     '("success" "GST_STATE_SUCCESS")
     '("async" "GST_STATE_ASYNC")
+    '("no-preroll" "GST_STATE_NO_PREROLL")
   )
 )
 

@@ -4416,6 +4416,16 @@
   (return-type "gint")
 )
 
+(define-method nth_field_name
+  (of-object "GstStructure")
+  (c-name "gst_structure_nth_field_name")
+  (return-type "const-gchar*")
+  (parameters
+    '("guint" "index")
+  )
+)
+
+
 (define-method has_field
   (of-object "GstStructure")
   (c-name "gst_structure_has_field")

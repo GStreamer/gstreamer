@@ -40,32 +40,32 @@ pygst_caps_map_add (PyObject *structure, PyObject *caps)
   g_hash_table_insert (structure_caps_map, structure, caps);
 }
 
-/* static void */
-/* pygst_caps_map_remove_structure (PyObject *structure) */
-/* { */
-/*   g_hash_table_remove (structure_caps_map, structure); */
-/* } */
+static void
+pygst_caps_map_remove_structure (PyObject *structure)
+{
+  g_hash_table_remove (structure_caps_map, structure);
+}
 
-/* static gboolean */
-/* pygst_caps_map_foreach (gpointer structure, gpointer caps, gpointer match) */
-/* { */
-/*   PyGBoxed *boxed = structure; */
+static gboolean
+pygst_caps_map_foreach (gpointer structure, gpointer caps, gpointer match)
+{
+  PyGBoxed *boxed = structure;
   
-/*   if (match != caps) */
-/*     return FALSE; */
+  if (match != caps)
+    return FALSE;
 
-/*   /\* we can't have free_on_dealloc stuff in here *\/ */
-/*   g_assert (boxed->free_on_dealloc == FALSE); */
-/*   boxed->boxed = gst_structure_copy (boxed->boxed); */
-/*   boxed->free_on_dealloc = TRUE; */
-/*   return TRUE; */
-/* } */
+  /* we can't have free_on_dealloc stuff in here */
+  g_assert (boxed->free_on_dealloc == FALSE);
+  boxed->boxed = gst_structure_copy (boxed->boxed);
+  boxed->free_on_dealloc = TRUE;
+  return TRUE;
+}
 
-/* static void */
-/* pygst_caps_map_modified (PyObject *caps) */
-/* { */
-/*   g_hash_table_foreach_remove (structure_caps_map, pygst_caps_map_foreach, caps); */
-/* } */
+static void
+pygst_caps_map_modified (PyObject *caps)
+{
+  g_hash_table_foreach_remove (structure_caps_map, pygst_caps_map_foreach, caps);
+}
 
 %%
 init
@@ -418,7 +418,7 @@ _wrap_gst_caps_tp_dealloc (PyObject *self)
   PyGBoxed *boxed = (PyGBoxed *) self;
 
   if (boxed->free_on_dealloc && boxed->boxed) {
-    pygst_caps_map_modified (self);
+      pygst_caps_map_modified (self);
     gst_caps_unref (boxed->boxed);
   }
 

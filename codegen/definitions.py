@@ -1,5 +1,41 @@
 # -*- Mode: Python; py-indent-offset: 4 -*-
 import sys
+from copy import *
+
+def get_valid_scheme_definitions(defs):
+    return [x for x in defs if isinstance(x, tuple) and len(x) >= 2]
+
+# New Parameter class, wich emulates a tuple for compatibility reasons
+class Parameter(object):
+    def __init__(self, ptype, pname, pdflt, pnull, prop=None):
+        self.ptype = ptype
+        self.pname = pname
+        self.pdflt = pdflt
+        self.pnull = pnull
+        
+    def __len__(self): return 4
+    def __getitem__(self, i):
+        return (self.ptype, self.pname, self.pdflt, self.pnull)[i]
+
+    def merge(self, old):
+        if old.pdflt is not None:
+            self.pdflt = old.pdflt
+        if old.pnull is not None:
+            self.pnull = old.pnull
+
+# Parameter for property based constructors
+class Property(object):
+    def __init__(self, pname, optional, argname):
+        self.pname = pname
+        self.optional = optional
+        self.argname = argname
+
+    def merge(self, old):
+        if old.optional is not None:
+            self.optional = old.optional
+        if old.argname is not None:
+            self.argname = old.argname
+
 
 class Definition:
     def __init__(self, *args):
@@ -13,6 +49,16 @@ class Definition:
 	"""write out this definition in defs file format"""
 	raise RuntimeError, "this is an abstract class"
 
+    def guess_return_value_ownership(self):
+        "return 1 if caller owns return value"
+        if getattr(self, 'is_constructor_of', False):
+            self.caller_owns_return = True
+        elif self.ret in ('char*', 'gchar*', 'string'):
+            self.caller_owns_return = True
+        else:
+            self.caller_owns_return = False
+
+
 class ObjectDef(Definition):
     def __init__(self, name, *args):
 	self.name = name
@@ -22,9 +68,8 @@ class ObjectDef(Definition):
         self.typecode = None
 	self.fields = []
         self.implements = []
-	for arg in args:
-	    if type(arg) != type(()) or len(arg) < 2:
-		continue
+        self.class_init_func = None
+	for arg in get_valid_scheme_definitions(args):
 	    if arg[0] == 'in-module':
 		self.module = arg[1]
 	    elif arg[0] == 'parent':
@@ -120,16 +165,20 @@ class InterfaceDef(Definition):
 	self.module = None
 	self.c_name = None
         self.typecode = None
+        self.vtable = None
 	self.fields = []
-	for arg in args:
-	    if type(arg) != type(()) or len(arg) < 2:
-		continue
+        self.interface_info = None
+	for arg in get_valid_scheme_definitions(args):
 	    if arg[0] == 'in-module':
 		self.module = arg[1]
 	    elif arg[0] == 'c-name':
 		self.c_name = arg[1]
 	    elif arg[0] == 'gtype-id':
 		self.typecode = arg[1]
+	    elif arg[0] == 'vtable':
+		self.vtable = arg[1]
+        if self.vtable is None:
+            self.vtable = self.c_name + "Iface"
     def write_defs(self, fp=sys.stdout):
 	fp.write('(define-interface ' + self.name + '\n')
 	if self.module:
@@ -148,9 +197,7 @@ class EnumDef(Definition):
 	self.c_name = None
         self.typecode = None
 	self.values = []
-	for arg in args:
-	    if type(arg) != type(()) or len(arg) < 2:
-		continue
+	for arg in get_valid_scheme_definitions(args):
 	    if arg[0] == 'in-module':
 		self.in_module = arg[1]
 	    elif arg[0] == 'c-name':
@@ -189,9 +236,7 @@ class BoxedDef(Definition):
         self.copy = None
         self.release = None
 	self.fields = []
-	for arg in args:
-	    if type(arg) != type(()) or len(arg) < 2:
-		continue
+	for arg in get_valid_scheme_definitions(args):
 	    if arg[0] == 'in-module':
 		self.module = arg[1]
 	    elif arg[0] == 'c-name':
@@ -236,9 +281,7 @@ class PointerDef(Definition):
 	self.c_name = None
         self.typecode = None
 	self.fields = []
-	for arg in args:
-	    if type(arg) != type(()) or len(arg) < 2:
-		continue
+	for arg in get_valid_scheme_definitions(args):
 	    if arg[0] == 'in-module':
 		self.module = arg[1]
 	    elif arg[0] == 'c-name':
@@ -268,7 +311,7 @@ class PointerDef(Definition):
             fp.write('  )\n')
 	fp.write(')\n\n')
 
-class MethodDef(Definition):
+class MethodDefBase(Definition):
     def __init__(self, name, *args):
         dump = 0
 	self.name = name
@@ -280,9 +323,7 @@ class MethodDef(Definition):
 	self.params = [] # of form (type, name, default, nullok)
         self.varargs = 0
         self.deprecated = None
-	for arg in args:
-	    if type(arg) != type(()) or len(arg) < 2:
-		continue
+	for arg in get_valid_scheme_definitions(args):
 	    if arg[0] == 'of-object':
                 self.of_object = arg[1]
 	    elif arg[0] == 'c-name':
@@ -300,11 +341,12 @@ class MethodDef(Definition):
                     pdflt = None
                     pnull = 0
                     for farg in parg[2:]:
+                        assert isinstance(farg, tuple)
                         if farg[0] == 'default':
                             pdflt = farg[1]
                         elif farg[0] == 'null-ok':
                             pnull = 1
-                    self.params.append((ptype, pname, pdflt, pnull))
+                    self.params.append(Parameter(ptype, pname, pdflt, pnull))
             elif arg[0] == 'varargs':
                 self.varargs = arg[1] in ('t', '#t')
             elif arg[0] == 'deprecated':
@@ -317,33 +359,30 @@ class MethodDef(Definition):
             self.write_defs(sys.stderr)
 
         if self.caller_owns_return is None and self.ret is not None:
-            if self.ret[:6] == 'const-':
-                self.caller_owns_return = 0
-            elif self.ret in ('char*', 'gchar*', 'string'):
-                self.caller_owns_return = 1
-            else:
-                self.caller_owns_return = 0
-        for item in ('c_name', 'of_object'):
-            if self.__dict__[item] == None:
-                self.write_defs(sys.stderr)
-                raise RuntimeError, "definition missing required %s" % (item,)
+            self.guess_return_value_ownership()
             
-    def merge(self, old):
+    def merge(self, old, parmerge):
+        self.caller_owns_return = old.caller_owns_return
+        self.varargs = old.varargs
 	# here we merge extra parameter flags accross to the new object.
+        if not parmerge:
+            self.params = deepcopy(old.params)
+            return
 	for i in range(len(self.params)):
 	    ptype, pname, pdflt, pnull = self.params[i]
 	    for p2 in old.params:
 		if p2[1] == pname:
 		    self.params[i] = (ptype, pname, p2[2], p2[3])
 		    break
-    def write_defs(self, fp=sys.stdout):
-	fp.write('(define-method ' + self.name + '\n')
+    def _write_defs(self, fp=sys.stdout):
 	if self.of_object != (None, None):
 	    fp.write('  (of-object "' + self.of_object + '")\n')
 	if self.c_name:
 	    fp.write('  (c-name "' + self.c_name + '")\n')
 	if self.typecode:
 	    fp.write('  (gtype-id "' + self.typecode + '")\n')
+        if self.caller_owns_return:
+	    fp.write('  (caller-owns-return #t)\n')
 	if self.ret:
 	    fp.write('  (return-type "' + self.ret + '")\n')
 	if self.deprecated:
@@ -356,7 +395,26 @@ class MethodDef(Definition):
                 if pnull: fp.write(' (null-ok)')
                 fp.write(')\n')
             fp.write('  )\n')
+	if self.varargs:
+	    fp.write('  (varargs #t)\n')
 	fp.write(')\n\n')
+
+class MethodDef(MethodDefBase):
+    def __init__(self, name, *args):
+        MethodDefBase.__init__(self, name, *args)
+        for item in ('c_name', 'of_object'):
+            if self.__dict__[item] == None:
+                self.write_defs(sys.stderr)
+                raise RuntimeError, "definition missing required %s" % (item,)
+        
+    def write_defs(self, fp=sys.stdout):
+	fp.write('(define-method ' + self.name + '\n')
+        self._write_defs(fp)
+
+class VirtualDef(MethodDefBase):
+    def write_defs(self, fp=sys.stdout):
+	fp.write('(define-virtual ' + self.name + '\n')
+        self._write_defs(fp)
 
 class FunctionDef(Definition):
     def __init__(self, name, *args):
@@ -371,9 +429,7 @@ class FunctionDef(Definition):
 	self.params = [] # of form (type, name, default, nullok)
         self.varargs = 0
         self.deprecated = None
-	for arg in args:
-	    if type(arg) != type(()) or len(arg) < 2:
-		continue
+	for arg in get_valid_scheme_definitions(args):
 	    if arg[0] == 'in-module':
 		self.in_module = arg[1]
 	    elif arg[0] == 'is-constructor-of':
@@ -397,7 +453,21 @@ class FunctionDef(Definition):
                             pdflt = farg[1]
                         elif farg[0] == 'null-ok':
                             pnull = 1
-                    self.params.append((ptype, pname, pdflt, pnull))
+                    self.params.append(Parameter(ptype, pname, pdflt, pnull))
+	    elif arg[0] == 'properties':
+                if self.is_constructor_of is None:
+                    print >> sys.stderr, "Warning: (properties ...) "\
+                          "is only valid for constructors"
+                for prop in arg[1:]:
+                    pname = prop[0]
+                    optional = False
+                    argname = pname
+                    for farg in prop[1:]:
+                        if farg[0] == 'optional':
+                            optional = True
+                        elif farg[0] == 'argname':
+                            argname = farg[1]
+                    self.params.append(Property(pname, optional, argname))
             elif arg[0] == 'varargs':
                 self.varargs = arg[1] in ('t', '#t')
             elif arg[0] == 'deprecated':
@@ -410,14 +480,7 @@ class FunctionDef(Definition):
             self.write_defs(sys.stderr)
 
         if self.caller_owns_return is None and self.ret is not None:
-            if self.ret[:6] == 'const-':
-                self.caller_owns_return = 0
-            elif self.is_constructor_of:
-                self.caller_owns_return = 1
-            elif self.ret in ('char*', 'gchar*', 'string'):
-                self.caller_owns_return = 1
-            else:
-                self.caller_owns_return = 0
+            self.guess_return_value_ownership()
         for item in ('c_name',):
             if self.__dict__[item] == None:
                 self.write_defs(sys.stderr)
@@ -425,14 +488,33 @@ class FunctionDef(Definition):
 
     _method_write_defs = MethodDef.__dict__['write_defs']
 
-    def merge(self, old):
+    def merge(self, old, parmerge):
+        self.caller_owns_return = old.caller_owns_return
+        self.varargs = old.varargs
+        if not parmerge:
+            self.params = deepcopy(old.params)
+            return
 	# here we merge extra parameter flags accross to the new object.
-	for i in range(len(self.params)):
-	    ptype, pname, pdflt, pnull = self.params[i]
-	    for p2 in old.params:
-		if p2[1] == pname:
-		    self.params[i] = (ptype, pname, p2[2], p2[3])
-		    break
+        def merge_param(param):
+	    for old_param in old.params:
+		if old_param.pname == param.pname:
+                    if isinstance(old_param, Property):
+                        # h2def never scans Property's, therefore if
+                        # we have one it was manually written, so we
+                        # keep it.
+                        return deepcopy(old_param)
+                    else:
+                        param.merge(old_param)
+                        return param
+            raise RuntimeError, "could not find %s in old_parameters %r" % (
+                param.pname, [p.pname for p in old.params])
+        try:
+            self.params = map(merge_param, self.params)
+        except RuntimeError:
+            # parameter names changed and we can't find a match; it's
+            # safer to keep the old parameter list untouched.
+            self.params = deepcopy(old.params)
+        
 	if not self.is_constructor_of:
             try:
                 self.is_constructor_of = old.is_constructor_of
@@ -454,17 +536,31 @@ class FunctionDef(Definition):
 	    fp.write('  (c-name "' + self.c_name + '")\n')
 	if self.typecode:
 	    fp.write('  (gtype-id "' + self.typecode + '")\n')
+        if self.caller_owns_return:
+	    fp.write('  (caller-owns-return #t)\n')
 	if self.ret:
 	    fp.write('  (return-type "' + self.ret + '")\n')
 	if self.deprecated:
 	    fp.write('  (deprecated "' + self.deprecated + '")\n')
         if self.params:
-            fp.write('  (parameters\n')
-            for ptype, pname, pdflt, pnull in self.params:
-                fp.write('    \'("' + ptype + '" "' + pname +'"')
-                if pdflt: fp.write(' (default "' + pdflt + '")')
-                if pnull: fp.write(' (null-ok)')
-                fp.write(')\n')
-            fp.write('  )\n')
-	fp.write(')\n\n')
+            if isinstance(self.params[0], Parameter):
+                fp.write('  (parameters\n')
+                for ptype, pname, pdflt, pnull in self.params:
+                    fp.write('    \'("' + ptype + '" "' + pname +'"')
+                    if pdflt: fp.write(' (default "' + pdflt + '")')
+                    if pnull: fp.write(' (null-ok)')
+                    fp.write(')\n')
+                fp.write('  )\n')
+            elif isinstance(self.params[0], Property):
+                fp.write('  (properties\n')
+                for prop in self.params:
+                    fp.write('    \'("' + prop.pname +'"')
+                    if prop.optional: fp.write(' (optional)')
+                    fp.write(')\n')
+                fp.write('  )\n')
+            else:
+                assert False, "strange parameter list %r" % self.params[0]
+	if self.varargs:
+	    fp.write('  (varargs #t)\n')
 
+	fp.write(')\n\n')

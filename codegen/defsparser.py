@@ -25,6 +25,7 @@ class DefsParser(IncludeParser):
         self.boxes = []      # boxed types
         self.pointers = []   # pointer types
 	self.functions = []  # functions and methods
+	self.virtuals = []   # virtual methods
 	self.c_name = {}     # hash of c names of functions
 	self.methods = {}    # hash of methods of particular objects
 	self.defines = defines	    # -Dfoo=bar options, as dictionary
@@ -66,13 +67,17 @@ class DefsParser(IncludeParser):
 	mdef = apply(MethodDef, args)
 	self.functions.append(mdef)
 	self.c_name[mdef.c_name] = mdef
-    def merge(self, old):
+    def define_virtual(self, *args):
+	vdef = apply(VirtualDef, args)
+	self.virtuals.append(vdef)
+    def merge(self, old, parmerge):
         for obj in self.objects:
             if old.c_name.has_key(obj.c_name):
                 obj.merge(old.c_name[obj.c_name])
-	for f in self.functions:
+        for f in self.functions:
             if old.c_name.has_key(f.c_name):
-                f.merge(old.c_name[f.c_name])
+                f.merge(old.c_name[f.c_name], parmerge)
+
     def printMissing(self, old):
 	for obj in self.objects:
 	    if not old.c_name.has_key(obj.c_name):
@@ -114,6 +119,12 @@ class DefsParser(IncludeParser):
         objname = obj.c_name
         return filter(lambda func, on=objname: isinstance(func, MethodDef) and
                       func.of_object == on, self.functions)
+
+    def find_virtuals(self, obj):
+        objname = obj.c_name
+        retval = filter(lambda func, on=objname: isinstance(func, VirtualDef) and
+                        func.of_object == on, self.virtuals)
+        return retval
 
     def find_functions(self):
         return filter(lambda func: isinstance(func, FunctionDef) and

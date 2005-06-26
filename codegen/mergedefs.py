@@ -3,17 +3,23 @@
 
 import sys
 import defsparser
+from optparse import OptionParser
 
-if len(sys.argv) < 3:
-    sys.stderr.write("Usage: mergedefs.py generated-defs old-defs\n")
-    sys.exit(1)
+parser = OptionParser(usage="usage: %prog [options] generated-defs old-defs")
+parser.add_option("-p", "--merge-parameters",
+                  help="Merge changes in function/methods parameter lists",
+                  action="store_true", dest="parmerge", default=False)
+(options, args) = parser.parse_args()
 
-newp = defsparser.DefsParser(sys.argv[1])
-oldp = defsparser.DefsParser(sys.argv[2])
+if len(args) != 2:
+    parser.error("wrong number of arguments")
+
+newp = defsparser.DefsParser(args[0])
+oldp = defsparser.DefsParser(args[1])
 
 newp.startParsing()
 oldp.startParsing()
 
-newp.merge(oldp)
+newp.merge(oldp, options.parmerge)
 
 newp.write_defs()

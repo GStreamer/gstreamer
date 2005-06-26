@@ -85,6 +85,21 @@ _wrap_gst_element_set_state(PyGObject *self, PyObject *args, PyObject *kwargs)
 	return PyInt_FromLong(ret);
 }
 %%
+override gst_element_get_state kwargs
+static PyObject *
+_wrap_gst_element_get_state(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    GstElementState state;
+    GstElementStateReturn	ret;
+
+    ret = gst_element_get_state(GST_ELEMENT (self->obj), &state, NULL, NULL);
+    if (!ret) {
+	PyErr_SetString(PyExc_RuntimeError, "conversion could not be performed");
+	return NULL;
+    }
+    return pyg_flags_from_gtype(GST_TYPE_ELEMENT_STATE, state);
+}
+%%
 /* override gst_element_query kwargs */
 /* static PyObject * */
 /* _wrap_gst_element_query(PyGObject *self, PyObject *args, PyObject *kwargs) */

@@ -4,6 +4,30 @@
 	* codegen/codegen.py:
 	* codegen/definitions.py:
 	* codegen/defsparser.py:
+	* codegen/h2def.py:
+	* codegen/mergedefs.py:
+	* codegen/reversewrapper.py:
+	Backport pygtk 2.6.2 codegen
+
+	* gst/gst-types.defs:
+	Added fields for Buffer, Event, Message and Query
+	Added pre-roll for enum ElementStateReturn
+
+	* gst/gst.defs:
+	Added (define-method for gst_structure_nth_field_name()
+
+	* gst/gstelement.override:
+	Added override for gst_element_get_state
+
+	* gst/gstcaps.override:
+	re-enabled structure functions
+	
+2005-06-26  Edward Hervey  <edward@fluendo.com>
+
+	* codegen/argtypes.py:
+	* codegen/codegen.py:
+	* codegen/definitions.py:
+	* codegen/defsparser.py:
 	* codegen/defsconvert.py:
 	* codegen/docgen.py:
 	Updated codegen to support miniobject

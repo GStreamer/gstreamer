@@ -53,7 +53,7 @@ def strip_comments(buf):
 
 obj_name_pat = "[A-Z][a-z]*[A-Z][A-Za-z0-9]*"
 
-split_prefix_pat = re.compile('([A-Z][a-z]*)([A-Za-z0-9]+)')
+split_prefix_pat = re.compile('([A-Z]+[a-z]*)([A-Za-z0-9]+)')
 
 def find_obj_defs(buf, objdefs=[]):
     """
@@ -312,7 +312,7 @@ proto_pat=re.compile(r"""
 (?P<ret>(-|\w|\&|\*)+\s*)  # return type
 \s+                   # skip whitespace
 (?P<func>\w+)\s*[(]   # match the function name until the opening (
-(?P<args>.*?)[)]     # group the function arguments
+\s*(?P<args>.*?)[)]     # group the function arguments
 """, re.IGNORECASE|re.VERBOSE)
 #"""
 arg_split_pat = re.compile("\s*,\s*")
@@ -353,7 +353,7 @@ def write_func(fp, name, ret, args, prefix):
             obj = m.group(2)
             if munged_name[:len(obj)] == string.lower(obj):
                 regex = string.join(map(lambda x: x+'_?',string.lower(obj)),'')
-                mname = re.sub(regex, '', name)
+                mname = re.sub(regex, '', name, 1)
                 if prefix:
                     l = len(prefix) + 1
                     if mname[:l] == prefix and mname[l+1] == '_':
