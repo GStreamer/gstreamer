@@ -1,3 +1,9 @@
+2005-06-26  Edward Hervey  <edward@fluendo.com>
+
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_class_init):
+	2nd argument of 'unknow-type' signal is a GstCaps and not a
+	GstMiniObject
+
 2005-06-25  Jan Schmidt  <thaytan@mad.scientist.com>
 	* gst-libs/gst/audio/gstaudiosink.c: (gst_audioringbuffer_acquire):
 	  Set the worker thread's running flag to TRUE before starting the
