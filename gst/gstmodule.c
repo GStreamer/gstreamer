@@ -143,6 +143,7 @@ init_gst (void)
 					     NULL);
      PyDict_SetItemString(d, "LinkError", PyGstExc_LinkError);
 
+
      pygst_register_classes (d);
      pygst_add_constants (m, "GST_");
 

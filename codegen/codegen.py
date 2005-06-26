@@ -543,6 +543,65 @@ class GObjectWrapper(Wrapper):
         substdict['cast'] = string.replace(self.objinfo.typecode, '_TYPE_', '_', 1)
         return substdict
 
+## TODO : Add GstMiniObjectWrapper(Wrapper)
+class GstMiniObjectWrapper(Wrapper):
+    constructor_tmpl = \
+        'static int\n' \
+        '_wrap_%(cname)s(PyGstMiniObject *self%(extraparams)s)\n' \
+        '{\n' \
+        '%(varlist)s' \
+        '%(parseargs)s' \
+        '%(codebefore)s' \
+        '    self->obj = (GstMiniObject *)%(cname)s(%(arglist)s);\n' \
+        '%(codeafter)s\n' \
+        '    if (!self->obj) {\n' \
+        '        PyErr_SetString(PyExc_RuntimeError, "could not create %(typename)s miniobject");\n' \
+        '        return -1;\n' \
+        '    }\n' \
+        '%(aftercreate)s' \
+        '    return 0;\n' \
+        '}\n\n'
+    method_tmpl = \
+        'static PyObject *\n' \
+        '_wrap_%(cname)s(PyGstMiniObject *self%(extraparams)s)\n' \
+        '{\n' \
+        '%(varlist)s' \
+        '%(parseargs)s' \
+        '%(codebefore)s' \
+        '    %(setreturn)s%(cname)s(%(cast)s(self->obj)%(arglist)s);\n' \
+        '%(codeafter)s\n' \
+        '}\n\n'
+
+
+    def __init__(self, parser, objinfo, overrides, fp=FileOutput(sys.stdout)):
+        Wrapper.__init__(self, parser, objinfo, overrides, fp)
+        if self.objinfo:
+            self.castmacro = string.replace(self.objinfo.typecode,
+                                            '_TYPE_', '_', 1)
+
+    def get_initial_class_substdict(self):
+        return { 'tp_basicsize'      : 'PyGstMiniObject',
+                 'tp_weaklistoffset' : 'offsetof(PyGstMiniObject, weakreflist)',
+                 'tp_dictoffset'     : 'offsetof(PyGstMiniObject, inst_dict)' }
+    
+    def get_field_accessor(self, fieldname):
+        castmacro = string.replace(self.objinfo.typecode, '_TYPE_', '_', 1)
+        return '%s(pygstminiobject_get(self))->%s' % (castmacro, fieldname)
+
+    def get_initial_constructor_substdict(self, constructor):
+        substdict = Wrapper.get_initial_constructor_substdict(self, constructor)
+        if not constructor.caller_owns_return:
+            substdict['aftercreate'] = "    g_object_ref(self->obj);\n"
+        else:
+            substdict['aftercreate'] = ''
+        return substdict
+
+    def get_initial_method_substdict(self, method):
+        substdict = Wrapper.get_initial_method_substdict(self, method)
+        substdict['cast'] = string.replace(self.objinfo.typecode, '_TYPE_', '_', 1)
+        return substdict
+    
+
 class GInterfaceWrapper(GObjectWrapper):
     def get_initial_class_substdict(self):
         return { 'tp_basicsize'      : 'PyObject',
@@ -663,6 +722,8 @@ def write_type_declarations(parser, fp):
         fp.write('PyTypeObject Py' + obj.c_name + '_Type;\n')
     for obj in parser.objects:
         fp.write('PyTypeObject Py' + obj.c_name + '_Type;\n')
+    for obj in parser.miniobjects:
+        fp.write('PyTypeObject Py' + obj.c_name + '_Type;\n')
     for interface in parser.interfaces:
         fp.write('PyTypeObject Py' + interface.c_name + '_Type;\n')
     fp.write('\n')
@@ -671,6 +732,7 @@ def write_classes(parser, overrides, fp):
     for klass, items in ((GBoxedWrapper, parser.boxes),
                          (GPointerWrapper, parser.pointers),
                          (GObjectWrapper, parser.objects),
+                         (GstMiniObjectWrapper, parser.miniobjects),
                          (GInterfaceWrapper, parser.interfaces)):
         for item in items:
             instance = klass(parser, item, overrides, fp)
@@ -763,6 +825,24 @@ def write_registers(parser, fp):
             fp.write('    pygobject_register_class(d, "' + obj.c_name +
                      '", ' + obj.typecode + ', &Py' + obj.c_name +
                      '_Type, NULL);\n')
+    #TODO: register mini-objects
+    miniobjects = parser.miniobjects[:]
+    for obj in miniobjects:
+        bases = []
+        if obj.parent != None:
+            bases.append(obj.parent)
+        bases = bases + obj.implements
+        if bases:
+            fp.write('    pygstminiobject_register_class(d, "' + obj.c_name +
+                     '", ' + obj.typecode + ', &Py' + obj.c_name +
+                     '_Type, Py_BuildValue("(' + 'O' * len(bases) + ')", ' +
+                     string.join(map(lambda s: '&Py'+s+'_Type', bases), ', ') +
+                     '));\n')
+        else:
+            fp.write('    pygstminiobject_register_class(d, "' + obj.c_name +
+                     '", ' + obj.typecode + ', &Py' + obj.c_name +
+                     '_Type, NULL);\n')
+       
     fp.write('}\n')
 
 def write_source(parser, overrides, prefix, fp=FileOutput(sys.stdout)):
@@ -785,6 +865,8 @@ def register_types(parser):
         argtypes.matcher.register_pointer(pointer.c_name, pointer.typecode)
     for obj in parser.objects:
         argtypes.matcher.register_object(obj.c_name, obj.parent, obj.typecode)
+    for obj in parser.miniobjects:
+        argtypes.matcher.register_miniobject(obj.c_name, obj.parent, obj.typecode)
     for obj in parser.interfaces:
         argtypes.matcher.register_object(obj.c_name, None, obj.typecode)
     for enum in parser.enums:

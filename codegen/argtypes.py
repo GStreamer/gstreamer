@@ -423,6 +423,71 @@ class ObjectArg(ArgType):
             info.codeafter.append('    /* pygobject_new handles NULL checking */\n' +
                                   '    return pygobject_new((GObject *)ret);')
 
+class MiniObjectArg(ArgType):
+    # should change these checks to more typesafe versions that check
+    # a little further down in the class heirachy.
+    nulldflt = ('    if ((PyObject *)py_%(name)s == Py_None)\n'
+                '        %(name)s = NULL;\n'
+                '    else if (py_%(name)s) && pygstminiobject_check(py_%(name)s, &Py%(type)s_Type))\n'
+                '        %(name)s = %(cast)s(py_%(name)s->obj);\n'
+                '    else if (py_%(name)s) {\n'
+                '        PyErr_SetString(PyExc_TypeError, "%(name)s should be a %(type)s or None");\n'
+                '        return NULL;\n'
+                '    }\n')
+    null = ('    if (py_%(name)s && pygstminiobject_check(py_%(name)s, &Py%(type)s_Type))\n'
+            '        %(name)s = %(cast)s(py_%(name)s->obj);\n'
+            '    else if ((PyObject *)py_%(name)s != Py_None) {\n'
+            '        PyErr_SetString(PyExc_TypeError, "%(name)s should be a %(type)s or None");\n'
+            '        return NULL;\n'
+            '    }\n')
+    dflt = '    if (py_%(name)s)\n' \
+           '        %(name)s = %(cast)s(py_%(name)s->obj);\n'
+    def __init__(self, objname, parent, typecode):
+	self.objname = objname
+	self.cast = string.replace(typecode, '_TYPE_', '_', 1)
+        self.parent = parent
+    def write_param(self, ptype, pname, pdflt, pnull, info):
+	if pnull:
+	    if pdflt:
+		info.varlist.add(self.objname, '*' + pname + ' = ' + pdflt)
+		info.varlist.add('PyGstMiniObject', '*py_' + pname + ' = NULL')
+		info.codebefore.append(self.nulldflt % {'name':pname,
+                                                        'cast':self.cast,
+                                                        'type':self.objname}) 
+	    else:
+		info.varlist.add(self.objname, '*' + pname + ' = NULL')
+		info.varlist.add('PyGstMiniObject', '*py_' + pname)
+		info.codebefore.append(self.null % {'name':pname,
+                                                    'cast':self.cast,
+                                                    'type':self.objname}) 
+            info.arglist.append(pname)
+            info.add_parselist('O', ['&py_' + pname], [pname])
+	else:
+	    if pdflt:
+		info.varlist.add(self.objname, '*' + pname + ' = ' + pdflt)
+		info.varlist.add('PyGstMiniObject', '*py_' + pname + ' = NULL')
+		info.codebefore.append(self.dflt % {'name':pname,
+                                                    'cast':self.cast}) 
+		info.arglist.append(pname)
+                info.add_parselist('O', ['&Py%s_Type' % self.objname,
+                                         '&py_' + pname], [pname])
+	    else:
+		info.varlist.add('PyGstMiniObject', '*' + pname)
+		info.arglist.append('%s(%s->obj)' % (self.cast, pname))
+                info.add_parselist('O!', ['&Py%s_Type' % self.objname,
+                                          '&' + pname], [pname])
+    def write_return(self, ptype, ownsreturn, info):
+        if ptype[-1] == '*': ptype = ptype[:-1]
+        info.varlist.add(ptype, '*ret')
+        if ownsreturn:
+            info.varlist.add('PyObject', '*py_ret')
+            info.codeafter.append('    py_ret = pygstminiobject_new((GstMiniObject *)ret);\n'
+                                  '    gst_mini_object_unref(ret);\n'
+                                  '    return py_ret;')
+        else:
+            info.codeafter.append('    /* pygobject_new handles NULL checking */\n' +
+                                  '    return pygstminiobject_new((GstMiniObject *)ret);')
+
 class BoxedArg(ArgType):
     # haven't done support for default args.  Is it needed?
     check = ('    if (pyg_boxed_check(py_%(name)s, %(typecode)s))\n'
@@ -715,6 +780,9 @@ class ArgMatcher:
             # hack to handle GdkBitmap synonym.
             self.register('GdkBitmap', oa)
             self.register('GdkBitmap*', oa)
+    def register_miniobject(self, ptype, parent, typecode):
+        oa = MiniObjectArg(ptype, parent, typecode)
+        self.register(ptype+'*', oa)
     def register_boxed(self, ptype, typecode):
         if self.argtypes.has_key(ptype): return
         arg = BoxedArg(ptype, typecode)
@@ -841,5 +909,6 @@ matcher.register('PyObject*', PyObjectArg())
 matcher.register('GdkNativeWindow', ULongArg())
 
 matcher.register_object('GObject', None, 'G_TYPE_OBJECT')
+matcher.register_miniobject('GstMiniObject', None, 'GST_TYPE_MINI_OBJECT')
 
 del arg

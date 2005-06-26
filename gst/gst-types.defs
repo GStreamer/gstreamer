@@ -146,34 +146,28 @@
 ;; MiniObject types
 ;;
 
-(define-boxed MiniObject
-  (in-module "Gst")
-  (c-name "GstMiniObject")
-  (gtype-id "GST_TYPE_MINI_OBJECT")
-)
-
-(define-object Buffer
+(define-miniobject Buffer
   (in-module "Gst")
   (parent "GstMiniObject")
   (c-name "GstBuffer")
   (gtype-id "GST_TYPE_BUFFER")
 )
 
-(define-object Event
+(define-miniobject Event
   (in-module "Gst")
   (parent "GstMiniObject")
   (c-name "GstEvent")
   (gtype-id "GST_TYPE_EVENT")
 )
 
-(define-object Message
+(define-miniobject Message
   (in-module "Gst")
   (parent "GstMiniObject")
   (c-name "GstMessage")
   (gtype-id "GST_TYPE_MESSAGE")
 )
 
-(define-object Query
+(define-miniobject Query
   (in-module "Gst")
   (parent "GstMiniObject")
   (c-name "GstQuery")

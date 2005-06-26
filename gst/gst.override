@@ -41,6 +41,7 @@ headers
 #include <gst/gstprobe.h>
 
 #include "pygstvalue.h"
+#include "pygstminiobject.h"
 
 /* These headers have been included directly to get around multiple 
  * GetAttrString calls */

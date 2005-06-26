@@ -19,6 +19,7 @@ class DefsParser(IncludeParser):
     def __init__(self, arg, defines={}):
 	IncludeParser.__init__(self, arg)
 	self.objects = []
+        self.miniobjects = []
         self.interfaces = []
 	self.enums = []      # enums and flags
         self.boxes = []      # boxed types
@@ -32,6 +33,11 @@ class DefsParser(IncludeParser):
 	odef = apply(ObjectDef, args)
 	self.objects.append(odef)
 	self.c_name[odef.c_name] = odef
+    # TODO: define_mini_object
+    def define_miniobject(self, *args):
+        odef = apply(MiniObjectDef, args)
+        self.miniobjects.append(odef)
+        self.c_name[odef.c_name] = odef
     def define_interface(self, *args):
         idef = apply(InterfaceDef, args)
         self.interfaces.append(idef)
@@ -78,6 +84,9 @@ class DefsParser(IncludeParser):
     def write_defs(self, fp=sys.stdout):
 	for obj in self.objects:
 	    obj.write_defs(fp)
+        # TODO: Add miniobject
+        for obj in self.miniobjects:
+            obj.write_defs(fp)
 	for enum in self.enums:
 	    enum.write_defs(fp)
         for boxed in self.boxes:

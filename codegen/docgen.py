@@ -37,6 +37,8 @@ def build_object_tree(parser):
         parent_node.add_child(node)
         nodes[node.name] = node
 
+    # TODO: Add mini-object
+
     if parser.interfaces:
         interfaces = Node('gobject.GInterface')
         root.add_child(interfaces)

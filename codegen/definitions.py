@@ -63,6 +63,57 @@ class ObjectDef(Definition):
             fp.write('  )\n')
 	fp.write(')\n\n')
 
+class MiniObjectDef(Definition):
+    def __init__(self, name, *args):
+	self.name = name
+	self.module = None
+	self.parent = None
+	self.c_name = None
+        self.typecode = None
+	self.fields = []
+        self.implements = []
+	for arg in args:
+	    if type(arg) != type(()) or len(arg) < 2:
+		continue
+	    if arg[0] == 'in-module':
+		self.module = arg[1]
+	    elif arg[0] == 'parent':
+                self.parent = arg[1]
+	    elif arg[0] == 'c-name':
+		self.c_name = arg[1]
+	    elif arg[0] == 'gtype-id':
+		self.typecode = arg[1]
+	    elif arg[0] == 'fields':
+                for parg in arg[1:]:
+                    self.fields.append((parg[0], parg[1]))
+            elif arg[0] == 'implements':
+                self.implements.append(arg[1])
+    def merge(self, old):
+	# currently the .h parser doesn't try to work out what fields of
+	# an object structure should be public, so we just copy the list
+	# from the old version ...
+	self.fields = old.fields
+        self.implements = old.implements
+    def write_defs(self, fp=sys.stdout):
+	fp.write('(define-object ' + self.name + '\n')
+	if self.module:
+	    fp.write('  (in-module "' + self.module + '")\n')
+	if self.parent != (None, None):	
+	    fp.write('  (parent "' + self.parent + '")\n')
+        for interface in self.implements:
+            fp.write('  (implements "' + interface + '")\n')
+	if self.c_name:
+	    fp.write('  (c-name "' + self.c_name + '")\n')
+	if self.typecode:
+	    fp.write('  (gtype-id "' + self.typecode + '")\n')
+        if self.fields:
+            fp.write('  (fields\n')
+            for (ftype, fname) in self.fields:
+                fp.write('    \'("' + ftype + '" "' + fname + '")\n')
+            fp.write('  )\n')
+	fp.write(')\n\n')
+
+
 class InterfaceDef(Definition):
     def __init__(self, name, *args):
 	self.name = name

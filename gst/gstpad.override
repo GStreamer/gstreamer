@@ -411,7 +411,7 @@ _wrap_gst_pad_link(PyGObject *self, PyObject *args, PyObject *kwargs)
                                      &PyGstPad_Type, &sinkpad))
         return NULL;
     ret = gst_pad_link(GST_PAD(self->obj), GST_PAD(sinkpad->obj));
-    if (!ret) {
+    if (ret) {
         PyErr_SetString(PyGstExc_LinkError, "link failed");
         return NULL;
     }
@@ -442,7 +442,7 @@ _wrap_gst_pad_link_filtered(PyGObject *self, PyObject *args, PyObject *kwargs)
     ret = gst_pad_link_filtered(GST_PAD(self->obj),
                                 GST_PAD(sinkpad->obj),
                                 filtercaps);
-    if (!ret) {
+    if (ret) {
         PyErr_SetString(PyGstExc_LinkError, "link failed");
         return NULL;
     }
