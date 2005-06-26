@@ -29,6 +29,7 @@ STATE_ENUM = 4
 STATE_FLAGS = 5
 STATE_METHOD = 6
 STATE_FUNCTION = 7
+STATE_MINIOBJECT = 8
 
 def convert(infp=sys.stdin, outfp=sys.stdout):
     state = STATE_START
@@ -40,6 +41,10 @@ def convert(infp=sys.stdin, outfp=sys.stdout):
 	    state = STATE_OBJECT
 	    seen_params = 0
 	    outfp.write('(define-object ' + line[8:])
+        elif line[:13] == '(mini-object ':
+            state = STATE_MINI_OBJECT
+            seen_params = 0
+            outfp.write('(define mini-object ' + line[13:])
 	elif line[:11] == '(interface ':
 	    state = STATE_INTERFACE
 	    seen_params = 0
