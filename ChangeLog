@@ -1,3 +1,8 @@
+2005-06-27  Andy Wingo  <wingo@pobox.com>
+
+	* docs/design/part-activation.txt: Notes on how activation should
+	work -- not quite implemented yet.
+
 2005-06-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstghostpad.c: (gst_proxy_pad_do_chain):
