@@ -310,6 +310,7 @@ GST_PLUGINS_ALL="\
 		effectv \
 		goom \
 		law \
+		realmedia \
 		rtp	\
 		rtsp	\
 		smpte	\
@@ -494,6 +495,7 @@ gst/alpha/Makefile
 gst/effectv/Makefile
 gst/goom/Makefile
 gst/law/Makefile
+gst/realmedia/Makefile
 gst/rtp/Makefile
 gst/rtsp/Makefile
 gst/smpte/Makefile

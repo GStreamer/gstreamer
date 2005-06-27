@@ -22,7 +22,7 @@
 #define __GST_RMDEMUX_H__
 
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
+#include <gst/base/gstadapter.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -57,7 +57,7 @@ struct _GstRMDemux {
   int n_video_streams;
   int n_audio_streams;
 
-  GstByteStream *bs;
+  GstAdapter *adapter;
 
   GNode *moov_node;
   GNode *moov_node_compressed;
@@ -75,6 +75,9 @@ struct _GstRMDemux {
 
   guint64 length;
 
+  guint32 object_id;
+  guint32 size;
+  guint16 object_version;
 };
 
 struct _GstRMDemuxClass {
@@ -92,7 +95,7 @@ struct _GstRMDemuxClass {
 #define GST_RM_AUD_28_8 GST_MAKE_FOURCC('2','8','_','8') // 28.8 Audio Codec
 #define GST_RM_AUD_COOK GST_MAKE_FOURCC('c','o','o','k') // Cooker G2 Audio Codec
 #define GST_RM_AUD_DNET GST_MAKE_FOURCC('d','n','e','t') // DolbyNet Audio Codec (low bitrate Dolby AC3)
-#define GST_RM_AUD_SIPR GST_MAKE_FOURCC('s','i','p','r') // Sipro/ACELP-NET Voice Codec
+#define GST_RM_AUD_SIPR GST_MAKE_FOURCC('s','i','p','r') // Sipro/ACELP.NET Voice Codec
 #define GST_RM_AUD_RAAC GST_MAKE_FOURCC('r','a','a','c') // LE-AAC Audio Codec
 #define GST_RM_AUD_RACP GST_MAKE_FOURCC('r','a','c','p') // HE-AAC Audio Codec
 #define GST_RM_AUD_RALF GST_MAKE_FOURCC('r','a','l','f') // RealAudio Lossless
@@ -100,29 +103,6 @@ struct _GstRMDemuxClass {
 
 #define GST_RM_AUD_xRA4 GST_MAKE_FOURCC('.','r','a','4') // Not a real audio codec
 #define GST_RM_AUD_xRA5 GST_MAKE_FOURCC('.','r','a','5') // Not a real audio codec
-
-/*
-
-enum GstRMVideoCodecs {
-  GST_RM_VDO_RV10,
-  GST_RM_VDO_RV20,
-  GST_RM_VDO_RV30,
-  GST_RM_VDO_RV40
-};
-
-enum GstRMAudioCodecs {
-  GST_RM_AUD_14_4,
-  GST_RM_AUD_28_8,
-  GST_RM_AUD_COOK,
-  GST_RM_AUD_DNET,
-  GST_RM_AUD_SIPR,
-  GST_RM_AUD_RAAC,
-  GST_RM_AUD_RACP,
-  GST_RM_AUD_RALF,
-  GST_RM_AUD_ATRC
-};
-
-*/
 
 #ifdef __cplusplus
 }
