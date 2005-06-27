@@ -1,3 +1,8 @@
+2005-06-27  Owen Fraser-Green  <owen@discobabe.net>
+
+	* gst/realmedia/rmdemux.c: Rewrote to use gstadapter. Also parses
+	audio and video header packets for known properties.
+
 2005-06-23  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtsp_proto_get_type),
