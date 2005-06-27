@@ -454,7 +454,7 @@ gboolean
 gst_pad_set_active (GstPad * pad, gboolean active)
 {
   GstActivateMode old;
-  gboolean ret;
+  gboolean ret = FALSE;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
