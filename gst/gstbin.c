@@ -841,36 +841,58 @@ gst_bin_get_state (GstElement * element, GstElementState * state,
   GList *children;
   guint32 children_cookie;
   gboolean zero_timeout;
+  gboolean have_no_preroll;
 
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "getting state");
 
   zero_timeout = timeout != NULL && timeout->tv_sec == 0
       && timeout->tv_usec == 0;
 
+  /* lock bin, no element can be added or removed between going into
+   * the quick scan and the blocking wait. */
+  GST_LOCK (bin);
+
+restart:
+  have_no_preroll = FALSE;
+
   /* if we have a non zero timeout we must make sure not to block
    * on the sinks when we have NO_PREROLL elements. This is why we do
    * a quick check if there are still NO_PREROLL elements. We also
    * catch the error elements this way. */
-  GST_STATE_LOCK (bin);
   if (!zero_timeout) {
-    GST_LOCK (bin);
     GTimeVal tv;
-    gboolean have_no_preroll = FALSE;
     gboolean have_async = FALSE;
 
     GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "checking for NO_PREROLL");
     /* use 0 timeout so we don't block on the sinks */
     GST_TIME_TO_TIMEVAL (0, tv);
     children = bin->children;
+    children_cookie = bin->children_cookie;
     while (children) {
       GstElement *child = GST_ELEMENT_CAST (children->data);
 
+      gst_object_ref (GST_OBJECT_CAST (child));
+      /* now we release the lock to enter a non blocking wait. We 
+       * release the lock anyway since we can. */
+      GST_UNLOCK (bin);
+
       ret = gst_element_get_state (child, NULL, NULL, &tv);
+
+      gst_object_unref (GST_OBJECT_CAST (child));
+
+      /* now grab the lock to iterate to the next child */
+      GST_LOCK (bin);
+      if (G_UNLIKELY (children_cookie != bin->children_cookie)) {
+        /* child added/removed during state change, restart. We need
+         * to restart with the quick check as a no-preroll element could
+         * have been added here and we don't want to block on sinks then.*/
+        goto restart;
+      }
+
       switch (ret) {
           /* report FAILURE or NO_PREROLL immediatly */
         case GST_STATE_FAILURE:
-          GST_UNLOCK (bin);
-          goto report;
+          goto done;
         case GST_STATE_NO_PREROLL:
           /* we have to continue scanning as there might be
            * ERRORS too */
@@ -884,47 +906,50 @@ gst_bin_get_state (GstElement * element, GstElementState * state,
       }
       children = g_list_next (children);
     }
-    GST_UNLOCK (bin);
     /* if we get here, we have no FAILURES, check for any NO_PREROLL
      * elements then. */
-    if (have_no_preroll)
-      goto report;
+    if (have_no_preroll) {
+      ret = GST_STATE_NO_PREROLL;
+      goto done;
+    }
 
     /* if we get here, no NO_PREROLL elements are in the pipeline */
     GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "no NO_PREROLL elements");
-    GST_STATE_NO_PREROLL (element) = FALSE;
 
     /* if no ASYNC elements exist we don't even have to poll with a
      * timeout again */
-    if (!have_async)
-      goto report;
+    if (!have_async) {
+      ret = GST_STATE_SUCCESS;
+      goto done;
+    }
   }
-  /* we have to release the state lock as we might block when querying
-   * the children, holding the lock for too long for no reason. */
-  GST_STATE_UNLOCK (bin);
 
   /* next we poll all children for their state to see if one of them
-   * is still busy with its state change. */
-  GST_LOCK (bin);
-restart:
+   * is still busy with its state change. We did not release the bin lock
+   * yet so the elements are the same as the ones from the quick scan. */
   children = bin->children;
   children_cookie = bin->children_cookie;
   while (children) {
     GstElement *child = GST_ELEMENT_CAST (children->data);
 
     gst_object_ref (GST_OBJECT_CAST (child));
+    /* now we release the lock to enter the potentialy blocking wait */
     GST_UNLOCK (bin);
 
-    /* ret is ASYNC if some child is still performing the state change */
+    /* ret is ASYNC if some child is still performing the state change
+     * ater the timeout. */
     ret = gst_element_get_state (child, NULL, NULL, timeout);
 
     gst_object_unref (GST_OBJECT_CAST (child));
 
     /* now grab the lock to iterate to the next child */
     GST_LOCK (bin);
-    if (G_UNLIKELY (children_cookie != bin->children_cookie))
-      /* child added/removed during state change, restart */
+    if (G_UNLIKELY (children_cookie != bin->children_cookie)) {
+      /* child added/removed during state change, restart. We need
+       * to restart with the quick check as a no-preroll element could
+       * have been added here and we don't want to block on sinks then.*/
       goto restart;
+    }
 
     switch (ret) {
       case GST_STATE_SUCCESS:
@@ -945,14 +970,17 @@ restart:
     }
     children = g_list_next (children);
   }
-  /* if we got here, all elements can to preroll */
-  GST_STATE_NO_PREROLL (element) = FALSE;
+  /* if we got here, all elements can do preroll */
+  have_no_preroll = FALSE;
+
 done:
   GST_UNLOCK (bin);
 
-  /* now we can take the state lock */
+  /* now we can take the state lock, it is possible that new elements
+   * are added now and we still report the old state. No problem though as
+   * the return is still consistent, the effect is as if the element was
+   * added after this function completed. */
   GST_STATE_LOCK (bin);
-report:
   switch (ret) {
     case GST_STATE_SUCCESS:
       /* we can commit the state */
@@ -973,6 +1001,8 @@ report:
   if (pending)
     *pending = GST_STATE_PENDING (element);
 
+  GST_STATE_NO_PREROLL (element) = have_no_preroll;
+
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
       "state current: %s, pending: %s, error: %d, no_preroll: %d, result: %d",
       gst_element_state_get_name (GST_STATE (element)),
@@ -988,6 +1018,33 @@ static void
 append_child (gpointer child, GQueue * queue)
 {
   g_queue_push_tail (queue, child);
+}
+
+/**
+ * gst_bin_iterate_state_order:
+ * @bin: #Gstbin to iterate on
+ *
+ * Get an iterator for the elements in this bin in the order
+ * in which a state change should be performed on them. This 
+ * means that first the sinks and then the other elements will
+ * be returned.
+ * Each element will have its refcount increased, so unref
+ * after use.
+ *
+ * MT safe.
+ *
+ * Returns: a #GstIterator of #GstElements. gst_iterator_free after use.
+ */
+GstIterator *
+gst_bin_iterate_state_order (GstBin * bin)
+{
+  GstIterator *result;
+
+  g_return_val_if_fail (GST_IS_BIN (bin), NULL);
+
+  result = NULL;
+
+  return result;
 }
 
 /* this function is called with the STATE_LOCK held. It works
@@ -1017,7 +1074,7 @@ gst_bin_change_state (GstElement * element)
   guint32 children_cookie;
   GQueue *elem_queue;           /* list of elements waiting for a state change */
   GQueue *semi_queue;           /* list of elements with no connected srcpads */
-  GQueue *temp;                 /* temp queue of leftovers */
+  GQueue *temp;                 /* queue of leftovers */
 
   bin = GST_BIN (element);
 
@@ -1033,7 +1090,7 @@ gst_bin_change_state (GstElement * element)
   if (pending == GST_STATE_VOID_PENDING)
     return GST_STATE_SUCCESS;
 
-  /* all elements added to this queue should have their refcount
+  /* all elements added to these queues should have their refcount
    * incremented */
   elem_queue = g_queue_new ();
   semi_queue = g_queue_new ();

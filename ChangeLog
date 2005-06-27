@@ -1,3 +1,11 @@
+2005-06-27  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (gst_bin_get_state), (gst_bin_iterate_state_order),
+	(gst_bin_change_state):
+	Cleanup the get_state() function a little, make sure it
+	iterates the same set of elements.
+	Added stub iterate_state_order().
+
 2005-06-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/gstreamer-docs.sgml:
