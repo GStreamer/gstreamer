@@ -81,7 +81,7 @@ GType gst_mini_object_get_type (void);
 GstMiniObject * gst_mini_object_new (GType type);
 GstMiniObject * gst_mini_object_copy (const GstMiniObject *mini_object);
 gboolean gst_mini_object_is_writable (const GstMiniObject *mini_object);
-GstMiniObject * gst_mini_object_make_writable (const GstMiniObject *mini_object);
+GstMiniObject * gst_mini_object_make_writable (GstMiniObject *mini_object);
 
 GstMiniObject * gst_mini_object_ref (GstMiniObject *mini_object);
 void gst_mini_object_unref (GstMiniObject *mini_object);

@@ -29,16 +29,12 @@
 #include "gsttag.h"
 #include "gstutils.h"
 
-#ifndef GST_DISABLE_TRACE
-/* #define GST_WITH_ALLOC_TRACE */
-#include "gsttrace.h"
-static GstAllocTrace *_message_trace;
-#endif
 
 static void gst_message_init (GTypeInstance * instance, gpointer g_class);
 static void gst_message_class_init (gpointer g_class, gpointer class_data);
 static void gst_message_finalize (GstMessage * message);
 static GstMessage *_gst_message_copy (GstMessage * message);
+
 
 void
 _gst_message_initialize (void)
@@ -54,10 +50,6 @@ _gst_message_initialize (void)
    * see http://bugzilla.gnome.org/show_bug.cgi?id=304551 */
   ptr = g_type_class_ref (GST_TYPE_MESSAGE);
   g_type_class_unref (ptr);
-
-#ifndef GST_DISABLE_TRACE
-  _message_trace = gst_alloc_trace_register (GST_MESSAGE_TRACE_NAME);
-#endif
 }
 
 GType

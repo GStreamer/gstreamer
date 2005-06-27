@@ -434,6 +434,7 @@ gst_bus_source_finalize (GSource * source)
   GstBusSource *bsource = (GstBusSource *) source;
 
   gst_object_unref (GST_OBJECT_CAST (bsource->bus));
+  bsource->bus = NULL;
 }
 
 static GSourceFuncs gst_bus_source_funcs = {

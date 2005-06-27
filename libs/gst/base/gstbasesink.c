@@ -100,7 +100,8 @@ static GstElementStateReturn gst_basesink_change_state (GstElement * element);
 static GstFlowReturn gst_basesink_chain (GstPad * pad, GstBuffer * buffer);
 static void gst_basesink_loop (GstPad * pad);
 static GstFlowReturn gst_basesink_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_basesink_activate (GstPad * pad, GstActivateMode mode);
+static gboolean gst_basesink_activate_push (GstPad * pad, gboolean active);
+static gboolean gst_basesink_activate_pull (GstPad * pad, gboolean active);
 static gboolean gst_basesink_event (GstPad * pad, GstEvent * event);
 static inline GstFlowReturn gst_basesink_handle_buffer (GstBaseSink * basesink,
     GstBuffer * buf);
@@ -256,8 +257,10 @@ gst_basesink_finalize (GObject * object)
 static void
 gst_basesink_set_pad_functions (GstBaseSink * this, GstPad * pad)
 {
-  gst_pad_set_activate_function (pad,
-      GST_DEBUG_FUNCPTR (gst_basesink_activate));
+  gst_pad_set_activatepush_function (pad,
+      GST_DEBUG_FUNCPTR (gst_basesink_activate_push));
+  gst_pad_set_activatepull_function (pad,
+      GST_DEBUG_FUNCPTR (gst_basesink_activate_pull));
   gst_pad_set_event_function (pad, GST_DEBUG_FUNCPTR (gst_basesink_event));
 
   if (this->has_chain)
@@ -824,51 +827,72 @@ paused:
 }
 
 static gboolean
-gst_basesink_activate (GstPad * pad, GstActivateMode mode)
+gst_basesink_deactivate (GstBaseSink * basesink, GstPad * pad)
+{
+  gboolean result = FALSE;
+  GstBaseSinkClass *bclass;
+
+  bclass = GST_BASESINK_GET_CLASS (basesink);
+
+  /* step 1, unblock clock sync (if any) or any other blocking thing */
+  GST_PREROLL_LOCK (pad);
+  GST_LOCK (basesink);
+  if (basesink->clock_id) {
+    gst_clock_id_unschedule (basesink->clock_id);
+  }
+  GST_UNLOCK (basesink);
+
+  /* unlock any subclasses */
+  if (bclass->unlock)
+    bclass->unlock (basesink);
+
+  /* flush out the data thread if it's locked in finish_preroll */
+  gst_basesink_preroll_queue_flush (basesink);
+  basesink->need_preroll = FALSE;
+  GST_PREROLL_SIGNAL (pad);
+  GST_PREROLL_UNLOCK (pad);
+
+  /* step 2, make sure streaming finishes */
+  result = gst_pad_stop_task (pad);
+
+  return result;
+}
+
+static gboolean
+gst_basesink_activate_push (GstPad * pad, gboolean active)
 {
   gboolean result = FALSE;
   GstBaseSink *basesink;
-  GstBaseSinkClass *bclass;
 
   basesink = GST_BASESINK (GST_OBJECT_PARENT (pad));
-  bclass = GST_BASESINK_GET_CLASS (basesink);
 
-  switch (mode) {
-    case GST_ACTIVATE_PUSH:
-      g_return_val_if_fail (basesink->has_chain, FALSE);
-      result = TRUE;
-      break;
-    case GST_ACTIVATE_PULL:
-      /* if we have a scheduler we can start the task */
-      g_return_val_if_fail (basesink->has_loop, FALSE);
-      gst_pad_peer_set_active (pad, mode);
-      result =
-          gst_pad_start_task (pad, (GstTaskFunction) gst_basesink_loop, pad);
-      break;
-    case GST_ACTIVATE_NONE:
-      /* step 1, unblock clock sync (if any) or any other blocking thing */
-      GST_PREROLL_LOCK (pad);
-      GST_LOCK (basesink);
-      if (basesink->clock_id) {
-        gst_clock_id_unschedule (basesink->clock_id);
-      }
-      GST_UNLOCK (basesink);
-
-      /* unlock any subclasses */
-      if (bclass->unlock)
-        bclass->unlock (basesink);
-
-      /* flush out the data thread if it's locked in finish_preroll */
-      gst_basesink_preroll_queue_flush (basesink);
-      basesink->need_preroll = FALSE;
-      GST_PREROLL_SIGNAL (pad);
-      GST_PREROLL_UNLOCK (pad);
-
-      /* step 2, make sure streaming finishes */
-      result = gst_pad_stop_task (pad);
-      break;
+  if (active) {
+    g_return_val_if_fail (basesink->has_chain, FALSE);
+    result = TRUE;
+  } else {
+    result = gst_basesink_deactivate (basesink, pad);
   }
-  basesink->pad_mode = mode;
+  basesink->pad_mode = GST_ACTIVATE_PUSH;
+
+  return result;
+}
+
+/* this won't get called until we implement an activate function */
+static gboolean
+gst_basesink_activate_pull (GstPad * pad, gboolean active)
+{
+  gboolean result = FALSE;
+  GstBaseSink *basesink;
+
+  basesink = GST_BASESINK (GST_OBJECT_PARENT (pad));
+
+  if (active) {
+    /* if we have a scheduler we can start the task */
+    g_return_val_if_fail (basesink->has_loop, FALSE);
+    result = gst_pad_start_task (pad, (GstTaskFunction) gst_basesink_loop, pad);
+  } else {
+    result = gst_basesink_deactivate (basesink, pad);
+  }
 
   return result;
 }

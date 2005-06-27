@@ -99,8 +99,68 @@ START_TEST (test_2_elements)
      ASSERT_CRITICAL (run_pipeline (setup_pipeline (s), s,
      GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_UNKNOWN)); */
 }
-END_TEST Suite *
-simple_launch_lines_suite (void)
+END_TEST static void
+got_handoff (GstElement * sink, GstBuffer * buf, GstPad * pad, gpointer unused)
+{
+  gst_element_post_message
+      (sink, gst_message_new_application (gst_structure_new ("foo", NULL)));
+}
+
+static void
+assert_live_count (GType type, gint live)
+{
+  GstAllocTrace *trace;
+  const gchar *name;
+
+  if (gst_alloc_trace_available ()) {
+    name = g_type_name (type);
+    g_assert (name);
+    trace = gst_alloc_trace_get (name);
+    if (trace) {
+      g_return_if_fail (trace->live == live);
+    }
+  } else {
+    g_print ("\nSkipping live count tests; recompile with traces to enable\n");
+  }
+}
+
+START_TEST (test_stop_from_app)
+{
+  GstElement *fakesrc, *fakesink, *pipeline;
+  GstBus *bus;
+  GstMessageType revent;
+
+  assert_live_count (GST_TYPE_BUFFER, 0);
+
+  fakesrc = gst_element_factory_make ("fakesrc", NULL);
+  fakesink = gst_element_factory_make ("fakesink", NULL);
+  pipeline = gst_element_factory_make ("pipeline", NULL);
+
+  g_return_if_fail (fakesrc && fakesink && pipeline);
+
+  gst_element_link (fakesrc, fakesink);
+  gst_bin_add_many (GST_BIN (pipeline), fakesrc, fakesink, NULL);
+
+  g_object_set (fakesink, "signal-handoffs", (gboolean) TRUE, NULL);
+  g_signal_connect (fakesink, "handoff", G_CALLBACK (got_handoff), NULL);
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  bus = gst_element_get_bus (pipeline);
+  g_assert (bus);
+
+  /* will time out after half a second */
+  revent = gst_bus_poll (bus, GST_MESSAGE_APPLICATION, GST_SECOND / 2);
+
+  g_return_if_fail (revent == GST_MESSAGE_APPLICATION);
+  gst_message_unref (gst_bus_pop (bus));
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (GST_OBJECT (pipeline));
+
+  assert_live_count (GST_TYPE_BUFFER, 0);
+}
+END_TEST Suite * simple_launch_lines_suite (void)
 {
   Suite *s = suite_create ("Pipelines");
   TCase *tc_chain = tcase_create ("linear");
@@ -110,6 +170,7 @@ simple_launch_lines_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_2_elements);
+  tcase_add_test (tc_chain, test_stop_from_app);
   return s;
 }
 

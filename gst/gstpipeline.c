@@ -125,7 +125,7 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
           G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PLAY_TIMEOUT,
       g_param_spec_uint64 ("play-timeout", "Play Timeout",
-          "Max timeout for going " "to PLAYING in nanoseconds", 0, G_MAXUINT64,
+          "Max timeout for going to PLAYING in nanoseconds", 0, G_MAXUINT64,
           DEFAULT_PLAY_TIMEOUT, G_PARAM_READWRITE));
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_pipeline_dispose);
@@ -153,19 +153,24 @@ gst_pipeline_init (GTypeInstance * instance, gpointer g_class)
     g_error ("Critical error: could not get scheduler \"%s\"\n"
         "Are you sure you have a registry ?\n"
         "Run gst-register as root if you haven't done so yet.", name);
+  } else {
+    gst_element_set_scheduler (GST_ELEMENT (pipeline), scheduler);
+    /* set_scheduler refs the bus via gst_object_replace, we drop our ref */
+    gst_object_unref ((GstObject *) scheduler);
   }
-  bus = g_object_new (gst_bus_get_type (), NULL);
-  gst_bus_set_sync_handler (bus,
-      (GstBusSyncHandler) pipeline_bus_handler, pipeline);
+
   pipeline->eosed = NULL;
   pipeline->delay = DEFAULT_DELAY;
   pipeline->play_timeout = DEFAULT_PLAY_TIMEOUT;
   /* we are our own manager */
   GST_ELEMENT_MANAGER (pipeline) = pipeline;
+
+  bus = g_object_new (gst_bus_get_type (), NULL);
+  gst_bus_set_sync_handler (bus,
+      (GstBusSyncHandler) pipeline_bus_handler, pipeline);
   gst_element_set_bus (GST_ELEMENT (pipeline), bus);
   /* set_bus refs the bus via gst_object_replace, we drop our ref */
   gst_object_unref ((GstObject *) bus);
-  gst_element_set_scheduler (GST_ELEMENT (pipeline), scheduler);
 }
 
 static void
@@ -175,6 +180,7 @@ gst_pipeline_dispose (GObject * object)
 
   gst_element_set_bus (GST_ELEMENT (pipeline), NULL);
   gst_scheduler_reset (GST_ELEMENT_SCHEDULER (object));
+  gst_element_set_scheduler (GST_ELEMENT (pipeline), NULL);
   gst_object_replace ((GstObject **) & pipeline->fixed_clock, NULL);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);

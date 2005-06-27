@@ -305,7 +305,9 @@ GstPad*			gst_element_get_static_pad	(GstElement *element, const gchar *name);
 GstPad*			gst_element_get_request_pad	(GstElement *element, const gchar *name);
 void			gst_element_release_request_pad	(GstElement *element, GstPad *pad);
 
-GstIterator *		gst_element_iterate_pads	(GstElement * element);
+GstIterator *		gst_element_iterate_pads 	(GstElement * element);
+GstIterator *		gst_element_iterate_src_pads 	(GstElement * element);
+GstIterator *		gst_element_iterate_sink_pads 	(GstElement * element);
 
 /* event/query/format stuff */
 gboolean		gst_element_send_event		(GstElement *element, GstEvent *event);

@@ -830,7 +830,7 @@ iterate_pad (GstIterator * it, GstPad * pad)
  *
  * Retrieves an iterattor of @element's pads. 
  *
- * Returns: the #GstIterator of #GstPad. unref each pad after usage.
+ * Returns: the #GstIterator of #GstPad. Unref each pad after use.
  *
  * MT safe.
  */
@@ -854,6 +854,56 @@ gst_element_iterate_pads (GstElement * element)
   return result;
 }
 
+static gint
+direction_filter (gconstpointer pad, gconstpointer direction)
+{
+  if (GST_PAD_DIRECTION (pad) == GPOINTER_TO_INT (direction)) {
+    /* pass the ref through */
+    return 0;
+  } else {
+    /* unref */
+    gst_object_unref (GST_OBJECT (pad));
+    return 1;
+  }
+}
+
+/**
+ * gst_element_iterate_src_pads:
+ * @element: a #GstElement.
+ *
+ * Retrieves an iterator of @element's source pads. 
+ *
+ * Returns: the #GstIterator of #GstPad. Unref each pad after use.
+ *
+ * MT safe.
+ */
+GstIterator *
+gst_element_iterate_src_pads (GstElement * element)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+
+  return gst_iterator_filter (gst_element_iterate_pads (element),
+      direction_filter, GINT_TO_POINTER (GST_PAD_SRC));
+}
+
+/**
+ * gst_element_iterate_sink_pads:
+ * @element: a #GstElement.
+ *
+ * Retrieves an iterator of @element's sink pads. 
+ *
+ * Returns: the #GstIterator of #GstPad. Unref each pad after use.
+ *
+ * MT safe.
+ */
+GstIterator *
+gst_element_iterate_sink_pads (GstElement * element)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+
+  return gst_iterator_filter (gst_element_iterate_pads (element),
+      direction_filter, GINT_TO_POINTER (GST_PAD_SINK));
+}
 
 /**
  * gst_element_class_add_pad_template:
@@ -1792,97 +1842,73 @@ invalid_return:
   }
 }
 
+/* gst_iterator_fold functions for pads_activate */
+
+static gboolean
+activate_pads (GstPad * pad, GValue * ret, gboolean * active)
+{
+  if (!gst_pad_set_active (pad, *active))
+    g_value_set_boolean (ret, FALSE);
+
+  gst_object_unref (GST_OBJECT (pad));
+  return TRUE;
+}
+
+/* returns false on error or early cutout of the fold, true otherwise */
+static gboolean
+iterator_fold_with_resync (GstIterator * iter, GstIteratorFoldFunction func,
+    GValue * ret, gpointer user_data)
+{
+  GstIteratorResult ires;
+  gboolean res = TRUE;
+
+  while (1) {
+    ires = gst_iterator_fold (iter, func, ret, user_data);
+
+    switch (ires) {
+      case GST_ITERATOR_RESYNC:
+        break;
+      case GST_ITERATOR_DONE:
+        res = TRUE;
+        goto done;
+      default:
+        res = FALSE;
+        goto done;
+    }
+  }
+
+done:
+  return res;
+}
+
 /* is called with STATE_LOCK
- *
- * This function activates the pads of a given element. 
- *
- * TODO: activate pads from src to sinks?
- *       move pad activate logic to GstPad because we also need this
- *       when pads are added to elements?
  */
 static gboolean
 gst_element_pads_activate (GstElement * element, gboolean active)
 {
-  GList *pads;
-  gboolean result;
-  guint32 cookie;
+  GValue ret = { 0, };
+  GstIterator *iter;
+  gboolean fold_ok;
 
-  GST_LOCK (element);
-restart:
-  result = TRUE;
-  pads = element->pads;
-  cookie = element->pads_cookie;
-  for (; pads && result; pads = g_list_next (pads)) {
-    GstPad *pad, *peer;
-    gboolean pad_loop, pad_get;
-    gboolean done = FALSE;
+  /* no need to unset this later, it's just a boolean */
+  g_value_init (&ret, G_TYPE_BOOLEAN);
+  g_value_set_boolean (&ret, TRUE);
 
-    pad = GST_PAD (pads->data);
-    gst_object_ref (GST_OBJECT (pad));
-    GST_UNLOCK (element);
+  iter = gst_element_iterate_src_pads (element);
+  fold_ok = iterator_fold_with_resync
+      (iter, (GstIteratorFoldFunction) activate_pads, &ret, &active);
+  gst_iterator_free (iter);
+  if (!fold_ok || !g_value_get_boolean (&ret))
+    return FALSE;
 
-    if (active) {
-      pad_get = GST_PAD_IS_SINK (pad) && gst_pad_check_pull_range (pad);
+  iter = gst_element_iterate_sink_pads (element);
+  fold_ok = iterator_fold_with_resync
+      (iter, (GstIteratorFoldFunction) activate_pads, &ret, &active);
+  gst_iterator_free (iter);
+  if (!fold_ok || !g_value_get_boolean (&ret))
+    return FALSE;
 
-      /* see if the pad has a loop function and grab
-       * the peer */
-      GST_LOCK (pad);
-      pad_loop = GST_PAD_LOOPFUNC (pad) != NULL;
-      peer = GST_PAD_PEER (pad);
-      if (peer)
-        gst_object_ref (GST_OBJECT_CAST (peer));
-      GST_UNLOCK (pad);
-
-      GST_DEBUG ("pad %s:%s: get: %d, loop: %d",
-          GST_DEBUG_PAD_NAME (pad), pad_get, pad_loop);
-
-      if (peer) {
-        gboolean peer_loop, peer_get;
-
-        /* see if the peer has a getrange function */
-        peer_get = GST_PAD_IS_SINK (peer)
-            && gst_pad_check_pull_range (GST_PAD_CAST (peer));
-        /* see if the peer has a loop function */
-        peer_loop = GST_PAD_LOOPFUNC (peer) != NULL;
-
-        GST_DEBUG ("peer %s:%s: get: %d, loop: %d",
-            GST_DEBUG_PAD_NAME (peer), peer_get, peer_loop);
-
-        /* If the pad is a sink with loop and the peer has a get function,
-         * we can activate the sinkpad,  FIXME, logic is reversed as
-         * check_pull_range() checks the peer of the given pad. */
-        if ((pad_get && pad_loop) || (peer_get && peer_loop)) {
-          GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-              "activating pad %s in pull mode", GST_OBJECT_NAME (pad));
-
-          result &= gst_pad_set_active (pad, GST_ACTIVATE_PULL);
-          done = TRUE;
-        }
-        gst_object_unref (GST_OBJECT_CAST (peer));
-      }
-
-      if (!done) {
-        /* all other conditions are just push based pads */
-        GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-            "activating pad %s in push mode", GST_OBJECT_NAME (pad));
-
-        result &= gst_pad_set_active (pad, GST_ACTIVATE_PUSH);
-      }
-    } else {
-      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-          "deactivating pad %s", GST_OBJECT_NAME (pad));
-
-      result &= gst_pad_set_active (pad, GST_ACTIVATE_NONE);
-    }
-
-    gst_object_unref (GST_OBJECT_CAST (pad));
-    GST_LOCK (element);
-    if (cookie != element->pads_cookie)
-      goto restart;
-  }
-  GST_UNLOCK (element);
-
-  return result;
+  return TRUE;
 }
 
 /* is called with STATE_LOCK */

@@ -523,7 +523,7 @@ main (int argc, char *argv[])
     if (!gst_alloc_trace_available ()) {
       g_warning ("Trace not available (recompile with trace enabled).");
     }
-    gst_alloc_trace_print_all ();
+    gst_alloc_trace_print_live ();
   }
 
   /* make a null-terminated version of argv */
@@ -643,7 +643,7 @@ end:
   gst_object_unref (GST_OBJECT (pipeline));
 
   if (trace)
-    gst_alloc_trace_print_all ();
+    gst_alloc_trace_print_live ();
 
   return res;
 }

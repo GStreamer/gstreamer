@@ -27,12 +27,6 @@
 #include "gstutils.h"
 #include "gstminiobject.h"
 
-#ifndef GST_DISABLE_TRACE
-/* #define GST_WITH_ALLOC_TRACE  */
-#include "gsttrace.h"
-
-static GstAllocTrace *_gst_buffer_trace;
-#endif
 
 static void gst_buffer_init (GTypeInstance * instance, gpointer g_class);
 static void gst_buffer_class_init (gpointer g_class, gpointer class_data);
@@ -43,11 +37,15 @@ static GstBuffer *_gst_buffer_copy (GstBuffer * buffer);
 void
 _gst_buffer_initialize (void)
 {
+  gpointer ptr;
+
   gst_buffer_get_type ();
 
-#ifndef GST_DISABLE_TRACE
-  _gst_buffer_trace = gst_alloc_trace_register (GST_BUFFER_TRACE_NAME);
-#endif
+  /* the GstMiniObject types need to be class_ref'd once before it can be
+   * done from multiple threads;
+   * see http://bugzilla.gnome.org/show_bug.cgi?id=304551 */
+  ptr = g_type_class_ref (GST_TYPE_BUFFER);
+  g_type_class_unref (ptr);
 }
 
 GType

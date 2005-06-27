@@ -133,8 +133,9 @@ static gboolean gst_type_find_element_checkgetrange (GstPad * srcpad);
 
 static GstElementStateReturn
 gst_type_find_element_change_state (GstElement * element);
+static gboolean gst_type_find_element_activate (GstPad * pad);
 static gboolean
-gst_type_find_element_activate (GstPad * pad, GstActivateMode mode);
+gst_type_find_element_activate_src_pull (GstPad * pad, gboolean active);
 
 static guint gst_type_find_element_signals[LAST_SIGNAL] = { 0 };
 
@@ -215,7 +216,8 @@ gst_type_find_element_init (GstTypeFindElement * typefind)
   typefind->src =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&type_find_element_src_template), "src");
-  gst_pad_set_activate_function (typefind->src, gst_type_find_element_activate);
+  gst_pad_set_activatepull_function (typefind->src,
+      gst_type_find_element_activate_src_pull);
   gst_pad_set_checkgetrange_function (typefind->src,
       gst_type_find_element_checkgetrange);
   gst_pad_set_getrange_function (typefind->src, gst_type_find_element_getrange);
@@ -749,56 +751,80 @@ gst_type_find_element_getrange (GstPad * srcpad,
 }
 
 static gboolean
-do_pull_typefind (GstTypeFindElement * typefind)
+gst_type_find_element_activate_src_pull (GstPad * pad, gboolean active)
 {
-  GstCaps *caps;
-  GstPad *peer;
-  gboolean res = FALSE;
-
-  peer = gst_pad_get_peer (typefind->sink);
-  if (peer) {
-    if (gst_pad_peer_set_active (typefind->sink, GST_ACTIVATE_PULL)) {
-      gint64 size;
-      GstFormat format = GST_FORMAT_BYTES;
-
-      gst_pad_query_position (peer, &format, NULL, &size);
-      caps = gst_type_find_helper (peer, (guint64) size);
-      if (caps) {
-        g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
-            0, 100, caps);
-        typefind->mode = MODE_NORMAL;
-        res = TRUE;
-      }
-    } else {
-      start_typefinding (typefind);
-      res = TRUE;
-    }
-
-    gst_object_unref (GST_OBJECT (peer));
-  }
-
-  return res;
-}
-
-static gboolean
-gst_type_find_element_activate (GstPad * pad, GstActivateMode mode)
-{
-  gboolean result;
   GstTypeFindElement *typefind;
 
   typefind = GST_TYPE_FIND_ELEMENT (GST_OBJECT_PARENT (pad));
 
-  switch (mode) {
-    case GST_ACTIVATE_PUSH:
-    case GST_ACTIVATE_PULL:
-      result = TRUE;
-      break;
-    default:
-      result = TRUE;
-      break;
+  return gst_pad_activate_pull (typefind->sink, active);
+}
+
+static gboolean
+gst_type_find_element_activate (GstPad * pad)
+{
+  GstCaps *found_caps = NULL;
+  GstTypeFindElement *typefind;
+
+  typefind = GST_TYPE_FIND_ELEMENT (GST_OBJECT_PARENT (pad));
+
+  /* 1. try to activate in pull mode. if not, switch to push and succeed.
+     2. try to pull type find.
+     3. deactivate pull mode.
+     4. src pad might have been activated push by the state change. deactivate.
+     5. if we didn't find any caps, fail.
+     6. emit have-type; maybe the app connected the source pad to something.
+     7. if the sink pad is activated, we are in pull mode. succeed.
+     otherwise activate both pads in push mode and succeed.
+   */
+
+  /* 1 */
+  if (!gst_pad_activate_pull (pad, TRUE)) {
+    start_typefinding (typefind);
+    return gst_pad_activate_push (pad, TRUE);
   }
 
-  return result;
+  /* 2 */
+  {
+    GstPad *peer;
+
+    peer = gst_pad_get_peer (pad);
+    if (peer) {
+      gint64 size;
+      GstFormat format = GST_FORMAT_BYTES;
+
+      gst_pad_query_position (peer, &format, NULL, &size);
+      found_caps = gst_type_find_helper (peer, (guint64) size);
+      gst_object_unref (GST_OBJECT (peer));
+    }
+  }
+
+  /* 3 */
+  gst_pad_activate_pull (pad, FALSE);
+
+  /* 4 */
+  gst_pad_activate_push (typefind->src, FALSE);
+
+  /* 5 */
+  if (!found_caps)
+    return FALSE;
+
+  /* 6 */
+  g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
+      0, 100, found_caps);
+  typefind->mode = MODE_NORMAL;
+  /* FIXME see if I can unref the caps here */
+
+  /* 7 */
+  if (gst_pad_is_active (pad))
+    return TRUE;
+  else {
+    gboolean ret;
+
+    ret = gst_pad_activate_push (typefind->src, TRUE);
+    ret &= gst_pad_activate_push (pad, TRUE);
+    return ret;
+  }
 }
 
 static GstElementStateReturn
@@ -811,21 +837,11 @@ gst_type_find_element_change_state (GstElement * element)
   typefind = GST_TYPE_FIND_ELEMENT (element);
 
   transition = GST_STATE_TRANSITION (element);
-  switch (transition) {
-    case GST_STATE_READY_TO_PAUSED:
-      if (!do_pull_typefind (typefind))
-        return GST_STATE_FAILURE;
-      //start_typefinding (typefind);
-      break;
-    default:
-      break;
-  }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
   switch (transition) {
     case GST_STATE_PAUSED_TO_READY:
-      //stop_typefinding (typefind);
       gst_caps_replace (&typefind->caps, NULL);
       break;
     default:

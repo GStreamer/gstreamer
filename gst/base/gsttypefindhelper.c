@@ -130,5 +130,8 @@ gst_type_find_helper (GstPad * src, guint64 size)
   if (find.best_probability > 0)
     result = find.caps;
 
+  if (find.buffer)
+    gst_buffer_unref (find.buffer);
+
   return result;
 }

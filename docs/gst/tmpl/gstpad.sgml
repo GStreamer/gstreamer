@@ -75,6 +75,8 @@ Last reviewed on December 13th, 2002 (0.5.0.1)
 @acceptcapsfunc: 
 @fixatecapsfunc: 
 @activatefunc: 
+@activatepushfunc: 
+@activatepullfunc: 
 @linkfunc: 
 @unlinkfunc: 
 @peer: 
@@ -444,10 +446,10 @@ Checks if the pad is a sink pad.
 </para>
 
 @pad: 
-@mode: 
+@active: 
 @Returns: 
 <!-- # Unused Parameters # -->
-@active: 
+@mode: 
 
 
 <!-- ##### FUNCTION gst_pad_is_active ##### -->

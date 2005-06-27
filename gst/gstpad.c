@@ -90,6 +90,7 @@ static void gst_pad_get_property (GObject * object, guint prop_id,
 
 static GstCaps *gst_pad_get_caps_unlocked (GstPad * pad);
 static void gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ);
+static gboolean gst_pad_activate_default (GstPad * pad);
 
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr gst_pad_save_thyself (GstObject * object, xmlNodePtr parent);
@@ -181,6 +182,7 @@ gst_pad_init (GstPad * pad)
   pad->linkfunc = NULL;
   pad->getcapsfunc = NULL;
 
+  pad->activatefunc = gst_pad_activate_default;
   pad->eventfunc = gst_pad_event_default;
   pad->querytypefunc = gst_pad_get_query_types_default;
   pad->queryfunc = gst_pad_query_default;
@@ -394,172 +396,265 @@ gst_pad_get_direction (GstPad * pad)
   return result;
 }
 
+static gboolean
+gst_pad_activate_default (GstPad * pad)
+{
+  return gst_pad_activate_push (pad, TRUE);
+}
+
+static void
+pre_activate_switch (GstPad * pad, gboolean new_active)
+{
+  if (new_active) {
+    return;
+  } else {
+    GST_LOCK (pad);
+    GST_PAD_SET_FLUSHING (pad);
+    /* unlock blocked pads so element can resume and stop */
+    GST_PAD_BLOCK_SIGNAL (pad);
+    GST_UNLOCK (pad);
+  }
+}
+
+static void
+post_activate_switch (GstPad * pad, gboolean new_active)
+{
+  if (new_active) {
+    GST_LOCK (pad);
+    GST_PAD_UNSET_FLUSHING (pad);
+    GST_UNLOCK (pad);
+  } else {
+    /* make streaming stop */
+    GST_STREAM_LOCK (pad);
+    GST_STREAM_UNLOCK (pad);
+  }
+}
+
 /**
  * gst_pad_set_active:
  * @pad: the #GstPad to activate or deactivate.
- * @mode: the mode of the pad.
+ * @active: whether or not the pad should be active.
  *
- * Activates or deactivates the given pad in the given mode.
+ * Activates or deactivates the given pad. Must be called with the STATE_LOCK.
+ * Normally called from within core state change functions.
  *
- * For a source pad: PULL mode will call the getrange function,
- * PUSH mode will require the element to call _push() on the pad.
+ * If @active, makes sure the pad is active. If it is already active, either in
+ * push or pull mode, just return. Otherwise dispatches to the pad's activate
+ * function to perform the actual activation.
  *
- * For a sink pad: PULL mode will require the element to call
- * the _pull_range() function, PUSH mode will call the chain function.
+ * If not @active, checks the pad's current mode and calls
+ * gst_pad_activate_push() or gst_pad_activate_pull(), as appropriate, with a
+ * FALSE argument.
+ *
+ * Returns: TRUE if the operation was successfull.
+ *
+ * MT safe. Must be called with STATE_LOCK.
+ */
+gboolean
+gst_pad_set_active (GstPad * pad, gboolean active)
+{
+  GstActivateMode old;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+
+  GST_LOCK (pad);
+  old = GST_PAD_ACTIVATE_MODE (pad);
+  GST_UNLOCK (pad);
+
+  if (active) {
+    switch (old) {
+      case GST_ACTIVATE_PUSH:
+      case GST_ACTIVATE_PULL:
+        ret = TRUE;
+        break;
+      case GST_ACTIVATE_NONE:
+        ret = (GST_PAD_ACTIVATEFUNC (pad)) (pad);
+        break;
+    }
+  } else {
+    switch (old) {
+      case GST_ACTIVATE_PUSH:
+        ret = gst_pad_activate_push (pad, FALSE);
+        break;
+      case GST_ACTIVATE_PULL:
+        ret = gst_pad_activate_pull (pad, FALSE);
+        break;
+      case GST_ACTIVATE_NONE:
+        ret = TRUE;
+        break;
+    }
+  }
+
+  return ret;
+}
+
+/**
+ * gst_pad_activate_pull:
+ * @pad: the #GstPad to activate or deactivate.
+ * @active: whether or not the pad should be active.
+ *
+ * Activates or deactivates the given pad in pull mode via dispatching to the
+ * pad's activatepullfunc. For use from within pad activation functions only.
+ * When called on sink pads, will first proxy the call to the peer pad, which is
+ * expected to activate its internally linked pads from within its activate_pull
+ * function.
+ *
+ * If you don't know what this is, you probably don't want to call it.
  *
  * Returns: TRUE if the operation was successfull.
  *
  * MT safe.
  */
 gboolean
-gst_pad_set_active (GstPad * pad, GstActivateMode mode)
+gst_pad_activate_pull (GstPad * pad, gboolean active)
 {
   GstActivateMode old;
-  GstPadActivateFunction activatefunc;
-  gboolean active, oldactive;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   GST_LOCK (pad);
-
-  active = GST_PAD_MODE_ACTIVATE (mode);
   old = GST_PAD_ACTIVATE_MODE (pad);
-  oldactive = GST_PAD_MODE_ACTIVATE (old);
+  GST_UNLOCK (pad);
 
-  /* if nothing changed, we can just exit */
-  if (G_UNLIKELY (oldactive == active && old == mode))
+  if ((active && old == GST_ACTIVATE_PULL)
+      || (!active && old == GST_ACTIVATE_NONE))
     goto was_ok;
-
-  /* FIXME, no mode switching yet, need more design docs first */
-#if 0
-  if (G_UNLIKELY (old == mode))
-    goto was_ok;
-#endif
-
-  /* make sure data is disallowed when going inactive or changing
-   * mode
-   */
-  if (!active || oldactive) {
-    GST_CAT_DEBUG (GST_CAT_PADS, "de-activating pad %s:%s",
-        GST_DEBUG_PAD_NAME (pad));
-    GST_PAD_SET_FLUSHING (pad);
-    /* unlock blocked pads so element can resume and stop */
-    GST_PAD_BLOCK_SIGNAL (pad);
-  }
 
   if (active) {
-    if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC) {
-      if (mode == GST_ACTIVATE_PULL) {
-        if (!pad->getrangefunc)
-          goto wrong_mode;
-      } else {
-        /* we can push if driven by a chain or loop on the sink pad.
-         * peer pad is assumed to be active now. */
-      }
-    } else {
-      /* sink pads */
-      if (mode == GST_ACTIVATE_PULL) {
-        /* the src can drive us with getrange */
-      } else {
-        if (!pad->chainfunc)
-          goto wrong_mode;
+    g_return_val_if_fail (old == GST_ACTIVATE_NONE, FALSE);
+  } else {
+    g_return_val_if_fail (old == GST_ACTIVATE_PULL, FALSE);
+  }
+
+  if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
+    GstPad *peer = gst_pad_get_peer (pad);
+
+    if (peer) {
+      if (!gst_pad_activate_pull (peer, active)) {
+        GST_LOCK (peer);
+        GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
+            "activate_pull on peer (%s:%s) failed", GST_DEBUG_PAD_NAME (peer));
+        GST_UNLOCK (peer);
+        gst_object_unref (GST_OBJECT (peer));
+        goto failure;
       }
     }
   }
 
-  activatefunc = pad->activatefunc;
-  if (activatefunc) {
-    gboolean result;
+  pre_activate_switch (pad, active);
 
-    GST_CAT_DEBUG (GST_CAT_PADS,
-        "calling activate function on pad %s:%s with mode %d",
-        GST_DEBUG_PAD_NAME (pad), mode);
-
-    /* unlock so element can sync */
-    GST_UNLOCK (pad);
-    result = activatefunc (pad, mode);
-    /* and lock again */
-    GST_LOCK (pad);
-    if (result == FALSE)
-      goto activate_error;
-  }
-  /* store the mode */
-  GST_PAD_ACTIVATE_MODE (pad) = mode;
-
-  /* when going to active allow data passing now */
-  if (active) {
-    GST_CAT_DEBUG (GST_CAT_PADS, "activating pad %s:%s in mode %d",
-        GST_DEBUG_PAD_NAME (pad), mode);
-    GST_PAD_UNSET_FLUSHING (pad);
-    GST_UNLOCK (pad);
+  if (GST_PAD_ACTIVATEPULLFUNC (pad)) {
+    if (GST_PAD_ACTIVATEPULLFUNC (pad) (pad, active)) {
+      goto success;
+    } else {
+      goto failure;
+    }
   } else {
-    GST_UNLOCK (pad);
-
-    /* and make streaming finish */
-    GST_STREAM_LOCK (pad);
-    GST_STREAM_UNLOCK (pad);
+    /* can happen for sinks of passthrough elements */
+    goto success;
   }
-  return TRUE;
 
 was_ok:
   {
-    GST_CAT_DEBUG (GST_CAT_PADS,
-        "pad %s:%s was active, old %d, new %d",
-        GST_DEBUG_PAD_NAME (pad), old, mode);
-    GST_UNLOCK (pad);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "already %s in pull mode",
+        active ? "activated" : "deactivated");
     return TRUE;
   }
-  /* errors */
-wrong_mode:
+
+success:
   {
-    GST_CAT_DEBUG (GST_CAT_PADS,
-        "pad %s:%s lacks functions to be active in mode %d",
-        GST_DEBUG_PAD_NAME (pad), mode);
+    GST_LOCK (pad);
+    GST_PAD_ACTIVATE_MODE (pad) =
+        active ? GST_ACTIVATE_PULL : GST_ACTIVATE_NONE;
     GST_UNLOCK (pad);
-    return FALSE;
+    post_activate_switch (pad, active);
+
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "%s in pull mode",
+        active ? "activated" : "deactivated");
+    return TRUE;
   }
-activate_error:
+
+failure:
   {
-    GST_CAT_DEBUG (GST_CAT_PADS,
-        "activate function returned FALSE for pad %s:%s",
-        GST_DEBUG_PAD_NAME (pad));
-    GST_UNLOCK (pad);
+    GST_CAT_INFO_OBJECT (GST_CAT_PADS, pad, "failed to %s in pull mode",
+        active ? "activate" : "deactivate");
     return FALSE;
   }
 }
 
 /**
- * gst_pad_peer_set_active:
- * @pad: the #GstPad to activate or deactivate the peer of.
- * @mode: the mode of the pad.
+ * gst_pad_activate_push:
+ * @pad: the #GstPad to activate or deactivate.
+ * @active: whether or not the pad should be active.
  *
- * Activates or deactivates the given peer of a pad. Elements
- * that will perform a _pull_range() on their sinkpads need
- * to call this function when the sinkpad is activated or when
- * an internally linked source pad is activated in pull mode.
+ * Activates or deactivates the given pad in push mode via dispatching to the
+ * pad's activatepushfunc. For use from within pad activation functions only.
+ *
+ * If you don't know what this is, you probably don't want to call it.
  *
  * Returns: TRUE if the operation was successfull.
  *
  * MT safe.
  */
 gboolean
-gst_pad_peer_set_active (GstPad * pad, GstActivateMode mode)
+gst_pad_activate_push (GstPad * pad, gboolean active)
 {
-  GstPad *peer;
-  gboolean result = FALSE;
+  GstActivateMode old;
 
-  peer = gst_pad_get_peer (pad);
-  if (!peer)
-    goto no_peer;
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
-  result = gst_pad_set_active (peer, mode);
-  gst_object_unref (GST_OBJECT_CAST (peer));
+  GST_LOCK (pad);
+  old = GST_PAD_ACTIVATE_MODE (pad);
+  GST_UNLOCK (pad);
 
-  return result;
+  if ((active && old == GST_ACTIVATE_PUSH)
+      || (!active && old == GST_ACTIVATE_NONE))
+    goto was_ok;
 
-  /* errors */
-no_peer:
+  if (active) {
+    g_return_val_if_fail (old == GST_ACTIVATE_NONE, FALSE);
+  } else {
+    g_return_val_if_fail (old == GST_ACTIVATE_PUSH, FALSE);
+  }
+
+  pre_activate_switch (pad, active);
+
+  if (GST_PAD_ACTIVATEPUSHFUNC (pad)) {
+    if (GST_PAD_ACTIVATEPUSHFUNC (pad) (pad, active)) {
+      goto success;
+    } else {
+      goto failure;
+    }
+  } else {
+    /* quite ok, element relies on state change func to prepare itself */
+    goto success;
+  }
+
+was_ok:
   {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "already %s in push mode",
+        active ? "activated" : "deactivated");
+    return TRUE;
+  }
+
+success:
+  {
+    GST_LOCK (pad);
+    GST_PAD_ACTIVATE_MODE (pad) =
+        active ? GST_ACTIVATE_PUSH : GST_ACTIVATE_NONE;
+    GST_UNLOCK (pad);
+    post_activate_switch (pad, active);
+
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "%s in push mode",
+        active ? "activated" : "deactivated");
+    return TRUE;
+  }
+
+failure:
+  {
+    GST_CAT_INFO_OBJECT (GST_CAT_PADS, pad, "failed to %s in push mode",
+        active ? "activate" : "deactivate");
     return FALSE;
   }
 }
@@ -721,8 +816,11 @@ gst_pad_is_blocked (GstPad * pad)
  * @pad: a sink #GstPad.
  * @chain: the #GstPadActivateFunction to set.
  *
- * Sets the given activate function for the pad. The activate function is called to
- * start or stop dataflow on a pad.
+ * Sets the given activate function for the pad. The activate function will
+ * dispatch to activate_push or activate_pull to perform the actual activation.
+ * Only makes sense to set on sink pads.
+ *
+ * Call this function if your sink pad can start a pull-based task.
  */
 void
 gst_pad_set_activate_function (GstPad * pad, GstPadActivateFunction activate)
@@ -732,6 +830,45 @@ gst_pad_set_activate_function (GstPad * pad, GstPadActivateFunction activate)
   GST_PAD_ACTIVATEFUNC (pad) = activate;
   GST_CAT_DEBUG (GST_CAT_PADS, "activatefunc for %s:%s set to %s",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (activate));
+}
+
+/**
+ * gst_pad_set_activatepull_function:
+ * @pad: a sink #GstPad.
+ * @chain: the #GstPadActivateModeFunction to set.
+ *
+ * Sets the given activate_pull function for the pad. An activate_pull function
+ * prepares the element and any upstream connections for pulling. See XXX
+ * part-activation.txt for details.
+ */
+void
+gst_pad_set_activatepull_function (GstPad * pad,
+    GstPadActivateModeFunction activatepull)
+{
+  g_return_if_fail (GST_IS_PAD (pad));
+
+  GST_PAD_ACTIVATEPULLFUNC (pad) = activatepull;
+  GST_CAT_DEBUG (GST_CAT_PADS, "activatepullfunc for %s:%s set to %s",
+      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (activatepull));
+}
+
+/**
+ * gst_pad_set_activatepush_function:
+ * @pad: a sink #GstPad.
+ * @chain: the #GstPadActivateModeFunction to set.
+ *
+ * Sets the given activate_push function for the pad. An activate_push function
+ * prepares the element for pushing. See XXX part-activation.txt for details.
+ */
+void
+gst_pad_set_activatepush_function (GstPad * pad,
+    GstPadActivateModeFunction activatepush)
+{
+  g_return_if_fail (GST_IS_PAD (pad));
+
+  GST_PAD_ACTIVATEPUSHFUNC (pad) = activatepush;
+  GST_CAT_DEBUG (GST_CAT_PADS, "activatepushfunc for %s:%s set to %s",
+      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (activatepush));
 }
 
 /**

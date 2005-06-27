@@ -84,10 +84,10 @@ static void gst_base_transform_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_base_transform_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static gboolean gst_base_transform_src_activate (GstPad * pad,
-    GstActivateMode mode);
-static gboolean gst_base_transform_sink_activate (GstPad * pad,
-    GstActivateMode mode);
+static gboolean gst_base_transform_src_activate_pull (GstPad * pad,
+    gboolean active);
+static gboolean gst_base_transform_sink_activate_push (GstPad * pad,
+    gboolean active);
 static GstElementStateReturn gst_base_transform_change_state (GstElement *
     element);
 
@@ -157,8 +157,8 @@ gst_base_transform_init (GstBaseTransform * trans, gpointer g_class)
       GST_DEBUG_FUNCPTR (gst_base_transform_event));
   gst_pad_set_chain_function (trans->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_transform_chain));
-  gst_pad_set_activate_function (trans->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_transform_sink_activate));
+  gst_pad_set_activatepush_function (trans->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_base_transform_sink_activate_push));
   gst_element_add_pad (GST_ELEMENT (trans), trans->sinkpad);
 
   pad_template =
@@ -169,8 +169,8 @@ gst_base_transform_init (GstBaseTransform * trans, gpointer g_class)
       GST_DEBUG_FUNCPTR (gst_base_transform_proxy_getcaps));
   gst_pad_set_getrange_function (trans->srcpad,
       GST_DEBUG_FUNCPTR (gst_base_transform_getrange));
-  gst_pad_set_activate_function (trans->srcpad,
-      GST_DEBUG_FUNCPTR (gst_base_transform_src_activate));
+  gst_pad_set_activatepull_function (trans->srcpad,
+      GST_DEBUG_FUNCPTR (gst_base_transform_src_activate_pull));
   gst_element_add_pad (GST_ELEMENT (trans), trans->srcpad);
 }
 
@@ -344,7 +344,7 @@ gst_base_transform_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_base_transform_sink_activate (GstPad * pad, GstActivateMode mode)
+gst_base_transform_sink_activate_push (GstPad * pad, gboolean active)
 {
   gboolean result = TRUE;
   GstBaseTransform *trans;
@@ -353,39 +353,31 @@ gst_base_transform_sink_activate (GstPad * pad, GstActivateMode mode)
   trans = GST_BASE_TRANSFORM (GST_OBJECT_PARENT (pad));
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
-  switch (mode) {
-    case GST_ACTIVATE_PUSH:
-    case GST_ACTIVATE_PULL:
-      if (bclass->start)
-        result = bclass->start (trans);
-      break;
-    case GST_ACTIVATE_NONE:
-      break;
+  if (active) {
+    if (bclass->start)
+      result = bclass->start (trans);
   }
 
   return result;
 }
 
 static gboolean
-gst_base_transform_src_activate (GstPad * pad, GstActivateMode mode)
+gst_base_transform_src_activate_pull (GstPad * pad, gboolean active)
 {
   gboolean result = FALSE;
   GstBaseTransform *trans;
+  GstBaseTransformClass *bclass;
 
   trans = GST_BASE_TRANSFORM (GST_OBJECT_PARENT (pad));
+  bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
-  switch (mode) {
-    case GST_ACTIVATE_PUSH:
-      result = TRUE;
-      break;
-    case GST_ACTIVATE_PULL:
-      result = gst_pad_set_active (trans->sinkpad, mode);
-      result = gst_pad_peer_set_active (trans->sinkpad, mode);
-      break;
-    case GST_ACTIVATE_NONE:
-      result = TRUE;
-      break;
+  result = gst_pad_activate_pull (trans->sinkpad, active);
+
+  if (active) {
+    if (result && bclass->start)
+      result &= bclass->start (trans);
   }
+
   return result;
 }
 

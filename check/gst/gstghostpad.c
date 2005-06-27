@@ -90,6 +90,39 @@ START_TEST (test_ghost_pads)
   fail_unless (gst_element_set_state (b1, GST_STATE_NULL) == GST_STATE_SUCCESS);
 
   gst_object_unref (GST_OBJECT (b1));
+  /* unreffing the bin will unref all elements, which will unlink and unparent
+   * all pads */
+
+  /* FIXME: ghost pads need to drop their internal pad in the unlink function,
+   * but can't right now. So internal pads have a ref from their parent, and the
+   * internal pads' targets have refs from the internals. When we do the last
+   * unref on the ghost pads, these refs should go away.
+   */
+
+  assert_gstrefcount (fsrc, 2); /* gisrc */
+  assert_gstrefcount (gsink, 1);
+  assert_gstrefcount (gsrc, 1);
+  assert_gstrefcount (fsink, 2);        /* gisink */
+
+  assert_gstrefcount (gisrc, 2);        /* gsink -- fixme drop ref in unlink */
+  assert_gstrefcount (isink, 2);        /* gsink */
+  assert_gstrefcount (gisink, 2);       /* gsrc -- fixme drop ref in unlink */
+  assert_gstrefcount (isrc, 2); /* gsrc */
+
+  /* while the fixme isn't fixed, check cleanup */
+  gst_object_unref (GST_OBJECT (gsink));
+  assert_gstrefcount (isink, 1);
+  assert_gstrefcount (gisrc, 1);
+  assert_gstrefcount (fsrc, 2); /* gisrc */
+  gst_object_unref (GST_OBJECT (gisrc));
+  assert_gstrefcount (fsrc, 1);
+
+  gst_object_unref (GST_OBJECT (gsrc));
+  assert_gstrefcount (isrc, 1);
+  assert_gstrefcount (gisink, 1);
+  assert_gstrefcount (fsink, 2);        /* gisrc */
+  gst_object_unref (GST_OBJECT (gisink));
+  assert_gstrefcount (fsink, 1);
 }
 END_TEST Suite * gst_ghost_pad_suite (void)
 {

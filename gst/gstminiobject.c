@@ -23,6 +23,10 @@
 #include "config.h"
 #endif
 
+#ifndef GST_DISABLE_TRACE
+#include "gsttrace.h"
+#endif
+
 #include "gst/gstminiobject.h"
 #include "gst/gstinfo.h"
 #include "gst/gst_private.h"
@@ -130,6 +134,21 @@ gst_mini_object_new (GType type)
 
   mini_object = (GstMiniObject *) g_type_create_instance (type);
 
+#ifndef GST_DISABLE_TRACE
+  {
+    const gchar *name;
+    GstAllocTrace *trace;
+
+    name = g_type_name (type);
+
+    trace = gst_alloc_trace_get (name);
+    if (!trace) {
+      trace = gst_alloc_trace_register (name);
+    }
+    gst_alloc_trace_new (trace, mini_object);
+  }
+#endif
+
   return mini_object;
 }
 
@@ -151,12 +170,18 @@ gst_mini_object_is_writable (const GstMiniObject * mini_object)
 }
 
 GstMiniObject *
-gst_mini_object_make_writable (const GstMiniObject * mini_object)
+gst_mini_object_make_writable (GstMiniObject * mini_object)
 {
+  GstMiniObject *ret;
+
   if (gst_mini_object_is_writable (mini_object)) {
-    return (GstMiniObject *) mini_object;
+    ret = (GstMiniObject *) mini_object;
+  } else {
+    ret = gst_mini_object_copy (mini_object);
+    gst_mini_object_unref ((GstMiniObject *) mini_object);
   }
-  return gst_mini_object_copy (mini_object);
+
+  return ret;
 }
 
 GstMiniObject *
@@ -180,8 +205,24 @@ gst_mini_object_free (GstMiniObject * mini_object)
 
   /* if the refcount is still 0 we can really free the
    * object, else the finalize method recycled the object */
-  if (g_atomic_int_get (&mini_object->refcount) == 0)
+  if (g_atomic_int_get (&mini_object->refcount) == 0) {
+#ifndef GST_DISABLE_TRACE
+    {
+      const gchar *name;
+      GstAllocTrace *trace;
+
+      name = g_type_name (G_TYPE_FROM_CLASS (mo_class));
+
+      trace = gst_alloc_trace_get (name);
+      if (G_LIKELY (trace)) {
+        gst_alloc_trace_free (trace, mini_object);
+      } else {
+        g_warning ("Untraced miniobject: (%s)%p", name, mini_object);
+      }
+    }
+#endif
     g_type_free_instance ((GTypeInstance *) mini_object);
+  }
 }
 
 void

@@ -160,13 +160,51 @@ gst_proxy_pad_do_bufferalloc (GstPad * pad, guint64 offset, guint size,
 }
 
 static gboolean
-gst_proxy_pad_do_activate (GstPad * pad, GstActivateMode mode)
+gst_proxy_pad_do_activate (GstPad * pad)
 {
   GstPad *target = GST_PROXY_PAD_TARGET (pad);
 
   g_return_val_if_fail (target != NULL, FALSE);
 
-  return gst_pad_set_active (target, mode);
+  return target->activatefunc (pad);
+}
+
+static gboolean
+gst_proxy_pad_do_activatepull (GstPad * pad, gboolean active)
+{
+  GstActivateMode old;
+  GstPad *target = GST_PROXY_PAD_TARGET (pad);
+
+  g_return_val_if_fail (target != NULL, FALSE);
+
+  GST_LOCK (target);
+  old = GST_PAD_ACTIVATE_MODE (target);
+  GST_UNLOCK (target);
+
+  if ((active && old == GST_ACTIVATE_PULL)
+      || (!active && old == GST_ACTIVATE_NONE))
+    return TRUE;
+  else
+    return gst_pad_activate_pull (target, active);
+}
+
+static gboolean
+gst_proxy_pad_do_activatepush (GstPad * pad, gboolean active)
+{
+  GstActivateMode old;
+  GstPad *target = GST_PROXY_PAD_TARGET (pad);
+
+  g_return_val_if_fail (target != NULL, FALSE);
+
+  GST_LOCK (target);
+  old = GST_PAD_ACTIVATE_MODE (target);
+  GST_UNLOCK (target);
+
+  if ((active && old == GST_ACTIVATE_PUSH)
+      || (!active && old == GST_ACTIVATE_NONE))
+    return TRUE;
+  else
+    return gst_pad_activate_push (target, active);
 }
 
 static void
@@ -275,6 +313,8 @@ gst_proxy_pad_set_property (GObject * object, guint prop_id,
       SETFUNC (queryfunc, query);
       SETFUNC (intlinkfunc, internal_link);
       SETFUNC (activatefunc, activate);
+      SETFUNC (activatepullfunc, activatepull);
+      SETFUNC (activatepushfunc, activatepush);
       SETFUNC (loopfunc, loop);
       SETFUNC (getcapsfunc, getcaps);
       SETFUNC (acceptcapsfunc, acceptcaps);
@@ -437,6 +477,25 @@ gst_ghost_pad_class_init (GstGhostPadClass * klass)
           "The ghost pad's internal pad", GST_TYPE_PAD, G_PARAM_READWRITE));
 }
 
+/* will only be called for src pads (afaict) */
+static gboolean
+gst_ghost_proxy_pad_do_activate_pull (GstPad * pad, gboolean active)
+{
+  GstObject *parent;
+  gboolean ret = FALSE;
+
+  parent = gst_object_get_parent (GST_OBJECT (pad));
+  if (parent) {
+    /* hacky hacky!!! */
+    if (GST_IS_GHOST_PAD (parent))
+      ret = gst_pad_activate_pull (GST_PAD (parent), active);
+
+    gst_object_unref (parent);
+  }
+
+  return ret;
+}
+
 static GstPadLinkReturn
 gst_ghost_pad_do_link (GstPad * pad, GstPad * peer)
 {
@@ -474,7 +533,7 @@ gst_ghost_pad_do_unlink (GstPad * pad)
   if (target->unlinkfunc)
     target->unlinkfunc (target);
 
-  /* doesn't work with the object locks in the properties dispatcher... */
+  /* FIXME: should do this here, but locks in deep_notify prevent it */
   /* g_object_set (pad, "internal", NULL, NULL); */
 }
 
@@ -509,6 +568,8 @@ gst_ghost_pad_set_property (GObject * object, guint prop_id,
       if (pad->internal) {
         GstPad *intpeer;
 
+        gst_pad_set_activatepull_function (pad->internal, NULL);
+
         g_signal_handler_disconnect (pad->internal, pad->notify_id);
 
         intpeer = gst_pad_get_peer (pad->internal);
@@ -519,11 +580,6 @@ gst_ghost_pad_set_property (GObject * object, guint prop_id,
             gst_pad_unlink (intpeer, pad->internal);
           }
           gst_object_unref (GST_OBJECT (intpeer));
-        }
-
-        /* delete me, only here for testing... */
-        if (GST_OBJECT_REFCOUNT_VALUE (pad->internal) != 1) {
-          gst_critical ("Refcounting problem: %" GST_PTR_FORMAT, pad->internal);
         }
 
         /* should dispose it */
@@ -546,6 +602,8 @@ gst_ghost_pad_set_property (GObject * object, guint prop_id,
         pad->notify_id = g_signal_connect (internal, "notify::caps",
             G_CALLBACK (on_int_notify), pad);
         on_int_notify (internal, NULL, pad);
+        gst_pad_set_activatepull_function (internal,
+            gst_ghost_proxy_pad_do_activate_pull);
 
         /* a ref was taken by set_parent */
       }

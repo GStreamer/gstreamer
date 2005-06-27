@@ -82,7 +82,8 @@ gst_basesrc_get_type (void)
   return basesrc_type;
 }
 
-static gboolean gst_basesrc_activate (GstPad * pad, GstActivateMode mode);
+static gboolean gst_basesrc_activate_push (GstPad * pad, gboolean active);
+static gboolean gst_basesrc_activate_pull (GstPad * pad, gboolean active);
 static void gst_basesrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_basesrc_get_property (GObject * object, guint prop_id,
@@ -158,7 +159,8 @@ gst_basesrc_init (GstBaseSrc * basesrc, gpointer g_class)
 
   pad = gst_pad_new_from_template (pad_template, "src");
 
-  gst_pad_set_activate_function (pad, gst_basesrc_activate);
+  gst_pad_set_activatepush_function (pad, gst_basesrc_activate_push);
+  gst_pad_set_activatepull_function (pad, gst_basesrc_activate_pull);
   gst_pad_set_event_function (pad, gst_basesrc_event_handler);
   gst_pad_set_query_function (pad, gst_basesrc_query);
 
@@ -729,54 +731,70 @@ gst_basesrc_stop (GstBaseSrc * basesrc)
 }
 
 static gboolean
-gst_basesrc_activate (GstPad * pad, GstActivateMode mode)
+gst_basesrc_deactivate (GstBaseSrc * basesrc, GstPad * pad)
 {
   gboolean result;
+
+  GST_LIVE_LOCK (basesrc);
+  basesrc->live_running = TRUE;
+  GST_LIVE_SIGNAL (basesrc);
+  GST_LIVE_UNLOCK (basesrc);
+
+  /* step 1, unblock clock sync (if any) */
+  gst_basesrc_unlock (basesrc);
+
+  /* step 2, make sure streaming finishes */
+  result = gst_pad_stop_task (pad);
+
+  return result;
+}
+
+static gboolean
+gst_basesrc_activate_push (GstPad * pad, gboolean active)
+{
   GstBaseSrc *basesrc;
 
   basesrc = GST_BASESRC (GST_OBJECT_PARENT (pad));
 
   /* prepare subclass first */
-  switch (mode) {
-    case GST_ACTIVATE_PUSH:
-    case GST_ACTIVATE_PULL:
-      result = gst_basesrc_start (basesrc);
-      break;
-    default:
-      result = TRUE;
-      break;
+  if (active) {
+    if (!gst_basesrc_start (basesrc))
+      goto error_start;
+
+    return gst_pad_start_task (pad, (GstTaskFunction) gst_basesrc_loop, pad);
+  } else {
+    return gst_basesrc_deactivate (basesrc, pad);
   }
-  /* if that failed we can stop here */
-  if (!result)
-    goto error_start;
 
-  result = FALSE;
-  switch (mode) {
-    case GST_ACTIVATE_PUSH:
-      result =
-          gst_pad_start_task (pad, (GstTaskFunction) gst_basesrc_loop, pad);
-      break;
-    case GST_ACTIVATE_PULL:
-      result = basesrc->seekable;
-      if (!result)
-        gst_basesrc_stop (basesrc);
-      break;
-    case GST_ACTIVATE_NONE:
-      GST_LIVE_LOCK (basesrc);
-      basesrc->live_running = TRUE;
-      GST_LIVE_SIGNAL (basesrc);
-      GST_LIVE_UNLOCK (basesrc);
-
-      /* step 1, unblock clock sync (if any) */
-      gst_basesrc_unlock (basesrc);
-
-      /* step 2, make sure streaming finishes */
-      result = gst_pad_stop_task (pad);
-      break;
+error_start:
+  {
+    GST_DEBUG_OBJECT (basesrc, "failed to start");
+    return FALSE;
   }
-  return result;
+}
 
-  /* ERROR */
+static gboolean
+gst_basesrc_activate_pull (GstPad * pad, gboolean active)
+{
+  GstBaseSrc *basesrc;
+
+  basesrc = GST_BASESRC (GST_OBJECT_PARENT (pad));
+
+  /* prepare subclass first */
+  if (active) {
+    if (!gst_basesrc_start (basesrc))
+      goto error_start;
+
+    if (!basesrc->seekable) {
+      gst_basesrc_stop (basesrc);
+      return FALSE;
+    }
+
+    return TRUE;
+  } else {
+    return gst_basesrc_deactivate (basesrc, pad);
+  }
+
 error_start:
   {
     GST_DEBUG_OBJECT (basesrc, "failed to start");

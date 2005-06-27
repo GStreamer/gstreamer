@@ -91,6 +91,7 @@ GstAllocTrace*		_gst_alloc_trace_register	(const gchar *name);
 
 int			gst_alloc_trace_live_all	(void);
 void			gst_alloc_trace_print_all	(void);
+void			gst_alloc_trace_print_live	(void);
 void			gst_alloc_trace_set_flags_all	(GstAllocTraceFlags flags);
 
 GstAllocTrace*		gst_alloc_trace_get		(const gchar *name);

@@ -140,8 +140,8 @@ static GstPadLinkReturn gst_queue_link_sink (GstPad * pad, GstPad * peer);
 static GstPadLinkReturn gst_queue_link_src (GstPad * pad, GstPad * peer);
 static void gst_queue_locked_flush (GstQueue * queue);
 
-static gboolean gst_queue_src_activate (GstPad * pad, GstActivateMode mode);
-static gboolean gst_queue_sink_activate (GstPad * pad, GstActivateMode mode);
+static gboolean gst_queue_src_activate_push (GstPad * pad, gboolean active);
+static gboolean gst_queue_sink_activate_push (GstPad * pad, gboolean active);
 static GstElementStateReturn gst_queue_change_state (GstElement * element);
 
 
@@ -300,8 +300,8 @@ gst_queue_init (GstQueue * queue)
       "sink");
   gst_pad_set_chain_function (queue->sinkpad,
       GST_DEBUG_FUNCPTR (gst_queue_chain));
-  gst_pad_set_activate_function (queue->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_queue_sink_activate));
+  gst_pad_set_activatepush_function (queue->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_queue_sink_activate_push));
   gst_pad_set_event_function (queue->sinkpad,
       GST_DEBUG_FUNCPTR (gst_queue_handle_sink_event));
   gst_pad_set_link_function (queue->sinkpad,
@@ -316,8 +316,8 @@ gst_queue_init (GstQueue * queue)
       gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
       "src");
   gst_pad_set_loop_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_loop));
-  gst_pad_set_activate_function (queue->srcpad,
-      GST_DEBUG_FUNCPTR (gst_queue_src_activate));
+  gst_pad_set_activatepush_function (queue->srcpad,
+      GST_DEBUG_FUNCPTR (gst_queue_src_activate_push));
   gst_pad_set_link_function (queue->srcpad,
       GST_DEBUG_FUNCPTR (gst_queue_link_src));
   gst_pad_set_getcaps_function (queue->srcpad,
@@ -819,65 +819,55 @@ gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
 }
 
 static gboolean
-gst_queue_sink_activate (GstPad * pad, GstActivateMode mode)
+gst_queue_sink_activate_push (GstPad * pad, gboolean active)
 {
   gboolean result = FALSE;
   GstQueue *queue;
 
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
-  switch (mode) {
-    case GST_ACTIVATE_PUSH:
-      queue->flushing = FALSE;
-      result = TRUE;
-      break;
-    case GST_ACTIVATE_PULL:
-      result = FALSE;
-      break;
-    case GST_ACTIVATE_NONE:
-      /* step 1, unblock chain and loop functions */
-      GST_QUEUE_MUTEX_LOCK;
-      queue->flushing = TRUE;
-      gst_queue_locked_flush (queue);
-      g_cond_signal (queue->item_del);
-      GST_QUEUE_MUTEX_UNLOCK;
+  if (active) {
+    queue->flushing = FALSE;
+    result = TRUE;
+  } else {
+    /* step 1, unblock chain and loop functions */
+    GST_QUEUE_MUTEX_LOCK;
+    queue->flushing = TRUE;
+    gst_queue_locked_flush (queue);
+    g_cond_signal (queue->item_del);
+    GST_QUEUE_MUTEX_UNLOCK;
 
-      /* step 2, make sure streaming finishes */
-      result = gst_pad_stop_task (pad);
-      break;
+    /* step 2, make sure streaming finishes */
+    result = gst_pad_stop_task (pad);
   }
+
   return result;
 }
 
 static gboolean
-gst_queue_src_activate (GstPad * pad, GstActivateMode mode)
+gst_queue_src_activate_push (GstPad * pad, gboolean active)
 {
   gboolean result = FALSE;
   GstQueue *queue;
 
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
-  switch (mode) {
-    case GST_ACTIVATE_PUSH:
-      GST_QUEUE_MUTEX_LOCK;
-      queue->flushing = FALSE;
-      result = gst_pad_start_task (pad, (GstTaskFunction) gst_queue_loop, pad);
-      GST_QUEUE_MUTEX_UNLOCK;
-      break;
-    case GST_ACTIVATE_PULL:
-      result = FALSE;
-      break;
-    case GST_ACTIVATE_NONE:
-      /* step 1, unblock chain and loop functions */
-      GST_QUEUE_MUTEX_LOCK;
-      queue->flushing = TRUE;
-      g_cond_signal (queue->item_add);
-      GST_QUEUE_MUTEX_UNLOCK;
+  if (active) {
+    GST_QUEUE_MUTEX_LOCK;
+    queue->flushing = FALSE;
+    result = gst_pad_start_task (pad, (GstTaskFunction) gst_queue_loop, pad);
+    GST_QUEUE_MUTEX_UNLOCK;
+  } else {
+    /* step 1, unblock chain and loop functions */
+    GST_QUEUE_MUTEX_LOCK;
+    queue->flushing = TRUE;
+    g_cond_signal (queue->item_add);
+    GST_QUEUE_MUTEX_UNLOCK;
 
-      /* step 2, make sure streaming finishes */
-      result = gst_pad_stop_task (pad);
-      break;
+    /* step 2, make sure streaming finishes */
+    result = gst_pad_stop_task (pad);
   }
+
   return result;
 }
 

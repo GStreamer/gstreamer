@@ -254,15 +254,34 @@ gst_alloc_trace_live_all (void)
   return num;
 }
 
+static gint
+compare_func (GstAllocTrace * a, GstAllocTrace * b)
+{
+  return strcmp (a->name, b->name);
+}
+
+static GList *
+gst_alloc_trace_list_sorted (void)
+{
+  GList *ret;
+
+  ret = g_list_sort (g_list_copy (_gst_alloc_tracers),
+      (GCompareFunc) compare_func);
+
+  return ret;
+}
+
 /**
  * gst_alloc_trace_print_all:
  *
- * Print the status of all registered alloc trace objectes.
+ * Print the status of all registered alloc trace objects.
  */
 void
 gst_alloc_trace_print_all (void)
 {
-  GList *walk = _gst_alloc_tracers;
+  GList *orig, *walk;
+
+  orig = walk = gst_alloc_trace_list_sorted ();
 
   while (walk) {
     GstAllocTrace *trace = (GstAllocTrace *) walk->data;
@@ -271,6 +290,33 @@ gst_alloc_trace_print_all (void)
 
     walk = g_list_next (walk);
   }
+
+  g_list_free (orig);
+}
+
+/**
+ * gst_alloc_trace_print_live:
+ *
+ * Print the status of all registered alloc trace objects, ignoring those
+ * without live objects.
+ */
+void
+gst_alloc_trace_print_live (void)
+{
+  GList *orig, *walk;
+
+  orig = walk = gst_alloc_trace_list_sorted ();
+
+  while (walk) {
+    GstAllocTrace *trace = (GstAllocTrace *) walk->data;
+
+    if (trace->live)
+      gst_alloc_trace_print (trace);
+
+    walk = g_list_next (walk);
+  }
+
+  g_list_free (orig);
 }
 
 /**
@@ -336,27 +382,20 @@ gst_alloc_trace_print (const GstAllocTrace * trace)
 
   g_return_if_fail (trace != NULL);
 
-  g_print ("%s (%p): flags %d", trace->name, trace, trace->flags);
-
   if (trace->flags & GST_ALLOC_TRACE_LIVE) {
-    g_print (", live %d", trace->live);
+    g_print ("%-22.22s : %d\n", trace->name, trace->live);
+  } else {
+    g_print ("%-22.22s : (no live count)\n", trace->name);
   }
+
   if (trace->flags & GST_ALLOC_TRACE_MEM_LIVE) {
     mem_live = trace->mem_live;
 
-    if (!mem_live) {
-      g_print (", no live memory");
-    } else {
-      g_print (", dumping live memory: ");
-
-      while (mem_live) {
-        g_print ("%p ", mem_live->data);
-        mem_live = g_slist_next (mem_live);
-      }
-      g_print ("\ntotal %d", g_slist_length (trace->mem_live));
+    while (mem_live) {
+      g_print ("%-22.22s : %p\n", "", mem_live->data);
+      mem_live = mem_live->next;
     }
   }
-  g_print ("\n");
 }
 
 /**

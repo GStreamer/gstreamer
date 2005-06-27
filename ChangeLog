@@ -1,3 +1,79 @@
+2005-06-27  Andy Wingo  <wingo@pobox.com>
+
+	* gst/base/gsttypefindhelper.c (gst_type_find_helper): Unref any
+	remaining buffer.
+
+	* gst/gsttrace.c (gst_alloc_trace_list_sorted): New helper,
+	returns a sorted copy of the trace list.
+	(gst_alloc_trace_print_live): New API, only prints traces with
+	live objects. Sort the list.
+	(gst_alloc_trace_print_all): Sort the list.
+	(gst_alloc_trace_print): Align columns.
+
+	* gst/elements/gstttypefindelement.c:
+	* gst/elements/gsttee.c:
+	* gst/base/gstbasesrc.c:
+	* gst/base/gstbasesink.c:
+	* gst/base/gstbasetransform.c:
+	* gst/gstqueue.c: Adapt for pad activation changes.
+
+	* gst/gstpipeline.c (gst_pipeline_init): Unref after parenting
+	sched.
+	(gst_pipeline_dispose): Drop ref on sched.
+
+	* gst/gstpad.c (gst_pad_init): Set the default activate func.
+	(gst_pad_activate_default): Push mode by default.
+	(pre_activate_switch, post_activate_switch): New stubs, things to
+	do before and after switching activation modes on pads.
+	(gst_pad_set_active): Take a boolean and not a mode, dispatch to
+	the pad's activate function to choose which mode to activate.
+	Shortcut on deactivation and call the right function directly.
+	(gst_pad_activate_pull): New API, (de)activates a pad in pull
+	mode.
+	(gst_pad_activate_push): New API, same for push mode.
+	(gst_pad_set_activate_function) 
+	(gst_pad_set_activatepull_function) 
+	(gst_pad_set_activatepush_function): Setters for new API.
+
+	* gst/gstminiobject.c (gst_mini_object_new, gst_mini_object_free):
+	Trace all miniobjects.
+	(gst_mini_object_make_writable): Unref the arg if we copy, like
+	gst_caps_make_writable.
+
+	* gst/gstmessage.c (_gst_message_initialize): No trace init.
+
+	* gst/gstghostpad.c (gst_proxy_pad_do_activate) 
+	(gst_proxy_pad_do_activatepull, gst_proxy_pad_do_activatepush):
+	Adapt for new pad API.
+
+	* gst/gstevent.c (_gst_event_initialize): Don't initialize trace.
+
+	* gst/gstelement.h:
+	* gst/gstelement.c (gst_element_iterate_src_pads) 
+	(gst_element_iterate_sink_pads): New API functions.
+	
+	* gst/gstelement.c (iterator_fold_with_resync): New utility,
+	should fold into gstiterator.c in some form.
+	(gst_element_pads_activate): Simplified via use of fold and
+	delegation of decisions to gstpad->activate.
+
+	* gst/gstbus.c (gst_bus_source_finalize): Set the bus to NULL,
+	help in debugging.
+
+	* gst/gstbuffer.c (_gst_buffer_initialize): Ref the buffer type
+	class once in init, like gstmessage. Didn't run into this issue
+	but it seems correct. Don't initialize a trace, gstminiobject does
+	that.
+
+	* check/pipelines/simple_launch_lines.c (test_stop_from_app): New
+	test, runs fakesrc ! fakesink, stopping on ::handoff via a message
+	to the bus.
+	(assert_live_count): New util function, uses alloc traces to check
+	cleanup.
+
+	* check/gst/gstghostpad.c (test_ghost_pads): More refcount checks.
+	To be modified when unlink drops the internal pad.
+
 2005-06-27  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (gst_bin_get_state), (gst_bin_iterate_state_order),

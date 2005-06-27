@@ -75,7 +75,8 @@ static void gst_tee_get_property (GObject * object, guint prop_id,
 
 static GstFlowReturn gst_tee_chain (GstPad * pad, GstBuffer * buffer);
 static void gst_tee_loop (GstPad * pad);
-static gboolean gst_tee_sink_activate (GstPad * pad, GstActivateMode mode);
+static gboolean gst_tee_sink_activate_push (GstPad * pad, gboolean active);
+static gboolean gst_tee_sink_activate_pull (GstPad * pad, gboolean active);
 
 
 static void
@@ -153,8 +154,10 @@ gst_tee_init (GstTee * tee)
 static void
 gst_tee_update_pad_functions (GstTee * tee)
 {
-  gst_pad_set_activate_function (tee->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_tee_sink_activate));
+  gst_pad_set_activatepush_function (tee->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_tee_sink_activate_push));
+  gst_pad_set_activatepull_function (tee->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_tee_sink_activate_pull));
 
   if (tee->has_chain)
     gst_pad_set_chain_function (tee->sinkpad,
@@ -348,27 +351,35 @@ pause_task:
 }
 
 static gboolean
-gst_tee_sink_activate (GstPad * pad, GstActivateMode mode)
+gst_tee_sink_activate_push (GstPad * pad, gboolean active)
 {
-  gboolean result = FALSE;
   GstTee *tee;
 
   tee = GST_TEE (GST_OBJECT_PARENT (pad));
 
-  switch (mode) {
-    case GST_ACTIVATE_PUSH:
-      g_return_val_if_fail (tee->has_chain, FALSE);
-      result = TRUE;
-      break;
-    case GST_ACTIVATE_PULL:
-      g_return_val_if_fail (tee->has_sink_loop, FALSE);
-      result = gst_pad_start_task (pad, (GstTaskFunction) gst_tee_loop, pad);
-      break;
-    case GST_ACTIVATE_NONE:
-      result = gst_pad_stop_task (pad);
-      break;
-  }
-  tee->sink_mode = mode;
+  tee->sink_mode = active && GST_ACTIVATE_PUSH;
 
-  return result;
+  if (active) {
+    g_return_val_if_fail (tee->has_chain, FALSE);
+  }
+
+  return TRUE;
+}
+
+/* won't be called until we implement an activate function */
+static gboolean
+gst_tee_sink_activate_pull (GstPad * pad, gboolean active)
+{
+  GstTee *tee;
+
+  tee = GST_TEE (GST_OBJECT_PARENT (pad));
+
+  tee->sink_mode = active && GST_ACTIVATE_PULL;
+
+  if (active) {
+    g_return_val_if_fail (tee->has_sink_loop, FALSE);
+    return gst_pad_start_task (pad, (GstTaskFunction) gst_tee_loop, pad);
+  } else {
+    return gst_pad_stop_task (pad);
+  }
 }

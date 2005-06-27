@@ -30,11 +30,6 @@
 #include "gsttag.h"
 #include "gstutils.h"
 
-#ifndef GST_DISABLE_TRACE
-/* #define GST_WITH_ALLOC_TRACE */
-#include "gsttrace.h"
-static GstAllocTrace *_event_trace;
-#endif
 
 static void gst_event_init (GTypeInstance * instance, gpointer g_class);
 static void gst_event_class_init (gpointer g_class, gpointer class_data);
@@ -45,10 +40,6 @@ void
 _gst_event_initialize (void)
 {
   gst_event_get_type ();
-
-#ifndef GST_DISABLE_TRACE
-  _event_trace = gst_alloc_trace_register (GST_EVENT_TRACE_NAME);
-#endif
 }
 
 GType

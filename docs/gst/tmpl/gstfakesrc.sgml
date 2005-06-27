@@ -63,6 +63,11 @@ GstFakeSrc
 
 </para>
 
+<!-- ##### ARG GstFakeSrc:is-live ##### -->
+<para>
+
+</para>
+
 <!-- ##### ARG GstFakeSrc:last-message ##### -->
 <para>
 

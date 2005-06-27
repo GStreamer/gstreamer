@@ -91,7 +91,8 @@ typedef enum {
 #define GST_PAD_MODE_ACTIVATE(mode) ((mode) != GST_ACTIVATE_NONE)
 
 /* pad states */
-typedef gboolean		(*GstPadActivateFunction)	(GstPad *pad, GstActivateMode mode);
+typedef gboolean		(*GstPadActivateFunction)	(GstPad *pad);
+typedef gboolean		(*GstPadActivateModeFunction)	(GstPad *pad, gboolean active);
 
 /* data passing */
 typedef GstFlowReturn		(*GstPadChainFunction)		(GstPad *pad, GstBuffer *buffer);
@@ -173,6 +174,8 @@ struct _GstPad {
   GstPadFixateCapsFunction	 fixatecapsfunc;
 
   GstPadActivateFunction	 activatefunc;
+  GstPadActivateModeFunction	 activatepushfunc;
+  GstPadActivateModeFunction	 activatepullfunc;
 
   /* pad link */
   GstPadLinkFunction		 linkfunc;
@@ -229,6 +232,8 @@ struct _GstPadClass {
 #define GST_PAD_ACTIVATE_MODE(pad)	(GST_PAD_CAST(pad)->mode)
 
 #define GST_PAD_ACTIVATEFUNC(pad)	(GST_PAD_CAST(pad)->activatefunc)
+#define GST_PAD_ACTIVATEPUSHFUNC(pad)	(GST_PAD_CAST(pad)->activatepushfunc)
+#define GST_PAD_ACTIVATEPULLFUNC(pad)	(GST_PAD_CAST(pad)->activatepullfunc)
 #define GST_PAD_LOOPFUNC(pad)		(GST_PAD_CAST(pad)->loopfunc)
 #define GST_PAD_CHAINFUNC(pad)		(GST_PAD_CAST(pad)->chainfunc)
 #define GST_PAD_CHECKGETRANGEFUNC(pad)	(GST_PAD_CAST(pad)->checkgetrangefunc)
@@ -358,9 +363,11 @@ GstElement*		gst_pad_get_parent			(GstPad *pad);
 
 GstPadDirection		gst_pad_get_direction			(GstPad *pad);
 
-gboolean		gst_pad_set_active			(GstPad *pad, GstActivateMode mode);
-gboolean		gst_pad_peer_set_active			(GstPad *pad, GstActivateMode mode);
+gboolean		gst_pad_set_active			(GstPad *pad, gboolean active);
 gboolean		gst_pad_is_active			(GstPad *pad);
+gboolean		gst_pad_activate_pull			(GstPad *pad, gboolean active);
+gboolean		gst_pad_activate_push			(GstPad *pad, gboolean active);
+
 gboolean		gst_pad_set_blocked			(GstPad *pad, gboolean blocked);
 gboolean		gst_pad_set_blocked_async		(GstPad *pad, gboolean blocked,
 								 GstPadBlockCallback callback, gpointer user_data);
@@ -377,6 +384,8 @@ GstFlowReturn		gst_pad_alloc_buffer			(GstPad *pad, guint64 offset, gint size,
 
 /* data passing setup functions */
 void			gst_pad_set_activate_function		(GstPad *pad, GstPadActivateFunction activate);
+void			gst_pad_set_activatepull_function	(GstPad *pad, GstPadActivateModeFunction activatepull);
+void			gst_pad_set_activatepush_function	(GstPad *pad, GstPadActivateModeFunction activatepush);
 void			gst_pad_set_loop_function		(GstPad *pad, GstPadLoopFunction loop);
 void			gst_pad_set_chain_function		(GstPad *pad, GstPadChainFunction chain);
 void			gst_pad_set_getrange_function		(GstPad *pad, GstPadGetRangeFunction get);
