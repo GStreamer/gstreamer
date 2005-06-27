@@ -196,7 +196,6 @@ GST_TIME_TO_TIMEVAL
 GST_CLOCK_ENTRY_TRACE_NAME
 GstClockEntry
 GstClockCallback
-GstClockEntryStatus
 GstClockEntryType
 GST_CLOCK_ENTRY
 GST_CLOCK_ENTRY_CLOCK
@@ -207,26 +206,15 @@ GST_CLOCK_ENTRY_STATUS
 GstClockReturn
 GstClockFlags
 GST_CLOCK_FLAGS
-gst_clock_set_speed
-gst_clock_get_speed
 gst_clock_set_resolution
 gst_clock_get_resolution
-gst_clock_set_active
-gst_clock_is_active
-gst_clock_reset
-gst_clock_handle_discont
 gst_clock_get_time
-gst_clock_get_event_time
-gst_clock_get_event_time_delay
-gst_clock_get_next_id
 gst_clock_new_single_shot_id
 gst_clock_new_periodic_id
 gst_clock_id_get_time
 gst_clock_id_wait
 gst_clock_id_wait_async
 gst_clock_id_unschedule
-gst_clock_id_unlock
-gst_clock_id_free
 <SUBSECTION Standard>
 GstClockClass
 GST_CLOCK
@@ -235,13 +223,11 @@ GST_TYPE_CLOCK
 GST_CLOCK_CLASS
 GST_IS_CLOCK_CLASS
 GST_CLOCK_GET_CLASS
-GST_TYPE_CLOCK_ENTRY_STATUS
 GST_TYPE_CLOCK_ENTRY_TYPE
 GST_TYPE_CLOCK_FLAGS
 GST_TYPE_CLOCK_RETURN
 <SUBSECTION Private>
 gst_clock_get_type
-gst_clock_entry_status_get_type
 gst_clock_entry_type_get_type
 gst_clock_flags_get_type
 gst_clock_return_get_type
@@ -251,28 +237,7 @@ gst_clock_return_get_type
 <FILE>gstcompat</FILE>
 <TITLE>GstCompat</TITLE>
 <SUBSECTION Standard>
-GST_PAD_IS_CONNECTED
-gst_element_connect
-gst_element_connect_pads
-gst_element_connect_many
-gst_element_connect_filtered
-gst_element_disconnect
-gst_pad_connect
-gst_pad_connect_filtered
-gst_pad_disconnect
-gst_pad_proxy_connect
-gst_pad_set_connect_function
-gst_pad_call_chain_function
-gst_pad_call_get_function
-GST_PAD_CONNECT_REFUSED
-GST_PAD_CONNECT_DELAYED
-GST_PAD_CONNECT_OK
-GST_PAD_CONNECT_DONE
-GstPadConnectReturn
-GstPadConnectFunction
-gst_info
 <SUBSECTION Private>
-
 </SECTION>
 
 <SECTION>
@@ -312,99 +277,52 @@ GST_ELEMENT_QUERY_TYPE_FUNCTION
 GST_ELEMENT_FORMATS_FUNCTION
 GST_ELEMENT_EVENT_MASK_FUNCTION
 GstElementFlags
-GST_ELEMENT_IS_THREAD_SUGGESTED
-GST_ELEMENT_IS_EVENT_AWARE
-GST_ELEMENT_IS_DECOUPLED
 GST_ELEMENT_NAME
 GST_ELEMENT_PARENT
-GST_ELEMENT_SCHED
 GST_ELEMENT_CLOCK
 GST_ELEMENT_PADS
 GST_ELEMENT_ERROR
-GstElementLoopFunction
-GstElementPreRunFunction
-GstElementPostRunFunction
 gst_element_class_add_pad_template
 gst_element_class_install_std_props
 gst_element_class_set_details
-gst_element_default_deep_notify
-gst_element_default_error
-gst_element_set_loop_function
 gst_element_get_name
 gst_element_set_name
 gst_element_get_parent
 gst_element_set_parent
-gst_element_set
-gst_element_get
-gst_element_set_valist
-gst_element_get_valist
-gst_element_set_property
-gst_element_get_property
-gst_element_enable_threadsafe_properties
-gst_element_disable_threadsafe_properties
-gst_element_set_pending_properties
 gst_element_requires_clock
 gst_element_provides_clock
 gst_element_get_clock
 gst_element_set_clock
-gst_element_clock_wait
-gst_element_get_time
-gst_element_wait
-gst_element_set_time
-gst_element_set_time_delay
-gst_element_adjust_time
 gst_element_is_indexable
 gst_element_set_index
 gst_element_get_index
-gst_element_release_locks
-gst_element_yield
-gst_element_interrupt
 gst_element_set_scheduler
 gst_element_get_scheduler
 gst_element_add_pad
 gst_element_remove_pad
-gst_element_add_ghost_pad
-gst_element_remove_ghost_pad
 gst_element_get_pad
 gst_element_get_static_pad
 gst_element_get_request_pad
 gst_element_release_request_pad
-gst_element_get_pad_list
 gst_element_get_compatible_pad
-gst_element_get_compatible_pad_filtered
-gst_element_class_get_pad_template
-gst_element_class_get_pad_template_list
-gst_element_get_pad_template
-gst_element_get_pad_template_list
 gst_element_get_compatible_pad_template
 gst_element_link
 gst_element_link_many
-gst_element_link_filtered
 gst_element_unlink
 gst_element_unlink_many
 gst_element_link_pads
-gst_element_link_pads_filtered
 gst_element_unlink_pads
-gst_element_get_event_masks
 gst_element_send_event
 gst_element_seek
 gst_element_get_query_types
 gst_element_query
-gst_element_get_formats
-gst_element_convert
-gst_element_found_tags
-gst_element_found_tags_for_pad
-gst_element_set_eos
-gst_element_error_full
 gst_element_is_locked_state
 gst_element_set_locked_state
 gst_element_sync_state_with_parent
 gst_element_get_state
 gst_element_set_state
-gst_element_wait_state_change
 gst_element_state_get_name
 gst_element_get_factory
-gst_element_get_managing_bin
 gst_element_no_more_pads
 <SUBSECTION Standard>
 GST_ELEMENT
@@ -440,13 +358,10 @@ gst_element_factory_get_klass
 gst_element_factory_get_description
 gst_element_factory_get_author
 gst_element_factory_get_num_pad_templates
-gst_element_factory_get_pad_templates
 gst_element_factory_get_uri_type
 gst_element_factory_get_uri_protocols
 gst_element_factory_create
 gst_element_factory_make
-gst_element_factory_can_src_caps
-gst_element_factory_can_sink_caps
 <SUBSECTION Standard>
 GstElementFactoryClass
 GST_ELEMENT_FACTORY
@@ -517,7 +432,6 @@ GST_EVENT_SEEK_FLAGS
 GST_EVENT_SEEK_OFFSET
 GST_EVENT_SEEK_ENDOFFSET
 GST_EVENT_SEEK_ACCURACY
-GST_EVENT_DISCONT_NEW_MEDIA
 GST_EVENT_DISCONT_OFFSET
 GST_EVENT_DISCONT_OFFSET_LEN
 GST_EVENT_SIZE_FORMAT
@@ -525,7 +439,6 @@ GST_EVENT_SIZE_VALUE
 GST_EVENT_RATE_VALUE
 gst_event_new
 gst_event_ref
-gst_event_ref_by_count
 gst_event_unref
 gst_event_copy
 gst_event_masks_contains
@@ -536,8 +449,6 @@ gst_event_new_discontinuous
 gst_event_new_discontinuous_valist
 gst_event_discont_get_value
 gst_event_new_filler
-gst_event_new_filler_stamped
-gst_event_filler_get_duration
 gst_event_new_flush
 <SUBSECTION Standard>
 GST_EVENT
@@ -574,7 +485,6 @@ gst_format_register
 gst_format_get_by_nick
 gst_formats_contains
 gst_format_get_details
-gst_format_get_definitions
 <SUBSECTION Standard>
 GST_TYPE_FORMAT
 <SUBSECTION Private>
@@ -585,9 +495,7 @@ gst_format_get_type
 <FILE>gstghostpad</FILE>
 <TITLE>GstGhostPad</TITLE>
 GstGhostPad
-GST_GPAD_REALPAD
 gst_ghost_pad_new
-gst_ghost_pad_save_thyself
 <SUBSECTION Standard>
 GstGhostPadClass
 GST_GHOST_PAD
@@ -822,8 +730,6 @@ GST_FLAG_SET
 GST_FLAG_UNSET
 GST_OBJECT_NAME
 GST_OBJECT_PARENT
-GST_OBJECT_DESTROYED
-GST_OBJECT_FLOATING
 GST_LOCK
 GST_TRYLOCK
 GST_UNLOCK
@@ -863,25 +769,16 @@ xmlNodePtr
 <FILE>gstpad</FILE>
 <TITLE>GstPad</TITLE>
 GstPad
-GstPadLink
 GST_PAD_LINK_FAILED
 GST_PAD_LINK_SUCCESSFUL
-GST_PAD_QUERY_TYPE_FUNCTION
-GST_PAD_FORMATS_FUNCTION
-GST_PAD_EVENT_MASK_FUNCTION
 GstPadChainFunction
-GstPadGetFunction
 GstPadEventFunction
-GstPadConvertFunction
 GstPadQueryFunction
 GstPadIntLinkFunction
-GstPadFormatsFunction
-GstPadEventMaskFunction
 GstPadQueryTypeFunction
 GstPadLinkFunction
 GstPadUnlinkFunction
 GstPadGetCapsFunction
-GstPadFixateFunction
 GstPadBufferAllocFunction
 GstPadDispatcherFunction
 GstPadDirection
@@ -892,94 +789,43 @@ GST_PAD_NAME
 GST_PAD_PARENT
 GST_PAD_ELEMENT_PRIVATE
 GST_PAD_PAD_TEMPLATE
-GST_PAD_REALIZE
 GST_PAD_DIRECTION
 GST_PAD_CAPS
 GST_PAD_PEER
 GST_PAD_IS_LINKED
-GST_PAD_IS_ACTIVE
-GST_PAD_IS_NEGOTIATING
-GST_PAD_IS_DISPATCHING
 GST_PAD_IS_USABLE
-GST_PAD_CAN_PULL
 GST_PAD_IS_SRC
 GST_PAD_IS_SINK
 gst_pad_new
 gst_pad_new_from_template
-gst_pad_custom_new
-gst_pad_custom_new_from_template
-gst_pad_set_name
 gst_pad_get_name
 gst_pad_get_direction
 gst_pad_set_active
-gst_pad_set_active_recursive
 gst_pad_is_active
 gst_pad_set_element_private
 gst_pad_get_element_private
-gst_pad_set_parent
 gst_pad_get_parent
-gst_pad_get_real_parent
-gst_pad_get_scheduler
-gst_pad_add_ghost_pad
-gst_pad_remove_ghost_pad
-gst_pad_get_ghost_pad_list
 gst_pad_get_pad_template
 gst_pad_set_bufferalloc_function
 gst_pad_alloc_buffer
 gst_pad_set_chain_function
-gst_pad_set_get_function
 gst_pad_set_event_function
-gst_pad_set_event_mask_function
-gst_pad_get_event_masks
-gst_pad_get_event_masks_default
 gst_pad_set_link_function
 gst_pad_can_link
-gst_pad_can_link_filtered
 gst_pad_set_unlink_function
 gst_pad_link
-gst_pad_link_filtered
 gst_pad_unlink
 gst_pad_is_linked
 gst_pad_get_peer
 gst_pad_get_negotiated_caps
-gst_pad_is_negotiated
 gst_pad_get_caps
 gst_pad_get_pad_template_caps
-gst_pad_try_set_caps
-gst_pad_try_set_caps_nonfixed
-gst_pad_check_compatibility
 gst_pad_set_getcaps_function
-gst_pad_set_fixate_function
 gst_pad_proxy_getcaps
-gst_pad_proxy_pad_link
-gst_pad_proxy_fixate
-gst_pad_proxy_link
-gst_pad_set_explicit_caps
-gst_pad_use_explicit_caps
-gst_pad_relink_filtered
-gst_pad_perform_negotiate
-gst_pad_renegotiate
-gst_pad_unnegotiate
-gst_pad_try_relink_filtered
 gst_pad_get_allowed_caps
-gst_pad_caps_change_notify
-gst_pad_recover_caps_error
 gst_pad_push
-gst_pad_pull
 gst_pad_send_event
 gst_pad_event_default
-gst_pad_select
-gst_pad_selectv
-gst_pad_select_valist
-gst_pad_collect
-gst_pad_collectv
-gst_pad_collect_valist
-gst_pad_set_formats_function
-gst_pad_get_formats
-gst_pad_get_formats_default
-gst_pad_set_convert_function
-gst_pad_convert
-gst_pad_convert_default
 gst_pad_set_query_function
 gst_pad_set_query_type_function
 gst_pad_get_query_types
@@ -1017,7 +863,6 @@ gst_pad_presence_get_type
 <TITLE>GstPadTemplate</TITLE>
 GstPadTemplate
 GstStaticPadTemplate
-GST_IS_GHOST_PAD_FAST
 GST_IS_PAD_FAST
 GST_PAD_TEMPLATE_NAME_TEMPLATE
 GST_PAD_TEMPLATE_DIRECTION
@@ -1028,7 +873,6 @@ GstPadTemplateFlags
 gst_pad_template_new
 gst_static_pad_template_get
 gst_pad_template_get_caps
-gst_pad_template_get_caps_by_name
 <SUBSECTION Standard>
 GstPadTemplateClass
 GST_PAD_TEMPLATE
@@ -1107,7 +951,6 @@ gst_plugin_load_file
 gst_plugin_unload_plugin
 gst_plugin_add_feature
 gst_plugin_load
-gst_library_load
 <SUBSECTION Standard>
 GST_PLUGIN
 GST_TYPE_PLUGIN
@@ -1178,7 +1021,6 @@ gst_query_type_register
 gst_query_type_get_by_nick
 gst_query_types_contains
 gst_query_type_get_details
-gst_query_type_get_definitions
 <SUBSECTION Standard>
 GST_TYPE_QUERY_TYPE
 <SUBSECTION Private>
@@ -1201,48 +1043,6 @@ GST_TYPE_QUEUE
 gst_queue_get_type
 </SECTION>
 <SUBSECTION Standard>
-
-<SECTION>
-<FILE>gstrealpad</FILE>
-<TITLE>GstRealPad</TITLE>
-GstRealPad
-GstRealPadFlags
-GST_IS_REAL_PAD_FAST
-GST_RPAD_DIRECTION
-GST_RPAD_CAPS
-GST_RPAD_APPFILTER
-GST_RPAD_PEER
-GST_RPAD_CHAINFUNC
-GST_RPAD_CHAINHANDLER
-GST_RPAD_GETFUNC
-GST_RPAD_GETHANDLER
-GST_RPAD_EVENTFUNC
-GST_RPAD_EVENTHANDLER
-GST_RPAD_CONVERTFUNC
-GST_RPAD_QUERYFUNC
-GST_RPAD_INTLINKFUNC
-GST_RPAD_FORMATSFUNC
-GST_RPAD_QUERYTYPEFUNC
-GST_RPAD_EVENTMASKFUNC
-GST_RPAD_LINKFUNC
-GST_RPAD_UNLINKFUNC
-GST_RPAD_GETCAPSFUNC
-GST_RPAD_FIXATEFUNC
-GST_RPAD_BUFFERALLOCFUNC
-GST_RPAD_LINK
-GST_RPAD_EXPLICIT_CAPS
-<SUBSECTION Standard>
-GstRealPadClass
-GST_REAL_PAD
-GST_IS_REAL_PAD
-GST_REAL_PAD_CLASS
-GST_IS_REAL_PAD_CLASS
-GST_TYPE_REAL_PAD
-GST_TYPE_REAL_PAD_FLAGS
-<SUBSECTION Private>
-gst_real_pad_flags_get_type
-gst_real_pad_get_type
-</SECTION>
 
 <SECTION>
 <FILE>gstregistry</FILE>
@@ -1316,30 +1116,8 @@ GstScheduler
 GstSchedulerFlags
 GST_SCHEDULER_PARENT
 GST_SCHEDULER_STATE
-GstSchedulerState
 gst_scheduler_setup
 gst_scheduler_reset
-gst_scheduler_add_element
-gst_scheduler_remove_element
-gst_scheduler_add_scheduler
-gst_scheduler_remove_scheduler
-gst_scheduler_state_transition
-gst_scheduler_scheduling_change
-gst_scheduler_lock_element
-gst_scheduler_unlock_element
-gst_scheduler_yield
-gst_scheduler_interrupt
-gst_scheduler_error
-gst_scheduler_pad_link
-gst_scheduler_pad_unlink
-gst_scheduler_pad_select
-gst_scheduler_clock_wait
-gst_scheduler_iterate
-gst_scheduler_use_clock
-gst_scheduler_set_clock
-gst_scheduler_get_clock
-gst_scheduler_auto_clock
-gst_scheduler_show
 GST_SCHEDULER_DEFAULT_NAME
 <SUBSECTION Standard>
 GstSchedulerClass
@@ -1350,11 +1128,9 @@ GST_IS_SCHEDULER_CLASS
 GST_SCHEDULER_GET_CLASS
 GST_TYPE_SCHEDULER
 GST_TYPE_SCHEDULER_FLAGS
-GST_TYPE_SCHEDULER_STATE
 <SUBSECTION Private>
 gst_scheduler_get_type
 gst_scheduler_flags_get_type
-gst_scheduler_state_get_type
 </SECTION>
 
 <SECTION>
@@ -1659,7 +1435,6 @@ gst_type_find_factory_get_type
 <TITLE>GstTypes</TITLE>
 GstElementState
 GstElementStateReturn
-GstResult
 GstRank
 GST_PADDING
 GST_PADDING_INIT
@@ -1667,12 +1442,10 @@ GST_PADDING_INIT
 GST_TYPE_ELEMENT_STATE
 GST_TYPE_ELEMENT_STATE_RETURN
 GST_TYPE_RANK
-GST_TYPE_RESULT
 <SUBSECTION Private>
 gst_element_state_get_type
 gst_element_state_return_get_type
 gst_rank_get_type
-gst_result_get_type
 </SECTION>
 
 <SECTION>
@@ -1864,7 +1637,6 @@ GST_IS_FAKESRC
 GST_TYPE_FAKESRC
 GST_FAKESRC_CLASS
 GST_IS_FAKESRC_CLASS
-GST_FAKESRC_GET_CLASS
 <SUBSECTION Private>
 gst_fakesrc_get_type
 </SECTION>
@@ -1881,25 +1653,8 @@ GST_IS_FAKESINK
 GST_TYPE_FAKESINK
 GST_FAKESINK_CLASS
 GST_IS_FAKESINK_CLASS
-GST_FAKESINK_GET_CLASS
 <SUBSECTION Private>
 gst_fakesink_get_type
-</SECTION>
-
-<SECTION>
-<FILE>gstbasesrc</FILE>
-<TITLE>GstBaseSrc</TITLE>
-GstBaseSrc
-GstBaseSrcClass
-<SUBSECTION Standard>
-GST_BASESRC
-GST_IS_BASESRC
-GST_TYPE_BASESRC
-GST_BASESRC_CLASS
-GST_IS_BASESRC_CLASS
-GST_BASESRC_GET_CLASS
-<SUBSECTION Private>
-gst_basesrc_get_type
 </SECTION>
 
 <SECTION>
@@ -1913,7 +1668,6 @@ GST_IS_FILESRC
 GST_TYPE_FILESRC
 GST_FILESRC_CLASS
 GST_IS_FILESRC_CLASS
-GST_FILESRC_GET_CLASS
 <SUBSECTION Private>
 gst_filesrc_get_type
 </SECTION>
@@ -1930,9 +1684,23 @@ GST_IS_FILESINK
 GST_TYPE_FILESINK
 GST_FILESINK_CLASS
 GST_IS_FILESINK_CLASS
-GST_FILESINK_GET_CLASS
 <SUBSECTION Private>
 gst_filesink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>gstbasesrc</FILE>
+<TITLE>GstBaseSrc</TITLE>
+GstBaseSrc
+GstBaseSrcClass
+<SUBSECTION Standard>
+GST_BASESRC
+GST_IS_BASESRC
+GST_TYPE_BASESRC
+GST_BASESRC_CLASS
+GST_IS_BASESRC_CLASS
+<SUBSECTION Private>
+gst_basesrc_get_type
 </SECTION>
 
 

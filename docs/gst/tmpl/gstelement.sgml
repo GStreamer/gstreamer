@@ -74,6 +74,7 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 @state_cond: 
 @current_state: 
 @pending_state: 
+@final_state: 
 @state_error: 
 @no_preroll: 
 @manager: 
@@ -120,6 +121,32 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 @gstelement: the object which received the signal.
 @arg1: 
 @arg2: 
+
+<!-- ##### STRUCT GstElementClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@details: 
+@elementfactory: 
+@padtemplates: 
+@numpadtemplates: 
+@pad_templ_cookie: 
+@request_new_pad: 
+@release_pad: 
+@get_state: 
+@change_state: 
+@set_manager: 
+@set_bus: 
+@set_scheduler: 
+@get_clock: 
+@set_clock: 
+@get_index: 
+@set_index: 
+@send_event: 
+@get_query_types: 
+@query: 
 
 <!-- ##### MACRO GST_NUM_STATES ##### -->
 <para>
@@ -493,25 +520,6 @@ Sets the parent of an element.
 @element: 
 @pad: 
 @caps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_class_get_pad_template ##### -->
-<para>
-
-</para>
-
-@element_class: 
-@name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_class_get_pad_template_list ##### -->
-<para>
-
-</para>
-
-@element_class: 
 @Returns: 
 
 

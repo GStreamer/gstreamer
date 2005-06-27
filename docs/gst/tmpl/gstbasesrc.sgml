@@ -19,6 +19,22 @@ GstBaseSrc
 
 </para>
 
+@live_lock: 
+@live_cond: 
+@is_live: 
+@live_running: 
+@blocksize: 
+@has_loop: 
+@has_getrange: 
+@seekable: 
+@random_access: 
+@clock_id: 
+@end_time: 
+@segment_start: 
+@segment_end: 
+@segment_loop: 
+@offset: 
+@size: 
 
 <!-- ##### ARG GstBaseSrc:blocksize ##### -->
 <para>
