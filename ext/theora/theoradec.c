@@ -1034,8 +1034,12 @@ static GstElementStateReturn
 theora_dec_change_state (GstElement * element)
 {
   GstTheoraDec *dec = GST_THEORA_DEC (element);
+  gint transition;
+  GstElementStateReturn ret;
 
-  switch (GST_STATE_TRANSITION (element)) {
+  transition = GST_STATE_TRANSITION (element);
+
+  switch (transition) {
     case GST_STATE_NULL_TO_READY:
       break;
     case GST_STATE_READY_TO_PAUSED:
@@ -1047,6 +1051,13 @@ theora_dec_change_state (GstElement * element)
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
+    default:
+      break;
+  }
+
+  ret = parent_class->change_state (element);
+
+  switch (transition) {
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
@@ -1062,7 +1073,7 @@ theora_dec_change_state (GstElement * element)
       break;
   }
 
-  return parent_class->change_state (element);
+  return ret;
 }
 
 static void

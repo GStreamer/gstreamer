@@ -1,3 +1,9 @@
+2005-06-27  Edward Hervey  <edward@fluendo.com>
+
+	* ext/theora/theoradec.c: (theora_dec_change_state): 
+	re-arranged call to parent's state change in order to avoid locks (or
+	worse).
+
 2005-06-26  Edward Hervey  <edward@fluendo.com>
 
 	* gst/playback/gstdecodebin.c: (gst_decode_bin_class_init):
