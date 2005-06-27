@@ -2230,7 +2230,7 @@ gst_element_set_manager (GstElement * element, GstPipeline * manager)
  * gst_element_get_manager:
  * @element: a #GstElement to get the manager of.
  *
- * Returns the manager of the element. 
+ * Returns the manager of the element.
  *
  * Returns: the element's #GstPipeline. unref after usage.
  *

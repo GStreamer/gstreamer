@@ -35,3 +35,34 @@ GstBaseSink
 
 </para>
 
+<!-- ##### STRUCT GstBaseSinkClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@get_caps: 
+@set_caps: 
+@buffer_alloc: 
+@get_times: 
+@unlock: 
+@event: 
+@preroll: 
+@render: 
+
+<!-- ##### MACRO GST_BASESINK_CLOCK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_BASESINK_PAD ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+

@@ -1,0 +1,34 @@
+<!-- ##### SECTION Title ##### -->
+GstBaseTransform
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GstBaseTransform ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstBaseTransformClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@set_caps: 
+@start: 
+@stop: 
+@event: 
+@transform: 
+

@@ -1,3 +1,20 @@
+2005-06-27  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/gstreamer.types:
+	* docs/gst/tmpl/gstbasesink.sgml:
+	* docs/gst/tmpl/gstbasesrc.sgml:
+	* docs/gst/tmpl/gstbasetransform.sgml:
+	* docs/gst/tmpl/gstelement.sgml:
+	* docs/gst/tmpl/gstiterator.sgml:
+	* gst/base/gstbasesrc.c:
+	* gst/base/gstbasesrc.h:
+	* gst/base/gstbasetransform.h:
+	* gst/gstelement.c:
+	* gst/gstiterator.h:
+	  adding basetransform and iterator docs
+
 2005-06-27  Andy Wingo  <wingo@pobox.com>
 
 	* docs/design/part-activation.txt: Notes on how activation should

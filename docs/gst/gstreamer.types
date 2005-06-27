@@ -33,9 +33,11 @@ gst_xml_get_type
 
 #include <gst/base/gstbasesrc.h>
 #include <gst/base/gstbasesink.h>
+#include <gst/base/gstbasetransform.h>
 
 gst_basesrc_get_type
 gst_basesink_get_type
+gst_base_transform_get_type
 
 % elements
 

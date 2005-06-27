@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2005 Wim Taymans <wim@fluendo.com>
  *
- * gstbasetransform.h: 
+ * gstbasetransform.h:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -28,12 +28,12 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_BASE_TRANSFORM  	(gst_base_transform_get_type())
-#define GST_BASE_TRANSFORM(obj)  	(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_TRANSFORM,GstBaseTransform))
+#define GST_TYPE_BASE_TRANSFORM		(gst_base_transform_get_type())
+#define GST_BASE_TRANSFORM(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_TRANSFORM,GstBaseTransform))
 #define GST_BASE_TRANSFORM_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASE_TRANSFORM,GstBaseTransformClass))
 #define GST_BASE_TRANSFORM_GET_CLASS(obj) \
 	(G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_BASE_TRANSFORM,GstBaseTransformClass))
-#define GST_IS_BASE_TRANSFORM(obj)  	(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_TRANSFORM))
+#define GST_IS_BASE_TRANSFORM(obj)	(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_TRANSFORM))
 #define GST_IS_BASE_TRANSFORM_CLASS(obj)(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_TRANSFORM))
 
 /* the names of the templates for the sink and source pads */
@@ -44,26 +44,34 @@ typedef struct _GstBaseTransform GstBaseTransform;
 typedef struct _GstBaseTransformClass GstBaseTransformClass;
 
 struct _GstBaseTransform {
-  GstElement 	 element;
+  GstElement	 element;
 
   /* source and sink pads */
-  GstPad 	*sinkpad;
-  GstPad 	*srcpad;
+  GstPad	*sinkpad;
+  GstPad	*srcpad;
 };
 
 struct _GstBaseTransformClass {
   GstElementClass parent_class;
 
+  /*< public >*/
+  /* virtual methods for subclasses */
+
+
+  /* notify the subclass of new caps */
   gboolean      (*set_caps)     (GstBaseTransform *trans, GstCaps *caps);
 
+  /* start and stop processing, ideal for opening/closing the resource */
   gboolean      (*start)        (GstBaseTransform *trans);
   gboolean      (*stop)         (GstBaseTransform *trans);
 
   gboolean      (*event)        (GstBaseTransform *trans, GstEvent *event);
+
+  /* transform one incoming buffer to one outgoing buffer */
   GstFlowReturn (*transform)    (GstBaseTransform *trans, GstBuffer *inbuf, GstBuffer **outbuf);
 };
 
-GType gst_base_transform_get_type(void);
+GType gst_base_transform_get_type (void);
 
 G_END_DECLS
 

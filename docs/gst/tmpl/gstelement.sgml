@@ -711,6 +711,15 @@ Sets the parent of an element.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_element_get_manager ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_element_no_more_pads ##### -->
 <para>
 

@@ -323,6 +323,7 @@ gst_element_get_state
 gst_element_set_state
 gst_element_state_get_name
 gst_element_get_factory
+gst_element_get_manager
 gst_element_no_more_pads
 <SUBSECTION Standard>
 GST_ELEMENT
@@ -697,6 +698,43 @@ GST_IMPLEMENTS_INTERFACE_GET_CLASS
 GST_TYPE_IMPLEMENTS_INTERFACE
 <SUBSECTION Private>
 gst_implements_interface_get_type
+</SECTION>
+
+<SECTION>
+<FILE>gstiterator</FILE>
+<TITLE>GstIterator</TITLE>
+GstIterator
+
+GstIteratorItem
+GstIteratorResult
+
+GstIteratorDisposeFunction
+GstIteratorNextFunction
+GstIteratorItemFunction
+GstIteratorResyncFunction
+GstIteratorFreeFunction
+GstIteratorFoldFunction
+
+GST_ITERATOR
+GST_ITERATOR_LOCK
+GST_ITERATOR_COOKIE
+GST_ITERATOR_ORIG_COOKIE
+
+gst_iterator_new
+gst_iterator_new_list
+
+gst_iterator_next
+gst_iterator_resync
+gst_iterator_free
+gst_iterator_push
+gst_iterator_filter
+gst_iterator_fold
+gst_iterator_foreach
+gst_iterator_find_custom
+
+
+<SUBSECTION Standard>
+<SUBSECTION Private>
 </SECTION>
 
 <SECTION>
@@ -1693,12 +1731,19 @@ gst_filesink_get_type
 <TITLE>GstBaseSrc</TITLE>
 GstBaseSrc
 GstBaseSrcClass
+GstBaseSrcFlags
+
+gst_basesrc_is_live
+gst_basesrc_set_live
+
+GST_BASESRC_PAD
 <SUBSECTION Standard>
 GST_BASESRC
 GST_IS_BASESRC
 GST_TYPE_BASESRC
 GST_BASESRC_CLASS
 GST_IS_BASESRC_CLASS
+GST_BASESRC_GET_CLASS
 <SUBSECTION Private>
 gst_basesrc_get_type
 </SECTION>
@@ -1708,6 +1753,10 @@ gst_basesrc_get_type
 <FILE>gstbasesink</FILE>
 <TITLE>GstBaseSink</TITLE>
 GstBaseSink
+GstBaseSinkClass
+
+GST_BASESINK_CLOCK
+GST_BASESINK_PAD
 
 <SUBSECTION Standard>
 GstBaseSinkClass
@@ -1719,4 +1768,20 @@ GST_IS_BASESINK_CLASS
 GST_BASESINK_GET_CLASS
 <SUBSECTION Private>
 gst_basesink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>gstbasetransform</FILE>
+<TITLE>GstBaseTransform</TITLE>
+GstBaseTransform
+GstBaseTransformClass
+<SUBSECTION Standard>
+GST_BASETRANSFORM
+GST_IS_BASETRANSFORM
+GST_TYPE_BASETRANSFORM
+GST_BASETRANSFORM_CLASS
+GST_IS_BASETRANSFORM_CLASS
+GST_BASETRANSFORM_GET_CLASS
+<SUBSECTION Private>
+gst_basetransform_get_type
 </SECTION>

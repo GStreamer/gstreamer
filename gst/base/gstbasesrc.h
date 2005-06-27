@@ -28,12 +28,12 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_BASESRC  		(gst_basesrc_get_type())
-#define GST_BASESRC(obj)  		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASESRC,GstBaseSrc))
-#define GST_BASESRC_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASESRC,GstBaseSrcClass))
+#define GST_TYPE_BASESRC		(gst_basesrc_get_type())
+#define GST_BASESRC(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASESRC,GstBaseSrc))
+#define GST_BASESRC_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASESRC,GstBaseSrcClass))
 #define GST_BASESRC_GET_CLASS(obj)      (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BASESRC, GstBaseSrcClass))
-#define GST_IS_BASESRC(obj)  		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASESRC))
-#define GST_IS_BASESRC_CLASS(obj)  	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASESRC))
+#define GST_IS_BASESRC(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASESRC))
+#define GST_IS_BASESRC_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASESRC))
 
 typedef enum {
   GST_BASESRC_STARTED           = GST_ELEMENT_FLAG_LAST,
@@ -52,7 +52,7 @@ typedef enum {
 typedef struct _GstBaseSrc GstBaseSrc;
 typedef struct _GstBaseSrcClass GstBaseSrcClass;
 
-#define GST_BASESRC_PAD(obj)           (GST_BASESRC (obj)->srcpad)
+#define GST_BASESRC_PAD(obj)                  (GST_BASESRC (obj)->srcpad)
 
 #define GST_LIVE_GET_LOCK(elem)               (GST_BASESRC(elem)->live_lock)
 #define GST_LIVE_LOCK(elem)                   g_mutex_lock(GST_LIVE_GET_LOCK(elem))
@@ -70,7 +70,8 @@ struct _GstBaseSrc {
   GstElement     element;
   GstPad	*srcpad;
 
-  /* only for subclass implementations */
+  /*< public >*/
+  /* available to subclass implementations */
   /* MT-protected (with LIVE_LOCK) */
   GMutex	*live_lock;
   GCond		*live_cond;
@@ -105,6 +106,8 @@ struct _GstBaseSrcClass {
   GstElementClass parent_class;
 
   /*< public >*/
+  /* virtual methods for subclasses */
+
   /* get caps from subclass */
   GstCaps*      (*get_caps)     (GstBaseSrc *src);
   /* notify the subclass of new caps */

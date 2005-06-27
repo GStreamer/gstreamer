@@ -8,7 +8,9 @@
 <!ENTITY GstBuffer SYSTEM "xml/gstbuffer.xml">
 <!ENTITY GstCaps SYSTEM "xml/gstcaps.xml">
 <!ENTITY GstClock SYSTEM "xml/gstclock.xml">
+<!--
 <!ENTITY GstCompat SYSTEM "xml/gstcompat.xml">
+-->
 <!ENTITY GstConfig SYSTEM "xml/gstconfig.xml">
 <!ENTITY GstElement SYSTEM "xml/gstelement.xml">
 <!ENTITY GstElementDetails SYSTEM "xml/gstelementdetails.xml">
@@ -22,6 +24,7 @@
 <!ENTITY GstIndex SYSTEM "xml/gstindex.xml">
 <!ENTITY GstIndexFactory SYSTEM "xml/gstindexfactory.xml">
 <!ENTITY GstInfo SYSTEM "xml/gstinfo.xml">
+<!ENTITY GstIterator SYSTEM "xml/gstiterator.xml">
 <!ENTITY GstMacros SYSTEM "xml/gstmacros.xml">
 <!ENTITY GstMemChunk SYSTEM "xml/gstmemchunk.xml">
 <!ENTITY GstObject SYSTEM "xml/gstobject.xml">
@@ -34,7 +37,6 @@
 <!ENTITY GstProbe SYSTEM "xml/gstprobe.xml">
 <!ENTITY GstQuery SYSTEM "xml/gstquery.xml">
 <!ENTITY GstQueue SYSTEM "xml/gstqueue.xml">
-<!ENTITY GstRealPad SYSTEM "xml/gstrealpad.xml">
 <!ENTITY GstRegistry SYSTEM "xml/gstregistry.xml">
 <!ENTITY GstRegistryPool SYSTEM "xml/gstregistrypool.xml">
 <!ENTITY GstScheduler SYSTEM "xml/gstscheduler.xml">
@@ -57,6 +59,7 @@
 
 <!ENTITY GstBaseSrc SYSTEM "xml/gstbasesrc.xml">
 <!ENTITY GstBaseSink SYSTEM "xml/gstbasesink.xml">
+<!ENTITY GstBaseTransform SYSTEM "xml/gstbasetransform.xml">
 
 <!ENTITY GstFakeSrc SYSTEM "xml/gstfakesrc.xml">
 <!ENTITY GstFakeSink SYSTEM "xml/gstfakesink.xml">
@@ -112,6 +115,7 @@
     &GstIndex;
     &GstIndexFactory;
     &GstInfo;
+    &GstIterator;
     &GstObject;
     &GstPad;
     &GstPadTemplate;
@@ -122,7 +126,6 @@
     &GstProbe;
     &GstQuery;
     &GstQueue;
-    &GstRealPad;
     &GstRegistry;
     &GstRegistryPool;
     &GstScheduler;
@@ -154,6 +157,7 @@
 
   </chapter>
 
+<!--
   <chapter id="gstreamer-compat">
     <title>GStreamer Core Compatibility</title>
     <para>
@@ -164,6 +168,7 @@
     &GstCompat;
 
   </chapter>
+-->
 
   <chapter id="element-types">
     <title>GStreamer Core Elements</title>
@@ -204,6 +209,7 @@
 
     &GstBaseSrc;
     &GstBaseSink;
+    &GstBaseTransform;
 
   </chapter>
 
