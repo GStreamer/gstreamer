@@ -1,3 +1,11 @@
+2005-06-27  Wim Taymans  <wim@fluendo.com>
+
+	* ext/mad/gstid3tag.c: (gst_id3_tag_src_link):
+	* ext/mad/gstmad.c: (gst_mad_chain):
+	RPAD_ -> PAD
+	Fix args in bufferalloc function call.
+	Makes the mad plugin compile again
+
 2005-06-27  Owen Fraser-Green  <owen@discobabe.net>
 
 	* gst/realmedia/rmdemux.c: Rewrote to use gstadapter. Also parses

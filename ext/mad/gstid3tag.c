@@ -1008,7 +1008,7 @@ gst_id3_tag_src_link (GstPad * pad, GstPad * peer)
   }
 #endif
   if (GST_RPAD_LINKFUNC (peer))
-    return GST_RPAD_LINKFUNC (peer) (peer, pad);
+    return GST_PAD_LINKFUNC (peer) (peer, pad);
   else
     return GST_PAD_LINK_OK;
 }

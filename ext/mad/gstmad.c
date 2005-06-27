@@ -1523,9 +1523,12 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         right_ch = mad->synth.pcm.samples[1];
 
         /* will attach the caps to the buffer */
-        outbuffer =
+        result =
             gst_pad_alloc_buffer (mad->srcpad, 0, nsamples * mad->channels * 2,
-            GST_PAD_CAPS (mad->srcpad));
+            GST_PAD_CAPS (mad->srcpad), &outbuffer);
+        if (result != GST_FLOW_OK)
+          goto end;
+
         outdata = (gint16 *) GST_BUFFER_DATA (outbuffer);
 
         GST_BUFFER_TIMESTAMP (outbuffer) = time_offset;
