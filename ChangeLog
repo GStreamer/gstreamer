@@ -1,3 +1,9 @@
+2005-06-27  Luca Ognibene  <luogni@tin.it>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_loop):
+	timestamp is a GstClockTime, not a double..
+	fix #309149 and maybe others bug
+
 2005-06-27  Daniel Fischer  <dan@f3c.com>
 
 	reviewed by: Luca Ognibene <luogni@tin.it>
