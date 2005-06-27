@@ -661,9 +661,10 @@ gst_ffmpegdemux_loop (GstElement * element)
       demux->last_ts[stream->index] = GST_BUFFER_TIMESTAMP (outbuf);
     }
 
-    if (pkt.flags & PKT_FLAG_KEY) {
+    if (pkt.flags & PKT_FLAG_KEY)
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_KEY_UNIT);
-    }
+    else
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_DELTA_UNIT);
 
     gst_pad_push (pad, GST_DATA (outbuf));
   }

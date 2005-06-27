@@ -488,7 +488,9 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data)
   GST_BUFFER_SIZE (outbuf) = ret_size;
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
-  if (ffmpegenc->context->coded_frame->key_frame == 0)
+  if (ffmpegenc->context->coded_frame->key_frame)
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_KEY_UNIT);
+  else
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_DELTA_UNIT);
   gst_pad_push (ffmpegenc->srcpad, GST_DATA (outbuf));
 
