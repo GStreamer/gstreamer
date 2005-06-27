@@ -312,33 +312,15 @@ gst_videotestsrc_src_unlink (GstPad * pad)
 }
 
 static gboolean
-gst_videotestsrc_activate (GstPad * pad, GstActivateMode mode)
+gst_videotestsrc_activate_push (GstPad * pad, gboolean active)
 {
-  gboolean result = FALSE;
-  GstVideotestsrc *videotestsrc;
-
-  videotestsrc = GST_VIDEOTESTSRC (GST_OBJECT_PARENT (pad));
-
-  switch (mode) {
-    case GST_ACTIVATE_PULL:
-      break;
-    case GST_ACTIVATE_PUSH:
-      result = gst_pad_start_task (pad,
-          (GstTaskFunction) gst_videotestsrc_loop, pad);
-      break;
-    case GST_ACTIVATE_NONE:
-      /* step 1, unblock clock sync (if any) */
-
-      /* step 2, make sure streaming finishes */
-      result = gst_pad_stop_task (pad);
-      break;
-    default:
-      result = FALSE;
-      break;
+  if (active) {
+    return gst_pad_start_task (pad,
+        (GstTaskFunction) gst_videotestsrc_loop, pad);
+  } else {
+    return gst_pad_stop_task (pad);
   }
-  return result;
 }
-
 
 static GstElementStateReturn
 gst_videotestsrc_change_state (GstElement * element)
@@ -443,8 +425,8 @@ gst_videotestsrc_init (GstVideotestsrc * videotestsrc)
   gst_pad_set_getcaps_function (videotestsrc->srcpad, gst_videotestsrc_getcaps);
   gst_pad_set_setcaps_function (videotestsrc->srcpad, gst_videotestsrc_setcaps);
   gst_element_add_pad (GST_ELEMENT (videotestsrc), videotestsrc->srcpad);
-  gst_pad_set_activate_function (videotestsrc->srcpad,
-      gst_videotestsrc_activate);
+  gst_pad_set_activatepush_function (videotestsrc->srcpad,
+      gst_videotestsrc_activate_push);
   gst_pad_set_loop_function (videotestsrc->srcpad, gst_videotestsrc_loop);
   gst_pad_set_link_function (videotestsrc->srcpad, gst_videotestsrc_src_link);
   gst_pad_set_unlink_function (videotestsrc->srcpad,

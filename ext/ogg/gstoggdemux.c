@@ -232,7 +232,7 @@ gst_ogg_pad_class_init (GstOggPadClass * klass)
 
   gobject_class = (GObjectClass *) klass;
 
-  ogg_pad_parent_class = g_type_class_ref (G_TYPE_OBJECT);
+  ogg_pad_parent_class = g_type_class_ref (GST_TYPE_PAD);
 
   gobject_class->dispose = gst_ogg_pad_dispose;
   gobject_class->finalize = gst_ogg_pad_finalize;
@@ -578,7 +578,13 @@ gst_ogg_pad_typefind (GstOggPad * pad, ogg_packet * packet)
           gst_pad_set_active (pad->elem_out, TRUE);
 
           /* and this pad may not be named src.. */
-          gst_pad_link (gst_element_get_pad (element, "src"), pad->elem_out);
+          {
+            GstPad *p;
+
+            p = gst_element_get_pad (element, "src");
+            gst_pad_link (p, pad->elem_out);
+            gst_object_unref (GST_OBJECT (p));
+          }
         }
       }
       g_list_free (factories);
@@ -797,7 +803,7 @@ gst_ogg_chain_new_stream (GstOggChain * chain, glong serialno)
   if (ogg_stream_init (&ret->stream, serialno) != 0) {
     GST_ERROR ("Could not initialize ogg_stream struct for serial %08lx.",
         serialno);
-    g_object_unref (G_OBJECT (ret));
+    gst_object_unref (GST_OBJECT (ret));
     return NULL;
   }
   gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_SERIAL, serialno,
@@ -872,8 +878,11 @@ static gint gst_ogg_demux_read_end_chain (GstOggDemux * ogg,
 static gboolean gst_ogg_demux_handle_event (GstPad * pad, GstEvent * event);
 static void gst_ogg_demux_loop (GstOggPad * pad);
 static GstFlowReturn gst_ogg_demux_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_ogg_demux_sink_activate (GstPad * sinkpad,
-    GstActivateMode mode);
+static gboolean gst_ogg_demux_sink_activate (GstPad * sinkpad);
+static gboolean gst_ogg_demux_sink_activate_pull (GstPad * sinkpad,
+    gboolean active);
+static gboolean gst_ogg_demux_sink_activate_push (GstPad * sinkpad,
+    gboolean active);
 static GstElementStateReturn gst_ogg_demux_change_state (GstElement * element);
 
 static void gst_ogg_print (GstOggDemux * demux);
@@ -920,6 +929,10 @@ gst_ogg_demux_init (GstOggDemux * ogg)
   gst_pad_set_event_function (ogg->sinkpad, gst_ogg_demux_handle_event);
   gst_pad_set_chain_function (ogg->sinkpad, gst_ogg_demux_chain);
   gst_pad_set_activate_function (ogg->sinkpad, gst_ogg_demux_sink_activate);
+  gst_pad_set_activatepull_function (ogg->sinkpad,
+      gst_ogg_demux_sink_activate_pull);
+  gst_pad_set_activatepush_function (ogg->sinkpad,
+      gst_ogg_demux_sink_activate_push);
   gst_element_add_pad (GST_ELEMENT (ogg), ogg->sinkpad);
 
   ogg->chain_lock = g_mutex_new ();
@@ -1972,35 +1985,43 @@ gst_ogg_demux_clear_chains (GstOggDemux * ogg)
 }
 
 static gboolean
-gst_ogg_demux_sink_activate (GstPad * sinkpad, GstActivateMode mode)
+gst_ogg_demux_sink_activate (GstPad * sinkpad)
 {
-  gboolean result = FALSE;
+  if (gst_pad_check_pull_range (sinkpad)) {
+    return gst_pad_activate_pull (sinkpad, TRUE);
+  } else {
+    return gst_pad_activate_push (sinkpad, TRUE);
+  }
+}
+
+static gboolean
+gst_ogg_demux_sink_activate_push (GstPad * sinkpad, gboolean active)
+{
   GstOggDemux *ogg;
 
   ogg = GST_OGG_DEMUX (GST_OBJECT_PARENT (sinkpad));
 
-  switch (mode) {
-    case GST_ACTIVATE_PUSH:
-      ogg->seekable = FALSE;
-      result = TRUE;
-      break;
-    case GST_ACTIVATE_PULL:
-      /* if we have a scheduler we can start the task */
-      gst_pad_peer_set_active (sinkpad, mode);
-      ogg->need_chains = TRUE;
-      ogg->seekable = TRUE;
-      result =
-          gst_pad_start_task (sinkpad, (GstTaskFunction) gst_ogg_demux_loop,
-          sinkpad);
-      break;
-    case GST_ACTIVATE_NONE:
-      /* step 1, unblock clock sync (if any) */
+  ogg->seekable = FALSE;
 
-      /* step 2, make sure streaming finishes */
-      result = gst_pad_stop_task (sinkpad);
-      break;
+  return TRUE;
+}
+
+static gboolean
+gst_ogg_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
+{
+  GstOggDemux *ogg;
+
+  ogg = GST_OGG_DEMUX (GST_OBJECT_PARENT (sinkpad));
+
+  if (active) {
+    ogg->need_chains = TRUE;
+    ogg->seekable = TRUE;
+
+    return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_ogg_demux_loop,
+        sinkpad);
+  } else {
+    return gst_pad_stop_task (sinkpad);
   }
-  return result;
 }
 
 static GstElementStateReturn

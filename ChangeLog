@@ -1,3 +1,19 @@
+2005-06-27  Andy Wingo  <wingo@pobox.com>
+
+	* gst/videotestsrc/gstvideotestsrc.c
+	(gst_videotestsrc_activate_push): Activation API changes.
+
+	* gst/playback/gstdecodebin.c (gst_decode_bin_change_state) 
+	(gst_decode_bin_dispose): Free dynamics in READY->NULL, because
+	they have refs on the decodebin.
+
+	* ext/ogg/gstoggdemux.c (gst_ogg_pad_class_init): Ref the right
+	parent class.
+	(gst_ogg_pad_typefind): Don't leak a pad ref.
+	(gst_ogg_chain_new_stream): gst_object_unref, not g_object_unref.
+	(gst_ogg_demux_sink_activate, gst_ogg_demux_sink_activate_push) 
+	(gst_ogg_demux_sink_activate_pull): Changes for activation API.
+
 2005-06-27  Edward Hervey  <edward@fluendo.com>
 
 	* ext/theora/theoradec.c: (theora_dec_change_state): 

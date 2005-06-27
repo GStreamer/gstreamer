@@ -344,19 +344,10 @@ static void
 gst_decode_bin_dispose (GObject * object)
 {
   GstDecodeBin *decode_bin;
-  GList *dyns;
 
   decode_bin = GST_DECODE_BIN (object);
 
   g_list_free (decode_bin->factories);
-
-  for (dyns = decode_bin->dynamics; dyns; dyns = g_list_next (dyns)) {
-    GstDynamic *dynamic = (GstDynamic *) dyns->data;
-
-    dynamic_free (dynamic);
-  }
-  g_list_free (decode_bin->dynamics);
-  decode_bin->dynamics = NULL;
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -1055,6 +1046,7 @@ gst_decode_bin_change_state (GstElement * element)
 {
   GstElementStateReturn ret;
   GstDecodeBin *decode_bin;
+  GList *dyns;
   gint transition;
 
   decode_bin = GST_DECODE_BIN (element);
@@ -1077,7 +1069,16 @@ gst_decode_bin_change_state (GstElement * element)
   switch (transition) {
     case GST_STATE_PLAYING_TO_PAUSED:
     case GST_STATE_PAUSED_TO_READY:
+      break;
     case GST_STATE_READY_TO_NULL:
+      for (dyns = decode_bin->dynamics; dyns; dyns = g_list_next (dyns)) {
+        GstDynamic *dynamic = (GstDynamic *) dyns->data;
+
+        dynamic_free (dynamic);
+      }
+      g_list_free (decode_bin->dynamics);
+      decode_bin->dynamics = NULL;
+      break;
     default:
       break;
   }
