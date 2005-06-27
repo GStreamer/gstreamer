@@ -75,6 +75,7 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 @current_state: 
 @pending_state: 
 @state_error: 
+@no_preroll: 
 @manager: 
 @bus: 
 @scheduler: 

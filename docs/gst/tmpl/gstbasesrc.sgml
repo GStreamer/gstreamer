@@ -35,3 +35,20 @@ GstBaseSrc
 
 </para>
 
+<!-- ##### STRUCT GstBaseSrcClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@get_caps: 
+@set_caps: 
+@start: 
+@stop: 
+@get_times: 
+@get_size: 
+@is_seekable: 
+@unlock: 
+@event: 
+@create: 
+

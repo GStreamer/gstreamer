@@ -1,5 +1,5 @@
 /* GStreamer
- * 
+ *
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2004 Wim Taymans <wim@fluendo.com>
  *
@@ -213,7 +213,7 @@ gst_bin_new (const gchar * name)
 
 /* set the index on all elements in this bin
  *
- * MT safe 
+ * MT safe
  */
 #ifndef GST_DISABLE_INDEX
 static void
@@ -236,7 +236,7 @@ gst_bin_set_index_func (GstElement * element, GstIndex * index)
 
 /* set the clock on all elements in this bin
  *
- * MT safe 
+ * MT safe
  */
 static void
 gst_bin_set_clock_func (GstElement * element, GstClock * clock)
@@ -257,7 +257,7 @@ gst_bin_set_clock_func (GstElement * element, GstClock * clock)
 
 /* get the clock for this bin by asking all of the children in this bin
  *
- * MT safe 
+ * MT safe
  */
 static GstClock *
 gst_bin_get_clock_func (GstElement * element)
@@ -283,7 +283,7 @@ gst_bin_get_clock_func (GstElement * element)
 
 /* set the bus on all of the children in this bin
  *
- * MT safe 
+ * MT safe
  */
 static void
 gst_bin_set_bus (GstElement * element, GstBus * bus)
@@ -306,7 +306,7 @@ gst_bin_set_bus (GstElement * element, GstBus * bus)
 
 /* set the scheduler on all of the children in this bin
  *
- * MT safe 
+ * MT safe
  */
 static void
 gst_bin_set_scheduler (GstElement * element, GstScheduler * sched)
@@ -329,7 +329,7 @@ gst_bin_set_scheduler (GstElement * element, GstScheduler * sched)
 
 /* set the manager on all of the children in this bin
  *
- * MT safe 
+ * MT safe
  */
 static void
 gst_bin_set_manager (GstElement * element, GstPipeline * manager)
@@ -350,7 +350,7 @@ gst_bin_set_manager (GstElement * element, GstPipeline * manager)
 
 /* add an element to this bin
  *
- * MT safe 
+ * MT safe
  */
 static gboolean
 gst_bin_add_func (GstBin * bin, GstElement * element)
@@ -436,10 +436,10 @@ had_parent:
  * Adds the given element to the bin.  Sets the element's parent, and thus
  * takes ownership of the element. An element can only be added to one bin.
  *
+ * MT safe.
+ *
  * Returns: TRUE if the element could be added, FALSE on wrong parameters or
  * the bin does not want to accept the element.
- *
- * MT safe.
  */
 gboolean
 gst_bin_add (GstBin * bin, GstElement * element)
@@ -560,10 +560,10 @@ not_in_bin:
  * want the element to still exist after removing, you need to call
  * #gst_object_ref before removing it from the bin.
  *
+ * MT safe.
+ *
  * Returns: TRUE if the element could be removed, FALSE on wrong parameters or
  * the bin does not want to remove the element.
- *
- * MT safe.
  */
 gboolean
 gst_bin_remove (GstBin * bin, GstElement * element)
@@ -606,14 +606,14 @@ iterate_child (GstIterator * it, GstElement * child)
  * gst_bin_iterate_elements:
  * @bin: #Gstbin to iterate the elements of
  *
- * Get an iterator for the elements in this bin. 
- * Each element will have its refcount increased, so unref 
- * after usage.
+ * Get an iterator for the elements in this bin.
+ * Each element will have its refcount increased, so unref
+ * after use.
+ *
+ * MT safe.
  *
  * Returns: a #GstIterator of #GstElements. gst_iterator_free after
  * use. returns NULL when passing bad parameters.
- *
- * MT safe.
  */
 GstIterator *
 gst_bin_iterate_elements (GstBin * bin)
@@ -624,7 +624,7 @@ gst_bin_iterate_elements (GstBin * bin)
 
   GST_LOCK (bin);
   /* add ref because the iterator refs the bin. When the iterator
-   * is freed it will unref the bin again using the provided dispose 
+   * is freed it will unref the bin again using the provided dispose
    * function. */
   gst_object_ref (GST_OBJECT (bin));
   result = gst_iterator_new_list (GST_GET_LOCK (bin),
@@ -654,14 +654,14 @@ iterate_child_recurse (GstIterator * it, GstElement * child)
  * gst_bin_iterate_recurse:
  * @bin: #Gstbin to iterate the elements of
  *
- * Get an iterator for the elements in this bin. 
- * Each element will have its refcount increased, so unref 
- * after usage. This iterator recurses into GstBin children.
+ * Get an iterator for the elements in this bin.
+ * Each element will have its refcount increased, so unref
+ * after use. This iterator recurses into GstBin children.
+ *
+ * MT safe.
  *
  * Returns: a #GstIterator of #GstElements. gst_iterator_free after
  * use. returns NULL when passing bad parameters.
- *
- * MT safe.
  */
 GstIterator *
 gst_bin_iterate_recurse (GstBin * bin)
@@ -672,7 +672,7 @@ gst_bin_iterate_recurse (GstBin * bin)
 
   GST_LOCK (bin);
   /* add ref because the iterator refs the bin. When the iterator
-   * is freed it will unref the bin again using the provided dispose 
+   * is freed it will unref the bin again using the provided dispose
    * function. */
   gst_object_ref (GST_OBJECT (bin));
   result = gst_iterator_new_list (GST_GET_LOCK (bin),
@@ -798,14 +798,14 @@ sink_iterator_filter (GstElement * child, GstBin * bin)
  * @bin: #Gstbin to iterate on
  *
  * Get an iterator for the sink elements in this bin.
- * Each element will have its refcount increased, so unref 
- * after usage.
+ * Each element will have its refcount increased, so unref
+ * after use.
  *
  * The sink elements are those without any linked srcpads.
  *
- * Returns: a #GstIterator of #GstElements. gst_iterator_free after use.
- *
  * MT safe.
+ *
+ * Returns: a #GstIterator of #GstElements. gst_iterator_free after use.
  */
 GstIterator *
 gst_bin_iterate_sinks (GstBin * bin)
@@ -826,7 +826,7 @@ gst_bin_iterate_sinks (GstBin * bin)
  *  1) check state of all children with 0 timeout to find ERROR and
  *     NO_PREROLL elements. return if found.
  *  2) perform full blocking wait with requested timeout.
- * 
+ *
  * 2) cannot be performed when 1) returns results as the sinks might
  *    not be able to complete the state change making 2) block forever.
  *
@@ -1147,7 +1147,7 @@ restart:
               gst_object_unref (GST_OBJECT (peer_elem));
               g_queue_delete_link (elem_queue, oldelem);
             }
-            /* was reffed before pushing on the queue by the 
+            /* was reffed before pushing on the queue by the
              * gst_object_get_parent() call we used to get the element. */
             g_queue_push_tail (elem_queue, peer_elem);
           } else {
@@ -1369,11 +1369,11 @@ compare_name (GstElement * element, const gchar * name)
  * Get the element with the given name from this bin. This
  * function recurses into subbins.
  *
+ * MT safe.
+ *
  * Returns: the element with the given name. Returns NULL if the
  * element is not found or when bad parameters were given. Unref after
- * usage.
- *
- * MT safe.
+ * use.
  */
 GstElement *
 gst_bin_get_by_name (GstBin * bin, const gchar * name)
@@ -1399,13 +1399,13 @@ gst_bin_get_by_name (GstBin * bin, const gchar * name)
  * @bin: #Gstbin to search
  * @name: the element name to search for
  *
+ * MT safe.
+ *
  * Get the element with the given name from this bin. If the
  * element is not found, a recursion is performed on the parent bin.
  *
  * Returns: the element with the given name or NULL when the element
- * was not found or bad parameters were given. Unref after usage.
- *
- * MT safe.
+ * was not found or bad parameters were given. Unref after use.
  */
 GstElement *
 gst_bin_get_by_name_recurse_up (GstBin * bin, const gchar * name)
@@ -1457,12 +1457,12 @@ compare_interface (GstElement * element, gpointer interface)
  * interface. If such an element is found, it returns the element. You can
  * cast this element to the given interface afterwards.
  * If you want all elements that implement the interface, use
- * gst_bin_iterate_all_by_interface(). The function recurses bins inside bins.
- *
- * Returns: An element inside the bin implementing the interface. Unref after
- *          usage.
+ * gst_bin_iterate_all_by_interface(). The function recurses inside bins.
  *
  * MT safe.
+ *
+ * Returns: An #GstElement inside the bin implementing the interface.
+ *          Unref after use.
  */
 GstElement *
 gst_bin_get_by_interface (GstBin * bin, GType interface)
@@ -1488,11 +1488,12 @@ gst_bin_get_by_interface (GstBin * bin, GType interface)
  * Looks for all elements inside the bin that implements the given
  * interface. You can safely cast all returned elements to the given interface.
  * The function recurses bins inside bins. The iterator will return a series
- * of #GstElement that should be unreffed after usage.
- *
- * Returns: An iterator for the  elements inside the bin implementing the interface.
+ * of #GstElement that should be unreffed after use.
  *
  * MT safe.
+ *
+ * Returns: A #GstIterator for the elements inside the bin implementing the
+ *          given interface.
  */
 GstIterator *
 gst_bin_iterate_all_by_interface (GstBin * bin, GType interface)

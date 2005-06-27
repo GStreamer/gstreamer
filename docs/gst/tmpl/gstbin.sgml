@@ -80,6 +80,15 @@ Will be emitted if an element was removed from this bin.
 @gstbin: the object which received the signal.
 @arg1: the element that was removed from the bin.
 
+<!-- ##### STRUCT GstBinClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@add_element: 
+@remove_element: 
+
 <!-- ##### ENUM GstBinFlags ##### -->
 <para>
 

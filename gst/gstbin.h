@@ -41,19 +41,8 @@ GST_EXPORT GType _gst_bin_type;
 
 /**
  * GstBinFlags:
- * @GST_BIN_FLAG_MANAGER: this bin is a manager of child elements, i.e.
- * a pipeline or thread.
- * @GST_BIN_SELF_SCHEDULABLE: the bin iterates itself.
- * @GST_BIN_FLAG_PREFER_COTHREADS: we prefer to have cothreads when its
- * an option, over chain-based.
- * @GST_BIN_FLAG_FIXED_CLOCK: bin has one clock that cannot be changed.
- * @GST_BIN_STATE_LOCKED: indicator that we are in a non-recursive
- * state-change on the bin, or that kids should not change parent state.
- * Both are internally used to prevent infinitely recursive loops of
- * state changes. Since they are mutually exclusive and serve the same
- * purpose, we use the same flag for them.
- * @GST_BIN_FLAG_LAST: the last enum in the series of flags in a bin,
- * derived classes can use this as first value in a list of flags.
+ * @GST_BIN_FLAG_LAST: the last enum in the series of flags for bins.
+ * Derived classes can use this as first value in a list of flags.
  *
  * GstBinFlags are a set of flags specific to bins. Most are set/used
  * internally. They can be checked using the GST_FLAG_IS_SET () macro,
@@ -88,13 +77,13 @@ struct _GstBin {
 struct _GstBinClass {
   GstElementClass parent_class;
 
-  /*< public >*/
+  /*< private >*/
   /* signals */
   void		(*element_added)	(GstBin *bin, GstElement *child);
   void		(*element_removed)	(GstBin *bin, GstElement *child);
 
-  /*< protected >*/
-  /* vtable */
+  /*< public >*/
+  /* virtual methods for subclasses */
   gboolean	(*add_element)		(GstBin *bin, GstElement *element);
   gboolean	(*remove_element)	(GstBin *bin, GstElement *element);
 

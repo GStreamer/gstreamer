@@ -35,6 +35,7 @@ against the GstElementStateReturn value.
 @GST_STATE_FAILURE: the state of the element could not be changed
 @GST_STATE_SUCCESS: the state of the element has already be changed
 @GST_STATE_ASYNC: the state of the element will change in the near future
+@GST_STATE_NO_PREROLL: 
 
 <!-- ##### ENUM GstRank ##### -->
 <para>

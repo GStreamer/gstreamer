@@ -30,6 +30,7 @@ gst_init_get_popt_table
 <FILE>gstbin</FILE>
 <TITLE>GstBin</TITLE>
 GstBin
+GstBinClass
 GstBinFlags
 
 gst_bin_new
@@ -296,6 +297,7 @@ GST_PLUGIN_EXPORT
 <FILE>gstelement</FILE>
 <TITLE>GstElement</TITLE>
 GstElement
+GstElementClass
 GST_NUM_STATES
 GST_STATE
 GST_STATE_PENDING
@@ -405,7 +407,6 @@ gst_element_get_factory
 gst_element_get_managing_bin
 gst_element_no_more_pads
 <SUBSECTION Standard>
-GstElementClass
 GST_ELEMENT
 GST_IS_ELEMENT
 GST_ELEMENT_CLASS
@@ -1889,8 +1890,8 @@ gst_fakesink_get_type
 <FILE>gstbasesrc</FILE>
 <TITLE>GstBaseSrc</TITLE>
 GstBaseSrc
-<SUBSECTION Standard>
 GstBaseSrcClass
+<SUBSECTION Standard>
 GST_BASESRC
 GST_IS_BASESRC
 GST_TYPE_BASESRC

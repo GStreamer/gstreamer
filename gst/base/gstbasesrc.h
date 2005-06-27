@@ -3,7 +3,7 @@
  *                    2000 Wim Taymans <wtay@chello.be>
  *                    2005 Wim Taymans <wim@fluendo.com>
  *
- * gstbasesrc.h: 
+ * gstbasesrc.h:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -68,33 +68,39 @@ typedef struct _GstBaseSrcClass GstBaseSrcClass;
 
 struct _GstBaseSrc {
   GstElement     element;
+  GstPad	*srcpad;
 
-  GstPad 	*srcpad;
-
-  /*< protected >*/ /* with LIVE_LOCK */
+  /* only for subclass implementations */
+  /* MT-protected (with LIVE_LOCK) */
   GMutex	*live_lock;
   GCond		*live_cond;
   gboolean	 is_live;
   gboolean	 live_running;
-  /*< protected >*/ /* with LOCK */
-  gint 		 blocksize;		/* size of buffers when operating push based */
-  gboolean	 has_loop;		/* some scheduling properties */
+
+  /* MT-protected (with LOCK) */
+  gint		 blocksize;	/* size of buffers when operating push based */
+  gboolean	 has_loop;	/* some scheduling properties */
   gboolean	 has_getrange;
   gboolean       seekable;
   gboolean       random_access;
 
-  GstClockID     clock_id;		/* for syncing */
+  GstClockID     clock_id;	/* for syncing */
   GstClockTime   end_time;
 
-  /* with STREAM_LOCK */
-  gint64	 segment_start;		/* start and end positions for seeking */
+  /* MT-protected (with STREAM_LOCK) */
+  gint64	 segment_start;	/* start and end positions for seeking */
   gint64	 segment_end;
   gboolean	 segment_loop;
 
-  guint64 	 offset;		/* current offset in the resource */
-  guint64        size;			/* total size of the resource */
+  guint64	 offset;	/* current offset in the resource */
+  guint64        size;		/* total size of the resource */
 };
 
+/**
+ * _GstBaseSrcClass:
+ * @create: ask the subclass to create a buffer with offset and size
+ * @start: start processing
+ */
 struct _GstBaseSrcClass {
   GstElementClass parent_class;
 
@@ -126,7 +132,7 @@ struct _GstBaseSrcClass {
   gboolean      (*event)        (GstBaseSrc *src, GstEvent *event);
 
   /* ask the subclass to create a buffer with offset and size */
-  GstFlowReturn (*create)       (GstBaseSrc *src, guint64 offset, guint size, 
+  GstFlowReturn (*create)       (GstBaseSrc *src, guint64 offset, guint size,
 		                 GstBuffer **buf);
 };
 
