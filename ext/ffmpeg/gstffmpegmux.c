@@ -475,8 +475,10 @@ gst_ffmpegmux_loop (GstElement * element)
     pkt.size = GST_BUFFER_SIZE (buf);
     pkt.stream_index = bufnum;
     pkt.flags = 0;
-    if (GST_BUFFER_FLAGS (buf) & GST_BUFFER_KEY_UNIT)
-       pkt.flags |= PKT_FLAG_KEY;
+
+    if (!(GST_BUFFER_FLAGS (buf) & GST_BUFFER_DELTA_UNIT))
+      pkt.flags |= PKT_FLAG_KEY;    
+
     if (GST_BUFFER_DURATION_IS_VALID (buf))
       pkt.duration = GST_BUFFER_DURATION (buf) * AV_TIME_BASE / GST_SECOND;
     else

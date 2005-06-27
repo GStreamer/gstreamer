@@ -725,6 +725,12 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
 	  *in_ts = GST_CLOCK_TIME_NONE;
         }
 
+	if (ffmpegdec->picture->key_frame) {
+	  GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_KEY_UNIT);
+	} else {
+	  GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_DELTA_UNIT);
+	}
+		
         GST_BUFFER_TIMESTAMP (outbuf) = ffmpegdec->next_ts;
         if (ffmpegdec->context->frame_rate_base != 0 &&
             ffmpegdec->context->frame_rate != 0) {

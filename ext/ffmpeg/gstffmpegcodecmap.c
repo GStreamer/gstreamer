@@ -1362,6 +1362,8 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
     caps = gst_caps_new_simple ("application/x-id3", NULL);
   } else if (!strcmp (format_name, "flic")) {
     caps = gst_caps_new_simple ("video/x-fli", NULL);
+  } else if (!strcmp (format_name, "flv")) {
+    caps = gst_caps_new_simple ("video/x-flv", NULL);
   } else {
     gchar *name;
 
@@ -1390,6 +1392,12 @@ gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
 
     *video_codec_list = mpeg_video_list;
     *audio_codec_list = mpeg_audio_list;
+  } else if (!strcmp (format_name, "flv")) {
+    static enum CodecID flv_video_list[] = { CODEC_ID_FLV1, CODEC_ID_NONE };
+    static enum CodecID flv_audio_list[] = { CODEC_ID_MP3, CODEC_ID_NONE };
+
+    *video_codec_list = flv_video_list;
+    *audio_codec_list = flv_audio_list;
   } else {
     GST_WARNING ("Format %s not found", format_name);
     return FALSE;
@@ -1813,20 +1821,26 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
   } else if (!strcmp (mimetype, "audio/x-amrwb")) {
     id = CODEC_ID_AMR_WB;
     audio = TRUE;
-  } else if (!strncmp (mimetype, "audio/x-gst_ff-", 15) ||
-      !strncmp (mimetype, "video/x-gst_ff-", 15)) {
+  } else if (!strncmp (mimetype, "audio/x-gst_ff-", 15) ) {
     gchar ext[16];
     AVCodec *codec;
-
     if (strlen (mimetype) <= 30 &&
-        sscanf (mimetype, "%*s/x-gst_ff-%s", ext) == 1) {
+        sscanf (mimetype, "audio/x-gst_ff-%s", ext) == 1) {
       if ((codec = avcodec_find_decoder_by_name (ext)) ||
           (codec = avcodec_find_encoder_by_name (ext))) {
         id = codec->id;
-        if (mimetype[0] == 'v')
-          video = TRUE;
-        else if (mimetype[0] == 'a')
-          audio = TRUE;
+	audio = TRUE;
+      }
+    }
+  } else if (!strncmp (mimetype, "video/x-gst_ff-", 15)) {
+    gchar ext[16];
+    AVCodec *codec;
+    if (strlen (mimetype) <= 30 &&
+        sscanf (mimetype, "video/x-gst_ff-%s", ext) == 1) {
+      if ((codec = avcodec_find_decoder_by_name (ext)) ||
+          (codec = avcodec_find_encoder_by_name (ext))) {
+        id = codec->id;
+        video = TRUE;
       }
     }
   }

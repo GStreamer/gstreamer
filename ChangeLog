@@ -1,3 +1,17 @@
+2005-06-27  Daniel Fischer  <dan@f3c.com>
+
+	reviewed by: Luca Ognibene <luogni@tin.it>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_formatid_to_caps),
+	(gst_ffmpeg_formatid_get_codecids), (gst_ffmpeg_caps_to_codecid):
+	add flv encoder
+	
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame):
+	set both DELTA_UNIT and KEY_UNIT
+	
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_loop):
+	use DELTA_UNIT and not the deprecated KEY_UNIT
+
 2005-06-25  Luca Ognibene  <luogni@tin.it>
 
 	* ext/libpostproc/gstpostproc.c: (gst_ffmpeg_log_callback),
