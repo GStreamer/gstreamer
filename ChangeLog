@@ -1,5 +1,14 @@
 2005-06-28  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstghostpad.c: (gst_proxy_pad_do_bufferalloc),
+	(gst_proxy_pad_do_getrange), (gst_proxy_pad_do_checkgetrange),
+	(gst_proxy_pad_do_getcaps), (gst_proxy_pad_do_acceptcaps),
+	(gst_proxy_pad_do_fixatecaps):
+	Call wrapper function instead of just calling the function
+	pointers. This takes care of any locking and whatmore.
+
+2005-06-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstpad.c: (gst_pad_alloc_buffer), (gst_pad_push),
 	(gst_pad_pull_range):
 	* gst/gstpad.h:

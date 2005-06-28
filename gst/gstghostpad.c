@@ -152,11 +152,24 @@ static GstFlowReturn
 gst_proxy_pad_do_bufferalloc (GstPad * pad, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf)
 {
+  GstFlowReturn result;
   GstPad *target = GST_PROXY_PAD_TARGET (pad);
+  GstPad *peer;
 
   g_return_val_if_fail (target != NULL, GST_FLOW_UNEXPECTED);
 
-  return target->bufferallocfunc (target, offset, size, caps, buf);
+  peer = gst_pad_get_peer (target);
+  if (peer) {
+    GST_DEBUG ("buffer alloc on %s:%s", GST_DEBUG_PAD_NAME (target));
+
+    result = gst_pad_alloc_buffer (peer, offset, size, caps, buf);
+
+    gst_object_unref (peer);
+  } else {
+    result = GST_FLOW_NOT_LINKED;
+  }
+
+  return result;
 }
 
 static gboolean
@@ -235,7 +248,7 @@ gst_proxy_pad_do_getrange (GstPad * pad, guint64 offset, guint size,
 
   g_return_val_if_fail (target != NULL, GST_FLOW_UNEXPECTED);
 
-  return target->getrangefunc (target, offset, size, buffer);
+  return gst_pad_get_range (target, offset, size, buffer);
 }
 
 static gboolean
@@ -245,7 +258,7 @@ gst_proxy_pad_do_checkgetrange (GstPad * pad)
 
   g_return_val_if_fail (target != NULL, FALSE);
 
-  return target->checkgetrangefunc (target);
+  return gst_pad_check_pull_range (target);
 }
 
 static GstCaps *
@@ -255,7 +268,7 @@ gst_proxy_pad_do_getcaps (GstPad * pad)
 
   g_return_val_if_fail (target != NULL, NULL);
 
-  return target->getcapsfunc (target);
+  return gst_pad_get_caps (target);
 }
 
 static gboolean
@@ -265,7 +278,7 @@ gst_proxy_pad_do_acceptcaps (GstPad * pad, GstCaps * caps)
 
   g_return_val_if_fail (target != NULL, FALSE);
 
-  return target->acceptcapsfunc (target, caps);
+  return gst_pad_accept_caps (target, caps);
 }
 
 static GstCaps *
@@ -275,7 +288,7 @@ gst_proxy_pad_do_fixatecaps (GstPad * pad, GstCaps * caps)
 
   g_return_val_if_fail (target != NULL, NULL);
 
-  return target->fixatecapsfunc (target, caps);
+  return gst_pad_fixate_caps (target, caps);
 }
 
 static gboolean
