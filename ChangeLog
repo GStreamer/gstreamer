@@ -1,3 +1,29 @@
+2005-06-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbus.c: (gst_bus_post), (gst_bus_have_pending),
+	(gst_bus_set_flushing), (gst_bus_pop), (gst_bus_peek),
+	(gst_bus_source_dispatch):
+	Add debugging messages.
+	Make internal methods static.
+	Handle the case where the bus is flushed in the handler.
+	
+	* gst/gstelement.c: (gst_element_get_bus):
+	Fix refcount in _get_bus();
+
+	* gst/gstpipeline.c: (gst_pipeline_change_state),
+	(gst_pipeline_get_clock_func):
+	Clock refcounting fixes.
+	Handle the case where preroll timed out more gracefully.
+	
+	* gst/gstsystemclock.c: (gst_system_clock_dispose):
+	Clean up the internal thread in dispose. This is needed
+	for subclasses that actually get disposed.
+	
+	* gst/schedulers/threadscheduler.c:
+	(gst_thread_scheduler_class_init), (gst_thread_scheduler_func),
+	(gst_thread_scheduler_dispose):
+	Free thread pool in dispose.
+
 2005-06-28  Andy Wingo  <wingo@pobox.com>
 
 	* tests/network-clock-utils.scm (debug, print-event): New utils.

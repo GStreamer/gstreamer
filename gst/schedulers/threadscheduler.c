@@ -226,6 +226,7 @@ gst_thread_scheduler_task_pause (GstTask * task)
 
 static void gst_thread_scheduler_class_init (gpointer g_class, gpointer data);
 static void gst_thread_scheduler_init (GstThreadScheduler * object);
+static void gst_thread_scheduler_dispose (GObject * object);
 
 GType
 gst_thread_scheduler_get_type (void)
@@ -257,10 +258,17 @@ static void gst_thread_scheduler_reset (GstScheduler * sched);
 static GstTask *gst_thread_scheduler_create_task (GstScheduler * sched,
     GstTaskFunction func, gpointer data);
 
+static GObjectClass *parent_class = NULL;
+
 static void
 gst_thread_scheduler_class_init (gpointer klass, gpointer class_data)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstSchedulerClass *scheduler = GST_SCHEDULER_CLASS (klass);
+
+  parent_class = g_type_class_ref (GST_TYPE_SCHEDULER);
+
+  gobject_class->dispose = gst_thread_scheduler_dispose;
 
   scheduler->setup = gst_thread_scheduler_setup;
   scheduler->reset = gst_thread_scheduler_reset;
@@ -311,6 +319,17 @@ gst_thread_scheduler_init (GstThreadScheduler * scheduler)
 {
   scheduler->pool = g_thread_pool_new (
       (GFunc) gst_thread_scheduler_func, scheduler, -1, FALSE, NULL);
+}
+static void
+gst_thread_scheduler_dispose (GObject * object)
+{
+  GstThreadScheduler *scheduler = GST_THREAD_SCHEDULER (object);
+
+  if (scheduler->pool) {
+    g_thread_pool_free (scheduler->pool, FALSE, TRUE);
+    scheduler->pool = NULL;
+  }
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static GstTask *

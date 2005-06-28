@@ -137,6 +137,29 @@ gst_system_clock_dispose (GObject * object)
 
     /* no parent dispose here, this is bad enough already */
   } else {
+    GstSystemClock *sysclock = GST_SYSTEM_CLOCK (clock);
+    GList *entries;
+
+    /* else we have to stop the thread */
+    GST_LOCK (clock);
+    sysclock->stopping = TRUE;
+    /* unschedule all entries */
+    for (entries = clock->entries; entries; entries = g_list_next (entries)) {
+      GstClockEntry *entry = (GstClockEntry *) entries->data;
+
+      GST_CAT_DEBUG (GST_CAT_CLOCK, "unscheduling entry %p", entry);
+      entry->status = GST_CLOCK_UNSCHEDULED;
+    }
+    g_list_free (clock->entries);
+    clock->entries = NULL;
+    GST_CLOCK_SIGNAL (clock);
+    GST_UNLOCK (clock);
+
+    if (sysclock->thread)
+      g_thread_join (sysclock->thread);
+    sysclock->thread = NULL;
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "joined thread");
+
     G_OBJECT_CLASS (parent_class)->dispose (object);
   }
 }

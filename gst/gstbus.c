@@ -185,6 +185,7 @@ gst_bus_post (GstBus * bus, GstMessage * message)
 
   GST_LOCK (bus);
   if (GST_FLAG_IS_SET (bus, GST_BUS_FLUSHING)) {
+    GST_DEBUG_OBJECT (bus, "bus is flushing");
     gst_message_unref (message);
     GST_UNLOCK (bus);
     return FALSE;
@@ -275,6 +276,8 @@ gst_bus_have_pending (GstBus * bus)
   length = g_queue_get_length (bus->queue);
   g_mutex_unlock (bus->queue_lock);
 
+  GST_DEBUG ("have %d pending", length);
+
   return (length > 0);
 }
 
@@ -299,9 +302,12 @@ gst_bus_set_flushing (GstBus * bus, gboolean flushing)
   if (flushing) {
     GST_FLAG_SET (bus, GST_BUS_FLUSHING);
 
+    GST_DEBUG ("set bus flushing");
+
     while ((message = gst_bus_pop (bus)))
       gst_message_unref (message);
   } else {
+    GST_DEBUG ("unset bus flushing");
     GST_FLAG_UNSET (bus, GST_BUS_FLUSHING);
   }
 
@@ -329,6 +335,8 @@ gst_bus_pop (GstBus * bus)
   message = g_queue_pop_head (bus->queue);
   g_mutex_unlock (bus->queue_lock);
 
+  GST_DEBUG ("pop on bus, got message %p", message);
+
   return message;
 }
 
@@ -353,6 +361,8 @@ gst_bus_peek (GstBus * bus)
   g_mutex_lock (bus->queue_lock);
   message = g_queue_peek_head (bus->queue);
   g_mutex_unlock (bus->queue_lock);
+
+  GST_DEBUG ("peek on bus, got message %p", message);
 
   return message;
 }
@@ -386,20 +396,20 @@ typedef struct
   GstBus *bus;
 } GstBusSource;
 
-gboolean
+static gboolean
 gst_bus_source_prepare (GSource * source, gint * timeout)
 {
   *timeout = -1;
   return gst_bus_have_pending (((GstBusSource *) source)->bus);
 }
 
-gboolean
+static gboolean
 gst_bus_source_check (GSource * source)
 {
   return gst_bus_have_pending (((GstBusSource *) source)->bus);
 }
 
-gboolean
+static gboolean
 gst_bus_source_dispatch (GSource * source, GSourceFunc callback,
     gpointer user_data)
 {
@@ -412,6 +422,8 @@ gst_bus_source_dispatch (GSource * source, GSourceFunc callback,
 
   message = gst_bus_peek (bsource->bus);
 
+  GST_DEBUG ("have message %p", message);
+
   g_return_val_if_fail (message != NULL, TRUE);
 
   if (!handler) {
@@ -420,15 +432,28 @@ gst_bus_source_dispatch (GSource * source, GSourceFunc callback,
     return FALSE;
   }
 
+  GST_DEBUG ("calling dispatch with %p", message);
+
   needs_pop = handler (bsource->bus, message, user_data);
 
-  if (needs_pop)
-    gst_message_unref (gst_bus_pop (bsource->bus));
+  GST_DEBUG ("handler returns %d", needs_pop);
+  if (needs_pop) {
+    message = gst_bus_pop (bsource->bus);
+    if (message) {
+      gst_message_unref (message);
+    } else {
+      /* after executing the handler, the app could have disposed
+       * the pipeline and set the bus to flushing. It is possible
+       * then that there are no more messages on the bus. this is
+       * not a problem. */
+      GST_DEBUG ("handler requested pop but no message on the bus");
+    }
+  }
 
   return TRUE;
 }
 
-void
+static void
 gst_bus_source_finalize (GSource * source)
 {
   GstBusSource *bsource = (GstBusSource *) source;

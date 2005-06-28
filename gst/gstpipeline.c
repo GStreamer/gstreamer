@@ -395,6 +395,7 @@ gst_pipeline_change_state (GstElement * element)
 
       clock = gst_element_get_clock (element);
       gst_element_set_clock (element, clock);
+      gst_object_unref (clock);
       pipeline->eosed = NULL;
       break;
     }
@@ -452,8 +453,7 @@ gst_pipeline_change_state (GstElement * element)
    * intermediate state.
    * FIXME this can block forever, better do this in a worker
    * thread or use a timeout? */
-  if (result == GST_STATE_ASYNC &&
-      (GST_STATE_FINAL (pipeline) != GST_STATE_PENDING (pipeline))) {
+  if (result == GST_STATE_ASYNC) {
     GTimeVal *timeval, timeout;
 
     GST_STATE_UNLOCK (pipeline);
@@ -468,6 +468,11 @@ gst_pipeline_change_state (GstElement * element)
     GST_UNLOCK (pipeline);
 
     result = gst_element_get_state (element, NULL, NULL, timeval);
+    if (result == GST_STATE_ASYNC) {
+      GST_WARNING ("timeout in PREROLL, forcing next state change");
+      g_warning ("timeout in PREROLL, forcing next state change");
+      result = GST_STATE_SUCCESS;
+    }
     GST_STATE_LOCK (pipeline);
   }
 
@@ -528,10 +533,7 @@ gst_pipeline_get_clock_func (GstElement * element)
     /* no clock, use a system clock */
     if (!clock) {
       clock = gst_system_clock_obtain ();
-      /* we unref since this function is not supposed to increase refcount
-       * of clock object returned; this is ok since the systemclock always
-       * has a refcount of at least one in the current code. */
-      gst_object_unref (clock);
+
       GST_CAT_DEBUG (GST_CAT_CLOCK, "pipeline obtained system clock: %p (%s)",
           clock, clock ? GST_STR_NULL (GST_OBJECT_NAME (clock)) : "-");
     } else {

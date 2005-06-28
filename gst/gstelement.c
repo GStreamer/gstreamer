@@ -2307,7 +2307,7 @@ gst_element_set_bus (GstElement * element, GstBus * bus)
  *
  * Returns the bus of the element.
  *
- * Returns: the element's #GstBus.
+ * Returns: the element's #GstBus. unref after usage.
  *
  * MT safe.
  */
@@ -2320,6 +2320,7 @@ gst_element_get_bus (GstElement * element)
 
   GST_LOCK (element);
   result = GST_ELEMENT_BUS (element);
+  gst_object_ref (result);
   GST_UNLOCK (element);
 
   return result;
