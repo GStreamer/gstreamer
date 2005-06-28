@@ -207,11 +207,6 @@ gst_basesrc_set_dataflow_funcs (GstBaseSrc * this)
 {
   GST_DEBUG ("updating dataflow functions");
 
-  if (this->has_loop)
-    gst_pad_set_loop_function (this->srcpad, gst_basesrc_loop);
-  else
-    gst_pad_set_loop_function (this->srcpad, NULL);
-
   if (this->has_getrange)
     gst_pad_set_getrange_function (this->srcpad, gst_basesrc_get_range);
   else

@@ -267,11 +267,6 @@ gst_basesink_set_pad_functions (GstBaseSink * this, GstPad * pad)
     gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_basesink_chain));
   else
     gst_pad_set_chain_function (pad, NULL);
-
-  if (this->has_loop)
-    gst_pad_set_loop_function (pad, GST_DEBUG_FUNCPTR (gst_basesink_loop));
-  else
-    gst_pad_set_loop_function (pad, NULL);
 }
 
 static void

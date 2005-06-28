@@ -7,6 +7,20 @@
 
 2005-06-28  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasesink.c: (gst_basesink_set_pad_functions),
+	(gst_basesink_preroll_queue_flush):
+	* gst/base/gstbasesrc.c: (gst_basesrc_set_dataflow_funcs):
+	* gst/elements/gsttee.c: (gst_tee_update_pad_functions):
+	* gst/gstghostpad.c: (gst_proxy_pad_do_bufferalloc),
+	(gst_proxy_pad_do_acceptcaps), (gst_proxy_pad_do_fixatecaps),
+	(gst_proxy_pad_set_property):
+	* gst/gstpad.c:
+	* gst/gstpad.h:
+	* gst/gstqueue.c: (gst_queue_init):
+	The deprecated pad loop function is removed now.
+
+2005-06-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/base/gstbasesink.c: (gst_basesink_preroll_queue_flush),
 	(gst_basesink_event), (gst_basesink_deactivate):
 	Flushing the preroll queue always needs to unlock the waiters.

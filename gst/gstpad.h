@@ -100,9 +100,8 @@ typedef GstFlowReturn		(*GstPadGetRangeFunction)	(GstPad *pad, guint64 offset,
 		                                                 guint length, GstBuffer **buffer);
 typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstEvent *event);
 
-/* deprecate me, check range should use seeking query, loop function is internal */
+/* deprecate me, check range should use seeking query */
 typedef gboolean		(*GstPadCheckGetRangeFunction)	(GstPad *pad);
-typedef void			(*GstPadLoopFunction)		(GstPad *pad);
 
 /* internal links */
 typedef GList*			(*GstPadIntLinkFunction)	(GstPad *pad);
@@ -185,7 +184,6 @@ struct _GstPad {
   gpointer			 sched_private;
 
   /* data transport functions */
-  GstPadLoopFunction		 loopfunc;
   GstPadChainFunction		 chainfunc;
   GstPadCheckGetRangeFunction	 checkgetrangefunc;
   GstPadGetRangeFunction	 getrangefunc;
@@ -234,7 +232,6 @@ struct _GstPadClass {
 #define GST_PAD_ACTIVATEFUNC(pad)	(GST_PAD_CAST(pad)->activatefunc)
 #define GST_PAD_ACTIVATEPUSHFUNC(pad)	(GST_PAD_CAST(pad)->activatepushfunc)
 #define GST_PAD_ACTIVATEPULLFUNC(pad)	(GST_PAD_CAST(pad)->activatepullfunc)
-#define GST_PAD_LOOPFUNC(pad)		(GST_PAD_CAST(pad)->loopfunc)
 #define GST_PAD_CHAINFUNC(pad)		(GST_PAD_CAST(pad)->chainfunc)
 #define GST_PAD_CHECKGETRANGEFUNC(pad)	(GST_PAD_CAST(pad)->checkgetrangefunc)
 #define GST_PAD_GETRANGEFUNC(pad)	(GST_PAD_CAST(pad)->getrangefunc)
@@ -386,7 +383,6 @@ GstFlowReturn		gst_pad_alloc_buffer			(GstPad *pad, guint64 offset, gint size,
 void			gst_pad_set_activate_function		(GstPad *pad, GstPadActivateFunction activate);
 void			gst_pad_set_activatepull_function	(GstPad *pad, GstPadActivateModeFunction activatepull);
 void			gst_pad_set_activatepush_function	(GstPad *pad, GstPadActivateModeFunction activatepush);
-void			gst_pad_set_loop_function		(GstPad *pad, GstPadLoopFunction loop);
 void			gst_pad_set_chain_function		(GstPad *pad, GstPadChainFunction chain);
 void			gst_pad_set_getrange_function		(GstPad *pad, GstPadGetRangeFunction get);
 void			gst_pad_set_checkgetrange_function	(GstPad *pad, GstPadCheckGetRangeFunction check);

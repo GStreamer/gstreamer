@@ -220,16 +220,6 @@ gst_proxy_pad_do_activatepush (GstPad * pad, gboolean active)
     return gst_pad_activate_push (target, active);
 }
 
-static void
-gst_proxy_pad_do_loop (GstPad * pad)
-{
-  GstPad *target = GST_PROXY_PAD_TARGET (pad);
-
-  g_return_if_fail (target != NULL);
-
-  target->loopfunc (target);
-}
-
 static GstFlowReturn
 gst_proxy_pad_do_chain (GstPad * pad, GstBuffer * buffer)
 {
@@ -328,7 +318,6 @@ gst_proxy_pad_set_property (GObject * object, guint prop_id,
       SETFUNC (activatefunc, activate);
       SETFUNC (activatepullfunc, activatepull);
       SETFUNC (activatepushfunc, activatepush);
-      SETFUNC (loopfunc, loop);
       SETFUNC (getcapsfunc, getcaps);
       SETFUNC (acceptcapsfunc, acceptcaps);
       SETFUNC (fixatecapsfunc, fixatecaps);

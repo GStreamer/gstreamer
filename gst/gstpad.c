@@ -872,24 +872,6 @@ gst_pad_set_activatepush_function (GstPad * pad,
 }
 
 /**
- * gst_pad_set_loop_function:
- * @pad: a sink #GstPad.
- * @chain: the #GstPadLoopFunction to set.
- *
- * Sets the given loop function for the pad. The loop function is called 
- * repeadedly to pull/push buffers from/to the peer pad.
- */
-void
-gst_pad_set_loop_function (GstPad * pad, GstPadLoopFunction loop)
-{
-  g_return_if_fail (GST_IS_PAD (pad));
-
-  GST_PAD_LOOPFUNC (pad) = loop;
-  GST_CAT_DEBUG (GST_CAT_PADS, "loopfunc for %s:%s set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (loop));
-}
-
-/**
  * gst_pad_set_chain_function:
  * @pad: a sink #GstPad.
  * @chain: the #GstPadChainFunction to set.

@@ -315,7 +315,6 @@ gst_queue_init (GstQueue * queue)
   queue->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
       "src");
-  gst_pad_set_loop_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_loop));
   gst_pad_set_activatepush_function (queue->srcpad,
       GST_DEBUG_FUNCPTR (gst_queue_src_activate_push));
   gst_pad_set_link_function (queue->srcpad,

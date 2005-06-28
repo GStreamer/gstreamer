@@ -164,11 +164,6 @@ gst_tee_update_pad_functions (GstTee * tee)
         GST_DEBUG_FUNCPTR (gst_tee_chain));
   else
     gst_pad_set_chain_function (tee->sinkpad, NULL);
-
-  if (tee->has_sink_loop)
-    gst_pad_set_loop_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_tee_loop));
-  else
-    gst_pad_set_loop_function (tee->sinkpad, NULL);
 }
 
 static GstPad *
