@@ -1,3 +1,10 @@
+2005-06-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstghostpad.c: (gst_proxy_pad_do_bufferalloc),
+	(gst_proxy_pad_do_checkgetrange), (gst_proxy_pad_do_acceptcaps),
+	(gst_proxy_pad_do_fixatecaps):
+	Correctly proxy the check_pull_range function.
+
 2005-06-28  Andy Wingo  <wingo@pobox.com>
 
 	* tests/network-clock.scm: Removed need for slib.

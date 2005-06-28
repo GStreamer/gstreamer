@@ -244,11 +244,19 @@ gst_proxy_pad_do_getrange (GstPad * pad, guint64 offset, guint size,
 static gboolean
 gst_proxy_pad_do_checkgetrange (GstPad * pad)
 {
+  gboolean result;
   GstPad *target = GST_PROXY_PAD_TARGET (pad);
+  GstPad *peer;
 
   g_return_val_if_fail (target != NULL, FALSE);
-
-  return gst_pad_check_pull_range (target);
+  peer = gst_pad_get_peer (target);
+  if (peer) {
+    result = gst_pad_check_pull_range (peer);
+    gst_object_unref (peer);
+  } else {
+    result = FALSE;
+  }
+  return result;
 }
 
 static GstCaps *
