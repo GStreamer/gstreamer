@@ -144,9 +144,9 @@ void            gst_object_default_deep_notify 	(GObject *object, GstObject *ori
                                                  GParamSpec *pspec, gchar **excluded_props);
 
 /* refcounting + life cycle */
-GstObject *	gst_object_ref			(GstObject *object);
-GstObject *	gst_object_unref		(GstObject *object);
-void 		gst_object_sink			(GstObject *object);
+gpointer	gst_object_ref			(gpointer object);
+void		gst_object_unref		(gpointer object);
+void 		gst_object_sink			(gpointer object);
 
 /* replace object pointer */
 void 		gst_object_replace		(GstObject **oldobj, GstObject *newobj);

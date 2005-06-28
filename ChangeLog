@@ -1,5 +1,9 @@
 2005-06-28  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstobject.c (gst_object_unref, gst_object_ref) 
+	(gst_object_sink): Take gpointer arguments, not GstObject --
+	avoids casts. Like GLib.
+
 	* gst/gstghostpad.c (gst_proxy_pad_do_activate): Don't proxy
 	activate.
 

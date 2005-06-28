@@ -255,8 +255,8 @@ gst_object_constructor (GType type, guint n_construct_properties,
  *
  * Returns: A pointer to the object
  */
-GstObject *
-gst_object_ref (GstObject * object)
+gpointer
+gst_object_ref (gpointer object)
 {
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
@@ -274,7 +274,7 @@ gst_object_ref (GstObject * object)
 #endif
 
 #ifdef REFCOUNT_HACK
-  g_atomic_int_inc (&object->refcount);
+  g_atomic_int_inc (&((GstObject *) object)->refcount);
   PATCH_REFCOUNT (object);
 #else
   /* FIXME, not MT safe because glib is not MT safe */
@@ -294,22 +294,16 @@ gst_object_ref (GstObject * object)
  *
  * The unref method should never be called with the LOCK held since
  * this might deadlock the dispose function.
- * 
- * Returns: NULL, so that constructs like
- *
- *   object = gst_object_unref (object);
- *
- *  automatically clear the input object pointer.
  */
-GstObject *
-gst_object_unref (GstObject * object)
+void
+gst_object_unref (gpointer object)
 {
-  g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
+  g_return_if_fail (GST_IS_OBJECT (object));
 
 #ifdef REFCOUNT_HACK
-  g_return_val_if_fail (GST_OBJECT_REFCOUNT_VALUE (object) > 0, NULL);
+  g_return_if_fail (GST_OBJECT_REFCOUNT_VALUE (object) > 0);
 #else
-  g_return_val_if_fail (((GObject *) object)->ref_count > 0, NULL);
+  g_return_if_fail (((GObject *) object)->ref_count > 0);
 #endif
 
 #ifdef DEBUG_REFCOUNT
@@ -326,7 +320,8 @@ gst_object_unref (GstObject * object)
 #endif
 
 #ifdef REFCOUNT_HACK
-  if (G_UNLIKELY (g_atomic_int_dec_and_test (&object->refcount))) {
+  if (G_UNLIKELY (g_atomic_int_dec_and_test (&((GstObject *) object)->
+              refcount))) {
     PATCH_REFCOUNT1 (object);
     g_object_unref (object);
   } else {
@@ -336,8 +331,6 @@ gst_object_unref (GstObject * object)
   /* FIXME, not MT safe because glib is not MT safe */
   g_object_unref (object);
 #endif
-
-  return NULL;
 }
 
 /**
@@ -352,7 +345,7 @@ gst_object_unref (GstObject * object)
  * MT safe. This function grabs and releases the object lock.
  */
 void
-gst_object_sink (GstObject * object)
+gst_object_sink (gpointer object)
 {
   g_return_if_fail (GST_IS_OBJECT (object));
 

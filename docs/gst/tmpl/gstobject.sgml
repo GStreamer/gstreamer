@@ -316,6 +316,7 @@ Acquire a reference to the mutex of this object.
 </para>
 
 @object: the object
+<!-- # Unused Parameters # -->
 @Returns: 
 
 
