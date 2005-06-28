@@ -26,6 +26,20 @@
 ;;; Code:
 
 
+;; Init the rng.
+
+(use-modules ((srfi srfi-1) (fold unfold)))
+
+(define (read-bytes-from-file-as-integer f n)
+  (with-input-from-file f
+    (lambda ()
+      (fold (lambda (x seed) (+ x (ash seed 8)))
+            0
+            (unfold zero? (lambda (n) (char->integer (read-char))) 1- n)))))
+
+(set! *random-state* (seed->random-state
+                      (read-bytes-from-file-as-integer "/dev/random" 4)))
+
 ;; General utilities.
 
 (define (iround x)

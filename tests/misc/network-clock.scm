@@ -72,47 +72,52 @@ exec guile -l $0 -e main -- "$@"
   (iround (* t *sample-frequency*)))
 
 
-(define (schedule-event events e time)
+(define (schedule-event events e time loss-probability)
   (let lp ((response-time (time->samples time))
            (stream events))
     (if (zero? response-time)
         (if (not (stream-car stream))
-            (stream-cons e (stream-cdr stream))
+            (if (< (random 1.0) loss-probability)
+                stream ;; drop the event
+                (stream-cons e (stream-cdr stream)))
             (stream-cons (stream-car stream) (lp 0 (stream-cdr stream))))
         (stream-cons (stream-car stream) (lp (1- response-time) (stream-cdr stream))))))
 
 (define (schedule-send-time-query events time)
-  (schedule-event events (list 'send-time-query) time))
+  (schedule-event events (list 'send-time-query) time 0.0))
 
 (define (schedule-time-query events l)
   (schedule-event events (list 'time-query l)
-                  (+ *send-delay* (random *send-noise*))))
+                  (+ *send-delay* (random *send-jitter*)) *send-loss*))
 
 (define (schedule-time-response events l r)
   (schedule-event events (list 'time-response l r)
-                  (+ *receive-delay* (random *receive-noise*))))
+                  (+ *recv-delay* (random *recv-jitter*)) *recv-loss*))
 
 
-(define (network-time remote-time local-time events m b x y)
+(define (timeout-- t)
+  (- t (/ 1 *sample-frequency*)))
+
+(define (network-time remote-time local-time events m b x y t)
   (let ((r (stream-car remote-time))
         (l (stream-car local-time))
         (event (stream-car events))
         (events (stream-cdr events)))
 
-    (define (next events m b x y)
+    (define (next events m b x y t)
       (stream-cons
        (+ (* m l) b)
        (network-time
-        (stream-cdr remote-time) (stream-cdr local-time) events m b x y)))
+        (stream-cdr remote-time) (stream-cdr local-time) events m b x y t)))
 
     (case (and=> event car)
       ((send-time-query)
        (format #t "; sending time query: ~a\n" l)
-       (next (schedule-time-query events l) m b x y))
+       (next (schedule-time-query events l) m b x y *timeout*))
 
       ((time-query)
        (format #t "; time query received, replying with ~a\n" r)
-       (next (schedule-time-response events (cadr event) r) m b x y))
+       (next (schedule-time-response events (cadr event) r) m b x y (timeout-- t)))
 
       ((time-response)
        (let ((x (q-push x (avg (cadr event) l)))
@@ -127,10 +132,18 @@ exec guile -l $0 -e main -- "$@"
                     (/ 1 (- 1 (min r-squared 0.99999)) 1000))
                 0.10))
              (format #t "; new slope and offset: ~a ~a (~a)\n" m b r-squared)
-             (next (schedule-send-time-query events (next-time)) m b x y)))))
+             (next (schedule-send-time-query events (next-time)) m b x y #f)))))
 
       (else
-       (next events m b x y)))))
+       (cond
+        ((not t)
+         ;; not waiting for a response
+         (next events m b x y t))
+        ((<= t 0.0)
+         ;; we timed out
+         (next (schedule-send-time-query events 0.0) m b x y 0.0))
+        (else
+         (next events m b x y (timeout-- t))))))))
 
 (define (run-simulation remote-speed local-speed)
   (let ((absolute-time (arithmetic-series 0.0 (/ 1.0 *sample-frequency*)))
@@ -148,7 +161,8 @@ exec guile -l $0 -e main -- "$@"
         1.0
         (stream-car local-time)
         (make-q (list (stream-car local-time)))
-        (make-q (list (stream-car remote-time))))))))
+        (make-q (list (stream-car remote-time)))
+        #f)))))
 
 (define (print-simulation total-time sample-rate remote-speed local-speed)
   (display "Absolute time; Remote time; Local time; Network time\n")
@@ -171,13 +185,16 @@ exec guile -l $0 -e main -- "$@"
      
 (define-parameter *sample-frequency* 40)
 (define-parameter *send-delay* 0.1)
-(define-parameter *receive-delay* 0.1)
-(define-parameter *send-noise* 0.1)
-(define-parameter *receive-noise* 0.1)
+(define-parameter *recv-delay* 0.1)
+(define-parameter *send-loss* 0.02)
+(define-parameter *recv-loss* 0.02)
+(define-parameter *send-jitter* 0.1)
+(define-parameter *recv-jitter* 0.1)
 (define-parameter *queue-length* 32)
 (define-parameter *local-rate* 1.0)
 (define-parameter *remote-rate* 1.1)
 (define-parameter *total-time* 5.0)
+(define-parameter *timeout* 1.0)
 
 
 (define (main args)

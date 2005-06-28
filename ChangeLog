@@ -1,3 +1,10 @@
+2005-06-28  Andy Wingo  <wingo@pobox.com>
+
+	* tests/network-clock.scm (*timeout*, *send-loss*, *recv-loss*):
+	New parameters, simulate network packet loss.
+
+	* tests/network-clock-utils.scm: Initialize the RNG.
+
 2005-06-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_basesink_preroll_queue_flush),
