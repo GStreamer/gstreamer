@@ -1007,7 +1007,7 @@ gst_id3_tag_src_link (GstPad * pad, GstPad * peer)
     GST_LOG_OBJECT (tag, "parsing operation, extracting tags");
   }
 #endif
-  if (GST_RPAD_LINKFUNC (peer))
+  if (GST_PAD_LINKFUNC (peer))
     return GST_PAD_LINKFUNC (peer) (peer, pad);
   else
     return GST_PAD_LINK_OK;
