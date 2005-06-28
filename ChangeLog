@@ -1,3 +1,9 @@
+2005-06-28  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_packet):
+	If we're building a chain we are not in an error case
+	when we queue a buffer.
+
 2005-06-28  Andy Wingo  <wingo@pobox.com>
 
 	* *.c: Don't cast to GstObject before reffing/unreffing.

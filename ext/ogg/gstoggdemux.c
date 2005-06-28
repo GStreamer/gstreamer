@@ -661,6 +661,8 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
         GST_BUFFER_OFFSET (buf) = -1;
         GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
         pad->headers = g_list_append (pad->headers, buf);
+        /* we are ok now */
+        ret = GST_FLOW_OK;
       }
     }
   } else {
