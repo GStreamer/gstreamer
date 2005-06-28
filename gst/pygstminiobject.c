@@ -31,6 +31,13 @@ static void pygstminiobject_dealloc(PyGstMiniObject *self);
 static int  pygstminiobject_traverse(PyGstMiniObject *self, visitproc visit, void *arg);
 static int  pygstminiobject_clear(PyGstMiniObject *self);
 
+static GHashTable *miniobjs;
+
+void
+pygst_miniobject_init()
+{
+    miniobjs = g_hash_table_new (NULL, NULL);
+}
 
 /**
  * pygstminiobject_lookup_class:
@@ -112,6 +119,31 @@ pygstminiobject_register_class(PyObject *dict, const gchar *type_name,
 }
 
 /**
+ * pygstminiobject_register_wrapper:
+ * @self: the wrapper instance
+ *
+ * In the constructor of PyGTK wrappers, this function should be
+ * called after setting the obj member.  It will tie the wrapper
+ * instance to the Gstminiobject so that the same wrapper instance will
+ * always be used for this Gstminiobject instance.  It will also sink any
+ * floating references on the Gstminiobject.
+ */
+void
+pygstminiobject_register_wrapper(PyObject *self)
+{
+    GstMiniObject *obj = ((PyGstMiniObject *)self)->obj;
+
+    if (!pygstminiobject_wrapper_key)
+	pygstminiobject_wrapper_key=g_quark_from_static_string(pygstminiobject_wrapper_id);
+    
+    Py_INCREF(self);
+    g_hash_table_insert (miniobjs, (gpointer) obj, (gpointer) self);
+/*     gst_mini_object_set_qdata_full(obj, pygstminiobject_wrapper_key, self, */
+/* 				   pyg_destroy_notify); */
+}
+
+
+/**
  * pygstminiobject_new:
  * @obj: a GstMiniObject instance.
  *
@@ -135,25 +167,33 @@ pygstminiobject_new(GstMiniObject *obj)
 	return Py_None;
     }
     
-    /* create wrapper */
-    PyTypeObject *tp = pygstminiobject_lookup_class(G_OBJECT_TYPE(obj));
-    /* need to bump type refcount if created with
-       pygstminiobject_new_with_interfaces(). fixes bug #141042 */
-    if (tp->tp_flags & Py_TPFLAGS_HEAPTYPE)
-	Py_INCREF(tp);
-    self = PyObject_GC_New(PyGstMiniObject, tp);
-    if (self == NULL)
-	return NULL;
-    self->obj = gst_mini_object_ref(obj);
-    
-    self->inst_dict = NULL;
-    self->weakreflist = NULL;
-    /* save wrapper pointer so we can access it later */
-    Py_INCREF(self);
-    /* g_object_set_qdata_full(obj, pygstminiobject_wrapper_key, self, */
-/* 			    pyg_destroy_notify); */
-    
-    PyObject_GC_Track((PyObject *)self);
+    /* we already have a wrapper for this object -- return it. */
+    self = (PyGstMiniObject *)g_hash_table_lookup (miniobjs, (gpointer) obj);
+/*     self = (PyGstMiniObject *)gst_mini_object_get_qdata(obj, pygstminiobject_wrapper_key); */
+    if (self != NULL) {
+	Py_INCREF(self);
+    } else {
+	/* create wrapper */
+	PyTypeObject *tp = pygstminiobject_lookup_class(G_OBJECT_TYPE(obj));
+	/* need to bump type refcount if created with
+	   pygstminiobject_new_with_interfaces(). fixes bug #141042 */
+	if (tp->tp_flags & Py_TPFLAGS_HEAPTYPE)
+	    Py_INCREF(tp);
+	self = PyObject_GC_New(PyGstMiniObject, tp);
+	if (self == NULL)
+	    return NULL;
+ 	self->obj = gst_mini_object_make_writable(obj);
+	
+	self->inst_dict = NULL;
+	self->weakreflist = NULL;
+	/* save wrapper pointer so we can access it later */
+	Py_INCREF(self);
+	g_hash_table_insert (miniobjs, (gpointer) obj, (gpointer) self);
+/* 	gst_mini_object_set_qdata_full(obj, pygstminiobject_wrapper_key, self, */
+/* 				       pyg_destroy_notify); */
+	
+	PyObject_GC_Track((PyObject *)self);
+    }
     
     return (PyObject *)self;
 }
@@ -177,6 +217,7 @@ pygstminiobject_dealloc(PyGstMiniObject *self)
 
     /* the following causes problems with subclassed types */
     /* self->ob_type->tp_free((PyObject *)self); */
+    g_hash_table_remove (miniobjs, (gpointer) self);
     PyObject_GC_Del(self);
 }
 
@@ -242,6 +283,7 @@ pygstminiobject_clear(PyGstMiniObject *self)
 static void
 pygstminiobject_free(PyObject *op)
 {
+    g_hash_table_remove (miniobjs, (gpointer) op);
     PyObject_GC_Del(op);
 }
 

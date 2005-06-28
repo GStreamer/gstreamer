@@ -36,31 +36,17 @@ void
 pygstminiobject_register_class(PyObject *dict, const gchar *type_name,
 			       GType gtype, PyTypeObject *type,
 			       PyObject *bases);
+void
+pygstminiobject_register_wrapper(PyObject *self);
+
+void
+pygst_miniobject_init();
 
 #ifndef _INSIDE_PYGSTMINIOBJECT_
 
 struct _PyGObject_Functions *_PyGObject_API;
 
 extern PyTypeObject PyGstMiniObject_Type;
-
-#define init_pygstminiobject() { \
-    PyObject *gstminiobject = PyImport_ImportModule("gstminiobject"); \
-    if (gstminiobject != NULL) { \
-        PyObject *mdict = PyModule_GetDict(gstminiobject); \
-        PyObject *cobject = PyDict_GetItemString(mdict, "_PyGstMiniObject_API"); \
-        if (PyCObject_Check(cobject)) \
-            _PyGstMiniObject_API = (struct _PyGstMiniObject_Functions *)PyCObject_AsVoidPtr(cobject); \
-        else { \
-            PyErr_SetString(PyExc_RuntimeError, \
-                            "could not find _PyGstMiniObject_API object"); \
-	    return; \
-        } \
-    } else { \
-        PyErr_SetString(PyExc_ImportError, \
-                        "could not import gst"); \
-        return; \
-    } \
-}
 
 #endif /* !_INSIDE_PYGSTMINIOBJECT_ */
 

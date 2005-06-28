@@ -673,7 +673,7 @@
     '("ok" "GST_FLOW_OK")
     '("resend" "GST_FLOW_RESEND")
     '("error" "GST_FLOW_ERROR")
-    '("not-connected" "GST_FLOW_NOT_CONNECTED")
+    '("not-linked" "GST_FLOW_NOT_LINKED")
     '("not-negotiated" "GST_FLOW_NOT_NEGOTIATED")
     '("wrong-state" "GST_FLOW_WRONG_STATE")
     '("unexpected" "GST_FLOW_UNEXPECTED")

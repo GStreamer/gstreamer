@@ -1031,6 +1031,18 @@
   (return-type "GstIterator*")
 )
 
+(define-method iterate_src_pads
+  (of-object "GstElement")
+  (c-name "gst_element_iterate_src_pads")
+  (return-type "GstIterator*")
+)
+
+(define-method iterate_sink_pads
+  (of-object "GstElement")
+  (c-name "gst_element_iterate_sink_pads")
+  (return-type "GstIterator*")
+)
+
 (define-method send_event
   (of-object "GstElement")
   (c-name "gst_element_send_event")
@@ -2646,22 +2658,28 @@
   )
 )
 
-(define-method ref
-  (of-object "GstObject")
+(define-function object_ref
   (c-name "gst_object_ref")
-  (return-type "GstObject*")
+  (return-type "gpointer")
+  (parameters
+    '("gpointer" "object")
+  )
 )
 
-(define-method unref
-  (of-object "GstObject")
+(define-function object_unref
   (c-name "gst_object_unref")
-  (return-type "GstObject*")
+  (return-type "none")
+  (parameters
+    '("gpointer" "object")
+  )
 )
 
-(define-method sink
-  (of-object "GstObject")
+(define-function object_sink
   (c-name "gst_object_sink")
   (return-type "none")
+  (parameters
+    '("gpointer" "object")
+  )
 )
 
 (define-function object_replace
@@ -2772,16 +2790,7 @@
   (c-name "gst_pad_set_active")
   (return-type "gboolean")
   (parameters
-    '("GstActivateMode" "mode")
-  )
-)
-
-(define-method peer_set_active
-  (of-object "GstPad")
-  (c-name "gst_pad_peer_set_active")
-  (return-type "gboolean")
-  (parameters
-    '("GstActivateMode" "mode")
+    '("gboolean" "active")
   )
 )
 
@@ -2789,6 +2798,24 @@
   (of-object "GstPad")
   (c-name "gst_pad_is_active")
   (return-type "gboolean")
+)
+
+(define-method activate_pull
+  (of-object "GstPad")
+  (c-name "gst_pad_activate_pull")
+  (return-type "gboolean")
+  (parameters
+    '("gboolean" "active")
+  )
+)
+
+(define-method activate_push
+  (of-object "GstPad")
+  (c-name "gst_pad_activate_push")
+  (return-type "gboolean")
+  (parameters
+    '("gboolean" "active")
+  )
 )
 
 (define-method set_blocked
@@ -2868,12 +2895,21 @@
   )
 )
 
-(define-method set_loop_function
+(define-method set_activatepull_function
   (of-object "GstPad")
-  (c-name "gst_pad_set_loop_function")
+  (c-name "gst_pad_set_activatepull_function")
   (return-type "none")
   (parameters
-    '("GstPadLoopFunction" "loop")
+    '("GstPadActivateModeFunction" "activatepull")
+  )
+)
+
+(define-method set_activatepush_function
+  (of-object "GstPad")
+  (c-name "gst_pad_set_activatepush_function")
+  (return-type "none")
+  (parameters
+    '("GstPadActivateModeFunction" "activatepush")
   )
 )
 
@@ -3322,7 +3358,7 @@
   (is-constructor-of "GstPipeline")
   (return-type "GstElement*")
   (parameters
-    '("const-gchar*" "name")
+    '("const-gchar*" "name" (null-ok) (default "NULL"))
   )
 )
 
@@ -5254,6 +5290,11 @@
 
 (define-function alloc_trace_print_all
   (c-name "gst_alloc_trace_print_all")
+  (return-type "none")
+)
+
+(define-function gst_alloc_trace_print_live
+  (c-name "gst_alloc_trace_print_live")
   (return-type "none")
 )
 

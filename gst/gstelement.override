@@ -92,6 +92,7 @@ _wrap_gst_element_get_state(PyGObject *self, PyObject *args, PyObject *kwargs)
     GstElementState state;
     GstElementStateReturn	ret;
 
+	/* Only returns the state for the time being */
     ret = gst_element_get_state(GST_ELEMENT (self->obj), &state, NULL, NULL);
     if (!ret) {
 	PyErr_SetString(PyExc_RuntimeError, "conversion could not be performed");
@@ -408,4 +409,36 @@ _wrap_gst_element_factory_get_pad_templates(PyGObject *self)
 		PyList_Append(list, pygobject_new(pads->data));
 		
 	return list;
+}
+%%
+override gst_element_query_position args
+static PyObject *
+_wrap_gst_element_query_position (PyGObject *self, PyObject *args)
+{
+    gint64	cur, end;
+    gint	format;
+    PyObject	*pformat;
+    PyObject	*ret;
+    int		i;
+
+    pformat = (PyObject*)PyTuple_GetItem(args, 0);
+    if (pyg_enum_get_value (GST_TYPE_FORMAT, pformat, &format)) {
+        PyErr_SetString(PyExc_TypeError, "argument should be a GstFormat");
+        return NULL;
+    }
+
+    ret = PyList_New(0);
+    if ((gst_element_query_position(GST_ELEMENT (self->obj), (GstFormat*) &format, &cur, &end))) {
+	PyList_Append(ret, PyLong_FromLong(cur));
+	PyList_Append(ret, PyLong_FromLong(end));
+	PyList_Append(ret, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
+    } else {
+	for (i = 0; i < 2; i++) {
+	    Py_INCREF(Py_None);
+	    PyList_Append(ret, Py_None);
+	}
+	PyList_Append(ret, pformat);
+    }
+
+    return ret;
 }

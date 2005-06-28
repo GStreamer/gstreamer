@@ -1,3 +1,21 @@
+2005-06-28  Edward Hervey  <edward@fluendo.com>
+
+	* codegen/codegen.py: (GstMiniObjectWrapper.constructor_tmpl):
+	let's not forget to wrap the MiniObject :)
+
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	Always keep up to date with the core
+
+	* gst/gstelement.override:
+	override for gst_element_query_position
+
+	* gst/pygstminiobject.c:
+	* gst/pygstminiobject.h:
+	* gst/gst.override:
+	PyGstMiniObject now properly wrap GstMiniObject and are referenced in a
+	global hash table
+
 2005-06-26  Edward Hervey  <edward@fluendo.com>
 
 	* codegen/argtypes.py:

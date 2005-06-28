@@ -832,6 +832,7 @@ class GstMiniObjectWrapper(Wrapper):
         '        return -1;\n' \
         '    }\n' \
         '%(aftercreate)s' \
+        '    pygstminiobject_register_wrapper((PyObject *)self);\n' \
         '    return 0;\n' \
         '}\n\n'
     method_tmpl = \
