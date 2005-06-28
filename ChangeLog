@@ -1,3 +1,10 @@
+2005-06-28  Wim Taymans  <wim@fluendo.com>
+
+	* ext/mad/gstid3tag.c: (gst_id3_tag_src_link):
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_init):
+	Fix old RPAD macro.
+	basesrc -> base_src
+
 2005-06-27  Wim Taymans  <wim@fluendo.com>
 
 	* ext/mad/gstid3tag.c: (gst_id3_tag_src_link):
