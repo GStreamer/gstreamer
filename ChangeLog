@@ -1,3 +1,7 @@
+2005-06-28  Andy Wingo  <wingo@pobox.com>
+
+	* *.c: Don't cast to GstObject before reffing/unreffing.
+
 2005-06-27  Andy Wingo  <wingo@pobox.com>
 
 	* gst/videotestsrc/gstvideotestsrc.c

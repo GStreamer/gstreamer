@@ -314,7 +314,7 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
     /* add the typefind element */
     if (!gst_bin_add (GST_BIN (decode_bin), decode_bin->typefind)) {
       g_warning ("Could not add typefind element, decodebin will not work");
-      gst_object_unref (GST_OBJECT (decode_bin->typefind));
+      gst_object_unref (decode_bin->typefind);
       decode_bin->typefind = NULL;
     }
 
@@ -325,7 +325,7 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
     gst_element_add_pad (GST_ELEMENT (decode_bin),
         gst_ghost_pad_new ("sink", pad));
 
-    gst_object_unref (GST_OBJECT_CAST (pad));
+    gst_object_unref (pad);
 
     /* connect a signal to find out when the typefind element found
      * a type */
@@ -358,8 +358,8 @@ dynamic_create (GstElement * element, GstDecodeBin * decode_bin)
   GstDynamic *dyn;
 
   /* take refs */
-  gst_object_ref (GST_OBJECT (element));
-  gst_object_ref (GST_OBJECT (decode_bin));
+  gst_object_ref (element);
+  gst_object_ref (decode_bin);
 
   dyn = g_new0 (GstDynamic, 1);
   dyn->element = element;
@@ -379,8 +379,8 @@ dynamic_free (GstDynamic * dyn)
   g_signal_handler_disconnect (G_OBJECT (dyn->element), dyn->np_sig_id);
   g_signal_handler_disconnect (G_OBJECT (dyn->element), dyn->nmp_sig_id);
 
-  gst_object_unref (GST_OBJECT (dyn->element));
-  gst_object_unref (GST_OBJECT (dyn->decode_bin));
+  gst_object_unref (dyn->element);
+  gst_object_unref (dyn->decode_bin);
   dyn->element = NULL;
   dyn->decode_bin = NULL;
   g_free (dyn);
@@ -595,7 +595,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
       GST_DEBUG_OBJECT (decode_bin, "link failed on pad %s:%s, reason %d",
           GST_DEBUG_PAD_NAME (pad), ret);
       /* get rid of the sinkpad */
-      gst_object_unref (GST_OBJECT_CAST (sinkpad));
+      gst_object_unref (sinkpad);
       /* this element did not work, remove it again and continue trying
        * other elements, the element will be disposed. */
       gst_bin_remove (GST_BIN (decode_bin), element);
@@ -637,7 +637,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
       result = element;
 
       /* get rid of the sinkpad now */
-      gst_object_unref (GST_OBJECT_CAST (sinkpad));
+      gst_object_unref (sinkpad);
 
       /* and exit */
       goto done;
@@ -665,11 +665,11 @@ get_our_ghost_pad (GstDecodeBin * decode_bin, GstPad * pad)
 
     if (parent == GST_ELEMENT (decode_bin)) {
       GST_DEBUG_OBJECT (decode_bin, "pad is our ghostpad");
-      gst_object_unref (GST_OBJECT_CAST (parent));
+      gst_object_unref (parent);
       return pad;
     } else {
       GST_DEBUG_OBJECT (decode_bin, "pad is ghostpad but not ours");
-      gst_object_unref (GST_OBJECT_CAST (parent));
+      gst_object_unref (parent);
       return NULL;
     }
   }
@@ -752,10 +752,10 @@ remove_element_chain (GstDecodeBin * decode_bin, GstPad * pad)
               GST_ELEMENT_NAME (elem), GST_DEBUG_PAD_NAME (pad));
           remove_element_chain (decode_bin, peer);
         }
-        gst_object_unref (GST_OBJECT_CAST (parent));
+        gst_object_unref (parent);
       }
     }
-    gst_object_unref (GST_OBJECT_CAST (peer));
+    gst_object_unref (peer);
   }
   GST_DEBUG_OBJECT (decode_bin, "removing %s", GST_ELEMENT_NAME (elem));
 
@@ -854,8 +854,8 @@ unlinked (GstPad * pad, GstPad * peerpad, GstDecodeBin * decode_bin)
   decode_bin->dynamics = g_list_prepend (decode_bin->dynamics, dyn);
 
 exit:
-  gst_object_unref (GST_OBJECT (element));
-  gst_object_unref (GST_OBJECT (peer));
+  gst_object_unref (element);
+  gst_object_unref (peer);
 }
 
 /* this function inspects the given element and tries to connect something
@@ -968,7 +968,7 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
     if (caps)
       gst_caps_unref (caps);
 
-    gst_object_unref (GST_OBJECT_CAST (pad));
+    gst_object_unref (pad);
   }
   g_list_free (to_connect);
 }
@@ -987,7 +987,7 @@ type_found (GstElement * typefind, guint probability, GstCaps * caps,
   /* autoplug the new pad with the caps that the signal gave us. */
   pad = gst_element_get_pad (typefind, "src");
   close_pad_link (typefind, pad, caps, decode_bin, FALSE);
-  gst_object_unref (GST_OBJECT_CAST (pad));
+  gst_object_unref (pad);
 
   dynamic = gst_decode_bin_is_dynamic (decode_bin);
   if (dynamic == FALSE) {

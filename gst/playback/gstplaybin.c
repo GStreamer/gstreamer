@@ -223,15 +223,15 @@ gst_play_bin_dispose (GObject * object)
   }
 
   if (play_bin->audio_sink != NULL) {
-    gst_object_unref (GST_OBJECT (play_bin->audio_sink));
+    gst_object_unref (play_bin->audio_sink);
     play_bin->audio_sink = NULL;
   }
   if (play_bin->video_sink != NULL) {
-    gst_object_unref (GST_OBJECT (play_bin->video_sink));
+    gst_object_unref (play_bin->video_sink);
     play_bin->video_sink = NULL;
   }
   if (play_bin->visualisation != NULL) {
-    gst_object_unref (GST_OBJECT (play_bin->visualisation));
+    gst_object_unref (play_bin->visualisation);
     play_bin->visualisation = NULL;
   }
   g_free (play_bin->font_desc);
@@ -254,11 +254,11 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_VIDEO_SINK:
       if (play_bin->video_sink != NULL) {
-        gst_object_unref (GST_OBJECT (play_bin->video_sink));
+        gst_object_unref (play_bin->video_sink);
       }
       play_bin->video_sink = g_value_get_object (value);
       if (play_bin->video_sink != NULL) {
-        gst_object_ref (GST_OBJECT (play_bin->video_sink));
+        gst_object_ref (play_bin->video_sink);
         gst_object_sink (GST_OBJECT (play_bin->video_sink));
       }
       /* when changing the videosink, we just remove the
@@ -268,22 +268,22 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       break;
     case ARG_AUDIO_SINK:
       if (play_bin->audio_sink != NULL) {
-        gst_object_unref (GST_OBJECT (play_bin->audio_sink));
+        gst_object_unref (play_bin->audio_sink);
       }
       play_bin->audio_sink = g_value_get_object (value);
       if (play_bin->audio_sink != NULL) {
-        gst_object_ref (GST_OBJECT (play_bin->audio_sink));
+        gst_object_ref (play_bin->audio_sink);
         gst_object_sink (GST_OBJECT (play_bin->audio_sink));
       }
       g_hash_table_remove (play_bin->cache, "abin");
       break;
     case ARG_VIS_PLUGIN:
       if (play_bin->visualisation != NULL) {
-        gst_object_unref (GST_OBJECT (play_bin->visualisation));
+        gst_object_unref (play_bin->visualisation);
       }
       play_bin->visualisation = g_value_get_object (value);
       if (play_bin->visualisation != NULL) {
-        gst_object_ref (GST_OBJECT (play_bin->visualisation));
+        gst_object_ref (play_bin->visualisation);
         gst_object_sink (GST_OBJECT (play_bin->visualisation));
       }
       break;
@@ -395,7 +395,7 @@ gen_video_element (GstPlayBin * play_bin)
   } else {
     sink = gst_element_factory_make ("xvimagesink", "videosink");
   }
-  gst_object_ref (GST_OBJECT (sink));
+  gst_object_ref (sink);
   g_hash_table_insert (play_bin->cache, "video_sink", sink);
 
   gst_bin_add (GST_BIN (element), identity);
@@ -408,13 +408,13 @@ gen_video_element (GstPlayBin * play_bin)
 
   pad = gst_element_get_pad (identity, "sink");
   gst_element_add_pad (element, gst_ghost_pad_new ("sink", pad));
-  gst_object_unref (GST_OBJECT (pad));
+  gst_object_unref (pad);
 
   gst_element_set_state (element, GST_STATE_READY);
 
   /* since we're gonna add it to a bin but don't want to lose it,
    * we keep a reference. */
-  gst_object_ref (GST_OBJECT (element));
+  gst_object_ref (element);
   g_hash_table_insert (play_bin->cache, "vbin", element);
 
   return element;
@@ -460,11 +460,11 @@ gen_text_element (GstPlayBin * play_bin)
 #define gst_element_add_ghost_pad(element, pad, name) \
     gst_element_add_pad (element, gst_ghost_pad_new (name, pad))
   gst_element_add_ghost_pad (element, pad, "text_sink");
-  gst_object_unref (GST_OBJECT (pad));
+  gst_object_unref (pad);
 
   pad = gst_element_get_pad (csp, "sink");
   gst_element_add_ghost_pad (element, pad, "sink");
-  gst_object_unref (GST_OBJECT (pad));
+  gst_object_unref (pad);
 
   return element;
 }
@@ -508,10 +508,10 @@ gen_audio_element (GstPlayBin * play_bin)
     sink = play_bin->audio_sink;
   } else {
     sink = gst_element_factory_make ("alsasink", "audiosink");
-    play_bin->audio_sink = GST_ELEMENT (gst_object_ref (GST_OBJECT (sink)));
+    play_bin->audio_sink = GST_ELEMENT (gst_object_ref (sink));
   }
 
-  gst_object_ref (GST_OBJECT (sink));
+  gst_object_ref (sink);
   g_hash_table_insert (play_bin->cache, "audio_sink", sink);
 
   gst_bin_add (GST_BIN (element), conv);
@@ -525,13 +525,13 @@ gen_audio_element (GstPlayBin * play_bin)
 
   pad = gst_element_get_pad (conv, "sink");
   gst_element_add_ghost_pad (element, pad, "sink");
-  gst_object_unref (GST_OBJECT (pad));
+  gst_object_unref (pad);
 
   gst_element_set_state (element, GST_STATE_READY);
 
   /* since we're gonna add it to a bin but don't want to lose it,
    * we keep a reference. */
-  gst_object_ref (GST_OBJECT (element));
+  gst_object_ref (element);
   g_hash_table_insert (play_bin->cache, "abin", element);
 
   return element;
@@ -589,7 +589,7 @@ gen_vis_element (GstPlayBin * play_bin)
 
   conv = gst_element_factory_make ("audioconvert", "aconv");
   if (play_bin->visualisation) {
-    gst_object_ref (GST_OBJECT (play_bin->visualisation));
+    gst_object_ref (play_bin->visualisation);
     vis = play_bin->visualisation;
   } else {
     vis = gst_element_factory_make ("goom", "vis");
@@ -606,19 +606,19 @@ gen_vis_element (GstPlayBin * play_bin)
   pad = gst_element_get_pad (aqueue, "sink");
   rpad = gst_element_get_request_pad (tee, "src%d");
   gst_pad_link (rpad, pad);
-  gst_object_unref (GST_OBJECT (rpad));
-  gst_object_unref (GST_OBJECT (pad));
+  gst_object_unref (rpad);
+  gst_object_unref (pad);
   gst_element_link_pads (aqueue, "src", asink, "sink");
 
   pad = gst_element_get_pad (conv, "sink");
   rpad = gst_element_get_request_pad (tee, "src%d");
   gst_pad_link (rpad, pad);
-  gst_object_unref (GST_OBJECT (rpad));
-  gst_object_unref (GST_OBJECT (pad));
+  gst_object_unref (rpad);
+  gst_object_unref (pad);
 
   pad = gst_element_get_pad (tee, "sink");
   gst_element_add_ghost_pad (element, pad, "sink");
-  gst_object_unref (GST_OBJECT (pad));
+  gst_object_unref (pad);
 
   return element;
 }
@@ -641,7 +641,7 @@ remove_sinks (GstPlayBin * play_bin)
        * is disposed */
       play_bin->sinks = g_list_remove (play_bin->sinks, element);
       gst_bin_remove (GST_BIN (parent), element);
-      gst_object_unref (GST_OBJECT (parent));
+      gst_object_unref (parent);
     }
   }
   element = g_hash_table_lookup (play_bin->cache, "vbin");
@@ -650,7 +650,7 @@ remove_sinks (GstPlayBin * play_bin)
     if (parent != NULL) {
       play_bin->sinks = g_list_remove (play_bin->sinks, element);
       gst_bin_remove (GST_BIN (parent), element);
-      gst_object_unref (GST_OBJECT (parent));
+      gst_object_unref (parent);
     }
   }
 
@@ -666,9 +666,9 @@ remove_sinks (GstPlayBin * play_bin)
     peer = gst_pad_get_peer (pad);
     if (peer) {
       gst_pad_unlink (peer, pad);
-      gst_object_unref (GST_OBJECT (peer));
+      gst_object_unref (peer);
     }
-    gst_object_unref (GST_OBJECT (pad));
+    gst_object_unref (pad);
 
     gst_bin_remove (GST_BIN (play_bin), element);
   }
@@ -704,12 +704,12 @@ add_sink (GstPlayBin * play_bin, GstElement * sink, GstPad * srcpad)
   /* we found a sink for this stream, now try to install it */
   sinkpad = gst_element_get_pad (sink, "sink");
   res = gst_pad_link (srcpad, sinkpad);
-  gst_object_unref (GST_OBJECT (sinkpad));
+  gst_object_unref (sinkpad);
 
   parent = gst_pad_get_parent (srcpad);
   GST_DEBUG ("Adding sink with state %d (parent: %d, peer: %d)\n",
       GST_STATE (sink), GST_STATE (play_bin), GST_STATE (parent));
-  gst_object_unref (GST_OBJECT (parent));
+  gst_object_unref (parent);
 
   /* try to link the pad of the sink to the stream */
   if (res < 0) {
@@ -780,7 +780,7 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
     pad = gst_element_get_pad (group->type[GST_STREAM_TYPE_AUDIO - 1].preroll,
         "src");
     add_sink (play_bin, sink, pad);
-    gst_object_unref (GST_OBJECT (pad));
+    gst_object_unref (pad);
   }
 
   /* link video */
@@ -793,15 +793,15 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
           gst_element_get_pad (group->type[GST_STREAM_TYPE_TEXT - 1].preroll,
           "src");
       gst_pad_link (textsrcpad, textsinkpad);
-      gst_object_unref (GST_OBJECT (textsinkpad));
-      gst_object_unref (GST_OBJECT (textsrcpad));
+      gst_object_unref (textsinkpad);
+      gst_object_unref (textsrcpad);
     } else {
       sink = gen_video_element (play_bin);
     }
     pad = gst_element_get_pad (group->type[GST_STREAM_TYPE_VIDEO - 1].preroll,
         "src");
     add_sink (play_bin, sink, pad);
-    gst_object_unref (GST_OBJECT (pad));
+    gst_object_unref (pad);
   }
 
   if (play_bin->fakesink) {

@@ -174,7 +174,7 @@ main (gint argc, gchar * argv[])
     gst_bin_iterate (GST_BIN (pipeline));
     if ((counter / 200) > last) {
       last = counter / 200;
-      gst_object_unref (GST_OBJECT (pipeline));
+      gst_object_unref (pipeline);
       create_pipeline ();
     }
   }

@@ -131,7 +131,7 @@ gst_baseaudiosink_get_clock (GstElement * elem)
 
   sink = GST_BASEAUDIOSINK (elem);
 
-  return GST_CLOCK (gst_object_ref (GST_OBJECT (sink->clock)));
+  return GST_CLOCK (gst_object_ref (sink->clock));
 }
 
 static GstClockTime
@@ -555,7 +555,7 @@ gst_baseaudiosink_change_state (GstElement * element)
     case GST_STATE_PAUSED_TO_READY:
       gst_ringbuffer_stop (sink->ringbuffer);
       gst_ringbuffer_release (sink->ringbuffer);
-      gst_object_unref (GST_OBJECT (sink->ringbuffer));
+      gst_object_unref (sink->ringbuffer);
       sink->ringbuffer = NULL;
       break;
     case GST_STATE_READY_TO_NULL:

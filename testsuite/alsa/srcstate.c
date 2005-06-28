@@ -89,7 +89,7 @@ main (gint argc, gchar * argv[])
 
   g_print ("The alsa plugin mastered another test.\n");
 
-  gst_object_unref (GST_OBJECT (pipeline));
+  gst_object_unref (pipeline);
 
   return 0;
 }

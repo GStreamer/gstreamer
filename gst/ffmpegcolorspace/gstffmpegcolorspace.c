@@ -290,7 +290,7 @@ gst_ffmpegcsp_setcaps (GstPad * pad, GstCaps * caps)
         gst_caps_unref (targetcaps);
       }
     }
-    gst_object_unref (GST_OBJECT (otherpeer));
+    gst_object_unref (otherpeer);
   }
 
   space->width = width;
@@ -305,7 +305,7 @@ configure_error_source:
   }
 configure_error_target:
   {
-    gst_object_unref (GST_OBJECT (otherpeer));
+    gst_object_unref (otherpeer);
     GST_DEBUG ("could not configure context for target");
     return FALSE;
   }

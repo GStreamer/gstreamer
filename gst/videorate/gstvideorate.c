@@ -322,7 +322,7 @@ gst_videorate_setcaps (GstPad * pad, GstCaps * caps)
       gst_pad_set_caps (otherpad, caps);
       ret = TRUE;
     }
-    gst_object_unref (GST_OBJECT (opeer));
+    gst_object_unref (opeer);
   }
 done:
   return ret;

@@ -560,7 +560,7 @@ gst_ogg_pad_typefind (GstOggPad * pad, ogg_packet * packet)
           GstCaps *any;
 
           /* this is ours */
-          gst_object_ref (GST_OBJECT (element));
+          gst_object_ref (element);
           gst_object_sink (GST_OBJECT (element));
 
           /* FIXME, it might not be named "sink" */
@@ -583,7 +583,7 @@ gst_ogg_pad_typefind (GstOggPad * pad, ogg_packet * packet)
 
             p = gst_element_get_pad (element, "src");
             gst_pad_link (p, pad->elem_out);
-            gst_object_unref (GST_OBJECT (p));
+            gst_object_unref (p);
           }
         }
       }
@@ -769,7 +769,7 @@ gst_ogg_chain_free (GstOggChain * chain)
   for (i = 0; i < chain->streams->len; i++) {
     GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
 
-    gst_object_unref (GST_OBJECT (pad));
+    gst_object_unref (pad);
   }
   g_array_free (chain->streams, TRUE);
   chain->streams = NULL;
@@ -787,7 +787,7 @@ gst_ogg_chain_new_stream (GstOggChain * chain, glong serialno)
 
   ret = g_object_new (GST_TYPE_OGG_PAD, NULL);
   /* we own this one */
-  gst_object_ref (GST_OBJECT (ret));
+  gst_object_ref (ret);
   gst_object_sink (GST_OBJECT (ret));
 
   list = gst_tag_list_new ();
@@ -803,7 +803,7 @@ gst_ogg_chain_new_stream (GstOggChain * chain, glong serialno)
   if (ogg_stream_init (&ret->stream, serialno) != 0) {
     GST_ERROR ("Could not initialize ogg_stream struct for serial %08lx.",
         serialno);
-    gst_object_unref (GST_OBJECT (ret));
+    gst_object_unref (ret);
     return NULL;
   }
   gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_SERIAL, serialno,
@@ -1723,7 +1723,7 @@ gst_ogg_demux_find_chains (GstOggDemux * ogg)
   /* find length to read last page, we store this for later use. */
   format = GST_FORMAT_BYTES;
   res = gst_pad_query_position (peer, &format, NULL, &ogg->length);
-  gst_object_unref (GST_OBJECT (peer));
+  gst_object_unref (peer);
   if (!res)
     goto no_length;
 

@@ -627,7 +627,7 @@ gst_ogm_parse_chain (GstPad * pad, GstBuffer * buffer)
       //gst_pad_use_explicit_caps (ogm->srcpad);
       //if (!gst_pad_set_explicit_caps (ogm->srcpad, caps)) {
       //  GST_ELEMENT_ERROR (ogm, CORE, NEGOTIATION, (NULL), (NULL));
-      //gst_object_unref (GST_OBJECT (ogm->srcpad));
+      //gst_object_unref (ogm->srcpad);
       //  ogm->srcpad = NULL;
       //  break;
       //}

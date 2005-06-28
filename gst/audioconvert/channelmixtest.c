@@ -88,7 +88,7 @@ main (gint argc, gchar ** argv)
         }
       }
     }
-    gst_object_unref (GST_OBJECT (bin));
+    gst_object_unref (bin);
   }
 
   return 0;

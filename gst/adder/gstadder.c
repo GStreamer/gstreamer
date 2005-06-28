@@ -294,7 +294,7 @@ not_sink:
 could_not_add:
   {
     gst_collectpads_remove_pad (adder->collect, newpad);
-    gst_object_unref (GST_OBJECT (newpad));
+    gst_object_unref (newpad);
     return NULL;
   }
 }

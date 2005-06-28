@@ -315,7 +315,7 @@ cb_parse_clicked (GtkButton * button, gpointer * user_data)
     return;
   }
   if (fd->input)
-    gst_object_unref (GST_OBJECT (fd->input));
+    gst_object_unref (fd->input);
   fd->input = GST_ELEMENT (gst_parse_launch (fd->input_pipe, &error));
   if (error) {
     ui_feedback_add (fd->ui, "Error : parsing input pipeline : %s\n",
@@ -329,7 +329,7 @@ cb_parse_clicked (GtkButton * button, gpointer * user_data)
     return;
   }
   if (fd->output)
-    gst_object_unref (GST_OBJECT (fd->output));
+    gst_object_unref (fd->output);
   fd->output = GST_ELEMENT (gst_parse_launch (fd->output_pipe, &error));
   if (error) {
     ui_feedback_add (fd->ui, "Error : parsing output pipeline : %s\n",
@@ -340,7 +340,7 @@ cb_parse_clicked (GtkButton * button, gpointer * user_data)
 
   /* try to create filter */
   if (fd->filter)
-    gst_object_unref (GST_OBJECT (fd->filter));
+    gst_object_unref (fd->filter);
   fd->filter = gst_element_factory_make (fd->filter_element, "filter");
   if (fd->filter == NULL) {
     ui_feedback_add (fd->ui, "Error : could not create element %s\n",

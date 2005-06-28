@@ -323,8 +323,8 @@ group_destroy (GstPlayBaseGroup * group)
       gst_bin_remove (group->type[n].bin, group->type[n].selector);
     } else {
       /* else we can just unref it */
-      gst_object_unref (GST_OBJECT (element));
-      gst_object_unref (GST_OBJECT (group->type[n].selector));
+      gst_object_unref (element);
+      gst_object_unref (group->type[n].selector);
     }
 
     group->type[n].preroll = NULL;
@@ -618,7 +618,7 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
   probe = gst_probe_new (FALSE, probe_triggered, info);
   /* have to REALIZE the pad as we cannot attach a padprobe to a ghostpad */
   gst_pad_add_probe (preroll_pad, probe);
-  gst_object_unref (GST_OBJECT_CAST (preroll_pad));
+  gst_object_unref (preroll_pad);
 
   /* add to group list */
   /* FIXME refcount elements */
@@ -860,7 +860,7 @@ preroll_unlinked (GstPad * pad, GstPad * peerpad,
   srcpad = gst_element_get_pad (fakesrc, "src");
   gst_bin_add (GST_BIN (play_base_bin), fakesrc);
   gst_pad_link (srcpad, pad);
-  gst_object_unref (GST_OBJECT_CAST (srcpad));
+  gst_object_unref (srcpad);
 
   /* keep track of these patch elements */
   g_object_set_data (G_OBJECT (pad), "fakesrc", fakesrc);
@@ -1204,7 +1204,7 @@ setup_source (GstPlayBaseBin * play_base_bin,
         }
 
         GST_DEBUG ("No subtitle found - ignoring");
-        gst_object_unref (GST_OBJECT (play_base_bin->subtitle));
+        gst_object_unref (play_base_bin->subtitle);
         play_base_bin->subtitle = NULL;
       } else {
         GST_DEBUG ("Subtitle set-up successful");
@@ -1435,13 +1435,13 @@ mute_group_type (GstPlayBaseGroup * group, GstStreamType type, gboolean mute)
 
   pad = gst_element_get_pad (group->type[type - 1].preroll, "src");
   gst_pad_set_active (pad, active);
-  gst_object_unref (GST_OBJECT_CAST (pad));
+  gst_object_unref (pad);
   pad = gst_element_get_pad (group->type[type - 1].preroll, "sink");
   gst_pad_set_active (pad, active);
-  gst_object_unref (GST_OBJECT_CAST (pad));
+  gst_object_unref (pad);
   pad = gst_element_get_pad (group->type[type - 1].selector, "src");
   gst_pad_set_active (pad, active);
-  gst_object_unref (GST_OBJECT_CAST (pad));
+  gst_object_unref (pad);
 
   if (mute) {
     g_signal_connect (group->type[type - 1].preroll, "state-change",

@@ -1218,7 +1218,7 @@ main (int argc, char **argv)
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
   g_print ("free pipeline\n");
-  gst_object_unref (GST_OBJECT (pipeline));
+  gst_object_unref (pipeline);
 
   return 0;
 }
