@@ -61,9 +61,8 @@ exec guile -l $0 -e main -- "$@"
 ;;; Code:
 
 
-(use-modules (ice-9 slib)
-             (ice-9 popen))
-(require 'printf)
+(use-modules (ice-9 popen))
+
 
 (load "network-clock-utils.scm")
 
@@ -172,7 +171,7 @@ exec guile -l $0 -e main -- "$@"
       (apply
        stream-while
        (lambda (a r l n) (<= a total-time))
-       (lambda (a r l n) (printf "%.3f %.3f %.3f %.3f\n" a r l n))
+       (lambda (a r l n) (format #t "~a ~a ~a ~a\n" a r l n))
        streams))))
 
 (define (plot-simulation)
