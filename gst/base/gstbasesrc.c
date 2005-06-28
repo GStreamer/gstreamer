@@ -34,8 +34,8 @@
 
 #define DEFAULT_BLOCKSIZE	4096
 
-GST_DEBUG_CATEGORY_STATIC (gst_basesrc_debug);
-#define GST_CAT_DEFAULT gst_basesrc_debug
+GST_DEBUG_CATEGORY_STATIC (gst_base_src_debug);
+#define GST_CAT_DEFAULT gst_base_src_debug
 
 /* BaseSrc signals and args */
 enum
@@ -54,69 +54,69 @@ enum
 
 static GstElementClass *parent_class = NULL;
 
-static void gst_basesrc_base_init (gpointer g_class);
-static void gst_basesrc_class_init (GstBaseSrcClass * klass);
-static void gst_basesrc_init (GstBaseSrc * src, gpointer g_class);
+static void gst_base_src_base_init (gpointer g_class);
+static void gst_base_src_class_init (GstBaseSrcClass * klass);
+static void gst_base_src_init (GstBaseSrc * src, gpointer g_class);
 
 GType
-gst_basesrc_get_type (void)
+gst_base_src_get_type (void)
 {
-  static GType basesrc_type = 0;
+  static GType base_src_type = 0;
 
-  if (!basesrc_type) {
-    static const GTypeInfo basesrc_info = {
+  if (!base_src_type) {
+    static const GTypeInfo base_src_info = {
       sizeof (GstBaseSrcClass),
-      (GBaseInitFunc) gst_basesrc_base_init,
+      (GBaseInitFunc) gst_base_src_base_init,
       NULL,
-      (GClassInitFunc) gst_basesrc_class_init,
+      (GClassInitFunc) gst_base_src_class_init,
       NULL,
       NULL,
       sizeof (GstBaseSrc),
       0,
-      (GInstanceInitFunc) gst_basesrc_init,
+      (GInstanceInitFunc) gst_base_src_init,
     };
 
-    basesrc_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstBaseSrc", &basesrc_info, G_TYPE_FLAG_ABSTRACT);
+    base_src_type = g_type_register_static (GST_TYPE_ELEMENT,
+        "GstBaseSrc", &base_src_info, G_TYPE_FLAG_ABSTRACT);
   }
-  return basesrc_type;
+  return base_src_type;
 }
 
-static gboolean gst_basesrc_activate_push (GstPad * pad, gboolean active);
-static gboolean gst_basesrc_activate_pull (GstPad * pad, gboolean active);
-static void gst_basesrc_set_property (GObject * object, guint prop_id,
+static gboolean gst_base_src_activate_push (GstPad * pad, gboolean active);
+static gboolean gst_base_src_activate_pull (GstPad * pad, gboolean active);
+static void gst_base_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_basesrc_get_property (GObject * object, guint prop_id,
+static void gst_base_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static gboolean gst_basesrc_event_handler (GstPad * pad, GstEvent * event);
+static gboolean gst_base_src_event_handler (GstPad * pad, GstEvent * event);
 
-static gboolean gst_basesrc_query (GstPad * pad, GstQuery * query);
+static gboolean gst_base_src_query (GstPad * pad, GstQuery * query);
 
 #if 0
-static const GstEventMask *gst_basesrc_get_event_mask (GstPad * pad);
+static const GstEventMask *gst_base_src_get_event_mask (GstPad * pad);
 #endif
 
-static gboolean gst_basesrc_unlock (GstBaseSrc * basesrc);
-static gboolean gst_basesrc_get_size (GstBaseSrc * basesrc, guint64 * size);
-static gboolean gst_basesrc_start (GstBaseSrc * basesrc);
-static gboolean gst_basesrc_stop (GstBaseSrc * basesrc);
+static gboolean gst_base_src_unlock (GstBaseSrc * basesrc);
+static gboolean gst_base_src_get_size (GstBaseSrc * basesrc, guint64 * size);
+static gboolean gst_base_src_start (GstBaseSrc * basesrc);
+static gboolean gst_base_src_stop (GstBaseSrc * basesrc);
 
-static GstElementStateReturn gst_basesrc_change_state (GstElement * element);
+static GstElementStateReturn gst_base_src_change_state (GstElement * element);
 
-static void gst_basesrc_set_dataflow_funcs (GstBaseSrc * this);
-static void gst_basesrc_loop (GstPad * pad);
-static gboolean gst_basesrc_check_get_range (GstPad * pad);
-static GstFlowReturn gst_basesrc_get_range (GstPad * pad, guint64 offset,
+static void gst_base_src_set_dataflow_funcs (GstBaseSrc * this);
+static void gst_base_src_loop (GstPad * pad);
+static gboolean gst_base_src_check_get_range (GstPad * pad);
+static GstFlowReturn gst_base_src_get_range (GstPad * pad, guint64 offset,
     guint length, GstBuffer ** buf);
 
 static void
-gst_basesrc_base_init (gpointer g_class)
+gst_base_src_base_init (gpointer g_class)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_basesrc_debug, "basesrc", 0, "basesrc element");
+  GST_DEBUG_CATEGORY_INIT (gst_base_src_debug, "basesrc", 0, "basesrc element");
 }
 
 static void
-gst_basesrc_class_init (GstBaseSrcClass * klass)
+gst_base_src_class_init (GstBaseSrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -126,8 +126,8 @@ gst_basesrc_class_init (GstBaseSrcClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_basesrc_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_basesrc_get_property);
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_base_src_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_base_src_get_property);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BLOCKSIZE,
       g_param_spec_ulong ("blocksize", "Block size",
@@ -144,11 +144,12 @@ gst_basesrc_class_init (GstBaseSrcClass * klass)
           "True if the element should expose a getrange function", TRUE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
-  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_basesrc_change_state);
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_base_src_change_state);
 }
 
 static void
-gst_basesrc_init (GstBaseSrc * basesrc, gpointer g_class)
+gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
 {
   GstPad *pad;
   GstPadTemplate *pad_template;
@@ -159,12 +160,12 @@ gst_basesrc_init (GstBaseSrc * basesrc, gpointer g_class)
 
   pad = gst_pad_new_from_template (pad_template, "src");
 
-  gst_pad_set_activatepush_function (pad, gst_basesrc_activate_push);
-  gst_pad_set_activatepull_function (pad, gst_basesrc_activate_pull);
-  gst_pad_set_event_function (pad, gst_basesrc_event_handler);
-  gst_pad_set_query_function (pad, gst_basesrc_query);
+  gst_pad_set_activatepush_function (pad, gst_base_src_activate_push);
+  gst_pad_set_activatepull_function (pad, gst_base_src_activate_pull);
+  gst_pad_set_event_function (pad, gst_base_src_event_handler);
+  gst_pad_set_query_function (pad, gst_base_src_query);
 
-  gst_pad_set_checkgetrange_function (pad, gst_basesrc_check_get_range);
+  gst_pad_set_checkgetrange_function (pad, gst_base_src_check_get_range);
 
   basesrc->is_live = FALSE;
   basesrc->live_lock = g_mutex_new ();
@@ -183,7 +184,7 @@ gst_basesrc_init (GstBaseSrc * basesrc, gpointer g_class)
 }
 
 void
-gst_basesrc_set_live (GstBaseSrc * src, gboolean live)
+gst_base_src_set_live (GstBaseSrc * src, gboolean live)
 {
   GST_LIVE_LOCK (src);
   src->is_live = live;
@@ -191,7 +192,7 @@ gst_basesrc_set_live (GstBaseSrc * src, gboolean live)
 }
 
 gboolean
-gst_basesrc_is_live (GstBaseSrc * src)
+gst_base_src_is_live (GstBaseSrc * src)
 {
   gboolean result;
 
@@ -203,18 +204,18 @@ gst_basesrc_is_live (GstBaseSrc * src)
 }
 
 static void
-gst_basesrc_set_dataflow_funcs (GstBaseSrc * this)
+gst_base_src_set_dataflow_funcs (GstBaseSrc * this)
 {
   GST_DEBUG ("updating dataflow functions");
 
   if (this->has_getrange)
-    gst_pad_set_getrange_function (this->srcpad, gst_basesrc_get_range);
+    gst_pad_set_getrange_function (this->srcpad, gst_base_src_get_range);
   else
     gst_pad_set_getrange_function (this->srcpad, NULL);
 }
 
 static gboolean
-gst_basesrc_query (GstPad * pad, GstQuery * query)
+gst_base_src_query (GstPad * pad, GstQuery * query)
 {
   gboolean b;
   guint64 ui64;
@@ -232,13 +233,13 @@ gst_basesrc_query (GstPad * pad, GstQuery * query)
       switch (format) {
         case GST_FORMAT_DEFAULT:
         case GST_FORMAT_BYTES:
-          b = gst_basesrc_get_size (src, &ui64);
+          b = gst_base_src_get_size (src, &ui64);
           /* better to make get_size take an int64 */
           i64 = b ? (gint64) ui64 : -1;
           gst_query_set_position (query, GST_FORMAT_BYTES, src->offset, i64);
           return TRUE;
         case GST_FORMAT_PERCENT:
-          b = gst_basesrc_get_size (src, &ui64);
+          b = gst_base_src_get_size (src, &ui64);
           i64 = GST_FORMAT_PERCENT_MAX;
           i64 *= b ? (src->offset / (gdouble) ui64) : 1.0;
           gst_query_set_position (query, GST_FORMAT_PERCENT,
@@ -270,7 +271,7 @@ gst_basesrc_query (GstPad * pad, GstQuery * query)
 
 #if 0
 static const GstEventMask *
-gst_basesrc_get_event_mask (GstPad * pad)
+gst_base_src_get_event_mask (GstPad * pad)
 {
   static const GstEventMask masks[] = {
     {GST_EVENT_SEEK, GST_SEEK_METHOD_CUR | GST_SEEK_METHOD_SET |
@@ -285,7 +286,7 @@ gst_basesrc_get_event_mask (GstPad * pad)
 #endif
 
 static gboolean
-gst_basesrc_do_seek (GstBaseSrc * src, GstEvent * event)
+gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
 {
   GstFormat format;
   gint64 offset;
@@ -339,7 +340,7 @@ gst_basesrc_do_seek (GstBaseSrc * src, GstEvent * event)
   gst_pad_push_event (src->srcpad, gst_event_new_flush (FALSE));
 
   /* unblock streaming thread */
-  gst_basesrc_unlock (src);
+  gst_base_src_unlock (src);
 
   /* grab streaming lock */
   GST_STREAM_LOCK (src->srcpad);
@@ -359,7 +360,7 @@ gst_basesrc_do_seek (GstBaseSrc * src, GstEvent * event)
   }
 
   /* and restart the task */
-  gst_pad_start_task (src->srcpad, (GstTaskFunction) gst_basesrc_loop,
+  gst_pad_start_task (src->srcpad, (GstTaskFunction) gst_base_src_loop,
       src->srcpad);
   GST_STREAM_UNLOCK (src->srcpad);
 
@@ -377,7 +378,7 @@ error:
 }
 
 static gboolean
-gst_basesrc_event_handler (GstPad * pad, GstEvent * event)
+gst_base_src_event_handler (GstPad * pad, GstEvent * event)
 {
   GstBaseSrc *src;
   GstBaseSrcClass *bclass;
@@ -391,7 +392,7 @@ gst_basesrc_event_handler (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      return gst_basesrc_do_seek (src, event);
+      return gst_base_src_do_seek (src, event);
     case GST_EVENT_SIZE:
     {
       GstFormat format;
@@ -410,7 +411,7 @@ gst_basesrc_event_handler (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH:
       /* cancel any blocking getrange */
       if (!GST_EVENT_FLUSH_DONE (event))
-        gst_basesrc_unlock (src);
+        gst_base_src_unlock (src);
       break;
     default:
       break;
@@ -421,8 +422,8 @@ gst_basesrc_event_handler (GstPad * pad, GstEvent * event)
 }
 
 static void
-gst_basesrc_set_property (GObject * object, guint prop_id, const GValue * value,
-    GParamSpec * pspec)
+gst_base_src_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstBaseSrc *src;
 
@@ -434,11 +435,11 @@ gst_basesrc_set_property (GObject * object, guint prop_id, const GValue * value,
       break;
     case PROP_HAS_LOOP:
       src->has_loop = g_value_get_boolean (value);
-      gst_basesrc_set_dataflow_funcs (src);
+      gst_base_src_set_dataflow_funcs (src);
       break;
     case PROP_HAS_GETRANGE:
       src->has_getrange = g_value_get_boolean (value);
-      gst_basesrc_set_dataflow_funcs (src);
+      gst_base_src_set_dataflow_funcs (src);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -447,7 +448,7 @@ gst_basesrc_set_property (GObject * object, guint prop_id, const GValue * value,
 }
 
 static void
-gst_basesrc_get_property (GObject * object, guint prop_id, GValue * value,
+gst_base_src_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
   GstBaseSrc *src;
@@ -471,7 +472,7 @@ gst_basesrc_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static GstFlowReturn
-gst_basesrc_get_range (GstPad * pad, guint64 offset, guint length,
+gst_base_src_get_range (GstPad * pad, guint64 offset, guint length,
     GstBuffer ** buf)
 {
   GstFlowReturn ret;
@@ -537,22 +538,22 @@ unexpected_length:
 }
 
 static gboolean
-gst_basesrc_check_get_range (GstPad * pad)
+gst_base_src_check_get_range (GstPad * pad)
 {
   GstBaseSrc *src;
 
   src = GST_BASESRC (GST_OBJECT_PARENT (pad));
 
   if (!GST_FLAG_IS_SET (src, GST_BASESRC_STARTED)) {
-    gst_basesrc_start (src);
-    gst_basesrc_stop (src);
+    gst_base_src_start (src);
+    gst_base_src_stop (src);
   }
 
   return src->seekable;
 }
 
 static void
-gst_basesrc_loop (GstPad * pad)
+gst_base_src_loop (GstPad * pad)
 {
   GstBaseSrc *src;
   GstBuffer *buf = NULL;
@@ -560,7 +561,7 @@ gst_basesrc_loop (GstPad * pad)
 
   src = GST_BASESRC (GST_OBJECT_PARENT (pad));
 
-  ret = gst_basesrc_get_range (pad, src->offset, src->blocksize, &buf);
+  ret = gst_base_src_get_range (pad, src->offset, src->blocksize, &buf);
   if (ret != GST_FLOW_OK)
     goto eos;
 
@@ -588,7 +589,7 @@ pause:
 }
 
 static gboolean
-gst_basesrc_unlock (GstBaseSrc * basesrc)
+gst_base_src_unlock (GstBaseSrc * basesrc)
 {
   GstBaseSrcClass *bclass;
   gboolean result = FALSE;
@@ -613,7 +614,7 @@ gst_basesrc_unlock (GstBaseSrc * basesrc)
 }
 
 static gboolean
-gst_basesrc_get_size (GstBaseSrc * basesrc, guint64 * size)
+gst_base_src_get_size (GstBaseSrc * basesrc, guint64 * size)
 {
   GstBaseSrcClass *bclass;
   gboolean result = FALSE;
@@ -629,7 +630,7 @@ gst_basesrc_get_size (GstBaseSrc * basesrc, guint64 * size)
 }
 
 static gboolean
-gst_basesrc_is_seekable (GstBaseSrc * basesrc)
+gst_base_src_is_seekable (GstBaseSrc * basesrc)
 {
   GstBaseSrcClass *bclass;
 
@@ -645,7 +646,7 @@ gst_basesrc_is_seekable (GstBaseSrc * basesrc)
 }
 
 static gboolean
-gst_basesrc_start (GstBaseSrc * basesrc)
+gst_base_src_start (GstBaseSrc * basesrc)
 {
   GstBaseSrcClass *bclass;
   gboolean result;
@@ -684,7 +685,7 @@ gst_basesrc_start (GstBaseSrc * basesrc)
   basesrc->segment_end = -1;
 
   /* check if we can seek, updates ->seekable */
-  gst_basesrc_is_seekable (basesrc);
+  gst_base_src_is_seekable (basesrc);
 
   /* run typefind */
 #if 0
@@ -707,7 +708,7 @@ could_not_start:
 }
 
 static gboolean
-gst_basesrc_stop (GstBaseSrc * basesrc)
+gst_base_src_stop (GstBaseSrc * basesrc)
 {
   GstBaseSrcClass *bclass;
   gboolean result = TRUE;
@@ -726,7 +727,7 @@ gst_basesrc_stop (GstBaseSrc * basesrc)
 }
 
 static gboolean
-gst_basesrc_deactivate (GstBaseSrc * basesrc, GstPad * pad)
+gst_base_src_deactivate (GstBaseSrc * basesrc, GstPad * pad)
 {
   gboolean result;
 
@@ -736,7 +737,7 @@ gst_basesrc_deactivate (GstBaseSrc * basesrc, GstPad * pad)
   GST_LIVE_UNLOCK (basesrc);
 
   /* step 1, unblock clock sync (if any) */
-  gst_basesrc_unlock (basesrc);
+  gst_base_src_unlock (basesrc);
 
   /* step 2, make sure streaming finishes */
   result = gst_pad_stop_task (pad);
@@ -745,7 +746,7 @@ gst_basesrc_deactivate (GstBaseSrc * basesrc, GstPad * pad)
 }
 
 static gboolean
-gst_basesrc_activate_push (GstPad * pad, gboolean active)
+gst_base_src_activate_push (GstPad * pad, gboolean active)
 {
   GstBaseSrc *basesrc;
 
@@ -753,12 +754,12 @@ gst_basesrc_activate_push (GstPad * pad, gboolean active)
 
   /* prepare subclass first */
   if (active) {
-    if (!gst_basesrc_start (basesrc))
+    if (!gst_base_src_start (basesrc))
       goto error_start;
 
-    return gst_pad_start_task (pad, (GstTaskFunction) gst_basesrc_loop, pad);
+    return gst_pad_start_task (pad, (GstTaskFunction) gst_base_src_loop, pad);
   } else {
-    return gst_basesrc_deactivate (basesrc, pad);
+    return gst_base_src_deactivate (basesrc, pad);
   }
 
 error_start:
@@ -769,7 +770,7 @@ error_start:
 }
 
 static gboolean
-gst_basesrc_activate_pull (GstPad * pad, gboolean active)
+gst_base_src_activate_pull (GstPad * pad, gboolean active)
 {
   GstBaseSrc *basesrc;
 
@@ -777,17 +778,17 @@ gst_basesrc_activate_pull (GstPad * pad, gboolean active)
 
   /* prepare subclass first */
   if (active) {
-    if (!gst_basesrc_start (basesrc))
+    if (!gst_base_src_start (basesrc))
       goto error_start;
 
     if (!basesrc->seekable) {
-      gst_basesrc_stop (basesrc);
+      gst_base_src_stop (basesrc);
       return FALSE;
     }
 
     return TRUE;
   } else {
-    return gst_basesrc_deactivate (basesrc, pad);
+    return gst_base_src_deactivate (basesrc, pad);
   }
 
 error_start:
@@ -798,7 +799,7 @@ error_start:
 }
 
 static GstElementStateReturn
-gst_basesrc_change_state (GstElement * element)
+gst_base_src_change_state (GstElement * element)
 {
   GstBaseSrc *basesrc;
   GstElementStateReturn result = GST_STATE_SUCCESS;
@@ -844,7 +845,7 @@ gst_basesrc_change_state (GstElement * element)
       GST_LIVE_UNLOCK (element);
       break;
     case GST_STATE_PAUSED_TO_READY:
-      if (!gst_basesrc_stop (basesrc))
+      if (!gst_base_src_stop (basesrc))
         result = GST_STATE_FAILURE;
       break;
     case GST_STATE_READY_TO_NULL:

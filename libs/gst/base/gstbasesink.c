@@ -26,8 +26,8 @@
 #include "gstbasesink.h"
 #include <gst/gstmarshal.h>
 
-GST_DEBUG_CATEGORY_STATIC (gst_basesink_debug);
-#define GST_CAT_DEFAULT gst_basesink_debug
+GST_DEBUG_CATEGORY_STATIC (gst_base_sink_debug);
+#define GST_CAT_DEFAULT gst_base_sink_debug
 
 /* BaseSink signals and properties */
 enum
@@ -52,71 +52,71 @@ enum
 
 static GstElementClass *parent_class = NULL;
 
-static void gst_basesink_base_init (gpointer g_class);
-static void gst_basesink_class_init (GstBaseSinkClass * klass);
-static void gst_basesink_init (GstBaseSink * trans, gpointer g_class);
-static void gst_basesink_finalize (GObject * object);
+static void gst_base_sink_base_init (gpointer g_class);
+static void gst_base_sink_class_init (GstBaseSinkClass * klass);
+static void gst_base_sink_init (GstBaseSink * trans, gpointer g_class);
+static void gst_base_sink_finalize (GObject * object);
 
 GType
-gst_basesink_get_type (void)
+gst_base_sink_get_type (void)
 {
-  static GType basesink_type = 0;
+  static GType base_sink_type = 0;
 
-  if (!basesink_type) {
-    static const GTypeInfo basesink_info = {
+  if (!base_sink_type) {
+    static const GTypeInfo base_sink_info = {
       sizeof (GstBaseSinkClass),
-      (GBaseInitFunc) gst_basesink_base_init,
+      (GBaseInitFunc) gst_base_sink_base_init,
       NULL,
-      (GClassInitFunc) gst_basesink_class_init,
+      (GClassInitFunc) gst_base_sink_class_init,
       NULL,
       NULL,
       sizeof (GstBaseSink),
       0,
-      (GInstanceInitFunc) gst_basesink_init,
+      (GInstanceInitFunc) gst_base_sink_init,
     };
 
-    basesink_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstBaseSink", &basesink_info, G_TYPE_FLAG_ABSTRACT);
+    base_sink_type = g_type_register_static (GST_TYPE_ELEMENT,
+        "GstBaseSink", &base_sink_info, G_TYPE_FLAG_ABSTRACT);
   }
-  return basesink_type;
+  return base_sink_type;
 }
 
-static void gst_basesink_set_clock (GstElement * element, GstClock * clock);
+static void gst_base_sink_set_clock (GstElement * element, GstClock * clock);
 
-static void gst_basesink_set_property (GObject * object, guint prop_id,
+static void gst_base_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_basesink_get_property (GObject * object, guint prop_id,
+static void gst_base_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstCaps *gst_base_sink_get_caps (GstBaseSink * sink);
 static gboolean gst_base_sink_set_caps (GstBaseSink * sink, GstCaps * caps);
 static GstFlowReturn gst_base_sink_buffer_alloc (GstBaseSink * sink,
     guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
-static void gst_basesink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
+static void gst_base_sink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end);
 
-static GstElementStateReturn gst_basesink_change_state (GstElement * element);
+static GstElementStateReturn gst_base_sink_change_state (GstElement * element);
 
-static GstFlowReturn gst_basesink_chain (GstPad * pad, GstBuffer * buffer);
-static void gst_basesink_loop (GstPad * pad);
-static GstFlowReturn gst_basesink_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_basesink_activate_push (GstPad * pad, gboolean active);
-static gboolean gst_basesink_activate_pull (GstPad * pad, gboolean active);
-static gboolean gst_basesink_event (GstPad * pad, GstEvent * event);
-static inline GstFlowReturn gst_basesink_handle_buffer (GstBaseSink * basesink,
+static GstFlowReturn gst_base_sink_chain (GstPad * pad, GstBuffer * buffer);
+static void gst_base_sink_loop (GstPad * pad);
+static GstFlowReturn gst_base_sink_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_base_sink_activate_push (GstPad * pad, gboolean active);
+static gboolean gst_base_sink_activate_pull (GstPad * pad, gboolean active);
+static gboolean gst_base_sink_event (GstPad * pad, GstEvent * event);
+static inline GstFlowReturn gst_base_sink_handle_buffer (GstBaseSink * basesink,
     GstBuffer * buf);
-static inline gboolean gst_basesink_handle_event (GstBaseSink * basesink,
+static inline gboolean gst_base_sink_handle_event (GstBaseSink * basesink,
     GstEvent * event);
 
 static void
-gst_basesink_base_init (gpointer g_class)
+gst_base_sink_base_init (gpointer g_class)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_basesink_debug, "basesink", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_base_sink_debug, "basesink", 0,
       "basesink element");
 }
 
 static void
-gst_basesink_class_init (GstBaseSinkClass * klass)
+gst_base_sink_class_init (GstBaseSinkClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -126,9 +126,9 @@ gst_basesink_class_init (GstBaseSinkClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_basesink_finalize);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_basesink_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_basesink_get_property);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_base_sink_finalize);
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_base_sink_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_base_sink_get_property);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HAS_LOOP,
       g_param_spec_boolean ("has-loop", "has-loop",
@@ -146,18 +146,18 @@ gst_basesink_class_init (GstBaseSinkClass * klass)
           "Number of buffers to queue during preroll", 0, G_MAXUINT, 0,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
-  gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_basesink_set_clock);
+  gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_base_sink_set_clock);
   gstelement_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_basesink_change_state);
+      GST_DEBUG_FUNCPTR (gst_base_sink_change_state);
 
   klass->get_caps = GST_DEBUG_FUNCPTR (gst_base_sink_get_caps);
   klass->set_caps = GST_DEBUG_FUNCPTR (gst_base_sink_set_caps);
   klass->buffer_alloc = GST_DEBUG_FUNCPTR (gst_base_sink_buffer_alloc);
-  klass->get_times = GST_DEBUG_FUNCPTR (gst_basesink_get_times);
+  klass->get_times = GST_DEBUG_FUNCPTR (gst_base_sink_get_times);
 }
 
 static GstCaps *
-gst_basesink_pad_getcaps (GstPad * pad)
+gst_base_sink_pad_getcaps (GstPad * pad)
 {
   GstBaseSinkClass *bclass;
   GstBaseSink *bsink;
@@ -182,7 +182,7 @@ gst_basesink_pad_getcaps (GstPad * pad)
 }
 
 static gboolean
-gst_basesink_pad_setcaps (GstPad * pad, GstCaps * caps)
+gst_base_sink_pad_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstBaseSinkClass *bclass;
   GstBaseSink *bsink;
@@ -198,7 +198,7 @@ gst_basesink_pad_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 static GstFlowReturn
-gst_basesink_pad_buffer_alloc (GstPad * pad, guint64 offset, guint size,
+gst_base_sink_pad_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf)
 {
   GstBaseSinkClass *bclass;
@@ -217,7 +217,7 @@ gst_basesink_pad_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 }
 
 static void
-gst_basesink_init (GstBaseSink * basesink, gpointer g_class)
+gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
 {
   GstPadTemplate *pad_template;
 
@@ -228,11 +228,11 @@ gst_basesink_init (GstBaseSink * basesink, gpointer g_class)
   basesink->sinkpad = gst_pad_new_from_template (pad_template, "sink");
 
   gst_pad_set_getcaps_function (basesink->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_basesink_pad_getcaps));
+      GST_DEBUG_FUNCPTR (gst_base_sink_pad_getcaps));
   gst_pad_set_setcaps_function (basesink->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_basesink_pad_setcaps));
+      GST_DEBUG_FUNCPTR (gst_base_sink_pad_setcaps));
   gst_pad_set_bufferalloc_function (basesink->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_basesink_pad_buffer_alloc));
+      GST_DEBUG_FUNCPTR (gst_base_sink_pad_buffer_alloc));
   gst_element_add_pad (GST_ELEMENT (basesink), basesink->sinkpad);
 
   basesink->pad_mode = GST_ACTIVATE_NONE;
@@ -243,7 +243,7 @@ gst_basesink_init (GstBaseSink * basesink, gpointer g_class)
 }
 
 static void
-gst_basesink_finalize (GObject * object)
+gst_base_sink_finalize (GObject * object)
 {
   GstBaseSink *basesink;
 
@@ -255,31 +255,31 @@ gst_basesink_finalize (GObject * object)
 }
 
 static void
-gst_basesink_set_pad_functions (GstBaseSink * this, GstPad * pad)
+gst_base_sink_set_pad_functions (GstBaseSink * this, GstPad * pad)
 {
   gst_pad_set_activatepush_function (pad,
-      GST_DEBUG_FUNCPTR (gst_basesink_activate_push));
+      GST_DEBUG_FUNCPTR (gst_base_sink_activate_push));
   gst_pad_set_activatepull_function (pad,
-      GST_DEBUG_FUNCPTR (gst_basesink_activate_pull));
-  gst_pad_set_event_function (pad, GST_DEBUG_FUNCPTR (gst_basesink_event));
+      GST_DEBUG_FUNCPTR (gst_base_sink_activate_pull));
+  gst_pad_set_event_function (pad, GST_DEBUG_FUNCPTR (gst_base_sink_event));
 
   if (this->has_chain)
-    gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_basesink_chain));
+    gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_base_sink_chain));
   else
     gst_pad_set_chain_function (pad, NULL);
 }
 
 static void
-gst_basesink_set_all_pad_functions (GstBaseSink * this)
+gst_base_sink_set_all_pad_functions (GstBaseSink * this)
 {
   GList *l;
 
   for (l = GST_ELEMENT_PADS (this); l; l = l->next)
-    gst_basesink_set_pad_functions (this, (GstPad *) l->data);
+    gst_base_sink_set_pad_functions (this, (GstPad *) l->data);
 }
 
 static void
-gst_basesink_set_clock (GstElement * element, GstClock * clock)
+gst_base_sink_set_clock (GstElement * element, GstClock * clock)
 {
   GstBaseSink *sink;
 
@@ -289,7 +289,7 @@ gst_basesink_set_clock (GstElement * element, GstClock * clock)
 }
 
 static void
-gst_basesink_set_property (GObject * object, guint prop_id,
+gst_base_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstBaseSink *sink;
@@ -300,13 +300,13 @@ gst_basesink_set_property (GObject * object, guint prop_id,
     case PROP_HAS_LOOP:
       GST_LOCK (sink);
       sink->has_loop = g_value_get_boolean (value);
-      gst_basesink_set_all_pad_functions (sink);
+      gst_base_sink_set_all_pad_functions (sink);
       GST_UNLOCK (sink);
       break;
     case PROP_HAS_CHAIN:
       GST_LOCK (sink);
       sink->has_chain = g_value_get_boolean (value);
-      gst_basesink_set_all_pad_functions (sink);
+      gst_base_sink_set_all_pad_functions (sink);
       GST_UNLOCK (sink);
       break;
     case PROP_PREROLL_QUEUE_LEN:
@@ -322,7 +322,7 @@ gst_basesink_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_basesink_get_property (GObject * object, guint prop_id, GValue * value,
+gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
   GstBaseSink *sink;
@@ -369,7 +369,7 @@ gst_base_sink_buffer_alloc (GstBaseSink * sink, guint64 offset, guint size,
 
 /* with PREROLL_LOCK */
 static GstFlowReturn
-gst_basesink_preroll_queue_empty (GstBaseSink * basesink, GstPad * pad)
+gst_base_sink_preroll_queue_empty (GstBaseSink * basesink, GstPad * pad)
 {
   GstMiniObject *obj;
   GQueue *q = basesink->preroll_queue;
@@ -387,10 +387,10 @@ gst_basesink_preroll_queue_empty (GstBaseSink * basesink, GstPad * pad)
 
       if (GST_IS_BUFFER (obj)) {
         GST_DEBUG ("poped buffer %p", obj);
-        ret = gst_basesink_handle_buffer (basesink, GST_BUFFER (obj));
+        ret = gst_base_sink_handle_buffer (basesink, GST_BUFFER (obj));
       } else {
         GST_DEBUG ("poped event %p", obj);
-        gst_basesink_handle_event (basesink, GST_EVENT (obj));
+        gst_base_sink_handle_event (basesink, GST_EVENT (obj));
         ret = GST_FLOW_OK;
       }
 
@@ -403,7 +403,7 @@ gst_basesink_preroll_queue_empty (GstBaseSink * basesink, GstPad * pad)
 
 /* with PREROLL_LOCK */
 static void
-gst_basesink_preroll_queue_flush (GstBaseSink * basesink, GstPad * pad)
+gst_base_sink_preroll_queue_flush (GstBaseSink * basesink, GstPad * pad)
 {
   GstMiniObject *obj;
   GQueue *q = basesink->preroll_queue;
@@ -423,7 +423,7 @@ gst_basesink_preroll_queue_flush (GstBaseSink * basesink, GstPad * pad)
 
 /* with STREAM_LOCK */
 static GstFlowReturn
-gst_basesink_handle_object (GstBaseSink * basesink, GstPad * pad,
+gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
     GstMiniObject * obj)
 {
   gint length;
@@ -525,7 +525,7 @@ no_preroll:
     GST_DEBUG ("no preroll needed");
     /* maybe it was another sink that blocked in preroll, need to check for
        buffers to drain */
-    ret = gst_basesink_preroll_queue_empty (basesink, pad);
+    ret = gst_base_sink_preroll_queue_empty (basesink, pad);
     GST_PREROLL_UNLOCK (pad);
 
     return ret;
@@ -539,7 +539,7 @@ flushing:
 }
 
 static gboolean
-gst_basesink_event (GstPad * pad, GstEvent * event)
+gst_base_sink_event (GstPad * pad, GstEvent * event)
 {
   GstBaseSink *basesink;
   gboolean result = TRUE;
@@ -558,7 +558,8 @@ gst_basesink_event (GstPad * pad, GstEvent * event)
 
       GST_STREAM_LOCK (pad);
       /* EOS also finishes the preroll */
-      ret = gst_basesink_handle_object (basesink, pad, GST_MINI_OBJECT (event));
+      ret =
+          gst_base_sink_handle_object (basesink, pad, GST_MINI_OBJECT (event));
       GST_STREAM_UNLOCK (pad);
       break;
     }
@@ -570,7 +571,8 @@ gst_basesink_event (GstPad * pad, GstEvent * event)
       if (basesink->clock) {
         //gint64 value = GST_EVENT_DISCONT_OFFSET (event, 0).value;
       }
-      ret = gst_basesink_handle_object (basesink, pad, GST_MINI_OBJECT (event));
+      ret =
+          gst_base_sink_handle_object (basesink, pad, GST_MINI_OBJECT (event));
       GST_STREAM_UNLOCK (pad);
       break;
     }
@@ -585,7 +587,7 @@ gst_basesink_event (GstPad * pad, GstEvent * event)
         /* we need preroll after the flush */
         basesink->need_preroll = TRUE;
         /* unlock from a possible state change/preroll */
-        gst_basesink_preroll_queue_flush (basesink, pad);
+        gst_base_sink_preroll_queue_flush (basesink, pad);
 
         GST_LOCK (basesink);
         if (basesink->clock_id) {
@@ -621,7 +623,7 @@ gst_basesink_event (GstPad * pad, GstEvent * event)
  * timestamps on a buffer, subclasses cna override
  */
 static void
-gst_basesink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
+gst_base_sink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end)
 {
   GstClockTime timestamp, duration;
@@ -646,7 +648,7 @@ gst_basesink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
  * 5) unref the clockid again
  */
 static gboolean
-gst_basesink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
+gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
 {
   gboolean result = TRUE;
 
@@ -696,7 +698,7 @@ gst_basesink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
  * 3) unref the event
  */
 static inline gboolean
-gst_basesink_handle_event (GstBaseSink * basesink, GstEvent * event)
+gst_base_sink_handle_event (GstBaseSink * basesink, GstEvent * event)
 {
   GstBaseSinkClass *bclass;
   gboolean ret;
@@ -761,12 +763,12 @@ gst_basesink_handle_event (GstBaseSink * basesink, GstEvent * event)
  * 3) unref the buffer
  */
 static inline GstFlowReturn
-gst_basesink_handle_buffer (GstBaseSink * basesink, GstBuffer * buf)
+gst_base_sink_handle_buffer (GstBaseSink * basesink, GstBuffer * buf)
 {
   GstBaseSinkClass *bclass;
   GstFlowReturn ret;
 
-  gst_basesink_do_sync (basesink, buf);
+  gst_base_sink_do_sync (basesink, buf);
 
   bclass = GST_BASESINK_GET_CLASS (basesink);
   if (bclass->render)
@@ -781,14 +783,14 @@ gst_basesink_handle_buffer (GstBaseSink * basesink, GstBuffer * buf)
 }
 
 static GstFlowReturn
-gst_basesink_chain (GstPad * pad, GstBuffer * buf)
+gst_base_sink_chain (GstPad * pad, GstBuffer * buf)
 {
   GstBaseSink *basesink;
   GstFlowReturn result;
 
   basesink = GST_BASESINK (GST_OBJECT_PARENT (pad));
 
-  result = gst_basesink_handle_object (basesink, pad, GST_MINI_OBJECT (buf));
+  result = gst_base_sink_handle_object (basesink, pad, GST_MINI_OBJECT (buf));
 
   return result;
 }
@@ -796,7 +798,7 @@ gst_basesink_chain (GstPad * pad, GstBuffer * buf)
 /* FIXME, not all sinks can operate in pull mode 
  */
 static void
-gst_basesink_loop (GstPad * pad)
+gst_base_sink_loop (GstPad * pad)
 {
   GstBaseSink *basesink;
   GstBuffer *buf = NULL;
@@ -810,7 +812,7 @@ gst_basesink_loop (GstPad * pad)
   if (result != GST_FLOW_OK)
     goto paused;
 
-  result = gst_basesink_chain (pad, buf);
+  result = gst_base_sink_chain (pad, buf);
   if (result != GST_FLOW_OK)
     goto paused;
 
@@ -823,7 +825,7 @@ paused:
 }
 
 static gboolean
-gst_basesink_deactivate (GstBaseSink * basesink, GstPad * pad)
+gst_base_sink_deactivate (GstBaseSink * basesink, GstPad * pad)
 {
   gboolean result = FALSE;
   GstBaseSinkClass *bclass;
@@ -844,7 +846,7 @@ gst_basesink_deactivate (GstBaseSink * basesink, GstPad * pad)
 
   /* flush out the data thread if it's locked in finish_preroll */
   basesink->need_preroll = FALSE;
-  gst_basesink_preroll_queue_flush (basesink, pad);
+  gst_base_sink_preroll_queue_flush (basesink, pad);
   GST_PREROLL_UNLOCK (pad);
 
   /* step 2, make sure streaming finishes */
@@ -854,7 +856,7 @@ gst_basesink_deactivate (GstBaseSink * basesink, GstPad * pad)
 }
 
 static gboolean
-gst_basesink_activate_push (GstPad * pad, gboolean active)
+gst_base_sink_activate_push (GstPad * pad, gboolean active)
 {
   gboolean result = FALSE;
   GstBaseSink *basesink;
@@ -865,7 +867,7 @@ gst_basesink_activate_push (GstPad * pad, gboolean active)
     g_return_val_if_fail (basesink->has_chain, FALSE);
     result = TRUE;
   } else {
-    result = gst_basesink_deactivate (basesink, pad);
+    result = gst_base_sink_deactivate (basesink, pad);
   }
   basesink->pad_mode = GST_ACTIVATE_PUSH;
 
@@ -874,7 +876,7 @@ gst_basesink_activate_push (GstPad * pad, gboolean active)
 
 /* this won't get called until we implement an activate function */
 static gboolean
-gst_basesink_activate_pull (GstPad * pad, gboolean active)
+gst_base_sink_activate_pull (GstPad * pad, gboolean active)
 {
   gboolean result = FALSE;
   GstBaseSink *basesink;
@@ -884,16 +886,17 @@ gst_basesink_activate_pull (GstPad * pad, gboolean active)
   if (active) {
     /* if we have a scheduler we can start the task */
     g_return_val_if_fail (basesink->has_loop, FALSE);
-    result = gst_pad_start_task (pad, (GstTaskFunction) gst_basesink_loop, pad);
+    result =
+        gst_pad_start_task (pad, (GstTaskFunction) gst_base_sink_loop, pad);
   } else {
-    result = gst_basesink_deactivate (basesink, pad);
+    result = gst_base_sink_deactivate (basesink, pad);
   }
 
   return result;
 }
 
 static GstElementStateReturn
-gst_basesink_change_state (GstElement * element)
+gst_base_sink_change_state (GstElement * element)
 {
   GstElementStateReturn ret = GST_STATE_SUCCESS;
   GstBaseSink *basesink = GST_BASESINK (element);
@@ -921,7 +924,7 @@ gst_basesink_change_state (GstElement * element)
        * we are pushing and syncing the buffers, better start a new
        * thread to do this. */
       if (basesink->eos) {
-        gst_basesink_preroll_queue_empty (basesink, basesink->sinkpad);
+        gst_base_sink_preroll_queue_empty (basesink, basesink->sinkpad);
       }
       /* don't need the preroll anymore */
       basesink->need_preroll = FALSE;

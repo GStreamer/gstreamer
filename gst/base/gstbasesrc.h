@@ -28,7 +28,7 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_BASESRC		(gst_basesrc_get_type())
+#define GST_TYPE_BASESRC		(gst_base_src_get_type())
 #define GST_BASESRC(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASESRC,GstBaseSrc))
 #define GST_BASESRC_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASESRC,GstBaseSrcClass))
 #define GST_BASESRC_GET_CLASS(obj)      (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BASESRC, GstBaseSrcClass))
@@ -139,10 +139,10 @@ struct _GstBaseSrcClass {
 		                 GstBuffer **buf);
 };
 
-GType gst_basesrc_get_type(void);
+GType gst_base_src_get_type(void);
 
-void		gst_basesrc_set_live	(GstBaseSrc *src, gboolean live);
-gboolean	gst_basesrc_is_live	(GstBaseSrc *src);
+void		gst_base_src_set_live	(GstBaseSrc *src, gboolean live);
+gboolean	gst_base_src_is_live	(GstBaseSrc *src);
 
 G_END_DECLS
 
