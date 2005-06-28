@@ -926,8 +926,6 @@ gst_ogg_demux_init (GstOggDemux * ogg)
   ogg->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&ogg_demux_sink_template_factory), "sink");
-  gst_pad_set_loop_function (ogg->sinkpad,
-      (GstPadLoopFunction) gst_ogg_demux_loop);
   gst_pad_set_event_function (ogg->sinkpad, gst_ogg_demux_handle_event);
   gst_pad_set_chain_function (ogg->sinkpad, gst_ogg_demux_chain);
   gst_pad_set_activate_function (ogg->sinkpad, gst_ogg_demux_sink_activate);
