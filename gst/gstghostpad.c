@@ -166,7 +166,7 @@ gst_proxy_pad_do_activate (GstPad * pad)
 
   g_return_val_if_fail (target != NULL, FALSE);
 
-  return target->activatefunc (pad);
+  return gst_pad_activate_push (pad, TRUE);
 }
 
 static gboolean
