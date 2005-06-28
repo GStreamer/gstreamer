@@ -1,6 +1,6 @@
 #!/bin/bash
 # -*- scheme -*-
-exec guile -l $0 -e main -- "$@"
+exec guile --debug -l $0 -e main -- "$@"
 !#
 
 ;; GStreamer
@@ -71,31 +71,25 @@ exec guile -l $0 -e main -- "$@"
   (iround (* t *sample-frequency*)))
 
 
-(define (schedule-event events e time loss-probability)
+(define (schedule-event events e time)
   (let lp ((response-time (time->samples time))
            (stream events))
     (if (zero? response-time)
         (if (not (stream-car stream))
-            (if (< (random 1.0) loss-probability)
-                stream ;; drop the event
-                (stream-cons e (stream-cdr stream)))
+            (stream-cons e (stream-cdr stream))
             (stream-cons (stream-car stream) (lp 0 (stream-cdr stream))))
         (stream-cons (stream-car stream) (lp (1- response-time) (stream-cdr stream))))))
 
 (define (schedule-send-time-query events time)
-  (schedule-event events (list 'send-time-query) time 0.0))
+  (schedule-event events (list 'send-time-query) time))
 
 (define (schedule-time-query events l)
   (schedule-event events (list 'time-query l)
-                  (+ *send-delay* (random *send-jitter*)) *send-loss*))
+                  (+ *send-delay* (random *send-jitter*))))
 
 (define (schedule-time-response events l r)
   (schedule-event events (list 'time-response l r)
-                  (+ *recv-delay* (random *recv-jitter*)) *recv-loss*))
-
-
-(define (timeout-- t)
-  (- t (/ 1 *sample-frequency*)))
+                  (+ *recv-delay* (random *recv-jitter*))))
 
 (define (network-time remote-time local-time events m b x y t)
   (let ((r (stream-car remote-time))
@@ -111,12 +105,19 @@ exec guile -l $0 -e main -- "$@"
 
     (case (and=> event car)
       ((send-time-query)
-       (format #t "; sending time query: ~a\n" l)
-       (next (schedule-time-query events l) m b x y *timeout*))
+       (cond
+        ((< (random 1.0) *packet-loss*)
+         (debug "; dropped time query: ~a\n" l)
+         (print-event 'packet-lost l (+ (* m l) b))
+         (next events m b x y (time->samples *timeout*)))
+        (else
+         (debug "; sending time query: ~a\n" l)
+         (print-event 'packet-sent l (+ (* m l) b))
+         (next (schedule-time-query events l) m b x y (time->samples *timeout*)))))
 
       ((time-query)
-       (format #t "; time query received, replying with ~a\n" r)
-       (next (schedule-time-response events (cadr event) r) m b x y (timeout-- t)))
+       (debug "; time query received, replying with ~a\n" r)
+       (next (schedule-time-response events (cadr event) r) m b x y (and t (1- t))))
 
       ((time-response)
        (let ((x (q-push x (avg (cadr event) l)))
@@ -130,7 +131,9 @@ exec guile -l $0 -e main -- "$@"
                     0
                     (/ 1 (- 1 (min r-squared 0.99999)) 1000))
                 0.10))
-             (format #t "; new slope and offset: ~a ~a (~a)\n" m b r-squared)
+             (debug "; new slope and offset: ~a ~a (~a)\n" m b r-squared)
+             (print-event 'packet-observed (avg (cadr event) l) (caddr event))
+             (print-event 'packet-received l (+ (* m l) b))
              (next (schedule-send-time-query events (next-time)) m b x y #f)))))
 
       (else
@@ -138,11 +141,11 @@ exec guile -l $0 -e main -- "$@"
         ((not t)
          ;; not waiting for a response
          (next events m b x y t))
-        ((<= t 0.0)
+        ((<= t 0)
          ;; we timed out
-         (next (schedule-send-time-query events 0.0) m b x y 0.0))
+         (next (schedule-send-time-query events 0.0) m b x y 0))
         (else
-         (next events m b x y (timeout-- t))))))))
+         (next events m b x y (1- t))))))))
 
 (define (run-simulation remote-speed local-speed)
   (let ((absolute-time (arithmetic-series 0.0 (/ 1.0 *sample-frequency*)))
@@ -163,30 +166,28 @@ exec guile -l $0 -e main -- "$@"
         (make-q (list (stream-car remote-time)))
         #f)))))
 
-(define (print-simulation total-time sample-rate remote-speed local-speed)
+(define (print-simulation)
   (display "Absolute time; Remote time; Local time; Network time\n")
   (call-with-values
-      (lambda () (run-simulation remote-speed local-speed))
+      (lambda () (run-simulation *remote-rate* *local-rate*))
     (lambda streams
       (apply
        stream-while
-       (lambda (a r l n) (<= a total-time))
+       (lambda (a r l n) (<= a *total-time*))
        (lambda (a r l n) (format #t "~a ~a ~a ~a\n" a r l n))
        streams))))
 
 (define (plot-simulation)
   (let ((port (open-output-pipe "./plot-data Network Clock Simulation")))
     (with-output-to-port port
-      (lambda ()
-        (print-simulation *total-time* #f *remote-rate* *local-rate*)))
+      print-simulation)
     (close-pipe port)))
 
      
 (define-parameter *sample-frequency* 40)
 (define-parameter *send-delay* 0.1)
 (define-parameter *recv-delay* 0.1)
-(define-parameter *send-loss* 0.02)
-(define-parameter *recv-loss* 0.02)
+(define-parameter *packet-loss* 0.01)
 (define-parameter *send-jitter* 0.1)
 (define-parameter *recv-jitter* 0.1)
 (define-parameter *queue-length* 32)
@@ -194,9 +195,13 @@ exec guile -l $0 -e main -- "$@"
 (define-parameter *remote-rate* 1.1)
 (define-parameter *total-time* 5.0)
 (define-parameter *timeout* 1.0)
+(define-parameter *debug* #f)
+(define-parameter *with-graph* #t)
 
 
 (define (main args)
   (parse-parameter-arguments (cdr args))
-  (plot-simulation)
+  (if *with-graph*
+      (plot-simulation)
+      (print-simulation))
   (quit))

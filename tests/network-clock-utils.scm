@@ -62,6 +62,13 @@
 (define (sq x)
   (* x x))
 
+(define (debug str . args)
+  (if *debug*
+      (apply format (current-error-port) str args)))
+
+(define (print-event kind x y)
+  (format #t "~a ~a ~a\n" kind x y))
+
 ;; Linear least squares.
 ;;
 ;; See http://mathworld.wolfram.com/LeastSquaresFitting.html
