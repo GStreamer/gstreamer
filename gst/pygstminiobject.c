@@ -132,12 +132,15 @@ void
 pygstminiobject_register_wrapper(PyObject *self)
 {
     GstMiniObject *obj = ((PyGstMiniObject *)self)->obj;
+    PyGILState_STATE state;
 
     if (!pygstminiobject_wrapper_key)
 	pygstminiobject_wrapper_key=g_quark_from_static_string(pygstminiobject_wrapper_id);
     
     Py_INCREF(self);
+    state = pyg_gil_state_ensure();
     g_hash_table_insert (miniobjs, (gpointer) obj, (gpointer) self);
+    pyg_gil_state_release(state);
 /*     gst_mini_object_set_qdata_full(obj, pygstminiobject_wrapper_key, self, */
 /* 				   pyg_destroy_notify); */
 }
@@ -157,6 +160,7 @@ pygstminiobject_register_wrapper(PyObject *self)
 PyObject *
 pygstminiobject_new(GstMiniObject *obj)
 {
+    PyGILState_STATE state;
     PyGstMiniObject *self;
 
     if (!pygstminiobject_wrapper_key)
@@ -168,7 +172,9 @@ pygstminiobject_new(GstMiniObject *obj)
     }
     
     /* we already have a wrapper for this object -- return it. */
+    state = pyg_gil_state_ensure();
     self = (PyGstMiniObject *)g_hash_table_lookup (miniobjs, (gpointer) obj);
+    pyg_gil_state_release(state);
 /*     self = (PyGstMiniObject *)gst_mini_object_get_qdata(obj, pygstminiobject_wrapper_key); */
     if (self != NULL) {
 	Py_INCREF(self);
@@ -182,31 +188,40 @@ pygstminiobject_new(GstMiniObject *obj)
 	self = PyObject_GC_New(PyGstMiniObject, tp);
 	if (self == NULL)
 	    return NULL;
- 	self->obj = gst_mini_object_make_writable(obj);
+	pyg_begin_allow_threads;
+ 	self->obj = gst_mini_object_ref(obj);
+	pyg_end_allow_threads;
 	
 	self->inst_dict = NULL;
 	self->weakreflist = NULL;
 	/* save wrapper pointer so we can access it later */
 	Py_INCREF(self);
+	state = pyg_gil_state_ensure();
 	g_hash_table_insert (miniobjs, (gpointer) obj, (gpointer) self);
+	pyg_gil_state_release(state);
 /* 	gst_mini_object_set_qdata_full(obj, pygstminiobject_wrapper_key, self, */
 /* 				       pyg_destroy_notify); */
 	
 	PyObject_GC_Track((PyObject *)self);
     }
-    
     return (PyObject *)self;
 }
 
 static void
 pygstminiobject_dealloc(PyGstMiniObject *self)
 {
+    PyGILState_STATE state;
+    
+    state = pyg_gil_state_ensure();
+
     PyObject_ClearWeakRefs((PyObject *)self);
 
     PyObject_GC_UnTrack((PyObject *)self);
 
     if (self->obj) {
+	pyg_begin_allow_threads;
 	gst_mini_object_unref(self->obj);
+	pyg_end_allow_threads;
     }
     self->obj = NULL;
 
@@ -219,6 +234,7 @@ pygstminiobject_dealloc(PyGstMiniObject *self)
     /* self->ob_type->tp_free((PyObject *)self); */
     g_hash_table_remove (miniobjs, (gpointer) self);
     PyObject_GC_Del(self);
+    pyg_gil_state_release(state);
 }
 
 static int
@@ -273,7 +289,9 @@ pygstminiobject_clear(PyGstMiniObject *self)
     self->inst_dict = NULL;
 
     if (self->obj) {
+	pyg_begin_allow_threads;
 	gst_mini_object_unref(self->obj);
+	pyg_end_allow_threads;
     }
     self->obj = NULL;
 
@@ -283,7 +301,11 @@ pygstminiobject_clear(PyGstMiniObject *self)
 static void
 pygstminiobject_free(PyObject *op)
 {
+    PyGILState_STATE state;
+
+    state = pyg_gil_state_ensure();
     g_hash_table_remove (miniobjs, (gpointer) op);
+    pyg_gil_state_release(state);
     PyObject_GC_Del(op);
 }
 

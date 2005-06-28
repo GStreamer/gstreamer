@@ -1,5 +1,8 @@
 2005-06-28  Edward Hervey  <edward@fluendo.com>
 
+	* gst/pygstminiobject.c:
+	thread safe handling of mini-objects
+
 	* codegen/codegen.py: (GstMiniObjectWrapper.constructor_tmpl):
 	let's not forget to wrap the MiniObject :)
 
