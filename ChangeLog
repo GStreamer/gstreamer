@@ -1,3 +1,9 @@
+2005-06-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesink.c: (gst_basesink_preroll_queue_flush),
+	(gst_basesink_event), (gst_basesink_deactivate):
+	Flushing the preroll queue always needs to unlock the waiters.
+
 2005-06-28  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstpipeline.c: (gst_pipeline_send_event): 

@@ -408,7 +408,7 @@ gst_basesink_preroll_queue_empty (GstBaseSink * basesink, GstPad * pad)
 
 /* with PREROLL_LOCK */
 static void
-gst_basesink_preroll_queue_flush (GstBaseSink * basesink)
+gst_basesink_preroll_queue_flush (GstBaseSink * basesink, GstPad * pad)
 {
   GstMiniObject *obj;
   GQueue *q = basesink->preroll_queue;
@@ -422,6 +422,8 @@ gst_basesink_preroll_queue_flush (GstBaseSink * basesink)
   }
   /* we can't have EOS anymore now */
   basesink->eos = FALSE;
+  /* and signal any waiters now */
+  GST_PREROLL_SIGNAL (pad);
 }
 
 /* with STREAM_LOCK */
@@ -587,9 +589,8 @@ gst_basesink_event (GstPad * pad, GstEvent * event)
         GST_PREROLL_LOCK (pad);
         /* we need preroll after the flush */
         basesink->need_preroll = TRUE;
-        gst_basesink_preroll_queue_flush (basesink);
         /* unlock from a possible state change/preroll */
-        GST_PREROLL_SIGNAL (pad);
+        gst_basesink_preroll_queue_flush (basesink, pad);
 
         GST_LOCK (basesink);
         if (basesink->clock_id) {
@@ -847,9 +848,8 @@ gst_basesink_deactivate (GstBaseSink * basesink, GstPad * pad)
     bclass->unlock (basesink);
 
   /* flush out the data thread if it's locked in finish_preroll */
-  gst_basesink_preroll_queue_flush (basesink);
   basesink->need_preroll = FALSE;
-  GST_PREROLL_SIGNAL (pad);
+  gst_basesink_preroll_queue_flush (basesink, pad);
   GST_PREROLL_UNLOCK (pad);
 
   /* step 2, make sure streaming finishes */
