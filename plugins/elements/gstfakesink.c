@@ -137,11 +137,11 @@ gst_fakesink_class_init (GstFakeSinkClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseSinkClass *gstbasesink_class;
+  GstBaseSinkClass *gstbase_sink_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasesink_class = (GstBaseSinkClass *) klass;
+  gstbase_sink_class = (GstBaseSinkClass *) klass;
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_fakesink_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fakesink_get_property);
@@ -178,10 +178,10 @@ gst_fakesink_class_init (GstFakeSinkClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_fakesink_change_state);
 
-  gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_fakesink_event);
-  gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_fakesink_preroll);
-  gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_fakesink_render);
-  gstbasesink_class->get_times = GST_DEBUG_FUNCPTR (gst_fakesink_get_times);
+  gstbase_sink_class->event = GST_DEBUG_FUNCPTR (gst_fakesink_event);
+  gstbase_sink_class->preroll = GST_DEBUG_FUNCPTR (gst_fakesink_preroll);
+  gstbase_sink_class->render = GST_DEBUG_FUNCPTR (gst_fakesink_render);
+  gstbase_sink_class->get_times = GST_DEBUG_FUNCPTR (gst_fakesink_get_times);
 }
 
 static void

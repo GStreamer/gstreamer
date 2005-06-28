@@ -213,11 +213,11 @@ gst_fakesrc_class_init (GstFakeSrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseSrcClass *gstbasesrc_class;
+  GstBaseSrcClass *gstbase_src_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasesrc_class = (GstBaseSrcClass *) klass;
+  gstbase_src_class = (GstBaseSrcClass *) klass;
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_fakesrc_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fakesrc_get_property);
@@ -295,11 +295,11 @@ gst_fakesrc_class_init (GstFakeSrcClass * klass)
       G_STRUCT_OFFSET (GstFakeSrcClass, handoff), NULL, NULL,
       gst_marshal_VOID__OBJECT_OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
 
-  /*gstbasesrc_class->is_seekable = GST_DEBUG_FUNCPTR (gst_fakesrc_is_seekable); */
-  gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_fakesrc_start);
-  gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_fakesrc_stop);
-  gstbasesrc_class->event = GST_DEBUG_FUNCPTR (gst_fakesrc_event_handler);
-  gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_fakesrc_create);
+  /*gstbase_src_class->is_seekable = GST_DEBUG_FUNCPTR (gst_fakesrc_is_seekable); */
+  gstbase_src_class->start = GST_DEBUG_FUNCPTR (gst_fakesrc_start);
+  gstbase_src_class->stop = GST_DEBUG_FUNCPTR (gst_fakesrc_stop);
+  gstbase_src_class->event = GST_DEBUG_FUNCPTR (gst_fakesrc_event_handler);
+  gstbase_src_class->create = GST_DEBUG_FUNCPTR (gst_fakesrc_create);
 }
 
 static void
@@ -436,7 +436,7 @@ gst_fakesrc_set_property (GObject * object, guint prop_id, const GValue * value,
       src->has_getrange = g_value_get_boolean (value);
       break;
     case PROP_IS_LIVE:
-      gst_basesrc_set_live (basesrc, g_value_get_boolean (value));
+      gst_base_src_set_live (basesrc, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -513,7 +513,7 @@ gst_fakesrc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, src->has_getrange);
       break;
     case PROP_IS_LIVE:
-      g_value_set_boolean (value, gst_basesrc_is_live (basesrc));
+      g_value_set_boolean (value, gst_base_src_is_live (basesrc));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
