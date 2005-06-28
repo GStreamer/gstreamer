@@ -81,7 +81,6 @@ Last reviewed on December 13th, 2002 (0.5.0.1)
 @unlinkfunc: 
 @peer: 
 @sched_private: 
-@loopfunc: 
 @chainfunc: 
 @checkgetrangefunc: 
 @getrangefunc: 

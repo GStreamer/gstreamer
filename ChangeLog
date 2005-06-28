@@ -1,5 +1,12 @@
 2005-06-28  Wim Taymans  <wim@fluendo.com>
 
+	* docs/gst/gstreamer.types:
+	* docs/gst/tmpl/gstbasesrc.sgml:
+	* docs/gst/tmpl/gstpad.sgml:
+	Docs fixes.
+
+2005-06-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstghostpad.c: (gst_proxy_pad_do_bufferalloc),
 	(gst_proxy_pad_do_checkgetrange), (gst_proxy_pad_do_acceptcaps),
 	(gst_proxy_pad_do_fixatecaps):
