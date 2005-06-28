@@ -68,7 +68,7 @@ run_pipeline (GstElement * pipe, gchar * descr,
   }
 
   gst_element_set_state (pipe, GST_STATE_NULL);
-  gst_object_unref (GST_OBJECT (pipe));
+  gst_object_unref (pipe);
 }
 
 START_TEST (test_pipeline_unref)
@@ -90,8 +90,8 @@ START_TEST (test_pipeline_unref)
   fail_unless (count == 1, "src has a refcount of %d instead of 1", count);
   count = GST_OBJECT_REFCOUNT_VALUE (sink);
   fail_unless (count == 1, "sink has a refcount of %d instead of 1", count);
-  gst_object_unref (GST_OBJECT (src));
-  gst_object_unref (GST_OBJECT (sink));
+  gst_object_unref (src);
+  gst_object_unref (sink);
 }
 
 END_TEST Suite *

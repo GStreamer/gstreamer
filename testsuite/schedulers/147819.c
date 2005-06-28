@@ -80,7 +80,7 @@ main (gint argc, gchar ** argv)
   gst_bin_iterate (GST_BIN (pipeline));
 
   /* do ugly stuff here */
-  gst_object_ref (GST_OBJECT (id1));
+  gst_object_ref (id1);
   gst_bin_remove (GST_BIN (pipeline), id1);
   gst_element_link_pads (src, "src", id1, "sink");
   gst_element_link_pads (id1, "src", id2, "sink");
@@ -92,7 +92,7 @@ main (gint argc, gchar ** argv)
   gst_bin_iterate (GST_BIN (pipeline));
 
   g_print ("cleaning up...\n");
-  gst_object_unref (GST_OBJECT (pipeline));
+  gst_object_unref (pipeline);
   src = id1 = id2 = sink = pipeline = NULL;
 
   g_print ("done.\n");

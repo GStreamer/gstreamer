@@ -131,7 +131,7 @@ main (gint argc, gchar * argv[])
   g_source_remove (id);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
-  gst_object_unref (GST_OBJECT (pipeline));
+  gst_object_unref (pipeline);
 
   g_print ("Done with test to show bug %d, fixed correctly\n", TESTNUM);
 

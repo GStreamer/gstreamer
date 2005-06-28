@@ -34,7 +34,7 @@ main (int argc, char *argv[])
   }
   fprintf (stderr, "+\n");
 
-  gst_object_unref (GST_OBJECT (bin));
+  gst_object_unref (bin);
 
   g_mem_chunk_info ();
   return 0;

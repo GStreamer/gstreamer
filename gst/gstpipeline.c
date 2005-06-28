@@ -256,7 +256,7 @@ is_eos (GstPipeline * pipeline)
           GST_DEBUG ("element %s posted EOS", name);
         }
         g_free (name);
-        gst_object_unref (GST_OBJECT (element));
+        gst_object_unref (element);
         break;
       }
       case GST_ITERATOR_RESYNC:
@@ -503,7 +503,7 @@ gst_pipeline_get_clock_func (GstElement * element)
   GST_LOCK (pipeline);
   if (GST_FLAG_IS_SET (pipeline, GST_PIPELINE_FLAG_FIXED_CLOCK)) {
     clock = pipeline->fixed_clock;
-    gst_object_ref (GST_OBJECT (clock));
+    gst_object_ref (clock);
     GST_UNLOCK (pipeline);
 
     GST_CAT_DEBUG (GST_CAT_CLOCK, "pipeline using fixed clock %p (%s)",
@@ -518,7 +518,7 @@ gst_pipeline_get_clock_func (GstElement * element)
       /* we unref since this function is not supposed to increase refcount
        * of clock object returned; this is ok since the systemclock always
        * has a refcount of at least one in the current code. */
-      gst_object_unref (GST_OBJECT (clock));
+      gst_object_unref (clock);
       GST_CAT_DEBUG (GST_CAT_CLOCK, "pipeline obtained system clock: %p (%s)",
           clock, clock ? GST_STR_NULL (GST_OBJECT_NAME (clock)) : "-");
     } else {

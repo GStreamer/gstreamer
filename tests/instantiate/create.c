@@ -37,7 +37,7 @@ create_all_elements (void)
       elements != NULL; elements = elements->next) {
     factory = (GstElementFactory *) elements->data;
     if ((element = gst_element_factory_create (factory, "test"))) {
-      gst_object_unref (GST_OBJECT (element));
+      gst_object_unref (element);
     }
   }
 }

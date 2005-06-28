@@ -157,7 +157,7 @@ gst_thread_scheduler_task_start (GstTask * task)
   GST_TASK_CAST (ttask)->state = GST_TASK_STARTED;
   switch (old) {
     case GST_TASK_STOPPED:
-      gst_object_ref (GST_OBJECT (task));
+      gst_object_ref (task);
       g_thread_pool_push (tsched->pool, task, NULL);
       break;
     case GST_TASK_PAUSED:
@@ -211,7 +211,7 @@ gst_thread_scheduler_task_pause (GstTask * task)
   GST_TASK_CAST (ttask)->state = GST_TASK_PAUSED;
   switch (old) {
     case GST_TASK_STOPPED:
-      gst_object_ref (GST_OBJECT (task));
+      gst_object_ref (task);
       g_thread_pool_push (tsched->pool, task, NULL);
       break;
     case GST_TASK_PAUSED:
@@ -303,7 +303,7 @@ done:
 
   GST_DEBUG_OBJECT (sched, "Exit task %p, thread %p", task, g_thread_self ());
 
-  gst_object_unref (GST_OBJECT (task));
+  gst_object_unref (task);
 }
 
 static void

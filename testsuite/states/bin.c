@@ -80,7 +80,7 @@ test_adding_one_element (GstElement * bin)
   gint i;
 
   g_assert (test);
-  gst_object_ref (GST_OBJECT (test));
+  gst_object_ref (test);
   assert_state (test, GST_STATE_NULL);
   gst_bin_add (GST_BIN (bin), test);
   assert_state (bin, MAX (bin_state, GST_STATE_NULL));
@@ -97,7 +97,7 @@ test_adding_one_element (GstElement * bin)
     assert_state (bin, MAX (bin_state, test_state));
   }
   gst_bin_remove (GST_BIN (bin), test);
-  gst_object_unref (GST_OBJECT (test));
+  gst_object_unref (test);
   assert_state (bin, bin_state);
 }
 
@@ -128,7 +128,7 @@ test_element_in_bin (gchar * bin_name)
     test_adding_one_element (bin);
   }
 
-  gst_object_unref (GST_OBJECT (bin));
+  gst_object_unref (bin);
 }
 
 gint

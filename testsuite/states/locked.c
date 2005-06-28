@@ -53,7 +53,7 @@ main (gint argc, gchar * argv[])
   loop = g_main_loop_new (NULL, FALSE);
   bus = gst_element_get_bus (pipeline);
   gst_bus_add_watch (bus, (GstBusHandler) message_received, pipeline);
-  gst_object_unref (GST_OBJECT (bus));
+  gst_object_unref (bus);
 
   fakesrc1 = gst_element_factory_make ("fakesrc", "fakesrc1");
   g_object_set (G_OBJECT (fakesrc1), "num_buffers", 5, NULL);
@@ -98,7 +98,7 @@ main (gint argc, gchar * argv[])
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
-  gst_object_unref (GST_OBJECT (pipeline));
+  gst_object_unref (pipeline);
 
   return 0;
 }

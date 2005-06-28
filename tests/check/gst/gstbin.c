@@ -79,9 +79,10 @@ START_TEST (test_interface)
   fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_DONE);
   gst_iterator_free (it);
 
-  gst_object_unref (GST_OBJECT (bin));
+  gst_object_unref (bin);
 }
-END_TEST Suite * gst_bin_suite (void)
+END_TEST Suite *
+gst_bin_suite (void)
 {
   Suite *s = suite_create ("GstBin");
   TCase *tc_chain = tcase_create ("bin tests");

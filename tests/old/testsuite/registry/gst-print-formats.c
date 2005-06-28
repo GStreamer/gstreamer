@@ -97,7 +97,7 @@ print_element_list (const char *klass, GstPadDirection dir)
               factory->details.longname, gst_plugin_feature_get_rank (feature));
           element = gst_element_factory_create (factory, NULL);
           print_pad_templates_info (element, factory, dir);
-          gst_object_unref (GST_OBJECT (element));
+          gst_object_unref (element);
         }
       }
 
@@ -282,7 +282,7 @@ get_element_mime_list (const char *klass, GstPadDirection dir)
             element = gst_element_factory_create (factory, NULL);
             list = get_pad_templates_info (element, factory, dir);
             mime_list = g_list_concat (mime_list, list);
-            gst_object_unref (GST_OBJECT (element));
+            gst_object_unref (element);
           }
         }
       }

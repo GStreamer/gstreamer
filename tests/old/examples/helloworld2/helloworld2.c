@@ -127,7 +127,7 @@ main (int argc, char *argv[])
   /* stop the pipeline */
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
 
-  gst_object_unref (GST_OBJECT (pipeline));
+  gst_object_unref (pipeline);
 
   exit (0);
 }

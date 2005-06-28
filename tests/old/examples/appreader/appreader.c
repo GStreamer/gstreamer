@@ -70,7 +70,7 @@ main (gint argc, gchar * argv[])
   } while (!done);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
-  gst_object_unref (GST_OBJECT (pipeline));
+  gst_object_unref (pipeline);
 
   return 0;
 }

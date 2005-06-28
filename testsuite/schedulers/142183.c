@@ -49,7 +49,7 @@ main (gint argc, gchar ** argv)
    * handoff signal, normally the scheduler should keep a ref to the
    * currently scheduled elements but that's another bug displayed in
    * 142183-2.c */
-  gst_object_ref (GST_OBJECT (id));
+  gst_object_ref (id);
   g_signal_connect (G_OBJECT (id), "handoff", (GCallback) handoff_identity,
       NULL);
   g_object_set (G_OBJECT (id), "loop-based", TRUE, NULL);
@@ -85,8 +85,8 @@ main (gint argc, gchar ** argv)
   g_print ("ok, no deadlock. bug 142183 fixed!\n");
 
   g_print ("cleaning up...\n");
-  gst_object_unref (GST_OBJECT (pipeline));
-  gst_object_unref (GST_OBJECT (id));
+  gst_object_unref (pipeline);
+  gst_object_unref (id);
   src = id = sink = pipeline = NULL;
 
   g_print ("done.\n");

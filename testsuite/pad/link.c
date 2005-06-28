@@ -183,7 +183,7 @@ main (int argc, char *argv[])
     }
 
     gst_element_set_state (pipeline, GST_STATE_NULL);
-    gst_object_unref (GST_OBJECT (pipeline));
+    gst_object_unref (pipeline);
 
     /* switch element types */
     g_print ("Loop=%s done\n", loop ? "true" : "false");

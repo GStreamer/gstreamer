@@ -795,7 +795,7 @@ gst_type_find_element_activate (GstPad * pad)
 
       gst_pad_query_position (peer, &format, NULL, &size);
       found_caps = gst_type_find_helper (peer, (guint64) size);
-      gst_object_unref (GST_OBJECT (peer));
+      gst_object_unref (peer);
     }
   }
 

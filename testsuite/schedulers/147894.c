@@ -133,8 +133,8 @@ main (gint argc, gchar ** argv)
 
 
   g_print ("cleaning up...\n");
-  gst_object_unref (GST_OBJECT (pipeline));
-  gst_object_unref (GST_OBJECT (pipeline2));
+  gst_object_unref (pipeline);
+  gst_object_unref (pipeline2);
   src = id = sink = pipeline = pipeline2 = NULL;
 
   g_print ("done.\n");

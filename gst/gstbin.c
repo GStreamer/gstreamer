@@ -528,12 +528,12 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
 
   /* we ref here because after the _unparent() the element can be disposed
    * and we still need it to fire a signal. */
-  gst_object_ref (GST_OBJECT_CAST (element));
+  gst_object_ref (element);
   gst_object_unparent (GST_OBJECT_CAST (element));
 
   g_signal_emit (G_OBJECT (bin), gst_bin_signals[ELEMENT_REMOVED], 0, element);
   /* element is really out of our control now */
-  gst_object_unref (GST_OBJECT_CAST (element));
+  gst_object_unref (element);
 
   return TRUE;
 
@@ -598,7 +598,7 @@ no_function:
 static GstIteratorItem
 iterate_child (GstIterator * it, GstElement * child)
 {
-  gst_object_ref (GST_OBJECT (child));
+  gst_object_ref (child);
   return GST_ITERATOR_ITEM_PASS;
 }
 
@@ -626,7 +626,7 @@ gst_bin_iterate_elements (GstBin * bin)
   /* add ref because the iterator refs the bin. When the iterator
    * is freed it will unref the bin again using the provided dispose
    * function. */
-  gst_object_ref (GST_OBJECT (bin));
+  gst_object_ref (bin);
   result = gst_iterator_new_list (GST_GET_LOCK (bin),
       &bin->children_cookie,
       &bin->children,
@@ -641,7 +641,7 @@ gst_bin_iterate_elements (GstBin * bin)
 static GstIteratorItem
 iterate_child_recurse (GstIterator * it, GstElement * child)
 {
-  gst_object_ref (GST_OBJECT (child));
+  gst_object_ref (child);
   if (GST_IS_BIN (child)) {
     GstIterator *other = gst_bin_iterate_recurse (GST_BIN (child));
 
@@ -674,7 +674,7 @@ gst_bin_iterate_recurse (GstBin * bin)
   /* add ref because the iterator refs the bin. When the iterator
    * is freed it will unref the bin again using the provided dispose
    * function. */
-  gst_object_ref (GST_OBJECT (bin));
+  gst_object_ref (bin);
   result = gst_iterator_new_list (GST_GET_LOCK (bin),
       &bin->children_cookie,
       &bin->children,
@@ -720,7 +720,7 @@ has_ancestor (GstObject * object, GstObject * ancestor)
   parent = gst_object_get_parent (object);
   result = has_ancestor (parent, ancestor);
   if (parent)
-    gst_object_unref (GST_OBJECT_CAST (parent));
+    gst_object_unref (parent);
 
   return result;
 }
@@ -757,7 +757,7 @@ bin_element_is_semi_sink (GstElement * child, GstBin * bin)
       if ((peer = gst_pad_get_peer (GST_PAD_CAST (pads->data)))) {
         connected_src =
             has_ancestor (GST_OBJECT_CAST (peer), GST_OBJECT_CAST (bin));
-        gst_object_unref (GST_OBJECT_CAST (peer));
+        gst_object_unref (peer);
         if (connected_src) {
           break;
         }
@@ -871,14 +871,14 @@ restart:
     while (children) {
       GstElement *child = GST_ELEMENT_CAST (children->data);
 
-      gst_object_ref (GST_OBJECT_CAST (child));
+      gst_object_ref (child);
       /* now we release the lock to enter a non blocking wait. We 
        * release the lock anyway since we can. */
       GST_UNLOCK (bin);
 
       ret = gst_element_get_state (child, NULL, NULL, &tv);
 
-      gst_object_unref (GST_OBJECT_CAST (child));
+      gst_object_unref (child);
 
       /* now grab the lock to iterate to the next child */
       GST_LOCK (bin);
@@ -932,7 +932,7 @@ restart:
   while (children) {
     GstElement *child = GST_ELEMENT_CAST (children->data);
 
-    gst_object_ref (GST_OBJECT_CAST (child));
+    gst_object_ref (child);
     /* now we release the lock to enter the potentialy blocking wait */
     GST_UNLOCK (bin);
 
@@ -940,7 +940,7 @@ restart:
      * ater the timeout. */
     ret = gst_element_get_state (child, NULL, NULL, timeout);
 
-    gst_object_unref (GST_OBJECT_CAST (child));
+    gst_object_unref (child);
 
     /* now grab the lock to iterate to the next child */
     GST_LOCK (bin);
@@ -1105,7 +1105,7 @@ restart:
   while (children) {
     GstElement *child = GST_ELEMENT_CAST (children->data);
 
-    gst_object_ref (GST_OBJECT_CAST (child));
+    gst_object_ref (child);
     GST_UNLOCK (bin);
 
     if (bin_element_is_sink (child, bin) == 0) {
@@ -1197,11 +1197,11 @@ restart:
 
             /* make sure we don't have duplicates */
             while ((oldelem = g_queue_find (semi_queue, peer_elem))) {
-              gst_object_unref (GST_OBJECT (peer_elem));
+              gst_object_unref (peer_elem);
               g_queue_delete_link (semi_queue, oldelem);
             }
             while ((oldelem = g_queue_find (elem_queue, peer_elem))) {
-              gst_object_unref (GST_OBJECT (peer_elem));
+              gst_object_unref (peer_elem);
               g_queue_delete_link (elem_queue, oldelem);
             }
             /* was reffed before pushing on the queue by the
@@ -1211,13 +1211,13 @@ restart:
             GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
                 "not adding element %s to queue, it is in another bin",
                 GST_ELEMENT_NAME (peer_elem));
-            gst_object_unref (GST_OBJECT_CAST (peer_elem));
+            gst_object_unref (peer_elem);
           }
           if (parent) {
             gst_object_unref (parent);
           }
         }
-        gst_object_unref (GST_OBJECT_CAST (peer));
+        gst_object_unref (peer);
       } else {
         GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
             "pad %s:%s does not have a peer", GST_DEBUG_PAD_NAME (pad));
@@ -1253,7 +1253,7 @@ restart:
             pending, gst_element_state_get_name (pending));
         ret = GST_STATE_FAILURE;
         /* release refcount of element we popped off the queue */
-        gst_object_unref (GST_OBJECT (qelement));
+        gst_object_unref (qelement);
         goto exit;
       case GST_STATE_NO_PREROLL:
         GST_CAT_DEBUG (GST_CAT_STATES,
@@ -1267,7 +1267,7 @@ restart:
         break;
     }
   next_element:
-    gst_object_unref (GST_OBJECT (qelement));
+    gst_object_unref (qelement);
   }
 
   if (have_no_preroll) {
@@ -1306,7 +1306,7 @@ gst_bin_dispose (GObject * object)
   GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
 
   /* ref to not hit 0 again */
-  gst_object_ref (GST_OBJECT (object));
+  gst_object_ref (object);
 
   while (bin->children) {
     gst_bin_remove (bin, GST_ELEMENT (bin->children->data));
@@ -1347,7 +1347,7 @@ gst_bin_send_event (GstElement * element, GstEvent * event)
         gst_event_ref (event);
         sink = GST_ELEMENT_CAST (data);
         res &= gst_element_send_event (sink, event);
-        gst_object_unref (GST_OBJECT (sink));
+        gst_object_unref (sink);
         break;
       }
       case GST_ITERATOR_RESYNC:
@@ -1386,7 +1386,7 @@ gst_bin_query (GstElement * element, GstQuery * query)
 
         sink = GST_ELEMENT_CAST (data);
         res = gst_element_query (sink, query);
-        gst_object_unref (GST_OBJECT (sink));
+        gst_object_unref (sink);
         break;
       }
       case GST_ITERATOR_RESYNC:
@@ -1413,7 +1413,7 @@ compare_name (GstElement * element, const gchar * name)
   GST_UNLOCK (element);
 
   if (eq != 0) {
-    gst_object_unref (GST_OBJECT (element));
+    gst_object_unref (element);
   }
   return eq;
 }
@@ -1499,7 +1499,7 @@ compare_interface (GstElement * element, gpointer interface)
   } else {
     /* we did not find the element, need to release the ref
      * added by the iterator */
-    gst_object_unref (GST_OBJECT (element));
+    gst_object_unref (element);
     ret = 1;
   }
   return ret;
@@ -1613,7 +1613,7 @@ gst_bin_restore_thyself (GstObject * object, xmlNodePtr self)
 
           /* it had to be parented to find the pads, now we ref and unparent so
            * we can add it to the bin */
-          gst_object_ref (GST_OBJECT (element));
+          gst_object_ref (element);
           gst_object_unparent (GST_OBJECT (element));
 
           gst_bin_add (bin, element);

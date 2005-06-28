@@ -64,7 +64,7 @@ main (gint argc, gchar ** argv)
 
   g_print ("cleaning up...\n");
   g_assert (i == 100);
-  gst_object_unref (GST_OBJECT (pipeline));
+  gst_object_unref (pipeline);
   src = id = sink = pipeline = NULL;
 
   g_print ("done.\n");

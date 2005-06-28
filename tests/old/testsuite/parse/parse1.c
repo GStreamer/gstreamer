@@ -59,7 +59,7 @@ static gchar *s;
 }G_STMT_END
 
 #define TEST_OK G_STMT_START{						\
-  gst_object_unref (GST_OBJECT (cur));					\
+  gst_object_unref (cur);					\
   cur = NULL;								\
   g_print ("TEST %2d line %3d COMPLETE\n", test, __LINE__);		\
 }G_STMT_END

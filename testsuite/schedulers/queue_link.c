@@ -58,9 +58,9 @@ main (gint argc, gchar ** argv)
 
   g_print ("unlinking...\n");
 
-  gst_object_ref (GST_OBJECT (queue));
+  gst_object_ref (queue);
   gst_bin_remove (GST_BIN (pipeline), queue);
-  gst_object_ref (GST_OBJECT (bin));
+  gst_object_ref (bin);
   gst_bin_remove (GST_BIN (thread), bin);
 
   g_print ("done.\n");

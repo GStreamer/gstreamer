@@ -536,7 +536,7 @@ gst_pad_activate_pull (GstPad * pad, gboolean active)
         GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
             "activate_pull on peer (%s:%s) failed", GST_DEBUG_PAD_NAME (peer));
         GST_UNLOCK (peer);
-        gst_object_unref (GST_OBJECT (peer));
+        gst_object_unref (peer);
         goto failure;
       }
     }
@@ -1706,12 +1706,12 @@ gst_pad_peer_get_caps (GstPad * pad)
   if (G_UNLIKELY (GST_PAD_IS_IN_GETCAPS (peerpad)))
     goto was_dispatching;
 
-  gst_object_ref (GST_OBJECT_CAST (peerpad));
+  gst_object_ref (peerpad);
   GST_UNLOCK (pad);
 
   result = gst_pad_get_caps (peerpad);
 
-  gst_object_unref (GST_OBJECT (peerpad));
+  gst_object_unref (peerpad);
 
   return result;
 
@@ -1989,7 +1989,7 @@ gst_pad_get_peer (GstPad * pad)
   GST_LOCK (pad);
   result = GST_PAD_PEER (pad);
   if (result)
-    gst_object_ref (GST_OBJECT (result));
+    gst_object_ref (result);
   GST_UNLOCK (pad);
 
   return result;
@@ -2029,12 +2029,12 @@ gst_pad_get_allowed_caps (GstPad * srcpad)
   GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%s:%s: getting allowed caps",
       GST_DEBUG_PAD_NAME (srcpad));
 
-  gst_object_ref (GST_OBJECT_CAST (peer));
+  gst_object_ref (peer);
   GST_UNLOCK (srcpad);
   mycaps = gst_pad_get_caps (srcpad);
 
   peercaps = gst_pad_get_caps (peer);
-  gst_object_unref (GST_OBJECT_CAST (peer));
+  gst_object_unref (peer);
 
   caps = gst_caps_intersect (mycaps, peercaps);
   gst_caps_unref (peercaps);
@@ -2147,7 +2147,7 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps,
   if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
     goto no_peer;
 
-  gst_object_ref (GST_OBJECT_CAST (peer));
+  gst_object_ref (peer);
   GST_UNLOCK (pad);
 
   if (G_LIKELY ((bufferallocfunc = peer->bufferallocfunc) == NULL))
@@ -2172,7 +2172,7 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps,
     goto fallback;
 
 do_caps:
-  gst_object_unref (GST_OBJECT_CAST (peer));
+  gst_object_unref (peer);
 
   /* FIXME, move capnego this into a base class? */
   caps = GST_BUFFER_CAPS (*buf);
@@ -2198,7 +2198,7 @@ flushing:
   {
     /* peer was flushing */
     GST_UNLOCK (peer);
-    gst_object_unref (GST_OBJECT_CAST (peer));
+    gst_object_unref (peer);
     GST_CAT_DEBUG (GST_CAT_PADS,
         "%s:%s called bufferallocfunc but peer was flushing, returning NULL",
         GST_DEBUG_PAD_NAME (pad));
@@ -2224,7 +2224,7 @@ not_negotiated:
   }
 peer_error:
   {
-    gst_object_unref (GST_OBJECT_CAST (peer));
+    gst_object_unref (peer);
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "alloc function retured error %d", ret);
     return ret;
@@ -2627,7 +2627,7 @@ handle_pad_block (GstPad * pad)
       "signal block taken on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   /* need to grab extra ref for the callbacks */
-  gst_object_ref (GST_OBJECT_CAST (pad));
+  gst_object_ref (pad);
 
   callback = pad->block_callback;
   if (callback) {
@@ -2654,7 +2654,7 @@ handle_pad_block (GstPad * pad)
     GST_PAD_BLOCK_SIGNAL (pad);
   }
 
-  gst_object_unref (GST_OBJECT_CAST (pad));
+  gst_object_unref (pad);
 }
 
 /**********************************************************************
@@ -2780,12 +2780,12 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
     goto not_linked;
 
-  gst_object_ref (GST_OBJECT_CAST (peer));
+  gst_object_ref (peer);
   GST_UNLOCK (pad);
 
   ret = gst_pad_chain (peer, buffer);
 
-  gst_object_unref (GST_OBJECT_CAST (peer));
+  gst_object_unref (peer);
 
   return ret;
 
@@ -2832,7 +2832,7 @@ gst_pad_check_pull_range (GstPad * pad)
   if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
     goto not_connected;
 
-  gst_object_ref (GST_OBJECT_CAST (peer));
+  gst_object_ref (peer);
   GST_UNLOCK (pad);
 
   /* see note in above function */
@@ -2846,7 +2846,7 @@ gst_pad_check_pull_range (GstPad * pad)
     ret = checkgetrangefunc (peer);
   }
 
-  gst_object_unref (GST_OBJECT_CAST (peer));
+  gst_object_unref (peer);
 
   return ret;
 
@@ -2964,12 +2964,12 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
     goto not_connected;
 
-  gst_object_ref (GST_OBJECT_CAST (peer));
+  gst_object_ref (peer);
   GST_UNLOCK (pad);
 
   ret = gst_pad_get_range (peer, offset, size, buffer);
 
-  gst_object_unref (GST_OBJECT_CAST (peer));
+  gst_object_unref (peer);
 
   return ret;
 
@@ -3010,12 +3010,12 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   if (peerpad == NULL)
     goto not_linked;
 
-  gst_object_ref (GST_OBJECT_CAST (peerpad));
+  gst_object_ref (peerpad);
   GST_UNLOCK (pad);
 
   result = gst_pad_send_event (peerpad, event);
 
-  gst_object_unref (GST_OBJECT_CAST (peerpad));
+  gst_object_unref (peerpad);
 
   return result;
 
@@ -3050,7 +3050,7 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
   GST_LOCK (pad);
 
   if (GST_EVENT_SRC (event) == NULL)
-    GST_EVENT_SRC (event) = gst_object_ref (GST_OBJECT (pad));
+    GST_EVENT_SRC (event) = gst_object_ref (pad);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH:
@@ -3080,12 +3080,12 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
   if ((eventfunc = GST_PAD_EVENTFUNC (pad)) == NULL)
     goto no_function;
 
-  gst_object_ref (GST_OBJECT_CAST (pad));
+  gst_object_ref (pad);
   GST_UNLOCK (pad);
 
   result = eventfunc (GST_PAD_CAST (pad), event);
 
-  gst_object_unref (GST_OBJECT_CAST (pad));
+  gst_object_unref (pad);
 
   return result;
 
@@ -3474,7 +3474,7 @@ gst_pad_stop_task (GstPad * pad)
   GST_STREAM_LOCK (pad);
   GST_STREAM_UNLOCK (pad);
 
-  gst_object_unref (GST_OBJECT_CAST (task));
+  gst_object_unref (task);
 
   return TRUE;
 

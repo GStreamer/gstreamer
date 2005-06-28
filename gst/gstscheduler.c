@@ -346,7 +346,7 @@ gst_scheduler_factory_create (GstSchedulerFactory * factory,
     sched->parent = parent;
 
     /* let's refcount the scheduler */
-    gst_object_ref (GST_OBJECT (sched));
+    gst_object_ref (sched);
     gst_object_sink (GST_OBJECT (sched));
   }
 

@@ -579,7 +579,7 @@ gst_ghost_pad_set_property (GObject * object, guint prop_id,
           } else {
             gst_pad_unlink (intpeer, pad->internal);
           }
-          gst_object_unref (GST_OBJECT (intpeer));
+          gst_object_unref (intpeer);
         }
 
         /* should dispose it */

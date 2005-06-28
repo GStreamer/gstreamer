@@ -58,7 +58,7 @@ main (gint argc, gchar ** argv)
   gst_bin_iterate (GST_BIN (pipeline));
 
   g_print ("cleaning up...\n");
-  gst_object_unref (GST_OBJECT (pipeline));
+  gst_object_unref (pipeline);
   src = id1 = id2 = sink = pipeline = NULL;
 
   g_print ("done.\n");

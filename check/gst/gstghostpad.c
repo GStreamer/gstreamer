@@ -56,9 +56,9 @@ START_TEST (test_ghost_pads)
 
   fsrc = gst_element_get_pad (src, "src");
   fail_unless (fsrc != NULL);
-  gsink = GST_PAD (gst_object_ref (GST_OBJECT (b2->sinkpads->data)));
+  gsink = GST_PAD (gst_object_ref (b2->sinkpads->data));
   fail_unless (gsink != NULL);
-  gsrc = GST_PAD (gst_object_ref (GST_OBJECT (b2->srcpads->data)));
+  gsrc = GST_PAD (gst_object_ref (b2->srcpads->data));
   fail_unless (gsrc != NULL);
   fsink = gst_element_get_pad (sink, "sink");
   fail_unless (fsink != NULL);
@@ -89,7 +89,7 @@ START_TEST (test_ghost_pads)
 
   fail_unless (gst_element_set_state (b1, GST_STATE_NULL) == GST_STATE_SUCCESS);
 
-  gst_object_unref (GST_OBJECT (b1));
+  gst_object_unref (b1);
   /* unreffing the bin will unref all elements, which will unlink and unparent
    * all pads */
 
@@ -110,21 +110,22 @@ START_TEST (test_ghost_pads)
   assert_gstrefcount (isrc, 2); /* gsrc */
 
   /* while the fixme isn't fixed, check cleanup */
-  gst_object_unref (GST_OBJECT (gsink));
+  gst_object_unref (gsink);
   assert_gstrefcount (isink, 1);
   assert_gstrefcount (gisrc, 1);
   assert_gstrefcount (fsrc, 2); /* gisrc */
-  gst_object_unref (GST_OBJECT (gisrc));
+  gst_object_unref (gisrc);
   assert_gstrefcount (fsrc, 1);
 
-  gst_object_unref (GST_OBJECT (gsrc));
+  gst_object_unref (gsrc);
   assert_gstrefcount (isrc, 1);
   assert_gstrefcount (gisink, 1);
   assert_gstrefcount (fsink, 2);        /* gisrc */
-  gst_object_unref (GST_OBJECT (gisink));
+  gst_object_unref (gisink);
   assert_gstrefcount (fsink, 1);
 }
-END_TEST Suite * gst_ghost_pad_suite (void)
+END_TEST Suite *
+gst_ghost_pad_suite (void)
 {
   Suite *s = suite_create ("GstGhostPad");
   TCase *tc_chain = tcase_create ("ghost pad tests");

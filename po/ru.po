@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-06-09 13:34+0200\n"
+"POT-Creation-Date: 2005-06-28 11:37+0200\n"
 "PO-Revision-Date: 2005-02-12 23:37+0300\n"
 "Last-Translator: Peter Astakhov <astakhovp@mail.ru>\n"
 "Language-Team: Russian <ru@li.org>\n"
@@ -597,19 +597,19 @@ msgstr ""
 msgid "Failed after iterations as requested."
 msgstr ""
 
-#: gst/elements/gsttypefindelement.c:180
+#: gst/elements/gsttypefindelement.c:181
 msgid "caps"
 msgstr ""
 
-#: gst/elements/gsttypefindelement.c:181
+#: gst/elements/gsttypefindelement.c:182
 msgid "detected capabilities in stream"
 msgstr ""
 
-#: gst/elements/gsttypefindelement.c:184
+#: gst/elements/gsttypefindelement.c:185
 msgid "minimum"
 msgstr ""
 
-#: gst/elements/gsttypefindelement.c:188
+#: gst/elements/gsttypefindelement.c:189
 msgid "maximum"
 msgstr ""
 
@@ -623,61 +623,61 @@ msgstr ""
 msgid "no bin \"%s\", skipping"
 msgstr ""
 
-#: gst/parse/grammar.y:263
+#: gst/parse/grammar.y:269
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr ""
 
-#: gst/parse/grammar.y:276
+#: gst/parse/grammar.y:282
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr ""
 
-#: gst/parse/grammar.y:487
+#: gst/parse/grammar.y:493
 #, c-format
 msgid "could not link %s to %s"
 msgstr ""
 
-#: gst/parse/grammar.y:532
+#: gst/parse/grammar.y:538
 #, c-format
 msgid "no element \"%s\""
 msgstr ""
 
-#: gst/parse/grammar.y:583
+#: gst/parse/grammar.y:589
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr ""
 
-#: gst/parse/grammar.y:605 gst/parse/grammar.y:653 gst/parse/grammar.y:669
-#: gst/parse/grammar.y:727
+#: gst/parse/grammar.y:611 gst/parse/grammar.y:659 gst/parse/grammar.y:675
+#: gst/parse/grammar.y:733
 msgid "link without source element"
 msgstr ""
 
-#: gst/parse/grammar.y:611 gst/parse/grammar.y:650 gst/parse/grammar.y:736
+#: gst/parse/grammar.y:617 gst/parse/grammar.y:656 gst/parse/grammar.y:742
 msgid "link without sink element"
 msgstr ""
 
-#: gst/parse/grammar.y:687
+#: gst/parse/grammar.y:693
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr ""
 
-#: gst/parse/grammar.y:697
+#: gst/parse/grammar.y:703
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr ""
 
-#: gst/parse/grammar.y:705
+#: gst/parse/grammar.y:711
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr ""
 
-#: gst/parse/grammar.y:709
+#: gst/parse/grammar.y:715
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr ""
 
-#: gst/parse/grammar.y:721
+#: gst/parse/grammar.y:727
 msgid "empty pipeline not allowed"
 msgstr ""
 
@@ -715,126 +715,141 @@ msgstr "ОШИБКА: не могу разобрать аргумент кома
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "ПРЕДУПРЕЖДЕНИЕ: элемент '%s' не найден.\n"
 
-#: tools/gst-launch.c:371
+#: tools/gst-launch.c:377
+#, fuzzy, c-format
+msgid "GOT EOS from element \"%s\".\n"
+msgstr "ОШИБКА: из элемента %s: %s\n"
+
+#: tools/gst-launch.c:386
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr ""
 
-#: tools/gst-launch.c:399
+#: tools/gst-launch.c:431
 #, c-format
 msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
 msgstr ""
 
-#: tools/gst-launch.c:429
+#: tools/gst-launch.c:461
 msgid "Output tags (also known as metadata)"
 msgstr "Выводить тэги (такжи называемые 'метаданные')"
 
-#: tools/gst-launch.c:431
+#: tools/gst-launch.c:463
 msgid "Output status information and property notifications"
 msgstr ""
 
-#: tools/gst-launch.c:433
+#: tools/gst-launch.c:465
 msgid "Do not output status information of TYPE"
 msgstr ""
 
-#: tools/gst-launch.c:433
+#: tools/gst-launch.c:465
 msgid "TYPE1,TYPE2,..."
 msgstr "ТИП1, ТИП2,..."
 
-#: tools/gst-launch.c:436
+#: tools/gst-launch.c:468
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr ""
 
-#: tools/gst-launch.c:436
+#: tools/gst-launch.c:468
 msgid "FILE"
 msgstr "ФАЙЛ"
 
-#: tools/gst-launch.c:439
+#: tools/gst-launch.c:471
 msgid "Do not install a fault handler"
 msgstr "Не устанавливать ошибочный обработчик"
 
-#: tools/gst-launch.c:441
+#: tools/gst-launch.c:473
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr ""
 
-#: tools/gst-launch.c:443
+#: tools/gst-launch.c:475
 msgid "Number of times to iterate pipeline"
 msgstr ""
 
-#: tools/gst-launch.c:513
+#: tools/gst-launch.c:545
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr ""
 
-#: tools/gst-launch.c:517
+#: tools/gst-launch.c:549
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr ""
 
-#: tools/gst-launch.c:521
+#: tools/gst-launch.c:553
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr ""
 
-#: tools/gst-launch.c:522
+#: tools/gst-launch.c:554
 #, c-format
 msgid "         Trying to run anyway.\n"
 msgstr "         Все равно пытаюсь запустить.\n"
 
-#: tools/gst-launch.c:545
+#: tools/gst-launch.c:578
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr ""
 
-#: tools/gst-launch.c:552
-#, c-format
-msgid "PREROLL pipeline ...\n"
-msgstr ""
-
-#: tools/gst-launch.c:554
-#, c-format
-msgid "ERROR: pipeline doesn't want to pause.\n"
-msgstr ""
-
-#: tools/gst-launch.c:566
-#, c-format
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr ""
-
-#: tools/gst-launch.c:571
-#, c-format
-msgid "RUNNING pipeline ...\n"
-msgstr ""
-
-#: tools/gst-launch.c:574
-#, c-format
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr ""
-
-#: tools/gst-launch.c:585
-msgid "Execution ended after %"
-msgstr ""
-
-#: tools/gst-launch.c:585
-msgid " ns.\n"
-msgstr ""
-
-#: tools/gst-launch.c:587
+#: tools/gst-launch.c:585 tools/gst-launch.c:629
 #, c-format
 msgid "PAUSE pipeline ...\n"
 msgstr ""
 
 #: tools/gst-launch.c:590
 #, c-format
+msgid "ERROR: pipeline doesn't want to pause.\n"
+msgstr ""
+
+#: tools/gst-launch.c:594
+#, c-format
+msgid "NO_PREROLL pipeline ...\n"
+msgstr ""
+
+#: tools/gst-launch.c:597
+#, c-format
+msgid "PREROLL pipeline ...\n"
+msgstr ""
+
+#: tools/gst-launch.c:601
+#, c-format
+msgid "PREROLLED pipeline ...\n"
+msgstr ""
+
+#: tools/gst-launch.c:608
+#, c-format
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr ""
+
+#: tools/gst-launch.c:613
+#, c-format
+msgid "RUNNING pipeline ...\n"
+msgstr ""
+
+#: tools/gst-launch.c:616
+#, c-format
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr ""
+
+#: tools/gst-launch.c:627
+msgid "Execution ended after %"
+msgstr ""
+
+#: tools/gst-launch.c:627
+msgid " ns.\n"
+msgstr ""
+
+#: tools/gst-launch.c:632
+#, c-format
 msgid "READY pipeline ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:593
+#: tools/gst-launch.c:635
 #, c-format
 msgid "NULL pipeline ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:600
+#: tools/gst-launch.c:642
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr ""

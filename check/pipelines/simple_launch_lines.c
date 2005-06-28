@@ -68,7 +68,7 @@ run_pipeline (GstElement * pipe, gchar * descr,
   }
 
   gst_element_set_state (pipe, GST_STATE_NULL);
-  gst_object_unref (GST_OBJECT (pipe));
+  gst_object_unref (pipe);
 }
 
 START_TEST (test_2_elements)
@@ -156,11 +156,12 @@ START_TEST (test_stop_from_app)
   gst_message_unref (gst_bus_pop (bus));
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
-  gst_object_unref (GST_OBJECT (pipeline));
+  gst_object_unref (pipeline);
 
   assert_live_count (GST_TYPE_BUFFER, 0);
 }
-END_TEST Suite * simple_launch_lines_suite (void)
+END_TEST Suite *
+simple_launch_lines_suite (void)
 {
   Suite *s = suite_create ("Pipelines");
   TCase *tc_chain = tcase_create ("linear");

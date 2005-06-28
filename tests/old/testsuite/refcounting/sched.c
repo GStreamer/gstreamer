@@ -69,7 +69,7 @@ main (gint argc, gchar * argv[])
     if (gst_bin_iterate (GST_BIN (pipeline)))
       i++;
     if (i % 50 == 0) {
-      gst_object_unref (GST_OBJECT (pipeline));
+      gst_object_unref (pipeline);
       create_pipeline ();
     }
   }

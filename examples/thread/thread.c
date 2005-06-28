@@ -73,7 +73,7 @@ main (int argc, char *argv[])
 
   loop = g_main_loop_new (NULL, FALSE);
 
-  gst_object_unref (GST_OBJECT (thread));
+  gst_object_unref (thread);
 
   exit (0);
 }

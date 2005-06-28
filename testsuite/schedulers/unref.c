@@ -26,7 +26,7 @@ cb_handoff (GstElement * element, GstBuffer * buffer, GstPad * pad,
 {
   if (pipeline) {
     g_print ("unreffing...\n");
-    gst_object_unref (GST_OBJECT (pipeline));
+    gst_object_unref (pipeline);
     pipeline = NULL;
   }
 }

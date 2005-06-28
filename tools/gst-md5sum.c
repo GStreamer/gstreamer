@@ -107,7 +107,7 @@ main (int argc, char *argv[])
   g_object_get (G_OBJECT (md5sink), "md5", &md5string, NULL);
   printf ("%s\n", md5string);
 
-  gst_object_unref (GST_OBJECT (pipeline));
+  gst_object_unref (pipeline);
 
   return 0;
 }

@@ -1,5 +1,8 @@
 2005-06-28  Andy Wingo  <wingo@pobox.com>
 
+	* *.c: Don't cast to GST_OBJECT when reffing or unreffing. Large
+	source-munging commit!!!
+
 	* gst/gstobject.c (gst_object_unref, gst_object_ref) 
 	(gst_object_sink): Take gpointer arguments, not GstObject --
 	avoids casts. Like GLib.

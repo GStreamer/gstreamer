@@ -30,13 +30,13 @@ main (int argc, gchar * argv[])
   g_assert (GST_OBJECT_IS_FLOATING (element));
   g_assert (!GST_OBJECT_IS_FLOATING (pad));
   g_assert (gst_pad_get_parent (pad) == element);
-  gst_object_unref (GST_OBJECT (element));
+  gst_object_unref (element);
   g_print ("create/addpad/unref 1 new element: %ld\n", vmsize () - usage1);
 
   for (i = 0; i < iters; i++) {
     element = gst_element_factory_make ("fakesink", NULL);;
     g_assert (GST_IS_ELEMENT (element));
-    gst_object_unref (GST_OBJECT (element));
+    gst_object_unref (element);
   }
   g_print ("create/unref %d elements: %ld\n", iters, vmsize () - usage1);
 
@@ -48,9 +48,9 @@ main (int argc, gchar * argv[])
     gst_element_link_pads (element2, "src", element, "sink");
     g_assert (GST_PAD_IS_LINKED (gst_element_get_pad (element2, "src")));
     g_assert (GST_PAD_IS_LINKED (gst_element_get_pad (element, "sink")));
-    gst_object_unref (GST_OBJECT (element));
+    gst_object_unref (element);
     g_assert (!GST_PAD_IS_LINKED (gst_element_get_pad (element2, "src")));
-    gst_object_unref (GST_OBJECT (element2));
+    gst_object_unref (element2);
   }
   g_print ("create/link/unref %d element duos: %ld\n", iters / 2,
       vmsize () - usage1);
@@ -61,7 +61,7 @@ main (int argc, gchar * argv[])
   g_assert (GST_IS_PAD (pad));
   gst_element_remove_pad (element, pad);
   g_assert (gst_element_get_pad (element, "sink") == NULL);
-  gst_object_unref (GST_OBJECT (element));
+  gst_object_unref (element);
 
   g_print ("pad removal on one element: %ld\n", vmsize () - usage1);
 
@@ -72,7 +72,7 @@ main (int argc, gchar * argv[])
     g_assert (GST_IS_PAD (pad));
     gst_element_remove_pad (element, pad);
     g_assert (gst_element_get_pad (element, "sink") == NULL);
-    gst_object_unref (GST_OBJECT (element));
+    gst_object_unref (element);
   }
   g_print ("pad removal loop on %d elements: %ld\n", iters / 2,
       vmsize () - usage1);
@@ -82,11 +82,11 @@ main (int argc, gchar * argv[])
     g_assert (GST_IS_ELEMENT (element));
     pad = gst_element_get_pad (element, "sink");
     g_assert (GST_IS_PAD (pad));
-    gst_object_ref (GST_OBJECT (pad));
+    gst_object_ref (pad);
     gst_element_remove_pad (element, pad);
     g_assert (gst_pad_get_parent (pad) == NULL);
-    gst_object_unref (GST_OBJECT (pad));
-    gst_object_unref (GST_OBJECT (element));
+    gst_object_unref (pad);
+    gst_object_unref (element);
   }
   g_print ("pad ref/removal/test loop on %d elements: %ld\n", iters / 2,
       vmsize () - usage1);
@@ -95,7 +95,7 @@ main (int argc, gchar * argv[])
   g_assert (GST_IS_ELEMENT (element));
   pad = gst_element_get_pad (element, "sink");
   g_assert (GST_IS_PAD (pad));
-  gst_object_unref (GST_OBJECT (element));
+  gst_object_unref (element);
 
   g_print ("pad unref on one element: %ld\n", vmsize () - usage1);
 
@@ -104,7 +104,7 @@ main (int argc, gchar * argv[])
     g_assert (GST_IS_ELEMENT (element));
     pad = gst_element_get_pad (element, "sink");
     g_assert (GST_IS_PAD (pad));
-    gst_object_unref (GST_OBJECT (element));
+    gst_object_unref (element);
   }
   g_print ("pad unref loop on %d elements: %ld\n", iters / 2,
       vmsize () - usage1);

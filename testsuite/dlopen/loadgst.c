@@ -22,5 +22,5 @@ do_test (void)
   g_print ("\n");
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
-  gst_object_unref (GST_OBJECT (pipeline));
+  gst_object_unref (pipeline);
 }

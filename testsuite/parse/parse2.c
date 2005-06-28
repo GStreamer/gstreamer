@@ -85,7 +85,7 @@ static char *video_file = NULL;
 }G_STMT_END
 #endif
 #define TEST_OK G_STMT_START{ \
-  gst_object_unref (GST_OBJECT (cur)); \
+  gst_object_unref (cur); \
   cur = NULL; \
   g_print ("TEST %2d line %3d COMPLETE\n", test, __LINE__); \
 }G_STMT_END
@@ -127,7 +127,7 @@ static char *video_file = NULL;
   GstElement *element = gst_element_factory_make ((element_name), NULL); \
   if (element) { \
     g_print ("REQUIRE line %3d    OK\n", __LINE__); \
-    gst_object_unref (GST_OBJECT (element)); \
+    gst_object_unref (element); \
   } else { \
     g_print ("REQUIRE line %3d   EXIT   : No element of type \"%s\" available. Exiting.\n", __LINE__, (element_name)); \
     TEST_FINISH; \

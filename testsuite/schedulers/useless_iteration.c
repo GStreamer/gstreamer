@@ -42,7 +42,7 @@ main (gint argc, gchar ** argv)
 
   g_print ("cleaning up... (%d iterations)\n", i);
   g_assert (i == 100);
-  gst_object_unref (GST_OBJECT (pipeline));
+  gst_object_unref (pipeline);
   pipeline = NULL;
 
   g_print ("done.\n");

@@ -492,7 +492,7 @@ gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
     newpad = (oclass->request_new_pad) (element, templ, name);
 
   if (newpad)
-    gst_object_ref (GST_OBJECT (newpad));
+    gst_object_ref (newpad);
 
   return newpad;
 }
@@ -638,9 +638,9 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
         } else {
           GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "unreffing pads");
 
-          gst_object_unref (GST_OBJECT (current));
+          gst_object_unref (current);
           if (peer)
-            gst_object_unref (GST_OBJECT (peer));
+            gst_object_unref (peer);
         }
         break;
       }
@@ -664,7 +664,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
   templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad),
       GST_PAD_DIRECTION (pad), GST_PAD_ALWAYS, templcaps);
   foundpad = gst_element_request_compatible_pad (element, templ);
-  gst_object_unref (GST_OBJECT (templ));
+  gst_object_unref (templ);
 
   if (foundpad) {
     GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
@@ -953,13 +953,13 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
       if (!(GST_PAD_DIRECTION (srcpad) == GST_PAD_SRC)) {
         GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is no src pad",
             GST_DEBUG_PAD_NAME (srcpad));
-        gst_object_unref (GST_OBJECT (srcpad));
+        gst_object_unref (srcpad);
         return FALSE;
       }
       if (GST_PAD_PEER (srcpad) != NULL) {
         GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is already linked",
             GST_DEBUG_PAD_NAME (srcpad));
-        gst_object_unref (GST_OBJECT (srcpad));
+        gst_object_unref (srcpad);
         return FALSE;
       }
     }
@@ -969,7 +969,7 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
     srcpads = GST_ELEMENT_PADS (src);
     srcpad = srcpads ? GST_PAD_CAST (srcpads->data) : NULL;
     if (srcpad)
-      gst_object_ref (GST_OBJECT (srcpad));
+      gst_object_ref (srcpad);
     GST_UNLOCK (src);
   }
   if (destpadname) {
@@ -982,13 +982,13 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
       if (!(GST_PAD_DIRECTION (destpad) == GST_PAD_SINK)) {
         GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is no sink pad",
             GST_DEBUG_PAD_NAME (destpad));
-        gst_object_unref (GST_OBJECT (destpad));
+        gst_object_unref (destpad);
         return FALSE;
       }
       if (GST_PAD_PEER (destpad) != NULL) {
         GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is already linked",
             GST_DEBUG_PAD_NAME (destpad));
-        gst_object_unref (GST_OBJECT (destpad));
+        gst_object_unref (destpad);
         return FALSE;
       }
     }
@@ -998,7 +998,7 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
     destpads = GST_ELEMENT_PADS (dest);
     destpad = destpads ? GST_PAD_CAST (destpads->data) : NULL;
     if (destpad)
-      gst_object_ref (GST_OBJECT (destpad));
+      gst_object_ref (destpad);
     GST_UNLOCK (dest);
   }
 
@@ -1008,8 +1008,8 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
     /* two explicitly specified pads */
     result = pad_link_maybe_ghosting (srcpad, destpad);
 
-    gst_object_unref (GST_OBJECT (srcpad));
-    gst_object_unref (GST_OBJECT (destpad));
+    gst_object_unref (srcpad);
+    gst_object_unref (destpad);
 
     return result;
   }
@@ -1027,7 +1027,7 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
 
         if (destpadname) {
           temp = destpad;
-          gst_object_ref (GST_OBJECT (temp));
+          gst_object_ref (temp);
         } else {
           temp = gst_element_get_compatible_pad (dest, srcpad, NULL);
         }
@@ -1036,23 +1036,23 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
           GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "linked pad %s:%s to pad %s:%s",
               GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (temp));
           if (destpad)
-            gst_object_unref (GST_OBJECT (destpad));
-          gst_object_unref (GST_OBJECT (srcpad));
-          gst_object_unref (GST_OBJECT (temp));
+            gst_object_unref (destpad);
+          gst_object_unref (srcpad);
+          gst_object_unref (temp);
           return TRUE;
         }
 
         if (temp) {
-          gst_object_unref (GST_OBJECT (temp));
+          gst_object_unref (temp);
         }
       }
       /* find a better way for this mess */
       if (srcpads) {
         srcpads = g_list_next (srcpads);
         if (srcpads) {
-          gst_object_unref (GST_OBJECT (srcpad));
+          gst_object_unref (srcpad);
           srcpad = GST_PAD_CAST (srcpads->data);
-          gst_object_ref (GST_OBJECT (srcpad));
+          gst_object_ref (srcpad);
         }
       }
     } while (srcpads);
@@ -1060,13 +1060,13 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
   if (srcpadname) {
     GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "no link possible from %s:%s to %s",
         GST_DEBUG_PAD_NAME (srcpad), GST_ELEMENT_NAME (dest));
-    gst_object_unref (GST_OBJECT (srcpad));
+    gst_object_unref (srcpad);
     if (destpad)
-      gst_object_unref (GST_OBJECT (destpad));
+      gst_object_unref (destpad);
     return FALSE;
   } else {
     if (srcpad)
-      gst_object_unref (GST_OBJECT (srcpad));
+      gst_object_unref (srcpad);
     srcpad = NULL;
   }
   if (destpad) {
@@ -1081,22 +1081,22 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
         if (temp && pad_link_maybe_ghosting (temp, destpad)) {
           GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "linked pad %s:%s to pad %s:%s",
               GST_DEBUG_PAD_NAME (temp), GST_DEBUG_PAD_NAME (destpad));
-          gst_object_unref (GST_OBJECT (temp));
-          gst_object_unref (GST_OBJECT (destpad));
+          gst_object_unref (temp);
+          gst_object_unref (destpad);
           if (srcpad)
-            gst_object_unref (GST_OBJECT (srcpad));
+            gst_object_unref (srcpad);
           return TRUE;
         }
         if (temp) {
-          gst_object_unref (GST_OBJECT (temp));
+          gst_object_unref (temp);
         }
       }
       if (destpads) {
         destpads = g_list_next (destpads);
         if (destpads) {
-          gst_object_unref (GST_OBJECT (destpad));
+          gst_object_unref (destpad);
           destpad = GST_PAD_CAST (destpads->data);
-          gst_object_ref (GST_OBJECT (destpad));
+          gst_object_ref (destpad);
         }
       }
     } while (destpads);
@@ -1104,14 +1104,14 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
   if (destpadname) {
     GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "no link possible from %s to %s:%s",
         GST_ELEMENT_NAME (src), GST_DEBUG_PAD_NAME (destpad));
-    gst_object_unref (GST_OBJECT (destpad));
+    gst_object_unref (destpad);
     if (srcpad)
-      gst_object_unref (GST_OBJECT (srcpad));
+      gst_object_unref (srcpad);
     return FALSE;
   } else {
-    gst_object_unref (GST_OBJECT (destpad));
+    gst_object_unref (destpad);
     if (srcpad)
-      gst_object_unref (GST_OBJECT (srcpad));
+      gst_object_unref (srcpad);
     srcpad = NULL;
     destpad = NULL;
   }
@@ -1139,8 +1139,8 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
                 GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
                     "linked pad %s:%s to pad %s:%s",
                     GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (destpad));
-                gst_object_unref (GST_OBJECT (srcpad));
-                gst_object_unref (GST_OBJECT (destpad));
+                gst_object_unref (srcpad);
+                gst_object_unref (destpad);
                 return TRUE;
               }
               /* it failed, so we release the request pads */
@@ -1318,12 +1318,12 @@ gst_element_unlink (GstElement * src, GstElement * dest)
               gst_pad_unlink (pad, peerpad);
             }
             if (peerelem)
-              gst_object_unref (GST_OBJECT (peerelem));
+              gst_object_unref (peerelem);
 
-            gst_object_unref (GST_OBJECT (peerpad));
+            gst_object_unref (peerpad);
           }
         }
-        gst_object_unref (GST_OBJECT (pad));
+        gst_object_unref (pad);
         break;
       }
       case GST_ITERATOR_RESYNC:

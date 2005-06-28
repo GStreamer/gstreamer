@@ -640,7 +640,7 @@ main (int argc, char *argv[])
 end:
 
   fprintf (stderr, _("FREEING pipeline ...\n"));
-  gst_object_unref (GST_OBJECT (pipeline));
+  gst_object_unref (pipeline);
 
   if (trace)
     gst_alloc_trace_print_live ();

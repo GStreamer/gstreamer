@@ -38,11 +38,11 @@ main (int argc, char *argv[])
 
   /* destroy the fakesink, but keep fakesrc (its state is GST_STATE_READY) */
   gst_element_unlink_pads (fakesrc, "src", fakesink1, "sink");
-  gst_object_ref (GST_OBJECT (fakesrc));
+  gst_object_ref (fakesrc);
   gst_bin_remove (GST_BIN (pipe1), fakesrc);
   gst_bin_remove (GST_BIN (pipe1), fakesink1);
 
-  gst_object_unref (GST_OBJECT (pipe1));
+  gst_object_unref (pipe1);
 
   /* make a new pipeline */
   gst_bin_add (GST_BIN (pipe2), fakesink2);

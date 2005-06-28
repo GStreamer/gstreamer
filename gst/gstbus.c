@@ -433,7 +433,7 @@ gst_bus_source_finalize (GSource * source)
 {
   GstBusSource *bsource = (GstBusSource *) source;
 
-  gst_object_unref (GST_OBJECT_CAST (bsource->bus));
+  gst_object_unref (bsource->bus);
   bsource->bus = NULL;
 }
 
@@ -461,7 +461,7 @@ gst_bus_create_watch (GstBus * bus)
 
   source = (GstBusSource *) g_source_new (&gst_bus_source_funcs,
       sizeof (GstBusSource));
-  gst_object_ref (GST_OBJECT_CAST (bus));
+  gst_object_ref (bus);
   source->bus = bus;
 
   return (GSource *) source;

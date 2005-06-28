@@ -74,8 +74,8 @@ gst_play_type_find (GstBin * bin, GstElement * element)
       gst_element_get_pad (typefind, "sink"));
   gst_bin_remove (bin, typefind);
   gst_bin_remove (GST_BIN (pipeline), GST_ELEMENT (bin));
-  gst_object_unref (GST_OBJECT (typefind));
-  gst_object_unref (GST_OBJECT (pipeline));
+  gst_object_unref (typefind);
+  gst_object_unref (pipeline);
 
   return caps;
 }
@@ -213,9 +213,9 @@ main (int argc, char *argv[])
   }
   g_list_free (input_channels);
 
-  gst_object_unref (GST_OBJECT (audiosink));
+  gst_object_unref (audiosink);
 
-  gst_object_unref (GST_OBJECT (main_bin));
+  gst_object_unref (main_bin);
 
   exit (0);
 }
@@ -382,7 +382,7 @@ destroy_input_channel (input_channel_t * channel)
 
   /* destroy elements */
 
-  gst_object_unref (GST_OBJECT (channel->pipe));
+  gst_object_unref (channel->pipe);
 
   free (channel);
 }

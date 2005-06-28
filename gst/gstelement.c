@@ -581,7 +581,7 @@ gst_element_remove_pad (GstElement * element, GstPad * pad)
     else
       gst_pad_unlink (GST_PAD_CAST (peer), pad);
 
-    gst_object_unref (GST_OBJECT (peer));
+    gst_object_unref (peer);
   }
 
   GST_LOCK (element);
@@ -683,7 +683,7 @@ gst_element_get_static_pad (GstElement * element, const gchar * name)
       g_list_find_custom (element->pads, name, (GCompareFunc) pad_compare_name);
   if (find) {
     result = GST_PAD_CAST (find->data);
-    gst_object_ref (GST_OBJECT_CAST (result));
+    gst_object_ref (result);
   }
 
   if (result == NULL) {
@@ -711,7 +711,7 @@ gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
     newpad = (oclass->request_new_pad) (element, templ, name);
 
   if (newpad)
-    gst_object_ref (GST_OBJECT (newpad));
+    gst_object_ref (newpad);
 
   return newpad;
 }
@@ -820,7 +820,7 @@ gst_element_get_pad (GstElement * element, const gchar * name)
 GstIteratorItem
 iterate_pad (GstIterator * it, GstPad * pad)
 {
-  gst_object_ref (GST_OBJECT_CAST (pad));
+  gst_object_ref (pad);
   return GST_ITERATOR_ITEM_PASS;
 }
 
@@ -842,7 +842,7 @@ gst_element_iterate_pads (GstElement * element)
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
   GST_LOCK (element);
-  gst_object_ref (GST_OBJECT (element));
+  gst_object_ref (element);
   result = gst_iterator_new_list (GST_GET_LOCK (element),
       &element->pads_cookie,
       &element->pads,
@@ -862,7 +862,8 @@ direction_filter (gconstpointer pad, gconstpointer direction)
     return 0;
   } else {
     /* unref */
-    gst_object_unref (GST_OBJECT (pad));
+    /* FIXME: this is very stupid */
+    gst_object_unref (GST_OBJECT_CAST (pad));
     return 1;
   }
 }
@@ -925,7 +926,7 @@ gst_element_class_add_pad_template (GstElementClass * klass,
           templ->name_template) == NULL);
 
   klass->padtemplates = g_list_append (klass->padtemplates,
-      gst_object_ref (GST_OBJECT (templ)));
+      gst_object_ref (templ));
   klass->numpadtemplates++;
 }
 
@@ -1041,7 +1042,7 @@ gst_element_get_random_pad (GstElement * element, GstPadDirection dir)
     GST_UNLOCK (pad);
   }
   if (result)
-    gst_object_ref (GST_OBJECT (result));
+    gst_object_ref (result);
 
   GST_UNLOCK (element);
 
@@ -1094,9 +1095,9 @@ gst_element_send_event (GstElement * element, GstEvent * event)
             "sending event to random pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
         result = gst_pad_send_event (peer, event);
-        gst_object_unref (GST_OBJECT (peer));
+        gst_object_unref (peer);
       }
-      gst_object_unref (GST_OBJECT (pad));
+      gst_object_unref (pad);
     }
   }
   GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "can't send event on element %s",
@@ -1165,9 +1166,9 @@ gst_element_get_query_types (GstElement * element)
       if (peer) {
         result = gst_pad_get_query_types (peer);
 
-        gst_object_unref (GST_OBJECT (peer));
+        gst_object_unref (peer);
       }
-      gst_object_unref (GST_OBJECT (pad));
+      gst_object_unref (pad);
     }
   }
   return result;
@@ -1209,7 +1210,7 @@ gst_element_query (GstElement * element, GstQuery * query)
     if (pad) {
       result = gst_pad_query (pad, query);
 
-      gst_object_unref (GST_OBJECT (pad));
+      gst_object_unref (pad);
     } else {
       pad = gst_element_get_random_pad (element, GST_PAD_SINK);
       if (pad) {
@@ -1218,9 +1219,9 @@ gst_element_query (GstElement * element, GstQuery * query)
         if (peer) {
           result = gst_pad_query (peer, query);
 
-          gst_object_unref (GST_OBJECT (peer));
+          gst_object_unref (peer);
         }
-        gst_object_unref (GST_OBJECT (pad));
+        gst_object_unref (pad);
       }
     }
   }
@@ -1258,12 +1259,12 @@ gst_element_post_message (GstElement * element, GstMessage * message)
     gst_message_unref (message);
     return FALSE;
   }
-  gst_object_ref (GST_OBJECT (bus));
+  gst_object_ref (bus);
   GST_DEBUG ("... on bus %p", bus);
   GST_UNLOCK (element);
 
   result = gst_bus_post (bus, message);
-  gst_object_unref (GST_OBJECT (bus));
+  gst_object_unref (bus);
 
   return result;
 }
@@ -1850,7 +1851,7 @@ activate_pads (GstPad * pad, GValue * ret, gboolean * active)
   if (!gst_pad_set_active (pad, *active))
     g_value_set_boolean (ret, FALSE);
 
-  gst_object_unref (GST_OBJECT (pad));
+  gst_object_unref (pad);
   return TRUE;
 }
 
@@ -2009,7 +2010,7 @@ gst_element_dispose (GObject * object)
   GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "dispose");
 
   /* ref so we don't hit 0 again */
-  gst_object_ref (GST_OBJECT (object));
+  gst_object_ref (object);
 
   /* first we break all our links with the ouside */
   while (element->pads) {
@@ -2271,7 +2272,7 @@ gst_element_get_manager (GstElement * element)
 
   GST_LOCK (element);
   result = GST_ELEMENT_MANAGER (element);
-  gst_object_ref (GST_OBJECT (result));
+  gst_object_ref (result);
   GST_UNLOCK (element);
 
   return result;

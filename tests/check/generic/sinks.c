@@ -63,8 +63,8 @@ START_TEST (test_src_sink)
   srcpad = gst_element_get_pad (src, "src");
   sinkpad = gst_element_get_pad (sink, "sink");
   gst_pad_link (srcpad, sinkpad);
-  gst_object_unref (GST_OBJECT (srcpad));
-  gst_object_unref (GST_OBJECT (sinkpad));
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
 
   ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
   ret = gst_element_get_state (pipeline, NULL, NULL, NULL);
@@ -102,8 +102,8 @@ START_TEST (test_livesrc_remove)
   srcpad = gst_element_get_pad (src, "src");
   sinkpad = gst_element_get_pad (sink, "sink");
   gst_pad_link (srcpad, sinkpad);
-  gst_object_unref (GST_OBJECT (srcpad));
-  gst_object_unref (GST_OBJECT (sinkpad));
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
 
   ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
   fail_unless (ret == GST_STATE_NO_PREROLL, "no no_preroll state return");
@@ -144,8 +144,8 @@ START_TEST (test_livesrc_sink)
   srcpad = gst_element_get_pad (src, "src");
   sinkpad = gst_element_get_pad (sink, "sink");
   gst_pad_link (srcpad, sinkpad);
-  gst_object_unref (GST_OBJECT (srcpad));
-  gst_object_unref (GST_OBJECT (sinkpad));
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
 
   ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
   fail_unless (ret == GST_STATE_NO_PREROLL, "no no_preroll state return");

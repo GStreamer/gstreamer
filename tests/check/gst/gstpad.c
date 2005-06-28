@@ -118,8 +118,8 @@ START_TEST (test_refcount)
   ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
 
   /* cleanup */
-  gst_object_unref (GST_OBJECT (src));
-  gst_object_unref (GST_OBJECT (sink));
+  gst_object_unref (src);
+  gst_object_unref (sink);
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
 
   gst_caps_unref (caps);
@@ -170,8 +170,8 @@ START_TEST (test_get_allowed_caps)
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
 
-  gst_object_unref (GST_OBJECT (src));
-  gst_object_unref (GST_OBJECT (sink));
+  gst_object_unref (src);
+  gst_object_unref (sink);
 
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
   gst_caps_unref (caps);
