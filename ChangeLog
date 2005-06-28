@@ -1,3 +1,10 @@
+2005-06-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstpad.c: (gst_pad_alloc_buffer), (gst_pad_push),
+	(gst_pad_pull_range):
+	* gst/gstpad.h:
+	CONNECTED -> LINKED.
+
 2005-06-28  Andy Wingo  <wingo@pobox.com>
 
 	* *.c: Don't cast to GST_OBJECT when reffing or unreffing. Large

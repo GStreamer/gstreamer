@@ -2189,10 +2189,10 @@ no_peer:
   {
     /* pad has no peer */
     GST_CAT_DEBUG (GST_CAT_PADS,
-        "%s:%s called bufferallocfunc but had no peer, returning NULL",
+        "%s:%s called bufferallocfunc but had no peer",
         GST_DEBUG_PAD_NAME (pad));
     GST_UNLOCK (pad);
-    return GST_FLOW_NOT_CONNECTED;
+    return GST_FLOW_NOT_LINKED;
   }
 flushing:
   {
@@ -2200,7 +2200,7 @@ flushing:
     GST_UNLOCK (peer);
     gst_object_unref (peer);
     GST_CAT_DEBUG (GST_CAT_PADS,
-        "%s:%s called bufferallocfunc but peer was flushing, returning NULL",
+        "%s:%s called bufferallocfunc but peer was flushing",
         GST_DEBUG_PAD_NAME (pad));
     return GST_FLOW_WRONG_STATE;
   }
@@ -2796,7 +2796,7 @@ not_linked:
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pushing, but it was not linked");
     GST_UNLOCK (pad);
-    return GST_FLOW_NOT_CONNECTED;
+    return GST_FLOW_NOT_LINKED;
   }
 }
 
@@ -2979,7 +2979,7 @@ not_connected:
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pulling range, but it was not linked");
     GST_UNLOCK (pad);
-    return GST_FLOW_NOT_CONNECTED;
+    return GST_FLOW_NOT_LINKED;
   }
 }
 

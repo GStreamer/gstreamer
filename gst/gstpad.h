@@ -75,7 +75,7 @@ typedef enum {
   GST_FLOW_OK		  =  0,		/* data passing was ok */
   GST_FLOW_RESEND	  =  1,		/* resend buffer, possibly with new caps */
   GST_FLOW_ERROR	  = -1,		/* some (fatal) error occured */
-  GST_FLOW_NOT_CONNECTED  = -2,		/* pad is not connected */
+  GST_FLOW_NOT_LINKED     = -2,		/* pad is not linked */
   GST_FLOW_NOT_NEGOTIATED = -3,		/* pad is not negotiated */
   GST_FLOW_WRONG_STATE    = -4,		/* pad is in wrong state */
   GST_FLOW_UNEXPECTED     = -5,		/* did not expect anything, this is not fatal */
