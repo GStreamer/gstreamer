@@ -286,6 +286,7 @@ gst_pipeline_send_event (GstElement * element, GstEvent * event)
   GstElementState state;
   GstEventType event_type = GST_EVENT_TYPE (event);
   GTimeVal timeout;
+  gint64 offset = -1;
 
   /* need to call _get_state() since a bin state is only updated
    * with this call. */
@@ -294,13 +295,25 @@ gst_pipeline_send_event (GstElement * element, GstEvent * event)
   gst_element_get_state (element, &state, NULL, &timeout);
   was_playing = state == GST_STATE_PLAYING;
 
-  if (was_playing && event_type == GST_EVENT_SEEK)
-    gst_element_set_state (element, GST_STATE_PAUSED);
+  if (event_type == GST_EVENT_SEEK) {
+    if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_TIME) {
+      GST_WARNING ("Pipelines only accept seek events with TIME format");
+      g_warning ("Pipelines only accept seek events with TIME format");
+      return FALSE;
+    }
+    offset = GST_EVENT_SEEK_OFFSET (event);
+    if (was_playing)
+      gst_element_set_state (element, GST_STATE_PAUSED);
+  }
 
   res = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
 
-  if (was_playing && event_type == GST_EVENT_SEEK)
-    gst_element_set_state (element, GST_STATE_PLAYING);
+  if (res && event_type == GST_EVENT_SEEK) {
+    /* need to set the stream time to the seek time */
+    GST_PIPELINE (element)->stream_time = offset;
+    if (was_playing)
+      gst_element_set_state (element, GST_STATE_PLAYING);
+  }
 
   return res;
 }

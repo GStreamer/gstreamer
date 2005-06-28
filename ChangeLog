@@ -1,3 +1,9 @@
+2005-06-28  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstpipeline.c: (gst_pipeline_send_event): 
+	Wheen a seek was successful on a pipeline, set the stream_time to the
+	seek offset in order to have a synchronized stream_time.
+
 2005-06-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstghostpad.c: (gst_proxy_pad_do_bufferalloc),
