@@ -11,9 +11,10 @@ Different clock implementations are possible by implementing this abstract
 base class.
 </para>
 <para>
-The clock time is always measured in nanoseconds, with the clock being set
-to 0 when the pipeline goes to READY. Usually all renderers sync to the global
-clock so that the clock is always a good measure of the time in the pipeline.
+The clock time is always measured in nanoseconds and always increases. The
+pipeline uses the clock to calculate the stream time.
+Usually all renderers sync to the global clock so that the clock is always 
+a good measure of the current playback time in the pipeline.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -208,11 +209,11 @@ The status of the entry
 The return value of a clock operation.
 </para>
 
-@GST_CLOCK_OK: 
+@GST_CLOCK_OK: The operation succeded.
 @GST_CLOCK_EARLY: The operation was scheduled too late.
-@GST_CLOCK_UNSCHEDULED: 
-@GST_CLOCK_BUSY: 
-@GST_CLOCK_BADTIME: 
+@GST_CLOCK_UNSCHEDULED: The clockID was unscheduled
+@GST_CLOCK_BUSY: The ClockID is busy
+@GST_CLOCK_BADTIME: A bad time was provided to a function.
 @GST_CLOCK_ERROR: An error occured
 @GST_CLOCK_UNSUPPORTED: Operation is not supported
 
