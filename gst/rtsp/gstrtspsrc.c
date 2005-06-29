@@ -429,7 +429,7 @@ gst_rtspsrc_loop (GstRTSPSrc * src)
   GList *lstream;
   GstRTSPStream *stream;
   GstPadChainFunction chainfunc;
-  GstPad *outpad;
+  GstPad *outpad = NULL;
   guint8 *data;
   gint size;
 
@@ -461,6 +461,10 @@ gst_rtspsrc_loop (GstRTSPSrc * src)
     /* hmm RTCP message */
     outpad = stream->rtpdecrtcp;
   }
+
+  /* we have no clue what this is, just ignore then. */
+  if (outpad == NULL)
+    goto unknown_stream;
 
   /* and chain buffer to internal element */
   {
