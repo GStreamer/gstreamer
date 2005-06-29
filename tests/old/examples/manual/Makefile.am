@@ -36,6 +36,7 @@ EXAMPLES = \
 	popt \
 	query \
 	typefind \
+	probe \
 	fakesrc \
 	playbin \
 	decodebin \
@@ -77,7 +78,7 @@ typefind.c dynamic.c: $(top_srcdir)/docs/manual/advanced-autoplugging.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ \
 		$(top_srcdir)/docs/manual/advanced-autoplugging.xml
 
-fakesrc.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
+probe.c fakesrc.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ \
 		$(top_srcdir)/docs/manual/advanced-dataaccess.xml
 

@@ -1,3 +1,11 @@
+2005-06-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/manual/advanced-dataaccess.xml:
+	* examples/manual/Makefile.am:
+	  Add probe example.
+	* gst/gstpad.c: (_gst_do_pass_data_accumulator):
+	  Make work (??).
+
 2005-06-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/elements/gstfilesink.c: (gst_filesink_render):

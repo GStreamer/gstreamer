@@ -125,11 +125,11 @@ static gboolean
 _gst_do_pass_data_accumulator (GSignalInvocationHint * ihint,
     GValue * return_accu, const GValue * handler_return, gpointer dummy)
 {
-  if (!g_value_get_boolean (handler_return)) {
-    g_value_set_boolean (return_accu, FALSE);
+  if (ihint->run_type == G_SIGNAL_RUN_FIRST) {
+    gboolean ret = g_value_get_boolean (handler_return);
 
-    /* stop emission here */
-    return FALSE;
+    g_value_set_boolean (return_accu, ret);
+    return ret;
   }
 
   return TRUE;

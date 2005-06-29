@@ -14,16 +14,100 @@
   </para>
 
   <sect1 id="section-data-probe">
-    <title>Data probes</title>
+    <title>Data probing</title>
     <para>
-      Probes are best envisioned as pad listeners. They are attached to a
-      pad in a pipeline, and you can add callback functions to this probe.
-      Those callback functions will be called whenever data is being sent
-      over this pad. The callback can then decide whether the data should
-      be discarded or it can replace the piece of data with another piece
-      of data. In this callback, it can also trigger actions in the
-      application itself. For pipeline manipulation, probes are rather
-      limited, but for pipeline tracking, they can be very useful.
+      Probing is best envisioned as a pad listener. Technically, a probe is
+      nothing more than a signal callback that can be attached to a pad.
+      Those signals are by default not fired at all (since that may have a
+      negative impact on performance), but can be enabled by attaching a
+      probe using <function>gst_pad_add_data_probe ()</function> or one of
+      the similar functions. Those functions attach the signal handler and
+      enable the actual signal emission. Similarly, one can use the
+      <function>gst_pad_remove_data_probe ()</function> or related functions
+      to remove the signal handlers again. It is also possible to only listen
+      to events or only to buffers (and ignore the other).
+    </para>
+    <para>
+      Probes run in pipeline threading context, so callbacks should try to
+      not block and generally not do any weird stuff, since this could
+      have a negative impact on pipeline performance or, in case of bugs,
+      cause deadlocks or crashes. However, most common buffer operations
+      that elements can do in <function>_chain ()</function> functions, can
+      be done in probe callbacks as well. The example below gives a short
+      impression on how to use them.
+    </para>
+    <programlisting><!-- example-begin probe.c -->
+#include &lt;gst/gst.h&gt;
+
+static gboolean
+cb_have_data (GstPad    *pad,
+	      GstBuffer *buffer,
+	      gpointer   u_data)
+{
+  gint x, y;
+  guint16 *data = (guint16 *) GST_BUFFER_DATA (buffer), t;
+
+  /* invert data */
+  for (y = 0; y &lt; 288; y++) {
+    for (x = 0; x &lt; 384 / 2; x++) {
+      t = data[384 - 1 - x];
+      data[384 - 1 - x] = data[x];
+      data[x] = t;
+    }
+    data += 384;
+  }
+
+  return TRUE;
+}
+
+gint
+main (gint   argc,
+      gchar *argv[])
+{
+  GMainLoop *loop;
+  GstElement *pipeline, *src, *sink, *filter, *csp;
+  GstPad *pad;
+
+  /* init GStreamer */
+  gst_init (&amp;argc, &amp;argv);
+  loop = g_main_loop_new (NULL, FALSE);
+
+  /* build */
+  pipeline = gst_pipeline_new ("my-pipeline");
+  src = gst_element_factory_make ("videotestsrc", "src");
+  filter = gst_element_factory_make ("capsfilter", "filter");
+  csp = gst_element_factory_make ("ffmpegcolorspace", "csp");
+  sink = gst_element_factory_make ("xvimagesink", "sink");
+  gst_element_link_many (src, filter, csp, sink, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), src, filter, csp, sink, NULL);
+  g_object_set (G_OBJECT (filter), "filter-caps",
+      gst_caps_new_simple ("video/x-raw-rgb",
+			   "width", G_TYPE_INT, 384,
+			   "height", G_TYPE_INT, 288,
+			   "framerate", G_TYPE_DOUBLE, (gdouble) 25.0,
+			   "bpp", G_TYPE_INT, 16,
+			   "depth", G_TYPE_INT, 16,
+			   "endianness", G_TYPE_INT, G_BYTE_ORDER,
+			   NULL), NULL);
+  pad = gst_element_get_pad (src, "src");
+  gst_pad_add_buffer_probe (pad, G_CALLBACK (cb_have_data), NULL);
+  gst_object_unref (pad);
+
+  /* run */
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  g_main_loop_run (loop);
+
+  /* exit */
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+
+  return 0;
+}
+    <!-- example-end probe.c --></programlisting>
+    <para>
+      Compare that output with the output of <quote>gst-launch-0.9
+      videotestsrc ! xvimagesink</quote>, just so you know what you're
+      looking for.
     </para>
   </sect1>
 
