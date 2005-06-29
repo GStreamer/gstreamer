@@ -23,7 +23,7 @@
       optimal plan for that data flow. Plan generation is one of the
       most complicated procedures in &GStreamer;. You will learn more
       about this process, called scheduling, in <xref
-      linkend="chapter-scheduler"/>.
+      linkend="section-threads-scheduling"/>.
     </para>
 
     <figure float="1" id="section-bin-img">

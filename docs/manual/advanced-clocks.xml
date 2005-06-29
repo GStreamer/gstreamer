@@ -1,7 +1,63 @@
 <chapter id="chapter-clocks">
   <title>Clocks in GStreamer</title>
 
-  <para> 
-    WRITEME
+  <para>
+    To maintain sync in pipeline playback (which is the only case where this
+    really matters), &GStreamer; uses <emphasis>clocks</emphasis>. Clocks
+    are exposed by some elements, whereas other elements are merely clock
+    slaves. The primary task of a clock is to represent the time progress
+    according to the element exposing the clock, based on its own playback
+    rate. If no clock provider is available in a pipeline, the system clock
+    is used instead.
   </para>
+
+  <sect1 id="section-clocks-providers">
+    <title>Clock providers</title>
+
+    <para>
+      Clock providers exist because they play back media at some rate, and
+      this rate is not necessarily the same as the system clock rate. For
+      example, a soundcard may playback at 44,1 kHz, but that doesn't mean
+      that after <emphasis>exactly</emphasis> 1 second <emphasis>according
+      to the system clock</emphasis>, the soundcard has played back 44.100
+      samples. This is only true by approximation. Therefore, generally,
+      pipelines with an audio output use the audiosink as clock provider.
+      This ensures that one second of video will be played back at the same
+      rate as that the soundcard plays back 1 second of audio.
+    </para>
+    <para>
+      Whenever some part of the pipeline requires to know the current clock
+      time, it will be requested from the clock through
+      <function>gst_clock_get_time ()</function>. The clock-time does not
+      need to start at 0. The pipeline, which contains the global clock that
+      all elements in the pipeline will use, in addition has a <quote>base
+      time</quote>, which is the clock time at the the point where media time
+      is starting from zero. This timestamp is subctracted from the clock
+      time, and that value is returned by <function>_get_time ()</function>.
+    </para>
+    <para>
+      The clock provider is responsible for making sure that the clock time
+      always represents the current media time as closely as possible; it
+      has to take care of things such as playback latencies, buffering in
+      audio-kernel modules, and so on, since all those could affect a/v sync
+      and thus decrease the user experience.
+    </para>
+  </sect1>
+
+  <sect1 id="section-clocks-slaves">
+    <title>Clock slaves</title>
+    <para>
+      Clock slaves get assigned a clock by their containing pipeline. Their
+      task is to make sure that media playback follows the time progress as
+      represented by this clock as closely as possible. For most elements,
+      that will simply mean to wait until a certain time is reached before
+      playing back their current sample; this can be done with the function
+      <function>gst_clock_id_wait ()</function>. Some elements may need to
+      support dropping samples too, however.
+    </para>
+    <para>
+      For more information on how to write elements that conform to this
+      required behaviour, see the Plugin Writer's Guide.
+    </para>
+  </sect1>
 </chapter>

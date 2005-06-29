@@ -16,6 +16,31 @@
     scope and purpose of each interface.
   </para>
 
+  <sect1 id="section-interfaces-uri">
+    <title>The URI interface</title>
+
+    <para>
+      In all examples so far, we have only supported local files through the
+      <quote>filesrc</quote> element. &GStreamer;, obviously, supports many
+      more location sources. However, we don't want applications to need to
+      know any particular element implementation details, such as element
+      names for particular network source types and so on. Therefore, there
+      is a URI interface, which can be used to get the source element that
+      supports a particular URI type. There is no strict rule for URI naming,
+      but in general we follow naming conventions that others use, too. For
+      example, assuming you have the correct plugins installed, &GStreamer;
+      supports <quote>file:///&lt;path&gt;/&lt;file&gt;</quote>,
+      <quote>http://&lt;host&gt;/&lt;path&gt;/&lt;file&gt;</quote>,
+      <quote>mms://&lt;host&gt;/&lt;path&gt;/&lt;file&gt;</quote>, and so on.
+    </para>
+    <para>
+      In order to get the source or sink element supporting a particular URI,
+      use <function>gst_element_make_from_uri ()</function>, with the URI
+      type being either <classname>GST_URI_SRC</classname> for a source
+      element, or <classname>GST_URI_SINK</classname> for a sink element.
+    </para>
+  </sect1>
+
   <sect1 id="section-interfaces-mixer">
     <title>The Mixer interface</title>
 

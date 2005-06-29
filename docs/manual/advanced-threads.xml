@@ -1,43 +1,22 @@
 <chapter id="chapter-threads">
   <title>Threads</title>
   <para> 
-    GStreamer has support for multithreading through the use of
-    the <ulink type="http"
-    url="&URLAPI;GstThread.html"><classname>GstThread</classname></ulink>
-    object. This object is in fact a special <ulink type="http"
-    url="&URLAPI;GstBin.html"><classname>GstBin</classname></ulink>
-    that will start a new thread (using Glib's
-    <classname>GThread</classname> system) when started.
+    &GStreamer; is inherently multi-threaded, and is fully thread-safe.
+    Most threading internals are hidden from the application, which should
+    make application development easier. However, in some cases, applications
+    may want to have influence on some parts of those. &GStreamer; allows
+    applications to force the use of multiple threads over some parts of
+    a pipeline.
   </para>
-  <para>
-    To create a new thread, you can simply use <function>gst_thread_new
-    ()</function>. From then on, you can use it similar to how you would
-    use a <classname>GstBin</classname>. You can add elements to it,
-    change state and so on. The largest difference between a thread and
-    other bins is that the thread does not require iteration. Once set to
-    the <classname>GST_STATE_PLAYING</classname> state, it will iterate
-    its contained children elements automatically.
-  </para>
-  <para>
-    <xref linkend="section-threads-img"/> shows how a thread can be
-    visualised.
-  </para>
-  <figure float="1" id="section-threads-img">
-    <title>A thread</title>
-    <mediaobject>
-      <imageobject>
-        <imagedata fileref="images/thread.&image;" format="&IMAGE;"/>
-      </imageobject>
-    </mediaobject>
-  </figure>
 
   <sect1 id="section-threads-uses">
-    <title>When would you want to use a thread?</title>
+    <title>When would you want to force a thread?</title>
     <para>
-      There are several reasons to use threads. However, there's also some
-      reasons to limit the use of threads as much as possible. We will go
-      into the drawbacks of threading in &GStreamer; in the next section.
-      Let's first list some situations where threads can be useful:
+      There are several reasons to force the use of threads. However,
+      for performance reasons, you never want to use one thread for every
+      element out there, since that will create some overhead.
+      Let's now list some situations where threads can be particularly
+      useful:
     </para>
     <itemizedlist>
       <listitem>
@@ -56,15 +35,6 @@
           will run independently and their synchronization will be better.
         </para>
       </listitem>
-      <listitem>
-        <para>
-          Data pre-rolls. You can use threads and queues (thread boundaries)
-          to cache a few seconds of data before playing. By using this
-          approach, the whole pipeline will already be setup and data will
-          already be decoded. When activating the rest of the pipeline, the
-          switch from PAUSED to PLAYING will be instant.
-        </para>
-      </listitem>
     </itemizedlist>
     <figure float="1" id="section-queues-img">
       <title>a two-threaded decoder with a queue</title>
@@ -76,8 +46,9 @@
     </figure>
     <para>
       Above, we've mentioned the <quote>queue</quote> element several times
-      now. A queue is a thread boundary element. It does so by using a
-      classic provider/receiver model as learned in threading classes at
+      now. A queue is the thread boundary element through which you can
+      force the use of threads. It does so by using a classic
+      provider/receiver model as learned in threading classes at
       universities all around the world. By doing this, it acts both as a
       means to make data throughput between threads threadsafe, and it can
       also act as a buffer. Queues have several <classname>GObject</classname>
@@ -87,164 +58,33 @@
       there's more data than the upper treshold, it will block input or
       (if configured to do so) drop data.
     </para>
-  </sect1>
-
-  <sect1 id="section-threads-constraints">
-    <title>Constraints placed on the pipeline by the GstThread</title>
     <para>
-      Within the pipeline, everything is the same as in any other bin. The
-      difference lies at the thread boundary, at the link between the
-      thread and the outside world (containing bin). Since &GStreamer; is
-      fundamentally buffer-oriented rather than byte-oriented, the natural
-      solution to this problem is an element that can "buffer" the buffers
-      between the threads, in a thread-safe fashion. This element is the
-      <quote>queue</quote> element. A queue should be placed in between any
-      two elements whose pads are linked together while the elements live in
-      different threads. It doesn't matter if the queue is placed in the
-      containing bin or in the thread itself, but it needs to be present
-      on one side or the other to enable inter-thread communication.
-    </para>
-    <para>
-      If you are writing a GUI application, making the top-level bin a
-      thread will make your GUI more responsive. If it were a pipeline
-      instead, it would have to be iterated by your application's event
-      loop, which increases the latency between events (say, keyboard
-      presses) and responses from the GUI. In addition, any slight hang
-      in the GUI would delay iteration of the pipeline, which (for example)
-      could cause pops in the output of the sound card, if it is an audio
-      pipeline.
-    </para>
-    <para>
-      A problem with using threads is, however, thread contexts. If you
-      connect to a signal that is emitted inside a thread, then the signal
-      handler for this thread <emphasis>will be executed in that same
-      thread</emphasis>! This is very important to remember, because many
-      graphical toolkits can not run multi-threaded. Gtk+, for example,
-      only allows threaded access to UI objects if you explicitely use
-      mutexes. Not doing so will result in random crashes and X errors.
-      A solution many people use is to place an idle handler in the signal
-      handler, and have the actual signal emission code be executed in the
-      idle handler, which will be executed from the mainloop.
-    </para>
-    <para>
-      Generally, if you use threads, you will encounter some problems. Don't
-      hesistate to ask us for help in case of problems.
+      To use a queues (and therefore force the use of two distinct threads
+      in the pipeline), one can simply create a <quote>queue</quote> element
+      and put this in as part of the pipeline. &GStreamer; will take care of
+      all threading details internally.
     </para>
   </sect1>
 
-  <sect1 id="section-threads-example">
-    <title>A threaded example application</title>
-    <para> 
-      As an example we show the helloworld program that we coded in
-      <xref linkend="chapter-helloworld"/> using a thread. Note that
-      the whole application lives in a thread (as opposed to half
-      of the application living in a thread and the other half being
-      another thread or a pipeline). Therefore, it does not need a
-      queue element in this specific case.
+  <sect1 id="section-threads-scheduling">
+    <title>Scheduling in &GStreamer;</title>
+
+    <para>
+      Scheduling of pipelines in &GStreamer; is done by using a thread for
+      each <quote>group</quote>, where a group is a set of elements separated
+      by <quote>queue</quote> elements. Within such a group, scheduling is
+      either push-based or pull-based, depending on which mode is supported
+      by the particular element. If elements support random access to data,
+      such as file sources, then elements downstream in the pipeline become
+      the entry point of this group (i.e. the element controlling the
+      scheduling of other elements). The entry point pulls data from upstream
+      and pushes data downstream, thereby calling data handling functions on
+      either type of element.
     </para>
-  
-    <programlisting><!-- example-begin threads.c -->
-#include &lt;gst/gst.h&gt;
-
-GstElement *thread, *source, *decodebin, *audiosink;
-
-static gboolean
-idle_eos (gpointer data)
-{
-  g_print ("Have idle-func in thread %p\n", g_thread_self ());
-  gst_main_quit ();
-
-  /* do this function only once */
-  return FALSE;
-}
-
-/*
- * EOS will be called when the src element has an end of stream.
- * Note that this function will be called in the thread context.
- * We will place an idle handler to the function that really
- * quits the application.
- */
-static void
-cb_eos (GstElement *thread,
-	gpointer    data) 
-{
-  g_print ("Have eos in thread %p\n", g_thread_self ());
-  g_idle_add ((GSourceFunc) idle_eos, NULL);
-}
-
-/*
- * On error, too, you'll want to forward signals to the main
- * thread, especially when using GUI applications.
- */
-
-static void
-cb_error (GstElement *thread,
-	  GstElement *source,
-	  GError     *error,
-	  gchar      *debug,
-	  gpointer    data)
-{
-  g_print ("Error in thread %p: %s\n", g_thread_self (), error->message);
-  g_idle_add ((GSourceFunc) idle_eos, NULL);
-}
-
-/*
- * Link new pad from decodebin to audiosink.
- * Contains no further error checking.
- */
-
-static void
-cb_newpad (GstElement *decodebin,
-	   GstPad     *pad,
-	   gboolean    last,
-	   gpointer    data)
-{
-  gst_pad_link (pad, gst_element_get_pad (audiosink, "sink"));
-  gst_bin_add (GST_BIN (thread), audiosink);
-  gst_bin_sync_children_state (GST_BIN (thread));
-}
-
-gint 
-main (gint   argc,
-      gchar *argv[]) 
-{
-  /* init GStreamer */
-  gst_init (&amp;argc, &amp;argv);
-
-  /* make sure we have a filename argument */
-  if (argc != 2) {
-    g_print ("usage: %s &lt;Ogg/Vorbis filename&gt;\n", argv[0]);
-    return -1;
-  }
-
-  /* create a new thread to hold the elements */
-  thread = gst_thread_new ("thread");
-  g_signal_connect (thread, "eos", G_CALLBACK (cb_eos), NULL);
-  g_signal_connect (thread, "error", G_CALLBACK (cb_error), NULL);
-
-  /* create elements */
-  source = gst_element_factory_make ("filesrc", "source");
-  g_object_set (G_OBJECT (source), "location", argv[1], NULL);
-  decodebin = gst_element_factory_make ("decodebin", "decoder");
-  g_signal_connect (decodebin, "new-decoded-pad",
-		    G_CALLBACK (cb_newpad), NULL);
-  audiosink = gst_element_factory_make ("alsasink", "audiosink");
-
-  /* setup */
-  gst_bin_add_many (GST_BIN (thread), source, decodebin, NULL);
-  gst_element_link (source, decodebin);
-  gst_element_set_state (audiosink, GST_STATE_PAUSED);
-  gst_element_set_state (thread, GST_STATE_PLAYING);
-
-  /* no need to iterate. We can now use a mainloop */
-  gst_main ();
-
-  /* unset */
-  gst_element_set_state (thread, GST_STATE_NULL);
-  gst_object_unref (GST_OBJECT (thread));
-
-  return 0;
-}
-    <!-- example-end threads.c --></programlisting>
+    <para>
+      In practice, most elements in &GStreamer;, such as decoders, encoders,
+      etc. only support push-based scheduling, which means that in practice,
+      &GStreamer; uses a push-based scheduling model.
+    </para>
   </sect1>
 </chapter>

@@ -20,6 +20,7 @@ gnome_CFLAGS = $(GST_OBJ_CFLAGS) $(LIBGNOMEUI_CFLAGS)
 EXTRA_DIST = extract.pl
 
 EXAMPLES = \
+	bus \
 	dynamic \
 	$(GNOME) \
 	elementcreate \
@@ -34,7 +35,6 @@ EXAMPLES = \
 	init \
 	popt \
 	query \
-	threads \
 	typefind \
 	fakesrc \
 	playbin \
@@ -48,6 +48,10 @@ elementmake.c elementcreate.c elementget.c elementlink.c elementfactory.c: $(top
 bin.c : $(top_srcdir)/docs/manual/basics-bins.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ \
 		$(top_srcdir)/docs/manual/basics-bins.xml
+
+bus.c: $(top_srcdir)/docs/manual/basics-bus.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ \
+		$(top_srcdir)/docs/manual/basics-bus.xml
 
 pad.c ghostpad.c: $(top_srcdir)/docs/manual/basics-pads.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ \
@@ -68,10 +72,6 @@ init.c popt.c: $(top_srcdir)/docs/manual/basics-init.xml
 query.c: $(top_srcdir)/docs/manual/advanced-position.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ \
 		$(top_srcdir)/docs/manual/advanced-position.xml
-
-threads.c: $(top_srcdir)/docs/manual/advanced-threads.xml
-	$(PERL_PATH) $(srcdir)/extract.pl $@ \
-		$(top_srcdir)/docs/manual/advanced-threads.xml
 
 typefind.c dynamic.c: $(top_srcdir)/docs/manual/advanced-autoplugging.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ \

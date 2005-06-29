@@ -252,7 +252,7 @@ main (int   argc,
       char *argv[])
 {
   GstElement *element;
-  const gchar *name;
+  gchar *name;
 
   /* init GStreamer */
   gst_init (&argc, &argv);
@@ -263,6 +263,7 @@ main (int   argc,
   /* get name */
   g_object_get (G_OBJECT (element), "name", &name, NULL);
   g_print ("The name of the element is '%s'.\n", name);
+  g_free (name);
 
   gst_object_unref (GST_OBJECT (element));
 
@@ -489,17 +490,30 @@ main (int   argc,
         <para>
           <classname>GST_STATE_PAUSED</classname>: in this state, an
           element has opened the stream, but is not actively processing
-          it. An element should not modify the stream's position, data or
-          anything else in this state. When set back to PLAYING, it should
-          continue processing at the point where it left off as soon as
-          possible.
+          it. An element is allowed to modify a stream's position, read
+          and process data and such to prepare for playback as soon as
+          state is changed to PLAYING, but it is <emphasis>not</emphasis>
+          allowed to play the data which would make the clock run.
+          In summary, PAUSED is the same as PLAYING but without a running
+          clock.
+         </para>
+         <para>
+          Elements going into the PAUSED state should prepare themselves
+          for moving over to the PLAYING state as soon as possible. Video
+          or audio outputs would, for example, wait for data to arrive and
+          queue it so they can play it right after the state change. Also,
+          video sinks can already play the first frame (since this does
+          not affect the clock yet). Autopluggers could use this same
+          state transition to already plug together a pipeline. Most other
+          elements, such as codecs or filters, do not need to explicitely
+          do anything in this state, however.
         </para>
       </listitem>
       <listitem>
         <para>
           <classname>GST_STATE_PLAYING</classname>: in the PLAYING state,
           an element does exactly the same as in the PAUSED state, except
-          that it actually processes data.
+          that the clock now runs.
         </para>
       </listitem>
     </itemizedlist>
@@ -511,12 +525,12 @@ main (int   argc,
       will internally set the element to READY and PAUSED in between.
     </para>
     <para>
-      Even though an element in <classname>GST_STATE_PLAYING</classname>
-      is ready for data processing, it will not necessarily do that. If
-      the element is placed in a thread (see <xref
-      linkend="chapter-threads"/>), it will process data automatically.
-      In other cases, however, you will need to <emphasis>iterate</emphasis>
-      the element's container.
+      When moved to <classname>GST_STATE_PLAYING</classname>, pipelines
+      will process data automatically. They do not need to be iterated in
+      any form. Internally, &GStreamer; will start threads that take this
+      task on to them. &GStreamer; will also take care of switching
+      messages from the pipeline's thread into the application's own
+      thread, by using a <xref linkend="chapter-bus"/>.
     </para>
   </sect1>
 </chapter>

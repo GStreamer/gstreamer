@@ -1,0 +1,90 @@
+<chapter id="chapter-porting">
+  <title>Porting 0.8 applications to 0.9</title>
+  <para>
+    This section of the appendix will discuss shortly what changes to
+    applications will be needed to quickly and conveniently port most
+    applications from &GStreamer;-0.8 to &GStreamer;-0.9, with references
+    to the relevant sections in this Application Development Manual
+    where needed. With this list, it should be possible to port simple
+    applications to &GStreamer;-0.9 in less than a day.
+  </para>
+
+  <sect1 id="section-porting-objects">
+    <title>List of changes</title>
+    <itemizedlist>
+      <listitem>
+        <para>
+          Most functions returning an object or an object property have
+          been changed to return its own reference rather than a constant
+          reference of the one owned by the object itself. The reason for
+          this change is primarily threadsafety. This means, effectively,
+          that return values of functions such as
+          <function>gst_element_get_pad ()</function>,
+          <function>gst_pad_get_name ()</function> and many more like these
+          have to be free'ed or unreferenced after use. Check the API
+          references of each function to know for sure whether return
+          values should be free'ed or not.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Applications should no longer use signal handlers to be notified
+          of errors, end-of-stream and other similar pipeline events.
+          Instead, they should use the <classname>GstBus</classname>, which
+          has been discussed in <xref linkend="chapter-bus"/>. The bus will
+          take care that the messages will be delivered in the context of
+          mainloop, which is almost certainly the application's main thread.
+          The big advantage of this is that applications no longer need to
+          be thread-aware; they don't need to use <function>g_idle_add
+          ()</function> in the signal handler and do the actual real work
+          in the idle-callback. &GStreamer; now does all that internally.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Related to this, <function>gst_bin_iterate ()</function> has been
+          removed. Pipelines will iterate in their own thread, and applications
+          can simply run a <classname>GMainLoop</classname> (or call the
+          mainloop of their UI toolkit, such as <function>gtk_main
+          ()</function>).
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          State changes can be delayed; ASYNC.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          In 0.8, events and queries had to manually be sent to sinks in
+          pipelines (unless you were using playbin). This is no longer
+          the case in 0.9. In 0.9, queries and events can be sent to
+          toplevel pipelines, and the pipeline will do the dispatching
+          internally for you. This means less bookkeeping in your
+          application. For a short code example, see <xref
+          linkend="chapter-queryevents"/>. Related, seeking is now
+          threadsafe, and your video output will show the new video
+          position's frame while seeking, providing a better user
+          experience.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          The <classname>GstThread</classname> object has been removed.
+          Applications can now simply put elements in a pipeline with
+          optionally some <quote>queue</quote> elements in between for
+          buffering, and &GStreamer; will take care of creating threads
+          internally. It is still possible to have parts of a pipeline
+          run in different threads than others, by using the
+          <quote>queue</quote> element. See <xref linkend="chapter-threads"/>
+          for details.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Filtered caps -> caps-filter.
+        </para>
+      </listitem>
+    </itemizedlist>
+  </sect1>
+</chapter>

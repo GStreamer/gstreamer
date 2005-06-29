@@ -13,34 +13,34 @@
     <classname>GstPad</classname>.
   </para>
 
-  <sect1 id="section-streaminfo">
-    <title>Stream information</title>
+  <sect1 id="section-tags-read">
+    <title>Metadata reading</title>
 
     <para>
       Stream information can most easily be read by reading them from a
       <classname>GstPad</classname>. This has already been discussed before
       in <xref linkend="section-caps-metadata"/>. Therefore, we will skip
-      it here.
+      it here. Note that this requires access to all pads of which you
+      want stream information.
     </para>
-  </sect1>
-
-  <sect1 id="section-tags-read">
-    <title>Tag reading</title>
 
     <para>
-      Tag reading is remarkably simple in &GStreamer; Every element supports
-      the <quote>found-tag</quote> signal, which will be fired each the time
-      the element reads tags from the stream. A <classname>GstBin</classname>
-      will conveniently forward tags found by its childs. Therefore, in most
-      applications, you will only need to connect to the
-      <quote>found-tag</quote> signal on the top-most bin in your pipeline,
-      and you will automatically retrieve all tags from the stream.
+      Tag reading is done through a bus in &GStreamer;, which has been
+      discussed previously in <xref linkend="chapter-bus"/>. You can
+      listen for <classname>GST_MESSAGE_TAG</classname> messages and handle
+      them as you wish.
     </para>
     <para>
-      Note, however, that the <quote>found-tag</quote> might be fired
-      multiple times and by multiple elements in the pipeline. It is the
+      Note, however, that the <classname>GST_MESSAGE_TAG</classname>
+      message may be fired multiple times in the pipeline. It is the
       application's responsibility to put all those tags together and
-      display them to the user in a nice, coherent way.
+      display them to the user in a nice, coherent way. Usually, using
+      <function>gst_tag_list_merge ()</function> is a good enough way
+      of doing this; make sure to empty the cache when loading a new song,
+      or after every few minutes when listening to internet radio. Also,
+      make sure you use <classname>GST_TAG_MERGE_PREPEND</classname> as
+      merging mode, so that a new title (which came in later) has a
+      preference over the old one for display.
     </para>
   </sect1>
 
@@ -48,7 +48,22 @@
     <title>Tag writing</title>
 
     <para>
-      WRITEME
+      Tag writing is done using the <classname>GstTagSetter</classname>
+      interface. All that's required is a tag-set-supporting element in
+      your pipeline. In order to see if any of the elements in your
+      pipeline supports tag writing, you can use the function
+      <function>gst_bin_iterate_all_by_interface (pipeline,
+      GST_TYPE_TAG_SETTER)</function>. On the resulting element, usually
+      an encoder or muxer, you can use <function>gst_tag_setter_merge
+      ()</function> (with a taglist) or <function>gst_tag_setter_add
+      ()</function> (with individual tags) to set tags on it.
+    </para>
+    <para>
+      A nice extra feature in &GStreamer; tag support is that tags are
+      preserved in pipelines. This means that if you transcode one file
+      containing tags into another media type, and that new media type
+      supports tags too, then the tags will be handled as part of the
+      data stream and be merged into the newly written media file, too.
     </para>
   </sect1>
 </chapter>

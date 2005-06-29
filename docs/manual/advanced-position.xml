@@ -3,15 +3,15 @@
 
   <para>
     So far, we've looked at how to create a pipeline to do media processing
-    and how to make it run ("iterate"). Most application developers will be
-    interested in providing feedback to the user on media progress. Media
-    players, for example, will want to show a slider showing the progress in
-    the song, and usually also a label indicating stream length. Transcoding
-    applications will want to show a progress bar on how much % of the task
-    is done. &GStreamer; has built-in support for doing all this using a
-    concept known as <emphasis>querying</emphasis>. Since seeking is very
-    similar, it will be discussed here as well. Seeking is done using the
-    concept of <emphasis>events</emphasis>.
+    and how to make it run. Most application developers will be interested
+    in providing feedback to the user on media progress. Media players, for
+    example, will want to show a slider showing the progress in the song,
+    and usually also a label indicating stream length. Transcoding
+    applications will want to show a progress bar on how much percent of
+    the task is done. &GStreamer; has built-in support for doing all this
+    using a concept known as <emphasis>querying</emphasis>. Since seeking
+    is very similar, it will be discussed here as well. Seeking is done
+    using the concept of <emphasis>events</emphasis>.
   </para>
 
   <sect1 id="section-querying">
@@ -22,42 +22,82 @@
       to progress tracking. This includes getting the length of a stream (if
       available) or getting the current position. Those stream properties
       can be retrieved in various formats such as time, audio samples, video
-      frames or bytes. The functions used are <function>gst_element_query
-      ()</function> and <function>gst_pad_query ()</function>.
+      frames or bytes. The function most commonly used for this is
+      <function>gst_element_query ()</function>, although some convenience
+      wrappers are provided as well (such as
+      <function>gst_element_query_position ()</function>). You can generally
+      query the pipeline directly, it'll figure out the internal details
+      for you, like which element to query.
     </para>
 
     <para>
-      Obviously, using either of the above-mentioned functions requires the
-      application to know <emphasis>which</emphasis> element or pad to run
-      the query on. This is tricky, but there are some good sides to the
-      story. The good thing is that elements (or, rather, pads - since
-      <function>gst_element_query ()</function> internally calls
-      <function>gst_pad_query ()</function>) forward (<quote>dispatch</quote>)
-      events and queries to peer pads (or elements) if they don't handle it
-      themselves. The bad side is that some elements (or pads) will handle
-      events, but not the specific formats that you want, and therefore it
-      still won't work.
-    </para>
-
-    <para>
-      Most queries will, fortunately, work fine. Queries are always
-      dispatched backwards. This means, effectively, that it's easiest to
-      run the query on your video or audio output element, and it will take
-      care of dispatching the query to the element that knows the answer
-      (such as the current position or the media length; usually the demuxer
-      or decoder).
+      Internally, queries will be sent to the sinks, and
+      <quote>dispatched</quote> backwards until one element can handle it;
+      that result will be sent back to the function caller. Usually, that
+      is the demuxer, although with live sources (from a webcam), it is the
+      source itself.
     </para>
 
     <programlisting><!-- example-begin query.c a -->
 #include &lt;gst/gst.h&gt;
+<!-- example-end query.c a -->
+<!-- example-begin query.c b --><!--
+static gboolean
+my_bus_callback (GstBus     *bus,
+                 GstMessage *message,
+                 gpointer    data)
+{
+  GMainLoop *loop = data;
+
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR: {
+      GError *err;
+      gchar *debug;
+
+      gst_message_parse_error (message, &amp;err, &amp;debug);
+      g_print ("Error: %s\n", err-&gt;message);
+      g_error_free (err);
+      g_free (debug);
+
+      g_main_loop_quit (loop);
+      break;
+    }
+    case GST_MESSAGE_EOS:
+      /* end-of-stream */
+      g_main_loop_quit (loop);
+      break;
+    default:
+      break;
+  }
+
+  /* remove from queue */
+  return TRUE;
+}
+--><!-- example-end query.c b -->
+<!-- example-begin query.c c -->
+static gboolean
+cb_print_position (GstElement *pipeline)
+{
+  GstFormat fmt = GST_FORMAT_TIME;
+  gint64 pos, len;
+
+  if (gst_element_query_position (pipeline, &amp;fmt, &amp;pos, &amp;len)) {
+    g_print ("Time: %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT "\r",
+	     GST_TIME_ARGS (pos), GST_TIME_ARGS (len));
+  }
+
+  /* call me again */
+  return TRUE;
+}
 
 gint
 main (gint   argc,
       gchar *argv[])
 {
-  GstElement *sink, *pipeline;
-<!-- example-end query.c a -->
-[..]<!-- example-begin query.c b --><!--
+  GstElement *pipeline;
+<!-- example-end query.c c -->
+[..]<!-- example-begin query.c d --><!--
+  GMainLoop *loop;
   gchar *l;
 
   /* init */
@@ -71,45 +111,32 @@ main (gint   argc,
 
   /* build pipeline, the easy way */
   l = g_strdup_printf ("filesrc location=\"%s\" ! oggdemux ! vorbisdec ! "
-		       "audioconvert ! audioscale ! alsasink name=a",
+		       "audioconvert ! audioscale ! alsasink",
 		       argv[1]);
   pipeline = gst_parse_launch (l, NULL);
-  sink = gst_bin_get_by_name (GST_BIN (pipeline), "a");
   g_free (l);
+  gst_bus_add_watch (gst_pipeline_get_bus (GST_PIPELINE (pipeline)),
+		     my_bus_callback, NULL);
 
   /* play */
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
---><!-- example-end query.c b -->
-<!-- example-begin query.c c -->
+  loop = g_main_loop_new (NULL, FALSE);
+--><!-- example-end query.c d -->
+<!-- example-begin query.c e -->
   /* run pipeline */
-  do {
-    gint64 len, pos;
-    GstFormat fmt = GST_FORMAT_TIME;
-
-    if (gst_element_query (sink, GST_QUERY_POSITION, &amp;fmt, &amp;pos) &amp;&amp;
-        gst_element_query (sink, GST_QUERY_TOTAL, &amp;fmt, &amp;len)) {
-      g_print ("Time: %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT "\r",
-	       GST_TIME_ARGS (pos), GST_TIME_ARGS (len));
-    }
-  } while (gst_bin_iterate (GST_BIN (pipeline)));
-<!-- example-end query.c c -->
-[..]<!-- example-begin query.c d --><!--
+  g_timeout_add (200, (GSourceFunc) cb_print_position, pipeline);
+  g_main_loop_run (loop);
+<!-- example-end query.c e -->
+[..]<!-- example-begin query.c f --><!--
   /* clean up */
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (GST_OBJECT (pipeline));
 
   return 0;
---><!-- example-end query.c d -->
-<!-- example-begin query.c e -->
+--><!-- example-end query.c f -->
+<!-- example-begin query.c g -->
 }
-    <!-- example-end query.c e --></programlisting>
-    <para>
-      If you are having problems with the dispatching behaviour, your best
-      bet is to manually decide which element to start running the query on.
-      You can get a list of supported formats and query-types with
-      <function>gst_element_get_query_types ()</function> and
-      <function>gst_element_get_formats ()</function>.
-    </para>
+    <!-- example-end query.c g --></programlisting>
   </sect1>
 
   <sect1 id="section-eventsseek">
@@ -118,27 +145,39 @@ main (gint   argc,
     <para>
       Events work in a very similar way as queries. Dispatching, for
       example, works exactly the same for events (and also has the same
-      limitations). Although there are more ways in which applications
-      and elements can interact using events, we will only focus on seeking
-      here. This is done using the seek-event. A seek-event contains a
-      seeking offset, a seek method (which indicates relative to what the
-      offset was given), a seek format (which is the unit of the offset,
-      e.g. time, audio samples, video frames or bytes) and optionally a
-      set of seeking-related flags (e.g. whether internal buffers should be
-      flushed). The behaviour of a seek is also wrapped in the function
-      <function>gst_element_seek ()</function>.
+      limitations), and they can similarly be sent to the toplevel pipeline
+      and it will figure out everything for you. Although there are more
+      ways in which applications and elements can interact using events,
+      we will only focus on seeking here. This is done using the seek-event.
+      A seek-event contains a seeking offset, a seek method (which indicates
+      relative to what the offset was given), a seek format (which is the
+      unit of the offset, e.g. time, audio samples, video frames or bytes)
+      and optionally a set of seeking-related flags (e.g. whether internal
+      buffers should be flushed). The behaviour of a seek is also wrapped
+      in the function <function>gst_element_seek ()</function>.
     </para>
 
     <programlisting>
 static void
-seek_to_time (GstElement *audiosink,
-	      gint64      time_nanonseconds)
+seek_to_time (GstElement *pipeline,
+	      gint64      time_nanoseconds)
 {
-  gst_element_seek (audiosink,
+  gst_element_seek (pipeline,
 		    GST_SEEK_METHOD_SET | GST_FORMAT_TIME |
 		    GST_SEEK_FLAG_FLUSH, time_nanoseconds);
 }
     </programlisting>
+    <para>
+      It is possible to do multiple seeks in short time-intervals, such as
+      a direct response to slider movement. After a seek, internally, the
+      pipeline will be paused (if it was playing), the position will be
+      re-set internally, the demuxers and decoders will decode from the new
+      position onwards and this will continue until all sinks have data
+      again. If it was playing originally, it will be set to playing again,
+      too. Since the new position is immediately available in a video output,
+      you will see the new frame, even if your pipeline is not in the playing
+      state.
+    </para>
   </sect1>
 </chapter>
 

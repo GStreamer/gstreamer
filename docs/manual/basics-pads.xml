@@ -71,7 +71,11 @@ cb_new_pad (GstElement *element,
 	    GstPad     *pad,
 	    gpointer    data)
 {
-  g_print ("A new pad %s was created\n", gst_pad_get_name (pad));
+  gchar *name;
+
+  name = gst_pad_get_name (pad);
+  g_print ("A new pad %s was created\n", name);
+  g_free (name);
 
   /* here, you would setup a new pad link for the newly created pad */
 <!-- example-end pad.c a -->[..]
@@ -79,9 +83,11 @@ cb_new_pad (GstElement *element,
 }
 
 int 
-main(int argc, char *argv[]) 
+main (int   argc,
+      char *argv[]) 
 {
   GstElement *pipeline, *source, *demux;
+  GMainLoop *loop;
 
   /* init */
   gst_init (&amp;argc, &amp;argv);
@@ -96,14 +102,15 @@ main(int argc, char *argv[])
 
   /* put together a pipeline */
   gst_bin_add_many (GST_BIN (pipeline), source, demux, NULL);
-  gst_element_link (source, demux);
+  gst_element_link_pads (source, "src", demux, "sink");
 
   /* listen for newly created pads */
   g_signal_connect (demux, "new-pad", G_CALLBACK (cb_new_pad), NULL);
 
   /* start the pipeline */
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
-  while (gst_bin_iterate (GST_BIN (pipeline)));
+  loop = g_main_loop_new (NULL, FALSE);
+  g_main_loop_run (loop);
 <!--example-end pad.c b -->
 [..]<!-- example-begin pad.c c --><!--
   return 0;
@@ -135,12 +142,18 @@ static void
 some_function (GstElement *tee)
 {
   GstPad * pad;
+  gchar *name;
 
   pad = gst_element_get_request_pad (tee, "src%d");
-  g_print ("A new pad %s was created\n", gst_pad_get_name (pad));
+  name = gst_pad_get_name (pad);
+  g_print ("A new pad %s was created\n", name);
+  g_free (name);
 
   /* here, you would link the pad */
 [..]
+
+  /* and, after doing that, free our reference */
+  gst_object_unref (GST_OBJECT (pad));
 }
       </programlisting>
       <para> 
@@ -161,12 +174,16 @@ link_to_multiplexer (GstPad     *tolink_pad,
 		     GstElement *mux)
 {
   GstPad *pad;
+  gchar *srcname = gst_pad_get_name (tolink_pad), *sinkname;
 
   pad = gst_element_get_compatible_pad (mux, tolink_pad);
   gst_pad_link (tolinkpad, pad);
+  sinkname = gst_pad_get_name (pad);
+  gst_object_unref (GST_OBJECT (pad));
 
-  g_print ("A new pad %s was created and linked to %s\n",
-	   gst_pad_get_name (pad), gst_pad_get_name (tolink_pad));
+  g_print ("A new pad %s was created and linked to %s\n", srcname, sinkname);
+  g_free (sinkname);
+  g_free (srcname);
 }
       </programlisting>
     </sect2>
@@ -319,6 +336,17 @@ Pad Templates:
     	    A list value (<classname>GST_TYPE_LIST</classname>): the
             property can take any value from a list of basic values
             given in this list.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            An array value (<classname>GST_TYPE_FIXED_LIST</classname>): the
+            property is an array of values. Each value in the array is a
+            full value on its own, too. All values in the array should be
+            of the same elementary type. This means that an array can
+            contain any combination of integers, lists of integers, integer
+            ranges together, and the same for floats or strings, but it can
+            not contain both floats and ints at the same time.
           </para>
         </listitem>
       </itemizedlist>
@@ -508,7 +536,7 @@ link_pads_with_filter (GstPad *one,
     </para>
     <para>
       A ghostpad is created using the function
-      <function>gst_element_add_ghost_pad ()</function>:
+      <function>gst_ghost_pad_new ()</function>:
     </para>
     <programlisting><!-- example-begin ghostpad.c a -->
 #include &lt;gst/gst.h&gt;
@@ -518,16 +546,20 @@ main (int   argc,
       char *argv[])
 {
   GstElement *bin, *sink;
+  GstPad *pad;
 
   /* init */
   gst_init (&amp;argc, &amp;argv);
 
-  /* create element, add to bin, add ghostpad */
+  /* create element, add to bin */
   sink = gst_element_factory_make ("fakesink", "sink");
   bin = gst_bin_new ("mybin");
   gst_bin_add (GST_BIN (bin), sink);
-  gst_element_add_ghost_pad (bin,
-      gst_element_get_pad (sink, "sink"), "sink");
+
+  /* add ghostpad */
+  pad = gst_element_get_pad (sink, "sink");
+  gst_element_add_pad (bin, gst_ghost_pad_new ("sink", pad));
+  gst_object_unref (GST_OBJECT (pad));
 <!-- example-end ghostpad.c a -->
 [..]<!-- example-begin ghostpad.c b --><!--
   return 0;

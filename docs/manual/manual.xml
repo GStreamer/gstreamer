@@ -27,6 +27,7 @@
 <!ENTITY INIT SYSTEM "basics-init.xml">
 <!ENTITY ELEMENTS SYSTEM "basics-elements.xml">
 <!ENTITY BINS SYSTEM "basics-bins.xml">
+<!ENTITY BUS SYSTEM "basics-bus.xml">
 <!ENTITY PADS SYSTEM "basics-pads.xml">
 <!ENTITY DATA SYSTEM "basics-data.xml">
 <!ENTITY HELLOWORLD SYSTEM "basics-helloworld.xml">
@@ -38,7 +39,6 @@
 <!ENTITY CLOCKS SYSTEM "advanced-clocks.xml">
 <!ENTITY DPARAMS SYSTEM "advanced-dparams.xml">
 <!ENTITY THREADS SYSTEM "advanced-threads.xml">
-<!ENTITY SCHEDULERS SYSTEM "advanced-schedulers.xml">
 <!ENTITY AUTOPLUGGING SYSTEM "advanced-autoplugging.xml">
 <!ENTITY DATAACCESS SYSTEM "advanced-dataaccess.xml">
 
@@ -48,6 +48,7 @@
 
 <!-- Appendices -->
 <!ENTITY CHECKLIST SYSTEM "appendix-checklist.xml">
+<!ENTITY PORTING SYSTEM "appendix-porting.xml">
 <!ENTITY INTEGRATION SYSTEM "appendix-integration.xml">
 <!ENTITY LICENSING SYSTEM "appendix-licensing.xml">
 <!ENTITY WIN32 SYSTEM "appendix-win32.xml">
@@ -170,6 +171,7 @@
     &INIT;
     &ELEMENTS;
     &BINS;
+    &BUS;
     &PADS;
     &DATA;
     &HELLOWORLD;
@@ -187,9 +189,18 @@
 	able to create a <emphasis>simple</emphasis> application. However,
         &GStreamer; provides much more candy than just the basics of playing
         back audio files. In this chapter, you will learn more of the
-	low-level features and internals of &GStreamer;, such as threads,
-        scheduling, synchronization, metadata, interfaces and dynamic
-        parameters.
+	low-level features and internals of &GStreamer;.
+      </para>
+      <para>
+        Some parts of this part will serve mostly as an explanation of
+        how &GStreamer; works internally; they are not actually needed for
+        actual application development. This includes chapter such as the
+        ones covering scheduling, autoplugging and synchronization. Other
+        chapters, however, discuss more advanced ways of
+        pipeline-application interaction, and can turn out to be very useful
+        for certain applications. This includes the chapters on metadata,
+        querying and events, interfaces, dynamic parameters and pipeline
+        data manipulation.
       </para>      
     </partintro>
 
@@ -199,7 +210,6 @@
     &CLOCKS;
     &DPARAMS;
     &THREADS;
-    &SCHEDULERS;
     &AUTOPLUGGING;
     &DATAACCESS;
 
@@ -245,6 +255,10 @@
         shortly explain how applications included with &GStreamer; can help
         making your life easier, and some information on debugging.
       </para>
+      <para>
+        In addition, we also provide a porting guide which will explain
+        easily how to port &GStreamer;-0.8 applications to &GStreamer;-0.9.
+      </para>
     </partintro>
 
 <!--
@@ -278,6 +292,7 @@ Idea:
 -->
 
     &CHECKLIST;
+    &PORTING;
     &INTEGRATION;
     &LICENSING;
     &WIN32;

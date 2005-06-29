@@ -1,0 +1,186 @@
+<chapter id="chapter-bus">
+  <title>Bus</title>
+  <para>
+    A bus is a simple system that takes care of forwarding messages from
+    the pipeline threads to an application in its own thread context. The
+    advantage of a bus is that an application does not need to be
+    thread-aware in order to use &GStreamer;, even though &GStreamer;
+    itself is heavily threaded.
+  </para>
+  <para>
+    Every pipeline contains a bus by default, so applications do not need
+    to create a bus or anything. The only thing applications should do is
+    set a message handler on a bus, which is similar to a signal handler
+    to an object. When the mainloop is running, the bus will periodically
+    be checked for new messages, and the callback will be called when any
+    message is available.
+  </para>
+
+  <sect1 id="section-bus-howto">
+    <title>How to use a bus</title>
+    <para>
+      To use a bus, attach a message handler to the default bus of a pipeline
+      using <function>gst_bus_add_watch ()</function>. This handler will be
+      called whenever the pipeline emits a message to the bus. In this
+      handler, check the signal type (see next section) and do something
+      accordingly. The return value of the handler should be TRUE to remove
+      the message from the bus.
+    </para>
+    <programlisting><!-- example-begin bus.c a -->
+#include &lt;gst/gst.h&gt;
+
+static GMainLoop *loop;
+
+static gboolean
+my_bus_callback (GstBus     *bus,
+		 GstMessage *message,
+		 gpointer    data)
+{
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR: {
+      GError *err;
+      gchar *debug;
+
+      gst_message_parse_error (message, &amp;err, &amp;debug);
+      g_print ("Error: %s\n", err-&gt;message);
+      g_error_free (err);
+      g_free (debug);
+
+      g_main_loop_quit (loop);
+      break;
+    }
+    case GST_MESSAGE_EOS:
+      /* end-of-stream */
+      g_main_loop_quit (loop);
+      break;
+    default:
+      /* unhandled message */
+      break;
+  }
+
+  /* remove message from the queue */
+  return TRUE;
+}
+
+gint
+main (gint   argc,
+      gchar *argv[])
+{
+  GMainLoop *loop;
+  GstElement *pipeline;
+
+  /* init */
+  gst_init (&amp;argc, &amp;argv);
+
+  /* create pipeline, add handler */
+  pipeline = gst_pipeline_new ("my_pipeline");
+  gst_bus_add_watch (gst_pipeline_get_bus (GST_PIPELINE (pipeline)),
+		     my_bus_callback, NULL);
+<!-- example-end bus.c a -->
+[..]<!-- example-begin bus.c b -->
+<!-- example-begin bus.c c -->
+  /* in the mainloop, all messages posted to the bus by the pipeline
+   * will automatically be sent to our callback. */
+  loop = g_main_loop_new (NULL, FALSE);
+  g_main_loop_run (loop);
+
+  return 0;
+}
+    <!-- example-end bus.c c -->
+    </programlisting>
+    <para>
+      It is important to know that the handler will be called in the thread
+      context of the mainloop. This means that the interaction between the
+      pipeline and application over the bus is
+      <emphasis>asynchronous</emphasis>, and thus not suited for some
+      real-time purposes, such as cross-fading between audio tracks, doing
+      (theoretically) gapless playback or video effects. All such things
+      should be done in the pipeline context, which is easiest by writing
+      a &GStreamer; plug-in. It is very useful for its primary purpose,
+      though: passing messages from pipeline to application.
+    </para>
+  </sect1>
+
+  <sect1 id="section-bus-message-types">
+    <title>Message types</title>
+    <para>
+      &GStreamer; has a few pre-defined message types that can be passed
+      over the bus. The messages are extendible, however. Plug-ins can
+      define additional messages, and applications can decide to either
+      have specific code for those or ignore them. All applications are
+      strongly recommended to at least handle error messages by providing
+      visual feedback to the user.
+    </para>
+    <para>
+      All messages have a message source, type and timestamp. The message
+      source can be used to see which element emitted the message. For some
+      messages, for example, only the ones emitted by the top-level pipeline
+      will be interesting to most applications (e.g. for state-change
+      notifications). Below is a list of all messages and a short explanation
+      of what they do and how to parse message-specific content.
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          Error, warning and information notifications: those are used
+          by elements if a message should be shown to the user about the
+          state of the pipeline. Error messages are fatal and terminate
+          the data-passing. The error should be repaired to resume pipeline
+          acvitity. Warnings are not fatal, but imply a problem nevertheless.
+          Information messages are for non-problem notifications. All those
+          messages contain a <classname>GError</classname> with the main
+          error type and message, and optionally a debug string. Both
+          can be extracted using <function>gst_message_parse_error
+          ()</function>, <function>_parse_warning ()</function> and
+          <function>_parse_info ()</function>. Both error and debug string
+          should be free'ed after use.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          End-of-stream notification: this is emitted when the stream has
+          ended. The state of the pipeline will not change, but further
+          media handling will stall. Applications can use this to skip to
+          the next song in their playlist. After end-of-stream, it is also
+          possible to seek back in the stream. Playback will then continue
+          automatically. This message has no specific arguments.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Tags: emitted when metadata was found in the stream. This can be
+          emitted multiple times for a pipeline (e.g. once for descriptive
+          metadata such as artist name or song title, and another one for
+          stream-information, such as samplerate and bitrate). Applications
+          should cache metadata internally. <function>gst_message_parse_tag
+          ()</function> should be used to parse the taglist, which should
+          be dereferenced after use.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          State-changes: emitted after a successful state change.
+          <function>gst_message_parse_state_changed ()</function> can be
+          used to parse the old and new state of this transition.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Buffering: emitted during caching of network-streams. One can
+          manually extract the progress (in percent) from the message by
+          extracting the <quote>buffer-percent</quote> property from the
+          structure returned by <function>gst_message_parse_structure
+          ()</function>.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Other application-specific messages: any information on those can
+          be extracted by getting a structure (see above) and reading
+          properties. In most cases, such messages can conveniently be
+          ignored.
+        </para>
+      </listitem>
+    </itemizedlist>
+  </sect1>
+</chapter>

@@ -1,3 +1,28 @@
+2005-06-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/manual/advanced-clocks.xml:
+	* docs/manual/advanced-interfaces.xml:
+	* docs/manual/advanced-metadata.xml:
+	* docs/manual/advanced-position.xml:
+	* docs/manual/advanced-schedulers.xml:
+	* docs/manual/advanced-threads.xml:
+	* docs/manual/appendix-porting.xml:
+	* docs/manual/basics-bins.xml:
+	* docs/manual/basics-bus.xml:
+	* docs/manual/basics-elements.xml:
+	* docs/manual/basics-helloworld.xml:
+	* docs/manual/basics-pads.xml:
+	* docs/manual/highlevel-components.xml:
+	* docs/manual/manual.xml:
+	* docs/manual/thread.fig:
+	  Update (until threads/scheduling) Application Development Manual;
+	  remove GstThread, add GstBus, add simple porting checklist, add
+	  documentation for tag writing, clocks, make all examples until this
+	  part compile and run.
+	* examples/manual/Makefile.am:
+	  Update from changes to Application Development Manual; add bus
+	  example, remove thread example.
+
 2005-06-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbus.c: (gst_bus_post), (gst_bus_have_pending),
