@@ -1,5 +1,14 @@
 2005-06-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* check/Makefile.am:
+	* gst/gst.c: (add_path_func), (init_pre):
+	* gst/gstregistry.c: (gst_registry_add_path):
+	  add A GST_PLUGIN_PATH_ONLY env var; if it is set, it will
+	  only scan the GST_PLUGIN_PATH locations, and not add
+	  system locations
+
+2005-06-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/gst/gstreamer-sections.txt:
 	* docs/gst/tmpl/gstbasesrc.sgml:
 	* gst/gstelement.c:

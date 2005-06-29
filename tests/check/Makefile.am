@@ -1,5 +1,6 @@
 TESTS_ENVIRONMENT=\
-	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/check \
+	GST_PLUGIN_PATH_ONLY=yes \
+	GST_PLUGIN_PATH=$(top_builddir)/gst \
 	GST_REGISTRY=$(top_builddir)/check/test-registry.xml
 
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@

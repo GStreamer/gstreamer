@@ -41,6 +41,8 @@
 #include "gstmarshal.h"
 #include "gstfilter.h"
 
+#define GST_CAT_DEFAULT GST_CAT_GST_INIT
+
 /* Element signals and args */
 enum
 {
@@ -227,11 +229,17 @@ gst_registry_add_path (GstRegistry * registry, const gchar * path)
   g_return_if_fail (GST_IS_REGISTRY (registry));
   g_return_if_fail (path != NULL);
 
+  if (strlen (path) == 0) {
+    GST_INFO ("Ignoring empty plugin path");
+    return;
+  }
+
   if (g_list_find_custom (registry->paths, path, (GCompareFunc) strcmp)) {
     g_warning ("path %s already added to registry", path);
     return;
   }
 
+  GST_INFO ("Adding plugin path: \"%s\"", path);
   registry->paths = g_list_append (registry->paths, g_strdup (path));
 }
 

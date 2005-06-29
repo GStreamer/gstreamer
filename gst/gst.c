@@ -388,7 +388,6 @@ add_path_func (gpointer data, gpointer user_data)
 {
   GstRegistry *registry = GST_REGISTRY (user_data);
 
-  GST_INFO ("Adding plugin path: \"%s\"", (gchar *) data);
   gst_registry_add_path (registry, (gchar *) data);
 }
 #endif
@@ -504,8 +503,10 @@ init_pre (void)
         PLUGINS_BUILDDIR "/gst/schedulers");
     gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/indexers");
 #else
-    /* add the main (installed) library path */
-    gst_registry_add_path (_global_registry, PLUGINS_DIR);
+    /* add the main (installed) library path if GST_PLUGIN_PATH_ONLY not set */
+    if (g_getenv ("GST_PLUGIN_PATH_ONLY") != NULL) {
+      gst_registry_add_path (_global_registry, PLUGINS_DIR);
+    }
 #endif /* PLUGINS_USE_BUILDDIR */
 
     if (g_getenv ("GST_REGISTRY")) {
