@@ -1,0 +1,182 @@
+<!-- ##### SECTION Title ##### -->
+gstringbuffer
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstRingBuffer ##### -->
+<para>
+
+</para>
+
+@cond: 
+@acquired: 
+@data: 
+@spec: 
+@segstate: 
+@samples_per_seg: 
+@empty_seg: 
+@state: 
+@segplayed: 
+@waiting: 
+
+<!-- ##### STRUCT GstRingBufferClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@acquire: 
+@release: 
+@play: 
+@pause: 
+@resume: 
+@stop: 
+@delay: 
+
+<!-- ##### FUNCTION gst_ringbuffer_set_callback ##### -->
+<para>
+
+</para>
+
+@buf: 
+@cb: 
+@user_data: 
+
+
+<!-- ##### FUNCTION gst_ringbuffer_acquire ##### -->
+<para>
+
+</para>
+
+@buf: 
+@spec: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_ringbuffer_release ##### -->
+<para>
+
+</para>
+
+@buf: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_ringbuffer_is_acquired ##### -->
+<para>
+
+</para>
+
+@buf: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_ringbuffer_play ##### -->
+<para>
+
+</para>
+
+@buf: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_ringbuffer_pause ##### -->
+<para>
+
+</para>
+
+@buf: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_ringbuffer_stop ##### -->
+<para>
+
+</para>
+
+@buf: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_ringbuffer_delay ##### -->
+<para>
+
+</para>
+
+@buf: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_ringbuffer_played_samples ##### -->
+<para>
+
+</para>
+
+@buf: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_ringbuffer_set_sample ##### -->
+<para>
+
+</para>
+
+@buf: 
+@sample: 
+
+
+<!-- ##### FUNCTION gst_ringbuffer_commit ##### -->
+<para>
+
+</para>
+
+@buf: 
+@sample: 
+@data: 
+@len: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_ringbuffer_prepare_read ##### -->
+<para>
+
+</para>
+
+@buf: 
+@segment: 
+@readptr: 
+@len: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_ringbuffer_clear ##### -->
+<para>
+
+</para>
+
+@buf: 
+@segment: 
+
+
+<!-- ##### FUNCTION gst_ringbuffer_advance ##### -->
+<para>
+
+</para>
+
+@buf: 
+@advance: 
+
+

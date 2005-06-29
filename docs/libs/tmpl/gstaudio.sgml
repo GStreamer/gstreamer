@@ -1,0 +1,97 @@
+<!-- ##### SECTION Title ##### -->
+gstaudio
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ENUM GstAudioFieldFlag ##### -->
+<para>
+
+</para>
+
+@GST_AUDIO_FIELD_RATE: 
+@GST_AUDIO_FIELD_CHANNELS: 
+@GST_AUDIO_FIELD_ENDIANNESS: 
+@GST_AUDIO_FIELD_WIDTH: 
+@GST_AUDIO_FIELD_DEPTH: 
+@GST_AUDIO_FIELD_SIGNED: 
+@GST_AUDIO_FIELD_BUFFER_FRAMES: 
+
+<!-- ##### FUNCTION gst_audio_frame_byte_size ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_audio_frame_length ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_audio_frame_rate ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_audio_length ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_audio_highest_sample_value ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_audio_is_buffer_framed ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_audio_structure_set_int ##### -->
+<para>
+
+</para>
+
+@structure: 
+@flag: 
+
+

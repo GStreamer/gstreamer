@@ -1,0 +1,9 @@
+#include <gst/gst.h>
+
+#include <gst/colorbalance/colorbalance.h>
+#include <gst/audio/gstringbuffer.h>
+
+gst_ringbuffer_get_type
+
+gst_color_balance_get_type
+gst_color_balance_channel_get_type

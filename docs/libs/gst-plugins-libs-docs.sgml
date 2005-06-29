@@ -3,7 +3,12 @@
                "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
 <!ENTITY % version-entities SYSTEM "version.entities">
 %version-entities;
+
+<!ENTITY GstAudio SYSTEM "xml/gstaudio.xml">
+<!ENTITY GstColorBalance SYSTEM "xml/gstcolorbalance.xml">
 <!ENTITY GstGConf SYSTEM "xml/gstgconf.xml">
+<!ENTITY GstRingBuffer SYSTEM "xml/gstringbuffer.xml">
+
 ]>
 <book id="index">
   <bookinfo>
@@ -12,6 +17,9 @@
 
   <chapter>
     <title>GStreamer Plugin Libraries</title>
+    &GstAudio;
+    &GstRingBuffer;
+    &GstColorBalance;
     &GstGConf;
   </chapter>
 </book>

@@ -1,3 +1,19 @@
+2005-06-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* autogen.sh:
+	* configure.ac:
+	* docs/Makefile.am:
+	* docs/libs/Makefile.am:
+	* docs/libs/gst-plugins-libs-docs.sgml:
+	* docs/libs/gst-plugins-libs-sections.txt:
+	* docs/libs/gst-plugins-libs.types:
+	* docs/libs/tmpl/gstaudio.sgml:
+	* docs/libs/tmpl/gstcolorbalance.sgml:
+	* docs/libs/tmpl/gstringbuffer.sgml:
+	* gst-libs/gst/audio/gstringbuffer.c:
+	(gst_ringbuffer_set_callback):
+	  reinstate gtk-doc docs for plugin libs
+
 2005-06-28  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_packet),

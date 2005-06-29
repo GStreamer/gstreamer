@@ -110,7 +110,7 @@ gst_ringbuffer_finalize (GObject * object)
  * gst_ringbuffer_set_callback:
  * @buf: the #GstRingBuffer to set the callback on
  * @cb: the callback to set
- * @data: use data passed to the callback
+ * @user_data: user data passed to the callback
  *
  * Sets the given callback function on the buffer. This function
  * will be called every time a segment has been written to a device.
@@ -119,7 +119,7 @@ gst_ringbuffer_finalize (GObject * object)
  */
 void
 gst_ringbuffer_set_callback (GstRingBuffer * buf, GstRingBufferCallback cb,
-    gpointer data)
+    gpointer user_data)
 {
   g_return_if_fail (buf != NULL);
 

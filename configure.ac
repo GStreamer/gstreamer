@@ -410,6 +410,10 @@ dnl ==========================================================================
 dnl ============================= sys plug-ins ================================
 dnl ==========================================================================
 
+echo
+AC_MSG_NOTICE([Checking libraries for plugins in sys/])
+echo
+
 dnl Check for X11
 translit(dnm, m, l) AM_CONDITIONAL(USE_X, true)
 GST_CHECK_FEATURE(X, [X libraries and plugins],
@@ -575,7 +579,9 @@ dnl let's try and sort them alphabetically, shall we ?
 
 if test "x$BUILD_EXTERNAL" = "xyes"; then
 
-AC_MSG_NOTICE(Checking for plug-in dependency libraries)
+echo
+AC_MSG_NOTICE([Checking libraries for plugins in ext/])
+echo
 
 dnl *** alsa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ALSA, true)
@@ -783,6 +789,12 @@ if test "x$USE_DEBUG" = xyes; then
   GST_CFLAGS="$GST_CFLAGS -g"
 fi
 
+dnl ######################
+dnl # Checks for gtk-doc #
+dnl ######################
+
+GTK_DOC_CHECK([1.0])
+
 dnl #############################
 dnl # Set automake conditionals #
 dnl #############################
@@ -796,11 +808,8 @@ AM_CONDITIONAL(BROKEN,              test "$BROKEN" = "$xyes")
 
 AM_CONDITIONAL(HAVE_NASM,           test "x$HAVE_NASM" = "xyes")
 AM_CONDITIONAL(HAVE_GTK,            test "x$HAVE_GTK" = "xyes")
-AM_CONDITIONAL(HAVE_GTK_DOC,        $HAVE_GTK_DOC)
-AM_CONDITIONAL(BUILD_DOCS,          test "x$BUILD_DOCS" = "xyes")
 AM_CONDITIONAL(BUILD_TESTS,         test "x$BUILD_TESTS" = "xyes")
 AM_CONDITIONAL(BUILD_EXAMPLES,      test "x$BUILD_EXAMPLES" = "xyes")
-AM_CONDITIONAL(BUILD_PLUGIN_DOCS,   test "x$BUILD_PLUGIN_DOCS" = "xyes")
 AM_CONDITIONAL(HAVE_FIG2DEV_PNG,    $HAVE_FIG2DEV_PNG)
 AM_CONDITIONAL(HAVE_FIG2DEV_PDF,    $HAVE_FIG2DEV_PDF)
 AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
@@ -918,15 +927,14 @@ pkgconfig/gstreamer-libs.pc
 pkgconfig/gstreamer-libs-uninstalled.pc
 pkgconfig/gstreamer-plugins.pc
 pkgconfig/gstreamer-plugins-uninstalled.pc
+docs/Makefile
+docs/libs/Makefile
+docs/version.entities
 po/Makefile.in
 common/Makefile
 common/m4/Makefile
 m4/Makefile
 )
-dnl disabled until it actually passes make distcheck
-dnl docs/Makefile
-dnl docs/libs/Makefile
-dnl docs/version.entities
 AC_OUTPUT
 
 echo -n "configure: *** Plug-ins that will be built :"
