@@ -1,3 +1,11 @@
+2005-06-29  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstelementfactory.c:
+	* gst/gstutils.h:
+	* gst/gstutils.c:
+	Moved gst_element_factory_can_[sink|src]_caps() to gstutils and added
+	the definition to the header file.
+
 2005-06-29  Andy Wingo  <wingo@pobox.com>
 
 	* docs/gst/Makefile.am (scan-build.stamp): Totally only check

@@ -732,6 +732,75 @@ gst_element_state_get_name (GstElementState state)
   return "";
 }
 
+/**
+ * gst_element_factory_can_src_caps :
+ * @factory: factory to query
+ * @caps: the caps to check
+ *
+ * Checks if the factory can source the given capability.
+ *
+ * Returns: true if it can src the capabilities
+ */
+gboolean
+gst_element_factory_can_src_caps (GstElementFactory * factory,
+    const GstCaps * caps)
+{
+  GList *templates;
+
+  g_return_val_if_fail (factory != NULL, FALSE);
+  g_return_val_if_fail (caps != NULL, FALSE);
+
+  templates = factory->staticpadtemplates;
+
+  while (templates) {
+    GstStaticPadTemplate *template = (GstStaticPadTemplate *) templates->data;
+
+    if (template->direction == GST_PAD_SRC) {
+      if (gst_caps_is_always_compatible (gst_static_caps_get (&template->
+                  static_caps), caps))
+        return TRUE;
+    }
+    templates = g_list_next (templates);
+  }
+
+  return FALSE;
+}
+
+/**
+ * gst_element_factory_can_sink_caps :
+ * @factory: factory to query
+ * @caps: the caps to check
+ *
+ * Checks if the factory can sink the given capability.
+ *
+ * Returns: true if it can sink the capabilities
+ */
+gboolean
+gst_element_factory_can_sink_caps (GstElementFactory * factory,
+    const GstCaps * caps)
+{
+  GList *templates;
+
+  g_return_val_if_fail (factory != NULL, FALSE);
+  g_return_val_if_fail (caps != NULL, FALSE);
+
+  templates = factory->staticpadtemplates;
+
+  while (templates) {
+    GstStaticPadTemplate *template = (GstStaticPadTemplate *) templates->data;
+
+    if (template->direction == GST_PAD_SINK) {
+      if (gst_caps_is_always_compatible (caps,
+              gst_static_caps_get (&template->static_caps)))
+        return TRUE;
+    }
+    templates = g_list_next (templates);
+  }
+
+  return FALSE;
+}
+
+
 /* if return val is true, *direct_child is a caller-owned ref on the direct
  * child of ancestor that is part of object's ancestry */
 static gboolean
