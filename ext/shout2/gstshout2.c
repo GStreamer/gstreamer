@@ -361,10 +361,9 @@ gst_shout2send_render (GstBaseSink * sink, GstBuffer * buf)
 
   shout2send = GST_SHOUT2SEND (sink);
 
-
   if (shout2send->clock && shout2send->sync) {
     //GST_DEBUG("using GStreamer clock to sync");
-    gst_element_wait (GST_ELEMENT (shout2send), GST_BUFFER_TIMESTAMP (buf));
+    //gst_element_wait (GST_ELEMENT (shout2send), GST_BUFFER_TIMESTAMP (buf));
   } else {
     //GST_DEBUG("using libshout to sync");
     shout_sync (shout2send->conn);
