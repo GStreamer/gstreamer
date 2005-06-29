@@ -793,7 +793,7 @@ dnl ######################
 dnl # Checks for gtk-doc #
 dnl ######################
 
-GTK_DOC_CHECK([1.0])
+GTK_DOC_CHECK([1.3])
 
 dnl #############################
 dnl # Set automake conditionals #
