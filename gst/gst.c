@@ -504,7 +504,7 @@ init_pre (void)
     gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/indexers");
 #else
     /* add the main (installed) library path if GST_PLUGIN_PATH_ONLY not set */
-    if (g_getenv ("GST_PLUGIN_PATH_ONLY") != NULL) {
+    if (g_getenv ("GST_PLUGIN_PATH_ONLY") == NULL) {
       gst_registry_add_path (_global_registry, PLUGINS_DIR);
     }
 #endif /* PLUGINS_USE_BUILDDIR */
