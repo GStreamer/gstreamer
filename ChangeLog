@@ -1,3 +1,8 @@
+2005-06-29  Wim Taymans  <wim@fluendo.com>
+
+	* ext/shout2/gstshout2.c: (gst_shout2send_render):
+	Fix build.
+
 2005-06-29  Andy Wingo  <wingo@pobox.com>
 
 	* gst/videofilter/gstvideoexample.c: Removed gst_library_load, I
