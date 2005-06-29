@@ -165,7 +165,7 @@ gst_mini_object_copy (const GstMiniObject * mini_object)
 gboolean
 gst_mini_object_is_writable (const GstMiniObject * mini_object)
 {
-  return (g_atomic_int_get (&mini_object->refcount) == 1) &&
+  return (GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object) == 1) &&
       ((mini_object->flags & GST_MINI_OBJECT_FLAG_READONLY) == 0);
 }
 
