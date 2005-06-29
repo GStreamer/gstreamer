@@ -194,10 +194,11 @@ gst_cacasink_setcaps (GstBaseSink * basesink, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "width", &(cacasink->width));
   gst_structure_get_int (structure, "height", &(cacasink->height));
-  gst_structure_get_int (structure, "bpp", &cacasink->bpp);
-  gst_structure_get_int (structure, "red_mask", &cacasink->red_mask);
-  gst_structure_get_int (structure, "green_mask", &cacasink->green_mask);
-  gst_structure_get_int (structure, "blue_mask", &cacasink->blue_mask);
+  gst_structure_get_int (structure, "bpp", (int *) &cacasink->bpp);
+  gst_structure_get_int (structure, "red_mask", (int *) &cacasink->red_mask);
+  gst_structure_get_int (structure, "green_mask",
+      (int *) &cacasink->green_mask);
+  gst_structure_get_int (structure, "blue_mask", (int *) &cacasink->blue_mask);
 
   if (cacasink->bpp == 24) {
     cacasink->red_mask = GUINT32_FROM_BE (cacasink->red_mask) >> 8;

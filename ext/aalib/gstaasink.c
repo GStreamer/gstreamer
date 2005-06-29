@@ -253,7 +253,7 @@ gst_aasink_fixate (GstPad * pad, GstCaps * caps)
     return newcaps;
   }
 
-  gst_caps_free (newcaps);
+  gst_caps_unref (newcaps);
   return NULL;
 }
 
@@ -305,7 +305,7 @@ gst_aasink_init (GstAASink * aasink)
 }
 
 static void
-gst_aasink_scale (GstAASink * aasink, gchar * src, gchar * dest,
+gst_aasink_scale (GstAASink * aasink, guchar * src, guchar * dest,
     gint sw, gint sh, gint dw, gint dh)
 {
   gint ypos, yinc, y;
