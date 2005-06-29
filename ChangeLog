@@ -1,5 +1,10 @@
 2005-06-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_init):
+	  Oops, I shouldn't apply hacks.
+
+2005-06-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/videotestsrc/gstvideotestsrc.c: (gst_videotestsrc_init):
 	  Remove pad_loop function which doesn't work.
 

@@ -187,7 +187,7 @@ gst_play_base_bin_init (GstPlayBaseBin * play_base_bin)
   play_base_bin->building_group = NULL;
   play_base_bin->queued_groups = NULL;
 
-  play_base_bin->queue_size = 0;        //DEFAULT_QUEUE_SIZE;
+  play_base_bin->queue_size = DEFAULT_QUEUE_SIZE;
   play_base_bin->queue_threshold = DEFAULT_QUEUE_THRESHOLD;
 }
 
