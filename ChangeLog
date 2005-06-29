@@ -1,5 +1,10 @@
 2005-06-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* docs/gst/gstreamer-docs.sgml:
+	  Remove probes more.
+
+2005-06-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* docs/gst/gstreamer-sections.txt:
 	* docs/gst/tmpl/gstpad.sgml:
 	* docs/gst/tmpl/gstprobe.sgml:

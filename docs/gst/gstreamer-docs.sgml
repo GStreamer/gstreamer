@@ -34,7 +34,6 @@
 <!ENTITY GstPipeline SYSTEM "xml/gstpipeline.xml">
 <!ENTITY GstPlugin SYSTEM "xml/gstplugin.xml">
 <!ENTITY GstPluginFeature SYSTEM "xml/gstpluginfeature.xml">
-<!ENTITY GstProbe SYSTEM "xml/gstprobe.xml">
 <!ENTITY GstQuery SYSTEM "xml/gstquery.xml">
 <!ENTITY GstQueue SYSTEM "xml/gstqueue.xml">
 <!ENTITY GstRegistry SYSTEM "xml/gstregistry.xml">
@@ -123,7 +122,6 @@
     &GstPipeline;
     &GstPlugin;
     &GstPluginFeature;
-    &GstProbe;
     &GstQuery;
     &GstQueue;
     &GstRegistry;
