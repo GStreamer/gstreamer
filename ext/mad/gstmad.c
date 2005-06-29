@@ -970,6 +970,7 @@ static gboolean
 gst_mad_sink_event (GstPad * pad, GstEvent * event)
 {
   GstMad *mad = GST_MAD (GST_PAD_PARENT (pad));
+  gint64 total;
 
   GST_DEBUG ("handling event %d", GST_EVENT_TYPE (event));
   switch (GST_EVENT_TYPE (event)) {
@@ -1013,10 +1014,11 @@ gst_mad_sink_event (GstPad * pad, GstEvent * event)
            * that this doesn't happen anywhere so far). */
           format = GST_FORMAT_DEFAULT;
           if (!gst_mad_convert_src (mad->srcpad,
-                  GST_FORMAT_TIME, time, &format, &mad->total_samples)) {
+                  GST_FORMAT_TIME, time, &format, &total)) {
             GST_DEBUG ("Failed to convert time to total_samples");
             continue;
           }
+          mad->total_samples = total;
 
           if (GST_PAD_IS_USABLE (mad->srcpad)) {
             discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
@@ -1274,7 +1276,7 @@ static GstFlowReturn
 gst_mad_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstMad *mad;
-  gchar *data;
+  guchar *data;
   glong size;
   gboolean new_pts = FALSE;
   GstClockTime timestamp;
@@ -1491,9 +1493,11 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         /* if we have a pending timestamp, we can use it now to calculate the sample offset */
         if (GST_CLOCK_TIME_IS_VALID (mad->last_ts)) {
           GstFormat format = GST_FORMAT_DEFAULT;
+          gint64 total;
 
           gst_pad_query_convert (mad->srcpad, GST_FORMAT_TIME, mad->last_ts,
-              &format, &mad->total_samples);
+              &format, &total);
+          mad->total_samples = total;
           mad->last_ts = GST_CLOCK_TIME_NONE;
         }
         time_offset = mad->total_samples * GST_SECOND / mad->rate;

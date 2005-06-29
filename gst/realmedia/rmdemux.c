@@ -688,7 +688,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
   }
 }
 
-static void
+G_GNUC_UNUSED static void
 re_hexdump_bytes (guint8 * ptr, int len, int offset)
 {
   guint8 *end = ptr + len;
