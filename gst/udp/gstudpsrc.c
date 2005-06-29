@@ -289,7 +289,7 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
   }
 
   outbuf = gst_netbuffer_new ();
-  GST_BUFFER_DATA (outbuf) = pktdata;
+  GST_BUFFER_DATA (outbuf) = (guint8 *) pktdata;
   GST_BUFFER_SIZE (outbuf) = ret;
 
   gst_netaddress_set_ip4_address (&outbuf->from, tmpaddr.sin_addr.s_addr,
@@ -420,7 +420,8 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
   guint bc_val;
   gint reuse;
   struct sockaddr_in my_addr;
-  int len, port;
+  guint len;
+  int port;
   GstUDPSrc *src;
   gint ret;
 

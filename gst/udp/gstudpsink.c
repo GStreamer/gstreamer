@@ -52,6 +52,9 @@ static void gst_udpsink_base_init (gpointer g_class);
 static void gst_udpsink_class_init (GstUDPSink * klass);
 static void gst_udpsink_init (GstUDPSink * udpsink);
 
+static void gst_udpsink_uri_handler_init (gpointer g_iface,
+    gpointer iface_data);
+
 static void gst_udpsink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_udpsink_get_property (GObject * object, guint prop_id,
@@ -79,10 +82,19 @@ gst_udpsink_get_type (void)
       (GInstanceInitFunc) gst_udpsink_init,
       NULL
     };
+    static const GInterfaceInfo urihandler_info = {
+      gst_udpsink_uri_handler_init,
+      NULL,
+      NULL
+    };
 
     udpsink_type =
         g_type_register_static (GST_TYPE_MULTIUDPSINK, "GstUDPSink",
         &udpsink_info, 0);
+
+    g_type_add_interface_static (udpsink_type, GST_TYPE_URI_HANDLER,
+        &urihandler_info);
+
   }
   return udpsink_type;
 }

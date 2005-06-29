@@ -451,7 +451,7 @@ typedef struct
 } SDPContext;
 
 static gboolean
-sdp_parse_line (SDPContext * c, gchar type, guint8 * buffer)
+sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
 {
   gchar str[4096];
   gchar *p = buffer;
@@ -575,8 +575,9 @@ sdp_message_parse_buffer (guint8 * data, guint size, SDPMessage * msg)
 
   c.state = SDP_SESSION;
   c.msg = msg;
+  c.media = NULL;
 
-  p = data;
+  p = (gchar *) data;
   while (TRUE) {
     while (g_ascii_isspace (*p))
       p++;
