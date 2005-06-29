@@ -217,7 +217,7 @@ stop_running:
 static void
 gst_audioringbuffer_init (GstAudioRingBuffer * ringbuffer)
 {
-  ringbuffer->running = TRUE;
+  ringbuffer->running = FALSE;
   ringbuffer->queuedseg = 0;
 
   ringbuffer->cond = g_cond_new ();

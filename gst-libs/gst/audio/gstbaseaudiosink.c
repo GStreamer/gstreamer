@@ -49,6 +49,8 @@ enum
 GST_BOILERPLATE_FULL (GstBaseAudioSink, gst_baseaudiosink, GstBaseSink,
     GST_TYPE_BASESINK, _do_init);
 
+static void gst_baseaudiosink_dispose (GObject * object);
+
 static void gst_baseaudiosink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_baseaudiosink_get_property (GObject * object, guint prop_id,
@@ -92,6 +94,7 @@ gst_baseaudiosink_class_init (GstBaseAudioSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_baseaudiosink_set_property);
   gobject_class->get_property =
       GST_DEBUG_FUNCPTR (gst_baseaudiosink_get_property);
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_baseaudiosink_dispose);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER_TIME,
       g_param_spec_int64 ("buffer-time", "Buffer Time",
@@ -122,6 +125,20 @@ gst_baseaudiosink_init (GstBaseAudioSink * baseaudiosink)
 
   baseaudiosink->clock = gst_audio_clock_new ("clock",
       (GstAudioClockGetTimeFunc) gst_baseaudiosink_get_time, baseaudiosink);
+}
+
+static void
+gst_baseaudiosink_dispose (GObject * object)
+{
+  GstBaseAudioSink *sink;
+
+  sink = GST_BASEAUDIOSINK (object);
+
+  if (sink->clock)
+    gst_object_unref (sink->clock);
+  sink->clock = NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static GstClock *
@@ -557,6 +574,7 @@ gst_baseaudiosink_change_state (GstElement * element)
       gst_ringbuffer_release (sink->ringbuffer);
       gst_object_unref (sink->ringbuffer);
       sink->ringbuffer = NULL;
+      gst_pad_set_caps (GST_BASESINK_PAD (sink), NULL);
       break;
     case GST_STATE_READY_TO_NULL:
       break;

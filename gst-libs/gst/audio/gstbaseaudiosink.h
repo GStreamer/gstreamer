@@ -64,7 +64,7 @@ G_BEGIN_DECLS
 #define GST_IS_BASEAUDIOSINK_CLASS(obj)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASEAUDIOSINK))
 
 #define GST_BASEAUDIOSINK_CLOCK(obj)	 (GST_BASEAUDIOSINK (obj)->clock)
-#define GST_BASEAUDIOSINK_PAD(obj)	 (GST_BASEAUDIOSINK (obj)->sinkpad)
+#define GST_BASEAUDIOSINK_PAD(obj)	 (GST_BASESINK (obj)->sinkpad)
 
 typedef struct _GstBaseAudioSink GstBaseAudioSink;
 typedef struct _GstBaseAudioSinkClass GstBaseAudioSinkClass;

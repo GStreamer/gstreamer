@@ -1,3 +1,18 @@
+2005-06-29  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstaudiosink.c: (gst_audioringbuffer_init):
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_baseaudiosink_class_init), (gst_baseaudiosink_dispose),
+	(gst_baseaudiosink_change_state):
+	* gst-libs/gst/audio/gstbaseaudiosink.h:
+	* gst-libs/gst/audio/gstringbuffer.c:
+	(gst_ringbuffer_set_callback):
+	Fix compilation error.
+	Ringbuffer starts out as not running.
+	Free our clock in dispose.
+	When releasing the ringbuffer we need to renegotiate so
+	clear the pad caps.
+
 2005-06-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* autogen.sh:

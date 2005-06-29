@@ -125,7 +125,7 @@ gst_ringbuffer_set_callback (GstRingBuffer * buf, GstRingBufferCallback cb,
 
   GST_LOCK (buf);
   buf->callback = cb;
-  buf->cb_data = data;
+  buf->cb_data = user_data;
   GST_UNLOCK (buf);
 }
 
