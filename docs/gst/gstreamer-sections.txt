@@ -1733,8 +1733,8 @@ GstBaseSrc
 GstBaseSrcClass
 GstBaseSrcFlags
 
-gst_basesrc_is_live
-gst_basesrc_set_live
+gst_base_src_is_live
+gst_base_src_set_live
 
 GST_BASESRC_PAD
 <SUBSECTION Standard>
@@ -1745,7 +1745,7 @@ GST_BASESRC_CLASS
 GST_IS_BASESRC_CLASS
 GST_BASESRC_GET_CLASS
 <SUBSECTION Private>
-gst_basesrc_get_type
+gst_base_src_get_type
 </SECTION>
 
 
@@ -1767,7 +1767,7 @@ GST_BASESINK_CLASS
 GST_IS_BASESINK_CLASS
 GST_BASESINK_GET_CLASS
 <SUBSECTION Private>
-gst_basesink_get_type
+gst_base_sink_get_type
 </SECTION>
 
 <SECTION>

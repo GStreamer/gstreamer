@@ -1177,9 +1177,7 @@ gst_element_get_query_types (GstElement * element)
 /**
  * gst_element_query:
  * @element: a #GstElement to perform the query on.
- * @type: the #GstQueryType.
- * @format: the #GstFormat pointer to hold the format of the result.
- * @value: the pointer to the value of the result.
+ * @query: the #GstQuery.
  *
  * Performs a query on the given element. If the format is set
  * to GST_FORMAT_DEFAULT and this function returns TRUE, the

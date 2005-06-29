@@ -296,9 +296,10 @@ gst_event_new_discontinuous (gdouble rate, GstFormat format1, ...)
  * gst_event_discont_get_value:
  * @event: The event to query
  * @format: The format of the discontinuous value
- * @value: A pointer to the value
+ * @start_value: A pointer to store the end value in
+ * @end_value: A pointer to store the end value in
  *
- * Get the value for the given format in the discontinous event.
+ * Get the start and end value for the given format in the discontinous event.
  *
  * Returns: TRUE if the discontinuous event carries the specified
  * format/value pair.

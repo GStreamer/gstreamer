@@ -441,6 +441,8 @@ Sets the parent of an element.
 </para>
 
 @element: 
+@scheduler: 
+<!-- # Unused Parameters # -->
 @sched: 
 
 

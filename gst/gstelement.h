@@ -113,13 +113,13 @@ typedef enum
 
 /**
  * GST_ELEMENT_ERROR:
- * @el: the element that throws the error
+ * @el:     the element that throws the error
  * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see #GstError)
- * @code: error code defined for that domain (see #GstError)
- * @message: the message to display (format string and args enclosed in
-             parentheses)
- * @debug: debugging information for the message (format string and args
-           enclosed in parentheses)
+ * @code:   error code defined for that domain (see #GstError)
+ * @text:   the message to display (format string and args enclosed in
+            parentheses)
+ * @debug:  debugging information for the message (format string and args
+            enclosed in parentheses)
  *
  * Utility function that elements can use in case they encountered a fatal
  * data processing error. The pipeline will throw an error signal and the
@@ -292,7 +292,7 @@ void			gst_element_set_manager		(GstElement * element, GstPipeline * pipeline);
 GstPipeline *		gst_element_get_manager		(GstElement * element);
 void			gst_element_set_bus		(GstElement * element, GstBus * bus);
 GstBus *		gst_element_get_bus		(GstElement * element);
-void			gst_element_set_scheduler	(GstElement *element, GstScheduler *sched);
+void			gst_element_set_scheduler	(GstElement *element, GstScheduler *scheduler);
 GstScheduler*		gst_element_get_scheduler	(GstElement *element);
 
 /* pad management */

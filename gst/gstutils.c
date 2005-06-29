@@ -577,7 +577,7 @@ gst_element_request_compatible_pad (GstElement * element,
  * gst_element_get_compatible_pad:
  * @element: a #GstElement in which the pad should be found.
  * @pad: the #GstPad to find a compatible one for.
- * @filtercaps: the #GstCaps to use as a filter.
+ * @caps: the #GstCaps to use as a filter.
  *
  * Looks for an unlinked pad to which the given pad can link. It is not
  * guaranteed that linking the pads will work, though it should work in most

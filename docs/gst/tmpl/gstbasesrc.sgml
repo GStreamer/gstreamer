@@ -76,6 +76,24 @@ GstBaseSrc
 @GST_BASESRC_STARTED: 
 @GST_BASESRC_FLAG_LAST: 
 
+<!-- ##### FUNCTION gst_base_src_is_live ##### -->
+<para>
+
+</para>
+
+@src: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_base_src_set_live ##### -->
+<para>
+
+</para>
+
+@src: 
+@live: 
+
+
 <!-- ##### MACRO GST_BASESRC_PAD ##### -->
 <para>
 

@@ -1,3 +1,13 @@
+2005-06-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstbasesrc.sgml:
+	* gst/gstelement.c:
+	* gst/gstelement.h:
+	* gst/gstevent.c:
+	* gst/gstutils.c:
+	  doc fixes
+
 2005-06-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/manual/advanced-autoplugging.xml:
