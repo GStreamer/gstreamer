@@ -176,6 +176,8 @@ scan-build.stamp: $(HFILE_GLOB) $(SCANOBJ_DEPS) $(basefiles)
 	        cp $(srcdir)/$(DOC_MODULE).types . ;			\
 	        chmod u+w $(DOC_MODULE).types ;				\
 	    fi ;							\
+	    GST_PLUGIN_PATH=`cd $(top_builddir) && pwd`			\
+	    GST_PLUGIN_PATH_ONLY=1					\
 	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" 			\
 	    CFLAGS="$(GTKDOC_CFLAGS)" LDFLAGS="$(GTKDOC_LIBS)"		\
 	    $(GTK_DOC_SCANOBJ) --type-init-func="gst_init(NULL,NULL)"	\
