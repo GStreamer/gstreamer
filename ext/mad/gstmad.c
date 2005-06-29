@@ -159,7 +159,6 @@ static gboolean gst_mad_src_event (GstPad * pad, GstEvent * event);
 static const GstFormat *gst_mad_get_formats (GstPad * pad);
 #endif
 
-static const GstEventMask *gst_mad_get_event_masks (GstPad * pad);
 static const GstQueryType *gst_mad_get_query_types (GstPad * pad);
 
 static gboolean gst_mad_src_query (GstPad * pad, GstQuery * query);
@@ -342,10 +341,6 @@ gst_mad_init (GstMad * mad)
   gst_element_add_pad (GST_ELEMENT (mad), mad->srcpad);
   gst_pad_set_event_function (mad->srcpad,
       GST_DEBUG_FUNCPTR (gst_mad_src_event));
-#if 0
-  gst_pad_set_event_mask_function (mad->srcpad,
-      GST_DEBUG_FUNCPTR (gst_mad_get_event_masks));
-#endif
   gst_pad_set_query_function (mad->srcpad,
       GST_DEBUG_FUNCPTR (gst_mad_src_query));
   gst_pad_set_query_type_function (mad->srcpad,
@@ -426,17 +421,6 @@ gst_mad_get_formats (GstPad * pad)
   return (GST_PAD_IS_SRC (pad) ? src_formats : sink_formats);
 }
 #endif
-
-static const GstEventMask *
-gst_mad_get_event_masks (GstPad * pad)
-{
-  static const GstEventMask gst_mad_src_event_masks[] = {
-    {GST_EVENT_SEEK, GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH},
-    {0,}
-  };
-
-  return gst_mad_src_event_masks;
-}
 
 static gboolean
 gst_mad_convert_sink (GstPad * pad, GstFormat src_format, gint64 src_value,
@@ -741,7 +725,6 @@ index_seek (GstMad * mad, GstPad * pad, GstEvent * event)
 static gboolean
 normal_seek (GstMad * mad, GstPad * pad, GstEvent * event)
 {
-  GstQuery *query;
   gint64 time_offset, bytes_offset;
   GstFormat format;
   guint flush;
@@ -1454,7 +1437,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
       }
 
       if (mad->check_for_xing) {
-        int bitrate, time;
+        int bitrate = 0, time = 0;
         GstTagList *list;
         int frame_len = mad->stream.next_frame - mad->stream.this_frame;
 

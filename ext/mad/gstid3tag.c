@@ -160,7 +160,6 @@ static void gst_id3_tag_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static gboolean gst_id3_tag_src_event (GstPad * pad, GstEvent * event);
-static const GstEventMask *gst_id3_tag_get_event_masks (GstPad * pad);
 static const GstQueryType *gst_id3_tag_get_query_types (GstPad * pad);
 
 static gboolean gst_id3_tag_src_query (GstPad * pad, GstQuery * query);
@@ -403,16 +402,7 @@ gst_id3_tag_get_property (GObject * object, guint prop_id, GValue * value,
   GST_LOG_OBJECT (tag, "setting state to %s", #new_state );				\
   tag->state = new_state;								\
 }G_STMT_END
-static const GstEventMask *
-gst_id3_tag_get_event_masks (GstPad * pad)
-{
-  static const GstEventMask gst_id3_tag_src_event_masks[] = {
-    {GST_EVENT_SEEK, GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH},
-    {0,}
-  };
 
-  return gst_id3_tag_src_event_masks;
-}
 static const GstQueryType *
 gst_id3_tag_get_query_types (GstPad * pad)
 {
