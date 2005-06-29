@@ -1,3 +1,9 @@
+2005-06-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/elements/gstfilesink.c: (gst_filesink_render):
+	  Simplify code so that we don't have to handle short
+	  writes and return GST_FLOW_ERROR if an error occured.
+
 2005-06-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/gst/gstreamer-docs.sgml:

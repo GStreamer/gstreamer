@@ -359,8 +359,7 @@ static GstFlowReturn
 gst_filesink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
   GstFileSink *filesink;
-  guint bytes_written = 0, back_pending = 0;
-  guint size;
+  guint size, back_pending = 0;
 
   size = GST_BUFFER_SIZE (buffer);
 
@@ -369,21 +368,14 @@ gst_filesink_render (GstBaseSink * sink, GstBuffer * buffer)
   if (ftell (filesink->file) < filesink->data_written)
     back_pending = filesink->data_written - ftell (filesink->file);
 
-  while (bytes_written < size) {
-    size_t wrote = fwrite (GST_BUFFER_DATA (buffer) + bytes_written, 1,
-        size - bytes_written, filesink->file);
-
-    if (wrote <= 0) {
-      GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
-          (_("Error while writing to file \"%s\"."), filesink->filename),
-          ("Only %d of %d bytes written: %s",
-              bytes_written, size, strerror (errno)));
-      break;
-    }
-    bytes_written += wrote;
+  if (fwrite (GST_BUFFER_DATA (buffer), size, 1, filesink->file) != 1) {
+    GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
+        (_("Error while writing to file \"%s\"."), filesink->filename),
+        ("%s", g_strerror (errno)));
+    return GST_FLOW_ERROR;
   }
 
-  filesink->data_written += bytes_written - back_pending;
+  filesink->data_written += size - back_pending;
 
   return GST_FLOW_OK;
 }
