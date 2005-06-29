@@ -1,0 +1,15 @@
+*.stamp
+html
+xml
+Makefile
+Makefile.in
+gst-plugins-libs-decl.txt
+gst-plugins-libs-decl-list.txt
+gst-plugins-libs-presed-scan.c
+gst-plugins-libs-undocumented.txt
+gst-plugins-libs-unused.txt
+gst-plugins-libs.args
+gst-plugins-libs.hierarchy
+gst-plugins-libs.interfaces
+gst-plugins-libs.prerequisites
+gst-plugins-libs.signals
