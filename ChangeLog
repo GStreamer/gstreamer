@@ -1,3 +1,14 @@
+2005-06-29  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtsp_proto_get_type),
+	(gst_rtspsrc_class_init), (gst_rtspsrc_create_stream),
+	(gst_rtspsrc_add_element), (gst_rtspsrc_set_state),
+	(gst_rtspsrc_stream_setup_rtp),
+	(gst_rtspsrc_stream_configure_transport), (find_stream),
+	(gst_rtspsrc_loop), (gst_rtspsrc_open), (gst_rtspsrc_play),
+	(gst_rtspsrc_change_state):
+	Fix case where outpad could not be decided.
+
 2005-06-29  Andy Wingo  <wingo@pobox.com>
 
 	* ext/Makefile.am (MAD_DIR): Add mad to the build.
