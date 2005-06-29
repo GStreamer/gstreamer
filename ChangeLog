@@ -1,5 +1,10 @@
 2005-06-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/videotestsrc/gstvideotestsrc.c: (gst_videotestsrc_init):
+	  Remove pad_loop function which doesn't work.
+
+2005-06-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_deactivate_current_chain):
 	  Send EOS when deactivating.
 	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_init),

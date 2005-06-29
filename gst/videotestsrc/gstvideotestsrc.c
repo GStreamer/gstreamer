@@ -427,7 +427,6 @@ gst_videotestsrc_init (GstVideotestsrc * videotestsrc)
   gst_element_add_pad (GST_ELEMENT (videotestsrc), videotestsrc->srcpad);
   gst_pad_set_activatepush_function (videotestsrc->srcpad,
       gst_videotestsrc_activate_push);
-  gst_pad_set_loop_function (videotestsrc->srcpad, gst_videotestsrc_loop);
   gst_pad_set_link_function (videotestsrc->srcpad, gst_videotestsrc_src_link);
   gst_pad_set_unlink_function (videotestsrc->srcpad,
       gst_videotestsrc_src_unlink);
