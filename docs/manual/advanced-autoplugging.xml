@@ -114,8 +114,51 @@
       was not found. The next section will introduce more useful behaviours,
       such as plugging together a decoding pipeline.
     </para>
-    <programlisting><!-- example-begin typefind.c -->
+    <programlisting><!-- example-begin typefind.c a -->
 #include &lt;gst/gst.h&gt;
+<!-- example-end typefind.c a -->
+<!-- example-begin typefind.c b --><!--
+static gboolean
+my_bus_callback (GstBus     *bus,
+                 GstMessage *message,
+                 gpointer    data)
+{
+  GMainLoop *loop = data;
+
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR: {
+      GError *err;
+      gchar *debug;
+
+      gst_message_parse_error (message, &amp;err, &amp;debug);
+      g_print ("Error: %s\n", err-&gt;message);
+      g_error_free (err);
+      g_free (debug);
+
+      g_main_loop_quit (loop);
+      break;
+    }
+    case GST_MESSAGE_EOS:
+      /* end-of-stream */
+      g_main_loop_quit (loop);
+      break;
+    default:
+      break;
+  }
+
+  /* remove from queue */
+  return TRUE;
+}
+--><!-- example-end typefind.c b -->
+<!-- example-begin typefind.c c -->
+static gboolean
+idle_exit_loop (gpointer data)
+{
+  g_main_loop_quit ((GMainLoop *) data);
+
+  /* once */
+  return FALSE;
+}
 
 static void
 cb_typefound (GstElement *typefind,
@@ -123,38 +166,29 @@ cb_typefound (GstElement *typefind,
 	      GstCaps    *caps,
 	      gpointer    data)
 {
+  GMainLoop *loop = data;
   gchar *type;
 
   type = gst_caps_to_string (caps);
   g_print ("Media type %s found, probability %d%%\n", type, probability);
   g_free (type);
 
-  /* done */
-  (* (gboolean *) data) = TRUE;
-}
-
-static void
-cb_error (GstElement *pipeline,
-	  GstElement *source,
-	  GError     *error,
-	  gchar      *debug,
-	  gpointer    data)
-{
-  g_print ("Error: %s\n", error->message);
-
-  /* done */
-  (* (gboolean *) data) = TRUE;
+  /* since we connect to a signal in the pipeline thread context, we need
+   * to set an idle handler to exit the main loop in the mainloop context.
+   * Normally, your app should not need to worry about such things. */
+  g_idle_add (idle_exit_loop, loop);
 }
 
 gint 
 main (gint   argc,
       gchar *argv[])
 {
+  GMainLoop *loop;
   GstElement *pipeline, *filesrc, *typefind;
-  gboolean done = FALSE;
 
   /* init GStreamer */
   gst_init (&amp;argc, &amp;argv);
+  loop = g_main_loop_new (NULL, FALSE);
 
   /* check args */
   if (argc != 2) {
@@ -164,24 +198,20 @@ main (gint   argc,
 
   /* create a new pipeline to hold the elements */
   pipeline = gst_pipeline_new ("pipe");
-  g_signal_connect (pipeline, "error", G_CALLBACK (cb_error), &amp;done);
+  gst_bus_add_watch (gst_pipeline_get_bus (GST_PIPELINE (pipeline)),
+		     my_bus_callback, NULL);
 
   /* create file source and typefind element */
   filesrc = gst_element_factory_make ("filesrc", "source");
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
   typefind = gst_element_factory_make ("typefind", "typefinder");
-  g_signal_connect (typefind, "have-type", G_CALLBACK (cb_typefound), &amp;done);
+  g_signal_connect (typefind, "have-type", G_CALLBACK (cb_typefound), loop);
 
   /* setup */
   gst_bin_add_many (GST_BIN (pipeline), filesrc, typefind, NULL);
   gst_element_link (filesrc, typefind);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
-
-  /* now iterate until the type is found */
-  do {
-    if (!gst_bin_iterate (GST_BIN (pipeline)))
-      break;
-  } while (!done);
+  g_main_loop_run (loop);
 
   /* unset */
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
@@ -189,7 +219,7 @@ main (gint   argc,
 
   return 0;
 }
-    <!-- example-end typefind.c --></programlisting>
+    <!-- example-end typefind.c c --></programlisting>
     <para>
       Once a media type has been detected, you can plug an element (e.g. a
       demuxer or decoder) to the source pad of the typefind element, and
@@ -305,7 +335,7 @@ cb_newpad (GstElement *element,
 
   caps = gst_pad_get_caps (pad);
   try_to_plug (pad, caps);
-  gst_caps_free (caps);
+  gst_caps_unref (caps);
 }
 
 static void
@@ -314,6 +344,7 @@ close_link (GstPad      *srcpad,
 	    const gchar *padname,
 	    const GList *templlist)
 {
+  GstPad *pad;
   gboolean has_dynamic_pads = FALSE;
 
   g_print ("Plugging pad %s:%s to newly created %s:%s\n",
@@ -322,15 +353,18 @@ close_link (GstPad      *srcpad,
 	   gst_object_get_name (GST_OBJECT (sinkelement)), padname);
 
   /* add the element to the pipeline and set correct state */
-  gst_element_set_state (sinkelement, GST_STATE_PAUSED);
-  gst_bin_add (GST_BIN (pipeline), sinkelement);
-  gst_pad_link (srcpad, gst_element_get_pad (sinkelement, padname));
-  gst_bin_sync_children_state (GST_BIN (pipeline));
+  if (sinkelement != audiosink) {
+    gst_element_set_state (sinkelement, GST_STATE_PAUSED);
+    gst_bin_add (GST_BIN (pipeline), sinkelement);
+  }
+  pad = gst_element_get_pad (sinkelement, padname);
+  gst_pad_link (srcpad, pad);
+  gst_object_unref (GST_OBJECT (pad));
 
   /* if we have static source pads, link those. If we have dynamic
    * source pads, listen for new-pad signals on the element */
   for ( ; templlist != NULL; templlist = templlist->next) {
-    GstPadTemplate *templ = GST_PAD_TEMPLATE (templlist->data);
+    GstStaticPadTemplate *templ = templlist->data;
 
     /* only sourcepads, no request pads */
     if (templ->direction != GST_PAD_SRC ||
@@ -345,7 +379,8 @@ close_link (GstPad      *srcpad,
 
         /* link */
         try_to_plug (pad, caps);
-        gst_caps_free (caps);
+        gst_object_unref (GST_OBJECT (pad));
+        gst_caps_unref (caps);
         break;
       }
       case GST_PAD_SOMETIMES:
@@ -366,15 +401,15 @@ static void
 try_to_plug (GstPad        *pad,
 	     const GstCaps *caps)
 {
-  GstObject *parent = GST_OBJECT (gst_pad_get_parent (pad));
+  GstObject *parent = GST_OBJECT (GST_OBJECT_PARENT (pad));
   const gchar *mime;
   const GList *item;
   GstCaps *res, *audiocaps;
 
-  /* don't plug if we're already plugged */
+  /* don't plug if we're already plugged - FIXME: memleak for pad */
   if (GST_PAD_IS_LINKED (gst_element_get_pad (audiosink, "sink"))) {
     g_print ("Omitting link for pad %s:%s because we're already linked\n",
-	     gst_object_get_name (parent), gst_pad_get_name (pad));
+	     GST_OBJECT_NAME (parent), GST_OBJECT_NAME (pad));
     return;
   }
 
@@ -382,7 +417,7 @@ try_to_plug (GstPad        *pad,
   mime = gst_structure_get_name (gst_caps_get_structure (caps, 0));
   if (g_strrstr (mime, "video")) {
     g_print ("Omitting link for pad %s:%s because mimetype %s is non-audio\n",
-	     gst_object_get_name (parent), gst_pad_get_name (pad), mime);
+	     GST_OBJECT_NAME (parent), GST_OBJECT_NAME (pad), mime);
     return;
   }
 
@@ -392,21 +427,21 @@ try_to_plug (GstPad        *pad,
   if (res &amp;&amp; !gst_caps_is_empty (res)) {
     g_print ("Found pad to link to audiosink - plugging is now done\n");
     close_link (pad, audiosink, "sink", NULL);
-    gst_caps_free (audiocaps);
-    gst_caps_free (res);
+    gst_caps_unref (audiocaps);
+    gst_caps_unref (res);
     return;
   }
-  gst_caps_free (audiocaps);
-  gst_caps_free (res);
+  gst_caps_unref (audiocaps);
+  gst_caps_unref (res);
 
   /* try to plug from our list */
   for (item = factories; item != NULL; item = item->next) {
     GstElementFactory *factory = GST_ELEMENT_FACTORY (item->data);
     const GList *pads;
 
-    for (pads = gst_element_factory_get_pad_templates (factory);
+    for (pads = gst_element_factory_get_static_pad_templates (factory);
          pads != NULL; pads = pads->next) {
-      GstPadTemplate *templ = GST_PAD_TEMPLATE (pads->data);
+      GstStaticPadTemplate *templ = pads->data;
 
       /* find the sink template - need an always pad*/
       if (templ->direction != GST_PAD_SINK ||
@@ -415,18 +450,21 @@ try_to_plug (GstPad        *pad,
       }
 
       /* can it link? */
-      res = gst_caps_intersect (caps, templ->caps);
+      res = gst_caps_intersect (caps,
+          gst_static_caps_get (&amp;templ->static_caps));
       if (res &amp;&amp; !gst_caps_is_empty (res)) {
         GstElement *element;
+        gchar *name_template = g_strdup (templ->name_template);
 
         /* close link and return */
-        gst_caps_free (res);
+        gst_caps_unref (res);
         element = gst_element_factory_create (factory, NULL);
-        close_link (pad, element, templ->name_template,
-		    gst_element_factory_get_pad_templates (factory));
+        close_link (pad, element, name_template,
+		    gst_element_factory_get_static_pad_templates (factory));
+        g_free (name_template);
         return;
       }
-      gst_caps_free (res);
+      gst_caps_unref (res);
 
       /* we only check one sink template per factory, so move on to the
        * next factory now */
@@ -436,7 +474,7 @@ try_to_plug (GstPad        *pad,
 
   /* if we get here, no item was found */
   g_print ("No compatible pad found to decode %s on %s:%s\n",
-	   mime, gst_object_get_name (parent), gst_pad_get_name (pad));
+	   mime, GST_OBJECT_NAME (parent), GST_OBJECT_NAME (pad));
 }
 
 static void
@@ -446,13 +484,16 @@ cb_typefound (GstElement *typefind,
 	      gpointer    data)
 {
   gchar *s;
+  GstPad *pad;
 
   s = gst_caps_to_string (caps);
   g_print ("Detected media type %s\n", s);
   g_free (s);
 
   /* actually plug now */
-  try_to_plug (gst_element_get_pad (typefind, "src"), caps);
+  pad = gst_element_get_pad (typefind, "src");
+  try_to_plug (pad, caps);
+  gst_object_unref (GST_OBJECT (pad));
 }
     <!-- example-end dynamic.c c --></programlisting>
     <para>
@@ -462,25 +503,49 @@ cb_typefound (GstElement *typefind,
       for video to create a player that plays both audio and video.
     </para>
     <!-- example-begin dynamic.c d --><!--
-static void
-cb_error (GstElement *pipeline,
-	  GstElement *source,
-	  GError     *error,
-	  gchar      *debug,
-	  gpointer    data)
+static gboolean
+my_bus_callback (GstBus     *bus,
+                 GstMessage *message,
+                 gpointer    data)
 {
-  g_print ("Error: %s\n", error->message);
+  GMainLoop *loop = data;
+
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR: {
+      GError *err;
+      gchar *debug;
+
+      gst_message_parse_error (message, &amp;err, &amp;debug);
+      g_print ("Error: %s\n", err-&gt;message);
+      g_error_free (err);
+      g_free (debug);
+
+      g_main_loop_quit (loop);
+      break;
+    }
+    case GST_MESSAGE_EOS:
+      /* end-of-stream */
+      g_main_loop_quit (loop);
+      break;
+    default:
+      break;
+  }
+
+  /* remove from queue */
+  return TRUE;
 }
 
 gint
 main (gint   argc,
       gchar *argv[])
 {
+  GMainLoop *loop;
   GstElement *typefind;
   gchar *p;
 
   /* init GStreamer and ourselves */
   gst_init (&amp;argc, &amp;argv);
+  loop = g_main_loop_new (NULL, FALSE);
   init_factories ();
 
   /* args */
@@ -492,16 +557,18 @@ main (gint   argc,
   /* pipeline */
   p = g_strdup_printf ("filesrc location=\"%s\" ! typefind name=tf", argv[1]);
   pipeline = gst_parse_launch (p, NULL);
+  gst_bus_add_watch (gst_pipeline_get_bus (GST_PIPELINE (pipeline)),
+		     my_bus_callback, NULL);
   g_free (p);
   typefind = gst_bin_get_by_name (GST_BIN (pipeline), "tf");
-  g_signal_connect (pipeline, "error", G_CALLBACK (cb_error), NULL);
   g_signal_connect (typefind, "have-type", G_CALLBACK (cb_typefound), NULL);
+  gst_object_unref (GST_OBJECT (typefind));
   audiosink = gst_element_factory_make ("alsasink", "audiosink");
-  gst_element_set_state (audiosink, GST_STATE_PAUSED);
+  gst_bin_add (GST_BIN (pipeline), audiosink);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   /* run */
-  while (gst_bin_iterate (GST_BIN (pipeline))) ;
+  g_main_loop_run (loop);
 
   /* exit */
   gst_element_set_state (pipeline, GST_STATE_NULL);
@@ -521,8 +588,7 @@ main (gint   argc,
       shortest-path-finding to make sure the most optimal pipeline is chosen,
       and so on. Basically, the features that you implement in an autoplugger
       depend on what you want to use it for. For full-blown implementations,
-      see the <quote>playbin</quote>, <quote>decodebin</quote> and
-      <quote>spider</quote> elements.
+      see the <quote>playbin</quote> and <quote>decodebin</quote> elements.
     </para>
   </sect1>
 </chapter>
