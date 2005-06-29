@@ -1143,6 +1143,7 @@ gst_ogg_demux_deactivate_current_chain (GstOggDemux * ogg)
   for (i = 0; i < chain->streams->len; i++) {
     GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
 
+    gst_pad_push_event (GST_PAD (pad), gst_event_new (GST_EVENT_EOS));
     gst_element_remove_pad (GST_ELEMENT (ogg), GST_PAD (pad));
   }
   /* if we cannot seek, we can destroy the chain completely */

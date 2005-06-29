@@ -173,34 +173,30 @@ gst_stream_info_init (GstStreamInfo * stream_info)
 }
 
 static gboolean
-cb_probe (GstProbe * probe, GstMiniObject ** data, gpointer user_data)
+cb_probe (GstPad * pad, GstEvent * e, gpointer user_data)
 {
   GstStreamInfo *info = user_data;
 
-  if (GST_IS_EVENT (*data)) {
-    GstEvent *e = GST_EVENT (*data);
+  if (GST_EVENT_TYPE (e) == GST_EVENT_TAG) {
+    gchar *codec;               //, *lang;
+    GstTagList *list = gst_event_tag_get_list (e);
 
-    if (GST_EVENT_TYPE (e) == GST_EVENT_TAG) {
-      gchar *codec;             //, *lang;
-      GstTagList *list = gst_event_tag_get_list (e);
-
-      if (gst_tag_list_get_string (list, GST_TAG_VIDEO_CODEC, &codec)) {
-        g_free (info->codec);
-        info->codec = codec;
-        g_object_notify (G_OBJECT (info), "codec");
-      } else if (gst_tag_list_get_string (list, GST_TAG_AUDIO_CODEC, &codec)) {
-        g_free (info->codec);
-        info->codec = codec;
-        g_object_notify (G_OBJECT (info), "codec");
-      }
-#if 0
-      if (gst_tag_list_get_string (list, GST_TAG_LANGUAGE_CODE, &lang)) {
-        g_free (info->langcode);
-        info->langcode = lang;
-        g_object_notify (G_OBJECT (info), "language-code");
-      }
-#endif
+    if (gst_tag_list_get_string (list, GST_TAG_VIDEO_CODEC, &codec)) {
+      g_free (info->codec);
+      info->codec = codec;
+      g_object_notify (G_OBJECT (info), "codec");
+    } else if (gst_tag_list_get_string (list, GST_TAG_AUDIO_CODEC, &codec)) {
+      g_free (info->codec);
+      info->codec = codec;
+      g_object_notify (G_OBJECT (info), "codec");
     }
+#if 0
+    if (gst_tag_list_get_string (list, GST_TAG_LANGUAGE_CODE, &lang)) {
+      g_free (info->langcode);
+      info->langcode = lang;
+      g_object_notify (G_OBJECT (info), "language-code");
+    }
+#endif
   }
 
   return TRUE;
@@ -216,10 +212,8 @@ gst_stream_info_new (GstObject * object,
 
   gst_object_ref (object);
   if (GST_IS_PAD (object)) {
-    GstProbe *probe;
-
-    probe = gst_probe_new (FALSE, cb_probe, info);
-    gst_pad_add_probe (GST_PAD_CAST (object), probe);
+    gst_pad_add_event_probe (GST_PAD_CAST (object),
+        G_CALLBACK (cb_probe), info);
   }
   info->object = object;
   info->type = type;

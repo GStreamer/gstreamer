@@ -1,3 +1,17 @@
+2005-06-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_deactivate_current_chain):
+	  Send EOS when deactivating.
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_init),
+	(check_queue), (queue_threshold_reached), (queue_out_of_data),
+	(gen_preroll_element), (probe_triggered), (mute_stream),
+	(silence_stream), (new_decoded_pad), (setup_substreams),
+	(set_active_source):
+	* gst/playback/gstplaybin.c: (gst_play_bin_get_property),
+	(remove_sinks), (add_sink):
+	* gst/playback/gststreaminfo.c: (cb_probe), (gst_stream_info_new):
+	  Change for new probe API.
+
 2005-06-29  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstaudiosink.c: (gst_audioringbuffer_init):

@@ -332,7 +332,7 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_double (value, play_bin->volume);
       break;
     case ARG_FRAME:
-      g_value_set_boxed (value, play_bin->frame);
+      gst_value_set_mini_object (value, GST_MINI_OBJECT (play_bin->frame));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -630,6 +630,7 @@ remove_sinks (GstPlayBin * play_bin)
   GList *sinks;
   GstObject *parent;
   GstElement *element;
+  GstPad *pad, *peer;
 
   GST_DEBUG ("removesinks");
   element = g_hash_table_lookup (play_bin->cache, "abin");
@@ -643,6 +644,15 @@ remove_sinks (GstPlayBin * play_bin)
       gst_bin_remove (GST_BIN (parent), element);
       gst_object_unref (parent);
     }
+    pad = gst_element_get_pad (element, "sink");
+    if (pad != NULL) {
+      peer = gst_pad_get_peer (pad);
+      if (peer != NULL) {
+        gst_pad_unlink (peer, pad);
+        gst_object_unref (peer);
+      }
+      gst_object_unref (pad);
+    }
   }
   element = g_hash_table_lookup (play_bin->cache, "vbin");
   if (element != NULL) {
@@ -651,6 +661,15 @@ remove_sinks (GstPlayBin * play_bin)
       play_bin->sinks = g_list_remove (play_bin->sinks, element);
       gst_bin_remove (GST_BIN (parent), element);
       gst_object_unref (parent);
+    }
+    pad = gst_element_get_pad (element, "sink");
+    if (pad != NULL) {
+      peer = gst_pad_get_peer (pad);
+      if (peer != NULL) {
+        gst_pad_unlink (peer, pad);
+        gst_object_unref (peer);
+      }
+      gst_object_unref (pad);
     }
   }
 
@@ -717,7 +736,7 @@ add_sink (GstPlayBin * play_bin, GstElement * sink, GstPad * srcpad)
 
     /* could not link this stream */
     capsstr = gst_caps_to_string (gst_pad_get_caps (srcpad));
-    g_warning ("could not link %s", capsstr);
+    g_warning ("could not link %s: %d", capsstr, res);
     g_free (capsstr);
 
     gst_bin_remove (GST_BIN (play_bin), sink);
