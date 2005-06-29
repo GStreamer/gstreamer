@@ -1,3 +1,22 @@
+2005-06-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstpad.sgml:
+	* docs/gst/tmpl/gstprobe.sgml:
+	* gst/Makefile.am:
+	* gst/gstpad.c: (_gst_do_pass_data_accumulator),
+	(gst_pad_class_init), (gst_pad_init), (gst_pad_chain),
+	(gst_pad_push), (gst_pad_get_range), (gst_pad_pull_range),
+	(gst_pad_push_event), (gst_pad_send_event):
+	* gst/gstpad.h:
+	* gst/gstutils.c: (gst_pad_add_data_probe),
+	(gst_pad_add_event_probe), (gst_pad_add_buffer_probe),
+	(gst_pad_remove_data_probe), (gst_pad_remove_event_probe),
+	(gst_pad_remove_buffer_probe):
+	* gst/gstutils.h:
+	  Remove old probes, add new g-signal-based probes and some utility
+	  functions.
+
 2005-06-29  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstelementfactory.c:

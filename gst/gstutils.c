@@ -2072,3 +2072,133 @@ gst_atomic_int_set (gint * atomic_int, gint value)
   *atomic_int = value;
   ignore = g_atomic_int_get (atomic_int);
 }
+
+/**
+ * gst_pad_add_data_probe:
+ * @pad: pad to add the data probe handler to
+ * @handler: function to call when data is passed over pad
+ * @data: data to pass along with the handler
+ *
+ * Connects a signal handler to the pad's have-data signal, and increases
+ * the emit_{buffer,event}_signals atomic number on the pads so that those
+ * signals are actually fired.
+ */
+
+void
+gst_pad_add_data_probe (GstPad * pad, GCallback handler, gpointer data)
+{
+  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (handler != NULL);
+
+  g_signal_connect (pad, "have-data", handler, data);
+  g_atomic_int_inc (&pad->emit_event_signals);
+  g_atomic_int_inc (&pad->emit_buffer_signals);
+}
+
+/**
+ * gst_pad_add_event_probe:
+ * @pad: pad to add the event probe handler to
+ * @handler: function to call when data is passed over pad
+ * @data: data to pass along with the handler
+ *
+ * Connects a signal handler to the pad's have-data signal, and increases
+ * the emit_event_signals atomic number on the pads so that this signal
+ * is actually fired.
+ */
+
+void
+gst_pad_add_event_probe (GstPad * pad, GCallback handler, gpointer data)
+{
+  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (handler != NULL);
+
+  g_signal_connect (pad, "have-data", handler, data);
+  g_atomic_int_inc (&pad->emit_event_signals);
+}
+
+/**
+ * gst_pad_add_buffer_probe:
+ * @pad: pad to add the buffer probe handler to
+ * @handler: function to call when data is passed over pad
+ * @data: data to pass along with the handler
+ *
+ * Connects a signal handler to the pad's have-data signal, and increases
+ * the emit_buffer_signals atomic number on the pads so that this signal
+ * is actually fired.
+ */
+
+void
+gst_pad_add_buffer_probe (GstPad * pad, GCallback handler, gpointer data)
+{
+  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (handler != NULL);
+
+  g_signal_connect (pad, "have-data", handler, data);
+  g_atomic_int_inc (&pad->emit_buffer_signals);
+}
+
+#define g_atomic_int_dec(atomic) (g_atomic_int_add ((atomic), -1))
+
+/**
+ * gst_pad_remove_data_probe:
+ * @pad: pad to remove the data probe handler from
+ * @handler: function that was assigned to the signal
+ * @data: data that was assigned to the signal handler
+ *
+ * Unconnects a signal handler to the pad's have-data signal, and decreases
+ * the emit_{buffer,event}_signals atomic number on the pads so that those
+ * signals are actually no more fired if no signals are connected.
+ */
+
+void
+gst_pad_remove_data_probe (GstPad * pad, GCallback handler, gpointer data)
+{
+  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (handler != NULL);
+
+  g_signal_handlers_disconnect_by_func (pad, handler, data);
+  g_atomic_int_dec (&pad->emit_event_signals);
+  g_atomic_int_dec (&pad->emit_buffer_signals);
+}
+
+/**
+ * gst_pad_remove_event_probe:
+ * @pad: pad to remove the event probe handler from
+ * @handler: function that was assigned to the signal
+ * @data: data that was assigned to the signal handler
+ *
+ * Unconnects a signal handler to the pad's have-data signal, and decreases
+ * the emit_event_signals atomic number on the pads so that this signal is
+ * actually no more fired if no signals are connected.
+ */
+
+void
+gst_pad_remove_event_probe (GstPad * pad, GCallback handler, gpointer data)
+{
+  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (handler != NULL);
+
+  g_signal_handlers_disconnect_by_func (pad, handler, data);
+  g_atomic_int_dec (&pad->emit_event_signals);
+}
+
+/**
+ * gst_pad_remove_buffer_probe:
+ * @pad: pad to remove the buffer probe handler from
+ * @handler: function that was assigned to the signal
+ * @data: data that was assigned to the signal handler
+ *
+ * Unconnects a signal handler to the pad's have-data signal, and decreases
+ * the emit_buffer_signals atomic number on the pads so that this signal is
+ * actually no more fired if no signals are connected.
+ */
+
+void
+gst_pad_remove_buffer_probe (GstPad * pad, GCallback handler, gpointer data)
+{
+  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (handler != NULL);
+
+  g_signal_handlers_disconnect_by_func (pad, handler, data);
+  g_atomic_int_dec (&pad->emit_buffer_signals);
+}

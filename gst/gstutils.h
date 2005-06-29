@@ -292,6 +292,26 @@ void			gst_buffer_stamp		(GstBuffer * dest, const GstBuffer * src);
 /* atomic functions */
 void                    gst_atomic_int_set              (gint * atomic_int, gint value);
 
+/* probes */
+void			gst_pad_add_data_probe		(GstPad * pad,
+							 GCallback handler,
+							 gpointer data);
+void			gst_pad_remove_data_probe	(GstPad * pad,
+							 GCallback handler,
+							 gpointer data);
+void			gst_pad_add_event_probe		(GstPad * pad,
+							 GCallback handler,
+							 gpointer data);
+void			gst_pad_remove_event_probe	(GstPad * pad,
+							 GCallback handler,
+							 gpointer data);
+void			gst_pad_add_buffer_probe	(GstPad * pad,
+							 GCallback handler,
+							 gpointer data);
+void			gst_pad_remove_buffer_probe	(GstPad * pad,
+							 GCallback handler,
+							 gpointer data);
+
 G_END_DECLS
 
 #endif /* __GST_UTILS_H__ */

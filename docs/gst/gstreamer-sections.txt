@@ -874,9 +874,13 @@ gst_pad_set_internal_link_function
 gst_pad_get_internal_links
 gst_pad_get_internal_links_default
 gst_pad_dispatcher
-gst_pad_add_probe
-gst_pad_remove_probe
 gst_pad_load_and_link
+gst_pad_add_data_probe
+gst_pad_add_buffer_probe
+gst_pad_add_event_probe
+gst_pad_remove_data_probe
+gst_pad_remove_buffer_probe
+gst_pad_remove_event_probe
 <SUBSECTION Standard>
 GstPadClass
 GST_PAD
@@ -1023,29 +1027,6 @@ GST_PLUGIN_FEATURE_GET_CLASS
 GST_TYPE_PLUGIN_FEATURE
 <SUBSECTION Private>
 gst_plugin_feature_get_type
-</SECTION>
-
-<SECTION>
-<FILE>gstprobe</FILE>
-<TITLE>GstProbe</TITLE>
-GstProbe
-GstProbeCallback
-gst_probe_new
-gst_probe_destroy
-gst_probe_perform
-GstProbeDispatcher
-gst_probe_dispatcher_new
-gst_probe_dispatcher_destroy
-gst_probe_dispatcher_init
-gst_probe_dispatcher_set_active
-gst_probe_dispatcher_add_probe
-gst_probe_dispatcher_remove_probe
-gst_probe_dispatcher_dispatch
-<SUBSECTION Standard>
-GST_PROBE
-GST_TYPE_PROBE
-<SUBSECTION Private>
-gst_probe_get_type
 </SECTION>
 
 <SECTION>

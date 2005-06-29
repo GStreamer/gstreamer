@@ -90,7 +90,17 @@ Last reviewed on December 13th, 2002 (0.5.0.1)
 @queryfunc: 
 @intlinkfunc: 
 @bufferallocfunc: 
-@probedisp: 
+@emit_buffer_signals: 
+@emit_event_signals: 
+
+<!-- ##### SIGNAL GstPad::have-data ##### -->
+<para>
+
+</para>
+
+@gstpad: the object which received the signal.
+@arg1: 
+@Returns: 
 
 <!-- ##### SIGNAL GstPad::linked ##### -->
 <para>
@@ -795,24 +805,6 @@ Checks if the pad is a sink pad.
 @Returns: 
 
 
-<!-- ##### MACRO gst_pad_add_probe ##### -->
-<para>
-Adds the probe to the given pad
-</para>
-
-@pad: The pad to add the probe to
-@probe: The probe to add to the pad
-
-
-<!-- ##### MACRO gst_pad_remove_probe ##### -->
-<para>
-Remove the probe from the pad
-</para>
-
-@pad: The pad to remove the probe of
-@probe: The probe to remove
-
-
 <!-- ##### FUNCTION gst_pad_load_and_link ##### -->
 <para>
 
@@ -820,5 +812,65 @@ Remove the probe from the pad
 
 @self: 
 @parent: 
+
+
+<!-- ##### FUNCTION gst_pad_add_data_probe ##### -->
+<para>
+
+</para>
+
+@pad: 
+@handler: 
+@data: 
+
+
+<!-- ##### FUNCTION gst_pad_add_buffer_probe ##### -->
+<para>
+
+</para>
+
+@pad: 
+@handler: 
+@data: 
+
+
+<!-- ##### FUNCTION gst_pad_add_event_probe ##### -->
+<para>
+
+</para>
+
+@pad: 
+@handler: 
+@data: 
+
+
+<!-- ##### FUNCTION gst_pad_remove_data_probe ##### -->
+<para>
+
+</para>
+
+@pad: 
+@handler: 
+@data: 
+
+
+<!-- ##### FUNCTION gst_pad_remove_buffer_probe ##### -->
+<para>
+
+</para>
+
+@pad: 
+@handler: 
+@data: 
+
+
+<!-- ##### FUNCTION gst_pad_remove_event_probe ##### -->
+<para>
+
+</para>
+
+@pad: 
+@handler: 
+@data: 
 
 

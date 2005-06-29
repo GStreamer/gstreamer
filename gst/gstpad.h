@@ -30,7 +30,6 @@
 #include <gst/gstbuffer.h>
 #include <gst/gstcaps.h>
 #include <gst/gstevent.h>
-#include <gst/gstprobe.h>
 #include <gst/gstquery.h>
 #include <gst/gstqueryutils.h>
 #include <gst/gsttask.h>
@@ -200,7 +199,8 @@ struct _GstPad {
 
   GstPadBufferAllocFunction      bufferallocfunc;
 
-  GstProbeDispatcher            probedisp;
+  /* whether to emit signals for have-data */
+  gint				 emit_buffer_signals, emit_event_signals;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -213,6 +213,7 @@ struct _GstPadClass {
   void		(*linked)		(GstPad *pad, GstPad *peer);
   void		(*unlinked)		(GstPad *pad, GstPad *peer);
   void		(*request_link)		(GstPad *pad);
+  gboolean	(*have_data)		(GstPad *pad, GstMiniObject *data);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -458,11 +459,6 @@ gboolean		gst_pad_query_default			(GstPad *pad, GstQuery *query);
 /* misc helper functions */
 gboolean		gst_pad_dispatcher			(GstPad *pad, GstPadDispatcherFunction dispatch,
 								 gpointer data);
-/* probes */
-#define			gst_pad_add_probe(pad, probe) \
-			(gst_probe_dispatcher_add_probe (&(GST_PAD_CAST (pad)->probedisp), probe))
-#define			gst_pad_remove_probe(pad, probe) \
-			(gst_probe_dispatcher_remove_probe (&(GST_PAD_CAST (pad)->probedisp), probe))
 
 #ifndef GST_DISABLE_LOADSAVE
 void			gst_pad_load_and_link			(xmlNodePtr self, GstObject *parent);
