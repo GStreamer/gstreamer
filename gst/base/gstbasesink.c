@@ -461,6 +461,7 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
   }
   /* we are prerolling */
   GST_DEBUG ("finish preroll %p >", basesink);
+  basesink->have_preroll = TRUE;
   GST_PREROLL_UNLOCK (pad);
 
   /* have to release STREAM_LOCK as we cannot take the STATE_LOCK
@@ -483,13 +484,14 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
   if (t > 0)
     GST_STREAM_LOCK_FULL (pad, t);
 
+  /* and wait if needed */
+  GST_PREROLL_LOCK (pad);
+
   GST_LOCK (pad);
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
   GST_UNLOCK (pad);
 
-  /* and wait if needed */
-  GST_PREROLL_LOCK (pad);
   /* it is possible that the application set the state to PLAYING
    * now in which case we don't need to block anymore. */
   if (!basesink->need_preroll)
@@ -504,17 +506,16 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
     /* block until the state changes, or we get a flush, or something */
     GST_DEBUG ("element %s waiting to finish preroll",
         GST_ELEMENT_NAME (basesink));
-    basesink->have_preroll = TRUE;
     GST_PREROLL_WAIT (pad);
     GST_DEBUG ("done preroll");
     basesink->have_preroll = FALSE;
   }
-  GST_PREROLL_UNLOCK (pad);
-
   GST_LOCK (pad);
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
   GST_UNLOCK (pad);
+
+  GST_PREROLL_UNLOCK (pad);
 
   return GST_FLOW_OK;
 
@@ -525,6 +526,7 @@ no_preroll:
     GST_DEBUG ("no preroll needed");
     /* maybe it was another sink that blocked in preroll, need to check for
        buffers to drain */
+    basesink->have_preroll = FALSE;
     ret = gst_base_sink_preroll_queue_empty (basesink, pad);
     GST_PREROLL_UNLOCK (pad);
 
@@ -533,6 +535,8 @@ no_preroll:
 flushing:
   {
     GST_UNLOCK (pad);
+    basesink->have_preroll = FALSE;
+    GST_PREROLL_UNLOCK (pad);
     GST_DEBUG ("pad is flushing");
     return GST_FLOW_WRONG_STATE;
   }
