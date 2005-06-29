@@ -1,6 +1,11 @@
 2005-06-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/manual/advanced-autoplugging.xml:
+	  Fix autoplugging example.
+
+2005-06-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/manual/advanced-autoplugging.xml:
 	* docs/manual/mime-world.fig:
 	  Try to get autoplugging working, fix type detection. Fix text
 	  in hello-world image.

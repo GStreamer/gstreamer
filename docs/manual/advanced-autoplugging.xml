@@ -354,11 +354,14 @@ close_link (GstPad      *srcpad,
 
   /* add the element to the pipeline and set correct state */
   if (sinkelement != audiosink) {
-    gst_element_set_state (sinkelement, GST_STATE_PAUSED);
     gst_bin_add (GST_BIN (pipeline), sinkelement);
+    gst_element_set_state (sinkelement, GST_STATE_READY);
   }
   pad = gst_element_get_pad (sinkelement, padname);
   gst_pad_link (srcpad, pad);
+  if (sinkelement != audiosink) {
+    gst_element_set_state (sinkelement, GST_STATE_PAUSED);
+  }
   gst_object_unref (GST_OBJECT (pad));
 
   /* if we have static source pads, link those. If we have dynamic
@@ -540,7 +543,7 @@ main (gint   argc,
       gchar *argv[])
 {
   GMainLoop *loop;
-  GstElement *typefind;
+  GstElement *typefind, *realsink;
   gchar *p;
 
   /* init GStreamer and ourselves */
@@ -563,8 +566,10 @@ main (gint   argc,
   typefind = gst_bin_get_by_name (GST_BIN (pipeline), "tf");
   g_signal_connect (typefind, "have-type", G_CALLBACK (cb_typefound), NULL);
   gst_object_unref (GST_OBJECT (typefind));
-  audiosink = gst_element_factory_make ("alsasink", "audiosink");
-  gst_bin_add (GST_BIN (pipeline), audiosink);
+  audiosink = gst_element_factory_make ("audioconvert", "aconv");
+  realsink = gst_element_factory_make ("alsasink", "audiosink");
+  gst_bin_add_many (GST_BIN (pipeline), audiosink, realsink, NULL);
+  gst_element_link (audiosink, realsink);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   /* run */
