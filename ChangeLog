@@ -1,3 +1,7 @@
+2005-06-29  Andy Wingo  <wingo@pobox.com>
+
+	* ext/Makefile.am (MAD_DIR): Add mad to the build.
+
 2005-06-28  Wim Taymans  <wim@fluendo.com>
 
 	* ext/mad/gstid3tag.c: (gst_id3_tag_src_link):
