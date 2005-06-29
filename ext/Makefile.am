@@ -226,11 +226,11 @@ LIBVISUAL_DIR=
 LIBMMS_DIR=
 # endif
 
-# if USE_MAD
-# MAD_DIR=mad
-# else
+if USE_MAD
+MAD_DIR=mad
+else
 MAD_DIR=
-# endif
+endif
 
 # if USE_MIKMOD
 # MIKMOD_DIR=mikmod
