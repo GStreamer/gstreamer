@@ -121,6 +121,7 @@ static void gst_goom_dispose (GObject * object);
 static GstElementStateReturn gst_goom_change_state (GstElement * element);
 
 static GstFlowReturn gst_goom_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_goom_event (GstPad * pad, GstEvent * event);
 
 static GstPadLinkReturn gst_goom_sink_setcaps (GstPad * pad, GstCaps * caps);
 static GstPadLinkReturn gst_goom_src_setcaps (GstPad * pad, GstCaps * caps);
@@ -194,6 +195,7 @@ gst_goom_init (GstGOOM * goom)
   gst_element_add_pad (GST_ELEMENT (goom), goom->srcpad);
 
   gst_pad_set_chain_function (goom->sinkpad, gst_goom_chain);
+  gst_pad_set_event_function (goom->sinkpad, gst_goom_event);
   gst_pad_set_setcaps_function (goom->sinkpad, gst_goom_sink_setcaps);
   gst_pad_set_setcaps_function (goom->srcpad, gst_goom_src_setcaps);
 

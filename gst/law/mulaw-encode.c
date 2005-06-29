@@ -75,7 +75,7 @@ mulawenc_getcaps (GstPad * pad)
     structure = gst_caps_get_structure (othercaps, 0);
     orate = gst_structure_get_value (structure, "rate");
     ochans = gst_structure_get_value (structure, "channels");
-    if (!rate || !chans)
+    if (!orate || !ochans)
       goto done;
 
     structure = gst_caps_get_structure (base_caps, 0);
@@ -210,7 +210,7 @@ gst_mulawenc_chain (GstPad * pad, GstBuffer * buffer)
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (mulawenc->srcpad));
-  mulaw_data = (gint8 *) GST_BUFFER_DATA (outbuf);
+  mulaw_data = (guint8 *) GST_BUFFER_DATA (outbuf);
 
   mulaw_encode (linear_data, mulaw_data, GST_BUFFER_SIZE (outbuf));
 

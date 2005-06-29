@@ -13,7 +13,7 @@ libgstvideofilter_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIBS)
 
 libgstvideoexample_la_SOURCES = gstvideoexample.c
 libgstvideoexample_la_CFLAGS = $(GST_CFLAGS)
-libgstvideoexample_la_LIBADD =
+libgstvideoexample_la_LIBADD = libgstvideofilter-@GST_MAJORMINOR@.la
 libgstvideoexample_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 # libgstvideoflip_la_SOURCES = gstvideoflip.c

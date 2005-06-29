@@ -1,3 +1,37 @@
+2005-06-29  Andy Wingo  <wingo@pobox.com>
+
+	* configure.ac (GST_CFLAGS): GCC strikes back!!! Let the build
+	breakage ensue!!!
+
+	* gst/rtsp/gstrtspsrc.c (gst_rtspsrc_loop, gst_rtspsrc_open):
+	Signedness, unused var fixes.
+	(gst_rtspsrc_close): Unused?
+
+	* gst/realmedia/rmdemux.c (re_hexdump_bytes): Unused.
+
+	* gst/law/mulaw-encode.c (gst_mulawenc_chain): Signeness fix.
+
+	* gst/law/alaw-encode.c (alawenc_getcaps): Remove unneeded
+	declarations. Typo (probably crasher) fix.
+	
+	* gst/law/mulaw-encode.c (mulawdec_getcaps): 
+	* gst/law/mulaw-encode.c (mulawenc_getcaps): 
+	* gst/law/alaw-decode.c (alawdec_getcaps): Same crasher fix.
+
+	* gst/goom/gstgoom.c (gst_goom_init): Hook up the event function.
+
+	* gst/effectv/gstwarp.c (gst_warptv_setup): Signedness fix.
+
+	* gst/effectv/gstdice.c (gst_dicetv_draw): Um, deferencing
+	uninitialized pointer not good.
+
+	* gst/videofilter/gstvideoexample.c (plugin_init): 
+	* gst/videofilter/Makefile.am (libgstvideoexample_la_LIBADD): Link
+	to libgstvideofilter instead of gst_library_load.
+
+	* gst/alpha/gstalpha.c (gst_alpha_chroma_key_i420) 
+	(gst_alpha_chroma_key_ayuv): Signedness fixen.
+
 2005-06-29  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtsp_proto_get_type),

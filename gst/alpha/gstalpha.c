@@ -497,7 +497,7 @@ gst_alpha_set_i420 (guint8 * src, guint8 * dest, gint width, gint height,
 }
 
 static void
-gst_alpha_chroma_key_ayuv (gchar * src, gchar * dest, gint width, gint height,
+gst_alpha_chroma_key_ayuv (guint8 * src, guint8 * dest, gint width, gint height,
     GstAlpha * alpha)
 {
   gint b_alpha;
@@ -608,7 +608,7 @@ gst_alpha_chroma_key_ayuv (gchar * src, gchar * dest, gint width, gint height,
 /* based on http://www.cs.utah.edu/~michael/chroma/
  */
 static void
-gst_alpha_chroma_key_i420 (gchar * src, gchar * dest, gint width, gint height,
+gst_alpha_chroma_key_i420 (guint8 * src, guint8 * dest, gint width, gint height,
     GstAlpha * alpha)
 {
   gint b_alpha;

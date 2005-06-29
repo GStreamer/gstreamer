@@ -265,7 +265,7 @@ gst_warptv_setup (GstVideofilter * videofilter)
   g_free (warptv->disttable);
   g_free (warptv->offstable);
 
-  warptv->offstable = (guint32 *) g_malloc (height * sizeof (guint32));
+  warptv->offstable = g_malloc (height * sizeof (guint32));
   warptv->disttable = g_malloc (width * height * sizeof (guint32));
 
   initSinTable (warptv);

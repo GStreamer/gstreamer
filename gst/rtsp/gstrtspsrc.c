@@ -292,7 +292,6 @@ static gboolean
 gst_rtspsrc_stream_setup_rtp (GstRTSPStream * stream, gint * rtpport,
     gint * rtcpport)
 {
-  GstElement *rtpsrc;
   GstElementStateReturn ret;
   GstRTSPSrc *src;
 
@@ -428,10 +427,9 @@ gst_rtspsrc_loop (GstRTSPSrc * src)
   gint channel;
   GList *lstream;
   GstRTSPStream *stream;
-  GstPadChainFunction chainfunc;
   GstPad *outpad = NULL;
   guint8 *data;
-  gint size;
+  guint size;
 
   do {
     GST_DEBUG ("doing reveive");
@@ -627,7 +625,6 @@ gst_rtspsrc_open (GstRTSPSrc * src)
         gchar *new;
         gint rtpport, rtcpport;
         gchar *trxparams;
-        gboolean res;
 
         /* allocate two udp ports */
         if (!gst_rtspsrc_stream_setup_rtp (stream, &rtpport, &rtcpport))
@@ -730,7 +727,7 @@ setup_rtp_failed:
   }
 }
 
-static gboolean
+G_GNUC_UNUSED static gboolean
 gst_rtspsrc_close (GstRTSPSrc * src)
 {
   RTSPMessage request = { 0 };

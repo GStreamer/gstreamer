@@ -119,9 +119,7 @@ alawenc_getcaps (GstPad * pad)
 {
   GstALawEnc *alawenc;
   GstPad *otherpad;
-  GstCaps *base_caps, *othercaps, *result;
-  GstStructure *structure;
-  const GValue *rate, *chans;
+  GstCaps *base_caps, *othercaps;
 
   alawenc = GST_ALAWENC (GST_PAD_PARENT (pad));
 
@@ -144,7 +142,7 @@ alawenc_getcaps (GstPad * pad)
     structure = gst_caps_get_structure (othercaps, 0);
     orate = gst_structure_get_value (structure, "rate");
     ochans = gst_structure_get_value (structure, "channels");
-    if (!rate || !chans)
+    if (!orate || !ochans)
       goto done;
 
     structure = gst_caps_get_structure (base_caps, 0);

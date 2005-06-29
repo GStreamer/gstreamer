@@ -152,7 +152,8 @@ rtsp_connection_send (RTSPConnection * conn, RTSPMessage * message)
     g_free (len);
     /* header ends here */
     g_string_append (str, "\r\n");
-    str = g_string_append_len (str, message->body, message->body_size);
+    str =
+        g_string_append_len (str, (gchar *) message->body, message->body_size);
   } else {
     /* just end headers */
     g_string_append (str, "\r\n");
@@ -376,7 +377,7 @@ read_body (gint fd, glong content_length, RTSPMessage * msg)
   }
 
 done:
-  rtsp_message_set_body (msg, body, content_length);
+  rtsp_message_set_body (msg, (guint8 *) body, content_length);
 
   return RTSP_OK;
 
@@ -545,4 +546,6 @@ rtsp_connection_free (RTSPConnection * conn)
     return RTSP_EINVAL;
 
   g_free (conn);
+
+  return RTSP_OK;
 }

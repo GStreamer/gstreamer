@@ -439,6 +439,8 @@ GST_CHECK_FEATURE(ESD, [esound plug-ins], esdsink, [
   ])
 ])
 
+GST_CFLAGS="$GST_CFLAGS $GST_ERROR"
+
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
 

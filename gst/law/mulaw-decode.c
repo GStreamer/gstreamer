@@ -75,7 +75,7 @@ mulawdec_getcaps (GstPad * pad)
     structure = gst_caps_get_structure (othercaps, 0);
     orate = gst_structure_get_value (structure, "rate");
     ochans = gst_structure_get_value (structure, "channels");
-    if (!rate || !chans)
+    if (!orate || !ochans)
       goto done;
 
     structure = gst_caps_get_structure (base_caps, 0);
