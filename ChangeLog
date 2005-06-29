@@ -1,5 +1,10 @@
 2005-06-29  Andy Wingo  <wingo@pobox.com>
 
+	* gst/videofilter/gstvideoexample.c: Removed gst_library_load, I
+	think. Whatever this plugin actually does, that I don't know.
+
+2005-06-29  Andy Wingo  <wingo@pobox.com>
+
 	* ext/mad/gstid3tag.c (gst_id3_tag_get_event_masks): Reschmoove.
 
 	* ext/mad/gstmad.c (gst_mad_get_event_masks): Remove.
