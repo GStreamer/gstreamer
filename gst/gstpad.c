@@ -125,13 +125,17 @@ static gboolean
 _gst_do_pass_data_accumulator (GSignalInvocationHint * ihint,
     GValue * return_accu, const GValue * handler_return, gpointer dummy)
 {
-  if (ihint->run_type == G_SIGNAL_RUN_FIRST) {
-    gboolean ret = g_value_get_boolean (handler_return);
-
-    g_value_set_boolean (return_accu, ret);
-    return ret;
+  if (!g_value_get_boolean (handler_return)) {
+    g_value_set_boolean (return_accu, FALSE);
+    return FALSE;
   }
 
+  return TRUE;
+}
+
+static gboolean
+silly_return_true_function (GstPad * pad, GstMiniObject * o)
+{
   return TRUE;
 }
 
@@ -188,6 +192,7 @@ gst_pad_class_init (GstPadClass * klass)
   gstobject_class->save_thyself = GST_DEBUG_FUNCPTR (gst_pad_save_thyself);
 #endif
   gstobject_class->path_string_separator = ".";
+  klass->have_data = silly_return_true_function;
 }
 
 static void
@@ -2666,6 +2671,33 @@ handle_pad_block (GstPad * pad)
  * Data passing functions
  */
 
+static gboolean
+gst_pad_emit_have_data_signal (GstPad * pad, GstMiniObject * obj)
+{
+  GValue ret = { 0 };
+  GValue args[2] = { {0}, {0} };
+  gboolean res;
+
+  /* init */
+  g_value_init (&ret, G_TYPE_BOOLEAN);
+  g_value_set_boolean (&ret, TRUE);
+  g_value_init (&args[0], GST_TYPE_PAD);
+  g_value_set_object (&args[0], pad);
+  g_value_init (&args[1], G_TYPE_POINTER);
+  g_value_set_pointer (&args[1], obj);
+
+  /* actually emit */
+  g_signal_emitv (args, gst_pad_signals[PAD_HAVE_DATA], 0, &ret);
+  res = g_value_get_boolean (&ret);
+
+  /* clean up */
+  g_value_unset (&ret);
+  g_value_unset (&args[0]);
+  g_value_unset (&args[1]);
+
+  return res;
+}
+
 /**
  * gst_pad_chain:
  * @pad: a sink #GstPad.
@@ -2717,7 +2749,7 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
     goto no_function;
 
   if (g_atomic_int_get (&pad->emit_buffer_signals) >= 1) {
-    g_signal_emit (pad, gst_pad_signals[PAD_HAVE_DATA], 0, buffer, &do_pass);
+    do_pass = gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (buffer));
   }
 
   if (do_pass) {
@@ -2801,7 +2833,7 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   GST_UNLOCK (pad);
 
   if (g_atomic_int_get (&pad->emit_buffer_signals) >= 1) {
-    g_signal_emit (pad, gst_pad_signals[PAD_HAVE_DATA], 0, buffer, &do_pass);
+    do_pass = gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (buffer));
   }
 
   if (do_pass) {
@@ -2939,7 +2971,7 @@ gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
   if (ret == GST_FLOW_OK && g_atomic_int_get (&pad->emit_buffer_signals) >= 1) {
     gboolean do_pass = TRUE;
 
-    g_signal_emit (pad, gst_pad_signals[PAD_HAVE_DATA], 0, *buffer, &do_pass);
+    do_pass = gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (*buffer));
     if (!do_pass) {
       GST_DEBUG ("Dropping data after FALSE probe return");
       gst_buffer_unref (*buffer);
@@ -3013,7 +3045,7 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   if (ret == GST_FLOW_OK && g_atomic_int_get (&pad->emit_buffer_signals) >= 1) {
     gboolean do_pass = TRUE;
 
-    g_signal_emit (pad, gst_pad_signals[PAD_HAVE_DATA], 0, *buffer, &do_pass);
+    do_pass = gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (*buffer));
     if (!do_pass) {
       GST_DEBUG ("Dropping data after FALSE probe return");
       gst_buffer_unref (*buffer);
@@ -3065,7 +3097,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   GST_UNLOCK (pad);
 
   if (g_atomic_int_get (&pad->emit_event_signals) >= 1) {
-    g_signal_emit (pad, gst_pad_signals[PAD_HAVE_DATA], 0, event, &do_pass);
+    do_pass = gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (event));
   }
 
   if (do_pass) {
@@ -3145,7 +3177,7 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
   GST_UNLOCK (pad);
 
   if (g_atomic_int_get (&pad->emit_event_signals) >= 1) {
-    g_signal_emit (pad, gst_pad_signals[PAD_HAVE_DATA], 0, event, &do_pass);
+    do_pass = gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (event));
   }
 
   if (do_pass) {
