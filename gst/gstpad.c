@@ -1833,7 +1833,7 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
   setcaps = GST_PAD_SETCAPSFUNC (pad);
 
   /* call setcaps function to configure the pad */
-  if (setcaps != NULL) {
+  if (setcaps != NULL && caps) {
     if (!GST_PAD_IS_IN_SETCAPS (pad)) {
       GST_FLAG_SET (pad, GST_PAD_IN_SETCAPS);
       GST_UNLOCK (pad);

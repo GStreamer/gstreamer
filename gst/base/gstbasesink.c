@@ -966,6 +966,8 @@ gst_base_sink_change_state (GstElement * element)
 
       /* if we don't have a preroll buffer and we have not received EOS,
        * we need to wait for a preroll */
+      GST_DEBUG ("have_preroll: %d, EOS: %d", basesink->have_preroll,
+          basesink->eos);
       if (!basesink->have_preroll && !basesink->eos) {
         basesink->need_preroll = TRUE;
         ret = GST_STATE_ASYNC;

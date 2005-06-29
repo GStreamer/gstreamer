@@ -152,7 +152,7 @@ gst_system_clock_dispose (GObject * object)
     }
     g_list_free (clock->entries);
     clock->entries = NULL;
-    GST_CLOCK_SIGNAL (clock);
+    GST_CLOCK_BROADCAST (clock);
     GST_UNLOCK (clock);
 
     if (sysclock->thread)
@@ -227,7 +227,7 @@ gst_system_clock_async_thread (GstClock * clock)
   GST_CAT_DEBUG (GST_CAT_CLOCK, "enter system clock thread");
   GST_LOCK (clock);
   /* signal spinup */
-  GST_CLOCK_SIGNAL (clock);
+  GST_CLOCK_BROADCAST (clock);
   /* now enter our infinite loop */
   while (!sysclock->stopping) {
     GstClockEntry *entry;
@@ -301,7 +301,7 @@ gst_system_clock_async_thread (GstClock * clock)
   }
 exit:
   /* signal exit */
-  GST_CLOCK_SIGNAL (clock);
+  GST_CLOCK_BROADCAST (clock);
   GST_UNLOCK (clock);
   GST_CAT_DEBUG (GST_CAT_CLOCK, "exit system clock thread");
 }
@@ -424,7 +424,7 @@ gst_system_clock_id_wait_async (GstClock * clock, GstClockEntry * entry)
    * will get to this entry automatically. */
   if (clock->entries->data == entry) {
     GST_CAT_DEBUG (GST_CAT_CLOCK, "send signal");
-    GST_CLOCK_SIGNAL (clock);
+    GST_CLOCK_BROADCAST (clock);
   }
   GST_UNLOCK (clock);
 
@@ -446,6 +446,6 @@ gst_system_clock_id_unschedule (GstClock * clock, GstClockEntry * entry)
   GST_LOCK (clock);
   entry->status = GST_CLOCK_UNSCHEDULED;
   GST_CAT_DEBUG (GST_CAT_CLOCK, "send signal");
-  GST_CLOCK_SIGNAL (clock);
+  GST_CLOCK_BROADCAST (clock);
   GST_UNLOCK (clock);
 }

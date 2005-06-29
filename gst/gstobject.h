@@ -63,9 +63,9 @@ typedef enum
 
 /* we do a GST_OBJECT_CAST to avoid type checking, better call these
  * function with a valid object! */
-#define GST_LOCK(obj)                   (g_mutex_lock(GST_OBJECT_CAST(obj)->lock))
-#define GST_TRYLOCK(obj)                (g_mutex_trylock(GST_OBJECT_CAST(obj)->lock))
-#define GST_UNLOCK(obj)                 (g_mutex_unlock(GST_OBJECT_CAST(obj)->lock))
+#define GST_LOCK(obj)                   g_mutex_lock(GST_OBJECT_CAST(obj)->lock)
+#define GST_TRYLOCK(obj)                g_mutex_trylock(GST_OBJECT_CAST(obj)->lock)
+#define GST_UNLOCK(obj)                 g_mutex_unlock(GST_OBJECT_CAST(obj)->lock)
 #define GST_GET_LOCK(obj)               (GST_OBJECT_CAST(obj)->lock)
 
 #define GST_OBJECT_NAME(obj)            (GST_OBJECT_CAST(obj)->name)

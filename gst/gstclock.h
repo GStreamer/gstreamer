@@ -130,7 +130,7 @@ typedef enum
 #define GST_CLOCK_COND(clock)            (GST_CLOCK_CAST(clock)->entries_changed)
 #define GST_CLOCK_WAIT(clock)            g_cond_wait(GST_CLOCK_COND(clock),GST_GET_LOCK(clock))
 #define GST_CLOCK_TIMED_WAIT(clock,tv)   g_cond_timed_wait(GST_CLOCK_COND(clock),GST_GET_LOCK(clock),tv)
-#define GST_CLOCK_SIGNAL(clock)          g_cond_broadcast(GST_CLOCK_COND(clock))
+#define GST_CLOCK_BROADCAST(clock)       g_cond_broadcast(GST_CLOCK_COND(clock))
 
 struct _GstClock {
   GstObject 	 object;

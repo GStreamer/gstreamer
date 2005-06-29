@@ -1,5 +1,25 @@
 2005-06-29  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object),
+	(gst_base_sink_change_state):
+	Small debug line.
+
+	* gst/gstclock.h:
+	map SIGNAL and BROADCAST to the right function.
+
+	* gst/gstobject.h:
+	Remove redundant braces.
+
+	* gst/gstpad.c: (gst_pad_set_caps):
+	Don't call setcaps function when reseting caps to NULL.
+
+	* gst/gstsystemclock.c: (gst_system_clock_dispose),
+	(gst_system_clock_async_thread), (gst_system_clock_id_wait_async),
+	(gst_system_clock_id_unschedule):
+	Use BROADCAST as this is what we do.
+
+2005-06-29  Wim Taymans  <wim@fluendo.com>
+
 	* gst/base/gstbasesink.c: (gst_base_sink_handle_object):
 	We are actually prerolling before commiting the state
 	change. 
