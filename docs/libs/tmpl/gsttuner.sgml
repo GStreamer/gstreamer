@@ -1,0 +1,177 @@
+<!-- ##### SECTION Title ##### -->
+gsttuner
+
+<!-- ##### SECTION Short_Description ##### -->
+interface for elements that provide tuner operations
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GstTuner ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstTunerClass ##### -->
+<para>
+
+</para>
+
+@klass: 
+@list_channels: 
+@set_channel: 
+@get_channel: 
+@list_norms: 
+@set_norm: 
+@get_norm: 
+@set_frequency: 
+@get_frequency: 
+@signal_strength: 
+@channel_changed: 
+@norm_changed: 
+@frequency_changed: 
+@signal_changed: 
+@_gst_reserved: 
+
+<!-- ##### FUNCTION gst_tuner_list_channels ##### -->
+<para>
+
+</para>
+
+@tuner: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_tuner_get_channel ##### -->
+<para>
+
+</para>
+
+@tuner: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_tuner_set_channel ##### -->
+<para>
+
+</para>
+
+@tuner: 
+@channel: 
+
+
+<!-- ##### FUNCTION gst_tuner_list_norms ##### -->
+<para>
+
+</para>
+
+@tuner: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_tuner_get_norm ##### -->
+<para>
+
+</para>
+
+@tuner: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_tuner_set_norm ##### -->
+<para>
+
+</para>
+
+@tuner: 
+@norm: 
+<!-- # Unused Parameters # -->
+@channel: 
+
+
+<!-- ##### FUNCTION gst_tuner_set_frequency ##### -->
+<para>
+
+</para>
+
+@tuner: 
+@channel: 
+@frequency: 
+
+
+<!-- ##### FUNCTION gst_tuner_signal_strength ##### -->
+<para>
+
+</para>
+
+@tuner: 
+@channel: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_tuner_find_norm_by_name ##### -->
+<para>
+
+</para>
+
+@tuner: 
+@norm: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_tuner_find_channel_by_name ##### -->
+<para>
+
+</para>
+
+@tuner: 
+@channel: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_tuner_channel_changed ##### -->
+<para>
+
+</para>
+
+@tuner: 
+@channel: 
+
+
+<!-- ##### FUNCTION gst_tuner_norm_changed ##### -->
+<para>
+
+</para>
+
+@tuner: 
+@norm: 
+
+
+<!-- ##### FUNCTION gst_tuner_frequency_changed ##### -->
+<para>
+
+</para>
+
+@tuner: 
+@channel: 
+@frequency: 
+
+
+<!-- ##### FUNCTION gst_tuner_signal_changed ##### -->
+<para>
+
+</para>
+
+@tuner: 
+@channel: 
+@signal: 
+
+

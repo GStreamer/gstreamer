@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+
+<!ENTITY GstCompiling SYSTEM "compiling.sgml">
+<!ENTITY GstAudio SYSTEM "xml/gstaudio.xml">
+<!ENTITY GstColorBalance SYSTEM "xml/gstcolorbalance.xml">
+<!ENTITY GstGConf SYSTEM "xml/gstgconf.xml">
+<!ENTITY GstRingBuffer SYSTEM "xml/gstringbuffer.xml">
+<!ENTITY GstTuner SYSTEM "xml/gsttuner.xml">
+
+]>
+<book id="index">
+  <bookinfo>
+    <title>GStreamer Base Plugins &GST_MAJORMINOR; Library Reference Manual</title>
+  </bookinfo>
+
+  <chapter id="gstreamer-plugins-base">
+    <title>GStreamer Base Plugins Libraries</title>
+    <para>
+This manual describes the libraries provided by the GStreamer Base Plugins
+package.
+    </para>
+    &GstCompiling;
+  </chapter>
+
+  <chapter id="gstreamer-audio">
+    <title>Audio Library</title>
+    <para>
+This library should be linked to by getting cflags and libs from
+<filename>gstreamer-plugins-base.pc</filename> and adding
+<filename>-lgstaudio-&GST_MAJORMINOR;</filename> to the library flags.
+    </para>
+    &GstAudio;
+    &GstRingBuffer;
+  </chapter>
+
+  <chapter id="gstreamer-interfaces">
+    <title>Interfaces Library</title>
+    <para>
+This library should be linked to by getting cflags and libs from
+<filename>gstreamer-plugins-base.pc</filename> and adding
+<filename>-lgstinterfaces-&GST_MAJORMINOR;</filename> to the library flags.
+    </para>
+    &GstColorBalance;
+    &GstTuner;
+  </chapter>
+
+  <chapter id="gstreamer-gconf">
+    <title>GConf Library</title>
+    <para>
+This library should be linked to by getting cflags and libs from
+<filename>gstreamer-gconf.pc</filename>.
+    </para>
+    &GstGConf;
+  </chapter>
+</book>

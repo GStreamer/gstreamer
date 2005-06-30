@@ -2,10 +2,10 @@
 
 # The name of the module, e.g. 'glib'.
 #DOC_MODULE=gst-plugins-libs-@GST_MAJORMINOR@
-DOC_MODULE=gst-plugins-libs
+DOC_MODULE=gst-plugins-base-libs
 
 # for upload.mak
-DOC=gst-plugins-libs
+DOC=gst-plugins-base-libs
 FORMATS=html
 html: html-build.stamp
 include $(srcdir)/../upload.mak
@@ -75,7 +75,7 @@ IGNORE_HFILES =
 HTML_IMAGES =
 
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
-content_files =
+content_files = compiling.sgml
 
 # Other files to distribute.
 extra_files =
@@ -212,6 +212,7 @@ html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files)
 	if test -d html; then rm -rf html; fi
 	mkdir html
 	@cp $(srcdir)/$(DOC_MAIN_SGML_FILE) html
+	@for f in $(content_files); do cp $(srcdir)/$$f html; done
 	cp -pr xml html
 	cp ../version.entities html
 	cd html && gtkdoc-mkhtml $(DOC_MODULE) $(DOC_MAIN_SGML_FILE)
