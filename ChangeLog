@@ -1,3 +1,10 @@
+2005-06-30  Antoine Tremblay  <hexa00@gmail.com>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstvalue.c: (gst_value_intersect_list):
+	  Fix memleak (#309125).
+
 2005-06-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/Makefile.am:
