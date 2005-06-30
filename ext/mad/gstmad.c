@@ -552,6 +552,7 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_POSITION:
     {
       GstFormat format;
+      GstFormat rformat;
       gint64 cur, total, total_bytes;
 
       /* save requested format */
@@ -563,9 +564,16 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
         GST_LOG_OBJECT (mad, "query on peer pad failed");
         goto error;
       }
+      /* get the returned format */
+      gst_query_parse_position (query, &rformat, NULL, &total_bytes);
+      if (rformat == GST_FORMAT_BYTES)
+        GST_LOG_OBJECT (mad, "peer pad returned total=%lld bytes", total_bytes);
+      else if (rformat == GST_FORMAT_TIME)
+        GST_LOG_OBJECT (mad, "peer pad returned time=%lld", total_bytes);
 
-      gst_query_parse_position (query, NULL, NULL, &total_bytes);
-      GST_LOG_OBJECT (mad, "peer pad returned total=%lld bytes", total_bytes);
+      /* Check if requested format is returned format */
+      if (format == rformat)
+        return TRUE;
 
       /* and convert to the requested format */
       if (format != GST_FORMAT_DEFAULT) {
