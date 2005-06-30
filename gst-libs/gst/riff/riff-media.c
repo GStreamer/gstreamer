@@ -41,7 +41,7 @@
  */
 
 GstCaps *
-gst_riff_create_video_caps_with_data (guint32 codec_fcc,
+gst_riff_create_video_caps (guint32 codec_fcc,
     gst_riff_strh * strh, gst_riff_strf_vids * strf,
     GstBuffer * strf_data, GstBuffer * strd_data, char **codec_name)
 {
@@ -94,10 +94,6 @@ gst_riff_create_video_caps_with_data (guint32 codec_fcc,
 
     case GST_MAKE_FOURCC ('H', 'F', 'Y', 'U'):
       caps = gst_caps_new_simple ("video/x-huffyuv", NULL);
-      if (strf) {
-        gst_caps_set_simple (caps, "bpp",
-            G_TYPE_INT, (int) strf->bit_cnt, NULL);
-      }
       if (codec_name)
         *codec_name = g_strdup ("Huffman Lossless Codec");
       break;
@@ -140,7 +136,6 @@ gst_riff_create_video_caps_with_data (guint32 codec_fcc,
       break;
 
     case GST_MAKE_FOURCC ('M', '2', '6', '3'):
-    case GST_MAKE_FOURCC ('m', '2', '6', '3'):
       caps = gst_caps_new_simple ("video/x-h263", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Microsoft H.263");
@@ -164,25 +159,6 @@ gst_riff_create_video_caps_with_data (guint32 codec_fcc,
         *codec_name = g_strdup ("Xirlink H.263");
       break;
 
-      /* apparently not standard H.263...? */
-    case GST_MAKE_FOURCC ('I', '2', '6', '3'):
-      caps = gst_caps_new_simple ("video/x-intel-h263", NULL);
-      if (codec_name)
-        *codec_name = g_strdup ("Intel H.263");
-      break;
-
-    case GST_MAKE_FOURCC ('h', '2', '6', '4'):
-      caps = gst_caps_new_simple ("video/x-h264", NULL);
-      if (codec_name)
-        *codec_name = g_strdup ("ITU H.264");
-      break;
-
-    case GST_MAKE_FOURCC ('V', 'S', 'S', 'H'):
-      caps = gst_caps_new_simple ("video/x-h264", NULL);
-      if (codec_name)
-        *codec_name = g_strdup ("VideoSoft H.264");
-      break;
-
     case GST_MAKE_FOURCC ('D', 'I', 'V', '3'):
     case GST_MAKE_FOURCC ('d', 'i', 'v', '3'):
     case GST_MAKE_FOURCC ('D', 'I', 'V', '4'):
@@ -203,13 +179,6 @@ gst_riff_create_video_caps_with_data (guint32 codec_fcc,
           "divxversion", G_TYPE_INT, 4, NULL);
       if (codec_name)
         *codec_name = g_strdup ("DivX MPEG-4 Version 4");
-      break;
-
-    case GST_MAKE_FOURCC ('B', 'L', 'Z', '0'):
-      caps = gst_caps_new_simple ("video/x-divx",
-          "divxversion", G_TYPE_INT, 4, NULL);
-      if (codec_name)
-        *codec_name = g_strdup ("Blizzard DivX");
       break;
 
     case GST_MAKE_FOURCC ('D', 'X', '5', '0'):
@@ -386,21 +355,13 @@ gst_riff_create_video_caps_with_data (guint32 codec_fcc,
 }
 
 GstCaps *
-gst_riff_create_video_caps (guint32 codec_fcc,
-    gst_riff_strh * strh, gst_riff_strf_vids * strf, char **codec_name)
-{
-  return gst_riff_create_video_caps_with_data (codec_fcc,
-      strh, strf, NULL, NULL, codec_name);
-}
-
-GstCaps *
-gst_riff_create_audio_caps_with_data (guint16 codec_id,
+gst_riff_create_audio_caps (guint16 codec_id,
     gst_riff_strh * strh, gst_riff_strf_auds * strf,
     GstBuffer * strf_data, GstBuffer * strd_data, char **codec_name)
 {
   gboolean block_align = FALSE, rate_chan = TRUE;
   GstCaps *caps = NULL;
-  gint rate_min = 1000, rate_max = 96000;
+  gint rate_min = 8000, rate_max = 96000;
   gint channels_max = 2;
 
   switch (codec_id) {
@@ -458,15 +419,6 @@ gst_riff_create_audio_caps_with_data (guint16 codec_id,
       if (strf != NULL && strf->size != 8) {
         GST_WARNING ("invalid depth (%d) of mulaw audio, overwriting.",
             strf->size);
-        strf->size = 8;
-        strf->av_bps = 8;
-        strf->blockalign = strf->av_bps * strf->channels;
-      }
-      if (strf != NULL && (strf->av_bps == 0 || strf->blockalign == 0)) {
-        GST_WARNING ("fixing av_bps (%d) and blockalign (%d) of mulaw audio",
-            strf->av_bps, strf->blockalign);
-        strf->av_bps = strf->size;
-        strf->blockalign = strf->av_bps * strf->channels;
       }
       caps = gst_caps_new_simple ("audio/x-mulaw", NULL);
       if (codec_name)
@@ -477,15 +429,6 @@ gst_riff_create_audio_caps_with_data (guint16 codec_id,
       if (strf != NULL && strf->size != 8) {
         GST_WARNING ("invalid depth (%d) of alaw audio, overwriting.",
             strf->size);
-        strf->size = 8;
-        strf->av_bps = 8;
-        strf->blockalign = strf->av_bps * strf->channels;
-      }
-      if (strf != NULL && (strf->av_bps == 0 || strf->blockalign == 0)) {
-        GST_WARNING ("fixing av_bps (%d) and blockalign (%d) of alaw audio",
-            strf->av_bps, strf->blockalign);
-        strf->av_bps = strf->size;
-        strf->blockalign = strf->av_bps * strf->channels;
       }
       caps = gst_caps_new_simple ("audio/x-alaw", NULL);
       if (codec_name)
@@ -577,16 +520,9 @@ gst_riff_create_audio_caps_with_data (guint16 codec_id,
 }
 
 GstCaps *
-gst_riff_create_audio_caps (guint16 codec_id,
-    gst_riff_strh * strh, gst_riff_strf_auds * strf, char **codec_name)
-{
-  return gst_riff_create_audio_caps_with_data (codec_id,
-      strh, strf, NULL, NULL, codec_name);
-}
-
-GstCaps *
 gst_riff_create_iavs_caps (guint32 codec_fcc,
-    gst_riff_strh * strh, gst_riff_strf_iavs * strf, char **codec_name)
+    gst_riff_strh * strh, gst_riff_strf_iavs * strf,
+    GstBuffer * init_data, GstBuffer * extra_data, char **codec_name)
 {
   GstCaps *caps = NULL;
 
@@ -631,8 +567,6 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('D', 'I', 'V', '3'),
     GST_MAKE_FOURCC ('M', 'P', 'E', 'G'),
     GST_MAKE_FOURCC ('H', '2', '6', '3'),
-    GST_MAKE_FOURCC ('I', '2', '6', '3'),
-    GST_MAKE_FOURCC ('h', '2', '6', '4'),
     GST_MAKE_FOURCC ('D', 'I', 'V', 'X'),
     GST_MAKE_FOURCC ('D', 'X', '5', '0'),
     GST_MAKE_FOURCC ('X', 'V', 'I', 'D'),
@@ -651,7 +585,7 @@ gst_riff_create_video_template_caps (void)
 
   caps = gst_caps_new_empty ();
   for (i = 0; tags[i] != 0; i++) {
-    one = gst_riff_create_video_caps (tags[i], NULL, NULL, NULL);
+    one = gst_riff_create_video_caps (tags[i], NULL, NULL, NULL, NULL, NULL);
     if (one)
       gst_caps_append (caps, one);
   }
@@ -683,7 +617,7 @@ gst_riff_create_audio_template_caps (void)
 
   caps = gst_caps_new_empty ();
   for (i = 0; tags[i] != 0; i++) {
-    one = gst_riff_create_audio_caps (tags[i], NULL, NULL, NULL);
+    one = gst_riff_create_audio_caps (tags[i], NULL, NULL, NULL, NULL, NULL);
     if (one)
       gst_caps_append (caps, one);
   }
@@ -704,7 +638,7 @@ gst_riff_create_iavs_template_caps (void)
 
   caps = gst_caps_new_empty ();
   for (i = 0; tags[i] != 0; i++) {
-    one = gst_riff_create_iavs_caps (tags[i], NULL, NULL, NULL);
+    one = gst_riff_create_iavs_caps (tags[i], NULL, NULL, NULL, NULL, NULL);
     if (one)
       gst_caps_append (caps, one);
   }

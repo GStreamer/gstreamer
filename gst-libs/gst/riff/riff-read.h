@@ -77,6 +77,11 @@ void gst_riff_parse_info	    (GstElement  * element,
 				     GstBuffer   * buf,
 				     GstTagList ** taglist);
 
+/*
+ * Init.
+ */
+void gst_riff_init		    (void);
+
 G_END_DECLS
 
 #endif /* __GST_RIFF_READ_H__ */

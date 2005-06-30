@@ -27,16 +27,8 @@
 
 GST_DEBUG_CATEGORY (riff_debug);
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+void
+gst_riff_init (void)
 {
   GST_DEBUG_CATEGORY_INIT (riff_debug, "riff", 0, "RIFF I/O");
-
-  return TRUE;
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "riff",
-    "RIFF I/O functions",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)

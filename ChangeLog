@@ -1,3 +1,16 @@
+2005-06-30  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),
+	(gst_riff_create_audio_caps), (gst_riff_create_iavs_caps),
+	(gst_riff_create_video_template_caps),
+	(gst_riff_create_audio_template_caps),
+	(gst_riff_create_iavs_template_caps):
+	* gst-libs/gst/riff/riff-media.h:
+	* gst-libs/gst/riff/riff-read.h:
+	* gst-libs/gst/riff/riff.c: (gst_riff_init):
+	  Add gst_riff_init() to initialize the debug category, instead
+	  of plugin_init(). Port riff-media.[ch] from -THREADED to HEAD.
+
 2005-06-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_init):
