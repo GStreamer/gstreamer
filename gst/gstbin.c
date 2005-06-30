@@ -1047,6 +1047,27 @@ gst_bin_iterate_state_order (GstBin * bin)
   return result;
 }
 
+static void
+clear_queue (GQueue * queue, gboolean unref)
+{
+  gpointer p;
+
+  while ((p = g_queue_pop_head (queue)))
+    if (unref)
+      gst_object_unref (p);
+}
+static void
+remove_all_from_queue (GQueue * queue, gpointer elem, gboolean unref)
+{
+  gpointer p;
+
+  while ((p = g_queue_find (queue, elem))) {
+    if (unref)
+      gst_object_unref (elem);
+    g_queue_delete_link (queue, p);
+  }
+}
+
 /* this function is called with the STATE_LOCK held. It works
  * as follows:
  *
@@ -1062,6 +1083,7 @@ gst_bin_iterate_state_order (GstBin * bin)
  *
  * MT safe.
  */
+/* FIXME,  make me more elegant */
 static GstElementStateReturn
 gst_bin_change_state (GstElement * element)
 {
@@ -1099,7 +1121,14 @@ gst_bin_change_state (GstElement * element)
   /* first step, find all sink elements, these are the elements
    * without (linked) source pads. */
   GST_LOCK (bin);
+
 restart:
+  /* make sure queues are empty, they could be filled when 
+   * restarting. */
+  clear_queue (elem_queue, TRUE);
+  clear_queue (semi_queue, TRUE);
+  clear_queue (temp, TRUE);
+
   children = bin->children;
   children_cookie = bin->children_cookie;
   while (children) {
@@ -1117,30 +1146,25 @@ restart:
     }
 
     GST_LOCK (bin);
-    if (G_UNLIKELY (children_cookie != bin->children_cookie)) {
-      /* undo what we had */
-      g_queue_foreach (elem_queue, (GFunc) gst_object_unref, NULL);
-      g_queue_foreach (semi_queue, (GFunc) gst_object_unref, NULL);
-      g_queue_foreach (temp, (GFunc) gst_object_unref, NULL);
-      while (g_queue_pop_head (elem_queue));
-      while (g_queue_pop_head (semi_queue));
-      while (g_queue_pop_head (temp));
+    if (G_UNLIKELY (children_cookie != bin->children_cookie))
       goto restart;
-    }
-
     children = g_list_next (children);
   }
   GST_UNLOCK (bin);
+  /* after this point new elements can be added/removed from the
+   * bin. We operate on the snapshot taken above. Applications
+   * should serialize their add/remove and set_state. */
 
   /* now change state for semi sink elements first so add them in
    * front of the other elements */
   g_queue_foreach (temp, (GFunc) append_child, semi_queue);
-  g_queue_free (temp);
+  clear_queue (temp, FALSE);
 
-  /* can be the case for a bin like ( identity ) */
+  /* if we don't have real sinks, we continue with the other elements */
   if (g_queue_is_empty (elem_queue) && !g_queue_is_empty (semi_queue)) {
     GQueue *q = elem_queue;
 
+    /* we swap the queues as oposed to copy them over */
     elem_queue = semi_queue;
     semi_queue = q;
   }
@@ -1153,20 +1177,8 @@ restart:
 
     /* take element */
     qelement = g_queue_pop_head (elem_queue);
-    /* we don't need it in the semi_queue anymore */
-    g_queue_remove_all (semi_queue, qelement);
-
-    /* if queue is empty now, continue with a non-sink */
-    if (g_queue_is_empty (elem_queue)) {
-      GstElement *non_sink;
-
-      GST_DEBUG ("sinks and upstream elements exhausted");
-      non_sink = g_queue_pop_head (semi_queue);
-      if (non_sink) {
-        GST_DEBUG ("found lefover non-sink %s", GST_OBJECT_NAME (non_sink));
-        g_queue_push_tail (elem_queue, non_sink);
-      }
-    }
+    /* we don't need any duplicates in the other queue anymore */
+    remove_all_from_queue (semi_queue, qelement, TRUE);
 
     /* queue all elements connected to the sinkpads of this element */
     GST_LOCK (qelement);
@@ -1189,31 +1201,24 @@ restart:
 
           /* see if this element is in the bin we are currently handling */
           parent = gst_object_get_parent (GST_OBJECT_CAST (peer_elem));
-          if (parent && parent == GST_OBJECT_CAST (bin)) {
-            GList *oldelem;
-
-            GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-                "adding element %s to queue", GST_ELEMENT_NAME (peer_elem));
-
-            /* make sure we don't have duplicates */
-            while ((oldelem = g_queue_find (semi_queue, peer_elem))) {
-              gst_object_unref (peer_elem);
-              g_queue_delete_link (semi_queue, oldelem);
-            }
-            while ((oldelem = g_queue_find (elem_queue, peer_elem))) {
-              gst_object_unref (peer_elem);
-              g_queue_delete_link (elem_queue, oldelem);
-            }
-            /* was reffed before pushing on the queue by the
-             * gst_object_get_parent() call we used to get the element. */
-            g_queue_push_tail (elem_queue, peer_elem);
-          } else {
-            GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-                "not adding element %s to queue, it is in another bin",
-                GST_ELEMENT_NAME (peer_elem));
-            gst_object_unref (peer_elem);
-          }
           if (parent) {
+            if (parent == GST_OBJECT_CAST (bin)) {
+              GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+                  "adding element %s to queue", GST_ELEMENT_NAME (peer_elem));
+
+              /* make sure we don't have duplicates */
+              remove_all_from_queue (semi_queue, peer_elem, TRUE);
+              remove_all_from_queue (elem_queue, peer_elem, TRUE);
+
+              /* was reffed before pushing on the queue by the
+               * gst_object_get_parent() call we used to get the element. */
+              g_queue_push_tail (elem_queue, peer_elem);
+            } else {
+              GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+                  "not adding element %s to queue, it is in another bin",
+                  GST_ELEMENT_NAME (peer_elem));
+              gst_object_unref (peer_elem);
+            }
             gst_object_unref (parent);
           }
         }
@@ -1228,11 +1233,23 @@ restart:
     locked = GST_FLAG_IS_SET (qelement, GST_ELEMENT_LOCKED_STATE);
     GST_UNLOCK (qelement);
 
+    /* skip locked elements */
     if (G_UNLIKELY (locked))
       goto next_element;
 
+    /* set base time on element */
     qelement->base_time = element->base_time;
     ret = gst_element_set_state (qelement, pending);
+
+    /* the set state could have cause elements to be added/removed,
+     * we support that. */
+    GST_LOCK (bin);
+    if (G_UNLIKELY (children_cookie != bin->children_cookie)) {
+      gst_object_unref (qelement);
+      goto restart;
+    }
+    GST_UNLOCK (bin);
+
     switch (ret) {
       case GST_STATE_SUCCESS:
         GST_CAT_DEBUG (GST_CAT_STATES,
@@ -1268,6 +1285,18 @@ restart:
     }
   next_element:
     gst_object_unref (qelement);
+
+    /* if queue is empty now, continue with a non-sink */
+    if (g_queue_is_empty (elem_queue)) {
+      GstElement *non_sink;
+
+      GST_DEBUG ("sinks and upstream elements exhausted");
+      non_sink = g_queue_pop_head (semi_queue);
+      if (non_sink) {
+        GST_DEBUG ("found lefover non-sink %s", GST_OBJECT_NAME (non_sink));
+        g_queue_push_tail (elem_queue, non_sink);
+      }
+    }
   }
 
   if (have_no_preroll) {
@@ -1275,25 +1304,23 @@ restart:
   } else if (have_async) {
     ret = GST_STATE_ASYNC;
   } else {
-    if ((ret = parent_class->change_state (element)) == GST_STATE_SUCCESS) {
-      /* we can commit the state change now */
-      gst_element_commit_state (element);
-    }
+    ret = parent_class->change_state (element);
   }
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-      "done changing bin's state from %s to %s, now in %s",
+      "done changing bin's state from %s to %s, now in %s, ret %d",
       gst_element_state_get_name (old_state),
       gst_element_state_get_name (pending),
-      gst_element_state_get_name (GST_STATE (element)));
+      gst_element_state_get_name (GST_STATE (element)), ret);
 
 exit:
   /* release refcounts in queue, should normally be empty unless we
    * had an error. */
-  g_queue_foreach (elem_queue, (GFunc) gst_object_unref, NULL);
+  clear_queue (elem_queue, TRUE);
+  clear_queue (semi_queue, TRUE);
   g_queue_free (elem_queue);
-  g_queue_foreach (semi_queue, (GFunc) gst_object_unref, NULL);
   g_queue_free (semi_queue);
+  g_queue_free (temp);
 
   return ret;
 }

@@ -1,5 +1,13 @@
 2005-06-30  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbin.c: (clear_queue), (remove_all_from_queue),
+	(gst_bin_change_state):
+	Probes are gone.
+	Lame attempt at making the state change function a bit
+	more readable.
+
+2005-06-30  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-clocks.txt:
 	* docs/design/part-element-sink.txt:
 	* docs/design/part-events.txt:
