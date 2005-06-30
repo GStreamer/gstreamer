@@ -199,8 +199,10 @@ struct _GstPad {
 
   GstPadBufferAllocFunction      bufferallocfunc;
 
-  /* whether to emit signals for have-data */
-  gint				 emit_buffer_signals, emit_event_signals;
+  /* whether to emit signals for have-data. counts number
+   * of handlers attached. */
+  gint				 do_buffer_signals;
+  gint				 do_event_signals;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -253,8 +255,11 @@ struct _GstPadClass {
 
 #define GST_PAD_BUFFERALLOCFUNC(pad)	(GST_PAD_CAST(pad)->bufferallocfunc)
 
+#define GST_PAD_DO_BUFFER_SIGNALS(pad) 	(GST_PAD_CAST(pad)->do_buffer_signals)
+#define GST_PAD_DO_EVENT_SIGNALS(pad) 	(GST_PAD_CAST(pad)->do_event_signals)
+
 #define GST_PAD_IS_LINKED(pad)		(GST_PAD_PEER(pad) != NULL)
-#define GST_PAD_IS_BLOCKED(pad)	(GST_FLAG_IS_SET (pad, GST_PAD_BLOCKED))
+#define GST_PAD_IS_BLOCKED(pad)		(GST_FLAG_IS_SET (pad, GST_PAD_BLOCKED))
 #define GST_PAD_IS_FLUSHING(pad)	(GST_FLAG_IS_SET (pad, GST_PAD_FLUSHING))
 #define GST_PAD_IS_IN_GETCAPS(pad)	(GST_FLAG_IS_SET (pad, GST_PAD_IN_GETCAPS))
 #define GST_PAD_IS_IN_SETCAPS(pad)	(GST_FLAG_IS_SET (pad, GST_PAD_IN_SETCAPS))

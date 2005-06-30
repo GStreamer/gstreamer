@@ -125,16 +125,16 @@ static gboolean
 _gst_do_pass_data_accumulator (GSignalInvocationHint * ihint,
     GValue * return_accu, const GValue * handler_return, gpointer dummy)
 {
-  if (!g_value_get_boolean (handler_return)) {
-    g_value_set_boolean (return_accu, FALSE);
-    return FALSE;
-  }
+  gboolean ret = g_value_get_boolean (handler_return);
 
-  return TRUE;
+  GST_DEBUG ("accumulated %d", ret);
+  g_value_set_boolean (return_accu, ret);
+
+  return ret;
 }
 
 static gboolean
-silly_return_true_function (GstPad * pad, GstMiniObject * o)
+default_have_data (GstPad * pad, GstMiniObject * o)
 {
   return TRUE;
 }
@@ -174,7 +174,8 @@ gst_pad_class_init (GstPadClass * klass)
       g_signal_new ("have-data", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstPadClass, have_data),
       _gst_do_pass_data_accumulator,
-      NULL, gst_marshal_BOOLEAN__POINTER, G_TYPE_BOOLEAN, 1, G_TYPE_POINTER);
+      NULL, gst_marshal_BOOLEAN__POINTER, G_TYPE_BOOLEAN, 1,
+      GST_TYPE_MINI_OBJECT);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PAD_PROP_CAPS,
       g_param_spec_boxed ("caps", "Caps", "The capabilities of the pad",
@@ -192,7 +193,8 @@ gst_pad_class_init (GstPadClass * klass)
   gstobject_class->save_thyself = GST_DEBUG_FUNCPTR (gst_pad_save_thyself);
 #endif
   gstobject_class->path_string_separator = ".";
-  klass->have_data = silly_return_true_function;
+
+  klass->have_data = default_have_data;
 }
 
 static void
@@ -214,7 +216,8 @@ gst_pad_init (GstPad * pad)
   pad->queryfunc = gst_pad_query_default;
   pad->intlinkfunc = gst_pad_get_internal_links_default;
 
-  pad->emit_buffer_signals = pad->emit_event_signals = 0;
+  pad->do_buffer_signals = 0;
+  pad->do_event_signals = 0;
 
   GST_PAD_UNSET_FLUSHING (pad);
 
@@ -2713,9 +2716,10 @@ GstFlowReturn
 gst_pad_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstCaps *caps;
-  gboolean caps_changed, do_pass = TRUE;
+  gboolean caps_changed;
   GstPadChainFunction chainfunc;
   GstFlowReturn ret;
+  gboolean emit_signal;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK,
@@ -2731,7 +2735,16 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
 
   caps = GST_BUFFER_CAPS (buffer);
   caps_changed = caps && caps != GST_PAD_CAPS (pad);
+
+  emit_signal = GST_PAD_DO_BUFFER_SIGNALS (pad) > 0;
   GST_UNLOCK (pad);
+
+  /* see if the signal should be emited, we emit before caps nego as
+   * we might drop the buffer and do capsnego for nothing. */
+  if (G_UNLIKELY (emit_signal)) {
+    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (buffer)))
+      goto dropping;
+  }
 
   /* we got a new datatype on the pad, see if it can handle it */
   if (G_UNLIKELY (caps_changed)) {
@@ -2748,21 +2761,11 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
   if (G_UNLIKELY ((chainfunc = GST_PAD_CHAINFUNC (pad)) == NULL))
     goto no_function;
 
-  if (g_atomic_int_get (&pad->emit_buffer_signals) >= 1) {
-    do_pass = gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (buffer));
-  }
+  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+      "calling chainfunction &%s of pad %s:%s",
+      GST_DEBUG_FUNCPTR_NAME (chainfunc), GST_DEBUG_PAD_NAME (pad));
 
-  if (do_pass) {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "calling chainfunction &%s of pad %s:%s",
-        GST_DEBUG_FUNCPTR_NAME (chainfunc), GST_DEBUG_PAD_NAME (pad));
-
-    ret = chainfunc (pad, buffer);
-  } else {
-    GST_DEBUG ("Dropping buffer due to FALSE probe return");
-    gst_buffer_unref (buffer);
-    ret = GST_FLOW_UNEXPECTED;
-  }
+  ret = chainfunc (pad, buffer);
 
   GST_STREAM_UNLOCK (pad);
 
@@ -2776,6 +2779,14 @@ flushing:
         "pushing, but pad was flushing");
     GST_UNLOCK (pad);
     GST_STREAM_UNLOCK (pad);
+    return GST_FLOW_UNEXPECTED;
+  }
+dropping:
+  {
+    gst_buffer_unref (buffer);
+    GST_DEBUG ("Dropping buffer due to FALSE probe return");
+    GST_STREAM_UNLOCK (pad);
+    /* FIXME, failure? */
     return GST_FLOW_UNEXPECTED;
   }
 not_negotiated:
@@ -2815,7 +2826,7 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
 {
   GstPad *peer;
   GstFlowReturn ret;
-  gboolean do_pass = TRUE;
+  gboolean emit_signal;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC, GST_FLOW_ERROR);
@@ -2829,20 +2840,19 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
     goto not_linked;
 
+  /* we emit signals on the pad areg, the peer will have a chance to
+   * emit in the _chain() function */
+  emit_signal = GST_PAD_DO_BUFFER_SIGNALS (pad) > 0;
+
   gst_object_ref (peer);
   GST_UNLOCK (pad);
 
-  if (g_atomic_int_get (&pad->emit_buffer_signals) >= 1) {
-    do_pass = gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (buffer));
+  if (G_UNLIKELY (emit_signal)) {
+    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (buffer)))
+      goto dropping;
   }
 
-  if (do_pass) {
-    ret = gst_pad_chain (peer, buffer);
-  } else {
-    GST_DEBUG ("Dropping buffer due to FALSE probe return");
-    gst_buffer_unref (buffer);
-    ret = GST_FLOW_UNEXPECTED;
-  }
+  ret = gst_pad_chain (peer, buffer);
 
   gst_object_unref (peer);
 
@@ -2856,6 +2866,14 @@ not_linked:
         "pushing, but it was not linked");
     GST_UNLOCK (pad);
     return GST_FLOW_NOT_LINKED;
+  }
+dropping:
+  {
+    gst_buffer_unref (buffer);
+    gst_object_unref (peer);
+    GST_DEBUG ("Dropping buffer due to FALSE probe return");
+    /* FIXME, failure? */
+    return GST_FLOW_UNEXPECTED;
   }
 }
 
@@ -2896,6 +2914,7 @@ gst_pad_check_pull_range (GstPad * pad)
 
   /* see note in above function */
   if (G_LIKELY ((checkgetrangefunc = peer->checkgetrangefunc) == NULL)) {
+    /* FIXME, kindoff ghetto */
     ret = GST_PAD_GETRANGEFUNC (peer) != NULL;
   } else {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
@@ -2943,6 +2962,7 @@ gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
 {
   GstFlowReturn ret;
   GstPadGetRangeFunction getrangefunc;
+  gboolean emit_signal;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC, GST_FLOW_ERROR);
@@ -2953,6 +2973,8 @@ gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
   GST_LOCK (pad);
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
+
+  emit_signal = GST_PAD_DO_BUFFER_SIGNALS (pad) > 0;
   GST_UNLOCK (pad);
 
   if (G_UNLIKELY ((getrangefunc = GST_PAD_GETRANGEFUNC (pad)) == NULL))
@@ -2966,19 +2988,13 @@ gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
 
   ret = getrangefunc (pad, offset, size, buffer);
 
-  GST_STREAM_UNLOCK (pad);
-
-  if (ret == GST_FLOW_OK && g_atomic_int_get (&pad->emit_buffer_signals) >= 1) {
-    gboolean do_pass = TRUE;
-
-    do_pass = gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (*buffer));
-    if (!do_pass) {
-      GST_DEBUG ("Dropping data after FALSE probe return");
-      gst_buffer_unref (*buffer);
-      *buffer = NULL;
-      ret = GST_FLOW_UNEXPECTED;
-    }
+  /* can only fire the signal if we have a valid buffer */
+  if (G_UNLIKELY (emit_signal) && (ret == GST_FLOW_OK)) {
+    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (*buffer)))
+      goto dropping;
   }
+
+  GST_STREAM_UNLOCK (pad);
 
   return ret;
 
@@ -2998,6 +3014,14 @@ no_function:
             GST_DEBUG_PAD_NAME (pad)));
     GST_STREAM_UNLOCK (pad);
     return GST_FLOW_ERROR;
+  }
+dropping:
+  {
+    GST_DEBUG ("Dropping data after FALSE probe return");
+    GST_STREAM_UNLOCK (pad);
+    gst_buffer_unref (*buffer);
+    *buffer = NULL;
+    return GST_FLOW_UNEXPECTED;
   }
 }
 
@@ -3021,6 +3045,7 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
 {
   GstPad *peer;
   GstFlowReturn ret;
+  gboolean emit_signal;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK,
@@ -3035,6 +3060,10 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
     goto not_connected;
 
+  /* signal emision for the pad, peer has chance to emit when
+   * we call _get_range() */
+  emit_signal = GST_PAD_DO_BUFFER_SIGNALS (pad) > 0;
+
   gst_object_ref (peer);
   GST_UNLOCK (pad);
 
@@ -3042,18 +3071,11 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
 
   gst_object_unref (peer);
 
-  if (ret == GST_FLOW_OK && g_atomic_int_get (&pad->emit_buffer_signals) >= 1) {
-    gboolean do_pass = TRUE;
-
-    do_pass = gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (*buffer));
-    if (!do_pass) {
-      GST_DEBUG ("Dropping data after FALSE probe return");
-      gst_buffer_unref (*buffer);
-      *buffer = NULL;
-      ret = GST_FLOW_UNEXPECTED;
-    }
+  /* can only fire the signal if we have a valid buffer */
+  if (G_UNLIKELY (emit_signal) && (ret == GST_FLOW_OK)) {
+    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (*buffer)))
+      goto dropping;
   }
-
   return ret;
 
   /* ERROR recovery here */
@@ -3063,6 +3085,13 @@ not_connected:
         "pulling range, but it was not linked");
     GST_UNLOCK (pad);
     return GST_FLOW_NOT_LINKED;
+  }
+dropping:
+  {
+    GST_DEBUG ("Dropping data after FALSE probe return");
+    gst_buffer_unref (*buffer);
+    *buffer = NULL;
+    return GST_FLOW_UNEXPECTED;
   }
 }
 
@@ -3083,7 +3112,8 @@ gboolean
 gst_pad_push_event (GstPad * pad, GstEvent * event)
 {
   GstPad *peerpad;
-  gboolean result, do_pass = TRUE;
+  gboolean result;
+  gboolean emit_signal;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
@@ -3093,20 +3123,17 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   if (peerpad == NULL)
     goto not_linked;
 
+  emit_signal = GST_PAD_DO_EVENT_SIGNALS (pad) > 0;
+
   gst_object_ref (peerpad);
   GST_UNLOCK (pad);
 
-  if (g_atomic_int_get (&pad->emit_event_signals) >= 1) {
-    do_pass = gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (event));
+  if (G_UNLIKELY (emit_signal)) {
+    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (event)))
+      goto dropping;
   }
 
-  if (do_pass) {
-    result = gst_pad_send_event (peerpad, event);
-  } else {
-    GST_DEBUG ("Dropping event after FALSE probe return");
-    gst_event_unref (event);
-    result = FALSE;
-  }
+  result = gst_pad_send_event (peerpad, event);
 
   gst_object_unref (peerpad);
 
@@ -3117,6 +3144,13 @@ not_linked:
   {
     gst_event_unref (event);
     GST_UNLOCK (pad);
+    return FALSE;
+  }
+dropping:
+  {
+    GST_DEBUG ("Dropping event after FALSE probe return");
+    gst_object_unref (peerpad);
+    gst_event_unref (event);
     return FALSE;
   }
 }
@@ -3134,8 +3168,9 @@ not_linked:
 gboolean
 gst_pad_send_event (GstPad * pad, GstEvent * event)
 {
-  gboolean result = FALSE, do_pass = TRUE;
+  gboolean result = FALSE;
   GstPadEventFunction eventfunc;
+  gboolean emit_signal;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
@@ -3173,20 +3208,17 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
   if ((eventfunc = GST_PAD_EVENTFUNC (pad)) == NULL)
     goto no_function;
 
+  emit_signal = GST_PAD_DO_EVENT_SIGNALS (pad) > 0;
+
   gst_object_ref (pad);
   GST_UNLOCK (pad);
 
-  if (g_atomic_int_get (&pad->emit_event_signals) >= 1) {
-    do_pass = gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (event));
+  if (G_UNLIKELY (emit_signal)) {
+    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (event)))
+      goto dropping;
   }
 
-  if (do_pass) {
-    result = eventfunc (GST_PAD_CAST (pad), event);
-  } else {
-    GST_DEBUG ("Dropping event after FALSE probe return");
-    gst_event_unref (event);
-    result = FALSE;
-  }
+  result = eventfunc (GST_PAD_CAST (pad), event);
 
   gst_object_unref (pad);
 
@@ -3205,6 +3237,13 @@ flushing:
   {
     GST_UNLOCK (pad);
     GST_CAT_DEBUG (GST_CAT_EVENT, "Received event on flushing pad. Discarding");
+    gst_event_unref (event);
+    return FALSE;
+  }
+dropping:
+  {
+    GST_DEBUG ("Dropping event after FALSE probe return");
+    gst_object_unref (pad);
     gst_event_unref (event);
     return FALSE;
   }
