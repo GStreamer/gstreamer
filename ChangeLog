@@ -1,3 +1,10 @@
+2005-06-30  Torsten Schoenfeld  <kaffeetisch@gmx.de>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gsttaginterface.c:
+	  Some documentation fixes (#307394 and #307397).
+
 2005-06-30  Antoine Tremblay  <hexa00@gmail.com>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
