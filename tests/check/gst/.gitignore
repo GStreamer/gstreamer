@@ -10,6 +10,7 @@ gstiterator
 gstmessage
 gstobject
 gstpad
+gststructure
 gstsystemclock
 gsttag
 gstvalue
