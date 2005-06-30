@@ -20,7 +20,9 @@ clean-local:
 	  rm -rf $$i; \
 	done
 
-TESTS = $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@ 	\
+# FIXME: it'd be nicer to run the versioned register, but in that case
+# "make dist" complains about not finding gst-register-0.9.c
+TESTS = $(top_builddir)/tools/gst-register 	\
 	gst/gst				     	\
 	gst/gstbin			     	\
         gst/gstbuffer				\
