@@ -1,0 +1,168 @@
+<!-- ##### SECTION Title ##### -->
+gstmixer
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GstMixer ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstMixerClass ##### -->
+<para>
+
+</para>
+
+@klass: 
+@mixer_type: 
+@list_tracks: 
+@set_volume: 
+@get_volume: 
+@set_mute: 
+@set_record: 
+@mute_toggled: 
+@record_toggled: 
+@volume_changed: 
+@set_option: 
+@get_option: 
+@option_changed: 
+@_gst_reserved: 
+
+<!-- ##### STRUCT GstMixerOptions ##### -->
+<para>
+
+</para>
+
+@parent: 
+@values: 
+@_gst_reserved: 
+
+<!-- ##### STRUCT GstMixerTrack ##### -->
+<para>
+
+</para>
+
+@parent: 
+@label: 
+@flags: 
+
+<!-- ##### FUNCTION gst_mixer_list_tracks ##### -->
+<para>
+
+</para>
+
+@mixer: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_mixer_get_volume ##### -->
+<para>
+
+</para>
+
+@mixer: 
+@track: 
+@volumes: 
+
+
+<!-- ##### FUNCTION gst_mixer_set_volume ##### -->
+<para>
+
+</para>
+
+@mixer: 
+@track: 
+@volumes: 
+
+
+<!-- ##### FUNCTION gst_mixer_set_mute ##### -->
+<para>
+
+</para>
+
+@mixer: 
+@track: 
+@mute: 
+
+
+<!-- ##### FUNCTION gst_mixer_set_record ##### -->
+<para>
+
+</para>
+
+@mixer: 
+@track: 
+@record: 
+
+
+<!-- ##### FUNCTION gst_mixer_set_option ##### -->
+<para>
+
+</para>
+
+@mixer: 
+@opts: 
+@value: 
+
+
+<!-- ##### FUNCTION gst_mixer_mute_toggled ##### -->
+<para>
+
+</para>
+
+@mixer: 
+@track: 
+@mute: 
+
+
+<!-- ##### FUNCTION gst_mixer_record_toggled ##### -->
+<para>
+
+</para>
+
+@mixer: 
+@track: 
+@record: 
+
+
+<!-- ##### FUNCTION gst_mixer_volume_changed ##### -->
+<para>
+
+</para>
+
+@mixer: 
+@track: 
+@volumes: 
+
+
+<!-- ##### FUNCTION gst_mixer_option_changed ##### -->
+<para>
+
+</para>
+
+@mixer: 
+@opts: 
+@value: 
+
+
+<!-- ##### FUNCTION gst_mixer_options_get_values ##### -->
+<para>
+
+</para>
+
+@mixer_options: 
+@Returns: 
+
+
