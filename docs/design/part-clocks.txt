@@ -30,7 +30,7 @@ is defined as follows:
  - In PLAYING, the stream time is the delta between the absolute time
    and the base time. The base time is defined as the absolute time minus
    the stream time at the time when the pipeline is set to PLAYING.
- - after a seek, the stream time is set to seek time.
+ - after a seek, the stream time is set to 0 (see part-seeking.txt)
 
 The stream time is completely managed by the GstPipeline object using the
 GstClock absolute time.
@@ -83,7 +83,10 @@ not possible, the callback will only be called once.
 
 None of the wait operations unref the GstClockID, the owner is 
 responsible for unreffing the ids itself. This holds for both periodic and
-single shot notifications. 
+single shot notifications. The reason being that the owner of the ClockID
+has to keep a handle to the ID to unblock the wait on FLUSHING events
+or state changes and if we unref it automatically, the handle might be
+invalid.
 
 These clock operations do not operate on the stream time, so the callbacks
 will also occur when not in PLAYING state as if the clock just keeps on 

@@ -1,5 +1,14 @@
 2005-06-30  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design/part-clocks.txt:
+	* docs/design/part-element-sink.txt:
+	* docs/design/part-events.txt:
+	* docs/design/part-preroll.txt:
+	* docs/design/part-states.txt:
+	Some more tweeks and additions to the docs.
+
+2005-06-30  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstpad.c: (_gst_do_pass_data_accumulator),
 	(default_have_data), (gst_pad_class_init), (gst_pad_init),
 	(gst_pad_emit_have_data_signal), (gst_pad_chain), (gst_pad_push),

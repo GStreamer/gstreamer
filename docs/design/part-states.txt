@@ -34,11 +34,15 @@ The STATE_LOCK protects 3 element variables:
   - STATE
   - PENDING_STATE 
   - STATE_ERROR flag
+  - NO_PREROLL flag
 
 The STATE always reflects the current state of the element. The PENDING_STATE
 always reflects the required state of the element. The PENDING_STATE can be
 VOID_PENDING if the element is in the right state. The STATE_ERROR flag 
 indicates that an error occured while doing the last state change.
+
+The NO_PREROLL flag indicates that the element said it was not able to preroll
+in its last state change. This flag is used in live sources.
 
 
 Setting state on elements
@@ -83,7 +87,11 @@ function returns a GstElementStateReturn.
 
  - If the element returned SUCCESS to the previous _set_state() function, this
    function will return the last state set on the element and VOID_PENDING in
-   the pending state value.
+   the pending state value. The function returns GST_STATE_SUCCESS.
+
+ - If the element returned NO_PREROLL to the previous _set_state() function, this
+   function will return the last state set on the element and VOID_PENDING in
+   the pending state value. The function returns GST_STATE_NO_PREROLL.
 
  - If the element returned FAILURE to the previous _set_state() call, this 
    funciton will return FAILURE with the state set to the current state of
@@ -139,7 +147,7 @@ The current state of the bin can be retrieved with _get_state(). This function w
 call the _get_state() function on all the elements. 
 
 First the bin will perform a _get_state() on all children with a 0 timeout. This
-is to find any children with an ERROR/NO_PREROLL result value.
+is to find any children with an ERROR/NO_PREROLL result value. 
 
 Then the bin performs the _get_state() with the requested timeout. The reason for
 the 2 phases is that when an ERROR or NO_PREROLL result is found, a blocking 
