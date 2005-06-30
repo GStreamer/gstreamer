@@ -54,6 +54,9 @@ struct _GstBaseSink {
   /*< protected >*/ /* with PREROLL_LOCK */
   GQueue	*preroll_queue;
   gint		 preroll_queue_max_len;
+  gint		 preroll_queued;
+  gint		 buffers_queued;
+  gint		 events_queued;
 
   guint64	 offset;
   gboolean	 has_loop;

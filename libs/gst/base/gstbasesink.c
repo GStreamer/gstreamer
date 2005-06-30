@@ -380,12 +380,28 @@ gst_base_sink_preroll_queue_empty (GstBaseSink * basesink, GstPad * pad)
   if (q) {
     GST_DEBUG ("emptying queue");
     while ((obj = g_queue_pop_head (q))) {
+      gboolean is_buffer;
+
+      is_buffer = GST_IS_BUFFER (obj);
+      if (is_buffer) {
+        basesink->preroll_queued--;
+        basesink->buffers_queued--;
+      } else {
+        switch (GST_EVENT_TYPE (obj)) {
+          case GST_EVENT_EOS:
+            basesink->preroll_queued--;
+            break;
+          default:
+            break;
+        }
+        basesink->events_queued--;
+      }
       /* we release the preroll lock while pushing so that we
        * can still flush it while blocking on the clock or
        * inside the element. */
       GST_PREROLL_UNLOCK (pad);
 
-      if (GST_IS_BUFFER (obj)) {
+      if (is_buffer) {
         GST_DEBUG ("poped buffer %p", obj);
         ret = gst_base_sink_handle_buffer (basesink, GST_BUFFER (obj));
       } else {
@@ -417,6 +433,9 @@ gst_base_sink_preroll_queue_flush (GstBaseSink * basesink, GstPad * pad)
   }
   /* we can't have EOS anymore now */
   basesink->eos = FALSE;
+  basesink->preroll_queued = 0;
+  basesink->buffers_queued = 0;
+  basesink->events_queued = 0;
   /* and signal any waiters now */
   GST_PREROLL_SIGNAL (pad);
 }
@@ -432,22 +451,34 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
 
   GST_PREROLL_LOCK (pad);
   /* push object on the queue */
-  GST_DEBUG ("push on queue %p %p", basesink, obj);
+  GST_DEBUG ("push on queue %p", basesink, obj);
   g_queue_push_tail (basesink->preroll_queue, obj);
 
   have_event = GST_IS_EVENT (obj);
-
-  if (have_event && GST_EVENT_TYPE (obj) == GST_EVENT_EOS) {
-    basesink->eos = TRUE;
+  if (have_event) {
+    switch (GST_EVENT_TYPE (obj)) {
+      case GST_EVENT_EOS:
+        basesink->preroll_queued++;
+        basesink->eos = TRUE;
+        break;
+      default:
+        break;
+    }
+    basesink->events_queued++;
+  } else {
+    basesink->preroll_queued++;
+    basesink->buffers_queued++;
   }
+  GST_DEBUG ("now %d preroll, %d buffers, %d events on queue",
+      basesink->preroll_queued,
+      basesink->buffers_queued, basesink->events_queued);
 
   /* check if we are prerolling */
   if (!basesink->need_preroll)
     goto no_preroll;
 
-  length = basesink->preroll_queue->length;
-  /* this is the first object we queued */
-  if (length == 1) {
+  /* there is a buffer queued */
+  if (basesink->buffers_queued == 1) {
     GST_DEBUG ("do preroll %p", obj);
 
     /* if it's a buffer, we need to call the preroll method */
@@ -459,46 +490,50 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
         bclass->preroll (basesink, GST_BUFFER (obj));
     }
   }
-  /* we are prerolling */
-  GST_DEBUG ("finish preroll %p >", basesink);
-  basesink->have_preroll = TRUE;
-  GST_PREROLL_UNLOCK (pad);
+  length = basesink->preroll_queued;
+  GST_DEBUG ("prerolled length %d", length);
 
-  /* have to release STREAM_LOCK as we cannot take the STATE_LOCK
-   * inside the STREAM_LOCK */
-  t = GST_STREAM_UNLOCK_FULL (pad);
-  GST_DEBUG ("released stream lock %d times", t);
-  if (t == 0) {
-    GST_WARNING ("STREAM_LOCK should have been locked !!");
-    g_warning ("STREAM_LOCK should have been locked !!");
+  if (length == 1) {
+    basesink->have_preroll = TRUE;
+    /* we are prerolling */
+    GST_PREROLL_UNLOCK (pad);
+
+    /* have to release STREAM_LOCK as we cannot take the STATE_LOCK
+     * inside the STREAM_LOCK */
+    t = GST_STREAM_UNLOCK_FULL (pad);
+    GST_DEBUG ("released stream lock %d times", t);
+    if (t == 0) {
+      GST_WARNING ("STREAM_LOCK should have been locked !!");
+      g_warning ("STREAM_LOCK should have been locked !!");
+    }
+
+    /* now we commit our state */
+    GST_STATE_LOCK (basesink);
+    GST_DEBUG ("commit state %p >", basesink);
+    gst_element_commit_state (GST_ELEMENT (basesink));
+    GST_STATE_UNLOCK (basesink);
+
+    /* reacquire stream lock, pad could be flushing now */
+    /* FIXME in glib, if t==0, the lock is still taken... hmmm */
+    if (t > 0)
+      GST_STREAM_LOCK_FULL (pad, t);
+
+    /* and wait if needed */
+    GST_PREROLL_LOCK (pad);
+
+    GST_LOCK (pad);
+    if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+      goto flushing;
+    GST_UNLOCK (pad);
+
+    /* it is possible that the application set the state to PLAYING
+     * now in which case we don't need to block anymore. */
+    if (!basesink->need_preroll)
+      goto no_preroll;
+
+    length = basesink->preroll_queued;
   }
 
-  /* now we commit our state */
-  GST_STATE_LOCK (basesink);
-  GST_DEBUG ("commit state %p >", basesink);
-  gst_element_commit_state (GST_ELEMENT (basesink));
-  GST_STATE_UNLOCK (basesink);
-
-  /* reacquire stream lock, pad could be flushing now */
-  /* FIXME in glib, if t==0, the lock is still taken... hmmm */
-  if (t > 0)
-    GST_STREAM_LOCK_FULL (pad, t);
-
-  /* and wait if needed */
-  GST_PREROLL_LOCK (pad);
-
-  GST_LOCK (pad);
-  if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
-    goto flushing;
-  GST_UNLOCK (pad);
-
-  /* it is possible that the application set the state to PLAYING
-   * now in which case we don't need to block anymore. */
-  if (!basesink->need_preroll)
-    goto no_preroll;
-
-  length = basesink->preroll_queue->length;
-  GST_DEBUG ("prerolled length %d", length);
   /* see if we need to block now. We cannot block on events, only
    * on buffers, the reason is that events can be sent from the
    * application thread and we don't want to block there. */
