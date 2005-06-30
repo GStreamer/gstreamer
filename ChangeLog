@@ -1,3 +1,8 @@
+2005-06-30  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstghostpad.c (gst_ghost_pad_do_activate_push): Proxy
+	activate_push down to the internal pad as well.
+
 2005-06-30  Torsten Schoenfeld  <kaffeetisch@gmx.de>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>

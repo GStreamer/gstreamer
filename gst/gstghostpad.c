@@ -506,6 +506,26 @@ gst_ghost_proxy_pad_do_activate_pull (GstPad * pad, gboolean active)
   return ret;
 }
 
+static gboolean
+gst_ghost_pad_do_activate_push (GstPad * pad, gboolean active)
+{
+  GstPad *internal;
+  gboolean ret;
+
+  ret = gst_proxy_pad_do_activatepush (pad, active);
+
+  GST_LOCK (pad);
+
+  internal = GST_GHOST_PAD (pad)->internal;
+
+  if (internal)
+    ret &= gst_pad_activate_push (internal, active);
+
+  GST_UNLOCK (pad);
+
+  return ret;
+}
+
 static GstPadLinkReturn
 gst_ghost_pad_do_link (GstPad * pad, GstPad * peer)
 {
@@ -680,6 +700,7 @@ gst_ghost_pad_new (const gchar * name, GstPad * target)
       "direction", GST_PAD_DIRECTION (target),
       "template", GST_PAD_PAD_TEMPLATE (target), "target", target, NULL);
 
+  gst_pad_set_activatepush_function (ret, gst_ghost_pad_do_activate_push);
   gst_pad_set_link_function (ret, gst_ghost_pad_do_link);
   gst_pad_set_unlink_function (ret, gst_ghost_pad_do_unlink);
 
