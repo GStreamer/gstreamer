@@ -916,12 +916,8 @@ gconf/gstreamer.schemas
 pkgconfig/Makefile
 pkgconfig/gstreamer-gconf.pc
 pkgconfig/gstreamer-gconf-uninstalled.pc
-pkgconfig/gstreamer-interfaces.pc
-pkgconfig/gstreamer-interfaces-uninstalled.pc
-pkgconfig/gstreamer-libs.pc
-pkgconfig/gstreamer-libs-uninstalled.pc
-pkgconfig/gstreamer-plugins.pc
-pkgconfig/gstreamer-plugins-uninstalled.pc
+pkgconfig/gstreamer-plugins-base.pc
+pkgconfig/gstreamer-plugins-base-uninstalled.pc
 docs/Makefile
 docs/libs/Makefile
 docs/version.entities
