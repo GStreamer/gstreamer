@@ -5,9 +5,6 @@ TESTS_ENVIRONMENT=\
 
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
-# make all tests depend on the versioned gst-register
-$(TESTS): $(top_builddir)/tools/gst-register
-
 # rebuild gst-register-@GST_MAJORMINOR@ if needed
 $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@$(EXEEXT):
 	cd $(top_builddir)/tools && make
@@ -23,7 +20,7 @@ clean-local:
 	  rm -rf $$i; \
 	done
 
-TESTS = $(top_builddir)/tools/gst-register 	\
+TESTS = $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@ 	\
 	gst/gst				     	\
 	gst/gstbin			     	\
         gst/gstbuffer				\
