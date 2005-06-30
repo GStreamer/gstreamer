@@ -1,5 +1,10 @@
 2005-06-30  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ogg/gstogmparse.c: (gst_ogm_parse_chain):
+	  Fix build after riff changes.
+
+2005-06-30  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),
 	(gst_riff_create_audio_caps), (gst_riff_create_iavs_caps),
 	(gst_riff_create_video_template_caps),
