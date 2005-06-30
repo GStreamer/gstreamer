@@ -1,0 +1,14 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/../gst-libs/gst
+includedir=${pcfiledir}/../gst-libs
+
+Name: GStreamer Base Plugins Libraries, Uninstalled
+Description: Streaming media framework, base plugins libraries, uninstalled
+Version: @VERSION@
+Requires: gstreamer-@GST_MAJORMINOR@
+
+Libs: -L${libdir}/audio -L${libdir}/floatcast -L${libdir}/interfaces -L${libdir}/net -L${libdir}/riff -L${libdir}/tag -L${libdir}/video
+Cflags: -I${includedir}
+
+libraries=audio floatcast interfaces net riff tag video
