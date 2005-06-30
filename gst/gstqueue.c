@@ -764,11 +764,14 @@ out_flushing:
 static gboolean
 gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
 {
-  GstQueue *queue = GST_QUEUE (GST_PAD_PARENT (pad));
   gboolean res = TRUE;
+
+#ifndef GST_DISABLE_DEBUG
+  GstQueue *queue = GST_QUEUE (GST_PAD_PARENT (pad));
 
   GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "got event %p (%d)",
       event, GST_EVENT_TYPE (event));
+#endif
 
   res = gst_pad_event_default (pad, event);
 
