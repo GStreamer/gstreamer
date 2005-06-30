@@ -1,6 +1,6 @@
 <SECTION>
 <FILE>gstaudio</FILE>
-<INCLUDE>gst-libs/gst/audio/audio.h</INCLUDE>
+<INCLUDE>gst/audio/audio.h</INCLUDE>
 GstAudioFieldFlag
 gst_audio_frame_byte_size
 gst_audio_frame_length
@@ -11,8 +11,9 @@ gst_audio_is_buffer_framed
 gst_audio_structure_set_int
 </SECTION>
 
+<SECTION>
 <FILE>gstcolorbalance</FILE>
-<INCLUDE>gst-libs/gst/colorbalance/colorbalance.h</INCLUDE>
+<INCLUDE>gst/interfaces/colorbalance.h</INCLUDE>
 GstColorBalance
 GstColorBalanceClass
 gst_color_balance_list_channels
@@ -23,13 +24,13 @@ gst_color_balance_value_changed
 
 <SECTION>
 <FILE>gstgconf</FILE>
-<INCLUDE>gst-libs/gst/gconf/gconf.h</INCLUDE>
+<INCLUDE>gst/gconf/gconf.h</INCLUDE>
 gst_gconf_get_string
 </SECTION>
 
 <SECTION>
 <FILE>gstringbuffer</FILE>
-<INCLUDE>gst-libs/gst/audio/gstringbuffer.h</INCLUDE>
+<INCLUDE>gst/audio/gstringbuffer.h</INCLUDE>
 GstRingBuffer
 GstRingBufferClass
 
