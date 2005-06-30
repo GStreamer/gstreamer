@@ -1,5 +1,10 @@
 2005-06-30  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_query):
+	  Compiler pains.
+
+2005-06-30  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* configure.ac:
 	* gst/avi/Makefile.am:
 	* gst/avi/gstavi.c: (plugin_init):

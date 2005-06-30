@@ -387,7 +387,7 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:{
-      gint64 len, pos;
+      gint64 len, pos = 0;
 
       len = (((gfloat) stream->strh->scale) * stream->strh->length /
           stream->strh->rate) * GST_SECOND;
@@ -418,7 +418,8 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query)
           pos = stream->current_frame * demux->avih->us_frame * GST_USECOND;
         }
       }
-      gst_query_set_position (query, GST_FORMAT_TIME, pos, len);
+      if (res)
+        gst_query_set_position (query, GST_FORMAT_TIME, pos, len);
       break;
     }
     default:
