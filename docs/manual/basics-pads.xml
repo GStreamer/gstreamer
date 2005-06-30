@@ -391,7 +391,8 @@ Pad Templates:
           specific subset of their supported stream types. An application
           can, for example, use <quote>filtered caps</quote> to set a
           specific (non-fixed) video size that will stream between two
-          pads.
+          pads. You will see an example of filtered caps further on in
+          this manual, in <xref linkend="section-data-spoof"/>.
         </para>
       </listitem>
     </itemizedlist>

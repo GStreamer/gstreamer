@@ -138,6 +138,14 @@ main (gint   argc,
       (using fakesrc) or grab (using fakesink or identity) data from a
       pipeline, and how to set negotiation.
     </para>
+    <para>
+      Those who're paying close attention, will notice that the purpose
+      of identity is almost identical to that of probes. Indeed, this is
+      true. Probes allow for the same purpose, and a bunch more, and
+      with less overhead plus dynamic removing/adding of handlers, but
+      apart from those, probes and identity have the same purpose, just
+      in a completely different implementation type.
+    </para>
 
     <sect2 id="section-spoof-handoff">
       <title>Inserting or grabbing data</title>
@@ -170,9 +178,12 @@ main (gint   argc,
         or an audio bitsize and number of channels. You can do this by
         forcing a specific <classname>GstCaps</classname> on the pipeline,
         which is possible by using <emphasis>filtered caps</emphasis>. You
-        can set a filtered caps on a link by using
-        <function>gst_pad_link_filtered ()</function>, where the third
-        argument is the format to force on the link.
+        can set a filtered caps on a link by using the
+        <quote>capsfilter</quote> element in between the two elements, and
+        specifying a <classname>GstCaps</classname> as
+        <quote>filter-caps</quote> property on this element. It will then
+        only allow types matching that specified capability set for
+        negotiation.
       </para>
     </sect2>
 
@@ -209,30 +220,32 @@ gint
 main (gint   argc,
       gchar *argv[])
 {
-  GstElement *pipeline, *fakesrc, *conv, *videosink;
-  GstCaps *filter;
+  GstElement *pipeline, *fakesrc, *flt, *conv, *videosink;
+  GMainLoop *loop;
 
   /* init GStreamer */
   gst_init (&amp;argc, &amp;argv);
+  loop = g_main_loop_new (NULL, FALSE);
 
   /* setup pipeline */
   pipeline = gst_pipeline_new ("pipeline");
   fakesrc = gst_element_factory_make ("fakesrc", "source");
+  flt = gst_element_factory_make ("capsfilter", "flt");
   conv = gst_element_factory_make ("ffmpegcolorspace", "conv");
-  videosink = gst_element_factory_make ("ximagesink", "videosink");
+  videosink = gst_element_factory_make ("xvimagesink", "videosink");
 
   /* setup */
-  filter = gst_caps_new_simple ("video/x-raw-rgb",
-				"width", G_TYPE_INT, 384,
-				"height", G_TYPE_INT, 288,
-				"framerate", G_TYPE_DOUBLE, (gdouble) 1.0,
-				"bpp", G_TYPE_INT, 16,
-				"depth", G_TYPE_INT, 16,
-				"endianness", G_TYPE_INT, G_BYTE_ORDER,
-				NULL);
-  gst_element_link_filtered (fakesrc, conv, filter);
-  gst_element_link (conv, videosink);
-  gst_bin_add_many (GST_BIN (pipeline), fakesrc, conv, videosink, NULL);
+  g_object_set (G_OBJECT (flt), "filter-caps",
+  		gst_caps_new_simple ("video/x-raw-rgb",
+				     "width", G_TYPE_INT, 384,
+				     "height", G_TYPE_INT, 288,
+				     "framerate", G_TYPE_DOUBLE, (gdouble) 1.0,
+				     "bpp", G_TYPE_INT, 16,
+				     "depth", G_TYPE_INT, 16,
+				     "endianness", G_TYPE_INT, G_BYTE_ORDER,
+				     NULL), NULL);
+  gst_element_link_many (fakesrc, flt, conv, videosink, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), fakesrc, flt, conv, videosink, NULL);
 
   /* setup fake source */
   g_object_set (G_OBJECT (fakesrc),
@@ -243,7 +256,7 @@ main (gint   argc,
 
   /* play */
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  while (gst_bin_iterate (GST_BIN (pipeline))) ;
+  g_main_loop_run (loop);
 
   /* clean up */
   gst_element_set_state (pipeline, GST_STATE_NULL);
