@@ -1,3 +1,28 @@
+2005-06-30  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/avi/Makefile.am:
+	* gst/avi/gstavi.c: (plugin_init):
+	* gst/avi/gstavidemux.c: (gst_avi_demux_get_type),
+	(gst_avi_demux_class_init), (gst_avi_demux_init),
+	(gst_avi_demux_reset), (gst_avi_demux_index_next),
+	(gst_avi_demux_index_entry_for_time),
+	(gst_avi_demux_index_entry_for_byte),
+	(gst_avi_demux_index_entry_for_frame), (gst_avi_demux_src_convert),
+	(gst_avi_demux_handle_src_query), (gst_avi_demux_handle_src_event),
+	(gst_avi_demux_parse_file_header), (gst_avi_demux_stream_init),
+	(gst_avi_demux_parse_avih), (gst_avi_demux_parse_superindex),
+	(gst_avi_demux_parse_subindex), (gst_avi_demux_read_subindexes),
+	(gst_avi_demux_parse_stream), (gst_avi_demux_parse_odml),
+	(gst_avi_demux_parse_index), (gst_avi_demux_stream_index),
+	(gst_avi_demux_stream_scan), (gst_avi_demux_massage_index),
+	(gst_avi_demux_stream_header), (gst_avi_demux_handle_seek),
+	(gst_avi_demux_process_next_entry), (gst_avi_demux_stream_data),
+	(gst_avi_demux_loop), (gst_avi_demux_sink_activate),
+	(gst_avi_demux_sink_activate_pull):
+	* gst/avi/gstavidemux.h:
+	  Port from -THREADED to HEAD, and fix for latest API changes of
+	  the day. Keep avimux dead for now.
+
 2005-06-29  Wim Taymans  <wim@fluendo.com>
 
 	* ext/shout2/gstshout2.c: (gst_shout2send_render):

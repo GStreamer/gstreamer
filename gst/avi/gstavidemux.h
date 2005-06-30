@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 
+#include "avi-ids.h"
 #include "gst/riff/riff-ids.h"
 #include "gst/riff/riff-read.h"
 
@@ -61,24 +62,24 @@ typedef struct {
 
   /* pad, strh */
   GstPad	*pad;
-  GstCaps	*caps;
   gst_riff_strh	*strh;
-  gint           blockalign, bitrate;
-  gint           width, height;
+  union {
+    gst_riff_strf_vids *vids;
+    gst_riff_strf_auds *auds;
+    gst_riff_strf_iavs *iavs;
+    gpointer	 data;
+  } strf;
+  GstBuffer	*extradata, *initdata;
+  gchar		*name;
 
   /* current position (byte, frame, time) */
   guint 	 current_frame;
   guint64 	 current_byte;
   gint		 current_entry;
 
-  /* delay in time (init_frames) */
-  guint64 	 delay;
-
   /* stream length */
   guint64	 total_bytes;
   guint32	 total_frames;
-
-  guint32	 skip;
 
   guint64	*indexes;
 } avi_stream_context;
@@ -90,14 +91,14 @@ typedef enum {
 } GstAviDemuxState;
 
 typedef struct _GstAviDemux {
-  GstRiffRead	 parent;
+  GstElement	 parent;
 
   /* pads */
   GstPad 	*sinkpad;
 
   /* AVI decoding state */
   GstAviDemuxState state;
-  guint          level_up;
+  guint64	 offset;
 
   /* index */
   gst_avi_index_entry *index_entries;
@@ -112,18 +113,18 @@ typedef struct _GstAviDemux {
   avi_stream_context stream[GST_AVI_DEMUX_MAX_STREAMS];
 
   /* some stream info for length */
-  guint32	 us_per_frame;
-  guint32	 num_frames;
+  gst_riff_avih	*avih;
 
   /* seeking */
   guint64 	 seek_offset;
   guint64	 last_seek;
   gint		 seek_entry;
   gboolean	 seek_flush;
+  GstEvent	*seek_event;
 } GstAviDemux;
 
 typedef struct _GstAviDemuxClass {
-  GstRiffReadClass parent_class;
+  GstElementClass parent_class;
 } GstAviDemuxClass;
 
 GType 		gst_avi_demux_get_type		(void);
