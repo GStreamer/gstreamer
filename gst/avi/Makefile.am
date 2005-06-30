@@ -12,7 +12,7 @@ noinst_HEADERS = \
 libgstavi_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	-I$(top_srcdir)/gst-libs	\
 	-DGETTEXT_PACKAGE="\"gst-plugins\""
-libgstavi_la_LIBADD =
+libgstavi_la_LIBADD = -lgstriff-0.9
 libgstavi_la_LDFLAGS = \
 	$(GST_PLUGIN_LDFLAGS) \
 	$(GST_PLUGINS_BASE_LIBS)
