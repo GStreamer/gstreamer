@@ -93,7 +93,7 @@ GstTunerChannel *
 
 const GList *	gst_tuner_list_norms		(GstTuner        *tuner);
 void		gst_tuner_set_norm		(GstTuner        *tuner,
-						 GstTunerNorm    *channel);
+						 GstTunerNorm    *norm);
 GstTunerNorm *	gst_tuner_get_norm		(GstTuner        *tuner);
 
 void		gst_tuner_set_frequency		(GstTuner        *tuner,
