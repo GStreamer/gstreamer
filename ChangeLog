@@ -1,5 +1,18 @@
 2005-06-30  Wim Taymans  <wim@fluendo.com>
 
+	* CHANGES-0.9:
+	* docs/design/draft-ghostpads.txt:
+	* docs/design/draft-push-pull.txt:
+	* docs/design/draft-query.txt:
+	* docs/design/part-TODO.txt:
+	* docs/design/part-query.txt:
+	Added CHANGES-0.9 doc, updated status of other docs.
+	
+	* gst/gstquery.h:
+	Remove "hmm" macro
+
+2005-06-30  Wim Taymans  <wim@fluendo.com>
+
 	* gst/base/gstbasesink.c: (gst_base_sink_preroll_queue_empty),
 	(gst_base_sink_preroll_queue_flush), (gst_base_sink_handle_object),
 	(gst_base_sink_change_state):

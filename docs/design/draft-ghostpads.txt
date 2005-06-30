@@ -3,7 +3,7 @@ Ghostpads
 
 Status:
 
-  DRAFT.
+  DRAFT.  DEPRECATED by better current implementation.
 
 
 Purpose:

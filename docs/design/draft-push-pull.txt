@@ -3,7 +3,7 @@ DRAFT push-pull scheduling
 
 Status
 
-  DRAFT
+  DRAFT. DEPRECATED by better current implementation.
 
 Observations:
 

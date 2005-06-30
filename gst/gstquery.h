@@ -156,10 +156,6 @@ GstQuery *	gst_query_new_application 	(GstQueryType type,
 
 GstStructure *  gst_query_get_structure		(GstQuery *query);
 
-/* hmm */
-#define GST_QUERY_POSITION_GET_FORMAT(q) \
-    (gst_structure_get_int ((q)->structure, "format"))
-
 G_END_DECLS
 
 #endif /* __GST_QUERY_H__ */

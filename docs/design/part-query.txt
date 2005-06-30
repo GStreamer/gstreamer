@@ -1,69 +1,93 @@
-Query
------
-
-Queries are used to get information about the state of the stream.
-Various queries exist such as get the total length and the position
-
-A query can be performed on a pad or on an element. Both the element
-and the pad query have default behaviour unless a custom query handler
-is installed.
-
-The default pad query handler will forward the query to an internally
-linked pad. This internally linked pad is either obtained by calling
-the internal_links function of the pad or by using the default 
-function (which selects the pads with oposite directions from the parent
-element).
-
-The default element query function will select a random source pad to
-send the event to.
-
-The pad query function has the following prototype:
-
-    gboolean (*GstPadQueryFunction) (GstPad *pad, GstQueryType type,
-                                     GstFormat *format, gint64  *value);
-
-The query function can return a single value in one of the defined
-formats.
-
-The function returns TRUE if the query could be performed. The returned
-values are undefined when this function returns FALSE.
-
-
-Query types
+DRAFT Query
 -----------
 
- GST_QUERY_TOTAL:
+Status
 
-   get the total length of the stream in the given format.
+  Implemented, move me to design...
 
- GST_QUERY_POSITION:
+Purpose
 
-   get the current position in the stream in the given format.
+  Queries are used to get information about the stream. 
+  A query is started on a specific pad and travels up or downstream.
 
- GST_QUERY_LATENCY:
+Types of queries
 
-   get the latency introduced in the stream in the given format.
-   This query can be used to retrieve how much data is queued in a
-   queue or in a hardware device such as an audio sink.
+  - get length of stream
+  - get position in stream
+  - get seeking capabilities
+  - get latency
+  - convert one value to another
+  - query supported formats
+  - query internal links.
 
- GST_QUERY_JITTER:
+Current implementation
 
-   Get the jitter, this is the difference between the expected and real
-   time a buffer is captured or played.
+  The current implementation of query requires pads to implement the 
+  following functions:
 
- GST_QUERY_START:
+     gboolean                (*GstPadConvertFunction)        (GstPad *pad,
+                                                              GstFormat src_format,  gint64  src_value,
+                                                              GstFormat *dest_format, gint64 *dest_value);
+     gboolean                (*GstPadQueryFunction)          (GstPad *pad, GstQueryType type,
+                                                              GstFormat *format, gint64  *value);
+     GList*                  (*GstPadIntLinkFunction)        (GstPad *pad);
+     const GstFormat*        (*GstPadFormatsFunction)        (GstPad *pad);
+     const GstEventMask*     (*GstPadEventMaskFunction)      (GstPad *pad);
+     const GstQueryType*     (*GstPadQueryTypeFunction)      (GstPad *pad);
 
-   Query the position in the stream where the last start position was
-   configured. When a seek was performed to play a stream from A to B,
-   this query will return A.
+  Most of these functions are not very extensible in particular,
+  the queryfunction can only return one value.
 
- GST_QUERY_SEGMENT_END:
 
-   Query the position in the stream where the last end position was
-   configured. When a seek was performed to play a stream from A to B,
-   this query will return B.
+Requirements
 
- GST_QUERY_RATE:
+  - multiple return values, grouped together when they make sense.
+  - one pad function to perform the query
+  - extensible queries.
 
-   Query the current playback rate of the stream.
+Proposition
+
+  - define GstQuery extending GstData and containing a GstStructure (see GstMessage)
+  - define standard query types (see proposed types)
+  - define methods to create a parse the results in the GstQuery.
+  - define pad method:
+
+     gboolean                (*GstPadQueryFunction)          (GstPad *pad, GstQuery *query);
+
+    pad returns result in query structure and TRUE as result or FALSE when
+    query is not supported.
+
+Proposed types
+
+ - GST_QUERY_SEEKING:
+   
+     - get info on how seeking can be done 
+         - getrange, with/without offset/size
+	 - ranges where seeking is efficient (for caching network sources)
+	 - flags describing seeking behaviour (forward, backward, segments,
+	             play backwards, ...)
+
+ - GST_QUERY_POSITION:
+  
+     - get info on current position of the stream
+       - start position
+       - current position
+       - end position
+       - length
+ 
+ - GST_QUERY_LATENCY:
+
+     - get amount of buffering 
+
+ - GST_QUERY_CONVERT:
+
+     - convert format/value to another format/value pair.
+
+ - GST_QUERY_FORMATS:
+
+     - return list of supported formats.
+
+Also????
+
+ - GST_QUERY_CAPS:
 
