@@ -9,14 +9,10 @@ endif
 ### all of the standard pc files we need to generate
 pcverfiles =  \
 	$(GCONF_PC) \
-	gstreamer-interfaces-@GST_MAJORMINOR@.pc \
-	gstreamer-libs-@GST_MAJORMINOR@.pc \
-	gstreamer-plugins-@GST_MAJORMINOR@.pc
+	gstreamer-plugins-base-@GST_MAJORMINOR@.pc
 pcverfiles_uninstalled = \
 	$(GCONF_PC_UNINSTALLED) \
-	gstreamer-interfaces-@GST_MAJORMINOR@-uninstalled.pc \
-	gstreamer-libs-@GST_MAJORMINOR@-uninstalled.pc \
-	gstreamer-plugins-@GST_MAJORMINOR@-uninstalled.pc
+	gstreamer-plugins-base-@GST_MAJORMINOR@-uninstalled.pc
 
 pcverfiles_gconf = $(GCONF_PC) $(GCONF_PC_UNINSTALLED)
 all-local: $(pcverfiles) $(pcverfiles_uninstalled)
@@ -33,9 +29,7 @@ pkgconfig_DATA = $(pcverfiles)
 CLEANFILES = $(pcverfiles) $(pcverfiles_uninstalled)
 pcinfiles = \
            gstreamer-gconf.pc.in gstreamer-gconf-uninstalled.pc.in \
-           gstreamer-interfaces.pc.in gstreamer-interfaces-uninstalled.pc.in \
-           gstreamer-libs.pc.in gstreamer-libs-uninstalled.pc.in \
-           gstreamer-plugins.pc.in gstreamer-plugins-uninstalled.pc.in
+           gstreamer-plugins-base.pc.in gstreamer-plugins-base-uninstalled.pc.in
 
 DISTCLEANFILES = $(pcinfiles:.in=)
 EXTRA_DIST = $(pcinfiles)
