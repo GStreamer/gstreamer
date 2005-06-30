@@ -928,10 +928,10 @@ m4/Makefile
 )
 AC_OUTPUT
 
-echo -n "configure: *** Plug-ins that will be built :"
+echo -n "configure: *** Plug-ins that will be built:"
 echo -e "$GST_PLUGINS_YES" | sort
 echo
-echo -n "configure: *** Plug-ins that will not be built :"
+echo -n "configure: *** Plug-ins that will not be built:"
 echo -e "$GST_PLUGINS_NO" | sort
 echo
 if test "x$BUILD_EXTERNAL" = "xno"; then

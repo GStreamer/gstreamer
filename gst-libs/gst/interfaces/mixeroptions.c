@@ -91,7 +91,7 @@ gst_mixer_options_init (GstMixerOptions * mixer_options)
 
 /**
  * gst_mixer_options_get_values:
- * @mixer_optnios: The #GstMixerOptions item that owns the values.
+ * @mixer_options: The #GstMixerOptions item that owns the values.
  *
  * Get the values for the mixer option.
  *
