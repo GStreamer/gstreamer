@@ -65,7 +65,7 @@ CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*.c
 #	$(top_builddir)/gst/schedulers/libgstbasicomegascheduler.la
 #SCANOBJ_DEPS = $(top_builddir)/libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
 SCANOBJ_DEPS = \
-	$(top_builddir)/gst-libs/gst/colorbalance/libgstcolorbalance.la \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la
 
 # Header files to ignore when scanning.

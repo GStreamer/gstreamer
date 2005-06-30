@@ -23,9 +23,9 @@
 #define __GST_TUNER_H__
 
 #include <gst/gst.h>
-#include <gst/tuner/tunernorm.h>
-#include <gst/tuner/tunerchannel.h>
-#include <gst/tuner/tuner-enumtypes.h>
+#include <gst/interfaces/tunernorm.h>
+#include <gst/interfaces/tunerchannel.h>
+#include <gst/interfaces/interfaces-enumtypes.h>
 
 G_BEGIN_DECLS
 

@@ -22,7 +22,7 @@
 #include "gstalsa.h"
 #include "gstalsamixeroptions.h"
 #include "gstalsamixertrack.h"
-#include <gst/mixer/mixer.h>
+#include <gst/interfaces/mixer.h>
 
 G_BEGIN_DECLS
 

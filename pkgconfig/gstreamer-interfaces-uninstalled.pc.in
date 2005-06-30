@@ -1,6 +1,6 @@
 prefix=
 exec_prefix=
-libdir=${pcfiledir}/../gst-libs/gst
+libdir=${pcfiledir}/../gst-libs/gst/interfaces
 includedir=${pcfiledir}/../gst-libs
 
 Name: GStreamer Interfaces library, uninstalled

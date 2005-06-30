@@ -25,7 +25,7 @@
 #define __GST_MIXER_OPTIONS_H__
 
 #include <gst/gst.h>
-#include <gst/mixer/mixertrack.h>
+#include <gst/interfaces/mixertrack.h>
 
 G_BEGIN_DECLS
 

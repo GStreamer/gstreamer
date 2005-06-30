@@ -25,7 +25,7 @@
 #endif
 
 #include "colorbalance.h"
-#include "colorbalance-marshal.h"
+#include "interfaces-marshal.h"
 
 enum
 {
@@ -75,7 +75,7 @@ gst_color_balance_class_init (GstColorBalanceClass * klass)
         GST_TYPE_COLOR_BALANCE, G_SIGNAL_RUN_LAST,
         G_STRUCT_OFFSET (GstColorBalanceClass, value_changed),
         NULL, NULL,
-        gst_color_balance_marshal_VOID__OBJECT_INT,
+        gst_interfaces_marshal_VOID__OBJECT_INT,
         G_TYPE_NONE, 2, GST_TYPE_COLOR_BALANCE_CHANNEL, G_TYPE_INT);
 
     initialized = TRUE;

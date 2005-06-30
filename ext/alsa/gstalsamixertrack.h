@@ -20,7 +20,7 @@
 #define __GST_ALSA_MIXER_TRACK_H__
 
 #include "gstalsa.h"
-#include <gst/mixer/mixertrack.h>
+#include <gst/interfaces/mixertrack.h>
 
 G_BEGIN_DECLS
 

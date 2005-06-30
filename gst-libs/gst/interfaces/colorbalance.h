@@ -23,8 +23,8 @@
 #define __GST_COLOR_BALANCE_H__
 
 #include <gst/gst.h>
-#include <gst/colorbalance/colorbalancechannel.h>
-#include <gst/colorbalance/colorbalance-enumtypes.h>
+#include <gst/interfaces/colorbalancechannel.h>
+#include <gst/interfaces/interfaces-enumtypes.h>
 
 G_BEGIN_DECLS
 

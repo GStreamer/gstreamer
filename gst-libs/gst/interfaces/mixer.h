@@ -23,9 +23,9 @@
 #define __GST_MIXER_H__
 
 #include <gst/gst.h>
-#include <gst/mixer/mixeroptions.h>
-#include <gst/mixer/mixertrack.h>
-#include <gst/mixer/mixer-enumtypes.h>
+#include <gst/interfaces/mixeroptions.h>
+#include <gst/interfaces/mixertrack.h>
+#include <gst/interfaces/interfaces-enumtypes.h>
 
 G_BEGIN_DECLS
 

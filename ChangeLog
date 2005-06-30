@@ -1,3 +1,42 @@
+2005-06-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* docs/libs/Makefile.am:
+	* docs/libs/gst-plugins-libs.types:
+	* ext/alsa/Makefile.am:
+	* ext/alsa/gstalsamixer.h:
+	* ext/alsa/gstalsamixeroptions.h:
+	* ext/alsa/gstalsamixertrack.h:
+	* gst-libs/gst/Makefile.am:
+	* gst-libs/gst/colorbalance/.cvsignore:
+	* gst-libs/gst/colorbalance/Makefile.am:
+	* gst-libs/gst/colorbalance/colorbalance-marshal.list:
+	* gst-libs/gst/colorbalance/colorbalance.c:
+	* gst-libs/gst/colorbalance/colorbalance.h:
+	* gst-libs/gst/colorbalance/colorbalance.vcproj:
+	* gst-libs/gst/colorbalance/colorbalancechannel.c:
+	* gst-libs/gst/colorbalance/colorbalancechannel.h:
+	* gst-libs/gst/interfaces/Makefile.am:
+	* gst-libs/gst/interfaces/colorbalance.c:
+	(gst_color_balance_class_init):
+	* gst-libs/gst/interfaces/colorbalance.h:
+	* gst-libs/gst/interfaces/interfaces-marshal.list:
+	* gst-libs/gst/interfaces/mixer.c: (gst_mixer_class_init):
+	* gst-libs/gst/interfaces/mixer.h:
+	* gst-libs/gst/interfaces/mixeroptions.h:
+	* gst-libs/gst/interfaces/navigation.c:
+	* gst-libs/gst/interfaces/tuner.c: (gst_tuner_class_init):
+	* gst-libs/gst/interfaces/tuner.h:
+	* gst/volume/Makefile.am:
+	* gst/volume/gstvolume.c:
+	* pkgconfig/gstreamer-interfaces-uninstalled.pc.in:
+	* sys/ximage/Makefile.am:
+	* sys/ximage/ximagesink.c:
+	* sys/xvimage/Makefile.am:
+	* sys/xvimage/xvimagesink.c:
+	  fold in all interfaces into an interfaces dir, preserving CVS
+	  history
+
 2005-06-30  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ogg/gstogmparse.c: (gst_ogm_parse_chain):

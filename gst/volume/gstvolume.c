@@ -26,7 +26,7 @@
 #include <gst/base/gstbasetransform.h>
 #include <gst/audio/audio.h>
 #include <gst/control/control.h>
-#include <gst/mixer/mixer.h>
+#include <gst/interfaces/mixer.h>
 #include "gstvolume.h"
 
 /* some defines for audio processing */

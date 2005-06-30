@@ -22,9 +22,9 @@
 #endif
 
 /* Our interfaces */
-#include <gst/navigation/navigation.h>
-#include <gst/xoverlay/xoverlay.h>
-#include <gst/colorbalance/colorbalance.h>
+#include <gst/interfaces/navigation.h>
+#include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/colorbalance.h>
 
 /* Object header */
 #include "xvimagesink.h"

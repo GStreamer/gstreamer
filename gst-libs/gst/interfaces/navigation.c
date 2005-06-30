@@ -23,7 +23,7 @@
 #include "config.h"
 #endif
 
-#include <gst/navigation/navigation.h>
+#include <gst/interfaces/navigation.h>
 
 static void gst_navigation_class_init (GstNavigationInterface * iface);
 
