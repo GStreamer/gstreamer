@@ -117,7 +117,7 @@
     <programlisting><!-- example-begin typefind.c a -->
 #include &lt;gst/gst.h&gt;
 <!-- example-end typefind.c a -->
-<!-- example-begin typefind.c b --><!--
+[.. my_bus_callback goes here ..]<!-- example-begin typefind.c b --><!--
 static gboolean
 my_bus_callback (GstBus     *bus,
                  GstMessage *message,

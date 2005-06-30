@@ -15,8 +15,9 @@
     <itemizedlist>
       <listitem>
         <para>
-          Always connect to the <quote>error</quote> signal of your topmost
-          pipeline to be notified of errors in your pipeline.
+          Always add a <classname>GstBus</classname> handler to your
+          pipeline. Always report errors in your application, and try
+          to do something with warnings and information messages, too.
         </para>
       </listitem>
       <listitem>
@@ -28,12 +29,28 @@
       </listitem>
       <listitem>
         <para>
+          Dereference return values of all functions returning a non-base
+          type, such as <function>gst_element_get_pad ()</function>. Also,
+          always free non-const string returns, such as
+          <function>gst_object_get_name ()</function>.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
           Always use your pipeline object to keep track of the current state
           of your pipeline. Don't keep private variables in your application.
           Also, don't update your user interface if a user presses the
-          <quote>play</quote> button. Instead, connect to the
-          <quote>state-changed</quote> signal of your topmost pipeline and
-          update the user interface whenever this signal is triggered.
+          <quote>play</quote> button. Instead, listen for the
+          <quote>state-changed</quote> message on the
+          <classname>GstBus</classname> and only update the user interface
+          whenever this message is received.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Report all bugs that you find in &GStreamer; bugzilla at
+          <ulink type="http"
+          url="http://bugzilla.gnome.org">http://bugzilla.gnome.org/</ulink>.
         </para>
       </listitem>
     </itemizedlist>
@@ -81,7 +98,9 @@
           <option>--gst-debug=<replaceable>LIST</replaceable></option> 
 	  takes a comma-separated list of category_name:level pairs to
           set specific levels for the individual categories. Example:
-          <option>GST_AUTOPLUG:5,avidemux:3</option>.
+          <option>GST_AUTOPLUG:5,avidemux:3</option>. Alternatively, you
+          can also set the <classname>GST_DEBUG</classname> environment
+          variable, which has the same effect.
          </para>
        </listitem>
        <listitem>

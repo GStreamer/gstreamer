@@ -1,3 +1,14 @@
+2005-06-30  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/manual/advanced-autoplugging.xml:
+	* docs/manual/appendix-checklist.xml:
+	* docs/manual/appendix-integration.xml:
+	* docs/manual/highlevel-components.xml:
+	  Fix playbin/decodebin examples, update docs a bit, mention bus
+	  instead of signals in various places, mention kmplayer and
+	  kaffeine since they have a working GStreamer backend in the KDE
+	  section.
+
 2005-06-30  Wim Taymans  <wim@fluendo.com>
 
 	* CHANGES-0.9:

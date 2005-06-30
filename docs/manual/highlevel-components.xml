@@ -14,10 +14,12 @@
   <para>
     We currently recommend people to use either playbin (see <xref
     linkend="section-components-playbin"/>) or decodebin (see <xref
-    linkend="section-components-decodebin"/>), depending on their needs. The
-    other components discussed here are either outdated or deprecated. The
-    documentation is provided for legacy purposes. Use of those other
-    components is not recommended.
+    linkend="section-components-decodebin"/>), depending on their needs.
+    Playbin is the recommended solution for everything related to simple
+    playback of media that should just work. Decodebin is a more flexible
+    autoplugger that could be used to add more advanced featuers, such
+    as playlist support, crossfading of audio tracks and so on. Its
+    programming interface is more low-level than that of playbin, though.
   </para>
 
   <sect1 id="section-components-playbin">
@@ -27,7 +29,8 @@
       Playbin is an element that can be created using the standard &GStreamer;
       API (e.g. <function>gst_element_factory_make ()</function>). The factory
       is conveniently called <quote>playbin</quote>. By being a
-      <classname>GstElement</classname>, playbin automatically supports all
+      <classname>GstPipeline</classname> (and thus a
+      <classname>GstElement</classname>), playbin automatically supports all
       of the features of this class, including error handling, tag support,
       state handling, getting stream positions, seeking, and so on.
     </para>
@@ -39,43 +42,57 @@
       file:///tmp/my.ogg or http://www.example.org/stream.ogg) using the
       <quote>uri</quote> property on playbin, and then setting the element
       to the <classname>GST_STATE_PLAYING</classname> state. Internally,
-      playbin uses threads, so there's no need to iterate the element or
-      anything. However, one thing to keep in mind is that signals fired
-      by playbin might come from another than the main thread, so be sure
-      to keep this in mind in your signal handles. Most application
-      programmers will want to use a function such as <function>g_idle_add
-      ()</function> to make sure that the signal is handled in the main
-      thread.
+      playbin will set up a pipeline to playback the media location.
     </para>
 
-    <programlisting><!-- example-begin playbin.c -->
+    <programlisting><!-- example-begin playbin.c a -->
 #include &lt;gst/gst.h&gt;
-
-static void
-cb_eos (GstElement *play,
-	gpointer    data)
+<!-- example-end playbin.c a -->
+[.. my_bus_callback goes here ..]<!-- example-begin playbin.c b --><!--
+static gboolean
+my_bus_callback (GstBus     *bus,
+		 GstMessage *message,
+		 gpointer    data)
 {
-  gst_main_quit ();
-}
+  GMainLoop *loop = data;
 
-static void
-cb_error (GstElement *play,
-	  GstElement *src,
-	  GError     *err,
-	  gchar      *debug,
-	  gpointer    data)
-{
-  g_print ("Error: %s\n", err->message);
-}
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR: {
+      GError *err;
+      gchar *debug;
 
+      gst_message_parse_error (message, &amp;err, &amp;debug);
+      g_print ("Error: %s\n", err-&gt;message);
+      g_error_free (err);
+      g_free (debug);
+
+      g_main_loop_quit (loop);
+      break;
+    }
+    case GST_MESSAGE_EOS:
+      /* end-of-stream */
+      g_main_loop_quit (loop);
+      break;
+    default:
+      /* unhandled message */
+      break;
+  }
+
+  /* remove message from the queue */
+  return TRUE;
+}
+--><!-- example-end playbin.c b -->
+<!-- example-begin playbin.c c -->
 gint
 main (gint   argc,
       gchar *argv[])
 {
+  GMainLoop *loop;
   GstElement *play;
 
   /* init GStreamer */
   gst_init (&amp;argc, &amp;argv);
+  loop = g_main_loop_new (NULL, FALSE);
 
   /* make sure we have a URI */
   if (argc != 2) {
@@ -86,15 +103,12 @@ main (gint   argc,
   /* set up */
   play = gst_element_factory_make ("playbin", "play");
   g_object_set (G_OBJECT (play), "uri", argv[1], NULL);
-  g_signal_connect (play, "eos", G_CALLBACK (cb_eos), NULL);
-  g_signal_connect (play, "error", G_CALLBACK (cb_error), NULL);
-  if (gst_element_set_state (play, GST_STATE_PLAYING) != GST_STATE_SUCCESS) {
-    g_print ("Failed to play\n");
-    return -1;
-  }
+  gst_bus_add_watch (gst_pipeline_get_bus (GST_PIPELINE (play)),
+		     my_bus_callback, loop);
+  gst_element_set_state (play, GST_STATE_PLAYING);
 
   /* now run */
-  gst_main ();
+  g_main_loop_run (loop);
 
   /* also clean up */
   gst_element_set_state (play, GST_STATE_NULL);
@@ -102,7 +116,7 @@ main (gint   argc,
 
   return 0;
 }
-    <!-- example-end playbin.c --></programlisting>
+    <!-- example-end playbin.c c --></programlisting>
 
     <para>
       Playbin has several features that have been discussed previously:
@@ -118,13 +132,15 @@ main (gint   argc,
         <para>
           Mostly controllable and trackable as a
           <classname>GstElement</classname>, including error handling, eos
-          handling, tag handling, state handling, media position handling and
+          handling, tag handling, state handling (through the
+          <classname>GstBus</classname>), media position handling and
           seeking.
         </para>
       </listitem>
       <listitem>
         <para>
-          Buffers network-sources.
+          Buffers network-sources, with buffer fullness notifications being
+          passed through the <classname>GstBus</classname>.
         </para>
       </listitem>
       <listitem>
@@ -135,7 +151,8 @@ main (gint   argc,
       <listitem>
         <para>
           Supports subtitles, both in the media as well as from separate
-          files.
+          files. For separate subtitle files, use the <quote>suburi</quote>
+          property.
         </para>
       </listitem>
       <listitem>
@@ -143,10 +160,17 @@ main (gint   argc,
           Supports stream selection and disabling. If your media has
           multiple audio or subtitle tracks, you can dynamically choose
           which one to play back, or decide to turn it off alltogther
-          (which is especially useful to turn off subtitles).
+          (which is especially useful to turn off subtitles). For each
+          of those, use the <quote>current-text</quote> and other related
+          properties.
         </para>
       </listitem>
     </itemizedlist>
+    <para>
+      For convenience, it is possible to test <quote>playbin</quote> on
+      the commandline, using the command <quote>gst-launch-0.9 playbin
+      uri=file:///path/to/file</quote>.
+    </para>
   </sect1>
 
   <sect1 id="section-components-decodebin">
@@ -164,18 +188,45 @@ main (gint   argc,
       the <quote>unknown-type</quote> signal. The application is then
       responsible for reporting the error to the user.
     </para>
-
-    <para>
-      The example code below will play back an audio stream of an input
-      file. For readability, it does not include any error handling of
-      any sort.
-    </para>
-
-    <programlisting><!-- example-begin decodebin.c -->
+    <programlisting><!-- example-begin decodebin.c a -->
 #include &lt;gst/gst.h&gt;
+<!-- example-end decodebin.c a -->
+[.. my_bus_callback goes here ..]<!-- example-begin decodebin.c b --><!--
+static gboolean
+my_bus_callback (GstBus     *bus,
+		 GstMessage *message,
+		 gpointer    data)
+{
+  GMainLoop *loop = data;
 
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR: {
+      GError *err;
+      gchar *debug;
+
+      gst_message_parse_error (message, &amp;err, &amp;debug);
+      g_print ("Error: %s\n", err-&gt;message);
+      g_error_free (err);
+      g_free (debug);
+
+      g_main_loop_quit (loop);
+      break;
+    }
+    case GST_MESSAGE_EOS:
+      /* end-of-stream */
+      g_main_loop_quit (loop);
+      break;
+    default:
+      /* unhandled message */
+      break;
+  }
+
+  /* remove message from the queue */
+  return TRUE;
+}
+--><!-- example-end decodebin.c b -->
+<!-- example-begin decodebin.c c -->
 GstElement *pipeline, *audio;
-GstPad *audiopad;
 
 static void
 cb_newpad (GstElement *decodebin,
@@ -185,29 +236,40 @@ cb_newpad (GstElement *decodebin,
 {
   GstCaps *caps;
   GstStructure *str;
+  GstPad *audiopad;
 
-  /* only link audio; only link once */
-  if (GST_PAD_IS_LINKED (audiopad))
+  /* only link once */
+  audiopad = gst_element_get_pad (audio, "sink");
+  if (GST_PAD_IS_LINKED (audiopad)) {
+    g_object_unref (audiopad);
     return;
+  }
+
+  /* check media type */
   caps = gst_pad_get_caps (pad);
   str = gst_caps_get_structure (caps, 0);
-  if (!g_strrstr (gst_structure_get_name (str), "audio"))
+  if (!g_strrstr (gst_structure_get_name (str), "audio")) {
+    gst_caps_unref (caps);
+    gst_object_unref (audiopad);
     return;
+  }
+  gst_caps_unref (caps);
 
   /* link'n'play */
   gst_pad_link (pad, audiopad);
-  gst_bin_add (GST_BIN (pipeline), audio);
-  gst_bin_sync_children_state (GST_BIN (pipeline));
 }
 
 gint
 main (gint   argc,
       gchar *argv[])
 {
-  GstElement *src, *dec, *conv, *scale, *sink;
+  GMainLoop *loop;
+  GstElement *src, *dec, *conv, *sink;
+  GstPad *audiopad;
 
   /* init GStreamer */
   gst_init (&amp;argc, &amp;argv);
+  loop = g_main_loop_new (NULL, FALSE);
 
   /* make sure we have input */
   if (argc != 2) {
@@ -217,24 +279,30 @@ main (gint   argc,
 
   /* setup */
   pipeline = gst_pipeline_new ("pipeline");
+  gst_bus_add_watch (gst_pipeline_get_bus (GST_PIPELINE (pipeline)),
+		     my_bus_callback, loop);
   src = gst_element_factory_make ("filesrc", "source");
   g_object_set (G_OBJECT (src), "location", argv[1], NULL);
   dec = gst_element_factory_make ("decodebin", "decoder");
   g_signal_connect (dec, "new-decoded-pad", G_CALLBACK (cb_newpad), NULL);
-  audio = gst_bin_new ("audiobin");
-  conv = gst_element_factory_make ("audioconvert", "aconv");
-  audiopad = gst_element_get_pad (conv, "sink");
-  scale = gst_element_factory_make ("audioscale", "scale");
-  sink = gst_element_factory_make ("alsasink", "sink");
-  gst_bin_add_many (GST_BIN (audio), conv, scale, sink, NULL);
-  gst_element_link_many (conv, scale, sink, NULL);
   gst_bin_add_many (GST_BIN (pipeline), src, dec, NULL);
   gst_element_link (src, dec);
 
+  /* create audio output */
+  audio = gst_bin_new ("audiobin");
+  conv = gst_element_factory_make ("audioconvert", "aconv");
+  audiopad = gst_element_get_pad (conv, "sink");
+  sink = gst_element_factory_make ("alsasink", "sink");
+  gst_bin_add_many (GST_BIN (audio), conv, sink, NULL);
+  gst_element_link (conv, sink);
+  gst_element_add_pad (audio,
+      gst_ghost_pad_new ("sink", audiopad));
+  gst_object_unref (audiopad);
+  gst_bin_add (GST_BIN (pipeline), audio);
+
   /* run */
-  gst_element_set_state (audio, GST_STATE_PAUSED);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  while (gst_bin_iterate (GST_BIN (pipeline))) ;
+  g_main_loop_run (loop);
 
   /* cleanup */
   gst_element_set_state (pipeline, GST_STATE_NULL);
@@ -242,7 +310,7 @@ main (gint   argc,
 
   return 0;
 }
-    <!-- example-end decodebin.c --></programlisting>
+    <!-- example-end decodebin.c c --></programlisting>
 
     <para>
       Decodebin, similar to playbin, supports the following features:
@@ -287,7 +355,7 @@ main (gint   argc,
     <para>
       Decodebin can be easily tested on the commandline, e.g. by using the
       command <command>gst-launch-0.8 filesrc location=file.ogg ! decodebin
-      ! audioconvert ! audioscale ! alsasink</command>.
+      ! audioconvert ! alsasink</command>.
     </para>
   </sect1>
 
