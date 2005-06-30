@@ -132,7 +132,7 @@ gst_tag_setter_merge (GstTagSetter * setter, const GstTagList * list,
  * @...: more tag / value pairs to set
  *
  * Adds the given tag / value pairs on the setter using the given merge mode. 
- * The list must be terminated with GST_TAG_INVALID.
+ * The list must be terminated with NULL.
  */
 void
 gst_tag_setter_add (GstTagSetter * setter, GstTagMergeMode mode,
@@ -156,7 +156,7 @@ gst_tag_setter_add (GstTagSetter * setter, GstTagMergeMode mode,
  * @...: more tag / GValue pairs to set
  *
  * Adds the given tag / GValue pairs on the setter using the given merge mode. 
- * The list must be terminated with GST_TAG_INVALID.
+ * The list must be terminated with NULL.
  */
 void
 gst_tag_setter_add_values (GstTagSetter * setter, GstTagMergeMode mode,
@@ -180,7 +180,7 @@ gst_tag_setter_add_values (GstTagSetter * setter, GstTagMergeMode mode,
  * @var_args: tag / value pairs to set
  *
  * Adds the given tag / value pairs on the setter using the given merge mode. 
- * The list must be terminated with GST_TAG_INVALID.
+ * The list must be terminated with NULL.
  */
 void
 gst_tag_setter_add_valist (GstTagSetter * setter, GstTagMergeMode mode,
@@ -206,7 +206,7 @@ gst_tag_setter_add_valist (GstTagSetter * setter, GstTagMergeMode mode,
  * @var_args: tag / GValue pairs to set
  *
  * Adds the given tag / GValue pairs on the setter using the given merge mode. 
- * The list must be terminated with GST_TAG_INVALID.
+ * The list must be terminated with NULL.
  */
 void
 gst_tag_setter_add_valist_values (GstTagSetter * setter, GstTagMergeMode mode,
@@ -228,13 +228,13 @@ gst_tag_setter_add_valist_values (GstTagSetter * setter, GstTagMergeMode mode,
  * gst_tag_setter_get_list:
  * @setter: a #GstTagSetter
  *
- * Retrieves a copy of the current list of tags the setter uses.
- * You need to gst_tag_list_free() the list after use.
+ * Returns the current list of tags the setter uses.  The list should not be
+ * modified or freed.
  *
  * Returns: a current snapshot of the taglist used in the setter
  *	    or NULL if none is used.
  */
-const GstTagList *
+G_CONST_RETURN GstTagList *
 gst_tag_setter_get_list (GstTagSetter * setter)
 {
   g_return_val_if_fail (GST_IS_TAG_SETTER (setter), NULL);
