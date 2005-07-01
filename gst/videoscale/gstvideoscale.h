@@ -61,7 +61,7 @@ struct _GstVideoscale {
 
   /* video state */
   gboolean inited;
-  struct videoscale_format_struct *format;
+  int format;
   gint to_width;
   gint to_height;
   gint from_width;
@@ -74,13 +74,7 @@ struct _GstVideoscale {
   GstVideoScaleMethod method;
   
   /* private */
-  gint from_buf_size;
   gint to_buf_size;
-#if 0
-  guchar *temp;
-  guchar (*filter) (guchar *src, gdouble x, gdouble y, gint sw, gint sh);
-  guchar copy_row[8192];
-#endif
 };
 
 struct _GstVideoscaleClass {

@@ -22,8 +22,11 @@
 #include "config.h"
 #endif
 #include "gstvideoscale.h"
-#include "videoscale.h"
+#include <gst/video/video.h>
 
+#include <string.h>
+
+#include "vs_image.h"
 
 /* debug variable definition */
 GST_DEBUG_CATEGORY (videoscale_debug);
@@ -49,6 +52,43 @@ enum
       /* FILL ME */
 };
 
+static GstStaticCaps gst_videoscale_format_caps[] = {
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBx),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_xBGR),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_BGR),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV")),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("YUY2")),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("YVYU")),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("UYVY")),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("Y800")),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420")),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("YV12")),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB_16),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB_15)
+};
+
+enum
+{
+  GST_VIDEOSCALE_RGBx = 0,
+  GST_VIDEOSCALE_xRGB,
+  GST_VIDEOSCALE_BGRx,
+  GST_VIDEOSCALE_xBGR,
+  GST_VIDEOSCALE_RGB,
+  GST_VIDEOSCALE_BGR,
+  GST_VIDEOSCALE_AYUV,
+  GST_VIDEOSCALE_YUY2,
+  GST_VIDEOSCALE_YVYU,
+  GST_VIDEOSCALE_UYVY,
+  GST_VIDEOSCALE_Y,
+  GST_VIDEOSCALE_I420,
+  GST_VIDEOSCALE_YV12,
+  GST_VIDEOSCALE_RGB565,
+  GST_VIDEOSCALE_RGB555
+};
+
 #define GST_TYPE_VIDEOSCALE_METHOD (gst_videoscale_method_get_type())
 static GType
 gst_videoscale_method_get_type (void)
@@ -72,16 +112,19 @@ gst_videoscale_method_get_type (void)
 static GstCaps *
 gst_videoscale_get_capslist (void)
 {
-  GstCaps *caps;
-  int i;
+  static GstCaps *caps;
 
-  caps = gst_caps_new_empty ();
-  for (i = 0; i < videoscale_n_formats; i++) {
-    gst_caps_append_structure (caps,
-        videoscale_get_structure (videoscale_formats + i));
+  if (caps == NULL) {
+    int i;
+
+    caps = gst_caps_new_empty ();
+    for (i = 0; i < G_N_ELEMENTS (gst_videoscale_format_caps); i++) {
+      gst_caps_append (caps,
+          gst_caps_copy (gst_static_caps_get (&gst_videoscale_format_caps[i])));
+    }
   }
 
-  return caps;
+  return gst_caps_copy (caps);
 }
 
 static GstPadTemplate *
@@ -194,8 +237,8 @@ gst_videoscale_getcaps (GstPad * pad)
     GstStructure *structure = gst_caps_get_structure (caps, i);
 
     gst_structure_set (structure,
-        "width", GST_TYPE_INT_RANGE, 16, G_MAXINT,
-        "height", GST_TYPE_INT_RANGE, 16, G_MAXINT, NULL);
+        "width", GST_TYPE_INT_RANGE, 16, 4096,
+        "height", GST_TYPE_INT_RANGE, 16, 4096, NULL);
     gst_structure_remove_field (structure, "pixel-aspect-ratio");
   }
 
@@ -203,6 +246,24 @@ gst_videoscale_getcaps (GstPad * pad)
   return caps;
 }
 
+static int
+gst_videoscale_get_format (const GstCaps * caps)
+{
+  int i;
+  GstCaps *icaps;
+
+  for (i = 0; i < G_N_ELEMENTS (gst_videoscale_format_caps); i++) {
+    icaps = gst_caps_intersect (caps,
+        gst_static_caps_get (&gst_videoscale_format_caps[i]));
+    if (!gst_caps_is_empty (icaps)) {
+      gst_caps_free (icaps);
+      return i;
+    }
+    gst_caps_free (icaps);
+  }
+
+  return -1;
+}
 
 static GstPadLinkReturn
 gst_videoscale_link (GstPad * pad, const GstCaps * caps)
@@ -212,7 +273,7 @@ gst_videoscale_link (GstPad * pad, const GstCaps * caps)
   GstPad *otherpad;
   GstCaps *othercaps, *newcaps;
   GstStructure *otherstructure, *structure, *newstructure;
-  struct videoscale_format_struct *format;
+  int format;
   int height = 0, width = 0, newwidth, newheight;
   const GValue *par = NULL, *otherpar;
 
@@ -227,9 +288,9 @@ gst_videoscale_link (GstPad * pad, const GstCaps * caps)
   ret &= gst_structure_get_int (structure, "height", &height);
   par = gst_structure_get_value (structure, "pixel-aspect-ratio");
 
-  format = videoscale_find_by_structure (structure);
+  format = gst_videoscale_get_format (caps);
 
-  if (!ret || format == NULL)
+  if (!ret || format == -1)
     return GST_PAD_LINK_REFUSED;
 
   GST_DEBUG_OBJECT (videoscale,
@@ -240,6 +301,7 @@ gst_videoscale_link (GstPad * pad, const GstCaps * caps)
   if (GST_PAD_LINK_SUCCESSFUL (ret)) {
     /* cool, we can use passthru */
     GST_DEBUG_OBJECT (videoscale, "passthru works");
+    GST_FLAG_SET (videoscale, GST_ELEMENT_WORK_IN_PLACE);
 
     videoscale->passthru = TRUE;
     newwidth = width;
@@ -247,6 +309,8 @@ gst_videoscale_link (GstPad * pad, const GstCaps * caps)
 
     goto beach;
   }
+
+  GST_FLAG_UNSET (videoscale, GST_ELEMENT_WORK_IN_PLACE);
 
   /* no passthru, so try to convert */
   GST_DEBUG_OBJECT (videoscale, "no passthru");
@@ -343,7 +407,6 @@ beach:
     videoscale->to_height = newheight;
   }
   videoscale->format = format;
-  gst_videoscale_setup (videoscale);
 
   GST_DEBUG_OBJECT (videoscale, "work completed");
 
@@ -473,8 +536,6 @@ gst_videoscale_init (GstVideoscale * videoscale)
   gst_pad_set_getcaps_function (videoscale->srcpad, gst_videoscale_getcaps);
   gst_pad_set_fixate_function (videoscale->srcpad, gst_videoscale_src_fixate);
 
-  videoscale->inited = FALSE;
-
   videoscale->method = GST_VIDEOSCALE_NEAREST;
   /*videoscale->method = GST_VIDEOSCALE_BILINEAR; */
   /*videoscale->method = GST_VIDEOSCALE_POINT_SAMPLE; */
@@ -486,29 +547,22 @@ gst_videoscale_handle_src_event (GstPad * pad, GstEvent * event)
   GstVideoscale *videoscale;
   double a;
   GstStructure *structure;
-  GstEvent *new_event;
 
   videoscale = GST_VIDEOSCALE (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NAVIGATION:
-      structure = gst_structure_copy (event->event_data.structure.structure);
-      if (gst_structure_get_double (event->event_data.structure.structure,
-              "pointer_x", &a)) {
+      event = GST_EVENT (gst_data_copy_on_write (GST_DATA (event)));
+      structure = event->event_data.structure.structure;
+      if (gst_structure_get_double (structure, "pointer_x", &a)) {
         gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
             a * videoscale->from_width / videoscale->to_width, NULL);
       }
-      if (gst_structure_get_double (event->event_data.structure.structure,
-              "pointer_y", &a)) {
+      if (gst_structure_get_double (structure, "pointer_y", &a)) {
         gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
             a * videoscale->from_height / videoscale->to_height, NULL);
       }
-      gst_event_unref (event);
-      new_event = gst_event_new (GST_EVENT_NAVIGATION);
-      GST_DEBUG_OBJECT (videoscale, "creating new NAVIGATION event %p",
-          new_event);
-      new_event->event_data.structure.structure = structure;
-      return gst_pad_event_default (pad, new_event);
+      return gst_pad_event_default (pad, event);
       break;
     default:
       GST_DEBUG_OBJECT (videoscale, "passing on non-NAVIGATION event %p",
@@ -518,51 +572,219 @@ gst_videoscale_handle_src_event (GstPad * pad, GstEvent * event)
   }
 }
 
+#define ROUND_UP_2(x)  (((x)+1)&~1)
+#define ROUND_UP_4(x)  (((x)+3)&~3)
+#define ROUND_UP_8(x)  (((x)+7)&~7)
+
 static void
 gst_videoscale_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstVideoscale *videoscale;
-  guchar *data;
   gulong size;
   GstBuffer *outbuf;
-
+  VSImage dest;
+  VSImage src;
+  VSImage dest_u;
+  VSImage src_u;
+  VSImage dest_v;
+  VSImage src_v;
+  guint8 *tmpbuf;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
 
   videoscale = GST_VIDEOSCALE (gst_pad_get_parent (pad));
-  g_return_if_fail (videoscale->inited);
-
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
 
   if (videoscale->passthru) {
-    GST_LOG_OBJECT (videoscale, "passing through buffer of %ld bytes", size);
     gst_pad_push (videoscale->srcpad, GST_DATA (buf));
     return;
   }
 
   GST_LOG_OBJECT (videoscale,
-      "buffersize=%ld from=%dx%d to=%dx%d fromsize=%ld tosize=%ld",
-      size, videoscale->from_width, videoscale->from_height,
-      videoscale->to_width, videoscale->to_height,
-      videoscale->from_buf_size, videoscale->to_buf_size);
+      "from=%dx%d to=%dx%d",
+      videoscale->from_width, videoscale->from_height,
+      videoscale->to_width, videoscale->to_height);
 
-  g_return_if_fail (size == videoscale->from_buf_size);
+  src.pixels = GST_BUFFER_DATA (buf);
+  src.width = videoscale->from_width;
+  src.height = videoscale->from_height;
+
+  dest.width = videoscale->to_width;
+  dest.height = videoscale->to_height;
+
+  switch (videoscale->format) {
+    case GST_VIDEOSCALE_RGBx:
+    case GST_VIDEOSCALE_xRGB:
+    case GST_VIDEOSCALE_BGRx:
+    case GST_VIDEOSCALE_xBGR:
+    case GST_VIDEOSCALE_AYUV:
+      src.stride = videoscale->from_width * 4;
+      dest.stride = videoscale->to_width * 4;
+      size = dest.stride * dest.height;
+      break;
+    case GST_VIDEOSCALE_RGB:
+    case GST_VIDEOSCALE_BGR:
+      src.stride = ROUND_UP_4 (videoscale->from_width * 3);
+      dest.stride = ROUND_UP_4 (videoscale->to_width * 3);
+      size = dest.stride * dest.height;
+      break;
+    case GST_VIDEOSCALE_YUY2:
+    case GST_VIDEOSCALE_YVYU:
+    case GST_VIDEOSCALE_UYVY:
+      src.stride = ROUND_UP_4 (videoscale->from_width * 2);
+      dest.stride = ROUND_UP_4 (videoscale->to_width * 2);
+      size = dest.stride * dest.height;
+      break;
+    case GST_VIDEOSCALE_Y:
+      src.stride = ROUND_UP_4 (videoscale->from_width);
+      dest.stride = ROUND_UP_4 (videoscale->to_width);
+      size = dest.stride * dest.height;
+      break;
+    case GST_VIDEOSCALE_I420:
+    case GST_VIDEOSCALE_YV12:
+      src.stride = ROUND_UP_4 (videoscale->from_width);
+      dest.stride = ROUND_UP_4 (videoscale->to_width);
+
+      src_u.pixels = src.pixels + ROUND_UP_2 (src.height) * src.stride;
+      src_u.height = ROUND_UP_2 (src.height) / 2;
+      src_u.width = ROUND_UP_2 (src.width) / 2;
+      src_u.stride = ROUND_UP_4 (src.stride / 2);
+
+      dest_u.height = ROUND_UP_2 (dest.height) / 2;
+      dest_u.width = ROUND_UP_2 (dest.width) / 2;
+      dest_u.stride = ROUND_UP_4 (dest.stride / 2);
+
+      memcpy (&src_v, &src_u, sizeof (src_v));
+      src_v.pixels = src_u.pixels + src_u.height * src_u.stride;
+
+      memcpy (&dest_v, &dest_u, sizeof (dest_v));
+
+      size = dest.stride * ROUND_UP_2 (dest.height) +
+          2 * dest_u.stride * dest_u.height;
+      break;
+    case GST_VIDEOSCALE_RGB565:
+      src.stride = ROUND_UP_4 (videoscale->from_width * 2);
+      dest.stride = ROUND_UP_4 (videoscale->to_width * 2);
+      size = dest.stride * dest.height;
+      break;
+    case GST_VIDEOSCALE_RGB555:
+      src.stride = ROUND_UP_4 (videoscale->from_width * 2);
+      dest.stride = ROUND_UP_4 (videoscale->to_width * 2);
+      size = dest.stride * dest.height;
+      break;
+    default:
+      g_warning ("don't know how to scale");
+      gst_buffer_unref (buf);
+      return;
+  }
 
   outbuf = gst_pad_alloc_buffer (videoscale->srcpad,
-      GST_BUFFER_OFFSET_NONE, videoscale->to_buf_size);
-
+      GST_BUFFER_OFFSET_NONE, size);
   gst_buffer_stamp (outbuf, buf);
 
-  g_return_if_fail (videoscale->format);
-  GST_LOG_OBJECT (videoscale, "format " GST_FOURCC_FORMAT,
-      GST_FOURCC_ARGS (videoscale->format->fourcc));
-  g_return_if_fail (videoscale->format->scale);
+  dest.pixels = GST_BUFFER_DATA (outbuf);
+  switch (videoscale->format) {
+    case GST_VIDEOSCALE_I420:
+    case GST_VIDEOSCALE_YV12:
+      dest_u.pixels = dest.pixels + ROUND_UP_2 (dest.height) * dest.stride;
+      dest_v.pixels = dest_u.pixels + dest_u.height * dest_u.stride;
+      break;
+    default:
+      break;
+  }
 
-  videoscale->format->scale (videoscale, GST_BUFFER_DATA (outbuf), data);
+  tmpbuf = g_malloc (dest.stride * 2);
+
+  switch (videoscale->method) {
+    case GST_VIDEOSCALE_NEAREST:
+      switch (videoscale->format) {
+        case GST_VIDEOSCALE_RGBx:
+        case GST_VIDEOSCALE_xRGB:
+        case GST_VIDEOSCALE_BGRx:
+        case GST_VIDEOSCALE_xBGR:
+        case GST_VIDEOSCALE_AYUV:
+          vs_image_scale_nearest_RGBA (&dest, &src, tmpbuf);
+          break;
+        case GST_VIDEOSCALE_RGB:
+        case GST_VIDEOSCALE_BGR:
+          vs_image_scale_nearest_RGB (&dest, &src, tmpbuf);
+          break;
+        case GST_VIDEOSCALE_YUY2:
+        case GST_VIDEOSCALE_YVYU:
+          vs_image_scale_nearest_YUYV (&dest, &src, tmpbuf);
+          break;
+        case GST_VIDEOSCALE_UYVY:
+          vs_image_scale_nearest_UYVY (&dest, &src, tmpbuf);
+          break;
+        case GST_VIDEOSCALE_Y:
+          vs_image_scale_nearest_Y (&dest, &src, tmpbuf);
+          break;
+        case GST_VIDEOSCALE_I420:
+        case GST_VIDEOSCALE_YV12:
+          vs_image_scale_nearest_Y (&dest, &src, tmpbuf);
+          vs_image_scale_nearest_Y (&dest_u, &src_u, tmpbuf);
+          vs_image_scale_nearest_Y (&dest_v, &src_v, tmpbuf);
+          break;
+        case GST_VIDEOSCALE_RGB565:
+          vs_image_scale_nearest_RGB565 (&dest, &src, tmpbuf);
+          break;
+        case GST_VIDEOSCALE_RGB555:
+          vs_image_scale_nearest_RGB555 (&dest, &src, tmpbuf);
+          break;
+        default:
+          g_warning ("don't know how to scale");
+      }
+      break;
+    case GST_VIDEOSCALE_BILINEAR:
+    case GST_VIDEOSCALE_BICUBIC:
+      switch (videoscale->format) {
+        case GST_VIDEOSCALE_RGBx:
+        case GST_VIDEOSCALE_xRGB:
+        case GST_VIDEOSCALE_BGRx:
+        case GST_VIDEOSCALE_xBGR:
+        case GST_VIDEOSCALE_AYUV:
+          vs_image_scale_linear_RGBA (&dest, &src, tmpbuf);
+          break;
+        case GST_VIDEOSCALE_RGB:
+        case GST_VIDEOSCALE_BGR:
+          vs_image_scale_linear_RGB (&dest, &src, tmpbuf);
+          break;
+        case GST_VIDEOSCALE_YUY2:
+        case GST_VIDEOSCALE_YVYU:
+          vs_image_scale_linear_YUYV (&dest, &src, tmpbuf);
+          break;
+        case GST_VIDEOSCALE_UYVY:
+          vs_image_scale_linear_UYVY (&dest, &src, tmpbuf);
+          break;
+        case GST_VIDEOSCALE_Y:
+          vs_image_scale_linear_Y (&dest, &src, tmpbuf);
+          break;
+        case GST_VIDEOSCALE_I420:
+        case GST_VIDEOSCALE_YV12:
+          vs_image_scale_linear_Y (&dest, &src, tmpbuf);
+          //memset (dest_u.pixels, 128, dest_u.stride * dest_u.height);
+          //memset (dest_v.pixels, 128, dest_v.stride * dest_v.height);
+          vs_image_scale_linear_Y (&dest_u, &src_u, tmpbuf);
+          vs_image_scale_linear_Y (&dest_v, &src_v, tmpbuf);
+          break;
+        case GST_VIDEOSCALE_RGB565:
+          vs_image_scale_linear_RGB565 (&dest, &src, tmpbuf);
+          break;
+        case GST_VIDEOSCALE_RGB555:
+          vs_image_scale_linear_RGB555 (&dest, &src, tmpbuf);
+          break;
+        default:
+          g_warning ("don't know how to scale");
+      }
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
+  g_free (tmpbuf);
 
   GST_LOG_OBJECT (videoscale, "pushing buffer of %d bytes",
       GST_BUFFER_SIZE (outbuf));

@@ -1,3 +1,8 @@
+2005-07-01  Andy Wingo  <wingo@pobox.com>
+
+	* gst/videoscale: Merge David's work from 0.8 branch. Changes to
+	come later.
+
 2005-06-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
