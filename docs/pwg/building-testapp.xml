@@ -108,6 +108,10 @@ main (gint   argc,
   /* initialization */
   gst_init (&amp;argc, &amp;argv);
   loop = g_main_loop_new (NULL, FALSE);
+  if (argc != 2) {
+    g_print ("Usage: %s &lt;mp3 filename&gt;\n", argv[0]);
+    return 01;
+  }
 
   /* create elements */
   pipeline = gst_pipeline_new ("my_pipeline");

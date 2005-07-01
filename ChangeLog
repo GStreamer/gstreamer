@@ -1,5 +1,12 @@
 2005-07-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* docs/pwg/building-testapp.xml:
+	  Add extra check.
+	* examples/pwg/Makefile.am:
+	  Fix buildbot.
+
+2005-07-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* configure.ac:
 	* examples/Makefile.am:
 	* examples/pwg/Makefile.am:

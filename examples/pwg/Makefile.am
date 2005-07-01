@@ -7,6 +7,9 @@ libchain_la_SOURCES = chain.c
 libchain2_la_SOURCES = chain2.c
 libstate_la_SOURCES = state.c
 libproperties_la_SOURCES = properties.c
+DISTCLEANFILES = \
+	boilerplate.c pads.c chain.c chain2.c state.c properties.c \
+	init.func caps.func chain.func state.func register.func
 
 EXTRA_DIST = extract.pl
 
