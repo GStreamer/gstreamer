@@ -1,3 +1,16 @@
+2005-07-01  Edward Hervey  <edward@fluendo.com>
+
+	* Makefile.am:
+	* configure.ac:
+	* gst/Makefile.am:
+	* pygst.py.in:
+	Modifications to have parallel-installable gst-python
+	Works more or less in the same way as pygtk:
+	import pygst
+	pygst.require('0.9')
+	import gst
+	
+
 2005-06-28  Edward Hervey  <edward@fluendo.com>
 
 	* gst/pygstminiobject.c:

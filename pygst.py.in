@@ -1,0 +1,57 @@
+# -*- Mode: Python; py-indent-offset: 4 -*-
+# pygtk - Python bindings for the GTK+ widget set.
+# Copyright (C) 1998-2002  James Henstridge
+#           (C) 2005 Edward Hervey
+#
+#   pygst.py: pygst version selection code.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+# USA
+
+# This allows parallel installation of gst-python
+#
+# In order to have backward compatibility
+
+import fnmatch
+import glob
+import os
+import sys
+
+__all__ = ['require']
+
+_pygst_dir = '@PYTHONDIR@/gst-@GST_MAJORMINOR@'
+
+_pygst_version = '@GST_MAJORMINOR@'
+
+_pygst_required_version = None
+
+def require(version):
+    global _pygst_required_version
+
+    if _pygst_required_version != None:
+        assert _pygst_required_version == version, \
+               "a different version of gst was already required"
+        return
+
+    assert not sys.modules.has_key('gst'), \
+           "pygst.require() must be called before importing gst"
+
+    assert version == _pygst_version, \
+           "Only version '%s' is available" % version
+
+    # prepend the pygst path ...
+    sys.path.insert(0, _pygst_dir)
+    
+    _pygst_required_version = version

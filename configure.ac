@@ -160,6 +160,9 @@ fi
 PYGST_CFLAGS="$PYGST_ERROR_CFLAGS"
 AC_SUBST(PYGST_CFLAGS)
 
+dnl full installation path
+AS_AC_EXPAND(PYTHONDIR, $pythondir)
+
 dnl add debugging options ...
 changequote(,)dnl
 if test "x$GCC" = xyes; then
@@ -188,4 +191,5 @@ AC_OUTPUT([
   docs/gst-python.ent
   testsuite/Makefile
   gst-python.spec
+  pygst.py
 ])

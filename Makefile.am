@@ -18,3 +18,16 @@ EXTRA_DIST = \
 	RELEASE
 
 include $(top_srcdir)/common/release.mak
+
+# install pth file.
+install-data-local:
+	$(mkinstalldirs) $(DESTDIR)$(pythondir)
+	echo "gst-$(GST_MAJORMINOR)" > $(DESTDIR)$(pyexecdir)/pygst.pth
+install-exec-local:
+	$(mkinstalldirs) $(DESTDIR)$(pyexecdir)
+	echo "gst-$(GST_MAJORMINOR)" > $(DESTDIR)$(pyexecdir)/pygst.pth
+uninstall-local:
+	rm -f $(DESTDIR)$(pythondir)/pygst.pth $(DESTDIR)$(pyexecdir)/pygst.pth
+
+# this file is common to all pygtk versions.
+pyexec_PYTHON = pygst.py
