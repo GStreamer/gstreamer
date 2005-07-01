@@ -12,7 +12,7 @@ built_headers = gstudp-enumtypes.h gstudp-marshal.h
 
 BUILT_SOURCES = $(built_sources) $(built_headers)
 
-libgstudp_la_SOURCES = gstudp.c gstudpsrc.c gstudpsink.c gstmultiudpsink.c
+libgstudp_la_SOURCES = gstudp.c gstudpsrc.c gstudpsink.c gstmultiudpsink.c gstdynudpsink.c
 libgstudp_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
 libgstudp_la_LIBADD =
 libgstudp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstnet-0.9
@@ -20,7 +20,7 @@ libgstudp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE
 nodist_libgstudp_la_SOURCES = \
         $(built_sources)
 
-noinst_HEADERS = gstudpsink.h gstudpsrc.h gstudp.h gstmultiudpsink.h
+noinst_HEADERS = gstudpsink.h gstudpsrc.h gstudp.h gstmultiudpsink.h gstdynudpsink.h
 
 EXTRA_DIST = README gstudp-marshal.list
 

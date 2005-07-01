@@ -24,6 +24,7 @@
 #include "gstudpsrc.h"
 #include "gstmultiudpsink.h"
 #include "gstudpsink.h"
+#include "gstdynudpsink.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -34,6 +35,10 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "multiudpsink", GST_RANK_NONE,
           GST_TYPE_MULTIUDPSINK))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "dynudpsink", GST_RANK_NONE,
+          GST_TYPE_DYNUDPSINK))
     return FALSE;
 
   if (!gst_element_register (plugin, "udpsrc", GST_RANK_NONE, GST_TYPE_UDPSRC))
