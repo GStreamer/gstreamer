@@ -1,5 +1,13 @@
 2005-07-01  Andy Wingo  <wingo@pobox.com>
 
+	* gst/videoscale/gstvideoscale.c:
+	* gst/videoscale/gstvideoscale.h: Clean up, port to 0.9. Derives
+	from BaseTransform, implements a transform_caps. Removed dead code
+	including some PAR stuff that was never reached -- should probably
+	be added back somehow.
+
+2005-07-01  Andy Wingo  <wingo@pobox.com>
+
 	* gst/videoscale: Merge David's work from 0.8 branch. Changes to
 	come later.
 

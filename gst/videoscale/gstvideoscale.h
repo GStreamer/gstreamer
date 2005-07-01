@@ -23,15 +23,15 @@
 
 
 #include <gst/gst.h>
+#include <gst/base/gstbasetransform.h>
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
-/* debugging */
+
 GST_DEBUG_CATEGORY_EXTERN (videoscale_debug);
 #define GST_CAT_DEFAULT videoscale_debug
+
 
 #define GST_TYPE_VIDEOSCALE \
   (gst_videoscale_get_type())
@@ -44,6 +44,7 @@ GST_DEBUG_CATEGORY_EXTERN (videoscale_debug);
 #define GST_IS_VIDEOSCALE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEOSCALE))
 
+
 typedef enum {
   GST_VIDEOSCALE_POINT_SAMPLE,
   GST_VIDEOSCALE_NEAREST,
@@ -51,13 +52,13 @@ typedef enum {
   GST_VIDEOSCALE_BICUBIC
 } GstVideoScaleMethod;
 
+
 typedef struct _GstVideoscale GstVideoscale;
 typedef struct _GstVideoscaleClass GstVideoscaleClass;
 
-struct _GstVideoscale {
-  GstElement element;
 
-  GstPad *sinkpad,*srcpad;
+struct _GstVideoscale {
+  GstBaseTransform element;
 
   /* video state */
   gboolean inited;
@@ -66,8 +67,6 @@ struct _GstVideoscale {
   gint to_height;
   gint from_width;
   gint from_height;
-  GValue *to_par;	/* pixel aspect ratio of sink pad */
-  GValue *from_par;	/* pixel aspect ratio of src pad */
   gboolean passthru;
   float framerate;
 
@@ -78,17 +77,14 @@ struct _GstVideoscale {
 };
 
 struct _GstVideoscaleClass {
-  GstElementClass parent_class;
+  GstBaseTransformClass parent_class;
 };
+
 
 GType gst_videoscale_get_type(void);
 
-void gst_videoscale_setup(GstVideoscale *);
-#define gst_videoscale_scale(scale, src, dest) (scale)->scale_cc((scale), (src), (dest))
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 
 #endif /* __GST_VIDEOSCALE_H__ */
