@@ -1,5 +1,9 @@
 2005-07-01  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gst.defs:
+	* gst/gst.override:
+	Probes are gone...
+
 	* Makefile.am:
 	* configure.ac:
 	* gst/Makefile.am:

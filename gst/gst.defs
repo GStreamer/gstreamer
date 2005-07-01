@@ -3620,97 +3620,6 @@
   (return-type "const-gchar*")
 )
 
-
-
-;; From ../gstreamer/gst/gstprobe.h
-
-(define-function gst_probe_get_type
-  (c-name "gst_probe_get_type")
-  (return-type "GType")
-)
-
-(define-function gst_probe_new
-  (c-name "gst_probe_new")
-  (is-constructor-of "GstProbe")
-  (return-type "GstProbe*")
-  (parameters
-    '("gboolean" "single_shot")
-    '("GstProbeCallback" "callback")
-    '("gpointer" "user_data")
-  )
-)
-
-(define-method destroy
-  (of-object "GstProbe")
-  (c-name "gst_probe_destroy")
-  (return-type "none")
-)
-
-(define-method perform
-  (of-object "GstProbe")
-  (c-name "gst_probe_perform")
-  (return-type "gboolean")
-  (parameters
-    '("GstMiniObject**" "data")
-  )
-)
-
-(define-function probe_dispatcher_new
-  (c-name "gst_probe_dispatcher_new")
-  (is-constructor-of "GstProbeDispatcher")
-  (return-type "GstProbeDispatcher*")
-)
-
-(define-method destroy
-  (of-object "GstProbeDispatcher")
-  (c-name "gst_probe_dispatcher_destroy")
-  (return-type "none")
-)
-
-(define-method init
-  (of-object "GstProbeDispatcher")
-  (c-name "gst_probe_dispatcher_init")
-  (return-type "none")
-)
-
-(define-method set_active
-  (of-object "GstProbeDispatcher")
-  (c-name "gst_probe_dispatcher_set_active")
-  (return-type "none")
-  (parameters
-    '("gboolean" "active")
-  )
-)
-
-(define-method add_probe
-  (of-object "GstProbeDispatcher")
-  (c-name "gst_probe_dispatcher_add_probe")
-  (return-type "none")
-  (parameters
-    '("GstProbe*" "probe")
-  )
-)
-
-(define-method remove_probe
-  (of-object "GstProbeDispatcher")
-  (c-name "gst_probe_dispatcher_remove_probe")
-  (return-type "none")
-  (parameters
-    '("GstProbe*" "probe")
-  )
-)
-
-(define-method dispatch
-  (of-object "GstProbeDispatcher")
-  (c-name "gst_probe_dispatcher_dispatch")
-  (return-type "gboolean")
-  (parameters
-    '("GstMiniObject**" "data")
-  )
-)
-
-
-
 ;; From ../gstreamer/gst/gstquery.h
 
 (define-function gst_query_get_type
@@ -5684,6 +5593,25 @@
     '("const-gchar*" "destpadname")
   )
 )
+
+(define-method can_src_caps
+  (of-object "GstElementFactory")
+  (c-name "gst_element_factory_can_src_caps")
+  (return-type "gboolean")
+  (parameters
+    '("const-GstCaps*" "caps")
+  )
+)
+
+(define-method can_sink_caps
+  (of-object "GstElementFactory")
+  (c-name "gst_element_factory_can_sink_caps")
+  (return-type "gboolean")
+  (parameters
+    '("const-GstCaps*" "caps")
+  )
+)
+
 
 (define-method query_position
   (of-object "GstElement")
