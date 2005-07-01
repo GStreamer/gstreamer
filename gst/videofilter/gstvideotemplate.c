@@ -219,9 +219,6 @@ gst_videotemplate_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_library_load ("gstvideofilter"))
-    return FALSE;
-
   return gst_element_register (plugin, "videotemplate", GST_RANK_NONE,
       GST_TYPE_VIDEOTEMPLATE);
 }

@@ -1,3 +1,24 @@
+2005-07-01  Jan Schmidt  <thaytan@mad.scientist.com>
+	* ext/libcaca/Makefile.am:
+	* ext/mad/Makefile.am:
+	* gst/effectv/Makefile.am:
+	* gst/udp/Makefile.am:
+	  Replace GST_PLUGINS_LIBS_* with GST_PLUGINS_BASE_*
+
+	* ext/mad/gstid3tag.c: (gst_id3_tag_src_query),
+	(gst_id3_tag_src_event), (gst_id3_tag_sink_event),
+	(gst_id3_tag_chain), (plugin_init):
+	* ext/mad/gstmad.c: (gst_mad_src_query), (gst_mad_chain):
+	  Signedness warning fix, use gst_pad_get_peer instead of GST_PAD_PEER
+	  in querying and event handling, because we're not holding the pad
+	  lock and the peer may disappear.
+	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_subindex),
+	(gst_avi_demux_parse_index), (gst_avi_demux_massage_index):
+	  Signedness warning fixes.
+
+	* gst/videofilter/gstvideotemplate.c: (plugin_init):
+	  Remove gst_library_load
+
 2005-06-30  Edward Hervey  <edward@fluendo.com>
 
 	* gst/avi/Makefile.am: (libgstavi_la_LIBADD):
