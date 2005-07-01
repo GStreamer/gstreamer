@@ -623,12 +623,6 @@ gst_ximagesink_renegotiate_size (GstXImageSink * ximagesink)
   if (ximagesink->xwindow->width <= 1 || ximagesink->xwindow->height <= 1)
     return;
 
-  /* FIXME */
-#if 0
-  if (GST_PAD_IS_NEGOTIATING (GST_VIDEOSINK_PAD (ximagesink)) ||
-      !gst_pad_is_negotiated (GST_VIDEOSINK_PAD (ximagesink)))
-    return;
-
   /* Window got resized or moved. We do caps negotiation again to get video
      scaler to fit that new size only if size of the window differs from our
      size. */
@@ -658,27 +652,21 @@ gst_ximagesink_renegotiate_size (GstXImageSink * ximagesink)
           nom, den, NULL);
     }
 
-    r = gst_pad_try_set_caps (GST_VIDEOSINK_PAD (ximagesink), caps);
-
-    if ((r == GST_PAD_LINK_OK) || (r == GST_PAD_LINK_DONE)) {
-      /* Renegotiation succeeded, we update our size and image */
+    if (gst_pad_peer_accept_caps (GST_VIDEOSINK_PAD (ximagesink), caps)) {
+      gst_caps_replace (&ximagesink->desired_caps, caps);
       GST_VIDEOSINK_WIDTH (ximagesink) = ximagesink->xwindow->width;
       GST_VIDEOSINK_HEIGHT (ximagesink) = ximagesink->xwindow->height;
 
-      if ((ximagesink->ximage) &&
-          ((GST_VIDEOSINK_WIDTH (ximagesink) != ximagesink->ximage->width) ||
-              (GST_VIDEOSINK_HEIGHT (ximagesink) !=
-                  ximagesink->ximage->height))) {
-        /* We renew our ximage only if size changed */
+      if (ximagesink->ximage) {
         GST_DEBUG_OBJECT (ximagesink, "destroying and recreating our ximage");
         gst_ximagesink_ximage_destroy (ximagesink, ximagesink->ximage);
         ximagesink->ximage = NULL;
       }
     } else {
       ximagesink->sw_scaling_failed = TRUE;
+      gst_caps_unref (caps);
     }
   }
-#endif
 }
 
 /* This function handles XEvents that might be in the queue. It generates
@@ -1060,7 +1048,7 @@ static gboolean
 gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstXImageSink *ximagesink;
-  gboolean ret;
+  gboolean ret = TRUE;
   GstStructure *structure;
   const GValue *par;
 
@@ -1074,10 +1062,12 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
       GST_PTR_FORMAT, ximagesink->xcontext->caps, caps);
 
   structure = gst_caps_get_structure (caps, 0);
-  ret = gst_structure_get_int (structure, "width",
-      &(GST_VIDEOSINK_WIDTH (ximagesink)));
-  ret &= gst_structure_get_int (structure, "height",
-      &(GST_VIDEOSINK_HEIGHT (ximagesink)));
+  if (GST_VIDEOSINK_WIDTH (ximagesink) == 0) {
+    ret &= gst_structure_get_int (structure, "width",
+        &(GST_VIDEOSINK_WIDTH (ximagesink)));
+    ret &= gst_structure_get_int (structure, "height",
+        &(GST_VIDEOSINK_HEIGHT (ximagesink)));
+  }
   ret &= gst_structure_get_double (structure,
       "framerate", &ximagesink->framerate);
   if (!ret)
@@ -1250,12 +1240,11 @@ gst_ximagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
             ("Failed creating an XImage in ximagesink chain function."));
         return GST_FLOW_ERROR;
       }
+      memcpy (ximagesink->ximage->ximage->data,
+          GST_BUFFER_DATA (buf),
+          MIN (GST_BUFFER_SIZE (buf), ximagesink->ximage->size));
+      gst_ximagesink_ximage_put (ximagesink, ximagesink->ximage);
     }
-
-    memcpy (ximagesink->ximage->ximage->data,
-        GST_BUFFER_DATA (buf),
-        MIN (GST_BUFFER_SIZE (buf), ximagesink->ximage->size));
-    gst_ximagesink_ximage_put (ximagesink, ximagesink->ximage);
   }
 
   gst_ximagesink_handle_xevents (ximagesink);
@@ -1307,7 +1296,7 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 
   /* FIXME, we should just parse the caps, and provide a buffer in this format,
    * we should not just reconfigure ourselves yet */
-  if (caps && caps != GST_PAD_CAPS (GST_VIDEOSINK_PAD (ximagesink))) {
+  if (caps && !GST_PAD_CAPS (GST_VIDEOSINK_PAD (ximagesink))) {
     if (!gst_ximagesink_setcaps (bsink, caps)) {
       return GST_FLOW_NOT_NEGOTIATED;
     }
@@ -1341,9 +1330,25 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 
   if (!ximage) {
     /* We found no suitable image in the pool. Creating... */
+    gint height, width;
+
+    if (ximagesink->desired_caps) {
+      GstStructure *s = gst_caps_get_structure (ximagesink->desired_caps, 0);
+
+      gst_structure_get_int (s, "width", &width);
+      gst_structure_get_int (s, "height", &height);
+    } else {
+      width = GST_VIDEOSINK_WIDTH (ximagesink);
+      height = GST_VIDEOSINK_HEIGHT (ximagesink);
+    }
+
     GST_DEBUG_OBJECT (ximagesink, "no usable image in pool, creating ximage");
-    ximage = gst_ximagesink_ximage_new (ximagesink,
-        GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
+    ximage = gst_ximagesink_ximage_new (ximagesink, width, height);
+
+    if (ximagesink->desired_caps)
+      gst_buffer_set_caps (GST_BUFFER (ximage), ximagesink->desired_caps);
+    else
+      gst_buffer_set_caps (GST_BUFFER (ximage), caps);
   }
 
   *buf = GST_BUFFER (ximage);

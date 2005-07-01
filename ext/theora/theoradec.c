@@ -123,6 +123,7 @@ static gboolean theora_dec_sink_convert (GstPad * pad,
     GstFormat src_format, gint64 src_value,
     GstFormat * dest_format, gint64 * dest_value);
 static gboolean theora_dec_sink_query (GstPad * pad, GstQuery * query);
+static GstCaps *theora_dec_src_getcaps (GstPad * pad);
 
 #if 0
 static const GstFormat *theora_get_formats (GstPad * pad);
@@ -178,6 +179,7 @@ gst_theora_dec_init (GstTheoraDec * dec)
   dec->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&theora_dec_src_factory), "src");
+  gst_pad_set_getcaps_function (dec->srcpad, theora_dec_src_getcaps);
   gst_pad_set_event_function (dec->srcpad, theora_dec_src_event);
   gst_pad_set_query_type_function (dec->srcpad, theora_get_query_types);
   gst_pad_set_query_function (dec->srcpad, theora_dec_src_query);
@@ -561,6 +563,21 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
 error:
   gst_event_unref (event);
   return res;
+}
+
+static GstCaps *
+theora_dec_src_getcaps (GstPad * pad)
+{
+  GstCaps *caps;
+
+  GST_LOCK (pad);
+  caps = GST_PAD_CAPS (pad);
+  GST_UNLOCK (pad);
+
+  if (caps)
+    return gst_caps_ref (caps);
+  else
+    return gst_caps_ref (gst_pad_get_pad_template_caps (pad));
 }
 
 static gboolean

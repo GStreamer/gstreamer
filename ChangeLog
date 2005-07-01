@@ -1,5 +1,32 @@
 2005-07-01  Andy Wingo  <wingo@pobox.com>
 
+	* ext/theora/theoradec.c (theora_dec_src_getcaps): Implement a
+	getcaps to do explicit caps. Needs to be done in all decoders,
+	possibly via a base class.
+
+	* configure.ac (GST_PLUGIN_LDFLAGS): Add videoscale.
+
+	* ext/ogg/gstoggdemux.c (gst_ogg_pad_typefind): No need to set
+	caps on the sink pad, just rely on the pad template. Also, setting
+	ANY caps on a pad is not valid because the caps are not fixed.
+
+	* sys/ximage/ximagesink.c (gst_ximagesink_buffer_alloc): Set the
+	caps on the buffer, and get the width from the desired_caps if
+	they're set.
+	(gst_ximagesink_renegotiate_size): Implement via setting the
+	desired_caps on the ximagesink.
+	(gst_ximagesink_setcaps): Only reset the width of the player if it
+	wasn't already set. Not sure if this is right.
+	(gst_ximagesink_show_frame): Memcpy only for normal buffers.
+
+	* sys/ximage/ximagesink.h (desired_caps): New field, is the caps
+	that the user wants. NULL unless the window has been resized.
+
+	* gst/volume/gstvolume.c (volume_transform): Adapt to
+	basetransform refcount changes.
+	
+2005-07-01  Andy Wingo  <wingo@pobox.com>
+
 	* gst/videoscale/gstvideoscale.c:
 	* gst/videoscale/gstvideoscale.h: Clean up, port to 0.9. Derives
 	from BaseTransform, implements a transform_caps. Removed dead code

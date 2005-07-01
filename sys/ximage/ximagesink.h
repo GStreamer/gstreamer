@@ -121,6 +121,8 @@ struct _GstXImageSink {
   GstXImageBuffer *ximage;
   GstXImageBuffer *cur_image;
 
+  GstCaps *desired_caps;
+
   gdouble framerate;
   GMutex *x_lock;
   GMutex *stream_lock;

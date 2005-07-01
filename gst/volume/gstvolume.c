@@ -346,7 +346,7 @@ volume_transform (GstBaseTransform * base, GstBuffer * inbuf,
     }
   }
 
-  *outbuf = gst_buffer_make_writable (gst_buffer_ref (inbuf));
+  *outbuf = gst_buffer_make_writable (inbuf);
 
   filter->process (filter, GST_BUFFER_TIMESTAMP (*outbuf),
       GST_BUFFER_DATA (*outbuf), GST_BUFFER_SIZE (*outbuf));

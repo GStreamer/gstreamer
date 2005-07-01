@@ -378,6 +378,7 @@ GST_PLUGINS_ALL="\
 	typefind \
 	videotestsrc \
 	videorate \
+	videoscale \
         volume \
 	"
 
@@ -885,6 +886,7 @@ gst/subparse/Makefile
 gst/typefind/Makefile
 gst/videotestsrc/Makefile
 gst/videorate/Makefile
+gst/videoscale/Makefile
 gst/volume/Makefile
 sys/Makefile
 sys/ximage/Makefile

@@ -557,8 +557,6 @@ gst_ogg_pad_typefind (GstOggPad * pad, ogg_packet * packet)
             gst_element_factory_create (GST_ELEMENT_FACTORY (factories->data),
             NULL);
         if (element) {
-          GstCaps *any;
-
           /* this is ours */
           gst_object_ref (element);
           gst_object_sink (GST_OBJECT (element));
@@ -572,9 +570,6 @@ gst_ogg_pad_typefind (GstOggPad * pad, ogg_packet * packet)
           gst_pad_set_chain_function (pad->elem_out,
               gst_ogg_pad_internal_chain);
           gst_pad_set_element_private (pad->elem_out, pad);
-          any = gst_caps_new_any ();
-          gst_pad_set_caps (pad->elem_out, any);
-          gst_caps_unref (any);
           gst_pad_set_active (pad->elem_out, TRUE);
 
           /* and this pad may not be named src.. */
