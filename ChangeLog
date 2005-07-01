@@ -1,3 +1,14 @@
+2005-07-01  Philippe Khalaf <burger@speedy.org>
+	* gst/udp/Makefile.am:
+	* gst/udp/gstudp.c:
+	* gst/udp/gstdynudpsink.c: (new)
+	* gst/udp/gstdynudpsink.h: (new)
+	  Added new element (udpdynsink) that receives GstNetBuffers and sends the
+	  udp packets to the source given in the buffer. It's used by rtpsession
+	  element for now.
+	* gst/udp/gstudpsrc.c:
+	  Fixed memory leak.
+
 2005-07-01  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:
