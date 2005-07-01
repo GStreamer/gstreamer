@@ -48,7 +48,7 @@ typedef struct _GstIdentityClass GstIdentityClass;
 struct _GstIdentity {
   GstBaseTransform 	 element;
 
-  guint 	 duplicate;
+  GstClockID     clock_id;
   gint 	 	 error_after;
   gfloat 	 drop_probability;
   gint		 datarate;

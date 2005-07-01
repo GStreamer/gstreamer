@@ -57,9 +57,13 @@ struct _GstBaseTransformClass {
   /*< public >*/
   /* virtual methods for subclasses */
 
+  /* given caps on one pad, what can I do on the other pad */
+  GstCaps*	(*transform_caps) (GstBaseTransform *trans, GstPad *pad,
+                                   GstCaps *caps);
 
   /* notify the subclass of new caps */
-  gboolean      (*set_caps)     (GstBaseTransform *trans, GstCaps *caps);
+  gboolean      (*set_caps)     (GstBaseTransform *trans, GstCaps *incaps,
+                                 GstCaps *outcaps);
 
   /* start and stop processing, ideal for opening/closing the resource */
   gboolean      (*start)        (GstBaseTransform *trans);
@@ -68,7 +72,8 @@ struct _GstBaseTransformClass {
   gboolean      (*event)        (GstBaseTransform *trans, GstEvent *event);
 
   /* transform one incoming buffer to one outgoing buffer */
-  GstFlowReturn (*transform)    (GstBaseTransform *trans, GstBuffer *inbuf, GstBuffer **outbuf);
+  GstFlowReturn (*transform)    (GstBaseTransform *trans, GstBuffer *inbuf,
+                                 GstBuffer **outbuf);
 };
 
 GType gst_base_transform_get_type (void);

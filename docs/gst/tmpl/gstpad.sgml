@@ -90,8 +90,8 @@ Last reviewed on December 13th, 2002 (0.5.0.1)
 @queryfunc: 
 @intlinkfunc: 
 @bufferallocfunc: 
-@emit_buffer_signals: 
-@emit_event_signals: 
+@do_buffer_signals: 
+@do_event_signals: 
 
 <!-- ##### SIGNAL GstPad::have-data ##### -->
 <para>

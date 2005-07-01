@@ -117,7 +117,7 @@ typedef void			(*GstPadUnlinkFunction)		(GstPad *pad);
 typedef GstCaps*		(*GstPadGetCapsFunction)	(GstPad *pad);
 typedef gboolean		(*GstPadSetCapsFunction)	(GstPad *pad, GstCaps *caps);
 typedef gboolean		(*GstPadAcceptCapsFunction)	(GstPad *pad, GstCaps *caps);
-typedef GstCaps*		(*GstPadFixateCapsFunction)	(GstPad *pad, GstCaps *caps);
+typedef void			(*GstPadFixateCapsFunction)	(GstPad *pad, GstCaps *caps);
 typedef GstFlowReturn		(*GstPadBufferAllocFunction)	(GstPad *pad, guint64 offset, guint size,
 								 GstCaps *caps, GstBuffer **buf);
 /* misc */
@@ -414,7 +414,7 @@ G_CONST_RETURN GstCaps*	gst_pad_get_pad_template_caps		(GstPad *pad);
 
 /* capsnego function for connected/unconnected pads */
 GstCaps *		gst_pad_get_caps			(GstPad * pad);
-GstCaps*		gst_pad_fixate_caps			(GstPad * pad, GstCaps *caps);
+void			gst_pad_fixate_caps			(GstPad * pad, GstCaps *caps);
 gboolean		gst_pad_accept_caps			(GstPad * pad, GstCaps *caps);
 gboolean		gst_pad_set_caps			(GstPad * pad, GstCaps *caps);
 

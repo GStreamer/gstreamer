@@ -1,3 +1,46 @@
+2005-07-01  Andy Wingo  <wingo@pobox.com>
+
+	* tests/network-clock.scm: Commentary update.
+
+	* gst/elements/gstidentity.c (PROP_DUPLICATE): Gone daddy gone.
+	Didn't really make sense, not implementable with basetransform,
+	etc.
+	(gst_identity_transform): Unref inbuf via make_writable. Feeble
+	attempt at implementing the sync property, needs an unlock method.
+
+	* gst/base/gstbasetransform.c (gst_base_transform_transform_caps):
+	New func, by default returns the same caps (the identity
+	transformation).
+	(gst_base_transform_getcaps): Uses transform_caps to return
+	something sensible.
+	(gst_base_transform_setcaps): Complicated logic to get caps on
+	both pads, even if they are different, and to call set_caps once
+	for every time both pads get their caps set.
+	(gst_base_transform_handle_buffer): Give the ref to the transform
+	function. Allows in-place modification of the buffer.
+
+	* gst/base/gstbasetransform.h (transform_caps): New class method.
+	Given caps on one side, what can I do on the other.
+	(set_caps): Take two caps, one for each side of the element.
+
+	* gst/gstpad.h:
+	* gst/gstpad.c (gst_pad_fixate_caps): Change prototype to modify
+	caps in place. This is safe because we can check the mutability of
+	the caps, and a good idea because fixate functions are just called
+	as a matter of last resort. (Not actually implemented.)
+	(gst_pad_set_caps): If the caps we're setting is actually the same
+	as the existing pad caps, just update the pointer without calling
+	setcaps. Assert that caps is either NULL or fixed, as per the
+	docs.
+
+	* gst/gstghostpad.c: Update for fixate changes.
+
+2005-07-02  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstcaps.c:
+	* gst/gstcaps.h (gst_static_caps_get): Not const return, having
+	two refcounts makes it immutable, which is enough. Doc more.
+
 2005-07-02  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstpad.c: (gst_pad_emit_have_data_signal):

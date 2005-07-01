@@ -347,9 +347,11 @@ gst_caps_unref (GstCaps * caps)
  *
  * Converts a #GstStaticCaps to a #GstCaps.
  *
- * Returns: the new #GstCaps
+ * Returns: A pointer to the #GstCaps. Although you do not have a reference on
+ * the caps, the core will never drop its references. (The core has two
+ * references on the caps so it will be immutable.)
  */
-const GstCaps *
+GstCaps *
 gst_static_caps_get (GstStaticCaps * static_caps)
 {
   GstCaps *caps = (GstCaps *) static_caps;

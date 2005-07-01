@@ -1748,15 +1748,13 @@ was_dispatching:
  * gst_pad_fixate_caps:
  * @pad: a  #GstPad to fixate
  *
- * Fixate a caps on the given pad.
- *
- * Returns: a fixated #GstCaps.
+ * Fixate a caps on the given pad. Modifies the caps in place, so you should be
+ * that the caps are actually writable (see gst_caps_make_writable()).
  */
-GstCaps *
+void
 gst_pad_fixate_caps (GstPad * pad, GstCaps * caps)
 {
   /* FIXME, implement me, call the fixate function for the pad */
-  return caps;
 }
 
 /**
@@ -1857,11 +1855,19 @@ gboolean
 gst_pad_set_caps (GstPad * pad, GstCaps * caps)
 {
   GstPadSetCapsFunction setcaps;
+  GstCaps *existing;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (caps == NULL || gst_caps_is_fixed (caps), FALSE);
 
   GST_LOCK (pad);
   setcaps = GST_PAD_SETCAPSFUNC (pad);
+
+  existing = GST_PAD_CAPS (pad);
+  if (caps == existing)
+    goto setting_same_caps;
+  else if (caps && existing && gst_caps_is_equal (caps, existing))
+    goto setting_same_caps;
 
   /* call setcaps function to configure the pad */
   if (setcaps != NULL && caps) {
@@ -1887,6 +1893,15 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
 
   return TRUE;
 
+setting_same_caps:
+  {
+    GST_UNLOCK (pad);
+    gst_caps_replace (&GST_PAD_CAPS (pad), caps);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+        "caps %" GST_PTR_FORMAT " same as existing, updating ptr only", caps);
+    return TRUE;
+  }
+/* errors */
 could_not_set:
   {
     GST_LOCK (pad);

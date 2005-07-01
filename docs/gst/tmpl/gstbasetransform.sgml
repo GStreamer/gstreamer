@@ -26,6 +26,7 @@ GstBaseTransform
 </para>
 
 @parent_class: 
+@transform_caps: 
 @set_caps: 
 @start: 
 @stop: 

@@ -54,9 +54,7 @@ exec guile --debug -l $0 -e main -- "$@"
 ;; second argument, rather deferring that calculation until stream-cdr
 ;; is called. In that way all times are actually infinite series.
 ;;
-;; Knobs: sample rate, send delay, receive delay, send noise, receive
-;; noise, queue length, rate of remote clock, rate of local clock. See
-;; network-clock.scm --help.
+;; Usage: See network-clock.scm --help.
 ;;
 ;;; Code:
 

@@ -98,7 +98,7 @@ GstCaps *                gst_caps_copy					(const GstCaps * caps);
 GstCaps *                gst_caps_make_writable          		(GstCaps *caps);
 void                     gst_caps_unref                  		(GstCaps* caps);
 
-G_CONST_RETURN GstCaps * gst_static_caps_get                            (GstStaticCaps *static_caps);
+GstCaps *		 gst_static_caps_get                            (GstStaticCaps *static_caps);
 
 /* manipulation */
 void                     gst_caps_append                                (GstCaps       *caps1,

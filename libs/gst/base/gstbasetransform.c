@@ -98,7 +98,7 @@ static GstFlowReturn gst_base_transform_chain (GstPad * pad,
     GstBuffer * buffer);
 static GstFlowReturn gst_base_transform_handle_buffer (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer ** outbuf);
-static GstCaps *gst_base_transform_proxy_getcaps (GstPad * pad);
+static GstCaps *gst_base_transform_getcaps (GstPad * pad);
 static gboolean gst_base_transform_setcaps (GstPad * pad, GstCaps * caps);
 
 /* static guint gst_base_transform_signals[LAST_SIGNAL] = { 0 }; */
@@ -150,7 +150,7 @@ gst_base_transform_init (GstBaseTransform * trans, gpointer g_class)
   g_return_if_fail (pad_template != NULL);
   trans->sinkpad = gst_pad_new_from_template (pad_template, "sink");
   gst_pad_set_getcaps_function (trans->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_transform_proxy_getcaps));
+      GST_DEBUG_FUNCPTR (gst_base_transform_getcaps));
   gst_pad_set_setcaps_function (trans->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_transform_setcaps));
   gst_pad_set_event_function (trans->sinkpad,
@@ -166,7 +166,9 @@ gst_base_transform_init (GstBaseTransform * trans, gpointer g_class)
   g_return_if_fail (pad_template != NULL);
   trans->srcpad = gst_pad_new_from_template (pad_template, "src");
   gst_pad_set_getcaps_function (trans->srcpad,
-      GST_DEBUG_FUNCPTR (gst_base_transform_proxy_getcaps));
+      GST_DEBUG_FUNCPTR (gst_base_transform_getcaps));
+  gst_pad_set_setcaps_function (trans->srcpad,
+      GST_DEBUG_FUNCPTR (gst_base_transform_setcaps));
   gst_pad_set_getrange_function (trans->srcpad,
       GST_DEBUG_FUNCPTR (gst_base_transform_getrange));
   gst_pad_set_activatepull_function (trans->srcpad,
@@ -175,46 +177,135 @@ gst_base_transform_init (GstBaseTransform * trans, gpointer g_class)
 }
 
 static GstCaps *
-gst_base_transform_proxy_getcaps (GstPad * pad)
+gst_base_transform_transform_caps (GstBaseTransform * trans, GstPad * pad,
+    GstCaps * caps)
 {
-  GstPad *otherpad;
+  GstBaseTransformClass *klass;
+
+  klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+
+  if (klass->transform_caps)
+    return klass->transform_caps (trans, pad, caps);
+  else
+    return gst_caps_ref (caps);
+}
+
+static GstCaps *
+gst_base_transform_getcaps (GstPad * pad)
+{
   GstBaseTransform *trans;
+  GstPad *otherpad;
   GstCaps *caps;
-  const GstCaps *templcaps;
 
-  trans = GST_BASE_TRANSFORM (GST_OBJECT_PARENT (pad));
+  trans = GST_BASE_TRANSFORM (GST_PAD_PARENT (pad));
 
-  otherpad = pad == trans->srcpad ? trans->sinkpad : trans->srcpad;
+  otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
 
-  /* we can do whatever the peer can do */
+  /* we can do what the peer can */
   caps = gst_pad_peer_get_caps (otherpad);
-  templcaps = gst_pad_get_pad_template_caps (pad);
 
-  if (caps == NULL) {
-    /* no peer, then the padtemplate is enough */
-    return gst_caps_copy (templcaps);
-  } else {
-    GstCaps *ret = gst_caps_intersect (caps, templcaps);
+  if (caps) {
+    GstCaps *temp;
 
+    temp = gst_base_transform_transform_caps (trans, otherpad, caps);
     gst_caps_unref (caps);
-    return ret;
+    caps = gst_caps_intersect (temp, gst_pad_get_pad_template_caps (pad));
+    gst_caps_unref (temp);
+  } else {
+    /* no peer, our padtemplate is enough then */
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
   }
+
+  return caps;
 }
 
 static gboolean
 gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstBaseTransform *trans;
-  GstBaseTransformClass *bclass;
-  gboolean result = TRUE;
+  GstBaseTransformClass *klass;
+  GstStructure *structure;
+  GstPad *otherpad, *otherpeer;
+  gboolean ret = TRUE;
 
   trans = GST_BASE_TRANSFORM (GST_PAD_PARENT (pad));
-  bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+  klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
-  if (bclass->set_caps)
-    result = bclass->set_caps (trans, caps);
+  otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
+  otherpeer = gst_pad_get_peer (otherpad);
 
-  return result;
+  if (GST_PAD_IS_IN_SETCAPS (otherpad))
+    goto done;
+
+  if (otherpeer == NULL || gst_pad_accept_caps (otherpeer, caps)) {
+
+    /* the peer accepts the caps as they are */
+    gst_pad_set_caps (otherpad, caps);
+
+    /* let the element know */
+    if (klass->set_caps)
+      klass->set_caps (trans, caps, caps);
+
+    ret = TRUE;
+  } else {
+    GstCaps *peercaps;
+    GstCaps *intersect;
+    GstCaps *transform = NULL;
+    GstCaps *othercaps;
+
+    ret = FALSE;
+
+    /* other pad has a peer, so we have to figure out how to do the conversion
+     */
+    /* see how we can transform the input caps */
+    transform = gst_base_transform_transform_caps (trans, pad, caps);
+
+    if (!transform)
+      goto done;
+
+    /* see what the peer can do */
+    peercaps = gst_pad_get_caps (otherpeer);
+
+    GST_DEBUG ("icaps %" GST_PTR_FORMAT, peercaps);
+    GST_DEBUG ("transform %" GST_PTR_FORMAT, transform);
+
+    /* filter against our possibilities */
+    intersect = gst_caps_intersect (peercaps, transform);
+    gst_caps_unref (peercaps);
+    gst_caps_unref (transform);
+
+    GST_DEBUG ("intersect %" GST_PTR_FORMAT, intersect);
+
+    /* take first possibility */
+    othercaps = gst_caps_copy_nth (intersect, 0);
+    gst_caps_unref (intersect);
+    structure = gst_caps_get_structure (othercaps, 0);
+
+    /* and fixate if necessary */
+    gst_pad_fixate_caps (otherpad, othercaps);
+
+    g_return_val_if_fail (gst_caps_is_fixed (othercaps), FALSE);
+
+    gst_pad_set_caps (otherpad, othercaps);
+
+    /* let the element know */
+    if (klass->set_caps) {
+      if (pad == trans->sinkpad) {
+        klass->set_caps (trans, caps, othercaps);
+      } else {
+        klass->set_caps (trans, othercaps, caps);
+      }
+    }
+
+    ret = TRUE;
+  }
+
+done:
+
+  if (otherpeer)
+    gst_object_unref (otherpeer);
+
+  return ret;
 }
 
 static gboolean
@@ -307,8 +398,6 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
   if (bclass->transform)
     ret = bclass->transform (trans, inbuf, outbuf);
-
-  gst_buffer_unref (inbuf);
 
   return ret;
 }

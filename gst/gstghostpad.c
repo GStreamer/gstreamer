@@ -279,14 +279,14 @@ gst_proxy_pad_do_acceptcaps (GstPad * pad, GstCaps * caps)
   return gst_pad_accept_caps (target, caps);
 }
 
-static GstCaps *
+static void
 gst_proxy_pad_do_fixatecaps (GstPad * pad, GstCaps * caps)
 {
   GstPad *target = GST_PROXY_PAD_TARGET (pad);
 
-  g_return_val_if_fail (target != NULL, NULL);
+  g_return_if_fail (target != NULL);
 
-  return gst_pad_fixate_caps (target, caps);
+  gst_pad_fixate_caps (target, caps);
 }
 
 static gboolean

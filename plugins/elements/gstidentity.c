@@ -73,7 +73,6 @@ enum
 {
   PROP_0,
   PROP_SLEEP_TIME,
-  PROP_DUPLICATE,
   PROP_ERROR_AFTER,
   PROP_DROP_PROBABILITY,
   PROP_DATARATE,
@@ -147,10 +146,6 @@ gst_identity_class_init (GstIdentityClass * klass)
       g_param_spec_uint ("sleep-time", "Sleep time",
           "Microseconds to sleep between processing", 0, G_MAXUINT,
           DEFAULT_SLEEP_TIME, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DUPLICATE,
-      g_param_spec_uint ("duplicate", "Duplicate Buffers",
-          "Push the buffers N times", 0, G_MAXUINT, DEFAULT_DUPLICATE,
-          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ERROR_AFTER,
       g_param_spec_int ("error_after", "Error After", "Error after N buffers",
           G_MININT, G_MAXINT, DEFAULT_ERROR_AFTER, G_PARAM_READWRITE));
@@ -196,7 +191,6 @@ static void
 gst_identity_init (GstIdentity * identity)
 {
   identity->sleep_time = DEFAULT_SLEEP_TIME;
-  identity->duplicate = DEFAULT_DUPLICATE;
   identity->error_after = DEFAULT_ERROR_AFTER;
   identity->drop_probability = DEFAULT_DROP_PROBABILITY;
   identity->datarate = DEFAULT_DATARATE;
@@ -271,7 +265,6 @@ gst_identity_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstIdentity *identity = GST_IDENTITY (trans);
-  guint i;
 
   if (identity->check_perfect)
     gst_identity_check_perfect (identity, inbuf);
@@ -281,6 +274,7 @@ gst_identity_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     if (identity->error_after == 0) {
       GST_ELEMENT_ERROR (identity, CORE, FAILED,
           (_("Failed after iterations as requested.")), (NULL));
+      gst_buffer_unref (inbuf);
       return GST_FLOW_ERROR;
     }
   }
@@ -300,6 +294,7 @@ gst_identity_transform (GstBaseTransform * trans, GstBuffer * inbuf,
           GST_BUFFER_FLAGS (inbuf), inbuf);
       GST_UNLOCK (identity);
       g_object_notify (G_OBJECT (identity), "last-message");
+      gst_buffer_unref (inbuf);
       return GST_FLOW_OK;
     }
   }
@@ -308,55 +303,65 @@ gst_identity_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     gst_util_dump_mem (GST_BUFFER_DATA (inbuf), GST_BUFFER_SIZE (inbuf));
   }
 
-  for (i = identity->duplicate; i; i--) {
-    GstClockTime time;
-
-    if (!identity->silent) {
-      GST_LOCK (identity);
-      g_free (identity->last_message);
-      identity->last_message =
-          g_strdup_printf ("chain   ******* (%s:%s)i (%d bytes, timestamp: %"
-          GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %"
-          G_GINT64_FORMAT ", offset_end: % " G_GINT64_FORMAT ", flags: %d) %p",
-          GST_DEBUG_PAD_NAME (trans->sinkpad), GST_BUFFER_SIZE (inbuf),
-          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)),
-          GST_TIME_ARGS (GST_BUFFER_DURATION (inbuf)),
-          GST_BUFFER_OFFSET (inbuf), GST_BUFFER_OFFSET_END (inbuf),
-          GST_BUFFER_FLAGS (inbuf), inbuf);
-      GST_UNLOCK (identity);
-      g_object_notify (G_OBJECT (identity), "last-message");
-    }
-
-    time = GST_BUFFER_TIMESTAMP (inbuf);
-
-    if (identity->datarate > 0) {
-      time = identity->offset * GST_SECOND / identity->datarate;
-
-      GST_BUFFER_TIMESTAMP (inbuf) = time;
-      GST_BUFFER_DURATION (inbuf) =
-          GST_BUFFER_SIZE (inbuf) * GST_SECOND / identity->datarate;
-    }
-
-    g_signal_emit (G_OBJECT (identity), gst_identity_signals[SIGNAL_HANDOFF], 0,
-        inbuf);
-
-    if (i > 1)
-      gst_buffer_ref (inbuf);
-
-    if (identity->sync) {
-      if (GST_ELEMENT (identity)->clock) {
-        /* gst_element_wait (GST_ELEMENT (identity), time); */
-      }
-    }
-
-    identity->offset += GST_BUFFER_SIZE (inbuf);
-
-    if (identity->sleep_time)
-      g_usleep (identity->sleep_time);
-
-    gst_buffer_ref (inbuf);
-    *outbuf = inbuf;
+  if (!identity->silent) {
+    GST_LOCK (identity);
+    g_free (identity->last_message);
+    identity->last_message =
+        g_strdup_printf ("chain   ******* (%s:%s)i (%d bytes, timestamp: %"
+        GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %"
+        G_GINT64_FORMAT ", offset_end: % " G_GINT64_FORMAT ", flags: %d) %p",
+        GST_DEBUG_PAD_NAME (trans->sinkpad), GST_BUFFER_SIZE (inbuf),
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (inbuf)),
+        GST_BUFFER_OFFSET (inbuf), GST_BUFFER_OFFSET_END (inbuf),
+        GST_BUFFER_FLAGS (inbuf), inbuf);
+    GST_UNLOCK (identity);
+    g_object_notify (G_OBJECT (identity), "last-message");
   }
+
+  *outbuf = gst_buffer_make_writable (inbuf);
+  /* inbuf is no longer usable */
+
+  if (identity->datarate > 0) {
+    GstClockTime time = identity->offset * GST_SECOND / identity->datarate;
+
+    GST_BUFFER_TIMESTAMP (*outbuf) = time;
+    GST_BUFFER_DURATION (*outbuf) =
+        GST_BUFFER_SIZE (*outbuf) * GST_SECOND / identity->datarate;
+  }
+
+  g_signal_emit (G_OBJECT (identity), gst_identity_signals[SIGNAL_HANDOFF], 0,
+      *outbuf);
+
+  if (identity->sync) {
+    GstClock *clock;
+    GstClockReturn cret;
+
+    clock = GST_ELEMENT (identity)->clock;
+
+    if (clock) {
+      /* save id if we need to unlock */
+      /* FIXME: actually unlock this somewhere if the state changes */
+      GST_LOCK (identity);
+      identity->clock_id = gst_clock_new_single_shot_id (clock,
+          GST_BUFFER_TIMESTAMP (*outbuf) + GST_ELEMENT (identity)->base_time);
+      GST_UNLOCK (identity);
+      cret = gst_clock_id_wait (identity->clock_id, NULL);
+      GST_LOCK (identity);
+      if (identity->clock_id) {
+        gst_clock_id_unref (identity->clock_id);
+        identity->clock_id = NULL;
+      }
+      GST_UNLOCK (identity);
+      if (cret == GST_CLOCK_UNSCHEDULED)
+        ret = GST_FLOW_UNEXPECTED;
+    }
+  }
+
+  identity->offset += GST_BUFFER_SIZE (*outbuf);
+
+  if (identity->sleep_time && ret == GST_FLOW_OK)
+    g_usleep (identity->sleep_time);
 
   return ret;
 }
@@ -375,9 +380,6 @@ gst_identity_set_property (GObject * object, guint prop_id,
       break;
     case PROP_SILENT:
       identity->silent = g_value_get_boolean (value);
-      break;
-    case PROP_DUPLICATE:
-      identity->duplicate = g_value_get_uint (value);
       break;
     case PROP_DUMP:
       identity->dump = g_value_get_boolean (value);
@@ -414,9 +416,6 @@ gst_identity_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case PROP_SLEEP_TIME:
       g_value_set_uint (value, identity->sleep_time);
-      break;
-    case PROP_DUPLICATE:
-      g_value_set_uint (value, identity->duplicate);
       break;
     case PROP_ERROR_AFTER:
       g_value_set_int (value, identity->error_after);
