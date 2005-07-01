@@ -1556,6 +1556,7 @@ gst_opt_scheduler_get_wrapper (GstPad * srcpad)
   data = NULL;
   disabled = FALSE;
 
+  gst_object_ref (GST_OBJECT (srcpad));
   GST_OPT_LOCK (osched);
   do {
     GST_LOG ("scheduling upstream group %p to fill datapen", group);
@@ -1616,6 +1617,7 @@ done:
 
   GST_LOG ("get handler, returning data %p, queue length %d",
       data, g_list_length (GST_PAD_DATALIST (srcpad)));
+  gst_object_unref (GST_OBJECT (srcpad));
 
   return data;
 }
