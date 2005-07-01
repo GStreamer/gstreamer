@@ -1,4 +1,11 @@
 2005-07-01  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	* ext/mad/Makefile.am:
+	* sys/oss/Makefile.am:
+	Roll gstreamer-interfaces-0.9.pc into gstreamer-plugins-base-0.9.pc
+
+2005-07-01  Jan Schmidt  <thaytan@mad.scientist.com>
 	* ext/libcaca/Makefile.am:
 	* ext/mad/Makefile.am:
 	* gst/effectv/Makefile.am:

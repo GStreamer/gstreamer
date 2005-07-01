@@ -8,7 +8,7 @@ libgstossaudio_la_SOURCES = gstossaudio.c	\
 
 libgstossaudio_la_CFLAGS = $(GST_CFLAGS)
 libgstossaudio_la_LIBADD = $(top_builddir)/gst-libs/gst/libgstinterfaces-@GST_MAJORMINOR@.la
-libgstossaudio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GST_INTERFACES_LIBS)
+libgstossaudio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GST_PLUGINS_BASE_LIBS)
 
 noinst_HEADERS = gstosssink.h	\
 		gstosssrc.h	\

@@ -244,18 +244,7 @@ fi
 AC_SUBST(GST_BASE_LIBS)
 AC_SUBST(GST_BASE_CFLAGS)
 
-dnl check for gstreamer-interfaces; uinstalled is selected preferentially
-PKG_CHECK_MODULES(GST_INTERFACES, gstreamer-interfaces-$GST_MAJORMINOR >= $GST_REQ,
-  HAVE_GST_INTERFACES="yes", HAVE_GST_INTERFACES="no")
-
-if test "x$HAVE_GST_INTERFACES" = "xno"; then
-  AC_MSG_ERROR(no GStreamer Interfaces Libs found)
-fi
-
-AC_SUBST(GST_INTERFACES_LIBS)
-AC_SUBST(GST_INTERFACES_CFLAGS)
-
-dnl check for gstreamer-interfaces; uinstalled is selected preferentially
+dnl check for gstreamer-plugins-base; uinstalled is selected preferentially
 PKG_CHECK_MODULES(GST_PLUGINS_BASE,
   gstreamer-plugins-base-$GST_MAJORMINOR >= $GST_REQ,
   HAVE_GST_PLUGINS_BASE="yes", HAVE_GST_PLUGINS_BASE="no")
