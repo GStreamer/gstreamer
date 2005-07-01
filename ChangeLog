@@ -1,3 +1,10 @@
+2005-07-02  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstpad.c: (gst_pad_emit_have_data_signal):
+	  Put the mini_object into GValue as a mini_object,
+	  not a gpointer, since that's how we declared
+	  the signal.
+
 2005-07-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* examples/pwg/Makefile.am:

@@ -2686,8 +2686,8 @@ gst_pad_emit_have_data_signal (GstPad * pad, GstMiniObject * obj)
   g_value_set_boolean (&ret, TRUE);
   g_value_init (&args[0], GST_TYPE_PAD);
   g_value_set_object (&args[0], pad);
-  g_value_init (&args[1], G_TYPE_POINTER);
-  g_value_set_pointer (&args[1], obj);
+  g_value_init (&args[1], GST_TYPE_MINI_OBJECT);        // G_TYPE_POINTER);
+  gst_value_set_mini_object (&args[1], obj);
 
   /* actually emit */
   g_signal_emitv (args, gst_pad_signals[PAD_HAVE_DATA], 0, &ret);
