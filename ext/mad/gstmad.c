@@ -554,16 +554,23 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
       GstFormat format;
       GstFormat rformat;
       gint64 cur, total, total_bytes;
+      GstPad *peer;
 
       /* save requested format */
       gst_query_parse_position (query, &format, NULL, NULL);
 
       /* query peer for total length in bytes */
       gst_query_set_position (query, GST_FORMAT_BYTES, -1, -1);
-      if (!gst_pad_query (GST_PAD_PEER (mad->sinkpad), query)) {
+
+      if ((peer = gst_pad_get_peer (mad->sinkpad)) == NULL)
+        goto error;
+
+      if (!gst_pad_query (peer, query)) {
         GST_LOG_OBJECT (mad, "query on peer pad failed");
         goto error;
       }
+      gst_object_unref (peer);
+
       /* get the returned format */
       gst_query_parse_position (query, &rformat, NULL, &total_bytes);
       if (rformat == GST_FORMAT_BYTES)
@@ -1267,7 +1274,7 @@ static GstFlowReturn
 gst_mad_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstMad *mad;
-  guchar *data;
+  guint8 *data;
   glong size;
   gboolean new_pts = FALSE;
   GstClockTime timestamp;
