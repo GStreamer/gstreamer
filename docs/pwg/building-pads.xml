@@ -26,12 +26,65 @@
     that, you have to register the pad with the element. This happens like
     this:
   </para>
-  <programlisting>
-static GstPadLinkReturn	gst_my_filter_link	(GstPad        *pad,
-						 const GstCaps *caps);
+  <programlisting><!-- example-begin init.func a --><!--
+#include "filter.h"
+#include &lt;string.h&gt;
+
+static GstElementStateReturn
+			gst_my_filter_change_state (GstElement * element);
+
+GST_BOILERPLATE (GstMyFilter, gst_my_filter, GstElement, GST_TYPE_ELEMENT);
+
+static void
+gst_my_filter_base_init (gpointer klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  static GstElementDetails my_filter_details = {
+    "An example plugin",
+    "Example/FirstExample",
+    "Shows the basic structure of a plugin",
+    "your name <your.name@your.isp>"
+  };
+  static GstStaticPadTemplate sink_factory =
+  GST_STATIC_PAD_TEMPLATE (
+    "sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("ANY")
+  );
+  static GstStaticPadTemplate src_factory =
+  GST_STATIC_PAD_TEMPLATE (
+    "src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("ANY")
+  );
+
+  gst_element_class_set_details (element_class, &my_filter_details);
+  gst_element_class_add_pad_template (element_class,
+        gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (element_class,
+        gst_static_pad_template_get (&sink_factory));
+}
+
+static void
+gst_my_filter_class_init (GstMyFilterClass * klass)
+{
+  GST_ELEMENT_CLASS (klass)->change_state = gst_my_filter_change_state;
+}
+--><!-- example-end init.func a -->
+<!-- example-begin init.func b -->
+static gboolean		gst_my_filter_setcaps	(GstPad        *pad,
+						 GstCaps       *caps);
 static GstCaps *	gst_my_filter_getcaps	(GstPad        *pad);
-static void		gst_my_filter_chain	(GstPad        *pad,
-						 GstData       *data);
+static GstFlowReturn	gst_my_filter_chain	(GstPad        *pad,
+						 GstBuffer     *buf);
+<!-- example-end init.func b -->
+<!-- example-begin init.func c --><!--
+static gboolean		gst_my_filter_event	(GstPad        *pad,
+						 GstEvent      *event);
+--><!-- example-end init.func c -->
+<!-- example-begin init.func d -->
 
 static void
 gst_my_filter_init (GstMyFilter *filter)
@@ -41,20 +94,27 @@ gst_my_filter_init (GstMyFilter *filter)
   /* pad through which data comes in to the element */
   filter-&gt;sinkpad = gst_pad_new_from_template (
 	gst_element_class_get_pad_template (klass, "sink"), "sink");
-  gst_pad_set_link_function (filter-&gt;sinkpad, gst_my_filter_link);
+  gst_pad_set_setcaps_function (filter-&gt;sinkpad, gst_my_filter_setcaps);
   gst_pad_set_getcaps_function (filter-&gt;sinkpad, gst_my_filter_getcaps);
   gst_pad_set_chain_function (filter-&gt;sinkpad, gst_my_filter_chain);
+<!-- example-end init.func d -->
+<!-- example-begin init.func e --><!--
+  gst_pad_set_event_function (filter-&gt;sinkpad, gst_my_filter_event);
+--><!-- example-end init.func e -->
+<!-- example-begin init.func f -->
   gst_element_add_pad (GST_ELEMENT (filter), filter-&gt;sinkpad);
 
   /* pad through which data goes out of the element */
   filter-&gt;srcpad = gst_pad_new_from_template (
 	gst_element_class_get_pad_template (klass, "src"), "src");
-  gst_pad_set_link_function (filter-&gt;srcpad, gst_my_filter_link);
+  gst_pad_set_setcaps_function (filter-&gt;srcpad, gst_my_filter_setcaps);
   gst_pad_set_getcaps_function (filter-&gt;srcpad, gst_my_filter_getcaps);
   gst_element_add_pad (GST_ELEMENT (filter), filter-&gt;srcpad);
-[..]
+
+  /* properties initial value */
+  filter->silent = FALSE;
 }
-  </programlisting>
+  <!-- example-end init.func f --></programlisting>
 
   <sect1 id="section-pads-linkfn" xreflabel="The link function">
   <title>The link function</title>
@@ -72,10 +132,10 @@ gst_my_filter_init (GstMyFilter *filter)
     If the element responds positively towards the streamtype, that type
     will be used on the pad. An example:
   </para>
-  <programlisting>
-static GstPadLinkReturn
-gst_my_filter_link (GstPad        *pad,
-		    const GstCaps *caps)
+  <programlisting><!-- example-begin caps.func a -->
+static gboolean
+gst_my_filter_setcaps (GstPad  *pad,
+		       GstCaps *caps)
 {
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   GstMyFilter *filter = GST_MY_FILTER (gst_pad_get_parent (pad));
@@ -97,7 +157,7 @@ gst_my_filter_link (GstPad        *pad,
   /* we're a filter and don't touch the properties of the data.
    * That means we can set the given caps unmodified on the next
    * element, and use that negotiation return value as ours. */
-  ret = gst_pad_try_set_caps (otherpad, gst_caps_copy (caps));
+  ret = gst_pad_set_caps (otherpad, gst_caps_copy (caps));
   if (GST_PAD_LINK_FAILED (ret))
     return ret;
 
@@ -111,7 +171,7 @@ gst_my_filter_link (GstPad        *pad,
 
   return ret;
 }
-  </programlisting>
+  <!-- example-end caps.func a --></programlisting>
   <para>
     In here, we check the mimetype of the provided caps. Normally, you don't
     need to do that in your own plugin/element, because the core does that
@@ -153,7 +213,7 @@ gst_my_filter_link (GstPad        *pad,
     specified on the other pad) on both pads. It explains how a
     <function>_getcaps ()</function> can be used to do this.
   </para>
-  <programlisting>
+  <programlisting><!-- example-begin caps.func b -->
 static GstCaps *
 gst_my_filter_getcaps (GstPad *pad)
 {
@@ -161,7 +221,7 @@ gst_my_filter_getcaps (GstPad *pad)
   GstPad *otherpad = (pad == filter-&gt;srcpad) ? filter-&gt;sinkpad :
 					       filter-&gt;srcpad;
   GstCaps *othercaps = gst_pad_get_allowed_caps (otherpad), *caps;
-  gint n;
+  gint i;
 
   if (gst_caps_is_empty (othercaps))
     return othercaps;
@@ -174,49 +234,36 @@ gst_my_filter_getcaps (GstPad *pad)
     gst_structure_remove_field (structure, "rate");
   }
   caps = gst_caps_intersect (othercaps, gst_pad_get_pad_template_caps (pad));
-  gst_caps_free (othercaps);
+  gst_caps_unref (othercaps);
 
   return caps;
 }
-  </programlisting>
+  <!-- example-end caps.func b --></programlisting>
   </sect1>
+<!-- example-begin pads.c --><!--
+#include "init.func"
+#include "caps.func"
 
-  <sect1 id="section-pads-explicitcaps" xreflabel="Explicit caps">
-  <title>Explicit caps</title>
-  <para>
-    Obviously, many elements will not need the complex mechanism described in
-    the previous sections, because they are much simpler than that.
-    Such elements only support one format, or their format
-    is fixed but the contents of the format depend on the stream or something
-    else. In those cases, <emphasis>explicit caps</emphasis> are an easy way
-    of handling caps. Explicit caps are an easy way of specifying one, fixed,
-    supported format on a pad. Pads using explicit caps do not implement their
-    own <function>_getcaps ()</function> or <function>_link ()</function>
-    functions. When the exact format is known, an elements uses
-    <function>gst_pad_set_explicit_caps ()</function> to specify the exact
-    format. This is very useful for demuxers, for example.
-  </para>
-  <programlisting>
-static void
-gst_my_filter_init (GstMyFilter *filter)
+static gboolean
+gst_my_filter_event (GstPad * pad, GstEvent * event)
 {
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (filter);
-[..]
-  filter-&gt;srcpad = gst_pad_new_from_template (
-	gst_element_class_get_pad_template (klass, "src"), "src");
-  gst_pad_use_explicit_caps (filter-&gt;srcpad);
-[..]
+  return gst_pad_event_default (pad, event);
 }
 
-static void
-gst_my_filter_somefunction (GstMyFilter *filter)
+static GstFlowReturn
+gst_my_filter_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstCaps *caps = ..;
-[..]
-  gst_pad_set_explicit_caps (filter-&gt;srcpad, caps);
-[..]
+  return gst_pad_push (GST_MY_FILTER (GST_OBJECT_PARENT (pad))->srcpad, buf);
 }
-  </programlisting>
-  </sect1>
+
+static GstElementStateReturn
+gst_my_filter_change_state (GstElement * element)
+{
+  return GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS,
+      change_state, (element), GST_STATE_SUCCESS);
+}
+
+#include "register.func"
+--><!-- example-end pads.c -->
 </chapter>
 

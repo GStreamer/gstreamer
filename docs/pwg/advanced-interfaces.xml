@@ -118,6 +118,13 @@ gst_my_filter_some_interface_init (GstSomeInterface *iface)
     </programlisting>
   </sect1>
 
+  <sect1 id="section-iface-uri" xreflabel="URI interface">
+    <title>URI interface</title>
+    <para>
+      WRITEME
+    </para>
+  </sect1>
+
   <sect1 id="section-iface-mixer" xreflabel="Mixer Interface">
     <title>Mixer Interface</title>
     <para>

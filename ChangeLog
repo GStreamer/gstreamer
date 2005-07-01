@@ -1,3 +1,26 @@
+2005-07-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* configure.ac:
+	* examples/Makefile.am:
+	* examples/pwg/Makefile.am:
+	* examples/pwg/extract.pl:
+	  Enable building the PWG examples.
+	* docs/pwg/advanced-interfaces.xml:
+	  Add URI interface stub.
+	* docs/pwg/advanced-types.xml:
+	* docs/pwg/other-autoplugger.xml:
+	* docs/pwg/appendix-porting.xml:
+	* docs/pwg/pwg.xml:
+	  Add porting guide (mostly stubs), remove autoplugging (see ADM).
+	* docs/pwg/building-boiler.xml:
+	* docs/pwg/building-chainfn.xml:
+	* docs/pwg/building-pads.xml:
+	* docs/pwg/building-props.xml:
+	* docs/pwg/building-state.xml:
+	* docs/pwg/building-testapp.xml:
+	  Update the building-*.xml parts for 0.9 changes. All examples
+	  code blocks compile in examples/pwg/*.
+
 2005-06-30  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/manual/advanced-autoplugging.xml:

@@ -12,7 +12,19 @@
     and can then fill in the value or take action required for that property
     to change value internally.
   </para>
-  <programlisting>
+  <programlisting><!-- example-begin properties.c a --><!--
+#include "filter.h"
+GST_BOILERPLATE (GstMyFilter, gst_my_filter, GstElement, GST_TYPE_ELEMENT);
+static void
+gst_my_filter_base_init (gpointer klass)
+{
+}
+static void
+gst_my_filter_init (GstMyFilter * filter)
+{
+}
+--><!-- example-end properties.c a -->
+<!-- example-begin properties.c b -->
 /* properties */
 enum {
   ARG_0,
@@ -82,7 +94,10 @@ gst_my_filter_get_property (GObject    *object,
       break;
   }
 }
-  </programlisting>
+<!-- example-end properties.c b -->
+<!-- example-begin properties.c c --><!--
+#include "register.func"
+  --><!-- example-end properties.c c --></programlisting>
   <para>
     The above is a very simple example of how arguments are used. Graphical
     applications - for example GStreamer Editor - will use these properties

@@ -1,7 +1,5 @@
 <chapter id="chapter-statemanage-states">
-  <title>
-    What are states?
-  </title>
+  <title>What are states?</title>
   <para>
     A state describes whether the element instance is initialized, whether it
     is ready to transfer data and whether it is currently handling data. There
@@ -55,9 +53,7 @@
   </para>
 
   <sect1 id="section-statemanage-filters">
-  <title>
-    Managing filter state
-  </title>
+  <title>Managing filter state</title>
   <para>
     An element can be notified of state changes through a virtual function
     pointer. Inside this function, the element can initialize any sort of
@@ -79,7 +75,24 @@ gst_my_filter_class_init (GstMyFilterClass *klass)
 
   element_class->change_state = gst_my_filter_change_state;
 }
-
+<!-- example-begin state.c a --><!--
+#include "init.func"
+#include "caps.func"
+#include "chain.func"
+#include "state.func"
+--><!-- example-end state.c a -->
+<!-- example-begin state.func a --><!--
+static gboolean
+gst_my_filter_allocate_memory (GstMyFilter * filter)
+{
+  return TRUE;
+}
+static void
+gst_my_filter_free_memory (GstMyFilter * filter)
+{
+}
+--><!-- example-end state.func a -->
+<!-- example-begin state.func b -->
 static GstElementStateReturn
 gst_my_filter_change_state (GstElement *element)
 {
@@ -97,11 +110,12 @@ gst_my_filter_change_state (GstElement *element)
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
+  return GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS,
+      change_state, (element), GST_STATE_SUCCESS);
 }
-  </programlisting>
+<!-- example-end state.func b -->
+<!-- example-begin state.c b --><!--
+#include "register.func"
+  --><!-- example-end state.c b --></programlisting>
   </sect1>
 </chapter>

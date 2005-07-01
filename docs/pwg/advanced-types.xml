@@ -143,8 +143,8 @@ plugin_init (GstPlugin *plugin)
       typefind functions.
     </para>
     <para>
-      Autoplugging will be discussed in great detail in the chapter called
-      <xref linkend="chapter-other-autoplugger"/>.
+      Autoplugging has been discussed in great detail in the Application
+      Development Manual.
     </para>
   </sect1>
 

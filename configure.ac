@@ -701,6 +701,7 @@ examples/manual/Makefile
 examples/mixer/Makefile
 examples/pingpong/Makefile
 examples/plugins/Makefile
+examples/pwg/Makefile
 examples/queue/Makefile
 examples/queue2/Makefile
 examples/queue3/Makefile

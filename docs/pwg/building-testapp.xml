@@ -63,25 +63,71 @@
       the pipeline and make sure it doesn't crash.
     </para>
 
-    <programlisting>
+    <programlisting><!-- example-begin test.c -->
 #include &lt;gst/gst.h&gt;
 
+static gboolean
+bus_call (GstBus     *bus,
+	  GstMessage *msg,
+	  gpointer    data)
+{
+  GMainLoop *loop = data;
+
+  switch (GST_MESSAGE_TYPE (msg)) {
+    case GST_MESSAGE_EOS:
+      g_print ("End-of-stream\n");
+      g_main_loop_quit (loop);
+      break;
+    case GST_MESSAGE_ERROR: {
+      gchar *debug;
+      GError *err;
+
+      gst_message_parse_error (msg, &amp;err, &amp;debug);
+      g_free (debug);
+
+      g_print ("Error: %s\n", err->message);
+      g_error_free (err);
+
+      g_main_loop_quit (loop);
+      break;
+    }
+    default:
+      break;
+  }
+
+  return TRUE;
+}
+
 gint
-main (gint   arcg,
+main (gint   argc,
       gchar *argv[])
 {
   GstElement *pipeline, *filesrc, *decoder, *filter, *sink;
+  GMainLoop *loop;
 
   /* initialization */
   gst_init (&amp;argc, &amp;argv);
+  loop = g_main_loop_new (NULL, FALSE);
 
   /* create elements */
   pipeline = gst_pipeline_new ("my_pipeline");
+  gst_bus_add_watch (gst_pipeline_get_bus (GST_PIPELINE (pipeline)),
+		     bus_call, loop);
 
   filesrc  = gst_element_factory_make ("filesrc", "my_filesource");
   decoder  = gst_element_factory_make ("mad", "my_decoder");
   filter   = gst_element_factory_make ("my_filter", "my_filter");
   sink     = gst_element_factory_make ("osssink", "audiosink");
+  if (!sink || !decoder) {
+    g_print ("Decoder or output could not be found - check your install\n");
+    return -1;
+  } else if (!filter) {
+    g_print ("Your self-written filter could not be found. Make sure it "
+             "is installed correctly in $(libdir)/gstreamer-0.9/ and that "
+             "you've ran gst-register-0.9 to register it. Check availability "
+             "of the plugin afterwards using \"gst-inspect-0.9 my_filter\"");
+    return -1;
+  }
 
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
 
@@ -91,7 +137,7 @@ main (gint   arcg,
 
   /* run */
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  while (gst_bin_iterate (GST_BIN (pipeline)));
+  g_main_loop_run (loop);
 
   /* clean up */
   gst_element_set_state (pipeline, GST_STATE_NULL);
@@ -99,5 +145,5 @@ main (gint   arcg,
 
   return 0;
 }
-    </programlisting>
+    <!-- example-end test.c --></programlisting>
 </chapter>

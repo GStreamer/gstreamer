@@ -134,40 +134,54 @@ U gst-template/gst-app/src/Makefile.am
 
     <example id="ex-boiler-examine-h">
       <title>Example Plugin Header File</title>
-      <programlisting>
-  /* Definition of structure storing data for this element. */
-  typedef struct _GstExample GstExample;
+      <programlisting><!-- example-begin filter.h a -->
+#include &lt;gst/gst.h&gt;
 
-  struct _GstExample {
-    GstElement element;
+/* Definition of structure storing data for this element. */
+typedef struct _GstMyFilter {
+  GstElement element;
 
-    GstPad *sinkpad, *srcpad;
+  GstPad *sinkpad, *srcpad;
 
-    gboolean silent;
-  };
+  gboolean silent;
+<!-- example-end filter.h a -->
+<!-- example-begin filter.h b --><!--
+  gint samplerate, channels;
+--><!-- example-end filter.h b -->
+<!-- example-begin filter.h c -->
+} GstMyFilter;
 
-  /* Standard definition defining a class for this element. */
-  typedef struct _GstExampleClass GstExampleClass;
-  struct _GstExampleClass {
-    GstElementClass parent_class;
-  };
+/* Standard definition defining a class for this element. */
+typedef struct _GstMyFilterClass {
+  GstElementClass parent_class;
+} GstMyFilterClass;
 
-  /* Standard macros for defining types for this element.  */
-  #define GST_TYPE_EXAMPLE \
-    (gst_example_get_type())
-  #define GST_EXAMPLE(obj) \
-    (G_TYPE_CHECK_CAST((obj),GST_TYPE_EXAMPLE,GstExample))
-  #define GST_EXAMPLE_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_EXAMPLE,GstExample))
-  #define GST_IS_EXAMPLE(obj) \
-    (G_TYPE_CHECK_TYPE((obj),GST_TYPE_EXAMPLE))
-  #define GST_IS_EXAMPLE_CLASS(obj) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_EXAMPLE))
+/* Standard macros for defining types for this element.  */
+#define GST_TYPE_MY_FILTER \
+  (gst_my_filter_get_type())
+#define GST_MY_FILTER(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MY_FILTER,GstMyFilter))
+#define GST_MY_FILTER_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MY_FILTER,GstMyFilterClass))
+#define GST_IS_MY_FILTER(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MY_FILTER))
+#define GST_IS_MY_FILTER_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MY_FILTER))
 
-  /* Standard function returning type information. */
-  GType gst_example_get_type (void);
-      </programlisting>
+/* Standard function returning type information. */
+GType gst_my_filter_get_type (void);
+      <!-- example-end filter.h c --></programlisting>
     </example>
+    <para>
+      Using this header file, you can use the following macro to setup
+      the <classname>GObject</classname> basics in your source file so
+      that all functions will be called appropriately:
+    </para>
+    <programlisting><!-- example-begin boilerplate.c a -->
+#include "filter.h"
+
+GST_BOILERPLATE (GstMyFilter, gst_my_filter, GstElement, GST_TYPE_ELEMENT);
+    <!-- example-end boilerplate.c a --></programlisting>
   </sect1>
 
   <!-- ############ sect1 ############# -->
@@ -198,14 +212,14 @@ U gst-template/gst-app/src/Makefile.am
     <para>
       For example:
     </para>
-    <programlisting>
-static GstElementDetails example_details = {
+    <programlisting><!-- example-begin boilerplate.c b -->
+static GstElementDetails my_filter_details = {
   "An example plugin",
   "Example/FirstExample",
   "Shows the basic structure of a plugin",
   "your name &lt;your.name@your.isp&gt;"
 };
-    </programlisting>
+    <!-- example-end boilerplate.c b --></programlisting>
     <para>
       The element details are registered with the plugin during
       the <function>_base_init ()</function> function, which is part of
@@ -213,17 +227,19 @@ static GstElementDetails example_details = {
       should be set for this GObject in the function where you register
       the type with Glib.
     </para>
-    <programlisting>
+    <programlisting><!-- example-begin boilerplate.c c -->
 static void
-gst_my_filter_base_init (GstMyFilterClass *klass)
+gst_my_filter_base_init (gpointer klass)
 {
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+<!-- example-end boilerplate.c c -->
   static GstElementDetails my_filter_details = {
 [..]
   };
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-[..]
+[..]<!-- example-begin boilerplate.c d -->
   gst_element_class_set_details (element_class, &amp;my_filter_details);
+<!-- example-end boilerplate.c d -->
 }
     </programlisting>
   </sect1>
@@ -258,7 +274,7 @@ gst_my_filter_base_init (GstMyFilterClass *klass)
     <para>
       For example:
     </para>
-    <programlisting>
+    <programlisting><!-- example-begin boilerplate.c e -->
 static GstStaticPadTemplate sink_factory =
 GST_STATIC_PAD_TEMPLATE (
   "sink",
@@ -266,6 +282,16 @@ GST_STATIC_PAD_TEMPLATE (
   GST_PAD_ALWAYS,
   GST_STATIC_CAPS ("ANY")
 );
+<!-- example-end boilerplate.c e -->
+<!-- example-begin boilerplate.c f --><!--
+static GstStaticPadTemplate src_factory =
+GST_STATIC_PAD_TEMPLATE (
+  "src",
+  GST_PAD_SRC,
+  GST_PAD_ALWAYS,
+  GST_STATIC_CAPS ("ANY")
+);
+--><!-- example-end boilerplate.c f -->
       </programlisting>
     <para>
       Those pad templates are registered during the
@@ -284,18 +310,30 @@ static GstStaticPadTemplate sink_factory = [..],
     src_factory = [..];
 
 static void
-gst_my_filter_base_init (GstMyFilterClass *klass)
+gst_my_filter_base_init (gpointer klass)
 {
-[..]
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
+[..]
+<!-- example-begin boilerplate.c g -->
   gst_element_class_add_pad_template (element_class,
 	gst_static_pad_template_get (&amp;src_factory));
   gst_element_class_add_pad_template (element_class,
 	gst_static_pad_template_get (&amp;sink_factory));
-[..]
 }
-    </programlisting>
+<!-- example-end boilerplate.c g -->
+<!-- example-begin boilerplate.c h --><!--
+static void
+gst_my_filter_class_init (GstMyFilterClass * klass)
+{
+}
+
+static void
+gst_my_filter_init (GstMyFilter * filter)
+{
+}
+
+#include "register.func"
+    --><!-- example-end boilerplate.c h --></programlisting>
     <para>
       The last argument in a template is its type
       or list of supported types. In this example, we use 'ANY', which means
@@ -362,7 +400,7 @@ GST_STATIC_PAD_TEMPLATE (
       Also, in this function, any supported element type in the plugin should
       be registered.
     </para>
-    <programlisting>
+    <programlisting><!-- example-begin register.func -->
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
@@ -382,7 +420,7 @@ GST_PLUGIN_DEFINE (
   "GStreamer",
   "http://gstreamer.net/"
 )
-    </programlisting>
+    <!-- example-end register.func --></programlisting>
     <para>
       Note that the information returned by the plugin_init() function will be
       cached in a central registry. For this reason, it is important that the

@@ -36,10 +36,10 @@
 <!ENTITY OTHER_ONETON         SYSTEM "other-oneton.xml">
 <!ENTITY OTHER_NTOONE         SYSTEM "other-ntoone.xml">
 <!ENTITY OTHER_NTON           SYSTEM "other-nton.xml">
-<!ENTITY OTHER_AUTOPLUGGER    SYSTEM "other-autoplugger.xml">
 <!ENTITY OTHER_MANAGER        SYSTEM "other-manager.xml">
 
 <!ENTITY APPENDIX_CHECKLIST   SYSTEM "appendix-checklist.xml">
+<!ENTITY APPENDIX_PORTING     SYSTEM "appendix-porting.xml">
 <!ENTITY APPENDIX_LICENSING   SYSTEM "appendix-licensing.xml">
 <!ENTITY APPENDIX_PYTHON      SYSTEM "appendix-python.xml">
 
@@ -172,7 +172,6 @@
     &OTHER_ONETON;
     &OTHER_NTOONE;
     &OTHER_NTON;
-    &OTHER_AUTOPLUGGER;
     &OTHER_MANAGER;
   </part>
 
@@ -187,6 +186,7 @@
     </partintro>
 
       &APPENDIX_CHECKLIST;
+      &APPENDIX_PORTING;
       &APPENDIX_LICENSING;
       &APPENDIX_PYTHON;
   </part>

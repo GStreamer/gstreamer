@@ -1,0 +1,37 @@
+<chapter id="chapter-porting">
+  <title>Porting 0.8 plug-ins to 0.9</title>
+  <para>
+    This section of the appendix will discuss shortly what changes to
+    plugins will be needed to quickly and conveniently port most
+    applications from &GStreamer;-0.8 to &GStreamer;-0.9, with references
+    to the relevant sections in this Plugin Writer's Guide where needed.
+    With this list, it should be possible to port most plugins to
+    &GStreamer;-0.9 in less than a day.
+  </para>
+
+  <sect1 id="section-porting-objects">
+    <title>List of changes</title>
+    <itemizedlist>
+      <listitem>
+        <para>
+          Most functions returning an object or an object property have
+          been changed to return its own reference rather than a constant
+          reference of the one owned by the object itself. The reason for
+          this change is primarily threadsafety. This means, effectively,
+          that return values of functions such as
+          <function>gst_element_get_pad ()</function>,
+          <function>gst_pad_get_name ()</function> and many more like these
+          have to be free'ed or unreferenced after use. Check the API
+          references of each function to know for sure whether return
+          values should be free'ed or not.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          base classes, async capsnego (caps-on-buffer), async for sinks,
+          bytestream dead / pull_range, direct scheduling, etc.
+        </para>
+      </listitem>
+    </itemizedlist>
+  </sect1>
+</chapter>

@@ -17,6 +17,7 @@ dirs = \
 	cutter				\
 	pingpong			\
 	manual				\
+	pwg				\
 	retag
 
 SUBDIRS = $(dirs)			\
