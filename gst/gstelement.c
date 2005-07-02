@@ -1239,7 +1239,10 @@ gst_element_add_ghost_pad (GstElement * element, GstPad * pad,
  * @pad: the #GstPad to remove from the element.
  *
  * Removes @pad from @element. @pad will be destroyed if it has not been
- * referenced elsewhere.
+ * referenced elsewhere. Normally, only elements remove pads. The only
+ * exception to this are ghost pads which were created by the application
+ * and request pads, which applications can remove using 
+ * gst_element_release_request_pad().
  */
 void
 gst_element_remove_pad (GstElement * element, GstPad * pad)
