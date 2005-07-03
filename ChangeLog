@@ -1,3 +1,9 @@
+2005-07-03  Owen Fraser-Green  <owen@discobabe.net>
+
+	* gst/realmedia/rmdemux.c (gst_rmdemux_add_stream),
+	(gst_rmdemux_src_getcaps), (gst_rmdemux_chain): 
+	Added getcaps function no_more_pads call
+
 2005-07-01  Philippe Khalaf <burger@speedy.org>
 	* gst/udp/Makefile.am:
 	* gst/udp/gstudp.c:

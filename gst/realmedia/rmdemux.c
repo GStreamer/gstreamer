@@ -23,16 +23,14 @@
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
-
+* gst / realmedia / rmdemux.c (gst_rmdemux_add_stream), (gst_rmdemux_src_getcaps):Added getcaps
+    function
 #include "rmdemux.h"
-
 #include <string.h>
 #include <zlib.h>
-
 #define RMDEMUX_GUINT32_GET(a)	GST_READ_UINT32_BE(a)
 #define RMDEMUX_GUINT16_GET(a)	GST_READ_UINT16_BE(a)
 #define RMDEMUX_FOURCC_GET(a)	GST_READ_UINT32_LE(a)
-
 typedef struct _GstRMDemuxIndex GstRMDemuxIndex;
 
 struct _GstRMDemuxStream
@@ -162,6 +160,7 @@ static void gst_rmdemux_parse_cont (GstRMDemux * rmdemux, const void *data,
     int length);
 static void gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const void *data,
     guint16 version, guint16 length);
+static GstCaps *gst_rmdemux_src_getcaps (GstPad * pad);
 
 static GstRMDemuxStream *gst_rmdemux_get_stream_by_id (GstRMDemux * rmdemux,
     int id);
@@ -241,6 +240,7 @@ gst_rmdemux_init (GstRMDemux * rmdemux)
       (&gst_rmdemux_sink_template), "sink");
   gst_pad_set_event_function (rmdemux->sinkpad, gst_rmdemux_sink_event);
   gst_pad_set_chain_function (rmdemux->sinkpad, gst_rmdemux_chain);
+
   gst_element_add_pad (GST_ELEMENT (rmdemux), rmdemux->sinkpad);
 
   rmdemux->adapter = gst_adapter_new ();
@@ -290,6 +290,7 @@ gst_rmdemux_change_state (GstElement * element)
       break;
     case GST_STATE_READY_TO_PAUSED:
       rmdemux->state = RMDEMUX_STATE_HEADER;
+      rmdemux->have_pads = FALSE;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
@@ -308,6 +309,24 @@ gst_rmdemux_change_state (GstElement * element)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
   return GST_STATE_SUCCESS;
+}
+
+static GstCaps *
+gst_rmdemux_src_getcaps (GstPad * pad)
+{
+  guint n;
+  GstRMDemux *rmdemux = GST_RMDEMUX (GST_PAD_PARENT (pad));
+
+  GST_DEBUG_OBJECT (rmdemux, "getcaps");
+
+  for (n = 0; n < rmdemux->n_streams; n++) {
+    if (rmdemux->streams[n] != NULL && rmdemux->streams[n]->pad == pad) {
+      return gst_caps_copy (rmdemux->streams[n]->caps);
+    }
+  }
+
+  /* Base case */
+  return gst_caps_new_empty ();
 }
 
 static GstFlowReturn
@@ -434,6 +453,12 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
       }
       case RMDEMUX_STATE_HEADER_DATA:
       {
+        /* If we haven't already done so then signal there are no more pads */
+        if (!rmdemux->have_pads) {
+          gst_element_no_more_pads (GST_ELEMENT (rmdemux));
+          rmdemux->have_pads = TRUE;
+        }
+
         /* The actual header is only 8 bytes */
         rmdemux->size = 8;
         if (gst_adapter_available (rmdemux->adapter) < rmdemux->size)
@@ -444,6 +469,7 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
         gst_rmdemux_parse_data (rmdemux, data, rmdemux->size);
 
         gst_adapter_flush (rmdemux->adapter, rmdemux->size);
+
         rmdemux->state = RMDEMUX_STATE_DATA_PACKET;
         break;
       }
@@ -660,6 +686,8 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 
     gst_pad_set_caps (stream->pad, stream->caps);
     gst_caps_unref (stream->caps);
+
+    gst_pad_set_getcaps_function (stream->pad, gst_rmdemux_src_getcaps);
 
     GST_DEBUG_OBJECT (rmdemux, "adding pad %p to rmdemux %p", stream->pad,
         rmdemux);

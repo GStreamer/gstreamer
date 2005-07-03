@@ -56,8 +56,8 @@ struct _GstRMDemux {
   int n_streams;
   int n_video_streams;
   int n_audio_streams;
-
   GstAdapter *adapter;
+  gboolean have_pads;
 
   GNode *moov_node;
   GNode *moov_node_compressed;
