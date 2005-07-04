@@ -81,7 +81,7 @@ static void gst_sinesrc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static gboolean gst_sinesrc_setcaps (GstBaseSrc * basesrc, GstCaps * caps);
-static GstCaps *gst_sinesrc_src_fixate (GstPad * pad, GstCaps * caps);
+static void gst_sinesrc_src_fixate (GstPad * pad, GstCaps * caps);
 
 static void gst_sinesrc_update_freq (const GValue * value, gpointer data);
 static void gst_sinesrc_populate_sinetable (GstSineSrc * src);
@@ -234,21 +234,14 @@ gst_sinesrc_dispose (GObject * object)
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
 
-static GstCaps *
+static void
 gst_sinesrc_src_fixate (GstPad * pad, GstCaps * caps)
 {
   GstStructure *structure;
-  GstCaps *newcaps;
 
-  if (gst_caps_get_size (caps) > 1)
-    return NULL;
-
-  newcaps = gst_caps_make_writable (caps);
-  structure = gst_caps_get_structure (newcaps, 0);
+  structure = gst_caps_get_structure (caps, 0);
 
   gst_caps_structure_fixate_field_nearest_int (structure, "rate", 44100);
-
-  return newcaps;
 }
 
 static gboolean
@@ -356,7 +349,7 @@ gst_sinesrc_create (GstBaseSrc * basesrc, guint64 offset,
     /* see whatever we are allowed to do */
     caps = gst_pad_get_allowed_caps (basesrc->srcpad);
     /* fix unfixed values */
-    caps = gst_sinesrc_src_fixate (basesrc->srcpad, caps);
+    gst_sinesrc_src_fixate (basesrc->srcpad, caps);
     /* and use those */
     gst_pad_set_caps (basesrc->srcpad, caps);
     gst_caps_unref (caps);

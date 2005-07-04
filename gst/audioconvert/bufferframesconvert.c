@@ -92,7 +92,7 @@ static GstElementStateReturn buffer_frames_convert_change_state (GstElement *
 
 static GstCaps *buffer_frames_convert_getcaps (GstPad * pad);
 static gboolean buffer_frames_convert_setcaps (GstPad * pad, GstCaps * caps);
-static GstCaps *buffer_frames_convert_fixate (GstPad * pad, GstCaps * caps);
+static void buffer_frames_convert_fixate (GstPad * pad, GstCaps * caps);
 
 static GstFlowReturn buffer_frames_convert_chain (GstPad * sinkpad,
     GstBuffer * buffer);
@@ -219,24 +219,14 @@ buffer_frames_convert_getcaps (GstPad * pad)
   return ret;
 }
 
-static GstCaps *
+static void
 buffer_frames_convert_fixate (GstPad * pad, GstCaps * caps)
 {
-  GstCaps *newcaps;
   GstStructure *structure;
 
-  newcaps = gst_caps_new_full (gst_structure_copy (gst_caps_get_structure
-          (caps, 0)), NULL);
-  structure = gst_caps_get_structure (newcaps, 0);
+  structure = gst_caps_get_structure (caps, 0);
 
-  if (gst_caps_structure_fixate_field_nearest_int (structure,
-          "buffer-frames", 256)) {
-    return newcaps;
-  }
-
-  gst_caps_unref (newcaps);
-
-  return NULL;
+  gst_caps_structure_fixate_field_nearest_int (structure, "buffer-frames", 256);
 }
 
 static gboolean

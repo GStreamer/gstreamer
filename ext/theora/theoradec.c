@@ -577,7 +577,7 @@ theora_dec_src_getcaps (GstPad * pad)
   if (caps)
     return gst_caps_ref (caps);
   else
-    return gst_caps_ref (gst_pad_get_pad_template_caps (pad));
+    return gst_caps_ref ((GstCaps *) gst_pad_get_pad_template_caps (pad));
 }
 
 static gboolean

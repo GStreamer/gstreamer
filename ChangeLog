@@ -1,3 +1,18 @@
+2005-07-04  Andy Wingo  <wingo@pobox.com>
+
+	* configure.ac: Enable -Werror.
+	
+	* ext/theora/theoradec.c (theora_dec_src_getcaps):
+	* gst/audioconvert/bufferframesconvert.c
+	(buffer_frames_convert_fixate):
+	* gst/audioconvert/gstaudioconvert.c (_fixate_caps_to_int)
+	(gst_audio_convert_fixate):
+	* gst/sine/gstsinesrc.c (gst_sinesrc_src_fixate)
+	(gst_sinesrc_create): Fixate func changes.
+	
+	* sys/ximage/ximagesink.c: (gst_ximagesink_renegotiate_size),
+	(gst_ximagesink_buffer_alloc): Unused var.
+
 2005-07-01  Andy Wingo  <wingo@pobox.com>
 
 	* ext/theora/theoradec.c (theora_dec_src_getcaps): Implement a

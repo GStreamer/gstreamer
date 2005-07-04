@@ -64,7 +64,7 @@ static GstFlowReturn gst_audio_convert_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_audio_convert_link_src (GstAudioConvert * this,
     GstCaps * sinkcaps, GstAudioConvertCaps * sink_ac_caps);
 static gboolean gst_audio_convert_setcaps (GstPad * pad, GstCaps * caps);
-static GstCaps *gst_audio_convert_fixate (GstPad * pad, GstCaps * caps);
+static void gst_audio_convert_fixate (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_audio_convert_getcaps (GstPad * pad);
 static GstElementStateReturn gst_audio_convert_change_state (GstElement *
     element);
@@ -489,86 +489,56 @@ gst_audio_convert_setcaps (GstPad * pad, GstCaps * caps)
 
 /* tries to fixate the given field of the given caps to the given int value */
 gboolean
-_fixate_caps_to_int (GstCaps ** caps, const gchar * field, gint value)
+_fixate_caps_to_int (GstCaps * caps, const gchar * field, gint value)
 {
-  GstCaps *try, *isect_lower, *isect_higher;
-  gboolean ret = FALSE;
+  gboolean changed = FALSE;
   guint i;
 
-  /* First try to see if we can fixate by intersecting given caps with
-   * simple audio caps with ranges starting/ending with value */
-  try = gst_caps_new_simple ("audio/x-raw-int", field, GST_TYPE_INT_RANGE,
-      G_MININT, value - 1, NULL);
-  gst_caps_append (try, gst_caps_new_simple ("audio/x-raw-float", field,
-          GST_TYPE_INT_RANGE, G_MININT, value - 1, NULL));
-  isect_lower = gst_caps_intersect (*caps, try);
-  gst_caps_unref (try);
-
-  if (!gst_caps_is_empty (isect_lower)) {
-    try = gst_caps_new_simple ("audio/x-raw-int", field, GST_TYPE_INT_RANGE,
-        value, G_MAXINT, NULL);
-    gst_caps_append (try, gst_caps_new_simple ("audio/x-raw-float", field,
-            GST_TYPE_INT_RANGE, value, G_MAXINT, NULL));
-    isect_higher = gst_caps_intersect (*caps, try);
-    gst_caps_unref (try);
-    /* FIXME: why choose to end up with the higher range, and not the fixed
-     * value ? */
-    if (!gst_caps_is_empty (isect_higher)) {
-      gst_caps_unref (*caps);
-      *caps = isect_higher;
-      ret = TRUE;
-    } else {
-      gst_caps_unref (isect_higher);
-    }
-  }
-  gst_caps_unref (isect_lower);
-
   /* FIXME: why don't we already return here when ret == TRUE ? */
-  for (i = 0; i < gst_caps_get_size (*caps); i++) {
-    GstStructure *structure = gst_caps_get_structure (*caps, i);
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    GstStructure *structure = gst_caps_get_structure (caps, i);
 
     if (gst_structure_has_field (structure, field))
-      ret |=
+      changed |=
           gst_caps_structure_fixate_field_nearest_int (structure, field, value);
   }
-  return ret;
+  return changed;
 }
 
-static GstCaps *
+static void
 gst_audio_convert_fixate (GstPad * pad, GstCaps * caps)
 {
   const GValue *pos_val;
-  GstAudioConvert *this =
-      GST_AUDIO_CONVERT (gst_object_get_parent (GST_OBJECT (pad)));
-  //GstPad *otherpad = (pad == this->sink ? this->src : this->sink);
-  GstAudioConvertCaps try, ac_caps =
-      (pad == this->sink ? this->srccaps : this->sinkcaps);
-  GstCaps *copy = gst_caps_copy (caps);
+  GstPad *otherpad;
+  GstAudioConvert *this;
+  GstAudioConvertCaps try, ac_caps;
 
-  //if (!GST_PAD_IS_NEGOTIATING (otherpad)) {
-  try.channels = 2;
-  try.width = 16;
-  try.depth = 16;
-  try.endianness = G_BYTE_ORDER;
-  /*
-     } else {
-     try.channels = ac_caps.channels;
-     try.width = ac_caps.is_int ? ac_caps.width : 16;
-     try.depth = ac_caps.is_int ? ac_caps.depth : 16;
-     try.endianness = ac_caps.is_int ? ac_caps.endianness : G_BYTE_ORDER;
-     }
-   */
+  this = GST_AUDIO_CONVERT (gst_pad_get_parent (pad));
+  otherpad = (pad == this->sink ? this->src : this->sink);
+  ac_caps = (pad == this->sink ? this->srccaps : this->sinkcaps);
 
-  if (_fixate_caps_to_int (&copy, "channels", try.channels)) {
+  if (!GST_PAD_IS_IN_SETCAPS (otherpad)) {
+    try.channels = ac_caps.channels;
+    try.width = ac_caps.is_int ? ac_caps.width : 16;
+    try.depth = ac_caps.is_int ? ac_caps.depth : 16;
+    try.endianness = ac_caps.is_int ? ac_caps.endianness : G_BYTE_ORDER;
+  } else {
+    try.channels = 2;
+    try.width = 16;
+    try.depth = 16;
+    try.endianness = G_BYTE_ORDER;
+  }
+
+  if (_fixate_caps_to_int (caps, "channels", try.channels)) {
     int n, c;
 
-    gst_structure_get_int (gst_caps_get_structure (copy, 0), "channels", &c);
+    gst_structure_get_int (gst_caps_get_structure (caps, 0), "channels", &c);
     if (c > 2) {
       /* make sure we have a channelpositions structure or array here */
       GstStructure *str;
 
-      for (n = 0; n < gst_caps_get_size (copy); n++) {
-        str = gst_caps_get_structure (copy, n);
+      for (n = 0; n < gst_caps_get_size (caps); n++) {
+        str = gst_caps_get_structure (caps, n);
         if (!gst_structure_get_value (str, "channel-positions")) {
           /* first try otherpad's positions, else anything */
           if (ac_caps.pos != NULL && c == ac_caps.channels) {
@@ -582,22 +552,19 @@ gst_audio_convert_fixate (GstPad * pad, GstCaps * caps)
       }
     } else {
       /* make sure we don't */
-      for (n = 0; n < gst_caps_get_size (copy); n++) {
-        gst_structure_remove_field (gst_caps_get_structure (copy, n),
+      for (n = 0; n < gst_caps_get_size (caps); n++) {
+        gst_structure_remove_field (gst_caps_get_structure (caps, n),
             "channel-positions");
       }
     }
-    return copy;
   }
-  if (_fixate_caps_to_int (&copy, "width", try.width))
-    return copy;
-  if (gst_structure_get_name (gst_caps_get_structure (copy, 0))[12] == 'i') {
-    if (_fixate_caps_to_int (&copy, "depth", try.depth))
-      return copy;
+
+  _fixate_caps_to_int (caps, "width", try.width);
+  if (gst_structure_get_name (gst_caps_get_structure (caps, 0))[12] == 'i') {
+    _fixate_caps_to_int (caps, "depth", try.depth);
   }
-  if (_fixate_caps_to_int (&copy, "endianness", try.endianness))
-    return copy;
-  if ((pos_val = gst_structure_get_value (gst_caps_get_structure (copy, 0),
+  _fixate_caps_to_int (caps, "endianness", try.endianness);
+  if ((pos_val = gst_structure_get_value (gst_caps_get_structure (caps, 0),
               "channel-positions")) != NULL) {
     GstAudioChannelPosition *pos;
     const GValue *pos_val_entry;
@@ -608,20 +575,17 @@ gst_audio_convert_fixate (GstPad * pad, GstCaps * caps)
       if (G_VALUE_TYPE (pos_val_entry) == GST_TYPE_LIST) {
         /* unfixed */
         pos =
-            gst_audio_fixate_channel_positions (gst_caps_get_structure (copy,
+            gst_audio_fixate_channel_positions (gst_caps_get_structure (caps,
                 0));
         if (pos) {
-          gst_audio_set_channel_positions (gst_caps_get_structure (copy, 0),
+          gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0),
               pos);
           g_free (pos);
-          return copy;
+          pos = NULL;
         }
       }
     }
   }
-
-  gst_caps_unref (copy);
-  return NULL;
 }
 
 static GstElementStateReturn

@@ -629,7 +629,6 @@ gst_ximagesink_renegotiate_size (GstXImageSink * ximagesink)
 
   if (GST_VIDEOSINK_WIDTH (ximagesink) != ximagesink->xwindow->width ||
       GST_VIDEOSINK_HEIGHT (ximagesink) != ximagesink->xwindow->height) {
-    GstPadLinkReturn r;
     GstCaps *caps;
 
     caps = gst_caps_new_simple ("video/x-raw-rgb",
