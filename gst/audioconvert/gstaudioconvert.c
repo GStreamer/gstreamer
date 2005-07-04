@@ -513,7 +513,7 @@ gst_audio_convert_fixate (GstPad * pad, GstCaps * caps)
   GstAudioConvert *this;
   GstAudioConvertCaps try, ac_caps;
 
-  this = GST_AUDIO_CONVERT (gst_pad_get_parent (pad));
+  this = GST_AUDIO_CONVERT (GST_PAD_PARENT (pad));
   otherpad = (pad == this->sink ? this->src : this->sink);
   ac_caps = (pad == this->sink ? this->srccaps : this->sinkcaps);
 
