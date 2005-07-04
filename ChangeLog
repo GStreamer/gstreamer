@@ -1,3 +1,7 @@
+2005-07-04  Andy Wingo  <wingo@pobox.com>
+
+	* check/gst/gstpad.c: Only set explicit caps on pads.
+
 2005-07-01  Andy Wingo  <wingo@pobox.com>
 
 	* tests/network-clock.scm: Commentary update.

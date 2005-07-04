@@ -75,7 +75,7 @@ START_TEST (test_link_unlink_threaded)
   sink = gst_pad_new ("sink", GST_PAD_SINK);
   fail_if (sink == NULL);
 
-  caps = gst_caps_new_any ();
+  caps = gst_caps_from_string ("foo/bar");
   gst_pad_set_caps (src, caps);
   gst_pad_set_caps (sink, caps);
 
@@ -101,7 +101,7 @@ START_TEST (test_refcount)
   src = gst_pad_new ("src", GST_PAD_SRC);
   fail_if (src == NULL);
 
-  caps = gst_caps_new_any ();
+  caps = gst_caps_from_string ("foo/bar");
   /* one for me */
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
 
@@ -147,7 +147,7 @@ START_TEST (test_get_allowed_caps)
   caps = gst_pad_get_allowed_caps (src);
   fail_unless (caps == NULL);
 
-  caps = gst_caps_new_any ();
+  caps = gst_caps_from_string ("foo/bar");
 
   gst_pad_set_caps (src, caps);
   gst_pad_set_caps (sink, caps);
