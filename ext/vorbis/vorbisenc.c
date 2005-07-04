@@ -906,6 +906,10 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer)
       GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
       gst_pad_set_caps (vorbisenc->srcpad, caps);
 
+      gst_buffer_set_caps (buf1, caps);
+      gst_buffer_set_caps (buf2, caps);
+      gst_buffer_set_caps (buf3, caps);
+
       /* push out buffers */
       gst_vorbisenc_push_buffer (vorbisenc, buf1);
       gst_vorbisenc_push_buffer (vorbisenc, buf2);
