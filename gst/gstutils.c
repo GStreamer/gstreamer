@@ -2083,22 +2083,28 @@ gst_atomic_int_set (gint * atomic_int, gint value)
  * Connects a signal handler to the pad's have-data signal, and increases
  * the do_{buffer,event}_signals number on the pads so that those
  * signals are actually fired.
+ *
+ * Returns: The handler id
  */
 
-void
+gulong
 gst_pad_add_data_probe (GstPad * pad, GCallback handler, gpointer data)
 {
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (handler != NULL);
+  gulong sigid;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), 0);
+  g_return_val_if_fail (handler != NULL, 0);
 
   GST_LOCK (pad);
-  g_signal_connect (pad, "have-data", handler, data);
+  sigid = g_signal_connect (pad, "have-data", handler, data);
   GST_PAD_DO_EVENT_SIGNALS (pad)++;
   GST_PAD_DO_BUFFER_SIGNALS (pad)++;
   GST_DEBUG ("adding data probe to pad %s:%s, now %d data, %d event probes",
       GST_DEBUG_PAD_NAME (pad),
       GST_PAD_DO_BUFFER_SIGNALS (pad), GST_PAD_DO_EVENT_SIGNALS (pad));
   GST_UNLOCK (pad);
+
+  return sigid;
 }
 
 /**
@@ -2110,20 +2116,26 @@ gst_pad_add_data_probe (GstPad * pad, GCallback handler, gpointer data)
  * Connects a signal handler to the pad's have-data signal, and increases
  * the do_event_signals number on the pads so that this signal
  * is actually fired.
+ *
+ * Returns: The handler id
  */
 
-void
+gulong
 gst_pad_add_event_probe (GstPad * pad, GCallback handler, gpointer data)
 {
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (handler != NULL);
+  gulong sigid;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), 0);
+  g_return_val_if_fail (handler != NULL, 0);
 
   GST_LOCK (pad);
-  g_signal_connect (pad, "have-data", handler, data);
+  sigid = g_signal_connect (pad, "have-data", handler, data);
   GST_PAD_DO_EVENT_SIGNALS (pad)++;
   GST_DEBUG ("adding event probe to pad %s:%s, now %d probes",
       GST_DEBUG_PAD_NAME (pad), GST_PAD_DO_EVENT_SIGNALS (pad));
   GST_UNLOCK (pad);
+
+  return sigid;
 }
 
 /**
@@ -2135,20 +2147,26 @@ gst_pad_add_event_probe (GstPad * pad, GCallback handler, gpointer data)
  * Connects a signal handler to the pad's have-data signal, and increases
  * the do_buffer_signals number on the pads so that this signal
  * is actually fired.
+ *
+ * Returns: The handler id
  */
 
-void
+gulong
 gst_pad_add_buffer_probe (GstPad * pad, GCallback handler, gpointer data)
 {
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (handler != NULL);
+  gulong sigid;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), 0);
+  g_return_val_if_fail (handler != NULL, 0);
 
   GST_LOCK (pad);
-  g_signal_connect (pad, "have-data", handler, data);
+  sigid = g_signal_connect (pad, "have-data", handler, data);
   GST_PAD_DO_BUFFER_SIGNALS (pad)++;
   GST_DEBUG ("adding buffer probe to pad %s:%s, now %d probes",
       GST_DEBUG_PAD_NAME (pad), GST_PAD_DO_BUFFER_SIGNALS (pad));
   GST_UNLOCK (pad);
+
+  return sigid;
 }
 
 /**

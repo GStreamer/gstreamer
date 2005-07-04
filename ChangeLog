@@ -1,3 +1,10 @@
+2005-07-04  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstutils.c:
+	* gst/gstutils.h:
+	(gst_pad_add_*_probe): now returns the signal id for better wrapping
+	in bindings.
+
 2005-07-04  Andy Wingo  <wingo@pobox.com>
 
 	* check/gst/gstpad.c: Only set explicit caps on pads.
