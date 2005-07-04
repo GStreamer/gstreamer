@@ -123,6 +123,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstsubparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvolume.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideorate.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvideoscale.so
 
 @USE_THEORA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttheora.so
 @USE_GNOME_VFS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgnomevfs.so
@@ -152,21 +153,20 @@ GStreamer support libraries header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/riff/riff-read.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/videosink.h
+%{_includedir}/gstreamer-%{majorminor}/gst/interfaces/colorbalance.h
+%{_includedir}/gstreamer-%{majorminor}/gst/interfaces/colorbalancechannel.h
+%{_includedir}/gstreamer-%{majorminor}/gst/interfaces/interfaces-enumtypes.h
+%{_includedir}/gstreamer-%{majorminor}/gst/interfaces/mixer.h
+%{_includedir}/gstreamer-%{majorminor}/gst/interfaces/mixeroptions.h
+%{_includedir}/gstreamer-%{majorminor}/gst/interfaces/mixertrack.h
+%{_includedir}/gstreamer-%{majorminor}/gst/interfaces/navigation.h
+%{_includedir}/gstreamer-%{majorminor}/gst/interfaces/propertyprobe.h
+%{_includedir}/gstreamer-%{majorminor}/gst/interfaces/tuner.h
+%{_includedir}/gstreamer-%{majorminor}/gst/interfaces/tunerchannel.h
+%{_includedir}/gstreamer-%{majorminor}/gst/interfaces/tunernorm.h
+%{_includedir}/gstreamer-%{majorminor}/gst/interfaces/xoverlay.h
+
 # plugin interface headers
-%{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixer.h
-%{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixertrack.h
-%{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixer-enumtypes.h
-%{_includedir}/gstreamer-%{majorminor}/gst/navigation/navigation.h
-%{_includedir}/gstreamer-%{majorminor}/gst/colorbalance/colorbalance.h
-%{_includedir}/gstreamer-%{majorminor}/gst/colorbalance/colorbalancechannel.h
-%{_includedir}/gstreamer-%{majorminor}/gst/colorbalance/colorbalance-enumtypes.h
-%{_includedir}/gstreamer-%{majorminor}/gst/propertyprobe/propertyprobe.h
-%{_includedir}/gstreamer-%{majorminor}/gst/tuner/tuner.h
-%{_includedir}/gstreamer-%{majorminor}/gst/tuner/tunerchannel.h
-%{_includedir}/gstreamer-%{majorminor}/gst/tuner/tunernorm.h
-%{_includedir}/gstreamer-%{majorminor}/gst/tuner/tuner-enumtypes.h
-%{_includedir}/gstreamer-%{majorminor}/gst/xoverlay/xoverlay.h
-%{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixeroptions.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudioclock.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudiosink.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstbaseaudiosink.h
@@ -185,9 +185,7 @@ GStreamer support libraries header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/tag/tag.h
 # pkg-config files
 @USE_GCONF_TRUE@%{_libdir}/pkgconfig/gstreamer-gconf-%{majorminor}.pc
-%{_libdir}/pkgconfig/gstreamer-interfaces-%{majorminor}.pc
-%{_libdir}/pkgconfig/gstreamer-libs-%{majorminor}.pc
-%{_libdir}/pkgconfig/gstreamer-plugins-%{majorminor}.pc
+%{_libdir}/pkgconfig/gstreamer-plugins-base-0.9.pc
 # .so files
 @USE_GCONF_TRUE@%{_libdir}/libgstgconf-%{majorminor}.so
 %{_libdir}/libgstinterfaces-%{majorminor}.so
