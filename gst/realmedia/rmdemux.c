@@ -23,8 +23,6 @@
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
-* gst / realmedia / rmdemux.c (gst_rmdemux_add_stream), (gst_rmdemux_src_getcaps):Added getcaps
-    function
 #include "rmdemux.h"
 #include <string.h>
 #include <zlib.h>

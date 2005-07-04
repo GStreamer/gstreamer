@@ -1,3 +1,8 @@
+2005-07-04  Wim Taymans  <wim@fluendo.com>
+
+	* gst/realmedia/rmdemux.c:
+	I don't think that piece of changelog should go there.
+
 2005-07-04  Andy Wingo  <wingo@pobox.com>
 
 	* ext/aalib/gstaasink.c (gst_aasink_fixate): Update for newer
