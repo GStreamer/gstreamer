@@ -230,31 +230,16 @@ gst_aasink_class_init (GstAASinkClass * klass)
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_aasink_render);
 }
 
-static GstCaps *
+static void
 gst_aasink_fixate (GstPad * pad, GstCaps * caps)
 {
   GstStructure *structure;
-  GstCaps *newcaps;
 
-  if (gst_caps_get_size (caps) > 1)
-    return NULL;
+  structure = gst_caps_get_structure (caps, 0);
 
-  newcaps = gst_caps_copy (caps);
-  structure = gst_caps_get_structure (newcaps, 0);
-
-  if (gst_caps_structure_fixate_field_nearest_int (structure, "width", 320)) {
-    return newcaps;
-  }
-  if (gst_caps_structure_fixate_field_nearest_int (structure, "height", 240)) {
-    return newcaps;
-  }
-  if (gst_caps_structure_fixate_field_nearest_double (structure, "framerate",
-          30.0)) {
-    return newcaps;
-  }
-
-  gst_caps_unref (newcaps);
-  return NULL;
+  gst_caps_structure_fixate_field_nearest_int (structure, "width", 320);
+  gst_caps_structure_fixate_field_nearest_int (structure, "height", 240);
+  gst_caps_structure_fixate_field_nearest_double (structure, "framerate", 30.0);
 }
 
 static gboolean
