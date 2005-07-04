@@ -1,3 +1,8 @@
+2005-07-04  Andy Wingo  <wingo@pobox.com>
+
+	* ext/aalib/gstaasink.c (gst_aasink_fixate): Update for newer
+	fixate prototype.
+
 2005-07-03  Owen Fraser-Green  <owen@discobabe.net>
 
 	* gst/realmedia/rmdemux.c (gst_rmdemux_add_stream),
