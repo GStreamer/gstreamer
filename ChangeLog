@@ -5,6 +5,19 @@
 
 2005-07-04  Andy Wingo  <wingo@pobox.com>
 
+	* examples/level/:
+	* examples/level/Makefile.am:
+	* examples/level/README:
+	* examples/level/demo.c:
+	* examples/level/plot.c: Examples moved out of the source dir. Not
+	updated tho.
+
+	* configure.ac: Add level to the build.
+
+	* gst/level/Makefile.am:
+	* gst/level/gstlevel.h:
+	* gst/level/gstlevel.c: Cleaned up, ported to 0.9.
+
 	* ext/aalib/gstaasink.c (gst_aasink_fixate): Update for newer
 	fixate prototype.
 
