@@ -27,12 +27,10 @@
 
 
 #include <gst/gst.h>
+#include <gst/base/gstbasetransform.h>
 
-#include "gstlevel-marshal.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 
 #define GST_TYPE_LEVEL \
@@ -46,13 +44,14 @@ extern "C" {
 #define GST_IS_LEVEL_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_LEVEL))
 
+
 typedef struct _GstLevel GstLevel;
 typedef struct _GstLevelClass GstLevelClass;
 
-struct _GstLevel {
-  GstElement element;
 
-  GstPad *sinkpad, *srcpad;
+struct _GstLevel {
+  GstBaseTransform element;
+
   gboolean signal;		/* whether or not to emit signals */
   gdouble interval;		/* how many seconds between emits */
 
@@ -75,16 +74,14 @@ struct _GstLevel {
 };
 
 struct _GstLevelClass {
-  GstElementClass parent_class;
-  void (*level) (GstElement *element, gdouble time, gint channel,
-                 gdouble RMS_dB, gdouble peak_dB, gdouble decay_peak_dB);
+  GstBaseTransformClass parent_class;
 };
+
 
 GType gst_level_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+
+G_END_DECLS
 
 
-#endif /* __GST_STEREO_H__ */
+#endif /* __GST_LEVEL_H__ */

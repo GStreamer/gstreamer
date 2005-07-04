@@ -1,0 +1,39 @@
+level plugin by thomas <thomas@apestaart.org>
+
+this plugin signals:
+  - running time since last EOS/start
+  - channel
+  - RMS level
+  - peak level
+  - decaying peak level
+over the given interval.
+
+This is useful for a VU meter display and for plotting out the signal graph.
+The VU meter can either display RMS, or display immediate peak level and
+have the falloff decaying peak level displayed as a line.
+
+The interval for signal emission, ttl of decay peak, and falloff of decay peak
+can all be set.
+
+The element only takes unsigned data in; it could be extended to signed as
+well, if separate fast chain functions are made that displaces the incoming
+data to its midpoint (ie, 0,65535 should be mapped to -32768, 32767)
+
+There are two demo apps, apps and plot.  apps will create some GTK sliders
+to display the volume.  plot will output data readable by gnuplot.
+
+Here is a sample plot script to plot output of the plot command that was
+stored to plot.dat
+
+set xlabel "Seconds"
+set ylabel "dB"
+set yrange [-60:0]
+plot 'plot.dat' using 1:2 title 'L RMS' with lines, \
+     'plot.dat' using 1:3 title 'L peak' with lines, \
+     'plot.dat' using 1:4 title 'L decay' with lines
+
+plot 'plot.dat' using 1:5 title 'R RMS' with lines, \
+     'plot.dat' using 1:6 title 'R peak' with lines, \
+     'plot.dat' using 1:7 title 'R decay' with lines
+
+

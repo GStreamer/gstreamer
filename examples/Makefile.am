@@ -5,7 +5,7 @@ FT2_SUBDIRS=
 endif
 
 if HAVE_GTK
-GTK_SUBDIRS=dynparams $(FT2_SUBDIRS)
+GTK_SUBDIRS=dynparams level $(FT2_SUBDIRS)
 else
 GTK_SUBDIRS=
 endif
@@ -17,4 +17,4 @@ GCONF_SUBDIRS=
 endif
 
 SUBDIRS=$(GTK_SUBDIRS) $(GCONF_SUBDIRS) switch
-DIST_SUBDIRS=capsfilter dynparams seeking indexing gstplay switch
+DIST_SUBDIRS=capsfilter dynparams seeking indexing gstplay switch level

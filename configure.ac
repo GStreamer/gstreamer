@@ -297,15 +297,17 @@ dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
 		alpha \
 		avi \
-		videofilter \
 		effectv \
 		goom \
 		law \
+		level \
 		realmedia \
 		rtp	\
 		rtsp	\
 		smpte	\
-		udp"
+		udp     \
+		videofilter \
+                "
 
 dnl see if we can build C++ plug-ins
 if test "x$HAVE_CXX" = "xyes"; then
@@ -489,6 +491,7 @@ gst/avi/Makefile
 gst/effectv/Makefile
 gst/goom/Makefile
 gst/law/Makefile
+gst/level/Makefile
 gst/realmedia/Makefile
 gst/rtp/Makefile
 gst/rtsp/Makefile
