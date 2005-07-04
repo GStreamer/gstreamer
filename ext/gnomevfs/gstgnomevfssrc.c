@@ -634,7 +634,8 @@ audiocast_thread_run (GstGnomeVFSSrc * src)
       char buf[1];
 
       GST_DEBUG ("audiocast thread: got die character");
-      read (src->audiocast_thread_die_infd, buf, 1);
+      if (read (src->audiocast_thread_die_infd, buf, 1) != 1)
+        g_warning ("gnomevfssrc: could not read from audiocast fd");
       close (src->audiocast_thread_die_infd);
       close (src->audiocast_fd);
       return NULL;
@@ -732,7 +733,8 @@ audiocast_thread_kill (GstGnomeVFSSrc * src)
      audiocast metadata too.
    */
   GST_DEBUG ("audiocast: writing die character");
-  write (src->audiocast_thread_die_outfd, "q", 1);
+  if (write (src->audiocast_thread_die_outfd, "q", 1) != 1)
+    g_critical ("gnomevfssrc: could not write to audiocast thread fd");
   close (src->audiocast_thread_die_outfd);
   GST_DEBUG ("audiocast: joining thread");
   g_thread_join (src->audiocast_thread);
@@ -785,13 +787,14 @@ gst_gnomevfssrc_received_headers_callback (gconstpointer in,
       continue;
 
     /* Icecast stuff */
-    if (!strncmp (data, "icy-metaint:", 12)) {  /* ugh */
-      sscanf (data + 12, "%d", &icy_metaint);
-      src->icy_metaint = icy_metaint;
-      GST_DEBUG ("got icy-metaint %d, killing audiocast thread",
-          src->icy_metaint);
-      audiocast_thread_kill (src);
-      continue;
+    if (strncmp (data, "icy-metaint:", 12) == 0) {      /* ugh */
+      if (sscanf (data + 12, "%d", &icy_metaint) == 1) {
+        src->icy_metaint = icy_metaint;
+        GST_DEBUG ("got icy-metaint %d, killing audiocast thread",
+            src->icy_metaint);
+        audiocast_thread_kill (src);
+        continue;
+      }
     }
 
     if (!strncmp (data, "icy-", 4))
