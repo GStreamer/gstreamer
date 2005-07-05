@@ -276,7 +276,7 @@ gst_videoscale_transform_caps (GstBaseTransform * trans, GstPad * pad,
 
   videoscale = GST_VIDEOSCALE (trans);
 
-  ret = gst_caps_make_writable (gst_caps_ref (caps));
+  ret = gst_caps_copy (caps);
 
   for (i = 0; i < gst_caps_get_size (ret); i++) {
     GstStructure *structure = gst_caps_get_structure (ret, i);
