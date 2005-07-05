@@ -1,3 +1,14 @@
+2005-07-05  Andy Wingo  <wingo@pobox.com>
+
+	* gst/videobox/gstvideobox.c: Clean up, port to 0.9, use
+	BaseTransform.
+
+	* gst/videobox/Makefile.am: Link to base libs, include
+	plugins-base cflags, dist the README.
+
+	* configure.ac (GST_PLUGIN_ALL, AC_CONFIG_FILES): Add videobox to
+	the build.
+
 2005-07-04  Wim Taymans  <wim@fluendo.com>
 
 	* gst/realmedia/rmdemux.c:

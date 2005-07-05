@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 #include <gst/gst.h>
+#include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
 
 #include <string.h>
@@ -49,11 +50,7 @@ GstVideoBoxFill;
 
 struct _GstVideoBox
 {
-  GstElement element;
-
-  /* pads */
-  GstPad *sinkpad;
-  GstPad *srcpad;
+  GstBaseTransform element;
 
   /* caps */
   gint in_width, in_height;
@@ -73,7 +70,7 @@ struct _GstVideoBox
 
 struct _GstVideoBoxClass
 {
-  GstElementClass parent_class;
+  GstBaseTransformClass parent_class;
 };
 
 /* elementfactory information */
@@ -94,14 +91,14 @@ GST_ELEMENT_DETAILS ("video box filter",
 
 enum
 {
-  ARG_0,
-  ARG_LEFT,
-  ARG_RIGHT,
-  ARG_TOP,
-  ARG_BOTTOM,
-  ARG_FILL_TYPE,
-  ARG_ALPHA,
-  ARG_BORDER_ALPHA,
+  PROP_0,
+  PROP_LEFT,
+  PROP_RIGHT,
+  PROP_TOP,
+  PROP_BOTTOM,
+  PROP_FILL_TYPE,
+  PROP_ALPHA,
+  PROP_BORDER_ALPHA,
   /* FILL ME */
 };
 
@@ -120,22 +117,21 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 
-static void gst_video_box_base_init (gpointer g_class);
-static void gst_video_box_class_init (GstVideoBoxClass * klass);
-static void gst_video_box_init (GstVideoBox * video_box);
+GST_BOILERPLATE (GstVideoBox, gst_video_box, GstBaseTransform,
+    GST_TYPE_BASE_TRANSFORM);
 
 static void gst_video_box_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_video_box_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_video_box_sink_setcaps (GstPad * pad, GstCaps * caps);
-static GstFlowReturn gst_video_box_chain (GstPad * pad, GstBuffer * buffer);
+static GstCaps *gst_video_box_transform_caps (GstBaseTransform * trans,
+    GstPad * pad, GstCaps * from);
+static gboolean gst_video_box_set_caps (GstBaseTransform * trans,
+    GstCaps * in, GstCaps * out);
+static GstFlowReturn gst_video_box_transform (GstBaseTransform * trans,
+    GstBuffer * in, GstBuffer ** out);
 
-static GstElementStateReturn gst_video_box_change_state (GstElement * element);
-
-
-static GstElementClass *parent_class = NULL;
 
 #define GST_TYPE_VIDEO_BOX_FILL (gst_video_box_fill_get_type())
 static GType
@@ -156,32 +152,6 @@ gst_video_box_fill_get_type (void)
   return video_box_fill_type;
 }
 
-/* static guint gst_video_box_signals[LAST_SIGNAL] = { 0 }; */
-
-GType
-gst_video_box_get_type (void)
-{
-  static GType video_box_type = 0;
-
-  if (!video_box_type) {
-    static const GTypeInfo video_box_info = {
-      sizeof (GstVideoBoxClass),
-      gst_video_box_base_init,
-      NULL,
-      (GClassInitFunc) gst_video_box_class_init,
-      NULL,
-      NULL,
-      sizeof (GstVideoBox),
-      0,
-      (GInstanceInitFunc) gst_video_box_init,
-    };
-
-    video_box_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstVideoBox",
-        &video_box_info, 0);
-  }
-  return video_box_type;
-}
 
 static void
 gst_video_box_base_init (gpointer g_class)
@@ -195,67 +165,55 @@ gst_video_box_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_video_box_src_template));
 }
+
 static void
 gst_video_box_class_init (GstVideoBoxClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
+  GstBaseTransformClass *trans_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  trans_class = (GstBaseTransformClass *) klass;
 
   gobject_class->set_property = gst_video_box_set_property;
   gobject_class->get_property = gst_video_box_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FILL_TYPE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FILL_TYPE,
       g_param_spec_enum ("fill", "Fill", "How to fill the borders",
           GST_TYPE_VIDEO_BOX_FILL, DEFAULT_FILL_TYPE,
           (GParamFlags) G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LEFT,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LEFT,
       g_param_spec_int ("left", "Left",
           "Pixels to box at left (<0  = add a border)", G_MININT, G_MAXINT,
           DEFAULT_LEFT, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_RIGHT,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_RIGHT,
       g_param_spec_int ("right", "Right",
           "Pixels to box at right (<0 = add a border)", G_MININT, G_MAXINT,
           DEFAULT_RIGHT, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TOP,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TOP,
       g_param_spec_int ("top", "Top",
           "Pixels to box at top (<0 = add a border)", G_MININT, G_MAXINT,
           DEFAULT_TOP, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BOTTOM,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BOTTOM,
       g_param_spec_int ("bottom", "Bottom",
           "Pixels to box at bottom (<0 = add a border)", G_MININT, G_MAXINT,
           DEFAULT_BOTTOM, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ALPHA,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ALPHA,
       g_param_spec_double ("alpha", "Alpha", "Alpha value picture", 0.0, 1.0,
           DEFAULT_ALPHA, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BORDER_ALPHA,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BORDER_ALPHA,
       g_param_spec_double ("border_alpha", "Border Alpha",
           "Alpha value of the border", 0.0, 1.0, DEFAULT_BORDER_ALPHA,
           G_PARAM_READWRITE));
 
-  gstelement_class->change_state = gst_video_box_change_state;
+  trans_class->transform_caps = gst_video_box_transform_caps;
+  trans_class->set_caps = gst_video_box_set_caps;
+  trans_class->transform = gst_video_box_transform;
 }
 
 static void
 gst_video_box_init (GstVideoBox * video_box)
 {
-  /* create the sink and src pads */
-  video_box->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_video_box_sink_template), "sink");
-  gst_element_add_pad (GST_ELEMENT (video_box), video_box->sinkpad);
-  gst_pad_set_chain_function (video_box->sinkpad, gst_video_box_chain);
-  gst_pad_set_setcaps_function (video_box->sinkpad, gst_video_box_sink_setcaps);
-
-  video_box->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_video_box_src_template), "src");
-  gst_element_add_pad (GST_ELEMENT (video_box), video_box->srcpad);
-
   video_box->box_right = DEFAULT_RIGHT;
   video_box->box_left = DEFAULT_LEFT;
   video_box->box_top = DEFAULT_TOP;
@@ -270,15 +228,10 @@ static void
 gst_video_box_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstVideoBox *video_box;
-
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_VIDEO_BOX (object));
-
-  video_box = GST_VIDEO_BOX (object);
+  GstVideoBox *video_box = GST_VIDEO_BOX (object);
 
   switch (prop_id) {
-    case ARG_LEFT:
+    case PROP_LEFT:
       video_box->box_left = g_value_get_int (value);
       if (video_box->box_left < 0) {
         video_box->border_left = -video_box->box_left;
@@ -288,7 +241,7 @@ gst_video_box_set_property (GObject * object, guint prop_id,
         video_box->crop_left = video_box->box_left;
       }
       break;
-    case ARG_RIGHT:
+    case PROP_RIGHT:
       video_box->box_right = g_value_get_int (value);
       if (video_box->box_right < 0) {
         video_box->border_right = -video_box->box_right;
@@ -298,7 +251,7 @@ gst_video_box_set_property (GObject * object, guint prop_id,
         video_box->crop_right = video_box->box_right;
       }
       break;
-    case ARG_TOP:
+    case PROP_TOP:
       video_box->box_top = g_value_get_int (value);
       if (video_box->box_top < 0) {
         video_box->border_top = -video_box->box_top;
@@ -308,7 +261,7 @@ gst_video_box_set_property (GObject * object, guint prop_id,
         video_box->crop_top = video_box->box_top;
       }
       break;
-    case ARG_BOTTOM:
+    case PROP_BOTTOM:
       video_box->box_bottom = g_value_get_int (value);
       if (video_box->box_bottom < 0) {
         video_box->border_bottom = -video_box->box_bottom;
@@ -318,13 +271,13 @@ gst_video_box_set_property (GObject * object, guint prop_id,
         video_box->crop_bottom = video_box->box_bottom;
       }
       break;
-    case ARG_FILL_TYPE:
+    case PROP_FILL_TYPE:
       video_box->fill_type = g_value_get_enum (value);
       break;
-    case ARG_ALPHA:
+    case PROP_ALPHA:
       video_box->alpha = g_value_get_double (value);
       break;
-    case ARG_BORDER_ALPHA:
+    case PROP_BORDER_ALPHA:
       video_box->border_alpha = g_value_get_double (value);
       break;
     default:
@@ -336,33 +289,28 @@ static void
 gst_video_box_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstVideoBox *video_box;
-
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_VIDEO_BOX (object));
-
-  video_box = GST_VIDEO_BOX (object);
+  GstVideoBox *video_box = GST_VIDEO_BOX (object);
 
   switch (prop_id) {
-    case ARG_LEFT:
+    case PROP_LEFT:
       g_value_set_int (value, video_box->box_left);
       break;
-    case ARG_RIGHT:
+    case PROP_RIGHT:
       g_value_set_int (value, video_box->box_right);
       break;
-    case ARG_TOP:
+    case PROP_TOP:
       g_value_set_int (value, video_box->box_top);
       break;
-    case ARG_BOTTOM:
+    case PROP_BOTTOM:
       g_value_set_int (value, video_box->box_bottom);
       break;
-    case ARG_FILL_TYPE:
+    case PROP_FILL_TYPE:
       g_value_set_enum (value, video_box->fill_type);
       break;
-    case ARG_ALPHA:
+    case PROP_ALPHA:
       g_value_set_double (value, video_box->alpha);
       break;
-    case ARG_BORDER_ALPHA:
+    case PROP_BORDER_ALPHA:
       g_value_set_double (value, video_box->border_alpha);
       break;
     default:
@@ -371,18 +319,48 @@ gst_video_box_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
+static GstCaps *
+gst_video_box_transform_caps (GstBaseTransform * trans, GstPad * pad,
+    GstCaps * from)
+{
+  GstVideoBox *video_box;
+  GstCaps *to;
+  GstStructure *structure;
+  gint direction, i, tmp;
+
+  video_box = GST_VIDEO_BOX (trans);
+  to = gst_caps_copy (from);
+  direction = (pad == trans->sinkpad) ? 1 : -1;
+
+  for (i = 0; i < gst_caps_get_size (to); i++) {
+    structure = gst_caps_get_structure (to, i);
+    if (gst_structure_get_int (structure, "width", &tmp))
+      gst_structure_set (structure, "width", G_TYPE_INT,
+          tmp + direction * (video_box->box_left + video_box->box_right), NULL);
+    if (gst_structure_get_int (structure, "height", &tmp))
+      gst_structure_set (structure, "height", G_TYPE_INT,
+          tmp + direction * (video_box->box_top + video_box->box_bottom), NULL);
+  }
+
+  return to;
+}
+
 static gboolean
-gst_video_box_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_video_box_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 {
   GstVideoBox *video_box;
   GstStructure *structure;
   gboolean ret;
 
-  video_box = GST_VIDEO_BOX (GST_PAD_PARENT (pad));
-  structure = gst_caps_get_structure (caps, 0);
+  video_box = GST_VIDEO_BOX (trans);
 
+  structure = gst_caps_get_structure (in, 0);
   ret = gst_structure_get_int (structure, "width", &video_box->in_width);
   ret &= gst_structure_get_int (structure, "height", &video_box->in_height);
+
+  structure = gst_caps_get_structure (out, 0);
+  ret &= gst_structure_get_int (structure, "width", &video_box->out_width);
+  ret &= gst_structure_get_int (structure, "height", &video_box->out_height);
 
   return ret;
 }
@@ -601,108 +579,41 @@ gst_video_box_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
 }
 
 static GstFlowReturn
-gst_video_box_chain (GstPad * pad, GstBuffer * buffer)
+gst_video_box_transform (GstBaseTransform * trans, GstBuffer * in,
+    GstBuffer ** out)
 {
   GstVideoBox *video_box;
-  GstBuffer *outbuf;
-  gint new_width, new_height;
   GstFlowReturn ret;
 
-  video_box = GST_VIDEO_BOX (gst_pad_get_parent (pad));
-
-  new_width =
-      video_box->in_width - (video_box->box_left + video_box->box_right);
-  new_height =
-      video_box->in_height - (video_box->box_top + video_box->box_bottom);
-
-  if (new_width != video_box->out_width ||
-      new_height != video_box->out_height ||
-      !GST_PAD_CAPS (video_box->srcpad)) {
-    GstCaps *newcaps;
-
-    newcaps = gst_caps_copy (gst_pad_get_negotiated_caps (video_box->sinkpad));
-
-    video_box->use_alpha = TRUE;
-
-    /* try AYUV first */
-    gst_caps_set_simple (newcaps,
-        "format", GST_TYPE_FOURCC, GST_STR_FOURCC ("AYUV"),
-        "width", G_TYPE_INT, new_width, "height", G_TYPE_INT, new_height, NULL);
-
-    if (GST_PAD_LINK_FAILED (gst_pad_try_set_caps (video_box->srcpad, newcaps))) {
-      video_box->use_alpha = FALSE;
-      newcaps =
-          gst_caps_copy (gst_pad_get_negotiated_caps (video_box->sinkpad));
-      gst_caps_set_simple (newcaps, "format", GST_TYPE_FOURCC,
-          GST_STR_FOURCC ("I420"), "width", G_TYPE_INT, new_width, "height",
-          G_TYPE_INT, new_height, NULL);
-
-      if (GST_PAD_LINK_FAILED (gst_pad_try_set_caps (video_box->srcpad,
-                  newcaps))) {
-        GST_ELEMENT_ERROR (video_box, CORE, NEGOTIATION, (NULL), (NULL));
-        return;
-      }
-    }
-
-    video_box->out_width = new_width;
-    video_box->out_height = new_height;
-  }
+  video_box = GST_VIDEO_BOX (trans);
 
   if (video_box->use_alpha) {
-    ret = gst_pad_alloc_buffer (video_box->srcpad,
-        GST_BUFFER_OFFSET_NONE, new_width * new_height * 4,
-        GST_RPAD_CAPS (video_box->srcpad), &outbuf);
+    ret = gst_pad_alloc_buffer (trans->srcpad,
+        GST_BUFFER_OFFSET_NONE,
+        video_box->out_height * video_box->out_height * 4,
+        GST_PAD_CAPS (trans->srcpad), out);
     if (ret != GST_FLOW_OK)
       goto done;
 
     gst_video_box_ayuv (video_box,
-        GST_BUFFER_DATA (buffer), GST_BUFFER_DATA (outbuf));
+        GST_BUFFER_DATA (in), GST_BUFFER_DATA (*out));
   } else {
-    ret = gst_pad_alloc_buffer (video_box->srcpad,
-        GST_BUFFER_OFFSET_NONE, GST_VIDEO_I420_SIZE (new_width, new_height),
-        GST_RPAD_CAPS (video_box->srcpad), &outbuf);
+    ret = gst_pad_alloc_buffer (trans->srcpad,
+        GST_BUFFER_OFFSET_NONE,
+        GST_VIDEO_I420_SIZE (video_box->out_width, video_box->out_height),
+        GST_PAD_CAPS (trans->srcpad), out);
     if (ret != GST_FLOW_OK)
       goto done;
 
     gst_video_box_i420 (video_box,
-        GST_BUFFER_DATA (buffer), GST_BUFFER_DATA (outbuf));
+        GST_BUFFER_DATA (in), GST_BUFFER_DATA (*out));
   }
-  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
-  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
 
-  ret = gst_pad_push (video_box->srcpad, outbuf);
+  gst_buffer_stamp (*out, in);
 
 done:
-  gst_buffer_unref (buffer);
-
+  gst_buffer_unref (in);
   return ret;
-}
-
-static GstElementStateReturn
-gst_video_box_change_state (GstElement * element)
-{
-  GstVideoBox *video_box;
-
-  video_box = GST_VIDEO_BOX (element);
-
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
-      break;
-    case GST_STATE_READY_TO_PAUSED:
-      break;
-    case GST_STATE_PAUSED_TO_PLAYING:
-      break;
-    case GST_STATE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_PAUSED_TO_READY:
-      break;
-    case GST_STATE_READY_TO_NULL:
-      break;
-  }
-
-  parent_class->change_state (element);
-
-  return GST_STATE_SUCCESS;
 }
 
 static gboolean
