@@ -232,7 +232,6 @@ gst_y4mencode_set_property (GObject * object, guint prop_id,
 {
   GstY4mEncode *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_Y4MENCODE (object));
   filter = GST_Y4MENCODE (object);
 
@@ -248,7 +247,6 @@ gst_y4mencode_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstY4mEncode *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_Y4MENCODE (object));
   filter = GST_Y4MENCODE (object);
 
