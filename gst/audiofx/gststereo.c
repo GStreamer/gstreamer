@@ -185,7 +185,6 @@ gst_stereo_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstStereo *stereo;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_STEREO (object));
   stereo = GST_STEREO (object);
 
@@ -207,7 +206,6 @@ gst_stereo_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstStereo *stereo;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_STEREO (object));
   stereo = GST_STEREO (object);
 
