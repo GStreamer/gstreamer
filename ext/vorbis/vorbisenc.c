@@ -972,7 +972,6 @@ gst_vorbisenc_get_property (GObject * object, guint prop_id, GValue * value,
 {
   VorbisEnc *vorbisenc;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_VORBISENC (object));
 
   vorbisenc = GST_VORBISENC (object);
@@ -1008,7 +1007,6 @@ gst_vorbisenc_set_property (GObject * object, guint prop_id,
 {
   VorbisEnc *vorbisenc;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_VORBISENC (object));
 
   vorbisenc = GST_VORBISENC (object);

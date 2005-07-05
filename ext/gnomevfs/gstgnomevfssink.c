@@ -312,7 +312,6 @@ gst_gnomevfssink_set_property (GObject * object, guint prop_id,
 {
   GstGnomeVFSSink *sink;
 
-  /* it's not null if we got it, but it might not be ours */
   sink = GST_GNOMEVFSSINK (object);
 
   switch (prop_id) {
@@ -375,7 +374,6 @@ gst_gnomevfssink_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstGnomeVFSSink *sink;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_GNOMEVFSSINK (object));
 
   sink = GST_GNOMEVFSSINK (object);

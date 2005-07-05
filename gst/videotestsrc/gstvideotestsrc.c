@@ -691,7 +691,6 @@ gst_videotestsrc_set_property (GObject * object, guint prop_id,
 {
   GstVideotestsrc *videotestsrc;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_VIDEOTESTSRC (object));
   videotestsrc = GST_VIDEOTESTSRC (object);
 
@@ -719,7 +718,6 @@ gst_videotestsrc_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstVideotestsrc *videotestsrc;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_VIDEOTESTSRC (object));
   videotestsrc = GST_VIDEOTESTSRC (object);
 

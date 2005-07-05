@@ -179,7 +179,6 @@ gst_audiofilter_template_set_property (GObject * object, guint prop_id,
 {
   GstAudiofilterTemplate *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_AUDIOFILTER_TEMPLATE (object));
   src = GST_AUDIOFILTER_TEMPLATE (object);
 
@@ -196,7 +195,6 @@ gst_audiofilter_template_get_property (GObject * object, guint prop_id,
 {
   GstAudiofilterTemplate *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_AUDIOFILTER_TEMPLATE (object));
   src = GST_AUDIOFILTER_TEMPLATE (object);
 

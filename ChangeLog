@@ -1,5 +1,9 @@
 2005-07-05  Andy Wingo  <wingo@pobox.com>
 
+	* Many files: Null if we got it....
+
+2005-07-05  Andy Wingo  <wingo@pobox.com>
+
 	* gst/tcp/gsttcpserversink.c (gst_tcpserversink_handle_server_read): 
 	* gst/tcp/gstmultifdsink.c (gst_multifdsink_client_queue_data):
 	Signedness fixes.

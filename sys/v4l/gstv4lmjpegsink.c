@@ -335,7 +335,6 @@ gst_v4lmjpegsink_set_property (GObject * object,
 {
   GstV4lMjpegSink *v4lmjpegsink;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_V4LMJPEGSINK (object));
 
   v4lmjpegsink = GST_V4LMJPEGSINK (object);
@@ -366,7 +365,6 @@ gst_v4lmjpegsink_get_property (GObject * object,
 {
   GstV4lMjpegSink *v4lmjpegsink;
 
-  /* it's not null if we got it, but it might not be ours */
   v4lmjpegsink = GST_V4LMJPEGSINK (object);
 
   switch (prop_id) {

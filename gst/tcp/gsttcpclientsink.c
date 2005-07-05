@@ -269,7 +269,6 @@ gst_tcpclientsink_set_property (GObject * object, guint prop_id,
 {
   GstTCPClientSink *tcpclientsink;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_TCPCLIENTSINK (object));
   tcpclientsink = GST_TCPCLIENTSINK (object);
 
@@ -301,7 +300,6 @@ gst_tcpclientsink_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstTCPClientSink *tcpclientsink;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_TCPCLIENTSINK (object));
   tcpclientsink = GST_TCPCLIENTSINK (object);
 

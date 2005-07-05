@@ -677,7 +677,6 @@ gst_audioscale_set_property (GObject * object, guint prop_id,
   Audioscale *src;
   gst_resample_t *r;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_AUDIOSCALE (object));
   src = GST_AUDIOSCALE (object);
   r = &(src->gst_resample_template);

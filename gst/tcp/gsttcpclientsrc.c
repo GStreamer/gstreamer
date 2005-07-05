@@ -333,7 +333,6 @@ gst_tcpclientsrc_set_property (GObject * object, guint prop_id,
 {
   GstTCPClientSrc *tcpclientsrc;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_TCPCLIENTSRC (object));
   tcpclientsrc = GST_TCPCLIENTSRC (object);
 

@@ -441,7 +441,6 @@ gst_v4lelement_set_property (GObject * object,
 {
   GstV4lElement *v4lelement;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_V4LELEMENT (object));
   v4lelement = GST_V4LELEMENT (object);
 
@@ -464,7 +463,6 @@ gst_v4lelement_get_property (GObject * object,
 {
   GstV4lElement *v4lelement;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_V4LELEMENT (object));
   v4lelement = GST_V4LELEMENT (object);
 

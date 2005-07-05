@@ -341,7 +341,6 @@ cdparanoia_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   CDParanoia *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_CDPARANOIA (object));
 
   src = CDPARANOIA (object);
