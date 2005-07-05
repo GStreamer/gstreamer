@@ -18,8 +18,9 @@ endif
 
 SUBDIRS = \
   $(XIMAGE_DIR) \
-  $(XVIMAGE_DIR) \
-  $(V4L_DIR)
+  $(XVIMAGE_DIR)
+
+#  $(V4L_DIR)
 
 DIST_SUBDIRS = \
   v4l \
