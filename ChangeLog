@@ -1,5 +1,9 @@
 2005-07-05  Andy Wingo  <wingo@pobox.com>
 
+	* gst/base/gstbasetransform.c (gst_base_transform_setcaps):
+	Default to returning TRUE for the case when tranform_caps returns
+	a fixed caps, like for identity or volume.
+
 	* check/gst/gstbus.c (pound_bus_with_messages): 
 	* check/gst/gstmessage.c (START_TEST): 
 	* check/pipelines/simple_launch_lines.c (got_handoff): Application

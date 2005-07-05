@@ -236,7 +236,7 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
   GstBaseTransformClass *klass;
   GstPad *otherpad, *otherpeer;
   GstCaps *othercaps = NULL;
-  gboolean ret = FALSE;
+  gboolean ret = TRUE;
 
   trans = GST_BASE_TRANSFORM (GST_PAD_PARENT (pad));
   klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
