@@ -1,3 +1,8 @@
+2005-07-05  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac: (GST_PLUGINS_ALL): 
+	videofilter must be compiled first, since other plugins depend ont it.
+
 2005-07-05  Andy Wingo  <wingo@pobox.com>
 
 	* Way, way, way too many files:
