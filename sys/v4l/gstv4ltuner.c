@@ -310,7 +310,7 @@ gst_v4l_tuner_signal_strength (GstTuner * tuner, GstTunerChannel * channel)
   GstV4lElement *v4lelement = GST_V4LELEMENT (tuner);
   GstV4lTunerChannel *v4lchannel = GST_V4L_TUNER_CHANNEL (channel);
   gint chan;
-  gint signal = 0;
+  guint signal = 0;
 
   /* assert that we're opened and that we're using a known item */
   g_return_val_if_fail (GST_V4L_IS_OPEN (v4lelement), 0);
@@ -325,5 +325,5 @@ gst_v4l_tuner_signal_strength (GstTuner * tuner, GstTunerChannel * channel)
     gst_v4l_get_signal (v4lelement, v4lchannel->tuner, &signal);
   }
 
-  return signal;
+  return (gint) signal;
 }

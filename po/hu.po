@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-06-19 11:41+0200\n"
+"POT-Creation-Date: 2005-07-05 13:29+0200\n"
 "PO-Revision-Date: 2004-07-18 11:03+0200\n"
 "Last-Translator: Laszlo Dvornik <dvornik@invitel.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -67,20 +67,20 @@ msgstr ""
 msgid "CDDA discid for metadata retrieval"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoia.c:683 ext/cdparanoia/gstcdparanoia.c:699
+#: ext/cdparanoia/gstcdparanoia.c:682 ext/cdparanoia/gstcdparanoia.c:698
 msgid "Could not open CD device for reading."
 msgstr "Nem lehet olvasásra megnyitni a CD-eszközt."
 
-#: ext/gnomevfs/gstgnomevfssink.c:432
+#: ext/gnomevfs/gstgnomevfssink.c:430
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Nem lehet írásra megnyitni a(z) \"%s\" vfs-fájlt: %s."
 
-#: ext/gnomevfs/gstgnomevfssink.c:439
+#: ext/gnomevfs/gstgnomevfssink.c:437
 msgid "No filename given"
 msgstr "Nincs fájlnév megadva"
 
-#: ext/gnomevfs/gstgnomevfssink.c:467
+#: ext/gnomevfs/gstgnomevfssink.c:465
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Nem lehet bezárni a(z) \"%s\" vfs-fájlt."

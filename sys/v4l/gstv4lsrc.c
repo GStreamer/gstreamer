@@ -214,6 +214,10 @@ gst_v4lsrc_class_init (GstV4lSrcClass * klass)
       g_param_spec_boolean ("autoprobe-fps", "Autoprobe FPS",
           "Whether the device should be probed for framerates",
           TRUE, G_PARAM_READWRITE));
+  /* FIXME: this should have been a 64 bit int instead, because 3 seconds
+   * overflows 32 bit nanosecond values.  However, this is an ABI change,
+   * so we're saving it for 0.9, and then we can also rename the property
+   * to something that makes more sense, like, timestamp-offset */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LATENCY_OFFSET,
       g_param_spec_int ("latency-offset", "Latency offset",
           "A latency offset subtracted from timestamps set on buffers (in ns)",
@@ -286,6 +290,21 @@ gst_v4lsrc_init (GstV4lSrc * v4lsrc)
   v4lsrc->fps_list = NULL;
 }
 
+static gint all_palettes[] = {
+  VIDEO_PALETTE_YUV422,
+  VIDEO_PALETTE_YUV420P,
+  VIDEO_PALETTE_UYVY,
+  VIDEO_PALETTE_YUV411P,
+  VIDEO_PALETTE_YUV422P,
+  VIDEO_PALETTE_YUV410P,
+  VIDEO_PALETTE_YUV411,
+  VIDEO_PALETTE_RGB555,
+  VIDEO_PALETTE_RGB565,
+  VIDEO_PALETTE_RGB24,
+  VIDEO_PALETTE_RGB32,
+  -1
+};
+
 static void
 gst_v4lsrc_open (GstElement * element, const gchar * device)
 {
@@ -293,31 +312,17 @@ gst_v4lsrc_open (GstElement * element, const gchar * device)
   GstV4lElement *v4l = GST_V4LELEMENT (v4lsrc);
   gint width = v4l->vcap.minwidth;
   gint height = v4l->vcap.minheight;
-
-  int palette[] = {
-    VIDEO_PALETTE_YUV422,
-    VIDEO_PALETTE_YUV420P,
-    VIDEO_PALETTE_UYVY,
-    VIDEO_PALETTE_YUV411P,
-    VIDEO_PALETTE_YUV422P,
-    VIDEO_PALETTE_YUV410P,
-    VIDEO_PALETTE_YUV411,
-    VIDEO_PALETTE_RGB555,
-    VIDEO_PALETTE_RGB565,
-    VIDEO_PALETTE_RGB24,
-    VIDEO_PALETTE_RGB32,
-    -1
-  }, i;
+  gint i;
 
   GST_DEBUG_OBJECT (v4lsrc, "Checking supported palettes");
-  for (i = 0; palette[i] != -1; i++) {
+  for (i = 0; all_palettes[i] != -1; i++) {
     /* try palette out */
-    if (!gst_v4lsrc_try_capture (v4lsrc, width, height, palette[i]))
+    if (!gst_v4lsrc_try_capture (v4lsrc, width, height, all_palettes[i]))
       continue;
     GST_DEBUG_OBJECT (v4lsrc, "Added palette %d (%s) to supported list",
-        palette[i], gst_v4lsrc_palette_name (palette[i]));
+        all_palettes[i], gst_v4lsrc_palette_name (all_palettes[i]));
     v4lsrc->colourspaces = g_list_append (v4lsrc->colourspaces,
-        GINT_TO_POINTER (palette[i]));
+        GINT_TO_POINTER (all_palettes[i]));
   }
   GST_DEBUG_OBJECT (v4lsrc, "%d palette(s) supported",
       g_list_length (v4lsrc->colourspaces));
@@ -552,6 +557,20 @@ gst_v4lsrc_palette_to_caps (int palette)
   return caps;
 }
 
+static GstCaps *
+gst_v4lsrc_get_any_caps ()
+{
+  gint i;
+  GstCaps *caps = gst_caps_new_empty (), *one;
+
+  for (i = 0; all_palettes[i] != -1; i++) {
+    one = gst_v4lsrc_palette_to_caps (all_palettes[i]);
+    gst_caps_append (caps, one);
+  }
+
+  return caps;
+}
+
 static GstPadLinkReturn
 gst_v4lsrc_src_link (GstPad * pad, const GstCaps * vscapslist)
 {
@@ -764,11 +783,11 @@ gst_v4lsrc_getcaps (GstPad * pad)
   GList *item;
 
   if (!GST_V4L_IS_OPEN (GST_V4LELEMENT (v4lsrc))) {
-    return gst_caps_new_any ();
+    return gst_v4lsrc_get_any_caps ();
   }
   if (!v4lsrc->autoprobe) {
     /* FIXME: query current caps and return those, with _any appended */
-    return gst_caps_new_any ();
+    return gst_v4lsrc_get_any_caps ();
   }
   fps = gst_v4lsrc_get_fps (v4lsrc);
 

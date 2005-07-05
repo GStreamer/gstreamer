@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-06-19 11:41+0200\n"
+"POT-Creation-Date: 2005-07-05 13:29+0200\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -69,21 +69,21 @@ msgstr ""
 msgid "CDDA discid for metadata retrieval"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoia.c:683 ext/cdparanoia/gstcdparanoia.c:699
+#: ext/cdparanoia/gstcdparanoia.c:682 ext/cdparanoia/gstcdparanoia.c:698
 msgid "Could not open CD device for reading."
 msgstr "Не могу да отворим ЦД уређај ради читања."
 
-#: ext/gnomevfs/gstgnomevfssink.c:432
+#: ext/gnomevfs/gstgnomevfssink.c:430
 #, fuzzy, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Не могу да отворим ВСД датотеку „%s“ ради уписа."
 
-#: ext/gnomevfs/gstgnomevfssink.c:439
+#: ext/gnomevfs/gstgnomevfssink.c:437
 #, fuzzy
 msgid "No filename given"
 msgstr "Име датотеке није задато."
 
-#: ext/gnomevfs/gstgnomevfssink.c:467
+#: ext/gnomevfs/gstgnomevfssink.c:465
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Не могу да затворим ВСД датотеку „%s“."

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-06-19 11:41+0200\n"
+"POT-Creation-Date: 2005-07-05 13:29+0200\n"
 "PO-Revision-Date: 2005-01-22 17:17+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net> \n"
@@ -69,20 +69,20 @@ msgstr ""
 msgid "CDDA discid for metadata retrieval"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoia.c:683 ext/cdparanoia/gstcdparanoia.c:699
+#: ext/cdparanoia/gstcdparanoia.c:682 ext/cdparanoia/gstcdparanoia.c:698
 msgid "Could not open CD device for reading."
 msgstr "Đã không mở được thiết bị CD để đọc"
 
-#: ext/gnomevfs/gstgnomevfssink.c:432
+#: ext/gnomevfs/gstgnomevfssink.c:430
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Đã không mở được tập tin vfs \"%s\" để ghi: %s."
 
-#: ext/gnomevfs/gstgnomevfssink.c:439
+#: ext/gnomevfs/gstgnomevfssink.c:437
 msgid "No filename given"
 msgstr "Chưa nhập tên tập tin "
 
-#: ext/gnomevfs/gstgnomevfssink.c:467
+#: ext/gnomevfs/gstgnomevfssink.c:465
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Đã không đóng được tập tin vfs \"%s\"."

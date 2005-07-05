@@ -66,7 +66,8 @@ gst_v4l_xoverlay_open (GstV4lElement * v4lelement)
   struct stat s;
   GstV4lXv *v4lxv;
   const gchar *name = g_getenv ("DISPLAY");
-  int ver, rel, req, ev, err, anum, i, id = 0, first_id = 0, min;
+  unsigned int ver, rel, req, ev, err, anum;
+  int i, id = 0, first_id = 0, min;
   XvAdaptorInfo *ai;
   Display *dpy;
 

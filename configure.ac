@@ -903,6 +903,7 @@ gst/volume/Makefile
 sys/Makefile
 sys/ximage/Makefile
 sys/xvimage/Makefile
+sys/v4l/Makefile
 ext/Makefile
 ext/alsa/Makefile
 ext/cdparanoia/Makefile
