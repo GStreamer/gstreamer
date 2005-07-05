@@ -3,6 +3,7 @@
 	* configure.ac:
 	* Makefile.am:
 	* gst/Makefile.am:
+	* examples/Makefile.am:
 	* testsuite/common.py:
 	gst.play is gone in 0.9...
 	
