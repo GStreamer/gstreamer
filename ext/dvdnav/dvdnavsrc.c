@@ -447,7 +447,6 @@ dvdnavsrc_set_property (GObject * object, guint prop_id,
 {
   DVDNavSrc *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_DVDNAVSRC (object));
 
   src = DVDNAVSRC (object);
@@ -514,7 +513,6 @@ dvdnavsrc_get_property (GObject * object, guint prop_id,
   DVDNavSrc *src;
   const char *title_string;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_DVDNAVSRC (object));
 
   src = DVDNAVSRC (object);

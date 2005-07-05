@@ -275,7 +275,6 @@ dvdreadsrc_set_property (GObject * object, guint prop_id, const GValue * value,
   DVDReadSrc *src;
   DVDReadSrcPrivate *priv;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_DVDREADSRC (object));
 
   src = DVDREADSRC (object);
@@ -320,7 +319,6 @@ dvdreadsrc_get_property (GObject * object, guint prop_id, GValue * value,
   DVDReadSrc *src;
   DVDReadSrcPrivate *priv;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_DVDREADSRC (object));
 
   src = DVDREADSRC (object);

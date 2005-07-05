@@ -559,7 +559,6 @@ gst_a52dec_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstA52Dec *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_A52DEC (object));
   src = GST_A52DEC (object);
 
@@ -579,7 +578,6 @@ gst_a52dec_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstA52Dec *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_A52DEC (object));
   src = GST_A52DEC (object);
 

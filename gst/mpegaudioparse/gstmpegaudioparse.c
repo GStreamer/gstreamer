@@ -523,7 +523,6 @@ gst_mp3parse_set_property (GObject * object, guint prop_id,
 {
   GstMPEGAudioParse *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_MP3PARSE (object));
   src = GST_MP3PARSE (object);
 
@@ -542,7 +541,6 @@ gst_mp3parse_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstMPEGAudioParse *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_MP3PARSE (object));
   src = GST_MP3PARSE (object);
 

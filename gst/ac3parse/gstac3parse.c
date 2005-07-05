@@ -383,7 +383,6 @@ gst_ac3parse_set_property (GObject * object, guint prop_id,
 {
   GstAc3Parse *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_AC3PARSE (object));
   src = GST_AC3PARSE (object);
 
@@ -402,7 +401,6 @@ gst_ac3parse_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstAc3Parse *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_AC3PARSE (object));
   src = GST_AC3PARSE (object);
 

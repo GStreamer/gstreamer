@@ -1536,7 +1536,6 @@ gst_mpeg2dec_set_property (GObject * object, guint prop_id,
 {
   GstMpeg2dec *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_MPEG2DEC (object));
   src = GST_MPEG2DEC (object);
 
@@ -1552,7 +1551,6 @@ gst_mpeg2dec_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstMpeg2dec *mpeg2dec;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_MPEG2DEC (object));
   mpeg2dec = GST_MPEG2DEC (object);
 

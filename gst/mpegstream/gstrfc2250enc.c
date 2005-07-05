@@ -328,7 +328,6 @@ gst_rfc2250_enc_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstRFC2250Enc *rfc2250_enc;
 
-  /* it's not null if we got it, but it might not be ours */
   rfc2250_enc = GST_RFC2250_ENC (object);
 
   switch (prop_id) {
