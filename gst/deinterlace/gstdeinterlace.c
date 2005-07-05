@@ -346,7 +346,6 @@ gst_deinterlace_set_property (GObject * object, guint prop_id,
 {
   GstDeInterlace *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_DEINTERLACE (object));
 
   filter = GST_DEINTERLACE (object);
@@ -375,7 +374,6 @@ gst_deinterlace_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstDeInterlace *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_DEINTERLACE (object));
 
   filter = GST_DEINTERLACE (object);

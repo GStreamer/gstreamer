@@ -355,7 +355,6 @@ gst_tarkinenc_get_property (GObject * object, guint prop_id, GValue * value,
 {
   TarkinEnc *tarkinenc;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_TARKINENC (object));
 
   tarkinenc = GST_TARKINENC (object);
@@ -381,7 +380,6 @@ gst_tarkinenc_set_property (GObject * object, guint prop_id,
 {
   TarkinEnc *tarkinenc;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_TARKINENC (object));
 
   tarkinenc = GST_TARKINENC (object);

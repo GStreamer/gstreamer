@@ -251,7 +251,6 @@ gst_afsrc_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstAFSrc *src;
 
-  /* it's not null if we got it, but it might not be ours */
   src = GST_AFSRC (object);
 
   switch (prop_id) {
@@ -271,7 +270,6 @@ gst_afsrc_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstAFSrc *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_AFSRC (object));
 
   src = GST_AFSRC (object);

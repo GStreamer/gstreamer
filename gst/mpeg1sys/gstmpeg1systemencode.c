@@ -562,7 +562,6 @@ gst_system_encode_set_property (GObject * object, guint prop_id,
 {
   GstMPEG1SystemEncode *system_encode;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_SYSTEM_ENCODE (object));
   system_encode = GST_SYSTEM_ENCODE (object);
 
@@ -579,7 +578,6 @@ gst_system_encode_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstMPEG1SystemEncode *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_SYSTEM_ENCODE (object));
   src = GST_SYSTEM_ENCODE (object);
 

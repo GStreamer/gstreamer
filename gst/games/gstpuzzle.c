@@ -444,7 +444,6 @@ gst_puzzle_set_property (GObject * object, guint prop_id,
 {
   GstPuzzle *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_PUZZLE (object));
   src = GST_PUZZLE (object);
 
@@ -470,7 +469,6 @@ gst_puzzle_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstPuzzle *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_PUZZLE (object));
   src = GST_PUZZLE (object);
 

@@ -299,7 +299,6 @@ gst_afparse_set_property (GObject * object, guint prop_id,
 {
   GstAFParse *afparse;
 
-  /* it's not null if we got it, but it might not be ours */
   afparse = GST_AFPARSE (object);
 
   switch (prop_id) {

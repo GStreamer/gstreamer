@@ -305,7 +305,6 @@ gst_musicbrainz_set_property (GObject * object, guint prop_id,
 {
   GstMusicBrainz *musicbrainz;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_MUSICBRAINZ (object));
 
   musicbrainz = GST_MUSICBRAINZ (object);
@@ -335,7 +334,6 @@ gst_musicbrainz_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstMusicBrainz *musicbrainz;
 
-  /* it's not null if we got it, but it might not be ours */
   musicbrainz = GST_MUSICBRAINZ (object);
 
   switch (prop_id) {

@@ -342,7 +342,6 @@ gst_nassink_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstNassink *nassink;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_NASSINK (object));
   nassink = GST_NASSINK (object);
 

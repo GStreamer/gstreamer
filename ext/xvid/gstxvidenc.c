@@ -422,7 +422,6 @@ gst_xvidenc_set_property (GObject * object,
 {
   GstXvidEnc *xvidenc;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_XVIDENC (object));
   xvidenc = GST_XVIDENC (object);
 
@@ -452,7 +451,6 @@ gst_xvidenc_get_property (GObject * object,
 {
   GstXvidEnc *xvidenc;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_XVIDENC (object));
   xvidenc = GST_XVIDENC (object);
 

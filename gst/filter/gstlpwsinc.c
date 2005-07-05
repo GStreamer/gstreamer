@@ -292,7 +292,6 @@ gst_lpwsinc_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstLPWSinc *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_LPWSINC (object));
 
   filter = GST_LPWSINC (object);
@@ -315,7 +314,6 @@ gst_lpwsinc_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstLPWSinc *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_LPWSINC (object));
 
   filter = GST_LPWSINC (object);

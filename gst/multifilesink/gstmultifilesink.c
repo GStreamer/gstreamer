@@ -238,7 +238,6 @@ gst_multifilesink_set_property (GObject * object, guint prop_id,
 {
   GstMultiFileSink *sink;
 
-  /* it's not null if we got it, but it might not be ours */
   sink = GST_MULTIFILESINK (object);
 
   switch (prop_id) {
@@ -258,7 +257,6 @@ gst_multifilesink_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstMultiFileSink *sink;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_MULTIFILESINK (object));
 
   sink = GST_MULTIFILESINK (object);

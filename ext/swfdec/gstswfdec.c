@@ -570,7 +570,6 @@ gst_swfdec_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstSwfdec *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_SWFDEC (object));
   src = GST_SWFDEC (object);
 
@@ -586,7 +585,6 @@ gst_swfdec_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstSwfdec *swfdec;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_SWFDEC (object));
   swfdec = GST_SWFDEC (object);
 

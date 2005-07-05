@@ -242,7 +242,6 @@ dxr3audiosink_set_property (GObject * object, guint prop_id,
 {
   Dxr3AudioSink *sink;
 
-  /* it's not null if we got it, but it might not be ours */
   sink = DXR3AUDIOSINK (object);
 
   switch (prop_id) {
@@ -267,7 +266,6 @@ dxr3audiosink_get_property (GObject * object, guint prop_id,
 {
   Dxr3AudioSink *sink;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_DXR3AUDIOSINK (object));
 
   sink = DXR3AUDIOSINK (object);

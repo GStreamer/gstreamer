@@ -452,7 +452,6 @@ gst_divxenc_set_property (GObject * object,
 {
   GstDivxEnc *divxenc;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_DIVXENC (object));
   divxenc = GST_DIVXENC (object);
 
@@ -479,7 +478,6 @@ gst_divxenc_get_property (GObject * object,
 {
   GstDivxEnc *divxenc;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_DIVXENC (object));
   divxenc = GST_DIVXENC (object);
 

@@ -399,7 +399,6 @@ gst_xsharpen_set_property (GObject * object, guint prop_id,
 {
   GstXsharpen *xsharpen;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_XSHARPEN (object));
 
   xsharpen = GST_XSHARPEN (object);
@@ -421,7 +420,6 @@ gst_xsharpen_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstXsharpen *xsharpen;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_XSHARPEN (object));
 
   xsharpen = GST_XSHARPEN (object);

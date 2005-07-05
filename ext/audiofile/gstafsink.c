@@ -209,7 +209,6 @@ gst_afsink_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstAFSink *sink;
 
-  /* it's not null if we got it, but it might not be ours */
   sink = GST_AFSINK (object);
 
   switch (prop_id) {
@@ -249,7 +248,6 @@ gst_afsink_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstAFSink *sink;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_AFSINK (object));
 
   sink = GST_AFSINK (object);

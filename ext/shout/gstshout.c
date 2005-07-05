@@ -313,7 +313,6 @@ gst_icecastsend_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstIcecastSend *icecastsend;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_ICECASTSEND (object));
   icecastsend = GST_ICECASTSEND (object);
 

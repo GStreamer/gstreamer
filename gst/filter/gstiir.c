@@ -226,7 +226,6 @@ gst_iir_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstIIR *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_IIR (object));
 
   filter = GST_IIR (object);
@@ -255,7 +254,6 @@ gst_iir_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstIIR *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_IIR (object));
 
   filter = GST_IIR (object);

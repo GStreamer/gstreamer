@@ -225,7 +225,6 @@ dxr3spusink_set_property (GObject * object, guint prop_id,
 {
   Dxr3SpuSink *sink;
 
-  /* it's not null if we got it, but it might not be ours */
   sink = DXR3SPUSINK (object);
 
   switch (prop_id) {
@@ -241,7 +240,6 @@ dxr3spusink_get_property (GObject * object, guint prop_id,
 {
   Dxr3SpuSink *sink;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_DXR3SPUSINK (object));
 
   sink = DXR3SPUSINK (object);

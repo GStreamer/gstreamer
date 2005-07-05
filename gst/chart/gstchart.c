@@ -364,7 +364,6 @@ gst_chart_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstChart *chart;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_CHART (object));
   chart = GST_CHART (object);
 
@@ -380,7 +379,6 @@ gst_chart_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstChart *chart;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_CHART (object));
   chart = GST_CHART (object);
 

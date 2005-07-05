@@ -211,7 +211,6 @@ gst_vcdsrc_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstVCDSrc *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_VCDSRC (object));
   src = GST_VCDSRC (object);
 
@@ -251,7 +250,6 @@ gst_vcdsrc_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstVCDSrc *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_VCDSRC (object));
   src = GST_VCDSRC (object);
 

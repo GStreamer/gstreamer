@@ -380,7 +380,6 @@ static void
 {
   Audioresample *audioresample;
 
-  /* it's not null if we got it, but it might not be ours */
     g_return_if_fail (GST_IS_AUDIORESAMPLE (object));
     audioresample = GST_AUDIORESAMPLE (object);
 

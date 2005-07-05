@@ -227,7 +227,6 @@ dxr3videosink_set_property (GObject * object, guint prop_id,
 {
   Dxr3VideoSink *sink;
 
-  /* it's not null if we got it, but it might not be ours */
   sink = DXR3VIDEOSINK (object);
 
   switch (prop_id) {
@@ -243,7 +242,6 @@ dxr3videosink_get_property (GObject * object, guint prop_id,
 {
   Dxr3VideoSink *sink;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_DXR3VIDEOSINK (object));
 
   sink = DXR3VIDEOSINK (object);

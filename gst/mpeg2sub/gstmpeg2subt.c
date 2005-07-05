@@ -1016,7 +1016,6 @@ gst_mpeg2subt_set_property (GObject * object, guint prop_id,
 {
   GstMpeg2Subt *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_MPEG2SUBT (object));
   src = GST_MPEG2SUBT (object);
 
@@ -1032,7 +1031,6 @@ gst_mpeg2subt_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstMpeg2Subt *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_MPEG2SUBT (object));
   src = GST_MPEG2SUBT (object);
 

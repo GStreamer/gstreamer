@@ -221,7 +221,6 @@ gst_artsdsink_set_property (GObject * object, guint prop_id,
 {
   GstArtsdsink *artsdsink;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_ARTSDSINK (object));
   artsdsink = GST_ARTSDSINK (object);
 
@@ -248,7 +247,6 @@ gst_artsdsink_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstArtsdsink *artsdsink;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_ARTSDSINK (object));
   artsdsink = GST_ARTSDSINK (object);
 

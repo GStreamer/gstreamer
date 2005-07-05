@@ -330,7 +330,6 @@ gst_vbidec_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstVBIDec *vbidec;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_VBIDEC (object));
   vbidec = GST_VBIDEC (object);
 
@@ -357,7 +356,6 @@ gst_vbidec_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstVBIDec *vbidec;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_VBIDEC (object));
   vbidec = GST_VBIDEC (object);
 
