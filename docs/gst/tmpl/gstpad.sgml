@@ -822,6 +822,7 @@ Checks if the pad is a sink pad.
 @pad: 
 @handler: 
 @data: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_pad_add_buffer_probe ##### -->
@@ -832,6 +833,7 @@ Checks if the pad is a sink pad.
 @pad: 
 @handler: 
 @data: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_pad_add_event_probe ##### -->
@@ -842,6 +844,7 @@ Checks if the pad is a sink pad.
 @pad: 
 @handler: 
 @data: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_pad_remove_data_probe ##### -->

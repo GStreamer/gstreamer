@@ -1367,7 +1367,8 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink)
 
   srccaps = gst_pad_get_caps_unlocked (src);
   sinkcaps = gst_pad_get_caps_unlocked (sink);
-  GST_CAT_DEBUG (GST_CAT_CAPS, "got caps %p and %p", srccaps, sinkcaps);
+  GST_CAT_DEBUG (GST_CAT_CAPS, " src caps %" GST_PTR_FORMAT, srccaps);
+  GST_CAT_DEBUG (GST_CAT_CAPS, "sink caps %" GST_PTR_FORMAT, sinkcaps);
 
   if (srccaps && sinkcaps) {
     GstCaps *icaps;

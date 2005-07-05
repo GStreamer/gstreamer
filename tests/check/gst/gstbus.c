@@ -40,7 +40,7 @@ pound_bus_with_messages (gpointer data)
 
     s = gst_structure_new ("test_message",
         "thread_id", G_TYPE_INT, thread_id, "msg_id", G_TYPE_INT, i, NULL);
-    m = gst_message_new_application (s);
+    m = gst_message_new_application (NULL, s);
     gst_bus_post (test_bus, m);
   }
   return NULL;

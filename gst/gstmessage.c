@@ -310,6 +310,7 @@ gst_message_new_state_changed (GstObject * src, GstElementState old,
 
 /**
  * gst_message_new_application:
+ * @src: The object originating the message.
  * @structure: The structure for the message. The message will take ownership of
  * the structure.
  *
@@ -321,13 +322,13 @@ gst_message_new_state_changed (GstObject * src, GstElementState old,
  * MT safe.
  */
 GstMessage *
-gst_message_new_application (GstStructure * structure)
+gst_message_new_application (GstObject * src, GstStructure * structure)
 {
   GstMessage *message;
 
   g_return_val_if_fail (GST_IS_STRUCTURE (structure), NULL);
 
-  message = gst_message_new (GST_MESSAGE_APPLICATION, NULL);
+  message = gst_message_new (GST_MESSAGE_APPLICATION, src);
   gst_structure_set_parent_refcount (structure, &message->mini_object.refcount);
   message->structure = structure;
 

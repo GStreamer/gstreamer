@@ -180,14 +180,21 @@ static GstCaps *
 gst_base_transform_transform_caps (GstBaseTransform * trans, GstPad * pad,
     GstCaps * caps)
 {
+  GstCaps *ret;
   GstBaseTransformClass *klass;
 
   klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
+  GST_DEBUG_OBJECT (trans, "from: %" GST_PTR_FORMAT, caps);
+
   if (klass->transform_caps)
-    return klass->transform_caps (trans, pad, caps);
+    ret = klass->transform_caps (trans, pad, caps);
   else
-    return gst_caps_ref (caps);
+    ret = gst_caps_ref (caps);
+
+  GST_DEBUG_OBJECT (trans, "to:   %" GST_PTR_FORMAT, ret);
+
+  return ret;
 }
 
 static GstCaps *
@@ -207,10 +214,13 @@ gst_base_transform_getcaps (GstPad * pad)
   if (caps) {
     GstCaps *temp;
 
-    temp = gst_base_transform_transform_caps (trans, otherpad, caps);
+    temp = gst_caps_intersect (caps, gst_pad_get_pad_template_caps (otherpad));
     gst_caps_unref (caps);
-    caps = gst_caps_intersect (temp, gst_pad_get_pad_template_caps (pad));
+    caps = gst_base_transform_transform_caps (trans, otherpad, temp);
     gst_caps_unref (temp);
+    temp = gst_caps_intersect (caps, gst_pad_get_pad_template_caps (pad));
+    gst_caps_unref (caps);
+    caps = temp;
   } else {
     /* no peer, our padtemplate is enough then */
     caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
@@ -224,9 +234,9 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstBaseTransform *trans;
   GstBaseTransformClass *klass;
-  GstStructure *structure;
   GstPad *otherpad, *otherpeer;
-  gboolean ret = TRUE;
+  GstCaps *othercaps = NULL;
+  gboolean ret = FALSE;
 
   trans = GST_BASE_TRANSFORM (GST_PAD_PARENT (pad));
   klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
@@ -234,76 +244,87 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
   otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
   otherpeer = gst_pad_get_peer (otherpad);
 
-  if (GST_PAD_IS_IN_SETCAPS (otherpad))
+  if (GST_PAD_IS_IN_SETCAPS (otherpad)) {
+    ret = TRUE;
     goto done;
+  }
 
-  if (otherpeer == NULL || gst_pad_accept_caps (otherpeer, caps)) {
+  /* see how we can transform the input caps */
+  othercaps = gst_base_transform_transform_caps (trans, pad, caps);
 
-    /* the peer accepts the caps as they are */
-    gst_pad_set_caps (otherpad, caps);
-
-    /* let the element know */
-    if (klass->set_caps)
-      klass->set_caps (trans, caps, caps);
-
-    ret = TRUE;
-  } else {
-    GstCaps *peercaps;
-    GstCaps *intersect;
-    GstCaps *transform = NULL;
-    GstCaps *othercaps;
-
+  if (!othercaps) {
     ret = FALSE;
+    goto done;
+  }
 
-    /* other pad has a peer, so we have to figure out how to do the conversion
-     */
-    /* see how we can transform the input caps */
-    transform = gst_base_transform_transform_caps (trans, pad, caps);
+  if (!gst_caps_is_fixed (othercaps)) {
+    GstCaps *temp;
 
-    if (!transform)
-      goto done;
-
-    /* see what the peer can do */
-    peercaps = gst_pad_get_caps (otherpeer);
-
-    GST_DEBUG ("icaps %" GST_PTR_FORMAT, peercaps);
-    GST_DEBUG ("transform %" GST_PTR_FORMAT, transform);
-
-    /* filter against our possibilities */
-    intersect = gst_caps_intersect (peercaps, transform);
-    gst_caps_unref (peercaps);
-    gst_caps_unref (transform);
-
-    GST_DEBUG ("intersect %" GST_PTR_FORMAT, intersect);
-
-    /* take first possibility */
-    othercaps = gst_caps_copy_nth (intersect, 0);
-    gst_caps_unref (intersect);
-    structure = gst_caps_get_structure (othercaps, 0);
-
-    /* and fixate if necessary */
-    gst_pad_fixate_caps (otherpad, othercaps);
-
-    g_return_val_if_fail (gst_caps_is_fixed (othercaps), FALSE);
-
-    gst_pad_set_caps (otherpad, othercaps);
-
-    /* let the element know */
-    if (klass->set_caps) {
-      if (pad == trans->sinkpad) {
-        klass->set_caps (trans, caps, othercaps);
-      } else {
-        klass->set_caps (trans, othercaps, caps);
+    temp = gst_caps_intersect (othercaps, caps);
+    if (temp) {
+      /* try passthrough. we know it's fixed, because caps is fixed */
+      if (gst_pad_accept_caps (otherpeer, caps)) {
+        gst_caps_unref (othercaps);
+        othercaps = gst_caps_ref (caps);
+        /* will fall though. calls accept_caps again, should fix that. */
       }
+      gst_caps_unref (temp);
     }
+  }
 
-    ret = TRUE;
+  if (!gst_caps_is_fixed (othercaps) && otherpeer) {
+    /* intersect against what the peer can do */
+    if (otherpeer) {
+      GstCaps *peercaps;
+      GstCaps *intersect;
+
+      peercaps = gst_pad_get_caps (otherpeer);
+      intersect = gst_caps_intersect (peercaps, othercaps);
+      gst_caps_unref (peercaps);
+      gst_caps_unref (othercaps);
+      othercaps = intersect;
+
+      GST_DEBUG ("filtering against peer yields %" GST_PTR_FORMAT, othercaps);
+    }
+  }
+
+  if (!gst_caps_is_fixed (othercaps)) {
+    GstCaps *temp;
+
+    /* take first possibility and fixate if necessary */
+    temp = gst_caps_copy_nth (othercaps, 0);
+    gst_caps_unref (othercaps);
+    othercaps = temp;
+    gst_pad_fixate_caps (otherpad, othercaps);
+  }
+
+  g_return_val_if_fail (gst_caps_is_fixed (othercaps), FALSE);
+
+  if (otherpeer && !gst_pad_accept_caps (otherpeer, othercaps)) {
+    GST_DEBUG ("FAILED to get peer of %" GST_PTR_FORMAT
+        " to accept %" GST_PTR_FORMAT, otherpad, othercaps);
+    ret = FALSE;
+    goto done;
+  }
+
+  /* we know this will work, we implement the setcaps */
+  gst_pad_set_caps (otherpad, othercaps);
+
+  /* success, let the element know */
+  if (klass->set_caps) {
+    if (pad == trans->sinkpad)
+      ret = klass->set_caps (trans, caps, othercaps);
+    else
+      ret = klass->set_caps (trans, othercaps, caps);
   }
 
 done:
 
   if (otherpeer)
     gst_object_unref (otherpeer);
+
+  if (othercaps)
+    gst_caps_unref (othercaps);
 
   return ret;
 }

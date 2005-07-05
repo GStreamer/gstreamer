@@ -1,3 +1,25 @@
+2005-07-05  Andy Wingo  <wingo@pobox.com>
+
+	* check/gst/gstbus.c (pound_bus_with_messages): 
+	* check/gst/gstmessage.c (START_TEST): 
+	* check/pipelines/simple_launch_lines.c (got_handoff): Application
+	message API change.
+
+	* gst/base/gstbasetransform.c (gst_base_transform_setcaps): More
+	logic weaks here: always run transform_caps, trying passthrough
+	operation only if the original caps intersects with the transform.
+
+	* gst/gstpad.c (gst_pad_link_check_compatible_unlocked): Debug
+	source and sink caps.
+
+	* gst/base/gstbasetransform.c (gst_base_transform_getcaps):
+	Intersect the peer caps with the pad template before going into
+	transform_caps.
+	(gst_base_transform_transform_caps): More debugging.
+
+	* gst/gstmessage.h (gst_message_new_application): Take a GstObject
+	src argument.
+
 2005-07-04  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstutils.c:

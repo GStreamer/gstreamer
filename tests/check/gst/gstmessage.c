@@ -148,7 +148,7 @@ START_TEST (test_parsing)
         "some_int", G_TYPE_INT, 10,
         "a_double", G_TYPE_DOUBLE, (gdouble) 1.8, NULL);
     fail_if (structure == NULL);
-    message = gst_message_new_application (structure);
+    message = gst_message_new_application (NULL, structure);
     fail_if (message == NULL);
     struc = gst_message_get_structure (message);
     fail_if (struc == NULL);
