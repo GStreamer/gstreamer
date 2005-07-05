@@ -110,11 +110,7 @@ coverage-report.txt:
 test-coverage-report.html:
 	mkdir -p ./coverage
 	lcov --directory . --zerocounters
-	$(MAKE) check
-	## workaround for lcov not liking libtool
-	for file in `find . -name "*.da" | grep "\.libs" ` ;do \
-		mv $$file `echo $$file | sed -e 's/\/\.libs//'`; \
-	done
+	-$(MAKE) check
 	lcov --directory . --capture --output-file ./coverage/$(PACKAGE).info
 	genhtml -o ./coverage --num-spaces 2 ./coverage/$(PACKAGE).info
 	
