@@ -286,7 +286,6 @@ gst_filesrc_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstFileSrc *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_FILESRC (object));
 
   src = GST_FILESRC (object);
@@ -321,7 +320,6 @@ gst_filesrc_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstFileSrc *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_FILESRC (object));
 
   src = GST_FILESRC (object);

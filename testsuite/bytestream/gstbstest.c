@@ -300,7 +300,6 @@ gst_bstest_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstBsTest *bstest;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_BSTEST (object));
 
   bstest = GST_BSTEST (object);
@@ -348,7 +347,6 @@ gst_bstest_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstBsTest *bstest;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_BSTEST (object));
 
   bstest = GST_BSTEST (object);

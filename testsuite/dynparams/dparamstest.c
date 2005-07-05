@@ -171,7 +171,6 @@ gst_dptest_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstDpTest *dptest;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_DPTEST (object));
 
   dptest = GST_DPTEST (object);

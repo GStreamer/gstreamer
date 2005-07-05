@@ -188,7 +188,6 @@ gst_filesink_set_property (GObject * object, guint prop_id,
 {
   GstFileSink *sink;
 
-  /* it's not null if we got it, but it might not be ours */
   sink = GST_FILESINK (object);
 
   switch (prop_id) {
@@ -207,7 +206,6 @@ gst_filesink_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstFileSink *sink;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_FILESINK (object));
 
   sink = GST_FILESINK (object);

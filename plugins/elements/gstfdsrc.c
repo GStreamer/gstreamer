@@ -174,7 +174,6 @@ gst_fdsrc_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstFdSrc *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_FDSRC (object));
 
   src = GST_FDSRC (object);
@@ -201,7 +200,6 @@ gst_fdsrc_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstFdSrc *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_FDSRC (object));
 
   src = GST_FDSRC (object);

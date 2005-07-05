@@ -451,7 +451,6 @@ gst_fakesrc_get_property (GObject * object, guint prop_id, GValue * value,
   GstFakeSrc *src;
   GstBaseSrc *basesrc;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_FAKESRC (object));
 
   src = GST_FAKESRC (object);

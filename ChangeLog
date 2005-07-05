@@ -1,3 +1,7 @@
+2005-07-05  Andy Wingo  <wingo@pobox.com>
+
+	* gst/elements, testsuite: Null if we got it...
+
 2005-07-05  Wim Taymans  <wim@fluendo.com>
 
 	* configure.ac:

@@ -137,7 +137,6 @@ gst_fdsink_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstFdSink *fdsink;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_FDSINK (object));
 
   fdsink = GST_FDSINK (object);
@@ -157,7 +156,6 @@ gst_fdsink_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstFdSink *fdsink;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_FDSINK (object));
 
   fdsink = GST_FDSINK (object);
