@@ -588,7 +588,6 @@ gst_colorspace_set_property (GObject * object, guint prop_id,
 {
   GstColorspace *space;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_COLORSPACE (object));
   space = GST_COLORSPACE (object);
 
@@ -604,7 +603,6 @@ gst_colorspace_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstColorspace *space;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_COLORSPACE (object));
   space = GST_COLORSPACE (object);
 
