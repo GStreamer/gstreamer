@@ -1,5 +1,13 @@
 2005-07-01  Edward Hervey  <edward@fluendo.com>
 
+	* configure.ac:
+	* Makefile.am:
+	* gst/Makefile.am:
+	* testsuite/common.py:
+	gst.play is gone in 0.9...
+	
+2005-07-01  Edward Hervey  <edward@fluendo.com>
+
 	* gst/gst.defs:
 	* gst/gst.override:
 	Probes are gone...

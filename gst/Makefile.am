@@ -9,17 +9,12 @@ pygstdir = $(pkgpythondir)
 pygst_PYTHON = __init__.py
 
 pygstexecdir = $(pkgpyexecdir)
-pygstexec_LTLIBRARIES = _gst.la $(interface_lib) $(play_lib)
+pygstexec_LTLIBRARIES = _gst.la $(interface_lib)
 
 if BUILD_INTERFACES
 interface_lib = interfaces.la
 else
 interface_lib =
-endif
-if BUILD_PLAY
-play_lib = play.la
-else
-play_lib =
 endif
 
 defs_DATA = gst-types.defs \
@@ -53,18 +48,6 @@ GST_DEFS = gst.defs gst-types.defs gst-extrafuncs.defs
 CLEANFILES = gst.c
 EXTRA_DIST += $(GST_DEFS) $(GST_OVERRIDES)
 gst.c: $(GST_DEFS) $(GST_OVERRIDES) $(GEN_FILES)
-
-# gst-play bindings
-play_la_CFLAGS = $(common_cflags) $(GST_PLAY_CFLAGS) 
-play_la_LIBADD = $(common_libadd) $(GST_PLAY_LIBS)
-play_la_LDFLAGS = $(common_ldflags) -export-symbols-regex initplay
-play_la_SOURCES = playmodule.c
-nodist_play_la_SOURCES = play.c
-PLAY_OVERRIDES = play.override
-PLAY_DEFS = play.defs
-CLEANFILES += play.c
-EXTRA_DIST += $(PLAY_DEFS) $(PLAY_OVERRIDES) 
-play.c: $(PLAY_DEFS) $(PLAY_OVERRIDES) $(GEN_FILES)
 
 # GStreamer interfaces bindings
 interfaces_la_CFLAGS = $(common_cflags) $(GST_INTERFACES_CFLAGS) 

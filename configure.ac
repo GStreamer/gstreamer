@@ -86,22 +86,6 @@ AM_CONDITIONAL(BUILD_INTERFACES, test "x$HAVE_INTERFACES" = "xyes")
 AC_SUBST(GST_INTERFACES_CFLAGS)
 AC_SUBST(GST_INTERFACES_LIBS)
 
-dnl Play
-AC_MSG_CHECKING(for GStreamer play include dir)
-PKG_CHECK_MODULES(GST_PLAY, gstreamer-play-$GST_MAJORMINOR, 
-       	          HAVE_PLAY=yes,HAVE_PLAY=no)
-AM_CONDITIONAL(BUILD_PLAY, test "x$HAVE_PLAY" = "xyes")
-AC_SUBST(GST_PLAY_CFLAGS)
-AC_SUBST(GST_PLAY_LIBS)
-
-dnl Editor
-dnl AC_MSG_CHECKING(for GStreamer editor include dir)
-dnl PKG_CHECK_MODULES(GST_EDITOR, gst-editor-libs >= 0.7.0,
-dnl        	          HAVE_EDITOR=yes,HAVE_EDITOR=no)
-dnl AM_CONDITIONAL(BUILD_EDITOR, test "x$HAVE_EDITOR" = "xyes")
-dnl AC_SUBST(GST_EDITOR_CFLAGS)
-dnl AC_SUBST(GST_EDITOR_LIBS)
-
 BUILD_DOCS=yes
 AC_CHECK_PROG(XMLTO, xmlto, xmlto, no)
 if test "x$XMLTO" = xno ; then
@@ -182,7 +166,6 @@ AC_OUTPUT([
   Makefile
   examples/Makefile
   examples/gst/Makefile
-  examples/gstplay/Makefile
   gst/Makefile
   pkgconfig/Makefile
   pkgconfig/gst-python.pc

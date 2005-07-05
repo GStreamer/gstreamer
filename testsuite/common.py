@@ -50,17 +50,6 @@ except ImportError:
 file = gst.interfaces.__file__
 assert file.startswith(path), 'bad gst.interfaces path: %s' % file
 
-try:
-   import gst.play
-   assert os.path.basename(gst.play.__file__) != path, 'bad path'
-except ImportError:
-   # hack: we import it from our builddir/gst/.libs instead; ugly
-   import play
-   gst.play = play
-   pass
-file = gst.play.__file__
-assert file.startswith(path), 'bad gst.play path: %s' % file
-
 # testhelper needs ltihooks
 import ltihooks
 import testhelper
