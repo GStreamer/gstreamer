@@ -53,11 +53,6 @@
 
 2005-07-05  Andy Wingo  <wingo@pobox.com>
 
-	* Way, way, way too many files:
-	Remove crack comment from the 2000 era.
-
-2005-07-05  Andy Wingo  <wingo@pobox.com>
-
 	* gst/playback/gstplaybasebin.c (fill_buffer):
 	message_new_application fixen.
 
