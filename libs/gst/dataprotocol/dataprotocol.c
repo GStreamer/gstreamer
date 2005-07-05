@@ -103,8 +103,8 @@ gst_dp_dump_byte_array (guint8 * array, guint length)
  *
  * Initialize GStreamer Data Protocol library.
  *
- * Should be called before using these functions; either from source linking
- * to this source file or from plugin_init.
+ * Should be called before using these functions from source linking
+ * to this source file.
  */
 void
 gst_dp_init (void)
@@ -586,18 +586,3 @@ gst_dp_validate_packet (guint header_length, const guint8 * header,
 
   return TRUE;
 }
-
-/*** PLUGIN STUFF ***/
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gst_dp_init ();
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "gstdataprotocol",
-    "a data protocol to serialize buffers, caps and events",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)

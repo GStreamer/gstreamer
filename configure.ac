@@ -731,6 +731,8 @@ pkgconfig/gstreamer-base.pc
 pkgconfig/gstreamer-base-uninstalled.pc
 pkgconfig/gstreamer-control.pc
 pkgconfig/gstreamer-control-uninstalled.pc
+pkgconfig/gstreamer-dataprotocol.pc
+pkgconfig/gstreamer-dataprotocol-uninstalled.pc
 gstreamer.spec,
 echo "$infomessages", infomessages="$infomessages"
 )

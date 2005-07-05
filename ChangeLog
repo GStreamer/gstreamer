@@ -1,3 +1,15 @@
+2005-07-05  Wim Taymans  <wim@fluendo.com>
+
+	* configure.ac:
+	* libs/gst/dataprotocol/Makefile.am:
+	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_validate_packet):
+	* libs/gst/dataprotocol/dataprotocol.h:
+	* pkgconfig/Makefile.am:
+	* pkgconfig/gstreamer-dataprotocol-uninstalled.pc.in:
+	* pkgconfig/gstreamer-dataprotocol.pc.in:
+	Ported dataprotol to 0.9. 
+	Added pkgconfig files.
+
 2005-07-05  Andy Wingo  <wingo@pobox.com>
 
 	* gst/base/gstbasetransform.c (gst_base_transform_setcaps):
