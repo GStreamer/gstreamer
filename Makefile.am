@@ -13,14 +13,14 @@ GCONF_DIR =
 # endif
 
 SUBDIRS = 			\
-	gst sys ext		\
+	gst sys ext gst-libs	\
 	$(GCONF_DIR) 		\
 	m4 common		
 # disabled
 #	$(SUBDIRS_DOCS)
 
 DIST_SUBDIRS = 			\
-	gst sys ext		\
+	gst sys ext gst-libs	\
 	m4 common
 
 # disabled
