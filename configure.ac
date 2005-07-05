@@ -295,6 +295,7 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
+		videofilter \
 		alpha \
 		avi \
 		effectv \
@@ -307,7 +308,6 @@ GST_PLUGINS_ALL="\
 		smpte	\
 		udp     \
 		videobox \
-		videofilter \
                 "
 
 dnl see if we can build C++ plug-ins
