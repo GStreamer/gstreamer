@@ -1,3 +1,11 @@
+2005-07-05  Andy Wingo  <wingo@pobox.com>
+
+	* gst/elements/gstfilesrc.c:
+	* gst/elements/gstfakesrc.c: 
+	* gst/base/gstpushsrc.c:
+	* gst/base/gstbasesrc.h: 
+	* gst/base/gstbasesrc.c: s/BASESRC/BASE_SRC/g.
+	
 2005-07-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* Makefile.am:

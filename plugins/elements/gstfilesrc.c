@@ -157,7 +157,7 @@ _do_init (GType filesrc_type)
   GST_DEBUG_CATEGORY_INIT (gst_filesrc_debug, "filesrc", 0, "filesrc element");
 }
 
-GST_BOILERPLATE_FULL (GstFileSrc, gst_filesrc, GstBaseSrc, GST_TYPE_BASESRC,
+GST_BOILERPLATE_FULL (GstFileSrc, gst_filesrc, GstBaseSrc, GST_TYPE_BASE_SRC,
     _do_init);
 
 static void

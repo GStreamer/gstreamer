@@ -180,7 +180,7 @@ gst_fakesrc_filltype_get_type (void)
 #define _do_init(bla) \
     GST_DEBUG_CATEGORY_INIT (gst_fakesrc_debug, "fakesrc", 0, "fakesrc element");
 
-GST_BOILERPLATE_FULL (GstFakeSrc, gst_fakesrc, GstBaseSrc, GST_TYPE_BASESRC,
+GST_BOILERPLATE_FULL (GstFakeSrc, gst_fakesrc, GstBaseSrc, GST_TYPE_BASE_SRC,
     _do_init);
 
 static void gst_fakesrc_set_property (GObject * object, guint prop_id,
@@ -369,7 +369,7 @@ gst_fakesrc_set_property (GObject * object, guint prop_id, const GValue * value,
   GstBaseSrc *basesrc;
 
   src = GST_FAKESRC (object);
-  basesrc = GST_BASESRC (object);
+  basesrc = GST_BASE_SRC (object);
 
   switch (prop_id) {
     case PROP_OUTPUT:
@@ -428,11 +428,11 @@ gst_fakesrc_set_property (GObject * object, guint prop_id, const GValue * value,
       src->dump = g_value_get_boolean (value);
       break;
     case PROP_HAS_LOOP:
-      g_return_if_fail (!GST_FLAG_IS_SET (object, GST_BASESRC_STARTED));
+      g_return_if_fail (!GST_FLAG_IS_SET (object, GST_BASE_SRC_STARTED));
       src->has_loop = g_value_get_boolean (value);
       break;
     case PROP_HAS_GETRANGE:
-      g_return_if_fail (!GST_FLAG_IS_SET (object, GST_BASESRC_STARTED));
+      g_return_if_fail (!GST_FLAG_IS_SET (object, GST_BASE_SRC_STARTED));
       src->has_getrange = g_value_get_boolean (value);
       break;
     case PROP_IS_LIVE:
@@ -454,7 +454,7 @@ gst_fakesrc_get_property (GObject * object, guint prop_id, GValue * value,
   g_return_if_fail (GST_IS_FAKESRC (object));
 
   src = GST_FAKESRC (object);
-  basesrc = GST_BASESRC (object);
+  basesrc = GST_BASE_SRC (object);
 
   switch (prop_id) {
     case PROP_OUTPUT:

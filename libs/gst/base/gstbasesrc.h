@@ -28,17 +28,17 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_BASESRC		(gst_base_src_get_type())
-#define GST_BASESRC(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASESRC,GstBaseSrc))
-#define GST_BASESRC_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASESRC,GstBaseSrcClass))
-#define GST_BASESRC_GET_CLASS(obj)      (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BASESRC, GstBaseSrcClass))
-#define GST_IS_BASESRC(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASESRC))
-#define GST_IS_BASESRC_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASESRC))
+#define GST_TYPE_BASE_SRC		(gst_base_src_get_type())
+#define GST_BASE_SRC(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_SRC,GstBaseSrc))
+#define GST_BASE_SRC_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASE_SRC,GstBaseSrcClass))
+#define GST_BASE_SRC_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BASE_SRC, GstBaseSrcClass))
+#define GST_IS_BASE_SRC(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_SRC))
+#define GST_IS_BASE_SRC_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_SRC))
 
 typedef enum {
-  GST_BASESRC_STARTED           = GST_ELEMENT_FLAG_LAST,
+  GST_BASE_SRC_STARTED           = GST_ELEMENT_FLAG_LAST,
 
-  GST_BASESRC_FLAG_LAST         = GST_ELEMENT_FLAG_LAST + 2
+  GST_BASE_SRC_FLAG_LAST         = GST_ELEMENT_FLAG_LAST + 2
 } GstBaseSrcFlags;
 
 /* base class for random access sources
@@ -52,13 +52,13 @@ typedef enum {
 typedef struct _GstBaseSrc GstBaseSrc;
 typedef struct _GstBaseSrcClass GstBaseSrcClass;
 
-#define GST_BASESRC_PAD(obj)                  (GST_BASESRC (obj)->srcpad)
+#define GST_BASE_SRC_PAD(obj)                 (GST_BASE_SRC (obj)->srcpad)
 
-#define GST_LIVE_GET_LOCK(elem)               (GST_BASESRC(elem)->live_lock)
+#define GST_LIVE_GET_LOCK(elem)               (GST_BASE_SRC(elem)->live_lock)
 #define GST_LIVE_LOCK(elem)                   g_mutex_lock(GST_LIVE_GET_LOCK(elem))
 #define GST_LIVE_TRYLOCK(elem)                g_mutex_trylock(GST_LIVE_GET_LOCK(elem))
 #define GST_LIVE_UNLOCK(elem)                 g_mutex_unlock(GST_LIVE_GET_LOCK(elem))
-#define GST_LIVE_GET_COND(elem)               (GST_BASESRC(elem)->live_cond)
+#define GST_LIVE_GET_COND(elem)               (GST_BASE_SRC(elem)->live_cond)
 #define GST_LIVE_WAIT(elem)                   g_cond_wait (GST_LIVE_GET_COND (elem), GST_LIVE_GET_LOCK (elem))
 #define GST_LIVE_TIMED_WAIT(elem, timeval)    g_cond_timed_wait (GST_LIVE_GET_COND (elem), GST_LIVE_GET_LOCK (elem),\
 		                                                                timeval)
@@ -146,4 +146,4 @@ gboolean	gst_base_src_is_live	(GstBaseSrc *src);
 
 G_END_DECLS
 
-#endif /* __GST_BASESRC_H__ */
+#endif /* __GST_BASE_SRC_H__ */

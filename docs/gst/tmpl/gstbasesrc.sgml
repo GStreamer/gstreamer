@@ -73,8 +73,8 @@ GstBaseSrc
 
 </para>
 
-@GST_BASESRC_STARTED: 
-@GST_BASESRC_FLAG_LAST: 
+@GST_BASE_SRC_STARTED: 
+@GST_BASE_SRC_FLAG_LAST: 
 
 <!-- ##### FUNCTION gst_base_src_is_live ##### -->
 <para>
@@ -92,13 +92,5 @@ GstBaseSrc
 
 @src: 
 @live: 
-
-
-<!-- ##### MACRO GST_BASESRC_PAD ##### -->
-<para>
-
-</para>
-
-@obj: 
 
 

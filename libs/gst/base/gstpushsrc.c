@@ -71,7 +71,7 @@ gst_pushsrc_get_type (void)
       (GInstanceInitFunc) gst_pushsrc_init,
     };
 
-    pushsrc_type = g_type_register_static (GST_TYPE_BASESRC,
+    pushsrc_type = g_type_register_static (GST_TYPE_BASE_SRC,
         "GstPushSrc", &pushsrc_info, G_TYPE_FLAG_ABSTRACT);
   }
   return pushsrc_type;
@@ -101,7 +101,7 @@ gst_pushsrc_class_init (GstPushSrcClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASESRC);
+  parent_class = g_type_class_ref (GST_TYPE_BASE_SRC);
 
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_pushsrc_create);
 }

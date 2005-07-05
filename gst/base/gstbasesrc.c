@@ -180,7 +180,7 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   basesrc->blocksize = DEFAULT_BLOCKSIZE;
   basesrc->clock_id = NULL;
 
-  GST_FLAG_UNSET (basesrc, GST_BASESRC_STARTED);
+  GST_FLAG_UNSET (basesrc, GST_BASE_SRC_STARTED);
 }
 
 void
@@ -222,7 +222,7 @@ gst_base_src_query (GstPad * pad, GstQuery * query)
   gint64 i64;
   GstBaseSrc *src;
 
-  src = GST_BASESRC (GST_PAD_PARENT (pad));
+  src = GST_BASE_SRC (GST_PAD_PARENT (pad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -384,8 +384,8 @@ gst_base_src_event_handler (GstPad * pad, GstEvent * event)
   GstBaseSrcClass *bclass;
   gboolean result;
 
-  src = GST_BASESRC (GST_PAD_PARENT (pad));
-  bclass = GST_BASESRC_GET_CLASS (src);
+  src = GST_BASE_SRC (GST_PAD_PARENT (pad));
+  bclass = GST_BASE_SRC_GET_CLASS (src);
 
   if (bclass->event)
     result = bclass->event (src, event);
@@ -427,7 +427,7 @@ gst_base_src_set_property (GObject * object, guint prop_id,
 {
   GstBaseSrc *src;
 
-  src = GST_BASESRC (object);
+  src = GST_BASE_SRC (object);
 
   switch (prop_id) {
     case PROP_BLOCKSIZE:
@@ -453,7 +453,7 @@ gst_base_src_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstBaseSrc *src;
 
-  src = GST_BASESRC (object);
+  src = GST_BASE_SRC (object);
 
   switch (prop_id) {
     case PROP_BLOCKSIZE:
@@ -479,8 +479,8 @@ gst_base_src_get_range (GstPad * pad, guint64 offset, guint length,
   GstBaseSrc *src;
   GstBaseSrcClass *bclass;
 
-  src = GST_BASESRC (GST_OBJECT_PARENT (pad));
-  bclass = GST_BASESRC_GET_CLASS (src);
+  src = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
+  bclass = GST_BASE_SRC_GET_CLASS (src);
 
   GST_LIVE_LOCK (src);
   if (src->is_live) {
@@ -492,7 +492,7 @@ gst_base_src_get_range (GstPad * pad, guint64 offset, guint length,
   }
   GST_LIVE_UNLOCK (src);
 
-  if (!GST_FLAG_IS_SET (src, GST_BASESRC_STARTED))
+  if (!GST_FLAG_IS_SET (src, GST_BASE_SRC_STARTED))
     goto not_started;
 
   if (!bclass->create)
@@ -542,9 +542,9 @@ gst_base_src_check_get_range (GstPad * pad)
 {
   GstBaseSrc *src;
 
-  src = GST_BASESRC (GST_OBJECT_PARENT (pad));
+  src = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
 
-  if (!GST_FLAG_IS_SET (src, GST_BASESRC_STARTED)) {
+  if (!GST_FLAG_IS_SET (src, GST_BASE_SRC_STARTED)) {
     gst_base_src_start (src);
     gst_base_src_stop (src);
   }
@@ -559,7 +559,7 @@ gst_base_src_loop (GstPad * pad)
   GstBuffer *buf = NULL;
   GstFlowReturn ret;
 
-  src = GST_BASESRC (GST_OBJECT_PARENT (pad));
+  src = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
 
   ret = gst_base_src_get_range (pad, src->offset, src->blocksize, &buf);
   if (ret != GST_FLOW_OK)
@@ -596,7 +596,7 @@ gst_base_src_unlock (GstBaseSrc * basesrc)
 
   GST_DEBUG ("unlock");
   /* unblock whatever the subclass is doing */
-  bclass = GST_BASESRC_GET_CLASS (basesrc);
+  bclass = GST_BASE_SRC_GET_CLASS (basesrc);
   if (bclass->unlock)
     result = bclass->unlock (basesrc);
 
@@ -619,7 +619,7 @@ gst_base_src_get_size (GstBaseSrc * basesrc, guint64 * size)
   GstBaseSrcClass *bclass;
   gboolean result = FALSE;
 
-  bclass = GST_BASESRC_GET_CLASS (basesrc);
+  bclass = GST_BASE_SRC_GET_CLASS (basesrc);
   if (bclass->get_size)
     result = bclass->get_size (basesrc, size);
 
@@ -634,7 +634,7 @@ gst_base_src_is_seekable (GstBaseSrc * basesrc)
 {
   GstBaseSrcClass *bclass;
 
-  bclass = GST_BASESRC_GET_CLASS (basesrc);
+  bclass = GST_BASE_SRC_GET_CLASS (basesrc);
 
   /* check if we can seek */
   if (bclass->is_seekable)
@@ -651,10 +651,10 @@ gst_base_src_start (GstBaseSrc * basesrc)
   GstBaseSrcClass *bclass;
   gboolean result;
 
-  if (GST_FLAG_IS_SET (basesrc, GST_BASESRC_STARTED))
+  if (GST_FLAG_IS_SET (basesrc, GST_BASE_SRC_STARTED))
     return TRUE;
 
-  bclass = GST_BASESRC_GET_CLASS (basesrc);
+  bclass = GST_BASE_SRC_GET_CLASS (basesrc);
   if (bclass->start)
     result = bclass->start (basesrc);
   else
@@ -663,7 +663,7 @@ gst_base_src_start (GstBaseSrc * basesrc)
   if (!result)
     goto could_not_start;
 
-  GST_FLAG_SET (basesrc, GST_BASESRC_STARTED);
+  GST_FLAG_SET (basesrc, GST_BASE_SRC_STARTED);
 
   /* start in the beginning */
   basesrc->offset = 0;
@@ -713,15 +713,15 @@ gst_base_src_stop (GstBaseSrc * basesrc)
   GstBaseSrcClass *bclass;
   gboolean result = TRUE;
 
-  if (!GST_FLAG_IS_SET (basesrc, GST_BASESRC_STARTED))
+  if (!GST_FLAG_IS_SET (basesrc, GST_BASE_SRC_STARTED))
     return TRUE;
 
-  bclass = GST_BASESRC_GET_CLASS (basesrc);
+  bclass = GST_BASE_SRC_GET_CLASS (basesrc);
   if (bclass->stop)
     result = bclass->stop (basesrc);
 
   if (result)
-    GST_FLAG_UNSET (basesrc, GST_BASESRC_STARTED);
+    GST_FLAG_UNSET (basesrc, GST_BASE_SRC_STARTED);
 
   return result;
 }
@@ -750,7 +750,7 @@ gst_base_src_activate_push (GstPad * pad, gboolean active)
 {
   GstBaseSrc *basesrc;
 
-  basesrc = GST_BASESRC (GST_OBJECT_PARENT (pad));
+  basesrc = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
 
   /* prepare subclass first */
   if (active) {
@@ -774,7 +774,7 @@ gst_base_src_activate_pull (GstPad * pad, gboolean active)
 {
   GstBaseSrc *basesrc;
 
-  basesrc = GST_BASESRC (GST_OBJECT_PARENT (pad));
+  basesrc = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
 
   /* prepare subclass first */
   if (active) {
@@ -806,7 +806,7 @@ gst_base_src_change_state (GstElement * element)
   GstElementStateReturn presult;
   GstElementState transition;
 
-  basesrc = GST_BASESRC (element);
+  basesrc = GST_BASE_SRC (element);
 
   transition = GST_STATE_TRANSITION (element);
 
