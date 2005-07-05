@@ -1,5 +1,7 @@
 2005-07-05  Andy Wingo  <wingo@pobox.com>
 
+	* gst/oneton: Removed (replaced by deinterleave).
+
 	* gst/adder:
 	* gst/audioconvert:
 	* gst/audiorate:
