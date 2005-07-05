@@ -234,7 +234,7 @@ gst_tcpserversrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
         GST_DEBUG_OBJECT (src, "Received caps through GDP: %s", string);
         g_free (string);
 
-        gst_pad_set_caps (GST_BASESRC_PAD (psrc), caps);
+        gst_pad_set_caps (GST_BASE_SRC_PAD (psrc), caps);
       }
 
       /* now receive the buffer header */

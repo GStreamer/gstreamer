@@ -112,7 +112,7 @@ gst_sinesrc_get_type (void)
       (GInstanceInitFunc) gst_sinesrc_init,
     };
 
-    sinesrc_type = g_type_register_static (GST_TYPE_BASESRC, "GstSineSrc",
+    sinesrc_type = g_type_register_static (GST_TYPE_BASE_SRC, "GstSineSrc",
         &sinesrc_info, 0);
   }
   return sinesrc_type;
@@ -139,7 +139,7 @@ gst_sinesrc_class_init (GstSineSrcClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASESRC);
+  parent_class = g_type_class_ref (GST_TYPE_BASE_SRC);
 
   gobject_class->set_property = gst_sinesrc_set_property;
   gobject_class->get_property = gst_sinesrc_get_property;
@@ -182,7 +182,7 @@ gst_sinesrc_class_init (GstSineSrcClass * klass)
 static void
 gst_sinesrc_init (GstSineSrc * src)
 {
-  src->srcpad = GST_BASESRC (src)->srcpad;
+  src->srcpad = GST_BASE_SRC (src)->srcpad;
 
   gst_pad_set_fixatecaps_function (src->srcpad, gst_sinesrc_src_fixate);
   gst_pad_set_query_function (src->srcpad, gst_sinesrc_src_query);

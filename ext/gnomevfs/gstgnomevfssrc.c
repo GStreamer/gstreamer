@@ -178,7 +178,7 @@ gst_gnomevfssrc_get_type (void)
     };
 
     gnomevfssrc_type =
-        g_type_register_static (GST_TYPE_BASESRC,
+        g_type_register_static (GST_TYPE_BASE_SRC,
         "GstGnomeVFSSrc", &gnomevfssrc_info, 0);
     g_type_add_interface_static (gnomevfssrc_type, GST_TYPE_URI_HANDLER,
         &urihandler_info);
@@ -211,7 +211,7 @@ gst_gnomevfssrc_class_init (GstGnomeVFSSrcClass * klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
   gstelement_class = GST_ELEMENT_CLASS (klass);
-  gstbasesrc_class = GST_BASESRC_CLASS (klass);
+  gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 

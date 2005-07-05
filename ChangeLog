@@ -1,5 +1,10 @@
 2005-07-05  Andy Wingo  <wingo@pobox.com>
 
+	* ext/gnomevfs/gstgnomevfssrc.c:
+	* gst/sine/gstsinesrc.c:
+	* gst/tcp/gsttcpserversrc.c:
+	* gst/tcp/gsttcpclientsrc.c: s/BASESRC/BASE_SRC/.
+
 	* sys/v4l/: Port from 0.8.
 
 	* Many files: Null if we got it....

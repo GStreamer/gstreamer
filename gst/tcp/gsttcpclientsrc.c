@@ -177,7 +177,7 @@ gst_tcpclientsrc_init (GstTCPClientSrc * this)
   this->caps = NULL;
   this->curoffset = 0;
 
-  gst_base_src_set_live (GST_BASESRC (this), TRUE);
+  gst_base_src_set_live (GST_BASE_SRC (this), TRUE);
 
   GST_FLAG_UNSET (this, GST_TCPCLIENTSRC_OPEN);
 }
@@ -421,7 +421,7 @@ gst_tcpclientsrc_start (GstBaseSrc * bsrc)
       sizeof (src->server_sin));
 
   if (ret) {
-    gst_tcpclientsrc_stop (GST_BASESRC (src));
+    gst_tcpclientsrc_stop (GST_BASE_SRC (src));
     switch (errno) {
       case ECONNREFUSED:
         GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
@@ -466,12 +466,12 @@ no_socket:
   }
 name_resolv:
   {
-    gst_tcpclientsrc_stop (GST_BASESRC (src));
+    gst_tcpclientsrc_stop (GST_BASE_SRC (src));
     return FALSE;
   }
 no_caps:
   {
-    gst_tcpclientsrc_stop (GST_BASESRC (src));
+    gst_tcpclientsrc_stop (GST_BASE_SRC (src));
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("Could not read caps through GDP"));
     return FALSE;
