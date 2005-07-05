@@ -118,86 +118,6 @@ _wrap_gst_buffer_set_data(PyObject *self, PyObject *args, PyObject *kwargs)
 	return Py_None;
 }
 %%
-override-attr GstBuffer.data_type
-static PyObject*
-_wrap_gst_buffer__get_data_type(PyGstMiniObject *self, void *closure)
-{
-	return pyg_type_wrapper_new(GST_DATA_TYPE(self->obj));
-}
-%%
-override-attr GstBuffer.flags
-static PyObject*
-_wrap_gst_buffer__get_flags(PyGstMiniObject *self, void *closure)
-{
-	return PyInt_FromLong(GST_DATA_FLAGS(self->obj));
-}
-%%
-override-attr GstBuffer.size
-static PyObject *
-_wrap_gst_buffer__get_size(PyGstMiniObject *self, void *closure)
-{
-	return PyInt_FromLong(GST_BUFFER_SIZE(self->obj));
-}
-%%
-override-attr GstBuffer.maxsize
-static PyObject *
-_wrap_gst_buffer__get_maxsize(PyGstMiniObject *self, void *closure)
-{
-	return PyInt_FromLong(GST_BUFFER_MAXSIZE(self->obj));
-}
-%%
-override-attr GstBuffer.offset
-static PyObject *
-_wrap_gst_buffer__get_offset(PyGstMiniObject *self, void *closure)
-{
-	return PyInt_FromLong(GST_BUFFER_OFFSET(self->obj));
-}
-%%
-override-attr GstBuffer.offset_end
-static PyObject *
-_wrap_gst_buffer__get_offset_end(PyGstMiniObject *self, void *closure)
-{
-	return PyInt_FromLong(GST_BUFFER_OFFSET_END(self->obj));
-}
-%%
-override-attr GstBuffer.timestamp
-static PyObject *
-_wrap_gst_buffer__get_timestamp(PyGstMiniObject *self, void *closure)
-{
-	return PyInt_FromLong(GST_BUFFER(self->obj)->timestamp);
-}
-static int
-_wrap_gst_buffer__set_timestamp(PyGBoxed *self, PyObject *value, void *closure)
-{
-    gint val;
-
-    val = PyInt_AsLong(value);
-    if (PyErr_Occurred())
-        return -1;
-    
-    pyg_boxed_get(self, GstBuffer)->timestamp = val;
-    return 0;
-}
-%%
-override-attr GstBuffer.duration
-static PyObject *
-_wrap_gst_buffer__get_duration(PyGstMiniObject *self, void *closure)
-{
-	return PyInt_FromLong(GST_BUFFER(self->obj)->duration);
-}
-static int
-_wrap_gst_buffer__set_duration(PyGBoxed *self, PyObject *value, void *closure)
-{
-    gint val;
-
-    val = PyInt_AsLong(value);
-    if (PyErr_Occurred())
-        return -1;
-    
-    pyg_boxed_get(self, GstBuffer)->duration = val;
-    return 0;
-}
-%%
 override-slot GstBuffer.tp_str
 static PyObject *
 _wrap_gst_buffer_tp_str(PyGstMiniObject *self)
@@ -378,16 +298,6 @@ _wrap_gst_buffer_copy_on_write (PyObject *self)
 	self = pyg_boxed_new (GST_TYPE_BUFFER, buf, FALSE, TRUE);
 	return self;
 }
-
-/* %%
-define GstBuffer.flags noargs
-static PyObject *
-_wrap_gst_buffer_flags(PyGBoxed *self)
-{
-	GstBuffer *buf = pyg_boxed_get(self, GstBuffer);
-	g_assert(GST_IS_BUFFER(buf));
-	return PyInt_FromLong(GST_BUFFER_FLAGS(buf));
-} */
 %%
 define GstBuffer.flag_is_set
 static PyObject *

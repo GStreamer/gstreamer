@@ -2443,6 +2443,7 @@
   (c-name "gst_message_new_application")
   (return-type "GstMessage*")
   (parameters
+    '("GstObject*" "src")
     '("GstStructure*" "structure")
   )
 )
@@ -3048,7 +3049,7 @@
 (define-method fixate_caps
   (of-object "GstPad")
   (c-name "gst_pad_fixate_caps")
-  (return-type "GstCaps*")
+  (return-type "none")
   (parameters
     '("GstCaps*" "caps")
   )
@@ -3269,6 +3270,66 @@
   (return-type "gboolean")
   (parameters
     '("GstPadDispatcherFunction" "dispatch")
+    '("gpointer" "data")
+  )
+)
+
+(define-method add_data_probe
+  (of-object "GstPad")
+  (c-name "gst_pad_add_data_probe")
+  (return-type "gulong")
+  (parameters
+    '("GCallback" "handler")
+    '("gpointer" "data")
+  )
+)
+
+(define-method remove_data_probe
+  (of-object "GstPad")
+  (c-name "gst_pad_remove_data_probe")
+  (return-type "none")
+  (parameters
+    '("GCallback" "handler")
+    '("gpointer" "data")
+  )
+)
+
+(define-method add_event_probe
+  (of-object "GstPad")
+  (c-name "gst_pad_add_event_probe")
+  (return-type "gulong")
+  (parameters
+    '("GCallback" "handler")
+    '("gpointer" "data")
+  )
+)
+
+(define-method remove_event_probe
+  (of-object "GstPad")
+  (c-name "gst_pad_remove_event_probe")
+  (return-type "none")
+  (parameters
+    '("GCallback" "handler")
+    '("gpointer" "data")
+  )
+)
+
+(define-method add_buffer_probe
+  (of-object "GstPad")
+  (c-name "gst_pad_add_buffer_probe")
+  (return-type "gulong")
+  (parameters
+    '("GCallback" "handler")
+    '("gpointer" "data")
+  )
+)
+
+(define-method remove_buffer_probe
+  (of-object "GstPad")
+  (c-name "gst_pad_remove_buffer_probe")
+  (return-type "none")
+  (parameters
+    '("GCallback" "handler")
     '("gpointer" "data")
   )
 )

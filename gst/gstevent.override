@@ -19,31 +19,3 @@
  * 
  * Author: Johan Dahlin <johan@gnome.org>
  */
-%%
-override-attr GstEvent.data_type
-static PyObject*
-_wrap_gst_event__get_data_type(PyGObject *self, void *closure)
-{
-  return pyg_type_wrapper_new(GST_DATA_TYPE(GST_DATA(self->obj)));
-}
-%%
-override-attr GstEvent.flags
-static PyObject*
-_wrap_gst_event__get_flags(PyGObject *self, void *closure)
-{
-  return PyInt_FromLong(GST_DATA_FLAGS(self->obj));
-}
-%%
-override-attr GstEvent.type
-static PyObject*
-_wrap_gst_event__get_type(PyGObject *self, void *closure)
-{
-  return pyg_enum_from_gtype(GST_TYPE_EVENT_TYPE, GST_EVENT_TYPE(GST_EVENT(self->obj)));
-}
-%%
-override-attr GstEvent.timestamp
-static PyObject *
-_wrap_gst_event__get_timestamp(PyGObject *self, void *closure)
-{
-  return PyInt_FromLong(GST_EVENT(self->obj)->timestamp);
-}

@@ -24,6 +24,8 @@
 #include "config.h"
 #endif
 
+#include "pygstminiobject.h"
+
 #include <locale.h>
 
 /* include this first, before NO_IMPORT_PYGOBJECT is defined */
@@ -144,8 +146,14 @@ init_gst (void)
      PyDict_SetItemString(d, "LinkError", PyGstExc_LinkError);
 
 
+     PyGstMiniObject_Type.tp_alloc = PyType_GenericAlloc;
+     PyGstMiniObject_Type.tp_new = PyType_GenericNew;
+     pygstminiobject_register_class(d, "GstMiniObject", GST_TYPE_MINI_OBJECT,
+				    &PyGstMiniObject_Type, NULL);
+
      pygst_register_classes (d);
      pygst_add_constants (m, "GST_");
+
 
      g_timeout_add_full (0, 100, python_do_pending_calls, NULL, NULL);
      

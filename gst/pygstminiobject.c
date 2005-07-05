@@ -91,6 +91,8 @@ pygstminiobject_register_class(PyObject *dict, const gchar *type_name,
 	class_name = s + 1;
 	
     type->ob_type = &PyType_Type;
+    type->tp_alloc = PyType_GenericAlloc;
+    type->tp_new = PyType_GenericNew;
     if (bases) {
 	type->tp_bases = bases;
 	type->tp_base = (PyTypeObject *)PyTuple_GetItem(bases, 0);
@@ -140,6 +142,7 @@ pygstminiobject_register_wrapper(PyObject *self)
     Py_INCREF(self);
     state = pyg_gil_state_ensure();
     g_hash_table_insert (miniobjs, (gpointer) obj, (gpointer) self);
+    gst_mini_object_ref(obj);
     pyg_gil_state_release(state);
 /*     gst_mini_object_set_qdata_full(obj, pygstminiobject_wrapper_key, self, */
 /* 				   pyg_destroy_notify); */
@@ -188,15 +191,14 @@ pygstminiobject_new(GstMiniObject *obj)
 	self = PyObject_GC_New(PyGstMiniObject, tp);
 	if (self == NULL)
 	    return NULL;
-	pyg_begin_allow_threads;
  	self->obj = gst_mini_object_ref(obj);
-	pyg_end_allow_threads;
 	
 	self->inst_dict = NULL;
 	self->weakreflist = NULL;
 	/* save wrapper pointer so we can access it later */
 	Py_INCREF(self);
 	state = pyg_gil_state_ensure();
+	gst_mini_object_ref(obj);
 	g_hash_table_insert (miniobjs, (gpointer) obj, (gpointer) self);
 	pyg_gil_state_release(state);
 /* 	gst_mini_object_set_qdata_full(obj, pygstminiobject_wrapper_key, self, */
@@ -210,6 +212,8 @@ pygstminiobject_new(GstMiniObject *obj)
 static void
 pygstminiobject_dealloc(PyGstMiniObject *self)
 {
+    GstMiniObject	*obj = NULL;
+
     PyGILState_STATE state;
     
     state = pyg_gil_state_ensure();
@@ -219,9 +223,8 @@ pygstminiobject_dealloc(PyGstMiniObject *self)
     PyObject_GC_UnTrack((PyObject *)self);
 
     if (self->obj) {
-	pyg_begin_allow_threads;
 	gst_mini_object_unref(self->obj);
-	pyg_end_allow_threads;
+	obj = self->obj;
     }
     self->obj = NULL;
 
@@ -232,7 +235,9 @@ pygstminiobject_dealloc(PyGstMiniObject *self)
 
     /* the following causes problems with subclassed types */
     /* self->ob_type->tp_free((PyObject *)self); */
-    g_hash_table_remove (miniobjs, (gpointer) self);
+    g_hash_table_remove (miniobjs, (gpointer) obj);
+    if (obj)
+	gst_mini_object_unref(obj);
     PyObject_GC_Del(self);
     pyg_gil_state_release(state);
 }
@@ -289,9 +294,7 @@ pygstminiobject_clear(PyGstMiniObject *self)
     self->inst_dict = NULL;
 
     if (self->obj) {
-	pyg_begin_allow_threads;
 	gst_mini_object_unref(self->obj);
-	pyg_end_allow_threads;
     }
     self->obj = NULL;
 
@@ -302,9 +305,12 @@ static void
 pygstminiobject_free(PyObject *op)
 {
     PyGILState_STATE state;
+    GstMiniObject *obj = ((PyGstMiniObject*) op)->obj;
 
     state = pyg_gil_state_ensure();
-    g_hash_table_remove (miniobjs, (gpointer) op);
+    g_hash_table_remove (miniobjs, obj);
+    if (obj)
+	gst_mini_object_unref (obj);
     pyg_gil_state_release(state);
     PyObject_GC_Del(op);
 }
@@ -402,9 +408,16 @@ pygstminiobject_get_refcount(PyGstMiniObject *self, void *closure)
     return PyInt_FromLong(GST_MINI_OBJECT_REFCOUNT_VALUE(self->obj));
 }
 
+static PyObject *
+pygstminiobject_get_flags(PyGstMiniObject *self, void *closure)
+{
+    return PyInt_FromLong(GST_MINI_OBJECT_FLAGS(self->obj));
+}
+
 static PyGetSetDef pygstminiobject_getsets[] = {
     { "__dict__", (getter)pygstminiobject_get_dict, (setter)0 },
     { "__grefcount__", (getter)pygstminiobject_get_refcount, (setter)0, },
+    { "flags", (getter)pygstminiobject_get_flags, (setter)0, },
     { NULL, 0, 0 }
 };
 
