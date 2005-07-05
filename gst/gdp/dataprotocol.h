@@ -20,7 +20,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifdef GST_ENABLE_NEW
 #ifndef __GST_DATA_PROTOCOL_H__
 #define __GST_DATA_PROTOCOL_H__
 
@@ -52,6 +51,8 @@ typedef enum {
   GST_DP_PAYLOAD_CAPS,
   GST_DP_PAYLOAD_EVENT_NONE      = 64,
 } GstDPPayloadType;
+
+void		gst_dp_init			(void);
 
 /* payload information from header */
 guint32		gst_dp_header_payload_length	(const guint8 * header);
@@ -98,4 +99,3 @@ gboolean	gst_dp_validate_packet		(guint header_length,
 G_END_DECLS
 
 #endif /* __GST_DATA_PROTOCOL_H__ */
-#endif /* GST_ENABLE_NEW */
