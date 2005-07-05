@@ -55,7 +55,6 @@ dnl AC_SUBST(GETTEXT_PACKAGE)
 dnl AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], "$GETTEXT_PACKAGE",
 dnl                   [gettext package name])
 
-
 dnl decide on error flags
 AS_COMPILER_FLAG(-Wall, GST_WALL="yes", GST_WALL="no")
 
@@ -433,7 +432,8 @@ GST_CHECK_FEATURE(ESD, [esound plug-ins], esdsink, [
   ])
 ])
 
-GST_CFLAGS="$GST_CFLAGS $GST_ERROR"
+dnl also add builddir include for enumtypes and marshal
+GST_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CFLAGS $GST_ERROR"
 
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
@@ -500,6 +500,8 @@ gst/smpte/Makefile
 gst/udp/Makefile
 gst/videobox/Makefile
 gst/videofilter/Makefile
+gst-libs/Makefile
+gst-libs/gst/Makefile
 sys/Makefile
 ext/Makefile
 ext/aalib/Makefile
