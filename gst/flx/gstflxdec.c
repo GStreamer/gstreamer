@@ -614,7 +614,6 @@ gst_flxdec_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstFlxDec *flxdec;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_FLXDEC (object));
   flxdec = GST_FLXDEC (object);
 
@@ -630,7 +629,6 @@ gst_flxdec_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstFlxDec *flxdec;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_FLXDEC (object));
   flxdec = GST_FLXDEC (object);
 

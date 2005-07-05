@@ -1150,7 +1150,6 @@ gst_dvdec_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstDVDec *dvdec;
 
-  /* It's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_DVDEC (object));
 
   /* Get a pointer of the right type. */
@@ -1185,7 +1184,6 @@ gst_dvdec_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstDVDec *dvdec;
 
-  /* It's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_DVDEC (object));
   dvdec = GST_DVDEC (object);
 

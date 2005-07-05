@@ -630,7 +630,6 @@ gst_textoverlay_set_property (GObject * object, guint prop_id,
 {
   GstTextOverlay *overlay;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_TEXTOVERLAY (object));
   overlay = GST_TEXTOVERLAY (object);
 
@@ -696,7 +695,6 @@ gst_textoverlay_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstTextOverlay *overlay;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_TEXTOVERLAY (object));
   overlay = GST_TEXTOVERLAY (object);
 

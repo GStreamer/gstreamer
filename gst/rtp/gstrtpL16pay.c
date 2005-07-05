@@ -281,7 +281,6 @@ gst_rtpL16enc_set_property (GObject * object, guint prop_id,
 {
   GstRtpL16Enc *rtpL16enc;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_RTP_L16_ENC (object));
   rtpL16enc = GST_RTP_L16_ENC (object);
 
@@ -297,7 +296,6 @@ gst_rtpL16enc_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstRtpL16Enc *rtpL16enc;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_RTP_L16_ENC (object));
   rtpL16enc = GST_RTP_L16_ENC (object);
 

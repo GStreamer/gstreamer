@@ -245,7 +245,6 @@ gst_pipefilter_set_property (GObject * object, guint prop_id,
 {
   GstPipefilter *pipefilter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_PIPEFILTER (object));
   pipefilter = GST_PIPEFILTER (object);
 
@@ -266,7 +265,6 @@ gst_pipefilter_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstPipefilter *pipefilter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_PIPEFILTER (object));
   pipefilter = GST_PIPEFILTER (object);
 

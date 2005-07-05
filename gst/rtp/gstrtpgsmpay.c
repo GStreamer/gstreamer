@@ -267,7 +267,6 @@ gst_rtpgsmenc_set_property (GObject * object, guint prop_id,
 {
   GstRtpGSMEnc *rtpgsmenc;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_RTP_GSM_ENC (object));
   rtpgsmenc = GST_RTP_GSM_ENC (object);
 
@@ -283,7 +282,6 @@ gst_rtpgsmenc_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstRtpGSMEnc *rtpgsmenc;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_RTP_GSM_ENC (object));
   rtpgsmenc = GST_RTP_GSM_ENC (object);
 

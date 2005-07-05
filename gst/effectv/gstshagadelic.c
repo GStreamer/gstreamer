@@ -318,7 +318,6 @@ gst_shagadelictv_set_property (GObject * object, guint prop_id,
 {
   GstShagadelicTV *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_SHAGADELICTV (object));
 
   filter = GST_SHAGADELICTV (object);
@@ -335,7 +334,6 @@ gst_shagadelictv_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstShagadelicTV *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_SHAGADELICTV (object));
 
   filter = GST_SHAGADELICTV (object);

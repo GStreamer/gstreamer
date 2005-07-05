@@ -327,7 +327,6 @@ gst_shaper_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstShaper *shaper;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_SHAPER (object));
 
   shaper = GST_SHAPER (object);
@@ -351,7 +350,6 @@ gst_shaper_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstShaper *shaper;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_SHAPER (object));
 
   shaper = GST_SHAPER (object);

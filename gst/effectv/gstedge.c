@@ -283,7 +283,6 @@ gst_edgetv_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstEdgeTV *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_EDGETV (object));
 
   filter = GST_EDGETV (object);
@@ -300,7 +299,6 @@ gst_edgetv_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstEdgeTV *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_EDGETV (object));
 
   filter = GST_EDGETV (object);

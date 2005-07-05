@@ -1276,7 +1276,6 @@ gst_avimux_get_property (GObject * object,
 {
   GstAviMux *avimux;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_AVIMUX (object));
   avimux = GST_AVIMUX (object);
 
@@ -1296,7 +1295,6 @@ gst_avimux_set_property (GObject * object,
 {
   GstAviMux *avimux;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_AVIMUX (object));
   avimux = GST_AVIMUX (object);
 

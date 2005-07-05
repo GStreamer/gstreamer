@@ -364,7 +364,6 @@ gst_videofilter_set_property (GObject * object, guint prop_id,
 {
   GstVideofilter *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_VIDEOFILTER (object));
   src = GST_VIDEOFILTER (object);
 
@@ -381,7 +380,6 @@ gst_videofilter_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstVideofilter *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_VIDEOFILTER (object));
   src = GST_VIDEOFILTER (object);
 

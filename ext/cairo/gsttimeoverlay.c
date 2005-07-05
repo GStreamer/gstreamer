@@ -153,7 +153,6 @@ gst_timeoverlay_set_property (GObject * object, guint prop_id,
 {
   GstTimeoverlay *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_TIMEOVERLAY (object));
   src = GST_TIMEOVERLAY (object);
 
@@ -175,7 +174,6 @@ gst_timeoverlay_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstTimeoverlay *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_TIMEOVERLAY (object));
   src = GST_TIMEOVERLAY (object);
 

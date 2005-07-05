@@ -332,7 +332,6 @@ gst_dicetv_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstDiceTV *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_DICETV (object));
 
   filter = GST_DICETV (object);
@@ -352,7 +351,6 @@ gst_dicetv_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstDiceTV *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_DICETV (object));
 
   filter = GST_DICETV (object);

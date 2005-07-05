@@ -367,7 +367,6 @@ gst_videoflip_set_property (GObject * object, guint prop_id,
 {
   GstVideoflip *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_VIDEOFLIP (object));
   src = GST_VIDEOFLIP (object);
 
@@ -387,7 +386,6 @@ gst_videoflip_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstVideoflip *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_VIDEOFLIP (object));
   src = GST_VIDEOFLIP (object);
 

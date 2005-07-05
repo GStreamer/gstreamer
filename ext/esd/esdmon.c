@@ -285,7 +285,6 @@ gst_esdmon_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstEsdmon *esdmon;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_ESDMON (object));
   esdmon = GST_ESDMON (object);
 
@@ -331,7 +330,6 @@ gst_esdmon_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstEsdmon *esdmon;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_ESDMON (object));
   esdmon = GST_ESDMON (object);
 

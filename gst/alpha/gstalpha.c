@@ -293,7 +293,6 @@ gst_alpha_set_property (GObject * object, guint prop_id,
 {
   GstAlpha *alpha;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_ALPHA (object));
 
   alpha = GST_ALPHA (object);
@@ -351,7 +350,6 @@ gst_alpha_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstAlpha *alpha;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_ALPHA (object));
 
   alpha = GST_ALPHA (object);

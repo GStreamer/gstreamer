@@ -273,7 +273,6 @@ gst_rtpL16parse_set_property (GObject * object, guint prop_id,
 {
   GstRtpL16Parse *rtpL16parse;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_RTP_L16_PARSE (object));
   rtpL16parse = GST_RTP_L16_PARSE (object);
 
@@ -295,7 +294,6 @@ gst_rtpL16parse_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstRtpL16Parse *rtpL16parse;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_RTP_L16_PARSE (object));
   rtpL16parse = GST_RTP_L16_PARSE (object);
 

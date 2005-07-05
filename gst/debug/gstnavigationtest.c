@@ -219,7 +219,6 @@ gst_navigationtest_set_property (GObject * object, guint prop_id,
 {
   GstNavigationtest *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_NAVIGATIONTEST (object));
   src = GST_NAVIGATIONTEST (object);
 
@@ -241,7 +240,6 @@ gst_navigationtest_get_property (GObject * object, guint prop_id,
 {
   GstNavigationtest *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_NAVIGATIONTEST (object));
   src = GST_NAVIGATIONTEST (object);
 

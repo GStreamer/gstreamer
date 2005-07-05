@@ -213,7 +213,6 @@ gst_video_crop_set_property (GObject * object, guint prop_id,
 {
   GstVideoCrop *video_crop;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_VIDEO_CROP (object));
 
   video_crop = GST_VIDEO_CROP (object);

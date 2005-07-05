@@ -390,7 +390,6 @@ gst_agingtv_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstAgingTV *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_AGINGTV (object));
   src = GST_AGINGTV (object);
 
@@ -412,7 +411,6 @@ gst_agingtv_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstAgingTV *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_AGINGTV (object));
   src = GST_AGINGTV (object);
 

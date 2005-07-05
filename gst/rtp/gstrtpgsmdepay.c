@@ -241,7 +241,6 @@ gst_rtpgsmparse_set_property (GObject * object, guint prop_id,
 {
   GstRtpGSMParse *rtpgsmparse;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_RTP_GSM_PARSE (object));
   rtpgsmparse = GST_RTP_GSM_PARSE (object);
 
@@ -260,7 +259,6 @@ gst_rtpgsmparse_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstRtpGSMParse *rtpgsmparse;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_RTP_GSM_PARSE (object));
   rtpgsmparse = GST_RTP_GSM_PARSE (object);
 

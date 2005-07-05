@@ -272,7 +272,6 @@ gst_cacasink_set_property (GObject * object, guint prop_id,
 {
   GstCACASink *cacasink;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_CACASINK (object));
 
   cacasink = GST_CACASINK (object);
@@ -305,7 +304,6 @@ gst_cacasink_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstCACASink *cacasink;
 
-  /* it's not null if we got it, but it might not be ours */
   cacasink = GST_CACASINK (object);
 
   switch (prop_id) {

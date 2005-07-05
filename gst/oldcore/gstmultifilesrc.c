@@ -151,7 +151,6 @@ gst_multifilesrc_set_property (GObject * object, guint prop_id,
 {
   GstMultiFileSrc *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_MULTIFILESRC (object));
 
   src = GST_MULTIFILESRC (object);
@@ -185,7 +184,6 @@ gst_multifilesrc_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstMultiFileSrc *src;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_MULTIFILESRC (object));
 
   src = GST_MULTIFILESRC (object);

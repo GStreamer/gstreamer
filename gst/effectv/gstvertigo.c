@@ -335,7 +335,6 @@ gst_vertigotv_set_property (GObject * object, guint prop_id,
 {
   GstVertigoTV *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_VERTIGOTV (object));
 
   filter = GST_VERTIGOTV (object);
@@ -358,7 +357,6 @@ gst_vertigotv_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstVertigoTV *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_VERTIGOTV (object));
 
   filter = GST_VERTIGOTV (object);

@@ -317,7 +317,6 @@ gst_quarktv_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstQuarkTV *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_QUARKTV (object));
 
   filter = GST_QUARKTV (object);
@@ -360,7 +359,6 @@ gst_quarktv_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstQuarkTV *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_QUARKTV (object));
 
   filter = GST_QUARKTV (object);

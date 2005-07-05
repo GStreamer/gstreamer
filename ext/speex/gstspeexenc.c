@@ -978,7 +978,6 @@ gst_speexenc_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstSpeexEnc *speexenc;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_SPEEXENC (object));
 
   speexenc = GST_SPEEXENC (object);
@@ -1023,7 +1022,6 @@ gst_speexenc_set_property (GObject * object, guint prop_id,
 {
   GstSpeexEnc *speexenc;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_SPEEXENC (object));
 
   speexenc = GST_SPEEXENC (object);

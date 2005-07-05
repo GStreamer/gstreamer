@@ -207,7 +207,6 @@ gst_gamma_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstGamma *gamma;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_GAMMA (object));
   gamma = GST_GAMMA (object);
 
@@ -240,7 +239,6 @@ gst_gamma_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstGamma *gamma;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_GAMMA (object));
   gamma = GST_GAMMA (object);
 

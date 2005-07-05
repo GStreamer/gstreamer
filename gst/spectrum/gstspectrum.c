@@ -129,7 +129,6 @@ gst_spectrum_set_property (GObject * object, guint prop_id,
 {
   GstSpectrum *spectrum;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_SPECTRUM (object));
   spectrum = GST_SPECTRUM (object);
 

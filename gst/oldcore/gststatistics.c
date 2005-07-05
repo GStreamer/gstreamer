@@ -340,7 +340,6 @@ gst_statistics_set_property (GObject * object, guint prop_id,
 {
   GstStatistics *statistics;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_STATISTICS (object));
 
   statistics = GST_STATISTICS (object);
@@ -376,7 +375,6 @@ gst_statistics_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstStatistics *statistics;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_STATISTICS (object));
 
   statistics = GST_STATISTICS (object);

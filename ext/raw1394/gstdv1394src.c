@@ -263,7 +263,6 @@ gst_dv1394src_set_property (GObject * object, guint prop_id,
 {
   GstDV1394Src *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_DV1394SRC (object));
   filter = GST_DV1394SRC (object);
 
@@ -300,7 +299,6 @@ gst_dv1394src_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstDV1394Src *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_DV1394SRC (object));
   filter = GST_DV1394SRC (object);
 

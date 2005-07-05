@@ -243,7 +243,6 @@ gst_aggregator_set_property (GObject * object, guint prop_id,
 {
   GstAggregator *aggregator;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_AGGREGATOR (object));
 
   aggregator = GST_AGGREGATOR (object);
@@ -267,7 +266,6 @@ gst_aggregator_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstAggregator *aggregator;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_AGGREGATOR (object));
 
   aggregator = GST_AGGREGATOR (object);

@@ -439,7 +439,6 @@ gst_mikmod_set_property (GObject * object, guint id, const GValue * value,
 {
   GstMikMod *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_MIKMOD (object));
   filter = GST_MIKMOD (object);
 
@@ -496,7 +495,6 @@ gst_mikmod_get_property (GObject * object, guint id, GValue * value,
 {
   GstMikMod *filter;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_MIKMOD (object));
   filter = GST_MIKMOD (object);
 

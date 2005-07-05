@@ -369,7 +369,6 @@ gst_median_set_property (GObject * object, guint prop_id, const GValue * value,
   GstMedian *median;
   gint argvalue;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_MEDIAN (object));
   median = GST_MEDIAN (object);
 
@@ -400,7 +399,6 @@ gst_median_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstMedian *median;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_MEDIAN (object));
   median = GST_MEDIAN (object);
 

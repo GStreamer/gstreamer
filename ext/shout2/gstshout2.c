@@ -386,7 +386,6 @@ gst_shout2send_set_property (GObject * object, guint prop_id,
 {
   GstShout2send *shout2send;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_SHOUT2SEND (object));
   shout2send = GST_SHOUT2SEND (object);
 
@@ -455,7 +454,6 @@ gst_shout2send_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstShout2send *shout2send;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_SHOUT2SEND (object));
   shout2send = GST_SHOUT2SEND (object);
 

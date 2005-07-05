@@ -538,7 +538,6 @@ gst_speexdec_get_property (GObject * object, guint prop_id,
 {
   GstSpeexDec *speexdec;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_SPEEXDEC (object));
 
   speexdec = GST_SPEEXDEC (object);
@@ -559,7 +558,6 @@ gst_speexdec_set_property (GObject * object, guint prop_id,
 {
   GstSpeexDec *speexdec;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_SPEEXDEC (object));
 
   speexdec = GST_SPEEXDEC (object);
