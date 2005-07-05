@@ -1,5 +1,8 @@
 2005-07-05  Andy Wingo  <wingo@pobox.com>
 
+	* gst/playback/gstplaybasebin.c (fill_buffer):
+	message_new_application fixen.
+
 	* gst/videoscale/gstvideoscale.c (gst_videoscale_transform_caps):
 	Style fix.
 
