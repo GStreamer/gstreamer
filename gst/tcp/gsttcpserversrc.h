@@ -23,10 +23,9 @@
 #define __GST_TCPSERVERSRC_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstpushsrc.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_END_DECLS
 
 #include <errno.h>
 #include <string.h>
@@ -60,10 +59,7 @@ typedef enum {
 } GstTCPServerSrcFlags;
 
 struct _GstTCPServerSrc {
-  GstElement element;
-
-  /* pad */
-  GstPad *srcpad;
+  GstPushSrc element;
 
   /* server information */
   int server_port;
@@ -81,18 +77,14 @@ struct _GstTCPServerSrc {
 
   GstTCPProtocolType protocol; /* protocol used for reading data */
   gboolean caps_received;      /* if we have received caps yet */
-  GstClock *clock;
 };
 
 struct _GstTCPServerSrcClass {
-  GstElementClass parent_class;
+  GstPushSrcClass parent_class;
 };
 
 GType gst_tcpserversrc_get_type (void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #endif /* __GST_TCPSERVERSRC_H__ */

@@ -21,8 +21,7 @@
 #include "config.h"
 #endif
 
-#include "gsttcpsrc.h"
-#include "gsttcpsink.h"
+#include <gst/dataprotocol/dataprotocol.h>
 #include "gsttcpclientsrc.h"
 #include "gsttcpclientsink.h"
 #include "gsttcpserversrc.h"
@@ -34,12 +33,7 @@ GST_DEBUG_CATEGORY (tcp_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "tcpsink", GST_RANK_NONE,
-          GST_TYPE_TCPSINK))
-    return FALSE;
-
-  if (!gst_element_register (plugin, "tcpsrc", GST_RANK_NONE, GST_TYPE_TCPSRC))
-    return FALSE;
+  gst_dp_init ();
 
   if (!gst_element_register (plugin, "tcpclientsink", GST_RANK_NONE,
           GST_TYPE_TCPCLIENTSINK))

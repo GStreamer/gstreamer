@@ -25,9 +25,7 @@
 
 #include <gst/gst.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -82,10 +80,6 @@ struct _GstTCPServerSinkClass {
 
 GType gst_tcpserversink_get_type (void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_TCPSERVERSINK_H__ */

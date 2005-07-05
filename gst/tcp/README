@@ -4,8 +4,6 @@ This part of the documentation is for the new tcp elements:
 - tcpserversrc
 - tcpserversink
                                                                                 
-which are created to replace the old tcpsrc/tcpsink
-                                                                                
 TESTS
 -----
 Use these tests to test functionality of the various tcp plugins
@@ -31,33 +29,3 @@ TODO
 ----
 - implement DNS resolution
 
---------
-
-This is the old documentation for the original tcpsrc/tcpsink elements.
-
-* What is TCP src/sink?
-
-solution, like icecast or realaudio or whatever.
-But the future RTP plugins shall not do the actual transmission/reception
-of packets on the network themselve but the Application developer would be
-encouraged to use either the TCP or the UDP plugins for that. UDP would be
-used mostly but there could be situations where TCP would be the only
-available choice. For example streaming accross firewalls that do not
-allow UDP.
-
-* Shortcomings
-
-Even given our modest ambitions, the current code doesn't handle
-caps negotiation robustly.
-
-* Todo
-
-The caps nego should do bi-directional negotiation.
-
-Perhaps this plugin can be the example of how to do caps negotiation
-via a point-to-point protocol.
-
-12 Sep 2001
-Wim Taymans <wim.taymans@chello.be>
-Joshua N Pritikin <vishnu@pobox.com>
-Zeeshan Ali <zak147@yahoo.com>

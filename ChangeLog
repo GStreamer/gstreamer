@@ -1,3 +1,46 @@
+2005-07-05  Wim Taymans  <wim@fluendo.com>
+
+	* configure.ac:
+	* gst/tcp/Makefile.am:
+	* gst/tcp/README:
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_get_type),
+	(gst_multifdsink_base_init), (gst_multifdsink_class_init),
+	(gst_multifdsink_init), (gst_multifdsink_remove_client_link),
+	(is_sync_frame), (gst_multifdsink_handle_client_write),
+	(gst_multifdsink_render), (gst_multifdsink_start),
+	(gst_multifdsink_stop), (gst_multifdsink_change_state):
+	* gst/tcp/gstmultifdsink.h:
+	* gst/tcp/gsttcp.c: (gst_tcp_host_to_ip),
+	(gst_tcp_gdp_read_buffer), (gst_tcp_gdp_read_caps),
+	(gst_tcp_gdp_write_buffer), (gst_tcp_gdp_write_caps):
+	* gst/tcp/gsttcp.h:
+	* gst/tcp/gsttcpclientsink.c: (gst_tcpclientsink_class_init),
+	(gst_tcpclientsink_init), (gst_tcpclientsink_setcaps),
+	(gst_tcpclientsink_render), (gst_tcpclientsink_start),
+	(gst_tcpclientsink_stop), (gst_tcpclientsink_change_state):
+	* gst/tcp/gsttcpclientsink.h:
+	* gst/tcp/gsttcpclientsrc.c: (gst_tcpclientsrc_get_type),
+	(gst_tcpclientsrc_base_init), (gst_tcpclientsrc_class_init),
+	(gst_tcpclientsrc_init), (gst_tcpclientsrc_getcaps),
+	(gst_tcpclientsrc_create), (gst_tcpclientsrc_start),
+	(gst_tcpclientsrc_stop), (gst_tcpclientsrc_unlock):
+	* gst/tcp/gsttcpclientsrc.h:
+	* gst/tcp/gsttcpplugin.c: (plugin_init):
+	* gst/tcp/gsttcpserversink.c: (gst_tcpserversink_class_init):
+	* gst/tcp/gsttcpserversink.h:
+	* gst/tcp/gsttcpserversrc.c: (gst_tcpserversrc_get_type),
+	(gst_tcpserversrc_base_init), (gst_tcpserversrc_class_init),
+	(gst_tcpserversrc_init), (gst_tcpserversrc_finalize),
+	(gst_tcpserversrc_create), (gst_tcpserversrc_start),
+	(gst_tcpserversrc_stop):
+	* gst/tcp/gsttcpserversrc.h:
+	* gst/tcp/gsttcpsink.c:
+	* gst/tcp/gsttcpsink.h:
+	* gst/tcp/gsttcpsrc.c:
+	* gst/tcp/gsttcpsrc.h:
+	Ported tcp plugins to 0.9. 
+	
+
 2005-07-05  Andy Wingo  <wingo@pobox.com>
 
 	* gst/playback/gstplaybasebin.c (fill_buffer):

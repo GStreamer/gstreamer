@@ -56,35 +56,42 @@ gst_tcp_host_to_ip (GstElement * element, const gchar * host)
   struct in_addr addr;
 
   GST_DEBUG_OBJECT (element, "resolving host %s", host);
+
   /* first check if it already is an IP address */
   if (inet_aton (host, &addr)) {
     ip = g_strdup (host);
     goto beach;
   }
-
   /* FIXME: could do a localhost check here */
 
   /* perform a name lookup */
-  hostinfo = gethostbyname (host);
-  if (!hostinfo) {
-    GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND, (NULL),
-        ("Could not find IP address for host \"%s\".", host));
-    return NULL;
-  }
+  if (!(hostinfo = gethostbyname (host)))
+    goto resolve_error;
 
-  if (hostinfo->h_addrtype != AF_INET) {
-    GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND, (NULL),
-        ("host \"%s\" is not an IP host", host));
-    return NULL;
-  }
+  if (hostinfo->h_addrtype != AF_INET)
+    goto not_ip;
 
   addrs = hostinfo->h_addr_list;
+
   /* There could be more than one IP address, but we just return the first */
   ip = g_strdup (inet_ntoa (*(struct in_addr *) *addrs));
 
 beach:
   GST_DEBUG_OBJECT (element, "resolved to IP %s", ip);
   return ip;
+
+resolve_error:
+  {
+    GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND, (NULL),
+        ("Could not find IP address for host \"%s\".", host));
+    return NULL;
+  }
+not_ip:
+  {
+    GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND, (NULL),
+        ("host \"%s\" is not an IP host", host));
+    return NULL;
+  }
 }
 
 /* write buffer to given socket incrementally.
@@ -149,15 +156,14 @@ gst_tcp_socket_close (int *socket)
   *socket = -1;
 }
 
-/* read the gdp buffer header from the given socket
+/* read a buffer from the given socket
  * returns:
- * - a GstData representing a GstBuffer in which data should be read
- * - a GstData representing a GstEvent
+ * - a GstBuffer in which data should be read
  * - NULL, indicating a connection close or an error, to be handled with
  *         EOS
  */
-GstData *
-gst_tcp_gdp_read_header (GstElement * this, int socket)
+GstBuffer *
+gst_tcp_gdp_read_buffer (GstElement * this, int socket)
 {
   size_t header_length = GST_DP_HEADER_LENGTH;
   size_t readsize;
@@ -169,36 +175,51 @@ gst_tcp_gdp_read_header (GstElement * this, int socket)
   readsize = header_length;
 
   GST_LOG_OBJECT (this, "Reading %d bytes for buffer packet header", readsize);
-  ret = gst_tcp_socket_read (socket, header, readsize);
-  /* if we read 0 bytes, and we're blocking, we hit eos */
-  if (ret == 0) {
-    GST_DEBUG ("blocking read returns 0, returning NULL");
-    g_free (header);
-    return NULL;
-  }
-  if (ret < 0) {
-    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
-    g_free (header);
-    return NULL;
-  }
-  if (ret != readsize) {
-    g_warning ("Wanted %d bytes, got %d bytes", (int) readsize, (int) ret);
-  }
-  g_assert (ret == readsize);
+  if ((ret = gst_tcp_socket_read (socket, header, readsize)) <= 0)
+    goto read_error;
 
-  if (!gst_dp_validate_header (header_length, header)) {
-    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
-        ("GDP buffer packet header does not validate"));
-    g_free (header);
-    return NULL;
-  }
+  if (ret != readsize)
+    goto short_read;
+
+  if (!gst_dp_validate_header (header_length, header))
+    goto validate_error;
+
   GST_LOG_OBJECT (this, "validated buffer packet header");
 
   buffer = gst_dp_buffer_from_header (header_length, header);
   g_free (header);
 
   GST_LOG_OBJECT (this, "created new buffer %p from packet header", buffer);
-  return GST_DATA (buffer);
+
+  return buffer;
+
+  /* ERRORS */
+read_error:
+  {
+    if (ret == 0) {
+      /* if we read 0 bytes, and we're blocking, we hit eos */
+      GST_DEBUG ("blocking read returns 0, returning NULL");
+      g_free (header);
+      return NULL;
+    } else {
+      GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
+      g_free (header);
+      return NULL;
+    }
+  }
+short_read:
+  {
+    GST_WARNING ("Wanted %d bytes, got %d bytes", (int) readsize, (int) ret);
+    g_warning ("Wanted %d bytes, got %d bytes", (int) readsize, (int) ret);
+    return NULL;
+  }
+validate_error:
+  {
+    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
+        ("GDP buffer packet header does not validate"));
+    g_free (header);
+    return NULL;
+  }
 }
 
 /* read the GDP caps packet from the given socket
@@ -218,56 +239,29 @@ gst_tcp_gdp_read_caps (GstElement * this, int socket)
   readsize = header_length;
 
   GST_LOG_OBJECT (this, "Reading %d bytes for caps packet header", readsize);
-  ret = gst_tcp_socket_read (socket, header, readsize);
-  if (ret < 0) {
-    g_free (header);
-    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
-    return NULL;
-  }
-  if (ret == 0) {
-    GST_WARNING_OBJECT (this, "read returned EOF");
-    return NULL;
-  }
-  if (ret != readsize) {
-    GST_WARNING_OBJECT (this, "Tried to read %d bytes but only read %d bytes",
-        readsize, ret);
-    return NULL;
-  }
+  if ((ret = gst_tcp_socket_read (socket, header, readsize)) <= 0)
+    goto read_error;
 
-  if (!gst_dp_validate_header (header_length, header)) {
-    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
-        ("GDP caps packet header does not validate"));
-    g_free (header);
-    return NULL;
-  }
+  if (ret != readsize)
+    goto short_read;
+
+  if (!gst_dp_validate_header (header_length, header))
+    goto validate_error;
 
   readsize = gst_dp_header_payload_length (header);
   payload = g_malloc (readsize);
-  GST_LOG_OBJECT (this, "Reading %d bytes for caps packet payload", readsize);
-  ret = gst_tcp_socket_read (socket, payload, readsize);
 
-  if (ret < 0) {
-    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
-    g_free (header);
-    g_free (payload);
-    return NULL;
-  }
-  if (gst_dp_header_payload_type (header) != GST_DP_PAYLOAD_CAPS) {
-    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
-        ("Header read doesn't describe CAPS payload"));
-    g_free (header);
-    g_free (payload);
-    return NULL;
-  }
+  GST_LOG_OBJECT (this, "Reading %d bytes for caps packet payload", readsize);
+  if ((ret = gst_tcp_socket_read (socket, payload, readsize)) < 0)
+    goto socket_read_error;
+
+  if (gst_dp_header_payload_type (header) != GST_DP_PAYLOAD_CAPS)
+    goto is_not_caps;
+
   g_assert (ret == readsize);
 
-  if (!gst_dp_validate_payload (readsize, header, payload)) {
-    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
-        ("GDP caps packet payload does not validate"));
-    g_free (header);
-    g_free (payload);
-    return NULL;
-  }
+  if (!gst_dp_validate_payload (readsize, header, payload))
+    goto packet_validate_error;
 
   caps = gst_dp_caps_from_packet (header_length, header, payload);
   string = gst_caps_to_string (caps);
@@ -278,28 +272,89 @@ gst_tcp_gdp_read_caps (GstElement * this, int socket)
   g_free (payload);
 
   return caps;
+
+  /* ERRORS */
+read_error:
+  {
+    if (ret < 0) {
+      g_free (header);
+      GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
+      return NULL;
+    }
+    if (ret == 0) {
+      GST_WARNING_OBJECT (this, "read returned EOF");
+      return NULL;
+    }
+  }
+short_read:
+  {
+    GST_WARNING_OBJECT (this, "Tried to read %d bytes but only read %d bytes",
+        readsize, ret);
+    return NULL;
+  }
+validate_error:
+  {
+    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
+        ("GDP caps packet header does not validate"));
+    g_free (header);
+    return NULL;
+  }
+socket_read_error:
+  {
+    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
+    g_free (header);
+    g_free (payload);
+    return NULL;
+  }
+is_not_caps:
+  {
+    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
+        ("Header read doesn't describe CAPS payload"));
+    g_free (header);
+    g_free (payload);
+    return NULL;
+  }
+packet_validate_error:
+  {
+    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
+        ("GDP caps packet payload does not validate"));
+    g_free (header);
+    g_free (payload);
+    return NULL;
+  }
 }
 
 /* write a GDP header to the socket.  Return false if fails. */
 gboolean
-gst_tcp_gdp_write_header (GstElement * this, int socket, GstBuffer * buffer,
+gst_tcp_gdp_write_buffer (GstElement * this, int socket, GstBuffer * buffer,
     gboolean fatal, const gchar * host, int port)
 {
   guint length;
   guint8 *header;
   size_t wrote;
 
-  if (!gst_dp_header_from_buffer (buffer, 0, &length, &header)) {
+  if (!gst_dp_header_from_buffer (buffer, 0, &length, &header))
+    goto create_error;
+
+  GST_LOG_OBJECT (this, "writing %d bytes for GDP buffer header", length);
+  wrote = gst_tcp_socket_write (socket, header, length);
+  g_free (header);
+
+  if (wrote != length)
+    goto write_error;
+
+  return TRUE;
+
+  /* ERRORS */
+create_error:
+  {
     if (fatal)
       GST_ELEMENT_ERROR (this, CORE, TOO_LAZY, (NULL),
           ("Could not create GDP header from buffer"));
     return FALSE;
   }
-
-  GST_LOG_OBJECT (this, "writing %d bytes for GDP buffer header", length);
-  wrote = gst_tcp_socket_write (socket, header, length);
-  g_free (header);
-  if (wrote != length) {
+write_error:
+  {
     if (fatal)
       GST_ELEMENT_ERROR (this, RESOURCE, WRITE,
           (_("Error while sending data to \"%s:%d\"."), host, port),
@@ -307,8 +362,6 @@ gst_tcp_gdp_write_header (GstElement * this, int socket, GstBuffer * buffer,
               wrote, GST_BUFFER_SIZE (buffer), g_strerror (errno)));
     return FALSE;
   }
-
-  return TRUE;
 }
 
 /* write GDP header and payload to the given socket for the given caps.
@@ -322,15 +375,36 @@ gst_tcp_gdp_write_caps (GstElement * this, int socket, const GstCaps * caps,
   guint8 *payload;
   size_t wrote;
 
-  if (!gst_dp_packet_from_caps (caps, 0, &length, &header, &payload)) {
+  if (!gst_dp_packet_from_caps (caps, 0, &length, &header, &payload))
+    goto create_error;
+
+  GST_LOG_OBJECT (this, "writing %d bytes for GDP caps header", length);
+  wrote = gst_tcp_socket_write (socket, header, length);
+  if (wrote != length)
+    goto write_header_error;
+
+  length = gst_dp_header_payload_length (header);
+  g_free (header);
+
+  GST_LOG_OBJECT (this, "writing %d bytes for GDP caps payload", length);
+  wrote = gst_tcp_socket_write (socket, payload, length);
+  g_free (payload);
+
+  if (wrote != length)
+    goto write_payload_error;
+
+  return TRUE;
+
+  /* ERRORS */
+create_error:
+  {
     if (fatal)
       GST_ELEMENT_ERROR (this, CORE, TOO_LAZY, (NULL),
           ("Could not create GDP packet from caps"));
     return FALSE;
   }
-  GST_LOG_OBJECT (this, "writing %d bytes for GDP caps header", length);
-  wrote = gst_tcp_socket_write (socket, header, length);
-  if (wrote != length) {
+write_header_error:
+  {
     g_free (header);
     g_free (payload);
     if (fatal)
@@ -340,13 +414,8 @@ gst_tcp_gdp_write_caps (GstElement * this, int socket, const GstCaps * caps,
               wrote, length, g_strerror (errno)));
     return FALSE;
   }
-
-  length = gst_dp_header_payload_length (header);
-  g_free (header);
-  GST_LOG_OBJECT (this, "writing %d bytes for GDP caps payload", length);
-  wrote = gst_tcp_socket_write (socket, payload, length);
-  g_free (payload);
-  if (wrote != length) {
+write_payload_error:
+  {
     if (fatal)
       GST_ELEMENT_ERROR (this, RESOURCE, WRITE,
           (_("Error while sending gdp payload data to \"%s:%d\"."), host, port),
@@ -354,5 +423,4 @@ gst_tcp_gdp_write_caps (GstElement * this, int socket, const GstCaps * caps,
               wrote, length, g_strerror (errno)));
     return FALSE;
   }
-  return TRUE;
 }

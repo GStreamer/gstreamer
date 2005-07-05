@@ -23,16 +23,16 @@
 #define __GST_TCPCLIENTSRC_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstpushsrc.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #include <netdb.h>                        /* sockaddr_in */
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>			  /* sockaddr_in */
 #include <unistd.h>
+
 #include "gsttcp.h"
 
 #define GST_TYPE_TCPCLIENTSRC \
@@ -56,10 +56,7 @@ typedef enum {
 } GstTCPClientSrcFlags;
 
 struct _GstTCPClientSrc {
-  GstElement element;
-
-  /* pad */
-  GstPad *srcpad;
+  GstPushSrc element;
 
   /* server information */
   int port;
@@ -75,21 +72,14 @@ struct _GstTCPClientSrc {
   GstTCPProtocolType protocol; /* protocol used for reading data */
   gboolean caps_received;      /* if we have received caps yet */
   GstCaps *caps;
-  GstClock *clock;
-
-  gboolean send_discont;       /* TRUE when we need to send a discont */
-  GstBuffer *buffer_after_discont; /* temporary storage for buffer */
 };
 
 struct _GstTCPClientSrcClass {
-  GstElementClass parent_class;
+  GstPushSrcClass parent_class;
 };
 
 GType gst_tcpclientsrc_get_type (void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_TCPCLIENTSRC_H__ */

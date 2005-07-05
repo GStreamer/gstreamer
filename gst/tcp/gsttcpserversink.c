@@ -119,16 +119,16 @@ gst_tcpserversink_class_init (GstTCPServerSink * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_MULTIFDSINK);
 
+  gobject_class->set_property = gst_tcpserversink_set_property;
+  gobject_class->get_property = gst_tcpserversink_get_property;
+  gobject_class->finalize = gst_tcpserversink_finalize;
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HOST,
       g_param_spec_string ("host", "host", "The host/IP to send the packets to",
           TCP_DEFAULT_HOST, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
       g_param_spec_int ("port", "port", "The port to send the packets to",
           0, TCP_HIGHEST_PORT, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
-
-  gobject_class->set_property = gst_tcpserversink_set_property;
-  gobject_class->get_property = gst_tcpserversink_get_property;
-  gobject_class->finalize = gst_tcpserversink_finalize;
 
   gstmultifdsink_class->init = gst_tcpserversink_init_send;
   gstmultifdsink_class->wait = gst_tcpserversink_handle_wait;

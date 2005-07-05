@@ -14,7 +14,6 @@ BUILT_SOURCES = $(built_sources) $(built_headers)
 
 libgsttcp_la_SOURCES = \
 	gsttcpplugin.c \
-	gsttcpsrc.c gsttcpsink.c \
 	gsttcp.c \
 	gstfdset.c \
 	gstmultifdsink.c  \
@@ -27,11 +26,10 @@ nodist_libgsttcp_la_SOURCES = \
 # remove ENABLE_NEW when dataprotocol is stable
 libgsttcp_la_CFLAGS = $(GST_CFLAGS) -DGST_ENABLE_NEW
 libgsttcp_la_LIBADD = 
-libgsttcp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgsttcp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GST_BASE_LIBS) $(GST_GDP_LIBS)
 
 noinst_HEADERS = \
   gsttcpplugin.h \
-  gsttcpsrc.h gsttcpsink.h \
   gsttcp.h \
   gstfdset.h \
   gstmultifdsink.h  \

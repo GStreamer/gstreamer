@@ -237,6 +237,16 @@ fi
 
 AC_SUBST(GST_CONTROL_LIBS)
 
+dnl check for gstreamer-dataprotocol; uninstalled is selected preferentially
+PKG_CHECK_MODULES(GST_GDP, gstreamer-dataprotocol-$GST_MAJORMINOR >= $GST_REQ,
+  HAVE_GST_GDP="yes", HAVE_GST_GDP="no")
+
+if test "x$HAVE_GST_GDP" = "xno"; then
+  AC_MSG_ERROR(no GStreamer Dataprotocol Libs found)
+fi
+
+AC_SUBST(GST_GDP_LIBS)
+
 PKG_CHECK_MODULES(GST_BASE, gstreamer-base-$GST_MAJORMINOR >= $GST_REQ,
   HAVE_GST_BASE="yes", HAVE_GST_BASE="no")
 
@@ -375,6 +385,7 @@ GST_PLUGINS_ALL="\
 	playback \
 	sine \
         subparse \
+        tcp \
 	typefind \
 	videotestsrc \
 	videorate \
@@ -883,6 +894,7 @@ gst/ffmpegcolorspace/Makefile
 gst/playback/Makefile
 gst/sine/Makefile
 gst/subparse/Makefile
+gst/tcp/Makefile
 gst/typefind/Makefile
 gst/videotestsrc/Makefile
 gst/videorate/Makefile

@@ -23,11 +23,11 @@
 
 
 #include <gst/gst.h>
+#include <gst/base/gstbasesink.h>
+
 #include "gsttcp.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -65,10 +65,7 @@ typedef enum {
 } GstTCPClientSinkFlags;
 
 struct _GstTCPClientSink {
-  GstElement element;
-
-  /* pad */
-  GstPad *sinkpad;
+  GstBaseSink element;
 
   /* server information */
   int port;
@@ -81,21 +78,14 @@ struct _GstTCPClientSink {
   size_t data_written; /* how much bytes have we written ? */
   GstTCPProtocolType protocol; /* used with the protocol enum */
   gboolean caps_sent; /* whether or not we sent caps already */
-
-  guint mtu;
-  GstClock *clock;
 };
 
 struct _GstTCPClientSinkClass {
-  GstElementClass parent_class;
+  GstBaseSinkClass parent_class;
 };
 
 GType gst_tcpclientsink_get_type(void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_TCPCLIENTSINK_H__ */

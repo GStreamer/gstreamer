@@ -46,11 +46,13 @@ gint gst_tcp_socket_read (int socket, void *buf, size_t count);
 
 void gst_tcp_socket_close (int *socket);
 
-GstData * gst_tcp_gdp_read_header (GstElement *this, int socket);
-GstCaps * gst_tcp_gdp_read_caps (GstElement *this, int socket);
+GstBuffer * gst_tcp_gdp_read_buffer (GstElement *elem, int socket);
+GstEvent * gst_tcp_gdp_read_event (GstElement *elem, int socket);
+GstCaps * gst_tcp_gdp_read_caps (GstElement *elem, int socket);
 
-gboolean gst_tcp_gdp_write_header (GstElement *this, int socket, GstBuffer *buffer, gboolean fatal, const gchar *host, int port);
-gboolean gst_tcp_gdp_write_caps (GstElement *this, int socket, const GstCaps *caps, gboolean fatal, const gchar *host, int port);
+gboolean gst_tcp_gdp_write_buffer (GstElement *elem, int socket, GstBuffer *buffer, gboolean fatal, const gchar *host, int port);
+gboolean gst_tcp_gdp_write_event (GstElement *elem, int socket, GstEvent *event, gboolean fatal, const gchar *host, int port);
+gboolean gst_tcp_gdp_write_caps (GstElement *elem, int socket, const GstCaps *caps, gboolean fatal, const gchar *host, int port);
 
 G_END_DECLS
 

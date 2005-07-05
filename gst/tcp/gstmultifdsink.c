@@ -66,6 +66,11 @@ GST_ELEMENT_DETAILS ("MultiFd sink",
     "Thomas Vander Stichele <thomas at apestaart dot org>, "
     "Wim Taymans <wim@fluendo.com>");
 
+static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
 GST_DEBUG_CATEGORY (multifdsink_debug);
 #define GST_CAT_DEFAULT (multifdsink_debug)
 
@@ -215,7 +220,8 @@ static void gst_multifdsink_init (GstMultiFdSink * multifdsink);
 static void gst_multifdsink_remove_client_link (GstMultiFdSink * sink,
     GList * link);
 
-static void gst_multifdsink_chain (GstPad * pad, GstData * _data);
+static GstFlowReturn gst_multifdsink_render (GstBaseSink * bsink,
+    GstBuffer * buf);
 static GstElementStateReturn gst_multifdsink_change_state (GstElement *
     element);
 
@@ -250,7 +256,7 @@ gst_multifdsink_get_type (void)
     };
 
     multifdsink_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstMultiFdSink",
+        g_type_register_static (GST_TYPE_BASESINK, "GstMultiFdSink",
         &multifdsink_info, 0);
   }
   return multifdsink_type;
@@ -261,6 +267,9 @@ gst_multifdsink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sinktemplate));
+
   gst_element_class_set_details (element_class, &gst_multifdsink_details);
 }
 
@@ -269,11 +278,16 @@ gst_multifdsink_class_init (GstMultiFdSinkClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstBaseSinkClass *gstbasesink_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  gstbasesink_class = (GstBaseSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_BASESINK);
+
+  gobject_class->set_property = gst_multifdsink_set_property;
+  gobject_class->get_property = gst_multifdsink_get_property;
 
   g_object_class_install_property (gobject_class, ARG_PROTOCOL,
       g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in",
@@ -375,10 +389,9 @@ gst_multifdsink_class_init (GstMultiFdSinkClass * klass)
           client_removed), NULL, NULL, gst_tcp_marshal_VOID__INT_BOXED,
       G_TYPE_NONE, 2, G_TYPE_INT, GST_TYPE_CLIENT_STATUS);
 
-  gobject_class->set_property = gst_multifdsink_set_property;
-  gobject_class->get_property = gst_multifdsink_get_property;
-
   gstelement_class->change_state = gst_multifdsink_change_state;
+
+  gstbasesink_class->render = gst_multifdsink_render;
 
   klass->add = gst_multifdsink_add;
   klass->remove = gst_multifdsink_remove;
@@ -391,11 +404,6 @@ gst_multifdsink_class_init (GstMultiFdSinkClass * klass)
 static void
 gst_multifdsink_init (GstMultiFdSink * this)
 {
-  /* create the sink pad */
-  this->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
-  gst_element_add_pad (GST_ELEMENT (this), this->sinkpad);
-  gst_pad_set_chain_function (this->sinkpad, gst_multifdsink_chain);
-
   GST_FLAG_UNSET (this, GST_MULTIFDSINK_OPEN);
 
   this->protocol = DEFAULT_PROTOCOL;
@@ -636,7 +644,7 @@ gst_multifdsink_remove_client_link (GstMultiFdSink * sink, GList * link)
   client->disconnect_time = GST_TIMEVAL_TO_TIME (now);
 
   /* free client buffers */
-  g_slist_foreach (client->sending, (GFunc) gst_data_unref, NULL);
+  g_slist_foreach (client->sending, (GFunc) gst_mini_object_unref, NULL);
   g_slist_free (client->sending);
   client->sending = NULL;
 
@@ -777,9 +785,9 @@ gst_multifdsink_client_queue_caps (GstMultiFdSink * sink, GstTCPClient * client,
 static gboolean
 is_sync_frame (GstMultiFdSink * sink, GstBuffer * buffer)
 {
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_DELTA_UNIT)) {
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
     return FALSE;
-  } else if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_IN_CAPS)) {
+  } else if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_IN_CAPS)) {
     return TRUE;
   }
   return FALSE;
@@ -934,7 +942,8 @@ gst_multifdsink_handle_client_write (GstMultiFdSink * sink,
   /* when using GDP, first check if we have queued caps yet */
   if (sink->protocol == GST_TCP_PROTOCOL_TYPE_GDP) {
     if (!client->caps_sent) {
-      const GstCaps *caps = GST_PAD_CAPS (GST_PAD_PEER (sink->sinkpad));
+      const GstCaps *caps =
+          GST_PAD_CAPS (GST_PAD_PEER (GST_BASESINK_PAD (sink)));
 
       /* queue caps for sending */
       res = gst_multifdsink_client_queue_caps (sink, client, caps);
@@ -1443,32 +1452,28 @@ gst_multifdsink_thread (GstMultiFdSink * sink)
   return NULL;
 }
 
-static void
-gst_multifdsink_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_multifdsink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
   GstMultiFdSink *sink;
 
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
-  sink = GST_MULTIFDSINK (GST_OBJECT_PARENT (pad));
-  g_return_if_fail (GST_FLAG_IS_SET (sink, GST_MULTIFDSINK_OPEN));
+  sink = GST_MULTIFDSINK (bsink);
 
-  if (GST_IS_EVENT (buf)) {
-    g_warning ("FIXME: handle events");
-    return;
-  }
+  /* since we keep this buffer out of the scope of this method */
+  gst_buffer_ref (buf);
+
+  g_return_val_if_fail (GST_FLAG_IS_SET (sink, GST_MULTIFDSINK_OPEN),
+      GST_FLOW_ERROR);
 
   GST_LOG_OBJECT (sink, "received buffer %p", buf);
   /* if we get IN_CAPS buffers, but the previous buffer was not IN_CAPS,
    * it means we're getting new streamheader buffers, and we should clear
    * the old ones */
-  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_IN_CAPS) &&
+  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_IN_CAPS) &&
       sink->previous_buffer_in_caps == FALSE) {
     GST_DEBUG_OBJECT (sink,
         "receiving new IN_CAPS buffers, clearing old streamheader");
-    g_slist_foreach (sink->streamheader, (GFunc) gst_data_unref, NULL);
+    g_slist_foreach (sink->streamheader, (GFunc) gst_mini_object_unref, NULL);
     g_slist_free (sink->streamheader);
     sink->streamheader = NULL;
   }
@@ -1478,13 +1483,13 @@ gst_multifdsink_chain (GstPad * pad, GstData * _data)
    * After that we return, since we only send these out when we get
    * non IN_CAPS buffers so we properly keep track of clients that got
    * streamheaders. */
-  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_IN_CAPS)) {
+  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_IN_CAPS)) {
     sink->previous_buffer_in_caps = TRUE;
     GST_DEBUG_OBJECT (sink,
         "appending IN_CAPS buffer with length %d to streamheader",
         GST_BUFFER_SIZE (buf));
     sink->streamheader = g_slist_append (sink->streamheader, buf);
-    return;
+    return GST_FLOW_OK;
   }
 
   sink->previous_buffer_in_caps = FALSE;
@@ -1492,6 +1497,8 @@ gst_multifdsink_chain (GstPad * pad, GstData * _data)
   gst_multifdsink_queue_buffer (sink, buf);
 
   sink->bytes_to_serve += GST_BUFFER_SIZE (buf);
+
+  return GST_FLOW_OK;
 }
 
 static void
@@ -1617,21 +1624,24 @@ gst_multifdsink_get_property (GObject * object, guint prop_id, GValue * value,
 
 /* create a socket for sending to remote machine */
 static gboolean
-gst_multifdsink_init_send (GstMultiFdSink * this)
+gst_multifdsink_start (GstBaseSink * bsink)
 {
   GstMultiFdSinkClass *fclass;
   int control_socket[2];
+  GstMultiFdSink *this;
 
+  if (GST_FLAG_IS_SET (bsink, GST_MULTIFDSINK_OPEN))
+    return TRUE;
+
+  this = GST_MULTIFDSINK (bsink);
   fclass = GST_MULTIFDSINK_GET_CLASS (this);
 
   GST_INFO_OBJECT (this, "starting in mode %d", this->mode);
   this->fdset = gst_fdset_new (this->mode);
 
-  if (socketpair (PF_UNIX, SOCK_STREAM, 0, control_socket) < 0) {
-    GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ_WRITE, (NULL),
-        GST_ERROR_SYSTEM);
-    return FALSE;
-  }
+  if (socketpair (PF_UNIX, SOCK_STREAM, 0, control_socket) < 0)
+    goto socket_pair;
+
   READ_SOCKET (this).fd = control_socket[0];
   WRITE_SOCKET (this).fd = control_socket[1];
 
@@ -1653,15 +1663,30 @@ gst_multifdsink_init_send (GstMultiFdSink * this)
   this->thread = g_thread_create ((GThreadFunc) gst_multifdsink_thread,
       this, TRUE, NULL);
 
+  GST_FLAG_SET (this, GST_MULTIFDSINK_OPEN);
+
   return TRUE;
+
+  /* ERRORS */
+socket_pair:
+  {
+    GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ_WRITE, (NULL),
+        GST_ERROR_SYSTEM);
+    return FALSE;
+  }
 }
 
-static void
-gst_multifdsink_close (GstMultiFdSink * this)
+static gboolean
+gst_multifdsink_stop (GstBaseSink * bsink)
 {
   GstMultiFdSinkClass *fclass;
+  GstMultiFdSink *this;
 
+  this = GST_MULTIFDSINK (bsink);
   fclass = GST_MULTIFDSINK_GET_CLASS (this);
+
+  if (!GST_FLAG_IS_SET (bsink, GST_MULTIFDSINK_OPEN))
+    return TRUE;
 
   this->running = FALSE;
 
@@ -1678,7 +1703,7 @@ gst_multifdsink_close (GstMultiFdSink * this)
   close (WRITE_SOCKET (this).fd);
 
   if (this->streamheader) {
-    g_slist_foreach (this->streamheader, (GFunc) gst_data_unref, NULL);
+    g_slist_foreach (this->streamheader, (GFunc) gst_mini_object_unref, NULL);
     g_slist_free (this->streamheader);
     this->streamheader = NULL;
   }
@@ -1691,46 +1716,55 @@ gst_multifdsink_close (GstMultiFdSink * this)
     gst_fdset_free (this->fdset);
     this->fdset = NULL;
   }
+  GST_FLAG_UNSET (this, GST_MULTIFDSINK_OPEN);
+
+  return TRUE;
 }
 
 static GstElementStateReturn
 gst_multifdsink_change_state (GstElement * element)
 {
   GstMultiFdSink *sink;
+  gint transition;
+  GstElementStateReturn ret;
 
-  g_return_val_if_fail (GST_IS_MULTIFDSINK (element), GST_STATE_FAILURE);
   sink = GST_MULTIFDSINK (element);
 
   /* we disallow changing the state from the streaming thread */
   if (g_thread_self () == sink->thread)
     return GST_STATE_FAILURE;
 
-  switch (GST_STATE_TRANSITION (element)) {
+  transition = GST_STATE_TRANSITION (element);
+
+  switch (transition) {
     case GST_STATE_NULL_TO_READY:
-      if (!GST_FLAG_IS_SET (sink, GST_MULTIFDSINK_OPEN)) {
-        if (!gst_multifdsink_init_send (sink))
-          return GST_STATE_FAILURE;
-        GST_FLAG_SET (sink, GST_MULTIFDSINK_OPEN);
-      }
+      if (!gst_multifdsink_start (GST_BASESINK (sink)))
+        goto start_failed;
       break;
     case GST_STATE_READY_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  switch (transition) {
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
       break;
     case GST_STATE_READY_TO_NULL:
-      if (GST_FLAG_IS_SET (sink, GST_MULTIFDSINK_OPEN)) {
-        gst_multifdsink_close (GST_MULTIFDSINK (element));
-        GST_FLAG_UNSET (sink, GST_MULTIFDSINK_OPEN);
-      }
+      gst_multifdsink_stop (GST_BASESINK (sink));
       break;
   }
+  return ret;
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
+  /* ERRORS */
+start_failed:
+  {
+    return GST_STATE_FAILURE;
+  }
 }

@@ -22,12 +22,10 @@
 #ifndef __GST_MULTIFDSINK_H__
 #define __GST_MULTIFDSINK_H__
 
-
 #include <gst/gst.h>
+#include <gst/base/gstbasesink.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #include "gsttcp.h"
 #include "gstfdset.h"
@@ -119,10 +117,7 @@ typedef struct {
 } GstTCPClient;
 
 struct _GstMultiFdSink {
-  GstElement element;
-
-  /* pad */
-  GstPad *sinkpad;
+  GstBaseSink element;
 
   guint64 bytes_to_serve; /* how much bytes we must serve */
   guint64 bytes_served; /* how much bytes have we served */
@@ -161,7 +156,7 @@ struct _GstMultiFdSink {
 };
 
 struct _GstMultiFdSinkClass {
-  GstElementClass parent_class;
+  GstBaseSinkClass parent_class;
 
   /* element methods */
   void 		(*add)    	(GstMultiFdSink *sink, int fd);
@@ -187,10 +182,6 @@ void gst_multifdsink_remove (GstMultiFdSink *sink, int fd);
 void gst_multifdsink_clear (GstMultiFdSink *sink);
 GValueArray* gst_multifdsink_get_stats (GstMultiFdSink *sink, int fd);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_MULTIFDSINK_H__ */
