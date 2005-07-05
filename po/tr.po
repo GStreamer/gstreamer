@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-06-28 11:37+0200\n"
+"POT-Creation-Date: 2005-07-05 16:52+0200\n"
 "PO-Revision-Date: 2004-04-03 03:14+0300\n"
 "Last-Translator: Baris Cicek <baris@teamforce.name.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -561,51 +561,51 @@ msgstr "albüm üst sınırı"
 msgid ", "
 msgstr ", "
 
-#: gst/elements/gstfilesink.c:231
+#: gst/elements/gstfilesink.c:229
 msgid "No file name specified for writing."
 msgstr "Yazım için hiç bir dosya adı belirtilmedi."
 
-#: gst/elements/gstfilesink.c:238
+#: gst/elements/gstfilesink.c:236
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "\"%s\" dosyası yazım için açılamadı."
 
-#: gst/elements/gstfilesink.c:253
+#: gst/elements/gstfilesink.c:251
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "\"%s\" kapatılırken hata."
 
-#: gst/elements/gstfilesink.c:307 gst/elements/gstfilesink.c:340
-#: gst/elements/gstfilesink.c:378
+#: gst/elements/gstfilesink.c:305 gst/elements/gstfilesink.c:338
+#: gst/elements/gstfilesink.c:371
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "\"%s\" dosyası yazılırken hata."
 
-#: gst/elements/gstfilesrc.c:854
+#: gst/elements/gstfilesrc.c:852
 msgid "No file name specified for reading."
 msgstr "Okuma için hiç bir dosya adı belirtilmedi."
 
-#: gst/elements/gstfilesrc.c:866
+#: gst/elements/gstfilesrc.c:864
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "\"%s\" dosyası okuma için açılamadı."
 
-#: gst/elements/gstfilesrc.c:875
+#: gst/elements/gstfilesrc.c:873
 #, fuzzy, c-format
 msgid "could not get info on \"%s\"."
 msgstr "%s, %s'a bağlanamadı"
 
-#: gst/elements/gstfilesrc.c:882
+#: gst/elements/gstfilesrc.c:880
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr ""
 
-#: gst/elements/gstfilesrc.c:889
+#: gst/elements/gstfilesrc.c:887
 #, fuzzy, c-format
 msgid "File \"%s\" is a socket."
 msgstr "\"%s\" dosyası düzenli bir dosya değil."
 
-#: gst/elements/gstidentity.c:283
+#: gst/elements/gstidentity.c:276
 msgid "Failed after iterations as requested."
 msgstr "İstenildiği gibi tekrarlama başarısız oldu."
 

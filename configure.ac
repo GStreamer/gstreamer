@@ -62,10 +62,10 @@ AS_COMPILER_FLAG(-Wall,
                  GST_ERROR_CFLAGS="-Wall",
                  GST_ERROR_CFLAGS="")
 dnl if we're in nano >= 1, add -Werror if supported
-if test "x$GST_CVS" = "xyes"
-then
-  AS_COMPILER_FLAG(-Werror, GST_ERROR_CFLAGS="$GST_ERROR_CFLAGS -Werror")
-fi
+dnl  if test "x$GST_CVS" = "xyes"
+dnl then
+dnl   AS_COMPILER_FLAG(-Werror, GST_ERROR_CFLAGS="$GST_ERROR_CFLAGS -Werror")
+dnl fi
 
 dnl We disable static building for development, for time savings
 dnl *NOTE*: dnl this line before release, so release does static too

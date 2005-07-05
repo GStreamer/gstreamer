@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-06-28 11:37+0200\n"
+"POT-Creation-Date: 2005-07-05 16:52+0200\n"
 "PO-Revision-Date: 2005-02-17 12:00+0100\n"
 "Last-Translator: Kjartan Maraas <kmaraas@broadpark.no>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -544,51 +544,51 @@ msgstr ""
 msgid ", "
 msgstr ", "
 
-#: gst/elements/gstfilesink.c:231
+#: gst/elements/gstfilesink.c:229
 msgid "No file name specified for writing."
 msgstr "Ingen filnavn oppgitt for skriving."
 
-#: gst/elements/gstfilesink.c:238
+#: gst/elements/gstfilesink.c:236
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Kunne ikke åpne fil «%s» for skriving."
 
-#: gst/elements/gstfilesink.c:253
+#: gst/elements/gstfilesink.c:251
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Feil ved lukking av fil «%s»."
 
-#: gst/elements/gstfilesink.c:307 gst/elements/gstfilesink.c:340
-#: gst/elements/gstfilesink.c:378
+#: gst/elements/gstfilesink.c:305 gst/elements/gstfilesink.c:338
+#: gst/elements/gstfilesink.c:371
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Feil ved skriving til fil «%s»."
 
-#: gst/elements/gstfilesrc.c:854
+#: gst/elements/gstfilesrc.c:852
 msgid "No file name specified for reading."
 msgstr "Ingen filnavn oppgitt for lesing."
 
-#: gst/elements/gstfilesrc.c:866
+#: gst/elements/gstfilesrc.c:864
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunne ikke åpne fil «%s» for lesing."
 
-#: gst/elements/gstfilesrc.c:875
+#: gst/elements/gstfilesrc.c:873
 #, fuzzy, c-format
 msgid "could not get info on \"%s\"."
 msgstr "Kunne ikke hente/sette innstillinger fra/på ressurs."
 
-#: gst/elements/gstfilesrc.c:882
+#: gst/elements/gstfilesrc.c:880
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "«%s» er en katalog."
 
-#: gst/elements/gstfilesrc.c:889
+#: gst/elements/gstfilesrc.c:887
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Fil «%s» er en plugg."
 
-#: gst/elements/gstidentity.c:283
+#: gst/elements/gstidentity.c:276
 msgid "Failed after iterations as requested."
 msgstr ""
 

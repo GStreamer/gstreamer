@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.7pre2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-06-28 11:37+0200\n"
+"POT-Creation-Date: 2005-07-05 16:52+0200\n"
 "PO-Revision-Date: 2004-12-22 17:44+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -583,51 +583,51 @@ msgstr "cim de l'àlbum"
 msgid ", "
 msgstr ", "
 
-#: gst/elements/gstfilesink.c:231
+#: gst/elements/gstfilesink.c:229
 msgid "No file name specified for writing."
 msgstr "No s'ha especificat cap nom de fitxer per a l'escriptura."
 
-#: gst/elements/gstfilesink.c:238
+#: gst/elements/gstfilesink.c:236
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "No s'ha pogut obrir «%s» per a l'escriptura."
 
-#: gst/elements/gstfilesink.c:253
+#: gst/elements/gstfilesink.c:251
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "S'ha produït un error en tancar el fitxer «%s»."
 
-#: gst/elements/gstfilesink.c:307 gst/elements/gstfilesink.c:340
-#: gst/elements/gstfilesink.c:378
+#: gst/elements/gstfilesink.c:305 gst/elements/gstfilesink.c:338
+#: gst/elements/gstfilesink.c:371
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "S'ha produït un error en escriure al fitxer «%s»."
 
-#: gst/elements/gstfilesrc.c:854
+#: gst/elements/gstfilesrc.c:852
 msgid "No file name specified for reading."
 msgstr "No s'ha especificat cap fitxer per a llegir."
 
-#: gst/elements/gstfilesrc.c:866
+#: gst/elements/gstfilesrc.c:864
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "No s'ha pogut obrir el fitxer «%s» per a la lectura."
 
-#: gst/elements/gstfilesrc.c:875
+#: gst/elements/gstfilesrc.c:873
 #, fuzzy, c-format
 msgid "could not get info on \"%s\"."
 msgstr "no s'ha pogut enllaçar %s a %s"
 
-#: gst/elements/gstfilesrc.c:882
+#: gst/elements/gstfilesrc.c:880
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "«%s» és un directori."
 
-#: gst/elements/gstfilesrc.c:889
+#: gst/elements/gstfilesrc.c:887
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "El fitxer «%s» és un sòcol."
 
-#: gst/elements/gstidentity.c:283
+#: gst/elements/gstidentity.c:276
 msgid "Failed after iterations as requested."
 msgstr "Ha fallat després de les iteracions com s'ha demanat."
 

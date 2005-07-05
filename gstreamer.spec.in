@@ -139,8 +139,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstelements.so
 %{_libdir}/gstreamer-%{majorminor}/libgstgetbits.so
 %{_libdir}/gstreamer-%{majorminor}/libgstindexers.so
-%{_libdir}/gstreamer-%{majorminor}/libgstdataprotocol.so
 %{_libdir}/gstreamer-%{majorminor}/libgstthreadscheduler.so
+%{_libdir}/libgstdataprotocol-%{majorminor}.so
 
 %{_bindir}/gst-complete-%{majorminor}
 %{_bindir}/gst-compprep-%{majorminor}
@@ -189,6 +189,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/gstreamer-%{majorminor}/gst/dataprotocol
 %{_includedir}/gstreamer-%{majorminor}/gst/getbits
 
+%{_libdir}/libgstdataprotocol-%{majorminor}.so.*
 %{_libdir}/libgstreamer-%{majorminor}.so
 %{_libdir}/libgstbase-%{majorminor}.so
 %{_libdir}/libgstcontrol-%{majorminor}.so
@@ -197,9 +198,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pkgconfig/gstreamer-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-base-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-control-%{majorminor}.pc
+%{_libdir}/pkgconfig/gstreamer-dataprotocol-%{majorminor}.pc
 
-%doc %{_datadir}/gtk-doc/html/gstreamer-%{majorminor}
-%doc %{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}
+# %doc %{_datadir}/gtk-doc/html/gstreamer-%{majorminor}
+# %doc %{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}
                                                                                 
 %changelog
 * Thu Jun 09 2005 Thomas Vander Stichele <thomas at apestaart dot org>

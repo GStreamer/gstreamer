@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.7pre2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-06-28 11:37+0200\n"
+"POT-Creation-Date: 2005-07-05 16:52+0200\n"
 "PO-Revision-Date: 2004-12-21 08:23+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -671,51 +671,51 @@ msgstr "il picco dell'album"
 msgid ", "
 msgstr ", "
 
-#: gst/elements/gstfilesink.c:231
+#: gst/elements/gstfilesink.c:229
 msgid "No file name specified for writing."
 msgstr "Nessun nome di file specificato per la scrittura."
 
-#: gst/elements/gstfilesink.c:238
+#: gst/elements/gstfilesink.c:236
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Impossibile aprire il file «%s» in scrittura."
 
-#: gst/elements/gstfilesink.c:253
+#: gst/elements/gstfilesink.c:251
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Errore nel chiudere il file «%s»."
 
-#: gst/elements/gstfilesink.c:307 gst/elements/gstfilesink.c:340
-#: gst/elements/gstfilesink.c:378
+#: gst/elements/gstfilesink.c:305 gst/elements/gstfilesink.c:338
+#: gst/elements/gstfilesink.c:371
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Errore durante la scrittura sul file «%s»."
 
-#: gst/elements/gstfilesrc.c:854
+#: gst/elements/gstfilesrc.c:852
 msgid "No file name specified for reading."
 msgstr "Nessun nome di file specificato per la lettura."
 
-#: gst/elements/gstfilesrc.c:866
+#: gst/elements/gstfilesrc.c:864
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Impossibile aprire il file «%s» in lettura."
 
-#: gst/elements/gstfilesrc.c:875
+#: gst/elements/gstfilesrc.c:873
 #, fuzzy, c-format
 msgid "could not get info on \"%s\"."
 msgstr "impossibile collegare %s a %s"
 
-#: gst/elements/gstfilesrc.c:882
+#: gst/elements/gstfilesrc.c:880
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "«%s» è una directory."
 
-#: gst/elements/gstfilesrc.c:889
+#: gst/elements/gstfilesrc.c:887
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Il file «%s» è un socket."
 
-#: gst/elements/gstidentity.c:283
+#: gst/elements/gstidentity.c:276
 msgid "Failed after iterations as requested."
 msgstr "Fallito dopo le iterazioni come richiesto."
 
