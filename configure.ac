@@ -306,6 +306,7 @@ GST_PLUGINS_ALL="\
 		rtsp	\
 		smpte	\
 		udp     \
+		videobox \
 		videofilter \
                 "
 
@@ -497,6 +498,7 @@ gst/rtp/Makefile
 gst/rtsp/Makefile
 gst/smpte/Makefile
 gst/udp/Makefile
+gst/videobox/Makefile
 gst/videofilter/Makefile
 sys/Makefile
 ext/Makefile
