@@ -1,5 +1,10 @@
 2005-07-05  Andy Wingo  <wingo@pobox.com>
 
+	* Way, way, way too many files:
+	Remove crack comment from the 2000 era.
+
+2005-07-05  Andy Wingo  <wingo@pobox.com>
+
 	* gst/videobox/gstvideobox.c: Clean up, port to 0.9, use
 	BaseTransform.
 
