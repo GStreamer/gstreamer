@@ -740,7 +740,7 @@ gst_multifdsink_handle_client_read (GstMultiFdSink * sink,
 
 static gboolean
 gst_multifdsink_client_queue_data (GstMultiFdSink * sink, GstTCPClient * client,
-    gchar * data, gint len)
+    guint8 * data, gint len)
 {
   GstBuffer *buf;
 

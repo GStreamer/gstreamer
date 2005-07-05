@@ -1,3 +1,9 @@
+2005-07-05  Andy Wingo  <wingo@pobox.com>
+
+	* gst/tcp/gsttcpserversink.c (gst_tcpserversink_handle_server_read): 
+	* gst/tcp/gstmultifdsink.c (gst_multifdsink_client_queue_data):
+	Signedness fixes.
+
 2005-07-05  Wim Taymans  <wim@fluendo.com>
 
 	* configure.ac:
@@ -40,6 +46,11 @@
 	* gst/tcp/gsttcpsrc.h:
 	Ported tcp plugins to 0.9. 
 	
+
+2005-07-05  Andy Wingo  <wingo@pobox.com>
+
+	* Way, way, way too many files:
+	Remove crack comment from the 2000 era.
 
 2005-07-05  Andy Wingo  <wingo@pobox.com>
 
