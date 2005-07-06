@@ -64,12 +64,12 @@ gst_ringbuffer_acquire
 gst_ringbuffer_release
 gst_ringbuffer_is_acquired
 
-gst_ringbuffer_play
+gst_ringbuffer_start
 gst_ringbuffer_pause
 gst_ringbuffer_stop
 
 gst_ringbuffer_delay
-gst_ringbuffer_played_samples
+gst_ringbuffer_samples_done
 gst_ringbuffer_set_sample
 gst_ringbuffer_commit
 
