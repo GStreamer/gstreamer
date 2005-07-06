@@ -3,10 +3,9 @@ prefix=
 exec_prefix=
 libdir=${pcfiledir}/../libs
 includedir=${pcfiledir}/..
-gstdataprotocol_libs=-lgstdataprotocol-@GST_MAJORMINOR@
 
-Name: GStreamer dataprotocol library, uninstalled
-Description: Dataprotocol for plug-ins
+Name: GStreamer data protocol library, uninstalled
+Description: Data protocol for plug-ins
 Requires: gstreamer-@GST_MAJORMINOR@ = @VERSION@
 Version: @VERSION@
 

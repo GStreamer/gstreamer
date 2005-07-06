@@ -3,8 +3,8 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@/gstreamer-@GST_MAJORMINOR@
 
-Name: GStreamer dataprotocol library
-Description: Dataprotocol for plug-ins
+Name: GStreamer data protocol library
+Description: Data protocol for plug-ins
 Requires: gstreamer-@GST_MAJORMINOR@
 Version: @VERSION@
 Libs: -L${libdir} -lgstdataprotocol-@GST_MAJORMINOR@
