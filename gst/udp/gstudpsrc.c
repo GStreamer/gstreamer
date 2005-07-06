@@ -192,7 +192,7 @@ gst_udpsrc_class_init (GstUDPSrc * klass)
 static void
 gst_udpsrc_init (GstUDPSrc * udpsrc)
 {
-  gst_base_src_set_live (GST_BASESRC (udpsrc), TRUE);
+  gst_base_src_set_live (GST_BASE_SRC (udpsrc), TRUE);
   udpsrc->port = UDP_DEFAULT_PORT;
   udpsrc->sock = -1;
   udpsrc->multi_group = g_strdup (UDP_DEFAULT_MULTICAST_GROUP);
