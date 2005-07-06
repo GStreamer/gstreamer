@@ -1,3 +1,19 @@
+2005-07-06  Wim Taymans  <wim@fluendo.com>
+
+	* ext/theora/theoradec.c: (theora_dec_src_getcaps),
+	(theora_dec_push), (theora_handle_data_packet):
+	Prepare for better timestamp fix later.
+
+	* gst/audioconvert/gstaudioconvert.c:
+	List most accurate caps first
+
+	* gst/videotestsrc/gstvideotestsrc.c: (gst_videotestsrc_loop):
+	Use proper pad task function.
+
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_new),
+	(gst_xvimagesink_show_frame):
+	Fix deadlock when alloc failed.
+
 2005-07-05  Andy Wingo  <wingo@pobox.com>
 
 	* ext/gnomevfs/gstgnomevfssrc.c:

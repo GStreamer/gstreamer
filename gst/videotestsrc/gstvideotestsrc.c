@@ -660,7 +660,7 @@ gst_videotestsrc_loop (GstPad * pad)
 
 need_pause:
   {
-    gst_task_pause (GST_PAD_TASK (pad));
+    gst_pad_pause_task (pad);
   }
 }
 

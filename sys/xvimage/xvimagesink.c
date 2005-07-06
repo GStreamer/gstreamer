@@ -404,12 +404,13 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink,
     XSync (xvimagesink->xcontext->disp, FALSE);
   }
   succeeded = TRUE;
-  g_mutex_unlock (xvimagesink->x_lock);
 
   GST_BUFFER_DATA (xvimage) = (guchar *) xvimage->xvimage->data;
   GST_BUFFER_SIZE (xvimage) = xvimage->size;
 
 beach:
+  g_mutex_unlock (xvimagesink->x_lock);
+
   if (!succeeded) {
     gst_xvimage_buffer_free (xvimage);
     xvimage = NULL;
@@ -1547,6 +1548,7 @@ no_image:
   {
     /* No image available. That's very bad ! */
     gst_buffer_unref (buf);
+    GST_DEBUG ("could not create image");
     GST_ELEMENT_ERROR (xvimagesink, CORE, NEGOTIATION, (NULL),
         ("Failed creating an XvImage in xvimagesink chain function."));
     return GST_FLOW_ERROR;

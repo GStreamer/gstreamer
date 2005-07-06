@@ -571,13 +571,12 @@ theora_dec_src_getcaps (GstPad * pad)
   GstCaps *caps;
 
   GST_LOCK (pad);
-  caps = GST_PAD_CAPS (pad);
+  if (!(caps = GST_PAD_CAPS (pad)))
+    caps = (GstCaps *) gst_pad_get_pad_template_caps (pad);
+  caps = gst_caps_ref (caps);
   GST_UNLOCK (pad);
 
-  if (caps)
-    return gst_caps_ref (caps);
-  else
-    return gst_caps_ref ((GstCaps *) gst_pad_get_pad_template_caps (pad));
+  return caps;
 }
 
 static gboolean
@@ -791,6 +790,16 @@ header_read_error:
 }
 
 static GstFlowReturn
+theora_dec_push (GstTheoraDec * dec, GstBuffer * buf)
+{
+  GstFlowReturn result;
+
+  result = gst_pad_push (dec->srcpad, buf);
+
+  return result;
+}
+
+static GstFlowReturn
 theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
     GstClockTime outtime)
 {
@@ -893,7 +902,7 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
       dec->info.fps_numerator;
   GST_BUFFER_TIMESTAMP (out) = outtime;
 
-  result = gst_pad_push (dec->srcpad, out);
+  result = theora_dec_push (dec, out);
 
   return result;
 

@@ -100,19 +100,18 @@ GST_BOILERPLATE_FULL (GstAudioConvert, gst_audio_convert, GstElement,
 
 #define STATIC_CAPS \
 GST_STATIC_CAPS ( \
+  "audio/x-raw-float, " \
+    "rate = (int) [ 1, MAX ], " \
+    "channels = (int) [ 1, 8 ], " \
+    "endianness = (int) BYTE_ORDER, " \
+    "width = (int) 32, " \
+    "buffer-frames = (int) [ 0, MAX ];" \
   "audio/x-raw-int, " \
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, 8 ], " \
     "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
-    "width = (int) 8, " \
-    "depth = (int) [ 1, 8 ], " \
-    "signed = (boolean) { true, false }; " \
-  "audio/x-raw-int, " \
-    "rate = (int) [ 1, MAX ], " \
-    "channels = (int) [ 1, 8 ], " \
-    "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
-    "width = (int) 16, " \
-    "depth = (int) [ 1, 16 ], " \
+    "width = (int) 32, " \
+    "depth = (int) [ 1, 32 ], " \
     "signed = (boolean) { true, false }; " \
   "audio/x-raw-int, " \
     "rate = (int) [ 1, MAX ], " \
@@ -125,15 +124,16 @@ GST_STATIC_CAPS ( \
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, 8 ], " \
     "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
-    "width = (int) 32, " \
-    "depth = (int) [ 1, 32 ], " \
+    "width = (int) 16, " \
+    "depth = (int) [ 1, 16 ], " \
     "signed = (boolean) { true, false }; " \
-  "audio/x-raw-float, " \
+  "audio/x-raw-int, " \
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, 8 ], " \
-    "endianness = (int) BYTE_ORDER, " \
-    "width = (int) 32, " \
-    "buffer-frames = (int) [ 0, MAX ]" \
+    "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
+    "width = (int) 8, " \
+    "depth = (int) [ 1, 8 ], " \
+    "signed = (boolean) { true, false } " \
 )
 
 static GstAudioChannelPosition *supported_positions;
