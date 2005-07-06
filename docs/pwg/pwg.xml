@@ -19,7 +19,6 @@
 <!ENTITY BUILDING_PROPS       SYSTEM "building-props.xml">
 <!ENTITY BUILDING_SIGNALS     SYSTEM "building-signals.xml">
 <!ENTITY BUILDING_TESTAPP     SYSTEM "building-testapp.xml">
-<!ENTITY BUILDING_FILTERFACT  SYSTEM "building-filterfactory.xml">
 
 <!ENTITY ADVANCED_NEGOTIATION SYSTEM "advanced-negotiation.xml">
 <!ENTITY ADVANCED_SCHEDULING  SYSTEM "advanced-scheduling.xml">
@@ -119,7 +118,6 @@
     &BUILDING_PROPS;
     &BUILDING_SIGNALS;
     &BUILDING_TESTAPP;
-    &BUILDING_FILTERFACT;
   </part>
 
   <!-- ############ part ############# -->

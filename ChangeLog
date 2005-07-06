@@ -1,5 +1,12 @@
 2005-07-06  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* docs/pwg/building-filterfactory.xml:
+	* docs/pwg/pwg.xml:
+	  Remove never-written filter-factory chapter; I'll add the various
+	  base classes to part 4 ("other element types") later on.
+
+2005-07-06  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* docs/pwg/advanced-negotiation.xml:
 	* docs/pwg/building-boiler.xml:
 	* docs/pwg/building-pads.xml:
