@@ -1,8 +1,7 @@
-/*
- * Copyright (C) 2001 CodeFactory AB
- * Copyright (C) 2001 Thomas Nyberg <thomas@codefactory.se>
- * Copyright (C) 2001-2002 Andy Wingo <apwingo@eos.ncsu.edu>
- * Copyright (C) 2003 Benjamin Otte <in7y118@public.uni-hamburg.de>
+/* GStreamer
+ * Copyright (C)  2005 Wim Taymans <wim@fluendo.com>
+ *
+ * gstalsasrc.h: 
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -11,45 +10,62 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the Free
- * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_ALSA_SRC_H__
-#define __GST_ALSA_SRC_H__
 
-#include "gstalsamixer.h"
+#ifndef __GST_ALSASRC_H__
+#define __GST_ALSASRC_H__
+
+
+#include <gst/gst.h>
+#include <gst/audio/gstaudiosrc.h>
+#include <alsa/asoundlib.h>
 
 G_BEGIN_DECLS
 
-#define GST_ALSA_SRC(obj)            (G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_ALSA_SRC, GstAlsaSrc))
-#define GST_ALSA_SRC_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST(klass, GST_TYPE_ALSA_SRC, GstAlsaSrcClass))
-#define GST_IS_ALSA_SRC(obj)         (G_TYPE_CHECK_INSTANCE_TYPE(obj, GST_TYPE_ALSA_SRC))
-#define GST_IS_ALSA_SRC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE(klass, GST_TYPE_ALSA_SRC))
-#define GST_TYPE_ALSA_SRC            (gst_alsa_src_get_type())
+#define GST_TYPE_ALSA_SRC          (gst_alsasrc_get_type())
+#define GST_ALSA_SRC(obj)          (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALSA_SRC,GstAlsaSrc))
+#define GST_ALSA_SRC_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALSA_SRC,GstAlsaSrcClass))
+#define GST_IS_ALSA_SRC(obj)       (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALSA_SRC))
+#define GST_IS_ALSA_SRC_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALSA_SRC))
 
 typedef struct _GstAlsaSrc GstAlsaSrc;
 typedef struct _GstAlsaSrcClass GstAlsaSrcClass;
 
 struct _GstAlsaSrc {
-  GstAlsaMixer   parent;
-  GstBuffer     *buf[GST_ALSA_MAX_TRACKS];
-  snd_pcm_status_t *status;
-  GstClockTime  base_time; /* FIXME: move this up ? already present in element ? */
+  GstAudioSrc    src;
+
+  gchar			*device;
+
+  snd_pcm_t 		*handle;
+  snd_pcm_hw_params_t 	*hwparams;
+  snd_pcm_sw_params_t 	*swparams;
+
+  snd_pcm_access_t access;
+  snd_pcm_format_t format;
+  guint rate;
+  guint channels;
+  gint bytes_per_sample;
+
+  guint buffer_time;
+  guint period_time;
+  snd_pcm_uframes_t buffer_size;
+  snd_pcm_uframes_t period_size;
 };
 
 struct _GstAlsaSrcClass {
-  GstAlsaMixerClass parent_class;
+  GstAudioSrcClass parent_class;
 };
 
-GType gst_alsa_src_get_type (void);
-
-gboolean gst_alsa_src_factory_init (GstPlugin *plugin);
+GType gst_alsasrc_get_type(void);
 
 G_END_DECLS
 
-#endif /* __GST_ALSA_SRC_H__ */
+#endif /* __GST_ALSASRC_H__ */

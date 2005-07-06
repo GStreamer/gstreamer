@@ -44,7 +44,7 @@ typedef void (*GstRingBufferCallback) (GstRingBuffer *rbuf, guint8* data, guint 
 typedef enum {
   GST_RINGBUFFER_STATE_STOPPED,
   GST_RINGBUFFER_STATE_PAUSED,
-  GST_RINGBUFFER_STATE_PLAYING,
+  GST_RINGBUFFER_STATE_STARTED,
 } GstRingBufferState;
 
 typedef enum {
@@ -160,11 +160,11 @@ struct _GstRingBuffer {
 
   /*< public >*/ /* ATOMIC */
   gint			 state;		/* state of the buffer */
-  gint			 segplayed;     /* number of segments played since last start */
+  gint			 segdone;       /* number of segments processed since last start */
   gint			 waiting;	/* when waiting for a segment to be freed */
 
   /*< private >*/
-  guint64		 next_sample;	/* the next sample we need to write */
+  guint64		 next_sample;	/* the next sample we need to process */
   GstRingBufferCallback  callback;
   gpointer               cb_data;
 };
@@ -179,7 +179,7 @@ struct _GstRingBufferClass {
   gboolean     (*release)      (GstRingBuffer *buf);
 
   /* playback control */
-  gboolean     (*play)         (GstRingBuffer *buf);
+  gboolean     (*start)        (GstRingBuffer *buf);
   gboolean     (*pause)        (GstRingBuffer *buf);
   gboolean     (*resume)       (GstRingBuffer *buf);
   gboolean     (*stop)         (GstRingBuffer *buf);
@@ -194,6 +194,10 @@ GType gst_ringbuffer_get_type(void);
 void     	gst_ringbuffer_set_callback   	(GstRingBuffer *buf, GstRingBufferCallback cb, 
 						 gpointer user_data);
 
+gboolean	gst_ringbuffer_parse_caps	(GstRingBufferSpec *spec, GstCaps *caps);
+void 		gst_ringbuffer_debug_spec_caps  (GstRingBufferSpec *spec);
+void 		gst_ringbuffer_debug_spec_buff  (GstRingBufferSpec *spec);
+
 /* allocate resources */
 gboolean 	gst_ringbuffer_acquire 		(GstRingBuffer *buf, GstRingBufferSpec *spec);
 gboolean 	gst_ringbuffer_release 		(GstRingBuffer *buf);
@@ -201,21 +205,25 @@ gboolean 	gst_ringbuffer_release 		(GstRingBuffer *buf);
 gboolean 	gst_ringbuffer_is_acquired	(GstRingBuffer *buf);
 
 /* playback/pause */
-gboolean 	gst_ringbuffer_play 		(GstRingBuffer *buf);
+gboolean 	gst_ringbuffer_start 		(GstRingBuffer *buf);
 gboolean 	gst_ringbuffer_pause 		(GstRingBuffer *buf);
 gboolean 	gst_ringbuffer_stop 		(GstRingBuffer *buf);
 
 /* get status */
 guint	 	gst_ringbuffer_delay 		(GstRingBuffer *buf);
-guint64	 	gst_ringbuffer_played_samples	(GstRingBuffer *buf);
+guint64	 	gst_ringbuffer_samples_done	(GstRingBuffer *buf);
 
 void	 	gst_ringbuffer_set_sample	(GstRingBuffer *buf, guint64 sample);
 
 /* commit samples */
 guint 		gst_ringbuffer_commit 		(GstRingBuffer *buf, guint64 sample, 
 						 guchar *data, guint len);
+/* read samples */
+guint 		gst_ringbuffer_read 		(GstRingBuffer *buf, guint64 sample, 
+						 guchar *data, guint len);
 
 /* mostly protected */
+gboolean	gst_ringbuffer_prepare_write	(GstRingBuffer *buf, gint *segment, guint8 **writeptr, gint *len);
 gboolean	gst_ringbuffer_prepare_read	(GstRingBuffer *buf, gint *segment, guint8 **readptr, gint *len);
 void		gst_ringbuffer_clear		(GstRingBuffer *buf, gint segment);
 void	 	gst_ringbuffer_advance	 	(GstRingBuffer *buf, guint advance);

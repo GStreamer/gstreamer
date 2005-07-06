@@ -3,7 +3,8 @@ plugin_LTLIBRARIES = libgstalsa.la
 
 libgstalsa_la_SOURCES = \
 	gstalsaplugin.c \
-	gstalsasink.c 
+	gstalsasink.c 	\
+	gstalsasrc.c
 
 # port alsa stuff then add the _SOURCES above
 EXTRA_DIST = \
@@ -11,8 +12,7 @@ EXTRA_DIST = \
 	gstalsamixertrack.c \
 	gstalsamixeroptions.c \
 	gstalsa.c \
-	gstalsaclock.c \
-	gstalsasrc.c
+	gstalsaclock.c 
 
 libgstalsa_la_CFLAGS = $(GST_CFLAGS) $(ALSA_CFLAGS)
 libgstalsa_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) \

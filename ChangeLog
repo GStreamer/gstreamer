@@ -1,5 +1,56 @@
 2005-07-06  Wim Taymans  <wim@fluendo.com>
 
+	* ext/alsa/Makefile.am:
+	* ext/alsa/gstalsaplugin.c: (plugin_init):
+	* ext/alsa/gstalsasink.c: (gst_alsasink_open):
+	* ext/alsa/gstalsasrc.c: (gst_alsasrc_get_type),
+	(gst_alsasrc_dispose), (gst_alsasrc_base_init),
+	(gst_alsasrc_class_init), (gst_alsasrc_init),
+	(gst_alsasrc_getcaps), (set_hwparams), (set_swparams),
+	(alsasrc_parse_spec), (gst_alsasrc_open), (gst_alsasrc_close),
+	(xrun_recovery), (gst_alsasrc_read), (gst_alsasrc_delay),
+	(gst_alsasrc_reset):
+	* ext/alsa/gstalsasrc.h:
+	* gst-libs/gst/audio/Makefile.am:
+	* gst-libs/gst/audio/gstaudiosink.c:
+	(gst_audioringbuffer_get_type), (gst_audioringbuffer_class_init),
+	(gst_audioringbuffer_start):
+	* gst-libs/gst/audio/gstaudiosrc.c: (gst_audioringbuffer_get_type),
+	(gst_audioringbuffer_class_init), (audioringbuffer_thread_func),
+	(gst_audioringbuffer_init), (gst_audioringbuffer_dispose),
+	(gst_audioringbuffer_finalize), (gst_audioringbuffer_acquire),
+	(gst_audioringbuffer_release), (gst_audioringbuffer_start),
+	(gst_audioringbuffer_stop), (gst_audioringbuffer_delay),
+	(gst_audiosrc_base_init), (gst_audiosrc_class_init),
+	(gst_audiosrc_init), (gst_audiosrc_create_ringbuffer):
+	* gst-libs/gst/audio/gstaudiosrc.h:
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_baseaudiosink_class_init), (gst_baseaudiosink_dispose),
+	(gst_baseaudiosink_get_time), (gst_baseaudiosink_setcaps),
+	(gst_baseaudiosink_preroll), (gst_baseaudiosink_render):
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	(gst_baseaudiosrc_base_init), (gst_baseaudiosrc_class_init),
+	(gst_baseaudiosrc_init), (gst_baseaudiosrc_get_clock),
+	(gst_baseaudiosrc_get_time), (gst_baseaudiosrc_set_property),
+	(gst_baseaudiosrc_get_property), (gst_baseaudiosrc_fixate),
+	(gst_baseaudiosrc_setcaps), (gst_baseaudiosrc_get_times),
+	(gst_baseaudiosrc_event), (gst_baseaudiosrc_create),
+	(gst_baseaudiosrc_create_ringbuffer), (gst_baseaudiosrc_callback),
+	(gst_baseaudiosrc_change_state):
+	* gst-libs/gst/audio/gstbaseaudiosrc.h:
+	* gst-libs/gst/audio/gstringbuffer.c: (build_linear_format),
+	(gst_ringbuffer_debug_spec_caps), (gst_ringbuffer_debug_spec_buff),
+	(gst_ringbuffer_parse_caps), (gst_ringbuffer_start),
+	(gst_ringbuffer_pause), (gst_ringbuffer_stop),
+	(gst_ringbuffer_samples_done), (gst_ringbuffer_set_sample),
+	(wait_segment), (gst_ringbuffer_commit), (gst_ringbuffer_read),
+	(gst_ringbuffer_prepare_read), (gst_ringbuffer_advance):
+	* gst-libs/gst/audio/gstringbuffer.h:
+	Added audiosource base classes.
+	Ported alsasrc, still very basic.
+
+2005-07-06  Wim Taymans  <wim@fluendo.com>
+
 	* ext/theora/theoradec.c: (theora_dec_src_getcaps),
 	(theora_dec_push), (theora_handle_data_packet):
 	Prepare for better timestamp fix later.

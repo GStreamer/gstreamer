@@ -17,7 +17,9 @@ CLEANFILES = gstaudiofilterexample.c \
 libgstaudio_@GST_MAJORMINOR@_la_SOURCES = audio.c gstaudioclock.c \
 	multichannel.c \
 	gstaudiosink.c \
+	gstaudiosrc.c \
 	gstbaseaudiosink.c \
+	gstbaseaudiosrc.c \
 	gstringbuffer.c
 nodist_libgstaudio_@GST_MAJORMINOR@_la_SOURCES = $(built_sources) $(built_headers)
 
@@ -27,7 +29,9 @@ libgstaudio_@GST_MAJORMINOR@include_HEADERS = \
 	gstaudioclock.h \
 	gstaudiofilter.h \
 	gstaudiosink.h \
+	gstaudiosrc.h \
 	gstbaseaudiosink.h \
+	gstbaseaudiosrc.h \
 	gstringbuffer.h \
 	multichannel.h
 
