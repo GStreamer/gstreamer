@@ -3,8 +3,8 @@ GstBin
 
 GstBin is a container element for other GstElements. This makes it possible
 to group elements together so that they can be treated as one single 
-GstElement.
-
+GstElement. A GstBin provides a GstBus for the children and collates messages
+from them.
 
 Add/removing elements
 ---------------------
@@ -36,12 +36,37 @@ operations on itself to all of its children. This includes:
  - state changes
  - index get/set
  - clock gst/set
- - bus set/get
  - scheduler set/get
 
 The state change distribution is the most complex and is explained in 
 part-states.txt.
 
+GstBus
+------
+
+The GstBin creates a GstBus for its children and distributes it when child
+elements are added to the bin. The bin attaches a sync handler to receive
+messages from children. The bus for receiving messages from children is 
+distinct from the bin's own externally-visible GstBus. 
+
+Messages received from children are forwarded intact onto the bin's 
+external message bus, except for EOS which is handled specially.
+
+The application can retrieve the external GstBus and integrate it in the
+mainloop or it can just _pop() messages off in its own thread.
+
+EOS
+---
+
+The sink elements will post an EOS event on the bus when they reach EOS. The
+EOS message is only posted to the bus when the element is in PLAYING.
+
+The bin collects all EOS messages and forwards it to the application as
+soon as all the sinks have posted an EOS.
+
+The list of queued EOS messages is cleared when the bin goes to PAUSED
+again. This means that all elements should repost the EOS message when going
+to PLAYING again.
 
 Subclassing
 -----------
@@ -49,5 +74,4 @@ Subclassing
 Subclasses of GstBin are free to implement their own add/remove implementations.
 It is a good idea to update the GList of children so that the _iterate() functions
 can still be used.
-
 

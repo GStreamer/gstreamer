@@ -2,29 +2,12 @@ GstPipeline
 -----------
 
 A GstPipeline is usually a toplevel bin an provides all of its 
-children with a clock and a bus.
-
-The GstPipeline will also collect EOS messages from its children and
-will forward the EOS message to the application when all of the
-sinks are in EOS.
+children with a clock.
 
 The pipeline also calculates the stream time based on the selected
 clock (see part-clocks.txt).
 
 The pipeline manages the seek operation for the application.
-
-
-GstBus
-------
-
-The pipeline creates a GstBus and attaches a sync handler to receive
-the EOS events.
-
-Since the pipeline subclasses GstBin, all of its children will receive
-the same bus when added to the Gstbin.
-
-The application can retrieve the GstBus and integrate it in the 
-mainloop or it can just _pop() messages off in its own thread.
 
 
 State changes
@@ -72,21 +55,6 @@ possible.
 
 The _auto_clock() method removes the fixed clock and reactivates the auto-
 matic clock selection algorithm described above.
-
-
-EOS
----
-
-The sink elements will post an EOS event on the bus when they reach EOS. The
-EOS message is only posted to the bus when the element is in PLAYING.
-
-The pipeline collects all EOS messages and forwards it to the application as
-soon as all the sinks have posted an EOS.
-
-The list of queued EOS messages is cleared when the pipeline goes to PAUSED
-again. This means that all elements should repost the EOS message when going
-to PLAYING again.
-
 
 Seeking
 -------

@@ -1,5 +1,13 @@
 2005-07-07  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* docs/design/part-gstbin.txt:
+	* docs/design/part-gstpipeline.txt:
+	  Update design notes to reflect the movement of
+	  responsibility for bus handling from GstPipeline to
+	  GstBin
+
+2005-07-07  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* configure.ac:
 	  Remove unnecessary queue2/3/4 examples.
 
