@@ -1,3 +1,10 @@
+2005-07-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/gst/gstpad.c:
+	* check/gstcheck.c:
+	* gst/gstpad.c: (gst_pad_get_internal_links_default):
+	  if pad has no parent, return NULL as list of internal links
+
 2005-07-05  Andy Wingo  <wingo@pobox.com>
 
 	* gst/elements/gstfilesrc.c:
@@ -9,7 +16,7 @@
 2005-07-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* Makefile.am:
-          better report genration target (lcov needs a patch)
+	  better report genration target (lcov needs a patch)
 
 2005-07-05  Andy Wingo  <wingo@pobox.com>
 

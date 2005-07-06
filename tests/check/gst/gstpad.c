@@ -48,10 +48,11 @@ START_TEST (test_link)
   fail_unless (srct == NULL);
 }
 
-END_TEST
+END_TEST;
+
 /* threaded link/unlink */
 /* use globals */
-    GstPad * src, *sink;
+GstPad *src, *sink;
 
 void
 thread_link_unlink (gpointer data)
@@ -88,7 +89,8 @@ START_TEST (test_link_unlink_threaded)
   MAIN_STOP_THREADS ();
 }
 
-END_TEST
+END_TEST;
+
 START_TEST (test_refcount)
 {
   GstPad *src, *sink;
@@ -125,7 +127,8 @@ START_TEST (test_refcount)
   gst_caps_unref (caps);
 }
 
-END_TEST
+END_TEST;
+
 START_TEST (test_get_allowed_caps)
 {
   GstPad *src, *sink;
@@ -177,7 +180,9 @@ START_TEST (test_get_allowed_caps)
   gst_caps_unref (caps);
 }
 
-END_TEST Suite *
+END_TEST;
+
+Suite *
 gst_pad_suite (void)
 {
   Suite *s = suite_create ("GstPad");

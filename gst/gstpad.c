@@ -2270,7 +2270,7 @@ peer_error:
  * pads inside the parent element with opposite direction.
  * The caller must free this list after use.
  *
- * Returns: a newly allocated #GList of pads.
+ * Returns: a newly allocated #GList of pads, or NULL if the pad has no parent.
  *
  * Not MT safe.
  */
@@ -2287,6 +2287,9 @@ gst_pad_get_internal_links_default (GstPad * pad)
   direction = pad->direction;
 
   parent = GST_PAD_PARENT (pad);
+  if (!parent)
+    return NULL;
+
   parent_pads = parent->pads;
 
   while (parent_pads) {
