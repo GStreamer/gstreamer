@@ -1748,6 +1748,7 @@ was_dispatching:
 /**
  * gst_pad_fixate_caps:
  * @pad: a  #GstPad to fixate
+ * @caps: the  #GstCaps to fixate
  *
  * Fixate a caps on the given pad. Modifies the caps in place, so you should be
  * that the caps are actually writable (see gst_caps_make_writable()).
@@ -1755,7 +1756,15 @@ was_dispatching:
 void
 gst_pad_fixate_caps (GstPad * pad, GstCaps * caps)
 {
-  /* FIXME, implement me, call the fixate function for the pad */
+  GstPadFixateCapsFunction fixatefunc;
+
+  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (caps != NULL);
+
+  fixatefunc = GST_PAD_FIXATECAPSFUNC (pad);
+  if (fixatefunc) {
+    fixatefunc (pad, caps);
+  }
 }
 
 /**
@@ -1770,32 +1779,42 @@ gboolean
 gst_pad_accept_caps (GstPad * pad, GstCaps * caps)
 {
   gboolean result;
+  GstPadAcceptCapsFunction acceptfunc;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
+  /* any pad can be unnegotiated */
+  if (caps == NULL)
+    return TRUE;
+
   GST_LOCK (pad);
+  acceptfunc = GST_PAD_ACCEPTCAPSFUNC (pad);
 
   GST_CAT_DEBUG (GST_CAT_CAPS, "pad accept caps of %s:%s (%p)",
       GST_DEBUG_PAD_NAME (pad), pad);
+  GST_UNLOCK (pad);
 
-  if (GST_PAD_ACCEPTCAPSFUNC (pad)) {
+  if (acceptfunc) {
     /* we can call the function */
-    result = GST_PAD_ACCEPTCAPSFUNC (pad) (pad, caps);
+    result = acceptfunc (pad, caps);
   } else {
     /* else see get the caps and see if it intersects to something
      * not empty */
     GstCaps *intersect;
     GstCaps *allowed;
 
-    allowed = gst_pad_get_caps_unlocked (pad);
-    intersect = gst_caps_intersect (allowed, caps);
-    if (gst_caps_is_empty (intersect))
-      result = FALSE;
-    else
-      result = TRUE;
-  }
-  GST_UNLOCK (pad);
+    allowed = gst_pad_get_caps (pad);
+    if (allowed) {
+      intersect = gst_caps_intersect (allowed, caps);
 
+      result = !gst_caps_is_empty (intersect);
+
+      gst_caps_unref (allowed);
+      gst_caps_unref (intersect);
+    } else {
+      result = FALSE;
+    }
+  }
   return result;
 }
 

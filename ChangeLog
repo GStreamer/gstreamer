@@ -1,3 +1,9 @@
+2005-07-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstpad.c: (gst_pad_fixate_caps), (gst_pad_accept_caps):
+	Implement the fixate function.
+	Clean up acceptcaps.
+
 2005-07-06  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/building-filterfactory.xml:
