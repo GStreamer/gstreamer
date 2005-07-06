@@ -1,3 +1,31 @@
+2005-07-07  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  Remove unnecessary queue2/3/4 examples.
+
+2005-07-07  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* examples/Makefile.am:
+	* examples/helloworld/helloworld.c: (event_loop), (main):
+	* examples/queue/queue.c: (event_loop), (main):
+	* examples/queue2/queue2.c: (main):
+          Update a couple of the examples to work again.
+
+	* gst/base/gstbasesink.c: (gst_base_sink_preroll_queue_empty),
+	(gst_base_sink_preroll_queue_flush), (gst_base_sink_handle_event):
+	 Spelling corrections and extra debug.
+	
+	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_init), (is_eos),
+	(gst_bin_add_func), (bin_element_is_sink), (gst_bin_get_state),
+	(gst_bin_change_state), (gst_bin_dispose), (bin_bus_handler):
+	* gst/gstbin.h:
+	* gst/gstpipeline.c: (gst_pipeline_init), (gst_pipeline_dispose),
+	(gst_pipeline_change_state):
+	* gst/gstpipeline.h:
+	  Move the bus handler for children to the GstBin, and create a
+	  separate bus for receiving messages from children to the one the
+	  bus sends 'upwards' on.
+
 2005-07-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/README:

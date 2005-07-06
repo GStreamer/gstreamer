@@ -703,9 +703,6 @@ examples/pingpong/Makefile
 examples/plugins/Makefile
 examples/pwg/Makefile
 examples/queue/Makefile
-examples/queue2/Makefile
-examples/queue3/Makefile
-examples/queue4/Makefile
 examples/retag/Makefile
 examples/thread/Makefile
 examples/typefind/Makefile
