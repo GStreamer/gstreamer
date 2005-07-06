@@ -113,6 +113,9 @@ struct _GstBaseSrcClass {
   /* notify the subclass of new caps */
   gboolean      (*set_caps)     (GstBaseSrc *src, GstCaps *caps);
 
+  /* decide on caps */
+  gboolean      (*negotiate)    (GstBaseSrc *src);
+
   /* start and stop processing, ideal for opening/closing the resource */
   gboolean      (*start)        (GstBaseSrc *src);
   gboolean      (*stop)         (GstBaseSrc *src);

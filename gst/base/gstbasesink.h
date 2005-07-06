@@ -87,6 +87,10 @@ struct _GstBaseSinkClass {
   void		(*get_times)    (GstBaseSink *sink, GstBuffer *buffer,
 		                 GstClockTime *start, GstClockTime *end);
 
+  /* start and stop processing, ideal for opening/closing the resource */
+  gboolean      (*start)        (GstBaseSink *sink);
+  gboolean      (*stop)         (GstBaseSink *sink);
+
   /* unlock any pending access to the resource. subclasses should unlock
    * any function ASAP. */
   gboolean      (*unlock)       (GstBaseSink *sink);

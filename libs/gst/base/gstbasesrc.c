@@ -81,6 +81,8 @@ gst_base_src_get_type (void)
   }
   return base_src_type;
 }
+static GstCaps *gst_base_src_getcaps (GstPad * pad);
+static gboolean gst_base_src_setcaps (GstPad * pad, GstCaps * caps);
 
 static gboolean gst_base_src_activate_push (GstPad * pad, gboolean active);
 static gboolean gst_base_src_activate_pull (GstPad * pad, gboolean active);
@@ -95,6 +97,7 @@ static gboolean gst_base_src_query (GstPad * pad, GstQuery * query);
 #if 0
 static const GstEventMask *gst_base_src_get_event_mask (GstPad * pad);
 #endif
+static gboolean gst_base_src_default_negotiate (GstBaseSrc * basesrc);
 
 static gboolean gst_base_src_unlock (GstBaseSrc * basesrc);
 static gboolean gst_base_src_get_size (GstBaseSrc * basesrc, guint64 * size);
@@ -146,6 +149,8 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_src_change_state);
+
+  klass->negotiate = gst_base_src_default_negotiate;
 }
 
 static void
@@ -153,6 +158,10 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
 {
   GstPad *pad;
   GstPadTemplate *pad_template;
+
+  basesrc->is_live = FALSE;
+  basesrc->live_lock = g_mutex_new ();
+  basesrc->live_cond = g_cond_new ();
 
   pad_template =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "src");
@@ -164,12 +173,9 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   gst_pad_set_activatepull_function (pad, gst_base_src_activate_pull);
   gst_pad_set_event_function (pad, gst_base_src_event_handler);
   gst_pad_set_query_function (pad, gst_base_src_query);
-
   gst_pad_set_checkgetrange_function (pad, gst_base_src_check_get_range);
-
-  basesrc->is_live = FALSE;
-  basesrc->live_lock = g_mutex_new ();
-  basesrc->live_cond = g_cond_new ();
+  gst_pad_set_getcaps_function (pad, gst_base_src_getcaps);
+  gst_pad_set_setcaps_function (pad, gst_base_src_setcaps);
 
   /* hold ref to pad */
   basesrc->srcpad = pad;
@@ -212,6 +218,46 @@ gst_base_src_set_dataflow_funcs (GstBaseSrc * this)
     gst_pad_set_getrange_function (this->srcpad, gst_base_src_get_range);
   else
     gst_pad_set_getrange_function (this->srcpad, NULL);
+}
+
+static gboolean
+gst_base_src_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstBaseSrcClass *bclass;
+  GstBaseSrc *bsrc;
+  gboolean res = TRUE;
+
+  bsrc = GST_BASE_SRC (GST_PAD_PARENT (pad));
+  bclass = GST_BASE_SRC_GET_CLASS (bsrc);
+
+  if (bclass->set_caps)
+    res = bclass->set_caps (bsrc, caps);
+
+  return res;
+}
+
+static GstCaps *
+gst_base_src_getcaps (GstPad * pad)
+{
+  GstBaseSrcClass *bclass;
+  GstBaseSrc *bsrc;
+  GstCaps *caps = NULL;
+
+  bsrc = GST_BASE_SRC (GST_PAD_PARENT (pad));
+  bclass = GST_BASE_SRC_GET_CLASS (bsrc);
+  if (bclass->get_caps)
+    caps = bclass->get_caps (bsrc);
+
+  if (caps == NULL) {
+    GstPadTemplate *pad_template;
+
+    pad_template =
+        gst_element_class_get_pad_template (GST_ELEMENT_CLASS (bclass), "src");
+    if (pad_template != NULL) {
+      caps = gst_caps_ref (gst_pad_template_get_caps (pad_template));
+    }
+  }
+  return caps;
 }
 
 static gboolean
@@ -565,6 +611,9 @@ gst_base_src_loop (GstPad * pad)
   if (ret != GST_FLOW_OK)
     goto eos;
 
+  if (buf == NULL)
+    goto error;
+
   src->offset += GST_BUFFER_SIZE (buf);
 
   ret = gst_pad_push (pad, buf);
@@ -584,6 +633,13 @@ pause:
   {
     GST_DEBUG_OBJECT (src, "pausing task");
     gst_pad_pause_task (pad);
+    return;
+  }
+error:
+  {
+    GST_DEBUG_OBJECT (src, "got error, pausing task");
+    gst_pad_pause_task (pad);
+    gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
     return;
   }
 }
@@ -646,6 +702,74 @@ gst_base_src_is_seekable (GstBaseSrc * basesrc)
 }
 
 static gboolean
+gst_base_src_default_negotiate (GstBaseSrc * basesrc)
+{
+  GstCaps *thiscaps;
+  GstCaps *caps = NULL;
+  GstCaps *peercaps = NULL;
+  gboolean result = FALSE;
+
+  thiscaps = gst_pad_get_caps (GST_BASE_SRC_PAD (basesrc));
+  GST_DEBUG ("caps of src: %" GST_PTR_FORMAT, thiscaps);
+  if (thiscaps == NULL || gst_caps_is_any (thiscaps))
+    goto no_nego_needed;
+
+  peercaps = gst_pad_peer_get_caps (GST_BASE_SRC_PAD (basesrc));
+  GST_DEBUG ("caps of peer: %" GST_PTR_FORMAT, peercaps);
+  if (peercaps) {
+    GstCaps *icaps;
+
+    icaps = gst_caps_intersect (thiscaps, peercaps);
+    GST_DEBUG ("intersect: %" GST_PTR_FORMAT, icaps);
+    gst_caps_unref (thiscaps);
+    gst_caps_unref (peercaps);
+    if (icaps) {
+      caps = gst_caps_copy_nth (icaps, 0);
+      gst_caps_unref (icaps);
+    }
+  } else {
+    caps = thiscaps;
+  }
+  if (caps) {
+    caps = gst_caps_make_writable (caps);
+    gst_pad_fixate_caps (GST_BASE_SRC_PAD (basesrc), caps);
+    GST_DEBUG ("fixated to: %" GST_PTR_FORMAT, caps);
+
+    if (gst_caps_is_any (caps)) {
+      gst_caps_unref (caps);
+      result = TRUE;
+    } else if (gst_caps_is_fixed (caps)) {
+      gst_pad_set_caps (GST_BASE_SRC_PAD (basesrc), caps);
+      gst_caps_unref (caps);
+      result = TRUE;
+    }
+  }
+  return result;
+
+no_nego_needed:
+  {
+    GST_DEBUG ("no negotiation needed");
+    if (thiscaps)
+      gst_caps_unref (thiscaps);
+    return TRUE;
+  }
+}
+
+static gboolean
+gst_base_src_negotiate (GstBaseSrc * basesrc)
+{
+  GstBaseSrcClass *bclass;
+  gboolean result = FALSE;
+
+  bclass = GST_BASE_SRC_GET_CLASS (basesrc);
+
+  if (bclass->negotiate)
+    result = bclass->negotiate (basesrc);
+
+  return result;
+}
+
+static gboolean
 gst_base_src_start (GstBaseSrc * basesrc)
 {
   GstBaseSrcClass *bclass;
@@ -694,8 +818,12 @@ gst_base_src_start (GstBaseSrc * basesrc)
 
     caps = gst_type_find_helper (basesrc->srcpad, basesrc->size);
     gst_pad_set_caps (basesrc->srcpad, caps);
+    gst_caps_unref (caps);
   }
 #endif
+
+  if (!gst_base_src_negotiate (basesrc))
+    goto could_not_negotiate;
 
   return TRUE;
 
@@ -703,6 +831,12 @@ gst_base_src_start (GstBaseSrc * basesrc)
 could_not_start:
   {
     GST_DEBUG_OBJECT (basesrc, "could not start");
+    return FALSE;
+  }
+could_not_negotiate:
+  {
+    GST_DEBUG_OBJECT (basesrc, "could not negotiate, stopping");
+    gst_base_src_stop (basesrc);
     return FALSE;
   }
 }
@@ -823,8 +957,10 @@ gst_base_src_change_state (GstElement * element)
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       GST_LIVE_LOCK (element);
-      basesrc->live_running = TRUE;
-      GST_LIVE_SIGNAL (element);
+      if (basesrc->is_live) {
+        basesrc->live_running = TRUE;
+        GST_LIVE_SIGNAL (element);
+      }
       GST_LIVE_UNLOCK (element);
       break;
     default:

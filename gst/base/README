@@ -20,7 +20,9 @@ GstBaseTransform
   Base class for simple tranform filters
 
   - one sinkpad and one srcpad
-  - formats the same on sink and source pad.
+  - possible formats on sink and source pad implemented
+    with custom transform_caps function. By default uses 
+    same format on sink and source.
   - handles state changes
   - does flushing
   - push mode
@@ -34,3 +36,7 @@ GstBaseSrc
   - handles state changes
   - pull/push mode
   - handles seeking/query
+
+GstPushSrc
+
+  Base class for push based source elements

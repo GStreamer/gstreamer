@@ -447,7 +447,6 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
 {
   gint length;
   gboolean have_event;
-  guint t;
 
   GST_PREROLL_LOCK (pad);
   /* push object on the queue */
@@ -484,16 +483,21 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
     /* if it's a buffer, we need to call the preroll method */
     if (GST_IS_BUFFER (obj)) {
       GstBaseSinkClass *bclass;
+      GstFlowReturn pres;
 
       bclass = GST_BASESINK_GET_CLASS (basesink);
       if (bclass->preroll)
-        bclass->preroll (basesink, GST_BUFFER (obj));
+        if ((pres =
+                bclass->preroll (basesink, GST_BUFFER (obj))) != GST_FLOW_OK)
+          goto preroll_failed;
     }
   }
   length = basesink->preroll_queued;
   GST_DEBUG ("prerolled length %d", length);
 
   if (length == 1) {
+    guint t;
+
     basesink->have_preroll = TRUE;
     /* we are prerolling */
     GST_PREROLL_UNLOCK (pad);
@@ -574,6 +578,36 @@ flushing:
     GST_PREROLL_UNLOCK (pad);
     GST_DEBUG ("pad is flushing");
     return GST_FLOW_WRONG_STATE;
+  }
+preroll_failed:
+  {
+    guint t;
+
+    GST_DEBUG ("preroll failed");
+    basesink->have_preroll = FALSE;
+    gst_base_sink_preroll_queue_flush (basesink, pad);
+    GST_PREROLL_UNLOCK (pad);
+
+    /* have to release STREAM_LOCK as we cannot take the STATE_LOCK
+     * inside the STREAM_LOCK */
+    t = GST_STREAM_UNLOCK_FULL (pad);
+    GST_DEBUG ("released stream lock %d times", t);
+    if (t == 0) {
+      GST_WARNING ("STREAM_LOCK should have been locked !!");
+      g_warning ("STREAM_LOCK should have been locked !!");
+    }
+
+    /* now we abort our state */
+    GST_STATE_LOCK (basesink);
+    GST_DEBUG ("abort state %p >", basesink);
+    gst_element_abort_state (GST_ELEMENT (basesink));
+    GST_STATE_UNLOCK (basesink);
+
+    /* reacquire stream lock, pad could be flushing now */
+    if (t > 0)
+      GST_STREAM_LOCK_FULL (pad, t);
+
+    return GST_FLOW_ERROR;
   }
 }
 
@@ -859,8 +893,10 @@ gst_base_sink_loop (GstPad * pad)
   return;
 
 paused:
-  gst_pad_pause_task (pad);
-  return;
+  {
+    gst_pad_pause_task (pad);
+    return;
+  }
 }
 
 static gboolean
@@ -940,9 +976,15 @@ gst_base_sink_change_state (GstElement * element)
   GstElementStateReturn ret = GST_STATE_SUCCESS;
   GstBaseSink *basesink = GST_BASESINK (element);
   GstElementState transition = GST_STATE_TRANSITION (element);
+  GstBaseSinkClass *bclass;
+
+  bclass = GST_BASESINK_GET_CLASS (basesink);
 
   switch (transition) {
     case GST_STATE_NULL_TO_READY:
+      if (bclass->start)
+        if (!bclass->start (basesink))
+          goto start_failed;
       break;
     case GST_STATE_READY_TO_PAUSED:
       /* need to complete preroll before this state change completes, there
@@ -1013,10 +1055,21 @@ gst_base_sink_change_state (GstElement * element)
     case GST_STATE_PAUSED_TO_READY:
       break;
     case GST_STATE_READY_TO_NULL:
+      if (bclass->stop)
+        if (!bclass->stop (basesink)) {
+          GST_WARNING ("failed to stop");
+        }
       break;
     default:
       break;
   }
 
   return ret;
+
+  /* ERRORS */
+start_failed:
+  {
+    GST_DEBUG ("failed to start");
+    return GST_STATE_FAILURE;
+  }
 }

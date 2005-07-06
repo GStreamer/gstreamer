@@ -1,5 +1,22 @@
 2005-07-06  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/README:
+	* gst/base/gstbasesink.c: (gst_base_sink_preroll_queue_empty),
+	(gst_base_sink_handle_object), (gst_base_sink_loop),
+	(gst_base_sink_change_state):
+	* gst/base/gstbasesink.h:
+	* gst/base/gstbasesrc.c: (gst_base_src_class_init),
+	(gst_base_src_init), (gst_base_src_setcaps),
+	(gst_base_src_getcaps), (gst_base_src_loop),
+	(gst_base_src_default_negotiate), (gst_base_src_negotiate),
+	(gst_base_src_start), (gst_base_src_change_state):
+	* gst/base/gstbasesrc.h:
+	Make basesrc negotiate.
+	Handle the case where preroll fails in basesink.
+	Update README.
+
+2005-07-06  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstpad.c: (gst_pad_fixate_caps), (gst_pad_accept_caps):
 	Implement the fixate function.
 	Clean up acceptcaps.
