@@ -7,8 +7,12 @@ libchain_la_SOURCES = chain.c
 libchain2_la_SOURCES = chain2.c
 libstate_la_SOURCES = state.c
 libproperties_la_SOURCES = properties.c
+libforwardcaps_la_SOURCES = forwardcaps.c
+libconvertcaps_la_SOURCES = convertcaps.c
+libgetcaps_la_SOURCES = getcaps.c
 DISTCLEANFILES = \
 	boilerplate.c pads.c chain.c chain2.c state.c properties.c \
+	forwardcaps.c convertcaps.c getcaps.c \
 	init.func caps.func chain.func state.func register.func filter.h
 
 EXTRA_DIST = extract.pl
@@ -19,7 +23,10 @@ EXAMPLES = \
 	libchain.la \
 	libchain2.la \
 	libstate.la \
-	libproperties.la
+	libproperties.la \
+	libforwardcaps.la \
+	libconvertcaps.la \
+	libgetcaps.la
 
 EXAMPLE_APPS = \
 	test
@@ -63,6 +70,10 @@ properties.c: $(top_srcdir)/docs/pwg/building-props.xml filter.h register.func
 test.c: $(top_srcdir)/docs/pwg/building-testapp.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ \
 		$(top_srcdir)/docs/pwg/building-testapp.xml
+
+forwardcaps.c convertcaps.c getcaps.c: $(top_srcdir)/docs/pwg/advanced-negotiation.xml init.func register.func chain.func state.func
+	$(PERL_PATH) $(srcdir)/extract.pl $@ \
+		$(top_srcdir)/docs/pwg/advanced-negotiation.xml
 
 noinst_PROGRAMS = $(EXAMPLE_APPS)
 noinst_LTLIBRARIES = $(EXAMPLES)

@@ -147,6 +147,8 @@ typedef struct _GstMyFilter {
 <!-- example-end filter.h a -->
 <!-- example-begin filter.h b --><!--
   gint samplerate, channels;
+  gint from_samplerate, to_samplerate;
+  gboolean passthrough;
 --><!-- example-end filter.h b -->
 <!-- example-begin filter.h c -->
 } GstMyFilter;

@@ -1,3 +1,16 @@
+2005-07-06  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/advanced-negotiation.xml:
+	* docs/pwg/building-boiler.xml:
+	* docs/pwg/building-pads.xml:
+	* docs/pwg/pwg.xml:
+	* examples/pwg/Makefile.am:
+	  Add a chapter on caps negotiation, simplify the original code
+	  samples a bit w.r.t. caps negotiation, add link to the advanced
+	  section. Add a bunch of examples showing different use cases of
+	  different types of caps negotiation. Upstream renegotiation isn't
+	  fully documented yet since nobody knows how that works.
+
 2005-07-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/gst/gstpad.c:

@@ -21,6 +21,7 @@
 <!ENTITY BUILDING_TESTAPP     SYSTEM "building-testapp.xml">
 <!ENTITY BUILDING_FILTERFACT  SYSTEM "building-filterfactory.xml">
 
+<!ENTITY ADVANCED_NEGOTIATION SYSTEM "advanced-negotiation.xml">
 <!ENTITY ADVANCED_SCHEDULING  SYSTEM "advanced-scheduling.xml">
 <!ENTITY ADVANCED_TYPES       SYSTEM "advanced-types.xml">
 <!ENTITY ADVANCED_REQUEST     SYSTEM "advanced-request.xml">
@@ -136,6 +137,7 @@
       </para>
     </partintro>
 
+    &ADVANCED_NEGOTIATION;
     &ADVANCED_SCHEDULING;
     &ADVANCED_TYPES;
     &ADVANCED_REQUEST;

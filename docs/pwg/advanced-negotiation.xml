@@ -1,0 +1,439 @@
+<chapter id="chapter-negotiation" xreflabel="Caps negotiation">
+  <title>Caps negotiation</title>
+  <para>
+    Caps negotiation is the process where elements configure themselves
+    and each other for streaming a particular media format over their pads.
+    Since different types of elements have different requirements for the
+    media formats they can negotiate to, it is important that this process
+    is generic and implements all those use cases correctly.
+  </para>
+  <para>
+    In this chapter, we will discuss downstream negotiation and upstream
+    negotiation from a pipeline perspective, implicating the responsibilities
+    of different types of elements in a pipeline, and we will introduce the
+    concept of <emphasis>fixed caps</emphasis>.
+  </para>
+
+  <sect1 id="section-nego-requirements" xreflabel="Caps negotiation use cases">
+    <title>Caps negotiation use cases</title>
+    <para>
+      Let's take the case of a file source, linked to a demuxer, linked to a
+      decoder, linked to a converter with a caps filter and finally an audio
+      output. When dataflow originally starts, the demuxer will parse the
+      file header (e.g. the Ogg headers), and notice that there is, for
+      example, a Vorbis stream in this Ogg file. Noticing that, it will
+      create an output pad for the Vorbis elementary stream and set a
+      Vorbis-caps on it. Lastly, it adds the pad. As of this point, the pad
+      is ready to be used to stream data, and so the Ogg demuxer is now done.
+      This pad is <emphasis>not</emphasis> re-negotiatable, since the type of
+      the data stream is embedded within the data.
+    </para>
+    <para>
+      The Vorbis decoder will decode the Vorbis headers and the Vorbis data
+      coming in on its sinkpad. Now, some decoders may be able to output in
+      multiple output formats, for example both 16-bit integer output and
+      floating-point output, whereas other decoders may be able to only decode
+      into one specific format, e.g. only floating-point (32-bit) audio. Those
+      two cases have consequences for how caps negotiation should be
+      implemented in this decoder element. In the one case, it is possible to
+      use fixed caps, and you're done. In the other case, however, you should
+      implement the possibility for <emphasis>renegotiation</emphasis> in this
+      element, which is the possibility for the data format to be changed to
+      another format at some point in the future. We will discuss how to do
+      this in one of the sections further on in this chapter.
+    </para>
+    <para>
+      The filter can be used by applications to force, for example, a specific
+      channel configuration (5.1/surround or 2.0/stereo), on the pipeline, so
+      that the user can enjoy sound coming from all its speakers. The audio
+      sink, in this example, is a standard ALSA output element (alsasink).
+      The converter element supports any-to-any, and the filter will make sure
+      that only a specifically wanted channel configuration streams through
+      this link (as provided by the user's channel configuration preference).
+      By changing this preference while the pipeline is running, some elements
+      will have to renegotiate <emphasis>while the pipeline is
+      running</emphasis>. This is done through upstream caps renegotiation.
+      That, too, will be discussed in detail in a section further below.
+    </para>
+    <para>
+      In order for caps negotiation on non-fixed links to work correctly,
+      pads can optionally implement a function that tells peer elements what
+      formats it supports and/or preferes. When upstream renegotiation is
+      triggered, this becomes important.
+    </para>
+    <para>
+      Downstream elements are notified of a newly set caps only when data
+      is actually passing their pad. This is because caps is attached to
+      buffers during dataflow. So when the vorbis decoder sets a caps on
+      its source pad (to configure the output format), the converter will
+      not yet be notified. Instead, the converter will only be notified
+      when the decoder pushes a buffer over its source pad to the converter.
+      Right before calling the chain-function in the converter, &GStreamer;
+      will check whether the format that was previously negotiated still
+      applies to this buffer. If not, it first calls the setcaps-function
+      of the converter to configure it for the new format. Only after that
+      will it call the chain function of the converter.
+    </para>
+  </sect1>
+
+  <sect1 id="section-nego-fixedcaps" xreflabel="Fixed caps">
+    <title>Fixed caps</title>
+    <para>
+      The simplest way in which to do caps negotiation is setting a fixed
+      caps on a pad. After a fixed caps has been set, the pad can not be
+      renegotiated from the outside. The only way to reconfigure the pad
+      is for the element owning the pad to set a new fixed caps on the pad.
+      Fixed caps is a setup property for pads, called when creating the pad:
+    </para>
+    <programlisting>
+[..]
+  pad = gst_pad_new_from_template (..);
+  gst_pad_use_fixed_caps (pad);
+[..]
+    </programlisting>
+    <para>
+      The fixed caps can then be set on the pad by calling
+      <function>gst_pad_set_caps ()</function>.
+    </para>
+    <programlisting>
+[..]
+  caps = gst_caps_new_simple ("audio/x-raw-float",
+      "width", G_TYPE_INT, 32,
+      "endianness", G_TYPE_INT, G_BYTE_ORDER,
+      "buffer-frames", G_TYPE_INT, &lt;bytes-per-frame&gt;,
+      "rate", G_TYPE_INT, &lt;samplerate&gt;,
+      "channels", G_TYPE_INT, &lt;num-channels&gt;, NULL);
+  if (!gst_pad_set_caps (pad, caps)) {
+    GST_ELEMENT_ERROR (element, CORE, NEGOTIATION, (NULL),
+        ("Some debug information here"));
+    return GST_FLOW_ERROR;
+  }
+[..]
+    </programlisting>
+    <para>
+      Elements that could implement fixed caps (on their source pads) are,
+      in general, all elements that are not renegotiatable. Examples include:
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          A typefinder, since the type found is part of the actual data stream
+          and can thus not be re-negotiated.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Pretty much all demuxers, since the contained elementary data
+          streams are defined in the file headers, and thus not
+          renegotiatable.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Some decoders, where the format is embedded in the datastream
+          and not part of the peercaps <emphasis>and</emphasis> where the
+          decoder itself is not reconfigureable, too.
+        </para>
+      </listitem>
+    </itemizedlist>
+    <para>
+      All other elements that need to be configured for the format should
+      implement full caps negotiation, which will be explained in the next
+      few sections.
+    </para>
+  </sect1>
+
+  <sect1 id="section-nego-downstream" xreflabel="Downstream caps negotiation">
+    <title>Downstream caps negotiation</title>
+    <para>
+      Downstream negotiation takes place when a format needs to be set on a
+      source pad to configure the output format, but this element allows
+      renegotiation because its format is configured on the sinkpad caps,
+      or because it supports multiple formats. The requirements for doing
+      the actual negotiation differ slightly.
+    </para>
+
+    <sect2 id="section-nego-downstream-embed"
+        xreflabel="Negotiating caps embedded in input caps">
+      <title>Negotiating caps embedded in input caps</title>
+      <para>
+        Many elements, particularly effects and converters, will be able
+        to parse the format of the stream from their input caps, and decide
+        the output format right at that time already. When renegotiation
+        takes place, some may merely need to "forward" the renegotiation
+        backwards upstream (more on that later). For those elements, all
+        (downstream) caps negotiation can be done in something that we
+        call the <function>_setcaps ()</function> function. This function is
+        called when a buffer is pushed over a pad, but the format on this
+        buffer is not the same as the format that was previously negotiated
+        (or, similarly, no format was negotiated yet so far).
+      </para>
+      <para>
+        In the <function>_setcaps ()</function>-function, the element can
+        forward the caps to the next element and, if that pad accepts the
+        format too, the element can parse the relevant parameters from the
+        caps and configure itself internally. The caps passed to this function
+        is <emphasis>always</emphasis> a subset of the template caps, so
+        there's no need for extensive safety checking. The following example
+        should give a clear indication of how such a function can be
+        implemented:
+      </para>
+      <programlisting><!-- example-begin forwardcaps.c a --><!--
+#include "init.func"
+static GstCaps *
+gst_my_filter_getcaps (GstPad * pad)
+{
+  return  NULL;
+}
+--><!-- example-end forwardcaps.c a -->
+<!-- example-begin forwardcaps.c b -->
+static gboolean
+gst_my_filter_setcaps (GstPad  *pad,
+		       GstCaps *caps)
+{
+  GstMyFilter *filter = GST_MY_FILTER (GST_OBJECT_PARENT (pad));
+  GstStructure *s;
+
+  /* forward-negotiate */
+  if (!gst_pad_set_caps (filter-&gt;srcpad, caps))
+    return FALSE;
+
+  /* negotiation succeeded, so now configure ourselves */
+  s = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int (s, "rate", &amp;filter-&gt;samplerate);
+  gst_structure_get_int (s, "channels", &amp;filter-&gt;channels);
+
+  return TRUE;
+}
+<!-- example-end forwardcaps.c b -->
+<!-- example-begin forwardcaps.c c --><!--
+#include "chain.func"
+#include "state.func"
+#include "register.func"
+      --><!-- example-end forwardcaps.c c --></programlisting>
+      <para>
+        There may also be cases where the filter actually is able to
+        <emphasis>change</emphasis> the format of the stream. In those cases,
+        it will negotiate a new format. Obviously, the element should first
+        attempt to configure <quote>pass-through</quote>, which means that
+        it does not change the stream's format. However, if that fails,
+        then it should call <function>gst_pad_get_allowed_caps ()</function>
+        on its sourcepad to get a list of supported formats on the outputs,
+        and pick the first. The return value of that function is guaranteed
+        to be a subset of the template caps.
+      </para>
+      <para>
+        Let's look at the example of an element that can convert between
+        samplerates, so where input and output samplerate don't have to be
+        the same:
+      </para>
+      <programlisting><!-- example-begin convertcaps.c a --><!--
+#include "init.func"
+static GstCaps *
+gst_my_filter_getcaps (GstPad * pad)
+{
+  return NULL;
+}
+static GstBuffer *
+gst_my_filter_convert (GstMyFilter *filter, GstBuffer *in)
+{
+  return NULL;
+}
+static gboolean
+gst_my_filter_event (GstPad * pad, GstEvent * event)
+{
+  return gst_pad_event_default (pad, event);
+}
+--><!-- example-end convertcaps.c a -->
+<!-- example-begin convertcaps.c b -->
+static gboolean
+gst_my_filter_setcaps (GstPad  *pad,
+		       GstCaps *caps)
+{
+  GstMyFilter *filter = GST_MY_FILTER (GST_OBJECT_PARENT (pad));
+
+  if (gst_pad_set_caps (filter-&gt;sinkpad, caps)) {
+    filter-&gt;passthrough = TRUE;
+  } else {
+    GstCaps *othercaps, *newcaps;
+    GstStructure *s = gst_caps_get_structure (caps, 0), *others;
+
+    /* no passthrough, setup internal conversion */
+    gst_structure_get_int (s, "channels", &amp;filter-&gt;channels);
+    othercaps = gst_pad_get_allowed_caps (filter-&gt;srcpad);
+    others = gst_caps_get_structure (othercaps, 0);
+    gst_structure_set (others,
+        "channels", G_TYPE_INT, filter-&gt;channels, NULL);
+
+    /* now, the samplerate value can optionally have multiple values, so
+     * we "fixate" it, which means that one fixed value is chosen */
+    newcaps = gst_caps_copy_nth (othercaps, 0);
+    gst_caps_unref (othercaps);
+    gst_pad_fixate_caps (filter-&gt;srcpad, newcaps);
+    if (!gst_pad_set_caps (filter-&gt;srcpad, newcaps))
+      return FALSE;
+
+    /* we are now set up, configure internally */
+    filter-&gt;passthrough = FALSE;
+    gst_structure_get_int (s, "rate", &amp;filter-&gt;from_samplerate);
+    others = gst_caps_get_structure (newcaps, 0);
+    gst_structure_get_int (others, "rate", &amp;filter-&gt;to_samplerate);
+  }
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_my_filter_chain (GstPad    *pad,
+		     GstBuffer *buf)
+{
+  GstMyFilter *filter = GST_MY_FILTER (GST_OBJECT_PARENT (pad));
+  GstBuffer *out;
+
+  /* push on if in passthrough mode */
+  if (filter-&gt;passthrough)
+    return gst_pad_push (filter-&gt;srcpad, buf);
+
+  /* convert, push */
+  out = gst_my_filter_convert (filter, buf);
+  gst_buffer_unref (buf);
+
+  return gst_pad_push (filter-&gt;srcpad, out);
+}
+<!-- example-end convertcaps.c b -->
+<!-- example-begin convertcaps.c c --><!--
+#include "state.func"
+#include "register.func"
+      --><!-- example-end convertcaps.c c --></programlisting>
+    </sect2>
+
+    <sect2 id="section-nego-downstream-parse"
+        xreflabel="Parsing and setting caps">
+      <title>Parsing and setting caps</title>
+      <para>
+        Other elements, such as certain types of decoders, will not be able
+        to parse the caps from their input, simply because the input format
+        does not contain the information required to know the output format
+        yet; rather, the data headers need to be parsed, too. In many cases,
+        fixed-caps will be enough, but in some cases, particularly in cases
+        where such decoders are renegotiatable, it is also possible to use
+        full caps negotiation.
+      </para>
+      <para>
+        Fortunately, the code required to do so is very similar to the last
+        code example in <xref linkend="section-nego-downstream-embed"/>, with
+        the difference being that the caps is selected in the <function>_chain
+        ()</function>-function rather than in the <function>_setcaps
+        ()</function>-function. The rest, as for getting all allowed caps from
+        the source pad, fixating and such, is all the same. Re-negotiation,
+        which will be handled in the next section, is very different for such
+        elements, though.
+      </para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="section-nego-upstream" xreflabel="Upstream caps (re)negotiation">
+    <title>Upstream caps (re)negotiation</title>
+    <para>
+      Upstream negotiation's primary use is to renegotiate (part of) an
+      already-negotiated pipeline to a new format. Some practical examples
+      include to select a different video size because the size of the video
+      window changed, and the video output itself is not capable of rescaling,
+      or because the audio channel configuration changed.
+    </para>
+    <para>
+      Upstream caps renegotiation is done in the <function>gst_pad_alloc_buffer
+      ()</function>-function. The idea here is that an element requesting a
+      buffer from downstream, has to specify the type of that buffer. If
+      renegotiation is to take place, this type will no longer apply, and the
+      downstream element will set a new caps on the provided buffer. Next,
+      &GStreamer; will trigger renegotiation on the sourcepad of the element
+      before the function returns.
+    </para>
+    <para>
+      It is important to note here that different elements actually have
+      different responsibilities here:
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          Elements should implement a <quote>padalloc</quote>-function in
+          order to be able to change format on renegotiation. This is also
+          true for filters and converters.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Elements should allocate new buffers using
+          <function>gst_pad_alloc_buffer ()</function>.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Elements that are renegotiatable should implement a
+          <quote>setcaps</quote>-function on their sourcepad as well.
+        </para>
+      </listitem>
+    </itemizedlist>
+    <para>
+      Unfortunately, not all details here have been worked out yet, so this
+      documentation is incomplete. FIXME.
+    </para>
+  </sect1>
+
+  <sect1 id="section-nego-getcaps" xreflabel="Implementing a getcaps function">
+    <title>Implementing a getcaps function</title>
+    <para>
+      A <function>_getcaps ()</function>-function is called when a peer
+      element would like to know which formats this element supports, and
+      in what order of preference. The return value should be all formats
+      that this elements supports, taking into account limitations of peer
+      elements further downstream or upstream, sorted by order of preference,
+      highest preference first.
+    </para>
+    <para>
+    </para>
+    <programlisting><!-- example-begin getcaps.c a --><!--
+#include "init.func"
+--><!-- example-end getcaps.c a -->
+<!-- example-begin getcaps.c b -->
+static GstCaps *
+gst_my_filter_getcaps (GstPad *pad)
+{
+  GstMyFilter *filter = GST_MY_FILTER (GST_OBJECT_PARENT (pad));
+  GstPad *otherpad = (pad == filter-&gt;srcpad) ? filter-&gt;sinkpad :
+						  filter-&gt;srcpad;
+  GstCaps *othercaps = gst_pad_get_allowed_caps (otherpad), *caps;
+  gint i;
+
+  /* We support *any* samplerate, indifferent from the samplerate
+   * supported by the linked elements on both sides. */
+  for (i = 0; i &lt; gst_caps_get_size (othercaps); i++) {
+    GstStructure *structure = gst_caps_get_structure (othercaps, i);
+
+    gst_structure_remove_field (structure, "rate");
+  }
+  caps = gst_caps_intersect (othercaps, gst_pad_get_pad_template_caps (pad));
+  gst_caps_unref (othercaps);
+
+  return caps;
+}
+<!-- example-end getcaps.c b -->
+<!-- example-begin getcaps.c c --><!--
+static gboolean
+gst_my_filter_setcaps (GstPad * pad, GstCaps * caps)
+{
+  return FALSE;
+}
+#include "chain.func"
+#include "state.func"
+#include "register.func"
+    --><!-- example-end getcaps.c c --></programlisting>
+    <para>
+      Using all the knowledge you've acquired by reading this chapter, you
+      should be able to write an element that does correct caps negotiation.
+      If in doubt, look at other elements of the same type in our CVS
+      repository to get an idea of how they do what you want to do.
+    </para>
+  </sect1>
+</chapter>
