@@ -1,3 +1,8 @@
+2005-07-06  Edward Hervey  <edward@fluendo.com>
+
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_init): 
+	GST_BASESRC --> GST_BASE_SRC
+
 2005-07-05  Andy Wingo  <wingo@pobox.com>
 
 	* gst/oneton: Removed (replaced by deinterleave).
