@@ -26,6 +26,7 @@
 
 #include <gst/gstelement.h>
 #include <gst/gstiterator.h>
+#include <gst/gstbus.h>
 
 G_BEGIN_DECLS
 
@@ -69,6 +70,9 @@ struct _GstBin {
   gint		 numchildren;
   GList		*children;
   guint32	 children_cookie;
+
+  GstBus        *child_bus;	/* Bus we set on our children */
+  GList         *eosed;         /* list of elements that posted EOS */
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];

@@ -1,10 +1,48 @@
 #include <stdlib.h>
 #include <gst/gst.h>
 
+static void
+event_loop (GstElement * pipe)
+{
+  GstBus *bus;
+  GstMessageType revent;
+  GstMessage *message = NULL;
+
+  bus = gst_element_get_bus (GST_ELEMENT (pipe));
+
+  while (TRUE) {
+    revent = gst_bus_poll (bus, GST_MESSAGE_ANY, -1);
+
+    message = gst_bus_pop (bus);
+    g_assert (message != NULL);
+
+    switch (revent) {
+      case GST_MESSAGE_EOS:
+        gst_message_unref (message);
+        return;
+      case GST_MESSAGE_WARNING:
+      case GST_MESSAGE_ERROR:{
+        GError *gerror;
+        gchar *debug;
+
+        gst_message_parse_error (message, &gerror, &debug);
+        gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
+        gst_message_unref (message);
+        g_error_free (gerror);
+        g_free (debug);
+        return;
+      }
+      default:
+        gst_message_unref (message);
+        break;
+    }
+  }
+}
+
 int
 main (int argc, char *argv[])
 {
-  GstElement *bin, *filesrc, *decoder, *osssink;
+  GstElement *bin, *filesrc, *decoder, *audiosink;
 
   gst_init (&argc, &argv);
 
@@ -29,19 +67,20 @@ main (int argc, char *argv[])
     return -1;
   }
   /* and an audio sink */
-  osssink = gst_element_factory_make ("osssink", "play_audio");
-  g_assert (osssink);
+  audiosink = gst_element_factory_make ("alsasink", "play_audio");
+  g_assert (audiosink);
 
   /* add objects to the main pipeline */
-  gst_bin_add_many (GST_BIN (bin), filesrc, decoder, osssink, NULL);
+  gst_bin_add_many (GST_BIN (bin), filesrc, decoder, audiosink, NULL);
 
   /* link the elements */
-  gst_element_link_many (filesrc, decoder, osssink, NULL);
+  gst_element_link_many (filesrc, decoder, audiosink, NULL);
 
   /* start playing */
   gst_element_set_state (bin, GST_STATE_PLAYING);
 
-  while (gst_bin_iterate (GST_BIN (bin)));
+  /* Run event loop listening for bus messages until EOS or ERROR */
+  event_loop (bin);
 
   /* stop the bin */
   gst_element_set_state (bin, GST_STATE_NULL);

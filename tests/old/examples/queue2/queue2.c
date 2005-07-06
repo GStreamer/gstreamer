@@ -15,9 +15,8 @@ eos (GstElement * element, gpointer data)
 int
 main (int argc, char *argv[])
 {
-  GstElement *filesrc, *osssink, *queue;
+  GstElement *filesrc, *audiosink, *queue;
   GstElement *pipeline;
-  GstElement *thread;
 
   gst_init (&argc, &argv);
 
@@ -25,10 +24,6 @@ main (int argc, char *argv[])
     g_print ("usage: %s <filename>\n", argv[0]);
     exit (-1);
   }
-
-  /* create a new thread to hold the elements */
-  thread = gst_thread_new ("thread");
-  g_assert (thread != NULL);
 
   /* create a new bin to hold the elements */
   pipeline = gst_pipeline_new ("pipeline");
@@ -43,18 +38,18 @@ main (int argc, char *argv[])
   queue = gst_element_factory_make ("queue", "queue");
 
   /* and an audio sink */
-  osssink = gst_element_factory_make ("osssink", "play_audio");
-  g_assert (osssink != NULL);
+  audiosink = gst_element_factory_make ("alsasink", "play_audio");
+  g_assert (audiosink != NULL);
 
   /* add objects to the main pipeline */
   /*
      gst_pipeline_add_src(GST_PIPELINE(pipeline), filesrc);
      gst_pipeline_add_sink(GST_PIPELINE(pipeline), queue);
 
-     gst_bin_add(GST_BIN(thread), osssink);
+     gst_bin_add(GST_BIN (pipeline), audiosink);
 
      gst_pad_link(gst_element_get_pad(queue,"src"),
-     gst_element_get_pad(osssink,"sink"));
+     gst_element_get_pad(audiosink,"sink"));
 
      if (!gst_pipeline_autoplug(GST_PIPELINE(pipeline))) {
      g_print("cannot autoplug pipeline\n");

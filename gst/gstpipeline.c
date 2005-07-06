@@ -63,8 +63,6 @@ static void gst_pipeline_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_pipeline_send_event (GstElement * element,
     GstEvent * event);
-static GstBusSyncReply pipeline_bus_handler (GstBus * bus, GstMessage * message,
-    GstPipeline * pipeline);
 
 static GstClock *gst_pipeline_get_clock_func (GstElement * element);
 static GstElementStateReturn gst_pipeline_change_state (GstElement * element);
@@ -141,7 +139,6 @@ gst_pipeline_init (GTypeInstance * instance, gpointer g_class)
 {
   GstScheduler *scheduler;
   GstPipeline *pipeline = GST_PIPELINE (instance);
-  GstBus *bus;
 
   /* get an instance of the default scheduler */
   scheduler = gst_scheduler_factory_make (NULL, GST_ELEMENT (pipeline));
@@ -159,18 +156,10 @@ gst_pipeline_init (GTypeInstance * instance, gpointer g_class)
     gst_object_unref ((GstObject *) scheduler);
   }
 
-  pipeline->eosed = NULL;
   pipeline->delay = DEFAULT_DELAY;
   pipeline->play_timeout = DEFAULT_PLAY_TIMEOUT;
   /* we are our own manager */
   GST_ELEMENT_MANAGER (pipeline) = pipeline;
-
-  bus = g_object_new (gst_bus_get_type (), NULL);
-  gst_bus_set_sync_handler (bus,
-      (GstBusSyncHandler) pipeline_bus_handler, pipeline);
-  gst_element_set_bus (GST_ELEMENT (pipeline), bus);
-  /* set_bus refs the bus via gst_object_replace, we drop our ref */
-  gst_object_unref ((GstObject *) bus);
 }
 
 static void
@@ -178,7 +167,6 @@ gst_pipeline_dispose (GObject * object)
 {
   GstPipeline *pipeline = GST_PIPELINE (object);
 
-  gst_element_set_bus (GST_ELEMENT (pipeline), NULL);
   gst_scheduler_reset (GST_ELEMENT_SCHEDULER (object));
   gst_element_set_scheduler (GST_ELEMENT (pipeline), NULL);
   gst_object_replace ((GstObject **) & pipeline->fixed_clock, NULL);
@@ -228,53 +216,6 @@ gst_pipeline_get_property (GObject * object, guint prop_id,
   GST_UNLOCK (pipeline);
 }
 
-static gboolean
-is_eos (GstPipeline * pipeline)
-{
-  GstIterator *sinks;
-  gboolean result = TRUE;
-  gboolean done = FALSE;
-
-  sinks = gst_bin_iterate_sinks (GST_BIN (pipeline));
-  while (!done) {
-    gpointer data;
-
-    switch (gst_iterator_next (sinks, &data)) {
-      case GST_ITERATOR_OK:
-      {
-        GstElement *element = GST_ELEMENT (data);
-        GList *eosed;
-        gchar *name;
-
-        name = gst_element_get_name (element);
-        eosed = g_list_find (pipeline->eosed, element);
-        if (!eosed) {
-          GST_DEBUG ("element %s did not post EOS yet", name);
-          result = FALSE;
-          done = TRUE;
-        } else {
-          GST_DEBUG ("element %s posted EOS", name);
-        }
-        g_free (name);
-        gst_object_unref (element);
-        break;
-      }
-      case GST_ITERATOR_RESYNC:
-        result = TRUE;
-        gst_iterator_resync (sinks);
-        break;
-      case GST_ITERATOR_DONE:
-        done = TRUE;
-        break;
-      default:
-        g_assert_not_reached ();
-        break;
-    }
-  }
-  gst_iterator_free (sinks);
-  return result;
-}
-
 /* sending an event on the pipeline pauses the pipeline if it
  * was playing.
  */
@@ -318,47 +259,6 @@ gst_pipeline_send_event (GstElement * element, GstEvent * event)
   return res;
 }
 
-/* FIXME, make me threadsafe */
-static GstBusSyncReply
-pipeline_bus_handler (GstBus * bus, GstMessage * message,
-    GstPipeline * pipeline)
-{
-  GstBusSyncReply result = GST_BUS_PASS;
-  gboolean posteos = FALSE;
-
-  /* we don't want messages from the streaming thread while we're doing the 
-   * state change. We do want them from the state change functions. */
-
-  switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_EOS:
-      if (GST_MESSAGE_SRC (message) != GST_OBJECT (pipeline)) {
-        GST_DEBUG ("got EOS message");
-        GST_LOCK (bus);
-        pipeline->eosed =
-            g_list_prepend (pipeline->eosed, GST_MESSAGE_SRC (message));
-        GST_UNLOCK (bus);
-        if (is_eos (pipeline)) {
-          posteos = TRUE;
-          GST_DEBUG ("all sinks posted EOS");
-        }
-        /* we drop all EOS messages */
-        result = GST_BUS_DROP;
-        gst_message_unref (message);
-      }
-      break;
-    case GST_MESSAGE_ERROR:
-      break;
-    default:
-      break;
-  }
-
-  if (posteos) {
-    gst_bus_post (bus, gst_message_new_eos (GST_OBJECT (pipeline)));
-  }
-
-  return result;
-}
-
 /**
  * gst_pipeline_new:
  * @name: name of new pipeline
@@ -396,7 +296,6 @@ gst_pipeline_change_state (GstElement * element)
       clock = gst_element_get_clock (element);
       gst_element_set_clock (element, clock);
       gst_object_unref (clock);
-      pipeline->eosed = NULL;
       break;
     }
     case GST_STATE_PAUSED_TO_PLAYING:

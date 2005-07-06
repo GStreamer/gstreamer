@@ -7,9 +7,6 @@ endif
 dirs = \
 	helloworld			\
 	queue				\
-	queue2				\
-	queue3				\
-	queue4				\
 	launch				\
 	thread				\
 	plugins				\
@@ -19,6 +16,10 @@ dirs = \
 	manual				\
 	pwg				\
 	retag
+
+#queue2				\
+#queue3				\
+#queue4				
 
 SUBDIRS = $(dirs)			\
 	$(GST_LOADSAVE_DIRS)

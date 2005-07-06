@@ -68,10 +68,11 @@ static GstClock *gst_bin_get_clock_func (GstElement * element);
 static void gst_bin_set_clock_func (GstElement * element, GstClock * clock);
 
 static void gst_bin_set_manager (GstElement * element, GstPipeline * manager);
-static void gst_bin_set_bus (GstElement * element, GstBus * bus);
 static void gst_bin_set_scheduler (GstElement * element, GstScheduler * sched);
 
 static gboolean gst_bin_send_event (GstElement * element, GstEvent * event);
+static GstBusSyncReply bin_bus_handler (GstBus * bus,
+    GstMessage * message, GstBin * bin);
 static gboolean gst_bin_query (GstElement * element, GstQuery * query);
 
 #ifndef GST_DISABLE_LOADSAVE
@@ -179,7 +180,6 @@ gst_bin_class_init (GstBinClass * klass)
   gstelement_class->get_clock = GST_DEBUG_FUNCPTR (gst_bin_get_clock_func);
   gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_bin_set_clock_func);
   gstelement_class->set_manager = GST_DEBUG_FUNCPTR (gst_bin_set_manager);
-  gstelement_class->set_bus = GST_DEBUG_FUNCPTR (gst_bin_set_bus);
   gstelement_class->set_scheduler = GST_DEBUG_FUNCPTR (gst_bin_set_scheduler);
 
   gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_bin_send_event);
@@ -192,9 +192,23 @@ gst_bin_class_init (GstBinClass * klass)
 static void
 gst_bin_init (GstBin * bin)
 {
+  GstBus *bus;
+
   bin->numchildren = 0;
   bin->children = NULL;
   bin->children_cookie = 0;
+  bin->eosed = NULL;
+
+  /* Set up a bus for listening to child elements, 
+   * and one for sending messages up the hierarchy */
+  bus = g_object_new (gst_bus_get_type (), NULL);
+  bin->child_bus = bus;
+  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bin_bus_handler, bin);
+
+  bus = g_object_new (gst_bus_get_type (), NULL);
+  gst_element_set_bus (GST_ELEMENT (bin), bus);
+  /* set_bus refs the bus via gst_object_replace, we drop our ref */
+  gst_object_unref (bus);
 }
 
 /**
@@ -281,29 +295,6 @@ gst_bin_get_clock_func (GstElement * element)
   return result;
 }
 
-/* set the bus on all of the children in this bin
- *
- * MT safe
- */
-static void
-gst_bin_set_bus (GstElement * element, GstBus * bus)
-{
-  GList *children;
-  GstBin *bin;
-
-  bin = GST_BIN (element);
-
-  parent_class->set_bus (element, bus);
-
-  GST_LOCK (bin);
-  for (children = bin->children; children; children = g_list_next (children)) {
-    GstElement *child = GST_ELEMENT (children->data);
-
-    gst_element_set_bus (child, bus);
-  }
-  GST_UNLOCK (bin);
-}
-
 /* set the scheduler on all of the children in this bin
  *
  * MT safe
@@ -348,6 +339,53 @@ gst_bin_set_manager (GstElement * element, GstPipeline * manager)
   GST_UNLOCK (element);
 }
 
+static gboolean
+is_eos (GstBin * bin)
+{
+  GstIterator *sinks;
+  gboolean result = TRUE;
+  gboolean done = FALSE;
+
+  sinks = gst_bin_iterate_sinks (bin);
+  while (!done) {
+    gpointer data;
+
+    switch (gst_iterator_next (sinks, &data)) {
+      case GST_ITERATOR_OK:
+      {
+        GstElement *element = GST_ELEMENT (data);
+        GList *eosed;
+        gchar *name;
+
+        name = gst_element_get_name (element);
+        eosed = g_list_find (bin->eosed, element);
+        if (!eosed) {
+          GST_DEBUG ("element %s did not post EOS yet", name);
+          result = FALSE;
+          done = TRUE;
+        } else {
+          GST_DEBUG ("element %s posted EOS", name);
+        }
+        g_free (name);
+        gst_object_unref (element);
+        break;
+      }
+      case GST_ITERATOR_RESYNC:
+        result = TRUE;
+        gst_iterator_resync (sinks);
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+  }
+  gst_iterator_free (sinks);
+  return result;
+}
+
 /* add an element to this bin
  *
  * MT safe
@@ -389,7 +427,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   bin->children_cookie++;
 
   gst_element_set_manager (element, GST_ELEMENT (bin)->manager);
-  gst_element_set_bus (element, GST_ELEMENT (bin)->bus);
+  gst_element_set_bus (element, bin->child_bus);
   gst_element_set_scheduler (element, GST_ELEMENT_SCHEDULER (bin));
   gst_element_set_clock (element, GST_ELEMENT_CLOCK (bin));
 
@@ -697,11 +735,11 @@ bin_element_is_sink (GstElement * child, GstBin * bin)
    * get its name safely. */
   GST_LOCK (child);
   is_sink = GST_FLAG_IS_SET (child, GST_ELEMENT_IS_SINK);
-  GST_UNLOCK (child);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
       "child %s %s sink", GST_OBJECT_NAME (child), is_sink ? "is" : "is not");
 
+  GST_UNLOCK (child);
   return is_sink ? 0 : 1;
 }
 
@@ -1112,6 +1150,12 @@ gst_bin_change_state (GstElement * element)
   if (pending == GST_STATE_VOID_PENDING)
     return GST_STATE_SUCCESS;
 
+  /* Clear eosed element list on READY-> PAUSED */
+  if (GST_STATE_TRANSITION (element) == GST_STATE_READY_TO_PAUSED) {
+    g_list_free (bin->eosed);
+    bin->eosed = NULL;
+  }
+
   /* all elements added to these queues should have their refcount
    * incremented */
   elem_queue = g_queue_new ();
@@ -1335,6 +1379,10 @@ gst_bin_dispose (GObject * object)
   /* ref to not hit 0 again */
   gst_object_ref (object);
 
+  g_list_free (bin->eosed);
+  gst_object_unref (bin->child_bus);
+  gst_element_set_bus (GST_ELEMENT (bin), NULL);
+
   while (bin->children) {
     gst_bin_remove (bin, GST_ELEMENT (bin->children->data));
   }
@@ -1391,6 +1439,39 @@ gst_bin_send_event (GstElement * element, GstEvent * event)
   gst_event_unref (event);
 
   return res;
+}
+
+/* FIXME, make me threadsafe */
+static GstBusSyncReply
+bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
+{
+  /* we don't want messages from the streaming thread while we're doing the
+   * state change. We do want them from the state change functions. */
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_EOS:
+      GST_DEBUG_OBJECT (bin, "got EOS message from %s",
+          gst_object_get_name (GST_MESSAGE_SRC (message)));
+
+      GST_LOCK (bin->child_bus);
+      bin->eosed = g_list_prepend (bin->eosed, GST_MESSAGE_SRC (message));
+      GST_UNLOCK (bin->child_bus);
+
+      if (is_eos (bin)) {
+        GST_DEBUG_OBJECT (bin, "all sinks posted EOS");
+        gst_bus_post (GST_ELEMENT (bin)->bus,
+            gst_message_new_eos (GST_OBJECT (bin)));
+      }
+
+      /* we drop all EOS messages */
+      gst_message_unref (message);
+      break;
+    default:
+      /* Send all other messages upward */
+      gst_bus_post (GST_ELEMENT (bin)->bus, message);
+      break;
+  }
+
+  return GST_BUS_DROP;
 }
 
 static gboolean

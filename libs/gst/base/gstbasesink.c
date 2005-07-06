@@ -402,10 +402,10 @@ gst_base_sink_preroll_queue_empty (GstBaseSink * basesink, GstPad * pad)
       GST_PREROLL_UNLOCK (pad);
 
       if (is_buffer) {
-        GST_DEBUG ("poped buffer %p", obj);
+        GST_DEBUG ("popped buffer %p", obj);
         ret = gst_base_sink_handle_buffer (basesink, GST_BUFFER (obj));
       } else {
-        GST_DEBUG ("poped event %p", obj);
+        GST_DEBUG ("popped event %p", obj);
         gst_base_sink_handle_event (basesink, GST_EVENT (obj));
         ret = GST_FLOW_OK;
       }
@@ -427,7 +427,7 @@ gst_base_sink_preroll_queue_flush (GstBaseSink * basesink, GstPad * pad)
   GST_DEBUG ("flushing queue %p", basesink);
   if (q) {
     while ((obj = g_queue_pop_head (q))) {
-      GST_DEBUG ("poped %p", obj);
+      GST_DEBUG ("popped %p", obj);
       gst_mini_object_unref (obj);
     }
   }
@@ -814,6 +814,7 @@ gst_base_sink_handle_event (GstBaseSink * basesink, GstEvent * event)
       /* if we are still EOS, we can post the EOS message */
       if (basesink->eos) {
         /* ok, now we can post the message */
+        GST_DEBUG_OBJECT (basesink, "Now posting EOS");
         gst_element_post_message (GST_ELEMENT (basesink),
             gst_message_new_eos (GST_OBJECT (basesink)));
       }

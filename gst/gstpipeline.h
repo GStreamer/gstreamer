@@ -26,7 +26,6 @@
 
 #include <gst/gsttypes.h>
 #include <gst/gstbin.h>
-#include <gst/gstbus.h>
 
 G_BEGIN_DECLS
 
@@ -53,8 +52,6 @@ struct _GstPipeline {
   GstClockTime   stream_time;
   GstClockTime   delay;
   GstClockTime   play_timeout;
-
-  GList		*eosed;		/* list of elements that posted EOS */
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
