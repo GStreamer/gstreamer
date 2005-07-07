@@ -379,6 +379,14 @@ GST_CHECK_FEATURE(LIBCACA, [libcaca], libcaca, [
   AC_SUBST(LIBCACA_LIBS)
 ])
 
+dnl *** libdv ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBDV, true)
+GST_CHECK_FEATURE(LIBDV, [libdv DV/video decoder], dvdec, [
+  PKG_CHECK_MODULES(LIBDV, libdv >= 0.100, HAVE_LIBDV="yes", HAVE_LIBDV="no")
+  AC_SUBST(LIBDV_CFLAGS)
+  AC_SUBST(LIBDV_LIBS)
+])
+
 dnl *** shout2 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SHOUT2, true)
 GST_CHECK_FEATURE(SHOUT2, [shout2 plug-in], shout2send, [
@@ -531,6 +539,7 @@ gst-libs/gst/Makefile
 sys/Makefile
 ext/Makefile
 ext/aalib/Makefile
+ext/dv/Makefile
 ext/libcaca/Makefile
 ext/mad/Makefile
 ext/raw1394/Makefile
