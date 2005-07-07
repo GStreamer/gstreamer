@@ -1,3 +1,9 @@
+2005-07-07  Wim Taymans  <wim@fluendo.com>
+
+	* gst/schedulers/threadscheduler.c: (gst_thread_scheduler_func),
+	(gst_thread_scheduler_dispose):
+	Unlock the STREAM_LOCK completely.
+
 2005-07-07  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:

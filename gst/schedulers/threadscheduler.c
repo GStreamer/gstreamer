@@ -289,12 +289,19 @@ gst_thread_scheduler_func (GstThreadSchedulerTask * ttask,
   GST_LOCK (task);
   while (G_LIKELY (task->state != GST_TASK_STOPPED)) {
     while (G_UNLIKELY (task->state == GST_TASK_PAUSED)) {
-      GST_TASK_UNLOCK (task);
+      guint t;
+
+      t = GST_TASK_UNLOCK_FULL (task);
+      if (t <= 0) {
+        g_warning ("wrong STREAM_LOCK count");
+      }
       GST_TASK_SIGNAL (task);
       GST_TASK_WAIT (task);
       GST_UNLOCK (task);
       /* locking order.. */
-      GST_TASK_LOCK (task);
+      if (t > 0)
+        GST_TASK_LOCK_FULL (task, t);
+
       GST_LOCK (task);
       if (task->state == GST_TASK_STOPPED)
         goto done;
