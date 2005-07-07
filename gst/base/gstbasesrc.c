@@ -531,6 +531,8 @@ gst_base_src_get_range (GstPad * pad, guint64 offset, guint length,
   GST_LIVE_LOCK (src);
   if (src->is_live) {
     while (!src->live_running) {
+      GST_DEBUG ("live source signal waiting");
+      GST_LIVE_SIGNAL (src);
       GST_DEBUG ("live source waiting for running state");
       GST_LIVE_WAIT (src);
       GST_DEBUG ("live source unlocked");
@@ -759,7 +761,7 @@ static gboolean
 gst_base_src_negotiate (GstBaseSrc * basesrc)
 {
   GstBaseSrcClass *bclass;
-  gboolean result = FALSE;
+  gboolean result = TRUE;
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
 
