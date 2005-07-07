@@ -407,7 +407,6 @@ static const GstQueryType *
 gst_id3_tag_get_query_types (GstPad * pad)
 {
   static const GstQueryType gst_id3_tag_src_query_types[] = {
-    GST_QUERY_TOTAL,
     GST_QUERY_POSITION,
     0
   };

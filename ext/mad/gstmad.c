@@ -532,7 +532,6 @@ static const GstQueryType *
 gst_mad_get_query_types (GstPad * pad)
 {
   static const GstQueryType gst_mad_src_query_types[] = {
-    GST_QUERY_TOTAL,
     GST_QUERY_POSITION,
     0
   };
@@ -611,60 +610,6 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
 
       break;
     }
-#if 0
-    case GST_QUERY_TOTAL:
-    {
-      switch (*format) {
-        case GST_FORMAT_BYTES:
-        case GST_FORMAT_DEFAULT:
-        case GST_FORMAT_TIME:
-        {
-          gint64 peer_value;
-          const GstFormat *peer_formats;
-
-          res = FALSE;
-
-          peer_formats = gst_pad_get_formats (GST_PAD_PEER (mad->sinkpad));
-
-          while (peer_formats && *peer_formats && !res) {
-
-            GstFormat peer_format = *peer_formats;
-
-            /* do the probe */
-            if (gst_pad_query (GST_PAD_PEER (mad->sinkpad), GST_QUERY_TOTAL,
-                    &peer_format, &peer_value)) {
-              GstFormat conv_format;
-
-              /* convert to TIME */
-              conv_format = GST_FORMAT_TIME;
-              res = gst_pad_convert (mad->sinkpad,
-                  peer_format, peer_value, &conv_format, value);
-              /* and to final format */
-              res &= gst_pad_convert (pad,
-                  GST_FORMAT_TIME, *value, format, value);
-            }
-            peer_formats++;
-          }
-          break;
-        }
-        default:
-          res = FALSE;
-          break;
-      }
-      break;
-    }
-    case GST_QUERY_POSITION:
-      switch (*format) {
-        default:
-        {
-          /* we only know about our samples, convert to requested format */
-          res &= gst_pad_convert (pad,
-              GST_FORMAT_DEFAULT, mad->total_samples, format, value);
-          break;
-        }
-      }
-      break;
-#endif
     default:
       res = FALSE;
       break;
