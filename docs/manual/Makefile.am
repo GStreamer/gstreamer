@@ -29,7 +29,7 @@ include $(srcdir)/../upload.mak
 ### this is standard automake stuff
 
 # package up all the source
-EXTRA_DIST = $(SRC)
+EXTRA_DIST = $(SRC) README
 
 # install documentation
 docdir = $(datadir)/doc/$(PACKAGE)-$(VERSION)/$(DOC)
