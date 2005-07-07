@@ -1,5 +1,17 @@
 2005-07-07  Wim Taymans  <wim@fluendo.com>
 
+	* configure.ac:
+	* ext/raw1394/Makefile.am:
+	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_get_type),
+	(gst_dv1394src_class_init), (gst_dv1394src_init),
+	(gst_dv1394src_iso_receive), (gst_dv1394src_create),
+	(gst_dv1394src_change_state), (gst_dv1394src_convert),
+	(gst_dv1394src_get_query_types), (gst_dv1394src_query):
+	* ext/raw1394/gstdv1394src.h:
+	Ported the 1394 source to 0.9.
+
+2005-07-07  Wim Taymans  <wim@fluendo.com>
+
 	* ext/mad/gstid3tag.c: (gst_id3_tag_get_query_types):
 	* ext/mad/gstmad.c: (gst_mad_get_query_types), (gst_mad_src_query):
 	* gst/avi/gstavidemux.c: (gst_avi_demux_get_src_query_types):
