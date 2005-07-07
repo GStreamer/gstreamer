@@ -345,7 +345,7 @@ uninstall-local:
 			rm -f $(DESTDIR)$(TARGET_DIR)/style.css; \
 		fi; \
 	fi) 
-	if test -d $(DESTDIR)$(TARGET_DIR); then rmdir -p --ignore-fail-on-non-empty $(DESTDIR)$(TARGET_DIR) 2>/dev/null; fi
+	if test -d $(DESTDIR)$(TARGET_DIR); then rmdir -p --ignore-fail-on-non-empty $(DESTDIR)$(TARGET_DIR) 2>/dev/null; fi; true
 
 #
 # Require gtk-doc when making dist
