@@ -366,7 +366,6 @@ static const GstQueryType *
 gst_avi_demux_get_src_query_types (GstPad * pad)
 {
   static const GstQueryType src_types[] = {
-    GST_QUERY_TOTAL,
     GST_QUERY_POSITION,
     0
   };
