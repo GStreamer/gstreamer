@@ -936,7 +936,6 @@ pkgconfig/gstreamer-gconf.pc
 pkgconfig/gstreamer-gconf-uninstalled.pc
 pkgconfig/gstreamer-plugins-base.pc
 pkgconfig/gstreamer-plugins-base-uninstalled.pc
-check/Makefile
 docs/Makefile
 docs/libs/Makefile
 docs/version.entities

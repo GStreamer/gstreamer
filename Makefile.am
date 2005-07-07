@@ -28,7 +28,6 @@ SUBDIRS = 			\
 	$(SUBDIRS_EXAMPLES) 	\
 	tools 			\
 	$(SUBDIRS_GCONF) 	\
-	$(SUBDIRS_CHECK)	\
 	docs			\
 	po 			\
 	common 			\
@@ -42,7 +41,6 @@ DIST_SUBDIRS = 			\
 	examples		\
 	tools 			\
 	gconf 			\
-	check			\
 	po 			\
 	common 			\
 	m4 			\
