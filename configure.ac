@@ -419,6 +419,32 @@ GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
 ])
 AC_SUBST(MAD_LIBS)
 
+dnl *** dv1394 ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_DV1394, true)
+GST_CHECK_FEATURE(DV1394, [raw1394 and avc1394 library], dv1394src, [
+  dnl we need to test three headers and three libs
+  GST_CHECK_LIBHEADER(RAW1394,
+    raw1394, raw1394_new_handle,,
+    libraw1394/raw1394.h, RAW1394_LIBS="-lraw1394")
+  GST_CHECK_LIBHEADER(AVC1394,
+    avc1394, avc1394_send_command, $RAW1394_LIBS,
+    libavc1394/avc1394.h, AVC1394_LIBS="-lavc1394")
+  GST_CHECK_LIBHEADER(ROM1394,
+    rom1394, rom1394_free_directory, $RAW1394_LIBS,
+    libavc1394/rom1394.h, ROM1394_LIBS="-lrom1394")
+
+  dnl now see how far we got
+  if test x$HAVE_RAW1394 = xyes && \
+     test x$HAVE_AVC1394 = xyes && \
+     test x$HAVE_ROM1394 = xyes; then
+       HAVE_DV1394=yes
+       DV1394_LIBS="$RAW1394_LIBS $AVC1394_LIBS $ROM1394_LIBS"
+       AC_SUBST(DV1394_LIBS)
+  else
+       HAVE_DV1394=no
+  fi
+])
+
 dnl **** ESound ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_ESD, true)
 GST_CHECK_FEATURE(ESD, [esound plug-ins], esdsink, [
@@ -507,6 +533,7 @@ ext/Makefile
 ext/aalib/Makefile
 ext/libcaca/Makefile
 ext/mad/Makefile
+ext/raw1394/Makefile
 ext/shout2/Makefile
 ext/sidplay/Makefile
 ext/esd/Makefile
