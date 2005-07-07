@@ -24,7 +24,7 @@
 #define __GST_V4L_X_OVERLAY_H__
 
 #include <gst/gst.h>
-#include <gst/xoverlay/xoverlay.h>
+#include <gst/interfaces/xoverlay.h>
 
 #include "gstv4lelement.h"
 

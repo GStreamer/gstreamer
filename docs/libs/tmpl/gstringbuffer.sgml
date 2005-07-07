@@ -27,7 +27,7 @@ an implementation of an audio ringbuffer
 @samples_per_seg: 
 @empty_seg: 
 @state: 
-@segplayed: 
+@segdone: 
 @waiting: 
 
 <!-- ##### STRUCT GstRingBufferClass ##### -->
@@ -38,7 +38,7 @@ an implementation of an audio ringbuffer
 @parent_class: 
 @acquire: 
 @release: 
-@play: 
+@start: 
 @pause: 
 @resume: 
 @stop: 
@@ -82,7 +82,7 @@ an implementation of an audio ringbuffer
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_ringbuffer_play ##### -->
+<!-- ##### FUNCTION gst_ringbuffer_start ##### -->
 <para>
 
 </para>
@@ -118,7 +118,7 @@ an implementation of an audio ringbuffer
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_ringbuffer_played_samples ##### -->
+<!-- ##### FUNCTION gst_ringbuffer_samples_done ##### -->
 <para>
 
 </para>

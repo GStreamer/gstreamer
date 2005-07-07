@@ -23,9 +23,13 @@
 #ifndef __GST_V4LSRC_H__
 #define __GST_V4LSRC_H__
 
+
 #include <gstv4lelement.h>
 
+
 G_BEGIN_DECLS
+
+
 #define GST_TYPE_V4LSRC \
   (gst_v4lsrc_get_type())
 #define GST_V4LSRC(obj) \
@@ -36,8 +40,11 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_V4LSRC))
 #define GST_IS_V4LSRC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_V4LSRC))
+
+
 typedef struct _GstV4lSrc GstV4lSrc;
 typedef struct _GstV4lSrcClass GstV4lSrcClass;
+
 
 enum
 {
@@ -47,13 +54,6 @@ enum
   QUEUE_STATE_SYNCED            /* the frame is captured */
 };
 
-typedef enum
-{
-  GST_V4LSRC_SYNC_MODE_CLOCK,
-  GST_V4LSRC_SYNC_MODE_PRIVATE_CLOCK,
-  GST_V4LSRC_SYNC_MODE_FIXED_FPS,
-  GST_V4LSRC_SYNC_MODE_NONE,
-} GstV4lSrcSyncMode;
 
 struct _GstV4lSrc
 {
@@ -76,34 +76,17 @@ struct _GstV4lSrc
   gint num_queued;
   gint sync_frame, queue_frame;
   gboolean is_capturing;
-  GstClockTimeDiff latency_offset;
+  GstClockTimeDiff timestamp_offset;
 
   /* True if we want to stop */
   gboolean quit;
 
-  /* A/V sync... frame counter and internal cache */
-  gulong handled;
-  gint last_frame;
-  gint need_writes;
-  gboolean need_discont;
-  GstClockTime last_discont;    /* gst_element_get_time () of last discont send */
+  gint offset;
+  gfloat fps;
 
-  /* clock */
-  GstClock *clock;
+  /* list of supported colorspaces (as integers) */
+  GList *colorspaces;
 
-  /* time to substract from clock time to get back to timestamp */
-  GstClockTime substract_time;
-
-  /* how often are we going to use each frame? */
-  gint *use_num_times;
-
-  /* list of supported colourspaces (as integers) */
-  GList *colourspaces;
-
-  /* how are we going to timestamp buffers? */
-  GstV4lSrcSyncMode syncmode;
-
-  gboolean copy_mode;
   gboolean autoprobe;           /* probe features on startup ? */
   gboolean autoprobe_fps;       /* probe fps on startup ? */
 
@@ -113,14 +96,13 @@ struct _GstV4lSrc
 struct _GstV4lSrcClass
 {
   GstV4lElementClass parent_class;
-
-  void (*frame_capture) (GObject * object);
-  void (*frame_drop) (GObject * object);
-  void (*frame_insert) (GObject * object);
 };
+
 
 GType gst_v4lsrc_get_type (void);
 
 
 G_END_DECLS
+
+
 #endif /* __GST_V4LSRC_H__ */

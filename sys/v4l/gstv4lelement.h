@@ -23,9 +23,6 @@
 #ifndef __GST_V4LELEMENT_H__
 #define __GST_V4LELEMENT_H__
 
-#include <gst/gst.h>
-#include <gst/xwindowlistener/xwindowlistener.h>
-
 /* Because of some really cool feature in video4linux1, also known as
  * 'not including sys/types.h and sys/time.h', we had to include it
  * ourselves. In all their intelligence, these people decided to fix
@@ -41,7 +38,10 @@
 #include <sys/types.h>
 #define _LINUX_TIME_H
 #include <linux/videodev.h>
+
 #include <gst/gst.h>
+#include <gst/base/gstpushsrc.h>
+
 
 G_BEGIN_DECLS
 
@@ -63,7 +63,7 @@ typedef struct _GstV4lElementClass GstV4lElementClass;
 typedef struct _GstV4lXv GstV4lXv;
 
 struct _GstV4lElement {
-  GstElement element;
+  GstPushSrc element;
 
   /* the video device */
   char *videodev;
@@ -94,16 +94,10 @@ struct _GstV4lElement {
 };
 
 struct _GstV4lElementClass {
-  GstElementClass parent_class;
+  GstPushSrcClass parent_class;
 
   /* probed devices */
   GList *devices;
-
-  /* signals */
-  void     (*open)           (GstElement  *element,
-                              const gchar *device);
-  void     (*close)          (GstElement  *element,
-                              const gchar *device);
 
   /* actions */
   gboolean (*get_attribute)   (GstElement  *element,

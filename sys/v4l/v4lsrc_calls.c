@@ -128,15 +128,6 @@ gst_v4lsrc_sync_frame (GstV4lSrc * v4lsrc, gint num)
   }
   GST_LOG_OBJECT (v4lsrc, "VIOIOCSYNC on frame %d done", num);
 
-  if (v4lsrc->clock) {
-    v4lsrc->timestamp_sync = gst_clock_get_time (v4lsrc->clock);
-  } else {
-    GTimeVal time;
-
-    g_get_current_time (&time);
-    v4lsrc->timestamp_sync = GST_TIMEVAL_TO_TIME (time);
-  }
-
   v4lsrc->frame_queue_state[num] = QUEUE_STATE_SYNCED;
   v4lsrc->num_queued--;
 
@@ -200,10 +191,6 @@ gst_v4lsrc_capture_init (GstV4lSrc * v4lsrc)
   /* keep track of queued buffers */
   v4lsrc->frame_queue_state = (gint8 *)
       g_malloc (sizeof (gint8) * v4lsrc->mbuf.frames);
-
-  /* track how often to use each frame */
-  v4lsrc->use_num_times = (gint *)
-      g_malloc (sizeof (gint) * v4lsrc->mbuf.frames);
 
   /* lock for the frame_state */
   v4lsrc->mutex_queue_state = g_mutex_new ();
@@ -307,9 +294,6 @@ gst_v4lsrc_grab_frame (GstV4lSrc * v4lsrc, gint * num)
     return FALSE;
   }
   v4lsrc->sync_frame = (v4lsrc->sync_frame + 1) % v4lsrc->mbuf.frames;
-
-  GST_LOG_OBJECT (v4lsrc, "(%" GST_TIME_FORMAT ") grabbed frame %d",
-      GST_TIME_ARGS (gst_clock_get_time (v4lsrc->clock)), *num);
 
   g_mutex_unlock (v4lsrc->mutex_queue_state);
 
@@ -427,8 +411,6 @@ gst_v4lsrc_capture_deinit (GstV4lSrc * v4lsrc)
   v4lsrc->cond_queue_state = NULL;
   g_free (v4lsrc->frame_queue_state);
   v4lsrc->frame_queue_state = NULL;
-  g_free (v4lsrc->use_num_times);
-  v4lsrc->use_num_times = NULL;
 
   /* unmap the buffer */
   if (munmap (GST_V4LELEMENT (v4lsrc)->buffer, v4lsrc->mbuf.size) == -1) {
@@ -542,13 +524,7 @@ gst_v4lsrc_get_fps (GstV4lSrc * v4lsrc)
     return current_fps;
   }
 
-  if (!(v4lsrc->syncmode == GST_V4LSRC_SYNC_MODE_FIXED_FPS) &&
-      v4lsrc->clock != NULL && v4lsrc->handled > 0) {
-    /* try to get time from clock master and calculate fps */
-    GstClockTime time =
-        gst_clock_get_time (v4lsrc->clock) - v4lsrc->substract_time;
-    return v4lsrc->handled * GST_SECOND / time;
-  }
+  /* removed fps estimation code here */
 
   /* if that failed ... */
 
@@ -564,4 +540,176 @@ gst_v4lsrc_get_fps (GstV4lSrc * v4lsrc)
     fps = 25.;
 
   return fps;
+}
+
+/* get a list of possible framerates
+ * this is only done for webcams;
+ * other devices return NULL here.
+ * this function takes a LONG time to execute.
+ */
+GValue *
+gst_v4lsrc_get_fps_list (GstV4lSrc * v4lsrc)
+{
+  gint fps_index;
+  gfloat fps;
+  struct video_window *vwin = &GST_V4LELEMENT (v4lsrc)->vwin;
+  GstV4lElement *v4lelement = GST_V4LELEMENT (v4lsrc);
+
+  /* check if we have vwin window properties giving a framerate,
+   * as is done for webcams
+   * See http://www.smcc.demon.nl/webcam/api.html
+   * which is used for the Philips and qce-ga drivers */
+  fps_index = (vwin->flags >> 16) & 0x3F;       /* 6 bit index for framerate */
+
+  /* webcams have a non-zero fps_index */
+  if (fps_index == 0) {
+    GST_DEBUG_OBJECT (v4lsrc, "fps_index is 0, no webcam");
+    return NULL;
+  }
+  GST_DEBUG_OBJECT (v4lsrc, "fps_index is %d, so webcam", fps_index);
+
+  {
+    gfloat current_fps;
+    int i;
+    GValue *list = NULL;
+    GValue value = { 0 };
+
+    /* webcam detected, so try all framerates and return a list */
+
+    list = g_new0 (GValue, 1);
+    g_value_init (list, GST_TYPE_LIST);
+
+    /* index of 16 corresponds to 15 fps */
+    current_fps = fps_index * 15.0 / 16;
+    GST_DEBUG_OBJECT (v4lsrc, "device reports fps of %.4f", current_fps);
+    for (i = 0; i < 63; ++i) {
+      /* set bits 16 to 21 to 0 */
+      vwin->flags &= (0x3F00 - 1);
+      /* set bits 16 to 21 to the index */
+      vwin->flags |= i << 16;
+      if (gst_v4l_set_window_properties (v4lelement)) {
+        /* setting it succeeded.  FIXME: get it and check. */
+        fps = i * 15.0 / 16;
+        g_value_init (&value, G_TYPE_DOUBLE);
+        g_value_set_double (&value, fps);
+        gst_value_list_append_value (list, &value);
+        g_value_unset (&value);
+      }
+    }
+    /* FIXME: set back the original fps_index */
+    vwin->flags &= (0x3F00 - 1);
+    vwin->flags |= fps_index << 16;
+    gst_v4l_set_window_properties (v4lelement);
+    return list;
+  }
+  return NULL;
+}
+
+#define GST_TYPE_V4LSRC_BUFFER (gst_v4lsrc_buffer_get_type())
+#define GST_IS_V4LSRC_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_V4LSRC_BUFFER))
+#define GST_V4LSRC_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_V4LSRC_BUFFER, GstV4lSrcBuffer))
+
+typedef struct _GstV4lSrcBuffer
+{
+  GstBuffer buffer;
+
+  GstV4lSrc *v4lsrc;
+
+  gint num;
+} GstV4lSrcBuffer;
+
+static void gst_v4lsrc_buffer_class_init (gpointer g_class,
+    gpointer class_data);
+static void gst_v4lsrc_buffer_init (GTypeInstance * instance, gpointer g_class);
+static void gst_v4lsrc_buffer_finalize (GstV4lSrcBuffer * v4lsrc_buffer);
+
+GType
+gst_v4lsrc_buffer_get_type (void)
+{
+  static GType _gst_v4lsrc_buffer_type;
+
+  if (G_UNLIKELY (_gst_v4lsrc_buffer_type == 0)) {
+    static const GTypeInfo v4lsrc_buffer_info = {
+      sizeof (GstBufferClass),
+      NULL,
+      NULL,
+      gst_v4lsrc_buffer_class_init,
+      NULL,
+      NULL,
+      sizeof (GstV4lSrcBuffer),
+      0,
+      gst_v4lsrc_buffer_init,
+      NULL
+    };
+    _gst_v4lsrc_buffer_type = g_type_register_static (GST_TYPE_BUFFER,
+        "GstV4lSrcBuffer", &v4lsrc_buffer_info, 0);
+  }
+  return _gst_v4lsrc_buffer_type;
+}
+
+static void
+gst_v4lsrc_buffer_class_init (gpointer g_class, gpointer class_data)
+{
+  GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
+
+  mini_object_class->finalize = (GstMiniObjectFinalizeFunction)
+      gst_v4lsrc_buffer_finalize;
+}
+
+static void
+gst_v4lsrc_buffer_init (GTypeInstance * instance, gpointer g_class)
+{
+
+}
+
+static void
+gst_v4lsrc_buffer_finalize (GstV4lSrcBuffer * v4lsrc_buffer)
+{
+  GstV4lSrc *v4lsrc;
+  gint num;
+
+  v4lsrc = v4lsrc_buffer->v4lsrc;
+  num = v4lsrc_buffer->num;
+
+  GST_LOG_OBJECT (v4lsrc, "freeing buffer %p for frame %d", v4lsrc_buffer, num);
+
+  /* only requeue if we still have an mmap buffer */
+  if (GST_V4LELEMENT (v4lsrc)->buffer) {
+    GST_LOG_OBJECT (v4lsrc, "requeueing frame %d", num);
+    gst_v4lsrc_requeue_frame (v4lsrc, num);
+  }
+
+  gst_object_unref (v4lsrc);
+}
+
+/* Create a V4lSrc buffer from our mmap'd data area */
+GstBuffer *
+gst_v4lsrc_buffer_new (GstV4lSrc * v4lsrc, gint num)
+{
+  GstBuffer *buf;
+
+  GST_DEBUG_OBJECT (v4lsrc, "creating buffer for frame %d", num);
+
+  buf = (GstBuffer *) gst_mini_object_new (GST_TYPE_V4LSRC_BUFFER);
+
+  GST_V4LSRC_BUFFER (buf)->num = num;
+  GST_V4LSRC_BUFFER (buf)->v4lsrc = gst_object_ref (v4lsrc);
+
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_READONLY);
+  GST_BUFFER_DATA (buf) = gst_v4lsrc_get_buffer (v4lsrc, num);
+  GST_BUFFER_SIZE (buf) = v4lsrc->buffer_size;
+  GST_BUFFER_OFFSET (buf) = v4lsrc->offset++;
+  GST_BUFFER_TIMESTAMP (buf) = gst_clock_get_time (GST_ELEMENT (v4lsrc)->clock);
+  GST_BUFFER_TIMESTAMP (buf) -= GST_ELEMENT (v4lsrc)->base_time;
+  /* fixme: this is a most ghetto timestamp/duration */
+
+  if (!v4lsrc->fps)
+    v4lsrc->fps = gst_v4lsrc_get_fps (v4lsrc);
+  if (v4lsrc->fps)
+    GST_BUFFER_DURATION (buf) = GST_SECOND / v4lsrc->fps;
+
+  /* the negotiate() method already set caps on the source pad */
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (v4lsrc)));
+
+  return buf;
 }

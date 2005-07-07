@@ -25,7 +25,6 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/tuner/tuner.h>
 
 #include "gstv4ltuner.h"
 #include "gstv4lelement.h"

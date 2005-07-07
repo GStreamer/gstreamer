@@ -26,9 +26,8 @@
 #include "gstv4lsrc.h"
 #include "v4l_calls.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+
+G_BEGIN_DECLS
 
 
 /* frame grabbing/capture (palette = VIDEO_PALETTE_* - see videodev.h) */
@@ -41,6 +40,8 @@ gboolean gst_v4lsrc_requeue_frame  (GstV4lSrc *v4lsrc, gint  num);
 gboolean gst_v4lsrc_capture_stop   (GstV4lSrc *v4lsrc);
 gboolean gst_v4lsrc_capture_deinit (GstV4lSrc *v4lsrc);
 gfloat   gst_v4lsrc_get_fps        (GstV4lSrc * v4lsrc);
+GValue * gst_v4lsrc_get_fps_list   (GstV4lSrc * v4lsrc);
+GstBuffer *gst_v4lsrc_buffer_new   (GstV4lSrc * v4lsrc, gint num);
 
 /* "the ugliest hack ever, now available at your local mirror" */
 gboolean gst_v4lsrc_try_capture    (GstV4lSrc *v4lsrc, gint width, gint height, gint palette);
@@ -48,8 +49,8 @@ gboolean gst_v4lsrc_try_capture    (GstV4lSrc *v4lsrc, gint width, gint height, 
 /* For debug purposes, share the palette names */
 const char *gst_v4lsrc_palette_name (int i);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+
+G_END_DECLS
+
 
 #endif /* __V4L_SRC_CALLS_H__ */

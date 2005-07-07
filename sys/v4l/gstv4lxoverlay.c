@@ -25,13 +25,12 @@
 #endif
 
 #include <string.h>
-#include <gst/gst.h>
-#include <gst/xoverlay/xoverlay.h>
+#include <sys/stat.h>
+
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/Xv.h>
 #include <X11/extensions/Xvlib.h>
-#include <sys/stat.h>
 
 #include "gstv4lxoverlay.h"
 #include "gstv4lelement.h"

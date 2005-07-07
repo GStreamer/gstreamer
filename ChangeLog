@@ -1,3 +1,38 @@
+2005-07-07  Andy Wingo  <wingo@pobox.com>
+
+	* sys/v4l/v4lsrc_calls.h:
+	* sys/v4l/v4lsrc_calls.c: Remove sync-related stuff.
+	(gst_v4lsrc_get_fps_list): Moved here from gstv4lsrc.c.
+	(gst_v4lsrc_buffer_new): Totally derive from GstBuffer.
+
+	* sys/v4l/v4l_calls.h: Cast to V4lElement.
+	* sys/v4l/v4l_calls.c: Header loc fixen, don't load mjpeg, all
+	v4lelements are sources.
+
+	* sys/v4l/gstv4lxoverlay.h:
+	* sys/v4l/gstv4lxoverlay.c:
+	* sys/v4l/gstv4ltuner.h:
+	* sys/v4l/gstv4ltuner.c: Header loc fixen.
+	
+	* sys/v4l/gstv4lsrc.h:
+	* sys/v4l/gstv4lsrc.c: Crucial GPL update. Clean up a bit, port to
+	PushSrc/BaseSrc. Removed most sync-related properties, videorate
+	or something should handle that. Made a live source.
+
+	* sys/v4l/gstv4lelement.h:
+	* sys/v4l/gstv4lelement.c: Derive from GstPushSrc. No more
+	signals. Some cleanups.
+
+	* sys/v4l/gstv4lcolorbalance.h: Interface header update.
+
+	* sys/v4l/gstv4l.c: Don't register v4lelement, or the jpeg/mjpeg
+	stuff.
+
+	* sys/v4l/Makefile.am: Build everything except the jpeg/mjpeg
+	stuff.
+
+	* sys/Makefile.am (SUBDIRS): Hit the V4L crack pipe.
+
 2005-07-07  Wim Taymans  <wim@fluendo.com>
 
 	* ext/theora/theoradec.c: (theora_get_query_types),

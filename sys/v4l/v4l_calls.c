@@ -34,16 +34,16 @@
 #include <unistd.h>
 
 #include <gst/gst.h>
-#include <gst/tuner/tuner.h>
-#include <gst/colorbalance/colorbalance.h>
+#include <gst/interfaces/tuner.h>
+#include <gst/interfaces/colorbalance.h>
 
 #include "v4l_calls.h"
 #include "gstv4ltuner.h"
 #include "gstv4lcolorbalance.h"
 
 #include "gstv4lsrc.h"
-#include "gstv4lmjpegsrc.h"
-#include "gstv4lmjpegsink.h"
+/* #include "gstv4lmjpegsrc.h" */
+/* #include "gstv4lmjpegsink.h" */
 
 GST_DEBUG_CATEGORY_EXTERN (v4l_debug);
 #define GST_CAT_DEFAULT v4l_debug
@@ -183,11 +183,11 @@ gst_v4l_open (GstV4lElement * v4lelement)
 
   /* device type check */
   if ((GST_IS_V4LSRC (v4lelement) &&
-          !(v4lelement->vcap.type & VID_TYPE_CAPTURE)) ||
-      (GST_IS_V4LMJPEGSRC (v4lelement) &&
-          !(v4lelement->vcap.type & VID_TYPE_MJPEG_ENCODER)) ||
-      (GST_IS_V4LMJPEGSINK (v4lelement) &&
-          !(v4lelement->vcap.type & VID_TYPE_MJPEG_DECODER))) {
+          !(v4lelement->vcap.type & VID_TYPE_CAPTURE))) {
+/*       (GST_IS_V4LMJPEGSRC (v4lelement) && */
+/*           !(v4lelement->vcap.type & VID_TYPE_MJPEG_ENCODER)) || */
+/*       (GST_IS_V4LMJPEGSINK (v4lelement) && */
+/*           !(v4lelement->vcap.type & VID_TYPE_MJPEG_DECODER))) { */
     GST_ELEMENT_ERROR (v4lelement, RESOURCE, SETTINGS, (NULL),
         ("Device opened, but wrong type (0x%x)", v4lelement->vcap.type));
     close (v4lelement->video_fd);
@@ -286,7 +286,6 @@ GList *
 gst_v4l_get_chan_names (GstV4lElement * v4lelement)
 {
   struct video_channel vchan;
-  const GList *pads = gst_element_get_pad_list (GST_ELEMENT (v4lelement));
   GList *list = NULL;
   gint i;
 
@@ -294,11 +293,6 @@ gst_v4l_get_chan_names (GstV4lElement * v4lelement)
 
   if (!GST_V4L_IS_OPEN (v4lelement))
     return NULL;
-
-  /* sinks don't have inputs in v4l */
-  if (pads && g_list_length ((GList *) pads) == 1)
-    if (GST_PAD_DIRECTION (GST_PAD (pads->data)) == GST_PAD_SINK)
-      return NULL;
 
   for (i = 0; i < gst_v4l_get_num_chans (v4lelement); i++) {
     GstV4lTunerChannel *v4lchannel = g_object_new (GST_TYPE_V4L_TUNER_CHANNEL,

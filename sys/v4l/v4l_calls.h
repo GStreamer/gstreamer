@@ -26,25 +26,24 @@
 #include "gstv4lelement.h"
 #include "gst/gst-i18n-plugin.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+
+G_BEGIN_DECLS
 
 
 /* simple check whether the device is open */
 #define GST_V4L_IS_OPEN(element) \
-  (element->video_fd > 0)
+  (GST_V4LELEMENT (element)->video_fd > 0)
 
 /* check whether the device is 'active' */
 #define GST_V4L_IS_ACTIVE(element) \
-  (element->buffer != NULL)
+  (GST_V4LELEMENT (element)->buffer != NULL)
 
 #define GST_V4L_IS_OVERLAY(element) \
-  (element->vcap.type & VID_TYPE_OVERLAY)
+  (GST_V4LELEMENT (element)->vcap.type & VID_TYPE_OVERLAY)
 
 /* checks whether the current v4lelement has already been open()'ed or not */
 #define GST_V4L_CHECK_OPEN(element)				\
-  if (element->video_fd <= 0)					\
+  if (!GST_V4L_IS_OPEN (element))				\
   {								\
     GST_ELEMENT_ERROR (element, RESOURCE, TOO_LAZY,		\
       (_("Device is not open.")), (NULL));			\
@@ -53,7 +52,7 @@ extern "C" {
 
 /* checks whether the current v4lelement is close()'ed or whether it is still open */
 #define GST_V4L_CHECK_NOT_OPEN(element)				\
-  if (element->video_fd != -1)					\
+  if (GST_V4L_IS_OPEN (element))				\
   {								\
     GST_ELEMENT_ERROR (element, RESOURCE, TOO_LAZY,		\
       (_("Device is open.")), (NULL));				\
@@ -71,7 +70,7 @@ extern "C" {
 
 /* checks whether we're in capture mode or not */
 #define GST_V4L_CHECK_ACTIVE(element)				\
-  if (element->buffer == NULL)					\
+  if (!GST_V4L_IS_ACTIVE (element))				\
   {								\
     GST_ELEMENT_ERROR (element, RESOURCE, SETTINGS,		\
       (NULL), ("Device is not in streaming mode"));		\
@@ -80,7 +79,7 @@ extern "C" {
 
 /* checks whether we're out of capture mode or not */
 #define GST_V4L_CHECK_NOT_ACTIVE(element)			\
-  if (element->buffer != NULL)					\
+  if (GST_V4L_IS_ACTIVE (element))				\
   {								\
     GST_ELEMENT_ERROR (element, RESOURCE, SETTINGS,		\
       (NULL), ("Device is in streaming mode"));			\
@@ -148,8 +147,8 @@ gboolean gst_v4l_set_audio      (GstV4lElement *v4lelement,
 gboolean gst_v4l_set_window_properties (GstV4lElement * v4lelement);
 gboolean gst_v4l_get_capabilities (GstV4lElement * v4lelement);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+
+G_END_DECLS
+
 
 #endif /* __V4L_CALLS_H__ */

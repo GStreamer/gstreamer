@@ -30,9 +30,9 @@
 
 #include "gstv4lelement.h"
 #include "gstv4lsrc.h"
-#include "gstv4ljpegsrc.h"
-#include "gstv4lmjpegsrc.h"
-#include "gstv4lmjpegsink.h"
+/* #include "gstv4ljpegsrc.h" */
+/* #include "gstv4lmjpegsrc.h" */
+/* #include "gstv4lmjpegsink.h" */
 
 GST_DEBUG_CATEGORY (v4l_debug); /* used in v4l_calls.c and v4lsrc_calls.c */
 
@@ -41,16 +41,13 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (v4l_debug, "v4l", 0, "V4L API calls");
 
-  if (!gst_element_register (plugin, "v4lelement",
-          GST_RANK_NONE, GST_TYPE_V4LELEMENT) ||
-      !gst_element_register (plugin, "v4lsrc",
-          GST_RANK_NONE, GST_TYPE_V4LSRC) ||
-      !gst_element_register (plugin, "v4ljpegsrc",
-          GST_RANK_NONE, GST_TYPE_V4LJPEGSRC) ||
-      !gst_element_register (plugin, "v4lmjpegsrc",
-          GST_RANK_NONE, GST_TYPE_V4LMJPEGSRC) ||
-      !gst_element_register (plugin, "v4lmjpegsink",
-          GST_RANK_NONE, GST_TYPE_V4LMJPEGSINK))
+  if (!gst_element_register (plugin, "v4lsrc", GST_RANK_NONE, GST_TYPE_V4LSRC))
+/*       !gst_element_register (plugin, "v4ljpegsrc", */
+/*           GST_RANK_NONE, GST_TYPE_V4LJPEGSRC) || */
+/*       !gst_element_register (plugin, "v4lmjpegsrc", */
+/*           GST_RANK_NONE, GST_TYPE_V4LMJPEGSRC) || */
+/*       !gst_element_register (plugin, "v4lmjpegsink", */
+/*           GST_RANK_NONE, GST_TYPE_V4LMJPEGSINK)) */
     return FALSE;
 
 #ifdef ENABLE_NLS

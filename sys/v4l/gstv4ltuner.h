@@ -24,7 +24,7 @@
 #define __GST_V4L_TUNER_H__
 
 #include <gst/gst.h>
-#include <gst/tuner/tuner.h>
+#include <gst/interfaces/tuner.h>
 
 G_BEGIN_DECLS
 
