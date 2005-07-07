@@ -276,8 +276,6 @@ gst_bus_have_pending (GstBus * bus)
   length = g_queue_get_length (bus->queue);
   g_mutex_unlock (bus->queue_lock);
 
-  GST_DEBUG ("have %d pending", length);
-
   return (length > 0);
 }
 

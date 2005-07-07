@@ -1,3 +1,8 @@
+2005-07-07  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstbus.c (gst_bus_have_pending): Remove intensely irritating
+	debug message.
+
 2005-07-07  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstquery.c:

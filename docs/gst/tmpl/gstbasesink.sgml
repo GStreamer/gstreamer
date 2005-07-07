@@ -45,6 +45,8 @@ GstBaseSink
 @set_caps: 
 @buffer_alloc: 
 @get_times: 
+@start: 
+@stop: 
 @unlock: 
 @event: 
 @preroll: 

@@ -63,6 +63,8 @@ clock providers in the bin.
 @numchildren: 
 @children: 
 @children_cookie: 
+@child_bus: 
+@eosed: 
 
 <!-- ##### SIGNAL GstBin::element-added ##### -->
 <para>

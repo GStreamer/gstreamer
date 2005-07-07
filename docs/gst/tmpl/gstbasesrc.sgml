@@ -59,6 +59,7 @@ GstBaseSrc
 @parent_class: 
 @get_caps: 
 @set_caps: 
+@negotiate: 
 @start: 
 @stop: 
 @get_times: 

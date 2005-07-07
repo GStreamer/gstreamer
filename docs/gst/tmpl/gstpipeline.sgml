@@ -30,7 +30,6 @@ the pipeline, use gst_object_unref() to free its resources.
 @stream_time: 
 @delay: 
 @play_timeout: 
-@eosed: 
 
 <!-- ##### ARG GstPipeline:delay ##### -->
 <para>
