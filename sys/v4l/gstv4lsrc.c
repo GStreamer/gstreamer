@@ -187,7 +187,8 @@ gst_v4lsrc_get_property (GObject * object,
   }
 }
 
-G_GNUC_UNUSED static void
+/* this function is a bit of a last resort */
+static void
 gst_v4lsrc_fixate (GstPad * pad, GstCaps * caps)
 {
   GstStructure *structure;
@@ -224,6 +225,8 @@ gst_v4lsrc_fixate (GstPad * pad, GstCaps * caps)
         targetwidth);
     gst_caps_structure_fixate_field_nearest_int (structure, "height",
         targetheight);
+    gst_caps_structure_fixate_field_nearest_double (structure, "framerate",
+        7.5);
   }
 }
 
