@@ -1,5 +1,0 @@
-<SECTION>
-<FILE>gstgconf</FILE>
-<INCLUDE>gst-libs/gst/gconf/gconf.h</INCLUDE>
-gst_gconf_get_string
-</SECTION>
