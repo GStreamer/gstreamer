@@ -1,11 +1,3 @@
-if BUILD_DOCS
-# disabled until it actually works
-# SUBDIRS_DOCS = docs
-SUBDIRS_DOCS =
-else
-SUBDIRS_DOCS =
-endif
-
 # if USE_GCONFTOOL
 # GCONF_DIR = gconf
 # else
@@ -22,9 +14,6 @@ SUBDIRS = 			\
 DIST_SUBDIRS = 			\
 	gst sys ext gst-libs	\
 	m4 common
-
-# disabled
-#	docs
 
 EXTRA_DIST = \
 	gst-plugins.spec depcomp \
