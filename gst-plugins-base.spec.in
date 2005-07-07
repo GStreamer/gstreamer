@@ -124,6 +124,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstvolume.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideorate.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoscale.so
+%{_libdir}/gstreamer-%{majorminor}/libgsttcp.so
 
 @USE_THEORA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttheora.so
 @USE_GNOME_VFS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgnomevfs.so
@@ -165,6 +166,8 @@ GStreamer support libraries header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/tunerchannel.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/tunernorm.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/xoverlay.h
+%{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudiosrc.h
+%{_includedir}/gstreamer-%{majorminor}/gst/audio/gstbaseaudiosrc.h
 
 # plugin interface headers
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudioclock.h
