@@ -46,18 +46,15 @@ static guint32 _n_values = 1;   /* we start from 1 because 0 reserved for NONE *
 static GstMemChunk *chunk;
 
 static GstQueryTypeDefinition standard_definitions[] = {
-  {GST_QUERY_TOTAL, "total", "Total length"},   /* deprecated */
   {GST_QUERY_POSITION, "position", "Current Position"},
   {GST_QUERY_LATENCY, "latency", "Latency"},
   {GST_QUERY_JITTER, "jitter", "Jitter"},
-  {GST_QUERY_START, "start", "Start position of stream"},       /* deprecated */
-  {GST_QUERY_SEGMENT_END, "segment_end", "End position of the stream"}, /* dep */
   {GST_QUERY_RATE, "rate", "Configured rate 1000000 = 1"},
   {GST_QUERY_SEEKING, "seeking", "Seeking capabilities and parameters"},
   {GST_QUERY_CONVERT, "convert", "Converting between formats"},
+  {GST_QUERY_FORMATS, "formats", "Supported formats for conversion"},
   {0, NULL, NULL}
 };
-
 
 void
 _gst_query_initialize (void)

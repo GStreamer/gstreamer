@@ -36,16 +36,13 @@ G_BEGIN_DECLS
 
 typedef enum {
   GST_QUERY_NONE = 0,
-  GST_QUERY_TOTAL, /* deprecated, use POSITION */
-  GST_QUERY_POSITION,
-  GST_QUERY_LATENCY,
-  GST_QUERY_JITTER, /* not in draft-query, necessary? */
-  GST_QUERY_START, /* deprecated, use SEEKING */
-  GST_QUERY_SEGMENT_END, /* deprecated, use SEEKING */
-  GST_QUERY_RATE, /* not in draft-query, necessary? */
-  GST_QUERY_SEEKING,
-  GST_QUERY_CONVERT,
-  GST_QUERY_FORMATS
+  GST_QUERY_POSITION,	/* get current/end position */
+  GST_QUERY_LATENCY,	/* get current latency */
+  GST_QUERY_JITTER, 	/* not in draft-query, necessary? */
+  GST_QUERY_RATE, 	/* get current playback rate */
+  GST_QUERY_SEEKING,	/* get seeking start/stop positions */
+  GST_QUERY_CONVERT,	/* convert values */
+  GST_QUERY_FORMATS	/* query supported formats for convert */
 } GstQueryType;
 
 /* rate is relative to 1000000  */
