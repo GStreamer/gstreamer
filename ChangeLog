@@ -1,3 +1,15 @@
+2005-07-07  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
+	* check/elements/.cvsignore:
+	* check/elements/gstfakesrc.c: (chain_func), (event_func),
+	(START_TEST), (fakesrc_suite), (main):
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_class_init),
+	(gst_fakesrc_set_property), (gst_fakesrc_get_property),
+	(gst_fakesrc_create), (gst_fakesrc_start):
+	* gst/elements/gstfakesrc.h:
+	  adding a first element test
+
 2005-07-07  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstbus.c (gst_bus_have_pending): Remove intensely irritating
@@ -112,7 +124,7 @@
 2005-07-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* Makefile.am:
-	  better report genration target (lcov needs a patch)
+	  better report generation target (lcov needs a patch)
 
 2005-07-05  Andy Wingo  <wingo@pobox.com>
 

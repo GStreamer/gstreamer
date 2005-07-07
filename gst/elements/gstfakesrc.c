@@ -222,9 +222,13 @@ gst_fakesrc_class_init (GstFakeSrcClass * klass)
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_fakesrc_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fakesrc_get_property);
 
+/*
+  FIXME: this is not implemented; would make sense once basesrc and fakesrc
+  support multiple pads
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_OUTPUT,
       g_param_spec_enum ("output", "output", "Output method (currently unused)",
           GST_TYPE_FAKESRC_OUTPUT, DEFAULT_OUTPUT, G_PARAM_READWRITE));
+*/
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DATA,
       g_param_spec_enum ("data", "data", "Data allocation method",
           GST_TYPE_FAKESRC_DATA, DEFAULT_DATA, G_PARAM_READWRITE));
@@ -260,9 +264,6 @@ gst_fakesrc_class_init (GstFakeSrcClass * klass)
       g_param_spec_int ("num-buffers", "num-buffers",
           "Number of buffers to output before sending EOS", -1, G_MAXINT,
           DEFAULT_NUM_BUFFERS, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_EOS,
-      g_param_spec_boolean ("eos", "eos", "Send out the EOS event?",
-          DEFAULT_EOS, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LAST_MESSAGE,
       g_param_spec_string ("last-message", "last-message",
           "The last status message", NULL, G_PARAM_READABLE));
@@ -414,10 +415,6 @@ gst_fakesrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_NUM_BUFFERS:
       src->num_buffers = g_value_get_int (value);
       break;
-    case PROP_EOS:
-      src->eos = g_value_get_boolean (value);
-      GST_INFO ("will EOS on next buffer");
-      break;
     case PROP_SILENT:
       src->silent = g_value_get_boolean (value);
       break;
@@ -489,9 +486,6 @@ gst_fakesrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_NUM_BUFFERS:
       g_value_set_int (value, src->num_buffers);
-      break;
-    case PROP_EOS:
-      g_value_set_boolean (value, src->eos);
       break;
     case PROP_SILENT:
       g_value_set_boolean (value, src->silent);
@@ -680,11 +674,6 @@ gst_fakesrc_create (GstBaseSrc * basesrc, guint64 offset, guint length,
       src->rt_num_buffers--;
   }
 
-  if (src->eos) {
-    GST_INFO ("fakesrc is setting eos on pad");
-    return GST_FLOW_UNEXPECTED;
-  }
-
   buf = gst_fakesrc_create_buffer (src);
   GST_BUFFER_OFFSET (buf) = src->buffer_count++;
 
@@ -737,7 +726,6 @@ gst_fakesrc_start (GstBaseSrc * basesrc)
 
   src->buffer_count = 0;
   src->pattern_byte = 0x00;
-  src->eos = FALSE;
   src->bytes_sent = 0;
   src->rt_num_buffers = src->num_buffers;
 

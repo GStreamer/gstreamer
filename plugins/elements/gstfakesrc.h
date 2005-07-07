@@ -79,7 +79,6 @@ struct _GstFakeSrc {
   /*< private >*/
   gboolean 	 has_loop;
   gboolean 	 has_getrange;
-  gboolean 	 eos;
 
   GstFakeSrcOutputType output;
   GstFakeSrcDataType   data;
