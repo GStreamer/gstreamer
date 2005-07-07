@@ -1,5 +1,13 @@
 2005-07-07  Wim Taymans  <wim@fluendo.com>
 
+	* gst/videobox/gstvideobox.c: (gst_video_box_init),
+	(gst_video_box_transform_caps), (gst_video_box_set_caps):
+	Logic was reversed. Needs some  more fixes in the transform
+	function to include AYUV output.
+	Moved AYUV as prefered format.
+
+2005-07-07  Wim Taymans  <wim@fluendo.com>
+
 	* configure.ac:
 	* ext/dv/Makefile.am:
 	* ext/dv/gstdvdec.c: (gst_dvdec_class_init), (gst_dvdec_init),
