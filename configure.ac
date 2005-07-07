@@ -733,6 +733,9 @@ main() { atomic_t t; atomic_set(&t,0); atomic_inc(&t); atomic_add(1,&t);return 0
   ])
 fi
 
+dnl check for "check", unit testing library/header
+AM_PATH_CHECK(0.9.2, HAVE_CHECK=yes, HAVE_CHECK=no)
+AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
 
 dnl ######################################################################
 dnl # Check command line parameters, and set shell variables accordingly #
@@ -933,6 +936,7 @@ pkgconfig/gstreamer-gconf.pc
 pkgconfig/gstreamer-gconf-uninstalled.pc
 pkgconfig/gstreamer-plugins-base.pc
 pkgconfig/gstreamer-plugins-base-uninstalled.pc
+check/Makefile
 docs/Makefile
 docs/libs/Makefile
 docs/version.entities

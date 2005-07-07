@@ -1,27 +1,34 @@
 if USE_GCONFTOOL
-GCONF_DIR = gconf
+SUBDIRS_GCONF = gconf
 else
-GCONF_DIR =
+SUBDIRS_GCONF =
 endif
 
 if BUILD_EXTERNAL
-EXT_DIR = ext
+SUBDIRS_EXT = ext
 else
-EXT_DIR =
+SUBDIRS_EXT =
 endif
 
 if BUILD_EXAMPLES
-EXAMPLES_DIR = examples
+SUBDIRS_EXAMPLES = examples
 else
-EXAMPLES_DIR =
+SUBDIRS_EXAMPLES =
+endif
+
+if HAVE_CHECK
+SUBDIRS_CHECK = check
+else
+SUBDIRS_CHECK =
 endif
 
 SUBDIRS = 			\
 	gst-libs 		\
-	gst sys $(EXT_DIR) 	\
-	$(EXAMPLES_DIR) 	\
+	gst sys $(SUBDIRS_EXT) 	\
+	$(SUBDIRS_EXAMPLES) 	\
 	tools 			\
-	$(GCONF_DIR) 		\
+	$(SUBDIRS_GCONF) 	\
+	$(SUBDIRS_CHECK)	\
 	docs			\
 	po 			\
 	common 			\
@@ -35,6 +42,7 @@ DIST_SUBDIRS = 			\
 	examples		\
 	tools 			\
 	gconf 			\
+	check			\
 	po 			\
 	common 			\
 	m4 			\
