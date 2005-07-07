@@ -106,7 +106,7 @@ static GstStaticPadTemplate gst_video_box_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, AYUV }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ AYUV, I420 }"))
     );
 
 static GstStaticPadTemplate gst_video_box_sink_template =
@@ -218,12 +218,15 @@ gst_video_box_init (GstVideoBox * video_box)
   video_box->box_left = DEFAULT_LEFT;
   video_box->box_top = DEFAULT_TOP;
   video_box->box_bottom = DEFAULT_BOTTOM;
+  video_box->crop_right = 0;
+  video_box->crop_left = 0;
+  video_box->crop_top = 0;
+  video_box->crop_bottom = 0;
   video_box->fill_type = DEFAULT_FILL_TYPE;
   video_box->alpha = DEFAULT_ALPHA;
   video_box->border_alpha = DEFAULT_BORDER_ALPHA;
 }
 
-/* do we need this function? */
 static void
 gst_video_box_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -330,8 +333,9 @@ gst_video_box_transform_caps (GstBaseTransform * trans, GstPad * pad,
 
   video_box = GST_VIDEO_BOX (trans);
   to = gst_caps_copy (from);
-  direction = (pad == trans->sinkpad) ? 1 : -1;
+  direction = (pad == trans->sinkpad) ? -1 : 1;
 
+  /* FIXME, include AYUV */
   for (i = 0; i < gst_caps_get_size (to); i++) {
     structure = gst_caps_get_structure (to, i);
     if (gst_structure_get_int (structure, "width", &tmp))
@@ -351,6 +355,7 @@ gst_video_box_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   GstVideoBox *video_box;
   GstStructure *structure;
   gboolean ret;
+  guint32 fourcc = 0;
 
   video_box = GST_VIDEO_BOX (trans);
 
@@ -361,6 +366,9 @@ gst_video_box_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   structure = gst_caps_get_structure (out, 0);
   ret &= gst_structure_get_int (structure, "width", &video_box->out_width);
   ret &= gst_structure_get_int (structure, "height", &video_box->out_height);
+  ret &= gst_structure_get_fourcc (structure, "format", &fourcc);
+
+  video_box->use_alpha = fourcc == GST_STR_FOURCC ("AYUV");
 
   return ret;
 }
