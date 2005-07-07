@@ -6,7 +6,9 @@ Makefile.in
 .deps
 .libs
 
-create
 *.bb
 *.bbg
 *.da
+
+caps
+create
