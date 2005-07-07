@@ -146,7 +146,6 @@ static const GstQueryType *
 vorbis_get_query_types (GstPad * pad)
 {
   static const GstQueryType vorbis_dec_src_query_types[] = {
-    GST_QUERY_TOTAL,
     GST_QUERY_POSITION,
     0
   };

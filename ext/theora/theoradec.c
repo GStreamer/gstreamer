@@ -261,7 +261,6 @@ static const GstQueryType *
 theora_get_query_types (GstPad * pad)
 {
   static const GstQueryType theora_src_query_types[] = {
-    GST_QUERY_TOTAL,
     GST_QUERY_POSITION,
     0
   };
