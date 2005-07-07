@@ -1,3 +1,10 @@
+2005-07-07  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* common/Makefile.am:
+	* common/gtk-doc.mak:
+	* docs/gst/Makefile.am:
+	  factor out gtk-doc.mak
+
 2005-07-07  Wim Taymans  <wim@fluendo.com>
 
 	* gst/schedulers/threadscheduler.c: (gst_thread_scheduler_func),
