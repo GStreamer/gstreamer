@@ -3,8 +3,8 @@ plugin_LTLIBRARIES = libgstdvdec.la
 
 libgstdvdec_la_SOURCES = gstdvdec.c
 libgstdvdec_la_CFLAGS = $(GST_CFLAGS) $(LIBDV_CFLAGS)
-libgstdvdec_la_LIBADD = $(LIBDV_LIBS) 
-libgstdvdec_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstdvdec_la_LIBADD = $(LIBDV_LIBS) $(GST_BASE_LIBS)
+libgstdvdec_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GST_BASE_LDFLAGS)
 
 noinst_HEADERS = gstdvdec.h
 

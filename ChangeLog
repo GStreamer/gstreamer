@@ -1,6 +1,23 @@
 2005-07-07  Wim Taymans  <wim@fluendo.com>
 
 	* configure.ac:
+	* ext/dv/Makefile.am:
+	* ext/dv/gstdvdec.c: (gst_dvdec_class_init), (gst_dvdec_init),
+	(gst_dvdec_get_src_query_types), (gst_dvdec_src_query),
+	(gst_dvdec_handle_sink_event), (gst_dvdec_handle_src_event),
+	(gst_dvdec_video_getcaps), (gst_dvdec_video_setcaps),
+	(gst_dvdec_decode_audio), (gst_dvdec_decode_video),
+	(gst_dvdec_decode_frame), (gst_dvdec_chain),
+	(gst_dvdec_change_state), (gst_dvdec_set_property),
+	(gst_dvdec_get_property), (plugin_init):
+	* ext/dv/gstdvdec.h:
+	* ext/esd/esdsink.c: (gst_esdsink_class_init):
+	Ported DVdec to 0.9.
+	Parent of esdsink is GstAudioSink.
+
+2005-07-07  Wim Taymans  <wim@fluendo.com>
+
+	* configure.ac:
 	* ext/raw1394/Makefile.am:
 	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_get_type),
 	(gst_dv1394src_class_init), (gst_dv1394src_init),

@@ -23,14 +23,10 @@
 
 #include <gst/gst.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #include <libdv/dv.h>
-#include <gst/bytestream/bytestream.h>
-
+#include <gst/base/gstadapter.h>
 
 /* This is the definition of the element's object structure. */
 typedef struct _GstDVDec GstDVDec;
@@ -44,36 +40,48 @@ struct _GstDVDec {
   GstElement 	 element;
 
   /* We need to keep track of our pads, so we do so here. */
-  GstPad 	*sinkpad,
-  		*videosrcpad,
-		  *audiosrcpad;
+  GstPad 	*sinkpad;
+  GstPad        *videosrcpad;
+  GstPad        *audiosrcpad;
 
   dv_decoder_t 	*decoder;
   gboolean	 clamp_luma;
   gboolean	 clamp_chroma;
   gint		 quality;
 
-  GstByteStream *bs;
-  dv_color_space_t space;
-  gint 		 bpp;
-  gboolean PAL;
+  GstAdapter    *adapter;
+  gint 		 frame_len;
+
+  /* PAL or NTSC flag */
+  gboolean       PAL;
+  /* video params */
   gdouble	 framerate;
   gint		 height;
+  gboolean	 wide;
+  /* audio params */
   gint     	 frequency;
   gint     	 channels;
-  gboolean	 wide;
+
+  /* negotiated output */
+  dv_color_space_t space;
+  gint 		 bpp;
   
   gint 		 length;
-  gint		 framecount;
   gint		 drop_factor;
-  guint64	 next_ts;
+  gint		 framecount;
+
+  guint64	 timestamp;
+  guint64	 duration;
+
   guint64	 audio_offset;
+  guint64	 video_offset;
+
   guint64	 end_position;
   gboolean	 need_discont;
   gboolean	 new_media;
   gboolean	 loop;
   
-  gboolean found_header;
+  gboolean       found_header;
 
   gint16 	*audio_buffers[4];
 };
@@ -114,10 +122,6 @@ struct _GstDVDecClass {
  */
 GType gst_dvdec_get_type(void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_DVDEC_H__ */
