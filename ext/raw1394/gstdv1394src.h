@@ -23,13 +23,11 @@
 
 
 #include <gst/gst.h>
+#include <gst/base/gstpushsrc.h>
+
 #include <libraw1394/raw1394.h>
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_DV1394SRC \
   (gst_dv1394src_get_type())
@@ -45,15 +43,19 @@ extern "C" {
 typedef struct _GstDV1394Src GstDV1394Src;
 typedef struct _GstDV1394SrcClass GstDV1394SrcClass;
 
-struct _GstDV1394Src {
-  GstElement element;
+#define GST_DV_GET_LOCK(dv)	(GST_DV1394SRC (dv)->dv_lock)
+#define GST_DV_LOCK(dv)		g_mutex_lock(GST_DV_GET_LOCK (dv))
+#define GST_DV_UNLOCK(dv)	g_mutex_unlock(GST_DV_GET_LOCK (dv))
 
-  GstPad *srcpad;
+struct _GstDV1394Src {
+  GstPushSrc element;
 
   // consecutive=2, skip=4 will skip 4 frames, then let 2 consecutive ones thru
   gint consecutive;
   gint skip;
   gboolean drop_incomplete;
+
+  GMutex *dv_lock;
 
   gint num_ports;
   gint port;
@@ -65,7 +67,6 @@ struct _GstDV1394Src {
   struct raw1394_portinfo pinfo[16];
   raw1394handle_t handle;
 
-  gboolean started;
   GstBuffer *buf;
   
   GstBuffer *frame;
@@ -80,7 +81,7 @@ struct _GstDV1394Src {
 };
 
 struct _GstDV1394SrcClass {
-  GstElementClass parent_class;
+  GstPushSrcClass parent_class;
 
   /* signal */
   void (*frame_dropped)  (GstElement *elem);
@@ -88,9 +89,6 @@ struct _GstDV1394SrcClass {
 
 GType gst_dv1394src_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_GST1394_H__ */
