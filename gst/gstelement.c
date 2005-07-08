@@ -2010,7 +2010,7 @@ gst_element_dispose (GObject * object)
   /* ref so we don't hit 0 again */
   gst_object_ref (object);
 
-  /* first we break all our links with the ouside */
+  /* first we break all our links with the outside */
   while (element->pads) {
     gst_element_remove_pad (element, GST_PAD (element->pads->data));
   }

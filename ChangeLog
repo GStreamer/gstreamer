@@ -1,5 +1,13 @@
 2005-07-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* check/Makefile.am:
+	* check/gst/gstelement.c: (START_TEST), (gst_element_suite),
+	(main):
+	  adding tests for elements
+	* gst/gstelement.c: (gst_element_dispose):
+
+2005-07-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/registries/gstlibxmlregistry.c: (load_feature):
 	  plug more leaks.  A simple gst_init() now is leakfree, yay.
 
