@@ -1,3 +1,14 @@
+2005-07-08  Andy Wingo  <wingo@pobox.com>
+
+	* gst/avi/Makefile.am (libgstavi_la_CFLAGS): No gettext hacks, the
+	defines come from config.h.
+
+	* autogen.sh: Run autopoint, etc.
+
+	* Makefile.am (DIST_SUBDIRS, SUBDIRS): Go into po/.
+
+	* configure.ac: Add gettext stuff.
+
 2005-07-07  Wim Taymans  <wim@fluendo.com>
 
 	* gst/videobox/gstvideobox.c: (gst_video_box_init),
