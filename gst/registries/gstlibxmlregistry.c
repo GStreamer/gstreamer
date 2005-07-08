@@ -552,6 +552,7 @@ gst_xml_registry_close_func (GstXMLRegistry * registry)
   return TRUE;
 }
 
+/* takes ownership of given value */
 static void
 add_to_char_array (gchar *** array, gchar * value)
 {
@@ -756,17 +757,21 @@ load_feature (xmlTextReaderPtr reader)
             } else if (g_ascii_strncasecmp (s, "source", 5) == 0) {
               factory->uri_type = GST_URI_SRC;
             }
+            g_free (s);
           }
         } else if (g_str_equal (tag, "uri_protocol")) {
           gchar *s = NULL;
 
-          if (read_string (reader, &s))
+          if (read_string (reader, &s)) {
             add_to_char_array (&factory->uri_protocols, s);
+          }
         } else if (g_str_equal (tag, "interface")) {
           gchar *s = NULL;
 
-          if (read_string (reader, &s))
+          if (read_string (reader, &s)) {
             __gst_element_factory_add_interface (factory, s);
+            g_free (s);
+          }
         } else if (g_str_equal (tag, "padtemplate")) {
           GstStaticPadTemplate *template = load_pad_template (reader);
 
@@ -782,8 +787,9 @@ load_feature (xmlTextReaderPtr reader)
         if (g_str_equal (tag, "extension")) {
           gchar *s = NULL;
 
-          if (read_string (reader, &s))
+          if (read_string (reader, &s)) {
             add_to_char_array (&factory->extensions, s);
+          }
         } else if (g_str_equal (tag, "caps")) {
           gchar *s = NULL;
 

@@ -1,5 +1,10 @@
 2005-07-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/registries/gstlibxmlregistry.c: (load_feature):
+	  plug more leaks.  A simple gst_init() now is leakfree, yay.
+
+2005-07-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/registries/gstlibxmlregistry.c: (read_string), (load_paths),
 	(gst_xml_registry_load):
 	  plug another memleak
