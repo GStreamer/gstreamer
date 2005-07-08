@@ -7,13 +7,13 @@ GCONF_DIR =
 SUBDIRS = 			\
 	gst sys ext gst-libs	\
 	$(GCONF_DIR) 		\
-	m4 common		
+	m4 common po
 # disabled
 #	$(SUBDIRS_DOCS)
 
 DIST_SUBDIRS = 			\
 	gst sys ext gst-libs	\
-	m4 common
+	m4 common po
 
 EXTRA_DIST = \
 	gst-plugins.spec depcomp \

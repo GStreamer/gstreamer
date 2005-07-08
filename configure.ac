@@ -46,14 +46,19 @@ AM_PROG_AS
 AS="${CC}"
 AS_PROG_OBJC
 
-dnl the gettext stuff needed
-dnl AM_GNU_GETTEXT_VERSION(0.11.5)
-dnl AM_GNU_GETTEXT([external])
-                                                                                
-dnl GETTEXT_PACKAGE=gst-plugins-$GST_MAJORMINOR
-dnl AC_SUBST(GETTEXT_PACKAGE)
-dnl AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], "$GETTEXT_PACKAGE",
-dnl                   [gettext package name])
+the gettext stuff needed
+AM_GNU_GETTEXT_VERSION(0.11.5)
+AM_GNU_GETTEXT([external])
+                                                                            
+GETTEXT_PACKAGE=gst-plugins-$GST_MAJORMINOR
+AC_SUBST(GETTEXT_PACKAGE)
+AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], "$GETTEXT_PACKAGE",
+                  [gettext package name])
+
+dnl define LOCALEDIR in config.h
+AS_AC_EXPAND(LOCALEDIR, $datadir/locale)
+AC_DEFINE_UNQUOTED([LOCALEDIR], "$LOCALEDIR",
+                   [gettext locale dir])
 
 dnl decide on error flags
 AS_COMPILER_FLAG(-Wall, GST_WALL="yes", GST_WALL="no")
@@ -339,26 +344,26 @@ dnl ============================= sys plug-ins ================================
 dnl ==========================================================================
 
 dnl *** OSS audio *** (Linux, *BSD)
-dnl translit(dnm, m, l) AM_CONDITIONAL(USE_OSS, true)
-dnl GST_CHECK_FEATURE(OSS, [OSS audio], osssrc osssink, [
-dnl  HAVE_OSS="yes"
-  dnl Linux and newer BSD versions :
-dnl  AC_CHECK_HEADER(sys/soundcard.h, [
-dnl    AC_DEFINE(HAVE_OSS_INCLUDE_IN_SYS,, [Define if OSS includes are in /sys/])
-dnl    ] , [
-    dnl Some old BSD versions :
-dnl    AC_CHECK_HEADER(soundcard.h, [
-dnl      AC_DEFINE(HAVE_OSS_INCLUDE_IN_ROOT,, [Define if OSS includes are in /])
-dnl      ], [
-      dnl Some old BSD versions :
-dnl      AC_CHECK_HEADER(machine/soundcard.h, [
-dnl        AC_DEFINE(HAVE_OSS_INCLUDE_IN_MACHINE,, [Define if OSS includes are in /machine/])
-dnl        ], [
-dnl        HAVE_OSS="no"
-dnl      ])
-dnl    ])
-dnl  ])
-dnl ])
+translit(dnm, m, l) AM_CONDITIONAL(USE_OSS, true)
+GST_CHECK_FEATURE(OSS, [OSS audio], osssrc osssink, [
+ HAVE_OSS="yes"
+dnl Linux and newer BSD versions :
+ AC_CHECK_HEADER(sys/soundcard.h, [
+   AC_DEFINE(HAVE_OSS_INCLUDE_IN_SYS,, [Define if OSS includes are in /sys/])
+   ] , [
+dnl Some old BSD versions :
+   AC_CHECK_HEADER(soundcard.h, [
+     AC_DEFINE(HAVE_OSS_INCLUDE_IN_ROOT,, [Define if OSS includes are in /])
+     ], [
+  dnl Some old BSD versions :
+     AC_CHECK_HEADER(machine/soundcard.h, [
+       AC_DEFINE(HAVE_OSS_INCLUDE_IN_MACHINE,, [Define if OSS includes are in /machine/])
+       ], [
+       HAVE_OSS="no"
+     ])
+   ])
+ ])
+])
 
 dnl ###########################
 dnl # Configure external libs #
@@ -537,6 +542,7 @@ gst/videofilter/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 sys/Makefile
+sys/oss/Makefile
 ext/Makefile
 ext/aalib/Makefile
 ext/dv/Makefile
