@@ -62,10 +62,11 @@ AS_COMPILER_FLAG(-Wall,
                  GST_ERROR_CFLAGS="-Wall",
                  GST_ERROR_CFLAGS="")
 dnl if we're in nano >= 1, add -Werror if supported
-dnl  if test "x$GST_CVS" = "xyes"
-dnl then
-dnl   AS_COMPILER_FLAG(-Werror, GST_ERROR_CFLAGS="$GST_ERROR_CFLAGS -Werror")
-dnl fi
+if test "x$GST_CVS" = "xyes"
+then
+  AS_COMPILER_FLAG(-Werror, GST_ERROR_CFLAGS="$GST_ERROR_CFLAGS -Werror")
+fi
+AC_SUBST(GST_ERROR_CFLAGS)
 
 dnl We disable static building for development, for time savings
 dnl *NOTE*: dnl this line before release, so release does static too
@@ -588,7 +589,7 @@ dnl we disable deprecated internally
 dnl XML, GLib, popt, GST_INT, VALGRIND, and the right include for CFLAGS
 dnl no need to add XML, GLib, popt explicitly since libgstreamer pulls them in
 GST_INT_CFLAGS="$GLIB_CFLAGS $XML_CFLAGS $GST_PKG_CFLAGS \
- $GST_INT_CFLAGS $GST_ERROR_CFLAGS -DGST_DISABLE_DEPRECATED"
+ $GST_INT_CFLAGS \$(GST_ERROR_CFLAGS) -DGST_DISABLE_DEPRECATED"
 
 dnl Private vars for libgst only
 GST_LIB_CFLAGS="$GST_PKG_CFLAGS $GST_INT_CFLAGS \

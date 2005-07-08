@@ -448,6 +448,7 @@ split_and_iterate (const gchar * stringlist, gchar * separator, GFunc iterator,
         break;
       }
     }
+    g_strfreev (strings);
   }
 }
 

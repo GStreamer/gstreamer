@@ -43,11 +43,6 @@ GstFakeSrc
 
 </para>
 
-<!-- ##### ARG GstFakeSrc:eos ##### -->
-<para>
-
-</para>
-
 <!-- ##### ARG GstFakeSrc:filltype ##### -->
 <para>
 
@@ -74,11 +69,6 @@ GstFakeSrc
 </para>
 
 <!-- ##### ARG GstFakeSrc:num-buffers ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstFakeSrc:output ##### -->
 <para>
 
 </para>

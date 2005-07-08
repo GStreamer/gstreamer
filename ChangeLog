@@ -1,3 +1,17 @@
+2005-07-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  make GST_ERROR_CFLAGS overridable and re-enable Werror
+	* docs/faq/cvs.xml:
+	  add a note about error CFLAGS
+	* docs/gst/tmpl/gstfakesrc.sgml:
+	* gst/elements/gstfakesrc.c:
+	  comment out some unused code
+	* gst/gst.c: (split_and_iterate):
+	* gst/registries/gstlibxmlregistry.c: (load_pad_template),
+	(load_feature):
+	  plug some memleaks
+
 2005-07-07  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* common/Makefile.am:

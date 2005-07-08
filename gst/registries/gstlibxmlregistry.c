@@ -661,6 +661,8 @@ load_pad_template (xmlTextReaderPtr reader)
   guint direction = 0, presence = 0;
 
   while ((ret = xmlTextReaderRead (reader)) == 1) {
+    /* if we're back at our depth, we have all info, and can return
+     * the completely parsed template */
     if (xmlTextReaderDepth (reader) == depth) {
       GstStaticPadTemplate *template;
 
@@ -684,6 +686,7 @@ load_pad_template (xmlTextReaderPtr reader)
         read_enum (reader, GST_TYPE_PAD_PRESENCE, &presence);
       } else if (!strncmp (tag, "caps", 4)) {
         read_string (reader, &caps_str);
+        g_print ("THOMAS: read caps string %s\n", caps_str);
       }
     }
   }
@@ -698,14 +701,15 @@ load_feature (xmlTextReaderPtr reader)
 {
   int ret;
   int depth = xmlTextReaderDepth (reader);
-  const gchar *feature_name =
-      (const gchar *) xmlTextReaderGetAttribute (reader, BAD_CAST "typename");
+  xmlChar *feature_name =
+      xmlTextReaderGetAttribute (reader, BAD_CAST "typename");
   GstPluginFeature *feature;
   GType type;
 
   if (!feature_name)
     return NULL;
-  type = g_type_from_name (feature_name);
+  type = g_type_from_name ((gchar *) feature_name);
+  xmlFree (feature_name);
   if (!type)
     return NULL;
   feature = g_object_new (type, NULL);

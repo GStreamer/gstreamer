@@ -94,6 +94,7 @@ enum
   PROP_IS_LIVE
 };
 
+/* not implemented
 #define GST_TYPE_FAKESRC_OUTPUT (gst_fakesrc_output_get_type())
 static GType
 gst_fakesrc_output_get_type (void)
@@ -117,6 +118,7 @@ gst_fakesrc_output_get_type (void)
   }
   return fakesrc_output_type;
 }
+*/
 
 #define GST_TYPE_FAKESRC_DATA (gst_fakesrc_data_get_type())
 static GType

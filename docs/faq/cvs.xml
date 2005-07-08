@@ -102,5 +102,34 @@ where you replace prefix with the prefix where libtool was installed.
        </para>
       </answer>
     </qandaentry>
+
+    <qandaentry>
+      <question id="werror">
+        <para>
+Why is "-Wall -Werror" being used ?
+        </para>
+      </question>
+
+      <answer>
+        <para>
+"-Wall" is being used because it finds a lot of possible problems with code.
+Not all of them are necessarily a problem, but it's better to have the compiler
+report some false positives and find a work-around than to spend time
+chasing a bug for days that the compiler was giving you hints about.
+        </para>
+        <para>
+"-Werror" is turned off for actual releases.  It's turned on by default for
+CVS and prereleases so that people actually notice and fix problems found by
+"-Wall".  We want people to actively hit and report or fix them.
+        </para>
+        <para>
+If for any reason you want to bypass these flags and you are certain it's the
+right thing to do, you can run
+<programlisting>make GST_ERROR_CFLAGS="</programlisting>
+to clear the CFLAGS for error checking.
+        </para>
+      </answer>
+    </qandaentry>
+
   </qandaset>
 </sect1>
