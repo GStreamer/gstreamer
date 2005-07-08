@@ -55,6 +55,9 @@
 /* gnome-vfs.h doesn't include the following header, which we need: */
 #include <libgnomevfs/gnome-vfs-standard-callbacks.h>
 
+GST_DEBUG_CATEGORY (gnomevfssrc_debug);
+#define GST_CAT_DEFAULT gnomevfssrc_debug
+
 #define GST_TYPE_GNOMEVFSSRC \
   (gst_gnomevfssrc_get_type())
 #define GST_GNOMEVFSSRC(obj) \
@@ -529,7 +532,7 @@ audiocast_init (GstGnomeVFSSrc * src)
 
   if (!src->iradio_mode)
     return TRUE;
-  GST_DEBUG ("audiocast: registering listener");
+  GST_DEBUG_OBJECT (src, "audiocast: registering listener");
   if (audiocast_register_listener (&src->audiocast_port,
           &src->audiocast_fd) < 0) {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
@@ -537,7 +540,7 @@ audiocast_init (GstGnomeVFSSrc * src)
     close (src->audiocast_fd);
     return FALSE;
   }
-  GST_DEBUG ("audiocast: creating pipe");
+  GST_DEBUG_OBJECT (src, "audiocast: creating pipe");
   src->audiocast_notify_queue = NULL;
   if (pipe (pipefds) < 0) {
     close (src->audiocast_fd);
@@ -545,7 +548,7 @@ audiocast_init (GstGnomeVFSSrc * src)
   }
   src->audiocast_thread_die_infd = pipefds[0];
   src->audiocast_thread_die_outfd = pipefds[1];
-  GST_DEBUG ("audiocast: creating audiocast thread");
+  GST_DEBUG_OBJECT (src, "audiocast: creating audiocast thread");
   src->audiocast_thread =
       g_thread_create ((GThreadFunc) audiocast_thread_run, src, TRUE, &error);
   if (error != NULL) {
@@ -564,7 +567,7 @@ audiocast_register_listener (gint * port, gint * fd)
   int sock;
   socklen_t sinlen = sizeof (struct sockaddr_in);
 
-  GST_DEBUG ("audiocast: estabilishing UDP listener");
+  GST_DEBUG ("audiocast: establishing UDP listener");
 
   if ((sock = socket (AF_INET, SOCK_DGRAM, 0)) < 0)
     goto lose;
@@ -686,7 +689,7 @@ audiocast_thread_run (GstGnomeVFSSrc * src)
           g_mutex_lock (src->audiocast_queue_mutex);
           src->audiocast_notify_queue =
               g_list_append (src->audiocast_notify_queue, "iradio-title");
-          GST_DEBUG ("audiocast title: %s\n", src->iradio_title);
+          GST_DEBUG_OBJECT (src, "audiocast title: %s\n", src->iradio_title);
           g_mutex_unlock (src->audiocast_queue_mutex);
         } else if (!strncmp (lines[i], "x-audiocast-streamurl", 21)) {
           g_mutex_lock (src->audiocast_udpdata_mutex);
@@ -697,7 +700,7 @@ audiocast_thread_run (GstGnomeVFSSrc * src)
           g_mutex_lock (src->audiocast_queue_mutex);
           src->audiocast_notify_queue =
               g_list_append (src->audiocast_notify_queue, "iradio-url");
-          GST_DEBUG ("audiocast url: %s\n", src->iradio_title);
+          GST_DEBUG_OBJECT (src, "audiocast url: %s\n", src->iradio_title);
           g_mutex_unlock (src->audiocast_queue_mutex);
         } else if (!strncmp (lines[i], "x-audiocast-udpseqnr", 20)) {
           gchar outbuf[120];
@@ -711,7 +714,7 @@ audiocast_thread_run (GstGnomeVFSSrc * src)
                 strerror (errno));
             continue;
           }
-          GST_DEBUG ("sent audiocast ack: %s\n", outbuf);
+          GST_DEBUG_OBJECT (src, "sent audiocast ack: %s\n", outbuf);
         }
       }
       g_strfreev (lines);
@@ -751,7 +754,7 @@ gst_gnomevfssrc_send_additional_headers_callback (gconstpointer in,
 
   if (!src->iradio_mode)
     return;
-  GST_DEBUG ("sending headers\n");
+  GST_DEBUG_OBJECT (src, "sending headers\n");
 
   out_args->headers = g_list_append (out_args->headers,
       g_strdup ("icy-metadata:1\r\n"));
@@ -790,7 +793,7 @@ gst_gnomevfssrc_received_headers_callback (gconstpointer in,
     if (strncmp (data, "icy-metaint:", 12) == 0) {      /* ugh */
       if (sscanf (data + 12, "%d", &icy_metaint) == 1) {
         src->icy_metaint = icy_metaint;
-        GST_DEBUG ("got icy-metaint %d, killing audiocast thread",
+        GST_DEBUG_OBJECT (src, "got icy-metaint %d, killing audiocast thread",
             src->icy_metaint);
         audiocast_thread_kill (src);
         continue;
@@ -804,7 +807,7 @@ gst_gnomevfssrc_received_headers_callback (gconstpointer in,
     else
       continue;
 
-    GST_DEBUG ("key: %s", key);
+    GST_DEBUG_OBJECT (src, "key: %s", key);
     if (!strncmp (key, "name", 4)) {
       g_free (src->iradio_name);
       src->iradio_name = gst_gnomevfssrc_unicodify (value);
@@ -825,29 +828,29 @@ gst_gnomevfssrc_received_headers_callback (gconstpointer in,
 }
 
 static void
-gst_gnomevfssrc_push_callbacks (GstGnomeVFSSrc * gnomevfssrc)
+gst_gnomevfssrc_push_callbacks (GstGnomeVFSSrc * src)
 {
-  if (gnomevfssrc->http_callbacks_pushed)
+  if (src->http_callbacks_pushed)
     return;
 
-  GST_DEBUG ("pushing callbacks");
+  GST_DEBUG_OBJECT (src, "pushing callbacks");
   gnome_vfs_module_callback_push
       (GNOME_VFS_MODULE_CALLBACK_HTTP_SEND_ADDITIONAL_HEADERS,
-      gst_gnomevfssrc_send_additional_headers_callback, gnomevfssrc, NULL);
+      gst_gnomevfssrc_send_additional_headers_callback, src, NULL);
   gnome_vfs_module_callback_push
       (GNOME_VFS_MODULE_CALLBACK_HTTP_RECEIVED_HEADERS,
-      gst_gnomevfssrc_received_headers_callback, gnomevfssrc, NULL);
+      gst_gnomevfssrc_received_headers_callback, src, NULL);
 
-  gnomevfssrc->http_callbacks_pushed = TRUE;
+  src->http_callbacks_pushed = TRUE;
 }
 
 static void
-gst_gnomevfssrc_pop_callbacks (GstGnomeVFSSrc * gnomevfssrc)
+gst_gnomevfssrc_pop_callbacks (GstGnomeVFSSrc * src)
 {
-  if (!gnomevfssrc->http_callbacks_pushed)
+  if (!src->http_callbacks_pushed)
     return;
 
-  GST_DEBUG ("popping callbacks");
+  GST_DEBUG_OBJECT (src, "popping callbacks");
   gnome_vfs_module_callback_pop
       (GNOME_VFS_MODULE_CALLBACK_HTTP_SEND_ADDITIONAL_HEADERS);
   gnome_vfs_module_callback_pop
@@ -866,7 +869,7 @@ gst_gnomevfssrc_get_icy_metadata (GstGnomeVFSSrc * src)
   gchar **tags;
   int i;
 
-  GST_DEBUG ("reading icecast metadata");
+  GST_DEBUG_OBJECT (src, "reading icecast metadata");
 
   while (length == 0) {
     res = gnome_vfs_read (src->handle, &foobyte, 1, &length);
@@ -902,7 +905,7 @@ gst_gnomevfssrc_get_icy_metadata (GstGnomeVFSSrc * src)
       g_free (src->iradio_title);
       src->iradio_title = gst_gnomevfssrc_unicodify (tags[i] + 13);
       if (src->iradio_title) {
-        GST_DEBUG ("sending notification on icecast title");
+        GST_DEBUG_OBJECT (src, "sending notification on icecast title");
         g_object_notify (G_OBJECT (src), "iradio-title");
       } else
         g_print ("Unable to convert icecast title \"%s\" to UTF-8!\n",
@@ -913,7 +916,7 @@ gst_gnomevfssrc_get_icy_metadata (GstGnomeVFSSrc * src)
       g_free (src->iradio_url);
       src->iradio_url = gst_gnomevfssrc_unicodify (tags[i] + 11);
       if (src->iradio_url) {
-        GST_DEBUG ("sending notification on icecast url");
+        GST_DEBUG_OBJECT (src, "sending notification on icecast url");
         g_object_notify (G_OBJECT (src), "iradio-url");
       } else
         g_print ("Unable to convert icecast url \"%s\" to UTF-8!\n",
@@ -969,7 +972,8 @@ gst_gnomevfssrc_create (GstBaseSrc * basesrc, guint64 offset, guint size,
     data = GST_BUFFER_DATA (buf);
 
     /* try to read */
-    GST_DEBUG ("doing read: icy_count: %" G_GINT64_FORMAT, src->icy_count);
+    GST_DEBUG_OBJECT (src, "doing read: icy_count: %" G_GINT64_FORMAT,
+        src->icy_count);
 
     res = gnome_vfs_read (src->handle, data,
         src->icy_metaint - src->icy_count, &readbytes);
@@ -1045,7 +1049,7 @@ gst_gnomevfssrc_get_size (GstBaseSrc * basesrc, guint64 * size)
 
   src = GST_GNOMEVFSSRC (basesrc);
 
-  GST_DEBUG ("size %lld", src->size);
+  GST_DEBUG_OBJECT (src, "size %" G_GUINT64_FORMAT, src->size);
 
   if (src->size == (GnomeVFSFileSize) - 1)
     return FALSE;

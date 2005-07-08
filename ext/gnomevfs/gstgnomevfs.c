@@ -29,16 +29,25 @@
 #include <libgnomevfs/gnome-vfs.h>
 #include <gst/gst.h>
 
+GST_DEBUG_CATEGORY_EXTERN (gnomevfssrc_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gnome_vfs_init ();
 
-  if (!gst_element_register (plugin, "gnomevfssrc", GST_RANK_SECONDARY, gst_gnomevfssrc_get_type ())    /*||
-                                                                                                           !gst_element_register (plugin, "gnomevfssink",
-                                                                                                           GST_RANK_SECONDARY, gst_gnomevfssink_get_type ()) */ ) {
+  GST_DEBUG_CATEGORY_INIT (gnomevfssrc_debug, "gnomevfssrc", 0,
+      "Gnome-VFS Source");
+
+
+  if (!gst_element_register (plugin, "gnomevfssrc", GST_RANK_SECONDARY,
+          gst_gnomevfssrc_get_type ()))
     return FALSE;
-  }
+/*
+  if (!gst_element_register (plugin, "gnomevfssink", GST_RANK_SECONDARY,
+      gst_gnomevfssink_get_type ()))
+    return FALSE;
+*/
+
 #ifdef ENABLE_NLS
   setlocale (LC_ALL, "");
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
@@ -50,5 +59,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "gnomevfs",
-    "elements to access the Gnome vfs",
+    "elements to read from and write to  Gnome-VFS uri's",
     plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)

@@ -218,7 +218,6 @@ gst_audiorate_setcaps (GstPad * pad, GstCaps * caps)
 static void
 gst_audiorate_init (GstAudiorate * audiorate)
 {
-  GST_DEBUG ("gst_audiorate_init");
   audiorate->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_audiorate_sink_template), "sink");

@@ -1,3 +1,17 @@
+2005-07-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/gnomevfs/gstgnomevfs.c: (plugin_init):
+	* ext/gnomevfs/gstgnomevfssrc.c: (audiocast_init),
+	(audiocast_register_listener), (audiocast_thread_run),
+	(gst_gnomevfssrc_send_additional_headers_callback),
+	(gst_gnomevfssrc_received_headers_callback),
+	(gst_gnomevfssrc_push_callbacks), (gst_gnomevfssrc_pop_callbacks),
+	(gst_gnomevfssrc_get_icy_metadata), (gst_gnomevfssrc_create),
+	(gst_gnomevfssrc_get_size):
+	  add/clean up debugging
+	* gst/audiorate/gstaudiorate.c: (gst_audiorate_init):
+	  cleanups
+
 2005-07-07  Andy Wingo  <wingo@pobox.com>
 
 	* sys/v4l/gstv4lsrc.c (gst_v4lsrc_fixate): Also fixate the
