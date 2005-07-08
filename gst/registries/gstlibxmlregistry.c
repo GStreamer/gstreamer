@@ -573,6 +573,11 @@ add_to_char_array (gchar *** array, gchar * value)
   *array = new;
 }
 
+/* read a string and store the result in *write_to.
+ * return whether or not *write_to was set to a newly allocated string
+ * FIXME: return values aren't actually checked, and in those failure cases
+ * (that currently aren't triggered) cleanup is not done correctly
+ */
 static gboolean
 read_string (xmlTextReaderPtr reader, gchar ** write_to)
 {
@@ -585,12 +590,14 @@ read_string (xmlTextReaderPtr reader, gchar ** write_to)
     if (xmlTextReaderDepth (reader) == depth)
       return found;
     if (xmlTextReaderNodeType (reader) == XML_READER_TYPE_TEXT) {
-      if (found)
+      if (found) {
         return FALSE;
+      }
       *write_to = g_strdup ((gchar *) xmlTextReaderConstValue (reader));
       found = TRUE;
     }
   }
+
   return FALSE;
 }
 
@@ -850,15 +857,14 @@ load_plugin (xmlTextReaderPtr reader)
   return NULL;
 }
 
-static GstPlugin *
+static void
 load_paths (xmlTextReaderPtr reader, GstXMLRegistry * registry)
 {
   int ret;
-  GstPlugin *plugin = g_new0 (GstPlugin, 1);
 
   while ((ret = xmlTextReaderRead (reader)) == 1) {
     if (xmlTextReaderDepth (reader) == 1) {
-      return plugin;
+      return;
     }
     if (xmlTextReaderNodeType (reader) == XML_READER_TYPE_ELEMENT &&
         xmlTextReaderDepth (reader) == 2) {
@@ -876,8 +882,7 @@ load_paths (xmlTextReaderPtr reader, GstXMLRegistry * registry)
     }
   }
 
-  g_free (plugin);
-  return NULL;
+  return;
 }
 
 static gboolean
@@ -925,7 +930,8 @@ gst_xml_registry_load (GstRegistry * registry)
           GstPlugin *plugin = load_plugin (reader);
 
           if (plugin) {
-            GST_DEBUG ("adding plugin %s with %d features", plugin->desc.name,
+            GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING,
+                "adding plugin %s with %d features", plugin->desc.name,
                 plugin->numfeatures);
             gst_registry_add_plugin (GST_REGISTRY (xmlregistry), plugin);
           }

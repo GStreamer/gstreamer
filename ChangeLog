@@ -1,5 +1,11 @@
 2005-07-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/registries/gstlibxmlregistry.c: (read_string), (load_paths),
+	(gst_xml_registry_load):
+	  plug another memleak
+
+2005-07-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	  use GST_SET_ERROR_CFLAGS
 	* docs/faq/cvs.xml:
