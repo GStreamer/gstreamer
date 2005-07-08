@@ -686,7 +686,6 @@ load_pad_template (xmlTextReaderPtr reader)
         read_enum (reader, GST_TYPE_PAD_PRESENCE, &presence);
       } else if (!strncmp (tag, "caps", 4)) {
         read_string (reader, &caps_str);
-        g_print ("THOMAS: read caps string %s\n", caps_str);
       }
     }
   }
