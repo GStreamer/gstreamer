@@ -4,11 +4,11 @@
 # DXR3_DIR=
 # endif
 
-# if USE_OSS
-# OSS_DIR=oss
-# else
+if USE_OSS
+OSS_DIR=oss
+else
 OSS_DIR=
-# endif
+endif
 
 # if USE_OSX_AUDIO
 # OSX_AUDIO_DIR=osxaudio
@@ -32,12 +32,6 @@ OSS_DIR=
 # SUNAUDIO_DIR=sunaudio
 # else
 # SUNAUDIO_DIR=
-# endif
-
-# if USE_GST_V4L
-# V4L_DIR=v4l
-# else
-# V4L_DIR=
 # endif
 
 # if USE_GST_V4L2

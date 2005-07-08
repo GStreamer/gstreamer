@@ -1,5 +1,7 @@
 2005-07-08  Andy Wingo  <wingo@pobox.com>
 
+	* sys/oss/: Port from THREADED+wim's fixes.
+
 	* gst/avi/Makefile.am (libgstavi_la_CFLAGS): No gettext hacks, the
 	defines come from config.h.
 
