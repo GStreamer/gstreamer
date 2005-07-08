@@ -92,8 +92,7 @@ static void gst_osssrc_class_init (GstOssSrcClass * klass);
 static void gst_osssrc_init (GstOssSrc * osssrc);
 static void gst_osssrc_dispose (GObject * object);
 
-static GstPadLinkReturn gst_osssrc_srcconnect (GstPad * pad,
-    const GstCaps * caps);
+static GstPadLinkReturn gst_osssrc_src_link (GstPad * pad, GstPad * peer);
 static GstCaps *gst_osssrc_getcaps (GstPad * pad);
 static const GstFormat *gst_osssrc_get_formats (GstPad * pad);
 static gboolean gst_osssrc_convert (GstPad * pad,
@@ -117,7 +116,7 @@ static const GstQueryType *gst_osssrc_get_query_types (GstPad * pad);
 static gboolean gst_osssrc_src_query (GstPad * pad, GstQueryType type,
     GstFormat * format, gint64 * value);
 
-static GstData *gst_osssrc_get (GstPad * pad);
+static void gst_osssrc_loop (GstPad * pad);
 
 static GstElementClass *parent_class = NULL;
 
@@ -168,6 +167,9 @@ gst_osssrc_class_init (GstOssSrcClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_OSSELEMENT);
 
+  gobject_class->set_property = gst_osssrc_set_property;
+  gobject_class->get_property = gst_osssrc_get_property;
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFFERSIZE,
       g_param_spec_ulong ("buffersize", "Buffer Size",
           "The size of the buffers with samples", 0, G_MAXULONG, 0,
@@ -177,8 +179,6 @@ gst_osssrc_class_init (GstOssSrcClass * klass)
           "The fragment as 0xMMMMSSSS (MMMM = total fragments, 2^SSSS = fragment size)",
           0, G_MAXINT, 6, G_PARAM_READWRITE));
 
-  gobject_class->set_property = gst_osssrc_set_property;
-  gobject_class->get_property = gst_osssrc_get_property;
   gobject_class->dispose = gst_osssrc_dispose;
 
   gstelement_class->change_state = gst_osssrc_change_state;
@@ -194,9 +194,9 @@ gst_osssrc_init (GstOssSrc * osssrc)
   osssrc->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&osssrc_src_factory), "src");
-  gst_pad_set_get_function (osssrc->srcpad, gst_osssrc_get);
+  gst_pad_set_loop_function (osssrc->srcpad, gst_osssrc_loop);
   gst_pad_set_getcaps_function (osssrc->srcpad, gst_osssrc_getcaps);
-  gst_pad_set_link_function (osssrc->srcpad, gst_osssrc_srcconnect);
+  gst_pad_set_link_function (osssrc->srcpad, gst_osssrc_src_link);
   gst_pad_set_convert_function (osssrc->srcpad, gst_osssrc_convert);
   gst_pad_set_formats_function (osssrc->srcpad, gst_osssrc_get_formats);
   gst_pad_set_event_function (osssrc->srcpad, gst_osssrc_src_event);
@@ -236,7 +236,7 @@ gst_osssrc_getcaps (GstPad * pad)
   GstOssSrc *src;
   GstCaps *caps;
 
-  src = GST_OSSSRC (gst_pad_get_parent (pad));
+  src = GST_OSSSRC (GST_PAD_PARENT (pad));
 
   gst_osselement_probe_caps (GST_OSSELEMENT (src));
 
@@ -250,19 +250,9 @@ gst_osssrc_getcaps (GstPad * pad)
 }
 
 static GstPadLinkReturn
-gst_osssrc_srcconnect (GstPad * pad, const GstCaps * caps)
+gst_osssrc_src_link (GstPad * pad, GstPad * peer)
 {
-  GstOssSrc *src;
-
-  src = GST_OSSSRC (gst_pad_get_parent (pad));
-
-  if (!gst_osselement_parse_caps (GST_OSSELEMENT (src), caps))
-    return GST_PAD_LINK_REFUSED;
-
-  if (!gst_osselement_sync_parms (GST_OSSELEMENT (src)))
-    return GST_PAD_LINK_REFUSED;
-
-  return GST_PAD_LINK_OK;
+  return GST_RPAD_LINKFUNC (peer) (peer, pad);
 }
 
 static gboolean
@@ -271,9 +261,10 @@ gst_osssrc_negotiate (GstPad * pad)
   GstOssSrc *src;
   GstCaps *allowed;
 
-  src = GST_OSSSRC (gst_pad_get_parent (pad));
+  src = GST_OSSSRC (GST_PAD_PARENT (pad));
 
-  allowed = gst_pad_get_allowed_caps (pad);
+  //allowed = gst_pad_get_allowed_caps (pad);
+  allowed = NULL;
 
   if (!gst_osselement_merge_fixed_caps (GST_OSSELEMENT (src), allowed))
     return FALSE;
@@ -282,17 +273,15 @@ gst_osssrc_negotiate (GstPad * pad)
     return FALSE;
 
   /* set caps on src pad */
-  if (gst_pad_try_set_caps (src->srcpad,
-          gst_caps_new_simple ("audio/x-raw-int",
-              "endianness", G_TYPE_INT, GST_OSSELEMENT (src)->endianness,
-              "signed", G_TYPE_BOOLEAN, GST_OSSELEMENT (src)->sign,
-              "width", G_TYPE_INT, GST_OSSELEMENT (src)->width,
-              "depth", G_TYPE_INT, GST_OSSELEMENT (src)->depth,
-              "rate", G_TYPE_INT, GST_OSSELEMENT (src)->rate,
-              "channels", G_TYPE_INT, GST_OSSELEMENT (src)->channels,
-              NULL)) <= 0) {
-    return FALSE;
-  }
+  GST_PAD_CAPS (src->srcpad) =
+      gst_caps_new_simple ("audio/x-raw-int",
+      "endianness", G_TYPE_INT, GST_OSSELEMENT (src)->endianness,
+      "signed", G_TYPE_BOOLEAN, GST_OSSELEMENT (src)->sign,
+      "width", G_TYPE_INT, GST_OSSELEMENT (src)->width,
+      "depth", G_TYPE_INT, GST_OSSELEMENT (src)->depth,
+      "rate", G_TYPE_INT, GST_OSSELEMENT (src)->rate,
+      "channels", G_TYPE_INT, GST_OSSELEMENT (src)->channels, NULL);
+
   return TRUE;
 }
 
@@ -332,21 +321,22 @@ gst_osssrc_set_clock (GstElement * element, GstClock * clock)
   osssrc->clock = clock;
 }
 
-static GstData *
-gst_osssrc_get (GstPad * pad)
+static void
+gst_osssrc_loop (GstPad * pad)
 {
   GstOssSrc *src;
   GstBuffer *buf;
   glong readbytes;
   glong readsamples;
 
-  src = GST_OSSSRC (gst_pad_get_parent (pad));
+  src = GST_OSSSRC (GST_PAD_PARENT (pad));
 
   GST_DEBUG ("attempting to read something from the soundcard");
 
   if (src->need_eos) {
     src->need_eos = FALSE;
-    return GST_DATA (gst_event_new (GST_EVENT_EOS));
+    gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
+    return;
   }
 
   buf = gst_buffer_new_and_alloc (src->buffersize);
@@ -356,14 +346,14 @@ gst_osssrc_get (GstPad * pad)
     if (!gst_osssrc_negotiate (pad)) {
       gst_buffer_unref (buf);
       GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, (NULL), (NULL));
-      return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
+      return;
     }
   }
   if (GST_OSSELEMENT (src)->bps == 0) {
     gst_buffer_unref (buf);
     GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, (NULL),
         ("format wasn't negotiated before chain function"));
-    return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
+    return;
   }
 
   readbytes = read (GST_OSSELEMENT (src)->fd, GST_BUFFER_DATA (buf),
@@ -371,13 +361,13 @@ gst_osssrc_get (GstPad * pad)
   if (readbytes < 0) {
     gst_buffer_unref (buf);
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
-    return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
+    return;
   }
 
   if (readbytes == 0) {
     gst_buffer_unref (buf);
-    gst_element_set_eos (GST_ELEMENT (src));
-    return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
+    gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
+    return;
   }
 
   readsamples = readbytes * GST_OSSELEMENT (src)->rate /
@@ -412,7 +402,9 @@ gst_osssrc_get (GstPad * pad)
   GST_DEBUG ("pushed buffer from soundcard of %ld bytes, timestamp %"
       G_GINT64_FORMAT, readbytes, GST_BUFFER_TIMESTAMP (buf));
 
-  return GST_DATA (buf);
+  gst_pad_push (pad, buf);
+
+  return;
 }
 
 static void
@@ -509,7 +501,7 @@ gst_osssrc_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
 {
   GstOssSrc *osssrc;
 
-  osssrc = GST_OSSSRC (gst_pad_get_parent (pad));
+  osssrc = GST_OSSSRC (GST_PAD_PARENT (pad));
 
   return gst_osselement_convert (GST_OSSELEMENT (osssrc), src_format, src_value,
       dest_format, dest_value);
@@ -533,7 +525,7 @@ gst_osssrc_src_event (GstPad * pad, GstEvent * event)
   GstOssSrc *osssrc;
   gboolean retval = FALSE;
 
-  osssrc = GST_OSSSRC (gst_pad_get_parent (pad));
+  osssrc = GST_OSSSRC (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
@@ -589,7 +581,7 @@ gst_osssrc_src_query (GstPad * pad, GstQueryType type, GstFormat * format,
   gboolean res = FALSE;
   GstOssSrc *osssrc;
 
-  osssrc = GST_OSSSRC (gst_pad_get_parent (pad));
+  osssrc = GST_OSSSRC (GST_PAD_PARENT (pad));
 
   switch (type) {
     case GST_QUERY_POSITION:

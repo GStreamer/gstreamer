@@ -1,9 +1,8 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wim.taymans@chello.be>
- *                    2004 Toni Willberg <toniw@iki.fi>
  *
- * gstosselement.c:
+ * gstosssink.c: 
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,7 +24,7 @@
 #include "config.h"
 #endif
 
-#include "gst-i18n-plugin.h"
+#include "gst/gst-i18n-plugin.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
@@ -34,28 +33,16 @@
 #include <errno.h>
 #include <string.h>
 
-#ifdef HAVE_OSS_INCLUDE_IN_SYS
 #include <sys/soundcard.h>
-#else
 
-#ifdef HAVE_OSS_INCLUDE_IN_ROOT
-#include <soundcard.h>
-#else
-
-#include <machine/soundcard.h>
-
-#endif /* HAVE_OSS_INCLUDE_IN_ROOT */
-
-#endif /* HAVE_OSS_INCLUDE_IN_SYS */
-
-#include <gst/propertyprobe/propertyprobe.h>
+#include <gst/interfaces/propertyprobe.h>
 
 #include "gstosselement.h"
 #include "gstossmixer.h"
 
 enum
 {
-  ARG_0,
+  ARG_ZERO,
   ARG_DEVICE,
   ARG_MIXERDEV,
   ARG_DEVICE_NAME
@@ -79,7 +66,6 @@ static void gst_osselement_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_osselement_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-static GstElementStateReturn gst_osselement_change_state (GstElement * element);
 
 static GstElementClass *parent_class = NULL;
 
@@ -152,6 +138,9 @@ gst_osselement_class_init (GstOssElementClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  gobject_class->set_property = gst_osselement_set_property;
+  gobject_class->get_property = gst_osselement_get_property;
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DEVICE,
       g_param_spec_string ("device", "Device", "OSS device (/dev/dspN usually)",
           "default", G_PARAM_READWRITE));
@@ -163,11 +152,7 @@ gst_osselement_class_init (GstOssElementClass * klass)
       g_param_spec_string ("device_name", "Device name", "Name of the device",
           NULL, G_PARAM_READABLE));
 
-  gobject_class->set_property = gst_osselement_set_property;
-  gobject_class->get_property = gst_osselement_get_property;
   gobject_class->finalize = gst_osselement_finalize;
-
-  gstelement_class->change_state = gst_osselement_change_state;
 }
 
 static const GList *
@@ -245,7 +230,7 @@ gst_osselement_class_probe_devices (GstOssElementClass * klass, gboolean check)
   static GList *device_combinations;
   GList *padtempllist;
   gint openmode = O_RDONLY;
-  gboolean is_mixer = FALSE;
+  gboolean mixer = FALSE;
 
   /* Ok, so how do we open the device? We assume that we have (max.) one
    * pad, and if this is a sinkpad, we're osssink (w). else, we're osssrc
@@ -257,7 +242,7 @@ gst_osselement_class_probe_devices (GstOssElementClass * klass, gboolean check)
     if (GST_PAD_TEMPLATE_DIRECTION (firstpadtempl) == GST_PAD_SINK) {
       openmode = O_WRONLY;
     }
-    is_mixer = TRUE;
+    mixer = TRUE;
   }
 
   if (!init && !check) {
@@ -303,7 +288,7 @@ gst_osselement_class_probe_devices (GstOssElementClass * klass, gboolean check)
         /* we just check the dsp. we assume the mixer always works.
          * we don't need a mixer anyway (says OSS)... If we are a
          * mixer element, we use the mixer anyway. */
-        if ((fd = open (is_mixer ? mixer :
+        if ((fd = open (mixer ? mixer :
                     dsp, openmode | O_NONBLOCK)) > 0 || errno == EBUSY) {
           GstOssDeviceCombination *combi;
 
@@ -314,7 +299,7 @@ gst_osselement_class_probe_devices (GstOssElementClass * klass, gboolean check)
           combi = g_new0 (GstOssDeviceCombination, 1);
           combi->dsp = dsp;
           combi->mixer = mixer;
-          combi->dev = is_mixer ? mixer_dev : dsp_dev;
+          combi->dev = mixer ? mixer_dev : dsp_dev;
           device_combinations = device_combination_append (device_combinations,
               combi);
         } else {
@@ -525,18 +510,19 @@ gst_osselement_parse_caps (GstOssElement * oss, const GstCaps * caps)
 {
   gint bps, format;
   GstStructure *structure;
+  gboolean res;
 
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_structure_get_int (structure, "width", &oss->width);
-  gst_structure_get_int (structure, "depth", &oss->depth);
+  res = gst_structure_get_int (structure, "width", &oss->width);
+  res &= gst_structure_get_int (structure, "depth", &oss->depth);
 
-  if (oss->width != oss->depth)
+  if (!res || oss->width != oss->depth)
     return FALSE;
 
-  gst_structure_get_int (structure, "law", &oss->law);
-  gst_structure_get_int (structure, "endianness", &oss->endianness);
-  gst_structure_get_boolean (structure, "signed", &oss->sign);
+  res = gst_structure_get_int (structure, "law", &oss->law);
+  res &= gst_structure_get_int (structure, "endianness", &oss->endianness);
+  res &= gst_structure_get_boolean (structure, "signed", &oss->sign);
 
   if (!gst_ossformat_get (oss->law, oss->endianness, oss->sign,
           oss->width, oss->depth, &format, &bps)) {
@@ -605,8 +591,10 @@ gst_osselement_sync_parms (GstOssElement * oss)
 
   /* gint fragscale, frag_ln; */
 
-  if (oss->fd == -1)
+  if (oss->fd == -1) {
+    GST_INFO ("osselement: no fd");
     return FALSE;
+  }
 
   if ((oss->fragment & 0xFFFF) == 0) {
     frag = 0;
@@ -634,7 +622,7 @@ gst_osselement_sync_parms (GstOssElement * oss)
 
   ioctl (oss->fd, SNDCTL_DSP_GETBLKSIZE, &oss->fragment_size);
 
-  if (oss->mode == GST_OSSELEMENT_WRITE) {
+  if (oss->mode == 1) {
     ioctl (oss->fd, SNDCTL_DSP_GETOSPACE, &space);
   } else {
     ioctl (oss->fd, SNDCTL_DSP_GETISPACE, &space);
@@ -680,31 +668,19 @@ gst_osselement_sync_parms (GstOssElement * oss)
   return TRUE;
 }
 
-static gboolean
-gst_osselement_open_audio (GstOssElement * oss)
+gboolean
+gst_osselement_open_audio (GstOssElement * oss, GstOssOpenMode mode)
 {
   gint caps;
-  GstOssOpenMode mode = GST_OSSELEMENT_READ;
-  const GList *padlist;
 
   g_return_val_if_fail (oss->fd == -1, FALSE);
   GST_INFO ("osselement: attempting to open sound device");
 
-  /* Ok, so how do we open the device? We assume that we have (max.) one
-   * pad, and if this is a sinkpad, we're osssink (w). else, we're osssrc (r) */
-  padlist = gst_element_get_pad_list (GST_ELEMENT (oss));
-  if (padlist != NULL) {
-    GstPad *firstpad = padlist->data;
-
-    if (GST_PAD_IS_SINK (firstpad)) {
-      mode = GST_OSSELEMENT_WRITE;
-    }
-  } else {
+  if (mode == GST_OSS_MODE_MIXER)
     goto do_mixer;
-  }
 
   /* first try to open the sound card */
-  if (mode == GST_OSSELEMENT_WRITE) {
+  if (mode == 1) {
     /* open non blocking first so that it returns immediatly with an error
      * when we cannot get to the device */
     oss->fd = open (oss->device, O_WRONLY | O_NONBLOCK);
@@ -728,7 +704,7 @@ gst_osselement_open_audio (GstOssElement * oss)
         break;
       case EACCES:
       case ETXTBSY:
-        if (mode == GST_OSSELEMENT_WRITE)
+        if (mode == 1)
           GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE,
               (_("Could not access device \"%s\", check its permissions."),
                   oss->device), GST_ERROR_SYSTEM);
@@ -745,8 +721,7 @@ gst_osselement_open_audio (GstOssElement * oss)
             GST_ERROR_SYSTEM);
         break;
       default:
-        /* FIXME: strerror is not threadsafe */
-        if (mode == GST_OSSELEMENT_WRITE)
+        if (mode == 1)
           GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE,
               (_("Could not open device \"%s\" for writing."), oss->device),
               GST_ERROR_SYSTEM);
@@ -823,17 +798,17 @@ gst_osselement_open_audio (GstOssElement * oss)
   oss->caps = caps;
 
 do_mixer:
-  gst_ossmixer_build_list (oss);
+  gst_ossmixer_build_list (NULL, NULL);
 
   return TRUE;
 }
 
-static void
+void
 gst_osselement_close_audio (GstOssElement * oss)
 {
-  gst_ossmixer_free_list (oss);
+  gst_ossmixer_free_list (NULL);
   if (oss->probed_caps) {
-    gst_caps_free (oss->probed_caps);
+    gst_caps_unref (oss->probed_caps);
     oss->probed_caps = NULL;
   }
 
@@ -913,7 +888,7 @@ gst_osselement_set_property (GObject * object,
     case ARG_DEVICE:
       /* disallow changing the device while it is opened
          get_property("device") should return the right one */
-      if (gst_element_get_state (GST_ELEMENT (oss)) == GST_STATE_NULL) {
+      if (oss->fd == -1) {
         g_free (oss->device);
         oss->device = g_strdup (g_value_get_string (value));
 
@@ -939,7 +914,7 @@ gst_osselement_set_property (GObject * object,
     case ARG_MIXERDEV:
       /* disallow changing the device while it is opened
          get_property("mixerdev") should return the right one */
-      if (gst_element_get_state (GST_ELEMENT (oss)) == GST_STATE_NULL) {
+      if (oss->fd == -1) {
         g_free (oss->mixer_dev);
         oss->mixer_dev = g_strdup (g_value_get_string (value));
       }
@@ -970,34 +945,6 @@ gst_osselement_get_property (GObject * object,
       break;
   }
 }
-
-static GstElementStateReturn
-gst_osselement_change_state (GstElement * element)
-{
-  GstOssElement *oss = GST_OSSELEMENT (element);
-
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
-      if (!gst_osselement_open_audio (oss)) {
-        return GST_STATE_FAILURE;
-      }
-      GST_INFO ("osselement: opened sound device");
-      break;
-    case GST_STATE_READY_TO_NULL:
-      gst_osselement_close_audio (oss);
-      gst_osselement_reset (oss);
-      GST_INFO ("osselement: closed sound device");
-      break;
-    default:
-      break;
-  }
-
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
-}
-
 
 /* rate probing code */
 
@@ -1061,31 +1008,15 @@ gst_osselement_probe_caps (GstOssElement * oss)
   GstStructure *structure;
   unsigned int format_bit;
   unsigned int format_mask;
-
   GstCaps *caps;
-
-  gboolean mono_supported = FALSE;
-  gboolean stereo_supported = FALSE;
-  int n_channels;
 
   if (oss->probed_caps != NULL)
     return;
   if (oss->fd == -1)
     return;
 
-
   /* FIXME test make sure we're not currently playing */
-
-  /* check if the device supports mono, stereo or both */
-  n_channels = 1;
-  ret = ioctl (oss->fd, SNDCTL_DSP_CHANNELS, &n_channels);
-  if (n_channels == 1)
-    mono_supported = TRUE;
-
-  n_channels = 2;
-  ret = ioctl (oss->fd, SNDCTL_DSP_CHANNELS, &n_channels);
-  if (n_channels == 2)
-    stereo_supported = TRUE;
+  /* FIXME test both mono and stereo */
 
   format_mask = AFMT_U8 | AFMT_S16_LE | AFMT_S16_BE | AFMT_S8 |
       AFMT_U16_LE | AFMT_U16_BE;
@@ -1101,12 +1032,7 @@ gst_osselement_probe_caps (GstOssElement * oss)
       probe = g_new0 (GstOssProbe, 1);
       probe->fd = oss->fd;
       probe->format = format_bit;
-
-      if (stereo_supported) {
-        probe->n_channels = 2;
-      } else {
-        probe->n_channels = 1;
-      }
+      probe->n_channels = 2;
 
       ret = gst_osselement_rate_probe_check (probe);
       if (probe->min == -1 || probe->max == -1) {
@@ -1140,21 +1066,7 @@ gst_osselement_probe_caps (GstOssElement * oss)
       g_free (probe);
 
       structure = gst_osselement_get_format_structure (format_bit);
-
-      if (mono_supported && stereo_supported) {
-        gst_structure_set (structure, "channels", GST_TYPE_INT_RANGE, 1, 2,
-            NULL);
-      } else if (mono_supported) {
-        gst_structure_set (structure, "channels", G_TYPE_INT, 1, NULL);
-      } else if (stereo_supported) {
-        gst_structure_set (structure, "channels", G_TYPE_INT, 2, NULL);
-      } else {
-        /* falling back to [1,2] because we don't know what breaks if we abort here */
-        GST_ERROR (_("Your OSS device doesn't support mono or stereo."));
-        gst_structure_set (structure, "channels", GST_TYPE_INT_RANGE, 1, 2,
-            NULL);
-      }
-
+      gst_structure_set (structure, "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
       gst_structure_set_value (structure, "rate", &rate_value);
       g_value_unset (&rate_value);
 

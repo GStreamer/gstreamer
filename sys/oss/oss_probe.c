@@ -1,24 +1,3 @@
-/* GStreamer
- * Copyright (C) 2004 David Schleef
- *               2004 Toni Willberg <toniw@iki.fi>
- *
- * oss_probe.c:
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
- */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -73,11 +52,8 @@ int
 main (int argc, char *argv[])
 {
   int fd;
-  int i, ret;
+  int i;
   Probe *probe;
-
-  gboolean mono_supported = FALSE;
-  gboolean stereo_supported = FALSE;
 
   fd = open ("/dev/dsp", O_RDWR);
   if (fd < 0) {
@@ -88,29 +64,7 @@ main (int argc, char *argv[])
   probe = g_new0 (Probe, 1);
   probe->fd = fd;
   probe->format = AFMT_S16_LE;
-
-  /* check if the device supports mono, stereo or both */
-  probe->n_channels = 1;
-  ret = ioctl (fd, SNDCTL_DSP_CHANNELS, &probe->n_channels);
-  if (probe->n_channels == 1)
-    mono_supported = TRUE;
-
   probe->n_channels = 2;
-  ret = ioctl (fd, SNDCTL_DSP_CHANNELS, &probe->n_channels);
-  if (probe->n_channels == 2)
-    stereo_supported = TRUE;
-
-  if (mono_supported && stereo_supported) {
-    g_print ("The device supports mono and stereo.\n");
-  } else if (mono_supported) {
-    g_print ("The device supports only mono.\n");
-  } else if (stereo_supported) {
-    g_print ("The device supports only stereo.\n");
-  } else {
-    /* exit with error */
-    g_error
-        ("The device doesn't support mono or stereo. This should not happen.\n");
-  }
 
   probe_check (probe);
   g_array_sort (probe->rates, int_compare);

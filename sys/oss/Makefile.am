@@ -1,25 +1,29 @@
 plugin_LTLIBRARIES = libgstossaudio.la
 
 libgstossaudio_la_SOURCES = gstossaudio.c	\
-			    gstosselement.c	\
+		            gstosselement.c	\
+		            gstosshelper.c	\
 			    gstossmixer.c	\
-			    gstosssink.c 	\
-			    gstosssrc.c
+			    gstosssink.c
 
-libgstossaudio_la_CFLAGS = $(GST_CFLAGS)
-libgstossaudio_la_LIBADD = $(top_builddir)/gst-libs/gst/libgstinterfaces-@GST_MAJORMINOR@.la
-libgstossaudio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GST_PLUGINS_BASE_LIBS)
+#		            gstossdmabuffer.c
 
-noinst_HEADERS = gstosssink.h	\
-		gstosssrc.h	\
-		gstosselement.h\
-		gstossmixer.h \
-		gst-i18n-plugin.h \
-		gettext.h
+libgstossaudio_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
+libgstossaudio_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
+                -lgstinterfaces-@GST_MAJORMINOR@ \
+		-lgstaudio-@GST_MAJORMINOR@
+libgstossaudio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 
 
-noinst_PROGRAMS = oss_probe
+noinst_HEADERS = gstosssink.h	  \
+		gstosssrc.h	  \
+		gstosselement.h   \
+                gstosshelper.h	  \
+		gstossdmabuffer.h \
+		gstossmixer.h
 
-oss_probe_SOURCES = oss_probe.c
-oss_probe_CFLAGS = $(GST_CFLAGS)
-oss_probe_LDADD = $(GLIB_LIBS)
+# noinst_PROGRAMS = #oss_probe
+
+# oss_probe_SOURCES = oss_probe.c
+# oss_probe_CFLAGS = $(GST_CFLAGS)
+# oss_probe_LDADD = $(GLIB_LIBS)
 

@@ -26,9 +26,7 @@
 #include <gst/gst.h>
 #include <sys/types.h>
 
-/* debugging category */
-GST_DEBUG_CATEGORY_EXTERN (oss_debug);
-#define GST_CAT_DEFAULT oss_debug
+#include "gstosshelper.h"
 
 G_BEGIN_DECLS
 
@@ -48,16 +46,6 @@ G_BEGIN_DECLS
 typedef struct _GstOssElement GstOssElement;
 typedef struct _GstOssElementClass GstOssElementClass;
 
-typedef enum {
-  GST_OSSELEMENT_READ,
-  GST_OSSELEMENT_WRITE,
-} GstOssOpenMode;
-
-typedef struct _GstOssDeviceCombination {
-  gchar *dsp, *mixer;
-  dev_t dev;
-} GstOssDeviceCombination;
-
 struct _GstOssElement
 {
   /* yes, we're a gstelement too */
@@ -73,7 +61,6 @@ struct _GstOssElement
   gint		 fragment;
   guint64	 fragment_time;
   gint		 fragment_size;
-  GstOssOpenMode mode;
   GstCaps       *probed_caps;
 
   /* stats bytes per *second* */
@@ -90,6 +77,7 @@ struct _GstOssElement
   gint		 depth;
   gint		 channels;
   gint		 rate;
+  gint mode;
 
   /* mixer stuff */
   GList		*tracklist;
@@ -115,8 +103,12 @@ gboolean 	gst_osselement_parse_caps 	(GstOssElement *oss,
 gboolean	gst_osselement_merge_fixed_caps (GstOssElement *oss,
 						 GstCaps      *caps);
 	
+gboolean 	gst_osselement_open_audio 	(GstOssElement *oss, GstOssOpenMode mode);
 gboolean 	gst_osselement_sync_parms 	(GstOssElement *oss);
 void		gst_osselement_reset 		(GstOssElement *oss);
+void 		gst_osselement_close_audio 	(GstOssElement *oss);
+
+	
 
 gboolean 	gst_osselement_convert 	 	(GstOssElement *oss, 
 						 GstFormat      src_format,

@@ -23,8 +23,9 @@
 #define __GST_OSS_MIXER_H__
 
 #include <gst/gst.h>
-#include <gst/mixer/mixer.h>
-#include "gstosselement.h"
+#include <gst/interfaces/mixer.h>
+
+#include "gstosshelper.h"
 
 G_BEGIN_DECLS
 
@@ -56,8 +57,9 @@ GType	gst_ossmixer_track_get_type	(void);
 
 void	gst_ossmixer_interface_init	(GstMixerClass *klass);
 void	gst_oss_interface_init		(GstImplementsInterfaceClass *klass);
-void	gst_ossmixer_build_list		(GstOssElement *oss);
-void	gst_ossmixer_free_list		(GstOssElement *oss);
+void	gst_ossmixer_build_list		(GstOssDeviceCombination * c,
+					 GstOssDevice *oss);
+void	gst_ossmixer_free_list		(GstOssDevice *oss);
 
 G_END_DECLS
 

@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include "gst-i18n-plugin.h"
+#include "gst/gst-i18n-plugin.h"
 
 #include "gstosselement.h"
 #include "gstosssink.h"
@@ -34,13 +34,10 @@ GST_DEBUG_CATEGORY (oss_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_library_load ("gstaudio"))
-    return FALSE;
-
-  if (!gst_element_register (plugin, "ossmixer", GST_RANK_PRIMARY,
-          GST_TYPE_OSSELEMENT) ||
-      !gst_element_register (plugin, "osssrc", GST_RANK_PRIMARY,
-          GST_TYPE_OSSSRC) ||
+  if (                          /*!gst_element_register (plugin, "ossmixer", GST_RANK_PRIMARY,
+                                   GST_TYPE_OSSELEMENT) ||
+                                   !gst_element_register (plugin, "osssrc", GST_RANK_PRIMARY,
+                                   GST_TYPE_OSSSRC) || */
       !gst_element_register (plugin, "osssink", GST_RANK_PRIMARY,
           GST_TYPE_OSSSINK)) {
     return FALSE;
