@@ -1,5 +1,15 @@
 2005-07-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_dispose):
+	  plug a memleak, allows me to import 1479 albums in one go
+	  in jamboree
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_sink_event),
+	(vorbis_handle_type_packet), (vorbis_dec_chain),
+	(vorbis_dec_change_state):
+	  fix some format strings
+
+2005-07-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/libs/tmpl/gstcolorbalance.sgml:
 	* docs/libs/tmpl/gstmixer.sgml:
 	* ext/alsa/gstalsasink.c: (gst_alsasink_class_init),

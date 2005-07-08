@@ -395,7 +395,7 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
           dec->granulepos = -1;
         }
       }
-      GST_DEBUG ("vd: discont %lld", dec->granulepos);
+      GST_DEBUG ("vd: discont %" G_GUINT64_FORMAT, dec->granulepos);
 
       dec->granulepos = -1;
 
@@ -735,7 +735,7 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
    */
   packet.e_o_s = 0;
 
-  GST_DEBUG ("vorbis granule: %lld", packet.granulepos);
+  GST_DEBUG ("vorbis granule: %" G_GUINT64_FORMAT, packet.granulepos);
 
   /* switch depending on packet type */
   if (packet.packet[0] & 1) {
@@ -748,7 +748,7 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
     result = vorbis_handle_data_packet (vd, &packet);
   }
 
-  GST_DEBUG ("offset end: %lld", GST_BUFFER_OFFSET_END (buffer));
+  GST_DEBUG ("offset end: %" G_GUINT64_FORMAT, GST_BUFFER_OFFSET_END (buffer));
 
   /* granulepos is the last sample in the packet */
   if (GST_BUFFER_OFFSET_END_IS_VALID (buffer))
@@ -791,6 +791,7 @@ vorbis_dec_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
+      GST_DEBUG_OBJECT (vd, "PAUSED -> READY, clearing vorbis structures");
       vorbis_block_clear (&vd->vb);
       vorbis_dsp_clear (&vd->vd);
       vorbis_comment_clear (&vd->vc);

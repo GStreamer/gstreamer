@@ -268,6 +268,8 @@ gst_ogg_pad_dispose (GObject * object)
 {
   GstOggPad *pad = GST_OGG_PAD (object);
 
+  gst_element_set_state (pad->element, GST_STATE_NULL);
+
   gst_object_replace ((GstObject **) (&pad->elem_pad), NULL);
   gst_object_replace ((GstObject **) (&pad->element), NULL);
   gst_object_replace ((GstObject **) (&pad->elem_out), NULL);
