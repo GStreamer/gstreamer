@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2005 Wim Taymans <wim@fluendo.com>
  *
- * gstalsasrc.c: 
+ * gstalsasrc.c:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -40,10 +40,20 @@ GST_ELEMENT_DETAILS ("Audio Src (ALSA)",
     "Output to a sound card via ALSA",
     "Wim Taymans <wim@fluendo.com>");
 
+enum
+{
+  PROP_0,
+  PROP_DEVICE,
+};
+
 static void gst_alsasrc_base_init (gpointer g_class);
 static void gst_alsasrc_class_init (GstAlsaSrcClass * klass);
 static void gst_alsasrc_init (GstAlsaSrc * alsasrc);
 static void gst_alsasrc_dispose (GObject * object);
+static void gst_alsasrc_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
+static void gst_alsasrc_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
 
 static GstCaps *gst_alsasrc_getcaps (GstBaseSrc * bsrc);
 
@@ -139,7 +149,9 @@ gst_alsasrc_class_init (GstAlsaSrcClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_BASEAUDIOSRC);
 
-  gobject_class->dispose = gst_alsasrc_dispose;
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_alsasrc_dispose);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_alsasrc_get_property);
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_alsasrc_set_property);
 
   gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_alsasrc_getcaps);
 
@@ -148,6 +160,49 @@ gst_alsasrc_class_init (GstAlsaSrcClass * klass)
   gstaudiosrc_class->read = GST_DEBUG_FUNCPTR (gst_alsasrc_read);
   gstaudiosrc_class->delay = GST_DEBUG_FUNCPTR (gst_alsasrc_delay);
   gstaudiosrc_class->reset = GST_DEBUG_FUNCPTR (gst_alsasrc_reset);
+
+  g_object_class_install_property (gobject_class, PROP_DEVICE,
+      g_param_spec_string ("device", "Device",
+          "ALSA device, as defined in an asound configuration file",
+          "default", G_PARAM_READWRITE));
+}
+
+static void
+gst_alsasrc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstAlsaSrc *src;
+
+  src = GST_ALSA_SRC (object);
+
+  switch (prop_id) {
+    case PROP_DEVICE:
+      if (src->device)
+        g_free (src->device);
+      src->device = g_strdup (g_value_get_string (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_alsasrc_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstAlsaSrc *src;
+
+  src = GST_ALSA_SRC (object);
+
+  switch (prop_id) {
+    case PROP_DEVICE:
+      g_value_set_string (value, src->device);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static void

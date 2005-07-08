@@ -26,8 +26,6 @@
 GST_DEBUG_CATEGORY (videorate_debug);
 #define GST_CAT_DEFAULT videorate_debug
 
-
-
 #define GST_TYPE_VIDEORATE \
   (gst_videorate_get_type())
 #define GST_VIDEORATE(obj) \

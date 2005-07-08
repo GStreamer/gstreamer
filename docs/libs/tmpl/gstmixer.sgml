@@ -45,18 +45,12 @@ gstmixer
 
 </para>
 
-@parent: 
-@values: 
-@_gst_reserved: 
 
 <!-- ##### STRUCT GstMixerTrack ##### -->
 <para>
 
 </para>
 
-@parent: 
-@label: 
-@flags: 
 
 <!-- ##### FUNCTION gst_mixer_list_tracks ##### -->
 <para>
