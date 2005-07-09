@@ -1364,6 +1364,7 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink)
 {
   GstCaps *srccaps;
   GstCaps *sinkcaps;
+  gboolean ret;
 
   srccaps = gst_pad_get_caps_unlocked (src);
   sinkcaps = gst_pad_get_caps_unlocked (sink);
@@ -1380,8 +1381,10 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink)
     GST_CAT_DEBUG (GST_CAT_CAPS,
         "intersection caps %p %" GST_PTR_FORMAT, icaps, icaps);
 
-    if (!icaps || gst_caps_is_empty (icaps))
+    if (!icaps || gst_caps_is_empty (icaps)) {
+      gst_caps_unref (icaps);
       return FALSE;
+    }
   }
 
   return TRUE;

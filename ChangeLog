@@ -1,5 +1,10 @@
 2005-07-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstpad.c: (gst_pad_link_check_compatible_unlocked):
+	  fix a caps leak
+
+2005-07-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/base/gstbasesrc.c: (gst_base_src_class_init),
 	(gst_base_src_finalize):
 	  add finalize method and clean up properly
