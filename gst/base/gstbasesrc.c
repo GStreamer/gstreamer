@@ -57,6 +57,8 @@ static GstElementClass *parent_class = NULL;
 static void gst_base_src_base_init (gpointer g_class);
 static void gst_base_src_class_init (GstBaseSrcClass * klass);
 static void gst_base_src_init (GstBaseSrc * src, gpointer g_class);
+static void gst_base_src_finalize (GObject * object);
+
 
 GType
 gst_base_src_get_type (void)
@@ -129,6 +131,7 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_base_src_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_base_src_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_base_src_get_property);
 
@@ -187,6 +190,19 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   basesrc->clock_id = NULL;
 
   GST_FLAG_UNSET (basesrc, GST_BASE_SRC_STARTED);
+}
+
+static void
+gst_base_src_finalize (GObject * object)
+{
+  GstBaseSrc *basesrc;
+
+  basesrc = GST_BASE_SRC (object);
+
+  g_mutex_free (basesrc->live_lock);
+  g_cond_free (basesrc->live_cond);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 void

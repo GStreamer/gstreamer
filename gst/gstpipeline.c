@@ -167,6 +167,8 @@ gst_pipeline_dispose (GObject * object)
 {
   GstPipeline *pipeline = GST_PIPELINE (object);
 
+  GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, pipeline, "dispose");
+
   gst_scheduler_reset (GST_ELEMENT_SCHEDULER (object));
   gst_element_set_scheduler (GST_ELEMENT (pipeline), NULL);
   gst_object_replace ((GstObject **) & pipeline->fixed_clock, NULL);

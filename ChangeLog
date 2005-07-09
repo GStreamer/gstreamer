@@ -1,3 +1,11 @@
+2005-07-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/base/gstbasesrc.c: (gst_base_src_class_init),
+	(gst_base_src_finalize):
+	  add finalize method and clean up properly
+	* gst/gstpipeline.c: (gst_pipeline_dispose):
+	  add debug
+
 2005-07-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/gst/gstbin.c: (pop_messages), (GST_START_TEST),
