@@ -1364,7 +1364,6 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink)
 {
   GstCaps *srccaps;
   GstCaps *sinkcaps;
-  gboolean ret;
 
   srccaps = gst_pad_get_caps_unlocked (src);
   sinkcaps = gst_pad_get_caps_unlocked (sink);
