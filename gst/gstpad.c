@@ -1384,6 +1384,7 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink)
       gst_caps_unref (icaps);
       return FALSE;
     }
+    gst_caps_unref (icaps);
   }
 
   return TRUE;
