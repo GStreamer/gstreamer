@@ -1449,14 +1449,14 @@ gst_bin_send_event (GstElement * element, GstEvent * event)
 static GstBusSyncReply
 bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
 {
-  GST_DEBUG_OBJECT (bin, "[msg %p] handling child message of type %d from %s",
-      message, GST_MESSAGE_TYPE (message),
-      gst_object_get_name (GST_MESSAGE_SRC (message)));
+  GST_DEBUG_OBJECT (bin, "[msg %p] handling child message of type %d",
+      message, GST_MESSAGE_TYPE (message));
   /* we don't want messages from the streaming thread while we're doing the
    * state change. We do want them from the state change functions. */
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_EOS:
-      GST_DEBUG_OBJECT (bin, "got EOS message");
+      GST_DEBUG_OBJECT (bin, "got EOS message from %s",
+          gst_object_get_name (GST_MESSAGE_SRC (message)));
 
       GST_LOCK (bin->child_bus);
       bin->eosed = g_list_prepend (bin->eosed, GST_MESSAGE_SRC (message));
