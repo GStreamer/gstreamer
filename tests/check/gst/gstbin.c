@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2005 Wim Taymans <wim@fluendo.com>
+ * Copyright (C) 2005 Thomas Vander Stichele <thomas at apestaart dot org>
  *
  * gstbin.c: Unit test for GstBin
  *
@@ -81,7 +82,43 @@ START_TEST (test_interface)
 
   gst_object_unref (bin);
 }
-END_TEST Suite *
+
+END_TEST;
+
+START_TEST (test_message_state_changed)
+{
+  GstBin *bin;
+  GstBus *bus;
+  GstMessage *message;
+
+  bin = GST_BIN (gst_bin_new (NULL));
+  fail_unless (bin != NULL, "Could not create bin");
+  ASSERT_OBJECT_REFCOUNT (bin, "bin", 1);
+
+  bus = GST_ELEMENT_BUS (bin);
+
+  /* change state, spawning a message, causing an incref on the bin */
+  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_READY);
+
+  ASSERT_OBJECT_REFCOUNT (bin, "bin", 2);
+
+  /* get and unref the message, causing a decref on the bin */
+  fail_unless (gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED,
+          -1) == GST_MESSAGE_STATE_CHANGED,
+      "did not get GST_MESSAGE_STATE_CHANGED");
+
+  message = gst_bus_pop (bus);
+  gst_message_unref (message);
+
+  ASSERT_OBJECT_REFCOUNT (bin, "bin", 1);
+
+  /* clean up */
+  gst_object_unref (bin);
+}
+
+END_TEST;
+
+Suite *
 gst_bin_suite (void)
 {
   Suite *s = suite_create ("GstBin");
@@ -89,6 +126,7 @@ gst_bin_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_interface);
+  tcase_add_test (tc_chain, test_message_state_changed);
 
   return s;
 }

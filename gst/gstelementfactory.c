@@ -346,7 +346,7 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
   if (name)
     gst_object_set_name (GST_OBJECT (element), name);
 
-  GST_DEBUG ("created \"%s\" at", GST_PLUGIN_FEATURE_NAME (factory));
+  GST_DEBUG ("created \"%s\"", GST_PLUGIN_FEATURE_NAME (factory));
   return element;
 }
 

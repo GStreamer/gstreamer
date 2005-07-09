@@ -199,7 +199,7 @@ gst_bin_init (GstBin * bin)
   bin->children_cookie = 0;
   bin->eosed = NULL;
 
-  /* Set up a bus for listening to child elements, 
+  /* Set up a bus for listening to child elements,
    * and one for sending messages up the hierarchy */
   bus = g_object_new (gst_bus_get_type (), NULL);
   bin->child_bus = bus;

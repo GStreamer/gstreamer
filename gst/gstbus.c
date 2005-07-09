@@ -97,6 +97,8 @@ gst_bus_init (GstBus * bus)
   bus->queue = g_queue_new ();
   bus->queue_lock = g_mutex_new ();
 
+  GST_DEBUG_OBJECT (bus, "created");
+
   return;
 }
 
@@ -180,8 +182,8 @@ gst_bus_post (GstBus * bus, GstMessage * message)
   g_return_val_if_fail (GST_IS_BUS (bus), FALSE);
   g_return_val_if_fail (GST_IS_MESSAGE (message), FALSE);
 
-  GST_DEBUG_OBJECT (bus, "posting message on bus, type %d",
-      GST_MESSAGE_TYPE (message));
+  GST_DEBUG_OBJECT (bus, "[msg %p] posting on bus, type %d",
+      message, GST_MESSAGE_TYPE (message));
 
   GST_LOCK (bus);
   if (GST_FLAG_IS_SET (bus, GST_BUS_FLUSHING)) {
@@ -205,12 +207,15 @@ gst_bus_post (GstBus * bus, GstMessage * message)
   switch (reply) {
     case GST_BUS_DROP:
       /* drop the message */
+      GST_DEBUG_OBJECT (bus, "[msg %p] dropped", message);
       break;
     case GST_BUS_PASS:
       /* pass the message to the async queue */
+      GST_DEBUG_OBJECT (bus, "[msg %p] pushing on async queue", message);
       g_mutex_lock (bus->queue_lock);
       g_queue_push_tail (bus->queue, message);
       g_mutex_unlock (bus->queue_lock);
+      GST_DEBUG_OBJECT (bus, "[msg %p] pushed on async queue", message);
 
       /* FIXME cannot assume the source is only in the default context */
       g_main_context_wakeup (NULL);
@@ -226,10 +231,10 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       GST_MESSAGE_COND (message) = cond;
       GST_MESSAGE_GET_LOCK (message) = lock;
 
-      GST_DEBUG ("waiting for async delivery of message %p", message);
+      GST_DEBUG_OBJECT (bus, "[msg %p] waiting for async delivery", message);
 
       /* now we lock the message mutex, send the message to the async
-       * queue. When the message is handled by the app and destroyed, 
+       * queue. When the message is handled by the app and destroyed,
        * the cond will be signalled and we can continue */
       g_mutex_lock (lock);
       g_mutex_lock (bus->queue_lock);
@@ -243,7 +248,7 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       g_cond_wait (cond, lock);
       g_mutex_unlock (lock);
 
-      GST_DEBUG ("message %p delivered asynchronously", message);
+      GST_DEBUG_OBJECT (bus, "[msg %p] delivered asynchronously", message);
 
       g_mutex_free (lock);
       g_cond_free (cond);

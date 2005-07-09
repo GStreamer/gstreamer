@@ -1,3 +1,18 @@
+2005-07-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/gst/gstbin.c: (START_TEST), (gst_bin_suite):
+	  add test for state change message on a bin
+	* check/gst/gstelement.c: (START_TEST), (gst_element_suite):
+	  add another test
+	* gst/gstbin.c: (gst_bin_init):
+	* gst/gstbus.c: (gst_bus_init), (gst_bus_post):
+	* gst/gstelement.c: (gst_element_post_message),
+	(gst_element_set_state):
+	* gst/gstelementfactory.c: (gst_element_factory_create):
+	* gst/gstmessage.c: (gst_message_new):
+	* gst/gstscheduler.c:
+	  various debugging additions and cleanups
+
 2005-07-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:

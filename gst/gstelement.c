@@ -1233,7 +1233,7 @@ gst_element_query (GstElement * element, GstQuery * query)
  *
  * Post a message on the elements #GstBus.
  *
- * Returns: TRUE if the message was successfuly posted.
+ * Returns: TRUE if the message was successfully posted.
  *
  * MT safe.
  */
@@ -1258,7 +1258,7 @@ gst_element_post_message (GstElement * element, GstMessage * message)
     return FALSE;
   }
   gst_object_ref (bus);
-  GST_DEBUG ("... on bus %p", bus);
+  GST_DEBUG ("... on bus %" GST_PTR_FORMAT, bus);
   GST_UNLOCK (element);
 
   result = gst_bus_post (bus, message);
@@ -1799,14 +1799,14 @@ gst_element_set_state (GstElement * element, GstElementState state)
         goto exit;
       case GST_STATE_SUCCESS:
         GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
-            "element changed state successfuly");
+            "element changed state successfully");
         /* we can commit the state now and proceed to the next state */
         gst_element_commit_state (element);
         GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "commited state");
         break;
       case GST_STATE_NO_PREROLL:
         GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
-            "element changed state successfuly and can't preroll");
+            "element changed state successfully and can't preroll");
         /* we can commit the state now and proceed to the next state */
         gst_element_commit_state (element);
         GST_STATE_NO_PREROLL (element) = TRUE;

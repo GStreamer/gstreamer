@@ -171,8 +171,10 @@ gst_message_new (GstMessageType type, GstObject * src)
   message->type = type;
   if (src) {
     message->src = gst_object_ref (src);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_MESSAGE, src, "message source");
   } else {
     message->src = NULL;
+    GST_CAT_DEBUG (GST_CAT_MESSAGE, "NULL message source");
   }
   message->structure = NULL;
 

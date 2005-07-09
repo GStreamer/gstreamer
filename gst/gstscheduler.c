@@ -358,7 +358,7 @@ gst_scheduler_factory_create (GstSchedulerFactory * factory,
  * @name: the name of the factory used to create the instance
  * @parent: the parent element of this scheduler
  *
- * Create a new #GstScheduler instance from the 
+ * Create a new #GstScheduler instance from the
  * schedulerfactory with the given name and parent. @parent will
  * have its scheduler set to the returned #GstScheduler instance.
  * If %NULL is passed as @name, the default scheduler name will

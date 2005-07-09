@@ -21,7 +21,7 @@
 
 #include "../gstcheck.h"
 
-START_TEST (test_add_pad)
+START_TEST (test_add_remove_pad)
 {
   GstElement *e;
   GstPad *p;
@@ -49,6 +49,36 @@ START_TEST (test_add_pad)
 
 END_TEST;
 
+START_TEST (test_add_pad_unref_element)
+{
+  GstElement *e;
+  GstPad *p;
+
+  /* getting an existing element class is cheating, but easier */
+  e = gst_element_factory_make ("fakesrc", "source");
+
+  /* create a new floating pad with refcount 1 */
+  p = gst_pad_new ("source", GST_PAD_SRC);
+  ASSERT_OBJECT_REFCOUNT (p, "pad", 1);
+  /* ref it for ourselves */
+  gst_object_ref (p);
+  ASSERT_OBJECT_REFCOUNT (p, "pad", 2);
+  /* adding it sinks the pad -> not floating, same refcount */
+  gst_element_add_pad (e, p);
+  ASSERT_OBJECT_REFCOUNT (p, "pad", 2);
+
+  /* unreffing the element should clean it up */
+  gst_object_unref (GST_OBJECT (e));
+
+  ASSERT_OBJECT_REFCOUNT (p, "pad", 1);
+
+  /* clean up our own reference */
+  gst_object_unref (p);
+}
+
+END_TEST;
+
+
 Suite *
 gst_element_suite (void)
 {
@@ -56,7 +86,8 @@ gst_element_suite (void)
   TCase *tc_chain = tcase_create ("element tests");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_add_pad);
+  tcase_add_test (tc_chain, test_add_remove_pad);
+  tcase_add_test (tc_chain, test_add_pad_unref_element);
 
   return s;
 }
