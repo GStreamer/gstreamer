@@ -22,6 +22,24 @@
 
 #include "../gstcheck.h"
 
+static void
+pop_messages (GstBus * bus, int count)
+{
+  GstMessage *message;
+
+  int i;
+
+  GST_DEBUG ("popping %d messages", count);
+  for (i = 0; i < count; ++i) {
+    fail_unless (gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, -1)
+        == GST_MESSAGE_STATE_CHANGED, "did not get GST_MESSAGE_STATE_CHANGED");
+
+    message = gst_bus_pop (bus);
+    gst_message_unref (message);
+  }
+  GST_DEBUG ("popped %d messages", count);
+}
+
 GST_START_TEST (test_interface)
 {
   GstBin *bin, *bin2;
@@ -137,11 +155,12 @@ GST_START_TEST (test_message_state_changed_child)
 
   bus = GST_ELEMENT_BUS (bin);
 
-  /* change state, spawning three messages:
-   * - first for fakesrc, causing incref on fakesrc
-   * - then two on bin, causing an incref on the bin */
+  /* change state, spawning two messages:
+   * - first for fakesrc, forwarded to bin's bus, causing incref on fakesrc
+   * - second for bin, causing an incref on the bin */
   GST_DEBUG ("setting bin to READY");
-  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_READY);
+  fail_unless (gst_element_set_state (GST_ELEMENT (bin), GST_STATE_READY)
+      == GST_STATE_SUCCESS);
 
   ASSERT_OBJECT_REFCOUNT (src, "src", 2);
   ASSERT_OBJECT_REFCOUNT (bin, "bin", 2);
@@ -151,6 +170,7 @@ GST_START_TEST (test_message_state_changed_child)
       == GST_MESSAGE_STATE_CHANGED, "did not get GST_MESSAGE_STATE_CHANGED");
 
   message = gst_bus_pop (bus);
+  fail_unless (message->src == GST_OBJECT (src));
   gst_message_unref (message);
 
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
@@ -161,6 +181,7 @@ GST_START_TEST (test_message_state_changed_child)
       == GST_MESSAGE_STATE_CHANGED, "did not get GST_MESSAGE_STATE_CHANGED");
 
   message = gst_bus_pop (bus);
+  fail_unless (message->src == GST_OBJECT (bin));
   gst_message_unref (message);
 
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
@@ -172,6 +193,72 @@ GST_START_TEST (test_message_state_changed_child)
 
 GST_END_TEST;
 
+GST_START_TEST (test_message_state_changed_children)
+{
+  GstPipeline *pipeline;
+  GstElement *src, *sink;
+  GstBus *bus;
+
+  pipeline = GST_PIPELINE (gst_pipeline_new (NULL));
+  fail_unless (pipeline != NULL, "Could not create pipeline");
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
+
+  src = gst_element_factory_make ("fakesrc", NULL);
+  fail_if (src == NULL, "Could not create fakesrc");
+  gst_bin_add (GST_BIN (pipeline), src);
+
+  sink = gst_element_factory_make ("fakesink", NULL);
+  fail_if (sink == NULL, "Could not create fakesink");
+  gst_bin_add (GST_BIN (pipeline), sink);
+
+  fail_unless (gst_element_link (src, sink), "could not link src and sink");
+
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (src, "sink", 1);
+
+  bus = GST_ELEMENT_BUS (pipeline);
+
+  /* change state, spawning three times three messages */
+  GST_DEBUG ("setting pipeline to PLAYING");
+  fail_unless (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING)
+      == GST_STATE_SUCCESS);
+
+  pop_messages (bus, 9);
+
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
+
+  /* go back to READY, spawning six messages */
+  GST_DEBUG ("setting pipeline to READY");
+  fail_unless (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_READY)
+      == GST_STATE_SUCCESS);
+
+  /* each object is referenced by two messages */
+  ASSERT_OBJECT_REFCOUNT (src, "src", 3);
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 3);
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 3);
+
+  pop_messages (bus, 6);
+
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
+
+  /* setting pipeline to NULL flushes the bus automatically */
+  fail_unless (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL)
+      == GST_STATE_SUCCESS);
+
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
+
+  /* clean up */
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
 
 Suite *
 gst_bin_suite (void)
@@ -183,6 +270,7 @@ gst_bin_suite (void)
   tcase_add_test (tc_chain, test_interface);
   tcase_add_test (tc_chain, test_message_state_changed);
   tcase_add_test (tc_chain, test_message_state_changed_child);
+  tcase_add_test (tc_chain, test_message_state_changed_children);
 
   return s;
 }

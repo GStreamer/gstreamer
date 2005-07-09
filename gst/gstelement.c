@@ -1231,7 +1231,7 @@ gst_element_query (GstElement * element, GstQuery * query)
  * @element: a #GstElement posting the message
  * @message: a #GstMessage to post
  *
- * Post a message on the elements #GstBus.
+ * Post a message on the element's #GstBus.
  *
  * Returns: TRUE if the message was successfully posted.
  *

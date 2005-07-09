@@ -1,5 +1,14 @@
 2005-07-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* check/gst/gstbin.c: (pop_messages), (GST_START_TEST),
+	(gst_bin_suite):
+	  add more things to check
+	* gst/gstbin.c: (gst_bin_change_state), (bin_bus_handler):
+	* gst/gstelement.c:
+	  more debug
+
+2005-07-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* check/elements/gstfakesrc.c: (chain_func), (event_func),
 	(GST_START_TEST), (fakesrc_suite):
 	* check/gst-libs/gdp.c: (GST_START_TEST):
