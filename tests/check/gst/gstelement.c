@@ -21,7 +21,7 @@
 
 #include "../gstcheck.h"
 
-START_TEST (test_add_remove_pad)
+GST_START_TEST (test_add_remove_pad)
 {
   GstElement *e;
   GstPad *p;
@@ -47,9 +47,9 @@ START_TEST (test_add_remove_pad)
   gst_object_unref (p);
 }
 
-END_TEST;
+GST_END_TEST;
 
-START_TEST (test_add_pad_unref_element)
+GST_START_TEST (test_add_pad_unref_element)
 {
   GstElement *e;
   GstPad *p;
@@ -76,7 +76,7 @@ START_TEST (test_add_pad_unref_element)
   gst_object_unref (p);
 }
 
-END_TEST;
+GST_END_TEST;
 
 
 Suite *

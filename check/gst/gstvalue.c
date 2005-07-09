@@ -24,7 +24,7 @@
 #include "../gstcheck.h"
 
 
-START_TEST (test_deserialize_buffer)
+GST_START_TEST (test_deserialize_buffer)
 {
   GValue value = { 0 };
 
@@ -32,9 +32,9 @@ START_TEST (test_deserialize_buffer)
   fail_unless (gst_value_deserialize (&value, "1234567890abcdef"));
 }
 
-END_TEST;
+GST_END_TEST;
 
-START_TEST (test_deserialize_gint64)
+GST_START_TEST (test_deserialize_gint64)
 {
   GValue value = { 0 };
   const char *strings[] = {
@@ -58,9 +58,9 @@ START_TEST (test_deserialize_gint64)
   }
 }
 
-END_TEST;
+GST_END_TEST;
 
-START_TEST (test_deserialize_gint)
+GST_START_TEST (test_deserialize_gint)
 {
   GValue value = { 0 };
   const char *strings[] = {
@@ -112,9 +112,9 @@ START_TEST (test_deserialize_gint)
   }
 }
 
-END_TEST;
+GST_END_TEST;
 
-START_TEST (test_deserialize_gint_failures)
+GST_START_TEST (test_deserialize_gint_failures)
 {
   GValue value = { 0 };
   const char *strings[] = {
@@ -138,9 +138,9 @@ START_TEST (test_deserialize_gint_failures)
   }
 }
 
-END_TEST;
+GST_END_TEST;
 
-START_TEST (test_deserialize_guint)
+GST_START_TEST (test_deserialize_guint)
 {
   GValue value = { 0 };
   const char *strings[] = {
@@ -192,9 +192,9 @@ START_TEST (test_deserialize_guint)
   }
 }
 
-END_TEST;
+GST_END_TEST;
 
-START_TEST (test_deserialize_guint_failures)
+GST_START_TEST (test_deserialize_guint_failures)
 {
   GValue value = { 0 };
   const char *strings[] = {
@@ -222,10 +222,10 @@ START_TEST (test_deserialize_guint_failures)
   }
 }
 
-END_TEST;
+GST_END_TEST;
 
 
-START_TEST (test_string)
+GST_START_TEST (test_string)
 {
   gchar *try[] = {
     "Dude",
@@ -252,9 +252,9 @@ START_TEST (test_string)
   g_value_unset (&v);
 }
 
-END_TEST;
+GST_END_TEST;
 
-START_TEST (test_deserialize_string)
+GST_START_TEST (test_deserialize_string)
 {
   struct
   {
@@ -302,7 +302,7 @@ START_TEST (test_deserialize_string)
   g_value_unset (&v);
 }
 
-END_TEST;
+GST_END_TEST;
 
 Suite *
 gst_value_suite (void)

@@ -21,7 +21,7 @@
 
 #include "../gstcheck.h"
 
-START_TEST (test_init)
+GST_START_TEST (test_init)
 {
   /* don't segfault with NULL, NULL */
   gst_init (NULL, NULL);
@@ -29,7 +29,7 @@ START_TEST (test_init)
   gst_init (NULL, NULL);
 }
 
-END_TEST;
+GST_END_TEST;
 
 Suite *
 gst_suite (void)

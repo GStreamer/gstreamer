@@ -1,5 +1,35 @@
 2005-07-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* check/elements/gstfakesrc.c: (chain_func), (event_func),
+	(GST_START_TEST), (fakesrc_suite):
+	* check/gst-libs/gdp.c: (GST_START_TEST):
+	* check/gst/gst.c: (GST_START_TEST):
+	* check/gst/gstbin.c: (GST_START_TEST), (gst_bin_suite):
+	* check/gst/gstbuffer.c: (GST_START_TEST), (gst_test_suite):
+	* check/gst/gstbus.c: (GST_START_TEST):
+	* check/gst/gstcaps.c: (GST_START_TEST):
+	* check/gst/gstdata.c: (GST_START_TEST):
+	* check/gst/gstelement.c: (GST_START_TEST):
+	* check/gst/gstghostpad.c: (GST_START_TEST):
+	* check/gst/gstiterator.c: (GST_START_TEST):
+	* check/gst/gstmessage.c: (GST_START_TEST):
+	* check/gst/gstobject.c: (GST_START_TEST):
+	* check/gst/gstpad.c: (GST_START_TEST):
+	* check/gst/gststructure.c: (GST_START_TEST):
+	* check/gst/gstsystemclock.c: (GST_START_TEST),
+	(gst_systemclock_suite):
+	* check/gst/gsttag.c: (GST_START_TEST), (gst_tag_suite):
+	* check/gst/gstvalue.c: (GST_START_TEST):
+	* check/pipelines/cleanup.c: (GST_START_TEST):
+	* check/pipelines/simple_launch_lines.c: (GST_START_TEST):
+	* check/states/sinks.c: (GST_START_TEST):
+	* check/gstcheck.c: (gst_check_init):
+	* check/gstcheck.h:
+	  add debugging category
+	  use GST_START_TEST now, so we add a debug line
+
+2005-07-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* check/gst/gstbin.c: (START_TEST), (gst_bin_suite):
 	  add test for state change message on a bin
 	* check/gst/gstelement.c: (START_TEST), (gst_element_suite):

@@ -55,7 +55,7 @@ event_func (GstPad * pad, GstEvent * event)
   return FALSE;
 }
 
-START_TEST (test_num_buffers)
+GST_START_TEST (test_num_buffers)
 {
   GstElement *src;
   GstScheduler *scheduler;
@@ -95,7 +95,7 @@ START_TEST (test_num_buffers)
   g_list_free (buffers);
 }
 
-END_TEST;
+GST_END_TEST;
 
 Suite *
 fakesrc_suite (void)

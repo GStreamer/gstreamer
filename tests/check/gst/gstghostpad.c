@@ -29,7 +29,7 @@ assert_gstrefcount (gpointer p, gint i)
         GST_OBJECT_REFCOUNT_VALUE (p));
 }
 
-START_TEST (test_ghost_pads)
+GST_START_TEST (test_ghost_pads)
 {
   GstElement *b1, *b2, *src, *i1, *sink;
   GstPad *gsink, *gsrc, *gisrc, *gisink, *isink, *isrc, *fsrc, *fsink;
@@ -124,7 +124,7 @@ START_TEST (test_ghost_pads)
   gst_object_unref (gisink);
   assert_gstrefcount (fsink, 1);
 }
-END_TEST Suite *
+GST_END_TEST Suite *
 gst_ghost_pad_suite (void)
 {
   Suite *s = suite_create ("GstGhostPad");

@@ -23,7 +23,7 @@
 #include "../gstcheck.h"
 
 
-START_TEST (test_from_string_int)
+GST_START_TEST (test_from_string_int)
 {
   const char *strings[] = {
     "video/x-raw-rgb, width = (int) 123456",
@@ -63,7 +63,7 @@ START_TEST (test_from_string_int)
   }
 }
 
-END_TEST;
+GST_END_TEST;
 
 Suite *
 gst_value_suite (void)

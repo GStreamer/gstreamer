@@ -31,6 +31,9 @@
 
 #include <gst/gst.h>
 
+GST_DEBUG_CATEGORY_EXTERN (check_debug);
+#define GST_CAT_DEFAULT check_debug
+
 /* logging function for tests
  * a test uses g_message() to log a debug line
  * a gst unit test can be run with GST_TEST_DEBUG env var set to see the
@@ -41,6 +44,17 @@ extern gboolean _gst_check_raised_critical;
 extern gboolean _gst_check_expecting_log;
 
 void gst_check_init (int *argc, char **argv[]);
+
+/***
+ * wrappers for START_TEST and END_TEST
+ */
+#define GST_START_TEST(__testname) \
+static void __testname (void)\
+{\
+  GST_DEBUG ("test start"); \
+  tcase_fn_start (""# __testname, __FILE__, __LINE__);
+
+#define GST_END_TEST END_TEST
 
 /***
  * thread test macros and variables
@@ -134,6 +148,7 @@ G_STMT_START {							\
 
 #define THREAD_TEST_RUNNING()	(_gst_check_threads_running == TRUE)
 
+/* additional assertions */
 #define ASSERT_CRITICAL(code)					\
 G_STMT_START {							\
   _gst_check_expecting_log = TRUE;				\

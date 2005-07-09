@@ -21,7 +21,7 @@
 
 #include "../gstcheck.h"
 
-START_TEST (test_signedness)
+GST_START_TEST (test_signedness)
 {
   GstClockTime time[] = { 0, 1, G_MAXUINT64 / GST_SECOND };
   GstClockTimeDiff diff[] =
@@ -36,7 +36,7 @@ START_TEST (test_signedness)
   }
 }
 
-END_TEST
+GST_END_TEST
 #define TIME_UNIT GST_SECOND
     static void
 gst_clock_debug (GstClock * clock)
@@ -65,7 +65,7 @@ error_callback (GstClock * clock, GstClockTime time,
   return FALSE;
 }
 
-START_TEST (test_single_shot)
+GST_START_TEST (test_single_shot)
 {
   GstClock *clock;
   GstClockID id, id2;
@@ -128,8 +128,8 @@ START_TEST (test_single_shot)
   g_usleep (2 * G_USEC_PER_SEC);
 }
 
-END_TEST
-START_TEST (test_periodic_shot)
+GST_END_TEST
+GST_START_TEST (test_periodic_shot)
 {
   GstClock *clock;
   GstClockID id, id2;
@@ -187,7 +187,7 @@ START_TEST (test_periodic_shot)
   g_usleep (2 * G_USEC_PER_SEC);
 }
 
-END_TEST Suite * gst_systemclock_suite (void)
+GST_END_TEST Suite * gst_systemclock_suite (void)
 {
   Suite *s = suite_create ("GstSystemClock");
   TCase *tc_chain = tcase_create ("waiting");

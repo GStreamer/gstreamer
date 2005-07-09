@@ -22,7 +22,7 @@
 
 #include "../gstcheck.h"
 
-START_TEST (test_copy)
+GST_START_TEST (test_copy)
 {
   GstBuffer *buffer, *copy;
 
@@ -35,8 +35,8 @@ START_TEST (test_copy)
       "Copy of buffer has different size");
 }
 
-END_TEST
-START_TEST (test_is_writable)
+GST_END_TEST
+GST_START_TEST (test_is_writable)
 {
   GstBuffer *buffer;
   GstData *data;
@@ -60,8 +60,8 @@ START_TEST (test_is_writable)
       "A buffer with two refs should not be writable");
 }
 
-END_TEST
-START_TEST (test_copy_on_write)
+GST_END_TEST
+GST_START_TEST (test_copy_on_write)
 {
   GstBuffer *buffer;
   GstData *data, *data2, *data3;
@@ -90,7 +90,7 @@ START_TEST (test_copy_on_write)
 
 }
 
-END_TEST gint num_threads = 10;
+GST_END_TEST gint num_threads = 10;
 gint refs_per_thread = 10000;
 
 /* test thread-safe refcounting of GstData */
@@ -110,7 +110,7 @@ thread_ref (GstData * data)
   g_message ("thread stopped\n");
 }
 
-START_TEST (test_ref_threaded)
+GST_START_TEST (test_ref_threaded)
 {
   GstBuffer *buffer;
   GstData *data;
@@ -128,7 +128,7 @@ START_TEST (test_ref_threaded)
   fail_unless (GST_DATA_REFCOUNT_VALUE (data) == expected,
       "Refcount of data is %d != %d", GST_DATA_REFCOUNT_VALUE (data), expected);
 }
-END_TEST void
+GST_END_TEST void
 thread_unref (GstData * data)
 {
   int j;
@@ -143,7 +143,7 @@ thread_unref (GstData * data)
   }
 }
 
-START_TEST (test_unref_threaded)
+GST_START_TEST (test_unref_threaded)
 {
   GstBuffer *buffer;
   GstData *data;
@@ -164,7 +164,7 @@ START_TEST (test_unref_threaded)
   /* final unref */
   gst_data_unref (data);
 }
-END_TEST Suite *
+GST_END_TEST Suite *
 gst_data_suite (void)
 {
   Suite *s = suite_create ("GstData");

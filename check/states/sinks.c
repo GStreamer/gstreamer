@@ -23,7 +23,7 @@
 #include "../gstcheck.h"
 
 /* a sink should go ASYNC to PAUSE. forcing PLAYING is possible */
-START_TEST (test_sink)
+GST_START_TEST (test_sink)
 {
   GstElement *sink;
   GstElementStateReturn ret;
@@ -43,10 +43,10 @@ START_TEST (test_sink)
   fail_unless (pending == GST_STATE_VOID_PENDING, "not playing");
 }
 
-END_TEST
+GST_END_TEST
 /* a sink should go ASYNC to PAUSE. PAUSE should complete when
  * prerolled. */
-START_TEST (test_src_sink)
+GST_START_TEST (test_src_sink)
 {
   GstElement *sink, *src, *pipeline;
   GstElementStateReturn ret;
@@ -79,11 +79,11 @@ START_TEST (test_src_sink)
   fail_unless (pending == GST_STATE_VOID_PENDING, "not playing");
 }
 
-END_TEST
+GST_END_TEST
 /* a pipeline with live source should return NO_PREROLL in
  * PAUSE. When removing the live source it should return ASYNC
  * from the sink */
-START_TEST (test_livesrc_remove)
+GST_START_TEST (test_livesrc_remove)
 {
   GstElement *sink, *src, *pipeline;
   GstElementStateReturn ret;
@@ -123,10 +123,10 @@ START_TEST (test_livesrc_remove)
 
 }
 
-END_TEST
+GST_END_TEST
 /* a sink should go ASYNC to PAUSE. PAUSE does not complete
  * since we have a live source. */
-START_TEST (test_livesrc_sink)
+GST_START_TEST (test_livesrc_sink)
 {
   GstElement *sink, *src, *pipeline;
   GstElementStateReturn ret;
@@ -169,7 +169,7 @@ START_TEST (test_livesrc_sink)
   fail_unless (pending == GST_STATE_VOID_PENDING, "not playing");
 }
 
-END_TEST
+GST_END_TEST
 /* test: try changing state of sinks */
     Suite * gst_object_suite (void)
 {

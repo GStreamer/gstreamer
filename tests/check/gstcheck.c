@@ -22,6 +22,7 @@
 
 #include "gstcheck.h"
 
+GST_DEBUG_CATEGORY (check_debug);
 
 /* logging function for tests
  * a test uses g_message() to log a debug line
@@ -70,6 +71,8 @@ void
 gst_check_init (int *argc, char **argv[])
 {
   gst_init (argc, argv);
+
+  GST_DEBUG_CATEGORY_INIT (check_debug, "check", 0, "check regression tests");
 
   if (g_getenv ("GST_TEST_DEBUG"))
     _gst_check_debug = TRUE;

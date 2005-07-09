@@ -22,7 +22,7 @@
 
 #include "../gstcheck.h"
 
-START_TEST (test_interface)
+GST_START_TEST (test_interface)
 {
   GstBin *bin, *bin2;
   GstElement *filesrc;
@@ -83,9 +83,9 @@ START_TEST (test_interface)
   gst_object_unref (bin);
 }
 
-END_TEST;
+GST_END_TEST;
 
-START_TEST (test_message_state_changed)
+GST_START_TEST (test_message_state_changed)
 {
   GstBin *bin;
   GstBus *bus;
@@ -116,7 +116,62 @@ START_TEST (test_message_state_changed)
   gst_object_unref (bin);
 }
 
-END_TEST;
+GST_END_TEST;
+
+GST_START_TEST (test_message_state_changed_child)
+{
+  GstBin *bin;
+  GstElement *src;
+  GstBus *bus;
+  GstMessage *message;
+
+  bin = GST_BIN (gst_bin_new (NULL));
+  fail_unless (bin != NULL, "Could not create bin");
+  ASSERT_OBJECT_REFCOUNT (bin, "bin", 1);
+
+  src = gst_element_factory_make ("fakesrc", NULL);
+  fail_if (src == NULL, "Could not create fakesrc");
+  gst_bin_add (bin, src);
+  ASSERT_OBJECT_REFCOUNT (bin, "bin", 1);
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+
+  bus = GST_ELEMENT_BUS (bin);
+
+  /* change state, spawning three messages:
+   * - first for fakesrc, causing incref on fakesrc
+   * - then two on bin, causing an incref on the bin */
+  GST_DEBUG ("setting bin to READY");
+  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_READY);
+
+  ASSERT_OBJECT_REFCOUNT (src, "src", 2);
+  ASSERT_OBJECT_REFCOUNT (bin, "bin", 2);
+
+  /* get and unref the message, causing a decref on the src */
+  fail_unless (gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, -1)
+      == GST_MESSAGE_STATE_CHANGED, "did not get GST_MESSAGE_STATE_CHANGED");
+
+  message = gst_bus_pop (bus);
+  gst_message_unref (message);
+
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (bin, "bin", 2);
+
+  /* get and unref message 2, causing a decref on the bin */
+  fail_unless (gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, -1)
+      == GST_MESSAGE_STATE_CHANGED, "did not get GST_MESSAGE_STATE_CHANGED");
+
+  message = gst_bus_pop (bus);
+  gst_message_unref (message);
+
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (bin, "bin", 1);
+
+  /* clean up */
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
 
 Suite *
 gst_bin_suite (void)
@@ -127,6 +182,7 @@ gst_bin_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_interface);
   tcase_add_test (tc_chain, test_message_state_changed);
+  tcase_add_test (tc_chain, test_message_state_changed_child);
 
   return s;
 }

@@ -71,7 +71,7 @@ run_pipeline (GstElement * pipe, gchar * descr,
   gst_object_unref (pipe);
 }
 
-START_TEST (test_pipeline_unref)
+GST_START_TEST (test_pipeline_unref)
 {
   gchar *s;
   gint count;
@@ -94,7 +94,7 @@ START_TEST (test_pipeline_unref)
   gst_object_unref (sink);
 }
 
-END_TEST Suite *
+GST_END_TEST Suite *
 cleanup_suite (void)
 {
   Suite *s = suite_create ("Pipeline cleanup");

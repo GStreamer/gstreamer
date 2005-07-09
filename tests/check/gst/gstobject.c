@@ -67,7 +67,7 @@ gst_fake_object_get_type (void)
 }
 
 /* g_object_new on abstract GstObject should fail */
-START_TEST (test_fail_abstract_new)
+GST_START_TEST (test_fail_abstract_new)
 {
   GstObject *object;
 
@@ -75,9 +75,9 @@ START_TEST (test_fail_abstract_new)
   fail_unless (object == NULL, "Created an instance of abstract GstObject");
 }
 
-END_TEST
+GST_END_TEST
 /* g_object_new on GstFakeObject should succeed */
-START_TEST (test_fake_object_new)
+GST_START_TEST (test_fake_object_new)
 {
   GstObject *object;
 
@@ -87,9 +87,9 @@ START_TEST (test_fake_object_new)
       "GstFakeObject instance is not a GstObject");
 }
 
-END_TEST
+GST_END_TEST
 /* GstFakeObject name tests */
-START_TEST (test_fake_object_name)
+GST_START_TEST (test_fake_object_name)
 {
   GstObject *object;
   gchar *name;
@@ -125,7 +125,7 @@ START_TEST (test_fake_object_name)
   g_free (name2);
 }
 
-END_TEST
+GST_END_TEST
 /* thread function for threaded name change test */
     gpointer thread_name_object (GstObject * object)
 {
@@ -156,7 +156,7 @@ END_TEST
  * constantly; fails because lock is released inbetween set and get
  */
 
-START_TEST (test_fake_object_name_threaded_wrong)
+GST_START_TEST (test_fake_object_name_threaded_wrong)
 {
   GstObject *object;
   gchar *name;
@@ -188,12 +188,12 @@ START_TEST (test_fake_object_name_threaded_wrong)
   fail_unless (expected_failure, "name did not get changed");
 }
 
-END_TEST
+GST_END_TEST
 /*
  * main thread sets and gets name directly on struct inside the object lock
  * succeed because lock is held during set/get, and threads are locked out
  */
-START_TEST (test_fake_object_name_threaded_right)
+GST_START_TEST (test_fake_object_name_threaded_right)
 {
   GstObject *object;
   gchar *name;
@@ -222,7 +222,7 @@ START_TEST (test_fake_object_name_threaded_right)
   MAIN_STOP_THREADS ();
 }
 
-END_TEST
+GST_END_TEST
 /*
  * main thread creates lots of objects
  * child threads sets default names on objects
@@ -280,7 +280,7 @@ gst_object_name_compare (GstObject * o, GstObject * p)
   return result;
 }
 
-START_TEST (test_fake_object_name_threaded_unique)
+GST_START_TEST (test_fake_object_name_threaded_unique)
 {
   GstObject *object;
   gint i;
@@ -326,9 +326,9 @@ START_TEST (test_fake_object_name_threaded_unique)
   g_list_foreach (object_list, (GFunc) g_object_unref, NULL);
 }
 
-END_TEST
+GST_END_TEST
 /* parentage test on GstFakeObject */
-START_TEST (test_fake_object_parentage)
+GST_START_TEST (test_fake_object_parentage)
 {
   GstObject *object1, *object2;
   GstObject *parent;
@@ -402,13 +402,13 @@ START_TEST (test_fake_object_parentage)
   gst_object_unref (object2);
 }
 
-END_TEST
+GST_END_TEST
 /* parentage test dispose on GstFakeObject, since our testcase
  * does not handle the parent relation completely, the parent does
  * not hold a ref to the child, we cannot dispose the parent to
  * dipose the child as well. This test needs to be run with DEBUG
  * info to check if the finalize methods are called correctly. */
-START_TEST (test_fake_object_parentage_dispose)
+GST_START_TEST (test_fake_object_parentage_dispose)
 {
   GstObject *object1, *object2;
   gboolean result;
@@ -431,7 +431,7 @@ START_TEST (test_fake_object_parentage_dispose)
   gst_object_unref (object2);
 }
 
-END_TEST
+GST_END_TEST
 /* test: try renaming a parented object, make sure it fails */
     Suite * gst_object_suite (void)
 {

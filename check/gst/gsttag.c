@@ -102,7 +102,7 @@ G_STMT_START {							\
 } G_STMT_END;
 
 
-START_TEST (test_merge)
+GST_START_TEST (test_merge)
 {
   GstTagList *list = NULL, *list2 = NULL, *merge = NULL;
 
@@ -173,7 +173,7 @@ START_TEST (test_merge)
   check_tags (merge, FTAG, FIXED1, NULL);
 }
 
-END_TEST Suite *
+GST_END_TEST Suite *
 gst_tag_suite (void)
 {
   Suite *s = suite_create ("GstTag");

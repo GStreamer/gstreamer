@@ -81,7 +81,7 @@ pull_messages ()
     g_return_if_fail (message_ids[i] == NUM_MESSAGES);
 }
 
-START_TEST (test_hammer_bus)
+GST_START_TEST (test_hammer_bus)
 {
   GThread *threads[NUM_THREADS];
   gint i;
@@ -99,7 +99,7 @@ START_TEST (test_hammer_bus)
 
   gst_object_unref ((GstObject *) test_bus);
 }
-END_TEST Suite *
+GST_END_TEST Suite *
 gstbus_suite (void)
 {
   Suite *s = suite_create ("GstBus");

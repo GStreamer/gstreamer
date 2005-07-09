@@ -24,7 +24,7 @@
 #include "../gstcheck.h"
 #include "capslist.h"
 
-START_TEST (test_from_string)
+GST_START_TEST (test_from_string)
 {
   GstCaps *caps;
   int i;
@@ -37,9 +37,9 @@ START_TEST (test_from_string)
   }
 }
 
-END_TEST;
+GST_END_TEST;
 
-START_TEST (test_buffer)
+GST_START_TEST (test_buffer)
 {
   GstCaps *c1;
   GstBuffer *buffer;
@@ -53,9 +53,9 @@ START_TEST (test_buffer)
   gst_buffer_unref (buffer);
 }
 
-END_TEST;
+GST_END_TEST;
 
-START_TEST (test_double_append)
+GST_START_TEST (test_double_append)
 {
   GstStructure *s1;
   GstCaps *c1;
@@ -66,9 +66,9 @@ START_TEST (test_double_append)
   ASSERT_CRITICAL (gst_caps_append_structure (c1, s1));
 }
 
-END_TEST;
+GST_END_TEST;
 
-START_TEST (test_mutability)
+GST_START_TEST (test_mutability)
 {
   GstStructure *s1;
   GstCaps *c1;
@@ -95,7 +95,7 @@ START_TEST (test_mutability)
   fail_unless (ret == 1);
 }
 
-END_TEST;
+GST_END_TEST;
 
 Suite *
 gst_caps_suite (void)

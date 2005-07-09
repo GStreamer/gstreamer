@@ -24,7 +24,7 @@
 
 static GQuark domain;
 
-START_TEST (test_parsing)
+GST_START_TEST (test_parsing)
 {
   GstMessage *message;
 
@@ -172,7 +172,7 @@ START_TEST (test_parsing)
 
 }
 
-END_TEST Suite *
+GST_END_TEST Suite *
 gst_data_suite (void)
 {
   Suite *s = suite_create ("GstMessage");

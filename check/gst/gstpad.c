@@ -21,7 +21,7 @@
 
 #include "../gstcheck.h"
 
-START_TEST (test_link)
+GST_START_TEST (test_link)
 {
   GstPad *src, *sink;
   GstPadTemplate *srct;
@@ -48,7 +48,7 @@ START_TEST (test_link)
   fail_unless (srct == NULL);
 }
 
-END_TEST;
+GST_END_TEST;
 
 /* threaded link/unlink */
 /* use globals */
@@ -66,7 +66,7 @@ thread_link_unlink (gpointer data)
   }
 }
 
-START_TEST (test_link_unlink_threaded)
+GST_START_TEST (test_link_unlink_threaded)
 {
   GstCaps *caps;
   int i;
@@ -89,9 +89,9 @@ START_TEST (test_link_unlink_threaded)
   MAIN_STOP_THREADS ();
 }
 
-END_TEST;
+GST_END_TEST;
 
-START_TEST (test_refcount)
+GST_START_TEST (test_refcount)
 {
   GstPad *src, *sink;
   GstCaps *caps;
@@ -127,9 +127,9 @@ START_TEST (test_refcount)
   gst_caps_unref (caps);
 }
 
-END_TEST;
+GST_END_TEST;
 
-START_TEST (test_get_allowed_caps)
+GST_START_TEST (test_get_allowed_caps)
 {
   GstPad *src, *sink;
   GstCaps *caps, *gotcaps;
@@ -180,7 +180,7 @@ START_TEST (test_get_allowed_caps)
   gst_caps_unref (caps);
 }
 
-END_TEST;
+GST_END_TEST;
 
 Suite *
 gst_pad_suite (void)

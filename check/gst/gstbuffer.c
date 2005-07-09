@@ -22,7 +22,7 @@
 
 #include "../gstcheck.h"
 
-START_TEST (test_subbuffer)
+GST_START_TEST (test_subbuffer)
 {
   GstBuffer *buffer, *sub;
   int rc;
@@ -41,8 +41,8 @@ START_TEST (test_subbuffer)
   gst_buffer_unref (buffer);
 }
 
-END_TEST
-START_TEST (test_is_span_fast)
+GST_END_TEST
+GST_START_TEST (test_is_span_fast)
 {
   GstBuffer *buffer, *sub1, *sub2;
 
@@ -63,7 +63,8 @@ START_TEST (test_is_span_fast)
   fail_if (gst_buffer_is_span_fast (sub1, sub2) == FALSE,
       "two subbuffers next to each other should be span_fast");
 }
-END_TEST Suite * gst_test_suite (void)
+GST_END_TEST Suite *
+gst_test_suite (void)
 {
   Suite *s = suite_create ("GstBuffer");
   TCase *tc_chain = tcase_create ("general");

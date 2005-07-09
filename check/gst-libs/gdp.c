@@ -26,7 +26,7 @@
 #include "libs/gst/dataprotocol/dp-private.h"   /* private header */
 
 /* test our method of reading and writing headers using TO/FROM_BE */
-START_TEST (test_conversion)
+GST_START_TEST (test_conversion)
 {
   guint8 array[9];
   guint8 write_array[9];
@@ -81,9 +81,9 @@ START_TEST (test_conversion)
       "GST_WRITE_UINT64_BE: memcmp failed");
 }
 
-END_TEST
+GST_END_TEST
 /* test creation of header from buffer and back again */
-START_TEST (test_buffer)
+GST_START_TEST (test_buffer)
 {
   GstBuffer *buffer;
   GstBuffer *newbuffer;
@@ -141,8 +141,8 @@ START_TEST (test_buffer)
   g_free (header);
 }
 
-END_TEST
-START_TEST (test_caps)
+GST_END_TEST
+GST_START_TEST (test_caps)
 {
   gchar *string, *newstring;
   GstCaps *caps, *newcaps;
@@ -173,8 +173,8 @@ START_TEST (test_caps)
   g_free (newstring);
 }
 
-END_TEST
-START_TEST (test_event)
+GST_END_TEST
+GST_START_TEST (test_event)
 {
   GstEvent *send;
   GstEvent *receive;
@@ -240,7 +240,7 @@ START_TEST (test_event)
   gst_event_unref (send);
   gst_event_unref (receive);
 }
-END_TEST Suite *
+GST_END_TEST Suite *
 gst_object_suite (void)
 {
   Suite *s = suite_create ("data protocol");

@@ -71,7 +71,7 @@ run_pipeline (GstElement * pipe, gchar * descr,
   gst_object_unref (pipe);
 }
 
-START_TEST (test_2_elements)
+GST_START_TEST (test_2_elements)
 {
   gchar *s;
 
@@ -99,7 +99,7 @@ START_TEST (test_2_elements)
      ASSERT_CRITICAL (run_pipeline (setup_pipeline (s), s,
      GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_UNKNOWN)); */
 }
-END_TEST static void
+GST_END_TEST static void
 got_handoff (GstElement * sink, GstBuffer * buf, GstPad * pad, gpointer unused)
 {
   gst_element_post_message
@@ -125,7 +125,7 @@ assert_live_count (GType type, gint live)
   }
 }
 
-START_TEST (test_stop_from_app)
+GST_START_TEST (test_stop_from_app)
 {
   GstElement *fakesrc, *fakesink, *pipeline;
   GstBus *bus;
@@ -161,7 +161,7 @@ START_TEST (test_stop_from_app)
 
   assert_live_count (GST_TYPE_BUFFER, 0);
 }
-END_TEST Suite *
+GST_END_TEST Suite *
 simple_launch_lines_suite (void)
 {
   Suite *s = suite_create ("Pipelines");
