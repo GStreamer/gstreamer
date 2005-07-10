@@ -136,7 +136,7 @@ gst_shout2send_get_type (void)
     };
 
     shout2send_type =
-        g_type_register_static (GST_TYPE_BASESINK, "GstShout2send",
+        g_type_register_static (GST_TYPE_BASE_SINK, "GstShout2send",
         &shout2send_info, 0);
 
     g_type_add_interface_static (shout2send_type, GST_TYPE_TAG_SETTER,
@@ -166,7 +166,7 @@ gst_shout2send_class_init (GstShout2sendClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASESINK);
+  parent_class = g_type_class_ref (GST_TYPE_BASE_SINK);
 
   gobject_class->set_property = gst_shout2send_set_property;
   gobject_class->get_property = gst_shout2send_get_property;
@@ -216,7 +216,7 @@ gst_shout2send_init (GstShout2send * shout2send)
 {
   GstPad *pad;
 
-  pad = GST_BASESINK_PAD (shout2send);
+  pad = GST_BASE_SINK_PAD (shout2send);
 
   gst_pad_set_setcaps_function (pad, gst_shout2send_setcaps);
   shout2send->clock = NULL;

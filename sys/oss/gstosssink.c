@@ -34,27 +34,27 @@
 #include "gstosssink.h"
 
 /* elementfactory information */
-static GstElementDetails gst_osssink_details =
+static GstElementDetails gst_oss_sink_details =
 GST_ELEMENT_DETAILS ("Audio Sink (OSS)",
     "Sink/Audio",
     "Output to a sound card via OSS",
     "Erik Walthinsen <omega@cse.ogi.edu>, "
     "Wim Taymans <wim.taymans@chello.be>");
 
-static void gst_osssink_base_init (gpointer g_class);
-static void gst_osssink_class_init (GstOssSinkClass * klass);
-static void gst_osssink_init (GstOssSink * osssink);
-static void gst_osssink_dispose (GObject * object);
+static void gst_oss_sink_base_init (gpointer g_class);
+static void gst_oss_sink_class_init (GstOssSinkClass * klass);
+static void gst_oss_sink_init (GstOssSink * osssink);
+static void gst_oss_sink_dispose (GObject * object);
 
-static GstCaps *gst_osssink_getcaps (GstBaseSink * bsink);
+static GstCaps *gst_oss_sink_getcaps (GstBaseSink * bsink);
 
-static gboolean gst_osssink_open (GstAudioSink * asink,
+static gboolean gst_oss_sink_open (GstAudioSink * asink,
     GstRingBufferSpec * spec);
-static gboolean gst_osssink_close (GstAudioSink * asink);
-static guint gst_osssink_write (GstAudioSink * asink, gpointer data,
+static gboolean gst_oss_sink_close (GstAudioSink * asink);
+static guint gst_oss_sink_write (GstAudioSink * asink, gpointer data,
     guint length);
-static guint gst_osssink_delay (GstAudioSink * asink);
-static void gst_osssink_reset (GstAudioSink * asink);
+static guint gst_oss_sink_delay (GstAudioSink * asink);
+static void gst_oss_sink_reset (GstAudioSink * asink);
 
 /* OssSink signals and args */
 enum
@@ -83,28 +83,28 @@ static GstStaticPadTemplate osssink_sink_factory =
 
 static GstElementClass *parent_class = NULL;
 
-/* static guint gst_osssink_signals[LAST_SIGNAL] = { 0 }; */
+/* static guint gst_oss_sink_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
-gst_osssink_get_type (void)
+gst_oss_sink_get_type (void)
 {
   static GType osssink_type = 0;
 
   if (!osssink_type) {
     static const GTypeInfo osssink_info = {
       sizeof (GstOssSinkClass),
-      gst_osssink_base_init,
+      gst_oss_sink_base_init,
       NULL,
-      (GClassInitFunc) gst_osssink_class_init,
+      (GClassInitFunc) gst_oss_sink_class_init,
       NULL,
       NULL,
       sizeof (GstOssSink),
       0,
-      (GInstanceInitFunc) gst_osssink_init,
+      (GInstanceInitFunc) gst_oss_sink_init,
     };
 
     osssink_type =
-        g_type_register_static (GST_TYPE_AUDIOSINK, "GstOssSink",
+        g_type_register_static (GST_TYPE_AUDIO_SINK, "GstOssSink",
         &osssink_info, 0);
   }
 
@@ -112,23 +112,23 @@ gst_osssink_get_type (void)
 }
 
 static void
-gst_osssink_dispose (GObject * object)
+gst_oss_sink_dispose (GObject * object)
 {
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
-gst_osssink_base_init (gpointer g_class)
+gst_oss_sink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_osssink_details);
+  gst_element_class_set_details (element_class, &gst_oss_sink_details);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&osssink_sink_factory));
 }
 static void
-gst_osssink_class_init (GstOssSinkClass * klass)
+gst_oss_sink_class_init (GstOssSinkClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -142,21 +142,21 @@ gst_osssink_class_init (GstOssSinkClass * klass)
   gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
   gstaudiosink_class = (GstAudioSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASEAUDIOSINK);
+  parent_class = g_type_class_ref (GST_TYPE_BASE_AUDIO_SINK);
 
-  gobject_class->dispose = gst_osssink_dispose;
+  gobject_class->dispose = gst_oss_sink_dispose;
 
-  gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_osssink_getcaps);
+  gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_oss_sink_getcaps);
 
-  gstaudiosink_class->open = GST_DEBUG_FUNCPTR (gst_osssink_open);
-  gstaudiosink_class->close = GST_DEBUG_FUNCPTR (gst_osssink_close);
-  gstaudiosink_class->write = GST_DEBUG_FUNCPTR (gst_osssink_write);
-  gstaudiosink_class->delay = GST_DEBUG_FUNCPTR (gst_osssink_delay);
-  gstaudiosink_class->reset = GST_DEBUG_FUNCPTR (gst_osssink_reset);
+  gstaudiosink_class->open = GST_DEBUG_FUNCPTR (gst_oss_sink_open);
+  gstaudiosink_class->close = GST_DEBUG_FUNCPTR (gst_oss_sink_close);
+  gstaudiosink_class->write = GST_DEBUG_FUNCPTR (gst_oss_sink_write);
+  gstaudiosink_class->delay = GST_DEBUG_FUNCPTR (gst_oss_sink_delay);
+  gstaudiosink_class->reset = GST_DEBUG_FUNCPTR (gst_oss_sink_reset);
 }
 
 static void
-gst_osssink_init (GstOssSink * osssink)
+gst_oss_sink_init (GstOssSink * osssink)
 {
   GST_DEBUG ("initializing osssink");
 
@@ -164,7 +164,7 @@ gst_osssink_init (GstOssSink * osssink)
 }
 
 static GstCaps *
-gst_osssink_getcaps (GstBaseSink * bsink)
+gst_oss_sink_getcaps (GstBaseSink * bsink)
 {
   GstOssSink *osssink;
   GstOssElement *element;
@@ -177,7 +177,7 @@ gst_osssink_getcaps (GstBaseSink * bsink)
 
   if (element->probed_caps == NULL) {
     caps =
-        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASESINK_PAD
+        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD
             (bsink)));
   } else {
     caps = gst_caps_ref (element->probed_caps);
@@ -222,7 +222,7 @@ G_STMT_START {					\
 } G_STMT_END
 
 static gboolean
-gst_osssink_open (GstAudioSink * asink, GstRingBufferSpec * spec)
+gst_oss_sink_open (GstAudioSink * asink, GstRingBufferSpec * spec)
 {
   struct audio_buf_info info;
   int mode;
@@ -269,20 +269,20 @@ gst_osssink_open (GstAudioSink * asink, GstRingBufferSpec * spec)
 }
 
 static gboolean
-gst_osssink_close (GstAudioSink * asink)
+gst_oss_sink_close (GstAudioSink * asink)
 {
   close (GST_OSSSINK (asink)->fd);
   return TRUE;
 }
 
 static guint
-gst_osssink_write (GstAudioSink * asink, gpointer data, guint length)
+gst_oss_sink_write (GstAudioSink * asink, gpointer data, guint length)
 {
   return write (GST_OSSSINK (asink)->fd, data, length);
 }
 
 static guint
-gst_osssink_delay (GstAudioSink * asink)
+gst_oss_sink_delay (GstAudioSink * asink)
 {
   GstOssSink *oss;
   gint delay = 0;
@@ -306,7 +306,7 @@ gst_osssink_delay (GstAudioSink * asink)
 }
 
 static void
-gst_osssink_reset (GstAudioSink * asink)
+gst_oss_sink_reset (GstAudioSink * asink)
 {
   GstOssSink *oss;
 

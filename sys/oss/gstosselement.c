@@ -69,7 +69,7 @@ static void gst_osselement_get_property (GObject * object,
 
 static GstElementClass *parent_class = NULL;
 
-/*static guint gst_osssrc_signals[LAST_SIGNAL] = { 0 }; */
+/*static guint gst_oss_src_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_osselement_get_type (void)

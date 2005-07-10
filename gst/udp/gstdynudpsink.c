@@ -98,7 +98,7 @@ gst_dynudpsink_get_type (void)
     };
 
     dynudpsink_type =
-        g_type_register_static (GST_TYPE_BASESINK, "GstDynUDPSink",
+        g_type_register_static (GST_TYPE_BASE_SINK, "GstDynUDPSink",
         &dynudpsink_info, 0);
   }
   return dynudpsink_type;
@@ -126,7 +126,7 @@ gst_dynudpsink_class_init (GstDynUDPSink * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASESINK);
+  parent_class = g_type_class_ref (GST_TYPE_BASE_SINK);
 
   gobject_class->set_property = gst_dynudpsink_set_property;
   gobject_class->get_property = gst_dynudpsink_get_property;

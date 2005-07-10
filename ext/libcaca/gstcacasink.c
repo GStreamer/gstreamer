@@ -95,7 +95,7 @@ gst_cacasink_get_type (void)
     };
 
     cacasink_type =
-        g_type_register_static (GST_TYPE_BASESINK, "GstCACASink",
+        g_type_register_static (GST_TYPE_BASE_SINK, "GstCACASink",
         &cacasink_info, 0);
   }
   return cacasink_type;
@@ -154,7 +154,7 @@ gst_cacasink_class_init (GstCACASinkClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASESINK);
+  parent_class = g_type_class_ref (GST_TYPE_BASE_SINK);
 
   gobject_class->set_property = gst_cacasink_set_property;
   gobject_class->get_property = gst_cacasink_get_property;
@@ -240,7 +240,7 @@ gst_cacasink_init (GstCACASink * cacasink)
 {
   GstPad *pad;
 
-  pad = GST_BASESINK_PAD (cacasink);
+  pad = GST_BASE_SINK_PAD (cacasink);
   /* gst_pad_set_fixatecaps_function (pad, gst_cacasink_fixate); */
 
   cacasink->screen_width = GST_CACA_DEFAULT_SCREEN_WIDTH;

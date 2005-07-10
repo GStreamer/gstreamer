@@ -102,7 +102,7 @@ gst_multiudpsink_get_type (void)
     };
 
     multiudpsink_type =
-        g_type_register_static (GST_TYPE_BASESINK, "GstMultiUDPSink",
+        g_type_register_static (GST_TYPE_BASE_SINK, "GstMultiUDPSink",
         &multiudpsink_info, 0);
   }
   return multiudpsink_type;
@@ -130,7 +130,7 @@ gst_multiudpsink_class_init (GstMultiUDPSink * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASESINK);
+  parent_class = g_type_class_ref (GST_TYPE_BASE_SINK);
 
   gobject_class->set_property = gst_multiudpsink_set_property;
   gobject_class->get_property = gst_multiudpsink_get_property;

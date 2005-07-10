@@ -105,7 +105,7 @@ gst_aasink_get_type (void)
     };
 
     aasink_type =
-        g_type_register_static (GST_TYPE_BASESINK, "GstAASink", &aasink_info,
+        g_type_register_static (GST_TYPE_BASE_SINK, "GstAASink", &aasink_info,
         0);
   }
   return aasink_type;
@@ -196,7 +196,7 @@ gst_aasink_class_init (GstAASinkClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASESINK);
+  parent_class = g_type_class_ref (GST_TYPE_BASE_SINK);
 
   gobject_class->set_property = gst_aasink_set_property;
   gobject_class->get_property = gst_aasink_get_property;
@@ -271,7 +271,7 @@ gst_aasink_init (GstAASink * aasink)
 {
   GstPad *pad;
 
-  pad = GST_BASESINK_PAD (aasink);
+  pad = GST_BASE_SINK_PAD (aasink);
   gst_pad_set_fixatecaps_function (pad, gst_aasink_fixate);
 
   memcpy (&aasink->ascii_surf, &aa_defparams,

@@ -106,8 +106,8 @@ gst_esdsink_get_type (void)
     };
 
     esdsink_type =
-        g_type_register_static (GST_TYPE_AUDIOSINK, "GstEsdSink", &esdsink_info,
-        0);
+        g_type_register_static (GST_TYPE_AUDIO_SINK, "GstEsdSink",
+        &esdsink_info, 0);
   }
   return esdsink_type;
 }
@@ -137,7 +137,7 @@ gst_esdsink_class_init (GstEsdSinkClass * klass)
   gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
   gstaudiosink_class = (GstAudioSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_AUDIOSINK);
+  parent_class = g_type_class_ref (GST_TYPE_AUDIO_SINK);
 
   gobject_class->dispose = gst_esdsink_dispose;
 

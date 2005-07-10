@@ -31,7 +31,7 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_OSSSRC \
-  (gst_osssrc_get_type())
+  (gst_oss_src_get_type())
 #define GST_OSSSRC(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OSSSRC,GstOssSrc))
 #define GST_OSSSRC_CLASS(klass) \
@@ -71,7 +71,7 @@ struct _GstOssSrcClass {
   GstOssElementClass parent_class;
 };
 
-GType gst_osssrc_get_type(void);
+GType gst_oss_src_get_type(void);
 
 G_END_DECLS
 

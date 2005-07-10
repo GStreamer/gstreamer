@@ -50,7 +50,7 @@
 #include <gst/audio/audioclock.h>
 
 /* elementfactory information */
-static GstElementDetails gst_osssrc_details =
+static GstElementDetails gst_oss_src_details =
 GST_ELEMENT_DETAILS ("Audio Source (OSS)",
     "Source/Audio",
     "Read from the sound card",
@@ -87,57 +87,57 @@ static GstStaticPadTemplate osssrc_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]")
     );
 
-static void gst_osssrc_base_init (gpointer g_class);
-static void gst_osssrc_class_init (GstOssSrcClass * klass);
-static void gst_osssrc_init (GstOssSrc * osssrc);
-static void gst_osssrc_dispose (GObject * object);
+static void gst_oss_src_base_init (gpointer g_class);
+static void gst_oss_src_class_init (GstOssSrcClass * klass);
+static void gst_oss_src_init (GstOssSrc * osssrc);
+static void gst_oss_src_dispose (GObject * object);
 
-static GstPadLinkReturn gst_osssrc_src_link (GstPad * pad, GstPad * peer);
-static GstCaps *gst_osssrc_getcaps (GstPad * pad);
-static const GstFormat *gst_osssrc_get_formats (GstPad * pad);
-static gboolean gst_osssrc_convert (GstPad * pad,
+static GstPadLinkReturn gst_oss_src_src_link (GstPad * pad, GstPad * peer);
+static GstCaps *gst_oss_src_getcaps (GstPad * pad);
+static const GstFormat *gst_oss_src_get_formats (GstPad * pad);
+static gboolean gst_oss_src_convert (GstPad * pad,
     GstFormat src_format, gint64 src_value,
     GstFormat * dest_format, gint64 * dest_value);
 
-static void gst_osssrc_set_property (GObject * object, guint prop_id,
+static void gst_oss_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_osssrc_get_property (GObject * object, guint prop_id,
+static void gst_oss_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static GstElementStateReturn gst_osssrc_change_state (GstElement * element);
+static GstElementStateReturn gst_oss_src_change_state (GstElement * element);
 
-static void gst_osssrc_set_clock (GstElement * element, GstClock * clock);
-static GstClock *gst_osssrc_get_clock (GstElement * element);
-static GstClockTime gst_osssrc_get_time (GstClock * clock, gpointer data);
+static void gst_oss_src_set_clock (GstElement * element, GstClock * clock);
+static GstClock *gst_oss_src_get_clock (GstElement * element);
+static GstClockTime gst_oss_src_get_time (GstClock * clock, gpointer data);
 
-static const GstEventMask *gst_osssrc_get_event_masks (GstPad * pad);
-static gboolean gst_osssrc_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_osssrc_send_event (GstElement * element, GstEvent * event);
-static const GstQueryType *gst_osssrc_get_query_types (GstPad * pad);
-static gboolean gst_osssrc_src_query (GstPad * pad, GstQueryType type,
+static const GstEventMask *gst_oss_src_get_event_masks (GstPad * pad);
+static gboolean gst_oss_src_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_oss_src_send_event (GstElement * element, GstEvent * event);
+static const GstQueryType *gst_oss_src_get_query_types (GstPad * pad);
+static gboolean gst_oss_src_src_query (GstPad * pad, GstQueryType type,
     GstFormat * format, gint64 * value);
 
-static void gst_osssrc_loop (GstPad * pad);
+static void gst_oss_src_loop (GstPad * pad);
 
 static GstElementClass *parent_class = NULL;
 
-/*static guint gst_osssrc_signals[LAST_SIGNAL] = { 0 }; */
+/*static guint gst_oss_src_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
-gst_osssrc_get_type (void)
+gst_oss_src_get_type (void)
 {
   static GType osssrc_type = 0;
 
   if (!osssrc_type) {
     static const GTypeInfo osssrc_info = {
       sizeof (GstOssSrcClass),
-      gst_osssrc_base_init,
+      gst_oss_src_base_init,
       NULL,
-      (GClassInitFunc) gst_osssrc_class_init,
+      (GClassInitFunc) gst_oss_src_class_init,
       NULL,
       NULL,
       sizeof (GstOssSrc),
       0,
-      (GInstanceInitFunc) gst_osssrc_init,
+      (GInstanceInitFunc) gst_oss_src_init,
     };
 
     osssrc_type =
@@ -148,16 +148,16 @@ gst_osssrc_get_type (void)
 }
 
 static void
-gst_osssrc_base_init (gpointer g_class)
+gst_oss_src_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_osssrc_details);
+  gst_element_class_set_details (element_class, &gst_oss_src_details);
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&osssrc_src_factory));
 }
 static void
-gst_osssrc_class_init (GstOssSrcClass * klass)
+gst_oss_src_class_init (GstOssSrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -167,8 +167,8 @@ gst_osssrc_class_init (GstOssSrcClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_OSSELEMENT);
 
-  gobject_class->set_property = gst_osssrc_set_property;
-  gobject_class->get_property = gst_osssrc_get_property;
+  gobject_class->set_property = gst_oss_src_set_property;
+  gobject_class->get_property = gst_oss_src_get_property;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFFERSIZE,
       g_param_spec_ulong ("buffersize", "Buffer Size",
@@ -179,30 +179,30 @@ gst_osssrc_class_init (GstOssSrcClass * klass)
           "The fragment as 0xMMMMSSSS (MMMM = total fragments, 2^SSSS = fragment size)",
           0, G_MAXINT, 6, G_PARAM_READWRITE));
 
-  gobject_class->dispose = gst_osssrc_dispose;
+  gobject_class->dispose = gst_oss_src_dispose;
 
-  gstelement_class->change_state = gst_osssrc_change_state;
-  gstelement_class->send_event = gst_osssrc_send_event;
+  gstelement_class->change_state = gst_oss_src_change_state;
+  gstelement_class->send_event = gst_oss_src_send_event;
 
-  gstelement_class->set_clock = gst_osssrc_set_clock;
-  gstelement_class->get_clock = gst_osssrc_get_clock;
+  gstelement_class->set_clock = gst_oss_src_set_clock;
+  gstelement_class->get_clock = gst_oss_src_get_clock;
 }
 
 static void
-gst_osssrc_init (GstOssSrc * osssrc)
+gst_oss_src_init (GstOssSrc * osssrc)
 {
   osssrc->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&osssrc_src_factory), "src");
-  gst_pad_set_loop_function (osssrc->srcpad, gst_osssrc_loop);
-  gst_pad_set_getcaps_function (osssrc->srcpad, gst_osssrc_getcaps);
-  gst_pad_set_link_function (osssrc->srcpad, gst_osssrc_src_link);
-  gst_pad_set_convert_function (osssrc->srcpad, gst_osssrc_convert);
-  gst_pad_set_formats_function (osssrc->srcpad, gst_osssrc_get_formats);
-  gst_pad_set_event_function (osssrc->srcpad, gst_osssrc_src_event);
-  gst_pad_set_event_mask_function (osssrc->srcpad, gst_osssrc_get_event_masks);
-  gst_pad_set_query_function (osssrc->srcpad, gst_osssrc_src_query);
-  gst_pad_set_query_type_function (osssrc->srcpad, gst_osssrc_get_query_types);
+  gst_pad_set_loop_function (osssrc->srcpad, gst_oss_src_loop);
+  gst_pad_set_getcaps_function (osssrc->srcpad, gst_oss_src_getcaps);
+  gst_pad_set_link_function (osssrc->srcpad, gst_oss_src_src_link);
+  gst_pad_set_convert_function (osssrc->srcpad, gst_oss_src_convert);
+  gst_pad_set_formats_function (osssrc->srcpad, gst_oss_src_get_formats);
+  gst_pad_set_event_function (osssrc->srcpad, gst_oss_src_src_event);
+  gst_pad_set_event_mask_function (osssrc->srcpad, gst_oss_src_get_event_masks);
+  gst_pad_set_query_function (osssrc->srcpad, gst_oss_src_src_query);
+  gst_pad_set_query_type_function (osssrc->srcpad, gst_oss_src_get_query_types);
 
   gst_element_add_pad (GST_ELEMENT (osssrc), osssrc->srcpad);
 
@@ -210,7 +210,7 @@ gst_osssrc_init (GstOssSrc * osssrc)
   osssrc->curoffset = 0;
 
   osssrc->provided_clock =
-      gst_audio_clock_new ("ossclock", gst_osssrc_get_time, osssrc);
+      gst_audio_clock_new ("ossclock", gst_oss_src_get_time, osssrc);
   gst_object_set_parent (GST_OBJECT (osssrc->provided_clock),
       GST_OBJECT (osssrc));
 
@@ -218,7 +218,7 @@ gst_osssrc_init (GstOssSrc * osssrc)
 }
 
 static void
-gst_osssrc_dispose (GObject * object)
+gst_oss_src_dispose (GObject * object)
 {
   GstOssSrc *osssrc = (GstOssSrc *) object;
 
@@ -231,7 +231,7 @@ gst_osssrc_dispose (GObject * object)
 }
 
 static GstCaps *
-gst_osssrc_getcaps (GstPad * pad)
+gst_oss_src_getcaps (GstPad * pad)
 {
   GstOssSrc *src;
   GstCaps *caps;
@@ -250,13 +250,13 @@ gst_osssrc_getcaps (GstPad * pad)
 }
 
 static GstPadLinkReturn
-gst_osssrc_src_link (GstPad * pad, GstPad * peer)
+gst_oss_src_src_link (GstPad * pad, GstPad * peer)
 {
   return GST_RPAD_LINKFUNC (peer) (peer, pad);
 }
 
 static gboolean
-gst_osssrc_negotiate (GstPad * pad)
+gst_oss_src_negotiate (GstPad * pad)
 {
   GstOssSrc *src;
   GstCaps *allowed;
@@ -286,7 +286,7 @@ gst_osssrc_negotiate (GstPad * pad)
 }
 
 static GstClockTime
-gst_osssrc_get_time (GstClock * clock, gpointer data)
+gst_oss_src_get_time (GstClock * clock, gpointer data)
 {
   GstOssSrc *osssrc = GST_OSSSRC (data);
   audio_buf_info info;
@@ -302,7 +302,7 @@ gst_osssrc_get_time (GstClock * clock, gpointer data)
 }
 
 static GstClock *
-gst_osssrc_get_clock (GstElement * element)
+gst_oss_src_get_clock (GstElement * element)
 {
   GstOssSrc *osssrc;
 
@@ -312,7 +312,7 @@ gst_osssrc_get_clock (GstElement * element)
 }
 
 static void
-gst_osssrc_set_clock (GstElement * element, GstClock * clock)
+gst_oss_src_set_clock (GstElement * element, GstClock * clock)
 {
   GstOssSrc *osssrc;
 
@@ -322,7 +322,7 @@ gst_osssrc_set_clock (GstElement * element, GstClock * clock)
 }
 
 static void
-gst_osssrc_loop (GstPad * pad)
+gst_oss_src_loop (GstPad * pad)
 {
   GstOssSrc *src;
   GstBuffer *buf;
@@ -343,7 +343,7 @@ gst_osssrc_loop (GstPad * pad)
 
   if (!GST_PAD_CAPS (pad)) {
     /* nothing was negotiated, we can decide on a format */
-    if (!gst_osssrc_negotiate (pad)) {
+    if (!gst_oss_src_negotiate (pad)) {
       gst_buffer_unref (buf);
       GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, (NULL), (NULL));
       return;
@@ -408,7 +408,7 @@ gst_osssrc_loop (GstPad * pad)
 }
 
 static void
-gst_osssrc_set_property (GObject * object, guint prop_id, const GValue * value,
+gst_oss_src_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
   GstOssSrc *src;
@@ -429,7 +429,7 @@ gst_osssrc_set_property (GObject * object, guint prop_id, const GValue * value,
 }
 
 static void
-gst_osssrc_get_property (GObject * object, guint prop_id, GValue * value,
+gst_oss_src_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
   GstOssSrc *src;
@@ -450,7 +450,7 @@ gst_osssrc_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static GstElementStateReturn
-gst_osssrc_change_state (GstElement * element)
+gst_oss_src_change_state (GstElement * element)
 {
   GstOssSrc *osssrc = GST_OSSSRC (element);
 
@@ -483,7 +483,7 @@ gst_osssrc_change_state (GstElement * element)
 }
 
 static const GstFormat *
-gst_osssrc_get_formats (GstPad * pad)
+gst_oss_src_get_formats (GstPad * pad)
 {
   static const GstFormat formats[] = {
     GST_FORMAT_TIME,
@@ -496,7 +496,7 @@ gst_osssrc_get_formats (GstPad * pad)
 }
 
 static gboolean
-gst_osssrc_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
+gst_oss_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
     GstFormat * dest_format, gint64 * dest_value)
 {
   GstOssSrc *osssrc;
@@ -508,19 +508,19 @@ gst_osssrc_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
 }
 
 static const GstEventMask *
-gst_osssrc_get_event_masks (GstPad * pad)
+gst_oss_src_get_event_masks (GstPad * pad)
 {
-  static const GstEventMask gst_osssrc_src_event_masks[] = {
+  static const GstEventMask gst_oss_src_src_event_masks[] = {
     {GST_EVENT_EOS, 0},
     {GST_EVENT_SIZE, 0},
     {0,}
   };
 
-  return gst_osssrc_src_event_masks;
+  return gst_oss_src_src_event_masks;
 }
 
 static gboolean
-gst_osssrc_src_event (GstPad * pad, GstEvent * event)
+gst_oss_src_src_event (GstPad * pad, GstEvent * event)
 {
   GstOssSrc *osssrc;
   gboolean retval = FALSE;
@@ -556,15 +556,15 @@ gst_osssrc_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_osssrc_send_event (GstElement * element, GstEvent * event)
+gst_oss_src_send_event (GstElement * element, GstEvent * event)
 {
   GstOssSrc *osssrc = GST_OSSSRC (element);
 
-  return gst_osssrc_src_event (osssrc->srcpad, event);
+  return gst_oss_src_src_event (osssrc->srcpad, event);
 }
 
 static const GstQueryType *
-gst_osssrc_get_query_types (GstPad * pad)
+gst_oss_src_get_query_types (GstPad * pad)
 {
   static const GstQueryType query_types[] = {
     GST_QUERY_POSITION,
@@ -575,7 +575,7 @@ gst_osssrc_get_query_types (GstPad * pad)
 }
 
 static gboolean
-gst_osssrc_src_query (GstPad * pad, GstQueryType type, GstFormat * format,
+gst_oss_src_src_query (GstPad * pad, GstQueryType type, GstFormat * format,
     gint64 * value)
 {
   gboolean res = FALSE;

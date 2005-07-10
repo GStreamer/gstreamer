@@ -32,7 +32,7 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_OSSSINK          (gst_osssink_get_type())
+#define GST_TYPE_OSSSINK          (gst_oss_sink_get_type())
 #define GST_OSSSINK(obj)          (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OSSSINK,GstOssSink))
 #define GST_OSSSINK_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OSSSINK,GstOssSinkClass))
 #define GST_IS_OSSSINK(obj)       (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OSSSINK))
@@ -54,7 +54,7 @@ struct _GstOssSinkClass {
   GstAudioSinkClass parent_class;
 };
 
-GType gst_osssink_get_type(void);
+GType gst_oss_sink_get_type(void);
 
 G_END_DECLS
 
