@@ -1,3 +1,109 @@
+2005-07-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  use overridable ERROR_CFLAGS
+	* docs/libs/gst-plugins-base-libs.types:
+	* docs/libs/tmpl/gstringbuffer.sgml:
+	* ext/alsa/gstalsasink.c: (gst_alsasink_get_type),
+	(gst_alsasink_class_init):
+	* ext/alsa/gstalsasrc.c: (gst_alsasrc_get_type),
+	(gst_alsasrc_class_init):
+	* gst-libs/gst/audio/audio.h:
+	* gst-libs/gst/audio/gstaudioclock.h:
+	* gst-libs/gst/audio/gstaudiofilter.c: (gst_audio_filter_get_type),
+	(gst_audio_filter_base_init), (gst_audio_filter_class_init),
+	(gst_audio_filter_link), (gst_audio_filter_init),
+	(gst_audio_filter_chain), (gst_audio_filter_set_property),
+	(gst_audio_filter_get_property),
+	(gst_audio_filter_class_add_pad_templates):
+	* gst-libs/gst/audio/gstaudiofilter.h:
+	* gst-libs/gst/audio/gstaudiofiltertemplate.c:
+	(gst_audio_filter_template_get_type),
+	(gst_audio_filter_template_base_init),
+	(gst_audio_filter_template_class_init),
+	(gst_audio_filter_template_init),
+	(gst_audio_filter_template_set_property),
+	(gst_audio_filter_template_get_property), (plugin_init),
+	(gst_audio_filter_template_setup),
+	(gst_audio_filter_template_filter),
+	(gst_audio_filter_template_filter_inplace):
+	* gst-libs/gst/audio/gstaudiosink.c:
+	(gst_audioringbuffer_get_type), (gst_audioringbuffer_class_init),
+	(audioringbuffer_thread_func), (gst_audioringbuffer_acquire),
+	(gst_audioringbuffer_release), (gst_audioringbuffer_start),
+	(gst_audioringbuffer_stop), (gst_audioringbuffer_delay),
+	(gst_audio_sink_base_init), (gst_audio_sink_class_init),
+	(gst_audio_sink_init), (gst_audio_sink_create_ringbuffer):
+	* gst-libs/gst/audio/gstaudiosink.h:
+	* gst-libs/gst/audio/gstaudiosrc.c: (gst_audioringbuffer_get_type),
+	(gst_audioringbuffer_class_init), (audioringbuffer_thread_func),
+	(gst_audioringbuffer_acquire), (gst_audioringbuffer_release),
+	(gst_audioringbuffer_start), (gst_audioringbuffer_stop),
+	(gst_audioringbuffer_delay), (gst_audio_src_base_init),
+	(gst_audio_src_class_init), (gst_audio_src_init),
+	(gst_audio_src_create_ringbuffer):
+	* gst-libs/gst/audio/gstaudiosrc.h:
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_base_init), (gst_base_audio_sink_class_init),
+	(gst_base_audio_sink_init), (gst_base_audio_sink_dispose),
+	(gst_base_audio_sink_get_clock), (gst_base_audio_sink_get_time),
+	(gst_base_audio_sink_set_property),
+	(gst_base_audio_sink_get_property), (gst_base_audio_sink_setcaps),
+	(gst_base_audio_sink_get_times), (gst_base_audio_sink_event),
+	(gst_base_audio_sink_preroll), (gst_base_audio_sink_render),
+	(gst_base_audio_sink_create_ringbuffer),
+	(gst_base_audio_sink_callback), (gst_base_audio_sink_change_state):
+	* gst-libs/gst/audio/gstbaseaudiosink.h:
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	(gst_base_audio_src_base_init), (gst_base_audio_src_class_init),
+	(gst_base_audio_src_init), (gst_base_audio_src_get_clock),
+	(gst_base_audio_src_get_time), (gst_base_audio_src_set_property),
+	(gst_base_audio_src_get_property), (gst_base_audio_src_fixate),
+	(gst_base_audio_src_setcaps), (gst_base_audio_src_get_times),
+	(gst_base_audio_src_event), (gst_base_audio_src_create),
+	(gst_base_audio_src_create_ringbuffer),
+	(gst_base_audio_src_callback), (gst_base_audio_src_change_state):
+	* gst-libs/gst/audio/gstbaseaudiosrc.h:
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_get_type),
+	(gst_ring_buffer_class_init), (gst_ring_buffer_init),
+	(gst_ring_buffer_dispose), (gst_ring_buffer_finalize),
+	(gst_ring_buffer_debug_spec_caps),
+	(gst_ring_buffer_debug_spec_buff), (gst_ring_buffer_parse_caps),
+	(gst_ring_buffer_set_callback), (gst_ring_buffer_acquire),
+	(gst_ring_buffer_release), (gst_ring_buffer_is_acquired),
+	(gst_ring_buffer_start), (gst_ring_buffer_pause),
+	(gst_ring_buffer_stop), (gst_ring_buffer_delay),
+	(gst_ring_buffer_samples_done), (gst_ring_buffer_set_sample),
+	(wait_segment), (gst_ring_buffer_commit), (gst_ring_buffer_read),
+	(gst_ring_buffer_prepare_read), (gst_ring_buffer_advance),
+	(gst_ring_buffer_clear):
+	* gst-libs/gst/audio/gstringbuffer.h:
+	* gst-libs/gst/video/gstvideosink.c: (gst_video_sink_init),
+	(gst_video_sink_class_init), (gst_video_sink_get_type):
+	* gst-libs/gst/video/videosink.h:
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_get_type),
+	(gst_multifdsink_class_init),
+	(gst_multifdsink_handle_client_write),
+	(gst_multifdsink_change_state):
+	* gst/tcp/gsttcpclientsink.c: (gst_tcpclientsink_class_init),
+	(gst_tcpclientsink_setcaps):
+	* sys/ximage/ximagesink.c: (gst_ximagesink_renegotiate_size),
+	(gst_ximagesink_getcaps), (gst_ximagesink_setcaps),
+	(gst_ximagesink_change_state), (gst_ximagesink_show_frame),
+	(gst_ximagesink_buffer_free), (gst_ximagesink_buffer_alloc),
+	(gst_ximagesink_send_pending_navigation),
+	(gst_ximagesink_set_xwindow_id), (gst_ximagesink_get_desired_size),
+	(gst_ximagesink_class_init), (gst_ximagesink_get_type):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_getcaps),
+	(gst_xvimagesink_setcaps), (gst_xvimagesink_change_state),
+	(gst_xvimagesink_show_frame), (gst_xvimagesink_buffer_alloc),
+	(gst_xvimagesink_send_pending_navigation),
+	(gst_xvimagesink_navigation_send_event),
+	(gst_xvimagesink_set_xwindow_id),
+	(gst_xvimagesink_get_desired_size), (gst_xvimagesink_class_init),
+	(gst_xvimagesink_get_type):
+	more macro splitting
+
 2005-07-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_dispose):

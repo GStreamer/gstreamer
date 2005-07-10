@@ -24,8 +24,8 @@
 
 #include "gstbaseaudiosink.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_baseaudiosink_debug);
-#define GST_CAT_DEFAULT gst_baseaudiosink_debug
+GST_DEBUG_CATEGORY_STATIC (gst_base_audio_sink_debug);
+#define GST_CAT_DEFAULT gst_base_audio_sink_debug
 
 /* BaseAudioSink signals and args */
 enum
@@ -44,43 +44,45 @@ enum
 };
 
 #define _do_init(bla) \
-    GST_DEBUG_CATEGORY_INIT (gst_baseaudiosink_debug, "baseaudiosink", 0, "baseaudiosink element");
+    GST_DEBUG_CATEGORY_INIT (gst_base_audio_sink_debug, "baseaudiosink", 0, "baseaudiosink element");
 
-GST_BOILERPLATE_FULL (GstBaseAudioSink, gst_baseaudiosink, GstBaseSink,
-    GST_TYPE_BASESINK, _do_init);
+GST_BOILERPLATE_FULL (GstBaseAudioSink, gst_base_audio_sink, GstBaseSink,
+    GST_TYPE_BASE_SINK, _do_init);
 
-static void gst_baseaudiosink_dispose (GObject * object);
+static void gst_base_audio_sink_dispose (GObject * object);
 
-static void gst_baseaudiosink_set_property (GObject * object, guint prop_id,
+static void gst_base_audio_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_baseaudiosink_get_property (GObject * object, guint prop_id,
+static void gst_base_audio_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn gst_baseaudiosink_change_state (GstElement *
+static GstElementStateReturn gst_base_audio_sink_change_state (GstElement *
     element);
 
-static GstClock *gst_baseaudiosink_get_clock (GstElement * elem);
-static GstClockTime gst_baseaudiosink_get_time (GstClock * clock,
+static GstClock *gst_base_audio_sink_get_clock (GstElement * elem);
+static GstClockTime gst_base_audio_sink_get_time (GstClock * clock,
     GstBaseAudioSink * sink);
 
-static GstFlowReturn gst_baseaudiosink_preroll (GstBaseSink * bsink,
+static GstFlowReturn gst_base_audio_sink_preroll (GstBaseSink * bsink,
     GstBuffer * buffer);
-static GstFlowReturn gst_baseaudiosink_render (GstBaseSink * bsink,
+static GstFlowReturn gst_base_audio_sink_render (GstBaseSink * bsink,
     GstBuffer * buffer);
-static gboolean gst_baseaudiosink_event (GstBaseSink * bsink, GstEvent * event);
-static void gst_baseaudiosink_get_times (GstBaseSink * bsink,
+static gboolean gst_base_audio_sink_event (GstBaseSink * bsink,
+    GstEvent * event);
+static void gst_base_audio_sink_get_times (GstBaseSink * bsink,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
-static gboolean gst_baseaudiosink_setcaps (GstBaseSink * bsink, GstCaps * caps);
+static gboolean gst_base_audio_sink_setcaps (GstBaseSink * bsink,
+    GstCaps * caps);
 
-//static guint gst_baseaudiosink_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_base_audio_sink_signals[LAST_SIGNAL] = { 0 };
 
 static void
-gst_baseaudiosink_base_init (gpointer g_class)
+gst_base_audio_sink_base_init (gpointer g_class)
 {
 }
 
 static void
-gst_baseaudiosink_class_init (GstBaseAudioSinkClass * klass)
+gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -91,10 +93,10 @@ gst_baseaudiosink_class_init (GstBaseAudioSinkClass * klass)
   gstbasesink_class = (GstBaseSinkClass *) klass;
 
   gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_baseaudiosink_set_property);
+      GST_DEBUG_FUNCPTR (gst_base_audio_sink_set_property);
   gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_baseaudiosink_get_property);
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_baseaudiosink_dispose);
+      GST_DEBUG_FUNCPTR (gst_base_audio_sink_get_property);
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_base_audio_sink_dispose);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER_TIME,
       g_param_spec_int64 ("buffer-time", "Buffer Time",
@@ -106,33 +108,34 @@ gst_baseaudiosink_class_init (GstBaseAudioSinkClass * klass)
           -1, G_MAXINT64, DEFAULT_LATENCY_TIME, G_PARAM_READWRITE));
 
   gstelement_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_baseaudiosink_change_state);
-  gstelement_class->get_clock = GST_DEBUG_FUNCPTR (gst_baseaudiosink_get_clock);
+      GST_DEBUG_FUNCPTR (gst_base_audio_sink_change_state);
+  gstelement_class->get_clock =
+      GST_DEBUG_FUNCPTR (gst_base_audio_sink_get_clock);
 
-  gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_baseaudiosink_event);
-  gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_baseaudiosink_preroll);
-  gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_baseaudiosink_render);
+  gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_base_audio_sink_event);
+  gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_base_audio_sink_preroll);
+  gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_base_audio_sink_render);
   gstbasesink_class->get_times =
-      GST_DEBUG_FUNCPTR (gst_baseaudiosink_get_times);
-  gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_baseaudiosink_setcaps);
+      GST_DEBUG_FUNCPTR (gst_base_audio_sink_get_times);
+  gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_base_audio_sink_setcaps);
 }
 
 static void
-gst_baseaudiosink_init (GstBaseAudioSink * baseaudiosink)
+gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink)
 {
   baseaudiosink->buffer_time = DEFAULT_BUFFER_TIME;
   baseaudiosink->latency_time = DEFAULT_LATENCY_TIME;
 
   baseaudiosink->clock = gst_audio_clock_new ("clock",
-      (GstAudioClockGetTimeFunc) gst_baseaudiosink_get_time, baseaudiosink);
+      (GstAudioClockGetTimeFunc) gst_base_audio_sink_get_time, baseaudiosink);
 }
 
 static void
-gst_baseaudiosink_dispose (GObject * object)
+gst_base_audio_sink_dispose (GObject * object)
 {
   GstBaseAudioSink *sink;
 
-  sink = GST_BASEAUDIOSINK (object);
+  sink = GST_BASE_AUDIO_SINK (object);
 
   if (sink->clock)
     gst_object_unref (sink->clock);
@@ -142,17 +145,17 @@ gst_baseaudiosink_dispose (GObject * object)
 }
 
 static GstClock *
-gst_baseaudiosink_get_clock (GstElement * elem)
+gst_base_audio_sink_get_clock (GstElement * elem)
 {
   GstBaseAudioSink *sink;
 
-  sink = GST_BASEAUDIOSINK (elem);
+  sink = GST_BASE_AUDIO_SINK (elem);
 
   return GST_CLOCK (gst_object_ref (sink->clock));
 }
 
 static GstClockTime
-gst_baseaudiosink_get_time (GstClock * clock, GstBaseAudioSink * sink)
+gst_base_audio_sink_get_time (GstClock * clock, GstBaseAudioSink * sink)
 {
   guint64 samples;
   GstClockTime result;
@@ -160,7 +163,7 @@ gst_baseaudiosink_get_time (GstClock * clock, GstBaseAudioSink * sink)
   if (sink->ringbuffer == NULL || sink->ringbuffer->spec.rate == 0)
     return 0;
 
-  samples = gst_ringbuffer_samples_done (sink->ringbuffer);
+  samples = gst_ring_buffer_samples_done (sink->ringbuffer);
 
   result = samples * GST_SECOND / sink->ringbuffer->spec.rate;
   result += GST_ELEMENT (sink)->base_time;
@@ -169,12 +172,12 @@ gst_baseaudiosink_get_time (GstClock * clock, GstBaseAudioSink * sink)
 }
 
 static void
-gst_baseaudiosink_set_property (GObject * object, guint prop_id,
+gst_base_audio_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstBaseAudioSink *sink;
 
-  sink = GST_BASEAUDIOSINK (object);
+  sink = GST_BASE_AUDIO_SINK (object);
 
   switch (prop_id) {
     case PROP_BUFFER_TIME:
@@ -190,12 +193,12 @@ gst_baseaudiosink_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_baseaudiosink_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
+gst_base_audio_sink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
 {
   GstBaseAudioSink *sink;
 
-  sink = GST_BASEAUDIOSINK (object);
+  sink = GST_BASE_AUDIO_SINK (object);
 
   switch (prop_id) {
     case PROP_BUFFER_TIME:
@@ -211,9 +214,9 @@ gst_baseaudiosink_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static gboolean
-gst_baseaudiosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
+gst_base_audio_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 {
-  GstBaseAudioSink *sink = GST_BASEAUDIOSINK (bsink);
+  GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (bsink);
   GstRingBufferSpec *spec;
 
   spec = &sink->ringbuffer->spec;
@@ -221,7 +224,7 @@ gst_baseaudiosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GST_DEBUG ("release old ringbuffer");
 
   /* release old ringbuffer */
-  gst_ringbuffer_release (sink->ringbuffer);
+  gst_ring_buffer_release (sink->ringbuffer);
 
   GST_DEBUG ("parse caps");
 
@@ -229,14 +232,14 @@ gst_baseaudiosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   spec->latency_time = sink->latency_time;
 
   /* parse new caps */
-  if (!gst_ringbuffer_parse_caps (spec, caps))
+  if (!gst_ring_buffer_parse_caps (spec, caps))
     goto parse_error;
 
-  gst_ringbuffer_debug_spec_buff (spec);
+  gst_ring_buffer_debug_spec_buff (spec);
 
   GST_DEBUG ("acquire new ringbuffer");
 
-  if (!gst_ringbuffer_acquire (sink->ringbuffer, spec))
+  if (!gst_ring_buffer_acquire (sink->ringbuffer, spec))
     goto acquire_error;
 
   /* calculate actual latency and buffer times */
@@ -246,7 +249,7 @@ gst_baseaudiosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
       spec->segtotal * spec->segsize * GST_MSECOND / (spec->rate *
       spec->bytes_per_sample);
 
-  gst_ringbuffer_debug_spec_buff (spec);
+  gst_ring_buffer_debug_spec_buff (spec);
 
   return TRUE;
 
@@ -264,7 +267,7 @@ acquire_error:
 }
 
 static void
-gst_baseaudiosink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
+gst_base_audio_sink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end)
 {
   /* ne need to sync to a clock here, we schedule the samples based
@@ -275,15 +278,15 @@ gst_baseaudiosink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
 }
 
 static gboolean
-gst_baseaudiosink_event (GstBaseSink * bsink, GstEvent * event)
+gst_base_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
 {
-  GstBaseAudioSink *sink = GST_BASEAUDIOSINK (bsink);
+  GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (bsink);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH:
       if (GST_EVENT_FLUSH_DONE (event)) {
       } else {
-        gst_ringbuffer_pause (sink->ringbuffer);
+        gst_ring_buffer_pause (sink->ringbuffer);
       }
       break;
     case GST_EVENT_DISCONTINUOUS:
@@ -302,7 +305,7 @@ gst_baseaudiosink_event (GstBaseSink * bsink, GstEvent * event)
 
     have_value:
       GST_DEBUG ("discont now at %lld", sample);
-      gst_ringbuffer_set_sample (sink->ringbuffer, sample);
+      gst_ring_buffer_set_sample (sink->ringbuffer, sample);
       break;
     }
     default:
@@ -312,11 +315,11 @@ gst_baseaudiosink_event (GstBaseSink * bsink, GstEvent * event)
 }
 
 static GstFlowReturn
-gst_baseaudiosink_preroll (GstBaseSink * bsink, GstBuffer * buffer)
+gst_base_audio_sink_preroll (GstBaseSink * bsink, GstBuffer * buffer)
 {
-  GstBaseAudioSink *sink = GST_BASEAUDIOSINK (bsink);
+  GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (bsink);
 
-  if (!gst_ringbuffer_is_acquired (sink->ringbuffer))
+  if (!gst_ring_buffer_is_acquired (sink->ringbuffer))
     goto wrong_state;
 
   /* we don't really do anything when prerolling. We could make a
@@ -334,19 +337,19 @@ wrong_state:
 }
 
 static GstFlowReturn
-gst_baseaudiosink_render (GstBaseSink * bsink, GstBuffer * buf)
+gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
   guint64 offset;
-  GstBaseAudioSink *sink = GST_BASEAUDIOSINK (bsink);
+  GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (bsink);
 
   offset = GST_BUFFER_OFFSET (buf);
 
   GST_DEBUG ("in offset %llu, time %" GST_TIME_FORMAT, offset,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
-  if (!gst_ringbuffer_is_acquired (sink->ringbuffer))
+  if (!gst_ring_buffer_is_acquired (sink->ringbuffer))
     goto wrong_state;
 
-  gst_ringbuffer_commit (sink->ringbuffer, offset,
+  gst_ring_buffer_commit (sink->ringbuffer, offset,
       GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
   return GST_FLOW_OK;
@@ -361,12 +364,12 @@ wrong_state:
 }
 
 GstRingBuffer *
-gst_baseaudiosink_create_ringbuffer (GstBaseAudioSink * sink)
+gst_base_audio_sink_create_ringbuffer (GstBaseAudioSink * sink)
 {
   GstBaseAudioSinkClass *bclass;
   GstRingBuffer *buffer = NULL;
 
-  bclass = GST_BASEAUDIOSINK_GET_CLASS (sink);
+  bclass = GST_BASE_AUDIO_SINK_GET_CLASS (sink);
   if (bclass->create_ringbuffer)
     buffer = bclass->create_ringbuffer (sink);
 
@@ -378,26 +381,26 @@ gst_baseaudiosink_create_ringbuffer (GstBaseAudioSink * sink)
 }
 
 void
-gst_baseaudiosink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
+gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
     gpointer user_data)
 {
-  //GstBaseAudioSink *sink = GST_BASEAUDIOSINK (data);
+  //GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (data);
 }
 
 static GstElementStateReturn
-gst_baseaudiosink_change_state (GstElement * element)
+gst_base_audio_sink_change_state (GstElement * element)
 {
   GstElementStateReturn ret = GST_STATE_SUCCESS;
-  GstBaseAudioSink *sink = GST_BASEAUDIOSINK (element);
+  GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (element);
   GstElementState transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
     case GST_STATE_NULL_TO_READY:
       break;
     case GST_STATE_READY_TO_PAUSED:
-      sink->ringbuffer = gst_baseaudiosink_create_ringbuffer (sink);
-      gst_ringbuffer_set_callback (sink->ringbuffer, gst_baseaudiosink_callback,
-          sink);
+      sink->ringbuffer = gst_base_audio_sink_create_ringbuffer (sink);
+      gst_ring_buffer_set_callback (sink->ringbuffer,
+          gst_base_audio_sink_callback, sink);
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
@@ -409,14 +412,14 @@ gst_baseaudiosink_change_state (GstElement * element)
 
   switch (transition) {
     case GST_STATE_PLAYING_TO_PAUSED:
-      gst_ringbuffer_pause (sink->ringbuffer);
+      gst_ring_buffer_pause (sink->ringbuffer);
       break;
     case GST_STATE_PAUSED_TO_READY:
-      gst_ringbuffer_stop (sink->ringbuffer);
-      gst_ringbuffer_release (sink->ringbuffer);
+      gst_ring_buffer_stop (sink->ringbuffer);
+      gst_ring_buffer_release (sink->ringbuffer);
       gst_object_unref (sink->ringbuffer);
       sink->ringbuffer = NULL;
-      gst_pad_set_caps (GST_BASESINK_PAD (sink), NULL);
+      gst_pad_set_caps (GST_BASE_SINK_PAD (sink), NULL);
       break;
     case GST_STATE_READY_TO_NULL:
       break;

@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2005 Wim Taymans <wim@fluendo.com>
  *
- * gstaudiosrc.h: 
+ * gstaudiosrc.h:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -35,26 +35,26 @@
  * base class.
  */
 
-#ifndef __GST_AUDIOSRC_H__
-#define __GST_AUDIOSRC_H__
+#ifndef __GST_AUDIO_SRC_H__
+#define __GST_AUDIO_SRC_H__
 
 #include <gst/gst.h>
 #include <gst/audio/gstbaseaudiosrc.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_AUDIOSRC  	 	(gst_audiosrc_get_type())
-#define GST_AUDIOSRC(obj) 	 	(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIOSRC,GstAudioSrc))
-#define GST_AUDIOSRC_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIOSRC,GstAudioSrcClass))
-#define GST_AUDIOSRC_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_AUDIOSRC,GstAudioSrcClass))
-#define GST_IS_AUDIOSRC(obj)  	 	(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIOSRC))
-#define GST_IS_AUDIOSRC_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIOSRC))
+#define GST_TYPE_AUDIO_SRC		(gst_audio_src_get_type())
+#define GST_AUDIO_SRC(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_SRC,GstAudioSrc))
+#define GST_AUDIO_SRC_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_SRC,GstAudioSrcClass))
+#define GST_AUDIO_SRC_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_AUDIO_SRC,GstAudioSrcClass))
+#define GST_IS_AUDIO_SRC(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_SRC))
+#define GST_IS_AUDIO_SRC_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_SRC))
 
 typedef struct _GstAudioSrc GstAudioSrc;
 typedef struct _GstAudioSrcClass GstAudioSrcClass;
 
 struct _GstAudioSrc {
-  GstBaseAudioSrc 	 element;
+  GstBaseAudioSrc	 element;
 
   /*< private >*/ /* with LOCK */
   GThread   *thread;
@@ -77,8 +77,8 @@ struct _GstAudioSrcClass {
   void     (*reset)  (GstAudioSrc *src);
 };
 
-GType gst_audiosrc_get_type(void);
+GType gst_audio_src_get_type(void);
 
 G_END_DECLS
 
-#endif /* __GST_AUDIOSRC_H__ */
+#endif /* __GST_AUDIO_SRC_H__ */

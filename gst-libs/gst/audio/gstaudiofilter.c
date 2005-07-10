@@ -42,36 +42,36 @@ enum
       /* FILL ME */
 };
 
-static void gst_audiofilter_base_init (gpointer g_class);
-static void gst_audiofilter_class_init (gpointer g_class, gpointer class_data);
-static void gst_audiofilter_init (GTypeInstance * instance, gpointer g_class);
+static void gst_audio_filter_base_init (gpointer g_class);
+static void gst_audio_filter_class_init (gpointer g_class, gpointer class_data);
+static void gst_audio_filter_init (GTypeInstance * instance, gpointer g_class);
 
-static void gst_audiofilter_set_property (GObject * object, guint prop_id,
+static void gst_audio_filter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_audiofilter_get_property (GObject * object, guint prop_id,
+static void gst_audio_filter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_audiofilter_chain (GstPad * pad, GstBuffer * buffer);
-GstCaps *gst_audiofilter_class_get_capslist (GstAudiofilterClass * klass);
+static GstFlowReturn gst_audio_filter_chain (GstPad * pad, GstBuffer * buffer);
+GstCaps *gst_audio_filter_class_get_capslist (GstAudiofilterClass * klass);
 
 static GstElementClass *parent_class = NULL;
 
 GType
-gst_audiofilter_get_type (void)
+gst_audio_filter_get_type (void)
 {
   static GType audiofilter_type = 0;
 
   if (!audiofilter_type) {
     static const GTypeInfo audiofilter_info = {
       sizeof (GstAudiofilterClass),
-      gst_audiofilter_base_init,
+      gst_audio_filter_base_init,
       NULL,
-      gst_audiofilter_class_init,
+      gst_audio_filter_class_init,
       NULL,
       NULL,
       sizeof (GstAudiofilter),
       0,
-      gst_audiofilter_init,
+      gst_audio_filter_init,
     };
 
     audiofilter_type = g_type_register_static (GST_TYPE_ELEMENT,
@@ -81,7 +81,7 @@ gst_audiofilter_get_type (void)
 }
 
 static void
-gst_audiofilter_base_init (gpointer g_class)
+gst_audio_filter_base_init (gpointer g_class)
 {
   static GstElementDetails audiofilter_details = {
     "Audio filter base class",
@@ -96,7 +96,7 @@ gst_audiofilter_base_init (gpointer g_class)
 }
 
 static void
-gst_audiofilter_class_init (gpointer g_class, gpointer class_data)
+gst_audio_filter_class_init (gpointer g_class, gpointer class_data)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -108,12 +108,12 @@ gst_audiofilter_class_init (gpointer g_class, gpointer class_data)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gobject_class->set_property = gst_audiofilter_set_property;
-  gobject_class->get_property = gst_audiofilter_get_property;
+  gobject_class->set_property = gst_audio_filter_set_property;
+  gobject_class->get_property = gst_audio_filter_get_property;
 }
 
 static GstPadLinkReturn
-gst_audiofilter_link (GstPad * pad, GstPad * peer)
+gst_audio_filter_link (GstPad * pad, GstPad * peer)
 {
   GstAudiofilter *audiofilter;
 
@@ -122,9 +122,9 @@ gst_audiofilter_link (GstPad * pad, GstPad * peer)
   //GstStructure *structure;
   GstAudiofilterClass *audiofilter_class;
 
-  GST_DEBUG ("gst_audiofilter_link");
-  audiofilter = GST_AUDIOFILTER (gst_pad_get_parent (pad));
-  audiofilter_class = GST_AUDIOFILTER_CLASS (G_OBJECT_GET_CLASS (audiofilter));
+  GST_DEBUG ("gst_audio_filter_link");
+  audiofilter = GST_AUDIO_FILTER (gst_pad_get_parent (pad));
+  audiofilter_class = GST_AUDIO_FILTER_CLASS (G_OBJECT_GET_CLASS (audiofilter));
 
 #if 0
   ret = GST_PAD_LINK_DELAYED;   /* intialise with dummy value */
@@ -166,20 +166,20 @@ gst_audiofilter_link (GstPad * pad, GstPad * peer)
 }
 
 static void
-gst_audiofilter_init (GTypeInstance * instance, gpointer g_class)
+gst_audio_filter_init (GTypeInstance * instance, gpointer g_class)
 {
-  GstAudiofilter *audiofilter = GST_AUDIOFILTER (instance);
+  GstAudiofilter *audiofilter = GST_AUDIO_FILTER (instance);
   GstPadTemplate *pad_template;
 
-  GST_DEBUG ("gst_audiofilter_init");
+  GST_DEBUG ("gst_audio_filter_init");
 
   pad_template =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "sink");
   g_return_if_fail (pad_template != NULL);
   audiofilter->sinkpad = gst_pad_new_from_template (pad_template, "sink");
   gst_element_add_pad (GST_ELEMENT (audiofilter), audiofilter->sinkpad);
-  gst_pad_set_chain_function (audiofilter->sinkpad, gst_audiofilter_chain);
-  gst_pad_set_link_function (audiofilter->sinkpad, gst_audiofilter_link);
+  gst_pad_set_chain_function (audiofilter->sinkpad, gst_audio_filter_chain);
+  gst_pad_set_link_function (audiofilter->sinkpad, gst_audio_filter_link);
   //gst_pad_set_getcaps_function (audiofilter->sinkpad, gst_pad_proxy_getcaps);
 
   pad_template =
@@ -187,31 +187,31 @@ gst_audiofilter_init (GTypeInstance * instance, gpointer g_class)
   g_return_if_fail (pad_template != NULL);
   audiofilter->srcpad = gst_pad_new_from_template (pad_template, "src");
   gst_element_add_pad (GST_ELEMENT (audiofilter), audiofilter->srcpad);
-  gst_pad_set_link_function (audiofilter->srcpad, gst_audiofilter_link);
+  gst_pad_set_link_function (audiofilter->srcpad, gst_audio_filter_link);
   //gst_pad_set_getcaps_function (audiofilter->srcpad, gst_pad_proxy_getcaps);
 
   audiofilter->inited = FALSE;
 }
 
 static GstFlowReturn
-gst_audiofilter_chain (GstPad * pad, GstBuffer * buffer)
+gst_audio_filter_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstBuffer *inbuf = GST_BUFFER (buffer);
   GstAudiofilter *audiofilter;
   GstBuffer *outbuf;
   GstAudiofilterClass *audiofilter_class;
 
-  GST_DEBUG ("gst_audiofilter_chain");
+  GST_DEBUG ("gst_audio_filter_chain");
 
   g_return_val_if_fail (pad != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (inbuf != NULL, GST_FLOW_ERROR);
 
-  audiofilter = GST_AUDIOFILTER (gst_pad_get_parent (pad));
+  audiofilter = GST_AUDIO_FILTER (gst_pad_get_parent (pad));
   //g_return_if_fail (audiofilter->inited);
-  audiofilter_class = GST_AUDIOFILTER_CLASS (G_OBJECT_GET_CLASS (audiofilter));
+  audiofilter_class = GST_AUDIO_FILTER_CLASS (G_OBJECT_GET_CLASS (audiofilter));
 
-  GST_DEBUG ("gst_audiofilter_chain: got buffer of %d bytes in '%s'",
+  GST_DEBUG ("gst_audio_filter_chain: got buffer of %d bytes in '%s'",
       GST_BUFFER_SIZE (inbuf), GST_OBJECT_NAME (audiofilter));
 
   if (audiofilter->passthru) {
@@ -255,15 +255,15 @@ gst_audiofilter_chain (GstPad * pad, GstBuffer * buffer)
 }
 
 static void
-gst_audiofilter_set_property (GObject * object, guint prop_id,
+gst_audio_filter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstAudiofilter *src;
 
-  g_return_if_fail (GST_IS_AUDIOFILTER (object));
-  src = GST_AUDIOFILTER (object);
+  g_return_if_fail (GST_IS_AUDIO_FILTER (object));
+  src = GST_AUDIO_FILTER (object);
 
-  GST_DEBUG ("gst_audiofilter_set_property");
+  GST_DEBUG ("gst_audio_filter_set_property");
   switch (prop_id) {
     default:
       break;
@@ -271,13 +271,13 @@ gst_audiofilter_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_audiofilter_get_property (GObject * object, guint prop_id, GValue * value,
+gst_audio_filter_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
   GstAudiofilter *src;
 
-  g_return_if_fail (GST_IS_AUDIOFILTER (object));
-  src = GST_AUDIOFILTER (object);
+  g_return_if_fail (GST_IS_AUDIO_FILTER (object));
+  src = GST_AUDIO_FILTER (object);
 
   switch (prop_id) {
     default:
@@ -287,7 +287,7 @@ gst_audiofilter_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 void
-gst_audiofilter_class_add_pad_templates (GstAudiofilterClass *
+gst_audio_filter_class_add_pad_templates (GstAudiofilterClass *
     audiofilter_class, const GstCaps * caps)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (audiofilter_class);

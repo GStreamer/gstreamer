@@ -19,30 +19,30 @@
  * Boston, MA 02111-1307, USA.
  */
  
-#ifndef __GST_VIDEOSINK_H__
-#define __GST_VIDEOSINK_H__
+#ifndef __GST_VIDEO_SINK_H__
+#define __GST_VIDEO_SINK_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
 
 G_BEGIN_DECLS
   
-#define GST_TYPE_VIDEOSINK (gst_videosink_get_type())
-#define GST_VIDEOSINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VIDEOSINK, GstVideoSink))
-#define GST_VIDEOSINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VIDEOSINK, GstVideoSink))
-#define GST_IS_VIDEOSINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VIDEOSINK))
-#define GST_IS_VIDEOSINK_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VIDEOSINK))
-#define GST_VIDEOSINK_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VIDEOSINK, GstVideoSinkClass))
+#define GST_TYPE_VIDEO_SINK (gst_video_sink_get_type())
+#define GST_VIDEO_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VIDEO_SINK, GstVideoSink))
+#define GST_VIDEO_SINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VIDEO_SINK, GstVideoSink))
+#define GST_IS_VIDEO_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VIDEO_SINK))
+#define GST_IS_VIDEO_SINK_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VIDEO_SINK))
+#define GST_VIDEO_SINK_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VIDEO_SINK, GstVideoSinkClass))
   
-#define GST_VIDEOSINK_PAD GST_BASESINK_PAD
-#define GST_VIDEOSINK_CLOCK GST_BASESINK_CLOCK
-#define GST_VIDEOSINK_WIDTH(obj) (GST_VIDEOSINK (obj)->width)
-#define GST_VIDEOSINK_HEIGHT(obj) (GST_VIDEOSINK (obj)->height)
+#define GST_VIDEO_SINK_PAD GST_BASE_SINK_PAD
+#define GST_VIDEO_SINK_CLOCK GST_BASE_SINK_CLOCK
+#define GST_VIDEO_SINK_WIDTH(obj) (GST_VIDEO_SINK (obj)->width)
+#define GST_VIDEO_SINK_HEIGHT(obj) (GST_VIDEO_SINK (obj)->height)
   
 typedef struct _GstVideoSink GstVideoSink;
 typedef struct _GstVideoSinkClass GstVideoSinkClass;
@@ -61,8 +61,8 @@ struct _GstVideoSinkClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType gst_videosink_get_type (void);
+GType gst_video_sink_get_type (void);
 
 G_END_DECLS
 
-#endif  /* __GST_VIDEOSINK_H__ */
+#endif  /* __GST_VIDEO_SINK_H__ */

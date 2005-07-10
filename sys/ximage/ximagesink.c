@@ -627,8 +627,8 @@ gst_ximagesink_renegotiate_size (GstXImageSink * ximagesink)
      scaler to fit that new size only if size of the window differs from our
      size. */
 
-  if (GST_VIDEOSINK_WIDTH (ximagesink) != ximagesink->xwindow->width ||
-      GST_VIDEOSINK_HEIGHT (ximagesink) != ximagesink->xwindow->height) {
+  if (GST_VIDEO_SINK_WIDTH (ximagesink) != ximagesink->xwindow->width ||
+      GST_VIDEO_SINK_HEIGHT (ximagesink) != ximagesink->xwindow->height) {
     GstCaps *caps;
 
     caps = gst_caps_new_simple ("video/x-raw-rgb",
@@ -651,10 +651,10 @@ gst_ximagesink_renegotiate_size (GstXImageSink * ximagesink)
           nom, den, NULL);
     }
 
-    if (gst_pad_peer_accept_caps (GST_VIDEOSINK_PAD (ximagesink), caps)) {
+    if (gst_pad_peer_accept_caps (GST_VIDEO_SINK_PAD (ximagesink), caps)) {
       gst_caps_replace (&ximagesink->desired_caps, caps);
-      GST_VIDEOSINK_WIDTH (ximagesink) = ximagesink->xwindow->width;
-      GST_VIDEOSINK_HEIGHT (ximagesink) = ximagesink->xwindow->height;
+      GST_VIDEO_SINK_WIDTH (ximagesink) = ximagesink->xwindow->width;
+      GST_VIDEO_SINK_HEIGHT (ximagesink) = ximagesink->xwindow->height;
 
       if (ximagesink->ximage) {
         GST_DEBUG_OBJECT (ximagesink, "destroying and recreating our ximage");
@@ -1026,7 +1026,7 @@ gst_ximagesink_getcaps (GstBaseSink * bsink)
 
   /* get a template copy and add the pixel aspect ratio */
   caps =
-      gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASESINK (ximagesink)->
+      gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK (ximagesink)->
           sinkpad));
   for (i = 0; i < gst_caps_get_size (caps); ++i) {
     GstStructure *structure = gst_caps_get_structure (caps, i);
@@ -1061,11 +1061,11 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
       GST_PTR_FORMAT, ximagesink->xcontext->caps, caps);
 
   structure = gst_caps_get_structure (caps, 0);
-  if (GST_VIDEOSINK_WIDTH (ximagesink) == 0) {
+  if (GST_VIDEO_SINK_WIDTH (ximagesink) == 0) {
     ret &= gst_structure_get_int (structure, "width",
-        &(GST_VIDEOSINK_WIDTH (ximagesink)));
+        &(GST_VIDEO_SINK_WIDTH (ximagesink)));
     ret &= gst_structure_get_int (structure, "height",
-        &(GST_VIDEOSINK_HEIGHT (ximagesink)));
+        &(GST_VIDEO_SINK_HEIGHT (ximagesink)));
   }
   ret &= gst_structure_get_double (structure,
       "framerate", &ximagesink->framerate);
@@ -1081,23 +1081,24 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     goto wrong_aspect;
 
   /* Creating our window and our image */
-  g_assert (GST_VIDEOSINK_WIDTH (ximagesink) > 0);
-  g_assert (GST_VIDEOSINK_HEIGHT (ximagesink) > 0);
+  g_assert (GST_VIDEO_SINK_WIDTH (ximagesink) > 0);
+  g_assert (GST_VIDEO_SINK_HEIGHT (ximagesink) > 0);
   if (!ximagesink->xwindow) {
     ximagesink->xwindow = gst_ximagesink_xwindow_new (ximagesink,
-        GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
+        GST_VIDEO_SINK_WIDTH (ximagesink), GST_VIDEO_SINK_HEIGHT (ximagesink));
   } else {
     if (ximagesink->xwindow->internal) {
       gst_ximagesink_xwindow_resize (ximagesink, ximagesink->xwindow,
-          GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
+          GST_VIDEO_SINK_WIDTH (ximagesink),
+          GST_VIDEO_SINK_HEIGHT (ximagesink));
     }
   }
 
   /* If our ximage has changed we destroy it, next chain iteration will create
      a new one */
   if ((ximagesink->ximage) &&
-      ((GST_VIDEOSINK_WIDTH (ximagesink) != ximagesink->ximage->width) ||
-          (GST_VIDEOSINK_HEIGHT (ximagesink) != ximagesink->ximage->height))) {
+      ((GST_VIDEO_SINK_WIDTH (ximagesink) != ximagesink->ximage->width) ||
+          (GST_VIDEO_SINK_HEIGHT (ximagesink) != ximagesink->ximage->height))) {
     gst_ximagesink_ximage_destroy (ximagesink, ximagesink->ximage);
     ximagesink->ximage = NULL;
   }
@@ -1105,7 +1106,7 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   g_mutex_unlock (ximagesink->stream_lock);
 
   gst_x_overlay_got_desired_size (GST_X_OVERLAY (ximagesink),
-      GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
+      GST_VIDEO_SINK_WIDTH (ximagesink), GST_VIDEO_SINK_HEIGHT (ximagesink));
 
   return TRUE;
 
@@ -1152,8 +1153,8 @@ gst_ximagesink_change_state (GstElement * element)
         gst_ximagesink_xwindow_clear (ximagesink, ximagesink->xwindow);
       ximagesink->framerate = 0;
       ximagesink->sw_scaling_failed = FALSE;
-      GST_VIDEOSINK_WIDTH (ximagesink) = 0;
-      GST_VIDEOSINK_HEIGHT (ximagesink) = 0;
+      GST_VIDEO_SINK_WIDTH (ximagesink) = 0;
+      GST_VIDEO_SINK_HEIGHT (ximagesink) = 0;
       g_mutex_unlock (ximagesink->stream_lock);
       break;
     case GST_STATE_READY_TO_NULL:
@@ -1231,7 +1232,8 @@ gst_ximagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
     if (!ximagesink->ximage) {
       GST_DEBUG_OBJECT (ximagesink, "creating our ximage");
       ximagesink->ximage = gst_ximagesink_ximage_new (ximagesink,
-          GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
+          GST_VIDEO_SINK_WIDTH (ximagesink),
+          GST_VIDEO_SINK_HEIGHT (ximagesink));
       if (!ximagesink->ximage) {
         /* No image available. That's very bad ! */
         gst_buffer_unref (buf);
@@ -1271,8 +1273,8 @@ gst_ximagesink_buffer_free (GstBuffer * buffer)
   ximagesink = ximage->ximagesink;
 
   /* If our geometry changed we can't reuse that image. */
-  if ((ximage->width != GST_VIDEOSINK_WIDTH (ximagesink)) ||
-      (ximage->height != GST_VIDEOSINK_HEIGHT (ximagesink)))
+  if ((ximage->width != GST_VIDEO_SINK_WIDTH (ximagesink)) ||
+      (ximage->height != GST_VIDEO_SINK_HEIGHT (ximagesink)))
     gst_ximagesink_ximage_destroy (ximagesink, ximage);
   else {
     /* In that case we can reuse the image and add it to our image pool. */
@@ -1295,7 +1297,7 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 
   /* FIXME, we should just parse the caps, and provide a buffer in this format,
    * we should not just reconfigure ourselves yet */
-  if (caps && !GST_PAD_CAPS (GST_VIDEOSINK_PAD (ximagesink))) {
+  if (caps && !GST_PAD_CAPS (GST_VIDEO_SINK_PAD (ximagesink))) {
     if (!gst_ximagesink_setcaps (bsink, caps)) {
       return GST_FLOW_NOT_NEGOTIATED;
     }
@@ -1313,8 +1315,8 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
       ximagesink->image_pool = g_slist_delete_link (ximagesink->image_pool,
           ximagesink->image_pool);
 
-      if ((ximage->width != GST_VIDEOSINK_WIDTH (ximagesink)) ||
-          (ximage->height != GST_VIDEOSINK_HEIGHT (ximagesink))) {
+      if ((ximage->width != GST_VIDEO_SINK_WIDTH (ximagesink)) ||
+          (ximage->height != GST_VIDEO_SINK_HEIGHT (ximagesink))) {
         /* This image is unusable. Destroying... */
         gst_ximagesink_ximage_destroy (ximagesink, ximage);
         ximage = NULL;
@@ -1337,8 +1339,8 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
       gst_structure_get_int (s, "width", &width);
       gst_structure_get_int (s, "height", &height);
     } else {
-      width = GST_VIDEOSINK_WIDTH (ximagesink);
-      height = GST_VIDEOSINK_HEIGHT (ximagesink);
+      width = GST_VIDEO_SINK_WIDTH (ximagesink);
+      height = GST_VIDEO_SINK_HEIGHT (ximagesink);
     }
 
     GST_DEBUG_OBJECT (ximagesink, "no usable image in pool, creating ximage");
@@ -1395,7 +1397,7 @@ gst_ximagesink_send_pending_navigation (GstXImageSink * ximagesink)
     if (event) {
       structure = event->event_data.structure.structure;
 
-      if (!GST_PAD_PEER (GST_VIDEOSINK_PAD (ximagesink))) {
+      if (!GST_PAD_PEER (GST_VIDEO_SINK_PAD (ximagesink))) {
         gst_event_unref (event);
         cur = g_slist_next (cur);
         continue;
@@ -1407,9 +1409,9 @@ gst_ximagesink_send_pending_navigation (GstXImageSink * ximagesink)
          to match the applied scaling. So here we just add the offset if the image
          is centered in the window.  */
 
-      x_offset = ximagesink->xwindow->width - GST_VIDEOSINK_WIDTH (ximagesink);
+      x_offset = ximagesink->xwindow->width - GST_VIDEO_SINK_WIDTH (ximagesink);
       y_offset =
-          ximagesink->xwindow->height - GST_VIDEOSINK_HEIGHT (ximagesink);
+          ximagesink->xwindow->height - GST_VIDEO_SINK_HEIGHT (ximagesink);
 
       if (gst_structure_get_double (structure, "pointer_x", &x)) {
         x -= x_offset / 2;
@@ -1420,7 +1422,7 @@ gst_ximagesink_send_pending_navigation (GstXImageSink * ximagesink)
         gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
       }
 
-      gst_pad_send_event (gst_pad_get_peer (GST_VIDEOSINK_PAD (ximagesink)),
+      gst_pad_send_event (gst_pad_get_peer (GST_VIDEO_SINK_PAD (ximagesink)),
           event);
     }
     cur = g_slist_next (cur);
@@ -1498,9 +1500,10 @@ gst_ximagesink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
   if (xwindow_id == 0) {
     /* If no width/height caps nego did not happen window will be created
        during caps nego then */
-    if (GST_VIDEOSINK_WIDTH (ximagesink) && GST_VIDEOSINK_HEIGHT (ximagesink)) {
+    if (GST_VIDEO_SINK_WIDTH (ximagesink) && GST_VIDEO_SINK_HEIGHT (ximagesink)) {
       xwindow = gst_ximagesink_xwindow_new (ximagesink,
-          GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
+          GST_VIDEO_SINK_WIDTH (ximagesink),
+          GST_VIDEO_SINK_HEIGHT (ximagesink));
     }
   } else {
     xwindow = g_new0 (GstXWindow, 1);
@@ -1524,9 +1527,9 @@ gst_ximagesink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
 #if 0
     /* If that new window geometry differs from our one we try to
        renegotiate caps */
-    if (gst_pad_is_negotiated (GST_VIDEOSINK_PAD (ximagesink)) &&
-        (xwindow->width != GST_VIDEOSINK_WIDTH (ximagesink) ||
-            xwindow->height != GST_VIDEOSINK_HEIGHT (ximagesink))) {
+    if (gst_pad_is_negotiated (GST_VIDEO_SINK_PAD (ximagesink)) &&
+        (xwindow->width != GST_VIDEO_SINK_WIDTH (ximagesink) ||
+            xwindow->height != GST_VIDEO_SINK_HEIGHT (ximagesink))) {
       GstPadLinkReturn r;
       GstCaps *caps;
 
@@ -1551,12 +1554,12 @@ gst_ximagesink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
         gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
             nom, den, NULL);
       }
-      r = gst_pad_try_set_caps (GST_VIDEOSINK_PAD (ximagesink), caps);
+      r = gst_pad_try_set_caps (GST_VIDEO_SINK_PAD (ximagesink), caps);
 
       /* If caps nego succeded updating our size */
       if ((r == GST_PAD_LINK_OK) || (r == GST_PAD_LINK_DONE)) {
-        GST_VIDEOSINK_WIDTH (ximagesink) = xwindow->width;
-        GST_VIDEOSINK_HEIGHT (ximagesink) = xwindow->height;
+        GST_VIDEO_SINK_WIDTH (ximagesink) = xwindow->width;
+        GST_VIDEO_SINK_HEIGHT (ximagesink) = xwindow->height;
       }
     }
 #endif
@@ -1574,8 +1577,8 @@ gst_ximagesink_get_desired_size (GstXOverlay * overlay,
 {
   GstXImageSink *ximagesink = GST_XIMAGESINK (overlay);
 
-  *width = GST_VIDEOSINK_WIDTH (ximagesink);
-  *height = GST_VIDEOSINK_HEIGHT (ximagesink);
+  *width = GST_VIDEO_SINK_WIDTH (ximagesink);
+  *height = GST_VIDEO_SINK_HEIGHT (ximagesink);
 }
 
 static void
@@ -1786,7 +1789,7 @@ gst_ximagesink_class_init (GstXImageSinkClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_VIDEOSINK);
+  parent_class = g_type_class_ref (GST_TYPE_VIDEO_SINK);
 
   gobject_class->finalize = gst_ximagesink_finalize;
   gobject_class->set_property = gst_ximagesink_set_property;
@@ -1858,7 +1861,7 @@ gst_ximagesink_get_type (void)
       NULL,
     };
 
-    ximagesink_type = g_type_register_static (GST_TYPE_VIDEOSINK,
+    ximagesink_type = g_type_register_static (GST_TYPE_VIDEO_SINK,
         "GstXImageSink", &ximagesink_info, 0);
 
     g_type_add_interface_static (ximagesink_type, GST_TYPE_IMPLEMENTS_INTERFACE,

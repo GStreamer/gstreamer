@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2005 Wim Taymans <wim@fluendo.com>
  *
- * gstaudiosink.h: 
+ * gstaudiosink.h:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -32,30 +32,30 @@
  * - reset: unblock a write to the device and reset.
  *
  * All scheduling of samples and timestamps is done in this
- * base class together with the GstBaseAudioSink using a 
+ * base class together with the GstBaseAudioSink using a
  * default implementation of a ringbuffer that uses threads.
  */
 
-#ifndef __GST_AUDIOSINK_H__
-#define __GST_AUDIOSINK_H__
+#ifndef __GST_AUDIO_SINK_H__
+#define __GST_AUDIO_SINK_H__
 
 #include <gst/gst.h>
-#include "gstbaseaudiosink.h"
+#include <gst/audio/gstbaseaudiosink.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_AUDIOSINK  	 	(gst_audiosink_get_type())
-#define GST_AUDIOSINK(obj) 	 	(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIOSINK,GstAudioSink))
-#define GST_AUDIOSINK_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIOSINK,GstAudioSinkClass))
-#define GST_AUDIOSINK_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_AUDIOSINK,GstAudioSinkClass))
-#define GST_IS_AUDIOSINK(obj)  	 	(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIOSINK))
-#define GST_IS_AUDIOSINK_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIOSINK))
+#define GST_TYPE_AUDIO_SINK		(gst_audio_sink_get_type())
+#define GST_AUDIO_SINK(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_SINK,GstAudioSink))
+#define GST_AUDIO_SINK_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_SINK,GstAudioSinkClass))
+#define GST_AUDIO_SINK_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_AUDIO_SINK,GstAudioSinkClass))
+#define GST_IS_AUDIO_SINK(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_SINK))
+#define GST_IS_AUDIO_SINK_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_SINK))
 
 typedef struct _GstAudioSink GstAudioSink;
 typedef struct _GstAudioSinkClass GstAudioSinkClass;
 
 struct _GstAudioSink {
-  GstBaseAudioSink 	 element;
+  GstBaseAudioSink	 element;
 
   /*< private >*/ /* with LOCK */
   GThread   *thread;
@@ -78,8 +78,8 @@ struct _GstAudioSinkClass {
   void     (*reset)  (GstAudioSink *sink);
 };
 
-GType gst_audiosink_get_type(void);
+GType gst_audio_sink_get_type(void);
 
 G_END_DECLS
 
-#endif /* __GST_AUDIOSINK_H__ */
+#endif /* __GST_AUDIO_SINK_H__ */

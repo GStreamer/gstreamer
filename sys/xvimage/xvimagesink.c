@@ -1289,7 +1289,7 @@ gst_xvimagesink_getcaps (GstBaseSink * bsink)
     return gst_caps_ref (xvimagesink->xcontext->caps);
 
   return
-      gst_caps_copy (gst_pad_get_pad_template_caps (GST_VIDEOSINK_PAD
+      gst_caps_copy (gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD
           (xvimagesink)));
 }
 
@@ -1374,31 +1374,32 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   /* check hd / den is an integer scale factor, and scale wd with the PAR */
   if (video_height % den == 0) {
     GST_DEBUG_OBJECT (xvimagesink, "keeping video height");
-    GST_VIDEOSINK_WIDTH (xvimagesink) = video_height * num / den;
-    GST_VIDEOSINK_HEIGHT (xvimagesink) = video_height;
+    GST_VIDEO_SINK_WIDTH (xvimagesink) = video_height * num / den;
+    GST_VIDEO_SINK_HEIGHT (xvimagesink) = video_height;
   } else if (video_width % num == 0) {
     GST_DEBUG_OBJECT (xvimagesink, "keeping video width");
-    GST_VIDEOSINK_WIDTH (xvimagesink) = video_width;
-    GST_VIDEOSINK_HEIGHT (xvimagesink) = video_width * den / num;
+    GST_VIDEO_SINK_WIDTH (xvimagesink) = video_width;
+    GST_VIDEO_SINK_HEIGHT (xvimagesink) = video_width * den / num;
   } else {
     GST_DEBUG_OBJECT (xvimagesink, "approximating while keeping video height");
-    GST_VIDEOSINK_WIDTH (xvimagesink) = video_height * num / den;
-    GST_VIDEOSINK_HEIGHT (xvimagesink) = video_height;
+    GST_VIDEO_SINK_WIDTH (xvimagesink) = video_height * num / den;
+    GST_VIDEO_SINK_HEIGHT (xvimagesink) = video_height;
   }
   GST_DEBUG_OBJECT (xvimagesink, "scaling to %dx%d",
-      GST_VIDEOSINK_WIDTH (xvimagesink), GST_VIDEOSINK_HEIGHT (xvimagesink));
+      GST_VIDEO_SINK_WIDTH (xvimagesink), GST_VIDEO_SINK_HEIGHT (xvimagesink));
 
   /* Creating our window and our image with the display size in pixels */
-  g_assert (GST_VIDEOSINK_WIDTH (xvimagesink) > 0);
-  g_assert (GST_VIDEOSINK_HEIGHT (xvimagesink) > 0);
+  g_assert (GST_VIDEO_SINK_WIDTH (xvimagesink) > 0);
+  g_assert (GST_VIDEO_SINK_HEIGHT (xvimagesink) > 0);
   if (!xvimagesink->xwindow)
     xvimagesink->xwindow = gst_xvimagesink_xwindow_new (xvimagesink,
-        GST_VIDEOSINK_WIDTH (xvimagesink), GST_VIDEOSINK_HEIGHT (xvimagesink));
+        GST_VIDEO_SINK_WIDTH (xvimagesink),
+        GST_VIDEO_SINK_HEIGHT (xvimagesink));
   else {
     if (xvimagesink->xwindow->internal)
       gst_xvimagesink_xwindow_resize (xvimagesink, xvimagesink->xwindow,
-          GST_VIDEOSINK_WIDTH (xvimagesink),
-          GST_VIDEOSINK_HEIGHT (xvimagesink));
+          GST_VIDEO_SINK_WIDTH (xvimagesink),
+          GST_VIDEO_SINK_HEIGHT (xvimagesink));
   }
 
   /* We renew our xvimage only if size or format changed;
@@ -1419,7 +1420,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   xvimagesink->xcontext->im_format = im_format;
 
   gst_x_overlay_got_desired_size (GST_X_OVERLAY (xvimagesink),
-      GST_VIDEOSINK_WIDTH (xvimagesink), GST_VIDEOSINK_HEIGHT (xvimagesink));
+      GST_VIDEO_SINK_WIDTH (xvimagesink), GST_VIDEO_SINK_HEIGHT (xvimagesink));
 
   return TRUE;
 }
@@ -1459,8 +1460,8 @@ gst_xvimagesink_change_state (GstElement * element)
       break;
     case GST_STATE_PAUSED_TO_READY:
       xvimagesink->framerate = 0;
-      GST_VIDEOSINK_WIDTH (xvimagesink) = 0;
-      GST_VIDEOSINK_HEIGHT (xvimagesink) = 0;
+      GST_VIDEO_SINK_WIDTH (xvimagesink) = 0;
+      GST_VIDEO_SINK_HEIGHT (xvimagesink) = 0;
       break;
     case GST_STATE_READY_TO_NULL:
       if (xvimagesink->xvimage) {
@@ -1539,7 +1540,8 @@ gst_xvimagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
     gst_xvimagesink_xvimage_put (xvimagesink, xvimagesink->xvimage);
   }
 
-  gst_xvimagesink_handle_xevents (xvimagesink, GST_VIDEOSINK_PAD (xvimagesink));
+  gst_xvimagesink_handle_xevents (xvimagesink,
+      GST_VIDEO_SINK_PAD (xvimagesink));
 
   return GST_FLOW_OK;
 
@@ -1575,7 +1577,7 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 
   /* FIXME, we should just parse the caps, and provide a buffer in this format,
    * we should not just reconfigure ourselves yet */
-  if (caps && caps != GST_PAD_CAPS (GST_VIDEOSINK_PAD (xvimagesink))) {
+  if (caps && caps != GST_PAD_CAPS (GST_VIDEO_SINK_PAD (xvimagesink))) {
     if (!gst_xvimagesink_setcaps (bsink, caps)) {
       return GST_FLOW_NOT_NEGOTIATED;
     }
@@ -1664,7 +1666,7 @@ gst_xvimagesink_send_pending_navigation (GstXvImageSink * xvimagesink)
     if (event) {
       structure = event->event_data.structure.structure;
 
-      if (!GST_PAD_PEER (GST_VIDEOSINK_PAD (xvimagesink))) {
+      if (!GST_PAD_PEER (GST_VIDEO_SINK_PAD (xvimagesink))) {
         gst_event_unref (event);
         cur = g_slist_next (cur);
         continue;
@@ -1682,7 +1684,7 @@ gst_xvimagesink_send_pending_navigation (GstXvImageSink * xvimagesink)
         gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
       }
 
-      gst_pad_send_event (gst_pad_get_peer (GST_VIDEOSINK_PAD (xvimagesink)),
+      gst_pad_send_event (gst_pad_get_peer (GST_VIDEO_SINK_PAD (xvimagesink)),
           event);
     }
     cur = g_slist_next (cur);
@@ -1705,17 +1707,17 @@ gst_xvimagesink_navigation_send_event (GstNavigation * navigation,
 
   /* Converting pointer coordinates to the non scaled geometry */
   if (gst_structure_get_double (structure, "pointer_x", &x)) {
-    x *= GST_VIDEOSINK_WIDTH (xvimagesink);
+    x *= GST_VIDEO_SINK_WIDTH (xvimagesink);
     x /= xvimagesink->xwindow->width;
     gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
   }
   if (gst_structure_get_double (structure, "pointer_y", &y)) {
-    y *= GST_VIDEOSINK_HEIGHT (xvimagesink);
+    y *= GST_VIDEO_SINK_HEIGHT (xvimagesink);
     y /= xvimagesink->xwindow->height;
     gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
   }
 
-  gst_pad_send_event (gst_pad_get_peer (GST_VIDEOSINK_PAD (xvimagesink)),
+  gst_pad_send_event (gst_pad_get_peer (GST_VIDEO_SINK_PAD (xvimagesink)),
       event);
 }
 
@@ -1765,10 +1767,12 @@ gst_xvimagesink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
   if (xwindow_id == 0) {
     /* If no width/height caps nego did not happen window will be created
        during caps nego then */
-    if (GST_VIDEOSINK_WIDTH (xvimagesink) && GST_VIDEOSINK_HEIGHT (xvimagesink)) {
-      xwindow = gst_xvimagesink_xwindow_new (xvimagesink,
-          GST_VIDEOSINK_WIDTH (xvimagesink),
-          GST_VIDEOSINK_HEIGHT (xvimagesink));
+    if (GST_VIDEO_SINK_WIDTH (xvimagesink)
+        && GST_VIDEO_SINK_HEIGHT (xvimagesink)) {
+      xwindow =
+          gst_xvimagesink_xwindow_new (xvimagesink,
+          GST_VIDEO_SINK_WIDTH (xvimagesink),
+          GST_VIDEO_SINK_HEIGHT (xvimagesink));
     }
   } else {
     xwindow = g_new0 (GstXWindow, 1);
@@ -1801,8 +1805,8 @@ gst_xvimagesink_get_desired_size (GstXOverlay * overlay,
 {
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (overlay);
 
-  *width = GST_VIDEOSINK_WIDTH (xvimagesink);
-  *height = GST_VIDEOSINK_HEIGHT (xvimagesink);
+  *width = GST_VIDEO_SINK_WIDTH (xvimagesink);
+  *height = GST_VIDEO_SINK_HEIGHT (xvimagesink);
 }
 
 static void
@@ -2102,7 +2106,7 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_VIDEOSINK);
+  parent_class = g_type_class_ref (GST_TYPE_VIDEO_SINK);
 
   gobject_class->set_property = gst_xvimagesink_set_property;
   gobject_class->get_property = gst_xvimagesink_get_property;
@@ -2196,7 +2200,7 @@ gst_xvimagesink_get_type (void)
       NULL,
     };
 
-    xvimagesink_type = g_type_register_static (GST_TYPE_VIDEOSINK,
+    xvimagesink_type = g_type_register_static (GST_TYPE_VIDEO_SINK,
         "GstXvImageSink", &xvimagesink_info, 0);
 
     g_type_add_interface_static (xvimagesink_type,

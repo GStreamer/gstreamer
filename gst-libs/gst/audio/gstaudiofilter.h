@@ -18,8 +18,8 @@
  */
 
 
-#ifndef __GST_AUDIOFILTER_H__
-#define __GST_AUDIOFILTER_H__
+#ifndef __GST_AUDIO_FILTER_H__
+#define __GST_AUDIO_FILTER_H__
 
 
 #include <gst/gst.h>
@@ -38,16 +38,16 @@ typedef void (*GstAudiofilterInplaceFilterFunc)(GstAudiofilter *filter,
 typedef void (*GstAudiofilterSetupFunc) (GstAudiofilter *filter);
 
 
-#define GST_TYPE_AUDIOFILTER \
-  (gst_audiofilter_get_type())
-#define GST_AUDIOFILTER(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIOFILTER,GstAudiofilter))
-#define GST_AUDIOFILTER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIOFILTER,GstAudiofilterClass))
-#define GST_IS_AUDIOFILTER(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIOFILTER))
-#define GST_IS_AUDIOFILTER_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIOFILTER))
+#define GST_TYPE_AUDIO_FILTER \
+  (gst_audio_filter_get_type())
+#define GST_AUDIO_FILTER(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_FILTER,GstAudiofilter))
+#define GST_AUDIO_FILTER_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_FILTER,GstAudiofilterClass))
+#define GST_IS_AUDIO_FILTER(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_FILTER))
+#define GST_IS_AUDIO_FILTER_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_FILTER))
 
 struct _GstAudiofilter {
   GstElement element;
@@ -77,11 +77,11 @@ struct _GstAudiofilterClass {
   GstAudiofilterFilterFunc filter;
 };
 
-GType gst_audiofilter_get_type(void);
+GType gst_audio_filter_get_type(void);
 
-void gst_audiofilter_class_add_pad_templates (GstAudiofilterClass *audiofilterclass, const GstCaps *caps);
+void gst_audio_filter_class_add_pad_templates (GstAudiofilterClass *audiofilterclass, const GstCaps *caps);
 
 G_END_DECLS
 
-#endif /* __GST_AUDIOFILTER_H__ */
+#endif /* __GST_AUDIO_FILTER_H__ */
 

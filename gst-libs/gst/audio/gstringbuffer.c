@@ -23,19 +23,19 @@
 
 #include "gstringbuffer.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_ringbuffer_debug);
-#define GST_CAT_DEFAULT gst_ringbuffer_debug
+GST_DEBUG_CATEGORY_STATIC (gst_ring_buffer_debug);
+#define GST_CAT_DEFAULT gst_ring_buffer_debug
 
-static void gst_ringbuffer_class_init (GstRingBufferClass * klass);
-static void gst_ringbuffer_init (GstRingBuffer * ringbuffer);
-static void gst_ringbuffer_dispose (GObject * object);
-static void gst_ringbuffer_finalize (GObject * object);
+static void gst_ring_buffer_class_init (GstRingBufferClass * klass);
+static void gst_ring_buffer_init (GstRingBuffer * ringbuffer);
+static void gst_ring_buffer_dispose (GObject * object);
+static void gst_ring_buffer_finalize (GObject * object);
 
 static GstObjectClass *parent_class = NULL;
 
 /* ringbuffer abstract base class */
 GType
-gst_ringbuffer_get_type (void)
+gst_ring_buffer_get_type (void)
 {
   static GType ringbuffer_type = 0;
 
@@ -44,26 +44,26 @@ gst_ringbuffer_get_type (void)
       sizeof (GstRingBufferClass),
       NULL,
       NULL,
-      (GClassInitFunc) gst_ringbuffer_class_init,
+      (GClassInitFunc) gst_ring_buffer_class_init,
       NULL,
       NULL,
       sizeof (GstRingBuffer),
       0,
-      (GInstanceInitFunc) gst_ringbuffer_init,
+      (GInstanceInitFunc) gst_ring_buffer_init,
       NULL
     };
 
     ringbuffer_type = g_type_register_static (GST_TYPE_OBJECT, "GstRingBuffer",
         &ringbuffer_info, G_TYPE_FLAG_ABSTRACT);
 
-    GST_DEBUG_CATEGORY_INIT (gst_ringbuffer_debug, "ringbuffer", 0,
+    GST_DEBUG_CATEGORY_INIT (gst_ring_buffer_debug, "ringbuffer", 0,
         "ringbuffer class");
   }
   return ringbuffer_type;
 }
 
 static void
-gst_ringbuffer_class_init (GstRingBufferClass * klass)
+gst_ring_buffer_class_init (GstRingBufferClass * klass)
 {
   GObjectClass *gobject_class;
   GstObjectClass *gstobject_class;
@@ -73,32 +73,32 @@ gst_ringbuffer_class_init (GstRingBufferClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_OBJECT);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_ringbuffer_dispose);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_ringbuffer_finalize);
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_ring_buffer_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_ring_buffer_finalize);
 }
 
 static void
-gst_ringbuffer_init (GstRingBuffer * ringbuffer)
+gst_ring_buffer_init (GstRingBuffer * ringbuffer)
 {
   ringbuffer->acquired = FALSE;
-  ringbuffer->state = GST_RINGBUFFER_STATE_STOPPED;
+  ringbuffer->state = GST_RING_BUFFER_STATE_STOPPED;
   ringbuffer->cond = g_cond_new ();
   ringbuffer->waiting = 0;
   ringbuffer->empty_seg = NULL;
 }
 
 static void
-gst_ringbuffer_dispose (GObject * object)
+gst_ring_buffer_dispose (GObject * object)
 {
-  GstRingBuffer *ringbuffer = GST_RINGBUFFER (object);
+  GstRingBuffer *ringbuffer = GST_RING_BUFFER (object);
 
   G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (ringbuffer));
 }
 
 static void
-gst_ringbuffer_finalize (GObject * object)
+gst_ring_buffer_finalize (GObject * object)
 {
-  GstRingBuffer *ringbuffer = GST_RINGBUFFER (object);
+  GstRingBuffer *ringbuffer = GST_RING_BUFFER (object);
 
   g_cond_free (ringbuffer->cond);
   g_free (ringbuffer->empty_seg);
@@ -180,7 +180,7 @@ build_linear_format (int depth, int width, int unsignd, int big_endian)
 }
 
 void
-gst_ringbuffer_debug_spec_caps (GstRingBufferSpec * spec)
+gst_ring_buffer_debug_spec_caps (GstRingBufferSpec * spec)
 {
   GST_DEBUG ("spec caps: %p %" GST_PTR_FORMAT, spec->caps, spec->caps);
   GST_DEBUG ("parsed caps: type:         %d", spec->type);
@@ -195,7 +195,7 @@ gst_ringbuffer_debug_spec_caps (GstRingBufferSpec * spec)
 }
 
 void
-gst_ringbuffer_debug_spec_buff (GstRingBufferSpec * spec)
+gst_ring_buffer_debug_spec_buff (GstRingBufferSpec * spec)
 {
   GST_DEBUG ("acquire ringbuffer: buffer time: %" G_GINT64_FORMAT " usec",
       spec->buffer_time);
@@ -210,7 +210,7 @@ gst_ringbuffer_debug_spec_buff (GstRingBufferSpec * spec)
 }
 
 gboolean
-gst_ringbuffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
+gst_ring_buffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
 {
   const gchar *mimetype;
   GstStructure *structure;
@@ -291,8 +291,8 @@ gst_ringbuffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
       spec->rate * spec->bytes_per_sample * spec->latency_time / GST_MSECOND;
   spec->segtotal = spec->buffer_time / spec->latency_time;
 
-  gst_ringbuffer_debug_spec_caps (spec);
-  gst_ringbuffer_debug_spec_buff (spec);
+  gst_ring_buffer_debug_spec_caps (spec);
+  gst_ring_buffer_debug_spec_buff (spec);
 
   return TRUE;
 
@@ -305,7 +305,7 @@ parse_error:
 }
 
 /**
- * gst_ringbuffer_set_callback:
+ * gst_ring_buffer_set_callback:
  * @buf: the #GstRingBuffer to set the callback on
  * @cb: the callback to set
  * @user_data: user data passed to the callback
@@ -316,7 +316,7 @@ parse_error:
  * MT safe.
  */
 void
-gst_ringbuffer_set_callback (GstRingBuffer * buf, GstRingBufferCallback cb,
+gst_ring_buffer_set_callback (GstRingBuffer * buf, GstRingBufferCallback cb,
     gpointer user_data)
 {
   g_return_if_fail (buf != NULL);
@@ -328,7 +328,7 @@ gst_ringbuffer_set_callback (GstRingBuffer * buf, GstRingBufferCallback cb,
 }
 
 /**
- * gst_ringbuffer_acquire:
+ * gst_ring_buffer_acquire:
  * @buf: the #GstRingBuffer to acquire
  * @spec: the specs of the buffer
  *
@@ -341,7 +341,7 @@ gst_ringbuffer_set_callback (GstRingBuffer * buf, GstRingBufferCallback cb,
  * MT safe.
  */
 gboolean
-gst_ringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
+gst_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 {
   gboolean res = FALSE;
   GstRingBufferClass *rclass;
@@ -355,7 +355,7 @@ gst_ringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   }
   buf->acquired = TRUE;
 
-  rclass = GST_RINGBUFFER_GET_CLASS (buf);
+  rclass = GST_RING_BUFFER_GET_CLASS (buf);
   if (rclass->acquire)
     res = rclass->acquire (buf, spec);
 
@@ -375,7 +375,7 @@ gst_ringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
         j = (j + 1) % buf->spec.bytes_per_sample;
       }
       /* set sample position to 0 */
-      gst_ringbuffer_set_sample (buf, 0);
+      gst_ring_buffer_set_sample (buf, 0);
     } else {
       g_warning
           ("invalid bytes_per_sample from acquire ringbuffer, fix the element");
@@ -390,7 +390,7 @@ done:
 }
 
 /**
- * gst_ringbuffer_release:
+ * gst_ring_buffer_release:
  * @buf: the #GstRingBuffer to release
  *
  * Free the resources of the ringbuffer.
@@ -400,14 +400,14 @@ done:
  * MT safe.
  */
 gboolean
-gst_ringbuffer_release (GstRingBuffer * buf)
+gst_ring_buffer_release (GstRingBuffer * buf)
 {
   gboolean res = FALSE;
   GstRingBufferClass *rclass;
 
   g_return_val_if_fail (buf != NULL, FALSE);
 
-  gst_ringbuffer_stop (buf);
+  gst_ring_buffer_stop (buf);
 
   GST_LOCK (buf);
   if (!buf->acquired) {
@@ -416,12 +416,12 @@ gst_ringbuffer_release (GstRingBuffer * buf)
   }
   buf->acquired = FALSE;
 
-  rclass = GST_RINGBUFFER_GET_CLASS (buf);
+  rclass = GST_RING_BUFFER_GET_CLASS (buf);
   if (rclass->release)
     res = rclass->release (buf);
 
   /* signal any waiters */
-  GST_RINGBUFFER_SIGNAL (buf);
+  GST_RING_BUFFER_SIGNAL (buf);
 
   if (!res) {
     buf->acquired = TRUE;
@@ -437,7 +437,7 @@ done:
 }
 
 /**
- * gst_ringbuffer_is_acquired:
+ * gst_ring_buffer_is_acquired:
  * @buf: the #GstRingBuffer to check
  *
  * Check if the ringbuffer is acquired and ready to use.
@@ -447,7 +447,7 @@ done:
  * MT safe.
  */
 gboolean
-gst_ringbuffer_is_acquired (GstRingBuffer * buf)
+gst_ring_buffer_is_acquired (GstRingBuffer * buf)
 {
   gboolean res;
 
@@ -462,7 +462,7 @@ gst_ringbuffer_is_acquired (GstRingBuffer * buf)
 
 
 /**
- * gst_ringbuffer_start:
+ * gst_ring_buffer_start:
  * @buf: the #GstRingBuffer to start
  *
  * Start processing samples from the ringbuffer.
@@ -472,7 +472,7 @@ gst_ringbuffer_is_acquired (GstRingBuffer * buf)
  * MT safe.
  */
 gboolean
-gst_ringbuffer_start (GstRingBuffer * buf)
+gst_ring_buffer_start (GstRingBuffer * buf)
 {
   gboolean res = FALSE;
   GstRingBufferClass *rclass;
@@ -483,12 +483,12 @@ gst_ringbuffer_start (GstRingBuffer * buf)
   GST_LOCK (buf);
   /* if stopped, set to started */
   res = g_atomic_int_compare_and_exchange (&buf->state,
-      GST_RINGBUFFER_STATE_STOPPED, GST_RINGBUFFER_STATE_STARTED);
+      GST_RING_BUFFER_STATE_STOPPED, GST_RING_BUFFER_STATE_STARTED);
 
   if (!res) {
     /* was not stopped, try from paused */
     res = g_atomic_int_compare_and_exchange (&buf->state,
-        GST_RINGBUFFER_STATE_PAUSED, GST_RINGBUFFER_STATE_STARTED);
+        GST_RING_BUFFER_STATE_PAUSED, GST_RING_BUFFER_STATE_STARTED);
     if (!res) {
       /* was not paused either, must be started then */
       res = TRUE;
@@ -497,7 +497,7 @@ gst_ringbuffer_start (GstRingBuffer * buf)
     resume = TRUE;
   }
 
-  rclass = GST_RINGBUFFER_GET_CLASS (buf);
+  rclass = GST_RING_BUFFER_GET_CLASS (buf);
   if (resume) {
     if (rclass->resume)
       res = rclass->resume (buf);
@@ -507,7 +507,7 @@ gst_ringbuffer_start (GstRingBuffer * buf)
   }
 
   if (!res) {
-    buf->state = GST_RINGBUFFER_STATE_PAUSED;
+    buf->state = GST_RING_BUFFER_STATE_PAUSED;
   }
 
 done:
@@ -517,7 +517,7 @@ done:
 }
 
 /**
- * gst_ringbuffer_pause:
+ * gst_ring_buffer_pause:
  * @buf: the #GstRingBuffer to pause
  *
  * Pause processing samples from the ringbuffer.
@@ -527,7 +527,7 @@ done:
  * MT safe.
  */
 gboolean
-gst_ringbuffer_pause (GstRingBuffer * buf)
+gst_ring_buffer_pause (GstRingBuffer * buf)
 {
   gboolean res = FALSE;
   GstRingBufferClass *rclass;
@@ -537,7 +537,7 @@ gst_ringbuffer_pause (GstRingBuffer * buf)
   GST_LOCK (buf);
   /* if started, set to paused */
   res = g_atomic_int_compare_and_exchange (&buf->state,
-      GST_RINGBUFFER_STATE_STARTED, GST_RINGBUFFER_STATE_PAUSED);
+      GST_RING_BUFFER_STATE_STARTED, GST_RING_BUFFER_STATE_PAUSED);
 
   if (!res) {
     /* was not started */
@@ -546,14 +546,14 @@ gst_ringbuffer_pause (GstRingBuffer * buf)
   }
 
   /* signal any waiters */
-  GST_RINGBUFFER_SIGNAL (buf);
+  GST_RING_BUFFER_SIGNAL (buf);
 
-  rclass = GST_RINGBUFFER_GET_CLASS (buf);
+  rclass = GST_RING_BUFFER_GET_CLASS (buf);
   if (rclass->pause)
     res = rclass->pause (buf);
 
   if (!res) {
-    buf->state = GST_RINGBUFFER_STATE_STARTED;
+    buf->state = GST_RING_BUFFER_STATE_STARTED;
   }
 done:
   GST_UNLOCK (buf);
@@ -562,7 +562,7 @@ done:
 }
 
 /**
- * gst_ringbuffer_stop:
+ * gst_ring_buffer_stop:
  * @buf: the #GstRingBuffer to stop
  *
  * Stop processing samples from the ringbuffer.
@@ -572,7 +572,7 @@ done:
  * MT safe.
  */
 gboolean
-gst_ringbuffer_stop (GstRingBuffer * buf)
+gst_ring_buffer_stop (GstRingBuffer * buf)
 {
   gboolean res = FALSE;
   GstRingBufferClass *rclass;
@@ -582,7 +582,7 @@ gst_ringbuffer_stop (GstRingBuffer * buf)
   GST_LOCK (buf);
   /* if started, set to stopped */
   res = g_atomic_int_compare_and_exchange (&buf->state,
-      GST_RINGBUFFER_STATE_STARTED, GST_RINGBUFFER_STATE_STOPPED);
+      GST_RING_BUFFER_STATE_STARTED, GST_RING_BUFFER_STATE_STOPPED);
 
   if (!res) {
     /* was not started, must be stopped then */
@@ -591,16 +591,16 @@ gst_ringbuffer_stop (GstRingBuffer * buf)
   }
 
   /* signal any waiters */
-  GST_RINGBUFFER_SIGNAL (buf);
+  GST_RING_BUFFER_SIGNAL (buf);
 
-  rclass = GST_RINGBUFFER_GET_CLASS (buf);
+  rclass = GST_RING_BUFFER_GET_CLASS (buf);
   if (rclass->stop)
     res = rclass->stop (buf);
 
   if (!res) {
-    buf->state = GST_RINGBUFFER_STATE_STARTED;
+    buf->state = GST_RING_BUFFER_STATE_STARTED;
   } else {
-    gst_ringbuffer_set_sample (buf, 0);
+    gst_ring_buffer_set_sample (buf, 0);
   }
 done:
   GST_UNLOCK (buf);
@@ -609,7 +609,7 @@ done:
 }
 
 /**
- * gst_ringbuffer_delay:
+ * gst_ring_buffer_delay:
  * @buf: the #GstRingBuffer to query
  *
  * Get the number of samples queued in the audio device. This is
@@ -622,17 +622,17 @@ done:
  * MT safe.
  */
 guint
-gst_ringbuffer_delay (GstRingBuffer * buf)
+gst_ring_buffer_delay (GstRingBuffer * buf)
 {
   GstRingBufferClass *rclass;
   guint res = 0;
 
   g_return_val_if_fail (buf != NULL, 0);
 
-  if (!gst_ringbuffer_is_acquired (buf))
+  if (!gst_ring_buffer_is_acquired (buf))
     return 0;
 
-  rclass = GST_RINGBUFFER_GET_CLASS (buf);
+  rclass = GST_RING_BUFFER_GET_CLASS (buf);
   if (rclass->delay)
     res = rclass->delay (buf);
 
@@ -640,7 +640,7 @@ gst_ringbuffer_delay (GstRingBuffer * buf)
 }
 
 /**
- * gst_ringbuffer_samples_done:
+ * gst_ring_buffer_samples_done:
  * @buf: the #GstRingBuffer to query
  *
  * Get the number of samples that were processed by the ringbuffer
@@ -651,7 +651,7 @@ gst_ringbuffer_delay (GstRingBuffer * buf)
  * MT safe.
  */
 guint64
-gst_ringbuffer_samples_done (GstRingBuffer * buf)
+gst_ring_buffer_samples_done (GstRingBuffer * buf)
 {
   gint segdone;
   guint64 raw, samples;
@@ -663,7 +663,7 @@ gst_ringbuffer_samples_done (GstRingBuffer * buf)
   segdone = g_atomic_int_get (&buf->segdone);
 
   /* and the number of samples not yet processed */
-  delay = gst_ringbuffer_delay (buf);
+  delay = gst_ring_buffer_delay (buf);
 
   samples = (segdone * buf->samples_per_seg);
   raw = samples;
@@ -678,7 +678,7 @@ gst_ringbuffer_samples_done (GstRingBuffer * buf)
 }
 
 /**
- * gst_ringbuffer_set_sample:
+ * gst_ring_buffer_set_sample:
  * @buf: the #GstRingBuffer to use
  * @sample: the sample number to set
  *
@@ -692,7 +692,7 @@ gst_ringbuffer_samples_done (GstRingBuffer * buf)
  * MT safe.
  */
 void
-gst_ringbuffer_set_sample (GstRingBuffer * buf, guint64 sample)
+gst_ring_buffer_set_sample (GstRingBuffer * buf, guint64 sample)
 {
   gint i;
 
@@ -708,7 +708,7 @@ gst_ringbuffer_set_sample (GstRingBuffer * buf, guint64 sample)
   buf->next_sample = sample;
 
   for (i = 0; i < buf->spec.segtotal; i++) {
-    gst_ringbuffer_clear (buf, i);
+    gst_ring_buffer_clear (buf, i);
   }
 
   GST_DEBUG ("setting sample to %llu, segdone %d", sample, buf->segdone);
@@ -718,21 +718,21 @@ static gboolean
 wait_segment (GstRingBuffer * buf)
 {
   /* buffer must be started now or we deadlock since nobody is reading */
-  if (g_atomic_int_get (&buf->state) != GST_RINGBUFFER_STATE_STARTED) {
+  if (g_atomic_int_get (&buf->state) != GST_RING_BUFFER_STATE_STARTED) {
     GST_DEBUG ("start!");
-    gst_ringbuffer_start (buf);
+    gst_ring_buffer_start (buf);
   }
 
   /* take lock first, then update our waiting flag */
   GST_LOCK (buf);
   if (g_atomic_int_compare_and_exchange (&buf->waiting, 0, 1)) {
     GST_DEBUG ("waiting..");
-    if (g_atomic_int_get (&buf->state) != GST_RINGBUFFER_STATE_STARTED)
+    if (g_atomic_int_get (&buf->state) != GST_RING_BUFFER_STATE_STARTED)
       goto not_started;
 
-    GST_RINGBUFFER_WAIT (buf);
+    GST_RING_BUFFER_WAIT (buf);
 
-    if (g_atomic_int_get (&buf->state) != GST_RINGBUFFER_STATE_STARTED)
+    if (g_atomic_int_get (&buf->state) != GST_RING_BUFFER_STATE_STARTED)
       goto not_started;
   }
   GST_UNLOCK (buf);
@@ -749,7 +749,7 @@ not_started:
 }
 
 /**
- * gst_ringbuffer_commit:
+ * gst_ring_buffer_commit:
  * @buf: the #GstRingBuffer to commit
  * @sample: the sample position of the data
  * @data: the data to commit
@@ -768,7 +768,7 @@ not_started:
  * MT safe.
  */
 guint
-gst_ringbuffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
+gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
     guint len)
 {
   gint segdone;
@@ -866,7 +866,7 @@ not_started:
 }
 
 /**
- * gst_ringbuffer_read:
+ * gst_ring_buffer_read:
  * @buf: the #GstRingBuffer to read from
  * @sample: the sample position of the data
  * @data: where the data should be read
@@ -886,7 +886,7 @@ not_started:
  * MT safe.
  */
 guint
-gst_ringbuffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
+gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
     guint len)
 {
   gint segdone;
@@ -984,7 +984,7 @@ not_started:
 }
 
 /**
- * gst_ringbuffer_prepare_read:
+ * gst_ring_buffer_prepare_read:
  * @buf: the #GstRingBuffer to read from
  * @segment: the segment to read
  * @readptr: the pointer to the memory where samples can be read
@@ -998,14 +998,14 @@ not_started:
  * MT safe.
  */
 gboolean
-gst_ringbuffer_prepare_read (GstRingBuffer * buf, gint * segment,
+gst_ring_buffer_prepare_read (GstRingBuffer * buf, gint * segment,
     guint8 ** readptr, gint * len)
 {
   guint8 *data;
   gint segdone;
 
   /* buffer must be started */
-  if (g_atomic_int_get (&buf->state) != GST_RINGBUFFER_STATE_STARTED)
+  if (g_atomic_int_get (&buf->state) != GST_RING_BUFFER_STATE_STARTED)
     return FALSE;
 
   g_return_val_if_fail (buf != NULL, FALSE);
@@ -1034,7 +1034,7 @@ gst_ringbuffer_prepare_read (GstRingBuffer * buf, gint * segment,
 }
 
 /**
- * gst_ringbuffer_advance:
+ * gst_ring_buffer_advance:
  * @buf: the #GstRingBuffer to advance
  * @advance: the number of segments written
  *
@@ -1044,7 +1044,7 @@ gst_ringbuffer_prepare_read (GstRingBuffer * buf, gint * segment,
  * MT safe.
  */
 void
-gst_ringbuffer_advance (GstRingBuffer * buf, guint advance)
+gst_ring_buffer_advance (GstRingBuffer * buf, guint advance)
 {
   g_return_if_fail (buf != NULL);
 
@@ -1057,13 +1057,13 @@ gst_ringbuffer_advance (GstRingBuffer * buf, guint advance)
   if (g_atomic_int_compare_and_exchange (&buf->waiting, 1, 0)) {
     GST_LOCK (buf);
     GST_DEBUG ("signal waiter");
-    GST_RINGBUFFER_SIGNAL (buf);
+    GST_RING_BUFFER_SIGNAL (buf);
     GST_UNLOCK (buf);
   }
 }
 
 /**
- * gst_ringbuffer_clear:
+ * gst_ring_buffer_clear:
  * @buf: the #GstRingBuffer to clear
  * @segment: the segment to clear
  *
@@ -1073,7 +1073,7 @@ gst_ringbuffer_advance (GstRingBuffer * buf, guint advance)
  * MT safe.
  */
 void
-gst_ringbuffer_clear (GstRingBuffer * buf, gint segment)
+gst_ring_buffer_clear (GstRingBuffer * buf, gint segment)
 {
   guint8 *data;
 

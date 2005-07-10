@@ -31,14 +31,14 @@ static GstElementClass *parent_class = NULL;
 /* Initing stuff */
 
 static void
-gst_videosink_init (GstVideoSink * videosink)
+gst_video_sink_init (GstVideoSink * videosink)
 {
   videosink->width = 0;
   videosink->height = 0;
 }
 
 static void
-gst_videosink_class_init (GstVideoSinkClass * klass)
+gst_video_sink_class_init (GstVideoSinkClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -52,7 +52,7 @@ gst_videosink_class_init (GstVideoSinkClass * klass)
 /* Public methods */
 
 GType
-gst_videosink_get_type (void)
+gst_video_sink_get_type (void)
 {
   static GType videosink_type = 0;
 
@@ -61,15 +61,15 @@ gst_videosink_get_type (void)
       sizeof (GstVideoSinkClass),
       NULL,
       NULL,
-      (GClassInitFunc) gst_videosink_class_init,
+      (GClassInitFunc) gst_video_sink_class_init,
       NULL,
       NULL,
       sizeof (GstVideoSink),
       0,
-      (GInstanceInitFunc) gst_videosink_init,
+      (GInstanceInitFunc) gst_video_sink_init,
     };
 
-    videosink_type = g_type_register_static (GST_TYPE_BASESINK,
+    videosink_type = g_type_register_static (GST_TYPE_BASE_SINK,
         "GstVideoSink", &videosink_info, 0);
   }
 

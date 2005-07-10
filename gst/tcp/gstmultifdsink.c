@@ -256,7 +256,7 @@ gst_multifdsink_get_type (void)
     };
 
     multifdsink_type =
-        g_type_register_static (GST_TYPE_BASESINK, "GstMultiFdSink",
+        g_type_register_static (GST_TYPE_BASE_SINK, "GstMultiFdSink",
         &multifdsink_info, 0);
   }
   return multifdsink_type;
@@ -284,7 +284,7 @@ gst_multifdsink_class_init (GstMultiFdSinkClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASESINK);
+  parent_class = g_type_class_ref (GST_TYPE_BASE_SINK);
 
   gobject_class->set_property = gst_multifdsink_set_property;
   gobject_class->get_property = gst_multifdsink_get_property;
@@ -943,7 +943,7 @@ gst_multifdsink_handle_client_write (GstMultiFdSink * sink,
   if (sink->protocol == GST_TCP_PROTOCOL_TYPE_GDP) {
     if (!client->caps_sent) {
       const GstCaps *caps =
-          GST_PAD_CAPS (GST_PAD_PEER (GST_BASESINK_PAD (sink)));
+          GST_PAD_CAPS (GST_PAD_PEER (GST_BASE_SINK_PAD (sink)));
 
       /* queue caps for sending */
       res = gst_multifdsink_client_queue_caps (sink, client, caps);
@@ -1738,7 +1738,7 @@ gst_multifdsink_change_state (GstElement * element)
 
   switch (transition) {
     case GST_STATE_NULL_TO_READY:
-      if (!gst_multifdsink_start (GST_BASESINK (sink)))
+      if (!gst_multifdsink_start (GST_BASE_SINK (sink)))
         goto start_failed;
       break;
     case GST_STATE_READY_TO_PAUSED:
@@ -1757,7 +1757,7 @@ gst_multifdsink_change_state (GstElement * element)
     case GST_STATE_PAUSED_TO_READY:
       break;
     case GST_STATE_READY_TO_NULL:
-      gst_multifdsink_stop (GST_BASESINK (sink));
+      gst_multifdsink_stop (GST_BASE_SINK (sink));
       break;
   }
   return ret;

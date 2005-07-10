@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2005 Wim Taymans <wim@fluendo.com>
  *
- * gstringbuffer.h: 
+ * gstringbuffer.h:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,19 +20,19 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_RINGBUFFER_H__
-#define __GST_RINGBUFFER_H__
+#ifndef __GST_RING_BUFFER_H__
+#define __GST_RING_BUFFER_H__
 
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_RINGBUFFER  	         (gst_ringbuffer_get_type())
-#define GST_RINGBUFFER(obj) 		 (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RINGBUFFER,GstRingBuffer))
-#define GST_RINGBUFFER_CLASS(klass) 	 (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RINGBUFFER,GstRingBufferClass))
-#define GST_RINGBUFFER_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_RINGBUFFER, GstRingBufferClass))
-#define GST_IS_RINGBUFFER(obj)  	 (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RINGBUFFER))
-#define GST_IS_RINGBUFFER_CLASS(obj)     (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RINGBUFFER))
+#define GST_TYPE_RING_BUFFER	         (gst_ring_buffer_get_type())
+#define GST_RING_BUFFER(obj)		 (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RING_BUFFER,GstRingBuffer))
+#define GST_RING_BUFFER_CLASS(klass) 	 (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RING_BUFFER,GstRingBufferClass))
+#define GST_RING_BUFFER_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_RING_BUFFER, GstRingBufferClass))
+#define GST_IS_RING_BUFFER(obj)  	 (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RING_BUFFER))
+#define GST_IS_RING_BUFFER_CLASS(obj)     (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RING_BUFFER))
 
 typedef struct _GstRingBuffer GstRingBuffer;
 typedef struct _GstRingBufferClass GstRingBufferClass;
@@ -42,9 +42,9 @@ typedef struct _GstRingBufferSpec GstRingBufferSpec;
 typedef void (*GstRingBufferCallback) (GstRingBuffer *rbuf, guint8* data, guint len, gpointer user_data);
 
 typedef enum {
-  GST_RINGBUFFER_STATE_STOPPED,
-  GST_RINGBUFFER_STATE_PAUSED,
-  GST_RINGBUFFER_STATE_STARTED,
+  GST_RING_BUFFER_STATE_STOPPED,
+  GST_RING_BUFFER_STATE_PAUSED,
+  GST_RING_BUFFER_STATE_STARTED,
 } GstRingBufferState;
 
 typedef enum {
@@ -141,10 +141,10 @@ struct _GstRingBufferSpec
   guint8   silence_sample[32];  /* bytes representing silence */
 };
 
-#define GST_RINGBUFFER_GET_COND(buf) (((GstRingBuffer *)buf)->cond)
-#define GST_RINGBUFFER_WAIT(buf)     (g_cond_wait (GST_RINGBUFFER_GET_COND (buf), GST_GET_LOCK (buf)))
-#define GST_RINGBUFFER_SIGNAL(buf)   (g_cond_signal (GST_RINGBUFFER_GET_COND (buf)))
-#define GST_RINGBUFFER_BROADCAST(buf)(g_cond_broadcast (GST_RINGBUFFER_GET_COND (buf)))
+#define GST_RING_BUFFER_GET_COND(buf) (((GstRingBuffer *)buf)->cond)
+#define GST_RING_BUFFER_WAIT(buf)     (g_cond_wait (GST_RING_BUFFER_GET_COND (buf), GST_GET_LOCK (buf)))
+#define GST_RING_BUFFER_SIGNAL(buf)   (g_cond_signal (GST_RING_BUFFER_GET_COND (buf)))
+#define GST_RING_BUFFER_BROADCAST(buf)(g_cond_broadcast (GST_RING_BUFFER_GET_COND (buf)))
 
 struct _GstRingBuffer {
   GstObject 	         object;
@@ -188,46 +188,46 @@ struct _GstRingBufferClass {
   guint        (*delay)        (GstRingBuffer *buf);
 };
 
-GType gst_ringbuffer_get_type(void);
+GType gst_ring_buffer_get_type(void);
 
 /* callback stuff */
-void     	gst_ringbuffer_set_callback   	(GstRingBuffer *buf, GstRingBufferCallback cb, 
+void     	gst_ring_buffer_set_callback   	(GstRingBuffer *buf, GstRingBufferCallback cb, 
 						 gpointer user_data);
 
-gboolean	gst_ringbuffer_parse_caps	(GstRingBufferSpec *spec, GstCaps *caps);
-void 		gst_ringbuffer_debug_spec_caps  (GstRingBufferSpec *spec);
-void 		gst_ringbuffer_debug_spec_buff  (GstRingBufferSpec *spec);
+gboolean	gst_ring_buffer_parse_caps	(GstRingBufferSpec *spec, GstCaps *caps);
+void 		gst_ring_buffer_debug_spec_caps  (GstRingBufferSpec *spec);
+void 		gst_ring_buffer_debug_spec_buff  (GstRingBufferSpec *spec);
 
 /* allocate resources */
-gboolean 	gst_ringbuffer_acquire 		(GstRingBuffer *buf, GstRingBufferSpec *spec);
-gboolean 	gst_ringbuffer_release 		(GstRingBuffer *buf);
+gboolean 	gst_ring_buffer_acquire 		(GstRingBuffer *buf, GstRingBufferSpec *spec);
+gboolean 	gst_ring_buffer_release 		(GstRingBuffer *buf);
 
-gboolean 	gst_ringbuffer_is_acquired	(GstRingBuffer *buf);
+gboolean 	gst_ring_buffer_is_acquired	(GstRingBuffer *buf);
 
 /* playback/pause */
-gboolean 	gst_ringbuffer_start 		(GstRingBuffer *buf);
-gboolean 	gst_ringbuffer_pause 		(GstRingBuffer *buf);
-gboolean 	gst_ringbuffer_stop 		(GstRingBuffer *buf);
+gboolean 	gst_ring_buffer_start 		(GstRingBuffer *buf);
+gboolean 	gst_ring_buffer_pause 		(GstRingBuffer *buf);
+gboolean 	gst_ring_buffer_stop 		(GstRingBuffer *buf);
 
 /* get status */
-guint	 	gst_ringbuffer_delay 		(GstRingBuffer *buf);
-guint64	 	gst_ringbuffer_samples_done	(GstRingBuffer *buf);
+guint	 	gst_ring_buffer_delay 		(GstRingBuffer *buf);
+guint64	 	gst_ring_buffer_samples_done	(GstRingBuffer *buf);
 
-void	 	gst_ringbuffer_set_sample	(GstRingBuffer *buf, guint64 sample);
+void	 	gst_ring_buffer_set_sample	(GstRingBuffer *buf, guint64 sample);
 
 /* commit samples */
-guint 		gst_ringbuffer_commit 		(GstRingBuffer *buf, guint64 sample, 
+guint 		gst_ring_buffer_commit 		(GstRingBuffer *buf, guint64 sample, 
 						 guchar *data, guint len);
 /* read samples */
-guint 		gst_ringbuffer_read 		(GstRingBuffer *buf, guint64 sample, 
+guint 		gst_ring_buffer_read 		(GstRingBuffer *buf, guint64 sample, 
 						 guchar *data, guint len);
 
 /* mostly protected */
-gboolean	gst_ringbuffer_prepare_write	(GstRingBuffer *buf, gint *segment, guint8 **writeptr, gint *len);
-gboolean	gst_ringbuffer_prepare_read	(GstRingBuffer *buf, gint *segment, guint8 **readptr, gint *len);
-void		gst_ringbuffer_clear		(GstRingBuffer *buf, gint segment);
-void	 	gst_ringbuffer_advance	 	(GstRingBuffer *buf, guint advance);
+gboolean	gst_ring_buffer_prepare_write	(GstRingBuffer *buf, gint *segment, guint8 **writeptr, gint *len);
+gboolean	gst_ring_buffer_prepare_read	(GstRingBuffer *buf, gint *segment, guint8 **readptr, gint *len);
+void		gst_ring_buffer_clear		(GstRingBuffer *buf, gint segment);
+void	 	gst_ring_buffer_advance	 	(GstRingBuffer *buf, guint advance);
 
 G_END_DECLS
 
-#endif /* __GST_RINGBUFFER_H__ */
+#endif /* __GST_RING_BUFFER_H__ */

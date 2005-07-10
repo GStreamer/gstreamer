@@ -109,7 +109,7 @@ gst_alsasrc_get_type (void)
     };
 
     alsasrc_type =
-        g_type_register_static (GST_TYPE_AUDIOSRC, "GstAlsaSrc",
+        g_type_register_static (GST_TYPE_AUDIO_SRC, "GstAlsaSrc",
         &alsasrc_info, 0);
   }
 
@@ -147,7 +147,7 @@ gst_alsasrc_class_init (GstAlsaSrcClass * klass)
   gstbaseaudiosrc_class = (GstBaseAudioSrcClass *) klass;
   gstaudiosrc_class = (GstAudioSrcClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASEAUDIOSRC);
+  parent_class = g_type_class_ref (GST_TYPE_BASE_AUDIO_SRC);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_alsasrc_dispose);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_alsasrc_get_property);

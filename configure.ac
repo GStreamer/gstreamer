@@ -60,16 +60,7 @@ AS_AC_EXPAND(LOCALEDIR, $datadir/locale)
 AC_DEFINE_UNQUOTED([LOCALEDIR], "$LOCALEDIR",
                    [gettext locale dir])
 
-dnl decide on error flags
-AS_COMPILER_FLAG(-Wall, GST_WALL="yes", GST_WALL="no")
-
-if test "x$GST_WALL" = "xyes"; then
-  GST_ERROR="$GST_ERROR -Wall"
-
-  if test "x$GST_CVS" = "xyes"; then
-    AS_COMPILER_FLAG(-Werror,GST_ERROR="$GST_ERROR -Werror",GST_ERROR="$GST_ERROR")
-  fi
-fi
+GST_SET_ERROR_CFLAGS($GST_CVS)
 
 dnl determine c++ compiler
 AC_PROG_CXX
@@ -693,6 +684,7 @@ GST_CHECK_FEATURE(VORBIS, [vorbis plug-in], vorbisenc vorbisdec, [
 if test "x$HAVE_VORBIS" = "xyes"; then
   ac_cflags_save="$CFLAGS"
   dnl FIXME: does this work on non-gcc? -- Company
+  dnl FIXME: no, it doesn't.  Why is this here in the first place ? -- thomasvs
   CFLAGS="-Wall -Werror"
   AC_COMPILE_IFELSE(
     AC_LANG_PROGRAM([
@@ -831,7 +823,8 @@ AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
 
 dnl prefer internal headers to already installed ones
 dnl also add builddir include for enumtypes and marshal
-GST_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CFLAGS $GST_ERROR"
+dnl add ERROR_CFLAGS, but overridable
+GST_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CFLAGS \$(ERROR_CFLAGS)"
 
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)

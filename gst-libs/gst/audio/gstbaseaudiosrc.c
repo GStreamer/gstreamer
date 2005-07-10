@@ -24,8 +24,8 @@
 
 #include "gstbaseaudiosrc.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_baseaudiosrc_debug);
-#define GST_CAT_DEFAULT gst_baseaudiosrc_debug
+GST_DEBUG_CATEGORY_STATIC (gst_base_audio_src_debug);
+#define GST_CAT_DEFAULT gst_base_audio_src_debug
 
 /* BaseAudioSrc signals and args */
 enum
@@ -44,42 +44,42 @@ enum
 };
 
 #define _do_init(bla) \
-    GST_DEBUG_CATEGORY_INIT (gst_baseaudiosrc_debug, "baseaudiosrc", 0, "baseaudiosrc element");
+    GST_DEBUG_CATEGORY_INIT (gst_base_audio_src_debug, "baseaudiosrc", 0, "baseaudiosrc element");
 
-GST_BOILERPLATE_FULL (GstBaseAudioSrc, gst_baseaudiosrc, GstPushSrc,
+GST_BOILERPLATE_FULL (GstBaseAudioSrc, gst_base_audio_src, GstPushSrc,
     GST_TYPE_PUSHSRC, _do_init);
 
-static void gst_baseaudiosrc_set_property (GObject * object, guint prop_id,
+static void gst_base_audio_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_baseaudiosrc_get_property (GObject * object, guint prop_id,
+static void gst_base_audio_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void gst_baseaudiosrc_fixate (GstPad * pad, GstCaps * caps);
+static void gst_base_audio_src_fixate (GstPad * pad, GstCaps * caps);
 
-static GstElementStateReturn gst_baseaudiosrc_change_state (GstElement *
+static GstElementStateReturn gst_base_audio_src_change_state (GstElement *
     element);
 
-static GstClock *gst_baseaudiosrc_get_clock (GstElement * elem);
-static GstClockTime gst_baseaudiosrc_get_time (GstClock * clock,
+static GstClock *gst_base_audio_src_get_clock (GstElement * elem);
+static GstClockTime gst_base_audio_src_get_time (GstClock * clock,
     GstBaseAudioSrc * src);
 
-static GstFlowReturn gst_baseaudiosrc_create (GstPushSrc * psrc,
+static GstFlowReturn gst_base_audio_src_create (GstPushSrc * psrc,
     GstBuffer ** buf);
 
-static gboolean gst_baseaudiosrc_event (GstBaseSrc * bsrc, GstEvent * event);
-static void gst_baseaudiosrc_get_times (GstBaseSrc * bsrc,
+static gboolean gst_base_audio_src_event (GstBaseSrc * bsrc, GstEvent * event);
+static void gst_base_audio_src_get_times (GstBaseSrc * bsrc,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
-static gboolean gst_baseaudiosrc_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
+static gboolean gst_base_audio_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
 
-//static guint gst_baseaudiosrc_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_base_audio_src_signals[LAST_SIGNAL] = { 0 };
 
 static void
-gst_baseaudiosrc_base_init (gpointer g_class)
+gst_base_audio_src_base_init (gpointer g_class)
 {
 }
 
 static void
-gst_baseaudiosrc_class_init (GstBaseAudioSrcClass * klass)
+gst_base_audio_src_class_init (GstBaseAudioSrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -92,9 +92,9 @@ gst_baseaudiosrc_class_init (GstBaseAudioSrcClass * klass)
   gstpushsrc_class = (GstPushSrcClass *) klass;
 
   gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_baseaudiosrc_set_property);
+      GST_DEBUG_FUNCPTR (gst_base_audio_src_set_property);
   gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_baseaudiosrc_get_property);
+      GST_DEBUG_FUNCPTR (gst_base_audio_src_get_property);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER_TIME,
       g_param_spec_int64 ("buffer-time", "Buffer Time",
@@ -106,41 +106,43 @@ gst_baseaudiosrc_class_init (GstBaseAudioSrcClass * klass)
           -1, G_MAXINT64, DEFAULT_LATENCY_TIME, G_PARAM_READWRITE));
 
   gstelement_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_baseaudiosrc_change_state);
-  gstelement_class->get_clock = GST_DEBUG_FUNCPTR (gst_baseaudiosrc_get_clock);
+      GST_DEBUG_FUNCPTR (gst_base_audio_src_change_state);
+  gstelement_class->get_clock =
+      GST_DEBUG_FUNCPTR (gst_base_audio_src_get_clock);
 
-  gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_baseaudiosrc_setcaps);
-  gstbasesrc_class->event = GST_DEBUG_FUNCPTR (gst_baseaudiosrc_event);
-  gstbasesrc_class->get_times = GST_DEBUG_FUNCPTR (gst_baseaudiosrc_get_times);
+  gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_base_audio_src_setcaps);
+  gstbasesrc_class->event = GST_DEBUG_FUNCPTR (gst_base_audio_src_event);
+  gstbasesrc_class->get_times =
+      GST_DEBUG_FUNCPTR (gst_base_audio_src_get_times);
 
-  gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_baseaudiosrc_create);
+  gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_base_audio_src_create);
 }
 
 static void
-gst_baseaudiosrc_init (GstBaseAudioSrc * baseaudiosrc)
+gst_base_audio_src_init (GstBaseAudioSrc * baseaudiosrc)
 {
   baseaudiosrc->buffer_time = DEFAULT_BUFFER_TIME;
   baseaudiosrc->latency_time = DEFAULT_LATENCY_TIME;
 
   baseaudiosrc->clock = gst_audio_clock_new ("clock",
-      (GstAudioClockGetTimeFunc) gst_baseaudiosrc_get_time, baseaudiosrc);
+      (GstAudioClockGetTimeFunc) gst_base_audio_src_get_time, baseaudiosrc);
 
   gst_pad_set_fixatecaps_function (GST_BASE_SRC_PAD (baseaudiosrc),
-      gst_baseaudiosrc_fixate);
+      gst_base_audio_src_fixate);
 }
 
 static GstClock *
-gst_baseaudiosrc_get_clock (GstElement * elem)
+gst_base_audio_src_get_clock (GstElement * elem)
 {
   GstBaseAudioSrc *src;
 
-  src = GST_BASEAUDIOSRC (elem);
+  src = GST_BASE_AUDIO_SRC (elem);
 
   return GST_CLOCK (gst_object_ref (GST_OBJECT (src->clock)));
 }
 
 static GstClockTime
-gst_baseaudiosrc_get_time (GstClock * clock, GstBaseAudioSrc * src)
+gst_base_audio_src_get_time (GstClock * clock, GstBaseAudioSrc * src)
 {
   guint64 samples;
   GstClockTime result;
@@ -148,7 +150,7 @@ gst_baseaudiosrc_get_time (GstClock * clock, GstBaseAudioSrc * src)
   if (src->ringbuffer == NULL || src->ringbuffer->spec.rate == 0)
     return 0;
 
-  samples = gst_ringbuffer_samples_done (src->ringbuffer);
+  samples = gst_ring_buffer_samples_done (src->ringbuffer);
 
   result = samples * GST_SECOND / src->ringbuffer->spec.rate;
   result += GST_ELEMENT (src)->base_time;
@@ -157,12 +159,12 @@ gst_baseaudiosrc_get_time (GstClock * clock, GstBaseAudioSrc * src)
 }
 
 static void
-gst_baseaudiosrc_set_property (GObject * object, guint prop_id,
+gst_base_audio_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstBaseAudioSrc *src;
 
-  src = GST_BASEAUDIOSRC (object);
+  src = GST_BASE_AUDIO_SRC (object);
 
   switch (prop_id) {
     case PROP_BUFFER_TIME:
@@ -178,12 +180,12 @@ gst_baseaudiosrc_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_baseaudiosrc_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
+gst_base_audio_src_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
 {
   GstBaseAudioSrc *src;
 
-  src = GST_BASEAUDIOSRC (object);
+  src = GST_BASE_AUDIO_SRC (object);
 
   switch (prop_id) {
     case PROP_BUFFER_TIME:
@@ -199,7 +201,7 @@ gst_baseaudiosrc_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-gst_baseaudiosrc_fixate (GstPad * pad, GstCaps * caps)
+gst_base_audio_src_fixate (GstPad * pad, GstCaps * caps)
 {
   GstStructure *s;
 
@@ -214,9 +216,9 @@ gst_baseaudiosrc_fixate (GstPad * pad, GstCaps * caps)
 }
 
 static gboolean
-gst_baseaudiosrc_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
+gst_base_audio_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 {
-  GstBaseAudioSrc *src = GST_BASEAUDIOSRC (bsrc);
+  GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (bsrc);
   GstRingBufferSpec *spec;
 
   spec = &src->ringbuffer->spec;
@@ -224,7 +226,7 @@ gst_baseaudiosrc_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   spec->buffer_time = src->buffer_time;
   spec->latency_time = src->latency_time;
 
-  if (!gst_ringbuffer_parse_caps (spec, caps))
+  if (!gst_ring_buffer_parse_caps (spec, caps))
     goto parse_error;
 
   /* calculate suggested segsize and segtotal */
@@ -234,13 +236,13 @@ gst_baseaudiosrc_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 
   GST_DEBUG ("release old ringbuffer");
 
-  gst_ringbuffer_release (src->ringbuffer);
+  gst_ring_buffer_release (src->ringbuffer);
 
-  gst_ringbuffer_debug_spec_buff (spec);
+  gst_ring_buffer_debug_spec_buff (spec);
 
   GST_DEBUG ("acquire new ringbuffer");
 
-  if (!gst_ringbuffer_acquire (src->ringbuffer, spec))
+  if (!gst_ring_buffer_acquire (src->ringbuffer, spec))
     goto acquire_error;
 
   /* calculate actual latency and buffer times */
@@ -250,7 +252,7 @@ gst_baseaudiosrc_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
       spec->segtotal * spec->segsize * GST_MSECOND / (spec->rate *
       spec->bytes_per_sample);
 
-  gst_ringbuffer_debug_spec_buff (spec);
+  gst_ring_buffer_debug_spec_buff (spec);
 
   return TRUE;
 
@@ -268,7 +270,7 @@ acquire_error:
 }
 
 static void
-gst_baseaudiosrc_get_times (GstBaseSrc * bsrc, GstBuffer * buffer,
+gst_base_audio_src_get_times (GstBaseSrc * bsrc, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end)
 {
   /* ne need to sync to a clock here, we schedule the samples based
@@ -279,15 +281,15 @@ gst_baseaudiosrc_get_times (GstBaseSrc * bsrc, GstBuffer * buffer,
 }
 
 static gboolean
-gst_baseaudiosrc_event (GstBaseSrc * bsrc, GstEvent * event)
+gst_base_audio_src_event (GstBaseSrc * bsrc, GstEvent * event)
 {
-  GstBaseAudioSrc *src = GST_BASEAUDIOSRC (bsrc);
+  GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (bsrc);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH:
       if (GST_EVENT_FLUSH_DONE (event)) {
       } else {
-        gst_ringbuffer_pause (src->ringbuffer);
+        gst_ring_buffer_pause (src->ringbuffer);
       }
       break;
     default:
@@ -297,15 +299,15 @@ gst_baseaudiosrc_event (GstBaseSrc * bsrc, GstEvent * event)
 }
 
 static GstFlowReturn
-gst_baseaudiosrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
+gst_base_audio_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
-  GstBaseAudioSrc *src = GST_BASEAUDIOSRC (psrc);
+  GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (psrc);
   GstBuffer *buf;
   guchar *data;
   guint len;
   guint res;
 
-  if (!gst_ringbuffer_is_acquired (src->ringbuffer))
+  if (!gst_ring_buffer_is_acquired (src->ringbuffer))
     goto wrong_state;
 
   buf = gst_buffer_new_and_alloc (src->ringbuffer->spec.segsize);
@@ -313,7 +315,7 @@ gst_baseaudiosrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   data = GST_BUFFER_DATA (buf);
   len = GST_BUFFER_SIZE (buf);
 
-  res = gst_ringbuffer_read (src->ringbuffer, -1, data, len);
+  res = gst_ring_buffer_read (src->ringbuffer, -1, data, len);
   if (res == -1)
     goto stopped;
 
@@ -337,12 +339,12 @@ stopped:
 }
 
 GstRingBuffer *
-gst_baseaudiosrc_create_ringbuffer (GstBaseAudioSrc * src)
+gst_base_audio_src_create_ringbuffer (GstBaseAudioSrc * src)
 {
   GstBaseAudioSrcClass *bclass;
   GstRingBuffer *buffer = NULL;
 
-  bclass = GST_BASEAUDIOSRC_GET_CLASS (src);
+  bclass = GST_BASE_AUDIO_SRC_GET_CLASS (src);
   if (bclass->create_ringbuffer)
     buffer = bclass->create_ringbuffer (src);
 
@@ -354,26 +356,26 @@ gst_baseaudiosrc_create_ringbuffer (GstBaseAudioSrc * src)
 }
 
 void
-gst_baseaudiosrc_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
+gst_base_audio_src_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
     gpointer user_data)
 {
-  //GstBaseAudioSrc *src = GST_BASEAUDIOSRC (data);
+  //GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (data);
 }
 
 static GstElementStateReturn
-gst_baseaudiosrc_change_state (GstElement * element)
+gst_base_audio_src_change_state (GstElement * element)
 {
   GstElementStateReturn ret = GST_STATE_SUCCESS;
-  GstBaseAudioSrc *src = GST_BASEAUDIOSRC (element);
+  GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (element);
   GstElementState transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
     case GST_STATE_NULL_TO_READY:
       break;
     case GST_STATE_READY_TO_PAUSED:
-      src->ringbuffer = gst_baseaudiosrc_create_ringbuffer (src);
-      gst_ringbuffer_set_callback (src->ringbuffer, gst_baseaudiosrc_callback,
-          src);
+      src->ringbuffer = gst_base_audio_src_create_ringbuffer (src);
+      gst_ring_buffer_set_callback (src->ringbuffer,
+          gst_base_audio_src_callback, src);
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
@@ -385,11 +387,11 @@ gst_baseaudiosrc_change_state (GstElement * element)
 
   switch (transition) {
     case GST_STATE_PLAYING_TO_PAUSED:
-      gst_ringbuffer_pause (src->ringbuffer);
+      gst_ring_buffer_pause (src->ringbuffer);
       break;
     case GST_STATE_PAUSED_TO_READY:
-      gst_ringbuffer_stop (src->ringbuffer);
-      gst_ringbuffer_release (src->ringbuffer);
+      gst_ring_buffer_stop (src->ringbuffer);
+      gst_ring_buffer_release (src->ringbuffer);
       gst_object_unref (GST_OBJECT (src->ringbuffer));
       src->ringbuffer = NULL;
       break;

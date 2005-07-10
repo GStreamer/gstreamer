@@ -113,7 +113,7 @@ gst_alsasink_get_type (void)
     };
 
     alsasink_type =
-        g_type_register_static (GST_TYPE_AUDIOSINK, "GstAlsaSink",
+        g_type_register_static (GST_TYPE_AUDIO_SINK, "GstAlsaSink",
         &alsasink_info, 0);
   }
 
@@ -151,7 +151,7 @@ gst_alsasink_class_init (GstAlsaSinkClass * klass)
   gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
   gstaudiosink_class = (GstAudioSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASEAUDIOSINK);
+  parent_class = g_type_class_ref (GST_TYPE_BASE_AUDIO_SINK);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_alsasink_dispose);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_alsasink_get_property);

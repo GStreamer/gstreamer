@@ -120,7 +120,7 @@ gst_tcpclientsink_class_init (GstTCPClientSink * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASESINK);
+  parent_class = g_type_class_ref (GST_TYPE_BASE_SINK);
 
   gobject_class->set_property = gst_tcpclientsink_set_property;
   gobject_class->get_property = gst_tcpclientsink_get_property;
@@ -182,7 +182,7 @@ gst_tcpclientsink_setcaps (GstBaseSink * bsink, GstCaps * caps)
         const GstCaps *caps;
         gchar *string;
 
-        caps = GST_PAD_CAPS (GST_PAD_PEER (GST_BASESINK_PAD (bsink)));
+        caps = GST_PAD_CAPS (GST_PAD_PEER (GST_BASE_SINK_PAD (bsink)));
         string = gst_caps_to_string (caps);
         GST_DEBUG_OBJECT (sink, "Sending caps %s through GDP", string);
         g_free (string);

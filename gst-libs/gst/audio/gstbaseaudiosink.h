@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2005 Wim Taymans <wim@fluendo.com>
  *
- * gstbaseaudiosink.h: 
+ * gstbaseaudiosink.h:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,7 +23,7 @@
 /* a base class for audio sinks.
  *
  * It uses a ringbuffer to schedule playback of samples. This makes
- * it very easy to drop or insert samples to align incomming 
+ * it very easy to drop or insert samples to align incoming
  * buffers to the exact playback timestamp.
  *
  * Subclasses must provide a ringbuffer pointing to either DMA
@@ -37,7 +37,7 @@
  * The available space is calculated in the callback function.
  *
  * The pull mode will pull_range() a new buffer of N samples with a
- * configurable latency. This allows for high-end real time 
+ * configurable latency. This allows for high-end real time
  * audio processing pipelines driven by the audiosink. The callback
  * function will be used to perform a pull_range() on the sinkpad.
  * The thread scheduling the callback can be a real-time thread.
@@ -46,8 +46,8 @@
  * the methods in GstBaseSink and this class.
  */
 
-#ifndef __GST_BASEAUDIOSINK_H__
-#define __GST_BASEAUDIOSINK_H__
+#ifndef __GST_BASE_AUDIO_SINK_H__
+#define __GST_BASE_AUDIO_SINK_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
@@ -56,21 +56,21 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_BASEAUDIOSINK  	 (gst_baseaudiosink_get_type())
-#define GST_BASEAUDIOSINK(obj) 		 (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASEAUDIOSINK,GstBaseAudioSink))
-#define GST_BASEAUDIOSINK_CLASS(klass) 	 (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASEAUDIOSINK,GstBaseAudioSinkClass))
-#define GST_BASEAUDIOSINK_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BASEAUDIOSINK, GstBaseAudioSinkClass))
-#define GST_IS_BASEAUDIOSINK(obj)  	 (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASEAUDIOSINK))
-#define GST_IS_BASEAUDIOSINK_CLASS(obj)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASEAUDIOSINK))
+#define GST_TYPE_BASE_AUDIO_SINK		(gst_base_audio_sink_get_type())
+#define GST_BASE_AUDIO_SINK(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_AUDIO_SINK,GstBaseAudioSink))
+#define GST_BASE_AUDIO_SINK_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASE_AUDIO_SINK,GstBaseAudioSinkClass))
+#define GST_BASE_AUDIO_SINK_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BASE_AUDIO_SINK, GstBaseAudioSinkClass))
+#define GST_IS_BASE_AUDIO_SINK(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_AUDIO_SINK))
+#define GST_IS_BASE_AUDIO_SINK_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_AUDIO_SINK))
 
-#define GST_BASEAUDIOSINK_CLOCK(obj)	 (GST_BASEAUDIOSINK (obj)->clock)
-#define GST_BASEAUDIOSINK_PAD(obj)	 (GST_BASESINK (obj)->sinkpad)
+#define GST_BASE_AUDIO_SINK_CLOCK(obj)	 (GST_BASE_AUDIO_SINK (obj)->clock)
+#define GST_BASE_AUDIO_SINK_PAD(obj)	 (GST_BASE_SINK (obj)->sinkpad)
 
 typedef struct _GstBaseAudioSink GstBaseAudioSink;
 typedef struct _GstBaseAudioSinkClass GstBaseAudioSinkClass;
 
 struct _GstBaseAudioSink {
-  GstBaseSink 	 element;
+  GstBaseSink	 element;
 
   /*< protected >*/ /* with LOCK */
   /* our ringbuffer */
@@ -91,10 +91,10 @@ struct _GstBaseAudioSinkClass {
   GstRingBuffer* (*create_ringbuffer)  (GstBaseAudioSink *sink);
 };
 
-GType gst_baseaudiosink_get_type(void);
+GType gst_base_audio_sink_get_type(void);
 
-GstRingBuffer *gst_baseaudiosink_create_ringbuffer (GstBaseAudioSink *sink);
+GstRingBuffer *gst_base_audio_sink_create_ringbuffer (GstBaseAudioSink *sink);
 
 G_END_DECLS
 
-#endif /* __GST_BASEAUDIOSINK_H__ */
+#endif /* __GST_BASE_AUDIO_SINK_H__ */

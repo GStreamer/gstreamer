@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2005 Wim Taymans <wim@fluendo.com>
  *
- * gstbaseaudiosrc.h: 
+ * gstbaseaudiosrc.h:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,8 +23,8 @@
 /* a base class for audio sources.
  */
 
-#ifndef __GST_BASEAUDIOSRC_H__
-#define __GST_BASEAUDIOSRC_H__
+#ifndef __GST_BASE_AUDIO_SRC_H__
+#define __GST_BASE_AUDIO_SRC_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
@@ -33,21 +33,21 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_BASEAUDIOSRC  	 	(gst_baseaudiosrc_get_type())
-#define GST_BASEAUDIOSRC(obj) 		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASEAUDIOSRC,GstBaseAudioSrc))
-#define GST_BASEAUDIOSRC_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASEAUDIOSRC,GstBaseAudioSrcClass))
-#define GST_BASEAUDIOSRC_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BASEAUDIOSRC, GstBaseAudioSrcClass))
-#define GST_IS_BASEAUDIOSRC(obj)  	(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASEAUDIOSRC))
-#define GST_IS_BASEAUDIOSRC_CLASS(obj)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASEAUDIOSRC))
+#define GST_TYPE_BASE_AUDIO_SRC			(gst_base_audio_src_get_type())
+#define GST_BASE_AUDIO_SRC(obj)			(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_AUDIO_SRC,GstBaseAudioSrc))
+#define GST_BASE_AUDIO_SRC_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASE_AUDIO_SRC,GstBaseAudioSrcClass))
+#define GST_BASE_AUDIO_SRC_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BASE_AUDIO_SRC, GstBaseAudioSrcClass))
+#define GST_IS_BASE_AUDIO_SRC(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_AUDIO_SRC))
+#define GST_IS_BASE_AUDIO_SRC_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_AUDIO_SRC))
 
-#define GST_BASEAUDIOSRC_CLOCK(obj)	 (GST_BASEAUDIOSRC (obj)->clock)
-#define GST_BASEAUDIOSRC_PAD(obj)	 (GST_BASESRC (obj)->srcpad)
+#define GST_BASE_AUDIO_SRC_CLOCK(obj)	 (GST_BASE_AUDIO_SRC (obj)->clock)
+#define GST_BASE_AUDIO_SRC_PAD(obj)	 (GST_BASE_SRC (obj)->srcpad)
 
 typedef struct _GstBaseAudioSrc GstBaseAudioSrc;
 typedef struct _GstBaseAudioSrcClass GstBaseAudioSrcClass;
 
 struct _GstBaseAudioSrc {
-  GstPushSrc 	 element;
+  GstPushSrc	 element;
 
   /*< protected >*/ /* with LOCK */
   /* our ringbuffer */
@@ -68,10 +68,10 @@ struct _GstBaseAudioSrcClass {
   GstRingBuffer* (*create_ringbuffer)  (GstBaseAudioSrc *src);
 };
 
-GType gst_baseaudiosrc_get_type(void);
+GType gst_base_audio_src_get_type(void);
 
-GstRingBuffer *gst_baseaudiosrc_create_ringbuffer (GstBaseAudioSrc *src);
+GstRingBuffer *gst_base_audio_src_create_ringbuffer (GstBaseAudioSrc *src);
 
 G_END_DECLS
 
-#endif /* __GST_BASEAUDIOSRC_H__ */
+#endif /* __GST_BASE_AUDIO_SRC_H__ */

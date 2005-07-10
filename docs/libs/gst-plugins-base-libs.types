@@ -3,7 +3,7 @@
 #include <gst/interfaces/colorbalance.h>
 #include <gst/audio/gstringbuffer.h>
 
-gst_ringbuffer_get_type
+gst_ring_buffer_get_type
 
 gst_color_balance_get_type
 gst_color_balance_channel_get_type

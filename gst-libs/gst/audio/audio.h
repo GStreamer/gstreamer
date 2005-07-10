@@ -58,7 +58,7 @@ G_BEGIN_DECLS
   "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
   "width = (int) { 8, 16, 24, 32 }, " \
   "depth = (int) [ 1, 32 ], " \
-  "signed = (boolean) { true, false }" 
+  "signed = (boolean) { true, false }"
 
 
 /* "standard" int audio is native order, 16 bit stereo. */
@@ -69,7 +69,7 @@ G_BEGIN_DECLS
   "endianness = (int) BYTE_ORDER, " \
   "width = (int) 16, " \
   "depth = (int) 16, " \
-  "signed = (boolean) true" 
+  "signed = (boolean) true"
 
 #define GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS \
   "audio/x-raw-float, " \
