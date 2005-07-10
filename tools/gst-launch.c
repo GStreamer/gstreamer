@@ -296,6 +296,7 @@ check_intr (GstElement * pipeline)
     gst_element_get_state (pipeline, NULL, NULL, NULL);
     g_print ("Pipeline paused.\n");
 
+    gst_object_unref (bus);
 
     return FALSE;
   }
@@ -365,8 +366,10 @@ event_loop (GstElement * pipeline, gboolean blocking)
     revent = gst_bus_poll (bus, GST_MESSAGE_ANY, blocking ? -1 : 0);
 
     /* if the poll timed out, only when !blocking */
-    if (revent == GST_MESSAGE_UNKNOWN)
+    if (revent == GST_MESSAGE_UNKNOWN) {
+      gst_object_unref (bus);
       return FALSE;
+    }
 
     message = gst_bus_pop (bus);
     g_return_val_if_fail (message != NULL, TRUE);
@@ -377,6 +380,7 @@ event_loop (GstElement * pipeline, gboolean blocking)
             ("GOT EOS from element \"%s\".\n"),
             GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))));
         gst_message_unref (message);
+        gst_object_unref (bus);
         return FALSE;
       case GST_MESSAGE_TAG:
         if (tags) {
@@ -416,6 +420,7 @@ event_loop (GstElement * pipeline, gboolean blocking)
         if (gerror)
           g_error_free (gerror);
         g_free (debug);
+        gst_object_unref (bus);
         return TRUE;
       }
       case GST_MESSAGE_STATE_CHANGED:{
@@ -432,6 +437,7 @@ event_loop (GstElement * pipeline, gboolean blocking)
             GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))));
         /* cut out of the event loop if check_intr set us to PAUSED */
         gst_message_unref (message);
+        gst_object_unref (bus);
         return FALSE;
       }
       default:

@@ -1,5 +1,12 @@
 2005-07-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstelement.c: (gst_element_get_bus):
+	  add debug
+	* tools/gst-launch.c: (check_intr), (event_loop):
+	  fix bus leaks
+
+2005-07-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstpad.c: (gst_pad_link_check_compatible_unlocked):
 	  fix a caps leak
 

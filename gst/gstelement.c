@@ -2321,6 +2321,8 @@ gst_element_get_bus (GstElement * element)
   gst_object_ref (result);
   GST_UNLOCK (element);
 
+  GST_DEBUG_OBJECT (element, "got bus %" GST_PTR_FORMAT, result);
+
   return result;
 }
 
