@@ -52,7 +52,7 @@ GstBaseSink
 @preroll: 
 @render: 
 
-<!-- ##### MACRO GST_BASESINK_CLOCK ##### -->
+<!-- ##### MACRO GST_BASE_SINK_CLOCK ##### -->
 <para>
 
 </para>
@@ -60,7 +60,7 @@ GstBaseSink
 @obj: 
 
 
-<!-- ##### MACRO GST_BASESINK_PAD ##### -->
+<!-- ##### MACRO GST_BASE_SINK_PAD ##### -->
 <para>
 
 </para>

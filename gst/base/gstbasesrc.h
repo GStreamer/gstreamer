@@ -21,8 +21,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_BASESRC_H__
-#define __GST_BASESRC_H__
+#ifndef __GST_BASE_SRC_H__
+#define __GST_BASE_SRC_H__
 
 #include <gst/gst.h>
 

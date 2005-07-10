@@ -104,8 +104,8 @@ _do_init (GType filesink_type)
       "filesink element");
 }
 
-GST_BOILERPLATE_FULL (GstFileSink, gst_filesink, GstBaseSink, GST_TYPE_BASESINK,
-    _do_init);
+GST_BOILERPLATE_FULL (GstFileSink, gst_filesink, GstBaseSink,
+    GST_TYPE_BASE_SINK, _do_init);
 
 static void
 gst_filesink_base_init (gpointer g_class)
@@ -122,7 +122,7 @@ static void
 gst_filesink_class_init (GstFileSinkClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstBaseSinkClass *gstbasesink_class = GST_BASESINK_CLASS (klass);
+  GstBaseSinkClass *gstbasesink_class = GST_BASE_SINK_CLASS (klass);
 
   gobject_class->set_property = gst_filesink_set_property;
   gobject_class->get_property = gst_filesink_get_property;
@@ -142,7 +142,7 @@ gst_filesink_init (GstFileSink * filesink)
 {
   GstPad *pad;
 
-  pad = GST_BASESINK_PAD (filesink);
+  pad = GST_BASE_SINK_PAD (filesink);
 
   gst_pad_set_query_function (pad, gst_filesink_query);
 

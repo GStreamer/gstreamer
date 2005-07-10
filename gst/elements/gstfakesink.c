@@ -102,8 +102,8 @@ gst_fakesink_state_error_get_type (void)
 #define _do_init(bla) \
     GST_DEBUG_CATEGORY_INIT (gst_fakesink_debug, "fakesink", 0, "fakesink element");
 
-GST_BOILERPLATE_FULL (GstFakeSink, gst_fakesink, GstBaseSink, GST_TYPE_BASESINK,
-    _do_init);
+GST_BOILERPLATE_FULL (GstFakeSink, gst_fakesink, GstBaseSink,
+    GST_TYPE_BASE_SINK, _do_init);
 
 static void gst_fakesink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -265,7 +265,7 @@ gst_fakesink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
   GstFakeSink *sink = GST_FAKESINK (bsink);
 
   if (sink->sync) {
-    GST_BASESINK_CLASS (parent_class)->get_times (bsink, buffer, start, end);
+    GST_BASE_SINK_CLASS (parent_class)->get_times (bsink, buffer, start, end);
   }
 }
 

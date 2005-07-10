@@ -95,3 +95,11 @@ GstBaseSrc
 @live: 
 
 
+<!-- ##### MACRO GST_BASE_SRC_PAD ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+

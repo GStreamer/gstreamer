@@ -163,8 +163,8 @@ gst_base_sink_pad_getcaps (GstPad * pad)
   GstBaseSink *bsink;
   GstCaps *caps = NULL;
 
-  bsink = GST_BASESINK (GST_PAD_PARENT (pad));
-  bclass = GST_BASESINK_GET_CLASS (bsink);
+  bsink = GST_BASE_SINK (GST_PAD_PARENT (pad));
+  bclass = GST_BASE_SINK_GET_CLASS (bsink);
   if (bclass->get_caps)
     caps = bclass->get_caps (bsink);
 
@@ -188,8 +188,8 @@ gst_base_sink_pad_setcaps (GstPad * pad, GstCaps * caps)
   GstBaseSink *bsink;
   gboolean res = FALSE;
 
-  bsink = GST_BASESINK (GST_PAD_PARENT (pad));
-  bclass = GST_BASESINK_GET_CLASS (bsink);
+  bsink = GST_BASE_SINK (GST_PAD_PARENT (pad));
+  bclass = GST_BASE_SINK_GET_CLASS (bsink);
 
   if (bclass->set_caps)
     res = bclass->set_caps (bsink, caps);
@@ -205,8 +205,8 @@ gst_base_sink_pad_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   GstBaseSink *bsink;
   GstFlowReturn result = GST_FLOW_OK;
 
-  bsink = GST_BASESINK (GST_PAD_PARENT (pad));
-  bclass = GST_BASESINK_GET_CLASS (bsink);
+  bsink = GST_BASE_SINK (GST_PAD_PARENT (pad));
+  bclass = GST_BASE_SINK_GET_CLASS (bsink);
 
   if (bclass->buffer_alloc)
     result = bclass->buffer_alloc (bsink, offset, size, caps, buf);
@@ -247,7 +247,7 @@ gst_base_sink_finalize (GObject * object)
 {
   GstBaseSink *basesink;
 
-  basesink = GST_BASESINK (object);
+  basesink = GST_BASE_SINK (object);
 
   g_queue_free (basesink->preroll_queue);
 
@@ -283,7 +283,7 @@ gst_base_sink_set_clock (GstElement * element, GstClock * clock)
 {
   GstBaseSink *sink;
 
-  sink = GST_BASESINK (element);
+  sink = GST_BASE_SINK (element);
 
   sink->clock = clock;
 }
@@ -294,7 +294,7 @@ gst_base_sink_set_property (GObject * object, guint prop_id,
 {
   GstBaseSink *sink;
 
-  sink = GST_BASESINK (object);
+  sink = GST_BASE_SINK (object);
 
   switch (prop_id) {
     case PROP_HAS_LOOP:
@@ -327,7 +327,7 @@ gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstBaseSink *sink;
 
-  sink = GST_BASESINK (object);
+  sink = GST_BASE_SINK (object);
 
   GST_LOCK (sink);
   switch (prop_id) {
@@ -485,7 +485,7 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
       GstBaseSinkClass *bclass;
       GstFlowReturn pres;
 
-      bclass = GST_BASESINK_GET_CLASS (basesink);
+      bclass = GST_BASE_SINK_GET_CLASS (basesink);
       if (bclass->preroll)
         if ((pres =
                 bclass->preroll (basesink, GST_BUFFER (obj))) != GST_FLOW_OK)
@@ -618,9 +618,9 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
   gboolean result = TRUE;
   GstBaseSinkClass *bclass;
 
-  basesink = GST_BASESINK (GST_OBJECT_PARENT (pad));
+  basesink = GST_BASE_SINK (GST_OBJECT_PARENT (pad));
 
-  bclass = GST_BASESINK_GET_CLASS (basesink);
+  bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
   GST_DEBUG ("event %p", event);
 
@@ -729,7 +729,7 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
     GstClockTime start, end;
     GstBaseSinkClass *bclass;
 
-    bclass = GST_BASESINK_GET_CLASS (basesink);
+    bclass = GST_BASE_SINK_GET_CLASS (basesink);
     start = end = -1;
     if (bclass->get_times)
       bclass->get_times (basesink, buffer, &start, &end);
@@ -802,7 +802,7 @@ gst_base_sink_handle_event (GstBaseSink * basesink, GstEvent * event)
       break;
   }
 
-  bclass = GST_BASESINK_GET_CLASS (basesink);
+  bclass = GST_BASE_SINK_GET_CLASS (basesink);
   if (bclass->event)
     ret = bclass->event (basesink, event);
   else
@@ -844,7 +844,7 @@ gst_base_sink_handle_buffer (GstBaseSink * basesink, GstBuffer * buf)
 
   gst_base_sink_do_sync (basesink, buf);
 
-  bclass = GST_BASESINK_GET_CLASS (basesink);
+  bclass = GST_BASE_SINK_GET_CLASS (basesink);
   if (bclass->render)
     ret = bclass->render (basesink, buf);
   else
@@ -862,7 +862,7 @@ gst_base_sink_chain (GstPad * pad, GstBuffer * buf)
   GstBaseSink *basesink;
   GstFlowReturn result;
 
-  basesink = GST_BASESINK (GST_OBJECT_PARENT (pad));
+  basesink = GST_BASE_SINK (GST_OBJECT_PARENT (pad));
 
   result = gst_base_sink_handle_object (basesink, pad, GST_MINI_OBJECT (buf));
 
@@ -878,7 +878,7 @@ gst_base_sink_loop (GstPad * pad)
   GstBuffer *buf = NULL;
   GstFlowReturn result;
 
-  basesink = GST_BASESINK (GST_OBJECT_PARENT (pad));
+  basesink = GST_BASE_SINK (GST_OBJECT_PARENT (pad));
 
   g_assert (basesink->pad_mode == GST_ACTIVATE_PULL);
 
@@ -906,7 +906,7 @@ gst_base_sink_deactivate (GstBaseSink * basesink, GstPad * pad)
   gboolean result = FALSE;
   GstBaseSinkClass *bclass;
 
-  bclass = GST_BASESINK_GET_CLASS (basesink);
+  bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
   /* step 1, unblock clock sync (if any) or any other blocking thing */
   GST_PREROLL_LOCK (pad);
@@ -937,7 +937,7 @@ gst_base_sink_activate_push (GstPad * pad, gboolean active)
   gboolean result = FALSE;
   GstBaseSink *basesink;
 
-  basesink = GST_BASESINK (GST_OBJECT_PARENT (pad));
+  basesink = GST_BASE_SINK (GST_OBJECT_PARENT (pad));
 
   if (active) {
     g_return_val_if_fail (basesink->has_chain, FALSE);
@@ -957,7 +957,7 @@ gst_base_sink_activate_pull (GstPad * pad, gboolean active)
   gboolean result = FALSE;
   GstBaseSink *basesink;
 
-  basesink = GST_BASESINK (GST_OBJECT_PARENT (pad));
+  basesink = GST_BASE_SINK (GST_OBJECT_PARENT (pad));
 
   if (active) {
     /* if we have a scheduler we can start the task */
@@ -975,11 +975,11 @@ static GstElementStateReturn
 gst_base_sink_change_state (GstElement * element)
 {
   GstElementStateReturn ret = GST_STATE_SUCCESS;
-  GstBaseSink *basesink = GST_BASESINK (element);
+  GstBaseSink *basesink = GST_BASE_SINK (element);
   GstElementState transition = GST_STATE_TRANSITION (element);
   GstBaseSinkClass *bclass;
 
-  bclass = GST_BASESINK_GET_CLASS (basesink);
+  bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
   switch (transition) {
     case GST_STATE_NULL_TO_READY:
@@ -1028,7 +1028,7 @@ gst_base_sink_change_state (GstElement * element)
     {
       GstBaseSinkClass *bclass;
 
-      bclass = GST_BASESINK_GET_CLASS (basesink);
+      bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
       GST_PREROLL_LOCK (basesink->sinkpad);
       GST_LOCK (basesink);

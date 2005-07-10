@@ -20,23 +20,23 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_BASESINK_H__
-#define __GST_BASESINK_H__
+#ifndef __GST_BASE_SINK_H__
+#define __GST_BASE_SINK_H__
 
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
 
 
-#define GST_TYPE_BASESINK		(gst_base_sink_get_type())
-#define GST_BASESINK(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASESINK,GstBaseSink))
-#define GST_BASESINK_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASESINK,GstBaseSinkClass))
-#define GST_BASESINK_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BASESINK, GstBaseSinkClass))
-#define GST_IS_BASESINK(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASESINK))
-#define GST_IS_BASESINK_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASESINK))
+#define GST_TYPE_BASE_SINK		(gst_base_sink_get_type())
+#define GST_BASE_SINK(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_SINK,GstBaseSink))
+#define GST_BASE_SINK_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASE_SINK,GstBaseSinkClass))
+#define GST_BASE_SINK_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BASE_SINK, GstBaseSinkClass))
+#define GST_IS_BASE_SINK(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_SINK))
+#define GST_IS_BASE_SINK_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_SINK))
 
-#define GST_BASESINK_CLOCK(obj)		(GST_BASESINK (obj)->clock)
-#define GST_BASESINK_PAD(obj)		(GST_BASESINK (obj)->sinkpad)
+#define GST_BASE_SINK_CLOCK(obj)		(GST_BASE_SINK (obj)->clock)
+#define GST_BASE_SINK_PAD(obj)		(GST_BASE_SINK (obj)->sinkpad)
 
 typedef struct _GstBaseSink GstBaseSink;
 typedef struct _GstBaseSinkClass GstBaseSinkClass;
@@ -105,4 +105,4 @@ GType gst_base_sink_get_type(void);
 
 G_END_DECLS
 
-#endif /* __GST_BASESINK_H__ */
+#endif /* __GST_BASE_SINK_H__ */

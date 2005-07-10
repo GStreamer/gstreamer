@@ -1,5 +1,27 @@
 2005-07-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstbasesink.sgml:
+	* docs/gst/tmpl/gstbasesrc.sgml:
+	* gst/base/gstbasesink.c: (gst_base_sink_pad_getcaps),
+	(gst_base_sink_pad_setcaps), (gst_base_sink_pad_buffer_alloc),
+	(gst_base_sink_finalize), (gst_base_sink_set_clock),
+	(gst_base_sink_set_property), (gst_base_sink_get_property),
+	(gst_base_sink_handle_object), (gst_base_sink_event),
+	(gst_base_sink_do_sync), (gst_base_sink_handle_event),
+	(gst_base_sink_handle_buffer), (gst_base_sink_chain),
+	(gst_base_sink_loop), (gst_base_sink_deactivate),
+	(gst_base_sink_activate_push), (gst_base_sink_activate_pull),
+	(gst_base_sink_change_state):
+	* gst/base/gstbasesink.h:
+	* gst/base/gstbasesrc.h:
+	* gst/elements/gstfakesink.c: (gst_fakesink_get_times):
+	* gst/elements/gstfilesink.c: (gst_filesink_class_init),
+	(gst_filesink_init):
+	  more macro splitting
+
+2005-07-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstelement.c: (gst_element_get_bus):
 	  add debug
 	* tools/gst-launch.c: (check_intr), (event_loop):
