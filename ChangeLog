@@ -1,3 +1,19 @@
+2005-07-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/aalib/gstaasink.c: (gst_aasink_get_type),
+	(gst_aasink_class_init), (gst_aasink_init):
+	* ext/esd/esdsink.c: (gst_esdsink_get_type),
+	(gst_esdsink_class_init):
+	* ext/libcaca/gstcacasink.c: (gst_cacasink_get_type),
+	(gst_cacasink_class_init), (gst_cacasink_init):
+	* ext/shout2/gstshout2.c: (gst_shout2send_get_type),
+	(gst_shout2send_class_init), (gst_shout2send_init):
+	* gst/udp/gstdynudpsink.c: (gst_dynudpsink_get_type),
+	(gst_dynudpsink_class_init):
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_get_type),
+	(gst_multiudpsink_class_init):
+	  more macro splitting
+
 2005-07-08  Andy Wingo  <wingo@pobox.com>
 
 	* sys/oss/: Port from THREADED+wim's fixes.

@@ -552,6 +552,7 @@ ext/raw1394/Makefile
 ext/shout2/Makefile
 ext/sidplay/Makefile
 ext/esd/Makefile
+po/Makefile.in
 common/Makefile
 common/m4/Makefile
 m4/Makefile
