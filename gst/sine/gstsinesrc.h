@@ -84,8 +84,6 @@ struct _GstSineSrc {
 
   GstClock *clock;
   GstClockTimeDiff timestamp_offset;
-  gint num_buffers, num_buffers_left;
-
 };
 
 struct _GstSineSrcClass {
