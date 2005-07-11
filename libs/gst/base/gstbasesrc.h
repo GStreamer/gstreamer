@@ -95,6 +95,9 @@ struct _GstBaseSrc {
 
   guint64	 offset;	/* current offset in the resource */
   guint64        size;		/* total size of the resource */
+
+  gint           num_buffers;
+  gint           num_buffers_left;
 };
 
 /**

@@ -35,6 +35,8 @@ GstBaseSrc
 @segment_loop: 
 @offset: 
 @size: 
+@num_buffers: 
+@num_buffers_left: 
 
 <!-- ##### ARG GstBaseSrc:blocksize ##### -->
 <para>
@@ -47,6 +49,11 @@ GstBaseSrc
 </para>
 
 <!-- ##### ARG GstBaseSrc:has-loop ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstBaseSrc:num-buffers ##### -->
 <para>
 
 </para>

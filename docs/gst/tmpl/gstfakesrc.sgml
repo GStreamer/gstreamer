@@ -68,11 +68,6 @@ GstFakeSrc
 
 </para>
 
-<!-- ##### ARG GstFakeSrc:num-buffers ##### -->
-<para>
-
-</para>
-
 <!-- ##### ARG GstFakeSrc:parentsize ##### -->
 <para>
 

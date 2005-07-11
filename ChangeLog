@@ -1,3 +1,19 @@
+2005-07-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/tmpl/gstbasesrc.sgml:
+	* docs/gst/tmpl/gstfakesrc.sgml:
+	* gst/base/gstbasesrc.c: (gst_base_src_class_init),
+	(gst_base_src_init), (gst_base_src_set_property),
+	(gst_base_src_get_property), (gst_base_src_get_range),
+	(gst_base_src_start):
+	* gst/base/gstbasesrc.h:
+	  add num-buffers property
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_class_init),
+	(gst_fakesrc_init), (gst_fakesrc_set_property),
+	(gst_fakesrc_get_property), (gst_fakesrc_create),
+	(gst_fakesrc_start):
+	  remove num-buffers property
+
 2005-07-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/gstreamer-sections.txt:

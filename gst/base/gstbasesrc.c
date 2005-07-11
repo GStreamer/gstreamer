@@ -33,6 +33,7 @@
 #include <gst/gstmarshal.h>
 
 #define DEFAULT_BLOCKSIZE	4096
+#define DEFAULT_NUM_BUFFERS	-1
 
 GST_DEBUG_CATEGORY_STATIC (gst_base_src_debug);
 #define GST_CAT_DEFAULT gst_base_src_debug
@@ -50,6 +51,7 @@ enum
   PROP_BLOCKSIZE,
   PROP_HAS_LOOP,
   PROP_HAS_GETRANGE,
+  PROP_NUM_BUFFERS,
 };
 
 static GstElementClass *parent_class = NULL;
@@ -150,6 +152,11 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
           "True if the element should expose a getrange function", TRUE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_NUM_BUFFERS,
+      g_param_spec_int ("num-buffers", "num-buffers",
+          "Number of buffers to output before sending EOS", -1, G_MAXINT,
+          DEFAULT_NUM_BUFFERS, G_PARAM_READWRITE));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_src_change_state);
 
@@ -165,6 +172,8 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   basesrc->is_live = FALSE;
   basesrc->live_lock = g_mutex_new ();
   basesrc->live_cond = g_cond_new ();
+  basesrc->num_buffers = DEFAULT_NUM_BUFFERS;
+  basesrc->num_buffers_left = -1;
 
   pad_template =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "src");
@@ -503,6 +512,9 @@ gst_base_src_set_property (GObject * object, guint prop_id,
       src->has_getrange = g_value_get_boolean (value);
       gst_base_src_set_dataflow_funcs (src);
       break;
+    case PROP_NUM_BUFFERS:
+      src->num_buffers = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -526,6 +538,9 @@ gst_base_src_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_HAS_GETRANGE:
       g_value_set_boolean (value, src->has_getrange);
+      break;
+    case PROP_NUM_BUFFERS:
+      g_value_set_int (value, src->num_buffers);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -579,6 +594,13 @@ gst_base_src_get_range (GstPad * pad, guint64 offset, guint length,
   if (length == 0)
     goto unexpected_length;
 
+  if (src->num_buffers_left == 0) {
+    goto reached_num_buffers;
+  } else {
+    if (src->num_buffers_left > 0)
+      src->num_buffers_left--;
+  }
+
   ret = bclass->create (src, offset, length, buf);
 
   return ret;
@@ -597,6 +619,11 @@ no_function:
 unexpected_length:
   {
     GST_DEBUG_OBJECT (src, "unexpected length %u", length);
+    return GST_FLOW_UNEXPECTED;
+  }
+reached_num_buffers:
+  {
+    GST_DEBUG_OBJECT (src, "sent all buffers");
     return GST_FLOW_UNEXPECTED;
   }
 }
@@ -795,6 +822,8 @@ gst_base_src_start (GstBaseSrc * basesrc)
 
   if (GST_FLAG_IS_SET (basesrc, GST_BASE_SRC_STARTED))
     return TRUE;
+
+  basesrc->num_buffers_left = basesrc->num_buffers;
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
   if (bclass->start)

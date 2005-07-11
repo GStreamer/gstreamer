@@ -63,7 +63,6 @@ enum
 #define DEFAULT_DATARATE	0
 #define DEFAULT_SYNC		FALSE
 #define DEFAULT_PATTERN		NULL
-#define DEFAULT_NUM_BUFFERS	-1
 #define DEFAULT_EOS		FALSE
 #define DEFAULT_SIGNAL_HANDOFFS FALSE
 #define DEFAULT_SILENT		FALSE
@@ -82,7 +81,6 @@ enum
   PROP_DATARATE,
   PROP_SYNC,
   PROP_PATTERN,
-  PROP_NUM_BUFFERS,
   PROP_EOS,
   PROP_SIGNAL_HANDOFFS,
   PROP_SILENT,
@@ -262,10 +260,6 @@ gst_fakesrc_class_init (GstFakeSrcClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PATTERN,
       g_param_spec_string ("pattern", "pattern", "pattern", DEFAULT_PATTERN,
           G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_NUM_BUFFERS,
-      g_param_spec_int ("num-buffers", "num-buffers",
-          "Number of buffers to output before sending EOS", -1, G_MAXINT,
-          DEFAULT_NUM_BUFFERS, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LAST_MESSAGE,
       g_param_spec_string ("last-message", "last-message",
           "The last status message", NULL, G_PARAM_READABLE));
@@ -311,8 +305,6 @@ gst_fakesrc_init (GstFakeSrc * fakesrc)
   fakesrc->output = FAKESRC_FIRST_LAST_LOOP;
   fakesrc->segment_start = -1;
   fakesrc->segment_end = -1;
-  fakesrc->num_buffers = DEFAULT_NUM_BUFFERS;
-  fakesrc->rt_num_buffers = -1;
   fakesrc->buffer_count = 0;
   fakesrc->silent = DEFAULT_SILENT;
   fakesrc->signal_handoffs = DEFAULT_SIGNAL_HANDOFFS;
@@ -414,9 +406,6 @@ gst_fakesrc_set_property (GObject * object, guint prop_id, const GValue * value,
       break;
     case PROP_PATTERN:
       break;
-    case PROP_NUM_BUFFERS:
-      src->num_buffers = g_value_get_int (value);
-      break;
     case PROP_SILENT:
       src->silent = g_value_get_boolean (value);
       break;
@@ -485,9 +474,6 @@ gst_fakesrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_PATTERN:
       g_value_set_string (value, src->pattern);
-      break;
-    case PROP_NUM_BUFFERS:
-      g_value_set_int (value, src->num_buffers);
       break;
     case PROP_SILENT:
       g_value_set_boolean (value, src->silent);
@@ -669,13 +655,6 @@ gst_fakesrc_create (GstBaseSrc * basesrc, guint64 offset, guint length,
     return GST_FLOW_UNEXPECTED;
   }
 
-  if (src->rt_num_buffers == 0) {
-    return GST_FLOW_UNEXPECTED;
-  } else {
-    if (src->rt_num_buffers > 0)
-      src->rt_num_buffers--;
-  }
-
   buf = gst_fakesrc_create_buffer (src);
   GST_BUFFER_OFFSET (buf) = src->buffer_count++;
 
@@ -729,7 +708,6 @@ gst_fakesrc_start (GstBaseSrc * basesrc)
   src->buffer_count = 0;
   src->pattern_byte = 0x00;
   src->bytes_sent = 0;
-  src->rt_num_buffers = src->num_buffers;
 
   return TRUE;
 }
