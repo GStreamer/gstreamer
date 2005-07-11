@@ -930,7 +930,7 @@ gst_value_deserialize_buffer (GValue * dest, const char *s)
   }
 
   if (ret) {
-    gst_value_set_mini_object (dest, GST_MINI_OBJECT (buffer));
+    gst_value_take_mini_object (dest, GST_MINI_OBJECT (buffer));
     return TRUE;
   } else {
     gst_buffer_unref (buffer);
@@ -1323,17 +1323,25 @@ gst_string_wrap (const char *s)
   return d;
 }
 
+/* FIXME: wouldn't it be nice if this function
+ * were documented ? Alphabet spaghetti is easier to digest.
+ */
 static char *
 gst_string_unwrap (const gchar * s)
 {
-  /* FIXME: do better memory management? */
-  gchar *ret = g_strdup (s);
-  gchar *read = ret, *write = ret;
+  gchar *ret;
+  gchar *read, *write;
 
-  if (*read++ != '"') {
-    g_free (ret);
+  if (s == NULL)
     return NULL;
-  }
+
+  ret = g_strdup (s);
+  read = ret;
+  write = ret;
+
+  if (*read++ != '"')
+    goto beach;
+
   while (*read) {
     if (GST_ASCII_IS_STRING (*read)) {
       *write++ = *read++;
@@ -1342,27 +1350,32 @@ gst_string_unwrap (const gchar * s)
     } else if (*read == '\\') {
       read++;
       if (*read >= '0' && *read <= '7') {
-        if (read[1] < '0' || read[1] > '7' || read[2] < '0' || read[2] > '7') {
-          g_free (ret);
-          return NULL;
-        }
+        if (read[1] < '0' || read[1] > '7' || read[2] < '0' || read[2] > '7')
+          goto beach;
+
         *write++ = ((read[0] - '0') << 6) +
             ((read[1] - '0') << 3) + (read[2] - '0');
         read += 3;
       } else {
+        /* if we run into a \0 here, we definately won't get a quote later */
+        if (*read == 0)
+          goto beach;
+
         *write++ = *read++;
       }
     } else {
-      g_free (ret);
-      return NULL;
+      goto beach;
     }
   }
-  if (*read != '"' || read[1] != '\0') {
-    g_free (ret);
-    return NULL;
-  }
+  if (*read != '"' || read[1] != '\0')
+    goto beach;
+
   *write++ = '\0';
   return ret;
+
+beach:
+  g_free (ret);
+  return NULL;
 }
 
 static char *

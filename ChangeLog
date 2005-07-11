@@ -1,3 +1,21 @@
+2005-07-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
+	  add two more tests for valgrinding
+	* check/gst/gstvalue.c: (GST_START_TEST):
+	  test refcount of deserialized buffer, found a leak
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/gstreamer.types:
+	* docs/gst/tmpl/gstminiobject.sgml:
+	  add miniobject to docs
+	* gst/gstminiobject.c:
+	  add some docs
+	* gst/gstvalue.c: (gst_value_deserialize_buffer),
+	(gst_string_unwrap):
+	  fix a hard-to-find invalid write for one of the tests
+	  fix a leak for deserialized buffers
+
 2005-07-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/advanced-events.xml:

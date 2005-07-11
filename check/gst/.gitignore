@@ -5,9 +5,11 @@ gstbuffer
 gstbus
 gstcaps
 gstdata
+gstelement
 gstghostpad
 gstiterator
 gstmessage
+gstminiobject
 gstobject
 gstpad
 gststructure

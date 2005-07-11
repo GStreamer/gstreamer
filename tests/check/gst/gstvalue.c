@@ -27,9 +27,16 @@
 GST_START_TEST (test_deserialize_buffer)
 {
   GValue value = { 0 };
+  GstBuffer *buf;
 
   g_value_init (&value, GST_TYPE_BUFFER);
   fail_unless (gst_value_deserialize (&value, "1234567890abcdef"));
+  buf = GST_BUFFER (gst_value_get_mini_object (&value));
+
+  ASSERT_MINI_OBJECT_REFCOUNT (buf, "buffer", 1);
+
+  /* cleanup */
+  gst_buffer_unref (buf);
 }
 
 GST_END_TEST;
@@ -262,9 +269,9 @@ GST_START_TEST (test_deserialize_string)
     gchar *to;
   } tests[] = {
     {
-    "", ""}, {
-    "\"\"", ""},
-        /* FAILURES */
+    "", ""},                    /* empty strings */
+    {
+    "\"\"", ""},                /* FAILURES */
     {
     "\"", NULL},                /* missing second quote */
     {

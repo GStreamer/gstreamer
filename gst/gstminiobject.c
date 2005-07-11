@@ -311,6 +311,15 @@ gst_value_mini_object_lcopy (const GValue * value, guint n_collect_values,
   return NULL;
 }
 
+/**
+ * gst_value_set_mini_object:
+ * @value:       a valid #GValue of %GST_TYPE_MINI_OBJECT derived type
+ * @mini_object: mini object value to set
+ *
+ * Set the contents of a %GST_TYPE_MINI_OBJECT derived #GValue to
+ * @mini_object.
+ * The caller retains ownership of the reference.
+ */
 void
 gst_value_set_mini_object (GValue * value, GstMiniObject * mini_object)
 {
@@ -321,6 +330,16 @@ gst_value_set_mini_object (GValue * value, GstMiniObject * mini_object)
       mini_object);
 }
 
+/**
+ * gst_value_take_mini_object:
+ * @value:       a valid #GValue of %GST_TYPE_MINI_OBJECT derived type
+ * @mini_object: mini object value to take
+ *
+ * Set the contents of a %GST_TYPE_MINI_OBJECT derived #GValue to
+ * @mini_object.
+ * Takes over the ownership of the caller's reference to @mini_object;
+ * the caller doesn't have to unref it any more.
+ */
 void
 gst_value_take_mini_object (GValue * value, GstMiniObject * mini_object)
 {
@@ -332,6 +351,15 @@ gst_value_take_mini_object (GValue * value, GstMiniObject * mini_object)
   gst_mini_object_unref (mini_object);
 }
 
+/**
+ * gst_value_get_mini_object:
+ * @value:   a valid #GValue of %GST_TYPE_MINI_OBJECT derived type
+ *
+ * Get the contents of a %GST_TYPE_MINI_OBJECT derived #GValue.
+ * Does not increase the refcount of the returned object.
+ *
+ * @Returns: mini object contents of @value
+ */
 GstMiniObject *
 gst_value_get_mini_object (const GValue * value)
 {

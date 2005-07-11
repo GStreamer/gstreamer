@@ -758,6 +758,44 @@ gst_mem_chunk_free
 </SECTION>
 
 <SECTION>
+<FILE>gstminiobject</FILE>
+<TITLE>GstMiniObject</TITLE>
+GstMiniObject
+GstMiniObjectFlags
+GST_MINI_OBJECT_FLAGS
+GST_MINI_OBJECT_FLAG_IS_SET
+GST_MINI_OBJECT_FLAG_SET
+GST_MINI_OBJECT_FLAG_UNSET
+
+gst_mini_object_new
+gst_mini_object_copy
+gst_mini_object_is_writable
+gst_mini_object_make_writable
+
+gst_mini_object_ref
+gst_mini_object_unref
+gst_mini_object_replace
+
+gst_param_spec_mini_object
+gst_value_set_mini_object
+gst_value_take_mini_object
+gst_value_get_mini_object
+
+<SUBSECTION Standard>
+GstMiniObjectClass
+GST_MINI_OBJECT
+GST_IS_MINI_OBJECT
+GST_MINI_OBJECT_CLASS
+GST_IS_MINI_OBJECT_CLASS
+GST_MINI_OBJECT_GET_CLASS
+GST_TYPE_MINI_OBJECT
+GST_TYPE_MINI_OBJECT_FLAGS
+<SUBSECTION Private>
+gst_mini_object_get_type
+gst_mini_object_flags_get_type
+</SECTION>
+
+<SECTION>
 <FILE>gstobject</FILE>
 <TITLE>GstObject</TITLE>
 GstObject

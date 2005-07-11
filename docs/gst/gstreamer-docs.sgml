@@ -27,6 +27,7 @@
 <!ENTITY GstIterator SYSTEM "xml/gstiterator.xml">
 <!ENTITY GstMacros SYSTEM "xml/gstmacros.xml">
 <!ENTITY GstMemChunk SYSTEM "xml/gstmemchunk.xml">
+<!ENTITY GstMiniObject SYSTEM "xml/gstminiobject.xml">
 <!ENTITY GstObject SYSTEM "xml/gstobject.xml">
 <!ENTITY GstPad SYSTEM "xml/gstpad.xml">
 <!ENTITY GstPadTemplate SYSTEM "xml/gstpadtemplate.xml">
@@ -115,6 +116,7 @@
     &GstIndexFactory;
     &GstInfo;
     &GstIterator;
+    &GstMiniObject;
     &GstObject;
     &GstPad;
     &GstPadTemplate;
