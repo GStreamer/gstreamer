@@ -1,3 +1,11 @@
+2005-07-11  Luca Ognibene  <luogni@tin.it>
+
+	* ext/ffmpeg/gstffmpegdec.c (struct _GstFFMpegDec) 
+	(gst_ffmpegdec_open, gst_ffmpegdec_negotiate): 
+	  Cache the pixel format value and renegotiate the pipeline
+	  if this value changes. Fixes segfault when decoding a
+	  stream with different colorspaces like a sequence of jpeg.
+
 2005-07-11  daniel fischer  <dan@f3c.com>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>

@@ -54,6 +54,7 @@ struct _GstFFMpegDec
   union {
     struct {
       gint width, height, fps, fps_base;
+      enum PixelFormat pix_fmt;
     } video;
     struct {
       gint channels, samplerate;
@@ -414,6 +415,7 @@ gst_ffmpegdec_open (GstFFMpegDec *ffmpegdec)
       ffmpegdec->format.video.height = 0;
       ffmpegdec->format.video.fps = 0;
       ffmpegdec->format.video.fps_base = 0;
+      ffmpegdec->format.video.pix_fmt = PIX_FMT_NB;
       break;
     case CODEC_TYPE_AUDIO:
       ffmpegdec->format.audio.samplerate = 0;
@@ -583,7 +585,8 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
           ffmpegdec->format.video.height == ffmpegdec->context->height &&
           ffmpegdec->format.video.fps == ffmpegdec->context->frame_rate &&
           ffmpegdec->format.video.fps_base ==
-              ffmpegdec->context->frame_rate_base)
+              ffmpegdec->context->frame_rate_base &&	  	  
+	  ffmpegdec->format.video.pix_fmt == ffmpegdec->context->pix_fmt)
         return TRUE;
       GST_DEBUG ("Renegotiating video from %dx%d@%d/%dfps to %dx%d@%d/%dfps",
           ffmpegdec->format.video.width, ffmpegdec->format.video.height,
@@ -594,6 +597,7 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
       ffmpegdec->format.video.height = ffmpegdec->context->height;
       ffmpegdec->format.video.fps = ffmpegdec->context->frame_rate;
       ffmpegdec->format.video.fps_base = ffmpegdec->context->frame_rate_base;
+      ffmpegdec->format.video.pix_fmt = ffmpegdec->context->pix_fmt;
       break;
     case CODEC_TYPE_AUDIO:
       if (ffmpegdec->format.audio.samplerate ==
