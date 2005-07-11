@@ -133,14 +133,14 @@
           sections.
         </para>
         <para>
-          The first chapter, named <xref linkend="chapter-loopbased-sched"/>,
+          The first chapter, named <xref linkend="chapter-scheduling"/>,
           will explain some of the basics of element scheduling. It is not
           very in-depth, but is mostly some sort of an introduction on why
           other things work as they do. Read this chapter if you're interested
           in &GStreamer; internals. Next, we will apply this knowledge and
           discuss another type of data transmission than what you learned in
           <xref linkend="chapter-building-chainfn"/>: <xref
-          linkend="chapter-loopbased-loopfn"/>. Loop-based elements will give
+          linkend="chapter-scheduling"/>. Loop-based elements will give
           you more control over input rate. This is useful when writing, for
           example, muxers or demuxers.
         </para>

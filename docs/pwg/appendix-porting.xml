@@ -6,7 +6,9 @@
     applications from &GStreamer;-0.8 to &GStreamer;-0.9, with references
     to the relevant sections in this Plugin Writer's Guide where needed.
     With this list, it should be possible to port most plugins to
-    &GStreamer;-0.9 in less than a day.
+    &GStreamer;-0.9 in less than a day. Exceptions are elements that will
+    require a base class in 0.9 (sources, sinks), in which case it may take
+    a lot longer, depending on the coder's skills.
   </para>
 
   <sect1 id="section-porting-objects">
@@ -28,8 +30,31 @@
       </listitem>
       <listitem>
         <para>
-          base classes, async capsnego (caps-on-buffer), async for sinks,
-          bytestream dead / pull_range, direct scheduling, etc.
+          In 0.8, scheduling could happen in any way. Source elements could
+          be <function>_get ()</function>-based or <function>_loop
+          ()</function>-based, and any other element could be  <function>_chain
+          ()</function>-based or <function>_loop ()</function>-based, with
+          no limitations. Scheduling in 0.9 is simpler for the scheduler,
+          and the element is expected to do some more work. Pads get
+          assigned a scheduling mode, based on which they can either
+          operate in random access-mode, in pipeline driving mode or in
+          push-mode. all this is documented in detail in <xref
+          linkend="chapter-scheduling"/>. As a result of this, the bytestream
+          object no longer exists. Elements requiring byte-level access should
+          now use random access on their sinkpads.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Negotiation is asynchronous. This means that negotiation is,
+          downstream, done as data comes in and, upstream, as renegotiation
+          is required. All details are described in <xref
+          linkend="chapter-negotiation"/>.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          base classes, async state changes.
         </para>
       </listitem>
     </itemizedlist>

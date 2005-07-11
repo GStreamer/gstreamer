@@ -6,7 +6,7 @@
   <para>
     N-to-1 elements have been previously mentioned and discussed in both
     <xref linkend="chapter-advanced-request"/> and in
-    <xref linkend="chapter-loopbased-loopfn"/>. The main noteworthy thing
+    <xref linkend="chapter-scheduling"/>. The main noteworthy thing
     about N-to-1 elements is that they should <emphasis>always</emphasis>,
     without any single exception, be <function>_loop ()</function>-based.
     Apart from that, there is not much general that you need to know. We
@@ -18,7 +18,7 @@
   <sect1 id="section-muxer-dataloop" xreflabel="The Data Loop Function">
     <title>The Data Loop Function</title>
     <para>
-      As previously mentioned in <xref linkend="chapter-loopbased-loopfn"/>,
+      As previously mentioned in <xref linkend="chapter-scheduling"/>,
       N-to-1 elements generally try to have one buffer from each sink pad
       and then handle the one with the earliest timestamp. There's some
       exceptions to this rule, we will come to those later. This only works

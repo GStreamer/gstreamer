@@ -194,8 +194,6 @@ gst_my_filter_handle_src_event (GstPad   *pad,
         N-to-1 elements. Note that the stream itself is <emphasis>not</emphasis>
         a resource that should be closed down on EOS! Applications might seek
         back to a point before EOS and set the pipeline to PLAYING again.
-        N-to-1 elements have been discussed previously in
-        <xref linkend="section-loopfn-multiinput"/>.
       </para>
       <para>
         The EOS event (<symbol>GST_EVENT_EOS</symbol>) has no properties,

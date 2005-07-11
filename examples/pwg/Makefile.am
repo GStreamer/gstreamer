@@ -10,9 +10,11 @@ libproperties_la_SOURCES = properties.c
 libforwardcaps_la_SOURCES = forwardcaps.c
 libconvertcaps_la_SOURCES = convertcaps.c
 libgetcaps_la_SOURCES = getcaps.c
+libtask_la_SOURCES = task.c
+librange_la_SOURCES = range.c
 DISTCLEANFILES = \
 	boilerplate.c pads.c chain.c chain2.c state.c properties.c \
-	forwardcaps.c convertcaps.c getcaps.c \
+	forwardcaps.c convertcaps.c getcaps.c task.c range.c \
 	init.func caps.func chain.func state.func register.func filter.h
 
 EXTRA_DIST = extract.pl
@@ -26,7 +28,9 @@ EXAMPLES = \
 	libproperties.la \
 	libforwardcaps.la \
 	libconvertcaps.la \
-	libgetcaps.la
+	libgetcaps.la \
+	libtask.la \
+	librange.la
 
 EXAMPLE_APPS = \
 	test
@@ -74,6 +78,10 @@ test.c: $(top_srcdir)/docs/pwg/building-testapp.xml
 forwardcaps.c convertcaps.c getcaps.c: $(top_srcdir)/docs/pwg/advanced-negotiation.xml init.func register.func chain.func state.func
 	$(PERL_PATH) $(srcdir)/extract.pl $@ \
 		$(top_srcdir)/docs/pwg/advanced-negotiation.xml
+
+task.c range.c: $(top_srcdir)/docs/pwg/advanced-scheduling.xml register.func
+	$(PERL_PATH) $(srcdir)/extract.pl $@ \
+		$(top_srcdir)/docs/pwg/advanced-scheduling.xml
 
 noinst_PROGRAMS = $(EXAMPLE_APPS)
 noinst_LTLIBRARIES = $(EXAMPLES)

@@ -1,3 +1,19 @@
+2005-07-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/advanced-events.xml:
+	* docs/pwg/advanced-request.xml:
+	* docs/pwg/advanced-scheduling.xml:
+	* docs/pwg/appendix-porting.xml:
+	* docs/pwg/building-boiler.xml:
+	* docs/pwg/intro-preface.xml:
+	* docs/pwg/other-ntoone.xml:
+	  Rewrite scheduling-chapter for scheduling model in 0.9. Add lots
+	  of example code and explanation for pad activation, loop() and
+	  getrange() functions and a bit more. Remove old comments pointing
+	  to loop-functions.
+	* examples/pwg/Makefile.am:
+	  Add loop/getrange examples.
+
 2005-07-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

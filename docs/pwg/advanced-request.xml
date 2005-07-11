@@ -263,9 +263,5 @@ gst_my_filter_request_new_pad (GstElement     *element,
 }
 ]]>
     </programlisting>
-    <para>
-      The <function>_loop ()</function> function is the same as the one given
-      previously in <xref linkend="section-loopfn-multiinput"/>.
-    </para>
   </sect1>
 </chapter>
