@@ -92,11 +92,12 @@ VALGRIND_TESTS_DISABLE = 			\
 	$(TESTS_TO_FIX)
 
 if HAVE_VALGRIND
-check-local:
+# hangs spectacularly on some machines, so let's not do this by default yet
+check-local-disabled:
 	make valgrind
 else
-check-local:
-	true
+check-local-disabled:
+	@true
 endif
 
 valgrind:
