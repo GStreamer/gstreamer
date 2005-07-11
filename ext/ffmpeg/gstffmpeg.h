@@ -49,4 +49,8 @@ G_END_DECLS
 
 extern URLProtocol gstreamer_protocol;
 
+/* use GST_FFMPEG URL_STREAMHEADER with URL_WRONLY if the first 
+ * buffer should be used as streamheader property on the pad's caps. */
+#define GST_FFMPEG_URL_STREAMHEADER 16
+
 #endif /* __GST_FFMPEG_H__ */

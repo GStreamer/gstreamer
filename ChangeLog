@@ -1,3 +1,14 @@
+2005-07-11  daniel fischer  <dan@f3c.com>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpeg.h:
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_loop):
+	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_open),
+	(gst_ffmpegdata_write):
+	  Add a stream-header flag to set stream-header caps on some streams,
+	  such as (in this case) flv (fixes #309051).
+
 2005-06-27  Luca Ognibene  <luogni@tin.it>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_loop):

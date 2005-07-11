@@ -342,6 +342,7 @@ gst_ffmpegmux_loop (GstElement * element)
   /* open "file" (gstreamer protocol to next element) */
   if (!ffmpegmux->opened) {
     const GstTagList *iface_tags;
+    int open_flags = URL_WRONLY;
 
     /* we do need all streams to have started capsnego,
      * or things will go horribly wrong */
@@ -410,8 +411,13 @@ gst_ffmpegmux_loop (GstElement * element)
       gst_tag_list_free (tags);
     }
 
+	/* set the streamheader flag for gstffmpegprotocol if codec supports it */
+	if (!strcmp (ffmpegmux->context->oformat->name, "flv") ) {
+		open_flags |= GST_FFMPEG_URL_STREAMHEADER;
+	}
+
     if (url_fopen (&ffmpegmux->context->pb,
-            ffmpegmux->context->filename, URL_WRONLY) < 0) {
+            ffmpegmux->context->filename, open_flags) < 0) {
       GST_ELEMENT_ERROR (element, LIBRARY, TOO_LAZY, (NULL),
           ("Failed to open stream context in ffmux"));
       return;
@@ -432,6 +438,9 @@ gst_ffmpegmux_loop (GstElement * element)
           ("Failed to write file header - check codec settings"));
       return;
     }
+	
+    /* flush the header so it will be used as streamheader */
+    put_flush_packet (&ffmpegmux->context->pb);
   }
 
   /* take the one with earliest timestamp,

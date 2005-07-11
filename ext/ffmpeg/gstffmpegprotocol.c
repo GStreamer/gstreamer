@@ -41,6 +41,7 @@ struct _GstProtocolInfo
 
   GstByteStream *bs;
   gboolean eos;
+  gboolean set_streamheader;
 };
 
 static int
@@ -53,6 +54,9 @@ gst_ffmpegdata_open (URLContext * h, const char *filename, int flags)
 
   info = g_new0 (GstProtocolInfo, 1);
 
+  info->set_streamheader = flags & GST_FFMPEG_URL_STREAMHEADER;
+  flags &= ~GST_FFMPEG_URL_STREAMHEADER;
+  
   /* we don't support R/W together */
   if (flags != URL_RDONLY && flags != URL_WRONLY) {
     g_warning ("Only read-only or write-only are supported");
@@ -196,16 +200,41 @@ gst_ffmpegdata_write (URLContext * h, unsigned char *buf, int size)
   GstBuffer *outbuf;
 
   GST_DEBUG ("Writing %d bytes", size);
-
   info = (GstProtocolInfo *) h->priv_data;
 
-  g_return_val_if_fail (h->flags == URL_WRONLY, -EIO);
+  g_return_val_if_fail (h->flags != URL_RDONLY, -EIO);
 
   /* create buffer and push data further */
   outbuf = gst_buffer_new_and_alloc (size);
   GST_BUFFER_SIZE (outbuf) = size;
   memcpy (GST_BUFFER_DATA (outbuf), buf, size);
 
+  if (info->set_streamheader) {
+    GstCaps *caps = gst_pad_get_caps (info->pad);
+    GList *bufs = NULL;
+    GstStructure *structure = gst_caps_get_structure (caps, 0);
+    GValue list = { 0 }, value = { 0 };
+
+    GST_DEBUG ("Using buffer (size %i) as streamheader", size);
+
+    g_value_init (&list, GST_TYPE_FIXED_LIST);
+
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_IN_CAPS);
+		
+    g_value_init (&value, GST_TYPE_BUFFER);
+    g_value_set_boxed (&value, outbuf);
+    gst_value_list_append_value (&list, &value);
+    g_value_unset (&value);
+
+    gst_structure_set_value (structure, "streamheader", &list);
+    g_value_unset (&list);
+
+    gst_pad_try_set_caps (info->pad, caps);
+
+    /* only set the first buffer */
+    info->set_streamheader = FALSE;
+  }
+	
   gst_pad_push (info->pad, GST_DATA (outbuf));
 
   return size;
