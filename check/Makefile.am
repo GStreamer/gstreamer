@@ -108,7 +108,7 @@ valgrind:
 		CK_FORK=no						\
 		libtool --mode=execute					\
 		$(VALGRIND_PATH) -q --suppressions=$(srcdir)/gst.supp	\
-		--leak-check=yes $$t;					\
+		--tool=memcheck $$t;					\
 		if test "$$?" -ne 0; then                               \
                         echo "Valgrind error for test $$t";		\
 			failed=`expr $$failed + 1`;			\
