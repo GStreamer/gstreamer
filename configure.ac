@@ -445,6 +445,9 @@ fi
 AC_SUBST(VALGRIND_CFLAGS)
 AC_SUBST(VALGRIND_LIBS)
 
+AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
+AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
+
 dnl ################################################
 dnl # Set defines according to variables set above #
 dnl ################################################
@@ -498,8 +501,8 @@ dnl #############################
 
 dnl These should be "USE_*" instead of "HAVE_*", but some packages expect
 dnl HAVE_ and it is likely to be easier to stick with the old name
-AM_CONDITIONAL(EXPERIMENTAL,        test "$EXPERIMENTAL" = "$xyes")
-AM_CONDITIONAL(BROKEN,              test "$BROKEN" = "$xyes")
+AM_CONDITIONAL(EXPERIMENTAL,        test "x$EXPERIMENTAL" = "yes")
+AM_CONDITIONAL(BROKEN,              test "x$BROKEN" = "yes")
 AM_CONDITIONAL(PLUGINS_USE_BUILDDIR,  test "x$PLUGINS_USE_BUILDDIR" = "xyes")
 
 

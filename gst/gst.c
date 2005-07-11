@@ -807,6 +807,25 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
 }
 
 /**
+ * gst_deinit:
+ *
+ * Clean up.
+ * Call only once, before exiting.
+ * After this call GStreamer should not be used anymore.
+ */
+void
+gst_deinit (void)
+{
+  GstClock *clock;
+
+  clock = gst_system_clock_obtain ();
+  gst_object_unref (clock);
+  gst_object_unref (clock);
+
+  gst_initialized = FALSE;
+}
+
+/**
  * gst_version:
  * @major: pointer to a guint to store the major version number
  * @minor: pointer to a guint to store the minor version number

@@ -28,6 +28,7 @@ GST_START_TEST (test_subbuffer)
   int rc;
 
   buffer = gst_buffer_new_and_alloc (4);
+  memset (GST_BUFFER_DATA (buffer), 0, 4);
 
   sub = gst_buffer_create_sub (buffer, 1, 2);
 
@@ -38,6 +39,9 @@ GST_START_TEST (test_subbuffer)
 
   rc = GST_MINI_OBJECT_REFCOUNT_VALUE (buffer);
   fail_unless (rc == 2, "parent refcount is %d instead of 3", rc);
+
+  /* clean up */
+  gst_buffer_unref (sub);
   gst_buffer_unref (buffer);
 }
 
@@ -62,6 +66,11 @@ GST_START_TEST (test_is_span_fast)
 
   fail_if (gst_buffer_is_span_fast (sub1, sub2) == FALSE,
       "two subbuffers next to each other should be span_fast");
+
+  /* clean up */
+  gst_buffer_unref (sub1);
+  gst_buffer_unref (sub2);
+  gst_buffer_unref (buffer);
 }
 GST_END_TEST Suite *
 gst_test_suite (void)

@@ -15,6 +15,8 @@ install-pluginLTLIBRARIES:
 # ths core dumps of some machines have PIDs appended
 CLEANFILES = core.* test-registry.xml
 
+EXTRA_DIST = gst.supp
+
 clean-local:
 	for i in `find . -name ".libs" -type d`; do \
 	  rm -rf $$i; \
@@ -32,6 +34,7 @@ TESTS = $(top_builddir)/tools/gst-register 	\
 	gst/gstghostpad				\
 	gst/gstiterator 			\
 	gst/gstmessage	 			\
+	gst/gstminiobject 			\
 	gst/gstobject				\
 	gst/gstpad				\
 	gst/gstsystemclock			\
@@ -60,3 +63,59 @@ gst_libs_gdp_SOURCES = \
 	$(top_srcdir)/libs/gst/dataprotocol/dataprotocol.c
 # remove GST_ENABLE_NEW when dataprotocol has been declared API-stable
 gst_libs_gdp_CFLAGS = $(AM_CFLAGS) -DGST_ENABLE_NEW
+
+# valgrind testing
+
+# these just need fixing, period
+TESTS_TO_FIX =					\
+	gst/gstghostpad				\
+	gst/gstiterator 			\
+	gst/gstmessage	 			\
+	gst/gstpad				\
+	gst/gstsystemclock			\
+	gst/gststructure			\
+	gst/gsttag				\
+	gst/gstvalue				\
+	elements/gstfakesrc			\
+	pipelines/cleanup			\
+	pipelines/simple_launch_lines		\
+	gst-libs/gdp
+
+# these need fixing because the threads cause segfaults under valgrind
+TESTS_THREADED =				\
+	gst/gstminiobject 			\
+	gst/gstobject
+
+VALGRIND_TESTS_DISABLE = 			\
+	$(top_builddir)/tools/gst-register 	\
+	$(TESTS_THREADED)			\
+	$(TESTS_TO_FIX)
+
+if HAVE_VALGRIND
+check-local:
+	make valgrind
+else
+check-local:
+	true
+endif
+
+valgrind:
+	@echo "Valgrinding tests ..."
+	$(TESTS_ENVIRONMENT) $(top_builddir)/tools/gst-register
+	@failed=0;							\
+	for t in $(filter-out $(VALGRIND_TESTS_DISABLE),$(TESTS)); do	\
+		$(TESTS_ENVIRONMENT)					\
+		CK_FORK=no						\
+		libtool --mode=execute					\
+		$(VALGRIND_PATH) -q --suppressions=$(srcdir)/gst.supp	\
+		--leak-check=yes $$t;					\
+		if test "$$?" -ne 0; then                               \
+                        echo "Valgrind error for test $$t";		\
+			failed=`expr $$failed + 1`;			\
+                fi;							\
+	done;								\
+	if test "$$failed" -ne 0; then					\
+		echo "$$failed tests had leaks under valgrind";		\
+		false;							\
+	fi
+

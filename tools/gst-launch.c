@@ -648,6 +648,7 @@ end:
   fprintf (stderr, _("FREEING pipeline ...\n"));
   gst_object_unref (pipeline);
 
+  gst_deinit ();
   if (trace)
     gst_alloc_trace_print_live ();
 

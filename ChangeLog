@@ -1,5 +1,32 @@
 2005-07-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	  check for valgrind binary + some fixes
+	* check/gst.supp:
+	  valgrind suppressions for the tests
+	* check/Makefile.am:
+	  add a valgrind: target that valgrinds the unit tests
+	* check/gst/gst.c: (GST_START_TEST), (gst_suite):
+	* check/gst/gstbin.c: (pop_messages), (GST_START_TEST):
+	* check/gst/gstbuffer.c: (GST_START_TEST), (gst_test_suite):
+	* check/gst/gstghostpad.c:
+	  added some cleanup
+	* check/gst/gstdata.c:
+	  removed
+	* check/gst/gstminiobject.c: (GST_START_TEST), (thread_ref),
+	(thread_unref), (gst_mini_object_suite), (main):
+	  added
+	* gst/gst.c: (gst_deinit):
+	* gst/gst.h:
+	  add a method to clean up.
+	* gst/gstsystemclock.c: (gst_system_clock_dispose),
+	(gst_system_clock_obtain):
+	  allow for disposing the system clock.
+	* tools/gst-launch.c: (main):
+	  deinit
+
+2005-07-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/gst/tmpl/gstbasesrc.sgml:
 	* docs/gst/tmpl/gstfakesrc.sgml:
 	* gst/base/gstbasesrc.c: (gst_base_src_class_init),

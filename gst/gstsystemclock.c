@@ -131,36 +131,34 @@ gst_system_clock_dispose (GObject * object)
 {
   GstClock *clock = (GstClock *) object;
 
-  /* there are subclasses of GstSystemClock running around... */
+  GstSystemClock *sysclock = GST_SYSTEM_CLOCK (clock);
+  GList *entries;
+
+  /* else we have to stop the thread */
+  GST_LOCK (clock);
+  sysclock->stopping = TRUE;
+  /* unschedule all entries */
+  for (entries = clock->entries; entries; entries = g_list_next (entries)) {
+    GstClockEntry *entry = (GstClockEntry *) entries->data;
+
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "unscheduling entry %p", entry);
+    entry->status = GST_CLOCK_UNSCHEDULED;
+  }
+  g_list_free (clock->entries);
+  clock->entries = NULL;
+  GST_CLOCK_BROADCAST (clock);
+  GST_UNLOCK (clock);
+
+  if (sysclock->thread)
+    g_thread_join (sysclock->thread);
+  sysclock->thread = NULL;
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "joined thread");
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+
   if (_the_system_clock == clock) {
-    g_warning ("disposing systemclock!");
-
-    /* no parent dispose here, this is bad enough already */
-  } else {
-    GstSystemClock *sysclock = GST_SYSTEM_CLOCK (clock);
-    GList *entries;
-
-    /* else we have to stop the thread */
-    GST_LOCK (clock);
-    sysclock->stopping = TRUE;
-    /* unschedule all entries */
-    for (entries = clock->entries; entries; entries = g_list_next (entries)) {
-      GstClockEntry *entry = (GstClockEntry *) entries->data;
-
-      GST_CAT_DEBUG (GST_CAT_CLOCK, "unscheduling entry %p", entry);
-      entry->status = GST_CLOCK_UNSCHEDULED;
-    }
-    g_list_free (clock->entries);
-    clock->entries = NULL;
-    GST_CLOCK_BROADCAST (clock);
-    GST_UNLOCK (clock);
-
-    if (sysclock->thread)
-      g_thread_join (sysclock->thread);
-    sysclock->thread = NULL;
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "joined thread");
-
-    G_OBJECT_CLASS (parent_class)->dispose (object);
+    _the_system_clock = NULL;
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "disposed system clock");
   }
 }
 
@@ -168,7 +166,7 @@ gst_system_clock_dispose (GObject * object)
  * gst_system_clock_obtain:
  *
  * Get a handle to the default system clock. The refcount of the
- * clock will be increased so you need to unref the clock after 
+ * clock will be increased so you need to unref the clock after
  * usage.
  *
  * Returns: the default clock.
@@ -185,9 +183,6 @@ gst_system_clock_obtain (void)
 
   if (clock == NULL) {
     GST_CAT_DEBUG (GST_CAT_CLOCK, "creating new static system clock");
-    /* FIXME: the only way to clean this up is to have a gst_exit()
-     * function; until then, the program will always end with the sysclock
-     * at refcount 1 */
     clock = g_object_new (GST_TYPE_SYSTEM_CLOCK,
         "name", "GstSystemClock", NULL);
 

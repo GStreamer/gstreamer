@@ -31,6 +31,30 @@ GST_START_TEST (test_init)
 
 GST_END_TEST;
 
+GST_START_TEST (test_deinit)
+{
+  gst_init (NULL, NULL);
+
+  gst_deinit ();
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_deinit_sysclock)
+{
+  GstClock *clock;
+
+  gst_init (NULL, NULL);
+
+  clock = gst_system_clock_obtain ();
+  gst_object_unref (clock);
+
+  gst_deinit ();
+}
+
+GST_END_TEST;
+
+
 Suite *
 gst_suite (void)
 {
@@ -39,6 +63,8 @@ gst_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_init);
+  tcase_add_test (tc_chain, test_deinit);
+  tcase_add_test (tc_chain, test_deinit_sysclock);
 
   return s;
 }

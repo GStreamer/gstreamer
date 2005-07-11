@@ -124,7 +124,10 @@ GST_START_TEST (test_ghost_pads)
   gst_object_unref (gisink);
   assert_gstrefcount (fsink, 1);
 }
-GST_END_TEST Suite *
+
+GST_END_TEST;
+
+Suite *
 gst_ghost_pad_suite (void)
 {
   Suite *s = suite_create ("GstGhostPad");

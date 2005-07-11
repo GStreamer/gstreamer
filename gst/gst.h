@@ -99,6 +99,7 @@ gboolean	gst_init_check_with_popt_table	(int *argc, char **argv[],
 						 *popt_options);
 
 const GstPoptOption *	gst_init_get_popt_table		(void);
+void		gst_deinit			(void);
 
 G_END_DECLS
 
