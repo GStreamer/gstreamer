@@ -14,6 +14,9 @@ a support library for audio elements
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### ENUM GstAudioFieldFlag ##### -->
 <para>
 

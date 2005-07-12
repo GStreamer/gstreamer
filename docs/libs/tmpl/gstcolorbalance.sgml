@@ -14,6 +14,9 @@ interface for elements that provide color balance operations
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GstColorBalance ##### -->
 <para>
 

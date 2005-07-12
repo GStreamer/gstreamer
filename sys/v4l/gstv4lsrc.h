@@ -89,6 +89,7 @@ struct _GstV4lSrc
 
   gboolean autoprobe;           /* probe features on startup ? */
   gboolean autoprobe_fps;       /* probe fps on startup ? */
+  gboolean copy_mode;
 
   GValue *fps_list;             /* list of fps probed */
 };

@@ -1,3 +1,10 @@
+2005-07-12  Andy Wingo  <wingo@pobox.com>
+
+	* sys/v4l/gstv4lsrc.c (gst_v4lsrc_get_property) 
+	(gst_v4lsrc_set_property, gst_v4lsrc_class_init, gst_v4lsrc_init) 
+	(gst_v4lsrc_create): Re-add the copy-mode property, default to
+	TRUE to avoid deadlocks if an element holds on to our buffers.
+
 2005-07-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/sine/gstsinesrc.c: (gst_sinesrc_class_init),

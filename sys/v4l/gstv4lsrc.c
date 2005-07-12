@@ -46,6 +46,7 @@ enum
   PROP_0,
   PROP_AUTOPROBE,
   PROP_AUTOPROBE_FPS,
+  PROP_COPY_MODE,
   PROP_TIMESTAMP_OFFSET
 };
 
@@ -102,6 +103,10 @@ gst_v4lsrc_class_init (GstV4lSrcClass * klass)
       g_param_spec_boolean ("autoprobe-fps", "Autoprobe FPS",
           "Whether the device should be probed for framerates",
           TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_COPY_MODE,
+      g_param_spec_boolean ("copy-mode", "Copy mode",
+          "Whether to send out copies of buffers, or direct pointers to the mmap region",
+          TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_TIMESTAMP_OFFSET, g_param_spec_int64 ("timestamp-offset",
           "Timestamp offset",
@@ -129,6 +134,7 @@ gst_v4lsrc_init (GstV4lSrc * v4lsrc)
   v4lsrc->is_capturing = FALSE;
   v4lsrc->autoprobe = TRUE;
   v4lsrc->autoprobe_fps = TRUE;
+  v4lsrc->copy_mode = TRUE;
 
   v4lsrc->timestamp_offset = 0;
 
@@ -155,6 +161,9 @@ gst_v4lsrc_set_property (GObject * object,
       g_return_if_fail (!GST_V4L_IS_ACTIVE (GST_V4LELEMENT (v4lsrc)));
       v4lsrc->autoprobe_fps = g_value_get_boolean (value);
       break;
+    case PROP_COPY_MODE:
+      v4lsrc->copy_mode = g_value_get_boolean (value);
+      break;
     case PROP_TIMESTAMP_OFFSET:
       v4lsrc->timestamp_offset = g_value_get_int (value);
       break;
@@ -177,6 +186,9 @@ gst_v4lsrc_get_property (GObject * object,
       break;
     case PROP_AUTOPROBE_FPS:
       g_value_set_boolean (value, v4lsrc->autoprobe_fps);
+      break;
+    case PROP_COPY_MODE:
+      g_value_set_boolean (value, v4lsrc->copy_mode);
       break;
     case PROP_TIMESTAMP_OFFSET:
       g_value_set_int (value, v4lsrc->timestamp_offset);
@@ -638,12 +650,12 @@ gst_v4lsrc_create (GstPushSrc * src, GstBuffer ** buf)
 
   *buf = gst_v4lsrc_buffer_new (v4lsrc, num);
 
-#if 0
-  GstBuffer *copy = gst_buffer_copy (buf);
+  if (v4lsrc->copy_mode) {
+    GstBuffer *copy = gst_buffer_copy (*buf);
 
-  gst_buffer_unref (buf);
-  buf = copy;
-#endif
+    gst_buffer_unref (*buf);
+    *buf = copy;
+  }
 
   return GST_FLOW_OK;
 }
