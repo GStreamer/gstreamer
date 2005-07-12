@@ -37,8 +37,8 @@ _wrap_gst_message_parse_state_changed (PyGstMiniObject *self)
   gst_message_parse_state_changed (GST_MESSAGE(self->obj), &old, &new);
   /* Return this as a tuple */
   ret = PyList_New(2);
-  PyList_SET_ITEM(ret, 0, pyg_enum_from_gtype(GST_TYPE_ELEMENT_STATE, old));
-  PyList_SET_ITEM(ret, 1, pyg_enum_from_gtype(GST_TYPE_ELEMENT_STATE, new));
+  PyList_SET_ITEM(ret, 0, pyg_flags_from_gtype(GST_TYPE_ELEMENT_STATE, old));
+  PyList_SET_ITEM(ret, 1, pyg_flags_from_gtype(GST_TYPE_ELEMENT_STATE, new));
   return ret;
 }
 %%
@@ -102,8 +102,7 @@ _wrap_gst_message_parse_tag (PyGstMiniObject *self)
 
 	gst_message_parse_tag (GST_MESSAGE(self->obj), &taglist);
 
-	ret = PyList_New(0);
-	PyList_Append(ret, pyg_boxed_new (GST_TYPE_TAG_LIST, taglist, TRUE, TRUE));
+	ret = pyg_boxed_new (GST_TYPE_TAG_LIST, taglist, TRUE, TRUE);
 
 	return ret;
 }

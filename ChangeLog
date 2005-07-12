@@ -1,5 +1,10 @@
 2005-07-12  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gstmessage.override: 
+	fixes in .parse_state_changed() and parse_tag()
+
+2005-07-12  Edward Hervey  <edward@fluendo.com>
+
 	* gst/gst-types.defs:
 	* gst/gst.defs:
 	Added GError wrapping,
