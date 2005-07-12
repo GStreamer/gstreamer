@@ -1,5 +1,10 @@
 2005-07-12  Andy Wingo  <wingo@pobox.com>
 
+	* env: New script, munges PYTHONPATH for uninstalled usage, and
+	also $PACKAGES which is useful if you add `print-packages` to your
+	$PS1 and drop http://wingolog.org/pub/print-packages into your
+	$PATH.
+
 	* configure.ac (AC_CONFIG_FILES): The makefile handles pygst.py
 	now.
 	

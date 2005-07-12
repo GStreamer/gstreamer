@@ -1,0 +1,13 @@
+#!/bin/bash
+
+thisdir=$(cd `dirname $0` && pwd)
+
+if [[ -n $PYTHONPATH ]]; then
+  export PYTHONPATH=$thisdir:$PYTHONPATH
+else
+  export PYTHONPATH=$thisdir
+fi
+
+export PACKAGES="pygst $PACKAGES"
+
+exec "$@"
