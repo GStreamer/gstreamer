@@ -105,6 +105,50 @@ py_pad_private(PyGObject *pad)
 	return pad_private ((GstPad *)pygobject_get(pad));
 }
 
+static gboolean
+probe_handler_marshal(GstPad *pad, GstMiniObject *data, gpointer user_data)
+{
+    PyGILState_STATE state;
+    PyObject *callback, *args;
+    PyObject *ret;
+    PyObject *py_data;
+    PyObject *py_user_data;
+    gboolean res;
+    gint len, i;
+
+    g_return_val_if_fail(user_data != NULL, FALSE);
+
+    state = pyg_gil_state_ensure();
+
+    py_user_data = (PyObject *) user_data;
+
+    py_data = pygstminiobject_new(data);
+
+    callback = PyTuple_GetItem(py_user_data, 0);
+    args = Py_BuildValue("(NN)",
+			 pygobject_new(G_OBJECT(pad)),
+			 py_data);
+
+    len = PyTuple_Size(py_user_data);
+    for (i = 1; i < len; ++i) {
+        PyObject *tuple = args;
+        args = PySequence_Concat(tuple, PyTuple_GetItem(py_user_data, i));
+        Py_DECREF(tuple);
+    }
+    ret = PyObject_CallObject(callback, args);
+
+    if (!ret) {
+        PyErr_Print();
+        res = FALSE;
+    } else {
+        res = PyObject_IsTrue(ret);
+        Py_DECREF(ret);
+    }
+    Py_DECREF(args);
+    pyg_gil_state_release(state);
+
+    return res;
+}
 %%
 ignore
   gst_pad_select
@@ -356,25 +400,24 @@ _wrap_gst_pad_tp_repr (PyGObject *self)
 }
 
 %%
-/* override gst_pad_query kwargs */
-/* static PyObject * */
-/* _wrap_gst_pad_query(PyGObject *self, PyObject *args, PyObject *kwargs) */
-/* { */
-/* 	static char *kwlist[] = { "type", "format", NULL }; */
-/* 	GstQueryType type; */
-/* 	GstFormat format; */
-/* 	gint64 value = 0; */
-/* 	gboolean ret; */
-
-/* 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, */
-/* 					 "ii:GstPad.query", kwlist, */
-/* 					 &type, &format)) */
-/* 		return NULL; */
-	
-/* 	ret = gst_pad_query(GST_PAD(self->obj), type, &format, &value); */
-/* 	return PyLong_FromLongLong(value); */
-/* } */
-/* %% */
+override gst_pad_query kwargs
+static PyObject *
+_wrap_gst_pad_query(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "query", NULL };
+    int ret;
+    PyGstMiniObject *query;
+    GstMiniObject *copy;
+    
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!:GstPad.query", kwlist, &PyGstQuery_Type, &query))
+        return NULL;
+    copy = gst_mini_object_make_writable(query->obj);
+    ret = gst_pad_query(GST_PAD(self->obj), GST_QUERY (copy));
+    gst_mini_object_unref ((query->obj));
+    gst_mini_object_replace (&(query->obj), copy);
+    return PyBool_FromLong(ret);   
+}
+%%
 override gst_pad_convert kwargs
 static PyObject *
 _wrap_gst_pad_convert(PyGObject *self, PyObject *args, PyObject *kwargs)
@@ -531,6 +574,175 @@ _wrap_gst_pad_new(PyGObject *self, PyObject *args, PyObject *kwargs)
     return 0;
 }
 %%
+override gst_pad_add_data_probe args
+static PyObject *
+_wrap_gst_pad_add_data_probe(PyGObject *self, PyObject *args)
+{
+    PyObject *callback, *cbargs = NULL, *data;
+    gulong sigid;
+    gint len;
+
+    len = PyTuple_Size(args);
+
+    if (len < 1) {
+	PyErr_SetString(PyExc_TypeError, "Probe requires at least 1 arg");
+	return NULL;
+    }
+    callback = PySequence_GetItem(args, 0);
+    if (!PyCallable_Check(callback)) {
+	PyErr_SetString(PyExc_TypeError, "callback is not callable");
+	return NULL;
+    }
+    cbargs = PySequence_GetSlice(args, 1, len);
+    if (cbargs == NULL)
+	return NULL;
+    data = Py_BuildValue("(ON)", callback, cbargs);
+    if (data == NULL)
+	return NULL;
+    sigid = gst_pad_add_data_probe (GST_PAD (self->obj), (GCallback) probe_handler_marshal, data);
+
+    return PyLong_FromUnsignedLong(sigid);
+}
+%%
+override gst_pad_add_event_probe args
+static PyObject *
+_wrap_gst_pad_add_event_probe(PyGObject *self, PyObject *args)
+{
+    PyObject *callback, *cbargs = NULL, *data;
+    gulong sigid;
+    gint len;
+
+    len = PyTuple_Size(args);
+
+    if (len < 1) {
+	PyErr_SetString(PyExc_TypeError, "Probe requires at least 1 arg");
+	return NULL;
+    }
+    callback = PySequence_GetItem(args, 0);
+    if (!PyCallable_Check(callback)) {
+	PyErr_SetString(PyExc_TypeError, "callback is not callable");
+	return NULL;
+    }
+    cbargs = PySequence_GetSlice(args, 1, len);
+    if (cbargs == NULL)
+	return NULL;
+    data = Py_BuildValue("(ON)", callback, cbargs);
+    if (data == NULL)
+	return NULL;
+    sigid = gst_pad_add_event_probe (GST_PAD (self->obj), (GCallback) probe_handler_marshal, data);
+
+    return PyLong_FromUnsignedLong(sigid);
+}
+%%
+override gst_pad_add_buffer_probe args
+static PyObject *
+_wrap_gst_pad_add_buffer_probe(PyGObject *self, PyObject *args)
+{
+    PyObject *callback, *cbargs = NULL, *data;
+    gulong sigid;
+    gint len;
+
+    len = PyTuple_Size(args);
+
+    if (len < 1) {
+	PyErr_SetString(PyExc_TypeError, "Probe requires at least 1 arg");
+	return NULL;
+    }
+    callback = PySequence_GetItem(args, 0);
+    if (!PyCallable_Check(callback)) {
+	PyErr_SetString(PyExc_TypeError, "callback is not callable");
+	return NULL;
+    }
+    cbargs = PySequence_GetSlice(args, 1, len);
+    if (cbargs == NULL)
+	return NULL;
+    data = Py_BuildValue("(ON)", callback, cbargs);
+    if (data == NULL)
+	return NULL;
+    sigid = gst_pad_add_buffer_probe (GST_PAD (self->obj), (GCallback) probe_handler_marshal, data);
+
+    return PyLong_FromUnsignedLong(sigid);
+}
+%%
+override gst_pad_remove_data_probe kwargs
+static PyObject *
+_wrap_gst_pad_remove_data_probe(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "signalid", NULL };
+    gulong	signalid;
+    GstPad	*pad = GST_PAD (self->obj);
+    
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+				     "k:GstPad.remove_data_probe",
+				     kwlist, &signalid))
+	return NULL;
+    GST_LOCK (pad);
+    if (!g_signal_handler_is_connected ((gpointer) pad, signalid)) {
+	GST_UNLOCK (pad);
+	Py_INCREF (Py_False);
+	return Py_False;
+    }
+    g_signal_handler_disconnect ((gpointer) pad, signalid);
+    GST_PAD_DO_BUFFER_SIGNALS (pad) -= 1;
+    GST_PAD_DO_EVENT_SIGNALS (pad) -= 1;
+    
+    GST_UNLOCK (pad);
+    Py_INCREF (Py_True);
+    return Py_True;
+}
+%%
+override gst_pad_remove_event_probe kwargs
+static PyObject *
+_wrap_gst_pad_remove_event_probe(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "signalid", NULL };
+    gulong	signalid;
+    GstPad	*pad = GST_PAD (self->obj);
+    
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+				     "k:GstPad.remove_event_probe",
+				     kwlist, &signalid))
+	return NULL;
+    GST_LOCK (pad);
+    if (!g_signal_handler_is_connected ((gpointer) pad, signalid)) {
+	GST_UNLOCK (pad);
+	Py_INCREF (Py_False);
+	return Py_False;
+    }
+    g_signal_handler_disconnect ((gpointer) pad, signalid);
+    GST_PAD_DO_EVENT_SIGNALS (pad) -= 1;
+    
+    GST_UNLOCK (pad);
+    Py_INCREF (Py_True);
+    return Py_True;
+}
+%%
+override gst_pad_remove_buffer_probe kwargs
+static PyObject *
+_wrap_gst_pad_remove_buffer_probe(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "signalid", NULL };
+    gulong	signalid;
+    GstPad	*pad = GST_PAD (self->obj);
+    
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+				     "k:GstPad.remove_buffer_probe",
+				     kwlist, &signalid))
+	return NULL;
+    GST_LOCK (pad);
+    if (!g_signal_handler_is_connected ((gpointer) pad, signalid)) {
+	GST_UNLOCK (pad);
+	Py_INCREF (Py_False);
+	return Py_False;
+    }
+    g_signal_handler_disconnect ((gpointer) pad, signalid);
+    GST_PAD_DO_BUFFER_SIGNALS (pad) -= 1;
+    
+    GST_UNLOCK (pad);
+    Py_INCREF (Py_True);
+    return Py_True;
+}
+%%
 override-slot GstPadTemplate.tp_getattr
 #define IS_ATTR(name) (strcmp (name, attr) == 0)
 PyObject *
@@ -551,4 +763,71 @@ _wrap_gst_pad_template_tp_getattr(PyObject *self, char *attr)
   }
   return Py_FindMethod(_PyGstPadTemplate_methods, self, attr);
 }
+%%
+override gst_pad_query_position args
+static PyObject *
+_wrap_gst_pad_query_position (PyGObject *self, PyObject *args)
+{
+    gint64	cur, end;
+    gint	format;
+    PyObject	*pformat;
+    PyObject	*ret;
 
+    pformat = (PyObject*)PyTuple_GetItem(args, 0);
+    if (pyg_enum_get_value (GST_TYPE_FORMAT, pformat, &format)) {
+        PyErr_SetString(PyExc_TypeError, "argument should be a GstFormat");
+        return NULL;
+    }
+
+    ret = PyList_New(0);
+    if ((gst_pad_query_position(GST_PAD (self->obj), (GstFormat*) &format, &cur, &end))) {
+	PyList_Append(ret, PyLong_FromLong(cur));
+	PyList_Append(ret, PyLong_FromLong(end));
+	PyList_Append(ret, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
+    } else {
+	Py_INCREF(Py_None);
+	ret = Py_None;
+    }
+
+    return ret;
+}
+%%
+override gst_pad_query_convert kwargs
+static PyObject *
+_wrap_gst_pad_query_convert (PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "fromformat", "fromvalue", "destformat", NULL };
+    PyObject	*pfromformat, *pdestformat;
+    GstFormat	srcformat, destformat;
+    gint64	fromval, dstval;
+    PyObject	*ret;
+
+    /* Input : src_format, src_val, dst_format */
+    /* Returns : dst_format, dst_val OR None */
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+				     "0L0:GstPad.query_convert",
+				     kwlist, &pfromformat, &fromval, &pdestformat))
+	return NULL;
+    if (pyg_enum_get_value(GST_TYPE_FORMAT, pfromformat, (gint *) &srcformat)) {
+	PyErr_SetString(PyExc_TypeError, "argument should be a GstFormat");
+	return NULL;
+    }
+    if (pyg_enum_get_value(GST_TYPE_FORMAT, pdestformat, (gint *) &destformat)) {
+	PyErr_SetString(PyExc_TypeError, "argument should be a GstFormat");
+	return NULL;
+    }
+
+    if (!(gst_pad_query_convert (GST_PAD(self->obj),
+				 srcformat, fromval,
+				 &destformat, &dstval))) {
+	Py_INCREF(Py_None);
+	return Py_None;
+    }
+    
+    ret = PyList_New(0);
+    PyList_Append(ret, pyg_enum_from_gtype (GST_TYPE_FORMAT, destformat));
+    PyList_Append(ret, PyLong_FromLongLong(dstval));
+
+    return ret;
+}

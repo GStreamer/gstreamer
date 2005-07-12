@@ -152,7 +152,6 @@
   (c-name "GstBuffer")
   (gtype-id "GST_TYPE_BUFFER")
   (fields
-   '("guint8*" "data")
    '("guint" "size")
    '("GstClockTime" "timestamp")
    '("GstClockTime" "duration")
@@ -228,6 +227,18 @@
   (in-module "Gst")
   (c-name "GstTagList")
   (gtype-id "GST_TYPE_TAG_LIST")
+)
+
+(define-boxed GError
+  (in-module "Gst")
+  (c-name "GError")
+  (gtype-id "GST_TYPE_G_ERROR")
+  (copy-func "g_error_copy")
+  (release-func "g_error_free")
+  (fields
+   '("GQuark" "domain")
+   '("gint"   "code")
+   '("gchar*" "message"))
 )
 
 ;; Enumerations and flags ...
@@ -779,12 +790,9 @@
   (gtype-id "GST_TYPE_QUERY_TYPE")
   (values
     '("none" "GST_QUERY_NONE")
-    '("total" "GST_QUERY_TOTAL")
     '("position" "GST_QUERY_POSITION")
     '("latency" "GST_QUERY_LATENCY")
     '("jitter" "GST_QUERY_JITTER")
-    '("start" "GST_QUERY_START")
-    '("segment-end" "GST_QUERY_SEGMENT_END")
     '("rate" "GST_QUERY_RATE")
     '("seeking" "GST_QUERY_SEEKING")
     '("convert" "GST_QUERY_CONVERT")

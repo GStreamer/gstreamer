@@ -1,0 +1,114 @@
+/* -*- Mode: C; ; c-file-style: "python" -*- */
+/* gst-python
+ * Copyright (C) 2005 Edward Hervey
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ * 
+ * Author: Johan Dahlin <johan@gnome.org>
+ */
+
+%%
+override gst_query_parse_position noargs
+static PyObject *
+_wrap_gst_query_parse_position (PyGstMiniObject *self)
+{
+	GstFormat	format;
+	gint64		cur, end;
+	PyObject	*ret;
+
+	if (GST_QUERY_TYPE(self->obj) != GST_QUERY_POSITION) {
+		PyErr_SetString(PyExc_TypeError, "Query is not a position query");
+		return NULL;
+	}
+	
+	gst_query_parse_position (GST_QUERY(self->obj), &format, &cur, &end);
+	
+	ret = PyList_New(0);
+	PyList_Append(ret, pyg_enum_from_gtype(GST_TYPE_FORMAT, format));
+	PyList_Append(ret, PyLong_FromLongLong(cur));
+	PyList_Append(ret, PyLong_FromLongLong(end));
+
+	return ret;
+}
+%%
+override gst_query_parse_convert noargs
+static PyObject *
+_wrap_gst_query_parse_convert (PyGstMiniObject *self)
+{
+	GstFormat	srcformat, destformat;
+	gint64		srcvalue, destvalue;
+	PyObject	*ret;
+
+	if (GST_QUERY_TYPE(self->obj) != GST_QUERY_CONVERT) {
+		PyErr_SetString(PyExc_TypeError, "Query is not a convert query");
+		return NULL;
+	}
+
+	gst_query_parse_convert (GST_QUERY(self->obj), 
+				 &srcformat, &srcvalue,
+				 &destformat, &destvalue);
+	
+	ret = PyList_New(0);
+	PyList_Append(ret, pyg_enum_from_gtype(GST_TYPE_FORMAT, srcformat));
+	PyList_Append(ret, PyLong_FromLongLong(srcvalue));
+	PyList_Append(ret, pyg_enum_from_gtype(GST_TYPE_FORMAT, destformat));
+	PyList_Append(ret, PyLong_FromLongLong(destvalue));
+
+	return ret;
+}
+%%
+override gst_query_parse_seeking_query noargs
+static PyObject *
+_wrap_gst_query_parse_seeking_query (PyGstMiniObject *self)
+{
+	GstFormat	format;
+
+	if (GST_QUERY_TYPE(self->obj) != GST_QUERY_SEEKING) {
+		PyErr_SetString(PyExc_TypeError, "Query is not a seeking query");
+		return NULL;
+	}
+
+	gst_query_parse_seeking_query (GST_QUERY(self->obj), &format);
+
+	return pyg_enum_from_gtype(GST_TYPE_FORMAT, format);
+}
+%%
+override gst_query_parse_seeking_response noargs
+static PyObject *
+_wrap_gst_query_parse_seeking_response (PyGstMiniObject *self)
+{
+	GstFormat	format;
+	gboolean	seekable;
+	gint64		segstart;
+	gint64		segend;
+	PyObject	*ret;
+
+	if (GST_QUERY_TYPE(self->obj) != GST_QUERY_SEEKING) {
+		PyErr_SetString(PyExc_TypeError, "Query is not a seeking query");
+		return NULL;
+	}
+
+	gst_query_parse_seeking_response (GST_QUERY(self->obj), &format,
+					  &seekable, &segstart, &segend);
+
+	ret = PyList_New(0);
+	PyList_Append(ret, pyg_enum_from_gtype(GST_TYPE_FORMAT, format));
+	PyList_Append(ret, PyInt_FromLong((long) seekable));
+	PyList_Append(ret, PyLong_FromLongLong(segstart));
+	PyList_Append(ret, PyLong_FromLongLong(segend));
+
+	return ret;
+}

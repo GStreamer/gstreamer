@@ -8,11 +8,11 @@ class PipelineConstructor(unittest.TestCase):
         assert isinstance(pipeline, gst.Pipeline), 'pipeline is not a GstPipline'
         assert pipeline.get_name() == name, 'pipelines name is wrong'
         
-class ThreadConstructor(unittest.TestCase):
-    def testCreate(self):
-        thread = gst.Thread('test-thread')
-        assert thread is not None, 'thread is None'
-        assert isinstance(thread, gst.Thread)
+## class ThreadConstructor(unittest.TestCase):
+##     def testCreate(self):
+##         thread = gst.Thread('test-thread')
+##         assert thread is not None, 'thread is None'
+##         assert isinstance(thread, gst.Thread)
         
 class Pipeline(unittest.TestCase):
     def setUp(self):

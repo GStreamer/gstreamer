@@ -217,9 +217,12 @@ _pygst_element_init (gpointer gclass, PyTypeObject *pyclass)
 include
   gstbin.override
   gstbuffer.override
-  gstcaps.override
-  gstelement.override
   gstevent.override
+  gstcaps.override
+  gstbus.override
+  gstelement.override
+  gstmessage.override
+  gstquery.override
   gstpad.override
   gststructure.override
 %%
@@ -562,6 +565,35 @@ _wrap_gst_plugin_feature_tp_str(PyObject *self)
 	       gst_plugin_feature_get_rank (feature));
     ret = PyString_FromString(repr);
     g_free (repr);
+    return ret;
+}
+%%
+override gst_plugin_get_feature_list noargs
+static PyObject *
+_wrap_gst_plugin_get_feature_list(PyGObject *self)
+{
+    PyObject	*ret;
+    PyObject	*item;
+    GList	*l, *features;
+
+    features = gst_plugin_get_feature_list (GST_PLUGIN (self->obj));
+
+    ret = PyList_New(0);
+
+    for (l = features; l; l = g_list_next(l)) {
+	item = pygobject_new((GObject *) GST_PLUGIN_FEATURE(l->data));
+
+	if (!item) {
+	    Py_DECREF(ret);
+	    return NULL;
+	}
+	PyList_Append(ret, item);
+
+	Py_DECREF(item);
+    }
+
+    g_list_free(features);
+
     return ret;
 }
 %%
@@ -914,4 +946,65 @@ _wrap_gst_element_register(PyObject *self, PyObject *args, PyObject *kwargs)
     ret = gst_element_register(_pygst_get_plugin(), elementname, rank, type);
     return PyBool_FromLong(ret);
 }
+%%
+override-attr GError.domain
+static PyObject *
+_wrap_gst_g_error__get_domain(PyGObject *self, void *closure)
+{
+    return PyString_FromString(g_quark_to_string(((GError*)self->obj)->domain));
+}
+%%
+override-slot GError.tp_str
+static PyObject *
+_wrap_gst_g_error_tp_str(PyGObject *self)
+{
+    GError *error = (GError*)self->obj;
+    return PyString_FromString(gst_error_get_message (error->domain,
+						      error->code));
+}
+%%
+override gst_uri_handler_get_protocols noargs
+static PyObject *
+_wrap_gst_uri_handler_get_protocols (PyGObject *self)
+{
+    gchar	**tab;
+    int		i, len;
+    PyObject	*ret;
 
+    tab = gst_uri_handler_get_protocols (GST_URI_HANDLER (self->obj));
+    if (!tab) {
+	Py_INCREF (Py_None);
+	return Py_None;
+    }
+    ret = PyList_New(0);
+
+    len = g_strv_length (tab);
+    for (i = 0; i < len; i++) {
+	PyList_Append(ret, PyString_FromString(tab[i]));
+    }
+
+    return ret;
+}
+%%
+override gst_registry_pool_list noargs
+static PyObject *
+_wrap_gst_registry_pool_list (PyObject *what)
+{
+    PyObject	*ret, *item;
+    GList	*res, *tmp;
+
+    ret = PyList_New(0);
+    res = gst_registry_pool_list();
+    for (tmp = res; tmp; tmp = g_list_next(tmp)) {
+	item = pygobject_new((GObject*) GST_REGISTRY(tmp->data));
+
+	if (!item) {
+	    Py_DECREF(ret);
+	    return NULL;
+	}
+	PyList_Append(ret, item);
+
+	Py_DECREF(item);
+    }
+    return ret;
+}

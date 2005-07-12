@@ -368,48 +368,32 @@ _wrap_gst_element_unlink_many(PyObject *self, PyObject *args)
 	Py_INCREF(Py_None);
 	return Py_None;
 }
-%%
-override gst_element_send_event kwargs
-static PyObject *
-_wrap_gst_element_send_event(PyGObject *self, PyObject *args, PyObject *kwargs)
-{
-    static char *kwlist[] = { "event", NULL };
-    PyObject *py_event;
-    int ret;
-    GstEvent *event = NULL;
+/* override gst_element_send_event kwargs */
+/* static PyObject * */
+/* _wrap_gst_element_send_event(PyGObject *self, PyObject *args, PyObject *kwargs) */
+/* { */
+/*     static char *kwlist[] = { "event", NULL }; */
+/*     PyObject *py_event; */
+/*     int ret; */
+/*     GstEvent *event = NULL; */
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:GstElement.send_event", kwlist, &py_event))
-        return NULL;
-    if (pyg_boxed_check(py_event, GST_TYPE_EVENT))
-        event = pyg_boxed_get(py_event, GstEvent);
-    else {
-        PyErr_SetString(PyExc_TypeError, "event should be a GstEvent");
-        return NULL;
-    }
+/*     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:GstElement.send_event", kwlist, &py_event)) */
+/*         return NULL; */
+/*     if (pyg_boxed_check(py_event, GST_TYPE_EVENT)) */
+/*         event = pyg_boxed_get(py_event, GstEvent); */
+/*     else { */
+/*         PyErr_SetString(PyExc_TypeError, "event should be a GstEvent"); */
+/*         return NULL; */
+/*     } */
 
-    /* The pipeline unrefs the event, but we want to keep the ownership */
-    gst_event_ref(event);
+/*     /\* The pipeline unrefs the event, but we want to keep the ownership *\/ */
+/*     gst_event_ref(event); */
     
-    ret = gst_element_send_event(GST_ELEMENT(self->obj), event);
-    return PyBool_FromLong(ret);
+/*     ret = gst_element_send_event(GST_ELEMENT(self->obj), event); */
+/*     return PyBool_FromLong(ret); */
 
-}
-%%
-override gst_element_factory_get_pad_templates
-static PyObject *
-_wrap_gst_element_factory_get_pad_templates(PyGObject *self)
-{
-	const GList *pads;
-	PyObject *list;
-	
-	pads = gst_element_factory_get_pad_templates(GST_ELEMENT_FACTORY(self->obj));
-
-	list = PyList_New(0);
-	for (; pads; pads = g_list_next (pads)) 
-		PyList_Append(list, pygobject_new(pads->data));
-		
-	return list;
-}
+/* } */
+/* %% */
 %%
 override gst_element_query_position args
 static PyObject *
@@ -419,7 +403,6 @@ _wrap_gst_element_query_position (PyGObject *self, PyObject *args)
     gint	format;
     PyObject	*pformat;
     PyObject	*ret;
-    int		i;
 
     pformat = (PyObject*)PyTuple_GetItem(args, 0);
     if (pyg_enum_get_value (GST_TYPE_FORMAT, pformat, &format)) {
@@ -433,12 +416,73 @@ _wrap_gst_element_query_position (PyGObject *self, PyObject *args)
 	PyList_Append(ret, PyLong_FromLong(end));
 	PyList_Append(ret, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
     } else {
-	for (i = 0; i < 2; i++) {
-	    Py_INCREF(Py_None);
-	    PyList_Append(ret, Py_None);
-	}
-	PyList_Append(ret, pformat);
+	Py_INCREF(Py_None);
+	ret = Py_None;
     }
 
+    return ret;
+}
+%%
+override gst_element_query_convert kwargs
+static PyObject *
+_wrap_gst_element_query_convert (PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "fromformat", "fromvalue", "destformat", NULL };
+    PyObject	*pfromformat, *pdestformat;
+    GstFormat	srcformat, destformat;
+    gint64	fromval, dstval;
+    PyObject	*ret;
+
+    /* Input : src_format, src_val, dst_format */
+    /* Returns : dst_format, dst_val OR None */
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+				     "0L0:GstElement.query_convert",
+				     kwlist, &pfromformat, &fromval, &pdestformat))
+	return NULL;
+    if (pyg_enum_get_value(GST_TYPE_FORMAT, pfromformat, (gint *) &srcformat)) {
+	PyErr_SetString(PyExc_TypeError, "argument should be a GstFormat");
+	return NULL;
+    }
+    if (pyg_enum_get_value(GST_TYPE_FORMAT, pdestformat, (gint *) &destformat)) {
+	PyErr_SetString(PyExc_TypeError, "argument should be a GstFormat");
+	return NULL;
+    }
+
+    if (!(gst_element_query_convert (GST_ELEMENT(self->obj),
+				     srcformat, fromval,
+				     &destformat, &dstval))) {
+	Py_INCREF(Py_None);
+	return Py_None;
+    }
+    
+    ret = PyList_New(0);
+    PyList_Append(ret, pyg_enum_from_gtype (GST_TYPE_FORMAT, destformat));
+    PyList_Append(ret, PyLong_FromLongLong(dstval));
+
+    return ret;
+}
+%%
+override gst_element_get_query_types noargs
+static PyObject *
+_wrap_gst_element_get_query_types (PyGObject *self)
+{
+    PyObject	*ret;
+    PyObject	*item;
+    int		i;
+    GstQueryType	*tab;
+
+    tab = (GstQueryType*) gst_element_get_query_types(GST_ELEMENT(self->obj));
+    if (tab == NULL) {
+	Py_INCREF(Py_None);
+	return Py_None;
+    }
+
+    ret = PyList_New(0);
+    for (i = 0; tab[i] != 0; i++) {
+	item = pyg_enum_from_gtype (GST_TYPE_QUERY_TYPE, tab[i]);
+	PyList_Append(ret, item);
+    }
+    
     return ret;
 }

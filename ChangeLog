@@ -1,3 +1,58 @@
+2005-07-12  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	Added GError wrapping,
+	Removed data field from Buffer,
+	Added virtual methods to object
+	Updated to latest API
+
+	* gst/gst.override:
+	wrapped gst_plugin_get_feature_list(), gst_uri_handler_get_protocols(),
+	gst_registry_pool_list()
+
+	* gst/gstbuffer.override:
+	gst.Buffer() works
+	get/setters fixed
+	wrapped gst_buffer_stamp()
+
+	* gst/gstbus.override:
+	wrapped gst_bus_set_sync_handler() and gst_bus_add_watch()
+
+	* gst/gstelement.override:
+	wrapped gst_element_send_event(), gst_element_factory_get_pad_templates()
+	gst_element_query_convert(), gst_element_get_query_types()
+
+	* gst/gstevent.override:
+	wrapped gst_event_discont_get_value()
+
+	* gst/gstmessage.override:
+	wrapped gst_message_parse_state_changed(), gst_message_parse_error(),
+	gst_message_parse_warning(), gst_message_parse_tag()
+
+	* gst/gstmodule.c:
+	Added registration of new fundamental type with pygtk
+
+	* gst/gstpad.override:
+	wrapped gst_pad_query(), gst_pad_[add|remove]_[data|event|buffer]_probe(),
+	gst_pad_query_position(), gst_pad_query_convert()
+
+	* gst/gstquery.override:
+	wrapped gst_query_parse_position(), gst_query_parse_convert(),
+	gst_query_parse_seeking_query(), gst_query_parse_seeking_reponse()
+
+	* gst/pygstminiobject.c:
+	fixes
+
+	* gst/Makefile.am:
+	added gstbus.override, gstmessage.override, gstquery.override
+
+	* testsuite/test_buffer.py:
+	* testsuite/test_element.py:
+	* testsuite/test_event.py:
+	* testsuite/test_pipeline.py:
+	Updating testsuites
+
 2005-07-05  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstmodule.c:

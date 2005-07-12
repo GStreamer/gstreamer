@@ -54,9 +54,15 @@ pygst_miniobject_init()
 PyTypeObject *
 pygstminiobject_lookup_class(GType gtype)
 {
-    PyTypeObject *py_type;
+    PyTypeObject *py_type = NULL;
+    GType	ctype = gtype;
 
-    py_type = g_type_get_qdata(gtype, pygstminiobject_class_key);
+    while (!py_type && ctype) {
+	py_type = g_type_get_qdata(ctype, pygstminiobject_class_key);
+	ctype = g_type_parent(ctype);
+    }
+    if (!ctype)
+	g_error ("Couldn't find a good base type!!");
     
     return py_type;
 }
@@ -184,6 +190,8 @@ pygstminiobject_new(GstMiniObject *obj)
     } else {
 	/* create wrapper */
 	PyTypeObject *tp = pygstminiobject_lookup_class(G_OBJECT_TYPE(obj));
+	if (!tp)
+	    g_warning ("Couldn't get class for type object : %p", obj);
 	/* need to bump type refcount if created with
 	   pygstminiobject_new_with_interfaces(). fixes bug #141042 */
 	if (tp->tp_flags & Py_TPFLAGS_HEAPTYPE)
@@ -213,6 +221,8 @@ static void
 pygstminiobject_dealloc(PyGstMiniObject *self)
 {
     GstMiniObject	*obj = NULL;
+
+    g_return_if_fail (self != NULL);
 
     PyGILState_STATE state;
     

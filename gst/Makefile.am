@@ -38,9 +38,12 @@ GST_OVERRIDES = 		\
 	gst.override 		\
 	gstbin.override 	\
 	gstbuffer.override 	\
+	gstbus.override		\
+	gstevent.override	\
 	gstcaps.override 	\
 	gstelement.override 	\
-	gstevent.override	\
+	gstmessage.override	\
+	gstquery.override	\
 	gstpad.override		\
 	gststructure.override
 

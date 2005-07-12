@@ -66,14 +66,25 @@ python_do_pending_calls(gpointer data)
     return TRUE;
 }
 
-/* static void */
-/* sink_gstobject(GObject *object) */
-/* { */
-/*      if (GST_OBJECT_FLOATING(object)) { */
-/* 	  g_object_ref(object); */
-/* 	  gst_object_sink(GST_OBJECT(object)); */
-/*      } */
-/* } */
+
+static PyObject*
+pygstminiobject_from_gvalue(const GValue *value)
+{
+     GstMiniObject	*miniobj;
+
+     if ((miniobj = gst_value_get_mini_object (value)) == NULL)
+	  return NULL;
+     return pygstminiobject_new(miniobj);
+}
+
+static int
+pygstminiobject_to_gvalue(GValue *value, PyObject *obj)
+{
+     PyGstMiniObject	*self = (PyGstMiniObject*) obj;
+
+     gst_value_set_mini_object(value, self->obj);
+     return 0;
+}
 
 DL_EXPORT(void)
 init_gst (void)
@@ -139,6 +150,8 @@ init_gst (void)
      PyModule_AddIntConstant(m, "MSECOND", GST_MSECOND);
      PyModule_AddIntConstant(m, "NSECOND", GST_NSECOND);
 
+     PyModule_AddObject(m, "CLOCK_TIME_NONE", PyLong_FromUnsignedLongLong(-1));
+
      /* LinkError exception */
      PyGstExc_LinkError = PyErr_NewException("gst.LinkError",
 					     PyExc_RuntimeError,
@@ -146,11 +159,12 @@ init_gst (void)
      PyDict_SetItemString(d, "LinkError", PyGstExc_LinkError);
 
 
-     PyGstMiniObject_Type.tp_alloc = PyType_GenericAlloc;
-     PyGstMiniObject_Type.tp_new = PyType_GenericNew;
      pygstminiobject_register_class(d, "GstMiniObject", GST_TYPE_MINI_OBJECT,
 				    &PyGstMiniObject_Type, NULL);
-
+     pyg_register_boxed_custom(GST_TYPE_MINI_OBJECT,
+			       pygstminiobject_from_gvalue,
+			       pygstminiobject_to_gvalue);
+     
      pygst_register_classes (d);
      pygst_add_constants (m, "GST_");
 

@@ -8,12 +8,13 @@ class EventTest(unittest.TestCase):
         self.sink = pipeline.get_by_name('sink')
         pipeline.set_state(gst.STATE_PLAYING)
         
-    def testEventEmpty(self):
-        event = gst.Event(gst.EVENT_EMPTY)
-        self.sink.send_event(event)
+##     def testEventEmpty(self):
+##         event = gst.Event(gst.EVENT_EMPTY)
+##         self.sink.send_event(event)
         
     def testEventSeek(self):
         event = gst.event_new_seek(gst.SEEK_METHOD_CUR, 0)
+        assert event
         self.sink.send_event(event)
 
 class EventFileSrcTest(unittest.TestCase):
@@ -27,6 +28,7 @@ class EventFileSrcTest(unittest.TestCase):
         self.source = self.pipeline.get_by_name('source')
         self.sink = self.pipeline.get_by_name('sink')
         self.sink.connect('handoff', self.handoff_cb)
+        self.bus = self.pipeline.get_bus()
         self.pipeline.set_state(gst.STATE_PLAYING)
         
     def tearDown(self):
@@ -40,8 +42,10 @@ class EventFileSrcTest(unittest.TestCase):
     def playAndIter(self):
         self.handoffs = []
         assert self.pipeline.set_state(gst.STATE_PLAYING)
-        while self.pipeline.iterate():
-            pass
+        while 42:
+            msg = self.bus.pop()
+            if msg and msg.type == gst.MESSAGE_EOS:
+                break
         assert self.pipeline.set_state(gst.STATE_PAUSED)
         handoffs = self.handoffs
         self.handoffs = []

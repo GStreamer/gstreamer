@@ -1,0 +1,109 @@
+/* -*- Mode: C; ; c-file-style: "python" -*- */
+/* gst-python
+ * Copyright (C) 2005 Edward Hervey
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ * 
+ * Author: Johan Dahlin <johan@gnome.org>
+ */
+
+%%
+override gst_message_parse_state_changed noargs
+static PyObject *
+_wrap_gst_message_parse_state_changed (PyGstMiniObject *self)
+{
+  GstElementState	old;
+  GstElementState	new;
+  PyObject		*ret;
+
+  /* Should raise an exception if it's not a state-changed message */
+  if (GST_MESSAGE(self->obj)->type != GST_MESSAGE_STATE_CHANGED) {
+	  PyErr_SetString(PyExc_TypeError, "Message is not a state-changed message");
+	  return NULL;
+  }
+  gst_message_parse_state_changed (GST_MESSAGE(self->obj), &old, &new);
+  /* Return this as a tuple */
+  ret = PyList_New(2);
+  PyList_SET_ITEM(ret, 0, pyg_enum_from_gtype(GST_TYPE_ELEMENT_STATE, old));
+  PyList_SET_ITEM(ret, 1, pyg_enum_from_gtype(GST_TYPE_ELEMENT_STATE, new));
+  return ret;
+}
+%%
+override gst_message_parse_error noargs
+static PyObject *
+_wrap_gst_message_parse_error (PyGstMiniObject *self)
+{
+	PyObject	*ret;
+	GError	*error;
+	gchar	*debug;
+	
+	if (GST_MESSAGE_TYPE(self->obj) != GST_MESSAGE_ERROR) {
+		PyErr_SetString(PyExc_TypeError, "Message is not an error message");
+		return NULL;
+	}
+
+	gst_message_parse_error (GST_MESSAGE(self->obj), &error, &debug);
+
+	ret = PyList_New(0);
+	PyList_Append(ret, pyg_boxed_new (GST_TYPE_G_ERROR, error, TRUE, TRUE));
+	if (debug != NULL)
+		PyList_Append(ret, PyString_FromString(debug));
+
+	return ret;
+}
+%%
+override gst_message_parse_warning noargs
+static PyObject *
+_wrap_gst_message_parse_warning (PyGstMiniObject *self)
+{
+	PyObject	*ret;
+	GError		*warning;
+	gchar	*debug;
+	
+	if (GST_MESSAGE_TYPE(self->obj) != GST_MESSAGE_WARNING) {
+		PyErr_SetString(PyExc_TypeError, "Message is not an warning message");
+		return NULL;
+	}
+
+	gst_message_parse_warning (GST_MESSAGE(self->obj), &warning, &debug);
+
+	ret = PyList_New(0);
+	PyList_Append(ret, pyg_boxed_new (GST_TYPE_G_ERROR, warning, TRUE, TRUE));
+	if (debug != NULL)
+		PyList_Append(ret, PyString_FromString(debug));
+
+	return ret;
+}
+%%
+override gst_message_parse_tag noargs
+static PyObject *
+_wrap_gst_message_parse_tag (PyGstMiniObject *self)
+{
+	PyObject	*ret;
+	GstTagList	*taglist;
+	
+	if (GST_MESSAGE_TYPE(self->obj) != GST_MESSAGE_TAG) {
+		PyErr_SetString(PyExc_TypeError, "Message is not an Tag message");
+		return NULL;
+	}
+
+	gst_message_parse_tag (GST_MESSAGE(self->obj), &taglist);
+
+	ret = PyList_New(0);
+	PyList_Append(ret, pyg_boxed_new (GST_TYPE_TAG_LIST, taglist, TRUE, TRUE));
+
+	return ret;
+}
