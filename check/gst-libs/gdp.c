@@ -81,7 +81,8 @@ GST_START_TEST (test_conversion)
       "GST_WRITE_UINT64_BE: memcmp failed");
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 /* test creation of header from buffer and back again */
 GST_START_TEST (test_buffer)
 {
@@ -138,10 +139,14 @@ GST_START_TEST (test_buffer)
   fail_unless (GST_BUFFER_FLAG_IS_SET (newbuffer, GST_BUFFER_FLAG_IN_CAPS),
       "GST_BUFFER_IN_CAPS flag should have been copied !");
 
+  /* clean up */
+  gst_buffer_unref (buffer);
+  gst_buffer_unref (newbuffer);
   g_free (header);
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 GST_START_TEST (test_caps)
 {
   gchar *string, *newstring;
@@ -164,16 +169,21 @@ GST_START_TEST (test_caps)
       "Could not validate packet");
   newcaps = gst_dp_caps_from_packet (header_length, header, payload);
   fail_unless (newcaps != NULL, "Could not create caps from packet");
-  //g_return_val_if_fail (GST_IS_CAPS (newcaps), -1);
+  fail_unless (GST_IS_CAPS (newcaps));
   newstring = gst_caps_to_string (newcaps);
   g_message ("Received caps: %s\n", newstring);
   fail_unless (strcmp (string, newstring) == 0,
       "Created caps do not match original caps");
+
+  /* cleanup */
+  g_free (header);
+  g_free (payload);
   g_free (string);
   g_free (newstring);
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 GST_START_TEST (test_event)
 {
   GstEvent *send;
@@ -196,6 +206,10 @@ GST_START_TEST (test_event)
       "Received event is not EOS");
   fail_unless (GST_EVENT_TIMESTAMP (receive) == GST_SECOND,
       "EOS timestamp is not 1.0 sec");
+
+  /* clean up */
+  g_free (header);
+  g_free (payload);
   gst_event_unref (send);
   gst_event_unref (receive);
 
@@ -214,6 +228,10 @@ GST_START_TEST (test_event)
       "Received event is not flush");
   fail_unless (GST_EVENT_TIMESTAMP (receive) == GST_SECOND * 2,
       "Flush timestamp is not 2.0 sec");
+
+  /* clean up */
+  g_free (header);
+  g_free (payload);
   gst_event_unref (send);
   gst_event_unref (receive);
 
@@ -237,11 +255,18 @@ GST_START_TEST (test_event)
       "Seek format is not time");
   fail_unless (GST_EVENT_SEEK_OFFSET (receive) == GST_SECOND,
       "Seek offset is not 1.0 sec");
+
+  /* clean up */
+  g_free (header);
+  g_free (payload);
   gst_event_unref (send);
   gst_event_unref (receive);
 }
-GST_END_TEST Suite *
-gst_object_suite (void)
+
+GST_END_TEST;
+
+Suite *
+gst_data_protocol_suite (void)
 {
   Suite *s = suite_create ("data protocol");
   TCase *tc_chain = tcase_create ("general");
@@ -260,7 +285,7 @@ main (int argc, char **argv)
 {
   int nf;
 
-  Suite *s = gst_object_suite ();
+  Suite *s = gst_data_protocol_suite ();
   SRunner *sr = srunner_create (s);
 
   gst_check_init (&argc, &argv);

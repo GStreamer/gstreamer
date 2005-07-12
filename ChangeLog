@@ -1,6 +1,14 @@
 2005-07-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:
+	  add per-test valgrind targets
+	* check/gst-libs/gdp.c: (GST_START_TEST),
+	(gst_data_protocol_suite), (main):
+	  clean up
+
+2005-07-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
 	  instate more valgrindable tests
 	* check/elements/gstfakesrc.c: (chain_func), (event_func),
 	(GST_START_TEST), (fakesrc_suite):
