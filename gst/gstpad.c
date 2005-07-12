@@ -1930,9 +1930,11 @@ could_not_set:
   {
     GST_LOCK (pad);
     GST_FLAG_UNSET (pad, GST_PAD_IN_SETCAPS);
+    GST_CAT_DEBUG (GST_CAT_CAPS,
+        "pad %s:%s, caps %" GST_PTR_FORMAT " could not be set",
+        GST_DEBUG_PAD_NAME (pad), caps);
     GST_UNLOCK (pad);
-    GST_CAT_DEBUG (GST_CAT_CAPS, "caps %" GST_PTR_FORMAT " could not be set",
-        caps);
+
     return FALSE;
   }
 }

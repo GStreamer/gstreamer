@@ -1,3 +1,20 @@
+2005-07-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasetransform.c: (gst_base_transform_setcaps):
+	Added more debug info in the negotiate process.
+
+	* gst/gstmessage.h:
+	Prepare for segment playback.
+
+	* gst/gstpad.c: (gst_pad_accept_caps), (gst_pad_set_caps):
+	Better debugging.
+
+	* gst/gstutils.c:
+	Some more docs.
+
+	* tools/gst-launch.c: (main):
+	NULL pipeline on errors.
+
 2005-07-12  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstbuffer.c (_gst_buffer_copy): Copy the buffer whether or

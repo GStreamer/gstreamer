@@ -47,6 +47,8 @@ G_BEGIN_DECLS
  *                             stops, errors, etc..
  * @GST_MESSAGE_APPLICATION: message posted by the application, possibly
  *                           via an application-specific element.
+ * @GST_MESSAGE_SEGMENT_START: pipeline started playback of a segment.
+ * @GST_MESSAGE_SEGMENT_DONE: pipeline completed playback of a segment.
  * @GST_MESSAGE_ANY: mask for all of the above messages.
  */
 typedef enum
@@ -64,6 +66,8 @@ typedef enum
   GST_MESSAGE_STRUCTURE_CHANGE  = (1 << 9),
   GST_MESSAGE_STREAM_STATUS     = (1 << 10),
   GST_MESSAGE_APPLICATION       = (1 << 11),
+  GST_MESSAGE_SEGMENT_START     = (1 << 12),
+  GST_MESSAGE_SEGMENT_DONE      = (1 << 13),
   GST_MESSAGE_ANY               = 0xffffffff
 } GstMessageType;
 

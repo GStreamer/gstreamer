@@ -252,7 +252,8 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
   /* see how we can transform the input caps */
   othercaps = gst_base_transform_transform_caps (trans, pad, caps);
 
-  if (!othercaps) {
+  if (!othercaps || gst_caps_is_empty (othercaps)) {
+    GST_DEBUG ("transform returned useless  %" GST_PTR_FORMAT, othercaps);
     ret = FALSE;
     goto done;
   }
@@ -260,13 +261,22 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
   if (!gst_caps_is_fixed (othercaps)) {
     GstCaps *temp;
 
+    GST_DEBUG ("transform returned non fixed  %" GST_PTR_FORMAT, othercaps);
+
     temp = gst_caps_intersect (othercaps, caps);
+    GST_DEBUG ("intersect returned %" GST_PTR_FORMAT, temp);
     if (temp) {
-      /* try passthrough. we know it's fixed, because caps is fixed */
-      if (gst_pad_accept_caps (otherpeer, caps)) {
-        gst_caps_unref (othercaps);
-        othercaps = gst_caps_ref (caps);
-        /* will fall though. calls accept_caps again, should fix that. */
+      if (!gst_caps_is_empty (temp)) {
+        GST_DEBUG ("try passthrough with %" GST_PTR_FORMAT, caps);
+        /* try passthrough. we know it's fixed, because caps is fixed */
+        if (gst_pad_accept_caps (otherpeer, caps)) {
+          GST_DEBUG ("peer accepted %" GST_PTR_FORMAT, caps);
+          gst_caps_unref (othercaps);
+          othercaps = gst_caps_ref (caps);
+          /* will fall though. calls accept_caps again, should fix that. */
+        } else {
+          GST_DEBUG ("peer did not accept %" GST_PTR_FORMAT, caps);
+        }
       }
       gst_caps_unref (temp);
     }
@@ -274,28 +284,32 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
 
   if (!gst_caps_is_fixed (othercaps) && otherpeer) {
     /* intersect against what the peer can do */
-    if (otherpeer) {
-      GstCaps *peercaps;
-      GstCaps *intersect;
+    GstCaps *peercaps;
+    GstCaps *intersect;
 
-      peercaps = gst_pad_get_caps (otherpeer);
-      intersect = gst_caps_intersect (peercaps, othercaps);
-      gst_caps_unref (peercaps);
-      gst_caps_unref (othercaps);
-      othercaps = intersect;
+    GST_DEBUG ("othercaps now %" GST_PTR_FORMAT, othercaps);
 
-      GST_DEBUG ("filtering against peer yields %" GST_PTR_FORMAT, othercaps);
-    }
+    peercaps = gst_pad_get_caps (otherpeer);
+    intersect = gst_caps_intersect (peercaps, othercaps);
+    gst_caps_unref (peercaps);
+    gst_caps_unref (othercaps);
+    othercaps = intersect;
+
+    GST_DEBUG ("filtering against peer yields %" GST_PTR_FORMAT, othercaps);
   }
 
   if (!gst_caps_is_fixed (othercaps)) {
     GstCaps *temp;
+
+    GST_DEBUG ("othercaps now, trying to fixate %" GST_PTR_FORMAT, othercaps);
 
     /* take first possibility and fixate if necessary */
     temp = gst_caps_copy_nth (othercaps, 0);
     gst_caps_unref (othercaps);
     othercaps = temp;
     gst_pad_fixate_caps (otherpad, othercaps);
+
+    GST_DEBUG ("after fixating %" GST_PTR_FORMAT, othercaps);
   }
 
   g_return_val_if_fail (gst_caps_is_fixed (othercaps), FALSE);
@@ -306,6 +320,8 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
     ret = FALSE;
     goto done;
   }
+
+  GST_DEBUG ("got final caps %" GST_PTR_FORMAT, othercaps);
 
   /* we know this will work, we implement the setcaps */
   gst_pad_set_caps (otherpad, othercaps);

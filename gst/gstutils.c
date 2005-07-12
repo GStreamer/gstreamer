@@ -1525,6 +1525,9 @@ gst_pad_can_link (GstPad * srcpad, GstPad * sinkpad)
  * @gst_pad_get_fixed_caps_func as the gstcaps function for the
  * pad. This way the function will always return the negotiated caps
  * or in case the pad is not negotiated, the padtemplate caps.
+ *
+ * Use this function on a pad that, once _set_caps() has been called
+ * on it, it cannot be renegotiated to something else.
  */
 void
 gst_pad_use_fixed_caps (GstPad * pad)
