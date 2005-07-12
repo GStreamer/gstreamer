@@ -19,15 +19,25 @@ EXTRA_DIST = \
 
 include $(top_srcdir)/common/release.mak
 
-# install pth file.
-install-data-local:
+pygst.py: pygst.py.in Makefile
+	if test -f $@; then chmod +w $@; fi
+	sed -e "s|@PYGSTDIR\@|$(shell pwd)|g" \
+	    -e "s|@GST_MAJORMINOR\@|$(GST_MAJORMINOR)|g" \
+	    $< > $@
+	chmod -w $@
+
+all-local: pygst.py
+
+# rewrite pygst path in installed pygst.py, install pth file.
+install-data-local: Makefile
 	$(mkinstalldirs) $(DESTDIR)$(pythondir)
-	echo "gst-$(GST_MAJORMINOR)" > $(DESTDIR)$(pyexecdir)/pygst.pth
+	sed -e "s|@PYGSTDIR\@|$(PYTHONDIR)/$(GST_MAJORMINOR)|g" \
+	    -e "s|@GST_MAJORMINOR\@|$(GST_MAJORMINOR)|g" \
+	    $(srcdir)/pygst.py.in > $(DESTDIR)$(pythondir)/pygst.py
+	chmod 644 $(DESTDIR)$(pyexecdir)/pygst.py
+	echo "gst-$(GST_MAJORMINOR)" > $(DESTDIR)$(pythondir)/pygst.pth
+
+# also install pth file in pyexec.
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)$(pyexecdir)
 	echo "gst-$(GST_MAJORMINOR)" > $(DESTDIR)$(pyexecdir)/pygst.pth
-uninstall-local:
-	rm -f $(DESTDIR)$(pythondir)/pygst.pth $(DESTDIR)$(pyexecdir)/pygst.pth
-
-# this file is common to all pygtk versions.
-pyexec_PYTHON = pygst.py

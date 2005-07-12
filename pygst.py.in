@@ -31,7 +31,7 @@ import sys
 
 __all__ = ['require']
 
-_pygst_dir = '@PYTHONDIR@/gst-@GST_MAJORMINOR@'
+_pygst_dir = '@PYGSTDIR@'
 
 _pygst_version = '@GST_MAJORMINOR@'
 

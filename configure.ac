@@ -173,5 +173,4 @@ AC_OUTPUT([
   docs/gst-python.ent
   testsuite/Makefile
   gst-python.spec
-  pygst.py
 ])

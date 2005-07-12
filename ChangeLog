@@ -1,5 +1,18 @@
 2005-07-12  Andy Wingo  <wingo@pobox.com>
 
+	* configure.ac (AC_CONFIG_FILES): The makefile handles pygst.py
+	now.
+	
+	* Makefile.am (install-data-local): Actually install pygst.pth to
+	the pythondir, not pyexecdir. Also install a properly sedded
+	pygst.py.
+	(pygst.py): Sed the builddir into pygst.py, and set not writable
+	(to avoid any confusion about which file to edit).
+
+	* pygst.py.in (_pygst_dir): Set _pygst_dir from one variable,
+	@PYGSTDIR@, which is manually sedded in from the Makefile, so that
+	it works both installed and uninstalled.
+
 	* configure.ac (AC_CONFIG_FILES):
 	* examples/: Moved all examples up from examples/gst/ into
 	examples/.
