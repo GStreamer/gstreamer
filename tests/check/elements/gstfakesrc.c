@@ -49,9 +49,11 @@ event_func (GstPad * pad, GstEvent * event)
     GST_STREAM_LOCK (pad);
     have_eos = TRUE;
     GST_STREAM_UNLOCK (pad);
+    gst_event_unref (event);
     return TRUE;
   }
 
+  gst_event_unref (event);
   return FALSE;
 }
 
@@ -93,6 +95,13 @@ GST_START_TEST (test_num_buffers)
   fail_unless (g_list_length (buffers) == 3);
   g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (buffers);
+
+  /* cleanup */
+  fail_unless (gst_element_set_state (src, GST_STATE_NULL) == GST_STATE_SUCCESS,
+      "could not set to null");
+
+  gst_object_unref (src);
+  gst_object_unref (sinkpad);
 }
 
 GST_END_TEST;

@@ -270,6 +270,7 @@ gst_pad_finalize (GObject * object)
 
   if (pad->stream_rec_lock) {
     g_static_rec_mutex_free (pad->stream_rec_lock);
+    g_free (pad->stream_rec_lock);
     pad->stream_rec_lock = NULL;
   }
   if (pad->preroll_lock) {

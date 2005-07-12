@@ -60,6 +60,9 @@ GST_START_TEST (test_from_string_int)
     fail_unless (value == results[i],
         "Value %d is not the expected result %d for string %s",
         value, results[i], s);
+
+    /* cleanup */
+    gst_structure_free (structure);
   }
 }
 

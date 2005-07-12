@@ -31,21 +31,32 @@ GST_START_TEST (test_link)
 
   src = gst_pad_new ("source", GST_PAD_SRC);
   fail_if (src == NULL);
+  ASSERT_OBJECT_REFCOUNT (src, "source pad", 1);
 
   name = gst_pad_get_name (src);
   fail_unless (strcmp (name, "source") == 0);
+  ASSERT_OBJECT_REFCOUNT (src, "source pad", 1);
+  g_free (name);
 
   sink = gst_pad_new ("sink", GST_PAD_SINK);
   fail_if (sink == NULL);
 
   /* linking without templates or caps should fail */
   ret = gst_pad_link (src, sink);
+  ASSERT_OBJECT_REFCOUNT (src, "source pad", 1);
+  ASSERT_OBJECT_REFCOUNT (sink, "sink pad", 1);
   fail_unless (ret == GST_PAD_LINK_NOFORMAT);
 
   ASSERT_CRITICAL (gst_pad_get_pad_template (NULL));
 
   srct = gst_pad_get_pad_template (src);
   fail_unless (srct == NULL);
+  ASSERT_OBJECT_REFCOUNT (src, "source pad", 1);
+
+  /* clean up */
+  ASSERT_OBJECT_REFCOUNT (src, "source pad", 1);
+  gst_object_unref (src);
+  gst_object_unref (sink);
 }
 
 GST_END_TEST;

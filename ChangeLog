@@ -1,3 +1,16 @@
+2005-07-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
+	  instate more valgrindable tests
+	* check/elements/gstfakesrc.c: (chain_func), (event_func),
+	(GST_START_TEST), (fakesrc_suite):
+	* check/gst/gstpad.c: (GST_START_TEST):
+	* check/gst/gststructure.c: (GST_START_TEST):
+	  fix test leaks
+	* docs/gst/tmpl/gstminiobject.sgml:
+	* gst/gstpad.c: (gst_pad_finalize):
+	  fix the static mutex leak
+
 2005-07-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:

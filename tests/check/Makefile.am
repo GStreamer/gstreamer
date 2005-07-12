@@ -70,11 +70,8 @@ gst_libs_gdp_CFLAGS = $(AM_CFLAGS) -DGST_ENABLE_NEW
 TESTS_TO_FIX =					\
 	gst/gstghostpad				\
 	gst/gstiterator 			\
-	gst/gstpad				\
 	gst/gstsystemclock			\
-	gst/gststructure			\
 	gst/gsttag				\
-	elements/gstfakesrc			\
 	pipelines/cleanup			\
 	pipelines/simple_launch_lines		\
 	gst-libs/gdp
