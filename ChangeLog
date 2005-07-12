@@ -1,3 +1,8 @@
+2005-07-12  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstbuffer.c (_gst_buffer_copy): Copy the buffer whether or
+	not it comes from a malloc region. Make sure our copy gets freed.
+
 2005-07-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/gst/gstelement.c: (GST_START_TEST), (gst_element_suite):

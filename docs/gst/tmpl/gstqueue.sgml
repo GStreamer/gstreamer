@@ -25,6 +25,9 @@ The queue blocks by default.
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GstQueue ##### -->
 <para>
 

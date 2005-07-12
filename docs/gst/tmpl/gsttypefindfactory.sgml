@@ -67,6 +67,9 @@ the given data. You can get quite a bit more complicated than that though.
 <link linkend="gstreamer-Writing-typefind-functions">Writing typefind functions</link>
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GstTypeFindFactory ##### -->
 <para>
 Object that stores information about a typefind function

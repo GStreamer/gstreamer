@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-07-07 12:59+0200\n"
+"POT-Creation-Date: 2005-07-12 10:48+0200\n"
 "PO-Revision-Date: 2004-01-13 12:03+0100\n"
 "Last-Translator: Thomas Vander Stichele <thomas@apestaart.org>\n"
 "Language-Team: Dutch <nl@li.org>\n"
@@ -730,142 +730,142 @@ msgstr "FOUT: versta argument %d op commandoregel niet: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "WAARSCHUWING: element met naam '%s' niet gevonden.\n"
 
-#: tools/gst-launch.c:377
+#: tools/gst-launch.c:380
 #, fuzzy, c-format
 msgid "GOT EOS from element \"%s\".\n"
 msgstr "FOUT: van element %s: %s\n"
 
-#: tools/gst-launch.c:386
+#: tools/gst-launch.c:390
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "TAG GEVONDEN   : gevonden door element \"%s\".\n"
 
-#: tools/gst-launch.c:431
+#: tools/gst-launch.c:436
 #, c-format
 msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
 msgstr ""
 
-#: tools/gst-launch.c:461
+#: tools/gst-launch.c:467
 msgid "Output tags (also known as metadata)"
 msgstr "Druk tags (ofte metadata) af"
 
-#: tools/gst-launch.c:463
+#: tools/gst-launch.c:469
 msgid "Output status information and property notifications"
 msgstr "Druk statusinformatie en eigenschapsnotificatie af"
 
-#: tools/gst-launch.c:465
+#: tools/gst-launch.c:471
 msgid "Do not output status information of TYPE"
 msgstr "Druk statusinformatie van type TYPE niet af"
 
-#: tools/gst-launch.c:465
+#: tools/gst-launch.c:471
 msgid "TYPE1,TYPE2,..."
 msgstr "TYPE1,TYPE2,..."
 
-#: tools/gst-launch.c:468
+#: tools/gst-launch.c:474
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Bewaar xml-representatie van pijplijn in BESTAND en stop"
 
-#: tools/gst-launch.c:468
+#: tools/gst-launch.c:474
 msgid "FILE"
 msgstr "BESTAND"
 
-#: tools/gst-launch.c:471
+#: tools/gst-launch.c:477
 msgid "Do not install a fault handler"
 msgstr "Installeer geen foutafhandelaar"
 
-#: tools/gst-launch.c:473
+#: tools/gst-launch.c:479
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Druk allocatiespoor af indien aangezet tijdens compileren"
 
-#: tools/gst-launch.c:475
+#: tools/gst-launch.c:481
 msgid "Number of times to iterate pipeline"
 msgstr "Aantal keren om de pijplijn te herhalen"
 
-#: tools/gst-launch.c:545
+#: tools/gst-launch.c:551
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FOUT: pijplijn kon niet gemaakt worden: %s.\n"
 
-#: tools/gst-launch.c:549
+#: tools/gst-launch.c:555
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "FOUT: pijplijn kon niet gemaakt worden.\n"
 
-#: tools/gst-launch.c:553
+#: tools/gst-launch.c:559
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "WAARSCHUWING: foutieve pijplijn: %s\n"
 
-#: tools/gst-launch.c:554
+#: tools/gst-launch.c:560
 #, c-format
 msgid "         Trying to run anyway.\n"
 msgstr "              Probeer toch uit te voeren.\n"
 
-#: tools/gst-launch.c:578
+#: tools/gst-launch.c:584
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FOUT: het 'pijplijn' element werd niet gevonden.\n"
 
-#: tools/gst-launch.c:585 tools/gst-launch.c:629
+#: tools/gst-launch.c:591 tools/gst-launch.c:635
 #, fuzzy, c-format
 msgid "PAUSE pipeline ...\n"
 msgstr "BEZIG met pijplijn ...\n"
 
-#: tools/gst-launch.c:590
+#: tools/gst-launch.c:596
 #, fuzzy, c-format
 msgid "ERROR: pipeline doesn't want to pause.\n"
 msgstr "FOUT: pijplijn wil niet spelen.\n"
 
-#: tools/gst-launch.c:594
+#: tools/gst-launch.c:600
 #, fuzzy, c-format
 msgid "NO_PREROLL pipeline ...\n"
 msgstr "BEZIG met pijplijn ...\n"
 
-#: tools/gst-launch.c:597
+#: tools/gst-launch.c:603
 #, fuzzy, c-format
 msgid "PREROLL pipeline ...\n"
 msgstr "BEZIG met pijplijn ...\n"
 
-#: tools/gst-launch.c:601
+#: tools/gst-launch.c:607
 #, fuzzy, c-format
 msgid "PREROLLED pipeline ...\n"
 msgstr "BEZIG met pijplijn ...\n"
 
-#: tools/gst-launch.c:608
+#: tools/gst-launch.c:614
 #, fuzzy, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "FOUT: pijplijn wil niet spelen.\n"
 
-#: tools/gst-launch.c:613
+#: tools/gst-launch.c:619
 #, c-format
 msgid "RUNNING pipeline ...\n"
 msgstr "BEZIG met pijplijn ...\n"
 
-#: tools/gst-launch.c:616
+#: tools/gst-launch.c:622
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FOUT: pijplijn wil niet spelen.\n"
 
-#: tools/gst-launch.c:627
+#: tools/gst-launch.c:633
 msgid "Execution ended after %"
 msgstr "Uitvoering beëindigd na %"
 
-#: tools/gst-launch.c:627
+#: tools/gst-launch.c:633
 #, fuzzy
 msgid " ns.\n"
 msgstr "ns).\n"
 
-#: tools/gst-launch.c:632
+#: tools/gst-launch.c:638
 #, fuzzy, c-format
 msgid "READY pipeline ...\n"
 msgstr "BEZIG met pijplijn ...\n"
 
-#: tools/gst-launch.c:635
+#: tools/gst-launch.c:641
 #, fuzzy, c-format
 msgid "NULL pipeline ...\n"
 msgstr "BEZIG met pijplijn ...\n"
 
-#: tools/gst-launch.c:642
+#: tools/gst-launch.c:648
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "BEZIG met pijplijn ...\n"

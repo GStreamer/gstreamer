@@ -22,6 +22,9 @@ a good measure of the current playback time in the pipeline.
 #GstSystemClock
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GstClock ##### -->
 <para>
 

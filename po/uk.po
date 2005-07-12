@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-07-07 12:59+0200\n"
+"POT-Creation-Date: 2005-07-12 10:48+0200\n"
 "PO-Revision-Date: 2004-08-03 10:53+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -736,142 +736,142 @@ msgstr ""
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "ПОПЕРЕДЖЕННЯ: елемент з назвою \"%s\" не існує.\n"
 
-#: tools/gst-launch.c:377
+#: tools/gst-launch.c:380
 #, fuzzy, c-format
 msgid "GOT EOS from element \"%s\".\n"
 msgstr "ПОМИЛКА: у елементі %s: %s\n"
 
-#: tools/gst-launch.c:386
+#: tools/gst-launch.c:390
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "ЗНАЙДЕНО ТЕГ  : знайдено у елементі \"%s\".\n"
 
-#: tools/gst-launch.c:431
+#: tools/gst-launch.c:436
 #, c-format
 msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
 msgstr ""
 
-#: tools/gst-launch.c:461
+#: tools/gst-launch.c:467
 msgid "Output tags (also known as metadata)"
 msgstr "Вивести теги (також відомі як метадані)"
 
-#: tools/gst-launch.c:463
+#: tools/gst-launch.c:469
 msgid "Output status information and property notifications"
 msgstr "Вивести інформацію про статус та сповіщення властивостей"
 
-#: tools/gst-launch.c:465
+#: tools/gst-launch.c:471
 msgid "Do not output status information of TYPE"
 msgstr "Не виводити інформацію про статус типу ТИП"
 
-#: tools/gst-launch.c:465
+#: tools/gst-launch.c:471
 msgid "TYPE1,TYPE2,..."
 msgstr "ТИП1,ТИП2,..."
 
-#: tools/gst-launch.c:468
+#: tools/gst-launch.c:474
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Зберегти xml представлення каналу у файл ФАЙЛ та завершитись"
 
-#: tools/gst-launch.c:468
+#: tools/gst-launch.c:474
 msgid "FILE"
 msgstr "ФАЙЛ"
 
-#: tools/gst-launch.c:471
+#: tools/gst-launch.c:477
 msgid "Do not install a fault handler"
 msgstr "Не встановлювати обробник збоїв"
 
-#: tools/gst-launch.c:473
+#: tools/gst-launch.c:479
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Вивести трасу розподілу (якщо ввімкнено при компіляції)"
 
-#: tools/gst-launch.c:475
+#: tools/gst-launch.c:481
 msgid "Number of times to iterate pipeline"
 msgstr "Кількість ітерацій каналу"
 
-#: tools/gst-launch.c:545
+#: tools/gst-launch.c:551
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ПОМИЛКА: канал не може бути сконструйований: %s.\n"
 
-#: tools/gst-launch.c:549
+#: tools/gst-launch.c:555
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ПОМИЛКА: канал не може бути сконструйований.\n"
 
-#: tools/gst-launch.c:553
+#: tools/gst-launch.c:559
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "ПОПЕРЕДЖЕННЯ: помилковий канал: %s\n"
 
-#: tools/gst-launch.c:554
+#: tools/gst-launch.c:560
 #, c-format
 msgid "         Trying to run anyway.\n"
 msgstr "         Спроба запуститись у будь-якому разі.\n"
 
-#: tools/gst-launch.c:578
+#: tools/gst-launch.c:584
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ПОМИЛКА: не знайдений елемент \"pipeline\".\n"
 
-#: tools/gst-launch.c:585 tools/gst-launch.c:629
+#: tools/gst-launch.c:591 tools/gst-launch.c:635
 #, fuzzy, c-format
 msgid "PAUSE pipeline ...\n"
 msgstr "ЗАПУСКАЄТЬСЯ канал ...\n"
 
-#: tools/gst-launch.c:590
+#: tools/gst-launch.c:596
 #, fuzzy, c-format
 msgid "ERROR: pipeline doesn't want to pause.\n"
 msgstr "ПОМИЛКА: канал не може почати відтворення.\n"
 
-#: tools/gst-launch.c:594
+#: tools/gst-launch.c:600
 #, fuzzy, c-format
 msgid "NO_PREROLL pipeline ...\n"
 msgstr "ЗАПУСКАЄТЬСЯ канал ...\n"
 
-#: tools/gst-launch.c:597
+#: tools/gst-launch.c:603
 #, fuzzy, c-format
 msgid "PREROLL pipeline ...\n"
 msgstr "ЗАПУСКАЄТЬСЯ канал ...\n"
 
-#: tools/gst-launch.c:601
+#: tools/gst-launch.c:607
 #, fuzzy, c-format
 msgid "PREROLLED pipeline ...\n"
 msgstr "ЗАПУСКАЄТЬСЯ канал ...\n"
 
-#: tools/gst-launch.c:608
+#: tools/gst-launch.c:614
 #, fuzzy, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "ПОМИЛКА: канал не може почати відтворення.\n"
 
-#: tools/gst-launch.c:613
+#: tools/gst-launch.c:619
 #, c-format
 msgid "RUNNING pipeline ...\n"
 msgstr "ЗАПУСКАЄТЬСЯ канал ...\n"
 
-#: tools/gst-launch.c:616
+#: tools/gst-launch.c:622
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ПОМИЛКА: канал не може почати відтворення.\n"
 
-#: tools/gst-launch.c:627
+#: tools/gst-launch.c:633
 msgid "Execution ended after %"
 msgstr "Виконання закінчено після %"
 
-#: tools/gst-launch.c:627
+#: tools/gst-launch.c:633
 #, fuzzy
 msgid " ns.\n"
 msgstr " нс).\n"
 
-#: tools/gst-launch.c:632
+#: tools/gst-launch.c:638
 #, fuzzy, c-format
 msgid "READY pipeline ...\n"
 msgstr "ЗАПУСКАЄТЬСЯ канал ...\n"
 
-#: tools/gst-launch.c:635
+#: tools/gst-launch.c:641
 #, fuzzy, c-format
 msgid "NULL pipeline ...\n"
 msgstr "ЗАПУСКАЄТЬСЯ канал ...\n"
 
-#: tools/gst-launch.c:642
+#: tools/gst-launch.c:648
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "ЗАПУСКАЄТЬСЯ канал ...\n"

@@ -117,10 +117,10 @@ _gst_buffer_copy (GstBuffer * buffer)
   GST_MINI_OBJECT (copy)->flags |= GST_MINI_OBJECT (buffer)->flags & mask;
 
   /* we simply copy everything from our parent */
-  if (buffer->malloc_data) {
-    copy->malloc_data = g_memdup (buffer->data, buffer->size);
-    copy->data = copy->malloc_data;
-  }
+  copy->data = g_memdup (buffer->data, buffer->size);
+  /* make sure it gets freed (even if the parent is subclassed, we return a
+     normal buffer */
+  copy->malloc_data = copy->data;
 
   copy->size = buffer->size;
 
