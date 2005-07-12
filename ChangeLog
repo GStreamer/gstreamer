@@ -1,5 +1,8 @@
 2005-07-12  Andy Wingo  <wingo@pobox.com>
 
+	* examples/pipeline-tester: New file, tests out gstreamer
+	pipelines. The pipelines are a bit broken right now tho.
+
 	* env: New script, munges PYTHONPATH for uninstalled usage, and
 	also $PACKAGES which is useful if you add `print-packages` to your
 	$PS1 and drop http://wingolog.org/pub/print-packages into your

@@ -8,6 +8,7 @@ examples_DATA = 	\
 	play.py		\
 	vorbisplay.py	\
 	gstfile.py	\
-	audioconcat.py
+	audioconcat.py  \
+	pipeline-tester
 
 EXTRA_DIST = $(examples_DATA)

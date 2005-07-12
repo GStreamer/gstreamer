@@ -1,0 +1,155 @@
+#!/usr/bin/env python
+#
+# gst-python
+# Copyright (C) 2005 Andy Wingo <wingo@pobox.com>
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Library General Public
+# License as published by the Free Software Foundation; either
+# version 2 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Library General Public License for more details.
+#
+# You should have received a copy of the GNU Library General Public
+# License along with this library; if not, write to the
+# Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+# Boston, MA 02111-1307, USA.
+
+
+# A test more of gst-plugins than of gst-python.
+
+
+import sys
+
+import pygtk
+pygtk.require('2.0')
+import gtk
+import gtk.gdk
+import pango
+
+import pygst
+pygst.require('0.9')
+import gst
+
+
+data = (('Video capture via V4L',
+         'v4lsrc name=source \n'
+         '    ! video/x-raw-yuv,format=(fourcc)I420 \n'
+         '    ! videorate \n'
+         '    ! xvimagesink'),
+        ('Sound capture via ALSA',
+         'alsasrc\n'
+         '    ! audio/x-raw-int,rate=22050,depth=16,channels=1,width=16,signed=(boolean)TRUE,endianness=1234\n'
+         '    ! level signal=true\n'
+         '    ! alsasink'))
+
+
+def escape(s, chars, escaper='\\'):
+    for c in chars:
+        s = s.replace(c, '%s%s' % (escaper, c))
+    return s
+
+
+def make_model():
+    m = gtk.ListStore(str, str)
+    for pair in data:
+        i = m.append()
+        m.set_value(i, 0, pair[0])
+        m.set_value(i, 1, pair[1])
+    return m
+
+
+class Window(gtk.Window):
+    def __init__(self):
+        gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
+        self.playing = False
+        self.selected_pipe = None
+        self.pipeline = None
+        self.prepare_ui()
+
+    def prepare_ui(self):
+        self.set_default_size(300,400)
+        self.set_title('GStreamer Pipeline Tester')
+        self.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DIALOG)
+        self.connect('delete-event', lambda *x: gtk.main_quit())
+        self.set_border_width(18)
+        b = gtk.VBox(False, 12)
+        b.show()
+        self.add(b)
+        l = gtk.Label()
+        l.set_markup('<big><b>GStreamer Pipeline Tester</b></big>')
+        l.show()
+        b.pack_start(l, False, False, 6)
+        l = gtk.Label('Choose a pipeline below to run.')
+        l.show()
+        b.pack_start(l, False, False, 0)
+        sw = gtk.ScrolledWindow()
+        sw.set_policy(gtk.POLICY_NEVER, gtk.POLICY_NEVER)
+        sw.set_shadow_type(gtk.SHADOW_IN)
+        sw.show()
+        b.pack_start(sw, True, True, 6)
+        tv = gtk.TreeView(make_model())
+        r = gtk.CellRendererText()
+        r.set_property('xalign', 0.5)
+        c = gtk.TreeViewColumn('System', r, text=0)
+        tv.append_column(c)
+        tv.set_headers_visible(False)
+        tv.show()
+        sw.add(tv)
+        l = gtk.Label()
+        l.set_selectable(True)
+        l.show()
+        b.pack_start(l, False, False, 0)
+        bb = gtk.HButtonBox()
+        bb.set_layout(gtk.BUTTONBOX_SPREAD)
+        bb.show()
+        b.pack_start(bb, False, False, 0)
+        bu = gtk.Button(stock=gtk.STOCK_MEDIA_PLAY)
+        bu.set_focus_on_click(False)
+        bu.show()
+        bb.pack_start(bu, True, False, 0)
+
+        def on_changed(s):
+            m, i = s.get_selected()
+            if m:
+                self.selected_pipe = m.get_value(i, 1)
+                pasteable = escape(self.selected_pipe, '\n)(')
+                l.set_markup('<small><tt>%s</tt></small>' % pasteable)
+            else:
+                self.selected_pipe = None
+                l.set_markup('')
+        tv.get_selection().connect('changed', on_changed)
+
+        bu.connect('clicked', self.play_toggled)
+
+    def play(self):
+        pipestr = self.selected_pipe
+        pipeline = gst.parse_launch(pipestr)
+        if pipeline.set_state(gst.STATE_PLAYING) != gst.STATE_SUCCESS:
+            print 'state change failed'
+            return False
+        else:
+            self.pipeline = pipeline
+            return True
+
+    def stop(self):
+        self.pipeline.set_state(gst.STATE_NULL)
+        self.pipeline = None
+
+    def play_toggled(self, button):
+        if self.playing:
+            self.stop()
+            button.set_label(gtk.STOCK_MEDIA_PLAY)
+            self.playing = False
+        else:
+            if self.play():
+                self.playing = True
+                button.set_label(gtk.STOCK_MEDIA_STOP)
+
+if __name__ == '__main__':
+    w = Window()
+    w.show()
+    gtk.main()
