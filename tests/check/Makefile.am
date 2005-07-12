@@ -75,7 +75,8 @@ gst_libs_gdp_CFLAGS = $(AM_CFLAGS) -DGST_ENABLE_NEW
 # these just need fixing, period
 TESTS_TO_FIX =					\
 	gst/gstghostpad				\
-	gst/gstiterator 			\
+	gst/gstiterator				\
+	gst/gstmessage				\
 	gst/gstsystemclock			\
 	gst/gsttag				\
 	pipelines/cleanup			\
@@ -105,7 +106,7 @@ endif
 	@$(TESTS_ENVIRONMENT)					\
 	libtool --mode=execute					\
 	$(VALGRIND_PATH) -q --suppressions=$(srcdir)/gst.supp	\
-	--tool=memcheck --trace-children=yes			\
+	--tool=memcheck --leak-check=yes --trace-children=yes	\
 	$*
 
 # valgrind all tests
@@ -124,25 +125,3 @@ valgrind: $(TESTS)
 		echo "$$failed tests had leaks under valgrind";		\
 		false;							\
 	fi
-
-valgrindy: $(TESTS)
-	@echo "Valgrinding tests ..."
-	$(TESTS_ENVIRONMENT) $(top_builddir)/tools/gst-register
-	@failed=0;							\
-	for t in $(filter-out $(VALGRIND_TESTS_DISABLE),$(TESTS)); do	\
-		$(TESTS_ENVIRONMENT)					\
-		libtool --mode=execute					\
-		$(VALGRIND_PATH) -q --suppressions=$(srcdir)/gst.supp	\
-		--tool=memcheck --trace-children=yes			\
-		$$t;							\
-		if test "$$?" -ne 0; then                               \
-                        echo "Valgrind error for test $$t";		\
-			failed=`expr $$failed + 1`;			\
-                fi;							\
-	done;								\
-	if test "$$failed" -ne 0; then					\
-		echo "$$failed tests had leaks under valgrind";		\
-		false;							\
-	fi
-
-
