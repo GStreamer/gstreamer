@@ -27,7 +27,6 @@
 
 static GstElementClass *parent_class = NULL;
 
-
 /* Initing stuff */
 
 static void
