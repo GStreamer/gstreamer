@@ -112,3 +112,67 @@ _wrap_gst_query_parse_seeking_response (PyGstMiniObject *self)
 
 	return ret;
 }
+%%
+override gst_query_new_position kwargs
+static PyObject *
+_wrap_gst_query_new_position(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "format", NULL };
+    PyObject *py_format = NULL;
+    GstFormat format;
+    GstQuery *ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:query_new_position", kwlist, &py_format))
+        return NULL;
+    if (pyg_enum_get_value(GST_TYPE_FORMAT, py_format, (gint *)&format))
+        return NULL;
+    ret = gst_query_new_position(format);
+    /* pygobject_new handles NULL checking */
+    return pygstminiobject_new_noref((GstMiniObject *)ret);
+}
+%%
+override gst_query_new_convert kwargs
+static PyObject *
+_wrap_gst_query_new_convert(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "src_fmt", "value", "dest_fmt", NULL };
+    PyObject *py_src_fmt = NULL, *py_dest_fmt = NULL;
+    GstQuery *ret;
+    GstFormat src_fmt, dest_fmt;
+    gint64 value;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OLO:query_new_convert", kwlist, &py_src_fmt, &value, &py_dest_fmt))
+        return NULL;
+    if (pyg_enum_get_value(GST_TYPE_FORMAT, py_src_fmt, (gint *)&src_fmt))
+        return NULL;
+    if (pyg_enum_get_value(GST_TYPE_FORMAT, py_dest_fmt, (gint *)&dest_fmt))
+        return NULL;
+    ret = gst_query_new_convert(src_fmt, value, dest_fmt);
+    /* pygobject_new handles NULL checking */
+    return pygstminiobject_new_noref((GstMiniObject *)ret);
+}
+%%
+override gst_query_new_application kwargs
+static PyObject *
+_wrap_gst_query_new_application(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "type", "structure", NULL };
+    PyObject *py_type = NULL, *py_structure;
+    GstQuery *ret;
+    GstStructure *structure = NULL;
+    GstQueryType type;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO:query_new_application", kwlist, &py_type, &py_structure))
+        return NULL;
+    if (pyg_enum_get_value(GST_TYPE_QUERY_TYPE, py_type, (gint *)&type))
+        return NULL;
+    if (pyg_boxed_check(py_structure, GST_TYPE_STRUCTURE))
+        structure = pyg_boxed_get(py_structure, GstStructure);
+    else {
+        PyErr_SetString(PyExc_TypeError, "structure should be a GstStructure");
+        return NULL;
+    }
+    ret = gst_query_new_application(type, structure);
+    /* pygobject_new handles NULL checking */
+    return pygstminiobject_new_noref((GstMiniObject *)ret);
+}

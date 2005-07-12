@@ -24,8 +24,8 @@
 
 static const gchar *pygstminiobject_class_id     = "PyGstMiniObject::class";
 static GQuark       pygstminiobject_class_key    = 0;
-static const gchar *pygstminiobject_wrapper_id   = "PyGstMiniObject::wrapper";
-static GQuark       pygstminiobject_wrapper_key  = 0;
+/* static const gchar *pygstminiobject_wrapper_id   = "PyGstMiniObject::wrapper"; */
+/* static GQuark       pygstminiobject_wrapper_key  = 0; */
 
 static void pygstminiobject_dealloc(PyGstMiniObject *self);
 static int  pygstminiobject_traverse(PyGstMiniObject *self, visitproc visit, void *arg);
@@ -119,10 +119,6 @@ pygstminiobject_register_class(PyObject *dict, const gchar *type_name,
 	g_type_set_qdata(gtype, pygstminiobject_class_key, type);
     }
 
-    /* set up __doc__ descriptor on type */
-/*     PyDict_SetItemString(type->tp_dict, "__doc__", */
-/* 			 pyg_object_descr_doc_get()); */
-
     PyDict_SetItemString(dict, (char *)class_name, (PyObject *)type);
 }
 
@@ -142,16 +138,11 @@ pygstminiobject_register_wrapper(PyObject *self)
     GstMiniObject *obj = ((PyGstMiniObject *)self)->obj;
     PyGILState_STATE state;
 
-    if (!pygstminiobject_wrapper_key)
-	pygstminiobject_wrapper_key=g_quark_from_static_string(pygstminiobject_wrapper_id);
-    
     Py_INCREF(self);
     state = pyg_gil_state_ensure();
     g_hash_table_insert (miniobjs, (gpointer) obj, (gpointer) self);
-    gst_mini_object_ref(obj);
+
     pyg_gil_state_release(state);
-/*     gst_mini_object_set_qdata_full(obj, pygstminiobject_wrapper_key, self, */
-/* 				   pyg_destroy_notify); */
 }
 
 
@@ -172,9 +163,6 @@ pygstminiobject_new(GstMiniObject *obj)
     PyGILState_STATE state;
     PyGstMiniObject *self;
 
-    if (!pygstminiobject_wrapper_key)
-	pygstminiobject_wrapper_key = g_quark_from_static_string(pygstminiobject_wrapper_id);
-
     if (obj == NULL) {
 	Py_INCREF(Py_None);
 	return Py_None;
@@ -184,7 +172,7 @@ pygstminiobject_new(GstMiniObject *obj)
     state = pyg_gil_state_ensure();
     self = (PyGstMiniObject *)g_hash_table_lookup (miniobjs, (gpointer) obj);
     pyg_gil_state_release(state);
-/*     self = (PyGstMiniObject *)gst_mini_object_get_qdata(obj, pygstminiobject_wrapper_key); */
+
     if (self != NULL) {
 	Py_INCREF(self);
     } else {
@@ -203,19 +191,68 @@ pygstminiobject_new(GstMiniObject *obj)
 	
 	self->inst_dict = NULL;
 	self->weakreflist = NULL;
-	/* save wrapper pointer so we can access it later */
+
 	Py_INCREF(self);
 	state = pyg_gil_state_ensure();
-	gst_mini_object_ref(obj);
+
+	/* save wrapper pointer so we can access it later */
 	g_hash_table_insert (miniobjs, (gpointer) obj, (gpointer) self);
 	pyg_gil_state_release(state);
-/* 	gst_mini_object_set_qdata_full(obj, pygstminiobject_wrapper_key, self, */
-/* 				       pyg_destroy_notify); */
 	
 	PyObject_GC_Track((PyObject *)self);
     }
     return (PyObject *)self;
 }
+
+/**
+ * pygstminiobject_new_noref
+ * @obj: a GstMiniObject instance.
+ *
+ * This function will return the wrapper for the given MiniObject
+ * Only use this function to wrap miniobjects created in the bindings
+ *
+ * Returns: a reference to the wrapper for the GstMiniObject.
+ */
+PyObject *
+pygstminiobject_new_noref(GstMiniObject *obj)
+{
+    PyGILState_STATE state;
+    PyGstMiniObject *self;
+
+    if (obj == NULL) {
+	Py_INCREF(Py_None);
+	return Py_None;
+    }
+    
+    /* create wrapper */
+    PyTypeObject *tp = pygstminiobject_lookup_class(G_OBJECT_TYPE(obj));
+    if (!tp)
+	g_warning ("Couldn't get class for type object : %p", obj);
+    /* need to bump type refcount if created with
+       pygstminiobject_new_with_interfaces(). fixes bug #141042 */
+    if (tp->tp_flags & Py_TPFLAGS_HEAPTYPE)
+	Py_INCREF(tp);
+    self = PyObject_GC_New(PyGstMiniObject, tp);
+    if (self == NULL)
+	return NULL;
+    /* DO NOT REF !! */
+    self->obj = obj;
+    /*self->obj = gst_mini_object_ref(obj);*/
+    
+    self->inst_dict = NULL;
+    self->weakreflist = NULL;
+    /* save wrapper pointer so we can access it later */
+    Py_INCREF(self);
+    state = pyg_gil_state_ensure();
+    
+    g_hash_table_insert (miniobjs, (gpointer) obj, (gpointer) self);
+    pyg_gil_state_release(state);
+    
+    PyObject_GC_Track((PyObject *)self);
+    return (PyObject *)self;
+}
+
+
 
 static void
 pygstminiobject_dealloc(PyGstMiniObject *self)
@@ -233,7 +270,7 @@ pygstminiobject_dealloc(PyGstMiniObject *self)
     PyObject_GC_UnTrack((PyObject *)self);
 
     if (self->obj) {
-	gst_mini_object_unref(self->obj);
+ 	gst_mini_object_unref(self->obj);
 	obj = self->obj;
     }
     self->obj = NULL;
@@ -246,8 +283,7 @@ pygstminiobject_dealloc(PyGstMiniObject *self)
     /* the following causes problems with subclassed types */
     /* self->ob_type->tp_free((PyObject *)self); */
     g_hash_table_remove (miniobjs, (gpointer) obj);
-    if (obj)
-	gst_mini_object_unref(obj);
+
     PyObject_GC_Del(self);
     pyg_gil_state_release(state);
 }
@@ -314,14 +350,6 @@ pygstminiobject_clear(PyGstMiniObject *self)
 static void
 pygstminiobject_free(PyObject *op)
 {
-    PyGILState_STATE state;
-    GstMiniObject *obj = ((PyGstMiniObject*) op)->obj;
-
-    state = pyg_gil_state_ensure();
-    g_hash_table_remove (miniobjs, obj);
-    if (obj)
-	gst_mini_object_unref (obj);
-    pyg_gil_state_release(state);
     PyObject_GC_Del(op);
 }
 
@@ -380,7 +408,8 @@ pygstminiobject_copy(PyGstMiniObject *self, PyObject *args)
 static PyObject *
 pygstminiobject_ref(PyGstMiniObject *self, PyObject *args)
 {
-    return pygstminiobject_new(gst_mini_object_ref(self->obj));
+    gst_mini_object_ref(self->obj);
+    return (PyObject*) self;
 }
 
 static PyObject *
@@ -394,9 +423,9 @@ pygstminiobject_unref(PyGstMiniObject *self, PyObject *args)
 static PyMethodDef pygstminiobject_methods[] = {
     { "__gstminiobject_init__", (PyCFunction)pygstminiobject__gstminiobject_init__,
       METH_VARARGS|METH_KEYWORDS },
-    { "copy", (PyCFunction)pygstminiobject_copy, METH_VARARGS},
-    { "ref", (PyCFunction)pygstminiobject_ref, METH_VARARGS},
-    { "unref", (PyCFunction)pygstminiobject_unref, METH_VARARGS},
+    { "copy", (PyCFunction)pygstminiobject_copy, METH_VARARGS, "Copies the miniobject"},
+    { "ref", (PyCFunction)pygstminiobject_ref, METH_VARARGS, "Adds a reference to the miniobject" },
+    { "unref", (PyCFunction)pygstminiobject_unref, METH_VARARGS, "Removes a reference from the miniobject"},
     { NULL, NULL, 0 }
 };
 

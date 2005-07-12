@@ -95,7 +95,7 @@ _wrap_gst_element_get_state(PyGObject *self, PyObject *args, PyObject *kwargs)
 	/* Only returns the state for the time being */
     ret = gst_element_get_state(GST_ELEMENT (self->obj), &state, NULL, NULL);
     if (!ret) {
-	PyErr_SetString(PyExc_RuntimeError, "conversion could not be performed");
+	PyErr_SetString(PyExc_RuntimeError, "Element is in an error state");
 	return NULL;
     }
     return pyg_flags_from_gtype(GST_TYPE_ELEMENT_STATE, state);

@@ -1,3 +1,26 @@
+2005-07-12  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.override:
+	removed deprecated wrappers (gst_event_new_any*)
+
+	* gst/gstbuffer.override:
+	* gst/gstquery.override:
+	* gst/gstmessage.override:
+	* gst/gstevent.override:
+	* gst/pygstminiobject.c:
+	* gst/pygstminiobject.h:
+	Correct wrapping of functions 'creating' mini-objects
+
+	* gst/gstelement.override: (_wrap_gst_element_get_state):
+	More meaningful exception message
+
+	* gst/gstpad.override:
+	wrapped gst_pad_alloc_buffer(), gst_pad_pull_range(),
+	gst_pad_get_range(), gst_pad_get_internal_links(),
+	gst_pad_get_internal_links_default(), gst_pad_get_query_types(),
+	gst_pad_get_query_types_default()
+	
+
 2005-07-12  Andy Wingo  <wingo@pobox.com>
 
 	* examples/pipeline-tester: New file, tests out gstreamer

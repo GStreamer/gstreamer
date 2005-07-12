@@ -407,14 +407,12 @@ _wrap_gst_pad_query(PyGObject *self, PyObject *args, PyObject *kwargs)
     static char *kwlist[] = { "query", NULL };
     int ret;
     PyGstMiniObject *query;
-    GstMiniObject *copy;
     
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!:GstPad.query", kwlist, &PyGstQuery_Type, &query))
         return NULL;
-    copy = gst_mini_object_make_writable(query->obj);
-    ret = gst_pad_query(GST_PAD(self->obj), GST_QUERY (copy));
-    gst_mini_object_unref ((query->obj));
-    gst_mini_object_replace (&(query->obj), copy);
+
+    ret = gst_pad_query(GST_PAD(self->obj), GST_QUERY (query->obj));
+
     return PyBool_FromLong(ret);   
 }
 %%
@@ -829,5 +827,174 @@ _wrap_gst_pad_query_convert (PyGObject *self, PyObject *args, PyObject *kwargs)
     PyList_Append(ret, pyg_enum_from_gtype (GST_TYPE_FORMAT, destformat));
     PyList_Append(ret, PyLong_FromLongLong(dstval));
 
+    return ret;
+}
+%%
+override gst_pad_alloc_buffer kwargs
+static PyObject *
+_wrap_gst_pad_alloc_buffer (PyGObject *self, PyObject * args, PyObject *kwargs)
+{
+    static char *kwlist[] = {"offset", "size", "caps", NULL};
+    guint64	offset;
+    gint	size;
+    PyObject	*pcaps;
+    GstCaps	*caps;
+    PyObject	*ret;
+    GstBuffer	*buf;
+    GstFlowReturn	res;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+				     "KiO:GstPad.alloc_buffer",
+				     kwlist, &offset, &size, &pcaps))
+	return NULL;
+    caps = pyg_boxed_get(pcaps, GstCaps);
+    res = gst_pad_alloc_buffer (GST_PAD(pygobject_get(self)),
+				offset, size, caps, &buf);
+    ret = PyList_New(0);
+    PyList_Append(ret, pyg_enum_from_gtype(GST_TYPE_FLOW_RETURN, res));
+    if (res != GST_FLOW_OK) {
+	Py_INCREF(Py_None);
+	PyList_Append(ret, Py_None);
+    } else {
+	PyList_Append(ret, pygstminiobject_new(GST_MINI_OBJECT(buf)));
+    }
+    return ret;
+}
+%%
+override gst_pad_pull_range kwargs
+static PyObject *
+_wrap_gst_pad_pull_range (PyGObject *self, PyObject * args, PyObject *kwargs)
+{
+    static char *kwlist[] = {"offset", "size", NULL};
+    guint64	offset;
+    gint	size;
+    PyObject	*ret;
+    GstBuffer	*buf;
+    GstFlowReturn	res;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+				     "Ki:GstPad.pull_range",
+				     kwlist, &offset, &size))
+	return NULL;
+    res = gst_pad_pull_range (GST_PAD(pygobject_get(self)),
+			      offset, size, &buf);
+    ret = PyList_New(0);
+    PyList_Append(ret, pyg_enum_from_gtype(GST_TYPE_FLOW_RETURN, res));
+    if (res != GST_FLOW_OK) {
+	Py_INCREF(Py_None);
+	PyList_Append(ret, Py_None);
+    } else {
+	PyList_Append(ret, pygstminiobject_new(GST_MINI_OBJECT(buf)));
+    }
+    return ret;
+}
+%%
+override gst_pad_get_range kwargs
+static PyObject *
+_wrap_gst_pad_get_range (PyGObject *self, PyObject * args, PyObject *kwargs)
+{
+    static char *kwlist[] = {"offset", "size", NULL};
+    guint64	offset;
+    gint	size;
+    PyObject	*ret;
+    GstBuffer	*buf;
+    GstFlowReturn	res;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+				     "Ki:GstPad.get_range",
+				     kwlist, &offset, &size))
+	return NULL;
+    res = gst_pad_get_range (GST_PAD(pygobject_get(self)),
+			     offset, size, &buf);
+    ret = PyList_New(0);
+    PyList_Append(ret, pyg_enum_from_gtype(GST_TYPE_FLOW_RETURN, res));
+    if (res != GST_FLOW_OK) {
+	Py_INCREF(Py_None);
+	PyList_Append(ret, Py_None);
+    } else {
+	PyList_Append(ret, pygstminiobject_new(GST_MINI_OBJECT(buf)));
+    }
+    return ret;
+}
+%%
+override gst_pad_get_internal_links noargs
+static PyObject *
+_wrap_gst_pad_get_internal_links (PyGObject * self)
+{
+    PyObject	*ret;
+    GList	*lst, *tmp;
+
+    lst = gst_pad_get_internal_links (GST_PAD (pygobject_get(self)));
+
+    ret = PyList_New(0);
+    for (tmp = lst ; tmp; tmp = g_list_next(tmp)) {
+	PyList_Append(ret, pygobject_new(G_OBJECT(tmp->data)));
+    }
+    g_list_free(lst);
+    return ret;
+}
+%%
+override gst_pad_get_internal_links_default noargs
+static PyObject *
+_wrap_gst_pad_get_internal_links_default (PyGObject * self)
+{
+    PyObject	*ret;
+    GList	*lst, *tmp;
+
+    lst = gst_pad_get_internal_links_default (GST_PAD (pygobject_get(self)));
+
+    ret = PyList_New(0);
+    for (tmp = lst ; tmp; tmp = g_list_next(tmp)) {
+	PyList_Append(ret, pygobject_new(G_OBJECT(tmp->data)));
+    }
+    g_list_free(lst);
+    return ret;
+}
+%%
+override gst_pad_get_query_types noargs
+static PyObject *
+_wrap_gst_pad_get_query_types (PyGObject *self)
+{
+    PyObject	*ret;
+    PyObject	*item;
+    int		i;
+    GstQueryType	*tab;
+
+    tab = (GstQueryType*) gst_pad_get_query_types(GST_PAD(self->obj));
+    if (tab == NULL) {
+	Py_INCREF(Py_None);
+	return Py_None;
+    }
+
+    ret = PyList_New(0);
+    for (i = 0; tab[i] != 0; i++) {
+	item = pyg_enum_from_gtype (GST_TYPE_QUERY_TYPE, tab[i]);
+	PyList_Append(ret, item);
+    }
+    
+    return ret;
+}
+%%
+override gst_pad_get_query_types_default noargs
+static PyObject *
+_wrap_gst_pad_get_query_types_default (PyGObject *self)
+{
+    PyObject	*ret;
+    PyObject	*item;
+    int		i;
+    GstQueryType	*tab;
+
+    tab = (GstQueryType*) gst_pad_get_query_types_default(GST_PAD(self->obj));
+    if (tab == NULL) {
+	Py_INCREF(Py_None);
+	return Py_None;
+    }
+
+    ret = PyList_New(0);
+    for (i = 0; tab[i] != 0; i++) {
+	item = pyg_enum_from_gtype (GST_TYPE_QUERY_TYPE, tab[i]);
+	PyList_Append(ret, item);
+    }
+    
     return ret;
 }

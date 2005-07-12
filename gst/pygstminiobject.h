@@ -28,6 +28,8 @@ typedef struct {
 
 PyObject *
 pygstminiobject_new(GstMiniObject *obj);
+PyObject *
+pygstminiobject_new_noref(GstMiniObject *obj);
 
 #define pygstminiobject_get(v) (((PyGstMiniObject *)(v))->obj)
 #define pygstminiobject_check(v,base) (PyObject_TypeCheck(v,base))
