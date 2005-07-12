@@ -1,3 +1,7 @@
+2005-07-12  Andy Wingo  <wingo@pobox.com>
+
+	* examples/gstplay: Removed examples for old gstplay.
+
 2005-07-12  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstmessage.override: 
