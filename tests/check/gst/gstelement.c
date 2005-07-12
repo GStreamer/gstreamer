@@ -78,6 +78,21 @@ GST_START_TEST (test_add_pad_unref_element)
 
 GST_END_TEST;
 
+GST_START_TEST (test_error_no_bus)
+{
+  GstElement *e;
+
+  e = gst_element_factory_make ("fakesrc", "source");
+
+  /* I don't want errors shown */
+  gst_debug_set_default_threshold (GST_LEVEL_NONE);
+
+  GST_ELEMENT_ERROR (e, RESOURCE, OPEN_READ, ("I could not read"), ("debug"));
+
+  gst_object_unref (e);
+}
+
+GST_END_TEST;
 
 Suite *
 gst_element_suite (void)
@@ -88,6 +103,7 @@ gst_element_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_add_remove_pad);
   tcase_add_test (tc_chain, test_add_pad_unref_element);
+  tcase_add_test (tc_chain, test_error_no_bus);
 
   return s;
 }

@@ -79,12 +79,43 @@ gst_value_suite (void)
   return s;
 }
 
+GST_START_TEST (test_structure_new)
+{
+  GstStructure *s;
+  GError *e;
+  GQuark domain;
+
+  s = gst_structure_new ("name", "key", G_TYPE_STRING, "value", NULL);
+  fail_unless (strcmp (gst_structure_get_string (s, "key"), "value") == 0);
+  gst_structure_free (s);
+
+  domain = g_quark_from_string ("test");
+  e = g_error_new (domain, 0, "a test error");
+  s = gst_structure_new ("name", "key", GST_TYPE_G_ERROR, e, NULL);
+  g_error_free (e);
+  gst_structure_free (s);
+}
+
+GST_END_TEST;
+
+Suite *
+gst_structure_suite (void)
+{
+  Suite *s = suite_create ("GstStructure");
+  TCase *tc_chain = tcase_create ("general");
+
+  suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_from_string_int);
+  tcase_add_test (tc_chain, test_structure_new);
+  return s;
+}
+
 int
 main (int argc, char **argv)
 {
   int nf;
 
-  Suite *s = gst_value_suite ();
+  Suite *s = gst_structure_suite ();
   SRunner *sr = srunner_create (s);
 
   gst_check_init (&argc, &argv);

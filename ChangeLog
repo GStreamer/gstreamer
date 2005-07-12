@@ -1,5 +1,20 @@
 2005-07-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* check/gst/gstelement.c: (GST_START_TEST), (gst_element_suite):
+	* check/gst/gstmessage.c: (GST_START_TEST):
+	* check/gst/gststructure.c: (GST_START_TEST),
+	(gst_structure_suite), (main):
+	  more testing
+	* gst/gstelement.c: (gst_element_message_full):
+	  clean up GError and debug string now that they get copied
+	* gst/gstmessage.c: (gst_message_new_error),
+	(gst_message_new_warning), (gst_message_parse_error),
+	(gst_message_parse_warning):
+	  use GST_TYPE_G_ERROR for structure_new, and take copies of
+	  arguments, so that we don't mess up refcounting
+
+2005-07-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* check/Makefile.am:
 	  add per-test valgrind targets
 	* check/gst-libs/gdp.c: (GST_START_TEST),

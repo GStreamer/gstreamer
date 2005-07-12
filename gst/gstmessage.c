@@ -23,6 +23,7 @@
 #include <string.h>             /* memcpy */
 
 #include "gst_private.h"
+#include "gsterror.h"
 #include "gstinfo.h"
 #include "gstmemchunk.h"
 #include "gstmessage.h"
@@ -206,7 +207,7 @@ gst_message_new_eos (GstObject * src)
  * @error: The GError for this message.
  * @debug: A debugging string for something or other.
  *
- * Create a new error message. The message will take ownership of @error and
+ * Create a new error message. The message will copy @error and
  * @debug.
  *
  * Returns: The new error message.
@@ -220,7 +221,8 @@ gst_message_new_error (GstObject * src, GError * error, gchar * debug)
   GstStructure *s;
 
   message = gst_message_new (GST_MESSAGE_ERROR, src);
-  s = gst_structure_new ("GstMessageError", "gerror", G_TYPE_POINTER, error,
+  /* gst_structure_new takes copies of the types passed in */
+  s = gst_structure_new ("GstMessageError", "gerror", GST_TYPE_G_ERROR, error,
       "debug", G_TYPE_STRING, debug, NULL);
   gst_structure_set_parent_refcount (s, &message->mini_object.refcount);
   message->structure = s;
@@ -234,7 +236,7 @@ gst_message_new_error (GstObject * src, GError * error, gchar * debug)
  * @error: The GError for this message.
  * @debug: A debugging string for something or other.
  *
- * Create a new warning message. The message will take ownership of @error and
+ * Create a new warning message. The message will make copies of @error and
  * @debug.
  *
  * Returns: The new warning message.
@@ -248,7 +250,8 @@ gst_message_new_warning (GstObject * src, GError * error, gchar * debug)
   GstStructure *s;
 
   message = gst_message_new (GST_MESSAGE_WARNING, src);
-  s = gst_structure_new ("GstMessageWarning", "gerror", G_TYPE_POINTER, error,
+  /* gst_structure_new takes copies of the types passed in */
+  s = gst_structure_new ("GstMessageWarning", "gerror", GST_TYPE_G_ERROR, error,
       "debug", G_TYPE_STRING, debug, NULL);
   gst_structure_set_parent_refcount (s, &message->mini_object.refcount);
   message->structure = s;
@@ -416,9 +419,9 @@ gst_message_parse_error (GstMessage * message, GError ** gerror, gchar ** debug)
 
   error_gvalue = gst_structure_get_value (message->structure, "gerror");
   g_return_if_fail (error_gvalue != NULL);
-  g_return_if_fail (G_VALUE_TYPE (error_gvalue) == G_TYPE_POINTER);
+  g_return_if_fail (G_VALUE_TYPE (error_gvalue) == GST_TYPE_G_ERROR);
 
-  error_val = g_value_get_pointer (error_gvalue);
+  error_val = (GError *) g_value_get_boxed (error_gvalue);
   if (error_val)
     *gerror = g_error_copy (error_val);
   else
@@ -447,9 +450,9 @@ gst_message_parse_warning (GstMessage * message, GError ** gerror,
 
   error_gvalue = gst_structure_get_value (message->structure, "gerror");
   g_return_if_fail (error_gvalue != NULL);
-  g_return_if_fail (G_VALUE_TYPE (error_gvalue) == G_TYPE_POINTER);
+  g_return_if_fail (G_VALUE_TYPE (error_gvalue) == GST_TYPE_G_ERROR);
 
-  error_val = g_value_get_pointer (error_gvalue);
+  error_val = (GError *) g_value_get_boxed (error_gvalue);
   if (error_val)
     *gerror = g_error_copy (error_val);
   else

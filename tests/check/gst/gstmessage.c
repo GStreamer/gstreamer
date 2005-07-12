@@ -49,8 +49,11 @@ GST_START_TEST (test_parsing)
     fail_if (message == NULL);
     fail_unless (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR);
     fail_unless (GST_MESSAGE_SRC (message) == NULL);
+
+    g_error_free (error);
     error = NULL;
     debug = NULL;
+
     gst_message_parse_error (message, &error, &debug);
     fail_if (error == NULL);
     fail_if (debug == NULL);
@@ -58,7 +61,10 @@ GST_START_TEST (test_parsing)
     fail_unless (error->domain == domain);
     fail_unless (error->code == 10);
     fail_unless (strcmp (debug, "error string") == 0);
+
     gst_message_unref (message);
+    g_error_free (error);
+    g_free (debug);
   }
   /* GST_MESSAGE_WARNING   */
   {
@@ -71,8 +77,11 @@ GST_START_TEST (test_parsing)
     fail_if (message == NULL);
     fail_unless (GST_MESSAGE_TYPE (message) == GST_MESSAGE_WARNING);
     fail_unless (GST_MESSAGE_SRC (message) == NULL);
+
+    g_error_free (warning);
     warning = NULL;
     debug = NULL;
+
     gst_message_parse_warning (message, &warning, &debug);
     fail_if (warning == NULL);
     fail_if (debug == NULL);
@@ -80,7 +89,10 @@ GST_START_TEST (test_parsing)
     fail_unless (warning->domain == domain);
     fail_unless (warning->code == 10);
     fail_unless (strcmp (debug, "warning string") == 0);
+
     gst_message_unref (message);
+    g_error_free (warning);
+    g_free (debug);
   }
   /* GST_MESSAGE_INFO   */
   {
@@ -101,6 +113,7 @@ GST_START_TEST (test_parsing)
     fail_if (tag == NULL);
     /* FIXME, check the actual tags */
     gst_message_unref (message);
+    gst_tag_list_free (tag);
   }
   /* GST_MESSAGE_BUFFERING   */
   {

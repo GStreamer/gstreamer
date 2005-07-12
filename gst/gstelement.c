@@ -1356,9 +1356,11 @@ void gst_element_message_full
 
   if (type == GST_MESSAGE_ERROR) {
     message = gst_message_new_error (GST_OBJECT (element), gerror, sent_debug);
-  } else {
+  } else if (type == GST_MESSAGE_WARNING) {
     message = gst_message_new_warning (GST_OBJECT (element), gerror,
         sent_debug);
+  } else {
+    g_assert_not_reached ();
   }
   gst_element_post_message (element, message);
 
@@ -1366,8 +1368,9 @@ void gst_element_message_full
       sent_text);
 
   /* cleanup */
+  g_error_free (gerror);
+  g_free (sent_debug);
   g_free (sent_text);
-  /* sent_debug is not part of the gerror, so don't free it here */
 }
 
 /**
