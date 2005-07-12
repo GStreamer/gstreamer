@@ -1,5 +1,9 @@
 2005-07-12  Andy Wingo  <wingo@pobox.com>
 
+	* configure.ac (AC_CONFIG_FILES):
+	* examples/: Moved all examples up from examples/gst/ into
+	examples/.
+
 	* examples/gstplay: Removed examples for old gstplay.
 
 2005-07-12  Edward Hervey  <edward@fluendo.com>
