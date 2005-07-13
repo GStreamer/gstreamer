@@ -1,5 +1,8 @@
 2005-07-13  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gst-types.defs: (MessageType):
+	updating to current core for 2 new GstMessageType's
+
 	* gst/gstbus.override: (bus_sync_handler),(bus_handler): 
 	properly unref the message python wrapper...
 

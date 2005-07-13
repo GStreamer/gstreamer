@@ -635,6 +635,8 @@
     '("structure-change" "GST_MESSAGE_STRUCTURE_CHANGE")
     '("stream-status" "GST_MESSAGE_STREAM_STATUS")
     '("application" "GST_MESSAGE_APPLICATION")
+    '("segment-start" "GST_MESSAGE_SEGMENT_START")
+    '("segment-done" "GST_MESSAGE_SEGMENT_DONE")
     '("any" "GST_MESSAGE_ANY")
   )
 )
