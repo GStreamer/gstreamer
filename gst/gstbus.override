@@ -63,7 +63,7 @@ bus_sync_handler (GstBus *bus, GstMessage *message, gpointer user_data)
 			res = GST_BUS_PASS;
 		Py_DECREF (ret);
 	}
-
+	Py_DECREF(py_msg);
 	Py_DECREF(args);
 
 	pyg_gil_state_release(state);
@@ -77,7 +77,7 @@ bus_handler (GstBus *bus, GstMessage *message, gpointer user_data)
 	PyGILState_STATE state;
 	gboolean	res;
 	PyObject	*py_userdata;
-	PyObject	*py_msg;
+ 	PyObject	*py_msg;
 	PyObject	*callback, *args;
 	PyObject	*ret;
 	gint		i,len;
@@ -87,7 +87,7 @@ bus_handler (GstBus *bus, GstMessage *message, gpointer user_data)
 	state = pyg_gil_state_ensure();
 
 	py_userdata = (PyObject *) user_data;
-	py_msg = pygstminiobject_new(GST_MINI_OBJECT(message));
+ 	py_msg = pygstminiobject_new(GST_MINI_OBJECT(message));
 	callback = PyTuple_GetItem(py_userdata, 0);
 	args = Py_BuildValue("(NN)",
 			     pygobject_new(G_OBJECT(bus)),
@@ -113,6 +113,7 @@ bus_handler (GstBus *bus, GstMessage *message, gpointer user_data)
 			res = PyObject_IsTrue(ret);
 		Py_DECREF(ret);
 	}
+	Py_DECREF(py_msg);
 	Py_DECREF(args);
 
 	pyg_gil_state_release(state);
