@@ -61,9 +61,6 @@ CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*.c
 # thomasvs: another nice wingo addition would be an explanation on why
 # this is useful ;)
 
-#SCANOBJ_DEPS = $(top_builddir)/gst/elements/libgstelements.la \
-#	$(top_builddir)/gst/schedulers/libgstbasicomegascheduler.la
-#SCANOBJ_DEPS = $(top_builddir)/libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
 SCANOBJ_DEPS = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la
@@ -83,7 +80,7 @@ extra_files =
 # CFLAGS and LDFLAGS for compiling scan program. Only needed if your app/lib
 # contains GtkObjects/GObjects and you want to document signals and properties.
 GTKDOC_CFLAGS = $(GST_BASE_CFLAGS) -I$(top_builddir) -I$(top_builddir)/gst-libs
-GTKDOC_LIBS = $(GST_BASE_LIBS) $(SCANOBJ_DEPS)
+GTKDOC_LIBS = $(SCANOBJ_DEPS) $(GST_BASE_LIBS)
 
 GTKDOC_CC=$(LIBTOOL) --mode=compile $(CC)
 GTKDOC_LD=$(LIBTOOL) --mode=link $(CC)

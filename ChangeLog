@@ -1,3 +1,42 @@
+2005-07-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  make GST_PLUGIN_LDFLAGS only be flags; GST_LIBS should be
+	  added manually to each Makefile.am so we are sure it goes
+	  *last* and doesn't add -L flags before linking in libs of our
+	  own, like, say, internal .la libs, that then accidentally pick
+	  up the installed copy.
+	* docs/libs/Makefile.am:
+	* ext/alsa/Makefile.am:
+	* ext/cdparanoia/Makefile.am:
+	* ext/gnomevfs/Makefile.am:
+	* ext/libvisual/Makefile.am:
+	* ext/ogg/Makefile.am:
+	* ext/theora/Makefile.am:
+	* ext/vorbis/Makefile.am:
+	* gst-libs/gst/video/Makefile.am:
+	* gst/adder/Makefile.am:
+	* gst/audioconvert/Makefile.am:
+	* gst/audiorate/Makefile.am:
+	* gst/audioscale/Makefile.am:
+	* gst/ffmpegcolorspace/Makefile.am:
+	* gst/playback/Makefile.am:
+	* gst/sine/Makefile.am:
+	* gst/subparse/Makefile.am:
+	* gst/tags/Makefile.am:
+	* gst/tcp/Makefile.am:
+	* gst/typefind/Makefile.am:
+	* gst/videorate/Makefile.am:
+	* gst/videoscale/Makefile.am:
+	* gst/videotestsrc/Makefile.am:
+	* gst/volume/Makefile.am:
+	* sys/v4l/Makefile.am:
+	* sys/ximage/Makefile.am:
+	* sys/xvimage/Makefile.am:
+	  adapt properly to this change. This should make sure that
+	  plugins and libs properly link to the as-yet-uninstalled
+	  copies of stuff like libgstinterfaces and libgstvideo
+
 2005-07-13  Andy Wingo  <wingo@pobox.com>
 
 	* sys/v4l/gstv4lsrc.c (gst_v4lsrc_stop): Fix a spurious warning.

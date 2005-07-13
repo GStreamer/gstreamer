@@ -25,8 +25,8 @@ nodist_libgsttcp_la_SOURCES = \
 
 # remove ENABLE_NEW when dataprotocol is stable
 libgsttcp_la_CFLAGS = $(GST_CFLAGS) -DGST_ENABLE_NEW
-libgsttcp_la_LIBADD = 
-libgsttcp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GST_BASE_LIBS) $(GST_GDP_LIBS)
+libgsttcp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgsttcp_la_LIBADD = $(GST_BASE_LIBS) $(GST_GDP_LIBS) $(GST_LIBS)
 
 noinst_HEADERS = \
   gsttcpplugin.h \
@@ -45,4 +45,3 @@ noinst_PROGRAMS = fdsetstress
 fdsetstress_SOURCES = fdsetstress.c gstfdset.c 
 fdsetstress_CFLAGS = $(GST_CFLAGS) $(GTK_CFLAGS)
 fdsetstress_LDFLAGS = $(GST_LIBS) $(GTK_LIBS)
-

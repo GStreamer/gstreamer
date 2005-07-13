@@ -22,12 +22,10 @@ libgstvideo4linux_la_SOURCES = \
 #	gstv4lmjpegsink.c v4lmjpegsink_calls.c
 
 libgstvideo4linux_la_CFLAGS = $(GST_CFLAGS) $(X_CFLAGS) -I$(top_srcdir)/gst-libs
+libgstvideo4linux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvideo4linux_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
-	$(GST_BASE_LIBS)
-libgstvideo4linux_la_LDFLAGS = \
-	$(GST_PLUGIN_LDFLAGS) \
-	$(xv_libs)
+	$(GST_BASE_LIBS) $(GST_LIBS) $(xv_libs)
 
 noinst_HEADERS = gstv4lelement.h v4l_calls.h \
 		gstv4lsrc.h v4lsrc_calls.h \
