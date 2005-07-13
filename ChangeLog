@@ -1,3 +1,11 @@
+2005-07-13  Andy Wingo  <wingo@pobox.com>
+
+	* sys/xvimage/xvimagesink.c (gst_xvimage_buffer_destroy) 
+	(gst_xvimagesink_xvimage_new): Ref the xvimagesink while the
+	buffer points to it.
+	(gst_xvimagesink_check_xshm_calls): Don't use our xvimage buffer,
+	rather just doing X calls ourselves. Also fixes a memleak.
+
 2005-07-12  Andy Wingo  <wingo@pobox.com>
 
 	* sys/v4l/gstv4lsrc.c (gst_v4lsrc_get_property) 

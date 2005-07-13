@@ -145,6 +145,9 @@ gst_xvimage_buffer_destroy (GstXvImageBuffer * xvimage)
 
   g_mutex_unlock (xvimagesink->x_lock);
 
+  xvimage->xvimagesink = NULL;
+  gst_object_unref (xvimagesink);
+
   return;
 
 no_sink:
@@ -257,14 +260,13 @@ gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
 #ifndef HAVE_XSHM
   return FALSE;
 #else
-  GstXvImageBuffer *xvimage = NULL;
+  XvImage *xvimage;
+  XShmSegmentInfo SHMInfo;
+  gint size;
   int (*handler) (Display *, XErrorEvent *);
   gboolean result = FALSE;
 
   g_return_val_if_fail (xcontext != NULL, FALSE);
-
-  xvimage = (GstXvImageBuffer *) gst_mini_object_new (GST_TYPE_XVIMAGE_BUFFER);
-  g_return_val_if_fail (xvimage != NULL, FALSE);
 
   /* Setting an error handler to catch failure */
   error_caught = FALSE;
@@ -272,45 +274,33 @@ gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
 
   /* Trying to create a 1x1 picture */
   GST_DEBUG ("XvShmCreateImage of 1x1");
-  xvimage->xvimage = XvShmCreateImage (xcontext->disp, xcontext->xv_port_id,
-      xcontext->im_format, NULL, 1, 1, &xvimage->SHMInfo);
-  if (!xvimage->xvimage) {
+  xvimage = XvShmCreateImage (xcontext->disp, xcontext->xv_port_id,
+      xcontext->im_format, NULL, 1, 1, &SHMInfo);
+  if (!xvimage) {
     GST_WARNING ("could not XvShmCreateImage a 1x1 image");
     goto beach;
   }
-  xvimage->size = xvimage->xvimage->data_size;
+  size = xvimage->data_size;
 
-  xvimage->SHMInfo.shmid = shmget (IPC_PRIVATE, xvimage->size,
-      IPC_CREAT | 0777);
-  if (xvimage->SHMInfo.shmid == -1) {
-    GST_WARNING ("could not get shared memory of %d bytes", xvimage->size);
+  SHMInfo.shmid = shmget (IPC_PRIVATE, size, IPC_CREAT | 0777);
+  if (SHMInfo.shmid == -1) {
+    GST_WARNING ("could not get shared memory of %d bytes", size);
     goto beach;
   }
 
-  xvimage->SHMInfo.shmaddr = shmat (xvimage->SHMInfo.shmid, 0, 0);
-  if (xvimage->SHMInfo.shmaddr == ((void *) -1)) {
+  SHMInfo.shmaddr = shmat (SHMInfo.shmid, 0, 0);
+  if (SHMInfo.shmaddr == ((void *) -1)) {
     GST_WARNING ("Failed to shmat: %s", g_strerror (errno));
     goto beach;
   }
 
-  xvimage->xvimage->data = xvimage->SHMInfo.shmaddr;
-  xvimage->SHMInfo.readOnly = FALSE;
+  xvimage->data = SHMInfo.shmaddr;
+  SHMInfo.readOnly = FALSE;
 
-  if (XShmAttach (xcontext->disp, &xvimage->SHMInfo) == 0) {
+  if (XShmAttach (xcontext->disp, &SHMInfo) == 0) {
     GST_WARNING ("Failed to XShmAttach");
     goto beach;
   }
-
-  XSync (xcontext->disp, 0);
-
-  XShmDetach (xcontext->disp, &xvimage->SHMInfo);
-  XSync (xcontext->disp, FALSE);
-
-  shmdt (xvimage->SHMInfo.shmaddr);
-  shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
-
-  /* To be sure, reset the SHMInfo entry */
-  xvimage->SHMInfo.shmaddr = ((void *) -1);
 
   /* store whether we succeeded in result and reset error_caught */
   result = !error_caught;
@@ -318,8 +308,17 @@ gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
 
 beach:
   XSetErrorHandler (handler);
-  gst_xvimage_buffer_free (xvimage);
+
   XSync (xcontext->disp, FALSE);
+  if (SHMInfo.shmaddr != ((void *) -1)) {
+    XShmDetach (xcontext->disp, &SHMInfo);
+    XSync (xcontext->disp, FALSE);
+    shmdt (SHMInfo.shmaddr);
+  }
+  if (SHMInfo.shmid > 0)
+    shmctl (SHMInfo.shmid, IPC_RMID, 0);
+  if (xvimage)
+    XFree (xvimage);
   return result;
 #endif /* HAVE_XSHM */
 }
@@ -340,7 +339,7 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink,
   xvimage->width = width;
   xvimage->height = height;
   xvimage->im_format = xvimagesink->xcontext->im_format;
-  xvimage->xvimagesink = xvimagesink;
+  xvimage->xvimagesink = gst_object_ref (xvimagesink);
 
   g_mutex_lock (xvimagesink->x_lock);
 
