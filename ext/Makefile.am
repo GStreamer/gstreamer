@@ -438,4 +438,6 @@ DIST_SUBDIRS=\
 	sidplay \
 	aalib \
 	libcaca \
-	esd
+	esd	\
+	raw1394 \
+	dv
