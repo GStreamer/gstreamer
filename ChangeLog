@@ -1,3 +1,7 @@
+2005-07-13  Andy Wingo  <wingo@pobox.com>
+
+	* examples/pipeline-tester: Tweaks, show messages.
+
 2005-07-12  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.override:

@@ -29,6 +29,7 @@ pygtk.require('2.0')
 import gtk
 import gtk.gdk
 import pango
+import gobject
 
 import pygst
 pygst.require('0.9')
@@ -40,11 +41,16 @@ data = (('Video capture via V4L',
          '    ! video/x-raw-yuv,format=(fourcc)I420 \n'
          '    ! videorate \n'
          '    ! xvimagesink'),
+        ('Video capture via V4L, fixed frame rate',
+         'v4lsrc name=source autoprobe=false autoprobe-fps=false \n'
+         '    ! video/x-raw-yuv,format=(fourcc)I420,framerate=(double)7.5 \n'
+         '    ! videorate \n'
+         '    ! xvimagesink'),
         ('Sound capture via ALSA',
          'alsasrc\n'
          '    ! audio/x-raw-int,rate=22050,depth=16,channels=1,width=16,signed=(boolean)TRUE,endianness=1234\n'
          '    ! level signal=true\n'
-         '    ! alsasink'))
+         '    ! fakesink'))
 
 
 def escape(s, chars, escaper='\\'):
@@ -92,6 +98,7 @@ class Window(gtk.Window):
         sw.show()
         b.pack_start(sw, True, True, 6)
         tv = gtk.TreeView(make_model())
+        tv.set_property('can-default', False)
         r = gtk.CellRendererText()
         r.set_property('xalign', 0.5)
         c = gtk.TreeViewColumn('System', r, text=0)
@@ -108,9 +115,11 @@ class Window(gtk.Window):
         bb.show()
         b.pack_start(bb, False, False, 0)
         bu = gtk.Button(stock=gtk.STOCK_MEDIA_PLAY)
+        bu.set_property('can-default', True)
         bu.set_focus_on_click(False)
         bu.show()
         bb.pack_start(bu, True, False, 0)
+        bu.set_property('has-default', True)
 
         def on_changed(s):
             m, i = s.get_selected()
@@ -123,21 +132,55 @@ class Window(gtk.Window):
                 l.set_markup('')
         tv.get_selection().connect('changed', on_changed)
 
+        tv.connect('row-activated', lambda *x: self.play_toggled(bu))
+
         bu.connect('clicked', self.play_toggled)
+
+    def error(self, message, secondary=None):
+        m = gtk.MessageDialog(self,
+                              gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                              gtk.MESSAGE_ERROR,
+                              gtk.BUTTONS_OK,
+                              message)
+        if secondary:
+            m.format_secondary_text(secondary)
+        m.run()
+                              
+    def on_message(self, bus, message):
+        t = message.type
+        if t == gst.MESSAGE_STATE_CHANGED:
+            pass
+        else:
+            print '%s: %s:' % (message.src.get_path_string(),
+                               message.type.value_nicks[1])
+            print '    %s' % message.structure.to_string()
+        return True
 
     def play(self):
         pipestr = self.selected_pipe
-        pipeline = gst.parse_launch(pipestr)
+        try:
+            self.set_sensitive(False)
+            pipeline = gst.parse_launch(pipestr)
+            self.set_sensitive(True)
+        except gobject.GError, e:
+            self.set_sensitive(True)
+            self.error('Could not create pipeline', e.__str__)
+            return False
+        watch_id = pipeline.get_bus().add_watch(self.on_message)
         if pipeline.set_state(gst.STATE_PLAYING) != gst.STATE_SUCCESS:
-            print 'state change failed'
+            pipeline.set_state(gst.STATE_NULL)
+            gobject.source_remove(watch_id)
             return False
         else:
             self.pipeline = pipeline
+            self.watch_id = watch_id
             return True
 
     def stop(self):
         self.pipeline.set_state(gst.STATE_NULL)
         self.pipeline = None
+        gobject.source_remove(self.watch_id)
+        del self.watch_id
 
     def play_toggled(self, button):
         if self.playing:
