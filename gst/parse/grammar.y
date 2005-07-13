@@ -377,7 +377,7 @@ gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
                 GST_ELEMENT_NAME (src), link->src_pad,
                 GST_ELEMENT_NAME (link->sink), link->sink_pad);
 
-  if (gst_element_link_pads (src, link->src_pad, link->sink, link->sink_pad)) {
+  if (gst_element_link_pads_filtered (src, link->src_pad, link->sink, link->sink_pad, link->caps)) {
     /* do this here, we don't want to get any problems later on when unlocking states */
     GST_CAT_DEBUG (GST_CAT_PIPELINE, "delayed linking %s:%s to %s:%s worked", 
                	   GST_ELEMENT_NAME (src), link->src_pad,
@@ -447,8 +447,9 @@ gst_parse_perform_link (link_t *link, graph_t *graph)
 	        link->caps);
 
   if (!srcs || !sinks) {
-    if (gst_element_link_pads (src, srcs ? (const gchar *) srcs->data : NULL,
-                                        sink, sinks ? (const gchar *) sinks->data : NULL)) {
+    if (gst_element_link_pads_filtered (src, srcs ? (const gchar *) srcs->data : NULL,
+                                        sink, sinks ? (const gchar *) sinks->data : NULL,
+					link->caps)) {
       gst_parse_element_lock (sink, gst_element_is_locked_state (src));
       goto success;
     } else {
@@ -470,7 +471,7 @@ gst_parse_perform_link (link_t *link, graph_t *graph)
     const gchar *sink_pad = (const gchar *) sinks->data;
     srcs = g_slist_next (srcs);
     sinks = g_slist_next (sinks);
-    if (gst_element_link_pads (src, src_pad, sink, sink_pad)) {
+    if (gst_element_link_pads_filtered (src, src_pad, sink, sink_pad, link->caps)) {
       gst_parse_element_lock (sink, gst_element_is_locked_state (src));
       continue;
     } else {

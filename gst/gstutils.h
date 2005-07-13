@@ -252,6 +252,10 @@ gboolean		gst_element_link_pads           (GstElement *src, const gchar *srcpadn
 void                    gst_element_unlink_pads         (GstElement *src, const gchar *srcpadname,
 		                                         GstElement *dest, const gchar *destpadname);
 
+gboolean		gst_element_link_pads_filtered	(GstElement * src, const gchar * srcpadname,
+                                                         GstElement * dest, const gchar * destpadname,
+                                                         GstCaps *filter);
+
 /* util elementfactory functions */
 gboolean		gst_element_factory_can_src_caps(GstElementFactory *factory, const GstCaps *caps);
 gboolean		gst_element_factory_can_sink_caps(GstElementFactory *factory, const GstCaps *caps);

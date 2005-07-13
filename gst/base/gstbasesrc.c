@@ -883,6 +883,9 @@ could_not_start:
 could_not_negotiate:
   {
     GST_DEBUG_OBJECT (basesrc, "could not negotiate, stopping");
+    GST_ELEMENT_ERROR (basesrc, STREAM, FORMAT,
+        ("Could not connect source to pipeline"),
+        ("Check your filtered caps, if any"));
     gst_base_src_stop (basesrc);
     return FALSE;
   }

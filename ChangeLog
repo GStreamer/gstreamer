@@ -1,3 +1,15 @@
+2005-07-13  Andy Wingo  <wingo@pobox.com>
+
+	* gst/base/gstbasesrc.c (gst_base_src_start): Post an error if the
+	source couldn't negotiate.
+
+	* gst/parse/grammar.y: Revert 1.54->1.55, so we now do filtered
+	connections again.
+
+	* gst/gstutils.h:
+	* gst/gstutils.c (gst_element_link_pads_filtered): New old
+	function. I am channeling Hades. Put your boots on suckers!!!
+
 2005-07-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* testsuite/caps/Makefile.am:

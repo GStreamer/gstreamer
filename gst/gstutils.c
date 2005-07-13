@@ -1229,6 +1229,68 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
 }
 
 /**
+ * gst_element_link_pads_filtered:
+ * @src: a #GstElement containing the source pad.
+ * @srcpadname: the name of the #GstPad in source element or NULL for any pad.
+ * @dest: the #GstElement containing the destination pad.
+ * @destpadname: the name of the #GstPad in destination element or NULL for any pad.
+ * @caps: the #GstCaps to filter the link, or #NULL for no filter.
+ *
+ * Links the two named pads of the source and destination elements. Side effect
+ * is that if one of the pads has no parent, it becomes a child of the parent of
+ * the other element. If they have different parents, the link fails. If @caps
+ * is not #NULL, makes sure that the caps of the link is a subset of @caps.
+ *
+ * Returns: TRUE if the pads could be linked, FALSE otherwise.
+ */
+gboolean
+gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
+    GstElement * dest, const gchar * destpadname, GstCaps * filter)
+{
+  /* checks */
+  g_return_val_if_fail (GST_IS_ELEMENT (src), FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (dest), FALSE);
+  g_return_val_if_fail (filter == NULL || GST_IS_CAPS (filter), FALSE);
+
+  if (filter) {
+    GstElement *capsfilter;
+    GstObject *parent;
+
+    capsfilter = gst_element_factory_make ("capsfilter", NULL);
+    if (!capsfilter) {
+      GST_ERROR ("Could not make a capsfilter");
+      return FALSE;
+    }
+
+    parent = gst_object_get_parent (GST_OBJECT (src));
+    g_return_val_if_fail (GST_IS_BIN (parent), FALSE);
+
+    if (!gst_bin_add (GST_BIN (parent), capsfilter)) {
+      GST_ERROR ("Could not add capsfilter");
+      gst_object_unref (capsfilter);
+      gst_object_unref (parent);
+      return FALSE;
+    }
+
+    gst_object_unref (parent);
+
+    g_object_set (capsfilter, "filter-caps", filter, NULL);
+
+    if (gst_element_link_pads (src, srcpadname, capsfilter, "sink")
+        && gst_element_link_pads (capsfilter, "src", dest, destpadname)) {
+      return TRUE;
+    } else {
+      GST_INFO ("Could not link elements");
+      gst_bin_remove (GST_BIN (GST_OBJECT_PARENT (capsfilter)), capsfilter);
+      /* will unref and unlink as appropriate */
+      return FALSE;
+    }
+  } else {
+    return gst_element_link_pads (src, srcpadname, dest, destpadname);
+  }
+}
+
+/**
  * gst_element_link:
  * @src: a #GstElement containing the source pad.
  * @dest: the #GstElement containing the destination pad.
@@ -1243,7 +1305,7 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
 gboolean
 gst_element_link (GstElement * src, GstElement * dest)
 {
-  return gst_element_link_pads (src, NULL, dest, NULL);
+  return gst_element_link_pads_filtered (src, NULL, dest, NULL, NULL);
 }
 
 /**
