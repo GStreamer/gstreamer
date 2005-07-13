@@ -405,27 +405,10 @@ pygstminiobject_copy(PyGstMiniObject *self, PyObject *args)
     return pygstminiobject_new(gst_mini_object_copy(self->obj));
 }
 
-static PyObject *
-pygstminiobject_ref(PyGstMiniObject *self, PyObject *args)
-{
-    gst_mini_object_ref(self->obj);
-    return (PyObject*) self;
-}
-
-static PyObject *
-pygstminiobject_unref(PyGstMiniObject *self, PyObject *args)
-{
-    gst_mini_object_ref(self->obj);
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-
 static PyMethodDef pygstminiobject_methods[] = {
     { "__gstminiobject_init__", (PyCFunction)pygstminiobject__gstminiobject_init__,
       METH_VARARGS|METH_KEYWORDS },
     { "copy", (PyCFunction)pygstminiobject_copy, METH_VARARGS, "Copies the miniobject"},
-    { "ref", (PyCFunction)pygstminiobject_ref, METH_VARARGS, "Adds a reference to the miniobject" },
-    { "unref", (PyCFunction)pygstminiobject_unref, METH_VARARGS, "Removes a reference from the miniobject"},
     { NULL, NULL, 0 }
 };
 

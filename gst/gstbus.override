@@ -55,7 +55,11 @@ bus_sync_handler (GstBus *bus, GstMessage *message, gpointer user_data)
 		PyErr_Print();
 		res = GST_BUS_PASS;
 	} else {
-		if (pyg_enum_get_value(GST_TYPE_BUS_SYNC_REPLY, ret, (gint *) &res))
+		if (ret == Py_None) {
+			PyErr_SetString(PyExc_TypeError, "callback should return a BusSyncReply");
+			PyErr_Print();
+			res = GST_BUS_PASS;	
+		} else if (pyg_enum_get_value(GST_TYPE_BUS_SYNC_REPLY, ret, (gint *) &res))
 			res = GST_BUS_PASS;
 		Py_DECREF (ret);
 	}
@@ -101,7 +105,12 @@ bus_handler (GstBus *bus, GstMessage *message, gpointer user_data)
 		PyErr_Print();
 		res = TRUE;
 	} else {
-		res = PyObject_IsTrue(ret);
+		if (ret == Py_None) {
+			PyErr_SetString(PyExc_TypeError, "callback should return True or False");
+			PyErr_Print();
+			res = TRUE;
+		} else 
+			res = PyObject_IsTrue(ret);
 		Py_DECREF(ret);
 	}
 	Py_DECREF(args);

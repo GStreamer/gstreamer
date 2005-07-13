@@ -1,3 +1,11 @@
+2005-07-13  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstbus.override: (bus_handler) (bus_sync_handler): 
+	Raise an exception if the callback doesn't return anything
+
+	* gst/pygstminiobject.c:
+	removed the 'ref' and 'unref' methods
+
 2005-07-13  Andy Wingo  <wingo@pobox.com>
 
 	* examples/pipeline-tester: Tweaks, show messages.
