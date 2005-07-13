@@ -766,7 +766,7 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
 
-#ifndef GST_DISABLE_DEBUG
+#ifndef GST_DISABLE_GST_DEBUG
   GstQueue *queue = GST_QUEUE (GST_PAD_PARENT (pad));
 
   GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "got event %p (%d)",
