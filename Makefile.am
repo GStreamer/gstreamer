@@ -31,7 +31,7 @@ all-local: pygst.py
 # rewrite pygst path in installed pygst.py, install pth file.
 install-data-local: Makefile
 	$(mkinstalldirs) $(DESTDIR)$(pythondir)
-	sed -e "s|@PYGSTDIR\@|$(PYTHONDIR)/$(GST_MAJORMINOR)|g" \
+	sed -e "s|@PYGSTDIR\@|$(PYTHONDIR)/gst-$(GST_MAJORMINOR)|g" \
 	    -e "s|@GST_MAJORMINOR\@|$(GST_MAJORMINOR)|g" \
 	    $(srcdir)/pygst.py.in > $(DESTDIR)$(pythondir)/pygst.py
 	chmod 644 $(DESTDIR)$(pyexecdir)/pygst.py
