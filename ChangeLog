@@ -1,3 +1,10 @@
+2005-07-13  Edward Hervey  <edward@fluendo.com>
+
+	* examples/bps.py: 
+	* examples/f2f.py:
+	* examples/gstfile.py:
+	Updated some examples to 0.9
+
 2005-07-13  Andy Wingo  <wingo@pobox.com>
 
 	* examples/vumeter.py: New file, a VU meter application that reads

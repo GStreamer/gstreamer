@@ -28,6 +28,10 @@ import sys
 import time
 import gobject
 import gtk
+
+import pygst
+pygst.require('0.9')
+
 import gst
 
 class BPS(object):
@@ -41,11 +45,6 @@ class BPS(object):
         bps = self.buffers/dt
         spb = dt/self.buffers
         print '\t%d buffers / %fs\t= %f bps\t= %f spb' % (self.buffers, dt, bps, spb)
-
-    def eos(self, sink):
-        self.done()
-        if self.method in ('gtk', 'c'):
-            gst.main_quit()
 
     def fakesrc(self, buffers):
         src = gst.element_factory_make('fakesrc','src')
@@ -65,78 +64,55 @@ class BPS(object):
         pipeline.add(src)
         sink = self.fakesink()
         pipeline.add(sink)
-        sink.connect('eos', self.eos)
         src.link(sink)
 
         return pipeline
 
-    def notify(self, sender, obj, arg):
-        prop = obj.get_property(arg.name)
-        print 'notify', sender, arg.name, prop
-        print prop
-
     def idle(self, pipeline):
         return pipeline.iterate()
 
-    def test(self, method):
-        print '%s:' % (method,),
-        self.method = method
-        
-	print self.pipeline.get_state()
-        self.pipeline.set_state(gst.STATE_PLAYING)
-	print self.pipeline.get_state()
+    def test(self):
+        self.bus = self.pipeline.get_bus()
 
-        if method == 'py':
-            self.start = time.time()
-            while self.pipeline.iterate():
-                pass
-        elif method == 'c':
-            self.start = time.time()
-            gobject.idle_add(self.pipeline.iterate)
-            gst.main()
-        #elif method == 'gst':
-        #    self.start = time.time()
-        #    gtk.idle_add(self.idle, self.pipeline)
-        #    gtk.main()
+        self.start = time.time()
+        
+        self.pipeline.set_state(gst.STATE_PLAYING)
+
+        while 1:
+            msg = self.bus.poll(gst.MESSAGE_EOS | gst.MESSAGE_ERROR, gst.SECOND)
+            if msg:
+                break
 
         self.pipeline.set_state(gst.STATE_NULL)
+        self.done()
 
-    def run(self, buffers, methods):
+    def run(self, buffers):
         self.buffers = buffers
         
         print '# Testing buffer processing rate for "fakesrc ! fakesink"'
-        #print '# gst = gtk idle loop function in python'
-        print '# c = gtk idle loop function in C'
-        print '# py = full iterate loop in python'
-        print '# all = full iterate loop in C'
         print '# bps = buffers per second'
         print '# spb = seconds per buffer'
         
         self.pipeline = self.build_pipeline(buffers)
         assert self.pipeline
-        #self.pipeline.connect('deep-notify', self.notify)
-        
-        map(self.test, methods)
+
+        self.test()
     
 def main(args):
     "GStreamer Buffers-Per-Second tester"
 
     if len(args) < 2:
-        print 'usage: %s buffers [method method ...]' % args[0]
+        print 'usage: %s buffers' % args[0]
         return 1
     
     bps = BPS()
     
     buffers = int(args[1])
-    if buffers < 0:
+    if buffers < 1:
 	print 'buffers must be higher than 0'
 	return
 
-    methods = args[2:]
-    if not methods:
-        methods = ('gtk', 'c', 'py', 'all')
-
-    bps.run(buffers, methods)
+    bps.run(buffers)
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))

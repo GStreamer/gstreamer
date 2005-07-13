@@ -13,6 +13,10 @@ import os
 import sys
 
 import gobject
+
+import pygst
+pygst.require('0.9')
+
 import gst
 
 def time_to_string(value):
@@ -104,7 +108,7 @@ class Discoverer(gst.Pipeline):
         self.typefind.connect("have-type", self._have_type_cb)
         self.dbin.connect("new-decoded-pad", self._new_decoded_pad_cb)
         self.dbin.connect("unknown-type", self._unknown_type_cb)
-        self.dbin.connect("found-tag", self._found_tag_cb)
+        #self.dbin.connect("found-tag", self._found_tag_cb)
 
         self.discover()
 
@@ -112,11 +116,41 @@ class Discoverer(gst.Pipeline):
         """iterate on ourself to find the information on the given file"""
         if self.finished:
             return
-        self.set_state(gst.STATE_PLAYING)
+        if not self.set_state(gst.STATE_PLAYING):
+            # the pipeline wasn't able to be set to playing
+            self.finished = True
+            return
+        bus = self.get_bus()
         while 1:
-            if not self.iterate():
+            if self.finished:
+                #print "self.finished, stopping"
                 break
-        self.set_state(gst.STATE_NULL)
+            msg = bus.poll(gst.MESSAGE_ANY, gst.SECOND)
+            if msg:
+                msg = bus.pop()
+            else:
+                continue
+            if msg.type & gst.MESSAGE_STATE_CHANGED:
+                #print "state changed", msg.src.get_name()
+                #print msg.parse_state_changed()
+                pass
+            elif msg.type & gst.MESSAGE_EOS:
+                break
+            elif msg.type & gst.MESSAGE_TAG:
+                for key in msg.parse_tag().keys():
+                    self.tags[key] = msg.structure[key]
+                print msg.structure.to_string()
+            elif msg.type & gst.MESSAGE_ERROR:
+                print "whooops, error"
+                break
+            else:
+                print "unknown message type"
+                
+        print "going to PAUSED"
+        #self.set_state(gst.STATE_PAUSED)
+        print "going to ready"
+        #self.set_state(gst.STATE_READY)
+        print "now in ready"
         self.finished = True
 
     def print_info(self):
@@ -159,18 +193,34 @@ class Discoverer(gst.Pipeline):
                 print "%20s :\t" % tag, self.tags[tag]
 
     def _unknown_type_cb(self, dbin, pad, caps):
+        print "unknown type", caps.to_string()
+        # if we get an unknown type and we don't already have an
+        # audio or video pad, we are finished !
         self.otherstreams.append(caps.to_string())
+        if not self.is_video and not self.is_audio:
+            self.finished = True
 
     def _have_type_cb(self, typefind, prob, caps):
         self.mimetype = caps.to_string()
 
     def _notify_caps_cb(self, pad, args):
         caps = pad.get_negotiated_caps()
+        print "caps notify on", pad, ":", caps
         if not caps:
             return
         # the caps are fixed
         # We now get the total length of that stream
-        length = pad.get_peer().query(gst.QUERY_TOTAL, gst.FORMAT_TIME)
+        q = gst.query_new_position(gst.FORMAT_TIME)
+        #print "query refcount", q.__grefcount__
+        if pad.get_peer().query(q):
+            #print "query refcount", q.__grefcount__
+            length = q.structure["end"]
+            pos = q.structure["cur"]
+            format = q.structure["format"]
+            #print "got length", time_to_string(pos), time_to_string(length), format
+        else:
+            print "query didn't work"
+        #length = pad.get_peer().query(gst.QUERY_TOTAL, gst.FORMAT_TIME)
         # We store the caps and length in the proper location
         if "audio" in caps.to_string():
             self.audiocaps = caps
@@ -195,10 +245,23 @@ class Discoverer(gst.Pipeline):
 
     def _new_decoded_pad_cb(self, dbin, pad, is_last):
         # Does the file contain got audio or video ?
-        if "audio" in pad.get_caps().to_string():
+        caps = pad.get_caps()
+        print "new decoded pad", caps.to_string()
+        if "audio" in caps.to_string():
             self.is_audio = True
-        elif "video" in pad.get_caps().to_string():
+            if caps.is_fixed():
+                print "have negotiated caps", caps
+                self.audiocaps = caps
+                return
+        elif "video" in caps.to_string():
             self.is_video = True
+            if caps.is_fixed():
+                print "have negotiated caps", caps
+                self.videocaps = caps
+                return
+        else:
+            print "got a different caps..", caps
+            return
         if is_last and not self.is_video and not self.is_audio:
             self.finished = True
             return
@@ -208,19 +271,12 @@ class Discoverer(gst.Pipeline):
         sinkpad = fakesink.get_pad("sink")
         # ... and connect a callback for when the caps are fixed
         sinkpad.connect("notify::caps", self._notify_caps_cb)
-        pad.link(sinkpad)
-        fakesink.set_state(gst.STATE_PLAYING)
+        if pad.link(sinkpad):
+            print "##### Couldn't link pad to fakesink"
+        #fakesink.set_state(gst.STATE_PLAYING)
 
     def _found_tag_cb(self, dbin, source, tags):
         self.tags.update(tags)
-
-    def do_iterate(self):
-        # this overrides the GstBin 'iterate' method
-        # if we have finished discovering we stop the iteration
-        if self.finished:
-            return False
-        # else we call the parent class method
-        return gst.Pipeline.do_iterate(self)
 
 gobject.type_register(Discoverer)
 
