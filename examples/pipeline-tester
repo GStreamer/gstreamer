@@ -38,13 +38,13 @@ import gst
 
 data = (('Video capture via V4L',
          'v4lsrc name=source \n'
-         '    ! video/x-raw-yuv,format=(fourcc)I420 \n'
          '    ! videorate \n'
          '    ! xvimagesink'),
         ('Video capture via V4L, fixed frame rate',
          'v4lsrc name=source autoprobe=false autoprobe-fps=false \n'
-         '    ! video/x-raw-yuv,format=(fourcc)I420,framerate=(double)7.5 \n'
+         '    ! video/x-raw-yuv,framerate=(double)7.5 \n'
          '    ! videorate \n'
+         '    ! ffmpegcolorspace \n'
          '    ! xvimagesink'),
         ('Sound capture via ALSA',
          'alsasrc\n'
