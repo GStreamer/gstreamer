@@ -1,3 +1,9 @@
+2005-07-13  Andy Wingo  <wingo@pobox.com>
+
+	* examples/pipeline-tester (Window.on_message): Handle errors.
+	(Window.play): Drain messages from bus before setting pipe to
+	NULL.
+
 2005-07-13  Edward Hervey  <edward@fluendo.com>
 
 	* Makefile.am: (install-data-local): 

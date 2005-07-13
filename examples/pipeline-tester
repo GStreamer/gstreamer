@@ -145,11 +145,15 @@ class Window(gtk.Window):
         if secondary:
             m.format_secondary_text(secondary)
         m.run()
+        m.destroy()
                               
     def on_message(self, bus, message):
         t = message.type
         if t == gst.MESSAGE_STATE_CHANGED:
             pass
+        elif t == gst.MESSAGE_ERROR:
+            err, debug = message.parse_error()
+            self.error("%s" % err, debug)
         else:
             print '%s: %s:' % (message.src.get_path_string(),
                                message.type.value_nicks[1])
@@ -168,6 +172,9 @@ class Window(gtk.Window):
             return False
         watch_id = pipeline.get_bus().add_watch(self.on_message)
         if pipeline.set_state(gst.STATE_PLAYING) != gst.STATE_SUCCESS:
+            # make sure we get error messages
+            while gtk.events_pending():
+                gtk.main_iteration()
             pipeline.set_state(gst.STATE_NULL)
             gobject.source_remove(watch_id)
             return False
