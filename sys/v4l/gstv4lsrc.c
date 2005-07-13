@@ -232,6 +232,7 @@ gst_v4lsrc_fixate (GstPad * pad, GstCaps * caps)
 
   for (i = 0; i < gst_caps_get_size (caps); ++i) {
     structure = gst_caps_get_structure (caps, i);
+    const GValue *v;
 
     gst_caps_structure_fixate_field_nearest_int (structure, "width",
         targetwidth);
@@ -239,6 +240,16 @@ gst_v4lsrc_fixate (GstPad * pad, GstCaps * caps)
         targetheight);
     gst_caps_structure_fixate_field_nearest_double (structure, "framerate",
         7.5);
+
+    v = gst_structure_get_value (structure, "format");
+    if (G_VALUE_TYPE (v) != GST_TYPE_FOURCC) {
+      guint32 fourcc;
+
+      g_return_if_fail (G_VALUE_TYPE (v) == GST_TYPE_LIST);
+
+      fourcc = gst_value_get_fourcc (gst_value_list_get_value (v, 0));
+      gst_structure_set (structure, "format", GST_TYPE_FOURCC, fourcc, NULL);
+    }
   }
 }
 
@@ -613,7 +624,7 @@ gst_v4lsrc_stop (GstBaseSrc * src)
 {
   GstV4lSrc *v4lsrc = GST_V4LSRC (src);
 
-  if (!gst_v4lsrc_capture_stop (v4lsrc))
+  if (GST_V4L_IS_ACTIVE (v4lsrc) && !gst_v4lsrc_capture_stop (v4lsrc))
     return FALSE;
 
   if (GST_V4LELEMENT (v4lsrc)->buffer != NULL) {

@@ -1,5 +1,8 @@
 2005-07-13  Andy Wingo  <wingo@pobox.com>
 
+	* sys/v4l/gstv4lsrc.c (gst_v4lsrc_stop): Fix a spurious warning.
+	(gst_v4lsrc_fixate): Fixate on format as well.
+
 	* sys/xvimage/xvimagesink.c (gst_xvimage_buffer_destroy) 
 	(gst_xvimagesink_xvimage_new): Ref the xvimagesink while the
 	buffer points to it.
