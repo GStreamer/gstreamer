@@ -27,6 +27,18 @@
    obj:/lib/ld-*.so
 }
 
+# a thread-related free problem in glibc from Edgard
+{
+   __libc_freeres_rw_acess
+   Memcheck:Addr4
+   obj:/lib/tls/i686/cmov/libc-*.so
+   obj:/lib/tls/i686/cmov/libc-*.so
+   obj:/lib/tls/i686/cmov/libc-*.so
+   obj:/lib/tls/i686/cmov/libc-*.so
+   obj:/lib/tls/i686/cmov/libc-*.so
+   fun:__libc_freeres
+}
+
 ### glib suppressions
 
 {
