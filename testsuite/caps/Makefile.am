@@ -14,8 +14,6 @@ tests_pass = \
 	fraction-multiply-and-zero \
 	intersect2 \
 	caps \
-	value_compare \
-	value_intersect \
 	audioscale \
 	filtercaps \
 	eratosthenes \

@@ -311,6 +311,131 @@ GST_START_TEST (test_deserialize_string)
 
 GST_END_TEST;
 
+GST_START_TEST (test_value_compare)
+{
+  GValue value1 = { 0 };
+  GValue value2 = { 0 };
+
+  g_value_init (&value1, G_TYPE_INT);
+  g_value_set_int (&value1, 10);
+  g_value_init (&value2, G_TYPE_INT);
+  g_value_set_int (&value2, 20);
+  fail_unless (gst_value_compare (&value1, &value2) == GST_VALUE_LESS_THAN);
+  fail_unless (gst_value_compare (&value2, &value1) == GST_VALUE_GREATER_THAN);
+  fail_unless (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
+  g_value_unset (&value1);
+  g_value_unset (&value2);
+
+  g_value_init (&value1, G_TYPE_DOUBLE);
+  g_value_set_double (&value1, 10);
+  g_value_init (&value2, G_TYPE_DOUBLE);
+  g_value_set_double (&value2, 20);
+  fail_unless (gst_value_compare (&value1, &value2) == GST_VALUE_LESS_THAN);
+  fail_unless (gst_value_compare (&value2, &value1) == GST_VALUE_GREATER_THAN);
+  fail_unless (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
+  g_value_unset (&value1);
+  g_value_unset (&value2);
+
+  g_value_init (&value1, G_TYPE_STRING);
+  g_value_set_string (&value1, "a");
+  g_value_init (&value2, G_TYPE_STRING);
+  g_value_set_string (&value2, "b");
+  fail_unless (gst_value_compare (&value1, &value2) == GST_VALUE_LESS_THAN);
+  fail_unless (gst_value_compare (&value2, &value1) == GST_VALUE_GREATER_THAN);
+  fail_unless (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
+  g_value_unset (&value1);
+  g_value_unset (&value2);
+
+  g_value_init (&value1, GST_TYPE_FOURCC);
+  gst_value_set_fourcc (&value1, GST_MAKE_FOURCC ('a', 'b', 'c', 'd'));
+  g_value_init (&value2, GST_TYPE_FOURCC);
+  gst_value_set_fourcc (&value2, GST_MAKE_FOURCC ('1', '2', '3', '4'));
+  fail_unless (gst_value_compare (&value1, &value2) == GST_VALUE_UNORDERED);
+  fail_unless (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
+  g_value_unset (&value1);
+  g_value_unset (&value2);
+
+  /* comparing 2/3 with 3/4 */
+  g_value_init (&value1, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&value1, 2, 3);
+  g_value_init (&value2, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&value2, 3, 4);
+  fail_unless (gst_value_compare (&value1, &value2) == GST_VALUE_LESS_THAN);
+  fail_unless (gst_value_compare (&value2, &value1) == GST_VALUE_GREATER_THAN);
+  fail_unless (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
+  g_value_unset (&value1);
+  g_value_unset (&value2);
+
+  /* comparing -4/5 with 2/-3 */
+  g_value_init (&value1, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&value1, -4, 5);
+  g_value_init (&value2, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&value2, 2, -3);
+  fail_unless (gst_value_compare (&value1, &value2) == GST_VALUE_LESS_THAN);
+  fail_unless (gst_value_compare (&value2, &value1) == GST_VALUE_GREATER_THAN);
+  fail_unless (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
+  g_value_unset (&value1);
+  g_value_unset (&value2);
+
+  /* comparing 10/100 with 200/2000 */
+  g_value_init (&value1, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&value1, 10, 100);
+  g_value_init (&value2, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&value2, 200, 2000);
+  fail_unless (gst_value_compare (&value1, &value2) == GST_VALUE_EQUAL);
+  g_value_unset (&value1);
+  g_value_unset (&value2);
+
+  /* comparing -4/5 with 2/-3 */
+  g_value_init (&value1, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&value1, -4, 5);
+  g_value_init (&value2, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&value2, 2, -3);
+  fail_unless (gst_value_compare (&value1, &value2) == GST_VALUE_LESS_THAN);
+  fail_unless (gst_value_compare (&value2, &value1) == GST_VALUE_GREATER_THAN);
+  fail_unless (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
+  g_value_unset (&value1);
+  g_value_unset (&value2);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_value_intersect)
+{
+  GValue dest = { 0 };
+  GValue src1 = { 0 };
+  GValue src2 = { 0 };
+  GValue item = { 0 };
+  gboolean ret;
+
+  g_value_init (&src1, G_TYPE_INT);
+  g_value_set_int (&src1, 10);
+  g_value_init (&src2, G_TYPE_INT);
+  g_value_set_int (&src1, 20);
+  ret = gst_value_intersect (&dest, &src1, &src2);
+  fail_unless (ret == 0);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+
+  g_value_init (&src1, GST_TYPE_FOURCC);
+  gst_value_set_fourcc (&src1, GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'));
+  g_value_init (&src2, GST_TYPE_LIST);
+  g_value_init (&item, GST_TYPE_FOURCC);
+  gst_value_set_fourcc (&item, GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'));
+  gst_value_list_append_value (&src2, &item);
+  gst_value_set_fourcc (&item, GST_MAKE_FOURCC ('I', '4', '2', '0'));
+  gst_value_list_append_value (&src2, &item);
+  gst_value_set_fourcc (&item, GST_MAKE_FOURCC ('A', 'B', 'C', 'D'));
+  gst_value_list_append_value (&src2, &item);
+
+  fail_unless (gst_value_intersect (&dest, &src1, &src2));
+  fail_unless (GST_VALUE_HOLDS_FOURCC (&dest));
+  fail_unless (gst_value_get_fourcc (&dest) ==
+      GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'));
+}
+
+GST_END_TEST;
+
 Suite *
 gst_value_suite (void)
 {
@@ -326,6 +451,8 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_deserialize_gint64);
   tcase_add_test (tc_chain, test_string);
   tcase_add_test (tc_chain, test_deserialize_string);
+  tcase_add_test (tc_chain, test_value_compare);
+  tcase_add_test (tc_chain, test_value_intersect);
   return s;
 }
 

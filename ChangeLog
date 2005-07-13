@@ -1,3 +1,11 @@
+2005-07-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* testsuite/caps/Makefile.am:
+	* testsuite/caps/value_compare.c:
+	* testsuite/caps/value_intersect.c:
+	* check/gst/gstvalue.c: (GST_START_TEST), (gst_value_suite):
+	  move two testsuite apps over to the check dir
+
 2005-07-12  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasetransform.c: (gst_base_transform_setcaps):
