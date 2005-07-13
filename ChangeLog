@@ -1,3 +1,11 @@
+2005-07-13  Andy Wingo  <wingo@pobox.com>
+
+	* examples/vumeter.py: New file, a VU meter application that reads
+	from alsasrc.
+
+	* examples/fvumeter.py: New file, imported from Flumotion and
+	relicensed under the LGPL. Implements a simple VU meter widget.
+
 2005-07-13  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstbus.override: (bus_handler) (bus_sync_handler): 

@@ -9,6 +9,8 @@ examples_DATA = 	\
 	vorbisplay.py	\
 	gstfile.py	\
 	audioconcat.py  \
-	pipeline-tester
+	pipeline-tester \
+	vumeter.py	\
+	fvumeter.py
 
 EXTRA_DIST = $(examples_DATA)
