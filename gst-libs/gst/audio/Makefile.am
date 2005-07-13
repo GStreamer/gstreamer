@@ -33,7 +33,9 @@ libgstaudio_@GST_MAJORMINOR@include_HEADERS = \
 	gstbaseaudiosink.h \
 	gstbaseaudiosrc.h \
 	gstringbuffer.h \
-	multichannel.h \
+	multichannel.h
+
+nodist_libgstaudio_@GST_MAJORMINOR@include_HEADERS = \
 	multichannel-enumtypes.h
 
 libgstaudio_@GST_MAJORMINOR@_la_LIBADD =
