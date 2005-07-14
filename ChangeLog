@@ -1,5 +1,10 @@
 2005-07-14  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasesrc.c: (gst_base_src_loop):
+	Post error messages on errors.
+
+2005-07-14  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstcaps.c: (gst_caps_do_simplify):
 	Remove debug info.
 

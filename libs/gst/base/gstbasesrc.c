@@ -678,11 +678,20 @@ pause:
   {
     GST_DEBUG_OBJECT (src, "pausing task");
     gst_pad_pause_task (pad);
+    if (GST_FLOW_IS_FATAL (ret)) {
+      /* for fatal errors we post an error message */
+      GST_ELEMENT_ERROR (src, STREAM, STOPPED,
+          ("streaming stopped, reason %d", ret),
+          ("streaming stopped, reason %d", ret));
+      gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
+    }
     return;
   }
 error:
   {
-    GST_DEBUG_OBJECT (src, "got error, pausing task");
+    GST_ELEMENT_ERROR (src, STREAM, STOPPED,
+        ("internal: element returned NULL buffer"),
+        ("internal: element returned NULL buffer"));
     gst_pad_pause_task (pad);
     gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
     return;
