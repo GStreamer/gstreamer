@@ -47,7 +47,7 @@ enum
     GST_DEBUG_CATEGORY_INIT (gst_base_audio_src_debug, "baseaudiosrc", 0, "baseaudiosrc element");
 
 GST_BOILERPLATE_FULL (GstBaseAudioSrc, gst_base_audio_src, GstPushSrc,
-    GST_TYPE_PUSHSRC, _do_init);
+    GST_TYPE_PUSH_SRC, _do_init);
 
 static void gst_base_audio_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

@@ -108,7 +108,7 @@ gst_tcpclientsrc_get_type (void)
     };
 
     tcpclientsrc_type =
-        g_type_register_static (GST_TYPE_PUSHSRC, "GstTCPClientSrc",
+        g_type_register_static (GST_TYPE_PUSH_SRC, "GstTCPClientSrc",
         &tcpclientsrc_info, 0);
   }
   return tcpclientsrc_type;
@@ -131,14 +131,14 @@ gst_tcpclientsrc_class_init (GstTCPClientSrc * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
-  GstPushSrcClass *gstpushsrc_class;
+  GstPushSrcClass *gstpush_src_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
-  gstpushsrc_class = (GstPushSrcClass *) klass;
+  gstpush_src_class = (GstPushSrcClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_PUSHSRC);
+  parent_class = g_type_class_ref (GST_TYPE_PUSH_SRC);
 
   gobject_class->set_property = gst_tcpclientsrc_set_property;
   gobject_class->get_property = gst_tcpclientsrc_get_property;
@@ -161,7 +161,7 @@ gst_tcpclientsrc_class_init (GstTCPClientSrc * klass)
   gstbasesrc_class->stop = gst_tcpclientsrc_stop;
   gstbasesrc_class->unlock = gst_tcpclientsrc_unlock;
 
-  gstpushsrc_class->create = gst_tcpclientsrc_create;
+  gstpush_src_class->create = gst_tcpclientsrc_create;
 
   GST_DEBUG_CATEGORY_INIT (tcpclientsrc_debug, "tcpclientsrc", 0,
       "TCP Client Source");

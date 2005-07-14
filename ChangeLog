@@ -1,3 +1,19 @@
+2005-07-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/libs/tmpl/gstaudio.sgml:
+	* docs/libs/tmpl/gstcolorbalance.sgml:
+	* docs/libs/tmpl/gstgconf.sgml:
+	* docs/libs/tmpl/gstmixer.sgml:
+	* docs/libs/tmpl/gstringbuffer.sgml:
+	* docs/libs/tmpl/gsttuner.sgml:
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	* gst/tcp/gsttcpclientsrc.c: (gst_tcpclientsrc_get_type),
+	(gst_tcpclientsrc_class_init):
+	* gst/tcp/gsttcpserversrc.c: (gst_tcpserversrc_get_type),
+	(gst_tcpserversrc_class_init):
+	* sys/v4l/gstv4lelement.c:
+	  more autistic cleanliness in functions/names/defines
+
 2005-07-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

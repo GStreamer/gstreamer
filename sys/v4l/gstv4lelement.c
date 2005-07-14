@@ -52,7 +52,7 @@ enum
 static void gst_v4lelement_init_interfaces (GType type);
 
 GST_BOILERPLATE_FULL (GstV4lElement, gst_v4lelement, GstPushSrc,
-    GST_TYPE_PUSHSRC, gst_v4lelement_init_interfaces)
+    GST_TYPE_PUSH_SRC, gst_v4lelement_init_interfaces)
 
 
      static void gst_v4lelement_dispose (GObject * object);

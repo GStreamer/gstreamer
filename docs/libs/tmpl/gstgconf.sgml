@@ -14,9 +14,6 @@ gconf default elements support
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### FUNCTION gst_gconf_get_string ##### -->
 <para>
 
