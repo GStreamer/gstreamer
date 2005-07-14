@@ -1,3 +1,10 @@
+2005-07-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_get_type),
+	(gst_udpsrc_class_init):
+	  more autistic cleanliness in functions/names/defines
+
+
 2005-07-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/aalib/gstaasink.c: (gst_aasink_get_type),
