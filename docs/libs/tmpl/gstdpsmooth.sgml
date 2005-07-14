@@ -14,9 +14,6 @@ realtime smoothed dynamic parameter
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### STRUCT GstDParamSmooth ##### -->
 <para>
 

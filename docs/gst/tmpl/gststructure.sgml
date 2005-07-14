@@ -14,9 +14,6 @@ Generic structure containing fields of names and values
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### STRUCT GstStructure ##### -->
 <para>
 

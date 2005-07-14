@@ -1695,7 +1695,7 @@ GST_TYPE_FAKESRC
 GST_FAKESRC_CLASS
 GST_IS_FAKESRC_CLASS
 <SUBSECTION Private>
-gst_fakesrc_get_type
+gst_fake_src_get_type
 </SECTION>
 
 <SECTION>
@@ -1711,7 +1711,7 @@ GST_TYPE_FAKESINK
 GST_FAKESINK_CLASS
 GST_IS_FAKESINK_CLASS
 <SUBSECTION Private>
-gst_fakesink_get_type
+gst_fake_sink_get_type
 </SECTION>
 
 <SECTION>
@@ -1720,13 +1720,13 @@ gst_fakesink_get_type
 GstFileSrc
 <SUBSECTION Standard>
 GstFileSrcClass
-GST_FILESRC
+GST_FILE_SRC
 GST_IS_FILESRC
 GST_TYPE_FILESRC
-GST_FILESRC_CLASS
+GST_FILE_SRC_CLASS
 GST_IS_FILESRC_CLASS
 <SUBSECTION Private>
-gst_filesrc_get_type
+gst_file_src_get_type
 </SECTION>
 
 <SECTION>
@@ -1736,13 +1736,13 @@ GstFileSink
 
 <SUBSECTION Standard>
 GstFileSinkClass
-GST_FILESINK
+GST_FILE_SINK
 GST_IS_FILESINK
 GST_TYPE_FILESINK
-GST_FILESINK_CLASS
+GST_FILE_SINK_CLASS
 GST_IS_FILESINK_CLASS
 <SUBSECTION Private>
-gst_filesink_get_type
+gst_file_sink_get_type
 </SECTION>
 
 <SECTION>

@@ -14,9 +14,6 @@ XML save/restore operations of pipelines
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### STRUCT GstXML ##### -->
 <para>
 

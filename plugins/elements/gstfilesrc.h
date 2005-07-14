@@ -3,7 +3,7 @@
  *                    2000 Wim Taymans <wtay@chello.be>
  *                    2005 Wim Taymans <wim@fluendo.com>
  *
- * gstfilesrc.h: 
+ * gstfilesrc.h:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,8 +21,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_FILESRC_H__
-#define __GST_FILESRC_H__
+#ifndef __GST_FILE_SRC_H__
+#define __GST_FILE_SRC_H__
 
 #include <sys/types.h>
 
@@ -31,16 +31,16 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_FILESRC \
-  (gst_filesrc_get_type())
-#define GST_FILESRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FILESRC,GstFileSrc))
-#define GST_FILESRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FILESRC,GstFileSrcClass)) 
-#define GST_IS_FILESRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FILESRC))
-#define GST_IS_FILESRC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FILESRC))
+#define GST_TYPE_FILE_SRC \
+  (gst_file_src_get_type())
+#define GST_FILE_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FILE_SRC,GstFileSrc))
+#define GST_FILE_SRC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FILE_SRC,GstFileSrcClass))
+#define GST_IS_FILE_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FILE_SRC))
+#define GST_IS_FILE_SRC_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FILE_SRC))
 
 typedef struct _GstFileSrc GstFileSrc;
 typedef struct _GstFileSrcClass GstFileSrcClass;
@@ -48,17 +48,17 @@ typedef struct _GstFileSrcClass GstFileSrcClass;
 struct _GstFileSrc {
   GstBaseSrc element;
 
-  guint pagesize;			/* system page size*/
- 
+  guint pagesize;			/* system page size */
+
   gchar *filename;			/* filename */
   gchar *uri;				/* caching the URI */
-  gint fd;				/* open file descriptor*/
+  gint fd;				/* open file descriptor */
   guint64 read_position;		/* position of fd */
 
   gboolean touch;			/* whether to touch every page */
   gboolean using_mmap;                  /* whether we opened it with mmap */
-  gboolean is_regular;                  /* whether it's (symlink to)
-                                           a regular file */
+  gboolean is_regular;                  /* whether it's a (symlink to a)
+                                           regular file */
   GstBuffer *mapbuf;
   size_t mapsize;
 };
@@ -67,8 +67,8 @@ struct _GstFileSrcClass {
   GstBaseSrcClass parent_class;
 };
 
-GType gst_filesrc_get_type(void);
+GType gst_file_src_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_FILESRC_H__ */
+#endif /* __GST_FILE_SRC_H__ */

@@ -35,9 +35,6 @@ to bring the plugin into memory.
 #GstPluginFeature, #GstType, #GstAutoplug, #GstElementFactory
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### FUNCTION gst_plugin_error_quark ##### -->
 <para>
 Get the error quark

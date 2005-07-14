@@ -21,20 +21,20 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_PUSHSRC_H__
-#define __GST_PUSHSRC_H__
+#ifndef __GST_PUSH_SRC_H__
+#define __GST_PUSH_SRC_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstbasesrc.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_PUSHSRC  		(gst_pushsrc_get_type())
-#define GST_PUSHSRC(obj)  		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PUSHSRC,GstPushSrc))
-#define GST_PUSHSRC_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PUSHSRC,GstPushSrcClass))
-#define GST_PUSHSRC_GET_CLASS(obj)      (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PUSHSRC, GstPushSrcClass))
-#define GST_IS_PUSHSRC(obj)  		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PUSHSRC))
-#define GST_IS_PUSHSRC_CLASS(obj)  	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PUSHSRC))
+#define GST_TYPE_PUSH_SRC  		(gst_push_src_get_type())
+#define GST_PUSH_SRC(obj)  		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PUSH_SRC,GstPushSrc))
+#define GST_PUSH_SRC_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PUSH_SRC,GstPushSrcClass))
+#define GST_PUSH_SRC_GET_CLASS(obj)      (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PUSH_SRC, GstPushSrcClass))
+#define GST_IS_PUSH_SRC(obj)  		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PUSH_SRC))
+#define GST_IS_PUSH_SRC_CLASS(obj)  	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PUSH_SRC))
 
 /* base class for block based sources
  *
@@ -67,8 +67,8 @@ struct _GstPushSrcClass {
   GstFlowReturn (*create) (GstPushSrc *src, GstBuffer **buf);
 };
 
-GType gst_pushsrc_get_type(void);
+GType gst_push_src_get_type(void);
 
 G_END_DECLS
 
-#endif /* __GST_PUSHSRC_H__ */
+#endif /* __GST_PUSH_SRC_H__ */

@@ -33,10 +33,10 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-GST_DEBUG_CATEGORY_STATIC (gst_fakesink_debug);
-#define GST_CAT_DEFAULT gst_fakesink_debug
+GST_DEBUG_CATEGORY_STATIC (gst_fake_sink_debug);
+#define GST_CAT_DEFAULT gst_fake_sink_debug
 
-GstElementDetails gst_fakesink_details = GST_ELEMENT_DETAILS ("Fake Sink",
+GstElementDetails gst_fake_sink_details = GST_ELEMENT_DETAILS ("Fake Sink",
     "Sink",
     "Black hole for data",
     "Erik Walthinsen <omega@cse.ogi.edu>, "
@@ -52,7 +52,7 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_STATE_ERROR FAKESINK_STATE_ERROR_NONE
+#define DEFAULT_STATE_ERROR FAKE_SINK_STATE_ERROR_NONE
 #define DEFAULT_SILENT FALSE
 #define DEFAULT_DUMP FALSE
 #define DEFAULT_SYNC FALSE
@@ -70,24 +70,24 @@ enum
   ARG_LAST_MESSAGE,
 };
 
-#define GST_TYPE_FAKESINK_STATE_ERROR (gst_fakesink_state_error_get_type())
+#define GST_TYPE_FAKE_SINK_STATE_ERROR (gst_fake_sink_state_error_get_type())
 static GType
-gst_fakesink_state_error_get_type (void)
+gst_fake_sink_state_error_get_type (void)
 {
   static GType fakesink_state_error_type = 0;
   static GEnumValue fakesink_state_error[] = {
-    {FAKESINK_STATE_ERROR_NONE, "0", "No state change errors"},
-    {FAKESINK_STATE_ERROR_NULL_READY, "1",
+    {FAKE_SINK_STATE_ERROR_NONE, "0", "No state change errors"},
+    {FAKE_SINK_STATE_ERROR_NULL_READY, "1",
         "Fail state change from NULL to READY"},
-    {FAKESINK_STATE_ERROR_READY_PAUSED, "2",
+    {FAKE_SINK_STATE_ERROR_READY_PAUSED, "2",
         "Fail state change from READY to PAUSED"},
-    {FAKESINK_STATE_ERROR_PAUSED_PLAYING, "3",
+    {FAKE_SINK_STATE_ERROR_PAUSED_PLAYING, "3",
         "Fail state change from PAUSED to PLAYING"},
-    {FAKESINK_STATE_ERROR_PLAYING_PAUSED, "4",
+    {FAKE_SINK_STATE_ERROR_PLAYING_PAUSED, "4",
         "Fail state change from PLAYING to PAUSED"},
-    {FAKESINK_STATE_ERROR_PAUSED_READY, "5",
+    {FAKE_SINK_STATE_ERROR_PAUSED_READY, "5",
         "Fail state change from PAUSED to READY"},
-    {FAKESINK_STATE_ERROR_READY_NULL, "6",
+    {FAKE_SINK_STATE_ERROR_READY_NULL, "6",
         "Fail state change from READY to NULL"},
     {0, NULL, NULL},
   };
@@ -100,40 +100,40 @@ gst_fakesink_state_error_get_type (void)
 }
 
 #define _do_init(bla) \
-    GST_DEBUG_CATEGORY_INIT (gst_fakesink_debug, "fakesink", 0, "fakesink element");
+    GST_DEBUG_CATEGORY_INIT (gst_fake_sink_debug, "fakesink", 0, "fakesink element");
 
-GST_BOILERPLATE_FULL (GstFakeSink, gst_fakesink, GstBaseSink,
+GST_BOILERPLATE_FULL (GstFakeSink, gst_fake_sink, GstBaseSink,
     GST_TYPE_BASE_SINK, _do_init);
 
-static void gst_fakesink_set_property (GObject * object, guint prop_id,
+static void gst_fake_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_fakesink_get_property (GObject * object, guint prop_id,
+static void gst_fake_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn gst_fakesink_change_state (GstElement * element);
+static GstElementStateReturn gst_fake_sink_change_state (GstElement * element);
 
-static GstFlowReturn gst_fakesink_preroll (GstBaseSink * bsink,
+static GstFlowReturn gst_fake_sink_preroll (GstBaseSink * bsink,
     GstBuffer * buffer);
-static GstFlowReturn gst_fakesink_render (GstBaseSink * bsink,
+static GstFlowReturn gst_fake_sink_render (GstBaseSink * bsink,
     GstBuffer * buffer);
-static gboolean gst_fakesink_event (GstBaseSink * bsink, GstEvent * event);
-static void gst_fakesink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
+static gboolean gst_fake_sink_event (GstBaseSink * bsink, GstEvent * event);
+static void gst_fake_sink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end);
 
-static guint gst_fakesink_signals[LAST_SIGNAL] = { 0 };
+static guint gst_fake_sink_signals[LAST_SIGNAL] = { 0 };
 
 static void
-gst_fakesink_base_init (gpointer g_class)
+gst_fake_sink_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
-  gst_element_class_set_details (gstelement_class, &gst_fakesink_details);
+  gst_element_class_set_details (gstelement_class, &gst_fake_sink_details);
 }
 
 static void
-gst_fakesink_class_init (GstFakeSinkClass * klass)
+gst_fake_sink_class_init (GstFakeSinkClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -143,12 +143,12 @@ gst_fakesink_class_init (GstFakeSinkClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbase_sink_class = (GstBaseSinkClass *) klass;
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_fakesink_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fakesink_get_property);
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_fake_sink_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fake_sink_get_property);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STATE_ERROR,
       g_param_spec_enum ("state_error", "State Error",
-          "Generate a state change error", GST_TYPE_FAKESINK_STATE_ERROR,
+          "Generate a state change error", GST_TYPE_FAKE_SINK_STATE_ERROR,
           DEFAULT_STATE_ERROR, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
       g_param_spec_string ("last_message", "Last Message",
@@ -169,23 +169,23 @@ gst_fakesink_class_init (GstFakeSinkClass * klass)
       g_param_spec_boolean ("dump", "Dump", "Dump received bytes to stdout",
           DEFAULT_DUMP, G_PARAM_READWRITE));
 
-  gst_fakesink_signals[SIGNAL_HANDOFF] =
+  gst_fake_sink_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstFakeSinkClass, handoff), NULL, NULL,
       gst_marshal_VOID__OBJECT_OBJECT, G_TYPE_NONE, 2,
       GST_TYPE_BUFFER, GST_TYPE_PAD);
 
   gstelement_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_fakesink_change_state);
+      GST_DEBUG_FUNCPTR (gst_fake_sink_change_state);
 
-  gstbase_sink_class->event = GST_DEBUG_FUNCPTR (gst_fakesink_event);
-  gstbase_sink_class->preroll = GST_DEBUG_FUNCPTR (gst_fakesink_preroll);
-  gstbase_sink_class->render = GST_DEBUG_FUNCPTR (gst_fakesink_render);
-  gstbase_sink_class->get_times = GST_DEBUG_FUNCPTR (gst_fakesink_get_times);
+  gstbase_sink_class->event = GST_DEBUG_FUNCPTR (gst_fake_sink_event);
+  gstbase_sink_class->preroll = GST_DEBUG_FUNCPTR (gst_fake_sink_preroll);
+  gstbase_sink_class->render = GST_DEBUG_FUNCPTR (gst_fake_sink_render);
+  gstbase_sink_class->get_times = GST_DEBUG_FUNCPTR (gst_fake_sink_get_times);
 }
 
 static void
-gst_fakesink_init (GstFakeSink * fakesink)
+gst_fake_sink_init (GstFakeSink * fakesink)
 {
   fakesink->silent = DEFAULT_SILENT;
   fakesink->dump = DEFAULT_DUMP;
@@ -196,12 +196,12 @@ gst_fakesink_init (GstFakeSink * fakesink)
 }
 
 static void
-gst_fakesink_set_property (GObject * object, guint prop_id,
+gst_fake_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstFakeSink *sink;
 
-  sink = GST_FAKESINK (object);
+  sink = GST_FAKE_SINK (object);
 
   switch (prop_id) {
     case ARG_SILENT:
@@ -226,12 +226,12 @@ gst_fakesink_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_fakesink_get_property (GObject * object, guint prop_id, GValue * value,
+gst_fake_sink_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
   GstFakeSink *sink;
 
-  sink = GST_FAKESINK (object);
+  sink = GST_FAKE_SINK (object);
 
   switch (prop_id) {
     case ARG_STATE_ERROR:
@@ -259,10 +259,10 @@ gst_fakesink_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-gst_fakesink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
+gst_fake_sink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end)
 {
-  GstFakeSink *sink = GST_FAKESINK (bsink);
+  GstFakeSink *sink = GST_FAKE_SINK (bsink);
 
   if (sink->sync) {
     GST_BASE_SINK_CLASS (parent_class)->get_times (bsink, buffer, start, end);
@@ -270,9 +270,9 @@ gst_fakesink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
 }
 
 static gboolean
-gst_fakesink_event (GstBaseSink * bsink, GstEvent * event)
+gst_fake_sink_event (GstBaseSink * bsink, GstEvent * event)
 {
-  GstFakeSink *sink = GST_FAKESINK (bsink);
+  GstFakeSink *sink = GST_FAKE_SINK (bsink);
 
   if (!sink->silent) {
     g_free (sink->last_message);
@@ -288,9 +288,9 @@ gst_fakesink_event (GstBaseSink * bsink, GstEvent * event)
 }
 
 static GstFlowReturn
-gst_fakesink_preroll (GstBaseSink * bsink, GstBuffer * buffer)
+gst_fake_sink_preroll (GstBaseSink * bsink, GstBuffer * buffer)
 {
-  GstFakeSink *sink = GST_FAKESINK (bsink);
+  GstFakeSink *sink = GST_FAKE_SINK (bsink);
 
   if (!sink->silent) {
     g_free (sink->last_message);
@@ -303,9 +303,9 @@ gst_fakesink_preroll (GstBaseSink * bsink, GstBuffer * buffer)
 }
 
 static GstFlowReturn
-gst_fakesink_render (GstBaseSink * bsink, GstBuffer * buf)
+gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
-  GstFakeSink *sink = GST_FAKESINK (bsink);
+  GstFakeSink *sink = GST_FAKE_SINK (bsink);
 
   if (!sink->silent) {
     g_free (sink->last_message);
@@ -322,7 +322,7 @@ gst_fakesink_render (GstBaseSink * bsink, GstBuffer * buf)
     g_object_notify (G_OBJECT (sink), "last_message");
   }
   if (sink->signal_handoffs)
-    g_signal_emit (G_OBJECT (sink), gst_fakesink_signals[SIGNAL_HANDOFF], 0,
+    g_signal_emit (G_OBJECT (sink), gst_fake_sink_signals[SIGNAL_HANDOFF], 0,
         buf, bsink->sinkpad);
 
   if (sink->dump) {
@@ -333,35 +333,35 @@ gst_fakesink_render (GstBaseSink * bsink, GstBuffer * buf)
 }
 
 static GstElementStateReturn
-gst_fakesink_change_state (GstElement * element)
+gst_fake_sink_change_state (GstElement * element)
 {
   GstElementStateReturn ret = GST_STATE_SUCCESS;
-  GstFakeSink *fakesink = GST_FAKESINK (element);
+  GstFakeSink *fakesink = GST_FAKE_SINK (element);
   GstElementState transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
     case GST_STATE_NULL_TO_READY:
-      if (fakesink->state_error == FAKESINK_STATE_ERROR_NULL_READY)
+      if (fakesink->state_error == FAKE_SINK_STATE_ERROR_NULL_READY)
         goto error;
       break;
     case GST_STATE_READY_TO_PAUSED:
-      if (fakesink->state_error == FAKESINK_STATE_ERROR_READY_PAUSED)
+      if (fakesink->state_error == FAKE_SINK_STATE_ERROR_READY_PAUSED)
         goto error;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
-      if (fakesink->state_error == FAKESINK_STATE_ERROR_PAUSED_PLAYING)
+      if (fakesink->state_error == FAKE_SINK_STATE_ERROR_PAUSED_PLAYING)
         goto error;
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
-      if (fakesink->state_error == FAKESINK_STATE_ERROR_PLAYING_PAUSED)
+      if (fakesink->state_error == FAKE_SINK_STATE_ERROR_PLAYING_PAUSED)
         goto error;
       break;
     case GST_STATE_PAUSED_TO_READY:
-      if (fakesink->state_error == FAKESINK_STATE_ERROR_PAUSED_READY)
+      if (fakesink->state_error == FAKE_SINK_STATE_ERROR_PAUSED_READY)
         goto error;
       break;
     case GST_STATE_READY_TO_NULL:
-      if (fakesink->state_error == FAKESINK_STATE_ERROR_READY_NULL)
+      if (fakesink->state_error == FAKE_SINK_STATE_ERROR_READY_NULL)
         goto error;
       g_free (fakesink->last_message);
       fakesink->last_message = NULL;

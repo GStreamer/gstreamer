@@ -31,9 +31,6 @@ Use gst_scheduler_factory_destroy() to remove the factory from the global list.
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### STRUCT GstSchedulerFactory ##### -->
 <para>
 

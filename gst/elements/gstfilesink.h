@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gstfilesink.h: 
+ * gstfilesink.h:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,24 +21,24 @@
  */
 
 
-#ifndef __GST_FILESINK_H__
-#define __GST_FILESINK_H__
+#ifndef __GST_FILE_SINK_H__
+#define __GST_FILE_SINK_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_FILESINK \
-  (gst_filesink_get_type())
-#define GST_FILESINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FILESINK,GstFileSink))
-#define GST_FILESINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FILESINK,GstFileSinkClass))
-#define GST_IS_FILESINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FILESINK))
-#define GST_IS_FILESINK_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FILESINK))
+#define GST_TYPE_FILE_SINK \
+  (gst_file_sink_get_type())
+#define GST_FILE_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FILE_SINK,GstFileSink))
+#define GST_FILE_SINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FILE_SINK,GstFileSinkClass))
+#define GST_IS_FILE_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FILE_SINK))
+#define GST_IS_FILE_SINK_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FILE_SINK))
 
 typedef struct _GstFileSink GstFileSink;
 typedef struct _GstFileSinkClass GstFileSinkClass;
@@ -57,8 +57,8 @@ struct _GstFileSinkClass {
   GstBaseSinkClass parent_class;
 };
 
-GType gst_filesink_get_type(void);
+GType gst_file_sink_get_type(void);
 
 G_END_DECLS
 
-#endif /* __GST_FILESINK_H__ */
+#endif /* __GST_FILE_SINK_H__ */

@@ -15,9 +15,6 @@ The version macros get defined by including "gst/gst.h".
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### MACRO GST_VERSION_MAJOR ##### -->
 <para>
 The major version of GStreamer at compile time

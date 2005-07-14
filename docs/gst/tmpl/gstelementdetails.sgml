@@ -14,9 +14,6 @@ Defines public information about a #GstElement
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### STRUCT GstElementDetails ##### -->
 <para>
 This struct is used to define public information about the element.  It

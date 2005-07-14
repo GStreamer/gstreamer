@@ -15,9 +15,6 @@ system time.
 #GstClock
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### STRUCT GstSystemClock ##### -->
 <para>
 

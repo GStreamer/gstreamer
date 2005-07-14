@@ -14,9 +14,6 @@ get a pipeline from a text pipeline description
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### FUNCTION gst_parse_error_quark ##### -->
 <para>
 

@@ -1,3 +1,121 @@
+2005-07-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/gstreamer.types:
+	* docs/gst/tmpl/gst.sgml:
+	* docs/gst/tmpl/gstbasesink.sgml:
+	* docs/gst/tmpl/gstbasesrc.sgml:
+	* docs/gst/tmpl/gstbasetransform.sgml:
+	* docs/gst/tmpl/gstbin.sgml:
+	* docs/gst/tmpl/gstbuffer.sgml:
+	* docs/gst/tmpl/gstcaps.sgml:
+	* docs/gst/tmpl/gstclock.sgml:
+	* docs/gst/tmpl/gstcompat.sgml:
+	* docs/gst/tmpl/gstconfig.sgml:
+	* docs/gst/tmpl/gstelement.sgml:
+	* docs/gst/tmpl/gstelementdetails.sgml:
+	* docs/gst/tmpl/gstelementfactory.sgml:
+	* docs/gst/tmpl/gstenumtypes.sgml:
+	* docs/gst/tmpl/gsterror.sgml:
+	* docs/gst/tmpl/gstevent.sgml:
+	* docs/gst/tmpl/gstfakesink.sgml:
+	* docs/gst/tmpl/gstfakesrc.sgml:
+	* docs/gst/tmpl/gstfilesink.sgml:
+	* docs/gst/tmpl/gstfilesrc.sgml:
+	* docs/gst/tmpl/gstfilter.sgml:
+	* docs/gst/tmpl/gstformat.sgml:
+	* docs/gst/tmpl/gstghostpad.sgml:
+	* docs/gst/tmpl/gstimplementsinterface.sgml:
+	* docs/gst/tmpl/gstindex.sgml:
+	* docs/gst/tmpl/gstindexfactory.sgml:
+	* docs/gst/tmpl/gstinfo.sgml:
+	* docs/gst/tmpl/gstiterator.sgml:
+	* docs/gst/tmpl/gstmacros.sgml:
+	* docs/gst/tmpl/gstmemchunk.sgml:
+	* docs/gst/tmpl/gstminiobject.sgml:
+	* docs/gst/tmpl/gstobject.sgml:
+	* docs/gst/tmpl/gstpad.sgml:
+	* docs/gst/tmpl/gstpadtemplate.sgml:
+	* docs/gst/tmpl/gstparse.sgml:
+	* docs/gst/tmpl/gstpipeline.sgml:
+	* docs/gst/tmpl/gstplugin.sgml:
+	* docs/gst/tmpl/gstpluginfeature.sgml:
+	* docs/gst/tmpl/gstquery.sgml:
+	* docs/gst/tmpl/gstqueue.sgml:
+	* docs/gst/tmpl/gstregistry.sgml:
+	* docs/gst/tmpl/gstregistrypool.sgml:
+	* docs/gst/tmpl/gstscheduler.sgml:
+	* docs/gst/tmpl/gstschedulerfactory.sgml:
+	* docs/gst/tmpl/gststructure.sgml:
+	* docs/gst/tmpl/gstsystemclock.sgml:
+	* docs/gst/tmpl/gsttaglist.sgml:
+	* docs/gst/tmpl/gsttagsetter.sgml:
+	* docs/gst/tmpl/gsttrace.sgml:
+	* docs/gst/tmpl/gsttrashstack.sgml:
+	* docs/gst/tmpl/gsttypefind.sgml:
+	* docs/gst/tmpl/gsttypefindfactory.sgml:
+	* docs/gst/tmpl/gsttypes.sgml:
+	* docs/gst/tmpl/gsturihandler.sgml:
+	* docs/gst/tmpl/gsturitype.sgml:
+	* docs/gst/tmpl/gstutils.sgml:
+	* docs/gst/tmpl/gstvalue.sgml:
+	* docs/gst/tmpl/gstversion.sgml:
+	* docs/gst/tmpl/gstxml.sgml:
+	* docs/libs/tmpl/gstcontrol.sgml:
+	* docs/libs/tmpl/gstdataprotocol.sgml:
+	* docs/libs/tmpl/gstdparam.sgml:
+	* docs/libs/tmpl/gstdplinint.sgml:
+	* docs/libs/tmpl/gstdpman.sgml:
+	* docs/libs/tmpl/gstdpsmooth.sgml:
+	* docs/libs/tmpl/gstgetbits.sgml:
+	* docs/libs/tmpl/gstunitconvert.sgml:
+	* gst/base/gstpushsrc.c: (gst_push_src_get_type),
+	(gst_push_src_base_init), (gst_push_src_class_init),
+	(gst_push_src_init), (gst_push_src_create):
+	* gst/base/gstpushsrc.h:
+	* gst/elements/gstelements.c:
+	* gst/elements/gstfakesink.c: (gst_fake_sink_state_error_get_type),
+	(gst_fake_sink_base_init), (gst_fake_sink_class_init),
+	(gst_fake_sink_init), (gst_fake_sink_set_property),
+	(gst_fake_sink_get_property), (gst_fake_sink_get_times),
+	(gst_fake_sink_event), (gst_fake_sink_preroll),
+	(gst_fake_sink_render), (gst_fake_sink_change_state):
+	* gst/elements/gstfakesink.h:
+	* gst/elements/gstfakesrc.c: (gst_fake_src_data_get_type),
+	(gst_fake_src_sizetype_get_type), (gst_fake_src_filltype_get_type),
+	(gst_fake_src_base_init), (gst_fake_src_class_init),
+	(gst_fake_src_init), (gst_fake_src_event_handler),
+	(gst_fake_src_alloc_parent), (gst_fake_src_set_property),
+	(gst_fake_src_get_property), (gst_fake_src_prepare_buffer),
+	(gst_fake_src_alloc_buffer), (gst_fake_src_get_size),
+	(gst_fake_src_create_buffer), (gst_fake_src_create),
+	(gst_fake_src_start), (gst_fake_src_stop):
+	* gst/elements/gstfakesrc.h:
+	* gst/elements/gstfilesink.c: (_do_init),
+	(gst_file_sink_base_init), (gst_file_sink_class_init),
+	(gst_file_sink_init), (gst_file_sink_dispose),
+	(gst_file_sink_set_location), (gst_file_sink_set_property),
+	(gst_file_sink_get_property), (gst_file_sink_open_file),
+	(gst_file_sink_close_file), (gst_file_sink_query),
+	(gst_file_sink_event), (gst_file_sink_render),
+	(gst_file_sink_change_state), (gst_file_sink_uri_get_type),
+	(gst_file_sink_uri_get_protocols), (gst_file_sink_uri_get_uri),
+	(gst_file_sink_uri_set_uri), (gst_file_sink_uri_handler_init):
+	* gst/elements/gstfilesink.h:
+	* gst/elements/gstfilesrc.c: (_do_init), (gst_file_src_base_init),
+	(gst_file_src_class_init), (gst_file_src_init),
+	(gst_file_src_finalize), (gst_file_src_set_location),
+	(gst_file_src_set_property), (gst_file_src_get_property),
+	(gst_file_src_map_region), (gst_file_src_map_small_region),
+	(gst_file_src_create_mmap), (gst_file_src_create_read),
+	(gst_file_src_create), (gst_file_src_is_seekable),
+	(gst_file_src_get_size), (gst_file_src_start), (gst_file_src_stop),
+	(gst_file_src_uri_get_type), (gst_file_src_uri_get_protocols),
+	(gst_file_src_uri_get_uri), (gst_file_src_uri_set_uri),
+	(gst_file_src_uri_handler_init):
+	* gst/elements/gstfilesrc.h:
+	  more autistic cleanliness in functions/names/defines
+
 2005-07-13  Andy Wingo  <wingo@pobox.com>
 
 	* gst/base/gstbasesrc.c (gst_base_src_start): Post an error if the

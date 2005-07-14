@@ -14,9 +14,6 @@ Structure describing sets of media formats
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### STRUCT GstCaps ##### -->
 <para>
 

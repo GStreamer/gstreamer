@@ -85,9 +85,6 @@ Last reviewed on August 12th, 2004 (0.8.5)
 #GstPad, #GstMiniObject
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### STRUCT GstBuffer ##### -->
 <para>
 The basic structure of a buffer.

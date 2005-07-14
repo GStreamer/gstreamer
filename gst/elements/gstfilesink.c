@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gstfilesink.c: 
+ * gstfilesink.c:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -43,10 +43,10 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-GST_DEBUG_CATEGORY_STATIC (gst_filesink_debug);
-#define GST_CAT_DEFAULT gst_filesink_debug
+GST_DEBUG_CATEGORY_STATIC (gst_file_sink_debug);
+#define GST_CAT_DEFAULT gst_file_sink_debug
 
-GstElementDetails gst_filesink_details = GST_ELEMENT_DETAILS ("File Sink",
+GstElementDetails gst_file_sink_details = GST_ELEMENT_DETAILS ("File Sink",
     "Sink/File",
     "Write stream to a file",
     "Thomas <thomas@apestaart.org>");
@@ -66,94 +66,94 @@ enum
   ARG_LOCATION
 };
 
-static void gst_filesink_dispose (GObject * object);
+static void gst_file_sink_dispose (GObject * object);
 
-static void gst_filesink_set_property (GObject * object, guint prop_id,
+static void gst_file_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_filesink_get_property (GObject * object, guint prop_id,
+static void gst_file_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_filesink_open_file (GstFileSink * sink);
-static void gst_filesink_close_file (GstFileSink * sink);
+static gboolean gst_file_sink_open_file (GstFileSink * sink);
+static void gst_file_sink_close_file (GstFileSink * sink);
 
-static gboolean gst_filesink_event (GstBaseSink * sink, GstEvent * event);
-static GstFlowReturn gst_filesink_render (GstBaseSink * sink,
+static gboolean gst_file_sink_event (GstBaseSink * sink, GstEvent * event);
+static GstFlowReturn gst_file_sink_render (GstBaseSink * sink,
     GstBuffer * buffer);
 
-static gboolean gst_filesink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_file_sink_query (GstPad * pad, GstQuery * query);
 
-static void gst_filesink_uri_handler_init (gpointer g_iface,
+static void gst_file_sink_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
-static GstElementStateReturn gst_filesink_change_state (GstElement * element);
+static GstElementStateReturn gst_file_sink_change_state (GstElement * element);
 
-//static guint gst_filesink_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_file_sink_signals[LAST_SIGNAL] = { 0 };
 
 static void
 _do_init (GType filesink_type)
 {
   static const GInterfaceInfo urihandler_info = {
-    gst_filesink_uri_handler_init,
+    gst_file_sink_uri_handler_init,
     NULL,
     NULL
   };
 
   g_type_add_interface_static (filesink_type, GST_TYPE_URI_HANDLER,
       &urihandler_info);
-  GST_DEBUG_CATEGORY_INIT (gst_filesink_debug, "filesink", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_file_sink_debug, "filesink", 0,
       "filesink element");
 }
 
-GST_BOILERPLATE_FULL (GstFileSink, gst_filesink, GstBaseSink,
+GST_BOILERPLATE_FULL (GstFileSink, gst_file_sink, GstBaseSink,
     GST_TYPE_BASE_SINK, _do_init);
 
 static void
-gst_filesink_base_init (gpointer g_class)
+gst_file_sink_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
-  gstelement_class->change_state = gst_filesink_change_state;
+  gstelement_class->change_state = gst_file_sink_change_state;
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
-  gst_element_class_set_details (gstelement_class, &gst_filesink_details);
+  gst_element_class_set_details (gstelement_class, &gst_file_sink_details);
 }
 
 static void
-gst_filesink_class_init (GstFileSinkClass * klass)
+gst_file_sink_class_init (GstFileSinkClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstBaseSinkClass *gstbasesink_class = GST_BASE_SINK_CLASS (klass);
 
-  gobject_class->set_property = gst_filesink_set_property;
-  gobject_class->get_property = gst_filesink_get_property;
+  gobject_class->set_property = gst_file_sink_set_property;
+  gobject_class->get_property = gst_file_sink_get_property;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOCATION,
       g_param_spec_string ("location", "File Location",
           "Location of the file to write", NULL, G_PARAM_READWRITE));
 
-  gobject_class->dispose = gst_filesink_dispose;
+  gobject_class->dispose = gst_file_sink_dispose;
 
-  gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_filesink_render);
-  gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_filesink_event);
+  gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_file_sink_render);
+  gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_file_sink_event);
 }
 
 static void
-gst_filesink_init (GstFileSink * filesink)
+gst_file_sink_init (GstFileSink * filesink)
 {
   GstPad *pad;
 
   pad = GST_BASE_SINK_PAD (filesink);
 
-  gst_pad_set_query_function (pad, gst_filesink_query);
+  gst_pad_set_query_function (pad, gst_file_sink_query);
 
   filesink->filename = NULL;
   filesink->file = NULL;
 }
 
 static void
-gst_filesink_dispose (GObject * object)
+gst_file_sink_dispose (GObject * object)
 {
-  GstFileSink *sink = GST_FILESINK (object);
+  GstFileSink *sink = GST_FILE_SINK (object);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 
@@ -164,7 +164,7 @@ gst_filesink_dispose (GObject * object)
 }
 
 static gboolean
-gst_filesink_set_location (GstFileSink * sink, const gchar * location)
+gst_file_sink_set_location (GstFileSink * sink, const gchar * location)
 {
   /* the element must be stopped or paused in order to do this */
   if (GST_STATE (sink) >= GST_STATE_PAUSED)
@@ -183,16 +183,16 @@ gst_filesink_set_location (GstFileSink * sink, const gchar * location)
   return TRUE;
 }
 static void
-gst_filesink_set_property (GObject * object, guint prop_id,
+gst_file_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstFileSink *sink;
 
-  sink = GST_FILESINK (object);
+  sink = GST_FILE_SINK (object);
 
   switch (prop_id) {
     case ARG_LOCATION:
-      gst_filesink_set_location (sink, g_value_get_string (value));
+      gst_file_sink_set_location (sink, g_value_get_string (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -201,14 +201,14 @@ gst_filesink_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_filesink_get_property (GObject * object, guint prop_id, GValue * value,
+gst_file_sink_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
   GstFileSink *sink;
 
-  g_return_if_fail (GST_IS_FILESINK (object));
+  g_return_if_fail (GST_IS_FILE_SINK (object));
 
-  sink = GST_FILESINK (object);
+  sink = GST_FILE_SINK (object);
 
   switch (prop_id) {
     case ARG_LOCATION:
@@ -221,7 +221,7 @@ gst_filesink_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static gboolean
-gst_filesink_open_file (GstFileSink * sink)
+gst_file_sink_open_file (GstFileSink * sink)
 {
   /* open the file */
   if (sink->filename == NULL || sink->filename[0] == '\0') {
@@ -244,7 +244,7 @@ gst_filesink_open_file (GstFileSink * sink)
 }
 
 static void
-gst_filesink_close_file (GstFileSink * sink)
+gst_file_sink_close_file (GstFileSink * sink)
 {
   if (fclose (sink->file) != 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
@@ -253,12 +253,12 @@ gst_filesink_close_file (GstFileSink * sink)
 }
 
 static gboolean
-gst_filesink_query (GstPad * pad, GstQuery * query)
+gst_file_sink_query (GstPad * pad, GstQuery * query)
 {
   GstFileSink *self;
   GstFormat format;
 
-  self = GST_FILESINK (GST_PAD_PARENT (pad));
+  self = GST_FILE_SINK (GST_PAD_PARENT (pad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -284,12 +284,12 @@ gst_filesink_query (GstPad * pad, GstQuery * query)
 
 /* handle events (search) */
 static gboolean
-gst_filesink_event (GstBaseSink * sink, GstEvent * event)
+gst_file_sink_event (GstBaseSink * sink, GstEvent * event)
 {
   GstEventType type;
   GstFileSink *filesink;
 
-  filesink = GST_FILESINK (sink);
+  filesink = GST_FILE_SINK (sink);
 
   type = event ? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
 
@@ -347,21 +347,21 @@ gst_filesink_event (GstBaseSink * sink, GstEvent * event)
 }
 
 /**
- * gst_filesink_chain:
+ * gst_file_sink_chain:
  * @pad: the pad this filesink is connected to
  * @buf: the buffer that has to be absorbed
  *
  * take the buffer from the pad and write to file if it's open
  */
 static GstFlowReturn
-gst_filesink_render (GstBaseSink * sink, GstBuffer * buffer)
+gst_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
   GstFileSink *filesink;
   guint size, back_pending = 0;
 
   size = GST_BUFFER_SIZE (buffer);
 
-  filesink = GST_FILESINK (sink);
+  filesink = GST_FILE_SINK (sink);
 
   if (ftell (filesink->file) < filesink->data_written)
     back_pending = filesink->data_written - ftell (filesink->file);
@@ -379,7 +379,7 @@ gst_filesink_render (GstBaseSink * sink, GstBuffer * buffer)
 }
 
 static GstElementStateReturn
-gst_filesink_change_state (GstElement * element)
+gst_file_sink_change_state (GstElement * element)
 {
   GstElementStateReturn ret;
   gint transition;
@@ -390,7 +390,7 @@ gst_filesink_change_state (GstElement * element)
     case GST_STATE_NULL_TO_READY:
       break;
     case GST_STATE_READY_TO_PAUSED:
-      if (!gst_filesink_open_file (GST_FILESINK (element)))
+      if (!gst_file_sink_open_file (GST_FILE_SINK (element)))
         goto open_error;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
@@ -405,7 +405,7 @@ gst_filesink_change_state (GstElement * element)
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
-      gst_filesink_close_file (GST_FILESINK (element));
+      gst_file_sink_close_file (GST_FILE_SINK (element));
       break;
     case GST_STATE_READY_TO_NULL:
       break;
@@ -424,31 +424,31 @@ open_error:
 /*** GSTURIHANDLER INTERFACE *************************************************/
 
 static guint
-gst_filesink_uri_get_type (void)
+gst_file_sink_uri_get_type (void)
 {
   return GST_URI_SINK;
 }
 static gchar **
-gst_filesink_uri_get_protocols (void)
+gst_file_sink_uri_get_protocols (void)
 {
   static gchar *protocols[] = { "file", NULL };
 
   return protocols;
 }
 static const gchar *
-gst_filesink_uri_get_uri (GstURIHandler * handler)
+gst_file_sink_uri_get_uri (GstURIHandler * handler)
 {
-  GstFileSink *sink = GST_FILESINK (handler);
+  GstFileSink *sink = GST_FILE_SINK (handler);
 
   return sink->uri;
 }
 
 static gboolean
-gst_filesink_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_file_sink_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 {
   gchar *protocol, *location;
   gboolean ret;
-  GstFileSink *sink = GST_FILESINK (handler);
+  GstFileSink *sink = GST_FILE_SINK (handler);
 
   protocol = gst_uri_get_protocol (uri);
   if (strcmp (protocol, "file") != 0) {
@@ -457,19 +457,19 @@ gst_filesink_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   }
   g_free (protocol);
   location = gst_uri_get_location (uri);
-  ret = gst_filesink_set_location (sink, location);
+  ret = gst_file_sink_set_location (sink, location);
   g_free (location);
 
   return ret;
 }
 
 static void
-gst_filesink_uri_handler_init (gpointer g_iface, gpointer iface_data)
+gst_file_sink_uri_handler_init (gpointer g_iface, gpointer iface_data)
 {
   GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
 
-  iface->get_type = gst_filesink_uri_get_type;
-  iface->get_protocols = gst_filesink_uri_get_protocols;
-  iface->get_uri = gst_filesink_uri_get_uri;
-  iface->set_uri = gst_filesink_uri_set_uri;
+  iface->get_type = gst_file_sink_uri_get_type;
+  iface->get_protocols = gst_file_sink_uri_get_protocols;
+  iface->get_uri = gst_file_sink_uri_get_uri;
+  iface->set_uri = gst_file_sink_uri_set_uri;
 }

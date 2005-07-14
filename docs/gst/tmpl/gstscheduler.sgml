@@ -14,9 +14,6 @@ This is a base class for custom schedulers.
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### STRUCT GstScheduler ##### -->
 <para>
 

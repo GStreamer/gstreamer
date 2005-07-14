@@ -43,17 +43,16 @@ struct _elements_entry
 };
 
 
+/* this declaration is here because there's no gstcapsfilter.h */
 extern GType gst_capsfilter_get_type (void);
-extern GType gst_filesrc_get_type (void);
-extern GstElementDetails gst_filesrc_details;
 
 static struct _elements_entry _elements[] = {
   {"capsfilter", GST_RANK_NONE, gst_capsfilter_get_type},
-  {"fakesrc", GST_RANK_NONE, gst_fakesrc_get_type},
-  {"fakesink", GST_RANK_NONE, gst_fakesink_get_type},
-  {"filesrc", GST_RANK_NONE, gst_filesrc_get_type},
+  {"fakesrc", GST_RANK_NONE, gst_fake_src_get_type},
+  {"fakesink", GST_RANK_NONE, gst_fake_sink_get_type},
+  {"filesrc", GST_RANK_NONE, gst_file_src_get_type},
   {"identity", GST_RANK_NONE, gst_identity_get_type},
-  {"filesink", GST_RANK_NONE, gst_filesink_get_type},
+  {"filesink", GST_RANK_NONE, gst_file_sink_get_type},
   {"tee", GST_RANK_NONE, gst_tee_get_type},
   {"typefind", GST_RANK_NONE, gst_type_find_element_get_type},
   {NULL, 0},
