@@ -83,6 +83,8 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/libgstgdkpixbuf.so
 rm -rf $RPM_BUILD_ROOT
 
 %post
+@USE_GCONF_TRUE@export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source` 
+@USE_GCONF_TRUE@gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer-%{majorminor}.schemas > /dev/null
 %{register}
 %postun
 %{register}
@@ -103,12 +105,13 @@ rm -rf $RPM_BUILD_ROOT
 # libraries
 %{_libdir}/libgstinterfaces-%{majorminor}.so.*
 @USE_GCONF_TRUE@%{_libdir}/libgstgconf-%{majorminor}.so.*
-%{_libdir}/libgstaudio-0.9.so.*
-%{_libdir}/libgstaudiofilter-0.9.so.*
-%{_libdir}/libgstriff-0.9.so.*
-%{_libdir}/libgsttagedit-0.9.so.*
-%{_libdir}/libgstvideo-0.9.so.*
-%{_libdir}/libgstnet-0.9.so.*
+%{_libdir}/libgstaudio-%{majorminor}.so.*
+%{_libdir}/libgstaudiofilter-%{majorminor}.so.*
+%{_libdir}/libgstriff-%{majorminor}.so.*
+%{_libdir}/libgsttagedit-%{majorminor}.so.*
+%{_libdir}/libgstvideo-%{majorminor}.so.*
+%{_libdir}/libgstnet-%{majorminor}.so.*
+%{_libdir}/libgstrtp-%{majorminor}.so.*
 
 # non-core plugins without external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstadder.so
@@ -125,6 +128,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstvideorate.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoscale.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttcp.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux.so
 
 @USE_THEORA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttheora.so
 @USE_GNOME_VFS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgnomevfs.so
@@ -168,6 +172,9 @@ GStreamer support libraries header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/xoverlay.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudiosrc.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstbaseaudiosrc.h
+%{_includedir}/gstreamer-%{majorminor}/gst/audio/multichannel-enumtypes.h
+%{_includedir}/gstreamer-%{majorminor}/gst/rtp/gstbasertpdepayload.h
+%{_includedir}/gstreamer-%{majorminor}/gst/rtp/gstrtpbuffer.h
 
 # plugin interface headers
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudioclock.h
@@ -181,6 +188,7 @@ GStreamer support libraries header files.
 %{_libdir}/libgsttagedit-%{majorminor}.so
 %{_libdir}/libgstvideo-%{majorminor}.so
 %{_libdir}/libgstnet-%{majorminor}.so
+%{_libdir}/libgstrtp-%{majorminor}.so
 
 
 # library headers
@@ -188,7 +196,7 @@ GStreamer support libraries header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/tag/tag.h
 # pkg-config files
 @USE_GCONF_TRUE@%{_libdir}/pkgconfig/gstreamer-gconf-%{majorminor}.pc
-%{_libdir}/pkgconfig/gstreamer-plugins-base-0.9.pc
+%{_libdir}/pkgconfig/gstreamer-plugins-base-%{majorminor}.pc
 # .so files
 @USE_GCONF_TRUE@%{_libdir}/libgstgconf-%{majorminor}.so
 %{_libdir}/libgstinterfaces-%{majorminor}.so
