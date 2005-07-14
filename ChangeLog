@@ -1,3 +1,11 @@
+2005-07-14  Wim Taymans  <wim@fluendo.com>
+
+	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_get_type),
+	(gst_dv1394src_class_init), (gst_dv1394src_init),
+	(gst_dv1394src_iso_receive), (gst_dv1394src_create),
+	(gst_dv1394src_change_state), (gst_dv1394src_query):
+	It's PUSH_SRC now.
+
 2005-07-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/udp/gstudpsrc.c: (gst_udpsrc_get_type),
