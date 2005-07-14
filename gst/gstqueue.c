@@ -655,20 +655,23 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
   return GST_FLOW_OK;
 
 out_unref:
-  GST_QUEUE_MUTEX_UNLOCK;
+  {
+    GST_QUEUE_MUTEX_UNLOCK;
 
-  gst_buffer_unref (buffer);
+    gst_buffer_unref (buffer);
 
-  return GST_FLOW_OK;
-
+    return GST_FLOW_OK;
+  }
 out_flushing:
-  GST_CAT_LOG_OBJECT (queue_dataflow, queue, "exit because of flush");
-  GST_QUEUE_MUTEX_UNLOCK;
-  gst_pad_pause_task (queue->srcpad);
+  {
+    GST_CAT_LOG_OBJECT (queue_dataflow, queue, "exit because of flush");
+    GST_QUEUE_MUTEX_UNLOCK;
+    gst_pad_pause_task (queue->srcpad);
 
-  gst_buffer_unref (buffer);
+    gst_buffer_unref (buffer);
 
-  return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_WRONG_STATE;
+  }
 }
 
 static void

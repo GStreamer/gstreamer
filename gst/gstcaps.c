@@ -1401,12 +1401,6 @@ gst_caps_do_simplify (GstCaps * caps)
         break;
       }
       if (gst_caps_structure_simplify (&result, simplify, compare)) {
-#if 0
-        g_print ("%s  -  %s  =  %s\n",
-            gst_structure_to_string (simplify),
-            gst_structure_to_string (compare),
-            result ? gst_structure_to_string (result) : "---");
-#endif
         if (result) {
           gst_caps_switch_structures (caps, simplify, result, i);
         } else {

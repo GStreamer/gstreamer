@@ -1,3 +1,26 @@
+2005-07-14  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstcaps.c: (gst_caps_do_simplify):
+	Remove debug info.
+
+	* gst/gsterror.h:
+	Define error for stream stopped.
+
+	* gst/gstghostpad.c: (gst_proxy_pad_do_bufferalloc),
+	(gst_proxy_pad_do_chain), (gst_proxy_pad_do_getrange):
+	Do proper return values.
+
+	* gst/gstpad.c: (gst_pad_get_caps_unlocked), (gst_pad_accept_caps),
+	(gst_pad_set_caps), (gst_pad_chain), (gst_pad_push),
+	(gst_pad_get_range):
+	Better return values.
+
+	* gst/gstpad.h:
+	Reorganise return values, add macro to check for fatal errors.
+
+	* gst/gstqueue.c: (gst_queue_chain):
+	Return proper GstFlowReturn values,
+
 2005-07-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/gstreamer-sections.txt:

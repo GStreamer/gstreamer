@@ -156,7 +156,7 @@ gst_proxy_pad_do_bufferalloc (GstPad * pad, guint64 offset, guint size,
   GstPad *target = GST_PROXY_PAD_TARGET (pad);
   GstPad *peer;
 
-  g_return_val_if_fail (target != NULL, GST_FLOW_UNEXPECTED);
+  g_return_val_if_fail (target != NULL, GST_FLOW_NOT_LINKED);
 
   peer = gst_pad_get_peer (target);
   if (peer) {
@@ -225,7 +225,7 @@ gst_proxy_pad_do_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstPad *target = GST_PROXY_PAD_TARGET (pad);
 
-  g_return_val_if_fail (target != NULL, GST_FLOW_UNEXPECTED);
+  g_return_val_if_fail (target != NULL, GST_FLOW_NOT_LINKED);
 
   return gst_pad_chain (target, buffer);
 }
@@ -236,7 +236,7 @@ gst_proxy_pad_do_getrange (GstPad * pad, guint64 offset, guint size,
 {
   GstPad *target = GST_PROXY_PAD_TARGET (pad);
 
-  g_return_val_if_fail (target != NULL, GST_FLOW_UNEXPECTED);
+  g_return_val_if_fail (target != NULL, GST_FLOW_NOT_LINKED);
 
   return gst_pad_get_range (target, offset, size, buffer);
 }

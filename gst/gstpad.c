@@ -1600,6 +1600,9 @@ gst_pad_get_caps_unlocked (GstPad * pad)
       g_critical ("pad %s:%s returned NULL caps from getcaps function",
           GST_DEBUG_PAD_NAME (pad));
     } else {
+      GST_CAT_DEBUG (GST_CAT_CAPS,
+          "pad getcaps %s:%s returned %" GST_PTR_FORMAT,
+          GST_DEBUG_PAD_NAME (pad), result);
 #ifndef G_DISABLE_ASSERT
       /* check that the returned caps are a real subset of the template caps */
       if (GST_PAD_PAD_TEMPLATE (pad)) {
@@ -2823,15 +2826,14 @@ flushing:
         "pushing, but pad was flushing");
     GST_UNLOCK (pad);
     GST_STREAM_UNLOCK (pad);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_WRONG_STATE;
   }
 dropping:
   {
     gst_buffer_unref (buffer);
     GST_DEBUG ("Dropping buffer due to FALSE probe return");
     GST_STREAM_UNLOCK (pad);
-    /* FIXME, failure? */
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_OK;
   }
 not_negotiated:
   {
@@ -2916,8 +2918,7 @@ dropping:
     gst_buffer_unref (buffer);
     gst_object_unref (peer);
     GST_DEBUG ("Dropping buffer due to FALSE probe return");
-    /* FIXME, failure? */
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_OK;
   }
 }
 
@@ -3049,7 +3050,7 @@ flushing:
         "pulling range, but pad was flushing");
     GST_UNLOCK (pad);
     GST_STREAM_UNLOCK (pad);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_WRONG_STATE;
   }
 no_function:
   {

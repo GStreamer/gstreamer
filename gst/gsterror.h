@@ -163,6 +163,7 @@ typedef enum
  * @GST_STREAM_ERROR_MUX: used when muxing fails.
  * @GST_STREAM_ERROR_FORMAT: used when the stream is of the wrong format
  * (for example, wrong caps).
+ * @GST_STREAM_ERROR_STOPPED: Streaming stopped.
  * @GST_STREAM_ERROR_NUM_ERRORS: the number of library error types.
  *
  * Stream errors are for anything related to the stream being processed:
@@ -182,6 +183,7 @@ typedef enum
   GST_STREAM_ERROR_DEMUX,
   GST_STREAM_ERROR_MUX,
   GST_STREAM_ERROR_FORMAT,
+  GST_STREAM_ERROR_STOPPED,
   GST_STREAM_ERROR_NUM_ERRORS
 } GstStreamError;
 
