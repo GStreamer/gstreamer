@@ -1234,18 +1234,13 @@ gst_ximagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
       ximagesink->ximage = gst_ximagesink_ximage_new (ximagesink,
           GST_VIDEO_SINK_WIDTH (ximagesink),
           GST_VIDEO_SINK_HEIGHT (ximagesink));
-      if (!ximagesink->ximage) {
-        /* No image available. That's very bad ! */
-        gst_buffer_unref (buf);
-        GST_ELEMENT_ERROR (ximagesink, CORE, NEGOTIATION, (NULL),
-            ("Failed creating an XImage in ximagesink chain function."));
-        return GST_FLOW_ERROR;
-      }
-      memcpy (ximagesink->ximage->ximage->data,
-          GST_BUFFER_DATA (buf),
-          MIN (GST_BUFFER_SIZE (buf), ximagesink->ximage->size));
-      gst_ximagesink_ximage_put (ximagesink, ximagesink->ximage);
+      if (!ximagesink->ximage)
+        goto no_ximage;
     }
+    memcpy (ximagesink->ximage->ximage->data,
+        GST_BUFFER_DATA (buf),
+        MIN (GST_BUFFER_SIZE (buf), ximagesink->ximage->size));
+    gst_ximagesink_ximage_put (ximagesink, ximagesink->ximage);
   }
 
   gst_ximagesink_handle_xevents (ximagesink);
@@ -1256,6 +1251,17 @@ gst_ximagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
   g_mutex_unlock (ximagesink->stream_lock);
 
   return GST_FLOW_OK;
+
+  /* ERRORS */
+no_ximage:
+  {
+    /* No image available. That's very bad ! */
+    g_mutex_unlock (ximagesink->stream_lock);
+    gst_buffer_unref (buf);
+    GST_ELEMENT_ERROR (ximagesink, CORE, NEGOTIATION, (NULL),
+        ("Failed creating an XImage in ximagesink chain function."));
+    return GST_FLOW_ERROR;
+  }
 }
 
 /* Buffer management */

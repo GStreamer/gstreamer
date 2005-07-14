@@ -152,6 +152,7 @@ gst_fdset_free (GstFDSet * set)
     case GST_FDSET_MODE_SELECT:
       break;
     case GST_FDSET_MODE_POLL:
+      g_free (set->testpollfds);
       g_free (set->pollfds);
       g_mutex_free (set->poll_lock);
       break;

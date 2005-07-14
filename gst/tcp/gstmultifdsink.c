@@ -409,7 +409,7 @@ gst_multifdsink_init (GstMultiFdSink * this)
   this->protocol = DEFAULT_PROTOCOL;
   this->mode = DEFAULT_MODE;
 
-  this->clientslock = g_mutex_new ();
+  CLIENTS_LOCK_INIT (this);
   this->clients = NULL;
   this->fd_hash = g_hash_table_new (g_int_hash, g_int_equal);
 
@@ -453,13 +453,13 @@ gst_multifdsink_add (GstMultiFdSink * sink, int fd)
   /* send last activity time to connect time */
   client->last_activity_time = GST_TIMEVAL_TO_TIME (now);
 
-  g_mutex_lock (sink->clientslock);
+  CLIENTS_LOCK (sink);
 
   /* check the hash to find a duplicate fd */
   clink = g_hash_table_lookup (sink->fd_hash, &client->fd.fd);
   if (clink != NULL) {
     client->status = GST_CLIENT_STATUS_DUPLICATE;
-    g_mutex_unlock (sink->clientslock);
+    CLIENTS_UNLOCK (sink);
     GST_WARNING_OBJECT (sink, "[fd %5d] duplicate client found, refusing", fd);
     g_signal_emit (G_OBJECT (sink),
         gst_multifdsink_signals[SIGNAL_CLIENT_REMOVED], 0, fd, client->status);
@@ -489,7 +489,7 @@ gst_multifdsink_add (GstMultiFdSink * sink, int fd)
 
   SEND_COMMAND (sink, CONTROL_RESTART);
 
-  g_mutex_unlock (sink->clientslock);
+  CLIENTS_UNLOCK (sink);
 
   g_signal_emit (G_OBJECT (sink),
       gst_multifdsink_signals[SIGNAL_CLIENT_ADDED], 0, fd);
@@ -502,7 +502,7 @@ gst_multifdsink_remove (GstMultiFdSink * sink, int fd)
 
   GST_DEBUG_OBJECT (sink, "[fd %5d] removing client", fd);
 
-  g_mutex_lock (sink->clientslock);
+  CLIENTS_LOCK (sink);
   clink = g_hash_table_lookup (sink->fd_hash, &fd);
   if (clink != NULL) {
     GstTCPClient *client = (GstTCPClient *) clink->data;
@@ -513,7 +513,7 @@ gst_multifdsink_remove (GstMultiFdSink * sink, int fd)
   } else {
     GST_WARNING_OBJECT (sink, "[fd %5d] no client with this fd found!", fd);
   }
-  g_mutex_unlock (sink->clientslock);
+  CLIENTS_UNLOCK (sink);
 }
 
 void
@@ -523,7 +523,7 @@ gst_multifdsink_clear (GstMultiFdSink * sink)
 
   GST_DEBUG_OBJECT (sink, "clearing all clients");
 
-  g_mutex_lock (sink->clientslock);
+  CLIENTS_LOCK (sink);
   for (clients = sink->clients; clients; clients = next) {
     GstTCPClient *client;
 
@@ -534,7 +534,7 @@ gst_multifdsink_clear (GstMultiFdSink * sink)
     gst_multifdsink_remove_client_link (sink, clients);
   }
   SEND_COMMAND (sink, CONTROL_RESTART);
-  g_mutex_unlock (sink->clientslock);
+  CLIENTS_UNLOCK (sink);
 }
 
 GValueArray *
@@ -544,7 +544,7 @@ gst_multifdsink_get_stats (GstMultiFdSink * sink, int fd)
   GValueArray *result = NULL;
   GList *clink;
 
-  g_mutex_lock (sink->clientslock);
+  CLIENTS_LOCK (sink);
   clink = g_hash_table_lookup (sink->fd_hash, &fd);
   client = (GstTCPClient *) clink->data;
   if (client != NULL) {
@@ -582,7 +582,7 @@ gst_multifdsink_get_stats (GstMultiFdSink * sink, int fd)
     g_value_set_uint64 (&value, client->last_activity_time);
     result = g_value_array_append (result, &value);
   }
-  g_mutex_unlock (sink->clientslock);
+  CLIENTS_UNLOCK (sink);
 
   /* python doesn't like a NULL pointer yet */
   if (result == NULL) {
@@ -650,19 +650,24 @@ gst_multifdsink_remove_client_link (GstMultiFdSink * sink, GList * link)
 
   /* unlock the mutex before signaling because the signal handler
    * might query some properties */
-  g_mutex_unlock (sink->clientslock);
+  CLIENTS_UNLOCK (sink);
 
   g_signal_emit (G_OBJECT (sink),
       gst_multifdsink_signals[SIGNAL_CLIENT_REMOVED], 0, fd, client->status);
 
   /* lock again before we remove the client completely */
-  g_mutex_lock (sink->clientslock);
+  CLIENTS_LOCK (sink);
 
   if (!g_hash_table_remove (sink->fd_hash, &client->fd.fd)) {
     GST_WARNING_OBJECT (sink,
         "[fd %5d] error removing client %p from hash", client->fd.fd, client);
   }
-  sink->clients = g_list_delete_link (sink->clients, link);
+  /* after releasing the lock above, the link could be invalid, more
+   * precisely, the next and prev pointers could point to invalid list
+   * links. One optimisation could be to add a cookie to the linked list
+   * and take a shortcut when it did not change between unlocking and locking
+   * our mutex. For now we just walk the list again. */
+  sink->clients = g_list_remove (sink->clients, client);
 
   if (fclass->removed)
     fclass->removed (sink, client->fd.fd);
@@ -740,12 +745,12 @@ gst_multifdsink_handle_client_read (GstMultiFdSink * sink,
 
 static gboolean
 gst_multifdsink_client_queue_data (GstMultiFdSink * sink, GstTCPClient * client,
-    guint8 * data, gint len)
+    gchar * data, gint len)
 {
   GstBuffer *buf;
 
   buf = gst_buffer_new ();
-  GST_BUFFER_DATA (buf) = data;
+  GST_BUFFER_DATA (buf) = (guint8 *) data;
   GST_BUFFER_SIZE (buf) = len;
 
   GST_LOG_OBJECT (sink, "[fd %5d] queueing data of length %d",
@@ -774,10 +779,10 @@ gst_multifdsink_client_queue_caps (GstMultiFdSink * sink, GstTCPClient * client,
     GST_DEBUG_OBJECT (sink, "Could not create GDP packet from caps");
     return FALSE;
   }
-  gst_multifdsink_client_queue_data (sink, client, header, length);
+  gst_multifdsink_client_queue_data (sink, client, (gchar *) header, length);
 
   length = gst_dp_header_payload_length (header);
-  gst_multifdsink_client_queue_data (sink, client, payload, length);
+  gst_multifdsink_client_queue_data (sink, client, (gchar *) payload, length);
 
   return TRUE;
 }
@@ -806,7 +811,7 @@ gst_multifdsink_client_queue_buffer (GstMultiFdSink * sink,
           "[fd %5d] could not create header, removing client", client->fd.fd);
       return FALSE;
     }
-    gst_multifdsink_client_queue_data (sink, client, header, len);
+    gst_multifdsink_client_queue_data (sink, client, (gchar *) header, len);
   }
 
   GST_LOG_OBJECT (sink, "[fd %5d] queueing buffer of length %d",
@@ -1171,7 +1176,7 @@ gst_multifdsink_queue_buffer (GstMultiFdSink * sink, GstBuffer * buf)
   g_get_current_time (&nowtv);
   now = GST_TIMEVAL_TO_TIME (nowtv);
 
-  g_mutex_lock (sink->clientslock);
+  CLIENTS_LOCK (sink);
   /* add buffer to queue */
   g_array_prepend_val (sink->bufqueue, buf);
   queuelen = sink->bufqueue->len;
@@ -1271,7 +1276,7 @@ gst_multifdsink_queue_buffer (GstMultiFdSink * sink, GstBuffer * buf)
   }
   /* save for stats */
   sink->buffers_queued = max_buffer_usage;
-  g_mutex_unlock (sink->clientslock);
+  CLIENTS_UNLOCK (sink);
 
   /* and send a signal to thread if fd_set changed */
   if (need_signal) {
@@ -1316,7 +1321,7 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
       if (errno == EBADF) {
         /* ok, so one or more of the fds is invalid. We loop over them to find
          * the ones that give an error to the F_GETFL fcntl. */
-        g_mutex_lock (sink->clientslock);
+        CLIENTS_LOCK (sink);
         for (clients = sink->clients; clients; clients = next) {
           GstTCPClient *client;
           int fd;
@@ -1338,7 +1343,7 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
             }
           }
         }
-        g_mutex_unlock (sink->clientslock);
+        CLIENTS_UNLOCK (sink);
         /* after this, go back in the select loop as the read/writefds
          * are not valid */
         try_again = TRUE;
@@ -1400,7 +1405,7 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
     fclass->wait (sink, sink->fdset);
 
   /* Check the clients */
-  g_mutex_lock (sink->clientslock);
+  CLIENTS_LOCK (sink);
   for (clients = sink->clients; clients; clients = next) {
     GstTCPClient *client;
 
@@ -1438,7 +1443,7 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
       }
     }
   }
-  g_mutex_unlock (sink->clientslock);
+  CLIENTS_UNLOCK (sink);
 }
 
 /* we handle the client communication in another thread so that we do not block
@@ -1717,6 +1722,8 @@ gst_multifdsink_stop (GstBaseSink * bsink)
     this->fdset = NULL;
   }
   GST_FLAG_UNSET (this, GST_MULTIFDSINK_OPEN);
+  CLIENTS_LOCK_FREE (this);
+  g_hash_table_destroy (this->fd_hash);
 
   return TRUE;
 }

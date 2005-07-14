@@ -1,5 +1,23 @@
 2005-07-14  Wim Taymans  <wim@fluendo.com>
 
+	* gst/tcp/gstfdset.c: (gst_fdset_free):
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_init),
+	(gst_multifdsink_add), (gst_multifdsink_remove),
+	(gst_multifdsink_clear), (gst_multifdsink_get_stats),
+	(gst_multifdsink_remove_client_link),
+	(gst_multifdsink_client_queue_data),
+	(gst_multifdsink_client_queue_caps),
+	(gst_multifdsink_client_queue_buffer),
+	(gst_multifdsink_queue_buffer), (gst_multifdsink_handle_clients),
+	(gst_multifdsink_stop):
+	* gst/tcp/gstmultifdsink.h:
+	0.8 backporting.
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_show_frame):
+	Also draw image when not from a pool.
+
+2005-07-14  Wim Taymans  <wim@fluendo.com>
+
 	* gst/playback/gstplaybasebin.c: (check_queue), (probe_triggered),
 	(mute_stream), (silence_stream):
 	Small debug additions.
