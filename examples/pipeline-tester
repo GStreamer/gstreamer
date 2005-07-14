@@ -50,7 +50,19 @@ data = (('Video capture via V4L',
          'alsasrc\n'
          '    ! audio/x-raw-int,rate=22050,depth=16,channels=1,width=16,signed=(boolean)TRUE,endianness=1234\n'
          '    ! level signal=true\n'
-         '    ! fakesink'))
+         '    ! fakesink'),
+        ('Streaming Ogg/Theora+Vorbis playback, tee to disk',
+         'gnomevfssrc location=http://gstreamer.freedesktop.org/media/small/cooldance.ogg \n'
+         '    ! tee name=tee \n'
+         '    tee. ! oggdemux name=demux \n'
+         '    demux. ! queue ! theoradec ! xvimagesink \n'
+         '    demux. ! queue ! vorbisdec ! audioconvert ! alsasink \n'
+         '    tee. ! filesink location=cooldance.ogg'),
+        ('Reencode Vorbis to mulaw, play via ALSA',
+         'filesrc location=cooldance.ogg \n'
+         '    ! oggdemux \n'
+         '    ! vorbisdec ! audioconvert \n'
+         '    ! mulawenc ! mulawdec ! alsasink'))
 
 
 def escape(s, chars, escaper='\\'):
@@ -120,6 +132,7 @@ class Window(gtk.Window):
         bu.show()
         bb.pack_start(bu, True, False, 0)
         bu.set_property('has-default', True)
+        self.button = bu
 
         def on_changed(s):
             m, i = s.get_selected()
@@ -132,9 +145,9 @@ class Window(gtk.Window):
                 l.set_markup('')
         tv.get_selection().connect('changed', on_changed)
 
-        tv.connect('row-activated', lambda *x: self.play_toggled(bu))
+        tv.connect('row-activated', lambda *x: self.play_toggled())
 
-        bu.connect('clicked', self.play_toggled)
+        bu.connect('clicked', lambda *x: self.play_toggled())
 
     def error(self, message, secondary=None):
         m = gtk.MessageDialog(self,
@@ -154,10 +167,15 @@ class Window(gtk.Window):
         elif t == gst.MESSAGE_ERROR:
             err, debug = message.parse_error()
             self.error("%s" % err, debug)
+        elif t == gst.MESSAGE_EOS:
+            self.play_toggled()
         else:
             print '%s: %s:' % (message.src.get_path_string(),
                                message.type.value_nicks[1])
-            print '    %s' % message.structure.to_string()
+            if message.structure:
+                print '    %s' % message.structure.to_string()
+            else:
+                print '    (no structure)'
         return True
 
     def play(self):
@@ -189,15 +207,15 @@ class Window(gtk.Window):
         gobject.source_remove(self.watch_id)
         del self.watch_id
 
-    def play_toggled(self, button):
+    def play_toggled(self):
         if self.playing:
             self.stop()
-            button.set_label(gtk.STOCK_MEDIA_PLAY)
+            self.button.set_label(gtk.STOCK_MEDIA_PLAY)
             self.playing = False
         else:
             if self.play():
                 self.playing = True
-                button.set_label(gtk.STOCK_MEDIA_STOP)
+                self.button.set_label(gtk.STOCK_MEDIA_STOP)
 
 if __name__ == '__main__':
     w = Window()
