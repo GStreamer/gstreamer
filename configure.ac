@@ -918,6 +918,7 @@ gst-libs/gst/gconf/Makefile
 gst-libs/gst/interfaces/Makefile
 gst-libs/gst/net/Makefile
 gst-libs/gst/riff/Makefile
+gst-libs/gst/rtp/Makefile
 gst-libs/gst/tag/Makefile
 gst-libs/gst/video/Makefile
 gst-libs/ext/Makefile

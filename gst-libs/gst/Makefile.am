@@ -11,6 +11,7 @@ SUBDIRS = \
 	interfaces \
 	net \
 	riff \
+	rtp \
 	tag \
 	video
 
@@ -21,6 +22,7 @@ DIST_SUBDIRS = \
 	interfaces \
 	net \
 	riff \
+	rtp \
 	tag \
 	video
 

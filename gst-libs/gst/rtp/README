@@ -1,0 +1,8 @@
+The RTP libraries
+---------------------
+
+GstRTPBuffer:
+
+  A GstBuffer subclass that can has extra RTP information such as timestamps and
+  marks. It is used for communications between the RTPSession element and the
+  RTP payloaders/depayloaders.

@@ -8,7 +8,7 @@ Description: Streaming media framework, base plugins libraries, uninstalled
 Version: @VERSION@
 Requires: gstreamer-@GST_MAJORMINOR@
 
-Libs: -L${libdir}/audio -L${libdir}/floatcast -L${libdir}/interfaces -L${libdir}/net -L${libdir}/riff -L${libdir}/tag -L${libdir}/video
+Libs: -L${libdir}/audio -L${libdir}/floatcast -L${libdir}/interfaces -L${libdir}/net -L${libdir}/riff -L${libdir}/rtp -L${libdir}/tag -L${libdir}/video
 Cflags: -I${includedir}
 
 libraries=audio floatcast interfaces net riff tag video
