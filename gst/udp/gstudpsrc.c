@@ -130,7 +130,8 @@ gst_udpsrc_get_type (void)
     };
 
     udpsrc_type =
-        g_type_register_static (GST_TYPE_PUSHSRC, "GstUDPSrc", &udpsrc_info, 0);
+        g_type_register_static (GST_TYPE_PUSH_SRC, "GstUDPSrc", &udpsrc_info,
+        0);
 
     g_type_add_interface_static (udpsrc_type, GST_TYPE_URI_HANDLER,
         &urihandler_info);
@@ -162,7 +163,7 @@ gst_udpsrc_class_init (GstUDPSrc * klass)
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstpushsrc_class = (GstPushSrcClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_PUSHSRC);
+  parent_class = g_type_class_ref (GST_TYPE_PUSH_SRC);
 
   gobject_class->set_property = gst_udpsrc_set_property;
   gobject_class->get_property = gst_udpsrc_get_property;
