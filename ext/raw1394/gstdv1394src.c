@@ -142,7 +142,7 @@ gst_dv1394src_get_type (void)
     };
 
     gst_dv1394src_type =
-        g_type_register_static (GST_TYPE_PUSHSRC, "DV1394Src",
+        g_type_register_static (GST_TYPE_PUSH_SRC, "DV1394Src",
         &gst_dv1394src_info, 0);
 
     g_type_add_interface_static (gst_dv1394src_type, GST_TYPE_URI_HANDLER,
@@ -178,7 +178,7 @@ gst_dv1394src_class_init (GstDV1394SrcClass * klass)
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstpushsrc_class = (GstPushSrcClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_PUSHSRC);
+  parent_class = g_type_class_ref (GST_TYPE_PUSH_SRC);
 
   gobject_class->set_property = gst_dv1394src_set_property;
   gobject_class->get_property = gst_dv1394src_get_property;
