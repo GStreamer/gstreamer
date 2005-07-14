@@ -450,6 +450,8 @@ check_queue (GstPad * pad, GstBuffer * data, gpointer user_data)
   GstPlayBaseBin *play_base_bin = g_object_get_data (G_OBJECT (queue), "pbb");
   guint64 level = 0;
 
+  GST_DEBUG ("check queue triggered");
+
   g_object_get (G_OBJECT (queue), "current-level-time", &level, NULL);
   GST_DEBUG ("Queue size: %" GST_TIME_FORMAT, GST_TIME_ARGS (level));
   level = level * 100 / play_base_bin->queue_threshold;
@@ -758,6 +760,8 @@ probe_triggered (GstPad * pad, GstEvent * event, gpointer user_data)
   group = (GstPlayBaseGroup *) g_object_get_data (G_OBJECT (info), "group");
   play_base_bin = group->bin;
 
+  GST_DEBUG ("probe triggered");
+
   if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
     gint num_groups = 0;
     gboolean have_left;
@@ -867,6 +871,8 @@ mute_stream (GstPad * pad, GstBuffer * buf, gpointer data)
 {
   GstStreamInfo *info = GST_STREAM_INFO (data);
 
+  GST_DEBUG ("mute stream triggered");
+
   g_object_set (G_OBJECT (info), "mute", TRUE, NULL);
   gst_pad_remove_buffer_probe (GST_PAD_CAST (info->object),
       G_CALLBACK (mute_stream), data);
@@ -879,6 +885,8 @@ mute_stream (GstPad * pad, GstBuffer * buf, gpointer data)
 static gboolean
 silence_stream (GstPad * pad, GstMiniObject * data, gpointer user_data)
 {
+  GST_DEBUG ("silence stream triggered");
+
   /* no data */
   return FALSE;
 }

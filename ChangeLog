@@ -1,5 +1,11 @@
 2005-07-14  Wim Taymans  <wim@fluendo.com>
 
+	* gst/playback/gstplaybasebin.c: (check_queue), (probe_triggered),
+	(mute_stream), (silence_stream):
+	Small debug additions.
+
+2005-07-14  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_dispose),
 	(gst_ogg_pad_submit_packet), (gst_ogg_pad_submit_page),
 	(gst_ogg_demux_activate_chain), (gst_ogg_demux_loop):
