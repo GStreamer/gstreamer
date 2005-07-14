@@ -268,8 +268,6 @@ gst_ogg_pad_dispose (GObject * object)
 {
   GstOggPad *pad = GST_OGG_PAD (object);
 
-  gst_element_set_state (pad->element, GST_STATE_NULL);
-
   gst_object_replace ((GstObject **) (&pad->elem_pad), NULL);
   gst_object_replace ((GstObject **) (&pad->element), NULL);
   gst_object_replace ((GstObject **) (&pad->elem_out), NULL);
@@ -662,6 +660,9 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
         ret = GST_FLOW_OK;
       }
     }
+    /* we just ignore unlinked pads */
+    if (ret == GST_FLOW_NOT_LINKED)
+      ret = GST_FLOW_OK;
   } else {
     /* initialize our internal decoder with packets */
     if (!pad->elem_pad)
@@ -678,6 +679,8 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
     GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
 
     ret = gst_pad_chain (pad->elem_pad, buf);
+    if (GST_FLOW_IS_FATAL (ret))
+      goto decoder_error;
   }
   pad->packetno++;
 
@@ -687,7 +690,12 @@ no_decoder:
   {
     GST_WARNING_OBJECT (ogg,
         "pad %08lx does not have elem_pad, no decoder ?", pad);
-    return GST_FLOW_OK;
+    return GST_FLOW_ERROR;
+  }
+decoder_error:
+  {
+    GST_WARNING_OBJECT (ogg, "internal decoder error");
+    return GST_FLOW_ERROR;
   }
 }
 
@@ -705,13 +713,8 @@ gst_ogg_pad_submit_page (GstOggPad * pad, ogg_page * page)
 
   ogg = GST_OGG_DEMUX (GST_PAD_PARENT (pad));
 
-  if (ogg_stream_pagein (&pad->stream, page) != 0) {
-    GST_WARNING_OBJECT (ogg,
-        "ogg stream choked on page (serial %08lx), resetting stream",
-        pad->serialno);
-    gst_ogg_pad_reset (pad);
-    return GST_FLOW_OK;
-  }
+  if (ogg_stream_pagein (&pad->stream, page) != 0)
+    goto choked;
 
   while (!done) {
     ret = ogg_stream_packetout (&pad->stream, &packet);
@@ -726,12 +729,8 @@ gst_ogg_pad_submit_page (GstOggPad * pad, ogg_page * page)
         break;
       case 1:
         result = gst_ogg_pad_submit_packet (pad, &packet);
-        if (result != GST_FLOW_OK) {
-          GST_WARNING_OBJECT (ogg, "could not submit packet, error: %d",
-              result);
-          gst_ogg_pad_reset (pad);
-          done = TRUE;
-        }
+        if (GST_FLOW_IS_FATAL (result))
+          goto could_not_submit;
         break;
       default:
         GST_WARNING_OBJECT (ogg,
@@ -742,6 +741,22 @@ gst_ogg_pad_submit_page (GstOggPad * pad, ogg_page * page)
     }
   }
   return result;
+
+choked:
+  {
+    GST_WARNING_OBJECT (ogg,
+        "ogg stream choked on page (serial %08lx), resetting stream",
+        pad->serialno);
+    gst_ogg_pad_reset (pad);
+    /* we continue to recover */
+    return GST_FLOW_OK;
+  }
+could_not_submit:
+  {
+    GST_WARNING_OBJECT (ogg, "could not submit packet, error: %d", result);
+    gst_ogg_pad_reset (pad);
+    return result;
+  }
 }
 
 
@@ -1156,39 +1171,38 @@ static gboolean
 gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain)
 {
   gint i;
-  GstFlowReturn ret;
+  GList *headers;
+  GstOggPad *pad;
 
   if (chain == ogg->current_chain)
     return TRUE;
 
   gst_ogg_demux_deactivate_current_chain (ogg);
 
+  /* first add the pads */
   for (i = 0; i < chain->streams->len; i++) {
-    GstOggPad *pad;
-    GList *headers;
-
     pad = g_array_index (chain->streams, GstOggPad *, i);
-
     gst_element_add_pad (GST_ELEMENT (ogg), GST_PAD (pad));
+  }
+
+  gst_element_no_more_pads (GST_ELEMENT (ogg));
+  ogg->current_chain = chain;
+
+  /* then send out the buffers */
+  for (i = 0; i < chain->streams->len; i++) {
+    pad = g_array_index (chain->streams, GstOggPad *, i);
 
     for (headers = pad->headers; headers; headers = g_list_next (headers)) {
       GstBuffer *buffer = GST_BUFFER (headers->data);
 
-      ret = gst_pad_push (GST_PAD_CAST (pad), buffer);
-      if (ret != GST_FLOW_OK)
-        goto flow_error;
+      /* we don't care about the return value here */
+      gst_pad_push (GST_PAD_CAST (pad), buffer);
     }
+    /* and free the headers */
+    g_list_free (pad->headers);
+    pad->headers = NULL;
   }
-  gst_element_no_more_pads (GST_ELEMENT (ogg));
-
-  ogg->current_chain = chain;
-
   return TRUE;
-
-flow_error:
-  {
-    return FALSE;
-  }
 }
 
 static gboolean
@@ -1930,39 +1944,51 @@ gst_ogg_demux_loop (GstOggPad * pad)
     GST_CHAIN_LOCK (ogg);
     got_chains = gst_ogg_demux_find_chains (ogg);
     GST_CHAIN_UNLOCK (ogg);
-    if (!got_chains) {
-      GST_LOG_OBJECT (ogg, "could not read chains");
-      goto pause;
-    }
+    if (!got_chains)
+      goto chain_read_failed;
     ogg->need_chains = FALSE;
     ogg->offset = 0;
   }
 
   GST_LOG_OBJECT (ogg, "pull data %lld", ogg->offset);
   if (ogg->offset == ogg->length) {
+    ret = GST_FLOW_OK;
     gst_ogg_demux_send_eos (ogg);
     goto pause;
   }
 
   ret = gst_pad_pull_range (ogg->sinkpad, ogg->offset, CHUNKSIZE, &buffer);
-  if (ret != GST_FLOW_OK) {
-    GST_LOG_OBJECT (ogg, "got unexpected %d", ret);
+  if (ret != GST_FLOW_OK)
     goto pause;
-  }
 
   ogg->offset += GST_BUFFER_SIZE (buffer);
 
   ret = gst_ogg_demux_chain (ogg->sinkpad, buffer);
-  if (ret != GST_FLOW_OK) {
-    GST_LOG_OBJECT (ogg, "got unexpected %d, pausing", ret);
+  if (ret != GST_FLOW_OK)
     goto pause;
-  }
+
   return;
 
+  /* ERRORS */
+chain_read_failed:
+  {
+    GST_ELEMENT_ERROR (ogg, STREAM, DEMUX,
+        ("could not read chains"), ("could not read chains"));
+    ret = GST_FLOW_ERROR;
+    goto pause;
+  }
 pause:
-  GST_LOG_OBJECT (ogg, "pausing task");
-  gst_pad_pause_task (ogg->sinkpad);
-  return;
+  {
+    GST_LOG_OBJECT (ogg, "pausing task, reason %d", ret);
+    gst_pad_pause_task (ogg->sinkpad);
+    if (GST_FLOW_IS_FATAL (ret)) {
+      gst_ogg_demux_send_eos (ogg);
+      GST_ELEMENT_ERROR (ogg, STREAM, STOPPED,
+          ("stream stopped, reason %d", ret),
+          ("stream stopped, reason %d", ret));
+    }
+    return;
+  }
 }
 
 static void

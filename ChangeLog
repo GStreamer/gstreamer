@@ -1,3 +1,11 @@
+2005-07-14  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_dispose),
+	(gst_ogg_pad_submit_packet), (gst_ogg_pad_submit_page),
+	(gst_ogg_demux_activate_chain), (gst_ogg_demux_loop):
+	Better error recovery, ignore unconnected pads and
+	non-fatal errors.
+
 2005-07-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/libs/tmpl/gstaudio.sgml:
