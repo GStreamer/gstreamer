@@ -129,8 +129,9 @@ static GstCaps *gst_video_box_transform_caps (GstBaseTransform * trans,
     GstPad * pad, GstCaps * from);
 static gboolean gst_video_box_set_caps (GstBaseTransform * trans,
     GstCaps * in, GstCaps * out);
+static guint gst_video_box_get_size (GstBaseTransform * trans);
 static GstFlowReturn gst_video_box_transform (GstBaseTransform * trans,
-    GstBuffer * in, GstBuffer ** out);
+    GstBuffer * in, GstBuffer * out);
 
 
 #define GST_TYPE_VIDEO_BOX_FILL (gst_video_box_fill_get_type())
@@ -208,6 +209,7 @@ gst_video_box_class_init (GstVideoBoxClass * klass)
 
   trans_class->transform_caps = gst_video_box_transform_caps;
   trans_class->set_caps = gst_video_box_set_caps;
+  trans_class->get_size = gst_video_box_get_size;
   trans_class->transform = gst_video_box_transform;
 }
 
@@ -387,6 +389,22 @@ gst_video_box_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 #define GST_VIDEO_I420_V_OFFSET(w,h) (GST_VIDEO_I420_U_OFFSET(w,h)+(GST_VIDEO_I420_U_ROWSTRIDE(w)*ROUND_UP_2(h)/2))
 
 #define GST_VIDEO_I420_SIZE(w,h)     (GST_VIDEO_I420_V_OFFSET(w,h)+(GST_VIDEO_I420_V_ROWSTRIDE(w)*ROUND_UP_2(h)/2))
+
+static guint
+gst_video_box_get_size (GstBaseTransform * trans)
+{
+  guint size;
+  GstVideoBox *video_box;
+
+  video_box = GST_VIDEO_BOX (trans);
+
+  if (video_box->use_alpha) {
+    size = video_box->out_height * video_box->out_height * 4;
+  } else {
+    size = GST_VIDEO_I420_SIZE (video_box->out_width, video_box->out_height);
+  }
+  return size;
+}
 
 static int yuv_colors_Y[] = { 16, 150, 29 };
 static int yuv_colors_U[] = { 128, 46, 255 };
@@ -588,40 +606,19 @@ gst_video_box_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
 
 static GstFlowReturn
 gst_video_box_transform (GstBaseTransform * trans, GstBuffer * in,
-    GstBuffer ** out)
+    GstBuffer * out)
 {
   GstVideoBox *video_box;
-  GstFlowReturn ret;
 
   video_box = GST_VIDEO_BOX (trans);
 
   if (video_box->use_alpha) {
-    ret = gst_pad_alloc_buffer (trans->srcpad,
-        GST_BUFFER_OFFSET_NONE,
-        video_box->out_height * video_box->out_height * 4,
-        GST_PAD_CAPS (trans->srcpad), out);
-    if (ret != GST_FLOW_OK)
-      goto done;
-
-    gst_video_box_ayuv (video_box,
-        GST_BUFFER_DATA (in), GST_BUFFER_DATA (*out));
+    gst_video_box_ayuv (video_box, GST_BUFFER_DATA (in), GST_BUFFER_DATA (out));
   } else {
-    ret = gst_pad_alloc_buffer (trans->srcpad,
-        GST_BUFFER_OFFSET_NONE,
-        GST_VIDEO_I420_SIZE (video_box->out_width, video_box->out_height),
-        GST_PAD_CAPS (trans->srcpad), out);
-    if (ret != GST_FLOW_OK)
-      goto done;
-
-    gst_video_box_i420 (video_box,
-        GST_BUFFER_DATA (in), GST_BUFFER_DATA (*out));
+    gst_video_box_i420 (video_box, GST_BUFFER_DATA (in), GST_BUFFER_DATA (out));
   }
 
-  gst_buffer_stamp (*out, in);
-
-done:
-  gst_buffer_unref (in);
-  return ret;
+  return GST_FLOW_OK;
 }
 
 static gboolean

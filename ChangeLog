@@ -1,3 +1,10 @@
+2005-07-15  Wim Taymans  <wim@fluendo.com>
+
+	* gst/level/gstlevel.c: (gst_level_transform):
+	* gst/videobox/gstvideobox.c: (gst_video_box_class_init),
+	(gst_video_box_get_size), (gst_video_box_transform):
+	Port to new base class.
+
 2005-07-14  Wim Taymans  <wim@fluendo.com>
 
 	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_get_type),

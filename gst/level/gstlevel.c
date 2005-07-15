@@ -85,7 +85,7 @@ static void gst_level_get_property (GObject * object, guint prop_id,
 static gboolean gst_level_set_caps (GstBaseTransform * trans, GstCaps * in,
     GstCaps * out);
 static GstFlowReturn gst_level_transform (GstBaseTransform * trans,
-    GstBuffer * in, GstBuffer ** out);
+    GstBuffer * in, GstBuffer * out);
 
 
 static void
@@ -345,7 +345,7 @@ gst_level_message_append_channel (GstMessage * m, gdouble rms, gdouble peak,
 }
 
 static GstFlowReturn
-gst_level_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer ** out)
+gst_level_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
 {
   GstLevel *filter;
   gpointer in_data;
@@ -361,8 +361,7 @@ gst_level_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer ** out)
   in_data = GST_BUFFER_DATA (in);
   num_samples = GST_BUFFER_SIZE (in) / (filter->width / 8);
 
-  g_return_val_if_fail (num_samples % filter->channels == 0,
-      GST_FLOW_UNEXPECTED);
+  g_return_val_if_fail (num_samples % filter->channels == 0, GST_FLOW_ERROR);
 
   for (i = 0; i < filter->channels; ++i) {
     switch (filter->width) {
@@ -445,8 +444,6 @@ gst_level_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer ** out)
     }
     filter->num_samples = 0;
   }
-
-  *out = in;
 
   return GST_FLOW_OK;
 }
