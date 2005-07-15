@@ -1,3 +1,11 @@
+2005-07-15  Andy Wingo  <wingo@pobox.com>
+
+	* gst/elements/gstidentity.c (marshal_VOID__MINIOBJECT): Write our
+	own marshalling function for the handoff signal. Properly type the
+	buffer as a buffer. Fixes some warnings. Should do a more general
+	solution.
+	(gst_identity_class_init): Plug into the right marshaller.
+
 2005-07-15  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-TODO.txt:

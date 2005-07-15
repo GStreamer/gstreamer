@@ -128,6 +128,34 @@ gst_identity_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+/* fixme: do something about this */
+static void
+marshal_VOID__MINIOBJECT (GClosure * closure, GValue * return_value,
+    guint n_param_values, const GValue * param_values, gpointer invocation_hint,
+    gpointer marshal_data)
+{
+  typedef void (*marshalfunc_VOID__MINIOBJECT) (gpointer obj, gpointer arg1,
+      gpointer data2);
+  register marshalfunc_VOID__MINIOBJECT callback;
+  register GCClosure *cc = (GCClosure *) closure;
+  register gpointer data1, data2;
+
+  g_return_if_fail (n_param_values == 2);
+
+  if (G_CCLOSURE_SWAP_DATA (closure)) {
+    data1 = closure->data;
+    data2 = g_value_peek_pointer (param_values + 0);
+  } else {
+    data1 = g_value_peek_pointer (param_values + 0);
+    data2 = closure->data;
+  }
+  callback =
+      (marshalfunc_VOID__MINIOBJECT) (marshal_data ? marshal_data : cc->
+      callback);
+
+  callback (data1, gst_value_get_mini_object (param_values + 1), data2);
+}
+
 static void
 gst_identity_class_init (GstIdentityClass * klass)
 {
@@ -177,7 +205,7 @@ gst_identity_class_init (GstIdentityClass * klass)
   gst_identity_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstIdentityClass, handoff), NULL, NULL,
-      gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_POINTER);
+      marshal_VOID__MINIOBJECT, G_TYPE_NONE, 1, GST_TYPE_BUFFER);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_identity_finalize);
 
