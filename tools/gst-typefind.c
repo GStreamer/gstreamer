@@ -64,9 +64,6 @@ main (int argc, char *argv[])
 
   pipeline = gst_pipeline_new (NULL);
 
-  /* don't hang too long trying to preroll */
-  g_object_set (pipeline, "play-timeout", (gint64) 0.25 * GST_SECOND, NULL);
-
   source = gst_element_factory_make ("filesrc", "source");
   g_assert (GST_IS_ELEMENT (source));
   typefind = gst_element_factory_make ("typefind", "typefind");
