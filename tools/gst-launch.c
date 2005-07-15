@@ -60,9 +60,10 @@ static void sigint_restore (void);
 
 static gint max_iterations = 0;
 static GstElement *pipeline;
-gboolean caught_intr = FALSE;
-gboolean caught_error = FALSE;
-gboolean tags = FALSE;
+static gboolean caught_intr = FALSE;
+static gboolean caught_error = FALSE;
+static gboolean tags = FALSE;
+static gboolean messages = FALSE;
 
 
 #ifndef GST_DISABLE_LOADSAVE
@@ -374,10 +375,21 @@ event_loop (GstElement * pipeline, gboolean blocking)
     message = gst_bus_pop (bus);
     g_return_val_if_fail (message != NULL, TRUE);
 
+    if (messages) {
+      gchar *sstr;
+      const GstStructure *s;
+
+      s = gst_message_get_structure (message);
+      sstr = gst_structure_to_string (s);
+      g_print (_("Got Message from element \"%s\": %s\n"),
+          GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))), sstr);
+      g_free (sstr);
+    }
+
     switch (revent) {
       case GST_MESSAGE_EOS:
         g_print (_
-            ("GOT EOS from element \"%s\".\n"),
+            ("Got EOS from element \"%s\".\n"),
             GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))));
         gst_message_unref (message);
         gst_object_unref (bus);
@@ -465,6 +477,8 @@ main (int argc, char *argv[])
   struct poptOption options[] = {
     {"tags", 't', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &tags, 0,
         N_("Output tags (also known as metadata)"), NULL},
+    {"messages", 'm', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &messages, 0,
+        N_("Output messages"), NULL},
     {"verbose", 'v', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &verbose, 0,
         N_("Output status information and property notifications"), NULL},
     {"exclude", 'X', POPT_ARG_STRING | POPT_ARGFLAG_STRIP, &exclude_args, 0,

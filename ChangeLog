@@ -1,3 +1,10 @@
+2005-07-15  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstmessage.c: (gst_message_new_state_changed):
+	* tools/gst-launch.c: (event_loop), (main):
+	Totally dump messages in -launch with the -m option.
+	Fix message name for State messages,
+
 2005-07-14  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesrc.c: (gst_base_src_loop):

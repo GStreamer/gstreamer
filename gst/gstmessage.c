@@ -305,7 +305,7 @@ gst_message_new_state_changed (GstObject * src, GstElementState old,
 
   message = gst_message_new (GST_MESSAGE_STATE_CHANGED, src);
 
-  s = gst_structure_new ("GstMessageError", "old-state", G_TYPE_INT, (gint) old,
+  s = gst_structure_new ("GstMessageState", "old-state", G_TYPE_INT, (gint) old,
       "new-state", G_TYPE_INT, (gint) new, NULL);
   gst_structure_set_parent_refcount (s, &message->mini_object.refcount);
   message->structure = s;
