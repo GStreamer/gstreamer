@@ -54,6 +54,9 @@ so that the autopluggers can select a plugin more appropriatly
 #GstElement, #GstPlugin, #GstPluginFeature, #GstPadTemplate.
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GstElementFactory ##### -->
 <para>
 

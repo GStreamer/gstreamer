@@ -109,6 +109,7 @@ int                      gst_caps_get_size                              (const G
 GstStructure *           gst_caps_get_structure                         (const GstCaps *caps,
 									 int            index);
 GstCaps * 		 gst_caps_copy_nth                              (const GstCaps * caps, gint nth);
+void			 gst_caps_truncate                              (GstCaps * caps);
 void                     gst_caps_set_simple                            (GstCaps       *caps,
 									 char          *field, ...);
 void                     gst_caps_set_simple_valist                     (GstCaps       *caps,

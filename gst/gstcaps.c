@@ -568,6 +568,27 @@ gst_caps_copy_nth (const GstCaps * caps, gint nth)
   return newcaps;
 }
 
+/** 	 
+ * gst_caps_truncate: 	 
+ * @caps: the @GstCaps to truncate
+ * 	 
+ * Destructively discard all but the first structure from @caps. Useful when
+ * fixating. @caps must be writable.
+ */
+void
+gst_caps_truncate (GstCaps * caps)
+{
+  gint i;
+
+  g_return_if_fail (GST_IS_CAPS (caps));
+  g_return_if_fail (IS_WRITABLE (caps));
+
+  i = caps->structs->len - 1;
+
+  while (i > 0)
+    gst_caps_remove_structure (caps, i--);
+}
+
 /**
  * gst_caps_set_simple:
  * @caps: the @GstCaps to set

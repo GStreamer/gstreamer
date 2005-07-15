@@ -14,6 +14,9 @@ GstBaseTransform
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GstBaseTransform ##### -->
 <para>
 
@@ -28,8 +31,10 @@ GstBaseTransform
 @parent_class: 
 @transform_caps: 
 @set_caps: 
+@get_size: 
 @start: 
 @stop: 
 @event: 
 @transform: 
+@transform_ip: 
 

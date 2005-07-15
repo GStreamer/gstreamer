@@ -14,6 +14,9 @@ Categorized error messages
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### ENUM GstCoreError ##### -->
 <para>
 
@@ -82,6 +85,7 @@ Categorized error messages
 @GST_STREAM_ERROR_DEMUX: 
 @GST_STREAM_ERROR_MUX: 
 @GST_STREAM_ERROR_FORMAT: 
+@GST_STREAM_ERROR_STOPPED: 
 @GST_STREAM_ERROR_NUM_ERRORS: 
 
 <!-- ##### MACRO GST_CORE_ERROR ##### -->
