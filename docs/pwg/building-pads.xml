@@ -148,7 +148,7 @@ gst_my_filter_setcaps (GstPad  *pad,
   if (strcmp (mime, "audio/x-raw-int") != 0) {
     GST_WARNING ("Wrong mimetype %s provided, we only support %s",
 		 mime, "audio/x-raw-int");
-    return GST_PAD_LINK_REFUSED;
+    return FALSE;
   }
 
   /* we're a filter and don't touch the properties of the data.
