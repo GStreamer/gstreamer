@@ -1,5 +1,25 @@
 2005-07-15  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasetransform.c: (gst_base_transform_init),
+	(gst_base_transform_transform_caps), (gst_base_transform_getcaps),
+	(gst_base_transform_configure_caps), (gst_base_transform_setcaps),
+	(gst_base_transform_get_size), (gst_base_transform_buffer_alloc),
+	(gst_base_transform_handle_buffer), (gst_base_transform_getrange),
+	(gst_base_transform_chain), (gst_base_transform_change_state),
+	(gst_base_transform_set_passthrough),
+	(gst_base_transform_is_passthrough):
+	* gst/base/gstbasetransform.h:
+	Make passthrough work using the bufferpools.
+	Changed API a bit, subclasses have to write into a buffer
+	provided by the base class.
+	More debug info in nego functions.
+	
+	* gst/elements/gstidentity.c: (gst_identity_init),
+	(gst_identity_transform):
+	Port to new base class.
+
+2005-07-15  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstmessage.c: (gst_message_new_state_changed):
 	* tools/gst-launch.c: (event_loop), (main):
 	Totally dump messages in -launch with the -m option.

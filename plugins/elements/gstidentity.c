@@ -98,7 +98,7 @@ static void gst_identity_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_identity_event (GstBaseTransform * trans, GstEvent * event);
 static GstFlowReturn gst_identity_transform (GstBaseTransform * trans,
-    GstBuffer * inbuf, GstBuffer ** outbuf);
+    GstBuffer * inbuf, GstBuffer * outbuf);
 static gboolean gst_identity_start (GstBaseTransform * trans);
 static gboolean gst_identity_stop (GstBaseTransform * trans);
 
@@ -190,6 +190,8 @@ gst_identity_class_init (GstIdentityClass * klass)
 static void
 gst_identity_init (GstIdentity * identity)
 {
+  gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (identity), TRUE);
+
   identity->sleep_time = DEFAULT_SLEEP_TIME;
   identity->error_after = DEFAULT_ERROR_AFTER;
   identity->drop_probability = DEFAULT_DROP_PROBABILITY;
@@ -261,7 +263,7 @@ gst_identity_check_perfect (GstIdentity * identity, GstBuffer * buf)
 
 static GstFlowReturn
 gst_identity_transform (GstBaseTransform * trans, GstBuffer * inbuf,
-    GstBuffer ** outbuf)
+    GstBuffer * outbuf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstIdentity *identity = GST_IDENTITY (trans);
@@ -274,7 +276,6 @@ gst_identity_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     if (identity->error_after == 0) {
       GST_ELEMENT_ERROR (identity, CORE, FAILED,
           (_("Failed after iterations as requested.")), (NULL));
-      gst_buffer_unref (inbuf);
       return GST_FLOW_ERROR;
     }
   }
@@ -294,7 +295,6 @@ gst_identity_transform (GstBaseTransform * trans, GstBuffer * inbuf,
           GST_BUFFER_FLAGS (inbuf), inbuf);
       GST_UNLOCK (identity);
       g_object_notify (G_OBJECT (identity), "last-message");
-      gst_buffer_unref (inbuf);
       return GST_FLOW_OK;
     }
   }
@@ -319,19 +319,16 @@ gst_identity_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     g_object_notify (G_OBJECT (identity), "last-message");
   }
 
-  *outbuf = gst_buffer_make_writable (inbuf);
-  /* inbuf is no longer usable */
-
   if (identity->datarate > 0) {
     GstClockTime time = identity->offset * GST_SECOND / identity->datarate;
 
-    GST_BUFFER_TIMESTAMP (*outbuf) = time;
-    GST_BUFFER_DURATION (*outbuf) =
-        GST_BUFFER_SIZE (*outbuf) * GST_SECOND / identity->datarate;
+    GST_BUFFER_TIMESTAMP (outbuf) = time;
+    GST_BUFFER_DURATION (outbuf) =
+        GST_BUFFER_SIZE (outbuf) * GST_SECOND / identity->datarate;
   }
 
   g_signal_emit (G_OBJECT (identity), gst_identity_signals[SIGNAL_HANDOFF], 0,
-      *outbuf);
+      outbuf);
 
   if (identity->sync) {
     GstClock *clock;
@@ -344,7 +341,7 @@ gst_identity_transform (GstBaseTransform * trans, GstBuffer * inbuf,
       /* FIXME: actually unlock this somewhere if the state changes */
       GST_LOCK (identity);
       identity->clock_id = gst_clock_new_single_shot_id (clock,
-          GST_BUFFER_TIMESTAMP (*outbuf) + GST_ELEMENT (identity)->base_time);
+          GST_BUFFER_TIMESTAMP (outbuf) + GST_ELEMENT (identity)->base_time);
       GST_UNLOCK (identity);
       cret = gst_clock_id_wait (identity->clock_id, NULL);
       GST_LOCK (identity);
@@ -358,7 +355,7 @@ gst_identity_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     }
   }
 
-  identity->offset += GST_BUFFER_SIZE (*outbuf);
+  identity->offset += GST_BUFFER_SIZE (outbuf);
 
   if (identity->sleep_time && ret == GST_FLOW_OK)
     g_usleep (identity->sleep_time);

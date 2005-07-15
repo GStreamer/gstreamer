@@ -49,6 +49,12 @@ struct _GstBaseTransform {
   /* source and sink pads */
   GstPad	*sinkpad;
   GstPad	*srcpad;
+
+  gboolean	 passthrough;
+
+  gboolean	 in_place;
+  guint		 out_size;
+  gboolean	 delay_configure;
 };
 
 struct _GstBaseTransformClass {
@@ -65,6 +71,9 @@ struct _GstBaseTransformClass {
   gboolean      (*set_caps)     (GstBaseTransform *trans, GstCaps *incaps,
                                  GstCaps *outcaps);
 
+  /* get the size of the output buffer, -1 on error */
+  guint         (*get_size)     (GstBaseTransform *trans);
+
   /* start and stop processing, ideal for opening/closing the resource */
   gboolean      (*start)        (GstBaseTransform *trans);
   gboolean      (*stop)         (GstBaseTransform *trans);
@@ -73,8 +82,14 @@ struct _GstBaseTransformClass {
 
   /* transform one incoming buffer to one outgoing buffer */
   GstFlowReturn (*transform)    (GstBaseTransform *trans, GstBuffer *inbuf,
-                                 GstBuffer **outbuf);
+                                 GstBuffer *outbuf);
+
+  /* transform a buffer inplace */
+  GstFlowReturn (*transform_ip) (GstBaseTransform *trans, GstBuffer *buf);
 };
+
+void		gst_base_transform_set_passthrough (GstBaseTransform *trans, gboolean passthrough);
+gboolean	gst_base_transform_is_passthrough (GstBaseTransform *trans);
 
 GType gst_base_transform_get_type (void);
 
