@@ -1,5 +1,8 @@
 2005-07-15  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstcaps.h (gst_caps_is_simple): Removed deprecated macro
+	(#157311).
+
 	* gst/elements/gstidentity.c (marshal_VOID__MINIOBJECT): Write our
 	own marshalling function for the handoff signal. Properly type the
 	buffer as a buffer. Fixes some warnings. Should do a more general
