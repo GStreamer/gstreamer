@@ -26,6 +26,7 @@ PAUSED state before commiting the state to PAUSED.
 FLUSHING events have to be handled out of sync with the buffer flow
 and take no part in the preroll procedure.
 
+Events other than EOS do not complete the preroll stage.
 
 
 

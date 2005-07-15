@@ -39,9 +39,29 @@ GstClock absolute time.
 Timestamps
 ----------
 
-Timestamps on buffers are always expressed in stream time. This means that
-all elements that require synchronizing to the clock need to be aware of
-the clock base time in order to know the absolute time of the timestamp.
+The combination of the last DISCONT event and the buffer timestamps 
+express the presentation stream time of the buffer. The stream time
+of a buffer is calculated as follows:
+
+ ST = TS - DT        where: TS = buffer timestamp
+                            DT = DISCONT timestamp
+			    ST = buffer stream time
+
+The reason for not making the buffer times express the stream time directly
+is for the following reasons:
+
+ - demuxers are easier if they can just copy the timestamps as encoded in
+   the file. The initial discont event would contain the lowest timestamp in
+   the stream which makes the stream time start from 0.
+ - pipelines requiring retimestamping of buffers can efficiently adjust
+   the timestamp in the discont events and have all buffers retimestamped
+   automatically.
+ - resync after different kinds of seeks is easier.
+
+If an element wants to synchronize a buffer to the clock it needs to first
+calculate the buffer stream time and then bring the stream time to the
+absolute clock time.
+
 Converting a timestamp (in stream time) to absolute time is performed using
 the following formula:
 

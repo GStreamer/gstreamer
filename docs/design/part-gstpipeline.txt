@@ -65,7 +65,7 @@ the pipeline performs the following actions:
  - record the current state of the pipeline.
  - set the pipeline to paused
  - send the seek event to all sinks
- - update the stream time with the time of the seek
+ - when a FLUSH seek is done, the stream_time is set 0 again.
  - restore old state of the pipeline.
 
 

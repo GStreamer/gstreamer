@@ -4,9 +4,6 @@
   to a duplicate name after adding it is therefore allowed and voids internal
   consistency.
 
-- only emit EOS in PLAYING. Make sure elements reemit the EOS message when going to
-  PLAYING again.
-
 - implement return values from events in addition to the gboolean. This should be
   done by making the event contain a GstStructure with input/output values, similar
   to GstMessage.
@@ -19,3 +16,6 @@
 
 - implement clock selection as explained in part-gstpipeline.txt
 
+- when a pipeline with a live source goes to PAUSED again, a sample is prerolled
+  in the sinks. This sample should be discarded, possibly with a flush event
+  started from the source.

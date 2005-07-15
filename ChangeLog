@@ -1,3 +1,12 @@
+2005-07-15  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-TODO.txt:
+	* docs/design/part-clocks.txt:
+	* docs/design/part-element-sink.txt:
+	* docs/design/part-events.txt:
+	* docs/design/part-gstpipeline.txt:
+	Updated docs, mostly DISCONT related.
+
 2005-07-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/pwg/building-pads.xml:
