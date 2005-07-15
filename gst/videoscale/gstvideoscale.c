@@ -150,7 +150,7 @@ static GstCaps *gst_videoscale_transform_caps (GstBaseTransform * trans,
 static gboolean gst_videoscale_set_caps (GstBaseTransform * trans,
     GstCaps * in, GstCaps * out);
 static GstFlowReturn gst_videoscale_transform (GstBaseTransform * trans,
-    GstBuffer * in, GstBuffer ** out);
+    GstBuffer * in, GstBuffer * out);
 
 static void gst_videoscale_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -450,7 +450,7 @@ gst_videoscale_prepare_images (GstVideoscale * videoscale, GstBuffer * in,
 
 static GstFlowReturn
 gst_videoscale_transform (GstBaseTransform * trans, GstBuffer * in,
-    GstBuffer ** out)
+    GstBuffer * out)
 {
   GstVideoscale *videoscale;
   GstFlowReturn ret;
@@ -473,17 +473,12 @@ gst_videoscale_transform (GstBaseTransform * trans, GstBuffer * in,
     goto done;
   }
 
-  *out = NULL;
-  ret = gst_pad_alloc_buffer (trans->srcpad,
-      GST_BUFFER_OFFSET_NONE, size, GST_PAD_CAPS (trans->srcpad), out);
-  if (ret != GST_FLOW_OK)
-    goto done;
-  gst_buffer_stamp (*out, in);
+  gst_buffer_stamp (out, in);
 
   /* output size could have changed, prepare again */
   gst_videoscale_prepare_sizes (videoscale, &src, &dest, FALSE);
 
-  gst_videoscale_prepare_images (videoscale, in, *out, &src, &src_u, &src_v,
+  gst_videoscale_prepare_images (videoscale, in, out, &src, &src_u, &src_v,
       &dest, &dest_u, &dest_v);
 
   tmpbuf = g_malloc (dest.stride * 2);
@@ -578,11 +573,10 @@ gst_videoscale_transform (GstBaseTransform * trans, GstBuffer * in,
   g_free (tmpbuf);
 
   GST_LOG_OBJECT (videoscale, "pushing buffer of %d bytes",
-      GST_BUFFER_SIZE (*out));
+      GST_BUFFER_SIZE (out));
 
 done:
-  gst_buffer_unref (in);
-  return ret;
+  return GST_FLOW_OK;
 }
 
 static gboolean

@@ -1,3 +1,18 @@
+2005-07-15  Wim Taymans  <wim@fluendo.com>
+
+	* gst/ffmpegcolorspace/Makefile.am:
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_caps_remove_format_info),
+	(gst_ffmpegcsp_transform_caps), (gst_ffmpegcsp_set_caps),
+	(gst_ffmpegcsp_get_type), (gst_ffmpegcsp_class_init),
+	(gst_ffmpegcsp_init), (gst_ffmpegcsp_get_size),
+	(gst_ffmpegcsp_transform_ip), (gst_ffmpegcsp_transform):
+	Ported ffmpegcolorspace to basetransform.
+
+	* gst/videoscale/gstvideoscale.c: (gst_videoscale_transform):
+	* gst/volume/gstvolume.c: (volume_transform):
+	Ported to new API.
+
 2005-07-14  Wim Taymans  <wim@fluendo.com>
 
 	* gst/videotestsrc/Makefile.am:

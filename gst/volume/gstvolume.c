@@ -132,7 +132,7 @@ static void volume_update_volume (const GValue * value, gpointer data);
 static void volume_update_mute (const GValue * value, gpointer data);
 
 static GstFlowReturn volume_transform (GstBaseTransform * base,
-    GstBuffer * inbuf, GstBuffer ** outbuf);
+    GstBuffer * inbuf, GstBuffer * outbuf);
 static void volume_process_float (GstVolume * filter, GstClockTime tstamp,
     gpointer bytes, gint n_bytes);
 static void volume_process_int16 (GstVolume * filter, GstClockTime tstamp,
@@ -329,7 +329,7 @@ volume_typefind (GstVolume * filter, const GstStructure * structure)
 
 static GstFlowReturn
 volume_transform (GstBaseTransform * base, GstBuffer * inbuf,
-    GstBuffer ** outbuf)
+    GstBuffer * outbuf)
 {
   GstVolume *filter = GST_VOLUME (base);
 
@@ -346,10 +346,8 @@ volume_transform (GstBaseTransform * base, GstBuffer * inbuf,
     }
   }
 
-  *outbuf = gst_buffer_make_writable (inbuf);
-
-  filter->process (filter, GST_BUFFER_TIMESTAMP (*outbuf),
-      GST_BUFFER_DATA (*outbuf), GST_BUFFER_SIZE (*outbuf));
+  filter->process (filter, GST_BUFFER_TIMESTAMP (outbuf),
+      GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
 
   return GST_FLOW_OK;
 }
