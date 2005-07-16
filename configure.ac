@@ -303,6 +303,7 @@ GST_PLUGINS_ALL="\
 		alpha \
 		avi \
 		effectv \
+        fdsrc \
 		goom \
 		law \
 		level \
@@ -529,6 +530,7 @@ gst/Makefile
 gst/alpha/Makefile
 gst/avi/Makefile
 gst/effectv/Makefile
+gst/fdsrc/Makefile
 gst/goom/Makefile
 gst/law/Makefile
 gst/level/Makefile
