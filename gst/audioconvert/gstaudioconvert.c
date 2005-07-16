@@ -640,7 +640,7 @@ gst_audio_convert_get_buffer (GstBuffer * buf, guint size)
   } else {
     ret = gst_buffer_new_and_alloc (size);
     g_assert (ret);
-    //gst_buffer_stamp (ret, buf);
+    gst_buffer_stamp (ret, buf);
     GST_LOG ("returning new buffer. data: %p - size: %u", ret->data, ret->size);
     return ret;
   }

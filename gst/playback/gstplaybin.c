@@ -387,6 +387,7 @@ gen_video_element (GstPlayBin * play_bin)
 
   element = gst_bin_new ("vbin");
   identity = gst_element_factory_make ("identity", "id");
+  g_object_set (identity, "silent", TRUE, NULL);
   g_signal_connect (identity, "handoff", G_CALLBACK (handoff), play_bin);
   conv = gst_element_factory_make ("ffmpegcolorspace", "vconv");
   //scale = gst_element_factory_make ("videoscale", "vscale");
