@@ -1,3 +1,10 @@
+2005-07-16  Philippe Khalaf <burger@speedy.org>
+
+	* gst/fdsrc/gstfdsrc.c:
+	* gst/fdsrc/gstfdsrc.h:
+	* gst/fdsrc/Makefile.am:
+	Moved fdsrc 0.9 port from gstreamer/gst/elements to here.
+
 2005-07-16  Wim Taymans  <wim@fluendo.com>
 
 	* ext/mad/gstmad.c: (gst_mad_src_query), (gst_mad_sink_event),
