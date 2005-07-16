@@ -1,3 +1,10 @@
+2005-07-16 Philippe Khalaf <burger@speedy.org>
+	* gst/elements/gstfdsrc.c:
+	* gst/elements/gstfdsrc.h:
+	* gst/elements/gstelements.c:
+	* gst/elements/Makefile.am:
+	Ported fdsrc to 0.9.
+
 2005-07-16  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_handle_object),
