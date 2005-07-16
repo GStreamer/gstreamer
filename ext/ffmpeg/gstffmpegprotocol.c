@@ -56,6 +56,7 @@ gst_ffmpegdata_open (URLContext * h, const char *filename, int flags)
 
   info->set_streamheader = flags & GST_FFMPEG_URL_STREAMHEADER;
   flags &= ~GST_FFMPEG_URL_STREAMHEADER;
+  h->flags &= ~GST_FFMPEG_URL_STREAMHEADER;
   
   /* we don't support R/W together */
   if (flags != URL_RDONLY && flags != URL_WRONLY) {

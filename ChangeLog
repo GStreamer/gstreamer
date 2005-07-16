@@ -1,3 +1,10 @@
+2005-07-16  daniel fischer  <dan@f3c.com>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_open):
+	  Strip off private flags from context value (#310054).
+
 2005-07-11  Luca Ognibene  <luogni@tin.it>
 
 	* ext/ffmpeg/gstffmpegdec.c (struct _GstFFMpegDec) 
