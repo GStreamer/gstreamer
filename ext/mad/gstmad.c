@@ -610,6 +610,19 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
 
       break;
     }
+    case GST_QUERY_CONVERT:
+    {
+      GstFormat src_fmt, dest_fmt;
+      gint64 src_val, dest_val;
+
+      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
+      if (!(res =
+              gst_mad_convert_src (pad, src_fmt, src_val, &dest_fmt,
+                  &dest_val)))
+        goto error;
+      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      break;
+    }
     default:
       res = FALSE;
       break;
@@ -913,80 +926,24 @@ static gboolean
 gst_mad_sink_event (GstPad * pad, GstEvent * event)
 {
   GstMad *mad = GST_MAD (GST_PAD_PARENT (pad));
-  gint64 total;
+  gboolean result;
 
   GST_DEBUG ("handling event %d", GST_EVENT_TYPE (event));
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_DISCONTINUOUS:
-    {
-      gint n = GST_EVENT_DISCONT_OFFSET_LEN (event);
-      gint i;
-
-      mad->total_samples = 0;
-
-      for (i = 0; i < n; i++) {
-        const GstFormat formats[] = { GST_FORMAT_BYTES, GST_FORMAT_TIME, 0 };
-#if 0
-        formats = gst_pad_get_formats (pad);
-#endif
-
-        if (gst_formats_contains (formats, GST_EVENT_DISCONT_OFFSET (event,
-                    i).format)) {
-          gint64 start_value = GST_EVENT_DISCONT_OFFSET (event, i).start_value;
-
-          //gint64 end_value = GST_EVENT_DISCONT_OFFSET (event, i).end_value;
-          gint64 time;
-          GstFormat format;
-          GstEvent *discont;
-
-          /* see how long the input bytes take */
-          if (GST_EVENT_DISCONT_OFFSET (event, i).format != GST_FORMAT_TIME) {
-            format = GST_FORMAT_TIME;
-            if (!gst_mad_convert_sink (pad,
-                    GST_EVENT_DISCONT_OFFSET (event, i).format,
-                    start_value, &format, &time)) {
-              continue;
-            }
-          } else {
-            time = start_value;
-          }
-
-          /* for now, this is the best we can do to get the total number
-           * of samples. This is suboptimal because the incoming event
-           * might contain this information already (although I believe
-           * that this doesn't happen anywhere so far). */
-          format = GST_FORMAT_DEFAULT;
-          if (!gst_mad_convert_src (mad->srcpad,
-                  GST_FORMAT_TIME, time, &format, &total)) {
-            GST_DEBUG ("Failed to convert time to total_samples");
-            continue;
-          }
-          mad->total_samples = total;
-
-          if (GST_PAD_IS_USABLE (mad->srcpad)) {
-            discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
-                time, NULL);
-            gst_pad_push_event (mad->srcpad, discont);
-          }
-          gst_event_unref (event);
-          goto done;
-        }
-      }
-      GST_WARNING ("Failed to retrieve sample position");
       /* this isn't really correct? */
-      gst_pad_event_default (pad, event);
-    done:
+      result = gst_pad_push_event (mad->srcpad, event);
       mad->tempsize = 0;
       /* we don't need to restart when we get here */
       mad->restart = FALSE;
       break;
-    }
     case GST_EVENT_EOS:
       mad->caps_set = FALSE;    /* could be a new stream */
-      gst_pad_event_default (pad, event);
+      result = gst_pad_push_event (mad->srcpad, event);
       break;
     default:
-      gst_pad_event_default (pad, event);
+      result = gst_pad_push_event (mad->srcpad, event);
       break;
   }
   return TRUE;
@@ -1226,13 +1183,13 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn result = GST_FLOW_OK;
 
   mad = GST_MAD (GST_PAD_PARENT (pad));
-  g_return_val_if_fail (GST_IS_MAD (mad), GST_FLOW_ERROR);
 
   /* restarts happen on discontinuities, ie. seek, flush, PAUSED to PLAYING */
   if (gst_mad_check_restart (mad))
     GST_DEBUG ("mad restarted");
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  GST_DEBUG ("mad in timestamp %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
 
   /* handle timestamps */
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
@@ -1252,6 +1209,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
       new_pts = TRUE;
     }
   }
+  GST_DEBUG ("last_ts %" GST_TIME_FORMAT, GST_TIME_ARGS (mad->last_ts));
 
   /* handle data */
   data = GST_BUFFER_DATA (buffer);
@@ -1477,6 +1435,9 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
           goto end;
 
         outdata = (gint16 *) GST_BUFFER_DATA (outbuffer);
+
+        GST_DEBUG ("mad out timestamp %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (time_offset));
 
         GST_BUFFER_TIMESTAMP (outbuffer) = time_offset;
         GST_BUFFER_DURATION (outbuffer) = time_duration;
