@@ -322,6 +322,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   guint64 render_offset, in_offset;
   GstClockTime time, render_time;
   GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (bsink);
+  gint64 diff;
 
   /* can't do anything when we don't have the device */
   if (!gst_ring_buffer_is_acquired (sink->ringbuffer))
@@ -336,7 +337,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   /* samples should be rendered based on their timestamp. All samples
    * arriving before the discont_start are to be trown away */
   /* FIXME, for now we drop the sample completely, we should
-   * in fact clip the sample */
+   * in fact clip the sample. Same for the segment_stop, actually. */
   if (time < bsink->discont_start)
     return GST_FLOW_OK;
 
@@ -347,8 +348,19 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   /* and bring the time to the offset in the buffer */
   render_offset = render_time * sink->ringbuffer->spec.rate / GST_SECOND;
 
-  GST_DEBUG ("render time %" GST_TIME_FORMAT ", render offset %llu",
-      GST_TIME_ARGS (render_time), render_offset);
+  /* roundoff errors in timestamp conversion */
+  diff = ABS ((gint64) render_offset - (gint64) sink->ringbuffer->next_sample);
+
+  GST_DEBUG ("render time %" GST_TIME_FORMAT ", render offset %llu, diff %lld",
+      GST_TIME_ARGS (render_time), render_offset, diff);
+
+  /* FIXME, depends on samplerate... Also the purpose of the OFFSET fields
+   * are to detect gaps and dropouts, we might better use them if they are
+   * valid. */
+  if (diff < 10) {
+    /* just align with previous sample then */
+    render_offset = -1;
+  }
 
   gst_ring_buffer_commit (sink->ringbuffer, render_offset,
       GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));

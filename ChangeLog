@@ -1,5 +1,12 @@
 2005-07-16  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_render):
+	Align samples even if we have roundoff errors in the 
+	timestamp conversion.
+
+2005-07-16  Wim Taymans  <wim@fluendo.com>
+
 	* docs/libs/tmpl/gstringbuffer.sgml:
 	* examples/seeking/seek.c: (make_vorbis_theora_pipeline),
 	(query_rates), (query_positions_elems), (query_positions_pads),
