@@ -785,11 +785,7 @@ gst_base_src_default_negotiate (GstBaseSrc * basesrc)
     caps = thiscaps;
   }
   if (caps) {
-    GstCaps *normalized;
-
-    normalized = gst_caps_make_writable (caps);
-    gst_caps_unref (caps);
-    caps = normalized;
+    caps = gst_caps_make_writable (caps);
     gst_caps_truncate (caps);
 
     gst_pad_fixate_caps (GST_BASE_SRC_PAD (basesrc), caps);

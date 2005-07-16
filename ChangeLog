@@ -1,3 +1,9 @@
+2005-07-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/base/gstbasesrc.c: (gst_base_src_default_negotiate):
+	  Don't unref the caps we passed to gst_caps_make_writable() after
+	  passing them. gst_caps_make_writable() will do that for us.
+
 2005-07-15  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstcaps.h (gst_caps_is_simple): Removed deprecated macro
