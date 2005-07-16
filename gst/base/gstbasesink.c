@@ -466,7 +466,8 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
         /* the discont event is needed to bring the buffer timestamps to the
          * stream time */
         if (!gst_event_discont_get_value (event, GST_FORMAT_TIME,
-                &basesink->discont_start, &basesink->discont_stop)) {
+                (gint64 *) & basesink->discont_start,
+                (gint64 *) & basesink->discont_stop)) {
           basesink->discont_start = 0;
           basesink->discont_stop = 0;
         }

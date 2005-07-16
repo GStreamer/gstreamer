@@ -1,6 +1,12 @@
 2005-07-16  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_handle_object),
+	(gst_base_sink_do_sync):
+	Fix compile error.
+
+2005-07-16  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object),
 	(gst_base_sink_event), (gst_base_sink_get_times),
 	(gst_base_sink_do_sync), (gst_base_sink_change_state):
 	* gst/base/gstbasesink.h:
