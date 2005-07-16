@@ -1727,6 +1727,21 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
   GST_LOG ("Index massaging done");
 }
 
+static gboolean
+gst_avi_demux_send_event (GstAviDemux * avi, GstEvent * event)
+{
+  gint i;
+
+  for (i = 0; i < avi->num_streams; i++) {
+    avi_stream_context *stream = &avi->stream[i];
+
+    gst_event_ref (event);
+    gst_pad_push_event (stream->pad, event);
+  }
+  gst_event_unref (event);
+  return TRUE;
+}
+
 /*
  * Read full AVI headers.
  */
@@ -1896,6 +1911,13 @@ done:
     return GST_FLOW_ERROR;
   }
 
+  /* send initial discont */
+  avi->seek_event = gst_event_new_discontinuous (1.0,
+      GST_FORMAT_TIME, (gint64) 0,
+      (gint64) (((gfloat) avi->stream[0].strh->scale) *
+          avi->stream[0].strh->length /
+          avi->stream[0].strh->rate) * GST_SECOND, NULL);
+
   /* at this point we know all the streams and we can signal the no more
    * pads signal */
   GST_DEBUG_OBJECT (avi, "signaling no more pads");
@@ -1911,18 +1933,12 @@ done:
 static gboolean
 gst_avi_demux_handle_seek (GstAviDemux * avi)
 {
-  guint i;
-
   /* FIXME: if we seek in an openDML file, we will have multiple
    * primary levels. Seeking in between those will cause havoc. */
 
   GST_LOG ("Seeking to entry %d", avi->seek_entry);
 
-  for (i = 0; i < avi->num_streams; i++) {
-    avi_stream_context *stream = &avi->stream[i];
-
-    gst_pad_push_event (stream->pad, gst_event_new_flush (FALSE));
-  }
+  gst_avi_demux_send_event (avi, gst_event_new_flush (FALSE));
 
   GST_STREAM_LOCK (avi->sinkpad);
 
@@ -1933,11 +1949,8 @@ gst_avi_demux_handle_seek (GstAviDemux * avi)
           avi->stream[0].strh->length /
           avi->stream[0].strh->rate) * GST_SECOND, NULL);
 
-  for (i = 0; i < avi->num_streams; i++) {
-    avi_stream_context *stream = &avi->stream[i];
+  gst_avi_demux_send_event (avi, gst_event_new_flush (TRUE));
 
-    gst_pad_push_event (stream->pad, gst_event_new_flush (TRUE));
-  }
   gst_pad_start_task (avi->sinkpad, (GstTaskFunction) gst_avi_demux_loop,
       avi->sinkpad);
 
@@ -1954,15 +1967,9 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
 
   do {
     if (avi->current_entry >= avi->index_size) {
-      gint n;
-
       GST_LOG_OBJECT (avi, "Handled last index entry, setting EOS (%d > %d)",
           avi->current_entry, avi->index_size);
-      for (n = 0; n < avi->num_streams; n++) {
-        if (avi->stream[n].pad)
-          gst_pad_push_event (avi->stream[n].pad,
-              gst_event_new (GST_EVENT_EOS));
-      }
+      gst_avi_demux_send_event (avi, gst_event_new (GST_EVENT_EOS));
       return GST_FLOW_WRONG_STATE;
     } else {
       GstBuffer *buf;
@@ -2115,17 +2122,9 @@ gst_avi_demux_loop (GstPad * pad)
       break;
     case GST_AVI_DEMUX_MOVI:
       if (avi->seek_event) {
-        gint i;
-
-        for (i = 0; i < avi->num_streams; i++) {
-          avi_stream_context *stream = &avi->stream[i];
-
-          gst_pad_push_event (stream->pad, gst_event_ref (avi->seek_event));
-        }
-        gst_event_unref (avi->seek_event);
+        gst_avi_demux_send_event (avi, avi->seek_event);
         avi->seek_event = NULL;
       }
-
       if ((res = gst_avi_demux_stream_data (avi)) != GST_FLOW_OK)
         goto pause;
       break;
