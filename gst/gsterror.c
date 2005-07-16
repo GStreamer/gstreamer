@@ -58,25 +58,26 @@ _gst_core_errors_init (void)
       N_("GStreamer developers were too lazy to assign an error code "
           "to this error.  Please file a bug."));
   TABLE (t, CORE, NOT_IMPLEMENTED,
-      N_("Internal GStreamer error: code not implemented.  File a bug."));
+      N_
+      ("Internal GStreamer error: code not implemented.  Please file a bug."));
   TABLE (t, CORE, STATE_CHANGE,
-      N_("Internal GStreamer error: state change failed.  File a bug."));
+      N_("Internal GStreamer error: state change failed.  Please file a bug."));
   TABLE (t, CORE, PAD,
-      N_("Internal GStreamer error: pad problem.  File a bug."));
+      N_("Internal GStreamer error: pad problem.  Please file a bug."));
   TABLE (t, CORE, THREAD,
-      N_("Internal GStreamer error: thread problem.  File a bug."));
+      N_("Internal GStreamer error: thread problem.  Please file a bug."));
   TABLE (t, CORE, SCHEDULER,
-      N_("Internal GStreamer error: scheduler problem.  File a bug."));
+      N_("Internal GStreamer error: scheduler problem.  Please file a bug."));
   TABLE (t, CORE, NEGOTIATION,
-      N_("Internal GStreamer error: negotiation problem.  File a bug."));
+      N_("Internal GStreamer error: negotiation problem.  Please file a bug."));
   TABLE (t, CORE, EVENT,
-      N_("Internal GStreamer error: event problem.  File a bug."));
+      N_("Internal GStreamer error: event problem.  Please file a bug."));
   TABLE (t, CORE, SEEK,
-      N_("Internal GStreamer error: seek problem.  File a bug."));
+      N_("Internal GStreamer error: seek problem.  Please file a bug."));
   TABLE (t, CORE, CAPS,
-      N_("Internal GStreamer error: caps problem.  File a bug."));
+      N_("Internal GStreamer error: caps problem.  Please file a bug."));
   TABLE (t, CORE, TAG,
-      N_("Internal GStreamer error: tag problem.  File a bug."));
+      N_("Internal GStreamer error: tag problem.  Please file a bug."));
 
   return t;
 }

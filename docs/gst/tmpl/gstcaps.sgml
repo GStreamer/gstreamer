@@ -85,14 +85,6 @@ exactly one.
 @caps: the #GstCaps instance to check
 
 
-<!-- ##### MACRO gst_caps_is_simple ##### -->
-<para>
-
-</para>
-
-@caps: 
-
-
 <!-- ##### MACRO GST_DEBUG_CAPS ##### -->
 <para>
 Convinience macro for prining out the contents of caps with GST_DEBUG().
