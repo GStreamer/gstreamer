@@ -455,16 +455,37 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
 
   have_event = GST_IS_EVENT (obj);
   if (have_event) {
+    GstEvent *event = GST_EVENT (obj);
+
     switch (GST_EVENT_TYPE (obj)) {
       case GST_EVENT_EOS:
         basesink->preroll_queued++;
         basesink->eos = TRUE;
+        break;
+      case GST_EVENT_DISCONTINUOUS:
+        /* the discont event is needed to bring the buffer timestamps to the
+         * stream time */
+        if (!gst_event_discont_get_value (event, GST_FORMAT_TIME,
+                &basesink->discont_start, &basesink->discont_stop)) {
+          basesink->discont_start = 0;
+          basesink->discont_stop = 0;
+        }
+        basesink->have_discont = TRUE;
+
+        GST_DEBUG ("received DISCONT %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
+            GST_TIME_ARGS (basesink->discont_start),
+            GST_TIME_ARGS (basesink->discont_stop));
         break;
       default:
         break;
     }
     basesink->events_queued++;
   } else {
+    if (!basesink->have_discont) {
+      GST_ELEMENT_ERROR (basesink, STREAM, STOPPED,
+          ("received buffer without a discont"),
+          ("received buffer without a discont"));
+    }
     basesink->preroll_queued++;
     basesink->buffers_queued++;
   }
@@ -641,9 +662,6 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       GstFlowReturn ret;
 
       GST_STREAM_LOCK (pad);
-      if (basesink->clock) {
-        //gint64 value = GST_EVENT_DISCONT_OFFSET (event, 0).value;
-      }
       ret =
           gst_base_sink_handle_object (basesink, pad, GST_MINI_OBJECT (event));
       GST_STREAM_UNLOCK (pad);
@@ -693,7 +711,7 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
 }
 
 /* default implementation to calculate the start and end
- * timestamps on a buffer, subclasses cna override
+ * timestamps on a buffer, subclasses can override
  */
 static void
 gst_base_sink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
@@ -703,6 +721,10 @@ gst_base_sink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+    /* bring timestamp to stream time using last
+     * discont offset. */
+    timestamp -= basesink->discont_start;
+    /* get duration to calculate end time */
     duration = GST_BUFFER_DURATION (buffer);
     if (GST_CLOCK_TIME_IS_VALID (duration)) {
       *end = timestamp + duration;
@@ -739,11 +761,17 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
 
     if (GST_CLOCK_TIME_IS_VALID (start)) {
       GstClockReturn ret;
+      GstClockTime base_time;
 
-      /* save clock id so that we can unlock it if needed */
       GST_LOCK (basesink);
+      base_time = GST_ELEMENT (basesink)->base_time;
+
+      GST_LOG_OBJECT (basesink,
+          "waiting for clock, base time %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (base_time));
+      /* save clock id so that we can unlock it if needed */
       basesink->clock_id = gst_clock_new_single_shot_id (basesink->clock,
-          start + GST_ELEMENT (basesink)->base_time);
+          start + base_time);
       basesink->end_time = end;
       GST_UNLOCK (basesink);
 
@@ -995,6 +1023,9 @@ gst_base_sink_change_state (GstElement * element)
       basesink->have_preroll = FALSE;
       basesink->need_preroll = TRUE;
       GST_PREROLL_UNLOCK (basesink->sinkpad);
+      basesink->have_discont = FALSE;
+      basesink->discont_start = 0;
+      basesink->discont_stop = 0;
       ret = GST_STATE_ASYNC;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:

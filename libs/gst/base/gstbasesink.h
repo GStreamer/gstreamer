@@ -66,6 +66,10 @@ struct _GstBaseSink {
   GstClockID     clock_id;
   GstClockTime   end_time;
 
+  gboolean	 have_discont;
+  GstClockTime	 discont_start;
+  GstClockTime	 discont_stop;
+
   gboolean       eos;
   gboolean       need_preroll;
   gboolean       have_preroll;

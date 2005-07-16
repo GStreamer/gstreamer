@@ -1,3 +1,40 @@
+2005-07-16  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object),
+	(gst_base_sink_event), (gst_base_sink_get_times),
+	(gst_base_sink_do_sync), (gst_base_sink_change_state):
+	* gst/base/gstbasesink.h:
+	Store and use discont values when syncing buffers as described
+	in design docs.
+	
+	* gst/base/gstbasesrc.c: (gst_base_src_send_discont),
+	(gst_base_src_do_seek), (gst_base_src_loop), (gst_base_src_start),
+	(gst_base_src_activate_push):
+	Push discont event when starting.
+
+	* gst/elements/gstidentity.c: (gst_identity_transform):
+	Small cleanups.
+
+	* gst/gstbin.c: (gst_bin_change_state):
+	Small cleanups in base_time  distribution.
+
+	* gst/gstelement.c: (gst_element_set_base_time),
+	(gst_element_get_base_time), (gst_element_change_state):
+	* gst/gstelement.h:
+	Added methods for the base_time of the element.
+	Some MT fixes.
+
+	* gst/gstpipeline.c: (gst_pipeline_send_event),
+	(gst_pipeline_change_state), (gst_pipeline_set_new_stream_time),
+	(gst_pipeline_get_last_stream_time):
+	* gst/gstpipeline.h:
+	MT fixes.
+	Handle seeking as described in design doc, remove stream_time
+	hack.
+	Cleanups clock and stream_time selection code. Added accessors
+	for the stream_time.
+	
+
 2005-07-16  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gsterror.c (_gst_core_errors_init): Use the magic word..

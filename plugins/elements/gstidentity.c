@@ -360,27 +360,28 @@ gst_identity_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
   if (identity->sync) {
     GstClock *clock;
-    GstClockReturn cret;
 
-    clock = GST_ELEMENT (identity)->clock;
+    GST_LOCK (identity);
+    if ((clock = GST_ELEMENT (identity)->clock)) {
+      GstClockReturn cret;
 
-    if (clock) {
       /* save id if we need to unlock */
-      /* FIXME: actually unlock this somewhere if the state changes */
-      GST_LOCK (identity);
+      /* FIXME: actually unlock this somewhere in the state changes */
       identity->clock_id = gst_clock_new_single_shot_id (clock,
           GST_BUFFER_TIMESTAMP (outbuf) + GST_ELEMENT (identity)->base_time);
       GST_UNLOCK (identity);
+
       cret = gst_clock_id_wait (identity->clock_id, NULL);
+
       GST_LOCK (identity);
       if (identity->clock_id) {
         gst_clock_id_unref (identity->clock_id);
         identity->clock_id = NULL;
       }
-      GST_UNLOCK (identity);
       if (cret == GST_CLOCK_UNSCHEDULED)
         ret = GST_FLOW_UNEXPECTED;
     }
+    GST_UNLOCK (identity);
   }
 
   identity->offset += GST_BUFFER_SIZE (outbuf);

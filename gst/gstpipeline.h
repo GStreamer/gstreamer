@@ -70,6 +70,9 @@ GstElement*	gst_pipeline_new		(const gchar *name);
 GstScheduler*	gst_pipeline_get_scheduler	(GstPipeline *pipeline);
 GstBus*		gst_pipeline_get_bus		(GstPipeline *pipeline);
 
+void		gst_pipeline_set_new_stream_time  (GstPipeline *pipeline, GstClockTime time);
+GstClockTime	gst_pipeline_get_last_stream_time (GstPipeline *pipeline);
+
 void            gst_pipeline_use_clock          (GstPipeline *pipeline, GstClock *clock);
 void            gst_pipeline_set_clock          (GstPipeline *pipeline, GstClock *clock);
 GstClock*       gst_pipeline_get_clock          (GstPipeline *pipeline);

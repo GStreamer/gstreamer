@@ -281,6 +281,8 @@ gboolean		gst_element_requires_clock	(GstElement *element);
 gboolean		gst_element_provides_clock	(GstElement *element);
 GstClock*		gst_element_get_clock		(GstElement *element);
 void			gst_element_set_clock		(GstElement *element, GstClock *clock);
+void			gst_element_set_base_time	(GstElement *element, GstClockTime time);
+GstClockTime		gst_element_get_base_time	(GstElement *element);
 
 /* indexes */
 gboolean		gst_element_is_indexable	(GstElement *element);

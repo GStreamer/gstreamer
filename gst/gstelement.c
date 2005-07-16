@@ -362,6 +362,52 @@ gst_element_get_clock (GstElement * element)
   return NULL;
 }
 
+/**
+ * gst_element_set_base_time:
+ * @element: a #GstElement.
+ * @time: the base time to set.
+ *
+ * Set the base time of an element. See @gst_element_get_base_time().
+ *
+ * MT safe.
+ */
+void
+gst_element_set_base_time (GstElement * element, GstClockTime time)
+{
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  GST_LOCK (element);
+  element->base_time = time;
+  GST_UNLOCK (element);
+}
+
+/**
+ * gst_element_get_base_time:
+ * @element: a #GstElement.
+ *
+ * Returns the base time of the element. The base time is the
+ * absolute time of the clock when this element was last put to
+ * PLAYING. Substracting the base time from the clock time gives
+ * the stream time of the element.
+ *
+ * Returns: the base time of the element.
+ *
+ * MT safe.
+ */
+GstClockTime
+gst_element_get_base_time (GstElement * element)
+{
+  GstClockTime result;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), GST_CLOCK_TIME_NONE);
+
+  GST_LOCK (element);
+  result = element->base_time;
+  GST_UNLOCK (element);
+
+  return result;
+}
+
 #ifndef GST_DISABLE_INDEX
 /**
  * gst_element_is_indexable:
@@ -1953,6 +1999,7 @@ gst_element_change_state (GstElement * element)
       }
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
+      /* FIXME really needed? */
       GST_LOCK (element);
       if (GST_ELEMENT_MANAGER (element)) {
         element->base_time =
@@ -1969,7 +2016,9 @@ gst_element_change_state (GstElement * element)
       if (!gst_element_pads_activate (element, FALSE)) {
         result = GST_STATE_FAILURE;
       } else {
+        GST_LOCK (element);
         element->base_time = 0;
+        GST_UNLOCK (element);
       }
       break;
     default:

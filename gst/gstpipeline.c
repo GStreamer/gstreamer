@@ -229,7 +229,6 @@ gst_pipeline_send_event (GstElement * element, GstEvent * event)
   GstElementState state;
   GstEventType event_type = GST_EVENT_TYPE (event);
   GTimeVal timeout;
-  gint64 offset = -1;
 
   /* need to call _get_state() since a bin state is only updated
    * with this call. */
@@ -239,12 +238,6 @@ gst_pipeline_send_event (GstElement * element, GstEvent * event)
   was_playing = state == GST_STATE_PLAYING;
 
   if (event_type == GST_EVENT_SEEK) {
-    if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_TIME) {
-      GST_WARNING ("Pipelines only accept seek events with TIME format");
-      g_warning ("Pipelines only accept seek events with TIME format");
-      return FALSE;
-    }
-    offset = GST_EVENT_SEEK_OFFSET (event);
     if (was_playing)
       gst_element_set_state (element, GST_STATE_PAUSED);
   }
@@ -253,7 +246,7 @@ gst_pipeline_send_event (GstElement * element, GstEvent * event)
 
   if (res && event_type == GST_EVENT_SEEK) {
     /* need to set the stream time to the seek time */
-    GST_PIPELINE (element)->stream_time = offset;
+    gst_pipeline_set_new_stream_time (GST_PIPELINE (element), 0);
     if (was_playing)
       gst_element_set_state (element, GST_STATE_PLAYING);
   }
@@ -284,35 +277,42 @@ gst_pipeline_change_state (GstElement * element)
   GstElementStateReturn result = GST_STATE_SUCCESS;
   GstPipeline *pipeline = GST_PIPELINE (element);
   gint transition = GST_STATE_TRANSITION (element);
+  GstClock *clock;
 
   switch (transition) {
     case GST_STATE_NULL_TO_READY:
+      GST_LOCK (element);
       if (element->bus)
         gst_bus_set_flushing (element->bus, FALSE);
+      GST_UNLOCK (element);
       gst_scheduler_setup (GST_ELEMENT_SCHEDULER (pipeline));
       break;
     case GST_STATE_READY_TO_PAUSED:
-    {
-      GstClock *clock;
-
-      clock = gst_element_get_clock (element);
-      gst_element_set_clock (element, clock);
-      gst_object_unref (clock);
       break;
-    }
     case GST_STATE_PAUSED_TO_PLAYING:
-      if (element->clock) {
-        GstClockTime start_time = gst_clock_get_time (element->clock);
+      /* when going to playing, select a clock */
+      if ((clock = gst_element_get_clock (element))) {
+        GstClockTime start_time;
 
+        /* distribute the clock */
+        gst_element_set_clock (element, clock);
+
+        /* get start time */
+        start_time = gst_clock_get_time (clock);
+        gst_object_unref (clock);
+
+        GST_LOCK (element);
         element->base_time = start_time -
             pipeline->stream_time + pipeline->delay;
         GST_DEBUG ("stream_time=%" GST_TIME_FORMAT ", start_time=%"
             GST_TIME_FORMAT ", base time %" GST_TIME_FORMAT,
             GST_TIME_ARGS (pipeline->stream_time),
             GST_TIME_ARGS (start_time), GST_TIME_ARGS (element->base_time));
+        GST_UNLOCK (element);
       } else {
-        element->base_time = 0;
+        GST_UNLOCK (element);
         GST_DEBUG ("no clock, using base time of 0");
+        gst_element_set_base_time (element, 0);
       }
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
@@ -325,28 +325,40 @@ gst_pipeline_change_state (GstElement * element)
 
   switch (transition) {
     case GST_STATE_READY_TO_PAUSED:
-      pipeline->stream_time = 0;
+      gst_pipeline_set_new_stream_time (pipeline, 0);
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
-      if (element->clock) {
+      GST_LOCK (element);
+      if ((clock = element->clock)) {
         GstClockTime now;
 
-        now = gst_clock_get_time (element->clock);
+        gst_object_ref (clock);
+        GST_UNLOCK (element);
+
+        /* calculate the time when we stopped */
+        now = gst_clock_get_time (clock);
+        gst_object_unref (clock);
+
+        GST_LOCK (element);
+        /* store the current stream time */
         pipeline->stream_time = now - element->base_time;
         GST_DEBUG ("stream_time=%" GST_TIME_FORMAT ", now=%" GST_TIME_FORMAT
             ", base time %" GST_TIME_FORMAT,
             GST_TIME_ARGS (pipeline->stream_time),
             GST_TIME_ARGS (now), GST_TIME_ARGS (element->base_time));
       }
+      GST_UNLOCK (element);
       break;
     case GST_STATE_PAUSED_TO_READY:
       break;
     case GST_STATE_READY_TO_NULL:
+      GST_LOCK (element);
       if (element->bus) {
         gst_bus_set_flushing (element->bus, TRUE);
       }
+      GST_UNLOCK (element);
       break;
   }
 
@@ -410,6 +422,55 @@ GstBus *
 gst_pipeline_get_bus (GstPipeline * pipeline)
 {
   return gst_element_get_bus (GST_ELEMENT (pipeline));
+}
+
+/**
+ * gst_pipeline_set_new_stream_time:
+ * @pipeline: the pipeline
+ *
+ * Set the new stream time of the pipeline. The stream time is used to
+ * set the base time on the elements (see @gst_element_set_base_time())
+ * in the PAUSED->PLAYING state transition.
+ *
+ * MT safe.
+ */
+void
+gst_pipeline_set_new_stream_time (GstPipeline * pipeline, GstClockTime time)
+{
+  g_return_if_fail (GST_IS_PIPELINE (pipeline));
+
+  GST_LOCK (pipeline);
+  pipeline->stream_time = time;
+  GST_DEBUG ("%s: set new stream_time to %" GST_TIME_FORMAT,
+      GST_ELEMENT_NAME (pipeline), time);
+  GST_UNLOCK (pipeline);
+}
+
+/**
+ * gst_pipeline_get_last_stream_time:
+ * @pipeline: the pipeline
+ *
+ * Gets the last stream time of the pipeline. If the pipeline is PLAYING,
+ * the returned time is the stream time used to configure the elements
+ * in the PAUSED->PLAYING state. If the pipeline is PAUSED, the returned
+ * time is the stream time when the pipeline was paused.
+ *
+ * Returns: a GstClockTime
+ *
+ * MT safe.
+ */
+GstClockTime
+gst_pipeline_get_last_stream_time (GstPipeline * pipeline)
+{
+  GstClockTime result;
+
+  g_return_val_if_fail (GST_IS_PIPELINE (pipeline), GST_CLOCK_TIME_NONE);
+
+  GST_LOCK (pipeline);
+  result = pipeline->stream_time;
+  GST_UNLOCK (pipeline);
+
+  return result;
 }
 
 static GstClock *

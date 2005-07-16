@@ -1135,6 +1135,7 @@ gst_bin_change_state (GstElement * element)
   GQueue *elem_queue;           /* list of elements waiting for a state change */
   GQueue *semi_queue;           /* list of elements with no connected srcpads */
   GQueue *temp;                 /* queue of leftovers */
+  GstClockTime base_time;
 
   bin = GST_BIN (element);
 
@@ -1167,6 +1168,9 @@ gst_bin_change_state (GstElement * element)
   GST_LOCK (bin);
 
 restart:
+  /* take base time */
+  base_time = element->base_time;
+
   /* make sure queues are empty, they could be filled when 
    * restarting. */
   clear_queue (elem_queue, TRUE);
@@ -1286,7 +1290,9 @@ restart:
       goto next_element;
 
     /* set base time on element */
-    qelement->base_time = element->base_time;
+    gst_element_set_base_time (qelement, base_time);
+
+    /* then change state */
     ret = gst_element_set_state (qelement, pending);
 
     /* the set state could have cause elements to be added/removed,

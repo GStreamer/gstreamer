@@ -357,6 +357,18 @@ gst_base_src_get_event_mask (GstPad * pad)
 #endif
 
 static gboolean
+gst_base_src_send_discont (GstBaseSrc * src)
+{
+  GstEvent *event;
+
+  event = gst_event_new_discontinuous (1.0,
+      GST_FORMAT_BYTES,
+      (gint64) src->segment_start, (gint64) src->segment_end, NULL);
+
+  return gst_pad_push_event (src->srcpad, event);
+}
+
+static gboolean
 gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
 {
   GstFormat format;
@@ -420,15 +432,7 @@ gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
   gst_pad_push_event (src->srcpad, gst_event_new_flush (TRUE));
 
   /* now send discont */
-  {
-    GstEvent *event;
-
-    event = gst_event_new_discontinuous (1.0,
-        GST_FORMAT_BYTES,
-        (gint64) src->segment_start, (gint64) src->segment_end, NULL);
-
-    gst_pad_push_event (src->srcpad, event);
-  }
+  gst_base_src_send_discont (src);
 
   /* and restart the task */
   gst_pad_start_task (src->srcpad, (GstTaskFunction) gst_base_src_loop,
@@ -864,7 +868,7 @@ gst_base_src_start (GstBaseSrc * basesrc)
   GST_DEBUG ("size %d %lld", result, basesrc->size);
 
   /* we always run to the end */
-  basesrc->segment_end = -1;
+  basesrc->segment_end = basesrc->size;
 
   /* check if we can seek, updates ->seekable */
   gst_base_src_is_seekable (basesrc);
@@ -951,6 +955,9 @@ gst_base_src_activate_push (GstPad * pad, gboolean active)
   if (active) {
     if (!gst_base_src_start (basesrc))
       goto error_start;
+
+    /* now send discont */
+    gst_base_src_send_discont (basesrc);
 
     return gst_pad_start_task (pad, (GstTaskFunction) gst_base_src_loop, pad);
   } else {
