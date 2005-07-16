@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2005 Philippe Khalaf <burger@speedy.org>
  *
  * gstfdsrc.c: 
  *
@@ -73,7 +74,7 @@ static guint gst_fdsrc_signals[LAST_SIGNAL] = { 0 };
 #define _do_init(bla) \
     GST_DEBUG_CATEGORY_INIT (gst_fdsrc_debug, "fdsrc", 0, "fdsrc element");
 
-GST_BOILERPLATE_FULL (GstFdSrc, gst_fdsrc, GstElement, GST_TYPE_ELEMENT,
+GST_BOILERPLATE_FULL (GstFdSrc, gst_fdsrc, GstElement, GST_TYPE_PUSH_SRC,
     _do_init);
 
 static void gst_fdsrc_set_property (GObject * object, guint prop_id,
@@ -83,8 +84,7 @@ static void gst_fdsrc_get_property (GObject * object, guint prop_id,
 
 static GstElementStateReturn gst_fdsrc_change_state (GstElement * element);
 
-static GstData *gst_fdsrc_get (GstPad * pad);
-
+static GstFlowReturn gst_fdsrc_create (GstPushSrc * psrc, GstBuffer ** outbuf);
 
 static void
 gst_fdsrc_base_init (gpointer g_class)
@@ -99,9 +99,15 @@ static void
 gst_fdsrc_class_init (GstFdSrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstBaseSrcClass *gstbasesrc_class;
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  GstPushSrcClass *gstpush_src_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  gstbasesrc_class = (GstBaseSrcClass *) klass;
+  gstpush_src_class = (GstPushSrcClass *) klass;
+
+  parent_class = g_type_class_ref (GST_TYPE_PUSH_SRC);
 
   gobject_class->set_property = gst_fdsrc_set_property;
   gobject_class->get_property = gst_fdsrc_get_property;
@@ -123,17 +129,16 @@ gst_fdsrc_class_init (GstFdSrcClass * klass)
       g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   gstelement_class->change_state = gst_fdsrc_change_state;
+
+  gstpush_src_class->create = gst_fdsrc_create;
+
 }
 
 static void
 gst_fdsrc_init (GstFdSrc * fdsrc)
 {
-  fdsrc->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
-      "src");
-
-  gst_pad_set_get_function (fdsrc->srcpad, gst_fdsrc_get);
-  gst_element_add_pad (GST_ELEMENT (fdsrc), fdsrc->srcpad);
+  // TODO set live only if it's actually a live source
+  gst_base_src_set_live (GST_BASE_SRC (fdsrc), TRUE);
 
   fdsrc->fd = 0;
   fdsrc->curoffset = 0;
@@ -220,8 +225,8 @@ gst_fdsrc_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstData *
-gst_fdsrc_get (GstPad * pad)
+static GstFlowReturn
+gst_fdsrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
   GstFdSrc *src;
   GstBuffer *buf;
@@ -233,7 +238,7 @@ gst_fdsrc_get (GstPad * pad)
   gint retval;
 #endif
 
-  src = GST_FDSRC (gst_pad_get_parent (pad));
+  src = GST_FDSRC (psrc);
 
   /* create the buffer */
   buf = gst_buffer_new_and_alloc (src->blocksize);
@@ -254,12 +259,10 @@ gst_fdsrc_get (GstPad * pad)
   if (retval == -1) {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("select on file descriptor: %s.", g_strerror (errno)));
-    gst_element_set_eos (GST_ELEMENT (src));
-    return GST_DATA (gst_event_new (GST_EVENT_EOS));
+    return GST_FLOW_ERROR;
   } else if (retval == 0) {
     g_signal_emit (G_OBJECT (src), gst_fdsrc_signals[SIGNAL_TIMEOUT], 0);
-    gst_element_set_eos (GST_ELEMENT (src));
-    return GST_DATA (gst_event_new (GST_EVENT_EOS));
+    return GST_FLOW_ERROR;
   }
 #endif
 
@@ -274,14 +277,13 @@ gst_fdsrc_get (GstPad * pad)
     src->curoffset += readbytes;
 
     /* we're done, return the buffer */
-    return GST_DATA (buf);
+    *outbuf = buf;
+    return GST_FLOW_OK;
   } else if (readbytes == 0) {
-    gst_element_set_eos (GST_ELEMENT (src));
-    return GST_DATA (gst_event_new (GST_EVENT_EOS));
+    return GST_FLOW_ERROR;
   } else {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("read on file descriptor: %s.", g_strerror (errno)));
-    gst_element_set_eos (GST_ELEMENT (src));
-    return GST_DATA (gst_event_new (GST_EVENT_EOS));
+    return GST_FLOW_ERROR;
   }
 }

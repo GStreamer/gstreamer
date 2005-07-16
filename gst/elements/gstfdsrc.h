@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2005 Philippe Khalaf <burger@speedy.org>
  *
  * gstfdsrc.h: 
  *
@@ -25,6 +26,7 @@
 #define __GST_FDSRC_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstpushsrc.h>
 
 G_BEGIN_DECLS
 
@@ -45,9 +47,7 @@ typedef struct _GstFdSrc GstFdSrc;
 typedef struct _GstFdSrcClass GstFdSrcClass;
 
 struct _GstFdSrc {
-  GstElement element;
-  /* pads */
-  GstPad *srcpad;
+  GstPushSrc element;
 
   /* fd */
   gint fd;
@@ -60,7 +60,7 @@ struct _GstFdSrc {
 };
 
 struct _GstFdSrcClass {
-  GstElementClass parent_class;
+  GstPushSrcClass parent_class;
 
   /* signals */
   void (*timeout) (GstElement *element);
