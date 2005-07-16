@@ -1,3 +1,12 @@
+2005-07-16  Wim Taymans  <wim@fluendo.com>
+
+	* check/gst/gstbin.c: (GST_START_TEST):
+	Make elements silent as the deep_notify refs the
+	parent, which might make the test fail.
+
+	* gst/gstghostpad.c: (gst_ghost_pad_do_activate_push):
+	Don't hold the lock for too long.
+
 2005-07-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gstbasesrc.c: (gst_base_src_default_negotiate):

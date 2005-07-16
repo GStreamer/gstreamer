@@ -515,13 +515,14 @@ gst_ghost_pad_do_activate_push (GstPad * pad, gboolean active)
   ret = gst_proxy_pad_do_activatepush (pad, active);
 
   GST_LOCK (pad);
-
-  internal = GST_GHOST_PAD (pad)->internal;
-
-  if (internal)
-    ret &= gst_pad_activate_push (internal, active);
-
+  if ((internal = GST_GHOST_PAD (pad)->internal))
+    gst_object_ref (internal);
   GST_UNLOCK (pad);
+
+  if (internal) {
+    ret &= gst_pad_activate_push (internal, active);
+    gst_object_unref (internal);
+  }
 
   return ret;
 }

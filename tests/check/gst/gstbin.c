@@ -205,9 +205,15 @@ GST_START_TEST (test_message_state_changed_children)
 
   src = gst_element_factory_make ("fakesrc", NULL);
   fail_if (src == NULL, "Could not create fakesrc");
+  /* need to silence the element as the deep_notify refcounts the
+   * parents while running */
+  g_object_set (G_OBJECT (src), "silent", TRUE, NULL);
   gst_bin_add (GST_BIN (pipeline), src);
 
   sink = gst_element_factory_make ("fakesink", NULL);
+  /* need to silence the element as the deep_notify refcounts the
+   * parents while running */
+  g_object_set (G_OBJECT (sink), "silent", TRUE, NULL);
   fail_if (sink == NULL, "Could not create fakesink");
   gst_bin_add (GST_BIN (pipeline), sink);
 
