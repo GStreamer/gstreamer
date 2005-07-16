@@ -1,3 +1,14 @@
+2005-07-16  Wim Taymans  <wim@fluendo.com>
+
+	* ext/mad/gstmad.c: (gst_mad_src_query), (gst_mad_sink_event),
+	(gst_mad_chain):
+	Add convert function for proper timestamp calculations.
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_send_event),
+	(gst_avi_demux_stream_header), (gst_avi_demux_handle_seek),
+	(gst_avi_demux_process_next_entry), (gst_avi_demux_loop):
+	Send out initial discont.
+
 2005-07-15  Wim Taymans  <wim@fluendo.com>
 
 	* gst/level/gstlevel.c: (gst_level_transform):
