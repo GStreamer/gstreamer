@@ -171,6 +171,8 @@ gst_vorbis_dec_init (GstVorbisDec * dec)
   gst_pad_set_query_type_function (dec->srcpad, vorbis_get_query_types);
   gst_pad_set_query_function (dec->srcpad, vorbis_dec_src_query);
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
+
+  dec->queued = NULL;
 }
 
 static gboolean
@@ -366,90 +368,33 @@ vorbis_dec_src_event (GstPad * pad, GstEvent * event)
 static gboolean
 vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
 {
-  gint64 start_value, end_value, time, bytes;
   gboolean ret = TRUE;
   GstVorbisDec *dec;
 
-  dec = GST_VORBIS_DEC (GST_PAD_PARENT (pad));
+  dec = GST_VORBIS_DEC (gst_pad_get_parent (pad));
 
   GST_LOG_OBJECT (dec, "handling event");
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      GST_STREAM_LOCK (pad);
+      ret = gst_pad_push_event (dec->srcpad, event);
+      GST_STREAM_UNLOCK (pad);
+      break;
     case GST_EVENT_DISCONTINUOUS:
       GST_STREAM_LOCK (pad);
-      if (gst_event_discont_get_value (event, GST_FORMAT_DEFAULT,
-              (gint64 *) & start_value, &end_value)) {
-        dec->granulepos = start_value;
-        GST_DEBUG_OBJECT (dec,
-            "setting granuleposition to %" G_GUINT64_FORMAT " after discont",
-            start_value);
-      } else {
-        if (gst_event_discont_get_value (event, GST_FORMAT_TIME,
-                (gint64 *) & start_value, &end_value)) {
-          dec->granulepos = start_value * dec->vi.rate / GST_SECOND;
-          GST_DEBUG_OBJECT (dec,
-              "setting granuleposition to %" G_GUINT64_FORMAT " after discont",
-              dec->granulepos);
-        } else {
-          GST_WARNING_OBJECT (dec,
-              "discont event didn't include offset, we might set it wrong now");
-          dec->granulepos = -1;
-        }
-      }
-      GST_DEBUG ("vd: discont %" G_GUINT64_FORMAT, dec->granulepos);
-
       dec->granulepos = -1;
-
-      if (dec->packetno < 3) {
-        if (dec->granulepos != 0)
-          GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
-              ("can't handle discont before parsing first 3 packets"));
-        dec->packetno = 0;
-#if 0
-        gst_pad_push_event (dec->srcpad, gst_event_new_discontinuous (FALSE,
-                GST_FORMAT_TIME, (guint64) 0, GST_FORMAT_DEFAULT,
-                (guint64) 0, GST_FORMAT_BYTES, (guint64) 0, 0));
-#endif
-        gst_event_ref (event);
-        gst_pad_push_event (dec->srcpad, event);
-      } else {
-        GstFormat time_format, default_format, bytes_format;
-
-        time_format = GST_FORMAT_TIME;
-        default_format = GST_FORMAT_DEFAULT;
-        bytes_format = GST_FORMAT_BYTES;
-
-        dec->packetno = 3;
-        /* if one of them works, all of them work */
-        if (vorbis_dec_convert (dec->srcpad, GST_FORMAT_DEFAULT,
-                dec->granulepos, &time_format, &time)
-            && vorbis_dec_convert (dec->srcpad, GST_FORMAT_DEFAULT,
-                dec->granulepos, &bytes_format, &bytes)) {
-
-          gst_event_ref (event);
-          gst_pad_push_event (dec->srcpad, event);
-          /*
-             gst_pad_push_event (dec->srcpad,
-             gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
-             time, GST_FORMAT_DEFAULT, dec->granulepos,
-             GST_FORMAT_BYTES, bytes, 0));
-           */
-        } else {
-          GST_ERROR_OBJECT (dec,
-              "failed to parse data for DISCONT event, not sending any");
-          gst_event_ref (event);
-          gst_pad_push_event (dec->srcpad, event);
-        }
 #ifdef HAVE_VORBIS_SYNTHESIS_RESTART
-        vorbis_synthesis_restart (&dec->vd);
+      vorbis_synthesis_restart (&dec->vd);
 #endif
-      }
+      ret = gst_pad_push_event (dec->srcpad, event);
       GST_STREAM_UNLOCK (pad);
-      gst_event_unref (event);
       break;
     default:
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_push_event (dec->srcpad, event);
       break;
   }
+  gst_object_unref (dec);
+
   return ret;
 }
 
@@ -641,6 +586,52 @@ copy_samples (float *out, float **in, guint samples, gint channels)
 }
 
 static GstFlowReturn
+vorbis_dec_push (GstVorbisDec * dec, GstBuffer * buf)
+{
+  GstFlowReturn result;
+  gint64 outoffset = GST_BUFFER_OFFSET (buf);
+
+  if (outoffset == -1) {
+    dec->queued = g_list_append (dec->queued, buf);
+    GST_DEBUG_OBJECT (dec, "queued buffer");
+    result = GST_FLOW_OK;
+  } else {
+    if (dec->queued) {
+      gint64 size;
+      GList *walk;
+
+      GST_DEBUG_OBJECT (dec, "first buffer with offset %lld", outoffset);
+
+      size = g_list_length (dec->queued);
+      for (walk = g_list_last (dec->queued); walk;
+          walk = g_list_previous (walk)) {
+        GstBuffer *buffer = GST_BUFFER (walk->data);
+
+        outoffset -=
+            GST_BUFFER_SIZE (buffer) / (sizeof (float) * dec->vi.channels);
+
+        GST_BUFFER_OFFSET (buffer) = outoffset;
+        GST_BUFFER_TIMESTAMP (buffer) = outoffset * GST_SECOND / dec->vi.rate;;
+        GST_DEBUG_OBJECT (dec, "patch buffer %lld offset %lld", size,
+            outoffset);
+        size--;
+      }
+      for (walk = dec->queued; walk; walk = g_list_next (walk)) {
+        GstBuffer *buffer = GST_BUFFER (walk->data);
+
+        /* ignore the result */
+        gst_pad_push (dec->srcpad, buffer);
+      }
+      g_list_free (dec->queued);
+      dec->queued = NULL;
+    }
+    result = gst_pad_push (dec->srcpad, buf);
+  }
+
+  return result;
+}
+
+static GstFlowReturn
 vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
 {
   float **pcm;
@@ -671,14 +662,15 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
       copy_samples (out_data, pcm, sample_count, vd->vi.channels);
 
       GST_BUFFER_OFFSET (out) = vd->granulepos;
-      GST_BUFFER_OFFSET_END (out) = vd->granulepos + sample_count;
-      if (vd->granulepos != -1)
+      if (vd->granulepos != -1) {
+        GST_BUFFER_OFFSET_END (out) = vd->granulepos + sample_count;
         GST_BUFFER_TIMESTAMP (out) = vd->granulepos * GST_SECOND / vd->vi.rate;
-      else
+      } else {
         GST_BUFFER_TIMESTAMP (out) = -1;
+      }
       GST_BUFFER_DURATION (out) = sample_count * GST_SECOND / vd->vi.rate;
 
-      result = gst_pad_push (vd->srcpad, out);
+      result = vorbis_dec_push (vd, out);
 
       if (vd->granulepos != -1)
         vd->granulepos += sample_count;
@@ -691,6 +683,10 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
     /* no samples.. */
     result = GST_FLOW_OK;
   }
+
+  /* granulepos is the last sample in the packet */
+  if (packet->granulepos != -1)
+    vd->granulepos = packet->granulepos;
 
   return result;
 
@@ -727,7 +723,7 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
   /* make ogg_packet out of the buffer */
   packet.packet = GST_BUFFER_DATA (buffer);
   packet.bytes = GST_BUFFER_SIZE (buffer);
-  packet.granulepos = vd->granulepos;
+  packet.granulepos = GST_BUFFER_OFFSET_END (buffer);
   packet.packetno = vd->packetno++;
   /* 
    * FIXME. Is there anyway to know that this is the last packet and
@@ -749,10 +745,6 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   GST_DEBUG ("offset end: %" G_GUINT64_FORMAT, GST_BUFFER_OFFSET_END (buffer));
-
-  /* granulepos is the last sample in the packet */
-  if (GST_BUFFER_OFFSET_END_IS_VALID (buffer))
-    vd->granulepos = GST_BUFFER_OFFSET_END (buffer);;
 
 done:
   gst_buffer_unref (buffer);

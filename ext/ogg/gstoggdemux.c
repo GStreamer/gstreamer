@@ -898,6 +898,7 @@ static gboolean gst_ogg_demux_sink_activate_pull (GstPad * sinkpad,
 static gboolean gst_ogg_demux_sink_activate_push (GstPad * sinkpad,
     gboolean active);
 static GstElementStateReturn gst_ogg_demux_change_state (GstElement * element);
+static void gst_ogg_demux_send_event (GstOggDemux * ogg, GstEvent * event);
 
 static void gst_ogg_print (GstOggDemux * demux);
 
@@ -1173,6 +1174,7 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain)
   gint i;
   GList *headers;
   GstOggPad *pad;
+  GstEvent *event;
 
   if (chain == ogg->current_chain)
     return TRUE;
@@ -1187,6 +1189,13 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain)
 
   gst_element_no_more_pads (GST_ELEMENT (ogg));
   ogg->current_chain = chain;
+
+  /* send the base time */
+  event = gst_event_new_discontinuous (1.0,
+      GST_FORMAT_TIME, (gint64) chain->start_time, (gint64) chain->total_time,
+      NULL);
+
+  gst_ogg_demux_send_event (ogg, event);
 
   /* then send out the buffers */
   for (i = 0; i < chain->streams->len; i++) {
@@ -1775,7 +1784,7 @@ gst_ogg_demux_find_chains (GstOggDemux * ogg)
       GstOggChain *chain = g_array_index (ogg->chains, GstOggChain *, i);
 
       chain->total_time = 0;
-      chain->start_time = 0;
+      chain->start_time = G_MAXINT64;
       chain->last_time = 0;
       chain->begin_time = ogg->total_time;
 
@@ -1904,7 +1913,7 @@ gst_ogg_demux_chain (GstPad * pad, GstBuffer * buffer)
 }
 
 static void
-gst_ogg_demux_send_eos (GstOggDemux * ogg)
+gst_ogg_demux_send_event (GstOggDemux * ogg, GstEvent * event)
 {
   GstOggChain *chain = ogg->current_chain;
 
@@ -1914,9 +1923,11 @@ gst_ogg_demux_send_eos (GstOggDemux * ogg)
     for (i = 0; i < chain->streams->len; i++) {
       GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
 
-      gst_pad_push_event (GST_PAD (pad), gst_event_new (GST_EVENT_EOS));
+      gst_event_ref (event);
+      gst_pad_push_event (GST_PAD (pad), event);
     }
   }
+  gst_event_unref (event);
 }
 
 /* random access code 
@@ -1946,6 +1957,7 @@ gst_ogg_demux_loop (GstOggPad * pad)
     GST_CHAIN_UNLOCK (ogg);
     if (!got_chains)
       goto chain_read_failed;
+
     ogg->need_chains = FALSE;
     ogg->offset = 0;
   }
@@ -1953,7 +1965,7 @@ gst_ogg_demux_loop (GstOggPad * pad)
   GST_LOG_OBJECT (ogg, "pull data %lld", ogg->offset);
   if (ogg->offset == ogg->length) {
     ret = GST_FLOW_OK;
-    gst_ogg_demux_send_eos (ogg);
+    gst_ogg_demux_send_event (ogg, gst_event_new (GST_EVENT_EOS));
     goto pause;
   }
 
@@ -1982,7 +1994,7 @@ pause:
     GST_LOG_OBJECT (ogg, "pausing task, reason %d", ret);
     gst_pad_pause_task (ogg->sinkpad);
     if (GST_FLOW_IS_FATAL (ret)) {
-      gst_ogg_demux_send_eos (ogg);
+      gst_ogg_demux_send_event (ogg, gst_event_new (GST_EVENT_EOS));
       GST_ELEMENT_ERROR (ogg, STREAM, STOPPED,
           ("stream stopped, reason %d", ret),
           ("stream stopped, reason %d", ret));

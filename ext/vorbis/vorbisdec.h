@@ -26,10 +26,7 @@
 #include <gst/gst.h>
 #include <vorbis/codec.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_VORBIS_DEC \
   (gst_vorbis_dec_get_type())
@@ -59,6 +56,8 @@ struct _GstVorbisDec {
   guint64     		granulepos;
 
   gboolean		initialized;
+
+  GList 		*queued;
 };
 
 struct _GstVorbisDecClass {
@@ -67,9 +66,6 @@ struct _GstVorbisDecClass {
 
 GType gst_vorbis_dec_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_VORBIS_DEC_H__ */

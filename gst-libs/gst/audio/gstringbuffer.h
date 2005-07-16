@@ -161,6 +161,7 @@ struct _GstRingBuffer {
   /*< public >*/ /* ATOMIC */
   gint			 state;		/* state of the buffer */
   gint			 segdone;       /* number of segments processed since last start */
+  gint			 segbase;	/* segment corresponding to segment 0 */
   gint			 waiting;	/* when waiting for a segment to be freed */
 
   /*< private >*/

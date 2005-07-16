@@ -163,10 +163,10 @@ gst_base_audio_sink_get_time (GstClock * clock, GstBaseAudioSink * sink)
   if (sink->ringbuffer == NULL || sink->ringbuffer->spec.rate == 0)
     return 0;
 
+  /* our processed samples are always increasing */
   samples = gst_ring_buffer_samples_done (sink->ringbuffer);
 
   result = samples * GST_SECOND / sink->ringbuffer->spec.rate;
-  result += GST_ELEMENT (sink)->base_time;
 
   return result;
 }
@@ -270,9 +270,8 @@ static void
 gst_base_audio_sink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end)
 {
-  /* ne need to sync to a clock here, we schedule the samples based
-   * on our own clock for the moment. FIXME, implement this when
-   * we are not using our own clock */
+  /* our clock sync is a bit too much for the base class to handle so
+   * we implement it ourselves. */
   *start = GST_CLOCK_TIME_NONE;
   *end = GST_CLOCK_TIME_NONE;
 }
@@ -289,25 +288,6 @@ gst_base_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
         gst_ring_buffer_pause (sink->ringbuffer);
       }
       break;
-    case GST_EVENT_DISCONTINUOUS:
-    {
-      gint64 time, sample;
-
-      if (gst_event_discont_get_value (event, GST_FORMAT_DEFAULT, &sample,
-              NULL))
-        goto have_value;
-      if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &time, NULL)) {
-        sample = time * sink->ringbuffer->spec.rate / GST_SECOND;
-        goto have_value;
-      }
-      g_warning ("discont without valid timestamp");
-      sample = 0;
-
-    have_value:
-      GST_DEBUG ("discont now at %lld", sample);
-      gst_ring_buffer_set_sample (sink->ringbuffer, sample);
-      break;
-    }
     default:
       break;
   }
@@ -339,17 +319,38 @@ wrong_state:
 static GstFlowReturn
 gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
-  guint64 offset;
+  guint64 render_offset, in_offset;
+  GstClockTime time, render_time;
   GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (bsink);
 
-  offset = GST_BUFFER_OFFSET (buf);
-
-  GST_DEBUG ("in offset %llu, time %" GST_TIME_FORMAT, offset,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+  /* can't do anything when we don't have the device */
   if (!gst_ring_buffer_is_acquired (sink->ringbuffer))
     goto wrong_state;
 
-  gst_ring_buffer_commit (sink->ringbuffer, offset,
+  in_offset = GST_BUFFER_OFFSET (buf);
+  time = GST_BUFFER_TIMESTAMP (buf);
+
+  GST_DEBUG ("time %" GST_TIME_FORMAT ", offset %llu, start %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (time), in_offset, GST_TIME_ARGS (bsink->discont_start));
+
+  /* samples should be rendered based on their timestamp. All samples
+   * arriving before the discont_start are to be trown away */
+  /* FIXME, for now we drop the sample completely, we should
+   * in fact clip the sample */
+  if (time < bsink->discont_start)
+    return GST_FLOW_OK;
+
+  /* bring buffer timestamp to stream time */
+  render_time = time - bsink->discont_start;
+  /* add base time to get absolute clock time */
+  render_time += gst_element_get_base_time (GST_ELEMENT (bsink));
+  /* and bring the time to the offset in the buffer */
+  render_offset = render_time * sink->ringbuffer->spec.rate / GST_SECOND;
+
+  GST_DEBUG ("render time %" GST_TIME_FORMAT ", render offset %llu",
+      GST_TIME_ARGS (render_time), render_offset);
+
+  gst_ring_buffer_commit (sink->ringbuffer, render_offset,
       GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
   return GST_FLOW_OK;

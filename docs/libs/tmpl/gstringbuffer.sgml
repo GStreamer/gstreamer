@@ -28,6 +28,7 @@ an implementation of an audio ringbuffer
 @empty_seg: 
 @state: 
 @segdone: 
+@segbase: 
 @waiting: 
 
 <!-- ##### STRUCT GstRingBufferClass ##### -->

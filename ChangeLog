@@ -1,5 +1,50 @@
 2005-07-16  Wim Taymans  <wim@fluendo.com>
 
+	* docs/libs/tmpl/gstringbuffer.sgml:
+	* examples/seeking/seek.c: (make_vorbis_theora_pipeline),
+	(query_rates), (query_positions_elems), (query_positions_pads),
+	(update_scale), (do_seek):
+	Updated seek example.
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_packet),
+	(gst_ogg_pad_submit_page), (gst_ogg_demux_activate_chain),
+	(gst_ogg_demux_find_chains), (gst_ogg_demux_send_event),
+	(gst_ogg_demux_loop):
+	Push out correct discont values.
+
+	* ext/theora/theoradec.c: (theora_dec_src_convert),
+	(theora_dec_sink_convert), (theora_dec_src_getcaps),
+	(theora_dec_sink_event), (theora_handle_type_packet),
+	(theora_handle_header_packet), (theora_dec_push),
+	(theora_handle_data_packet), (theora_dec_chain),
+	(theora_dec_change_state):
+	Better timestamping.
+
+	* ext/vorbis/vorbisdec.c: (gst_vorbis_dec_init),
+	(vorbis_dec_sink_event), (vorbis_dec_push),
+	(vorbis_handle_data_packet), (vorbis_dec_chain):
+	* ext/vorbis/vorbisdec.h:
+	Better timestamping.
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_get_time), (gst_base_audio_sink_get_times),
+	(gst_base_audio_sink_event), (gst_base_audio_sink_render):
+	Handle syncing on timestamps instead of sample offsets. Make
+	use of DISCONT values as described in design docs.
+
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	(gst_base_audio_src_get_time):
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_acquire),
+	(gst_ring_buffer_set_sample), (gst_ring_buffer_commit),
+	(gst_ring_buffer_read):
+	* gst-libs/gst/audio/gstringbuffer.h:
+	* sys/ximage/ximagesink.c: (gst_ximagesink_get_times),
+	(gst_ximagesink_show_frame):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_times):
+	Correcly convert buffer timestamp to stream time.
+
+2005-07-16  Wim Taymans  <wim@fluendo.com>
+
 	* gst/audioconvert/gstaudioconvert.c:
 	(gst_audio_convert_get_buffer):
 	Timestamp buffers correctly.

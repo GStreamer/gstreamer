@@ -153,7 +153,6 @@ gst_base_audio_src_get_time (GstClock * clock, GstBaseAudioSrc * src)
   samples = gst_ring_buffer_samples_done (src->ringbuffer);
 
   result = samples * GST_SECOND / src->ringbuffer->spec.rate;
-  result += GST_ELEMENT (src)->base_time;
 
   return result;
 }

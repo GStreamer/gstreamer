@@ -21,7 +21,7 @@ static guint update_id;
 static guint seek_timeout_id = 0;
 static gulong changed_id;
 
-//#define SOURCE "gnomevfssrc"
+//#define SOURCE "filesrc"
 #define SOURCE "gnomevfssrc"
 #define ASINK "alsasink"
 //#define ASINK "osssink"
@@ -33,8 +33,8 @@ static gulong changed_id;
 #define UPDATE_INTERVAL 500
 
 /* number of milliseconds to play for after a seek */
-#define SCRUB_TIME 250
-#define SCRUB
+//#define SCRUB_TIME 250
+//#define SCRUB
 
 #define THREAD
 #define PAD_SEEK
@@ -376,6 +376,7 @@ make_vorbis_theora_pipeline (const gchar * location)
   GstElement *audiosink, *videosink;
   GstElement *a_queue, *v_queue;
   GstPad *seekable;
+  GstPad *pad;
 
   pipeline = gst_pipeline_new ("app");
 
@@ -405,8 +406,9 @@ make_vorbis_theora_pipeline (const gchar * location)
   gst_element_link (a_decoder, a_convert);
   gst_element_link (a_convert, audiosink);
 
-  gst_element_add_ghost_pad (audio_bin, gst_element_get_pad (a_queue, "sink"),
-      "sink");
+  pad = gst_element_get_pad (a_queue, "sink");
+  gst_element_add_pad (audio_bin, gst_ghost_pad_new ("sink", pad));
+  gst_object_unref (GST_OBJECT_CAST (pad));
 
   setup_dynamic_link (demux, NULL, gst_element_get_pad (audio_bin, "sink"),
       NULL);
@@ -427,8 +429,9 @@ make_vorbis_theora_pipeline (const gchar * location)
 
   gst_element_link_many (v_queue, v_decoder, v_convert, videosink, NULL);
 
-  gst_element_add_ghost_pad (video_bin, gst_element_get_pad (v_queue, "sink"),
-      "sink");
+  pad = gst_element_get_pad (v_queue, "sink");
+  gst_element_add_pad (video_bin, gst_ghost_pad_new ("sink", pad));
+  gst_object_unref (GST_OBJECT_CAST (pad));
 
   setup_dynamic_link (demux, NULL, gst_element_get_pad (video_bin, "sink"),
       NULL);
@@ -933,6 +936,8 @@ update_scale (gpointer data)
     gtk_widget_queue_draw (hscale);
   }
 
+  gst_object_unref (clock);
+
   return TRUE;
 }
 
@@ -992,7 +997,7 @@ do_seek (GtkWidget * widget)
   }
 
   if (res)
-    GST_PIPELINE (pipeline)->stream_time = real;
+    gst_pipeline_set_new_stream_time (GST_PIPELINE (pipeline), 0);
   else
     g_print ("seek failed\n");
 }

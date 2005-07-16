@@ -54,10 +54,11 @@ struct _GstTheoraDec
   theora_info info;
   theora_comment comment;
 
-  guint packetno;
+  gboolean have_header;
   guint64 granulepos;
 
-  gboolean initialized;
+  GstClockTime last_timestamp;
+  guint64 frame_nr;
   gboolean need_keyframe;
   gint width, height;
   gint offset_x, offset_y;
@@ -281,7 +282,7 @@ theora_dec_src_convert (GstPad * pad,
   dec = GST_THEORA_DEC (GST_PAD_PARENT (pad));
 
   /* we need the info part before we can done something */
-  if (dec->packetno < 1)
+  if (!dec->have_header)
     return FALSE;
 
   if (src_format == *dest_format) {
@@ -347,7 +348,7 @@ theora_dec_sink_convert (GstPad * pad,
   dec = GST_THEORA_DEC (GST_PAD_PARENT (pad));
 
   /* we need the info part before we can done something */
-  if (dec->packetno < 1)
+  if (!dec->have_header)
     return FALSE;
 
   if (src_format == *dest_format) {
@@ -581,69 +582,32 @@ theora_dec_src_getcaps (GstPad * pad)
 static gboolean
 theora_dec_sink_event (GstPad * pad, GstEvent * event)
 {
-  gint64 start_value, end_value, time, bytes;
   gboolean ret = TRUE;
   GstTheoraDec *dec;
 
-  dec = GST_THEORA_DEC (GST_PAD_PARENT (pad));
+  dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
 
   GST_LOG_OBJECT (dec, "handling event");
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      GST_STREAM_LOCK (pad);
+      ret = gst_pad_push_event (dec->srcpad, event);
+      GST_STREAM_UNLOCK (pad);
+      break;
     case GST_EVENT_DISCONTINUOUS:
       GST_STREAM_LOCK (pad);
-      if (gst_event_discont_get_value (event, GST_FORMAT_DEFAULT,
-              &start_value, &end_value)) {
-        dec->granulepos = start_value;
-        GST_DEBUG_OBJECT (dec,
-            "setting granuleposition to %" G_GUINT64_FORMAT " after discont",
-            start_value);
-      } else {
-        GST_WARNING_OBJECT (dec,
-            "discont event didn't include offset, we might set it wrong now");
-        dec->granulepos = -1;
-      }
-      if (dec->packetno < 3) {
-        if (dec->granulepos != 0)
-          GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
-              ("can't handle discont before parsing first 3 packets"));
-        dec->packetno = 0;
-        gst_pad_push_event (dec->srcpad, gst_event_new_discontinuous (FALSE,
-                GST_FORMAT_TIME, (guint64) 0, GST_FORMAT_DEFAULT,
-                (guint64) 0, GST_FORMAT_BYTES, (guint64) 0, 0));
-      } else {
-        GstFormat time_format, default_format, bytes_format;
-
-        time_format = GST_FORMAT_TIME;
-        default_format = GST_FORMAT_DEFAULT;
-        bytes_format = GST_FORMAT_BYTES;
-
-        /* if one of them works, all of them work */
-        if (theora_dec_sink_convert (dec->sinkpad, GST_FORMAT_DEFAULT,
-                dec->granulepos, &time_format, &time)
-            && theora_dec_src_convert (dec->srcpad, GST_FORMAT_TIME, time,
-                &default_format, &start_value)
-            && theora_dec_src_convert (dec->srcpad, GST_FORMAT_TIME, time,
-                &bytes_format, &bytes)) {
-          gst_pad_push_event (dec->srcpad,
-              gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
-                  time, GST_FORMAT_DEFAULT, start_value, GST_FORMAT_BYTES,
-                  bytes, 0));
-          /* store new framenumber */
-          dec->packetno = start_value + 3;
-        } else {
-          GST_ERROR_OBJECT (dec,
-              "failed to parse data for DISCONT event, not sending any");
-        }
-        /* sync to keyframe */
-        dec->need_keyframe = TRUE;
-      }
+      dec->need_keyframe = TRUE;
+      dec->granulepos = -1;
+      dec->last_timestamp = -1;
+      ret = gst_pad_push_event (dec->srcpad, event);
       GST_STREAM_UNLOCK (pad);
-      gst_event_unref (event);
       break;
     default:
-      ret = gst_pad_event_default (dec->sinkpad, event);
+      ret = gst_pad_push_event (dec->srcpad, event);
       break;
   }
+  gst_object_unref (dec);
+
   return ret;
 }
 
@@ -750,7 +714,7 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   gst_pad_set_caps (dec->srcpad, caps);
   gst_caps_unref (caps);
 
-  dec->initialized = TRUE;
+  dec->have_header = TRUE;
 
   return GST_FLOW_OK;
 }
@@ -765,15 +729,18 @@ theora_handle_header_packet (GstTheoraDec * dec, ogg_packet * packet)
   if (theora_decode_header (&dec->info, &dec->comment, packet))
     goto header_read_error;
 
-  switch (packet->packetno) {
-    case 1:
+  switch (packet->packet[0]) {
+    case 0x81:
       res = theora_handle_comment_packet (dec, packet);
       break;
-    case 2:
+    case 0x82:
       res = theora_handle_type_packet (dec, packet);
       break;
     default:
       /* ignore */
+      g_warning ("unknown theora header packet found");
+    case 0x80:
+      /* nothing special, this is the identification header */
       res = GST_FLOW_OK;
       break;
   }
@@ -792,8 +759,39 @@ static GstFlowReturn
 theora_dec_push (GstTheoraDec * dec, GstBuffer * buf)
 {
   GstFlowReturn result;
+  GstClockTime outtime = GST_BUFFER_TIMESTAMP (buf);
 
-  result = gst_pad_push (dec->srcpad, buf);
+  if (outtime == GST_CLOCK_TIME_NONE) {
+    dec->queued = g_list_append (dec->queued, buf);
+    GST_DEBUG_OBJECT (dec, "queued buffer");
+    result = GST_FLOW_OK;
+  } else {
+    if (dec->queued) {
+      gint64 size;
+      GList *walk;
+
+      GST_DEBUG_OBJECT (dec, "first buffer with time %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (outtime));
+
+      size = g_list_length (dec->queued);
+      for (walk = dec->queued; walk; walk = g_list_next (walk)) {
+        GstBuffer *buffer = GST_BUFFER (walk->data);
+        GstClockTime time;
+
+        time = outtime - ((size * GST_SECOND * dec->info.fps_denominator)
+            / dec->info.fps_numerator);
+
+        GST_DEBUG_OBJECT (dec, "patch buffer %lld %lld", size, time);
+        GST_BUFFER_TIMESTAMP (buffer) = time;
+        /* ignore the result */
+        gst_pad_push (dec->srcpad, buffer);
+        size--;
+      }
+      g_list_free (dec->queued);
+      dec->queued = NULL;
+    }
+    result = gst_pad_push (dec->srcpad, buf);
+  }
 
   return result;
 }
@@ -813,7 +811,7 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
   gint cwidth, cheight;
   GstFlowReturn result;
 
-  if (!dec->initialized)
+  if (!dec->have_header)
     goto not_initialized;
 
   /* the second most significant bit of the first data byte is cleared 
@@ -894,8 +892,9 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
     }
   }
 
-  GST_BUFFER_OFFSET (out) = dec->packetno - 4;
-  GST_BUFFER_OFFSET_END (out) = dec->packetno - 3;
+  GST_BUFFER_OFFSET (out) = dec->frame_nr;
+  dec->frame_nr++;
+  GST_BUFFER_OFFSET_END (out) = dec->frame_nr;
   GST_BUFFER_DURATION (out) =
       GST_SECOND * ((gdouble) dec->info.fps_denominator) /
       dec->info.fps_numerator;
@@ -909,7 +908,7 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
 not_initialized:
   {
     GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
-        (NULL), ("no header sent yet (packet no is %d)", packet->packetno));
+        (NULL), ("no header sent yet"));
     return GST_FLOW_ERROR;
   }
 dropping:
@@ -946,109 +945,49 @@ theora_dec_chain (GstPad * pad, GstBuffer * buf)
 {
   GstTheoraDec *dec;
   ogg_packet packet;
-  guint64 offset_end;
-  GstClockTime outtime;
   GstFlowReturn result = GST_FLOW_OK;
 
-  dec = GST_THEORA_DEC (GST_PAD_PARENT (pad));
-
-  if (dec->packetno >= 3) {
-    /* try timestamp first */
-    outtime = GST_BUFFER_TIMESTAMP (buf);
-
-    if (outtime == -1) {
-      gboolean need_flush = FALSE;
-
-      /* the offset end field in theora is actually the time of
-       * this frame, not the end time */
-      offset_end = GST_BUFFER_OFFSET_END (buf);
-      GST_DEBUG_OBJECT (dec, "got buffer with granule %lld", offset_end);
-
-      if (offset_end != -1) {
-        if (dec->granulepos == -1) {
-          GST_DEBUG_OBJECT (dec, "first buffer with granule");
-          need_flush = TRUE;
-        }
-        dec->granulepos = offset_end;
-      }
-      if (dec->granulepos == -1) {
-        /* we need to wait for a buffer with at least a timestamp or an 
-         * offset before we can generate valid timestamps */
-        dec->queued = g_list_append (dec->queued, buf);
-        GST_DEBUG_OBJECT (dec, "queued buffer");
-        return GST_FLOW_OK;
-      } else {
-        /* granulepos to time */
-        outtime =
-            GST_SECOND * theora_granule_time (&dec->state, dec->granulepos);
-
-        GST_DEBUG_OBJECT (dec, "granulepos=%lld outtime=%" GST_TIME_FORMAT,
-            dec->granulepos, GST_TIME_ARGS (outtime));
-
-        if (need_flush) {
-          GList *walk;
-          GstClockTime patch;
-          gint64 len;
-          gint64 old_granule = dec->granulepos;
-
-          dec->granulepos = -1;
-
-          len = g_list_length (dec->queued);
-
-          GST_DEBUG_OBJECT (dec, "first buffer with granule, flushing");
-
-          /* now resubmit all queued buffers with corrected timestamps */
-          for (walk = dec->queued; walk; walk = g_list_next (walk)) {
-            GstBuffer *qbuffer = GST_BUFFER (walk->data);
-
-            patch = outtime - (GST_SECOND * len * dec->info.fps_denominator) /
-                dec->info.fps_numerator,
-                GST_DEBUG_OBJECT (dec, "patch buffer %lld %lld", len, patch);
-            GST_BUFFER_TIMESTAMP (qbuffer) = patch;
-
-            /* buffers are unreffed in chain function */
-            theora_dec_chain (pad, qbuffer);
-            len--;
-          }
-          g_list_free (dec->queued);
-          dec->queued = NULL;
-
-          dec->granulepos = old_granule;
-        }
-      }
-    } else {
-      GST_DEBUG_OBJECT (dec, "got buffer with timestamp %lld", outtime);
-    }
-  } else {
-    /* we don't know yet */
-    outtime = -1;
-  }
+  dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
 
   /* make ogg_packet out of the buffer */
   packet.packet = GST_BUFFER_DATA (buf);
   packet.bytes = GST_BUFFER_SIZE (buf);
-  packet.granulepos = dec->granulepos;
-  packet.packetno = dec->packetno;
-  packet.b_o_s = (packet.packetno == 0) ? 1 : 0;
+  packet.granulepos = GST_BUFFER_OFFSET_END (buf);
+  packet.packetno = 0;          /* we don't really care */
+  packet.b_o_s = dec->have_header ? 0 : 1;
   packet.e_o_s = 0;
 
+  if (dec->have_header) {
+    if (packet.granulepos != -1) {
+      dec->granulepos = packet.granulepos;
+      dec->last_timestamp =
+          GST_SECOND * theora_granule_time (&dec->state, packet.granulepos);
+    } else if (dec->last_timestamp != -1) {
+      dec->last_timestamp +=
+          (GST_SECOND * dec->info.fps_denominator) / dec->info.fps_numerator;
+    }
+  } else {
+    dec->last_timestamp = -1;
+  }
+
   GST_DEBUG_OBJECT (dec, "header=%d packetno=%lld, outtime=%" GST_TIME_FORMAT,
-      packet.packet[0], packet.packetno, GST_TIME_ARGS (outtime));
+      packet.packet[0], packet.packetno, GST_TIME_ARGS (dec->last_timestamp));
 
   /* switch depending on packet type */
   if (packet.packet[0] & 0x80) {
-    if (packet.packetno > 3) {
+    if (dec->have_header) {
       GST_WARNING_OBJECT (GST_OBJECT (dec), "Ignoring header");
       goto done;
     }
     result = theora_handle_header_packet (dec, &packet);
   } else {
-    result = theora_handle_data_packet (dec, &packet, outtime);
+    result = theora_handle_data_packet (dec, &packet, dec->last_timestamp);
   }
 
 done:
-  dec->packetno++;
   _inc_granulepos (dec);
+
+  gst_object_unref (dec);
 
   gst_buffer_unref (buf);
 
@@ -1070,8 +1009,9 @@ theora_dec_change_state (GstElement * element)
     case GST_STATE_READY_TO_PAUSED:
       theora_info_init (&dec->info);
       theora_comment_init (&dec->comment);
+      dec->have_header = FALSE;
       dec->need_keyframe = TRUE;
-      dec->initialized = FALSE;
+      dec->last_timestamp = -1;
       dec->granulepos = -1;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
@@ -1089,7 +1029,7 @@ theora_dec_change_state (GstElement * element)
       theora_clear (&dec->state);
       theora_comment_clear (&dec->comment);
       theora_info_clear (&dec->info);
-      dec->packetno = 0;
+      dec->have_header = FALSE;
       dec->granulepos = -1;
       break;
     case GST_STATE_READY_TO_NULL:

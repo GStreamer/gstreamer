@@ -1496,6 +1496,7 @@ gst_xvimagesink_get_times (GstBaseSink * bsink, GstBuffer * buf,
 
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
     *start = GST_BUFFER_TIMESTAMP (buf);
+    *start -= bsink->discont_start;
     if (GST_BUFFER_DURATION_IS_VALID (buf)) {
       *end = *start + GST_BUFFER_DURATION (buf);
     } else {

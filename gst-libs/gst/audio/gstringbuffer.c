@@ -374,8 +374,6 @@ gst_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
         buf->empty_seg[i] = buf->spec.silence_sample[j];
         j = (j + 1) % buf->spec.bytes_per_sample;
       }
-      /* set sample position to 0 */
-      gst_ring_buffer_set_sample (buf, 0);
     } else {
       g_warning
           ("invalid bytes_per_sample from acquire ringbuffer, fix the element");
@@ -701,17 +699,20 @@ gst_ring_buffer_set_sample (GstRingBuffer * buf, guint64 sample)
   if (sample == -1)
     sample = 0;
 
+  if (buf->samples_per_seg == 0)
+    return;
+
   /* FIXME, we assume the ringbuffer can restart at a random 
    * position, round down to the beginning and keep track of
    * offset when calculating the processed samples. */
-  buf->segdone = sample / buf->samples_per_seg;
+  buf->segbase = buf->segdone - sample / buf->samples_per_seg;
   buf->next_sample = sample;
 
   for (i = 0; i < buf->spec.segtotal; i++) {
     gst_ring_buffer_clear (buf, i);
   }
 
-  GST_DEBUG ("setting sample to %llu, segdone %d", sample, buf->segdone);
+  GST_DEBUG ("set sample to %llu, segbase %d", sample, buf->segbase);
 }
 
 static gboolean
@@ -813,7 +814,7 @@ gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
       gint diff;
 
       /* get the currently processed segment */
-      segdone = g_atomic_int_get (&buf->segdone);
+      segdone = g_atomic_int_get (&buf->segdone) - buf->segbase;
 
       /* see how far away it is from the write segment */
       diff = writeseg - segdone;
@@ -931,7 +932,7 @@ gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
       gint diff;
 
       /* get the currently processed segment */
-      segdone = g_atomic_int_get (&buf->segdone);
+      segdone = g_atomic_int_get (&buf->segdone) - buf->segbase;
 
       /* see how far away it is from the read segment */
       diff = segdone - readseg;
