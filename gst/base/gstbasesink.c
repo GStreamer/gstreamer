@@ -163,7 +163,7 @@ gst_base_sink_pad_getcaps (GstPad * pad)
   GstBaseSink *bsink;
   GstCaps *caps = NULL;
 
-  bsink = GST_BASE_SINK (GST_PAD_PARENT (pad));
+  bsink = GST_BASE_SINK (gst_pad_get_parent (pad));
   bclass = GST_BASE_SINK_GET_CLASS (bsink);
   if (bclass->get_caps)
     caps = bclass->get_caps (bsink);
@@ -177,6 +177,7 @@ gst_base_sink_pad_getcaps (GstPad * pad)
       caps = gst_caps_ref (gst_pad_template_get_caps (pad_template));
     }
   }
+  gst_object_unref (bsink);
 
   return caps;
 }
@@ -188,11 +189,13 @@ gst_base_sink_pad_setcaps (GstPad * pad, GstCaps * caps)
   GstBaseSink *bsink;
   gboolean res = FALSE;
 
-  bsink = GST_BASE_SINK (GST_PAD_PARENT (pad));
+  bsink = GST_BASE_SINK (gst_pad_get_parent (pad));
   bclass = GST_BASE_SINK_GET_CLASS (bsink);
 
   if (bclass->set_caps)
     res = bclass->set_caps (bsink, caps);
+
+  gst_object_unref (bsink);
 
   return res;
 }
@@ -205,13 +208,15 @@ gst_base_sink_pad_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   GstBaseSink *bsink;
   GstFlowReturn result = GST_FLOW_OK;
 
-  bsink = GST_BASE_SINK (GST_PAD_PARENT (pad));
+  bsink = GST_BASE_SINK (gst_pad_get_parent (pad));
   bclass = GST_BASE_SINK_GET_CLASS (bsink);
 
   if (bclass->buffer_alloc)
     result = bclass->buffer_alloc (bsink, offset, size, caps, buf);
   else
     *buf = NULL;
+
+  gst_object_unref (bsink);
 
   return result;
 }
@@ -436,6 +441,7 @@ gst_base_sink_preroll_queue_flush (GstBaseSink * basesink, GstPad * pad)
   basesink->preroll_queued = 0;
   basesink->buffers_queued = 0;
   basesink->events_queued = 0;
+  basesink->have_preroll = FALSE;
   /* and signal any waiters now */
   GST_PREROLL_SIGNAL (pad);
 }
@@ -518,7 +524,7 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
   GST_DEBUG ("prerolled length %d", length);
 
   if (length == 1) {
-    guint t;
+    gint t;
 
     basesink->have_preroll = TRUE;
     /* we are prerolling */
@@ -528,7 +534,7 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
      * inside the STREAM_LOCK */
     t = GST_STREAM_UNLOCK_FULL (pad);
     GST_DEBUG ("released stream lock %d times", t);
-    if (t == 0) {
+    if (t <= 0) {
       GST_WARNING ("STREAM_LOCK should have been locked !!");
       g_warning ("STREAM_LOCK should have been locked !!");
     }
@@ -558,6 +564,8 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
       goto no_preroll;
 
     length = basesink->preroll_queued;
+
+    g_assert (length == 1);
   }
 
   /* see if we need to block now. We cannot block on events, only
@@ -569,7 +577,6 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
         GST_ELEMENT_NAME (basesink));
     GST_PREROLL_WAIT (pad);
     GST_DEBUG ("done preroll");
-    basesink->have_preroll = FALSE;
   }
   GST_LOCK (pad);
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
@@ -596,17 +603,16 @@ no_preroll:
 flushing:
   {
     GST_UNLOCK (pad);
-    basesink->have_preroll = FALSE;
+    gst_base_sink_preroll_queue_flush (basesink, pad);
     GST_PREROLL_UNLOCK (pad);
     GST_DEBUG ("pad is flushing");
     return GST_FLOW_WRONG_STATE;
   }
 preroll_failed:
   {
-    guint t;
+    gint t;
 
     GST_DEBUG ("preroll failed");
-    basesink->have_preroll = FALSE;
     gst_base_sink_preroll_queue_flush (basesink, pad);
     GST_PREROLL_UNLOCK (pad);
 
@@ -614,7 +620,7 @@ preroll_failed:
      * inside the STREAM_LOCK */
     t = GST_STREAM_UNLOCK_FULL (pad);
     GST_DEBUG ("released stream lock %d times", t);
-    if (t == 0) {
+    if (t <= 0) {
       GST_WARNING ("STREAM_LOCK should have been locked !!");
       g_warning ("STREAM_LOCK should have been locked !!");
     }
@@ -640,7 +646,7 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
   gboolean result = TRUE;
   GstBaseSinkClass *bclass;
 
-  basesink = GST_BASE_SINK (GST_OBJECT_PARENT (pad));
+  basesink = GST_BASE_SINK (gst_pad_get_parent (pad));
 
   bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
@@ -701,12 +707,14 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
         GST_STREAM_LOCK (pad);
         GST_STREAM_UNLOCK (pad);
       }
-
+      GST_DEBUG ("event unref %p %p", basesink, event);
+      gst_event_unref (event);
       break;
     default:
-      result = gst_pad_event_default (pad, event);
+      gst_event_unref (event);
       break;
   }
+  gst_object_unref (basesink);
 
   return result;
 }
@@ -891,9 +899,11 @@ gst_base_sink_chain (GstPad * pad, GstBuffer * buf)
   GstBaseSink *basesink;
   GstFlowReturn result;
 
-  basesink = GST_BASE_SINK (GST_OBJECT_PARENT (pad));
+  basesink = GST_BASE_SINK (gst_pad_get_parent (pad));
 
   result = gst_base_sink_handle_object (basesink, pad, GST_MINI_OBJECT (buf));
+
+  gst_object_unref (basesink);
 
   return result;
 }
@@ -907,7 +917,7 @@ gst_base_sink_loop (GstPad * pad)
   GstBuffer *buf = NULL;
   GstFlowReturn result;
 
-  basesink = GST_BASE_SINK (GST_OBJECT_PARENT (pad));
+  basesink = GST_BASE_SINK (gst_pad_get_parent (pad));
 
   g_assert (basesink->pad_mode == GST_ACTIVATE_PULL);
 
@@ -919,11 +929,14 @@ gst_base_sink_loop (GstPad * pad)
   if (result != GST_FLOW_OK)
     goto paused;
 
+  gst_object_unref (basesink);
+
   /* default */
   return;
 
 paused:
   {
+    gst_object_unref (basesink);
     gst_pad_pause_task (pad);
     return;
   }
@@ -952,6 +965,7 @@ gst_base_sink_deactivate (GstBaseSink * basesink, GstPad * pad)
   /* flush out the data thread if it's locked in finish_preroll */
   basesink->need_preroll = FALSE;
   gst_base_sink_preroll_queue_flush (basesink, pad);
+  GST_PREROLL_SIGNAL (pad);
   GST_PREROLL_UNLOCK (pad);
 
   /* step 2, make sure streaming finishes */
@@ -966,15 +980,19 @@ gst_base_sink_activate_push (GstPad * pad, gboolean active)
   gboolean result = FALSE;
   GstBaseSink *basesink;
 
-  basesink = GST_BASE_SINK (GST_OBJECT_PARENT (pad));
+  basesink = GST_BASE_SINK (gst_pad_get_parent (pad));
 
   if (active) {
-    g_return_val_if_fail (basesink->has_chain, FALSE);
+    if (!basesink->has_chain)
+      goto done;
     result = TRUE;
   } else {
     result = gst_base_sink_deactivate (basesink, pad);
   }
   basesink->pad_mode = GST_ACTIVATE_PUSH;
+
+done:
+  gst_object_unref (basesink);
 
   return result;
 }
@@ -986,16 +1004,19 @@ gst_base_sink_activate_pull (GstPad * pad, gboolean active)
   gboolean result = FALSE;
   GstBaseSink *basesink;
 
-  basesink = GST_BASE_SINK (GST_OBJECT_PARENT (pad));
+  basesink = GST_BASE_SINK (gst_pad_get_parent (pad));
 
   if (active) {
     /* if we have a scheduler we can start the task */
-    g_return_val_if_fail (basesink->has_loop, FALSE);
+    if (!basesink->has_loop)
+      goto done;
     result =
         gst_pad_start_task (pad, (GstTaskFunction) gst_base_sink_loop, pad);
   } else {
     result = gst_base_sink_deactivate (basesink, pad);
   }
+done:
+  gst_object_unref (basesink);
 
   return result;
 }
@@ -1042,10 +1063,8 @@ gst_base_sink_change_state (GstElement * element)
       }
       /* don't need the preroll anymore */
       basesink->need_preroll = FALSE;
-      if (basesink->have_preroll) {
-        /* now let it play */
-        GST_PREROLL_SIGNAL (basesink->sinkpad);
-      }
+      /* now let it play */
+      GST_PREROLL_SIGNAL (basesink->sinkpad);
       GST_PREROLL_UNLOCK (basesink->sinkpad);
       break;
     }
