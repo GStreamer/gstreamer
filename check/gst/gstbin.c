@@ -232,10 +232,13 @@ GST_START_TEST (test_message_state_changed_children)
 
   pop_messages (bus, 9);
 
+  /* this test is completely bogus as the refcount can change while running */
+#if 0
   ASSERT_OBJECT_REFCOUNT (bus, "bus", 1);
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
+#endif
 
   /* go back to READY, spawning six messages */
   GST_DEBUG ("setting pipeline to READY");
