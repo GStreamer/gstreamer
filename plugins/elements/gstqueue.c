@@ -26,8 +26,6 @@
 #include "gst_private.h"
 
 #include "gstqueue.h"
-#include "gstscheduler.h"
-#include "gstpipeline.h"
 #include "gstevent.h"
 #include "gstinfo.h"
 #include "gsterror.h"
@@ -471,7 +469,8 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH:
       STATUS (queue, "received flush event");
       /* forward event */
-      gst_pad_event_default (pad, event);
+      gst_event_ref (event);
+      gst_pad_push_event (queue->srcpad, event);
       if (GST_EVENT_FLUSH_DONE (event)) {
         GST_QUEUE_MUTEX_LOCK;
         queue->flushing = FALSE;
@@ -493,6 +492,7 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
         gst_pad_pause_task (queue->srcpad);
         GST_CAT_LOG_OBJECT (queue_dataflow, queue, "loop stopped");
       }
+      gst_event_unref (event);
       goto done;
     case GST_EVENT_EOS:
       STATUS (queue, "received EOS");

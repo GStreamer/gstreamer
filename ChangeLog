@@ -1,3 +1,8 @@
+2005-07-18  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstqueue.c: (gst_queue_handle_sink_event):
+	Fix nasty refcount bug.
+
 2005-07-16 Philippe Khalaf <burger@speedy.org>
 	* gst/elements/gstfdsrc.c:
 	* gst/elements/gstfdsrc.h:
