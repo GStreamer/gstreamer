@@ -100,20 +100,6 @@
   (gtype-id "GST_TYPE_REGISTRY")
 )
 
-(define-object Scheduler
-  (in-module "Gst")
-  (parent "GstObject")
-  (c-name "GstScheduler")
-  (gtype-id "GST_TYPE_SCHEDULER")
-)
-
-(define-object SchedulerFactory
-  (in-module "Gst")
-  (parent "GstPluginFeature")
-  (c-name "GstSchedulerFactory")
-  (gtype-id "GST_TYPE_SCHEDULER_FACTORY")
-)
-
 (define-object SystemClock
   (in-module "Gst")
   (parent "GstClock")
@@ -332,8 +318,6 @@
   (c-name "GstElementFlags")
   (gtype-id "GST_TYPE_ELEMENT_FLAGS")
   (values
-    '("scheduler-private1" "GST_ELEMENT_SCHEDULER_PRIVATE1")
-    '("scheduler-private2" "GST_ELEMENT_SCHEDULER_PRIVATE2")
     '("locked-state" "GST_ELEMENT_LOCKED_STATE")
     '("is-sink" "GST_ELEMENT_IS_SINK")
     '("flag-last" "GST_ELEMENT_FLAG_LAST")
@@ -351,7 +335,6 @@
     '("state-change" "GST_CORE_ERROR_STATE_CHANGE")
     '("pad" "GST_CORE_ERROR_PAD")
     '("thread" "GST_CORE_ERROR_THREAD")
-    '("scheduler" "GST_CORE_ERROR_SCHEDULER")
     '("negotiation" "GST_CORE_ERROR_NEGOTIATION")
     '("event" "GST_CORE_ERROR_EVENT")
     '("seek" "GST_CORE_ERROR_SEEK")
@@ -414,6 +397,7 @@
     '("demux" "GST_STREAM_ERROR_DEMUX")
     '("mux" "GST_STREAM_ERROR_MUX")
     '("format" "GST_STREAM_ERROR_FORMAT")
+    '("stopped" "GST_STREAM_ERROR_STOPPED")
     '("num-errors" "GST_STREAM_ERROR_NUM_ERRORS")
   )
 )
@@ -683,13 +667,13 @@
   (c-name "GstFlowReturn")
   (gtype-id "GST_TYPE_FLOW_RETURN")
   (values
-    '("ok" "GST_FLOW_OK")
     '("resend" "GST_FLOW_RESEND")
-    '("error" "GST_FLOW_ERROR")
+    '("ok" "GST_FLOW_OK")
     '("not-linked" "GST_FLOW_NOT_LINKED")
-    '("not-negotiated" "GST_FLOW_NOT_NEGOTIATED")
     '("wrong-state" "GST_FLOW_WRONG_STATE")
     '("unexpected" "GST_FLOW_UNEXPECTED")
+    '("not-negotiated" "GST_FLOW_NOT_NEGOTIATED")
+    '("error" "GST_FLOW_ERROR")
     '("not-supported" "GST_FLOW_NOT_SUPPORTED")
   )
 )
@@ -825,15 +809,6 @@
     '("exists" "GST_REGISTRY_EXISTS")
     '("remote" "GST_REGISTRY_REMOTE")
     '("delayed-loading" "GST_REGISTRY_DELAYED_LOADING")
-  )
-)
-
-(define-enum SchedulerFlags
-  (in-module "Gst")
-  (c-name "GstSchedulerFlags")
-  (gtype-id "GST_TYPE_SCHEDULER_FLAGS")
-  (values
-    '("t" "GST_SCHEDULER_FLAG_LAST")
   )
 )
 
