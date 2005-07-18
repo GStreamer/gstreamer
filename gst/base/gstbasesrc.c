@@ -658,8 +658,7 @@ gst_base_src_loop (GstPad * pad)
 
   if (src->offset == 0) {
     /* now send discont */
-    if (!gst_base_src_send_discont (src))
-      goto eos;
+    gst_base_src_send_discont (src);
   }
 
   ret = gst_base_src_get_range (pad, src->offset, src->blocksize, &buf);
