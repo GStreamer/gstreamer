@@ -1,5 +1,10 @@
 2005-07-18  Wim Taymans  <wim@fluendo.com>
 
+	* docs/gst/gstreamer.types:
+	Remove deleted types.
+
+2005-07-18  Wim Taymans  <wim@fluendo.com>
+
 	* check/elements/gstfakesrc.c: (GST_START_TEST):
 	* configure.ac:
 	* gst/Makefile.am:
