@@ -808,7 +808,7 @@ gst_id3_tag_sink_event (GstPad * pad, GstEvent * event)
         case GST_ID3_TAG_STATE_SEEKING_TO_NORMAL:
           /* just assume it's the right seek for now */
           gst_id3_tag_set_state (tag, GST_ID3_TAG_STATE_NORMAL_START);
-          gst_event_unref (event);
+          gst_pad_push_event (tag->srcpad, event);
           break;
         case GST_ID3_TAG_STATE_NORMAL_START:
           if (!CAN_BE_DEMUXER (tag)) {
