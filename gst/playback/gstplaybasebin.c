@@ -499,7 +499,7 @@ queue_threshold_reached (GstElement * queue, GstPlayBaseBin * play_base_bin)
     g_object_set_data (G_OBJECT (queue), "probe", NULL);
     gst_pad_remove_buffer_probe (sinkpad, G_CALLBACK (check_queue), queue);
 
-    g_object_unref (G_OBJECT (sinkpad));
+    gst_object_unref (sinkpad);
   }
 }
 
@@ -524,7 +524,7 @@ queue_out_of_data (GstElement * queue, GstPlayBaseBin * play_base_bin)
     GST_DEBUG_OBJECT (play_base_bin,
         "Re-attaching buffering probe to pad %s:%s",
         GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
-    g_object_unref (G_OBJECT (sinkpad));
+    gst_object_unref (sinkpad);
 
     fill_buffer (play_base_bin, 0);
   }
@@ -596,7 +596,7 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
     gst_pad_add_buffer_probe (sinkpad, G_CALLBACK (check_queue), preroll);
     GST_DEBUG_OBJECT (play_base_bin, "Attaching probe to pad %s:%s (%p)",
         GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
-    g_object_unref (G_OBJECT (sinkpad));
+    gst_object_unref (sinkpad);
     g_object_set_data (G_OBJECT (preroll), "pbb", play_base_bin);
     g_object_set_data (G_OBJECT (preroll), "probe", (gpointer) 0x1);
 
@@ -956,7 +956,7 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
   /* keep a ref to the signal id so that we can disconnect the signal callback */
   g_object_set_data (G_OBJECT (sinkpad), "unlinked_id", GINT_TO_POINTER (sig));
   gst_pad_link (pad, sinkpad);
-  g_object_unref (G_OBJECT (sinkpad));
+  gst_object_unref (sinkpad);
 
   /* add the stream to the list */
   gst_caps_unref (caps);

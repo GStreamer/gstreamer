@@ -1,3 +1,18 @@
+2005-07-18  Wim Taymans  <wim@fluendo.com>
+
+	* examples/seeking/seek.c: (make_vorbis_theora_pipeline),
+	(query_rates), (query_positions_elems), (query_positions_pads),
+	(do_seek), (seek_cb), (stop_seek):
+	Updated seek example. 
+
+	* gst/playback/gstdecodebin.c: (remove_element_chain), (unlinked):
+	* gst/playback/gstplaybasebin.c: (queue_threshold_reached),
+	(queue_out_of_data), (gen_preroll_element), (new_decoded_pad):
+	* gst/playback/gstplaybin.c: (add_sink):
+	* gst/playback/gststreaminfo.c: (gst_stream_info_dispose),
+	(gst_stream_info_set_mute):
+	Some refcount leak fixes.
+
 2005-07-16  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:

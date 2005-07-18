@@ -234,14 +234,16 @@ gst_stream_info_dispose (GObject * object)
   stream_info = GST_STREAM_INFO (object);
 
   if (stream_info->object) {
-    GstElement *parent;
+    GstObject *parent;
 
     parent = gst_pad_get_parent ((GstPad *)
         GST_PAD_CAST (stream_info->object));
     if (parent != NULL) {
-      g_signal_handlers_disconnect_by_func (parent,
-          G_CALLBACK (stream_info_change_state), stream_info);
-      g_object_unref (G_OBJECT (parent));
+      if (GST_IS_ELEMENT (parent)) {
+        g_signal_handlers_disconnect_by_func (parent,
+            G_CALLBACK (stream_info_change_state), stream_info);
+      }
+      gst_object_unref (parent);
     }
 
     gst_object_unref (stream_info->object);
@@ -291,7 +293,7 @@ gst_stream_info_set_mute (GstStreamInfo * stream_info, gboolean mute)
   }
 
   if (mute != stream_info->mute) {
-    GstElement *element;
+    GstObject *element;
 
     stream_info->mute = mute;
     //gst_pad_set_active_recursive ((GstPad *)
@@ -300,14 +302,18 @@ gst_stream_info_set_mute (GstStreamInfo * stream_info, gboolean mute)
 
     element = gst_pad_get_parent ((GstPad *)
         GST_PAD_CAST (stream_info->object));
-    if (mute) {
-      g_signal_connect (element, "state-change",
-          G_CALLBACK (stream_info_change_state), stream_info);
-    } else {
-      g_signal_handlers_disconnect_by_func (element,
-          G_CALLBACK (stream_info_change_state), stream_info);
+    if (element) {
+      if (GST_IS_ELEMENT (element)) {
+        if (mute) {
+          g_signal_connect (element, "state-change",
+              G_CALLBACK (stream_info_change_state), stream_info);
+        } else {
+          g_signal_handlers_disconnect_by_func (element,
+              G_CALLBACK (stream_info_change_state), stream_info);
+        }
+      }
+      gst_object_unref (element);
     }
-    g_object_unref (G_OBJECT (element));
   }
   return TRUE;
 }

@@ -1005,7 +1005,9 @@ do_seek (GtkWidget * widget)
 static void
 seek_cb (GtkWidget * widget)
 {
-#ifdef SCRUB
+#ifndef SCRUB
+  GTimeVal timeval;
+#else
   /* If the timer hasn't expired yet, then the pipeline is running */
   if (seek_timeout_id != 0) {
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
@@ -1013,6 +1015,12 @@ seek_cb (GtkWidget * widget)
 #endif
 
   do_seek (widget);
+
+#ifndef SCRUB
+  /* wait for preroll */
+  GST_TIME_TO_TIMEVAL (50 * GST_MSECOND, timeval);
+  gst_element_get_state (pipeline, NULL, NULL, &timeval);
+#endif
 
 #ifdef SCRUB
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
@@ -1047,8 +1055,9 @@ stop_seek (GtkWidget * widget, gpointer user_data)
     gtk_timeout_remove (seek_timeout_id);
     seek_timeout_id = 0;
     /* Still scrubbing, so the pipeline is already playing */
-  } else
+  } else {
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  }
 
   update_id =
       gtk_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
