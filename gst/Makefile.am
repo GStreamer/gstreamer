@@ -206,8 +206,7 @@ noinst_HEADERS = 		\
 	gettext.h		\
 	gst-i18n-lib.h		\
 	gst-i18n-app.h		\
-	gst_private.h		\
-	gstarch.h
+	gst_private.h
 
 gstmarshal.h: gstmarshal.list
 	glib-genmarshal --header --prefix=gst_marshal $(srcdir)/gstmarshal.list > gstmarshal.h.tmp

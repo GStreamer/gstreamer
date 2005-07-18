@@ -1,6 +1,12 @@
 2005-07-18  Wim Taymans  <wim@fluendo.com>
 
 	* gst/Makefile.am:
+	* gst/gstarch.h:
+	Remove old file.
+
+2005-07-18  Wim Taymans  <wim@fluendo.com>
+
+	* gst/Makefile.am:
 	No more cothreads.h
 
 2005-07-18  Wim Taymans  <wim@fluendo.com>
