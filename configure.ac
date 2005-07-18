@@ -25,6 +25,7 @@ dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
 AS_LIBTOOL(GST, 6, 0, 0)
+AS_LIBTOOL_TAGS([])
 AM_PROG_LIBTOOL
 
 AC_CONFIG_SRCDIR([gst/gst.c])
