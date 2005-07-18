@@ -855,21 +855,6 @@
   (return-type "GstIndex*")
 )
 
-(define-method set_manager
-  (of-object "GstElement")
-  (c-name "gst_element_set_manager")
-  (return-type "none")
-  (parameters
-    '("GstPipeline*" "pipeline")
-  )
-)
-
-(define-method get_manager
-  (of-object "GstElement")
-  (c-name "gst_element_get_manager")
-  (return-type "GstPipeline*")
-)
-
 (define-method set_bus
   (of-object "GstElement")
   (c-name "gst_element_set_bus")
@@ -883,21 +868,6 @@
   (of-object "GstElement")
   (c-name "gst_element_get_bus")
   (return-type "GstBus*")
-)
-
-(define-method set_scheduler
-  (of-object "GstElement")
-  (c-name "gst_element_set_scheduler")
-  (return-type "none")
-  (parameters
-    '("GstScheduler*" "sched")
-  )
-)
-
-(define-method get_scheduler
-  (of-object "GstElement")
-  (c-name "gst_element_get_scheduler")
-  (return-type "GstScheduler*")
 )
 
 (define-method add_pad
@@ -1181,27 +1151,11 @@
   )
 )
 
-(define-virtual set_manager
-  (of-object "GstElement")
-  (return-type "none")
-  (parameters
-   '("GstPipeline*" "pipeline")
-  )
-)
-
 (define-virtual set_bus
   (of-object "GstElement")
   (return-type "none")
   (parameters
    '("GstBus*" "bus")
-  )
-)
-
-(define-virtual set_scheduler
-  (of-object "GstElement")
-  (return-type "none")
-  (parameters
-   '("GstScheduler*" "scheduler")
   )
 )
 
@@ -1502,11 +1456,6 @@
 
 (define-function gst_query_type_get_type
   (c-name "gst_query_type_get_type")
-  (return-type "GType")
-)
-
-(define-function gst_scheduler_flags_get_type
-  (c-name "gst_scheduler_flags_get_type")
   (return-type "GType")
 )
 
@@ -2831,12 +2780,6 @@
   )
 )
 
-(define-method get_parent
-  (of-object "GstPad")
-  (c-name "gst_pad_get_parent")
-  (return-type "GstElement*")
-)
-
 (define-method get_direction
   (of-object "GstPad")
   (c-name "gst_pad_get_direction")
@@ -3478,12 +3421,6 @@
   (parameters
     '("const-gchar*" "name" (null-ok) (default "NULL"))
   )
-)
-
-(define-method get_scheduler
-  (of-object "GstPipeline")
-  (c-name "gst_pipeline_get_scheduler")
-  (return-type "GstScheduler*")
 )
 
 (define-method get_bus
@@ -4175,128 +4112,6 @@
   (return-type "GstRegistry*")
   (parameters
     '("GstRegistryFlags" "flags")
-  )
-)
-
-
-
-;; From ../gstreamer/gst/gstscheduler.h
-
-(define-function gst_scheduler_get_type
-  (c-name "gst_scheduler_get_type")
-  (return-type "GType")
-)
-
-(define-method setup
-  (of-object "GstScheduler")
-  (c-name "gst_scheduler_setup")
-  (return-type "none")
-)
-
-(define-method reset
-  (of-object "GstScheduler")
-  (c-name "gst_scheduler_reset")
-  (return-type "none")
-)
-
-(define-method create_task
-  (of-object "GstScheduler")
-  (c-name "gst_scheduler_create_task")
-  (return-type "GstTask*")
-  (parameters
-    '("GstTaskFunction" "func")
-    '("gpointer" "data")
-  )
-)
-
-(define-function gst_scheduler_factory_get_type
-  (c-name "gst_scheduler_factory_get_type")
-  (return-type "GType")
-)
-
-(define-function scheduler_register
-  (c-name "gst_scheduler_register")
-  (return-type "gboolean")
-  (parameters
-    '("GstPlugin*" "plugin")
-    '("const-gchar*" "name")
-    '("const-gchar*" "longdesc")
-    '("GType" "type")
-  )
-)
-
-(define-function gst_scheduler_factory_new
-  (c-name "gst_scheduler_factory_new")
-  (is-constructor-of "GstSchedulerFactory")
-  (return-type "GstSchedulerFactory*")
-  (parameters
-    '("const-gchar*" "name")
-    '("const-gchar*" "longdesc")
-    '("GType" "type")
-  )
-)
-
-(define-method destroy
-  (of-object "GstSchedulerFactory")
-  (c-name "gst_scheduler_factory_destroy")
-  (return-type "none")
-)
-
-(define-function scheduler_factory_find
-  (c-name "gst_scheduler_factory_find")
-  (return-type "GstSchedulerFactory*")
-  (parameters
-    '("const-gchar*" "name")
-  )
-)
-
-(define-method create
-  (of-object "GstSchedulerFactory")
-  (c-name "gst_scheduler_factory_create")
-  (return-type "GstScheduler*")
-  (parameters
-    '("GstElement*" "parent")
-  )
-)
-
-(define-function scheduler_factory_make
-  (c-name "gst_scheduler_factory_make")
-  (return-type "GstScheduler*")
-  (parameters
-    '("const-gchar*" "name")
-    '("GstElement*" "parent")
-  )
-)
-
-(define-function scheduler_factory_set_default_name
-  (c-name "gst_scheduler_factory_set_default_name")
-  (return-type "none")
-  (parameters
-    '("const-gchar*" "name")
-  )
-)
-
-(define-function scheduler_factory_get_default_name
-  (c-name "gst_scheduler_factory_get_default_name")
-  (return-type "const-gchar*")
-)
-
-(define-virtual setup
-  (of-object "GstScheduler")
-  (return-type "none")
-)
-
-(define-virtual reset
-  (of-object "GstScheduler")
-  (return-type "none")
-)
-
-(define-virtual create_task
-  (of-object "GstScheduler")
-  (return-type "GstTask*")
-  (parameters
-   '("GstTaskFunction" "func")
-   '("gpointer" "data")
   )
 )
 
@@ -5288,21 +5103,6 @@
 (define-method pause
   (of-object "GstTask")
   (c-name "gst_task_pause")
-  (return-type "gboolean")
-)
-
-(define-virtual start
-  (of-object "GstTask")
-  (return-type "gboolean")
-)
-
-(define-virtual stop
-  (of-object "GstTask")
-  (return-type "gboolean")
-)
-
-(define-virtual pause
-  (of-object "GstTask")
   (return-type "gboolean")
 )
 
