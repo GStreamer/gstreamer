@@ -163,6 +163,9 @@ The general flow of executing the seek with FLUSH is as follows:
  6) start stopped tasks and unlock the STREAM_LOCK, dataflow will continue
     now from the new position.
 
+More information about the different seek types can be found in 
+part-seeking.txt.
+
 
 SIZE
 ----

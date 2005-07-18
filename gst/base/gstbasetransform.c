@@ -231,7 +231,7 @@ gst_base_transform_getcaps (GstPad * pad)
   GstPad *otherpad;
   GstCaps *caps;
 
-  trans = GST_BASE_TRANSFORM (GST_PAD_PARENT (pad));
+  trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
 
   otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
 
@@ -272,6 +272,8 @@ gst_base_transform_getcaps (GstPad * pad)
 done:
   GST_DEBUG ("returning  %" GST_PTR_FORMAT, caps);
 
+  gst_object_unref (trans);
+
   return caps;
 }
 
@@ -306,7 +308,7 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
   GstCaps *othercaps = NULL;
   gboolean ret = TRUE;
 
-  trans = GST_BASE_TRANSFORM (GST_PAD_PARENT (pad));
+  trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
   klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
@@ -408,6 +410,8 @@ done:
   if (othercaps)
     gst_caps_unref (othercaps);
 
+  gst_object_unref (trans);
+
   return ret;
 
   /* ERRORS */
@@ -479,7 +483,7 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
   gboolean ret = FALSE;
   gboolean unlock;
 
-  trans = GST_BASE_TRANSFORM (GST_PAD_PARENT (pad));
+  trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   if (bclass->event)
@@ -504,6 +508,8 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
   ret = gst_pad_event_default (pad, event);
   if (unlock)
     GST_STREAM_UNLOCK (pad);
+
+  gst_object_unref (trans);
 
   return ret;
 }
@@ -670,13 +676,14 @@ gst_base_transform_sink_activate_push (GstPad * pad, gboolean active)
   GstBaseTransform *trans;
   GstBaseTransformClass *bclass;
 
-  trans = GST_BASE_TRANSFORM (GST_OBJECT_PARENT (pad));
+  trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   if (active) {
     if (bclass->start)
       result = bclass->start (trans);
   }
+  gst_object_unref (trans);
 
   return result;
 }
@@ -688,7 +695,7 @@ gst_base_transform_src_activate_pull (GstPad * pad, gboolean active)
   GstBaseTransform *trans;
   GstBaseTransformClass *bclass;
 
-  trans = GST_BASE_TRANSFORM (GST_OBJECT_PARENT (pad));
+  trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   result = gst_pad_activate_pull (trans->sinkpad, active);
@@ -697,6 +704,7 @@ gst_base_transform_src_activate_pull (GstPad * pad, gboolean active)
     if (result && bclass->start)
       result &= bclass->start (trans);
   }
+  gst_object_unref (trans);
 
   return result;
 }

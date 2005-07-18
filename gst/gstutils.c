@@ -1443,7 +1443,9 @@ gst_element_unlink (GstElement * src, GstElement * dest)
           /* see if the pad is connected and is really a pad
            * of dest */
           if (peerpad) {
-            GstElement *peerelem = gst_pad_get_parent (peerpad);
+            GstElement *peerelem;
+
+            peerelem = gst_pad_get_parent_element (peerpad);
 
             if (peerelem == dest) {
               gst_pad_unlink (pad, peerpad);
@@ -1639,6 +1641,34 @@ gst_pad_get_fixed_caps_func (GstPad * pad)
 
 done:
   return result;
+}
+
+/**
+ * gst_pad_get_parent_element:
+ * @pad: a pad
+ *
+ * Gets the parent of @pad, cast to a #GstElement. If a @pad has no parent or
+ * its parent is not an element, return NULL.
+ *
+ * Returns: The parent of the pad. The caller has a reference on the parent, so
+ * unref when you're finished with it.
+ *
+ * MT safe.
+ */
+GstElement *
+gst_pad_get_parent_element (GstPad * pad)
+{
+  GstObject *p;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  p = gst_object_get_parent (GST_OBJECT_CAST (pad));
+
+  if (p && !GST_IS_ELEMENT (p)) {
+    gst_object_unref (p);
+    p = NULL;
+  }
+  return GST_ELEMENT_CAST (p);
 }
 
 /**
@@ -1955,7 +1985,7 @@ gst_pad_proxy_getcaps (GstPad * pad)
 
   GST_DEBUG ("proxying getcaps for %s:%s", GST_DEBUG_PAD_NAME (pad));
 
-  element = gst_pad_get_parent (pad);
+  element = gst_pad_get_parent_element (pad);
   if (element == NULL)
     return NULL;
 
@@ -2027,7 +2057,7 @@ gst_pad_proxy_setcaps (GstPad * pad, GstCaps * caps)
 
   GST_DEBUG ("proxying pad link for %s:%s", GST_DEBUG_PAD_NAME (pad));
 
-  element = gst_pad_get_parent (pad);
+  element = gst_pad_get_parent_element (pad);
 
   iter = gst_element_iterate_pads (element);
 

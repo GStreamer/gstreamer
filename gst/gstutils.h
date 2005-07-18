@@ -278,6 +278,8 @@ GstCaps*		gst_pad_get_fixed_caps_func	(GstPad *pad);
 GstCaps*		gst_pad_proxy_getcaps		(GstPad * pad);
 gboolean		gst_pad_proxy_setcaps		(GstPad * pad, GstCaps * caps);
 
+GstElement*		gst_pad_get_parent_element	(GstPad *pad);
+
 /* util query functions */
 gboolean                gst_pad_query_position          (GstPad *pad, GstFormat *format,
 		                                         gint64 *cur, gint64 *end);

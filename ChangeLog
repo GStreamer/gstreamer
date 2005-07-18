@@ -1,5 +1,35 @@
 2005-07-18  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design/part-dynamic.txt:
+	* docs/design/part-events.txt:
+	* docs/design/part-seeking.txt:
+	Some more docs in the works.
+
+	* gst/base/gstbasetransform.c: (gst_base_transform_transform_caps),
+	(gst_base_transform_getcaps), (gst_base_transform_configure_caps),
+	(gst_base_transform_setcaps), (gst_base_transform_get_size),
+	(gst_base_transform_buffer_alloc), (gst_base_transform_event),
+	(gst_base_transform_handle_buffer),
+	(gst_base_transform_sink_activate_push),
+	(gst_base_transform_src_activate_pull),
+	(gst_base_transform_set_passthrough),
+	(gst_base_transform_is_passthrough):
+	Refcounting fixes.
+
+	* gst/gstbus.c: (gst_bus_source_dispatch), (gst_bus_poll):
+	Cleanups.
+
+	* gst/gstevent.c: (gst_event_finalize):
+	Set SRC to NULL.
+
+	* gst/gstutils.c: (gst_element_unlink),
+	(gst_pad_get_parent_element), (gst_pad_proxy_getcaps),
+	(gst_pad_proxy_setcaps):
+	* gst/gstutils.h:
+	Add _get_parent_element() to get a pads parent as an element.
+
+2005-07-18  Wim Taymans  <wim@fluendo.com>
+
 	* check/gst/gstbin.c: (GST_START_TEST):
 	Remove bogus test.
 

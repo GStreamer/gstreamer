@@ -99,6 +99,7 @@ gst_event_finalize (GstEvent * event)
 
   if (GST_EVENT_SRC (event)) {
     gst_object_unref (GST_EVENT_SRC (event));
+    GST_EVENT_SRC (event) = NULL;
   }
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:

@@ -420,28 +420,30 @@ gst_bus_source_dispatch (GSource * source, GSourceFunc callback,
   GstBusSource *bsource = (GstBusSource *) source;
   GstMessage *message;
   gboolean needs_pop = TRUE;
+  GstBus *bus;
 
-  g_return_val_if_fail (GST_IS_BUS (bsource->bus), FALSE);
+  g_return_val_if_fail (bsource != NULL, FALSE);
 
-  message = gst_bus_peek (bsource->bus);
+  bus = bsource->bus;
+
+  g_return_val_if_fail (GST_IS_BUS (bus), FALSE);
+
+  message = gst_bus_peek (bus);
 
   GST_DEBUG ("have message %p", message);
 
   g_return_val_if_fail (message != NULL, TRUE);
 
-  if (!handler) {
-    g_warning ("GstBus watch dispatched without callback\n"
-        "You must call g_source_connect().");
-    return FALSE;
-  }
+  if (!handler)
+    goto no_handler;
 
   GST_DEBUG ("calling dispatch with %p", message);
 
-  needs_pop = handler (bsource->bus, message, user_data);
+  needs_pop = handler (bus, message, user_data);
 
   GST_DEBUG ("handler returns %d", needs_pop);
   if (needs_pop) {
-    message = gst_bus_pop (bsource->bus);
+    message = gst_bus_pop (bus);
     if (message) {
       gst_message_unref (message);
     } else {
@@ -452,8 +454,14 @@ gst_bus_source_dispatch (GSource * source, GSourceFunc callback,
       GST_DEBUG ("handler requested pop but no message on the bus");
     }
   }
-
   return TRUE;
+
+no_handler:
+  {
+    g_warning ("GstBus watch dispatched without callback\n"
+        "You must call g_source_connect().");
+    return FALSE;
+  }
 }
 
 static void
@@ -596,6 +604,8 @@ poll_timeout (GstBusPollData * poll_data)
  * specify a maximum time to poll with the @timeout parameter. If @timeout is
  * negative, this function will block indefinitely.
  *
+ * This function will enter the default mainloop while polling.
+ *
  * Returns: The type of the message that was received, or GST_MESSAGE_UNKNOWN if
  * the poll timed out. The message will remain in the bus queue; you will need
  * to gst_bus_pop() it off before entering gst_bus_poll() again.
@@ -603,28 +613,29 @@ poll_timeout (GstBusPollData * poll_data)
 GstMessageType
 gst_bus_poll (GstBus * bus, GstMessageType events, GstClockTimeDiff timeout)
 {
-  GstBusPollData *poll_data;
+  GstBusPollData poll_data;
   GstMessageType ret;
   guint id;
 
-  poll_data = g_new0 (GstBusPollData, 1);
   if (timeout >= 0)
-    poll_data->timeout_id = g_timeout_add (timeout / GST_MSECOND,
-        (GSourceFunc) poll_timeout, poll_data);
-  poll_data->loop = g_main_loop_new (NULL, FALSE);
-  poll_data->events = events;
-  poll_data->revent = GST_MESSAGE_UNKNOWN;
+    poll_data.timeout_id = g_timeout_add (timeout / GST_MSECOND,
+        (GSourceFunc) poll_timeout, &poll_data);
+  else
+    poll_data.timeout_id = 0;
 
-  id = gst_bus_add_watch (bus, (GstBusHandler) poll_handler, poll_data);
-  g_main_loop_run (poll_data->loop);
+  poll_data.loop = g_main_loop_new (NULL, FALSE);
+  poll_data.events = events;
+  poll_data.revent = GST_MESSAGE_UNKNOWN;
+
+  id = gst_bus_add_watch (bus, (GstBusHandler) poll_handler, &poll_data);
+  g_main_loop_run (poll_data.loop);
   g_source_remove (id);
 
-  ret = poll_data->revent;
+  ret = poll_data.revent;
 
-  if (poll_data->timeout_id)
-    g_source_remove (poll_data->timeout_id);
-  g_main_loop_unref (poll_data->loop);
-  g_free (poll_data);
+  if (poll_data.timeout_id)
+    g_source_remove (poll_data.timeout_id);
+  g_main_loop_unref (poll_data.loop);
 
   return ret;
 }
