@@ -1,3 +1,7 @@
+2005-07-18  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.defs: Updating defs file
+
 2005-07-13  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst-types.defs: (MessageType):

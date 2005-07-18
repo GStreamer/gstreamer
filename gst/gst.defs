@@ -439,6 +439,12 @@
   )
 )
 
+(define-method truncate
+  (of-object "GstCaps")
+  (c-name "gst_caps_truncate")
+  (return-type "none")
+)
+
 (define-method set_simple
   (of-object "GstCaps")
   (c-name "gst_caps_set_simple")
@@ -811,6 +817,21 @@
   (parameters
     '("GstClock*" "clock")
   )
+)
+
+(define-method set_base_time
+  (of-object "GstElement")
+  (c-name "gst_element_set_base_time")
+  (return-type "none")
+  (parameters
+    '("GstClockTime" "time")
+  )
+)
+
+(define-method get_base_time
+  (of-object "GstElement")
+  (c-name "gst_element_get_base_time")
+  (return-type "GstClockTime")
 )
 
 (define-method is_indexable
@@ -3471,6 +3492,21 @@
   (return-type "GstBus*")
 )
 
+(define-method set_new_stream_time
+  (of-object "GstPipeline")
+  (c-name "gst_pipeline_set_new_stream_time")
+  (return-type "none")
+  (parameters
+    '("GstClockTime" "time")
+  )
+)
+
+(define-method get_last_stream_time
+  (of-object "GstPipeline")
+  (c-name "gst_pipeline_get_last_stream_time")
+  (return-type "GstClockTime")
+)
+
 (define-method use_clock
   (of-object "GstPipeline")
   (c-name "gst_pipeline_use_clock")
@@ -5725,6 +5761,18 @@
   )
 )
 
+(define-method link_pads_filtered
+  (of-object "GstElement")
+  (c-name "gst_element_link_pads_filtered")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "srcpadname")
+    '("GstElement*" "dest")
+    '("const-gchar*" "destpadname")
+    '("GstCaps*" "filter")
+  )
+)
+
 (define-method can_src_caps
   (of-object "GstElementFactory")
   (c-name "gst_element_factory_can_src_caps")
@@ -5811,6 +5859,12 @@
   (parameters
     '("GstCaps*" "caps")
   )
+)
+
+(define-method get_parent_element
+  (of-object "GstPad")
+  (c-name "gst_pad_get_parent_element")
+  (return-type "GstElement*")
 )
 
 (define-method query_position
