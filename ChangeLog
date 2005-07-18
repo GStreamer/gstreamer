@@ -1,5 +1,10 @@
 2005-07-18  Wim Taymans  <wim@fluendo.com>
 
+	* gst/Makefile.am:
+	No more cothreads.h
+
+2005-07-18  Wim Taymans  <wim@fluendo.com>
+
 	* gst/cothreads.c:
 	* gst/cothreads.h:
 	Let's remove these.
