@@ -244,8 +244,6 @@ static gboolean
 gst_rtspsrc_add_element (GstRTSPSrc * src, GstElement * element)
 {
   gst_object_set_parent (GST_OBJECT (element), GST_OBJECT (src));
-  gst_element_set_manager (element, GST_ELEMENT_MANAGER (src));
-  gst_element_set_scheduler (element, GST_ELEMENT_SCHEDULER (src));
 
   return TRUE;
 }
@@ -795,10 +793,8 @@ gst_rtspsrc_play (GstRTSPSrc * src)
   if (!gst_rtspsrc_send (src, &request, &response))
     goto send_error;
 
-  if (GST_ELEMENT_SCHEDULER (src) && src->interleaved) {
-    src->task =
-        gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (src),
-        (GstTaskFunction) gst_rtspsrc_loop, src);
+  if (src->interleaved) {
+    src->task = gst_task_create ((GstTaskFunction) gst_rtspsrc_loop, src);
 
     gst_task_start (src->task);
   }

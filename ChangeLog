@@ -1,3 +1,9 @@
+2005-07-18  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_add_element),
+	(gst_rtspsrc_play):
+	Fix for core changes.
+
 2005-07-18  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/mad/gstid3tag.c: (gst_id3_tag_sink_event):
