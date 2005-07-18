@@ -143,6 +143,7 @@ static void gst_rmdemux_dispose (GObject * object);
 static GstElementStateReturn gst_rmdemux_change_state (GstElement * element);
 static GstFlowReturn gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_rmdemux_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_rmdemux_send_event (GstRMDemux * rmdemux, GstEvent * event);
 
 static void gst_rmdemux_parse__rmf (GstRMDemux * rmdemux, const void *data,
     int length);
@@ -257,6 +258,7 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     "Realmedia stream demuxer",
     plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
 
+
      static gboolean gst_rmdemux_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean ret = TRUE;
@@ -282,8 +284,12 @@ static GstElementStateReturn
 gst_rmdemux_change_state (GstElement * element)
 {
   GstRMDemux *rmdemux = GST_RMDEMUX (element);
+  gint transition;
+  GstElementStateReturn res;
 
-  switch (GST_STATE_TRANSITION (element)) {
+  transition = GST_STATE_TRANSITION (element);
+
+  switch (transition) {
     case GST_STATE_NULL_TO_READY:
       break;
     case GST_STATE_READY_TO_PAUSED:
@@ -292,6 +298,11 @@ gst_rmdemux_change_state (GstElement * element)
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
+  }
+
+  res = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  switch (transition) {
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
@@ -303,10 +314,7 @@ gst_rmdemux_change_state (GstElement * element)
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
+  return res;
 }
 
 static GstCaps *
@@ -455,6 +463,10 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
         if (!rmdemux->have_pads) {
           gst_element_no_more_pads (GST_ELEMENT (rmdemux));
           rmdemux->have_pads = TRUE;
+
+          gst_rmdemux_send_event (rmdemux,
+              gst_event_new_discontinuous (1.0, GST_FORMAT_TIME, (gint64) 0,
+                  (gint64) - 1, NULL));
         }
 
         /* The actual header is only 8 bytes */
@@ -533,9 +545,10 @@ static GstRMDemuxStream *
 gst_rmdemux_get_stream_by_id (GstRMDemux * rmdemux, int id)
 {
   int i;
-  GstRMDemuxStream *stream;
 
   for (i = 0; i < rmdemux->n_streams; i++) {
+    GstRMDemuxStream *stream;
+
     stream = rmdemux->streams[i];
     if (stream->id == id) {
       return stream;
@@ -543,6 +556,23 @@ gst_rmdemux_get_stream_by_id (GstRMDemux * rmdemux, int id)
   }
 
   return NULL;
+}
+
+static gboolean
+gst_rmdemux_send_event (GstRMDemux * rmdemux, GstEvent * event)
+{
+  int i;
+
+  for (i = 0; i < rmdemux->n_streams; i++) {
+    GstRMDemuxStream *stream;
+
+    stream = rmdemux->streams[i];
+    gst_event_ref (event);
+    gst_pad_push_event (stream->pad, event);
+  }
+  gst_event_unref (event);
+
+  return TRUE;
 }
 
 void
@@ -666,8 +696,6 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
           "height", G_TYPE_INT, (int) stream->height, NULL);
     }
     rmdemux->n_audio_streams++;
-
-
   } else {
     GST_WARNING_OBJECT (rmdemux, "not adding stream of type %d",
         stream->subtype);
@@ -690,6 +718,10 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     GST_DEBUG_OBJECT (rmdemux, "adding pad %p to rmdemux %p", stream->pad,
         rmdemux);
     gst_element_add_pad (GST_ELEMENT (rmdemux), stream->pad);
+
+    gst_pad_push_event (stream->pad,
+        gst_event_new_discontinuous (1.0, GST_FORMAT_TIME, (gint64) 0,
+            (gint64) - 1, NULL));
 
     /* If there's some extra data then send it as the first packet */
     if (stream->extra_data_size > 0) {
