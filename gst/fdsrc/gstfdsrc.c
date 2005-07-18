@@ -24,7 +24,6 @@
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
-#include "gst/gst_private.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
