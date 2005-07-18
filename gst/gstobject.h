@@ -26,9 +26,7 @@
 
 #include <gst/gstconfig.h>
 
-#include <glib-object.h>	/* note that this gets wrapped in __GST_OBJECT_H__ */
-
-#include <gst/gsttypes.h>
+#include <glib-object.h>
 
 G_BEGIN_DECLS
 
@@ -80,6 +78,9 @@ typedef enum
 #define GST_OBJECT_IS_DISPOSING(obj)    (GST_FLAG_IS_SET (obj, GST_OBJECT_DISPOSING))
 #define GST_OBJECT_IS_DESTROYED(obj)    (GST_FLAG_IS_SET (obj, GST_OBJECT_DESTROYED))
 #define GST_OBJECT_IS_FLOATING(obj)     (GST_FLAG_IS_SET (obj, GST_OBJECT_FLOATING))
+
+typedef struct _GstObject GstObject;
+typedef struct _GstObjectClass GstObjectClass;
 
 struct _GstObject {
   GObject 	 object;

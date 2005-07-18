@@ -29,7 +29,6 @@
 #include "gstbus.h"
 #include "gstmarshal.h"
 #include "gsterror.h"
-#include "gstscheduler.h"
 #include "gstevent.h"
 #include "gstutils.h"
 #include "gstinfo.h"
@@ -67,11 +66,7 @@ static void gst_element_finalize (GObject * object);
 static GstElementStateReturn gst_element_change_state (GstElement * element);
 static GstElementStateReturn gst_element_get_state_func (GstElement * element,
     GstElementState * state, GstElementState * pending, GTimeVal * timeout);
-static void gst_element_set_manager_func (GstElement * element,
-    GstPipeline * manager);
 static void gst_element_set_bus_func (GstElement * element, GstBus * bus);
-static void gst_element_set_scheduler_func (GstElement * element,
-    GstScheduler * scheduler);
 
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr gst_element_save_thyself (GstObject * object,
@@ -174,9 +169,7 @@ gst_element_class_init (GstElementClass * klass)
 
   klass->change_state = GST_DEBUG_FUNCPTR (gst_element_change_state);
   klass->get_state = GST_DEBUG_FUNCPTR (gst_element_get_state_func);
-  klass->set_manager = GST_DEBUG_FUNCPTR (gst_element_set_manager_func);
   klass->set_bus = GST_DEBUG_FUNCPTR (gst_element_set_bus_func);
-  klass->set_scheduler = GST_DEBUG_FUNCPTR (gst_element_set_scheduler_func);
   klass->numpadtemplates = 0;
 
   klass->elementfactory = NULL;
@@ -1915,6 +1908,7 @@ iterator_fold_with_resync (GstIterator * iter, GstIteratorFoldFunction func,
 
     switch (ires) {
       case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (iter);
         break;
       case GST_ITERATOR_DONE:
         res = TRUE;
@@ -1999,13 +1993,6 @@ gst_element_change_state (GstElement * element)
       }
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
-      /* FIXME really needed? */
-      GST_LOCK (element);
-      if (GST_ELEMENT_MANAGER (element)) {
-        element->base_time =
-            GST_ELEMENT_CAST (GST_ELEMENT_MANAGER (element))->base_time;
-      }
-      GST_UNLOCK (element);
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
@@ -2072,7 +2059,6 @@ gst_element_dispose (GObject * object)
   }
 
   GST_LOCK (element);
-  gst_object_replace ((GstObject **) & element->manager, NULL);
   gst_object_replace ((GstObject **) & element->clock, NULL);
   GST_UNLOCK (element);
 
@@ -2239,20 +2225,6 @@ gst_element_restore_thyself (GstObject * object, xmlNodePtr self)
 #endif /* GST_DISABLE_LOADSAVE */
 
 static void
-gst_element_set_manager_func (GstElement * element, GstPipeline * manager)
-{
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, element, "setting manager to %p",
-      manager);
-
-  /* setting the manager cannot increase the refcount */
-  GST_LOCK (element);
-  GST_ELEMENT_MANAGER (element) = manager;
-  GST_UNLOCK (element);
-}
-
-static void
 gst_element_set_bus_func (GstElement * element, GstBus * bus)
 {
   g_return_if_fail (GST_IS_ELEMENT (element));
@@ -2263,69 +2235,6 @@ gst_element_set_bus_func (GstElement * element, GstBus * bus)
   gst_object_replace ((GstObject **) & GST_ELEMENT_BUS (element),
       GST_OBJECT (bus));
   GST_UNLOCK (element);
-}
-
-static void
-gst_element_set_scheduler_func (GstElement * element, GstScheduler * scheduler)
-{
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, element, "setting scheduler to %p",
-      scheduler);
-
-  GST_LOCK (element);
-  gst_object_replace ((GstObject **) & GST_ELEMENT_SCHEDULER (element),
-      GST_OBJECT (scheduler));
-  GST_UNLOCK (element);
-}
-
-/**
- * gst_element_set_manager:
- * @element: a #GstElement to set the manager of.
- * @manager: the #GstManager to set.
- *
- * Sets the manager of the element.  For internal use only, unless you're
- * writing a new bin subclass.
- *
- * MT safe.
- */
-void
-gst_element_set_manager (GstElement * element, GstPipeline * manager)
-{
-  GstElementClass *oclass;
-
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  oclass = GST_ELEMENT_GET_CLASS (element);
-
-  if (oclass->set_manager)
-    oclass->set_manager (element, manager);
-}
-
-
-/**
- * gst_element_get_manager:
- * @element: a #GstElement to get the manager of.
- *
- * Returns the manager of the element.
- *
- * Returns: the element's #GstPipeline. unref after usage.
- *
- * MT safe.
- */
-GstPipeline *
-gst_element_get_manager (GstElement * element)
-{
-  GstPipeline *result = NULL;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (element), result);
-
-  GST_LOCK (element);
-  result = GST_ELEMENT_MANAGER (element);
-  gst_object_ref (result);
-  GST_UNLOCK (element);
-
-  return result;
 }
 
 /**
@@ -2374,53 +2283,6 @@ gst_element_get_bus (GstElement * element)
   GST_UNLOCK (element);
 
   GST_DEBUG_OBJECT (element, "got bus %" GST_PTR_FORMAT, result);
-
-  return result;
-}
-
-/**
- * gst_element_set_scheduler:
- * @element: a #GstElement to set the scheduler of.
- * @scheduler: the #GstScheduler to set.
- *
- * Sets the scheduler of the element.  For internal use only, unless you're
- * testing elements.
- *
- * MT safe.
- */
-void
-gst_element_set_scheduler (GstElement * element, GstScheduler * scheduler)
-{
-  GstElementClass *oclass;
-
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  oclass = GST_ELEMENT_GET_CLASS (element);
-
-  if (oclass->set_scheduler)
-    oclass->set_scheduler (element, scheduler);
-}
-
-/**
- * gst_element_get_scheduler:
- * @element: a #GstElement to get the scheduler of.
- *
- * Returns the scheduler of the element.
- *
- * Returns: the element's #GstScheduler.
- *
- * MT safe.
- */
-GstScheduler *
-gst_element_get_scheduler (GstElement * element)
-{
-  GstScheduler *result = NULL;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (element), result);
-
-  GST_LOCK (element);
-  result = GST_ELEMENT_SCHEDULER (element);
-  GST_UNLOCK (element);
 
   return result;
 }

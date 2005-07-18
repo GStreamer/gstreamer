@@ -24,7 +24,6 @@
 #ifndef __GST_PIPELINE_H__
 #define __GST_PIPELINE_H__
 
-#include <gst/gsttypes.h>
 #include <gst/gstbin.h>
 
 G_BEGIN_DECLS
@@ -35,6 +34,9 @@ G_BEGIN_DECLS
 #define GST_PIPELINE_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PIPELINE, GstPipelineClass))
 #define GST_IS_PIPELINE_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PIPELINE))
 #define GST_PIPELINE_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PIPELINE, GstPipelineClass))
+
+typedef struct _GstPipeline GstPipeline;
+typedef struct _GstPipelineClass GstPipelineClass;
 
 typedef enum {
   /* this pipeline works with a fixed clock */
@@ -67,7 +69,6 @@ struct _GstPipelineClass {
 GType		gst_pipeline_get_type		(void);
 GstElement*	gst_pipeline_new		(const gchar *name);
 
-GstScheduler*	gst_pipeline_get_scheduler	(GstPipeline *pipeline);
 GstBus*		gst_pipeline_get_bus		(GstPipeline *pipeline);
 
 void		gst_pipeline_set_new_stream_time  (GstPipeline *pipeline, GstClockTime time);

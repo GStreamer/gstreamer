@@ -24,8 +24,10 @@
 #ifndef __GST_ELEMENT_FACTORY_H__
 #define __GST_ELEMENT_FACTORY_H__
 
+typedef struct _GstElementFactory GstElementFactory;
+typedef struct _GstElementFactoryClass GstElementFactoryClass;
+
 #include <gst/gstconfig.h>
-#include <gst/gsttypes.h>
 #include <gst/gstelement.h>
 #include <gst/gstobject.h>
 #include <gst/gstplugin.h>
@@ -33,6 +35,8 @@
 #include <gst/gstiterator.h>
 
 G_BEGIN_DECLS
+
+typedef struct _GstElementDetails GstElementDetails;
 
 /* FIXME: need translatable stuff in here (how handle in registry)? */
 struct _GstElementDetails
@@ -48,7 +52,7 @@ struct _GstElementDetails
 };
 
 #define GST_ELEMENT_DETAILS(longname,klass,description,author)		\
-  { longname, klass, description, author, GST_PADDING_INIT }
+  { longname, klass, description, author, {0} }
 #define GST_IS_ELEMENT_DETAILS(details) (					\
   (details) && ((details)->longname != NULL) && ((details)->klass != NULL)	\
   && ((details)->description != NULL) && ((details)->author != NULL))

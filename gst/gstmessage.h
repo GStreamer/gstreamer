@@ -22,13 +22,10 @@
 #ifndef __GST_MESSAGE_H__
 #define __GST_MESSAGE_H__
 
-#include <gst/gsttypes.h>
-#include <gst/gstminiobject.h>
-#include <gst/gstobject.h>
-#include <gst/gsttag.h>
-#include <gst/gststructure.h>
-
 G_BEGIN_DECLS 
+
+typedef struct _GstMessage GstMessage;
+typedef struct _GstMessageClass GstMessageClass;
 
 /**
  * GstMessageType:
@@ -51,7 +48,7 @@ G_BEGIN_DECLS
  * @GST_MESSAGE_SEGMENT_DONE: pipeline completed playback of a segment.
  * @GST_MESSAGE_ANY: mask for all of the above messages.
  */
-typedef enum
+typedef enum _GstMessageType
 {
   GST_MESSAGE_UNKNOWN           = 0,
   GST_MESSAGE_EOS               = (1 << 0),
@@ -71,10 +68,13 @@ typedef enum
   GST_MESSAGE_ANY               = 0xffffffff
 } GstMessageType;
 
-#define GST_MESSAGE_TRACE_NAME	"GstMessage"
+#include <gst/gstminiobject.h>
+#include <gst/gstobject.h>
+#include <gst/gstelement.h>
+#include <gst/gsttag.h>
+#include <gst/gststructure.h>
 
-typedef struct _GstMessage GstMessage;
-typedef struct _GstMessageClass GstMessageClass;
+#define GST_MESSAGE_TRACE_NAME	"GstMessage"
 
 #define GST_TYPE_MESSAGE				(gst_message_get_type())
 #define GST_IS_MESSAGE(obj)                      (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MESSAGE))
@@ -118,6 +118,9 @@ struct _GstMessage
 
 struct _GstMessageClass {
   GstMiniObjectClass mini_object_class;
+
+  /*< private > */
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 void 		_gst_message_initialize 	(void);
@@ -146,6 +149,6 @@ void		gst_message_parse_state_changed	(GstMessage *message, GstElementState *old
                                                  GstElementState *new_state);
 const GstStructure *  gst_message_get_structure	(GstMessage *message);
 
-
 G_END_DECLS
+
 #endif /* __GST_MESSAGE_H__ */

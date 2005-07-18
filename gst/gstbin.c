@@ -32,7 +32,6 @@
 #include "gstinfo.h"
 #include "gsterror.h"
 
-#include "gstscheduler.h"
 #include "gstindex.h"
 #include "gstutils.h"
 
@@ -66,9 +65,6 @@ static void gst_bin_set_index_func (GstElement * element, GstIndex * index);
 #endif
 static GstClock *gst_bin_get_clock_func (GstElement * element);
 static void gst_bin_set_clock_func (GstElement * element, GstClock * clock);
-
-static void gst_bin_set_manager (GstElement * element, GstPipeline * manager);
-static void gst_bin_set_scheduler (GstElement * element, GstScheduler * sched);
 
 static gboolean gst_bin_send_event (GstElement * element, GstEvent * event);
 static GstBusSyncReply bin_bus_handler (GstBus * bus,
@@ -179,8 +175,6 @@ gst_bin_class_init (GstBinClass * klass)
 #endif
   gstelement_class->get_clock = GST_DEBUG_FUNCPTR (gst_bin_get_clock_func);
   gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_bin_set_clock_func);
-  gstelement_class->set_manager = GST_DEBUG_FUNCPTR (gst_bin_set_manager);
-  gstelement_class->set_scheduler = GST_DEBUG_FUNCPTR (gst_bin_set_scheduler);
 
   gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_bin_send_event);
   gstelement_class->query = GST_DEBUG_FUNCPTR (gst_bin_query);
@@ -295,50 +289,6 @@ gst_bin_get_clock_func (GstElement * element)
   return result;
 }
 
-/* set the scheduler on all of the children in this bin
- *
- * MT safe
- */
-static void
-gst_bin_set_scheduler (GstElement * element, GstScheduler * sched)
-{
-  GList *children;
-  GstBin *bin;
-
-  bin = GST_BIN (element);
-
-  parent_class->set_scheduler (element, sched);
-
-  GST_LOCK (bin);
-  for (children = bin->children; children; children = g_list_next (children)) {
-    GstElement *child = GST_ELEMENT (children->data);
-
-    gst_element_set_scheduler (child, sched);
-  }
-  GST_UNLOCK (bin);
-}
-
-/* set the manager on all of the children in this bin
- *
- * MT safe
- */
-static void
-gst_bin_set_manager (GstElement * element, GstPipeline * manager)
-{
-  GstBin *bin = GST_BIN (element);
-  GList *kids;
-  GstElement *kid;
-
-  GST_ELEMENT_CLASS (parent_class)->set_manager (element, manager);
-
-  GST_LOCK (element);
-  for (kids = bin->children; kids != NULL; kids = kids->next) {
-    kid = GST_ELEMENT (kids->data);
-    gst_element_set_manager (kid, manager);
-  }
-  GST_UNLOCK (element);
-}
-
 static gboolean
 is_eos (GstBin * bin)
 {
@@ -426,9 +376,9 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   bin->numchildren++;
   bin->children_cookie++;
 
-  gst_element_set_manager (element, GST_ELEMENT (bin)->manager);
   gst_element_set_bus (element, bin->child_bus);
-  gst_element_set_scheduler (element, GST_ELEMENT_SCHEDULER (bin));
+
+  gst_element_set_base_time (element, GST_ELEMENT (bin)->base_time);
   gst_element_set_clock (element, GST_ELEMENT_CLOCK (bin));
 
   GST_UNLOCK (bin);
@@ -552,9 +502,7 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
       elem_name);
   g_free (elem_name);
 
-  gst_element_set_manager (element, NULL);
   gst_element_set_bus (element, NULL);
-  gst_element_set_scheduler (element, NULL);
 
   /* unlock any waiters for the state change. It is possible that
    * we are waiting for an ASYNC state change on this element. The
@@ -878,13 +826,9 @@ gst_bin_get_state (GstElement * element, GstElementState * state,
   GstElementStateReturn ret = GST_STATE_SUCCESS;
   GList *children;
   guint32 children_cookie;
-  gboolean zero_timeout;
   gboolean have_no_preroll;
 
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "getting state");
-
-  zero_timeout = timeout != NULL && timeout->tv_sec == 0
-      && timeout->tv_usec == 0;
 
   /* lock bin, no element can be added or removed between going into
    * the quick scan and the blocking wait. */
@@ -893,11 +837,11 @@ gst_bin_get_state (GstElement * element, GstElementState * state,
 restart:
   have_no_preroll = FALSE;
 
-  /* if we have a non zero timeout we must make sure not to block
+  /* first we need to poll with a non zero timeout to make sure we don't block
    * on the sinks when we have NO_PREROLL elements. This is why we do
    * a quick check if there are still NO_PREROLL elements. We also
    * catch the error elements this way. */
-  if (!zero_timeout) {
+  {
     GTimeVal tv;
     gboolean have_async = FALSE;
 
@@ -928,7 +872,7 @@ restart:
       }
 
       switch (ret) {
-          /* report FAILURE or NO_PREROLL immediatly */
+          /* report FAILURE  immediatly */
         case GST_STATE_FAILURE:
           goto done;
         case GST_STATE_NO_PREROLL:
@@ -996,13 +940,8 @@ restart:
       case GST_STATE_NO_PREROLL:
         /* report FAILURE and NO_PREROLL immediatly */
         goto done;
-        break;
       case GST_STATE_ASYNC:
-        /* since we checked for non prerollable elements before,
-         * the first ASYNC return is the real return value */
-        if (!zero_timeout)
-          goto done;
-        break;
+        goto done;
       default:
         g_assert_not_reached ();
     }
@@ -1244,36 +1183,42 @@ restart:
 
       peer = gst_pad_get_peer (pad);
       if (peer) {
-        GstElement *peer_elem;
+        GstObject *peer_parent;
 
-        peer_elem = gst_pad_get_parent (peer);
+        /*  get parent */
+        peer_parent = gst_object_get_parent (GST_OBJECT (peer));
 
-        if (peer_elem) {
+        /* if we have an element parent, follow it */
+        if (peer_parent && GST_IS_ELEMENT (peer_parent)) {
           GstObject *parent;
 
           /* see if this element is in the bin we are currently handling */
-          parent = gst_object_get_parent (GST_OBJECT_CAST (peer_elem));
+          parent = gst_object_get_parent (peer_parent);
           if (parent) {
             if (parent == GST_OBJECT_CAST (bin)) {
               GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-                  "adding element %s to queue", GST_ELEMENT_NAME (peer_elem));
+                  "adding element %s to queue", GST_ELEMENT_NAME (peer_parent));
 
               /* make sure we don't have duplicates */
-              remove_all_from_queue (semi_queue, peer_elem, TRUE);
-              remove_all_from_queue (elem_queue, peer_elem, TRUE);
+              remove_all_from_queue (semi_queue, peer_parent, TRUE);
+              remove_all_from_queue (elem_queue, peer_parent, TRUE);
 
               /* was reffed before pushing on the queue by the
                * gst_object_get_parent() call we used to get the element. */
-              g_queue_push_tail (elem_queue, peer_elem);
+              g_queue_push_tail (elem_queue, peer_parent);
+              /* so that we don't unref it */
+              peer_parent = NULL;
             } else {
               GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
                   "not adding element %s to queue, it is in another bin",
-                  GST_ELEMENT_NAME (peer_elem));
-              gst_object_unref (peer_elem);
+                  GST_ELEMENT_NAME (peer_parent));
             }
             gst_object_unref (parent);
           }
         }
+        if (peer_parent)
+          gst_object_unref (peer_parent);
+
         gst_object_unref (peer);
       } else {
         GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,

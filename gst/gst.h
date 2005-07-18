@@ -28,7 +28,6 @@
 #include <popt.h>
 
 #include <gst/gstenumtypes.h>
-#include <gst/gsttypes.h>
 #include <gst/gstversion.h>
 
 #include <gst/gstbin.h>
@@ -52,7 +51,6 @@
 #include <gst/gstplugin.h>
 #include <gst/gstquery.h>
 #include <gst/gstqueryutils.h>
-#include <gst/gstscheduler.h>
 #include <gst/gststructure.h>
 #include <gst/gstsystemclock.h>
 #include <gst/gsttag.h>

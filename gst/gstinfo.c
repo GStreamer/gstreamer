@@ -37,9 +37,6 @@
 #include <unistd.h>
 #endif
 #include <string.h>             /* G_VA_COPY */
-#include "gstelement.h"
-#include "gstpad.h"
-#include "gstscheduler.h"
 #include "gst_private.h"
 #include "gstutils.h"
 #ifdef HAVE_VALGRIND
@@ -129,17 +126,12 @@ gboolean __gst_debug_enabled = TRUE;
 GstDebugCategory *GST_CAT_DEFAULT = NULL;
 
 GstDebugCategory *GST_CAT_GST_INIT = NULL;
-GstDebugCategory *GST_CAT_COTHREADS = NULL;
-GstDebugCategory *GST_CAT_COTHREAD_SWITCH = NULL;
 GstDebugCategory *GST_CAT_AUTOPLUG = NULL;
 GstDebugCategory *GST_CAT_AUTOPLUG_ATTEMPT = NULL;
 GstDebugCategory *GST_CAT_PARENTAGE = NULL;
 GstDebugCategory *GST_CAT_STATES = NULL;
-GstDebugCategory *GST_CAT_PLANNING = NULL;
 GstDebugCategory *GST_CAT_SCHEDULING = NULL;
 
-/* FIXME: remove GST_CAT_DATAFLOW in 0.9 */
-GstDebugCategory *GST_CAT_DATAFLOW = NULL;
 GstDebugCategory *GST_CAT_BUFFER = NULL;
 GstDebugCategory *GST_CAT_CAPS = NULL;
 GstDebugCategory *GST_CAT_CLOCK = NULL;
@@ -159,7 +151,6 @@ GstDebugCategory *GST_CAT_EVENT = NULL;
 GstDebugCategory *GST_CAT_MESSAGE = NULL;
 GstDebugCategory *GST_CAT_PARAMS = NULL;
 GstDebugCategory *GST_CAT_CALL_TRACE = NULL;
-GstDebugCategory *GST_CAT_SEEK = NULL;
 GstDebugCategory *GST_CAT_SIGNAL = NULL;
 GstDebugCategory *GST_CAT_PROBE = NULL;
 
@@ -232,10 +223,6 @@ _gst_debug_init (void)
   /* FIXME: add descriptions here */
   GST_CAT_GST_INIT = _gst_debug_category_new ("GST_INIT",
       GST_DEBUG_BOLD | GST_DEBUG_FG_RED, NULL);
-  GST_CAT_COTHREADS = _gst_debug_category_new ("GST_COTHREADS",
-      GST_DEBUG_BOLD | GST_DEBUG_FG_GREEN, NULL);
-  GST_CAT_COTHREAD_SWITCH = _gst_debug_category_new ("GST_COTHREAD_SWITCH",
-      GST_DEBUG_BOLD | GST_DEBUG_FG_WHITE | GST_DEBUG_BG_GREEN, NULL);
   GST_CAT_AUTOPLUG = _gst_debug_category_new ("GST_AUTOPLUG",
       GST_DEBUG_BOLD | GST_DEBUG_FG_BLUE, NULL);
   GST_CAT_AUTOPLUG_ATTEMPT = _gst_debug_category_new ("GST_AUTOPLUG_ATTEMPT",
@@ -244,13 +231,8 @@ _gst_debug_init (void)
       GST_DEBUG_BOLD | GST_DEBUG_FG_WHITE | GST_DEBUG_BG_RED, NULL);
   GST_CAT_STATES = _gst_debug_category_new ("GST_STATES",
       GST_DEBUG_BOLD | GST_DEBUG_FG_RED, NULL);
-  GST_CAT_PLANNING = _gst_debug_category_new ("GST_PLANNING",
-      GST_DEBUG_BOLD | GST_DEBUG_FG_MAGENTA, NULL);
   GST_CAT_SCHEDULING = _gst_debug_category_new ("GST_SCHEDULING",
       GST_DEBUG_BOLD | GST_DEBUG_FG_MAGENTA, NULL);
-/* FIXME: remove GST_CAT_DATAFLOW in 0.9 */
-  GST_CAT_DATAFLOW = _gst_debug_category_new ("GST_DATAFLOW",
-      GST_DEBUG_BOLD | GST_DEBUG_FG_GREEN, "dataflow inside pads");
   GST_CAT_BUFFER = _gst_debug_category_new ("GST_BUFFER",
       GST_DEBUG_BOLD | GST_DEBUG_FG_GREEN, NULL);
   GST_CAT_CAPS = _gst_debug_category_new ("GST_CAPS",
@@ -290,9 +272,6 @@ _gst_debug_init (void)
       GST_DEBUG_BOLD | GST_DEBUG_FG_BLACK | GST_DEBUG_BG_YELLOW, NULL);
   GST_CAT_CALL_TRACE = _gst_debug_category_new ("GST_CALL_TRACE",
       GST_DEBUG_BOLD, NULL);
-  /* FIXME: fold back to GST_CAT_EVENT in 0.9 */
-  GST_CAT_SEEK = _gst_debug_category_new ("GST_SEEK",
-      GST_DEBUG_BOLD | GST_DEBUG_FG_BLUE, "plugins reacting to seek events");
   GST_CAT_SIGNAL = _gst_debug_category_new ("GST_SIGNAL",
       GST_DEBUG_BOLD | GST_DEBUG_FG_WHITE | GST_DEBUG_BG_RED, NULL);
   GST_CAT_PROBE = _gst_debug_category_new ("GST_PROBE",

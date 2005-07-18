@@ -129,7 +129,7 @@ _gst_message_copy (GstMessage * message)
 
   copy = (GstMessage *) gst_mini_object_new (GST_TYPE_MESSAGE);
 
-  /* FIXME */
+  /* FIXME, need to copy relevant data from the miniobject. */
   //memcpy (copy, message, sizeof (GstMessage));
 
   copy->lock = message->lock;

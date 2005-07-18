@@ -61,8 +61,8 @@ else
 GST_URI_SRC = gsturi.c
 endif
 
-SUBDIRS = $(GST_PARSE_DIRS) $(GST_REGISTRY_DIRS) . base elements schedulers $(GST_INDEX_DIRS) 
-DIST_SUBDIRS = base elements parse registries schedulers indexers
+SUBDIRS = $(GST_PARSE_DIRS) $(GST_REGISTRY_DIRS) . base elements $(GST_INDEX_DIRS) 
+DIST_SUBDIRS = base elements parse registries indexers
 
 # make variables for all generated source and header files to make the
 # distinction clear
@@ -103,7 +103,6 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstquery.c		\
 	gstqueryutils.c		\
 	gstqueue.c		\
-	gstscheduler.c		\
 	gststructure.c		\
 	gstsystemclock.c	\
 	gsttag.c		\
@@ -179,7 +178,6 @@ gst_headers =			\
 	gstquery.h		\
 	gstqueryutils.h		\
 	gstqueue.h		\
-	gstscheduler.h		\
 	gststructure.h		\
 	gstsystemclock.h	\
 	gsttag.h		\
@@ -188,7 +186,6 @@ gst_headers =			\
 	gsttrace.h		\
 	gsttrashstack.h		\
 	gsttypefind.h		\
-	gsttypes.h		\
 	gsturi.h		\
 	gsturitype.h		\
 	gstutils.h		\

@@ -1,5 +1,78 @@
 2005-07-18  Wim Taymans  <wim@fluendo.com>
 
+	* check/elements/gstfakesrc.c: (GST_START_TEST):
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/gst.c: (gst_init_get_popt_table), (init_pre), (init_post),
+	(init_popt_callback):
+	* gst/gst.h:
+	* gst/gst_private.h:
+	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_add_func),
+	(gst_bin_remove_func), (gst_bin_get_state), (gst_bin_change_state):
+	* gst/gstbin.h:
+	* gst/gstbus.h:
+	* gst/gstconfig.h.in:
+	* gst/gstelement.c: (gst_element_class_init),
+	(gst_element_set_base_time), (gst_element_get_base_time),
+	(iterator_fold_with_resync), (gst_element_change_state),
+	(gst_element_dispose), (gst_element_get_bus):
+	* gst/gstelement.h:
+	* gst/gstelementfactory.h:
+	* gst/gsterror.c: (_gst_core_errors_init):
+	* gst/gsterror.h:
+	* gst/gstevent.h:
+	* gst/gstghostpad.c: (gst_ghost_pad_do_activate_push):
+	* gst/gstindex.c:
+	* gst/gstinfo.c: (_gst_debug_init):
+	* gst/gstmessage.c: (_gst_message_copy):
+	* gst/gstmessage.h:
+	* gst/gstminiobject.h:
+	* gst/gstobject.c:
+	* gst/gstobject.h:
+	* gst/gstpad.c: (gst_pad_get_caps_unlocked), (gst_pad_accept_caps),
+	(gst_pad_set_caps), (gst_pad_start_task), (gst_pad_stop_task):
+	* gst/gstpad.h:
+	* gst/gstparse.h:
+	* gst/gstpipeline.c: (gst_pipeline_init), (gst_pipeline_dispose),
+	(gst_pipeline_change_state), (gst_pipeline_set_new_stream_time),
+	(gst_pipeline_get_last_stream_time):
+	* gst/gstpipeline.h:
+	* gst/gstpluginfeature.h:
+	* gst/gstquery.h:
+	* gst/gstscheduler.c:
+	* gst/gstscheduler.h:
+	* gst/gststructure.h:
+	* gst/gsttask.c: (gst_task_get_type), (gst_task_class_init),
+	(gst_task_finalize), (gst_task_func), (gst_task_create),
+	(gst_task_set_lock), (gst_task_get_state), (gst_task_start),
+	(gst_task_stop), (gst_task_pause):
+	* gst/gsttask.h:
+	* gst/gsttypefind.h:
+	* gst/gsttypes.h:
+	* gst/registries/gstlibxmlregistry.c: (load_feature),
+	(gst_xml_registry_load), (gst_xml_registry_save_feature):
+	* gst/registries/gstxmlregistry.c:
+	(gst_xml_registry_start_element), (gst_xml_registry_save_feature):
+	* gst/schedulers/threadscheduler.c:
+	* libs/gst/control/dparammanager.h:
+	* tools/gst-inspect.c: (print_element_list),
+	(print_plugin_features), (print_element_features):
+	* tools/gst-xmlinspect.c: (print_element_list),
+	(print_plugin_info), (main):
+	Removed plugable schedulers.
+	Removed Scheduler/Manager from elements.
+	Removed gsttypes.h, rearranged includes.
+	Removed dependency pad<->element, element<>pipeline, and
+	various others,  fix includes.
+	implement gst_pad_get_parent() with gst_object_get_parent()
+	Make GstTask sefcontained.
+	Fix _get_state() on GstBin, it did not return ASYNC with a 0
+	timeout.
+	Fix endless loop in iterator_fold_with_resync.
+
+
+2005-07-18  Wim Taymans  <wim@fluendo.com>
+
 	* gst/Makefile.am:
 	* gst/gstarch.h:
 	Remove old file.

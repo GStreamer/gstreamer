@@ -93,7 +93,6 @@ enum
   ARG_PLUGIN_PATH,
   ARG_PLUGIN_LOAD,
   ARG_SEGTRAP_DISABLE,
-  ARG_SCHEDULER,
   ARG_REGISTRY
 };
 
@@ -191,8 +190,6 @@ gst_init_get_popt_table (void)
           ARG_SEGTRAP_DISABLE,
           N_("Disable trapping of segmentation faults during plugin loading"),
         NULL},
-    {"gst-scheduler", NUL, POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL,
-        ARG_SCHEDULER, NULL, N_("SCHEDULER")},
     {"gst-registry", NUL, POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL,
         ARG_REGISTRY, N_("Registry to use"), N_("REGISTRY")},
     POPT_TABLEEND
@@ -209,10 +206,6 @@ gst_init_get_popt_table (void)
             g_strdup_printf (_
             ("path list for loading plugins (separated by '%s')"),
             G_SEARCHPATH_SEPARATOR_S);
-      } else if (strcmp (gstreamer_options[i].longName, "gst-scheduler") == 0) {
-        gstreamer_options[i].descrip =
-            g_strdup_printf (_("Scheduler to use (default is '%s')"),
-            GST_SCHEDULER_DEFAULT_NAME);
       }
     }
 
@@ -500,8 +493,6 @@ init_pre (void)
     gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/elements");
     gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/types");
     gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/autoplug");
-    gst_registry_add_path (_global_registry,
-        PLUGINS_BUILDDIR "/gst/schedulers");
     gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/indexers");
 #else
     /* add the main (installed) library path if GST_PLUGIN_PATH_ONLY not set */
@@ -585,7 +576,6 @@ init_post (void)
   gst_pad_get_type ();
   gst_element_factory_get_type ();
   gst_element_get_type ();
-  gst_scheduler_factory_get_type ();
   gst_type_find_factory_get_type ();
   gst_bin_get_type ();
 
@@ -783,9 +773,6 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
           break;
         case ARG_SEGTRAP_DISABLE:
           _gst_disable_segtrap = TRUE;
-          break;
-        case ARG_SCHEDULER:
-          gst_scheduler_factory_set_default_name (arg);
           break;
         case ARG_REGISTRY:
 #ifndef GST_DISABLE_REGISTRY

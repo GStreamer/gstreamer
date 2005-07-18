@@ -46,13 +46,10 @@ gboolean __gst_in_valgrind (void);
 #include <gst/gstinfo.h>
 
 extern GstDebugCategory *GST_CAT_GST_INIT;
-extern GstDebugCategory *GST_CAT_COTHREADS;
-extern GstDebugCategory *GST_CAT_COTHREAD_SWITCH;
 extern GstDebugCategory *GST_CAT_AUTOPLUG;
 extern GstDebugCategory *GST_CAT_AUTOPLUG_ATTEMPT;
 extern GstDebugCategory *GST_CAT_PARENTAGE;
 extern GstDebugCategory *GST_CAT_STATES;
-extern GstDebugCategory *GST_CAT_PLANNING;
 extern GstDebugCategory *GST_CAT_SCHEDULING;
 extern GstDebugCategory *GST_CAT_BUFFER;
 extern GstDebugCategory *GST_CAT_CAPS;
@@ -78,13 +75,10 @@ extern GstDebugCategory *GST_CAT_PROBE;
 #else
 
 #define GST_CAT_GST_INIT         NULL
-#define GST_CAT_COTHREADS        NULL
-#define GST_CAT_COTHREAD_SWITCH  NULL
 #define GST_CAT_AUTOPLUG         NULL
 #define GST_CAT_AUTOPLUG_ATTEMPT NULL
 #define GST_CAT_PARENTAGE        NULL
 #define GST_CAT_STATES           NULL
-#define GST_CAT_PLANNING         NULL
 #define GST_CAT_SCHEDULING       NULL
 #define GST_CAT_DATAFLOW         NULL
 #define GST_CAT_BUFFER           NULL

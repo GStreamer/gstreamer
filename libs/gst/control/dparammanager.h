@@ -22,7 +22,7 @@
 #ifndef __GST_DPMAN_H__
 #define __GST_DPMAN_H__
 
-#include <gst/gstobject.h>
+#include <gst/gstelement.h>
 #include <gst/control/dparamcommon.h>
 #include <gst/control/dparam.h>
 #include <gst/control/unitconvert.h>

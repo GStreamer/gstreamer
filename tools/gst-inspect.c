@@ -883,13 +883,6 @@ print_element_list (gboolean print_all)
           if (!print_all)
             g_print ("no extensions\n");
         }
-      } else if (GST_IS_SCHEDULER_FACTORY (feature)) {
-        GstSchedulerFactory *factory;
-
-        factory = GST_SCHEDULER_FACTORY (feature);
-        if (!print_all)
-          g_print ("%s:  %s: %s\n", plugin->desc.name,
-              GST_PLUGIN_FEATURE_NAME (factory), factory->longdesc);
       } else {
         if (!print_all)
           n_print ("%s:  %s (%s)\n", plugin->desc.name,
@@ -923,7 +916,6 @@ print_plugin_features (GstPlugin * plugin)
   gint num_features = 0;
   gint num_elements = 0;
   gint num_types = 0;
-  gint num_schedulers = 0;
   gint num_indexes = 0;
   gint num_other = 0;
 
@@ -968,12 +960,6 @@ print_plugin_features (GstPlugin * plugin)
         g_print ("%s type: N/A\n", plugin->desc.name);
 
       num_types++;
-    } else if (GST_IS_SCHEDULER_FACTORY (feature)) {
-      GstSchedulerFactory *factory;
-
-      factory = GST_SCHEDULER_FACTORY (feature);
-      n_print ("  %s: %s\n", GST_OBJECT_NAME (factory), factory->longdesc);
-      num_schedulers++;
     } else {
       n_print ("  %s (%s)\n", gst_object_get_name (GST_OBJECT (feature)),
           g_type_name (G_OBJECT_TYPE (feature)));
@@ -988,8 +974,6 @@ print_plugin_features (GstPlugin * plugin)
     n_print ("  +-- %d elements\n", num_elements);
   if (num_types > 0)
     n_print ("  +-- %d types\n", num_types);
-  if (num_schedulers > 0)
-    n_print ("  +-- %d schedulers\n", num_schedulers);
   if (num_indexes > 0)
     n_print ("  +-- %d indexes\n", num_indexes);
   if (num_other > 0)
@@ -1004,12 +988,6 @@ print_element_features (const gchar * element_name)
   GstPluginFeature *feature;
 
   /* FIXME implement other pretty print function for these */
-  feature = gst_registry_pool_find_feature (element_name,
-      GST_TYPE_SCHEDULER_FACTORY);
-  if (feature) {
-    n_print ("%s: a scheduler\n", element_name);
-    return 0;
-  }
 #ifndef GST_DISABLE_INDEX
   feature = gst_registry_pool_find_feature (element_name,
       GST_TYPE_INDEX_FACTORY);

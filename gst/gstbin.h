@@ -54,8 +54,8 @@ typedef enum {
   GST_BIN_FLAG_LAST		= GST_ELEMENT_FLAG_LAST + 5
 } GstBinFlags;
 
-/*typedef struct _GstBin GstBin; */
-/*typedef struct _GstBinClass GstBinClass; */
+typedef struct _GstBin GstBin; 
+typedef struct _GstBinClass GstBinClass; 
 
 #define GST_BIN_NUMCHILDREN(bin)	(GST_BIN_CAST(bin)->numchildren);
 #define GST_BIN_CHILDREN(bin)		(GST_BIN_CAST(bin)->children);

@@ -24,9 +24,11 @@
 
 #include "gstinfo.h"
 #include "gstregistrypool.h"
-#include "gstpad.h"
 #include "gstindex.h"
 #include "gstmarshal.h"
+/* for constructing an entry name */
+#include "gstelement.h"
+#include "gstpad.h"
 
 /* Index signals and args */
 enum

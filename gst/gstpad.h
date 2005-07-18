@@ -34,7 +34,6 @@
 #include <gst/gstqueryutils.h>
 #include <gst/gsttask.h>
 
-
 G_BEGIN_DECLS
 
 GST_EXPORT GType _gst_pad_type;
@@ -50,12 +49,11 @@ GST_EXPORT GType _gst_pad_type;
 #define GST_PAD_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PAD, GstPadClass))
 #define GST_PAD_CAST(obj)		((GstPad*)(obj))
 
+typedef struct _GstPad GstPad;
+typedef struct _GstPadClass GstPadClass;
 
-/* why are these in gsttypes, again? */
-/*typedef struct _GstPad GstPad;*/
-/*typedef struct _GstPadClass GstPadClass;*/
-/*typedef struct _GstPadTemplate GstPadTemplate;*/
-/*typedef struct _GstPadTemplateClass GstPadTemplateClass;*/
+typedef struct _GstPadTemplate GstPadTemplate;
+typedef struct _GstPadTemplateClass GstPadTemplateClass;
 typedef struct _GstStaticPadTemplate GstStaticPadTemplate;
 
 typedef enum {
@@ -366,7 +364,7 @@ GstPad*			gst_pad_new				(const gchar *name, GstPadDirection direction);
 GstPad*			gst_pad_new_from_template		(GstPadTemplate *templ, const gchar *name);
 
 #define gst_pad_get_name(pad) gst_object_get_name (GST_OBJECT_CAST (pad))
-GstElement*		gst_pad_get_parent			(GstPad *pad);
+#define gst_pad_get_parent(pad) gst_object_get_parent (GST_OBJECT_CAST (pad))
 
 GstPadDirection		gst_pad_get_direction			(GstPad *pad);
 

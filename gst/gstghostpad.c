@@ -25,9 +25,6 @@
 #include "gst_private.h"
 
 #include "gstghostpad.h"
-#include "gstelement.h"
-#include "gstbin.h"
-
 
 #define GST_TYPE_PROXY_PAD		(gst_proxy_pad_get_type ())
 #define GST_IS_PROXY_PAD(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PROXY_PAD))

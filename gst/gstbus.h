@@ -22,7 +22,9 @@
 #ifndef __GST_BUS_H__
 #define __GST_BUS_H__
 
-#include <gst/gsttypes.h>
+typedef struct _GstBus GstBus;
+typedef struct _GstBusClass GstBusClass;
+
 #include <gst/gstmessage.h>
 #include <gst/gstclock.h>
 

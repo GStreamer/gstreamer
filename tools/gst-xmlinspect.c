@@ -709,12 +709,6 @@ print_element_list (void)
           }
         } else
           g_print ("%s type: N/A\n", plugin->desc.name);
-      } else if (GST_IS_SCHEDULER_FACTORY (feature)) {
-        GstSchedulerFactory *factory;
-
-        factory = GST_SCHEDULER_FACTORY (feature);
-        g_print ("%s:  %s: %s\n", plugin->desc.name,
-            GST_PLUGIN_FEATURE_NAME (factory), factory->longdesc);
       } else {
         g_print ("%s:  %s (%s)\n", plugin->desc.name,
             GST_PLUGIN_FEATURE_NAME (feature),
@@ -734,7 +728,6 @@ print_plugin_info (GstPlugin * plugin)
   gint num_elements = 0;
   gint num_autoplug = 0;
   gint num_types = 0;
-  gint num_schedulers = 0;
   gint num_indexes = 0;
   gint num_other = 0;
 
@@ -787,12 +780,6 @@ print_plugin_info (GstPlugin * plugin)
       } else
         g_print ("%s type: N/A\n", plugin->desc.name);
       num_types++;
-    } else if (GST_IS_SCHEDULER_FACTORY (feature)) {
-      GstSchedulerFactory *factory;
-
-      factory = GST_SCHEDULER_FACTORY (feature);
-      g_print ("  %s: %s\n", GST_OBJECT_NAME (factory), factory->longdesc);
-      num_schedulers++;
     } else {
       g_print ("  %s (%s)\n", gst_object_get_name (GST_OBJECT (feature)),
           g_type_name (G_OBJECT_TYPE (feature)));
@@ -808,8 +795,6 @@ print_plugin_info (GstPlugin * plugin)
     g_print ("  +-- %d autopluggers\n", num_autoplug);
   if (num_types > 0)
     g_print ("  +-- %d types\n", num_types);
-  if (num_schedulers > 0)
-    g_print ("  +-- %d schedulers\n", num_schedulers);
   if (num_indexes > 0)
     g_print ("  +-- %d indexes\n", num_indexes);
   if (num_other > 0)
@@ -828,9 +813,6 @@ main (int argc, char *argv[])
   struct poptOption options[] = {
     {"gst-inspect-plugin", 'p', POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL, 0,
         "Show plugin details", NULL},
-    {"gst-inspect-scheduler", 's', POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL,
-          0,
-        "Show scheduler details", NULL},
     POPT_TABLEEND
   };
 
@@ -867,12 +849,6 @@ main (int argc, char *argv[])
         GstPluginFeature *feature;
 
         /* FIXME implement other pretty print function for these */
-        feature = gst_registry_pool_find_feature (argv[1],
-            GST_TYPE_SCHEDULER_FACTORY);
-        if (feature) {
-          g_print ("%s: a scheduler\n", argv[1]);
-          return 0;
-        }
 #ifndef GST_DISABLE_INDEX
         feature = gst_registry_pool_find_feature (argv[1],
             GST_TYPE_INDEX_FACTORY);

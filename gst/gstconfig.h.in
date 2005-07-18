@@ -20,6 +20,9 @@
 #define GST_DISABLE_URI 1
 #endif
 
+/***** default padding of structures *****/
+#define GST_PADDING		4
+#define GST_PADDING_INIT	{0}
 
 /***** disabling of subsystems *****/
 

@@ -24,7 +24,6 @@
 
 #include "gstpipeline.h"
 #include "gstinfo.h"
-#include "gstscheduler.h"
 #include "gstsystemclock.h"
 
 static GstElementDetails gst_pipeline_details =
@@ -137,29 +136,10 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
 static void
 gst_pipeline_init (GTypeInstance * instance, gpointer g_class)
 {
-  GstScheduler *scheduler;
   GstPipeline *pipeline = GST_PIPELINE (instance);
-
-  /* get an instance of the default scheduler */
-  scheduler = gst_scheduler_factory_make (NULL, GST_ELEMENT (pipeline));
-
-  /* FIXME need better error handling */
-  if (scheduler == NULL) {
-    const gchar *name = gst_scheduler_factory_get_default_name ();
-
-    g_error ("Critical error: could not get scheduler \"%s\"\n"
-        "Are you sure you have a registry ?\n"
-        "Run gst-register as root if you haven't done so yet.", name);
-  } else {
-    gst_element_set_scheduler (GST_ELEMENT (pipeline), scheduler);
-    /* set_scheduler refs the bus via gst_object_replace, we drop our ref */
-    gst_object_unref ((GstObject *) scheduler);
-  }
 
   pipeline->delay = DEFAULT_DELAY;
   pipeline->play_timeout = DEFAULT_PLAY_TIMEOUT;
-  /* we are our own manager */
-  GST_ELEMENT_MANAGER (pipeline) = pipeline;
 }
 
 static void
@@ -169,8 +149,6 @@ gst_pipeline_dispose (GObject * object)
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, pipeline, "dispose");
 
-  gst_scheduler_reset (GST_ELEMENT_SCHEDULER (object));
-  gst_element_set_scheduler (GST_ELEMENT (pipeline), NULL);
   gst_object_replace ((GstObject **) & pipeline->fixed_clock, NULL);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -285,7 +263,6 @@ gst_pipeline_change_state (GstElement * element)
       if (element->bus)
         gst_bus_set_flushing (element->bus, FALSE);
       GST_UNLOCK (element);
-      gst_scheduler_setup (GST_ELEMENT_SCHEDULER (pipeline));
       break;
     case GST_STATE_READY_TO_PAUSED:
       break;
@@ -390,22 +367,6 @@ gst_pipeline_change_state (GstElement * element)
   }
 
   return result;
-}
-
-/**
- * gst_pipeline_get_scheduler:
- * @pipeline: the pipeline
- *
- * Gets the #GstScheduler of this pipeline.
- *
- * Returns: a GstScheduler.
- *
- * MT safe.
- */
-GstScheduler *
-gst_pipeline_get_scheduler (GstPipeline * pipeline)
-{
-  return gst_element_get_scheduler (GST_ELEMENT (pipeline));
 }
 
 /**

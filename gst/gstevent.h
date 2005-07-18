@@ -24,7 +24,6 @@
 #ifndef __GST_EVENT_H__
 #define __GST_EVENT_H__
 
-#include <gst/gsttypes.h>
 #include <gst/gstminiobject.h>
 #include <gst/gstformat.h>
 #include <gst/gstobject.h>
@@ -211,6 +210,8 @@ struct _GstEvent {
 struct _GstEventClass {
   GstMiniObjectClass mini_object_class;
 
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 void		_gst_event_initialize		(void);
@@ -245,6 +246,7 @@ gboolean	gst_event_discont_get_value	(GstEvent *event, GstFormat format,
 						 gint64 *start_value, gint64 *end_value);
 
 #define		gst_event_new_filler()		gst_event_new(GST_EVENT_FILLER)
+#define		gst_event_new_eos()		gst_event_new(GST_EVENT_EOS)
 
 /* flush events */
 GstEvent*	gst_event_new_flush 		(gboolean done);

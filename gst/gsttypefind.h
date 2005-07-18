@@ -23,11 +23,9 @@
 #ifndef __GST_TYPE_FIND_H__
 #define __GST_TYPE_FIND_H__
 
-#include <gst/gstbuffer.h>
 #include <gst/gstcaps.h>
 #include <gst/gstplugin.h>
 #include <gst/gstpluginfeature.h>
-#include <gst/gsttypes.h>
 
 G_BEGIN_DECLS
 
@@ -54,17 +52,17 @@ typedef enum {
 
 struct _GstTypeFind {
   /* private to the caller of the typefind function */
-  guint8 *		(* peek)			(gpointer		data,
-							 gint64	         	offset,
-							 guint			size);
-  void			(* suggest)			(gpointer		data,
-							 guint			probability,
-							 const GstCaps *		caps);
+  guint8 *	(* peek)	(gpointer		data,
+				 gint64	         	offset,
+				 guint			size);
+  void		(* suggest)	(gpointer		data,
+				 guint			probability,
+				 const GstCaps *	caps);
   
-  gpointer			data;
+  gpointer	data;
   
   /* optional */
-  guint64		(* get_length)			(gpointer		data);
+  guint64	(* get_length)	(gpointer		data);
 
   /* <private> */
   gpointer _gst_reserved[GST_PADDING];

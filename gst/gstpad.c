@@ -26,10 +26,6 @@
 #include "gstenumtypes.h"
 #include "gstmarshal.h"
 #include "gstutils.h"
-#include "gstelement.h"
-#include "gstbin.h"
-#include "gstscheduler.h"
-#include "gstevent.h"
 #include "gstinfo.h"
 #include "gsterror.h"
 #include "gstvalue.h"
@@ -369,35 +365,6 @@ gst_pad_new_from_template (GstPadTemplate * templ, const gchar * name)
 
   return g_object_new (GST_TYPE_PAD,
       "name", name, "direction", templ->direction, "template", templ, NULL);
-}
-
-/**
- * gst_pad_get_parent:
- * @pad: a pad
- *
- * Gets the parent of @pad, cast to a #GstElement. If a @pad has no parent or
- * its parent is not an element, return NULL.
- *
- * Returns: The parent of the pad. The caller has a reference on the parent, so
- * unref when you're finished with it.
- *
- * MT safe.
- */
-GstElement *
-gst_pad_get_parent (GstPad * pad)
-{
-  GstObject *p;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  p = gst_object_get_parent (GST_OBJECT_CAST (pad));
-
-  if (p && !GST_IS_ELEMENT (p)) {
-    gst_object_unref (p);
-    p = NULL;
-  }
-
-  return GST_ELEMENT_CAST (p);
 }
 
 /**
@@ -3545,55 +3512,27 @@ gst_pad_get_element_private (GstPad * pad)
  * dataflow. This function will automatically acauire the STREAM_LOCK of
  * the pad before calling @func.
  *
- * Returns: a TRUE if the task could be started. FALSE when the pad has
- * no parent or the parent has no scheduler.
+ * Returns: a TRUE if the task could be started. 
  */
 gboolean
 gst_pad_start_task (GstPad * pad, GstTaskFunction func, gpointer data)
 {
-  GstElement *parent;
-  GstScheduler *sched;
   GstTask *task;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (func != NULL, FALSE);
 
   GST_LOCK (pad);
-  parent = GST_PAD_PARENT (pad);
-
-  if (parent == NULL || !GST_IS_ELEMENT (parent))
-    goto no_parent;
-
-  sched = GST_ELEMENT_SCHEDULER (parent);
-  if (sched == NULL)
-    goto no_sched;
-
   task = GST_PAD_TASK (pad);
   if (task == NULL) {
-    task = gst_scheduler_create_task (sched, func, data);
+    task = gst_task_create (func, data);
     gst_task_set_lock (task, GST_STREAM_GET_LOCK (pad));
-
     GST_PAD_TASK (pad) = task;
   }
+  gst_task_start (task);
   GST_UNLOCK (pad);
 
-  gst_task_start (task);
-
   return TRUE;
-
-  /* ERRORS */
-no_parent:
-  {
-    GST_UNLOCK (pad);
-    GST_DEBUG ("no parent");
-    return FALSE;
-  }
-no_sched:
-  {
-    GST_UNLOCK (pad);
-    GST_DEBUG ("no scheduler");
-    return FALSE;
-  }
 }
 
 /**
@@ -3654,9 +3593,8 @@ gst_pad_stop_task (GstPad * pad)
   if (task == NULL)
     goto no_task;
   GST_PAD_TASK (pad) = NULL;
-  GST_UNLOCK (pad);
-
   gst_task_stop (task);
+  GST_UNLOCK (pad);
 
   GST_STREAM_LOCK (pad);
   GST_STREAM_UNLOCK (pad);

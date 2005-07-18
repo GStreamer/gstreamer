@@ -107,6 +107,9 @@ struct _GstQuery
 
 struct _GstQueryClass {
   GstMiniObjectClass mini_object_class;
+  
+  /*< private > */
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 void            _gst_query_initialize          (void);

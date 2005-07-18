@@ -60,7 +60,6 @@ event_func (GstPad * pad, GstEvent * event)
 GST_START_TEST (test_num_buffers)
 {
   GstElement *src;
-  GstScheduler *scheduler;
   GstPad *srcpad, *sinkpad;
 
   src = gst_element_factory_make ("fakesrc", "src");
@@ -72,9 +71,6 @@ GST_START_TEST (test_num_buffers)
   fail_if (sinkpad == NULL, "Could not create a sinkpad");
 
   g_object_set (G_OBJECT (src), "num-buffers", 3, NULL);
-
-  scheduler = gst_scheduler_factory_make (NULL, src);
-  gst_element_set_scheduler (src, scheduler);
 
   srcpad = gst_element_get_pad (src, "src");
   fail_if (srcpad == NULL, "Could not get source pad from fakesrc");

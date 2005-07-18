@@ -54,7 +54,6 @@
 #include <gst/gst_private.h>
 #include <gst/gstelement.h>
 #include <gst/gsttypefind.h>
-#include <gst/gstscheduler.h>
 #include <gst/gsturi.h>
 #include <gst/gstinfo.h>
 #include <gst/gstenumtypes.h>
@@ -798,11 +797,6 @@ load_feature (xmlTextReaderPtr reader)
             g_free (s);
           }
         }
-      } else if (GST_IS_SCHEDULER_FACTORY (feature)) {
-        GstSchedulerFactory *factory = GST_SCHEDULER_FACTORY (feature);
-
-        if (g_str_equal (tag, "longdesc"))
-          read_string (reader, &factory->longdesc);
       } else if (GST_IS_INDEX_FACTORY (feature)) {
         GstIndexFactory *factory = GST_INDEX_FACTORY (feature);
 
@@ -905,7 +899,6 @@ gst_xml_registry_load (GstRegistry * registry)
 
   /* make sure these types exist */
   GST_TYPE_ELEMENT_FACTORY;
-  GST_TYPE_SCHEDULER_FACTORY;
   GST_TYPE_TYPE_FIND_FACTORY;
   GST_TYPE_INDEX_FACTORY;
 
@@ -1125,8 +1118,6 @@ gst_xml_registry_save_feature (GstXMLRegistry * xmlregistry,
         i++;
       }
     }
-  } else if (GST_IS_SCHEDULER_FACTORY (feature)) {
-    PUT_ESCAPED ("longdesc", GST_SCHEDULER_FACTORY (feature)->longdesc);
   } else if (GST_IS_INDEX_FACTORY (feature)) {
     PUT_ESCAPED ("longdesc", GST_INDEX_FACTORY (feature)->longdesc);
   }

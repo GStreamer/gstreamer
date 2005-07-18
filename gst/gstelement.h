@@ -24,10 +24,25 @@
 #ifndef __GST_ELEMENT_H__
 #define __GST_ELEMENT_H__
 
+/* gstelement.h and gstelementfactory.h include eachother */
+typedef struct _GstElement GstElement;
+typedef struct _GstElementClass GstElementClass;
+
+/* gstmessage.h needs ElementState */
+#define GST_NUM_STATES 4
+typedef enum {
+  GST_STATE_VOID_PENDING        = 0,
+  GST_STATE_NULL                = (1 << 0),
+  GST_STATE_READY               = (1 << 1),
+  GST_STATE_PAUSED              = (1 << 2),
+  GST_STATE_PLAYING             = (1 << 3)
+} GstElementState;
+
+
 #include <gst/gstconfig.h>
-#include <gst/gsttypes.h>
 #include <gst/gstobject.h>
 #include <gst/gstpad.h>
+#include <gst/gstbus.h>
 #include <gst/gstclock.h>
 #include <gst/gstelementfactory.h>
 #include <gst/gstplugin.h>
@@ -49,7 +64,13 @@ GST_EXPORT GType _gst_element_type;
 #define GST_ELEMENT_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_ELEMENT, GstElementClass))
 #define GST_ELEMENT_CAST(obj)		((GstElement*)(obj))
 
-#define GST_NUM_STATES 4
+typedef enum {
+  GST_STATE_FAILURE             = 0,
+  GST_STATE_SUCCESS             = 1,
+  GST_STATE_ASYNC               = 2,
+  GST_STATE_NO_PREROLL          = 3
+} GstElementStateReturn;
+
 /* NOTE: this probably should be done with an #ifdef to decide
  * whether to safe-cast or to just do the non-checking cast.
  */
@@ -87,10 +108,6 @@ GST_EXPORT GType _gst_element_type;
 
 typedef enum
 {
-  /* private flags that can be used by the scheduler */
-  GST_ELEMENT_SCHEDULER_PRIVATE1,
-  GST_ELEMENT_SCHEDULER_PRIVATE2,
-
   /* ignore state changes from parent */
   GST_ELEMENT_LOCKED_STATE,
 
@@ -105,9 +122,7 @@ typedef enum
 
 #define GST_ELEMENT_NAME(obj)			(GST_OBJECT_NAME(obj))
 #define GST_ELEMENT_PARENT(obj)			(GST_ELEMENT_CAST(GST_OBJECT_PARENT(obj)))
-#define GST_ELEMENT_MANAGER(obj)		(GST_ELEMENT_CAST(obj)->manager)
 #define GST_ELEMENT_BUS(obj)			(GST_ELEMENT_CAST(obj)->bus)
-#define GST_ELEMENT_SCHEDULER(obj)		(GST_ELEMENT_CAST(obj)->scheduler)
 #define GST_ELEMENT_CLOCK(obj)			(GST_ELEMENT_CAST(obj)->clock)
 #define GST_ELEMENT_PADS(obj)			(GST_ELEMENT_CAST(obj)->pads)
 
@@ -179,10 +194,7 @@ struct _GstElement
                                         change. it is cleared when doing another state change. */
   gboolean		no_preroll;  /* flag is set when the element cannot preroll */
   /*< public >*/ /* with LOCK */
-  /* element manager */
-  GstPipeline	       *manager;
   GstBus	       *bus;
-  GstScheduler	       *scheduler;
 
   /* allocated clock */
   GstClock	       *clock;
@@ -237,10 +249,8 @@ struct _GstElementClass
 						 GstElementState * pending, GTimeVal * timeout);
   GstElementStateReturn (*change_state)		(GstElement *element);
 
-  /* manager */
-  void			(*set_manager)		(GstElement * element, GstPipeline * pipeline);
+  /* bus */
   void			(*set_bus)		(GstElement * element, GstBus * bus);
-  void			(*set_scheduler)	(GstElement *element, GstScheduler *scheduler);
 
   /* set/get clocks */
   GstClock*		(*get_clock)		(GstElement *element);
@@ -289,13 +299,9 @@ gboolean		gst_element_is_indexable	(GstElement *element);
 void			gst_element_set_index		(GstElement *element, GstIndex *index);
 GstIndex*		gst_element_get_index		(GstElement *element);
 
-/* manager and tasks */
-void			gst_element_set_manager		(GstElement * element, GstPipeline * pipeline);
-GstPipeline *		gst_element_get_manager		(GstElement * element);
+/* bus */
 void			gst_element_set_bus		(GstElement * element, GstBus * bus);
 GstBus *		gst_element_get_bus		(GstElement * element);
-void			gst_element_set_scheduler	(GstElement *element, GstScheduler *scheduler);
-GstScheduler*		gst_element_get_scheduler	(GstElement *element);
 
 /* pad management */
 gboolean		gst_element_add_pad		(GstElement *element, GstPad *pad);

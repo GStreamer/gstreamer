@@ -23,8 +23,9 @@
 #ifndef __GST_MINI_OBJECT_H__
 #define __GST_MINI_OBJECT_H__
 
+#include <gst/gstconfig.h>
+
 #include <glib-object.h>
-#include "gst/gsttypes.h"
 
 G_BEGIN_DECLS
 

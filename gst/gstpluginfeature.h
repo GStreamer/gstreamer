@@ -25,7 +25,6 @@
 #define __GST_PLUGIN_FEATURE_H__
 
 #include <glib-object.h>
-#include <gst/gsttypes.h>
 
 G_BEGIN_DECLS
 
@@ -41,6 +40,14 @@ G_BEGIN_DECLS
 typedef struct _GstPluginFeature GstPluginFeature;
 typedef struct _GstPluginFeatureClass GstPluginFeatureClass;
 
+/* some predefined ranks */
+typedef enum {
+  GST_RANK_NONE                 = 0,
+  GST_RANK_MARGINAL             = 64,
+  GST_RANK_SECONDARY            = 128,
+  GST_RANK_PRIMARY              = 256
+} GstRank;
+
 struct _GstPluginFeature {
   GObject 	 object;
 
@@ -50,6 +57,7 @@ struct _GstPluginFeature {
 
   gpointer 	 manager;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

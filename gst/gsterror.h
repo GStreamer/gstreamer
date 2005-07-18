@@ -45,7 +45,6 @@ G_BEGIN_DECLS
  * @GST_CORE_ERROR_STATE_CHANGE: used for state change errors.
  * @GST_CORE_ERROR_PAD: used for pad-related errors.
  * @GST_CORE_ERROR_THREAD: used for thread-related errors.
- * @GST_CORE_ERROR_SCHEDULER: used for scheduler-related errors.
  * @GST_CORE_ERROR_NEGOTIATION: used for negotiation-related errors.
  * @GST_CORE_ERROR_EVENT: used for event-related errors.
  * @GST_CORE_ERROR_SEEK: used for seek-related errors.
@@ -66,7 +65,6 @@ typedef enum
   GST_CORE_ERROR_STATE_CHANGE,
   GST_CORE_ERROR_PAD,
   GST_CORE_ERROR_THREAD,
-  GST_CORE_ERROR_SCHEDULER,
   GST_CORE_ERROR_NEGOTIATION,
   GST_CORE_ERROR_EVENT,
   GST_CORE_ERROR_SEEK,

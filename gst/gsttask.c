@@ -27,7 +27,9 @@
 
 static void gst_task_class_init (GstTaskClass * klass);
 static void gst_task_init (GstTask * task);
-static void gst_task_dispose (GObject * object);
+static void gst_task_finalize (GObject * object);
+
+static void gst_task_func (GstTask * task, GstTaskClass * tclass);
 
 static GstObjectClass *parent_class = NULL;
 
@@ -51,8 +53,7 @@ gst_task_get_type (void)
     };
 
     _gst_task_type =
-        g_type_register_static (GST_TYPE_OBJECT, "GstTask",
-        &task_info, G_TYPE_FLAG_ABSTRACT);
+        g_type_register_static (GST_TYPE_OBJECT, "GstTask", &task_info, 0);
   }
   return _gst_task_type;
 }
@@ -66,7 +67,10 @@ gst_task_class_init (GstTaskClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_OBJECT);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_task_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_task_finalize);
+
+  klass->pool = g_thread_pool_new (
+      (GFunc) gst_task_func, klass, -1, FALSE, NULL);
 }
 
 static void
@@ -78,15 +82,58 @@ gst_task_init (GstTask * task)
 }
 
 static void
-gst_task_dispose (GObject * object)
+gst_task_finalize (GObject * object)
 {
   GstTask *task = GST_TASK (object);
 
-  GST_DEBUG ("task %p dispose", task);
+  GST_DEBUG ("task %p finalize", task);
 
   g_cond_free (task->cond);
+  task->cond = NULL;
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_task_func (GstTask * task, GstTaskClass * tclass)
+{
+  GST_DEBUG ("Entering task %p, thread %p", task, g_thread_self ());
+
+  /* locking order is TASK_LOCK, LOCK */
+  GST_TASK_LOCK (task);
+  GST_LOCK (task);
+  while (G_LIKELY (task->state != GST_TASK_STOPPED)) {
+    while (G_UNLIKELY (task->state == GST_TASK_PAUSED)) {
+      gint t;
+
+      t = GST_TASK_UNLOCK_FULL (task);
+      if (t <= 0) {
+        g_warning ("wrong STREAM_LOCK count %d", t);
+      }
+      GST_TASK_SIGNAL (task);
+      GST_TASK_WAIT (task);
+      GST_UNLOCK (task);
+      /* locking order.. */
+      if (t > 0)
+        GST_TASK_LOCK_FULL (task, t);
+
+      GST_LOCK (task);
+      if (task->state == GST_TASK_STOPPED)
+        goto done;
+    }
+    GST_UNLOCK (task);
+
+    task->func (task->data);
+
+    GST_LOCK (task);
+  }
+done:
+  GST_UNLOCK (task);
+  GST_TASK_UNLOCK (task);
+
+  GST_DEBUG ("Exit task %p, thread %p", task, g_thread_self ());
+
+  gst_object_unref (task);
 }
 
 /**
@@ -105,7 +152,15 @@ gst_task_dispose (GObject * object)
 GstTask *
 gst_task_create (GstTaskFunction func, gpointer data)
 {
-  return NULL;
+  GstTask *task;
+
+  task = g_object_new (GST_TYPE_TASK, NULL);
+  task->func = func;
+  task->data = data;
+
+  GST_DEBUG ("Created task %p", task);
+
+  return task;
 }
 
 /**
@@ -164,16 +219,38 @@ gboolean
 gst_task_start (GstTask * task)
 {
   GstTaskClass *tclass;
-  gboolean result = FALSE;
+  GstTaskState old;
+  GStaticRecMutex *lock;
 
   g_return_val_if_fail (GST_IS_TASK (task), FALSE);
 
   tclass = GST_TASK_GET_CLASS (task);
 
-  if (tclass->start)
-    result = tclass->start (task);
+  GST_DEBUG_OBJECT (task, "Starting task %p", task);
 
-  return result;
+  GST_LOCK (task);
+  if (G_UNLIKELY (GST_TASK_GET_LOCK (task) == NULL)) {
+    lock = g_new (GStaticRecMutex, 1);
+    g_static_rec_mutex_init (lock);
+    GST_TASK_GET_LOCK (task) = lock;
+  }
+
+  old = task->state;
+  task->state = GST_TASK_STARTED;
+  switch (old) {
+    case GST_TASK_STOPPED:
+      gst_object_ref (task);
+      g_thread_pool_push (tclass->pool, task, NULL);
+      break;
+    case GST_TASK_PAUSED:
+      GST_TASK_SIGNAL (task);
+      break;
+    case GST_TASK_STARTED:
+      break;
+  }
+  GST_UNLOCK (task);
+
+  return TRUE;
 }
 
 /**
@@ -190,16 +267,29 @@ gboolean
 gst_task_stop (GstTask * task)
 {
   GstTaskClass *tclass;
-  gboolean result = FALSE;
+  GstTaskState old;
 
   g_return_val_if_fail (GST_IS_TASK (task), FALSE);
 
   tclass = GST_TASK_GET_CLASS (task);
 
-  if (tclass->stop)
-    result = tclass->stop (task);
+  GST_DEBUG_OBJECT (task, "Stopping task %p", task);
 
-  return result;
+  GST_LOCK (task);
+  old = task->state;
+  task->state = GST_TASK_STOPPED;
+  switch (old) {
+    case GST_TASK_STOPPED:
+      break;
+    case GST_TASK_PAUSED:
+      GST_TASK_SIGNAL (task);
+      break;
+    case GST_TASK_STARTED:
+      break;
+  }
+  GST_UNLOCK (task);
+
+  return TRUE;
 }
 
 /**
@@ -216,14 +306,28 @@ gboolean
 gst_task_pause (GstTask * task)
 {
   GstTaskClass *tclass;
-  gboolean result = FALSE;
+  GstTaskState old;
 
   g_return_val_if_fail (GST_IS_TASK (task), FALSE);
 
   tclass = GST_TASK_GET_CLASS (task);
 
-  if (tclass->pause)
-    result = tclass->pause (task);
+  GST_DEBUG_OBJECT (task, "Pausing task %p", task);
 
-  return result;
+  GST_LOCK (task);
+  old = task->state;
+  task->state = GST_TASK_PAUSED;
+  switch (old) {
+    case GST_TASK_STOPPED:
+      gst_object_ref (task);
+      g_thread_pool_push (tclass->pool, task, NULL);
+      break;
+    case GST_TASK_PAUSED:
+      break;
+    case GST_TASK_STARTED:
+      break;
+  }
+  GST_UNLOCK (task);
+
+  return TRUE;
 }

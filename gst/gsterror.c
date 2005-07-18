@@ -66,8 +66,6 @@ _gst_core_errors_init (void)
       N_("Internal GStreamer error: pad problem.  Please file a bug."));
   TABLE (t, CORE, THREAD,
       N_("Internal GStreamer error: thread problem.  Please file a bug."));
-  TABLE (t, CORE, SCHEDULER,
-      N_("Internal GStreamer error: scheduler problem.  Please file a bug."));
   TABLE (t, CORE, NEGOTIATION,
       N_("Internal GStreamer error: negotiation problem.  Please file a bug."));
   TABLE (t, CORE, EVENT,

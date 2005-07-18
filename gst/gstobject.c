@@ -42,7 +42,7 @@
  * we use our own atomic refcounting to do proper MT safe refcounting.
  *
  * A proper fix is of course to make the glib refcounting threadsafe which is
- * planned.
+ * planned. Update: atomic refcounting is now in glib >= 2.7.3
  */
 #ifdef REFCOUNT_HACK
 #define PATCH_REFCOUNT(obj)    ((GObject*)(obj))->ref_count = 100000;

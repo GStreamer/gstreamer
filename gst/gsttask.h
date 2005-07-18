@@ -63,7 +63,6 @@ typedef enum {
 struct _GstTask {
   GstObject      object;
 
-
   /*< public >*/ /* with LOCK */
   GstTaskState     state;
   GCond 	  *cond;
@@ -80,10 +79,8 @@ struct _GstTask {
 struct _GstTaskClass {
   GstObjectClass parent_class;
 
-  /*< protected >*/
-  gboolean (*start) (GstTask *task);
-  gboolean (*stop)  (GstTask *task);
-  gboolean (*pause) (GstTask *task);
+  /*< private >*/
+  GThreadPool *pool;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
