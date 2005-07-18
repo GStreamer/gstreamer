@@ -1,3 +1,13 @@
+2005-07-19  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/base/gstbasesrc.c: (gst_base_src_loop),
+	(gst_base_src_activate_push):
+	  Send discont event from the loop function, as pads
+	  aren't activated yet in the activate_push handler.
+
+	* gst/gstbin.c: (bin_bus_handler):
+	  Don't leak element name.
+
 2005-07-18  Andy Wingo  <wingo@pobox.com>
 
 	* configure.ac: Use AS_LIBTOOL_TAGS.

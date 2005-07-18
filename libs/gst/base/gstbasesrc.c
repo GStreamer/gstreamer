@@ -656,6 +656,12 @@ gst_base_src_loop (GstPad * pad)
 
   src = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
 
+  if (src->offset == 0) {
+    /* now send discont */
+    if (!gst_base_src_send_discont (src))
+      goto eos;
+  }
+
   ret = gst_base_src_get_range (pad, src->offset, src->blocksize, &buf);
   if (ret != GST_FLOW_OK)
     goto eos;
@@ -955,9 +961,6 @@ gst_base_src_activate_push (GstPad * pad, gboolean active)
   if (active) {
     if (!gst_base_src_start (basesrc))
       goto error_start;
-
-    /* now send discont */
-    gst_base_src_send_discont (basesrc);
 
     return gst_pad_start_task (pad, (GstTaskFunction) gst_base_src_loop, pad);
   } else {

@@ -1405,9 +1405,11 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
   /* we don't want messages from the streaming thread while we're doing the
    * state change. We do want them from the state change functions. */
   switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_EOS:
-      GST_DEBUG_OBJECT (bin, "got EOS message from %s",
-          gst_object_get_name (GST_MESSAGE_SRC (message)));
+    case GST_MESSAGE_EOS:{
+      gchar *name = gst_object_get_name (GST_MESSAGE_SRC (message));
+
+      GST_DEBUG_OBJECT (bin, "got EOS message from %s", name);
+      g_free (name);
 
       GST_LOCK (bin->child_bus);
       bin->eosed = g_list_prepend (bin->eosed, GST_MESSAGE_SRC (message));
@@ -1422,6 +1424,7 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
       /* we drop all EOS messages */
       gst_message_unref (message);
       break;
+    }
     default:
       /* Send all other messages upward */
       GST_DEBUG_OBJECT (bin, "posting message upward");
