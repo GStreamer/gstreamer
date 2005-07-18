@@ -1,5 +1,11 @@
 2005-07-18  Wim Taymans  <wim@fluendo.com>
 
+	* gst/cothreads.c:
+	* gst/cothreads.h:
+	Let's remove these.
+
+2005-07-18  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-dynamic.txt:
 	* docs/design/part-events.txt:
 	* docs/design/part-seeking.txt:
