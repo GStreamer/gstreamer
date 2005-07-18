@@ -164,6 +164,8 @@ gst_stream_selector_get_linked_pad (GstPad * pad, gboolean strict)
   else if (pad == sel->last_active_sinkpad || !strict)
     otherpad = sel->srcpad;
 
+  gst_object_unref (sel);
+
   return otherpad;
 }
 
@@ -171,17 +173,22 @@ static GstCaps *
 gst_stream_selector_getcaps (GstPad * pad)
 {
   GstPad *otherpad = gst_stream_selector_get_linked_pad (pad, FALSE);
+  GstObject *parent;
 
+  parent = gst_object_get_parent (GST_OBJECT (pad));
   if (!otherpad) {
-    GST_DEBUG_OBJECT (gst_pad_get_parent (pad),
-        "Pad %s not linked, returning ANY", gst_pad_get_name (pad));
+    GST_DEBUG_OBJECT (parent,
+        "Pad %s:%s not linked, returning ANY", GST_DEBUG_PAD_NAME (pad));
 
+    gst_object_unref (parent);
     return gst_caps_new_any ();
   }
 
-  GST_DEBUG_OBJECT (gst_pad_get_parent (pad),
-      "Pad %s is linked (to %s), returning allowed-caps",
-      gst_pad_get_name (pad), gst_pad_get_name (otherpad));
+  GST_DEBUG_OBJECT (parent,
+      "Pad %s:%s is linked (to %s:%s), returning allowed-caps",
+      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (otherpad));
+
+  gst_object_unref (parent);
 
   return gst_pad_peer_get_caps (otherpad);
 }
@@ -241,17 +248,19 @@ gst_stream_selector_chain (GstPad * pad, GstBuffer * buf)
   /* first, check if the active pad changed. If so, redo
    * negotiation and fail if that fails. */
   if (pad != sel->last_active_sinkpad) {
-    GST_LOG_OBJECT (sel, "stream change detected, switching from %s to %s",
+    GST_LOG_OBJECT (sel, "stream change detected, switching from %s to %s:%s",
         sel->last_active_sinkpad ?
-        gst_pad_get_name (sel->last_active_sinkpad) : "none",
-        gst_pad_get_name (pad));
+        GST_OBJECT_NAME (sel->last_active_sinkpad) : "none",
+        GST_DEBUG_PAD_NAME (pad));
     sel->last_active_sinkpad = pad;
   }
 
   /* forward */
-  GST_DEBUG_OBJECT (sel, "Forwarding buffer %p from pad %s",
-      "buf", gst_pad_get_name (pad));
+  GST_DEBUG_OBJECT (sel, "Forwarding buffer %p from pad %s:%s",
+      buf, GST_DEBUG_PAD_NAME (pad));
   res = gst_pad_push (sel->srcpad, buf);
+
+  gst_object_unref (sel);
 
   return res;
 }

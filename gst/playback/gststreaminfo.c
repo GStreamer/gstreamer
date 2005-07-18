@@ -234,15 +234,13 @@ gst_stream_info_dispose (GObject * object)
   stream_info = GST_STREAM_INFO (object);
 
   if (stream_info->object) {
-    GstObject *parent;
+    GstElement *parent;
 
-    parent = gst_pad_get_parent ((GstPad *)
+    parent = gst_pad_get_parent_element ((GstPad *)
         GST_PAD_CAST (stream_info->object));
     if (parent != NULL) {
-      if (GST_IS_ELEMENT (parent)) {
-        g_signal_handlers_disconnect_by_func (parent,
-            G_CALLBACK (stream_info_change_state), stream_info);
-      }
+      g_signal_handlers_disconnect_by_func (parent,
+          G_CALLBACK (stream_info_change_state), stream_info);
       gst_object_unref (parent);
     }
 
@@ -293,24 +291,22 @@ gst_stream_info_set_mute (GstStreamInfo * stream_info, gboolean mute)
   }
 
   if (mute != stream_info->mute) {
-    GstObject *element;
+    GstElement *element;
 
     stream_info->mute = mute;
     //gst_pad_set_active_recursive ((GstPad *)
     //GST_PAD_CAST (stream_info->object), !mute);
     g_warning ("FIXME");
 
-    element = gst_pad_get_parent ((GstPad *)
+    element = gst_pad_get_parent_element ((GstPad *)
         GST_PAD_CAST (stream_info->object));
     if (element) {
-      if (GST_IS_ELEMENT (element)) {
-        if (mute) {
-          g_signal_connect (element, "state-change",
-              G_CALLBACK (stream_info_change_state), stream_info);
-        } else {
-          g_signal_handlers_disconnect_by_func (element,
-              G_CALLBACK (stream_info_change_state), stream_info);
-        }
+      if (mute) {
+        g_signal_connect (element, "state-change",
+            G_CALLBACK (stream_info_change_state), stream_info);
+      } else {
+        g_signal_handlers_disconnect_by_func (element,
+            G_CALLBACK (stream_info_change_state), stream_info);
       }
       gst_object_unref (element);
     }

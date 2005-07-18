@@ -741,18 +741,16 @@ remove_element_chain (GstDecodeBin * decode_bin, GstPad * pad)
         GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer));
 
     {
-      GstObject *parent = gst_pad_get_parent (peer);
+      GstElement *parent = gst_pad_get_parent_element (peer);
 
       if (parent) {
-        if (GST_IS_ELEMENT (parent)) {
-          if (parent != GST_OBJECT (decode_bin)) {
-            GST_DEBUG_OBJECT (decode_bin, "dead end pad %s:%s",
-                GST_DEBUG_PAD_NAME (peer));
-          } else {
-            GST_DEBUG_OBJECT (decode_bin, "recursing element %s on pad %s:%s",
-                GST_ELEMENT_NAME (elem), GST_DEBUG_PAD_NAME (pad));
-            remove_element_chain (decode_bin, peer);
-          }
+        if (parent != GST_ELEMENT (decode_bin)) {
+          GST_DEBUG_OBJECT (decode_bin, "dead end pad %s:%s",
+              GST_DEBUG_PAD_NAME (peer));
+        } else {
+          GST_DEBUG_OBJECT (decode_bin, "recursing element %s on pad %s:%s",
+              GST_ELEMENT_NAME (elem), GST_DEBUG_PAD_NAME (pad));
+          remove_element_chain (decode_bin, peer);
         }
         gst_object_unref (parent);
       }

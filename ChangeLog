@@ -1,5 +1,16 @@
 2005-07-18  Wim Taymans  <wim@fluendo.com>
 
+	* gst/playback/gstdecodebin.c: (remove_element_chain):
+	* gst/playback/gstplaybin.c: (add_sink):
+	* gst/playback/gststreaminfo.c: (gst_stream_info_dispose),
+	(gst_stream_info_set_mute):
+	* gst/playback/gststreamselector.c:
+	(gst_stream_selector_get_linked_pad),
+	(gst_stream_selector_getcaps), (gst_stream_selector_chain):
+	More leak and compile fixes.
+
+2005-07-18  Wim Taymans  <wim@fluendo.com>
+
 	* examples/seeking/seek.c: (make_vorbis_theora_pipeline),
 	(query_rates), (query_positions_elems), (query_positions_pads),
 	(do_seek), (seek_cb), (stop_seek):
