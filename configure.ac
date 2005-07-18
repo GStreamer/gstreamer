@@ -29,6 +29,7 @@ dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
 dnl for 0.8.3 release, gst_play_get_all_by_interface was added, so update
 AS_LIBTOOL(GST_PLUGINS, 1, 0, 1)
+AS_LIBTOOL_TAGS([])
 AM_PROG_LIBTOOL
 
 dnl FIXME take something else ?
@@ -91,9 +92,9 @@ fi
 dnl Check for FIONREAD ioctl declaration :
 GST_CHECK_FIONREAD()
 
-DEFAULT_AUDIOSINK="osssink"
+DEFAULT_AUDIOSINK="alsasink"
 DEFAULT_VIDEOSINK="xvimagesink"
-DEFAULT_AUDIOSRC="osssrc"
+DEFAULT_AUDIOSRC="alsasrc"
 DEFAULT_VIDEOSRC="v4lsrc"
 DEFAULT_VISUALIZER="goom"
 case "$host" in 
@@ -942,10 +943,13 @@ m4/Makefile
 )
 AC_OUTPUT
 
-echo -n "configure: *** Plug-ins that will be built:"
+echo -n "configure: *** Core plug-ins, always built:"
+( for i in $GST_PLUGINS_ALL; do echo $i; done ) | sort
+echo
+echo -n "configure: *** Plug-ins relying on libraries that will be built:"
 echo -e "$GST_PLUGINS_YES" | sort
 echo
-echo -n "configure: *** Plug-ins that will not be built:"
+echo -n "configure: *** Plug-ins relying on libraries that will NOT be built:"
 echo -e "$GST_PLUGINS_NO" | sort
 echo
 if test "x$BUILD_EXTERNAL" = "xno"; then

@@ -1,3 +1,10 @@
+2005-07-18  Andy Wingo  <wingo@pobox.com>
+
+	* configure.ac (DEFAULT_AUDIOSINK, DEFAULT_AUDIOSRC): Use alsa by
+	default. Also because it's the only thing that really works. (This
+	is used in the GConf elements).
+	Use AS_LIBTOOL_TAGS.
+
 2005-07-18  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstdecodebin.c: (remove_element_chain):
@@ -2351,7 +2358,7 @@
 	(buffer_frames_convert_link):
 	  Don't leak othercaps. (fixes #167878)
 
-2005-02-19  Arwed v. Merkatz  <v.merkatz@gmx.net>>
+2005-02-19  Arwed v. Merkatz  <v.merkatz@gmx.net>
 
 	* configure.ac:
 	* ext/libvisual/visual.c: (gst_visual_srclink),
