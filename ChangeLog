@@ -1,3 +1,11 @@
+2005-07-18  Wim Taymans  <wim@fluendo.com>
+
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_sink_event),
+	(gst_rmdemux_change_state), (gst_rmdemux_chain),
+	(gst_rmdemux_get_stream_by_id), (gst_rmdemux_send_event),
+	(gst_rmdemux_add_stream):
+	Send discont event before pushing first buffer.
+
 2005-07-17  Philippe Khalaf <burger@speedy.org>
 
 	* gst/fdsrc/gstfdsrc.c:
