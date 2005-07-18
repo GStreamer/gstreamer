@@ -1,5 +1,7 @@
 2005-07-18  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gstpad.override: misc fixes for change in gst_pad_get_parent()
+
 	* gst/gst.defs: Updating defs file even more :)
 
 2005-07-18  Edward Hervey  <edward@fluendo.com>
