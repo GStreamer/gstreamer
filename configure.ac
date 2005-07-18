@@ -29,6 +29,7 @@ dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
 dnl for 0.8.3 release, gst_play_get_all_by_interface was added, so update
 AS_LIBTOOL(GST_PLUGINS, 1, 0, 1)
+AS_LIBTOOL_TAGS([CXX])
 AM_PROG_LIBTOOL
 
 dnl FIXME take something else ?
@@ -46,7 +47,7 @@ AM_PROG_AS
 AS="${CC}"
 AS_PROG_OBJC
 
-the gettext stuff needed
+dnl the gettext stuff needed
 AM_GNU_GETTEXT_VERSION(0.11.5)
 AM_GNU_GETTEXT([external])
                                                                             
