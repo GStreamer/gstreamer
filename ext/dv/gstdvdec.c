@@ -767,11 +767,11 @@ error:
 static gboolean
 gst_dvdec_send_event (GstDVDec * dvdec, GstEvent * event)
 {
-  gboolean res = TRUE;
+  gboolean res = FALSE;
 
   gst_event_ref (event);
-  res &= gst_pad_push_event (dvdec->videosrcpad, event);
-  res &= gst_pad_push_event (dvdec->audiosrcpad, event);
+  res |= gst_pad_push_event (dvdec->videosrcpad, event);
+  res |= gst_pad_push_event (dvdec->audiosrcpad, event);
 
   return res;
 }
@@ -1151,8 +1151,10 @@ gst_dvdec_decode_video (GstDVDec * dvdec, const guint8 * data)
     goto skip;
   dvdec->framecount = 0;
 
-  if ((gst_pad_alloc_buffer (dvdec->videosrcpad, 0, (720 * height) * dvdec->bpp,
-              GST_PAD_CAPS (dvdec->videosrcpad), &outbuf)) != GST_FLOW_OK)
+  ret =
+      gst_pad_alloc_buffer (dvdec->videosrcpad, 0, (720 * height) * dvdec->bpp,
+      GST_PAD_CAPS (dvdec->videosrcpad), &outbuf);
+  if (ret != GST_FLOW_OK)
     goto no_buffer;
 
   outframe = GST_BUFFER_DATA (outbuf);
@@ -1190,7 +1192,7 @@ skip:
   /* ERRORS */
 no_buffer:
   {
-    return GST_FLOW_WRONG_STATE;
+    return ret;
   }
 }
 
@@ -1199,7 +1201,7 @@ gst_dvdec_decode_frame (GstDVDec * dvdec, const guint8 * data)
 {
   GstClockTime next_ts;
   gdouble framerate;
-  GstFlowReturn ret;
+  GstFlowReturn aret, vret, ret;
 
   if (dvdec->need_discont) {
     GstEvent *event;
@@ -1239,14 +1241,20 @@ gst_dvdec_decode_frame (GstDVDec * dvdec, const guint8 * data)
   if (dv_is_new_recording (dvdec->decoder, data))
     dvdec->new_media = TRUE;
 
-  ret = gst_dvdec_decode_audio (dvdec, data);
-  if (ret != GST_FLOW_OK)
+  aret = ret = gst_dvdec_decode_audio (dvdec, data);
+  if (ret != GST_FLOW_OK && ret != GST_FLOW_NOT_LINKED)
     goto done;
 
-  ret = gst_dvdec_decode_video (dvdec, data);
-  if (ret != GST_FLOW_OK)
+  vret = ret = gst_dvdec_decode_video (dvdec, data);
+  if (ret != GST_FLOW_OK && ret != GST_FLOW_NOT_LINKED)
     goto done;
 
+  if (aret == GST_FLOW_NOT_LINKED && vret == GST_FLOW_NOT_LINKED) {
+    ret = GST_FLOW_NOT_LINKED;
+    goto done;
+  }
+
+  ret = GST_FLOW_OK;
   dvdec->timestamp = next_ts;
 
 done:

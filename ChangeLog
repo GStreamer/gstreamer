@@ -1,5 +1,10 @@
 2005-07-19  Andy Wingo  <wingo@pobox.com>
 
+	* ext/dv/gstdvdec.c (gst_dvdec_decode_video): Don't clobber
+	alloc_buffer's return value.
+	(gst_dvdec_decode_frame): Handle unlinked pads with grace and
+	agility.
+
 	* ext/dv/gstdvdec.h: Fix signedness error.
 
 2005-07-19  Wim Taymans  <wim@fluendo.com>
