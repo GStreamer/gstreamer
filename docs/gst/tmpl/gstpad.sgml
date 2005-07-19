@@ -491,7 +491,7 @@ Checks if the pad is a sink pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_get_parent ##### -->
+<!-- ##### MACRO gst_pad_get_parent ##### -->
 <para>
 
 </para>

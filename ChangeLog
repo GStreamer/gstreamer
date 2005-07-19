@@ -1,3 +1,7 @@
+2005-07-19  Andy Wingo  <wingo@pobox.com>
+
+	* gst/parse/parse.l: Attempt to solve bug #172815.
+
 2005-07-19  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-clocks.txt:

@@ -80,9 +80,7 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 @final_state: 
 @state_error: 
 @no_preroll: 
-@manager: 
 @bus: 
-@scheduler: 
 @clock: 
 @base_time: 
 @numpads: 
@@ -140,9 +138,7 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 @release_pad: 
 @get_state: 
 @change_state: 
-@set_manager: 
 @set_bus: 
-@set_scheduler: 
 @get_clock: 
 @set_clock: 
 @get_index: 
@@ -256,8 +252,6 @@ A helper macro to create a mask function
 This enum defines the standard flags that an element may have.
 </para>
 
-@GST_ELEMENT_SCHEDULER_PRIVATE1: 
-@GST_ELEMENT_SCHEDULER_PRIVATE2: 
 @GST_ELEMENT_LOCKED_STATE: 
 @GST_ELEMENT_IS_SINK: 
 @GST_ELEMENT_FLAG_LAST: 
@@ -430,26 +424,6 @@ Sets the parent of an element.
 
 
 <!-- ##### FUNCTION gst_element_get_index ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_set_scheduler ##### -->
-<para>
-
-</para>
-
-@element: 
-@scheduler: 
-<!-- # Unused Parameters # -->
-@sched: 
-
-
-<!-- ##### FUNCTION gst_element_get_scheduler ##### -->
 <para>
 
 </para>
@@ -708,15 +682,6 @@ Sets the parent of an element.
 
 
 <!-- ##### FUNCTION gst_element_get_factory ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_get_manager ##### -->
 <para>
 
 </para>

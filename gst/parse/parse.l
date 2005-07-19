@@ -2,12 +2,18 @@
 #include <math.h>
 #include <string.h>
 
+#include <glib/gprintf.h>
+
 #include "../gst_private.h"
 
 #include "types.h"
 #include "../gstinfo.h"
 #include "../gsturi.h"
 #include "grammar.tab.h"
+
+/* Override the default ECHO so as to avoid fortify warnings. Ignore the
+   embedded-NUL case for now. We know yytext is NUL-terminated. */
+#define ECHO g_fprintf(yyout, "%s", yytext)
 
 #ifdef G_HAVE_ISO_VARARGS
 #define PRINT(...) GST_CAT_DEBUG (GST_CAT_PIPELINE, "flex: " __VA_ARGS__)
