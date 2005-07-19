@@ -29,9 +29,9 @@ G_BEGIN_DECLS
 #define GST_TYPE_VIDEOTESTSRC \
   (gst_videotestsrc_get_type())
 #define GST_VIDEOTESTSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEOTESTSRC,GstVideotestsrc))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEOTESTSRC,GstVideoTestSrc))
 #define GST_VIDEOTESTSRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEOTESTSRC,GstVideotestsrc))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEOTESTSRC,GstVideoTestSrc))
 #define GST_IS_VIDEOTESTSRC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEOTESTSRC))
 #define GST_IS_VIDEOTESTSRC_CLASS(obj) \
@@ -41,16 +41,16 @@ typedef enum {
   GST_VIDEOTESTSRC_SMPTE,
   GST_VIDEOTESTSRC_SNOW,
   GST_VIDEOTESTSRC_BLACK,
-} GstVideotestsrcPattern;
+} GstVideoTestSrcPattern;
 
-typedef struct _GstVideotestsrc GstVideotestsrc;
-typedef struct _GstVideotestsrcClass GstVideotestsrcClass;
+typedef struct _GstVideoTestSrc GstVideoTestSrc;
+typedef struct _GstVideoTestSrcClass GstVideoTestSrcClass;
 
-struct _GstVideotestsrc {
+struct _GstVideoTestSrc {
   GstPushSrc element;
 
   /* type of output */
-  GstVideotestsrcPattern pattern_type;
+  GstVideoTestSrcPattern pattern_type;
 
   /* video state */
   char *format_name;
@@ -64,20 +64,18 @@ struct _GstVideotestsrc {
   gint64 timestamp_offset;		/* base offset */
   GstClockTime running_time;		/* total running time */
   gint64 n_frames;			/* total frames sent */
-  GstClock *clock;
-  gint num_buffers, num_buffers_left;
   gint64 segment_start_frame;
   gint64 segment_end_frame;
   gboolean segment;
 
-  void (*make_image) (GstVideotestsrc *v, unsigned char *dest, int w, int h);
+  void (*make_image) (GstVideoTestSrc *v, unsigned char *dest, int w, int h);
 };
 
-struct _GstVideotestsrcClass {
+struct _GstVideoTestSrcClass {
   GstPushSrcClass parent_class;
 };
 
-GType gst_videotestsrc_get_type (void) G_GNUC_CONST;
+GType gst_videotestsrc_get_type (void);
 
 G_END_DECLS
 

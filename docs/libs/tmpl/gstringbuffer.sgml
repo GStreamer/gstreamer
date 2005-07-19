@@ -14,6 +14,9 @@ an implementation of an audio ringbuffer
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GstRingBuffer ##### -->
 <para>
 

@@ -65,12 +65,12 @@ struct fourcc_list_struct *
 	paintinfo_find_by_structure	(const GstStructure *structure);
 GstStructure *
 	paint_get_structure		(struct fourcc_list_struct *format);
-int	gst_videotestsrc_get_size	(GstVideotestsrc * v, int w, int h);
-void	gst_videotestsrc_smpte		(GstVideotestsrc * v,
+int	gst_videotestsrc_get_size	(GstVideoTestSrc * v, int w, int h);
+void	gst_videotestsrc_smpte		(GstVideoTestSrc * v,
 					 unsigned char *dest, int w, int h);
-void	gst_videotestsrc_snow		(GstVideotestsrc * v,
+void	gst_videotestsrc_snow		(GstVideoTestSrc * v,
 					 unsigned char *dest, int w, int h);
-void	gst_videotestsrc_black		(GstVideotestsrc * v,
+void	gst_videotestsrc_black		(GstVideoTestSrc * v,
 					 unsigned char *dest, int w, int h);
 
 extern struct fourcc_list_struct fourcc_list[];

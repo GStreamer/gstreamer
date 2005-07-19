@@ -1,3 +1,7 @@
+2005-07-19  Andy Wingo  <wingo@pobox.com>
+
+	* gst/videotestsrc/: Cleanups.
+
 2005-07-19  Wim Taymans  <wim@fluendo.com>
 
 	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnomevfssrc_create):
