@@ -945,22 +945,20 @@ gst_gnomevfssrc_create (GstBaseSrc * basesrc, guint64 offset, guint size,
 
   src = GST_GNOMEVFSSRC (basesrc);
 
+  GST_DEBUG ("now at %llu, reading %lld, size %u", src->curoffset, offset,
+      size);
+
   /* seek if required */
   if (src->curoffset != offset) {
+    GST_DEBUG ("need to seek");
     if (src->seekable) {
+      GST_DEBUG ("seeking to %lld", offset);
       res = gnome_vfs_seek (src->handle, GNOME_VFS_SEEK_START, offset);
-      if (res != GNOME_VFS_OK) {
-        GST_ERROR_OBJECT (src,
-            "Failed to seek to requested position %lld: %s",
-            offset, gnome_vfs_result_to_string (res));
-        return GST_FLOW_ERROR;
-      }
+      if (res != GNOME_VFS_OK)
+        goto seek_failed;
       src->curoffset = offset;
     } else {
-      GST_ERROR_OBJECT (src,
-          "Requested seek from %lld to %lld on non-seekable stream",
-          src->curoffset, offset);
-      return GST_FLOW_ERROR;
+      goto cannot_seek;
     }
   }
 
@@ -1017,6 +1015,20 @@ gst_gnomevfssrc_create (GstBaseSrc * basesrc, guint64 offset, guint size,
 
   return GST_FLOW_OK;
 
+seek_failed:
+  {
+    GST_ERROR_OBJECT (src,
+        "Failed to seek to requested position %lld: %s",
+        offset, gnome_vfs_result_to_string (res));
+    return GST_FLOW_ERROR;
+  }
+cannot_seek:
+  {
+    GST_ERROR_OBJECT (src,
+        "Requested seek from %lld to %lld on non-seekable stream",
+        src->curoffset, offset);
+    return GST_FLOW_ERROR;
+  }
 read_failed:
   {
     gst_buffer_unref (buf);

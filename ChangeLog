@@ -1,5 +1,10 @@
 2005-07-19  Wim Taymans  <wim@fluendo.com>
 
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnomevfssrc_create):
+	Better debugging.
+
+2005-07-19  Wim Taymans  <wim@fluendo.com>
+
 	* examples/seeking/seek.c: (make_dv_pipeline),
 	(make_vorbis_theora_pipeline), (query_rates),
 	(query_positions_elems), (query_positions_pads), (do_seek):
