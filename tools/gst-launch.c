@@ -293,8 +293,8 @@ check_intr (GstElement * pipeline)
         NULL, "pipeline interrupted");
     gst_bus_post (bus, message);
 
+    /* pipeline will wait for element to go to PAUSED */
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
-    gst_element_get_state (pipeline, NULL, NULL, NULL);
     g_print ("Pipeline paused.\n");
 
     gst_object_unref (bus);

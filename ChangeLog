@@ -1,5 +1,11 @@
 2005-07-19  Wim Taymans  <wim@fluendo.com>
 
+	* tools/gst-launch.c: (check_intr), (event_loop), (main):
+	Don't block forever for the state change to complete, the
+	pipeline already did with a sensible timeout.
+
+2005-07-19  Wim Taymans  <wim@fluendo.com>
+
 	* gst/base/gstbasesrc.c: (gst_base_src_get_range):
 	Make sure we never call the create function is we
 	got deactivated.
