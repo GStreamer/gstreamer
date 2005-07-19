@@ -221,6 +221,49 @@ G_STMT_START {					\
   }						\
 } G_STMT_END
 
+static gint
+gst_oss_sink_get_format (GstBufferFormat fmt)
+{
+  gint result;
+
+  switch (fmt) {
+    case GST_MU_LAW:
+      result = AFMT_MU_LAW;
+      break;
+    case GST_A_LAW:
+      result = AFMT_A_LAW;
+      break;
+    case GST_IMA_ADPCM:
+      result = AFMT_IMA_ADPCM;
+      break;
+    case GST_U8:
+      result = AFMT_U8;
+      break;
+    case GST_S16_LE:
+      result = AFMT_S16_LE;
+      break;
+    case GST_S16_BE:
+      result = AFMT_S16_BE;
+      break;
+    case GST_S8:
+      result = AFMT_S8;
+      break;
+    case GST_U16_LE:
+      result = AFMT_U16_LE;
+      break;
+    case GST_U16_BE:
+      result = AFMT_U16_BE;
+      break;
+    case GST_MPEG:
+      result = AFMT_MPEG;
+      break;
+    default:
+      result = 0;
+      break;
+  }
+  return result;
+}
+
 static gboolean
 gst_oss_sink_open (GstAudioSink * asink, GstRingBufferSpec * spec)
 {
@@ -243,10 +286,15 @@ gst_oss_sink_open (GstAudioSink * asink, GstRingBufferSpec * spec)
   mode &= ~O_NONBLOCK;
   fcntl (oss->fd, F_SETFL, mode);
 
-  SET_PARAM (oss, SNDCTL_DSP_SETFMT, AFMT_S16_LE);
-  SET_PARAM (oss, SNDCTL_DSP_STEREO, 1);
-  SET_PARAM (oss, SNDCTL_DSP_CHANNELS, 2);
-  SET_PARAM (oss, SNDCTL_DSP_SPEED, 44100);
+  tmp = gst_oss_sink_get_format (spec->format);
+  if (tmp == 0)
+    goto wrong_format;
+
+  SET_PARAM (oss, SNDCTL_DSP_SETFMT, tmp);
+  if (spec->channels == 2)
+    SET_PARAM (oss, SNDCTL_DSP_STEREO, 1);
+  SET_PARAM (oss, SNDCTL_DSP_CHANNELS, spec->channels);
+  SET_PARAM (oss, SNDCTL_DSP_SPEED, spec->rate);
 
   tmp = ilog2 (spec->segsize);
   tmp = ((spec->segtotal & 0x7fff) << 16) | tmp;
@@ -266,6 +314,12 @@ gst_oss_sink_open (GstAudioSink * asink, GstRingBufferSpec * spec)
       spec->segtotal, tmp);
 
   return TRUE;
+
+wrong_format:
+  {
+    GST_DEBUG ("wrong format %d\n", spec->format);
+    return FALSE;
+  }
 }
 
 static gboolean
