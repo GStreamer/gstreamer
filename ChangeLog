@@ -1,5 +1,16 @@
 2005-07-19  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstqueue.c: (gst_queue_init), (gst_queue_handle_sink_event),
+	(gst_queue_chain), (gst_queue_loop), (gst_queue_handle_src_event),
+	(gst_queue_handle_src_query), (gst_queue_sink_activate_push),
+	(gst_queue_src_activate_push), (gst_queue_change_state),
+	(gst_queue_get_property):
+	* gst/gstqueue.h:
+	Propagate GstFlowReturn more intelligently upstream and output
+	an ERROR/EOS when streaming stopped due to fatal error.
+
+2005-07-19  Wim Taymans  <wim@fluendo.com>
+
 	* tools/gst-launch.c: (check_intr), (event_loop), (main):
 	Don't block forever for the state change to complete, the
 	pipeline already did with a sensible timeout.
