@@ -10,11 +10,11 @@ else
  AALIB_DIR=
 endif
 
-# if USE_AMRNB
-# AMRNB_DIR=amrnb
-# else
-AMRNB_DIR=
-# endif
+if USE_AMRNB
+ AMRNB_DIR=amrnb
+else
+ AMRNB_DIR=
+endif
 
 # if USE_ARTS
 # ARTS_DIR=arts
@@ -106,11 +106,11 @@ endif
 FAAC_DIR=
 # endif
 
-# if USE_FAAD
-# FAAD_DIR=faad
-# else
-FAAD_DIR=
-# endif
+if USE_FAAD
+ FAAD_DIR=faad
+else
+ FAAD_DIR=
+endif
 
 ## if USE_FESTIVAL
 ## FESTIVAL_DIR=festival
@@ -238,11 +238,11 @@ endif
 MIKMOD_DIR=
 # endif
 
-# if USE_MPEG2DEC
-# MPEG2DEC_DIR=mpeg2dec
-# else
-MPEG2DEC_DIR=
-#endif
+if USE_MPEG2DEC
+ MPEG2DEC_DIR=mpeg2dec
+else
+ MPEG2DEC_DIR=
+endif
 
 # if USE_MPEG2ENC
 # MPEG2ENC_DIR=mpeg2enc
@@ -440,4 +440,7 @@ DIST_SUBDIRS=\
 	libcaca \
 	esd	\
 	raw1394 \
-	dv
+	dv \
+	amrnb \
+	faad \
+	mpeg2dec

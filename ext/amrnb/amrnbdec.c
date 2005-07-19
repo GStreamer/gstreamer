@@ -206,7 +206,7 @@ gst_amrnbdec_chain (GstPad * pad, GstBuffer * buffer)
         (amrnbdec->rate * amrnbdec->channels);
     GST_BUFFER_TIMESTAMP (out) = amrnbdec->ts;
     amrnbdec->ts += GST_BUFFER_DURATION (out);
-    gst_buffer_set_caps (out, GST_RPAD_CAPS (amrnbdec->srcpad));
+    gst_buffer_set_caps (out, gst_pad_get_caps (amrnbdec->srcpad));
 
     /* decode */
     Decoder_Interface_Decode (amrnbdec->handle, data,

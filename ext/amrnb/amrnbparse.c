@@ -56,8 +56,7 @@ static gboolean gst_amrnbparse_query (GstPad * pad, GstQuery * query);
 static gboolean gst_amrnbparse_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_amrnbparse_chain (GstPad * pad, GstBuffer * buffer);
 static void gst_amrnbparse_loop (GstPad * pad);
-static gboolean gst_amrnbparse_sink_activate (GstPad * sinkpad,
-    GstActivateMode mode);
+static gboolean gst_amrnbparse_sink_activate (GstPad * sinkpad);
 static GstElementStateReturn gst_amrnbparse_state_change (GstElement * element);
 
 static GstElementClass *parent_class = NULL;
@@ -130,10 +129,11 @@ gst_amrnbparse_init (GstAmrnbParse * amrnbparse)
       GST_DEBUG_FUNCPTR (gst_amrnbparse_chain));
   gst_pad_set_event_function (amrnbparse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_amrnbparse_event));
-  gst_pad_set_loop_function (amrnbparse->sinkpad,
+/*  gst_pad_set_loop_function (amrnbparse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_amrnbparse_loop));
+*/
   gst_pad_set_activate_function (amrnbparse->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_amrnbparse_sink_activate));
+      gst_amrnbparse_sink_activate);
   gst_element_add_pad (GST_ELEMENT (amrnbparse), amrnbparse->sinkpad);
 
   /* create the src pad */
@@ -174,7 +174,6 @@ gst_amrnbparse_querytypes (GstPad * pad)
 {
   static const GstQueryType list[] = {
     GST_QUERY_POSITION,
-    GST_QUERY_TOTAL,
     0
   };
 
@@ -260,7 +259,7 @@ gst_amrnbparse_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstAmrnbParse *amrnbparse;
   GstFlowReturn res;
-  gint block, mode, read;
+  gint block, mode;
   const guint8 *data;
   GstBuffer *out;
 
@@ -365,7 +364,7 @@ gst_amrnbparse_loop (GstPad * pad)
   GstBuffer *buffer;
   guint8 *data;
   gint size;
-  gint block, mode, read;
+  gint block, mode;
   GstFlowReturn ret;
 
   amrnbparse = GST_AMRNBPARSE (GST_PAD_PARENT (pad));
@@ -438,12 +437,17 @@ eos:
 }
 
 static gboolean
-gst_amrnbparse_sink_activate (GstPad * sinkpad, GstActivateMode mode)
+gst_amrnbparse_sink_activate (GstPad * sinkpad)
 {
   gboolean result = FALSE;
   GstAmrnbParse *amrnbparse;
+  GstActivateMode mode;
 
   amrnbparse = GST_AMRNBPARSE (GST_OBJECT_PARENT (sinkpad));
+
+  GST_LOCK (sinkpad);
+  mode = GST_PAD_ACTIVATE_MODE (sinkpad);
+  GST_UNLOCK (sinkpad);
 
   switch (mode) {
     case GST_ACTIVATE_PUSH:
@@ -451,7 +455,7 @@ gst_amrnbparse_sink_activate (GstPad * sinkpad, GstActivateMode mode)
       result = TRUE;
       break;
     case GST_ACTIVATE_PULL:
-      gst_pad_peer_set_active (sinkpad, mode);
+      /*gst_pad_peer_set_active (sinkpad, mode); */
 
       amrnbparse->need_header = TRUE;
       amrnbparse->seekable = TRUE;

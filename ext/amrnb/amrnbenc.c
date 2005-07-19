@@ -213,7 +213,7 @@ gst_amrnbenc_chain (GstPad * pad, GstBuffer * buffer)
         (amrnbenc->rate * amrnbenc->channels);
     GST_BUFFER_TIMESTAMP (out) = amrnbenc->ts;
     amrnbenc->ts += GST_BUFFER_DURATION (out);
-    gst_buffer_set_caps (out, GST_RPAD_CAPS (amrnbenc->srcpad));
+    gst_buffer_set_caps (out, gst_pad_get_caps (amrnbenc->srcpad));
 
     data = (guint8 *) gst_adapter_peek (amrnbenc->adapter, 320);
 
