@@ -1,3 +1,7 @@
+2005-07-19  Andy Wingo  <wingo@pobox.com>
+
+	* ext/dv/gstdvdec.h: Fix signedness error.
+
 2005-07-19  Wim Taymans  <wim@fluendo.com>
 
 	* ext/dv/gstdvdec.c: (gst_dvdec_init), (gst_dvdec_src_convert),
