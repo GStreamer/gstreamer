@@ -99,7 +99,7 @@ with different major/minor versions of GStreamer.
   --with-cachedir=%{_localstatedir}/cache/gstreamer-%{majorminor} \
   --disable-tests --disable-examples --disable-docs-build
                                                                                 
-make %{?_smp_mflags}
+make ERROR_CFLAGS=""
 
 %install  
 rm -rf $RPM_BUILD_ROOT
@@ -139,7 +139,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstelements.so
 %{_libdir}/gstreamer-%{majorminor}/libgstgetbits.so
 %{_libdir}/gstreamer-%{majorminor}/libgstindexers.so
-%{_libdir}/gstreamer-%{majorminor}/libgstthreadscheduler.so
 %{_libdir}/libgstdataprotocol-%{majorminor}.so
 
 %{_bindir}/gst-complete-%{majorminor}
