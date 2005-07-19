@@ -76,8 +76,8 @@ struct _GstDVDec {
 
   gint64	 start_byte;
   gint64	 stop_byte;
-  GstClockTime	 start_timestamp;
-  GstClockTime	 stop_timestamp;
+  gint64	 start_timestamp;
+  gint64	 stop_timestamp;
 
   gboolean	 need_discont;
   gboolean	 new_media;
