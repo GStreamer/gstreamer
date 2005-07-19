@@ -1,3 +1,9 @@
+2005-07-19  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesrc.c: (gst_base_src_get_range):
+	Make sure we never call the create function is we
+	got deactivated.
+
 2005-07-19  Andy Wingo  <wingo@pobox.com>
 
 	* gst/parse/parse.l: Attempt to solve bug #172815.

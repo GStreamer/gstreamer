@@ -577,6 +577,11 @@ gst_base_src_get_range (GstPad * pad, guint64 offset, guint length,
   }
   GST_LIVE_UNLOCK (src);
 
+  GST_LOCK (pad);
+  if (GST_PAD_IS_FLUSHING (pad))
+    goto flushing;
+  GST_UNLOCK (pad);
+
   if (!GST_FLAG_IS_SET (src, GST_BASE_SRC_STARTED))
     goto not_started;
 
@@ -612,6 +617,12 @@ gst_base_src_get_range (GstPad * pad, guint64 offset, guint length,
   return ret;
 
   /* ERROR */
+flushing:
+  {
+    GST_DEBUG_OBJECT (src, "pad is flushing");
+    GST_UNLOCK (pad);
+    return GST_FLOW_WRONG_STATE;
+  }
 not_started:
   {
     GST_DEBUG_OBJECT (src, "getrange but not started");
