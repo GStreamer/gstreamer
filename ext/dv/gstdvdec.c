@@ -1108,6 +1108,7 @@ gst_dvdec_decode_video (GstDVDec * dvdec, const guint8 * data)
   if ((dvdec->framerate != framerate) || (dvdec->height != height)
       || dvdec->wide != wide) {
     GstCaps *caps;
+    gboolean setcaps_ret;
     gint par_x, par_y;
 
     dvdec->framerate = framerate;
@@ -1138,10 +1139,11 @@ gst_dvdec_decode_video (GstDVDec * dvdec, const guint8 * data)
         "format", GST_TYPE_FOURCC, GST_STR_FOURCC ("YUY2"),
         "width", G_TYPE_INT, 720,
         "height", G_TYPE_INT, height,
-        "framerate", G_TYPE_DOUBLE, framerate,
+        "framerate", G_TYPE_DOUBLE, framerate / dvdec->drop_factor,
         "pixel-aspect-ratio", GST_TYPE_FRACTION, par_x, par_y, NULL);
-    gst_pad_set_caps (dvdec->videosrcpad, caps);
+    setcaps_ret = gst_pad_set_caps (dvdec->videosrcpad, caps);
     gst_caps_unref (caps);
+    g_return_val_if_fail (setcaps_ret == TRUE, GST_FLOW_UNEXPECTED);
   }
 
 
