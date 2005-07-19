@@ -1,3 +1,10 @@
+2005-07-19  Wim Taymans  <wim@fluendo.com>
+
+	* examples/seeking/seek.c: (make_dv_pipeline),
+	(make_vorbis_theora_pipeline), (query_rates),
+	(query_positions_elems), (query_positions_pads), (do_seek):
+	Make correct DV pipeline.
+
 2005-07-18  Andy Wingo  <wingo@pobox.com>
 
 	* configure.ac (DEFAULT_AUDIOSINK, DEFAULT_AUDIOSRC): Use alsa by
