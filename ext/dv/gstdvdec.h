@@ -66,17 +66,19 @@ struct _GstDVDec {
   dv_color_space_t space;
   gint 		 bpp;
   
-  gint 		 length;
   gint		 drop_factor;
   gint		 framecount;
-
+  
   guint64	 timestamp;
   guint64	 duration;
-
   guint64	 audio_offset;
   guint64	 video_offset;
 
-  guint64	 end_position;
+  gint64	 start_byte;
+  gint64	 stop_byte;
+  GstClockTime	 start_timestamp;
+  GstClockTime	 stop_timestamp;
+
   gboolean	 need_discont;
   gboolean	 new_media;
   gboolean	 loop;

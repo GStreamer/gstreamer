@@ -1,3 +1,15 @@
+2005-07-19  Wim Taymans  <wim@fluendo.com>
+
+	* ext/dv/gstdvdec.c: (gst_dvdec_init), (gst_dvdec_src_convert),
+	(gst_dvdec_sink_convert), (gst_dvdec_get_src_query_types),
+	(gst_dvdec_src_query), (gst_dvdec_get_sink_query_types),
+	(gst_dvdec_sink_query), (gst_dvdec_send_event),
+	(gst_dvdec_handle_sink_event), (gst_dvdec_handle_src_event),
+	(gst_dvdec_decode_audio), (gst_dvdec_decode_video),
+	(gst_dvdec_decode_frame), (gst_dvdec_flush), (gst_dvdec_chain):
+	* ext/dv/gstdvdec.h:
+	Implemented seeking in dvdec.
+
 2005-07-19  Andy Wingo  <wingo@pobox.com>
 
 	* ext/Makefile.am: Enable dvdev and raw1394src.
