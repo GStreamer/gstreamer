@@ -79,12 +79,15 @@ static void gst_faad_base_init (GstFaadClass * klass);
 static void gst_faad_class_init (GstFaadClass * klass);
 static void gst_faad_init (GstFaad * faad);
 
+/*
 static GstPadLinkReturn
 gst_faad_sinkconnect (GstPad * pad, const GstCaps * caps);
 static GstPadLinkReturn
-gst_faad_srcconnect (GstPad * pad, const GstCaps * caps);
+gst_faad_srcconnect (GstPad * pad, const GstCaps * caps);*/
+static gboolean gst_faad_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_faad_srcgetcaps (GstPad * pad);
-static void gst_faad_chain (GstPad * pad, GstData * data);
+static gboolean gst_faad_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_faad_chain (GstPad * pad, GstBuffer * buffer);
 static GstElementStateReturn gst_faad_change_state (GstElement * element);
 
 static GstElementClass *parent_class = NULL;
@@ -155,28 +158,59 @@ gst_faad_init (GstFaad * faad)
   faad->channel_positions = NULL;
   faad->init = FALSE;
 
-  GST_FLAG_SET (faad, GST_ELEMENT_EVENT_AWARE);
+  /* GST_FLAG_SET (faad, GST_ELEMENT_EVENT_AWARE); */
 
   faad->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
       "sink");
   gst_element_add_pad (GST_ELEMENT (faad), faad->sinkpad);
+  gst_pad_set_event_function (faad->sinkpad, gst_faad_event);
+  gst_pad_set_setcaps_function (faad->sinkpad, gst_faad_setcaps);
   gst_pad_set_chain_function (faad->sinkpad, gst_faad_chain);
-  gst_pad_set_link_function (faad->sinkpad, gst_faad_sinkconnect);
+  /*gst_pad_set_link_function (faad->sinkpad, gst_faad_sinkconnect); */
 
   faad->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
       "src");
   gst_element_add_pad (GST_ELEMENT (faad), faad->srcpad);
-  gst_pad_set_link_function (faad->srcpad, gst_faad_srcconnect);
-
+  gst_pad_use_fixed_caps (faad->srcpad);
+  /*gst_pad_set_link_function (faad->srcpad, gst_faad_srcconnect); */
   gst_pad_set_getcaps_function (faad->srcpad, gst_faad_srcgetcaps);
 }
+
+static gboolean
+gst_faad_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstStructure *structure;
+  GstFaad *faad;
+  GstCaps *copy;
+
+  faad = GST_FAAD (GST_PAD_PARENT (pad));
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  /* get channel count */
+  gst_structure_get_int (structure, "channels", &faad->channels);
+  gst_structure_get_int (structure, "rate", &faad->samplerate);
+
+  /* create reverse caps */
+  copy = gst_caps_new_simple ("audio/x-raw-float",
+      "channels", G_TYPE_INT, faad->channels,
+      "depth", G_TYPE_INT, G_STRINGIFY (bpp),
+      "endianness", G_TYPE_INT, G_BYTE_ORDER,
+      "rate", G_TYPE_INT, faad->samplerate);
+
+  gst_pad_set_caps (faad->srcpad, copy);
+  gst_caps_unref (copy);
+
+  return TRUE;
+}
+
 
 /*
  * Channel identifier conversion - caller g_free()s result!
  */
-
+/*
 static guchar *
 gst_faad_chanpos_from_gst (GstAudioChannelPosition * pos, guint num)
 {
@@ -223,7 +257,7 @@ gst_faad_chanpos_from_gst (GstAudioChannelPosition * pos, guint num)
 
   return fpos;
 }
-
+*/
 static GstAudioChannelPosition *
 gst_faad_chanpos_to_gst (guchar * fpos, guint num)
 {
@@ -274,6 +308,7 @@ gst_faad_chanpos_to_gst (guchar * fpos, guint num)
   return pos;
 }
 
+/*
 static GstPadLinkReturn
 gst_faad_sinkconnect (GstPad * pad, const GstCaps * caps)
 {
@@ -282,18 +317,18 @@ gst_faad_sinkconnect (GstPad * pad, const GstCaps * caps)
   const GValue *value;
   GstBuffer *buf;
 
-  /* Assume raw stream */
+  // Assume raw stream 
   faad->packetised = FALSE;
 
   if ((value = gst_structure_get_value (str, "codec_data"))) {
     gulong samplerate;
     guchar channels;
 
-    /* We have codec data, means packetised stream */
+    // We have codec data, means packetised stream 
     faad->packetised = TRUE;
     buf = g_value_get_boxed (value);
 
-    /* someone forgot that char can be unsigned when writing the API */
+    // someone forgot that char can be unsigned when writing the API 
     if ((gint8) faacDecInit2 (faad->handle, GST_BUFFER_DATA (buf),
             GST_BUFFER_SIZE (buf), &samplerate, &channels) < 0)
       return GST_PAD_LINK_REFUSED;
@@ -312,11 +347,11 @@ gst_faad_sinkconnect (GstPad * pad, const GstCaps * caps)
 
   faad->need_channel_setup = TRUE;
 
-  /* if there's no decoderspecificdata, it's all fine. We cannot know
-   * much more at this point... */
+  // if there's no decoderspecificdata, it's all fine. We cannot know
+  // * much more at this point... 
   return GST_PAD_LINK_OK;
 }
-
+*/
 static GstCaps *
 gst_faad_srcgetcaps (GstPad * pad)
 {
@@ -395,7 +430,7 @@ gst_faad_srcgetcaps (GstPad * pad)
       if (faad->channels != -1) {
         gst_structure_set (str, "channels", G_TYPE_INT, faad->channels, NULL);
 
-        /* put channel information here */
+        // put channel information here */
         if (faad->channel_positions) {
           GstAudioChannelPosition *pos;
 
@@ -437,6 +472,7 @@ gst_faad_srcgetcaps (GstPad * pad)
   return templ;
 }
 
+/**
 static GstPadLinkReturn
 gst_faad_srcconnect (GstPad * pad, const GstCaps * caps)
 {
@@ -455,15 +491,15 @@ gst_faad_srcconnect (GstPad * pad, const GstCaps * caps)
 
   mimetype = gst_structure_get_name (structure);
 
-  /* Samplerate and channels are normally provided through
-   * the getcaps function */
+  // Samplerate and channels are normally provided through
+  // * the getcaps function 
   if (!gst_structure_get_int (structure, "channels", &channels) ||
       !gst_structure_get_int (structure, "rate", &rate) ||
       rate != faad->samplerate || channels != faad->channels) {
     return GST_PAD_LINK_REFUSED;
   }
 
-  /* Another internal checkup. */
+  // Another internal checkup. 
   if (faad->need_channel_setup) {
     GstAudioChannelPosition *pos;
     guchar *fpos;
@@ -533,28 +569,55 @@ gst_faad_srcconnect (GstPad * pad, const GstCaps * caps)
     if (faacDecSetConfiguration (faad->handle, conf) == 0)
       return GST_PAD_LINK_REFUSED;
 
-    /* FIXME: handle return value, how? */
+    // FIXME: handle return value, how? 
     faad->bps = depth / 8;
 
     return GST_PAD_LINK_OK;
   }
 
   return GST_PAD_LINK_REFUSED;
+}*/
+
+/*
+ * Data reading.
+ */
+static gboolean
+gst_faad_event (GstPad * pad, GstEvent * event)
+{
+  GstFaad *faad;
+  gboolean res;
+
+  faad = GST_FAAD (gst_pad_get_parent (pad));
+
+  GST_LOG ("handling event %d", GST_EVENT_TYPE (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+    case GST_EVENT_DISCONTINUOUS:
+    default:
+      break;
+  }
+
+  res = gst_pad_event_default (faad->sinkpad, event);
+
+  return res;
 }
 
-static void
-gst_faad_chain (GstPad * pad, GstData * data)
+static GstFlowReturn
+gst_faad_chain (GstPad * pad, GstBuffer * buffer)
 {
+  GstFlowReturn ret = GST_FLOW_OK;
   guint input_size;
   guint skip_bytes = 0;
   guchar *input_data;
   GstFaad *faad = GST_FAAD (gst_pad_get_parent (pad));
-  GstBuffer *buf, *outbuf;
+  GstBuffer *outbuf;
   faacDecFrameInfo *info;
   guint64 next_ts;
   void *out;
   gboolean run_loop = TRUE;
 
+/*
   if (GST_IS_EVENT (data)) {
     GstEvent *event = GST_EVENT (data);
 
@@ -572,14 +635,14 @@ gst_faad_chain (GstPad * pad, GstData * data)
         return;
     }
   }
-
+*/
   info = g_new0 (faacDecFrameInfo, 1);
 
   /* buffer + remaining data */
-  buf = GST_BUFFER (data);
-  next_ts = GST_BUFFER_TIMESTAMP (buf);
+  /* buf = GST_BUFFER (data); */
+  next_ts = GST_BUFFER_TIMESTAMP (buffer);
   if (faad->tempbuf) {
-    buf = gst_buffer_join (faad->tempbuf, buf);
+    buffer = gst_buffer_join (faad->tempbuf, buffer);
     faad->tempbuf = NULL;
   }
 
@@ -590,11 +653,12 @@ gst_faad_chain (GstPad * pad, GstData * data)
     glong init_res;
 
     init_res = faacDecInit (faad->handle,
-        GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), &samplerate, &channels);
+        GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer), &samplerate,
+        &channels);
     if (init_res < 0) {
       GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
           ("Failed to init decoder from stream"));
-      return;
+      return GST_FLOW_UNEXPECTED;
     }
     skip_bytes = init_res;
     faad->init = TRUE;
@@ -609,8 +673,8 @@ gst_faad_chain (GstPad * pad, GstData * data)
   }
 
   /* decode cycle */
-  input_data = GST_BUFFER_DATA (buf);
-  input_size = GST_BUFFER_SIZE (buf);
+  input_data = GST_BUFFER_DATA (buffer);
+  input_size = GST_BUFFER_SIZE (buffer);
   info->bytesconsumed = input_size - skip_bytes;
 
   if (!faad->packetised) {
@@ -660,7 +724,7 @@ gst_faad_chain (GstPad * pad, GstData * data)
       }
 
       if (fmt_change) {
-        GstPadLinkReturn ret;
+        /*GstPadLinkReturn ret; */
 
         /* store new negotiation information */
         faad->samplerate = info->samplerate;
@@ -671,12 +735,12 @@ gst_faad_chain (GstPad * pad, GstData * data)
         memcpy (faad->channel_positions, info->channel_position,
             faad->channels);
 
-        /* and negotiate */
-        ret = gst_pad_renegotiate (faad->srcpad);
-        if (GST_PAD_LINK_FAILED (ret)) {
-          GST_ELEMENT_ERROR (faad, CORE, NEGOTIATION, (NULL), (NULL));
-          break;
-        }
+        /* and negotiate 
+           ret = gst_pad_renegotiate (faad->srcpad);
+           if (GST_PAD_LINK_FAILED (ret)) {
+           GST_ELEMENT_ERROR (faad, CORE, NEGOTIATION, (NULL), (NULL));
+           break;
+           } */
       }
 
       /* play decoded data */
@@ -690,25 +754,27 @@ gst_faad_chain (GstPad * pad, GstData * data)
         if (GST_CLOCK_TIME_IS_VALID (next_ts)) {
           next_ts += GST_BUFFER_DURATION (outbuf);
         }
-        gst_pad_push (faad->srcpad, GST_DATA (outbuf));
+        gst_pad_push (faad->srcpad, outbuf);
       }
     }
   }
 
   /* Keep the leftovers in raw stream */
   if (input_size > 0 && !faad->packetised) {
-    if (input_size < GST_BUFFER_SIZE (buf)) {
-      faad->tempbuf = gst_buffer_create_sub (buf,
-          GST_BUFFER_SIZE (buf) - input_size, input_size);
+    if (input_size < GST_BUFFER_SIZE (buffer)) {
+      faad->tempbuf = gst_buffer_create_sub (buffer,
+          GST_BUFFER_SIZE (buffer) - input_size, input_size);
     } else {
-      faad->tempbuf = buf;
-      gst_buffer_ref (buf);
+      faad->tempbuf = buffer;
+      gst_buffer_ref (buffer);
     }
   }
 
-  gst_buffer_unref (buf);
+  gst_buffer_unref (buffer);
 
   g_free (info);
+
+  return ret;
 }
 
 static GstElementStateReturn
@@ -758,8 +824,7 @@ gst_faad_change_state (GstElement * element)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_library_load ("gstaudio") &&
-      gst_element_register (plugin, "faad", GST_RANK_PRIMARY, GST_TYPE_FAAD);
+  return gst_element_register (plugin, "faad", GST_RANK_PRIMARY, GST_TYPE_FAAD);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

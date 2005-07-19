@@ -378,6 +378,50 @@ GST_CHECK_FEATURE(AALIB, [aasink plug-in], aasink, [
   AS_SCRUB_INCLUDE(AALIB_CFLAGS)
 ])
 
+dnl *** AMR-NB ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_AMRNB, true)
+GST_CHECK_FEATURE(AMRNB, [AMR-NB], amrnbdec amrnbenc, [
+  GST_CHECK_LIBHEADER(AMRNB, amrnb,
+		      Decoder_Interface_init, -lm,
+		      amrnb/interf_dec.h,
+		      AMRNB_LIBS="-lamrnb -lm"
+		      AC_SUBST(AMRNB_LIBS))
+])
+
+dnl **** Free AAC Decoder (FAAD) ****
+translit(dnm, m, l) AM_CONDITIONAL(USE_FAAD, true)
+GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
+  HAVE_FAAD="yes"
+  GST_CHECK_LIBHEADER(FAAD, faad, faacDecOpen, -lm, faad.h, FAAD_LIBS="-lfaad -lm", HAVE_FAAD="no")
+  if test $HAVE_FAAD = "yes"; then
+    AC_MSG_CHECKING([Checking for FAAD >= 2])
+    AC_TRY_RUN([
+
+#include <faad.h>
+#if !defined(FAAD2_VERSION) || !defined(FAAD_FMT_DOUBLE)
+#error Not faad2
+#else
+#include <string.h>
+
+int main()
+{
+char version[9] = FAAD2_VERSION;
+// a release candidate of 2.0 is not enought for us
+if ( strstr( version, "2.0 RC" ) ) { return 1; }
+
+return 0;
+}
+
+#endif
+    ],
+       [ HAVE_FAAD="yes" && AC_MSG_RESULT(yes)],
+       [ HAVE_FAAD="no"  && AC_MSG_RESULT(no)])
+  fi;
+  AS_SCRUB_INCLUDE(FAAD_CFLAGS)
+  AC_SUBST(FAAD_LIBS)
+])
+
+
 dnl *** libcaca ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBCACA, true)
 GST_CHECK_FEATURE(LIBCACA, [libcaca], libcaca, [
@@ -433,6 +477,15 @@ GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
   fi    
 ])
 AC_SUBST(MAD_LIBS)
+
+dnl *** mpeg2dec ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_MPEG2DEC, true)
+GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
+  PKG_CHECK_MODULES(MPEG2DEC, libmpeg2 >= 0.4.0,
+      HAVE_MPEG2DEC="yes", HAVE_MPEG2DEC="no")
+  AC_SUBST(MPEG2DEC_CFLAGS)
+  AC_SUBST(MPEG2DEC_LIBS)
+])
 
 dnl *** dv1394 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DV1394, true)
@@ -555,6 +608,9 @@ ext/raw1394/Makefile
 ext/shout2/Makefile
 ext/sidplay/Makefile
 ext/esd/Makefile
+ext/mpeg2dec/Makefile
+ext/faad/Makefile
+ext/amrnb/Makefile
 po/Makefile.in
 common/Makefile
 common/m4/Makefile
