@@ -73,7 +73,7 @@ The pipeline base time is propagated to all the element during the PAUSED
 to PLAYING state change. All elements are therefore able to convert the 
 stream time to the absolute time. It is possible to specify an aditional
 delay to the base time to compensate for the delay it takes to perform
-the state change.
+the state change using the GstPipeline "delay" property.
 
 
 Clock features

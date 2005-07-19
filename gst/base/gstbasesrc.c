@@ -387,6 +387,19 @@ gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
   offset = GST_EVENT_SEEK_OFFSET (event);
   src->segment_loop = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_SEGMENT_LOOP;
 
+  /* send flush start */
+  gst_pad_push_event (src->srcpad, gst_event_new_flush (FALSE));
+
+  /* unblock streaming thread */
+  gst_base_src_unlock (src);
+
+  /* grab streaming lock */
+  GST_STREAM_LOCK (src->srcpad);
+
+  /* send flush end */
+  gst_pad_push_event (src->srcpad, gst_event_new_flush (TRUE));
+
+  /* perform the seek */
   switch (GST_EVENT_SEEK_METHOD (event)) {
     case GST_SEEK_METHOD_SET:
       if (offset < 0)
@@ -419,18 +432,6 @@ gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
       goto error;
   }
 
-  /* send flush start */
-  gst_pad_push_event (src->srcpad, gst_event_new_flush (FALSE));
-
-  /* unblock streaming thread */
-  gst_base_src_unlock (src);
-
-  /* grab streaming lock */
-  GST_STREAM_LOCK (src->srcpad);
-
-  /* send flush end */
-  gst_pad_push_event (src->srcpad, gst_event_new_flush (TRUE));
-
   /* now send discont */
   gst_base_src_send_discont (src);
 
@@ -447,6 +448,7 @@ gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
 error:
   {
     GST_DEBUG_OBJECT (src, "seek error");
+    GST_STREAM_UNLOCK (src->srcpad);
     gst_event_unref (event);
     return FALSE;
   }

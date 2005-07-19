@@ -1,3 +1,12 @@
+2005-07-19  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-clocks.txt:
+	* docs/design/part-events.txt:
+	* gst/base/gstbasesrc.c: (gst_base_src_do_seek):
+	Small docs updates.
+	Only update the seeking values when we are not
+	busy streaming.
+
 2005-07-19  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/base/gstbasesrc.c: (gst_base_src_loop):
