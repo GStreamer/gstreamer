@@ -184,11 +184,11 @@ else
 LIBCACA_DIR=
 endif
 
-# if USE_LIBDV
-# LIBDV_DIR=dv
-# else
+if USE_LIBDV
+LIBDV_DIR=dv
+else
 LIBDV_DIR=
-# endif
+endif
 
 # if USE_LIBFAME
 # LIBFAME_DIR=libfame
@@ -286,11 +286,11 @@ NAS_DIR=
 PANGO_DIR=
 # endif
 
-# if USE_DV1394
-# DV1394_DIR=raw1394
-# else
+if USE_DV1394
+DV1394_DIR=raw1394
+else
 DV1394_DIR=
-# endif
+endif
 
 # if USE_SDL
 # SDL_DIR=sdl
