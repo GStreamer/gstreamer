@@ -1,5 +1,11 @@
 2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* docs/manual/appendix-porting.xml:
+	  Mention removal of libgstgconf-0.9.la and existence of gconf
+	  elements.
+
+2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* docs/pwg/advanced-clock.xml:
 	* docs/pwg/appendix-porting.xml:
 	* docs/pwg/intro-preface.xml:

@@ -85,6 +85,14 @@
           Filtered caps -> caps-filter.
         </para>
       </listitem>
+      <listitem>
+        <para>
+          libgstgconf-0.9.la does not exist. Use the
+          <quote>gconfvideosink</quote> and <quote>gconfaudiosink</quote>
+          elements instead, which will do live-updates and require no library
+          linking.
+        </para>
+      </listitem>
     </itemizedlist>
   </sect1>
 </chapter>
