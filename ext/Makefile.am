@@ -124,6 +124,12 @@ endif
 FLAC_DIR=
 # endif
 
+if USE_GCONF
+GCONF_DIR=gconf
+else
+GCONF_DIR=
+endif
+
 # if USE_GDK_PIXBUF
 # GDK_PIXBUF_DIR=gdk_pixbuf
 # else
@@ -393,6 +399,7 @@ SUBDIRS=\
 	$(FAAC_DIR) \
 	$(FAAD_DIR) \
 	$(FLAC_DIR) \
+	$(GCONF_DIR) \
 	$(GDK_PIXBUF_DIR) \
 	$(GNOMEVFS_DIR) \
 	$(GSM_DIR) \
@@ -434,6 +441,7 @@ SUBDIRS=\
 
 DIST_SUBDIRS=\
 	mad \
+	gconf \
 	shout2 \
 	sidplay \
 	aalib \
