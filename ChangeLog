@@ -1,3 +1,8 @@
+2005-07-20  Andy Wingo  <wingo@pobox.com>
+
+	* gst/videoscale/vs_image.c (vs_image_scale_nearest_YUYV): Typo
+	fix (?), fixes a seggie mcfalterson (#310894).
+
 2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_get_headers),

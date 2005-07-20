@@ -284,7 +284,7 @@ vs_image_scale_nearest_YUYV (const VSImage * dest, const VSImage * src,
   y_increment = ((src->height - 1) << 16) / (dest->height - 1);
   x_increment = ((src->width - 1) << 16) / (dest->width - 1);
 
-  n_quads = ROUND_UP_2 (dest->width);
+  n_quads = ROUND_UP_2 (dest->width) / 2;
   acc = 0;
   for (i = 0; i < dest->height; i++) {
     j = acc >> 16;
