@@ -31,11 +31,11 @@
 {
    __libc_freeres_rw_acess
    Memcheck:Addr4
-   obj:/lib/tls/i686/cmov/libc-*.so
-   obj:/lib/tls/i686/cmov/libc-*.so
-   obj:/lib/tls/i686/cmov/libc-*.so
-   obj:/lib/tls/i686/cmov/libc-*.so
-   obj:/lib/tls/i686/cmov/libc-*.so
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
    fun:__libc_freeres
 }
 
@@ -46,14 +46,14 @@
    Memcheck:Leak
    fun:calloc
    fun:g_malloc0
-   obj:/usr/lib/libgobject-2.0.so.*
-   obj:/usr/lib/libgobject-2.0.so.*
+   obj:*
+   obj:*
    fun:g_type_init_with_debug_flags
    fun:g_type_init
    fun:init_pre
    fun:init_popt_callback
-   obj:/usr/lib/libpopt.so.*
-   obj:/usr/lib/libpopt.so.*
+   obj:*
+   obj:*
    fun:poptGetContext
    fun:gst_init_check_with_popt_table
 }
