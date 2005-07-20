@@ -1,5 +1,29 @@
 2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/gconf/Makefile.am:
+	* ext/gconf/gconf.c: (gst_bin_find_unconnected_pad),
+	(gst_gconf_render_bin_from_description),
+	(gst_gconf_get_default_video_sink):
+	* ext/gconf/gstgconfaudiosink.c: (gst_gconf_audio_sink_base_init),
+	(gst_gconf_audio_sink_class_init), (gst_gconf_audio_sink_dispose),
+	(cb_toggle_element), (gst_gconf_audio_sink_change_state):
+	* ext/gconf/gstgconfelements.h:
+	* ext/gconf/gstgconfvideosink.c: (gst_gconf_video_sink_base_init),
+	(gst_gconf_video_sink_class_init), (gst_gconf_video_sink_dispose),
+	(cb_toggle_element), (gst_gconf_video_sink_change_state):
+	* gst/autodetect/gstautoaudiosink.c:
+	(gst_auto_audio_sink_base_init), (gst_auto_audio_sink_class_init),
+	(gst_auto_audio_sink_detect), (gst_auto_audio_sink_change_state):
+	* gst/autodetect/gstautovideosink.c:
+	(gst_auto_video_sink_base_init), (gst_auto_video_sink_class_init),
+	(gst_auto_video_sink_find_best), (gst_auto_video_sink_detect):
+	  Port auto/gconfsinks to 0.9. They actually appear to work here in
+	  Totem as well, making them actually useful.
+
+2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/faad/Makefile.am:
 	  Fix uninstalled build.
 
