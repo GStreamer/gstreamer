@@ -197,9 +197,10 @@
           the concepts apply equally to other plugin types, including sources,
           sinks, and autopluggers. This part of the guide presents the issues
           that arise when working on these more specialized plugin types. The
-          part includes chapters on <xref linkend="chapter-other-source"/>,
-          <xref linkend="chapter-other-sink"/>, <xref
-          linkend="chapter-other-oneton"/>, <xref
+          chapter starts with a special focus on elements that can be written
+          using a base-class (<xref linkend="chapter-other-base"/>), and
+          later also goes into writing special types of elements in
+          <xref linkend="chapter-other-oneton"/>, <xref
           linkend="chapter-other-ntoone"/> and <xref
           linkend="chapter-other-manager"/>.
         </para>

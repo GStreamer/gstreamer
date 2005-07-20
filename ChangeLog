@@ -1,3 +1,18 @@
+2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/advanced-clock.xml:
+	* docs/pwg/appendix-porting.xml:
+	* docs/pwg/intro-preface.xml:
+	* docs/pwg/other-base.xml:
+	* docs/pwg/other-manager.xml:
+	* docs/pwg/other-nton.xml:
+	* docs/pwg/other-ntoone.xml:
+	* docs/pwg/other-oneton.xml:
+	* docs/pwg/pwg.xml:
+	  Document base classes, update sections of n-to-1 and 1-to-n (muxer,
+	  demuxer), remove n-to-n (was never written), fix some code examples
+	  and links and update the porting section to include all this.
+
 2005-07-19  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstqueue.c: (gst_queue_init), (gst_queue_handle_sink_event),

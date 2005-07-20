@@ -1,6 +1,3 @@
-
-<!-- ############ chapter ############# -->
-
 <chapter id="chapter-other-manager" xreflabel="Writing a Manager">
   <title>Writing a Manager</title>
   <para>
@@ -30,25 +27,18 @@
         function).
       </para>
     </listitem>
+    <listitem>
+      <para>
+        To embed an element, or a series of elements, into something that
+        looks and works like a simple element to the outside world.
+      </para>
+    </listitem>
   </itemizedlist>
   <para>
-    This chapter will explain the setup of managers. As a specific example,
-    we will try to add EOS event support to source elements. This can be
-    used to finish capturing an audio stream to a file. Source elements
-    normally don't do any EOS handling at all, so a manager is perfect to
-    extend those element's functionalities.
+    Making a manager is about as simple as it gets. You can derive from a
+    <classname>GstBin</classname>, and in most cases, you can embed the
+    required elements in the <function>_init ()</function> already, including
+    setup of ghostpads. If you need any custom data handlers, you can connect
+    signals or embed a second element which you control.
   </para>
-  <para>
-    Specifically, this element will contain two child elements: the actual
-    source element and a <quote>helper element</quote> that implement an
-    event handler on its source pad. This event handler will respond to
-    EOS events by storing them internally and returning the event (rather
-    than data) on the next call to the <function>_get ()</function>
-    function. After that, it will go into EOS and set the parent (and
-    thereby the contained source element) to EOS as well. Other events will
-    be forwarded to the source element, which will handle them as usual.
-  </para>
-  <programlisting>
-..
-  </programlisting>
 </chapter>

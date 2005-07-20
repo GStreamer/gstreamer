@@ -31,11 +31,9 @@
 <!ENTITY ADVANCED_TAGGING     SYSTEM "advanced-tagging.xml">
 <!ENTITY ADVANCED_EVENTS      SYSTEM "advanced-events.xml">
 
-<!ENTITY OTHER_SOURCE         SYSTEM "other-source.xml">
-<!ENTITY OTHER_SINK           SYSTEM "other-sink.xml">
+<!ENTITY OTHER_BASE           SYSTEM "other-base.xml">
 <!ENTITY OTHER_ONETON         SYSTEM "other-oneton.xml">
 <!ENTITY OTHER_NTOONE         SYSTEM "other-ntoone.xml">
-<!ENTITY OTHER_NTON           SYSTEM "other-nton.xml">
 <!ENTITY OTHER_MANAGER        SYSTEM "other-manager.xml">
 
 <!ENTITY APPENDIX_CHECKLIST   SYSTEM "appendix-checklist.xml">
@@ -152,26 +150,26 @@
 
   <!-- ############ part ############# -->
 
-  <part id="part-other" xreflabel="Other Element Types">
-    <title>Other Element Types</title>
+  <part id="part-other" xreflabel="Creating special element types">
+    <title>Creating special element types</title>
     <partintro>
       <para>
         By now, we have looked at pretty much any feature that can be embedded
-        into a &GStreamer; element. However, we have limited ourselves to the
-        simple model of a filter element. In this chapter, we will look at the
-        specific difficulties and things to keep in mind when writing specific
-        types of elements. We will discuss output elements (sinks), input
-        elements (sources), 1-to-N elements, N-to-1 elements, N-to-N elements,
-        autopluggers and managers. Some of these represent elements that don't
-        actually exist. Rather, they represent a general concept.
+        into a &GStreamer; element. Most of this has been fairly low-level and
+        given deep insights in how &GStreamer; works internally. Fortunately,
+        &GStreamer; contains some easier-to-use interfaces to create such
+        elements. In order to do that, we will look closer at the element
+        types for which &GStreamer; provides base classes (sources, sinks and
+        transformation elements). We will also look closer at some types of
+        elements that require no specific coding such as scheduling-interaction
+        or data passing, but rather require specific pipeline control (e.g.
+        N-to-1 elements and managers).
       </para>
     </partintro>
 
-    &OTHER_SOURCE;
-    &OTHER_SINK;
+    &OTHER_BASE;
     &OTHER_ONETON;
     &OTHER_NTOONE;
-    &OTHER_NTON;
     &OTHER_MANAGER;
   </part>
 

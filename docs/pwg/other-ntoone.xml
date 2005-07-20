@@ -1,82 +1,31 @@
-
-<!-- ############ chapter ############# -->
-
-<chapter id="chapter-other-ntoone" xreflabel="Writing a N-to-1 Element or Muxer">
+<chapter id="chapter-other-ntoone"
+    xreflabel="Writing a N-to-1 Element or Muxer">
   <title>Writing a N-to-1 Element or Muxer</title>
   <para>
     N-to-1 elements have been previously mentioned and discussed in both
     <xref linkend="chapter-advanced-request"/> and in
     <xref linkend="chapter-scheduling"/>. The main noteworthy thing
-    about N-to-1 elements is that they should <emphasis>always</emphasis>,
-    without any single exception, be <function>_loop ()</function>-based.
-    Apart from that, there is not much general that you need to know. We
-    will discuss one special type of N-to-1 elements here, these being
-    muxers. The first two of these sections apply to N-to-1 elements in
-    general, though.
+    about N-to-1 elements is that each pad is push-based in its own thread,
+    and the N-to-1 element synchronizes those streams by
+    expected-timestamp-based logic. This means it lets all streams wait
+    except for the one that provides the earliest next-expected timestamp.
+    When that stream has passwed one buffer, the next
+    earliest-expected-timestamp is calculated, and we start back where we
+    were, until all streams have reached EOS. There is a helper base class,
+    called <classname>GstCollectPads</classname>, that will help you to do
+    this.
+  </para>
+  <para>
+    Note, however, that this helper class will only help you with grabbing
+    a buffer from each input and giving you the one with earliest timestamp.
+    If you need anything more difficult, such as "don't-grab-a-new-buffer
+    until a given timestamp" or something like that, you'll need to do this
+    yourself.
   </para>
 
-  <sect1 id="section-muxer-dataloop" xreflabel="The Data Loop Function">
-    <title>The Data Loop Function</title>
-    <para>
-      As previously mentioned in <xref linkend="chapter-scheduling"/>,
-      N-to-1 elements generally try to have one buffer from each sink pad
-      and then handle the one with the earliest timestamp. There's some
-      exceptions to this rule, we will come to those later. This only works
-      if all streams actually continuously provide input. There might be
-      cases where this is not true, for example subtitles (there might be
-      no subtitle for a while), overlay images and so forth. For this
-      purpose, there is a <function>_select ()</function> function in
-      &GStreamer;. It checks whether input is available on a (list of)
-      pad(s). In this way, you can skip over the pads that are 'non-
-      continuous'.
-    </para>
-    <programlisting>
-/* Pad selection is currently broken, FIXME some day */
-    </programlisting>
-  </sect1>
-
-  <sect1 id="section-muxer-events" xreflabel="Events in the Loop Function">
-    <title>Events in the Loop Function</title>
-    <para>
-      N-to-1 elements using a cache will sometimes receive events, and it
-      is often unclear how to handle those. For example, how do you seek
-      to a frame in an <emphasis>output</emphasis> file (and what's the
-      point of it anyway)? So, do discontinuity or seek events make sense,
-      and should you use them?
-    </para>
-    <sect2 id="section-muxevents-discont" xreflabel="Discontinuities and flushes">
-      <title>Discontinuities and flushes</title>
-      <para>
-        Don't do anything. They specify a discontinuity in the output, and
-        you should continue to playback as you would otherwise. You
-        generally do not need to put a discontinuity in the output stream
-        in muxers; you would have to manually start adapting timestamps of
-        output frames (if appliccable) to match the previous timescale,
-        though. Note that the output data stream should be continuous. For
-        other types of N-to-1-elements, it is generally fine to forward
-        the discontinuity once it has been received from all pads. This
-        depends on the specific element.
-      </para>
-    </sect2>
-    <sect2 id="section-muxevents-seek" xreflabel="Seeks">
-      <title>Seeks</title>
-      <para>
-        Depends on the element. Muxers would generally not implement this,
-        because the concept of seeking in an <emphasis>output</emphasis>
-        stream at frame level is not very useful. Seeking at byte level
-        can be useful, but that is more generally done
-        <emphasis>by</emphasis> muxers <emphasis>on</emphasis> sink
-        elements.
-      </para>
-    </sect2>
-    <sect2 id="section-muxevents-eos" xreflabel="End-of-Stream">
-      <title>End-of-Stream</title>
-      <para>
-        Speaks for itself.
-      </para>
-    </sect2>
-  </sect1>
-
+<!--
+  Note: I'd like to have something like this in the final text, but since
+  the code below doesn't work and this is all 0.8'y, I commented it for now.
   <sect1 id="section-muxer-negotiation" xreflabel="Negotiation">
     <title>Negotiation</title>
     <para>
@@ -202,46 +151,5 @@ gst_avi_mux_loop (GstElement *element)
       muxers, it is not a complete solution, nor is it a pretty one.
     </para>
   </sect1>
-
-  <sect1 id="section-muxer-markup" xreflabel="Markup vs. data processing">
-    <title>Markup vs. data processing</title>
-    <para>
-      As we noted on demuxers before, we love common programming paradigms
-      such as clean, lean and mean code. To achieve that in muxers, it's
-      generally a good idea to separate the actual data stream markup from
-      the data processing. To illustrate, here's how AVI muxers should
-      write out RIFF tag chunks:
-    </para>
-    <programlisting>
-static void
-gst_avi_mux_write_chunk (GstAviMux *mux,
-			 guint32    id,
-			 GstBuffer *data)
-{
-  GstBuffer *hdr;
-
-  hdr = gst_buffer_new_and_alloc (8);
-  ((guint32 *) GST_BUFFER_DATA (buf))[0] = GUINT32_TO_LE (id);
-  ((guint32 *) GST_BUFFER_DATA (buf))[1] = GUINT32_TO_LE (GST_BUFFER_SIZE (data));
-
-  gst_pad_push (mux->srcpad, hdr);
-  gst_pad_push (mux->srcpad, data);
-}
-
-static void
-gst_avi_mux_loop (GstElement *element)
-{
-  GstAviMux *mux = GST_AVI_MUX (element);
-  GstBuffer *buf;
-[..]
-  buf = gst_pad_pull (mux->sinkpad[0]);
-[..]
-  gst_avi_mux_write_chunk (GST_MAKE_FOURCC ('0','0','d','b'), buf);
-}
-    </programlisting>
-    <para>
-      In general, try to program clean code, that should cover pretty
-      much everything.
-    </para>
-  </sect1>
+-->
 </chapter>

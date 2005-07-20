@@ -8,7 +8,12 @@
     With this list, it should be possible to port most plugins to
     &GStreamer;-0.9 in less than a day. Exceptions are elements that will
     require a base class in 0.9 (sources, sinks), in which case it may take
-    a lot longer, depending on the coder's skills.
+    a lot longer, depending on the coder's skills (however, when using the
+    <classname>GstBaseSink</classname> and <classname>GstBaseSrc</classname>
+    base-classes, it shouldn't be all too bad), and elements requiring
+    the deprecated bytestream interface, which should take 1-2 days with
+    random access. The scheduling parts of muxers will also need a rewrite,
+    which will take about the same amount of time.
   </para>
 
   <sect1 id="section-porting-objects">
@@ -54,7 +59,36 @@
       </listitem>
       <listitem>
         <para>
-          base classes, async state changes.
+          For as far as possible, elements should try to use existing base
+          classes in 0.9. Sink and source elements, for example, could derive
+          from <classname>GstBaseSrc</classname> and
+          <classname>GstBaseSink</classname>. Audio sinks or sources could even
+          derive from audio-specific base classes. All existing base classes
+          have been discussed in <xref linkend="chapter-other-base"/> and the
+          next few chapters.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          In 0.9, event handling and buffers are separated once again. This
+          means that in order to receive events, one no longer has to set the
+          <classname>GST_FLAG_EVENT_AWARE</classname> flag, but can simply
+          set an event handling function on its sinkpad(s), using the function
+          <function>gst_pad_set_event_function ()</function>. The
+          <function>_chain ()</function>-function will only receive buffers.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Although core will wrap most threading-related locking for you (e.g.
+          it takes the stream lock before calling your data handling
+          functions), you are still responsible for locking around certain
+          functions, e.g. object properties. Be sure to lock properly here,
+          since applications will change those properties in a different thread
+          than the thread which does the actual data passing! You can use the
+          <function>GST_LOCK ()</function> and <function>GST_UNLOCK
+          ()</function> helpers in most cases, fortunately, which grabs the
+          default property lock of the element.
         </para>
       </listitem>
     </itemizedlist>
