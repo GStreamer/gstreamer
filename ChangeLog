@@ -1,3 +1,8 @@
+2005-07-20  Andy Wingo  <wingo@pobox.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c (gst_mpeg2dec_sink_event): Signedness
+	fix.
+
 2005-07-20  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac: 
