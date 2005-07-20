@@ -105,7 +105,7 @@ main (int   argc,
   gst_element_link_pads (source, "src", demux, "sink");
 
   /* listen for newly created pads */
-  g_signal_connect (demux, "new-pad", G_CALLBACK (cb_new_pad), NULL);
+  g_signal_connect (demux, "pad-added", G_CALLBACK (cb_new_pad), NULL);
 
   /* start the pipeline */
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);

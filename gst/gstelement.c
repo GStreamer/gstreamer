@@ -114,7 +114,7 @@ gst_element_class_init (GstElementClass * klass)
   parent_class = g_type_class_ref (GST_TYPE_OBJECT);
 
   /**
-   * GstElement::state-change:
+   * GstElement::state-changed:
    * @gstelement: the object which received the signal
    * @int:
    * @int:
@@ -122,19 +122,19 @@ gst_element_class_init (GstElementClass * klass)
    * the #GstElementState of the element has been changed
    */
   gst_element_signals[STATE_CHANGE] =
-      g_signal_new ("state-change", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstElementClass, state_change), NULL,
+      g_signal_new ("state-changed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstElementClass, state_changed), NULL,
       NULL, gst_marshal_VOID__INT_INT, G_TYPE_NONE, 2, G_TYPE_INT, G_TYPE_INT);
   /**
-   * GstElement::new-pad:
+   * GstElement::pad-added:
    * @gstelement: the object which received the signal
    * @object:
    *
    * a new #GstPad has been added to the element
    */
   gst_element_signals[NEW_PAD] =
-      g_signal_new ("new-pad", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstElementClass, new_pad), NULL, NULL,
+      g_signal_new ("pad-added", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstElementClass, pad_added), NULL, NULL,
       gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
   /**
    * GstElement::pad-removed:
@@ -1148,8 +1148,10 @@ gst_element_send_event (GstElement * element, GstEvent * event)
 /**
  * gst_element_seek:
  * @element: a #GstElement to send the event to.
- * @seek_type: the method to use for seeking.
- * @offset: the offset to seek to.
+ * @seek_method: the method to use for seeking (GST_SEEK_METHOD_*).
+ * @seek_format: the #GstFormat to use for seeking (GST_FORMAT_*).
+ * @seek_flags: the flags to use for seeking (GST_SEEK_FLAG_*).
+ * @offset: the offset to seek to (in the given seek_format).
  *
  * Sends a seek event to an element.
  *
@@ -1158,14 +1160,15 @@ gst_element_send_event (GstElement * element, GstEvent * event)
  * MT safe.
  */
 gboolean
-gst_element_seek (GstElement * element, GstSeekType seek_type, guint64 offset)
+gst_element_seek (GstElement * element, GstSeekType seek_method,
+    GstFormat seek_format, GstSeekType seek_flags, guint64 offset)
 {
   GstEvent *event;
   gboolean result;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
-  event = gst_event_new_seek (seek_type, offset);
+  event = gst_event_new_seek (seek_method | seek_format | seek_flags, offset);
   result = gst_element_send_event (element, event);
 
   return result;

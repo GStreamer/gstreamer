@@ -1,5 +1,32 @@
 2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* docs/manual/advanced-autoplugging.xml:
+	* docs/manual/basics-helloworld.xml:
+	* docs/manual/basics-pads.xml:
+	* docs/random/ds/0.9-suggested-changes:
+	* gst/gstelement.c: (gst_element_class_init), (gst_element_seek):
+	* gst/gstelement.h:
+	* gst/gstevent.h:
+	* gst/gstformat.h:
+	* gst/gstquery.h:
+	* gst/gststructure.c: (gst_structure_value_get_generic_type),
+	(gst_structure_parse_array), (gst_structure_parse_value):
+	* gst/gstvalue.c: (gst_type_is_fixed),
+	(gst_value_list_prepend_value), (gst_value_list_append_value),
+	(gst_value_list_get_size), (gst_value_list_get_value),
+	(gst_value_transform_array_string), (gst_value_serialize_array),
+	(gst_value_deserialize_array), (gst_value_intersect_array),
+	(gst_value_is_fixed), (_gst_value_initialize):
+	* gst/gstvalue.h:
+	  GstElement::new-pad -> pad-added, GstElement::state-change ->
+	  state-changed, GstValueFixedList -> GstValueArray, add format and
+	  flags as their own arguments in gst_element_seek() (should improve
+	  "bindeability"), remove function generators since they don't work
+	  under a whole bunch of compilers (they were deprecated already
+	  anyway).
+
+2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/gstinfo.c: (_gst_debug_nameof_funcptr),
 	(_gst_debug_register_funcptr):
 	* gst/gstinfo.h:

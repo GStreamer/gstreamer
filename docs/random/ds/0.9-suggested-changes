@@ -42,16 +42,11 @@ API:
  - dparams: should be converted into some kind of special pad and
    object property combination.
 
- - remove gst_element_yield()
-
  - read/write locks on buffers
 
  - be able to send events to unlinked pads (bug #114442)
 
  - caps should have a flag on fields to indicate that the field is optional
-
- - remove gst_pad_select() and add gst_pad_pull_many(), which pulls one
-   buffer from one of many pads
 
  - deprecate gst_buffer_merge() and replace with a function that takes
    ownership of the buffers.  (bug #136408)
@@ -64,11 +59,6 @@ API:
  - fix plugin code to load plugins with RTLD_LOCAL
 
  - don't install gstmarshal.h
-
- - make GstPad and friends a real class heirarchy
-
- - make GstBuffer/GstData a real class heirarchy, although maybe not
-   as a subclass of GObject.
 
  - remove unnecessary headers from gst.h (gstqueue.h in particular)
 
@@ -87,12 +77,7 @@ API:
    24 fps pulled down to 60 and straight video, etc) and make sure our
    video stream descriptions make sense.
 
- - rename GST_TYPE_FIXED_LIST to GST_TYPE_ARRAY
-
  - remove GstMemChunk
-
- - remove GST_FORMATS_FUNCTION().  It doesn't work with non-c99 
-   compilers.
 
  - do an audit to remove GtkObject-isms from gtk-1.2
 
@@ -138,10 +123,6 @@ bugs with interesting info:
   
 
 object hierarchy:
-- state_change in GstElementClass should be renamed to state_changed, since
-  it's a signal triggered after state has changed
-
-
 - a method for elements to know when downstream elements are ignoring
   the data stream.  This would allow automatic shutoff of pipelines
   whose processing is being dumped.
@@ -160,8 +141,3 @@ object hierarchy:
   - make this explicit by having a list of keywords instead of a fixed string
     with slashes
   - fix the editor/el browser to display this nicely
-
-- optimization:
-  - delay parsing caps from the registry until after startup (until they're 
-    first requested or maybe an idle handler for the main loop)
-

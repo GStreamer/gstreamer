@@ -59,30 +59,6 @@ struct _GstQueryTypeDefinition
   gchar     	*description;
 };
 
-#ifdef G_HAVE_ISO_VARARGS
-#define GST_QUERY_TYPE_FUNCTION(type, functionname, ...)  	\
-static const GstQueryType*                           	\
-functionname (type object)                         	\
-{                                                       \
-  static const GstQueryType types[] = {              	\
-    __VA_ARGS__,                                        \
-    0                                              	\
-  };                                                    \
-  return types;                                         \
-}
-#elif defined(G_HAVE_GNUC_VARARGS)
-#define GST_QUERY_TYPE_FUNCTION(type, functionname, a...) 	\
-static const GstQueryType*                           	\
-functionname (type object)                          	\
-{                                                       \
-  static const GstQueryType types[] = {              	\
-    a,                                                  \
-    0                                              	\
-  };                                                    \
-  return types;                                         \
-}
-#endif
-
 #define GST_TYPE_QUERY				(gst_query_get_type())
 #define GST_IS_QUERY(obj)                      (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_QUERY))
 #define GST_IS_QUERY_CLASS(klass)              (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_QUERY))

@@ -53,30 +53,6 @@ struct _GstFormatDefinition
   gchar     *description;
 };
 
-#ifdef G_HAVE_ISO_VARARGS
-#define GST_FORMATS_FUNCTION(type, functionname, ...)   \
-static const GstFormat*                              	\
-functionname (type object)                       	\
-{                                                    	\
-  static const GstFormat formats[] = {               	\
-    __VA_ARGS__,                                     	\
-    0                                                	\
-  };                                                 	\
-  return formats;                                    	\
-}
-#elif defined(G_HAVE_GNUC_VARARGS)
-#define GST_FORMATS_FUNCTION(type, functionname, a...)  \
-static const GstFormat*                              	\
-functionname (type object)                       	\
-{                                                    	\
-  static const GstFormat formats[] = {               	\
-    a,                                               	\
-    0                                                	\
-  };                                                 	\
-  return formats;                                    	\
-}
-#endif
-
 void		_gst_format_initialize		(void);
 
 /* register a new format */

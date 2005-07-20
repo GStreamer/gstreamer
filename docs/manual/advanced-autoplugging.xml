@@ -365,7 +365,7 @@ close_link (GstPad      *srcpad,
   gst_object_unref (GST_OBJECT (pad));
 
   /* if we have static source pads, link those. If we have dynamic
-   * source pads, listen for new-pad signals on the element */
+   * source pads, listen for pad-added signals on the element */
   for ( ; templlist != NULL; templlist = templlist->next) {
     GstStaticPadTemplate *templ = templlist->data;
 
@@ -396,7 +396,7 @@ close_link (GstPad      *srcpad,
 
   /* listen for newly created pads if this element supports that */
   if (has_dynamic_pads) {
-    g_signal_connect (sinkelement, "new-pad", G_CALLBACK (cb_newpad), NULL);
+    g_signal_connect (sinkelement, "pad-added", G_CALLBACK (cb_newpad), NULL);
   }
 }
 

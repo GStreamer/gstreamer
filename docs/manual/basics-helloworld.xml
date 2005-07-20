@@ -35,7 +35,7 @@
       audio) and is called <quote>oggdemux</quote>. The second is a Vorbis
       audio decoder, it's conveniently called <quote>vorbisdec</quote>.
       Since <quote>oggdemux</quote> creates dynamic pads for each elementary
-      stream, you'll need to set a <quote>new-pad</quote> event handler
+      stream, you'll need to set a <quote>pad-added</quote> event handler
       on the <quote>oggdemux</quote> element, like you've learned in
       <xref linkend="section-pads-dynamic"/>, to link the Ogg parser and
       the Vorbis decoder elements together. At last, we'll also need an
@@ -145,10 +145,10 @@ main (int   argc,
 
   /* link together - note that we cannot link the parser and
    * decoder yet, becuse the parser uses dynamic pads. For that,
-   * we set a new-pad signal handler. */
+   * we set a pad-added signal handler. */
   gst_element_link (source, parser);
   gst_element_link_many (decoder, conv, sink, NULL);
-  g_signal_connect (parser, "new-pad", G_CALLBACK (new_pad), NULL);
+  g_signal_connect (parser, "pad-added", G_CALLBACK (new_pad), NULL);
 
   /* put all elements in a bin */
   gst_bin_add_many (GST_BIN (pipeline),

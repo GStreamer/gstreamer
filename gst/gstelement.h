@@ -89,23 +89,6 @@ typedef enum {
 #define GST_STATE_PAUSED_TO_READY	((GST_STATE_PAUSED<<8) | GST_STATE_READY)
 #define GST_STATE_READY_TO_NULL		((GST_STATE_READY<<8) | GST_STATE_NULL)
 
-/* convenience functions */
-#ifdef G_HAVE_ISO_VARARGS
-#define GST_ELEMENT_QUERY_TYPE_FUNCTION(functionname, ...) \
-	GST_QUERY_TYPE_FUNCTION (GstElement*, functionname, __VA_ARGS__);
-#define GST_ELEMENT_FORMATS_FUNCTION(functionname, ...)    \
-	GST_FORMATS_FUNCTION (GstElement*, functionname, __VA_ARGS__);
-#define GST_ELEMENT_EVENT_MASK_FUNCTION(functionname, ...) \
-	GST_EVENT_MASK_FUNCTION (GstElement*, functionname, __VA_ARGS__);
-#elif defined(G_HAVE_GNUC_VARARGS)
-#define GST_ELEMENT_QUERY_TYPE_FUNCTION(functionname, a...) \
-	GST_QUERY_TYPE_FUNCTION (GstElement*, functionname, a);
-#define GST_ELEMENT_FORMATS_FUNCTION(functionname, a...)    \
-	GST_FORMATS_FUNCTION (GstElement*, functionname, a);
-#define GST_ELEMENT_EVENT_MASK_FUNCTION(functionname, a...) \
-	GST_EVENT_MASK_FUNCTION (GstElement*, functionname, a);
-#endif
-
 typedef enum
 {
   /* ignore state changes from parent */
@@ -232,8 +215,8 @@ struct _GstElementClass
 
   /*< private >*/
   /* signal callbacks */
-  void (*state_change)	(GstElement *element, GstElementState old, GstElementState state);
-  void (*new_pad)	(GstElement *element, GstPad *pad);
+  void (*state_changed)	(GstElement *element, GstElementState old, GstElementState state);
+  void (*pad_added)	(GstElement *element, GstPad *pad);
   void (*pad_removed)	(GstElement *element, GstPad *pad);
   void (*no_more_pads)	(GstElement *element);
 
@@ -319,7 +302,10 @@ GstIterator *		gst_element_iterate_sink_pads 	(GstElement * element);
 
 /* event/query/format stuff */
 gboolean		gst_element_send_event		(GstElement *element, GstEvent *event);
-gboolean		gst_element_seek		(GstElement *element, GstSeekType seek_type,
+gboolean		gst_element_seek		(GstElement *element,
+							 GstSeekType seek_method,
+							 GstFormat   seek_format,
+							 GstSeekType seek_flags,
 							 guint64 offset);
 G_CONST_RETURN GstQueryType*
 			gst_element_get_query_types	(GstElement *element);

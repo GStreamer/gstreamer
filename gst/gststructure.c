@@ -1091,7 +1091,7 @@ static GType
 gst_structure_value_get_generic_type (GValue * val)
 {
   if (G_VALUE_TYPE (val) == GST_TYPE_LIST
-      || G_VALUE_TYPE (val) == GST_TYPE_FIXED_LIST) {
+      || G_VALUE_TYPE (val) == GST_TYPE_ARRAY) {
     GArray *array = g_value_peek_pointer (val);
 
     if (array->len > 0) {
@@ -1328,11 +1328,11 @@ gst_structure_parse_list (gchar * s, gchar ** after, GValue * value, GType type)
 }
 
 static gboolean
-gst_structure_parse_fixed_list (gchar * s, gchar ** after, GValue * value,
+gst_structure_parse_array (gchar * s, gchar ** after, GValue * value,
     GType type)
 {
   return gst_structure_parse_any_list (s, after, value, type,
-      GST_TYPE_FIXED_LIST, '<', '>');
+      GST_TYPE_ARRAY, '<', '>');
 }
 
 static gboolean
@@ -1439,7 +1439,7 @@ gst_structure_parse_value (gchar * str,
   } else if (*s == '{') {
     ret = gst_structure_parse_list (s, &s, value, type);
   } else if (*s == '<') {
-    ret = gst_structure_parse_fixed_list (s, &s, value, type);
+    ret = gst_structure_parse_array (s, &s, value, type);
   } else {
     value_s = s;
     if (!gst_structure_parse_string (s, &value_end, &s))

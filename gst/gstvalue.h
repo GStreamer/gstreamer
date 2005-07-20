@@ -38,8 +38,8 @@ G_BEGIN_DECLS
 #define GST_VALUE_HOLDS_FOURCC(x)       (G_VALUE_HOLDS(x, gst_type_fourcc))
 #define GST_VALUE_HOLDS_INT_RANGE(x)    (G_VALUE_HOLDS(x, gst_type_int_range))
 #define GST_VALUE_HOLDS_DOUBLE_RANGE(x) (G_VALUE_HOLDS(x, gst_type_double_range))
-#define GST_VALUE_HOLDS_LIST(x)         (G_VALUE_HOLDS(x, gst_type_list))
-#define GST_VALUE_HOLDS_FIXED_LIST(x)   (G_VALUE_HOLDS(x, gst_type_fixed_list))
+#define GST_VALUE_HOLDS_LIST(x)		(G_VALUE_HOLDS(x, gst_type_list))
+#define GST_VALUE_HOLDS_ARRAY(x)	(G_VALUE_HOLDS(x, gst_type_array))
 #define GST_VALUE_HOLDS_CAPS(x)		(G_VALUE_HOLDS(x, GST_TYPE_CAPS))
 #define GST_VALUE_HOLDS_FRACTION(x)	(G_VALUE_HOLDS(x, gst_type_fraction))
 
@@ -47,7 +47,7 @@ G_BEGIN_DECLS
 #define GST_TYPE_INT_RANGE               gst_type_int_range
 #define GST_TYPE_DOUBLE_RANGE            gst_type_double_range
 #define GST_TYPE_LIST                    gst_type_list
-#define GST_TYPE_FIXED_LIST              gst_type_fixed_list
+#define GST_TYPE_ARRAY			 gst_type_array
 #define GST_TYPE_FRACTION                gst_type_fraction
 
 #define GST_VALUE_LESS_THAN              (-1)
@@ -85,7 +85,7 @@ GST_EXPORT GType gst_type_fourcc;
 GST_EXPORT GType gst_type_int_range;
 GST_EXPORT GType gst_type_double_range;
 GST_EXPORT GType gst_type_list;
-GST_EXPORT GType gst_type_fixed_list;
+GST_EXPORT GType gst_type_array;
 GST_EXPORT GType gst_type_fraction;
 
 void		gst_value_register		(const GstValueTable   *table);
@@ -181,7 +181,6 @@ void		gst_value_register_subtract_func (GType		minuend_type,
 						GstValueSubtractFunc func);
 
 /* fixation */
-gboolean	gst_type_is_fixed		(GType type);
 gboolean	gst_value_is_fixed		(const GValue   *value);
 
 /* private */
