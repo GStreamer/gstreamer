@@ -1,5 +1,12 @@
 2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* docs/manual/appendix-porting.xml:
+	* docs/pwg/appendix-porting.xml:
+	  Document new-pad/state-change signal renames and the FixedList
+	  type rename.
+
+2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* docs/manual/advanced-autoplugging.xml:
 	* docs/manual/basics-helloworld.xml:
 	* docs/manual/basics-pads.xml:

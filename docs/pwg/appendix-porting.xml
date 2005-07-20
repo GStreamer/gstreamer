@@ -91,6 +91,14 @@
           default property lock of the element.
         </para>
       </listitem>
+      <listitem>
+        <para>
+          <classname>GstValueFixedList</classname> and all
+          <function>*_fixed_list_* ()</function> functions were renamed to
+          <classname>GstValueArray</classname> and <function>*_array_*
+          ()</function>.
+        </para>
+      </listitem>
     </itemizedlist>
   </sect1>
 </chapter>

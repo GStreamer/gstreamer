@@ -93,6 +93,13 @@
           linking.
         </para>
       </listitem>
+      <listitem>
+        <para>
+          The <quote>new-pad</quote> and <quote>state-change</quote> signals on
+          <classname>GstElement</classname> were renamed to
+          <quote>pad-added</quote> and <quote>state-changed</quote>.
+        </para>
+      </listitem>
     </itemizedlist>
   </sect1>
 </chapter>
