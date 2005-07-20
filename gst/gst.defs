@@ -962,7 +962,9 @@
   (c-name "gst_element_seek")
   (return-type "gboolean")
   (parameters
-    '("GstSeekType" "seek_type")
+    '("GstSeekType" "seek_method")
+    '("GstFormat" "seek_format")
+    '("GstSeekType" "seek_flags")
     '("guint64" "offset")
   )
 )
@@ -2433,10 +2435,11 @@
   )
 )
 
-(define-function message_new_application
-  (c-name "gst_message_new_application")
+(define-function message_new_custom
+  (c-name "gst_message_new_custom")
   (return-type "GstMessage*")
   (parameters
+    '("GstMessageType" "type")
     '("GstObject*" "src")
     '("GstStructure*" "structure")
   )
@@ -6053,14 +6056,6 @@
     '("GType" "minuend_type")
     '("GType" "subtrahend_type")
     '("GstValueSubtractFunc" "func")
-  )
-)
-
-(define-function type_is_fixed
-  (c-name "gst_type_is_fixed")
-  (return-type "gboolean")
-  (parameters
-    '("GType" "type")
   )
 )
 

@@ -1,3 +1,10 @@
+2005-07-20  Edward Hervey  <edward@fluendo.com>
+
+	* gst/pygstvalue.c:
+	FixedList -> Array
+	* gst/gst.defs:
+	Updating defs file.
+
 2005-07-18  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstpad.override: misc fixes for change in gst_pad_get_parent()

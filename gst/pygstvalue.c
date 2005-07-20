@@ -77,7 +77,7 @@ pygst_value_as_pyobject(const GValue *value, gboolean copy_boxed)
                         pygst_value_as_pyobject
                         (gst_value_list_get_value (value, i), copy_boxed));
       }
-    } else if (GST_VALUE_HOLDS_FIXED_LIST (value)) {
+    } else if (GST_VALUE_HOLDS_ARRAY (value)) {
       int i, len;
       len = gst_value_list_get_size (value);
       ret = PyTuple_New (len);
@@ -134,7 +134,7 @@ pygst_value_init_for_pyobject (GValue *value, PyObject *obj)
       }
     } else if (PyTuple_Check (obj)) {
       PyErr_Clear ();
-      t = GST_TYPE_FIXED_LIST;
+      t = GST_TYPE_ARRAY;
     } else if (PyList_Check (obj)) {
       PyErr_Clear ();
       t = GST_TYPE_LIST;
@@ -230,7 +230,7 @@ pygst_value_from_pyobject (GValue *value, PyObject *obj)
   } else if (PyTuple_Check (obj)) {
     gint i, len;
     PyErr_Clear ();
-    VALUE_TYPE_CHECK (value, GST_TYPE_FIXED_LIST);
+    VALUE_TYPE_CHECK (value, GST_TYPE_ARRAY);
     len = PyTuple_Size (obj);
     for (i = 0; i < len; i++) {
       PyObject *o;
