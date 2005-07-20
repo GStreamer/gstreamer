@@ -1,5 +1,11 @@
 2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/playback/gstplaybasebin.c: (fill_buffer):
+	  Use _new_custom() so we can set custom message types for buffering
+	  messages.
+
+2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* configure.ac:
 	* gst-libs/gst/Makefile.am:
 	* gst-libs/gst/gconf/.cvsignore:
