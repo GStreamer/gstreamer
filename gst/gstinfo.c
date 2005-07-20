@@ -1030,12 +1030,13 @@ gst_debug_get_all_categories (void)
 
 GHashTable *__gst_function_pointers = NULL;
 const gchar *
-_gst_debug_nameof_funcptr (void *ptr)
+_gst_debug_nameof_funcptr (GstDebugFuncPtr ptr)
     G_GNUC_NO_INSTRUMENT;
 
 /* This function MUST NOT return NULL */
-     const gchar *_gst_debug_nameof_funcptr (void *ptr)
+     const gchar *_gst_debug_nameof_funcptr (GstDebugFuncPtr func)
 {
+  gpointer ptr = (gpointer) func;
   gchar *ptrname;
 
 #ifdef HAVE_DLADDR
@@ -1064,15 +1065,15 @@ _gst_debug_nameof_funcptr (void *ptr)
   }
 }
 
-void *
-_gst_debug_register_funcptr (void *ptr, gchar * ptrname)
+void
+_gst_debug_register_funcptr (GstDebugFuncPtr func, gchar * ptrname)
 {
+  gpointer ptr = (gpointer) func;
+
   if (!__gst_function_pointers)
     __gst_function_pointers = g_hash_table_new (g_direct_hash, g_direct_equal);
   if (!g_hash_table_lookup (__gst_function_pointers, ptr))
     g_hash_table_insert (__gst_function_pointers, ptr, ptrname);
-
-  return ptr;
 }
 
 #ifdef HAVE_PRINTF_EXTENSION

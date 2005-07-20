@@ -1,5 +1,12 @@
 2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/gstinfo.c: (_gst_debug_nameof_funcptr),
+	(_gst_debug_register_funcptr):
+	* gst/gstinfo.h:
+	  Fix illegal cast on some platforms (#309253).
+
+2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/gstmessage.c: (gst_message_new_custom):
 	* gst/gstmessage.h:
 	  Add _new_custom, make _new_application a macro to _new_custom.
