@@ -247,11 +247,13 @@ gst_ffmpegmux_request_new_pad (GstElement * element,
 
   /* AVStream needs to be created */
   st = av_new_stream (ffmpegmux->context, padnum);
-  st->codec.codec_type = type;
-  st->codec.codec_id = CODEC_ID_NONE;   /* this is a check afterwards */
+  st->codec->codec_type = type;
+  st->codec->codec_id = CODEC_ID_NONE;   /* this is a check afterwards */
   st->stream_copy = 1;          /* we're not the actual encoder */
-  st->codec.bit_rate = bitrate;
-  st->codec.frame_size = framesize;
+  st->codec->bit_rate = bitrate;
+  st->codec->frame_size = framesize;
+  st->time_base.den = GST_SECOND;
+  st->time_base.num = 1;
   /* we fill in codec during capsnego */
 
   /* we love debug output (c) (tm) (r) */
@@ -284,7 +286,7 @@ gst_ffmpegmux_connect (GstPad * pad, const GstCaps * caps)
 
   /* for the format-specific guesses, we'll go to
    * our famous codec mapper */
-  if (gst_ffmpeg_caps_to_codecid (caps, &st->codec) != CODEC_ID_NONE) {
+  if (gst_ffmpeg_caps_to_codecid (caps, st->codec) != CODEC_ID_NONE) {
     ffmpegmux->eos[i] = FALSE;
     return GST_PAD_LINK_OK;
   }
@@ -350,16 +352,16 @@ gst_ffmpegmux_loop (GstElement * element)
       AVStream *st = ffmpegmux->context->streams[i];
 
       /* check whether the pad has successfully completed capsnego */
-      if (st->codec.codec_id == CODEC_ID_NONE) {
+      if (st->codec->codec_id == CODEC_ID_NONE) {
         GST_ELEMENT_ERROR (element, CORE, NEGOTIATION, (NULL),
             ("no caps set on stream %d (%s)", i,
-                (st->codec.codec_type == CODEC_TYPE_VIDEO) ?
+                (st->codec->codec_type == CODEC_TYPE_VIDEO) ?
                 "video" : "audio"));
         return;
       }
-      if (st->codec.codec_type == CODEC_TYPE_AUDIO) {
-        st->codec.frame_size =
-            st->codec.sample_rate *
+      if (st->codec->codec_type == CODEC_TYPE_AUDIO) {
+        st->codec->frame_size =
+            st->codec->sample_rate *
             GST_BUFFER_DURATION (ffmpegmux->bufferqueue[i]) / GST_SECOND;
       }
     }
@@ -470,15 +472,17 @@ gst_ffmpegmux_loop (GstElement * element)
   if (bufnum >= 0) {
     GstBuffer *buf;
     AVPacket pkt;
+    AVRational bq = { 1, 1000000000 };
 
     /* push out current buffer */
     buf = ffmpegmux->bufferqueue[bufnum];
     ffmpegmux->bufferqueue[bufnum] = NULL;
 
-    ffmpegmux->context->streams[bufnum]->codec.frame_number++;
+    ffmpegmux->context->streams[bufnum]->codec->frame_number++;
 
     /* set time */
-    pkt.pts = GST_BUFFER_TIMESTAMP (buf) * AV_TIME_BASE / GST_SECOND;
+    pkt.pts = av_rescale_q (GST_BUFFER_TIMESTAMP (buf),
+        bq, ffmpegmux->context->streams[bufnum]->time_base);
     pkt.dts = pkt.pts;
     pkt.data = GST_BUFFER_DATA (buf);
     pkt.size = GST_BUFFER_SIZE (buf);
@@ -563,7 +567,6 @@ gst_ffmpegmux_register (GstPlugin * plugin)
   GType type;
   AVOutputFormat *in_plugin;
   GstFFMpegMuxClassParams *params;
-  AVCodec *in_codec;
 
   in_plugin = first_oformat;
 

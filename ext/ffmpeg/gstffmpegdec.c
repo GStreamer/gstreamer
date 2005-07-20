@@ -583,20 +583,21 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
     case CODEC_TYPE_VIDEO:
       if (ffmpegdec->format.video.width == ffmpegdec->context->width &&
           ffmpegdec->format.video.height == ffmpegdec->context->height &&
-          ffmpegdec->format.video.fps == ffmpegdec->context->frame_rate &&
+          ffmpegdec->format.video.fps == ffmpegdec->context->time_base.den &&
           ffmpegdec->format.video.fps_base ==
-              ffmpegdec->context->frame_rate_base &&	  	  
+              ffmpegdec->context->time_base.num &&
 	  ffmpegdec->format.video.pix_fmt == ffmpegdec->context->pix_fmt)
         return TRUE;
       GST_DEBUG ("Renegotiating video from %dx%d@%d/%dfps to %dx%d@%d/%dfps",
           ffmpegdec->format.video.width, ffmpegdec->format.video.height,
           ffmpegdec->format.video.fps, ffmpegdec->format.video.fps_base,
           ffmpegdec->context->width, ffmpegdec->context->height,
-          ffmpegdec->context->frame_rate, ffmpegdec->context->frame_rate_base);
+          ffmpegdec->context->time_base.den,
+          ffmpegdec->context->time_base.num);
       ffmpegdec->format.video.width = ffmpegdec->context->width;
       ffmpegdec->format.video.height = ffmpegdec->context->height;
-      ffmpegdec->format.video.fps = ffmpegdec->context->frame_rate;
-      ffmpegdec->format.video.fps_base = ffmpegdec->context->frame_rate_base;
+      ffmpegdec->format.video.fps = ffmpegdec->context->time_base.den;
+      ffmpegdec->format.video.fps_base = ffmpegdec->context->time_base.num;
       ffmpegdec->format.video.pix_fmt = ffmpegdec->context->pix_fmt;
       break;
     case CODEC_TYPE_AUDIO:
@@ -736,11 +737,11 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
 	}
 		
         GST_BUFFER_TIMESTAMP (outbuf) = ffmpegdec->next_ts;
-        if (ffmpegdec->context->frame_rate_base != 0 &&
-            ffmpegdec->context->frame_rate != 0) {
+        if (ffmpegdec->context->time_base.num != 0 &&
+            ffmpegdec->context->time_base.den != 0) {
           GST_BUFFER_DURATION (outbuf) = GST_SECOND *
-              ffmpegdec->context->frame_rate_base /
-              ffmpegdec->context->frame_rate;
+              ffmpegdec->context->time_base.num /
+              ffmpegdec->context->time_base.den;
 
           /* Take repeat_pict into account */
           GST_BUFFER_DURATION (outbuf) += GST_BUFFER_DURATION (outbuf)
@@ -760,11 +761,11 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
 	  *in_ts = GST_CLOCK_TIME_NONE;
         }
         
-        if (ffmpegdec->context->frame_rate_base != 0 &&
-            ffmpegdec->context->frame_rate != 0) {
+        if (ffmpegdec->context->time_base.num != 0 &&
+            ffmpegdec->context->time_base.den != 0) {
           guint64 dur = GST_SECOND *  
-            ffmpegdec->context->frame_rate_base /
-            ffmpegdec->context->frame_rate;
+            ffmpegdec->context->time_base.num /
+            ffmpegdec->context->time_base.den;
 
           /* Take repeat_pict into account */
           dur += dur * ffmpegdec->picture->repeat_pict / 2;
@@ -961,8 +962,9 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
     if (ffmpegdec->pctx) {
       gint res;
       gint64 ffpts;
+      AVRational bq = { 1, 1000000000 };
       
-      ffpts = gst_ffmpeg_pts_gst_to_ffmpeg (in_ts);
+      ffpts = av_rescale_q (in_ts, bq, ffmpegdec->context->time_base);
 
       res = av_parser_parse (ffmpegdec->pctx, ffmpegdec->context,
           &data, &size, bdata, bsize,
@@ -971,7 +973,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
       GST_DEBUG_OBJECT (ffmpegdec, "Parsed video frame, res=%d, size=%d",
           res, size);
       
-      in_ts = gst_ffmpeg_pts_ffmpeg_to_gst (ffmpegdec->pctx->pts);
+      in_ts = av_rescale_q (in_ts, ffmpegdec->context->time_base, bq);
 
       if (res == 0 || size == 0)
         break;
@@ -1168,6 +1170,7 @@ gst_ffmpegdec_register (GstPlugin * plugin)
         break;
     }
     if (!gst_element_register (plugin, type_name, rank, type)) {
+      g_warning ("Failed to register %s", type_name);
       g_free (type_name);
       return FALSE;
     }

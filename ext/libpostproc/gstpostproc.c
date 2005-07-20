@@ -335,9 +335,7 @@ gst_postproc_chain (GstPad * pad, GstData * data)
   GstPostProc	*postproc;
   GstBuffer	*in, *out;
   int		stride[3];
-  unsigned char * inplane[3];
   unsigned char	* outplane[3];
-  gint		pixdif, i;
 
   GST_DEBUG("chaining");
 

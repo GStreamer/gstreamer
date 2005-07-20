@@ -316,8 +316,8 @@ gst_ffmpegenc_getcaps (GstPad * pad)
   /* set some default properties */
   ctx->width = 384;
   ctx->height = 288;
-  ctx->frame_rate_base = DEFAULT_FRAME_RATE_BASE;
-  ctx->frame_rate = 25 * DEFAULT_FRAME_RATE_BASE;
+  ctx->time_base.num = DEFAULT_FRAME_RATE_BASE;
+  ctx->time_base.den = 25 * DEFAULT_FRAME_RATE_BASE;
   ctx->bit_rate = 350 * 1000;
   /* makes it silent */
   ctx->strict_std_compliance = -1;
@@ -385,6 +385,10 @@ gst_ffmpegenc_link (GstPad * pad, const GstCaps * caps)
   /* fetch pix_fmt and so on */
   gst_ffmpeg_caps_with_codectype (oclass->in_plugin->type,
       caps, ffmpegenc->context);
+
+  /* FIXME: prevent nego errors because of fixed-caps */
+  if (!ffmpegenc->context->time_base.den)
+    ffmpegenc->context->time_base.den = DEFAULT_FRAME_RATE_BASE * 25;
 
   pix_fmt = ffmpegenc->context->pix_fmt;
 
@@ -461,8 +465,13 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data)
   GstFFMpegEncClass *oclass =
       (GstFFMpegEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
   gint ret_size = 0, frame_size;
+  const AVRational bq = { 1, 1000000000 };
 
   /* FIXME: events (discont (flush!) and eos (close down) etc.) */
+
+  GST_DEBUG_OBJECT (ffmpegenc,
+      "Received buffer of time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)));
 
   frame_size = gst_ffmpeg_avpicture_fill ((AVPicture *) ffmpegenc->picture,
       GST_BUFFER_DATA (inbuf),
@@ -470,7 +479,9 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data)
       ffmpegenc->context->width, ffmpegenc->context->height);
   g_return_if_fail (frame_size == GST_BUFFER_SIZE (inbuf));
 
-  ffmpegenc->picture->pts = gst_ffmpeg_pts_gst_to_ffmpeg (GST_BUFFER_TIMESTAMP (inbuf));
+  ffmpegenc->picture->pts =
+      av_rescale_q (GST_BUFFER_TIMESTAMP (inbuf),
+          bq, ffmpegenc->context->time_base);
 
   outbuf = gst_buffer_new_and_alloc (ffmpegenc->buffer_size);
   ret_size = avcodec_encode_video (ffmpegenc->context,
@@ -478,8 +489,8 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data)
       GST_BUFFER_MAXSIZE (outbuf), ffmpegenc->picture);
 
   if (ret_size < 0) {
-    GST_ELEMENT_ERROR (ffmpegenc, LIBRARY, ENCODE, (NULL),
-        ("ffenc_%s: failed to encode buffer", oclass->in_plugin->name));
+    GST_ERROR_OBJECT (ffmpegenc,
+        "ffenc_%s: failed to encode buffer", oclass->in_plugin->name);
     gst_buffer_unref (inbuf);
     gst_buffer_unref (outbuf);
     return;
@@ -503,8 +514,6 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstData * _data)
   GstBuffer *inbuf = GST_BUFFER (_data);
   GstBuffer *outbuf = NULL, *subbuf;
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) (gst_pad_get_parent (pad));
-  GstFFMpegEncClass *oclass =
-      (GstFFMpegEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
   gint size, ret_size = 0, in_size, frame_size;
 
   size = GST_BUFFER_SIZE (inbuf);
@@ -516,6 +525,10 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstData * _data)
   in_size = size;
   if (ffmpegenc->cache)
     in_size += GST_BUFFER_SIZE (ffmpegenc->cache);
+
+  GST_DEBUG_OBJECT (ffmpegenc,
+      "Received buffer of time %" GST_TIME_FORMAT " and size %d (cache: %d)",
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)), size, in_size - size);
 
   while (1) {
     /* do we have enough data for one frame? */
@@ -569,7 +582,7 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstData * _data)
         GST_BUFFER_DATA (subbuf));
 
     if (ret_size < 0) {
-      g_warning ("ffenc_%s: failed to encode buffer", oclass->in_plugin->name);
+      GST_ERROR_OBJECT (ffmpegenc, "Failed to encode buffer");
       gst_buffer_unref (inbuf);
       gst_buffer_unref (outbuf);
       gst_buffer_unref (subbuf);

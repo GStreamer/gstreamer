@@ -167,12 +167,9 @@ gst_ffmpegscale_pad_link (GstPad * pad, const GstCaps * caps)
   GstStructure *structure;
   AVCodecContext *ctx;
   GstFFMpegScale *scale;
-  const GstCaps *othercaps;
   GstPad *otherpad;
   GstPadLinkReturn ret;
   int height, width;
-  double framerate;
-  const GValue *par = NULL;
   gchar *caps_string;
 
   caps_string = gst_caps_to_string (caps);

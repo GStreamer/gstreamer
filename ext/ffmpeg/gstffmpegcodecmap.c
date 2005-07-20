@@ -86,8 +86,9 @@ gst_ffmpeg_set_palette (GstCaps *caps, AVCodecContext *context)
     gst_caps_new_simple (mimetype,			      	\
 	"width",     G_TYPE_INT,   context->width,	      	\
 	"height",    G_TYPE_INT,   context->height,	  	\
-	"framerate", G_TYPE_DOUBLE, 1. * context->frame_rate /  \
-				   context->frame_rate_base,    \
+	"framerate", G_TYPE_DOUBLE, 1. *			\
+				context->time_base.den /	\
+					context->time_base.num,	\
 	__VA_ARGS__, NULL)  					\
     :	  							\
     gst_caps_new_simple (mimetype,			      	\
@@ -430,6 +431,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           "wcversion", G_TYPE_INT, 3 - CODEC_ID_XAN_WC3 + codec_id, NULL);
       break;
 
+    case CODEC_ID_FRAPS:
     case CODEC_ID_VCR1:
     case CODEC_ID_CLJR:
     case CODEC_ID_MDEC:
@@ -589,6 +591,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_ADPCM_G726:
     case CODEC_ID_ADPCM_CT:
     case CODEC_ID_ADPCM_SWF:
+    case CODEC_ID_ADPCM_YAMAHA:
       do {
         gchar *layout = NULL;
 
@@ -634,6 +637,9 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
             break;
           case CODEC_ID_ADPCM_SWF:
             layout = "swf";
+            break;
+          case CODEC_ID_ADPCM_YAMAHA:
+            layout = "yamaha";
             break;
           default:
             g_assert (0);       /* don't worry, we never get here */
@@ -724,6 +730,11 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       if (!encode) {
         caps = gst_caps_new_simple ("audio/x-flac", NULL);
       }
+      break;
+
+    case CODEC_ID_DVD_SUBTITLE:
+    case CODEC_ID_DVB_SUBTITLE:
+      caps = NULL;
       break;
 
     default:
@@ -1089,8 +1100,8 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
   gst_structure_get_int (structure, "bpp", &context->bits_per_sample);
 
   if (gst_structure_get_double (structure, "framerate", &fps)) {
-    context->frame_rate = fps * DEFAULT_FRAME_RATE_BASE;
-    context->frame_rate_base = DEFAULT_FRAME_RATE_BASE;
+    context->time_base.den = fps * DEFAULT_FRAME_RATE_BASE;
+    context->time_base.num = DEFAULT_FRAME_RATE_BASE;
   }
 
   if (!raw)
@@ -1381,7 +1392,7 @@ gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
     enum CodecID ** video_codec_list, enum CodecID ** audio_codec_list)
 {
   if (!strcmp (format_name, "mp4")) {
-    static enum CodecID mp4_video_list[] = { CODEC_ID_MPEG4, CODEC_ID_NONE };
+    static enum CodecID mp4_video_list[] = { CODEC_ID_MPEG4, CODEC_ID_H264, CODEC_ID_NONE };
     static enum CodecID mp4_audio_list[] = { CODEC_ID_AAC, CODEC_ID_NONE };
 
     *video_codec_list = mp4_video_list;
@@ -1392,6 +1403,12 @@ gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
 
     *video_codec_list = mpeg_video_list;
     *audio_codec_list = mpeg_audio_list;
+  } else if (!strcmp (format_name, "vob")) {
+    static enum CodecID vob_video_list[] = { CODEC_ID_MPEG2VIDEO, CODEC_ID_NONE };
+    static enum CodecID vob_audio_list[] = { CODEC_ID_MP2, CODEC_ID_AC3, CODEC_ID_NONE };
+
+    *video_codec_list = vob_video_list;
+    *audio_codec_list = vob_audio_list;
   } else if (!strcmp (format_name, "flv")) {
     static enum CodecID flv_video_list[] = { CODEC_ID_FLV1, CODEC_ID_NONE };
     static enum CodecID flv_audio_list[] = { CODEC_ID_MP3, CODEC_ID_NONE };
@@ -1724,6 +1741,8 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
       id = CODEC_ID_ADPCM_CT;
     } else if (!strcmp (layout, "swf")) {
       id = CODEC_ID_ADPCM_SWF;
+    } else if (!strcmp (layout, "yamaha")) {
+      id = CODEC_ID_ADPCM_YAMAHA;
     }
     if (id != CODEC_ID_NONE)
       audio = TRUE;
@@ -2189,6 +2208,9 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
     case CODEC_ID_ADPCM_SWF:
       name = "Shockwave ADPCM";
       break;
+    case CODEC_ID_ADPCM_YAMAHA:
+      name = "Yamaha ADPCM";
+      break;
     case CODEC_ID_RA_144:
       name = "Realaudio 14k4bps";
       break;
@@ -2215,6 +2237,15 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       break;
     case CODEC_ID_ALAC:
       name = "Apple lossless audio";
+      break;
+    case CODEC_ID_DVD_SUBTITLE:
+      name = "DVD subtitle";
+      break;
+    case CODEC_ID_DVB_SUBTITLE:
+      name = "DVB subtitle";
+      break;
+    case CODEC_ID_FRAPS:
+      name = "FRAPS video";
       break;
     default:
       GST_WARNING ("Unknown codecID 0x%x", codec_id);
@@ -2544,7 +2575,6 @@ int
 gst_ffmpeg_img_convert (AVPicture * dst, int dst_pix_fmt,
     const AVPicture * src, int src_pix_fmt, int src_width, int src_height)
 {
-  int i;
   PixFmtInfo *pf = &pix_fmt_info[src_pix_fmt];
 
   pf = &pix_fmt_info[src_pix_fmt];
@@ -2563,6 +2593,3 @@ gst_ffmpeg_img_convert (AVPicture * dst, int dst_pix_fmt,
   }
   return img_convert (dst, dst_pix_fmt, src, src_pix_fmt, src_width, src_height);
 }
-
-
-

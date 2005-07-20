@@ -212,7 +212,6 @@ gst_ffmpegdata_write (URLContext * h, unsigned char *buf, int size)
 
   if (info->set_streamheader) {
     GstCaps *caps = gst_pad_get_caps (info->pad);
-    GList *bufs = NULL;
     GstStructure *structure = gst_caps_get_structure (caps, 0);
     GValue list = { 0 }, value = { 0 };
 

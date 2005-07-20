@@ -129,10 +129,7 @@ static GstCaps *
 gst_ffmpegdeinterlace_getcaps (GstPad * pad)
 {
   GstFFMpegDeinterlace *filter;
-  GstCaps *othercaps;
-  GstCaps *caps;
   GstPad *otherpad;
-  gint i;
   
   filter = GST_FFMPEGDEINTERLACE (gst_pad_get_parent (pad));
 
@@ -149,7 +146,6 @@ gst_ffmpegdeinterlace_pad_link (GstPad * pad, const GstCaps * caps)
   GstStructure *structure;
   AVCodecContext *ctx;
   GstFFMpegDeinterlace *deinterlace;
-  const GstCaps *othercaps;
   GstPad *otherpad;
   GstPadLinkReturn ret;
   int height, width;

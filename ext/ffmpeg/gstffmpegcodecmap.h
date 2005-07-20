@@ -132,34 +132,4 @@ gst_ffmpeg_img_convert (AVPicture * dst, int dst_pix_fmt,
 			const AVPicture * src, int src_pix_fmt,
 			int src_width, int src_height);
 
-
-
-static inline int64_t
-gst_ffmpeg_pts_gst_to_ffmpeg (GstClockTime inpts) {
-  
-  int64_t outpts;
-  
-  if (GST_CLOCK_TIME_IS_VALID (inpts)) 
-    outpts = (inpts / (GST_SECOND / AV_TIME_BASE));
-  else
-    outpts = AV_NOPTS_VALUE;
-  
-  return outpts;  
-}
-
-static inline GstClockTime
-gst_ffmpeg_pts_ffmpeg_to_gst (int64_t inpts) {
-  
-  GstClockTime outpts;
-  
-  if (inpts != AV_NOPTS_VALUE) 
-    outpts = (inpts * (GST_SECOND / AV_TIME_BASE));
-  else
-    outpts = GST_CLOCK_TIME_NONE;
-  
-  return outpts;  
-}
-
-
 #endif /* __GST_FFMPEG_CODECMAP_H__ */
-

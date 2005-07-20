@@ -44,6 +44,8 @@ extern gboolean gst_ffmpegdec_register (GstPlugin * plugin);
 extern gboolean gst_ffmpegenc_register (GstPlugin * plugin);
 extern gboolean gst_ffmpegmux_register (GstPlugin * plugin);
 extern gboolean gst_ffmpegcsp_register (GstPlugin * plugin);
+extern gboolean gst_ffmpegscale_register (GstPlugin * plugin);
+extern gboolean gst_ffmpegdeinterlace_register (GstPlugin * plugin);
 
 G_END_DECLS
 

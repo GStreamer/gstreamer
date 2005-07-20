@@ -296,7 +296,7 @@ gst_ffmpegdemux_src_event (GstPad * pad, GstEvent * event)
       offset = GST_EVENT_SEEK_OFFSET (event);
       switch (GST_EVENT_SEEK_FORMAT (event)) {
         case GST_FORMAT_DEFAULT:
-          if (stream->codec.codec_type != CODEC_TYPE_VIDEO) {
+          if (stream->codec->codec_type != CODEC_TYPE_VIDEO) {
             res = FALSE;
             break;
           } else {
@@ -336,7 +336,7 @@ gst_ffmpegdemux_src_format_list (GstPad * pad)
   }, src_a_formats[] = {
   GST_FORMAT_TIME, 0};
 
-  return (stream->codec.codec_type == CODEC_TYPE_VIDEO) ?
+  return (stream->codec->codec_type == CODEC_TYPE_VIDEO) ?
       src_v_formats : src_a_formats;
 }
 
@@ -371,7 +371,7 @@ gst_ffmpegdemux_src_query (GstPad * pad,
           break;
         case GST_FORMAT_DEFAULT:
           if (stream->codec_info_nb_frames &&
-              stream->codec.codec_type == CODEC_TYPE_VIDEO) {
+              stream->codec->codec_type == CODEC_TYPE_VIDEO) {
             *value = stream->codec_info_nb_frames;
             res = TRUE;
           }
@@ -397,7 +397,7 @@ gst_ffmpegdemux_src_query (GstPad * pad,
           }
           break;
         case GST_FORMAT_DEFAULT:
-          if (stream && stream->codec.codec_type == CODEC_TYPE_VIDEO &&
+          if (stream && stream->codec->codec_type == CODEC_TYPE_VIDEO &&
               GST_CLOCK_TIME_IS_VALID (demux->last_ts[stream->index])) {
             res = gst_pad_convert (pad, GST_FORMAT_TIME,
                 demux->last_ts[stream->index], fmt, value);
@@ -429,15 +429,15 @@ gst_ffmpegdemux_src_convert (GstPad * pad,
   AVStream *stream = gst_ffmpegdemux_stream_from_pad (pad);
   gboolean res = TRUE;
 
-  if (!stream || stream->codec.codec_type != CODEC_TYPE_VIDEO)
+  if (!stream || stream->codec->codec_type != CODEC_TYPE_VIDEO)
     return FALSE;
 
   switch (src_fmt) {
     case GST_FORMAT_TIME:
       switch (*dest_fmt) {
         case GST_FORMAT_DEFAULT:
-          *dest_value = src_value * stream->r_frame_rate /
-              (GST_SECOND * stream->r_frame_rate_base);
+          *dest_value = src_value * stream->r_frame_rate.num /
+              (GST_SECOND * stream->r_frame_rate.den);
           break;
         default:
           res = FALSE;
@@ -447,8 +447,8 @@ gst_ffmpegdemux_src_convert (GstPad * pad,
     case GST_FORMAT_DEFAULT:
       switch (*dest_fmt) {
         case GST_FORMAT_TIME:
-          *dest_value = src_value * GST_SECOND * stream->r_frame_rate_base /
-              stream->r_frame_rate;
+          *dest_value = src_value * GST_SECOND * stream->r_frame_rate.num /
+              stream->r_frame_rate.den;
           break;
         default:
           res = FALSE;
@@ -475,7 +475,7 @@ gst_ffmpegdemux_add (GstFFMpegDemux * demux, AVStream * stream)
   gchar *padname;
   const gchar *codec;
 
-  switch (stream->codec.codec_type) {
+  switch (stream->codec->codec_type) {
     case CODEC_TYPE_VIDEO:
       templ = oclass->videosrctempl;
       num = demux->videopads++;
@@ -485,7 +485,7 @@ gst_ffmpegdemux_add (GstFFMpegDemux * demux, AVStream * stream)
       num = demux->audiopads++;
       break;
     default:
-      GST_WARNING ("Unknown pad type %d", stream->codec.codec_type);
+      GST_WARNING ("Unknown pad type %d", stream->codec->codec_type);
       break;
   }
   if (!templ)
@@ -509,17 +509,17 @@ gst_ffmpegdemux_add (GstFFMpegDemux * demux, AVStream * stream)
 
   /* get caps that belongs to this stream */
   caps =
-      gst_ffmpeg_codecid_to_caps (stream->codec.codec_id, &stream->codec, TRUE);
+      gst_ffmpeg_codecid_to_caps (stream->codec->codec_id, stream->codec, TRUE);
   gst_pad_set_explicit_caps (pad, caps);
 
   gst_element_add_pad (GST_ELEMENT (demux), pad);
 
   /* metadata */
-  if ((codec = gst_ffmpeg_get_codecid_longname (stream->codec.codec_id))) {
+  if ((codec = gst_ffmpeg_get_codecid_longname (stream->codec->codec_id))) {
     GstTagList *list = gst_tag_list_new ();
 
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-        (stream->codec.codec_type == CODEC_TYPE_VIDEO) ?
+        (stream->codec->codec_type == CODEC_TYPE_VIDEO) ?
         GST_TAG_VIDEO_CODEC : GST_TAG_AUDIO_CODEC, codec, NULL);
     gst_element_found_tags_for_pad (GST_ELEMENT (demux), pad, 0, list);
   }
@@ -696,7 +696,6 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
   GType type;
   AVInputFormat *in_plugin;
   GstFFMpegDemuxClassParams *params;
-  AVCodec *in_codec;
   gchar **extensions;
   GTypeInfo typeinfo = {
     sizeof (GstFFMpegDemuxClass),

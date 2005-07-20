@@ -1,3 +1,33 @@
+2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpeg.h:
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_to_pixfmt), (gst_ffmpeg_formatid_get_codecids),
+	(gst_ffmpeg_caps_to_codecid), (gst_ffmpeg_get_codecid_longname),
+	(gst_ffmpeg_img_convert):
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_negotiate),
+	(gst_ffmpegdec_frame), (gst_ffmpegdec_chain),
+	(gst_ffmpegdec_register):
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	(gst_ffmpegdeinterlace_getcaps), (gst_ffmpegdeinterlace_pad_link):
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_src_event),
+	(gst_ffmpegdemux_src_format_list), (gst_ffmpegdemux_src_query),
+	(gst_ffmpegdemux_src_convert), (gst_ffmpegdemux_add),
+	(gst_ffmpegdemux_register):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_getcaps),
+	(gst_ffmpegenc_link), (gst_ffmpegenc_chain_video),
+	(gst_ffmpegenc_chain_audio):
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_request_new_pad),
+	(gst_ffmpegmux_connect), (gst_ffmpegmux_loop),
+	(gst_ffmpegmux_register):
+	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_write):
+	* ext/ffmpeg/gstffmpegscale.c: (gst_ffmpegscale_pad_link):
+	* ext/libpostproc/gstpostproc.c: (gst_postproc_chain):
+	  Update to ffmpeg snapshot of Jul 20 2005 4:00 PM GMT. Mostly
+	  some added codecs, some API changes, etc. Also adds a VOB muxer
+	  for MPEG-2 video and adds h264 to .mp4 muxing.
+
 2005-07-16  daniel fischer  <dan@f3c.com>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
