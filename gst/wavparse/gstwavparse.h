@@ -44,8 +44,7 @@ extern "C" {
 
 typedef enum {
   GST_WAVPARSE_START,
-  GST_WAVPARSE_FMT,
-  GST_WAVPARSE_OTHER,
+  GST_WAVPARSE_HEADER,
   GST_WAVPARSE_DATA,
 } GstWavParseState;
 
@@ -53,13 +52,14 @@ typedef struct _GstWavParse GstWavParse;
 typedef struct _GstWavParseClass GstWavParseClass;
 
 struct _GstWavParse {
-  GstRiffRead parent;
+  GstElement parent;
 
   /* pads */
   GstPad *sinkpad,*srcpad;
 
   /* WAVE decoding state */
   GstWavParseState state;
+  guint64	offset;
 
   /* format of audio, see defines below */
   gint format;
@@ -73,14 +73,14 @@ struct _GstWavParse {
   guint32 bps;
 
   guint64 dataleft, datasize, datastart;
-  int byteoffset;
   
   gboolean seek_pending;
+  GstEvent *seek_event;
   guint64 seek_offset;
 };
 
 struct _GstWavParseClass {
-  GstRiffReadClass parent_class;
+  GstElementClass parent_class;
 };
 
 GType gst_wavparse_get_type(void);

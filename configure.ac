@@ -315,6 +315,7 @@ GST_PLUGINS_ALL="\
 		smpte	\
 		udp     \
 		videobox \
+		wavparse \
                 "
 
 dnl see if we can build C++ plug-ins
@@ -597,6 +598,7 @@ gst/smpte/Makefile
 gst/udp/Makefile
 gst/videobox/Makefile
 gst/videofilter/Makefile
+gst/wavparse/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 sys/Makefile

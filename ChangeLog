@@ -1,3 +1,12 @@
+2005-07-20  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac: 
+	* gst/wavparse/gstwavparse.c: 
+	* gst/wavparse/gstwavparse.h:
+	* gst/wavparse/Makefile.am:
+	Ported wavparse to 0.9 . Playing, seeking and state changes work.
+	Could need more loving on the headers though.
+
 2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* configure.ac:
