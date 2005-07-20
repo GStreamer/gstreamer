@@ -7,4 +7,4 @@ TODO
         is parsed correctly.
       - implement seek/query/convert
       - implement getrange scheduling
-      
+   - on EOS, only post EOS when the complete ringbuffer has been played.      

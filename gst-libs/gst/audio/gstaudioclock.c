@@ -81,6 +81,8 @@ static void
 gst_audio_clock_init (GstAudioClock * clock)
 {
   gst_object_set_name (GST_OBJECT (clock), "GstAudioClock");
+
+  clock->last_time = 0;
 }
 
 GstClock *
@@ -100,6 +102,13 @@ static GstClockTime
 gst_audio_clock_get_internal_time (GstClock * clock)
 {
   GstAudioClock *aclock = GST_AUDIO_CLOCK (clock);
+  GstClockTime result;
 
-  return aclock->func (clock, aclock->user_data);
+  result = aclock->func (clock, aclock->user_data);
+  if (result == GST_CLOCK_TIME_NONE)
+    result = aclock->last_time;
+  else
+    aclock->last_time = result;
+
+  return result;
 }

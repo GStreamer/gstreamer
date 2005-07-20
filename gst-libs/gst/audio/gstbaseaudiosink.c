@@ -62,6 +62,8 @@ static GstElementStateReturn gst_base_audio_sink_change_state (GstElement *
 static GstClock *gst_base_audio_sink_get_clock (GstElement * elem);
 static GstClockTime gst_base_audio_sink_get_time (GstClock * clock,
     GstBaseAudioSink * sink);
+static void gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data,
+    guint len, gpointer user_data);
 
 static GstFlowReturn gst_base_audio_sink_preroll (GstBaseSink * bsink,
     GstBuffer * buffer);
@@ -126,8 +128,10 @@ gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink)
   baseaudiosink->buffer_time = DEFAULT_BUFFER_TIME;
   baseaudiosink->latency_time = DEFAULT_LATENCY_TIME;
 
+
   baseaudiosink->clock = gst_audio_clock_new ("clock",
       (GstAudioClockGetTimeFunc) gst_base_audio_sink_get_time, baseaudiosink);
+
 }
 
 static void
@@ -140,6 +144,10 @@ gst_base_audio_sink_dispose (GObject * object)
   if (sink->clock)
     gst_object_unref (sink->clock);
   sink->clock = NULL;
+
+  if (sink->ringbuffer)
+    gst_object_unref (sink->ringbuffer);
+  sink->ringbuffer = NULL;
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -161,7 +169,7 @@ gst_base_audio_sink_get_time (GstClock * clock, GstBaseAudioSink * sink)
   GstClockTime result;
 
   if (sink->ringbuffer == NULL || sink->ringbuffer->spec.rate == 0)
-    return 0;
+    return GST_CLOCK_TIME_NONE;
 
   /* our processed samples are always increasing */
   samples = gst_ring_buffer_samples_done (sink->ringbuffer);
@@ -288,6 +296,8 @@ gst_base_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
         gst_ring_buffer_pause (sink->ringbuffer);
       }
       break;
+    case GST_EVENT_EOS:
+      break;
     default:
       break;
   }
@@ -335,7 +345,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       GST_TIME_ARGS (time), in_offset, GST_TIME_ARGS (bsink->discont_start));
 
   /* samples should be rendered based on their timestamp. All samples
-   * arriving before the discont_start are to be trown away */
+   * arriving before the discont_start are to be thrown away */
   /* FIXME, for now we drop the sample completely, we should
    * in fact clip the sample. Same for the segment_stop, actually. */
   if (time < bsink->discont_start)
@@ -369,10 +379,10 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
 wrong_state:
   {
-    GST_DEBUG ("ringbuffer in wrong state");
+    GST_DEBUG ("ringbuffer not negotiated");
     GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND,
-        ("sink not negotiated."), (NULL));
-    return GST_FLOW_ERROR;
+        ("sink not negotiated."), ("sink not negotiated."));
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 }
 
@@ -386,14 +396,13 @@ gst_base_audio_sink_create_ringbuffer (GstBaseAudioSink * sink)
   if (bclass->create_ringbuffer)
     buffer = bclass->create_ringbuffer (sink);
 
-  if (buffer) {
+  if (buffer)
     gst_object_set_parent (GST_OBJECT (buffer), GST_OBJECT (sink));
-  }
 
   return buffer;
 }
 
-void
+static void
 gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
     gpointer user_data)
 {
@@ -411,9 +420,11 @@ gst_base_audio_sink_change_state (GstElement * element)
     case GST_STATE_NULL_TO_READY:
       break;
     case GST_STATE_READY_TO_PAUSED:
-      sink->ringbuffer = gst_base_audio_sink_create_ringbuffer (sink);
-      gst_ring_buffer_set_callback (sink->ringbuffer,
-          gst_base_audio_sink_callback, sink);
+      if (sink->ringbuffer == NULL) {
+        sink->ringbuffer = gst_base_audio_sink_create_ringbuffer (sink);
+        gst_ring_buffer_set_callback (sink->ringbuffer,
+            gst_base_audio_sink_callback, sink);
+      }
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
@@ -430,8 +441,6 @@ gst_base_audio_sink_change_state (GstElement * element)
     case GST_STATE_PAUSED_TO_READY:
       gst_ring_buffer_stop (sink->ringbuffer);
       gst_ring_buffer_release (sink->ringbuffer);
-      gst_object_unref (sink->ringbuffer);
-      sink->ringbuffer = NULL;
       gst_pad_set_caps (GST_BASE_SINK_PAD (sink), NULL);
       break;
     case GST_STATE_READY_TO_NULL:

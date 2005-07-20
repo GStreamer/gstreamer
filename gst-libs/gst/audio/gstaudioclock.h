@@ -51,6 +51,8 @@ struct _GstAudioClock {
   GstAudioClockGetTimeFunc func;
   gpointer user_data;
 
+  GstClockTime last_time;
+
   gpointer _gst_reserved[GST_PADDING];
 };
 

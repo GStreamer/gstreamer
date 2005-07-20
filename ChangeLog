@@ -1,3 +1,17 @@
+2005-07-20  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/TODO:
+	* gst-libs/gst/audio/gstaudioclock.c: (gst_audio_clock_init),
+	(gst_audio_clock_get_internal_time):
+	* gst-libs/gst/audio/gstaudioclock.h:
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_init), (gst_base_audio_sink_dispose),
+	(gst_base_audio_sink_get_time), (gst_base_audio_sink_event),
+	(gst_base_audio_sink_render),
+	(gst_base_audio_sink_create_ringbuffer),
+	(gst_base_audio_sink_change_state):
+	Make sure the audio clock always returns an increasing value.
+
 2005-07-19  Andy Wingo  <wingo@pobox.com>
 
 	* gst/videotestsrc/: Cleanups.
