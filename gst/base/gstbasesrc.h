@@ -92,6 +92,7 @@ struct _GstBaseSrc {
   gint64	 segment_start;	/* start and end positions for seeking */
   gint64	 segment_end;
   gboolean	 segment_loop;
+  gboolean 	 need_discont;
 
   guint64	 offset;	/* current offset in the resource */
   guint64        size;		/* total size of the resource */

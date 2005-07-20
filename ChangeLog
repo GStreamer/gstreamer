@@ -1,3 +1,20 @@
+2005-07-20  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesrc.c: (gst_base_src_init),
+	(gst_base_src_do_seek), (gst_base_src_loop), (gst_base_src_start):
+	* gst/base/gstbasesrc.h:
+	Add a gboolean to decide when to push out a discont.
+
+	* gst/gstqueue.c: (gst_queue_handle_sink_event), (gst_queue_chain),
+	(gst_queue_loop), (gst_queue_handle_src_query),
+	(gst_queue_sink_activate_push), (gst_queue_src_activate_push),
+	(gst_queue_set_property), (gst_queue_get_property):
+	Some cleanups.
+
+	* tests/threadstate/threadstate1.c: (main):
+	Make a thread test compile and run... very silly..
+
+
 2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/manual/appendix-porting.xml:

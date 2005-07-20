@@ -195,6 +195,7 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
 
   basesrc->segment_start = -1;
   basesrc->segment_end = -1;
+  basesrc->need_discont = TRUE;
   basesrc->blocksize = DEFAULT_BLOCKSIZE;
   basesrc->clock_id = NULL;
 
@@ -432,8 +433,8 @@ gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
       goto error;
   }
 
-  /* now send discont */
-  gst_base_src_send_discont (src);
+  /* now make sure the discont will be send */
+  src->need_discont = TRUE;
 
   /* and restart the task */
   gst_pad_start_task (src->srcpad, (GstTaskFunction) gst_base_src_loop,
@@ -669,9 +670,10 @@ gst_base_src_loop (GstPad * pad)
 
   src = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
 
-  if (src->offset == 0) {
+  if (src->need_discont) {
     /* now send discont */
     gst_base_src_send_discont (src);
+    src->need_discont = FALSE;
   }
 
   ret = gst_base_src_get_range (pad, src->offset, src->blocksize, &buf);
@@ -871,7 +873,6 @@ gst_base_src_start (GstBaseSrc * basesrc)
 
   /* start in the beginning */
   basesrc->offset = 0;
-  basesrc->segment_start = 0;
 
   /* figure out the size */
   if (bclass->get_size) {
@@ -886,7 +887,9 @@ gst_base_src_start (GstBaseSrc * basesrc)
   GST_DEBUG ("size %d %lld", result, basesrc->size);
 
   /* we always run to the end */
+  basesrc->segment_start = 0;
   basesrc->segment_end = basesrc->size;
+  basesrc->need_discont = TRUE;
 
   /* check if we can seek, updates ->seekable */
   gst_base_src_is_seekable (basesrc);
