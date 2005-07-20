@@ -26,42 +26,14 @@
 #include "gstautoaudiosink.h"
 #include "gstautodetect.h"
 
-static void gst_auto_audio_sink_base_init (GstAutoAudioSinkClass * klass);
-static void gst_auto_audio_sink_class_init (GstAutoAudioSinkClass * klass);
-static void gst_auto_audio_sink_init (GstAutoAudioSink * sink);
 static void gst_auto_audio_sink_detect (GstAutoAudioSink * sink, gboolean fake);
 static GstElementStateReturn
 gst_auto_audio_sink_change_state (GstElement * element);
 
-static GstBinClass *parent_class = NULL;
-
-GType
-gst_auto_audio_sink_get_type (void)
-{
-  static GType gst_auto_audio_sink_type = 0;
-
-  if (!gst_auto_audio_sink_type) {
-    static const GTypeInfo gst_auto_audio_sink_info = {
-      sizeof (GstAutoAudioSinkClass),
-      (GBaseInitFunc) gst_auto_audio_sink_base_init,
-      NULL,
-      (GClassInitFunc) gst_auto_audio_sink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstAutoAudioSink),
-      0,
-      (GInstanceInitFunc) gst_auto_audio_sink_init,
-    };
-
-    gst_auto_audio_sink_type = g_type_register_static (GST_TYPE_BIN,
-        "GstAutoAudioSink", &gst_auto_audio_sink_info, 0);
-  }
-
-  return gst_auto_audio_sink_type;
-}
+GST_BOILERPLATE (GstAutoAudioSink, gst_auto_audio_sink, GstBin, GST_TYPE_BIN);
 
 static void
-gst_auto_audio_sink_base_init (GstAutoAudioSinkClass * klass)
+gst_auto_audio_sink_base_init (gpointer klass)
 {
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
   GstElementDetails gst_auto_audio_sink_details = {
@@ -84,8 +56,6 @@ static void
 gst_auto_audio_sink_class_init (GstAutoAudioSinkClass * klass)
 {
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
-
-  parent_class = g_type_class_ref (GST_TYPE_BIN);
 
   eklass->change_state = gst_auto_audio_sink_change_state;
 }
@@ -205,14 +175,17 @@ static void
 gst_auto_audio_sink_detect (GstAutoAudioSink * sink, gboolean fake)
 {
   GstElement *esink;
-  GstPad *peer = NULL;
+  GstPad *targetpad, *peer = NULL;
 
   /* save ghostpad */
   if (sink->pad) {
-    gst_object_ref (GST_OBJECT (sink->pad));
-    peer = GST_PAD_PEER (GST_PAD_REALIZE (sink->pad));
-    if (peer)
+    peer = GST_PAD_PEER (sink->pad);
+    if (peer) {
       gst_pad_unlink (peer, sink->pad);
+      GST_DEBUG_OBJECT (sink, "Element was linked, caching peer %p", peer);
+    }
+    gst_element_remove_pad (GST_ELEMENT (sink), sink->pad);
+    sink->pad = NULL;
   }
 
   /* kill old element */
@@ -235,17 +208,12 @@ gst_auto_audio_sink_detect (GstAutoAudioSink * sink, gboolean fake)
   gst_bin_add (GST_BIN (sink), esink);
 
   /* attach ghost pad */
-  if (sink->pad) {
-    GST_DEBUG_OBJECT (sink, "Re-doing existing ghostpad");
-    gst_pad_add_ghost_pad (gst_element_get_pad (sink->kid, "sink"), sink->pad);
-    if (GST_ELEMENT (sink)->pads == NULL)
-      gst_element_add_pad (GST_ELEMENT (sink), sink->pad);
-  } else {
-    GST_DEBUG_OBJECT (sink, "Creating new ghostpad");
-    sink->pad = gst_ghost_pad_new ("sink",
-        gst_element_get_pad (sink->kid, "sink"));
-    gst_element_add_pad (GST_ELEMENT (sink), sink->pad);
-  }
+  GST_DEBUG_OBJECT (sink, "Creating new ghostpad");
+  targetpad = gst_element_get_pad (sink->kid, "sink");
+  sink->pad = gst_ghost_pad_new ("sink", targetpad);
+  gst_object_unref (targetpad);
+  gst_element_add_pad (GST_ELEMENT (sink), sink->pad);
+
   if (peer) {
     GST_DEBUG_OBJECT (sink, "Linking...");
     gst_pad_link (peer, sink->pad);
@@ -266,5 +234,6 @@ gst_auto_audio_sink_change_state (GstElement * element)
       return GST_STATE_FAILURE;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  return GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS, change_state,
+      (element), GST_STATE_SUCCESS);
 }

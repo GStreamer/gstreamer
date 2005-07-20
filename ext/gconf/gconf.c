@@ -55,25 +55,34 @@ gst_bin_find_unconnected_pad (GstBin * bin, GstPadDirection direction)
   const GList *pads = NULL;
   GstElement *element = NULL;
 
-  elements = (GList *) gst_bin_get_list (bin);
+  GST_LOCK (bin);
+  elements = bin->children;
   /* traverse all elements looking for unconnected pads */
   while (elements && pad == NULL) {
     element = GST_ELEMENT (elements->data);
-    pads = gst_element_get_pad_list (element);
+    GST_LOCK (element);
+    pads = element->pads;
     while (pads) {
+      GstPad *testpad = GST_PAD (pads->data);
+
       /* check if the direction matches */
-      if (GST_PAD_DIRECTION (GST_PAD (pads->data)) == direction) {
-        if (GST_PAD_PEER (GST_PAD (pads->data)) == NULL) {
+      if (GST_PAD_DIRECTION (testpad) == direction) {
+        GST_LOCK (testpad);
+        if (GST_PAD_PEER (testpad) == NULL) {
+          GST_UNLOCK (testpad);
           /* found it ! */
-          pad = GST_PAD (pads->data);
+          pad = testpad;
+          break;
         }
+        GST_UNLOCK (testpad);
       }
-      if (pad)
-        break;                  /* found one already */
       pads = g_list_next (pads);
     }
+    GST_UNLOCK (element);
     elements = g_list_next (elements);
   }
+  GST_UNLOCK (bin);
+
   return pad;
 }
 
@@ -158,10 +167,10 @@ gst_gconf_render_bin_from_description (const gchar * description)
 
   /* find pads and ghost them if necessary */
   if ((pad = gst_bin_find_unconnected_pad (GST_BIN (bin), GST_PAD_SRC))) {
-    gst_element_add_ghost_pad (bin, pad, "src");
+    gst_element_add_pad (bin, gst_ghost_pad_new ("src", pad));
   }
   if ((pad = gst_bin_find_unconnected_pad (GST_BIN (bin), GST_PAD_SINK))) {
-    gst_element_add_ghost_pad (bin, pad, "sink");
+    gst_element_add_pad (bin, gst_ghost_pad_new ("sink", pad));
   }
   return bin;
 }
@@ -217,8 +226,8 @@ gst_gconf_get_default_audio_sink (void)
  * gst_gconf_get_default_video_sink:
  *
  * Render video output bin from GStreamer GConf key : "default/videosink".
- * If key is invalid, the default video sink for the platform is used,
- * and this is detected by the autodetection bin autovideosink.
+ * If key is invalid, the default video sink for the platform is used
+ * (typically xvimagesink or ximagesink).
  *
  * Returns: a #GstElement containing the video output bin, or NULL if
  * everything failed.
@@ -229,7 +238,7 @@ gst_gconf_get_default_video_sink (void)
   GstElement *ret = gst_gconf_render_bin_from_key ("default/videosink");
 
   if (!ret) {
-    ret = gst_element_factory_make ("xvimagesink", NULL);
+    ret = gst_element_factory_make (DEFAULT_VIDEOSINK, NULL);
 
     if (!ret)
       g_warning ("No GConf default video sink key and %s doesn't work",
@@ -243,7 +252,7 @@ gst_gconf_get_default_video_sink (void)
  * gst_gconf_get_default_audio_src:
  *
  * Render audio acquisition bin from GStreamer GConf key : "default/audiosrc".
- * If key is invalid, the default audio source for the plaform is used
+ * If key is invalid, the default audio source for the plaform is used.
  * (typically osssrc or sunaudiosrc).
  *
  * Returns: a #GstElement containing the audio source bin, or NULL if

@@ -24,46 +24,16 @@
 #include "gstgconfelements.h"
 #include "gstgconfaudiosink.h"
 
-static void gst_gconf_audio_sink_base_init (GstGConfAudioSinkClass * klass);
-static void gst_gconf_audio_sink_class_init (GstGConfAudioSinkClass * klass);
-static void gst_gconf_audio_sink_init (GstGConfAudioSink * sink);
 static void gst_gconf_audio_sink_dispose (GObject * object);
-
 static void cb_toggle_element (GConfClient * client,
     guint connection_id, GConfEntry * entry, gpointer data);
-
 static GstElementStateReturn
 gst_gconf_audio_sink_change_state (GstElement * element);
 
-static GstBinClass *parent_class = NULL;
-
-GType
-gst_gconf_audio_sink_get_type (void)
-{
-  static GType gst_gconf_audio_sink_type = 0;
-
-  if (!gst_gconf_audio_sink_type) {
-    static const GTypeInfo gst_gconf_audio_sink_info = {
-      sizeof (GstGConfAudioSinkClass),
-      (GBaseInitFunc) gst_gconf_audio_sink_base_init,
-      NULL,
-      (GClassInitFunc) gst_gconf_audio_sink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstGConfAudioSink),
-      0,
-      (GInstanceInitFunc) gst_gconf_audio_sink_init,
-    };
-
-    gst_gconf_audio_sink_type = g_type_register_static (GST_TYPE_BIN,
-        "GstGConfAudioSink", &gst_gconf_audio_sink_info, 0);
-  }
-
-  return gst_gconf_audio_sink_type;
-}
+GST_BOILERPLATE (GstGConfAudioSink, gst_gconf_audio_sink, GstBin, GST_TYPE_BIN);
 
 static void
-gst_gconf_audio_sink_base_init (GstGConfAudioSinkClass * klass)
+gst_gconf_audio_sink_base_init (gpointer klass)
 {
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
   GstElementDetails gst_gconf_audio_sink_details = {
@@ -87,8 +57,6 @@ gst_gconf_audio_sink_class_init (GstGConfAudioSinkClass * klass)
 {
   GObjectClass *oklass = G_OBJECT_CLASS (klass);
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
-
-  parent_class = g_type_class_ref (GST_TYPE_BIN);
 
   oklass->dispose = gst_gconf_audio_sink_dispose;
   eklass->change_state = gst_gconf_audio_sink_change_state;
@@ -120,7 +88,7 @@ gst_gconf_audio_sink_dispose (GObject * object)
     sink->client = NULL;
   }
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
 
 static void
@@ -128,15 +96,17 @@ cb_toggle_element (GConfClient * client,
     guint connection_id, GConfEntry * entry, gpointer data)
 {
   GstGConfAudioSink *sink = GST_GCONF_AUDIO_SINK (data);
-  GstPad *peer = NULL;
-  GstElementState state = GST_STATE (sink);
+  GstPad *peer = NULL, *targetpad;
 
   /* save ghostpad */
   if (sink->pad) {
-    gst_object_ref (GST_OBJECT (sink->pad));
-    peer = GST_PAD_PEER (GST_PAD_REALIZE (sink->pad));
-    if (peer)
+    peer = GST_PAD_PEER (sink->pad);
+    if (peer) {
       gst_pad_unlink (peer, sink->pad);
+      GST_DEBUG_OBJECT (sink, "Caching peer %p", peer);
+    }
+    gst_element_remove_pad (GST_ELEMENT (sink), sink->pad);
+    sink->pad = NULL;
   }
 
   /* kill old element */
@@ -158,21 +128,16 @@ cb_toggle_element (GConfClient * client,
   gst_bin_add (GST_BIN (sink), sink->kid);
 
   /* re-attach ghostpad */
-  if (sink->pad) {
-    GST_DEBUG_OBJECT (sink, "Re-doing existing ghostpad");
-    gst_pad_add_ghost_pad (gst_element_get_pad (sink->kid, "sink"), sink->pad);
-  } else {
-    GST_DEBUG_OBJECT (sink, "Creating new ghostpad");
-    sink->pad = gst_ghost_pad_new ("sink",
-        gst_element_get_pad (sink->kid, "sink"));
-    gst_element_add_pad (GST_ELEMENT (sink), sink->pad);
-  }
+  GST_DEBUG_OBJECT (sink, "Creating new ghostpad");
+  targetpad = gst_element_get_pad (sink->kid, "sink");
+  sink->pad = gst_ghost_pad_new ("sink", targetpad);
+  gst_object_unref (targetpad);
+  gst_element_add_pad (GST_ELEMENT (sink), sink->pad);
+
   if (peer) {
     GST_DEBUG_OBJECT (sink, "Linking...");
     gst_pad_link (peer, sink->pad);
   }
-  GST_DEBUG_OBJECT (sink, "Syncing state");
-  gst_element_set_state (GST_ELEMENT (sink), state);
 
   GST_DEBUG_OBJECT (sink, "done changing gconf audio sink");
   sink->init = TRUE;
@@ -191,5 +156,6 @@ gst_gconf_audio_sink_change_state (GstElement * element)
       return GST_STATE_FAILURE;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  return GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS, change_state,
+      (element), GST_STATE_SUCCESS);
 }

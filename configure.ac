@@ -302,9 +302,10 @@ dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
 		videofilter \
 		alpha \
+		autodetect \
 		avi \
 		effectv \
-        fdsrc \
+		fdsrc \
 		goom \
 		law \
 		level \
@@ -582,6 +583,7 @@ Makefile
 gst-plugins.spec
 gst/Makefile
 gst/alpha/Makefile
+gst/autodetect/Makefile
 gst/avi/Makefile
 gst/effectv/Makefile
 gst/fdsrc/Makefile
@@ -602,6 +604,7 @@ sys/oss/Makefile
 ext/Makefile
 ext/aalib/Makefile
 ext/dv/Makefile
+ext/gconf/Makefile
 ext/libcaca/Makefile
 ext/mad/Makefile
 ext/raw1394/Makefile

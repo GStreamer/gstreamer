@@ -20,7 +20,7 @@
 #ifndef __GST_GCONF_ELEMENTS_H__
 #define __GST_GCONF_ELEMENTS_H__
 
-#include <gst/gconf/gconf.h>
+#include <gconf.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gconf_debug);
 #define GST_CAT_DEFAULT gconf_debug
