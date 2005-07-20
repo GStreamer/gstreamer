@@ -220,7 +220,7 @@ gst_audio_set_channel_positions (GstStructure * str,
 
   /* build gvaluearray from positions */
   g_value_init (&pos_val_entry, GST_TYPE_AUDIO_CHANNEL_POSITION);
-  g_value_init (&pos_val_arr, GST_TYPE_FIXED_LIST);
+  g_value_init (&pos_val_arr, GST_TYPE_ARRAY);
   for (n = 0; n < channels; n++) {
     g_value_set_enum (&pos_val_entry, pos[n]);
     gst_value_list_append_value (&pos_val_arr, &pos_val_entry);
@@ -276,7 +276,7 @@ gst_audio_set_structure_channel_positions_list (GstStructure * str,
     return;
 
   /* create the array of lists */
-  g_value_init (&pos_val_arr, GST_TYPE_FIXED_LIST);
+  g_value_init (&pos_val_arr, GST_TYPE_ARRAY);
   g_value_init (&pos_val_entry, GST_TYPE_AUDIO_CHANNEL_POSITION);
   for (n = 0; n < channels; n++) {
     g_value_init (&pos_val_list, GST_TYPE_LIST);

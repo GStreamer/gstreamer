@@ -126,7 +126,7 @@ vorbis_parse_set_header_on_caps (GstVorbisParse * parse, GstCaps * caps)
   GST_BUFFER_FLAG_SET (buf3, GST_BUFFER_FLAG_IN_CAPS);
 
   /* put buffers in a fixed list */
-  g_value_init (&list, GST_TYPE_FIXED_LIST);
+  g_value_init (&list, GST_TYPE_ARRAY);
   g_value_init (&value, GST_TYPE_BUFFER);
   g_value_set_boxed (&value, buf1);
   gst_value_list_append_value (&list, &value);

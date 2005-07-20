@@ -302,7 +302,7 @@ gst_stream_info_set_mute (GstStreamInfo * stream_info, gboolean mute)
         GST_PAD_CAST (stream_info->object));
     if (element) {
       if (mute) {
-        g_signal_connect (element, "state-change",
+        g_signal_connect (element, "state-changed",
             G_CALLBACK (stream_info_change_state), stream_info);
       } else {
         g_signal_handlers_disconnect_by_func (element,

@@ -629,7 +629,7 @@ gst_ogg_mux_get_headers (GstOggPad * pad)
     streamheader = gst_structure_get_value (structure, "streamheader");
     if (streamheader != NULL) {
       GST_LOG ("got header");
-      if (G_VALUE_TYPE (streamheader) == GST_TYPE_FIXED_LIST) {
+      if (G_VALUE_TYPE (streamheader) == GST_TYPE_ARRAY) {
         GArray *bufarr = g_value_peek_pointer (streamheader);
         gint i;
 
@@ -672,7 +672,7 @@ gst_ogg_mux_set_header_on_caps (GstCaps * caps, GList * buffers)
   structure = gst_caps_get_structure (caps, 0);
 
   /* put buffers in a fixed list */
-  g_value_init (&list, GST_TYPE_FIXED_LIST);
+  g_value_init (&list, GST_TYPE_ARRAY);
 
   while (walk) {
     GstBuffer *buf = GST_BUFFER (walk->data);

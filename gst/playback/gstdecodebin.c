@@ -364,7 +364,7 @@ dynamic_create (GstElement * element, GstDecodeBin * decode_bin)
   dyn = g_new0 (GstDynamic, 1);
   dyn->element = element;
   dyn->decode_bin = decode_bin;
-  dyn->np_sig_id = g_signal_connect (G_OBJECT (element), "new-pad",
+  dyn->np_sig_id = g_signal_connect (G_OBJECT (element), "pad-added",
       G_CALLBACK (new_pad), dyn);
   dyn->nmp_sig_id = g_signal_connect (G_OBJECT (element), "no-more-pads",
       G_CALLBACK (no_more_pads), dyn);

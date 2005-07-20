@@ -438,7 +438,7 @@ theora_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
   GST_BUFFER_FLAG_SET (buf3, GST_BUFFER_FLAG_IN_CAPS);
 
   /* put buffers in a fixed list */
-  g_value_init (&list, GST_TYPE_FIXED_LIST);
+  g_value_init (&list, GST_TYPE_ARRAY);
   g_value_init (&value, GST_TYPE_BUFFER);
   gst_value_set_buffer (&value, buf1);
   gst_value_list_append_value (&list, &value);

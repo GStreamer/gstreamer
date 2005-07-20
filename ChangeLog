@@ -1,5 +1,20 @@
 2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_get_headers),
+	(gst_ogg_mux_set_header_on_caps):
+	* ext/theora/theoraenc.c: (theora_set_header_on_caps):
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_set_header_on_caps):
+	* ext/vorbis/vorbisparse.c: (vorbis_parse_set_header_on_caps):
+	* gst-libs/gst/audio/multichannel.c:
+	(gst_audio_set_channel_positions),
+	(gst_audio_set_structure_channel_positions_list):
+	* gst/playback/gstdecodebin.c: (dynamic_create):
+	* gst/playback/gstplaybasebin.c: (setup_source), (mute_group_type):
+	* gst/playback/gststreaminfo.c: (gst_stream_info_set_mute):
+	  Fixes for API changes in core.
+
+2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/playback/gstplaybasebin.c: (fill_buffer):
 	  Use _new_custom() so we can set custom message types for buffering
 	  messages.

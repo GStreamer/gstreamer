@@ -1167,7 +1167,7 @@ setup_source (GstPlayBaseBin * play_base_bin,
           GST_STATE_SUCCESS) {
         GST_DEBUG ("waiting for first group...");
         sig6 = g_signal_connect (G_OBJECT (subbin),
-            "state-change", G_CALLBACK (state_change), play_base_bin);
+            "state-changed", G_CALLBACK (state_change), play_base_bin);
         g_cond_wait (play_base_bin->group_cond, play_base_bin->group_lock);
         GST_DEBUG ("group done !");
       } else {
@@ -1433,7 +1433,7 @@ mute_group_type (GstPlayBaseGroup * group, GstStreamType type, gboolean mute)
   gst_object_unref (pad);
 
   if (mute) {
-    g_signal_connect (group->type[type - 1].preroll, "state-change",
+    g_signal_connect (group->type[type - 1].preroll, "state-changed",
         G_CALLBACK (muted_group_change_state), group);
   } else {
     g_signal_handlers_disconnect_by_func (group->type[type - 1].preroll,
