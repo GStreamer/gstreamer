@@ -1,3 +1,8 @@
+2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/faad/Makefile.am:
+	  Fix uninstalled build.
+
 2005-07-19  Wim Taymans  <wim@fluendo.com>
 
 	* sys/oss/gstosssink.c: (gst_oss_sink_get_format),
