@@ -417,7 +417,7 @@ gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
       } else {
       	data->caps = NULL;
       }
-      data->signal_id = g_signal_connect (G_OBJECT (src), "new_pad", 
+      data->signal_id = g_signal_connect (G_OBJECT (src), "pad-added", 
 					  G_CALLBACK (gst_parse_found_pad), data);
       return TRUE;
     }

@@ -44,7 +44,7 @@ static GstDParamWrapper *gst_dpman_new_wrapper (GstDParamManager * dpman,
     GstDPMUpdateMethod update_method);
 static GstDParamWrapper *gst_dpman_get_wrapper (GstDParamManager * dpman,
     const gchar * dparam_name);
-static void gst_dpman_state_change (GstElement * element, gint old_state,
+static void gst_dpman_state_changed (GstElement * element, gint old_state,
     gint new_state, GstDParamManager * dpman);
 static gboolean gst_dpman_preprocess_synchronous (GstDParamManager * dpman,
     guint frames, gint64 timestamp);
@@ -625,8 +625,8 @@ gst_dpman_set_parent (GstDParamManager * dpman, GstElement * parent)
 
   g_hash_table_insert (_element_registry, parent, dpman);
   gst_object_set_parent (GST_OBJECT (dpman), GST_OBJECT (parent));
-  g_signal_connect (G_OBJECT (parent), "state_change",
-      G_CALLBACK (gst_dpman_state_change), dpman);
+  g_signal_connect (G_OBJECT (parent), "state_changed",
+      G_CALLBACK (gst_dpman_state_changed), dpman);
 }
 
 /**
@@ -725,7 +725,7 @@ gst_dpman_new_wrapper (GstDParamManager * dpman,
 
 
 static void
-gst_dpman_state_change (GstElement * element, gint old_state, gint new_state,
+gst_dpman_state_changed (GstElement * element, gint old_state, gint new_state,
     GstDParamManager * dpman)
 {
   GList *dwraps;

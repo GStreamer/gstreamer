@@ -1,3 +1,16 @@
+2005-07-20  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstmessage.c: (gst_message_new_segment_start),
+	(gst_message_new_segment_done), (gst_message_parse_segment_start),
+	(gst_message_parse_segment_done):
+	* gst/gstmessage.h:
+	Added a bunch of messages for advanced seeking.
+
+	* gst/parse/grammar.y:
+	* libs/gst/control/dparammanager.c: (gst_dpman_set_parent),
+	(gst_dpman_state_changed):
+	Fix some new-pad -> pad-added signals
+
 2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/manual/appendix-porting.xml:

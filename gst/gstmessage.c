@@ -185,7 +185,9 @@ gst_message_new (GstMessageType type, GstObject * src)
 /**
  * gst_message_new_eos:
  *
- * Create a new eos message.
+ * Create a new eos message. This message is generated and posted in
+ * the sink elements of a GstBin. The bin will only forward the EOS
+ * message to the application if all sinks have posted an EOS message.
  *
  * Returns: The new eos message.
  *
@@ -208,7 +210,8 @@ gst_message_new_eos (GstObject * src)
  * @debug: A debugging string for something or other.
  *
  * Create a new error message. The message will copy @error and
- * @debug.
+ * @debug. This message is posted by element when a fatal event
+ * occured. The pipeline will probably (partially) stop. 
  *
  * Returns: The new error message.
  *
@@ -265,6 +268,7 @@ gst_message_new_warning (GstObject * src, GError * error, gchar * debug)
  * @tag_list: The tag list for the message.
  *
  * Create a new tag message. The message will take ownership of the tag list.
+ * The message is posted by elements that discovered a new taglist.
  *
  * Returns: The new tag message.
  *
@@ -290,7 +294,8 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
  * @old: The previous state.
  * @new: The new (current) state.
  *
- * Create a state change message.
+ * Create a state change message. This message is posted whenever an element changed
+ * its state.
  *
  * Returns: The new state change message.
  *
@@ -314,7 +319,67 @@ gst_message_new_state_changed (GstObject * src, GstElementState old,
 }
 
 /**
- * gst_message_new_cistom:
+ * gst_message_new_segment_start:
+ * @src: The object originating the message.
+ * @timestamp: The timestamp of the segment being played
+ *
+ * Create a new segment message. This message is posted by elements that
+ * start playback of a segment as a result of a segment seek. This message
+ * is not received by the application but is used for maintenance reasons in
+ * container elements.
+ *
+ * Returns: The new segment start message.
+ *
+ * MT safe.
+ */
+GstMessage *
+gst_message_new_segment_start (GstObject * src, GstClockTime timestamp)
+{
+  GstMessage *message;
+  GstStructure *s;
+
+  message = gst_message_new (GST_MESSAGE_SEGMENT_START, src);
+
+  s = gst_structure_new ("GstMessageSegmentStart", "timestamp", G_TYPE_INT64,
+      (gint64) timestamp, NULL);
+  gst_structure_set_parent_refcount (s, &message->mini_object.refcount);
+  message->structure = s;
+
+  return message;
+}
+
+/**
+ * gst_message_new_segment_done:
+ * @src: The object originating the message.
+ * @timestamp: The timestamp of the segment being played
+ *
+ * Create a new segment done message. This message is posted by elements that
+ * finish playback of a segment as a result of a segment seek. This message
+ * is received by the application after all elements that posted a segment_start
+ * have posted the segment_done.
+ *
+ * Returns: The new segment done message.
+ *
+ * MT safe.
+ */
+GstMessage *
+gst_message_new_segment_done (GstObject * src, GstClockTime timestamp)
+{
+  GstMessage *message;
+  GstStructure *s;
+
+  message = gst_message_new (GST_MESSAGE_SEGMENT_DONE, src);
+
+  s = gst_structure_new ("GstMessageSegmentDone", "timestamp", G_TYPE_INT64,
+      (gint64) timestamp, NULL);
+  gst_structure_set_parent_refcount (s, &message->mini_object.refcount);
+  message->structure = s;
+
+  return message;
+}
+
+/**
+ * gst_message_new_custom:
  * @src: The object originating the message.
  * @structure: The structure for the message. The message will take ownership of
  * the structure.
@@ -461,4 +526,52 @@ gst_message_parse_warning (GstMessage * message, GError ** gerror,
     *gerror = NULL;
 
   *debug = g_strdup (gst_structure_get_string (message->structure, "debug"));
+}
+
+/**
+ * gst_message_parse_segment_start:
+ * @message: A valid #GstMessage of type GST_MESSAGE_SEGMENT_START.
+ *
+ * Extracts the timestamp from the segment start message.
+ *
+ * MT safe.
+ */
+void
+gst_message_parse_segment_start (GstMessage * message, GstClockTime * timestamp)
+{
+  const GValue *time_gvalue;
+
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_SEGMENT_START);
+
+  time_gvalue = gst_structure_get_value (message->structure, "timstamp");
+  g_return_if_fail (time_gvalue != NULL);
+  g_return_if_fail (G_VALUE_TYPE (time_gvalue) == G_TYPE_INT64);
+
+  if (timestamp)
+    *timestamp = (GstClockTime) g_value_get_int64 (time_gvalue);
+}
+
+/**
+ * gst_message_parse_segment_done:
+ * @message: A valid #GstMessage of type GST_MESSAGE_SEGMENT_DONE.
+ *
+ * Extracts the timestamp from the segment done message.
+ *
+ * MT safe.
+ */
+void
+gst_message_parse_segment_done (GstMessage * message, GstClockTime * timestamp)
+{
+  const GValue *time_gvalue;
+
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_SEGMENT_DONE);
+
+  time_gvalue = gst_structure_get_value (message->structure, "timstamp");
+  g_return_if_fail (time_gvalue != NULL);
+  g_return_if_fail (G_VALUE_TYPE (time_gvalue) == G_TYPE_INT64);
+
+  if (timestamp)
+    *timestamp = (GstClockTime) g_value_get_int64 (time_gvalue);
 }

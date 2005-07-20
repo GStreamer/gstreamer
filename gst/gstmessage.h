@@ -140,6 +140,8 @@ GstMessage *	gst_message_new_warning 	(GstObject * src, GError * error, gchar * 
 GstMessage *	gst_message_new_tag 		(GstObject * src, GstTagList * tag_list);
 GstMessage *	gst_message_new_state_changed 	(GstObject * src, GstElementState old_state,
                                                  GstElementState new_state);
+GstMessage *	gst_message_new_segment_start 	(GstObject * src, GstClockTime timestamp);
+GstMessage *	gst_message_new_segment_done 	(GstObject * src, GstClockTime timestamp);
 GstMessage *	gst_message_new_custom 		(GstMessageType type,
 						 GstObject    * src,
 						 GstStructure * structure);
@@ -151,6 +153,9 @@ void		gst_message_parse_warning	(GstMessage *message, GError **gerror, gchar **d
 void		gst_message_parse_tag		(GstMessage *message, GstTagList **tag_list);
 void		gst_message_parse_state_changed	(GstMessage *message, GstElementState *old_state,
                                                  GstElementState *new_state);
+void 		gst_message_parse_segment_start (GstMessage *message, GstClockTime *timestamp);
+void		gst_message_parse_segment_done 	(GstMessage *message, GstClockTime *timestamp);
+
 const GstStructure *  gst_message_get_structure	(GstMessage *message);
 
 G_END_DECLS
