@@ -314,26 +314,28 @@ gst_message_new_state_changed (GstObject * src, GstElementState old,
 }
 
 /**
- * gst_message_new_application:
+ * gst_message_new_cistom:
  * @src: The object originating the message.
  * @structure: The structure for the message. The message will take ownership of
  * the structure.
  *
- * Create a new application-specific message. These messages can be used by
- * application-specific plugins to pass data to the app.
+ * Create a new custom-typed message. This can be used for anything not
+ * handled by other message-specific functions to pass a message to the
+ * app.
  *
  * Returns: The new message.
  *
  * MT safe.
  */
 GstMessage *
-gst_message_new_application (GstObject * src, GstStructure * structure)
+gst_message_new_custom (GstMessageType type, GstObject * src,
+    GstStructure * structure)
 {
   GstMessage *message;
 
   g_return_val_if_fail (GST_IS_STRUCTURE (structure), NULL);
 
-  message = gst_message_new (GST_MESSAGE_APPLICATION, src);
+  message = gst_message_new (type, src);
   gst_structure_set_parent_refcount (structure, &message->mini_object.refcount);
   message->structure = structure;
 

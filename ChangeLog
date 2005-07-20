@@ -1,3 +1,9 @@
+2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstmessage.c: (gst_message_new_custom):
+	* gst/gstmessage.h:
+	  Add _new_custom, make _new_application a macro to _new_custom.
+
 2005-07-20  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesrc.c: (gst_base_src_init),

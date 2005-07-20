@@ -140,7 +140,11 @@ GstMessage *	gst_message_new_warning 	(GstObject * src, GError * error, gchar * 
 GstMessage *	gst_message_new_tag 		(GstObject * src, GstTagList * tag_list);
 GstMessage *	gst_message_new_state_changed 	(GstObject * src, GstElementState old_state,
                                                  GstElementState new_state);
-GstMessage *	gst_message_new_application 	(GstObject * src, GstStructure *structure);
+GstMessage *	gst_message_new_custom 		(GstMessageType type,
+						 GstObject    * src,
+						 GstStructure * structure);
+#define		gst_message_new_application(src, str) \
+  gst_message_new_custom (GST_MESSAGE_APPLICATION, src, str)
 
 void		gst_message_parse_error		(GstMessage *message, GError **gerror, gchar **debug);
 void		gst_message_parse_warning	(GstMessage *message, GError **gerror, gchar **debug);
