@@ -1118,8 +1118,8 @@ gst_mpeg2dec_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_DISCONTINUOUS:
     {
-      GstClockTime time;
-      GstClockTime end_time;    /* 0.9 just to call
+      gint64 time;
+      gint64 end_time;          /* 0.9 just to call
                                    gst_event_discont_get_value, non
                                    used anywhere else */
 
