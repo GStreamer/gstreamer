@@ -915,7 +915,6 @@ gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/audio/Makefile
 gst-libs/gst/floatcast/Makefile
-gst-libs/gst/gconf/Makefile
 gst-libs/gst/interfaces/Makefile
 gst-libs/gst/net/Makefile
 gst-libs/gst/riff/Makefile
@@ -929,8 +928,6 @@ tools/Makefile
 gconf/Makefile
 gconf/gstreamer.schemas
 pkgconfig/Makefile
-pkgconfig/gstreamer-gconf.pc
-pkgconfig/gstreamer-gconf-uninstalled.pc
 pkgconfig/gstreamer-plugins-base.pc
 pkgconfig/gstreamer-plugins-base-uninstalled.pc
 docs/Makefile

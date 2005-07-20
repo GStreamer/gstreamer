@@ -1,3 +1,15 @@
+2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* configure.ac:
+	* gst-libs/gst/Makefile.am:
+	* gst-libs/gst/gconf/.cvsignore:
+	* gst-libs/gst/gconf/Makefile.am:
+	* gst-libs/gst/gconf/test-gconf.c:
+	* pkgconfig/Makefile.am:
+	* pkgconfig/gstreamer-gconf-uninstalled.pc.in:
+	* pkgconfig/gstreamer-gconf.pc.in:
+	  Remove gconf stuff, use gconf elements instead from now on.
+
 2005-07-20  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/TODO:
