@@ -560,17 +560,17 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
     g_return_if_reached ();
 
   /* create stream selector */
+  selector = g_object_new (GST_TYPE_STREAM_SELECTOR, NULL);
   padname = gst_pad_get_name (pad);
   name = g_strdup_printf ("selector_%s_%s", prename, padname);
-  selector = g_object_new (GST_TYPE_STREAM_SELECTOR, NULL);
   gst_object_set_name (GST_OBJECT (selector), name);
   g_free (name);
 
   /* create preroll queue */
   name = g_strdup_printf ("preroll_%s_%s", prename, padname);
   preroll = gst_element_factory_make ("queue", name);
-  g_free (padname);
   g_free (name);
+  g_free (padname);
 
   g_object_set (G_OBJECT (preroll),
       "max-size-buffers", 0, "max-size-bytes",
@@ -611,9 +611,11 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
   /* listen for EOS */
   preroll_pad = gst_element_get_pad (preroll, "src");
   gst_pad_add_event_probe (preroll_pad, G_CALLBACK (probe_triggered), info);
+  gst_object_unref (preroll_pad);
 
   /* add to group list */
-  /* FIXME refcount elements */
+  /* FIXME refcount elements, after bin_add, object refs are invalid since 
+   * it takes ownership. */
   group->type[type - 1].selector = selector;
   group->type[type - 1].preroll = preroll;
   if (type == GST_STREAM_TYPE_TEXT && play_base_bin->subtitle) {

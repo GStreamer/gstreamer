@@ -827,6 +827,8 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
     gst_object_unref (pad);
   }
 
+  /* remove the sinks now, pipeline get_state will now wait for the
+   * sinks to preroll */
   if (play_bin->fakesink) {
     gst_bin_remove (GST_BIN (play_bin), play_bin->fakesink);
     play_bin->fakesink = NULL;
@@ -846,6 +848,8 @@ gst_play_bin_change_state (GstElement * element)
 
   switch (transition) {
     case GST_STATE_READY_TO_PAUSED:
+      /* this really is the easiest way to make the state change return
+       * ASYNC until we added the sinks */
       if (!play_bin->fakesink) {
         play_bin->fakesink = gst_element_factory_make ("fakesink", "test");
         gst_bin_add (GST_BIN (play_bin), play_bin->fakesink);

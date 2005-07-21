@@ -1,3 +1,10 @@
+2005-07-21  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstplaybasebin.c: (gen_preroll_element):
+	* gst/playback/gstplaybin.c: (setup_sinks),
+	(gst_play_bin_change_state):
+	Refcount fix and more comments.
+
 2005-07-21  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/ximage/Makefile.am:
