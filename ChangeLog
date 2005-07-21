@@ -1,3 +1,25 @@
+2005-07-21  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.defs:
+	I'm bored with writing "Updating defs file", so I'll just write a poem
+	by Charles Baudelaire, "L'invitation au voyage" :
+	
+	  Mon enfant, ma soeur,
+	  Songe à la douceur
+	  D'aller là-bas vivre ensemble !
+	  Aimer à loisir,
+	  Aimer et mourir
+	  Au pays qui te ressemble !
+	  Les soleils mouillés
+	  De ces ciels brouillés
+	  Pour mon esprit ont les charmes
+	  Si mystérieux
+	  De tes traîtres yeux,
+	  Brillant à travers leurs larmes.
+
+	The rest at the next defs update :)
+
+
 2005-07-20  Edward Hervey  <edward@fluendo.com>
 
 	* gst/pygstvalue.c:

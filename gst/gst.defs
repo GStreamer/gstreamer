@@ -2435,6 +2435,24 @@
   )
 )
 
+(define-function gst_message_new_segment_start
+  (c-name "gst_message_new_segment_start")
+  (return-type "GstMessage*")
+  (parameters
+    '("GstObject*" "src")
+    '("GstClockTime" "timestamp")
+  )
+)
+
+(define-function gst_message_new_segment_done
+  (c-name "gst_message_new_segment_done")
+  (return-type "GstMessage*")
+  (parameters
+    '("GstObject*" "src")
+    '("GstClockTime" "timestamp")
+  )
+)
+
 (define-function message_new_custom
   (c-name "gst_message_new_custom")
   (return-type "GstMessage*")
@@ -2481,6 +2499,24 @@
   (parameters
     '("GstElementState*" "old_state")
     '("GstElementState*" "new_state")
+  )
+)
+
+(define-method parse_segment_start
+  (of-object "GstMessage")
+  (c-name "gst_message_parse_segment_start")
+  (return-type "none")
+  (parameters
+    '("GstClockTime*" "timestamp")
+  )
+)
+
+(define-method parse_segment_done
+  (of-object "GstMessage")
+  (c-name "gst_message_parse_segment_done")
+  (return-type "none")
+  (parameters
+    '("GstClockTime*" "timestamp")
   )
 )
 
