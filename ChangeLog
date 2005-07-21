@@ -1,5 +1,9 @@
 2005-07-21  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gstmessage.override:
+	wrapped gst_message_parse_segment_start() and 
+	gst_message_parse_segment_done()
+
 	* gst/gst.defs:
 	I'm bored with writing "Updating defs file", so I'll just write a poem
 	by Charles Baudelaire, "L'invitation au voyage" :

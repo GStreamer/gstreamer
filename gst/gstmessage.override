@@ -42,6 +42,44 @@ _wrap_gst_message_parse_state_changed (PyGstMiniObject *self)
   return ret;
 }
 %%
+override gst_message_parse_segment_start noargs
+static PyObject *
+_wrap_gst_message_parse_segment_start (PyGstMiniObject *self)
+{
+  GstClockTime		timestart;
+  PyObject		*ret;
+
+  /* Should raise an exception if it's not a segment start message */
+  if (GST_MESSAGE(self->obj)->type != GST_MESSAGE_SEGMENT_START) {
+	  PyErr_SetString(PyExc_TypeError, "Message is not a segment start message");
+	  return NULL;
+  }
+  gst_message_parse_segment_start (GST_MESSAGE(self->obj), &timestart);
+  /* Return this as a tuple */
+  ret = PyLong_FromUnsignedLongLong(timestart);
+
+  return ret;
+}
+%%
+override gst_message_parse_segment_done noargs
+static PyObject *
+_wrap_gst_message_parse_segment_done (PyGstMiniObject *self)
+{
+  GstClockTime		timestart;
+  PyObject		*ret;
+
+  /* Should raise an exception if it's not a segment start message */
+  if (GST_MESSAGE(self->obj)->type != GST_MESSAGE_SEGMENT_DONE) {
+	  PyErr_SetString(PyExc_TypeError, "Message is not a segment done message");
+	  return NULL;
+  }
+  gst_message_parse_segment_done (GST_MESSAGE(self->obj), &timestart);
+  /* Return this as a tuple */
+  ret = PyLong_FromUnsignedLongLong(timestart);
+
+  return ret;
+}
+%%
 override gst_message_parse_error noargs
 static PyObject *
 _wrap_gst_message_parse_error (PyGstMiniObject *self)
