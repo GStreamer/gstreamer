@@ -30,7 +30,8 @@
 
 /* Debugging category */
 #include <gst/gstinfo.h>
-GST_DEBUG_CATEGORY_STATIC (gst_debug_ximagesink);
+
+GST_DEBUG_CATEGORY_EXTERN (gst_debug_ximagesink);
 #define GST_CAT_DEFAULT gst_debug_ximagesink
 
 typedef struct
@@ -1881,22 +1882,3 @@ gst_ximagesink_get_type (void)
 
   return ximagesink_type;
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "ximagesink",
-          GST_RANK_SECONDARY, GST_TYPE_XIMAGESINK))
-    return FALSE;
-
-  GST_DEBUG_CATEGORY_INIT (gst_debug_ximagesink, "ximagesink", 0,
-      "ximagesink element");
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "ximagesink",
-    "XFree86 video output plugin based on standard Xlib calls",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)

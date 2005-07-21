@@ -1,3 +1,11 @@
+2005-07-21  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/ximage/Makefile.am:
+	* sys/ximage/ximage.c: (plugin_init):
+	* sys/ximage/ximagesink.c:
+	Prepare for adding ximagesrc, rename of plugin to ximage etc.
+	
+
 2005-07-21  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_event),
