@@ -1,3 +1,20 @@
+2005-07-21  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_init), (gst_ogg_pad_event),
+	(gst_ogg_pad_internal_chain), (gst_ogg_pad_typefind),
+	(gst_ogg_demux_chain_elem_pad), (gst_ogg_demux_queue_data),
+	(gst_ogg_demux_chain_peer), (gst_ogg_pad_submit_packet),
+	(gst_ogg_pad_submit_page), (gst_ogg_chain_new),
+	(gst_ogg_demux_init), (gst_ogg_demux_deactivate_current_chain),
+	(gst_ogg_demux_activate_chain), (gst_ogg_demux_perform_seek),
+	(gst_ogg_demux_read_chain), (gst_ogg_demux_find_pad),
+	(gst_ogg_demux_collect_chain_info), (gst_ogg_demux_collect_info),
+	(gst_ogg_demux_find_chains), (gst_ogg_demux_chain),
+	(gst_ogg_demux_send_event), (gst_ogg_demux_loop),
+	(gst_ogg_demux_change_state), (gst_ogg_print):
+	Reorganize code to send the right disconts when in streaming
+	mode.
+
 2005-07-20  Andy Wingo  <wingo@pobox.com>
 
 	* gst/videoscale/vs_image.c (vs_image_scale_nearest_YUYV): Typo
