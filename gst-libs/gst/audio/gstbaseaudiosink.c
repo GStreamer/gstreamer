@@ -331,6 +331,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
   guint64 render_offset, in_offset;
   GstClockTime time, render_time;
+  GstClockTimeDiff render_diff;
   GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (bsink);
   gint64 diff;
 
@@ -344,15 +345,16 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GST_DEBUG ("time %" GST_TIME_FORMAT ", offset %llu, start %" GST_TIME_FORMAT,
       GST_TIME_ARGS (time), in_offset, GST_TIME_ARGS (bsink->discont_start));
 
+  render_diff = time - bsink->discont_start;
   /* samples should be rendered based on their timestamp. All samples
    * arriving before the discont_start are to be thrown away */
   /* FIXME, for now we drop the sample completely, we should
    * in fact clip the sample. Same for the segment_stop, actually. */
-  if (time < bsink->discont_start)
+  if (render_diff < 0)
     return GST_FLOW_OK;
 
   /* bring buffer timestamp to stream time */
-  render_time = time - bsink->discont_start;
+  render_time = render_diff;
   /* add base time to get absolute clock time */
   render_time += gst_element_get_base_time (GST_ELEMENT (bsink));
   /* and bring the time to the offset in the buffer */

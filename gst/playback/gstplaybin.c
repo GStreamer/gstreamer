@@ -729,7 +729,7 @@ add_sink (GstPlayBin * play_bin, GstElement * sink, GstPad * srcpad)
   /* this is only for debugging */
   parent = gst_pad_get_parent_element (srcpad);
   if (parent) {
-    GST_DEBUG ("Adding sink with state %d (parent: %d, peer: %d)\n",
+    GST_DEBUG ("Adding sink with state %d (parent: %d, peer: %d)",
         GST_STATE (sink), GST_STATE (play_bin), GST_STATE (parent));
     gst_object_unref (parent);
   }

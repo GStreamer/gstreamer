@@ -1,5 +1,27 @@
 2005-07-21  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_event),
+	(gst_ogg_pad_internal_chain), (gst_ogg_pad_typefind),
+	(gst_ogg_demux_chain_elem_pad), (gst_ogg_demux_queue_data),
+	(gst_ogg_demux_chain_peer), (gst_ogg_pad_submit_packet),
+	(gst_ogg_pad_submit_page), (gst_ogg_chain_new),
+	(gst_ogg_demux_init), (gst_ogg_demux_activate_chain),
+	(gst_ogg_demux_perform_seek), (gst_ogg_demux_collect_chain_info),
+	(gst_ogg_demux_collect_info), (gst_ogg_demux_chain),
+	(gst_ogg_demux_send_event), (gst_ogg_demux_loop):
+	Generate correct disconts for live chained oggs.
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_render),
+	(gst_base_audio_sink_create_ringbuffer),
+	(gst_base_audio_sink_change_state):
+	Handle discont math correctly.
+
+	* gst/playback/gstplaybin.c: (add_sink):
+	Some small debug cleanup.
+
+2005-07-21  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_init), (gst_ogg_pad_event),
 	(gst_ogg_pad_internal_chain), (gst_ogg_pad_typefind),
 	(gst_ogg_demux_chain_elem_pad), (gst_ogg_demux_queue_data),
