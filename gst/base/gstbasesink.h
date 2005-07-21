@@ -67,8 +67,8 @@ struct _GstBaseSink {
   GstClockTime   end_time;
 
   gboolean	 have_discont;
-  GstClockTime	 discont_start;
-  GstClockTime	 discont_stop;
+  GstClockTimeDiff	 discont_start;
+  GstClockTimeDiff	 discont_stop;
 
   gboolean       eos;
   gboolean       need_preroll;

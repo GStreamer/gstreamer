@@ -2,7 +2,7 @@ Seeking
 -------
 
 Seeking in GStreamer means configuring the pipeline for playback of the
-media between a certain start and stop time.
+media between a certain start and stop time, called a segment.
 
 Different kinds of seeking exist:
 
@@ -29,6 +29,10 @@ post a SEGMENT_STOP message on the bus. This message is posted by the
 earliest element in the pipeline, typically a demuxer. After receiving
 the message, the application can reconnect the pipeline or issue other
 seek events in the pipeline.
+
+The seek can also  change the playback speed of the configured segment.
+A speed of 1.0 is normal speed, 2.0 is double speed. Negative values
+mean backward playback.
 
 
 Generating seeking events

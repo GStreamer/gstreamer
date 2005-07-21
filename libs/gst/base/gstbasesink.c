@@ -472,8 +472,7 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
         /* the discont event is needed to bring the buffer timestamps to the
          * stream time */
         if (!gst_event_discont_get_value (event, GST_FORMAT_TIME,
-                (gint64 *) & basesink->discont_start,
-                (gint64 *) & basesink->discont_stop)) {
+                &basesink->discont_start, &basesink->discont_stop)) {
           basesink->discont_start = 0;
           basesink->discont_stop = 0;
         }
@@ -730,15 +729,26 @@ gst_base_sink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+    GstClockTimeDiff diff;
+
     /* bring timestamp to stream time using last
      * discont offset. */
-    timestamp -= basesink->discont_start;
+    if ((diff = timestamp - basesink->discont_start) < 0)
+      goto too_late;
+
     /* get duration to calculate end time */
     duration = GST_BUFFER_DURATION (buffer);
     if (GST_CLOCK_TIME_IS_VALID (duration)) {
-      *end = timestamp + duration;
+      *end = diff + duration;
     }
-    *start = timestamp;
+    *start = diff;
+  }
+  return;
+
+too_late:
+  {
+    *start = GST_CLOCK_TIME_NONE;
+    *end = GST_CLOCK_TIME_NONE;
   }
 }
 

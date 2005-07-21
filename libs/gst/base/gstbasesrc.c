@@ -702,11 +702,11 @@ pause:
   {
     GST_DEBUG_OBJECT (src, "pausing task");
     gst_pad_pause_task (pad);
-    if (GST_FLOW_IS_FATAL (ret)) {
+    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
       /* for fatal errors we post an error message */
       GST_ELEMENT_ERROR (src, STREAM, STOPPED,
-          ("streaming stopped, reason %d", ret),
-          ("streaming stopped, reason %d", ret));
+          ("streaming stopped, reason %s", gst_flow_get_name (ret)),
+          ("streaming stopped, reason %s", gst_flow_get_name (ret)));
       gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
     }
     return;

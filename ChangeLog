@@ -1,3 +1,27 @@
+2005-07-21  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-seeking.txt:
+	Some small additions.
+
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object),
+	(gst_base_sink_get_times), (gst_base_sink_do_sync),
+	(gst_base_sink_activate_push), (gst_base_sink_activate_pull):
+	* gst/base/gstbasesink.h:
+	discont values are gint64, handle the math correctly.
+
+	* gst/base/gstbasesrc.c: (gst_base_src_loop):
+	Make the basesrc report error if the source pad is not linked.
+
+	* gst/gstqueue.c: (gst_queue_link_src), (gst_queue_chain),
+	(gst_queue_loop), (gst_queue_handle_src_query),
+	(gst_queue_src_activate_push):
+	Make queue collect data even if the srcpad is not linked.
+	Start pushing out data as soon as it is linked.
+
+	* gst/gstutils.c: (gst_element_unlink), (gst_flow_get_name):
+	* gst/gstutils.h:
+	Added gst_flow_get_name() to ease error reporting.
+
 2005-07-20  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstmessage.c: (gst_message_new_segment_start),

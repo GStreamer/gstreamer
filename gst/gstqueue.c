@@ -29,6 +29,7 @@
 #include "gstevent.h"
 #include "gstinfo.h"
 #include "gsterror.h"
+#include "gstutils.h"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -406,10 +407,28 @@ static GstPadLinkReturn
 gst_queue_link_src (GstPad * pad, GstPad * peer)
 {
   GstPadLinkReturn result = GST_PAD_LINK_OK;
+  GstQueue *queue;
 
-  /* FIXME, see if we need to push or get pulled */
-  if (GST_PAD_LINKFUNC (peer))
+  queue = GST_QUEUE (gst_pad_get_parent (pad));
+
+  GST_DEBUG ("queue linking source pad");
+
+  if (GST_PAD_LINKFUNC (peer)) {
     result = GST_PAD_LINKFUNC (peer) (peer, pad);
+  }
+
+  if (GST_PAD_LINK_SUCCESSFUL (result)) {
+    GST_QUEUE_MUTEX_LOCK (queue);
+    if (queue->srcresult == GST_FLOW_OK) {
+      gst_pad_start_task (pad, (GstTaskFunction) gst_queue_loop, pad);
+      GST_DEBUG ("starting task as pad is linked");
+    } else {
+      GST_DEBUG ("not starting task reason %s",
+          gst_flow_get_name (queue->srcresult));
+    }
+    GST_QUEUE_MUTEX_UNLOCK (queue);
+  }
+  gst_object_unref (queue);
 
   return result;
 }
@@ -673,9 +692,10 @@ out_unref:
 out_flushing:
   {
     GstFlowReturn ret = queue->srcresult;
+    const gchar *flowname = gst_flow_get_name (ret);
 
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-        "exit because task paused, reason:  %d", ret);
+        "exit because task paused, reason: %s", flowname);
     GST_QUEUE_MUTEX_UNLOCK (queue);
 
     gst_buffer_unref (buffer);
@@ -746,13 +766,18 @@ restart:
     /* can opt to check for srcresult here but the push should
      * return an error value that is more accurate */
     if (result != GST_FLOW_OK) {
+      const gchar *flowname;
+
+      flowname = gst_flow_get_name (result);
+
       queue->srcresult = result;
       if (GST_FLOW_IS_FATAL (result)) {
         GST_ELEMENT_ERROR (queue, STREAM, STOPPED,
-            ("streaming stopped, reason %d", result),
-            ("streaming stopped, reason %d", result));
+            ("streaming stopped, reason %s", flowname),
+            ("streaming stopped, reason %s", flowname));
         gst_pad_push_event (queue->srcpad, gst_event_new (GST_EVENT_EOS));
       }
+      GST_DEBUG ("pausing queue, reason %s", flowname);
       gst_pad_pause_task (queue->srcpad);
     }
   } else {
@@ -760,6 +785,7 @@ restart:
       /* all incomming data is now unexpected */
       queue->srcresult = GST_FLOW_UNEXPECTED;
       /* and we don't need to process anymore */
+      GST_DEBUG ("pausing queue, we're EOS now");
       gst_pad_pause_task (queue->srcpad);
       restart = FALSE;
     }
@@ -780,8 +806,10 @@ restart:
 
 out_flushing:
   {
+    const gchar *flowname = gst_flow_get_name (queue->srcresult);
+
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-        "exit because task paused, reason:  %d", queue->srcresult);
+        "exit because task paused, reason:  %s", flowname);
     GST_QUEUE_MUTEX_UNLOCK (queue);
 
     return;
@@ -890,7 +918,13 @@ gst_queue_src_activate_push (GstPad * pad, gboolean active)
   if (active) {
     GST_QUEUE_MUTEX_LOCK (queue);
     queue->srcresult = GST_FLOW_OK;
-    result = gst_pad_start_task (pad, (GstTaskFunction) gst_queue_loop, pad);
+    /* we do not start the task yet if the pad is not connected */
+    if (gst_pad_is_linked (pad))
+      result = gst_pad_start_task (pad, (GstTaskFunction) gst_queue_loop, pad);
+    else {
+      GST_DEBUG ("not starting task as pad is not linked");
+      result = TRUE;
+    }
     GST_QUEUE_MUTEX_UNLOCK (queue);
   } else {
     /* step 1, unblock chain and loop functions */

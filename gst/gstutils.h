@@ -280,6 +280,10 @@ gboolean		gst_pad_proxy_setcaps		(GstPad * pad, GstCaps * caps);
 
 GstElement*		gst_pad_get_parent_element	(GstPad *pad);
 
+/* flow */
+G_CONST_RETURN gchar*   gst_flow_get_name      		(GstFlowReturn ret);
+
+
 /* util query functions */
 gboolean                gst_pad_query_position          (GstPad *pad, GstFormat *format,
 		                                         gint64 *cur, gint64 *end);
