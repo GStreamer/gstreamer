@@ -104,7 +104,6 @@ rm -rf $RPM_BUILD_ROOT
 
 # libraries
 %{_libdir}/libgstinterfaces-%{majorminor}.so.*
-@USE_GCONF_TRUE@%{_libdir}/libgstgconf-%{majorminor}.so.*
 %{_libdir}/libgstaudio-%{majorminor}.so.*
 %{_libdir}/libgstaudiofilter-%{majorminor}.so.*
 %{_libdir}/libgstriff-%{majorminor}.so.*
@@ -192,13 +191,10 @@ GStreamer support libraries header files.
 
 
 # library headers
-@USE_GCONF_TRUE@%{_includedir}/gstreamer-%{majorminor}/gst/gconf/gconf.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tag/tag.h
 # pkg-config files
-@USE_GCONF_TRUE@%{_libdir}/pkgconfig/gstreamer-gconf-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-plugins-base-%{majorminor}.pc
 # .so files
-@USE_GCONF_TRUE@%{_libdir}/libgstgconf-%{majorminor}.so
 %{_libdir}/libgstinterfaces-%{majorminor}.so
 @USE_ALSA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstalsa.so
 
