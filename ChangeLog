@@ -1,3 +1,17 @@
+2005-07-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  Make type explicit.
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_release_buffer),
+	(gst_ffmpegdec_frame), (gst_ffmpegdec_chain),
+	(gst_ffmpegdec_change_state):
+	  When we provide a buffer and get a valid return value (data was
+	  read), but no output (have-data==0), then we need to reuse this
+	  same output buffer, because it may be used for caching output
+	  data. Fixes #307353.
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_loop):
+	  Timestamp fix.
+
 2005-07-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpeg.h:

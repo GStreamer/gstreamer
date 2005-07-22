@@ -656,8 +656,9 @@ gst_ffmpegdemux_loop (GstElement * element)
     GST_BUFFER_SIZE (outbuf) = pkt.size;
 
     if (pkt.pts != AV_NOPTS_VALUE) {
-      GST_BUFFER_TIMESTAMP (outbuf) = (GstClockTime) (pkt.pts +
-          stream->start_time) * GST_SECOND / AV_TIME_BASE;
+      AVRational bq = { 1, GST_SECOND };
+      GST_BUFFER_TIMESTAMP (outbuf) = av_rescale_q (pkt.pts,
+          demux->context->streams[pkt.stream_index]->time_base, bq);
       demux->last_ts[stream->index] = GST_BUFFER_TIMESTAMP (outbuf);
     }
 

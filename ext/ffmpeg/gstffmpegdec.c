@@ -562,7 +562,8 @@ gst_ffmpegdec_release_buffer (AVCodecContext * context, AVFrame * picture)
   g_return_if_fail (buf != NULL);
   g_return_if_fail (picture->type == FF_BUFFER_TYPE_USER);
 
-  ffmpegdec->last_buffer = NULL;
+  if (buf == ffmpegdec->last_buffer)
+    ffmpegdec->last_buffer = NULL;
   gst_buffer_unref (buf);
 
   /* zero out the reference in ffmpeg */
@@ -665,7 +666,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
   GstFFMpegDecClass *oclass =
       (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
   GstBuffer *outbuf = NULL;
-  gint have_data, len = 0;
+  gint have_data = 0, len = 0;
   
   ffmpegdec->context->frame_number++;
 
@@ -690,6 +691,8 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
 
 	if (ffmpegdec->picture->opaque != NULL) {
 	  outbuf = (GstBuffer *) ffmpegdec->picture->opaque;
+          if (outbuf == ffmpegdec->last_buffer)
+            ffmpegdec->last_buffer = NULL;
 	} else {
 	  AVPicture pic;
 	  gint fsize = gst_ffmpeg_avpicture_get_size (ffmpegdec->context->pix_fmt,
@@ -778,14 +781,18 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
       break;
 
     case CODEC_TYPE_AUDIO:
-      outbuf = gst_buffer_new_and_alloc (AVCODEC_MAX_AUDIO_FRAME_SIZE);
+      if (!ffmpegdec->last_buffer)
+        outbuf = gst_buffer_new_and_alloc (AVCODEC_MAX_AUDIO_FRAME_SIZE);
+      else {
+        outbuf = ffmpegdec->last_buffer;
+        ffmpegdec->last_buffer = NULL;
+      }
       len = avcodec_decode_audio (ffmpegdec->context,
           (int16_t *) GST_BUFFER_DATA (outbuf), &have_data, data, size);
       GST_DEBUG_OBJECT (ffmpegdec,
           "Decode audio: len=%d, have_data=%d", len, have_data);
 
       if (len >= 0 && have_data > 0) {
-
 	if (!gst_ffmpegdec_negotiate (ffmpegdec)) {
 	  gst_buffer_unref (outbuf);
 	  return -1;
@@ -801,6 +808,9 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
             ffmpegdec->context->sample_rate);
         ffmpegdec->next_ts += GST_BUFFER_DURATION (outbuf);
         *in_ts += GST_BUFFER_DURATION (outbuf);
+      } else if (len > 0 && have_data == 0) {
+        /* cache output, because it may be used for caching (in-place) */
+        ffmpegdec->last_buffer = outbuf;
       } else {
         gst_buffer_unref (outbuf);
       }
@@ -1006,6 +1016,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
 
     ffmpegdec->pcache = gst_buffer_create_sub (inbuf,
         GST_BUFFER_SIZE (inbuf) - bsize, bsize);
+  } else if (bsize > 0) {
+    GST_DEBUG_OBJECT (ffmpegdec, "Dropping %d bytes of data", bsize);
   }
   gst_buffer_unref (inbuf);
 }
@@ -1021,6 +1033,7 @@ gst_ffmpegdec_change_state (GstElement * element)
       gst_ffmpegdec_close (ffmpegdec);
       if (ffmpegdec->last_buffer != NULL) {
 	gst_buffer_unref (ffmpegdec->last_buffer);
+        ffmpegdec->last_buffer = NULL;
       }
       break;
   }
