@@ -1,3 +1,40 @@
+2005-07-22  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-events.txt:
+	Small update.
+
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object),
+	(gst_base_sink_do_sync), (gst_base_sink_activate_push),
+	(gst_base_sink_activate_pull):
+	Some more comments.
+
+	* gst/elements/gstfakesrc.c: (gst_fake_src_class_init),
+	(gst_fake_src_create):
+	Fix handoff marshall.
+
+	* gst/elements/gstidentity.c: (gst_identity_class_init),
+	(gst_identity_transform_ip):
+	We're a real inplace element.
+
+	* gst/gstbus.c: (gst_bus_post):
+	Added some comments.
+
+	* tests/lat.c: (fakesrc), (fakesink), (simple), (queue), (main):
+	* tests/muxing/case1.c: (main):
+	* tests/sched/dynamic-pipeline.c: (main):
+	* tests/sched/interrupt1.c: (main):
+	* tests/sched/interrupt2.c: (main):
+	* tests/sched/interrupt3.c: (main):
+	* tests/sched/runxml.c: (main):
+	* tests/sched/sched-stress.c: (main):
+	* tests/seeking/seeking1.c: (event_received), (main):
+	* tests/threadstate/threadstate2.c: (bus_handler), (timeout_func),
+	(main):
+	* tests/threadstate/threadstate3.c: (main):
+	* tests/threadstate/threadstate4.c: (main):
+	* tests/threadstate/threadstate5.c: (main):
+	Fix the tests.
+
 2005-07-21  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-seeking.txt:

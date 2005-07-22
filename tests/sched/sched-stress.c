@@ -6,7 +6,7 @@ int
 main (int argc, char *argv[])
 {
   GstElement *bin, *src, *dec, *sink;
-  int i, j;
+  int i;
 
   gst_init (&argc, &argv);
 
@@ -20,8 +20,6 @@ main (int argc, char *argv[])
     gst_bin_add_many (GST_BIN (bin), src, dec, sink, NULL);
     gst_element_link_many (src, dec, sink, NULL);
     gst_element_set_state (bin, GST_STATE_PLAYING);
-    for (j = 0; j < 30; j++)
-      gst_bin_iterate (GST_BIN (bin));
     gst_element_set_state (bin, GST_STATE_PAUSED);
   }
 

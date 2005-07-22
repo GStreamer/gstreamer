@@ -473,6 +473,7 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
          * stream time */
         if (!gst_event_discont_get_value (event, GST_FORMAT_TIME,
                 &basesink->discont_start, &basesink->discont_stop)) {
+          /* this means this sink will not be able to sync to the clock */
           basesink->discont_start = 0;
           basesink->discont_stop = 0;
         }

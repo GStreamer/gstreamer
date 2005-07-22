@@ -78,12 +78,6 @@ main (int argc, char *argv[])
 /*    gst_element_set_state(bin, GST_STATE_READY); */
     gst_element_set_state (bin, GST_STATE_PLAYING);
 
-    if (GST_IS_THREAD (bin)) {
-      g_usleep (G_USEC_PER_SEC);
-    } else {
-      gst_bin_iterate (GST_BIN (bin));
-    }
-
     if (outcount != 1 && incount != 1) {
       g_print ("test failed\n");
       exit (-1);

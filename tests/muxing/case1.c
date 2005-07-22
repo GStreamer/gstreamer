@@ -66,7 +66,7 @@ main (int argc, char *argv[])
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
-  while (gst_bin_iterate (pipeline));
+  g_usleep (2 * G_USEC_PER_SEC);
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
 

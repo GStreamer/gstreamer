@@ -166,7 +166,8 @@ gst_bus_new (void)
  * @bus: a #GstBus to post on
  * @message: The #GstMessage to post
  *
- * Post a message on the given bus.
+ * Post a message on the given bus. Ownership of the message
+ * is taken by the bus.
  *
  * Returns: TRUE if the message could be posted.
  *
@@ -210,7 +211,7 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       GST_DEBUG_OBJECT (bus, "[msg %p] dropped", message);
       break;
     case GST_BUS_PASS:
-      /* pass the message to the async queue */
+      /* pass the message to the async queue, refcount passed in the queue */
       GST_DEBUG_OBJECT (bus, "[msg %p] pushing on async queue", message);
       g_mutex_lock (bus->queue_lock);
       g_queue_push_tail (bus->queue, message);
@@ -354,6 +355,8 @@ gst_bus_pop (GstBus * bus)
  *
  * MT safe.
  */
+/* FIXME, dangerous as the bus could be set to flushing while the app holds
+ * a ref to the message */
 GstMessage *
 gst_bus_peek (GstBus * bus)
 {

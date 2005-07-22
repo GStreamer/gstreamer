@@ -72,6 +72,7 @@ fakesrc (void)
   g_return_val_if_fail (src != NULL, NULL);
   g_object_set (G_OBJECT (src), "silent", TRUE, NULL);
   g_object_set (G_OBJECT (src), "num_buffers", iterations, NULL);
+  g_object_set (G_OBJECT (src), "signal-handoffs", TRUE, NULL);
   g_signal_connect (G_OBJECT (src), "handoff", G_CALLBACK (handoff_src), NULL);
 
   return src;
@@ -85,6 +86,7 @@ fakesink (void)
   sink = gst_element_factory_make ("fakesink", "fakesink");
   g_return_val_if_fail (sink != NULL, NULL);
   g_object_set (G_OBJECT (sink), "silent", TRUE, NULL);
+  g_object_set (G_OBJECT (sink), "signal-handoffs", TRUE, NULL);
   g_signal_connect (G_OBJECT (sink),
       "handoff", G_CALLBACK (handoff_sink), NULL);
 
@@ -103,9 +105,6 @@ simple (int argc, int argi, char *argv[])
     return NULL;
   }
   idents = atoi (argv[argi]);
-  if ((argc - argi) == 2) {
-    gst_scheduler_factory_set_default_name (argv[argi + 1]);
-  }
 
   pipeline = GST_PIPELINE (gst_pipeline_new ("pipeline"));
   g_return_val_if_fail (pipeline != NULL, NULL);
@@ -125,7 +124,7 @@ GstPipeline *
 queue (int argc, int argi, char *argv[])
 {
   GstPipeline *pipeline;
-  GstElement *last, *src, *sink, *src_thr, *src_q, *sink_q, *sink_thr;
+  GstElement *last, *src, *sink, *src_q, *sink_q;
   int idents;
 
   if ((argc - argi) < 1) {
@@ -134,27 +133,18 @@ queue (int argc, int argi, char *argv[])
   }
   idents = atoi (argv[argi]);
 
-  if ((argc - argi) == 2) {
-    gst_scheduler_factory_set_default_name (argv[argi + 1]);
-  }
-
   pipeline = GST_PIPELINE (gst_pipeline_new ("pipeline"));
   g_return_val_if_fail (pipeline != NULL, NULL);
 
-  src_thr = GST_ELEMENT (gst_thread_new ("src_thread"));
-  g_return_val_if_fail (src_thr != NULL, NULL);
-
   src = fakesrc ();
   g_return_val_if_fail (src != NULL, NULL);
-  gst_bin_add (GST_BIN (src_thr), GST_ELEMENT (src));
+  gst_bin_add (GST_BIN (pipeline), GST_ELEMENT (src));
 
   src_q = gst_element_factory_make ("queue", "src_q");
   g_return_val_if_fail (src_q != NULL, NULL);
-  gst_bin_add (GST_BIN (src_thr), GST_ELEMENT (src_q));
+  gst_bin_add (GST_BIN (pipeline), GST_ELEMENT (src_q));
   gst_pad_link (gst_element_get_pad (src, "src"),
       gst_element_get_pad (src_q, "sink"));
-
-  gst_bin_add (GST_BIN (pipeline), GST_ELEMENT (src_thr));
 
   last = identity_add (pipeline, src_q, idents);
 
@@ -164,14 +154,9 @@ queue (int argc, int argi, char *argv[])
   gst_pad_link (gst_element_get_pad (last, "src"),
       gst_element_get_pad (sink_q, "sink"));
 
-  sink_thr = GST_ELEMENT (gst_thread_new ("sink_thread"));
-  g_return_val_if_fail (sink_thr != NULL, NULL);
-
   sink = fakesink ();
   g_return_val_if_fail (sink != NULL, NULL);
-  gst_bin_add (GST_BIN (sink_thr), GST_ELEMENT (sink));
-
-  gst_bin_add (GST_BIN (pipeline), GST_ELEMENT (sink_thr));
+  gst_bin_add (GST_BIN (pipeline), GST_ELEMENT (sink));
 
   gst_pad_link (gst_element_get_pad (sink_q, "src"),
       gst_element_get_pad (sink, "sink"));
@@ -187,8 +172,8 @@ struct test
 };
 
 static struct test tests[] = {
-  {"simple", "ident_count [scheduler_name]", simple},
-  {"queue", "ident_count [scheduler_name]", queue},
+  {"simple", "ident_count", simple},
+  {"queue", "ident_count", queue},
   {NULL, NULL, NULL}
 };
 
@@ -229,7 +214,7 @@ main (int argc, char *argv[])
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
   while (count < iterations) {
-    gst_bin_iterate (GST_BIN (pipeline));
+    g_usleep (G_USEC_PER_SEC);
   }
   g_print ("\n");
 

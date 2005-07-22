@@ -28,6 +28,8 @@ The EOS event can only be sent on a sinkpad. It is typically emited by the
 source element when it has finished sending data. This event is mainly sent
 in the streaming thread but can also be sent from the application thread.
 
+An EOS event sent on a srcpad returns GST_FLOW_UNEXPECTED.
+
 The downstream element should forward the EOS event to its downstream peer
 elements. This way the event will eventually reach the renderers which should
 then post an EOS message on the bus.
@@ -126,7 +128,9 @@ travels upstream.
 
 The seek event contains the new start and end position of playback
 after the seek is performed. Optionally the end position can be left
-at -1 to continue playback to the end of the stream.
+at -1 to continue playback to the end of the stream. The seek event
+also contains the new playback rate of the stream, 1.0 is normal playback,
+2.0 double speed and negative values mean backwards playback.
 
 A seek usually flushes the graph to minimize latency after the seek this
 behaviour is triggered by using the SEEK_FLUSH flag. 

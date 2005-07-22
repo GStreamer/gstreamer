@@ -7,6 +7,7 @@ static GstPad *pad;
 static void
 event_received (GObject * object, GstEvent * event, GstElement * pipeline)
 {
+#if 0
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT_DONE) {
     g_print ("segment done\n");
     if (--looping == 1) {
@@ -19,6 +20,7 @@ event_received (GObject * object, GstEvent * event, GstElement * pipeline)
     }
     gst_pad_send_event (pad, event);
   }
+#endif
 }
 
 gint
@@ -27,7 +29,8 @@ main (gint argc, gchar * argv[])
   GstElement *pipeline;
   GstElement *fakesrc;
   GstElement *fakesink;
-  guint64 value;
+
+  /* guint64 value; */
   GstFormat format;
 
   gst_init (&argc, &argv);
@@ -55,18 +58,20 @@ main (gint argc, gchar * argv[])
 
   format = GST_FORMAT_DEFAULT;
 
+#if 0
   gst_pad_query (pad, GST_QUERY_START, &format, &value);
   g_print ("configured for start   %" G_GINT64_FORMAT "\n", value);
   gst_pad_query (pad, GST_QUERY_SEGMENT_END, &format, &value);
   g_print ("configured segment end %" G_GINT64_FORMAT "\n", value);
+#endif
 
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   g_signal_connect (G_OBJECT (pipeline), "deep_notify",
-      G_CALLBACK (gst_element_default_deep_notify), NULL);
+      G_CALLBACK (gst_object_default_deep_notify), NULL);
 
-  while (gst_bin_iterate (GST_BIN (pipeline)));
+  g_usleep (2 * G_USEC_PER_SEC);
 
   g_print
       ("doing segment seek from 50 to 55 with looping (2 times), then 20 to 25 without looping\n");
@@ -80,14 +85,16 @@ main (gint argc, gchar * argv[])
   g_signal_connect (G_OBJECT (gst_element_get_pad (fakesink, "sink")),
       "event_received", G_CALLBACK (event_received), event);
 
+#if 0
   gst_pad_query (pad, GST_QUERY_START, &format, &value);
   g_print ("configured for start   %" G_GINT64_FORMAT "\n", value);
   gst_pad_query (pad, GST_QUERY_SEGMENT_END, &format, &value);
   g_print ("configured segment end %" G_GINT64_FORMAT "\n", value);
+#endif
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-  while (gst_bin_iterate (GST_BIN (pipeline)));
+  g_usleep (2 * G_USEC_PER_SEC);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 

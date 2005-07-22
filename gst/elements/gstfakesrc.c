@@ -290,7 +290,8 @@ gst_fake_src_class_init (GstFakeSrcClass * klass)
   gst_fake_src_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstFakeSrcClass, handoff), NULL, NULL,
-      gst_marshal_VOID__OBJECT_OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
+      gst_marshal_VOID__OBJECT_OBJECT, G_TYPE_NONE, 2, GST_TYPE_BUFFER,
+      GST_TYPE_PAD);
 
   /*gstbase_src_class->is_seekable = GST_DEBUG_FUNCPTR (gst_fake_src_is_seekable); */
   gstbase_src_class->start = GST_DEBUG_FUNCPTR (gst_fake_src_start);
@@ -689,7 +690,7 @@ gst_fake_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
   if (src->signal_handoffs) {
     GST_LOG_OBJECT (src, "pre handoff emit");
     g_signal_emit (G_OBJECT (src), gst_fake_src_signals[SIGNAL_HANDOFF], 0,
-        buf);
+        buf, basesrc->srcpad);
     GST_LOG_OBJECT (src, "post handoff emit");
   }
 

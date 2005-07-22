@@ -33,13 +33,14 @@ main (int argc, char *argv[])
 
   /* initialize cothreads */
   gst_element_set_state (pipe1, GST_STATE_PLAYING);
-  gst_bin_iterate (GST_BIN (pipe1));
+
   gst_element_set_state (pipe1, GST_STATE_READY);
 
   /* destroy the fakesink, but keep fakesrc (its state is GST_STATE_READY) */
   gst_element_unlink_pads (fakesrc, "src", fakesink1, "sink");
   gst_object_ref (fakesrc);
   gst_bin_remove (GST_BIN (pipe1), fakesrc);
+  g_usleep (2 * G_USEC_PER_SEC);
   gst_bin_remove (GST_BIN (pipe1), fakesink1);
 
   gst_object_unref (pipe1);
@@ -56,7 +57,7 @@ main (int argc, char *argv[])
 
   /* try to iterate the pipeline */
   gst_element_set_state (pipe2, GST_STATE_PLAYING);
-  gst_bin_iterate (GST_BIN (pipe2));
+  g_usleep (2 * G_USEC_PER_SEC);
   gst_element_set_state (pipe2, GST_STATE_NULL);
 
   return 0;

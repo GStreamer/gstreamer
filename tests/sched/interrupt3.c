@@ -3,7 +3,7 @@
 int
 main (int argc, char *argv[])
 {
-  GstElement *pipeline, *thread, *queue, *src, *adder, *sink;
+  GstElement *pipeline, *queue, *src, *adder, *sink;
   GstPad *sinkpad;
 
   gst_init (&argc, &argv);
@@ -15,17 +15,14 @@ main (int argc, char *argv[])
   src = gst_element_factory_make ("fakesrc", "src");
   g_object_set (G_OBJECT (src), "sizetype", 2, NULL);
 
-  thread = gst_thread_new ("thread");
-
   queue = gst_element_factory_make ("queue", "queue");
   adder = gst_element_factory_make ("adder", "adder");
   sink = gst_element_factory_make ("fakesink", "sink");
 
-  gst_bin_add (GST_BIN (thread), queue);
-  gst_bin_add (GST_BIN (thread), adder);
-  gst_bin_add (GST_BIN (thread), sink);
-  gst_bin_add (GST_BIN (pipeline), thread);
   gst_bin_add (GST_BIN (pipeline), src);
+  gst_bin_add (GST_BIN (pipeline), queue);
+  gst_bin_add (GST_BIN (pipeline), adder);
+  gst_bin_add (GST_BIN (pipeline), sink);
 
   sinkpad = gst_element_get_request_pad (adder, "sink%d");
 
