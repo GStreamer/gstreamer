@@ -1,3 +1,9 @@
+2005-07-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/mad/gstmad.c: (gst_mad_src_event):
+	  First try forwarding events, makes seeking in AVI files with mp3
+	  audio work again.
+
 2005-07-20  Andy Wingo  <wingo@pobox.com>
 
 	* ext/mpeg2dec/gstmpeg2dec.c (gst_mpeg2dec_sink_event): Signedness
