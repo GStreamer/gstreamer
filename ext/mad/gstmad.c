@@ -787,10 +787,13 @@ gst_mad_src_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
       /* the all-formats seek logic */
     case GST_EVENT_SEEK:
-      if (mad->index)
-        res = index_seek (mad, pad, event);
-      else
-        res = normal_seek (mad, pad, event);
+      gst_event_ref (event);
+      if (!(res = gst_pad_event_default (pad, event))) {
+        if (mad->index)
+          res = index_seek (mad, pad, event);
+        else
+          res = normal_seek (mad, pad, event);
+      }
       break;
 
     default:
