@@ -1,3 +1,11 @@
+2005-07-23  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	* gst/silence/Makefile.am:
+	* gst/silence/gstsilence.h:
+	* gst/silence/gstsilence.c:
+	Ported silence to 0.9 using GstBaseSrc ... 180 lines :)
+
 2005-07-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/mad/gstmad.c: (gst_mad_src_event):
