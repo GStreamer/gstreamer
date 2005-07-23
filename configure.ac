@@ -313,6 +313,7 @@ GST_PLUGINS_ALL="\
 		rtp	\
 		rtsp	\
 		smpte	\
+		silence \
 		udp     \
 		videobox \
 		wavparse \
@@ -595,6 +596,7 @@ gst/realmedia/Makefile
 gst/rtp/Makefile
 gst/rtsp/Makefile
 gst/smpte/Makefile
+gst/silence/Makefile
 gst/udp/Makefile
 gst/videobox/Makefile
 gst/videofilter/Makefile
