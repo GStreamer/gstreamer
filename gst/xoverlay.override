@@ -21,6 +21,4 @@
 %%
 headers
 
-#include <gst/xoverlay/xoverlay.h>
-#undef  GST_X_OVERLAY
-#define GST_X_OVERLAY(obj)      (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_X_OVERLAY, GstXOverlay))
+#include <gst/interfaces/xoverlay.h>

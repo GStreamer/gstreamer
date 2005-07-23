@@ -54,7 +54,7 @@ gst.c: $(GST_DEFS) $(GST_OVERRIDES) $(GEN_FILES)
 
 # GStreamer interfaces bindings
 interfaces_la_CFLAGS = $(common_cflags) $(GST_INTERFACES_CFLAGS) 
-interfaces_la_LIBADD = $(common_libadd) $(GST_INTERFACES_LIBS)
+interfaces_la_LIBADD = $(common_libadd) $(GST_INTERFACES_LIBS) -lgstinterfaces-0.9 
 interfaces_la_LDFLAGS = $(common_ldflags) -export-symbols-regex initinterface
 interfaces_la_SOURCES = interfacesmodule.c
 nodist_interfaces_la_SOURCES = interfaces.c

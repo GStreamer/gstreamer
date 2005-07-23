@@ -29,26 +29,11 @@ headers
 
 #include <gst/gst.h>
 
-/* XXX: Remove this macros in 0.9 */
-#include <gst/colorbalance/colorbalance.h>
-#undef  GST_COLOR_BALANCE
-#define GST_COLOR_BALANCE(obj)  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_COLOR_BALANCE, GstColorBalance))
-
-#include <gst/navigation/navigation.h>
-#undef  GST_NAVIGATION
-#define GST_NAVIGATION(obj)     (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_NAVIGATION, GstNavigation))
-
-#include <gst/propertyprobe/propertyprobe.h>
-#undef  GST_PROPERTY_PROBE
-#define GST_PROPERTY_PROBE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PROPERTY_PROBE, GstPropertyProbe))
-
-#include <gst/tuner/tuner.h>
-#undef  GST_TUNER
-#define GST_TUNER(obj)          (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TUNER, GstTuner))
-
-#include <gst/mixer/mixer.h>
-#undef  GST_MIXER
-#define GST_MIXER(obj)          (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MIXER, GstMixer))
+#include <gst/interfaces/colorbalance.h>
+#include <gst/interfaces/navigation.h>
+#include <gst/interfaces/propertyprobe.h>
+#include <gst/interfaces/tuner.h>
+#include <gst/interfaces/mixer.h>
 
 %%
 modulename gst.interfaces

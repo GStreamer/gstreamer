@@ -1,3 +1,13 @@
+2005-07-23  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/interfaces.defs:
+	* gst/interfaces.override:
+	* gst/xoverlay.override:
+	It seems that, somewhere along the way, I forgot to make sure interfaces
+	were binded too :)
+
 2005-07-21  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstmessage.override:
