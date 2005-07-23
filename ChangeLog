@@ -1,3 +1,9 @@
+2005-07-24  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_to_codecid):
+	  Add x264 to muxer (it was added to template, but I forgot to add
+	  h264 caps recognition for some reason).
+
 2005-07-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c:

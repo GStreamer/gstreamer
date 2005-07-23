@@ -1841,6 +1841,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
   } else if (!strcmp (mimetype, "audio/x-amrwb")) {
     id = CODEC_ID_AMR_WB;
     audio = TRUE;
+  } else if (!strcmp (mimetype, "video/x-h264")) {
+    id = CODEC_ID_H264;
+    video = TRUE;
   } else if (!strncmp (mimetype, "audio/x-gst_ff-", 15) ) {
     gchar ext[16];
     AVCodec *codec;
