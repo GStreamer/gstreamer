@@ -1,8 +1,5 @@
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+#include "tools.h"
 
-#include <gst/gst.h>
 #include <gst/control/control.h>
 #include <string.h>
 #include <locale.h>
@@ -863,17 +860,19 @@ main (int argc, char *argv[])
   GstPlugin *plugin;
   gchar *so;
   struct poptOption options[] = {
+    GST_TOOLS_POPT_VERSION,
     {"gst-inspect-plugin", 'p', POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL, 0,
-        "Show plugin details", NULL},
+        N_("Show plugin details"), NULL},
     {"gst-inspect-scheduler", 's', POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL,
           0,
-        "Show scheduler details", NULL},
+        N_("Show scheduler details"), NULL},
     POPT_TABLEEND
   };
 
   setlocale (LC_ALL, "");
 
   gst_init_with_popt_table (&argc, &argv, options);
+  gst_tools_print_version ("gst-xmlinspect-0.8");
   gst_control_init (&argc, &argv);
 
   PUT_STRING (0, "<?xml version=\"1.0\"?>");

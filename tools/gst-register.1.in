@@ -40,6 +40,9 @@ Use SCHEDULER as the default scheduler
 .TP 8
 .B  \-\-gst\-registry=REGISTRY
 Use the file REGISTRY as registry instead of the default
+.TP 8
+.B  \-\-version
+Show version information and exit.
 
 .SH FILES
 .TP 8

@@ -55,6 +55,9 @@ Enable printout of errors while loading \fIGStreamer\fP plugins
 .TP 8
 .B  \-\-gst\-plugin\-path=PATH
 Add directories separated with ':' to the plugin search path
+.TP 8
+.B  \-\-version
+Show version information and exit.
 .SH "SEE ALSO"
 .BR gst\-launch (1),
 .BR gst\-register (1),

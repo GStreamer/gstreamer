@@ -1,10 +1,7 @@
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+#include "tools.h"
 
 #include <string.h>
 #include <stdlib.h>
-#include <gst/gst.h>
 #include <locale.h>
 
 static guint64 iterations = 0;
@@ -53,6 +50,7 @@ main (int argc, char *argv[])
   gboolean verbose = FALSE;
   gchar *exclude_args = NULL;
   struct poptOption options[] = {
+    GST_TOOLS_POPT_VERSION,
     {"verbose", 'v', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &verbose, 0,
         "do not output status information", NULL},
     POPT_TABLEEND
@@ -69,6 +67,7 @@ main (int argc, char *argv[])
   setlocale (LC_ALL, "");
 
   gst_init_with_popt_table (&argc, &argv, options);
+  gst_tools_print_version ("gst-md5sum-0.8");
 
   /* make a parseable argvn array */
   argvn = g_new0 (char *, argc);

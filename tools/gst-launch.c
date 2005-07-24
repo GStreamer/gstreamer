@@ -21,14 +21,13 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
 
 /* FIXME: hack alert */
 #ifdef _MSC_VER
 #define DISABLE_FAULT_HANDLER
 #endif
+
+#include "tools.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -40,9 +39,6 @@
 #include <sys/wait.h>
 #endif
 #include <locale.h>             /* for LC_ALL */
-#include "gst/gst-i18n-app.h"
-
-#include <gst/gst.h>
 
 /* FIXME: This is just a temporary hack.  We should have a better
  * check for siginfo handling. */
@@ -408,6 +404,7 @@ main (int argc, char *argv[])
   gchar *savefile = NULL;
   gchar *exclude_args = NULL;
   struct poptOption options[] = {
+    GST_TOOLS_POPT_VERSION,
     {"tags", 't', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &tags, 0,
         N_("Output tags (also known as metadata)"), NULL},
     {"verbose", 'v', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &verbose, 0,
@@ -442,6 +439,7 @@ main (int argc, char *argv[])
   gst_alloc_trace_set_flags_all (GST_ALLOC_TRACE_LIVE);
 
   gst_init_with_popt_table (&argc, &argv, options);
+  gst_tools_print_version ("gst-launch-0.8");
 
   /* FIXpopt: strip short args, too. We do it ourselves for now */
   j = 1;

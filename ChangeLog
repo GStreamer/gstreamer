@@ -1,3 +1,25 @@
+2005-07-24  Benjamin Otte  <otte@gnome.org>
+
+	* po/POTFILES.in:
+	* tools/Makefile.am:
+	* tools/tools.h:
+	  add tools.h for common stuff of all our tools. Currently does what's
+	  necessary for the --version command line switch.
+	* tools/gst-compprep.c: (main):
+	* tools/gst-inspect.c: (main):
+	* tools/gst-launch.1.in:
+	* tools/gst-launch.c: (main):
+	* tools/gst-md5sum.1.in:
+	* tools/gst-md5sum.c: (main):
+	* tools/gst-register.1.in:
+	* tools/gst-register.c: (main):
+	* tools/gst-typefind.1.in:
+	* tools/gst-typefind.c: (main):
+	* tools/gst-xmlinspect.1.in:
+	* tools/gst-xmlinspect.c: (main):
+	* tools/gst-xmllaunch.1.in:
+	  add and document --version switch to all tools.
+
 2005-07-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstelement.c:

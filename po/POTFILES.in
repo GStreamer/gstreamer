@@ -16,3 +16,4 @@ gst/parse/grammar.y
 tools/gst-inspect.c
 tools/gst-launch.c
 tools/gst-register.c
+tools/tools.h

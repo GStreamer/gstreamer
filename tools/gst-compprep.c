@@ -1,10 +1,5 @@
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
-
+#include "tools.h"
 #include <locale.h>
-
-#include <gst/gst.h>
 
 GST_DEBUG_CATEGORY_STATIC (debug_compprep);
 #define GST_CAT_DEFAULT debug_compprep
@@ -33,10 +28,15 @@ main (int argc, char *argv[])
   GstPadTemplate *padtemplate;
   GParamSpec **property_specs;
   guint num_properties, i;
+  struct poptOption options[] = {
+    GST_TOOLS_POPT_VERSION,
+    POPT_TABLEEND
+  };
 
   setlocale (LC_ALL, "");
 
-  gst_init (&argc, &argv);
+  gst_init_with_popt_table (&argc, &argv, options);
+  gst_tools_print_version ("gst-compprep-0.8");
   GST_DEBUG_CATEGORY_INIT (debug_compprep, "compprep", GST_DEBUG_BOLD,
       "gst-compprep application");
 

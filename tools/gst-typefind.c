@@ -1,11 +1,8 @@
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+#include "tools.h"
 
 #include <string.h>
 #include <stdlib.h>
 #include <locale.h>
-#include <gst/gst.h>
 
 /*
  * find the type of a media file and display it's properties
@@ -37,10 +34,15 @@ main (int argc, char *argv[])
   guint i = 1;
   GstElement *pipeline;
   GstElement *source, *typefind;
+  struct poptOption options[] = {
+    GST_TOOLS_POPT_VERSION,
+    POPT_TABLEEND
+  };
 
   setlocale (LC_ALL, "");
 
-  gst_init (&argc, &argv);
+  gst_init_with_popt_table (&argc, &argv, options);
+  gst_tools_print_version ("gst-typefind-0.8");
 
   if (argc < 2) {
     g_print ("Please give a filename to typefind\n\n");

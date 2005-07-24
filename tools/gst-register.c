@@ -20,11 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
-
-#include <gst/gst.h>
+#include "tools.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -36,8 +32,6 @@
 #include <string.h>
 #include <errno.h>
 #include <locale.h>
-
-#include "gst/gst-i18n-app.h"
 
 static gint num_features = 0;
 static gint num_plugins = 0;
@@ -82,6 +76,10 @@ main (int argc, char *argv[])
 {
   GList *registries;
   GList *path_spill = NULL;     /* used for path spill from failing registries */
+  struct poptOption options[] = {
+    GST_TOOLS_POPT_VERSION,
+    POPT_TABLEEND
+  };
 
 #ifdef GETTEXT_PACKAGE
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
@@ -91,7 +89,8 @@ main (int argc, char *argv[])
 
   /* Init gst */
   _gst_registry_auto_load = FALSE;
-  gst_init (&argc, &argv);
+  gst_init_with_popt_table (&argc, &argv, options);
+  gst_tools_print_version ("gst-register-0.8");
 
   registries = gst_registry_pool_list ();
   registries = g_list_reverse (registries);

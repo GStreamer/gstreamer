@@ -21,14 +21,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
-
-#include <gst/gst.h>
+#include "tools.h"
 #include <gst/control/control.h>
-
-#include "gst/gst-i18n-app.h"
 
 #include <string.h>
 #include <locale.h>
@@ -1164,6 +1158,7 @@ main (int argc, char *argv[])
 {
   gboolean print_all = FALSE;
   struct poptOption options[] = {
+    GST_TOOLS_POPT_VERSION,
     {"print-all", 'a', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &print_all, 0,
         N_("Print all elements"), NULL},
     POPT_TABLEEND
@@ -1176,6 +1171,7 @@ main (int argc, char *argv[])
 #endif
 
   gst_init_with_popt_table (&argc, &argv, options);
+  gst_tools_print_version ("gst-inspect-0.8");
   gst_control_init (&argc, &argv);
 
   if (print_all && argc > 2) {

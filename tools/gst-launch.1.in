@@ -23,6 +23,9 @@ For a complete description of possible PIPELINE-DESCRIPTIONS see above under
 .B  \-\-help
 Print help synopsis and available FLAGS
 .TP 8
+.B  \-i, \-\-iterations=N
+Stop processing after N iterations.
+.TP 8
 .B  \-v, \-\-silent
 Output status information
 .TP 8
@@ -42,8 +45,8 @@ work.
 .B  \-t, \-\-tags
 Print tags found in the streams, if any.
 .TP 8
-.B  \-i, \-\-iterations=N
-Stop processing after N iterations.
+.B  \-\-version
+Show version information and exit.
 
 .
 .SH "GSTREAMER OPTIONS"

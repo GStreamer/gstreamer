@@ -39,6 +39,8 @@ bin_PROGRAMS = \
 	$(GST_OTHER_SRC) $(GST_OTHER_SRC_V)
 bin_SCRIPTS = gst-feedback-@GST_MAJORMINOR@
 
+noinst_HEADERS = tools.h
+
 # make sure each versioned tool has the right source file and flags
 if !GST_DISABLE_REGISTRY
 gst_register_@GST_MAJORMINOR@_SOURCES = gst-register.c
