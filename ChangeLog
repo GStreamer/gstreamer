@@ -1,5 +1,10 @@
 2005-07-24  Benjamin Otte  <otte@gnome.org>
 
+	* tools/tools.h:
+	  gst_version is unsigned, I need to use gcc 4
+
+2005-07-24  Benjamin Otte  <otte@gnome.org>
+
 	* po/POTFILES.in:
 	* tools/Makefile.am:
 	* tools/tools.h:

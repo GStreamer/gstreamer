@@ -47,13 +47,13 @@ void
 gst_tools_print_version (const char *program)
 {
   if (__gst_tools_version) {
-    gint major, minor, micro;
+    guint major, minor, micro;
     
     gst_version (&major, &minor, &micro);
     g_print ("GStreamer (%s) %s %s\n\n", program, GST_PACKAGE, GST_VERSION);
     g_print ("provided by %s\n", GST_ORIGIN);
     g_print ("release %s\n", GST_VERSION_RELEASE);
-    g_print ("using GStreamer Core Library version %d.%d.%d\n", major, minor, micro);
+    g_print ("using GStreamer Core Library version %u.%u.%u\n", major, minor, micro);
     exit (0);
   }
   g_set_prgname (program);
