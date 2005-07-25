@@ -1,3 +1,10 @@
+2005-07-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/playback/gstplaybin.c: (gen_video_element),
+	(gen_audio_element):
+	  Switch to auto*sink elements as default sinks; add volume element
+	  so that volume control in totem works.
+
 2005-07-21  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstplaybasebin.c: (gen_preroll_element):

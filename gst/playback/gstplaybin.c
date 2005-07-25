@@ -394,7 +394,7 @@ gen_video_element (GstPlayBin * play_bin)
   if (play_bin->video_sink) {
     sink = play_bin->video_sink;
   } else {
-    sink = gst_element_factory_make ("xvimagesink", "videosink");
+    sink = gst_element_factory_make ("autovideosink", "videosink");
   }
   gst_object_ref (sink);
   g_hash_table_insert (play_bin->cache, "video_sink", sink);
@@ -508,7 +508,7 @@ gen_audio_element (GstPlayBin * play_bin)
   if (play_bin->audio_sink) {
     sink = play_bin->audio_sink;
   } else {
-    sink = gst_element_factory_make ("alsasink", "audiosink");
+    sink = gst_element_factory_make ("autoaudiosink", "audiosink");
     play_bin->audio_sink = GST_ELEMENT (gst_object_ref (sink));
   }
 
@@ -517,12 +517,12 @@ gen_audio_element (GstPlayBin * play_bin)
 
   gst_bin_add (GST_BIN (element), conv);
   //gst_bin_add (GST_BIN (element), scale);
-  //gst_bin_add (GST_BIN (element), volume);
+  gst_bin_add (GST_BIN (element), volume);
   gst_bin_add (GST_BIN (element), sink);
 
   gst_element_link_pads (conv, "src",   /*scale, "sink");
-                                           gst_element_link_pads (scale, "src", volume, "sink");
-                                           gst_element_link_pads (volume, "src", */ sink, "sink");
+                                           gst_element_link_pads (scale, "src", */ volume, "sink");
+  gst_element_link_pads (volume, "src", sink, "sink");
 
   pad = gst_element_get_pad (conv, "sink");
   gst_element_add_ghost_pad (element, pad, "sink");
