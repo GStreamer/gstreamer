@@ -51,6 +51,13 @@
   (gtype-id "GST_TYPE_PAD")
 )
 
+(define-object GhostPad
+  (in-module "Gst")
+  (parent "GstPad")
+  (c-name "GstGhostPad")
+  (gtype-id "GST_TYPE_GHOST_PAD")
+)
+
 (define-object PadTemplate
   (in-module "Gst")
   (parent "GstObject")

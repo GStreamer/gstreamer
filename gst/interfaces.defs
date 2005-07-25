@@ -32,6 +32,31 @@
   )
 )
 
+(define-flags MixerTrackFlags
+  (in-module "Gst")
+  (c-name "GstMixerTrackFlags")
+  (gtype-id "GST_TYPE_MIXER_TRACK_FLAGS")
+  (values
+    '("input" "GST_MIXER_TRACK_INPUT")
+    '("output" "GST_MIXER_TRACK_OUTPUT")
+    '("mute" "GST_MIXER_TRACK_MUTE")
+    '("record" "GST_MIXER_TRACK_RECORD")
+    '("master" "GST_MIXER_TRACK_MASTER")
+    '("software" "GST_MIXER_TRACK_SOFTWARE")
+  )
+)
+
+(define-flags TunerChannelFlags
+  (in-module "Gst")
+  (c-name "GstTunerChannelFlags")
+  (gtype-id "GST_TYPE_TUNER_CHANNEL_FLAGS")
+  (values
+    '("input" "GST_TUNER_CHANNEL_INPUT")
+    '("output" "GST_TUNER_CHANNEL_OUTPUT")
+    '("frequency" "GST_TUNER_CHANNEL_FREQUENCY")
+    '("audio" "GST_TUNER_CHANNEL_AUDIO")
+  )
+)
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/colorbalance/colorbalance.h
 
@@ -525,6 +550,13 @@
      '("gint" "min_volume")
      '("gint" "max_volume")
     )
+)
+
+(define-object MixerOptions
+  (in-module "Gst")
+  (parent "GstMixerTrack")
+  (c-name "GstMixerOptions")
+  (gtype-id "GST_TYPE_MIXER_OPTIONS")
 )
 
 (define-interface Navigation
