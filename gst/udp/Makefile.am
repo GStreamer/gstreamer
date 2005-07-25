@@ -14,8 +14,8 @@ BUILT_SOURCES = $(built_sources) $(built_headers)
 
 libgstudp_la_SOURCES = gstudp.c gstudpsrc.c gstudpsink.c gstmultiudpsink.c gstdynudpsink.c
 libgstudp_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
-libgstudp_la_LIBADD =
-libgstudp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstnet-0.9
+libgstudp_la_LIBADD = $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstnet-0.9
+libgstudp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 nodist_libgstudp_la_SOURCES = \
         $(built_sources)
