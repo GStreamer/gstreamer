@@ -48,8 +48,8 @@ BuildRequires:  XFree86-devel
 @USE_ESD_TRUE@Provides:		gstreamer-audiosink
 # @USE_FLAC_TRUE@Requires:      flac >= 1.0.3
 # @USE_FLAC_TRUE@BuildRequires: flac-devel >= 1.0.3
-# @USE_GCONF_TRUE@Requires: 	GConf2
-# @USE_GCONF_TRUE@BuildRequires: 	GConf2-devel
+@USE_GCONF_TRUE@Requires: 	GConf2
+@USE_GCONF_TRUE@BuildRequires: 	GConf2-devel
 # @USE_GNOME_VFS_TRUE@Requires:      gnome-vfs2 > 1.9.4.00
 # @USE_GNOME_VFS_TRUE@BuildRequires: gnome-vfs2-devel > 1.9.4.00
 # @USE_HERMES_TRUE@Requires:      Hermes >= 1.3.0
@@ -60,7 +60,7 @@ BuildRequires:  XFree86-devel
 # @USE_LIBPNG_TRUE@BuildRequires: libpng-devel >= 1.2.0
 # @USE_MIKMOD_TRUE@Requires:      mikmod
 # @USE_MIKMOD_TRUE@BuildRequires: mikmod
-# @USE_OSS_TRUE@BuildRequires: glibc-devel
+@USE_OSS_TRUE@BuildRequires: glibc-devel
 # @USE_PANGO_TRUE@Requires:        pango
 # @USE_PANGO_TRUE@BuildRequires:   pango-devel
 # @USE_RAW1394_TRUE@Requires:      libraw1394
@@ -136,6 +136,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstavi.so
 %{_libdir}/gstreamer-%{majorminor}/libgstlevel.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideobox.so
+%{_libdir}/gstreamer-%{majorminor}/libgstfdsrc.so
+%{_libdir}/gstreamer-%{majorminor}/libgstwavparse.so
+%{_libdir}/gstreamer-%{majorminor}/libgstautodetect.so
+%{_libdir}/gstreamer-%{majorminor}/libgstsilence.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvideoflip.so
 
 # gstreamer-plugins with external dependencies but in the main package
 # @USE_ARTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstarts.so
@@ -145,7 +150,6 @@ rm -rf $RPM_BUILD_ROOT
 @USE_ESD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstesd.so
 # @USE_POLYP_TRUE@%{_libdir}/gstreamer-%{majorminor}/libpolypaudio.so
 # @USE_FLAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstflac.so
-# @USE_GNOME_VFS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgnomevfs.so
 # @USE_HERMES_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsthermescolorspace.so
 # @USE_SMOOTHWAVE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsmoothwave.so
 # @USE_JPEG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstjpeg.so
@@ -154,7 +158,7 @@ rm -rf $RPM_BUILD_ROOT
 # @USE_VORBIS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvorbis.so
 # @USE_VORBIS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstogg.so
 # @USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpng.so
-# @USE_OSS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstossaudio.so
+@USE_OSS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstossaudio.so
 # @USE_GST_V4L_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux.so
 ## @USE_RAW1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgst1394.so
 # Snapshot plugin uses libpng
@@ -167,13 +171,12 @@ rm -rf $RPM_BUILD_ROOT
 # @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvimagesink.so
 # @USE_SNDFILE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsndfile.so
 # @USE_MUSICBRAINZ_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttrm.so
-
+@USE_GCONF_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgconfelements.so
 ## Libraries
 %{_libdir}/libgstvideofilter-%{majorminor}.*
+%{_datadir}/locale
 
 %post
-# @USE_GCONF_TRUE@export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
-# @USE_GCONF_TRUE@gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer-%{majorminor}.schemas > /dev/null
 %{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
 
 %package audio
@@ -216,7 +219,7 @@ This package contains additional audio plugins for GStreamer, including
 Summary:        Extra audio plugins for GStreamer
 Group:          Applications/Multimedia
                                                                                 
-# @USE_FAAD_TRUE@BuildRequires:  faad2-devel >= 2.0
+@USE_FAAD_TRUE@BuildRequires:  faad2-devel >= 2.0
 # @USE_GSM_TRUE@BuildRequires:  gsm-devel >= 1.0.10
 # @USE_LAME_TRUE@BuildRequires:  lame-devel >= 3.89
 @USE_MAD_TRUE@BuildRequires:  libid3tag-devel >= 0.15.0
@@ -226,7 +229,7 @@ Requires:       gstreamer09-plugins >= %{gstp_minver}
 Requires(pre):  %{_bindir}/gst-register-%{majorminor}
 Requires(post): %{_bindir}/gst-register-%{majorminor}
                                                                                 
-# @USE_FAAD_TRUE@Provides:      gstreamer-faad = %{version}-%{release}
+@USE_FAAD_TRUE@Provides:      gstreamer-faad = %{version}-%{release}
 # @USE_GSM_TRUE@Provides:       gstreamer-gsm = %{version}-%{release}
 # @USE_LAME_TRUE@Provides:      gstreamer-lame = %{version}-%{release}
 @USE_MAD_TRUE@Provides:       gstreamer-mad = %{version}-%{release}
@@ -245,7 +248,7 @@ This package contains extra audio plugins for GStreamer, including
                                                                                 
 %files extra-audio
 %defattr(-, root, root, -)
-# @USE_FAAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaad.so
+@USE_FAAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaad.so
 # @USE_GSM_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgsm.so
 # @USE_LAME_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstlame.so
 @USE_MAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmad.so
@@ -308,8 +311,8 @@ This package contains additional video plugins for GStreamer, including
 %files video
 %defattr(-, root, root, -)
 @USE_AALIB_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstaasink.so
-# @USE_LIBDV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdvdec.so
-# @USE_DV1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgst1394.so
+@USE_LIBDV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdvdec.so
+@USE_DV1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgst1394.so
 @USE_LIBCACA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcacasink.so
 # @USE_DIRAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdirac.so
 # @USE_OPENGL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstglimagesink.so
@@ -324,7 +327,7 @@ Summary:        Extra video plugins for GStreamer
 Group:          Applications/Multimedia
                                                                                 
 # @USE_LIBFAME_TRUE@BuildRequires:  libfame-devel >= 0.9.0
-# @USE_MPEG2DEC_TRUE@BuildRequires:  mpeg2dec-devel >= 0.4.0
+@USE_MPEG2DEC_TRUE@BuildRequires:  mpeg2dec-devel >= 0.4.0
 # @USE_SWFDEC_TRUE@BuildRequires:  swfdec-devel
                                                                                 
 Requires:       gstreamer09-plugins >= %{gstp_minver}
@@ -333,7 +336,7 @@ Requires(pre):  %{_bindir}/gst-register-%{majorminor}
 Requires(post): %{_bindir}/gst-register-%{majorminor}
                                                                                 
 # @USE_LIBFAME_TRUE@Provides:       gstreamer-libfame = %{version}-%{release}
-# @USE_MPEG2DEC_TRUE@Provides:       gstreamer-mpeg2dec = %{version}-%{release}
+@USE_MPEG2DEC_TRUE@Provides:       gstreamer-mpeg2dec = %{version}-%{release}
 # @USE_SWFDEC_TRUE@Provides:       gstreamer-swfdec = %{version}-%{release}
                                                                                 
 %description extra-video
@@ -350,7 +353,7 @@ This package contains extra video plugins for GStreamer, including
 %files extra-video
 %defattr(-, root, root, -)
 # @USE_LIBFAME_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstlibfame.so
-# @USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2dec.so
+@USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2dec.so
 # @USE_SWFDEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstswfdec.so
 
 # Here are packages not in the base plugins package but not dependant
