@@ -1,3 +1,9 @@
+2005-07-25  Christian Schaller  <uraeus@gnome.org>
+
+
+	* gst-plugins.spec.in: add silence and videoflip
+	* gst/videofilter/Makefile.am: add missing header to noinst
+
 2005-07-25  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/videofilter/Makefile.am:
