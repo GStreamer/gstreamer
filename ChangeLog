@@ -1,3 +1,13 @@
+2005-07-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstpad.c: (fixate_value), (gst_pad_default_fixate),
+	(gst_pad_fixate_caps):
+	  Implement default fixation once again, so that gst_pad_fixate()
+	  actually does anything at all. This probably needs to be some
+	  sort of a last resort, and use profile-based fixation first, but
+	  since that doesn't exist yet, this is the best we have. Fixes
+	  visualization in Totem.
+
 2005-07-22  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-events.txt:

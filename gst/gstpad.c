@@ -1719,6 +1719,64 @@ was_dispatching:
   }
 }
 
+static gboolean
+fixate_value (GValue * dest, const GValue * src)
+{
+  if (G_VALUE_TYPE (src) == GST_TYPE_INT_RANGE) {
+    g_value_init (dest, G_TYPE_INT);
+    g_value_set_int (dest, gst_value_get_int_range_min (src));
+  } else if (G_VALUE_TYPE (src) == GST_TYPE_DOUBLE_RANGE) {
+    g_value_init (dest, G_TYPE_DOUBLE);
+    g_value_set_double (dest, gst_value_get_double_range_min (src));
+  } else if (G_VALUE_TYPE (src) == GST_TYPE_LIST) {
+    GValue temp = { 0 };
+
+    gst_value_init_and_copy (&temp, gst_value_list_get_value (src, 0));
+    if (!fixate_value (dest, &temp))
+      gst_value_init_and_copy (dest, &temp);
+    g_value_unset (&temp);
+  } else if (G_VALUE_TYPE (src) == GST_TYPE_ARRAY) {
+    gboolean res = FALSE;
+    gint n;
+
+    g_value_init (dest, GST_TYPE_ARRAY);
+    for (n = 0; n < gst_value_list_get_size (src); n++) {
+      GValue kid = { 0 };
+      const GValue *orig_kid = gst_value_list_get_value (src, n);
+
+      if (!fixate_value (&kid, orig_kid))
+        gst_value_init_and_copy (&kid, orig_kid);
+      else
+        res = TRUE;
+      gst_value_list_append_value (dest, &kid);
+      g_value_unset (&kid);
+    }
+
+    if (!res)
+      g_value_unset (dest);
+
+    return res;
+  } else {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_pad_default_fixate (GQuark field_id, const GValue * value, gpointer data)
+{
+  GstStructure *s = data;
+  GValue v = { 0 };
+
+  if (fixate_value (&v, value)) {
+    gst_structure_id_set_value (s, field_id, &v);
+    g_value_unset (&v);
+  }
+
+  return TRUE;
+}
+
 /**
  * gst_pad_fixate_caps:
  * @pad: a  #GstPad to fixate
@@ -1731,6 +1789,7 @@ void
 gst_pad_fixate_caps (GstPad * pad, GstCaps * caps)
 {
   GstPadFixateCapsFunction fixatefunc;
+  gint n;
 
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (caps != NULL);
@@ -1738,6 +1797,13 @@ gst_pad_fixate_caps (GstPad * pad, GstCaps * caps)
   fixatefunc = GST_PAD_FIXATECAPSFUNC (pad);
   if (fixatefunc) {
     fixatefunc (pad, caps);
+  }
+
+  /* default fixation */
+  for (n = 0; n < gst_caps_get_size (caps); n++) {
+    GstStructure *s = gst_caps_get_structure (caps, n);
+
+    gst_structure_foreach (s, gst_pad_default_fixate, s);
   }
 }
 
