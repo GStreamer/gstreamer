@@ -1,3 +1,19 @@
+2005-07-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/videofilter/Makefile.am:
+	* gst/videofilter/gstgamma.c: (gst_gamma_setup):
+	* gst/videofilter/gstvideobalance.c: (gst_videobalance_setup):
+	* gst/videofilter/gstvideofilter.c: (gst_videofilter_class_init),
+	(gst_videofilter_getcaps), (gst_videofilter_setcaps),
+	(gst_videofilter_init), (gst_videofilter_chain),
+	(gst_videofilter_set_property), (gst_videofilter_get_property),
+	(gst_videofilter_setup), (gst_videofilter_class_add_pad_templates):
+	* gst/videofilter/gstvideofilter.h:
+	* gst/videofilter/gstvideoflip.c: (gst_videoflip_init),
+	(gst_videoflip_set_property), (gst_videoflip_get_property),
+	(plugin_init), (gst_videoflip_setup), (gst_videoflip_planar411):
+	  forward port from 0.9 and enable videoflip now that it works
+
 2005-07-23  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:

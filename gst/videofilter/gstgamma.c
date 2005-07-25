@@ -274,10 +274,11 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "gamma",
     "Changes gamma on video images",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN);
 
 
-     static void gst_gamma_setup (GstVideofilter * videofilter)
+static void
+gst_gamma_setup (GstVideofilter * videofilter)
 {
   GstGamma *gamma;
 
