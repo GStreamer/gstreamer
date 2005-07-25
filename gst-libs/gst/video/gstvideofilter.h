@@ -97,6 +97,7 @@ void gst_videofilter_set_output_size(GstVideofilter *videofilter,
 GstVideofilterFormat *gst_videofilter_find_format_by_structure (GstVideofilter *filter,
     const GstStructure *structure);
 GstCaps *gst_videofilter_class_get_capslist(GstVideofilterClass *videofilterclass);
+void gst_videofilter_setup (GstVideofilter * videofilter);
 
 void gst_videofilter_class_add_format(GstVideofilterClass *videofilterclass,
     GstVideofilterFormat *format);
