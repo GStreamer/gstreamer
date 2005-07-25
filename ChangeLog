@@ -1,5 +1,10 @@
 2005-07-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/vorbis/vorbisdec.c: (vorbis_handle_comment_packet):
+	  Report bitrate.
+
+2005-07-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/playback/gstplaybin.c: (gen_video_element),
 	(gen_audio_element):
 	  Switch to auto*sink elements as default sinks; add volume element

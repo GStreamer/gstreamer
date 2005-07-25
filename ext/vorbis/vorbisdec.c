@@ -401,6 +401,7 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
 static GstFlowReturn
 vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
 {
+  guint bitrate = 0;
   gchar *encoder = NULL;
   GstMessage *message;
   GstTagList *list;
@@ -429,15 +430,27 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
   gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
       GST_TAG_ENCODER_VERSION, vd->vi.version,
       GST_TAG_AUDIO_CODEC, "Vorbis", NULL);
-  if (vd->vi.bitrate_upper > 0)
-    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-        GST_TAG_MAXIMUM_BITRATE, (guint) vd->vi.bitrate_upper, NULL);
-  if (vd->vi.bitrate_nominal > 0)
+  if (vd->vi.bitrate_nominal > 0) {
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
         GST_TAG_NOMINAL_BITRATE, (guint) vd->vi.bitrate_nominal, NULL);
-  if (vd->vi.bitrate_lower > 0)
+    bitrate = vd->vi.bitrate_nominal;
+  }
+  if (vd->vi.bitrate_upper > 0) {
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+        GST_TAG_MAXIMUM_BITRATE, (guint) vd->vi.bitrate_upper, NULL);
+    if (!bitrate)
+      bitrate = vd->vi.bitrate_upper;
+  }
+  if (vd->vi.bitrate_lower > 0) {
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
         GST_TAG_MINIMUM_BITRATE, (guint) vd->vi.bitrate_lower, NULL);
+    if (!bitrate)
+      bitrate = vd->vi.bitrate_lower;
+  }
+  if (bitrate) {
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+        GST_TAG_BITRATE, (guint) bitrate, NULL);
+  }
 
   message = gst_message_new_tag ((GstObject *) vd, list);
   gst_element_post_message (GST_ELEMENT (vd), message);
