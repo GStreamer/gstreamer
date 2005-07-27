@@ -481,8 +481,8 @@ gst_ffmpegmux_loop (GstElement * element)
     ffmpegmux->context->streams[bufnum]->codec->frame_number++;
 
     /* set time */
-    pkt.pts = av_rescale_q (GST_BUFFER_TIMESTAMP (buf),
-        bq, ffmpegmux->context->streams[bufnum]->time_base);
+    pkt.pts = gst_ffmpeg_time_gst_to_ff (GST_BUFFER_TIMESTAMP (buf),
+        ffmpegmux->context->streams[bufnum]->time_base);
     pkt.dts = pkt.pts;
     pkt.data = GST_BUFFER_DATA (buf);
     pkt.size = GST_BUFFER_SIZE (buf);

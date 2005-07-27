@@ -132,4 +132,37 @@ gst_ffmpeg_img_convert (AVPicture * dst, int dst_pix_fmt,
 			const AVPicture * src, int src_pix_fmt,
 			int src_width, int src_height);
 
+/*
+ * Convert from/to a GStreamer <-> FFMpeg timestamp.
+ */
+static inline guint64
+gst_ffmpeg_time_ff_to_gst (gint64 pts, AVRational base)
+{
+  guint64 out;
+
+  if (pts == AV_NOPTS_VALUE){
+    out = GST_CLOCK_TIME_NONE;
+  } else {
+    AVRational bq = { 1, GST_SECOND };
+    out = av_rescale_q (pts, base, bq);
+  }
+
+  return out;
+}
+
+static inline gint64
+gst_ffmpeg_time_gst_to_ff (guint64 time, AVRational base)
+{
+  gint64 out;
+
+  if (!GST_CLOCK_TIME_IS_VALID (time)) {
+    out = AV_NOPTS_VALUE;
+  } else {
+    AVRational bq;
+    out = av_rescale_q (time, bq, base);
+  }
+
+  return out;
+}
+
 #endif /* __GST_FFMPEG_CODECMAP_H__ */

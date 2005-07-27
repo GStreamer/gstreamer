@@ -1,3 +1,15 @@
+2005-07-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_connect),
+	(gst_ffmpegdec_frame), (gst_ffmpegdec_chain):
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_loop):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_link),
+	(gst_ffmpegenc_chain_video):
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_loop):
+	  Use special functions for timestamp-conversion again, since we
+	  otherwise don't handle clocktimenone correctly (#311593).
+
 2005-07-24  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_to_codecid):

@@ -655,12 +655,11 @@ gst_ffmpegdemux_loop (GstElement * element)
     memcpy (GST_BUFFER_DATA (outbuf), pkt.data, pkt.size);
     GST_BUFFER_SIZE (outbuf) = pkt.size;
 
-    if (pkt.pts != AV_NOPTS_VALUE) {
-      AVRational bq = { 1, GST_SECOND };
-      GST_BUFFER_TIMESTAMP (outbuf) = av_rescale_q (pkt.pts,
-          demux->context->streams[pkt.stream_index]->time_base, bq);
+    GST_BUFFER_TIMESTAMP (outbuf) =
+        gst_ffmpeg_time_ff_to_gst (pkt.pts,
+          demux->context->streams[pkt.stream_index]->time_base);
+    if (GST_BUFFER_TIMESTAMP_IS_VALID (outbuf))
       demux->last_ts[stream->index] = GST_BUFFER_TIMESTAMP (outbuf);
-    }
 
     if (pkt.flags & PKT_FLAG_KEY)
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_KEY_UNIT);

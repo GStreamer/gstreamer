@@ -453,6 +453,10 @@ gst_ffmpegdec_connect (GstPad * pad, const GstCaps * caps)
   /* get size and so */
   gst_ffmpeg_caps_with_codecid (oclass->in_plugin->id,
       oclass->in_plugin->type, caps, ffmpegdec->context);
+  if (!ffmpegdec->context->time_base.den) {
+    ffmpegdec->context->time_base.num = 1;
+    ffmpegdec->context->time_base.den = 25;
+  }
 
   /* get pixel aspect ratio if it's set */
   structure = gst_caps_get_structure (caps, 0);
@@ -807,7 +811,8 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
             (2 * ffmpegdec->context->channels *
             ffmpegdec->context->sample_rate);
         ffmpegdec->next_ts += GST_BUFFER_DURATION (outbuf);
-        *in_ts += GST_BUFFER_DURATION (outbuf);
+        if (GST_CLOCK_TIME_IS_VALID (*in_ts))
+          *in_ts += GST_BUFFER_DURATION (outbuf);
       } else if (len > 0 && have_data == 0) {
         /* cache output, because it may be used for caching (in-place) */
         ffmpegdec->last_buffer = outbuf;
@@ -972,10 +977,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
     if (ffmpegdec->pctx) {
       gint res;
       gint64 ffpts;
-      AVRational bq = { 1, 1000000000 };
-      
-      ffpts = av_rescale_q (in_ts, bq, ffmpegdec->context->time_base);
 
+      ffpts = gst_ffmpeg_time_gst_to_ff (in_ts, ffmpegdec->context->time_base);
       res = av_parser_parse (ffmpegdec->pctx, ffmpegdec->context,
           &data, &size, bdata, bsize,
           ffpts, ffpts);
@@ -983,8 +986,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
       GST_DEBUG_OBJECT (ffmpegdec, "Parsed video frame, res=%d, size=%d",
           res, size);
       
-      in_ts = av_rescale_q (in_ts, ffmpegdec->context->time_base, bq);
-
+      in_ts = gst_ffmpeg_time_ff_to_gst (ffmpegdec->pctx->pts,
+          ffmpegdec->context->time_base);
       if (res == 0 || size == 0)
         break;
       else {

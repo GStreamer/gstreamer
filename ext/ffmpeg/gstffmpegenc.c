@@ -385,10 +385,10 @@ gst_ffmpegenc_link (GstPad * pad, const GstCaps * caps)
   /* fetch pix_fmt and so on */
   gst_ffmpeg_caps_with_codectype (oclass->in_plugin->type,
       caps, ffmpegenc->context);
-
-  /* FIXME: prevent nego errors because of fixed-caps */
-  if (!ffmpegenc->context->time_base.den)
-    ffmpegenc->context->time_base.den = DEFAULT_FRAME_RATE_BASE * 25;
+  if (!ffmpegenc->context->time_base.den) {
+    ffmpegenc->context->time_base.den = 25;
+    ffmpegenc->context->time_base.num = 1;
+  }
 
   pix_fmt = ffmpegenc->context->pix_fmt;
 
@@ -480,8 +480,8 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data)
   g_return_if_fail (frame_size == GST_BUFFER_SIZE (inbuf));
 
   ffmpegenc->picture->pts =
-      av_rescale_q (GST_BUFFER_TIMESTAMP (inbuf),
-          bq, ffmpegenc->context->time_base);
+      gst_ffmpeg_time_gst_to_ff (GST_BUFFER_TIMESTAMP (inbuf),
+          ffmpegenc->context->time_base);
 
   outbuf = gst_buffer_new_and_alloc (ffmpegenc->buffer_size);
   ret_size = avcodec_encode_video (ffmpegenc->context,
