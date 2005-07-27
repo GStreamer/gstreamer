@@ -241,26 +241,26 @@ gst_base_transform_getcaps (GstPad * pad)
     GstCaps *temp;
     const GstCaps *templ;
 
-    GST_DEBUG ("peer caps  %" GST_PTR_FORMAT, caps);
+    GST_DEBUG_OBJECT (trans, "peer caps  %" GST_PTR_FORMAT, caps);
 
     /* filtered against our padtemplate */
     templ = gst_pad_get_pad_template_caps (otherpad);
-    GST_DEBUG ("our template  %" GST_PTR_FORMAT, templ);
+    GST_DEBUG_OBJECT (trans, "our template  %" GST_PTR_FORMAT, templ);
     temp = gst_caps_intersect (caps, templ);
-    GST_DEBUG ("intersected %" GST_PTR_FORMAT, temp);
+    GST_DEBUG_OBJECT (trans, "intersected %" GST_PTR_FORMAT, temp);
     gst_caps_unref (caps);
     /* then see what we can tranform this to */
     caps = gst_base_transform_transform_caps (trans, otherpad, temp);
-    GST_DEBUG ("transformed  %" GST_PTR_FORMAT, caps);
+    GST_DEBUG_OBJECT (trans, "transformed  %" GST_PTR_FORMAT, caps);
     gst_caps_unref (temp);
     if (caps == NULL)
       goto done;
 
     /* and filter against the template again */
     templ = gst_pad_get_pad_template_caps (pad);
-    GST_DEBUG ("our template  %" GST_PTR_FORMAT, templ);
+    GST_DEBUG_OBJECT (trans, "our template  %" GST_PTR_FORMAT, templ);
     temp = gst_caps_intersect (caps, templ);
-    GST_DEBUG ("intersected %" GST_PTR_FORMAT, temp);
+    GST_DEBUG_OBJECT (trans, "intersected %" GST_PTR_FORMAT, temp);
     gst_caps_unref (caps);
     /* this is what we can do */
     caps = temp;
@@ -270,7 +270,7 @@ gst_base_transform_getcaps (GstPad * pad)
   }
 
 done:
-  GST_DEBUG ("returning  %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (trans, "returning  %" GST_PTR_FORMAT, caps);
 
   gst_object_unref (trans);
 
@@ -294,7 +294,7 @@ gst_base_transform_configure_caps (GstBaseTransform * trans, GstCaps * in,
   /* if all goes well, get the size of the output buffer */
   if (ret) {
     trans->out_size = gst_base_transform_get_size (trans);
-    GST_DEBUG ("output buffer size %d", trans->out_size);
+    GST_DEBUG_OBJECT (trans, "output buffer size %d", trans->out_size);
   }
   return ret;
 }
@@ -329,21 +329,23 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
   if (!gst_caps_is_fixed (othercaps)) {
     GstCaps *temp;
 
-    GST_DEBUG ("transform returned non fixed  %" GST_PTR_FORMAT, othercaps);
+    GST_DEBUG_OBJECT (trans,
+        "transform returned non fixed  %" GST_PTR_FORMAT, othercaps);
 
     temp = gst_caps_intersect (othercaps, caps);
-    GST_DEBUG ("intersect returned %" GST_PTR_FORMAT, temp);
+    GST_DEBUG_OBJECT (trans, "intersect returned %" GST_PTR_FORMAT, temp);
     if (temp) {
       if (!gst_caps_is_empty (temp) && otherpeer) {
-        GST_DEBUG ("try passthrough with %" GST_PTR_FORMAT, caps);
+        GST_DEBUG_OBJECT (trans, "try passthrough with %" GST_PTR_FORMAT, caps);
         /* try passthrough. we know it's fixed, because caps is fixed */
         if (gst_pad_accept_caps (otherpeer, caps)) {
-          GST_DEBUG ("peer accepted %" GST_PTR_FORMAT, caps);
+          GST_DEBUG_OBJECT (trans, "peer accepted %" GST_PTR_FORMAT, caps);
           gst_caps_unref (othercaps);
           othercaps = gst_caps_ref (caps);
           /* will fall though. calls accept_caps again, should fix that. */
         } else {
-          GST_DEBUG ("peer did not accept %" GST_PTR_FORMAT, caps);
+          GST_DEBUG_OBJECT (trans,
+              "peer did not accept %" GST_PTR_FORMAT, caps);
         }
       }
       gst_caps_unref (temp);
@@ -355,7 +357,7 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
     GstCaps *peercaps;
     GstCaps *intersect;
 
-    GST_DEBUG ("othercaps now %" GST_PTR_FORMAT, othercaps);
+    GST_DEBUG_OBJECT (trans, "othercaps now %" GST_PTR_FORMAT, othercaps);
 
     peercaps = gst_pad_get_caps (otherpeer);
     intersect = gst_caps_intersect (peercaps, othercaps);
@@ -363,13 +365,15 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
     gst_caps_unref (othercaps);
     othercaps = intersect;
 
-    GST_DEBUG ("filtering against peer yields %" GST_PTR_FORMAT, othercaps);
+    GST_DEBUG_OBJECT (trans,
+        "filtering against peer yields %" GST_PTR_FORMAT, othercaps);
   }
 
   if (!gst_caps_is_fixed (othercaps)) {
     GstCaps *temp;
 
-    GST_DEBUG ("othercaps now, trying to fixate %" GST_PTR_FORMAT, othercaps);
+    GST_DEBUG_OBJECT (trans,
+        "othercaps now, trying to fixate %" GST_PTR_FORMAT, othercaps);
 
     /* take first possibility and fixate if necessary */
     temp = gst_caps_copy_nth (othercaps, 0);
@@ -377,7 +381,7 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
     othercaps = temp;
     gst_pad_fixate_caps (otherpad, othercaps);
 
-    GST_DEBUG ("after fixating %" GST_PTR_FORMAT, othercaps);
+    GST_DEBUG_OBJECT (trans, "after fixating %" GST_PTR_FORMAT, othercaps);
   }
 
   /* caps should be fixed now */
@@ -388,13 +392,13 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
   if (otherpeer && !gst_pad_accept_caps (otherpeer, othercaps))
     goto peer_no_accept;
 
-  GST_DEBUG ("got final caps %" GST_PTR_FORMAT, othercaps);
+  GST_DEBUG_OBJECT (trans, "got final caps %" GST_PTR_FORMAT, othercaps);
 
   /* we know this will work, we implement the setcaps */
   gst_pad_set_caps (otherpad, othercaps);
 
   trans->in_place = gst_caps_is_equal (caps, othercaps);
-  GST_DEBUG ("in_place: %d", trans->in_place);
+  GST_DEBUG_OBJECT (trans, "in_place: %d", trans->in_place);
 
   /* see if we have to configure the element now */
   if (!trans->delay_configure) {
@@ -417,19 +421,20 @@ done:
   /* ERRORS */
 no_transform:
   {
-    GST_DEBUG ("transform returned useless  %" GST_PTR_FORMAT, othercaps);
+    GST_DEBUG_OBJECT (trans,
+        "transform returned useless  %" GST_PTR_FORMAT, othercaps);
     ret = FALSE;
     goto done;
   }
 could_not_fixate:
   {
-    GST_DEBUG ("FAILED to fixate %" GST_PTR_FORMAT, othercaps);
+    GST_DEBUG_OBJECT (trans, "FAILED to fixate %" GST_PTR_FORMAT, othercaps);
     ret = FALSE;
     goto done;
   }
 peer_no_accept:
   {
-    GST_DEBUG ("FAILED to get peer of %" GST_PTR_FORMAT
+    GST_DEBUG_OBJECT (trans, "FAILED to get peer of %" GST_PTR_FORMAT
         " to accept %" GST_PTR_FORMAT, otherpad, othercaps);
     ret = FALSE;
     goto done;
@@ -445,7 +450,7 @@ gst_base_transform_get_size (GstBaseTransform * trans)
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
   if (bclass->get_size) {
     res = bclass->get_size (trans);
-    GST_DEBUG ("get size function returned %d", res);
+    GST_DEBUG_OBJECT (trans, "get size function returned %d", res);
   }
 
   return res;
@@ -595,7 +600,7 @@ no_size:
 no_buffer:
   {
     gst_buffer_unref (inbuf);
-    GST_DEBUG ("could not get buffer from pool");
+    GST_DEBUG_OBJECT (trans, "could not get buffer from pool");
     return ret;
   }
 }

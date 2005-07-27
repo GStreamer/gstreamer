@@ -1,3 +1,10 @@
+2005-07-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/base/gstbasetransform.c: (gst_base_transform_getcaps),
+	(gst_base_transform_configure_caps), (gst_base_transform_setcaps),
+	(gst_base_transform_get_size), (gst_base_transform_handle_buffer):
+	  Make debugging actually useful.
+
 2005-07-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstpad.c: (fixate_value), (gst_pad_default_fixate),
