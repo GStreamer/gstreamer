@@ -273,13 +273,20 @@ static gboolean
 gst_fake_sink_event (GstBaseSink * bsink, GstEvent * event)
 {
   GstFakeSink *sink = GST_FAKE_SINK (bsink);
+  const GstStructure *s;
 
   if (!sink->silent) {
+    gchar *sstr;
+
     g_free (sink->last_message);
 
+    s = gst_event_get_structure (event);
+    sstr = gst_structure_to_string (s);
+
     sink->last_message =
-        g_strdup_printf ("event   ******* E (type: %d) %p",
-        GST_EVENT_TYPE (event), event);
+        g_strdup_printf ("event   ******* E (type: %d, %s) %p",
+        GST_EVENT_TYPE (event), sstr, event);
+    g_free (sstr);
 
     g_object_notify (G_OBJECT (sink), "last_message");
   }

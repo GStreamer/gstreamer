@@ -804,48 +804,6 @@ gst_tag_list_foreach (GstTagList * list, GstTagForeachFunc func,
       &data);
 }
 
-/***** tag events *****/
-
-/**
- * gst_event_new_tag:
- * @list: the tag list to put into the event or NULL for an empty list
- *
- * Creates a new tag event with the given list and takes ownership of it.
- *
- * Returns: a new tag event
- */
-GstEvent *
-gst_event_new_tag (GstTagList * list)
-{
-  GstEvent *ret;
-
-  g_return_val_if_fail (list == NULL || GST_IS_TAG_LIST (list), NULL);
-
-  ret = gst_event_new (GST_EVENT_TAG);
-  if (!list)
-    list = gst_tag_list_new ();
-  ret->event_data.structure.structure = (GstStructure *) list;
-
-  return ret;
-}
-
-/**
- * gst_event_tag_get_list:
- * @tag_event: a tagging #GstEvent
- *
- * Gets the taglist from a given tagging event.
- *
- * Returns: The #GstTagList of the event
- */
-GstTagList *
-gst_event_tag_get_list (GstEvent * tag_event)
-{
-  g_return_val_if_fail (GST_IS_EVENT (tag_event), NULL);
-  g_return_val_if_fail (GST_EVENT_TYPE (tag_event) == GST_EVENT_TAG, NULL);
-
-  return GST_TAG_LIST (tag_event->event_data.structure.structure);
-}
-
 /**
  * gst_tag_list_get_value_index:
  * @list: a #GStTagList

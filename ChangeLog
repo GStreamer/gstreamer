@@ -1,3 +1,71 @@
+2005-07-27  Wim Taymans  <wim@fluendo.com>
+
+	* CHANGES-0.9:
+	* docs/design/part-TODO.txt:
+	* docs/design/part-events.txt:
+	Some docs updates
+
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object),
+	(gst_base_sink_event), (gst_base_sink_do_sync),
+	(gst_base_sink_activate_push), (gst_base_sink_activate_pull):
+	* gst/base/gstbasesrc.c: (gst_base_src_send_discont),
+	(gst_base_src_do_seek), (gst_base_src_event_handler),
+	(gst_base_src_loop):
+	* gst/base/gstbasetransform.c: (gst_base_transform_transform_caps),
+	(gst_base_transform_configure_caps), (gst_base_transform_setcaps),
+	(gst_base_transform_get_size), (gst_base_transform_buffer_alloc),
+	(gst_base_transform_event), (gst_base_transform_handle_buffer),
+	(gst_base_transform_set_passthrough),
+	(gst_base_transform_is_passthrough):
+	* gst/elements/gstfakesink.c: (gst_fake_sink_event):
+	* gst/elements/gstfilesink.c: (gst_file_sink_event):
+	Event updates.
+
+	* gst/gstbuffer.h:
+	Use faster casts.
+
+	* gst/gstelement.c: (gst_element_seek):
+	* gst/gstelement.h:
+	Update gst_element_seek.
+
+	* gst/gstevent.c: (gst_event_finalize), (_gst_event_copy),
+	(gst_event_new), (gst_event_new_custom), (gst_event_get_structure),
+	(gst_event_new_flush_start), (gst_event_new_flush_stop),
+	(gst_event_new_eos), (gst_event_new_newsegment),
+	(gst_event_parse_newsegment), (gst_event_new_tag),
+	(gst_event_parse_tag), (gst_event_new_filler), (gst_event_new_qos),
+	(gst_event_parse_qos), (gst_event_new_seek),
+	(gst_event_parse_seek), (gst_event_new_navigation):
+	* gst/gstevent.h:
+	Make GstEvent use GstStructure. Add parsing code, make sure the
+	API is sufficiently generic.
+	Mark possible directions of events and serialization.
+
+	* gst/gstmessage.c: (gst_message_init), (gst_message_finalize),
+	(_gst_message_copy), (gst_message_new_segment_start),
+	(gst_message_new_segment_done), (gst_message_new_custom),
+	(gst_message_parse_segment_start),
+	(gst_message_parse_segment_done):
+	Small cleanups.
+
+	* gst/gstpad.c: (gst_pad_get_caps_unlocked), (gst_pad_accept_caps),
+	(gst_pad_set_caps), (gst_pad_send_event):
+	Update for new events. 
+	Catch events sent in wrong directions.
+
+	* gst/gstqueue.c: (gst_queue_link_src),
+	(gst_queue_handle_sink_event), (gst_queue_chain), (gst_queue_loop),
+	(gst_queue_handle_src_query):
+	Event updates.
+
+	* gst/gsttag.c:
+	* gst/gsttag.h:
+	Remove event code from this file.
+
+	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_packet_from_event),
+	(gst_dp_event_from_packet):
+	Event updates.
+
 2005-07-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/base/gstbasetransform.c: (gst_base_transform_getcaps),

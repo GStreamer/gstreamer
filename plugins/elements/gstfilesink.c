@@ -291,48 +291,23 @@ gst_file_sink_event (GstBaseSink * sink, GstEvent * event)
 
   filesink = GST_FILE_SINK (sink);
 
-  type = event ? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
+  type = GST_EVENT_TYPE (event);
 
   switch (type) {
-    case GST_EVENT_SEEK:
-      if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_BYTES) {
-        return FALSE;
-      }
-
-      if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH) {
-        if (fflush (filesink->file)) {
-          GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
-              (_("Error while writing to file \"%s\"."), filesink->filename),
-              GST_ERROR_SYSTEM);
-          return FALSE;
-        }
-      }
-
-      switch (GST_EVENT_SEEK_METHOD (event)) {
-        case GST_SEEK_METHOD_SET:
-          fseek (filesink->file, GST_EVENT_SEEK_OFFSET (event), SEEK_SET);
-          break;
-        case GST_SEEK_METHOD_CUR:
-          fseek (filesink->file, GST_EVENT_SEEK_OFFSET (event), SEEK_CUR);
-          break;
-        case GST_SEEK_METHOD_END:
-          fseek (filesink->file, GST_EVENT_SEEK_OFFSET (event), SEEK_END);
-          break;
-        default:
-          g_warning ("unknown seek method!");
-          break;
-      }
-      break;
-    case GST_EVENT_DISCONTINUOUS:
+    case GST_EVENT_NEWSEGMENT:
     {
       gint64 soffset, eoffset;
+      GstFormat format;
 
-      if (gst_event_discont_get_value (event, GST_FORMAT_BYTES, &soffset,
-              &eoffset))
+      gst_event_parse_newsegment (event, NULL, &format, &soffset, &eoffset,
+          NULL);
+
+      if (format == GST_FORMAT_BYTES) {
         fseek (filesink->file, soffset, SEEK_SET);
+      }
       break;
     }
-    case GST_EVENT_FLUSH:
+    case GST_EVENT_EOS:
       if (fflush (filesink->file)) {
         GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
             (_("Error while writing to file \"%s\"."), filesink->filename),

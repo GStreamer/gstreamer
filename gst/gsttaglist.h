@@ -24,7 +24,6 @@
 #define __GST_TAG_H__
 
 #include <gst/gststructure.h>
-#include <gst/gstevent.h>
 
 G_BEGIN_DECLS
 
@@ -219,11 +218,6 @@ gboolean	gst_tag_list_get_pointer_index	(const GstTagList *	list,
 						 const gchar *		tag,
 						 guint			index,
 						 gpointer *		value);
-
-/* tag events */
-GstEvent *	gst_event_new_tag		(GstTagList *		list);
-GstTagList *	gst_event_tag_get_list		(GstEvent *		tag_event);
-
 
 /* GStreamer core tags (need to be discussed) */
 /**

@@ -10,15 +10,47 @@ others don't.
 
 Different types of events exist to implement various functionalities.
 
+  GST_EVENT_FLUSH_START:   data is to be discarded
+  GST_EVENT_FLUSH_STOP:    data is allowed again
   GST_EVENT_EOS: 	   no more data is to be expected on a pad.
-  GST_EVENT_FLUSH:         data is to be discarded or allowed again
-  GST_EVENT_DISCONTINUOUS: A new group of buffers with common start time  
+  GST_EVENT_NEWSEGMENT:    A new group of buffers with common start time  
+  GST_EVENT_TAG:           Stream metadata.
+  GST_EVENT_FILLER:        Filler for sparse data streams
   GST_EVENT_QOS:           A notification of the quality of service of the stream
   GST_EVENT_SEEK:          A seek should be performed to a new position in the stream
-  GST_EVENT_SIZE:          Notification of suggested buffer size.
-  GST_EVENT_RATE:          Notification to change the processing speed of a stream
   GST_EVENT_NAVIGATION:    A navigation event.
-  GST_EVENT_TAG:           Stream metadata.
+
+
+FLUSH_START/STOP
+----------------
+
+A flush event is sent both downstream and upstream to clear any pending data 
+from the pipeline. This might be needed to make the graph more responsive 
+when the normal dataflow gets interrupted by for example a seek event.
+
+Flushing happens in two stages.
+
+ 1) a source filter sends the FLUSH_START event to the downstream peer element. The
+    downstream element starts rejecting buffers from the upstream elements. It
+    sends the flush event further downstream and discards any buffers it is 
+    holding as well as return from the chain function as soon as possible.
+    This makes sure that all upstream elements get unblocked.
+    This event is not synchronized with the STREAM_LOCK and can be done in the 
+    application thread.
+
+ 2) a source filter sends the FLUSH_STOP event to indicate
+    that the downstream element can accept buffers again. The downstream 
+    element sends the flush event to its peer elements. After this step dataflow
+    continues. The FLUSH_STOP call is synchronized with the STREAM_LOCK so any
+    data used by the chain function can safely freed here if needed. Any 
+    pending EOS events should be discarded too.
+
+After the flush completes the second stage, data is flowing again in the pipeline
+and all buffers are more recent than those before the flush.
+
+For elements that use the pullregion function, they send both flush events to
+the upstream pads in the same way top make sure that the pullregion function
+unlocks and any pending buffers are cleared in the upstream elements.
 
 
 EOS
@@ -57,66 +89,38 @@ the EOS event is received in the PAUSED state, it is queued until the element
 goes to PLAYING.
 
 
-FLUSH
------
-
-A flush event is sent both downstream and upstream to clear any pending data 
-from the pipeline. This might be needed to make the graph more responsive 
-when the normal dataflow gets interrupted by for example a seek event.
-
-Flushing happens in two stages.
-
- 1) a source filter sends the flush event to the downstream peer element. The
-    downstream element starts rejecting buffers from the upstream elements. It
-    sends the flush event further downstream and discards any buffers it is 
-    holding as well as return from the chain function as soon as possible.
-    This makes sure that all upstream elements get unblocked.
-    This event is not synchronized with the STREAM_LOCK and can be done in the 
-    application thread.
-
- 2) a source filter sends the flush event with the done flag set to indicate
-    that the downstream element can accept buffers again. The downstream 
-    element sends the flush event to its peer elements. After this step dataflow
-    continues. The endflush call is synchronized with the STREAM_LOCK so any
-    data used by the chain function can safely freed here if needed. Any 
-    pending EOS events should be discarded too.
-
-After the flush completes the second stage, data is flowing again in the pipeline
-and all buffers are more recent than those before the flush.
-
-For elements that use the pullregion function, they send both flush events to
-the upstream pads in the same way top make sure that the pullregion function
-unlocks and any pending buffers are cleared in the upstream elements.
-
-
-DISCONTINUOUS
+NEWSEGMENT
 -------------
 
-A discont event is sent downstream by an element to indicate that the following
-group of buffers start and end at the specified time. The discont event
+A newsegment event is sent downstream by an element to indicate that the following
+group of buffers start and end at the specified positions. The newsegment event
 also contains the playback speed of the stream.
 
 Since the stream time is always set to 0 at start and after a seek, a 0
 point for all next buffer's timestamps has to be propagated through the
-pipeline using the DISCONT event.
+pipeline using the NEWSEGMENT event.
 
-Before sending buffers, an element must send a DISCONT event. An element is
-free to refuse buffers if they were not preceeded by a DISCONT event.
+Before sending buffers, an element must send a NEWSEGMENT event. An element is
+free to refuse buffers if they were not preceeded by a NEWSEGMENT event.
 
-Elements that sync to the clock should store the DISCONT start and end values
+Elements that sync to the clock should store the NEWSEGMENT start and end values
 and substract the start value from the buffer timestamp before comparing
 it against the stream time (see part-clocks.txt).
 
-An element is allowed to send out buffers with the DISCONT start time already
+An element is allowed to send out buffers with the NEWSEGMENT start time already
 substracted from the timestamp. If it does so, it needs to send a corrected
-DISCONT downstream, ie, one with start time 0.
+NEWSEGMENT downstream, ie, one with start time 0.
 
-A DISCONT event should be generated as soon as possible in the pipeline and
+A NEWSEGMENT event should be generated as soon as possible in the pipeline and
 is usually generated by a demuxer or source. The event is generated before 
 pushing the first buffer and after a seek, right before pushing the new buffer.
 
-The DISCONT event can be send from both the application and the streaming
+The NEWSEGMENT event can be send from both the application and the streaming
 thread and should be serialized with the buffers.
+
+Buffers should be clipped within the range indicated by the newsegment event
+start and stop values. Sinks are allowed to drop buffers with timestamps out
+of the indicated newsegment range.
 
 
 SEEK
@@ -149,7 +153,7 @@ the STREAM_LOCK so that the streaming thread and the seek gets serialized.
 The general flow of executing the seek with FLUSH is as follows:
 
  1) unblock the streaming threads, they could be blocked in a chain 
-    function. This is done by sending a flush on all srcpads.
+    function. This is done by sending a FLUSH_START on all srcpads.
     The flush will make sure that all downstream elements unlock and
     that control will return to this element chain/loop function.
     We cannot lock the STREAM_LOCK before doing this since it might
@@ -162,38 +166,15 @@ The general flow of executing the seek with FLUSH is as follows:
     will wait for the seek to complete. Most likely, the stream thread
     will pause because the peer elements are flushing.
 
- 4) send a flush event with the done flag set to allow streaming again.
+ 4) send a FLUSH_STOP event to all peer elements to allow streaming again.
 
- 5) send a DISCONT event to signal the new buffer timestamp base time.
+ 5) send a NEWSEGMENT event to signal the new buffer timestamp base time.
 
  6) start stopped tasks and unlock the STREAM_LOCK, dataflow will continue
     now from the new position.
 
 More information about the different seek types can be found in 
 part-seeking.txt.
-
-
-SIZE
-----
-
-Some demuxers know an optimal size for any downstream buffers. They can 
-use this event to signal this fact. Similary an element can signal an
-upstream element for a prefered buffer size.
-
-
-RATE
-----
-
-When the application wants to change the playback rate of the stream, it
-issues a rate event on the sinks. A rate of 1.0 is the normal playback rate, 
-2.0 plays at twice the speed and negative values play backwards.
-
-The rate event travels upstream. After the rate event reaches an element
-that can handle the rate event, it issues a flush and generates a new 
-DISCONT event with the updated rate.
-
-Note that the clock speed does not change. More specific information about
-changing the playback rate are to be thought out and written down.
 
 
 NAVIGATION

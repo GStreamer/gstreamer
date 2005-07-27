@@ -1160,15 +1160,17 @@ gst_element_send_event (GstElement * element, GstEvent * event)
  * MT safe.
  */
 gboolean
-gst_element_seek (GstElement * element, GstSeekType seek_method,
-    GstFormat seek_format, GstSeekType seek_flags, guint64 offset)
+gst_element_seek (GstElement * element, gdouble rate, GstFormat format,
+    GstSeekFlags flags, GstSeekType cur_type, gint64 cur,
+    GstSeekType stop_type, gint64 stop)
 {
   GstEvent *event;
   gboolean result;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
-  event = gst_event_new_seek (seek_method | seek_format | seek_flags, offset);
+  event =
+      gst_event_new_seek (rate, format, flags, cur_type, cur, stop_type, stop);
   result = gst_element_send_event (element, event);
 
   return result;

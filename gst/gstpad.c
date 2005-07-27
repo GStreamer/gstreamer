@@ -3255,24 +3255,29 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
 
   GST_LOCK (pad);
 
+  if (GST_PAD_IS_SINK (pad) && !GST_EVENT_IS_DOWNSTREAM (event))
+    goto wrong_direction;
+  if (GST_PAD_IS_SRC (pad) && !GST_EVENT_IS_UPSTREAM (event))
+    goto wrong_direction;
+
   if (GST_EVENT_SRC (event) == NULL)
     GST_EVENT_SRC (event) = gst_object_ref (pad);
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH:
-      GST_CAT_DEBUG (GST_CAT_EVENT, "have event type %d (FLUSH) on pad %s:%s",
+    case GST_EVENT_FLUSH_START:
+      GST_CAT_DEBUG (GST_CAT_EVENT,
+          "have event type %d (FLUSH_START) on pad %s:%s",
           GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (pad));
 
-      if (GST_EVENT_FLUSH_DONE (event)) {
-        GST_PAD_UNSET_FLUSHING (pad);
-        GST_CAT_DEBUG (GST_CAT_EVENT, "cleared flush flag");
-      } else {
-        /* can't even accept a flush begin event when flushing */
-        if (GST_PAD_IS_FLUSHING (pad))
-          goto flushing;
-        GST_PAD_SET_FLUSHING (pad);
-        GST_CAT_DEBUG (GST_CAT_EVENT, "set flush flag");
-      }
+      /* can't even accept a flush begin event when flushing */
+      if (GST_PAD_IS_FLUSHING (pad))
+        goto flushing;
+      GST_PAD_SET_FLUSHING (pad);
+      GST_CAT_DEBUG (GST_CAT_EVENT, "set flush flag");
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      GST_PAD_UNSET_FLUSHING (pad);
+      GST_CAT_DEBUG (GST_CAT_EVENT, "cleared flush flag");
       break;
     default:
       GST_CAT_DEBUG (GST_CAT_EVENT, "have event type %d on pad %s:%s",
@@ -3303,6 +3308,14 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
   return result;
 
   /* ERROR handling */
+wrong_direction:
+  {
+    g_warning ("pad %s:%s sending event in wrong direction",
+        GST_DEBUG_PAD_NAME (pad));
+    GST_UNLOCK (pad);
+    gst_event_unref (event);
+    return FALSE;
+  }
 no_function:
   {
     g_warning ("pad %s:%s has no event handler, file a bug.",

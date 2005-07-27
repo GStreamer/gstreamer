@@ -491,32 +491,38 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH:
-      STATUS (queue, "received flush event");
+    case GST_EVENT_FLUSH_START:
+      STATUS (queue, "received flush start event");
       /* forward event, re first as we're going to use it still */
       gst_event_ref (event);
       gst_pad_push_event (queue->srcpad, event);
-      if (GST_EVENT_FLUSH_DONE (event)) {
-        GST_QUEUE_MUTEX_LOCK (queue);
-        gst_queue_locked_flush (queue);
-        queue->srcresult = GST_FLOW_OK;
-        gst_pad_start_task (queue->srcpad, (GstTaskFunction) gst_queue_loop,
-            queue->srcpad);
-        GST_QUEUE_MUTEX_UNLOCK (queue);
 
-        STATUS (queue, "after flush");
-      } else {
-        /* now unblock the chain function */
-        GST_QUEUE_MUTEX_LOCK (queue);
-        queue->srcresult = GST_FLOW_WRONG_STATE;
-        /* unblock the loop function */
-        g_cond_signal (queue->item_add);
-        GST_QUEUE_MUTEX_UNLOCK (queue);
+      /* now unblock the chain function */
+      GST_QUEUE_MUTEX_LOCK (queue);
+      queue->srcresult = GST_FLOW_WRONG_STATE;
+      /* unblock the loop function */
+      g_cond_signal (queue->item_add);
+      GST_QUEUE_MUTEX_UNLOCK (queue);
 
-        /* make sure it pauses */
-        gst_pad_pause_task (queue->srcpad);
-        GST_CAT_LOG_OBJECT (queue_dataflow, queue, "loop stopped");
-      }
+      /* make sure it pauses */
+      gst_pad_pause_task (queue->srcpad);
+      GST_CAT_LOG_OBJECT (queue_dataflow, queue, "loop stopped");
+      gst_event_unref (event);
+      goto done;
+    case GST_EVENT_FLUSH_STOP:
+      STATUS (queue, "received flush stop event");
+      /* forward event, re first as we're going to use it still */
+      gst_event_ref (event);
+      gst_pad_push_event (queue->srcpad, event);
+
+      GST_QUEUE_MUTEX_LOCK (queue);
+      gst_queue_locked_flush (queue);
+      queue->srcresult = GST_FLOW_OK;
+      gst_pad_start_task (queue->srcpad, (GstTaskFunction) gst_queue_loop,
+          queue->srcpad);
+      GST_QUEUE_MUTEX_UNLOCK (queue);
+
+      STATUS (queue, "after flush");
       gst_event_unref (event);
       goto done;
     case GST_EVENT_EOS:
@@ -775,7 +781,7 @@ restart:
         GST_ELEMENT_ERROR (queue, STREAM, STOPPED,
             ("streaming stopped, reason %s", flowname),
             ("streaming stopped, reason %s", flowname));
-        gst_pad_push_event (queue->srcpad, gst_event_new (GST_EVENT_EOS));
+        gst_pad_push_event (queue->srcpad, gst_event_new_eos ());
       }
       GST_DEBUG ("pausing queue, reason %s", flowname);
       gst_pad_pause_task (queue->srcpad);

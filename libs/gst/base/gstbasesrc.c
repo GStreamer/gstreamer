@@ -362,9 +362,9 @@ gst_base_src_send_discont (GstBaseSrc * src)
 {
   GstEvent *event;
 
-  event = gst_event_new_discontinuous (1.0,
+  event = gst_event_new_newsegment (1.0,
       GST_FORMAT_BYTES,
-      (gint64) src->segment_start, (gint64) src->segment_end, NULL);
+      (gint64) src->segment_start, (gint64) src->segment_end, (gint64) 0);
 
   return gst_pad_push_event (src->srcpad, event);
 }
@@ -372,10 +372,14 @@ gst_base_src_send_discont (GstBaseSrc * src)
 static gboolean
 gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
 {
+  gdouble rate;
   GstFormat format;
-  gint64 offset;
+  GstSeekFlags flags;
+  GstSeekType cur_type, stop_type;
+  gint64 cur, stop;
 
-  format = GST_EVENT_SEEK_FORMAT (event);
+  gst_event_parse_seek (event, &rate, &format, &flags,
+      &cur_type, &cur, &stop_type, &stop);
 
   /* get seek format */
   if (format == GST_FORMAT_DEFAULT)
@@ -385,11 +389,10 @@ gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
     return FALSE;
 
   /* get seek positions */
-  offset = GST_EVENT_SEEK_OFFSET (event);
-  src->segment_loop = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_SEGMENT_LOOP;
+  src->segment_loop = flags & GST_SEEK_FLAG_SEGMENT;
 
   /* send flush start */
-  gst_pad_push_event (src->srcpad, gst_event_new_flush (FALSE));
+  gst_pad_push_event (src->srcpad, gst_event_new_flush_start ());
 
   /* unblock streaming thread */
   gst_base_src_unlock (src);
@@ -397,35 +400,35 @@ gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
   /* grab streaming lock */
   GST_STREAM_LOCK (src->srcpad);
 
-  /* send flush end */
-  gst_pad_push_event (src->srcpad, gst_event_new_flush (TRUE));
+  /* send flush stop */
+  gst_pad_push_event (src->srcpad, gst_event_new_flush_stop ());
 
   /* perform the seek */
-  switch (GST_EVENT_SEEK_METHOD (event)) {
-    case GST_SEEK_METHOD_SET:
-      if (offset < 0)
+  switch (cur_type) {
+    case GST_SEEK_TYPE_SET:
+      if (cur < 0)
         goto error;
-      src->offset = MIN (offset, src->size);
+      src->offset = MIN (cur, src->size);
       src->segment_start = src->offset;
-      src->segment_end = MIN (GST_EVENT_SEEK_ENDOFFSET (event), src->size);
+      src->segment_end = MIN (stop, src->size);
       GST_DEBUG_OBJECT (src, "seek set pending to %" G_GINT64_FORMAT,
           src->offset);
       break;
-    case GST_SEEK_METHOD_CUR:
-      offset += src->offset;
-      src->offset = CLAMP (offset, 0, src->size);
+    case GST_SEEK_TYPE_CUR:
+      cur += src->offset;
+      src->offset = CLAMP (cur, 0, src->size);
       src->segment_start = src->offset;
-      src->segment_end = GST_EVENT_SEEK_ENDOFFSET (event);
+      src->segment_end = stop;
       GST_DEBUG_OBJECT (src, "seek cur pending to %" G_GINT64_FORMAT,
           src->offset);
       break;
-    case GST_SEEK_METHOD_END:
-      if (offset > 0)
+    case GST_SEEK_TYPE_END:
+      if (cur > 0)
         goto error;
-      offset = src->size + offset;
-      src->offset = MAX (0, offset);
+      cur = src->size + cur;
+      src->offset = MAX (0, cur);
       src->segment_start = src->offset;
-      src->segment_end = GST_EVENT_SEEK_ENDOFFSET (event);
+      src->segment_end = stop;
       GST_DEBUG_OBJECT (src, "seek end pending to %" G_GINT64_FORMAT,
           src->offset);
       break;
@@ -471,25 +474,11 @@ gst_base_src_event_handler (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
       return gst_base_src_do_seek (src, event);
-    case GST_EVENT_SIZE:
-    {
-      GstFormat format;
-
-      format = GST_EVENT_SIZE_FORMAT (event);
-      if (format == GST_FORMAT_DEFAULT)
-        format = GST_FORMAT_BYTES;
-      /* we can only accept bytes */
-      if (format != GST_FORMAT_BYTES)
-        return FALSE;
-
-      src->blocksize = GST_EVENT_SIZE_VALUE (event);
-      g_object_notify (G_OBJECT (src), "blocksize");
-      break;
-    }
-    case GST_EVENT_FLUSH:
+    case GST_EVENT_FLUSH_START:
       /* cancel any blocking getrange */
-      if (!GST_EVENT_FLUSH_DONE (event))
-        gst_base_src_unlock (src);
+      gst_base_src_unlock (src);
+      break;
+    case GST_EVENT_FLUSH_STOP:
       break;
     default:
       break;
@@ -695,7 +684,7 @@ eos:
   {
     GST_DEBUG_OBJECT (src, "going to EOS");
     gst_pad_pause_task (pad);
-    gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
+    gst_pad_push_event (pad, gst_event_new_eos ());
     return;
   }
 pause:
@@ -707,7 +696,7 @@ pause:
       GST_ELEMENT_ERROR (src, STREAM, STOPPED,
           ("streaming stopped, reason %s", gst_flow_get_name (ret)),
           ("streaming stopped, reason %s", gst_flow_get_name (ret)));
-      gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
+      gst_pad_push_event (pad, gst_event_new_eos ());
     }
     return;
   }
@@ -717,7 +706,7 @@ error:
         ("internal: element returned NULL buffer"),
         ("internal: element returned NULL buffer"));
     gst_pad_pause_task (pad);
-    gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
+    gst_pad_push_event (pad, gst_event_new_eos ());
     return;
   }
 }

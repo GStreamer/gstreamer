@@ -25,11 +25,9 @@
 #include "gst_private.h"
 
 #include "gstinfo.h"
-#include "gstmemchunk.h"
 #include "gstevent.h"
-#include "gsttag.h"
+#include "gstenumtypes.h"
 #include "gstutils.h"
-
 
 static void gst_event_init (GTypeInstance * instance, gpointer g_class);
 static void gst_event_class_init (gpointer g_class, gpointer class_data);
@@ -101,298 +99,400 @@ gst_event_finalize (GstEvent * event)
     gst_object_unref (GST_EVENT_SRC (event));
     GST_EVENT_SRC (event) = NULL;
   }
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_TAG:
-      if (GST_IS_TAG_LIST (event->event_data.structure.structure)) {
-        gst_tag_list_free (event->event_data.structure.structure);
-      } else {
-        g_warning ("tag event %p didn't contain a valid tag list!", event);
-        GST_ERROR ("tag event %p didn't contain a valid tag list!", event);
-      }
-      break;
-    case GST_EVENT_NAVIGATION:
-      gst_structure_free (event->event_data.structure.structure);
-      break;
-    default:
-      break;
+  if (event->structure) {
+    gst_structure_set_parent_refcount (event->structure, NULL);
+    gst_structure_free (event->structure);
   }
 }
-
 
 static GstEvent *
 _gst_event_copy (GstEvent * event)
 {
   GstEvent *copy;
 
-  copy = gst_event_new (event->type);
+  copy = (GstEvent *) gst_mini_object_new (GST_TYPE_EVENT);
 
-  copy->timestamp = event->timestamp;
-  if (event->src) {
-    copy->src = gst_object_ref (event->src);
+  GST_EVENT_TYPE (copy) = GST_EVENT_TYPE (event);
+  GST_EVENT_TIMESTAMP (copy) = GST_EVENT_TIMESTAMP (event);
+
+  if (GST_EVENT_SRC (event)) {
+    GST_EVENT_SRC (copy) = gst_object_ref (GST_EVENT_SRC (event));
   }
-
-  memcpy (&copy->event_data, &event->event_data, sizeof (event->event_data));
-
-  /* FIXME copy/ref additional fields */
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_TAG:
-      copy->event_data.structure.structure =
-          gst_tag_list_copy ((GstTagList *) event->event_data.structure.
-          structure);
-      break;
-    case GST_EVENT_NAVIGATION:
-      copy->event_data.structure.structure =
-          gst_structure_copy (event->event_data.structure.structure);
-    default:
-      break;
+  if (event->structure) {
+    copy->structure = gst_structure_copy (event->structure);
+    gst_structure_set_parent_refcount (copy->structure,
+        &event->mini_object.refcount);
   }
-
   return copy;
 }
 
-/**
- * gst_event_masks_contains:
- * @masks: The eventmask array to search
- * @mask: the event mask to find
- *
- * See if the given eventmask is inside the eventmask array.
- *
- * Returns: TRUE if the eventmask is found inside the array
- */
-gboolean
-gst_event_masks_contains (const GstEventMask * masks, GstEventMask * mask)
-{
-  g_return_val_if_fail (mask != NULL, FALSE);
-
-  if (!masks)
-    return FALSE;
-
-  while (masks->type) {
-    if (masks->type == mask->type &&
-        (masks->flags & mask->flags) == mask->flags)
-      return TRUE;
-
-    masks++;
-  }
-
-  return FALSE;
-}
-
-/**
- * gst_event_new:
- * @type: The type of the new event
- *
- * Allocate a new event of the given type.
- *
- * Returns: A new event.
- */
-GstEvent *
+static GstEvent *
 gst_event_new (GstEventType type)
 {
   GstEvent *event;
 
   event = (GstEvent *) gst_mini_object_new (GST_TYPE_EVENT);
 
-  GST_CAT_INFO (GST_CAT_EVENT, "creating new event type %d: %p", type, event);
+  GST_CAT_INFO (GST_CAT_EVENT, "creating new event %p %d", event, type);
 
-  GST_EVENT_TYPE (event) = type;
+  event->type = type;
+  event->src = NULL;
+  event->structure = NULL;
 
   return event;
+}
+
+/**
+ * gst_event_new_custom:
+ * @type: The type of the new event
+ * @structure: The structure for the event. The event will take ownership of
+ * the structure.
+ *
+ * Create a new custom-typed event. This can be used for anything not
+ * handled by other event-specific functions to pass an event to another
+ * element.
+ *
+ * Make sure to allocate an event type with the #GST_EVENT_MAKE_TYPE macro,
+ * assigning a free number and filling in the correct direction and
+ * serialization flags.
+ *
+ * New custom events can also be created by subclassing the event type if
+ * needed.
+ *
+ * Returns: The new custom event.
+ */
+GstEvent *
+gst_event_new_custom (GstEventType type, GstStructure * structure)
+{
+  GstEvent *event;
+
+  event = gst_event_new (type);
+  if (structure) {
+    gst_structure_set_parent_refcount (structure, &event->mini_object.refcount);
+    event->structure = structure;
+  }
+  return event;
+}
+
+/**
+ * gst_event_get_structure:
+ * @event: The #GstEvent.
+ *
+ * Access the structure of the event.
+ *
+ * Returns: The structure of the event. The structure is still
+ * owned by the event, which means that you should not free it and
+ * that the pointer becomes invalid when you free the event.
+ *
+ * MT safe.
+ */
+const GstStructure *
+gst_event_get_structure (GstEvent * event)
+{
+  g_return_val_if_fail (GST_IS_EVENT (event), NULL);
+
+  return event->structure;
+}
+
+/**
+ * gst_event_new_flush_start:
+ *
+ * Allocate a new flush start event. The flush start event can be send
+ * upstream and downstream and travels out-of-bounds with the dataflow.
+ * It marks pads as being in a WRONG_STATE to process more data.
+ *
+ * Elements unlock and blocking functions and exit their streaming functions
+ * as fast as possible. 
+ *
+ * This event is typically generated after a seek to minimize the latency
+ * after the seek.
+ *
+ * Returns: A new flush start event.
+ */
+GstEvent *
+gst_event_new_flush_start (void)
+{
+  return gst_event_new (GST_EVENT_FLUSH_START);
+}
+
+/**
+ * gst_event_new_flush_stop:
+ *
+ * Allocate a new flush stop event. The flush start event can be send
+ * upstream and downstream and travels out-of-bounds with the dataflow.
+ * It is typically send after sending a FLUSH_START event to make the
+ * pads accept data again.
+ *
+ * Elements can process this event synchronized with the dataflow since
+ * the preceeding FLUSH_START event stopped the dataflow.
+ *
+ * This event is typically generated to complete a seek and to resume
+ * dataflow.
+ *
+ * Returns: A new flush stop event.
+ */
+GstEvent *
+gst_event_new_flush_stop (void)
+{
+  return gst_event_new (GST_EVENT_FLUSH_STOP);
+}
+
+/**
+ * gst_event_new_eos:
+ *
+ * Create a new EOS event. The eos event can only travel downstream
+ * synchronized with the buffer flow. Elements that receive the EOS
+ * event on a pad can return UNEXPECTED as a GstFlowReturn when data
+ * after the EOS event arrives.
+ *
+ * The EOS event will travel up to the sink elements in the pipeline
+ * which will then post the GST_MESSAGE_EOS on the bus.
+ *
+ * When all sinks have posted an EOS message, the EOS message is
+ * forwarded to the application.
+ *
+ * Returns: The new EOS event.
+ */
+GstEvent *
+gst_event_new_eos (void)
+{
+  return gst_event_new (GST_EVENT_EOS);
+}
+
+/**
+ * gst_event_new_newsegment:
+ * @rate: a new rate for playback
+ * @format: The format of the segment values
+ * @start_val: the start value of the segment
+ * @stop_val: the stop value of the segment
+ * @base: base value for buffer timestamps.
+ *
+ * Allocate a new newsegment event with the given format/values tripplets.
+ *
+ * The newsegment event marks the range of buffers to be processed. All
+ * data not within the segment range is not to be processed.
+ *
+ * The base time of the segment is used to convert the buffer timestamps
+ * into the stream time again.
+ *
+ * After a newsegment event, the buffer stream time is calculated with:
+ *
+ *   TIMESTAMP(buf) - start_time + base
+ *
+ * Returns: A new newsegment event.
+ */
+GstEvent *
+gst_event_new_newsegment (gdouble rate, GstFormat format,
+    gint64 start_val, gint64 stop_val, gint64 base)
+{
+  return gst_event_new_custom (GST_EVENT_NEWSEGMENT,
+      gst_structure_new ("GstEventNewsegment", "rate", G_TYPE_DOUBLE, rate,
+          "format", GST_TYPE_FORMAT, format,
+          "start_val", G_TYPE_INT64, start_val,
+          "stop_val", G_TYPE_INT64, stop_val,
+          "base", G_TYPE_INT64, base, NULL));
+}
+
+/**
+ * gst_event_parse_newsegment:
+ * @event: The event to query
+ * @rate: A pointer to the rate of the segment
+ * @format: A pointer to the format of the newsegment values
+ * @start_value: A pointer to store the start value in
+ * @stop_value: A pointer to store the stop value in
+ * @base: A pointer to store the base time in
+ *
+ * Get the start, stop and format in the newsegment event.
+ */
+void
+gst_event_parse_newsegment (GstEvent * event, gdouble * rate,
+    GstFormat * format, gint64 * start_value, gint64 * stop_value,
+    gint64 * base)
+{
+  const GstStructure *structure;
+
+  g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT);
+
+  structure = gst_event_get_structure (event);
+  if (rate)
+    *rate = g_value_get_double (gst_structure_get_value (structure, "rate"));
+  if (format)
+    *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
+  if (start_value)
+    *start_value =
+        g_value_get_int64 (gst_structure_get_value (structure, "start_val"));
+  if (stop_value)
+    *stop_value =
+        g_value_get_int64 (gst_structure_get_value (structure, "stop_val"));
+  if (base)
+    *base = g_value_get_int64 (gst_structure_get_value (structure, "base"));
+}
+
+/* tag event */
+GstEvent *
+gst_event_new_tag (GstTagList * taglist)
+{
+  g_return_val_if_fail (taglist != NULL, NULL);
+
+  return gst_event_new_custom (GST_EVENT_TAG, (GstStructure *) taglist);
+}
+
+void
+gst_event_parse_tag (GstEvent * event, GstTagList ** taglist)
+{
+  g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_TAG);
+
+  if (taglist)
+    *taglist = (GstTagList *) event->structure;
+}
+
+/* filler event */
+GstEvent *
+gst_event_new_filler (void)
+{
+  return gst_event_new (GST_EVENT_FILLER);
+}
+
+/**
+ * gst_event_new_qos:
+ * @proportion: the proportion of the qos message
+ * @diff: The time difference of the last Clock sync
+ * @timestamp: The timestamp of the buffer
+ *
+ * Allocate a new qos event with the given values.
+ * The QOS event is generated in an element that wants an upstream
+ * element to either reduce or increase its rate because of
+ * high/low CPU load.
+ *
+ * proportion is the requested adjustment in datarate, 1.0 is the normal
+ * datarate, 0.75 means increase datarate by 75%, 1.5 is 150%. Negative
+ * values request a slow down, so -0.75 means a decrease by 75%.
+ *
+ * diff is the difference against the clock in stream time of the last 
+ * buffer that caused the element to generate the QOS event.
+ *
+ * timestamp is the timestamp of the last buffer that cause the element
+ * to generate the QOS event.
+ *
+ * Returns: A new QOS event.
+ */
+GstEvent *
+gst_event_new_qos (gdouble proportion, GstClockTimeDiff diff,
+    GstClockTime timestamp)
+{
+  return gst_event_new_custom (GST_EVENT_QOS,
+      gst_structure_new ("GstEventQOS",
+          "proportion", G_TYPE_DOUBLE, proportion,
+          "diff", G_TYPE_INT64, diff,
+          "timestamp", G_TYPE_UINT64, timestamp, NULL));
+}
+
+/**
+ * gst_event_parse_qos:
+ * @event: The event to query
+ * @proportion: A pointer to store the proportion in
+ * @diff: A pointer to store the diff in
+ * @timestamp: A pointer to store the timestamp in
+ *
+ * Get the proportion, diff and timestamp in the qos event.
+ */
+void
+gst_event_parse_qos (GstEvent * event, gdouble * proportion,
+    GstClockTimeDiff * diff, GstClockTime * timestamp)
+{
+  const GstStructure *structure;
+
+  g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_QOS);
+
+  structure = gst_event_get_structure (event);
+  if (proportion)
+    *proportion =
+        g_value_get_double (gst_structure_get_value (structure, "proportion"));
+  if (diff)
+    *diff = g_value_get_int64 (gst_structure_get_value (structure, "diff"));
+  if (timestamp)
+    *timestamp =
+        g_value_get_uint64 (gst_structure_get_value (structure, "timestamp"));
 }
 
 /**
  * gst_event_new_seek:
- * @type: The type of the seek event
- * @offset: The offset of the seek
+ * @rate: The new playback rate
+ * @format: The format of the seek values
+ * @flags: The optional seek flags.
+ * @cur_type: The type and flags for the new current position
+ * @cur: The value of the new current position
+ * @stop_type: The type and flags for the new stop position
+ * @stop: The value of the new stop position
  *
  * Allocate a new seek event with the given parameters.
+ *
+ * The seek event configures playback of the pipeline from 
+ * @cur to @stop at the speed given in @rate.
+ * The @cur and @stop values are expressed in format @format.
+ *
+ * A @rate of 1.0 means normal playback rate, 2.0 means double speed.
+ * Negatives values means backwards playback. A value of 0.0 for the
+ * rate is not allowed.
+ *
+ * @cur_type and @stop_type specify how to adjust the current and stop
+ * time, relative or absolute. A type of #GST_EVENT_TYPE_NONE means that
+ * the position should not be updated.
  *
  * Returns: A new seek event.
  */
 GstEvent *
-gst_event_new_seek (GstSeekType type, gint64 offset)
+gst_event_new_seek (gdouble rate, GstFormat format, GstSeekFlags flags,
+    GstSeekType cur_type, gint64 cur, GstSeekType stop_type, gint64 stop)
 {
-  GstEvent *event;
-
-  event = gst_event_new (GST_EVENT_SEEK);
-
-  GST_EVENT_SEEK_TYPE (event) = type;
-  GST_EVENT_SEEK_OFFSET (event) = offset;
-  GST_EVENT_SEEK_ENDOFFSET (event) = -1;
-
-  return event;
+  return gst_event_new_custom (GST_EVENT_SEEK,
+      gst_structure_new ("GstEventSeek", "rate", G_TYPE_DOUBLE, rate,
+          "format", GST_TYPE_FORMAT, format,
+          "flags", GST_TYPE_SEEK_FLAGS, flags,
+          "cur_type", GST_TYPE_SEEK_TYPE, cur_type,
+          "cur", G_TYPE_INT64, cur,
+          "stop_type", GST_TYPE_SEEK_TYPE, stop_type,
+          "stop", G_TYPE_INT64, stop, NULL));
 }
 
-/**
- * gst_event_new_discontinuous_valist:
- * @new_media: A flag indicating a new media type starts
- * @format1: The format of the discont value
- * @var_args: more discont values and formats
- *
- * Allocate a new discontinuous event with the given format/value pairs. Note
- * that the values are of type gint64 - you may not use simple integers such
- * as "0" when calling this function, always cast them like "(gint64) 0".
- * Terminate the list with #GST_FORMAT_UNDEFINED.
- *
- * Returns: A new discontinuous event.
- */
+void
+gst_event_parse_seek (GstEvent * event, gdouble * rate, GstFormat * format,
+    GstSeekFlags * flags,
+    GstSeekType * cur_type, gint64 * cur,
+    GstSeekType * stop_type, gint64 * stop)
+{
+  const GstStructure *structure;
+
+  g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_SEEK);
+
+  structure = gst_event_get_structure (event);
+  if (rate)
+    *rate = g_value_get_double (gst_structure_get_value (structure, "rate"));
+  if (format)
+    *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
+  if (flags)
+    *flags = g_value_get_flags (gst_structure_get_value (structure, "flags"));
+  if (cur_type)
+    *cur_type =
+        g_value_get_enum (gst_structure_get_value (structure, "cur_type"));
+  if (cur)
+    *cur = g_value_get_int64 (gst_structure_get_value (structure, "cur"));
+  if (stop_type)
+    *stop_type =
+        g_value_get_enum (gst_structure_get_value (structure, "stop_type"));
+  if (stop)
+    *stop = g_value_get_int64 (gst_structure_get_value (structure, "stop"));
+}
+
+/* navigation event */
 GstEvent *
-gst_event_new_discontinuous_valist (gdouble rate, GstFormat format1,
-    va_list var_args)
+gst_event_new_navigation (GstStructure * structure)
 {
-  GstEvent *event;
-  gint count = 0;
+  g_return_val_if_fail (structure != NULL, NULL);
 
-  event = gst_event_new (GST_EVENT_DISCONTINUOUS);
-  GST_EVENT_DISCONT_RATE (event) = rate;
-
-  while (format1 != GST_FORMAT_UNDEFINED && count < 8) {
-
-    GST_EVENT_DISCONT_OFFSET (event, count).format =
-        format1 & GST_SEEK_FORMAT_MASK;
-    GST_EVENT_DISCONT_OFFSET (event, count).start_value =
-        va_arg (var_args, gint64);
-    GST_EVENT_DISCONT_OFFSET (event, count).end_value =
-        va_arg (var_args, gint64);
-
-    format1 = va_arg (var_args, GstFormat);
-
-    count++;
-  }
-
-  GST_EVENT_DISCONT_OFFSET_LEN (event) = count;
-
-  return event;
-}
-
-/**
- * gst_event_new_discontinuous:
- * @new_media: A flag indicating a new media type starts
- * @format1: The format of the discont value
- * @...: more discont values and formats
- *
- * Allocate a new discontinuous event with the given format/value pairs. Note
- * that the values are of type gint64 - you may not use simple integers such
- * as "0" when calling this function, always cast them like "(gint64) 0".
- * Terminate the list with #GST_FORMAT_UNDEFINED.
- *
- * Returns: A new discontinuous event.
- */
-GstEvent *
-gst_event_new_discontinuous (gdouble rate, GstFormat format1, ...)
-{
-  va_list var_args;
-  GstEvent *event;
-
-  va_start (var_args, format1);
-
-  event = gst_event_new_discontinuous_valist (rate, format1, var_args);
-
-  va_end (var_args);
-
-  return event;
-}
-
-/**
- * gst_event_discont_get_value:
- * @event: The event to query
- * @format: The format of the discontinuous value
- * @start_value: A pointer to store the end value in
- * @end_value: A pointer to store the end value in
- *
- * Get the start and end value for the given format in the discontinous event.
- *
- * Returns: TRUE if the discontinuous event carries the specified
- * format/value pair.
- */
-gboolean
-gst_event_discont_get_value (GstEvent * event, GstFormat format,
-    gint64 * start_value, gint64 * end_value)
-{
-  gint i, n;
-
-  g_return_val_if_fail (event != NULL, FALSE);
-
-  n = GST_EVENT_DISCONT_OFFSET_LEN (event);
-
-  for (i = 0; i < n; i++) {
-    if (GST_EVENT_DISCONT_OFFSET (event, i).format == format) {
-      if (start_value)
-        *start_value = GST_EVENT_DISCONT_OFFSET (event, i).start_value;
-      if (end_value)
-        *end_value = GST_EVENT_DISCONT_OFFSET (event, i).end_value;
-      return TRUE;
-    }
-  }
-
-  return FALSE;
-}
-
-
-/**
- * gst_event_new_size:
- * @format: The format of the size value
- * @value: The value of the size event
- *
- * Create a new size event with the given values.
- *
- * Returns: The new size event.
- */
-GstEvent *
-gst_event_new_size (GstFormat format, gint64 value)
-{
-  GstEvent *event;
-
-  event = gst_event_new (GST_EVENT_SIZE);
-
-  GST_EVENT_SIZE_FORMAT (event) = format;
-  GST_EVENT_SIZE_VALUE (event) = value;
-
-  return event;
-}
-
-
-/**
- * gst_event_new_segment_seek:
- * @type: The type of the seek event
- * @start: The start offset of the seek
- * @stop: The stop offset of the seek
- *
- * Allocate a new segment seek event with the given parameters. 
- *
- * Returns: A new segment seek event.
- */
-GstEvent *
-gst_event_new_segment_seek (GstSeekType type, gint64 start, gint64 stop)
-{
-  GstEvent *event;
-
-  g_return_val_if_fail (start < stop || stop == -1, NULL);
-
-  event = gst_event_new (GST_EVENT_SEEK);
-
-  GST_EVENT_SEEK_TYPE (event) = type;
-  GST_EVENT_SEEK_OFFSET (event) = start;
-  GST_EVENT_SEEK_ENDOFFSET (event) = stop;
-
-  return event;
-}
-
-/**
- * gst_event_new_flush:
- * @done: Indicates the end of the flush
- *
- * Allocate a new flush event.
- *
- * Returns: A new flush event.
- */
-GstEvent *
-gst_event_new_flush (gboolean done)
-{
-  GstEvent *event;
-
-  event = gst_event_new (GST_EVENT_FLUSH);
-  GST_EVENT_FLUSH_DONE (event) = done;
-
-  return event;
+  return gst_event_new_custom (GST_EVENT_NAVIGATION, structure);
 }

@@ -302,11 +302,10 @@ GstIterator *		gst_element_iterate_sink_pads 	(GstElement * element);
 
 /* event/query/format stuff */
 gboolean		gst_element_send_event		(GstElement *element, GstEvent *event);
-gboolean		gst_element_seek		(GstElement *element,
-							 GstSeekType seek_method,
-							 GstFormat   seek_format,
-							 GstSeekType seek_flags,
-							 guint64 offset);
+gboolean		gst_element_seek		(GstElement *element, gdouble rate,
+							 GstFormat format, GstSeekFlags flags,
+							 GstSeekType cur_type, gint64 cur,
+							 GstSeekType stop_type, gint64 stop);
 G_CONST_RETURN GstQueryType*
 			gst_element_get_query_types	(GstElement *element);
 gboolean		gst_element_query		(GstElement *element, GstQuery *query);

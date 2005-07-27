@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wim.taymans@chello.be>
+ *                    2005 Wim Taymans <wim@fluendo.com>
  *
  * gstevent.h: Header for GstEvent subsystem
  *
@@ -27,122 +28,110 @@
 #include <gst/gstminiobject.h>
 #include <gst/gstformat.h>
 #include <gst/gstobject.h>
+#include <gst/gstclock.h>
 #include <gst/gststructure.h>
+#include <gst/gsttag.h>
 
 G_BEGIN_DECLS
 
+/* bitmaks defining the direction */
+#define GST_EVDIR_US	(1 << 0)	
+#define GST_EVDIR_DS	(1 << 1)	
+#define GST_EVDIR_BOTH	GST_EVDIR_US | GST_EVDIR_DS
+/* mask defining event is serialized with data */
+#define GST_EVSER	(1 << 2)	
+#define GST_EVSHIFT	4	
+
+/* when making custom event types, use this macro with the num and
+ * the given flags */
+#define GST_EVENT_MAKE_TYPE(num,flags) (((num) << GST_EVSHIFT) | (flags))
+
 /**
  * GstEventType:
- * @GST_EVENT_UNKNOWN: 
- * @GST_EVENT_EOS:
- * @GST_EVENT_FLUSH:
- * @GST_EVENT_DISCONTINUOUS:
- * @GST_EVENT_QOS:
- * @GST_EVENT_SEEK:
- * @GST_EVENT_SIZE:
- * @GST_EVENT_RATE:
- * @GST_EVENT_NAVIGATION:
- * @GST_EVENT_TAG:
+ * @GST_EVENT_UNKNOWN: unknown event.
+ * @GST_EVENT_FLUSH_START: start a flush operation
+ * @GST_EVENT_FLUSH_STOP: stop a flush operation
+ * @GST_EVENT_EOS: no more data is to be expected.
+ * @GST_EVENT_NEWSEGMENT: a new segment started
+ * @GST_EVENT_TAG: a new tag
+ * @GST_EVENT_FILLER: filler for sparse data streams.
+ * @GST_EVENT_QOS: a quality message
+ * @GST_EVENT_SEEK: a request for a new playback position and rate.
+ * @GST_EVENT_NAVIGATION: a navigation event
  */
 typedef enum {
-  GST_EVENT_UNKNOWN		= 0,
-  GST_EVENT_EOS			= 1,
-  GST_EVENT_FLUSH		= 2,
-  GST_EVENT_DISCONTINUOUS	= 3,
-  GST_EVENT_QOS			= 4,
-  GST_EVENT_SEEK		= 5,
-  GST_EVENT_SIZE		= 8,
-  GST_EVENT_RATE		= 9,
-  GST_EVENT_NAVIGATION		= 10,
-  GST_EVENT_TAG			= 11
+  GST_EVENT_UNKNOWN		= GST_EVENT_MAKE_TYPE (0, 0),
+  /* bidirectional events */
+  GST_EVENT_FLUSH_START		= GST_EVENT_MAKE_TYPE (1, GST_EVDIR_BOTH),
+  GST_EVENT_FLUSH_STOP		= GST_EVENT_MAKE_TYPE (2, GST_EVDIR_BOTH),
+  /* downstream serialized events */
+  GST_EVENT_EOS			= GST_EVENT_MAKE_TYPE (3, GST_EVDIR_DS | GST_EVSER),
+  GST_EVENT_NEWSEGMENT		= GST_EVENT_MAKE_TYPE (4, GST_EVDIR_DS | GST_EVSER),
+  GST_EVENT_TAG			= GST_EVENT_MAKE_TYPE (5, GST_EVDIR_DS | GST_EVSER),
+  GST_EVENT_FILLER		= GST_EVENT_MAKE_TYPE (6, GST_EVDIR_DS | GST_EVSER),
+  /* upstream events */
+  GST_EVENT_QOS			= GST_EVENT_MAKE_TYPE (7, GST_EVDIR_US),
+  GST_EVENT_SEEK		= GST_EVENT_MAKE_TYPE (8, GST_EVDIR_US),
+  GST_EVENT_NAVIGATION		= GST_EVENT_MAKE_TYPE (9, GST_EVDIR_US),
+
+  /* custom events start here */
+  GST_EVENT_CUSTOM_START	= 32
 } GstEventType;
-#define GST_EVENT_ANY GST_EVENT_NAVIGATION
 
 #define GST_EVENT_TRACE_NAME	"GstEvent"
 
 typedef struct _GstEvent GstEvent;
 typedef struct _GstEventClass GstEventClass;
 
-#define GST_TYPE_EVENT			       (gst_event_get_type())
-#define GST_IS_EVENT(obj)                      (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_EVENT))
-#define GST_IS_EVENT_CLASS(klass)              (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_EVENT))
-#define GST_EVENT_GET_CLASS(obj)               (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_EVENT, GstEventClass))
-#define GST_EVENT(obj)                         (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_EVENT, GstEvent))
-#define GST_EVENT_CLASS(klass)                 (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_EVENT, GstEventClass))
+#define GST_TYPE_EVENT		        (gst_event_get_type())
+#define GST_IS_EVENT(obj)               (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_EVENT))
+#define GST_IS_EVENT_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_EVENT))
+#define GST_EVENT_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_EVENT, GstEventClass))
+#define GST_EVENT(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_EVENT, GstEvent))
+#define GST_EVENT_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_EVENT, GstEventClass))
 
 #define GST_EVENT_TYPE(event)		(GST_EVENT(event)->type)
 #define GST_EVENT_TIMESTAMP(event)	(GST_EVENT(event)->timestamp)
 #define GST_EVENT_SRC(event)		(GST_EVENT(event)->src)
 
-#define GST_EVENT_IS_INTERRUPT(event) (GST_EVENT_TYPE (event) == GST_EVENT_INTERRUPT)
+#define GST_EVENT_IS_UPSTREAM(ev)	!!(GST_EVENT_TYPE (ev) & GST_EVDIR_US)
+#define GST_EVENT_IS_DOWNSTREAM(ev)	!!(GST_EVENT_TYPE (ev) & GST_EVDIR_DS)
+#define GST_EVENT_IS_SERIALIZED(ev)	!!(GST_EVENT_TYPE (ev) & GST_EVSER)
 
-#define GST_SEEK_FORMAT_SHIFT	0
-#define GST_SEEK_METHOD_SHIFT	16
-#define GST_SEEK_FLAGS_SHIFT	20
-#define GST_SEEK_FORMAT_MASK	0x0000ffff
-#define GST_SEEK_METHOD_MASK	0x000f0000
-#define GST_SEEK_FLAGS_MASK	0xfff00000
-
+/**
+ * GstSeekType:
+ * @GST_SEEK_TYPE_NONE: no change in position is required
+ * @GST_SEEK_TYPE_CUR: change relative to current position
+ * @GST_SEEK_TYPE_SET: absolute position is requested
+ * @GST_SEEK_TYPE_END: relative position to duration is requested
+ */
 typedef enum {
-  GST_EVENT_FLAG_NONE		= 0,
-
-  /* indicates negative rates are supported */
-  GST_RATE_FLAG_NEGATIVE	= (1 << 1)
-} GstEventFlag;
-
-typedef struct
-{
-  GstEventType	type;
-  GstEventFlag	flags;
-} GstEventMask;
-
-/* seek events, extends GstEventFlag */
-typedef enum {
-  /* | with some format */
-  /* | with one of these */
-  GST_SEEK_METHOD_CUR		= (1 << (GST_SEEK_METHOD_SHIFT + 0)),
-  GST_SEEK_METHOD_SET		= (1 << (GST_SEEK_METHOD_SHIFT + 1)),
-  GST_SEEK_METHOD_END		= (1 << (GST_SEEK_METHOD_SHIFT + 2)),
-
-  /* | with optional seek flags */
-  /* seek flags */
-  GST_SEEK_FLAG_FLUSH		= (1 << (GST_SEEK_FLAGS_SHIFT + 0)),
-  GST_SEEK_FLAG_ACCURATE	= (1 << (GST_SEEK_FLAGS_SHIFT + 1)),
-  GST_SEEK_FLAG_KEY_UNIT	= (1 << (GST_SEEK_FLAGS_SHIFT + 2)),
-  GST_SEEK_FLAG_SEGMENT_LOOP	= (1 << (GST_SEEK_FLAGS_SHIFT + 3))
-	
+  /* one of these */
+  GST_SEEK_TYPE_NONE		= 0,
+  GST_SEEK_TYPE_CUR		= 1,
+  GST_SEEK_TYPE_SET		= 2,
+  GST_SEEK_TYPE_END		= 3
 } GstSeekType;
 
+/**
+ * GstSeekFlags:
+ * @GST_SEEK_FLAG_NONE: no flag
+ * @GST_SEEK_FLAG_FLUSH: flush pipeline
+ * @GST_SEEK_FLAG_ACCURATE: accurate position is requested, this might
+ *                     be slower for some formats.
+ * @GST_SEEK_FLAG_KEY_UNIT: seek to the nearest keyframe. This might be
+ * 		       faster but less accurate.
+ * @GST_SEEK_FLAG_SEGMENT: perform a segment seek. After the playback
+ *            of the segment completes, no EOS will be emmited but a
+ *            SEGMENT_DONE message will be posted on the bus.
+ */
 typedef enum {
-  GST_SEEK_CERTAIN,
-  GST_SEEK_FUZZY
-} GstSeekAccuracy;
-
-typedef struct
-{
-  GstFormat	format;
-  gint64	start_value;
-  gint64	end_value;
-} GstFormatValue;
-
-#define GST_EVENT_SEEK_TYPE(event)		(GST_EVENT(event)->event_data.seek.type)
-#define GST_EVENT_SEEK_FORMAT(event)		(GST_EVENT_SEEK_TYPE(event) & GST_SEEK_FORMAT_MASK)
-#define GST_EVENT_SEEK_METHOD(event)		(GST_EVENT_SEEK_TYPE(event) & GST_SEEK_METHOD_MASK)
-#define GST_EVENT_SEEK_FLAGS(event)		(GST_EVENT_SEEK_TYPE(event) & GST_SEEK_FLAGS_MASK)
-#define GST_EVENT_SEEK_OFFSET(event)		(GST_EVENT(event)->event_data.seek.offset)
-#define GST_EVENT_SEEK_ENDOFFSET(event)		(GST_EVENT(event)->event_data.seek.endoffset)
-#define GST_EVENT_SEEK_ACCURACY(event)		(GST_EVENT(event)->event_data.seek.accuracy)
-
-#define GST_EVENT_DISCONT_RATE(event)		(GST_EVENT(event)->event_data.discont.rate)
-#define GST_EVENT_DISCONT_OFFSET(event,i)	(GST_EVENT(event)->event_data.discont.offsets[i])
-#define GST_EVENT_DISCONT_OFFSET_LEN(event)	(GST_EVENT(event)->event_data.discont.noffsets)
-
-#define GST_EVENT_FLUSH_DONE(event)		(GST_EVENT(event)->event_data.flush.done)
-
-#define GST_EVENT_SIZE_FORMAT(event)		(GST_EVENT(event)->event_data.size.format)
-#define GST_EVENT_SIZE_VALUE(event)		(GST_EVENT(event)->event_data.size.value)
-
-#define GST_EVENT_RATE_VALUE(event)		(GST_EVENT(event)->event_data.rate.value)
+  GST_SEEK_FLAG_NONE		= 0,
+  GST_SEEK_FLAG_FLUSH		= (1 << 0),
+  GST_SEEK_FLAG_ACCURATE	= (1 << 1),
+  GST_SEEK_FLAG_KEY_UNIT	= (1 << 2),
+  GST_SEEK_FLAG_SEGMENT		= (1 << 3)
+} GstSeekFlags;
 
 struct _GstEvent {
   GstMiniObject mini_object;
@@ -152,32 +141,7 @@ struct _GstEvent {
   guint64	timestamp;
   GstObject	*src;
 
-  union {
-    struct {
-      GstSeekType	type;
-      gint64		offset;
-      gint64		endoffset;
-      GstSeekAccuracy	accuracy;
-    } seek;
-    struct {
-      GstFormatValue	offsets[8];
-      gint		noffsets;
-      gdouble		rate;
-    } discont;
-    struct {
-      gboolean		done;
-    } flush;
-    struct {
-      GstFormat		format;
-      gint64		value;
-    } size;
-    struct {
-      gdouble		value;
-    } rate;
-    struct {
-      GstStructure	*structure;
-    } structure;
-  } event_data;
+  GstStructure	*structure;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -193,39 +157,54 @@ struct _GstEventClass {
 void		_gst_event_initialize		(void);
 	
 GType		gst_event_get_type		(void);
-GstEvent*	gst_event_new			(GstEventType type);
-
 /* refcounting */
 #define         gst_event_ref(ev)		GST_EVENT (gst_mini_object_ref (GST_MINI_OBJECT (ev)))
 #define         gst_event_unref(ev)		gst_mini_object_unref (GST_MINI_OBJECT (ev))
-/* copy buffer */
+/* copy event */
 #define         gst_event_copy(ev)		GST_EVENT (gst_mini_object_copy (GST_MINI_OBJECT (ev)))
 
-gboolean	gst_event_masks_contains	(const GstEventMask *masks, GstEventMask *mask);
+/* custom event */
+GstEvent*	gst_event_new_custom		(GstEventType type, GstStructure *structure);
 
-/* seek event */
-GstEvent*	gst_event_new_seek		(GstSeekType type, gint64 offset);
-
-GstEvent*	gst_event_new_segment_seek	(GstSeekType type, gint64 start, gint64 stop);
-
-
-/* size events */
-GstEvent*	gst_event_new_size		(GstFormat format, gint64 value);
-
-/* discontinous event */
-GstEvent*	gst_event_new_discontinuous	(gdouble rate,
-						 GstFormat format1, ...);
-GstEvent*	gst_event_new_discontinuous_valist	(gdouble rate,
-						 GstFormat format1,
-						 va_list var_args);
-gboolean	gst_event_discont_get_value	(GstEvent *event, GstFormat format, 
-						 gint64 *start_value, gint64 *end_value);
-
-#define		gst_event_new_filler()		gst_event_new(GST_EVENT_FILLER)
-#define		gst_event_new_eos()		gst_event_new(GST_EVENT_EOS)
+const GstStructure *  
+		gst_event_get_structure 	(GstEvent *event);
 
 /* flush events */
-GstEvent*	gst_event_new_flush 		(gboolean done);
+GstEvent *	gst_event_new_flush_start	(void);
+GstEvent *	gst_event_new_flush_stop	(void);
+
+/* EOS event */
+GstEvent *	gst_event_new_eos		(void);
+
+/* newsegment events */
+GstEvent*	gst_event_new_newsegment	(gdouble rate,
+						 GstFormat format, gint64 start_value, gint64 stop_value,
+						 gint64 base);
+void		gst_event_parse_newsegment	(GstEvent *event, gdouble *rate, GstFormat *format, 
+						 gint64 *start_value, gint64 *end_value, gint64 *base);
+/* tag event */
+GstEvent*	gst_event_new_tag		(GstTagList *taglist);
+void		gst_event_parse_tag		(GstEvent *event, GstTagList **taglist);
+
+/* filler event */
+GstEvent *	gst_event_new_filler		(void);
+
+
+/* QOS events */
+GstEvent*	gst_event_new_qos		(gdouble proportion, GstClockTimeDiff diff,
+						 GstClockTime timestamp);
+void		gst_event_parse_qos		(GstEvent *event, gdouble *proportion, GstClockTimeDiff *diff,
+						 GstClockTime *timestamp);
+/* seek event */
+GstEvent*	gst_event_new_seek		(gdouble rate, GstFormat format, GstSeekFlags flags,
+						 GstSeekType cur_type, gint64 cur, 
+						 GstSeekType stop_type, gint64 stop);
+void		gst_event_parse_seek		(GstEvent *event, gdouble *rate, GstFormat *format, 
+		                                 GstSeekFlags *flags,
+						 GstSeekType *cur_type, gint64 *cur, 
+						 GstSeekType *stop_type, gint64 *stop);
+/* navigation event */
+GstEvent*	gst_event_new_navigation	(GstStructure *structure);
 
 G_END_DECLS
 

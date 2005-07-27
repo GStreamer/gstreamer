@@ -48,14 +48,14 @@ typedef struct _GstBufferClass GstBufferClass;
 #define GST_BUFFER_FLAG_SET(buf,flag)           GST_MINI_OBJECT_FLAG_SET (buf, flag)
 #define GST_BUFFER_FLAG_UNSET(buf,flag)         GST_MINI_OBJECT_FLAG_UNSET (buf, flag)
 
-#define GST_BUFFER_DATA(buf)			(GST_BUFFER(buf)->data)
-#define GST_BUFFER_SIZE(buf)			(GST_BUFFER(buf)->size)
-#define GST_BUFFER_TIMESTAMP(buf)		(GST_BUFFER(buf)->timestamp)
-#define GST_BUFFER_DURATION(buf)		(GST_BUFFER(buf)->duration)
-#define GST_BUFFER_CAPS(buf)			(GST_BUFFER(buf)->caps)
-#define GST_BUFFER_OFFSET(buf)			(GST_BUFFER(buf)->offset)
-#define GST_BUFFER_OFFSET_END(buf)		(GST_BUFFER(buf)->offset_end)
-#define GST_BUFFER_MALLOCDATA(buf)		(GST_BUFFER(buf)->malloc_data)
+#define GST_BUFFER_DATA(buf)			(GST_BUFFER_CAST(buf)->data)
+#define GST_BUFFER_SIZE(buf)			(GST_BUFFER_CAST(buf)->size)
+#define GST_BUFFER_TIMESTAMP(buf)		(GST_BUFFER_CAST(buf)->timestamp)
+#define GST_BUFFER_DURATION(buf)		(GST_BUFFER_CAST(buf)->duration)
+#define GST_BUFFER_CAPS(buf)			(GST_BUFFER_CAST(buf)->caps)
+#define GST_BUFFER_OFFSET(buf)			(GST_BUFFER_CAST(buf)->offset)
+#define GST_BUFFER_OFFSET_END(buf)		(GST_BUFFER_CAST(buf)->offset_end)
+#define GST_BUFFER_MALLOCDATA(buf)		(GST_BUFFER_CAST(buf)->malloc_data)
 
 #define GST_BUFFER_OFFSET_NONE	((guint64)-1)
 
@@ -138,12 +138,12 @@ G_STMT_START {						\
 } G_STMT_END
 
 /* refcounting */
-#define		gst_buffer_ref(buf)		GST_BUFFER (gst_mini_object_ref (GST_MINI_OBJECT (buf)))
+#define		gst_buffer_ref(buf)		GST_BUFFER_CAST (gst_mini_object_ref (GST_MINI_OBJECT (buf)))
 #define		gst_buffer_unref(buf)		gst_mini_object_unref (GST_MINI_OBJECT (buf))
 /* copy buffer */
-#define		gst_buffer_copy(buf)		GST_BUFFER (gst_mini_object_copy (GST_MINI_OBJECT (buf)))
+#define		gst_buffer_copy(buf)		GST_BUFFER_CAST (gst_mini_object_copy (GST_MINI_OBJECT (buf)))
 #define		gst_buffer_is_writable(buf)	gst_mini_object_is_writable (GST_MINI_OBJECT (buf))
-#define		gst_buffer_make_writable(buf)   GST_BUFFER (gst_mini_object_make_writable (GST_MINI_OBJECT (buf)))
+#define		gst_buffer_make_writable(buf)   GST_BUFFER_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT (buf)))
 
 #define		gst_buffer_replace(obuf,nbuf)	gst_mini_object_replace ((GstMiniObject **)(obuf), GST_MINI_OBJECT (nbuf))
 

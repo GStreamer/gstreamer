@@ -94,7 +94,7 @@ gst_message_init (GTypeInstance * instance, gpointer g_class)
 {
   GstMessage *message = GST_MESSAGE (instance);
 
-  message->timestamp = GST_CLOCK_TIME_NONE;
+  GST_MESSAGE_TIMESTAMP (message) = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -106,6 +106,7 @@ gst_message_finalize (GstMessage * message)
 
   if (GST_MESSAGE_SRC (message)) {
     gst_object_unref (GST_MESSAGE_SRC (message));
+    GST_MESSAGE_SRC (message) = NULL;
   }
 
   if (message->lock) {
@@ -132,10 +133,10 @@ _gst_message_copy (GstMessage * message)
   /* FIXME, need to copy relevant data from the miniobject. */
   //memcpy (copy, message, sizeof (GstMessage));
 
-  copy->lock = message->lock;
-  copy->cond = message->cond;
-  copy->type = message->type;
-  copy->timestamp = message->timestamp;
+  GST_MESSAGE_GET_LOCK (copy) = GST_MESSAGE_GET_LOCK (message);
+  GST_MESSAGE_COND (copy) = GST_MESSAGE_COND (message);
+  GST_MESSAGE_TYPE (copy) = GST_MESSAGE_TYPE (message);
+  GST_MESSAGE_TIMESTAMP (copy) = GST_MESSAGE_TIMESTAMP (message);
 
   if (GST_MESSAGE_SRC (message)) {
     GST_MESSAGE_SRC (copy) = gst_object_ref (GST_MESSAGE_SRC (message));
@@ -150,16 +151,6 @@ _gst_message_copy (GstMessage * message)
   return copy;
 }
 
-/**
- * gst_message_new:
- * @type: The type of the new message
- *
- * Allocate a new message of the given type.
- *
- * Returns: A new message.
- *
- * MT safe.
- */
 static GstMessage *
 gst_message_new (GstMessageType type, GstObject * src)
 {
@@ -386,7 +377,7 @@ gst_message_new_segment_done (GstObject * src, GstClockTime timestamp)
  *
  * Create a new custom-typed message. This can be used for anything not
  * handled by other message-specific functions to pass a message to the
- * app.
+ * app. The structure field can be NULL.
  *
  * Returns: The new message.
  *
@@ -398,12 +389,12 @@ gst_message_new_custom (GstMessageType type, GstObject * src,
 {
   GstMessage *message;
 
-  g_return_val_if_fail (GST_IS_STRUCTURE (structure), NULL);
-
   message = gst_message_new (type, src);
-  gst_structure_set_parent_refcount (structure, &message->mini_object.refcount);
-  message->structure = structure;
-
+  if (structure) {
+    gst_structure_set_parent_refcount (structure,
+        &message->mini_object.refcount);
+    message->structure = structure;
+  }
   return message;
 }
 

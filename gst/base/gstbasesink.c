@@ -468,11 +468,17 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
         basesink->preroll_queued++;
         basesink->eos = TRUE;
         break;
-      case GST_EVENT_DISCONTINUOUS:
-        /* the discont event is needed to bring the buffer timestamps to the
+      case GST_EVENT_NEWSEGMENT:
+      {
+        GstFormat format;
+        gdouble rate;
+
+        /* the newsegment event is needed to bring the buffer timestamps to the
          * stream time */
-        if (!gst_event_discont_get_value (event, GST_FORMAT_TIME,
-                &basesink->discont_start, &basesink->discont_stop)) {
+        gst_event_parse_newsegment (event, &rate, &format,
+            &basesink->discont_start, &basesink->discont_stop, NULL);
+
+        if (format != GST_FORMAT_TIME) {
           /* this means this sink will not be able to sync to the clock */
           basesink->discont_start = 0;
           basesink->discont_stop = 0;
@@ -483,6 +489,7 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
             GST_TIME_ARGS (basesink->discont_start),
             GST_TIME_ARGS (basesink->discont_stop));
         break;
+      }
       default:
         break;
     }
@@ -664,7 +671,7 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       GST_STREAM_UNLOCK (pad);
       break;
     }
-    case GST_EVENT_DISCONTINUOUS:
+    case GST_EVENT_NEWSEGMENT:
     {
       GstFlowReturn ret;
 
@@ -674,39 +681,44 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       GST_STREAM_UNLOCK (pad);
       break;
     }
-    case GST_EVENT_FLUSH:
+    case GST_EVENT_FLUSH_START:
       /* make sure we are not blocked on the clock also clear any pending
        * eos state. */
       if (bclass->event)
         bclass->event (basesink, event);
 
-      if (!GST_EVENT_FLUSH_DONE (event)) {
-        GST_PREROLL_LOCK (pad);
-        /* we need preroll after the flush */
-        basesink->need_preroll = TRUE;
-        /* unlock from a possible state change/preroll */
-        gst_base_sink_preroll_queue_flush (basesink, pad);
+      GST_PREROLL_LOCK (pad);
+      /* we need preroll after the flush */
+      basesink->need_preroll = TRUE;
+      /* unlock from a possible state change/preroll */
+      gst_base_sink_preroll_queue_flush (basesink, pad);
 
-        GST_LOCK (basesink);
-        if (basesink->clock_id) {
-          gst_clock_id_unschedule (basesink->clock_id);
-        }
-        GST_UNLOCK (basesink);
-        GST_PREROLL_UNLOCK (pad);
-
-        /* and we need to commit our state again on the next
-         * prerolled buffer */
-        GST_STATE_LOCK (basesink);
-        GST_STREAM_LOCK (pad);
-        gst_element_lost_state (GST_ELEMENT (basesink));
-        GST_STREAM_UNLOCK (pad);
-        GST_STATE_UNLOCK (basesink);
-      } else {
-        /* now we are completely unblocked and the _chain method
-         * will return */
-        GST_STREAM_LOCK (pad);
-        GST_STREAM_UNLOCK (pad);
+      GST_LOCK (basesink);
+      if (basesink->clock_id) {
+        gst_clock_id_unschedule (basesink->clock_id);
       }
+      GST_UNLOCK (basesink);
+      GST_PREROLL_UNLOCK (pad);
+
+      /* and we need to commit our state again on the next
+       * prerolled buffer */
+      GST_STATE_LOCK (basesink);
+      GST_STREAM_LOCK (pad);
+      gst_element_lost_state (GST_ELEMENT (basesink));
+      GST_STREAM_UNLOCK (pad);
+      GST_STATE_UNLOCK (basesink);
+      GST_DEBUG ("event unref %p %p", basesink, event);
+      gst_event_unref (event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      if (bclass->event)
+        bclass->event (basesink, event);
+
+      /* now we are completely unblocked and the _chain method
+       * will return */
+      GST_STREAM_LOCK (pad);
+      GST_STREAM_UNLOCK (pad);
+
       GST_DEBUG ("event unref %p %p", basesink, event);
       gst_event_unref (event);
       break;
