@@ -1,5 +1,11 @@
 2005-07-27  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_packet_from_event),
+	(gst_dp_event_from_packet):
+	Fix serialization of seek events.
+
+2005-07-27  Wim Taymans  <wim@fluendo.com>
+
 	* check/gst-libs/gdp.c: (GST_START_TEST):
 	* gst/elements/gstfakesink.c: (gst_fake_sink_event):
 	Fix compilation and fix event serialization.
