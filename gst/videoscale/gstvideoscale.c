@@ -447,14 +447,14 @@ gst_videoscale_prepare_images (GstVideoscale * videoscale, GstBuffer * in,
       src_u->height = ROUND_UP_2 (src->height) / 2;
       src_u->width = ROUND_UP_2 (src->width) / 2;
       src_u->stride = ROUND_UP_4 (src->stride / 2);
-      memcpy (src_v, src_u, sizeof (src_v));
+      memcpy (src_v, src_u, sizeof (*src_v));
       src_v->pixels = src_u->pixels + src_u->height * src_u->stride;
 
       dest_u->pixels = dest->pixels + ROUND_UP_2 (dest->height) * dest->stride;
       dest_u->height = ROUND_UP_2 (dest->height) / 2;
       dest_u->width = ROUND_UP_2 (dest->width) / 2;
       dest_u->stride = ROUND_UP_4 (dest->stride / 2);
-      memcpy (dest_v, dest_u, sizeof (dest_v));
+      memcpy (dest_v, dest_u, sizeof (*dest_v));
       dest_v->pixels = dest_u->pixels + dest_u->height * dest_u->stride;
       break;
     default:

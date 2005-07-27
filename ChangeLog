@@ -1,3 +1,8 @@
+2005-07-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/videoscale/gstvideoscale.c: (gst_videoscale_prepare_images):
+	  Fix segfault for I420/YV12.
+
 2005-07-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/vorbis/vorbisdec.c: (vorbis_handle_comment_packet):
