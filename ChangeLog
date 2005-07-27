@@ -1,5 +1,11 @@
 2005-07-27  Wim Taymans  <wim@fluendo.com>
 
+	* check/gst-libs/gdp.c: (GST_START_TEST):
+	* gst/elements/gstfakesink.c: (gst_fake_sink_event):
+	Fix compilation and fix event serialization.
+
+2005-07-27  Wim Taymans  <wim@fluendo.com>
+
 	* CHANGES-0.9:
 	* docs/design/part-TODO.txt:
 	* docs/design/part-events.txt:

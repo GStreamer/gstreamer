@@ -192,7 +192,7 @@ GST_START_TEST (test_event)
   guint8 *header, *payload;
 
   g_message ("Testing EOS event at 1s\n");
-  send = gst_event_new (GST_EVENT_EOS);
+  send = gst_event_new_eos ();
   GST_EVENT_TIMESTAMP (send) = GST_SECOND;
   fail_unless (gst_dp_packet_from_event (send, GST_DP_HEADER_FLAG_CRC,
           &header_length, &header, &payload),
@@ -214,7 +214,7 @@ GST_START_TEST (test_event)
   gst_event_unref (receive);
 
   g_message ("Testing FLUSH event at 2s\n");
-  send = gst_event_new (GST_EVENT_FLUSH);
+  send = gst_event_new_flush_start ();
   GST_EVENT_TIMESTAMP (send) = GST_SECOND * 2;
   fail_unless (gst_dp_packet_from_event (send, GST_DP_HEADER_FLAG_CRC,
           &header_length, &header, &payload),
@@ -224,7 +224,7 @@ GST_START_TEST (test_event)
 
   g_message ("Flush, timestamp %" GST_TIME_FORMAT "\n",
       GST_TIME_ARGS (GST_EVENT_TIMESTAMP (receive)));
-  fail_unless (GST_EVENT_TYPE (receive) == GST_EVENT_FLUSH,
+  fail_unless (GST_EVENT_TYPE (receive) == GST_EVENT_FLUSH_START,
       "Received event is not flush");
   fail_unless (GST_EVENT_TIMESTAMP (receive) == GST_SECOND * 2,
       "Flush timestamp is not 2.0 sec");
@@ -236,7 +236,9 @@ GST_START_TEST (test_event)
   gst_event_unref (receive);
 
   g_message ("Testing SEEK event with 1 second at 3 seconds\n");
-  send = gst_event_new_seek (GST_FORMAT_TIME, GST_SECOND);
+  send =
+      gst_event_new_seek (1.0, GST_FORMAT_TIME, 0, GST_SEEK_TYPE_SET,
+      GST_SECOND, GST_SEEK_TYPE_NONE, 0);
   GST_EVENT_TIMESTAMP (send) = GST_SECOND * 3;
   fail_unless (gst_dp_packet_from_event (send, GST_DP_HEADER_FLAG_CRC,
           &header_length, &header, &payload),
@@ -244,17 +246,26 @@ GST_START_TEST (test_event)
 
   receive = gst_dp_event_from_packet (header_length, header, payload);
 
-  g_message ("Seek, timestamp %" GST_TIME_FORMAT ", to %" GST_TIME_FORMAT "\n",
-      GST_TIME_ARGS (GST_EVENT_TIMESTAMP (receive)),
-      GST_TIME_ARGS (GST_EVENT_SEEK_OFFSET (receive)));
-  fail_unless (GST_EVENT_TYPE (receive) == GST_EVENT_SEEK,
-      "Returned event is not seek");
-  fail_unless (GST_EVENT_TIMESTAMP (receive) == GST_SECOND * 3,
-      "Seek timestamp is not 3.0 sec");
-  fail_unless (GST_EVENT_SEEK_FORMAT (receive) == GST_FORMAT_TIME,
-      "Seek format is not time");
-  fail_unless (GST_EVENT_SEEK_OFFSET (receive) == GST_SECOND,
-      "Seek offset is not 1.0 sec");
+  {
+    gdouble rate;
+    GstFormat format;
+    GstSeekFlags flags;
+    GstSeekType cur_type, stop_type;
+    gint64 cur, stop;
+
+    gst_event_parse_seek (receive, &rate, &format, &flags,
+        &cur_type, &cur, &stop_type, &stop);
+
+    g_message ("Seek, timestamp %" GST_TIME_FORMAT ", to %" GST_TIME_FORMAT
+        "\n", GST_TIME_ARGS (GST_EVENT_TIMESTAMP (receive)),
+        GST_TIME_ARGS (cur));
+    fail_unless (GST_EVENT_TYPE (receive) == GST_EVENT_SEEK,
+        "Returned event is not seek");
+    fail_unless (GST_EVENT_TIMESTAMP (receive) == GST_SECOND * 3,
+        "Seek timestamp is not 3.0 sec");
+    fail_unless (format == GST_FORMAT_TIME, "Seek format is not time");
+    fail_unless (cur == GST_SECOND, "Seek cur is not 1.0 sec");
+  }
 
   /* clean up */
   g_free (header);

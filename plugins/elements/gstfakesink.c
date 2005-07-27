@@ -280,8 +280,10 @@ gst_fake_sink_event (GstBaseSink * bsink, GstEvent * event)
 
     g_free (sink->last_message);
 
-    s = gst_event_get_structure (event);
-    sstr = gst_structure_to_string (s);
+    if ((s = gst_event_get_structure (event)))
+      sstr = gst_structure_to_string (s);
+    else
+      sstr = g_strdup ("");
 
     sink->last_message =
         g_strdup_printf ("event   ******* E (type: %d, %s) %p",
