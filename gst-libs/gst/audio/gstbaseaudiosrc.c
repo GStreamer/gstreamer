@@ -285,11 +285,10 @@ gst_base_audio_src_event (GstBaseSrc * bsrc, GstEvent * event)
   GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (bsrc);
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH:
-      if (GST_EVENT_FLUSH_DONE (event)) {
-      } else {
-        gst_ring_buffer_pause (src->ringbuffer);
-      }
+    case GST_EVENT_FLUSH_START:
+      gst_ring_buffer_pause (src->ringbuffer);
+      break;
+    case GST_EVENT_FLUSH_STOP:
       break;
     default:
       break;
