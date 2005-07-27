@@ -1,5 +1,10 @@
 2005-07-27  Wim Taymans  <wim@fluendo.com>
 
+	* ext/vorbis/Makefile.am:
+	Revert wrong commit.
+
+2005-07-27  Wim Taymans  <wim@fluendo.com>
+
 	* gst-libs/gst/audio/gstbaseaudiosrc.c: (gst_base_audio_src_event):
 	More compilation fixen.
 
