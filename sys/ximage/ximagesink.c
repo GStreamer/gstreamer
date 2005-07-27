@@ -1447,8 +1447,7 @@ gst_ximagesink_navigation_send_event (GstNavigation * navigation,
   GstXImageSink *ximagesink = GST_XIMAGESINK (navigation);
   GstEvent *event;
 
-  event = gst_event_new (GST_EVENT_NAVIGATION);
-  event->event_data.structure.structure = structure;
+  event = gst_event_new_custom (GST_EVENT_NAVIGATION, structure);
 
   g_mutex_lock (ximagesink->nav_lock);
   ximagesink->pend_nav_events =

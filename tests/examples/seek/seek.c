@@ -86,7 +86,7 @@ setup_dynamic_link (GstElement * element, const gchar * padname,
   connect->target = target;
   connect->bin = bin;
 
-  g_signal_connect (G_OBJECT (element), "new_pad", G_CALLBACK (dynamic_link),
+  g_signal_connect (G_OBJECT (element), "pad-added", G_CALLBACK (dynamic_link),
       connect);
 }
 
@@ -158,7 +158,6 @@ make_dv_pipeline (const gchar * location)
   rate_pads = g_list_prepend (rate_pads, seekable);
 
   seekable = gst_element_get_pad (decoder, "audio");
-  seekable_pads = g_list_prepend (seekable_pads, seekable);
   rate_pads = g_list_prepend (rate_pads, seekable);
   rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (decoder, "sink"));
 
@@ -976,9 +975,11 @@ do_seek (GtkWidget * widget)
 
       g_print ("seek to %" GST_TIME_FORMAT " on pad %s:%s\n",
           GST_TIME_ARGS (real), GST_DEBUG_PAD_NAME (seekable));
-      s_event =
-          gst_event_new_seek (GST_FORMAT_TIME | GST_SEEK_METHOD_SET |
-          GST_SEEK_FLAG_FLUSH, real);
+
+
+      s_event = gst_event_new_seek (1.0,
+          GST_FORMAT_TIME,
+          GST_SEEK_FLAG_FLUSH, GST_SEEK_TYPE_SET, real, GST_SEEK_TYPE_NONE, 0);
 
       res = gst_pad_send_event (seekable, s_event);
 
@@ -993,9 +994,9 @@ do_seek (GtkWidget * widget)
       g_print ("seek to %" GST_TIME_FORMAT " on element %s\n",
           GST_TIME_ARGS (real), GST_ELEMENT_NAME (seekable));
 
-      s_event =
-          gst_event_new_seek (GST_FORMAT_TIME | GST_SEEK_METHOD_SET |
-          GST_SEEK_FLAG_FLUSH, real);
+      s_event = gst_event_new_seek (1.0,
+          GST_FORMAT_TIME,
+          GST_SEEK_FLAG_FLUSH, GST_SEEK_TYPE_SET, real, GST_SEEK_TYPE_NONE, 0);
 
       res = gst_element_send_event (seekable, s_event);
 

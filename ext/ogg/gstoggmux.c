@@ -935,7 +935,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
       ogg_mux->next_ts = GST_BUFFER_TIMESTAMP (ogg_mux->pulling->buffer);
     } else {
       /* no pad to pull on, send EOS */
-      gst_pad_push_event (ogg_mux->srcpad, gst_event_new (GST_EVENT_EOS));
+      gst_pad_push_event (ogg_mux->srcpad, gst_event_new_eos ());
       return GST_FLOW_WRONG_STATE;
     }
   }

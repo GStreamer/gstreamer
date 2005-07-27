@@ -1702,8 +1702,7 @@ gst_xvimagesink_navigation_send_event (GstNavigation * navigation,
   GstEvent *event;
   double x, y;
 
-  event = gst_event_new (GST_EVENT_NAVIGATION);
-  event->event_data.structure.structure = structure;
+  event = gst_event_new_custom (GST_EVENT_NAVIGATION, structure);
 
   /* Converting pointer coordinates to the non scaled geometry */
   if (gst_structure_get_double (structure, "pointer_x", &x)) {

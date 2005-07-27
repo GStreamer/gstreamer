@@ -523,14 +523,21 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
   GstTheoraDec *dec;
-  GstFormat format;
 
   dec = GST_THEORA_DEC (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:{
-      gint64 value;
+      GstFormat format, tformat;
+      gdouble rate;
       GstEvent *real_seek;
+      GstSeekFlags flags;
+      GstSeekType cur_type, stop_type;
+      gint64 cur, stop;
+      gint64 tcur, tstop;
+
+      gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
+          &stop_type, &stop);
 
       /* we have to ask our peer to seek to time here as we know
        * nothing about how to generate a granulepos from the src
@@ -538,17 +545,17 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
        * 
        * First bring the requested format to time 
        */
-      format = GST_FORMAT_TIME;
-      if (!(res = theora_dec_src_convert (pad, GST_EVENT_SEEK_FORMAT (event),
-                  GST_EVENT_SEEK_OFFSET (event), &format, &value)))
+      tformat = GST_FORMAT_TIME;
+      if (!(res = theora_dec_src_convert (pad, format, cur, &tformat, &tcur)))
+        goto error;
+      if (!(res = theora_dec_src_convert (pad, format, stop, &tformat, &tstop)))
         goto error;
 
       /* then seek with time on the peer */
-      real_seek = gst_event_new_seek (
-          (GST_EVENT_SEEK_TYPE (event) & ~GST_SEEK_FORMAT_MASK) |
-          format, value);
+      real_seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
+          flags, cur_type, tcur, stop_type, tstop);
 
-      res = gst_pad_send_event (GST_PAD_PEER (dec->sinkpad), real_seek);
+      res = gst_pad_push_event (dec->sinkpad, real_seek);
 
       gst_event_unref (event);
       break;
@@ -594,7 +601,7 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
       ret = gst_pad_push_event (dec->srcpad, event);
       GST_STREAM_UNLOCK (pad);
       break;
-    case GST_EVENT_DISCONTINUOUS:
+    case GST_EVENT_NEWSEGMENT:
       GST_STREAM_LOCK (pad);
       dec->need_keyframe = TRUE;
       dec->granulepos = -1;

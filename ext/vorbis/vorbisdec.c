@@ -341,19 +341,35 @@ vorbis_dec_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:{
-      gint64 value;
-      GstFormat my_format = GST_FORMAT_TIME;
+      GstFormat format, tformat;
+      gdouble rate;
+      GstEvent *real_seek;
+      GstSeekFlags flags;
+      GstSeekType cur_type, stop_type;
+      gint64 cur, stop;
+      gint64 tcur, tstop;
 
-      /* convert to time */
-      res = vorbis_dec_convert (pad, GST_EVENT_SEEK_FORMAT (event),
-          GST_EVENT_SEEK_OFFSET (event), &my_format, &value);
-      if (res) {
-        GstEvent *real_seek = gst_event_new_seek (
-            (GST_EVENT_SEEK_TYPE (event) & ~GST_SEEK_FORMAT_MASK) |
-            GST_FORMAT_TIME, value);
+      gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
+          &stop_type, &stop);
 
-        res = gst_pad_send_event (GST_PAD_PEER (dec->sinkpad), real_seek);
-      }
+      /* we have to ask our peer to seek to time here as we know
+       * nothing about how to generate a granulepos from the src
+       * formats or anything.
+       *
+       * First bring the requested format to time
+       */
+      tformat = GST_FORMAT_TIME;
+      if (!(res = vorbis_dec_convert (pad, format, cur, &tformat, &tcur)))
+        goto error;
+      if (!(res = vorbis_dec_convert (pad, format, stop, &tformat, &tstop)))
+        goto error;
+
+      /* then seek with time on the peer */
+      real_seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
+          flags, cur_type, tcur, stop_type, tstop);
+
+      res = gst_pad_send_event (GST_PAD_PEER (dec->sinkpad), real_seek);
+
       gst_event_unref (event);
       break;
     }
@@ -362,6 +378,10 @@ vorbis_dec_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
+  return res;
+
+error:
+  gst_event_unref (event);
   return res;
 }
 
@@ -380,7 +400,7 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
       ret = gst_pad_push_event (dec->srcpad, event);
       GST_STREAM_UNLOCK (pad);
       break;
-    case GST_EVENT_DISCONTINUOUS:
+    case GST_EVENT_NEWSEGMENT:
       GST_STREAM_LOCK (pad);
       dec->granulepos = -1;
 #ifdef HAVE_VORBIS_SYNTHESIS_RESTART

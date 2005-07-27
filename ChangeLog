@@ -1,3 +1,42 @@
+2005-07-27  Wim Taymans  <wim@fluendo.com>
+
+	* examples/seeking/seek.c: (setup_dynamic_link),
+	(make_dv_pipeline), (make_vorbis_theora_pipeline), (query_rates),
+	(query_positions_elems), (query_positions_pads), (do_seek):
+	Update seek example.
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_event),
+	(gst_ogg_pad_typefind), (gst_ogg_demux_chain_elem_pad),
+	(gst_ogg_demux_queue_data), (gst_ogg_demux_chain_peer),
+	(gst_ogg_pad_submit_packet), (gst_ogg_pad_submit_page),
+	(gst_ogg_demux_handle_event),
+	(gst_ogg_demux_deactivate_current_chain),
+	(gst_ogg_demux_activate_chain), (gst_ogg_demux_perform_seek),
+	(gst_ogg_demux_collect_chain_info), (gst_ogg_demux_collect_info),
+	(gst_ogg_demux_chain), (gst_ogg_demux_send_event),
+	(gst_ogg_demux_loop):
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_collected):
+	* ext/theora/theoradec.c: (theora_dec_src_event),
+	(theora_dec_src_getcaps), (theora_dec_sink_event),
+	(theora_dec_push), (theora_dec_chain):
+	* ext/vorbis/Makefile.am:
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_src_event),
+	(vorbis_dec_sink_event), (vorbis_dec_push),
+	(vorbis_handle_data_packet):
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_sink_event),
+	(gst_vorbisenc_chain):
+	* gst/playback/gststreaminfo.c: (cb_probe):
+	* gst/subparse/gstsubparse.c: (gst_subparse_src_event):
+	* gst/videorate/gstvideorate.c: (gst_videorate_event):
+	* gst/videoscale/gstvideoscale.c:
+	(gst_videoscale_handle_src_event):
+	* gst/videotestsrc/gstvideotestsrc.c: (gst_videotestsrc_event):
+	* sys/ximage/ximagesink.c: (gst_ximagesink_show_frame),
+	(gst_ximagesink_navigation_send_event):
+	* sys/xvimage/xvimagesink.c:
+	(gst_xvimagesink_navigation_send_event):
+	Various event updates and cleanups
+
 2005-07-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/videoscale/gstvideoscale.c: (gst_videoscale_prepare_images):

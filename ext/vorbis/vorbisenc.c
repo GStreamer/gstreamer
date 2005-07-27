@@ -838,7 +838,10 @@ gst_vorbisenc_sink_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_TAG:
       if (vorbisenc->tags) {
-        gst_tag_list_insert (vorbisenc->tags, gst_event_tag_get_list (event),
+        GstTagList *list;
+
+        gst_event_parse_tag (event, &list);
+        gst_tag_list_insert (vorbisenc->tags, list,
             gst_tag_setter_get_merge_mode (GST_TAG_SETTER (vorbisenc)));
       } else {
         g_assert_not_reached ();
@@ -959,7 +962,7 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer)
     vorbis_block_clear (&vorbisenc->vb);
     vorbis_dsp_clear (&vorbisenc->vd);
     vorbis_info_clear (&vorbisenc->vi);
-    gst_pad_push_event (vorbisenc->srcpad, gst_event_new (GST_EVENT_EOS));
+    gst_pad_push_event (vorbisenc->srcpad, gst_event_new_eos ());
     //gst_element_set_eos (GST_ELEMENT (vorbisenc));
   }
   return GST_FLOW_OK;

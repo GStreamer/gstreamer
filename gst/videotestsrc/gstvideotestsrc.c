@@ -340,24 +340,27 @@ gst_videotestsrc_event (GstBaseSrc * bsrc, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
     {
-      switch (GST_EVENT_SEEK_FORMAT (event)) {
+      GstFormat format;
+      GstSeekType cur_type, stop_type;
+      GstSeekFlags flags;
+      gint64 cur, stop;
+
+      gst_event_parse_seek (event, NULL, &format, &flags, &cur_type, &cur,
+          &stop_type, &stop);
+
+      switch (format) {
         case GST_FORMAT_TIME:
-          new_n_frames =
-              GST_EVENT_SEEK_OFFSET (event) * (double) videotestsrc->rate /
-              GST_SECOND;
+          new_n_frames = cur * (double) videotestsrc->rate / GST_SECOND;
           videotestsrc->segment_start_frame = new_n_frames;
           videotestsrc->segment_end_frame =
-              GST_EVENT_SEEK_ENDOFFSET (event) * (double) videotestsrc->rate /
-              GST_SECOND;
-          videotestsrc->segment =
-              GST_EVENT_SEEK_TYPE (event) & GST_SEEK_FLAG_SEGMENT_LOOP;
+              stop * (double) videotestsrc->rate / GST_SECOND;
+          videotestsrc->segment = flags & GST_SEEK_FLAG_SEGMENT;
           break;
         case GST_FORMAT_DEFAULT:
-          new_n_frames = GST_EVENT_SEEK_OFFSET (event);
+          new_n_frames = cur;
           videotestsrc->segment_start_frame = new_n_frames;
-          videotestsrc->segment_end_frame = GST_EVENT_SEEK_ENDOFFSET (event);
-          videotestsrc->segment =
-              GST_EVENT_SEEK_TYPE (event) & GST_SEEK_FLAG_SEGMENT_LOOP;
+          videotestsrc->segment_end_frame = stop;
+          videotestsrc->segment = flags & GST_SEEK_FLAG_SEGMENT;
           break;
         default:
           res = FALSE;

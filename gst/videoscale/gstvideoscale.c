@@ -603,7 +603,8 @@ gst_videoscale_handle_src_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_NAVIGATION:
       event =
           GST_EVENT (gst_mini_object_make_writable (GST_MINI_OBJECT (event)));
-      structure = event->event_data.structure.structure;
+
+      structure = (GstStructure *) gst_event_get_structure (event);
       if (gst_structure_get_double (structure, "pointer_x", &a)) {
         gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
             a * videoscale->from_width / videoscale->to_width, NULL);

@@ -380,15 +380,18 @@ gst_videorate_event (GstPad * pad, GstEvent * event)
     goto done;
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_DISCONTINUOUS:
+    case GST_EVENT_NEWSEGMENT:
     {
-      gint64 start, end;
+      gint64 start, stop;
+      GstFormat format;
 
       GST_STREAM_LOCK (pad);
 
-      if (!(gst_event_discont_get_value (event, GST_FORMAT_TIME, &start, &end)))
+      gst_event_parse_newsegment (event, NULL, &format, &start, &stop, NULL);
+
+      if (format != GST_FORMAT_TIME) {
         GST_WARNING ("Got discont but doesn't have GST_FORMAT_TIME value");
-      else {
+      } else {
         gst_videorate_blank_data (videorate);
         videorate->first_ts = start;
       }

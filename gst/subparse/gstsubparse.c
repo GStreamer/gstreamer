@@ -172,13 +172,18 @@ static gboolean
 gst_subparse_src_event (GstPad * pad, GstEvent * event)
 {
   GstSubparse *self = GST_SUBPARSE (gst_pad_get_parent (pad));
+  GstFormat format;
+  GstSeekType type;
 
 #define grvif(x,y) g_return_val_if_fail (x, y)
 
-  /* we guaranteed these with the eventmask */
   grvif (GST_EVENT_TYPE (event) == GST_EVENT_SEEK, FALSE);
-  grvif (GST_EVENT_SEEK_FORMAT (event) == GST_FORMAT_TIME, FALSE);
-  grvif (GST_EVENT_SEEK_METHOD (event) == GST_SEEK_METHOD_SET, FALSE);
+
+  gst_event_parse_seek (event, NULL, &format, NULL, &type, NULL, NULL, NULL);
+
+  /* we guaranteed these with the eventmask */
+  grvif (format == GST_FORMAT_TIME, FALSE);
+  grvif (type == GST_SEEK_TYPE_SET, FALSE);
 
   gst_event_unref (event);
 
@@ -189,6 +194,8 @@ gst_subparse_src_event (GstPad * pad, GstEvent * event)
   self->next_offset = 0;
 
   GST_STREAM_UNLOCK (self->sinkpad);
+
+  gst_object_unref (self);
 
   return TRUE;
 }

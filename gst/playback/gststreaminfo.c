@@ -179,7 +179,9 @@ cb_probe (GstPad * pad, GstEvent * e, gpointer user_data)
 
   if (GST_EVENT_TYPE (e) == GST_EVENT_TAG) {
     gchar *codec;               //, *lang;
-    GstTagList *list = gst_event_tag_get_list (e);
+    GstTagList *list;
+
+    gst_event_parse_tag (e, &list);
 
     if (gst_tag_list_get_string (list, GST_TAG_VIDEO_CODEC, &codec)) {
       g_free (info->codec);
