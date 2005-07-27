@@ -329,18 +329,27 @@ gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
       *payload = NULL;
       break;
     case GST_EVENT_SEEK:
-      pl_length = 4 + 8 + 8 + 4;
+    {
+      gdouble rate;
+      GstFormat format;
+      GstSeekFlags flags;
+      GstSeekType cur_type, stop_type;
+      gint64 cur, stop;
+
+      gst_event_parse_seek ((GstEvent *) event, &rate, &format, &flags,
+          &cur_type, &cur, &stop_type, &stop);
+
+      pl_length = 4 + 4 + 4 + 8 + 4 + 8;
       *payload = g_malloc0 (pl_length);
-      /*
-         GST_WRITE_UINT32_BE (*payload, (guint32) GST_EVENT_SEEK_TYPE (event));
-         GST_WRITE_UINT64_BE (*payload + 4,
-         (guint64) GST_EVENT_SEEK_OFFSET (event));
-         GST_WRITE_UINT64_BE (*payload + 12,
-         (guint64) GST_EVENT_SEEK_ENDOFFSET (event));
-         GST_WRITE_UINT32_BE (*payload + 20,
-         (guint32) GST_EVENT_SEEK_ACCURACY (event));
-       */
+      /* FIXME write rate */
+      GST_WRITE_UINT32_BE (*payload, (guint32) format);
+      GST_WRITE_UINT32_BE (*payload + 4, (guint32) flags);
+      GST_WRITE_UINT32_BE (*payload + 8, (guint32) cur_type);
+      GST_WRITE_UINT64_BE (*payload + 12, (guint64) cur);
+      GST_WRITE_UINT32_BE (*payload + 20, (guint32) stop_type);
+      GST_WRITE_UINT64_BE (*payload + 24, (guint64) stop);
       break;
+    }
     case GST_EVENT_QOS:
     case GST_EVENT_NAVIGATION:
     case GST_EVENT_TAG:
@@ -481,19 +490,24 @@ gst_dp_event_from_packet (guint header_length, const guint8 * header,
       break;
     case GST_EVENT_SEEK:
     {
-      /*
-         GstSeekType type;
-         gint64 offset, endoffset;
-         GstSeekAccuracy accuracy;
+      gdouble rate;
+      GstFormat format;
+      GstSeekFlags flags;
+      GstSeekType cur_type, stop_type;
+      gint64 cur, stop;
 
-         type = (GstSeekType) GST_READ_UINT32_BE (payload);
-         offset = (gint64) GST_READ_UINT64_BE (payload + 4);
-         endoffset = (gint64) GST_READ_UINT64_BE (payload + 12);
-         accuracy = (GstSeekAccuracy) GST_READ_UINT32_BE (payload + 20);
-         event = gst_event_new_segment_seek (type, offset, endoffset);
-         GST_EVENT_TIMESTAMP (event) = GST_DP_HEADER_TIMESTAMP (header);
-         GST_EVENT_SEEK_ACCURACY (event) = accuracy;
-       */
+      /* FIXME, read rate */
+      rate = 1.0;
+      format = (GstFormat) GST_READ_UINT32_BE (payload);
+      flags = (GstSeekFlags) GST_READ_UINT32_BE (payload + 4);
+      cur_type = (GstSeekType) GST_READ_UINT32_BE (payload + 8);
+      cur = (gint64) GST_READ_UINT64_BE (payload + 12);
+      stop_type = (GstSeekType) GST_READ_UINT32_BE (payload + 20);
+      stop = (gint64) GST_READ_UINT64_BE (payload + 24);
+
+      event = gst_event_new_seek (rate, format, flags, cur_type, cur,
+          stop_type, stop);
+      GST_EVENT_TIMESTAMP (event) = GST_DP_HEADER_TIMESTAMP (header);
       break;
     }
     case GST_EVENT_QOS:
