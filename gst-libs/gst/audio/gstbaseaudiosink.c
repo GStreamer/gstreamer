@@ -290,11 +290,10 @@ gst_base_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
   GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (bsink);
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH:
-      if (GST_EVENT_FLUSH_DONE (event)) {
-      } else {
-        gst_ring_buffer_pause (sink->ringbuffer);
-      }
+    case GST_EVENT_FLUSH_START:
+      gst_ring_buffer_pause (sink->ringbuffer);
+      break;
+    case GST_EVENT_FLUSH_STOP:
       break;
     case GST_EVENT_EOS:
       break;

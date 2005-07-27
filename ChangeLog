@@ -1,5 +1,13 @@
 2005-07-27  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_event), (gst_base_audio_sink_render),
+	(gst_base_audio_sink_create_ringbuffer),
+	(gst_base_audio_sink_change_state):
+	Fix compilation.
+
+2005-07-27  Wim Taymans  <wim@fluendo.com>
+
 	* examples/seeking/seek.c: (setup_dynamic_link),
 	(make_dv_pipeline), (make_vorbis_theora_pipeline), (query_rates),
 	(query_positions_elems), (query_positions_pads), (do_seek):
