@@ -1,5 +1,10 @@
 2005-07-27  Wim Taymans  <wim@fluendo.com>
 
+	* ext/faad/gstfaad.c: (gst_faad_event):
+	Compile fixes.
+
+2005-07-27  Wim Taymans  <wim@fluendo.com>
+
 	* ext/amrnb/amrnbparse.c: (gst_amrnbparse_event),
 	(gst_amrnbparse_loop):
 	* ext/dv/gstdvdec.c: (gst_dvdec_handle_sink_event),
