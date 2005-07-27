@@ -268,8 +268,8 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
   GST_LOG_OBJECT (rmdemux, "handling event");
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_DISCONTINUOUS:
-      GST_DEBUG_OBJECT (rmdemux, "discontinuous event");
+    case GST_EVENT_NEWSEGMENT:
+      GST_DEBUG_OBJECT (rmdemux, "newsegment event");
       gst_event_unref (event);
       break;
     default:
@@ -465,8 +465,8 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
           rmdemux->have_pads = TRUE;
 
           gst_rmdemux_send_event (rmdemux,
-              gst_event_new_discontinuous (1.0, GST_FORMAT_TIME, (gint64) 0,
-                  (gint64) - 1, NULL));
+              gst_event_new_newsegment (1.0, GST_FORMAT_TIME, (gint64) 0,
+                  (gint64) - 1, 0));
         }
 
         /* The actual header is only 8 bytes */
@@ -720,8 +720,8 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     gst_element_add_pad (GST_ELEMENT (rmdemux), stream->pad);
 
     gst_pad_push_event (stream->pad,
-        gst_event_new_discontinuous (1.0, GST_FORMAT_TIME, (gint64) 0,
-            (gint64) - 1, NULL));
+        gst_event_new_newsegment (1.0, GST_FORMAT_TIME, (gint64) 0,
+            (gint64) - 1, 0));
 
     /* If there's some extra data then send it as the first packet */
     if (stream->extra_data_size > 0) {

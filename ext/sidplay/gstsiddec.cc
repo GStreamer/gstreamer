@@ -466,7 +466,7 @@ gst_siddec_sink_event (GstPad * pad, GstEvent * event)
       res = start_play_tune (siddec);
       GST_STREAM_UNLOCK (pad);
       break;
-    case GST_EVENT_DISCONTINUOUS:
+    case GST_EVENT_NEWSEGMENT:
       res = FALSE;
       break;
     default:

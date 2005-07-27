@@ -466,44 +466,56 @@ static gboolean
 gst_id3_tag_src_event (GstPad * pad, GstEvent * event)
 {
   GstID3Tag *tag;
+  gboolean res = FALSE;
 
   tag = GST_ID3_TAG (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      if (GST_EVENT_SEEK_FORMAT (event) == GST_FORMAT_BYTES &&
+    {
+      gdouble rate;
+      GstFormat format;
+      GstSeekType cur_type, stop_type;
+      GstSeekFlags flags;
+      gint64 cur, stop;
+
+      gst_event_parse_seek (event, &rate, &format, &flags,
+          &cur_type, &cur, &stop_type, &stop);
+
+      if (format == GST_FORMAT_BYTES &&
           tag->state == GST_ID3_TAG_STATE_NORMAL &&
-          GST_PAD_PEER (tag->sinkpad)) {
+          gst_pad_is_linked (tag->sinkpad)) {
         GstEvent *new;
         gint diff = 0;
 
-        switch (GST_EVENT_SEEK_METHOD (event)) {
-          case GST_SEEK_METHOD_SET:
+        switch (cur_type) {
+          case GST_SEEK_TYPE_SET:
             diff = tag->v2tag_size - tag->v2tag_size_new;
             break;
-          case GST_SEEK_METHOD_CUR:
+          case GST_SEEK_TYPE_CUR:
             break;
-          case GST_SEEK_METHOD_END:
-            diff =
-                GST_EVENT_SEEK_OFFSET (event) ? tag->v1tag_size_new -
-                tag->v1tag_size : 0;
+          case GST_SEEK_TYPE_END:
+            diff = cur ? tag->v1tag_size_new - tag->v1tag_size : 0;
             break;
           default:
             g_assert_not_reached ();
             break;
         }
-        new = gst_event_new_seek (GST_EVENT_SEEK_TYPE (event),
-            GST_EVENT_SEEK_OFFSET (event) + diff);
-        gst_event_unref (event);
-        return gst_pad_push_event (tag->sinkpad, new);
+        new = gst_event_new_seek (rate, format, flags,
+            cur_type, cur + diff, stop_type, stop);
+        gst_pad_push_event (tag->sinkpad, new);
+        res = TRUE;
       }
       break;
+    }
     default:
       break;
   }
 
   gst_event_unref (event);
-  return FALSE;
+  gst_object_unref (tag);
+
+  return res;
 }
 
 GstTagList *
@@ -773,7 +785,8 @@ gst_id3_tag_sink_event (GstPad * pad, GstEvent * event)
   GstID3Tag *tag = GST_ID3_TAG (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_DISCONTINUOUS:
+    case GST_EVENT_NEWSEGMENT:
+#if 0
       switch (tag->state) {
         case GST_ID3_TAG_STATE_READING_V2_TAG:{
           gint64 value, end_value;
@@ -844,16 +857,22 @@ gst_id3_tag_sink_event (GstPad * pad, GstEvent * event)
         default:
           g_assert_not_reached ();
       }
+#endif
       break;
     case GST_EVENT_TAG:
+    {
+      GstTagList *list;
+
+      gst_event_parse_tag (event, &list);
+
       if (tag->event_tags) {
-        gst_tag_list_insert (tag->event_tags, gst_event_tag_get_list (event),
-            GST_TAG_MERGE_PREPEND);
+        gst_tag_list_insert (tag->event_tags, list, GST_TAG_MERGE_PREPEND);
       } else {
-        tag->event_tags = gst_tag_list_copy (gst_event_tag_get_list (event));
+        tag->event_tags = gst_tag_list_copy (list);
       }
       gst_event_unref (event);
       break;
+    }
     case GST_EVENT_EOS:
       if (tag->v1tag_render && IS_MUXER (tag)) {
         GstTagList *merged;
@@ -1088,19 +1107,21 @@ gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer)
         /* seek to beginning */
         GST_LOG_OBJECT (tag, "seeking back to beginning");
         gst_id3_tag_set_state (tag, GST_ID3_TAG_STATE_SEEKING_TO_NORMAL);
+#if 0
         if (!gst_pad_push_event (tag->sinkpad,
                 gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_SET |
                     GST_SEEK_FLAG_FLUSH, tag->v2tag_size))) {
           GST_ELEMENT_ERROR (tag, CORE, SEEK, (NULL),
               ("can't seek back to beginning from reading ID3v1 tag"));
         }
+#endif
       } else {
         gst_id3_tag_send_tag_event (tag);
         /* set eos, we're done parsing tags */
         GST_LOG_OBJECT (tag, "setting EOS after reading ID3v1 tag");
         gst_id3_tag_set_state (tag, GST_ID3_TAG_STATE_NORMAL);
         //gst_element_set_eos (GST_ELEMENT (tag));
-        gst_pad_push_event (tag->srcpad, gst_event_new (GST_EVENT_EOS));
+        gst_pad_push_event (tag->srcpad, gst_event_new_eos ());
       }
       return GST_FLOW_OK;
     case GST_ID3_TAG_STATE_READING_V2_TAG:
@@ -1164,12 +1185,14 @@ gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer)
           return GST_FLOW_OK;
       /* seek to ID3v1 tag */
       gst_id3_tag_set_state (tag, GST_ID3_TAG_STATE_SEEKING_TO_V1_TAG);
+#if 0
       if (gst_pad_push_event (tag->sinkpad,
               gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_END |
                   GST_SEEK_FLAG_FLUSH, -128))) {
         gst_buffer_unref (buffer);
         return GST_FLOW_OK;
       }
+#endif
       gst_id3_tag_set_state (tag, GST_ID3_TAG_STATE_NORMAL_START);
       /* fall through */
     case GST_ID3_TAG_STATE_NORMAL_START:
@@ -1212,7 +1235,7 @@ gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer)
       if (tag->parse_mode == GST_ID3_TAG_PARSE_ANY) {
         gst_buffer_unref (buffer);
         //gst_element_set_eos (GST_ELEMENT (tag));
-        gst_pad_push_event (tag->srcpad, gst_event_new (GST_EVENT_EOS));
+        gst_pad_push_event (tag->srcpad, gst_event_new_eos ());
       } else {
         if (GST_BUFFER_OFFSET_IS_VALID (buffer)) {
           if (buffer->offset >= tag->v1tag_offset) {

@@ -638,6 +638,12 @@ error:
 static gboolean
 index_seek (GstMad * mad, GstPad * pad, GstEvent * event)
 {
+  gdouble rate;
+  GstFormat format;
+  GstSeekFlags flags;
+  GstSeekType cur_type, stop_type;
+  gint64 cur, stop;
+
   /* since we know the exact byteoffset of the frame,
      make sure to try bytes first */
 
@@ -649,10 +655,12 @@ index_seek (GstMad * mad, GstPad * pad, GstEvent * event)
   const GstFormat *try_formats = try_all_formats;
   const GstFormat *peer_formats;
 
+  gst_event_parse_seek (event, &rate, &format, &flags,
+      &cur_type, &cur, &stop_type, &stop);
+
   GstIndexEntry *entry = gst_index_get_assoc_entry (mad->index, mad->index_id,
       GST_INDEX_LOOKUP_BEFORE, 0,
-      GST_EVENT_SEEK_FORMAT (event),
-      GST_EVENT_SEEK_OFFSET (event));
+      format, cur);
 
   GST_DEBUG ("index seek");
 
@@ -674,18 +682,17 @@ index_seek (GstMad * mad, GstPad * pad, GstEvent * event)
 
       GST_DEBUG ("index %s %" G_GINT64_FORMAT
           " -> %s %" G_GINT64_FORMAT,
-          gst_format_get_details (GST_EVENT_SEEK_FORMAT (event))->nick,
-          GST_EVENT_SEEK_OFFSET (event),
-          gst_format_get_details (*try_formats)->nick, value);
+          gst_format_get_details (format)->nick,
+          cur, gst_format_get_details (*try_formats)->nick, value);
 
-      seek_event = gst_event_new_seek (*try_formats |
-          GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, value);
+      seek_event = gst_event_new_seek (rate, *try_formats, flags,
+          cur_type, value, stop_type, stop);
 
       if (gst_pad_send_event (GST_PAD_PEER (mad->sinkpad), seek_event)) {
         /* seek worked, we're done, loop will exit */
         mad->restart = TRUE;
-        g_assert (GST_EVENT_SEEK_FORMAT (event) == GST_FORMAT_TIME);
-        mad->segment_start = GST_EVENT_SEEK_OFFSET (event);
+        g_assert (format == GST_FORMAT_TIME);
+        mad->segment_start = cur;
         return TRUE;
       }
     }
@@ -698,8 +705,13 @@ index_seek (GstMad * mad, GstPad * pad, GstEvent * event)
 static gboolean
 normal_seek (GstMad * mad, GstPad * pad, GstEvent * event)
 {
-  gint64 time_offset, bytes_offset;
-  GstFormat format;
+  gdouble rate;
+  GstFormat format, conv;
+  GstSeekFlags flags;
+  GstSeekType cur_type, stop_type;
+  gint64 cur, stop;
+  gint64 time_cur, time_stop;
+  gint64 bytes_cur, bytes_stop;
   guint flush;
 
   /* const GstFormat *peer_formats; */
@@ -707,39 +719,46 @@ normal_seek (GstMad * mad, GstPad * pad, GstEvent * event)
 
   GST_DEBUG ("normal seek");
 
-  format = GST_FORMAT_TIME;
-  if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_TIME) {
-    if (!gst_mad_convert_src (pad, GST_EVENT_SEEK_FORMAT (event),
-            GST_EVENT_SEEK_OFFSET (event), &format, &time_offset)) {
-      /* probably unsupported seek format */
-      GST_DEBUG ("failed to convert format %u into GST_FORMAT_TIME",
-          GST_EVENT_SEEK_FORMAT (event));
-      return FALSE;
-    }
+  gst_event_parse_seek (event, &rate, &format, &flags,
+      &cur_type, &cur, &stop_type, &stop);
+
+  if (format != GST_FORMAT_TIME) {
+    conv = GST_FORMAT_TIME;
+    if (!gst_mad_convert_src (pad, format, cur, &conv, &time_cur))
+      goto convert_error;
+    if (!gst_mad_convert_src (pad, format, stop, &conv, &time_stop))
+      goto convert_error;
   } else {
-    time_offset = GST_EVENT_SEEK_OFFSET (event);
+    time_cur = cur;
+    time_stop = stop;
   }
 
-  GST_DEBUG ("seek to time %" GST_TIME_FORMAT, GST_TIME_ARGS (time_offset));
+  GST_DEBUG ("seek to time %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (time_cur), GST_TIME_ARGS (time_stop));
 
   /* shave off the flush flag, we'll need it later */
-  flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
+  flush = flags & GST_SEEK_FLAG_FLUSH;
 
   /* assume the worst */
   res = FALSE;
 
-  format = GST_FORMAT_BYTES;
-  if (gst_mad_convert_sink (pad, GST_FORMAT_TIME, time_offset,
-          &format, &bytes_offset)) {
+  conv = GST_FORMAT_BYTES;
+  if (!gst_mad_convert_sink (pad, GST_FORMAT_TIME, time_cur, &conv, &bytes_cur))
+    goto convert_error;
+  if (!gst_mad_convert_sink (pad, GST_FORMAT_TIME, time_stop, &conv,
+          &bytes_stop))
+    goto convert_error;
+
+  {
     GstEvent *seek_event;
 
     /* conversion succeeded, create the seek */
     seek_event =
-        gst_event_new_seek (format | GST_EVENT_SEEK_METHOD (event) | flush,
-        bytes_offset);
+        gst_event_new_seek (rate, GST_FORMAT_BYTES, flags, cur_type,
+        bytes_cur, stop_type, bytes_stop);
 
     /* do the seek */
-    res = gst_pad_send_event (GST_PAD_PEER (mad->sinkpad), seek_event);
+    res = gst_pad_push_event (mad->sinkpad, seek_event);
   }
 #if 0
   peer_formats = gst_pad_get_formats (GST_PAD_PEER (mad->sinkpad));
@@ -774,6 +793,14 @@ normal_seek (GstMad * mad, GstPad * pad, GstEvent * event)
 #endif
 
   return res;
+
+  /* ERRORS */
+convert_error:
+  {
+    /* probably unsupported seek format */
+    GST_DEBUG ("failed to convert format %u into GST_FORMAT_TIME", format);
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -934,16 +961,20 @@ gst_mad_sink_event (GstPad * pad, GstEvent * event)
   GST_DEBUG ("handling event %d", GST_EVENT_TYPE (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_DISCONTINUOUS:
+    case GST_EVENT_NEWSEGMENT:
       /* this isn't really correct? */
+      GST_STREAM_LOCK (pad);
       result = gst_pad_push_event (mad->srcpad, event);
       mad->tempsize = 0;
       /* we don't need to restart when we get here */
       mad->restart = FALSE;
+      GST_STREAM_UNLOCK (pad);
       break;
     case GST_EVENT_EOS:
+      GST_STREAM_LOCK (pad);
       mad->caps_set = FALSE;    /* could be a new stream */
       result = gst_pad_push_event (mad->srcpad, event);
+      GST_STREAM_UNLOCK (pad);
       break;
     default:
       result = gst_pad_push_event (mad->srcpad, event);

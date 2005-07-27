@@ -1024,9 +1024,10 @@ gst_mpeg2dec_chain (GstPad * pad, GstBuffer * buf)
         }
 
         if (mpeg2dec->pending_event) {
-          done =
-              GST_EVENT_SEEK_FLAGS (mpeg2dec->
-              pending_event) & GST_SEEK_FLAG_FLUSH;
+          done = TRUE;
+#if 0
+          GST_EVENT_SEEK_FLAGS (mpeg2dec->pending_event) & GST_SEEK_FLAG_FLUSH;
+#endif
 
           gst_mpeg2dec_src_event (mpeg2dec->srcpad, mpeg2dec->pending_event);
           mpeg2dec->pending_event = NULL;
@@ -1116,15 +1117,18 @@ gst_mpeg2dec_sink_event (GstPad * pad, GstEvent * event)
   gboolean ret = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_DISCONTINUOUS:
+    case GST_EVENT_NEWSEGMENT:
     {
+#if 0
       gint64 time;
       gint64 end_time;          /* 0.9 just to call
                                    gst_event_discont_get_value, non
                                    used anywhere else */
+#endif
 
       GST_STREAM_LOCK (pad);
 
+#if 0
       if (!gst_event_discont_get_value (event, GST_FORMAT_TIME, &time,
               &end_time)
           || !GST_CLOCK_TIME_IS_VALID (time)) {
@@ -1137,6 +1141,7 @@ gst_mpeg2dec_sink_event (GstPad * pad, GstEvent * event)
             GST_TIME_FORMAT ")", mpeg2dec->next_time,
             GST_TIME_ARGS (mpeg2dec->next_time));
       }
+#endif
 
       // what's hell is that
       /*
@@ -1151,24 +1156,27 @@ gst_mpeg2dec_sink_event (GstPad * pad, GstEvent * event)
          }
        */
 
-      GST_STREAM_UNLOCK (pad);
       ret = gst_pad_event_default (pad, event);
+      GST_STREAM_UNLOCK (pad);
       break;
     }
-    case GST_EVENT_FLUSH:
-    {
+    case GST_EVENT_FLUSH_START:
+      ret = gst_pad_event_default (pad, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      GST_STREAM_LOCK (pad);
       mpeg2dec->discont_state = MPEG2DEC_DISC_NEW_PICTURE;
       gst_mpeg2dec_flush_decoder (mpeg2dec);
       ret = gst_pad_event_default (pad, event);
+      GST_STREAM_UNLOCK (pad);
       break;
-    }
     case GST_EVENT_EOS:
       GST_STREAM_LOCK (pad);
       if (mpeg2dec->index && mpeg2dec->closed) {
         gst_index_commit (mpeg2dec->index, mpeg2dec->index_id);
       }
-      GST_STREAM_UNLOCK (pad);
       ret = gst_pad_event_default (pad, event);
+      GST_STREAM_UNLOCK (pad);
       break;
 
     default:
@@ -1445,14 +1453,21 @@ index_seek (GstPad * pad, GstEvent * event)
 {
   GstIndexEntry *entry;
   GstMpeg2dec *mpeg2dec;
+  gdouble rate;
+  GstFormat format;
+  GstSeekFlags flags;
+  GstSeekType cur_type, stop_type;
+  gint64 cur, stop;
 
   mpeg2dec = GST_MPEG2DEC (GST_PAD_PARENT (pad));
 
-  entry = gst_index_get_assoc_entry (mpeg2dec->index, mpeg2dec->index_id,
-      GST_INDEX_LOOKUP_BEFORE, GST_ASSOCIATION_FLAG_KEY_UNIT,
-      GST_EVENT_SEEK_FORMAT (event), GST_EVENT_SEEK_OFFSET (event));
+  gst_event_parse_seek (event, &rate, &format, &flags,
+      &cur_type, &cur, &stop_type, &stop);
 
-  if ((entry) && GST_PAD_PEER (mpeg2dec->sinkpad)) {
+  entry = gst_index_get_assoc_entry (mpeg2dec->index, mpeg2dec->index_id,
+      GST_INDEX_LOOKUP_BEFORE, GST_ASSOCIATION_FLAG_KEY_UNIT, format, cur);
+
+  if ((entry) && gst_pad_is_linked (mpeg2dec->sinkpad)) {
     const GstFormat *peer_formats, *try_formats;
 
     /* since we know the exact byteoffset of the frame, make sure to seek on bytes first */
@@ -1478,16 +1493,15 @@ index_seek (GstPad * pad, GstEvent * event)
 
         GST_CAT_DEBUG (GST_CAT_SEEK, "index %s %" G_GINT64_FORMAT
             " -> %s %" G_GINT64_FORMAT,
-            gst_format_get_details (GST_EVENT_SEEK_FORMAT (event))->nick,
-            GST_EVENT_SEEK_OFFSET (event),
-            gst_format_get_details (*try_formats)->nick, value);
+            gst_format_get_details (format)->nick,
+            cur, gst_format_get_details (*try_formats)->nick, value);
 
         /* lookup succeeded, create the seek */
         seek_event =
-            gst_event_new_seek (*try_formats | GST_SEEK_METHOD_SET |
-            GST_SEEK_FLAG_FLUSH, value);
+            gst_event_new_seek (rate, *try_formats, flags, cur_type, value,
+            stop_type, stop);
         /* do the seek */
-        if (gst_pad_send_event (GST_PAD_PEER (mpeg2dec->sinkpad), seek_event)) {
+        if (gst_pad_push_event (mpeg2dec->sinkpad, seek_event)) {
           /* seek worked, we're done, loop will exit */
 #if 0
           mpeg2dec->segment_start = GST_EVENT_SEEK_OFFSET (event);
@@ -1505,9 +1519,14 @@ index_seek (GstPad * pad, GstEvent * event)
 static gboolean
 normal_seek (GstPad * pad, GstEvent * event)
 {
-  gint64 time_offset, bytes_offset;
-  GstFormat format;
   guint flush;
+  gdouble rate;
+  GstFormat format, conv;
+  GstSeekFlags flags;
+  GstSeekType cur_type, stop_type;
+  gint64 cur, stop;
+  gint64 time_cur, bytes_cur;
+  gint64 time_stop, bytes_stop;
 
   GstMpeg2dec *mpeg2dec;
 
@@ -1518,39 +1537,48 @@ normal_seek (GstPad * pad, GstEvent * event)
 
   GST_DEBUG ("normal seek");
 
-  format = GST_FORMAT_TIME;
-  if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_TIME) {
-    if (!gst_mpeg2dec_src_convert (pad, GST_EVENT_SEEK_FORMAT (event),
-            GST_EVENT_SEEK_OFFSET (event), &format, &time_offset)) {
-      /* probably unsupported seek format */
-      GST_DEBUG ("failed to convert format %u into GST_FORMAT_TIME",
-          GST_EVENT_SEEK_FORMAT (event));
-      return FALSE;
-    }
+  gst_event_parse_seek (event, &rate, &format, &flags,
+      &cur_type, &cur, &stop_type, &stop);
+
+  conv = GST_FORMAT_TIME;
+  if (format != GST_FORMAT_TIME) {
+    if (!gst_mpeg2dec_src_convert (pad, format, cur, &conv, &time_cur))
+      goto convert_failed;
+    if (!gst_mpeg2dec_src_convert (pad, format, stop, &conv, &time_stop))
+      goto convert_failed;
   } else {
-    time_offset = GST_EVENT_SEEK_OFFSET (event);
+    time_cur = cur;
+    time_stop = stop;
   }
 
-  GST_DEBUG ("seek to time %" GST_TIME_FORMAT, GST_TIME_ARGS (time_offset));
+  GST_DEBUG ("seek to time %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (time_cur), GST_TIME_ARGS (time_stop));
 
   /* shave off the flush flag, we'll need it later */
-  flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
+  flush = flags & GST_SEEK_FLAG_FLUSH;
 
   /* assume the worst */
   res = FALSE;
 
-  format = GST_FORMAT_BYTES;
-  if (gst_mpeg2dec_sink_convert (pad, GST_FORMAT_TIME, time_offset,
-          &format, &bytes_offset)) {
+  conv = GST_FORMAT_BYTES;
+  if (!gst_mpeg2dec_sink_convert (pad, GST_FORMAT_TIME, time_cur,
+          &format, &bytes_cur))
+    goto convert_failed;
+  if (!gst_mpeg2dec_sink_convert (pad, GST_FORMAT_TIME, time_stop,
+          &format, &bytes_stop))
+    goto convert_failed;
+
+
+  {
     GstEvent *seek_event;
 
     /* conversion succeeded, create the seek */
     seek_event =
-        gst_event_new_seek (format | GST_EVENT_SEEK_METHOD (event) | flush,
-        bytes_offset);
+        gst_event_new_seek (rate, GST_FORMAT_BYTES, flags,
+        cur_type, bytes_cur, stop_type, bytes_stop);
 
     /* do the seek */
-    res = gst_pad_send_event (GST_PAD_PEER (mpeg2dec->sinkpad), seek_event);
+    res = gst_pad_push_event (mpeg2dec->sinkpad, seek_event);
   }
 #if 0
 
@@ -1591,6 +1619,14 @@ normal_seek (GstPad * pad, GstEvent * event)
 #endif
 
   return res;
+
+  /* ERRORS */
+convert_failed:
+  {
+    /* probably unsupported seek format */
+    GST_DEBUG ("failed to convert format %u into GST_FORMAT_TIME", format);
+    return FALSE;
+  }
 }
 
 
@@ -1623,11 +1659,7 @@ gst_mpeg2dec_src_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_NAVIGATION:
       /* Forward a navigation event unchanged */
-      if (GST_PAD_PEER (mpeg2dec->sinkpad))
-        return gst_pad_send_event (GST_PAD_PEER (mpeg2dec->sinkpad), event);
-
-      res = FALSE;
-      break;
+      return gst_pad_push_event (mpeg2dec->sinkpad, event);
     default:
       res = FALSE;
       break;
@@ -1639,20 +1671,24 @@ gst_mpeg2dec_src_event (GstPad * pad, GstEvent * event)
 static GstElementStateReturn
 gst_mpeg2dec_change_state (GstElement * element)
 {
+  GstElementStateReturn ret;
   GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (element);
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
       break;
     case GST_STATE_READY_TO_PAUSED:
-    {
       mpeg2dec->next_time = 0;
-
       gst_mpeg2dec_reset (mpeg2dec);
       break;
-    }
     case GST_STATE_PAUSED_TO_PLAYING:
+    default:
       break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
@@ -1663,8 +1699,7 @@ gst_mpeg2dec_change_state (GstElement * element)
     default:
       break;
   }
-
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  return ret;
 }
 
 static void

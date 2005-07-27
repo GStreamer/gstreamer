@@ -243,7 +243,6 @@ gst_amrnbparse_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-    case GST_EVENT_DISCONTINUOUS:
     default:
       break;
   }
@@ -430,7 +429,7 @@ need_pause:
 eos:
   {
     GST_LOG_OBJECT (amrnbparse, "pausing task");
-    gst_pad_push_event (amrnbparse->srcpad, gst_event_new (GST_EVENT_EOS));
+    gst_pad_push_event (amrnbparse->srcpad, gst_event_new_eos ());
     gst_pad_pause_task (pad);
     return;
   }
