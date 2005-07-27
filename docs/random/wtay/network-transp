@@ -1,0 +1,48 @@
+Network Transparent elements
+----------------------------
+
+1) netbin
+
+   - exposes local shims and remote real elements.
+   - all shim pads can be connected to other shim
+     pads and operations are proxied to real elements.
+   - when the pads are not part of the same bin, network
+     transparent ghostpads are created to connect them.
+   - bin has host property to indicate where it should
+     run.
+
+2) netpipeline
+
+   - synchronizes different netbins, this means distributing
+     the same element base time to the remote bins.
+   - clocks master/slave is set up.
+
+3) netpad
+
+   - all pad operations are proxied to peer pad using
+     a network protocol, possibly selectable from RTP/TCP/....
+     Serialisation of buffers and events are to be considered
+     but also methods with their arguments. A generator would
+     not be too bad to automate this.
+   - the implementation would be fairly similar to the
+     ghostpad implementation.
+   - This includes event passing (bidirectional) and
+     data passing (unidirectional). Some events have to pass
+     in parallel with the datastream so the event path should
+     use a different connection.
+     
+4) GStreamer deamon
+
+   - each host has to run a deamon that listens for
+     commands and creates elements/pipelines and performs all
+     operations on the real pipeline.
+
+Other stuff
+-----------
+
+ - what about migrating elements from one host to another. This
+   would happen when an element is removed form a bin into another
+   bin. 
+
+ - do we have/need a fast protocol for stuff on the same machine or
+   will regular network connections work fine?

@@ -1,5 +1,10 @@
 2005-07-27  Wim Taymans  <wim@fluendo.com>
 
+	* docs/random/wtay/network-transp:
+	Some old doc I had.
+
+2005-07-27  Wim Taymans  <wim@fluendo.com>
+
 	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_packet_from_event),
 	(gst_dp_event_from_packet):
 	Fix serialization of seek events.
