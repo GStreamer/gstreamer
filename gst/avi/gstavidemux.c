@@ -460,22 +460,30 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      GST_DEBUG_OBJECT (avi, "seek format %d, %08x",
-          GST_EVENT_SEEK_FORMAT (event), stream->strh->type);
+    {
+      GstFormat format;
+      GstSeekFlags flags;
+      gint64 cur, stop;
 
-      switch (GST_EVENT_SEEK_FORMAT (event)) {
+      gst_event_parse_seek (event, NULL, &format, &flags, NULL, &cur, NULL,
+          &stop);
+
+      GST_DEBUG_OBJECT (avi, "seek format %d, %08x",
+          format, stream->strh->type);
+
+      switch (format) {
         case GST_FORMAT_BYTES:
         case GST_FORMAT_DEFAULT:
         case GST_FORMAT_TIME:{
           gst_avi_index_entry *entry = NULL, *real;
-          gint64 desired_offset = GST_EVENT_SEEK_OFFSET (event);
+          gint64 desired_offset = cur;
           guint32 flags;
 
           GST_DEBUG_OBJECT (avi, "seeking to %" G_GINT64_FORMAT,
               desired_offset);
 
           flags = GST_RIFF_IF_KEYFRAME;
-          switch (GST_EVENT_SEEK_FORMAT (event)) {
+          switch (format) {
             case GST_FORMAT_BYTES:
               entry = gst_avi_demux_index_entry_for_byte (avi, 0,       //stream->num,
                   desired_offset, flags);
@@ -494,6 +502,8 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
               real = gst_avi_demux_index_entry_for_time (avi, stream->num,
                   desired_offset, 0);
               break;
+            default:
+              break;
           }
 
           if (!(flags & GST_SEEK_FLAG_ACCURATE))
@@ -502,14 +512,13 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
           if (entry) {
             avi->seek_offset = entry->offset + avi->index_offset;
             avi->last_seek = real->ts;
-            avi->seek_flush =
-                (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH);
+            avi->seek_flush = flags & GST_SEEK_FLAG_FLUSH;
             avi->seek_entry = entry->index_nr;
             GST_DEBUG_OBJECT (avi, "Will seek to entry %d", avi->seek_entry);
             res = gst_avi_demux_handle_seek (avi);
           } else {
             GST_DEBUG_OBJECT (avi, "no index entry found for format=%d value=%"
-                G_GINT64_FORMAT, GST_EVENT_SEEK_FORMAT (event), desired_offset);
+                G_GINT64_FORMAT, format, desired_offset);
             res = FALSE;
           }
           GST_LOG ("seek done");
@@ -520,6 +529,7 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
           break;
       }
       break;
+    }
     default:
       res = FALSE;
       break;
@@ -1912,11 +1922,11 @@ done:
   }
 
   /* send initial discont */
-  avi->seek_event = gst_event_new_discontinuous (1.0,
+  avi->seek_event = gst_event_new_newsegment (1.0,
       GST_FORMAT_TIME, (gint64) 0,
       (gint64) (((gfloat) avi->stream[0].strh->scale) *
           avi->stream[0].strh->length /
-          avi->stream[0].strh->rate) * GST_SECOND, NULL);
+          avi->stream[0].strh->rate) * GST_SECOND, 0);
 
   /* at this point we know all the streams and we can signal the no more
    * pads signal */
@@ -1938,18 +1948,18 @@ gst_avi_demux_handle_seek (GstAviDemux * avi)
 
   GST_LOG ("Seeking to entry %d", avi->seek_entry);
 
-  gst_avi_demux_send_event (avi, gst_event_new_flush (FALSE));
+  gst_avi_demux_send_event (avi, gst_event_new_flush_start ());
 
   GST_STREAM_LOCK (avi->sinkpad);
 
   avi->current_entry = avi->seek_entry;
-  avi->seek_event = gst_event_new_discontinuous (1.0,
+  avi->seek_event = gst_event_new_newsegment (1.0,
       GST_FORMAT_TIME, avi->last_seek,
       (gint64) (((gfloat) avi->stream[0].strh->scale) *
           avi->stream[0].strh->length /
-          avi->stream[0].strh->rate) * GST_SECOND, NULL);
+          avi->stream[0].strh->rate) * GST_SECOND, 0);
 
-  gst_avi_demux_send_event (avi, gst_event_new_flush (TRUE));
+  gst_avi_demux_send_event (avi, gst_event_new_flush_stop ());
 
   gst_pad_start_task (avi->sinkpad, (GstTaskFunction) gst_avi_demux_loop,
       avi->sinkpad);
@@ -1969,7 +1979,7 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
     if (avi->current_entry >= avi->index_size) {
       GST_LOG_OBJECT (avi, "Handled last index entry, setting EOS (%d > %d)",
           avi->current_entry, avi->index_size);
-      gst_avi_demux_send_event (avi, gst_event_new (GST_EVENT_EOS));
+      gst_avi_demux_send_event (avi, gst_event_new_eos ());
       return GST_FLOW_WRONG_STATE;
     } else {
       GstBuffer *buf;

@@ -328,9 +328,12 @@ gst_shout2send_event (GstBaseSink * sink, GstEvent * event)
       GST_DEBUG ("tag event received");
       /* vorbis audio doesnt need metadata setting on the icecast level, only mp3 */
       if (shout2send->tags && shout2send->audio_format == SHOUT_FORMAT_MP3) {
+        GstTagList *list;
+
+        gst_event_parse_tag (event, &list);
+
         gst_tag_list_insert (shout2send->tags,
-            gst_event_tag_get_list (event),
-            gst_tag_setter_get_merge_mode (GST_TAG_SETTER (shout2send)));
+            list, gst_tag_setter_get_merge_mode (GST_TAG_SETTER (shout2send)));
         /* lets get the artist and song tags */
         tempmetadata = NULL;
         gst_tag_list_foreach ((GstTagList *) shout2send->tags,

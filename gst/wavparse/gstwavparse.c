@@ -697,7 +697,7 @@ gst_wavparse_other (GstWavParse * wav)
 static gboolean
 gst_wavparse_handle_seek (GstWavParse * wav)
 {
-  gst_pad_push_event (wav->srcpad, gst_event_new_flush (FALSE));
+  gst_pad_push_event (wav->srcpad, gst_event_new_flush_start ());
 
   GST_STREAM_LOCK (wav->sinkpad);
 
@@ -707,12 +707,12 @@ gst_wavparse_handle_seek (GstWavParse * wav)
   /*
      FIXME : currently the seek/discont doesn't care about the stop value ! 
    */
-  wav->seek_event = gst_event_new_discontinuous (1.0,
+  wav->seek_event = gst_event_new_newsegment (1.0,
       GST_FORMAT_TIME,
       GST_SECOND *
-      wav->seek_offset / wav->bps, GST_SECOND * wav->datasize / wav->bps, NULL);
+      wav->seek_offset / wav->bps, GST_SECOND * wav->datasize / wav->bps, 0);
 
-  gst_pad_push_event (wav->srcpad, gst_event_new_flush (TRUE));
+  gst_pad_push_event (wav->srcpad, gst_event_new_flush_stop ());
 
   gst_pad_start_task (wav->sinkpad, (GstTaskFunction) gst_wavparse_loop,
       wav->sinkpad);
@@ -817,9 +817,9 @@ gst_wavparse_stream_headers (GstWavParse * wav)
 
   GST_DEBUG ("Finished parsing headers");
   /* Initial discont */
-  wav->seek_event = gst_event_new_discontinuous (1.0,
+  wav->seek_event = gst_event_new_newsegment (1.0,
       GST_FORMAT_TIME,
-      (gint64) 0, (gint64) GST_SECOND * wav->datasize / wav->bps, NULL);
+      (gint64) 0, (gint64) GST_SECOND * wav->datasize / wav->bps, 0);
 
   return GST_FLOW_OK;
 }
@@ -836,10 +836,7 @@ gst_wavparse_stream_data (GstWavParse * wav)
   GST_DEBUG ("stream data !!!");
   /* Get the next n bytes and output them */
   if (wav->dataleft == 0) {
-    if ((res =
-            gst_pad_push_event (wav->srcpad,
-                gst_event_new (GST_EVENT_EOS))) != GST_FLOW_OK)
-      return res;
+    gst_pad_push_event (wav->srcpad, gst_event_new_eos ());
     return GST_FLOW_WRONG_STATE;
   }
 
@@ -921,7 +918,7 @@ pause:
     GST_ELEMENT_ERROR (wav, STREAM, STOPPED,
         ("streaming stopped, reason %d", ret),
         ("streaming stopped, reason %d", ret));
-    gst_pad_push_event (wav->srcpad, gst_event_new (GST_EVENT_EOS));
+    gst_pad_push_event (wav->srcpad, gst_event_new_eos ());
   }
 }
 
@@ -1105,22 +1102,22 @@ gst_wavparse_srcpad_event (GstPad * pad, GstEvent * event)
       gint64 bseek_start, bseek_stop;
       GstFormat format;
       GstFormat dformat = GST_FORMAT_BYTES;
+      gint64 cur, stop;
 
-      format = GST_EVENT_SEEK_FORMAT (event);
+      gst_event_parse_seek (event, NULL, &format, NULL,
+          NULL, &cur, NULL, &stop);
 
       GST_DEBUG ("seek format %d", format);
 
       /* find the corresponding bytestream position */
       if (format == GST_FORMAT_BYTES) {
-        bseek_start = GST_EVENT_SEEK_OFFSET (event);
-        bseek_stop = GST_EVENT_SEEK_ENDOFFSET (event);
+        bseek_start = cur;
+        bseek_stop = stop;
       } else {
-        res &=
-            gst_wavparse_pad_convert (pad, format,
-            GST_EVENT_SEEK_OFFSET (event), &dformat, &bseek_start);
-        res &=
-            gst_wavparse_pad_convert (pad, format,
-            GST_EVENT_SEEK_ENDOFFSET (event), &dformat, &bseek_stop);
+        res &= gst_wavparse_pad_convert (pad, format,
+            cur, &dformat, &bseek_start);
+        res &= gst_wavparse_pad_convert (pad, format,
+            stop, &dformat, &bseek_stop);
         if (!res)
           return res;
       }

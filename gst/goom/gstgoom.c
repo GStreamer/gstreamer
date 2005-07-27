@@ -315,11 +315,12 @@ gst_goom_event (GstPad * pad, GstEvent * event)
   goom = GST_GOOM (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_DISCONTINUOUS:
+    case GST_EVENT_NEWSEGMENT:
     {
       gint64 start = 0, stop = 0;
+      GstFormat format;
 
-      gst_event_discont_get_value (event, GST_FORMAT_TIME, &start, &stop);
+      gst_event_parse_newsegment (event, NULL, &format, &start, &stop, NULL);
       gst_adapter_clear (goom->adapter);
       goom->audio_basetime = start;
       goom->samples_consumed = 0;

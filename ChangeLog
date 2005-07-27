@@ -1,3 +1,28 @@
+2005-07-27  Wim Taymans  <wim@fluendo.com>
+
+	* ext/amrnb/amrnbparse.c: (gst_amrnbparse_event),
+	(gst_amrnbparse_loop):
+	* ext/dv/gstdvdec.c: (gst_dvdec_handle_sink_event),
+	(gst_dvdec_handle_src_event), (gst_dvdec_decode_frame):
+	* ext/mad/gstid3tag.c: (gst_id3_tag_src_event),
+	(gst_id3_tag_sink_event), (gst_id3_tag_chain):
+	* ext/mad/gstmad.c: (gst_mad_src_query), (index_seek),
+	(normal_seek), (gst_mad_sink_event), (gst_mad_chain):
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* ext/shout2/gstshout2.c: (gst_shout2send_event):
+	* ext/sidplay/gstsiddec.cc:
+	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_event),
+	(gst_avi_demux_send_event), (gst_avi_demux_stream_header),
+	(gst_avi_demux_handle_seek), (gst_avi_demux_process_next_entry):
+	* gst/goom/gstgoom.c: (gst_goom_event):
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_sink_event),
+	(gst_rmdemux_chain), (gst_rmdemux_send_event),
+	(gst_rmdemux_add_stream):
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_handle_seek),
+	(gst_wavparse_stream_headers), (gst_wavparse_stream_data),
+	(gst_wavparse_loop), (gst_wavparse_srcpad_event):
+	Various event updates and cleanups.
+
 2005-07-25  Christian Schaller  <uraeus@gnome.org>
 
 

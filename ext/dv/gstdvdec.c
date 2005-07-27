@@ -783,36 +783,36 @@ gst_dvdec_handle_sink_event (GstPad * pad, GstEvent * event)
   gboolean res = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH:
-      if (!GST_EVENT_FLUSH_DONE (event)) {
-        /* we are not blocking on anything exect the push() calls
-         * to the peer which will be unblocked by forwarding the
-         * event.*/
-        res = gst_dvdec_send_event (dvdec, event);
+    case GST_EVENT_FLUSH_START:
+      /* we are not blocking on anything exect the push() calls
+       * to the peer which will be unblocked by forwarding the
+       * event.*/
+      res = gst_dvdec_send_event (dvdec, event);
 
-        /* and wait till streaming stops, not strictly needed as
-         * the peer calling us will do the same. */
-        GST_STREAM_LOCK (pad);
-        GST_STREAM_UNLOCK (pad);
-      } else {
-        GST_STREAM_LOCK (pad);
-        gst_adapter_clear (dvdec->adapter);
-        GST_DEBUG ("cleared adapter");
-        res = gst_dvdec_send_event (dvdec, event);
-        GST_STREAM_UNLOCK (pad);
-      }
-      break;
-    case GST_EVENT_DISCONTINUOUS:
-    {
+      /* and wait till streaming stops, not strictly needed as
+       * the peer calling us will do the same. */
       GST_STREAM_LOCK (pad);
+      GST_STREAM_UNLOCK (pad);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      GST_STREAM_LOCK (pad);
+      gst_adapter_clear (dvdec->adapter);
+      GST_DEBUG ("cleared adapter");
+      res = gst_dvdec_send_event (dvdec, event);
+      GST_STREAM_UNLOCK (pad);
+      break;
+    case GST_EVENT_NEWSEGMENT:
+    {
+      GstFormat format;
+
+      GST_STREAM_LOCK (pad);
+
       /* parse byte start and stop positions */
-      if (!(res = gst_event_discont_get_value (event,
-                  GST_FORMAT_BYTES, &dvdec->start_byte, &dvdec->stop_byte)))
-        goto done;
+      gst_event_parse_newsegment (event, NULL, &format,
+          &dvdec->start_byte, &dvdec->stop_byte, NULL);
 
       /* and queue a DISCONT before sending the next set of buffers */
       dvdec->need_discont = TRUE;
-    done:
       gst_event_unref (event);
       GST_STREAM_UNLOCK (pad);
       break;
@@ -846,25 +846,30 @@ gst_dvdec_handle_src_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
     {
-      gint64 start_position, end_position;
-      GstFormat format;
       GstEvent *newevent;
       gint64 offset;
+      GstFormat format, conv;
+      gint64 cur, stop;
+      gdouble rate;
+      GstSeekType cur_type, stop_type;
+      GstSeekFlags flags;
+      gint64 start_position, end_position;
 
-      if ((offset = GST_EVENT_SEEK_OFFSET (event)) != -1) {
+      gst_event_parse_seek (event, &rate, &format, &flags,
+          &cur_type, &cur, &stop_type, &stop);
+
+      if ((offset = cur) != -1) {
         /* bring the format to time on srcpad. */
-        format = GST_FORMAT_TIME;
+        conv = GST_FORMAT_TIME;
         if (!(res = gst_pad_query_convert (pad,
-                    GST_EVENT_SEEK_FORMAT (event),
-                    offset, &format, &start_position))) {
+                    format, offset, &conv, &start_position))) {
           /* could not convert seek format to time offset */
           break;
         }
         /* and convert to bytes on sinkpad. */
-        format = GST_FORMAT_BYTES;
+        conv = GST_FORMAT_BYTES;
         if (!(res = gst_pad_query_convert (dvdec->sinkpad,
-                    GST_FORMAT_TIME,
-                    start_position, &format, &start_position))) {
+                    GST_FORMAT_TIME, start_position, &conv, &start_position))) {
           /* could not convert time format to bytes offset */
           break;
         }
@@ -872,18 +877,18 @@ gst_dvdec_handle_src_event (GstPad * pad, GstEvent * event)
         start_position = -1;
       }
 
-      if ((offset = GST_EVENT_SEEK_ENDOFFSET (event)) != -1) {
+      if ((offset = stop) != -1) {
         /* bring the format to time on srcpad. */
-        format = GST_FORMAT_TIME;
+        conv = GST_FORMAT_TIME;
         if (!(res = gst_pad_query_convert (pad,
-                    GST_EVENT_SEEK_FORMAT (event),
-                    offset, &format, &end_position))) {
+                    format, offset, &conv, &end_position))) {
           /* could not convert seek format to time offset */
           break;
         }
+        conv = GST_FORMAT_BYTES;
         /* and convert to bytes on sinkpad. */
         if (!(res = gst_pad_query_convert (dvdec->sinkpad,
-                    GST_FORMAT_TIME, end_position, &format, &end_position))) {
+                    GST_FORMAT_TIME, end_position, &conv, &end_position))) {
           /* could not convert seek format to bytes offset */
           break;
         }
@@ -891,9 +896,8 @@ gst_dvdec_handle_src_event (GstPad * pad, GstEvent * event)
         end_position = -1;
       }
       /* now this is the updated seek event on bytes */
-      newevent = gst_event_new_segment_seek (
-          (GST_EVENT_SEEK_TYPE (event) & ~GST_SEEK_FORMAT_MASK) |
-          GST_FORMAT_BYTES, start_position, end_position);
+      newevent = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags,
+          cur_type, start_position, stop_type, end_position);
 
       res = gst_pad_push_event (dvdec->sinkpad, newevent);
       break;
@@ -1227,8 +1231,8 @@ gst_dvdec_decode_frame (GstDVDec * dvdec, const guint8 * data)
       goto discont_error;
     }
 
-    event = gst_event_new_discontinuous (1.0, GST_FORMAT_TIME,
-        dvdec->start_timestamp, dvdec->stop_timestamp, NULL);
+    event = gst_event_new_newsegment (1.0, GST_FORMAT_TIME,
+        dvdec->start_timestamp, dvdec->stop_timestamp, 0);
     gst_dvdec_send_event (dvdec, event);
 
     dvdec->need_discont = FALSE;
