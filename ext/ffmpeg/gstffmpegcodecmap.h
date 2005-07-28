@@ -158,7 +158,7 @@ gst_ffmpeg_time_gst_to_ff (guint64 time, AVRational base)
   if (!GST_CLOCK_TIME_IS_VALID (time)) {
     out = AV_NOPTS_VALUE;
   } else {
-    AVRational bq;
+    AVRational bq = { 1, GST_SECOND };
     out = av_rescale_q (time, bq, base);
   }
 

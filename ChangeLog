@@ -1,3 +1,10 @@
+2005-07-28  daniel fischer  <dan@f3c.com>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	  Actually initialize value (#311802).
+
 2005-07-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.h:
