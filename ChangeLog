@@ -1,3 +1,11 @@
+2005-07-28  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/base/gstbasetransform.c: (gst_base_transform_setcaps),
+	(gst_base_transform_handle_buffer):
+	* gst/base/gstbasetransform.h:
+	  Remove broken delay_configure (fixes renegotiation of software
+	  scaling pipelines); remove some leftover printf()s.
+
 2005-07-28  Wim Taymans  <wim@fluendo.com>
 
 	* check/gst/gstghostpad.c: (GST_START_TEST), (gst_ghost_pad_suite):

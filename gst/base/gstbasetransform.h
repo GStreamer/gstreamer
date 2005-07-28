@@ -54,7 +54,6 @@ struct _GstBaseTransform {
 
   gboolean	 in_place;
   guint		 out_size;
-  gboolean	 delay_configure;
 };
 
 struct _GstBaseTransformClass {

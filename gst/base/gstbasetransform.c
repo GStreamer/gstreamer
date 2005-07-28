@@ -299,7 +299,6 @@ gst_base_transform_configure_caps (GstBaseTransform * trans, GstCaps * in,
   return ret;
 }
 
-#include <string.h>
 static gboolean
 gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
 {
@@ -322,10 +321,7 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
 
   /* see how we can transform the input caps */
   othercaps = gst_base_transform_transform_caps (trans, pad, caps);
-  if (!strcmp (GST_OBJECT_NAME (trans), "vconv")) {
-    g_print ("%s transforms into %s\n",
-        gst_caps_to_string (caps), gst_caps_to_string (othercaps));
-  }
+
   /* check if transform is empty */
   if (!othercaps || gst_caps_is_empty (othercaps))
     goto no_transform;
@@ -365,11 +361,6 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
 
     peercaps = gst_pad_get_caps (otherpeer);
     intersect = gst_caps_intersect (peercaps, othercaps);
-    if (!strcmp (GST_OBJECT_NAME (trans), "vconv")) {
-      g_print ("%s -> %s = %s\n",
-          gst_caps_to_string (peercaps),
-          gst_caps_to_string (othercaps), gst_caps_to_string (intersect));
-    }
     gst_caps_unref (peercaps);
     gst_caps_unref (othercaps);
     othercaps = intersect;
@@ -413,12 +404,10 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
   GST_DEBUG_OBJECT (trans, "in_place: %d", trans->in_place);
 
   /* see if we have to configure the element now */
-  if (!trans->delay_configure) {
-    if (pad == trans->sinkpad)
-      ret = gst_base_transform_configure_caps (trans, caps, othercaps);
-    else
-      ret = gst_base_transform_configure_caps (trans, othercaps, caps);
-  }
+  if (pad == trans->sinkpad)
+    ret = gst_base_transform_configure_caps (trans, caps, othercaps);
+  else
+    ret = gst_base_transform_configure_caps (trans, othercaps, caps);
 
 done:
   if (otherpeer)
@@ -577,17 +566,10 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
         goto no_size;
     }
 
-    /* we cannot reconfigure the element yet as we are still processing
-     * the old buffer. We will therefore delay the reconfiguration of the
-     * element until we have processed this last buffer. */
-    trans->delay_configure = TRUE;
-
     /* no in place transform, get buffer, this might renegotiate. */
     ret = gst_pad_alloc_buffer (trans->srcpad,
         GST_BUFFER_OFFSET (inbuf), trans->out_size,
         GST_PAD_CAPS (trans->srcpad), outbuf);
-
-    trans->delay_configure = FALSE;
 
     if (ret != GST_FLOW_OK)
       goto no_buffer;
