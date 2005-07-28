@@ -299,6 +299,7 @@ gst_base_transform_configure_caps (GstBaseTransform * trans, GstCaps * in,
   return ret;
 }
 
+#include <string.h>
 static gboolean
 gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
 {
@@ -321,7 +322,10 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
 
   /* see how we can transform the input caps */
   othercaps = gst_base_transform_transform_caps (trans, pad, caps);
-
+  if (!strcmp (GST_OBJECT_NAME (trans), "vconv")) {
+    g_print ("%s transforms into %s\n",
+        gst_caps_to_string (caps), gst_caps_to_string (othercaps));
+  }
   /* check if transform is empty */
   if (!othercaps || gst_caps_is_empty (othercaps))
     goto no_transform;
@@ -361,6 +365,11 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
 
     peercaps = gst_pad_get_caps (otherpeer);
     intersect = gst_caps_intersect (peercaps, othercaps);
+    if (!strcmp (GST_OBJECT_NAME (trans), "vconv")) {
+      g_print ("%s -> %s = %s\n",
+          gst_caps_to_string (peercaps),
+          gst_caps_to_string (othercaps), gst_caps_to_string (intersect));
+    }
     gst_caps_unref (peercaps);
     gst_caps_unref (othercaps);
     othercaps = intersect;
@@ -368,6 +377,9 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
     GST_DEBUG_OBJECT (trans,
         "filtering against peer yields %" GST_PTR_FORMAT, othercaps);
   }
+
+  if (gst_caps_is_empty (othercaps))
+    goto no_transform_possible;
 
   if (!gst_caps_is_fixed (othercaps)) {
     GstCaps *temp;
@@ -423,6 +435,14 @@ no_transform:
   {
     GST_DEBUG_OBJECT (trans,
         "transform returned useless  %" GST_PTR_FORMAT, othercaps);
+    ret = FALSE;
+    goto done;
+  }
+no_transform_possible:
+  {
+    GST_DEBUG_OBJECT (trans,
+        "transform could not transform %" GST_PTR_FORMAT
+        " in anything we support", caps);
     ret = FALSE;
     goto done;
   }

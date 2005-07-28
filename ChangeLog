@@ -1,3 +1,8 @@
+2005-07-28  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/base/gstbasetransform.c: (gst_base_transform_setcaps):
+	  Better debug if no transform is possible.
+
 2005-07-27  Wim Taymans  <wim@fluendo.com>
 
 	* docs/random/wtay/network-transp:
