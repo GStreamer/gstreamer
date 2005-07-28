@@ -20,7 +20,7 @@
 #ifndef __VIDEOTESTSRC_H__
 #define __VIDEOTESTSRC_H__
 
-#include <stdint.h>
+#include "_stdint.h"
 
 struct vts_color_struct {
 	uint8_t Y, U, V;
