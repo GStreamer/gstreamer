@@ -270,6 +270,56 @@ GST_START_TEST (test_message_state_changed_children)
 
 GST_END_TEST;
 
+/* adding an element with linked pads to a bin unlinks the
+ * pads */
+GST_START_TEST (test_add_linked)
+{
+  GstElement *src, *sink;
+  GstPad *srcpad, *sinkpad;
+  GstElement *pipeline;
+
+  pipeline = gst_pipeline_new (NULL);
+  fail_unless (pipeline != NULL, "Could not create pipeline");
+
+  src = gst_element_factory_make ("fakesrc", NULL);
+  fail_if (src == NULL, "Could not create fakesrc");
+  sink = gst_element_factory_make ("fakesink", NULL);
+  fail_if (src == NULL, "Could not create fakesink");
+
+  srcpad = gst_element_get_pad (src, "src");
+  fail_unless (srcpad != NULL);
+  sinkpad = gst_element_get_pad (sink, "sink");
+  fail_unless (sinkpad != NULL);
+
+  fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);
+
+  /* pads are linked now */
+  fail_unless (gst_pad_is_linked (srcpad));
+  fail_unless (gst_pad_is_linked (sinkpad));
+
+  /* adding element to bin voids hierarchy so pads are unlinked */
+  gst_bin_add (GST_BIN (pipeline), src);
+
+  /* check if pads really are unlinked */
+  fail_unless (!gst_pad_is_linked (srcpad));
+  fail_unless (!gst_pad_is_linked (sinkpad));
+
+  /* cannot link pads in wrong hierarchy */
+  fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_WRONG_HIERARCHY);
+
+  /* adding other element to bin as well */
+  gst_bin_add (GST_BIN (pipeline), sink);
+
+  /* now we can link again */
+  fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);
+
+  /* check if pads really are linked */
+  fail_unless (gst_pad_is_linked (srcpad));
+  fail_unless (gst_pad_is_linked (sinkpad));
+}
+
+GST_END_TEST;
+
 Suite *
 gst_bin_suite (void)
 {
@@ -281,6 +331,7 @@ gst_bin_suite (void)
   tcase_add_test (tc_chain, test_message_state_changed);
   tcase_add_test (tc_chain, test_message_state_changed_child);
   tcase_add_test (tc_chain, test_message_state_changed_children);
+  tcase_add_test (tc_chain, test_add_linked);
 
   return s;
 }

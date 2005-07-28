@@ -336,6 +336,21 @@ is_eos (GstBin * bin)
   return result;
 }
 
+static void
+unlink_pads (GstPad * pad)
+{
+  GstPad *peer;
+
+  if ((peer = gst_pad_get_peer (pad))) {
+    if (gst_pad_get_direction (pad) == GST_PAD_SRC)
+      gst_pad_unlink (pad, peer);
+    else
+      gst_pad_unlink (peer, pad);
+    gst_object_unref (peer);
+  }
+  gst_object_unref (pad);
+}
+
 /* add an element to this bin
  *
  * MT safe
@@ -344,13 +359,13 @@ static gboolean
 gst_bin_add_func (GstBin * bin, GstElement * element)
 {
   gchar *elem_name;
+  GstIterator *it;
 
   /* we obviously can't add ourself to ourself */
   if (G_UNLIKELY (GST_ELEMENT_CAST (element) == GST_ELEMENT_CAST (bin)))
     goto adding_itself;
 
-  /* get the element name to make sure it is unique in this bin, FIXME, another
-   * thread can change the name after the unlock. */
+  /* get the element name to make sure it is unique in this bin. */
   GST_LOCK (element);
   elem_name = g_strdup (GST_ELEMENT_NAME (element));
   GST_UNLOCK (element);
@@ -359,9 +374,9 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
 
   /* then check to see if the element's name is already taken in the bin,
    * we can safely take the lock here. This check is probably bogus because
-   * you can safely change the element name after adding it to the bin. */
-  if (G_UNLIKELY (gst_object_check_uniqueness (bin->children,
-              elem_name) == FALSE))
+   * you can safely change the element name after this check and before setting
+   * the object parent. The window is very small though... */
+  if (G_UNLIKELY (!gst_object_check_uniqueness (bin->children, elem_name)))
     goto duplicate_name;
 
   /* set the element's parent and add the element to the bin's list of children */
@@ -369,15 +384,23 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
               GST_OBJECT_CAST (bin))))
     goto had_parent;
 
+  /* if we add a sink we become a sink */
   if (GST_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK))
     GST_FLAG_SET (bin, GST_ELEMENT_IS_SINK);
+
+  /* unlink all linked pads */
+  it = gst_element_iterate_pads (element);
+  gst_iterator_foreach (it, (GFunc) unlink_pads, element);
+  gst_iterator_free (it);
 
   bin->children = g_list_prepend (bin->children, element);
   bin->numchildren++;
   bin->children_cookie++;
 
+  /* distribute the bus */
   gst_element_set_bus (element, bin->child_bus);
 
+  /* propagate the current base time and clock */
   gst_element_set_base_time (element, GST_ELEMENT (bin)->base_time);
   gst_element_set_clock (element, GST_ELEMENT_CLOCK (bin));
 
@@ -416,6 +439,7 @@ had_parent:
   }
 }
 
+
 /**
  * gst_bin_add:
  * @bin: #GstBin to add element to
@@ -423,6 +447,9 @@ had_parent:
  *
  * Adds the given element to the bin.  Sets the element's parent, and thus
  * takes ownership of the element. An element can only be added to one bin.
+ *
+ * If the element's pads are linked to other pads, the pads will be unlinked
+ * before the element is added to the bin.
  *
  * MT safe.
  *
@@ -467,6 +494,7 @@ static gboolean
 gst_bin_remove_func (GstBin * bin, GstElement * element)
 {
   gchar *elem_name;
+  GstIterator *it;
 
   /* grab element name so we can print it */
   GST_LOCK (element);
@@ -477,6 +505,11 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   /* the element must be in the bin's list of children */
   if (G_UNLIKELY (g_list_find (bin->children, element) == NULL))
     goto not_in_bin;
+
+  /* unlink all linked pads */
+  it = gst_element_iterate_pads (element);
+  gst_iterator_foreach (it, (GFunc) unlink_pads, element);
+  gst_iterator_free (it);
 
   /* now remove the element from the list of elements */
   bin->children = g_list_remove (bin->children, element);
@@ -545,6 +578,9 @@ not_in_bin:
  * will be freed in the process of removing it from the bin.  If you
  * want the element to still exist after removing, you need to call
  * #gst_object_ref before removing it from the bin.
+ *
+ * If the element's pads are linked to other pads, the pads will be unlinked
+ * before the element is removed from the bin.
  *
  * MT safe.
  *

@@ -94,6 +94,43 @@ GST_START_TEST (test_error_no_bus)
 
 GST_END_TEST;
 
+/* link and run two elements without putting them in a 
+ * pipeline */
+GST_START_TEST (test_link)
+{
+  GstElement *src, *sink;
+
+  src = gst_element_factory_make ("fakesrc", "source");
+  sink = gst_element_factory_make ("fakesink", "sink");
+
+  fail_unless (gst_element_link_pads (src, "src", sink, "sink"));
+
+  /* do sink to source state change */
+  gst_element_set_state (sink, GST_STATE_PAUSED);
+  gst_element_set_state (src, GST_STATE_PAUSED);
+
+  /* wait for preroll */
+  gst_element_get_state (sink, NULL, NULL, NULL);
+
+  /* play some more */
+  gst_element_set_state (sink, GST_STATE_PLAYING);
+  gst_element_set_state (src, GST_STATE_PLAYING);
+
+  g_usleep (G_USEC_PER_SEC);
+
+  /* and stop */
+  gst_element_set_state (sink, GST_STATE_PAUSED);
+  gst_element_set_state (src, GST_STATE_PAUSED);
+
+  /* wait for preroll */
+  gst_element_get_state (sink, NULL, NULL, NULL);
+
+  gst_element_set_state (sink, GST_STATE_NULL);
+  gst_element_set_state (src, GST_STATE_NULL);
+}
+
+GST_END_TEST;
+
 Suite *
 gst_element_suite (void)
 {
@@ -104,6 +141,7 @@ gst_element_suite (void)
   tcase_add_test (tc_chain, test_add_remove_pad);
   tcase_add_test (tc_chain, test_add_pad_unref_element);
   tcase_add_test (tc_chain, test_error_no_bus);
+  tcase_add_test (tc_chain, test_link);
 
   return s;
 }

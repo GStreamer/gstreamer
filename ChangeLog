@@ -1,3 +1,20 @@
+2005-07-28  Wim Taymans  <wim@fluendo.com>
+
+	* check/gst/gstbin.c: (GST_START_TEST), (gst_bin_suite):
+	Added checks for hierarchy consistency whan adding linked
+	elements to bins.
+
+	* check/gst/gstelement.c: (GST_START_TEST), (gst_element_suite):
+	Added check to test element scheduling without bin/pipeline.
+
+	* check/pipelines/simple_launch_lines.c: (GST_START_TEST):
+	First add elements to bin, then link.
+	
+	* gst/gstbin.c: (unlink_pads), (gst_bin_add_func),
+	(gst_bin_remove_func):
+	Unlink pads from elements added/removed from bin to maintain
+	hierarchy consistency.
+
 2005-07-28  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/base/gstbasetransform.c: (gst_base_transform_setcaps),

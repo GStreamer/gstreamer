@@ -139,8 +139,8 @@ GST_START_TEST (test_stop_from_app)
 
   g_return_if_fail (fakesrc && fakesink && pipeline);
 
-  gst_element_link (fakesrc, fakesink);
   gst_bin_add_many (GST_BIN (pipeline), fakesrc, fakesink, NULL);
+  gst_element_link (fakesrc, fakesink);
 
   g_object_set (fakesink, "signal-handoffs", (gboolean) TRUE, NULL);
   g_signal_connect (fakesink, "handoff", G_CALLBACK (got_handoff), NULL);
