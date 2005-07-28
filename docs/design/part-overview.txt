@@ -41,6 +41,10 @@ Introduction
  vorbisdec element decodes the compressed data and sends it to the alsasink
  element. The alsasink element sends the samples to the audio card for playback.
 
+ Downstream and upstream are the term used to describe the direction in the
+ Pipeline. From source to sink is called "downstream" and "upstream" is 
+ from sink to source.
+
  The task of the application is to construct a pipeline as above using existing
  elements. This is further explained in the pipeline building topic.
 
@@ -198,7 +202,9 @@ Dataflow and buffers
  out the buffer.
 
  When an element pad receives a buffer, if has to check if it understands the media
- type of the buffer before starting processing it. 
+ type of the buffer before starting processing it. The GStreamer core does this
+ automatically and will call the gst_pad_set_caps() function of the element before
+ sending the buffer to the element.
 
  Both gst_pad_push() and gst_pad_pull_range() have a return value indicating wether
  the operation succeeded. An error code means that no more data should be send
@@ -273,10 +279,14 @@ Pipeline clock
  One of the important functions of the pipeline is to select a global clock
  for all the elements in the pipeline.
 
+ The purpose of the clock is to provide a stricly increasing value at the rate
+ of one GST_SECOND per second. Clock values are expressed in nanoseconds.
+ Elements use the clock time to synchronized the playback of data.
+
  Before the pipeline is set to PAUSED, the pipeline asks each element if they can
  provide a clock. The clock is selected in the following order:
 
-  - If the application selected a clock, us that one.
+  - If the application selected a clock, use that one.
   - If a source element provides a clock, use that clock.
   - Select a clock from any other element that provides a clock, start with the
     sinks.
@@ -284,7 +294,10 @@ Pipeline clock
 
  In a typical playback pipeline this will select the clock provided by a sink element
  such as an audio sink.
- 
+
+ In capture pipelines, this will typically select the clock of the data producer, which
+ can in most cases not control the rate at which it delivers data.
+
 
 Pipeline states
 ---------------
@@ -447,8 +460,9 @@ Pipeline seeking
  When the seek event reaches an element that will perform the seek operation, that 
  element performs the following steps.
 
-  1) send a FLUSH event to all downstream and upstream peer elements.
-  2) make sure the streaming thread is not running.
+  1) send a FLUSH_START event to all downstream and upstream peer elements.
+  2) make sure the streaming thread is not running. The streaming thread will
+     always stop because of step 1).
   3) perform the seek operation
   4) send a FLUSH done event to all downstream and upstream peer elements.
   5) send DISCONT event to inform all elements of the new position and to complete

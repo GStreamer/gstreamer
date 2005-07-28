@@ -1,3 +1,29 @@
+2005-07-28  Wim Taymans  <wim@fluendo.com>
+
+	* check/gst/gstghostpad.c: (GST_START_TEST), (gst_ghost_pad_suite):
+	Added some more tests for wrong hierarchy
+
+	* docs/design/part-overview.txt:
+	Some updates.
+
+	* gst/gstbin.c: (gst_bin_remove_func), (gst_bin_dispose):
+	Cleanups.
+
+	* gst/gstelement.c: (gst_element_remove_pad), (gst_element_seek),
+	(gst_element_dispose):
+	Some more cleanups.
+
+	* gst/gstpad.c: (gst_pad_link_check_compatible_unlocked),
+	(gst_pad_link_check_hierarchy), (gst_pad_link_prepare),
+	(gst_pad_get_caps_unlocked), (gst_pad_accept_caps),
+	(gst_pad_set_caps), (gst_pad_send_event):
+	Check for correct hierarchy when linking pads. Moving to
+	strict requirement for ghostpads when linking elements in
+	different bins.
+
+	* gst/gstpad.h:
+	Clean ups. Added WRONG_HIERARCHY return value.
+
 2005-07-28  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/base/gstbasetransform.c: (gst_base_transform_setcaps):

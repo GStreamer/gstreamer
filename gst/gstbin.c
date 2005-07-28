@@ -483,7 +483,7 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   bin->numchildren--;
   bin->children_cookie++;
 
-  /* check if we a sink */
+  /* check if we removed a sink */
   if (GST_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK)) {
     GList *other_sink;
 
@@ -691,6 +691,9 @@ bin_element_is_sink (GstElement * child, GstBin * bin)
   return is_sink ? 0 : 1;
 }
 
+/* check if object has the given ancestor somewhere up in
+ * the hierarchy
+ */
 static gboolean
 has_ancestor (GstObject * object, GstObject * ancestor)
 {
@@ -1008,6 +1011,8 @@ append_child (gpointer child, GQueue * queue)
  * Each element will have its refcount increased, so unref
  * after use.
  *
+ * Not implemented yet.
+ *
  * MT safe.
  *
  * Returns: a #GstIterator of #GstElements. gst_iterator_free after use.
@@ -1060,7 +1065,8 @@ remove_all_from_queue (GQueue * queue, gpointer elem, gboolean unref)
  *
  * MT safe.
  */
-/* FIXME,  make me more elegant */
+/* FIXME,  make me more elegant, want to use a topological sort algorithm
+ * based on indegrees (or outdegrees in our case) */
 static GstElementStateReturn
 gst_bin_change_state (GstElement * element)
 {
@@ -1335,7 +1341,9 @@ gst_bin_dispose (GObject * object)
   gst_object_ref (object);
 
   g_list_free (bin->eosed);
+  bin->eosed = NULL;
   gst_object_unref (bin->child_bus);
+  bin->child_bus = NULL;
   gst_element_set_bus (GST_ELEMENT (bin), NULL);
 
   while (bin->children) {

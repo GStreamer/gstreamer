@@ -29,6 +29,99 @@ assert_gstrefcount (gpointer p, gint i)
         GST_OBJECT_REFCOUNT_VALUE (p));
 }
 
+/* test if removing a bin also cleans up the ghostpads 
+ */
+GST_START_TEST (test_remove1)
+{
+  GstElement *b1, *b2, *src, *sink;
+  GstPad *srcpad, *sinkpad;
+  GstPadLinkReturn ret;
+
+  b1 = gst_element_factory_make ("pipeline", NULL);
+  b2 = gst_element_factory_make ("bin", NULL);
+  src = gst_element_factory_make ("fakesrc", NULL);
+  sink = gst_element_factory_make ("fakesink", NULL);
+
+  fail_unless (gst_bin_add (GST_BIN (b2), sink));
+  fail_unless (gst_bin_add (GST_BIN (b1), src));
+  fail_unless (gst_bin_add (GST_BIN (b1), b2));
+
+  sinkpad = gst_element_get_pad (sink, "sink");
+  gst_element_add_pad (b2, gst_ghost_pad_new ("sink", sinkpad));
+  gst_object_unref (sinkpad);
+
+  srcpad = gst_element_get_pad (src, "src");
+  /* get the ghostpad */
+  sinkpad = gst_element_get_pad (b2, "sink");
+
+  ret = gst_pad_link (srcpad, sinkpad);
+  fail_unless (ret == GST_PAD_LINK_OK);
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
+
+  /* now remove the bin with the ghostpad, b2 is disposed
+   * now. */
+  gst_bin_remove (GST_BIN (b1), b2);
+
+  srcpad = gst_element_get_pad (src, "src");
+  /* pad cannot be linked now */
+  fail_if (gst_pad_is_linked (srcpad));
+}
+
+GST_END_TEST;
+
+/* test if linking fails over different bins using a pipeline
+ * like this:
+ *
+ * fakesrc num_buffers=10 ! ( fakesink )
+ *
+ */
+GST_START_TEST (test_link)
+{
+  GstElement *b1, *b2, *src, *sink;
+  GstPad *srcpad, *sinkpad, *gpad;
+  GstPadLinkReturn ret;
+
+  b1 = gst_element_factory_make ("pipeline", NULL);
+  b2 = gst_element_factory_make ("bin", NULL);
+  src = gst_element_factory_make ("fakesrc", NULL);
+  sink = gst_element_factory_make ("fakesink", NULL);
+
+  fail_unless (gst_bin_add (GST_BIN (b2), sink));
+  fail_unless (gst_bin_add (GST_BIN (b1), src));
+  fail_unless (gst_bin_add (GST_BIN (b1), b2));
+
+  srcpad = gst_element_get_pad (src, "src");
+  fail_unless (srcpad != NULL);
+  sinkpad = gst_element_get_pad (sink, "sink");
+  fail_unless (sinkpad != NULL);
+
+  /* linking in different hierarchies should fail */
+  ret = gst_pad_link (srcpad, sinkpad);
+  fail_unless (ret == GST_PAD_LINK_WRONG_HIERARCHY);
+
+  /* now setup a ghostpad */
+  gpad = gst_ghost_pad_new ("sink", sinkpad);
+  gst_object_unref (sinkpad);
+  /* need to ref as _add_pad takes ownership */
+  gst_object_ref (gpad);
+  gst_element_add_pad (b2, gpad);
+
+  /* our new sinkpad */
+  sinkpad = gpad;
+
+  /* and linking should work now */
+  ret = gst_pad_link (srcpad, sinkpad);
+  fail_unless (ret == GST_PAD_LINK_OK);
+}
+
+GST_END_TEST;
+
+/* test if ghostpads are created automagically when using
+ * gst_element_link_pads.
+ *
+ * fakesrc num_buffers=10 ! ( identity ) ! fakesink 
+ */
 GST_START_TEST (test_ghost_pads)
 {
   GstElement *b1, *b2, *src, *i1, *sink;
@@ -134,6 +227,8 @@ gst_ghost_pad_suite (void)
   TCase *tc_chain = tcase_create ("ghost pad tests");
 
   suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_remove1);
+  tcase_add_test (tc_chain, test_link);
   tcase_add_test (tc_chain, test_ghost_pads);
 
   return s;

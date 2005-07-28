@@ -590,35 +590,28 @@ gboolean
 gst_element_remove_pad (GstElement * element, GstPad * pad)
 {
   GstPad *peer;
-  gchar *pad_name;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   /* locking pad to look at the name and parent */
   GST_LOCK (pad);
-  pad_name = g_strdup (GST_PAD_NAME (pad));
-
   GST_CAT_INFO_OBJECT (GST_CAT_ELEMENT_PADS, element, "removing pad '%s'",
-      GST_STR_NULL (pad_name));
+      GST_STR_NULL (GST_PAD_NAME (pad)));
 
   if (G_UNLIKELY (GST_PAD_PARENT (pad) != element))
     goto not_our_pad;
   GST_UNLOCK (pad);
 
-  g_free (pad_name);
-
-  peer = gst_pad_get_peer (pad);
-
   /* unlink */
-  if (peer != NULL) {
+  if ((peer = gst_pad_get_peer (pad))) {
     /* window for MT unsafeness, someone else could unlink here
      * and then we call unlink with wrong pads. The unlink
      * function would catch this and safely return failed. */
     if (GST_PAD_IS_SRC (pad))
-      gst_pad_unlink (pad, GST_PAD_CAST (peer));
+      gst_pad_unlink (pad, peer);
     else
-      gst_pad_unlink (GST_PAD_CAST (peer), pad);
+      gst_pad_unlink (peer, pad);
 
     gst_object_unref (peer);
   }
@@ -658,7 +651,6 @@ not_our_pad:
         GST_ELEMENT_NAME (element));
     GST_UNLOCK (element);
     GST_UNLOCK (pad);
-    g_free (pad_name);
     return FALSE;
   }
 }
@@ -2056,7 +2048,7 @@ gst_element_dispose (GObject * object)
 
   /* first we break all our links with the outside */
   while (element->pads) {
-    gst_element_remove_pad (element, GST_PAD (element->pads->data));
+    gst_element_remove_pad (element, GST_PAD_CAST (element->pads->data));
   }
   if (G_UNLIKELY (element->pads != 0)) {
     g_critical ("could not remove pads from element %s",

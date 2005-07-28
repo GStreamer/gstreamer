@@ -56,13 +56,24 @@ typedef struct _GstPadTemplate GstPadTemplate;
 typedef struct _GstPadTemplateClass GstPadTemplateClass;
 typedef struct _GstStaticPadTemplate GstStaticPadTemplate;
 
+/**
+ * GstPadLinkReturn:
+ * #GST_PAD_LINK_OK		: link ok 
+ * #GST_PAD_LINK_WRONG_HIERARCHY: pads have no common grandparent 
+ * #GST_PAD_LINK_WAS_LINKED	: pad was already linked 
+ * #GST_PAD_LINK_WRONG_DIRECTION: pads have wrong direction 
+ * #GST_PAD_LINK_NOFORMAT	: pads do not have common format 
+ * #GST_PAD_LINK_NOSCHED	: pads cannot cooperate in scheduling 
+ * #GST_PAD_LINK_REFUSED	: refused for some reason 
+ */
 typedef enum {
-  GST_PAD_LINK_NOSCHED          = -5,	/* pads cannot cooperate in scheduling */
-  GST_PAD_LINK_NOFORMAT         = -4,	/* pads do not have common format */
-  GST_PAD_LINK_REFUSED          = -3,	/* refused for some reason */
-  GST_PAD_LINK_WRONG_DIRECTION  = -2,	/* pads have wrong direction */
-  GST_PAD_LINK_WAS_LINKED       = -1,	/* pad was already linked */
-  GST_PAD_LINK_OK               =  0,	/* link ok */
+  GST_PAD_LINK_OK               =  0,
+  GST_PAD_LINK_WRONG_HIERARCHY  = -1,
+  GST_PAD_LINK_WAS_LINKED       = -2,
+  GST_PAD_LINK_WRONG_DIRECTION  = -3,
+  GST_PAD_LINK_NOFORMAT         = -4,
+  GST_PAD_LINK_NOSCHED          = -5,
+  GST_PAD_LINK_REFUSED          = -6,
 } GstPadLinkReturn;
 
 #define GST_PAD_LINK_FAILED(ret) ((ret) < GST_PAD_LINK_OK)

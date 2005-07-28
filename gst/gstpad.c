@@ -1327,6 +1327,12 @@ gst_pad_is_linked (GstPad * pad)
   return result;
 }
 
+/* get the caps from both pads and see if the intersection
+ * is not empty.
+ *
+ * This function should be called with the pad LOCK on both
+ * pads
+ */
 static gboolean
 gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink)
 {
@@ -1338,6 +1344,7 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink)
   GST_CAT_DEBUG (GST_CAT_CAPS, " src caps %" GST_PTR_FORMAT, srccaps);
   GST_CAT_DEBUG (GST_CAT_CAPS, "sink caps %" GST_PTR_FORMAT, sinkcaps);
 
+  /* if we have caps on both pads we can check the intersection */
   if (srccaps && sinkcaps) {
     GstCaps *icaps;
 
@@ -1349,6 +1356,7 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink)
         "intersection caps %p %" GST_PTR_FORMAT, icaps, icaps);
 
     if (!icaps || gst_caps_is_empty (icaps)) {
+      GST_CAT_DEBUG (GST_CAT_CAPS, "intersection is empty");
       gst_caps_unref (icaps);
       return FALSE;
     }
@@ -1358,6 +1366,49 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink)
   return TRUE;
 }
 
+/* check if the grandparents of both pads are the same.
+ * This check is required so that we don't try to link
+ * pads from elements in different bins without ghostpads.
+ *
+ * The LOCK should be helt on both pads
+ */
+static gboolean
+gst_pad_link_check_hierarchy (GstPad * src, GstPad * sink)
+{
+  GstObject *psrc, *psink;
+  gboolean res = TRUE;
+
+  psrc = GST_OBJECT_PARENT (src);
+  psink = GST_OBJECT_PARENT (sink);
+
+  /* if one of the pads has no parent, we allow the link */
+  if (psrc && psink) {
+    /* if the parents are the same, we have a loop */
+    if (psrc == psink) {
+      GST_CAT_DEBUG (GST_CAT_CAPS, "pads have same parent %" GST_PTR_FORMAT,
+          psrc);
+      res = FALSE;
+      goto done;
+    }
+    /* if they both have a parent, we check the grandparents */
+    psrc = gst_object_get_parent (psrc);
+    psink = gst_object_get_parent (psink);
+
+    if (psrc != psink) {
+      /* if they have grandparents but they are not the same */
+      GST_CAT_DEBUG (GST_CAT_CAPS,
+          "pads have different grandparents %" GST_PTR_FORMAT " and %"
+          GST_PTR_FORMAT, psrc, psink);
+      res = FALSE;
+    }
+    if (psrc)
+      gst_object_unref (psrc);
+    if (psink)
+      gst_object_unref (psink);
+  }
+done:
+  return res;
+}
 
 /* FIXME leftover from an attempt at refactoring... */
 /* call with the two pads unlocked */
@@ -1387,10 +1438,14 @@ gst_pad_link_prepare (GstPad * srcpad, GstPad * sinkpad)
   if (G_UNLIKELY (GST_PAD_PEER (sinkpad) != NULL))
     goto sink_was_linked;
 
+  /* check hierarchy, pads can only be linked if the grandparents
+   * are the same. */
+  if (!gst_pad_link_check_hierarchy (srcpad, sinkpad))
+    goto wrong_hierarchy;
+
   /* check pad caps for non-empty intersection */
-  if (!gst_pad_link_check_compatible_unlocked (srcpad, sinkpad)) {
+  if (!gst_pad_link_check_compatible_unlocked (srcpad, sinkpad))
     goto no_format;
-  }
 
   /* FIXME check pad scheduling for non-empty intersection */
 
@@ -1427,6 +1482,13 @@ sink_was_linked:
     GST_UNLOCK (sinkpad);
     GST_UNLOCK (srcpad);
     return GST_PAD_LINK_WAS_LINKED;
+  }
+wrong_hierarchy:
+  {
+    GST_CAT_INFO (GST_CAT_PADS, "pads have wrong hierarchy");
+    GST_UNLOCK (sinkpad);
+    GST_UNLOCK (srcpad);
+    return GST_PAD_LINK_WRONG_HIERARCHY;
   }
 no_format:
   {
