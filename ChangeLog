@@ -1,5 +1,10 @@
 2005-07-28  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_src_query):
+	  Fix confusing debug message (s/event/query/)
+
+2005-07-28  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/videotestsrc/videotestsrc.h:
 	  Use "_stdint.h" instead of <stdint.h>
 

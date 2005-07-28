@@ -299,7 +299,7 @@ vorbis_dec_src_query (GstPad * pad, GstQuery * query)
 
 error:
   {
-    GST_DEBUG ("error handling event");
+    GST_DEBUG ("error handling query");
     return res;
   }
 }
