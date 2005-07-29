@@ -1,3 +1,15 @@
+2005-07-29  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstbus.c: (gst_bus_set_flushing), (gst_bus_pop),
+	(gst_bus_peek), (gst_bus_source_dispatch),
+	(gst_bus_add_watch_full), (poll_handler), (poll_timeout),
+	(poll_destroy), (poll_destroy_timeout), (gst_bus_poll):
+	  gst_bus_poll may be called from other threads. Handle
+	  this nicely by not making poll_data disappear off the
+	  stack once gst_bus_poll returns.
+	  gst_bus_peek now increments the refcount on the returned
+	  message.
+
 2005-07-29  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-gstghostpad.txt:
