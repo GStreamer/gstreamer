@@ -153,7 +153,7 @@ Ghostpads
       a) new GstProxyPad Y is created
       b) Y direction is same as peer
       c) Y target is set to peer
-      d) X internal pad is set to Y
+      d) X internal pad is set to Y (X is parent of Y)
       e) Y is activated in the same mode as X
       f) core makes link from src to X
 
@@ -196,7 +196,7 @@ Ghostpads
       a) new GstProxyPad Y is created
       b) Y direction is same as peer
       c) Y target is set to peer
-      d) X internal pad is set to Y
+      d) X internal pad is set to Y (X is parent of Y)
       e) link is made from Y to X target (sink)
       f) Y is activated in the same mode as X
       g) core makes link from src to X

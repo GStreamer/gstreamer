@@ -388,11 +388,6 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   if (GST_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK))
     GST_FLAG_SET (bin, GST_ELEMENT_IS_SINK);
 
-  /* unlink all linked pads */
-  it = gst_element_iterate_pads (element);
-  gst_iterator_foreach (it, (GFunc) unlink_pads, element);
-  gst_iterator_free (it);
-
   bin->children = g_list_prepend (bin->children, element);
   bin->numchildren++;
   bin->children_cookie++;
@@ -405,6 +400,11 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   gst_element_set_clock (element, GST_ELEMENT_CLOCK (bin));
 
   GST_UNLOCK (bin);
+
+  /* unlink all linked pads */
+  it = gst_element_iterate_pads (element);
+  gst_iterator_foreach (it, (GFunc) unlink_pads, element);
+  gst_iterator_free (it);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, bin, "added element \"%s\"",
       elem_name);
@@ -506,11 +506,6 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   if (G_UNLIKELY (g_list_find (bin->children, element) == NULL))
     goto not_in_bin;
 
-  /* unlink all linked pads */
-  it = gst_element_iterate_pads (element);
-  gst_iterator_foreach (it, (GFunc) unlink_pads, element);
-  gst_iterator_free (it);
-
   /* now remove the element from the list of elements */
   bin->children = g_list_remove (bin->children, element);
   bin->numchildren--;
@@ -528,12 +523,16 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
       GST_FLAG_UNSET (bin, GST_ELEMENT_IS_SINK);
     }
   }
-
   GST_UNLOCK (bin);
 
   GST_CAT_INFO_OBJECT (GST_CAT_PARENTAGE, bin, "removed child \"%s\"",
       elem_name);
   g_free (elem_name);
+
+  /* unlink all linked pads */
+  it = gst_element_iterate_pads (element);
+  gst_iterator_foreach (it, (GFunc) unlink_pads, element);
+  gst_iterator_free (it);
 
   gst_element_set_bus (element, NULL);
 

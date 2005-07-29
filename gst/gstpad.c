@@ -183,7 +183,7 @@ gst_pad_class_init (GstPadClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PAD_PROP_TEMPLATE,
       g_param_spec_object ("template", "Template",
           "The GstPadTemplate of this pad", GST_TYPE_PAD_TEMPLATE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+          G_PARAM_READWRITE));
 
 #ifndef GST_DISABLE_LOADSAVE
   gstobject_class->save_thyself = GST_DEBUG_FUNCPTR (gst_pad_save_thyself);

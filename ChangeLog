@@ -1,3 +1,18 @@
+2005-07-29  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-gstghostpad.txt:
+	Small update.
+
+	* gst/gstbin.c: (unlink_pads), (gst_bin_add_func),
+	(gst_bin_remove_func):
+	Unlinking pads while holding the bin LOCK is not a good
+	idea.
+
+	* gst/gstpad.c: (gst_pad_class_init),
+	(gst_pad_link_check_hierarchy), (gst_pad_get_caps_unlocked),
+	(gst_pad_accept_caps), (gst_pad_set_caps), (gst_pad_send_event):
+	No prob setting template after creating the pad.
+
 2005-07-29  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstbus.c: (gst_bus_set_flushing), (gst_bus_pop),
