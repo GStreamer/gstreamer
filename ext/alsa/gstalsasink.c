@@ -76,9 +76,12 @@ static GstStaticPadTemplate alsasink_sink_factory =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-        //"endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, "
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+        "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, "
+#else
+        "endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }, "
+#endif
         //"signed = (boolean) { TRUE, FALSE }, "
-        "endianness = (int) LITTLE_ENDIAN, "
         "signed = (boolean) TRUE, "
         "width = (int) 16, "
         "depth = (int) 16, "

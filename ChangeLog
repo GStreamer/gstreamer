@@ -1,3 +1,11 @@
+2005-07-29  Andy Wingo  <wingo@pobox.com>
+
+	* ext/alsa/gstalsaplugin.c (plugin_init): We are primary audio
+	sinks.
+
+	* ext/alsa/gstalsasink.c (alsasink_sink_factory): Advertise our
+	support of both endiannesses.
+
 2005-07-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/vorbis/vorbisdec.c: (vorbis_dec_src_query):
