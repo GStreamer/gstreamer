@@ -1,5 +1,33 @@
 2005-07-29  Wim Taymans  <wim@fluendo.com>
 
+	* check/gst/gstghostpad.c: (GST_START_TEST), (gst_ghost_pad_suite):
+	Added test for removing an element with ghostpad from a bin.
+	Fixed test as current implementation does the right thing.
+
+	* gst/gstghostpad.c: (gst_proxy_pad_class_init),
+	(gst_proxy_pad_do_query_type), (gst_proxy_pad_do_event),
+	(gst_proxy_pad_do_query), (gst_proxy_pad_do_internal_link),
+	(gst_proxy_pad_do_bufferalloc), (gst_proxy_pad_do_activate),
+	(gst_proxy_pad_do_activatepull), (gst_proxy_pad_do_activatepush),
+	(gst_proxy_pad_do_chain), (gst_proxy_pad_do_getrange),
+	(gst_proxy_pad_do_checkgetrange), (gst_proxy_pad_do_getcaps),
+	(gst_proxy_pad_do_acceptcaps), (gst_proxy_pad_do_fixatecaps),
+	(gst_proxy_pad_do_setcaps), (gst_proxy_pad_set_target),
+	(gst_proxy_pad_get_target), (gst_proxy_pad_init),
+	(gst_proxy_pad_dispose), (gst_proxy_pad_finalize),
+	(gst_ghost_pad_class_init), (gst_ghost_pad_do_activate_push),
+	(gst_ghost_pad_do_link), (gst_ghost_pad_do_unlink),
+	(gst_ghost_pad_set_internal), (gst_ghost_pad_dispose),
+	(gst_ghost_pad_new_notarget), (gst_ghost_pad_new),
+	(gst_ghost_pad_get_target), (gst_ghost_pad_set_target):
+	* gst/gstghostpad.h:
+	Clean up ghostpads, remove properties for internal stuff.
+	Make threadsafe.
+	Fix refcounting.
+	Prepare for switching targets, not all use cases work yet.
+
+2005-07-29  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-gstghostpad.txt:
 	Small update.
 

@@ -70,6 +70,46 @@ GST_START_TEST (test_remove1)
 
 GST_END_TEST;
 
+/* test if removing a bin also cleans up the ghostpads 
+ */
+GST_START_TEST (test_remove2)
+{
+  GstElement *b1, *b2, *src, *sink;
+  GstPad *srcpad, *sinkpad;
+  GstPadLinkReturn ret;
+
+  b1 = gst_element_factory_make ("pipeline", NULL);
+  b2 = gst_element_factory_make ("bin", NULL);
+  src = gst_element_factory_make ("fakesrc", NULL);
+  sink = gst_element_factory_make ("fakesink", NULL);
+
+  fail_unless (gst_bin_add (GST_BIN (b2), sink));
+  fail_unless (gst_bin_add (GST_BIN (b1), src));
+  fail_unless (gst_bin_add (GST_BIN (b1), b2));
+
+  sinkpad = gst_element_get_pad (sink, "sink");
+  gst_element_add_pad (b2, gst_ghost_pad_new ("sink", sinkpad));
+  gst_object_unref (sinkpad);
+
+  srcpad = gst_element_get_pad (src, "src");
+  /* get the ghostpad */
+  sinkpad = gst_element_get_pad (b2, "sink");
+
+  ret = gst_pad_link (srcpad, sinkpad);
+  fail_unless (ret == GST_PAD_LINK_OK);
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
+
+  /* now remove the sink from the bin */
+  gst_bin_remove (GST_BIN (b2), sink);
+
+  srcpad = gst_element_get_pad (src, "src");
+  /* pad is still linked to ghostpad */
+  fail_if (!gst_pad_is_linked (srcpad));
+}
+
+GST_END_TEST;
+
 /* test if linking fails over different bins using a pipeline
  * like this:
  *
@@ -186,23 +226,16 @@ GST_START_TEST (test_ghost_pads)
   /* unreffing the bin will unref all elements, which will unlink and unparent
    * all pads */
 
-  /* FIXME: ghost pads need to drop their internal pad in the unlink function,
-   * but can't right now. So internal pads have a ref from their parent, and the
-   * internal pads' targets have refs from the internals. When we do the last
-   * unref on the ghost pads, these refs should go away.
-   */
-
   assert_gstrefcount (fsrc, 2); /* gisrc */
   assert_gstrefcount (gsink, 1);
   assert_gstrefcount (gsrc, 1);
   assert_gstrefcount (fsink, 2);        /* gisink */
 
-  assert_gstrefcount (gisrc, 2);        /* gsink -- fixme drop ref in unlink */
+  assert_gstrefcount (gisrc, 1);        /* gsink */
   assert_gstrefcount (isink, 2);        /* gsink */
-  assert_gstrefcount (gisink, 2);       /* gsrc -- fixme drop ref in unlink */
+  assert_gstrefcount (gisink, 1);       /* gsrc */
   assert_gstrefcount (isrc, 2); /* gsrc */
 
-  /* while the fixme isn't fixed, check cleanup */
   gst_object_unref (gsink);
   assert_gstrefcount (isink, 1);
   assert_gstrefcount (gisrc, 1);
@@ -216,6 +249,11 @@ GST_START_TEST (test_ghost_pads)
   assert_gstrefcount (fsink, 2);        /* gisrc */
   gst_object_unref (gisink);
   assert_gstrefcount (fsink, 1);
+
+  gst_object_unref (fsrc);
+  gst_object_unref (isrc);
+  gst_object_unref (isink);
+  gst_object_unref (fsink);
 }
 
 GST_END_TEST;
@@ -228,6 +266,7 @@ gst_ghost_pad_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_remove1);
+  tcase_add_test (tc_chain, test_remove2);
   tcase_add_test (tc_chain, test_link);
   tcase_add_test (tc_chain, test_ghost_pads);
 
