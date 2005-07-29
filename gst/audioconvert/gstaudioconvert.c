@@ -431,6 +431,10 @@ gst_audio_convert_link_src (GstAudioConvert * this,
           "rate", G_TYPE_INT, sink_ac_caps->rate,
           "channels", G_TYPE_INT, sink_ac_caps->channels, NULL);
 
+      /* if there is a choice, prefer no conversion */
+      gst_caps_structure_fixate_field_nearest_int (structure,
+          "endianness", sink_ac_caps->endianness);
+
       if (strcmp (gst_structure_get_name (structure), "audio/x-raw-float") == 0) {
         if (!sink_ac_caps->is_int) {
           /* copy over */
