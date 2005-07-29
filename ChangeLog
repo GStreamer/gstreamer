@@ -1,3 +1,9 @@
+2005-07-29  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-gstghostpad.txt:
+	Overview of current GhostPad datastructures and use
+	cases for changing the target.
+
 2005-07-28  Wim Taymans  <wim@fluendo.com>
 
 	* check/gst/gstbin.c: (GST_START_TEST), (gst_bin_suite):
