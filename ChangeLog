@@ -1,3 +1,23 @@
+2005-07-30  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Use AC_SYS_LARGEFILE, which will set _FILE_OFFSET_BITS=64
+	  and _LARGEFILE_SOURCE in config.h as required. Do not 
+	  export those flags in our .pc files any longer (#142209).
+
+	  Remove unused GST_DISABLE_OMEGA_COTHREADS stuff.
+
+	* gst/elements/gstfilesink.c: (gst_file_sink_class_init),
+	(gst_file_sink_do_seek), (gst_file_sink_event),
+	(gst_file_sink_get_current_offset), (gst_file_sink_render):
+	  Redo seek/tell calls with large file support in mind; add some
+	  debugging messages; add log message that tells us when large
+	  file support is unavailable or not enabled for some reason.
+
+	* gst/elements/gstfilesrc.c: (gst_file_src_class_init):
+	  Add log message that tells us when large file support 
+	  is unavailable or not enabled for some reason.
+
 2005-07-29  Wim Taymans  <wim@fluendo.com>
 
 	* check/gst/gstghostpad.c: (GST_START_TEST), (gst_ghost_pad_suite):

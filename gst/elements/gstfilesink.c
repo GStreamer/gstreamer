@@ -135,6 +135,10 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
 
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_file_sink_render);
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_file_sink_event);
+
+  if (sizeof (off_t) < 8) {
+    GST_LOG ("No large file support, sizeof (off_t) = %u", sizeof (off_t));
+  }
 }
 
 static void
@@ -282,6 +286,24 @@ gst_file_sink_query (GstPad * pad, GstQuery * query)
   }
 }
 
+static void
+gst_file_sink_do_seek (GstFileSink * filesink, guint64 new_offset)
+{
+  GST_DEBUG_OBJECT (filesink, "Seeking to offset %" G_GUINT64_FORMAT,
+      new_offset);
+
+#ifdef G_OS_UNIX
+  if (lseek (fileno (filesink->file), (off_t) new_offset,
+          SEEK_SET) != (off_t) - 1)
+    return;
+#else
+  if (fseek (filesink->file, (long) new_offset, SEEK_SET) == 0)
+    return;
+#endif
+
+  GST_DEBUG_OBJECT (filesink, "Seeking failed: %s", g_strerror (errno));
+}
+
 /* handle events (search) */
 static gboolean
 gst_file_sink_event (GstBaseSink * sink, GstEvent * event)
@@ -303,7 +325,9 @@ gst_file_sink_event (GstBaseSink * sink, GstEvent * event)
           NULL);
 
       if (format == GST_FORMAT_BYTES) {
-        fseek (filesink->file, soffset, SEEK_SET);
+        gst_file_sink_do_seek (filesink, (guint64) soffset);
+      } else {
+        GST_DEBUG ("Ignored NEWSEGMENT event of format %u", (guint) format);
       }
       break;
     }
@@ -321,36 +345,53 @@ gst_file_sink_event (GstBaseSink * sink, GstEvent * event)
   return TRUE;
 }
 
-/**
- * gst_file_sink_chain:
- * @pad: the pad this filesink is connected to
- * @buf: the buffer that has to be absorbed
- *
- * take the buffer from the pad and write to file if it's open
- */
+static gboolean
+gst_file_sink_get_current_offset (GstFileSink * filesink, guint64 * p_pos)
+{
+  off_t ret;
+
+#ifdef G_OS_UNIX
+  ret = lseek (fileno (filesink->file), 0, SEEK_CUR);
+#else
+  ret = (off_t) ftell (filesink->file);
+#endif
+
+  *p_pos = (guint64) ret;
+
+  return (ret != (off_t) - 1);
+}
+
 static GstFlowReturn
 gst_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
   GstFileSink *filesink;
+  guint64 cur_pos;
   guint size, back_pending = 0;
 
   size = GST_BUFFER_SIZE (buffer);
 
   filesink = GST_FILE_SINK (sink);
 
-  if (ftell (filesink->file) < filesink->data_written)
-    back_pending = filesink->data_written - ftell (filesink->file);
+  if (!gst_file_sink_get_current_offset (filesink, &cur_pos))
+    goto handle_error;
 
-  if (fwrite (GST_BUFFER_DATA (buffer), size, 1, filesink->file) != 1) {
-    GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
-        (_("Error while writing to file \"%s\"."), filesink->filename),
-        ("%s", g_strerror (errno)));
-    return GST_FLOW_ERROR;
-  }
+  if (cur_pos < filesink->data_written)
+    back_pending = filesink->data_written - cur_pos;
+
+  if (fwrite (GST_BUFFER_DATA (buffer), size, 1, filesink->file) != 1)
+    goto handle_error;
 
   filesink->data_written += size - back_pending;
 
   return GST_FLOW_OK;
+
+handle_error:
+
+  GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
+      (_("Error while writing to file \"%s\"."), filesink->filename),
+      ("%s", g_strerror (errno)));
+
+  return GST_FLOW_ERROR;
 }
 
 static GstElementStateReturn

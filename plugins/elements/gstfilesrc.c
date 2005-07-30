@@ -207,6 +207,10 @@ gst_file_src_class_init (GstFileSrcClass * klass)
   gstbasesrc_class->is_seekable = GST_DEBUG_FUNCPTR (gst_file_src_is_seekable);
   gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_file_src_get_size);
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_file_src_create);
+
+  if (sizeof (off_t) < 8) {
+    GST_LOG ("No large file support, sizeof (off_t) = %u!", sizeof (off_t));
+  }
 }
 
 static void

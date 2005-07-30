@@ -1,3 +1,5 @@
+AC_PREREQ(2.52)
+
 AC_INIT
 AC_CANONICAL_TARGET
 
@@ -147,41 +149,12 @@ if test x$FLEX_PATH = xno; then
   AC_MSG_ERROR(Could not find flex)
 fi
 
-dnl
-dnl We should really use AC_SYS_LARGEFILE, but the problem is
-dnl many of the plugins don't include "config.h".  To assure
-dnl binary compatibility, it is necessary that all gstreamer
-dnl code be compiled with the same sizeof(off_t), so we use
-dnl the following crude hack.
-dnl
-
-AC_MSG_CHECKING(for large file support)
-AC_TRY_RUN([
-#define _LARGEFILE_SOURCE
-#define _FILE_OFFSET_BITS 64
-#include <sys/types.h>
-int main () { return !(sizeof(off_t) == 8); }
-],
-[
-  AC_MSG_RESULT(yes)
-  GST_PKG_CFLAGS="-D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
-],
-[
-  AC_MSG_RESULT(no)
-],
-[
-  AC_MSG_RESULT(no)
-])
+dnl check for large file support (affected
+dnl plugins must include config.h for this)
+AC_SYS_LARGEFILE
 
 dnl check for mmap
 AC_FUNC_MMAP()
-if test "$ac_cv_func_mmap_fixed_mapped" = "yes" ; then
-  GST_DISABLE_OMEGA_COTHREADS=no
-else
-  GST_DISABLE_OMEGA_COTHREADS=yes
-fi
-dnl for future --disabling, maybe.  Right now, it depends on HAVE_MMAP
-AM_CONDITIONAL(GST_DISABLE_OMEGA_COTHREADS, test "x$GST_DISABLE_OMEGA_COTHREADS" = "xyes")
 
 dnl check for makecontext and define HAVE_MAKECONTEXT if we have it
 AC_CHECK_MCSC()
