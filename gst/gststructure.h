@@ -70,6 +70,8 @@ void                    gst_structure_free                 (GstStructure        
 
 G_CONST_RETURN gchar *  gst_structure_get_name             (const GstStructure      *structure);
 GQuark			gst_structure_get_name_id          (const GstStructure      *structure);
+gboolean                gst_structure_has_name             (const GstStructure      *structure,
+							    const gchar             *name);
 void                    gst_structure_set_name             (GstStructure            *structure,
 							    const gchar             *name);
 

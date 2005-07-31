@@ -58,13 +58,13 @@ typedef struct _GstStaticPadTemplate GstStaticPadTemplate;
 
 /**
  * GstPadLinkReturn:
- * #GST_PAD_LINK_OK		: link ok 
- * #GST_PAD_LINK_WRONG_HIERARCHY: pads have no common grandparent 
- * #GST_PAD_LINK_WAS_LINKED	: pad was already linked 
- * #GST_PAD_LINK_WRONG_DIRECTION: pads have wrong direction 
- * #GST_PAD_LINK_NOFORMAT	: pads do not have common format 
- * #GST_PAD_LINK_NOSCHED	: pads cannot cooperate in scheduling 
- * #GST_PAD_LINK_REFUSED	: refused for some reason 
+ * @GST_PAD_LINK_OK		: link ok 
+ * @GST_PAD_LINK_WRONG_HIERARCHY: pads have no common grandparent 
+ * @GST_PAD_LINK_WAS_LINKED	: pad was already linked 
+ * @GST_PAD_LINK_WRONG_DIRECTION: pads have wrong direction 
+ * @GST_PAD_LINK_NOFORMAT	: pads do not have common format 
+ * @GST_PAD_LINK_NOSCHED	: pads cannot cooperate in scheduling 
+ * @GST_PAD_LINK_REFUSED	: refused for some reason 
  */
 typedef enum {
   GST_PAD_LINK_OK               =  0,

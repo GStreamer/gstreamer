@@ -285,7 +285,27 @@ gst_structure_get_name (const GstStructure * structure)
 }
 
 /**
- * gst_structure_get_name:
+ * gst_structure_has_name:
+ * @structure: a #GstStructure
+ * @name: structure name to check for
+ *
+ * Returns: TRUE if @name matches the name of the structure.
+ */
+gboolean
+gst_structure_has_name (const GstStructure * structure, const gchar * name)
+{
+  const gchar *structure_name;
+
+  g_return_val_if_fail (structure != NULL, FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+
+  structure_name = g_quark_to_string (structure->name);
+
+  return (structure_name && strcmp (structure_name, name) == 0);
+}
+
+/**
+ * gst_structure_get_name_id:
  * @structure: a #GstStructure
  *
  * Accessor fuction.

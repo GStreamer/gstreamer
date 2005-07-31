@@ -1226,6 +1226,7 @@ gst_structure_new_valist
 gst_structure_copy
 gst_structure_free
 gst_structure_get_name
+gst_structure_has_name
 gst_structure_set_name
 gst_structure_get_name_id
 gst_structure_id_get_value

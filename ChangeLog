@@ -1,3 +1,13 @@
+2005-07-31  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstpad.h:
+	  Fix inline docs for GstPadLinkReturn.
+	  
+	* gst/gststructure.c: (gst_structure_has_name):
+	* gst/gststructure.h:
+	* docs/gst/gstreamer-sections.txt:
+	  New API: gst_structure_has_name().
+
 2005-07-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
