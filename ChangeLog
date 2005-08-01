@@ -1,3 +1,14 @@
+2005-08-01  Stefan Kost  <ensonic@users.sf.net>
+
+	reviewed by: <delete if not using a buddy>
+
+	* configure.ac:
+	* ext/ladspa/Makefile.am:
+	* ext/ladspa/gstladspa.c: (gst_ladspa_init), (gst_ladspa_loop),
+	(gst_ladspa_chain), (gst_ladspa_get), (plugin_init):
+	* ext/ladspa/gstladspa.h:
+          deactivate and remove dparams (libgstcontrol)
+
 2005-07-27  Wim Taymans  <wim@fluendo.com>
 
 	* ext/faad/gstfaad.c: (gst_faad_event):

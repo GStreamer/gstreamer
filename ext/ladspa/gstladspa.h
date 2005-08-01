@@ -52,8 +52,6 @@ struct _GstLADSPA {
   LADSPA_Descriptor *descriptor;
   LADSPA_Handle *handle;
 
-  GstDParamManager *dpman;
-
   gfloat *controls;
   
   GstPad **sinkpads, 
