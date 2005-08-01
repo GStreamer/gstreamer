@@ -51,6 +51,7 @@ struct _GstTypeFindElement {
   guint			min_probability;
   guint			max_probability;
   GstCaps *		caps;
+  gboolean              caps_changed;
 
   guint			mode;
   GstBuffer *		store;
