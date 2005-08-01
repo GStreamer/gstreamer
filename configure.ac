@@ -415,6 +415,11 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_X, true)
 GST_CHECK_FEATURE(X, [X libraries and plugins],
                   [ximagesink], [
   AC_PATH_XTRA
+  ac_cflags_save="$CFLAGS"
+  ac_cppflags_save="$CPPFLAGS"
+  CFLAGS="$CFLAGS $X_CFLAGS"
+  CPPFLAGS="$CPPFLAGS $X_CFLAGS"
+
   dnl now try to find the HEADER
   AC_CHECK_HEADER(X11/Xlib.h, HAVE_X="yes", HAVE_X="no")
 
@@ -431,6 +436,8 @@ GST_CHECK_FEATURE(X, [X libraries and plugins],
     AC_SUBST(X_LIBS)
   fi
   AC_SUBST(HAVE_X)
+  CFLAGS="$ac_cflags_save"
+  CPPFLAGS="$ac_cppflags_save"
 ])
   
 dnl *** XVideo ***

@@ -1,3 +1,10 @@
+2005-08-01  Jan Schmidt  <thaytan@mad.scientist.com>
+	* configure.ac:
+	  When testing for X libs, use the X CFlags 
+	* gst/adder/gstadder.c: (gst_adder_change_state):
+	  Stop the collectpads before calling parent state change function
+	  on PAUSED->READY, otherwise we deadlock deactivating pads.
+
 2005-08-01  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:

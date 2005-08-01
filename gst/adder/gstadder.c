@@ -419,23 +419,15 @@ gst_adder_change_state (GstElement * element)
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
+    case GST_STATE_PAUSED_TO_READY:
+      gst_collectpads_stop (adder->collect);
+      break;
     default:
       break;
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
-  switch (transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_PAUSED_TO_READY:
-      gst_collectpads_stop (adder->collect);
-      break;
-    case GST_STATE_READY_TO_NULL:
-      break;
-    default:
-      break;
-  }
   return ret;
 }
 
