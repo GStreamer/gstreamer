@@ -137,7 +137,6 @@ GST_CAPS_NONE
 GST_STATIC_CAPS_ANY
 GST_STATIC_CAPS_NONE
 GST_CAPS_IS_SIMPLE
-gst_caps_is_simple
 GST_DEBUG_CAPS
 GST_STATIC_CAPS
 gst_caps_new_empty
@@ -296,8 +295,6 @@ gst_element_set_clock
 gst_element_is_indexable
 gst_element_set_index
 gst_element_get_index
-gst_element_set_scheduler
-gst_element_get_scheduler
 gst_element_add_pad
 gst_element_remove_pad
 gst_element_get_pad
@@ -416,12 +413,6 @@ GST_EVENT_TYPE
 GST_EVENT_TIMESTAMP
 GST_EVENT_SRC
 GST_EVENT_IS_INTERRUPT
-GST_SEEK_FORMAT_SHIFT
-GST_SEEK_METHOD_SHIFT
-GST_SEEK_FLAGS_SHIFT
-GST_SEEK_FORMAT_MASK
-GST_SEEK_METHOD_MASK
-GST_SEEK_FLAGS_MASK
 GstEventFlag
 GST_EVENT_MASK_FUNCTION
 GstSeekType
@@ -438,19 +429,24 @@ GST_EVENT_DISCONT_OFFSET_LEN
 GST_EVENT_SIZE_FORMAT
 GST_EVENT_SIZE_VALUE
 GST_EVENT_RATE_VALUE
-gst_event_new
 gst_event_ref
 gst_event_unref
 gst_event_copy
-gst_event_masks_contains
-gst_event_new_seek
-gst_event_new_segment_seek
-gst_event_new_size
-gst_event_new_discontinuous
-gst_event_new_discontinuous_valist
-gst_event_discont_get_value
+gst_event_new_custom
+gst_event_get_structure
+gst_event_new_flush_start
+gst_event_new_flush_stop
+gst_event_new_eos
+gst_event_new_newsegment
+gst_event_parse_newsegment
+gst_event_new_tag
+gst_event_parse_tag
 gst_event_new_filler
-gst_event_new_flush
+gst_event_new_qos
+gst_event_parse_qos
+gst_event_new_seek
+gst_event_parse_seek
+gst_event_new_navigation
 <SUBSECTION Standard>
 GST_EVENT
 GST_IS_EVENT
@@ -1167,54 +1163,6 @@ gst_registry_pool_get_prefered
 </SECTION>
 
 <SECTION>
-<FILE>gstscheduler</FILE>
-<TITLE>GstScheduler</TITLE>
-GstScheduler
-GstSchedulerFlags
-GST_SCHEDULER_PARENT
-GST_SCHEDULER_STATE
-gst_scheduler_setup
-gst_scheduler_reset
-GST_SCHEDULER_DEFAULT_NAME
-<SUBSECTION Standard>
-GstSchedulerClass
-GST_SCHEDULER
-GST_IS_SCHEDULER
-GST_SCHEDULER_CLASS
-GST_IS_SCHEDULER_CLASS
-GST_SCHEDULER_GET_CLASS
-GST_TYPE_SCHEDULER
-GST_TYPE_SCHEDULER_FLAGS
-<SUBSECTION Private>
-gst_scheduler_get_type
-gst_scheduler_flags_get_type
-</SECTION>
-
-<SECTION>
-<FILE>gstschedulerfactory</FILE>
-<TITLE>GstSchedulerFactory</TITLE>
-GstSchedulerFactory
-gst_scheduler_register
-gst_scheduler_factory_new
-gst_scheduler_factory_destroy
-gst_scheduler_factory_find
-gst_scheduler_factory_create
-gst_scheduler_factory_make
-gst_scheduler_factory_set_default_name
-gst_scheduler_factory_get_default_name
-<SUBSECTION Standard>
-GstSchedulerFactoryClass
-GST_SCHEDULER_FACTORY
-GST_IS_SCHEDULER_FACTORY
-GST_SCHEDULER_FACTORY_CLASS
-GST_IS_SCHEDULER_FACTORY_CLASS
-GST_SCHEDULER_FACTORY_GET_CLASS
-GST_TYPE_SCHEDULER_FACTORY
-<SUBSECTION Private>
-gst_scheduler_factory_get_type
-</SECTION>
-
-<SECTION>
 <FILE>gststructure</FILE>
 <TITLE>GstStructure</TITLE>
 GstStructure
@@ -1600,7 +1548,6 @@ GstValueUnionFunc
 GstValueIntersectFunc
 GstValueSubtractFunc
 GstValueTable
-gst_type_is_fixed
 gst_value_is_fixed
 gst_value_register
 gst_value_init_and_copy

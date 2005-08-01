@@ -39,8 +39,6 @@
 <!ENTITY GstQueue SYSTEM "xml/gstqueue.xml">
 <!ENTITY GstRegistry SYSTEM "xml/gstregistry.xml">
 <!ENTITY GstRegistryPool SYSTEM "xml/gstregistrypool.xml">
-<!ENTITY GstScheduler SYSTEM "xml/gstscheduler.xml">
-<!ENTITY GstSchedulerFactory SYSTEM "xml/gstschedulerfactory.xml">
 <!ENTITY GstStructure SYSTEM "xml/gststructure.xml">
 <!ENTITY GstSystemClock SYSTEM "xml/gstsystemclock.xml">
 <!ENTITY GstTagList SYSTEM "xml/gsttaglist.xml">
@@ -128,8 +126,6 @@
     &GstQueue;
     &GstRegistry;
     &GstRegistryPool;
-    &GstScheduler;
-    &GstSchedulerFactory;
     &GstStructure;
     &GstSystemClock;
     &GstTagList;

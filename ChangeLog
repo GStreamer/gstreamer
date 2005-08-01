@@ -1,3 +1,11 @@
+2005-08-01  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstscheduler.sgml:
+	* docs/gst/tmpl/gstschedulerfactory.sgml:
+	  Remove some old cruft from docs.
+
 2005-07-31  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstpad.h:
