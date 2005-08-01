@@ -48,16 +48,6 @@ A Query Type definition
 @nick: a short nick
 @description: a longer description of the query type
 
-<!-- ##### MACRO GST_QUERY_TYPE_FUNCTION ##### -->
-<para>
-Convenience function to define a function that returns an array of query types.
-</para>
-
-@type: Type of first argument for function
-@functionname: The name of the function
-@...: query types, 0 to end the list
-
-
 <!-- ##### FUNCTION gst_query_type_register ##### -->
 <para>
 

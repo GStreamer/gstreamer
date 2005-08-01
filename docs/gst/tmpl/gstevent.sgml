@@ -39,6 +39,7 @@ gst_event_new_flush() creates a new flush event.
 @type: 
 @timestamp: 
 @src: 
+@structure: 
 
 <!-- ##### ENUM GstEventType ##### -->
 <para>
@@ -46,22 +47,16 @@ The different major types of events.
 </para>
 
 @GST_EVENT_UNKNOWN: unknown event.
+@GST_EVENT_FLUSH_START: 
+@GST_EVENT_FLUSH_STOP: 
 @GST_EVENT_EOS: an end-of-stream event.
-@GST_EVENT_FLUSH: a flush event.
-@GST_EVENT_DISCONTINUOUS: a discontinuous event to indicate the stream has a discontinuity.
+@GST_EVENT_NEWSEGMENT: 
+@GST_EVENT_TAG: 
+@GST_EVENT_FILLER: 
 @GST_EVENT_QOS: a quality of service event
 @GST_EVENT_SEEK: a seek event.
-@GST_EVENT_SIZE: a size suggestion for a peer element
-@GST_EVENT_RATE: adjust the output rate of an element
 @GST_EVENT_NAVIGATION: 
-@GST_EVENT_TAG: 
-
-<!-- ##### MACRO GST_EVENT_ANY ##### -->
-<para>
-
-</para>
-
-
+@GST_EVENT_CUSTOM_START: 
 
 <!-- ##### MACRO GST_EVENT_TRACE_NAME ##### -->
 <para>
@@ -94,74 +89,6 @@ The source object that generated this event
 @event: The event to query
 
 
-<!-- ##### MACRO GST_EVENT_IS_INTERRUPT ##### -->
-<para>
-Check if the event is an interrupt event
-</para>
-
-@event: The event to check
-
-
-<!-- ##### MACRO GST_SEEK_FORMAT_SHIFT ##### -->
-<para>
-Shift for the format in the GstSeekType
-</para>
-
-
-
-<!-- ##### MACRO GST_SEEK_METHOD_SHIFT ##### -->
-<para>
-Shift for the method in the GstSeekType
-</para>
-
-
-
-<!-- ##### MACRO GST_SEEK_FLAGS_SHIFT ##### -->
-<para>
-Shift for the flags in the GstSeekType
-</para>
-
-
-
-<!-- ##### MACRO GST_SEEK_FORMAT_MASK ##### -->
-<para>
-Mask for the format in the GstSeekType
-</para>
-
-
-
-<!-- ##### MACRO GST_SEEK_METHOD_MASK ##### -->
-<para>
-Mask for the method in the GstSeekType
-</para>
-
-
-
-<!-- ##### MACRO GST_SEEK_FLAGS_MASK ##### -->
-<para>
-Mask for the flags in the GstSeekType
-</para>
-
-
-
-<!-- ##### ENUM GstEventFlag ##### -->
-<para>
-Event flags are used when querying for supported events
-</para>
-
-@GST_EVENT_FLAG_NONE: no value
-@GST_RATE_FLAG_NEGATIVE: indicates negative rates are supported
-
-<!-- ##### MACRO GST_EVENT_MASK_FUNCTION ##### -->
-<para>
-A convenience macro to create event mask functions
-</para>
-
-@type: The type of the first argument of the function
-@functionname: the name of the function
-@...: event masks, the last element is marked with 0
-
-
 <!-- ##### ENUM GstSeekType ##### -->
 <para>
 The different types of seek events. When constructing a seek event a format,
@@ -190,129 +117,10 @@ in a pipeline.
 </example>
 </para>
 
-@GST_SEEK_METHOD_CUR: Seek to an relative position
-@GST_SEEK_METHOD_SET: Seek to an absolute position
-@GST_SEEK_METHOD_END: Seek relative to the end of the stream
-@GST_SEEK_FLAG_FLUSH: Flush any pending data while seeking
-@GST_SEEK_FLAG_ACCURATE: Seek as accurately as possible
-@GST_SEEK_FLAG_KEY_UNIT: Seek to a nearby key unit
-@GST_SEEK_FLAG_SEGMENT_LOOP: Loop between start and stop in a segmented seek
-
-<!-- ##### ENUM GstSeekAccuracy ##### -->
-<para>
-The accuracy about a seek operation gives more information of how the seek was
-performed, namly if the seek was accurate or fuzzy.
-</para>
-
-@GST_SEEK_CERTAIN: The seek was exact
-@GST_SEEK_FUZZY: The seek was fuzzy, exact position can not be guaranteed
-
-<!-- ##### MACRO GST_EVENT_SEEK_TYPE ##### -->
-<para>
-Get the seektype of the GST_EVENT_SEEK.
-</para>
-
-@event: The event to query.
-
-
-<!-- ##### MACRO GST_EVENT_SEEK_FORMAT ##### -->
-<para>
-The format of the seek value
-</para>
-
-@event: The event operate on
-
-
-<!-- ##### MACRO GST_EVENT_SEEK_METHOD ##### -->
-<para>
-The seek method to use as one of #GstSeekType
-</para>
-
-@event: The event operate on
-
-
-<!-- ##### MACRO GST_EVENT_SEEK_FLAGS ##### -->
-<para>
-The optional seek flags
-</para>
-
-@event: The event operate on
-
-
-<!-- ##### MACRO GST_EVENT_SEEK_OFFSET ##### -->
-<para>
-Get the offset of the seek event.
-</para>
-
-@event: The event to query.
-
-
-<!-- ##### MACRO GST_EVENT_SEEK_ENDOFFSET ##### -->
-<para>
-The event stop position for a segment seek
-</para>
-
-@event: The event to query
-
-
-<!-- ##### MACRO GST_EVENT_SEEK_ACCURACY ##### -->
-<para>
-Indicates how accurate the event was performed.
-</para>
-
-@event: The event to query
-
-
-<!-- ##### MACRO GST_EVENT_DISCONT_OFFSET ##### -->
-<para>
-The offset of the discont event. A discont event can hold up to 8 different
-format/value pairs.
-</para>
-
-@event: The event to query
-@i: The offset/value pair.
-
-
-<!-- ##### MACRO GST_EVENT_DISCONT_OFFSET_LEN ##### -->
-<para>
-Get the number of offset/value pairs this event has.
-</para>
-
-@event: The event to query.
-
-
-<!-- ##### MACRO GST_EVENT_SIZE_FORMAT ##### -->
-<para>
-The format of the size event.
-</para>
-
-@event: The event to query
-
-
-<!-- ##### MACRO GST_EVENT_SIZE_VALUE ##### -->
-<para>
-The value of the size event
-</para>
-
-@event: The event to query
-
-
-<!-- ##### MACRO GST_EVENT_RATE_VALUE ##### -->
-<para>
-Get access to the rate vale field
-</para>
-
-@event: The event to query
-
-
-<!-- ##### FUNCTION gst_event_new ##### -->
-<para>
-
-</para>
-
-@type: 
-@Returns: 
-
+@GST_SEEK_TYPE_NONE: 
+@GST_SEEK_TYPE_CUR: 
+@GST_SEEK_TYPE_SET: 
+@GST_SEEK_TYPE_END: 
 
 <!-- ##### MACRO gst_event_ref ##### -->
 <para>
@@ -339,14 +147,123 @@ Copy the event using the event specific copy function
 @Returns: A new event that is a copy of the given input event
 
 
-<!-- ##### FUNCTION gst_event_masks_contains ##### -->
+<!-- ##### FUNCTION gst_event_new_custom ##### -->
 <para>
 
 </para>
 
-@masks: 
-@mask: 
+@type: 
+@structure: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gst_event_get_structure ##### -->
+<para>
+
+</para>
+
+@event: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_event_new_flush_start ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_event_new_flush_stop ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_event_new_eos ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_event_new_newsegment ##### -->
+<para>
+
+</para>
+
+@rate: 
+@format: 
+@start_value: 
+@stop_value: 
+@base: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_event_parse_newsegment ##### -->
+<para>
+
+</para>
+
+@event: 
+@rate: 
+@format: 
+@start_value: 
+@end_value: 
+@base: 
+
+
+<!-- ##### FUNCTION gst_event_new_tag ##### -->
+<para>
+
+</para>
+
+@taglist: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@list: 
+
+
+<!-- ##### FUNCTION gst_event_parse_tag ##### -->
+<para>
+
+</para>
+
+@event: 
+@taglist: 
+
+
+<!-- ##### FUNCTION gst_event_new_filler ##### -->
+<para>
+Create a new dummy event that should be ignored
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_event_new_qos ##### -->
+<para>
+
+</para>
+
+@proportion: 
+@diff: 
+@timestamp: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_event_parse_qos ##### -->
+<para>
+
+</para>
+
+@event: 
+@proportion: 
+@diff: 
+@timestamp: 
 
 
 <!-- ##### FUNCTION gst_event_new_seek ##### -->
@@ -354,85 +271,40 @@ Copy the event using the event specific copy function
 
 </para>
 
-@type: 
-@offset: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_event_new_segment_seek ##### -->
-<para>
-
-</para>
-
-@type: 
-@start: 
+@rate: 
+@format: 
+@flags: 
+@cur_type: 
+@cur: 
+@stop_type: 
 @stop: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_event_new_size ##### -->
-<para>
-
-</para>
-
-@format: 
-@value: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_event_new_discontinuous ##### -->
-<para>
-
-</para>
-
-@rate: 
-@format1: 
-@Varargs: 
-@Returns: 
 <!-- # Unused Parameters # -->
-@new_media: 
+@type: 
+@offset: 
 
 
-<!-- ##### FUNCTION gst_event_new_discontinuous_valist ##### -->
-<para>
-
-</para>
-
-@rate: 
-@format1: 
-@var_args: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@new_media: 
-
-
-<!-- ##### FUNCTION gst_event_discont_get_value ##### -->
+<!-- ##### FUNCTION gst_event_parse_seek ##### -->
 <para>
 
 </para>
 
 @event: 
+@rate: 
 @format: 
-@start_value: 
-@end_value: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@value: 
+@flags: 
+@cur_type: 
+@cur: 
+@stop_type: 
+@stop: 
 
 
-<!-- ##### MACRO gst_event_new_filler ##### -->
+<!-- ##### FUNCTION gst_event_new_navigation ##### -->
 <para>
-Create a new dummy event that should be ignored
+
 </para>
 
-
-
-<!-- ##### FUNCTION gst_event_new_flush ##### -->
-<para>
-Create a new flush event.
-</para>
-
-@done: 
+@structure: 
 @Returns: 
 
 

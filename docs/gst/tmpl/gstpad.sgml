@@ -300,12 +300,13 @@ The direction of a pad.
 The result of a pad link.
 </para>
 
-@GST_PAD_LINK_NOSCHED: 
-@GST_PAD_LINK_NOFORMAT: 
-@GST_PAD_LINK_REFUSED: the link was refused.
-@GST_PAD_LINK_WRONG_DIRECTION: 
-@GST_PAD_LINK_WAS_LINKED: 
 @GST_PAD_LINK_OK:      the link succeeded.
+@GST_PAD_LINK_WRONG_HIERARCHY: 
+@GST_PAD_LINK_WAS_LINKED: 
+@GST_PAD_LINK_WRONG_DIRECTION: 
+@GST_PAD_LINK_NOFORMAT: 
+@GST_PAD_LINK_NOSCHED: 
+@GST_PAD_LINK_REFUSED: the link was refused.
 
 <!-- ##### ENUM GstPadPresence ##### -->
 <para>

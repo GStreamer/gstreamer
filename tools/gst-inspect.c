@@ -26,7 +26,6 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/control/control.h>
 
 #include "gst/gst-i18n-app.h"
 
@@ -659,61 +658,6 @@ print_pad_info (GstElement * element)
   }
 }
 
-static void
-print_dynamic_parameters_info (GstElement * element)
-{
-  GstDParamManager *dpman;
-  GParamSpec **specs = NULL;
-  gint x;
-
-  if ((dpman = gst_dpman_get_manager (element))) {
-    specs = gst_dpman_list_dparam_specs (dpman);
-  }
-
-  if (specs && specs[0] != NULL) {
-    n_print ("\n");
-    n_print ("Dynamic Parameters:\n");
-
-    for (x = 0; specs[x] != NULL; x++) {
-      g_print ("  %-20.20s: ", g_param_spec_get_name (specs[x]));
-
-      switch (G_PARAM_SPEC_VALUE_TYPE (specs[x])) {
-        case G_TYPE_INT64:
-          g_print ("64 Bit Integer (Default %" G_GINT64_FORMAT ", Range %"
-              G_GINT64_FORMAT " -> %" G_GINT64_FORMAT ")",
-              ((GParamSpecInt64 *) specs[x])->default_value,
-              ((GParamSpecInt64 *) specs[x])->minimum,
-              ((GParamSpecInt64 *) specs[x])->maximum);
-          break;
-        case G_TYPE_INT:
-          g_print ("Integer (Default %d, Range %d -> %d)",
-              ((GParamSpecInt *) specs[x])->default_value,
-              ((GParamSpecInt *) specs[x])->minimum,
-              ((GParamSpecInt *) specs[x])->maximum);
-          break;
-        case G_TYPE_FLOAT:
-          g_print ("Float. Default: %-8.8s %15.7g\n", "",
-              ((GParamSpecFloat *) specs[x])->default_value);
-          g_print ("%-23.23s Range: %15.7g - %15.7g", "",
-              ((GParamSpecFloat *) specs[x])->minimum,
-              ((GParamSpecFloat *) specs[x])->maximum);
-          break;
-        case G_TYPE_DOUBLE:
-          g_print ("Double. Default: %-8.8s %15.7g\n", "",
-              ((GParamSpecDouble *) specs[x])->default_value);
-          g_print ("%-23.23s Range: %15.7g - %15.7g", "",
-              ((GParamSpecDouble *) specs[x])->minimum,
-              ((GParamSpecDouble *) specs[x])->maximum);
-          break;
-        default:
-          g_print ("unknown %ld", G_PARAM_SPEC_VALUE_TYPE (specs[x]));
-      }
-      g_print ("\n");
-    }
-    g_free (specs);
-  }
-}
-
 #if 0
 static gint
 compare_signal_names (GSignalQuery * a, GSignalQuery * b)
@@ -1046,7 +990,6 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
   print_index_info (element);
   print_pad_info (element);
   print_element_properties_info (element);
-  print_dynamic_parameters_info (element);
   print_signal_info (element);
   print_children_info (element);
 
@@ -1073,7 +1016,6 @@ main (int argc, char *argv[])
 #endif
 
   gst_init_with_popt_table (&argc, &argv, options);
-  gst_control_init (&argc, &argv);
 
   if (print_all && argc > 2) {
     g_print ("-a requires no extra arguments\n");

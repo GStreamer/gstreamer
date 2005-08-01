@@ -30,6 +30,9 @@ GstFakeSrc
 
 @gstfakesrc: the object which received the signal.
 @arg1: 
+@:
+@:
+@: 
 
 <!-- ##### ARG GstFakeSrc:data ##### -->
 <para>

@@ -36,6 +36,7 @@ GstBaseSrc
 @segment_start: 
 @segment_end: 
 @segment_loop: 
+@need_discont: 
 @offset: 
 @size: 
 @num_buffers: 

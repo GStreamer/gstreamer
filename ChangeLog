@@ -1,3 +1,45 @@
+2005-08-01  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* docs/gst/tmpl/gstbasesrc.sgml:
+	* docs/gst/tmpl/gstelement.sgml:
+	* docs/gst/tmpl/gstevent.sgml:
+	* docs/gst/tmpl/gstfakesrc.sgml:
+	* docs/gst/tmpl/gstformat.sgml:
+	* docs/gst/tmpl/gstghostpad.sgml:
+	* docs/gst/tmpl/gstpad.sgml:
+	* docs/gst/tmpl/gstquery.sgml:
+	* docs/gst/tmpl/gststructure.sgml:
+	* docs/gst/tmpl/gsttaglist.sgml:
+	* docs/gst/tmpl/gstvalue.sgml:
+	* docs/libs/gstreamer-libs-docs.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	* docs/libs/gstreamer-libs.types:
+	* libs/gst/Makefile.am:
+	* libs/gst/control/.cvsignore:
+	* libs/gst/control/Makefile.am:
+	* libs/gst/control/control.c:
+	* libs/gst/control/control.h:
+	* libs/gst/control/dparam.c:
+	* libs/gst/control/dparam.h:
+	* libs/gst/control/dparam_smooth.c:
+	* libs/gst/control/dparam_smooth.h:
+	* libs/gst/control/dparamcommon.h:
+	* libs/gst/control/dparammanager.c:
+	* libs/gst/control/dparammanager.h:
+	* libs/gst/control/dplinearinterp.c:
+	* libs/gst/control/dplinearinterp.h:
+	* libs/gst/control/unitconvert.c:
+	* libs/gst/control/unitconvert.h:
+	* testsuite/Makefile.am:
+	* testsuite/dynparams/.cvsignore:
+	* testsuite/dynparams/Makefile.am:
+	* testsuite/dynparams/dparamstest.c:
+	* tools/Makefile.am:
+	* tools/gst-inspect.c: (print_element_info), (main):
+	* tools/gst-xmlinspect.c: (print_element_info), (main):
+          deactivate and remove dparams (libgstcontrol)
+
 2005-08-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/elements/gsttypefindelement.c:

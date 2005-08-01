@@ -91,20 +91,20 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 @sinkpads: 
 @pads_cookie: 
 
-<!-- ##### SIGNAL GstElement::new-pad ##### -->
-<para>
-
-</para>
-
-@gstelement: the object which received the signal.
-@arg1: 
-
 <!-- ##### SIGNAL GstElement::no-more-pads ##### -->
 <para>
 
 </para>
 
 @gstelement: the object which received the signal.
+
+<!-- ##### SIGNAL GstElement::pad-added ##### -->
+<para>
+
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: 
 
 <!-- ##### SIGNAL GstElement::pad-removed ##### -->
 <para>
@@ -114,7 +114,7 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 @gstelement: the object which received the signal.
 @arg1: 
 
-<!-- ##### SIGNAL GstElement::state-change ##### -->
+<!-- ##### SIGNAL GstElement::state-changed ##### -->
 <para>
 
 </para>
@@ -218,33 +218,6 @@ The Element is going from the PAUSED state to the READY state.
 The Element is going from the READY state to the NULL state.
 </para>
 
-
-
-<!-- ##### MACRO GST_ELEMENT_QUERY_TYPE_FUNCTION ##### -->
-<para>
-Helper macro to create query type functions
-</para>
-
-@functionname: The function name
-@...: list of query types.
-
-
-<!-- ##### MACRO GST_ELEMENT_FORMATS_FUNCTION ##### -->
-<para>
-Halper macro to create element format functions
-</para>
-
-@functionname: The function name
-@...: formats
-
-
-<!-- ##### MACRO GST_ELEMENT_EVENT_MASK_FUNCTION ##### -->
-<para>
-A helper macro to create a mask function
-</para>
-
-@functionname: the name of the mask function
-@...: Masks
 
 
 <!-- ##### ENUM GstElementFlags ##### -->
@@ -594,9 +567,17 @@ Sets the parent of an element.
 </para>
 
 @element: 
+@rate: 
+@format: 
+@flags: 
+@cur_type: 
+@cur: 
+@stop_type: 
+@stop: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @seek_type: 
 @offset: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gst_element_get_query_types ##### -->

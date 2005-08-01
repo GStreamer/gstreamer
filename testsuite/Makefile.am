@@ -16,7 +16,7 @@ endif
 SUBDIRS = \
 	bytestream caps cleanup \
 	$(GST_DEBUG_DIRS) \
-	dlopen dynparams \
+	dlopen \
 	elements indexers negotiation pad \
 	$(GST_PARSE_DIRS) \
 	plugin refcounting schedulers states threads trigger
@@ -24,7 +24,7 @@ SUBDIRS = \
 DIST_SUBDIRS = \
 	bytestream caps cleanup \
 	debug \
-	dlopen dynparams \
+	dlopen \
 	elements indexers negotiation pad \
 	parse \
 	plugin refcounting schedulers states threads trigger

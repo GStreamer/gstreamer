@@ -23,11 +23,6 @@ Pseudo link pads
 </para>
 
 
-<!-- ##### ARG GstGhostPad:internal ##### -->
-<para>
-
-</para>
-
 <!-- ##### FUNCTION gst_ghost_pad_new ##### -->
 <para>
 

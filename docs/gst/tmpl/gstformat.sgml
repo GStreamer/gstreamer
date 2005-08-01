@@ -54,17 +54,6 @@ A format definition
 @nick: A short nick of the format
 @description: A longer description of the format
 
-<!-- ##### MACRO GST_FORMATS_FUNCTION ##### -->
-<para>
-A convenience function to define a function that returns an array
-of formats.
-</para>
-
-@type: The type of the first argument of the function
-@functionname: The name of the function
-@...: comma separated list of functions closed with 0
-
-
 <!-- ##### FUNCTION gst_format_register ##### -->
 <para>
 

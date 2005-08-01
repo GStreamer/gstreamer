@@ -101,6 +101,16 @@ Generic structure containing fields of names and values
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_structure_has_name ##### -->
+<para>
+
+</para>
+
+@structure: 
+@name: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_structure_set_name ##### -->
 <para>
 

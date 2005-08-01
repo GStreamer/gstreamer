@@ -630,7 +630,6 @@ gst/parse/Makefile
 gst/registries/Makefile
 libs/Makefile
 libs/gst/Makefile
-libs/gst/control/Makefile
 libs/gst/dataprotocol/Makefile
 libs/gst/getbits/Makefile
 po/Makefile.in
@@ -648,7 +647,6 @@ testsuite/caps/Makefile
 testsuite/cleanup/Makefile
 testsuite/debug/Makefile
 testsuite/dlopen/Makefile
-testsuite/dynparams/Makefile
 testsuite/elements/Makefile
 testsuite/indexers/Makefile
 testsuite/negotiation/Makefile

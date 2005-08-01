@@ -606,16 +606,7 @@ List of tags and values used to describe media metadata
 
 </para>
 
-@list: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_event_tag_get_list ##### -->
-<para>
-
-</para>
-
-@tag_event: 
+@taglist: 
 @Returns: 
 
 

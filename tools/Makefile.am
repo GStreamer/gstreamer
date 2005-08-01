@@ -92,10 +92,6 @@ gst_md5sum_SOURCES = gst-run.c
 gst_typefind_SOURCES = gst-run.c
 gst_xmlinspect_SOURCES = gst-run.c
 
-gst_inspect_@GST_MAJORMINOR@_LDADD = ../libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
-
-gst_xmlinspect_@GST_MAJORMINOR@_LDADD = ../libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
-
 # CFLAGS and libs for nonversioned frontend binaries
 AM_CFLAGS = $(GLIB_ONLY_CFLAGS) $(POPT_CFLAGS)
 LDADD = $(GLIB_ONLY_LIBS) $(POPT_LIBS)

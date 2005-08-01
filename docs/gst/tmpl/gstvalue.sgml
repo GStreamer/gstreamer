@@ -106,14 +106,6 @@ Checks if the give GValue contains a LIST value.
 @x: the #GValue to check
 
 
-<!-- ##### MACRO GST_VALUE_HOLDS_FIXED_LIST ##### -->
-<para>
-Checks if the give GValue contains a FIXED_LIST value.
-</para>
-
-@x: the #GValue to check
-
-
 <!-- ##### MACRO GST_VALUE_HOLDS_CAPS ##### -->
 <para>
 Checks if the give GValue contains a CAPS value.
@@ -234,15 +226,6 @@ GST_VALUE_GREATER_THAN or GST_VALUE_UNORDERED
 @compare: 
 @serialize: 
 @deserialize: 
-
-<!-- ##### FUNCTION gst_type_is_fixed ##### -->
-<para>
-
-</para>
-
-@type: 
-@Returns: 
-
 
 <!-- ##### FUNCTION gst_value_is_fixed ##### -->
 <para>
