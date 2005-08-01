@@ -219,16 +219,6 @@ if test -z $GST_TOOLS_DIR; then
 fi
 AC_SUBST(GST_TOOLS_DIR)
 
-dnl check for gstreamer-control; uninstalled is selected preferentially
-PKG_CHECK_MODULES(GST_CONTROL, gstreamer-control-$GST_MAJORMINOR >= $GST_REQ,
-  HAVE_GST_CONTROL="yes", HAVE_GST_CONTROL="no")
-
-if test "x$HAVE_GST_CONTROL" = "xno"; then
-  AC_MSG_ERROR(no GStreamer Control Libs found)
-fi
-
-AC_SUBST(GST_CONTROL_LIBS)
-
 dnl check for gstreamer-dataprotocol; uninstalled is selected preferentially
 PKG_CHECK_MODULES(GST_GDP, gstreamer-dataprotocol-$GST_MAJORMINOR >= $GST_REQ,
   HAVE_GST_GDP="yes", HAVE_GST_GDP="no")

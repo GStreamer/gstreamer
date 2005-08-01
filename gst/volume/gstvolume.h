@@ -54,8 +54,6 @@ struct _GstVolume {
 
   void (*process)(GstVolume*, GstClockTime, gpointer, gint);
 
-  GstDParamManager *dpman;
-
   gboolean mute;
   gint   volume_i, real_vol_i; /* the _i(nt) values get synchronized with the */
   gfloat volume_f, real_vol_f; /* _f(loat) values on each update */

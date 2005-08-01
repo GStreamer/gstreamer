@@ -27,7 +27,6 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <gst/control/control.h>
 
 #include "gstsinesrc.h"
 
@@ -197,20 +196,6 @@ gst_sinesrc_init (GstSineSrc * src)
 
   src->seq = 0;
 
-  src->dpman = gst_dpman_new ("sinesrc_dpman", GST_ELEMENT (src));
-
-  gst_dpman_add_required_dparam_callback (src->dpman,
-      g_param_spec_double ("freq", "Frequency (Hz)", "Frequency of the tone",
-          10.0, 10000.0, 350.0, G_PARAM_READWRITE),
-      "hertz", gst_sinesrc_update_freq, src);
-
-  gst_dpman_add_required_dparam_direct (src->dpman,
-      g_param_spec_double ("volume", "Volume", "Volume of the tone",
-          0.0, 1.0, 0.8, G_PARAM_READWRITE), "scalar", &(src->volume)
-      );
-
-  gst_dpman_set_rate (src->dpman, src->samplerate);
-
   gst_sinesrc_populate_sinetable (src);
   gst_sinesrc_update_table_inc (src);
 
@@ -317,7 +302,7 @@ gst_sinesrc_create (GstBaseSrc * basesrc, guint64 offset,
   guint tdiff;
 
   gint16 *samples;
-  gint i = 0;
+  gint i;
 
   src = GST_SINESRC (basesrc);
 
@@ -362,12 +347,10 @@ gst_sinesrc_create (GstBaseSrc * basesrc, guint64 offset,
 
   samples = (gint16 *) GST_BUFFER_DATA (buf);
 
-  GST_DPMAN_PREPROCESS (src->dpman, src->samples_per_buffer, src->timestamp);
-
   src->timestamp += tdiff;
   src->offset += src->samples_per_buffer;
 
-  while (GST_DPMAN_PROCESS (src->dpman, i)) {
+  for (i = 0; i < src->samples_per_buffer; i++) {
 #if 0
     src->table_lookup = (gint) (src->table_pos);
     src->table_lookup_next = src->table_lookup + 1;
@@ -385,8 +368,7 @@ gst_sinesrc_create (GstBaseSrc * basesrc, guint64 offset,
     src->table_pos += src->table_inc;
 
     /*no interpolation */
-    /*samples[i] = src->table_data[src->table_lookup] */
-    /*               * src->volume * 32767.0; */
+    /*samples[i] = src->table_data[src->table_lookup] * src->volume * 32767.0; */
 
     /*linear interpolation */
     samples[i] = ((src->table_interp * (src->table_data[src->table_lookup_next]
@@ -399,9 +381,7 @@ gst_sinesrc_create (GstBaseSrc * basesrc, guint64 offset,
     if (src->accumulator >= 2 * M_PI) {
       src->accumulator -= 2 * M_PI;
     }
-    samples[i] = sin (src->accumulator) * src->volume * 32767.0;
-
-    i++;
+    *samples++ = sin (src->accumulator) * src->volume * 32767.0;
   }
 
   *buffer = buf;
@@ -428,11 +408,9 @@ gst_sinesrc_set_property (GObject * object, guint prop_id,
       src->samples_per_buffer = g_value_get_int (value);
       break;
     case ARG_FREQ:
-      gst_dpman_bypass_dparam (src->dpman, "freq");
       gst_sinesrc_update_freq (value, src);
       break;
     case ARG_VOLUME:
-      gst_dpman_bypass_dparam (src->dpman, "volume");
       src->volume = g_value_get_double (value);
       break;
     case ARG_SYNC:
@@ -528,9 +506,6 @@ gst_sinesrc_update_table_inc (GstSineSrc * src)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  /* initialize dparam support library */
-  gst_control_init (NULL, NULL);
-
   return gst_element_register (plugin, "sinesrc",
       GST_RANK_NONE, GST_TYPE_SINESRC);
 }

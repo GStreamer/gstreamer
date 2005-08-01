@@ -170,8 +170,6 @@ gst_volume_set_volume (GstMixer * mixer, GstMixerTrack * track, gint * volumes)
   g_return_if_fail (filter != NULL);
   g_return_if_fail (GST_IS_VOLUME (filter));
 
-  gst_dpman_bypass_dparam (filter->dpman, "volume");
-
   filter->volume_f = (gfloat) volumes[0] / VOLUME_STEPS;
   filter->volume_i = filter->volume_f * VOLUME_UNITY_INT;
 
@@ -203,8 +201,6 @@ gst_volume_set_mute (GstMixer * mixer, GstMixerTrack * track, gboolean mute)
   g_return_if_fail (filter != NULL);
   g_return_if_fail (GST_IS_VOLUME (filter));
 
-  gst_dpman_bypass_dparam (filter->dpman, "volume");
-
   filter->mute = mute;
 
   if (filter->mute) {
@@ -231,13 +227,7 @@ gst_volume_mixer_init (GstMixerClass * klass)
 static void
 gst_volume_dispose (GObject * object)
 {
-  GstVolume *volume;
-
-  volume = GST_VOLUME (object);
-
-  if (volume->dpman)
-    g_object_unref (G_OBJECT (volume->dpman));
-  volume->dpman = NULL;
+  GstVolume *volume = GST_VOLUME (object);
 
   if (volume->tracklist) {
     if (volume->tracklist->data)
@@ -292,15 +282,6 @@ gst_volume_init (GstVolume * filter)
   filter->real_vol_i = VOLUME_UNITY_INT;
   filter->real_vol_f = 1.0;
   filter->tracklist = NULL;
-
-  filter->dpman = gst_dpman_new ("volume_dpman", GST_ELEMENT (filter));
-  gst_dpman_add_required_dparam_callback (filter->dpman,
-      g_param_spec_int ("mute", "Mute", "Mute the audio",
-          0, 1, 0, G_PARAM_READWRITE), "int", volume_update_mute, filter);
-  gst_dpman_add_required_dparam_callback (filter->dpman,
-      g_param_spec_double ("volume", "Volume", "Volume of the audio",
-          0.0, VOLUME_MAX_DOUBLE, 1.0, G_PARAM_READWRITE),
-      "scalar", volume_update_volume, filter);
 
   track = g_object_new (GST_TYPE_MIXER_TRACK, NULL);
 
@@ -362,11 +343,8 @@ volume_process_float (GstVolume * filter, GstClockTime tstamp,
   data = (gfloat *) bytes;
   num_samples = n_bytes / sizeof (gfloat);
 
-  GST_DPMAN_PREPROCESS (filter->dpman, num_samples, tstamp);
-
-  i = 0;
-  while (GST_DPMAN_PROCESS (filter->dpman, i)) {
-    data[i++] *= filter->real_vol_f;
+  for (i = 0; i < num_samples; i++) {
+    *data++ *= filter->real_vol_f;
   }
 }
 
@@ -375,34 +353,27 @@ volume_process_int16 (GstVolume * filter, GstClockTime tstamp,
     gpointer bytes, gint n_bytes)
 {
   gint16 *data;
-  gint i, num_samples;
+  gint i, val, num_samples;
 
   data = (gint16 *) bytes;
   num_samples = n_bytes / sizeof (gint16);
 
-  GST_DPMAN_PREPROCESS (filter->dpman, num_samples, tstamp);
-  i = 0;
-
   /* need... liboil... */
-  while (GST_DPMAN_PROCESS (filter->dpman, i)) {
-    /* only clamp if the gain is greater than 1.0 */
-    if (filter->real_vol_i > VOLUME_UNITY_INT) {
-      while (i < GST_DPMAN_NEXT_UPDATE_FRAME (filter->dpman)) {
-        /* we use bitshifting instead of dividing by UNITY_INT for speed */
-        data[i] =
-            (gint16) CLAMP ((filter->real_vol_i *
-                (gint) data[i]) >> VOLUME_UNITY_BIT_SHIFT, VOLUME_MIN_INT16,
-            VOLUME_MAX_INT16);
-        i++;
-      }
-    } else {
-      while (i < GST_DPMAN_NEXT_UPDATE_FRAME (filter->dpman)) {
-        /* we use bitshifting instead of dividing by UNITY_INT for speed */
-        data[i] =
-            (gint16) ((filter->real_vol_i *
-                (gint) data[i]) >> VOLUME_UNITY_BIT_SHIFT);
-        i++;
-      }
+  /* only clamp if the gain is greater than 1.0 */
+  if (filter->real_vol_i > VOLUME_UNITY_INT) {
+    for (i = 0; i < num_samples; i++) {
+      /* we use bitshifting instead of dividing by UNITY_INT for speed */
+      val = (gint) * data;
+      *data++ =
+          (gint16) CLAMP ((filter->real_vol_i *
+              val) >> VOLUME_UNITY_BIT_SHIFT, VOLUME_MIN_INT16,
+          VOLUME_MAX_INT16);
+    }
+  } else {
+    for (i = 0; i < num_samples; i++) {
+      /* we use bitshifting instead of dividing by UNITY_INT for speed */
+      val = (gint) * data;
+      *data++ = (gint16) ((filter->real_vol_i * val) >> VOLUME_UNITY_BIT_SHIFT);
     }
   }
 }
@@ -455,11 +426,9 @@ volume_set_property (GObject * object, guint prop_id, const GValue * value,
 
   switch (prop_id) {
     case PROP_MUTE:
-      gst_dpman_bypass_dparam (filter->dpman, "mute");
       volume_update_mute (value, filter);
       break;
     case PROP_VOLUME:
-      gst_dpman_bypass_dparam (filter->dpman, "volume");
       volume_update_volume (value, filter);
       break;
     default:
@@ -490,8 +459,6 @@ volume_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_control_init (NULL, NULL);
-
   return gst_element_register (plugin, "volume", GST_RANK_NONE,
       GST_TYPE_VOLUME);
 }

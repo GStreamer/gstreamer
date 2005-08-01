@@ -53,7 +53,6 @@ struct _GstSineSrc {
 
   /* pads */
   GstPad *srcpad;
-  GstDParamManager *dpman;
 
   /* parameters */
   gdouble volume;
