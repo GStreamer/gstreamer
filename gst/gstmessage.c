@@ -94,6 +94,7 @@ gst_message_init (GTypeInstance * instance, gpointer g_class)
 {
   GstMessage *message = GST_MESSAGE (instance);
 
+  GST_CAT_INFO (GST_CAT_MESSAGE, "new message %p", message);
   GST_MESSAGE_TIMESTAMP (message) = GST_CLOCK_TIME_NONE;
 }
 

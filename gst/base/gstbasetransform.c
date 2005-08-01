@@ -180,6 +180,7 @@ gst_base_transform_init (GstBaseTransform * trans, gpointer g_class)
   gst_element_add_pad (GST_ELEMENT (trans), trans->srcpad);
 
   trans->passthrough = FALSE;
+  trans->out_size = -1;
 }
 
 static GstCaps *
@@ -581,7 +582,7 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
     else
       ret = GST_FLOW_NOT_SUPPORTED;
 
-    if (ret)
+    if (ret != GST_FLOW_OK)
       ret =
           gst_base_transform_configure_caps (trans,
           GST_PAD_CAPS (trans->sinkpad), GST_PAD_CAPS (trans->srcpad));
@@ -734,7 +735,11 @@ gst_base_transform_change_state (GstElement * element)
       break;
     case GST_STATE_READY_TO_PAUSED:
       GST_LOCK (trans);
-      trans->in_place = trans->passthrough;
+      if (GST_PAD_CAPS (trans->sinkpad) && GST_PAD_CAPS (trans->srcpad))
+        trans->in_place = gst_caps_is_equal (GST_PAD_CAPS (trans->sinkpad),
+            GST_PAD_CAPS (trans->srcpad)) || trans->passthrough;
+      else
+        trans->in_place = trans->passthrough;
       trans->out_size = -1;
       GST_UNLOCK (trans);
       break;
