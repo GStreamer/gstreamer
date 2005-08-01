@@ -414,7 +414,6 @@ gst_ladspa_init (GstLADSPA * ladspa)
   ladspa->srcpads = g_new0 (GstPad *, oclass->numsrcpads);
   ladspa->sinkpads = g_new0 (GstPad *, oclass->numsinkpads);
   ladspa->controls = g_new (gfloat, oclass->numcontrols);
-  ladspa->dpman = gst_dpman_new ("ladspa_dpman", GST_ELEMENT (ladspa));
 
   /* set up pads */
   sinkcount = 0;
@@ -430,43 +429,6 @@ gst_ladspa_init (GstLADSPA * ladspa)
       ladspa->sinkpads[sinkcount++] = pad;
     else
       ladspa->srcpads[srccount++] = pad;
-  }
-
-  /* set up dparams */
-  for (i = 0; i < oclass->numcontrols; i++) {
-    if (LADSPA_IS_PORT_INPUT (desc->PortDescriptors[i])) {
-      cinfo = oclass->control_info[i];
-      ladspa->controls[i] = cinfo.def;
-
-      if (cinfo.toggled) {
-        gst_dpman_add_required_dparam_callback (ladspa->dpman,
-            g_param_spec_int (cinfo.param_name, cinfo.name, cinfo.name,
-                0, 1, (gint) (ladspa->controls[i]), G_PARAM_READWRITE),
-            "int", gst_ladspa_update_int, &(ladspa->controls[i])
-            );
-      } else if (cinfo.integer) {
-        gst_dpman_add_required_dparam_callback (ladspa->dpman,
-            g_param_spec_int (cinfo.param_name, cinfo.name, cinfo.name,
-                (gint) cinfo.lowerbound, (gint) cinfo.upperbound,
-                (gint) ladspa->controls[i], G_PARAM_READWRITE),
-            "int", gst_ladspa_update_int, &(ladspa->controls[i])
-            );
-      } else if (cinfo.samplerate) {
-        gst_dpman_add_required_dparam_direct (ladspa->dpman,
-            g_param_spec_float (cinfo.param_name, cinfo.name, cinfo.name,
-                cinfo.lowerbound, cinfo.upperbound,
-                ladspa->controls[i], G_PARAM_READWRITE),
-            "hertz-rate-bound", &(ladspa->controls[i])
-            );
-      } else {
-        gst_dpman_add_required_dparam_direct (ladspa->dpman,
-            g_param_spec_float (cinfo.param_name, cinfo.name, cinfo.name,
-                cinfo.lowerbound, cinfo.upperbound,
-                ladspa->controls[i], G_PARAM_READWRITE),
-            "float", &(ladspa->controls[i])
-            );
-      }
-    }
   }
 
   /* nonzero default needed to instantiate() some plugins */
@@ -729,8 +691,7 @@ static void
 gst_ladspa_loop (GstElement * element)
 {
   guint i, j, numsrcpads, numsinkpads;
-  guint num_processed, num_to_process;
-  gint largest_buffer;
+  glong num_samples;
   LADSPA_Data **data_in, **data_out;
   GstBuffer **buffers_in, **buffers_out;
 
@@ -747,7 +708,8 @@ gst_ladspa_loop (GstElement * element)
   buffers_in = g_new0 (GstBuffer *, numsinkpads);
   buffers_out = g_new0 (GstBuffer *, numsrcpads);
 
-  largest_buffer = -1;
+  /* determine largest buffer */
+  num_samples = -1;
 
   /* first get all the necessary data from the input ports */
   for (i = 0; i < numsinkpads; i++) {
@@ -768,12 +730,11 @@ gst_ladspa_loop (GstElement * element)
       }
     }
 
-    if (largest_buffer < 0)
-      largest_buffer = GST_BUFFER_SIZE (buffers_in[i]) / sizeof (gfloat);
+    if (num_samples < 0)
+      num_samples = GST_BUFFER_SIZE (buffers_in[i]) / sizeof (gfloat);
     else
-      largest_buffer =
-          MIN (GST_BUFFER_SIZE (buffers_in[i]) / sizeof (gfloat),
-          largest_buffer);
+      num_samples =
+          MIN (GST_BUFFER_SIZE (buffers_in[i]) / sizeof (gfloat), num_samples);
     data_in[i] = (LADSPA_Data *) GST_BUFFER_DATA (buffers_in[i]);
     GST_BUFFER_TIMESTAMP (buffers_in[i]) = ladspa->timestamp;
   }
@@ -793,32 +754,15 @@ gst_ladspa_loop (GstElement * element)
     data_out[i] = (LADSPA_Data *) GST_BUFFER_DATA (buffers_out[i]);
   }
 
-  GST_DPMAN_PREPROCESS (ladspa->dpman, largest_buffer, ladspa->timestamp);
-  num_processed = 0;
+  /* process chunk */
+  for (i = 0; i < numsinkpads; i++)
+    desc->connect_port (ladspa->handle, oclass->sinkpad_portnums[i],
+        data_in[i]);
+  for (i = 0; i < numsrcpads; i++)
+    desc->connect_port (ladspa->handle, oclass->srcpad_portnums[i],
+        data_out[i]);
 
-  /* split up processing of the buffer into chunks so that dparams can
-   * be updated when required.
-   * In many cases the buffer will be processed in one chunk anyway.
-   */
-  while (GST_DPMAN_PROCESS (ladspa->dpman, num_processed)) {
-    num_to_process = GST_DPMAN_FRAMES_TO_PROCESS (ladspa->dpman);
-
-    for (i = 0; i < numsinkpads; i++)
-      desc->connect_port (ladspa->handle, oclass->sinkpad_portnums[i],
-          data_in[i]);
-    for (i = 0; i < numsrcpads; i++)
-      desc->connect_port (ladspa->handle, oclass->srcpad_portnums[i],
-          data_out[i]);
-
-    desc->run (ladspa->handle, num_to_process);
-
-    for (i = 0; i < numsinkpads; i++)
-      data_in[i] += num_to_process;
-    for (i = 0; i < numsrcpads; i++)
-      data_out[i] += num_to_process;
-
-    num_processed += num_to_process;
-  }
+  desc->run (ladspa->handle, num_samples);
 
   for (i = 0; i < numsinkpads; i++) {
     if (i >= numsrcpads || buffers_out[i] != buffers_in[i])
@@ -852,8 +796,8 @@ gst_ladspa_chain (GstPad * pad, GstData * _data)
   LADSPA_Descriptor *desc;
   LADSPA_Data *data_in, **data_out = NULL;
   GstBuffer **buffers_out = NULL;
-  unsigned long num_samples;
-  guint num_to_process, num_processed, i, numsrcpads;
+  gulong num_samples;
+  guint i, numsrcpads;
   GstLADSPA *ladspa;
   GstLADSPAClass *oclass;
 
@@ -888,30 +832,13 @@ gst_ladspa_chain (GstPad * pad, GstData * _data)
     data_out[i] = (LADSPA_Data *) GST_BUFFER_DATA (buffers_out[i]);
   }
 
-  GST_DPMAN_PREPROCESS (ladspa->dpman, num_samples,
-      GST_BUFFER_TIMESTAMP (buffer_in));
-  num_processed = 0;
+  /* process chunk */
+  desc->connect_port (ladspa->handle, oclass->sinkpad_portnums[0], data_in);
+  for (i = 0; i < numsrcpads; i++)
+    desc->connect_port (ladspa->handle, oclass->srcpad_portnums[i],
+        data_out[i]);
 
-  /* split up processing of the buffer into chunks so that dparams can
-   * be updated when required.
-   * In many cases the buffer will be processed in one chunk anyway.
-   */
-  while (GST_DPMAN_PROCESS (ladspa->dpman, num_processed)) {
-    num_to_process = GST_DPMAN_FRAMES_TO_PROCESS (ladspa->dpman);
-
-    desc->connect_port (ladspa->handle, oclass->sinkpad_portnums[0], data_in);
-    for (i = 0; i < numsrcpads; i++)
-      desc->connect_port (ladspa->handle, oclass->srcpad_portnums[i],
-          data_out[i]);
-
-    desc->run (ladspa->handle, num_to_process);
-
-    data_in += num_to_process;
-    for (i = 0; i < numsrcpads; i++)
-      data_out[i] += num_to_process;
-
-    num_processed += num_to_process;
-  }
+  desc->run (ladspa->handle, num_samples);
 
   if (!numsrcpads || buffers_out[0] != buffer_in)
     gst_buffer_unref (buffer_in);
@@ -937,7 +864,6 @@ gst_ladspa_get (GstPad * pad)
   GstBuffer *buf;
   LADSPA_Data *data;
   LADSPA_Descriptor *desc;
-  guint num_to_process, num_processed;
 
   ladspa = (GstLADSPA *) gst_pad_get_parent (pad);
   oclass = (GstLADSPAClass *) (G_OBJECT_GET_CLASS (ladspa));
@@ -948,27 +874,13 @@ gst_ladspa_get (GstPad * pad)
   GST_BUFFER_TIMESTAMP (buf) = ladspa->timestamp;
   data = (LADSPA_Data *) GST_BUFFER_DATA (buf);
 
-  GST_DPMAN_PREPROCESS (ladspa->dpman, ladspa->buffer_frames,
-      ladspa->timestamp);
-  num_processed = 0;
+  /* update timestamp */
+  ladspa->timestamp += num_to_process * GST_SECOND / ladspa->samplerate;
 
-  /* split up processing of the buffer into chunks so that dparams can
-   * be updated when required.
-   * In many cases the buffer will be processed in one chunk anyway.
-   */
-  while (GST_DPMAN_PROCESS (ladspa->dpman, num_processed)) {
-    num_to_process = GST_DPMAN_FRAMES_TO_PROCESS (ladspa->dpman);
+  /* process chunk */
+  desc->connect_port (ladspa->handle, oclass->srcpad_portnums[0], data);
 
-    /* update timestamp */
-    ladspa->timestamp += num_to_process * GST_SECOND / ladspa->samplerate;
-
-    desc->connect_port (ladspa->handle, oclass->srcpad_portnums[0], data);
-
-    desc->run (ladspa->handle, num_to_process);
-
-    data += num_to_process;
-    num_processed = num_to_process;
-  }
+  desc->run (ladspa->handle, ladspa->buffer_frames);
 
   return GST_DATA (buf);
 }
@@ -1035,9 +947,6 @@ plugin_init (GstPlugin * plugin)
   ladspa_plugin = plugin;
 
   LADSPAPluginSearch (ladspa_describe_plugin);
-
-  /* initialize dparam support library */
-  gst_control_init (NULL, NULL);
 
   return TRUE;
 }
