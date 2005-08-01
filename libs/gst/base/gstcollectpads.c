@@ -84,6 +84,7 @@ gst_collectpads_finalize (GObject * object)
 {
   GstCollectPads *pads = GST_COLLECTPADS (object);
 
+  gst_collectpads_stop (pads);
   g_cond_free (pads->cond);
   /* FIXME, free data */
 
@@ -310,7 +311,7 @@ gst_collectpads_stop (GstCollectPads * pads)
 
   GST_LOCK (pads);
   pads->started = FALSE;
-  GST_COLLECTPADS_SIGNAL (pads);
+  GST_COLLECTPADS_BROADCAST (pads);
   GST_UNLOCK (pads);
 }
 

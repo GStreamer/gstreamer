@@ -1,4 +1,10 @@
 2005-08-01  Jan Schmidt  <thaytan@mad.scientist.com>
+	* gst/base/gstcollectpads.c: (gst_collectpads_finalize),
+	(gst_collectpads_stop):
+	  Broadcast the condition when shutting down, to make sure we wake all
+	  threads up. Shut down pads on finalize, for safety.
+
+2005-08-01  Jan Schmidt  <thaytan@mad.scientist.com>
 	* gst/base/gstbasetransform.c: (gst_base_transform_init),
 	(gst_base_transform_handle_buffer),
 	(gst_base_transform_change_state):
