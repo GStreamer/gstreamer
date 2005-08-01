@@ -1,6 +1,15 @@
 2005-08-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/elements/gsttypefindelement.c:
+	(gst_type_find_element_have_type), (gst_type_find_element_init),
+	(stop_typefinding), (gst_type_find_element_handle_event),
+	(gst_type_find_element_chain), (gst_type_find_element_getrange):
+	* gst/elements/gsttypefindelement.h:
+	  Set caps on all outgoing buffers, not just the first one.
+
+2005-08-01  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/elements/gsttypefindelement.c:
 	(gst_type_find_element_have_type),
 	(gst_type_find_element_check_set_buffer_caps),
 	(gst_type_find_element_init), (stop_typefinding),

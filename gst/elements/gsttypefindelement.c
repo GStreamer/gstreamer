@@ -148,18 +148,7 @@ gst_type_find_element_have_type (GstTypeFindElement * typefind,
 
   GST_INFO_OBJECT (typefind, "found caps %" GST_PTR_FORMAT, caps);
   typefind->caps = gst_caps_copy (caps);
-  typefind->caps_changed = TRUE;
   gst_pad_set_caps (typefind->src, (GstCaps *) caps);
-}
-
-static inline void
-gst_type_find_element_check_set_buffer_caps (GstTypeFindElement * typefind,
-    GstBuffer * buffer)
-{
-  if (typefind->caps_changed && buffer != NULL) {
-    gst_buffer_set_caps (buffer, typefind->caps);
-    typefind->caps_changed = FALSE;
-  }
 }
 
 static void
@@ -240,7 +229,6 @@ gst_type_find_element_init (GstTypeFindElement * typefind)
 
   typefind->mode = MODE_TYPEFIND;
   typefind->caps = NULL;
-  typefind->caps_changed = FALSE;
   typefind->min_probability = 1;
   typefind->max_probability = GST_TYPE_FIND_MAXIMUM;
 
@@ -441,7 +429,7 @@ stop_typefinding (GstTypeFindElement * typefind)
       gst_buffer_unref (typefind->store);
     } else {
       typefind->mode = MODE_NORMAL;
-      gst_type_find_element_check_set_buffer_caps (typefind, typefind->store);
+      gst_buffer_set_caps (typefind->store, typefind->caps);
       gst_pad_push (typefind->src, typefind->store);
     }
     typefind->store = NULL;
@@ -512,8 +500,7 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
             g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
                 0, entry->probability, entry->caps);
             stop_typefinding (typefind);
-            gst_type_find_element_check_set_buffer_caps (typefind,
-                typefind->store);
+            gst_buffer_set_caps (typefind->store, typefind->caps);
             gst_pad_push (typefind->src, typefind->store);
             typefind->store = NULL;
             res = gst_pad_event_default (pad, event);
@@ -614,7 +601,7 @@ gst_type_find_element_chain (GstPad * pad, GstBuffer * buffer)
 
   switch (typefind->mode) {
     case MODE_NORMAL:
-      gst_type_find_element_check_set_buffer_caps (typefind, buffer);
+      gst_buffer_set_caps (buffer, typefind->caps);
       return gst_pad_push (typefind->src, buffer);
     case MODE_TYPEFIND:{
       gboolean done = TRUE;
@@ -766,12 +753,8 @@ gst_type_find_element_getrange (GstPad * srcpad,
 
   ret = gst_pad_pull_range (typefind->sink, offset, length, buffer);
 
-  if (typefind->caps_changed) {
-    if (ret == GST_FLOW_OK && buffer && *buffer) {
-      gst_buffer_set_caps (*buffer, typefind->caps);
-      typefind->caps_changed = FALSE;
-    }
-  }
+  if (ret == GST_FLOW_OK && buffer && *buffer)
+    gst_buffer_set_caps (*buffer, typefind->caps);
 
   return ret;
 }
