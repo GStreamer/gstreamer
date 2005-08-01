@@ -86,50 +86,6 @@ AM_CONDITIONAL(BUILD_INTERFACES, test "x$HAVE_INTERFACES" = "xyes")
 AC_SUBST(GST_INTERFACES_CFLAGS)
 AC_SUBST(GST_INTERFACES_LIBS)
 
-BUILD_DOCS=yes
-AC_CHECK_PROG(XMLTO, xmlto, xmlto, no)
-if test "x$XMLTO" = xno ; then
-  BUILD_DOCS=no
-fi
-AC_SUBST(XMLTO)
-AC_CHECK_PROG(XMLCATALOG, xmlcatalog, xmlcatalog, no)
-if test "x$XMLCATALOG" = xno ; then
-  BUILD_DOCS=no
-fi
-AC_SUBST(XMLCATALOG)
-AC_CHECK_PROG(XMLLINT, xmllint, xmllint, no)
-if test "x$XMLLINT" = xno ; then
-  BUILD_DOCS=no
-fi
-AC_SUBST(XMLLINT)
-
-AC_ARG_ENABLE(docs,
-AC_HELP_STRING([--enable-docs],[enable building of documentation]),
-[case "${enableval}" in
-  yes)
-    if test "x$XMLTO" = "xno" ; then
-      AC_MSG_ERROR([you don't have xmlto, so don't use --enable-docs])
-      BUILD_DOCS=no
-    fi
-    if test "x$XMLCATALOG" = "xno" ; then
-      AC_MSG_ERROR([you don't have xmlcatalog, so don't use --enable-docs])
-      BUILD_DOCS=no
-    fi
-    if test "x$XMLLINT" = "xno" ; then
-      AC_MSG_ERROR([you don't have xmllint, so don't use --enable-docs])
-      BUILD_DOCS=no
-    fi
-    ;;
-  no)
-    BUILD_DOCS=no
-    ;;
-  *)
-    AC_MSG_ERROR(bad value ${enableval} for --enable-docs)
-    ;;
-esac])
-
-AM_CONDITIONAL(BUILD_DOCS,          test "x$BUILD_DOCS" = "xyes")
-
 dnl decide on error flags
 dnl if we support -Wall, set it unconditionally
 AS_COMPILER_FLAG(-Wall,
@@ -164,13 +120,12 @@ changequote([,])dnl
 
 AC_OUTPUT([
   Makefile
+  pygst.py
   examples/Makefile
   gst/Makefile
   pkgconfig/Makefile
   pkgconfig/gst-python.pc
   pkgconfig/gst-python-uninstalled.pc
-  docs/Makefile
-  docs/gst-python.ent
   testsuite/Makefile
   gst-python.spec
 ])

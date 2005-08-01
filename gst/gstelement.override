@@ -412,8 +412,8 @@ _wrap_gst_element_query_position (PyGObject *self, PyObject *args)
 
     ret = PyList_New(0);
     if ((gst_element_query_position(GST_ELEMENT (self->obj), (GstFormat*) &format, &cur, &end))) {
-	PyList_Append(ret, PyLong_FromLong(cur));
-	PyList_Append(ret, PyLong_FromLong(end));
+	PyList_Append(ret, PyLong_FromLongLong(cur));
+	PyList_Append(ret, PyLong_FromLongLong(end));
 	PyList_Append(ret, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
     } else {
 	Py_INCREF(Py_None);

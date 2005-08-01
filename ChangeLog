@@ -1,3 +1,30 @@
+2005-08-01  Edward Hervey  <edward@fluendo.com>
+
+	* README-docs:
+	* configure.ac:
+	* Makefile.am:
+	Remove old documentation system
+
+	* gst/gst.defs:
+	* gst/gst-types.defs:
+	Updating defs files
+
+	* gst/gst.override:
+	Wrapped gst_flow_get_name() for const-gchar *
+
+	* gst/gstelement.override:
+	I really should test everything on 32 AND 64 bits systems...
+
+	* gst/gstevent.override:
+	Updated gst_event_new_seek() wrapper
+	Added gst_event_get_structure() wrapper
+
+	* gst/gstmodule.c:
+	Changed definition of gst.CLOCK_TIME_NONE to wrap GST_CLOCK_TIME_NONE
+
+	* testsuite/testhelpermodule.c:
+	gst_event_new --> gst_event_new_custom
+
 2005-07-25  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst-types.defs: (GhostPad):

@@ -931,3 +931,26 @@ _wrap_gst_registry_pool_list (PyObject *what)
     }
     return ret;
 }
+%%
+override gst_flow_get_name kwargs
+static PyObject *
+_wrap_gst_flow_get_name(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "ret", NULL };
+    PyObject *py_ret = NULL;
+    const gchar *ret;
+    gchar	*nret;
+    GstFlowReturn flow;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:gst_flow_get_name", kwlist, &py_ret))
+        return NULL;
+    if (pyg_enum_get_value(GST_TYPE_FLOW_RETURN, py_ret, (gint *)&flow))
+        return NULL;
+    ret = gst_flow_get_name(flow);
+    if (ret) {
+	nret = g_strdup(ret);
+        return PyString_FromString(nret);
+    }
+    Py_INCREF(Py_None);
+    return Py_None;
+}

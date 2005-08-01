@@ -26,7 +26,7 @@ _wrap_emit_event (PyObject * self, PyObject *args)
   if (!PyArg_ParseTuple(args, "O|i", &obj, &event_type))
     return NULL;
 
-  event = gst_event_new(event_type);
+  event = gst_event_new_custom(event_type, NULL);
   
   g_signal_emit_by_name(G_OBJECT(obj->obj), "event", event);
 

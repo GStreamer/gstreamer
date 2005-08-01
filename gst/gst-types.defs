@@ -427,38 +427,28 @@
   )
 )
 
-(define-flags EventFlag
-  (in-module "Gst")
-  (c-name "GstEventFlag")
-  (gtype-id "GST_TYPE_EVENT_FLAG")
-  (values
-    '("event-flag-none" "GST_EVENT_FLAG_NONE")
-    '("rate-flag-negative" "GST_RATE_FLAG_NEGATIVE")
-  )
-)
-
-(define-flags SeekType
+(define-enum SeekType
   (in-module "Gst")
   (c-name "GstSeekType")
   (gtype-id "GST_TYPE_SEEK_TYPE")
   (values
-    '("method-cur" "GST_SEEK_METHOD_CUR")
-    '("method-set" "GST_SEEK_METHOD_SET")
-    '("method-end" "GST_SEEK_METHOD_END")
-    '("flag-flush" "GST_SEEK_FLAG_FLUSH")
-    '("flag-accurate" "GST_SEEK_FLAG_ACCURATE")
-    '("flag-key-unit" "GST_SEEK_FLAG_KEY_UNIT")
-    '("flag-segment-loop" "GST_SEEK_FLAG_SEGMENT_LOOP")
+    '("none" "GST_SEEK_TYPE_NONE")
+    '("cur" "GST_SEEK_TYPE_CUR")
+    '("set" "GST_SEEK_TYPE_SET")
+    '("end" "GST_SEEK_TYPE_END")
   )
 )
 
-(define-enum SeekAccuracy
+(define-flags SeekFlags
   (in-module "Gst")
-  (c-name "GstSeekAccuracy")
-  (gtype-id "GST_TYPE_SEEK_ACCURACY")
+  (c-name "GstSeekFlags")
+  (gtype-id "GST_TYPE_SEEK_FLAGS")
   (values
-    '("certain" "GST_SEEK_CERTAIN")
-    '("fuzzy" "GST_SEEK_FUZZY")
+    '("none" "GST_SEEK_FLAG_NONE")
+    '("flush" "GST_SEEK_FLAG_FLUSH")
+    '("accurate" "GST_SEEK_FLAG_ACCURATE")
+    '("key-unit" "GST_SEEK_FLAG_KEY_UNIT")
+    '("segment" "GST_SEEK_FLAG_SEGMENT")
   )
 )
 
@@ -660,12 +650,13 @@
   (c-name "GstPadLinkReturn")
   (gtype-id "GST_TYPE_PAD_LINK_RETURN")
   (values
-    '("nosched" "GST_PAD_LINK_NOSCHED")
-    '("noformat" "GST_PAD_LINK_NOFORMAT")
-    '("refused" "GST_PAD_LINK_REFUSED")
-    '("wrong-direction" "GST_PAD_LINK_WRONG_DIRECTION")
-    '("was-linked" "GST_PAD_LINK_WAS_LINKED")
     '("ok" "GST_PAD_LINK_OK")
+    '("wrong-hierarchy" "GST_PAD_LINK_WRONG_HIERARCHY")
+    '("was-linked" "GST_PAD_LINK_WAS_LINKED")
+    '("wrong-direction" "GST_PAD_LINK_WRONG_DIRECTION")
+    '("noformat" "GST_PAD_LINK_NOFORMAT")
+    '("nosched" "GST_PAD_LINK_NOSCHED")
+    '("refused" "GST_PAD_LINK_REFUSED")
   )
 )
 

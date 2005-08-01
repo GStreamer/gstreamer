@@ -59,17 +59,27 @@ override gst_event_new_seek kwargs
 static PyObject *
 _wrap_gst_event_new_seek(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    static char *kwlist[] = { "type", "offset", NULL };
-    PyObject *py_type = NULL;
-    gint64 offset;
+    static char *kwlist[] = { "rate", "format", "flags", "cur_type", "cur", "stop_type", "stop", NULL };
+    GstSeekType cur_type, stop_type;
+    PyObject *py_format = NULL, *py_flags = NULL, *py_cur_type = NULL, *py_stop_type = NULL;
+    double rate;
     GstEvent *ret;
-    GstSeekType type;
+    GstFormat format;
+    gint64 cur, stop;
+    GstSeekFlags flags;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OL:event_new_seek", kwlist, &py_type, &offset))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "dOOOLOL:GstEvent.new_seek", kwlist, &rate, &py_format, &py_flags, &py_cur_type, &cur, &py_stop_type, &stop))
         return NULL;
-    if (pyg_flags_get_value(GST_TYPE_SEEK_TYPE, py_type, (gint *)&type))
+    if (pyg_enum_get_value(GST_TYPE_FORMAT, py_format, (gint *)&format))
         return NULL;
-    ret = gst_event_new_seek(type, offset);
+    if (pyg_flags_get_value(GST_TYPE_SEEK_FLAGS, py_flags, (gint *)&flags))
+        return NULL;
+    if (pyg_flags_get_value(GST_TYPE_SEEK_TYPE, py_cur_type, (gint *)&cur_type))
+        return NULL;
+    if (pyg_flags_get_value(GST_TYPE_SEEK_TYPE, py_stop_type, (gint *)&stop_type))
+        return NULL;
+    ret = gst_event_new_seek(rate, format, flags, cur_type, cur, stop_type, stop);
+
     /* pygobject_new handles NULL checking */
     return pygstminiobject_new_noref((GstMiniObject *)ret);
 }
@@ -147,4 +157,15 @@ _wrap_gst_event_new_tag(PyObject *self, PyObject *args, PyObject *kwargs)
     ret = gst_event_new_tag(list);
     /* pygobject_new handles NULL checking */
     return pygstminiobject_new_noref((GstMiniObject *)ret);
+}
+%%
+override gst_event_get_structure noargs
+static PyObject *
+_wrap_gst_event_get_structure(PyGstMiniObject *self)
+{
+    GstStructure *ret;
+
+    ret = (GstStructure *) gst_event_get_structure(GST_EVENT(self->obj));
+    /* pyg_boxed_new handles NULL checking */
+    return pyg_boxed_new(GST_TYPE_STRUCTURE, ret, TRUE, TRUE);
 }

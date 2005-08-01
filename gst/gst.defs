@@ -962,10 +962,13 @@
   (c-name "gst_element_seek")
   (return-type "gboolean")
   (parameters
-    '("GstSeekType" "seek_method")
-    '("GstFormat" "seek_format")
-    '("GstSeekType" "seek_flags")
-    '("guint64" "offset")
+    '("gdouble" "rate")
+    '("GstFormat" "format")
+    '("GstSeekFlags" "flags")
+    '("GstSeekType" "cur_type")
+    '("gint64" "cur")
+    '("GstSeekType" "stop_type")
+    '("gint64" "stop")
   )
 )
 
@@ -1331,18 +1334,13 @@
   (return-type "GType")
 )
 
-(define-function gst_event_flag_get_type
-  (c-name "gst_event_flag_get_type")
-  (return-type "GType")
-)
-
 (define-function gst_seek_type_get_type
   (c-name "gst_seek_type_get_type")
   (return-type "GType")
 )
 
-(define-function gst_seek_accuracy_get_type
-  (c-name "gst_seek_accuracy_get_type")
+(define-function gst_seek_flags_get_type
+  (c-name "gst_seek_flags_get_type")
   (return-type "GType")
 )
 
@@ -1568,91 +1566,140 @@
   (return-type "GType")
 )
 
-(define-function gst_event_new
-  (c-name "gst_event_new")
-  (is-constructor-of "GstEvent")
+(define-function gst_event_new_custom
+  (c-name "gst_event_new_custom")
   (return-type "GstEvent*")
   (parameters
     '("GstEventType" "type")
+    '("GstStructure*" "structure")
   )
 )
 
-(define-method s_contains
-  (of-object "GstEventMask")
-  (c-name "gst_event_masks_contains")
-  (return-type "gboolean")
+(define-method get_structure
+  (of-object "GstEvent")
+  (c-name "gst_event_get_structure")
+  (return-type "const-GstStructure*")
+)
+
+(define-function gst_event_new_flush_start
+  (c-name "gst_event_new_flush_start")
+  (return-type "GstEvent*")
+)
+
+(define-function gst_event_new_flush_stop
+  (c-name "gst_event_new_flush_stop")
+  (return-type "GstEvent*")
+)
+
+(define-function gst_event_new_eos
+  (c-name "gst_event_new_eos")
+  (return-type "GstEvent*")
+)
+
+(define-function gst_event_new_newsegment
+  (c-name "gst_event_new_newsegment")
+  (return-type "GstEvent*")
   (parameters
-    '("GstEventMask*" "mask")
+    '("gdouble" "rate")
+    '("GstFormat" "format")
+    '("gint64" "start_value")
+    '("gint64" "stop_value")
+    '("gint64" "base")
   )
 )
 
-(define-function event_new_seek
+(define-method parse_newsegment
+  (of-object "GstEvent")
+  (c-name "gst_event_parse_newsegment")
+  (return-type "none")
+  (parameters
+    '("gdouble*" "rate")
+    '("GstFormat*" "format")
+    '("gint64*" "start_value")
+    '("gint64*" "end_value")
+    '("gint64*" "base")
+  )
+)
+
+(define-function gst_event_new_tag
+  (c-name "gst_event_new_tag")
+  (return-type "GstEvent*")
+  (parameters
+    '("GstTagList*" "taglist")
+  )
+)
+
+(define-method parse_tag
+  (of-object "GstEvent")
+  (c-name "gst_event_parse_tag")
+  (return-type "none")
+  (parameters
+    '("GstTagList**" "taglist")
+  )
+)
+
+(define-function gst_event_new_filler
+  (c-name "gst_event_new_filler")
+  (return-type "GstEvent*")
+)
+
+(define-function gst_event_new_qos
+  (c-name "gst_event_new_qos")
+  (return-type "GstEvent*")
+  (parameters
+    '("gdouble" "proportion")
+    '("GstClockTimeDiff" "diff")
+    '("GstClockTime" "timestamp")
+  )
+)
+
+(define-method parse_qos
+  (of-object "GstEvent")
+  (c-name "gst_event_parse_qos")
+  (return-type "none")
+  (parameters
+    '("gdouble*" "proportion")
+    '("GstClockTimeDiff*" "diff")
+    '("GstClockTime*" "timestamp")
+  )
+)
+
+(define-function gst_event_new_seek
   (c-name "gst_event_new_seek")
   (return-type "GstEvent*")
   (parameters
-    '("GstSeekType" "type")
-    '("gint64" "offset")
-  )
-)
-
-(define-function event_new_segment_seek
-  (c-name "gst_event_new_segment_seek")
-  (return-type "GstEvent*")
-  (parameters
-    '("GstSeekType" "type")
-    '("gint64" "start")
+    '("gdouble" "rate")
+    '("GstFormat" "format")
+    '("GstSeekFlags" "flags")
+    '("GstSeekType" "cur_type")
+    '("gint64" "cur")
+    '("GstSeekType" "stop_type")
     '("gint64" "stop")
   )
 )
 
-(define-function event_new_size
-  (c-name "gst_event_new_size")
-  (return-type "GstEvent*")
-  (parameters
-    '("GstFormat" "format")
-    '("gint64" "value")
-  )
-)
-
-(define-function event_new_discontinuous
-  (c-name "gst_event_new_discontinuous")
-  (return-type "GstEvent*")
-  (parameters
-    '("gdouble" "rate")
-    '("GstFormat" "format1")
-  )
-  (varargs #t)
-)
-
-(define-function event_new_discontinuous_valist
-  (c-name "gst_event_new_discontinuous_valist")
-  (return-type "GstEvent*")
-  (parameters
-    '("gdouble" "rate")
-    '("GstFormat" "format1")
-    '("va_list" "var_args")
-  )
-)
-
-(define-method discont_get_value
+(define-method parse_seek
   (of-object "GstEvent")
-  (c-name "gst_event_discont_get_value")
-  (return-type "gboolean")
+  (c-name "gst_event_parse_seek")
+  (return-type "none")
   (parameters
-    '("GstFormat" "format")
-    '("gint64*" "start_value")
-    '("gint64*" "end_value")
+    '("gdouble*" "rate")
+    '("GstFormat*" "format")
+    '("GstSeekFlags*" "flags")
+    '("GstSeekType*" "cur_type")
+    '("gint64*" "cur")
+    '("GstSeekType*" "stop_type")
+    '("gint64*" "stop")
   )
 )
 
-(define-function event_new_flush
-  (c-name "gst_event_new_flush")
+(define-function gst_event_new_navigation
+  (c-name "gst_event_new_navigation")
   (return-type "GstEvent*")
   (parameters
-    '("gboolean" "done")
+    '("GstStructure*" "structure")
   )
 )
-
 
 
 ;; From ../gstreamer/gst/gstfilter.h
@@ -1725,6 +1772,30 @@
   (parameters
     '("const-gchar*" "name")
     '("GstPad*" "target")
+  )
+)
+
+(define-function gst_ghost_pad_new_notarget
+  (c-name "gst_ghost_pad_new_notarget")
+  (return-type "GstPad*")
+  (parameters
+    '("const-gchar*" "name")
+    '("GstPadDirection" "dir")
+  )
+)
+
+(define-method get_target
+  (of-object "GstGhostPad")
+  (c-name "gst_ghost_pad_get_target")
+  (return-type "GstPad*")
+)
+
+(define-method set_target
+  (of-object "GstGhostPad")
+  (c-name "gst_ghost_pad_set_target")
+  (return-type "gboolean")
+  (parameters
+    '("GstPad*" "newtarget")
   )
 )
 
@@ -4233,6 +4304,15 @@
   (return-type "GQuark")
 )
 
+(define-method has_name
+  (of-object "GstStructure")
+  (c-name "gst_structure_has_name")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "name")
+  )
+)
+
 (define-method set_name
   (of-object "GstStructure")
   (c-name "gst_structure_set_name")
@@ -4996,21 +5076,6 @@
   )
 )
 
-(define-function event_new_tag
-  (c-name "gst_event_new_tag")
-  (return-type "GstEvent*")
-  (parameters
-    '("GstTagList*" "list")
-  )
-)
-
-(define-method tag_get_list
-  (of-object "GstEvent")
-  (c-name "gst_event_tag_get_list")
-  (return-type "GstTagList*")
-)
-
-
 
 ;; From ../gstreamer/gst/gsttaginterface.h
 
@@ -5704,6 +5769,14 @@
   (of-object "GstPad")
   (c-name "gst_pad_get_parent_element")
   (return-type "GstElement*")
+)
+
+(define-function flow_get_name
+  (c-name "gst_flow_get_name")
+  (return-type "const-gchar*")
+  (parameters
+    '("GstFlowReturn" "ret")
+  )
 )
 
 (define-method query_position
