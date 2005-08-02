@@ -1,3 +1,8 @@
+2005-08-02  Jan Schmidt  <thaytan@mad.scientist.com>
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_change_state):
+	  Stop collectpads before calling the parent state
+	  change function on PAUSED->READY.
+
 2005-08-01  Jan Schmidt  <thaytan@mad.scientist.com>
 	* configure.ac:
 	  When testing for X libs, use the X CFlags 
