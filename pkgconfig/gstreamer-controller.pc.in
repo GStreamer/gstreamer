@@ -1,0 +1,11 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@/gstreamer-@GST_MAJORMINOR@
+
+Name: GStreamer controller
+Description: Dynamic parameter control for GStreamer elements
+Requires: gstreamer-@GST_MAJORMINOR@
+Version: @VERSION@
+Libs: -L${libdir} -lgstcontroller-@GST_MAJORMINOR@
+Cflags: -I${includedir}
