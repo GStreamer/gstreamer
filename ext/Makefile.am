@@ -208,11 +208,11 @@ LIBFAME_DIR=
 LIBMNG_DIR=
 # endif
 
-# if USE_LIBPNG
-# LIBPNG_DIR=libpng
-# else
+if USE_LIBPNG
+LIBPNG_DIR=libpng
+else
 LIBPNG_DIR=
-# endif
+endif
 
 # if USE_POLYP
 # POLYP_DIR=polyp

@@ -519,6 +519,16 @@ GST_CHECK_FEATURE(ESD, [esound plug-ins], esdsink, [
   ])
 ])
 
+dnl *** libpng ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBPNG, true)
+GST_CHECK_FEATURE(LIBPNG, [libpng PNG encoder], pngenc, [
+  PKG_CHECK_MODULES(LIBPNG, libpng12, HAVE_LIBPNG="yes", HAVE_LIBPNG="no")
+  AC_SUBST(LIBPNG_CFLAGS)
+  AC_SUBST(LIBPNG_LIBS)
+])
+
+
+
 dnl also add builddir include for enumtypes and marshal
 GST_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CFLAGS $GST_ERROR"
 
@@ -600,6 +610,7 @@ ext/aalib/Makefile
 ext/dv/Makefile
 ext/gconf/Makefile
 ext/libcaca/Makefile
+ext/libpng/Makefile
 ext/mad/Makefile
 ext/raw1394/Makefile
 ext/shout2/Makefile
