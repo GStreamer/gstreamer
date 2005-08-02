@@ -24,7 +24,6 @@
 #endif
 #include <string.h>
 #include <math.h>
-#include <gst/control/control.h>
 #include <gst/audio/audio.h>
 
 #include "gstladspa.h"
