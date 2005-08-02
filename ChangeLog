@@ -1,3 +1,12 @@
+2005-08-02  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/libpng/Makefile.am:
+	* ext/libpng/gstpng.c:
+	* ext/libpng/gstpngenc.c:
+	Ported pngenc , still have to port pngdec...
+
 2005-08-01  Stefan Kost  <ensonic@users.sf.net>
 
 	reviewed by: <delete if not using a buddy>
