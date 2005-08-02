@@ -1,3 +1,8 @@
+2005-08-02  Edward Hervey  <edward@fluendo.com>
+
+	* gst/volume/gstvolume.c:
+	include left from controller cleanup
+
 2005-08-02  Jan Schmidt  <thaytan@mad.scientist.com>
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_change_state):
 	  Stop collectpads before calling the parent state
