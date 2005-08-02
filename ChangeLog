@@ -1,3 +1,53 @@
+2005-08-03  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* docs/libs/Makefile.am:
+	* docs/libs/gstreamer-libs-docs.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	* docs/libs/gstreamer-libs.types:
+	* examples/Makefile.am:
+	* examples/controller/.cvsignore:
+	* examples/controller/Makefile.am:
+	* examples/controller/audio-example.c: (main):
+	* libs/gst/Makefile.am:
+	* libs/gst/controller/.cvsignore:
+	* libs/gst/controller/Makefile.am:
+	* libs/gst/controller/gst-controller.c:
+	(on_object_controlled_property_changed), (gst_timed_value_compare),
+	(gst_timed_value_find),
+	(gst_controlled_property_set_interpolation_mode),
+	(gst_controlled_property_new), (gst_controlled_property_free),
+	(gst_controller_find_controlled_property),
+	(gst_controller_new_valist), (gst_controller_new),
+	(gst_controller_remove_properties_valist),
+	(gst_controller_remove_properties), (gst_controller_set),
+	(gst_controller_set_from_list), (gst_controller_unset),
+	(gst_controller_get), (gst_controller_get_all),
+	(gst_controller_sink_values), (gst_controller_get_value_arrays),
+	(gst_controller_get_value_array),
+	(gst_controller_set_interpolation_mode),
+	(_gst_controller_finalize), (_gst_controller_init),
+	(_gst_controller_class_init), (gst_controller_get_type):
+	* libs/gst/controller/gst-controller.h:
+	* libs/gst/controller/gst-helper.c: (g_object_control_properties),
+	(g_object_uncontrol_properties), (g_object_get_controller),
+	(g_object_set_controller), (g_object_sink_values),
+	(g_object_get_value_arrays), (g_object_get_value_array):
+	* libs/gst/controller/gst-interpolation.c:
+	(gst_controlled_property_find_timed_value_node),
+	(interpolate_none_get), (interpolate_trigger_get),
+	(interpolate_trigger_get_value_array):
+	* libs/gst/controller/lib.c: (gst_controller_init):
+	* pkgconfig/Makefile.am:
+	* pkgconfig/gstreamer-control-uninstalled.pc.in:
+	* pkgconfig/gstreamer-control.pc.in:
+	* testsuite/Makefile.am:
+	* testsuite/controller/.cvsignore:
+	* testsuite/controller/Makefile.am:
+	* testsuite/controller/interpolator.c: (main):
+          added controller code
+          removed dparam pc files
+
 2005-08-01  Jan Schmidt  <thaytan@mad.scientist.com>
 	* gst/base/gstcollectpads.c: (gst_collectpads_finalize),
 	(gst_collectpads_stop):

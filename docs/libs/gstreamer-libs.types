@@ -1,3 +1,4 @@
 #include <gst/gst.h>
+#include <gst/controller/gst-controller.h>
 
-
+gst_controller_get_type

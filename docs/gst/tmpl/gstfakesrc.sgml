@@ -32,6 +32,9 @@ GstFakeSrc
 @arg1: 
 @:
 @:
+@:
+@:
+@:
 @: 
 
 <!-- ##### ARG GstFakeSrc:data ##### -->

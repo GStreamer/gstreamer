@@ -14,7 +14,7 @@ GST_DEBUG_DIRS = debug
 endif
 
 SUBDIRS = \
-	bytestream caps cleanup \
+	bytestream caps cleanup controller \
 	$(GST_DEBUG_DIRS) \
 	dlopen \
 	elements indexers negotiation pad \
@@ -22,7 +22,7 @@ SUBDIRS = \
 	plugin refcounting schedulers states threads trigger
 
 DIST_SUBDIRS = \
-	bytestream caps cleanup \
+	bytestream caps cleanup controller \
 	debug \
 	dlopen \
 	elements indexers negotiation pad \

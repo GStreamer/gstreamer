@@ -1,0 +1,11 @@
+Makefile
+Makefile.in
+*.o
+*.lo
+*.la
+*.bb
+*.bbg
+*.da
+.deps
+.libs
+interpolator

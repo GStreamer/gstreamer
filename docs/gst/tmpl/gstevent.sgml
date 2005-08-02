@@ -223,8 +223,6 @@ Copy the event using the event specific copy function
 
 @taglist: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@list: 
 
 
 <!-- ##### FUNCTION gst_event_parse_tag ##### -->

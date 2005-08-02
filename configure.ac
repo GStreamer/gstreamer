@@ -630,6 +630,7 @@ gst/parse/Makefile
 gst/registries/Makefile
 libs/Makefile
 libs/gst/Makefile
+libs/gst/controller/Makefile
 libs/gst/dataprotocol/Makefile
 libs/gst/getbits/Makefile
 po/Makefile.in
@@ -645,6 +646,7 @@ testsuite/Makefile
 testsuite/bytestream/Makefile
 testsuite/caps/Makefile
 testsuite/cleanup/Makefile
+testsuite/controller/Makefile
 testsuite/debug/Makefile
 testsuite/dlopen/Makefile
 testsuite/elements/Makefile
@@ -659,6 +661,7 @@ testsuite/states/Makefile
 testsuite/threads/Makefile
 testsuite/trigger/Makefile
 examples/Makefile
+examples/controller/Makefile
 examples/cutter/Makefile
 examples/helloworld/Makefile
 examples/launch/Makefile
@@ -691,8 +694,8 @@ pkgconfig/gstreamer.pc
 pkgconfig/gstreamer-uninstalled.pc
 pkgconfig/gstreamer-base.pc
 pkgconfig/gstreamer-base-uninstalled.pc
-pkgconfig/gstreamer-control.pc
-pkgconfig/gstreamer-control-uninstalled.pc
+pkgconfig/gstreamer-controller.pc
+pkgconfig/gstreamer-controller-uninstalled.pc
 pkgconfig/gstreamer-dataprotocol.pc
 pkgconfig/gstreamer-dataprotocol-uninstalled.pc
 gstreamer.spec,

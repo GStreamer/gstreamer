@@ -47,7 +47,7 @@ SCAN_OPTIONS=--deprecated-guards="GST_DISABLE_DEPRECATED"
 #EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt gstreamer-sections.txt $(DOC_MAIN_SGML_FILE)
 
 # Extra options to supply to gtkdoc-mkdb.
-MKDB_OPTIONS=--sgml-mode --ignore-files=trio
+MKDB_OPTIONS= --output-format=xml --sgml-mode --ignore-files=trio
 
 # Extra options to supply to gtkdoc-fixref.
 FIXXREF_OPTIONS=--extra-dir=../gst/html
@@ -56,13 +56,14 @@ FIXXREF_OPTIONS=--extra-dir=../gst/html
 HFILE_GLOB=$(DOC_SOURCE_DIR)/*/*.h
 CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*.c
 
-# this is a wingo addition
-# thomasvs: another nice wingo addition would be an explanation on why
-# this is useful ;)
-
+# Dependencies for the intermediate scanobj tool
 #SCANOBJ_DEPS = $(top_builddir)/gst/elements/libgstelements.la \
 #	$(top_builddir)/gst/schedulers/libgstbasicomegascheduler.la \
 #	$(top_builddir)/libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
+SCANOBJ_DEPS = $(top_builddir)/libs/gst/controller/libgstcontroller-@GST_MAJORMINOR@.la
+
+# Extra options to pass to gtkdoc-scanobj or gtkdoc-scangobj.
+SCANOBJ_OPTIONS=--type-init-func="g_type_init();gst_init(&argc,&argv)"
 
 # Header files to ignore when scanning.
 IGNORE_HFILES = \
@@ -80,7 +81,7 @@ extra_files =
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed if your app/lib
 # contains GtkObjects/GObjects and you want to document signals and properties.
-GTKDOC_CFLAGS = $(GST_OBJ_CFLAGS) $(POPT_CFLAGS) -I$(top_builddir)
+GTKDOC_CFLAGS = $(GST_OBJ_CFLAGS) $(POPT_CFLAGS) -I$(top_builddir) -I$(top_builddir)/libs
 GTKDOC_LIBS = $(GST_OBJ_LIBS) $(POPT_LIBS) $(SCANOBJ_DEPS)
 
 GTKDOC_CC=$(LIBTOOL) --mode=compile $(CC)
