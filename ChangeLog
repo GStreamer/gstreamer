@@ -1,5 +1,25 @@
 2005-08-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/gconf/gstgconfaudiosink.c: (gst_gconf_audio_sink_reset),
+	(gst_gconf_audio_sink_init), (do_toggle_element),
+	(cb_toggle_element), (gst_gconf_audio_sink_change_state):
+	* ext/gconf/gstgconfaudiosink.h:
+	* ext/gconf/gstgconfvideosink.c: (gst_gconf_video_sink_reset),
+	(gst_gconf_video_sink_init), (do_toggle_element),
+	(cb_toggle_element), (gst_gconf_video_sink_change_state):
+	* ext/gconf/gstgconfvideosink.h:
+	* gst/autodetect/gstautoaudiosink.c: (gst_auto_audio_sink_reset),
+	(gst_auto_audio_sink_init), (gst_auto_audio_sink_detect),
+	(gst_auto_audio_sink_change_state):
+	* gst/autodetect/gstautoaudiosink.h:
+	* gst/autodetect/gstautovideosink.c: (gst_auto_video_sink_reset),
+	(gst_auto_video_sink_init), (gst_auto_video_sink_detect),
+	(gst_auto_video_sink_change_state):
+	* gst/autodetect/gstautovideosink.h:
+	  Use new ghostpad API; now they actually work in Totem, also.
+
+2005-08-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/libpng/Makefile.am:
 	  Fix uninstalled build.
 
