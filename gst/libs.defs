@@ -1,0 +1,430 @@
+;; -*- scheme -*-
+; object definitions ...
+(define-object Adapter
+  (in-module "Gst")
+  (parent "GObject")
+  (c-name "GstAdapter")
+  (gtype-id "GST_TYPE_ADAPTER")
+)
+
+(define-object Controller
+  (in-module "Gst")
+  (parent "GObject")
+  (c-name "GstController")
+  (gtype-id "GST_TYPE_CONTROLLER")
+)
+
+;; Enumerations and flags ...
+
+(define-enum InterpolateMode
+  (in-module "Gst")
+  (c-name "GstInterpolateMode")
+  (values
+    '("none" "GST_INTERPOLATE_NONE")
+    '("trigger" "GST_INTERPOLATE_TRIGGER")
+    '("linear" "GST_INTERPOLATE_LINEAR")
+    '("quadratic" "GST_INTERPOLATE_QUADRATIC")
+    '("cubic" "GST_INTERPOLATE_CUBIC")
+    '("user" "GST_INTERPOLATE_USER")
+  )
+)
+
+(define-flags DPHeaderFlag
+  (in-module "Gst")
+  (c-name "GstDPHeaderFlag")
+  (values
+    '("none" "GST_DP_HEADER_FLAG_NONE")
+    '("crc-header" "GST_DP_HEADER_FLAG_CRC_HEADER")
+    '("crc-payload" "GST_DP_HEADER_FLAG_CRC_PAYLOAD")
+    '("crc" "GST_DP_HEADER_FLAG_CRC")
+  )
+)
+
+(define-enum DPPayloadType
+  (in-module "Gst")
+  (c-name "GstDPPayloadType")
+  (values
+    '("none" "GST_DP_PAYLOAD_NONE")
+    '("buffer" "GST_DP_PAYLOAD_BUFFER")
+    '("caps" "GST_DP_PAYLOAD_CAPS")
+    '("event-none" "GST_DP_PAYLOAD_EVENT_NONE")
+  )
+)
+
+
+;; From ../gstreamer/libs/gst/bytestream/adapter.h
+
+(define-function gst_adapter_new
+  (c-name "gst_adapter_new")
+  (is-constructor-of "GstAdapter")
+  (return-type "GstAdapter*")
+)
+
+(define-method clear
+  (of-object "GstAdapter")
+  (c-name "gst_adapter_clear")
+  (return-type "none")
+)
+
+(define-method push
+  (of-object "GstAdapter")
+  (c-name "gst_adapter_push")
+  (return-type "none")
+  (parameters
+    '("GstBuffer*" "buf")
+  )
+)
+
+(define-method peek
+  (of-object "GstAdapter")
+  (c-name "gst_adapter_peek")
+  (return-type "const-guint8*")
+  (parameters
+    '("guint" "size")
+  )
+)
+
+(define-method flush
+  (of-object "GstAdapter")
+  (c-name "gst_adapter_flush")
+  (return-type "none")
+  (parameters
+    '("guint" "flush")
+  )
+)
+
+(define-method available
+  (of-object "GstAdapter")
+  (c-name "gst_adapter_available")
+  (return-type "guint")
+)
+
+(define-method available_fast
+  (of-object "GstAdapter")
+  (c-name "gst_adapter_available_fast")
+  (return-type "guint")
+)
+
+
+
+;; From ../gstreamer/libs/gst/controller/gst-controller.h
+
+(define-function gst_controller_get_type
+  (c-name "gst_controller_get_type")
+  (return-type "GType")
+)
+
+(define-function gst_controller_new_valist
+  (c-name "gst_controller_new_valist")
+  (return-type "GstController*")
+  (parameters
+    '("GObject*" "object")
+    '("va_list" "var_args")
+  )
+)
+
+(define-function gst_controller_new
+  (c-name "gst_controller_new")
+  (is-constructor-of "GstController")
+  (return-type "GstController*")
+  (parameters
+    '("GObject*" "object")
+  )
+  (varargs #t)
+)
+
+(define-method remove_properties_valist
+  (of-object "GstController")
+  (c-name "gst_controller_remove_properties_valist")
+  (return-type "gboolean")
+  (parameters
+    '("va_list" "var_args")
+  )
+)
+
+(define-method remove_properties
+  (of-object "GstController")
+  (c-name "gst_controller_remove_properties")
+  (return-type "gboolean")
+  (parameters
+  )
+  (varargs #t)
+)
+
+(define-method set
+  (of-object "GstController")
+  (c-name "gst_controller_set")
+  (return-type "gboolean")
+  (parameters
+    '("gchar*" "property_name")
+    '("GstClockTime" "timestamp")
+    '("GValue*" "value")
+  )
+)
+
+(define-method set_from_list
+  (of-object "GstController")
+  (c-name "gst_controller_set_from_list")
+  (return-type "gboolean")
+  (parameters
+    '("gchar*" "property_name")
+    '("GSList*" "timedvalues")
+  )
+)
+
+(define-method unset
+  (of-object "GstController")
+  (c-name "gst_controller_unset")
+  (return-type "gboolean")
+  (parameters
+    '("gchar*" "property_name")
+    '("GstClockTime" "timestamp")
+  )
+)
+
+(define-method get
+  (of-object "GstController")
+  (c-name "gst_controller_get")
+  (return-type "GValue*")
+  (parameters
+    '("gchar*" "property_name")
+    '("GstClockTime" "timestamp")
+  )
+)
+
+(define-method get_all
+  (of-object "GstController")
+  (c-name "gst_controller_get_all")
+  (return-type "const-GList*")
+  (parameters
+    '("gchar*" "property_name")
+  )
+)
+
+(define-method sink_values
+  (of-object "GstController")
+  (c-name "gst_controller_sink_values")
+  (return-type "gboolean")
+  (parameters
+    '("GstClockTime" "timestamp")
+  )
+)
+
+(define-method get_value_arrays
+  (of-object "GstController")
+  (c-name "gst_controller_get_value_arrays")
+  (return-type "gboolean")
+  (parameters
+    '("GstClockTime" "timestamp")
+    '("GSList*" "value_arrays")
+  )
+)
+
+(define-method get_value_array
+  (of-object "GstController")
+  (c-name "gst_controller_get_value_array")
+  (return-type "gboolean")
+  (parameters
+    '("GstClockTime" "timestamp")
+    '("GstValueArray*" "value_array")
+  )
+)
+
+(define-method set_interpolation_mode
+  (of-object "GstController")
+  (c-name "gst_controller_set_interpolation_mode")
+  (return-type "gboolean")
+  (parameters
+    '("gchar*" "property_name")
+    '("GstInterpolateMode" "mode")
+  )
+)
+
+(define-method control_properties
+  (of-object "GObject")
+  (c-name "g_object_control_properties")
+  (return-type "GstController*")
+  (parameters
+  )
+  (varargs #t)
+)
+
+(define-method uncontrol_properties
+  (of-object "GObject")
+  (c-name "g_object_uncontrol_properties")
+  (return-type "gboolean")
+  (parameters
+  )
+  (varargs #t)
+)
+
+(define-method get_controller
+  (of-object "GObject")
+  (c-name "g_object_get_controller")
+  (return-type "GstController*")
+)
+
+(define-method set_controller
+  (of-object "GObject")
+  (c-name "g_object_set_controller")
+  (return-type "gboolean")
+  (parameters
+    '("GstController*" "controller")
+  )
+)
+
+(define-method sink_values
+  (of-object "GObject")
+  (c-name "g_object_sink_values")
+  (return-type "gboolean")
+  (parameters
+    '("GstClockTime" "timestamp")
+  )
+)
+
+(define-method get_value_arrays
+  (of-object "GObject")
+  (c-name "g_object_get_value_arrays")
+  (return-type "gboolean")
+  (parameters
+    '("GstClockTime" "timestamp")
+    '("GSList*" "value_arrays")
+  )
+)
+
+(define-method get_value_array
+  (of-object "GObject")
+  (c-name "g_object_get_value_array")
+  (return-type "gboolean")
+  (parameters
+    '("GstClockTime" "timestamp")
+    '("GstValueArray*" "value_array")
+  )
+)
+
+(define-function gst_controller_init
+  (c-name "gst_controller_init")
+  (return-type "gboolean")
+  (parameters
+    '("int*" "argc")
+    '("char***" "argv")
+  )
+)
+
+
+
+;; From ../gstreamer/libs/gst/dataprotocol/dataprotocol.h
+
+(define-function gst_dp_init
+  (c-name "gst_dp_init")
+  (return-type "none")
+)
+
+(define-function gst_dp_header_payload_length
+  (c-name "gst_dp_header_payload_length")
+  (return-type "guint32")
+  (parameters
+    '("const-guint8*" "header")
+  )
+)
+
+(define-function gst_dp_header_payload_type
+  (c-name "gst_dp_header_payload_type")
+  (return-type "GstDPPayloadType")
+  (parameters
+    '("const-guint8*" "header")
+  )
+)
+
+(define-function gst_dp_header_from_buffer
+  (c-name "gst_dp_header_from_buffer")
+  (return-type "gboolean")
+  (parameters
+    '("const-GstBuffer*" "buffer")
+    '("GstDPHeaderFlag" "flags")
+    '("guint*" "length")
+    '("guint8**" "header")
+  )
+)
+
+(define-function gst_dp_packet_from_caps
+  (c-name "gst_dp_packet_from_caps")
+  (return-type "gboolean")
+  (parameters
+    '("const-GstCaps*" "caps")
+    '("GstDPHeaderFlag" "flags")
+    '("guint*" "length")
+    '("guint8**" "header")
+    '("guint8**" "payload")
+  )
+)
+
+(define-function gst_dp_packet_from_event
+  (c-name "gst_dp_packet_from_event")
+  (return-type "gboolean")
+  (parameters
+    '("const-GstEvent*" "event")
+    '("GstDPHeaderFlag" "flags")
+    '("guint*" "length")
+    '("guint8**" "header")
+    '("guint8**" "payload")
+  )
+)
+
+(define-function gst_dp_buffer_from_header
+  (c-name "gst_dp_buffer_from_header")
+  (return-type "GstBuffer*")
+  (parameters
+    '("guint" "header_length")
+    '("const-guint8*" "header")
+  )
+)
+
+(define-function gst_dp_caps_from_packet
+  (c-name "gst_dp_caps_from_packet")
+  (return-type "GstCaps*")
+  (parameters
+    '("guint" "header_length")
+    '("const-guint8*" "header")
+    '("const-guint8*" "payload")
+  )
+)
+
+(define-function gst_dp_event_from_packet
+  (c-name "gst_dp_event_from_packet")
+  (return-type "GstEvent*")
+  (parameters
+    '("guint" "header_length")
+    '("const-guint8*" "header")
+    '("const-guint8*" "payload")
+  )
+)
+
+(define-function gst_dp_validate_header
+  (c-name "gst_dp_validate_header")
+  (return-type "gboolean")
+  (parameters
+    '("guint" "header_length")
+    '("const-guint8*" "header")
+  )
+)
+
+(define-function gst_dp_validate_payload
+  (c-name "gst_dp_validate_payload")
+  (return-type "gboolean")
+  (parameters
+    '("guint" "header_length")
+    '("const-guint8*" "header")
+    '("const-guint8*" "payload")
+  )
+)
+
+(define-function gst_dp_validate_packet
+  (c-name "gst_dp_validate_packet")
+  (return-type "gboolean")
+  (parameters
+    '("guint" "header_length")
+    '("const-guint8*" "header")
+    '("const-guint8*" "payload")
+  )
+)

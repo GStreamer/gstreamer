@@ -58,6 +58,29 @@ PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ)
 AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_LIBS)
 
+dnl check for gstreamer-base; uninstalled is selected preferentially
+PKG_CHECK_MODULES(GST_BASE, gstreamer-base-$GST_MAJORMINOR >= $GST_REQ,
+  HAVE_GST_BASE="yes", HAVE_GST_BASE="no")
+
+if test "x$HAVE_GST_BASE" = "xno"; then
+  AC_MSG_ERROR(no GStreamer Base Libs found)
+fi
+
+AC_SUBST(GST_BASE_LIBS)
+AC_SUBST(GST_BASE_CFLAGS)
+
+dnl check for gstreamer-controller
+PKG_CHECK_MODULES(GST_CONTROLLER, gstreamer-controller-$GST_MAJORMINOR >= $GST_REQ,
+  HAVE_GST_CONTROLLER="yes", HAVE_GST_CONTROLLER="no")
+
+if test "x$HAVE_GST_CONTROLLER" = "xno"; then
+  AC_MSG_ERROR(no GStreamer Controller Libs found)
+fi
+
+AC_SUBST(GST_CONTROLLER_LIBS)
+AC_SUBST(GST_CONTROLLER_CFLAGS)
+
+
 dnl check for pygtk
 PKG_CHECK_MODULES(PYGTK, pygtk-2.0 >= $PYGTK_REQ)
 AC_SUBST(PYGTK_CFLAGS)

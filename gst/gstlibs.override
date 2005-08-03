@@ -1,0 +1,68 @@
+/* -*- Mode: C; ; c-file-style: "python" -*- */
+/* gst-python
+ * Copyright (C) 2005 Edward Hervey
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ * 
+ * Author: Johan Dahlin <johan@gnome.org>
+ */
+%%
+override gst_controller_set args
+static PyObject *
+_wrap_gst_controller_set (PyGObject *self, PyObject *args)
+{
+  GstController	*controller = (GstController *) self->obj;
+  gchar		*param_name;
+  GstClockTime	timestamp;
+  GValue	value = { 0, };
+  PyObject	*pvalue;
+  GType		type = 0;
+  GList		*tmp;
+  gboolean	res;
+
+  if (!PyArg_ParseTuple(args, "sLO:GstController.set",
+			&param_name, &timestamp, &pvalue))
+    return NULL;
+
+  /* We need to find the GType to convert to */
+  for (tmp = controller->properties; tmp; tmp = g_list_next (tmp)) {
+    GstControlledProperty	*prop = (GstControlledProperty *) tmp->data;
+    if (!strcmp (prop->name, param_name))
+      type = prop->type;
+  }
+
+  if (!type) {
+    PyErr_SetString (PyExc_TypeError,
+		     "The controller doesn't handle the given property");
+    return NULL;
+  }
+
+  g_value_init (&value, type);
+
+  if (pyg_value_from_pyobject (&value, pvalue)) {
+    PyErr_SetString (PyExc_TypeError,
+		     "Couldn't convert the given value to the good type");
+    return NULL;
+  }
+
+  res = gst_controller_set (controller, param_name, timestamp, &value);
+  if (res) {
+    Py_INCREF (Py_True);
+    return Py_True;
+  }
+  Py_INCREF (Py_False);
+  return Py_False;
+}

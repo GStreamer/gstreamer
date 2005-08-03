@@ -2,6 +2,7 @@
 
 (include "gst-extrafuncs.defs")
 (include "gst-types.defs")
+(include "libs.defs")
 
 ;; From ../gstreamer/gst/gst.h
 

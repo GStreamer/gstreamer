@@ -39,6 +39,10 @@ headers
 #include <gst/gsttag.h>
 #include <gst/gsttaginterface.h>
 
+#include <gst/controller/gst-controller.h>
+#include <gst/dataprotocol/dataprotocol.h>
+#include <gst/base/gstadapter.h>
+
 #include "pygstvalue.h"
 #include "pygstminiobject.h"
 
@@ -225,6 +229,7 @@ include
   gstquery.override
   gstpad.override
   gststructure.override
+  gstlibs.override
 %%
 init
 {

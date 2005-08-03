@@ -1,3 +1,14 @@
+2005-08-03  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/gstlibs.override:
+	* gst/gst.defs:
+	* gst/libs.defs:
+	* gst/gst.override:
+	* gst/gstlibs.override:
+	bindings now wrap the gstreamer extra libs (adapter, controller,...)
+
 2005-08-03  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstmessage.override (_wrap_gst_message_parse_error): Always
