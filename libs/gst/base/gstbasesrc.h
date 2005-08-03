@@ -41,14 +41,6 @@ typedef enum {
   GST_BASE_SRC_FLAG_LAST         = GST_ELEMENT_FLAG_LAST + 2
 } GstBaseSrcFlags;
 
-/* base class for random access sources
- *
- * This class is mostly usefull for elements that do byte based
- * access to a random access resource, like files.
- *
- * Seeking, flushing, scheduling and sync is all handled by this
- * base class.
- */
 typedef struct _GstBaseSrc GstBaseSrc;
 typedef struct _GstBaseSrcClass GstBaseSrcClass;
 

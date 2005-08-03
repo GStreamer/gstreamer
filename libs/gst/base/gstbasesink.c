@@ -19,6 +19,23 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstbasesink
+ * @short_description: Base class for sink elements
+ * @see_also: #GstBaseTransformc, #GstBaseSource
+ *
+ * This class is for elements that do output operations.
+ *
+ * <itemizedlist>
+ *   <listitem><para>one sinkpad</para></listitem>
+ *   <listitem><para>handles state changes</para></listitem>
+ *   <listitem><para>pull/push mode</para></listitem>
+ *   <listitem><para>handles seeking/query</para></listitem>
+ *   <listitem><para>handles preroll</para></listitem>
+ *   <listitem><para>EOS handling</para></listitem>
+ * </itemizedlist>
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif

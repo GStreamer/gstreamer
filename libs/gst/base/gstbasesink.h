@@ -41,10 +41,6 @@ G_BEGIN_DECLS
 typedef struct _GstBaseSink GstBaseSink;
 typedef struct _GstBaseSinkClass GstBaseSinkClass;
 
-/* a base class for implementing chain based sinks
- *
- * Preroll, EOS, state changes are all handled.
- */
 struct _GstBaseSink {
   GstElement	 element;
 

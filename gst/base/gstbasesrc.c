@@ -20,6 +20,23 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstbasesrc
+ * @short_description: Base class for getrange based source elements
+ * @see_also: #GstBaseTransformc, #GstBaseSink
+ *
+ * This class is mostly useful for elements that do byte based
+ * access to a random access resource, like files.
+ *
+ * <itemizedlist>
+ *   <listitem><para>one sinkpad</para></listitem>
+ *   <listitem><para>handles state changes</para></listitem>
+ *   <listitem><para>does flushing</para></listitem>
+ *   <listitem><para>preroll with optional preview</para></listitem>
+ *   <listitem><para>pull/push mode</para></listitem>
+ *   <listitem><para>EOS handling</para></listitem>
+ * </itemizedlist>
+ */
 
 #include <stdlib.h>
 #include <string.h>

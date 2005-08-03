@@ -58,6 +58,7 @@
 <!ENTITY GstBaseSrc SYSTEM "xml/gstbasesrc.xml">
 <!ENTITY GstBaseSink SYSTEM "xml/gstbasesink.xml">
 <!ENTITY GstBaseTransform SYSTEM "xml/gstbasetransform.xml">
+<!ENTITY GstPushSrc SYSTEM "xml/gstpushsrc.xml">
 
 <!ENTITY GstFakeSrc SYSTEM "xml/gstfakesrc.xml">
 <!ENTITY GstFakeSink SYSTEM "xml/gstfakesink.xml">
@@ -206,6 +207,7 @@
     &GstBaseSrc;
     &GstBaseSink;
     &GstBaseTransform;
+	&GstPushSrc;
 
   </chapter>
 

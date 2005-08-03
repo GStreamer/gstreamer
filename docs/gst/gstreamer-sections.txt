@@ -1631,6 +1631,89 @@ gst_xml_get_type
 <TITLE>GstEnumTypes</TITLE>
 </SECTION>
 
+# base classes
+
+<SECTION>
+<FILE>gstbasesrc</FILE>
+<TITLE>GstBaseSrc</TITLE>
+GstBaseSrc
+GstBaseSrcClass
+GstBaseSrcFlags
+
+gst_base_src_is_live
+gst_base_src_set_live
+
+GST_BASE_SRC_PAD
+<SUBSECTION Standard>
+GST_BASE_SRC
+GST_IS_BASE_SRC
+GST_TYPE_BASE_SRC
+GST_BASE_SRC_CLASS
+GST_IS_BASE_SRC_CLASS
+GST_BASE_SRC_GET_CLASS
+<SUBSECTION Private>
+gst_base_src_get_type
+</SECTION>
+
+
+<SECTION>
+<FILE>gstbasesink</FILE>
+<TITLE>GstBaseSink</TITLE>
+GstBaseSink
+GstBaseSinkClass
+
+GST_BASE_SINK_CLOCK
+GST_BASE_SINK_PAD
+
+<SUBSECTION Standard>
+GstBaseSinkClass
+GST_BASE_SINK
+GST_IS_BASE_SINK
+GST_TYPE_BASE_SINK
+GST_BASE_SINK_CLASS
+GST_IS_BASE_SINK_CLASS
+GST_BASE_SINK_GET_CLASS
+<SUBSECTION Private>
+gst_base_sink_get_type
+</SECTION>
+
+
+<SECTION>
+<FILE>gstbasetransform</FILE>
+<TITLE>GstBaseTransform</TITLE>
+GstBaseTransform
+GstBaseTransformClass
+<SUBSECTION Standard>
+GST_BASE_TRANSFORM
+GST_IS_BASE_TRANSFORM
+GST_TYPE_BASE_TRANSFORM
+GST_BASE_TRANSFORM_CLASS
+GST_IS_BASE_TRANSFORM_CLASS
+GST_BASE_TRANSFORM_GET_CLASS
+<SUBSECTION Private>
+gst_base_transform_get_type
+</SECTION>
+
+
+<SECTION>
+<FILE>gstpushsrc</FILE>
+<TITLE>GstPushSrc</TITLE>
+GstPushSrc
+GstPushSrcClass
+<SUBSECTION Standard>
+GST_PUSH_SRC
+GST_IS_PUSH_SRC
+GST_TYPE_PUSH_SRC
+GST_PUSH_SRC_CLASS
+GST_IS_PUSH_SRC_CLASS
+GST_PUSH_SRC_GET_CLASS
+<SUBSECTION Private>
+gst_push_src_get_type
+</SECTION>
+
+
+# elements
+
 <SECTION>
 <FILE>gstfakesrc</FILE>
 <TITLE>GstFakeSrc</TITLE>
@@ -1691,64 +1774,4 @@ GST_FILE_SINK_CLASS
 GST_IS_FILESINK_CLASS
 <SUBSECTION Private>
 gst_file_sink_get_type
-</SECTION>
-
-<SECTION>
-<FILE>gstbasesrc</FILE>
-<TITLE>GstBaseSrc</TITLE>
-GstBaseSrc
-GstBaseSrcClass
-GstBaseSrcFlags
-
-gst_base_src_is_live
-gst_base_src_set_live
-
-GST_BASE_SRC_PAD
-<SUBSECTION Standard>
-GST_BASE_SRC
-GST_IS_BASE_SRC
-GST_TYPE_BASE_SRC
-GST_BASE_SRC_CLASS
-GST_IS_BASE_SRC_CLASS
-GST_BASE_SRC_GET_CLASS
-<SUBSECTION Private>
-gst_base_src_get_type
-</SECTION>
-
-
-<SECTION>
-<FILE>gstbasesink</FILE>
-<TITLE>GstBaseSink</TITLE>
-GstBaseSink
-GstBaseSinkClass
-
-GST_BASE_SINK_CLOCK
-GST_BASE_SINK_PAD
-
-<SUBSECTION Standard>
-GstBaseSinkClass
-GST_BASE_SINK
-GST_IS_BASE_SINK
-GST_TYPE_BASE_SINK
-GST_BASE_SINK_CLASS
-GST_IS_BASE_SINK_CLASS
-GST_BASE_SINK_GET_CLASS
-<SUBSECTION Private>
-gst_base_sink_get_type
-</SECTION>
-
-<SECTION>
-<FILE>gstbasetransform</FILE>
-<TITLE>GstBaseTransform</TITLE>
-GstBaseTransform
-GstBaseTransformClass
-<SUBSECTION Standard>
-GST_BASE_TRANSFORM
-GST_IS_BASE_TRANSFORM
-GST_TYPE_BASE_TRANSFORM
-GST_BASE_TRANSFORM_CLASS
-GST_IS_BASE_TRANSFORM_CLASS
-GST_BASE_TRANSFORM_GET_CLASS
-<SUBSECTION Private>
-gst_base_transform_get_type
 </SECTION>

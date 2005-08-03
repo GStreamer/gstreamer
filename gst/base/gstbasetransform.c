@@ -21,6 +21,28 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstbasetransform
+ * @short_description: Base class for simple tranform filters
+ * @see_also: #GstBaseSrc, #GstBaseSink
+ *
+ * This base class is for filter elements that process data.
+ *
+ * <itemizedlist>
+ *   <listitem><para>one sinkpad and one srcpad</para></listitem>
+ *   <listitem><para>
+ *      possible formats on sink and source pad implemented
+ *      with custom transform_caps function. By default uses
+ *      same format on sink and source.
+ *   </para></listitem>
+ *   <listitem><para>handles state changes</para></listitem>
+ *   <listitem><para>does flushing</para></listitem>
+ *   <listitem><para>push mode</para></listitem>
+ *   <listitem><para>
+ *       pull mode if transform can operate on arbitrary data
+ *    </para></listitem>
+ * </itemizedlist>
+*/
 
 #include <stdlib.h>
 

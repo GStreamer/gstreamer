@@ -36,23 +36,6 @@ G_BEGIN_DECLS
 #define GST_IS_PUSH_SRC(obj)  		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PUSH_SRC))
 #define GST_IS_PUSH_SRC_CLASS(obj)  	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PUSH_SRC))
 
-/* base class for block based sources
- *
- * This class is mostly usefull for elements that cannot do
- * random access, or at least very slowly. The source usually
- * prefers to push out a fixed size buffer.
- *
- * Classes extending this base class will usually be scheduled
- * in a push based mode. It the peer accepts to operate without
- * offsets and withing the limits of the allowed block size, this
- * class can operate in getrange based mode automatically.
- *
- * The subclass should extend the methods from the baseclass in
- * addition to the create method.
- *
- * Seeking, flushing, scheduling and sync is all handled by this
- * base class.
- */
 typedef struct _GstPushSrc GstPushSrc;
 typedef struct _GstPushSrcClass GstPushSrcClass;
 

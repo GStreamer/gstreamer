@@ -1,5 +1,24 @@
 2005-08-03  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/gst/Makefile.am:
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/gstreamer.types:
+	* docs/gst/tmpl/gstfakesrc.sgml:
+	* gst/base/README:
+	* gst/base/gstbasesink.c:
+	* gst/base/gstbasesink.h:
+	* gst/base/gstbasesrc.c:
+	* gst/base/gstbasesrc.h:
+	* gst/base/gstbasetransform.c:
+	* gst/base/gstpushsrc.c:
+	* gst/base/gstpushsrc.h:
+	  add short/long description docs to base classes
+	  add pushsrc to the docs
+	  remove consolidated doc fragments
+
+2005-08-03  Stefan Kost  <ensonic@users.sf.net>
+
 	* configure.ac:
 	* docs/libs/Makefile.am:
 	* docs/libs/gstreamer-libs-docs.sgml:
@@ -13668,4 +13687,3 @@
                                                                                 
         * ChangeLog: moved to gstreamer/docs/random/old/ChangeLog.gstreamer
         * moved CVS to freedesktop.org
-
