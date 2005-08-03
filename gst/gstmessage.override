@@ -97,8 +97,12 @@ _wrap_gst_message_parse_error (PyGstMiniObject *self)
 
 	ret = PyList_New(0);
 	PyList_Append(ret, pyg_boxed_new (GST_TYPE_G_ERROR, error, TRUE, TRUE));
-	if (debug != NULL)
+	if (debug != NULL) {
 		PyList_Append(ret, PyString_FromString(debug));
+	} else {
+		Py_INCREF (Py_None);
+		PyList_Append(ret, Py_None);
+	}
 
 	return ret;
 }

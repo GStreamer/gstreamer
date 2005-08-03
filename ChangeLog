@@ -1,5 +1,8 @@
 2005-08-03  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstmessage.override (_wrap_gst_message_parse_error): Always
+	return a tuple of length 2.
+
 	* examples/pipeline-tester: Commit some updates I had.
 
 	* configure.ac (PYGST_CFLAGS): pygst.py generation is handled by
