@@ -48,7 +48,7 @@ GQuark controller_key;
 /* imports from gst-interpolation.c */
 
 extern GList
-    *gst_controlled_property_find_timed_value_node (GstControlledProperty *
+    * gst_controlled_property_find_timed_value_node (GstControlledProperty *
     prop, GstClockTime timestamp);
 extern GstInterpolateMethod *interpolation_methods[];
 
@@ -368,17 +368,19 @@ gst_controller_new_valist (GObject * object, va_list var_args)
    */
 
   self = g_object_get_qdata (object, controller_key);
-  if (!self) {
-    self = g_object_new (GST_TYPE_CONTROLLER, NULL);
-    self->lock = g_mutex_new ();
-    // store the controller
-    g_object_set_qdata (object, controller_key, self);
-  }
   // create GstControlledProperty for each property
   while ((name = va_arg (var_args, gchar *))) {
     // create GstControlledProperty and add to self->propeties List
-    if ((prop = gst_controlled_property_new (object, name)))
+    if ((prop = gst_controlled_property_new (object, name))) {
+      // if we don't have a controller object yet, now is the time to create one
+      if (!self) {
+        self = g_object_new (GST_TYPE_CONTROLLER, NULL);
+        self->lock = g_mutex_new ();
+        // store the controller
+        g_object_set_qdata (object, controller_key, self);
+      }
       self->properties = g_list_prepend (self->properties, prop);
+    }
   }
   va_end (var_args);
 

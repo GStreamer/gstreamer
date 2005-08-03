@@ -1,5 +1,15 @@
 2005-08-03  Stefan Kost  <ensonic@users.sf.net>
 
+	* check/Makefile.am:
+	* check/gst-libs/controller.c:
+	* libs/gst/controller/gst-controller.c:
+	(gst_controller_new_valist):
+	  added check test suite for the controller
+	* gst/base/gstpushsrc.c:
+	  fixed a doc typo
+
+2005-08-03  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/gst/Makefile.am:
 	* docs/gst/gstreamer-docs.sgml:
 	* docs/gst/gstreamer-sections.txt:
