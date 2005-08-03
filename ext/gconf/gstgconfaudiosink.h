@@ -45,7 +45,6 @@ typedef struct _GstGConfAudioSink {
   GConfClient *client;
   GstElement *kid;
   GstPad *pad;
-  gboolean init;
 } GstGConfAudioSink;
 
 typedef struct _GstGConfAudioSinkClass {

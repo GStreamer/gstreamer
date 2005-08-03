@@ -45,7 +45,6 @@ typedef struct _GstGConfVideoSink {
   GConfClient *client;
   GstElement *kid;
   GstPad *pad;
-  gboolean init;
 } GstGConfVideoSink;
 
 typedef struct _GstGConfVideoSinkClass {

@@ -26,7 +26,6 @@
 #include "gstautoaudiosink.h"
 #include "gstautodetect.h"
 
-static void gst_auto_audio_sink_detect (GstAutoAudioSink * sink, gboolean fake);
 static GstElementStateReturn
 gst_auto_audio_sink_change_state (GstElement * element);
 
@@ -60,13 +59,36 @@ gst_auto_audio_sink_class_init (GstAutoAudioSinkClass * klass)
   eklass->change_state = gst_auto_audio_sink_change_state;
 }
 
+/*
+ * Hack to make initial linking work; ideally, this'd work even when
+ * no target has been assigned to the ghostpad yet.
+ */
+
+static void
+gst_auto_audio_sink_reset (GstAutoAudioSink * sink)
+{
+  GstPad *targetpad;
+
+  /* fakesink placeholder */
+  if (sink->kid) {
+    gst_bin_remove (GST_BIN (sink), sink->kid);
+  }
+  sink->kid = gst_element_factory_make ("fakesink", "tempsink");
+  gst_bin_add (GST_BIN (sink), sink->kid);
+
+  /* pad */
+  targetpad = gst_element_get_pad (sink->kid, "sink");
+  gst_ghost_pad_set_target (GST_GHOST_PAD (sink->pad), targetpad);
+  gst_object_unref (targetpad);
+}
+
 static void
 gst_auto_audio_sink_init (GstAutoAudioSink * sink)
 {
-  sink->pad = NULL;
-  sink->kid = NULL;
-  gst_auto_audio_sink_detect (sink, TRUE);
-  sink->init = FALSE;
+  sink->pad = gst_ghost_pad_new_notarget ("sink", GST_PAD_SINK);
+  gst_element_add_pad (GST_ELEMENT (sink), sink->pad);
+
+  gst_auto_audio_sink_reset (sink);
 }
 
 static gboolean
@@ -171,56 +193,35 @@ done:
   return choice;
 }
 
-static void
-gst_auto_audio_sink_detect (GstAutoAudioSink * sink, gboolean fake)
+static gboolean
+gst_auto_audio_sink_detect (GstAutoAudioSink * sink)
 {
   GstElement *esink;
-  GstPad *targetpad, *peer = NULL;
+  GstPad *targetpad;
 
-  /* save ghostpad */
-  if (sink->pad) {
-    peer = GST_PAD_PEER (sink->pad);
-    if (peer) {
-      gst_pad_unlink (peer, sink->pad);
-      GST_DEBUG_OBJECT (sink, "Element was linked, caching peer %p", peer);
-    }
-    gst_element_remove_pad (GST_ELEMENT (sink), sink->pad);
-    sink->pad = NULL;
-  }
-
-  /* kill old element */
   if (sink->kid) {
-    GST_DEBUG_OBJECT (sink, "Removing old kid");
     gst_bin_remove (GST_BIN (sink), sink->kid);
     sink->kid = NULL;
   }
 
   /* find element */
-  GST_DEBUG_OBJECT (sink, "Creating new kid (%ssink)", fake ? "fake" : "audio");
-  if (fake) {
-    esink = gst_element_factory_make ("fakesink", "temporary-sink");
-  } else if (!(esink = gst_auto_audio_sink_find_best (sink))) {
+  GST_DEBUG_OBJECT (sink, "Creating new kid");
+  if (!(esink = gst_auto_audio_sink_find_best (sink))) {
     GST_ELEMENT_ERROR (sink, LIBRARY, INIT, (NULL),
         ("Failed to find a supported audio sink"));
-    return;
+    return FALSE;
   }
   sink->kid = esink;
   gst_bin_add (GST_BIN (sink), esink);
 
   /* attach ghost pad */
-  GST_DEBUG_OBJECT (sink, "Creating new ghostpad");
+  GST_DEBUG_OBJECT (sink, "Re-assigning ghostpad");
   targetpad = gst_element_get_pad (sink->kid, "sink");
-  sink->pad = gst_ghost_pad_new ("sink", targetpad);
+  gst_ghost_pad_set_target (GST_GHOST_PAD (sink->pad), targetpad);
   gst_object_unref (targetpad);
-  gst_element_add_pad (GST_ELEMENT (sink), sink->pad);
-
-  if (peer) {
-    GST_DEBUG_OBJECT (sink, "Linking...");
-    gst_pad_link (peer, sink->pad);
-  }
-
   GST_DEBUG_OBJECT (sink, "done changing auto audio sink");
-  sink->init = TRUE;
+
+  return TRUE;
 }
 
 static GstElementStateReturn
@@ -228,12 +229,20 @@ gst_auto_audio_sink_change_state (GstElement * element)
 {
   GstAutoAudioSink *sink = GST_AUTO_AUDIO_SINK (element);
 
-  if (GST_STATE_TRANSITION (element) == GST_STATE_NULL_TO_READY && !sink->init) {
-    gst_auto_audio_sink_detect (sink, FALSE);
-    if (!sink->init)
-      return GST_STATE_FAILURE;
+  GST_DEBUG_OBJECT (element, "Change state 0x%x",
+      GST_STATE_TRANSITION (element));
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
+      if (!gst_auto_audio_sink_detect (sink))
+        return GST_STATE_FAILURE;
+      break;
+    case GST_STATE_READY_TO_NULL:
+      gst_auto_audio_sink_reset (sink);
+      break;
+    default:
+      break;
   }
 
-  return GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS, change_state,
-      (element), GST_STATE_SUCCESS);
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 }

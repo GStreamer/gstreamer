@@ -43,7 +43,6 @@ typedef struct _GstAutoVideoSink {
   /* explicit pointers to stuff used */
   GstPad *pad;
   GstElement *kid;
-  gboolean init;
 } GstAutoVideoSink;
 
 typedef struct _GstAutoVideoSinkClass {

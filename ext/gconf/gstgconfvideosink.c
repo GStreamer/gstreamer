@@ -62,20 +62,40 @@ gst_gconf_video_sink_class_init (GstGConfVideoSinkClass * klass)
   eklass->change_state = gst_gconf_video_sink_change_state;
 }
 
+/*
+ * Hack to make negotiation work.
+ */
+
+static void
+gst_gconf_video_sink_reset (GstGConfVideoSink * sink)
+{
+  GstPad *targetpad;
+
+  /* fakesink */
+  if (sink->kid) {
+    gst_bin_remove (GST_BIN (sink), sink->kid);
+  }
+  sink->kid = gst_element_factory_make ("fakesink", "testsink");
+  gst_bin_add (GST_BIN (sink), sink->kid);
+
+  targetpad = gst_element_get_pad (sink->kid, "sink");
+  gst_ghost_pad_set_target (GST_GHOST_PAD (sink->pad), targetpad);
+  gst_object_unref (targetpad);
+}
+
 static void
 gst_gconf_video_sink_init (GstGConfVideoSink * sink)
 {
-  sink->pad = NULL;
-  sink->kid = NULL;
+  sink->pad = gst_ghost_pad_new_notarget ("sink", GST_PAD_SINK);
+  gst_element_add_pad (GST_ELEMENT (sink), sink->pad);
+
+  gst_gconf_video_sink_reset (sink);
 
   sink->client = gconf_client_get_default ();
   gconf_client_add_dir (sink->client, GST_GCONF_DIR,
       GCONF_CLIENT_PRELOAD_RECURSIVE, NULL);
   gconf_client_notify_add (sink->client, GST_GCONF_DIR "/default/videosink",
       cb_toggle_element, sink, NULL, NULL);
-  cb_toggle_element (sink->client, 0, NULL, sink);
-
-  sink->init = FALSE;
 }
 
 static void
@@ -91,23 +111,10 @@ gst_gconf_video_sink_dispose (GObject * object)
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
 
-static void
-cb_toggle_element (GConfClient * client,
-    guint connection_id, GConfEntry * entry, gpointer data)
+static gboolean
+do_toggle_element (GstGConfVideoSink * sink)
 {
-  GstGConfVideoSink *sink = GST_GCONF_VIDEO_SINK (data);
-  GstPad *peer = NULL, *targetpad;
-
-  /* save ghostpad */
-  if (sink->pad) {
-    peer = GST_PAD_PEER (sink->pad);
-    if (peer) {
-      gst_pad_unlink (peer, sink->pad);
-      GST_DEBUG_OBJECT (sink, "Caching peer %p", peer);
-    }
-    gst_element_remove_pad (GST_ELEMENT (sink), sink->pad);
-    sink->pad = NULL;
-  }
+  GstPad *targetpad;
 
   /* kill old element */
   if (sink->kid) {
@@ -116,31 +123,30 @@ cb_toggle_element (GConfClient * client,
     sink->kid = NULL;
   }
 
-  GST_DEBUG_OBJECT (sink, "Creating new kid (%ssink)",
-      entry ? "video" : "fake");
-  sink->kid = entry ? gst_gconf_get_default_video_sink () :
-      gst_element_factory_make ("fakesink", "temporary-element");
-  if (!sink->kid) {
+  GST_DEBUG_OBJECT (sink, "Creating new kid");
+  if (!(sink->kid = gst_gconf_get_default_video_sink ())) {
     GST_ELEMENT_ERROR (sink, LIBRARY, SETTINGS, (NULL),
         ("Failed to render video sink from GConf"));
-    return;
+    return FALSE;
   }
+  gst_element_set_state (sink->kid, GST_STATE (sink));
   gst_bin_add (GST_BIN (sink), sink->kid);
 
   /* re-attach ghostpad */
   GST_DEBUG_OBJECT (sink, "Creating new ghostpad");
   targetpad = gst_element_get_pad (sink->kid, "sink");
-  sink->pad = gst_ghost_pad_new ("sink", targetpad);
+  gst_ghost_pad_set_target (GST_GHOST_PAD (sink->pad), targetpad);
   gst_object_unref (targetpad);
-  gst_element_add_pad (GST_ELEMENT (sink), sink->pad);
-
-  if (peer) {
-    GST_DEBUG_OBJECT (sink, "Linking...");
-    gst_pad_link (peer, sink->pad);
-  }
-
   GST_DEBUG_OBJECT (sink, "done changing gconf video sink");
-  sink->init = TRUE;
+
+  return TRUE;
+}
+
+static void
+cb_toggle_element (GConfClient * client,
+    guint connection_id, GConfEntry * entry, gpointer data)
+{
+  do_toggle_element (GST_GCONF_VIDEO_SINK (data));
 }
 
 static GstElementStateReturn
@@ -148,12 +154,16 @@ gst_gconf_video_sink_change_state (GstElement * element)
 {
   GstGConfVideoSink *sink = GST_GCONF_VIDEO_SINK (element);
 
-  if (GST_STATE_TRANSITION (element) == GST_STATE_NULL_TO_READY && !sink->init) {
-    cb_toggle_element (sink->client, 0,
-        gconf_client_get_entry (sink->client,
-            GST_GCONF_DIR "/default/videosink", NULL, TRUE, NULL), sink);
-    if (!sink->init)
-      return GST_STATE_FAILURE;
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
+      if (!do_toggle_element (sink))
+        return GST_STATE_FAILURE;
+      break;
+    case GST_STATE_READY_TO_NULL:
+      gst_gconf_video_sink_reset (sink);
+      break;
+    default:
+      break;
   }
 
   return GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS, change_state,
