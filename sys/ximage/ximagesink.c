@@ -653,9 +653,13 @@ gst_ximagesink_renegotiate_size (GstXImageSink * ximagesink)
     }
 
     if (gst_pad_peer_accept_caps (GST_VIDEO_SINK_PAD (ximagesink), caps)) {
+      g_mutex_lock (ximagesink->pool_lock);
+
       gst_caps_replace (&ximagesink->desired_caps, caps);
       GST_VIDEO_SINK_WIDTH (ximagesink) = ximagesink->xwindow->width;
       GST_VIDEO_SINK_HEIGHT (ximagesink) = ximagesink->xwindow->height;
+
+      g_mutex_unlock (ximagesink->pool_lock);
 
       if (ximagesink->ximage) {
         GST_DEBUG_OBJECT (ximagesink, "destroying and recreating our ximage");
@@ -1335,8 +1339,6 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
     }
   }
 
-  g_mutex_unlock (ximagesink->pool_lock);
-
   if (!ximage) {
     /* We found no suitable image in the pool. Creating... */
     gint height, width;
@@ -1357,8 +1359,12 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
     if (ximagesink->desired_caps)
       gst_buffer_set_caps (GST_BUFFER (ximage), ximagesink->desired_caps);
     else
+      /* fixme we have no guarantee that the ximage is actually of these caps,
+         do we? */
       gst_buffer_set_caps (GST_BUFFER (ximage), caps);
   }
+
+  g_mutex_unlock (ximagesink->pool_lock);
 
   *buf = GST_BUFFER (ximage);
 

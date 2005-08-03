@@ -1,3 +1,10 @@
+2005-08-03  Andy Wingo  <wingo@pobox.com>
+
+	* sys/ximage/ximagesink.c (gst_ximagesink_renegotiate_size):
+	(gst_ximagesink_buffer_alloc): 
+	Protect the height, width, and desired_caps with the pool_lock.
+	Fixes videotestsrc ! queue ! ximagesink.
+
 2005-08-02  Edward Hervey  <edward@fluendo.com>
 
 	* gst/volume/gstvolume.c:
