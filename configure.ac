@@ -8,7 +8,7 @@ dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
 AM_MAINTAINER_MODE
                                                                                 
 dnl when going to/from release please set the nano (fourth number) right !
-AS_VERSION(gst-python, PYGST_VERSION, 0, 8, 2, 0, GST_CVS="no", GST_CVS="yes")
+AS_VERSION(gst-python, PYGST_VERSION, 0, 8, 2, 1, GST_CVS="no", GST_CVS="yes")
 
 AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 
@@ -61,6 +61,11 @@ AC_SUBST(GST_LIBS)
 dnl check for pygtk
 PKG_CHECK_MODULES(PYGTK, pygtk-2.0 >= $PYGTK_REQ)
 AC_SUBST(PYGTK_CFLAGS)
+
+dnl check for pygtk >= 2.6.2
+PKG_CHECK_MODULES(PYGTK_2_6_2, pygtk-2.0 >= 2.6.2,
+  HAVE_PYGTK_2_6_2="yes", HAVE_PYGTK_2_6_2="no")
+AM_CONDITIONAL(HAVE_PYGTK_2_6_2, test "x$HAVE_PYGTK_2_6_2" = "xyes")
 
 AC_MSG_CHECKING(for pygtk defs)
 PYGTK_DEFSDIR=`$PKG_CONFIG --variable=defsdir pygtk-2.0`
@@ -132,6 +137,7 @@ AC_OUTPUT([
   examples/gst/Makefile
   examples/gstplay/Makefile
   gst/Makefile
+  gst/extend/Makefile
   pkgconfig/Makefile
   pkgconfig/gst-python.pc
   pkgconfig/gst-python-uninstalled.pc

@@ -28,39 +28,9 @@ import os
 import sys
 import gobject
 import gst
+from gst.extend import sources
 
 from gstfile import Discoverer, time_to_string
-
-class AudioSource(gst.Bin):
-    """A bin for audio sources with proper audio converters"""
-
-    def __init__(self, filename, caps):
-        gst.Bin.__init__(self)
-        self.filename = filename
-        self.outcaps = caps
-
-        self.filesrc = gst.element_factory_make("filesrc")
-        self.filesrc.set_property("location", self.filename)
-        self.dbin = gst.element_factory_make("decodebin")
-        self.ident = gst.element_factory_make("identity")
-        self.audioconvert = gst.element_factory_make("audioconvert")
-        self.audioscale = gst.element_factory_make("audioscale")
-        
-        self.add_many(self.filesrc, self.dbin, self.ident,
-                      self.audioconvert, self.audioscale)
-        self.filesrc.link(self.dbin)
-        self.audioconvert.link(self.audioscale)
-        self.audioscale.link(self.ident, caps)
-        self.add_ghost_pad(self.ident.get_pad("src"), "src")
-        
-        self.dbin.connect("new-decoded-pad", self._new_decoded_pad_cb)
-
-    def _new_decoded_pad_cb(self, dbin, pad, is_last):
-        if not "audio" in pad.get_caps().to_string():
-            return
-        pad.link(self.audioconvert.get_pad("sink"))
-
-gobject.type_register(AudioSource)
 
 class AudioConcat(gst.Thread):
     """A Gstreamer thread that concatenates a series of audio files to another audio file"""
@@ -97,7 +67,7 @@ class AudioConcat(gst.Thread):
             if not d.audiolength:
                 continue
             print "file", infile, "has length", time_to_string(d.audiolength)
-            asource = AudioSource(infile, caps)
+            asource = sources.AudioSource(infile, caps)
             gnlsource = gst.element_factory_make("gnlsource")
             gnlsource.set_property("element", asource)
             gnlsource.set_property("media-start", 0L)

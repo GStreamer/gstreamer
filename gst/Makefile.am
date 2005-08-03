@@ -50,6 +50,11 @@ GST_OVERRIDES = 		\
 	gststructure.override
 
 GST_DEFS = gst.defs gst-types.defs gst-extrafuncs.defs
+
+if HAVE_PYGTK_2_6_2
+GST_DEFS += gst-pygtk-2.6.2.defs
+endif
+
 CLEANFILES = gst.c
 EXTRA_DIST += $(GST_DEFS) $(GST_OVERRIDES)
 gst.c: $(GST_DEFS) $(GST_OVERRIDES) $(GEN_FILES)
@@ -75,7 +80,7 @@ nodist_interfaces_la_SOURCES = interfaces.c
 INTERFACES_OVERRIDES = interfaces.override xoverlay.override
 INTERFACES_DEFS = interfaces.defs xoverlay.defs xwindowlistener.defs
 CLEANFILES += interfaces.c
-EXTRA_DIST += $(INTERFACES_DEFS) $(INTERFACES_OVERRIDES) 
+EXTRA_DIST += $(INTERFACES_DEFS) $(INTERFACES_OVERRIDES) gst-pygtk-2.6.2.defs
 interfaces.c: $(INTERFACES_DEFS) $(INTERFACES_OVERRIDES) $(GEN_FILES)
 
 .defs.c: 
@@ -87,3 +92,5 @@ interfaces.c: $(INTERFACES_DEFS) $(INTERFACES_OVERRIDES) $(GEN_FILES)
 		--prefix py$* $*.defs) > gen-$*.c \
 	&& cp gen-$*.c $*.c \
 	&& rm -f gen-$*.c
+
+SUBDIRS = extend

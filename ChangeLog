@@ -1,3 +1,56 @@
+2005-08-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  back to cvs
+	  add check for recent enough pygtk
+	* examples/gst/audioconcat.py:
+	  move out AudioSource
+	* gst/Makefile.am:
+	* gst/extend/Makefile.am:
+	* gst/extend/__init__.py:
+	* gst/extend/sources.py:
+	  create an extend module with AudioSource
+	* gst/gst.defs:
+	* gst/gst-pygtk-2.6.2.defs:
+	  move out the pygtk 2.6.2-needing pieces
+	* testsuite/common.py:
+	* testsuite/runtests.py:
+	* testsuite/test_buffer.py:
+	* testsuite/test_caps.py:
+	* testsuite/test_element.py:
+	* testsuite/test_error.py:
+	* testsuite/test_event.py:
+	* testsuite/test_interface.py:
+	* testsuite/test_pad.py:
+	* testsuite/test_pipeline.py:
+	* testsuite/test_probe.py:
+	* testsuite/test_registry.py:
+	* testsuite/test_struct.py:
+	* testsuite/test_xml.py:
+	  clean up whitespace and headers
+
+2005-08-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  back to cvs, damnit
+	* examples/gst/audioconcat.py:
+	* gst/Makefile.am:
+	* gst/gst.defs:
+	* testsuite/common.py:
+	* testsuite/runtests.py:
+	* testsuite/test_buffer.py:
+	* testsuite/test_caps.py:
+	* testsuite/test_element.py:
+	* testsuite/test_error.py:
+	* testsuite/test_event.py:
+	* testsuite/test_interface.py:
+	* testsuite/test_pad.py:
+	* testsuite/test_pipeline.py:
+	* testsuite/test_probe.py:
+	* testsuite/test_registry.py:
+	* testsuite/test_struct.py:
+	* testsuite/test_xml.py:
+
 === gst-python 0.8.2 ===
 
 2005-06-21  Edward Hervey  <edward@fluendo.com>

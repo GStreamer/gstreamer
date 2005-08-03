@@ -1617,14 +1617,7 @@
   (return-type "GstElementStateReturn")
 )
 
-(define-virtual request_new_pad
-  (of-object "GstElement")
-  (return-type "GstPad*")
-  (parameters
-    '("GstPadTemplate*" "templ")
-    '("const-gchar*" "name")
-  )
-)
+; (define-virtual request_new_pad: in pygtk-2.6.2.defs
 
 (define-virtual release_pad
   (of-object "GstElement")
@@ -1634,10 +1627,7 @@
   )
 )
 
-(define-virtual get_clock
-  (of-object "GstElement")
-  (return-type "GstClock*")
-)
+; (define-virtual get_clock: in pygtk-2.6.2.defs
 
 (define-virtual set_clock
   (of-object "GstElement")
@@ -1647,10 +1637,7 @@
   )
 )
 
-(define-virtual get_index
-  (of-object "GstElement")
-  (return-type "GstIndex*")
-)
+; (define-virtual get_index: in pygtk-2.6.2.defs
 
 (define-virtual set_index
   (of-object "GstElement")

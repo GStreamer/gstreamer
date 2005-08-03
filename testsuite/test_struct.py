@@ -1,3 +1,25 @@
+#!/usr/bin/env python
+# -*- Mode: Python -*-
+# vi:si:et:sw=4:sts=4:ts=4
+#
+# GStreamer python bindings
+# Copyright (C) 2002 David I. Lehn <dlehn@users.sourceforge.net>
+#               2004 Johan Dahlin  <johan@gnome.org>
+
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+# 
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+# 
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
 import sys
 from common import gst, unittest
 
@@ -13,26 +35,26 @@ class StructureTest(unittest.TestCase):
     def testInt(self):
         assert self.struct.has_key('width')
         assert isinstance(self.struct['width'], int)
-	assert self.struct['width'] == 10, self.struct['width']
-	self.struct['width'] = 5
+        assert self.struct['width'] == 10, self.struct['width']
+        self.struct['width'] = 5
         assert self.struct.has_key('width')
         assert isinstance(self.struct['width'], int)
-	assert self.struct['width'] == 5, self.struct['width']
+        assert self.struct['width'] == 5, self.struct['width']
 
     def testString(self):
         assert self.struct.has_key('foo')
         assert isinstance(self.struct['foo'], str)
-	assert self.struct['foo'] == 'bar', self.struct['foo']
-	self.struct['foo'] = 'baz'
+        assert self.struct['foo'] == 'bar', self.struct['foo']
+        self.struct['foo'] = 'baz'
         assert self.struct.has_key('foo')
         assert isinstance(self.struct['foo'], str)
-	assert self.struct['foo'] == 'baz', self.struct['foo']
+        assert self.struct['foo'] == 'baz', self.struct['foo']
 
     def testCreateInt(self):
-	self.struct['integer'] = 5
+        self.struct['integer'] = 5
         assert self.struct.has_key('integer')
         assert isinstance(self.struct['integer'], int)
-	assert self.struct['integer'] == 5, self.struct['integer']
+        assert self.struct['integer'] == 5, self.struct['integer']
         
     def testGstValue(self):
         s = self.struct
@@ -61,9 +83,9 @@ class StructureTest(unittest.TestCase):
         assert s['rlist'] == [([(['a', 'b'], ['c', 'd']),'e'], ['f', 'g']), 'h']
 
     def testStructureChange(self):
-	assert self.struct['framerate'] == 5.0
-	self.struct['framerate'] = 10.0
-	assert self.struct['framerate'] == 10.0
+        assert self.struct['framerate'] == 5.0
+        self.struct['framerate'] = 10.0
+        assert self.struct['framerate'] == 10.0
         self.struct['pixel-aspect-ratio'] = gst.Fraction(4, 2)
         assert self.struct['pixel-aspect-ratio'].num == 2
         assert self.struct['pixel-aspect-ratio'].denom == 1

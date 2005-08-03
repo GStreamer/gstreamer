@@ -1,0 +1,22 @@
+;; -*- scheme -*-
+
+;; methods that are wrapped wrong with codegen from before pygtk 2.6.2
+
+(define-virtual request_new_pad
+  (of-object "GstElement")
+  (return-type "GstPad*")
+  (parameters
+    '("GstPadTemplate*" "templ")
+    '("const-gchar*" "name")
+  )
+)
+
+(define-virtual get_clock
+  (of-object "GstElement")
+  (return-type "GstClock*")
+)
+
+(define-virtual get_index
+  (of-object "GstElement")
+  (return-type "GstIndex*")
+)
