@@ -57,12 +57,41 @@ data = (('Video capture via V4L',
          '    tee. ! oggdemux name=demux \n'
          '    demux. ! queue ! theoradec ! xvimagesink \n'
          '    demux. ! queue ! vorbisdec ! audioconvert ! alsasink \n'
-         '    tee. ! filesink location=cooldance.ogg'),
+         '    tee. ! queue ! filesink location=cooldance.ogg'),
+        ('Video test, YUV format',
+         'videotestsrc \n'
+         '    ! video/x-raw-yuv,format=(fourcc)I420 \n'
+         '    ! xvimagesink'),
+        ('Video test, RGB format',
+         'videotestsrc \n'
+         '    ! video/x-raw-rgb,red_mask=0xff00 \n'
+         '    ! ximagesink'),
         ('Reencode Vorbis to mulaw, play via ALSA',
          'filesrc location=cooldance.ogg \n'
          '    ! oggdemux \n'
          '    ! vorbisdec ! audioconvert \n'
-         '    ! mulawenc ! mulawdec ! alsasink'))
+         '    ! mulawenc ! mulawdec ! alsasink'),
+        ('Capture DV via firewire, transcode into Ogg',
+         'dv1394src \n'
+         '    ! dvdec name=dec drop-factor=2 \n'
+         '    ! video/x-raw-yuv,format=(fourcc)YUY2 \n'
+         '    ! queue \n'
+         '    ! videorate \n'
+         '    ! videoscale \n'
+         '    ! video/x-raw-yuv,width=360,height=288 \n'
+         '    ! videoscale \n'
+         '    ! video/x-raw-yuv,width=240,height=192,framerate=10.0,format=(fourcc)YUY2 \n'
+         '    ! ffmpegcolorspace \n'
+         '    ! theoraenc \n'
+         '    ! oggmux name=mux \n'
+         '    ! filesink location=dv.ogg \n'
+         ' \n'
+         '    dec. \n'
+         '    ! audio/x-raw-int \n'
+         '    ! queue \n'
+         '    ! audioconvert \n'
+         '    ! vorbisenc \n'
+         '    ! mux.'))
 
 
 def escape(s, chars, escaper='\\'):
@@ -186,7 +215,7 @@ class Window(gtk.Window):
             self.set_sensitive(True)
         except gobject.GError, e:
             self.set_sensitive(True)
-            self.error('Could not create pipeline', e.__str__)
+            self.error('Could not create pipeline', str(e))
             return False
         watch_id = pipeline.get_bus().add_watch(self.on_message)
         if pipeline.set_state(gst.STATE_PLAYING) != gst.STATE_SUCCESS:

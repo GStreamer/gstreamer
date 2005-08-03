@@ -120,7 +120,6 @@ changequote([,])dnl
 
 AC_OUTPUT([
   Makefile
-  pygst.py
   examples/Makefile
   gst/Makefile
   pkgconfig/Makefile

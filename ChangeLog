@@ -1,3 +1,10 @@
+2005-08-03  Andy Wingo  <wingo@pobox.com>
+
+	* examples/pipeline-tester: Commit some updates I had.
+
+	* configure.ac (PYGST_CFLAGS): pygst.py generation is handled by
+	the makefile.
+
 2005-08-01  Edward Hervey  <edward@fluendo.com>
 
 	* README-docs:
