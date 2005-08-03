@@ -10,6 +10,9 @@ except ImportError:
 import os
 import sys
 
+# imported from here by other tests
+import unittest
+
 import pygtk
 pygtk.require('2.0')
 
