@@ -21,6 +21,7 @@ tests =  \
 	test_buffer.py \
         test_caps.py \
 	test_element.py \
+	test_error.py \
 	test_event.py \
         test_interface.py \
 	test_pad.py \

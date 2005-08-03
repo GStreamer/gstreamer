@@ -6,9 +6,9 @@ except ImportError:
         from DLFCN import RTLD_LAZY, RTLD_GLOBAL
     except ImportError:
         pass
+
 import os
 import sys
-import unittest
 
 import pygtk
 pygtk.require('2.0')
