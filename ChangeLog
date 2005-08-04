@@ -1,3 +1,10 @@
+2005-08-04  Edward Hervey  <edward@fluendo.com>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_reset),
+	(gst_avi_demux_parse_stream), (gst_avi_demux_process_next_entry):
+	You need to allocatate (len+1) characters to store a len size string.
+	Also don't stop the processing task if the output pad is not linked.
+
 2005-08-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/gconf/gstgconfaudiosink.c: (gst_gconf_audio_sink_reset),

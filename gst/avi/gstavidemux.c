@@ -162,7 +162,8 @@ gst_avi_demux_reset (GstAviDemux * avi)
   for (i = 0; i < avi->num_streams; i++) {
     g_free (avi->stream[i].strh);
     g_free (avi->stream[i].strf.data);
-    g_free (avi->stream[i].name);
+    if (avi->stream[i].name)
+      g_free (avi->stream[i].name);
     if (avi->stream[i].initdata)
       gst_buffer_unref (avi->stream[i].initdata);
     if (avi->stream[i].extradata)
@@ -963,7 +964,7 @@ gst_avi_demux_parse_stream (GstElement * element, GstBuffer * buf)
         break;
       case GST_RIFF_TAG_strn:
         g_free (stream->name);
-        stream->name = g_new (gchar, GST_BUFFER_SIZE (sub));
+        stream->name = g_new (gchar, GST_BUFFER_SIZE (sub) + 1);
         memcpy (stream->name, GST_BUFFER_DATA (sub), GST_BUFFER_SIZE (sub));
         stream->name[GST_BUFFER_SIZE (sub)] = '\0';
         gst_buffer_unref (sub);
@@ -2019,7 +2020,8 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
             GST_TIME_FORMAT " on pad %s",
             GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
             gst_pad_get_name (stream->pad));
-        if ((res = gst_pad_push (stream->pad, buf)) != GST_FLOW_OK)
+        if (!((res = gst_pad_push (stream->pad, buf)) & (GST_FLOW_OK
+                    || GST_FLOW_NOT_LINKED)))
           return res;
         processed = TRUE;
       }
