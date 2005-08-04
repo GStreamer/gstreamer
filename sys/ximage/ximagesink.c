@@ -431,8 +431,9 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstXImageBuffer * ximage)
 #ifdef HAVE_XSHM
   if (ximagesink->xcontext->use_xshm) {
     GST_LOG_OBJECT (ximagesink,
-        "XShmPutImage, src: %d, %d - dest: %d, %d, dim: %dx%d",
-        0, 0, x, y, w, h);
+        "XShmPutImage, src: %d, %d - dest: %d, %d, dim: %dx%d, win %dx%d",
+        0, 0, x, y, w, h, ximagesink->xwindow->width,
+        ximagesink->xwindow->height);
     XShmPutImage (ximagesink->xcontext->disp, ximagesink->xwindow->win,
         ximagesink->xwindow->gc, ximage->ximage, 0, 0, x, y, w, h, FALSE);
   } else
@@ -654,18 +655,8 @@ gst_ximagesink_renegotiate_size (GstXImageSink * ximagesink)
 
     if (gst_pad_peer_accept_caps (GST_VIDEO_SINK_PAD (ximagesink), caps)) {
       g_mutex_lock (ximagesink->pool_lock);
-
       gst_caps_replace (&ximagesink->desired_caps, caps);
-      GST_VIDEO_SINK_WIDTH (ximagesink) = ximagesink->xwindow->width;
-      GST_VIDEO_SINK_HEIGHT (ximagesink) = ximagesink->xwindow->height;
-
       g_mutex_unlock (ximagesink->pool_lock);
-
-      if (ximagesink->ximage) {
-        GST_DEBUG_OBJECT (ximagesink, "destroying and recreating our ximage");
-        gst_ximagesink_ximage_destroy (ximagesink, ximagesink->ximage);
-        ximagesink->ximage = NULL;
-      }
     } else {
       ximagesink->sw_scaling_failed = TRUE;
       gst_caps_unref (caps);

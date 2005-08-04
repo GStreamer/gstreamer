@@ -1,3 +1,14 @@
+2005-08-04  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_put),
+	(gst_ximagesink_renegotiate_size):
+	  Do not set new window sizes yet if we prepare a new buffer size
+	  for upstream renegotiation (software scaling) at some point in the
+	  future, because this new size waqs not actually accepted yet. Once
+	  accepted, renegotiation later on will set the new sizes just fine.
+	  Fixes a videotestsrc ! queue ! videoscale ! ximagesink xoverlay
+	  embedding testcase.
+
 2005-08-03  Andy Wingo  <wingo@pobox.com>
 
 	* sys/ximage/ximagesink.c (gst_ximagesink_renegotiate_size):
