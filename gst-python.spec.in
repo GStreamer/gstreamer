@@ -65,6 +65,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/python?.?/site-packages/gst/_gst.so
 %{_libdir}/python?.?/site-packages/gst/interfaces.so
 %{_libdir}/python?.?/site-packages/gst/play.so
+%{_libdir}/python?.?/site-packages/gst/extend
 %dir %{_datadir}/gst-python
 %{_datadir}/gst-python/examples
 %{_datadir}/gst-python/2.0/defs/*.defs

@@ -1,5 +1,14 @@
 2005-08-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst-python.spec.in:
+	  add extend
+	* gst/extend/sources.py:
+	  move a comment
+	* gst/gstmodule.c: (sink_gstobject):
+	  prefer gst_object_ref so we get a log message for it
+
+2005-08-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/extend/Makefile.am:
 	* gst/extend/leveller.py:
 	* gst/extend/pygobject.py:

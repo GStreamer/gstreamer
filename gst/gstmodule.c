@@ -68,7 +68,7 @@ static void
 sink_gstobject(GObject *object)
 {
      if (GST_OBJECT_FLOATING(object)) {
-	  g_object_ref(object);
+	  gst_object_ref(GST_OBJECT(object));
 	  gst_object_sink(GST_OBJECT(object));
      }
 }
