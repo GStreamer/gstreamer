@@ -1,3 +1,12 @@
+2005-08-04  Benjamin Otte  <otte@gnome.org>
+
+	* docs/libs/gstreamer-libs-docs.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/bytestream/adapter.c:
+	  add GstAdapter docs.
+	* libs/gst/bytestream/adapter.h:
+	  mark custom fields in GstAdapter struct as private for gtk-doc
+
 2005-07-24  Benjamin Otte  <otte@gnome.org>
 
 	* tools/tools.h:

@@ -89,6 +89,20 @@ swab32
 </SECTION>
 
 <SECTION>
+<FILE>gstadapter</FILE>
+<INCLUDE>gst/bytestream/adapter.h</INCLUDE>
+GstAdapter
+gst_adapter_new
+gst_adapter_clear
+gst_adapter_push
+gst_adapter_peek
+gst_adapter_flush
+gst_adapter_available
+gst_adapter_available_fast
+<SUBSECTION Standard>
+</SECTION>
+
+<SECTION>
 <FILE>gstbytestream</FILE>
 <INCLUDE>libs/bytestream/bytestream.h</INCLUDE>
 GstByteStream
