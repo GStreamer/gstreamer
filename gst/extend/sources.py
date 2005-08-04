@@ -21,14 +21,27 @@
 
 import os
 import sys
+
 import gobject
 import gst
+
+from pygobject import gsignal
+
+EOS = 'EOS'
+ERROR = 'ERROR'
+WRONG_TYPE = 'WRONG_TYPE'
+UNKNOWN_TYPE = 'UNKNOWN_TYPE'
 
 class AudioSource(gst.Bin):
     """A bin for audio sources with proper audio converters"""
 
+    gsignal('done', str)
+
     def __init__(self, filename, caps="audio/x-raw-int,channels=2,rate=44100"):
         gst.Bin.__init__(self)
+        # with pygtk 2.4 this call is needed for the gsignal to work
+        self.__gobject_init__()
+
         self.filename = filename
         self.outcaps = caps
 
@@ -47,36 +60,67 @@ class AudioSource(gst.Bin):
         self.add_ghost_pad(self.ident.get_pad("src"), "src")
         
         self.dbin.connect("new-decoded-pad", self._new_decoded_pad_cb)
+        self.dbin.connect("unknown-type", self._unknown_type_cb)
         self.eos = False
         self.connect("eos", self._have_eos_cb)
 
     def _new_decoded_pad_cb(self, dbin, pad, is_last):
         if not "audio" in pad.get_caps().to_string():
+            self.emit('done', WRONG_TYPE)
             return
+
         pad.link(self.audioconvert.get_pad("sink"))
+
+    def _unknown_type_cb(self, pad, caps):
+        self.emit('done', UNKNOWN_TYPE)
 
     def _have_eos_cb(self, object):
         self.eos = True
-
-# run us to test
+        self.emit('done', EOS)
 gobject.type_register(AudioSource)
 
+# run us to test
 if __name__ == "__main__":
-    source = AudioSource(sys.argv[1])
-    thread = gst.Thread("playing")
+    main = gobject.MainLoop()
 
-    pipeline = "osssink"
+    def _done_cb(source, reason):
+        print "Done"
+        if reason != EOS:
+            print "Some error happened: %s" % reason
+        main.quit()
+
+    def _error_cb(source, element, gerror, message):
+        print "Error: %s" % gerror
+        main.quit()
+        
+    source = AudioSource(sys.argv[1])
+    pipeline = gst.Pipeline("playing")
+    # connecting on the source also catches eos emit when
+    # no audio pad
+    source.connect('done', _done_cb)
+    pipeline.connect('error', _error_cb)
+
+    p = "osssink"
     if len(sys.argv) > 2:
-        pipeline = " ".join(sys.argv[2:])
+        p = " ".join(sys.argv[2:])
     
-    thread.add(source)
-    sink = gst.parse_launch(pipeline)
-    thread.add(sink)
+    pipeline.add(source)
+    sink = gst.parse_launch(p)
+    pipeline.add(sink)
     source.link(sink)
 
-    thread.set_state(gst.STATE_PLAYING)
+    # we schedule this as a timeout so that we are definately in the main
+    # loop when it goes to PLAYING, and errors make main.quit() work correctly
+    def _start(pipeline):
+        print "setting pipeline to PLAYING"
+        pipeline.set_state(gst.STATE_PLAYING)
+        print "set pipeline to PLAYING"
 
-    while not source.eos:
-        pass
+    gobject.timeout_add(0, _start, pipeline)
+    gobject.idle_add(pipeline.iterate)
 
-    thread.set_state(gst.STATE_NULL)
+    print "Going into main loop"
+    main.run()
+    print "Left main loop"
+
+    pipeline.set_state(gst.STATE_NULL)

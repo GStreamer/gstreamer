@@ -1,3 +1,12 @@
+2005-08-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/extend/Makefile.am:
+	* gst/extend/leveller.py:
+	* gst/extend/pygobject.py:
+	* gst/extend/sources.py:
+	  adding pygobject helper code
+	  adding a leveller object to calculate RMS and mix points
+
 2005-08-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
