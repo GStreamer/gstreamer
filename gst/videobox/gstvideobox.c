@@ -129,7 +129,7 @@ static GstCaps *gst_video_box_transform_caps (GstBaseTransform * trans,
     GstPad * pad, GstCaps * from);
 static gboolean gst_video_box_set_caps (GstBaseTransform * trans,
     GstCaps * in, GstCaps * out);
-static guint gst_video_box_get_size (GstBaseTransform * trans);
+static guint gst_video_box_get_size (GstBaseTransform * trans, GstCaps * caps);
 static GstFlowReturn gst_video_box_transform (GstBaseTransform * trans,
     GstBuffer * in, GstBuffer * out);
 
@@ -391,18 +391,23 @@ gst_video_box_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 #define GST_VIDEO_I420_SIZE(w,h)     (GST_VIDEO_I420_V_OFFSET(w,h)+(GST_VIDEO_I420_V_ROWSTRIDE(w)*ROUND_UP_2(h)/2))
 
 static guint
-gst_video_box_get_size (GstBaseTransform * trans)
+gst_video_box_get_size (GstBaseTransform * trans, GstCaps * caps)
 {
-  guint size;
+  guint size = -1;
   GstVideoBox *video_box;
 
   video_box = GST_VIDEO_BOX (trans);
 
-  if (video_box->use_alpha) {
-    size = video_box->out_height * video_box->out_height * 4;
-  } else {
-    size = GST_VIDEO_I420_SIZE (video_box->out_width, video_box->out_height);
+  if (gst_caps_is_equal (caps, GST_PAD_CAPS (trans->sinkpad))) {
+    size = GST_VIDEO_I420_SIZE (video_box->in_width, video_box->in_height);
+  } else if (gst_caps_is_equal (caps, GST_PAD_CAPS (trans->srcpad))) {
+    if (video_box->use_alpha) {
+      size = video_box->out_height * video_box->out_height * 4;
+    } else {
+      size = GST_VIDEO_I420_SIZE (video_box->out_width, video_box->out_height);
+    }
   }
+
   return size;
 }
 

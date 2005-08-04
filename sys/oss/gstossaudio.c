@@ -38,7 +38,7 @@ plugin_init (GstPlugin * plugin)
                                    GST_TYPE_OSSELEMENT) ||
                                    !gst_element_register (plugin, "osssrc", GST_RANK_PRIMARY,
                                    GST_TYPE_OSSSRC) || */
-      !gst_element_register (plugin, "osssink", GST_RANK_PRIMARY,
+      !gst_element_register (plugin, "osssink", GST_RANK_SECONDARY,
           GST_TYPE_OSSSINK)) {
     return FALSE;
   }

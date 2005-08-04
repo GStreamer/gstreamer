@@ -101,21 +101,17 @@ fi
 dnl Check for FIONREAD ioctl declaration :
 GST_CHECK_FIONREAD()
 
-DEFAULT_AUDIOSINK="osssink"
-DEFAULT_VIDEOSINK="xvimagesink"
-DEFAULT_AUDIOSRC="osssrc"
+DEFAULT_AUDIOSINK="autoaudiosink"
+DEFAULT_VIDEOSINK="autovideosink"
+DEFAULT_AUDIOSRC="alsasrc"
 DEFAULT_VIDEOSRC="v4lsrc"
 DEFAULT_VISUALIZER="goom"
 case "$host" in 
   *-sun-* | *pc-solaris* )
-    DEFAULT_AUDIOSINK="sunaudiosink"
-    DEFAULT_VIDEOSINK="ximagesink"
     DEFAULT_AUDIOSRC="sunaudiosrc"
     ;;
   *-darwin* )
-    DEFAULT_AUDIOSINK="osxaudiosink"
     DEFAULT_AUDIOSRC="osxaudiosrc"
-    DEFAULT_VIDEOSINK="osxvideosink"
     ;;
 esac
 

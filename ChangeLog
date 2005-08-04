@@ -1,3 +1,13 @@
+2005-08-04  Andy Wingo  <wingo@pobox.com>
+
+	* sys/oss/gstossaudio.c (plugin_init): Second-class citizen.
+
+	* gst/videobox/gstvideobox.c (gst_video_box_get_size): Update for
+	API changes.
+
+	* configure.ac (DEFAULT_AUDIOSINK, DEFAULT_VIDEOSINK): Set to
+	autoaudiosink and autovideosink.
+
 2005-08-04  Edward Hervey  <edward@fluendo.com>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_reset),
@@ -1064,7 +1074,7 @@
 	UDP fixes, added uri handler.
 	Added rtpdec that will manage the RTP session in the future.
 
-2005-05-10  Arwed v. Merkatz  <v.merkatz@gmx.net>>
+2005-05-10  Arwed v. Merkatz  <v.merkatz@gmx.net>
 
 	* PORTED_09:
 	* configure.ac:
