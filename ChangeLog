@@ -1,3 +1,8 @@
+2005-08-04  Edward Hervey  <edward@fluendo.com>
+
+	* gst/base/gstadapter.h: 
+	Added gst_adapter_get_type() to the header
+
 2005-08-03  Stefan Kost  <ensonic@users.sf.net>
 
 	* check/Makefile.am:

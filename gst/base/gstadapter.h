@@ -68,7 +68,7 @@ const guint8 *		gst_adapter_peek      		(GstAdapter *adapter, guint size);
 void			gst_adapter_flush		(GstAdapter *adapter, guint flush);
 guint			gst_adapter_available		(GstAdapter *adapter);
 guint			gst_adapter_available_fast    	(GstAdapter *adapter);
-
+GType			gst_adapter_get_type		(void);
 
 G_END_DECLS
 
