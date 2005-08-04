@@ -1,3 +1,12 @@
+2005-08-04  Andy Wingo  <wingo@pobox.com>
+
+	* gst/videoscale/gstvideoscale.c (gst_videoscale_get_size):
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c
+	(gst_ffmpegcsp_get_size): Adapt to API changes.
+
+	* gst/videoscale/gstvideoscale.c (gst_videoscale_transform_ip):
+	Implement an in-place do-nothing transform.
+
 2005-08-04  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_put),

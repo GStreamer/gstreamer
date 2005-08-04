@@ -149,7 +149,9 @@ static GstCaps *gst_videoscale_transform_caps (GstBaseTransform * trans,
     GstPad * pad, GstCaps * caps);
 static gboolean gst_videoscale_set_caps (GstBaseTransform * trans,
     GstCaps * in, GstCaps * out);
-static guint gst_videoscale_get_size (GstBaseTransform * trans);
+static guint gst_videoscale_get_size (GstBaseTransform * trans, GstCaps * caps);
+static GstFlowReturn gst_videoscale_transform_ip (GstBaseTransform * trans,
+    GstBuffer * in);
 static GstFlowReturn gst_videoscale_transform (GstBaseTransform * trans,
     GstBuffer * in, GstBuffer * out);
 
@@ -218,6 +220,7 @@ gst_videoscale_class_init (GstVideoscaleClass * klass)
   trans_class->transform_caps = gst_videoscale_transform_caps;
   trans_class->set_caps = gst_videoscale_set_caps;
   trans_class->get_size = gst_videoscale_get_size;
+  trans_class->transform_ip = gst_videoscale_transform_ip;
   trans_class->transform = gst_videoscale_transform;
 
   parent_class = g_type_class_peek_parent (klass);
@@ -421,15 +424,20 @@ gst_videoscale_prepare_sizes (GstVideoscale * videoscale, VSImage * src,
 }
 
 static guint
-gst_videoscale_get_size (GstBaseTransform * trans)
+gst_videoscale_get_size (GstBaseTransform * trans, GstCaps * caps)
 {
   GstVideoscale *videoscale;
   VSImage dest;
   VSImage src;
+  guint size = -1;
 
   videoscale = GST_VIDEOSCALE (trans);
 
-  return (guint) gst_videoscale_prepare_sizes (videoscale, &src, &dest, TRUE);
+  if (gst_caps_is_equal (caps, GST_PAD_CAPS (trans->srcpad)))
+    size = gst_videoscale_prepare_sizes (videoscale, &src, &dest, TRUE);
+  /* don't have an easy way of getting the size on the sink side for now... */
+
+  return size;
 }
 
 static void
@@ -460,6 +468,12 @@ gst_videoscale_prepare_images (GstVideoscale * videoscale, GstBuffer * in,
     default:
       break;
   }
+}
+
+static GstFlowReturn
+gst_videoscale_transform_ip (GstBaseTransform * trans, GstBuffer * in)
+{
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn

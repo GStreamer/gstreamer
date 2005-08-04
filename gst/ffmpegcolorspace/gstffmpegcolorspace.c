@@ -91,7 +91,7 @@ static void gst_ffmpegcsp_init (GstFFMpegCsp * space);
 
 static gboolean gst_ffmpegcsp_set_caps (GstBaseTransform * btrans,
     GstCaps * incaps, GstCaps * outcaps);
-static guint gst_ffmpegcsp_get_size (GstBaseTransform * btrans);
+static guint gst_ffmpegcsp_get_size (GstBaseTransform * btrans, GstCaps * caps);
 static GstFlowReturn gst_ffmpegcsp_transform
     (GstBaseTransform * btrans, GstBuffer * inbuf, GstBuffer * outbuf);
 static GstFlowReturn gst_ffmpegcsp_transform_ip
@@ -311,13 +311,17 @@ gst_ffmpegcsp_init (GstFFMpegCsp * space)
 }
 
 static guint
-gst_ffmpegcsp_get_size (GstBaseTransform * btrans)
+gst_ffmpegcsp_get_size (GstBaseTransform * btrans, GstCaps * caps)
 {
   GstFFMpegCsp *space;
-  guint size;
+  guint size = -1;
 
   space = GST_FFMPEGCSP (btrans);
-  size = avpicture_get_size (space->to_pixfmt, space->width, space->height);
+  if (gst_caps_is_equal (caps, GST_PAD_CAPS (btrans->srcpad))) {
+    size = avpicture_get_size (space->to_pixfmt, space->width, space->height);
+  } else if (gst_caps_is_equal (caps, GST_PAD_CAPS (btrans->sinkpad))) {
+    size = avpicture_get_size (space->from_pixfmt, space->width, space->height);
+  }
 
   return size;
 }
