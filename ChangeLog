@@ -1,3 +1,11 @@
+2005-08-04  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.defs:
+	* gst/gst.override:
+	* gst/gstmodule.c:
+	We now have debugging in gst-python ;)
+	gst.[log|debug|info|warning|error]()
+
 2005-08-03  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:

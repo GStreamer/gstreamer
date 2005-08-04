@@ -2273,7 +2273,48 @@
   )
 )
 
+;; DEBUGGING FUNCTIONS FROM PYTHON
+;; The c functions don't actually exist
 
+(define-function log
+  (c-name "gst_log")
+  (return-type "none")
+  (parameters
+   '("gchar *" "msg")
+   )
+)
+
+(define-function debug
+  (c-name "gst_debug")
+  (return-type "none")
+  (parameters
+   '("gchar *" "msg")
+   )
+)
+
+(define-function info
+  (c-name "gst_info")
+  (return-type "none")
+  (parameters
+   '("gchar *" "msg")
+   )
+)
+
+(define-function warning
+  (c-name "gst_warning")
+  (return-type "none")
+  (parameters
+   '("gchar *" "msg")
+   )
+)
+
+(define-function error
+  (c-name "gst_error")
+  (return-type "none")
+  (parameters
+   '("gchar *" "msg")
+   )
+)
 
 ;; From ../gstreamer/gst/gstinterface.h
 
