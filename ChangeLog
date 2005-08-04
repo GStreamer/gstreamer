@@ -1,3 +1,32 @@
+2005-08-04  Andy Wingo  <wingo@pobox.com>
+
+	* gst/elements/gstcapsfilter.c: Reimplement using basetransform,
+	fixes buffer_alloc proxying among other things.
+
+	* gst/base/gstbasetransform.c:
+	* gst/base/gstbasetransform.h:
+	Revert patch to gstbasetransform from 7-28 removing
+	delay_configure.
+
+	* gst/base/gstbasetransform.h (GstBaseTransformClass.get_size):
+	* gst/base/gstbasetransform.c (gst_base_transform_get_size):
+	Semantics changed, should return not the size of the output buffer
+	but the byte size of a buffer with a given caps.
+
+	* gst/base/gstbasetransform.c (gst_base_transform_getcaps): Better
+	debug object.
+	(gst_base_transform_configure_caps): Don't set out_size here: (in,
+	out) are not the pad caps until setcaps finishes.
+	(gst_base_transform_buffer_alloc): Proxy the buffer_alloc for the
+	not-in-place case as well. Deal with changing from in-place to
+	not-in-place within calling pad_alloc_buffer. Still a bit
+	concerned about the overhead here...
+
+2005-08-03  Andy Wingo  <wingo@pobox.com>
+
+	* gst/base/gstbasetransform.c (gst_base_transform_setcaps): Not
+	fixating is an error.
+
 2005-08-04  Edward Hervey  <edward@fluendo.com>
 
 	* gst/base/gstadapter.h: 

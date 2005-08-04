@@ -54,6 +54,7 @@ struct _GstBaseTransform {
 
   gboolean	 in_place;
   guint		 out_size;
+  gboolean	 delay_configure;
 };
 
 struct _GstBaseTransformClass {
@@ -70,8 +71,8 @@ struct _GstBaseTransformClass {
   gboolean      (*set_caps)     (GstBaseTransform *trans, GstCaps *incaps,
                                  GstCaps *outcaps);
 
-  /* get the size of the output buffer, -1 on error */
-  guint         (*get_size)     (GstBaseTransform *trans);
+  /* get the byte size of a given caps, -1 on error */
+  guint         (*get_size)     (GstBaseTransform *trans, GstCaps *caps);
 
   /* start and stop processing, ideal for opening/closing the resource */
   gboolean      (*start)        (GstBaseTransform *trans);

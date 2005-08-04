@@ -110,7 +110,8 @@ static gboolean gst_base_transform_src_activate_pull (GstPad * pad,
     gboolean active);
 static gboolean gst_base_transform_sink_activate_push (GstPad * pad,
     gboolean active);
-static guint gst_base_transform_get_size (GstBaseTransform * trans);
+static guint gst_base_transform_get_size (GstBaseTransform * trans,
+    GstCaps * caps);
 
 static GstElementStateReturn gst_base_transform_change_state (GstElement *
     element);
@@ -264,26 +265,26 @@ gst_base_transform_getcaps (GstPad * pad)
     GstCaps *temp;
     const GstCaps *templ;
 
-    GST_DEBUG_OBJECT (trans, "peer caps  %" GST_PTR_FORMAT, caps);
+    GST_DEBUG_OBJECT (pad, "peer caps  %" GST_PTR_FORMAT, caps);
 
     /* filtered against our padtemplate */
     templ = gst_pad_get_pad_template_caps (otherpad);
-    GST_DEBUG_OBJECT (trans, "our template  %" GST_PTR_FORMAT, templ);
+    GST_DEBUG_OBJECT (pad, "our template  %" GST_PTR_FORMAT, templ);
     temp = gst_caps_intersect (caps, templ);
-    GST_DEBUG_OBJECT (trans, "intersected %" GST_PTR_FORMAT, temp);
+    GST_DEBUG_OBJECT (pad, "intersected %" GST_PTR_FORMAT, temp);
     gst_caps_unref (caps);
     /* then see what we can tranform this to */
     caps = gst_base_transform_transform_caps (trans, otherpad, temp);
-    GST_DEBUG_OBJECT (trans, "transformed  %" GST_PTR_FORMAT, caps);
+    GST_DEBUG_OBJECT (pad, "transformed  %" GST_PTR_FORMAT, caps);
     gst_caps_unref (temp);
     if (caps == NULL)
       goto done;
 
     /* and filter against the template again */
     templ = gst_pad_get_pad_template_caps (pad);
-    GST_DEBUG_OBJECT (trans, "our template  %" GST_PTR_FORMAT, templ);
+    GST_DEBUG_OBJECT (pad, "our template  %" GST_PTR_FORMAT, templ);
     temp = gst_caps_intersect (caps, templ);
-    GST_DEBUG_OBJECT (trans, "intersected %" GST_PTR_FORMAT, temp);
+    GST_DEBUG_OBJECT (pad, "intersected %" GST_PTR_FORMAT, temp);
     gst_caps_unref (caps);
     /* this is what we can do */
     caps = temp;
@@ -314,11 +315,6 @@ gst_base_transform_configure_caps (GstBaseTransform * trans, GstCaps * in,
     ret = klass->set_caps (trans, in, out);
   }
 
-  /* if all goes well, get the size of the output buffer */
-  if (ret) {
-    trans->out_size = gst_base_transform_get_size (trans);
-    GST_DEBUG_OBJECT (trans, "output buffer size %d", trans->out_size);
-  }
   return ret;
 }
 
@@ -427,10 +423,12 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
   GST_DEBUG_OBJECT (trans, "in_place: %d", trans->in_place);
 
   /* see if we have to configure the element now */
-  if (pad == trans->sinkpad)
-    ret = gst_base_transform_configure_caps (trans, caps, othercaps);
-  else
-    ret = gst_base_transform_configure_caps (trans, othercaps, caps);
+  if (!trans->delay_configure) {
+    if (pad == trans->sinkpad)
+      ret = gst_base_transform_configure_caps (trans, caps, othercaps);
+    else
+      ret = gst_base_transform_configure_caps (trans, othercaps, caps);
+  }
 
 done:
   if (otherpeer)
@@ -460,7 +458,7 @@ no_transform_possible:
   }
 could_not_fixate:
   {
-    GST_DEBUG_OBJECT (trans, "FAILED to fixate %" GST_PTR_FORMAT, othercaps);
+    GST_ERROR_OBJECT (trans, "FAILED to fixate %" GST_PTR_FORMAT, othercaps);
     ret = FALSE;
     goto done;
   }
@@ -474,15 +472,15 @@ peer_no_accept:
 }
 
 static guint
-gst_base_transform_get_size (GstBaseTransform * trans)
+gst_base_transform_get_size (GstBaseTransform * trans, GstCaps * caps)
 {
   guint res = -1;
   GstBaseTransformClass *bclass;
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
   if (bclass->get_size) {
-    res = bclass->get_size (trans);
-    GST_DEBUG_OBJECT (trans, "get size function returned %d", res);
+    res = bclass->get_size (trans, caps);
+    GST_DEBUG_OBJECT (trans, "get size(%p) returned %d", caps, res);
   }
 
   return res;
@@ -494,21 +492,74 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 {
   GstBaseTransform *trans;
   GstFlowReturn res;
+  guint got_size;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
 
+  *buf = NULL;
+
   if (trans->in_place) {
-    /* we can only proxy the bufferpool if we do in_place transforms */
+    /* request a buffer with the same caps */
     res = gst_pad_alloc_buffer (trans->srcpad, offset, size, caps, buf);
   } else {
-    /* else let the default alloc function allocate a buffer */
-    *buf = NULL;
+    /* if we are configured, request a buffer with the src caps */
+    GstCaps *srccaps = gst_pad_get_negotiated_caps (trans->srcpad);
+
+    if (!srccaps)
+      goto not_configured;
+
+    got_size = gst_base_transform_get_size (trans, srccaps);
+    if (got_size == -1) {
+      gst_caps_unref (srccaps);
+      goto unknown_size;
+    }
+
+    res = gst_pad_alloc_buffer (trans->srcpad, offset, got_size, srccaps, buf);
+    gst_caps_unref (srccaps);
+  }
+
+  if (res == GST_FLOW_OK && !trans->in_place) {
+    /* note that we might have been in place before, but calling the
+       alloc_buffer caused setcaps to switch us out of in_place -- in any case
+       the alloc_buffer served to transmit caps information but we can't use the
+       buffer. fall through and allocate a buffer corresponding to our sink
+       caps, if any */
+    GstCaps *sinkcaps = gst_pad_get_negotiated_caps (trans->sinkpad);
+
+    if (!sinkcaps)
+      goto not_configured;
+
+    got_size = gst_base_transform_get_size (trans, sinkcaps);
+    if (got_size == -1) {
+      gst_caps_unref (sinkcaps);
+      goto unknown_size;
+    }
+
+    *buf = gst_buffer_new_and_alloc (got_size);
+    gst_buffer_set_caps (*buf, sinkcaps);
+    GST_BUFFER_OFFSET (*buf) = offset;
     res = GST_FLOW_OK;
+
+    gst_caps_unref (sinkcaps);
   }
 
   gst_object_unref (trans);
-
   return res;
+
+not_configured:
+  {
+    /* let the default allocator handle it */
+    *buf = NULL;
+    gst_object_unref (trans);
+    return GST_FLOW_OK;
+  }
+unknown_size:
+  {
+    /* let the default allocator handle it */
+    *buf = NULL;
+    gst_object_unref (trans);
+    return GST_FLOW_OK;
+  }
 }
 
 
@@ -584,15 +635,24 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
     /* figure out the output size */
     if (trans->out_size == -1) {
       /* ask subclass */
-      if ((trans->out_size = gst_base_transform_get_size (trans)) == -1)
-        /* else we have an error */
+      trans->out_size = gst_base_transform_get_size (trans,
+          GST_PAD_CAPS (trans->srcpad));
+      if (trans->out_size == -1)
+        /* we have an error */
         goto no_size;
     }
+
+    /* we cannot reconfigure the element yet as we are still processing
+     * the old buffer. We will therefore delay the reconfiguration of the
+     * element until we have processed this last buffer. */
+    trans->delay_configure = TRUE;
 
     /* no in place transform, get buffer, this might renegotiate. */
     ret = gst_pad_alloc_buffer (trans->srcpad,
         GST_BUFFER_OFFSET (inbuf), trans->out_size,
         GST_PAD_CAPS (trans->srcpad), outbuf);
+
+    trans->delay_configure = FALSE;
 
     if (ret != GST_FLOW_OK)
       goto no_buffer;
