@@ -14,9 +14,6 @@ various global enums and constants
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### ENUM GstElementState ##### -->
 <para>
 These contants describe the state a #GstElement is in and transition scheduled for the #GstElement (the pending state).

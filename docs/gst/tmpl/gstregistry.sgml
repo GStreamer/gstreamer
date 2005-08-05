@@ -15,6 +15,3 @@ All registries build the #GstRegistryPool.
 #GstPlugin, #GstPluginFeature
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-

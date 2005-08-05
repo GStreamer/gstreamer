@@ -57,9 +57,6 @@ Last reviewed on December 13th, 2002 (0.5.0.1)
 #GstPadTemplate, #GstElement, #GstEvent
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### STRUCT GstPad ##### -->
 <para>
 

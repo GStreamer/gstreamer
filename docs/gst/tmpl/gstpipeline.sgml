@@ -21,9 +21,6 @@ the pipeline, use gst_object_unref() to free its resources.
 #GstBin
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### STRUCT GstPipeline ##### -->
 <para>
 

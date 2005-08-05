@@ -14,9 +14,6 @@ GstFakeSrc
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### STRUCT GstFakeSrc ##### -->
 <para>
 
@@ -30,6 +27,7 @@ GstFakeSrc
 
 @gstfakesrc: the object which received the signal.
 @arg1: 
+@:
 @:
 @:
 @:

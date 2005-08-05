@@ -14,9 +14,6 @@ Element interface that allows setting and retrieval of media metadata
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### STRUCT GstTagSetter ##### -->
 <para>
 

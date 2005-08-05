@@ -37,9 +37,6 @@ If a subsystem is disabled in GStreamer, a value is defined in
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### MACRO GST_DISABLE_LOADSAVE_REGISTRY ##### -->
 <para>
 
