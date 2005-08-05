@@ -163,7 +163,8 @@ GST_PLUGIN_DEFINE_STATIC (GST_VERSION_MAJOR,
   gst_controller_init (NULL, NULL);
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 /* tests for an element with no controlled params */
 GST_START_TEST (controller_new_fail)
 {
@@ -172,7 +173,7 @@ GST_START_TEST (controller_new_fail)
 
   elem = gst_element_factory_make ("fakesrc", "test_source");
 
-  /* that property should not exists */
+  /* that property should not exist */
   ctrl = gst_controller_new (G_OBJECT (elem), "_schrompf_", NULL);
   fail_unless (ctrl == NULL, NULL);
 
@@ -183,7 +184,8 @@ GST_START_TEST (controller_new_fail)
   g_object_unref (elem);
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 /* tests for an element with controlled params */
 GST_START_TEST (controller_new_okay)
 {
@@ -200,16 +202,15 @@ GST_START_TEST (controller_new_okay)
   g_object_unref (elem);
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 /* @TODO write more tests (using an internal element that has controlable params)
  */
-    Suite * gst_controller_suite (void)
+Suite *
+gst_controller_suite (void)
 {
   Suite *s = suite_create ("Controller");
   TCase *tc = tcase_create ("general");
-
-  /* turn off timeout */
-  tcase_set_timeout (tc, 60);
 
   suite_add_tcase (s, tc);
   tcase_add_test (tc, controller_init);
