@@ -61,7 +61,7 @@ struct _GstFFMpegDec
     } audio;
   } format;
   gboolean waiting_for_key;
-  guint64 next_ts;
+  guint64 next_ts, synctime;
 
   /* parsing */
   AVCodecParserContext *pctx;
@@ -118,13 +118,12 @@ static void gst_ffmpegdec_class_init (GstFFMpegDecClass * klass);
 static void gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec);
 static void gst_ffmpegdec_dispose (GObject * object);
 
-static gboolean gst_ffmpegdec_query (GstPad * pad, GstQueryType type,
-    GstFormat * fmt, gint64 * value);
+static gboolean gst_ffmpegdec_query (GstPad * pad, GstQuery *query);
 static gboolean gst_ffmpegdec_event (GstPad * pad, GstEvent * event);
 
-static GstPadLinkReturn gst_ffmpegdec_connect (GstPad * pad,
-    const GstCaps * caps);
-static void gst_ffmpegdec_chain (GstPad * pad, GstData * data);
+static gboolean gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_ffmpegdec_chain (GstPad * pad, GstBuffer * buf);
 
 static GstElementStateReturn gst_ffmpegdec_change_state (GstElement * element);
 
@@ -237,6 +236,11 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  gobject_class->dispose = gst_ffmpegdec_dispose;
+  gobject_class->set_property = gst_ffmpegdec_set_property;
+  gobject_class->get_property = gst_ffmpegdec_get_property;
+  gstelement_class->change_state = gst_ffmpegdec_change_state;
+
   g_object_class_install_property (gobject_class, ARG_SKIPFRAME,
       g_param_spec_enum ("skip-frame", "Skip frames",
           "Which types of frames to skip during decoding",
@@ -245,11 +249,6 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass * klass)
       g_param_spec_enum ("lowres", "Low resolution",
           "At which resolution to decode images",
           GST_FFMPEGDEC_TYPE_LOWRES, 0, G_PARAM_READWRITE));
-
-  gobject_class->dispose = gst_ffmpegdec_dispose;
-  gobject_class->set_property = gst_ffmpegdec_set_property;
-  gobject_class->get_property = gst_ffmpegdec_get_property;
-  gstelement_class->change_state = gst_ffmpegdec_change_state;
 }
 
 static void
@@ -260,12 +259,13 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
 
   /* setup pads */
   ffmpegdec->sinkpad = gst_pad_new_from_template (oclass->sinktempl, "sink");
-  gst_pad_set_link_function (ffmpegdec->sinkpad, gst_ffmpegdec_connect);
+  gst_pad_set_setcaps_function (ffmpegdec->sinkpad, gst_ffmpegdec_setcaps);
+  gst_pad_set_event_function (ffmpegdec->sinkpad, gst_ffmpegdec_sink_event);
   gst_pad_set_chain_function (ffmpegdec->sinkpad, gst_ffmpegdec_chain);
   gst_element_add_pad (GST_ELEMENT (ffmpegdec), ffmpegdec->sinkpad);
 
   ffmpegdec->srcpad = gst_pad_new_from_template (oclass->srctempl, "src");
-  gst_pad_use_explicit_caps (ffmpegdec->srcpad);
+  gst_pad_use_fixed_caps (ffmpegdec->srcpad);
   gst_pad_set_event_function (ffmpegdec->srcpad,
       GST_DEBUG_FUNCPTR (gst_ffmpegdec_event));
   gst_pad_set_query_function (ffmpegdec->srcpad,
@@ -283,8 +283,6 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->hurry_up = ffmpegdec->lowres = 0;
 
   ffmpegdec->last_buffer = NULL;
-
-  GST_FLAG_SET (ffmpegdec, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void
@@ -302,19 +300,24 @@ gst_ffmpegdec_dispose (GObject * object)
 }
 
 static gboolean
-gst_ffmpegdec_query (GstPad * pad, GstQueryType type,
-    GstFormat * fmt, gint64 * value)
+gst_ffmpegdec_query (GstPad * pad, GstQuery *query)
 {
-  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) gst_pad_get_parent (pad);
-  GstPad *peer = GST_PAD_PEER (ffmpegdec->sinkpad);
-  GstFormat bfmt = GST_FORMAT_BYTES;
+  GstFFMpegDec *ffmpegdec;
+  GstPad *peer;
+  GstFormat bfmt;
+
+  bfmt = GST_FORMAT_BYTES;
+  ffmpegdec = (GstFFMpegDec *) GST_PAD_PARENT (pad);
+  peer = GST_PAD_PEER (ffmpegdec->sinkpad);
 
   if (!peer)
-    return FALSE;
+    goto no_peer;
 
-  if (gst_pad_query (peer, type, fmt, value))
+  /* just forward to peer */
+  if (gst_pad_query (peer, query))
     return TRUE;
 
+#if 0
   /* ok, do bitrate calc... */
   if ((type != GST_QUERY_POSITION && type != GST_QUERY_TOTAL) ||
            *fmt != GST_FORMAT_TIME || ffmpegdec->context->bit_rate == 0 ||
@@ -324,19 +327,28 @@ gst_ffmpegdec_query (GstPad * pad, GstQueryType type,
   if (ffmpegdec->pcache && type == GST_QUERY_POSITION)
     *value -= GST_BUFFER_SIZE (ffmpegdec->pcache);
   *value *= GST_SECOND / ffmpegdec->context->bit_rate;
+#endif
 
-  return TRUE;
+  return FALSE;
+
+no_peer:
+  {
+    return FALSE;
+  }
 }
 
 static gboolean
 gst_ffmpegdec_event (GstPad * pad, GstEvent * event)
 {
-  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) gst_pad_get_parent (pad);
-  GstPad *peer = GST_PAD_PEER (ffmpegdec->sinkpad);
+  GstFFMpegDec *ffmpegdec;
+  GstPad *peer;
+  
+  ffmpegdec = (GstFFMpegDec *) GST_PAD_PARENT (pad);
+  peer = GST_PAD_PEER (ffmpegdec->sinkpad);
 
   if (!peer)
     return FALSE;
-
+  
   gst_event_ref (event);
   if (gst_pad_send_event (peer, event)) {
     gst_event_unref (event);
@@ -389,13 +401,10 @@ gst_ffmpegdec_open (GstFFMpegDec *ffmpegdec)
   GstFFMpegDecClass *oclass =
       (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
+  if (avcodec_open (ffmpegdec->context, oclass->in_plugin) < 0)
+    goto could_not_open;
+
   ffmpegdec->opened = TRUE;
-  if (avcodec_open (ffmpegdec->context, oclass->in_plugin) < 0) {
-    gst_ffmpegdec_close (ffmpegdec);
-    GST_DEBUG ("ffdec_%s: Failed to open FFMPEG codec",
-        oclass->in_plugin->name);
-    return FALSE;
-  }
 
   GST_LOG ("Opened ffmpeg codec %s", oclass->in_plugin->name);
 
@@ -425,16 +434,25 @@ gst_ffmpegdec_open (GstFFMpegDec *ffmpegdec)
       break;
   }
   ffmpegdec->next_ts = 0;
-  
+  ffmpegdec->synctime = GST_CLOCK_TIME_NONE;
   ffmpegdec->last_buffer = NULL;
 
   return TRUE;
+
+  /* ERRORS */
+could_not_open:
+  {
+    gst_ffmpegdec_close (ffmpegdec);
+    GST_DEBUG ("ffdec_%s: Failed to open FFMPEG codec",
+        oclass->in_plugin->name);
+    return FALSE;
+  }
 }
 
 static GstPadLinkReturn
-gst_ffmpegdec_connect (GstPad * pad, const GstCaps * caps)
+gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) (gst_pad_get_parent (pad));
+  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) (GST_OBJECT_PARENT (pad));
   GstFFMpegDecClass *oclass =
       (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
   GstStructure *structure;
@@ -485,10 +503,10 @@ gst_ffmpegdec_connect (GstPad * pad, const GstCaps * caps)
       g_free (ffmpegdec->par);
       ffmpegdec->par = NULL;
     }
-    return GST_PAD_LINK_REFUSED;
+    return FALSE;
   }
 
-  return GST_PAD_LINK_OK;
+  return TRUE;
 }
 
 static int
@@ -528,7 +546,8 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
 	return avcodec_default_get_buffer(context, picture);
       }
       
-      buf = gst_pad_alloc_buffer (ffmpegdec->srcpad, GST_BUFFER_OFFSET_NONE, bufsize);
+      if (gst_pad_alloc_buffer (ffmpegdec->srcpad, GST_BUFFER_OFFSET_NONE, bufsize, GST_PAD_CAPS (ffmpegdec->srcpad), &buf) != GST_FLOW_OK)
+        return -1;
       ffmpegdec->last_buffer = buf;
       
       gst_ffmpeg_avpicture_fill ((AVPicture *) picture,
@@ -647,18 +666,18 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
   }
 
   if (caps == NULL ||
-      !gst_pad_set_explicit_caps (ffmpegdec->srcpad, caps)) {
+      !gst_pad_set_caps (ffmpegdec->srcpad, caps)) {
     GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
         ("Failed to link ffmpeg decoder (%s) to next element",
         oclass->in_plugin->name));
 
     if (caps != NULL)
-      gst_caps_free (caps);
+      gst_caps_unref (caps);
 
     return FALSE;
   }
 
-  gst_caps_free (caps);
+  gst_caps_unref (caps);
 
   return TRUE;
 }
@@ -671,7 +690,8 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
       (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
   GstBuffer *outbuf = NULL;
   gint have_data = 0, len = 0;
-  
+  GstFlowReturn ret;  
+
   ffmpegdec->context->frame_number++;
 
   switch (oclass->in_plugin->type) {
@@ -684,6 +704,43 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
           ffmpegdec->picture, &have_data, data, size);
       GST_DEBUG_OBJECT (ffmpegdec,
           "Decode video: len=%d, have_data=%d", len, have_data);
+
+      if (ffmpegdec->waiting_for_key) {
+        if (ffmpegdec->picture->pict_type == FF_I_TYPE) {
+          ffmpegdec->waiting_for_key = FALSE;
+        } else {
+          GST_WARNING_OBJECT (ffmpegdec,
+              "Dropping non-keyframe (seek/init)");
+          have_data = 0;
+          break;
+        }
+      }
+
+      /* note that ffmpeg sometimes gets the FPS wrong.
+       * For B-frame containing movies, we get all pictures delayed
+       * except for the I frames, so we synchronize only on I frames
+       * and keep an internal counter based on FPS for the others. */
+      if (!(oclass->in_plugin->capabilities & CODEC_CAP_DELAY) ||
+          ((ffmpegdec->picture->pict_type == FF_I_TYPE ||
+            !GST_CLOCK_TIME_IS_VALID (ffmpegdec->next_ts)) &&
+        GST_CLOCK_TIME_IS_VALID (*in_ts))) {
+        ffmpegdec->next_ts = *in_ts;
+        *in_ts = GST_CLOCK_TIME_NONE;
+      }
+
+      /* precise seeking.... */
+      if (GST_CLOCK_TIME_IS_VALID (ffmpegdec->synctime)) {
+        if (ffmpegdec->next_ts >= ffmpegdec->synctime) {
+          ffmpegdec->synctime = GST_CLOCK_TIME_NONE;
+        } else {
+          GST_WARNING_OBJECT (ffmpegdec,
+              "Dropping frame for synctime %" GST_TIME_FORMAT ", expected %"
+              GST_TIME_FORMAT, GST_TIME_ARGS (ffmpegdec->synctime),
+              GST_TIME_ARGS (ffmpegdec->next_ts));
+          have_data = 0;
+          /* don´t break here! Timestamps are updated below */
+        }
+      }
 
       if (ffmpegdec->waiting_for_key &&
           ffmpegdec->picture->pict_type != FF_I_TYPE) {
@@ -705,7 +762,8 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
 	  if (!gst_ffmpegdec_negotiate (ffmpegdec))
 	    return -1;	
 	  
-	  outbuf = gst_pad_alloc_buffer (ffmpegdec->srcpad, GST_BUFFER_OFFSET_NONE, fsize);
+	  if ((ret = gst_pad_alloc_buffer (ffmpegdec->srcpad, GST_BUFFER_OFFSET_NONE, fsize, GST_PAD_CAPS (ffmpegdec->srcpad), &outbuf)) != GST_FLOW_OK)
+            return ret;
 
 	  /* original ffmpeg code does not handle odd sizes correctly.
 	   * This patched up version does */
@@ -725,22 +783,8 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
 	
 	ffmpegdec->waiting_for_key = FALSE;
 
-        /* note that ffmpeg sometimes gets the FPS wrong.
-         * For B-frame containing movies, we get all pictures delayed
-         * except for the I frames, so we synchronize only on I frames
-         * and keep an internal counter based on FPS for the others. */
-        if (!(oclass->in_plugin->capabilities & CODEC_CAP_DELAY) ||
-	    ((ffmpegdec->picture->pict_type == FF_I_TYPE ||
-              !GST_CLOCK_TIME_IS_VALID (ffmpegdec->next_ts)) &&
-             GST_CLOCK_TIME_IS_VALID (*in_ts))) {
-          ffmpegdec->next_ts = *in_ts;
-	  *in_ts = GST_CLOCK_TIME_NONE;
-        }
-
-	if (ffmpegdec->picture->key_frame) {
-	  GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_KEY_UNIT);
-	} else {
-	  GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_DELTA_UNIT);
+	if (!ffmpegdec->picture->key_frame) {
+	  GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 	}
 		
         GST_BUFFER_TIMESTAMP (outbuf) = ffmpegdec->next_ts;
@@ -753,7 +797,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
           /* Take repeat_pict into account */
           GST_BUFFER_DURATION (outbuf) += GST_BUFFER_DURATION (outbuf)
               * ffmpegdec->picture->repeat_pict / 2;
-	  
+
           ffmpegdec->next_ts += GST_BUFFER_DURATION (outbuf);
         } else {
           ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
@@ -776,7 +820,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
 
           /* Take repeat_pict into account */
           dur += dur * ffmpegdec->picture->repeat_pict / 2;
-	  
+
           ffmpegdec->next_ts += dur;
         } else {
           ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
@@ -840,22 +884,20 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
   }
   
   if (have_data) {
-
     GST_DEBUG_OBJECT (ffmpegdec, "Decoded data, now pushing (%"
         GST_TIME_FORMAT ")", GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
 
-    if (GST_PAD_IS_USABLE (ffmpegdec->srcpad))
-      gst_pad_push (ffmpegdec->srcpad, GST_DATA (outbuf));
-    else
-      gst_buffer_unref (outbuf);
+    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ffmpegdec->srcpad));
+    gst_pad_push (ffmpegdec->srcpad, outbuf);
   }
 
   return len;
 }
 
-static void
-gst_ffmpegdec_handle_event (GstFFMpegDec * ffmpegdec, GstEvent * event)
+static gboolean
+gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
 {
+  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) GST_OBJECT_PARENT (pad);
   GstFFMpegDecClass *oclass =
       (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
@@ -874,30 +916,31 @@ gst_ffmpegdec_handle_event (GstFFMpegDec * ffmpegdec, GstEvent * event)
         } while (try++ < 10);
       }
       goto forward;
-    case GST_EVENT_FLUSH:
+    case GST_EVENT_FLUSH_START:
       if (ffmpegdec->opened) {
         avcodec_flush_buffers (ffmpegdec->context);
       }
       goto forward;
-    case GST_EVENT_DISCONTINUOUS: {
-      gint64 value;
+    case GST_EVENT_NEWSEGMENT: {
+      gint64 base, start, end;
+      gdouble rate;
+      GstFormat fmt;
 
-      if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
-        ffmpegdec->next_ts = value;
+      gst_event_parse_newsegment (event, &rate, &fmt, &start, &end, &base);
+      if (fmt == GST_FORMAT_TIME) {
+        ffmpegdec->next_ts = start;
         GST_DEBUG_OBJECT (ffmpegdec, "Discont to time %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (value));
-      } else if (ffmpegdec->context->bit_rate &&
-          gst_event_discont_get_value (event, GST_FORMAT_BYTES, &value)) {
-        gboolean new_media;
-
-        ffmpegdec->next_ts = value * GST_SECOND / ffmpegdec->context->bit_rate;
+            GST_TIME_ARGS (start));
+      } else if (ffmpegdec->context->bit_rate && fmt == GST_FORMAT_BYTES) {
+        ffmpegdec->next_ts = start * GST_SECOND / ffmpegdec->context->bit_rate;
         GST_DEBUG_OBJECT (ffmpegdec,
             "Discont to byte %lld, time %" GST_TIME_FORMAT,
-            value, GST_TIME_ARGS (ffmpegdec->next_ts));
-        new_media = GST_EVENT_DISCONT_NEW_MEDIA (event);
+            start, GST_TIME_ARGS (ffmpegdec->next_ts));
         gst_event_unref (event);
-        event = gst_event_new_discontinuous (new_media,
-            GST_FORMAT_TIME, ffmpegdec->next_ts, GST_FORMAT_UNDEFINED);
+        event = gst_event_new_newsegment (rate, fmt,
+            start * GST_SECOND / ffmpegdec->context->bit_rate,
+            end * GST_SECOND / ffmpegdec->context->bit_rate,
+            base * GST_SECOND / ffmpegdec->context->bit_rate);
       } else {
         GST_WARNING_OBJECT (ffmpegdec,
             "Received discont with no useful value...");
@@ -911,49 +954,39 @@ gst_ffmpegdec_handle_event (GstFFMpegDec * ffmpegdec, GstEvent * event)
           ffmpegdec->waiting_for_key = TRUE;
         }
       }
+      ffmpegdec->waiting_for_key = TRUE;
+      ffmpegdec->synctime = ffmpegdec->next_ts;
       /* fall-through */
     }
     default:
     forward:
-      gst_pad_event_default (ffmpegdec->sinkpad, event);
-      return;
+      return gst_pad_event_default (ffmpegdec->sinkpad, event);
   }
+
+  return TRUE;
 }
 
-static void
-gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
 {
-  GstBuffer *inbuf;
-  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) (gst_pad_get_parent (pad));
+  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) (GST_PAD_PARENT (pad));
   GstFFMpegDecClass *oclass =
       (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
   guint8 *bdata, *data;
   gint bsize, size, len, have_data;
-  guint64 in_ts;
+  guint64 in_ts = GST_BUFFER_TIMESTAMP (inbuf);
 
-  /* event handling */
-  if (GST_IS_EVENT (_data)) {
-    gst_ffmpegdec_handle_event (ffmpegdec, GST_EVENT (_data));
-    return;
-  }
-
-  inbuf = GST_BUFFER (_data);
-  in_ts = GST_BUFFER_TIMESTAMP (inbuf);
-
-  if (!ffmpegdec->opened) {
-    GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
-        ("ffdec_%s: input format was not set before data start",
-            oclass->in_plugin->name));
-    return;
-  }
-
+  if (!ffmpegdec->opened)
+    goto not_negotiated;
+  
   GST_DEBUG_OBJECT (ffmpegdec,
       "Received new data of size %d, time %" GST_TIME_FORMAT,
       GST_BUFFER_SIZE (inbuf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)));
 
   /* parse cache joining */
   if (ffmpegdec->pcache) {
-    inbuf = gst_buffer_join (ffmpegdec->pcache, inbuf);
+    inbuf = gst_buffer_span (ffmpegdec->pcache, 0, inbuf,
+	    GST_BUFFER_SIZE (ffmpegdec->pcache) + GST_BUFFER_SIZE (inbuf));
     ffmpegdec->pcache = NULL;
     bdata = GST_BUFFER_DATA (inbuf);
     bsize = GST_BUFFER_SIZE (inbuf);
@@ -964,7 +997,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
    * ffmpeg devs know about it and will fix it (they said). */
   else if (oclass->in_plugin->id == CODEC_ID_SVQ1 ||
       oclass->in_plugin->id == CODEC_ID_SVQ3) {
-    inbuf = gst_buffer_copy_on_write (inbuf);
+    inbuf = gst_buffer_make_writable (inbuf);
     bdata = GST_BUFFER_DATA (inbuf);
     bsize = GST_BUFFER_SIZE (inbuf);
   } else {
@@ -1023,6 +1056,17 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
     GST_DEBUG_OBJECT (ffmpegdec, "Dropping %d bytes of data", bsize);
   }
   gst_buffer_unref (inbuf);
+
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+not_negotiated:
+  {
+    GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
+        ("ffdec_%s: input format was not set before data start",
+            oclass->in_plugin->name));
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 static GstElementStateReturn
@@ -1030,6 +1074,9 @@ gst_ffmpegdec_change_state (GstElement * element)
 {
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) element;
   gint transition = GST_STATE_TRANSITION (element);
+  GstElementStateReturn ret;
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
   switch (transition) {
     case GST_STATE_PAUSED_TO_READY:
@@ -1039,12 +1086,11 @@ gst_ffmpegdec_change_state (GstElement * element)
         ffmpegdec->last_buffer = NULL;
       }
       break;
+    default:
+      break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
+  return ret;
 }
 
 static void
@@ -1141,8 +1187,8 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       srccaps = gst_ffmpeg_codectype_to_caps (in_plugin->type, NULL);
     }
     if (!sinkcaps || !srccaps) {
-      if (sinkcaps) gst_caps_free (sinkcaps);
-      if (srccaps) gst_caps_free (srccaps);
+      if (sinkcaps) gst_caps_unref (sinkcaps);
+      if (srccaps) gst_caps_unref (srccaps);
       goto next;
     }
 

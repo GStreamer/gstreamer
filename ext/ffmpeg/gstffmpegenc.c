@@ -132,11 +132,10 @@ static void gst_ffmpegenc_base_init (GstFFMpegEncClass * klass);
 static void gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc);
 static void gst_ffmpegenc_dispose (GObject * object);
 
-static GstPadLinkReturn gst_ffmpegenc_link (GstPad * pad,
-    const GstCaps * caps);
+static gboolean gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps * gst_ffmpegenc_getcaps (GstPad * pad);
-static void gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data);
-static void gst_ffmpegenc_chain_audio (GstPad * pad, GstData * _data);
+static GstFlowReturn gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer *buffer);
+static GstFlowReturn gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer *buffer);
 
 static void gst_ffmpegenc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -206,6 +205,9 @@ gst_ffmpegenc_class_init (GstFFMpegEncClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  gobject_class->set_property = gst_ffmpegenc_set_property;
+  gobject_class->get_property = gst_ffmpegenc_get_property;
+
   if (klass->in_plugin->type == CODEC_TYPE_VIDEO) {
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BIT_RATE,
         g_param_spec_ulong ("bitrate", "Bit Rate",
@@ -227,9 +229,6 @@ gst_ffmpegenc_class_init (GstFFMpegEncClass * klass)
             "Target Audio Bitrate", 0, G_MAXULONG, 128000, G_PARAM_READWRITE));
   }
 
-  gobject_class->set_property = gst_ffmpegenc_set_property;
-  gobject_class->get_property = gst_ffmpegenc_get_property;
-
   gstelement_class->change_state = gst_ffmpegenc_change_state;
 
   gobject_class->dispose = gst_ffmpegenc_dispose;
@@ -243,10 +242,10 @@ gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc)
 
   /* setup pads */
   ffmpegenc->sinkpad = gst_pad_new_from_template (oclass->sinktempl, "sink");
-  gst_pad_set_link_function (ffmpegenc->sinkpad, gst_ffmpegenc_link);
+  gst_pad_set_setcaps_function (ffmpegenc->sinkpad, gst_ffmpegenc_setcaps);
   gst_pad_set_getcaps_function (ffmpegenc->sinkpad, gst_ffmpegenc_getcaps);
   ffmpegenc->srcpad = gst_pad_new_from_template (oclass->srctempl, "src");
-  gst_pad_use_explicit_caps (ffmpegenc->srcpad);
+  gst_pad_use_fixed_caps (ffmpegenc->srcpad);
 
   /* ffmpeg objects */
   ffmpegenc->context = avcodec_alloc_context ();
@@ -290,7 +289,7 @@ gst_ffmpegenc_dispose (GObject * object)
 static GstCaps *
 gst_ffmpegenc_getcaps (GstPad * pad)
 {
-  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) gst_pad_get_parent (pad);
+  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) GST_PAD_PARENT (pad);
   GstFFMpegEncClass *oclass =
       (GstFFMpegEncClass *) G_OBJECT_GET_CLASS (ffmpegenc);
   AVCodecContext *ctx;
@@ -348,14 +347,14 @@ gst_ffmpegenc_getcaps (GstPad * pad)
   return caps;
 }
 
-static GstPadLinkReturn
-gst_ffmpegenc_link (GstPad * pad, const GstCaps * caps)
+static gboolean
+gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstCaps *other_caps;
   GstCaps *allowed_caps;
   GstCaps *icaps;
   enum PixelFormat pix_fmt;
-  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) gst_pad_get_parent (pad);
+  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) GST_PAD_PARENT (pad);
   GstFFMpegEncClass *oclass =
       (GstFFMpegEncClass *) G_OBJECT_GET_CLASS (ffmpegenc);
 
@@ -425,10 +424,10 @@ gst_ffmpegenc_link (GstPad * pad, const GstCaps * caps)
   }
 
   icaps = gst_caps_intersect (allowed_caps, other_caps);
-  gst_caps_free (allowed_caps);
-  gst_caps_free (other_caps);
+  gst_caps_unref (allowed_caps);
+  gst_caps_unref (other_caps);
   if (gst_caps_is_empty (icaps)) {
-    gst_caps_free (icaps);
+    gst_caps_unref (icaps);
     return GST_PAD_LINK_REFUSED;
   }
 
@@ -438,18 +437,16 @@ gst_ffmpegenc_link (GstPad * pad, const GstCaps * caps)
     newcaps =
         gst_caps_new_full (gst_structure_copy (gst_caps_get_structure (icaps,
             0)), NULL);
-    gst_caps_free (icaps);
+    gst_caps_unref (icaps);
     icaps = newcaps;
   }
 
-  /* FIXME set_explicit_caps is not supposed to be used in a pad link
-   * function. */
-  if (!gst_pad_set_explicit_caps (ffmpegenc->srcpad, icaps)) {
+  if (!gst_pad_set_caps (ffmpegenc->srcpad, icaps)) {
     avcodec_close (ffmpegenc->context);
-    gst_caps_free (icaps);
+    gst_caps_unref (icaps);
     return GST_PAD_LINK_REFUSED;
   }
-  gst_caps_free (icaps);
+  gst_caps_unref (icaps);
 
   /* success! */
   ffmpegenc->opened = TRUE;
@@ -457,15 +454,14 @@ gst_ffmpegenc_link (GstPad * pad, const GstCaps * caps)
   return GST_PAD_LINK_OK;
 }
 
-static void
-gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
 {
-  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) (gst_pad_get_parent (pad));
-  GstBuffer *inbuf = GST_BUFFER (_data), *outbuf;
+  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) (GST_PAD_PARENT (pad));
+  GstBuffer *outbuf;
   GstFFMpegEncClass *oclass =
       (GstFFMpegEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
   gint ret_size = 0, frame_size;
-  const AVRational bq = { 1, 1000000000 };
 
   /* FIXME: events (discont (flush!) and eos (close down) etc.) */
 
@@ -477,7 +473,7 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data)
       GST_BUFFER_DATA (inbuf),
       ffmpegenc->context->pix_fmt,
       ffmpegenc->context->width, ffmpegenc->context->height);
-  g_return_if_fail (frame_size == GST_BUFFER_SIZE (inbuf));
+  g_return_val_if_fail (frame_size == GST_BUFFER_SIZE (inbuf), GST_FLOW_ERROR);
 
   ffmpegenc->picture->pts =
       gst_ffmpeg_time_gst_to_ff (GST_BUFFER_TIMESTAMP (inbuf),
@@ -486,35 +482,33 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data)
   outbuf = gst_buffer_new_and_alloc (ffmpegenc->buffer_size);
   ret_size = avcodec_encode_video (ffmpegenc->context,
       GST_BUFFER_DATA (outbuf),
-      GST_BUFFER_MAXSIZE (outbuf), ffmpegenc->picture);
+      GST_BUFFER_SIZE (outbuf), ffmpegenc->picture);
 
   if (ret_size < 0) {
     GST_ERROR_OBJECT (ffmpegenc,
         "ffenc_%s: failed to encode buffer", oclass->in_plugin->name);
     gst_buffer_unref (inbuf);
     gst_buffer_unref (outbuf);
-    return;
+    return GST_FLOW_OK;
   }
 
   GST_BUFFER_SIZE (outbuf) = ret_size;
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
-  if (ffmpegenc->context->coded_frame->key_frame)
-    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_KEY_UNIT);
-  else
-    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_DELTA_UNIT);
-  gst_pad_push (ffmpegenc->srcpad, GST_DATA (outbuf));
+  if (!ffmpegenc->context->coded_frame->key_frame)
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ffmpegenc->srcpad));
 
-  gst_buffer_unref (inbuf);
+  return gst_pad_push (ffmpegenc->srcpad, outbuf);
 }
 
-static void
-gst_ffmpegenc_chain_audio (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
 {
-  GstBuffer *inbuf = GST_BUFFER (_data);
   GstBuffer *outbuf = NULL, *subbuf;
-  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) (gst_pad_get_parent (pad));
+  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) (GST_OBJECT_PARENT (pad));
   gint size, ret_size = 0, in_size, frame_size;
+  GstFlowReturn ret;
 
   size = GST_BUFFER_SIZE (inbuf);
 
@@ -537,7 +531,8 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstData * _data)
       if (in_size > size) {
         /* this is panic! we got a buffer, but still don't have enough
          * data. Merge them and retry in the next cycle... */
-        ffmpegenc->cache = gst_buffer_merge (ffmpegenc->cache, inbuf);
+        ffmpegenc->cache = gst_buffer_span (ffmpegenc->cache, 0, inbuf,
+		GST_BUFFER_SIZE (ffmpegenc->cache) + GST_BUFFER_SIZE (inbuf));
       } else if (in_size == size) {
         /* exactly the same! how wonderful */
         ffmpegenc->cache = inbuf;
@@ -554,8 +549,7 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstData * _data)
       } else {
         gst_buffer_unref (inbuf);
       }
-
-      return;
+      return GST_FLOW_OK;
     }
 
     /* create the frame */
@@ -564,7 +558,8 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstData * _data)
       subbuf = gst_buffer_create_sub (inbuf, 0, frame_size - (in_size - size));
       GST_BUFFER_DURATION (subbuf) =
           GST_BUFFER_DURATION (inbuf) * GST_BUFFER_SIZE (subbuf) / size;
-      subbuf = gst_buffer_merge (ffmpegenc->cache, subbuf);
+      subbuf = gst_buffer_span (ffmpegenc->cache, 0, subbuf,
+	      GST_BUFFER_SIZE (ffmpegenc->cache) + GST_BUFFER_SIZE (subbuf));
       ffmpegenc->cache = NULL;
     } else {
       subbuf = gst_buffer_create_sub (inbuf, size - in_size, frame_size);
@@ -578,7 +573,7 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstData * _data)
     outbuf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (inbuf));
     ret_size = avcodec_encode_audio (ffmpegenc->context,
         GST_BUFFER_DATA (outbuf),
-        GST_BUFFER_MAXSIZE (outbuf), (const short int *)
+        GST_BUFFER_SIZE (outbuf), (const short int *)
         GST_BUFFER_DATA (subbuf));
 
     if (ret_size < 0) {
@@ -586,17 +581,20 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstData * _data)
       gst_buffer_unref (inbuf);
       gst_buffer_unref (outbuf);
       gst_buffer_unref (subbuf);
-      return;
+      return GST_FLOW_OK;
     }
 
     GST_BUFFER_SIZE (outbuf) = ret_size;
     GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (subbuf);
     GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (subbuf);
-    gst_pad_push (ffmpegenc->srcpad, GST_DATA (outbuf));
+    gst_buffer_unref (subbuf);
+
+    ret = gst_pad_push (ffmpegenc->srcpad, outbuf);
 
     in_size -= frame_size;
-    gst_buffer_unref (subbuf);
   }
+
+  return ret;
 }
 
 static void
