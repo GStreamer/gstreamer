@@ -19,7 +19,13 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+/**
+ * SECTION:gstfilesink
+ * @short_description: write stream to a file
+ * @see_also: #GstFileSrc
+ *
+ * Wrtite incomming data to a file in the local file system.
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"

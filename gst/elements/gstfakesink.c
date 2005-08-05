@@ -19,7 +19,13 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+/**
+ * SECTION:gstfakesink
+ * @short_description: black hole for data
+ * @see_also: #GstFakeSrc
+ *
+ * Dummy sink that swallows everything.
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"

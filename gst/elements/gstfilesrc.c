@@ -19,6 +19,14 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstfilesrc
+ * @short_description: read from arbitrary point in a file
+ * @see_also: #GstFileSrc
+ *
+ * Read data from a file in the local file system. The implementation is using
+ * mmap(2) to read chunks from the file in an efficient way.
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
