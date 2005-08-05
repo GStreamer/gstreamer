@@ -15,6 +15,9 @@ the system.
 GstRegistry
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### FUNCTION gst_registry_pool_list ##### -->
 <para>
 

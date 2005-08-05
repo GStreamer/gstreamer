@@ -14,6 +14,9 @@ GValue implementations specific to GStreamer
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### MACRO GST_MAKE_FOURCC ##### -->
 <para>
 will transform four characters into a host-endiannness guint32 fourcc:

@@ -55,6 +55,9 @@ clock providers in the bin.
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GstBin ##### -->
 <para>
 

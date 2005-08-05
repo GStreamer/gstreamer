@@ -217,7 +217,6 @@ gst_controlled_property_new (GObject * object, const gchar * name)
       gchar *signal_name;
 
       prop->name = pspec->name; // so we don't use the same mem twice
-      prop->object = object;
       prop->type = G_PARAM_SPEC_VALUE_TYPE (pspec);
       gst_controlled_property_set_interpolation_mode (prop,
           GST_INTERPOLATE_NONE);
@@ -298,7 +297,6 @@ gst_controlled_property_free (GstControlledProperty * prop)
 {
   GList *node;
 
-  g_signal_handler_disconnect (prop->object, prop->notify_handler_id);
   for (node = prop->values; node; node = g_list_next (node)) {
     g_free (node->data);
   }
@@ -370,16 +368,25 @@ gst_controller_new_valist (GObject * object, va_list var_args)
   self = g_object_get_qdata (object, controller_key);
   // create GstControlledProperty for each property
   while ((name = va_arg (var_args, gchar *))) {
-    // create GstControlledProperty and add to self->propeties List
-    if ((prop = gst_controlled_property_new (object, name))) {
-      // if we don't have a controller object yet, now is the time to create one
-      if (!self) {
-        self = g_object_new (GST_TYPE_CONTROLLER, NULL);
-        self->lock = g_mutex_new ();
-        // store the controller
-        g_object_set_qdata (object, controller_key, self);
+    // test if this property isn't yet controlled
+    if (!self || !(prop = gst_controller_find_controlled_property (self, name))) {
+      // create GstControlledProperty and add to self->propeties List
+      if ((prop = gst_controlled_property_new (object, name))) {
+        // if we don't have a controller object yet, now is the time to create one
+        if (!self) {
+          self = g_object_new (GST_TYPE_CONTROLLER, NULL);
+          self->lock = g_mutex_new ();
+          self->object = object;
+          // store the controller
+          g_object_set_qdata (object, controller_key, self);
+        } else {
+          // increment ref-count
+          self = g_object_ref (self);
+        }
+        self->properties = g_list_prepend (self->properties, prop);
       }
-      self->properties = g_list_prepend (self->properties, prop);
+    } else {
+      GST_WARNING ("trying to control property again");
     }
   }
   va_end (var_args);
@@ -434,6 +441,7 @@ gst_controller_remove_properties_valist (GstController * self, va_list var_args)
     g_mutex_lock (self->lock);
     if ((prop = gst_controller_find_controlled_property (self, name))) {
       self->properties = g_list_remove (self->properties, prop);
+      g_signal_handler_disconnect (self->object, prop->notify_handler_id);
       gst_controlled_property_free (prop);
     } else {
       res = FALSE;
@@ -712,7 +720,7 @@ gst_controller_sink_values (GstController * self, GstClockTime timestamp)
       value = prop->get (prop, timestamp);
       prop->last_value.timestamp = timestamp;
       g_value_copy (value, &prop->last_value.value);
-      g_object_set_property (prop->object, prop->name, value);
+      g_object_set_property (self->object, prop->name, value);
     }
   }
   g_mutex_unlock (self->lock);
@@ -864,16 +872,21 @@ _gst_controller_finalize (GObject * object)
 {
   GstController *self = GST_CONTROLLER (object);
   GList *node;
+  GstControlledProperty *prop;
 
-  // free list of properties
+  /* free list of properties */
   if (self->properties) {
     for (node = self->properties; node; node = g_list_next (node)) {
-      gst_controlled_property_free (node->data);
+      prop = node->data;
+      g_signal_handler_disconnect (self->object, prop->notify_handler_id);
+      gst_controlled_property_free (prop);
     }
     g_list_free (self->properties);
     self->properties = NULL;
   }
   g_mutex_free (self->lock);
+  /* remove controller from objects qdata list */
+  g_object_set_qdata (self->object, controller_key, NULL);
 
   if (G_OBJECT_CLASS (parent_class)->finalize)
     (G_OBJECT_CLASS (parent_class)->finalize) (object);

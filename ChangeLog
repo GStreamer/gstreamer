@@ -1,3 +1,30 @@
+2005-08-05  Stefan Kost  <ensonic@users.sf.net>
+
+	* check/gst-libs/controller.c: (gst_test_mono_source_get_property),
+	(gst_test_mono_source_set_property),
+	(gst_test_mono_source_class_init), (GST_START_TEST),
+	(gst_controller_suite):
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/gstreamer.types:
+	* docs/libs/gstreamer-libs-docs.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	* gst/base/gstadapter.c:
+	* libs/gst/controller/gst-controller.c:
+	(gst_controlled_property_new), (gst_controlled_property_free),
+	(gst_controller_new_valist),
+	(gst_controller_remove_properties_valist),
+	(gst_controller_sink_values), (_gst_controller_finalize):
+	* libs/gst/controller/gst-controller.h:
+	* libs/gst/controller/gst-helper.c:
+	(gst_object_control_properties), (gst_object_uncontrol_properties),
+	(gst_object_get_controller), (gst_object_set_controller),
+	(gst_object_sink_values), (gst_object_get_value_arrays),
+	(gst_object_get_value_array):
+          more tests (and fixes) for the controller
+          more docs for the controller
+          integrated companies docs for the adapter 
+
 2005-08-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/elements/gstfakesrc.c: (setup_fakesrc), (cleanup_fakesrc),

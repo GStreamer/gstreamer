@@ -142,3 +142,18 @@ GST_TYPE_CONTROLLER
 <SUBSECTION Private>
 gst_controller_get_type
 </SECTION>
+
+<SECTION>
+<FILE>gstcontrollergobject</FILE>
+<TITLE>GstControllerGObject</TITLE>
+<INCLUDE>libs/controller/gstcontroller.h</INCLUDE>
+gst_object_control_properties
+gst_object_uncontrol_properties
+gst_object_get_controller
+gst_object_set_controller
+gst_object_sink_values
+gst_object_get_value_arrays
+gst_object_get_value_array
+<SUBSECTION Standard>
+<SUBSECTION Private>
+</SECTION>

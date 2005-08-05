@@ -30,7 +30,7 @@ enum
 {
   ARG_ULONG = 1,
   ARG_DOUBLE,
-  ARG_SWITCH,
+  ARG_BOOLEAN,
   ARG_COUNT
 };
 
@@ -47,6 +47,9 @@ typedef struct _GstTestMonoSourceClass GstTestMonoSourceClass;
 struct _GstTestMonoSource
 {
   GstElement parent;
+  gulong val_ulong;
+  gdouble val_double;
+  gboolean val_bool;
 };
 struct _GstTestMonoSourceClass
 {
@@ -59,14 +62,17 @@ static void
 gst_test_mono_source_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
 {
-  //GstTestMonoSource *self = GST_TEST_MONO_SOURCE(object);
+  GstTestMonoSource *self = GST_TEST_MONO_SOURCE (object);
 
   switch (property_id) {
     case ARG_ULONG:
+      g_value_set_ulong (value, self->val_ulong);
       break;
-    default:{
+    case ARG_DOUBLE:
+      g_value_set_double (value, self->val_double);
+      break;
+    default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-    }
       break;
   }
 }
@@ -75,14 +81,17 @@ static void
 gst_test_mono_source_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec)
 {
-  //GstTestMonoSource *self = GST_TEST_MONO_SOURCE(object);
+  GstTestMonoSource *self = GST_TEST_MONO_SOURCE (object);
 
   switch (property_id) {
     case ARG_ULONG:
+      self->val_ulong = g_value_get_ulong (value);
       break;
-    default:{
+    case ARG_DOUBLE:
+      self->val_double = g_value_get_double (value);
+      break;
+    default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-    }
       break;
   }
 }
@@ -100,6 +109,12 @@ gst_test_mono_source_class_init (GstTestMonoSourceClass * klass)
           "ulong prop",
           "ulong number parameter for the test_mono_source",
           0, G_MAXULONG, 0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+
+  g_object_class_install_property (gobject_class, ARG_DOUBLE,
+      g_param_spec_double ("double",
+          "double prop",
+          "double number parameter for the test_mono_source",
+          0.0, 100.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 }
 
 static void
@@ -177,17 +192,13 @@ GST_START_TEST (controller_new_fail)
   ctrl = gst_controller_new (G_OBJECT (elem), "_schrompf_", NULL);
   fail_unless (ctrl == NULL, NULL);
 
-  /* that property exists, but is not controllable */
-  ASSERT_CRITICAL (ctrl = gst_controller_new (G_OBJECT (elem), "name", NULL));
-  fail_unless (ctrl == NULL, NULL);
-
   g_object_unref (elem);
 }
 
 GST_END_TEST;
 
 /* tests for an element with controlled params */
-GST_START_TEST (controller_new_okay)
+GST_START_TEST (controller_new_okay1)
 {
   GstController *ctrl;
   GstElement *elem;
@@ -197,6 +208,121 @@ GST_START_TEST (controller_new_okay)
   /* that property should exist and should be controllable */
   ctrl = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
   fail_unless (ctrl != NULL, NULL);
+
+  g_object_unref (ctrl);
+  g_object_unref (elem);
+}
+
+GST_END_TEST;
+
+/* controlling several params should return the same controller */
+GST_START_TEST (controller_new_okay2)
+{
+  GstController *ctrl1, *ctrl2;
+  GstElement *elem;
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and should be controllable */
+  ctrl1 = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
+  fail_unless (ctrl1 != NULL, NULL);
+
+  /* that property should exist and should be controllable */
+  ctrl2 = gst_controller_new (G_OBJECT (elem), "double", NULL);
+  fail_unless (ctrl2 != NULL, NULL);
+  fail_unless (ctrl1 == ctrl2, NULL);
+
+  g_object_unref (ctrl2);
+  g_object_unref (ctrl1);
+  g_object_unref (elem);
+}
+
+GST_END_TEST;
+
+/* controlling a params twice should be handled */
+GST_START_TEST (controller_param_twice)
+{
+  GstController *ctrl;
+  GstElement *elem;
+  gboolean res;
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and should be controllable */
+  ctrl = gst_controller_new (G_OBJECT (elem), "ulong", "ulong", NULL);
+  fail_unless (ctrl != NULL, NULL);
+
+  /* it should have been added at least once, let remove it */
+  res = gst_controller_remove_properties (ctrl, "ulong", NULL);
+  fail_unless (res, NULL);
+
+  /* removing it agian should not work */
+  res = gst_controller_remove_properties (ctrl, "ulong", NULL);
+  fail_unless (!res, NULL);
+
+  g_object_unref (ctrl);
+  g_object_unref (elem);
+}
+
+GST_END_TEST;
+
+/* tests if we cleanup properly */
+GST_START_TEST (controller_finalize)
+{
+  GstController *ctrl;
+  GstElement *elem;
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and should be controllable */
+  ctrl = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
+  fail_unless (ctrl != NULL, NULL);
+
+  /* free the controller */
+  g_object_unref (ctrl);
+
+  /* object shouldn't have a controller anymore */
+  ctrl = gst_object_get_controller (G_OBJECT (elem));
+  fail_unless (ctrl == NULL, NULL);
+
+  g_object_unref (elem);
+}
+
+GST_END_TEST;
+
+/* test timed value handling without interpolation */
+GST_START_TEST (controller_interpolate_none)
+{
+  GstController *ctrl;
+  GstElement *elem;
+  gboolean res;
+  GValue val_ulong = { 0, };
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and should be controllable */
+  ctrl = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
+  fail_unless (ctrl != NULL, NULL);
+
+  /* set interpolation mode */
+  gst_controller_set_interpolation_mode (ctrl, "ulong", GST_INTERPOLATE_NONE);
+
+  /* set control values */
+  g_value_init (&val_ulong, G_TYPE_ULONG);
+  g_value_set_ulong (&val_ulong, 0);
+  res = gst_controller_set (ctrl, "ulong", 0 * GST_SECOND, &val_ulong);
+  fail_unless (res, NULL);
+  g_value_set_ulong (&val_ulong, 100);
+  res = gst_controller_set (ctrl, "ulong", 2 * GST_SECOND, &val_ulong);
+  fail_unless (res, NULL);
+
+  /* now pull in values for some timestamps */
+  gst_controller_sink_values (ctrl, 0 * GST_SECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sink_values (ctrl, 1 * GST_SECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sink_values (ctrl, 2 * GST_SECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
 
   g_object_unref (ctrl);
   g_object_unref (elem);
@@ -215,7 +341,11 @@ gst_controller_suite (void)
   suite_add_tcase (s, tc);
   tcase_add_test (tc, controller_init);
   tcase_add_test (tc, controller_new_fail);
-  tcase_add_test (tc, controller_new_okay);
+  tcase_add_test (tc, controller_new_okay1);
+  tcase_add_test (tc, controller_new_okay2);
+  tcase_add_test (tc, controller_param_twice);
+  tcase_add_test (tc, controller_finalize);
+  tcase_add_test (tc, controller_interpolate_none);
 
   return s;
 }

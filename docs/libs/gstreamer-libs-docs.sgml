@@ -5,6 +5,7 @@
 %version-entities;
 <!ENTITY GstBytestream SYSTEM "xml/gstbytestream.xml">
 <!ENTITY GstController SYSTEM "xml/gstcontroller.xml">
+<!ENTITY GstControllerGObject SYSTEM "xml/gstcontrollergobject.xml">
 <!ENTITY GstGetbits SYSTEM "xml/gstgetbits.xml">
 <!-- has not yet been written
 <!ENTITY GstPutbits SYSTEM "xml/gstputbits.xml">
@@ -40,7 +41,7 @@
     <chapter id="gstreamer-control">
       <title>gstcontrol</title>
       &GstController;
-      <!--&GstControllerGObject; -->
+      &GstControllerGObject;
     </chapter>
 
   </part>

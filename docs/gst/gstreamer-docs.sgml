@@ -55,6 +55,7 @@
 <!ENTITY GstVersion SYSTEM "xml/gstversion.xml">
 <!ENTITY GstXML SYSTEM "xml/gstxml.xml">
 
+<!ENTITY GstAdapter SYSTEM "xml/gstadapter.xml">
 <!ENTITY GstBaseSrc SYSTEM "xml/gstbasesrc.xml">
 <!ENTITY GstBaseSink SYSTEM "xml/gstbasesink.xml">
 <!ENTITY GstBaseTransform SYSTEM "xml/gstbasetransform.xml">
@@ -204,10 +205,11 @@
       These base classes are provided to be extended by elements.
     </para>
 
+    &GstAdapter;
     &GstBaseSrc;
     &GstBaseSink;
     &GstBaseTransform;
-	&GstPushSrc;
+    &GstPushSrc;
 
   </chapter>
 

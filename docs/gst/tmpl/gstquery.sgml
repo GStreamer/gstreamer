@@ -15,6 +15,9 @@ Query types can be used to perform queries on pads and elements.
 #GstPad, #GstElement
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### ENUM GstQueryType ##### -->
 <para>
 Standard predefined Query types

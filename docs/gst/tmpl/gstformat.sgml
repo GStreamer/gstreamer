@@ -15,6 +15,9 @@ formats can be used to perform seeking or conversions/query operations.
 #GstPad, #GstElement
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### ENUM GstFormat ##### -->
 <para>
 Standard predefined formats

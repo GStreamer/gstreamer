@@ -15,6 +15,9 @@ and the element property that can handle a given URI.
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GstURIHandler ##### -->
 <para>
 

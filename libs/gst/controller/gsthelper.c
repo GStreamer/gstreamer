@@ -14,7 +14,7 @@ GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DEFAULT);
 extern GQuark controller_key;
 
 /**
- * g_object_control_properties:
+ * gst_object_control_properties:
  * @object: the object of which some properties should be controlled
  * @var_args: %NULL terminated list of property names that should be controlled
  *
@@ -28,7 +28,7 @@ extern GQuark controller_key;
  * one or more of the given properties aren't available, or cannot be controlled, for the given element.
  */
 GstController *
-g_object_control_properties (GObject * object, ...)
+gst_object_control_properties (GObject * object, ...)
 {
   GstController *ctrl;
 
@@ -43,7 +43,7 @@ g_object_control_properties (GObject * object, ...)
 }
 
 /**
- * g_object_uncontrol_properties:
+ * gst_object_uncontrol_properties:
  * @object: the object of which some properties should not be controlled anymore
  * @var_args: %NULL terminated list of property names that should be controlled
  *
@@ -55,7 +55,7 @@ g_object_control_properties (GObject * object, ...)
  * controller, %TRUE otherwise
  */
 gboolean
-g_object_uncontrol_properties (GObject * object, ...)
+gst_object_uncontrol_properties (GObject * object, ...)
 {
   gboolean res = FALSE;
   GstController *ctrl;
@@ -73,14 +73,14 @@ g_object_uncontrol_properties (GObject * object, ...)
 }
 
 /**
- * g_object_get_controller:
+ * gst_object_get_controller:
  * @object: the object that has controlled properties
  *
  * Returns: the controller handling some of the given element's properties,
  * %NULL if no controller
  */
 GstController *
-g_object_get_controller (GObject * object)
+gst_object_get_controller (GObject * object)
 {
   g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
 
@@ -88,7 +88,7 @@ g_object_get_controller (GObject * object)
 }
 
 /**
- * g_object_set_controller:
+ * gst_object_set_controller:
  * @object: the object that should get the controller
  * @controller: the controller object to plug in
  *
@@ -97,7 +97,7 @@ g_object_get_controller (GObject * object)
  * Returns: %FALSE if the GObject already has an controller, %TRUE otherwise
  */
 gboolean
-g_object_set_controller (GObject * object, GstController * controller)
+gst_object_set_controller (GObject * object, GstController * controller)
 {
   GstController *ctrl;
 
@@ -111,7 +111,7 @@ g_object_set_controller (GObject * object, GstController * controller)
 }
 
 /**
- * g_object_sink_values:
+ * gst_object_sink_values:
  * @object: the object that has controlled properties
  * @timestamp: the time that should be processed
  *
@@ -120,7 +120,7 @@ g_object_set_controller (GObject * object, GstController * controller)
  * Returns: same thing as gst_controller_sink_values()
  */
 gboolean
-g_object_sink_values (GObject * object, GstClockTime timestamp)
+gst_object_sink_values (GObject * object, GstClockTime timestamp)
 {
   GstController *ctrl = NULL;
 
@@ -133,7 +133,7 @@ g_object_sink_values (GObject * object, GstClockTime timestamp)
 }
 
 /**
- * g_object_get_value_arrays:
+ * gst_object_get_value_arrays:
  * @object: the object that has controlled properties
  * @timestamp: the time that should be processed
  * @value_arrays: list to return the control-values in
@@ -150,7 +150,7 @@ g_object_sink_values (GObject * object, GstClockTime timestamp)
  * Returns: %TRUE if the given array(s) could be filled, %FALSE otherwise
  */
 gboolean
-g_object_get_value_arrays (GObject * object, GstClockTime timestamp,
+gst_object_get_value_arrays (GObject * object, GstClockTime timestamp,
     GSList * value_arrays)
 {
   GstController *ctrl;
@@ -164,7 +164,7 @@ g_object_get_value_arrays (GObject * object, GstClockTime timestamp,
 }
 
 /**
- * g_object_get_value_array:
+ * gst_object_get_value_array:
  * @self: the object that has controlled properties
  * @timestamp: the time that should be processed
  * @value_array: array to put control-values in
@@ -179,7 +179,7 @@ g_object_get_value_arrays (GObject * object, GstClockTime timestamp,
  * Returns: %TRUE if the given array(s) could be filled, %FALSE otherwise
  */
 gboolean
-g_object_get_value_array (GObject * object, GstClockTime timestamp,
+gst_object_get_value_array (GObject * object, GstClockTime timestamp,
     GstValueArray * value_array)
 {
   GstController *ctrl;

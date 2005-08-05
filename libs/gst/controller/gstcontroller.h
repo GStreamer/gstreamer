@@ -110,7 +110,6 @@ typedef struct _GstInterpolateMethod
 typedef struct _GstControlledProperty
 {
   gchar *name;                  // name of the property
-  GObject *object;              // the object we control
   GType type;                   // type of the handled property
   GValue default_value;         // default value for the handled property
   GValue result_value;          // result value location for the interpolation method
@@ -160,6 +159,7 @@ struct _GstController
 
   GList *properties;  // List of GstControlledProperty
   GMutex *lock;       // Secure property access, elements will access from threads
+  GObject *object;    // the object we control
 };
 
 struct _GstControllerClass
@@ -207,17 +207,17 @@ gboolean gst_controller_set_interpolation_mode (GstController * self,
 
 /* GObject convenience functions */
 
-GstController *g_object_control_properties (GObject * object, ...);
-gboolean g_object_uncontrol_properties (GObject * object, ...);
+GstController *gst_object_control_properties (GObject * object, ...);
+gboolean gst_object_uncontrol_properties (GObject * object, ...);
 
-GstController *g_object_get_controller (GObject * object);
-gboolean g_object_set_controller (GObject * object, GstController * controller);
+GstController *gst_object_get_controller (GObject * object);
+gboolean gst_object_set_controller (GObject * object, GstController * controller);
 
-gboolean g_object_sink_values (GObject * object, GstClockTime timestamp);
+gboolean gst_object_sink_values (GObject * object, GstClockTime timestamp);
 
-gboolean g_object_get_value_arrays (GObject * object,
+gboolean gst_object_get_value_arrays (GObject * object,
     GstClockTime timestamp, GSList * value_arrays);
-gboolean g_object_get_value_array (GObject * object,
+gboolean gst_object_get_value_array (GObject * object,
     GstClockTime timestamp, GstValueArray * value_array);
 
 /* lib init/done */

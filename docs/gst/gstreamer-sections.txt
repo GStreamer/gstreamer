@@ -1634,6 +1634,30 @@ gst_xml_get_type
 # base classes
 
 <SECTION>
+<FILE>gstadapter</FILE>
+<TITLE>GstAdapter</TITLE>
+GstAdapter
+GstAdapterClass
+gst_adapter_new
+gst_adapter_clear
+gst_adapter_push
+gst_adapter_peek
+gst_adapter_flush
+gst_adapter_available
+gst_adapter_available_fast
+<SUBSECTION Standard>
+GST_ADAPTER_SRC
+GST_IS_ADAPTER_SRC
+GST_TYPE_ADAPTER_SRC
+GST_ADAPTER_SRC_CLASS
+GST_IS_ADAPTER_SRC_CLASS
+GST_ADAPTER_SRC_GET_CLASS
+<SUBSECTION Private>
+gst_adapter_src_get_type
+</SECTION>
+
+
+<SECTION>
 <FILE>gstbasesrc</FILE>
 <TITLE>GstBaseSrc</TITLE>
 GstBaseSrc
