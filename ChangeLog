@@ -1,3 +1,9 @@
+2005-08-05  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst-libs/gst/gconf/gconf.c:
+	* gst-libs/gst/gconf/gconf.h:
+	  Fix some Andy Problem [tm].
+
 2005-08-04  Andy Wingo  <wingo@pobox.com>
 
 	* gst/videoscale/gstvideoscale.c (gst_videoscale_get_size):
