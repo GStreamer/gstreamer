@@ -1,5 +1,25 @@
 2005-08-05  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/gstreamer.types:
+	* docs/gst/tmpl/gstbasesink.sgml:
+	* docs/gst/tmpl/gstbasesrc.sgml:
+	* docs/gst/tmpl/gstbasetransform.sgml:
+	* docs/gst/tmpl/gstfakesrc.sgml:
+	* gst/base/gstcollectpads.c:
+	* gst/base/gstcollectpads.h:
+	* libs/gst/controller/gst-controller.c:
+	* libs/gst/controller/gst-controller.h:
+	* libs/gst/controller/gst-helper.c:
+	* libs/gst/controller/gst-interpolation.c:
+	* libs/gst/controller/lib.c:
+	  added long/short desc for controller docs
+	  added collectpads base class docs
+	  added correct includes to base-class docs
+
+2005-08-05  Stefan Kost  <ensonic@users.sf.net>
+
 	* check/gst-libs/controller.c: (gst_test_mono_source_get_property),
 	(gst_test_mono_source_set_property),
 	(gst_test_mono_source_class_init), (GST_START_TEST),

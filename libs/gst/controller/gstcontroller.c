@@ -1,39 +1,68 @@
-/*
- * gst-controller.c
- * 
- * New dynamic properties
+/* GStreamer
  *
+ * Copyright (C) <2005> Stefan Kost <ensonic at users dot sf dot net>
+ *
+ * gst-controller.c: dynamic parameter control subsystem
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
  */
 
-/* What needs to be done in plugins?
-Very little - it is just two steps to make a plugin controllable!
-
-1) Just mark gobject-properties that make sense to be controlled,
-   by GST_PARAM_CONTROLLABLE for a start.
-
-2) When processing data (get, chain, loop function) at the beginning call
-   gst_element_sink_values(element,timestamp).
-   This will made the controller to update all gobject properties that are under
-   control with the current values based on timestamp.
-*/
-
-/* What needs to be done in applications?
-
-1) First put some properties under control, by calling 
-   controller=g_object_control_properties(object, "prop1", "prop2",...);
-
-2) Set how the controller will smooth inbetween values.
-   gst_controller_set_interpolation_mode(controller,"prop1",mode);
-
-3) Set key values
-   gst_controller_set(controller,"prop1",0*GST_SECOND,value1);
-   gst_controller_set(controller,"prop1",1*GST_SECOND,value2);
-
-4) Start your pipeline ;-)
-
-5) Live control params from the GUI
-   g_object_set_live_value(object, "prop1", timestamp, value);
-*/
+/**
+ * SECTION:gstcontroller
+ * @short_description: dynamic parameter control subsystem
+ *
+ * The controller subsystem offers a lighwight way to adjust gobject properties
+ * over time. 
+ *
+ * What needs to be changed in a #GstElement?
+ * Very little - it is just two steps to make a plugin controllable!
+ * <orderedlist>
+ *   <listitem><para>
+ *     mark gobject-properties paramspecs that make sense to be controlled,
+ *     by GST_PARAM_CONTROLLABLE.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     when processing data (get, chain, loop function) at the beginning call
+ *     gst_object_sink_values(element,timestamp).
+ *     This will made the controller to update all gobject properties that are under
+ *     control with the current values based on timestamp.
+ *   </para></listitem>
+ * </orderedlist>
+ *
+ * What needs to be done in applications?
+ * Again its not a lot to change.
+ * <orderedlist>
+ *   <listitem><para>
+ *     first put some properties under control, by calling 
+ *     controller=g_object_control_properties(object, "prop1", "prop2",...);
+ *   </para></listitem>
+ *   <listitem><para>
+ *     set how the controller will smooth inbetween values.
+ *     gst_controller_set_interpolation_mode(controller,"prop1",mode);
+ *   </para></listitem>
+ *   <listitem><para>
+ *     set key values
+ *     gst_controller_set(controller,"prop1",0*GST_SECOND,value1);
+ *     gst_controller_set(controller,"prop1",1*GST_SECOND,value2);
+ *   </para></listitem>
+ *   <listitem><para>
+ *     start your pipeline
+ *   </para></listitem>
+ * </orderedlist>
+ */
 
 #include "config.h"
 #include "gst-controller.h"
@@ -419,7 +448,7 @@ gst_controller_new (GObject * object, ...)
 }
 
 /**
- * gst_controller_remove_properties:
+ * gst_controller_remove_properties_valist:
  * @self: the controller object from which some properties should be removed
  * @var_args: %NULL terminated list of property names that should be removed
  *

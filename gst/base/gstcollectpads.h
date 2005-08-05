@@ -33,24 +33,6 @@ G_BEGIN_DECLS
 #define GST_IS_COLLECTPADS(obj)  	(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_COLLECTPADS))
 #define GST_IS_COLLECTPADS_CLASS(obj)  	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_COLLECTPADS))
 
-/* manages a set of pads that operate in collect mode. This means
- * that control is given to the manager of this object when all
- * pads have data.
- *
- * - pads are added to the collection with add/remove_pad. The pad
- *   has to be a sinkpad. The chain function of the pad is
- *   overridden. The element_private of the pad is used to store
- *   private information.
- * - For each pad, data is queued in the chain function or by
- *   performing a pull_range.
- * - When data is queued on all pads, a callback function is
- *   called.
- * - Data can be dequeued from the pad with the _pop() method. 
- *   One can _peek() at the data with the peek function.
- * - Data can also be dequeued with the available/read/flush
- *   calls.
- */
-
 typedef struct _GstCollectPads GstCollectPads;
 typedef struct _GstCollectPadsClass GstCollectPadsClass;
 

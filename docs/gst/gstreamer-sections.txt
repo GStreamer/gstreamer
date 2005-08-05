@@ -1636,6 +1636,7 @@ gst_xml_get_type
 <SECTION>
 <FILE>gstadapter</FILE>
 <TITLE>GstAdapter</TITLE>
+<INCLUDE>gst/base/gstadapter.h</INCLUDE>
 GstAdapter
 GstAdapterClass
 gst_adapter_new
@@ -1660,6 +1661,7 @@ gst_adapter_src_get_type
 <SECTION>
 <FILE>gstbasesrc</FILE>
 <TITLE>GstBaseSrc</TITLE>
+<INCLUDE>gst/base/gstbasesrc.h</INCLUDE>
 GstBaseSrc
 GstBaseSrcClass
 GstBaseSrcFlags
@@ -1683,6 +1685,7 @@ gst_base_src_get_type
 <SECTION>
 <FILE>gstbasesink</FILE>
 <TITLE>GstBaseSink</TITLE>
+<INCLUDE>gst/base/gstbasesink.h</INCLUDE>
 GstBaseSink
 GstBaseSinkClass
 
@@ -1705,6 +1708,7 @@ gst_base_sink_get_type
 <SECTION>
 <FILE>gstbasetransform</FILE>
 <TITLE>GstBaseTransform</TITLE>
+<INCLUDE>gst/base/gstbasetransform.h</INCLUDE>
 GstBaseTransform
 GstBaseTransformClass
 <SUBSECTION Standard>
@@ -1720,8 +1724,42 @@ gst_base_transform_get_type
 
 
 <SECTION>
+<FILE>gstcollectpads</FILE>
+<TITLE>GstCollectPads</TITLE>
+<INCLUDE>gst/base/gstcollectpads.h</INCLUDE>
+GstCollectPads
+GstCollectPadsClass
+GstCollectData
+gst_collectpads_new
+gst_collectpads_set_function
+gst_collectpads_add_pad
+gst_collectpads_remove_pad
+gst_collectpads_is_active
+gst_collectpads_collect
+gst_collectpads_collect_range
+gst_collectpads_start
+gst_collectpads_stop
+gst_collectpads_peek
+gst_collectpads_pop
+gst_collectpads_available
+gst_collectpads_read
+gst_collectpads_flush
+<SUBSECTION Standard>
+GST_COLLECTPADS
+GST_IS_COLLECTPADS
+GST_TYPE_COLLECTPADS
+GST_COLLECTPADS_CLASS
+GST_IS_COLLECTPADS_CLASS
+GST_COLLECTPADS_GET_CLASS
+<SUBSECTION Private>
+gst_collectpads_get_type
+</SECTION>
+
+
+<SECTION>
 <FILE>gstpushsrc</FILE>
 <TITLE>GstPushSrc</TITLE>
+<INCLUDE>gst/base/gstpushsrc.h</INCLUDE>
 GstPushSrc
 GstPushSrcClass
 <SUBSECTION Standard>

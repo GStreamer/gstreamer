@@ -18,6 +18,36 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstcollectpads
+ * @short_description: manages a set of pads that operate in collect mode
+ * @see_also: 
+ *
+ * Manages a set of pads that operate in collect mode. This means that control
+ * is given to the manager of this object when all pads have data.
+ * <itemizedlist>
+ *   <listitem><para>
+ *     Pads are added to the collection with add/remove_pad. The pad
+ *     has to be a sinkpad. The chain function of the pad is
+ *     overridden. The element_private of the pad is used to store
+ *     private information.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     For each pad, data is queued in the chain function or by
+ *     performing a pull_range.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     When data is queued on all pads, a callback function is called.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Data can be dequeued from the pad with the _pop() method. 
+ *     One can _peek() at the data with the peek function.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Data can also be dequeued with the available/read/flush calls.
+ *   </para></listitem>
+ * </itemizedlist>
+ */
 
 #include "gstcollectpads.h"
 
