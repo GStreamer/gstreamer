@@ -1,5 +1,5 @@
 <!-- ##### SECTION Title ##### -->
-GstMultiFdSink
+multifdsink
 
 <!-- ##### SECTION Short_Description ##### -->
 
@@ -13,6 +13,9 @@ GstMultiFdSink
 <para>
 
 </para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
 
 <!-- ##### STRUCT GstMultiFdSink ##### -->
 <para>

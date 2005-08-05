@@ -541,11 +541,11 @@ many_types:
   }
 }
 
-/** 
+/*
  * given a list of element factories, try to link one of the factories
  * to the given pad.
  *
- * The function returns the element that was successfully linked to the 
+ * The function returns the element that was successfully linked to the
  * pad.
  */
 static GstElement *

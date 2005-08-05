@@ -1,0 +1,35 @@
+<!-- ##### SECTION Title ##### -->
+tcpserversink
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### STRUCT GstTCPServerSink ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstTCPServerSink:host ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstTCPServerSink:port ##### -->
+<para>
+
+</para>
+

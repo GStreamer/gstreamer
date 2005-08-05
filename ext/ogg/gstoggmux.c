@@ -694,7 +694,7 @@ gst_ogg_mux_set_header_on_caps (GstCaps * caps, GList * buffers)
   return caps;
 }
 
-/**
+/*
  * For each pad we need to write out one (small) header in one
  * page that allows decoders to identify the type of the stream.
  * After that we need to write out all extra info for the decoders.

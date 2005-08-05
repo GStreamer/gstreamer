@@ -65,7 +65,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 
-/********** Define useful types for non-programmatic interfaces **********/
+/* Define useful types for non-programmatic interfaces **********/
 #define GST_TYPE_PARANOIA_MODE (gst_paranoia_mode_get_type())
 static GType
 gst_paranoia_mode_get_type (void)
@@ -103,7 +103,7 @@ gst_paranoia_endian_get_type (void)
   return paranoia_endian_type;
 }
 
-/********** Standard stuff for signals and arguments **********/
+/* Standard stuff for signals and arguments **********/
 /* CDParanoia signals and args */
 enum
 {
@@ -446,7 +446,7 @@ cdparanoia_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_enum (value, src->paranoia_mode);
       break;
     case ARG_DISCID:
-      /**
+      /*
        * Due to possible autocorrections of start sectors of audio tracks on 
        * multisession cds, we can maybe not compute the correct discid.
        * So issue a warning.
@@ -1163,7 +1163,7 @@ plugin_init (GstPlugin * plugin)
   return TRUE;
 }
 
-/*** GSTURIHANDLER INTERFACE *************************************************/
+/* GSTURIHANDLER INTERFACE *************************************************/
 
 static guint
 cdparanoia_uri_get_type (void)

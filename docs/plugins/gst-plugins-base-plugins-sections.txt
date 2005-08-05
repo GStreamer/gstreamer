@@ -1,13 +1,41 @@
 <SECTION>
-<FILE>gstmultifdsink</FILE>
+<FILE>multifdsink</FILE>
 GstMultiFdSink
 GstMultiFdSinkFlags
 GstRecoverPolicy
 GstSyncMethod
 GstUnitType
 GstClientStatus
-<TITLE>GstMultiFdSink</TITLE>
+<TITLE>multifdsink</TITLE>
 <SUBSECTION Standard>
 GstMultiFdSinkClass
 </SECTION>
 
+<SECTION>
+<FILE>tcpserversink</FILE>
+GstTCPServerSink
+<TITLE>tcpserversink</TITLE>
+<SUBSECTION Standard>
+GstTCPServerSinkClass
+</SECTION>
+
+
+<SECTION>
+<FILE>private</FILE>
+CLIENTS_UNLOCK
+CLIENTS_LOCK_INIT
+GST_MULTIFDSINK_GET_CLASS
+CLIENTS_LOCK_FREE
+GST_IS_MULTIFDSINK_CLASS
+gst_multifdsink_get_type
+gst_multifdsink_remove
+GST_IS_MULTIFDSINK
+CLIENTS_LOCK
+GST_TYPE_MULTIFDSINK
+gst_multifdsink_clear
+GstTCPClient
+GST_MULTIFDSINK_CLASS
+gst_multifdsink_get_stats
+GST_MULTIFDSINK
+gst_multifdsink_add
+</SECTION>

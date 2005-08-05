@@ -18,6 +18,13 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:tcpserversink
+ * @short_description: a sink that acts as a TCP server and sends data to
+ *  multiple clients
+ * @see_also: #multifdsink
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

@@ -49,7 +49,7 @@ SCAN_OPTIONS=
 #EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt gstreamer-sections.txt $(DOC_MAIN_SGML_FILE)
 
 # Extra options to supply to gtkdoc-mkdb.
-MKDB_OPTIONS=--sgml-mode --ignore-files=trio
+MKDB_OPTIONS=--sgml-mode
 
 # Extra options to supply to gtkdoc-fixref.
 # FIXME get the location of the installed gstreamer docs
@@ -66,9 +66,12 @@ CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.c
 SCANOBJ_DEPS =
 
 # Header files to ignore when scanning.
-IGNORE_HFILES = avcodec.h gstffmpegcodecmap.h
+IGNORE_HFILES = avcodec.h gstffmpegcodecmap.h dsputil.h
+IGNORE_CFILES = utils.c mem.c imgconvert.c
 
-EXTRA_HFILES = $(top_srcdir)/gst/tcp/gstmultifdsink.h
+EXTRA_HFILES = \
+	$(top_srcdir)/gst/tcp/gstmultifdsink.h \
+	$(top_srcdir)/gst/tcp/gsttcpserversink.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES =

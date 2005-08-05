@@ -1,5 +1,26 @@
 2005-08-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* common/gtk-doc-plugins.mak:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	  renamed to actual element names, so much nicer to look at
+	* docs/plugins/tmpl/gstmultifdsink.sgml:
+	  remove
+	* docs/plugins/tmpl/multifdsink.sgml:
+	* docs/plugins/tmpl/tcpserversink.sgml:
+	  add
+	* ext/alsa/gstalsa.c:
+	* ext/cdparanoia/gstcdparanoia.c: (cdparanoia_get_property):
+	* ext/ogg/gstoggmux.c:
+	* gst/audioconvert/gstaudioconvert.c: (gst_audio_convert_chain):
+	* gst/playback/gstdecodebin.c:
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_class_init):
+	* gst/tcp/gsttcpserversink.c:
+	  various fixes and documentation additions
+
+2005-08-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* common/Makefile.am:
 	* common/gstdoc-scangobj:
 	* common/gtk-doc-plugins.mak:

@@ -96,7 +96,7 @@ static gboolean gst_alsa_query (GstElement * element,
 static gboolean gst_alsa_pad_query (GstPad * pad,
     GstQueryType type, GstFormat * format, gint64 * value);
 
-/*** TYPE FUNCTIONS ***********************************************************/
+/* TYPE FUNCTIONS ***********************************************************/
 
 GType
 gst_alsa_get_type (void)
@@ -131,7 +131,7 @@ gst_alsa_get_type (void)
   return alsa_type;
 }
 
-/*** GOBJECT FUNCTIONS ********************************************************/
+/* GOBJECT FUNCTIONS ********************************************************/
 
 enum
 {
@@ -519,7 +519,7 @@ gst_alsa_probe_interface_init (GstPropertyProbeInterface * iface)
   iface->get_values = gst_alsa_probe_get_values;
 }
 
-/*** GSTREAMER PAD / QUERY / CONVERSION / STATE FUNCTIONS *********************/
+/* GSTREAMER PAD / QUERY / CONVERSION / STATE FUNCTIONS *********************/
 
 static GstPad *
 gst_alsa_request_new_pad (GstElement * element, GstPadTemplate * templ,
@@ -767,7 +767,7 @@ add_channels (GstStructure * structure, gint min_channels, gint max_channels)
   }
 }
 
-/**
+/*
  * Get all available caps.
  * @format: SND_PCM_FORMAT_UNKNOWN for all formats, desired format else
  * @rate: allowed rates if < 0, else desired rate
@@ -1425,7 +1425,7 @@ gst_alsa_set_clock (GstElement * element, GstClock * clock)
   GST_ALSA (element)->ext_clock = clock;
 }
 
-/*** AUDIO PROCESSING *********************************************************/
+/* AUDIO PROCESSING *********************************************************/
 
 inline snd_pcm_sframes_t
 gst_alsa_update_avail (GstAlsa * this)
@@ -1474,8 +1474,8 @@ gst_alsa_pcm_wait (GstAlsa * this)
   return TRUE;
 }
 
-/**
- * error out or make sure we're in SND_PCM_STATE_RUNNING afterwards 
+/*
+ * error out or make sure we're in SND_PCM_STATE_RUNNING afterwards
  * return FALSE if we're not
  */
 inline gboolean
@@ -1552,7 +1552,7 @@ gst_alsa_xrun_recovery (GstAlsa * this)
   return TRUE;
 }
 
-/*** AUDIO SETUP / START / STOP ***********************************************/
+/* AUDIO SETUP / START / STOP ***********************************************/
 
 void
 gst_alsa_set_eos (GstAlsa * this)
@@ -1700,7 +1700,7 @@ gst_alsa_probe_hw_params (GstAlsa * this, GstAlsaFormat * format)
   return TRUE;
 }
 
-/**
+/*
  * You must set all hw parameters at once and can't use already set params and
  * change them.
  * Thx ALSA for not documenting this
@@ -1932,7 +1932,7 @@ gst_alsa_close_audio (GstAlsa * this)
   return TRUE;
 }
 
-/*** QUERYING/FORMAT/CONVERSION FUNCTIONS *************************************/
+/* QUERYING/FORMAT/CONVERSION FUNCTIONS *************************************/
 
 static const GstFormat *
 gst_alsa_get_formats (GstPad * pad)

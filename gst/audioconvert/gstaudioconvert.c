@@ -237,7 +237,7 @@ gst_audio_convert_chain (GstPad * pad, GstBuffer * buf)
 
   this = GST_AUDIO_CONVERT (GST_OBJECT_PARENT (pad));
 
-  /**
+  /*
    * Theory of operation:
    * - convert the format (endianness, signedness, width, depth) to
    *   (G_BYTE_ORDER, TRUE, 32, 32)
