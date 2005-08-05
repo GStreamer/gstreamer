@@ -69,7 +69,7 @@ struct _GstTCPClientSrc {
   /* number of bytes we've gotten */
   off_t curoffset;
 
-  GstTCPProtocolType protocol; /* protocol used for reading data */
+  GstTCPProtocol protocol; /* protocol used for reading data */
   gboolean caps_received;      /* if we have received caps yet */
   GstCaps *caps;
 };

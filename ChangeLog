@@ -1,3 +1,45 @@
+2005-08-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* common/Makefile.am:
+	* common/gstdoc-scangobj:
+	* common/gtk-doc-plugins.mak:
+	* common/gtk-doc.mak:
+	  add a custom scangobj that uses the registry
+	  add a custom gtk-doc-plugins.mak that uses it
+	  some doc build fixes
+	* configure.ac:
+	* docs/Makefile.am:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	* docs/plugins/gst-plugins-base-plugins.types:
+	* docs/plugins/tmpl/gstmultifdsink.sgml:
+	  add docs for one element, multifdsink
+	* gst/adder/gstadder.h:
+	* gst/volume/gstvolume.h:
+	  don't privatize enum
+	* gst/tcp/gstfdset.c: (gst_fdset_mode_get_type):
+	* gst/tcp/gstmultifdsink.c: (gst_recover_policy_get_type),
+	(gst_sync_method_get_type), (gst_client_status_get_type),
+	(gst_multifdsink_class_init),
+	(gst_multifdsink_client_queue_buffer),
+	(gst_multifdsink_handle_client_write):
+	* gst/tcp/gstmultifdsink.h:
+	* gst/tcp/gsttcp.h:
+	* gst/tcp/gsttcpclientsink.c: (gst_tcpclientsink_class_init),
+	(gst_tcpclientsink_init), (gst_tcpclientsink_setcaps),
+	(gst_tcpclientsink_render):
+	* gst/tcp/gsttcpclientsink.h:
+	* gst/tcp/gsttcpclientsrc.c: (gst_tcpclientsrc_class_init),
+	(gst_tcpclientsrc_init), (gst_tcpclientsrc_create),
+	(gst_tcpclientsrc_start):
+	* gst/tcp/gsttcpclientsrc.h:
+	* gst/tcp/gsttcpserversrc.c: (gst_tcpserversrc_class_init),
+	(gst_tcpserversrc_init), (gst_tcpserversrc_create):
+	* gst/tcp/gsttcpserversrc.h:
+	* gst/typefind/gsttypefindfunctions.c:
+	  remove superfluous Type stuff
+
 2005-08-05  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/playback/gstplaybin.c: (gen_video_element):

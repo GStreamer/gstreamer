@@ -100,7 +100,7 @@ typedef struct {
 
   gboolean discont;
 
-  GstTCPProtocolType protocol;
+  GstTCPProtocol protocol;
 
   gboolean caps_sent;
   gboolean streamheader_sent;
@@ -139,7 +139,7 @@ struct _GstMultiFdSink {
   GSList *streamheader; /* GSList of GstBuffers to use as streamheader */
   gboolean previous_buffer_in_caps;
 
-  GstTCPProtocolType protocol;
+  GstTCPProtocol protocol;
   guint mtu;
 
   GArray *bufqueue;	/* global queue of buffers */

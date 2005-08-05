@@ -1,0 +1,13 @@
+<SECTION>
+<FILE>gstmultifdsink</FILE>
+GstMultiFdSink
+GstMultiFdSinkFlags
+GstRecoverPolicy
+GstSyncMethod
+GstUnitType
+GstClientStatus
+<TITLE>GstMultiFdSink</TITLE>
+<SUBSECTION Standard>
+GstMultiFdSinkClass
+</SECTION>
+

@@ -153,8 +153,7 @@ gst_tcpclientsrc_class_init (GstTCPClientSrc * klass)
           TCP_HIGHEST_PORT, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_PROTOCOL,
       g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in",
-          GST_TYPE_TCP_PROTOCOL_TYPE, GST_TCP_PROTOCOL_TYPE_NONE,
-          G_PARAM_READWRITE));
+          GST_TYPE_TCP_PROTOCOL, GST_TCP_PROTOCOL_NONE, G_PARAM_READWRITE));
 
   gstbasesrc_class->get_caps = gst_tcpclientsrc_getcaps;
   gstbasesrc_class->start = gst_tcpclientsrc_start;
@@ -173,7 +172,7 @@ gst_tcpclientsrc_init (GstTCPClientSrc * this)
   this->port = TCP_DEFAULT_PORT;
   this->host = g_strdup (TCP_DEFAULT_HOST);
   this->sock_fd = -1;
-  this->protocol = GST_TCP_PROTOCOL_TYPE_NONE;
+  this->protocol = GST_TCP_PROTOCOL_NONE;
   this->caps = NULL;
   this->curoffset = 0;
 
@@ -228,7 +227,7 @@ gst_tcpclientsrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   switch (src->protocol) {
       fd_set testfds;
 
-    case GST_TCP_PROTOCOL_TYPE_NONE:
+    case GST_TCP_PROTOCOL_NONE:
       /* do a blocking select on the socket */
       FD_ZERO (&testfds);
       FD_SET (src->sock_fd, &testfds);
@@ -246,7 +245,7 @@ gst_tcpclientsrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
       buf = gst_buffer_new_and_alloc (readsize);
       break;
 
-    case GST_TCP_PROTOCOL_TYPE_GDP:
+    case GST_TCP_PROTOCOL_GDP:
       if (!(buf = gst_tcp_gdp_read_buffer (GST_ELEMENT (src), src->sock_fd)))
         goto hit_eos;
 
@@ -438,7 +437,7 @@ gst_tcpclientsrc_start (GstBaseSrc * bsrc)
   }
 
   /* get the caps if we're using GDP */
-  if (src->protocol == GST_TCP_PROTOCOL_TYPE_GDP) {
+  if (src->protocol == GST_TCP_PROTOCOL_GDP) {
     /* if we haven't received caps yet, we should get them first */
     if (!src->caps_received) {
       GstCaps *caps;

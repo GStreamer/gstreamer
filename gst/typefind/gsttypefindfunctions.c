@@ -263,7 +263,7 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
 
 /*** audio/mpeg version 1 ****************************************************/
 
-/**
+/*
  * The chance that random data is identified as a valid mp3 header is 63 / 2^18
  * (0.024%) per try. This makes the function for calculating false positives
  *   1 - (1 - ((63 / 2 ^18) ^ GST_MP3_TYPEFIND_MIN_HEADERS)) ^ buffersize)

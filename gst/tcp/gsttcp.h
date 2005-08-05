@@ -35,9 +35,9 @@ G_BEGIN_DECLS
 
 typedef enum
 {
-  GST_TCP_PROTOCOL_TYPE_NONE,
-  GST_TCP_PROTOCOL_TYPE_GDP
-} GstTCPProtocolType;
+  GST_TCP_PROTOCOL_NONE,
+  GST_TCP_PROTOCOL_GDP
+} GstTCPProtocol;
 
 gchar * gst_tcp_host_to_ip (GstElement *element, const gchar *host);
 

@@ -44,13 +44,12 @@ extern GstElementDetails gst_adder_details;
 typedef struct _GstAdder             GstAdder;
 typedef struct _GstAdderClass        GstAdderClass;
 typedef struct _GstAdderInputChannel GstAdderInputChannel;
-typedef enum   _GstAdderFormat       GstAdderFormat;
 
-enum _GstAdderFormat {
+typedef enum {
   GST_ADDER_FORMAT_UNSET,
   GST_ADDER_FORMAT_INT,
   GST_ADDER_FORMAT_FLOAT
-};
+} GstAdderFormat;
 
 typedef void (*GstAdderFunction) (gpointer out, gpointer in, guint size);
 

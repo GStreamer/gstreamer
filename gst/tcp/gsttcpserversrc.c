@@ -150,8 +150,7 @@ gst_tcpserversrc_class_init (GstTCPServerSrc * klass)
           0, TCP_HIGHEST_PORT, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_PROTOCOL,
       g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in",
-          GST_TYPE_TCP_PROTOCOL_TYPE, GST_TCP_PROTOCOL_TYPE_NONE,
-          G_PARAM_READWRITE));
+          GST_TYPE_TCP_PROTOCOL, GST_TCP_PROTOCOL_NONE, G_PARAM_READWRITE));
 
   gstbasesrc_class->start = gst_tcpserversrc_start;
   gstbasesrc_class->stop = gst_tcpserversrc_stop;
@@ -170,7 +169,7 @@ gst_tcpserversrc_init (GstTCPServerSrc * src)
   src->server_sock_fd = -1;
   src->client_sock_fd = -1;
   src->curoffset = 0;
-  src->protocol = GST_TCP_PROTOCOL_TYPE_NONE;
+  src->protocol = GST_TCP_PROTOCOL_NONE;
 
   GST_FLAG_UNSET (src, GST_TCPSERVERSRC_OPEN);
 }
@@ -199,7 +198,7 @@ gst_tcpserversrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 
   /* read the buffer header if we're using a protocol */
   switch (src->protocol) {
-    case GST_TCP_PROTOCOL_TYPE_NONE:
+    case GST_TCP_PROTOCOL_NONE:
     {
       fd_set testfds;
 
@@ -220,7 +219,7 @@ gst_tcpserversrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
       buf = gst_buffer_new_and_alloc (readsize);
       break;
     }
-    case GST_TCP_PROTOCOL_TYPE_GDP:
+    case GST_TCP_PROTOCOL_GDP:
       /* if we haven't received caps yet, we should get them first */
       if (!src->caps_received) {
         gchar *string;

@@ -76,7 +76,7 @@ struct _GstTCPClientSink {
   int sock_fd;
 
   size_t data_written; /* how much bytes have we written ? */
-  GstTCPProtocolType protocol; /* used with the protocol enum */
+  GstTCPProtocol protocol; /* used with the protocol enum */
   gboolean caps_sent; /* whether or not we sent caps already */
 };
 

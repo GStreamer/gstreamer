@@ -1,11 +1,11 @@
 if ENABLE_GTK_DOC
-GTK_DOC_DIRS = libs
+GTK_DOC_DIRS = libs # plugins
 else
 GTK_DOC_DIRS =
 endif
 
 SUBDIRS = $(GTK_DOC_DIRS)
-DIST_SUBDIRS = libs
+DIST_SUBDIRS = libs plugins
 
 EXTRA_DIST = \
         upload.mak \

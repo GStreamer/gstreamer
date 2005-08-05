@@ -42,12 +42,11 @@ G_BEGIN_DECLS
 
 typedef struct _GstVolume GstVolume;
 typedef struct _GstVolumeClass GstVolumeClass;
-typedef enum _GstVolumeFormat GstVolumeFormat;
 
-enum _GstVolumeFormat {
+typedef enum {
   GST_VOLUME_FORMAT_INT=1,
   GST_VOLUME_FORMAT_FLOAT
-};
+} GstVolumeFormat;
 
 struct _GstVolume {
   GstBaseTransform element;

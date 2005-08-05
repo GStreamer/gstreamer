@@ -44,7 +44,7 @@ gst_fdset_mode_get_type (void)
   };
 
   if (!fdset_mode_type) {
-    fdset_mode_type = g_enum_register_static ("GstFDSetModeType", fdset_mode);
+    fdset_mode_type = g_enum_register_static ("GstFDSetMode", fdset_mode);
   }
   return fdset_mode_type;
 }

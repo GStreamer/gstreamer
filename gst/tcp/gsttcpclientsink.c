@@ -134,8 +134,7 @@ gst_tcpclientsink_class_init (GstTCPClientSink * klass)
           0, TCP_HIGHEST_PORT, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_PROTOCOL,
       g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in",
-          GST_TYPE_TCP_PROTOCOL_TYPE, GST_TCP_PROTOCOL_TYPE_NONE,
-          G_PARAM_READWRITE));
+          GST_TYPE_TCP_PROTOCOL, GST_TCP_PROTOCOL_NONE, G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_tcpclientsink_change_state;
 
@@ -152,7 +151,7 @@ gst_tcpclientsink_init (GstTCPClientSink * this)
   this->port = TCP_DEFAULT_PORT;
 
   this->sock_fd = -1;
-  this->protocol = GST_TCP_PROTOCOL_TYPE_NONE;
+  this->protocol = GST_TCP_PROTOCOL_NONE;
   GST_FLAG_UNSET (this, GST_TCPCLIENTSINK_OPEN);
 }
 
@@ -173,10 +172,10 @@ gst_tcpclientsink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   /* write the buffer header if we have one */
   switch (sink->protocol) {
-    case GST_TCP_PROTOCOL_TYPE_NONE:
+    case GST_TCP_PROTOCOL_NONE:
       break;
 
-    case GST_TCP_PROTOCOL_TYPE_GDP:
+    case GST_TCP_PROTOCOL_GDP:
       /* if we haven't send caps yet, send them first */
       if (!sink->caps_sent) {
         const GstCaps *caps;
@@ -226,9 +225,9 @@ gst_tcpclientsink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   /* write the buffer header if we have one */
   switch (sink->protocol) {
-    case GST_TCP_PROTOCOL_TYPE_NONE:
+    case GST_TCP_PROTOCOL_NONE:
       break;
-    case GST_TCP_PROTOCOL_TYPE_GDP:
+    case GST_TCP_PROTOCOL_GDP:
       GST_LOG_OBJECT (sink, "Sending buffer header through GDP");
       if (!gst_tcp_gdp_write_buffer (GST_ELEMENT (sink), sink->sock_fd, buf,
               TRUE, sink->host, sink->port))

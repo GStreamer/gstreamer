@@ -929,6 +929,7 @@ pkgconfig/gstreamer-plugins-base.pc
 pkgconfig/gstreamer-plugins-base-uninstalled.pc
 docs/Makefile
 docs/libs/Makefile
+docs/plugins/Makefile
 docs/version.entities
 po/Makefile.in
 common/Makefile

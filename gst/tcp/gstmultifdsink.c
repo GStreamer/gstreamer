@@ -91,7 +91,7 @@ enum
 };
 
 /* this is really arbitrarily chosen */
-#define DEFAULT_PROTOCOL		 GST_TCP_PROTOCOL_TYPE_NONE
+#define DEFAULT_PROTOCOL		 GST_TCP_PROTOCOL_NONE
 #define DEFAULT_MODE			 GST_FDSET_MODE_POLL
 #define DEFAULT_BUFFERS_MAX		-1
 #define DEFAULT_BUFFERS_SOFT_MAX	-1
@@ -145,7 +145,7 @@ gst_recover_policy_get_type (void)
 
   if (!recover_policy_type) {
     recover_policy_type =
-        g_enum_register_static ("GstTCPRecoverPolicy", recover_policy);
+        g_enum_register_static ("GstRecoverPolicy", recover_policy);
   }
   return recover_policy_type;
 }
@@ -166,7 +166,7 @@ gst_sync_method_get_type (void)
   };
 
   if (!sync_method_type) {
-    sync_method_type = g_enum_register_static ("GstTCPSyncMethod", sync_method);
+    sync_method_type = g_enum_register_static ("GstSyncMethod", sync_method);
   }
   return sync_method_type;
 }
@@ -208,7 +208,7 @@ gst_client_status_get_type (void)
 
   if (!client_status_type) {
     client_status_type =
-        g_enum_register_static ("GstTCPClientStatus", client_status);
+        g_enum_register_static ("GstClientStatus", client_status);
   }
   return client_status_type;
 }
@@ -291,7 +291,7 @@ gst_multifdsink_class_init (GstMultiFdSinkClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_PROTOCOL,
       g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in",
-          GST_TYPE_TCP_PROTOCOL_TYPE, DEFAULT_PROTOCOL, G_PARAM_READWRITE));
+          GST_TYPE_TCP_PROTOCOL, DEFAULT_PROTOCOL, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_MODE,
       g_param_spec_enum ("mode", "Mode",
           "The mode for selecting activity on the fds", GST_TYPE_FDSET_MODE,
@@ -361,14 +361,34 @@ gst_multifdsink_class_init (GstMultiFdSinkClass * klass)
           "Total number of bytes send to all clients", 0, G_MAXUINT64, 0,
           G_PARAM_READABLE));
 
+  /**
+   * GstMultiFdSink::add:
+   * @gstmultifdsink: the multifdsink element to emit this signal on
+   * @arg1:           the file descriptor to add to multifdsink
+   *
+   * Hand the given open file descriptor to multifdsink to write to.
+   */
   gst_multifdsink_signals[SIGNAL_ADD] =
       g_signal_new ("add", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstMultiFdSinkClass, add),
       NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+  /**
+   * GstMultiFdSink::remove:
+   * @gstmultifdsink: the multifdsink element to emit this signal on
+   * @arg1:           the file descriptor to remove from multifdsink
+   *
+   * Remove the given open file descriptor from multifdsink.
+   */
   gst_multifdsink_signals[SIGNAL_REMOVE] =
       g_signal_new ("remove", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstMultiFdSinkClass, remove),
       NULL, NULL, gst_tcp_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+  /**
+   * GstMultiFdSink::clear:
+   * @gstmultifdsink: the multifdsink element to emit this signal on
+   *
+   * Clear all file descriptors from multifdsink.
+   */
   gst_multifdsink_signals[SIGNAL_CLEAR] =
       g_signal_new ("clear", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstMultiFdSinkClass, clear),
@@ -379,10 +399,24 @@ gst_multifdsink_class_init (GstMultiFdSinkClass * klass)
       NULL, NULL, gst_tcp_marshal_BOXED__INT, G_TYPE_VALUE_ARRAY, 1,
       G_TYPE_INT);
 
+  /**
+   * GstMultiFdSink::client-added:
+   * @gstmultifdsink: the multifdsink element that emitted this signal
+   * @arg1:           the file descriptor that was added to multifdsink
+   *
+   * The given file descriptor was added to multifdsink.
+   */
   gst_multifdsink_signals[SIGNAL_CLIENT_ADDED] =
       g_signal_new ("client-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstMultiFdSinkClass, client_added),
       NULL, NULL, gst_tcp_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+  /**
+   * GstMultiFdSink::client-removed:
+   * @gstmultifdsink: the multifdsink element that emitted this signal
+   * @arg1:           the file descriptor that was removed from multifdsink
+   *
+   * The given file descriptor was removed from multifdsink.
+   */
   gst_multifdsink_signals[SIGNAL_CLIENT_REMOVED] =
       g_signal_new ("client-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstMultiFdSinkClass,
@@ -802,7 +836,7 @@ static gboolean
 gst_multifdsink_client_queue_buffer (GstMultiFdSink * sink,
     GstTCPClient * client, GstBuffer * buffer)
 {
-  if (sink->protocol == GST_TCP_PROTOCOL_TYPE_GDP) {
+  if (sink->protocol == GST_TCP_PROTOCOL_GDP) {
     guint8 *header;
     guint len;
 
@@ -945,7 +979,7 @@ gst_multifdsink_handle_client_write (GstMultiFdSink * sink,
   now = GST_TIMEVAL_TO_TIME (nowtv);
 
   /* when using GDP, first check if we have queued caps yet */
-  if (sink->protocol == GST_TCP_PROTOCOL_TYPE_GDP) {
+  if (sink->protocol == GST_TCP_PROTOCOL_GDP) {
     if (!client->caps_sent) {
       const GstCaps *caps =
           GST_PAD_CAPS (GST_PAD_PEER (GST_BASE_SINK_PAD (sink)));
