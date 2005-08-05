@@ -637,7 +637,7 @@ gst_controller_unset (GstController * self, gchar * property_name,
  * gst_controller_get:
  * @self: the controller object which handles the properties
  * @property_name: the name of the property to get
- * timestamp: the time the control-change should be read from
+ * @timestamp: the time the control-change should be read from
  *
  * Gets the value for the given controller-handled property at the requested
  * time.
@@ -841,8 +841,8 @@ gst_controller_get_value_array (GstController * self, GstClockTime timestamp,
 
 /**
  * gst_controller_set_interpolation_mode:
- * @controller:
- * @property_name:
+ * @self: the controller object
+ * @property_name: the name of the property for which to change the interpolation
  * @mode: interpolation mode
  *
  * Sets the given interpolation mode on the given property.

@@ -39,7 +39,7 @@ extern GQuark controller_key;
 /**
  * gst_object_control_properties:
  * @object: the object of which some properties should be controlled
- * @var_args: %NULL terminated list of property names that should be controlled
+ * @...: %NULL terminated list of property names that should be controlled
  *
  * Convenience function for GObject
  *
@@ -68,7 +68,7 @@ gst_object_control_properties (GObject * object, ...)
 /**
  * gst_object_uncontrol_properties:
  * @object: the object of which some properties should not be controlled anymore
- * @var_args: %NULL terminated list of property names that should be controlled
+ * @...: %NULL terminated list of property names that should be controlled
  *
  * Convenience function for GObject
  *
@@ -99,8 +99,7 @@ gst_object_uncontrol_properties (GObject * object, ...)
  * gst_object_get_controller:
  * @object: the object that has controlled properties
  *
- * Returns: the controller handling some of the given element's properties,
- * %NULL if no controller
+ * Returns: the controller handling some of the given element's properties, %NULL if no controller
  */
 GstController *
 gst_object_get_controller (GObject * object)
@@ -188,7 +187,7 @@ gst_object_get_value_arrays (GObject * object, GstClockTime timestamp,
 
 /**
  * gst_object_get_value_array:
- * @self: the object that has controlled properties
+ * @object: the object that has controlled properties
  * @timestamp: the time that should be processed
  * @value_array: array to put control-values in
  *

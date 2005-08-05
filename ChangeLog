@@ -1,5 +1,13 @@
 2005-08-05  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/controller/gst-controller.c:
+	* libs/gst/controller/gst-controller.h:
+	* libs/gst/controller/gst-helper.c:
+	  adding more entries to the docs and fix small doc-bugs
+
+2005-08-05  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/gst/gstreamer-docs.sgml:
 	* docs/gst/gstreamer-sections.txt:
 	* docs/gst/gstreamer.types:

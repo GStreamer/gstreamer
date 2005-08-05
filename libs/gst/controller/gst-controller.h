@@ -61,15 +61,20 @@ typedef struct _GstTimedValue
 
 /**
  * GstValueArray:
+ * @property_name: the name of the property this array belongs to
+ * @nbsamples: number of samples requested
+ * @sample_interval: interval between each sample
+ * @values: pointer to the array
  *
- * Structure to receive multiple values at once
+ * Structure to receive multiple values at once.
+ * If the pointer to the values array is NULL, it will be allocated (CHECKME).
  */
 typedef struct _GstValueArray
 {
   gchar *property_name;
-  gint nbsamples;               // Number of samples requested
-  GstClockTime sample_interval; // Interval between each sample
-  gpointer *values;             // pointer to the array (so it can be filled if NULL)
+  gint nbsamples;
+  GstClockTime sample_interval;
+  gpointer *values;
 } GstValueArray;
 
 
