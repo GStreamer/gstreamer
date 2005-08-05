@@ -1,3 +1,10 @@
+2005-08-05  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	  Release gst-ffmpeg 0.8.6 "Vamoz a la Playa".
+
 2005-07-28  daniel fischer  <dan@f3c.com>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>

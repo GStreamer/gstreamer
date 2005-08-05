@@ -1,3 +1,26 @@
+This is GStreamer FFMpeg 0.8.6
+
+Changes since 0.8.5:
+	New elements:
+	* post-processing plugin
+	* vob/flv muxers, h264 support in mp4 muxer
+
+	Snapshot update:
+	* to 20/7
+	* many performance improvements, especially in h264 decoding
+
+Bugs fixed since 0.8.5:
+	* 160665 : [ffdec_h264] VideoSoft h.264 videos (VSSH) make totem/ffd...
+	* 308335 : [PATCH] ffmpeg postprocessing plugins
+	* 308415 : gst-ffmpeg cvs doesn't build in
+	* 308804 : ffmpeg encoders do not set the GST_BUFFER_DELTA_UNIT flag
+	* 309050 : [PATCH] flv encoding
+	* 309051 : [PATCH] enable "streamheader" properties
+	* 309149 : [flv] flv demuxer/decoder doesn't set correct timestamps
+	* 310054 : [PATCH] fix flag handling for GST_FFMPEG_URL_STREAMHEADER
+	* 311593 : fix timestamps
+	* 311802 : [PATCH] local variable 'bq' for timestamp conversion unin...
+
 This is GStreamer FFMpeg 0.8.5
 
 Changes since 0.8.4:

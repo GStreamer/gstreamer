@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer FFmpeg 0.8.5 "For the better of the world"
+GStreamer: Release notes for GStreamer FFmpeg 0.8.6 "Vamoz a la Playa"
         
 
 The GStreamer team is happy to announce a new stable release of the
@@ -16,33 +16,23 @@ regularly from our modifications.
 Features of this release
     
       * codecs for most popular formats
-      * stability fixes
-      * gcc4 support
-      * snapshot update to 21/4
-      * timestamp smoothing
-      * deinterlacer and scaler elements added
-      * new codecs for alac, shorten
-      * much improved h264 support
-      * some muxers added (mpeg, mp4)
+      * snapshot update to 20/7
+      * new post-processing plugin
+      * added flv/vob muxers
       * decoder performance improvements
 
 Bugs fixed in this release
     
-      * 149097 : Internal GStreamer error: pad problem. File a bug.
-      * 169082 : segfault with invalid pipeline
-      * 169823 : [enhancement] add alac decoding support :)
-      * 172668 : gst-ffmpeg 0.8.4 doesn't compile with gcc4
-      * 172961 : valgrind gives a lot of errors on gst-ffmpeg elements
-      * 173044 : [PATCH to ffmpeg] Memory error in mjpeg_decode_frame
-      * 300200 : cpu usage on certain .mov file goes to 100% once file has...
-      * 300923 : [PATCH] make ffdec_* elements use gst_pad_alloc_buffer
-      * 301717 : [PATCH] ffenc_mpeg4 segfaults in _get_caps
-      * 301783 : [PATCH] enable our get/release_buffer functions in ffmpegdec
-      * 302017 : possible segfault
-      * 302147 : [PATCH] support YUVJ(420|422|444)P colorspace format in f...
-      * 306530 : quicktime files encoded with "Sorensen video v.3" have fr...
-      * 306770 : [PATCH] only do timestamp interpolation for delayed streams
-      * 306893 : Unreffing already unreffed buffer when going from PAUSED-...
+      * 160665 : [ffdec_h264] VideoSoft h.264 videos (VSSH) make totem/ffd...
+      * 308335 : [PATCH] ffmpeg postprocessing plugins
+      * 308415 : gst-ffmpeg cvs doesn't build in
+      * 308804 : ffmpeg encoders do not set the GST_BUFFER_DELTA_UNIT flag
+      * 309050 : [PATCH] flv encoding
+      * 309051 : [PATCH] enable "streamheader" properties
+      * 309149 : [flv] flv demuxer/decoder doesn't set correct timestamps
+      * 310054 : [PATCH] fix flag handling for GST_FFMPEG_URL_STREAMHEADER
+      * 311593 : fix timestamps 
+      * 311802 : [PATCH] local variable 'bq' for timestamp conversion unin...
 
 Download
 
@@ -73,4 +63,6 @@ Contributors to this release
       * Ronald Bultje
       * Edward Hervey
       * Luca Ognibene
+      * Daniel Fischer
+      * Sebastien Cote
  
