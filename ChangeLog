@@ -1,5 +1,10 @@
 2005-08-05  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/playback/gstplaybin.c: (gen_video_element):
+	  Enable videoscale.
+
+2005-08-05  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst-libs/gst/gconf/gconf.c:
 	* gst-libs/gst/gconf/gconf.h:
 	  Fix some Andy Problem [tm].

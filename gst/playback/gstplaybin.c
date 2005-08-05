@@ -374,7 +374,7 @@ gen_video_element (GstPlayBin * play_bin)
   GstElement *element;
   GstElement *conv;
 
-  //GstElement *scale;
+  GstElement *scale;
   GstElement *sink;
   GstElement *identity;
   GstPad *pad;
@@ -390,7 +390,7 @@ gen_video_element (GstPlayBin * play_bin)
   g_object_set (identity, "silent", TRUE, NULL);
   g_signal_connect (identity, "handoff", G_CALLBACK (handoff), play_bin);
   conv = gst_element_factory_make ("ffmpegcolorspace", "vconv");
-  //scale = gst_element_factory_make ("videoscale", "vscale");
+  scale = gst_element_factory_make ("videoscale", "vscale");
   if (play_bin->video_sink) {
     sink = play_bin->video_sink;
   } else {
@@ -401,11 +401,11 @@ gen_video_element (GstPlayBin * play_bin)
 
   gst_bin_add (GST_BIN (element), identity);
   gst_bin_add (GST_BIN (element), conv);
-  //gst_bin_add (GST_BIN (element), scale);
+  gst_bin_add (GST_BIN (element), scale);
   gst_bin_add (GST_BIN (element), sink);
   gst_element_link_pads (identity, "src", conv, "sink");
-  gst_element_link_pads (conv, "src",   /*scale, "sink");
-                                           gst_element_link_pads (scale, "src", */ sink, "sink");
+  gst_element_link_pads (conv, "src", scale, "sink");
+  gst_element_link_pads (scale, "src", sink, "sink");
 
   pad = gst_element_get_pad (identity, "sink");
   gst_element_add_pad (element, gst_ghost_pad_new ("sink", pad));
