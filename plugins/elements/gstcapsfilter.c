@@ -152,11 +152,14 @@ gst_capsfilter_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_FILTER_CAPS:{
-      GstCaps *new_caps = gst_caps_copy (gst_value_get_caps (value));
+      const GstCaps *new_caps_val = gst_value_get_caps (value);
+      GstCaps *new_caps;
       GstCaps *old_caps;
 
-      if (new_caps == NULL) {
+      if (new_caps_val == NULL) {
         new_caps = gst_caps_new_any ();
+      } else {
+        new_caps = gst_caps_copy (new_caps_val);
       }
 
       old_caps = capsfilter->filter_caps;

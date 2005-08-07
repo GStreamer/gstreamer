@@ -1,3 +1,8 @@
+2005-08-07  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/elements/gstcapsfilter.c: (gst_capsfilter_set_property):
+	  Allow NULL as filter-caps (which means "any").
+
 2005-08-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/libs/gstreamer-libs-sections.txt:
