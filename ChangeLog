@@ -1,3 +1,8 @@
+2005-08-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/jpeg/Makefile.am:
+	  Fix compile.
+
 2005-08-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
