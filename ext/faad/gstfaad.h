@@ -39,16 +39,14 @@ G_BEGIN_DECLS
 typedef struct _GstFaad {
   GstElement element;
 
-  /* pads */
-  GstPad *srcpad, *sinkpad;
+  GstPad    *srcpad;
+  GstPad    *sinkpad;
 
-  /* cache for latest MPEG-frame */
-  gint samplerate,
-       channels,
-       bps;
+  guint      samplerate; /* sample rate of the last MPEG frame    */
+  guint      channels;   /* number of channels of the last frame  */
+  guint      bps;        /* bytes per sample                      */
 
-  /* used to keep input leftovers */
-  GstBuffer *tempbuf;
+  GstBuffer *tempbuf;    /* used to keep input leftovers          */
 
   /* FAAD object */
   faacDecHandle handle;
@@ -58,6 +56,10 @@ typedef struct _GstFaad {
   guchar *channel_positions;
   gboolean need_channel_setup;
   gboolean packetised; /* We must differentiate between raw and packetised streams */
+
+  guint64 next_ts;     /* timestamp of next buffer                        */
+  guint64 bytes_in;    /* bytes received                                  */
+  guint64 sum_dur_out; /* sum of durations of decoded buffers we sent out */
 } GstFaad;
 
 typedef struct _GstFaadClass {
