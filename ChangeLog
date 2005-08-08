@@ -1,3 +1,8 @@
+2005-08-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/base/gstbasetransform.c: (gst_base_transform_buffer_alloc):
+	  Fix a pretty good memleak.
+
 2005-08-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstiterator.h:

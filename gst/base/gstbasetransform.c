@@ -535,6 +535,9 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
       goto unknown_size;
     }
 
+    if (*buf) {
+      gst_buffer_unref (*buf);
+    }
     *buf = gst_buffer_new_and_alloc (got_size);
     gst_buffer_set_caps (*buf, sinkcaps);
     GST_BUFFER_OFFSET (*buf) = offset;
@@ -549,14 +552,20 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 not_configured:
   {
     /* let the default allocator handle it */
-    *buf = NULL;
+    if (*buf) {
+      gst_buffer_unref (*buf);
+      *buf = NULL;
+    }
     gst_object_unref (trans);
     return GST_FLOW_OK;
   }
 unknown_size:
   {
     /* let the default allocator handle it */
-    *buf = NULL;
+    if (*buf) {
+      gst_buffer_unref (*buf);
+      *buf = NULL;
+    }
     gst_object_unref (trans);
     return GST_FLOW_OK;
   }
