@@ -54,10 +54,10 @@ BuildRequires:  XFree86-devel
 # @USE_GNOME_VFS_TRUE@BuildRequires: gnome-vfs2-devel > 1.9.4.00
 # @USE_HERMES_TRUE@Requires:      Hermes >= 1.3.0
 # @USE_HERMES_TRUE@BuildRequires: Hermes-devel >= 1.3.0
-# @USE_JPEG_TRUE@Requires:      libjpeg
-# @USE_JPEG_TRUE@BuildRequires: libjpeg-devel
-# @USE_LIBPNG_TRUE@Requires:      libpng >= 1.2.0
-# @USE_LIBPNG_TRUE@BuildRequires: libpng-devel >= 1.2.0
+@USE_JPEG_TRUE@Requires:      libjpeg
+@USE_JPEG_TRUE@BuildRequires: libjpeg-devel
+@USE_LIBPNG_TRUE@Requires:      libpng >= 1.2.0
+@USE_LIBPNG_TRUE@BuildRequires: libpng-devel >= 1.2.0
 # @USE_MIKMOD_TRUE@Requires:      mikmod
 # @USE_MIKMOD_TRUE@BuildRequires: mikmod
 @USE_OSS_TRUE@BuildRequires: glibc-devel
@@ -152,12 +152,12 @@ rm -rf $RPM_BUILD_ROOT
 # @USE_FLAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstflac.so
 # @USE_HERMES_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsthermescolorspace.so
 # @USE_SMOOTHWAVE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsmoothwave.so
-# @USE_JPEG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstjpeg.so
+@USE_JPEG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstjpeg.so
 # @USE_MIKMOD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmikmod.so
 # @USE_SDL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsdlvideosink.so
 # @USE_VORBIS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvorbis.so
 # @USE_VORBIS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstogg.so
-# @USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpng.so
+@USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpng.so
 @USE_OSS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstossaudio.so
 # @USE_GST_V4L_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux.so
 ## @USE_RAW1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgst1394.so
