@@ -1468,11 +1468,24 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
       gst_message_unref (message);
       break;
     }
-    default:
+    default:{
+      GstBus *bus;
+
       /* Send all other messages upward */
-      GST_DEBUG_OBJECT (bin, "posting message upward");
-      gst_bus_post (GST_ELEMENT (bin)->bus, message);
+      GST_LOCK (bin);
+      if (!(bus = GST_ELEMENT (bin)->bus)) {
+        GST_DEBUG_OBJECT (bin, "dropping message because no parent bus");
+        GST_UNLOCK (bin);
+      } else {
+        gst_object_ref (bus);
+        GST_UNLOCK (bin);
+
+        GST_DEBUG_OBJECT (bin, "posting message upward");
+        gst_bus_post (GST_ELEMENT (bin)->bus, message);
+        gst_object_unref (bus);
+      }
       break;
+    }
   }
 
   return GST_BUS_DROP;
