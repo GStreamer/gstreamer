@@ -1,3 +1,26 @@
+2005-08-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/jpeg/Makefile.am:
+	* ext/jpeg/gstjpeg.c: (plugin_init):
+	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_get_type),
+	(gst_jpeg_dec_finalize), (gst_jpeg_dec_base_init),
+	(gst_jpeg_dec_class_init), (gst_jpeg_dec_fill_input_buffer),
+	(gst_jpeg_dec_init_source), (gst_jpeg_dec_skip_input_data),
+	(gst_jpeg_dec_resync_to_restart), (gst_jpeg_dec_term_source),
+	(gst_jpeg_dec_my_output_message), (gst_jpeg_dec_my_emit_message),
+	(gst_jpeg_dec_my_error_exit), (gst_jpeg_dec_init),
+	(is_jpeg_start_marker), (is_jpeg_end_marker),
+	(gst_jpeg_dec_find_jpeg_header), (gst_jpeg_dec_ensure_header),
+	(gst_jpeg_dec_have_end_marker),
+	(gst_jpeg_dec_parse_tag_has_entropy_segment),
+	(gst_jpeg_dec_parse_image_data), (gst_jpeg_dec_chain),
+	(gst_jpeg_dec_change_state):
+	* ext/jpeg/gstjpegdec.h:
+	  Port jpegdec to 0.9; handles 'progressive loading' now, ie. input does
+	  no longer need to be one single buffer.
+
 2005-08-04  Andy Wingo  <wingo@pobox.com>
 
 	* sys/oss/gstossaudio.c (plugin_init): Second-class citizen.
