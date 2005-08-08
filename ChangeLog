@@ -1,3 +1,8 @@
+2005-08-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/alsa/gstalsasink.c: (set_hwparams):
+	  Assign debug category, add negotiation debug msgs.
+
 2005-08-07  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnomevfssrc_start):

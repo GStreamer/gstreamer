@@ -30,7 +30,7 @@
 #include <getopt.h>
 #include <alsa/asoundlib.h>
 
-
+#include "gstalsa.h"
 #include "gstalsasink.h"
 
 /* elementfactory information */
@@ -240,6 +240,8 @@ set_hwparams (GstAlsaSink * alsa)
   snd_pcm_hw_params_t *params;
 
   snd_pcm_hw_params_alloca (&params);
+
+  GST_DEBUG ("Negotiating to %d channels @ %d Hz", alsa->channels, alsa->rate);
 
   /* choose all parameters */
   CHECK (snd_pcm_hw_params_any (alsa->handle, params), no_config);
