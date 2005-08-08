@@ -133,7 +133,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc ABOUT-NLS REQUIREMENTS DOCBUILDING
 %{_libdir}/libgstreamer-%{majorminor}.so.*
 %{_libdir}/libgstbase-%{majorminor}.so.*
-%{_libdir}/libgstcontrol-%{majorminor}.so.*
+%{_libdir}/libgstcontroller-%{majorminor}.so.*
 
 %dir %{_libdir}/gstreamer-%{majorminor}
 %{_libdir}/gstreamer-%{majorminor}/libgstelements.so
@@ -182,22 +182,22 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_includedir}/gstreamer-%{majorminor}
 %dir %{_includedir}/gstreamer-%{majorminor}/gst
 %{_includedir}/gstreamer-%{majorminor}/gst/*.h
+%{_includedir}/gstreamer-%{majorminor}/gst/controller/gst-controller.h
 
 %{_includedir}/gstreamer-%{majorminor}/gst/base
-%{_includedir}/gstreamer-%{majorminor}/gst/control
 %{_includedir}/gstreamer-%{majorminor}/gst/dataprotocol
 %{_includedir}/gstreamer-%{majorminor}/gst/getbits
 
 %{_libdir}/libgstdataprotocol-%{majorminor}.so.*
 %{_libdir}/libgstreamer-%{majorminor}.so
 %{_libdir}/libgstbase-%{majorminor}.so
-%{_libdir}/libgstcontrol-%{majorminor}.so
+%{_libdir}/libgstcontroller-%{majorminor}.so
 
 %{_datadir}/aclocal/gst-element-check-%{majorminor}.m4
 %{_libdir}/pkgconfig/gstreamer-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-base-%{majorminor}.pc
-%{_libdir}/pkgconfig/gstreamer-control-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-dataprotocol-%{majorminor}.pc
+%{_libdir}/pkgconfig/gstreamer-controller-%{majorminor}.pc
 
 # %doc %{_datadir}/gtk-doc/html/gstreamer-%{majorminor}
 # %doc %{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}
