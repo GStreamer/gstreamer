@@ -1,3 +1,9 @@
+2005-08-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_init),
+	(gst_jpeg_dec_setcaps), (gst_jpeg_dec_chain):
+	  Add setcaps() function (for mjpeg).
+
 2005-08-08  Andy Wingo  <wingo@pobox.com>
 
 	* ext/esd/esdsink.c (gst_esdsink_getcaps): Seems that wierd
