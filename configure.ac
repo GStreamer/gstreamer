@@ -447,6 +447,27 @@ GST_CHECK_FEATURE(SIDPLAY, [sidplay plug-in], sidplay, [
   GST_PATH_SIDPLAY()
 ])
 
+dnl *** jpeg ***
+dnl FIXME: we could use header checks here as well IMO
+translit(dnm, m, l) AM_CONDITIONAL(USE_JPEG, true)
+GST_CHECK_FEATURE(JPEG, [jpeg], jpegenc jpegdec, [
+  AC_ARG_WITH(jpeg-mmx,
+    [  --with-jpeg-mmx, path to MMX'ified JPEG library])
+  OLD_LIBS="$LIBS"
+  if test x$with_jpeg_mmx != x; then
+    LIBS="$LIBS -L$with_jpeg_mmx"
+  fi
+  AC_CHECK_LIB(jpeg-mmx, jpeg_set_defaults, HAVE_JPEG="yes", HAVE_JPEG="no")
+  JPEG_LIBS="$LIBS -ljpeg-mmx"
+  LIBS="$OLD_LIBS"
+  if test x$HAVE_JPEG != xyes; then
+    AC_CHECK_LIB(jpeg, jpeg_set_defaults, HAVE_JPEG="yes", HAVE_JPEG="no")
+    JPEG_LIBS="-ljpeg"
+  fi
+  AC_SUBST(JPEG_LIBS)
+])
+
+
 dnl *** mad ***
 dnl FIXME: we could use header checks here as well IMO
 translit(dnm, m, l) AM_CONDITIONAL(USE_MAD, true)
@@ -596,6 +617,7 @@ gst/silence/Makefile
 gst/udp/Makefile
 gst/videobox/Makefile
 gst/videofilter/Makefile
+ext/jpeg/Makefile
 gst/wavparse/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
