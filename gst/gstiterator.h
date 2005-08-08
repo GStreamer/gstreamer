@@ -23,7 +23,7 @@
 #define __GST_ITERATOR_H__
 
 #include <glib-object.h> /* for GValue in the fold */
-#include "gstconfig.h"
+#include <gst/gstconfig.h>
 
 G_BEGIN_DECLS
 
