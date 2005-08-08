@@ -1,5 +1,8 @@
 2005-08-08  Andy Wingo  <wingo@pobox.com>
 
+	* ext/esd/esdsink.c (gst_esdsink_getcaps): Seems that wierd
+	va_list caps setting function was borked. Fixed esdsink.
+
 	* sys/oss/gstosssink.c (gst_oss_sink_open, gst_oss_sink_close) 
 	(gst_oss_sink_prepare, gst_oss_sink_unprepare): Update for newer
 	audiosink api.
