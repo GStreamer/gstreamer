@@ -1,3 +1,15 @@
+2005-08-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/base/gstadapter.h:
+	* gst/base/gstbasesink.h:
+	* gst/base/gstbasesrc.h:
+	* gst/base/gstbasetransform.h:
+	* gst/base/gstcollectpads.h:
+	* gst/base/gstpushsrc.h:
+	* gst/gstiterator.h:
+	  Add padding to our base elements' class and instance structs and
+	  to GstIterator (you will need to rebuild all plugins and apps!)
+
 2005-08-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstbin.c: (bin_bus_handler):

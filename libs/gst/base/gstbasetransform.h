@@ -55,6 +55,9 @@ struct _GstBaseTransform {
   gboolean	 in_place;
   guint		 out_size;
   gboolean	 delay_configure;
+
+  /*< private >*/
+  gpointer       _gst_reserved[GST_PADDING];
 };
 
 struct _GstBaseTransformClass {
@@ -86,6 +89,9 @@ struct _GstBaseTransformClass {
 
   /* transform a buffer inplace */
   GstFlowReturn (*transform_ip) (GstBaseTransform *trans, GstBuffer *buf);
+
+  /*< private >*/
+  gpointer       _gst_reserved[GST_PADDING];
 };
 
 void		gst_base_transform_set_passthrough (GstBaseTransform *trans, gboolean passthrough);

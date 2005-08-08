@@ -91,6 +91,9 @@ struct _GstBaseSrc {
 
   gint           num_buffers;
   gint           num_buffers_left;
+
+  /*< private >*/
+  gpointer       _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -136,6 +139,9 @@ struct _GstBaseSrcClass {
   /* ask the subclass to create a buffer with offset and size */
   GstFlowReturn (*create)       (GstBaseSrc *src, guint64 offset, guint size,
 		                 GstBuffer **buf);
+
+  /*< private >*/
+  gpointer       _gst_reserved[GST_PADDING];
 };
 
 GType gst_base_src_get_type(void);

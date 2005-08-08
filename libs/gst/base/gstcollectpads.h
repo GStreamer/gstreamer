@@ -70,11 +70,15 @@ struct _GstCollectPads {
   guint		 queuedpads;		/* number of pads with a buffer */
 
   gboolean	 started;
+
+  gpointer       _gst_reserved[GST_PADDING];
 };
 
 struct _GstCollectPadsClass {
   GstObjectClass parent_class;
 
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_collectpads_get_type(void);

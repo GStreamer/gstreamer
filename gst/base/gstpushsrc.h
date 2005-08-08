@@ -41,6 +41,9 @@ typedef struct _GstPushSrcClass GstPushSrcClass;
 
 struct _GstPushSrc {
   GstBaseSrc     parent;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstPushSrcClass {
@@ -48,6 +51,9 @@ struct _GstPushSrcClass {
 
   /* ask the subclass to create a buffer */
   GstFlowReturn (*create) (GstPushSrc *src, GstBuffer **buf);
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_push_src_get_type(void);

@@ -51,12 +51,14 @@ struct _GstAdapter {
   guint		assembled_size;
   guint		assembled_len;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstAdapterClass {
   GObjectClass	parent_class;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

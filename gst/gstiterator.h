@@ -22,8 +22,8 @@
 #ifndef __GST_ITERATOR_H__
 #define __GST_ITERATOR_H__
 
-#include <glib.h>
 #include <glib-object.h> /* for GValue in the fold */
+#include "gstconfig.h"
 
 G_BEGIN_DECLS
 
@@ -68,6 +68,9 @@ struct _GstIterator {
   guint32   cookie;		/* cookie of the iterator */
   guint32  *master_cookie;	/* pointer to guint32 holding the cookie when this
 				   iterator was created */
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* creating iterators */

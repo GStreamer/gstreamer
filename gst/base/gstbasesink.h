@@ -69,6 +69,9 @@ struct _GstBaseSink {
   gboolean       eos;
   gboolean       need_preroll;
   gboolean       have_preroll;
+
+  /*< private >*/
+  gpointer       _gst_reserved[GST_PADDING];
 };
 
 struct _GstBaseSinkClass {
@@ -99,6 +102,9 @@ struct _GstBaseSinkClass {
   gboolean      (*event)        (GstBaseSink *sink, GstEvent *event);
   GstFlowReturn (*preroll)      (GstBaseSink *sink, GstBuffer *buffer);
   GstFlowReturn (*render)       (GstBaseSink *sink, GstBuffer *buffer);
+
+  /*< private >*/
+  gpointer       _gst_reserved[GST_PADDING];
 };
 
 GType gst_base_sink_get_type(void);
