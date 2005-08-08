@@ -695,6 +695,13 @@ remove_sinks (GstPlayBin * play_bin)
   g_list_free (play_bin->sinks);
   play_bin->sinks = NULL;
 
+  /* FIXME: this is probably some refcounting problem */
+  if (play_bin->visualisation && GST_OBJECT_PARENT (play_bin->visualisation)) {
+    gst_bin_remove (GST_BIN (GST_OBJECT_PARENT (play_bin->visualisation)),
+        play_bin->visualisation);
+    gst_element_set_state (play_bin->visualisation, GST_STATE_NULL);
+  }
+
   if (play_bin->frame) {
     gst_buffer_unref (play_bin->frame);
     play_bin->frame = NULL;
