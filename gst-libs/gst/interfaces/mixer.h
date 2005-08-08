@@ -86,7 +86,6 @@ struct _GstMixerClass {
 			   GstMixerTrack *channel,
 			   gint          *volumes);
 
-  /* use padding */
   void		(* set_option)     (GstMixer      *mixer,
 				    GstMixerOptions *opts,
 				    gchar         *value);
@@ -97,7 +96,8 @@ struct _GstMixerClass {
 			   GstMixerOptions *opts,
 			   gchar         *option);
 
-  gpointer _gst_reserved[GST_PADDING-3];
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType		gst_mixer_get_type	(void);
