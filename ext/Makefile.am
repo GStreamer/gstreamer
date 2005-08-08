@@ -451,4 +451,6 @@ DIST_SUBDIRS=\
 	dv \
 	amrnb \
 	faad \
-	mpeg2dec
+	mpeg2dec \
+	jpeg \
+	libpng
