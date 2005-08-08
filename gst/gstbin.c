@@ -1460,7 +1460,7 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
 
       if (is_eos (bin)) {
         GST_DEBUG_OBJECT (bin, "all sinks posted EOS");
-        gst_bus_post (GST_ELEMENT (bin)->bus,
+        gst_element_post_message (GST_ELEMENT (bin),
             gst_message_new_eos (GST_OBJECT (bin)));
       }
 
@@ -1468,24 +1468,11 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
       gst_message_unref (message);
       break;
     }
-    default:{
-      GstBus *bus;
-
+    default:
       /* Send all other messages upward */
-      GST_LOCK (bin);
-      if (!(bus = GST_ELEMENT (bin)->bus)) {
-        GST_DEBUG_OBJECT (bin, "dropping message because no parent bus");
-        GST_UNLOCK (bin);
-      } else {
-        gst_object_ref (bus);
-        GST_UNLOCK (bin);
-
-        GST_DEBUG_OBJECT (bin, "posting message upward");
-        gst_bus_post (GST_ELEMENT (bin)->bus, message);
-        gst_object_unref (bus);
-      }
+      GST_DEBUG_OBJECT (bin, "posting message upward");
+      gst_element_post_message (GST_ELEMENT (bin), message);
       break;
-    }
   }
 
   return GST_BUS_DROP;
