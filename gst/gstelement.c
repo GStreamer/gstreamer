@@ -1887,6 +1887,8 @@ activate_pads (GstPad * pad, GValue * ret, gboolean * active)
 {
   if (!gst_pad_set_active (pad, *active))
     g_value_set_boolean (ret, FALSE);
+  else if (!*active)
+    gst_pad_set_caps (pad, NULL);
 
   gst_object_unref (pad);
   return TRUE;

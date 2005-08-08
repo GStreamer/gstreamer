@@ -1,3 +1,10 @@
+2005-08-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstelement.c: (activate_pads):
+	  On paused->ready, set pad->caps to NULL, as is the documented
+	  behaviour in this state change. Fixes playback of series of
+	  media files when visualization is enabled in Totem.
+
 2005-08-07  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/elements/gstcapsfilter.c: (gst_capsfilter_set_property):
