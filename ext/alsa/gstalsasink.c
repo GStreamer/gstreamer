@@ -57,8 +57,10 @@ static void gst_alsasink_get_property (GObject * object,
 
 static GstCaps *gst_alsasink_getcaps (GstBaseSink * bsink);
 
-static gboolean gst_alsasink_open (GstAudioSink * asink,
+static gboolean gst_alsasink_open (GstAudioSink * asink);
+static gboolean gst_alsasink_prepare (GstAudioSink * asink,
     GstRingBufferSpec * spec);
+static gboolean gst_alsasink_unprepare (GstAudioSink * asink);
 static gboolean gst_alsasink_close (GstAudioSink * asink);
 static guint gst_alsasink_write (GstAudioSink * asink, gpointer data,
     guint length);
@@ -163,6 +165,8 @@ gst_alsasink_class_init (GstAlsaSinkClass * klass)
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_alsasink_getcaps);
 
   gstaudiosink_class->open = GST_DEBUG_FUNCPTR (gst_alsasink_open);
+  gstaudiosink_class->prepare = GST_DEBUG_FUNCPTR (gst_alsasink_prepare);
+  gstaudiosink_class->unprepare = GST_DEBUG_FUNCPTR (gst_alsasink_unprepare);
   gstaudiosink_class->close = GST_DEBUG_FUNCPTR (gst_alsasink_close);
   gstaudiosink_class->write = GST_DEBUG_FUNCPTR (gst_alsasink_write);
   gstaudiosink_class->delay = GST_DEBUG_FUNCPTR (gst_alsasink_delay);
@@ -480,7 +484,29 @@ error:
 }
 
 static gboolean
-gst_alsasink_open (GstAudioSink * asink, GstRingBufferSpec * spec)
+gst_alsasink_open (GstAudioSink * asink)
+{
+  GstAlsaSink *alsa;
+  gint err;
+
+  alsa = GST_ALSA_SINK (asink);
+
+  CHECK (snd_pcm_open (&alsa->handle, alsa->device, SND_PCM_STREAM_PLAYBACK,
+          SND_PCM_NONBLOCK), open_error);
+
+  return TRUE;
+
+  /* ERRORS */
+open_error:
+  {
+    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+        ("Playback open error: %s", snd_strerror (err)), (NULL));
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_alsasink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 {
   GstAlsaSink *alsa;
   gint err;
@@ -489,9 +515,6 @@ gst_alsasink_open (GstAudioSink * asink, GstRingBufferSpec * spec)
 
   if (!alsasink_parse_spec (alsa, spec))
     goto spec_parse;
-
-  CHECK (snd_pcm_open (&alsa->handle, alsa->device, SND_PCM_STREAM_PLAYBACK,
-          SND_PCM_NONBLOCK), open_error);
 
   CHECK (snd_pcm_nonblock (alsa->handle, 0), non_block);
 
@@ -515,12 +538,6 @@ spec_parse:
         ("Error parsing spec"), (NULL));
     return FALSE;
   }
-open_error:
-  {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Playback open error: %s", snd_strerror (err)), (NULL));
-    return FALSE;
-  }
 non_block:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
@@ -542,11 +559,47 @@ sw_params_failed:
 }
 
 static gboolean
-gst_alsasink_close (GstAudioSink * asink)
+gst_alsasink_unprepare (GstAudioSink * asink)
 {
   GstAlsaSink *alsa;
+  gint err;
 
   alsa = GST_ALSA_SINK (asink);
+
+  CHECK (snd_pcm_drop (alsa->handle), drop);
+
+  CHECK (snd_pcm_hw_free (alsa->handle), hw_free);
+
+  CHECK (snd_pcm_nonblock (alsa->handle, 1), non_block);
+
+  return TRUE;
+
+  /* ERRORS */
+drop:
+  {
+    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+        ("Could not drop samples: %s", snd_strerror (err)), (NULL));
+    return FALSE;
+  }
+hw_free:
+  {
+    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+        ("Could not free hw params: %s", snd_strerror (err)), (NULL));
+    return FALSE;
+  }
+non_block:
+  {
+    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+        ("Could not set device to nonblocking: %s", snd_strerror (err)),
+        (NULL));
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_alsasink_close (GstAudioSink * asink)
+{
+  GstAlsaSink *alsa = GST_ALSA_SINK (asink);
 
   snd_pcm_close (alsa->handle);
 

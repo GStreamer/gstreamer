@@ -419,13 +419,15 @@ gst_base_audio_sink_change_state (GstElement * element)
 
   switch (transition) {
     case GST_STATE_NULL_TO_READY:
-      break;
-    case GST_STATE_READY_TO_PAUSED:
       if (sink->ringbuffer == NULL) {
         sink->ringbuffer = gst_base_audio_sink_create_ringbuffer (sink);
         gst_ring_buffer_set_callback (sink->ringbuffer,
             gst_base_audio_sink_callback, sink);
       }
+      if (!gst_ring_buffer_open_device (sink->ringbuffer))
+        return GST_STATE_FAILURE;
+      break;
+    case GST_STATE_READY_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
@@ -441,10 +443,11 @@ gst_base_audio_sink_change_state (GstElement * element)
       break;
     case GST_STATE_PAUSED_TO_READY:
       gst_ring_buffer_stop (sink->ringbuffer);
-      gst_ring_buffer_release (sink->ringbuffer);
       gst_pad_set_caps (GST_BASE_SINK_PAD (sink), NULL);
+      gst_ring_buffer_release (sink->ringbuffer);
       break;
     case GST_STATE_READY_TO_NULL:
+      gst_ring_buffer_close_device (sink->ringbuffer);
       break;
     default:
       break;

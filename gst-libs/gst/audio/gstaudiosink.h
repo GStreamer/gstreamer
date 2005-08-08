@@ -67,15 +67,19 @@ struct _GstAudioSinkClass {
   /* vtable */
 
   /* open the device with given specs */
-  gboolean (*open)   (GstAudioSink *sink, GstRingBufferSpec *spec);
+  gboolean (*open)      (GstAudioSink *sink);
+  /* prepare resources and state to operate with the given specs */
+  gboolean (*prepare)   (GstAudioSink *sink, GstRingBufferSpec *spec);
+  /* undo anything that was done in prepare() */
+  gboolean (*unprepare) (GstAudioSink *sink);
   /* close the device */
-  gboolean (*close)  (GstAudioSink *sink);
+  gboolean (*close)     (GstAudioSink *sink);
   /* write samples to the device */
-  guint    (*write)  (GstAudioSink *sink, gpointer data, guint length);
+  guint    (*write)     (GstAudioSink *sink, gpointer data, guint length);
   /* get number of samples queued in the device */
-  guint    (*delay)  (GstAudioSink *sink);
+  guint    (*delay)     (GstAudioSink *sink);
   /* reset the audio device, unblock from a write */
-  void     (*reset)  (GstAudioSink *sink);
+  void     (*reset)     (GstAudioSink *sink);
 };
 
 GType gst_audio_sink_get_type(void);

@@ -151,6 +151,7 @@ struct _GstRingBuffer {
 
   /*< public >*/ /* with LOCK */
   GCond                 *cond;
+  gboolean               open;
   gboolean               acquired;
   GstBuffer             *data;
   GstRingBufferSpec      spec;
@@ -174,10 +175,14 @@ struct _GstRingBufferClass {
   GstObjectClass parent_class;
 
   /*< public >*/
+  /* just open the device, don't set any params or allocate anything */
+  gboolean     (*open_device)  (GstRingBuffer *buf);
   /* allocate the resources for the ringbuffer using the given specs */
   gboolean     (*acquire)      (GstRingBuffer *buf, GstRingBufferSpec *spec);
   /* free resources of the ringbuffer */
   gboolean     (*release)      (GstRingBuffer *buf);
+  /* close the device */
+  gboolean     (*close_device) (GstRingBuffer *buf);
 
   /* playback control */
   gboolean     (*start)        (GstRingBuffer *buf);
@@ -199,9 +204,15 @@ gboolean	gst_ring_buffer_parse_caps	(GstRingBufferSpec *spec, GstCaps *caps);
 void 		gst_ring_buffer_debug_spec_caps  (GstRingBufferSpec *spec);
 void 		gst_ring_buffer_debug_spec_buff  (GstRingBufferSpec *spec);
 
+/* device state */
+gboolean 	gst_ring_buffer_open_device 	(GstRingBuffer *buf);
+gboolean 	gst_ring_buffer_close_device 	(GstRingBuffer *buf);
+
+gboolean 	gst_ring_buffer_device_is_open	(GstRingBuffer *buf);
+
 /* allocate resources */
-gboolean 	gst_ring_buffer_acquire 		(GstRingBuffer *buf, GstRingBufferSpec *spec);
-gboolean 	gst_ring_buffer_release 		(GstRingBuffer *buf);
+gboolean 	gst_ring_buffer_acquire 	(GstRingBuffer *buf, GstRingBufferSpec *spec);
+gboolean 	gst_ring_buffer_release 	(GstRingBuffer *buf);
 
 gboolean 	gst_ring_buffer_is_acquired	(GstRingBuffer *buf);
 

@@ -1,3 +1,34 @@
+2005-08-08  Andy Wingo  <wingo@pobox.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c
+	(gst_base_audio_sink_change_state): Open the device in NULL->READY
+	like good elements should. Close on READY->NULL too.
+
+	* gst-libs/gst/audio/gstaudiosink.c
+	(gst_audioringbuffer_open_device,
+	(gst_audioringbuffer_close_device, gst_audioringbuffer_acquire)
+	(gst_audioringbuffer_release): Updates for new ring buffer API,
+	hook into the new audio sink api.
+
+	* gst-libs/gst/audio/gstaudiosink.h (GstAudioSinkClass.open)
+	(GstAudioSinkClass.close): Just open and close the device -- no
+	resource allocation or configuration.
+	(GstAudioSinkClass.prepare, GstAudioSinkClass.unprepare): New
+	vmethods, handle device setup and resource allocation.
+
+	* ext/alsa/gstalsasink.c (gst_alsasink_open, gst_alsasink_close)
+	(gst_alsasink_prepare, gst_alsasink_unprepare): Update for new
+	base class API.
+
+	* gst-libs/gst/audio/gstringbuffer.h
+	(GstRingBufferClass.open_device, GstRingBufferClass.close_device):
+	New vmethods.
+
+	* gst-libs/gst/audio/gstringbuffer.c (gst_ring_buffer_open_device)
+	(gst_ring_buffer_close_device, gst_ring_buffer_device_is_open):
+	New API functions. The device should be opened before acquiring
+	and closed after releasing.
+
 2005-08-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/interfaces/mixer.h:

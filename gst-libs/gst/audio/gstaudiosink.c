@@ -70,6 +70,8 @@ static void gst_audioringbuffer_finalize (GObject * object);
 
 static GstRingBufferClass *ring_parent_class = NULL;
 
+static gboolean gst_audioringbuffer_open_device (GstRingBuffer * buf);
+static gboolean gst_audioringbuffer_close_device (GstRingBuffer * buf);
 static gboolean gst_audioringbuffer_acquire (GstRingBuffer * buf,
     GstRingBufferSpec * spec);
 static gboolean gst_audioringbuffer_release (GstRingBuffer * buf);
@@ -120,6 +122,10 @@ gst_audioringbuffer_class_init (GstAudioRingBufferClass * klass)
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_audioringbuffer_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_audioringbuffer_finalize);
 
+  gstringbuffer_class->open_device =
+      GST_DEBUG_FUNCPTR (gst_audioringbuffer_open_device);
+  gstringbuffer_class->close_device =
+      GST_DEBUG_FUNCPTR (gst_audioringbuffer_close_device);
   gstringbuffer_class->acquire =
       GST_DEBUG_FUNCPTR (gst_audioringbuffer_acquire);
   gstringbuffer_class->release =
@@ -236,6 +242,54 @@ gst_audioringbuffer_finalize (GObject * object)
 }
 
 static gboolean
+gst_audioringbuffer_open_device (GstRingBuffer * buf)
+{
+  GstAudioSink *sink;
+  GstAudioSinkClass *csink;
+  gboolean result = TRUE;
+
+  sink = GST_AUDIO_SINK (GST_OBJECT_PARENT (buf));
+  csink = GST_AUDIO_SINK_GET_CLASS (sink);
+
+  if (csink->open)
+    result = csink->open (sink);
+
+  if (!result)
+    goto could_not_open;
+
+  return result;
+
+could_not_open:
+  {
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_audioringbuffer_close_device (GstRingBuffer * buf)
+{
+  GstAudioSink *sink;
+  GstAudioSinkClass *csink;
+  gboolean result = TRUE;
+
+  sink = GST_AUDIO_SINK (GST_OBJECT_PARENT (buf));
+  csink = GST_AUDIO_SINK_GET_CLASS (sink);
+
+  if (csink->close)
+    result = csink->close (sink);
+
+  if (!result)
+    goto could_not_open;
+
+  return result;
+
+could_not_open:
+  {
+    return FALSE;
+  }
+}
+
+static gboolean
 gst_audioringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 {
   GstAudioSink *sink;
@@ -246,8 +300,8 @@ gst_audioringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   sink = GST_AUDIO_SINK (GST_OBJECT_PARENT (buf));
   csink = GST_AUDIO_SINK_GET_CLASS (sink);
 
-  if (csink->open)
-    result = csink->open (sink, spec);
+  if (csink->prepare)
+    result = csink->prepare (sink, spec);
 
   if (!result)
     goto could_not_open;
@@ -300,8 +354,8 @@ gst_audioringbuffer_release (GstRingBuffer * buf)
   gst_buffer_unref (buf->data);
   buf->data = NULL;
 
-  if (csink->close)
-    result = csink->close (sink);
+  if (csink->unprepare)
+    result = csink->unprepare (sink);
 
   return result;
 }

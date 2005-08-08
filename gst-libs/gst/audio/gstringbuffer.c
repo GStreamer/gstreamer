@@ -80,6 +80,7 @@ gst_ring_buffer_class_init (GstRingBufferClass * klass)
 static void
 gst_ring_buffer_init (GstRingBuffer * ringbuffer)
 {
+  ringbuffer->open = FALSE;
   ringbuffer->acquired = FALSE;
   ringbuffer->state = GST_RING_BUFFER_STATE_STOPPED;
   ringbuffer->cond = g_cond_new ();
@@ -327,6 +328,127 @@ gst_ring_buffer_set_callback (GstRingBuffer * buf, GstRingBufferCallback cb,
   GST_UNLOCK (buf);
 }
 
+
+/**
+ * gst_ring_buffer_open_device:
+ * @buf: the #GstRingBuffer
+ *
+ * Open the audio device associated with the ring buffer. Does not perform any
+ * setup on the device. You must open the device before acquiring the ring
+ * buffer.
+ *
+ * Returns: TRUE if the device could be opened, FALSE on error.
+ *
+ * MT safe.
+ */
+gboolean
+gst_ring_buffer_open_device (GstRingBuffer * buf)
+{
+  gboolean res = TRUE;
+  GstRingBufferClass *rclass;
+
+  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
+
+  GST_LOCK (buf);
+  if (buf->open) {
+    g_warning ("Device for ring buffer %p already open, fix your code", buf);
+    res = TRUE;
+    goto done;
+  }
+  buf->open = TRUE;
+
+  /* if this fails, something is wrong in this file */
+  g_assert (!buf->acquired);
+
+  rclass = GST_RING_BUFFER_GET_CLASS (buf);
+  if (rclass->open_device)
+    res = rclass->open_device (buf);
+
+  if (!res) {
+    buf->open = FALSE;
+  }
+
+done:
+  GST_UNLOCK (buf);
+
+  return res;
+}
+
+/**
+ * gst_ring_buffer_close_device:
+ * @buf: the #GstRingBuffer
+ *
+ * Close the audio device associated with the ring buffer. The ring buffer
+ * should already have been released via gst_ring_buffer_release().
+ *
+ * Returns: TRUE if the device could be closed, FALSE on error.
+ *
+ * MT safe.
+ */
+gboolean
+gst_ring_buffer_close_device (GstRingBuffer * buf)
+{
+  gboolean res = TRUE;
+  GstRingBufferClass *rclass;
+
+  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
+
+  GST_LOCK (buf);
+  if (!buf->open) {
+    g_warning ("Device for ring buffer %p already closed, fix your code", buf);
+    res = TRUE;
+    goto done;
+  }
+
+  if (buf->acquired) {
+    g_critical ("Resources for ring buffer %p still acquired", buf);
+    res = FALSE;
+    goto done;
+  }
+
+  buf->open = FALSE;
+
+  rclass = GST_RING_BUFFER_GET_CLASS (buf);
+  if (rclass->close_device)
+    res = rclass->close_device (buf);
+
+  if (!res) {
+    buf->open = TRUE;
+  }
+
+done:
+  GST_UNLOCK (buf);
+
+  return res;
+}
+
+/**
+ * gst_ring_buffer_device_is_open:
+ * @buf: the #GstRingBuffer
+ *
+ * Checks the status of the device associated with the ring buffer.
+ *
+ * Returns: TRUE if the device was open, FALSE if it was closed.
+ *
+ * MT safe.
+ */
+gboolean
+gst_ring_buffer_device_is_open (GstRingBuffer * buf)
+{
+  gboolean res = TRUE;
+
+  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
+
+  GST_LOCK (buf);
+
+  res = buf->open;
+
+  GST_UNLOCK (buf);
+
+  return res;
+}
+
+
 /**
  * gst_ring_buffer_acquire:
  * @buf: the #GstRingBuffer to acquire
@@ -349,6 +471,11 @@ gst_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   g_return_val_if_fail (buf != NULL, FALSE);
 
   GST_LOCK (buf);
+  if (!buf->open) {
+    g_critical ("Device for %p not opened", buf);
+    res = FALSE;
+    goto done;
+  }
   if (buf->acquired) {
     res = TRUE;
     goto done;
@@ -413,6 +540,9 @@ gst_ring_buffer_release (GstRingBuffer * buf)
     goto done;
   }
   buf->acquired = FALSE;
+
+  /* if this fails, something is wrong in this file */
+  g_assert (buf->open == TRUE);
 
   rclass = GST_RING_BUFFER_GET_CLASS (buf);
   if (rclass->release)
