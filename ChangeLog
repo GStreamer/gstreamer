@@ -1,5 +1,15 @@
 2005-08-08  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/faad/gstfaad.c: (gst_faad_base_init), (gst_faad_class_init),
+	(gst_faad_init), (gst_faad_setcaps), (gst_faad_srcgetcaps),
+	(gst_faad_event), (gst_faad_update_caps), (gst_faad_chain),
+	(gst_faad_change_state):
+	* ext/faad/gstfaad.h:
+	  Fix negotiation (#310932) and miscellaneous other stuff. Probably
+	  still needs some more work.
+
+2005-08-08  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_init),
 	(gst_jpeg_dec_setcaps), (gst_jpeg_dec_chain):
 	  Add setcaps() function (for mjpeg).
