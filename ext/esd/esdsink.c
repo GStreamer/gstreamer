@@ -176,34 +176,13 @@ gst_esdsink_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-#define IS_WRITABLE(caps) \
-  (g_atomic_int_get (&(caps)->refcount) == 1)
-
-void
-gst_caps_set_each (GstCaps * caps, char *field, ...)
-{
-  GstStructure *structure;
-  va_list var_args;
-  int i;
-
-  g_return_if_fail (GST_IS_CAPS (caps));
-  g_return_if_fail (IS_WRITABLE (caps));
-
-  va_start (var_args, field);
-  for (i = 0; i < caps->structs->len; i++) {
-    structure = gst_caps_get_structure (caps, i);
-
-    gst_structure_set_valist (structure, field, var_args);
-  }
-  va_end (var_args);
-}
-
 static GstCaps *
 gst_esdsink_getcaps (GstBaseSink * bsink)
 {
   GstEsdSink *esdsink;
   GstPadTemplate *pad_template;
   GstCaps *caps = NULL;
+  gint i;
   esd_server_info_t *server_info;
 
   GST_DEBUG ("getcaps called");
@@ -221,10 +200,15 @@ gst_esdsink_getcaps (GstBaseSink * bsink)
   if (server_info) {
     GST_DEBUG ("got server info rate: %i", server_info->rate);
 
-    g_print ("hey\n");
-    gst_caps_set_each (caps, "rate", G_TYPE_INT, server_info->rate, NULL);
-    g_print ("ho\n");
+    for (i = 0; i < caps->structs->len; i++) {
+      GstStructure *s;
+
+      s = gst_caps_get_structure (caps, i);
+      gst_structure_set (s, "rate", G_TYPE_INT, server_info->rate, NULL);
+    }
+
     esd_free_server_info (server_info);
+
     return caps;
   } else {
     GST_WARNING_OBJECT (esdsink, "couldn't get server info!");
