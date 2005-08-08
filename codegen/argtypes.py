@@ -141,18 +141,6 @@ class CharArg(ArgType):
 	info.varlist.add('gchar', 'ret')
         info.codeafter.append('    return PyString_FromStringAndSize(&ret, 1);')
 class GUniCharArg(ArgType):
-    param_tmpl = ('    if (py_%(name)s[1] != 0) {\n'
-                  '        PyErr_SetString(PyExc_TypeError, "%(name)s should be a 1 character unicode string");\n'
-                  '        return NULL;\n'
-                  '    }\n'
-                  '    %(name)s = (gunichar)py_%(name)s[0];\n')
-    dflt_tmpl = ('    if (py_%(name)s != NULL) {\n'
-                 '        if (py_%(name)s[1] != 0) {\n'
-                 '            PyErr_SetString(PyExc_TypeError, "%(name)s should be a 1 character unicode string");\n'
-                 '            return NULL;\n'
-                 '        }\n'
-                 '        %(name)s = (gunichar)py_%(name)s[0];\n'
-                 '     }\n')
     ret_tmpl = ('#if !defined(Py_UNICODE_SIZE) || Py_UNICODE_SIZE == 2\n'
                 '    if (ret > 0xffff) {\n'
                 '        PyErr_SetString(PyExc_RuntimeError, "returned character can not be represented in 16-bit unicode");\n'
@@ -164,13 +152,10 @@ class GUniCharArg(ArgType):
     def write_param(self, ptype, pname, pdflt, pnull, info):
 	if pdflt:
 	    info.varlist.add('gunichar', pname + " = '" + pdflt + "'")
-            info.codebefore.append(self.dflt_tmpl % {'name':pname})
 	else:
 	    info.varlist.add('gunichar', pname)
-            info.codebefore.append(self.param_tmpl % {'name':pname})
-        info.varlist.add('Py_UNICODE', '*py_' + pname + ' = NULL')
 	info.arglist.append(pname)
-        info.add_parselist('u', ['&py_' + pname], [pname])
+        info.add_parselist('O&', ['pyg_pyobj_to_unichar_conv', '&' + pname], [pname])
     def write_return(self, ptype, ownsreturn, info):
         info.varlist.add('gunichar', 'ret')
         info.varlist.add('Py_UNICODE', 'py_ret')

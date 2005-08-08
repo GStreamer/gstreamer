@@ -1,3 +1,9 @@
+2005-08-08  Edward Hervey  <edward@fluendo.com>
+
+	* codegen/codegen.py:
+	* codegen/argtypes.py:
+	Updates from pygtk's codegen and typo fix
+
 2005-08-04  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.defs:

@@ -865,7 +865,7 @@ class GstMiniObjectWrapper(Wrapper):
     def get_initial_constructor_substdict(self, constructor):
         substdict = Wrapper.get_initial_constructor_substdict(self, constructor)
         if not constructor.caller_owns_return:
-            substdict['aftercreate'] = "    g_object_ref(self->obj);\n"
+            substdict['aftercreate'] = "    gst_mini_object_ref(self->obj);\n"
         else:
             substdict['aftercreate'] = ''
         return substdict
