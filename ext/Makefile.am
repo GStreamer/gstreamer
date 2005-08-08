@@ -160,11 +160,11 @@ HERMES_DIR=
 JACK_DIR=
 # endif
 
-# if USE_JPEG
-# JPEG_DIR=jpeg
-# else
+if USE_JPEG
+JPEG_DIR=jpeg
+else
 JPEG_DIR=
-# endif
+endif
 
 # if USE_LADSPA
 # LADSPA_DIR=ladspa

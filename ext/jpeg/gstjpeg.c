@@ -19,9 +19,14 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+
 #include <string.h>
 
+#include <gst/gst.h>
+
 #include "gstjpegdec.h"
+
+#if 0
 #include "gstjpegenc.h"
 #include "gstsmokeenc.h"
 #include "gstsmokedec.h"
@@ -42,18 +47,22 @@ smoke_type_find (GstTypeFind * tf, gpointer private)
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, SMOKE_CAPS);
   }
 }
+#endif
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+#if 0
   if (!gst_element_register (plugin, "jpegenc", GST_RANK_NONE,
           GST_TYPE_JPEGENC))
     return FALSE;
+#endif
 
   if (!gst_element_register (plugin, "jpegdec", GST_RANK_PRIMARY,
-          GST_TYPE_JPEGDEC))
+          GST_TYPE_JPEG_DEC))
     return FALSE;
 
+#if 0
   if (!gst_element_register (plugin, "smokeenc", GST_RANK_PRIMARY,
           GST_TYPE_SMOKEENC))
     return FALSE;
@@ -65,6 +74,7 @@ plugin_init (GstPlugin * plugin)
   if (!gst_type_find_register (plugin, "video/x-smoke", GST_RANK_PRIMARY,
           smoke_type_find, NULL, SMOKE_CAPS, NULL))
     return FALSE;
+#endif
 
   return TRUE;
 }

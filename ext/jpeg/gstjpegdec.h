@@ -18,73 +18,81 @@
  */
 
 
-#ifndef __GST_JPEGDEC_H__
-#define __GST_JPEGDEC_H__
+#ifndef __GST_JPEG_DEC_H__
+#define __GST_JPEG_DEC_H__
 
 
-#include <gst/gst.h>
+#include <setjmp.h>
+#include <gst/gstelement.h>
+
 /* this is a hack hack hack to get around jpeglib header bugs... */
 #ifdef HAVE_STDLIB_H
 # undef HAVE_STDLIB_H
 #endif
 #include <jpeglib.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
+#define GST_TYPE_JPEG_DEC \
+  (gst_jpeg_dec_get_type())
+#define GST_JPEG_DEC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_JPEG_DEC,GstJpegDec))
+#define GST_JPEG_DEC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_JPEG_DEC,GstJpegDec))
+#define GST_IS_JPEG_DEC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_JPEG_DEC))
+#define GST_IS_JPEG_DEC_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_JPEG_DEC))
 
-#define GST_TYPE_JPEGDEC \
-  (gst_jpegdec_get_type())
-#define GST_JPEGDEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_JPEGDEC,GstJpegDec))
-#define GST_JPEGDEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_JPEGDEC,GstJpegDec))
-#define GST_IS_JPEGDEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_JPEGDEC))
-#define GST_IS_JPEGDEC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_JPEGDEC))
+typedef struct _GstJpegDec           GstJpegDec;
+typedef struct _GstJpegDecClass      GstJpegDecClass;
 
-typedef struct _GstJpegDec GstJpegDec;
-typedef struct _GstJpegDecClass GstJpegDecClass;
+struct GstJpegDecErrorMgr {
+  struct jpeg_error_mgr    pub;   /* public fields */
+  jmp_buf                  setjmp_buffer;
+};
 
+struct GstJpegDecSourceMgr {
+  struct jpeg_source_mgr   pub;   /* public fields */
+  GstJpegDec              *dec;
+};
+
+/* Can't use GstBaseTransform, because GstBaseTransform
+ * doesn't handle the N buffers in, 1 buffer out case,
+ * but only the 1-in 1-out case */
 struct _GstJpegDec {
   GstElement element;
 
   /* pads */
-  GstPad *sinkpad,*srcpad;
+  GstPad  *sinkpad;
+  GstPad  *srcpad;
 
-  int parse_state;
+  GstBuffer *tempbuf;
+
   /* the timestamp of the next frame */
-  guint64 next_time;
-  /* the interval between frames */
-  guint64 time_interval;
+  guint64  next_ts;
 
   /* video state */
-  gint format;
-  gint width;
-  gint height;
-  gdouble fps;
-  /* the size of the output buffer */
-  gint outsize;
+  guint    width;
+  guint    height;
+  gdouble  fps;
+
   /* the jpeg line buffer */
   guchar **line[3];
 
   struct jpeg_decompress_struct cinfo;
-  struct jpeg_error_mgr jerr;
-  struct jpeg_source_mgr jsrc;
+  struct GstJpegDecErrorMgr     jerr;
+  struct GstJpegDecSourceMgr    jsrc;
 };
 
 struct _GstJpegDecClass {
-  GstElementClass parent_class;
+  GstElementClass  parent_class;
 };
 
-GType gst_jpegdec_get_type(void);
+GType gst_jpeg_dec_get_type(void);
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 
-#endif /* __GST_JPEGDEC_H__ */
+#endif /* __GST_JPEG_DEC_H__ */
