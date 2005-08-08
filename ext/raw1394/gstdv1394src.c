@@ -272,10 +272,7 @@ static void
 gst_dv1394src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstDV1394Src *filter;
-
-  g_return_if_fail (GST_IS_DV1394SRC (object));
-  filter = GST_DV1394SRC (object);
+  GstDV1394Src *filter = GST_DV1394SRC (object);
 
   switch (prop_id) {
     case ARG_PORT:
@@ -308,10 +305,7 @@ static void
 gst_dv1394src_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstDV1394Src *filter;
-
-  g_return_if_fail (GST_IS_DV1394SRC (object));
-  filter = GST_DV1394SRC (object);
+  GstDV1394Src *filter = GST_DV1394SRC (object);
 
   switch (prop_id) {
     case ARG_PORT:

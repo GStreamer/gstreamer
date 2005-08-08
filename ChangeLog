@@ -1,3 +1,18 @@
+2005-08-08  Andy Wingo  <wingo@pobox.com>
+
+	* sys/oss/gstosssink.c (gst_oss_sink_open, gst_oss_sink_close) 
+	(gst_oss_sink_prepare, gst_oss_sink_unprepare): Update for newer
+	audiosink api.
+
+	* ext/raw1394/gstdv1394src.c (gst_dv1394src_get_property) 
+	(gst_dv1394src_set_property): Style. All about the style.
+
+	* ext/esd/esdsink.c (gst_esdsink_getcaps): Return specific caps
+	only if in READY or higher (i.e., if _open() has been called.)
+	(gst_esdsink_open, gst_esdsink_close, gst_esdsink_prepare) 
+	(gst_esdsink_unprepare): Update for audiosink changes.
+	(gst_esdsink_change_state): Die!
+
 2005-08-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/jpeg/Makefile.am:

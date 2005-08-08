@@ -48,9 +48,11 @@ static void gst_oss_sink_dispose (GObject * object);
 
 static GstCaps *gst_oss_sink_getcaps (GstBaseSink * bsink);
 
-static gboolean gst_oss_sink_open (GstAudioSink * asink,
-    GstRingBufferSpec * spec);
+static gboolean gst_oss_sink_open (GstAudioSink * asink);
 static gboolean gst_oss_sink_close (GstAudioSink * asink);
+static gboolean gst_oss_sink_prepare (GstAudioSink * asink,
+    GstRingBufferSpec * spec);
+static gboolean gst_oss_sink_unprepare (GstAudioSink * asink);
 static guint gst_oss_sink_write (GstAudioSink * asink, gpointer data,
     guint length);
 static guint gst_oss_sink_delay (GstAudioSink * asink);
@@ -150,6 +152,8 @@ gst_oss_sink_class_init (GstOssSinkClass * klass)
 
   gstaudiosink_class->open = GST_DEBUG_FUNCPTR (gst_oss_sink_open);
   gstaudiosink_class->close = GST_DEBUG_FUNCPTR (gst_oss_sink_close);
+  gstaudiosink_class->prepare = GST_DEBUG_FUNCPTR (gst_oss_sink_prepare);
+  gstaudiosink_class->unprepare = GST_DEBUG_FUNCPTR (gst_oss_sink_unprepare);
   gstaudiosink_class->write = GST_DEBUG_FUNCPTR (gst_oss_sink_write);
   gstaudiosink_class->delay = GST_DEBUG_FUNCPTR (gst_oss_sink_delay);
   gstaudiosink_class->reset = GST_DEBUG_FUNCPTR (gst_oss_sink_reset);
@@ -265,12 +269,10 @@ gst_oss_sink_get_format (GstBufferFormat fmt)
 }
 
 static gboolean
-gst_oss_sink_open (GstAudioSink * asink, GstRingBufferSpec * spec)
+gst_oss_sink_open (GstAudioSink * asink)
 {
-  struct audio_buf_info info;
-  int mode;
   GstOssSink *oss;
-  int tmp;
+  int mode;
 
   oss = GST_OSSSINK (asink);
 
@@ -282,9 +284,33 @@ gst_oss_sink_open (GstAudioSink * asink, GstRingBufferSpec * spec)
     perror ("/dev/dsp");
     return FALSE;
   }
+
+  return TRUE;
+}
+
+static gboolean
+gst_oss_sink_close (GstAudioSink * asink)
+{
+  close (GST_OSSSINK (asink)->fd);
+  return TRUE;
+}
+
+static gboolean
+gst_oss_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
+{
+  GstOssSink *oss;
+  struct audio_buf_info info;
+  int mode;
+  int tmp;
+
+  oss = GST_OSSSINK (asink);
+
   mode = fcntl (oss->fd, F_GETFL);
   mode &= ~O_NONBLOCK;
-  fcntl (oss->fd, F_SETFL, mode);
+  if (fcntl (oss->fd, F_SETFL, mode) == -1) {
+    perror ("/dev/dsp");
+    return FALSE;
+  }
 
   tmp = gst_oss_sink_get_format (spec->format);
   if (tmp == 0)
@@ -323,10 +349,28 @@ wrong_format:
 }
 
 static gboolean
-gst_oss_sink_close (GstAudioSink * asink)
+gst_oss_sink_unprepare (GstAudioSink * asink)
 {
-  close (GST_OSSSINK (asink)->fd);
+  /* could do a SNDCTL_DSP_RESET, but the OSS manual recommends a close/open */
+
+  if (!gst_oss_sink_close (asink))
+    goto couldnt_close;
+
+  if (!gst_oss_sink_open (asink))
+    goto couldnt_reopen;
+
   return TRUE;
+
+couldnt_close:
+  {
+    GST_DEBUG ("Could not close the audio device");
+    return FALSE;
+  }
+couldnt_reopen:
+  {
+    GST_DEBUG ("Could not reopen the audio device");
+    return FALSE;
+  }
 }
 
 static guint

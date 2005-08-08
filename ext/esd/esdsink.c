@@ -69,12 +69,13 @@ static void gst_esdsink_class_init (GstEsdSinkClass * klass);
 static void gst_esdsink_init (GstEsdSink * esdsink);
 static void gst_esdsink_dispose (GObject * object);
 
-static GstElementStateReturn gst_esdsink_change_state (GstElement * element);
 static GstCaps *gst_esdsink_getcaps (GstBaseSink * bsink);
 
-static gboolean gst_esdsink_open (GstAudioSink * asink,
-    GstRingBufferSpec * spec);
+static gboolean gst_esdsink_open (GstAudioSink * asink);
 static gboolean gst_esdsink_close (GstAudioSink * asink);
+static gboolean gst_esdsink_prepare (GstAudioSink * asink,
+    GstRingBufferSpec * spec);
+static gboolean gst_esdsink_unprepare (GstAudioSink * asink);
 static guint gst_esdsink_write (GstAudioSink * asink, gpointer data,
     guint length);
 static guint gst_esdsink_delay (GstAudioSink * asink);
@@ -126,13 +127,11 @@ static void
 gst_esdsink_class_init (GstEsdSinkClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
   GstBaseAudioSinkClass *gstbaseaudiosink_class;
   GstAudioSinkClass *gstaudiosink_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
   gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
   gstaudiosink_class = (GstAudioSinkClass *) klass;
@@ -141,12 +140,12 @@ gst_esdsink_class_init (GstEsdSinkClass * klass)
 
   gobject_class->dispose = gst_esdsink_dispose;
 
-  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_esdsink_change_state);
-
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_esdsink_getcaps);
 
   gstaudiosink_class->open = GST_DEBUG_FUNCPTR (gst_esdsink_open);
   gstaudiosink_class->close = GST_DEBUG_FUNCPTR (gst_esdsink_close);
+  gstaudiosink_class->prepare = GST_DEBUG_FUNCPTR (gst_esdsink_prepare);
+  gstaudiosink_class->unprepare = GST_DEBUG_FUNCPTR (gst_esdsink_unprepare);
   gstaudiosink_class->write = GST_DEBUG_FUNCPTR (gst_esdsink_write);
   gstaudiosink_class->delay = GST_DEBUG_FUNCPTR (gst_esdsink_delay);
   gstaudiosink_class->reset = GST_DEBUG_FUNCPTR (gst_esdsink_reset);
@@ -177,31 +176,6 @@ gst_esdsink_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-static GstElementStateReturn
-gst_esdsink_change_state (GstElement * element)
-{
-  GstEsdSink *esdsink = GST_ESDSINK (element);
-  GstElementState transition = GST_STATE_TRANSITION (element);
-  GstElementStateReturn ret = GST_STATE_SUCCESS;
-
-  switch (transition) {
-    case GST_STATE_NULL_TO_READY:
-      GST_INFO ("attempting to open control connection to esound server");
-      esdsink->ctrl_fd = esd_open_sound (esdsink->host);
-      if (esdsink->ctrl_fd < 0) {
-        GST_ELEMENT_ERROR (esdsink, RESOURCE, OPEN_WRITE, (NULL),
-            ("can't open connection to esound server"));
-        ret = GST_STATE_FAILURE;
-      }
-      break;
-    default:
-      break;
-  }
-  if (ret == GST_STATE_SUCCESS)
-    ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
-  return ret;
-}
-
 #define IS_WRITABLE(caps) \
   (g_atomic_int_get (&(caps)->refcount) == 1)
 
@@ -227,30 +201,70 @@ gst_caps_set_each (GstCaps * caps, char *field, ...)
 static GstCaps *
 gst_esdsink_getcaps (GstBaseSink * bsink)
 {
-  GST_DEBUG ("getcaps called");
-  esd_server_info_t *server_info;
+  GstEsdSink *esdsink;
+  GstPadTemplate *pad_template;
   GstCaps *caps = NULL;
-  GstEsdSink *esdsink = GST_ESDSINK (bsink);
+  esd_server_info_t *server_info;
 
-  esdsink->ctrl_fd = esd_open_sound (esdsink->host);
-  if (esdsink->ctrl_fd < 0)
-    return NULL;
+  GST_DEBUG ("getcaps called");
+
+  esdsink = GST_ESDSINK (bsink);
+
+  pad_template = gst_static_pad_template_get (&sink_factory);
+  caps = gst_caps_copy (gst_pad_template_get_caps (pad_template));
+
+  if (esdsink->ctrl_fd < 0) {
+    return caps;
+  }
+
   server_info = esd_get_server_info (esdsink->ctrl_fd);
   if (server_info) {
     GST_DEBUG ("got server info rate: %i", server_info->rate);
-    GstPadTemplate *pad_template;
 
-    pad_template = gst_static_pad_template_get (&sink_factory);
-    caps = gst_caps_copy (gst_pad_template_get_caps (pad_template));
+    g_print ("hey\n");
     gst_caps_set_each (caps, "rate", G_TYPE_INT, server_info->rate, NULL);
-    free (server_info);
+    g_print ("ho\n");
+    esd_free_server_info (server_info);
     return caps;
+  } else {
+    GST_WARNING_OBJECT (esdsink, "couldn't get server info!");
+    gst_caps_unref (caps);
+    return NULL;
   }
-  return NULL;
 }
 
 static gboolean
-gst_esdsink_open (GstAudioSink * asink, GstRingBufferSpec * spec)
+gst_esdsink_open (GstAudioSink * asink)
+{
+  GstEsdSink *esdsink = GST_ESDSINK (asink);
+
+  esdsink->ctrl_fd = esd_open_sound (esdsink->host);
+
+  if (esdsink->ctrl_fd < 0)
+    goto couldnt_connect;
+
+  return TRUE;
+
+couldnt_connect:
+  {
+    GST_ELEMENT_ERROR (esdsink, RESOURCE, OPEN_WRITE, (NULL),
+        ("can't open connection to esound server"));
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_esdsink_close (GstAudioSink * asink)
+{
+  GstEsdSink *esdsink = GST_ESDSINK (asink);
+
+  esd_close (esdsink->ctrl_fd);
+
+  return TRUE;
+}
+
+static gboolean
+gst_esdsink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 {
   GstEsdSink *esdsink = GST_ESDSINK (asink);
 
@@ -287,7 +301,7 @@ gst_esdsink_open (GstAudioSink * asink, GstRingBufferSpec * spec)
 }
 
 static gboolean
-gst_esdsink_close (GstAudioSink * asink)
+gst_esdsink_unprepare (GstAudioSink * asink)
 {
   GstEsdSink *esdsink = GST_ESDSINK (asink);
 
@@ -296,8 +310,6 @@ gst_esdsink_close (GstAudioSink * asink)
 
   close (esdsink->fd);
   esdsink->fd = -1;
-  close (esdsink->ctrl_fd);
-  esdsink->ctrl_fd = -1;
 
   GST_INFO ("esdsink: closed sound device");
   return TRUE;
