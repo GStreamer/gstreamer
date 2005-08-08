@@ -84,6 +84,7 @@ static void gst_jpeg_dec_class_init (GstJpegDecClass * klass);
 static void gst_jpeg_dec_init (GstJpegDec * jpegdec);
 
 static GstFlowReturn gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_jpeg_dec_setcaps (GstPad * pad, GstCaps * caps);
 static GstElementStateReturn gst_jpeg_dec_change_state (GstElement * element);
 
 GType
@@ -236,6 +237,8 @@ gst_jpeg_dec_init (GstJpegDec * dec)
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_jpeg_dec_sink_pad_template), "sink");
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
+  gst_pad_set_setcaps_function (dec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_jpeg_dec_setcaps));
   gst_pad_set_chain_function (dec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_jpeg_dec_chain));
 
@@ -595,6 +598,29 @@ guarantee_huff_tables (j_decompress_ptr dinfo)
   }
 }
 
+static gboolean
+gst_jpeg_dec_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstStructure *s;
+  GstJpegDec *dec;
+  gdouble fps;
+  gint width, height;
+
+  dec = GST_JPEG_DEC (GST_OBJECT_PARENT (pad));
+  s = gst_caps_get_structure (caps, 0);
+
+  if (gst_structure_get_double (s, "framerate", &fps))
+    dec->fps = fps;
+
+  if (gst_structure_get_int (s, "width", &width)
+      && gst_structure_get_int (s, "height", &height)) {
+    dec->width = width;
+    dec->height = height;
+  }
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
 {
@@ -703,7 +729,6 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
     dec->height = height;
   }
 
-  /* FIXME: implement upstream nego for framerate? */
   caps = gst_caps_new_simple ("video/x-raw-yuv",
       "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
       "width", G_TYPE_INT, width,
