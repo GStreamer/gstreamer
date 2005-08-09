@@ -94,7 +94,7 @@ gst_ffmpeg_set_palette (GstCaps *caps, AVCodecContext *context)
     gst_caps_new_simple (mimetype,			      	\
 	"width",     GST_TYPE_INT_RANGE, 16, 4096,      	\
 	"height",    GST_TYPE_INT_RANGE, 16, 4096,	      	\
-	"framerate", GST_TYPE_DOUBLE_RANGE, (double) 0., 	\
+	"framerate", GST_TYPE_DOUBLE_RANGE, (double) 1., 	\
 						G_MAXDOUBLE,	\
 	__VA_ARGS__, NULL)
 
