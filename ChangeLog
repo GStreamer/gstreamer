@@ -1,5 +1,14 @@
 2005-08-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_event),
+	(gst_avi_demux_handle_seek):
+	  Fix seeking (or, well, fix threading issue where a variable was
+	  set before a lock was taken and was already unset before that
+	  same lock was taken and was thus no longer in existance when it
+	  actually had to be used).
+
+2005-08-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/avi/gstavidemux.c: (gst_avi_demux_process_next_entry):
 	  Mixing binary and logical operators is not going to work; fix
 	  position-querying in Totem.

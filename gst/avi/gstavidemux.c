@@ -59,7 +59,7 @@ static gboolean gst_avi_demux_src_convert (GstPad * pad,
     GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 
-static gboolean gst_avi_demux_handle_seek (GstAviDemux * avi);
+static gboolean gst_avi_demux_handle_seek (GstAviDemux * avi, guint64 time);
 static void gst_avi_demux_loop (GstPad * pad);
 static gboolean gst_avi_demux_sink_activate (GstPad * sinkpad);
 static gboolean gst_avi_demux_sink_activate_pull (GstPad * sinkpad,
@@ -516,7 +516,7 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
             avi->seek_flush = flags & GST_SEEK_FLAG_FLUSH;
             avi->seek_entry = entry->index_nr;
             GST_DEBUG_OBJECT (avi, "Will seek to entry %d", avi->seek_entry);
-            res = gst_avi_demux_handle_seek (avi);
+            res = gst_avi_demux_handle_seek (avi, real->ts);
           } else {
             GST_DEBUG_OBJECT (avi, "no index entry found for format=%d value=%"
                 G_GINT64_FORMAT, format, desired_offset);
@@ -1942,7 +1942,7 @@ done:
  */
 
 static gboolean
-gst_avi_demux_handle_seek (GstAviDemux * avi)
+gst_avi_demux_handle_seek (GstAviDemux * avi, guint64 time)
 {
   /* FIXME: if we seek in an openDML file, we will have multiple
    * primary levels. Seeking in between those will cause havoc. */
@@ -1953,13 +1953,13 @@ gst_avi_demux_handle_seek (GstAviDemux * avi)
 
   GST_STREAM_LOCK (avi->sinkpad);
 
+  avi->last_seek = time;
   avi->current_entry = avi->seek_entry;
   avi->seek_event = gst_event_new_newsegment (1.0,
-      GST_FORMAT_TIME, avi->last_seek,
+      GST_FORMAT_TIME, time,
       (gint64) (((gfloat) avi->stream[0].strh->scale) *
           avi->stream[0].strh->length /
           avi->stream[0].strh->rate) * GST_SECOND, 0);
-
   gst_avi_demux_send_event (avi, gst_event_new_flush_stop ());
 
   gst_pad_start_task (avi->sinkpad, (GstTaskFunction) gst_avi_demux_loop,
