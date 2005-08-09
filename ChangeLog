@@ -1,3 +1,8 @@
+2005-08-09  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstpad.override: (_wrap_gst_pad_query_position): 
+	Long != LongLong ....
+
 2005-08-08  Edward Hervey  <edward@fluendo.com>
 
 	* codegen/codegen.py:
