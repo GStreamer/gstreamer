@@ -63,6 +63,9 @@ struct _GstBaseRTPDepayload
   // dropping any packets that are more than
   // RTP_QUEUEDELAY ms late
   GQueue *queue;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstBaseRTPDepayloadClass
@@ -83,6 +86,9 @@ struct _GstBaseRTPDepayloadClass
   // non-pure function used to convert from RTP timestamp to GST timestamp
   // this function is used by the child class before gst_pad_pushing
   GstBuffer* (*setgsttimestamp) (GstRTPBuffer *in);
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_base_rtp_depayload_get_type (void);

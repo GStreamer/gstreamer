@@ -139,6 +139,9 @@ struct _GstRingBufferSpec
   /* out */
   gint     bytes_per_sample;	/* number of bytes of one sample */
   guint8   silence_sample[32];  /* bytes representing silence */
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 #define GST_RING_BUFFER_GET_COND(buf) (((GstRingBuffer *)buf)->cond)
@@ -169,6 +172,9 @@ struct _GstRingBuffer {
   guint64		 next_sample;	/* the next sample we need to process */
   GstRingBufferCallback  callback;
   gpointer               cb_data;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstRingBufferClass {
@@ -192,6 +198,9 @@ struct _GstRingBufferClass {
 
   /* number of samples queued in device */
   guint        (*delay)        (GstRingBuffer *buf);
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_ring_buffer_get_type(void);

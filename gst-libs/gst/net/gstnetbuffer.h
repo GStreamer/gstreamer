@@ -52,6 +52,8 @@ typedef struct
     guint32	  ip4;
   } address;
   guint16	port;
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 } GstNetAddress;
 
 struct _GstNetBuffer {
@@ -59,10 +61,16 @@ struct _GstNetBuffer {
 
   GstNetAddress from;
   GstNetAddress to;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstNetBufferClass {
   GstBufferClass  buffer_class;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* creating buffers */

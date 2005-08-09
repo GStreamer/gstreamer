@@ -82,6 +82,9 @@ struct _GstBaseAudioSink {
 
   /* clock */
   GstClock	*clock;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstBaseAudioSinkClass {
@@ -89,6 +92,9 @@ struct _GstBaseAudioSinkClass {
 
   /* subclass ringbuffer allocation */
   GstRingBuffer* (*create_ringbuffer)  (GstBaseAudioSink *sink);
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_base_audio_sink_get_type(void);

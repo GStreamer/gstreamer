@@ -58,6 +58,9 @@ struct _GstAudioSrc {
 
   /*< private >*/ /* with LOCK */
   GThread   *thread;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstAudioSrcClass {
@@ -75,6 +78,9 @@ struct _GstAudioSrcClass {
   guint    (*delay)  (GstAudioSrc *src);
   /* reset the audio device, unblock from a write */
   void     (*reset)  (GstAudioSrc *src);
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_audio_src_get_type(void);

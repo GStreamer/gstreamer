@@ -53,12 +53,14 @@ struct _GstAudioClock {
 
   GstClockTime last_time;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstAudioClockClass {
   GstSystemClockClass parent_class;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

@@ -59,6 +59,9 @@ struct _GstAudioSink {
 
   /*< private >*/ /* with LOCK */
   GThread   *thread;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstAudioSinkClass {
@@ -80,6 +83,9 @@ struct _GstAudioSinkClass {
   guint    (*delay)     (GstAudioSink *sink);
   /* reset the audio device, unblock from a write */
   void     (*reset)     (GstAudioSink *sink);
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_audio_sink_get_type(void);

@@ -66,6 +66,9 @@ struct _GstAudiofilter {
   int n_samples;
   int size;
   int bytes_per_sample;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstAudiofilterClass {
@@ -75,6 +78,9 @@ struct _GstAudiofilterClass {
   GstAudiofilterSetupFunc setup;
   GstAudiofilterInplaceFilterFunc filter_inplace;
   GstAudiofilterFilterFunc filter;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_audio_filter_get_type(void);

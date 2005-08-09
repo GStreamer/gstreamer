@@ -48,10 +48,16 @@ struct _GstRTPBuffer {
   guint32 timestamp;
   guint32 timestampinc;
   gboolean mark;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstRTPBufferClass {
   GstBufferClass  buffer_class;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* creating buffers */
