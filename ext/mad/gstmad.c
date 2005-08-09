@@ -360,7 +360,7 @@ gst_mad_init (GstMad * mad)
   mad->framecount = 0;
   mad->vbr_average = 0;
   mad->vbr_rate = 0;
-  mad->restart = FALSE;
+  mad->restart = TRUE;
   mad->segment_start = 0;
   mad->header.mode = -1;
   mad->header.emphasis = -1;
@@ -1215,12 +1215,15 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
   gboolean new_pts = FALSE;
   GstClockTime timestamp;
   GstFlowReturn result = GST_FLOW_OK;
+  gboolean do_send_discont = FALSE;
 
   mad = GST_MAD (GST_PAD_PARENT (pad));
 
   /* restarts happen on discontinuities, ie. seek, flush, PAUSED to PLAYING */
-  if (gst_mad_check_restart (mad))
+  if (gst_mad_check_restart (mad)) {
+    do_send_discont = TRUE;
     GST_DEBUG ("mad restarted");
+  }
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   GST_DEBUG ("mad in timestamp %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
@@ -1493,6 +1496,12 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
           }
         }
 
+        if (do_send_discont) {
+          gst_pad_push_event (mad->srcpad,
+              gst_event_new_newsegment (1.0, GST_FORMAT_TIME,
+                  GST_BUFFER_TIMESTAMP (outbuffer), GST_CLOCK_TIME_NONE, 0));
+          do_send_discont = FALSE;
+        }
         result = gst_pad_push (mad->srcpad, outbuffer);
         if (result != GST_FLOW_OK) {
           goto end;
