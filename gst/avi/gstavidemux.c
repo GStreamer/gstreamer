@@ -1848,6 +1848,8 @@ gst_avi_demux_stream_header (GstAviDemux * avi)
         avi->avih->streams, avi->num_streams);
   }
 
+  GST_DEBUG_OBJECT (avi, "skipping junk between header and data ...");
+
   /* Now, find the data (i.e. skip all junk between header and data) */
   do {
     guint size;
@@ -1881,6 +1883,8 @@ gst_avi_demux_stream_header (GstAviDemux * avi)
               gst_tag_list_free (t);
             gst_buffer_unref (buf);
           }
+          /* gst_riff_read_chunk() has already advanced avi->offset */
+          break;
         default:
           avi->offset += 8 + ((size + 1) & ~1);
           break;
