@@ -247,6 +247,7 @@ gst_jpeg_dec_init (GstJpegDec * dec)
       (&gst_jpeg_dec_src_pad_template), "src");
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
+  dec->packetized = FALSE;
   dec->next_ts = 0;
   dec->fps = 1.0;
 
@@ -604,20 +605,19 @@ gst_jpeg_dec_setcaps (GstPad * pad, GstCaps * caps)
   GstStructure *s;
   GstJpegDec *dec;
   gdouble fps;
-  gint width, height;
 
   dec = GST_JPEG_DEC (GST_OBJECT_PARENT (pad));
   s = gst_caps_get_structure (caps, 0);
 
-  if (gst_structure_get_double (s, "framerate", &fps))
+  if (gst_structure_get_double (s, "framerate", &fps)) {
     dec->fps = fps;
-
-  if (gst_structure_get_int (s, "width", &width)
-      && gst_structure_get_int (s, "height", &height)) {
-    dec->width = width;
-    dec->height = height;
+    dec->packetized = TRUE;
+    GST_DEBUG ("got framerate of %f fps => packetized mode", fps);
   }
 
+  /* do not extract width/height here. we do that in the chain
+   * function on a per-frame basis (including the line[] array
+   * setup) */
   return TRUE;
 }
 
@@ -652,22 +652,32 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   if (!gst_jpeg_dec_ensure_header (dec))
     return GST_FLOW_OK;         /* need more data */
 
+  /* If we know that each input buffer contains data
+   * for a whole jpeg image (e.g. MJPEG streams), just 
+   * do some sanity checking instead of parsing all of 
+   * the jpeg data */
+  if (dec->packetized) {
+    img_len = GST_BUFFER_SIZE (dec->tempbuf);
 #if 0
-  /* This is a very crude way to handle 'progressive
-   *  loading' without parsing the image, and thus
-   *  considerably cheaper. It should work for most
-   *  most use cases, as with most use cases the end
-   *  of the image is also the end of a buffer. */
-  if (!gst_jpeg_dec_have_end_marker (dec))
-    return GST_FLOW_OK;         /* need more data */
+    /* This does not work, e.g. avidemux adds an 
+     * extra 0 at the end of the buffer */
+    if (!gst_jpeg_dec_have_end_marker (dec)) {
+      gst_util_dump_mem (GST_BUFFER_DATA (dec->tempbuf),
+          GST_BUFFER_SIZE (dec->tempbuf));
+      GST_ELEMENT_ERROR (dec, STREAM, DECODE, ("JPEG input without EOI marker"),
+          (NULL));
+      ret = GST_FLOW_ERROR;
+      goto done;
+    }
 #endif
+  } else {
+    /* Parse jpeg image to handle jpeg input that
+     * is not aligned to buffer boundaries */
+    img_len = gst_jpeg_dec_parse_image_data (dec);
 
-  /* Parse jpeg image to handle jpeg input that
-   * is not aligned to buffer boundaries */
-  img_len = gst_jpeg_dec_parse_image_data (dec);
-
-  if (img_len == 0)
-    return GST_FLOW_OK;         /* need more data */
+    if (img_len == 0)
+      return GST_FLOW_OK;       /* need more data */
+  }
 
   data = (guchar *) GST_BUFFER_DATA (dec->tempbuf);
   size = img_len;
@@ -681,7 +691,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
       GST_DEBUG ("jpeg input EOF error, we probably need more data");
       return GST_FLOW_OK;
     }
-    GST_ELEMENT_ERROR (dec, LIBRARY, TOO_LAZY,
+    GST_ELEMENT_ERROR (dec, STREAM, DECODE,
         (_("Failed to decode JPEG image")), (NULL));
     ret = GST_FLOW_ERROR;
     goto done;
@@ -829,6 +839,7 @@ gst_jpeg_dec_change_state (GstElement * element)
       dec->next_ts = 0;
       dec->width = -1;
       dec->height = -1;
+      dec->packetized = FALSE;
       break;
     case GST_STATE_READY_TO_NULL:
       g_free (dec->line[0]);

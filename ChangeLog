@@ -1,3 +1,13 @@
+2005-08-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_init),
+	(gst_jpeg_dec_setcaps), (gst_jpeg_dec_chain),
+	(gst_jpeg_dec_change_state):
+	* ext/jpeg/gstjpegdec.h:
+	  Make mjpeg actually work and skip jpeg data parsing if we
+	  know that the input is packetized (ie. each input buffer
+	  is exactly one jpeg frame).
+
 2005-08-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/mad/gstmad.c: (gst_mad_init), (gst_mad_chain):

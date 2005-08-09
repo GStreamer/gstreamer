@@ -69,6 +69,9 @@ struct _GstJpegDec {
 
   GstBuffer *tempbuf;
 
+  /* TRUE if each input buffer contains a whole jpeg image */
+  gboolean packetized;
+
   /* the timestamp of the next frame */
   guint64  next_ts;
 
