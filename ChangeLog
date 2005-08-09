@@ -1,3 +1,9 @@
+2005-08-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_chunk),
+	(gst_riff_parse_chunk):
+	  Fix bug in debug message and add some more debug messages.
+
 2005-08-08  Edward Hervey  <edward@fluendo.com>
 
 	* gst-libs/gst/riff/riff-media.c:

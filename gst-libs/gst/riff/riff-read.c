@@ -52,6 +52,7 @@ gst_riff_read_chunk (GstElement * element,
   GstFlowReturn res;
   guint size;
   guint64 offset = *_offset;
+  gchar dbg[5] = { 0, };
 
   if ((res = gst_pad_pull_range (pad, offset, 8, &buf)) != GST_FLOW_OK)
     return res;
@@ -65,9 +66,14 @@ gst_riff_read_chunk (GstElement * element,
   size = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf) + 4);
   gst_buffer_unref (buf);
 
+  memcpy (dbg, tag, 4);
+  GST_DEBUG_OBJECT (element, "tag=%s, size=%u", dbg, size);
+
   if ((res = gst_pad_pull_range (pad, offset + 8, size, &buf)) != GST_FLOW_OK)
     return res;
   else if (!buf || GST_BUFFER_SIZE (buf) < size) {
+    GST_DEBUG_OBJECT (element, "not enough data (available=%u, needed=%u)",
+        (buf) ? GST_BUFFER_SIZE (buf) : 0, size);
     if (buf)
       gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
@@ -101,15 +107,21 @@ gst_riff_parse_chunk (GstElement * element, GstBuffer * buf,
   guint size;
   guint32 fourcc;
   guint8 *data;
+  gchar dbg[5] = { 0, };
   guint offset = *_offset;
 
   *chunk_data = NULL;
   *_fourcc = 0;
 
+  if (buf && GST_BUFFER_SIZE (buf) == offset) {
+    GST_DEBUG_OBJECT (element, "End of chunk (offset %d)", offset);
+    return FALSE;
+  }
+
   if (!buf || GST_BUFFER_SIZE (buf) < offset + 8) {
     GST_DEBUG_OBJECT (element,
         "Failed to parse chunk header (offset %d, %d available, %d needed)",
-        offset, buf ? GST_BUFFER_DATA (buf) : 0, 8);
+        offset, (buf) ? GST_BUFFER_SIZE (buf) : 0, 8);
     return FALSE;
   }
 
@@ -117,6 +129,9 @@ gst_riff_parse_chunk (GstElement * element, GstBuffer * buf,
   data = GST_BUFFER_DATA (buf) + offset;
   fourcc = GST_READ_UINT32_LE (data);
   size = GST_READ_UINT32_LE (data + 4);
+
+  memcpy (dbg, data, 4);
+  GST_DEBUG_OBJECT (element, "fourcc=%s, size=%u", dbg, size);
 
   if (GST_BUFFER_SIZE (buf) < size + 8 + offset) {
     GST_DEBUG_OBJECT (element,
