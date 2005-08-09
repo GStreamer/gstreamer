@@ -628,7 +628,7 @@ gst_faad_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_NEWSEGMENT:
     {
       GstFormat fmt;
-      guint64 start, end, base;
+      gint64 start, end, base;
       gdouble rate;
 
       gst_event_parse_newsegment (event, &rate, &fmt, &start, &end, &base);
