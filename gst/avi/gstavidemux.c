@@ -2020,8 +2020,8 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
             GST_TIME_FORMAT " on pad %s",
             GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
             gst_pad_get_name (stream->pad));
-        if (!((res = gst_pad_push (stream->pad, buf)) & (GST_FLOW_OK
-                    || GST_FLOW_NOT_LINKED)))
+        if ((res = gst_pad_push (stream->pad, buf)) != GST_FLOW_OK &&
+            res != GST_FLOW_NOT_LINKED)
           return res;
         processed = TRUE;
       }
