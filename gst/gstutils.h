@@ -224,6 +224,15 @@ type_as_function ## _get_type (void)						\
 
 #endif /* GST_HAVE_UNALIGNED_ACCESS */
 
+
+/* Miscellaneous utility macros */
+#define GST_ROUND_UP_2(num)  (((num)+1)&~1)
+#define GST_ROUND_UP_4(num)  (((num)+3)&~3)
+#define GST_ROUND_UP_8(num)  (((num)+7)&~7)
+#define GST_ROUND_UP_16(num) (((num)+15)&~15)
+#define GST_ROUND_UP_32(num) (((num)+31)&~31)
+#define GST_ROUND_UP_64(num) (((num)+63)&~63)
+
 void 			gst_object_default_error 	(GstObject * source, 
 							 GError * error, gchar * debug);
 

@@ -1,3 +1,9 @@
+2005-08-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstutils.h:
+	  New macros: GST_ROUND_UP_2() through GST_ROUND_UP_64().
+
 2005-08-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/base/gstbasetransform.c: (gst_base_transform_buffer_alloc):
