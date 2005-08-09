@@ -22,8 +22,6 @@
 #define __GST_QTDEMUX_H__
 
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
-#include <gst/getbits/getbits.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -58,8 +56,6 @@ struct _GstQTDemux {
   int n_video_streams;
   int n_audio_streams;
 
-  GstByteStream *bs;
-
   GNode *moov_node;
   GNode *moov_node_compressed;
 
@@ -68,7 +64,7 @@ struct _GstQTDemux {
 
   int state;
 
-  int offset;
+  guint64 offset;
 
   GstTagList *tag_list;
 
@@ -81,6 +77,9 @@ struct _GstQTDemux {
 
 struct _GstQTDemuxClass {
   GstElementClass parent_class;
+
+  void (* got_redirect) (GstElement  * element,
+			 const gchar * new_location);
 };
 
 #ifdef __cplusplus
