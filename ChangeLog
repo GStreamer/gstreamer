@@ -1,3 +1,9 @@
+2005-08-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  Fix template to not allow fps=0 so that we don't get a floating
+	  point exception on premature fixation (that's a disease, y'know?).
+
 2005-08-05  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* autogen.sh:
