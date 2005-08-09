@@ -1,5 +1,11 @@
 2005-08-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/mad/gstmad.c: (gst_mad_init), (gst_mad_chain):
+	  It'd be nice if I could listen to my mp3 files, so send out an
+	  initial discont, as the sink apparently wants.
+
+2005-08-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_event),
 	(gst_avi_demux_handle_seek):
 	  Fix seeking (or, well, fix threading issue where a variable was
