@@ -295,6 +295,7 @@ GST_PLUGINS_ALL="\
 		goom \
 		law \
 		level \
+		qtdemux \
 		realmedia \
 		rtp	\
 		rtsp	\
@@ -618,6 +619,7 @@ gst/udp/Makefile
 gst/videobox/Makefile
 gst/videofilter/Makefile
 ext/jpeg/Makefile
+gst/qtdemux/Makefile
 gst/wavparse/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
