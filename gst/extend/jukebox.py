@@ -64,7 +64,7 @@ class Jukebox(gst.Bin):
         # load our pickle if it exists
         if os.path.exists(self._picklepath):
             file = open(self._picklepath)
-            self._levels = picklepath.load(file)
+            self._levels = pickle.load(file)
             file.close()
 
         # FIXME: randomize our list if asked for
