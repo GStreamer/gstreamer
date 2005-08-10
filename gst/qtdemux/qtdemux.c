@@ -678,8 +678,9 @@ gst_qtdemux_loop_header (GstPad * pad)
           /* ? */
           qtdemux->need_flush = FALSE;
         }
-        GST_DEBUG ("Pushing buf with time=%" GST_TIME_FORMAT "\n",
+        GST_DEBUG ("Pushing buf with time=%" GST_TIME_FORMAT,
             GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+        gst_buffer_set_caps (buf, stream->caps);
         gst_pad_push (stream->pad, buf);
 
         GST_INFO ("pushing buffer on %" GST_PTR_FORMAT, stream->pad);
