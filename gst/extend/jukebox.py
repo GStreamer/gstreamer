@@ -92,8 +92,8 @@ class Jukebox(gst.Bin):
             
         next = self._triggers[0][0]
         if now > next:
-            self.log("now %f, next %f" % (now, next))
-            self.log("running trigger")
+            gst.debug("now %f, next %f" % (now, next))
+            gst.debug("running trigger")
             t = self._triggers.pop()
             method = t[1]
             args = t[2:] 
@@ -104,19 +104,19 @@ class Jukebox(gst.Bin):
     def _scan(self):
         # start a leveller for a new _toscan file
         if self._scani >= len(self._files):
-            self.log("We're done scanning !")
+            gst.debug("We're done scanning !")
             return
 
         file = self._files[self._scani]
         self._scani += 1
 
         if file in self._levels.keys():
-            self.log("already did file %s" % file)
+            gst.debug("already did file %s" % file)
             self._check_prerolled()
             gobject.timeout_add(0, self._scan)
             return
             
-        self.log("creating leveller for %s" % file)
+        gst.debug("creating leveller for %s" % file)
         leveller = Leveller(file)
         leveller.connect('done', self._leveller_done_cb, file)
         gobject.timeout_add(0, leveller.start)
@@ -124,13 +124,13 @@ class Jukebox(gst.Bin):
 
     def _leveller_done_cb(self, l, reason, file):
         if reason != sources.EOS:
-            self.log("Error: %s" % reason)
+            gst.debug("Error: %s" % reason)
             return
 
-        self.log("in: %f, out: %f" % (l.mixin, l.mixout))
-        self.log("rms: %f, %f dB" % (l.rms, l.rmsdB))
+        gst.debug("in: %f, out: %f" % (l.mixin, l.mixout))
+        gst.debug("rms: %f, %f dB" % (l.rms, l.rmsdB))
         self._levels[file] = (l.rms, l.mixin, l.mixout, l.length)
-        self.log("writing level pickle")
+        gst.debug("writing level pickle")
         file = open(self._picklepath, "w")
         pickle.dump(self._levels, file)
         file.close()
@@ -139,7 +139,7 @@ class Jukebox(gst.Bin):
         self._scan()
 
     def _check_prerolled(self):
-        self.log("_check_prerolled: index: scan %d, play %d" % (
+        gst.debug("_check_prerolled: index: scan %d, play %d" % (
             self._scani, self._playi))
         if not self._prerolled and self._scani > self._playi + 1:
             self._prerolled = True
@@ -147,23 +147,23 @@ class Jukebox(gst.Bin):
 
     def preroll(self):
         # scan the first few files and start playing
-        self.log("starting jukebox prerolling")
+        gst.debug("starting jukebox prerolling")
         self._scan()
 
     def start(self):
         if not self._prerolled:
             raise Exception, "baby"
-        self.log("START of mixing")
+        gst.debug("START of mixing")
         file = self._get_next_play()
         (rms, mixin, mixout, length) = self._levels[file]
-        self.log("START with %s (%f/%f/%f)" % (file, mixin, mixout, length))
+        gst.debug("START with %s (%f/%f/%f)" % (file, mixin, mixout, length))
         self._next_mix = mixout
         self._source_play(file)
         
     def _schedule_next_play(self):
         file = self._get_next_play()
         if not file:
-            self.log("No more files left to schedule for play")
+            gst.debug("No more files left to schedule for play")
             return
 
         try:
@@ -172,11 +172,11 @@ class Jukebox(gst.Bin):
             raise AssertionError, "file %s not in self._levels"
 
         when = self._next_mix - mixin
-        self.log("Scheduling start of %s at %f" % (file, when))
+        gst.debug("Scheduling start of %s at %f" % (file, when))
         self._triggers.append((when, self._source_play, file))
 
         self._next_mix = when + mixout
-        self.log("Next mix should happen at %f" % when)
+        gst.debug("Next mix should happen at %f" % when)
 
     def _peek_next_play(self):
         """
@@ -194,22 +194,22 @@ class Jukebox(gst.Bin):
                 # we're going to be done, emit after all pads on adder are gone
                 return None
                 
-            self.log("Reset play pointer to top")
+            gst.debug("Reset play pointer to top")
             self._loopsleft -= 1
             if self._random:
-                self.log("Reshuffling")
+                gst.debug("Reshuffling")
                 self._files = rand.sample(self._files, len(self._files))
             self._playi = 0
 
         file = self._files[self._playi]
         self._playi += 1
 
-        self.log("Returning next play file %s" % file)
+        gst.debug("Returning next play file %s" % file)
         return file
         
     def _source_play(self, file):
         # take the next file, and connect it to adder
-        self.log('_source_play: prerolling %s' % file)
+        gst.debug('_source_play: prerolling %s' % file)
         source = sources.AudioSource(file)
         self.add(source)
         source.connect('prerolled', self._source_prerolled_cb)
@@ -217,23 +217,23 @@ class Jukebox(gst.Bin):
         source.set_state(gst.STATE_PLAYING)
 
     def _source_prerolled_cb(self, source):
-        self.log('source %r prerolled' % source)
+        gst.debug('source %r prerolled' % source)
         srcpad = source.get_pad("src")
         sinkpad = self._adder.get_request_pad("sink%d")
-        self.log("Linking srcpad %r to adder pad %r using caps %r" % (
+        gst.debug("Linking srcpad %r to adder pad %r using caps %r" % (
             srcpad, sinkpad, self._caps))
         srcpad.link_filtered(sinkpad, self._caps)
         self._schedule_next_play()
 
     def _source_done_cb(self, source, reason):
-        self.log('source %r done' % source)
+        gst.debug('source %r done' % source)
         srcpad = source.get_pad("src")
         sinkpad = srcpad.get_peer()
         srcpad.unlink(sinkpad)
         self._adder.release_request_pad(sinkpad)
 
         if len(self._adder.get_pad_list()) == 1:
-            self.log('only a source pad left, so we are done')
+            gst.debug('only a source pad left, so we are done')
             self.emit('done', sources.EOS)
         
 gobject.type_register(Jukebox)
@@ -263,22 +263,18 @@ if __name__ == "__main__":
     print list
     source = Jukebox(list, random=True, loops=-1)
 
-    def _done_cb(source, reason):
-        print "Done"
-        if reason != EOS:
-            print "Some error happened: %s" % reason
-        main.quit()
-
     def _error_cb(source, element, gerror, message):
         print "Error: %s" % gerror
         main.quit()
         
-    def _jukebox_prerolled(jukebox):
+    def _jukebox_prerolled_cb(jukebox):
         print "prerolled"
         _start()
 
-    def _jukebox_done(jukebox, reason):
+    def _jukebox_done_cb(jukebox, reason):
         print "done"
+        if reason != sources.EOS:
+            print "Some error happened: %s" % reason
         main.quit()
         
     def _iterate_idler():
@@ -301,8 +297,8 @@ if __name__ == "__main__":
         print "set pipeline to PLAYING"
         gobject.idle_add(_iterate_idler)
 
-    source.connect('prerolled', _jukebox_prerolled)
-    source.connect('done', _jukebox_done)
+    source.connect('prerolled', _jukebox_prerolled_cb)
+    source.connect('done', _jukebox_done_cb)
     source.preroll()
     pipeline.add(source)
 

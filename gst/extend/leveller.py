@@ -73,13 +73,6 @@ class Leveller(gst.Pipeline):
         self.rms = 0.0
         self.rmsdB = 0.0
 
-    def debug(self, *args):
-        print " ".join(args)
-        #pass
-    def log(self, *args):
-        #print " ".join(args)
-        pass
-
     def _level_cb(self, element, time, channel, rmsdB, peakdB, decaydB):
         # rms is being signalled in dB
         # FIXME: maybe level should have a way of signalling actual values
@@ -96,7 +89,7 @@ class Leveller(gst.Pipeline):
                 rmsdBstr = str(10 * math.log10(meansquaresum))
             except OverflowError:
                 rmsdBstr = "(-inf)"
-            self.log("meansquaresum %f (%s dB)" % (meansquaresum, rmsdBstr))
+            gst.log("meansquaresum %f (%s dB)" % (meansquaresum, rmsdBstr))
 
             # update values
             self._peaksdB.append((self._lasttime, peakdB))
@@ -105,21 +98,21 @@ class Leveller(gst.Pipeline):
             self._peakdB = 0.0
 
         # store the current values for later processing
-        self.log("time %f, channel %d, rmsdB %f" % (time, channel, rmsdB))
+        gst.log("time %f, channel %d, rmsdB %f" % (time, channel, rmsdB))
         self._lasttime = time
         self._rmsdB[channel] = rmsdB
         if peakdB > self._peakdB:
             self._peakdB = peakdB
 
     def _done_cb(self, source, reason):
-        self.debug("done, reason %s" % reason)
+        gst.debug("done, reason %s" % reason)
         # we ignore eos because we want the whole pipeline to eos
         if reason == EOS:
             return
         self.emit('done', reason)
 
     def _eos_cb(self, source):
-        self.debug("eos, start calcing")
+        gst.debug("eos, start calcing")
 
         # get the highest peak RMS for this track
         highestdB = self._peaksdB[0][1]
@@ -127,16 +120,16 @@ class Leveller(gst.Pipeline):
         for (time, peakdB) in self._peaksdB:
             if peakdB > highestdB:
                 highestdB = peakdB
-        self.debug("highest peak(dB): %f" % highestdB)
+        gst.debug("highest peak(dB): %f" % highestdB)
 
         # get the length
         (self.length, peakdB) = self._peaksdB[-1]
         
         # find the mix in point
         for (time, peakdB) in self._peaksdB:
-            self.log("time %f, peakdB %f" % (time, peakdB))
+            gst.log("time %f, peakdB %f" % (time, peakdB))
             if peakdB > self._thresholddB + highestdB:
-                self.debug("found mix-in point of %f dB at %f" % (
+                gst.debug("found mix-in point of %f dB at %f" % (
                     peakdB, time))
                 self.mixin = time
                 break
@@ -147,7 +140,7 @@ class Leveller(gst.Pipeline):
         for (time, peakdB) in self._peaksdB:
             if found:
                 self.mixout = time
-                self.debug("found mix-out point of %f dB right before %f" % (
+                gst.debug("found mix-out point of %f dB right before %f" % (
                     found, time))
                 break
                 
@@ -163,7 +156,7 @@ class Leveller(gst.Pipeline):
 
             delta = time - lasttime
             weightedsquaresums += meansquaresum * delta
-            self.log("added MSS %f over time %f at time %f, now %f" % (
+            gst.log("added MSS %f over time %f at time %f, now %f" % (
                 meansquaresum, delta, time, weightedsquaresums))
 
             lasttime = time
@@ -179,9 +172,9 @@ class Leveller(gst.Pipeline):
         self.emit('done', EOS)
 
     def start(self):
-        self.debug("Setting to PLAYING")
+        gst.debug("Setting to PLAYING")
         self.set_state(gst.STATE_PLAYING)
-        self.debug("Set to PLAYING")
+        gst.debug("Set to PLAYING")
 gobject.type_register(Leveller)
 
 if __name__ == "__main__":

@@ -50,6 +50,7 @@ class AudioSource(gst.Bin):
         self.filesrc.set_property("location", self.filename)
         self.dbin = gst.element_factory_make("decodebin")
         self.ident = gst.element_factory_make("identity")
+        self.ident.set_property('silent', True)
         self.audioconvert = gst.element_factory_make("audioconvert")
         self.audioscale = gst.element_factory_make("audioscale")
         
@@ -68,16 +69,13 @@ class AudioSource(gst.Bin):
     def __repr__(self):
         return "<AudioSource for %s>" % self.filename
         
-    def log(self, *args):
-        print " ".join(args)
-
     def _new_decoded_pad_cb(self, dbin, pad, is_last):
-        self.log("new decoded pad: pad %r" % pad)
+        gst.debug("new decoded pad: pad %r" % pad)
         if not "audio" in pad.get_caps().to_string():
             self.emit('done', WRONG_TYPE)
             return
 
-        self.log("linking pad %r to audioconvert" % pad)
+        gst.debug("linking pad %r to audioconvert" % pad)
         pad.link(self.audioconvert.get_pad("sink"))
         self.emit('prerolled')
 
