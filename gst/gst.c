@@ -346,6 +346,10 @@ gst_init_check_with_popt_table (int *argc, char **argv[],
   context = poptGetContext ("GStreamer", *argc, (const char **) *argv,
       options, 0);
 
+  /* check for GST_DEBUG_NO_COLOR environment variable */
+  if (g_getenv ("GST_DEBUG_NO_COLOR") != NULL)
+    gst_debug_set_colored (FALSE);
+
   /* check for GST_DEBUG environment variable */
   gst_debug_env = g_getenv ("GST_DEBUG");
   if (gst_debug_env)
@@ -467,6 +471,9 @@ init_pre (void)
 #ifndef GST_DISABLE_REGISTRY
   {
     const gchar *debug_list;
+
+    if (g_getenv ("GST_DEBUG_NO_COLOR") != NULL)
+      gst_debug_set_colored (FALSE);
 
     debug_list = g_getenv ("GST_DEBUG");
     if (debug_list) {

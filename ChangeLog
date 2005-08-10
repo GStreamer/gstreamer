@@ -1,5 +1,11 @@
 2005-08-10  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gst.c: (gst_init_check_with_popt_table), (init_pre):
+	  Check whether GST_DEBUG_NO_COLOR environment variable is
+	  set and disable coloured debug output if that is the case.
+
+2005-08-10  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/base/gsttypefindhelper.c: (helper_find_peek),
 	(gst_type_find_helper):
 	  The memory returned by gst_type_find_peek() needs to
