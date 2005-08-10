@@ -1,3 +1,15 @@
+2005-08-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/extend/leveller.py:
+	  take into account the total peak RMS when finding mixin/mixout 
+	  add length, just because
+	* gst/extend/sources.py:
+	  add a prerolled signal
+	* gst/gstbuffer.override:
+	  wrap timestamp and duration as longs, not ints
+	* gst/gstmodule.c: (init_gst):
+	  register gst.CLOCK_TIME_NONE
+
 2005-08-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-python.spec.in:

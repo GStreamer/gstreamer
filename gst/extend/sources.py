@@ -36,6 +36,7 @@ class AudioSource(gst.Bin):
     """A bin for audio sources with proper audio converters"""
 
     gsignal('done', str)
+    gsignal('prerolled')
 
     def __init__(self, filename, caps="audio/x-raw-int,channels=2,rate=44100"):
         gst.Bin.__init__(self)
@@ -64,12 +65,21 @@ class AudioSource(gst.Bin):
         self.eos = False
         self.connect("eos", self._have_eos_cb)
 
+    def __repr__(self):
+        return "<AudioSource for %s>" % self.filename
+        
+    def log(self, *args):
+        print " ".join(args)
+
     def _new_decoded_pad_cb(self, dbin, pad, is_last):
+        self.log("new decoded pad: pad %r" % pad)
         if not "audio" in pad.get_caps().to_string():
             self.emit('done', WRONG_TYPE)
             return
 
+        self.log("linking pad %r to audioconvert" % pad)
         pad.link(self.audioconvert.get_pad("sink"))
+        self.emit('prerolled')
 
     def _unknown_type_cb(self, pad, caps):
         self.emit('done', UNKNOWN_TYPE)

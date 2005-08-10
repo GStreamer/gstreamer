@@ -137,6 +137,8 @@ init_gst (void)
      PyModule_AddIntConstant(m, "MSECOND", GST_MSECOND);
      PyModule_AddIntConstant(m, "NSECOND", GST_NSECOND);
 
+     PyModule_AddObject(m, "CLOCK_TIME_NONE", PyLong_FromUnsignedLongLong(GST_CLOCK_TIME_NONE));
+
      /* LinkError exception */
      PyGstExc_LinkError = PyErr_NewException("gst.LinkError",
 					     PyExc_RuntimeError,

@@ -69,9 +69,13 @@ class Leveller(gst.Pipeline):
         # will be set when done
         self.mixin = 0.0
         self.mixout = 0.0
+        self.length = 0.0
         self.rms = 0.0
         self.rmsdB = 0.0
 
+    def debug(self, *args):
+        print " ".join(args)
+        #pass
     def log(self, *args):
         #print " ".join(args)
         pass
@@ -108,29 +112,47 @@ class Leveller(gst.Pipeline):
             self._peakdB = peakdB
 
     def _done_cb(self, source, reason):
-        self.log("done, reason %s" % reason)
+        self.debug("done, reason %s" % reason)
         # we ignore eos because we want the whole pipeline to eos
         if reason == EOS:
             return
         self.emit('done', reason)
 
     def _eos_cb(self, source):
-        self.log("eos, start calcing")
+        self.debug("eos, start calcing")
 
+        # get the highest peak RMS for this track
+        highestdB = self._peaksdB[0][1]
+
+        for (time, peakdB) in self._peaksdB:
+            if peakdB > highestdB:
+                highestdB = peakdB
+        self.debug("highest peak(dB): %f" % highestdB)
+
+        # get the length
+        (self.length, peakdB) = self._peaksdB[-1]
+        
         # find the mix in point
         for (time, peakdB) in self._peaksdB:
-            if peakdB > self._thresholddB:
-                self.log("found mix-in point at %f" % time)
+            self.log("time %f, peakdB %f" % (time, peakdB))
+            if peakdB > self._thresholddB + highestdB:
+                self.debug("found mix-in point of %f dB at %f" % (
+                    peakdB, time))
                 self.mixin = time
                 break
 
         # reverse and find out point
         self._peaksdB.reverse()
+        found = None
         for (time, peakdB) in self._peaksdB:
-            if peakdB > self._thresholddB:
-                self.log("found mix-out point at %f" % time)
+            if found:
                 self.mixout = time
+                self.debug("found mix-out point of %f dB right before %f" % (
+                    found, time))
                 break
+                
+            if peakdB > self._thresholddB + highestdB:
+                found = peakdB
 
         # now calculate RMS between these two points
         weightedsquaresums = 0.0
@@ -157,9 +179,9 @@ class Leveller(gst.Pipeline):
         self.emit('done', EOS)
 
     def start(self):
-        self.log("Setting to PLAYING")
+        self.debug("Setting to PLAYING")
         self.set_state(gst.STATE_PLAYING)
-        self.log("Set to PLAYING")
+        self.debug("Set to PLAYING")
 gobject.type_register(Leveller)
 
 if __name__ == "__main__":
@@ -170,17 +192,17 @@ if __name__ == "__main__":
         if reason != EOS:
             print "Error: %s" % reason
         else:
-            print "in: %f, out: %f" % (l.mixin, l.mixout)
+            print "in: %f, out: %f, length: %f" % (l.mixin, l.mixout, l.length)
             print "rms: %f, %f dB" % (l.rms, l.rmsdB)
         main.quit()
 
-    def _error_cb(element, source, gerror, message, l):
+    def _error_cb(element, source, gerror, message):
         print "Error: %s" % gerror
         main.quit()
 
     leveller = Leveller(sys.argv[1])
     leveller.connect('done', _done_cb, leveller)
-    leveller.connect('error', _error_cb, leveller)
+    leveller.connect('error', _error_cb)
 
     gobject.timeout_add(0, leveller.start)
     gobject.idle_add(leveller.iterate)

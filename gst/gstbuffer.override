@@ -164,14 +164,19 @@ override-attr GstBuffer.timestamp
 static PyObject *
 _wrap_gst_buffer__get_timestamp(PyGObject *self, void *closure)
 {
-	return PyInt_FromLong(GST_BUFFER(self->obj)->timestamp);
+    return PyLong_FromUnsignedLongLong(GST_BUFFER(self->obj)->timestamp);
 }
+
 static int
 _wrap_gst_buffer__set_timestamp(PyGBoxed *self, PyObject *value, void *closure)
 {
-    gint val;
+    guint64 val;
 
-    val = PyInt_AsLong(value);
+    if (PyInt_CheckExact(value))
+      val = PyInt_AsUnsignedLongLongMask(value);
+    else
+      val = PyLong_AsUnsignedLongLong(value);
+
     if (PyErr_Occurred())
         return -1;
     
@@ -183,20 +188,25 @@ override-attr GstBuffer.duration
 static PyObject *
 _wrap_gst_buffer__get_duration(PyGObject *self, void *closure)
 {
-	return PyInt_FromLong(GST_BUFFER(self->obj)->duration);
+    return PyLong_FromUnsignedLongLong(GST_BUFFER(self->obj)->duration);
 }
 static int
 _wrap_gst_buffer__set_duration(PyGBoxed *self, PyObject *value, void *closure)
 {
-    gint val;
+    guint64 val;
 
-    val = PyInt_AsLong(value);
+    if (PyInt_CheckExact(value))
+      val = PyInt_AsUnsignedLongLongMask(value);
+    else
+      val = PyLong_AsUnsignedLongLong(value);
+
     if (PyErr_Occurred())
         return -1;
     
     pyg_boxed_get(self, GstBuffer)->duration = val;
     return 0;
 }
+
 %%
 override-slot GstBuffer.tp_str
 static PyObject *
