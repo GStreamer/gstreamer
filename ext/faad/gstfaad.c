@@ -25,6 +25,9 @@
 #include <gst/audio/multichannel.h>
 #include "gstfaad.h"
 
+GST_DEBUG_CATEGORY_STATIC (faad_debug);
+#define GST_CAT_DEFAULT faad_debug
+
 static GstElementDetails faad_details = {
   "Free AAC Decoder (FAAD)",
   "Codec/Decoder/Audio",
@@ -141,6 +144,8 @@ gst_faad_class_init (GstFaadClass * klass)
   parent_class = g_type_class_peek_parent (klass);
 
   gstelement_class->change_state = gst_faad_change_state;
+
+  GST_DEBUG_CATEGORY_INIT (faad_debug, "faad", 0, "AAC decoding");
 }
 
 static void
@@ -191,12 +196,7 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
 
     /* We have codec data, means packetised stream */
     faad->packetised = TRUE;
-    buf = g_value_get_boxed (value);
-
-    if (faad->handle) {
-      GST_DEBUG ("faad handle already open; closing before re-initing");
-      faacDecClose (faad->handle);
-    }
+    buf = GST_BUFFER (gst_value_get_mini_object (value));
 
     /* someone forgot that char can be unsigned when writing the API */
     if ((gint8) faacDecInit2 (faad->handle, GST_BUFFER_DATA (buf),

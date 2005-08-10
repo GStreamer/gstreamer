@@ -1,3 +1,12 @@
+2005-08-10  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/faad/gstfaad.c: (gst_faad_class_init), (gst_faad_setcaps):
+	  Add debug category, remove Close() call that made it crash
+	  whenever reusing, renegotiating or anything; Close() actually
+	  free()s the handle and should only be called on READY->NULL.
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header):
+	  Actually set caps on buffer (in addition to pad), also.
+
 2005-08-10  Owen Fraser-Green  <owen@discobabe.net>
 
 	* gst/realmedia/rmdemux.c (gst_rmdemux_sink_activate) 
