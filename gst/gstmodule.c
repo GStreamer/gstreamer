@@ -170,7 +170,7 @@ init_gst (void)
      pygst_add_constants (m, "GST_");
 
      /* Initialize debugging category */
-     GST_DEBUG_CATEGORY_INIT (gst_python, "gst-python", 0, "GStreamer python bindings");
+     GST_DEBUG_CATEGORY_INIT (gst_python, "python", 0, "GStreamer python bindings");
 
      g_timeout_add_full (0, 100, python_do_pending_calls, NULL, NULL);
      

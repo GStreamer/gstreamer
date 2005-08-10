@@ -1,5 +1,8 @@
 2005-08-10  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gstmodule.c: (init_gst): 
+	changed debug category name from 'gst-python' to 'python'
+
 	* gst/gst.override: (pygst_debug_log): 
 	gchar is way smaller than an int... resulting in negative line numbers
 	in debug.
