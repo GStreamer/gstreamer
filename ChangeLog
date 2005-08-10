@@ -1,3 +1,9 @@
+2005-08-10  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.override: (pygst_debug_log): 
+	printf("urlencoded%20space") != printf("%s", "urlencoded%20space")
+	Funny how a lot of problems have gone since that's fixed :)
+
 2005-08-09  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstpad.override: (_wrap_gst_pad_query_position): 
