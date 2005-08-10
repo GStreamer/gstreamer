@@ -124,11 +124,20 @@ class BufferTest(unittest.TestCase):
     def testAttrTimestamp(self):
         buffer = gst.Buffer()
         assert hasattr(buffer, "timestamp")
-        assert isinstance(buffer.timestamp, int)
+        assert isinstance(buffer.timestamp, long)
 
-        assert buffer.timestamp == -1
+        assert buffer.timestamp == gst.CLOCK_TIME_NONE
         buffer.timestamp = 0
         assert buffer.timestamp == 0
-        
+
+    def testAttrDuration(self):
+        buffer = gst.Buffer()
+        assert hasattr(buffer, "duration")
+        assert isinstance(buffer.duration, long)
+
+        assert buffer.duration == gst.CLOCK_TIME_NONE
+        buffer.duration = 0
+        assert buffer.duration == 0
+         
 if __name__ == "__main__":
     unittest.main()
