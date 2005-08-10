@@ -81,11 +81,11 @@ struct _GstBaseRTPDepayloadClass
 
   // pure virtual function, child must use this to process incoming
   // rtp packets
-  GstFlowReturn (*process) (GstBaseRTPDepayload *base, GstRTPBuffer *in);
+  GstBuffer * (*process) (GstBaseRTPDepayload *base, GstRTPBuffer *in);
 
   // non-pure function used to convert from RTP timestamp to GST timestamp
   // this function is used by the child class before gst_pad_pushing
-  GstBuffer* (*setgsttimestamp) (GstRTPBuffer *in);
+  void (*set_gst_timestamp) (GstBaseRTPDepayload *filter, guint32 timestamp, GstBuffer *buf);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];

@@ -1,3 +1,9 @@
+2005-08-10  Philippe Khalaf <burger@speedy.org>
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	* gst-libs/gst/rtp/gstbasertpdepayload.h:
+	  Added rtp timestamp -> gst timestamp conversion.
+	  Fixed several problems with queue.
+
 2005-08-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/audio/gstaudioclock.h:

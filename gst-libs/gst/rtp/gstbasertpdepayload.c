@@ -42,15 +42,6 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("application/x-rtp-noheader")
     );
 
-/*static GstStaticPadTemplate src_factory =
-GST_STATIC_PAD_TEMPLATE (
-        "src",
-        GST_PAD_SRC,
-        GST_PAD_ALWAYS,
-//        GST_STATIC_CAPS ("video/x-h263")
-        GST_STATIC_CAPS("ANY")
-        );*/
-
 static GstElementClass *parent_class = NULL;
 
 static void gst_base_rtp_depayload_base_init (GstBaseRTPDepayloadClass * klass);
@@ -58,6 +49,9 @@ static void gst_base_rtp_depayload_class_init (GstBaseRTPDepayloadClass *
     klass);
 static void gst_base_rtp_depayload_init (GstBaseRTPDepayload * filter,
     gpointer g_class);
+
+static void gst_base_rtp_depayload_push (GstBaseRTPDepayload * filter,
+    GstRTPBuffer * rtp_buf);
 
 GType
 gst_base_rtp_depayload_get_type (void)
@@ -94,9 +88,11 @@ static gboolean gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_base_rtp_depayload_chain (GstPad * pad,
     GstBuffer * in);
 
-static GstFlowReturn gst_base_rtp_depayload_add_to_queue (GstBaseRTPDepayload *
-    filter, GstRTPBuffer * in);
-static GstBuffer *gst_base_rtp_depayload_set_gst_timestamp (GstRTPBuffer * in);
+static GstFlowReturn gst_base_rtp_depayload_add_to_queue
+    (GstBaseRTPDepayload * filter, GstRTPBuffer * in);
+
+static void gst_base_rtp_depayload_set_gst_timestamp
+    (GstBaseRTPDepayload * filter, guint32 timestamp, GstBuffer * buf);
 
 
 static void
@@ -129,7 +125,7 @@ gst_base_rtp_depayload_class_init (GstBaseRTPDepayloadClass * klass)
   gobject_class->finalize = gst_base_rtp_depayload_finalize;
 
   klass->add_to_queue = gst_base_rtp_depayload_add_to_queue;
-  klass->setgsttimestamp = gst_base_rtp_depayload_set_gst_timestamp;
+  klass->set_gst_timestamp = gst_base_rtp_depayload_set_gst_timestamp;
 
   GST_DEBUG_CATEGORY_INIT (basertpdepayload_debug, "basertpdepayload", 0,
       "Base class for RTP Depayloaders");
@@ -222,7 +218,8 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
   GstBaseRTPDepayloadClass *bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
 
   if (filter->process_only) {
-    bclass->process (filter, GST_RTPBUFFER (in));
+    GST_DEBUG ("Pushing directly!");
+    gst_base_rtp_depayload_push (filter, GST_RTPBUFFER (in));
   } else {
     if (bclass->add_to_queue)
       ret = bclass->add_to_queue (filter, GST_RTPBUFFER (in));
@@ -255,36 +252,89 @@ gst_base_rtp_depayload_add_to_queue (GstBaseRTPDepayload * filter,
       i++;
     // now insert it at that place
     g_queue_push_nth (queue, in, i);
-    GST_DEBUG ("Packet added to queue %d at pos %d timestamp %d sn %d",
+    GST_DEBUG ("Packet added to queue %d at pos %d timestamp %u sn %d",
         g_queue_get_length (queue), i, in->timestamp, in->seqnum);
 
     // if our queue is getting to big (more than RTP_QUEUEDELAY ms of data)
     // release heading buffers
-    GST_DEBUG ("clockrate %d, queu_delay %d", filter->clock_rate,
-        filter->queue_delay);
+    //GST_DEBUG("clockrate %d, queu_delay %d", filter->clock_rate, filter->queue_delay);
     gfloat q_size_secs = (gfloat) filter->queue_delay / 1000;
     guint maxtsunits = (gfloat) filter->clock_rate * q_size_secs;
 
-    GST_DEBUG ("maxtsunit is %d", maxtsunits);
+    GST_DEBUG ("maxtsunit is %u", maxtsunits);
     GST_DEBUG ("ts %d %d %d %d", in->timestamp, in->seqnum,
         GST_RTPBUFFER (g_queue_peek_tail (queue))->timestamp,
         GST_RTPBUFFER (g_queue_peek_tail (queue))->seqnum);
-    while (GST_RTPBUFFER (g_queue_peek_tail (queue))->timestamp -
-        in->timestamp > maxtsunits) {
+    while (in->timestamp -
+        GST_RTPBUFFER (g_queue_peek_tail (queue))->timestamp > maxtsunits) {
       GST_DEBUG ("Poping packet from queue");
       GstBaseRTPDepayloadClass *bclass =
           GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
-      if (bclass->process)
-        bclass->process (filter, GST_RTPBUFFER (g_queue_pop_tail (queue)));
+      if (bclass->process) {
+        GstRTPBuffer *in = g_queue_pop_tail (queue);
+
+        gst_base_rtp_depayload_push (filter, GST_RTPBUFFER (in));
+      }
     }
   }
   return GST_FLOW_OK;
 }
 
-static GstBuffer *
-gst_base_rtp_depayload_set_gst_timestamp (GstRTPBuffer * in)
+static void
+gst_base_rtp_depayload_push (GstBaseRTPDepayload * filter,
+    GstRTPBuffer * rtp_buf)
 {
-  return NULL;
+  GstBaseRTPDepayloadClass *bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
+  GstBuffer *out_buf;
+
+  // let's send it out to processing
+  out_buf = bclass->process (filter, GST_RTPBUFFER (rtp_buf));
+  if (out_buf) {
+    // set the caps
+    gst_buffer_set_caps (GST_BUFFER (out_buf),
+        gst_pad_get_caps (filter->srcpad));
+    // set the timestamp
+    // I am assuming here that the timestamp of the last RTP buffer
+    // is the same as the timestamp wanted on the collector
+    // maybe i should add a way to override this timestamp from the
+    // depayloader child class
+    bclass->set_gst_timestamp (filter, rtp_buf->timestamp, out_buf);
+    // push it
+    GST_DEBUG ("Pushing buffer size %d, timestamp %u",
+        GST_BUFFER_SIZE (out_buf), GST_BUFFER_TIMESTAMP (out_buf));
+    gst_pad_push (filter->srcpad, GST_BUFFER (out_buf));
+    GST_DEBUG ("Pushed buffer");
+  }
+}
+
+static void
+gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
+    guint32 timestamp, GstBuffer * buf)
+{
+  static gboolean first = TRUE;
+
+  // rtp timestamps are based on the clock_rate
+  // gst timesamps are in nanoseconds
+  GST_DEBUG ("calculating ts : timestamp : %u, clockrate : %u", timestamp,
+      filter->clock_rate);
+  guint64 ts = ((timestamp * GST_SECOND) / filter->clock_rate);
+
+  GST_BUFFER_TIMESTAMP (buf) = ts;
+  //GST_BUFFER_TIMESTAMP (buf) =
+  //    (guint64)(((timestamp * GST_SECOND) / filter->clock_rate));
+  GST_DEBUG ("calculated ts %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+
+  // if this is the first buf send a discont
+  if (first) {
+    // send discont
+    GstEvent *event = gst_event_new_newsegment (1.0, GST_FORMAT_TIME,
+        ts, GST_CLOCK_TIME_NONE, 0);
+
+    gst_pad_push_event (filter->srcpad, event);
+    first = FALSE;
+    GST_DEBUG ("Pushed discont on this first buffer");
+  }
 }
 
 static void
