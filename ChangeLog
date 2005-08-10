@@ -1,3 +1,9 @@
+2005-08-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gst.c: (gst_init_check_with_popt_table), (init_pre):
+	  Check whether GST_DEBUG_NO_COLOR environment variable is
+	  set and disable coloured debug output if so.
+
 2005-08-04  Benjamin Otte  <otte@gnome.org>
 
 	* docs/libs/gstreamer-libs-docs.sgml:

@@ -346,6 +346,10 @@ gst_init_check_with_popt_table (int *argc, char **argv[],
   }
 
   if (popt_options == NULL) {
+    /* check for GST_DEBUG_NO_COLOR environment variable */
+    if (g_getenv ("GST_DEBUG_NO_COLOR") != NULL)
+      gst_debug_set_colored (FALSE);
+
     options = options_without;
   } else {
     options = options_with;
@@ -468,6 +472,9 @@ init_pre (void)
 
   {
     const gchar *debug_list;
+
+    if (g_getenv ("GST_DEBUG_NO_COLOR") != NULL)
+      gst_debug_set_colored (FALSE);
 
     debug_list = g_getenv ("GST_DEBUG");
     if (debug_list) {
