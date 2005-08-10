@@ -1,6 +1,11 @@
 2005-08-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/extend/jukebox.py:
+	  implement volume scaling to make tracks match the target RMS
+
+2005-08-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/extend/jukebox.py:
 	* gst/extend/leveller.py:
 	* gst/extend/sources.py:
 	  use python debugging

@@ -36,6 +36,8 @@ from leveller import Leveller
 class Jukebox(gst.Bin):
     gsignal('done', str)
     gsignal('prerolled')
+    gsignal('changed', str, gobject.TYPE_UINT64) # clocktime, filename
+    gsignal('looped')
 
     def __init__(self, files, rms=0.1, loops=0, random=False,
                  caps="audio/x-raw-int,channels=2,rate=44100",
@@ -90,8 +92,11 @@ class Jukebox(gst.Bin):
         if buffer.duration is not gst.CLOCK_TIME_NONE:
             now += float(buffer.duration) / gst.SECOND
             
-        next = self._triggers[0][0]
-        if now > next:
+        while self._triggers:
+            next = self._triggers[0][0]
+            if now < next:
+                break
+
             gst.debug("now %f, next %f" % (now, next))
             gst.debug("running trigger")
             t = self._triggers.pop()
@@ -174,6 +179,8 @@ class Jukebox(gst.Bin):
         when = self._next_mix - mixin
         gst.debug("Scheduling start of %s at %f" % (file, when))
         self._triggers.append((when, self._source_play, file))
+        self._triggers.append((self._next_mix, self._emit_changed, file,
+            long(self._next_mix * gst.SECOND)))
 
         self._next_mix = when + mixout
         gst.debug("Next mix should happen at %f" % when)
@@ -195,6 +202,7 @@ class Jukebox(gst.Bin):
                 return None
                 
             gst.debug("Reset play pointer to top")
+            self.emit('looped')
             self._loopsleft -= 1
             if self._random:
                 gst.debug("Reshuffling")
@@ -212,13 +220,34 @@ class Jukebox(gst.Bin):
         gst.debug('_source_play: prerolling %s' % file)
         source = sources.AudioSource(file)
         self.add(source)
-        source.connect('prerolled', self._source_prerolled_cb)
+        source.connect('prerolled', self._source_prerolled_cb, file)
         source.connect('done', self._source_done_cb)
         source.set_state(gst.STATE_PLAYING)
 
-    def _source_prerolled_cb(self, source):
+    def _emit_changed(self, file, when):
+        print "emitting changed for %s at %r" % (file, when)
+        self.emit('changed', file, when)
+
+    def _source_prerolled_cb(self, source, file):
         gst.debug('source %r prerolled' % source)
-        srcpad = source.get_pad("src")
+        rms = self._levels[file][0]
+        print rms
+        gst.debug('file rms %f, target rms %f' % (rms, self._target_rms))
+        print 'file rms %f, target rms %f' % (rms, self._target_rms)
+        level = 1.0
+        if rms > self._target_rms:
+            level = self._target_rms / rms
+            gst.debug('setting volume of %f' % level)
+        else:
+            gst.debug('not going to go above 1.0 level')
+
+        volume = gst.element_factory_make('volume')
+        volume.set_property('volume', level)
+        self.add(volume)
+        source.link(volume)
+        volume.set_state(gst.STATE_PLAYING)
+        
+        srcpad = volume.get_pad("src")
         sinkpad = self._adder.get_request_pad("sink%d")
         gst.debug("Linking srcpad %r to adder pad %r using caps %r" % (
             srcpad, sinkpad, self._caps))
@@ -276,6 +305,12 @@ if __name__ == "__main__":
         if reason != sources.EOS:
             print "Some error happened: %s" % reason
         main.quit()
+
+    def _jukebox_changed_cb(jukebox, filename, when):
+        print "changed file to %s at %f" % (filename, float(when) / gst.SECOND)
+
+    def _jukebox_looped_cb(jukebox):
+        print "jukebox looped"
         
     def _iterate_idler():
         #print "iterating pipeline"
@@ -299,6 +334,8 @@ if __name__ == "__main__":
 
     source.connect('prerolled', _jukebox_prerolled_cb)
     source.connect('done', _jukebox_done_cb)
+    source.connect('changed', _jukebox_changed_cb)
+    source.connect('looped', _jukebox_looped_cb)
     source.preroll()
     pipeline.add(source)
 
