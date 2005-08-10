@@ -1,3 +1,12 @@
+2005-08-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_stream_headers),
+	(gst_wavparse_stream_data):
+	  Add some fixes from 0.8 branch: allow 24/32bps songs and
+	  blockalign samples to the header-specified size, if any
+	  (#311070); error out on channels==0 or bitrate==0 
+	  (#309043, #304588).
+
 2005-08-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/level/gstlevel.c: (gst_level_init), (gst_level_set_caps),

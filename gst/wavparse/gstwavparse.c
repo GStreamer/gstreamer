@@ -69,8 +69,8 @@ static GstStaticPadTemplate src_template_factory =
     GST_STATIC_CAPS ("audio/x-raw-int, "
         "endianness = (int) little_endian, "
         "signed = (boolean) { true, false }, "
-        "width = (int) { 8, 16 }, "
-        "depth = (int) { 8, 16 }, "
+        "width = (int) { 8, 16, 24, 32 }, "
+        "depth = (int) { 8, 16, 24, 32 }, "
         "rate = (int) [ 8000, 48000 ], "
         "channels = (int) [ 1, 2 ]; "
         "audio/mpeg, "
@@ -750,6 +750,8 @@ gst_wavparse_stream_headers (GstWavParse * wav)
     return GST_FLOW_ERROR;
   }
 
+  /* Note: gst_riff_create_audio_caps might nedd to fix values in
+   * the header header depending on the format, so call it first */
   caps =
       gst_riff_create_audio_caps (header->format, NULL, header, NULL,
       NULL, NULL);
@@ -757,10 +759,22 @@ gst_wavparse_stream_headers (GstWavParse * wav)
   wav->format = header->format;
   wav->rate = header->rate;
   wav->channels = header->channels;
+  if (wav->channels == 0) {
+    GST_ELEMENT_ERROR (wav, STREAM, FAILED, (NULL),
+        ("Stream claims to contain no channels - invalid data"));
+    g_free (header);
+    return GST_FLOW_ERROR;
+  }
   wav->blockalign = header->blockalign;
   wav->width = (header->blockalign * 8) / header->channels;
   wav->depth = header->size;
   wav->bps = header->av_bps;
+  if (wav->bps <= 0) {
+    GST_ELEMENT_ERROR (wav, STREAM, FAILED, (NULL),
+        ("Stream claims to have a bitrate of <= zero - invalid data"));
+    g_free (header);
+    return GST_FLOW_ERROR;
+  }
 
   g_free (header);
 
@@ -774,7 +788,9 @@ gst_wavparse_stream_headers (GstWavParse * wav)
     gst_element_no_more_pads (GST_ELEMENT (wav));
     GST_DEBUG ("frequency %d, channels %d", wav->rate, wav->channels);
   } else {
-    GST_ELEMENT_ERROR (wav, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
+    GST_ELEMENT_ERROR (wav, STREAM, TYPE_NOT_FOUND, (NULL),
+        ("No caps found for format 0x%x, %d channels, %d Hz",
+            wav->format, wav->channels, wav->rate));
     return GST_FLOW_ERROR;
   }
 
@@ -843,6 +859,8 @@ gst_wavparse_stream_data (GstWavParse * wav)
   GST_DEBUG ("offset : %lld , dataleft : %lld", wav->offset, wav->dataleft);
 
   desired = MIN (wav->dataleft, MAX_BUFFER_SIZE);
+  if (desired >= wav->blockalign && wav->blockalign > 0)
+    desired -= (desired % wav->blockalign);
   GST_DEBUG ("Fetching %lld bytes of data from the sinkpad.", desired);
   if ((res = gst_pad_pull_range (wav->sinkpad, wav->offset,
               desired, &buf)) != GST_FLOW_OK) {
