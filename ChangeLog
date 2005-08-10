@@ -1,3 +1,15 @@
+2005-08-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/base/gsttypefindhelper.c: (helper_find_peek),
+	(gst_type_find_helper):
+	  The memory returned by gst_type_find_peek() needs to
+	  stay valid until the end of a typefind function, and
+	  typefind functions may keep results from different 
+	  offsets around, so we can't just unref the buffer from
+	  the previous _peek(), but have to save all buffers 
+	  returned by _peek() until typefinding is done and only
+	  free them then.
+
 2005-08-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-sections.txt:

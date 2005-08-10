@@ -38,7 +38,7 @@ typedef struct
   guint best_probability;
   GstCaps *caps;
   guint64 size;
-  GstBuffer *buffer;
+  GList *buffers;
 }
 GstTypeFindHelper;
 
@@ -63,18 +63,15 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
     offset += find->size;
   }
 
+  /* TODO: is it worth checking our list of buffers for
+   * a match before pulling a new buffer via _getrange()? */
   buffer = NULL;
   ret = GST_PAD_GETRANGEFUNC (src) (src, offset, size, &buffer);
-
-  if (find->buffer) {
-    gst_buffer_unref (find->buffer);
-    find->buffer = NULL;
-  }
 
   if (ret != GST_FLOW_OK)
     goto error;
 
-  find->buffer = buffer;
+  find->buffers = g_list_prepend (find->buffers, buffer);
 
   return GST_BUFFER_DATA (buffer);
 
@@ -112,7 +109,7 @@ gst_type_find_helper (GstPad * src, guint64 size)
   find.best_probability = 0;
   find.caps = NULL;
   find.size = size;
-  find.buffer = NULL;
+  find.buffers = NULL;
   gst_find.data = &find;
   gst_find.peek = helper_find_peek;
   gst_find.suggest = helper_find_suggest;
@@ -130,8 +127,9 @@ gst_type_find_helper (GstPad * src, guint64 size)
   if (find.best_probability > 0)
     result = find.caps;
 
-  if (find.buffer)
-    gst_buffer_unref (find.buffer);
+  for (walk = find.buffers; walk; walk = walk->next)
+    gst_buffer_unref (GST_BUFFER (walk->data));
+  g_list_free (find.buffers);
 
   return result;
 }
