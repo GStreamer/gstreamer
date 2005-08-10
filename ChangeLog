@@ -1,5 +1,12 @@
 2005-08-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gst.defs:
+	* gst/gst.override:
+	* gst/gstmodule.c: (init_gst):
+	  backport debug wrapping from 0.9
+
+2005-08-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/extend/leveller.py:
 	  take into account the total peak RMS when finding mixin/mixout 
 	  add length, just because

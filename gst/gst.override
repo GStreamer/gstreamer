@@ -49,6 +49,9 @@ headers
 
 PyObject *PyGstExc_LinkError = NULL;
 
+GST_DEBUG_CATEGORY_EXTERN (gst_python);
+#define GST_CAT_DEFAULT gst_python
+
 GSList *mainloops = NULL;
 void
 _pygst_main_quit(void)
@@ -210,6 +213,30 @@ _pygst_element_init (gpointer gclass, PyTypeObject *pyclass)
   return 0;
 }
 #endif
+
+static PyObject *
+pygst_debug_log (PyObject *whatever, PyObject *string, GstDebugLevel level)
+{
+    gchar	*str;
+    gchar	*function;
+    gchar	*filename;
+    int		lineno;
+    PyFrameObject	*frame;
+
+    if (!PyArg_ParseTuple(string, "s:gst.debug_log", &str)) {
+	PyErr_SetString(PyExc_TypeError, "Need a string!");
+	return NULL;
+    }
+
+    frame = PyEval_GetFrame();
+    function = PyString_AsString(frame->f_code->co_name);
+    filename = PyString_AsString(frame->f_code->co_filename);
+    lineno = frame->f_code->co_firstlineno;
+    /* gst_debug_log : category, level, file, function, line, object, format, va_list */
+    gst_debug_log (GST_CAT_DEFAULT, level, filename, function, lineno, NULL, "%s", str);
+    Py_INCREF (Py_None);
+    return Py_None;    
+}
 
 %%
 include
@@ -1042,3 +1069,39 @@ _wrap_gst_element_register(PyObject *self, PyObject *args, PyObject *kwargs)
     return PyBool_FromLong(ret);
 }
 
+%%
+override gst_log args
+static PyObject *
+_wrap_gst_log (PyObject *whatever, PyObject *string)
+{
+    return pygst_debug_log (whatever, string, GST_LEVEL_LOG);
+}
+%%
+override gst_debug args
+static PyObject *
+_wrap_gst_debug (PyObject *whatever, PyObject *string)
+{
+    return pygst_debug_log (whatever, string, GST_LEVEL_DEBUG);
+}
+%%
+override gst_info args
+static PyObject *
+_wrap_gst_info (PyObject *whatever, PyObject *string)
+{
+    return pygst_debug_log (whatever, string, GST_LEVEL_INFO);
+}
+%%
+%%
+override gst_warning
+static PyObject *
+_wrap_gst_warning (PyObject *whatever, PyObject *string)
+{
+    return pygst_debug_log (whatever, string, GST_LEVEL_WARNING);
+}
+%%
+override gst_error
+static PyObject *
+_wrap_gst_error (PyObject *whatever, PyObject *string)
+{
+    return pygst_debug_log (whatever, string, GST_LEVEL_ERROR);
+}
