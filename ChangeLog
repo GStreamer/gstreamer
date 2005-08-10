@@ -1,3 +1,11 @@
+2005-08-10  Owen Fraser-Green  <owen@discobabe.net>
+
+	* gst/realmedia/rmdemux.c (gst_rmdemux_sink_activate) 
+	(gst_rmdemux_sink_activate_push, gst_rmdemux_sink_activate_pull) 
+	(gst_rmdemux_loop, gst_rmdemux_src_event) 
+	(gst_rmdemux_perform_seek, gst_rmdemux_src_query): Implemented
+	push-pull and seeking.
+
 2005-08-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/faad/gstfaad.c: (gst_faad_event):

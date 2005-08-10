@@ -29,6 +29,8 @@
 #define RMDEMUX_GUINT32_GET(a)	GST_READ_UINT32_BE(a)
 #define RMDEMUX_GUINT16_GET(a)	GST_READ_UINT16_BE(a)
 #define RMDEMUX_FOURCC_GET(a)	GST_READ_UINT32_LE(a)
+#define HEADER_SIZE 10
+#define DATA_SIZE 8
 typedef struct _GstRMDemuxIndex GstRMDemuxIndex;
 
 struct _GstRMDemuxStream
@@ -63,36 +65,8 @@ struct _GstRMDemuxStream
 
 struct _GstRMDemuxIndex
 {
-  int unknown;
   guint32 offset;
-  int timestamp;
-  int frame;
-};
-
-enum GstRMDemuxState
-{
-  RMDEMUX_STATE_NULL,
-  RMDEMUX_STATE_HEADER,
-  RMDEMUX_STATE_HEADER_UNKNOWN,
-  RMDEMUX_STATE_HEADER_RMF,
-  RMDEMUX_STATE_HEADER_PROP,
-  RMDEMUX_STATE_HEADER_MDPR,
-  RMDEMUX_STATE_HEADER_INDX,
-  RMDEMUX_STATE_HEADER_DATA,
-  RMDEMUX_STATE_HEADER_CONT,
-  RMDEMUX_STATE_HEADER_SEEKING,
-  RMDEMUX_STATE_SEEKING,
-  RMDEMUX_STATE_DATA_PACKET,
-  RMDEMUX_STATE_SEEKING_EOS,
-  RMDEMUX_STATE_EOS
-};
-
-enum GstRMDemuxStreamType
-{
-  GST_RMDEMUX_STREAM_UNKNOWN,
-  GST_RMDEMUX_STREAM_VIDEO,
-  GST_RMDEMUX_STREAM_AUDIO,
-  GST_RMDEMUX_STREAM_FILEINFO
+  GstClockTime timestamp;
 };
 
 static GstElementDetails gst_rmdemux_details = {
@@ -142,8 +116,18 @@ static void gst_rmdemux_init (GstRMDemux * rmdemux);
 static void gst_rmdemux_dispose (GObject * object);
 static GstElementStateReturn gst_rmdemux_change_state (GstElement * element);
 static GstFlowReturn gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer);
+static void gst_rmdemux_loop (GstPad * pad);
+static gboolean gst_rmdemux_sink_activate (GstPad * sinkpad);
+static gboolean gst_rmdemux_sink_activate_push (GstPad * sinkpad,
+    gboolean active);
+static gboolean gst_rmdemux_sink_activate_pull (GstPad * sinkpad,
+    gboolean active);
 static gboolean gst_rmdemux_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_rmdemux_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_rmdemux_send_event (GstRMDemux * rmdemux, GstEvent * event);
+static const GstQueryType *gst_rmdemux_src_query_types (GstPad * pad);
+static gboolean gst_rmdemux_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_rmdemux_perform_seek (GstRMDemux * rmdemux, gboolean flush);
 
 static void gst_rmdemux_parse__rmf (GstRMDemux * rmdemux, const void *data,
     int length);
@@ -239,6 +223,12 @@ gst_rmdemux_init (GstRMDemux * rmdemux)
       (&gst_rmdemux_sink_template), "sink");
   gst_pad_set_event_function (rmdemux->sinkpad, gst_rmdemux_sink_event);
   gst_pad_set_chain_function (rmdemux->sinkpad, gst_rmdemux_chain);
+  gst_pad_set_activate_function (rmdemux->sinkpad, gst_rmdemux_sink_activate);
+  gst_pad_set_activatepull_function (rmdemux->sinkpad,
+      gst_rmdemux_sink_activate_pull);
+  gst_pad_set_activatepush_function (rmdemux->sinkpad,
+      gst_rmdemux_sink_activate_push);
+
 
   gst_element_add_pad (GST_ELEMENT (rmdemux), rmdemux->sinkpad);
 
@@ -280,6 +270,215 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
   return ret;
 }
 
+static gboolean
+gst_rmdemux_src_event (GstPad * pad, GstEvent * event)
+{
+  gboolean ret = TRUE;
+
+  GstRMDemux *rmdemux = GST_RMDEMUX (GST_PAD_PARENT (pad));
+
+  GST_LOG_OBJECT (rmdemux, "handling src event");
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:{
+      gboolean running;
+      gboolean flush;
+      GstFormat format;
+      GstSeekFlags flags;
+      GstSeekType cur_type, stop_type;
+      gint64 cur, stop;
+
+      /* can't seek if we are not seekable, FIXME could pass the
+       * seek query upstream after converting it to bytes using
+       * the average bitrate of the stream. */
+      if (!rmdemux->seekable) {
+        ret = FALSE;
+        GST_DEBUG ("seek on non seekable stream");
+        goto done_unref;
+      }
+      gst_event_parse_seek (event, NULL, &format, &flags,
+          &cur_type, &cur, &stop_type, &stop);
+
+      /* we can only seek on time */
+      if (format != GST_FORMAT_TIME) {
+        ret = FALSE;
+        GST_DEBUG ("can only seek on TIME");
+        goto done_unref;
+      }
+      rmdemux->segment_start = cur;
+      rmdemux->segment_stop = stop;
+      rmdemux->segment_play = !!(flags & GST_SEEK_FLAG_SEGMENT);
+      flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+      gst_event_unref (event);
+
+      GST_DEBUG ("segment positions set to %" GST_TIME_FORMAT "-%"
+          GST_TIME_FORMAT, GST_TIME_ARGS (rmdemux->segment_start),
+          GST_TIME_ARGS (rmdemux->segment_stop));
+
+      /* check if we can do the seek now */
+      GST_LOCK (rmdemux);
+      running = rmdemux->running;
+      GST_UNLOCK (rmdemux);
+
+      /* now do the seek */
+      if (running) {
+        ret = gst_rmdemux_perform_seek (rmdemux, flush);
+      } else
+        ret = TRUE;
+      break;
+    }
+    default:
+      ret = gst_pad_event_default (rmdemux->sinkpad, event);
+      break;
+  }
+
+  return ret;
+
+done_unref:
+  GST_DEBUG ("error handling event");
+  gst_event_unref (event);
+  return ret;
+}
+
+static gboolean
+gst_rmdemux_perform_seek (GstRMDemux * rmdemux, gboolean flush)
+{
+  /* nothing configured, play complete file */
+  if (rmdemux->segment_start == GST_CLOCK_TIME_NONE)
+    rmdemux->segment_start = 0;
+  if (rmdemux->segment_stop == GST_CLOCK_TIME_NONE)
+    rmdemux->segment_stop = rmdemux->duration;
+
+  rmdemux->segment_start = CLAMP (rmdemux->segment_start, 0, rmdemux->duration);
+  rmdemux->segment_stop = CLAMP (rmdemux->segment_stop, 0, rmdemux->duration);
+
+  /* first step is to unlock the streaming thread if it is
+   * blocked in a chain call, we do this by starting the flush. because
+   * we cannot yet hold any streaming lock, we have to protect the chains
+   * with their own lock. */
+  if (flush) {
+    gst_pad_push_event (rmdemux->sinkpad, gst_event_new_flush_start ());
+    gst_rmdemux_send_event (rmdemux, gst_event_new_flush_start ());
+  } else {
+    gst_pad_pause_task (rmdemux->sinkpad);
+  }
+
+  /* now grab the stream lock so that streaming cannot continue, for
+   * non flushing seeks when the element is in PAUSED this could block
+   * forever. */
+  GST_STREAM_LOCK (rmdemux->sinkpad);
+
+  /* we need to stop flushing on the srcpad as we're going to use it
+   * next. We can do this as we have the STREAM lock now. */
+  gst_pad_push_event (rmdemux->sinkpad, gst_event_new_flush_stop ());
+
+  /* Find the new offset */
+  /* Get the video stream */
+  {
+    int i, n;
+
+    rmdemux->offset = 0;
+    GstClockTime tmp_time = 0;
+
+    /* Find the last offset which occurs after the seek time */
+    for (n = 0; n < rmdemux->n_streams; n++) {
+      GstRMDemuxStream *stream;
+
+      stream = rmdemux->streams[n];
+
+      for (i = 0; i < stream->index_length; i++) {
+        if (stream->index[i].timestamp > rmdemux->segment_start) {
+          if (stream->index[i].offset > rmdemux->offset) {
+            rmdemux->offset = stream->index[i].offset;
+            tmp_time = stream->index[i].timestamp;
+          }
+          break;
+        }
+      }
+    }
+
+    GST_DEBUG_OBJECT (rmdemux, "seek offset to %" GST_TIME_FORMAT " at 0x%x",
+        GST_TIME_ARGS (tmp_time), rmdemux->offset);
+  }
+
+  /* now we have a new position, prepare for streaming again */
+  {
+    GstEvent *event;
+
+    /* Reset the demuxer state */
+    rmdemux->state = RMDEMUX_STATE_DATA_PACKET;
+    gst_adapter_clear (rmdemux->adapter);
+
+    if (flush)
+      gst_rmdemux_send_event (rmdemux, gst_event_new_flush_stop ());
+
+    /* create the discont event we are going to send out */
+    event = gst_event_new_newsegment (1.0,
+        GST_FORMAT_TIME, (gint64) rmdemux->segment_start,
+        (gint64) rmdemux->segment_stop, 0);
+
+    gst_rmdemux_send_event (rmdemux, event);
+
+    /* notify start of new segment */
+    if (rmdemux->segment_play) {
+      gst_element_post_message (GST_ELEMENT (rmdemux),
+          gst_message_new_segment_start (GST_OBJECT (rmdemux),
+              rmdemux->segment_start));
+    }
+    /* restart our task since it might have been stopped when we did the 
+     * flush. */
+    gst_pad_start_task (rmdemux->sinkpad, (GstTaskFunction) gst_rmdemux_loop,
+        rmdemux->sinkpad);
+  }
+
+  /* streaming can continue now */
+  GST_STREAM_UNLOCK (rmdemux->sinkpad);
+
+  return TRUE;
+
+//seek_error:
+//  GST_DEBUG_OBJECT (rmdemux, "got a seek error");
+//  GST_STREAM_UNLOCK (rmdemux->sinkpad);
+//
+//  return FALSE;
+}
+
+
+static gboolean
+gst_rmdemux_src_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res = TRUE;
+  GstRMDemux *rmdemux;
+
+  rmdemux = GST_RMDEMUX (GST_PAD_PARENT (pad));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+      GST_DEBUG_OBJECT (rmdemux, "src_query position");
+      gst_query_set_position (query, GST_FORMAT_TIME, -1, rmdemux->duration);
+      break;
+    case GST_QUERY_CONVERT:
+      res = FALSE;
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
+
+  return res;
+}
+
+static const GstQueryType *
+gst_rmdemux_src_query_types (GstPad * pad)
+{
+  static const GstQueryType query_types[] = {
+    GST_QUERY_POSITION,
+    0
+  };
+
+  return query_types;
+}
+
 static GstElementStateReturn
 gst_rmdemux_change_state (GstElement * element)
 {
@@ -295,6 +494,11 @@ gst_rmdemux_change_state (GstElement * element)
     case GST_STATE_READY_TO_PAUSED:
       rmdemux->state = RMDEMUX_STATE_HEADER;
       rmdemux->have_pads = FALSE;
+      rmdemux->packet_number = 0;
+      rmdemux->segment_start = GST_CLOCK_TIME_NONE;
+      rmdemux->segment_stop = GST_CLOCK_TIME_NONE;
+      rmdemux->segment_play = FALSE;
+      rmdemux->running = FALSE;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
@@ -307,6 +511,9 @@ gst_rmdemux_change_state (GstElement * element)
       break;
     case GST_STATE_PAUSED_TO_READY:
       gst_adapter_clear (rmdemux->adapter);
+      GST_LOCK (rmdemux);
+      rmdemux->running = FALSE;
+      GST_UNLOCK (rmdemux);
       break;
     case GST_STATE_READY_TO_NULL:
       break;
@@ -335,6 +542,157 @@ gst_rmdemux_src_getcaps (GstPad * pad)
   return gst_caps_new_empty ();
 }
 
+/* this function is called when the pad is activated and should start
+ * processing data.
+ *
+ * We check if we can do random access to decide if we work push or
+ * pull based.
+ */
+static gboolean
+gst_rmdemux_sink_activate (GstPad * sinkpad)
+{
+  if (gst_pad_check_pull_range (sinkpad)) {
+    return gst_pad_activate_pull (sinkpad, TRUE);
+  } else {
+    return gst_pad_activate_push (sinkpad, TRUE);
+  }
+}
+
+/* this function gets called when we activate ourselves in push mode.
+ * We cannot seek (ourselves) in the stream */
+static gboolean
+gst_rmdemux_sink_activate_push (GstPad * pad, gboolean active)
+{
+  GstRMDemux *rmdemux;
+
+  rmdemux = GST_RMDEMUX (GST_PAD_PARENT (pad));
+
+  GST_DEBUG_OBJECT (rmdemux, "activate_push");
+
+  rmdemux->seekable = FALSE;
+
+  return TRUE;
+}
+
+/* this function gets called when we activate ourselves in pull mode.
+ * We can perform  random access to the resource and we start a task
+ * to start reading */
+static gboolean
+gst_rmdemux_sink_activate_pull (GstPad * pad, gboolean active)
+{
+  GstRMDemux *rmdemux;
+
+  rmdemux = GST_RMDEMUX (GST_PAD_PARENT (pad));
+
+  GST_DEBUG_OBJECT (rmdemux, "activate_pull");
+
+  if (active) {
+    rmdemux->seekable = TRUE;
+    rmdemux->offset = 0;
+    rmdemux->loop_state = RMDEMUX_LOOP_STATE_HEADER;
+    rmdemux->data_offset = G_MAXUINT;
+
+    return gst_pad_start_task (pad, (GstTaskFunction) gst_rmdemux_loop, pad);
+  } else {
+    return gst_pad_stop_task (pad);
+  }
+}
+
+/* random access mode - just pass over to our chain function */
+static void
+gst_rmdemux_loop (GstPad * pad)
+{
+  GstRMDemux *rmdemux;
+  GstBuffer *buffer;
+  GstFlowReturn ret;
+  guint size;
+
+  rmdemux = GST_RMDEMUX (GST_PAD_PARENT (pad));
+
+  GST_DEBUG_OBJECT (rmdemux, "loop with state=%d and offset=0x%x",
+      rmdemux->loop_state, rmdemux->offset);
+
+  switch (rmdemux->state) {
+    case RMDEMUX_STATE_HEADER:
+      size = HEADER_SIZE;
+      break;
+    case RMDEMUX_STATE_HEADER_DATA:
+      size = DATA_SIZE;
+      break;
+    case RMDEMUX_STATE_DATA_PACKET:
+      size = rmdemux->avg_packet_size;
+      break;
+    default:
+      size = rmdemux->size;
+  }
+
+  ret = gst_pad_pull_range (pad, rmdemux->offset, size, &buffer);
+  if (ret != GST_FLOW_OK)
+    goto need_pause;
+
+  size = GST_BUFFER_SIZE (buffer);
+
+  /* EOS */
+  if (size < 1)
+    goto eos;
+
+  /* Defer to the chain function */
+  if (gst_rmdemux_chain (pad, buffer) != GST_FLOW_OK)
+    goto need_pause;
+
+  rmdemux->offset += size;
+
+  switch (rmdemux->loop_state) {
+    case RMDEMUX_LOOP_STATE_HEADER:
+      if (rmdemux->offset >= rmdemux->data_offset) {
+        /* It's the end of the header */
+        rmdemux->loop_state = RMDEMUX_LOOP_STATE_INDEX;
+        rmdemux->offset = rmdemux->index_offset;
+      }
+      break;
+    case RMDEMUX_LOOP_STATE_INDEX:
+      if (rmdemux->state == RMDEMUX_STATE_HEADER) {
+        if (rmdemux->index_offset == 0) {
+          /* We've read the last index */
+          rmdemux->loop_state = RMDEMUX_LOOP_STATE_DATA;
+          rmdemux->offset = rmdemux->data_offset;
+          GST_LOCK (rmdemux);
+          rmdemux->running = TRUE;
+          GST_UNLOCK (rmdemux);
+        } else {
+          /* Get the next index */
+          rmdemux->offset = rmdemux->index_offset;
+        }
+      }
+      break;
+    case RMDEMUX_LOOP_STATE_DATA:
+      break;
+  }
+
+  return;
+
+need_pause:
+  {
+    GST_LOG_OBJECT (rmdemux, "pausing task");
+    gst_pad_pause_task (pad);
+    return;
+  }
+eos:
+  {
+    int n;
+
+    GST_LOG_OBJECT (rmdemux, "pushing eos");
+    for (n = 0; n < rmdemux->n_streams; n++) {
+      if (rmdemux->streams[n] != NULL && rmdemux->streams[n]->pad == pad) {
+        gst_pad_push_event (rmdemux->streams[n]->pad, gst_event_new_eos ());
+      }
+    }
+
+    gst_pad_pause_task (pad);
+    return;
+  }
+}
+
 static GstFlowReturn
 gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
 {
@@ -344,21 +702,25 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
 
   GstRMDemux *rmdemux = GST_RMDEMUX (GST_PAD_PARENT (pad));
 
+  GST_LOG_OBJECT (rmdemux, "Chaining buffer of size %d",
+      GST_BUFFER_SIZE (buffer));
+
   GST_STREAM_LOCK (pad);
 
   gst_adapter_push (rmdemux->adapter, buffer);
 
   while (TRUE) {
+    GST_LOG_OBJECT (rmdemux, "looping in chain");
     switch (rmdemux->state) {
       case RMDEMUX_STATE_HEADER:
       {
-        if (gst_adapter_available (rmdemux->adapter) < 10)
+        if (gst_adapter_available (rmdemux->adapter) < HEADER_SIZE)
           goto unlock;
 
-        data = gst_adapter_peek (rmdemux->adapter, 10);
+        data = gst_adapter_peek (rmdemux->adapter, HEADER_SIZE);
 
         rmdemux->object_id = RMDEMUX_FOURCC_GET (data + 0);
-        rmdemux->size = RMDEMUX_GUINT32_GET (data + 4) - 10;
+        rmdemux->size = RMDEMUX_GUINT32_GET (data + 4) - HEADER_SIZE;
         rmdemux->object_version = RMDEMUX_GUINT16_GET (data + 8);
 
         GST_LOG_OBJECT (rmdemux, "header found with object_id="
@@ -470,7 +832,9 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
         }
 
         /* The actual header is only 8 bytes */
-        rmdemux->size = 8;
+        rmdemux->size = DATA_SIZE;
+        GST_DEBUG_OBJECT (rmdemux, "data available %d",
+            gst_adapter_available (rmdemux->adapter));
         if (gst_adapter_available (rmdemux->adapter) < rmdemux->size)
           goto unlock;
 
@@ -480,6 +844,8 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
 
         gst_adapter_flush (rmdemux->adapter, rmdemux->size);
 
+        rmdemux->packet_number++;
+        GST_DEBUG_OBJECT (rmdemux, "packet_number: %d", rmdemux->packet_number);
         rmdemux->state = RMDEMUX_STATE_DATA_PACKET;
         break;
       }
@@ -530,9 +896,20 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
         } else {
           /* Stream done */
           gst_adapter_flush (rmdemux->adapter, 2);
-          rmdemux->state = RMDEMUX_STATE_HEADER;
+
+          if (rmdemux->packet_number == rmdemux->num_packets)
+            rmdemux->state = RMDEMUX_STATE_EOS;
+          else
+            rmdemux->state = RMDEMUX_STATE_HEADER;
         }
+        break;
       }
+      case RMDEMUX_STATE_EOS:
+        GST_WARNING_OBJECT (rmdemux, "FIXME: Handle EOS.");
+        goto unlock;
+      default:
+        GST_WARNING_OBJECT (rmdemux, "Unhandled state %d", rmdemux->state);
+        goto unlock;
     }
   }
 
@@ -567,6 +944,7 @@ gst_rmdemux_send_event (GstRMDemux * rmdemux, GstEvent * event)
     GstRMDemuxStream *stream;
 
     stream = rmdemux->streams[i];
+
     gst_event_ref (event);
     gst_pad_push_event (stream->pad, event);
   }
@@ -713,7 +1091,14 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     gst_pad_set_caps (stream->pad, stream->caps);
     gst_caps_unref (stream->caps);
 
-    gst_pad_set_getcaps_function (stream->pad, gst_rmdemux_src_getcaps);
+    gst_pad_set_getcaps_function (stream->pad,
+        GST_DEBUG_FUNCPTR (gst_rmdemux_src_getcaps));
+    gst_pad_set_event_function (stream->pad,
+        GST_DEBUG_FUNCPTR (gst_rmdemux_src_event));
+    gst_pad_set_query_type_function (stream->pad,
+        GST_DEBUG_FUNCPTR (gst_rmdemux_src_query_types));
+    gst_pad_set_query_function (stream->pad,
+        GST_DEBUG_FUNCPTR (gst_rmdemux_src_query));
 
     GST_DEBUG_OBJECT (rmdemux, "adding pad %p to rmdemux %p", stream->pad,
         rmdemux);
@@ -809,19 +1194,21 @@ gst_rmdemux_parse_prop (GstRMDemux * rmdemux, const void *data, int length)
   GST_LOG_OBJECT (rmdemux, "avg bitrate: %d", RMDEMUX_GUINT32_GET (data + 4));
   GST_LOG_OBJECT (rmdemux, "max packet size: %d",
       RMDEMUX_GUINT32_GET (data + 8));
-  GST_LOG_OBJECT (rmdemux, "avg packet size: %d",
-      RMDEMUX_GUINT32_GET (data + 12));
-  GST_LOG_OBJECT (rmdemux, "number of packets: %d",
-      RMDEMUX_GUINT32_GET (data + 16));
+  rmdemux->avg_packet_size = RMDEMUX_GUINT32_GET (data + 12);
+  GST_LOG_OBJECT (rmdemux, "avg packet size: %d", rmdemux->avg_packet_size);
+  rmdemux->num_packets = RMDEMUX_GUINT32_GET (data + 16);
+  GST_LOG_OBJECT (rmdemux, "number of packets: %d", rmdemux->num_packets);
 
   GST_LOG_OBJECT (rmdemux, "duration: %d", RMDEMUX_GUINT32_GET (data + 20));
-  rmdemux->duration = RMDEMUX_GUINT32_GET (data + 20);
+  rmdemux->duration = RMDEMUX_GUINT32_GET (data + 20) * GST_SECOND / 1000;
 
   GST_LOG_OBJECT (rmdemux, "preroll: %d", RMDEMUX_GUINT32_GET (data + 24));
+  rmdemux->index_offset = RMDEMUX_GUINT32_GET (data + 28);
   GST_LOG_OBJECT (rmdemux, "offset of INDX section: 0x%08x",
-      RMDEMUX_GUINT32_GET (data + 28));
+      rmdemux->index_offset);
+  rmdemux->data_offset = RMDEMUX_GUINT32_GET (data + 32);
   GST_LOG_OBJECT (rmdemux, "offset of DATA section: 0x%08x",
-      RMDEMUX_GUINT32_GET (data + 32));
+      rmdemux->data_offset);
   GST_LOG_OBJECT (rmdemux, "n streams: %d", RMDEMUX_GUINT16_GET (data + 36));
   GST_LOG_OBJECT (rmdemux, "flags: 0x%04x", RMDEMUX_GUINT16_GET (data + 38));
 }
@@ -840,6 +1227,7 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const void *data, int length)
   stream = g_new0 (GstRMDemuxStream, 1);
 
   stream->id = RMDEMUX_GUINT16_GET (data);
+  stream->index = NULL;
   GST_LOG_OBJECT (rmdemux, "stream_number=%d", stream->id);
 
   offset = 30;
@@ -988,6 +1376,9 @@ gst_rmdemux_parse_indx (GstRMDemux * rmdemux, const void *data, int length)
 
   n = RMDEMUX_GUINT32_GET (data);
   id = RMDEMUX_GUINT16_GET (data + 4);
+  rmdemux->index_offset = RMDEMUX_GUINT32_GET (data + 6);
+
+  GST_DEBUG_OBJECT (rmdemux, "Number of indices=%d Stream ID=%d", n, id);
 
   stream = gst_rmdemux_get_stream_by_id (rmdemux, id);
   if (stream == NULL)
@@ -997,16 +1388,18 @@ gst_rmdemux_parse_indx (GstRMDemux * rmdemux, const void *data, int length)
   stream->index = index;
   stream->index_length = n;
 
-  offset = 8;
+  offset = 10;
   for (i = 0; i < n; i++) {
-    index[i].unknown = RMDEMUX_GUINT16_GET (data + offset + 0);
-    index[i].offset = RMDEMUX_GUINT32_GET (data + offset + 2);
-    index[i].timestamp = RMDEMUX_GUINT32_GET (data + offset + 6);
-    index[i].frame = RMDEMUX_GUINT32_GET (data + offset + 10);
+    index[i].timestamp = RMDEMUX_GUINT32_GET (data + offset + 2) * GST_MSECOND;
+    index[i].offset = RMDEMUX_GUINT32_GET (data + offset + 6);
+
+    GST_DEBUG_OBJECT (rmdemux, "Index found for timestamp=%f at offset=%x",
+        (float) index[i].timestamp / 1000.0, index[i].offset);
 
     offset += 14;
   }
 
+  GST_DEBUG_OBJECT (rmdemux, "finished reading index and offset = %d", offset);
 }
 
 static void

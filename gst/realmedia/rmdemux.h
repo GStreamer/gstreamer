@@ -42,6 +42,39 @@ extern "C" {
 
 #define GST_RMDEMUX_MAX_STREAMS		8
 
+typedef enum
+{
+  RMDEMUX_STATE_NULL,
+  RMDEMUX_STATE_HEADER,
+  RMDEMUX_STATE_HEADER_UNKNOWN,
+  RMDEMUX_STATE_HEADER_RMF,
+  RMDEMUX_STATE_HEADER_PROP,
+  RMDEMUX_STATE_HEADER_MDPR,
+  RMDEMUX_STATE_HEADER_INDX,
+  RMDEMUX_STATE_HEADER_DATA,
+  RMDEMUX_STATE_HEADER_CONT,
+  RMDEMUX_STATE_HEADER_SEEKING,
+  RMDEMUX_STATE_SEEKING,
+  RMDEMUX_STATE_DATA_PACKET,
+  RMDEMUX_STATE_SEEKING_EOS,
+  RMDEMUX_STATE_EOS
+} GstRMDemuxState;
+
+typedef enum
+{
+  RMDEMUX_LOOP_STATE_HEADER,
+  RMDEMUX_LOOP_STATE_INDEX,
+  RMDEMUX_LOOP_STATE_DATA
+} GstRMDemuxLoopState;
+
+typedef enum
+{
+  GST_RMDEMUX_STREAM_UNKNOWN,
+  GST_RMDEMUX_STREAM_VIDEO,
+  GST_RMDEMUX_STREAM_AUDIO,
+  GST_RMDEMUX_STREAM_FILEINFO
+} GstRMDemuxStreamType;
+
 typedef struct _GstRMDemux GstRMDemux;
 typedef struct _GstRMDemuxClass GstRMDemuxClass;
 typedef struct _GstRMDemuxStream GstRMDemuxStream;
@@ -59,21 +92,28 @@ struct _GstRMDemux {
   GstAdapter *adapter;
   gboolean have_pads;
 
-  GNode *moov_node;
-  GNode *moov_node_compressed;
-
   guint32 timescale;
-  guint32 duration;
+  guint64 duration;
+  guint32 avg_packet_size;
+  guint32 index_offset;
+  guint32 data_offset;
+  guint32 num_packets;
+  guint32 packet_number;
 
-  int state;
+  guint offset;
+  gboolean seekable;
 
-  int offset;
-  int data_offset;
+  GstRMDemuxState state;
+  GstRMDemuxLoopState loop_state;
+
+  /* playback start/stop positions */
+  GstClockTime segment_start;
+  GstClockTime segment_stop;
+  gboolean segment_play;
+  gboolean running;
 
   int n_chunks;
   int chunk_index;
-
-  guint64 length;
 
   guint32 object_id;
   guint32 size;
