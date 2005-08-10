@@ -1,3 +1,16 @@
+2005-08-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/level/gstlevel.c: (gst_level_init), (gst_level_set_caps),
+	(gst_level_transform):
+	* gst/level/gstlevel.h:
+	  remove unused MS struct member
+	  don't reset the CS values for channels on every _chain, so that
+	  level actually correctly calculates the RMS value.  sigh.
+	  calculate RMS values correctly for peak and decay peak sums;
+	  before we were signalling them as if they already were amplitude
+	  and not power values.  sigh.
+	Remind me to not try and pretend I'm writing DSP code.
+
 2005-08-10  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/faad/gstfaad.c: (gst_faad_class_init), (gst_faad_setcaps):
