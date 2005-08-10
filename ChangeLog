@@ -1,6 +1,12 @@
 2005-08-10  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.override: (pygst_debug_log): 
+	gchar is way smaller than an int... resulting in negative line numbers
+	in debug.
+
+2005-08-10  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.override: (pygst_debug_log): 
 	printf("urlencoded%20space") != printf("%s", "urlencoded%20space")
 	Funny how a lot of problems have gone since that's fixed :)
 

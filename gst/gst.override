@@ -226,7 +226,7 @@ pygst_debug_log (PyObject *whatever, PyObject *string, GstDebugLevel level)
     gchar	*str;
     gchar	*function;
     gchar	*filename;
-    gchar	lineno;
+    int		lineno;
     PyFrameObject	*frame;
 
     if (!PyArg_ParseTuple(string, "s:gst.debug_log", &str)) {
