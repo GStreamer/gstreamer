@@ -139,7 +139,6 @@ gst_level_init (GstLevel * filter)
 {
   filter->CS = NULL;
   filter->peak = NULL;
-  filter->MS = NULL;
   filter->RMS_dB = NULL;
 
   filter->rate = 0;
@@ -233,70 +232,59 @@ gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   g_free (filter->last_peak);
   g_free (filter->decay_peak);
   g_free (filter->decay_peak_age);
-  g_free (filter->MS);
   g_free (filter->RMS_dB);
   filter->CS = g_new (double, filter->channels);
   filter->peak = g_new (double, filter->channels);
   filter->last_peak = g_new (double, filter->channels);
   filter->decay_peak = g_new (double, filter->channels);
   filter->decay_peak_age = g_new (double, filter->channels);
-  filter->MS = g_new (double, filter->channels);
   filter->RMS_dB = g_new (double, filter->channels);
 
   for (i = 0; i < filter->channels; ++i) {
     filter->CS[i] = filter->peak[i] = filter->last_peak[i] =
         filter->decay_peak[i] = filter->decay_peak_age[i] =
-        filter->MS[i] = filter->RMS_dB[i] = 0.0;
+        filter->RMS_dB[i] = 0.0;
   }
 
   return TRUE;
 }
 
-#if 0
-#define DEBUG(str,...) g_print (str, ...)
-#else
-#define DEBUG(str,...)          /*nop */
-#endif
-
 /* process one (interleaved) channel of incoming samples
  * calculate square sum of samples
- * normalize and return normalized Cumulative Square
+ * normalize and average over number of samples
+ * returns a normalized average power value as CS, as a double between 0 and 1
+ * also returns the normalized peak power (square of the highest amplitude)
+ *
  * caller must assure num is a multiple of channels
+ * samples for multiple channels are interleaved
+ * input sample data enters in *in_data as 8 or 16 bit data
  * this filter only accepts signed audio data, so mid level is always 0
  */
-#define DEFINE_LEVEL_CALCULATOR(TYPE)                                           \
-static void inline                                                              \
-gst_level_calculate_##TYPE (TYPE * in, guint num, gint channels,                \
-                            gint resolution, double *CS, double *peak)          \
-{                                                                               \
-  register int j;                                                               \
-  double squaresum = 0.0;	/* square sum of the integer samples */         \
-  register double square = 0.0;		/* Square */                            \
-  register double PSS = 0.0;		/* Peak Square Sample */                \
-  gdouble normalizer;                                                           \
-                                                                                \
-  *CS = 0.0;      /* Cumulative Square for this block */                        \
-                                                                                \
-  normalizer = (double) (1 << resolution);                                      \
-                                                                                \
-  /*                                                                            \
-   * process data here                                                          \
-   * input sample data enters in *in_data as 8 or 16 bit data                   \
-   * samples for left and right channel are interleaved                         \
-   * returns the Mean Square of the samples as a double between 0 and 1         \
-   */                                                                           \
-                                                                                \
-  for (j = 0; j < num; j += channels)                                           \
-  {                                                                             \
-    DEBUG ("ch %d -> smp %d\n", j, in[j]);                                      \
-    square = (double) (in[j] * in[j]);                                          \
-    if (square > PSS) PSS = square;                                             \
-    squaresum += square;                                                        \
-  }                                                                             \
-  *peak = PSS / ((double) normalizer * (double) normalizer);                    \
-                                                                                \
-  /* return normalized cumulative square */                                     \
-  *CS = squaresum / ((double) normalizer * (double) normalizer);                \
+
+#define DEFINE_LEVEL_CALCULATOR(TYPE)                                         \
+static void inline                                                            \
+gst_level_calculate_##TYPE (TYPE * in, guint num, gint channels,              \
+                            gint resolution, double *CS, double *peak)        \
+{                                                                             \
+  register int j;                                                             \
+  double squaresum = 0.0;        /* square sum of the integer samples */      \
+  register double square = 0.0;	 /* Square */                                 \
+  register double PSS = 0.0;     /* Peak Square Sample */                     \
+  gdouble normalizer;            /* divisor to get a [-1, - 1] range */       \
+                                                                              \
+  *CS = 0.0;                     /* Cumulative Square for this block */       \
+                                                                              \
+  normalizer = (double) (1 << resolution);                                    \
+                                                                              \
+  for (j = 0; j < num; j += channels)                                         \
+  {                                                                           \
+    square = ((double) in[j]) * in[j];                                        \
+    if (square > PSS) PSS = square;                                           \
+    squaresum += square;                                                      \
+  }                                                                           \
+                                                                              \
+  *CS = squaresum / (normalizer * normalizer);                                \
+  *peak = PSS / (normalizer * normalizer);                                    \
 }
 
 DEFINE_LEVEL_CALCULATOR (gint16);
@@ -350,49 +338,52 @@ gst_level_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   GstLevel *filter;
   gpointer in_data;
   double CS = 0.0;
-  gint num_samples = 0;
+  gint num_int_samples = 0;     /* number of samples for all channels combined */
   gint i;
 
   filter = GST_LEVEL (trans);
 
   for (i = 0; i < filter->channels; ++i)
-    filter->CS[i] = filter->peak[i] = filter->MS[i] = filter->RMS_dB[i] = 0.0;
+    filter->peak[i] = filter->RMS_dB[i] = 0.0;
 
   in_data = GST_BUFFER_DATA (in);
-  num_samples = GST_BUFFER_SIZE (in) / (filter->width / 8);
+  num_int_samples = GST_BUFFER_SIZE (in) / (filter->width / 8);
 
-  g_return_val_if_fail (num_samples % filter->channels == 0, GST_FLOW_ERROR);
+  g_return_val_if_fail (num_int_samples % filter->channels == 0,
+      GST_FLOW_ERROR);
 
   for (i = 0; i < filter->channels; ++i) {
+    CS = 0.0;
     switch (filter->width) {
       case 16:
-        gst_level_calculate_gint16 (in_data + i, num_samples,
+        gst_level_calculate_gint16 (in_data + i, num_int_samples,
             filter->channels, filter->width - 1, &CS, &filter->peak[i]);
         break;
       case 8:
-        gst_level_calculate_gint8 (((gint8 *) in_data) + i, num_samples,
+        gst_level_calculate_gint8 (((gint8 *) in_data) + i, num_int_samples,
             filter->channels, filter->width - 1, &CS, &filter->peak[i]);
         break;
     }
-    GST_LOG_OBJECT (filter, "channel %d, cumulative sum %f, peak %f", i, CS,
-        filter->peak[i]);
+    GST_LOG_OBJECT (filter,
+        "channel %d, cumulative sum %f, peak %f, over %d channels/%d samples",
+        i, CS, filter->peak[i], num_int_samples, filter->channels);
     filter->CS[i] += CS;
-
   }
 
-  filter->num_samples += num_samples;
+  filter->num_samples += num_int_samples / filter->channels;
 
   for (i = 0; i < filter->channels; ++i) {
-    filter->decay_peak_age[i] += num_samples;
-    DEBUG ("filter peak info [%d]: peak %f, age %f\n", i,
+    filter->decay_peak_age[i] += num_int_samples / filter->channels;
+    GST_LOG_OBJECT (filter, "filter peak info [%d]: peak %f, age %f\n", i,
         filter->last_peak[i], filter->decay_peak_age[i]);
+
     /* update running peak */
     if (filter->peak[i] > filter->last_peak[i])
       filter->last_peak[i] = filter->peak[i];
 
     /* update decay peak */
     if (filter->peak[i] >= filter->decay_peak[i]) {
-      DEBUG ("new peak, %f\n", filter->peak[i]);
+      GST_LOG_OBJECT (filter, "new peak, %f\n", filter->peak[i]);
       filter->decay_peak[i] = filter->peak[i];
       filter->decay_peak_age[i] = 0;
     } else {
@@ -403,15 +394,19 @@ gst_level_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
         double length;          /* length of buffer in seconds */
 
 
-        length = (double) num_samples / (filter->channels * filter->rate);
+        length = (double) num_int_samples / (filter->channels * filter->rate);
         falloff_dB = filter->decay_peak_falloff * length;
         falloff = pow (10, falloff_dB / -20.0);
 
-        DEBUG ("falloff: length %f, dB falloff %f, falloff factor %e\n",
+        GST_LOG_OBJECT (filter,
+            "falloff: length %f, dB falloff %f, falloff factor %e\n",
             length, falloff_dB, falloff);
         filter->decay_peak[i] *= falloff;
-        DEBUG ("peak is %f samples old, decayed with factor %e to %f\n",
+        GST_LOG_OBJECT (filter,
+            "peak is %f samples old, decayed with factor %e to %f\n",
             filter->decay_peak_age[i], falloff, filter->decay_peak[i]);
+      } else {
+        GST_LOG_OBJECT (filter, "peak not old enough, not decaying");
       }
     }
   }
@@ -422,18 +417,30 @@ gst_level_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
     if (filter->signal) {
       GstMessage *m;
       double endtime, RMS;
+      double RMSdB, lastdB, decaydB;
 
+      /* FIXME: convert to a GstClockTime instead */
       endtime = (double) GST_BUFFER_TIMESTAMP (in) / GST_SECOND
-          + (double) num_samples / (double) filter->rate;
+          + (double) num_int_samples / (filter->rate * filter->channels);
 
       m = gst_level_message_new (filter, endtime);
 
       for (i = 0; i < filter->channels; ++i) {
-        RMS = sqrt (filter->CS[i] / (filter->num_samples / filter->channels));
+        RMS = sqrt (filter->CS[i] / filter->num_samples);
+        GST_LOG_OBJECT (filter,
+            "CS: %f, num_samples %f, channel %d, RMS %f",
+            filter->CS[i], filter->num_samples, i, RMS);
+        /* RMS values are calculated in amplitude, so 20 * log 10 */
+        RMSdB = 20 * log10 (RMS);
+        /* peak values are square sums, ie. power, so 10 * log 10 */
+        lastdB = 10 * log10 (filter->last_peak[i]);
+        decaydB = 10 * log10 (filter->decay_peak[i]);
 
-        gst_level_message_append_channel (m, 20 * log10 (RMS),
-            20 * log10 (filter->last_peak[i]),
-            20 * log10 (filter->decay_peak[i]));
+        GST_LOG_OBJECT (filter,
+            "time %f, channel %d, RMS %f dB, peak %f dB, decay %f dB",
+            endtime, i, RMSdB, lastdB, decaydB);
+
+        gst_level_message_append_channel (m, RMSdB, lastdB, decaydB);
 
         /* reset cumulative and normal peak */
         filter->CS[i] = 0.0;

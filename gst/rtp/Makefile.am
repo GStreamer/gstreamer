@@ -1,4 +1,3 @@
-
 plugin_LTLIBRARIES = libgstrtp.la
 
 libgstrtp_la_SOURCES = gstrtp.c gstrtpdec.c
