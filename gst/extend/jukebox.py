@@ -23,7 +23,7 @@
 import os
 import sys
 import pickle
-import random
+import random as rand
 
 import gobject
 import gst
@@ -37,7 +37,7 @@ class Jukebox(gst.Bin):
     gsignal('done', str)
     gsignal('prerolled')
 
-    def __init__(self, files, rms=0.1, loop=False, random=False,
+    def __init__(self, files, rms=0.1, loops=0, random=False,
                  caps="audio/x-raw-int,channels=2,rate=44100",
                  picklepath='level.pck'):
         gst.Bin.__init__(self)
@@ -45,7 +45,7 @@ class Jukebox(gst.Bin):
         self.__gobject_init__()
 
         self._target_rms = rms
-        self._loop = loop
+        self._loopsleft = loops
         self._random = random
         self._picklepath = picklepath
         self._caps = gst.caps_from_string(caps)
@@ -69,7 +69,7 @@ class Jukebox(gst.Bin):
 
         # FIXME: randomize our list if asked for
         if self._random:
-            self._files = random.sample(self._files, len(self._files))
+            self._files = rand.sample(self._files, len(self._files))
 
         # our ghost pad we feed from
         self._adder = gst.element_factory_make("adder")
@@ -190,13 +190,15 @@ class Jukebox(gst.Bin):
         if we go back to the top
         """
         if self._playi >= len(self._files):
-            if not self._loop:
+            if self._loopsleft == 0:
                 # we're going to be done, emit after all pads on adder are gone
                 return None
+                
             self.log("Reset play pointer to top")
+            self._loopsleft -= 1
             if self._random:
                 self.log("Reshuffling")
-                self._files = random.sample(self._files, len(self._files))
+                self._files = rand.sample(self._files, len(self._files))
             self._playi = 0
 
         file = self._files[self._playi]
@@ -259,7 +261,7 @@ if __name__ == "__main__":
     pipeline = gst.Pipeline('jukebox')
     list = open(sys.argv[1]).read().rstrip().split('\n')
     print list
-    source = Jukebox(list)
+    source = Jukebox(list, random=True, loops=-1)
 
     def _done_cb(source, reason):
         print "Done"
