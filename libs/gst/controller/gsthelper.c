@@ -23,6 +23,7 @@
 /**
  * SECTION:gstcontrollergobject
  * @short_description: #GObject convinience methods for using dynamic properties
+ * @see_also: #GstController
  *
  * These methods allow to use some #GstController functionallity directly from
  * the #GObject class.
@@ -49,6 +50,7 @@ extern GQuark controller_key;
  *
  * Returns: The GstController with which the user can control the given properties dynamically or NULL if
  * one or more of the given properties aren't available, or cannot be controlled, for the given element.
+ * Since: 0.9
  */
 GstController *
 gst_object_control_properties (GObject * object, ...)
@@ -76,6 +78,7 @@ gst_object_control_properties (GObject * object, ...)
  *
  * Returns: %FALSE if one of the given property names isn't handled by the
  * controller, %TRUE otherwise
+ * Since: 0.9
  */
 gboolean
 gst_object_uncontrol_properties (GObject * object, ...)
@@ -100,6 +103,7 @@ gst_object_uncontrol_properties (GObject * object, ...)
  * @object: the object that has controlled properties
  *
  * Returns: the controller handling some of the given element's properties, %NULL if no controller
+ * Since: 0.9
  */
 GstController *
 gst_object_get_controller (GObject * object)
@@ -117,6 +121,7 @@ gst_object_get_controller (GObject * object)
  * Sets the controller on the given GObject
  *
  * Returns: %FALSE if the GObject already has an controller, %TRUE otherwise
+ * Since: 0.9
  */
 gboolean
 gst_object_set_controller (GObject * object, GstController * controller)
@@ -140,6 +145,7 @@ gst_object_set_controller (GObject * object, GstController * controller)
  * Convenience function for GObject
  *
  * Returns: same thing as gst_controller_sink_values()
+ * Since: 0.9
  */
 gboolean
 gst_object_sink_values (GObject * object, GstClockTime timestamp)
@@ -170,6 +176,7 @@ gst_object_sink_values (GObject * object, GstClockTime timestamp)
  * The g_object_* functions are just convenience functions for GObject
  *
  * Returns: %TRUE if the given array(s) could be filled, %FALSE otherwise
+ * Since: 0.9
  */
 gboolean
 gst_object_get_value_arrays (GObject * object, GstClockTime timestamp,
@@ -199,6 +206,7 @@ gst_object_get_value_arrays (GObject * object, GstClockTime timestamp,
  * The g_object_* functions are just convenience functions for GObject
  *
  * Returns: %TRUE if the given array(s) could be filled, %FALSE otherwise
+ * Since: 0.9
  */
 gboolean
 gst_object_get_value_array (GObject * object, GstClockTime timestamp,

@@ -52,7 +52,16 @@
   </part>
 
   <index id="api-index">
-    <title>API Index</title>
+    <title>Index</title>
+  </index>
+  <index role="deprecated">
+    <title>Index of deprecated symbols</title>
+  </index>
+  <index role="0.8">
+    <title>Index of new symbols in 0.8</title>
+  </index>
+  <index role="0.9">
+    <title>Index of new symbols in 0.9</title>
   </index>
 
 </book>

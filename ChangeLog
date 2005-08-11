@@ -1,3 +1,13 @@
+2005-08-11  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/libs/gstreamer-libs-docs.sgml:
+          added deprecation and since indexes
+	* libs/gst/controller/gst-controller.c:
+	* libs/gst/controller/gst-helper.c:
+          added since tags
+
+
 2005-08-11  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstghostpad.c: (gst_proxy_pad_set_target_unlocked),
