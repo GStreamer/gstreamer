@@ -236,10 +236,12 @@ pygst_debug_log (PyObject *whatever, PyObject *string, GstDebugLevel level)
 
     frame = PyEval_GetFrame();
     function = PyString_AsString(frame->f_code->co_name);
-    filename = PyString_AsString(frame->f_code->co_filename);
+    filename = g_path_get_basename(PyString_AsString(frame->f_code->co_filename));
     lineno = frame->f_code->co_firstlineno;
     /* gst_debug_log : category, level, file, function, line, object, format, va_list */
     gst_debug_log (GST_CAT_DEFAULT, level, filename, function, lineno, NULL, "%s", str);
+    if (filename)
+	g_free(filename);
     Py_INCREF (Py_None);
     return Py_None;    
 }

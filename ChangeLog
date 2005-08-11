@@ -1,3 +1,8 @@
+2005-08-11  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.override: (pygst_debug_log):
+	Only display the filename and not the full path
+
 2005-08-10  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstmodule.c: (init_gst): 
