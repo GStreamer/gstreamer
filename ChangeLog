@@ -1,3 +1,19 @@
+2005-08-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_init), (gst_jpeg_dec_chain),
+	(gst_jpeg_dec_change_state):
+	* ext/jpeg/gstjpegdec.h:
+	  Fix crashes/invalid memory access for pictures that have a height
+	  that is not a multiple of 16 (or rather: v_samp_factor * DCTSIZE).
+	  
+	  Also fix the state change function for downwards state changes
+	  (need to chain up to parent before destroying our resources, to 
+	  make sure pads get deactivated and our chain function isn't
+	  running and using those very same resources in another thread).
+
+	  The jpeg line buffer only needs to be v_samp_factor*DCTSIZE lines
+	  per plane, not picture_height lines; allocate that on the stack.
+
 2005-08-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_stream_headers),

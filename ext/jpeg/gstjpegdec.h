@@ -76,12 +76,7 @@ struct _GstJpegDec {
   guint64  next_ts;
 
   /* video state */
-  guint    width;
-  guint    height;
   gdouble  fps;
-
-  /* the jpeg line buffer */
-  guchar **line[3];
 
   struct jpeg_decompress_struct cinfo;
   struct GstJpegDecErrorMgr     jerr;
