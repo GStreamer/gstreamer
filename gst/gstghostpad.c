@@ -339,12 +339,16 @@ gst_proxy_pad_do_setcaps (GstPad * pad, GstCaps * caps)
     gst_pad_set_##kind##_function (pad, gst_proxy_pad_do_##kind)
 
 static gboolean
-gst_proxy_pad_set_target (GstPad * pad, GstPad * target)
+gst_proxy_pad_set_target_unlocked (GstPad * pad, GstPad * target)
 {
-  GST_PROXY_LOCK (pad);
+  GstPad *oldtarget;
+
+  GST_DEBUG ("set target %s:%s on %s:%s",
+      GST_DEBUG_PAD_NAME (target), GST_DEBUG_PAD_NAME (pad));
+
   /* clear old target */
-  if (GST_PROXY_PAD_TARGET (pad)) {
-    gst_object_unref (GST_PROXY_PAD_TARGET (pad));
+  if ((oldtarget = GST_PROXY_PAD_TARGET (pad))) {
+    gst_object_unref (oldtarget);
     GST_PROXY_PAD_TARGET (pad) = NULL;
   }
 
@@ -374,9 +378,19 @@ gst_proxy_pad_set_target (GstPad * pad, GstPad * target)
       SETFUNC (checkgetrangefunc, checkgetrange);
     }
   }
+  return TRUE;
+}
+
+static gboolean
+gst_proxy_pad_set_target (GstPad * pad, GstPad * target)
+{
+  gboolean result;
+
+  GST_PROXY_LOCK (pad);
+  result = gst_proxy_pad_set_target_unlocked (pad, target);
   GST_PROXY_UNLOCK (pad);
 
-  return TRUE;
+  return result;
 }
 
 static GstPad *
@@ -762,7 +776,41 @@ gst_ghost_pad_get_target (GstGhostPad * gpad)
 gboolean
 gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
 {
+  GstPad *internal;
+  GstPad *oldtarget;
+  gboolean result;
+
   g_return_val_if_fail (GST_IS_GHOST_PAD (gpad), FALSE);
 
-  return gst_proxy_pad_set_target (GST_PAD_CAST (gpad), newtarget);
+  GST_PROXY_LOCK (gpad);
+  internal = gpad->internal;
+
+  GST_DEBUG ("set target %s:%s on %s:%s",
+      GST_DEBUG_PAD_NAME (newtarget), GST_DEBUG_PAD_NAME (gpad));
+
+  /* clear old target */
+  if ((oldtarget = GST_PROXY_PAD_TARGET (gpad))) {
+    /* if we have an internal pad, unlink */
+    if (internal) {
+      if (GST_PAD_IS_SRC (internal))
+        gst_pad_unlink (internal, oldtarget);
+      else
+        gst_pad_unlink (oldtarget, internal);
+    }
+  }
+
+  result = gst_proxy_pad_set_target_unlocked (GST_PAD_CAST (gpad), newtarget);
+
+  if (result && newtarget) {
+    /* and link to internal pad if we have one */
+    if (internal) {
+      if (GST_PAD_IS_SRC (internal))
+        result = gst_pad_link (internal, newtarget);
+      else
+        result = gst_pad_link (newtarget, internal);
+    }
+  }
+  GST_PROXY_UNLOCK (gpad);
+
+  return result;
 }

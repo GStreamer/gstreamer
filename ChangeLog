@@ -1,3 +1,14 @@
+2005-08-11  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstghostpad.c: (gst_proxy_pad_set_target_unlocked),
+	(gst_proxy_pad_set_target), (gst_proxy_pad_get_target),
+	(gst_proxy_pad_dispose), (gst_ghost_pad_do_activate_push),
+	(gst_ghost_pad_do_link), (gst_ghost_pad_set_internal),
+	(gst_ghost_pad_new_notarget), (gst_ghost_pad_get_target),
+	(gst_ghost_pad_set_target):
+	Actually implement (re)setting the target on a ghostpad
+	as described in the docs.
+
 2005-08-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gst.c: (gst_init_check_with_popt_table), (init_pre):
