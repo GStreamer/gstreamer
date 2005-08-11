@@ -42,7 +42,6 @@ class Jukebox(gst.Bin):
     def __init__(self, files, rms=0.1, loops=0, random=False,
                  caps="audio/x-raw-int,channels=2,rate=44100",
                  picklepath='level.pck'):
-        gst.Bin.__init__(self)
         # with pygtk 2.4 this call is needed for the gsignal to work
         self.__gobject_init__()
 

@@ -1,3 +1,11 @@
+2005-08-11  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/extend/jukebox.py:
+	* gst/extend/leveller.py:
+	* gst/extend/sources.py:
+	  Chain up to self.__gobject_init__() in constructors for derived
+	  objects, as this makes signals work in pygtk 2.4, 2.6 and 2.7
+
 2005-08-11  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.override: (pygst_debug_log):

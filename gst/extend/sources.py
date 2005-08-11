@@ -39,7 +39,6 @@ class AudioSource(gst.Bin):
     gsignal('prerolled')
 
     def __init__(self, filename, caps="audio/x-raw-int,channels=2,rate=44100"):
-        gst.Bin.__init__(self)
         # with pygtk 2.4 this call is needed for the gsignal to work
         self.__gobject_init__()
 

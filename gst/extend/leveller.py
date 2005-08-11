@@ -35,7 +35,7 @@ class Leveller(gst.Pipeline):
     gsignal('done', str)
 
     def __init__(self, filename, threshold=-9.0):
-        gobject.GObject.__init__(self)
+        self.__gobject_init__()
 
         self._thresholddB = threshold
         self._threshold = math.pow(10, self._thresholddB / 10.0)
