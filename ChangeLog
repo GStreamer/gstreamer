@@ -1,3 +1,8 @@
+2005-08-11  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.override: (pygst_debug_log):
+	Print the filename and not the full path
+
 2005-08-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/extend/jukebox.py:
