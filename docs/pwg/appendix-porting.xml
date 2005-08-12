@@ -24,7 +24,7 @@
           Most functions returning an object or an object property have
           been changed to return its own reference rather than a constant
           reference of the one owned by the object itself. The reason for
-          this change is primarily threadsafety. This means, effectively,
+          this change is primarily threadsafety. This means effectively
           that return values of functions such as
           <function>gst_element_get_pad ()</function>,
           <function>gst_pad_get_name ()</function> and many more like these
@@ -51,10 +51,10 @@
       </listitem>
       <listitem>
         <para>
-          Negotiation is asynchronous. This means that negotiation is,
-          downstream, done as data comes in and, upstream, as renegotiation
-          is required. All details are described in <xref
-          linkend="chapter-negotiation"/>.
+          Negotiation is asynchronous. This means that downstream negotiation
+          is done as data comes in and upstream negotiation is done whenever
+          renegotiation is required. All details are described in 
+          <xref linkend="chapter-negotiation"/>.
         </para>
       </listitem>
       <listitem>
@@ -73,8 +73,8 @@
           In 0.9, event handling and buffers are separated once again. This
           means that in order to receive events, one no longer has to set the
           <classname>GST_FLAG_EVENT_AWARE</classname> flag, but can simply
-          set an event handling function on its sinkpad(s), using the function
-          <function>gst_pad_set_event_function ()</function>. The
+          set an event handling function on the element's sinkpad(s), using
+           the function <function>gst_pad_set_event_function ()</function>. The
           <function>_chain ()</function>-function will only receive buffers.
         </para>
       </listitem>
@@ -97,6 +97,48 @@
           <function>*_fixed_list_* ()</function> functions were renamed to
           <classname>GstValueArray</classname> and <function>*_array_*
           ()</function>.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          The semantics of <symbol>GST_STATE_PAUSED</symbol> and 
+          <symbol>GST_STATE_PLAYING</symbol> have changed for elements that
+          are not sink elements. Non-sink elements need to be able to accept
+          and process data already in the <symbol>GST_STATE_PAUSED</symbol> 
+          state now (ie. when prerolling the pipeline). More details can be
+          found in <xref linkend="chapter-statemanage-states"/>.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          If your plugin's state change function hasn't been superseded by
+          virtual start() and stop() methods of one of the new base classes,
+          then your plugin's state change functions may need to be changed in 
+          order to safely handle concurrent access by multiple threads. Your 
+          typical state change function will now first handle upwards state 
+          changes, then chain up to the state change function of the parent 
+          class (usually GstElementClass in these cases), and only then handle
+          downwards state changes. See the vorbis decoder plugin in
+          gst-plugins-base for an example.
+        </para>
+        <para>
+          The reason for this is that in the case of downwards state changes
+          you don't want to destroy allocated resources while your plugin's 
+          chain function (for example) is still accessing those resources in
+          another thread. Whether your chain function might be running or not
+          depends on the state of your plugin's pads, and the state of those
+          pads is closely linked to the state of the element. Pad states are
+          handled in the GstElement class's state change function, including
+          proper locking, that's why it is essential to chain up before
+          destroying allocated resources.
+        </para>
+        <para>
+          As already mentioned above, you should really rewrite your plugin
+          to derive from one of the new base classes though, so you don't have
+          to worry about these things, as the base class will handle it for you.
+          There are no base classes for decoders and encoders yet, so the above 
+          paragraphs about state changes definitively apply if your plugin is a
+          decoder or an encoder.
         </para>
       </listitem>
     </itemizedlist>
