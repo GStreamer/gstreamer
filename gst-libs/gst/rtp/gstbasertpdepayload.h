@@ -41,6 +41,11 @@ G_BEGIN_DECLS
 // in milliseconds
 #define RTP_QUEUEDELAY 100;
 
+#define QUEUE_LOCK_INIT(base)	(g_static_rec_mutex_init(&base->queuelock))
+#define QUEUE_LOCK_FREE(base)	(g_static_rec_mutex_free(&base->queuelock))
+#define QUEUE_LOCK(base)		(g_static_rec_mutex_lock(&base->queuelock))
+#define QUEUE_UNLOCK(base)		(g_static_rec_mutex_unlock(&base->queuelock))
+
 typedef struct _GstBaseRTPDepayload      GstBaseRTPDepayload;
 typedef struct _GstBaseRTPDepayloadClass GstBaseRTPDepayloadClass;
 
@@ -49,6 +54,13 @@ struct _GstBaseRTPDepayload
   GstElement parent;
 
   GstPad *sinkpad, *srcpad;
+
+  /* lock to protect the queue */
+  GStaticRecMutex queuelock;
+
+  gboolean thread_running;
+  /* the releaser thread */
+  GThread *thread;
 
   // this attribute must be set by the child
   guint clock_rate;

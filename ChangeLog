@@ -1,3 +1,9 @@
+2005-08-12  Philippe Khalaf <burger@speedy.org>
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	* gst-libs/gst/rtp/gstbasertpdepayload.h:
+	  Made a thread to release the queue.
+	  Removed timestamp conversion for now.
+
 2005-08-10  Philippe Khalaf <burger@speedy.org>
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
 	* gst-libs/gst/rtp/gstbasertpdepayload.h:
