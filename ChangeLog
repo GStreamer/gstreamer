@@ -1,3 +1,13 @@
+2005-08-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_decode_indirect),
+	(gst_jpeg_dec_decode_direct), (gst_jpeg_dec_chain):
+	  Fix decoding of pictures with certain uneven or unaligned
+	  widths where jpeglib needs more horizontal padding than our
+	  I420 buffers provide, resulting in blocky artifacts at the
+	  left side of the picture (#164176). 
+	  Also make use of our shiny new GST_ROUND_N() macros.
+
 2005-08-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_init), (gst_jpeg_dec_chain),
