@@ -4,6 +4,6 @@ libgstmad_la_SOURCES = gstmad.c gstid3tag.c
 
 libgstmad_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(MAD_CFLAGS) $(ID3_CFLAGS)
 libgstmad_la_LIBADD = $(MAD_LIBS) $(ID3_LIBS)
-libgstmad_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GST_PLUGINS_BASE_LIBS) -lgsttagedit-0.9
+libgstmad_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GST_PLUGINS_BASE_LIBS) -lgsttagedit-@GST_MAJORMINOR@
 
 noinst_HEADERS = gstmad.h
