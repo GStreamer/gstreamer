@@ -1,3 +1,12 @@
+2005-08-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/mad/Makefile.am:
+	* gst/avi/Makefile.am:
+	* gst/effectv/Makefile.am:
+	* gst/udp/Makefile.am:
+	* gst/wavparse/Makefile.am:
+	  Use -lgstfoo-@GST_MAJORMINOR@ instead of -lgstfoo-0.9
+
 2005-08-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_decode_indirect),
