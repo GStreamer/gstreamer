@@ -16,7 +16,6 @@ win32/gstreamer-dbg.def
 win32/gstreamer.def
 win32/GStreamer.vcproj
 win32/gst-register.vcproj
-win32/gstspider.vcproj
 win32/gstversion.h
 win32/gtchar.h
 win32/Makefile
