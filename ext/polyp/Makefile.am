@@ -1,5 +1,4 @@
-
-plugin_LTLIBRARIES = libpolypaudio.la
+plugin_LTLIBRARIES = libgstpolypaudio.la
 
 libpolypaudio_la_SOURCES = plugin.c polypsink.c
 libpolypaudio_la_CFLAGS = $(GST_CFLAGS)
