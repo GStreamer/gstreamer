@@ -1,3 +1,13 @@
+2005-08-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gsttag.c: (_gst_tag_initialize), (gst_tag_register):
+	* gst/gsttag.h:
+	  Add GST_TAG_LANGUAGE_CODE as we have in 0.8, and don't
+	  spew out a warning if a tag that is already registered
+	  is re-registered, unless it is re-registered with a 
+	  different type (#308438).
+
 2005-08-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/pwg/appendix-porting.xml:

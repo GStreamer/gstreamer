@@ -188,6 +188,9 @@ _gst_tag_initialize (void)
       G_TYPE_DOUBLE, _("replaygain album gain"), _("album gain in db"), NULL);
   gst_tag_register (GST_TAG_ALBUM_PEAK, GST_TAG_FLAG_META,
       G_TYPE_DOUBLE, _("replaygain album peak"), _("peak of the album"), NULL);
+  gst_tag_register (GST_TAG_LANGUAGE_CODE, GST_TAG_FLAG_META, G_TYPE_STRING,
+      _("language code"),
+      _("language code for this stream, conforming to ISO-639-1"), NULL);
 }
 
 /**
@@ -277,7 +280,11 @@ gst_tag_register (const gchar * name, GstTagFlag flag, GType type,
 
   key = g_quark_from_string (name);
   info = gst_tag_lookup (key);
-  g_return_if_fail (info == NULL);
+
+  if (info) {
+    g_return_if_fail (info->type == type);
+    return;
+  }
 
   info = g_new (GstTagInfo, 1);
   info->flag = flag;
