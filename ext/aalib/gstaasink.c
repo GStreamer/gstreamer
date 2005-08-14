@@ -548,4 +548,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "aasink",
     "ASCII Art video sink",
-    plugin_init, VERSION, "GPL", GST_PACKAGE, GST_ORIGIN)
+    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)

@@ -45,5 +45,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "gconfelements",
-    "Plugin contains plugins wrapping the GStreamer/GConf audio/video output settings",
+    "elements wrapping the GStreamer/GConf audio/video output settings",
     plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)

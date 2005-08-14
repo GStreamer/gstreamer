@@ -295,6 +295,6 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "gstfdsrc",
-    "A source for fd (file descriptors)",
+    "fdsrc",
+    "A source that reads from a file descriptor",
     plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)
