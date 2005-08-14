@@ -1,21 +1,19 @@
+plugin_LTLIBRARIES = libgsstandardelements.la
 
-plugin_LTLIBRARIES = libgstoldcoreelements.la
-
-libgstoldcoreelements_la_SOURCES =	\
-	gstelements.c		\
-	gstaggregator.c		\
-	gstfdsink.c		\
-	gstfdsrc.c		\
-	gstmd5sink.c		\
-	gstmultifilesrc.c	\
-	gstpipefilter.c		\
-	gstshaper.c		\
+libgststandardelements_la_SOURCES =	\
+	gstelements.c			\
+	gstaggregator.c			\
+	gstfdsink.c			\
+	gstfdsrc.c			\
+	gstmd5sink.c			\
+	gstmultifilesrc.c		\
+	gstpipefilter.c			\
+	gstshaper.c			\
 	gststatistics.c
 
-
-libgstoldcoreelements_la_CFLAGS = $(GST_CFLAGS)
-libgstoldcoreelements_la_LIBADD =
-libgstoldcoreelements_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgststandardelements_la_CFLAGS = $(GST_CFLAGS)
+libgststandardelements_la_LIBADD =
+libgststandardelements_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS =		\
 	gstaggregator.h		\
@@ -26,4 +24,3 @@ noinst_HEADERS =		\
 	gstpipefilter.h		\
 	gstshaper.h		\
 	gststatistics.h
-
