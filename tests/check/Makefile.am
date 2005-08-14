@@ -105,6 +105,12 @@ check-local-disabled:
 	@true
 endif
 
+# run any given test by running make test.check
+%.check: % $(CHECK_REGISTRY)
+	@$(TESTS_ENVIRONMENT)					\
+	$*
+
+
 # valgrind any given test by running make test.valgrind
 %.valgrind: % $(CHECK_REGISTRY)
 	@$(TESTS_ENVIRONMENT)					\

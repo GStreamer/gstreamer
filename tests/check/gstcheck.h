@@ -170,6 +170,9 @@ G_STMT_START {							\
 #define ASSERT_CAPS_REFCOUNT(caps, name, value)			\
 	ASSERT_MINI_OBJECT_REFCOUNT(caps, name, value)
 
+#define ASSERT_BUFFER_REFCOUNT(buffer, name, value)		\
+	ASSERT_MINI_OBJECT_REFCOUNT(buffer, name, value)
+
 #define ASSERT_MINI_OBJECT_REFCOUNT(caps, name, value)		\
 G_STMT_START {							\
   int rc;							\

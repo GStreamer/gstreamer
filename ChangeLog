@@ -1,3 +1,15 @@
+2005-08-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
+	  add a .check target for running the check
+	* check/gst-libs/controller.c: (GST_START_TEST):
+	  cosmetic fixups
+	* check/gst/gstbuffer.c: (GST_START_TEST), (gst_test_suite):
+	  complete checks for gstbuffer; would be nice if I could get the
+	  gcov stuff to work so I can see if I actually completed gstbuffer.c
+	* check/gstcheck.h:
+	  add ASSERT_BUFFER_REFCOUNT
+
 2005-08-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-sections.txt:
@@ -21,10 +33,10 @@
 
 	* docs/gst/gstreamer-docs.sgml:
 	* docs/libs/gstreamer-libs-docs.sgml:
-          added deprecation and since indexes
+	  added deprecation and since indexes
 	* libs/gst/controller/gst-controller.c:
 	* libs/gst/controller/gst-helper.c:
-          added since tags
+	  added since tags
 
 
 2005-08-11  Wim Taymans  <wim@fluendo.com>

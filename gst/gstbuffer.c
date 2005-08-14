@@ -197,7 +197,6 @@ gst_buffer_new_and_alloc (guint size)
   return newbuf;
 }
 
-
 /**
  * gst_buffer_get_caps:
  * @buffer: a #GstBuffer to get the caps of.
@@ -328,12 +327,12 @@ gst_subbuffer_init (GTypeInstance * instance, gpointer g_class)
  *
  * Creates a sub-buffer from the parent at a given offset.
  * This sub-buffer uses the actual memory space of the parent buffer.
- * This function will copy the offset and timestamp field when the 
+ * This function will copy the offset and timestamp field when the
  * offset is 0, else they are set to _NONE.
  * The duration field of the new buffer are set to GST_CLOCK_TIME_NONE.
  *
  * Returns: the new #GstBuffer, or NULL if there was an error.
- * 
+ *
  * MT safe.
  */
 GstBuffer *
@@ -426,11 +425,11 @@ gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
  *
  * If the two source buffers are children of the same larger buffer,
  * and are contiguous, the new buffer will be a child of the shared
- * parent, and thus no copying is necessary. you can use 
+ * parent, and thus no copying is necessary. you can use
  * gst_buffer_is_span_fast() to determine if a memcpy will be needed.
  *
  * Returns: the new #GstBuffer that spans the two source buffers.
- * 
+ *
  * MT safe.
  */
 GstBuffer *
