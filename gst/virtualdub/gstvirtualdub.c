@@ -120,9 +120,7 @@ plugin_init (GModule * module, GstPlugin * plugin)
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "virtualdub",
-  plugin_init
-};
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "virtualdub",
+    "VirtualDub", plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN);

@@ -404,4 +404,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "trm",
     "A trm signature producer",
-    plugin_init, VERSION, "GPL", GST_PACKAGE, GST_ORIGIN)
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)

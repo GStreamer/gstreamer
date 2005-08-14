@@ -170,7 +170,8 @@ gst_arts_loop (GstElement * element)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "gstarts", GST_RANK_NONE, GST_TYPE_ARTS))
+  if (!gst_element_register (plugin, "artsfilter", GST_RANK_NONE,
+          GST_TYPE_ARTS))
     return FALSE;
 
   return TRUE;
@@ -178,6 +179,6 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "gst_arts",
+    "arts",
     "arTs filter wrapper",
     plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)

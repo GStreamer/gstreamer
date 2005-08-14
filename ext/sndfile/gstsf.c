@@ -874,6 +874,6 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "gstsf",
-    "Sndfile plugin library",
+    "sndfile",
+    "use libsndfile to read and write audio from and to files",
     plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
