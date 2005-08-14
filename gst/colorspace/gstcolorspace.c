@@ -47,7 +47,7 @@ static GstColorspaceConverter gst_colorspace_converters[] = {
 static GstElementDetails colorspace_details =
 GST_ELEMENT_DETAILS ("Colorspace converter",
     "Filter/Converter/Video",
-    "Converts video from one colorspace to another",
+    "Converts video from YUV to RGB",
     "Wim Taymans <wim.taymans@chello.be>");
 
 static GstStaticPadTemplate gst_colorspace_sink_template =
@@ -625,6 +625,6 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "colorspace",
-    "internal colorspace converter",
+    "yuvtorgbcolorspace",
+    "YUV to RGB colorspace converter",
     plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)

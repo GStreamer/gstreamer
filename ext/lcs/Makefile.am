@@ -1,9 +1,6 @@
+plugin_LTLIBRARIES = libgstlcscolorspace.la
 
-plugin_LTLIBRARIES = libgstcolorspacelcs.la
-
-libgstcolorspacelcs_la_SOURCES = gstcolorspace.c 
-libgstcolorspacelcs_la_CFLAGS = $(GST_CFLAGS) $(LCS_CFLAGS)
-libgstcolorspacelcs_la_LIBADD = $(LCS_LIBS)
-libgstcolorspacelcs_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-
-noinst_HEADERS = 
+libgstlcscolorspace_la_SOURCES = gstcolorspace.c 
+libgstlcscolorspace_la_CFLAGS = $(GST_CFLAGS) $(LCS_CFLAGS)
+libgstlcscolorspace_la_LIBADD = $(LCS_LIBS)
+libgstlcscolorspace_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
