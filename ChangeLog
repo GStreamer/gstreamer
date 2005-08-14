@@ -1,3 +1,27 @@
+2005-08-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/aalib/gstaasink.c:
+	  aalib is LGPL, so this plugin can be LGPL
+	* ext/arts/gst_arts.c: (plugin_init):
+	  rename, we don't like underscores
+	* ext/audiofile/gstaf.c:
+	* ext/sndfile/gstsf.c:
+	  rename, we like a descriptive plugin name
+	* ext/gconf/gstgconfelements.c:
+	  change description a little
+	* ext/musicbrainz/gsttrm.c:
+	  musicbrainz is LGPL, so plugin can be LGPL
+	* ext/raw1394/gst1394.c:
+	  rename, we like all-digit names
+	* gst/equalizer/gstiirequalizer.c:
+	* gst/fdsrc/gstfdsrc.c:
+	* gst/multifilesink/gstmultifilesink.c:
+	  rename
+	* gst/virtualdub/gstvirtualdub.c:
+	  use GST_PLUGIN_DEFINE
+	* sys/dxr3/dxr3init.c:
+	  only uses system headers, and code is LGPL, so plugin is LGPL
+
 2005-08-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mad/Makefile.am:
