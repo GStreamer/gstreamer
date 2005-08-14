@@ -462,6 +462,17 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       }
       break;
 
+    case CODEC_ID_QTRLE:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-rle",
+          "layout", G_TYPE_STRING, "quicktime", NULL);
+      if (context) {
+        gst_caps_set_simple (caps,
+            "depth", G_TYPE_INT, (gint) context->bits_per_sample, NULL);
+      } else {
+        gst_caps_set_simple (caps, "depth", GST_TYPE_INT_RANGE, 1, 64, NULL);
+      }
+      break;
+
     case CODEC_ID_MSVIDEO1:
       caps = GST_FF_VID_CAPS_NEW ("video/x-msvideocodec",
 	  "msvideoversion", G_TYPE_INT, 1, NULL);
@@ -483,7 +494,6 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_VMDAUDIO:
     case CODEC_ID_MSZH:
     case CODEC_ID_ZLIB:
-    case CODEC_ID_QTRLE:
     case CODEC_ID_SONIC:
     case CODEC_ID_SONIC_LS:
     case CODEC_ID_SNOW:
