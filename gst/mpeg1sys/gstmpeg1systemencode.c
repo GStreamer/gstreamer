@@ -595,12 +595,12 @@ plugin_init (GstPlugin * plugin)
   if (!gst_library_load ("gstgetbits"))
     return FALSE;
 
-  return gst_element_register (plugin, "system_encode",
+  return gst_element_register (plugin, "mpeg1sysenc",
       GST_RANK_NONE, GST_TYPE_SYSTEM_ENCODE);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "system_encode",
+    "mpeg1sysenc",
     "MPEG-1 system stream encoder",
     plugin_init, VERSION, "GPL", GST_PACKAGE, GST_ORIGIN)
