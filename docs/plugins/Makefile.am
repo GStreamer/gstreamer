@@ -69,9 +69,21 @@ SCANOBJ_DEPS =
 IGNORE_HFILES = avcodec.h gstffmpegcodecmap.h dsputil.h
 IGNORE_CFILES = utils.c mem.c imgconvert.c
 
+# we add all .h files of elements that have signals/args we want
+# sadly this also pulls in the private methods - maybe we should
+# move those around in the source ?
+# also, we should add some stuff here conditionally based on whether
+# or not the plugin will actually build
+# but I'm not sure about that - it might be this Just Works given that
+# the registry won't have the element
+
+# FIXME: not ported yet
+#	$(top_srcdir)/ext/gnomevfs/gstgnomevfssink.c 
+
 EXTRA_HFILES = \
 	$(top_srcdir)/gst/tcp/gstmultifdsink.h \
-	$(top_srcdir)/gst/tcp/gsttcpserversink.h
+	$(top_srcdir)/gst/tcp/gsttcpserversink.h \
+	$(top_srcdir)/ext/vorbis/vorbisenc.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES =

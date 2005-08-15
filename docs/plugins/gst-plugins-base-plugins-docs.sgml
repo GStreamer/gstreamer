@@ -11,8 +11,38 @@
   </bookinfo>
 
   <chapter>
+    <title>gst-plugins-base Elements</title>
+    <xi:include href="xml/element-multifdsink.xml" />
+    <xi:include href="xml/element-tcpserversink.xml" />
+<!--
+    <xi:include href="xml/element-gnomevfssink.xml" />
+-->
+    <xi:include href="xml/element-vorbisenc.xml" />
+  </chapter>
+
+  <chapter>
     <title>gst-plugins-base Plugins</title>
-    <xi:include href="xml/multifdsink.xml"/>
-    <xi:include href="xml/tcpserversink.xml"/>
+    <xi:include href="xml/plugin-adder.xml" />
+    <xi:include href="xml/plugin-alsa.xml" />
+    <xi:include href="xml/plugin-audioconvert.xml" />
+    <xi:include href="xml/plugin-audiorate.xml" />
+    <xi:include href="xml/plugin-decodebin.xml" />
+    <xi:include href="xml/plugin-gnomevfs.xml" />
+    <xi:include href="xml/plugin-ogg.xml" />
+    <xi:include href="xml/plugin-playbin.xml" />
+    <xi:include href="xml/plugin-sine.xml" />
+    <xi:include href="xml/plugin-subparse.xml" />
+    <xi:include href="xml/plugin-tcp.xml" />
+    <xi:include href="xml/plugin-theora.xml" />
+    <xi:include href="xml/plugin-typefindfunctions.xml" />
+    <xi:include href="xml/plugin-video4linux.xml" />
+    <xi:include href="xml/plugin-videorate.xml" />
+    <xi:include href="xml/plugin-videoscale.xml" />
+    <xi:include href="xml/plugin-videotestsrc.xml" />
+    <xi:include href="xml/plugin-volume.xml" />
+    <xi:include href="xml/plugin-vorbis.xml" />
+    <xi:include href="xml/plugin-ximage.xml" />
+    <xi:include href="xml/plugin-xvimagesink.xml" />
   </chapter>
 </book>
+

@@ -1,5 +1,5 @@
 <SECTION>
-<FILE>multifdsink</FILE>
+<FILE>element-multifdsink</FILE>
 GstMultiFdSink
 GstMultiFdSinkFlags
 GstRecoverPolicy
@@ -12,16 +12,42 @@ GstMultiFdSinkClass
 </SECTION>
 
 <SECTION>
-<FILE>tcpserversink</FILE>
+<FILE>element-tcpserversink</FILE>
 GstTCPServerSink
 <TITLE>tcpserversink</TITLE>
 <SUBSECTION Standard>
 GstTCPServerSinkClass
 </SECTION>
 
+<SECTION>
+<FILE>element-tcpserversink</FILE>
+GstTCPServerSink
+<TITLE>tcpserversink</TITLE>
+<SUBSECTION Standard>
+GstTCPServerSinkClass
+</SECTION>
+
+<SECTION>
+<FILE>element-gnomevfssink</FILE>
+GstGnomeVFSSink
+<TITLE>gnomevfssink</TITLE>
+<SUBSECTION Standard>
+GstGnomeVFSSinkClass
+</SECTION>
+
+
+<SECTION>
+<FILE>element-vorbisenc</FILE>
+<TITLE>vorbisenc</TITLE>
+GstVorbisEnc
+<SUBSECTION Standard>
+GstVorbisEncClass
+</SECTION>
+
 
 <SECTION>
 <FILE>private</FILE>
+
 CLIENTS_UNLOCK
 CLIENTS_LOCK_INIT
 GST_MULTIFDSINK_GET_CLASS
@@ -38,4 +64,29 @@ GST_MULTIFDSINK_CLASS
 gst_multifdsink_get_stats
 GST_MULTIFDSINK
 gst_multifdsink_add
+
+GST_TCPSERVERSINK
+GstTCPServerSinkFlags
+GST_TYPE_TCPSERVERSINK
+gst_tcpserversink_get_type
+GST_IS_TCPSERVERSINK_CLASS
+GST_IS_TCPSERVERSINK
+
+GST_GNOMEVFSSINK_CLASS
+GST_TYPE_GNOMEVFSSINK
+GST_IS_GNOMEVFSSINK
+gst_gnomevfssink_get_type
+GST_IS_GNOMEVFSSINK_CLASS
+GST_ELEMENT_CLASS
+GstGnomeVFSSinkFlags
+GST_GNOMEVFSSINK
+
+GST_IS_VORBISENC
+GST_VORBISENC_CLASS
+GST_VORBISENC
+GST_TCPSERVERSINK_CLASS
+GST_TYPE_VORBISENC
+GST_IS_VORBISENC_CLASS
+vorbisenc_get_type
+
 </SECTION>
