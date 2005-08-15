@@ -153,6 +153,10 @@
           changes (so similar to <function>_set_link_function ()</function> in
           &GStreamer;-0.8).
         </para>
+        <para>
+          If the element is derived from a <classname>GstBase</classname> class,
+          then override the <function>set_caps ()</function>.
+        </para>
       </listitem>
     </itemizedlist>
   </sect1>

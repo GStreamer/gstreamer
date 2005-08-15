@@ -175,6 +175,14 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
       g_param_spec_boolean ("dump", "Dump", "Dump received bytes to stdout",
           DEFAULT_DUMP, G_PARAM_READWRITE));
 
+  /**
+   * GstFakeSink::handoff:
+   * @fakesink: the fakesink instance
+   * @buffer: the buffer that just has been received
+   * @pad: the pad that received it
+   *
+   * This signal gets emitted before unreffing the buffer.
+   */
   gst_fake_sink_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstFakeSinkClass, handoff), NULL, NULL,

@@ -241,6 +241,7 @@ gst_clock_return_get_type
 
 <SECTION>
 <FILE>gstconfig</FILE>
+<SUBSECTION Private>
 GST_DISABLE_LOADSAVE_REGISTRY
 GST_DISABLE_GST_DEBUG
 GST_DISABLE_LOADSAVE
@@ -1443,13 +1444,13 @@ gst_type_find_factory_get_type
 GstElementState
 GstElementStateReturn
 GstRank
-GST_PADDING
-GST_PADDING_INIT
 <SUBSECTION Standard>
 GST_TYPE_ELEMENT_STATE
 GST_TYPE_ELEMENT_STATE_RETURN
 GST_TYPE_RANK
 <SUBSECTION Private>
+GST_PADDING
+GST_PADDING_INIT
 gst_element_state_get_type
 gst_element_state_return_get_type
 gst_rank_get_type

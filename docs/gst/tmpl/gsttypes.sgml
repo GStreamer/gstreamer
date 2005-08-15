@@ -55,17 +55,3 @@ gst_plugin_feature_set_rank().
 @GST_RANK_SECONDARY: likely to be chosen
 @GST_RANK_PRIMARY: will be chosen first
 
-<!-- ##### MACRO GST_PADDING ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GST_PADDING_INIT ##### -->
-<para>
-
-</para>
-
-
-

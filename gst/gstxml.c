@@ -75,7 +75,17 @@ gst_xml_class_init (GstXMLClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_OBJECT);
 
-  /* FIXME G_TYPE_POINTER should be GType of xmlNodePtr */
+  /* FIXME G_TYPE_POINTER should be GType of xmlNodePtr
+   * (ensonic) can't be fixed, as libxml does not use GObject (unfortunately)
+   */
+  /**
+   * GstXML::object-loaded:
+   * @xml: the xml persistence instance
+   * @object: the object that has been loaded
+   * @xml_node: the related xml_node pointer to the document tree
+   *
+   * Signals that a new object has been deserialized.
+   */
   gst_xml_signals[OBJECT_LOADED] =
       g_signal_new ("object-loaded", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstXMLClass, object_loaded), NULL,
@@ -289,7 +299,7 @@ gst_xml_parse_file (GstXML * xml, const guchar * fname, const guchar * root)
   return gst_xml_parse_doc (xml, doc, root);
 }
 
-/* FIXME guchar* */
+/* FIXME 0.9: guchar* */
 /**
  * gst_xml_parse_memory:
  * @xml: a pointer to a GstXML object

@@ -293,6 +293,14 @@ gst_fake_src_class_init (GstFakeSrcClass * klass)
           "True if the element cannot produce data in PAUSED", FALSE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
+  /**
+   * GstFakeSrc::handoff:
+   * @fakesrc: the fakesrc instance
+   * @buffer: the buffer that will be pushed
+   * @pad: the pad that will sent it
+   *
+   * This signal gets emitted before sending the buffer.
+   */
   gst_fake_src_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstFakeSrcClass, handoff), NULL, NULL,

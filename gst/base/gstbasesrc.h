@@ -44,6 +44,12 @@ typedef enum {
 typedef struct _GstBaseSrc GstBaseSrc;
 typedef struct _GstBaseSrcClass GstBaseSrcClass;
 
+/**
+ * GST_BASE_SRC_PAD:
+ * @obj: base source instance
+ *
+ * Returns the pointer to the #GstPad object of the element.
+ */
 #define GST_BASE_SRC_PAD(obj)                 (GST_BASE_SRC (obj)->srcpad)
 
 #define GST_LIVE_GET_LOCK(elem)               (GST_BASE_SRC(elem)->live_lock)

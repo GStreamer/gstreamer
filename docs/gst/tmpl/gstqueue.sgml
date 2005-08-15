@@ -36,10 +36,7 @@ The queue blocks by default.
 
 <!-- ##### SIGNAL GstQueue::overrun ##### -->
 <para>
-Reports that the buffer became full (overrun).
-A buffer is full if the total amount of data inside it (num-buffers, time,
-size) is higher than the boundary values which can be set through the GObject
-properties.
+
 </para>
 
 @gstqueue: the object which received the signal.
@@ -53,10 +50,7 @@ properties.
 
 <!-- ##### SIGNAL GstQueue::underrun ##### -->
 <para>
-Reports that the buffer became empty (underrun).
-A buffer is empty if the total amount of data inside it (num-buffers, time,
-size) is lower than the boundary values which can be set through the GObject
-properties.
+
 </para>
 
 @gstqueue: the object which received the signal.

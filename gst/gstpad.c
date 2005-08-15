@@ -153,19 +153,49 @@ gst_pad_class_init (GstPadClass * klass)
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_pad_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_pad_get_property);
 
+  /**
+   * GstPad::linked:
+   * @pad: the pad that emitted the signal
+   * @peer: the peer pad that has been connected
+   *
+   * Signals that a pad has been linked to the peer pad.
+   */
   gst_pad_signals[PAD_LINKED] =
       g_signal_new ("linked", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstPadClass, linked), NULL, NULL,
       gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_PAD);
+  /**
+   * GstPad::unlinked:
+   * @pad: the pad that emitted the signal
+   * @peer: the peer pad that has been disconnected
+   *
+   * Signals that a pad has been unlinked from the peer pad.
+   */
   gst_pad_signals[PAD_UNLINKED] =
       g_signal_new ("unlinked", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstPadClass, unlinked), NULL, NULL,
       gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_PAD);
+  /**
+   * GstPad::request-link:
+   * @pad: the pad that emitted the signal
+   * @peer: the peer pad for which a connection is requested
+   *
+   * Signals that a pad connection has been requested.
+   */
   gst_pad_signals[PAD_REQUEST_LINK] =
-      g_signal_new ("request_link", G_TYPE_FROM_CLASS (klass),
+      g_signal_new ("request-link", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstPadClass, request_link), NULL,
       NULL, gst_marshal_VOID__OBJECT, G_TYPE_NONE, 0);
 
+  /**
+   * GstPad::have-data:
+   * @pad: the pad that emitted the signal
+   * @mini_obj: new data
+   *
+   * Signals that new data is available on the pad. This signal is used internaly.
+   *
+   * Returns: %TRUE to keep the data, %FALSE to drop it
+   */
   gst_pad_signals[PAD_HAVE_DATA] =
       g_signal_new ("have-data", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstPadClass, have_data),

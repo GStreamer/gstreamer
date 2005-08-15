@@ -224,14 +224,40 @@ gst_queue_class_init (GstQueueClass * klass)
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_queue_get_property);
 
   /* signals */
+  /**
+   * GstQueue::underrun:
+   * @queue: the queue instance
+   *
+   * Reports that the buffer became empty (underrun).
+   * A buffer is empty if the total amount of data inside it (num-buffers, time,
+   * size) is lower than the boundary values which can be set through the GObject
+   * properties.
+   */
   gst_queue_signals[SIGNAL_UNDERRUN] =
       g_signal_new ("underrun", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
       G_STRUCT_OFFSET (GstQueueClass, underrun), NULL, NULL,
       g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+  /**
+   * GstQueue::running:
+   * @queue: the queue instance
+   *
+   * Reports that enough (min-threshold) data is in the queue. Use this signal
+   * together with the underrun signal to pause the pipeline on underrun and wait
+   * for the queue to fill-up before resume playback.
+   */
   gst_queue_signals[SIGNAL_RUNNING] =
       g_signal_new ("running", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
       G_STRUCT_OFFSET (GstQueueClass, running), NULL, NULL,
       g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+  /**
+   * GstQueue::overrun:
+   * @queue: the queue instance
+   *
+   * Reports that the buffer became full (overrun).
+   * A buffer is full if the total amount of data inside it (num-buffers, time,
+   * size) is higher than the boundary values which can be set through the GObject
+   * properties.
+   */
   gst_queue_signals[SIGNAL_OVERRUN] =
       g_signal_new ("overrun", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
       G_STRUCT_OFFSET (GstQueueClass, overrun), NULL, NULL,

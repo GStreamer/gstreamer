@@ -150,6 +150,9 @@ typedef struct _GstControlledProperty
   /* TODO keep the last search result to be able to continue
      GList      *last_value;                    // last search result, can be used for incremental searches
    */
+
+  /*< private >*/
+  gpointer       _gst_reserved[GST_PADDING];
 } GstControlledProperty;
 
 #define GST_CONTROLLED_PROPERTY(obj)    ((GstControlledProperty *)(obj))
@@ -181,11 +184,17 @@ struct _GstController
   GList *properties;  // List of GstControlledProperty
   GMutex *lock;       // Secure property access, elements will access from threads
   GObject *object;    // the object we control
+
+  /*< private >*/
+  gpointer       _gst_reserved[GST_PADDING];
 };
 
 struct _GstControllerClass
 {
   GObjectClass parent_class;
+
+  /*< private >*/
+  gpointer       _gst_reserved[GST_PADDING];
 };
 
 GType gst_controller_get_type (void);

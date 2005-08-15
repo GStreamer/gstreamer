@@ -27,6 +27,8 @@
  *
  * This class is mostly useful for elements that do byte based
  * access to a random access resource, like files.
+ * If random access is not possible, the live-mode should be set
+ * to TRUE.
  *
  * <itemizedlist>
  *   <listitem><para>one sinkpad</para></listitem>
@@ -232,6 +234,14 @@ gst_base_src_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+/**
+ * gst_base_src_set_live:
+ * @src: base source instance
+ * @live: new live-mode
+ *
+ * If the element listens to a live source, the @livemode should
+ * be set to %TRUE. This declares that this source can't seek.
+ */
 void
 gst_base_src_set_live (GstBaseSrc * src, gboolean live)
 {
@@ -240,6 +250,14 @@ gst_base_src_set_live (GstBaseSrc * src, gboolean live)
   GST_LIVE_UNLOCK (src);
 }
 
+/**
+ * gst_base_src_get_live:
+ * @src: base source instance
+ *
+ * Check if an element is in live mode.
+ *
+ * Returns: %TRUE if element is in live mode.
+ */
 gboolean
 gst_base_src_is_live (GstBaseSrc * src)
 {

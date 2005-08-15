@@ -228,3 +228,51 @@ various utility functions
 @num: 
 
 
+<!-- ##### MACRO GST_ROUND_UP_2 ##### -->
+<para>
+
+</para>
+
+@num: 
+
+
+<!-- ##### MACRO GST_ROUND_UP_4 ##### -->
+<para>
+
+</para>
+
+@num: 
+
+
+<!-- ##### MACRO GST_ROUND_UP_8 ##### -->
+<para>
+
+</para>
+
+@num: 
+
+
+<!-- ##### MACRO GST_ROUND_UP_16 ##### -->
+<para>
+
+</para>
+
+@num: 
+
+
+<!-- ##### MACRO GST_ROUND_UP_32 ##### -->
+<para>
+
+</para>
+
+@num: 
+
+
+<!-- ##### MACRO GST_ROUND_UP_64 ##### -->
+<para>
+
+</para>
+
+@num: 
+
+

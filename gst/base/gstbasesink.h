@@ -31,11 +31,23 @@ G_BEGIN_DECLS
 #define GST_TYPE_BASE_SINK		(gst_base_sink_get_type())
 #define GST_BASE_SINK(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_SINK,GstBaseSink))
 #define GST_BASE_SINK_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASE_SINK,GstBaseSinkClass))
-#define GST_BASE_SINK_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BASE_SINK, GstBaseSinkClass))
+#define GST_BASE_SINK_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BASE_SINK, GstBaseSinkClass))
 #define GST_IS_BASE_SINK(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_SINK))
 #define GST_IS_BASE_SINK_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_SINK))
 
-#define GST_BASE_SINK_CLOCK(obj)		(GST_BASE_SINK (obj)->clock)
+/**
+ * GST_BASE_SINK_CLOCK:
+ * @obj: base sink instance
+ *
+ * Returns the pointer to the #GstClock object of the element.
+ */
+#define GST_BASE_SINK_CLOCK(obj)	(GST_BASE_SINK (obj)->clock)
+/**
+ * GST_BASE_SINK_PAD:
+ * @obj: base sink instance
+ *
+ * Returns the pointer to the #GstPad object of the element.
+ */
 #define GST_BASE_SINK_PAD(obj)		(GST_BASE_SINK (obj)->sinkpad)
 
 typedef struct _GstBaseSink GstBaseSink;

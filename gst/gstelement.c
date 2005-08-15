@@ -116,8 +116,8 @@ gst_element_class_init (GstElementClass * klass)
   /**
    * GstElement::state-changed:
    * @gstelement: the object which received the signal
-   * @int:
-   * @int:
+   * @old_state: the GST_STATE_XXX before the change
+   * @new_state: the GST_STATE_XXX after the change
    *
    * the #GstElementState of the element has been changed
    */
@@ -128,7 +128,7 @@ gst_element_class_init (GstElementClass * klass)
   /**
    * GstElement::pad-added:
    * @gstelement: the object which received the signal
-   * @object:
+   * @new_pad: the pad that has been added
    *
    * a new #GstPad has been added to the element
    */
@@ -139,7 +139,7 @@ gst_element_class_init (GstElementClass * klass)
   /**
    * GstElement::pad-removed:
    * @gstelement: the object which received the signal
-   * @object:
+   * @old_pad: the pad that has been removed
    *
    * a #GstPad has been removed from the element
    */
@@ -151,7 +151,7 @@ gst_element_class_init (GstElementClass * klass)
    * GstElement::no-more-pads:
    * @gstelement: the object which received the signal
    *
-   * ?
+   * This signals that the element will not generate more dynamic pads.
    */
   gst_element_signals[NO_MORE_PADS] =
       g_signal_new ("no-more-pads", G_TYPE_FROM_CLASS (klass),
