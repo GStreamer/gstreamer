@@ -141,6 +141,19 @@
           decoder or an encoder.
         </para>
       </listitem>
+      <listitem>
+        <para>
+          <function>gst_pad_set_link_function ()</function>, which used to set
+          a function that would be called when a format was negotiated between
+          two <classname>GstPad</classname>s, now sets a function that is
+          called when two elements are linked together in an application. For
+          all practical purposes, you most likely want to use the function
+          <function>gst_pad_set_setcaps_function ()</function>, nowadays, which
+          sets a function that is called when the format streaming over a pad
+          changes (so similar to <function>_set_link_function ()</function> in
+          &GStreamer;-0.8).
+        </para>
+      </listitem>
     </itemizedlist>
   </sect1>
 </chapter>

@@ -1,3 +1,8 @@
+2005-08-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/appendix-porting.xml:
+	  Document _set_link_function -> _set_setcaps_function.
+
 2005-08-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:
