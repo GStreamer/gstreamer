@@ -916,7 +916,7 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
         } while (try++ < 10);
       }
       goto forward;
-    case GST_EVENT_FLUSH_START:
+    case GST_EVENT_FLUSH_STOP:
       if (ffmpegdec->opened) {
         avcodec_flush_buffers (ffmpegdec->context);
       }

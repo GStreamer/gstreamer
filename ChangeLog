@@ -1,3 +1,10 @@
+2005-08-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_sink_event):
+	  Flush buffers in flush-stop, not flush-start, since the task is not
+	  stopped yet in flush-stop, which may lead to odd crashes in random
+	  places inside libavcodec.
+
 2005-08-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c:
