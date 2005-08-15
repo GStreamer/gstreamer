@@ -2,18 +2,18 @@
 multifdsink
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Send data to multiple filedescriptors
 
 <!-- ##### SECTION Long_Description ##### -->
 <include xmlns="http://www.w3.org/2003/XInclude" href="element-multifdsink-details.xml" />
 <para>
 
 </para>
-
 <!-- ##### SECTION See_Also ##### -->
 <para>
 
 </para>
+
 
 <!-- ##### SECTION Stability_Level ##### -->
 
