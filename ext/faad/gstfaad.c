@@ -633,8 +633,8 @@ gst_faad_event (GstPad * pad, GstEvent * event)
 
       gst_event_parse_newsegment (event, &rate, &fmt, &start, &end, &base);
       if (fmt == GST_FORMAT_TIME) {
-        GST_DEBUG ("Got NEWSEGMENT event in GST_FORMAT_TIME, passing on ("
-            GST_TIME_FORMAT " - " GST_TIME_FORMAT ")", GST_TIME_ARGS (start),
+        GST_DEBUG ("Got NEWSEGMENT event in GST_FORMAT_TIME, passing on (%"
+            GST_TIME_FORMAT " - %" GST_TIME_FORMAT ")", GST_TIME_ARGS (start),
             GST_TIME_ARGS (end));
       } else if (fmt == GST_FORMAT_BYTES) {
         GstEvent *new_ev;
@@ -659,8 +659,8 @@ gst_faad_event (GstPad * pad, GstEvent * event)
             base);
         gst_event_unref (event);
         event = new_ev;
-        GST_DEBUG ("Sending new NEWSEGMENT event, time " GST_TIME_FORMAT " - "
-            GST_TIME_FORMAT, GST_TIME_ARGS (new_start),
+        GST_DEBUG ("Sending new NEWSEGMENT event, time %" GST_TIME_FORMAT
+            " - %" GST_TIME_FORMAT, GST_TIME_ARGS (new_start),
             GST_TIME_ARGS (new_end));
       }
 

@@ -667,6 +667,8 @@ gst_qtdemux_loop_header (GstPad * pad)
               GST_CLOCK_TIME_NONE, 0);
           gint n;
 
+          GST_DEBUG ("Discont to %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
           qtdemux->need_discont = FALSE;
           for (n = 0; n < qtdemux->n_streams; n++) {
             gst_event_ref (event);
