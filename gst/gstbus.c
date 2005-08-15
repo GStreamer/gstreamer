@@ -545,7 +545,7 @@ gst_bus_add_watch_full (GstBus * bus, gint priority,
   id = g_source_attach (source, NULL);
   g_source_unref (source);
 
-  GST_DEBUG_OBJECT (bus, "New source %p\n", source);
+  GST_DEBUG_OBJECT (bus, "New source %p", source);
   return id;
 }
 

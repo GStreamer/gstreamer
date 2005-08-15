@@ -376,14 +376,18 @@ event_loop (GstElement * pipeline, gboolean blocking)
     g_return_val_if_fail (message != NULL, TRUE);
 
     if (messages) {
-      gchar *sstr;
       const GstStructure *s;
 
       s = gst_message_get_structure (message);
-      sstr = gst_structure_to_string (s);
-      g_print (_("Got Message from element \"%s\": %s\n"),
-          GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))), sstr);
-      g_free (sstr);
+      g_print (_("Got Message from element \"%s\"\n"),
+          GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))));
+      if (s) {
+        gchar *sstr;
+
+        sstr = gst_structure_to_string (s);
+        g_print ("%s\n", sstr);
+        g_free (sstr);
+      }
     }
 
     switch (revent) {

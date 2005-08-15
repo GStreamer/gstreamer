@@ -1,7 +1,12 @@
+2005-08-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* tools/gst-launch.c: (event_loop):
+	  don't convert NULL structures to strings
+
 2005-08-15  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:
-          made some defines private
+	  made some defines private
 	* docs/gst/tmpl/gstconfig.sgml:
 	* docs/gst/tmpl/gstqueue.sgml:
 	* docs/gst/tmpl/gsttaglist.sgml:
@@ -17,9 +22,9 @@
 	* gst/gstpad.c: (gst_pad_class_init):
 	* gst/gstqueue.c: (gst_queue_class_init):
 	* gst/gstxml.c: (gst_xml_class_init):
-          documented all undocumented signal inline
+	  documented all undocumented signal inline
 	* libs/gst/controller/gst-controller.h:
-          added padding
+	  added padding
 
 2005-08-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
