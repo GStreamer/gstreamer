@@ -1,0 +1,19 @@
+<plugin>
+  <name>audiorate</name>
+  <description>Adjusts audio frames</description>
+  <filename>../../gst/audiorate/.libs/libgstaudiorate.so</filename>
+  <basename>libgstaudiorate.so</basename>
+  <version>0.9.1.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>audiorate</name>
+      <longname>Audio rate adjuster</longname>
+      <class>Filter/Effect/Audio</class>
+      <description>Drops/duplicates/adjusts timestamps on audio samples to make a perfect stream</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+  </elements>
+</plugin>

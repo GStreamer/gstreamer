@@ -1,0 +1,20 @@
+<plugin>
+  <name>subparse</name>
+  <description>Subtitle (.sub) file parsing</description>
+  <filename>../../gst/subparse/.libs/libgstsubparse.so</filename>
+  <basename>libgstsubparse.so</basename>
+  <version>0.9.1.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>subparse</name>
+      <longname>Subtitle parsers</longname>
+      <class>Codec/Parser/Subtitle</class>
+      <description>Parses subtitle (.sub) files into text streams</description>
+      <author>Gustavo J. A. M. Carneiro &lt;gjc@inescporto.pt&gt;
+    Ronald S. Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+  </elements>
+</plugin>

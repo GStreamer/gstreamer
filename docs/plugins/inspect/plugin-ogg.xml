@@ -1,0 +1,47 @@
+<plugin>
+  <name>ogg</name>
+  <description>ogg stream manipulation (info about ogg: http://xiph.org)</description>
+  <filename>../../ext/ogg/.libs/libgstogg.so</filename>
+  <basename>libgstogg.so</basename>
+  <version>0.9.1.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>ogmtextparse</name>
+      <longname>OGM text stream parser</longname>
+      <class>Codec/Decoder/Subtitle</class>
+      <description>parse an OGM text header and stream</description>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ogmvideoparse</name>
+      <longname>OGM video stream parser</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>parse an OGM video header and stream</description>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ogmaudioparse</name>
+      <longname>OGM audio stream parser</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>parse an OGM audio header and stream</description>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>oggmux</name>
+      <longname>ogg muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>mux ogg streams (info about ogg: http://xiph.org)</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>oggdemux</name>
+      <longname>ogg demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>demux ogg streams (info about ogg: http://xiph.org)</description>
+      <author>Wim Taymand &lt;wim@fluendo.com&gt;</author>
+    </element>
+  </elements>
+</plugin>

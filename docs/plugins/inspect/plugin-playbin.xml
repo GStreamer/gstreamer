@@ -1,0 +1,19 @@
+<plugin>
+  <name>playbin</name>
+  <description>player bin</description>
+  <filename>../../gst/playback/.libs/libgstplaybin.so</filename>
+  <basename>libgstplaybin.so</basename>
+  <version>0.9.1.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>playbin</name>
+      <longname>Player Bin</longname>
+      <class>Generic/Bin/Player</class>
+      <description>Autoplug and play media from an uri</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+  </elements>
+</plugin>

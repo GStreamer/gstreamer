@@ -1,0 +1,19 @@
+<plugin>
+  <name>videorate</name>
+  <description>Adjusts video frames</description>
+  <filename>../../gst/videorate/.libs/libgstvideorate.so</filename>
+  <basename>libgstvideorate.so</basename>
+  <version>0.9.1.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>videorate</name>
+      <longname>Video rate adjuster</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Drops/duplicates/adjusts timestamps on video frames to make a perfect stream</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+  </elements>
+</plugin>

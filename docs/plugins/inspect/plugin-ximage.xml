@@ -1,0 +1,19 @@
+<plugin>
+  <name>ximage</name>
+  <description>XFree86 video output and input elements based on standard Xlib calls</description>
+  <filename>../../sys/ximage/.libs/libgstximage.so</filename>
+  <basename>libgstximage.so</basename>
+  <version>0.9.1.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>ximagesink</name>
+      <longname>Video sink</longname>
+      <class>Sink/Video</class>
+      <description>A standard X based videosink</description>
+      <author>Julien Moutte &lt;julien@moutte.net&gt;</author>
+    </element>
+  </elements>
+</plugin>

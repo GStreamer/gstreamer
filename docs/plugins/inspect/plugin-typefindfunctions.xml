@@ -1,0 +1,13 @@
+<plugin>
+  <name>typefindfunctions</name>
+  <description>default typefind functions</description>
+  <filename>../../gst/typefind/.libs/libgsttypefindfunctions.so</filename>
+  <basename>libgsttypefindfunctions.so</basename>
+  <version>0.9.1.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+
+  </elements>
+</plugin>

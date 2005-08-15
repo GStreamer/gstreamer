@@ -1,0 +1,47 @@
+<plugin>
+  <name>tcp</name>
+  <description>transfer data over the network via TCP</description>
+  <filename>../../gst/tcp/.libs/libgsttcp.so</filename>
+  <basename>libgsttcp.so</basename>
+  <version>0.9.1.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>multifdsink</name>
+      <longname>MultiFd sink</longname>
+      <class>Sink/Network</class>
+      <description>Send data to multiple filedescriptors</description>
+      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>tcpserversrc</name>
+      <longname>TCP Server source</longname>
+      <class>Source/Network</class>
+      <description>Receive data as a server over the network via TCP</description>
+      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
+    </element>
+    <element>
+      <name>tcpserversink</name>
+      <longname>TCP Server sink</longname>
+      <class>Sink/Network</class>
+      <description>Send data as a server over the network via TCP</description>
+      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
+    </element>
+    <element>
+      <name>tcpclientsrc</name>
+      <longname>TCP Client source</longname>
+      <class>Source/Network</class>
+      <description>Receive data as a client over the network via TCP</description>
+      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
+    </element>
+    <element>
+      <name>tcpclientsink</name>
+      <longname>TCP Client sink</longname>
+      <class>Sink/Network</class>
+      <description>Send data as a client over the network via TCP</description>
+      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
+    </element>
+  </elements>
+</plugin>

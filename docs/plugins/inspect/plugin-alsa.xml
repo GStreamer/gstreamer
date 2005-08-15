@@ -1,0 +1,26 @@
+<plugin>
+  <name>alsa</name>
+  <description>ALSA plugin library</description>
+  <filename>../../ext/alsa/.libs/libgstalsa.so</filename>
+  <basename>libgstalsa.so</basename>
+  <version>0.9.1.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>alsasink</name>
+      <longname>Audio Sink (ALSA)</longname>
+      <class>Sink/Audio</class>
+      <description>Output to a sound card via ALSA</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>alsasrc</name>
+      <longname>Audio Src (ALSA)</longname>
+      <class>Src/Audio</class>
+      <description>Output to a sound card via ALSA</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+  </elements>
+</plugin>

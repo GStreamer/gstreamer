@@ -1,0 +1,19 @@
+<plugin>
+  <name>decodebin</name>
+  <description>decoder bin</description>
+  <filename>../../gst/playback/.libs/libgstdecodebin.so</filename>
+  <basename>libgstdecodebin.so</basename>
+  <version>0.9.1.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>decodebin</name>
+      <longname>Decoder Bin</longname>
+      <class>Generic/Bin/Decoder</class>
+      <description>Autoplug and decode to raw media</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+  </elements>
+</plugin>

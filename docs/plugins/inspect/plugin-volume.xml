@@ -1,0 +1,19 @@
+<plugin>
+  <name>volume</name>
+  <description>element for controlling audio volume</description>
+  <filename>../../gst/volume/.libs/libgstvolume.so</filename>
+  <basename>libgstvolume.so</basename>
+  <version>0.9.1.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>volume</name>
+      <longname>Volume</longname>
+      <class>Filter/Effect/Audio</class>
+      <description>Set volume on audio/raw streams</description>
+      <author>Andy Wingo &lt;wingo@pobox.com&gt;</author>
+    </element>
+  </elements>
+</plugin>

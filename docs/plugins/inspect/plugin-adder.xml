@@ -1,0 +1,19 @@
+<plugin>
+  <name>adder</name>
+  <description>Adds multiple streams</description>
+  <filename>../../gst/adder/.libs/libgstadder.so</filename>
+  <basename>libgstadder.so</basename>
+  <version>0.9.1.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>adder</name>
+      <longname>Adder</longname>
+      <class>Generic/Audio</class>
+      <description>Add N audio channels together</description>
+      <author>Thomas &lt;thomas@apestaart.org&gt;</author>
+    </element>
+  </elements>
+</plugin>

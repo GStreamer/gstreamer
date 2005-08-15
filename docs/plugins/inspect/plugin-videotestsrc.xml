@@ -1,0 +1,19 @@
+<plugin>
+  <name>videotestsrc</name>
+  <description>Creates a test video stream</description>
+  <filename>../../gst/videotestsrc/.libs/libgstvideotestsrc.so</filename>
+  <basename>libgstvideotestsrc.so</basename>
+  <version>0.9.1.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>videotestsrc</name>
+      <longname>Video test source</longname>
+      <class>Source/Video</class>
+      <description>Creates a test video stream</description>
+      <author>David A. Schleef &lt;ds@schleef.org&gt;</author>
+    </element>
+  </elements>
+</plugin>
