@@ -1,3 +1,8 @@
+2005-08-15  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/README:
+	Added rtsp server implementation docs.
+
 2005-08-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/aalib/gstaasink.c:
