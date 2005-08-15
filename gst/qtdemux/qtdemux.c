@@ -2018,6 +2018,11 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         gst_caps_set_simple (stream->caps,
             "codec_data", GST_TYPE_BUFFER, buf, NULL);
         gst_buffer_unref (buf);
+      } else if (QTDEMUX_FOURCC_GET (stsd->data + 16 + 4) ==
+          GST_MAKE_FOURCC ('r', 'l', 'e', ' ')) {
+        gst_caps_set_simple (stream->caps,
+            "depth", G_TYPE_INT, QTDEMUX_GUINT16_GET (stsd->data + offset + 82),
+            NULL);
       }
     }
 
@@ -2670,7 +2675,8 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
       _codec ("H.264 / AVC");
       return gst_caps_from_string ("video/x-h264");
     case GST_MAKE_FOURCC ('r', 'l', 'e', ' '):
-      /* Run-length encoding */
+      _codec ("Run-length encoding");
+      return gst_caps_from_string ("video/x-rle, layout=(string)quicktime");
     case GST_MAKE_FOURCC ('s', 'm', 'c', ' '):
     case GST_MAKE_FOURCC ('k', 'p', 'c', 'd'):
     default:
