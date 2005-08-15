@@ -9,13 +9,6 @@
   <origin>http://gstreamer.freedesktop.org/</origin>
   <elements>
     <element>
-      <name>vorbisparse</name>
-      <longname>VorbisParse</longname>
-      <class>Codec/Parser/Audio</class>
-      <description>parse raw vorbis streams</description>
-      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
-    </element>
-    <element>
       <name>vorbisdec</name>
       <longname>VorbisDec</longname>
       <class>Codec/Decoder/Audio</class>
@@ -28,6 +21,13 @@
       <class>Codec/Encoder/Audio</class>
       <description>Encodes audio in Vorbis format</description>
       <author>Monty &lt;monty@xiph.org&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>vorbisparse</name>
+      <longname>VorbisParse</longname>
+      <class>Codec/Parser/Audio</class>
+      <description>parse raw vorbis streams</description>
+      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
     </element>
   </elements>
 </plugin>

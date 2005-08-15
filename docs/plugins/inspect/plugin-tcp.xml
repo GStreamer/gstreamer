@@ -16,17 +16,10 @@
       <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
-      <name>tcpserversrc</name>
-      <longname>TCP Server source</longname>
-      <class>Source/Network</class>
-      <description>Receive data as a server over the network via TCP</description>
-      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
-    </element>
-    <element>
-      <name>tcpserversink</name>
-      <longname>TCP Server sink</longname>
+      <name>tcpclientsink</name>
+      <longname>TCP Client sink</longname>
       <class>Sink/Network</class>
-      <description>Send data as a server over the network via TCP</description>
+      <description>Send data as a client over the network via TCP</description>
       <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
     </element>
     <element>
@@ -37,10 +30,17 @@
       <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
     </element>
     <element>
-      <name>tcpclientsink</name>
-      <longname>TCP Client sink</longname>
+      <name>tcpserversink</name>
+      <longname>TCP Server sink</longname>
       <class>Sink/Network</class>
-      <description>Send data as a client over the network via TCP</description>
+      <description>Send data as a server over the network via TCP</description>
+      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
+    </element>
+    <element>
+      <name>tcpserversrc</name>
+      <longname>TCP Server source</longname>
+      <class>Source/Network</class>
+      <description>Receive data as a server over the network via TCP</description>
       <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
     </element>
   </elements>
