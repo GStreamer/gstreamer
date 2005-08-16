@@ -1,3 +1,9 @@
+2005-08-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame),
+	(gst_ffmpegdec_sink_event), (gst_ffmpegdec_chain):
+	  Handle return values of gst_pad_push().
+
 2005-08-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):

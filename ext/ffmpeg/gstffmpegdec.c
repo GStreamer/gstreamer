@@ -684,13 +684,13 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
 
 static gint
 gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
-    guint8 * data, guint size, gint * got_data, guint64 * in_ts)
+    guint8 * data, guint size, gint * got_data, guint64 * in_ts,
+    GstFlowReturn * ret)
 {
   GstFFMpegDecClass *oclass =
       (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
   GstBuffer *outbuf = NULL;
   gint have_data = 0, len = 0;
-  GstFlowReturn ret;  
 
   ffmpegdec->context->frame_number++;
 
@@ -762,8 +762,8 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
 	  if (!gst_ffmpegdec_negotiate (ffmpegdec))
 	    return -1;	
 	  
-	  if ((ret = gst_pad_alloc_buffer (ffmpegdec->srcpad, GST_BUFFER_OFFSET_NONE, fsize, GST_PAD_CAPS (ffmpegdec->srcpad), &outbuf)) != GST_FLOW_OK)
-            return ret;
+	  if ((*ret = gst_pad_alloc_buffer (ffmpegdec->srcpad, GST_BUFFER_OFFSET_NONE, fsize, GST_PAD_CAPS (ffmpegdec->srcpad), &outbuf)) != GST_FLOW_OK)
+            return -1;
 
 	  /* original ffmpeg code does not handle odd sizes correctly.
 	   * This patched up version does */
@@ -888,7 +888,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
         GST_TIME_FORMAT ")", GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
 
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ffmpegdec->srcpad));
-    gst_pad_push (ffmpegdec->srcpad, outbuf);
+    *ret = gst_pad_push (ffmpegdec->srcpad, outbuf);
   }
 
   return len;
@@ -909,8 +909,9 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
       if (oclass->in_plugin->capabilities & CODEC_CAP_DELAY) {
         gint have_data, len, try = 0;
         do {
+          GstFlowReturn ret;
           len = gst_ffmpegdec_frame (ffmpegdec, NULL, 0, &have_data,
-              &ffmpegdec->next_ts);
+              &ffmpegdec->next_ts, &ret);
           if (len < 0 || have_data == 0)
             break;
         } while (try++ < 10);
@@ -975,6 +976,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
   guint8 *bdata, *data;
   gint bsize, size, len, have_data;
   guint64 in_ts = GST_BUFFER_TIMESTAMP (inbuf);
+  GstFlowReturn ret = GST_FLOW_OK;
 
   if (!ffmpegdec->opened)
     goto not_negotiated;
@@ -1033,7 +1035,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
     }
 
     if ((len = gst_ffmpegdec_frame (ffmpegdec, data, size,
-             &have_data, &in_ts)) < 0)
+             &have_data, &in_ts, &ret)) < 0 || ret != GST_FLOW_OK)
       break;
 
     if (!ffmpegdec->pctx) {
@@ -1057,7 +1059,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
   }
   gst_buffer_unref (inbuf);
 
-  return GST_FLOW_OK;
+  return ret;
 
   /* ERRORS */
 not_negotiated:
