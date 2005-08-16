@@ -1,5 +1,12 @@
 2005-08-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/gstutils.c: (gst_element_found_tags_for_pad), (push_and_ref),
+	(gst_element_found_tags):
+	* gst/gstutils.h:
+	  Add two utility functions for tag handling.
+
+2005-08-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* docs/manual/advanced-dataaccess.xml:
 	* docs/manual/basics-helloworld.xml:
 	  Fix docs to use _bin_add() before _link(), which fixes the examples

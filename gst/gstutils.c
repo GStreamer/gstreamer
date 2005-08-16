@@ -2382,3 +2382,58 @@ gst_pad_remove_buffer_probe (GstPad * pad, GCallback handler, gpointer data)
       count, GST_DEBUG_PAD_NAME (pad), GST_PAD_DO_BUFFER_SIGNALS (pad));
   GST_UNLOCK (pad);
 }
+
+/**
+ * gst_element_found_tags_for_pad:
+ * @element: element for which to post taglist to bus.
+ * @pad: pad on which to push tag-event.
+ * @list: the taglist to post on the bus and create event from.
+ *
+ * Posts a message to the bus that new tags were found and pushes the
+ * tags as event. Takes ownership of the taglist.
+ */
+void
+gst_element_found_tags_for_pad (GstElement * element,
+    GstPad * pad, GstTagList * list)
+{
+  g_return_if_fail (element != NULL);
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (list != NULL);
+
+  gst_pad_push_event (pad, gst_event_new_tag (gst_tag_list_copy (list)));
+  gst_element_post_message (element,
+      gst_message_new_tag (GST_OBJECT (element), list));
+}
+
+static void
+push_and_ref (GstPad * pad, GstEvent * event)
+{
+  gst_pad_push_event (pad, gst_event_ref (event));
+}
+
+/**
+ * gst_element_found_tags:
+ * @element: element for which we found the tags.
+ * @list: list of tags.
+ *
+ * Posts a message to the bus that new tags were found, and pushes an event
+ * to all sourcepads. Takes ownership of the taglist.
+ */
+void
+gst_element_found_tags (GstElement * element, GstTagList * list)
+{
+  GstIterator *iter;
+  GstEvent *event;
+
+  g_return_if_fail (element != NULL);
+  g_return_if_fail (list != NULL);
+
+  iter = gst_element_iterate_src_pads (element);
+  event = gst_event_new_tag (gst_tag_list_copy (list));
+  gst_iterator_foreach (iter, (GFunc) push_and_ref, event);
+  gst_iterator_free (iter);
+  gst_event_unref (event);
+
+  gst_element_post_message (element,
+      gst_message_new_tag (GST_OBJECT (element), list));
+}

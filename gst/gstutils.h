@@ -331,6 +331,13 @@ void			gst_pad_remove_buffer_probe	(GstPad * pad,
 							 GCallback handler,
 							 gpointer data);
 
+/* tag emission utility functions */
+void			gst_element_found_tags_for_pad	(GstElement * element,
+							 GstPad * pad,
+							 GstTagList * list);
+void			gst_element_found_tags		(GstElement * element,
+							 GstTagList * list);
+
 G_END_DECLS
 
 #endif /* __GST_UTILS_H__ */
