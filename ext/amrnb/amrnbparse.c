@@ -322,7 +322,7 @@ gst_amrnbparse_read_header (GstAmrnbParse * amrnbparse)
 {
   GstBuffer *buffer;
   GstFlowReturn ret;
-  gint8 *data;
+  guint8 *data;
   gint size;
 
   ret =
