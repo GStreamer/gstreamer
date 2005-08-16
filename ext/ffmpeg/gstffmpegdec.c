@@ -453,7 +453,8 @@ gst_ffmpegdec_connect (GstPad * pad, const GstCaps * caps)
   /* get size and so */
   gst_ffmpeg_caps_with_codecid (oclass->in_plugin->id,
       oclass->in_plugin->type, caps, ffmpegdec->context);
-  if (!ffmpegdec->context->time_base.den) {
+  if (!ffmpegdec->context->time_base.den ||
+      !ffmpegdec->context->time_base.num) {
     ffmpegdec->context->time_base.num = 1;
     ffmpegdec->context->time_base.den = 25;
   }

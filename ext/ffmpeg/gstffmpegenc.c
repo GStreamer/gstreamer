@@ -385,7 +385,8 @@ gst_ffmpegenc_link (GstPad * pad, const GstCaps * caps)
   /* fetch pix_fmt and so on */
   gst_ffmpeg_caps_with_codectype (oclass->in_plugin->type,
       caps, ffmpegenc->context);
-  if (!ffmpegenc->context->time_base.den) {
+  if (!ffmpegenc->context->time_base.den ||
+      !ffmpegenc->context->time_base.num) {
     ffmpegenc->context->time_base.den = 25;
     ffmpegenc->context->time_base.num = 1;
   }

@@ -1,3 +1,10 @@
+2005-08-17  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_connect):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_link):
+	  If you ever crash again on premature fixation, I'll cut your @#$^#$
+	  off, you ^$#^!#^.
+
 2005-08-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* autogen.sh:
