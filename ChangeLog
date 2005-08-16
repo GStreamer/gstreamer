@@ -1,3 +1,25 @@
+2005-08-16  Andy Wingo  <wingo@pobox.com>
+
+	* ext/raw1394/gstdv1394src.c (gst_dv1394src_iso_receive): Note
+	license info in the source code -- was only in the commit log
+	before.
+
+	* ext/dv/gstdvdec.h:
+	* ext/dv/gstdvdec.c: Only decodes systemstream=FALSE dv video --
+	old pipelines using dvdec should probably have a dvdemux first.
+
+	* ext/dv/gstdvdemux.h:
+	* ext/dv/gstdvdemux.c: Split out from dvdec, chunks the incoming
+	systemstream=TRUE data into frames, sets caps data, and spits out
+	PCM audio in addition to systemstream=FALSE video frames. Operates
+	in chain mode only for now; should make a getrange version as
+	well.
+
+	* ext/dv/gstdv.c: New file, registers the libgstdv plugin.
+
+	* ext/dv/Makefile.am: Library name changed to libgstdv. Split
+	dvdec into dvdemux and dvdec.
+
 2005-08-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/faad/gstfaad.c: (gst_faad_event), (gst_faad_chain):

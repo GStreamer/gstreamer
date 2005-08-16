@@ -1,12 +1,12 @@
 
-plugin_LTLIBRARIES = libgstdvdec.la
+plugin_LTLIBRARIES = libgstdv.la
 
-libgstdvdec_la_SOURCES = gstdvdec.c
-libgstdvdec_la_CFLAGS = $(GST_CFLAGS) $(LIBDV_CFLAGS)
-libgstdvdec_la_LIBADD = $(LIBDV_LIBS) $(GST_BASE_LIBS)
-libgstdvdec_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GST_PLUGINS_BASE_LIBS)
+libgstdv_la_SOURCES = gstdv.c gstdvdec.c gstdvdemux.c
+libgstdv_la_CFLAGS = $(GST_CFLAGS) $(LIBDV_CFLAGS)
+libgstdv_la_LIBADD = $(LIBDV_LIBS) $(GST_BASE_LIBS)
+libgstdv_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GST_PLUGINS_BASE_LIBS)
 
-noinst_HEADERS = gstdvdec.h
+noinst_HEADERS = gstdvdemux.h gstdvdec.h
 
 #if HAVE_GTK
 #noinst_PROGRAMS = demo-play

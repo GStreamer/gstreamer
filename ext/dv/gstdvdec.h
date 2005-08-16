@@ -21,109 +21,65 @@
 #ifndef __GST_DVDEC_H__
 #define __GST_DVDEC_H__
 
+
 #include <gst/gst.h>
+#include <libdv/dv.h>
+
 
 G_BEGIN_DECLS
 
-#include <libdv/dv.h>
-#include <gst/base/gstadapter.h>
 
-/* This is the definition of the element's object structure. */
+#define GST_TYPE_DVDEC \
+  (gst_dvdec_get_type())
+#define GST_DVDEC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DVDEC,GstDVDec))
+#define GST_DVDEC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DVDEC,GstDVDec))
+#define GST_IS_DVDEC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DVDEC))
+#define GST_IS_DVDEC_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DVDEC))
+
+
 typedef struct _GstDVDec GstDVDec;
+typedef struct _GstDVDecClass GstDVDecClass;
 
-/* The structure itself is derived from GstElement, as can be seen by the
- * fact that there's a complete instance of the GstElement structure at
- * the beginning of the object.  This allows the element to be cast to
- * an Element or even an Object.
- */
+
 struct _GstDVDec {
   GstElement 	 element;
 
-  /* We need to keep track of our pads, so we do so here. */
   GstPad 	*sinkpad;
-  GstPad        *videosrcpad;
-  GstPad        *audiosrcpad;
+  GstPad        *srcpad;
 
   dv_decoder_t 	*decoder;
   gboolean	 clamp_luma;
   gboolean	 clamp_chroma;
   gint		 quality;
 
-  GstAdapter    *adapter;
   gint 		 frame_len;
-
-  /* PAL or NTSC flag */
   gboolean       PAL;
-  /* video params */
   gdouble	 framerate;
   gint		 height;
   gboolean	 wide;
-  /* audio params */
-  gint     	 frequency;
-  gint     	 channels;
 
   /* negotiated output */
   dv_color_space_t space;
   gint 		 bpp;
   
+  gint		 video_offset;
   gint		 drop_factor;
-  gint		 framecount;
-  
-  guint64	 timestamp;
-  guint64	 duration;
-  guint64	 audio_offset;
-  guint64	 video_offset;
-
-  gint64	 start_byte;
-  gint64	 stop_byte;
-  gint64	 start_timestamp;
-  gint64	 stop_timestamp;
-
-  gboolean	 need_discont;
-  gboolean	 new_media;
-  gboolean	 loop;
-  
-  gboolean       found_header;
-
-  gint16 	*audio_buffers[4];
+  gboolean       headers_seen;
 };
-
-/* The other half of the object is its class.  The class also derives from
- * the same parent, though it must be the class structure this time.
- * Function pointers for polymophic methods and signals are placed in this
- * structure. */
-typedef struct _GstDVDecClass GstDVDecClass;
 
 struct _GstDVDecClass {
   GstElementClass parent_class;
 };
 
-/* Five standard preprocessing macros are used in the Gtk+ object system.
- * The first uses the object's _get_type function to return the GType
- * of the object.
- */
-#define GST_TYPE_DVDEC \
-  (gst_dvdec_get_type())
-/* The second is a checking cast to the correct type.  If the object passed
- * is not the right type, a warning will be generated on stderr.
- */
-#define GST_DVDEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DVDEC,GstDVDec))
-/* The third is a checking cast of the class instead of the object. */
-#define GST_DVDEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DVDEC,GstDVDec))
-/* The last two simply check to see if the passed pointer is an object or
- * class of the correct type. */
-#define GST_IS_DVDEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DVDEC))
-#define GST_IS_DVDEC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DVDEC))
 
-/* This is the only prototype needed, because it is used in the above
- * GST_TYPE_DVDEC macro.
- */
-GType gst_dvdec_get_type(void);
+GType gst_dvdec_get_type (void);
+
 
 G_END_DECLS
+
 
 #endif /* __GST_DVDEC_H__ */

@@ -344,6 +344,8 @@ gst_dv1394src_iso_receive (raw1394handle_t handle, int channel, size_t len,
   if (len > 16) {
     /*
        the following code taken from kino-0.51 (Dan Dennedy/Charles Yates)
+       Kindly relicensed under the LGPL. See the commit log for version 1.6 of
+       this file in CVS.
      */
     unsigned char *p = (unsigned char *) &data[3];
     int section_type = p[0] >> 5;       /* section type is in bits 5 - 7 */
