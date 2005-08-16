@@ -1,3 +1,11 @@
+2005-08-16  Andy Wingo  <wingo@pobox.com>
+
+	* examples/seeking/Makefile.am: Don't compile non-compiling
+	compiled objects with the compiler.
+
+	* examples/seeking/seek.c (make_dv_pipeline): Update for new DV
+	elements.
+
 2005-08-12  Philippe Khalaf <burger@speedy.org>
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
 	* gst-libs/gst/rtp/gstbasertpdepayload.h:
