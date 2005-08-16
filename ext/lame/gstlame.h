@@ -100,9 +100,6 @@ struct _GstLame {
 
   /* time tracker */
   guint64 last_ts, last_offs, last_duration;
-
-  /* new media count */
-  gint16 newmediacount;
 };
 
 struct _GstLameClass {

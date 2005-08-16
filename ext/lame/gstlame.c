@@ -35,7 +35,7 @@ static GstElementDetails gst_lame_details = {
   "L.A.M.E. mp3 encoder",
   "Codec/Encoder/Audio",
   "High-quality free MP3 encoder",
-  "Erik Walthinsen <omega@cse.ogi.edu>",
+  "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>",
 };
 
 /* LAME can do MPEG-1, MPEG-2, and MPEG-2.5, so it has 9 possible
@@ -230,7 +230,8 @@ static void gst_lame_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_lame_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_lame_chain (GstPad * pad, GstData * _data);
+static gboolean gst_lame_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_lame_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_lame_setup (GstLame * lame);
 static GstElementStateReturn gst_lame_change_state (GstElement * element);
 
@@ -293,6 +294,9 @@ gst_lame_class_init (GstLameClass * klass)
   gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+
+  gobject_class->set_property = gst_lame_set_property;
+  gobject_class->get_property = gst_lame_get_property;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate (kb/s)", "Bitrate in kbit/sec",
@@ -407,8 +411,6 @@ gst_lame_class_init (GstLameClass * klass)
       g_param_spec_enum ("preset", "Lame Preset", "Lame Preset",
           GST_TYPE_LAME_PRESET, 0, G_PARAM_READWRITE));
 #endif
-  gobject_class->set_property = gst_lame_set_property;
-  gobject_class->get_property = gst_lame_get_property;
 
   gstelement_class->change_state = gst_lame_change_state;
 }
@@ -423,22 +425,25 @@ gst_lame_src_getcaps (GstPad * pad)
 
   if (!gst_lame_setup (lame)) {
     GST_DEBUG_OBJECT (lame, "problem doing lame setup");
-    return
+    caps =
         gst_caps_copy (gst_pad_template_get_caps (gst_static_pad_template_get
             (&gst_lame_src_template)));
+  } else {
+    caps = gst_caps_new_simple ("audio/mpeg",
+        "mpegversion", G_TYPE_INT, 1,
+        "layer", G_TYPE_INT, 3,
+        "rate", G_TYPE_INT, lame_get_out_samplerate (lame->lgf),
+        "channels", G_TYPE_INT, lame->num_channels, NULL);
   }
 
-  caps = gst_caps_new_simple ("audio/mpeg",
-      "mpegversion", G_TYPE_INT, 1,
-      "layer", G_TYPE_INT, 3,
-      "rate", G_TYPE_INT, lame_get_out_samplerate (lame->lgf),
-      "channels", G_TYPE_INT, lame->num_channels, NULL);
+  gst_object_unref (lame);
 
   return caps;
 }
 
-static GstPadLinkReturn
-gst_lame_src_link (GstPad * pad, const GstCaps * caps)
+#if 0
+static gboolean
+gst_lame_src_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstLame *lame;
   gint out_samplerate;
@@ -446,15 +451,17 @@ gst_lame_src_link (GstPad * pad, const GstCaps * caps)
   GstCaps *othercaps, *channelcaps;
   GstPadLinkReturn result;
 
-  lame = GST_LAME (gst_pad_get_parent (pad));
+  lame = GST_LAME (GST_PAD_PARENT (pad));
   structure = gst_caps_get_structure (caps, 0);
 
-  if (!gst_structure_get_int (structure, "rate", &out_samplerate) ||
-      !gst_structure_get_int (structure, "channels", &lame->num_channels))
-    g_return_val_if_reached (GST_PAD_LINK_REFUSED);
+  /* we need channels and rate */
+  if (!gst_structure_get_int (structure, "rate", &out_samplerate));
+  goto no_rate;
+  if (!gst_structure_get_int (structure, "channels", &lame->num_channels));
+  goto no_channels;
 
   if (lame_set_out_samplerate (lame->lgf, out_samplerate) != 0)
-    return GST_PAD_LINK_REFUSED;
+    goto could_not_set_samplerate;
 
   /* we don't do channel conversion */
   channelcaps = gst_caps_new_simple ("audio/x-raw-int", "channels", G_TYPE_INT,
@@ -480,10 +487,27 @@ gst_lame_src_link (GstPad * pad, const GstCaps * caps)
   }
 
   return result;
-}
 
-static GstPadLinkReturn
-gst_lame_sink_link (GstPad * pad, const GstCaps * caps)
+no_rate:
+  {
+    GST_DEBUG ("no rate specified in caps");
+    return FALSE;
+  }
+no_channels:
+  {
+    GST_DEBUG ("no channels specified in caps");
+    return FALSE;
+  }
+could_not_set_samplerate:
+  {
+    GST_DEBUG ("could not set samplerate");
+    return FALSE;
+  }
+}
+#endif
+
+static gboolean
+gst_lame_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstLame *lame;
   gint out_samplerate;
@@ -493,16 +517,15 @@ gst_lame_sink_link (GstPad * pad, const GstCaps * caps)
   lame = GST_LAME (gst_pad_get_parent (pad));
   structure = gst_caps_get_structure (caps, 0);
 
-  if (!gst_structure_get_int (structure, "rate", &lame->samplerate) ||
-      !gst_structure_get_int (structure, "channels", &lame->num_channels))
-    g_return_val_if_reached (GST_PAD_LINK_REFUSED);
+  if (!gst_structure_get_int (structure, "rate", &lame->samplerate))
+    goto no_rate;
+  if (!gst_structure_get_int (structure, "channels", &lame->num_channels))
+    goto no_channels;
 
+  /* let lame choose a default samplerate */
   lame_set_out_samplerate (lame->lgf, 0);
-  if (!gst_lame_setup (lame)) {
-    GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
-        ("could not initialize encoder (wrong parameters?)"));
-    return GST_PAD_LINK_REFUSED;
-  }
+  if (!gst_lame_setup (lame))
+    goto setup_failed;
 
   out_samplerate = lame_get_out_samplerate (lame->lgf);
   othercaps =
@@ -512,7 +535,30 @@ gst_lame_sink_link (GstPad * pad, const GstCaps * caps)
       "channels", G_TYPE_INT, lame->num_channels,
       "rate", G_TYPE_INT, out_samplerate, NULL);
 
-  return gst_pad_try_set_caps (lame->srcpad, othercaps);
+  /* and use these caps */
+  gst_pad_set_caps (lame->srcpad, othercaps);
+  gst_caps_unref (othercaps);
+
+  return TRUE;
+
+no_rate:
+  {
+    GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
+        ("no rate specified in input"));
+    return FALSE;
+  }
+no_channels:
+  {
+    GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
+        ("no channels specified in input"));
+    return FALSE;
+  }
+setup_failed:
+  {
+    GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
+        ("could not initialize encoder (wrong parameters?)"));
+    return FALSE;
+  }
 }
 
 static void
@@ -523,17 +569,16 @@ gst_lame_init (GstLame * lame)
   lame->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_lame_sink_template), "sink");
-  gst_element_add_pad (GST_ELEMENT (lame), lame->sinkpad);
+  gst_pad_set_event_function (lame->sinkpad, gst_lame_sink_event);
   gst_pad_set_chain_function (lame->sinkpad, gst_lame_chain);
-  gst_pad_set_link_function (lame->sinkpad, gst_lame_sink_link);
+  gst_pad_set_setcaps_function (lame->sinkpad, gst_lame_sink_setcaps);
+  gst_element_add_pad (GST_ELEMENT (lame), lame->sinkpad);
 
   lame->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_lame_src_template), "src");
-  gst_element_add_pad (GST_ELEMENT (lame), lame->srcpad);
-  gst_pad_set_link_function (lame->srcpad, gst_lame_src_link);
   gst_pad_set_getcaps_function (lame->srcpad, gst_lame_src_getcaps);
-  GST_FLAG_SET (lame, GST_ELEMENT_EVENT_AWARE);
+  gst_element_add_pad (GST_ELEMENT (lame), lame->srcpad);
 
   GST_DEBUG ("setting up lame encoder");
   lame->lgf = lame_init ();
@@ -581,7 +626,6 @@ gst_lame_init (GstLame * lame)
 
   id3tag_init (lame->lgf);
 
-  lame->newmediacount = 0;
   GST_DEBUG_OBJECT (lame, "done initializing");
 }
 
@@ -912,115 +956,123 @@ gst_lame_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static void
-gst_lame_chain (GstPad * pad, GstData * _data)
+static gboolean
+gst_lame_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
+  GstLame *lame;
+
+  lame = GST_LAME (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      GST_DEBUG_OBJECT (lame, "handling EOS event");
+      /* FIXME, push last data packet */
+
+      gst_pad_push_event (lame->srcpad, event);
+      break;
+    case GST_EVENT_FLUSH_START:
+      GST_DEBUG_OBJECT (lame, "handling FLUSH start event");
+      /* forward event */
+      gst_pad_push_event (lame->srcpad, event);
+
+      /* make streaming stop */
+      GST_STREAM_LOCK (pad);
+      GST_STREAM_UNLOCK (pad);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+    {
+      guchar *mp3_data = NULL;
+      gint mp3_buffer_size, mp3_size = 0;
+
+      GST_DEBUG_OBJECT (lame, "handling FLUSH stop event");
+
+      /* clear buffers */
+      GST_STREAM_LOCK (pad);
+      mp3_buffer_size = 7200;
+      mp3_data = g_malloc (mp3_buffer_size);
+      mp3_size = lame_encode_flush (lame->lgf, mp3_data, mp3_buffer_size);
+
+      gst_pad_push_event (lame->srcpad, event);
+      GST_STREAM_UNLOCK (pad);
+      break;
+    }
+    case GST_EVENT_TAG:
+      GST_DEBUG_OBJECT (lame, "handling TAG event");
+      if (lame->tags) {
+        GstTagList *taglist;
+
+        gst_event_parse_tag (event, &taglist),
+            gst_tag_list_insert (lame->tags, taglist,
+            gst_tag_setter_get_merge_mode (GST_TAG_SETTER (lame)));
+      } else {
+        g_assert_not_reached ();
+      }
+      gst_pad_push_event (lame->srcpad, event);
+      break;
+    default:
+      gst_pad_push_event (lame->srcpad, event);
+      break;
+  }
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_lame_chain (GstPad * pad, GstBuffer * buf)
+{
   GstLame *lame;
   GstBuffer *outbuf;
-  gchar *mp3_data = NULL;
+  guchar *mp3_data = NULL;
   gint mp3_buffer_size, mp3_size = 0;
-  gboolean eos = FALSE;
+  gint64 duration;
+  GstFlowReturn result;
 
   lame = GST_LAME (gst_pad_get_parent (pad));
 
   GST_LOG_OBJECT (lame, "entered chain");
 
-  if (GST_IS_EVENT (buf)) {
-    switch (GST_EVENT_TYPE (buf)) {
-      case GST_EVENT_EOS:
-        GST_DEBUG_OBJECT (lame, "handling EOS event");
-        eos = TRUE;
-      case GST_EVENT_FLUSH:
-        GST_DEBUG_OBJECT (lame, "handling FLUSH event");
-        mp3_buffer_size = 7200;
-        mp3_data = g_malloc (mp3_buffer_size);
+  if (!lame->initialized)
+    goto not_initialized;
 
-        mp3_size = lame_encode_flush (lame->lgf, mp3_data, mp3_buffer_size);
-        gst_event_unref (GST_EVENT (buf));
-        break;
-      case GST_EVENT_TAG:
-        GST_DEBUG_OBJECT (lame, "handling TAG event");
-        if (lame->tags) {
-          gst_tag_list_insert (lame->tags,
-              gst_event_tag_get_list (GST_EVENT (buf)),
-              gst_tag_setter_get_merge_mode (GST_TAG_SETTER (lame)));
-        } else {
-          g_assert_not_reached ();
-        }
+  /* allocate space for output */
+  mp3_buffer_size =
+      ((GST_BUFFER_SIZE (buf) / (2 + lame->num_channels)) * 1.25) + 7200;
+  mp3_data = g_malloc (mp3_buffer_size);
 
-        gst_pad_event_default (pad, GST_EVENT (buf));
-        break;
-      case GST_EVENT_DISCONTINUOUS:
-        if (GST_EVENT_DISCONT_NEW_MEDIA (GST_EVENT (buf))) {
-          /* do not re-initialise if it is first new media discont */
-          if (lame->newmediacount++ > 0) {
-            lame_close (lame->lgf);
-            lame->lgf = lame_init ();
-            lame->initialized = FALSE;
-            lame->last_ts = GST_CLOCK_TIME_NONE;
-
-            gst_lame_setup (lame);
-          }
-        }
-        gst_pad_event_default (pad, GST_EVENT (buf));
-
-        break;
-      default:
-        gst_pad_event_default (pad, GST_EVENT (buf));
-        break;
-    }
+  /* lame seems to be too stupid to get mono interleaved going */
+  if (lame->num_channels == 1) {
+    mp3_size = lame_encode_buffer (lame->lgf,
+        (short int *) (GST_BUFFER_DATA (buf)),
+        (short int *) (GST_BUFFER_DATA (buf)),
+        GST_BUFFER_SIZE (buf) / 2, mp3_data, mp3_buffer_size);
   } else {
-    gint64 duration;
-
-    if (!lame->initialized) {
-      gst_buffer_unref (buf);
-      GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
-          ("encoder not initialized (input is not audio?)"));
-      return;
-    }
-
-    /* allocate space for output */
-    mp3_buffer_size =
-        ((GST_BUFFER_SIZE (buf) / (2 + lame->num_channels)) * 1.25) + 7200;
-    mp3_data = g_malloc (mp3_buffer_size);
-
-    /* lame seems to be too stupid to get mono interleaved going */
-    if (lame->num_channels == 1) {
-      mp3_size = lame_encode_buffer (lame->lgf,
-          (short int *) (GST_BUFFER_DATA (buf)),
-          (short int *) (GST_BUFFER_DATA (buf)),
-          GST_BUFFER_SIZE (buf) / 2, mp3_data, mp3_buffer_size);
-    } else {
-      mp3_size = lame_encode_buffer_interleaved (lame->lgf,
-          (short int *) (GST_BUFFER_DATA (buf)),
-          GST_BUFFER_SIZE (buf) / 2 / lame->num_channels,
-          mp3_data, mp3_buffer_size);
-    }
-
-    GST_LOG_OBJECT (lame, "encoded %d bytes of audio to %d bytes of mp3",
-        GST_BUFFER_SIZE (buf), mp3_size);
-
-    duration = (GST_SECOND * GST_BUFFER_SIZE (buf) /
-        (2 * lame->samplerate * lame->num_channels));
-
-    if (GST_BUFFER_DURATION (buf) != GST_CLOCK_TIME_NONE &&
-        GST_BUFFER_DURATION (buf) != duration)
-      GST_DEBUG_OBJECT (lame, "incoming buffer had incorrect duration "
-          GST_TIME_FORMAT "outgoing buffer will have correct duration "
-          GST_TIME_FORMAT,
-          GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_TIME_ARGS (duration));
-
-    if (lame->last_ts == GST_CLOCK_TIME_NONE) {
-      lame->last_ts = GST_BUFFER_TIMESTAMP (buf);
-      lame->last_offs = GST_BUFFER_OFFSET (buf);
-      lame->last_duration = duration;
-    } else {
-      lame->last_duration += duration;
-    }
-
-    gst_buffer_unref (buf);
+    mp3_size = lame_encode_buffer_interleaved (lame->lgf,
+        (short int *) (GST_BUFFER_DATA (buf)),
+        GST_BUFFER_SIZE (buf) / 2 / lame->num_channels,
+        mp3_data, mp3_buffer_size);
   }
+
+  GST_LOG_OBJECT (lame, "encoded %d bytes of audio to %d bytes of mp3",
+      GST_BUFFER_SIZE (buf), mp3_size);
+
+  duration = (GST_SECOND * GST_BUFFER_SIZE (buf) /
+      (2 * lame->samplerate * lame->num_channels));
+
+  if (GST_BUFFER_DURATION (buf) != GST_CLOCK_TIME_NONE &&
+      GST_BUFFER_DURATION (buf) != duration)
+    GST_DEBUG_OBJECT (lame, "incoming buffer had incorrect duration %"
+        GST_TIME_FORMAT "outgoing buffer will have correct duration %"
+        GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_TIME_ARGS (duration));
+
+  if (lame->last_ts == GST_CLOCK_TIME_NONE) {
+    lame->last_ts = GST_BUFFER_TIMESTAMP (buf);
+    lame->last_offs = GST_BUFFER_OFFSET (buf);
+    lame->last_duration = duration;
+  } else {
+    lame->last_duration += duration;
+  }
+
+  gst_buffer_unref (buf);
 
   if (mp3_size > 0) {
     outbuf = gst_buffer_new ();
@@ -1030,16 +1082,25 @@ gst_lame_chain (GstPad * pad, GstData * _data)
     GST_BUFFER_OFFSET (outbuf) = lame->last_offs;
     GST_BUFFER_DURATION (outbuf) = lame->last_duration;
 
-    gst_pad_push (lame->srcpad, GST_DATA (outbuf));
+    result = gst_pad_push (lame->srcpad, outbuf);
 
     lame->last_ts = GST_CLOCK_TIME_NONE;
   } else {
     g_free (mp3_data);
+    result = GST_FLOW_OK;
   }
+  gst_object_unref (lame);
 
-  if (eos) {
-    gst_pad_push (lame->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
-    gst_element_set_eos (GST_ELEMENT (lame));
+  return result;
+
+  /* ERRORS */
+not_initialized:
+  {
+    gst_buffer_unref (buf);
+    GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
+        ("encoder not initialized (input is not audio?)"));
+    gst_object_unref (lame);
+    return GST_FLOW_ERROR;
   }
 }
 
@@ -1135,18 +1196,26 @@ static GstElementStateReturn
 gst_lame_change_state (GstElement * element)
 {
   GstLame *lame;
-
-  g_return_val_if_fail (GST_IS_LAME (element), GST_STATE_FAILURE);
+  gint transition;
+  GstElementStateReturn result;
 
   lame = GST_LAME (element);
 
-  GST_DEBUG ("state pending %d", GST_STATE_PENDING (element));
+  transition = GST_STATE_TRANSITION (lame);
 
-  switch (GST_STATE_TRANSITION (element)) {
+  switch (transition) {
     case GST_STATE_READY_TO_PAUSED:
       lame->last_ts = GST_CLOCK_TIME_NONE;
       break;
-    case GST_STATE_READY_TO_NULL:
+    default:
+      break;
+  }
+
+  /* if we haven't failed already, give the parent class a chance to ;-) */
+  result = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  switch (transition) {
+    case GST_STATE_PAUSED_TO_READY:
       if (lame->initialized) {
         lame_close (lame->lgf);
         lame->lgf = lame_init ();
@@ -1157,11 +1226,7 @@ gst_lame_change_state (GstElement * element)
       break;
   }
 
-  /* if we haven't failed already, give the parent class a chance to ;-) */
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
+  return result;
 }
 
 static gboolean
