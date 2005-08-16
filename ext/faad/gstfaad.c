@@ -669,6 +669,9 @@ gst_faad_event (GstPad * pad, GstEvent * event)
       GST_STREAM_UNLOCK (pad);
       break;
     }
+    case GST_EVENT_FLUSH_START:
+      res = gst_pad_push_event (faad->srcpad, event);
+      break;
     default:
       GST_STREAM_LOCK (pad);
       res = gst_pad_push_event (faad->srcpad, event);
@@ -839,7 +842,7 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
         r = gst_pad_alloc_buffer (faad->srcpad, 0, bufsize, caps, &outbuf);
         if (r != GST_FLOW_OK) {
           GST_DEBUG ("Failed to allocate buffer");
-          ret = GST_FLOW_OK;    /* CHECK: or return something else? */
+          ret = r;              //GST_FLOW_OK;    /* CHECK: or return something else? */
           goto out;
         }
 
@@ -855,7 +858,9 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
         GST_DEBUG ("pushing buffer, off=%" G_GUINT64_FORMAT ", ts=%"
             GST_TIME_FORMAT, GST_BUFFER_OFFSET (outbuf),
             GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
-        gst_pad_push (faad->srcpad, outbuf);
+        if ((ret = gst_pad_push (faad->srcpad, outbuf)) != GST_FLOW_OK &&
+            ret != GST_FLOW_NOT_LINKED)
+          goto out;
       }
     }
   }

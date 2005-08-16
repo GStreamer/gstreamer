@@ -507,6 +507,7 @@ gst_qtdemux_loop_header (GstPad * pad)
   int offset;
   guint64 cur_offset;
   int size;
+  GstFlowReturn ret;
 
   /* FIXME _tell gets the offset wrong */
   //cur_offset = gst_bytestream_tell(qtdemux->bs);
@@ -683,7 +684,9 @@ gst_qtdemux_loop_header (GstPad * pad)
         GST_DEBUG ("Pushing buf with time=%" GST_TIME_FORMAT,
             GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
         gst_buffer_set_caps (buf, stream->caps);
-        gst_pad_push (stream->pad, buf);
+        ret = gst_pad_push (stream->pad, buf);
+        if (ret != GST_FLOW_OK && ret != GST_FLOW_NOT_LINKED)
+          goto pause;
 
         GST_INFO ("pushing buffer on %" GST_PTR_FORMAT, stream->pad);
       }
