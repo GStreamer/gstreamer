@@ -1,3 +1,9 @@
+2005-08-16  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	(gst_base_audio_src_change_state):
+	Open and close device in READY<->NULL state change.
+
 2005-08-16  Andy Wingo  <wingo@pobox.com>
 
 	* examples/seeking/Makefile.am: Don't compile non-compiling

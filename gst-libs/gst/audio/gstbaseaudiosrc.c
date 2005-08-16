@@ -369,11 +369,15 @@ gst_base_audio_src_change_state (GstElement * element)
 
   switch (transition) {
     case GST_STATE_NULL_TO_READY:
+      if (src->ringbuffer == NULL) {
+        src->ringbuffer = gst_base_audio_src_create_ringbuffer (src);
+        gst_ring_buffer_set_callback (src->ringbuffer,
+            gst_base_audio_src_callback, src);
+      }
+      if (!gst_ring_buffer_open_device (src->ringbuffer))
+        return GST_STATE_FAILURE;
       break;
     case GST_STATE_READY_TO_PAUSED:
-      src->ringbuffer = gst_base_audio_src_create_ringbuffer (src);
-      gst_ring_buffer_set_callback (src->ringbuffer,
-          gst_base_audio_src_callback, src);
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
@@ -390,10 +394,11 @@ gst_base_audio_src_change_state (GstElement * element)
     case GST_STATE_PAUSED_TO_READY:
       gst_ring_buffer_stop (src->ringbuffer);
       gst_ring_buffer_release (src->ringbuffer);
-      gst_object_unref (GST_OBJECT (src->ringbuffer));
-      src->ringbuffer = NULL;
       break;
     case GST_STATE_READY_TO_NULL:
+      gst_ring_buffer_close_device (src->ringbuffer);
+      gst_object_unref (GST_OBJECT (src->ringbuffer));
+      src->ringbuffer = NULL;
       break;
     default:
       break;
