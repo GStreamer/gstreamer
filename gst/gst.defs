@@ -764,9 +764,10 @@
   )
 )
 
+; 9 August 05 - changed to be a method on elements and not classes - wingo
 (define-method get_pad_template
-  (of-object "GstElementClass")
-  (c-name "gst_element_class_get_pad_template")
+  (of-object "GstElement")
+  (c-name "gst_element_get_pad_template")
   (return-type "GstPadTemplate*")
   (parameters
     '("const-gchar*" "name")

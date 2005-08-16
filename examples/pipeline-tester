@@ -168,7 +168,7 @@ class Window(gtk.Window):
             if m:
                 self.selected_pipe = m.get_value(i, 1)
                 pasteable = escape(self.selected_pipe, '\n)(')
-                l.set_markup('<small><tt>%s</tt></small>' % pasteable)
+                l.set_markup('<big><big><tt>%s</tt></big></big>' % pasteable)
             else:
                 self.selected_pipe = None
                 l.set_markup('')

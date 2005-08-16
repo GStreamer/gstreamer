@@ -1,3 +1,11 @@
+2005-08-16  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gst.defs (get_pad_template): Change to operate on elements
+	and not their classes so it can be wrapped in pygtk 2.6.
+
+	* gst/gstelement.override (_wrap_gst_element_get_pad_template):
+	New override.
+
 2005-08-11  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.override: (pygst_debug_log):
