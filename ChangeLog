@@ -1,3 +1,9 @@
+2005-08-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/faad/gstfaad.c: (gst_faad_event), (gst_faad_chain):
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header):
+	  Handle _push() return values.
+
 2005-08-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/faad/gstfaad.c: (gst_faad_event):
