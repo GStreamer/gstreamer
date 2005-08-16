@@ -1,3 +1,8 @@
+2005-08-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* autogen.sh:
+	  Increment ffmpeg date for some fixes.
+
 2005-08-14  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):
