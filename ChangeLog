@@ -1,3 +1,16 @@
+2005-08-16  Wim Taymans  <wim@fluendo.com>
+
+	* configure.ac:
+	* ext/amrnb/amrnbparse.c: (gst_amrnbparse_read_header):
+	Fix compile warning.
+
+	* ext/lame/gstlame.c: (gst_lame_class_init),
+	(gst_lame_src_getcaps), (gst_lame_src_setcaps),
+	(gst_lame_sink_setcaps), (gst_lame_init), (gst_lame_sink_event),
+	(gst_lame_chain), (gst_lame_change_state):
+	* ext/lame/gstlame.h:
+	Port lame plugin
+
 2005-08-16  Andy Wingo  <wingo@pobox.com>
 
 	* ext/raw1394/gstdv1394src.c (gst_dv1394src_iso_receive): Note
