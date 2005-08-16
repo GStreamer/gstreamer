@@ -476,10 +476,6 @@ gst_qtdemux_change_state (GstElement * element)
       qtdemux->last_ts = GST_CLOCK_TIME_NONE;
       qtdemux->need_discont = TRUE;
       qtdemux->need_flush = FALSE;
-      if (qtdemux->tag_list) {
-        gst_tag_list_free (qtdemux->tag_list);
-        qtdemux->tag_list = NULL;
-      }
       for (n = 0; n < qtdemux->n_streams; n++) {
         gst_element_remove_pad (element, qtdemux->streams[n]->pad);
         g_free (qtdemux->streams[n]->samples);
@@ -788,11 +784,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
       gst_pad_get_name (stream->pad), stream->pad, qtdemux);
   gst_element_add_pad (GST_ELEMENT (qtdemux), stream->pad);
   if (list) {
-    gst_tag_list_free (list);
-/*
-    gst_element_found_tags_for_pad (GST_ELEMENT (qtdemux),
-        stream->pad, 0, list);
-*/
+    gst_element_found_tags_for_pad (GST_ELEMENT (qtdemux), stream->pad, list);
   }
 }
 
@@ -1860,17 +1852,10 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
     qtdemux_parse_udta (qtdemux, udta);
 
     if (qtdemux->tag_list) {
-      GstEvent *event;
-      gchar *t;
-
-      event = gst_event_new_tag (gst_tag_list_copy (qtdemux->tag_list));
-      gst_pad_event_default (qtdemux->sinkpad, event);
-      t = gst_structure_to_string (qtdemux->tag_list);
-      GST_DEBUG ("calling gst_element_found_tags with %s", t);
-      g_free (t);
-/*
+      GST_DEBUG ("calling gst_element_found_tags with %" GST_PTR_FORMAT,
+          qtdemux->tag_list);
       gst_element_found_tags (GST_ELEMENT (qtdemux), qtdemux->tag_list);
-*/
+      qtdemux->tag_list = NULL;
     }
   } else {
     GST_LOG ("No udta node found.");

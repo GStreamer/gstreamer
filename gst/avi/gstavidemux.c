@@ -1057,6 +1057,14 @@ gst_avi_demux_parse_stream (GstElement * element, GstBuffer * buf)
   gst_element_add_pad (GST_ELEMENT (avi), pad);
   GST_LOG_OBJECT (element, "Added pad %s", gst_pad_get_name (pad));
 
+  if (codec_name) {
+    GstTagList *list = gst_tag_list_new ();
+
+    gst_tag_list_add (list, GST_TAG_MERGE_APPEND, tag_name, codec_name, NULL);
+    gst_element_found_tags_for_pad (GST_ELEMENT (avi), pad, list);
+    g_free (codec_name);
+  }
+
   return TRUE;
 
 fail:
@@ -1879,8 +1887,9 @@ gst_avi_demux_stream_header (GstAviDemux * avi)
 
             sub = gst_buffer_create_sub (buf, 4, GST_BUFFER_SIZE (buf) - 4);
             gst_riff_parse_info (GST_ELEMENT (avi), sub, &t);
-            if (t)
-              gst_tag_list_free (t);
+            if (t) {
+              gst_element_found_tags (GST_ELEMENT (avi), t);
+            }
             gst_buffer_unref (buf);
           }
           /* gst_riff_read_chunk() has already advanced avi->offset */
