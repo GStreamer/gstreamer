@@ -1,3 +1,9 @@
+2005-08-16  Andy Wingo  <wingo@pobox.com>
+
+	* gst/base/gstadapter.h:
+	* gst/base/gstadapter.c (gst_adapter_take): New function, like
+	peek() but you own the data. Not terribly efficient atm.
+
 2005-08-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstutils.c: (gst_element_found_tags_for_pad), (push_and_ref),

@@ -68,6 +68,7 @@ void			gst_adapter_clear		(GstAdapter *adapter);
 void			gst_adapter_push		(GstAdapter *adapter, GstBuffer* buf);
 const guint8 *		gst_adapter_peek      		(GstAdapter *adapter, guint size);
 void			gst_adapter_flush		(GstAdapter *adapter, guint flush);
+guint8*			gst_adapter_take		(GstAdapter * adapter, guint nbytes);
 guint			gst_adapter_available		(GstAdapter *adapter);
 guint			gst_adapter_available_fast    	(GstAdapter *adapter);
 GType			gst_adapter_get_type		(void);

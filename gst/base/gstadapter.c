@@ -258,6 +258,40 @@ gst_adapter_flush (GstAdapter * adapter, guint flush)
 }
 
 /**
+ * gst_adapter_take:
+ * @adapter: a #GstAdapter
+ * @nbytes: number of bytes to take
+ *
+ * Returns a freshly allocated buffer containing the first @nbytes bytes of the
+ * @adapter. g_free() the return value after use.
+ *
+ * Returns: oven-fresh hot data, or NULL if @nbytes bytes are not available
+ */
+guint8 *
+gst_adapter_take (GstAdapter * adapter, guint nbytes)
+{
+  const guint8 *cdata;
+  guint8 *data;
+
+  g_return_val_if_fail (GST_IS_ADAPTER (adapter), NULL);
+  g_return_val_if_fail (nbytes > 0, NULL);
+
+  GST_LOG_OBJECT (adapter, "taking %u bytes", nbytes);
+
+  cdata = gst_adapter_peek (adapter, nbytes);
+
+  if (!cdata)
+    return NULL;
+
+  data = g_malloc (nbytes);
+  memcpy (data, cdata, nbytes);
+
+  gst_adapter_flush (adapter, nbytes);
+
+  return data;
+}
+
+/**
  * gst_adapter_available:
  * @adapter: a #GstAdapter
  *
