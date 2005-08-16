@@ -2122,10 +2122,6 @@ gst_element_save_thyself (GstObject * object, xmlNodePtr parent)
         (xmlChar *) GST_PLUGIN_FEATURE (factory)->name);
   }
 
-/* FIXME: what is this? */
-/*  if (element->manager) */
-/*    xmlNewChild(parent, NULL, "manager", GST_ELEMENT_NAME(element->manager)); */
-
   /* params */
   specs = g_object_class_list_properties (G_OBJECT_GET_CLASS (object), &nspecs);
 

@@ -1175,9 +1175,9 @@ restart:
 
     GST_LOCK (bin);
     if (G_UNLIKELY (children_cookie != bin->children_cookie)) {
-      /* FIXME: we reffed some children already, are we leaking refcounts
-       * in that case ? */
       GST_INFO_OBJECT (bin, "bin->children_cookie changed, restarting");
+      /* restart will unref the children in the queues so that we don't
+       * leak refcounts. */
       goto restart;
     }
     children = g_list_next (children);
@@ -1439,14 +1439,12 @@ gst_bin_send_event (GstElement * element, GstEvent * event)
   return res;
 }
 
-/* FIXME, make me threadsafe */
 static GstBusSyncReply
 bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
 {
   GST_DEBUG_OBJECT (bin, "[msg %p] handling child message of type %d",
       message, GST_MESSAGE_TYPE (message));
-  /* we don't want messages from the streaming thread while we're doing the
-   * state change. We do want them from the state change functions. */
+
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_EOS:{
       gchar *name = gst_object_get_name (GST_MESSAGE_SRC (message));
@@ -1454,10 +1452,12 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
       GST_DEBUG_OBJECT (bin, "got EOS message from %s", name);
       g_free (name);
 
+      /* collect all eos messages from the children */
       GST_LOCK (bin->child_bus);
       bin->eosed = g_list_prepend (bin->eosed, GST_MESSAGE_SRC (message));
       GST_UNLOCK (bin->child_bus);
 
+      /* if we are completely EOS, we forward an EOS message */
       if (is_eos (bin)) {
         GST_DEBUG_OBJECT (bin, "all sinks posted EOS");
         gst_element_post_message (GST_ELEMENT (bin),

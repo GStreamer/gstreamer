@@ -1525,17 +1525,13 @@ gchar *
 gst_caps_to_string (const GstCaps * caps)
 {
   int i;
-  GstStructure *structure;
   GString *s;
-  char *sstr;
 
   /* NOTE:  This function is potentially called by the debug system,
    * so any calls to gst_log() (and GST_DEBUG(), GST_LOG(), etc.)
    * should be careful to avoid recursion.  This includes any functions
    * called by gst_caps_to_string.  In particular, calls should
    * not use the GST_PTR_FORMAT extension.  */
-
-  /* FIXME does this leak? */
 
   if (caps == NULL) {
     return g_strdup ("NULL");
@@ -1546,16 +1542,16 @@ gst_caps_to_string (const GstCaps * caps)
   if (gst_caps_is_empty (caps)) {
     return g_strdup ("EMPTY");
   }
+
   s = g_string_new ("");
-  structure = gst_caps_get_structure (caps, 0);
-  sstr = gst_structure_to_string (structure);
-  g_string_append (s, sstr);
-  g_free (sstr);
+  for (i = 0; i < caps->structs->len; i++) {
+    GstStructure *structure;
+    char *sstr;
 
-  for (i = 1; i < caps->structs->len; i++) {
+    if (i > 0)
+      g_string_append (s, "; ");
+
     structure = gst_caps_get_structure (caps, i);
-
-    g_string_append (s, "; ");
     sstr = gst_structure_to_string (structure);
     g_string_append (s, sstr);
     g_free (sstr);

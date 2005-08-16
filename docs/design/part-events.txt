@@ -122,6 +122,11 @@ Buffers should be clipped within the range indicated by the newsegment event
 start and stop values. Sinks are allowed to drop buffers with timestamps out
 of the indicated newsegment range.
 
+If a newsegment arrives at an element not preceeded by a flush event, the 
+streamtime of the pipeline will not be reset to 0 so any element that syncs
+to the clock must use the stop times of the previous newsegment events to
+make the buffer timestamps increasing.
+
 
 SEEK
 ----

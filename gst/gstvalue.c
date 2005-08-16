@@ -578,7 +578,6 @@ static gchar *
 gst_value_collect_int_range (GValue * value, guint n_collect_values,
     GTypeCValue * collect_values, guint collect_flags)
 {
-  /* FIXME */
   value->data[0].v_int = collect_values[0].v_int;
   value->data[1].v_int = collect_values[1].v_int;
 
@@ -1347,8 +1346,17 @@ gst_string_wrap (const char *s)
   return d;
 }
 
-/* FIXME: wouldn't it be nice if this function
- * were documented ? Alphabet spaghetti is easier to digest.
+/* 
+ * This function takes a string delimited with double quotes (")
+ * and unescapes any \xxx octal numbers.
+ *
+ * If sequences of \y are found where y is not in the range of
+ * 0->3, y is copied unescaped.
+ *
+ * If \xyy is found where x is an octal number but y is not, an
+ * error is encountered and NULL is returned.
+ *
+ * the input string must be \0 terminated.
  */
 static char *
 gst_string_unwrap (const gchar * s)
@@ -1356,44 +1364,65 @@ gst_string_unwrap (const gchar * s)
   gchar *ret;
   gchar *read, *write;
 
+  /* NULL string returns NULL */
   if (s == NULL)
     return NULL;
 
+  /* strings not starting with " are invalid */
+  if (*s != '"')
+    return NULL;
+
+  /* make copy of original string to hold the result. This
+   * string will always be smaller than the original */
   ret = g_strdup (s);
   read = ret;
   write = ret;
 
-  if (*read++ != '"')
-    goto beach;
+  /* need to move to the next position as we parsed the " */
+  read++;
 
   while (*read) {
     if (GST_ASCII_IS_STRING (*read)) {
+      /* normal chars are just copied */
       *write++ = *read++;
     } else if (*read == '"') {
+      /* quote marks end of string */
       break;
     } else if (*read == '\\') {
+      /* got an escape char, move to next position to read a tripplet
+       * of octal numbers */
       read++;
-      if (*read >= '0' && *read <= '7') {
+      /* is the next char a possible first octal number? */
+      if (*read >= '0' && *read <= '3') {
+        /* parse other 2 numbers, if one of them is not in the range of
+         * an octal number, we error. We also catch the case where a zero
+         * byte is found here. */
         if (read[1] < '0' || read[1] > '7' || read[2] < '0' || read[2] > '7')
           goto beach;
 
+        /* now convert the octal number to a byte again. */
         *write++ = ((read[0] - '0') << 6) +
             ((read[1] - '0') << 3) + (read[2] - '0');
+
         read += 3;
       } else {
         /* if we run into a \0 here, we definately won't get a quote later */
         if (*read == 0)
           goto beach;
 
+        /* else copy \X sequence */
         *write++ = *read++;
       }
     } else {
+      /* weird character, error */
       goto beach;
     }
   }
+  /* if the string is not ending in " and zero terminated, we error */
   if (*read != '"' || read[1] != '\0')
     goto beach;
 
+  /* null terminate result string and return */
   *write++ = '\0';
   return ret;
 
@@ -1597,15 +1626,11 @@ static gboolean
 gst_value_union_int_int_range (GValue * dest, const GValue * src1,
     const GValue * src2)
 {
-  g_return_val_if_fail (G_VALUE_TYPE (src1) == G_TYPE_INT, FALSE);
-  g_return_val_if_fail (G_VALUE_TYPE (src2) == GST_TYPE_INT_RANGE, FALSE);
-
   if (src2->data[0].v_int <= src1->data[0].v_int &&
       src2->data[1].v_int >= src1->data[0].v_int) {
     gst_value_init_and_copy (dest, src2);
     return TRUE;
   }
-
   return FALSE;
 }
 
@@ -1615,9 +1640,6 @@ gst_value_union_int_range_int_range (GValue * dest, const GValue * src1,
 {
   int min;
   int max;
-
-  g_return_val_if_fail (G_VALUE_TYPE (src1) == GST_TYPE_INT_RANGE, FALSE);
-  g_return_val_if_fail (G_VALUE_TYPE (src2) == GST_TYPE_INT_RANGE, FALSE);
 
   min = MAX (src1->data[0].v_int, src2->data[0].v_int);
   max = MIN (src1->data[1].v_int, src2->data[1].v_int);
@@ -1641,9 +1663,6 @@ static gboolean
 gst_value_intersect_int_int_range (GValue * dest, const GValue * src1,
     const GValue * src2)
 {
-  g_return_val_if_fail (G_VALUE_TYPE (src1) == G_TYPE_INT, FALSE);
-  g_return_val_if_fail (G_VALUE_TYPE (src2) == GST_TYPE_INT_RANGE, FALSE);
-
   if (src2->data[0].v_int <= src1->data[0].v_int &&
       src2->data[1].v_int >= src1->data[0].v_int) {
     gst_value_init_and_copy (dest, src1);
@@ -1659,9 +1678,6 @@ gst_value_intersect_int_range_int_range (GValue * dest, const GValue * src1,
 {
   int min;
   int max;
-
-  g_return_val_if_fail (G_VALUE_TYPE (src1) == GST_TYPE_INT_RANGE, FALSE);
-  g_return_val_if_fail (G_VALUE_TYPE (src2) == GST_TYPE_INT_RANGE, FALSE);
 
   min = MAX (src1->data[0].v_int, src2->data[0].v_int);
   max = MIN (src1->data[1].v_int, src2->data[1].v_int);
@@ -1684,9 +1700,6 @@ static gboolean
 gst_value_intersect_double_double_range (GValue * dest, const GValue * src1,
     const GValue * src2)
 {
-  g_return_val_if_fail (G_VALUE_TYPE (src1) == G_TYPE_DOUBLE, FALSE);
-  g_return_val_if_fail (G_VALUE_TYPE (src2) == GST_TYPE_DOUBLE_RANGE, FALSE);
-
   if (src2->data[0].v_double <= src1->data[0].v_double &&
       src2->data[1].v_double >= src1->data[0].v_double) {
     gst_value_init_and_copy (dest, src1);
@@ -1702,9 +1715,6 @@ gst_value_intersect_double_range_double_range (GValue * dest,
 {
   double min;
   double max;
-
-  g_return_val_if_fail (G_VALUE_TYPE (src1) == GST_TYPE_DOUBLE_RANGE, FALSE);
-  g_return_val_if_fail (G_VALUE_TYPE (src2) == GST_TYPE_DOUBLE_RANGE, FALSE);
 
   min = MAX (src1->data[0].v_double, src2->data[0].v_double);
   max = MIN (src1->data[1].v_double, src2->data[1].v_double);
@@ -1730,8 +1740,6 @@ gst_value_intersect_list (GValue * dest, const GValue * value1,
   guint i, size;
   GValue intersection = { 0, };
   gboolean ret = FALSE;
-
-  g_return_val_if_fail (GST_VALUE_HOLDS_LIST (value1), FALSE);
 
   size = gst_value_list_get_size (value1);
   for (i = 0; i < size; i++) {
@@ -1797,13 +1805,18 @@ gst_value_subtract_int_int_range (GValue * dest, const GValue * minuend,
   int max = gst_value_get_int_range_max (subtrahend);
   int val = g_value_get_int (minuend);
 
+  /* subtracting a range from an int only works if the int is not in the
+   * range */
   if (val < min || val > max) {
+    /* and the result is the int */
     gst_value_init_and_copy (dest, minuend);
     return TRUE;
   }
   return FALSE;
 }
 
+/* creates a new int range based on input values. 
+ */
 static gboolean
 gst_value_create_new_range (GValue * dest, int min1, int max1, int min2,
     int max2)
@@ -1858,14 +1871,17 @@ gst_value_subtract_int_range_int (GValue * dest, const GValue * minuend,
 
   g_return_val_if_fail (min < max, FALSE);
 
+  /* value is outside of the range, return range unchanged */
   if (val < min || val > max) {
     gst_value_init_and_copy (dest, minuend);
     return TRUE;
   } else {
+    /* max must be MAXINT too as val <= max */
     if (val == G_MAXINT) {
       max--;
       val--;
     }
+    /* min must be MININT too as val >= max */
     if (val == G_MININT) {
       min++;
       val++;
@@ -1915,7 +1931,8 @@ static gboolean
 gst_value_subtract_double_range_double (GValue * dest, const GValue * minuend,
     const GValue * subtrahend)
 {
-  /* FIXME! */
+  /* since we don't have open ranges, we cannot create a hole in
+   * a double range. We return the original range */
   gst_value_init_and_copy (dest, minuend);
   return TRUE;
 }
@@ -1924,7 +1941,7 @@ static gboolean
 gst_value_subtract_double_range_double_range (GValue * dest,
     const GValue * minuend, const GValue * subtrahend)
 {
-  /* FIXME! */
+  /* since we don't have open ranges, we have to approximate */
   /* done like with ints */
   double min1 = gst_value_get_double_range_min (minuend);
   double max2 = gst_value_get_double_range_max (minuend);
@@ -1972,8 +1989,6 @@ gst_value_subtract_from_list (GValue * dest, const GValue * minuend,
   GValue subtraction = { 0, };
   gboolean ret = FALSE;
 
-  g_return_val_if_fail (GST_VALUE_HOLDS_LIST (minuend), FALSE);
-
   size = gst_value_list_get_size (minuend);
   for (i = 0; i < size; i++) {
     const GValue *cur = gst_value_list_get_value (minuend, i);
@@ -2013,8 +2028,6 @@ gst_value_subtract_list (GValue * dest, const GValue * minuend,
   guint i, size;
   GValue data[2] = { {0,}, {0,} };
   GValue *subtraction = &data[0], *result = &data[1];
-
-  g_return_val_if_fail (GST_VALUE_HOLDS_LIST (subtrahend), FALSE);
 
   gst_value_init_and_copy (result, minuend);
   size = gst_value_list_get_size (subtrahend);
@@ -2059,6 +2072,7 @@ gst_value_can_compare (const GValue * value1, const GValue * value2)
 
   if (G_VALUE_TYPE (value1) != G_VALUE_TYPE (value2))
     return FALSE;
+
   for (i = 0; i < gst_value_table->len; i++) {
     table = &g_array_index (gst_value_table, GstValueTable, i);
     if (g_type_is_a (G_VALUE_TYPE (value1), table->type) && table->compare)
@@ -2924,14 +2938,11 @@ gst_value_transform_fraction_double (const GValue * src_value,
 static int
 gst_value_compare_fraction (const GValue * value1, const GValue * value2)
 {
-  /* FIXME: maybe we should make this more mathematically correct instead
-   * of approximating with gdoubles */
-
   gint n1, n2;
   gint d1, d2;
 
-  gdouble new_num_1;
-  gdouble new_num_2;
+  gint64 new_num_1;
+  gint64 new_num_2;
 
   n1 = value1->data[0].v_int;
   n2 = value2->data[0].v_int;
@@ -2942,12 +2953,14 @@ gst_value_compare_fraction (const GValue * value1, const GValue * value2)
   if (n1 == n2 && d1 == d2)
     return GST_VALUE_EQUAL;
 
-  new_num_1 = n1 * d2;
-  new_num_2 = n2 * d1;
+  /* extend to 64 bits */
+  new_num_1 = ((gint64) n1) * d2;
+  new_num_2 = ((gint64) n2) * d1;
   if (new_num_1 < new_num_2)
     return GST_VALUE_LESS_THAN;
   if (new_num_1 > new_num_2)
     return GST_VALUE_GREATER_THAN;
+
   g_assert_not_reached ();
   return GST_VALUE_UNORDERED;
 }

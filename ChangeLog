@@ -1,3 +1,35 @@
+2005-08-16  Wim Taymans  <wim@fluendo.com>
+
+	* check/gst/gstvalue.c: (GST_START_TEST), (gst_value_suite):
+	Added subtract checks.
+
+	* docs/design/part-events.txt:
+	Some more docs about newsegment
+
+	* gst/gstbin.c: (gst_bin_change_state), (bin_bus_handler):
+	Fix FIXME
+
+	* gst/gstcaps.c: (gst_caps_to_string):
+	Add comments, cleanups.
+	
+	* gst/gstelement.c: (gst_element_save_thyself):
+	cleanups
+	
+	* gst/gstvalue.c: (gst_value_collect_int_range),
+	(gst_string_unwrap), (gst_value_union_int_int_range),
+	(gst_value_union_int_range_int_range),
+	(gst_value_intersect_int_int_range),
+	(gst_value_intersect_int_range_int_range),
+	(gst_value_intersect_double_double_range),
+	(gst_value_intersect_double_range_double_range),
+	(gst_value_intersect_list), (gst_value_subtract_int_int_range),
+	(gst_value_subtract_int_range_int),
+	(gst_value_subtract_double_range_double),
+	(gst_value_subtract_double_range_double_range),
+	(gst_value_subtract_from_list), (gst_value_subtract_list),
+	(gst_value_can_compare), (gst_value_compare_fraction):
+	Cleanups, add comments, remove unneeded asserts.
+
 2005-08-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* tools/gst-launch.c: (event_loop):
