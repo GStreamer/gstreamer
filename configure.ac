@@ -265,8 +265,7 @@ dnl =================================================
 # we set the defaults always to make sure we have non-empty variables
 # for the Makefile
 
-PKG_CHECK_MODULES(LIBOIL, liboil-0.2, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
-#PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.0, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
+PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.0, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
 AC_SUBST(LIBOIL_CFLAGS)
 AC_SUBST(LIBOIL_LIBS)
 if test "x${HAVE_LIBOIL}" = xyes ; then
@@ -411,6 +410,30 @@ return 0;
   AC_SUBST(FAAD_LIBS)
 ])
 
+dnl *** lame ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LAME, true)
+GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
+  GST_CHECK_LIBHEADER(LAME, mp3lame, lame_init, -lm, lame/lame.h,
+  [
+    HAVE_LAME="yes"
+    LAME_LIBS="-lmp3lame -lm"
+    dnl is lame presets available
+    LAME_CFLAGS=""
+    AC_TRY_RUN([
+#include <lame/lame.h>
+int main (int argc, char *argv[])
+{
+  printf("%d\n", MEDIUM);
+  return 0;
+}
+      ],
+      [LAME_CFLAGS="-DGSTLAME_PRESET"],
+      [LAME_CFLAGS=""]
+    )
+  AC_SUBST(LAME_CFLAGS)
+  AC_SUBST(LAME_LIBS)
+  ])
+])
 
 dnl *** libcaca ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBCACA, true)
@@ -629,6 +652,7 @@ ext/Makefile
 ext/aalib/Makefile
 ext/dv/Makefile
 ext/gconf/Makefile
+ext/lame/Makefile
 ext/libcaca/Makefile
 ext/libpng/Makefile
 ext/mad/Makefile
