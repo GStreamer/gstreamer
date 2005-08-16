@@ -78,8 +78,8 @@ main (gint   argc,
   filter = gst_element_factory_make ("capsfilter", "filter");
   csp = gst_element_factory_make ("ffmpegcolorspace", "csp");
   sink = gst_element_factory_make ("xvimagesink", "sink");
-  gst_element_link_many (src, filter, csp, sink, NULL);
   gst_bin_add_many (GST_BIN (pipeline), src, filter, csp, sink, NULL);
+  gst_element_link_many (src, filter, csp, sink, NULL);
   g_object_set (G_OBJECT (filter), "filter-caps",
       gst_caps_new_simple ("video/x-raw-rgb",
 			   "width", G_TYPE_INT, 384,
@@ -244,8 +244,8 @@ main (gint   argc,
 				     "depth", G_TYPE_INT, 16,
 				     "endianness", G_TYPE_INT, G_BYTE_ORDER,
 				     NULL), NULL);
-  gst_element_link_many (fakesrc, flt, conv, videosink, NULL);
   gst_bin_add_many (GST_BIN (pipeline), fakesrc, flt, conv, videosink, NULL);
+  gst_element_link_many (fakesrc, flt, conv, videosink, NULL);
 
   /* setup fake source */
   g_object_set (G_OBJECT (fakesrc),

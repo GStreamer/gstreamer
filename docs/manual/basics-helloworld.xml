@@ -143,16 +143,16 @@ main (int   argc,
   gst_bus_add_watch (gst_pipeline_get_bus (GST_PIPELINE (pipeline)),
 		     bus_call, loop);
 
+  /* put all elements in a bin */
+  gst_bin_add_many (GST_BIN (pipeline),
+		    source, parser, decoder, conv, sink, NULL);
+
   /* link together - note that we cannot link the parser and
    * decoder yet, becuse the parser uses dynamic pads. For that,
    * we set a pad-added signal handler. */
   gst_element_link (source, parser);
   gst_element_link_many (decoder, conv, sink, NULL);
   g_signal_connect (parser, "pad-added", G_CALLBACK (new_pad), NULL);
-
-  /* put all elements in a bin */
-  gst_bin_add_many (GST_BIN (pipeline),
-		    source, parser, decoder, conv, sink, NULL);
 
   /* Now set to playing and iterate. */
   g_print ("Setting to PLAYING\n");
