@@ -267,7 +267,8 @@ gst_volume_class_init (GstVolumeClass * klass)
       g_param_spec_double ("volume", "volume", "volume",
           0.0, VOLUME_MAX_DOUBLE, 1.0, G_PARAM_READWRITE));
 
-  GST_BASE_TRANSFORM_CLASS (klass)->transform = volume_transform;
+  GST_BASE_TRANSFORM_CLASS (klass)->transform =
+      GST_DEBUG_FUNCPTR (volume_transform);
 }
 
 static void

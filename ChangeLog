@@ -1,3 +1,10 @@
+2005-08-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/sine/gstsinesrc.c: (gst_sinesrc_src_query):
+	  moved statement below switch
+	* gst/volume/gstvolume.c: (gst_volume_class_init):
+	  added debug ptr
+
 2005-08-16  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosrc.c:

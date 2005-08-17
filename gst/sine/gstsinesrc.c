@@ -279,10 +279,9 @@ gst_sinesrc_src_query (GstPad * pad, GstQuery * query)
           break;
         default:
           break;
-
-          if (res) {
-            gst_query_set_position (query, format, current, -1);
-          }
+      }
+      if (res) {
+        gst_query_set_position (query, format, current, -1);
       }
       break;
     }
