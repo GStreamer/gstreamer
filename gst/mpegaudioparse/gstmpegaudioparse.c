@@ -67,8 +67,8 @@ static void gst_mp3parse_class_init (GstMPEGAudioParseClass * klass);
 static void gst_mp3parse_base_init (GstMPEGAudioParseClass * klass);
 static void gst_mp3parse_init (GstMPEGAudioParse * mp3parse);
 
-static void gst_mp3parse_chain (GstPad * pad, GstData * _data);
-static long bpf_from_header (GstMPEGAudioParse * parse, unsigned long header);
+static GstFlowReturn gst_mp3parse_chain (GstPad * pad, GstBuffer * buffer);
+
 static int head_check (unsigned long head);
 
 static void gst_mp3parse_set_property (GObject * object, guint prop_id,
@@ -239,13 +239,17 @@ gst_mp3parse_class_init (GstMPEGAudioParseClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SKIP, g_param_spec_int ("skip", "skip", "skip", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BIT_RATE, g_param_spec_int ("bitrate", "Bitrate", "Bit Rate", G_MININT, G_MAXINT, 0, G_PARAM_READABLE)); /* CHECKME */
-
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   gobject_class->set_property = gst_mp3parse_set_property;
   gobject_class->get_property = gst_mp3parse_get_property;
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SKIP,
+      g_param_spec_int ("skip", "skip", "skip",
+          G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BIT_RATE,
+      g_param_spec_int ("bitrate", "Bitrate", "Bit Rate",
+          G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
 
   gstelement_class->change_state = gst_mp3parse_change_state;
 }
@@ -256,16 +260,14 @@ gst_mp3parse_init (GstMPEGAudioParse * mp3parse)
   mp3parse->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&mp3_sink_template), "sink");
-  gst_element_add_pad (GST_ELEMENT (mp3parse), mp3parse->sinkpad);
-
   gst_pad_set_chain_function (mp3parse->sinkpad, gst_mp3parse_chain);
-  gst_element_set_loop_function (GST_ELEMENT (mp3parse), NULL);
+  gst_element_add_pad (GST_ELEMENT (mp3parse), mp3parse->sinkpad);
 
   mp3parse->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&mp3_src_template), "src");
+  gst_pad_use_fixed_caps (mp3parse->srcpad);
   gst_element_add_pad (GST_ELEMENT (mp3parse), mp3parse->srcpad);
-  gst_pad_use_explicit_caps (mp3parse->srcpad);
   /*gst_pad_set_type_id(mp3parse->srcpad, mp3frametype); */
 
   mp3parse->partialbuf = NULL;
@@ -275,10 +277,10 @@ gst_mp3parse_init (GstMPEGAudioParse * mp3parse)
   mp3parse->rate = mp3parse->channels = mp3parse->layer = -1;
 }
 
-static void
-gst_mp3parse_chain (GstPad * pad, GstData * _data)
+/* FIXME, use adapter */
+static GstFlowReturn
+gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
   GstMPEGAudioParse *mp3parse;
   guchar *data;
   glong size, offset = 0;
@@ -287,25 +289,11 @@ gst_mp3parse_chain (GstPad * pad, GstData * _data)
   GstBuffer *outbuf;
   guint64 last_ts;
 
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
-/*  g_return_if_fail(GST_IS_BUFFER(buf)); */
-
   mp3parse = GST_MP3PARSE (gst_pad_get_parent (pad));
 
   GST_DEBUG ("mp3parse: received buffer of %d bytes", GST_BUFFER_SIZE (buf));
 
   last_ts = GST_BUFFER_TIMESTAMP (buf);
-
-  /* FIXME, do flush */
-  /*
-     if (mp3parse->partialbuf) {
-     gst_buffer_unref(mp3parse->partialbuf);
-     mp3parse->partialbuf = NULL;
-     }
-     mp3parse->in_flush = TRUE;
-   */
 
   /* if we have something left from the previous frame */
   if (mp3parse->partialbuf) {
@@ -332,15 +320,19 @@ gst_mp3parse_chain (GstPad * pad, GstData * _data)
     /* search for a possible start byte */
     for (; ((offset < size - 4) && (data[offset] != 0xff)); offset++)
       skipped++;
-    if (skipped && !mp3parse->in_flush) {
+    if (skipped) {
       GST_DEBUG ("mp3parse: **** now at %ld skipped %d bytes", offset, skipped);
     }
     /* construct the header word */
     header = GST_READ_UINT32_BE (data + offset);
     /* if it's a valid header, go ahead and send off the frame */
     if (head_check (header)) {
-      /* calculate the bpf of the frame */
-      bpf = bpf_from_header (mp3parse, header);
+      guint bitrate = 0, layer = 0, rate = 0, channels = 0;
+
+      if (!(bpf = mp3_type_frame_length_from_header (header, &layer,
+                  &channels, &bitrate, &rate))) {
+        g_error ("Header failed internal error");
+      }
 
       /********************************************************************************
       * robust seek support
@@ -387,18 +379,13 @@ gst_mp3parse_chain (GstPad * pad, GstData * _data)
             bpf);
         break;
       } else {
-        guint bitrate, layer, rate, channels;
-
-        if (!mp3_type_frame_length_from_header (header, &layer,
-                &channels, &bitrate, &rate)) {
-          g_error ("Header failed internal error");
-        }
         if (channels != mp3parse->channels ||
             rate != mp3parse->rate ||
             layer != mp3parse->layer || bitrate != mp3parse->bit_rate) {
           GstCaps *caps = mp3_caps_create (layer, channels, bitrate, rate);
 
-          gst_pad_set_explicit_caps (mp3parse->srcpad, caps);
+          gst_pad_set_caps (mp3parse->srcpad, caps);
+          gst_caps_unref (caps);
 
           mp3parse->channels = channels;
           mp3parse->layer = layer;
@@ -412,23 +399,18 @@ gst_mp3parse_chain (GstPad * pad, GstData * _data)
         if (mp3parse->skip == 0) {
           GST_DEBUG ("mp3parse: pushing buffer of %d bytes",
               GST_BUFFER_SIZE (outbuf));
-          if (mp3parse->in_flush) {
-            /* FIXME do some sort of flush event */
-            mp3parse->in_flush = FALSE;
-          }
           GST_BUFFER_TIMESTAMP (outbuf) = last_ts;
+
           if (mp3parse->layer == 1) {
             GST_BUFFER_DURATION (outbuf) = 384 * GST_SECOND / mp3parse->rate;
           } else {
             GST_BUFFER_DURATION (outbuf) = 1152 * GST_SECOND / mp3parse->rate;
           }
 
-          if (GST_PAD_CAPS (mp3parse->srcpad) != NULL) {
-            gst_pad_push (mp3parse->srcpad, GST_DATA (outbuf));
-          } else {
-            GST_DEBUG ("No capsnego yet, delaying buffer push");
-            gst_buffer_unref (outbuf);
-          }
+          gst_buffer_set_caps (outbuf, GST_PAD_CAPS (pad));
+
+          gst_pad_push (mp3parse->srcpad, outbuf);
+
         } else {
           GST_DEBUG ("mp3parse: skipping buffer of %d bytes",
               GST_BUFFER_SIZE (outbuf));
@@ -438,8 +420,7 @@ gst_mp3parse_chain (GstPad * pad, GstData * _data)
       }
     } else {
       offset++;
-      if (!mp3parse->in_flush)
-        GST_DEBUG ("mp3parse: *** wrong header, skipping byte (FIXME?)");
+      GST_DEBUG ("mp3parse: *** wrong header, skipping byte (FIXME?)");
     }
   }
   /* if we have processed this block and there are still */
@@ -457,19 +438,10 @@ gst_mp3parse_chain (GstPad * pad, GstData * _data)
     gst_buffer_unref (mp3parse->partialbuf);
     mp3parse->partialbuf = NULL;
   }
-}
 
-static long
-bpf_from_header (GstMPEGAudioParse * parse, unsigned long header)
-{
-  guint bitrate, layer, rate, channels, length;
+  gst_object_unref (mp3parse);
 
-  if (!(length = mp3_type_frame_length_from_header (header, &layer,
-              &channels, &bitrate, &rate))) {
-    return 0;
-  }
-
-  return length;
+  return GST_FLOW_OK;
 }
 
 static gboolean
@@ -561,8 +533,8 @@ static GstElementStateReturn
 gst_mp3parse_change_state (GstElement * element)
 {
   GstMPEGAudioParse *src;
+  GstElementStateReturn result;
 
-  g_return_val_if_fail (GST_IS_MP3PARSE (element), GST_STATE_FAILURE);
   src = GST_MP3PARSE (element);
 
   switch (GST_STATE_TRANSITION (element)) {
@@ -575,10 +547,9 @@ gst_mp3parse_change_state (GstElement * element)
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  result = GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
-  return GST_STATE_SUCCESS;
+  return result;
 }
 
 static gboolean
