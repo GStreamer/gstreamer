@@ -5865,6 +5865,12 @@
   (varargs #t)
 )
 
+(define-method watch_for_state_change
+  (of-object "GstBin")
+  (c-name "gst_bin_watch_for_state_change")
+  (return-type "none")
+)
+
 (define-method merge
   (of-object "GstBuffer")
   (c-name "gst_buffer_merge")
