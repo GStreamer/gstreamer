@@ -633,6 +633,7 @@ gst/fdsrc/Makefile
 gst/goom/Makefile
 gst/law/Makefile
 gst/level/Makefile
+gst/mpegaudioparse/Makefile
 gst/realmedia/Makefile
 gst/rtp/Makefile
 gst/rtsp/Makefile
