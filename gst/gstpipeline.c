@@ -255,6 +255,7 @@ gst_pipeline_change_state (GstElement * element)
   GstElementStateReturn result = GST_STATE_SUCCESS;
   GstPipeline *pipeline = GST_PIPELINE (element);
   gint transition = GST_STATE_TRANSITION (element);
+  GstClockTime play_timeout;
   GstClock *clock;
 
   switch (transition) {
@@ -339,23 +340,27 @@ gst_pipeline_change_state (GstElement * element)
       break;
   }
 
-  /* we wait for async state changes ourselves when we are in an
-   * intermediate state.
-   * FIXME this can block forever, better do this in a worker
-   * thread or use a timeout? */
   if (result == GST_STATE_ASYNC) {
+    GST_LOCK (pipeline);
+    play_timeout = pipeline->play_timeout;
+    GST_UNLOCK (pipeline);
+  } else {
+    play_timeout = 0;
+  }
+
+  /* we wait for async state changes ourselves when we are in an
+   * intermediate state. */
+  if (play_timeout > 0) {
     GTimeVal *timeval, timeout;
 
     GST_STATE_UNLOCK (pipeline);
 
-    GST_LOCK (pipeline);
-    if (pipeline->play_timeout > 0) {
-      GST_TIME_TO_TIMEVAL (pipeline->play_timeout, timeout);
-      timeval = &timeout;
-    } else {
+    if (play_timeout == G_MAXUINT64) {
       timeval = NULL;
+    } else {
+      GST_TIME_TO_TIMEVAL (play_timeout, timeout);
+      timeval = &timeout;
     }
-    GST_UNLOCK (pipeline);
 
     result = gst_element_get_state (element, NULL, NULL, timeval);
     if (result == GST_STATE_ASYNC) {
@@ -363,6 +368,7 @@ gst_pipeline_change_state (GstElement * element)
       g_warning ("timeout in PREROLL, forcing next state change");
       result = GST_STATE_SUCCESS;
     }
+
     GST_STATE_LOCK (pipeline);
   }
 
