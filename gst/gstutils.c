@@ -1786,6 +1786,52 @@ gst_bin_remove_many (GstBin * bin, GstElement * element_1, ...)
 }
 
 static void
+get_state_func (GstElement * element, gpointer unused)
+{
+  GstElementStateReturn ret = GST_STATE_ASYNC;
+
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+      "new thread waiting on state change");
+
+  /* wait indefinitely */
+  while (ret == GST_STATE_ASYNC)
+    ret = gst_element_get_state (element, NULL, NULL, NULL);
+
+  gst_object_unref (element);
+}
+
+/**
+ * gst_bin_watch_for_state_change:
+ * @bin: the bin to watch for state changes
+ *
+ * Spawns a thread calling gst_element_get_state on @bin with infinite timeout.
+ *
+ * In practice this is done because if a bin returns GST_STATE_ASYNC from a
+ * state change it will not commit its state until someone calls
+ * gst_element_get_state on it. Thus having another thread checking the bin's
+ * state will ensure that a state-changed message gets posted on the bus
+ * eventually.
+ *
+ * This function is admittedly a bit of a hack. Bins should always post
+ * messages. However this behavior was broken out into this function to avoid
+ * spawning threads when scrubbing, when the bin's state is changing quickly and
+ * asynchronously.
+ */
+void
+gst_bin_watch_for_state_change (GstBin * bin)
+{
+  static GThreadPool *pool = NULL;
+  static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
+
+  g_static_mutex_lock (&mutex);
+  if (pool == NULL)
+    pool = g_thread_pool_new ((GFunc) get_state_func, NULL, -1, FALSE, NULL);
+  g_static_mutex_unlock (&mutex);
+
+  g_thread_pool_push (pool, gst_object_ref (bin), NULL);
+}
+
+static void
 gst_element_populate_std_props (GObjectClass * klass, const gchar * prop_name,
     guint arg_id, GParamFlags flags)
 {

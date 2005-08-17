@@ -1073,6 +1073,7 @@ clear_queue (GQueue * queue, gboolean unref)
     if (unref)
       gst_object_unref (p);
 }
+
 static void
 remove_all_from_queue (GQueue * queue, gpointer elem, gboolean unref)
 {

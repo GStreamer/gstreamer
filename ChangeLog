@@ -1,3 +1,14 @@
+2005-08-17  Andy Wingo  <wingo@pobox.com>
+
+	* gst/base/gstbasetransform.c: Debug changes.
+
+	* gst/gstutils.h:
+	* gst/gstutils.c (gst_bin_watch_for_state_change): Add function to
+	ensure bins post state change messages. A bit of a hack but I can't
+	think of a way to avoid it.
+
+	* check/gst/gstbin.c (test_watch_for_state_change): Added test.
+
 2005-08-16  Andy Wingo  <wingo@pobox.com>
 
 	* gst/base/gstadapter.h:

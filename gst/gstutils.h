@@ -302,6 +302,7 @@ gboolean                gst_pad_query_convert           (GstPad *pad, GstFormat 
 /* bin functions */
 void            	gst_bin_add_many                (GstBin *bin, GstElement *element_1, ...);
 void            	gst_bin_remove_many             (GstBin *bin, GstElement *element_1, ...);
+void			gst_bin_watch_for_state_change  (GstBin *bin);
 
 /* buffer functions */
 GstBuffer *		gst_buffer_merge		(GstBuffer * buf1, GstBuffer * buf2);

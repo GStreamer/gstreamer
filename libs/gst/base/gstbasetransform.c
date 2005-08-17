@@ -215,8 +215,6 @@ gst_base_transform_transform_caps (GstBaseTransform * trans, GstPad * pad,
 
   klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
-  GST_DEBUG_OBJECT (trans, "from: %" GST_PTR_FORMAT, caps);
-
   /* if there is a custom transform function, use this */
   if (klass->transform_caps) {
     GstCaps *temp;
@@ -230,10 +228,10 @@ gst_base_transform_transform_caps (GstBaseTransform * trans, GstPad * pad,
       GstCaps *nth;
 
       nth = gst_caps_copy_nth (caps, i);
-      GST_DEBUG_OBJECT (trans, "  from: %" GST_PTR_FORMAT, nth);
+      GST_DEBUG_OBJECT (trans, "from[%d]: %" GST_PTR_FORMAT, i, nth);
       temp = klass->transform_caps (trans, pad, nth);
       gst_caps_unref (nth);
-      GST_DEBUG_OBJECT (trans, "  to  : %" GST_PTR_FORMAT, temp);
+      GST_DEBUG_OBJECT (trans, "  to[%d]: %" GST_PTR_FORMAT, i, temp);
 
       gst_caps_append (ret, temp);
     }

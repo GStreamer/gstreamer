@@ -270,6 +270,68 @@ GST_START_TEST (test_message_state_changed_children)
 
 GST_END_TEST;
 
+GST_START_TEST (test_watch_for_state_change)
+{
+  GstElement *src, *sink, *bin;
+  GstBus *bus;
+
+  bin = gst_element_factory_make ("bin", NULL);
+  fail_unless (bin != NULL, "Could not create bin");
+
+  src = gst_element_factory_make ("fakesrc", NULL);
+  fail_if (src == NULL, "Could not create fakesrc");
+  sink = gst_element_factory_make ("fakesink", NULL);
+  fail_if (sink == NULL, "Could not create fakesink");
+
+  gst_bin_add (GST_BIN (bin), sink);
+  gst_bin_add (GST_BIN (bin), src);
+
+  fail_unless (gst_element_link (src, sink), "could not link src and sink");
+
+  bus = GST_ELEMENT_BUS (bin);
+
+  /* change state, spawning two times three messages, minus one async */
+  fail_unless (gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED)
+      == GST_STATE_ASYNC);
+
+  pop_messages (bus, 5);
+
+  fail_unless (gst_bus_have_pending (bus) == FALSE,
+      "Unexpected messages on bus");
+
+  gst_bin_watch_for_state_change (GST_BIN (bin));
+
+  /* should get the bin's state change message now */
+  pop_messages (bus, 1);
+
+  fail_unless (gst_bus_have_pending (bus) == FALSE,
+      "Unexpected messages on bus");
+
+  fail_unless (gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING)
+      == GST_STATE_SUCCESS);
+
+  pop_messages (bus, 3);
+
+  /* this one might return either SUCCESS or ASYNC, likely SUCCESS */
+  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
+
+  gst_bin_watch_for_state_change (GST_BIN (bin));
+
+  pop_messages (bus, 3);
+
+  fail_unless (gst_bus_have_pending (bus) == FALSE,
+      "Unexpected messages on bus");
+
+  /* setting bin to NULL flushes the bus automatically */
+  fail_unless (gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL)
+      == GST_STATE_SUCCESS);
+
+  /* clean up */
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
 /* adding an element with linked pads to a bin unlinks the
  * pads */
 GST_START_TEST (test_add_linked)
@@ -331,6 +393,7 @@ gst_bin_suite (void)
   tcase_add_test (tc_chain, test_message_state_changed);
   tcase_add_test (tc_chain, test_message_state_changed_child);
   tcase_add_test (tc_chain, test_message_state_changed_children);
+  tcase_add_test (tc_chain, test_watch_for_state_change);
   tcase_add_test (tc_chain, test_add_linked);
 
   return s;
