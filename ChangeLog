@@ -1,5 +1,22 @@
 2005-08-17  Wim Taymans  <wim@fluendo.com>
 
+	* configure.ac:
+	Added mpegaudioparse
+
+	* ext/lame/gstlame.c: (gst_lame_src_getcaps),
+	(gst_lame_src_setcaps), (gst_lame_sink_setcaps),
+	(gst_lame_sink_event), (gst_lame_chain):
+	Some cleanups.
+	Fix memleak.
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3parse_class_init), (gst_mp3parse_init),
+	(gst_mp3parse_chain), (gst_mp3parse_change_state):
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	Ported mpegaudioparse
+
+2005-08-17  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_open), (gst_rtspsrc_play):
 	Support absolute control urls too.
 

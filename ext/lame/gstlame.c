@@ -1020,11 +1020,11 @@ static GstFlowReturn
 gst_lame_chain (GstPad * pad, GstBuffer * buf)
 {
   GstLame *lame;
-  GstBuffer *outbuf;
-  guchar *mp3_data = NULL;
-  gint mp3_buffer_size, mp3_size = 0;
+  guchar *mp3_data;
+  gint mp3_buffer_size, mp3_size;
   gint64 duration;
   GstFlowReturn result;
+  gint num_samples;
 
   lame = GST_LAME (gst_pad_get_parent (pad));
 
@@ -1033,9 +1033,10 @@ gst_lame_chain (GstPad * pad, GstBuffer * buf)
   if (!lame->initialized)
     goto not_initialized;
 
+  num_samples = GST_BUFFER_SIZE (buf) / 2;
+
   /* allocate space for output */
-  mp3_buffer_size =
-      ((GST_BUFFER_SIZE (buf) / (2 + lame->num_channels)) * 1.25) + 7200;
+  mp3_buffer_size = 1.25 * num_samples + 7200;
   mp3_data = g_malloc (mp3_buffer_size);
 
   /* lame seems to be too stupid to get mono interleaved going */
@@ -1043,12 +1044,11 @@ gst_lame_chain (GstPad * pad, GstBuffer * buf)
     mp3_size = lame_encode_buffer (lame->lgf,
         (short int *) (GST_BUFFER_DATA (buf)),
         (short int *) (GST_BUFFER_DATA (buf)),
-        GST_BUFFER_SIZE (buf) / 2, mp3_data, mp3_buffer_size);
+        num_samples, mp3_data, mp3_buffer_size);
   } else {
     mp3_size = lame_encode_buffer_interleaved (lame->lgf,
         (short int *) (GST_BUFFER_DATA (buf)),
-        GST_BUFFER_SIZE (buf) / 2 / lame->num_channels,
-        mp3_data, mp3_buffer_size);
+        num_samples / lame->num_channels, mp3_data, mp3_buffer_size);
   }
 
   GST_LOG_OBJECT (lame, "encoded %d bytes of audio to %d bytes of mp3",
@@ -1074,9 +1074,16 @@ gst_lame_chain (GstPad * pad, GstBuffer * buf)
 
   gst_buffer_unref (buf);
 
+  if (mp3_size < 0) {
+    g_warning ("error %d", mp3_size);
+  }
+
   if (mp3_size > 0) {
+    GstBuffer *outbuf;
+
     outbuf = gst_buffer_new ();
     GST_BUFFER_DATA (outbuf) = mp3_data;
+    GST_BUFFER_MALLOCDATA (outbuf) = mp3_data;
     GST_BUFFER_SIZE (outbuf) = mp3_size;
     GST_BUFFER_TIMESTAMP (outbuf) = lame->last_ts;
     GST_BUFFER_OFFSET (outbuf) = lame->last_offs;
