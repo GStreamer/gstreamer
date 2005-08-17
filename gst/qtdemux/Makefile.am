@@ -7,5 +7,3 @@ libgstqtdemux_la_LDFLAGS = ${GST_PLUGIN_LDFLAGS}
 libgstqtdemux_la_SOURCES = qtdemux.c
 
 noinst_HEADERS = qtdemux.h
-
-EXTRA_DIST = README
