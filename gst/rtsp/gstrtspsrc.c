@@ -604,8 +604,13 @@ gst_rtspsrc_open (GstRTSPSrc * src)
         continue;
       }
 
-      /* FIXME, check absolute/relative URL */
-      setup_url = g_strdup_printf ("%s/%s", src->location, control_url);
+      /* check absolute/relative URL */
+      /* FIXME, what if the control_url starts with a '/' or a non rtsp: protocol? */
+      if (g_str_has_prefix (control_url, "rtsp://")) {
+        setup_url = g_strdup (control_url);
+      } else {
+        setup_url = g_strdup_printf ("%s/%s", src->location, control_url);
+      }
 
       GST_DEBUG ("setup %s", setup_url);
       /* create SETUP request */
