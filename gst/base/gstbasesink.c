@@ -528,6 +528,9 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
       basesink->preroll_queued,
       basesink->buffers_queued, basesink->events_queued);
 
+  if (basesink->playing_async)
+    goto playing_async;
+
   /* check if we are prerolling */
   if (!basesink->need_preroll)
     goto no_preroll;
@@ -625,6 +628,34 @@ no_preroll:
     basesink->have_preroll = FALSE;
     ret = gst_base_sink_preroll_queue_empty (basesink, pad);
     GST_PREROLL_UNLOCK (pad);
+
+    return ret;
+  }
+playing_async:
+  {
+    GstFlowReturn ret;
+    gint t;
+
+    basesink->have_preroll = FALSE;
+    basesink->playing_async = FALSE;
+
+    /* handle buffer first */
+    ret = gst_base_sink_preroll_queue_empty (basesink, pad);
+
+    /* unroll locks, commit state, reacquire stream lock */
+    GST_PREROLL_UNLOCK (pad);
+    t = GST_STREAM_UNLOCK_FULL (pad);
+    GST_DEBUG ("released stream lock %d times", t);
+    if (t <= 0) {
+      GST_WARNING ("STREAM_LOCK should have been locked !!");
+      g_warning ("STREAM_LOCK should have been locked !!");
+    }
+    GST_STATE_LOCK (basesink);
+    GST_DEBUG ("commit state %p >", basesink);
+    gst_element_commit_state (GST_ELEMENT (basesink));
+    GST_STATE_UNLOCK (basesink);
+    if (t > 0)
+      GST_STREAM_LOCK_FULL (pad, t);
 
     return ret;
   }
@@ -1104,11 +1135,18 @@ gst_base_sink_change_state (GstElement * element)
        * thread to do this. */
       if (basesink->eos) {
         gst_base_sink_preroll_queue_empty (basesink, basesink->sinkpad);
+      } else if (!basesink->have_preroll) {
+        /* don't need preroll, but do queue a commit_state */
+        basesink->need_preroll = FALSE;
+        basesink->playing_async = TRUE;
+        ret = GST_STATE_ASYNC;
+        /* we know it's not waiting, no need to signal */
+      } else {
+        /* don't need the preroll anymore */
+        basesink->need_preroll = FALSE;
+        /* now let it play */
+        GST_PREROLL_SIGNAL (basesink->sinkpad);
       }
-      /* don't need the preroll anymore */
-      basesink->need_preroll = FALSE;
-      /* now let it play */
-      GST_PREROLL_SIGNAL (basesink->sinkpad);
       GST_PREROLL_UNLOCK (basesink->sinkpad);
       break;
     }
@@ -1132,6 +1170,8 @@ gst_base_sink_change_state (GstElement * element)
         gst_clock_id_unschedule (basesink->clock_id);
       }
       GST_UNLOCK (basesink);
+
+      basesink->playing_async = FALSE;
 
       /* unlock any subclasses */
       if (bclass->unlock)

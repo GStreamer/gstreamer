@@ -81,6 +81,7 @@ struct _GstBaseSink {
   gboolean       eos;
   gboolean       need_preroll;
   gboolean       have_preroll;
+  gboolean       playing_async;
 
   /*< private >*/
   gpointer       _gst_reserved[GST_PADDING];

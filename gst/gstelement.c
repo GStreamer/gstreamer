@@ -1778,6 +1778,7 @@ gst_element_set_state (GstElement * element, GstElementState state)
   GST_STATE_FINAL (element) = state;
   if (ret == GST_STATE_ASYNC) {
     gst_element_commit_state (element);
+    gst_element_lost_state (element);
   }
 
   /* start with the current state */

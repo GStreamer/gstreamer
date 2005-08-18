@@ -28,6 +28,7 @@ GST_START_TEST (test_sink)
   GstElement *sink;
   GstElementStateReturn ret;
   GstElementState current, pending;
+  GTimeVal tv;
 
   sink = gst_element_factory_make ("fakesink", "sink");
 
@@ -35,12 +36,22 @@ GST_START_TEST (test_sink)
   fail_unless (ret == GST_STATE_ASYNC, "no async state return");
 
   ret = gst_element_set_state (sink, GST_STATE_PLAYING);
-  fail_unless (ret == GST_STATE_SUCCESS, "cannot force play");
+  fail_unless (ret == GST_STATE_ASYNC, "no forced async state change");
 
-  ret = gst_element_get_state (sink, &current, &pending, NULL);
-  fail_unless (ret == GST_STATE_SUCCESS, "not playing");
-  fail_unless (current == GST_STATE_PLAYING, "not playing");
-  fail_unless (pending == GST_STATE_VOID_PENDING, "not playing");
+  GST_TIME_TO_TIMEVAL ((GstClockTime) 0, tv);
+
+  ret = gst_element_get_state (sink, &current, &pending, &tv);
+  fail_unless (ret == GST_STATE_ASYNC, "not changing state async");
+  fail_unless (current == GST_STATE_PAUSED, "bad current state");
+  fail_unless (pending == GST_STATE_PLAYING, "bad pending state");
+
+  ret = gst_element_set_state (sink, GST_STATE_PAUSED);
+  fail_unless (ret == GST_STATE_ASYNC, "no async going back to paused");
+
+  ret = gst_element_set_state (sink, GST_STATE_READY);
+  fail_unless (ret == GST_STATE_SUCCESS, "failed to go to ready");
+
+  gst_object_unref (sink);
 }
 
 GST_END_TEST

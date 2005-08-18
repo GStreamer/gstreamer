@@ -1,3 +1,21 @@
+2005-08-18  Andy Wingo  <wingo@pobox.com>
+
+	Make sure that when a pipeline goes to PLAYING, that data has
+	actually hit the sink.
+
+	* check/states/sinks.c (test_sink): A sink that doesn't get any
+	data shouldn't return SUCCESS for going to either PLAYING or
+	PAUSED. Test also the return values on the way back down.
+
+	* gst/gstelement.c (gst_element_set_state): When changing the
+	state of an element currently changing state asynchronously, go to
+	lost-state after commiting the pending state. Makes future calls
+	to get_state continue to return ASYNC.
+
+	* gst/base/gstbasesink.c (gst_base_sink_change_state): Return
+	ASYNC when going to PLAYING if we still don't have preroll, as can
+	happen with live sources.
+
 2005-08-18  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* docs/pwg/advanced-types.xml:
