@@ -495,7 +495,7 @@ need_pause:
 
 static gboolean
 gst_rtspsrc_send (GstRTSPSrc * src, RTSPMessage * request,
-    RTSPMessage * response)
+    RTSPMessage * response, RTSPStatusCode * code)
 {
   RTSPResult res;
 
@@ -507,6 +507,11 @@ gst_rtspsrc_send (GstRTSPSrc * src, RTSPMessage * request,
 
   if ((res = rtsp_connection_receive (src->connection, response)) < 0)
     goto receive_error;
+
+  if (code) {
+    *code = response->type_data.response.code;
+  }
+
   if (response->type_data.response.code != RTSP_STS_OK)
     goto error_response;
 
@@ -559,6 +564,48 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   if ((res = rtsp_connection_open (url, &src->connection)) < 0)
     goto could_not_open;
 
+  /* create OPTIONS */
+  GST_DEBUG ("create options...");
+  if ((res =
+          rtsp_message_init_request (RTSP_OPTIONS, src->location,
+              &request)) < 0)
+    goto create_request_failed;
+
+  /* send OPTIONS */
+  GST_DEBUG ("send options...");
+  if (!gst_rtspsrc_send (src, &request, &response, NULL))
+    goto send_error;
+
+  {
+    gchar *respoptions = NULL;
+    gchar **options;
+    gint i;
+
+    rtsp_message_get_header (&response, RTSP_HDR_ALLOW, &respoptions);
+    if (!respoptions)
+      goto no_options;
+
+    /* parse options */
+    options = g_strsplit (respoptions, ",", 0);
+
+    i = 0;
+    while (options[i]) {
+      gint method = rtsp_find_method (options[i]);
+
+      /* keep bitfield of supported methods */
+      if (method != -1)
+        src->options |= method;
+      i++;
+    }
+    g_strfreev (options);
+
+    /* we need describe and setup */
+    if (!(src->options & RTSP_DESCRIBE))
+      goto no_describe;
+    if (!(src->options & RTSP_SETUP))
+      goto no_setup;
+  }
+
   /* create DESCRIBE */
   GST_DEBUG ("create describe...");
   if ((res =
@@ -570,8 +617,21 @@ gst_rtspsrc_open (GstRTSPSrc * src)
 
   /* send DESCRIBE */
   GST_DEBUG ("send describe...");
-  if (!gst_rtspsrc_send (src, &request, &response))
+  if (!gst_rtspsrc_send (src, &request, &response, NULL))
     goto send_error;
+
+  /* check if reply is SDP */
+  {
+    gchar *respcont = NULL;
+
+    rtsp_message_get_header (&response, RTSP_HDR_CONTENT_TYPE, &respcont);
+    /* could not be set but since the request returned OK, we assume it
+     * was SDP, else check it. */
+    if (respcont) {
+      if (!g_ascii_strcasecmp (respcont, "application/sdp") == 0)
+        goto wrong_content_type;
+    }
+  }
 
   /* parse SDP */
   rtsp_message_get_body (&response, &data, &size);
@@ -622,7 +682,6 @@ gst_rtspsrc_open (GstRTSPSrc * src)
       }
       g_free (setup_url);
 
-
       transports = g_strdup ("");
       if (protocols & GST_RTSP_PROTO_UDP_UNICAST) {
         gchar *new;
@@ -662,15 +721,17 @@ gst_rtspsrc_open (GstRTSPSrc * src)
       rtsp_message_add_header (&request, RTSP_HDR_TRANSPORT, transports);
       g_free (transports);
 
-      if (!gst_rtspsrc_send (src, &request, &response))
+      if (!gst_rtspsrc_send (src, &request, &response, NULL))
         goto send_error;
 
       /* parse response transport */
       {
-        gchar *resptrans;
+        gchar *resptrans = NULL;
         RTSPTransport transport = { 0 };
 
         rtsp_message_get_header (&response, RTSP_HDR_TRANSPORT, &resptrans);
+        if (!resptrans)
+          goto no_transport;
 
         /* parse transport */
         rtsp_transport_parse (resptrans, &transport);
@@ -723,14 +784,44 @@ send_error:
         ("Could not send message."), (NULL));
     return FALSE;
   }
+no_options:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, WRITE,
+        ("Invalid OPTIONS response."), (NULL));
+    return FALSE;
+  }
+no_describe:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, WRITE,
+        ("Server does not support DESCRIBE."), (NULL));
+    return FALSE;
+  }
+no_setup:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, WRITE,
+        ("Server does not support SETUP."), (NULL));
+    return FALSE;
+  }
+wrong_content_type:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, WRITE,
+        ("Server does not support SDP."), (NULL));
+    return FALSE;
+  }
 setup_rtp_failed:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE, ("Could not setup rtp."), (NULL));
     return FALSE;
   }
+no_transport:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, WRITE,
+        ("Server did not select transport."), (NULL));
+    return FALSE;
+  }
 }
 
-G_GNUC_UNUSED static gboolean
+static gboolean
 gst_rtspsrc_close (GstRTSPSrc * src)
 {
   RTSPMessage request = { 0 };
@@ -746,14 +837,16 @@ gst_rtspsrc_close (GstRTSPSrc * src)
     src->task = NULL;
   }
 
-  /* do TEARDOWN */
-  if ((res =
-          rtsp_message_init_request (RTSP_TEARDOWN, src->location,
-              &request)) < 0)
-    goto create_request_failed;
+  if (src->options & RTSP_PLAY) {
+    /* do TEARDOWN */
+    if ((res =
+            rtsp_message_init_request (RTSP_TEARDOWN, src->location,
+                &request)) < 0)
+      goto create_request_failed;
 
-  if (!gst_rtspsrc_send (src, &request, &response))
-    goto send_error;
+    if (!gst_rtspsrc_send (src, &request, &response, NULL))
+      goto send_error;
+  }
 
   /* close connection */
   GST_DEBUG ("closing connection...");
@@ -788,6 +881,9 @@ gst_rtspsrc_play (GstRTSPSrc * src)
   RTSPMessage response = { 0 };
   RTSPResult res;
 
+  if (!(src->options & RTSP_PLAY))
+    return TRUE;
+
   GST_DEBUG ("PLAY...");
 
   /* do play */
@@ -795,7 +891,7 @@ gst_rtspsrc_play (GstRTSPSrc * src)
           rtsp_message_init_request (RTSP_PLAY, src->location, &request)) < 0)
     goto create_request_failed;
 
-  if (!gst_rtspsrc_send (src, &request, &response))
+  if (!gst_rtspsrc_send (src, &request, &response, NULL))
     goto send_error;
 
   if (src->interleaved) {
@@ -827,13 +923,16 @@ gst_rtspsrc_pause (GstRTSPSrc * src)
   RTSPMessage response = { 0 };
   RTSPResult res;
 
+  if (!(src->options & RTSP_PAUSE))
+    return TRUE;
+
   GST_DEBUG ("PAUSE...");
   /* do pause */
   if ((res =
           rtsp_message_init_request (RTSP_PAUSE, src->location, &request)) < 0)
     goto create_request_failed;
 
-  if (!gst_rtspsrc_send (src, &request, &response))
+  if (!gst_rtspsrc_send (src, &request, &response, NULL))
     goto send_error;
 
   return TRUE;
@@ -868,6 +967,7 @@ gst_rtspsrc_change_state (GstElement * element)
       break;
     case GST_STATE_READY_TO_PAUSED:
       rtspsrc->interleaved = FALSE;
+      rtspsrc->options = 0;
       if (!gst_rtspsrc_open (rtspsrc))
         goto open_failed;
       break;
@@ -891,6 +991,7 @@ gst_rtspsrc_change_state (GstElement * element)
       gst_rtspsrc_pause (rtspsrc);
       break;
     case GST_STATE_PAUSED_TO_READY:
+      gst_rtspsrc_close (rtspsrc);
       break;
     case GST_STATE_READY_TO_NULL:
       break;

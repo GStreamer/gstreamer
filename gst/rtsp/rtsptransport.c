@@ -95,6 +95,8 @@ rtsp_transport_parse (gchar * str, RTSPTransport * transport)
       transport->lower_transport = RTSP_LOWER_TRANS_UDP;
     } else if (g_str_has_prefix (split[i], "RTP/AVP/TCP")) {
       transport->lower_transport = RTSP_LOWER_TRANS_TCP;
+    } else if (g_str_has_prefix (split[i], "RTP/AVP")) {
+      transport->lower_transport = RTSP_LOWER_TRANS_UDP;
     } else if (g_str_has_prefix (split[i], "multicast")) {
       transport->multicast = TRUE;
     } else if (g_str_has_prefix (split[i], "unicast")) {

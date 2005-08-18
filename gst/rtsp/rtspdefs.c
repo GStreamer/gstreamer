@@ -136,7 +136,17 @@ rtsp_init_status (void)
 const gchar *
 rtsp_method_as_text (RTSPMethod method)
 {
-  return rtsp_methods[method];
+  gint i;
+
+  if (method == 0)
+    return NULL;
+
+  i = 0;
+  while ((method & 1) == 0) {
+    i++;
+    method >>= 1;
+  }
+  return rtsp_methods[i];
 }
 
 const gchar *
@@ -176,8 +186,8 @@ rtsp_find_method (gchar * method)
   gint idx;
 
   for (idx = 0; rtsp_methods[idx]; idx++) {
-    if (g_ascii_strcasecmp (rtsp_headers[idx], method) == 0) {
-      return idx;
+    if (g_ascii_strcasecmp (rtsp_methods[idx], method) == 0) {
+      return (1 << idx);
     }
   }
   return -1;

@@ -88,6 +88,8 @@ struct _GstRTSPSrc {
   gboolean	 debug;
 
   GstRTSPProto	 protocols;
+  /* supported options */
+  gint        	 options;
 
   RTSPConnection *connection;
   RTSPMessage	*request;

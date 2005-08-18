@@ -54,17 +54,17 @@ typedef enum {
 } RTSPState;
 
 typedef enum {
-  RTSP_DESCRIBE,
-  RTSP_ANNOUNCE,
-  RTSP_GET_PARAMETER,
-  RTSP_OPTIONS,
-  RTSP_PAUSE,
-  RTSP_PLAY,
-  RTSP_RECORD,
-  RTSP_REDIRECT,
-  RTSP_SETUP,
-  RTSP_SET_PARAMETER,
-  RTSP_TEARDOWN,
+  RTSP_DESCRIBE		= (1 <<  0),
+  RTSP_ANNOUNCE		= (1 <<  1),
+  RTSP_GET_PARAMETER	= (1 <<  2),
+  RTSP_OPTIONS		= (1 <<  3),
+  RTSP_PAUSE		= (1 <<  4),
+  RTSP_PLAY		= (1 <<  5),
+  RTSP_RECORD		= (1 <<  6),
+  RTSP_REDIRECT		= (1 <<  7),
+  RTSP_SETUP		= (1 <<  8),
+  RTSP_SET_PARAMETER	= (1 <<  9),
+  RTSP_TEARDOWN		= (1 << 10),
 } RTSPMethod;
 
 typedef enum {
