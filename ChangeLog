@@ -1,3 +1,9 @@
+2005-08-18  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* check/gst/gstevents.c: (GST_START_TEST), (event_probe),
+	(test_event), (timediff), (gstevents_suite):
+	  Should fix build on 64-bit arch's
+
 2005-08-18  Andy Wingo  <wingo@pobox.com>
 
 	Make sure that when a pipeline goes to PLAYING, that data has

@@ -191,7 +191,7 @@ GTimeVal got_event_time;
 static gboolean
 event_probe (GstPad * pad, GstMiniObject ** data, gpointer user_data)
 {
-  gboolean before_q = (gboolean) user_data;
+  gboolean before_q = (gboolean) GPOINTER_TO_INT (user_data);
 
   fail_unless (GST_IS_EVENT (data));
 
