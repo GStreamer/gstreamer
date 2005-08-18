@@ -1,3 +1,37 @@
+2005-08-18  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* check/Makefile.am:
+	* check/gst/gstevents.c: (GST_START_TEST), (event_probe),
+	(test_event), (timediff), (gstevents_suite), (main):
+	  I wrote a test!
+
+	* docs/design/part-seeking.txt:
+	  Spelling correction
+
+	* docs/gst/tmpl/gstevent.sgml:
+	* docs/gst/tmpl/gstfakesrc.sgml:
+	  Docs updates.
+
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object):
+	  Treat a buffer-without-newsegment the same as a receiving 
+	  a newsegment not in time format, and disable syncing to the clock
+	  with a warning.
+
+	* gst/gstbus.c: (gst_bus_set_sync_handler):
+	  Assert if anyone tries to replace the existing sync_handler for bus, 
+	  as only the owner should be setting it.
+
+	* gst/gstevent.h:
+	  Have a fixed set of custom event enums with events identified by
+	  their structure name (as in 0.8), rather than a free-for-all
+	  allowing collisions between enum values from different plugins.
+
+	* gst/gstpad.c: (gst_pad_class_init):
+	  Docs change.
+	  
+	* gst/gstqueue.c: (gst_queue_handle_sink_event):
+	  Handle out-of-band downstream events from the sending thread.
+
 2005-08-17  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstpipeline.c (gst_pipeline_change_state): Interpret

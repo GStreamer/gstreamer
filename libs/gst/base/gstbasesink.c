@@ -514,8 +514,12 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
   } else {
     if (!basesink->have_discont) {
       GST_ELEMENT_ERROR (basesink, STREAM, STOPPED,
-          ("received buffer without a discont"),
-          ("received buffer without a discont"));
+          ("Received buffer without a new-segment. Cannot sync to clock."),
+          ("Received buffer without a new-segment. Cannot sync to clock."));
+      basesink->have_discont = TRUE;
+      /* this means this sink will not be able to sync to the clock */
+      basesink->discont_start = 0;
+      basesink->discont_stop = 0;
     }
     basesink->preroll_queued++;
     basesink->buffers_queued++;

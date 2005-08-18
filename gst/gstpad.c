@@ -192,7 +192,9 @@ gst_pad_class_init (GstPadClass * klass)
    * @pad: the pad that emitted the signal
    * @mini_obj: new data
    *
-   * Signals that new data is available on the pad. This signal is used internaly.
+   * Signals that new data is available on the pad. This signal is used 
+   * internally for implementing pad probes. 
+   * See gst_pad_add_*_probe functions.
    *
    * Returns: %TRUE to keep the data, %FALSE to drop it
    */

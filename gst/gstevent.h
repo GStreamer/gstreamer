@@ -58,6 +58,12 @@ G_BEGIN_DECLS
  * @GST_EVENT_QOS: a quality message
  * @GST_EVENT_SEEK: a request for a new playback position and rate.
  * @GST_EVENT_NAVIGATION: a navigation event
+ * @GST_EVENT_CUSTOM_UP: Custom upstream event, carrying a custom GstStructure
+ * @GST_EVENT_CUSTOM_DS: Custom in-stream downstream, carrying a custom GstStructure
+ * @GST_EVENT_CUSTOM_DS_OOB: Custom out-of-band downstream event, carrying a custom GstStructure
+ * @GST_EVENT_CUSTOM_BOTH: Custom up or downstream event. In-band when travelling downstream.
+ * @GST_EVENT_CUSTOM_BOTH_OOB: Custom up or downstream out-of-band event.
+ *
  */
 typedef enum {
   GST_EVENT_UNKNOWN		= GST_EVENT_MAKE_TYPE (0, 0),
@@ -75,7 +81,11 @@ typedef enum {
   GST_EVENT_NAVIGATION		= GST_EVENT_MAKE_TYPE (9, GST_EVDIR_US),
 
   /* custom events start here */
-  GST_EVENT_CUSTOM_START	= 32
+  GST_EVENT_CUSTOM_UP		= GST_EVENT_MAKE_TYPE (32, GST_EVDIR_US),
+  GST_EVENT_CUSTOM_DS		= GST_EVENT_MAKE_TYPE (32, GST_EVDIR_DS | GST_EVSER),
+  GST_EVENT_CUSTOM_DS_OOB	= GST_EVENT_MAKE_TYPE (32, GST_EVDIR_DS),
+  GST_EVENT_CUSTOM_BOTH		= GST_EVENT_MAKE_TYPE (32, GST_EVDIR_BOTH | GST_EVSER),
+  GST_EVENT_CUSTOM_BOTH_OOB	= GST_EVENT_MAKE_TYPE (32, GST_EVDIR_BOTH)
 } GstEventType;
 
 #define GST_EVENT_TRACE_NAME	"GstEvent"
@@ -187,10 +197,12 @@ GstEvent*	gst_event_new_tag		(GstTagList *taglist);
 void		gst_event_parse_tag		(GstEvent *event, GstTagList **taglist);
 
 /* filler event */
+/* FIXME: FILLER events need to be fully specified and implemented */
 GstEvent *	gst_event_new_filler		(void);
 
 
 /* QOS events */
+/* FIXME: QOS events need to be fully specified and implemented */
 GstEvent*	gst_event_new_qos		(gdouble proportion, GstClockTimeDiff diff,
 						 GstClockTime timestamp);
 void		gst_event_parse_qos		(GstEvent *event, gdouble *proportion, GstClockTimeDiff *diff,

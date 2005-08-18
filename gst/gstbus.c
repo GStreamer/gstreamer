@@ -380,9 +380,12 @@ gst_bus_peek (GstBus * bus)
  * @func: The handler function to install
  * @data: User data that will be sent to the handler function.
  *
- * Install a synchronous handler on the bus. The function will be called
+ * Sets the synchronous handler on the bus. The function will be called
  * every time a new message is posted on the bus. Note that the function
- * will be called in the same thread context as the posting object.
+ * will be called in the same thread context as the posting object. This
+ * function is usually only called by the creator of the bus. Applications
+ * should handle messages asynchronously using the gst_bus watch and poll
+ * functions.
  */
 void
 gst_bus_set_sync_handler (GstBus * bus, GstBusSyncHandler func, gpointer data)
@@ -390,6 +393,11 @@ gst_bus_set_sync_handler (GstBus * bus, GstBusSyncHandler func, gpointer data)
   g_return_if_fail (GST_IS_BUS (bus));
 
   GST_LOCK (bus);
+
+  /* Assert if the user attempts to replace an existing sync_handler,
+   * other than to clear it */
+  g_assert (func == NULL || bus->sync_handler == NULL);
+
   bus->sync_handler = func;
   bus->sync_handler_data = data;
   GST_UNLOCK (bus);

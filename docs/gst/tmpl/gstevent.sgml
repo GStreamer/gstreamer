@@ -56,7 +56,11 @@ The different major types of events.
 @GST_EVENT_QOS: a quality of service event
 @GST_EVENT_SEEK: a seek event.
 @GST_EVENT_NAVIGATION: 
-@GST_EVENT_CUSTOM_START: 
+@GST_EVENT_CUSTOM_UP: 
+@GST_EVENT_CUSTOM_DS: 
+@GST_EVENT_CUSTOM_DS_OOB: 
+@GST_EVENT_CUSTOM_BOTH: 
+@GST_EVENT_CUSTOM_BOTH_OOB: 
 
 <!-- ##### MACRO GST_EVENT_TRACE_NAME ##### -->
 <para>

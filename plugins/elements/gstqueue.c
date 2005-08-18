@@ -555,9 +555,16 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
       STATUS (queue, "received EOS");
       break;
     default:
-      /* we put the event in the queue, we don't have to act ourselves */
-      GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-          "adding event %p of type %d", event, GST_EVENT_TYPE (event));
+      if (GST_EVENT_IS_SERIALIZED (event)) {
+        /* we put the event in the queue, we don't have to act ourselves */
+        GST_CAT_LOG_OBJECT (queue_dataflow, queue,
+            "adding event %p of type %d", event, GST_EVENT_TYPE (event));
+      } else {
+        gst_event_ref (event);
+        gst_pad_push_event (queue->srcpad, event);
+        gst_event_unref (event);
+        goto done;
+      }
       break;
   }
 

@@ -6,7 +6,7 @@ media between a certain start and stop time, called a segment.
 
 Different kinds of seeking exist:
 
- - immeditate seeking with low latency (FLUSH seek)
+ - immediate seeking with low latency (FLUSH seek)
  - seeking without flush, playback will start from the new
    position after all the queues are emptied with old data.
  - segment seeking with and without FLUSH, this can be used to
