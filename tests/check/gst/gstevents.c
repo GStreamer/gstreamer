@@ -243,16 +243,16 @@ static void test_event
 
   /* Wait up to 5 seconds for the event to appear */
   if (expect_before_q) {
-    for (i = 0; i < 50; i++) {
-      g_usleep (G_USEC_PER_SEC / 10);
+    for (i = 0; i < 500; i++) {
+      g_usleep (G_USEC_PER_SEC / 100);
       if (got_event_before_q != NULL)
         break;
     }
     fail_if (got_event_before_q == NULL);
     fail_unless (GST_EVENT_TYPE (got_event_before_q) == type);
   } else {
-    for (i = 0; i < 50; i++) {
-      g_usleep (G_USEC_PER_SEC / 10);
+    for (i = 0; i < 500; i++) {
+      g_usleep (G_USEC_PER_SEC / 100);
       if (got_event_after_q != NULL)
         break;
     }
@@ -284,11 +284,11 @@ GST_START_TEST (send_custom_events)
   gst_bin_add_many (pipeline, fakesrc, queue, fakesink, NULL);
   fail_unless (gst_element_link_many (fakesrc, queue, fakesink, NULL));
 
-  /* Send 25 buffers per sec */
-  g_object_set (G_OBJECT (fakesrc), "silent", TRUE, "datarate", 25,
+  /* Send 100 buffers per sec */
+  g_object_set (G_OBJECT (fakesrc), "silent", TRUE, "datarate", 100,
       "sizemax", 1, "sizetype", 2, NULL);
   g_object_set (G_OBJECT (queue), "max-size-buffers", 0, "max-size-time",
-      (guint64) 1.1 * GST_SECOND, "max-size-bytes", 0, NULL);
+      (guint64) GST_SECOND, "max-size-bytes", 0, NULL);
   g_object_set (G_OBJECT (fakesink), "silent", TRUE, "sync", TRUE, NULL);
 
   fail_if ((srcpad = gst_element_get_pad (fakesrc, "src")) == NULL);
@@ -303,35 +303,42 @@ GST_START_TEST (send_custom_events)
 
   /* Upstream events */
   test_event (GST_EVENT_CUSTOM_UP, sinkpad, TRUE);
-  fail_unless (timediff (&got_event_time, &sent_event_time) < G_USEC_PER_SEC,
+  fail_unless (timediff (&got_event_time,
+          &sent_event_time) < G_USEC_PER_SEC / 2,
       "GST_EVENT_CUSTOM_UP took to long to reach source");
 
   test_event (GST_EVENT_CUSTOM_BOTH, sinkpad, TRUE);
-  fail_unless (timediff (&got_event_time, &sent_event_time) < G_USEC_PER_SEC,
+  fail_unless (timediff (&got_event_time,
+          &sent_event_time) < G_USEC_PER_SEC / 2,
       "GST_EVENT_CUSTOM_BOTH took to long to reach source");
 
   test_event (GST_EVENT_CUSTOM_BOTH_OOB, sinkpad, TRUE);
-  fail_unless (timediff (&got_event_time, &sent_event_time) < G_USEC_PER_SEC,
+  fail_unless (timediff (&got_event_time,
+          &sent_event_time) < G_USEC_PER_SEC / 2,
       "GST_EVENT_CUSTOM_BOTH_OOB took to long to reach source");
 
   /* Out of band downstream events */
   test_event (GST_EVENT_CUSTOM_DS_OOB, srcpad, FALSE);
-  fail_unless (timediff (&got_event_time, &sent_event_time) < G_USEC_PER_SEC,
+  fail_unless (timediff (&got_event_time,
+          &sent_event_time) < G_USEC_PER_SEC / 2,
       "GST_EVENT_CUSTOM_DS_OOB took to long to reach source");
 
   test_event (GST_EVENT_CUSTOM_BOTH_OOB, srcpad, FALSE);
-  fail_unless (timediff (&got_event_time, &sent_event_time) < G_USEC_PER_SEC,
+  fail_unless (timediff (&got_event_time,
+          &sent_event_time) < G_USEC_PER_SEC / 2,
       "GST_EVENT_CUSTOM_BOTH_OOB took to long to reach source");
 
   /* In-band downstream events are expected to take at least 1 second 
    * to traverse the the queue */
   test_event (GST_EVENT_CUSTOM_DS, srcpad, FALSE);
-  fail_unless (timediff (&got_event_time, &sent_event_time) >= G_USEC_PER_SEC,
+  fail_unless (timediff (&got_event_time,
+          &sent_event_time) >= G_USEC_PER_SEC / 2,
       "GST_EVENT_CUSTOM_DS arrived too quickly for an in-band event: %lld us",
       timediff (&got_event_time, &sent_event_time));
 
   test_event (GST_EVENT_CUSTOM_BOTH, srcpad, FALSE);
-  fail_unless (timediff (&got_event_time, &sent_event_time) >= G_USEC_PER_SEC,
+  fail_unless (timediff (&got_event_time,
+          &sent_event_time) >= G_USEC_PER_SEC / 2,
       "GST_EVENT_CUSTOM_BOTH arrived too quickly for an in-band event: %lld us",
       timediff (&got_event_time, &sent_event_time));
 
