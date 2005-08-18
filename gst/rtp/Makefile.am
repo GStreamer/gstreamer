@@ -4,6 +4,8 @@ libgstrtp_la_SOURCES = gstrtp.c \
 		       gstrtpdec.c \
 		       gstrtpmpadec.c \
 		       gstrtpmpaenc.c \
+		       gstrtpamrdec.c \
+		       gstrtpamrenc.c \
 		       gstrtph263pdec.c \
 		       gstrtph263penc.c 
 
@@ -16,6 +18,8 @@ libgstrtp_la_LIBADD = $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
 
 noinst_HEADERS = gstrtpL16enc.h 	\
 		 gstrtpL16parse.h 	\
+		 gstrtpamrdec.h 	\
+		 gstrtpamrenc.h 	\
 		 gstrtpgsmenc.h 	\
 		 gstrtpgsmparse.h 	\
 		 gstrtpmpadec.h 	\

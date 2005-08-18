@@ -26,7 +26,7 @@
 static GstElementDetails gst_rtp_mpaenc_details = {
   "RTP packet parser",
   "Codec/Parser/Network",
-  "Extracts MPEG audio from RTP packets",
+  "Encode MPEG audio as RTP packets",
   "Wim Taymans <wim@fluendo.com>"
 };
 
