@@ -65,7 +65,7 @@
  * example, we will use them, however.
  */
 
-GstElement *pipeline, *source, *parser, *decoder, *sink;
+GstElement *pipeline, *source, *parser, *decoder, *conv, *scale, *sink;
 
 static void
 new_pad (GstElement *element,
@@ -75,7 +75,7 @@ new_pad (GstElement *element,
   /* We can now link this pad with the audio decoder and
    * add both decoder and audio output to the pipeline. */
   gst_pad_link (pad, gst_element_get_pad (decoder, "sink"));
-  gst_bin_add_many (GST_BIN (pipeline), decoder, sink, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), decoder, conv, scale, sink, NULL);
 
   /* This function synchronizes a bins state on all of its
    * contained children. */
@@ -100,6 +100,8 @@ main (int   argc,
   source = gst_element_factory_make ("filesrc", "file-source");
   parser = gst_element_factory_make ("oggdemux", "ogg-parser");
   decoder = gst_element_factory_make ("vorbisdec", "vorbis-decoder");
+  conv = gst_element_factory_make ("audioconvert", "conv");
+  scale = gst_element_factory_make ("audioscale", "scale");
   sink = gst_element_factory_make ("alsasink", "alsa-output");
 
   /* set filename property on the file source */
@@ -109,7 +111,7 @@ main (int   argc,
    * decoder yet, becuse the parser uses dynamic pads. For that,
    * we set a new-pad signal handler. */
   gst_element_link (source, parser);
-  gst_element_link (decoder, sink);
+  gst_element_link_many (decoder, conv, scale, sink, NULL);
   g_signal_connect (parser, "new-pad", G_CALLBACK (new_pad), NULL);
 
   /* put all elements in a bin - or at least the ones we will use
@@ -121,6 +123,8 @@ main (int   argc,
    * This will decrease the amount of time spent on linking these
    * elements when the Ogg parser emits the new-pad signal. */
   gst_element_set_state (decoder, GST_STATE_READY);
+  gst_element_set_state (conv, GST_STATE_READY);
+  gst_element_set_state (scale, GST_STATE_READY);
   gst_element_set_state (sink, GST_STATE_READY);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 

@@ -1,3 +1,8 @@
+2005-08-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/manual/basics-helloworld.xml:
+	  Fix example for dmix (use audioconvert/audioscale).
+
 2005-08-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gst.c: (gst_init_check_with_popt_table), (init_pre):
