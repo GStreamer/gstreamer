@@ -1,3 +1,46 @@
+2005-08-18  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp-common.h:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpL16enc.h:
+	* gst/rtp/gstrtpdec.c: (gst_rtpdec_get_type),
+	(gst_rtpdec_class_init), (gst_rtpdec_chain_rtp),
+	(gst_rtpdec_chain_rtcp), (gst_rtpdec_change_state),
+	(gst_rtpdec_plugin_init):
+	* gst/rtp/gstrtph263pdec.c: (gst_rtph263pdec_get_type),
+	(gst_rtph263pdec_base_init), (gst_rtph263pdec_class_init),
+	(gst_rtph263pdec_init), (gst_rtph263pdec_chain),
+	(gst_rtph263pdec_set_property), (gst_rtph263pdec_get_property),
+	(gst_rtph263pdec_change_state), (gst_rtph263pdec_plugin_init):
+	* gst/rtp/gstrtph263pdec.h:
+	* gst/rtp/gstrtph263penc.c: (gst_rtph263penc_get_type),
+	(gst_rtph263penc_base_init), (gst_rtph263penc_class_init),
+	(gst_rtph263penc_init), (gst_rtph263penc_flush),
+	(gst_rtph263penc_chain), (gst_rtph263penc_set_property),
+	(gst_rtph263penc_get_property), (gst_rtph263penc_change_state),
+	(gst_rtph263penc_plugin_init):
+	* gst/rtp/gstrtph263penc.h:
+	* gst/rtp/gstrtpmpadec.c: (gst_rtpmpadec_get_type),
+	(gst_rtpmpadec_base_init), (gst_rtpmpadec_class_init),
+	(gst_rtpmpadec_init), (gst_rtpmpadec_chain),
+	(gst_rtpmpadec_set_property), (gst_rtpmpadec_get_property),
+	(gst_rtpmpadec_change_state), (gst_rtpmpadec_plugin_init):
+	* gst/rtp/gstrtpmpadec.h:
+	* gst/rtp/gstrtpmpaenc.c: (gst_rtpmpaenc_get_type),
+	(gst_rtpmpaenc_base_init), (gst_rtpmpaenc_class_init),
+	(gst_rtpmpaenc_init), (gst_rtpmpaenc_flush), (gst_rtpmpaenc_chain),
+	(gst_rtpmpaenc_set_property), (gst_rtpmpaenc_get_property),
+	(gst_rtpmpaenc_change_state), (gst_rtpmpaenc_plugin_init):
+	* gst/rtp/gstrtpmpaenc.h:
+	* gst/rtp/rtp-packet.c:
+	* gst/rtp/rtp-packet.h:
+	Remove old code that is now in gst-libs/gst/rtp/.
+	Added some payload/depayloaders.
+
+	* gst/udp/gstudpsink.c: (gst_udpsink_class_init):
+	Fix port number range.
+
 2005-08-17  Wim Taymans  <wim@fluendo.com>
 
 	* configure.ac:
