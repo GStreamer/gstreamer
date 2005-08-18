@@ -1,5 +1,21 @@
 2005-08-18  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_send), (gst_rtspsrc_open),
+	(gst_rtspsrc_close), (gst_rtspsrc_play), (gst_rtspsrc_pause),
+	(gst_rtspsrc_change_state):
+	* gst/rtsp/gstrtspsrc.h:
+	* gst/rtsp/rtspdefs.c: (rtsp_method_as_text), (rtsp_find_method):
+	* gst/rtsp/rtspdefs.h:
+	* gst/rtsp/rtsptransport.c: (rtsp_transport_parse):
+	Handle RTSP defaults better.
+	Issue OPTIONS request to figure out what we are allowed to do.
+	Make the methods a bitfield so we can easily collect supported 
+	options.
+	Fix rtsp_find_method.
+	Do proper RTSP connection shutdown.
+
+2005-08-18  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/Makefile.am:
 	* gst/rtp/gstrtp-common.h:
 	* gst/rtp/gstrtp.c: (plugin_init):
