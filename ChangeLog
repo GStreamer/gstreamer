@@ -1,5 +1,12 @@
 2005-08-18  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* docs/pwg/advanced-types.xml:
+	  Hack long paragraph into 2 chunks as a workaround for buggy
+	  jadetex version in sid and breezy that loops infinitely and
+	  eats all RAM.
+
+2005-08-18  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* check/gst/gstevents.c: (GST_START_TEST), (event_probe),
 	(test_event), (timediff), (gstevents_suite):
 	  Provide more error margin in clock measurements to allow for 

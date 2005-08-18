@@ -308,8 +308,8 @@ plugin_init (GstPlugin *plugin)
           <!-- ############ type ############# -->
 
           <row>
-            <entry morerows="2">audio/x-raw-float</entry>
-            <entry morerows="2">
+            <entry morerows="3">audio/x-raw-float</entry>
+            <entry morerows="3">
               Unstructured and uncompressed raw floating-point audio data.
             </entry>
             <entry>endianness</entry>
@@ -332,19 +332,23 @@ plugin_init (GstPlugin *plugin)
             </entry>
           </row>
           <row>
-            <entry>buffer-frames</entry>
-            <entry>integer</entry>
-            <entry>Any</entry>
+            <entry morerows="1">buffer-frames</entry>
+            <entry morerows="1">integer</entry>
+            <entry morerows="1">Any</entry>
             <entry>
               The number of frames per buffer. The reason for this property
               is that the element does not need to reuse buffers or use data
               spanned over multiple buffers, so this property - when used
-              rightly - will decrease latency. Note that some people think that
-              this property is very ugly, whereas others think it is vital for
-              the use of &GStreamer; in professional audio applications. The
-              special value zero is reserved and implies that size is variable
-              between buffers.
-            </entry>
+              rightly - will decrease latency.
+	    </entry>
+	  </row>
+          <row>
+	    <entry>
+              Note that some people think that this property is very ugly, 
+	      whereas others think it is vital for the use of &GStreamer; in 
+	      proffessional audio applications. The special value zero is 
+	      reserved and implies that size is variable between buffers.
+	    </entry>
           </row>
 
           <!-- ############ subtitle ############# -->
