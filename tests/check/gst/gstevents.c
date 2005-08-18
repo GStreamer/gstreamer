@@ -327,11 +327,13 @@ GST_START_TEST (send_custom_events)
    * to traverse the the queue */
   test_event (GST_EVENT_CUSTOM_DS, srcpad, FALSE);
   fail_unless (timediff (&got_event_time, &sent_event_time) >= G_USEC_PER_SEC,
-      "GST_EVENT_CUSTOM_BOTH_OOB arrived at sink too quickly for an in-band event");
+      "GST_EVENT_CUSTOM_DS arrived too quickly for an in-band event: %lld us",
+      timediff (&got_event_time, &sent_event_time));
 
   test_event (GST_EVENT_CUSTOM_BOTH, srcpad, FALSE);
   fail_unless (timediff (&got_event_time, &sent_event_time) >= G_USEC_PER_SEC,
-      "GST_EVENT_CUSTOM_BOTH_OOB arrived at sink too quickly for an in-band event");
+      "GST_EVENT_CUSTOM_BOTH arrived too quickly for an in-band event: %lld us",
+      timediff (&got_event_time, &sent_event_time));
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   gst_bin_watch_for_state_change (GST_BIN (pipeline));

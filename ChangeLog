@@ -1,5 +1,12 @@
 2005-08-18  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* check/gst/gstevents.c: (GST_START_TEST), (event_probe),
+	(test_event), (timediff), (gstevents_suite):
+           Fix error message output so I might be able to tell why the
+	   test works here but fails on the build farm.
+
+2005-08-18  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* check/Makefile.am:
 	* check/gst/gstevents.c: (GST_START_TEST), (event_probe),
 	(test_event), (timediff), (gstevents_suite), (main):
