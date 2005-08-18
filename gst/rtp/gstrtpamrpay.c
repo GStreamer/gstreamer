@@ -38,11 +38,15 @@ enum
 };
 
 #define DEFAULT_MTU	1024
+#define DEFAULT_PT	96
+#define DEFAULT_SSRC	0
 
 enum
 {
   PROP_0,
-  PROP_MTU
+  PROP_MTU,
+  PROP_PT,
+  PROP_SSRC
 };
 
 static GstStaticPadTemplate gst_rtpamrenc_sink_template =
@@ -131,6 +135,14 @@ gst_rtpamrenc_class_init (GstRtpAMREncClass * klass)
       g_param_spec_uint ("mtu", "MTU",
           "Maximum size of one packet",
           28, G_MAXUINT, DEFAULT_MTU, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PT,
+      g_param_spec_uint ("pt", "payload type",
+          "The payload type of the packets",
+          0, 0x80, DEFAULT_PT, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SSRC,
+      g_param_spec_uint ("ssrc", "SSRC",
+          "The SSRC of the packets",
+          0, G_MAXUINT, DEFAULT_SSRC, G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_rtpamrenc_change_state;
 }
@@ -150,6 +162,8 @@ gst_rtpamrenc_init (GstRtpAMREnc * rtpamrenc)
   gst_element_add_pad (GST_ELEMENT (rtpamrenc), rtpamrenc->sinkpad);
 
   rtpamrenc->mtu = DEFAULT_MTU;
+  rtpamrenc->pt = DEFAULT_PT;
+  rtpamrenc->ssrc = DEFAULT_SSRC;
 }
 
 static GstFlowReturn
@@ -176,6 +190,8 @@ gst_rtpamrenc_chain (GstPad * pad, GstBuffer * buffer)
   /* FIXME, assert for now */
   g_assert (GST_BUFFER_SIZE (outbuf) < rtpamrenc->mtu);
 
+  gst_rtpbuffer_set_payload_type (outbuf, rtpamrenc->pt);
+  gst_rtpbuffer_set_ssrc (outbuf, rtpamrenc->ssrc);
   gst_rtpbuffer_set_seq (outbuf, rtpamrenc->seqnum++);
   gst_rtpbuffer_set_timestamp (outbuf, timestamp * 8000 / GST_SECOND);
 
@@ -222,6 +238,12 @@ gst_rtpamrenc_set_property (GObject * object, guint prop_id,
     case PROP_MTU:
       rtpamrenc->mtu = g_value_get_uint (value);
       break;
+    case PROP_PT:
+      rtpamrenc->pt = g_value_get_uint (value);
+      break;
+    case PROP_SSRC:
+      rtpamrenc->ssrc = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -239,6 +261,12 @@ gst_rtpamrenc_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case PROP_MTU:
       g_value_set_uint (value, rtpamrenc->mtu);
+      break;
+    case PROP_PT:
+      g_value_set_uint (value, rtpamrenc->pt);
+      break;
+    case PROP_SSRC:
+      g_value_set_uint (value, rtpamrenc->ssrc);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -47,6 +47,8 @@ struct _GstRtpAMREnc
   GstPad *srcpad;
 
   guint16 seqnum;
+  guint   pt;
+  guint   ssrc;
 
   guint mtu;
 };

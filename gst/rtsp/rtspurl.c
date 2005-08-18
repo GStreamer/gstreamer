@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 #include <stdlib.h>
+#include <string.h>
 
 #include "rtspurl.h"
 
@@ -49,7 +50,7 @@ rtsp_url_parse (const gchar * urlstr, RTSPUrl ** url)
     return RTSP_EINVAL;
   }
 
-  slash = g_strrstr (p, "/");
+  slash = strstr (p, "/");
   at = g_strrstr (p, "@");
 
   if (at && slash && at > slash)

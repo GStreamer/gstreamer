@@ -581,7 +581,7 @@ gst_rtspsrc_open (GstRTSPSrc * src)
     gchar **options;
     gint i;
 
-    rtsp_message_get_header (&response, RTSP_HDR_ALLOW, &respoptions);
+    rtsp_message_get_header (&response, RTSP_HDR_PUBLIC, &respoptions);
     if (!respoptions)
       goto no_options;
 
@@ -590,7 +590,13 @@ gst_rtspsrc_open (GstRTSPSrc * src)
 
     i = 0;
     while (options[i]) {
-      gint method = rtsp_find_method (options[i]);
+      gchar *stripped;
+      gint method;
+
+      stripped = g_strdup (options[i]);
+      stripped = g_strstrip (stripped);
+      method = rtsp_find_method (stripped);
+      g_free (stripped);
 
       /* keep bitfield of supported methods */
       if (method != -1)
