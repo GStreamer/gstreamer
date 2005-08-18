@@ -46,7 +46,7 @@ static GstStaticPadTemplate gst_rtpamrdec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/mpeg")
+    GST_STATIC_CAPS ("audio/x-amr-nb")
     );
 
 static GstStaticPadTemplate gst_rtpamrdec_sink_template =
@@ -130,10 +130,17 @@ gst_rtpamrdec_class_init (GstRtpAMRDecClass * klass)
 static void
 gst_rtpamrdec_init (GstRtpAMRDec * rtpamrdec)
 {
+  GstCaps *caps;
+
   rtpamrdec->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_rtpamrdec_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (rtpamrdec), rtpamrdec->srcpad);
+
+  caps = gst_caps_new_simple ("audio/x-amr-nb",
+      "channels", G_TYPE_INT, 1, "rate", G_TYPE_INT, 8000, NULL);
+
+  gst_pad_set_caps (rtpamrdec->srcpad, caps);
 
   rtpamrdec->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
@@ -157,17 +164,14 @@ gst_rtpamrdec_chain (GstPad * pad, GstBuffer * buf)
   {
     gint payload_len;
     guint8 *payload;
-    guint16 frag_offset;
     guint32 timestamp;
 
     payload_len = gst_rtpbuffer_get_payload_len (buf);
     payload = gst_rtpbuffer_get_payload (buf);
 
-    frag_offset = (payload[2] << 8) | payload[3];
-
     /* strip off header */
-    payload_len -= 4;
-    payload += 4;
+    payload_len -= 2;
+    payload += 2;
 
     timestamp = gst_rtpbuffer_get_timestamp (buf);
 
@@ -176,6 +180,8 @@ gst_rtpamrdec_chain (GstPad * pad, GstBuffer * buf)
     //GST_BUFFER_TIMESTAMP (outbuf) = timestamp * GST_SECOND / 90000;
 
     memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
+
+    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (rtpamrdec->srcpad));
 
     GST_DEBUG ("gst_rtpamrdec_chain: pushing buffer of size %d",
         GST_BUFFER_SIZE (outbuf));

@@ -581,9 +581,15 @@ gst_rtspsrc_open (GstRTSPSrc * src)
     gchar **options;
     gint i;
 
-    rtsp_message_get_header (&response, RTSP_HDR_PUBLIC, &respoptions);
-    if (!respoptions)
-      goto no_options;
+    /* Try Allow Header first */
+    rtsp_message_get_header (&response, RTSP_HDR_ALLOW, &respoptions);
+    if (!respoptions) {
+      /* Then maybe Public Header... */
+      rtsp_message_get_header (&response, RTSP_HDR_PUBLIC, &respoptions);
+      if (!respoptions) {
+        goto no_options;
+      }
+    }
 
     /* parse options */
     options = g_strsplit (respoptions, ",", 0);

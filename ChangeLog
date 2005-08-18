@@ -1,5 +1,16 @@
 2005-08-18  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/gstrtpamrdec.c: (gst_rtpamrdec_init),
+	(gst_rtpamrdec_chain):
+	Fix up amr depayloader a bit.
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_send), (gst_rtspsrc_open),
+	(gst_rtspsrc_close), (gst_rtspsrc_play):
+	Look for options result in Public and Allow header fields..
+	spec says Allow but some servers return Public...
+
+2005-08-18  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/gstrtpamrenc.c: (gst_rtpamrenc_class_init),
 	(gst_rtpamrenc_init), (gst_rtpamrenc_chain),
 	(gst_rtpamrenc_set_property), (gst_rtpamrenc_get_property):
