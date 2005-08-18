@@ -51,7 +51,7 @@ static void gst_base_rtp_depayload_init (GstBaseRTPDepayload * filter,
     gpointer g_class);
 
 static void gst_base_rtp_depayload_push (GstBaseRTPDepayload * filter,
-    GstRTPBuffer * rtp_buf);
+    GstBuffer * rtp_buf);
 
 GType
 gst_base_rtp_depayload_get_type (void)
@@ -91,7 +91,7 @@ static GstFlowReturn gst_base_rtp_depayload_chain (GstPad * pad,
 static GstElementStateReturn gst_base_rtp_depayload_change_state (GstElement *
     element);
 static GstFlowReturn gst_base_rtp_depayload_add_to_queue (GstBaseRTPDepayload *
-    filter, GstRTPBuffer * in);
+    filter, GstBuffer * in);
 
 static void gst_base_rtp_depayload_set_gst_timestamp
     (GstBaseRTPDepayload * filter, guint32 timestamp, GstBuffer * buf);
@@ -221,24 +221,21 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
 
   g_return_val_if_fail (filter->clock_rate > 0, GST_FLOW_ERROR);
 
-  // must supply RTPBuffers here
-  g_return_val_if_fail (GST_IS_RTPBUFFER (in), GST_FLOW_ERROR);
-
   GstBaseRTPDepayloadClass *bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
 
   if (filter->process_only) {
     GST_DEBUG ("Pushing directly!");
-    gst_base_rtp_depayload_push (filter, GST_RTPBUFFER (in));
+    gst_base_rtp_depayload_push (filter, in);
   } else {
     if (bclass->add_to_queue)
-      ret = bclass->add_to_queue (filter, GST_RTPBUFFER (in));
+      ret = bclass->add_to_queue (filter, in);
   }
   return ret;
 }
 
 static GstFlowReturn
 gst_base_rtp_depayload_add_to_queue (GstBaseRTPDepayload * filter,
-    GstRTPBuffer * in)
+    GstBuffer * in)
 {
   GQueue *queue = filter->queue;
 
@@ -246,39 +243,55 @@ gst_base_rtp_depayload_add_to_queue (GstBaseRTPDepayload * filter,
   QUEUE_LOCK (filter);
   if (g_queue_is_empty (queue)) {
     g_queue_push_tail (queue, in);
-  } else
+  } else {
+    guint16 seqnum, queueseq;
+    guint32 timestamp;
+
+    seqnum = gst_rtpbuffer_get_seq (in);
+    queueseq = gst_rtpbuffer_get_seq (GST_BUFFER (g_queue_peek_head (queue)));
+
     // not our first packet
-  {
     // let us make sure it is not very late
-    if (in->seqnum < GST_RTPBUFFER (g_queue_peek_head (queue))->seqnum) {
-      // we need to drop this one
-      GST_DEBUG ("Packet arrived to late, dropping");
-      return GST_FLOW_OK;
-    }
+    if (seqnum < queueseq)
+      goto too_late;
+
     // look for right place to insert it
     int i = 0;
 
-    while (in->seqnum < GST_RTPBUFFER (g_queue_peek_nth (queue, i))->seqnum)
+    while (seqnum < queueseq) {
       i++;
+      queueseq =
+          gst_rtpbuffer_get_seq (GST_BUFFER (g_queue_peek_nth (queue, i)));
+    }
+
     // now insert it at that place
     g_queue_push_nth (queue, in, i);
-    GST_DEBUG ("Packet added to queue %d at pos %d timestamp %u sn %d",
-        g_queue_get_length (queue), i, in->timestamp, in->seqnum);
 
+    timestamp = gst_rtpbuffer_get_timestamp (in);
+
+    GST_DEBUG ("Packet added to queue %d at pos %d timestamp %u sn %d",
+        g_queue_get_length (queue), i, timestamp, seqnum);
   }
   QUEUE_UNLOCK (filter);
   return GST_FLOW_OK;
+
+too_late:
+  {
+    QUEUE_UNLOCK (filter);
+    // we need to drop this one
+    GST_DEBUG ("Packet arrived to late, dropping");
+    return GST_FLOW_OK;
+  }
 }
 
 static void
-gst_base_rtp_depayload_push (GstBaseRTPDepayload * filter,
-    GstRTPBuffer * rtp_buf)
+gst_base_rtp_depayload_push (GstBaseRTPDepayload * filter, GstBuffer * rtp_buf)
 {
   GstBaseRTPDepayloadClass *bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
   GstBuffer *out_buf;
 
   // let's send it out to processing
-  out_buf = bclass->process (filter, GST_RTPBUFFER (rtp_buf));
+  out_buf = bclass->process (filter, rtp_buf);
   if (out_buf) {
     // set the caps
     gst_buffer_set_caps (GST_BUFFER (out_buf),
@@ -330,6 +343,8 @@ static void
 gst_base_rtp_depayload_queue_release (GstBaseRTPDepayload * filter)
 {
   GQueue *queue = filter->queue;
+  guint32 headts, tailts;
+  GstBaseRTPDepayloadClass *bclass;
 
   if (g_queue_is_empty (queue))
     return;
@@ -341,18 +356,22 @@ gst_base_rtp_depayload_queue_release (GstBaseRTPDepayload * filter)
   guint maxtsunits = (gfloat) filter->clock_rate * q_size_secs;
 
   //GST_DEBUG("maxtsunit is %u", maxtsunits);
-  //GST_DEBUG("ts %d %d %d", GST_RTPBUFFER(g_queue_peek_head (queue))->timestamp, GST_RTPBUFFER(g_queue_peek_tail (queue))->timestamp);
+  //GST_DEBUG("ts %d %d %d", GST_BUFFER(g_queue_peek_head (queue))->timestamp, GST_BUFFER(g_queue_peek_tail (queue))->timestamp);
   QUEUE_LOCK (filter);
-  while (GST_RTPBUFFER (g_queue_peek_head (queue))->timestamp -
-      GST_RTPBUFFER (g_queue_peek_tail (queue))->timestamp > maxtsunits) {
-    //GST_DEBUG("Poping packet from queue");
-    GstBaseRTPDepayloadClass *bclass =
-        GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
-    if (bclass->process) {
-      GstRTPBuffer *in = g_queue_pop_tail (queue);
+  headts = gst_rtpbuffer_get_timestamp (GST_BUFFER (g_queue_peek_head (queue)));
+  tailts = gst_rtpbuffer_get_timestamp (GST_BUFFER (g_queue_peek_tail (queue)));
 
-      gst_base_rtp_depayload_push (filter, GST_RTPBUFFER (in));
+  bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
+
+  while (headts - tailts > maxtsunits) {
+    //GST_DEBUG("Poping packet from queue");
+    if (bclass->process) {
+      GstBuffer *in = g_queue_pop_tail (queue);
+
+      gst_base_rtp_depayload_push (filter, in);
     }
+    tailts =
+        gst_rtpbuffer_get_timestamp (GST_BUFFER (g_queue_peek_tail (queue)));
   }
   QUEUE_UNLOCK (filter);
 }

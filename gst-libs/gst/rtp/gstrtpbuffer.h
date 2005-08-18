@@ -1,5 +1,9 @@
 /* GStreamer
  * Copyright (C) <2005> Philippe Khalaf <burger@speedy.org>
+ *               <2005> Wim Taymans <wim@fluendo.com>
+ *
+ * gstrtpbuffer.h: various helper functions to manipulate buffers
+ *     with RTP payload.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,46 +28,82 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstRTPBuffer GstRTPBuffer;
-typedef struct _GstRTPBufferClass GstRTPBufferClass;
+#define GST_RTP_VERSION 2
 
-#define GST_TYPE_RTPBUFFER            (gst_rtpbuffer_get_type())
-#define GST_IS_RTPBUFFER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_RTPBUFFER))
-#define GST_IS_RTPBUFFER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_RTPBUFFER))
-#define GST_RTPBUFFER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_RTPBUFFER, GstRTPBufferClass))
-#define GST_RTPBUFFER(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_RTPBUFFER, GstRTPBuffer))
-#define GST_RTPBUFFER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_RTPBUFFER, GstRTPBufferClass))
+typedef enum
+{
+  /* Audio: */
+  GST_RTP_PAYLOAD_PCMU = 0,             /* ITU-T G.711. mu-law audio (RFC 3551) */
+  GST_RTP_PAYLOAD_GSM = 3,
+  GST_RTP_PAYLOAD_PCMA = 8,             /* ITU-T G.711 A-law audio (RFC 3551) */
+  GST_RTP_PAYLOAD_L16_STEREO = 10,
+  GST_RTP_PAYLOAD_L16_MONO = 11,
+  GST_RTP_PAYLOAD_MPA = 14,             /* Audio MPEG 1-3 */
+  GST_RTP_PAYLOAD_G723_63 = 16,         /* Not standard */
+  GST_RTP_PAYLOAD_G723_53 = 17,         /* Not standard */
+  GST_RTP_PAYLOAD_TS48 = 18,            /* Not standard */
+  GST_RTP_PAYLOAD_TS41 = 19,            /* Not standard */
+  GST_RTP_PAYLOAD_G728 = 20,            /* Not standard */
+  GST_RTP_PAYLOAD_G729 = 21,            /* Not standard */
 
-/* buffer for use rtp packets
- *
- * It contains the payload type, timestamp, timestamp increment 
- * and mark of the rtp packet
- */
+  /* Video: */
+  GST_RTP_PAYLOAD_MPV = 32,             /* Video MPEG 1 & 2 */
 
-struct _GstRTPBuffer {
-  GstBuffer buffer;
-
-  guint8 pt;
-  guint16 seqnum;
-  guint32 timestamp;
-  guint32 timestampinc;
-  gboolean mark;
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
-};
-
-struct _GstRTPBufferClass {
-  GstBufferClass  buffer_class;
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
-};
+  /* BOTH */
+  GST_RTP_PAYLOAD_BMPEG = 34            /* Not Standard */
+} GstRTPPayload;
 
 /* creating buffers */
-GType		gst_rtpbuffer_get_type		(void);
+GstBuffer*	gst_rtpbuffer_new		(void);
+void		gst_rtpbuffer_allocate_data	(GstBuffer *buffer, guint payload_len, 
+						 guint8 pad_len, guint8 csrc_count);
 
-GstRTPBuffer*	gst_rtpbuffer_new		(void);
+GstBuffer*	gst_rtpbuffer_new_take_data	(gpointer data, guint len);
+GstBuffer*	gst_rtpbuffer_new_copy_data	(gpointer data, guint len);
+GstBuffer*	gst_rtpbuffer_new_allocate	(guint payload_len, guint8 pad_len, guint8 csrc_count);
+GstBuffer*	gst_rtpbuffer_new_allocate_len	(guint packet_len, guint8 pad_len, guint8 csrc_count);
+
+guint		gst_rtpbuffer_calc_header_len	(guint8 csrc_count);
+guint		gst_rtpbuffer_calc_packet_len	(guint payload_len, guint8 pad_len, guint8 csrc_count);
+guint		gst_rtpbuffer_calc_payload_len	(guint packet_len, guint8 pad_len, guint8 csrc_count);
+
+gboolean 	gst_rtpbuffer_validate_data	(guint8 *data, guint len);
+gboolean 	gst_rtpbuffer_validate		(GstBuffer *buffer);
+
+void 		gst_rtpbuffer_set_packet_len	(GstBuffer *buffer, guint len);
+guint 		gst_rtpbuffer_get_packet_len	(GstBuffer *buffer);
+
+guint8 		gst_rtpbuffer_get_version	(GstBuffer *buffer);
+void 		gst_rtpbuffer_set_version	(GstBuffer *buffer, guint8 version);
+
+gboolean 	gst_rtpbuffer_get_padding	(GstBuffer *buffer);
+void 		gst_rtpbuffer_set_padding	(GstBuffer *buffer, gboolean padding);
+void 		gst_rtpbuffer_pad_to		(GstBuffer *buffer, guint len);
+
+gboolean	gst_rtpbuffer_get_extension	(GstBuffer *buffer);
+void 		gst_rtpbuffer_set_extension	(GstBuffer *buffer, gboolean extension);
+
+guint32 	gst_rtpbuffer_get_ssrc		(GstBuffer *buffer);
+void 		gst_rtpbuffer_set_ssrc		(GstBuffer *buffer, guint32 ssrc);
+
+guint8 		gst_rtpbuffer_get_csrc_count	(GstBuffer *buffer);
+guint32 	gst_rtpbuffer_get_csrc		(GstBuffer *buffer, guint8 idx);
+void	 	gst_rtpbuffer_set_csrc		(GstBuffer *buffer, guint8 idx, guint32 csrc);
+
+gboolean	gst_rtpbuffer_get_marker	(GstBuffer *buffer);
+void 		gst_rtpbuffer_set_marker	(GstBuffer *buffer, gboolean marker);
+
+guint8 		gst_rtpbuffer_get_payload_type	(GstBuffer *buffer);
+void 		gst_rtpbuffer_set_payload_type	(GstBuffer *buffer, guint8 payload_type);
+
+guint16 	gst_rtpbuffer_get_seq		(GstBuffer *buffer);
+void 		gst_rtpbuffer_set_seq		(GstBuffer *buffer, guint16 seq);
+
+guint32 	gst_rtpbuffer_get_timestamp	(GstBuffer *buffer);
+void 		gst_rtpbuffer_set_timestamp	(GstBuffer *buffer, guint32 timestamp);
+
+guint 		gst_rtpbuffer_get_payload_len	(GstBuffer *buffer);
+gpointer 	gst_rtpbuffer_get_payload	(GstBuffer *buffer);
 
 G_END_DECLS
 

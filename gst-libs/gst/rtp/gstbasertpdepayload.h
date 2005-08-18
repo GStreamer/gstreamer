@@ -89,11 +89,11 @@ struct _GstBaseRTPDepayloadClass
 
   // non-pure function, default implementation in base class
   // this does buffering, reordering and dropping
-  GstFlowReturn (*add_to_queue) (GstBaseRTPDepayload *filter, GstRTPBuffer *in);
+  GstFlowReturn (*add_to_queue) (GstBaseRTPDepayload *filter, GstBuffer *in);
 
   // pure virtual function, child must use this to process incoming
   // rtp packets
-  GstBuffer * (*process) (GstBaseRTPDepayload *base, GstRTPBuffer *in);
+  GstBuffer * (*process) (GstBaseRTPDepayload *base, GstBuffer *in);
 
   // non-pure function used to convert from RTP timestamp to GST timestamp
   // this function is used by the child class before gst_pad_pushing

@@ -1,3 +1,35 @@
+2005-08-18  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_chain),
+	(gst_base_rtp_depayload_add_to_queue),
+	(gst_base_rtp_depayload_push),
+	(gst_base_rtp_depayload_queue_release):
+	* gst-libs/gst/rtp/gstbasertpdepayload.h:
+	Fix for RTPBuffer changes.
+
+	* gst-libs/gst/rtp/gstrtpbuffer.c: (gst_rtpbuffer_allocate_data),
+	(gst_rtpbuffer_new_take_data), (gst_rtpbuffer_new_copy_data),
+	(gst_rtpbuffer_new_allocate), (gst_rtpbuffer_new_allocate_len),
+	(gst_rtpbuffer_calc_header_len), (gst_rtpbuffer_calc_packet_len),
+	(gst_rtpbuffer_calc_payload_len), (gst_rtpbuffer_validate_data),
+	(gst_rtpbuffer_validate), (gst_rtpbuffer_set_packet_len),
+	(gst_rtpbuffer_get_packet_len), (gst_rtpbuffer_get_version),
+	(gst_rtpbuffer_set_version), (gst_rtpbuffer_get_padding),
+	(gst_rtpbuffer_set_padding), (gst_rtpbuffer_pad_to),
+	(gst_rtpbuffer_get_extension), (gst_rtpbuffer_set_extension),
+	(gst_rtpbuffer_get_ssrc), (gst_rtpbuffer_set_ssrc),
+	(gst_rtpbuffer_get_csrc_count), (gst_rtpbuffer_get_csrc),
+	(gst_rtpbuffer_set_csrc), (gst_rtpbuffer_get_marker),
+	(gst_rtpbuffer_set_marker), (gst_rtpbuffer_get_payload_type),
+	(gst_rtpbuffer_set_payload_type), (gst_rtpbuffer_get_seq),
+	(gst_rtpbuffer_set_seq), (gst_rtpbuffer_get_timestamp),
+	(gst_rtpbuffer_set_timestamp), (gst_rtpbuffer_get_payload_len),
+	(gst_rtpbuffer_get_payload):
+	* gst-libs/gst/rtp/gstrtpbuffer.h:
+	Don't subclass GstBuffer but add methods and helper functions
+	to construct and manipulate RTP packets in regular GstBuffers.
+
 2005-08-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/sine/gstsinesrc.c: (gst_sinesrc_src_query):
