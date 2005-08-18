@@ -1,10 +1,24 @@
 plugin_LTLIBRARIES = libgstrtp.la
 
-libgstrtp_la_SOURCES = gstrtp.c gstrtpdec.c
+libgstrtp_la_SOURCES = gstrtp.c \
+		       gstrtpdec.c \
+		       gstrtpmpadec.c \
+		       gstrtpmpaenc.c \
+		       gstrtph263pdec.c \
+		       gstrtph263penc.c 
 
-#gstrtpL16enc.c gstrtpL16parse.c gstrtpgsmenc.c gstrtpgsmparse.c rtp-packet.c
+#gstrtpL16enc.c gstrtpL16parse.c gstrtpgsmenc.c gstrtpgsmparse.c 
 
-libgstrtp_la_CFLAGS = $(GST_CFLAGS)
-libgstrtp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstrtp_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
+libgstrtp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 
+libgstrtp_la_LIBADD = $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
+                -lgstrtp-@GST_MAJORMINOR@
 
-noinst_HEADERS = gstrtpL16enc.h gstrtpL16parse.h gstrtpgsmenc.h gstrtpgsmparse.h gstrtp-common.h rtp-packet.h gstrtpdec.h
+noinst_HEADERS = gstrtpL16enc.h 	\
+		 gstrtpL16parse.h 	\
+		 gstrtpgsmenc.h 	\
+		 gstrtpgsmparse.h 	\
+		 gstrtpmpadec.h 	\
+		 gstrtpmpaenc.h 	\
+		 gstrtph263pdec.h 	\
+		 gstrtph263penc.h 	

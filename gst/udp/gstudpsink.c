@@ -129,7 +129,7 @@ gst_udpsink_class_init (GstUDPSink * klass)
           UDP_DEFAULT_HOST, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
       g_param_spec_int ("port", "port", "The port to send the packets to",
-          0, 32768, UDP_DEFAULT_PORT, G_PARAM_READWRITE));
+          0, 65535, UDP_DEFAULT_PORT, G_PARAM_READWRITE));
 }
 
 

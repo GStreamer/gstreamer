@@ -22,11 +22,27 @@
 #endif
 
 #include "gstrtpdec.h"
+#include "gstrtpmpaenc.h"
+#include "gstrtpmpadec.h"
+#include "gstrtph263pdec.h"
+#include "gstrtph263penc.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_rtpdec_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtpmpadec_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtpmpaenc_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtph263penc_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtph263pdec_plugin_init (plugin))
     return FALSE;
 
   return TRUE;

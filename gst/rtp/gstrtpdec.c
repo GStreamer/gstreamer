@@ -20,6 +20,9 @@
 
 #include "gstrtpdec.h"
 
+GST_DEBUG_CATEGORY (rtpdec_debug);
+#define GST_CAT_DEFAULT (rtpdec_debug)
+
 /* elementfactory information */
 static GstElementDetails rtpdec_details = GST_ELEMENT_DETAILS ("RTP Decoder",
     "Codec/Parser/Network",
@@ -137,6 +140,8 @@ gst_rtpdec_class_init (gpointer g_class)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   gstelement_class->change_state = gst_rtpdec_change_state;
+
+  GST_DEBUG_CATEGORY_INIT (rtpdec_debug, "rtpdec", 0, "RTP decoder");
 }
 
 static void
@@ -176,14 +181,16 @@ gst_rtpdec_chain_rtp (GstPad * pad, GstBuffer * buffer)
 
   src = GST_RTPDEC (GST_PAD_PARENT (pad));
 
-  g_print ("got rtp packet\n");
+  GST_DEBUG ("got rtp packet");
   return gst_pad_push (src->src_rtp, buffer);
 }
 
 static GstFlowReturn
 gst_rtpdec_chain_rtcp (GstPad * pad, GstBuffer * buffer)
 {
-  g_print ("got rtcp packet\n");
+  GST_DEBUG ("got rtcp packet");
+
+  gst_buffer_unref (buffer);
   return GST_FLOW_OK;
 }
 

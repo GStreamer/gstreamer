@@ -22,13 +22,8 @@
 #define __GST_RTP_L16_ENC_H__
 
 #include <gst/gst.h>
-#include "rtp-packet.h"
-#include "gstrtp-common.h"
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+G_BEGIN_DECLS
 
 /* Definition of structure storing data for this element. */
 typedef struct _GstRtpL16Enc GstRtpL16Enc;
@@ -72,9 +67,6 @@ struct _GstRtpL16EncClass
 
 gboolean gst_rtpL16enc_plugin_init (GstPlugin * plugin);
 
-#ifdef __cplusplus
-}
-#endif				/* __cplusplus */
-
+G_END_DECLS
 
 #endif				/* __GST_RTP_L16_ENC_H__ */
