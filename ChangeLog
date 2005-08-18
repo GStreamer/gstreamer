@@ -1,3 +1,9 @@
+2005-08-18  Andy Wingo  <wingo@pobox.com>
+
+	* examples/debug-slider.py: New file.
+
+	* examples/Makefile.am (examples_DATA): Dist it, foolios.
+
 2005-08-17  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gst.defs (watch_for_state_change): Added wrapper from CVS.
