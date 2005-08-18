@@ -1,5 +1,26 @@
 2005-08-18  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpamrdec.c: (gst_rtpamrdec_get_type),
+	(gst_rtpamrdec_base_init), (gst_rtpamrdec_class_init),
+	(gst_rtpamrdec_init), (gst_rtpamrdec_chain),
+	(gst_rtpamrdec_set_property), (gst_rtpamrdec_get_property),
+	(gst_rtpamrdec_change_state), (gst_rtpamrdec_plugin_init):
+	* gst/rtp/gstrtpamrdec.h:
+	* gst/rtp/gstrtpamrenc.c: (gst_rtpamrenc_get_type),
+	(gst_rtpamrenc_base_init), (gst_rtpamrenc_class_init),
+	(gst_rtpamrenc_init), (gst_rtpamrenc_chain),
+	(gst_rtpamrenc_set_property), (gst_rtpamrenc_get_property),
+	(gst_rtpamrenc_change_state), (gst_rtpamrenc_plugin_init):
+	* gst/rtp/gstrtpamrenc.h:
+	* gst/rtp/gstrtpmpaenc.c: (gst_rtpmpaenc_class_init),
+	(gst_rtpmpaenc_flush), (gst_rtpmpaenc_chain):
+	Added very simplistic amr payloader. depayloader does not
+	work yet.
+
+2005-08-18  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_send), (gst_rtspsrc_open),
 	(gst_rtspsrc_close), (gst_rtspsrc_play), (gst_rtspsrc_pause),
 	(gst_rtspsrc_change_state):
