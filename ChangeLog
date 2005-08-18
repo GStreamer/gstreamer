@@ -1,5 +1,21 @@
 2005-08-18  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/gstrtpamrenc.c: (gst_rtpamrenc_class_init),
+	(gst_rtpamrenc_init), (gst_rtpamrenc_chain),
+	(gst_rtpamrenc_set_property), (gst_rtpamrenc_get_property):
+	* gst/rtp/gstrtpamrenc.h:
+	Added payload_type and ssrc properties to the payloader.
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_send), (gst_rtspsrc_open),
+	(gst_rtspsrc_close), (gst_rtspsrc_play):
+	Options need to be stripped and are in the Public header field.
+
+	* gst/rtsp/rtspurl.c: (rtsp_url_parse):
+	Fix url / parsing...
+
+
+2005-08-18  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/Makefile.am:
 	* gst/rtp/gstrtp.c: (plugin_init):
 	* gst/rtp/gstrtpamrdec.c: (gst_rtpamrdec_get_type),
