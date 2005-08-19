@@ -19,6 +19,79 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gst
+ * @short_description: Media library supporting arbitrary formats and filter graphs.
+ * @see_also: Check out both <ulink url="http://www.cse.ogi.edu/sysl/">OGI's
+ *   pipeline</ulink> and Microsoft's DirectShow for some background.
+ *
+ * GStreamer is a framework for constructing graphs of various filters
+ * (termed elements here) that will handle streaming media.  Any discreet
+ * (packetizable) media type is supported, with provisions for automatically
+ * determining source type.  Formatting/framing information is provided with
+ * a powerful negotiation framework.  Plugins are heavily used to provide for
+ * all elements, allowing one to construct plugins outside of the GST
+ * library, even released binary-only if license require (please don't).
+ * 
+ * GStreamer borrows heavily from both the <ulink
+ * url="http://www.cse.ogi.edu/sysl/">OGI media pipeline</ulink> and
+ * Microsoft's DirectShow, hopefully taking the best of both and leaving the
+ * cruft behind.  Its interface is still very fluid and thus can be changed 
+ * to increase the sanity/noise ratio.
+ *
+ * The <application>GStreamer</application> library should be initialized with
+ * gst_init() before it can be used. You should pass pointers to the main argc
+ * and argv variables so that GStreamer can process its own command line
+ * options, as shown in the following example.
+ *
+ * <example>
+ * <title>Initializing the gstreamer library</title>
+ * <programlisting>
+ * int 
+ * main (int argc, char *argv[])
+ * {
+ *   // initialize the GStreamer library
+ *   gst_init (&amp;argc, &amp;argv);
+ *   ...
+ * }
+ * </programlisting>
+ * </example>
+ * 
+ * It's allowed to pass two NULL pointers to gst_init() in case you don't want to
+ * pass the command line args to GStreamer.
+ *
+ * You can also use a popt table to initialize your own parameters as shown in
+ * the next code fragment:
+ * <example>
+ * <title>Initializing own parameters when initializing gstreamer</title>
+ * <programlisting>
+ * static gboolean stats = FALSE;
+ * ...
+ *  
+ * int 
+ * main (int argc, char *argv[])
+ * {
+ *   struct poptOption options[] = {
+ *     { "stats",  's',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &amp;stats,   0,
+ *         "Show pad stats", NULL},
+ *       POPT_TABLEEND
+ *     };
+ *   
+ *   // initialize the GStreamer library
+ *   gst_init_with_popt_table (&amp;argc, &amp;argv, options);
+ *   
+ *   ...
+ * }
+ * </programlisting>
+ * </example>
+ *
+ * Use gst_version() to query the library version at runtime or use the GST_VERSION_* macros
+ * to find the version at compile time.
+ *
+ * The functions gst_main() and gst_main_quit() enter and exit the main loop.
+ * GStreamer doesn't currently require you to use a mainloop but can intergrate
+ * with it without problems.
+ */
 
 #include <stdlib.h>
 #include <stdio.h>

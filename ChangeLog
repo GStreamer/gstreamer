@@ -1,3 +1,9 @@
+2005-08-19  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/tmpl/gst.sgml:
+	* gst/gst.c:
+          eliminate another tmpl file, fix spelling in the long-description
+
 2005-08-18  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* check/gst/gstevents.c: (GST_START_TEST), (event_probe),
