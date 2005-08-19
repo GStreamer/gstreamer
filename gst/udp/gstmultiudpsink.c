@@ -66,8 +66,6 @@ static void gst_multiudpsink_class_init (GstMultiUDPSink * klass);
 static void gst_multiudpsink_init (GstMultiUDPSink * udpsink);
 static void gst_multiudpsink_finalize (GObject * object);
 
-static void gst_multiudpsink_get_times (GstBaseSink * sink, GstBuffer * buffer,
-    GstClockTime * start, GstClockTime * end);
 static GstFlowReturn gst_multiudpsink_render (GstBaseSink * sink,
     GstBuffer * buffer);
 static GstElementStateReturn gst_multiudpsink_change_state (GstElement *
@@ -169,7 +167,6 @@ gst_multiudpsink_class_init (GstMultiUDPSink * klass)
 
   gstelement_class->change_state = gst_multiudpsink_change_state;
 
-  gstbasesink_class->get_times = gst_multiudpsink_get_times;
   gstbasesink_class->render = gst_multiudpsink_render;
 
   GST_DEBUG_CATEGORY_INIT (multiudpsink_debug, "multiudpsink", 0, "UDP sink");
@@ -192,14 +189,6 @@ gst_multiudpsink_finalize (GObject * object)
   g_mutex_free (sink->client_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static void
-gst_multiudpsink_get_times (GstBaseSink * sink, GstBuffer * buffer,
-    GstClockTime * start, GstClockTime * end)
-{
-  *start = GST_BUFFER_TIMESTAMP (buffer);
-  *end = *start + GST_BUFFER_DURATION (buffer);
 }
 
 static GstFlowReturn
