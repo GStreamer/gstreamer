@@ -1,5 +1,10 @@
 2005-08-19  Wim Taymans  <wim@fluendo.com>
 
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_class_init):
+	Remove get_time code that is both wrong and unneeded.
+
+2005-08-19  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/gstrtph263penc.c: (gst_rtph263penc_class_init),
 	(gst_rtph263penc_flush), (gst_rtph263penc_chain),
 	(gst_rtph263penc_set_property), (gst_rtph263penc_get_property):
