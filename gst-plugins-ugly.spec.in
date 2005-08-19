@@ -142,6 +142,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstsilence.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoflip.so
 %{_libdir}/gstreamer-%{majorminor}/libgstqtdemux.so
+%{_libdir}/gstreamer-%{majorminor}//libgstmpegaudioparse.so
 
 # gstreamer-plugins with external dependencies but in the main package
 # @USE_ARTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstarts.so
