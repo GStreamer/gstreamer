@@ -37,8 +37,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-amr-nb, "
-        "rate = (int) 8000, " "channels = (int) 1")
+    GST_STATIC_CAPS ("audio/AMR, " "rate = (int) 8000, " "channels = (int) 1")
     );
 
 static void gst_amrnbenc_base_init (GstAmrnbEncClass * klass);
@@ -174,7 +173,7 @@ gst_amrnbenc_setcaps (GstPad * pad, GstCaps * caps)
   }
 
   /* create reverse caps */
-  copy = gst_caps_new_simple ("audio/x-amr-nb",
+  copy = gst_caps_new_simple ("audio/AMR",
       "channels", G_TYPE_INT, amrnbenc->channels,
       "rate", G_TYPE_INT, amrnbenc->rate, NULL);
 
