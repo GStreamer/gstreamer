@@ -1,5 +1,14 @@
 2005-08-19  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/gstrtph263penc.c: (gst_rtph263penc_class_init),
+	(gst_rtph263penc_flush), (gst_rtph263penc_chain),
+	(gst_rtph263penc_set_property), (gst_rtph263penc_get_property):
+	* gst/rtp/gstrtph263penc.h:
+	Added configurable pt and ssrc, to be merged in the caps or
+	a base class...
+
+2005-08-19  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/gstrtph263pdec.c: (gst_rtph263pdec_init),
 	(gst_rtph263pdec_chain):
 	* gst/rtp/gstrtph263penc.c: (gst_rtph263penc_class_init),
