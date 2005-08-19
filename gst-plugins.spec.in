@@ -141,6 +141,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstautodetect.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsilence.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoflip.so
+%{_libdir}/gstreamer-%{majorminor}/libgstqtdemux.so
 
 # gstreamer-plugins with external dependencies but in the main package
 # @USE_ARTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstarts.so
@@ -311,7 +312,7 @@ This package contains additional video plugins for GStreamer, including
 %files video
 %defattr(-, root, root, -)
 @USE_AALIB_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstaasink.so
-@USE_LIBDV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdvdec.so
+@USE_LIBDV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdv.so
 @USE_DV1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgst1394.so
 @USE_LIBCACA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcacasink.so
 # @USE_DIRAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdirac.so
