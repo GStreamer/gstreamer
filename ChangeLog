@@ -1,3 +1,10 @@
+2005-08-19  Andy Wingo  <wingo@pobox.com>
+
+	* gst/interfaces.override (_wrap_gst_tuner_list_channels) 
+	(_wrap_gst_tuner_list_norms, _wrap_gst_mixer_list_tracks) 
+	(_wrap_gst_color_balance_list_channels): Catch programming errors
+	without segfaults, as glib would do.
+
 2005-08-18  Andy Wingo  <wingo@pobox.com>
 
 	* examples/debug-slider.py: New file.

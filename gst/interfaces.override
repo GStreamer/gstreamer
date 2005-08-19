@@ -58,6 +58,8 @@ _wrap_gst_tuner_list_channels(PyGObject *self)
     const GList *l, *list;
     PyObject *py_list;
 	
+    g_return_val_if_fail (GST_IS_TUNER (self->obj), PyList_New(0));
+
     list = gst_tuner_list_channels(GST_TUNER(self->obj));
     
     py_list = PyList_New(0);
@@ -78,6 +80,8 @@ _wrap_gst_tuner_list_norms(PyGObject *self)
     const GList *l, *list;
     PyObject *py_list;
 	
+    g_return_val_if_fail (GST_IS_TUNER (self->obj), PyList_New(0));
+
     list = gst_tuner_list_norms(GST_TUNER(self->obj));
     
     py_list = PyList_New(0);
@@ -98,6 +102,8 @@ _wrap_gst_mixer_list_tracks(PyGObject *self)
     const GList *l, *list;
     PyObject *py_list;
 	
+    g_return_val_if_fail (GST_IS_MIXER (self->obj), PyList_New(0));
+
     list = gst_mixer_list_tracks(GST_MIXER(self->obj));
     
     py_list = PyList_New(0);
@@ -117,6 +123,8 @@ _wrap_gst_color_balance_list_channels(PyGObject *self)
 {
     const GList *l, *list;
     PyObject *py_list;
+
+    g_return_val_if_fail (GST_IS_COLOR_BALANCE (self->obj), PyList_New(0));
 
     list = gst_color_balance_list_channels(GST_COLOR_BALANCE(self->obj));
 
