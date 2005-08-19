@@ -453,4 +453,5 @@ DIST_SUBDIRS=\
 	faad \
 	mpeg2dec \
 	jpeg \
-	libpng
+	libpng \
+	lame
