@@ -303,6 +303,7 @@ GST_PLUGINS_ALL="\
 		udp     \
 		videobox \
 		wavparse \
+		mpegaudioparse \
                 "
 
 dnl see if we can build C++ plug-ins
