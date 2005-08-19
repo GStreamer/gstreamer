@@ -56,11 +56,9 @@ plugin_init (GstPlugin * plugin)
 {
   int err;
 
-  /*
-     if (!gst_element_register (plugin, "alsamixer", GST_RANK_NONE,
-     GST_TYPE_ALSA_MIXER))
-     return FALSE;
-   */
+  if (!gst_element_register (plugin, "alsamixer", GST_RANK_NONE,
+          GST_TYPE_ALSA_MIXER))
+    return FALSE;
   if (!gst_element_register (plugin, "alsasrc", GST_RANK_PRIMARY,
           GST_TYPE_ALSA_SRC))
     return FALSE;

@@ -16,13 +16,17 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+
 #ifndef __GST_ALSA_MIXER_TRACK_H__
 #define __GST_ALSA_MIXER_TRACK_H__
+
 
 #include "gstalsa.h"
 #include <gst/interfaces/mixertrack.h>
 
+
 G_BEGIN_DECLS
+
 
 #define GST_ALSA_MIXER_TRACK_TYPE		(gst_alsa_mixer_track_get_type ())
 #define GST_ALSA_MIXER_TRACK(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALSA_MIXER_TRACK,GstAlsaMixerTrack))
@@ -37,6 +41,7 @@ typedef struct _GstAlsaMixerTrackClass GstAlsaMixerTrackClass;
 #define GST_ALSA_MIXER_TRACK_CAPTURE  (1<<0)
 #define GST_ALSA_MIXER_TRACK_PLAYBACK (1<<1)
 
+#define GST_ALSA_MAX_CHANNELS	32 /* tracks can have up to 32 channels */
 struct _GstAlsaMixerTrack {
   GstMixerTrack		 parent;
   snd_mixer_elem_t	*element; /* the ALSA mixer element for this track */
@@ -57,6 +62,8 @@ GstMixerTrack *	gst_alsa_mixer_track_new	(snd_mixer_elem_t *	element,
 						 gint			flags,
 						 gint			alsa_flags);
 
+
 G_END_DECLS
+
 
 #endif /* __GST_ALSA_MIXER_TRACK_H__ */

@@ -1,3 +1,15 @@
+2005-08-19  Andy Wingo  <wingo@pobox.com>
+
+	* ext/alsa/gstalsamixertrack.h:
+	* ext/alsa/gstalsamixertrack.c:
+	* ext/alsa/gstalsamixeroptions.h:
+	* ext/alsa/gstalsamixeroptions.c:
+	* ext/alsa/gstalsamixer.h:
+	* ext/alsa/gstalsamixer.c: Port to 0.9.
+
+	* ext/alsa/Makefile.am: Build mixer, mixeroptions, mixertracks.
+	Remove gstalsa.c and alsaclock. No more cruft here.
+	
 2005-08-18  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:

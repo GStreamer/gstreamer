@@ -16,13 +16,17 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+
 #ifndef __GST_ALSA_MIXER_OPTIONS_H__
 #define __GST_ALSA_MIXER_OPTIONS_H__
+
 
 #include "gstalsa.h"
 #include <gst/interfaces/mixeroptions.h>
 
+
 G_BEGIN_DECLS
+
 
 #define GST_ALSA_MIXER_OPTIONS_TYPE		(gst_alsa_mixer_options_get_type ())
 #define GST_ALSA_MIXER_OPTIONS(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALSA_MIXER_OPTIONS,GstAlsaMixerOptions))
@@ -31,8 +35,10 @@ G_BEGIN_DECLS
 #define GST_IS_ALSA_MIXER_OPTIONS_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALSA_MIXER_OPTIONS))
 #define GST_TYPE_ALSA_MIXER_OPTIONS		(gst_alsa_mixer_options_get_type())
 
+
 typedef struct _GstAlsaMixerOptions GstAlsaMixerOptions;
 typedef struct _GstAlsaMixerOptionsClass GstAlsaMixerOptionsClass;
+
 
 struct _GstAlsaMixerOptions {
   GstMixerOptions	 parent;
@@ -44,10 +50,13 @@ struct _GstAlsaMixerOptionsClass {
   GstMixerOptionsClass parent;
 };
 
+
 GType		gst_alsa_mixer_options_get_type	(void);
 GstMixerOptions *gst_alsa_mixer_options_new	(snd_mixer_elem_t *	element,
 						 gint			track_num);
 
+
 G_END_DECLS
+
 
 #endif /* __GST_ALSA_MIXER_OPTIONS_H__ */
