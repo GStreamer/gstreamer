@@ -1,5 +1,13 @@
 2005-08-19  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/gstrtph263pdec.c: (gst_rtph263pdec_init),
+	(gst_rtph263pdec_chain):
+	* gst/rtp/gstrtph263penc.c: (gst_rtph263penc_class_init),
+	(gst_rtph263penc_flush), (gst_rtph263penc_chain):
+	Some cleanups in the h263p (de)payloaders.
+
+2005-08-19  Wim Taymans  <wim@fluendo.com>
+
 	* ext/amrnb/amrnbdec.c:
 	* ext/amrnb/amrnbenc.c: (gst_amrnbenc_setcaps):
 	* ext/amrnb/amrnbparse.c:
