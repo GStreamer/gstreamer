@@ -185,10 +185,8 @@ gst_rtph263penc_flush (GstRtpH263PEnc * rtph263penc)
     payload_len = header_len + towrite;
 
     outbuf = gst_rtpbuffer_new_allocate (payload_len, 0, 0);
-    gst_rtpbuffer_set_padding (outbuf, 0);
     gst_rtpbuffer_set_timestamp (outbuf,
         rtph263penc->first_ts * 90000 / GST_SECOND);
-    gst_rtpbuffer_set_payload_type (outbuf, 0);
     /* last fragment gets the marker bit set */
     gst_rtpbuffer_set_marker (outbuf, avail > towrite ? 0 : 1);
 
@@ -197,6 +195,12 @@ gst_rtph263penc_flush (GstRtpH263PEnc * rtph263penc)
     data = (guint8 *) gst_adapter_peek (rtph263penc->adapter, towrite);
     memcpy (&payload[header_len], data, towrite);
 
+    /*  0                   1
+     *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     * |   RR    |P|V|   PLEN    |PEBIT|
+     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     */
     payload[0] = fragmented ? 0x00 : 0x04;
     payload[1] = 0;
 

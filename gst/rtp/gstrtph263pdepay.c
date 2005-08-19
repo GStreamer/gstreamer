@@ -175,8 +175,8 @@ gst_rtph263pdec_chain (GstPad * pad, GstBuffer * buf)
     header_len = 2;
 
     M = gst_rtpbuffer_get_marker (buf);
-    P = payload[0] & 0x04 ? TRUE : FALSE;
-    V = payload[0] & 0x02 ? TRUE : FALSE;
+    P = (payload[0] & 0x04) == 0x04;
+    V = (payload[0] & 0x02) == 0x02;
     PLEN = ((payload[0] & 0x1) << 5) | (payload[1] >> 3);
 
     if (V) {
