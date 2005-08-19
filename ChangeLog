@@ -1,5 +1,8 @@
 2005-08-19  Andy Wingo  <wingo@pobox.com>
 
+	* gst/interfaces.defs (MixerTrack): MixerTrack is a GObject. How
+	did this ever work before?
+
 	* gst/interfaces.override (_wrap_gst_tuner_list_channels) 
 	(_wrap_gst_tuner_list_norms, _wrap_gst_mixer_list_tracks) 
 	(_wrap_gst_color_balance_list_channels): Catch programming errors

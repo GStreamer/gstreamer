@@ -540,7 +540,7 @@
 
 (define-object MixerTrack
    (in-module "Gst")
-   (parent "GstObject")
+   (parent "GObject")
    (c-name "GstMixerTrack")
    (gtype-id "GST_TYPE_MIXER_TRACK")
    (fields
