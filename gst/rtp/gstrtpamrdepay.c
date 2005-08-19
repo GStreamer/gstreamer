@@ -42,25 +42,43 @@ enum
   ARG_FREQUENCY
 };
 
-static GstStaticPadTemplate gst_rtpamrdec_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-amr-nb")
-    );
-
+/* input is an RTP packet 
+ *
+ * params see RFC 3267, section 8.1
+ */
 static GstStaticPadTemplate gst_rtpamrdec_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-rtp")
+    GST_STATIC_CAPS ("application/x-rtp, "
+        "octet-align = (boolean) TRUE, "
+        "crc = (boolean) FALSE, "
+        "robust-sorting = (boolean) FALSE, "
+        "interleaving = (boolean) FALSE, "
+        "channels = (int) 1, " "rate = (int) 8000"
+        /* following options are not needed for a decoder 
+         *
+         "mode-set = (int) [ 0, 7 ], "
+         "mode-change-period = (int) [ 1, MAX ], "
+         "mode-change-neighbor = (boolean) { TRUE, FALSE }, "
+         "maxptime = (int) [ 20, MAX ], "
+         "ptime = (int) [ 20, MAX ]"
+         */
+    )
     );
 
+static GstStaticPadTemplate gst_rtpamrdec_src_template =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/AMR, " "channels = (int) 1," "rate = (int) 8000")
+    );
 
 static void gst_rtpamrdec_class_init (GstRtpAMRDecClass * klass);
 static void gst_rtpamrdec_base_init (GstRtpAMRDecClass * klass);
 static void gst_rtpamrdec_init (GstRtpAMRDec * rtpamrdec);
 
+static gboolean gst_rtpamrdec_sink_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_rtpamrdec_chain (GstPad * pad, GstBuffer * buffer);
 
 static void gst_rtpamrdec_set_property (GObject * object, guint prop_id,
@@ -130,23 +148,102 @@ gst_rtpamrdec_class_init (GstRtpAMRDecClass * klass)
 static void
 gst_rtpamrdec_init (GstRtpAMRDec * rtpamrdec)
 {
-  GstCaps *caps;
+  GstCaps *srccaps;
 
   rtpamrdec->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_rtpamrdec_src_template), "src");
-  gst_element_add_pad (GST_ELEMENT (rtpamrdec), rtpamrdec->srcpad);
 
-  caps = gst_caps_new_simple ("audio/x-amr-nb",
+  /* FIXME */
+  srccaps = gst_caps_new_simple ("audio/AMR",
       "channels", G_TYPE_INT, 1, "rate", G_TYPE_INT, 8000, NULL);
+  gst_pad_set_caps (rtpamrdec->srcpad, srccaps);
+  gst_caps_unref (srccaps);
 
-  gst_pad_set_caps (rtpamrdec->srcpad, caps);
+  gst_element_add_pad (GST_ELEMENT (rtpamrdec), rtpamrdec->srcpad);
 
   rtpamrdec->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_rtpamrdec_sink_template), "sink");
+  gst_pad_set_setcaps_function (rtpamrdec->sinkpad, gst_rtpamrdec_sink_setcaps);
   gst_pad_set_chain_function (rtpamrdec->sinkpad, gst_rtpamrdec_chain);
   gst_element_add_pad (GST_ELEMENT (rtpamrdec), rtpamrdec->sinkpad);
+}
+
+static gboolean
+gst_rtpamrdec_sink_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstStructure *structure;
+  GstCaps *srccaps;
+  GstRtpAMRDec *rtpamrdec;
+
+  rtpamrdec = GST_RTP_AMR_DEC (GST_OBJECT_PARENT (pad));
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (!gst_structure_get_boolean (structure, "octet-align",
+          &rtpamrdec->octet_align))
+    rtpamrdec->octet_align = FALSE;
+
+  /* FIXME, force octect align for now until all elements negotiate 
+   * correctly*/
+  rtpamrdec->octet_align = TRUE;
+
+  if (!gst_structure_get_boolean (structure, "crc", &rtpamrdec->crc))
+    rtpamrdec->crc = FALSE;
+
+  if (rtpamrdec->crc) {
+    /* crc mode implies octet aligned mode */
+    rtpamrdec->octet_align = TRUE;
+  }
+
+  if (!gst_structure_get_boolean (structure, "robust-sorting",
+          &rtpamrdec->robust_sorting))
+    rtpamrdec->robust_sorting = FALSE;
+
+  if (rtpamrdec->robust_sorting) {
+    /* robust_sorting mode implies octet aligned mode */
+    rtpamrdec->octet_align = TRUE;
+  }
+
+  if (!gst_structure_get_boolean (structure, "interleaving",
+          &rtpamrdec->interleaving))
+    rtpamrdec->interleaving = FALSE;
+
+  if (rtpamrdec->interleaving) {
+    /* interleaving mode implies octet aligned mode */
+    rtpamrdec->octet_align = TRUE;
+  }
+
+  if (!gst_structure_get_int (structure, "channels", &rtpamrdec->channels))
+    rtpamrdec->channels = 1;
+  if (!gst_structure_get_int (structure, "rate", &rtpamrdec->rate))
+    rtpamrdec->rate = 8000;
+
+  /* we require 1 channel, 8000 Hz, octet aligned, no CRC, 
+   * no robust sorting, no interleaving for now */
+  if (rtpamrdec->channels != 1)
+    return FALSE;
+  if (rtpamrdec->rate != 8000)
+    return FALSE;
+  if (rtpamrdec->octet_align != TRUE)
+    return FALSE;
+  if (rtpamrdec->crc != FALSE)
+    return FALSE;
+  if (rtpamrdec->robust_sorting != FALSE)
+    return FALSE;
+  if (rtpamrdec->interleaving != FALSE)
+    return FALSE;
+
+  srccaps = gst_caps_new_simple ("audio/AMR",
+      "channels", G_TYPE_INT, rtpamrdec->channels,
+      "rate", G_TYPE_INT, rtpamrdec->rate, NULL);
+  gst_pad_set_caps (rtpamrdec->srcpad, srccaps);
+  gst_caps_unref (srccaps);
+
+  rtpamrdec->negotiated = TRUE;
+
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -158,26 +255,58 @@ gst_rtpamrdec_chain (GstPad * pad, GstBuffer * buf)
 
   rtpamrdec = GST_RTP_AMR_DEC (GST_OBJECT_PARENT (pad));
 
+  if (!rtpamrdec->negotiated)
+    goto not_negotiated;
+
   if (!gst_rtpbuffer_validate (buf))
     goto bad_packet;
 
+  /* when we get here, 1 channel, 8000 Hz, octet aligned, no CRC, 
+   * no robust sorting, no interleaving data is to be parsed */
   {
     gint payload_len;
     guint8 *payload;
     guint32 timestamp;
+    guint8 CMR, F, FT, Q;
 
     payload_len = gst_rtpbuffer_get_payload_len (buf);
+
+    /* need at least 2 bytes for the header */
+    if (payload_len < 2)
+      goto bad_packet;
+
     payload = gst_rtpbuffer_get_payload (buf);
 
-    /* strip off header */
-    payload_len -= 2;
-    payload += 2;
+    /* parse header 
+     *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 
+     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+..
+     * | CMR=6 |R|R|R|R|0|FT#1=5 |Q|P|P|
+     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+..
+     */
+    CMR = (payload[0] & 0xf0) >> 4;
+    F = (payload[1] & 0x80) >> 7;
+    /* we only support 1 packet per RTP packet for now */
+    if (F != 0)
+      goto one_packet_only;
+
+    FT = (payload[1] & 0x78) >> 3;
+    Q = (payload[1] & 0x04) >> 2;
+
+    /* skip packet */
+    if (FT > 9 && FT < 15) {
+      ret = GST_FLOW_OK;
+      goto skip;
+    }
+
+    /* strip header now, leave FT in the data for the decoder */
+    payload_len -= 1;
+    payload += 1;
 
     timestamp = gst_rtpbuffer_get_timestamp (buf);
 
     outbuf = gst_buffer_new_and_alloc (payload_len);
 
-    //GST_BUFFER_TIMESTAMP (outbuf) = timestamp * GST_SECOND / 90000;
+    GST_BUFFER_TIMESTAMP (outbuf) = timestamp * GST_SECOND / 8000;
 
     memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
 
@@ -185,17 +314,29 @@ gst_rtpamrdec_chain (GstPad * pad, GstBuffer * buf)
 
     GST_DEBUG ("gst_rtpamrdec_chain: pushing buffer of size %d",
         GST_BUFFER_SIZE (outbuf));
-
-    gst_buffer_unref (buf);
-
     ret = gst_pad_push (rtpamrdec->srcpad, outbuf);
+
+  skip:
+    gst_buffer_unref (buf);
   }
 
   return ret;
 
+not_negotiated:
+  {
+    GST_DEBUG ("not_negotiated");
+    gst_buffer_unref (buf);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 bad_packet:
   {
     GST_DEBUG ("Packet did not validate");
+    gst_buffer_unref (buf);
+    return GST_FLOW_ERROR;
+  }
+one_packet_only:
+  {
+    GST_DEBUG ("One packet per RTP packet only");
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
@@ -243,6 +384,11 @@ gst_rtpamrdec_change_state (GstElement * element)
 
   switch (transition) {
     case GST_STATE_NULL_TO_READY:
+      break;
+    case GST_STATE_READY_TO_PAUSED:
+      /* FIXME, don't require negotiation until all elements
+       * do */
+      rtpamrdec->negotiated = TRUE;
       break;
     default:
       break;

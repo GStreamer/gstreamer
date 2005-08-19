@@ -53,14 +53,24 @@ static GstStaticPadTemplate gst_rtpamrenc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-amr-nb, channels=(int)1, rate=(int)8000")
+    GST_STATIC_CAPS ("audio/AMR, channels=(int)1, rate=(int)8000")
     );
 
 static GstStaticPadTemplate gst_rtpamrenc_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-rtp")
+    GST_STATIC_CAPS ("application/x-rtp, "
+        "octet-align = (boolean) TRUE, "
+        "crc = (boolean) FALSE, "
+        "robust-sorting = (boolean) FALSE, "
+        "interleaving = (boolean) FALSE, "
+        "channels = (int) 1, "
+        "rate = (int) 8000, "
+        "mode-set = (int) [ 0, 7 ], "
+        "mode-change-period = (int) [ 1, MAX ], "
+        "mode-change-neighbor = (boolean) { TRUE, FALSE }, "
+        "maxptime = (int) [ 20, MAX ], " "ptime = (int) [ 20, MAX ]")
     );
 
 
@@ -150,9 +160,21 @@ gst_rtpamrenc_class_init (GstRtpAMREncClass * klass)
 static void
 gst_rtpamrenc_init (GstRtpAMREnc * rtpamrenc)
 {
+  GstCaps *caps;
+
   rtpamrenc->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_rtpamrenc_src_template), "src");
+
+  caps = gst_caps_new_simple ("application/x-rtp",
+      "octet-align", G_TYPE_BOOLEAN, TRUE,
+      "crc", G_TYPE_BOOLEAN, FALSE,
+      "robust-sorting", G_TYPE_BOOLEAN, FALSE,
+      "interleaving", G_TYPE_BOOLEAN, FALSE,
+      "channels", G_TYPE_INT, 1, "rate", G_TYPE_INT, 8000, NULL);
+
+  gst_pad_set_caps (rtpamrenc->srcpad, caps);
+  gst_caps_unref (caps);
   gst_element_add_pad (GST_ELEMENT (rtpamrenc), rtpamrenc->srcpad);
 
   rtpamrenc->sinkpad =
@@ -173,7 +195,7 @@ gst_rtpamrenc_chain (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn ret;
   guint size, payload_len;
   GstBuffer *outbuf;
-  guint8 *payload;
+  guint8 *payload, *data;
   GstClockTime timestamp;
 
   rtpamrenc = GST_RTP_AMR_ENC (gst_pad_get_parent (pad));
@@ -184,7 +206,10 @@ gst_rtpamrenc_chain (GstPad * pad, GstBuffer * buffer)
   /* FIXME, only one AMR frame per RTP packet for now, 
    * octet aligned, no interleaving, single channel, no CRC,
    * no robust-sorting. */
-  payload_len = size + 2;
+
+  /* we need one extra byte for the CMR, the ToC is in the input
+   * data */
+  payload_len = size + 1;
 
   outbuf = gst_rtpbuffer_new_allocate (payload_len, 0, 0);
   /* FIXME, assert for now */
@@ -207,17 +232,23 @@ gst_rtpamrenc_chain (GstPad * pad, GstBuffer * buffer)
    *  +-+-+-+-+-+-+-+-+
    */
   payload[0] = 0xF0;            /* CMR, no specific mode requested */
+
+  data = GST_BUFFER_DATA (buffer);
+
+  /* copy data in payload */
+  memcpy (&payload[1], data, size);
+
   /*   0 1 2 3 4 5 6 7
    *  +-+-+-+-+-+-+-+-+
    *  |F|  FT   |Q|P|P|
    *  +-+-+-+-+-+-+-+-+
    */
-  payload[1] = 0x04;            /* ToC, no damage (Q=1) */
-
-  /* copy data in payload */
-  memcpy (&payload[2], GST_BUFFER_DATA (buffer), size);
+  /* clear F flag */
+  payload[1] = payload[1] & 0x7f;
 
   gst_buffer_unref (buffer);
+
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (rtpamrenc->srcpad));
 
   ret = gst_pad_push (rtpamrenc->srcpad, outbuf);
 

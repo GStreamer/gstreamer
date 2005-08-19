@@ -652,6 +652,9 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   sdp_message_init (&sdp);
   sdp_message_parse_buffer (data, size, &sdp);
 
+  if (src->debug)
+    sdp_message_dump (&sdp);
+
   /* we allow all configured protocols */
   protocols = src->protocols;
   /* setup streams */

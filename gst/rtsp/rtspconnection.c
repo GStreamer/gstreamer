@@ -339,9 +339,7 @@ parse_line (gchar * buffer, RTSPMessage * msg)
   bptr++;
 
   field = rtsp_find_header_field (key);
-  if (field == -1) {
-    g_warning ("ignoring unknown header field '%s'\n", key);
-  } else {
+  if (field != -1) {
     while (g_ascii_isspace (*bptr))
       bptr++;
     rtsp_message_add_header (msg, field, bptr);

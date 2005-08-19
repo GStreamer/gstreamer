@@ -75,6 +75,7 @@ enum
 #define UDP_DEFAULT_PORT		4951
 #define UDP_DEFAULT_MULTICAST_GROUP	"0.0.0.0"
 #define UDP_DEFAULT_URI			"udp://0.0.0.0:4951"
+#define UDP_DEFAULT_CAPS		NULL
 
 enum
 {
@@ -82,6 +83,7 @@ enum
   PROP_PORT,
   PROP_MULTICAST_GROUP,
   PROP_URI,
+  PROP_CAPS,
   /* FILL ME */
 };
 
@@ -180,6 +182,9 @@ gst_udpsrc_class_init (GstUDPSrc * klass)
       g_param_spec_string ("uri", "URI",
           "URI in the form of udp://hostname:port", UDP_DEFAULT_URI,
           G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_CAPS,
+      g_param_spec_boxed ("caps", "Caps",
+          "The caps of the source pad", GST_TYPE_CAPS, G_PARAM_READWRITE));
 
   gstbasesrc_class->start = gst_udpsrc_start;
   gstbasesrc_class->stop = gst_udpsrc_stop;
@@ -297,6 +302,8 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
   gst_netaddress_set_ip4_address (&outbuf->from, tmpaddr.sin_addr.s_addr,
       tmpaddr.sin_port);
 
+  gst_buffer_set_caps (GST_BUFFER (outbuf), udpsrc->caps);
+
   GST_LOG_OBJECT (udpsrc, "read %d bytes", readsize);
 
   *buf = GST_BUFFER (outbuf);
@@ -386,6 +393,23 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_URI:
       gst_udpsrc_set_uri (udpsrc, g_value_get_string (value));
       break;
+    case PROP_CAPS:
+    {
+      const GstCaps *new_caps_val = gst_value_get_caps (value);
+      GstCaps *new_caps;
+      GstCaps *old_caps;
+
+      if (new_caps_val == NULL) {
+        new_caps = gst_caps_new_any ();
+      } else {
+        new_caps = gst_caps_copy (new_caps_val);
+      }
+
+      old_caps = udpsrc->caps;
+      udpsrc->caps = new_caps;
+      gst_caps_unref (old_caps);
+      break;
+    }
     default:
       break;
   }
@@ -408,6 +432,9 @@ gst_udpsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_URI:
       g_value_set_string (value, udpsrc->uri);
+      break;
+    case PROP_CAPS:
+      gst_value_set_caps (value, udpsrc->caps);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

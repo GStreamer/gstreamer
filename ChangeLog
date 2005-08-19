@@ -1,3 +1,30 @@
+2005-08-19  Wim Taymans  <wim@fluendo.com>
+
+	* ext/amrnb/amrnbdec.c:
+	* ext/amrnb/amrnbenc.c: (gst_amrnbenc_setcaps):
+	* ext/amrnb/amrnbparse.c:
+	Update caps with audio/AMR.
+	
+	* gst/rtp/gstrtpamrdec.c: (gst_rtpamrdec_init),
+	(gst_rtpamrdec_sink_setcaps), (gst_rtpamrdec_chain),
+	(gst_rtpamrdec_change_state):
+	* gst/rtp/gstrtpamrdec.h:
+	* gst/rtp/gstrtpamrenc.c: (gst_rtpamrenc_class_init),
+	(gst_rtpamrenc_init), (gst_rtpamrenc_chain):
+	Dont set FT headers twice, it was already in the encoded
+	bitstream.
+	
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_send), (gst_rtspsrc_open),
+	(gst_rtspsrc_close), (gst_rtspsrc_play):
+	* gst/rtsp/rtspconnection.c: (parse_line):
+	Cleanups
+	
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_class_init),
+	(gst_udpsrc_create), (gst_udpsrc_set_property),
+	(gst_udpsrc_get_property):
+	* gst/udp/gstudpsrc.h:
+	Added caps property, we need this soon to type the buffers.
+
 2005-08-18  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/gstrtpamrdec.c: (gst_rtpamrdec_init),

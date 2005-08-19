@@ -65,6 +65,8 @@ struct _GstUDPSrc {
 
   struct sockaddr_in myaddr;
   struct ip_mreq multi_addr;
+
+  GstCaps *caps;
 };
 
 struct _GstUDPSrcClass {

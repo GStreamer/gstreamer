@@ -45,7 +45,19 @@ struct _GstRtpAMRDec
   GstPad *sinkpad;
   GstPad *srcpad;
 
-  guint frequency;
+  gboolean negotiated;
+
+  gboolean octet_align;
+  guint8   mode_set;
+  gint     mode_change_period;
+  gboolean mode_change_neighbor;
+  gint     maxptime;
+  gboolean crc;
+  gboolean robust_sorting;
+  gboolean interleaving;
+  gint     ptime;
+  gint     channels;
+  gint     rate;
 };
 
 struct _GstRtpAMRDecClass
