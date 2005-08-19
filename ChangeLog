@@ -1,3 +1,9 @@
+2005-08-19  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_setcaps),
+	(gst_ffmpegenc_chain_video), (gst_ffmpegenc_change_state):
+	Fix return values from the setcaps function.
+
 2005-08-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame),

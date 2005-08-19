@@ -397,7 +397,7 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
       avcodec_close (ffmpegenc->context);
     GST_DEBUG ("ffenc_%s: Failed to open FFMPEG codec",
         oclass->in_plugin->name);
-    return GST_PAD_LINK_REFUSED;
+    return FALSE;
   }
 
   /* is the colourspace correct? */
@@ -405,7 +405,7 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
     avcodec_close (ffmpegenc->context);
     GST_DEBUG ("ffenc_%s: AV wants different colourspace (%d given, %d wanted)",
         oclass->in_plugin->name, pix_fmt, ffmpegenc->context->pix_fmt);
-    return GST_PAD_LINK_REFUSED;
+    return FALSE;
   }
 
   /* some codecs support more than one format, first auto-choose one */
@@ -420,7 +420,7 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
   if (!other_caps) {
     avcodec_close (ffmpegenc->context);
     GST_DEBUG ("Unsupported codec - no caps found");
-    return GST_PAD_LINK_REFUSED;
+    return FALSE;
   }
 
   icaps = gst_caps_intersect (allowed_caps, other_caps);
@@ -428,7 +428,7 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
   gst_caps_unref (other_caps);
   if (gst_caps_is_empty (icaps)) {
     gst_caps_unref (icaps);
-    return GST_PAD_LINK_REFUSED;
+    return FALSE;
   }
 
   if (gst_caps_get_size (icaps) > 1) {
@@ -444,14 +444,14 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
   if (!gst_pad_set_caps (ffmpegenc->srcpad, icaps)) {
     avcodec_close (ffmpegenc->context);
     gst_caps_unref (icaps);
-    return GST_PAD_LINK_REFUSED;
+    return FALSE;
   }
   gst_caps_unref (icaps);
 
   /* success! */
   ffmpegenc->opened = TRUE;
 
-  return GST_PAD_LINK_OK;
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -462,8 +462,6 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
   GstFFMpegEncClass *oclass =
       (GstFFMpegEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
   gint ret_size = 0, frame_size;
-
-  /* FIXME: events (discont (flush!) and eos (close down) etc.) */
 
   GST_DEBUG_OBJECT (ffmpegenc,
       "Received buffer of time %" GST_TIME_FORMAT,
@@ -498,6 +496,8 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
   if (!ffmpegenc->context->coded_frame->key_frame)
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ffmpegenc->srcpad));
+
+  gst_buffer_unref (inbuf);
 
   return gst_pad_push (ffmpegenc->srcpad, outbuf);
 }
@@ -660,6 +660,14 @@ gst_ffmpegenc_change_state (GstElement * element)
 {
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) element;
   gint transition = GST_STATE_TRANSITION (element);
+  GstElementStateReturn result;
+
+  switch (transition) {
+    default:
+      break;
+  }
+
+  result = GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
   switch (transition) {
     case GST_STATE_PAUSED_TO_READY:
@@ -672,12 +680,10 @@ gst_ffmpegenc_change_state (GstElement * element)
         ffmpegenc->cache = NULL;
       }
       break;
+    default:
+      break;
   }
-
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
+  return result;
 }
 
 gboolean
