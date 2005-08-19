@@ -37,12 +37,16 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_MTU	1024
+#define DEFAULT_MTU     1024
+#define DEFAULT_PT      96
+#define DEFAULT_SSRC    0
 
 enum
 {
   PROP_0,
-  PROP_MTU
+  PROP_MTU,
+  PROP_PT,
+  PROP_SSRC
 };
 
 static GstStaticPadTemplate gst_rtph263penc_sink_template =
@@ -132,6 +136,14 @@ gst_rtph263penc_class_init (GstRtpH263PEncClass * klass)
       g_param_spec_uint ("mtu", "MTU",
           "Maximum size of one packet",
           28, G_MAXUINT, DEFAULT_MTU, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PT,
+      g_param_spec_uint ("pt", "payload type",
+          "The payload type of the packets",
+          0, 0x80, DEFAULT_PT, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SSRC,
+      g_param_spec_uint ("ssrc", "SSRC",
+          "The SSRC of the packets",
+          0, G_MAXUINT, DEFAULT_SSRC, G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_rtph263penc_change_state;
 }
@@ -187,6 +199,9 @@ gst_rtph263penc_flush (GstRtpH263PEnc * rtph263penc)
     outbuf = gst_rtpbuffer_new_allocate (payload_len, 0, 0);
     gst_rtpbuffer_set_timestamp (outbuf,
         rtph263penc->first_ts * 90000 / GST_SECOND);
+    gst_rtpbuffer_set_payload_type (outbuf, rtph263penc->pt);
+    gst_rtpbuffer_set_ssrc (outbuf, rtph263penc->ssrc);
+    gst_rtpbuffer_set_seq (outbuf, rtph263penc->seqnum++);
     /* last fragment gets the marker bit set */
     gst_rtpbuffer_set_marker (outbuf, avail > towrite ? 0 : 1);
 
@@ -247,6 +262,12 @@ gst_rtph263penc_set_property (GObject * object, guint prop_id,
     case PROP_MTU:
       rtph263penc->mtu = g_value_get_uint (value);
       break;
+    case PROP_PT:
+      rtph263penc->pt = g_value_get_uint (value);
+      break;
+    case PROP_SSRC:
+      rtph263penc->ssrc = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -264,6 +285,12 @@ gst_rtph263penc_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case PROP_MTU:
       g_value_set_uint (value, rtph263penc->mtu);
+      break;
+    case PROP_PT:
+      g_value_set_uint (value, rtph263penc->pt);
+      break;
+    case PROP_SSRC:
+      g_value_set_uint (value, rtph263penc->ssrc);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

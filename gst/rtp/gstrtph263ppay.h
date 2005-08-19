@@ -49,6 +49,10 @@ struct _GstRtpH263PEnc
   GstAdapter *adapter;
   GstClockTime first_ts;
 
+  guint16 seqnum;
+  guint   pt;
+  guint   ssrc;
+
   guint mtu;
 };
 
