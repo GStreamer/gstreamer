@@ -37,7 +37,7 @@ GST_START_TEST (test_signedness)
 }
 
 GST_END_TEST
-#define TIME_UNIT GST_SECOND
+#define TIME_UNIT (GST_SECOND / 5)
     static void
 gst_clock_debug (GstClock * clock)
 {
@@ -97,14 +97,14 @@ GST_START_TEST (test_single_shot)
   result = gst_clock_id_wait_async (id, ok_callback, NULL);
   gst_clock_id_unref (id);
   fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
-  g_usleep (2 * G_USEC_PER_SEC);
+  g_usleep (TIME_UNIT / (2 * 1000));
 
   id = gst_clock_new_single_shot_id (clock, base + 5 * TIME_UNIT);
   g_message ("waiting one second async, with cancel on id %p\n", id);
   result = gst_clock_id_wait_async (id, error_callback, NULL);
   fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
-  g_usleep (G_USEC_PER_SEC / 2);
-  g_message ("cancel id %p after 0.5 seconds\n", id);
+  g_usleep (TIME_UNIT / (2 * 1000));
+  g_message ("cancel id %p after half a time unit\n", id);
   gst_clock_id_unschedule (id);
   gst_clock_id_unref (id);
   g_message ("canceled id %p\n", id);
@@ -119,13 +119,12 @@ GST_START_TEST (test_single_shot)
   g_message ("waiting id %p\n", id2);
   result = gst_clock_id_wait_async (id2, error_callback, NULL);
   fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
-  g_usleep (G_USEC_PER_SEC / 2);
-  g_message ("cancel id %p after 0.5 seconds\n", id2);
+  g_usleep (TIME_UNIT / (2 * 1000));
+  g_message ("cancel id %p after half a time unit\n", id2);
   gst_clock_id_unschedule (id2);
   g_message ("canceled id %p\n", id2);
   gst_clock_id_unref (id2);
-
-  g_usleep (2 * G_USEC_PER_SEC);
+  g_usleep (TIME_UNIT / (2 * 1000));
 }
 
 GST_END_TEST
@@ -142,11 +141,11 @@ GST_START_TEST (test_periodic_shot)
   gst_clock_debug (clock);
   base = gst_clock_get_time (clock);
 
-  /* signal every half a second */
+  /* signal every half a time unit */
   id = gst_clock_new_periodic_id (clock, base + TIME_UNIT, TIME_UNIT / 2);
   fail_unless (id != NULL, "Could not create periodic id");
 
-  g_message ("waiting one second\n");
+  g_message ("waiting one time unit\n");
   result = gst_clock_id_wait (id, NULL);
   gst_clock_debug (clock);
   fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
@@ -159,12 +158,12 @@ GST_START_TEST (test_periodic_shot)
   g_message ("waiting for the next async %p\n", id);
   result = gst_clock_id_wait_async (id, ok_callback, NULL);
   fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
-  g_usleep (2 * G_USEC_PER_SEC);
+  g_usleep (TIME_UNIT / (2 * 1000));
 
   g_message ("waiting some more for the next async %p\n", id);
   result = gst_clock_id_wait_async (id, ok_callback, NULL);
   fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
-  g_usleep (2 * G_USEC_PER_SEC);
+  g_usleep (TIME_UNIT / (2 * 1000));
 
   id2 = gst_clock_new_periodic_id (clock, base + TIME_UNIT, TIME_UNIT / 2);
   fail_unless (id2 != NULL, "Could not create second periodic id");
@@ -172,7 +171,7 @@ GST_START_TEST (test_periodic_shot)
   g_message ("waiting some more for another async %p\n", id2);
   result = gst_clock_id_wait_async (id2, ok_callback, NULL);
   fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
-  g_usleep (2 * G_USEC_PER_SEC);
+  g_usleep (TIME_UNIT / (2 * 1000));
 
   g_message ("unschedule %p\n", id);
   gst_clock_id_unschedule (id);
@@ -184,16 +183,16 @@ GST_START_TEST (test_periodic_shot)
   result = gst_clock_id_wait (id, NULL);
   fail_unless (result == GST_CLOCK_UNSCHEDULED,
       "Waiting did not return UNSCHEDULED");
-  g_usleep (2 * G_USEC_PER_SEC);
+  g_usleep (TIME_UNIT / (2 * 1000));
+
+  /* clean up */
+  gst_clock_id_unref (id);
 }
 
 GST_END_TEST Suite * gst_systemclock_suite (void)
 {
   Suite *s = suite_create ("GstSystemClock");
   TCase *tc_chain = tcase_create ("waiting");
-
-  /* increase timeout */
-  tcase_set_timeout (tc_chain, 20);
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_signedness);

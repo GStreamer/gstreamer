@@ -171,6 +171,14 @@ GST_START_TEST (test_merge)
   check_tags (merge, FTAG, FIXED1, NULL);
   NEW_LISTS_FIXED (GST_TAG_MERGE_KEEP_ALL);
   check_tags (merge, FTAG, FIXED1, NULL);
+
+  /* clean up */
+  if (list)
+    gst_tag_list_free (list);
+  if (list2)
+    gst_tag_list_free (list2);
+  if (merge)
+    gst_tag_list_free (merge);
 }
 
 GST_END_TEST Suite *

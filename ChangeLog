@@ -1,5 +1,15 @@
 2005-08-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* check/Makefile.am:
+	* check/gst/gstiterator.c: (GST_START_TEST):
+	* check/gst/gstsystemclock.c: (GST_START_TEST),
+	(gst_systemclock_suite):
+	* check/gst/gsttag.c: (GST_START_TEST), (gst_tag_suite):
+	* gst/gstclock.c:
+	  valgrind more tests
+
+2005-08-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* check/elements/.cvsignore:
 	* check/elements/gstfakesrc.c:
 	  rename to name of element

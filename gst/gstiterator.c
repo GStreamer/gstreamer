@@ -55,7 +55,7 @@ gst_iterator_init (GstIterator * it,
  *
  * For each item retrieved, the @item function is called with the lock
  * held. The @free function is called when the iterator is freed.
- * 
+ *
  * Returns: the new #GstIterator.
  *
  * MT safe.
@@ -130,8 +130,8 @@ gst_list_iterator_free (GstListIterator * it)
  * @item: function to call for each item
  * @free: function to call when the iterator is freed
  *
- * Create a new iterator designed for iterating @list. 
- * 
+ * Create a new iterator designed for iterating @list.
+ *
  * Returns: the new #GstIterator for @list.
  *
  * MT safe.
@@ -263,8 +263,8 @@ gst_iterator_resync (GstIterator * it)
  * gst_iterator_free:
  * @it: The #GstIterator to free
  *
- * Free the iterator. 
- * 
+ * Free the iterator.
+ *
  * MT safe.
  */
 void

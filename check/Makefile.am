@@ -75,14 +75,8 @@ gst_libs_controller_LDADD = $(GST_OBJ_LIBS) \
 	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_MAJORMINOR@.la
 
 # valgrind testing
-
-# these just need fixing, period
+# these just need valgrind fixing, period
 TESTS_TO_FIX =					\
-	gst/gstghostpad				\
-	gst/gstiterator				\
-	gst/gstmessage				\
-	gst/gstsystemclock			\
-	gst/gsttag				\
 	pipelines/cleanup			\
 	pipelines/simple_launch_lines
 

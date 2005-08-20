@@ -52,25 +52,28 @@ GST_START_TEST (test_manual_iteration)
 
   iter = gst_iterator_new_list (m, &cookie, &l, NULL, NULL, NULL);
 
-  g_return_if_fail (iter != NULL);
+  fail_unless (iter != NULL);
 
   while (1) {
     res = gst_iterator_next (iter, &item);
     if (i < NUM_ELEMENTS) {
-      g_return_if_fail (res == GST_ITERATOR_OK);
-      g_return_if_fail (GPOINTER_TO_INT (item) == i);
+      fail_unless (res == GST_ITERATOR_OK);
+      fail_unless (GPOINTER_TO_INT (item) == i);
       i++;
       continue;
     } else {
-      g_return_if_fail (res == GST_ITERATOR_DONE);
+      fail_unless (res == GST_ITERATOR_DONE);
       break;
     }
   }
 
+  /* clean up */
   gst_iterator_free (iter);
+  g_mutex_free (m);
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 GST_START_TEST (test_resync)
 {
   GList *l;
@@ -87,35 +90,40 @@ GST_START_TEST (test_resync)
 
   iter = gst_iterator_new_list (m, &cookie, &l, NULL, NULL, NULL);
 
-  g_return_if_fail (iter != NULL);
+  fail_unless (iter != NULL);
 
   while (1) {
     res = gst_iterator_next (iter, &item);
     if (i < NUM_ELEMENTS / 2) {
-      g_return_if_fail (res == GST_ITERATOR_OK);
-      g_return_if_fail (GPOINTER_TO_INT (item) == i);
+      fail_unless (res == GST_ITERATOR_OK);
+      fail_unless (GPOINTER_TO_INT (item) == i);
       i++;
       continue;
     } else if (!hacked_list) {
       /* here's where we test resync */
-      g_return_if_fail (res == GST_ITERATOR_OK);
+      fail_unless (res == GST_ITERATOR_OK);
       l = g_list_prepend (l, GINT_TO_POINTER (-1));
       cookie++;
       hacked_list = TRUE;
       continue;
     } else {
-      g_return_if_fail (res == GST_ITERATOR_RESYNC);
+      fail_unless (res == GST_ITERATOR_RESYNC);
       gst_iterator_resync (iter);
       res = gst_iterator_next (iter, &item);
-      g_return_if_fail (res == GST_ITERATOR_OK);
-      g_return_if_fail (GPOINTER_TO_INT (item) == -1);
+      fail_unless (res == GST_ITERATOR_OK);
+      fail_unless (GPOINTER_TO_INT (item) == -1);
       break;
     }
   }
 
+  /* clean up */
   gst_iterator_free (iter);
+  g_mutex_free (m);
 }
-GST_END_TEST static gboolean
+
+GST_END_TEST;
+
+static gboolean
 add_fold_func (gpointer item, GValue * ret, gpointer user_data)
 {
   g_value_set_int (ret, g_value_get_int (ret) + GPOINTER_TO_INT (item));
@@ -135,7 +143,7 @@ GST_START_TEST (test_fold)
   l = make_list_of_ints (NUM_ELEMENTS);
   m = g_mutex_new ();
   iter = gst_iterator_new_list (m, &cookie, &l, NULL, NULL, NULL);
-  g_return_if_fail (iter != NULL);
+  fail_unless (iter != NULL);
 
   expected = 0;
   for (i = 0; i < NUM_ELEMENTS; i++)
@@ -146,10 +154,17 @@ GST_START_TEST (test_fold)
 
   res = gst_iterator_fold (iter, add_fold_func, &ret, NULL);
 
-  g_return_if_fail (res == GST_ITERATOR_DONE);
-  g_return_if_fail (g_value_get_int (&ret) == expected);
+  fail_unless (res == GST_ITERATOR_DONE);
+  fail_unless (g_value_get_int (&ret) == expected);
+
+  /* clean up */
+  gst_iterator_free (iter);
+  g_mutex_free (m);
 }
-GST_END_TEST Suite *
+
+GST_END_TEST;
+
+Suite *
 gstiterator_suite (void)
 {
   Suite *s = suite_create ("GstIterator");

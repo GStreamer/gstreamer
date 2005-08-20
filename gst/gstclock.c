@@ -148,7 +148,7 @@ gst_clock_id_unref (GstClockID id)
  * @clock: The clockid to get a single shot notification from
  * @time: the requested time
  *
- * Get an ID from the given clock to trigger a single shot 
+ * Get an ID from the given clock to trigger a single shot
  * notification at the requested time. The single shot id should be
  * unreffed after usage.
  *
