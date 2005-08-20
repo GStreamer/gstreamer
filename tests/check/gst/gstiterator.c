@@ -20,7 +20,7 @@
  */
 
 
-#include "../gstcheck.h"
+#include <gst/check/gstcheck.h>
 
 
 static GList *

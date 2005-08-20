@@ -22,7 +22,7 @@
 
 #include <unistd.h>
 
-#include "../gstcheck.h"
+#include <gst/check/gstcheck.h>
 
 GList *buffers = NULL;
 gboolean have_eos = FALSE;

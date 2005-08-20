@@ -1,8 +1,56 @@
+2005-08-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/elements/.cvsignore:
+	* check/elements/gstfakesrc.c:
+	  rename to name of element
+	* check/elements/identity.c: (chain_func), (event_func),
+	(setup_identity), (cleanup_identity), (GST_START_TEST),
+	(identity_suite), (main):
+	  add a test for identity
+	* check/Makefile.am:
+	* pkgconfig/Makefile.am:
+	* pkgconfig/gstreamer-check.pc.in:
+	* pkgconfig/gstreamer-check-uninstalled.pc.in:
+	* gst/check:
+	* gst/Makefile.am:
+	* configure.ac:
+	  move the check stuff to a library that gets installed
+	* check/gst-libs/controller.c: (GST_START_TEST):
+	* check/gst-libs/gdp.c:
+	* check/gst/gst.c: (GST_START_TEST):
+	* check/gst/gstbin.c:
+	* check/gst/gstbuffer.c: (GST_START_TEST), (gst_test_suite):
+	* check/gst/gstbus.c:
+	* check/gst/gstcaps.c: (GST_START_TEST):
+	* check/gst/gstelement.c:
+	* check/gst/gstghostpad.c:
+	* check/gst/gstiterator.c:
+	* check/gst/gstmessage.c:
+	* check/gst/gstminiobject.c: (thread_ref), (GST_START_TEST):
+	* check/gst/gstobject.c:
+	* check/gst/gstpad.c: (GST_START_TEST):
+	* check/gst/gststructure.c: (GST_START_TEST):
+	* check/gst/gstsystemclock.c: (GST_START_TEST),
+	(gst_systemclock_suite):
+	* check/gst/gsttag.c: (gst_tag_suite):
+	* check/gst/gstvalue.c:
+	* check/pipelines/cleanup.c:
+	* check/pipelines/simple_launch_lines.c:
+	* check/states/sinks.c:
+	  change include statement
+
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstpad.sgml:
+	  document more pad stuff
+	* gst/gstminiobject.c: (gst_mini_object_ref),
+	(gst_mini_object_unref):
+	  debug refcounting
+
 2005-08-19  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/tmpl/gst.sgml:
 	* gst/gst.c:
-          eliminate another tmpl file, fix spelling in the long-description
+	  eliminate another tmpl file, fix spelling in the long-description
 
 2005-08-18  Jan Schmidt  <thaytan@mad.scientist.com>
 
@@ -46,7 +94,7 @@
 
 	* check/gst/gstevents.c: (GST_START_TEST), (event_probe),
 	(test_event), (timediff), (gstevents_suite):
-           Fix error message output so I might be able to tell why the
+	   Fix error message output so I might be able to tell why the
 	   test works here but fails on the build farm.
 
 2005-08-18  Jan Schmidt  <thaytan@mad.scientist.com>

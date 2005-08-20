@@ -21,7 +21,7 @@
  */
 
 #include "config.h"
-#include "../gstcheck.h"
+#include <gst/check/gstcheck.h>
 #include <gst/controller/gst-controller.h>
 
 /* LOCAL TEST ELEMENT */

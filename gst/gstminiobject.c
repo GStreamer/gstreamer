@@ -23,14 +23,16 @@
 #include "config.h"
 #endif
 
-#ifndef GST_DISABLE_TRACE
-#include "gsttrace.h"
-#endif
-
 #include "gst/gstminiobject.h"
 #include "gst/gstinfo.h"
 #include "gst/gst_private.h"
 #include <gobject/gvaluecollector.h>
+
+#ifndef GST_DISABLE_TRACE
+#include "gsttrace.h"
+#endif
+
+#define DEBUG_REFCOUNT
 
 static void gst_mini_object_base_init (gpointer g_class);
 static void gst_mini_object_base_finalize (gpointer g_class);
@@ -189,11 +191,17 @@ gst_mini_object_ref (GstMiniObject * mini_object)
 {
   g_return_val_if_fail (mini_object != NULL, NULL);
 
+#ifdef DEBUG_REFCOUNT
+  GST_CAT_LOG (GST_CAT_REFCOUNTING, "%p ref %d->%d",
+      mini_object,
+      GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object),
+      GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object) + 1);
+#endif
+
   g_atomic_int_inc (&mini_object->refcount);
 
   return mini_object;
 }
-
 
 static void
 gst_mini_object_free (GstMiniObject * mini_object)
@@ -230,6 +238,13 @@ gst_mini_object_unref (GstMiniObject * mini_object)
 {
   g_return_if_fail (mini_object != NULL);
   g_return_if_fail (mini_object->refcount > 0);
+
+#ifdef DEBUG_REFCOUNT
+  GST_CAT_LOG (GST_CAT_REFCOUNTING, "%p unref %d->%d",
+      mini_object,
+      GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object),
+      GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object) - 1);
+#endif
 
   if (g_atomic_int_dec_and_test (&mini_object->refcount)) {
     gst_mini_object_free (mini_object);

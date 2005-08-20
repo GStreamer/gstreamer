@@ -1,13 +1,23 @@
 ### all of the standard pc files we need to generate
+if HAVE_CHECK
+CHECK_PC_I = gstreamer-check-@GST_MAJORMINOR@.pc
+CHECK_PC_U = gstreamer-check-@GST_MAJORMINOR@-uninstalled.pc
+else
+CHECK_PC_I =
+CHECK_PC_U =
+endif
+
 pcfiles = 							\
 	gstreamer-@GST_MAJORMINOR@.pc				\
 	gstreamer-base-@GST_MAJORMINOR@.pc			\
-	gstreamer-controller-@GST_MAJORMINOR@.pc			\
+	$(CHECK_PC_I)						\
+	gstreamer-controller-@GST_MAJORMINOR@.pc		\
 	gstreamer-dataprotocol-@GST_MAJORMINOR@.pc
 
 pcfiles_uninstalled =						\
 	gstreamer-@GST_MAJORMINOR@-uninstalled.pc		\
 	gstreamer-base-@GST_MAJORMINOR@-uninstalled.pc		\
+	$(CHECK_PC_U)						\
 	gstreamer-controller-@GST_MAJORMINOR@-uninstalled.pc	\
 	gstreamer-dataprotocol-@GST_MAJORMINOR@-uninstalled.pc
 
@@ -27,7 +37,9 @@ EXTRA_DIST =							\
 	gstreamer-uninstalled.pc.in				\
 	gstreamer-base.pc.in					\
 	gstreamer-base-uninstalled.pc.in			\
-	gstreamer-controller.pc.in					\
+	gstreamer-check.pc.in					\
+	gstreamer-check-uninstalled.pc.in			\
+	gstreamer-controller.pc.in				\
 	gstreamer-controller-uninstalled.pc.in			\
 	gstreamer-dataprotocol.pc.in				\
 	gstreamer-dataprotocol-uninstalled.pc.in

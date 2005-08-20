@@ -21,7 +21,7 @@
  */
 
 
-#include "../gstcheck.h"
+#include <gst/check/gstcheck.h>
 
 
 GST_START_TEST (test_deserialize_buffer)

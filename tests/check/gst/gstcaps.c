@@ -21,7 +21,7 @@
  */
 
 
-#include "../gstcheck.h"
+#include <gst/check/gstcheck.h>
 #include "capslist.h"
 
 GST_START_TEST (test_from_string)

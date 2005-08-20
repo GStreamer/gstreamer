@@ -19,7 +19,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "../gstcheck.h"
+#include <gst/check/gstcheck.h>
 
 static void
 assert_gstrefcount (gpointer p, gint i)

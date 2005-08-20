@@ -49,6 +49,7 @@ TESTS = $(top_builddir)/tools/gst-register 	\
 	gst/gsttag				\
 	gst/gstvalue				\
 	elements/gstfakesrc			\
+	elements/identity			\
 	pipelines/simple_launch_lines		\
 	pipelines/cleanup			\
 	states/sinks				\
@@ -57,14 +58,11 @@ TESTS = $(top_builddir)/tools/gst-register 	\
 
 check_PROGRAMS = $(TESTS)
 
-noinst_LTLIBRARIES = libgstcheck.la
+noinst_HEADERS = gst/capslist.h
 
-libgstcheck_la_SOURCES = gstcheck.c
-libgstcheck_la_LIBADD = $(GST_OBJ_LIBS)
-noinst_HEADERS = gstcheck.h gst/capslist.h
-
-AM_CFLAGS = $(GST_OBJ_CFLAGS) $(CHECK_CFLAGS)
-LDADD = $(GST_OBJ_LIBS) $(CHECK_LIBS) libgstcheck.la
+AM_CFLAGS = $(GST_OBJ_CFLAGS)
+LDADD = $(GST_OBJ_LIBS) \
+	$(top_builddir)/gst/check/libgstcheck-@GST_MAJORMINOR@.la
 
 gst_libs_gdp_SOURCES = \
 	gst-libs/gdp.c \
@@ -72,7 +70,8 @@ gst_libs_gdp_SOURCES = \
 # remove GST_ENABLE_NEW when dataprotocol has been declared API-stable
 gst_libs_gdp_CFLAGS = $(AM_CFLAGS) -DGST_ENABLE_NEW
 
-gst_libs_controller_LDADD = $(GST_OBJ_LIBS) $(CHECK_LIBS) libgstcheck.la \
+gst_libs_controller_LDADD = $(GST_OBJ_LIBS) \
+	$(top_builddir)/gst/check/libgstcheck-@GST_MAJORMINOR@.la \
 	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_MAJORMINOR@.la
 
 # valgrind testing

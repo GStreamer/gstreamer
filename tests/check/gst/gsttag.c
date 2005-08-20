@@ -18,7 +18,7 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "../gstcheck.h"
+#include <gst/check/gstcheck.h>
 
 #include <string.h>
 

@@ -1,7 +1,10 @@
 lib_LTLIBRARIES = libgstreamer-@GST_MAJORMINOR@.la
-noinst_LTLIBRARIES =
 
-#GST_INSTRUMENT_FLAGS = -finstrument-functions -DGST_ENABLE_FUNC_INSTRUMENTATION
+if HAVE_CHECK
+SUBDIRS_CHECK = check
+else
+SUBDIRS_CHECK =
+endif
 
 if GST_DISABLE_LOADSAVE
 GST_LOADSAVE_SRC = 
@@ -11,11 +14,11 @@ endif
 
 if GST_DISABLE_PARSE
 GST_PARSE_SRC = 
-GST_PARSE_DIRS = 
+SUBDIRS_PARSE = 
 GST_PARSE_LA = 
 else
 GST_PARSE_SRC = gstparse.c
-GST_PARSE_DIRS = parse
+SUBDIRS_PARSE = parse
 GST_PARSE_LA = parse/libgstparse.la 
 endif
 
@@ -27,11 +30,11 @@ endif
 
 if GST_DISABLE_REGISTRY
 GST_REGISTRY_SRC = 
-GST_REGISTRY_DIRS =
+SUBDIRS_REGISTRY =
 GST_REGISTRY_LA = 
 else
 GST_REGISTRY_SRC = gstregistry.c
-GST_REGISTRY_DIRS = registries
+SUBDIRS_REGISTRY = registries
 GST_REGISTRY_LA = registries/libgstxmlregistry.la
 endif
 
@@ -43,10 +46,10 @@ endif
 
 if GST_DISABLE_INDEX
 GST_INDEX_SRC = 
-GST_INDEX_DIRS =
+SUBDIRS_INDEX =
 else
 GST_INDEX_SRC = gstindex.c
-GST_INDEX_DIRS = indexers
+SUBDIRS_INDEX = indexers
 endif
 
 if GST_DISABLE_PLUGIN
@@ -61,8 +64,8 @@ else
 GST_URI_SRC = gsturi.c
 endif
 
-SUBDIRS = $(GST_PARSE_DIRS) $(GST_REGISTRY_DIRS) . base elements $(GST_INDEX_DIRS) 
-DIST_SUBDIRS = base elements parse registries indexers
+SUBDIRS = $(SUBDIRS_PARSE) $(SUBDIRS_REGISTRY) . base elements $(SUBDIRS_INDEX) $(SUBDIRS_CHECK)
+DIST_SUBDIRS = base elements parse registries indexers $(SUBDIRS_CHECK)
 
 # make variables for all generated source and header files to make the
 # distinction clear

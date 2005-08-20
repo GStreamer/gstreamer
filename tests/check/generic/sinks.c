@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "../gstcheck.h"
+#include <gst/check/gstcheck.h>
 
 /* a sink should go ASYNC to PAUSE. forcing PLAYING is possible */
 GST_START_TEST (test_sink)

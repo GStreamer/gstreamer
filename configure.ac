@@ -624,6 +624,7 @@ gst/Makefile
 gst/gstconfig.h
 gst/gstversion.h
 gst/base/Makefile
+gst/check/Makefile
 gst/indexers/Makefile
 gst/elements/Makefile
 gst/parse/Makefile
@@ -694,6 +695,8 @@ pkgconfig/gstreamer.pc
 pkgconfig/gstreamer-uninstalled.pc
 pkgconfig/gstreamer-base.pc
 pkgconfig/gstreamer-base-uninstalled.pc
+pkgconfig/gstreamer-check.pc
+pkgconfig/gstreamer-check-uninstalled.pc
 pkgconfig/gstreamer-controller.pc
 pkgconfig/gstreamer-controller-uninstalled.pc
 pkgconfig/gstreamer-dataprotocol.pc
