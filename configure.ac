@@ -238,6 +238,12 @@ fi
 
 AC_SUBST(GST_BASE_LIBS)
 
+PKG_CHECK_MODULES(GST_CHECK, gstreamer-check-$GST_MAJORMINOR >= $GST_REQ,
+  HAVE_GST_CHECK="yes", HAVE_GST_CHECK="no")
+
+AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
+AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
+
 dnl Determine endianness
 AC_C_BIGENDIAN
 
@@ -927,6 +933,7 @@ gconf/gstreamer.schemas
 pkgconfig/Makefile
 pkgconfig/gstreamer-plugins-base.pc
 pkgconfig/gstreamer-plugins-base-uninstalled.pc
+check/Makefile
 docs/Makefile
 docs/libs/Makefile
 docs/plugins/Makefile

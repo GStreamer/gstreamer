@@ -28,6 +28,7 @@ SUBDIRS = 			\
 	$(SUBDIRS_EXAMPLES) 	\
 	tools 			\
 	$(SUBDIRS_GCONF) 	\
+	check			\
 	docs			\
 	po 			\
 	common 			\
@@ -35,6 +36,7 @@ SUBDIRS = 			\
 	pkgconfig
 
 DIST_SUBDIRS = 			\
+	check			\
 	docs			\
 	gst-libs		\
 	gst sys ext		\
