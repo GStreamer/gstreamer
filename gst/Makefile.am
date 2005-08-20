@@ -65,7 +65,7 @@ GST_URI_SRC = gsturi.c
 endif
 
 SUBDIRS = $(SUBDIRS_PARSE) $(SUBDIRS_REGISTRY) . base elements $(SUBDIRS_INDEX) $(SUBDIRS_CHECK)
-DIST_SUBDIRS = base elements parse registries indexers $(SUBDIRS_CHECK)
+DIST_SUBDIRS = base elements parse registries indexers check
 
 # make variables for all generated source and header files to make the
 # distinction clear
