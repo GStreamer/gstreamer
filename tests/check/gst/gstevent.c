@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2005 Jan Schmidt <thaytan@mad.scientist.com>
  *
- * gstevents.c: Unit test for event handling
+ * gstevent.c: Unit test for event handling
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,7 +20,7 @@
  */
 
 
-#include "../gstcheck.h"
+#include <gst/check/gstcheck.h>
 
 GST_START_TEST (create_custom_events)
 {
@@ -184,7 +184,9 @@ GST_START_TEST (create_custom_events)
   }
 }
 
-GST_END_TEST GTimeVal sent_event_time;
+GST_END_TEST;
+
+GTimeVal sent_event_time;
 GstEvent *got_event_before_q, *got_event_after_q;
 GTimeVal got_event_time;
 
@@ -328,7 +330,7 @@ GST_START_TEST (send_custom_events)
           &sent_event_time) < G_USEC_PER_SEC / 2,
       "GST_EVENT_CUSTOM_BOTH_OOB took to long to reach source");
 
-  /* In-band downstream events are expected to take at least 1 second 
+  /* In-band downstream events are expected to take at least 1 second
    * to traverse the the queue */
   test_event (GST_EVENT_CUSTOM_DS, srcpad, FALSE);
   fail_unless (timediff (&got_event_time,
@@ -348,7 +350,10 @@ GST_START_TEST (send_custom_events)
   gst_object_unref (pipeline);
 }
 
-GST_END_TEST Suite * gstevents_suite (void)
+GST_END_TEST;
+
+Suite *
+gstevents_suite (void)
 {
   Suite *s = suite_create ("GstEvent");
   TCase *tc_chain = tcase_create ("customevents");

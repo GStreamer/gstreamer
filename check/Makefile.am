@@ -37,7 +37,7 @@ TESTS = $(top_builddir)/tools/gst-register 	\
         gst/gstbus				\
 	gst/gstcaps     			\
 	gst/gstelement				\
-	gst/gstevents				\
+	gst/gstevent				\
 	gst/gstghostpad				\
 	gst/gstiterator 			\
 	gst/gstmessage	 			\
