@@ -1,5 +1,11 @@
 2005-08-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstelement.h:
+	  make GST_ELEMENT_ERROR not do GST_ERROR_OBJECT - these errors should
+	  be handled by the application and not always printed as well
+
+2005-08-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* check/Makefile.am:
 	  set GST_TOOLS_DIR
 	* gst/check/gstcheck.c: (gst_check_message_error):

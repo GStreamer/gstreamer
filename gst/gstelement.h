@@ -128,9 +128,9 @@ G_STMT_START {								\
   gchar *__txt = _gst_element_error_printf text;			\
   gchar *__dbg = _gst_element_error_printf debug;			\
   if (__txt)								\
-    GST_ERROR_OBJECT (el, "%s", __txt);					\
+    GST_WARNING_OBJECT (el, "error: %s", __txt);			\
   if (__dbg)								\
-    GST_ERROR_OBJECT (el, "%s", __dbg);					\
+    GST_WARNING_OBJECT (el, "error: %s", __dbg);			\
   gst_element_message_full (GST_ELEMENT(el), GST_MESSAGE_ERROR,		\
     GST_ ## domain ## _ERROR, GST_ ## domain ## _ERROR_ ## code,	\
     __txt, __dbg, __FILE__, GST_FUNCTION, __LINE__);			\
@@ -142,9 +142,9 @@ G_STMT_START {								\
   gchar *__txt = _gst_element_error_printf text;			\
   gchar *__dbg = _gst_element_error_printf debug;			\
   if (__txt)								\
-    GST_WARNING_OBJECT (el, "%s", __txt);				\
+    GST_WARNING_OBJECT (el, "warning: %s", __txt);			\
   if (__dbg)								\
-    GST_WARNING_OBJECT (el, "%s", __dbg);				\
+    GST_WARNING_OBJECT (el, "warning: %s", __dbg);			\
   gst_element_message_full (GST_ELEMENT(el), GST_MESSAGE_WARNING,	\
     GST_ ## domain ## _ERROR, GST_ ## domain ## _ERROR_ ## code,	\
   __txt, __dbg, __FILE__, GST_FUNCTION, __LINE__);			\
