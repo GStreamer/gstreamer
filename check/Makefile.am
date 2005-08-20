@@ -48,7 +48,7 @@ TESTS = $(top_builddir)/tools/gst-register 	\
 	gst/gststructure			\
 	gst/gsttag				\
 	gst/gstvalue				\
-	elements/gstfakesrc			\
+	elements/fakesrc			\
 	elements/identity			\
 	pipelines/simple_launch_lines		\
 	pipelines/cleanup			\
