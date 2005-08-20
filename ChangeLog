@@ -1,6 +1,15 @@
 2005-08-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:
+	* check/gst.supp:
+	* common/Makefile.am:
+	* common/check.mak:
+	* common/gst.supp:
+	  factor out some of the common stuff so we can use it
+
+2005-08-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
 	* check/gst/gstiterator.c: (GST_START_TEST):
 	* check/gst/gstsystemclock.c: (GST_START_TEST),
 	(gst_systemclock_suite):
