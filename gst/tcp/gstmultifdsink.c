@@ -431,7 +431,8 @@ gst_multifdsink_class_init (GstMultiFdSinkClass * klass)
           client_removed), NULL, NULL, gst_tcp_marshal_VOID__INT_BOXED,
       G_TYPE_NONE, 2, G_TYPE_INT, GST_TYPE_CLIENT_STATUS);
 
-  gstelement_class->change_state = gst_multifdsink_change_state;
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_multifdsink_change_state);
 
   gstbasesink_class->render = gst_multifdsink_render;
 

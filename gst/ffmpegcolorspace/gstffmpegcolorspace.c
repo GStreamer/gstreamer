@@ -343,7 +343,7 @@ gst_ffmpegcsp_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
 
   GST_DEBUG ("from %d -> to %d", space->from_pixfmt, space->to_pixfmt);
   if (space->from_pixfmt == PIX_FMT_NB || space->to_pixfmt == PIX_FMT_NB)
-    goto unkown_format;
+    goto unknown_format;
 
   /* fill from with source data */
   gst_ffmpegcsp_avpicture_fill (&space->from_frame,
@@ -368,7 +368,7 @@ gst_ffmpegcsp_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
   return GST_FLOW_OK;
 
   /* ERRORS */
-unkown_format:
+unknown_format:
   {
     GST_ELEMENT_ERROR (space, CORE, NOT_IMPLEMENTED, (NULL),
         ("attempting to convert colorspaces between unknown formats"));

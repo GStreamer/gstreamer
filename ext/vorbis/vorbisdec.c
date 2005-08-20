@@ -753,18 +753,24 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
 
   vd = GST_VORBIS_DEC (GST_PAD_PARENT (pad));
 
+  if (GST_BUFFER_SIZE (buffer) == 0) {
+    gst_buffer_unref (buffer);
+    GST_ELEMENT_ERROR (vd, STREAM, DECODE, (NULL), ("Empty buffer received"));
+    return GST_FLOW_ERROR;
+  }
   /* make ogg_packet out of the buffer */
   packet.packet = GST_BUFFER_DATA (buffer);
   packet.bytes = GST_BUFFER_SIZE (buffer);
   packet.granulepos = GST_BUFFER_OFFSET_END (buffer);
   packet.packetno = vd->packetno++;
-  /* 
+  /*
    * FIXME. Is there anyway to know that this is the last packet and
    * set e_o_s??
    */
   packet.e_o_s = 0;
 
-  GST_DEBUG ("vorbis granule: %" G_GUINT64_FORMAT, packet.granulepos);
+  GST_DEBUG_OBJECT (vd, "vorbis granule: %" G_GUINT64_FORMAT,
+      packet.granulepos);
 
   /* switch depending on packet type */
   if (packet.packet[0] & 1) {
@@ -777,7 +783,8 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
     result = vorbis_handle_data_packet (vd, &packet);
   }
 
-  GST_DEBUG ("offset end: %" G_GUINT64_FORMAT, GST_BUFFER_OFFSET_END (buffer));
+  GST_DEBUG_OBJECT (vd, "offset end: %" G_GUINT64_FORMAT,
+      GST_BUFFER_OFFSET_END (buffer));
 
 done:
   gst_buffer_unref (buffer);

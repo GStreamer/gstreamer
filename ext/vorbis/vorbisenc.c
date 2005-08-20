@@ -17,6 +17,13 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:vorbisenc
+ * @short_description: an encoder that encodes to Ogg/Vorbis
+ * @see_also: oggdemux
+ *
+ */
+
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -43,7 +50,7 @@ GstElementDetails vorbisenc_details = {
   "Monty <monty@xiph.org>, " "Wim Taymans <wim@fluendo.com>",
 };
 
-/* VorbisEnc signals and args */
+/* GstVorbisEnc signals and args */
 enum
 {
   /* FILL ME */
@@ -102,12 +109,12 @@ gst_vorbisenc_get_formats (GstPad * pad)
 #define HIGHEST_BITRATE 	250001  /* highest allowed for a 44 kHz stream */
 
 static void gst_vorbisenc_base_init (gpointer g_class);
-static void gst_vorbisenc_class_init (VorbisEncClass * klass);
-static void gst_vorbisenc_init (VorbisEnc * vorbisenc);
+static void gst_vorbisenc_class_init (GstVorbisEncClass * klass);
+static void gst_vorbisenc_init (GstVorbisEnc * vorbisenc);
 
 static gboolean gst_vorbisenc_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_vorbisenc_setup (VorbisEnc * vorbisenc);
+static gboolean gst_vorbisenc_setup (GstVorbisEnc * vorbisenc);
 
 static void gst_vorbisenc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -126,13 +133,13 @@ vorbisenc_get_type (void)
 
   if (!vorbisenc_type) {
     static const GTypeInfo vorbisenc_info = {
-      sizeof (VorbisEncClass),
+      sizeof (GstVorbisEncClass),
       gst_vorbisenc_base_init,
       NULL,
       (GClassInitFunc) gst_vorbisenc_class_init,
       NULL,
       NULL,
-      sizeof (VorbisEnc),
+      sizeof (GstVorbisEnc),
       0,
       (GInstanceInitFunc) gst_vorbisenc_init,
     };
@@ -143,8 +150,8 @@ vorbisenc_get_type (void)
     };
 
     vorbisenc_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "VorbisEnc", &vorbisenc_info,
-        0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstVorbisEnc",
+        &vorbisenc_info, 0);
 
     g_type_add_interface_static (vorbisenc_type, GST_TYPE_TAG_SETTER,
         &tag_setter_info);
@@ -192,7 +199,7 @@ gst_vorbisenc_base_init (gpointer g_class)
 }
 
 static void
-gst_vorbisenc_class_init (VorbisEncClass * klass)
+gst_vorbisenc_class_init (GstVorbisEncClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -238,7 +245,7 @@ gst_vorbisenc_class_init (VorbisEncClass * klass)
 static gboolean
 gst_vorbisenc_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
-  VorbisEnc *vorbisenc;
+  GstVorbisEnc *vorbisenc;
   GstStructure *structure;
 
   vorbisenc = GST_VORBISENC (GST_PAD_PARENT (pad));
@@ -261,7 +268,7 @@ gst_vorbisenc_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
     GstFormat * dest_format, gint64 * dest_value)
 {
   gboolean res = TRUE;
-  VorbisEnc *vorbisenc;
+  GstVorbisEnc *vorbisenc;
   gint64 avg;
 
   vorbisenc = GST_VORBISENC (gst_pad_get_parent (pad));
@@ -304,7 +311,7 @@ gst_vorbisenc_convert_sink (GstPad * pad, GstFormat src_format,
   gboolean res = TRUE;
   guint scale = 1;
   gint bytes_per_sample;
-  VorbisEnc *vorbisenc;
+  GstVorbisEnc *vorbisenc;
 
   vorbisenc = GST_VORBISENC (gst_pad_get_parent (pad));
 
@@ -378,7 +385,7 @@ static gboolean
 gst_vorbisenc_src_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = TRUE;
-  VorbisEnc *vorbisenc;
+  GstVorbisEnc *vorbisenc;
 
   vorbisenc = GST_VORBISENC (GST_PAD_PARENT (pad));
 
@@ -453,7 +460,7 @@ static gboolean
 gst_vorbisenc_sink_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = TRUE;
-  VorbisEnc *vorbisenc;
+  GstVorbisEnc *vorbisenc;
 
   vorbisenc = GST_VORBISENC (GST_PAD_PARENT (pad));
 
@@ -481,7 +488,7 @@ error:
 }
 
 static void
-gst_vorbisenc_init (VorbisEnc * vorbisenc)
+gst_vorbisenc_init (GstVorbisEnc * vorbisenc)
 {
   vorbisenc->sinkpad =
       gst_pad_new_from_template (gst_vorbisenc_sink_template, "sink");
@@ -566,7 +573,7 @@ gst_vorbisenc_metadata_set1 (const GstTagList * list, const gchar * tag,
   const gchar *vorbistag = NULL;
   gchar *vorbisvalue = NULL;
   guint i, count;
-  VorbisEnc *enc = GST_VORBISENC (vorbisenc);
+  GstVorbisEnc *enc = GST_VORBISENC (vorbisenc);
 
   vorbistag = gst_tag_to_vorbis_tag (tag);
   if (vorbistag == NULL) {
@@ -584,7 +591,7 @@ gst_vorbisenc_metadata_set1 (const GstTagList * list, const gchar * tag,
 }
 
 static void
-gst_vorbisenc_set_metadata (VorbisEnc * vorbisenc)
+gst_vorbisenc_set_metadata (GstVorbisEnc * vorbisenc)
 {
   GstTagList *copy;
   const GstTagList *user_tags;
@@ -602,7 +609,7 @@ gst_vorbisenc_set_metadata (VorbisEnc * vorbisenc)
 }
 
 static gchar *
-get_constraints_string (VorbisEnc * vorbisenc)
+get_constraints_string (GstVorbisEnc * vorbisenc)
 {
   gint min = vorbisenc->min_bitrate;
   gint max = vorbisenc->max_bitrate;
@@ -621,7 +628,7 @@ get_constraints_string (VorbisEnc * vorbisenc)
 }
 
 static void
-update_start_message (VorbisEnc * vorbisenc)
+update_start_message (GstVorbisEnc * vorbisenc)
 {
   gchar *constraints;
 
@@ -666,7 +673,7 @@ update_start_message (VorbisEnc * vorbisenc)
 }
 
 static gboolean
-gst_vorbisenc_setup (VorbisEnc * vorbisenc)
+gst_vorbisenc_setup (GstVorbisEnc * vorbisenc)
 {
   vorbisenc->setup = FALSE;
 
@@ -744,7 +751,7 @@ gst_vorbisenc_setup (VorbisEnc * vorbisenc)
 
 /* prepare a buffer for transmission by passing data through libvorbis */
 static GstBuffer *
-gst_vorbisenc_buffer_from_packet (VorbisEnc * vorbisenc, ogg_packet * packet)
+gst_vorbisenc_buffer_from_packet (GstVorbisEnc * vorbisenc, ogg_packet * packet)
 {
   GstBuffer *outbuf;
 
@@ -762,7 +769,7 @@ gst_vorbisenc_buffer_from_packet (VorbisEnc * vorbisenc, ogg_packet * packet)
 
 /* push out the buffer and do internal bookkeeping */
 static void
-gst_vorbisenc_push_buffer (VorbisEnc * vorbisenc, GstBuffer * buffer)
+gst_vorbisenc_push_buffer (GstVorbisEnc * vorbisenc, GstBuffer * buffer)
 {
   vorbisenc->bytes_out += GST_BUFFER_SIZE (buffer);
 
@@ -774,7 +781,7 @@ gst_vorbisenc_push_buffer (VorbisEnc * vorbisenc, GstBuffer * buffer)
 }
 
 static void
-gst_vorbisenc_push_packet (VorbisEnc * vorbisenc, ogg_packet * packet)
+gst_vorbisenc_push_packet (GstVorbisEnc * vorbisenc, ogg_packet * packet)
 {
   GstBuffer *outbuf;
 
@@ -822,7 +829,7 @@ static gboolean
 gst_vorbisenc_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
-  VorbisEnc *vorbisenc;
+  GstVorbisEnc *vorbisenc;
 
   vorbisenc = GST_VORBISENC (GST_PAD_PARENT (pad));
 
@@ -832,6 +839,7 @@ gst_vorbisenc_sink_event (GstPad * pad, GstEvent * event)
          but it's easier to see here in non-clever fashion.
          Tell the library we're at end of stream so that it can handle
          the last frame and mark end of stream in the output properly */
+      GST_DEBUG_OBJECT (vorbisenc, "received EOS, will process later");
       vorbis_analysis_wrote (&vorbisenc->vd, 0);
       vorbisenc->eos = TRUE;
       gst_event_unref (event);
@@ -859,7 +867,7 @@ static GstFlowReturn
 gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstBuffer *buf = GST_BUFFER (buffer);
-  VorbisEnc *vorbisenc;
+  GstVorbisEnc *vorbisenc;
 
   vorbisenc = GST_VORBISENC (GST_PAD_PARENT (pad));
 
@@ -877,6 +885,7 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer)
     }
 
     if (!vorbisenc->header_sent) {
+      GST_DEBUG_OBJECT (vorbisenc, "creating and sending header packets");
       //gint result;
 
       /* Vorbis streams begin with three headers; the initial header (with
@@ -948,16 +957,20 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer)
   while (vorbis_analysis_blockout (&vorbisenc->vd, &vorbisenc->vb) == 1) {
     ogg_packet op;
 
+    GST_LOG_OBJECT (vorbisenc, "analysed to a block");
+
     /* analysis */
     vorbis_analysis (&vorbisenc->vb, NULL);
     vorbis_bitrate_addblock (&vorbisenc->vb);
 
     while (vorbis_bitrate_flushpacket (&vorbisenc->vd, &op)) {
+      GST_LOG_OBJECT (vorbisenc, "pushing out a data packet");
       gst_vorbisenc_push_packet (vorbisenc, &op);
     }
   }
 
   if (vorbisenc->eos) {
+    GST_DEBUG_OBJECT (vorbisenc, "EOS, clearing state and sending event on");
     /* clean up and exit.  vorbis_info_clear() must be called last */
     vorbis_block_clear (&vorbisenc->vb);
     vorbis_dsp_clear (&vorbisenc->vd);
@@ -972,7 +985,7 @@ static void
 gst_vorbisenc_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  VorbisEnc *vorbisenc;
+  GstVorbisEnc *vorbisenc;
 
   g_return_if_fail (GST_IS_VORBISENC (object));
 
@@ -1007,7 +1020,7 @@ static void
 gst_vorbisenc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  VorbisEnc *vorbisenc;
+  GstVorbisEnc *vorbisenc;
 
   g_return_if_fail (GST_IS_VORBISENC (object));
 
@@ -1078,7 +1091,7 @@ gst_vorbisenc_set_property (GObject * object, guint prop_id,
 static GstElementStateReturn
 gst_vorbisenc_change_state (GstElement * element)
 {
-  VorbisEnc *vorbisenc = GST_VORBISENC (element);
+  GstVorbisEnc *vorbisenc = GST_VORBISENC (element);
   GstElementState transition;
   GstElementStateReturn res;
 

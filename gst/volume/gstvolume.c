@@ -368,6 +368,8 @@ volume_set_caps (GstBaseTransform * base, GstCaps * incaps, GstCaps * outcaps)
 {
   GstVolume *this = GST_VOLUME (base);
 
+  GST_DEBUG_OBJECT (this,
+      "set_caps: in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps, outcaps);
   volume_funcfind (this, gst_caps_get_structure (incaps, 0));
 
   if (!this->process) {

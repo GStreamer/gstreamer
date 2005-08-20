@@ -13,13 +13,21 @@ clean-local: clean-local-check
 $(CHECK_REGISTRY):
 	$(TESTS_ENVIRONMENT)					\
 	GST_PLUGIN_PATH_ONLY=yes				\
-	GST_PLUGIN_PATH=$(top_builddir)/gst			\
+	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/ext	\
 	$(GST_TOOLS_DIR)/gst-register-@GST_MAJORMINOR@
 
 TESTS = $(GST_TOOLS_DIR)/gst-register-@GST_MAJORMINOR@		\
 	$(check_PROGRAMS)
 
-check_PROGRAMS = elements/volume
+if USE_VORBIS
+check_vorbis = elements/vorbisdec
+else
+check_vorbis =
+endif
+
+check_PROGRAMS = \
+	elements/volume \
+	$(check_vorbis)
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS)
 LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS)

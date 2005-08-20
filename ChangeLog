@@ -1,3 +1,62 @@
+2005-08-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
+	  add ext dir for plugins
+	  add vorbisdec test conditionally
+	* check/elements/volume.c: (setup_volume), (cleanup_volume),
+	(GST_START_TEST), (volume_suite):
+	  add a test with wrong caps
+	* check/elements/vorbisdec.c: (chain_func), (setup_vorbisdec),
+	(cleanup_vorbisdec), (GST_START_TEST), (vorbisdec_suite), (main):
+	  add a vorbisdec test
+	* ext/ogg/gstoggdemux.c: (gst_ogg_chain_new_stream),
+	(gst_ogg_demux_chain), (gst_ogg_demux_loop):
+	  clean up debug output
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_chain):
+	  yay, fix a segfault/security issue in vorbisdec
+	  gst-launch fakesrc ! vorbisdec wasn't happy
+	* ext/vorbis/vorbisenc.c: (vorbisenc_get_type),
+	(gst_vorbisenc_class_init), (gst_vorbisenc_sink_setcaps),
+	(gst_vorbisenc_convert_src), (gst_vorbisenc_convert_sink),
+	(gst_vorbisenc_src_query), (gst_vorbisenc_sink_query),
+	(gst_vorbisenc_init), (gst_vorbisenc_metadata_set1),
+	(gst_vorbisenc_set_metadata), (get_constraints_string),
+	(update_start_message), (gst_vorbisenc_setup),
+	(gst_vorbisenc_buffer_from_packet), (gst_vorbisenc_push_buffer),
+	(gst_vorbisenc_push_packet), (gst_vorbisenc_sink_event),
+	(gst_vorbisenc_chain), (gst_vorbisenc_get_property),
+	(gst_vorbisenc_set_property), (gst_vorbisenc_change_state):
+	* ext/vorbis/vorbisenc.h:
+	  march in line
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_transform):
+	  have the kow come home
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_class_init):
+	  debug my func ptr
+	* gst/volume/gstvolume.c: (volume_set_caps):
+	  add a debug
+
+2005-08-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* check/.cvsignore:
+	* check/Makefile.am:
+	* check/elements/.cvsignore:
+	* check/elements/volume.c: (chain_func), (event_func),
+	(setup_volume), (cleanup_volume), (GST_START_TEST), (volume_suite),
+	(main):
+	* configure.ac:
+	  add unit test structure for gst-plugins-base
+	  add a test for volume
+	* gst/volume/gstvolume.c: (gst_volume_list_tracks),
+	(gst_volume_set_volume), (gst_volume_get_volume),
+	(gst_volume_set_mute), (gst_volume_class_init), (gst_volume_init),
+	(volume_funcfind), (volume_process_float), (volume_process_int16),
+	(volume_set_caps), (volume_transform), (volume_update_mute),
+	(volume_update_volume), (volume_set_property),
+	(volume_get_property):
+	  document a little; use basetransform vmethod _set_caps
+
 2005-08-19  Andy Wingo  <wingo@pobox.com>
 
 	* ext/alsa/gstalsamixertrack.h:

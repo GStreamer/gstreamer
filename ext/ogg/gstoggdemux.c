@@ -929,11 +929,12 @@ gst_ogg_chain_new_stream (GstOggChain * chain, glong serialno)
   }
   gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_SERIAL, serialno,
       NULL);
+  /* FIXME: either have it or remove it */
   //gst_element_found_tags (GST_ELEMENT (ogg), list);
   gst_tag_list_free (list);
 
-  GST_LOG ("created new ogg src %p for stream with serial %08lx", ret,
-      serialno);
+  GST_DEBUG_OBJECT (chain->ogg,
+      "created new ogg src %p for stream with serial %08lx", ret, serialno);
 
   g_array_append_val (chain->streams, ret);
 
@@ -2101,16 +2102,14 @@ gst_ogg_demux_chain (GstPad * pad, GstBuffer * buffer)
 unknown_chain:
   {
     GST_ELEMENT_ERROR (ogg, STREAM, DECODE,
-        ("unknown ogg chain for serial %08x detected", serialno),
-        ("unknown ogg chain for serial %08x detected", serialno));
+        (NULL), ("unknown ogg chain for serial %08x detected", serialno));
     gst_ogg_demux_send_event (ogg, gst_event_new_eos ());
     return GST_FLOW_ERROR;
   }
 unknown_pad:
   {
     GST_ELEMENT_ERROR (ogg, STREAM, DECODE,
-        ("unknown ogg pad for serial %08d detected", serialno),
-        ("unknown ogg pad for serial %08d detected", serialno));
+        (NULL), ("unknown ogg pad for serial %08d detected", serialno));
     gst_ogg_demux_send_event (ogg, gst_event_new_eos ());
     return GST_FLOW_ERROR;
   }
@@ -2203,8 +2202,7 @@ gst_ogg_demux_loop (GstOggPad * pad)
   /* ERRORS */
 chain_read_failed:
   {
-    GST_ELEMENT_ERROR (ogg, STREAM, DEMUX,
-        ("could not read chains"), ("could not read chains"));
+    GST_ELEMENT_ERROR (ogg, STREAM, DEMUX, (NULL), ("could not read chains"));
     ret = GST_FLOW_ERROR;
     goto pause;
   }
@@ -2215,8 +2213,7 @@ pause:
     if (GST_FLOW_IS_FATAL (ret)) {
       gst_ogg_demux_send_event (ogg, gst_event_new_eos ());
       GST_ELEMENT_ERROR (ogg, STREAM, STOPPED,
-          ("stream stopped, reason %d", ret),
-          ("stream stopped, reason %d", ret));
+          (NULL), ("stream stopped, reason %d", ret));
     }
     return;
   }

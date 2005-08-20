@@ -33,22 +33,22 @@ extern "C" {
 #define GST_TYPE_VORBISENC \
   (vorbisenc_get_type())
 #define GST_VORBISENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VORBISENC,VorbisEnc))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VORBISENC,GstVorbisEnc))
 #define GST_VORBISENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VORBISENC,VorbisEncClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VORBISENC,GstVorbisEncClass))
 #define GST_IS_VORBISENC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VORBISENC))
 #define GST_IS_VORBISENC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VORBISENC))
 
-typedef struct _VorbisEnc VorbisEnc;
-typedef struct _VorbisEncClass VorbisEncClass;
+typedef struct _GstVorbisEnc GstVorbisEnc;
+typedef struct _GstVorbisEncClass GstVorbisEncClass;
 
-struct _VorbisEnc {
-  GstElement 	   element;
+struct _GstVorbisEnc {
+  GstElement	   element;
 
-  GstPad          *sinkpad,
-                  *srcpad;
+  GstPad          *sinkpad;
+  GstPad          *srcpad;
 
   vorbis_info      vi; /* struct that stores all the static vorbis bitstream
 				                            settings */
@@ -79,7 +79,7 @@ struct _VorbisEnc {
   gchar		  *last_message;
 };
 
-struct _VorbisEncClass {
+struct _GstVorbisEncClass {
   GstElementClass parent_class;
 };
 
