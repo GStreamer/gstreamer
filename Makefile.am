@@ -28,7 +28,7 @@ SUBDIRS = 			\
 	$(SUBDIRS_EXAMPLES) 	\
 	tools 			\
 	$(SUBDIRS_GCONF) 	\
-	check			\
+	$(SUBDIRS_CHECK)	\
 	docs			\
 	po 			\
 	common 			\
