@@ -86,3 +86,19 @@ gst_check_init (int *argc, char **argv[])
   g_log_set_handler ("GLib-GObject", G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING,
       gst_check_log_critical_func, NULL);
 }
+
+/* message checking */
+void
+gst_check_message_error (GstMessage * message, GstMessageType type,
+    GQuark domain, gint code)
+{
+  GError *error;
+  gchar *debug;
+
+  fail_unless_equals_int (GST_MESSAGE_TYPE (message), type);
+  gst_message_parse_error (message, &error, &debug);
+  fail_unless_equals_int (error->domain, domain);
+  fail_unless_equals_int (error->code, code);
+  g_error_free (error);
+  g_free (debug);
+}

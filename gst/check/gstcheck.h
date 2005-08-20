@@ -45,6 +45,12 @@ extern gboolean _gst_check_expecting_log;
 
 void gst_check_init (int *argc, char **argv[]);
 
+void gst_check_message_error (GstMessage *message, GstMessageType type, GQuark domain, gint code);
+
+#define fail_unless_message_error(msg, domain, code)		\
+gst_check_message_error (msg, GST_MESSAGE_ERROR,		\
+  GST_ ## domain ## _ERROR, GST_ ## domain ## _ERROR_ ## code)
+
 /***
  * wrappers for START_TEST and END_TEST
  */
@@ -55,6 +61,15 @@ static void __testname (void)\
   tcase_fn_start (""# __testname, __FILE__, __LINE__);
 
 #define GST_END_TEST END_TEST
+
+/* additional fail macros */
+#define fail_unless_equals_int(a, b)					\
+G_STMT_START {								\
+  int first = a;							\
+  int second = b;							\
+  fail_unless(first == second,						\
+    "'" #a "' (%d) is not equal to '" #b"' (%d)", first, second);	\
+} G_STMT_END;
 
 /***
  * thread test macros and variables

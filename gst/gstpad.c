@@ -2099,6 +2099,7 @@ not_accepted:
   }
 }
 
+/* returns TRUE if the src pad could be configured to accept the given caps */
 static gboolean
 gst_pad_configure_src (GstPad * pad, GstCaps * caps)
 {

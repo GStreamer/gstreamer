@@ -1,6 +1,15 @@
 2005-08-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:
+	  set GST_TOOLS_DIR
+	* gst/check/gstcheck.c: (gst_check_message_error):
+	* gst/check/gstcheck.h:
+	  add a fail_unless_equals_int
+	  add fail_unless for error messages
+
+2005-08-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
 	* check/gst.supp:
 	* common/Makefile.am:
 	* common/check.mak:

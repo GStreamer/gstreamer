@@ -2,6 +2,8 @@ include $(top_srcdir)/common/check.mak
 
 CHECK_REGISTRY=$(top_builddir)/check/test-registry.xml
 
+GST_TOOLS_DIR = $(top_builddir)/tools
+
 TESTS_ENVIRONMENT=\
 	GST_PLUGIN_PATH_ONLY=yes \
 	GST_PLUGIN_PATH=$(top_builddir)/gst \
