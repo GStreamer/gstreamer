@@ -299,7 +299,7 @@ vorbis_dec_src_query (GstPad * pad, GstQuery * query)
 
 error:
   {
-    GST_DEBUG ("error handling query");
+    GST_WARNING_OBJECT (dec, "error handling query");
     return res;
   }
 }
@@ -419,74 +419,11 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static GstFlowReturn
-vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
-{
-  guint bitrate = 0;
-  gchar *encoder = NULL;
-  GstMessage *message;
-  GstTagList *list;
-  GstBuffer *buf;
-
-  GST_DEBUG ("parsing comment packet");
-
-  buf = gst_buffer_new_and_alloc (packet->bytes);
-  GST_BUFFER_DATA (buf) = packet->packet;
-
-  list =
-      gst_tag_list_from_vorbiscomment_buffer (buf, (guint8 *) "\003vorbis", 7,
-      &encoder);
-
-  gst_buffer_unref (buf);
-
-  if (!list) {
-    GST_ERROR_OBJECT (vd, "couldn't decode comments");
-    list = gst_tag_list_new ();
-  }
-  if (encoder) {
-    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-        GST_TAG_ENCODER, encoder, NULL);
-    g_free (encoder);
-  }
-  gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-      GST_TAG_ENCODER_VERSION, vd->vi.version,
-      GST_TAG_AUDIO_CODEC, "Vorbis", NULL);
-  if (vd->vi.bitrate_nominal > 0) {
-    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-        GST_TAG_NOMINAL_BITRATE, (guint) vd->vi.bitrate_nominal, NULL);
-    bitrate = vd->vi.bitrate_nominal;
-  }
-  if (vd->vi.bitrate_upper > 0) {
-    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-        GST_TAG_MAXIMUM_BITRATE, (guint) vd->vi.bitrate_upper, NULL);
-    if (!bitrate)
-      bitrate = vd->vi.bitrate_upper;
-  }
-  if (vd->vi.bitrate_lower > 0) {
-    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-        GST_TAG_MINIMUM_BITRATE, (guint) vd->vi.bitrate_lower, NULL);
-    if (!bitrate)
-      bitrate = vd->vi.bitrate_lower;
-  }
-  if (bitrate) {
-    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-        GST_TAG_BITRATE, (guint) bitrate, NULL);
-  }
-
-  message = gst_message_new_tag ((GstObject *) vd, list);
-  gst_element_post_message (GST_ELEMENT (vd), message);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-vorbis_handle_type_packet (GstVorbisDec * vd, ogg_packet * packet)
+vorbis_handle_identification_packet (GstVorbisDec * vd)
 {
   GstCaps *caps;
   const GstAudioChannelPosition *pos = NULL;
 
-  /* done */
-  vorbis_synthesis_init (&vd->vd, &vd->vi);
-  vorbis_block_init (&vd->vd, &vd->vb);
   caps = gst_caps_new_simple ("audio/x-raw-float",
       "rate", G_TYPE_INT, vd->vi.rate,
       "channels", G_TYPE_INT, vd->vi.channels,
@@ -549,8 +486,6 @@ vorbis_handle_type_packet (GstVorbisDec * vd, ogg_packet * packet)
   gst_pad_set_caps (vd->srcpad, caps);
   gst_caps_unref (caps);
 
-  vd->initialized = TRUE;
-
   return GST_FLOW_OK;
 
   /* ERROR */
@@ -564,11 +499,81 @@ channel_count_error:
 }
 
 static GstFlowReturn
+vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
+{
+  guint bitrate = 0;
+  gchar *encoder = NULL;
+  GstMessage *message;
+  GstTagList *list;
+  GstBuffer *buf;
+
+  GST_DEBUG_OBJECT (vd, "parsing comment packet");
+
+  buf = gst_buffer_new_and_alloc (packet->bytes);
+  GST_BUFFER_DATA (buf) = packet->packet;
+
+  list =
+      gst_tag_list_from_vorbiscomment_buffer (buf, (guint8 *) "\003vorbis", 7,
+      &encoder);
+
+  gst_buffer_unref (buf);
+
+  if (!list) {
+    GST_ERROR_OBJECT (vd, "couldn't decode comments");
+    list = gst_tag_list_new ();
+  }
+  if (encoder) {
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+        GST_TAG_ENCODER, encoder, NULL);
+    g_free (encoder);
+  }
+  gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+      GST_TAG_ENCODER_VERSION, vd->vi.version,
+      GST_TAG_AUDIO_CODEC, "Vorbis", NULL);
+  if (vd->vi.bitrate_nominal > 0) {
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+        GST_TAG_NOMINAL_BITRATE, (guint) vd->vi.bitrate_nominal, NULL);
+    bitrate = vd->vi.bitrate_nominal;
+  }
+  if (vd->vi.bitrate_upper > 0) {
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+        GST_TAG_MAXIMUM_BITRATE, (guint) vd->vi.bitrate_upper, NULL);
+    if (!bitrate)
+      bitrate = vd->vi.bitrate_upper;
+  }
+  if (vd->vi.bitrate_lower > 0) {
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+        GST_TAG_MINIMUM_BITRATE, (guint) vd->vi.bitrate_lower, NULL);
+    if (!bitrate)
+      bitrate = vd->vi.bitrate_lower;
+  }
+  if (bitrate) {
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+        GST_TAG_BITRATE, (guint) bitrate, NULL);
+  }
+
+  message = gst_message_new_tag ((GstObject *) vd, list);
+  gst_element_post_message (GST_ELEMENT (vd), message);
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+vorbis_handle_type_packet (GstVorbisDec * vd)
+{
+  vorbis_synthesis_init (&vd->vd, &vd->vi);
+  vorbis_block_init (&vd->vd, &vd->vb);
+  vd->initialized = TRUE;
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
 vorbis_handle_header_packet (GstVorbisDec * vd, ogg_packet * packet)
 {
   GstFlowReturn res;
 
-  GST_DEBUG ("parsing header packet");
+  GST_DEBUG_OBJECT (vd, "parsing header packet");
 
   /* Packetno = 0 if the first byte is exactly 0x01 */
   packet->b_o_s = (packet->packet[0] == 0x1) ? 1 : 0;
@@ -576,12 +581,17 @@ vorbis_handle_header_packet (GstVorbisDec * vd, ogg_packet * packet)
   if (vorbis_synthesis_headerin (&vd->vi, &vd->vc, packet))
     goto header_read_error;
 
+  /* FIXME: we should probably double-check if packet[0] is 1/3/5 for each
+   * of these */
   switch (packet->packetno) {
+    case 0:
+      res = vorbis_handle_identification_packet (vd);
+      break;
     case 1:
       res = vorbis_handle_comment_packet (vd, packet);
       break;
     case 2:
-      res = vorbis_handle_type_packet (vd, packet);
+      res = vorbis_handle_type_packet (vd);
       break;
     default:
       /* ignore */
@@ -645,8 +655,8 @@ vorbis_dec_push (GstVorbisDec * dec, GstBuffer * buf)
 
         GST_BUFFER_OFFSET (buffer) = outoffset;
         GST_BUFFER_TIMESTAMP (buffer) = outoffset * GST_SECOND / dec->vi.rate;;
-        GST_DEBUG_OBJECT (dec, "patch buffer %lld offset %lld", size,
-            outoffset);
+        GST_DEBUG_OBJECT (dec, "patch buffer %" G_GUINT64_FORMAT
+            " offset %" G_GUINT64_FORMAT, size, outoffset);
         size--;
       }
       for (walk = dec->queued; walk; walk = g_list_next (walk)) {
@@ -755,7 +765,7 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
 
   if (GST_BUFFER_SIZE (buffer) == 0) {
     gst_buffer_unref (buffer);
-    GST_ELEMENT_ERROR (vd, STREAM, DECODE, (NULL), ("Empty buffer received"));
+    GST_ELEMENT_ERROR (vd, STREAM, DECODE, (NULL), ("empty buffer received"));
     return GST_FLOW_ERROR;
   }
   /* make ogg_packet out of the buffer */
@@ -766,6 +776,8 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
   /*
    * FIXME. Is there anyway to know that this is the last packet and
    * set e_o_s??
+   * Yes there is, keep one packet at all times and only push out when
+   * you receive a new one.  Implement this.
    */
   packet.e_o_s = 0;
 

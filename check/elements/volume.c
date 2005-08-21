@@ -85,89 +85,22 @@ GstElement *
 setup_volume ()
 {
   GstElement *volume;
-  GstPad *srcpad, *sinkpad;
 
   GST_DEBUG ("setup_volume");
-
-  volume = gst_element_factory_make ("volume", "volume");
-  fail_if (volume == NULL, "Could not create a volume");
-
-  /* sending pad */
-  mysrcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
-      "src");
-  fail_if (mysrcpad == NULL, "Could not create a mysrcpad");
-  ASSERT_OBJECT_REFCOUNT (mysrcpad, "mysrcpad", 1);
-
-  sinkpad = gst_element_get_pad (volume, "sink");
-  fail_if (sinkpad == NULL, "Could not get source pad from volume");
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
-  gst_pad_set_caps (mysrcpad, NULL);
-  fail_unless (gst_pad_link (mysrcpad, sinkpad) == GST_PAD_LINK_OK,
-      "Could not link source and volume sink pads");
-  gst_object_unref (sinkpad);   /* because we got it higher up */
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 1);
-
-  /* receiving pad */
-  mysinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sinktemplate),
-      "sink");
-  fail_if (mysinkpad == NULL, "Could not create a mysinkpad");
-
-  srcpad = gst_element_get_pad (volume, "src");
-  fail_if (srcpad == NULL, "Could not get source pad from volume");
-  gst_pad_set_caps (mysinkpad, NULL);
-  gst_pad_set_chain_function (mysinkpad, chain_func);
-
-  fail_unless (gst_pad_link (srcpad, mysinkpad) == GST_PAD_LINK_OK,
-      "Could not link volume source and mysink pads");
-  gst_object_unref (srcpad);    /* because we got it higher up */
-  ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 1);
-
+  volume = gst_check_setup_element ("volume");
+  mysrcpad = gst_check_setup_src_pad (volume, &srctemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (volume, &sinktemplate, NULL);
   return volume;
 }
 
 void
 cleanup_volume (GstElement * volume)
 {
-  GstPad *srcpad, *sinkpad;
-
   GST_DEBUG ("cleanup_volume");
 
-  fail_unless (gst_element_set_state (volume, GST_STATE_NULL) ==
-      GST_STATE_SUCCESS, "could not set to null");
-  ASSERT_OBJECT_REFCOUNT (volume, "volume", 1);
-
-  /* clean up floating src pad */
-  sinkpad = gst_element_get_pad (volume, "sink");
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
-
-  gst_pad_unlink (mysrcpad, sinkpad);
-
-  /* pad refs held by both creator and this function (through _get) */
-  ASSERT_OBJECT_REFCOUNT (mysrcpad, "srcpad", 1);
-  gst_object_unref (mysrcpad);
-  mysrcpad = NULL;
-
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
-  gst_object_unref (sinkpad);
-  /* one more ref is held by volume itself */
-
-  /* clean up floating sink pad */
-  srcpad = gst_element_get_pad (volume, "src");
-  gst_pad_unlink (srcpad, mysinkpad);
-
-  /* pad refs held by both creator and this function (through _get) */
-  ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 2);
-  gst_object_unref (srcpad);
-  /* one more ref is held by volume itself */
-
-  ASSERT_OBJECT_REFCOUNT (mysinkpad, "mysinkpad", 1);
-  gst_object_unref (mysinkpad);
-  mysinkpad = NULL;
-
-  ASSERT_OBJECT_REFCOUNT (volume, "volume", 1);
-  gst_object_unref (volume);
+  gst_check_teardown_src_pad (volume);
+  gst_check_teardown_sink_pad (volume);
+  gst_check_teardown_element (volume);
 }
 
 GST_START_TEST (test_unity)

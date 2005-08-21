@@ -45,6 +45,17 @@ guchar identification_header[30] = {
   0x01,                         /* framing_flag */
 };
 
+guchar comment_header[] = {
+  3,                            /* packet_type */
+  'v', 'o', 'r', 'b', 'i', 's',
+  2, 0, 0, 0,                   /* vendor_length */
+  'm', 'e',
+  1, 0, 0, 0,                   /* user_comment_list_length */
+  9, 0, 0, 0,                   /* length comment[0] */
+  'A', 'R', 'T', 'I', 'S', 'T', '=', 'm', 'e',
+  0x01,                         /* framing bit */
+};
+
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -54,15 +65,6 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-GstFlowReturn
-chain_func (GstPad * pad, GstBuffer * buffer)
-{
-  GST_DEBUG ("chain_func: received buffer %p", buffer);
-  buffers = g_list_append (buffers, buffer);
-
-  return GST_FLOW_OK;
-}
-
 GstElement *
 setup_vorbisdec ()
 {
@@ -70,41 +72,9 @@ setup_vorbisdec ()
   GstPad *srcpad, *sinkpad;
 
   GST_DEBUG ("setup_vorbisdec");
-
-  vorbisdec = gst_element_factory_make ("vorbisdec", "vorbisdec");
-  fail_if (vorbisdec == NULL, "Could not create a vorbisdec");
-
-  /* sending pad */
-  mysrcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
-      "src");
-  fail_if (mysrcpad == NULL, "Could not create a mysrcpad");
-  ASSERT_OBJECT_REFCOUNT (mysrcpad, "mysrcpad", 1);
-
-  sinkpad = gst_element_get_pad (vorbisdec, "sink");
-  fail_if (sinkpad == NULL, "Could not get source pad from vorbisdec");
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
-  gst_pad_set_caps (mysrcpad, NULL);
-  fail_unless (gst_pad_link (mysrcpad, sinkpad) == GST_PAD_LINK_OK,
-      "Could not link source and vorbisdec sink pads");
-  gst_object_unref (sinkpad);   /* because we got it higher up */
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 1);
-
-  /* receiving pad */
-  mysinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sinktemplate),
-      "sink");
-  fail_if (mysinkpad == NULL, "Could not create a mysinkpad");
-
-  srcpad = gst_element_get_pad (vorbisdec, "src");
-  fail_if (srcpad == NULL, "Could not get source pad from vorbisdec");
-  gst_pad_set_caps (mysinkpad, NULL);
-  gst_pad_set_chain_function (mysinkpad, chain_func);
-
-  fail_unless (gst_pad_link (srcpad, mysinkpad) == GST_PAD_LINK_OK,
-      "Could not link vorbisdec source and mysink pads");
-  gst_object_unref (srcpad);    /* because we got it higher up */
-  ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 1);
+  vorbisdec = gst_check_setup_element ("vorbisdec");
+  mysrcpad = gst_check_setup_src_pad (vorbisdec, &srctemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (vorbisdec, &sinktemplate, NULL);
 
   return vorbisdec;
 }
@@ -116,41 +86,50 @@ cleanup_vorbisdec (GstElement * vorbisdec)
 
   GST_DEBUG ("cleanup_vorbisdec");
 
-  fail_unless (gst_element_set_state (vorbisdec, GST_STATE_NULL) ==
-      GST_STATE_SUCCESS, "could not set to null");
-  ASSERT_OBJECT_REFCOUNT (vorbisdec, "vorbisdec", 1);
-
-  /* clean up floating src pad */
-  sinkpad = gst_element_get_pad (vorbisdec, "sink");
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
-
-  gst_pad_unlink (mysrcpad, sinkpad);
-
-  /* pad refs held by both creator and this function (through _get) */
-  ASSERT_OBJECT_REFCOUNT (mysrcpad, "srcpad", 1);
-  gst_object_unref (mysrcpad);
-  mysrcpad = NULL;
-
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
-  gst_object_unref (sinkpad);
-  /* one more ref is held by vorbisdec itself */
-
-  /* clean up floating sink pad */
-  srcpad = gst_element_get_pad (vorbisdec, "src");
-  gst_pad_unlink (srcpad, mysinkpad);
-
-  /* pad refs held by both creator and this function (through _get) */
-  ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 2);
-  gst_object_unref (srcpad);
-  /* one more ref is held by vorbisdec itself */
-
-  ASSERT_OBJECT_REFCOUNT (mysinkpad, "mysinkpad", 1);
-  gst_object_unref (mysinkpad);
-  mysinkpad = NULL;
-
-  ASSERT_OBJECT_REFCOUNT (vorbisdec, "vorbisdec", 1);
-  gst_object_unref (vorbisdec);
+  gst_check_teardown_src_pad (vorbisdec);
+  gst_check_teardown_sink_pad (vorbisdec);
+  gst_check_teardown_element (vorbisdec);
 }
+
+GST_START_TEST (test_wrong_channels_identification_header)
+{
+  GstElement *vorbisdec;
+  GstBuffer *inbuffer, *outbuffer;
+  GstBus *bus;
+  GstMessage *message;
+
+  vorbisdec = setup_vorbisdec ();
+  fail_unless (gst_element_set_state (vorbisdec,
+          GST_STATE_PLAYING) == GST_STATE_SUCCESS, "could not set to playing");
+  bus = gst_bus_new ();
+
+  inbuffer = gst_buffer_new_and_alloc (30);
+  memcpy (GST_BUFFER_DATA (inbuffer), identification_header, 30);
+  /* set the channel count to 7, which is not supported */
+  GST_BUFFER_DATA (inbuffer)[11] = 7;
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  gst_buffer_ref (inbuffer);
+
+  gst_element_set_bus (vorbisdec, bus);
+  /* pushing gives away my reference ... */
+  fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), GST_FLOW_ERROR);
+  /* ... and nothing ends up on the global buffer list */
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  gst_buffer_unref (inbuffer);
+  fail_unless_equals_int (g_list_length (buffers), 0);
+
+  fail_if ((message = gst_bus_pop (bus)) == NULL);
+  fail_unless_message_error (message, STREAM, NOT_IMPLEMENTED);
+  gst_message_unref (message);
+  gst_element_set_bus (vorbisdec, NULL);
+
+  /* cleanup */
+  gst_object_unref (GST_OBJECT (bus));
+  cleanup_vorbisdec (vorbisdec);
+}
+
+GST_END_TEST;
+
 
 GST_START_TEST (test_empty_identification_header)
 {
@@ -158,8 +137,6 @@ GST_START_TEST (test_empty_identification_header)
   GstBuffer *inbuffer, *outbuffer;
   GstBus *bus;
   GstMessage *message;
-  GError *error;
-  gchar *debug;
 
   vorbisdec = setup_vorbisdec ();
   bus = gst_bus_new ();
@@ -189,21 +166,37 @@ GST_START_TEST (test_empty_identification_header)
 
 GST_END_TEST;
 
-
-GST_START_TEST (test_unity)
+/* FIXME: also tests comment header */
+GST_START_TEST (test_identification_header)
 {
   GstElement *vorbisdec;
   GstBuffer *inbuffer, *outbuffer;
-  gint16 in[2] = { 16384, -256 };
+  GstBus *bus;
+  GstMessage *message;
+  GstTagList *tag_list;
+  gchar *artist;
 
   vorbisdec = setup_vorbisdec ();
   fail_unless (gst_element_set_state (vorbisdec,
           GST_STATE_PLAYING) == GST_STATE_SUCCESS, "could not set to playing");
+  bus = gst_bus_new ();
 
   inbuffer = gst_buffer_new_and_alloc (30);
   memcpy (GST_BUFFER_DATA (inbuffer), identification_header, 30);
-  //FIXME: add a test for wrong channels, like so:
-  //GST_BUFFER_DATA (inbuffer)[12] = 7;
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  gst_buffer_ref (inbuffer);
+
+  gst_element_set_bus (vorbisdec, bus);
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  /* ... and nothing ends up on the global buffer list */
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  gst_buffer_unref (inbuffer);
+  fail_unless (g_list_length (buffers) == 0);
+  fail_if ((message = gst_bus_pop (bus)) != NULL);
+
+  inbuffer = gst_buffer_new_and_alloc (sizeof (comment_header));
+  memcpy (GST_BUFFER_DATA (inbuffer), comment_header, sizeof (comment_header));
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_ref (inbuffer);
 
@@ -213,8 +206,20 @@ GST_START_TEST (test_unity)
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_unref (inbuffer);
   fail_unless (g_list_length (buffers) == 0);
+  /* there's a tag message waiting */
+  fail_if ((message = gst_bus_pop (bus)) == NULL);
+  gst_message_parse_tag (message, &tag_list);
+  fail_unless_equals_int (gst_tag_list_get_tag_size (tag_list, GST_TAG_ARTIST),
+      1);
+  fail_unless (gst_tag_list_get_string (tag_list, GST_TAG_ARTIST, &artist));
+  fail_unless_equals_string (artist, "me");
+  fail_unless_equals_int (gst_tag_list_get_tag_size (tag_list, "album"), 0);
+  gst_tag_list_free (tag_list);
+  gst_message_unref (message);
 
   /* cleanup */
+  gst_element_set_bus (vorbisdec, NULL);
+  gst_object_unref (GST_OBJECT (bus));
   cleanup_vorbisdec (vorbisdec);
 }
 
@@ -227,8 +232,9 @@ vorbisdec_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_unity);
   tcase_add_test (tc_chain, test_empty_identification_header);
+  tcase_add_test (tc_chain, test_wrong_channels_identification_header);
+  tcase_add_test (tc_chain, test_identification_header);
 
   return s;
 }
