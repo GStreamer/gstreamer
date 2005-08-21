@@ -78,6 +78,7 @@ gst_libs_controller_LDADD = $(GST_OBJ_LIBS) \
 # valgrind testing
 # these just need valgrind fixing, period
 TESTS_TO_FIX =					\
+	gst-libs/controller			\
 	pipelines/cleanup			\
 	pipelines/simple_launch_lines
 

@@ -24,21 +24,14 @@
 
 #include <gst/check/gstcheck.h>
 
-GList *buffers = NULL;
 gboolean have_eos = FALSE;
+
+GstPad *mysinkpad;
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
-
-GstFlowReturn
-chain_func (GstPad * pad, GstBuffer * buffer)
-{
-  buffers = g_list_append (buffers, buffer);
-
-  return GST_FLOW_OK;
-}
 
 gboolean
 event_func (GstPad * pad, GstEvent * event)
@@ -60,52 +53,20 @@ event_func (GstPad * pad, GstEvent * event)
 GstElement *
 setup_fakesrc ()
 {
-  GstElement *src;
-  GstPad *srcpad, *sinkpad;
+  GstElement *fakesrc;
 
-  src = gst_element_factory_make ("fakesrc", "src");
-  fail_if (src == NULL, "Could not create a fakesrc");
-
-  sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sinktemplate),
-      "sink");
-  fail_if (sinkpad == NULL, "Could not create a sinkpad");
-
-  srcpad = gst_element_get_pad (src, "src");
-  fail_if (srcpad == NULL, "Could not get source pad from fakesrc");
-  gst_pad_set_caps (sinkpad, NULL);
-  gst_pad_set_chain_function (sinkpad, chain_func);
-  gst_pad_set_event_function (sinkpad, event_func);
-
-  fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK,
-      "Could not link source and sink pads");
-  return src;
+  GST_DEBUG ("setup_fakesrc");
+  fakesrc = gst_check_setup_element ("fakesrc");
+  mysinkpad = gst_check_setup_sink_pad (fakesrc, &sinktemplate, NULL);
+  gst_pad_set_event_function (mysinkpad, event_func);
+  return fakesrc;
 }
 
 void
-cleanup_fakesrc (GstElement * src)
+cleanup_fakesrc (GstElement * fakesrc)
 {
-  GstPad *srcpad, *sinkpad;
-
-  fail_unless (gst_element_set_state (src, GST_STATE_NULL) == GST_STATE_SUCCESS,
-      "could not set to null");
-
-  srcpad = gst_element_get_pad (src, "src");
-  sinkpad = gst_pad_get_peer (srcpad);
-
-  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
-  gst_object_unref (src);
-
-  gst_pad_unlink (srcpad, sinkpad);
-
-  /* pad refs held by both creator and this function (through _get) */
-  ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 2);
-  gst_object_unref (srcpad);
-  gst_object_unref (srcpad);
-
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
-  gst_object_unref (sinkpad);
-  gst_object_unref (sinkpad);
+  gst_check_teardown_sink_pad (fakesrc);
+  gst_check_teardown_element (fakesrc);
 }
 
 GST_START_TEST (test_num_buffers)

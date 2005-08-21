@@ -122,7 +122,7 @@ G_CONST_RETURN GValue *
 		gst_tag_list_get_value_index	(const GstTagList *	list,
 						 const gchar *		tag,
 						 guint			index);
-gboolean      	gst_tag_list_copy_value		(GValue *		dest,
+gboolean	gst_tag_list_copy_value		(GValue *		dest,
 						 const GstTagList *	list,
 						 const gchar *		tag);
 
@@ -211,7 +211,7 @@ gboolean	gst_tag_list_get_string_index	(const GstTagList *	list,
 						 const gchar *		tag,
 						 guint			index,
 						 gchar **		value);
-gboolean	gst_tag_list_get_pointer      	(const GstTagList *	list,
+gboolean	gst_tag_list_get_pointer	(const GstTagList *	list,
 						 const gchar *		tag,
 						 gpointer *		value);
 gboolean	gst_tag_list_get_pointer_index	(const GstTagList *	list,

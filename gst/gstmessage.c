@@ -438,7 +438,7 @@ gst_message_parse_tag (GstMessage * message, GstTagList ** tag_list)
 }
 
 /**
- * gst_message_parse_tag:
+ * gst_message_parse_state_changed:
  * @message: A valid #GstMessage of type GST_MESSAGE_STATE_CHANGED.
  *
  * Extracts the old and new states from the GstMessage.

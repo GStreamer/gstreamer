@@ -43,9 +43,24 @@ extern gboolean _gst_check_threads_running;
 extern gboolean _gst_check_raised_critical;
 extern gboolean _gst_check_expecting_log;
 
+/* global variables used in test methods */
+GList * buffers;
+
 void gst_check_init (int *argc, char **argv[]);
 
+GstFlowReturn gst_check_chain_func (GstPad *pad, GstBuffer *buffer);
+
 void gst_check_message_error (GstMessage *message, GstMessageType type, GQuark domain, gint code);
+
+GstElement * gst_check_setup_element (const gchar *factory);
+void gst_check_teardown_element (GstElement *element);
+GstPad * gst_check_setup_src_pad (GstElement *element,
+    GstStaticPadTemplate *template, GstCaps *caps);
+void gst_check_teardown_src_pad (GstElement *element);
+GstPad * gst_check_setup_sink_pad (GstElement *element,
+    GstStaticPadTemplate *template, GstCaps *caps);
+void gst_check_teardown_sink_pad (GstElement *element);
+
 
 #define fail_unless_message_error(msg, domain, code)		\
 gst_check_message_error (msg, GST_MESSAGE_ERROR,		\
@@ -70,6 +85,15 @@ G_STMT_START {								\
   fail_unless(first == second,						\
     "'" #a "' (%d) is not equal to '" #b"' (%d)", first, second);	\
 } G_STMT_END;
+
+#define fail_unless_equals_string(a, b)					\
+G_STMT_START {								\
+  gchar * first = a;							\
+  gchar * second = b;							\
+  fail_unless(strcmp (first, second) == 0,				\
+    "'" #a "' (%s) is not equal to '" #b"' (%s)", first, second);	\
+} G_STMT_END;
+
 
 /***
  * thread test macros and variables
@@ -179,7 +203,7 @@ G_STMT_START {							\
   int rc;							\
   rc = GST_OBJECT_REFCOUNT_VALUE (object);			\
   fail_unless (rc == value,					\
-               name " refcount is %d instead of %d", rc, value);\
+      "%s refcount is %d instead of %d", name, rc, value);	\
 } G_STMT_END
 
 #define ASSERT_CAPS_REFCOUNT(caps, name, value)			\

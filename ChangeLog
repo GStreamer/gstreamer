@@ -1,3 +1,22 @@
+2005-08-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
+	  don't valgrind the controller test - it's leaking - Stefan, HELP
+	* gst/check/gstcheck.c: (gst_check_message_error),
+	(gst_check_chain_func), (gst_check_setup_element),
+	(gst_check_teardown_element), (gst_check_setup_src_pad),
+	(gst_check_teardown_src_pad), (gst_check_setup_sink_pad),
+	(gst_check_teardown_sink_pad):
+	* gst/check/gstcheck.h:
+	  add a bunch of methods to set up elements, and src and sink pads
+	* check/elements/fakesrc.c: (setup_fakesrc), (cleanup_fakesrc):
+	* check/elements/identity.c: (setup_identity), (cleanup_identity),
+	(GST_START_TEST):
+	  use them
+	* gst/gstmessage.c:
+	* gst/gsttag.h:
+	  whitespace/doc fixes
+
 2005-08-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstelement.h:

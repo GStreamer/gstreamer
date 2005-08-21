@@ -102,3 +102,134 @@ gst_check_message_error (GstMessage * message, GstMessageType type,
   g_error_free (error);
   g_free (debug);
 }
+
+/* helper functions */
+GstFlowReturn
+gst_check_chain_func (GstPad * pad, GstBuffer * buffer)
+{
+  GST_DEBUG ("chain_func: received buffer %p", buffer);
+  buffers = g_list_append (buffers, buffer);
+
+  return GST_FLOW_OK;
+}
+
+/* setup an element for a filter test with mysrcpad and mysinkpad */
+GstElement *
+gst_check_setup_element (const gchar * factory)
+{
+  GstElement *element;
+
+  GST_DEBUG ("setup_element");
+
+  element = gst_element_factory_make (factory, factory);
+  fail_if (element == NULL, "Could not create a %s", factory);
+  ASSERT_OBJECT_REFCOUNT (element, factory, 1);
+  return element;
+}
+
+void
+gst_check_teardown_element (GstElement * element)
+{
+  GST_DEBUG ("teardown_element");
+
+  fail_unless (gst_element_set_state (element, GST_STATE_NULL) ==
+      GST_STATE_SUCCESS, "could not set to null");
+  ASSERT_OBJECT_REFCOUNT (element, "element", 1);
+  gst_object_unref (element);
+}
+
+GstPad *
+gst_check_setup_src_pad (GstElement * element,
+    GstStaticPadTemplate * srctemplate, GstCaps * caps)
+{
+  GstPad *srcpad, *sinkpad;
+
+  /* sending pad */
+  srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (srctemplate),
+      "src");
+  fail_if (srcpad == NULL, "Could not create a srcpad");
+  ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 1);
+
+  sinkpad = gst_element_get_pad (element, "sink");
+  fail_if (sinkpad == NULL, "Could not get sink pad from %s",
+      GST_ELEMENT_NAME (element));
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
+  gst_pad_set_caps (srcpad, caps);
+  fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK,
+      "Could not link source and %s sink pads", GST_ELEMENT_NAME (element));
+  gst_object_unref (sinkpad);   /* because we got it higher up */
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 1);
+
+  return srcpad;
+}
+
+void
+gst_check_teardown_src_pad (GstElement * element)
+{
+  GstPad *srcpad, *sinkpad;
+
+  /* clean up floating src pad */
+  sinkpad = gst_element_get_pad (element, "sink");
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
+  srcpad = gst_pad_get_peer (sinkpad);
+
+  gst_pad_unlink (srcpad, sinkpad);
+
+  /* pad refs held by both creator and this function (through _get) */
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
+  gst_object_unref (sinkpad);
+  /* one more ref is held by element itself */
+
+  /* pad refs held by both creator and this function (through _get_peer) */
+  ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 2);
+  gst_object_unref (srcpad);
+  gst_object_unref (srcpad);
+}
+
+GstPad *
+gst_check_setup_sink_pad (GstElement * element, GstStaticPadTemplate * template,
+    GstCaps * caps)
+{
+  GstPad *srcpad, *sinkpad;
+
+  /* receiving pad */
+  sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (template),
+      "sink");
+  fail_if (sinkpad == NULL, "Could not create a sinkpad");
+
+  srcpad = gst_element_get_pad (element, "src");
+  fail_if (srcpad == NULL, "Could not get source pad from %s",
+      GST_ELEMENT_NAME (element));
+  gst_pad_set_caps (sinkpad, caps);
+  gst_pad_set_chain_function (sinkpad, gst_check_chain_func);
+
+  fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK,
+      "Could not link %s source and sink pads", GST_ELEMENT_NAME (element));
+  gst_object_unref (srcpad);    /* because we got it higher up */
+  ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 1);
+
+  return sinkpad;
+}
+
+void
+gst_check_teardown_sink_pad (GstElement * element)
+{
+  GstPad *srcpad, *sinkpad;
+
+  /* clean up floating sink pad */
+  srcpad = gst_element_get_pad (element, "src");
+  sinkpad = gst_pad_get_peer (srcpad);
+  gst_pad_unlink (srcpad, sinkpad);
+
+  /* pad refs held by both creator and this function (through _get_pad) */
+  ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 2);
+  gst_object_unref (srcpad);
+  /* one more ref is held by element itself */
+
+  /* pad refs held by both creator and this function (through _get_peer) */
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
+  gst_object_unref (sinkpad);
+  gst_object_unref (sinkpad);
+}
