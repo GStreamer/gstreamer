@@ -69,7 +69,6 @@ GstElement *
 setup_vorbisdec ()
 {
   GstElement *vorbisdec;
-  GstPad *srcpad, *sinkpad;
 
   GST_DEBUG ("setup_vorbisdec");
   vorbisdec = gst_check_setup_element ("vorbisdec");
@@ -82,8 +81,6 @@ setup_vorbisdec ()
 void
 cleanup_vorbisdec (GstElement * vorbisdec)
 {
-  GstPad *srcpad, *sinkpad;
-
   GST_DEBUG ("cleanup_vorbisdec");
 
   gst_check_teardown_src_pad (vorbisdec);
