@@ -397,6 +397,9 @@ gst_base_src_send_discont (GstBaseSrc * src)
 {
   GstEvent *event;
 
+  GST_DEBUG_OBJECT (src, "Sending newsegment from %" G_GINT64_FORMAT
+      " to %" G_GINT64_FORMAT, (gint64) src->segment_start,
+      (gint64) src->segment_end);
   event = gst_event_new_newsegment (1.0,
       GST_FORMAT_BYTES,
       (gint64) src->segment_start, (gint64) src->segment_end, (gint64) 0);
@@ -882,6 +885,8 @@ gst_base_src_start (GstBaseSrc * basesrc)
   if (GST_FLAG_IS_SET (basesrc, GST_BASE_SRC_STARTED))
     return TRUE;
 
+  GST_DEBUG_OBJECT (basesrc, "starting source");
+
   basesrc->num_buffers_left = basesrc->num_buffers;
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
@@ -960,6 +965,8 @@ gst_base_src_stop (GstBaseSrc * basesrc)
   if (!GST_FLAG_IS_SET (basesrc, GST_BASE_SRC_STARTED))
     return TRUE;
 
+  GST_DEBUG_OBJECT (basesrc, "stopping source");
+
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
   if (bclass->stop)
     result = bclass->stop (basesrc);
@@ -998,17 +1005,20 @@ gst_base_src_activate_push (GstPad * pad, gboolean active)
 
   /* prepare subclass first */
   if (active) {
+    GST_DEBUG_OBJECT (basesrc, "Activating in push mode");
     if (!gst_base_src_start (basesrc))
       goto error_start;
 
     return gst_pad_start_task (pad, (GstTaskFunction) gst_base_src_loop, pad);
   } else {
+    GST_DEBUG_OBJECT (basesrc, "Deactivating in push mode");
     return gst_base_src_deactivate (basesrc, pad);
   }
 
 error_start:
   {
-    GST_DEBUG_OBJECT (basesrc, "failed to start");
+    gst_base_src_stop (basesrc);
+    GST_DEBUG_OBJECT (basesrc, "Failed to start in push mode");
     return FALSE;
   }
 }
@@ -1022,6 +1032,7 @@ gst_base_src_activate_pull (GstPad * pad, gboolean active)
 
   /* prepare subclass first */
   if (active) {
+    GST_DEBUG_OBJECT (basesrc, "Activating in pull mode");
     if (!gst_base_src_start (basesrc))
       goto error_start;
 
@@ -1032,12 +1043,23 @@ gst_base_src_activate_pull (GstPad * pad, gboolean active)
 
     return TRUE;
   } else {
+    GST_DEBUG_OBJECT (basesrc, "Deactivating in pull mode");
+
+    if (!gst_base_src_stop (basesrc))
+      goto error_stop;
+
     return gst_base_src_deactivate (basesrc, pad);
   }
 
 error_start:
   {
-    GST_DEBUG_OBJECT (basesrc, "failed to start");
+    gst_base_src_stop (basesrc);
+    GST_DEBUG_OBJECT (basesrc, "Failed to start in pull mode");
+    return FALSE;
+  }
+error_stop:
+  {
+    GST_DEBUG_OBJECT (basesrc, "Failed to stop in pull mode");
     return FALSE;
   }
 }
@@ -1078,8 +1100,10 @@ gst_base_src_change_state (GstElement * element)
   }
 
   if ((presult = GST_ELEMENT_CLASS (parent_class)->change_state (element)) !=
-      GST_STATE_SUCCESS)
+      GST_STATE_SUCCESS) {
+    gst_base_src_stop (basesrc);
     return presult;
+  }
 
   switch (transition) {
     case GST_STATE_PLAYING_TO_PAUSED:

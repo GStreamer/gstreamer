@@ -202,6 +202,8 @@ event_probe (GstPad * pad, GstMiniObject ** data, gpointer user_data)
       case GST_EVENT_CUSTOM_UP:
       case GST_EVENT_CUSTOM_BOTH:
       case GST_EVENT_CUSTOM_BOTH_OOB:
+        if (got_event_before_q != NULL)
+          break;
         gst_event_ref (data);
         g_get_current_time (&got_event_time);
         got_event_before_q = GST_EVENT (data);
@@ -215,6 +217,8 @@ event_probe (GstPad * pad, GstMiniObject ** data, gpointer user_data)
       case GST_EVENT_CUSTOM_DS_OOB:
       case GST_EVENT_CUSTOM_BOTH:
       case GST_EVENT_CUSTOM_BOTH_OOB:
+        if (got_event_after_q != NULL)
+          break;
         gst_event_ref (data);
         g_get_current_time (&got_event_time);
         got_event_after_q = GST_EVENT (data);
@@ -228,12 +232,16 @@ event_probe (GstPad * pad, GstMiniObject ** data, gpointer user_data)
 }
 
 static void test_event
-    (GstEventType type, GstPad * pad, gboolean expect_before_q)
+    (GstBin * pipeline, GstEventType type, GstPad * pad,
+    gboolean expect_before_q)
 {
   GstEvent *event;
   gint i;
 
   got_event_before_q = got_event_after_q = NULL;
+
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+  gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, NULL);
 
   event = gst_event_new_custom (type,
       gst_structure_empty_new ("application/x-custom"));
@@ -261,7 +269,17 @@ static void test_event
     fail_if (got_event_after_q == NULL);
     fail_unless (GST_EVENT_TYPE (got_event_after_q) == type);
   }
-};
+
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
+  gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, NULL);
+
+  if (got_event_before_q)
+    gst_event_unref (got_event_before_q);
+  if (got_event_after_q)
+    gst_event_unref (got_event_after_q);
+
+  got_event_before_q = got_event_after_q = NULL;
+}
 
 static gint64
 timediff (GTimeVal * end, GTimeVal * start)
@@ -301,48 +319,51 @@ GST_START_TEST (send_custom_events)
   gst_pad_add_event_probe (sinkpad, (GCallback) event_probe,
       GINT_TO_POINTER (FALSE));
 
-  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
-
   /* Upstream events */
-  test_event (GST_EVENT_CUSTOM_UP, sinkpad, TRUE);
+  test_event (pipeline, GST_EVENT_CUSTOM_UP, sinkpad, TRUE);
   fail_unless (timediff (&got_event_time,
           &sent_event_time) < G_USEC_PER_SEC / 2,
-      "GST_EVENT_CUSTOM_UP took to long to reach source");
+      "GST_EVENT_CUSTOM_UP took to long to reach source: %"
+      G_GINT64_FORMAT " us", timediff (&got_event_time, &sent_event_time));
 
-  test_event (GST_EVENT_CUSTOM_BOTH, sinkpad, TRUE);
+  test_event (pipeline, GST_EVENT_CUSTOM_BOTH, sinkpad, TRUE);
   fail_unless (timediff (&got_event_time,
           &sent_event_time) < G_USEC_PER_SEC / 2,
-      "GST_EVENT_CUSTOM_BOTH took to long to reach source");
+      "GST_EVENT_CUSTOM_BOTH took to long to reach source: %"
+      G_GINT64_FORMAT " us", timediff (&got_event_time, &sent_event_time));
 
-  test_event (GST_EVENT_CUSTOM_BOTH_OOB, sinkpad, TRUE);
+  test_event (pipeline, GST_EVENT_CUSTOM_BOTH_OOB, sinkpad, TRUE);
   fail_unless (timediff (&got_event_time,
           &sent_event_time) < G_USEC_PER_SEC / 2,
-      "GST_EVENT_CUSTOM_BOTH_OOB took to long to reach source");
+      "GST_EVENT_CUSTOM_BOTH_OOB took to long to reach source: %"
+      G_GINT64_FORMAT " us", timediff (&got_event_time, &sent_event_time));
 
   /* Out of band downstream events */
-  test_event (GST_EVENT_CUSTOM_DS_OOB, srcpad, FALSE);
+  test_event (pipeline, GST_EVENT_CUSTOM_DS_OOB, srcpad, FALSE);
   fail_unless (timediff (&got_event_time,
           &sent_event_time) < G_USEC_PER_SEC / 2,
-      "GST_EVENT_CUSTOM_DS_OOB took to long to reach source");
+      "GST_EVENT_CUSTOM_DS_OOB took to long to reach source: %"
+      G_GINT64_FORMAT " us", timediff (&got_event_time, &sent_event_time));
 
-  test_event (GST_EVENT_CUSTOM_BOTH_OOB, srcpad, FALSE);
+  test_event (pipeline, GST_EVENT_CUSTOM_BOTH_OOB, srcpad, FALSE);
   fail_unless (timediff (&got_event_time,
           &sent_event_time) < G_USEC_PER_SEC / 2,
-      "GST_EVENT_CUSTOM_BOTH_OOB took to long to reach source");
+      "GST_EVENT_CUSTOM_BOTH_OOB took to long to reach source: %"
+      G_GINT64_FORMAT " us", timediff (&got_event_time, &sent_event_time));
 
   /* In-band downstream events are expected to take at least 1 second
    * to traverse the the queue */
-  test_event (GST_EVENT_CUSTOM_DS, srcpad, FALSE);
+  test_event (pipeline, GST_EVENT_CUSTOM_DS, srcpad, FALSE);
   fail_unless (timediff (&got_event_time,
           &sent_event_time) >= G_USEC_PER_SEC / 2,
-      "GST_EVENT_CUSTOM_DS arrived too quickly for an in-band event: %lld us",
-      timediff (&got_event_time, &sent_event_time));
+      "GST_EVENT_CUSTOM_DS arrived too quickly for an in-band event: %"
+      G_GINT64_FORMAT " us", timediff (&got_event_time, &sent_event_time));
 
-  test_event (GST_EVENT_CUSTOM_BOTH, srcpad, FALSE);
+  test_event (pipeline, GST_EVENT_CUSTOM_BOTH, srcpad, FALSE);
   fail_unless (timediff (&got_event_time,
           &sent_event_time) >= G_USEC_PER_SEC / 2,
-      "GST_EVENT_CUSTOM_BOTH arrived too quickly for an in-band event: %lld us",
-      timediff (&got_event_time, &sent_event_time));
+      "GST_EVENT_CUSTOM_BOTH arrived too quickly for an in-band event: %"
+      G_GINT64_FORMAT " us", timediff (&got_event_time, &sent_event_time));
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   gst_bin_watch_for_state_change (GST_BIN (pipeline));

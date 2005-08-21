@@ -49,21 +49,29 @@ G_BEGIN_DECLS
 /**
  * GstEventType:
  * @GST_EVENT_UNKNOWN: unknown event.
- * @GST_EVENT_FLUSH_START: start a flush operation
- * @GST_EVENT_FLUSH_STOP: stop a flush operation
- * @GST_EVENT_EOS: no more data is to be expected.
- * @GST_EVENT_NEWSEGMENT: a new segment started
- * @GST_EVENT_TAG: a new tag
- * @GST_EVENT_FILLER: filler for sparse data streams.
- * @GST_EVENT_QOS: a quality message
- * @GST_EVENT_SEEK: a request for a new playback position and rate.
- * @GST_EVENT_NAVIGATION: a navigation event
- * @GST_EVENT_CUSTOM_UP: Custom upstream event, carrying a custom GstStructure
- * @GST_EVENT_CUSTOM_DS: Custom in-stream downstream, carrying a custom GstStructure
- * @GST_EVENT_CUSTOM_DS_OOB: Custom out-of-band downstream event, carrying a custom GstStructure
- * @GST_EVENT_CUSTOM_BOTH: Custom up or downstream event. In-band when travelling downstream.
- * @GST_EVENT_CUSTOM_BOTH_OOB: Custom up or downstream out-of-band event.
+ * @GST_EVENT_FLUSH_START: Start a flush operation
+ * @GST_EVENT_FLUSH_STOP: Stop a flush operation
+ * @GST_EVENT_EOS: End-Of-Stream. No more data is to be expected to follow without
+ * a NEWSEGMENT event.
+ * @GST_EVENT_NEWSEGMENT: A new media segment follows in the dataflow.
+ * @GST_EVENT_TAG: A new set of metadata tags has been found in the stream.
+ * @GST_EVENT_FILLER: Filler for sparse data streams.
+ * @GST_EVENT_QOS: A quality message. Used to indicate to upstream elements that the downstream elements
+ * are being starved of or flooded with data.
+ * @GST_EVENT_SEEK: A request for a new playback position and rate.
+ * @GST_EVENT_NAVIGATION: Navigation events are usually used for communicating user
+ * requests, such as mouse or keyboard movements, to upstream elements.
+ * @GST_EVENT_CUSTOM_UP: Upstream custom event
+ * @GST_EVENT_CUSTOM_DS: Downstream custom event that travels in the data flow.
+ * @GST_EVENT_CUSTOM_DS_OOB: Custom out-of-band downstream event.
+ * @GST_EVENT_CUSTOM_BOTH: Custom upstream or downstream event. In-band when travelling downstream.
+ * @GST_EVENT_CUSTOM_BOTH_OOB: Custom upstream or downstream out-of-band event.
  *
+ * GstEventType lists the standard event types that can be sent in a pipeline. 
+ *
+ * The custom event types can be used for private messages between elements that can't be expressed using normal
+ * GStreamer buffer passing semantics. Custom events carry an arbitrary GstStructure. 
+ * Specific custom events are distinguished by the name of the structure.
  */
 typedef enum {
   GST_EVENT_UNKNOWN		= GST_EVENT_MAKE_TYPE (0, 0),
@@ -88,6 +96,9 @@ typedef enum {
   GST_EVENT_CUSTOM_BOTH_OOB	= GST_EVENT_MAKE_TYPE (32, GST_EVDIR_BOTH)
 } GstEventType;
 
+/**
+ * @The name used for memory allocation tracing 
+ */
 #define GST_EVENT_TRACE_NAME	"GstEvent"
 
 typedef struct _GstEvent GstEvent;

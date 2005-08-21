@@ -79,18 +79,30 @@ main (int argc, char *argv[])
 
   while (i < argc) {
     GstElementStateReturn sret;
+    GstElementState state;
 
     filename = argv[i];
     g_object_set (source, "location", filename, NULL);
+
+    GST_DEBUG ("Starting typefinding for %s", filename);
 
     /* typefind will only commit to PAUSED if it actually finds a type;
      * otherwise the state change fails */
     sret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
 
-    if (sret != GST_STATE_SUCCESS)
+    if (GST_STATE_ASYNC == sret) {
+      if (GST_STATE_FAILURE ==
+          gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL, NULL))
+        break;
+    } else if (sret != GST_STATE_SUCCESS)
       g_print ("%s - No type found\n", argv[i]);
 
-    gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+    if (GST_STATE_ASYNC ==
+        gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL)) {
+      if (GST_STATE_FAILURE ==
+          gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL, NULL))
+        break;
+    }
 
     i++;
   }

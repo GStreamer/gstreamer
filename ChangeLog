@@ -1,3 +1,26 @@
+2005-08-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* check/Makefile.am:
+	  Use CHECK_CFLAGS and CHECK_LIBS
+	* check/gst/gstevent.c: (event_probe), (test_event),
+	(GST_START_TEST):
+	  Don't leak events.
+	* gst/base/gstbasesrc.c: (gst_base_src_send_discont),
+	(gst_base_src_start), (gst_base_src_stop),
+	(gst_base_src_activate_push), (gst_base_src_activate_pull),
+	(gst_base_src_change_state):
+	  Sprinkle gst_base_src_stop liberally around error paths to fix
+	  problems reusing a source after failed state changes.
+	* gst/base/gsttypefindhelper.c: (helper_find_peek),
+	(helper_find_suggest), (gst_type_find_helper):
+	  Extra debug output. Don't segfault on GST_PAD_GETRANGEFUNC = NULL
+	* gst/gstevent.h:
+	* docs/gst/tmpl/gstevent.sgml:
+	  Migrate part of the docs from the SGML file. Wait for ensonic to
+	  tell me how I did it wrong ;)
+	* tools/gst-typefind.c: (main):
+	  Extra robustness to state changes between files.
+
 2005-08-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:

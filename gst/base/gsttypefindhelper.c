@@ -39,6 +39,7 @@ typedef struct
   GstCaps *caps;
   guint64 size;
   GList *buffers;
+  GstTypeFindFactory *factory;
 }
 GstTypeFindHelper;
 
@@ -50,11 +51,14 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
   GstPad *src;
   GstFlowReturn ret;
 
-  if (size == 0)
-    return NULL;
-
   find = (GstTypeFindHelper *) data;
   src = find->src;
+
+  GST_LOG_OBJECT (src, "'%s' called peek (%" G_GINT64_FORMAT ", %u)",
+      GST_PLUGIN_FEATURE_NAME (find->factory), offset, size);
+
+  if (size == 0)
+    return NULL;
 
   if (offset < 0) {
     if (find->size == -1 || find->size < -offset)
@@ -86,6 +90,10 @@ helper_find_suggest (gpointer data, guint probability, const GstCaps * caps)
 {
   GstTypeFindHelper *find = (GstTypeFindHelper *) data;
 
+  GST_LOG_OBJECT (find->src,
+      "'%s' called called suggest (%u, %" GST_PTR_FORMAT ")",
+      GST_PLUGIN_FEATURE_NAME (find->factory), probability, caps);
+
   if (probability > find->best_probability) {
     GstCaps *copy = gst_caps_copy (caps);
 
@@ -103,6 +111,9 @@ gst_type_find_helper (GstPad * src, guint64 size)
   GList *walk, *type_list = NULL;
   GstCaps *result = NULL;
 
+  g_return_val_if_fail (src != NULL, NULL);
+  g_return_val_if_fail (GST_PAD_GETRANGEFUNC (src) != NULL, NULL);
+
   walk = type_list = gst_type_find_factory_get_list ();
 
   find.src = src;
@@ -117,6 +128,8 @@ gst_type_find_helper (GstPad * src, guint64 size)
 
   while (walk) {
     GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (walk->data);
+
+    find.factory = factory;
 
     gst_type_find_factory_call_function (factory, &gst_find);
     if (find.best_probability >= GST_TYPE_FIND_MAXIMUM)

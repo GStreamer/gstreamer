@@ -61,9 +61,10 @@ check_PROGRAMS = $(TESTS)
 
 noinst_HEADERS = gst/capslist.h
 
-AM_CFLAGS = $(GST_OBJ_CFLAGS)
+AM_CFLAGS = $(GST_OBJ_CFLAGS) $(CHECK_CFLAGS)
 LDADD = $(GST_OBJ_LIBS) \
-	$(top_builddir)/gst/check/libgstcheck-@GST_MAJORMINOR@.la
+	$(top_builddir)/gst/check/libgstcheck-@GST_MAJORMINOR@.la \
+	$(CHECK_LIBS)
 
 gst_libs_gdp_SOURCES = \
 	gst-libs/gdp.c \
@@ -73,7 +74,8 @@ gst_libs_gdp_CFLAGS = $(AM_CFLAGS) -DGST_ENABLE_NEW
 
 gst_libs_controller_LDADD = $(GST_OBJ_LIBS) \
 	$(top_builddir)/gst/check/libgstcheck-@GST_MAJORMINOR@.la \
-	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_MAJORMINOR@.la
+	$(CHECK_LIBS) \
+	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_MAJORMINOR@.la 
 
 # valgrind testing
 # these just need valgrind fixing, period
