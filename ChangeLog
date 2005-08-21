@@ -1,5 +1,11 @@
 2005-08-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* check/gst/gstevent.c: (event_probe), (test_event),
+	(GST_START_TEST):
+	 Er, don't call gst_bin_watch_for_state_change you idiot.
+
+2005-08-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* check/Makefile.am:
 	  Use CHECK_CFLAGS and CHECK_LIBS
 	* check/gst/gstevent.c: (event_probe), (test_event),

@@ -366,7 +366,7 @@ GST_START_TEST (send_custom_events)
       G_GINT64_FORMAT " us", timediff (&got_event_time, &sent_event_time));
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
-  gst_bin_watch_for_state_change (GST_BIN (pipeline));
+  gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, NULL);
 
   gst_object_unref (pipeline);
 }
