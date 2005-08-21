@@ -203,7 +203,8 @@ G_STMT_START {							\
   int rc;							\
   rc = GST_OBJECT_REFCOUNT_VALUE (object);			\
   fail_unless (rc == value,					\
-      "%s refcount is %d instead of %d", name, rc, value);	\
+      "%s (%p) refcount is %d instead of %d",			\
+      name, object, rc, value);					\
 } G_STMT_END
 
 #define ASSERT_CAPS_REFCOUNT(caps, name, value)			\

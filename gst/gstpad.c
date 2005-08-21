@@ -634,6 +634,8 @@ gst_pad_activate_push (GstPad * pad, gboolean active)
   GstActivateMode old;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "trying to set %s in push mode",
+      active ? "activated" : "deactivated");
 
   GST_LOCK (pad);
   old = GST_PAD_ACTIVATE_MODE (pad);
@@ -2928,7 +2930,7 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
       goto not_negotiated;
   }
 
-  /* NOTE: we read the chainfunc unlocked. 
+  /* NOTE: we read the chainfunc unlocked.
    * we cannot hold the lock for the pad so we might send
    * the data to the wrong function. This is not really a
    * problem since functions are assigned at creation time
@@ -2941,6 +2943,10 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
       GST_DEBUG_FUNCPTR_NAME (chainfunc), GST_DEBUG_PAD_NAME (pad));
 
   ret = chainfunc (pad, buffer);
+
+  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+      "called chainfunction &%s of pad %s:%s, returned %d",
+      GST_DEBUG_FUNCPTR_NAME (chainfunc), GST_DEBUG_PAD_NAME (pad), ret);
 
   GST_STREAM_UNLOCK (pad);
 

@@ -221,26 +221,72 @@ GST_START_TEST (test_message_state_changed_children)
 
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
-  ASSERT_OBJECT_REFCOUNT (src, "sink", 1);
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
 
   bus = GST_ELEMENT_BUS (pipeline);
 
-  /* change state, spawning three times three messages */
-  GST_DEBUG ("setting pipeline to PLAYING");
-  fail_unless (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING)
+  /* change state to READY, spawning three messages */
+  GST_DEBUG ("setting pipeline to READY");
+  fail_unless (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_READY)
       == GST_STATE_SUCCESS);
 
-  pop_messages (bus, 9);
+  /* each object is referenced by a message */
+  ASSERT_OBJECT_REFCOUNT (bus, "bus", 1);
+  ASSERT_OBJECT_REFCOUNT (src, "src", 2);
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 2);
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 2);
 
-  /* this test is completely bogus as the refcount can change while running */
-#if 0
+  pop_messages (bus, 3);
+  fail_if ((gst_bus_pop (bus)) != NULL);
+
   ASSERT_OBJECT_REFCOUNT (bus, "bus", 1);
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
-#endif
+
+  /* change state to PAUSED, spawning three messages */
+  GST_DEBUG ("setting pipeline to PAUSED");
+  fail_unless (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED)
+      == GST_STATE_SUCCESS);
+
+  /* each object is referenced by a message;
+   * base_sink_chain has taken a refcount on the sink, and is blocked on
+   * preroll */
+  ASSERT_OBJECT_REFCOUNT (src, "src", 2);
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 3);
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 2);
+
+  pop_messages (bus, 3);
+  fail_if ((gst_bus_pop (bus)) != NULL);
+
+  ASSERT_OBJECT_REFCOUNT (bus, "bus", 1);
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 2);
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
+
+  /* change state to PLAYING, spawning three messages */
+  GST_DEBUG ("setting pipeline to PLAYING");
+  fail_unless (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING)
+      == GST_STATE_SUCCESS);
+
+  /* each object is referenced by one message; sink still has an extra
+   * because it's still blocked on preroll */
+  ASSERT_OBJECT_REFCOUNT (src, "src", 2);
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 3);
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 2);
+
+  pop_messages (bus, 3);
+  fail_if ((gst_bus_pop (bus)) != NULL);
+
+  ASSERT_OBJECT_REFCOUNT (bus, "bus", 1);
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 2);
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
 
   /* go back to READY, spawning six messages */
+  /* FIXME: only now does the sink get unblocked from preroll
+   * (check log for "done preroll")
+   * mabe that's a bug ? */
   GST_DEBUG ("setting pipeline to READY");
   fail_unless (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_READY)
       == GST_STATE_SUCCESS);
@@ -251,6 +297,7 @@ GST_START_TEST (test_message_state_changed_children)
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 3);
 
   pop_messages (bus, 6);
+  fail_if ((gst_bus_pop (bus)) != NULL);
 
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);

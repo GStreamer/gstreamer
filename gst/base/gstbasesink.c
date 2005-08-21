@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2005 Wim Taymans <wim@fluendo.com>
  *
- * gstbasesink.c: 
+ * gstbasesink.c:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -473,7 +473,7 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
 
   GST_PREROLL_LOCK (pad);
   /* push object on the queue */
-  GST_DEBUG ("push on queue %p", basesink, obj);
+  GST_DEBUG_OBJECT (basesink, "push %p on preroll_queue", obj);
   g_queue_push_tail (basesink->preroll_queue, obj);
 
   have_event = GST_IS_EVENT (obj);
@@ -572,7 +572,7 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
 
     /* now we commit our state */
     GST_STATE_LOCK (basesink);
-    GST_DEBUG ("commit state %p >", basesink);
+    GST_DEBUG_OBJECT (basesink, "commit state");
     gst_element_commit_state (GST_ELEMENT (basesink));
     GST_STATE_UNLOCK (basesink);
 
@@ -604,10 +604,10 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
    * application thread and we don't want to block there. */
   if (length > basesink->preroll_queue_max_len && !have_event) {
     /* block until the state changes, or we get a flush, or something */
-    GST_DEBUG ("element %s waiting to finish preroll",
+    GST_DEBUG_OBJECT (basesink, "waiting to finish preroll",
         GST_ELEMENT_NAME (basesink));
     GST_PREROLL_WAIT (pad);
-    GST_DEBUG ("done preroll");
+    GST_DEBUG_OBJECT (basesink, "done preroll");
   }
   GST_LOCK (pad);
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
@@ -651,7 +651,7 @@ playing_async:
       g_warning ("STREAM_LOCK should have been locked !!");
     }
     GST_STATE_LOCK (basesink);
-    GST_DEBUG ("commit state %p >", basesink);
+    GST_DEBUG_OBJECT (basesink, "commit state");
     gst_element_commit_state (GST_ELEMENT (basesink));
     GST_STATE_UNLOCK (basesink);
     if (t > 0)
@@ -686,7 +686,7 @@ preroll_failed:
 
     /* now we abort our state */
     GST_STATE_LOCK (basesink);
-    GST_DEBUG ("abort state %p >", basesink);
+    GST_DEBUG_OBJECT (basesink, "abort state");
     gst_element_abort_state (GST_ELEMENT (basesink));
     GST_STATE_UNLOCK (basesink);
 
@@ -983,7 +983,7 @@ gst_base_sink_chain (GstPad * pad, GstBuffer * buf)
   return result;
 }
 
-/* FIXME, not all sinks can operate in pull mode 
+/* FIXME, not all sinks can operate in pull mode
  */
 static void
 gst_base_sink_loop (GstPad * pad)

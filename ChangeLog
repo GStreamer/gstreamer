@@ -1,3 +1,20 @@
+2005-08-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
+	  clean up environment for when registry gets built versus
+	  when actual tests are run; valgrind seems to not report
+	  leaks if GST_PLUGIN_PATH is set to some specific values
+	* check/gst/gstbin.c: (GST_START_TEST):
+	  add more refcounting checks; maybe this exposes a
+	  preroll lock bug ?
+	* common/check.mak:
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object):
+	* gst/check/gstcheck.h:
+	* gst/gstbin.c: (bin_element_is_semi_sink), (gst_bin_get_state),
+	(gst_bin_change_state):
+	* gst/gstpad.c: (gst_pad_activate_push), (gst_pad_chain):
+	  add/fix debugging/whitespace
+
 2005-08-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* check/gst/gstevent.c: (event_probe), (test_event),

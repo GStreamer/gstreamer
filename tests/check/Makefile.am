@@ -4,8 +4,13 @@ CHECK_REGISTRY = $(top_builddir)/check/test-registry.xml
 
 GST_TOOLS_DIR = $(top_builddir)/tools
 
-TESTS_ENVIRONMENT=\
+REGISTRY_ENVIRONMENT = \
 	GST_REGISTRY=$(CHECK_REGISTRY)
+
+TESTS_ENVIRONMENT = \
+        $(REGISTRY_ENVIRONMENT)                                 \
+        GST_PLUGIN_PATH_ONLY=yes                                \
+        GST_PLUGIN_PATH=$(top_builddir)/gst
 
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
@@ -25,13 +30,9 @@ clean-local: clean-local-check
 
 $(CHECK_REGISTRY):
 	$(TESTS_ENVIRONMENT)					\
-	GST_PLUGIN_PATH_ONLY=yes				\
-	GST_PLUGIN_PATH=$(top_builddir)/gst			\
-	$(top_builddir)/tools/gst-register
+	$(top_builddir)/tools/gst-register-@GST_MAJORMINOR@
 
-# FIXME: it'd be nicer to run the versioned register, but in that case
-# "make dist" complains about not finding gst-register-0.9.c
-TESTS = $(top_builddir)/tools/gst-register 	\
+check_PROGRAMS =				\
 	gst/gst				     	\
 	gst/gstbin			     	\
         gst/gstbuffer				\
@@ -57,7 +58,8 @@ TESTS = $(top_builddir)/tools/gst-register 	\
 	gst-libs/controller			\
 	gst-libs/gdp
 
-check_PROGRAMS = $(TESTS)
+TESTS = $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@	\
+	$(check_PROGRAMS)
 
 noinst_HEADERS = gst/capslist.h
 
@@ -89,7 +91,7 @@ TESTS_THREADED =				\
 	gst/gstminiobject 			\
 	gst/gstobject
 
-VALGRIND_TESTS_DISABLE = 			\
-	$(top_builddir)/tools/gst-register 	\
-	$(TESTS_THREADED)			\
+VALGRIND_TESTS_DISABLE = 					\
+	$(top_builddir)/tools/gst-register-@GST_MAJORMINOR@	\
+	$(TESTS_THREADED)					\
 	$(TESTS_TO_FIX)

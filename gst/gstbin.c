@@ -778,6 +778,7 @@ bin_element_is_semi_sink (GstElement * child, GstBin * bin)
     for (pads = child->srcpads; pads; pads = g_list_next (pads)) {
       GstPad *peer;
 
+      GST_DEBUG ("looking at pad %p", pads->data);
       if ((peer = gst_pad_get_peer (GST_PAD_CAST (pads->data)))) {
         connected_src =
             has_ancestor (GST_OBJECT_CAST (peer), GST_OBJECT_CAST (bin));
@@ -892,7 +893,7 @@ restart:
       GstElement *child = GST_ELEMENT_CAST (children->data);
 
       gst_object_ref (child);
-      /* now we release the lock to enter a non blocking wait. We 
+      /* now we release the lock to enter a non blocking wait. We
        * release the lock anyway since we can. */
       GST_UNLOCK (bin);
 
@@ -1152,7 +1153,7 @@ restart:
   /* take base time */
   base_time = element->base_time;
 
-  /* make sure queues are empty, they could be filled when 
+  /* make sure queues are empty, they could be filled when
    * restarting. */
   clear_queue (elem_queue, TRUE);
   clear_queue (semi_queue, TRUE);
@@ -1160,6 +1161,7 @@ restart:
 
   children = bin->children;
   children_cookie = bin->children_cookie;
+  GST_DEBUG_OBJECT (bin, "reffing and examining children");
   while (children) {
     GstElement *child = GST_ELEMENT_CAST (children->data);
 
@@ -1183,7 +1185,9 @@ restart:
     }
     children = g_list_next (children);
   }
+  GST_DEBUG_OBJECT (bin, "reffed and examined children");
   GST_UNLOCK (bin);
+
   /* after this point new elements can be added/removed from the
    * bin. We operate on the snapshot taken above. Applications
    * should serialize their add/remove and set_state. */
@@ -1203,6 +1207,7 @@ restart:
   }
 
   /* second step, change state of elements in the queue */
+  GST_DEBUG_OBJECT (bin, "change state of elements in the queue");
   while (!g_queue_is_empty (elem_queue)) {
     GstElement *qelement;
     GList *pads;
