@@ -1765,6 +1765,7 @@ gst_element_set_state (GstElement * element, GstElementState state)
   GstElementState pending;
   GTimeVal tv;
 
+  g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
 
   /* get current element state,  need to call the method so that
    * we call the virtual method and subclasses can implement their

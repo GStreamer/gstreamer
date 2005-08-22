@@ -1,3 +1,11 @@
+2005-08-22  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstcaps.c: (gst_static_caps_get), (gst_caps_to_string):
+	Make _static_caps_get() refcounting sane.
+	
+	* gst/gstelement.c: (gst_element_set_state):
+	Add g_return_val_if_fail() to protect against segfaults.
+
 2005-08-22  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/tmpl/gstevent.sgml:
