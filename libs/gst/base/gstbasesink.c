@@ -604,8 +604,7 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
    * application thread and we don't want to block there. */
   if (length > basesink->preroll_queue_max_len && !have_event) {
     /* block until the state changes, or we get a flush, or something */
-    GST_DEBUG_OBJECT (basesink, "waiting to finish preroll",
-        GST_ELEMENT_NAME (basesink));
+    GST_DEBUG_OBJECT (basesink, "waiting to finish preroll");
     GST_PREROLL_WAIT (pad);
     GST_DEBUG_OBJECT (basesink, "done preroll");
   }

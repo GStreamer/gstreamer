@@ -544,8 +544,12 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
       GST_QUEUE_MUTEX_LOCK (queue);
       gst_queue_locked_flush (queue);
       queue->srcresult = GST_FLOW_OK;
-      gst_pad_start_task (queue->srcpad, (GstTaskFunction) gst_queue_loop,
-          queue->srcpad);
+      if (gst_pad_is_linked (queue->srcpad)) {
+        gst_pad_start_task (queue->srcpad, (GstTaskFunction) gst_queue_loop,
+            queue->srcpad);
+      } else {
+        GST_DEBUG_OBJECT (queue, "not re-starting task as pad is not linked");
+      }
       GST_QUEUE_MUTEX_UNLOCK (queue);
 
       STATUS (queue, "after flush");
@@ -961,7 +965,7 @@ gst_queue_src_activate_push (GstPad * pad, gboolean active)
     if (gst_pad_is_linked (pad))
       result = gst_pad_start_task (pad, (GstTaskFunction) gst_queue_loop, pad);
     else {
-      GST_DEBUG ("not starting task as pad is not linked");
+      GST_DEBUG_OBJECT (queue, "not starting task as pad is not linked");
       result = TRUE;
     }
     GST_QUEUE_MUTEX_UNLOCK (queue);

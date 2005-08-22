@@ -376,22 +376,6 @@ gst_base_src_query (GstPad * pad, GstQuery * query)
   }
 }
 
-#if 0
-static const GstEventMask *
-gst_base_src_get_event_mask (GstPad * pad)
-{
-  static const GstEventMask masks[] = {
-    {GST_EVENT_SEEK, GST_SEEK_METHOD_CUR | GST_SEEK_METHOD_SET |
-          GST_SEEK_METHOD_END | GST_SEEK_FLAG_FLUSH |
-          GST_SEEK_FLAG_SEGMENT_LOOP},
-    {GST_EVENT_FLUSH, 0},
-    {GST_EVENT_SIZE, 0},
-    {0, 0},
-  };
-  return masks;
-}
-#endif
-
 static gboolean
 gst_base_src_send_discont (GstBaseSrc * src)
 {
@@ -443,36 +427,50 @@ gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
 
   /* perform the seek */
   switch (cur_type) {
+    case GST_SEEK_TYPE_NONE:
+      break;
     case GST_SEEK_TYPE_SET:
       if (cur < 0)
         goto error;
       src->offset = MIN (cur, src->size);
       src->segment_start = src->offset;
-      src->segment_end = MIN (stop, src->size);
-      GST_DEBUG_OBJECT (src, "seek set pending to %" G_GINT64_FORMAT,
-          src->offset);
       break;
     case GST_SEEK_TYPE_CUR:
-      cur += src->offset;
-      src->offset = CLAMP (cur, 0, src->size);
+      src->offset = CLAMP (src->offset + cur, 0, src->size);
       src->segment_start = src->offset;
-      src->segment_end = stop;
-      GST_DEBUG_OBJECT (src, "seek cur pending to %" G_GINT64_FORMAT,
-          src->offset);
       break;
     case GST_SEEK_TYPE_END:
       if (cur > 0)
         goto error;
-      cur = src->size + cur;
-      src->offset = MAX (0, cur);
+      src->offset = MAX (0, src->size + cur);
       src->segment_start = src->offset;
-      src->segment_end = stop;
-      GST_DEBUG_OBJECT (src, "seek end pending to %" G_GINT64_FORMAT,
-          src->offset);
       break;
     default:
       goto error;
   }
+
+  switch (stop_type) {
+    case GST_SEEK_TYPE_NONE:
+      break;
+    case GST_SEEK_TYPE_SET:
+      if (stop < 0)
+        goto error;
+      src->segment_end = MIN (stop, src->size);
+      break;
+    case GST_SEEK_TYPE_CUR:
+      src->segment_end = CLAMP (src->segment_end + stop, 0, src->size);
+      break;
+    case GST_SEEK_TYPE_END:
+      if (stop > 0)
+        goto error;
+      src->segment_end = src->size + stop;
+      break;
+    default:
+      goto error;
+  }
+
+  GST_DEBUG_OBJECT (src, "seek pending for segment from %" G_GINT64_FORMAT
+      " to %" G_GINT64_FORMAT, src->segment_start, src->segment_end);
 
   /* now make sure the discont will be send */
   src->need_discont = TRUE;

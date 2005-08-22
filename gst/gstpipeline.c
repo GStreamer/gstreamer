@@ -364,7 +364,8 @@ gst_pipeline_change_state (GstElement * element)
 
     result = gst_element_get_state (element, NULL, NULL, timeval);
     if (result == GST_STATE_ASYNC) {
-      GST_WARNING ("timeout in PREROLL, forcing next state change");
+      GST_WARNING_OBJECT (pipeline,
+          "timeout in PREROLL, forcing next state change");
       g_warning ("timeout in PREROLL, forcing next state change");
       result = GST_STATE_SUCCESS;
     }

@@ -1,3 +1,19 @@
+2005-08-22  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object):
+	  Remove extra parameter to debug output
+
+	* gst/base/gstbasesrc.c: (gst_base_src_send_discont),
+	(gst_base_src_do_seek), (gst_base_src_activate_push):
+	  Fix seek event handling.
+
+	* gst/gstpipeline.c: (gst_pipeline_change_state):
+	* gst/gstqueue.c: (gst_queue_handle_sink_event),
+	(gst_queue_src_activate_push):
+	  Don't start the src pad task on FLUSH_STOP if the pad
+	  isn't linked.
+	  Debug changes.
+
 2005-08-22  Wim Taymans  <wim@fluendo.com>
 
 	* check/gst/gstcaps.c: (GST_START_TEST), (gst_caps_suite):
