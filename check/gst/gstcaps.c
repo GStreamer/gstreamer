@@ -97,6 +97,32 @@ GST_START_TEST (test_mutability)
 
 GST_END_TEST;
 
+GST_START_TEST (test_static_caps)
+{
+  GstStaticCaps scaps = GST_STATIC_CAPS ("audio/x-raw-int,rate=44100");
+  GstCaps *caps1;
+  GstCaps *caps2;
+
+  /* caps creation */
+  caps1 = gst_static_caps_get (&scaps);
+  fail_unless (caps1 != NULL);
+  /* 1 refcount core, one from us */
+  fail_unless (GST_CAPS_REFCOUNT (caps1) == 2);
+
+  /* caps should be the same */
+  caps2 = gst_static_caps_get (&scaps);
+  fail_unless (caps2 != NULL);
+  /* 1 refcount core, two from us */
+  fail_unless (GST_CAPS_REFCOUNT (caps1) == 3);
+  /* caps must be equal */
+  fail_unless (caps1 == caps2);
+
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
+}
+
+GST_END_TEST;
+
 Suite *
 gst_caps_suite (void)
 {
@@ -108,6 +134,8 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_double_append);
   tcase_add_test (tc_chain, test_mutability);
   tcase_add_test (tc_chain, test_buffer);
+  tcase_add_test (tc_chain, test_static_caps);
+
   return s;
 }
 

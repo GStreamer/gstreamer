@@ -1,5 +1,10 @@
 2005-08-22  Wim Taymans  <wim@fluendo.com>
 
+	* check/gst/gstcaps.c: (GST_START_TEST), (gst_caps_suite):
+	Added check for gst_static_caps_get() refcounting.
+
+2005-08-22  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstcaps.c: (gst_static_caps_get), (gst_caps_to_string):
 	Make _static_caps_get() refcounting sane.
 	
