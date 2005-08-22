@@ -509,6 +509,10 @@ gst_base_src_event_handler (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
+      if (!src->seekable) {
+        gst_event_unref (event);
+        return FALSE;
+      }
       return gst_base_src_do_seek (src, event);
     case GST_EVENT_FLUSH_START:
       /* cancel any blocking getrange */

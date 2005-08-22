@@ -1,5 +1,10 @@
 2005-08-22  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* gst/base/gstbasesrc.c: (gst_base_src_event_handler)
+	  Don't pretend to handle seek events if the source is not seekable
+
+2005-08-22  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/base/gstbasesink.c: (gst_base_sink_handle_object):
 	  Remove extra parameter to debug output
 
