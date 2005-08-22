@@ -88,6 +88,47 @@ type_as_function ## _get_type (void)						\
   GST_BOILERPLATE_FULL (type, type_as_function, parent_type, parent_type_macro,	\
       __GST_DO_NOTHING)
 
+/* Like GST_BOILERPLATE, but makes the type 1) implement an interface, and 2)
+ * implement GstImplementsInterface for that type
+ *
+ * After this you will need to implement interface_as_function ## _supported
+ * and interface_as_function ## _interface_init
+ */
+#define GST_BOILERPLATE_WITH_INTERFACE(type, type_as_function, parent_type,             \
+    parent_type_as_macro, interface_type, interface_type_as_macro,                      \
+    interface_as_function)                                                              \
+                                                                                        \
+static void interface_as_function ## _interface_init (interface_type ## Class *klass);  \
+static gboolean interface_as_function ## _supported (type *object, GType iface_type);   \
+                                                                                        \
+static void                                                                             \
+type_as_function ## _implements_interface_init (GstImplementsInterfaceClass *klass)     \
+{                                                                                       \
+  klass->supported = (gpointer)interface_as_function ## _supported;                     \
+}                                                                                       \
+                                                                                        \
+static void                                                                             \
+type_as_function ## _init_interfaces (GType type)                                       \
+{                                                                                       \
+  static const GInterfaceInfo implements_iface_info = {                                 \
+    (GInterfaceInitFunc) type_as_function ## _implements_interface_init,                \
+    NULL,                                                                               \
+    NULL,                                                                               \
+  };                                                                                    \
+  static const GInterfaceInfo iface_info = {                                            \
+    (GInterfaceInitFunc) interface_as_function ## _interface_init,                      \
+    NULL,                                                                               \
+    NULL,                                                                               \
+  };                                                                                    \
+                                                                                        \
+  g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,                     \
+      &implements_iface_info);                                                          \
+  g_type_add_interface_static (type, interface_type_as_macro, &iface_info);             \
+}                                                                                       \
+                                                                                        \
+GST_BOILERPLATE_FULL (type, type_as_function, parent_type,                              \
+    parent_type_as_macro, type_as_function ## _init_interfaces)
+
 /* Just call the parent handler.  This assumes that there is a variable
  * named parent_class that points to the (duh!) parent class.  Note that
  * this macro is not to be used with things that return something, use
