@@ -1,3 +1,9 @@
+2005-08-22  Owen Fraser-Green  <owen@discobabe.net>
+
+	* gst/realmedia/rmdemux.c: 
+	(gst_rmdemux_perform_seek, gst_rmdemux_parse_packet): 
+	Seeking improvements.
+
 2005-08-19  Wim Taymans  <wim@fluendo.com>
 
 	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_class_init):
