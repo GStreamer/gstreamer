@@ -259,6 +259,7 @@ class Jukebox(gst.Bin):
         sinkpad = srcpad.get_peer()
         srcpad.unlink(sinkpad)
         self._adder.release_request_pad(sinkpad)
+        source.set_state(gst.STATE_NULL)
 
         if len(self._adder.get_pad_list()) == 1:
             gst.debug('only a source pad left, so we are done')
