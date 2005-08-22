@@ -8,7 +8,7 @@ libgstvolume_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS)
 
-noinst_HEADERS = gstvolume.h filter.func
+noinst_HEADERS = gstvolume.h
 
 if HAVE_GTK
 noinst_PROGRAMS = demo
