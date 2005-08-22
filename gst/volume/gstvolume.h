@@ -1,4 +1,6 @@
 /* -*- c-basic-offset: 2 -*-
+ * vi:si:et:sw=2:sts=8:ts=8:expandtab
+ *
  * GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
@@ -18,16 +20,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef __GST_VOLUME_H__
 #define __GST_VOLUME_H__
 
-
 #include <gst/gst.h>
 
-
 G_BEGIN_DECLS
-
 
 #define GST_TYPE_VOLUME \
   (gst_volume_get_type())
@@ -56,7 +54,7 @@ struct _GstVolume {
   gboolean mute;
   gint   volume_i, real_vol_i; /* the _i(nt) values get synchronized with the */
   gfloat volume_f, real_vol_f; /* _f(loat) values on each update */
-  
+
   GList *tracklist;
 };
 
@@ -64,10 +62,8 @@ struct _GstVolumeClass {
   GstBaseTransformClass parent_class;
 };
 
-GType gst_volume_get_type(void);
-
+GType gst_volume_get_type (void);
 
 G_END_DECLS
-
 
 #endif /* __GST_VOLUME_H__ */

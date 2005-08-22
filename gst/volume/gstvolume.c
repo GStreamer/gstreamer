@@ -1,4 +1,6 @@
 /* -*- c-basic-offset: 2 -*-
+ * vi:si:et:sw=2:sts=8:ts=8:expandtab
+ *
  * GStreamer
  * Copyright (C) 1999-2001 Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) 2005 Andy Wingo <wingo@pobox.com>
@@ -22,6 +24,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <string.h>
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
@@ -33,15 +36,14 @@
 /* the volume factor is a range from 0.0 to (arbitrary) 4.0
  * we map 1.0 to VOLUME_UNITY_INT
  */
-#define VOLUME_UNITY_INT	8192    /* internal int for unity */
-#define VOLUME_UNITY_BIT_SHIFT	13      /* number of bits to shift
-                                           for unity */
-#define VOLUME_MAX_DOUBLE	4.0
-#define VOLUME_MAX_INT16	32767
-#define VOLUME_MIN_INT16	-32768
+#define VOLUME_UNITY_INT        8192    /* internal int for unity */
+#define VOLUME_UNITY_BIT_SHIFT  13      /* number of bits to shift for unity */
+#define VOLUME_MAX_DOUBLE       4.0
+#define VOLUME_MAX_INT16        32767
+#define VOLUME_MIN_INT16        -32768
 
 /* number of steps we use for the mixer interface to go from 0.0 to 1.0 */
-# define VOLUME_STEPS		100
+# define VOLUME_STEPS           100
 
 static GstElementDetails volume_details = {
   "Volume",
@@ -49,7 +51,6 @@ static GstElementDetails volume_details = {
   "Set volume on audio/raw streams",
   "Andy Wingo <wingo@pobox.com>",
 };
-
 
 /* Filter signals and args */
 enum
@@ -102,7 +103,7 @@ static GstStaticPadTemplate volume_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 static void gst_volume_interface_init (GstImplementsInterfaceClass * klass);
 static void gst_volume_mixer_init (GstMixerClass * iface);
 
-#define _init_interfaces(type)						\
+#define _init_interfaces(type)                                          \
   {                                                                     \
     static const GInterfaceInfo voliface_info = {                       \
       (GInterfaceInitFunc) gst_volume_interface_init,                   \
@@ -134,7 +135,6 @@ static GstFlowReturn volume_transform (GstBaseTransform * base,
     GstBuffer * inbuf, GstBuffer * outbuf);
 gboolean volume_set_caps (GstBaseTransform * base, GstCaps * incaps,
     GstCaps * outcaps);
-
 
 static void volume_process_float (GstVolume * this, GstClockTime tstamp,
     gpointer bytes, gint n_bytes);
