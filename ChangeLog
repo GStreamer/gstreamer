@@ -1,3 +1,11 @@
+2005-08-22  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/mad/gstid3tag.c: (gst_id3_tag_init),
+	(gst_id3_tag_sink_event), (gst_id3_tag_do_caps_nego),
+	(gst_id3_tag_chain), (gst_id3_tag_change_state), (plugin_init):
+	  Works a bit better now, but still needs a rewrite to use
+	  get_range instead of this seeking nastiness.
+
 2005-08-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* configure.ac:
