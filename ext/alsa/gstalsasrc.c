@@ -46,9 +46,11 @@ enum
   PROP_DEVICE,
 };
 
-static void gst_alsasrc_base_init (gpointer g_class);
-static void gst_alsasrc_class_init (GstAlsaSrcClass * klass);
-static void gst_alsasrc_init (GstAlsaSrc * alsasrc);
+GST_BOILERPLATE_WITH_INTERFACE (GstAlsaSrc, gst_alsasrc, GstAudioSrc,
+    GST_TYPE_AUDIO_SRC, GstMixer, GST_TYPE_MIXER, gst_alsasrc_mixer);
+
+GST_IMPLEMENT_ALSA_MIXER_METHODS (GstAlsaSrc, gst_alsasrc_mixer);
+
 static void gst_alsasrc_dispose (GObject * object);
 static void gst_alsasrc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -57,7 +59,10 @@ static void gst_alsasrc_get_property (GObject * object,
 
 static GstCaps *gst_alsasrc_getcaps (GstBaseSrc * bsrc);
 
-static gboolean gst_alsasrc_open (GstAudioSrc * asrc, GstRingBufferSpec * spec);
+static gboolean gst_alsasrc_open (GstAudioSrc * asrc);
+static gboolean gst_alsasrc_prepare (GstAudioSrc * asrc,
+    GstRingBufferSpec * spec);
+static gboolean gst_alsasrc_unprepare (GstAudioSrc * asrc);
 static gboolean gst_alsasrc_close (GstAudioSrc * asrc);
 static guint gst_alsasrc_read (GstAudioSrc * asrc, gpointer data, guint length);
 static guint gst_alsasrc_delay (GstAudioSrc * asrc);
@@ -85,36 +90,6 @@ static GstStaticPadTemplate alsasrc_src_factory =
         "depth = (int) 8, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]")
     );
-
-static GstElementClass *parent_class = NULL;
-
-/* static guint gst_alsasrc_signals[LAST_SIGNAL] = { 0 }; */
-
-GType
-gst_alsasrc_get_type (void)
-{
-  static GType alsasrc_type = 0;
-
-  if (!alsasrc_type) {
-    static const GTypeInfo alsasrc_info = {
-      sizeof (GstAlsaSrcClass),
-      gst_alsasrc_base_init,
-      NULL,
-      (GClassInitFunc) gst_alsasrc_class_init,
-      NULL,
-      NULL,
-      sizeof (GstAlsaSrc),
-      0,
-      (GInstanceInitFunc) gst_alsasrc_init,
-    };
-
-    alsasrc_type =
-        g_type_register_static (GST_TYPE_AUDIO_SRC, "GstAlsaSrc",
-        &alsasrc_info, 0);
-  }
-
-  return alsasrc_type;
-}
 
 static void
 gst_alsasrc_dispose (GObject * object)
@@ -147,8 +122,6 @@ gst_alsasrc_class_init (GstAlsaSrcClass * klass)
   gstbaseaudiosrc_class = (GstBaseAudioSrcClass *) klass;
   gstaudiosrc_class = (GstAudioSrcClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASE_AUDIO_SRC);
-
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_alsasrc_dispose);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_alsasrc_get_property);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_alsasrc_set_property);
@@ -156,6 +129,8 @@ gst_alsasrc_class_init (GstAlsaSrcClass * klass)
   gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_alsasrc_getcaps);
 
   gstaudiosrc_class->open = GST_DEBUG_FUNCPTR (gst_alsasrc_open);
+  gstaudiosrc_class->prepare = GST_DEBUG_FUNCPTR (gst_alsasrc_prepare);
+  gstaudiosrc_class->unprepare = GST_DEBUG_FUNCPTR (gst_alsasrc_unprepare);
   gstaudiosrc_class->close = GST_DEBUG_FUNCPTR (gst_alsasrc_close);
   gstaudiosrc_class->read = GST_DEBUG_FUNCPTR (gst_alsasrc_read);
   gstaudiosrc_class->delay = GST_DEBUG_FUNCPTR (gst_alsasrc_delay);
@@ -475,7 +450,32 @@ error:
 }
 
 static gboolean
-gst_alsasrc_open (GstAudioSrc * asrc, GstRingBufferSpec * spec)
+gst_alsasrc_open (GstAudioSrc * asrc)
+{
+  GstAlsaSrc *alsa;
+  gint err;
+
+  alsa = GST_ALSA_SRC (asrc);
+
+  CHECK (snd_pcm_open (&alsa->handle, alsa->device, SND_PCM_STREAM_CAPTURE,
+          SND_PCM_NONBLOCK), open_error);
+
+  if (!alsa->mixer)
+    alsa->mixer = gst_alsa_mixer_new (alsa->device, GST_ALSA_MIXER_CAPTURE);
+
+  return TRUE;
+
+  /* ERRORS */
+open_error:
+  {
+    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+        ("Capture open error: %s", snd_strerror (err)), (NULL));
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_alsasrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
 {
   GstAlsaSrc *alsa;
   gint err;
@@ -484,9 +484,6 @@ gst_alsasrc_open (GstAudioSrc * asrc, GstRingBufferSpec * spec)
 
   if (!alsasrc_parse_spec (alsa, spec))
     goto spec_parse;
-
-  CHECK (snd_pcm_open (&alsa->handle, alsa->device, SND_PCM_STREAM_CAPTURE,
-          SND_PCM_NONBLOCK), open_error);
 
   CHECK (snd_pcm_nonblock (alsa->handle, 0), non_block);
 
@@ -509,12 +506,6 @@ spec_parse:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
         ("Error parsing spec"), (NULL));
-    return FALSE;
-  }
-open_error:
-  {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Recording open error: %s", snd_strerror (err)), (NULL));
     return FALSE;
   }
 non_block:
@@ -544,17 +535,57 @@ prepare_failed:
 }
 
 static gboolean
-gst_alsasrc_close (GstAudioSrc * asrc)
+gst_alsasrc_unprepare (GstAudioSrc * asrc)
 {
   GstAlsaSrc *alsa;
+  gint err;
 
   alsa = GST_ALSA_SRC (asrc);
 
+  CHECK (snd_pcm_drop (alsa->handle), drop);
+
+  CHECK (snd_pcm_hw_free (alsa->handle), hw_free);
+
+  CHECK (snd_pcm_nonblock (alsa->handle, 1), non_block);
+
+  return TRUE;
+
+  /* ERRORS */
+drop:
+  {
+    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+        ("Could not drop samples: %s", snd_strerror (err)), (NULL));
+    return FALSE;
+  }
+hw_free:
+  {
+    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+        ("Could not free hw params: %s", snd_strerror (err)), (NULL));
+    return FALSE;
+  }
+non_block:
+  {
+    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+        ("Could not set device to nonblocking: %s", snd_strerror (err)),
+        (NULL));
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_alsasrc_close (GstAudioSrc * asrc)
+{
+  GstAlsaSrc *alsa = GST_ALSA_SRC (asrc);
+
   snd_pcm_close (alsa->handle);
+
+  if (alsa->mixer) {
+    gst_alsa_mixer_free (alsa->mixer);
+    alsa->mixer = NULL;
+  }
 
   return TRUE;
 }
-
 
 /*
  *   Underrun and suspend recovery

@@ -69,15 +69,19 @@ struct _GstAudioSrcClass {
   /* vtable */
 
   /* open the device with given specs */
-  gboolean (*open)   (GstAudioSrc *src, GstRingBufferSpec *spec);
+  gboolean (*open)      (GstAudioSrc *src);
+  /* prepare resources and state to operate with the given specs */
+  gboolean (*prepare)   (GstAudioSrc *src, GstRingBufferSpec *spec);
+  /* undo anything that was done in prepare() */
+  gboolean (*unprepare) (GstAudioSrc *src);
   /* close the device */
-  gboolean (*close)  (GstAudioSrc *src);
+  gboolean (*close)     (GstAudioSrc *src);
   /* read samples from the device */
-  guint    (*read)   (GstAudioSrc *src, gpointer data, guint length);
+  guint    (*read)      (GstAudioSrc *src, gpointer data, guint length);
   /* get number of samples queued in the device */
-  guint    (*delay)  (GstAudioSrc *src);
+  guint    (*delay)     (GstAudioSrc *src);
   /* reset the audio device, unblock from a write */
-  void     (*reset)  (GstAudioSrc *src);
+  void     (*reset)     (GstAudioSrc *src);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];

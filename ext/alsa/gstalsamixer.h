@@ -22,8 +22,8 @@
 
 
 #include "gstalsa.h"
-#include <gst/interfaces/mixer.h>
 
+#include <gst/interfaces/mixer.h>
 #include "gstalsamixeroptions.h"
 #include "gstalsamixertrack.h"
 
@@ -31,33 +31,160 @@
 G_BEGIN_DECLS
 
 
-#define GST_ALSA_MIXER(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALSA_MIXER,GstAlsaMixer))
-#define GST_ALSA_MIXER_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALSA_MIXER,GstAlsaMixerClass))
-#define GST_IS_ALSA_MIXER(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALSA_MIXER))
-#define GST_IS_ALSA_MIXER_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALSA_MIXER))
-#define GST_TYPE_ALSA_MIXER		(gst_alsa_mixer_get_type())
+#define GST_ALSA_MIXER(obj)		((GstAlsaMixer*)(obj))
 
+
+typedef enum {
+  GST_ALSA_MIXER_CAPTURE = 1<<0,
+  GST_ALSA_MIXER_PLAYBACK = 1<<1,
+  GST_ALSA_MIXER_ALL = GST_ALSA_MIXER_CAPTURE | GST_ALSA_MIXER_PLAYBACK
+} GstAlsaMixerDirection;
+  
 
 typedef struct _GstAlsaMixer GstAlsaMixer;
-typedef struct _GstAlsaMixerClass GstAlsaMixerClass;
 
 
 struct _GstAlsaMixer {
-  GstElement		parent;
-
   GList *		tracklist;	/* list of available tracks */
 
-  snd_mixer_t *		mixer_handle;
+  snd_mixer_t *		handle;
 
+  gchar *		device;
   gchar *		cardname;
+
+  GstAlsaMixerDirection dir;
 };
 
-struct _GstAlsaMixerClass {
-  GstElementClass	parent;
-};
+
+GstAlsaMixer*	gst_alsa_mixer_new		(const gchar *device,
+                                                 GstAlsaMixerDirection dir);
+void		gst_alsa_mixer_free		(GstAlsaMixer *mixer);
+
+const GList*	gst_alsa_mixer_list_tracks 	(GstAlsaMixer * mixer);
+void		gst_alsa_mixer_set_volume	(GstAlsaMixer * mixer,
+                                                 GstMixerTrack * track,
+                                                 gint * volumes);
+void		gst_alsa_mixer_get_volume	(GstAlsaMixer * mixer,
+                                                 GstMixerTrack * track,
+                                                 gint * volumes);
+void		gst_alsa_mixer_set_record	(GstAlsaMixer * mixer,
+                                                 GstMixerTrack * track,
+                                                 gboolean record);
+void		gst_alsa_mixer_set_mute		(GstAlsaMixer * mixer,
+                                                 GstMixerTrack * track,
+                                                 gboolean mute);
+void		gst_alsa_mixer_set_option	(GstAlsaMixer * mixer,
+                                                 GstMixerOptions * opts,
+                                                 gchar * value);
+const gchar*	gst_alsa_mixer_get_option	(GstAlsaMixer * mixer,
+                                                 GstMixerOptions * opts);
 
 
-GType		gst_alsa_mixer_get_type		(void);
+#define GST_IMPLEMENT_ALSA_MIXER_METHODS(Type, interface_as_function)           \
+static gboolean                                                                 \
+interface_as_function ## _supported (Type *this, GType iface_type)              \
+{                                                                               \
+  g_assert (iface_type == GST_TYPE_MIXER);                                      \
+                                                                                \
+  return (this->mixer != NULL);                                                 \
+}                                                                               \
+                                                                                \
+static const GList*                                                             \
+interface_as_function ## _list_tracks (GstMixer * mixer)                        \
+{                                                                               \
+  Type *this = (Type*) mixer;                                                   \
+                                                                                \
+  g_return_val_if_fail (this != NULL, NULL);                                    \
+  g_return_val_if_fail (this->mixer != NULL, NULL);                             \
+                                                                                \
+  return gst_alsa_mixer_list_tracks (this->mixer);                              \
+}                                                                               \
+                                                                                \
+static void                                                                     \
+interface_as_function ## _set_volume (GstMixer * mixer, GstMixerTrack * track,  \
+    gint * volumes)                                                             \
+{                                                                               \
+  Type *this = (Type*) mixer;                                                   \
+                                                                                \
+  g_return_if_fail (this != NULL);                                              \
+  g_return_if_fail (this->mixer != NULL);                                       \
+                                                                                \
+  gst_alsa_mixer_set_volume (this->mixer, track, volumes);                      \
+}                                                                               \
+                                                                                \
+static void                                                                     \
+interface_as_function ## _get_volume (GstMixer * mixer, GstMixerTrack * track,  \
+    gint * volumes)                                                             \
+{                                                                               \
+  Type *this = (Type*) mixer;                                                   \
+                                                                                \
+  g_return_if_fail (this != NULL);                                              \
+  g_return_if_fail (this->mixer != NULL);                                       \
+                                                                                \
+  gst_alsa_mixer_get_volume (this->mixer, track, volumes);                      \
+}                                                                               \
+                                                                                \
+static void                                                                     \
+interface_as_function ## _set_record (GstMixer * mixer, GstMixerTrack * track,  \
+    gboolean record)                                                            \
+{                                                                               \
+  Type *this = (Type*) mixer;                                                   \
+                                                                                \
+  g_return_if_fail (this != NULL);                                              \
+  g_return_if_fail (this->mixer != NULL);                                       \
+                                                                                \
+  gst_alsa_mixer_set_record (this->mixer, track, record);                       \
+}                                                                               \
+                                                                                \
+static void                                                                     \
+interface_as_function ## _set_mute (GstMixer * mixer, GstMixerTrack * track,    \
+    gboolean mute)                                                              \
+{                                                                               \
+  Type *this = (Type*) mixer;                                                   \
+                                                                                \
+  g_return_if_fail (this != NULL);                                              \
+  g_return_if_fail (this->mixer != NULL);                                       \
+                                                                                \
+  gst_alsa_mixer_set_mute (this->mixer, track, mute);                           \
+}                                                                               \
+                                                                                \
+static void                                                                     \
+interface_as_function ## _set_option (GstMixer * mixer, GstMixerOptions * opts, \
+    gchar * value)                                                              \
+{                                                                               \
+  Type *this = (Type*) mixer;                                                   \
+                                                                                \
+  g_return_if_fail (this != NULL);                                              \
+  g_return_if_fail (this->mixer != NULL);                                       \
+                                                                                \
+  gst_alsa_mixer_set_option (this->mixer, opts, value);                         \
+}                                                                               \
+                                                                                \
+static const gchar*                                                             \
+interface_as_function ## _get_option (GstMixer * mixer, GstMixerOptions * opts) \
+{                                                                               \
+  Type *this = (Type*) mixer;                                                   \
+                                                                                \
+  g_return_val_if_fail (this != NULL, NULL);                                    \
+  g_return_val_if_fail (this->mixer != NULL, NULL);                             \
+                                                                                \
+  return gst_alsa_mixer_get_option (this->mixer, opts);                         \
+}                                                                               \
+                                                                                \
+static void                                                                     \
+interface_as_function ## _interface_init (GstMixerClass * klass)                \
+{                                                                               \
+  GST_MIXER_TYPE (klass) = GST_MIXER_HARDWARE;                                  \
+                                                                                \
+  /* set up the interface hooks */                                              \
+  klass->list_tracks = interface_as_function ## _list_tracks;                   \
+  klass->set_volume = interface_as_function ## _set_volume;                     \
+  klass->get_volume = interface_as_function ## _get_volume;                     \
+  klass->set_mute = interface_as_function ## _set_mute;                         \
+  klass->set_record = interface_as_function ## _set_record;                     \
+  klass->set_option = interface_as_function ## _set_option;                     \
+  klass->get_option = interface_as_function ## _get_option;                     \
+}
 
 
 G_END_DECLS

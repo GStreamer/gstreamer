@@ -3,6 +3,7 @@ plugin_LTLIBRARIES = libgstalsa.la
 libgstalsa_la_SOURCES = \
 	gstalsaplugin.c \
 	gstalsamixer.c	\
+	gstalsamixerelement.c \
 	gstalsamixertrack.c \
 	gstalsamixeroptions.c \
 	gstalsasink.c 	\
@@ -20,5 +21,6 @@ noinst_HEADERS = \
 	gstalsasink.h \
 	gstalsasrc.h \
 	gstalsamixer.h \
+	gstalsamixerelement.h \
 	gstalsamixertrack.h \
 	gstalsamixeroptions.h

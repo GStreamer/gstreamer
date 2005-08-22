@@ -1,3 +1,22 @@
+2005-08-22  Andy Wingo  <wingo@pobox.com>
+
+	* gst-libs/gst/audio/gstaudiosrc.h:
+	* gst-libs/gst/audio/gstaudiosrc.c: Implement open_device and
+	close_device in the ring buffer, like gstaudiosink.
+
+	* ext/alsa/gstalsamixer.h:
+	* ext/alsa/gstalsamixer.c: Not a GObject any more. Include a nifty
+	macro to implement the interface without much code. Cleanups. 
+
+	* ext/alsa/gstalsasrc.h:
+	* ext/alsa/gstalsasrc.c: Be a mixer. Open device and mixer in
+	READY.
+
+	* ext/alsa/Makefile.am: Add new files.
+	* ext/alsa/gstalsamixerelement.c: 
+	* ext/alsa/gstalsamixerelement.c: Split element code out from
+	mixer code so that alsasrc can be a mixer too.
+
 2005-08-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/elements/volume.c: (setup_volume), (cleanup_volume),

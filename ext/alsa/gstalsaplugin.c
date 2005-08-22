@@ -25,7 +25,7 @@
 
 #include "gstalsasink.h"
 #include "gstalsasrc.h"
-#include "gstalsamixer.h"
+#include "gstalsamixerelement.h"
 
 GST_DEBUG_CATEGORY (alsa_debug);
 
@@ -57,7 +57,7 @@ plugin_init (GstPlugin * plugin)
   int err;
 
   if (!gst_element_register (plugin, "alsamixer", GST_RANK_NONE,
-          GST_TYPE_ALSA_MIXER))
+          GST_TYPE_ALSA_MIXER_ELEMENT))
     return FALSE;
   if (!gst_element_register (plugin, "alsasrc", GST_RANK_PRIMARY,
           GST_TYPE_ALSA_SRC))

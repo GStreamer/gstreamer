@@ -70,6 +70,8 @@ static void gst_audioringbuffer_finalize (GObject * object);
 
 static GstRingBufferClass *ring_parent_class = NULL;
 
+static gboolean gst_audioringbuffer_open_device (GstRingBuffer * buf);
+static gboolean gst_audioringbuffer_close_device (GstRingBuffer * buf);
 static gboolean gst_audioringbuffer_acquire (GstRingBuffer * buf,
     GstRingBufferSpec * spec);
 static gboolean gst_audioringbuffer_release (GstRingBuffer * buf);
@@ -120,6 +122,10 @@ gst_audioringbuffer_class_init (GstAudioRingBufferClass * klass)
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_audioringbuffer_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_audioringbuffer_finalize);
 
+  gstringbuffer_class->open_device =
+      GST_DEBUG_FUNCPTR (gst_audioringbuffer_open_device);
+  gstringbuffer_class->close_device =
+      GST_DEBUG_FUNCPTR (gst_audioringbuffer_close_device);
   gstringbuffer_class->acquire =
       GST_DEBUG_FUNCPTR (gst_audioringbuffer_acquire);
   gstringbuffer_class->release =
@@ -233,6 +239,54 @@ gst_audioringbuffer_finalize (GObject * object)
 }
 
 static gboolean
+gst_audioringbuffer_open_device (GstRingBuffer * buf)
+{
+  GstAudioSrc *src;
+  GstAudioSrcClass *csrc;
+  gboolean result = TRUE;
+
+  src = GST_AUDIO_SRC (GST_OBJECT_PARENT (buf));
+  csrc = GST_AUDIO_SRC_GET_CLASS (src);
+
+  if (csrc->open)
+    result = csrc->open (src);
+
+  if (!result)
+    goto could_not_open;
+
+  return result;
+
+could_not_open:
+  {
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_audioringbuffer_close_device (GstRingBuffer * buf)
+{
+  GstAudioSrc *src;
+  GstAudioSrcClass *csrc;
+  gboolean result = TRUE;
+
+  src = GST_AUDIO_SRC (GST_OBJECT_PARENT (buf));
+  csrc = GST_AUDIO_SRC_GET_CLASS (src);
+
+  if (csrc->close)
+    result = csrc->close (src);
+
+  if (!result)
+    goto could_not_open;
+
+  return result;
+
+could_not_open:
+  {
+    return FALSE;
+  }
+}
+
+static gboolean
 gst_audioringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 {
   GstAudioSrc *src;
@@ -243,8 +297,8 @@ gst_audioringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   src = GST_AUDIO_SRC (GST_OBJECT_PARENT (buf));
   csrc = GST_AUDIO_SRC_GET_CLASS (src);
 
-  if (csrc->open)
-    result = csrc->open (src, spec);
+  if (csrc->prepare)
+    result = csrc->prepare (src, spec);
 
   if (!result)
     goto could_not_open;
@@ -297,8 +351,8 @@ gst_audioringbuffer_release (GstRingBuffer * buf)
   gst_buffer_unref (buf->data);
   buf->data = NULL;
 
-  if (csrc->close)
-    result = csrc->close (src);
+  if (csrc->unprepare)
+    result = csrc->unprepare (src);
 
   return result;
 }
