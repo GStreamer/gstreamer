@@ -1,3 +1,19 @@
+2005-08-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/flac/Makefile.am:
+	* ext/flac/gstflac.c: (plugin_init):
+	* ext/flac/gstflacdec.c: (flacdec_get_type), (gst_flacdec_init),
+	(gst_flacdec_update_metadata), (gst_flacdec_seek),
+	(gst_flacdec_tell), (gst_flacdec_length), (gst_flacdec_read),
+	(gst_flacdec_write), (gst_flacdec_loop),
+	(gst_flacdec_get_src_query_types), (gst_flacdec_src_query),
+	(gst_flacdec_src_event), (gst_flacdec_sink_activate),
+	(gst_flacdec_sink_activate_pull), (gst_flacdec_change_state):
+	* ext/flac/gstflacdec.h:
+	  Port flacdec (seeking is still slow'ish).
+
 2005-08-22  Owen Fraser-Green  <owen@discobabe.net>
 
 	* gst/realmedia/rmdemux.c: 
