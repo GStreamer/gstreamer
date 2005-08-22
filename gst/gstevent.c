@@ -19,6 +19,22 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstevent
+ * @short_description: Structure describing events that are passed up and down a pipeline
+ * @see_also: #GstPad, #GstElement
+ *
+ * The event classes are used to construct and query events.
+ *
+ * Events are usually created with gst_event_new() which takes the event type as
+ * an argument. Properties specific to the event can be set afterwards with the
+ * provided macros. The event should be unreferenced with gst_event_unref().
+ *
+ * gst_event_new_seek() is a usually used to create a seek event and it takes
+ * the needed parameters for a seek event. 
+ *
+ * gst_event_new_flush() creates a new flush event.
+ */
 
 #include <string.h>             /* memcpy */
 
@@ -330,6 +346,14 @@ gst_event_parse_newsegment (GstEvent * event, gdouble * rate,
 }
 
 /* tag event */
+/**
+ * gst_event_new_tag:
+ * @taglist: metadata list
+ *
+ * Generates a metadata tag event from the given @taglist.
+ * 
+ * Returns: a new #GstEvent
+ */
 GstEvent *
 gst_event_new_tag (GstTagList * taglist)
 {
@@ -338,6 +362,13 @@ gst_event_new_tag (GstTagList * taglist)
   return gst_event_new_custom (GST_EVENT_TAG, (GstStructure *) taglist);
 }
 
+/**
+ * gst_event_parse_tag:
+ * @event: a tag event
+ * @taglist: pointer to metadata list
+ *
+ * Parses a tag @event and stores the results in the given @taglist location.
+ */
 void
 gst_event_parse_tag (GstEvent * event, GstTagList ** taglist)
 {
@@ -349,6 +380,13 @@ gst_event_parse_tag (GstEvent * event, GstTagList ** taglist)
 }
 
 /* filler event */
+/**
+ * gst_event_new_filler:
+ *
+ * Create a new dummy event that should be ignored.
+ *
+ * Returns: a new #GstEvent
+ */
 GstEvent *
 gst_event_new_filler (void)
 {
@@ -458,6 +496,19 @@ gst_event_new_seek (gdouble rate, GstFormat format, GstSeekFlags flags,
           "stop", G_TYPE_INT64, stop, NULL));
 }
 
+/**
+ * gst_event_parse_seek:
+ * @event: a seek event
+ * @rate: result location for the rate
+ * @format: result location for the stream format
+ * @flags:  result location for the #GstSeekFlags
+ * @cur_type: result location for the #GstSeekType of the current position
+ * @cur: result location for the current postion expressed in @format
+ * @stop_type:  result location for the #GstSeekType of the stop position
+ * @stop: result location for the stop postion expressed in @format
+ *
+ * Parses a seek @event and stores the results in the given result locations.
+ */
 void
 gst_event_parse_seek (GstEvent * event, gdouble * rate, GstFormat * format,
     GstSeekFlags * flags,
@@ -489,6 +540,14 @@ gst_event_parse_seek (GstEvent * event, gdouble * rate, GstFormat * format,
 }
 
 /* navigation event */
+/**
+ * gst_event_new_navigation:
+ * @structure: description of the event
+ *
+ * Create a new navigation event from the given description.
+ *
+ * Returns: a new #GstEvent
+ */
 GstEvent *
 gst_event_new_navigation (GstStructure * structure)
 {

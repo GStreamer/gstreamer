@@ -97,7 +97,8 @@ typedef enum {
 } GstEventType;
 
 /**
- * @The name used for memory allocation tracing 
+ * GST_EVENT_TRACE_NAME:
+ * The name used for memory allocation tracing 
  */
 #define GST_EVENT_TRACE_NAME	"GstEvent"
 
@@ -111,8 +112,32 @@ typedef struct _GstEventClass GstEventClass;
 #define GST_EVENT(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_EVENT, GstEvent))
 #define GST_EVENT_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_EVENT, GstEventClass))
 
+/**
+ * GST_EVENT_TYPE:
+ * @event: the event to query
+ *
+ * Get the event type.
+ *
+ * Returns: the #GstEventType of the given event
+ */
 #define GST_EVENT_TYPE(event)		(GST_EVENT(event)->type)
+/**
+ * GST_EVENT_TIMESTAMP:
+ * @event: the event to query
+ *
+ * Get the timestamp of the event.
+ *
+ * Returns: the timestamp of the given event
+ */
 #define GST_EVENT_TIMESTAMP(event)	(GST_EVENT(event)->timestamp)
+/**
+ * GST_EVENT_SRC:
+ * @event: the event to query
+ *
+ * The source object that generated this event.
+ *
+ * Returns: the source #GstObject for the given event
+ */
 #define GST_EVENT_SRC(event)		(GST_EVENT(event)->src)
 
 #define GST_EVENT_IS_UPSTREAM(ev)	!!(GST_EVENT_TYPE (ev) & GST_EVDIR_US)
@@ -125,6 +150,32 @@ typedef struct _GstEventClass GstEventClass;
  * @GST_SEEK_TYPE_CUR: change relative to current position
  * @GST_SEEK_TYPE_SET: absolute position is requested
  * @GST_SEEK_TYPE_END: relative position to duration is requested
+ *
+ * The different types of seek events. When constructing a seek event a format,
+ * a seek method and optional flags are OR-ed together. The seek event is then
+ * inserted into the graph with #gst_pad_send_event() or
+ * #gst_element_send_event().
+
+ * Following example illustrates how to insert a seek event (1 second in the stream)
+ * in a pipeline.
+ * <example>
+ * <title>Insertion of a seek event into a pipeline</title>
+ * <programlisting>
+ *  gboolean res;
+ *  GstEvent *event;
+ *  
+ *  event = gst_event_new_seek (
+ *            GST_FORMAT_TIME |		// seek on time
+ *            GST_SEEK_METHOD_SET |	// set the absolute position
+ *            GST_SEEK_FLAG_FLUSH,	// flush any pending data
+ *            1 * GST_SECOND);		// the seek offset (1 second)
+ *  
+ *  res = gst_element_send_event (GST_ELEMENT (osssink), event);
+ *  if (!res) {
+ *    g_warning ("seek failed");
+ *  }
+ * </programlisting>
+ * </example>
  */
 typedef enum {
   /* one of these */
@@ -145,6 +196,7 @@ typedef enum {
  * @GST_SEEK_FLAG_SEGMENT: perform a segment seek. After the playback
  *            of the segment completes, no EOS will be emmited but a
  *            SEGMENT_DONE message will be posted on the bus.
+ *
  */
 typedef enum {
   GST_SEEK_FLAG_NONE		= 0,
@@ -178,10 +230,32 @@ struct _GstEventClass {
 void		_gst_event_initialize		(void);
 	
 GType		gst_event_get_type		(void);
+
 /* refcounting */
+/**
+ * gst_event_ref:
+ * @ev: The event to refcount
+ *
+ * Increase the refcount of this event.
+ */
 #define         gst_event_ref(ev)		GST_EVENT (gst_mini_object_ref (GST_MINI_OBJECT (ev)))
+/**
+ * gst_event_ref:
+ * @ev: The event to refcount
+ *
+ * Decrease the refcount of an event, freeing it if the refcount reaches 0.
+ */
 #define         gst_event_unref(ev)		gst_mini_object_unref (GST_MINI_OBJECT (ev))
+
 /* copy event */
+/**
+ * gst_event_copy:
+ * @ev: The event to copy
+ *
+ * Copy the event using the event specific copy function.
+ *
+ * Returns: A new event that is a copy of the given input event
+ */
 #define         gst_event_copy(ev)		GST_EVENT (gst_mini_object_copy (GST_MINI_OBJECT (ev)))
 
 /* custom event */
