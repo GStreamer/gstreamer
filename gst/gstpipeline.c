@@ -410,7 +410,7 @@ gst_pipeline_set_new_stream_time (GstPipeline * pipeline, GstClockTime time)
   GST_LOCK (pipeline);
   pipeline->stream_time = time;
   GST_DEBUG ("%s: set new stream_time to %" GST_TIME_FORMAT,
-      GST_ELEMENT_NAME (pipeline), time);
+      GST_ELEMENT_NAME (pipeline), GST_TIME_ARGS (time));
   GST_UNLOCK (pipeline);
 }
 

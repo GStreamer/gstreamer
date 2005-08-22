@@ -1,3 +1,12 @@
+2005-08-22  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasetransform.c: (gst_base_transform_transform_caps),
+	(gst_base_transform_handle_buffer):
+	Also call the transform function if we have ANY caps.
+
+	* gst/gstpipeline.c: (gst_pipeline_set_new_stream_time):
+	Fix debug info.
+
 2005-08-22  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/base/gstbasesrc.c: (gst_base_src_event_handler)

@@ -222,18 +222,27 @@ gst_base_transform_transform_caps (GstBaseTransform * trans, GstPad * pad,
 
     ret = gst_caps_new_empty ();
 
-    /* we send caps with just one structure to the transform 
-     * function as this is easier for the element */
-    for (i = 0; i < gst_caps_get_size (caps); i++) {
-      GstCaps *nth;
-
-      nth = gst_caps_copy_nth (caps, i);
-      GST_DEBUG_OBJECT (trans, "from[%d]: %" GST_PTR_FORMAT, i, nth);
-      temp = klass->transform_caps (trans, pad, nth);
-      gst_caps_unref (nth);
-      GST_DEBUG_OBJECT (trans, "  to[%d]: %" GST_PTR_FORMAT, i, temp);
+    if (gst_caps_is_any (caps)) {
+      /* for any caps we still have to call the transform function */
+      GST_DEBUG_OBJECT (trans, "from ANY:");
+      temp = klass->transform_caps (trans, pad, caps);
+      GST_DEBUG_OBJECT (trans, "  to: %" GST_PTR_FORMAT, temp);
 
       gst_caps_append (ret, temp);
+    } else {
+      /* we send caps with just one structure to the transform 
+       * function as this is easier for the element */
+      for (i = 0; i < gst_caps_get_size (caps); i++) {
+        GstCaps *nth;
+
+        nth = gst_caps_copy_nth (caps, i);
+        GST_DEBUG_OBJECT (trans, "from[%d]: %" GST_PTR_FORMAT, i, nth);
+        temp = klass->transform_caps (trans, pad, nth);
+        gst_caps_unref (nth);
+        GST_DEBUG_OBJECT (trans, "  to[%d]: %" GST_PTR_FORMAT, i, temp);
+
+        gst_caps_append (ret, temp);
+      }
     }
     gst_caps_do_simplify (ret);
   } else {
@@ -620,6 +629,7 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
 
   if (trans->in_place) {
     if (bclass->transform_ip) {
+      /* we do not call make writable here */
       gst_buffer_ref (inbuf);
 
       /* in place transform and subclass supports method */
