@@ -30,25 +30,19 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
-
-  /* we need the gsttags plugin for metadata querying */
-  if (!gst_plugin_load ("gsttags"))
-    return FALSE;
-
+#if 0
   if (!gst_element_register (plugin, "flacenc", GST_RANK_NONE,
           GST_TYPE_FLACENC))
     return FALSE;
-
+#endif
   if (!gst_element_register (plugin, "flacdec", GST_RANK_PRIMARY,
           GST_TYPE_FLACDEC))
     return FALSE;
-
+#if 0
   if (!gst_element_register (plugin, "flactag", GST_RANK_PRIMARY,
           gst_flac_tag_get_type ()))
     return FALSE;
-
+#endif
   return TRUE;
 }
 

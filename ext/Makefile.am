@@ -118,11 +118,11 @@ endif
 ## FESTIVAL_DIR=
 ## endif
 
-# if USE_FLAC
-# FLAC_DIR=flac
-# else
+if USE_FLAC
+FLAC_DIR=flac
+else
 FLAC_DIR=
-# endif
+endif
 
 if USE_GCONF
 GCONF_DIR=gconf
@@ -451,6 +451,7 @@ DIST_SUBDIRS=\
 	dv \
 	amrnb \
 	faad \
+	flac \
 	mpeg2dec \
 	jpeg \
 	libpng \

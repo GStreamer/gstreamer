@@ -23,7 +23,6 @@
 
 
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
 
 #include <FLAC/all.h>
 
@@ -45,7 +44,7 @@ struct _FlacDec {
   GstElement 	 element;
 
   GstPad 	*sinkpad,*srcpad;
-  GstByteStream *bs;
+  guint64	 offset;
 
   FLAC__SeekableStreamDecoder *decoder;
   gint		 channels;
