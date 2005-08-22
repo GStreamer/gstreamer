@@ -7,6 +7,7 @@
 <!ENTITY GstBin SYSTEM "xml/gstbin.xml">
 <!ENTITY GstBuffer SYSTEM "xml/gstbuffer.xml">
 <!ENTITY GstCaps SYSTEM "xml/gstcaps.xml">
+<!ENTITY GstChildProxy SYSTEM "xml/gstchildproxy.xml">
 <!ENTITY GstClock SYSTEM "xml/gstclock.xml">
 <!--
 <!ENTITY GstCompat SYSTEM "xml/gstcompat.xml">
@@ -102,6 +103,7 @@
     &GstBin;
     &GstBuffer;
     &GstCaps;
+    &GstChildProxy;
     &GstClock;
     &GstConfig;
     &GstElement;
@@ -203,7 +205,8 @@
   <chapter id="gstreamer-base">
     <title>GStreamer Base Classes</title>
     <para>
-      These base classes are provided to be extended by elements.
+      libgstbase-&GST_MAJORMINOR;.so provides some base classes to be extended
+      by elements.
     </para>
 
     &GstAdapter;

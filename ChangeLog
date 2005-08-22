@@ -1,3 +1,27 @@
+2005-08-23  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* gst/Makefile.am:
+	* gst/gstbin.c: (gst_bin_get_type),
+	(gst_bin_child_proxy_get_child_by_index),
+	(gst_bin_child_proxy_get_children_count),
+	(gst_bin_child_proxy_init):
+	* gst/gstchildproxy.c: (gst_child_proxy_get_child_by_name),
+	(gst_child_proxy_get_child_by_index),
+	(gst_child_proxy_get_children_count), (gst_child_proxy_lookup),
+	(gst_child_proxy_get_property), (gst_child_proxy_get_valist),
+	(gst_child_proxy_get), (gst_child_proxy_set_property),
+	(gst_child_proxy_set_valist), (gst_child_proxy_set),
+	(gst_child_proxy_child_added), (gst_child_proxy_child_removed),
+	(gst_child_proxy_base_init), (gst_child_proxy_get_type):
+	* gst/gstchildproxy.h:
+	* gst/parse/grammar.y:
+	* tools/gst-inspect.c: (print_interfaces),
+	(print_element_properties_info), (print_element_info):
+         ported gstchildproxy over from 0.8
+         ported gst-inspect fixes and enhancements over from 0.8
+
 2005-08-22  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasetransform.c: (gst_base_transform_transform_caps),
