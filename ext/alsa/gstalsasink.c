@@ -44,6 +44,7 @@ enum
 {
   PROP_0,
   PROP_DEVICE,
+  PROP_DEVICE_NAME
 };
 
 static void gst_alsasink_base_init (gpointer g_class);
@@ -176,6 +177,10 @@ gst_alsasink_class_init (GstAlsaSinkClass * klass)
       g_param_spec_string ("device", "Device",
           "ALSA device, as defined in an asound configuration file",
           "default", G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
+      g_param_spec_string ("device-name", "Device name",
+          "Human-readable name of the sound device", "", G_PARAM_READABLE));
 }
 
 static void
@@ -209,6 +214,18 @@ gst_alsasink_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_DEVICE:
       g_value_set_string (value, sink->device);
+      break;
+    case PROP_DEVICE_NAME:
+      if (sink->handle) {
+        snd_pcm_info_t *info;
+
+        snd_pcm_info_malloc (&info);
+        snd_pcm_info (sink->handle, info);
+        g_value_set_string (value, snd_pcm_info_get_name (info));
+        snd_pcm_info_free (info);
+      } else {
+        g_value_set_string (value, NULL);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
