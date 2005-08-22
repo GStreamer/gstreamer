@@ -207,6 +207,21 @@ G_STMT_START {							\
       name, object, rc, value);					\
 } G_STMT_END
 
+#define ASSERT_OBJECT_REFCOUNT_BETWEEN(object, name, lower, upper)	\
+G_STMT_START {								\
+  int rc = GST_OBJECT_REFCOUNT_VALUE (object);				\
+  int lo = lower;							\
+  int hi = upper;							\
+									\
+  fail_unless (rc >= lo,						\
+      "%s (%p) refcount %d is smaller than %d",				\
+      name, object, rc, lo);						\
+  fail_unless (rc <= hi,						\
+      "%s (%p) refcount %d is bigger than %d",				\
+      name, object, rc, hi);						\
+} G_STMT_END
+
+
 #define ASSERT_CAPS_REFCOUNT(caps, name, value)			\
 	ASSERT_MINI_OBJECT_REFCOUNT(caps, name, value)
 

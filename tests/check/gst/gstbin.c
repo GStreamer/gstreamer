@@ -269,12 +269,10 @@ GST_START_TEST (test_message_state_changed_children)
   fail_unless (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING)
       == GST_STATE_SUCCESS);
 
-  /* each object is referenced by one message; sink still has an extra
-   * because it's still blocked on preroll */
-  /* FIXME: dual-CPU or HT machines seem to unblock from preroll after popping
-   */
+  /* each object is referenced by one message
+   * sink might have an extra reference if it's still blocked on preroll */
   ASSERT_OBJECT_REFCOUNT (src, "src", 2);
-  //ASSERT_OBJECT_REFCOUNT (sink, "sink", 3);
+  ASSERT_OBJECT_REFCOUNT_BETWEEN (sink, "sink", 2, 3);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 2);
 
   pop_messages (bus, 3);
@@ -282,15 +280,11 @@ GST_START_TEST (test_message_state_changed_children)
 
   ASSERT_OBJECT_REFCOUNT (bus, "bus", 1);
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
-  /* FIXME: dual-CPU or HT machines seem to unblock from preroll after popping
-   */
-  //ASSERT_OBJECT_REFCOUNT (sink, "sink", 2);
+  /* sink might have an extra reference if it's still blocked on preroll */
+  ASSERT_OBJECT_REFCOUNT_BETWEEN (sink, "sink", 1, 2);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
 
   /* go back to READY, spawning six messages */
-  /* FIXME: only now does the sink get unblocked from preroll
-   * (check log for "done preroll")
-   * mabe that's a bug ? */
   GST_DEBUG ("setting pipeline to READY");
   fail_unless (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_READY)
       == GST_STATE_SUCCESS);

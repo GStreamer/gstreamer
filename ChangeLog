@@ -1,3 +1,11 @@
+2005-08-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/gst/gstbin.c: (GST_START_TEST):
+	  since we don't know when preroll is done, use refcount range
+	  check for the sink
+	* gst/check/gstcheck.h:
+	  add macro for checking refcount range
+
 2005-08-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:
