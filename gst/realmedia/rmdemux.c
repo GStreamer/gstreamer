@@ -49,6 +49,7 @@ struct _GstRMDemuxStream
   GstRMDemuxIndex *index;
   int index_length;
   double frame_rate;
+  guint32 seek_offset;
 
   guint16 width;
   guint16 height;
@@ -255,14 +256,14 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
 
   GstRMDemux *rmdemux = GST_RMDEMUX (GST_PAD_PARENT (pad));
 
-  GST_LOG_OBJECT (rmdemux, "handling event");
-
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
-      GST_DEBUG_OBJECT (rmdemux, "newsegment event");
+      GST_LOG_OBJECT (rmdemux, "Event on sink: NEWSEGMENT");
       gst_event_unref (event);
       break;
     default:
+      GST_LOG_OBJECT (rmdemux, "Event on sink: type=%d",
+          GST_EVENT_TYPE (event));
       ret = gst_pad_event_default (rmdemux->sinkpad, event);
       break;
   }
@@ -288,6 +289,7 @@ gst_rmdemux_src_event (GstPad * pad, GstEvent * event)
       GstSeekType cur_type, stop_type;
       gint64 cur, stop;
 
+      GST_LOG_OBJECT (rmdemux, "Event on src: SEEK");
       /* can't seek if we are not seekable, FIXME could pass the
        * seek query upstream after converting it to bytes using
        * the average bitrate of the stream. */
@@ -328,6 +330,7 @@ gst_rmdemux_src_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
+      GST_LOG_OBJECT (rmdemux, "Event on src: type=%d", GST_EVENT_TYPE (event));
       ret = gst_pad_event_default (rmdemux->sinkpad, event);
       break;
   }
@@ -378,27 +381,32 @@ gst_rmdemux_perform_seek (GstRMDemux * rmdemux, gboolean flush)
     int i, n;
 
     rmdemux->offset = 0;
-    GstClockTime tmp_time = 0;
+    GstClockTime tmp_time = rmdemux->segment_stop;
 
-    /* Find the last offset which occurs after the seek time */
+    /* Find the last offset which occurs before the seek time */
     for (n = 0; n < rmdemux->n_streams; n++) {
       GstRMDemuxStream *stream;
 
       stream = rmdemux->streams[n];
 
-      for (i = 0; i < stream->index_length; i++) {
-        if (stream->index[i].timestamp > rmdemux->segment_start) {
-          if (stream->index[i].offset > rmdemux->offset) {
-            rmdemux->offset = stream->index[i].offset;
+      for (i = stream->index_length - 1; i >= 0; i--) {
+        if (stream->index[i].timestamp < rmdemux->segment_start) {
+          /* Set the seek_offset for the stream so we don't bother parsing it
+           * until we've passed that point */
+          stream->seek_offset = stream->index[i].offset;
+          if (tmp_time > stream->index[i].timestamp) {
             tmp_time = stream->index[i].timestamp;
+            rmdemux->offset = stream->index[i].offset;
+            GST_DEBUG_OBJECT (rmdemux,
+                "We're looking for %" GST_TIME_FORMAT
+                " and we found that stream %d has the latest index at %"
+                GST_TIME_FORMAT, GST_TIME_ARGS (rmdemux->segment_start), n,
+                GST_TIME_ARGS (tmp_time));
           }
           break;
         }
       }
     }
-
-    GST_DEBUG_OBJECT (rmdemux, "seek offset to %" GST_TIME_FORMAT " at 0x%x",
-        GST_TIME_ARGS (tmp_time), rmdemux->offset);
   }
 
   /* now we have a new position, prepare for streaming again */
@@ -417,6 +425,9 @@ gst_rmdemux_perform_seek (GstRMDemux * rmdemux, gboolean flush)
         GST_FORMAT_TIME, (gint64) rmdemux->segment_start,
         (gint64) rmdemux->segment_stop, 0);
 
+    GST_DEBUG_OBJECT (rmdemux,
+        "sending NEWSEGMENT event to all src pads with segment_start= %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (rmdemux->segment_start));
     gst_rmdemux_send_event (rmdemux, event);
 
     /* notify start of new segment */
@@ -826,6 +837,7 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
           gst_element_no_more_pads (GST_ELEMENT (rmdemux));
           rmdemux->have_pads = TRUE;
 
+          GST_LOG_OBJECT (rmdemux, "no more pads.");
           gst_rmdemux_send_event (rmdemux,
               gst_event_new_newsegment (1.0, GST_FORMAT_TIME, (gint64) 0,
                   (gint64) - 1, 0));
@@ -944,6 +956,8 @@ gst_rmdemux_send_event (GstRMDemux * rmdemux, GstEvent * event)
     GstRMDemuxStream *stream;
 
     stream = rmdemux->streams[i];
+
+    GST_DEBUG_OBJECT (rmdemux, "Pushing event to stream %d", i);
 
     gst_event_ref (event);
     gst_pad_push_event (stream->pad, event);
@@ -1200,7 +1214,7 @@ gst_rmdemux_parse_prop (GstRMDemux * rmdemux, const void *data, int length)
   GST_LOG_OBJECT (rmdemux, "number of packets: %d", rmdemux->num_packets);
 
   GST_LOG_OBJECT (rmdemux, "duration: %d", RMDEMUX_GUINT32_GET (data + 20));
-  rmdemux->duration = RMDEMUX_GUINT32_GET (data + 20) * GST_SECOND / 1000;
+  rmdemux->duration = RMDEMUX_GUINT32_GET (data + 20) * GST_MSECOND;
 
   GST_LOG_OBJECT (rmdemux, "preroll: %d", RMDEMUX_GUINT32_GET (data + 24));
   rmdemux->index_offset = RMDEMUX_GUINT32_GET (data + 28);
@@ -1228,6 +1242,7 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const void *data, int length)
 
   stream->id = RMDEMUX_GUINT16_GET (data);
   stream->index = NULL;
+  stream->seek_offset = 0;
   GST_LOG_OBJECT (rmdemux, "stream_number=%d", stream->id);
 
   offset = 30;
@@ -1393,9 +1408,8 @@ gst_rmdemux_parse_indx (GstRMDemux * rmdemux, const void *data, int length)
     index[i].timestamp = RMDEMUX_GUINT32_GET (data + offset + 2) * GST_MSECOND;
     index[i].offset = RMDEMUX_GUINT32_GET (data + offset + 6);
 
-    GST_DEBUG_OBJECT (rmdemux, "Index found for timestamp=%f at offset=%x",
-        (float) index[i].timestamp / 1000.0, index[i].offset);
-
+    GST_DEBUG_OBJECT (rmdemux, "Index found for timestamp=%f (at offset=%x)",
+        (float) index[i].timestamp / GST_SECOND, index[i].offset);
     offset += 14;
   }
 
@@ -1446,18 +1460,25 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const void *data,
 
   stream = gst_rmdemux_get_stream_by_id (rmdemux, id);
 
-  if (gst_pad_alloc_buffer (stream->pad, GST_BUFFER_OFFSET_NONE,
-          packet_size, stream->caps, &buffer) != GST_FLOW_OK) {
-    GST_WARNING_OBJECT (rmdemux, "failed to alloc src buffer for stream %d",
-        id);
-    return;
-  }
+  if (rmdemux->offset >= stream->seek_offset) {
+    if (gst_pad_alloc_buffer (stream->pad, GST_BUFFER_OFFSET_NONE,
+            packet_size, stream->caps, &buffer) != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (rmdemux, "failed to alloc src buffer for stream %d",
+          id);
+      return;
+    }
 
-  memcpy (GST_BUFFER_DATA (buffer), (guint8 *) data, packet_size);
-  GST_BUFFER_TIMESTAMP (buffer) = GST_SECOND * timestamp / 1000;
+    memcpy (GST_BUFFER_DATA (buffer), (guint8 *) data, packet_size);
+    GST_BUFFER_TIMESTAMP (buffer) = GST_MSECOND * timestamp;
 
-  if (stream && stream->pad && GST_PAD_IS_USABLE (stream->pad)) {
-    GST_DEBUG_OBJECT (rmdemux, "Pushing buffer of size %d to pad", packet_size);
-    gst_pad_push (stream->pad, buffer);
+    if (stream && stream->pad && GST_PAD_IS_USABLE (stream->pad)) {
+      GST_DEBUG_OBJECT (rmdemux, "Pushing buffer of size %d to pad",
+          packet_size);
+      gst_pad_push (stream->pad, buffer);
+    }
+  } else {
+    GST_DEBUG_OBJECT (rmdemux,
+        "Stream %d is skipping: seek_offset=%d, offset=%d", stream->id,
+        stream->seek_offset, rmdemux->offset);
   }
 }
