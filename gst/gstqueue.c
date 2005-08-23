@@ -526,8 +526,9 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
       /* now unblock the chain function */
       GST_QUEUE_MUTEX_LOCK (queue);
       queue->srcresult = GST_FLOW_WRONG_STATE;
-      /* unblock the loop function */
+      /* unblock the loop and chain functions */
       g_cond_signal (queue->item_add);
+      g_cond_signal (queue->item_del);
       GST_QUEUE_MUTEX_UNLOCK (queue);
 
       /* make sure it pauses */

@@ -301,6 +301,23 @@ GstEvent *
 gst_event_new_newsegment (gdouble rate, GstFormat format,
     gint64 start_val, gint64 stop_val, gint64 base)
 {
+  if (format == GST_FORMAT_TIME) {
+    GST_CAT_INFO (GST_CAT_EVENT,
+        "creating newsegment rate %lf, format GST_FORMAT_TIME, "
+        "start %" GST_TIME_FORMAT ", stop %" GST_TIME_FORMAT
+        ", base %" GST_TIME_FORMAT,
+        rate, GST_TIME_ARGS (start_val),
+        GST_TIME_ARGS (stop_val), GST_TIME_ARGS (base));
+  } else {
+    GST_CAT_INFO (GST_CAT_EVENT,
+        "creating newsegment rate %lf, format %d, "
+        "start %lld, stop %lld, base %lld",
+        rate, format, start_val, stop_val, base);
+  }
+
+  if (start_val != -1 && stop_val != -1)
+    g_return_val_if_fail (start_val < stop_val, NULL);
+
   return gst_event_new_custom (GST_EVENT_NEWSEGMENT,
       gst_structure_new ("GstEventNewsegment", "rate", G_TYPE_DOUBLE, rate,
           "format", GST_TYPE_FORMAT, format,
@@ -345,7 +362,6 @@ gst_event_parse_newsegment (GstEvent * event, gdouble * rate,
     *base = g_value_get_int64 (gst_structure_get_value (structure, "base"));
 }
 
-/* tag event */
 /**
  * gst_event_new_tag:
  * @taglist: metadata list
@@ -420,6 +436,11 @@ GstEvent *
 gst_event_new_qos (gdouble proportion, GstClockTimeDiff diff,
     GstClockTime timestamp)
 {
+  GST_CAT_INFO (GST_CAT_EVENT,
+      "creating qos proportion %lf, diff %" GST_TIME_FORMAT
+      ", timestamp %" GST_TIME_FORMAT, proportion,
+      GST_TIME_ARGS (diff), GST_TIME_ARGS (timestamp));
+
   return gst_event_new_custom (GST_EVENT_QOS,
       gst_structure_new ("GstEventQOS",
           "proportion", G_TYPE_DOUBLE, proportion,
@@ -486,6 +507,21 @@ GstEvent *
 gst_event_new_seek (gdouble rate, GstFormat format, GstSeekFlags flags,
     GstSeekType cur_type, gint64 cur, GstSeekType stop_type, gint64 stop)
 {
+  if (format == GST_FORMAT_TIME) {
+    GST_CAT_INFO (GST_CAT_EVENT,
+        "creating seek rate %lf, format TIME, flags %d, "
+        "cur_type %d, cur %" GST_TIME_FORMAT ", "
+        "stop_type %d, stop %" GST_TIME_FORMAT,
+        rate, flags, cur_type, GST_TIME_ARGS (cur),
+        stop_type, GST_TIME_ARGS (stop));
+  } else {
+    GST_CAT_INFO (GST_CAT_EVENT,
+        "creating seek rate %lf, format %d, flags %d, "
+        "cur_type %d, cur %" G_GINT64_FORMAT ", "
+        "stop_type %d, stop %" G_GINT64_FORMAT,
+        rate, format, flags, cur_type, cur, stop_type, stop);
+  }
+
   return gst_event_new_custom (GST_EVENT_SEEK,
       gst_structure_new ("GstEventSeek", "rate", G_TYPE_DOUBLE, rate,
           "format", GST_TYPE_FORMAT, format,
@@ -539,7 +575,6 @@ gst_event_parse_seek (GstEvent * event, gdouble * rate, GstFormat * format,
     *stop = g_value_get_int64 (gst_structure_get_value (structure, "stop"));
 }
 
-/* navigation event */
 /**
  * gst_event_new_navigation:
  * @structure: description of the event

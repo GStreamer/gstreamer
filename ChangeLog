@@ -1,3 +1,16 @@
+2005-08-23  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstevent.c: (_gst_event_copy), (gst_event_new_custom),
+	(gst_event_new_newsegment), (gst_event_parse_newsegment),
+	(gst_event_new_tag), (gst_event_parse_tag), (gst_event_new_qos),
+	(gst_event_parse_qos), (gst_event_new_seek),
+	(gst_event_parse_seek):
+	* gst/gstevent.h:
+	Some more debugging output and doc cleanups.
+
+	* gst/gstqueue.c: (gst_queue_handle_sink_event):
+	Fix possible deadlock.
+
 2005-08-23  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-docs.sgml:

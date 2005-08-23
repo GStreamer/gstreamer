@@ -197,7 +197,6 @@ typedef enum {
  * @GST_SEEK_FLAG_SEGMENT: perform a segment seek. After the playback
  *            of the segment completes, no EOS will be emmited but a
  *            SEGMENT_DONE message will be posted on the bus.
- *
  */
 typedef enum {
   GST_SEEK_FLAG_NONE		= 0,
