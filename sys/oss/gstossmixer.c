@@ -143,6 +143,7 @@ gst_ossmixer_new (const char *device, GstOssMixerDirection dir)
 
   ret->device = g_strdup (device);
   ret->dir = dir;
+  ret->mixer_fd = -1;
 
   if (!gst_ossmixer_open (ret))
     goto error;
