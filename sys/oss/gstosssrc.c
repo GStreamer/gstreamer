@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wtay@chello.be>
+ *               2000,2005 Wim Taymans <wim@fluendo.com>
  *
  * gstosssrc.c: 
  *
@@ -23,62 +23,66 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <sys/ioctl.h>
+#include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
-
-#ifdef HAVE_OSS_INCLUDE_IN_SYS
 #include <sys/soundcard.h>
-#else
 
-#ifdef HAVE_OSS_INCLUDE_IN_ROOT
-#include <soundcard.h>
-#else
+#include "gstosssrc.h"
 
-#include <machine/soundcard.h>
 
-#endif /* HAVE_OSS_INCLUDE_IN_ROOT */
-
-#endif /* HAVE_OSS_INCLUDE_IN_SYS */
-
-#include <gstosssrc.h>
-#include <gstosselement.h>
-#include <gst/audio/audioclock.h>
-
-/* elementfactory information */
 static GstElementDetails gst_oss_src_details =
 GST_ELEMENT_DETAILS ("Audio Source (OSS)",
     "Source/Audio",
-    "Read from the sound card",
-    "Erik Walthinsen <omega@cse.ogi.edu>");
+    "Capture from a sound card via OSS",
+    "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
 
-
-/* OssSrc signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
 
 enum
 {
-  ARG_0,
-  ARG_BUFFERSIZE,
-  ARG_FRAGMENT
+  PROP_0,
+  PROP_DEVICE,
+  PROP_DEVICE_NAME,
 };
+
+GST_BOILERPLATE (GstOssSrc, gst_oss_src, GstAudioSrc, GST_TYPE_AUDIO_SRC);
+
+/*
+GST_BOILERPLATE_WITH_INTERFACE (GstOssSrc, gst_oss_src, GstAudioSrc, GST_TYPE_AUDIO_SRC,
+ GstMixer, GST_TYPE_MIXER, gst_oss_src_mixer);
+GST_IMPLEMENT_OSS_MIXER_METHODS (GstOssSrc, gst_oss_src_mixer);
+*/
+
+static void gst_oss_src_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static void gst_oss_src_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+
+static void gst_oss_src_dispose (GObject * object);
+
+static GstCaps *gst_oss_src_getcaps (GstBaseSrc * bsrc);
+
+static gboolean gst_oss_src_open (GstAudioSrc * asrc);
+static gboolean gst_oss_src_close (GstAudioSrc * asrc);
+static gboolean gst_oss_src_prepare (GstAudioSrc * asrc,
+    GstRingBufferSpec * spec);
+static gboolean gst_oss_src_unprepare (GstAudioSrc * asrc);
+static guint gst_oss_src_read (GstAudioSrc * asrc, gpointer data, guint length);
+static guint gst_oss_src_delay (GstAudioSrc * asrc);
+static void gst_oss_src_reset (GstAudioSrc * asrc);
+
+
 
 static GstStaticPadTemplate osssrc_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, "
+        "endianness = (int) { " G_STRINGIFY (G_BYTE_ORDER) " }, "
         "signed = (boolean) { TRUE, FALSE }, "
         "width = (int) 16, "
-        "depth = (int) { 8, 16 }, "
+        "depth = (int) 16, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]; "
         "audio/x-raw-int, "
         "signed = (boolean) { TRUE, FALSE }, "
@@ -87,64 +91,11 @@ static GstStaticPadTemplate osssrc_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]")
     );
 
-static void gst_oss_src_base_init (gpointer g_class);
-static void gst_oss_src_class_init (GstOssSrcClass * klass);
-static void gst_oss_src_init (GstOssSrc * osssrc);
-static void gst_oss_src_dispose (GObject * object);
 
-static GstPadLinkReturn gst_oss_src_src_link (GstPad * pad, GstPad * peer);
-static GstCaps *gst_oss_src_getcaps (GstPad * pad);
-static const GstFormat *gst_oss_src_get_formats (GstPad * pad);
-static gboolean gst_oss_src_convert (GstPad * pad,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value);
-
-static void gst_oss_src_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_oss_src_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-static GstElementStateReturn gst_oss_src_change_state (GstElement * element);
-
-static void gst_oss_src_set_clock (GstElement * element, GstClock * clock);
-static GstClock *gst_oss_src_get_clock (GstElement * element);
-static GstClockTime gst_oss_src_get_time (GstClock * clock, gpointer data);
-
-static const GstEventMask *gst_oss_src_get_event_masks (GstPad * pad);
-static gboolean gst_oss_src_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_oss_src_send_event (GstElement * element, GstEvent * event);
-static const GstQueryType *gst_oss_src_get_query_types (GstPad * pad);
-static gboolean gst_oss_src_src_query (GstPad * pad, GstQueryType type,
-    GstFormat * format, gint64 * value);
-
-static void gst_oss_src_loop (GstPad * pad);
-
-static GstElementClass *parent_class = NULL;
-
-/*static guint gst_oss_src_signals[LAST_SIGNAL] = { 0 }; */
-
-GType
-gst_oss_src_get_type (void)
+static void
+gst_oss_src_dispose (GObject * object)
 {
-  static GType osssrc_type = 0;
-
-  if (!osssrc_type) {
-    static const GTypeInfo osssrc_info = {
-      sizeof (GstOssSrcClass),
-      gst_oss_src_base_init,
-      NULL,
-      (GClassInitFunc) gst_oss_src_class_init,
-      NULL,
-      NULL,
-      sizeof (GstOssSrc),
-      0,
-      (GInstanceInitFunc) gst_oss_src_init,
-    };
-
-    osssrc_type =
-        g_type_register_static (GST_TYPE_OSSELEMENT, "GstOssSrc", &osssrc_info,
-        0);
-  }
-  return osssrc_type;
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -153,6 +104,7 @@ gst_oss_src_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_set_details (element_class, &gst_oss_src_details);
+
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&osssrc_src_factory));
 }
@@ -161,287 +113,52 @@ gst_oss_src_class_init (GstOssSrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstBaseSrcClass *gstbasesrc_class;
+  GstBaseAudioSrcClass *gstbaseaudiosrc_class;
+  GstAudioSrcClass *gstaudiosrc_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  gstbasesrc_class = (GstBaseSrcClass *) klass;
+  gstbaseaudiosrc_class = (GstBaseAudioSrcClass *) klass;
+  gstaudiosrc_class = (GstAudioSrcClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_OSSELEMENT);
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_oss_src_dispose);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_oss_src_get_property);
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_oss_src_set_property);
 
-  gobject_class->set_property = gst_oss_src_set_property;
-  gobject_class->get_property = gst_oss_src_get_property;
+  gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_oss_src_getcaps);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFFERSIZE,
-      g_param_spec_ulong ("buffersize", "Buffer Size",
-          "The size of the buffers with samples", 0, G_MAXULONG, 0,
-          G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAGMENT,
-      g_param_spec_int ("fragment", "Fragment",
-          "The fragment as 0xMMMMSSSS (MMMM = total fragments, 2^SSSS = fragment size)",
-          0, G_MAXINT, 6, G_PARAM_READWRITE));
+  gstaudiosrc_class->open = GST_DEBUG_FUNCPTR (gst_oss_src_open);
+  gstaudiosrc_class->prepare = GST_DEBUG_FUNCPTR (gst_oss_src_prepare);
+  gstaudiosrc_class->unprepare = GST_DEBUG_FUNCPTR (gst_oss_src_unprepare);
+  gstaudiosrc_class->close = GST_DEBUG_FUNCPTR (gst_oss_src_close);
+  gstaudiosrc_class->read = GST_DEBUG_FUNCPTR (gst_oss_src_read);
+  gstaudiosrc_class->delay = GST_DEBUG_FUNCPTR (gst_oss_src_delay);
+  gstaudiosrc_class->reset = GST_DEBUG_FUNCPTR (gst_oss_src_reset);
 
-  gobject_class->dispose = gst_oss_src_dispose;
+  g_object_class_install_property (gobject_class, PROP_DEVICE,
+      g_param_spec_string ("device", "Device",
+          "OSS device (usually /dev/dspN)", "/dev/dsp", G_PARAM_READWRITE));
 
-  gstelement_class->change_state = gst_oss_src_change_state;
-  gstelement_class->send_event = gst_oss_src_send_event;
-
-  gstelement_class->set_clock = gst_oss_src_set_clock;
-  gstelement_class->get_clock = gst_oss_src_get_clock;
+  g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
+      g_param_spec_string ("device-name", "Device name",
+          "Human-readable name of the sound device", "", G_PARAM_READABLE));
 }
 
 static void
-gst_oss_src_init (GstOssSrc * osssrc)
-{
-  osssrc->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&osssrc_src_factory), "src");
-  gst_pad_set_loop_function (osssrc->srcpad, gst_oss_src_loop);
-  gst_pad_set_getcaps_function (osssrc->srcpad, gst_oss_src_getcaps);
-  gst_pad_set_link_function (osssrc->srcpad, gst_oss_src_src_link);
-  gst_pad_set_convert_function (osssrc->srcpad, gst_oss_src_convert);
-  gst_pad_set_formats_function (osssrc->srcpad, gst_oss_src_get_formats);
-  gst_pad_set_event_function (osssrc->srcpad, gst_oss_src_src_event);
-  gst_pad_set_event_mask_function (osssrc->srcpad, gst_oss_src_get_event_masks);
-  gst_pad_set_query_function (osssrc->srcpad, gst_oss_src_src_query);
-  gst_pad_set_query_type_function (osssrc->srcpad, gst_oss_src_get_query_types);
-
-  gst_element_add_pad (GST_ELEMENT (osssrc), osssrc->srcpad);
-
-  osssrc->buffersize = 4096;
-  osssrc->curoffset = 0;
-
-  osssrc->provided_clock =
-      gst_audio_clock_new ("ossclock", gst_oss_src_get_time, osssrc);
-  gst_object_set_parent (GST_OBJECT (osssrc->provided_clock),
-      GST_OBJECT (osssrc));
-
-  osssrc->clock = NULL;
-}
-
-static void
-gst_oss_src_dispose (GObject * object)
-{
-  GstOssSrc *osssrc = (GstOssSrc *) object;
-
-  if (osssrc->provided_clock != NULL) {
-    gst_object_unparent (GST_OBJECT (osssrc->provided_clock));
-    osssrc->provided_clock = NULL;
-  }
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-static GstCaps *
-gst_oss_src_getcaps (GstPad * pad)
-{
-  GstOssSrc *src;
-  GstCaps *caps;
-
-  src = GST_OSSSRC (GST_PAD_PARENT (pad));
-
-  gst_osselement_probe_caps (GST_OSSELEMENT (src));
-
-  if (GST_OSSELEMENT (src)->probed_caps == NULL) {
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
-  } else {
-    caps = gst_caps_copy (GST_OSSELEMENT (src)->probed_caps);
-  }
-
-  return caps;
-}
-
-static GstPadLinkReturn
-gst_oss_src_src_link (GstPad * pad, GstPad * peer)
-{
-  return GST_RPAD_LINKFUNC (peer) (peer, pad);
-}
-
-static gboolean
-gst_oss_src_negotiate (GstPad * pad)
-{
-  GstOssSrc *src;
-  GstCaps *allowed;
-
-  src = GST_OSSSRC (GST_PAD_PARENT (pad));
-
-  //allowed = gst_pad_get_allowed_caps (pad);
-  allowed = NULL;
-
-  if (!gst_osselement_merge_fixed_caps (GST_OSSELEMENT (src), allowed))
-    return FALSE;
-
-  if (!gst_osselement_sync_parms (GST_OSSELEMENT (src)))
-    return FALSE;
-
-  /* set caps on src pad */
-  GST_PAD_CAPS (src->srcpad) =
-      gst_caps_new_simple ("audio/x-raw-int",
-      "endianness", G_TYPE_INT, GST_OSSELEMENT (src)->endianness,
-      "signed", G_TYPE_BOOLEAN, GST_OSSELEMENT (src)->sign,
-      "width", G_TYPE_INT, GST_OSSELEMENT (src)->width,
-      "depth", G_TYPE_INT, GST_OSSELEMENT (src)->depth,
-      "rate", G_TYPE_INT, GST_OSSELEMENT (src)->rate,
-      "channels", G_TYPE_INT, GST_OSSELEMENT (src)->channels, NULL);
-
-  return TRUE;
-}
-
-static GstClockTime
-gst_oss_src_get_time (GstClock * clock, gpointer data)
-{
-  GstOssSrc *osssrc = GST_OSSSRC (data);
-  audio_buf_info info;
-
-  if (!GST_OSSELEMENT (osssrc)->bps)
-    return 0;
-
-  if (ioctl (GST_OSSELEMENT (osssrc)->fd, SNDCTL_DSP_GETISPACE, &info) < 0)
-    return 0;
-
-  return (osssrc->curoffset * GST_OSSELEMENT (osssrc)->sample_width +
-      info.bytes) * GST_SECOND / GST_OSSELEMENT (osssrc)->bps;
-}
-
-static GstClock *
-gst_oss_src_get_clock (GstElement * element)
-{
-  GstOssSrc *osssrc;
-
-  osssrc = GST_OSSSRC (element);
-
-  return GST_CLOCK (osssrc->provided_clock);
-}
-
-static void
-gst_oss_src_set_clock (GstElement * element, GstClock * clock)
-{
-  GstOssSrc *osssrc;
-
-  osssrc = GST_OSSSRC (element);
-
-  osssrc->clock = clock;
-}
-
-static void
-gst_oss_src_loop (GstPad * pad)
-{
-  GstOssSrc *src;
-  GstBuffer *buf;
-  glong readbytes;
-  glong readsamples;
-
-  src = GST_OSSSRC (GST_PAD_PARENT (pad));
-
-  GST_DEBUG ("attempting to read something from the soundcard");
-
-  if (src->need_eos) {
-    src->need_eos = FALSE;
-    gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
-    return;
-  }
-
-  buf = gst_buffer_new_and_alloc (src->buffersize);
-
-  if (!GST_PAD_CAPS (pad)) {
-    /* nothing was negotiated, we can decide on a format */
-    if (!gst_oss_src_negotiate (pad)) {
-      gst_buffer_unref (buf);
-      GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, (NULL), (NULL));
-      return;
-    }
-  }
-  if (GST_OSSELEMENT (src)->bps == 0) {
-    gst_buffer_unref (buf);
-    GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, (NULL),
-        ("format wasn't negotiated before chain function"));
-    return;
-  }
-
-  readbytes = read (GST_OSSELEMENT (src)->fd, GST_BUFFER_DATA (buf),
-      src->buffersize);
-  if (readbytes < 0) {
-    gst_buffer_unref (buf);
-    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
-    return;
-  }
-
-  if (readbytes == 0) {
-    gst_buffer_unref (buf);
-    gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
-    return;
-  }
-
-  readsamples = readbytes * GST_OSSELEMENT (src)->rate /
-      GST_OSSELEMENT (src)->bps;
-
-  GST_BUFFER_SIZE (buf) = readbytes;
-  GST_BUFFER_OFFSET (buf) = src->curoffset;
-  GST_BUFFER_OFFSET_END (buf) = src->curoffset + readsamples;
-  GST_BUFFER_DURATION (buf) =
-      readsamples * GST_SECOND / GST_OSSELEMENT (src)->rate;
-
-  /* if we have a clock */
-  if (src->clock) {
-    if (src->clock == src->provided_clock) {
-      /* if it's our own clock, we can be very accurate */
-      GST_BUFFER_TIMESTAMP (buf) =
-          src->curoffset * GST_SECOND / GST_OSSELEMENT (src)->rate;
-    } else {
-      /* somebody elses clock, timestamp with that clock, no discontinuity in
-       * the stream since the OFFSET is updated correctly. Elements can stretch
-       * to match timestamps */
-      GST_BUFFER_TIMESTAMP (buf) =
-          gst_element_get_time (GST_ELEMENT (src)) - GST_BUFFER_DURATION (buf);
-    }
-  } else {
-    /* no clock, no timestamp */
-    GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
-  }
-
-  src->curoffset += readsamples;
-
-  GST_DEBUG ("pushed buffer from soundcard of %ld bytes, timestamp %"
-      G_GINT64_FORMAT, readbytes, GST_BUFFER_TIMESTAMP (buf));
-
-  gst_pad_push (pad, buf);
-
-  return;
-}
-
-static void
-gst_oss_src_set_property (GObject * object, guint prop_id, const GValue * value,
-    GParamSpec * pspec)
+gst_oss_src_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstOssSrc *src;
 
-  src = GST_OSSSRC (object);
+  src = GST_OSS_SRC (object);
 
   switch (prop_id) {
-    case ARG_BUFFERSIZE:
-      src->buffersize = g_value_get_ulong (value);
-      break;
-    case ARG_FRAGMENT:
-      GST_OSSELEMENT (src)->fragment = g_value_get_int (value);
-      gst_osselement_sync_parms (GST_OSSELEMENT (src));
-      break;
-    default:
-      break;
-  }
-}
-
-static void
-gst_oss_src_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  GstOssSrc *src;
-
-  src = GST_OSSSRC (object);
-
-  switch (prop_id) {
-    case ARG_BUFFERSIZE:
-      g_value_set_ulong (value, src->buffersize);
-      break;
-    case ARG_FRAGMENT:
-      g_value_set_int (value, GST_OSSELEMENT (src)->fragment);
+    case PROP_DEVICE:
+      if (src->device)
+        g_free (src->device);
+      src->device = g_strdup (g_value_get_string (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -449,147 +166,283 @@ gst_oss_src_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstElementStateReturn
-gst_oss_src_change_state (GstElement * element)
+static void
+gst_oss_src_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
 {
-  GstOssSrc *osssrc = GST_OSSSRC (element);
+  GstOssSrc *src;
 
-  GST_DEBUG ("osssrc: state change");
+  src = GST_OSS_SRC (object);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_PAUSED:
-      osssrc->curoffset = 0;
+  switch (prop_id) {
+    case PROP_DEVICE:
+      g_value_set_string (value, src->device);
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
-      gst_audio_clock_set_active (GST_AUDIO_CLOCK (osssrc->provided_clock),
-          TRUE);
-      break;
-    case GST_STATE_PLAYING_TO_PAUSED:
-      gst_audio_clock_set_active (GST_AUDIO_CLOCK (osssrc->provided_clock),
-          FALSE);
-      break;
-    case GST_STATE_PAUSED_TO_READY:
-      if (GST_FLAG_IS_SET (element, GST_OSSSRC_OPEN))
-        ioctl (GST_OSSELEMENT (osssrc)->fd, SNDCTL_DSP_RESET, 0);
+    case PROP_DEVICE_NAME:
+      g_value_set_string (value, src->device_name);
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
 }
 
-static const GstFormat *
-gst_oss_src_get_formats (GstPad * pad)
+static void
+gst_oss_src_init (GstOssSrc * osssrc)
 {
-  static const GstFormat formats[] = {
-    GST_FORMAT_TIME,
-    GST_FORMAT_DEFAULT,
-    GST_FORMAT_BYTES,
-    0
-  };
+  GST_DEBUG ("initializing osssrc");
 
-  return formats;
+  osssrc->device = g_strdup ("/dev/dsp");
+  osssrc->element = g_object_new (GST_TYPE_OSSELEMENT, NULL);
 }
 
-static gboolean
-gst_oss_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value)
+static GstCaps *
+gst_oss_src_getcaps (GstBaseSrc * bsrc)
 {
   GstOssSrc *osssrc;
+  GstOssElement *element;
+  GstCaps *caps;
 
-  osssrc = GST_OSSSRC (GST_PAD_PARENT (pad));
+  osssrc = GST_OSS_SRC (bsrc);
+  element = osssrc->element;
 
-  return gst_osselement_convert (GST_OSSELEMENT (osssrc), src_format, src_value,
-      dest_format, dest_value);
-}
+  gst_osselement_probe_caps (element);
 
-static const GstEventMask *
-gst_oss_src_get_event_masks (GstPad * pad)
-{
-  static const GstEventMask gst_oss_src_src_event_masks[] = {
-    {GST_EVENT_EOS, 0},
-    {GST_EVENT_SIZE, 0},
-    {0,}
-  };
-
-  return gst_oss_src_src_event_masks;
-}
-
-static gboolean
-gst_oss_src_src_event (GstPad * pad, GstEvent * event)
-{
-  GstOssSrc *osssrc;
-  gboolean retval = FALSE;
-
-  osssrc = GST_OSSSRC (GST_PAD_PARENT (pad));
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_EOS:
-      osssrc->need_eos = TRUE;
-      retval = TRUE;
-      break;
-    case GST_EVENT_SIZE:
-    {
-      GstFormat format;
-      gint64 value;
-
-      format = GST_FORMAT_BYTES;
-
-      /* convert to bytes */
-      if (gst_osselement_convert (GST_OSSELEMENT (osssrc),
-              GST_EVENT_SIZE_FORMAT (event),
-              GST_EVENT_SIZE_VALUE (event), &format, &value)) {
-        osssrc->buffersize = GST_EVENT_SIZE_VALUE (event);
-        g_object_notify (G_OBJECT (osssrc), "buffersize");
-        retval = TRUE;
-      }
-    }
-    default:
-      break;
+  if (element->probed_caps == NULL) {
+    caps =
+        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc)));
+  } else {
+    caps = gst_caps_ref (element->probed_caps);
   }
-  gst_event_unref (event);
-  return retval;
+
+  return caps;
 }
 
-static gboolean
-gst_oss_src_send_event (GstElement * element, GstEvent * event)
+static gint
+ilog2 (gint x)
 {
-  GstOssSrc *osssrc = GST_OSSSRC (element);
-
-  return gst_oss_src_src_event (osssrc->srcpad, event);
+  /* well... hacker's delight explains... */
+  x = x | (x >> 1);
+  x = x | (x >> 2);
+  x = x | (x >> 4);
+  x = x | (x >> 8);
+  x = x | (x >> 16);
+  x = x - ((x >> 1) & 0x55555555);
+  x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
+  x = (x + (x >> 4)) & 0x0f0f0f0f;
+  x = x + (x >> 8);
+  x = x + (x >> 16);
+  return (x & 0x0000003f) - 1;
 }
 
-static const GstQueryType *
-gst_oss_src_get_query_types (GstPad * pad)
+#define SET_PARAM(_oss, _label, _name, _val) 	\
+G_STMT_START {					\
+  int _tmp = _val;				\
+  if (ioctl(_oss->fd, _name, &_tmp) == -1) {	\
+    perror(_label);				\
+    return FALSE;				\
+  }						\
+  GST_DEBUG_OBJECT (_oss, _label " %d", _tmp);	\
+} G_STMT_END
+
+#define GET_PARAM(oss, label, name, val) 	\
+G_STMT_START {					\
+  if (ioctl(oss->fd, name, val) == -1) {	\
+    perror(label);				\
+    return FALSE;				\
+  }						\
+} G_STMT_END
+
+static gint
+gst_oss_src_get_format (GstBufferFormat fmt)
 {
-  static const GstQueryType query_types[] = {
-    GST_QUERY_POSITION,
-    0,
-  };
+  gint result;
 
-  return query_types;
-}
-
-static gboolean
-gst_oss_src_src_query (GstPad * pad, GstQueryType type, GstFormat * format,
-    gint64 * value)
-{
-  gboolean res = FALSE;
-  GstOssSrc *osssrc;
-
-  osssrc = GST_OSSSRC (GST_PAD_PARENT (pad));
-
-  switch (type) {
-    case GST_QUERY_POSITION:
-      res = gst_osselement_convert (GST_OSSELEMENT (osssrc),
-          GST_FORMAT_DEFAULT, osssrc->curoffset, format, value);
+  switch (fmt) {
+    case GST_MU_LAW:
+      result = AFMT_MU_LAW;
+      break;
+    case GST_A_LAW:
+      result = AFMT_A_LAW;
+      break;
+    case GST_IMA_ADPCM:
+      result = AFMT_IMA_ADPCM;
+      break;
+    case GST_U8:
+      result = AFMT_U8;
+      break;
+    case GST_S16_LE:
+      result = AFMT_S16_LE;
+      break;
+    case GST_S16_BE:
+      result = AFMT_S16_BE;
+      break;
+    case GST_S8:
+      result = AFMT_S8;
+      break;
+    case GST_U16_LE:
+      result = AFMT_U16_LE;
+      break;
+    case GST_U16_BE:
+      result = AFMT_U16_BE;
+      break;
+    case GST_MPEG:
+      result = AFMT_MPEG;
       break;
     default:
+      result = 0;
       break;
   }
-  return res;
+  return result;
+}
+
+static gboolean
+gst_oss_src_open (GstAudioSrc * asrc)
+{
+  GstOssSrc *oss;
+  int mode;
+
+  oss = GST_OSS_SRC (asrc);
+
+  mode = O_RDONLY;
+  mode |= O_NONBLOCK;
+
+  oss->fd = open (oss->device, mode, 0);
+  if (oss->fd == -1) {
+    perror (oss->device);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_oss_src_close (GstAudioSrc * asrc)
+{
+  close (GST_OSS_SRC (asrc)->fd);
+  return TRUE;
+}
+
+static gboolean
+gst_oss_src_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
+{
+  GstOssSrc *oss;
+  struct audio_buf_info info;
+  int mode;
+  int tmp;
+
+  oss = GST_OSS_SRC (asrc);
+
+  mode = fcntl (oss->fd, F_GETFL);
+  mode &= ~O_NONBLOCK;
+  if (fcntl (oss->fd, F_SETFL, mode) == -1) {
+    perror (oss->device);
+    return FALSE;
+  }
+
+  tmp = gst_oss_src_get_format (spec->format);
+  if (tmp == 0)
+    goto wrong_format;
+
+  tmp = ilog2 (spec->segsize);
+  tmp = ((spec->segtotal & 0x7fff) << 16) | tmp;
+  GST_DEBUG ("set segsize: %d, segtotal: %d, value: %08x", spec->segsize,
+      spec->segtotal, tmp);
+
+  SET_PARAM (oss, "SETFRAGMENT", SNDCTL_DSP_SETFRAGMENT, tmp);
+
+  SET_PARAM (oss, "RESET", SNDCTL_DSP_RESET, 0);
+
+  SET_PARAM (oss, "SETFMT", SNDCTL_DSP_SETFMT, tmp);
+  if (spec->channels == 2)
+    SET_PARAM (oss, "STEREO", SNDCTL_DSP_STEREO, 1);
+  SET_PARAM (oss, "CHANNELS", SNDCTL_DSP_CHANNELS, spec->channels);
+  SET_PARAM (oss, "SPEED", SNDCTL_DSP_SPEED, spec->rate);
+
+  GET_PARAM (oss, "GETISPACE", SNDCTL_DSP_GETISPACE, &info);
+
+  spec->segsize = info.fragsize;
+  spec->segtotal = info.fragstotal;
+  spec->bytes_per_sample = 4;
+  oss->bytes_per_sample = 4;
+  memset (spec->silence_sample, 0, spec->bytes_per_sample);
+
+  GST_DEBUG ("got segsize: %d, segtotal: %d, value: %08x", spec->segsize,
+      spec->segtotal, tmp);
+
+  return TRUE;
+
+wrong_format:
+  {
+    GST_DEBUG ("wrong format %d\n", spec->format);
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_oss_src_unprepare (GstAudioSrc * asrc)
+{
+  /* could do a SNDCTL_DSP_RESET, but the OSS manual recommends a close/open */
+
+  if (!gst_oss_src_close (asrc))
+    goto couldnt_close;
+
+  if (!gst_oss_src_open (asrc))
+    goto couldnt_reopen;
+
+  return TRUE;
+
+couldnt_close:
+  {
+    GST_DEBUG ("Could not close the audio device");
+    return FALSE;
+  }
+couldnt_reopen:
+  {
+    GST_DEBUG ("Could not reopen the audio device");
+    return FALSE;
+  }
+}
+
+static guint
+gst_oss_src_read (GstAudioSrc * asrc, gpointer data, guint length)
+{
+  return read (GST_OSS_SRC (asrc)->fd, data, length);
+}
+
+static guint
+gst_oss_src_delay (GstAudioSrc * asrc)
+{
+  GstOssSrc *oss;
+  gint delay = 0;
+  gint ret;
+
+  oss = GST_OSS_SRC (asrc);
+
+#ifdef SNDCTL_DSP_GETODELAY
+  ret = ioctl (oss->fd, SNDCTL_DSP_GETODELAY, &delay);
+#else
+  ret = -1;
+#endif
+  if (ret < 0) {
+    audio_buf_info info;
+
+    ret = ioctl (oss->fd, SNDCTL_DSP_GETOSPACE, &info);
+
+    delay = (ret < 0 ? 0 : (info.fragstotal * info.fragsize) - info.bytes);
+  }
+  return delay / oss->bytes_per_sample;
+}
+
+static void
+gst_oss_src_reset (GstAudioSrc * asrc)
+{
+  GstOssSrc *oss;
+
+  //gint ret;
+
+  oss = GST_OSS_SRC (asrc);
+
+  /* deadlocks on my machine... */
+  //ret = ioctl (oss->fd, SNDCTL_DSP_RESET, 0);
 }

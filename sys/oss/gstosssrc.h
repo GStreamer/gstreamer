@@ -21,58 +21,44 @@
  */
 
 
-#ifndef __GST_OSSSRC_H__
-#define __GST_OSSSRC_H__
+#ifndef __GST_OSS_SRC_H__
+#define __GST_OSS_SRC_H__
 
 
 #include <gst/gst.h>
+#include <gst/audio/gstaudiosrc.h>
+
 #include "gstosselement.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_OSSSRC \
-  (gst_oss_src_get_type())
-#define GST_OSSSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OSSSRC,GstOssSrc))
-#define GST_OSSSRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OSSSRC,GstOssSrcClass))
-#define GST_IS_OSSSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OSSSRC))
-#define GST_IS_OSSSRC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OSSSRC))
-
-typedef enum {
-  GST_OSSSRC_OPEN		= GST_ELEMENT_FLAG_LAST,
-
-  GST_OSSSRC_FLAG_LAST	= GST_ELEMENT_FLAG_LAST+2,
-} GstOssSrcFlags;
+#define GST_TYPE_OSS_SRC          (gst_oss_src_get_type())
+#define GST_OSS_SRC(obj)          (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OSS_SRC,GstOssSrc))
+#define GST_OSS_SRC_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OSS_SRC,GstOssSrcClass))
+#define GST_IS_OSS_SRC(obj)       (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OSS_SRC))
+#define GST_IS_OSS_SRC_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OSS_SRC))
 
 typedef struct _GstOssSrc GstOssSrc;
 typedef struct _GstOssSrcClass GstOssSrcClass;
 
 struct _GstOssSrc {
-  GstOssElement  element;
+  GstAudioSrc    src;
 
-  /* pads */
-  GstPad 	*srcpad;
+  GstOssElement *element;
 
-  gboolean	 need_eos; /* Do we need to emit an EOS? */
-  
-  /* blocking.
-   * curoffset is in *samples*. */
-  gulong 	 curoffset;
-  gulong 	 buffersize;
+  gint fd;
+  gint		 bytes_per_sample;
 
-  /* clocks */
-  GstClock *provided_clock, *clock;
+  gchar *device;
+  gchar *device_name;
 };
 
 struct _GstOssSrcClass {
-  GstOssElementClass parent_class;
+  GstAudioSrcClass parent_class;
 };
 
 GType gst_oss_src_get_type(void);
 
 G_END_DECLS
 
-#endif /* __GST_OSSSRC_H__ */
+#endif /* __GST_OSS_SRC_H__ */

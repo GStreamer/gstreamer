@@ -1,3 +1,13 @@
+2005-08-23  Andy Wingo  <wingo@pobox.com>
+
+	* sys/oss/gstosssrc.h: 
+	* sys/oss/gstosssrc.c: Totally ported, dude.
+
+	* sys/oss/Makefile.am:
+	* sys/oss/gstossaudio.c: Add osssrc.
+	
+	* sys/oss/gstosssink.c: We do native byte order.
+
 2005-08-23  Owen Fraser-Green  <owen@discobabe.net>
 
 	* gst/realmedia/rmdemux.c (gst_rmdemux_src_event): Fixed bug

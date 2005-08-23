@@ -4,7 +4,8 @@ libgstossaudio_la_SOURCES = gstossaudio.c	\
 		            gstosselement.c	\
 		            gstosshelper.c	\
 			    gstossmixer.c	\
-			    gstosssink.c
+			    gstosssink.c	\
+			    gstosssrc.c
 
 #		            gstossdmabuffer.c
 
