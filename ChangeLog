@@ -1,5 +1,8 @@
 2005-08-23  Andy Wingo  <wingo@pobox.com>
 
+	* sys/oss/gstosssrc.c: 
+	* sys/oss/gstosssrc.h: Easy to implement a mixer, eh...
+
 	* sys/oss/gstossmixerelement.h:
 	* sys/oss/gstossmixerelement.c: Added mixer element like
 	alsamixer.
