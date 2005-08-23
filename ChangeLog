@@ -1,3 +1,9 @@
+2005-08-23  Andy Wingo  <wingo@pobox.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosrc.c
+	(gst_base_audio_src_fixate): Only fixate endianness if it is
+	present in the caps.
+
 2005-08-22  Andy Wingo  <wingo@pobox.com>
 
 	* ext/alsa/gstalsasink.c (gst_alsasink_get_property): 

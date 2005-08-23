@@ -211,7 +211,8 @@ gst_base_audio_src_fixate (GstPad * pad, GstCaps * caps)
   gst_caps_structure_fixate_field_nearest_int (s, "depth", 16);
   gst_caps_structure_fixate_field_nearest_int (s, "width", 16);
   gst_structure_set (s, "signed", G_TYPE_BOOLEAN, TRUE, NULL);
-  gst_caps_structure_fixate_field_nearest_int (s, "endianness", G_BYTE_ORDER);
+  if (gst_structure_has_field (s, "endianness"))
+    gst_caps_structure_fixate_field_nearest_int (s, "endianness", G_BYTE_ORDER);
 }
 
 static gboolean
