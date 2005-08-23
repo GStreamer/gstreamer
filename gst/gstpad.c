@@ -2302,9 +2302,9 @@ no_peer:
  * @buf: a newly allocated buffer
  *
  * Allocates a new, empty buffer optimized to push to pad @pad.  This
- * function only works if @pad is a source pad and has a peer. 
+ * function only works if @pad is a source pad and has a peer.
  *
- * You need to check the caps of the buffer after performing this 
+ * You need to check the caps of the buffer after performing this
  * function and renegotiate to the format if needed.
  *
  * A new, empty #GstBuffer will be put in the @buf argument.
@@ -2346,9 +2346,9 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps,
     goto flushing;
 
   GST_CAT_DEBUG (GST_CAT_PADS,
-      "calling bufferallocfunc &%s (@%p) of peer pad %s:%s",
+      "calling bufferallocfunc &%s (@%p) of peer pad %s:%s for size %d",
       GST_DEBUG_FUNCPTR_NAME (bufferallocfunc),
-      &bufferallocfunc, GST_DEBUG_PAD_NAME (peer));
+      &bufferallocfunc, GST_DEBUG_PAD_NAME (peer), size);
   GST_UNLOCK (peer);
 
   ret = bufferallocfunc (peer, offset, size, caps, buf);

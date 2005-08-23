@@ -144,6 +144,10 @@ gboolean                 gst_caps_structure_fixate_field_nearest_double (GstStru
 									 const char   *field_name,
 									 double        target);
 
+gboolean                 gst_caps_structure_fixate_field_boolean (GstStructure *structure,
+									 const char   *field_name,
+									 gboolean        target);
+
 
 G_END_DECLS
 

@@ -1,3 +1,16 @@
+2005-08-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstbuffer.c: (gst_buffer_new_and_alloc):
+	  some debugging
+	* gst/gstcaps.h:
+	  whitespace fixes
+	* gst/gstpad.c: (gst_pad_activate_push), (gst_pad_alloc_buffer):
+	  more debugging
+	* gst/gststructure.c: (gst_caps_structure_fixate_field_boolean):
+	* gst/gststructure.h:
+	  add a fixate function for booleans; add a FIXME that these func
+	  names should probably be gst_structure_fixate_*
+
 2005-08-23  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-docs.sgml:

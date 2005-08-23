@@ -1592,6 +1592,7 @@ gst_structure_copy_conditional (const GstStructure * structure)
  *
  * Returns: TRUE if the structure could be fixated
  */
+/* FIXME: rename to gst_structure_... */
 gboolean
 gst_caps_structure_fixate_field_nearest_int (GstStructure * structure,
     const char *field_name, int target)
@@ -1708,4 +1709,58 @@ gst_caps_structure_fixate_field_nearest_double (GstStructure * structure,
 
   return FALSE;
 
+}
+
+/**
+ * gst_caps_structure_fixate_field_boolean:
+ * @structure: a #GstStructure
+ * @field_name: a field in @structure
+ * @target: the target value of the fixation
+ *
+ * Fixates a #GstStructure by changing the given @field_name field to the given
+ * @target boolean if that field is not fixed yet.
+ *
+ * Returns: TRUE if the structure could be fixated
+ */
+/* FIXME: rename to gst_structure_... */
+gboolean
+gst_caps_structure_fixate_field_boolean (GstStructure * structure,
+    const char *field_name, gboolean target)
+{
+  const GValue *value;
+
+  g_return_val_if_fail (gst_structure_has_field (structure, field_name), FALSE);
+  g_return_val_if_fail (IS_MUTABLE (structure), FALSE);
+
+  value = gst_structure_get_value (structure, field_name);
+
+  if (G_VALUE_TYPE (value) == G_TYPE_BOOLEAN) {
+    /* already fixed */
+    return FALSE;
+  } else if (G_VALUE_TYPE (value) == GST_TYPE_LIST) {
+    const GValue *list_value;
+    int i, n;
+    int best = 0;
+    int best_index = -1;
+
+    n = gst_value_list_get_size (value);
+    for (i = 0; i < n; i++) {
+      list_value = gst_value_list_get_value (value, i);
+      if (G_VALUE_TYPE (list_value) == G_TYPE_BOOLEAN) {
+        gboolean x = g_value_get_boolean (list_value);
+
+        if (best_index == -1 || x == target) {
+          best_index = i;
+          best = x;
+        }
+      }
+    }
+    if (best_index != -1) {
+      gst_structure_set (structure, field_name, G_TYPE_BOOLEAN, best, NULL);
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  return FALSE;
 }

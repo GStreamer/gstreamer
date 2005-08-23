@@ -92,10 +92,10 @@ GstCaps *                gst_caps_new_full_valist                       (GstStru
 									 va_list        var_args);
 
 /* reference counting */
-GstCaps *                gst_caps_ref                    		(GstCaps* caps);
+GstCaps *                gst_caps_ref					(GstCaps* caps);
 GstCaps *                gst_caps_copy					(const GstCaps * caps);
-GstCaps *                gst_caps_make_writable          		(GstCaps *caps);
-void                     gst_caps_unref                  		(GstCaps* caps);
+GstCaps *                gst_caps_make_writable				(GstCaps *caps);
+void                     gst_caps_unref					(GstCaps* caps);
 
 GstCaps *		 gst_static_caps_get                            (GstStaticCaps *static_caps);
 
@@ -107,7 +107,7 @@ void                     gst_caps_append_structure                      (GstCaps
 int                      gst_caps_get_size                              (const GstCaps *caps);
 GstStructure *           gst_caps_get_structure                         (const GstCaps *caps,
 									 int            index);
-GstCaps * 		 gst_caps_copy_nth                              (const GstCaps * caps, gint nth);
+GstCaps *		 gst_caps_copy_nth                              (const GstCaps * caps, gint nth);
 void			 gst_caps_truncate                              (GstCaps * caps);
 void                     gst_caps_set_simple                            (GstCaps       *caps,
 									 char          *field, ...);
@@ -120,11 +120,11 @@ gboolean                 gst_caps_is_any                                (const G
 gboolean                 gst_caps_is_empty                              (const GstCaps *caps);
 gboolean                 gst_caps_is_fixed                              (const GstCaps *caps);
 gboolean                 gst_caps_is_always_compatible                  (const GstCaps *caps1,
-						                 	 const GstCaps *caps2);
+									const GstCaps *caps2);
 gboolean		 gst_caps_is_subset				(const GstCaps *subset,
 									 const GstCaps *superset);
 gboolean		 gst_caps_is_equal				(const GstCaps *caps1,
-						                 	 const GstCaps *caps2);
+									 const GstCaps *caps2);
 
 /* operations */
 GstCaps *                gst_caps_intersect                             (const GstCaps *caps1,
