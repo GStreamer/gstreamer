@@ -1,3 +1,8 @@
+2005-08-23  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/speex/gstspeexenc.h:
+          Fixed include path of adapter
+
 2005-08-23  Wim Taymans  <wim@fluendo.com>
 
 	* ext/speex/gstspeexdec.c: (gst_speex_dec_class_init):
