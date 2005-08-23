@@ -264,7 +264,7 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     default:
       GST_LOG_OBJECT (rmdemux, "Event on sink: type=%d",
           GST_EVENT_TYPE (event));
-      ret = gst_pad_event_default (rmdemux->sinkpad, event);
+      ret = gst_pad_event_default (pad, event);
       break;
   }
 
@@ -331,7 +331,7 @@ gst_rmdemux_src_event (GstPad * pad, GstEvent * event)
     }
     default:
       GST_LOG_OBJECT (rmdemux, "Event on src: type=%d", GST_EVENT_TYPE (event));
-      ret = gst_pad_event_default (rmdemux->sinkpad, event);
+      ret = gst_pad_event_default (pad, event);
       break;
   }
 
@@ -1460,7 +1460,7 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const void *data,
 
   stream = gst_rmdemux_get_stream_by_id (rmdemux, id);
 
-  if (rmdemux->offset >= stream->seek_offset) {
+  if ((rmdemux->offset + packet_size) > stream->seek_offset) {
     if (gst_pad_alloc_buffer (stream->pad, GST_BUFFER_OFFSET_NONE,
             packet_size, stream->caps, &buffer) != GST_FLOW_OK) {
       GST_WARNING_OBJECT (rmdemux, "failed to alloc src buffer for stream %d",
@@ -1478,7 +1478,7 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const void *data,
     }
   } else {
     GST_DEBUG_OBJECT (rmdemux,
-        "Stream %d is skipping: seek_offset=%d, offset=%d", stream->id,
-        stream->seek_offset, rmdemux->offset);
+        "Stream %d is skipping: seek_offset=%d, offset=%d, packet_size",
+        stream->id, stream->seek_offset, rmdemux->offset, packet_size);
   }
 }
