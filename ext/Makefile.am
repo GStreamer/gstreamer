@@ -364,11 +364,11 @@ XVID_DIR=
 SNAPSHOT_DIR=
 # endif
 
-# if USE_SPEEX
-# SPEEX_DIR=speex
-# else
+if USE_SPEEX
+SPEEX_DIR=speex
+else
 SPEEX_DIR=
-# endif
+endif
 
 # if USE_XINE
 # XINE_DIR=xine
@@ -455,4 +455,5 @@ DIST_SUBDIRS=\
 	mpeg2dec \
 	jpeg \
 	libpng \
-	lame
+	lame \
+	speex
