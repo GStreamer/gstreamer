@@ -306,8 +306,16 @@ gst_oss_src_open (GstAudioSrc * asrc)
     return FALSE;
   }
 
-  if (!oss->mixer)
+  if (!oss->mixer) {
     oss->mixer = gst_ossmixer_new ("/dev/mixer", GST_OSS_MIXER_CAPTURE);
+
+    if (oss->mixer) {
+      if (oss->device_name) {
+        g_free (oss->device_name);
+      }
+      oss->device_name = g_strdup (oss->mixer->cardname);
+    }
+  }
 
   return TRUE;
 }

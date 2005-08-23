@@ -1,5 +1,8 @@
 2005-08-23  Andy Wingo  <wingo@pobox.com>
 
+	* sys/oss/gstosssrc.c (gst_oss_src_open): Set the device-name
+	property after opening the mixer.
+
 	* sys/oss/gstosssrc.c: 
 	* sys/oss/gstosssrc.h: Easy to implement a mixer, eh...
 
