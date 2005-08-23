@@ -33,6 +33,11 @@ G_BEGIN_DECLS
 typedef struct _GstBuffer GstBuffer;
 typedef struct _GstBufferClass GstBufferClass;
 
+/**
+ * GST_BUFFER_TRACE_NAME:
+ *
+ * The name used for tracing memory allocations.
+ */
 #define GST_BUFFER_TRACE_NAME		"GstBuffer"
 
 #define GST_TYPE_BUFFER				(gst_buffer_get_type())
@@ -43,25 +48,157 @@ typedef struct _GstBufferClass GstBufferClass;
 #define GST_BUFFER_CLASS(klass)                 (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_BUFFER, GstBufferClass))
 #define GST_BUFFER_CAST(obj)                    ((GstBuffer *)(obj))
 
+/**
+ * GST_BUFFER_FLAGS:
+ * @buf: a #GstBuffer to retrieve the flags from.
+ *
+ * Gets the flags from this buffer.
+ *
+ * Returns: the set of #GstBufferFlag items
+ */
 #define GST_BUFFER_FLAGS(buf)                   GST_MINI_OBJECT_FLAGS(buf)
+/**
+ * GST_BUFFER_FLAG_IS_SET:
+ * @buf: a #GstBuffer to query flags of.
+ * @flag: the #GstBufferFlag to check.
+ *
+ * Gives the status of a given flag of a buffer.
+ *
+ * Returns: %TRUE if flag is set.
+ */
 #define GST_BUFFER_FLAG_IS_SET(buf,flag)        GST_MINI_OBJECT_FLAG_IS_SET (buf, flag)
+/**
+ * GST_BUFFER_FLAG_SET:
+ * @buf: a #GstBuffer to modify flags of.
+ * @flag: the #GstBufferFlag to set.
+ *
+ * Sets a buffer flag.
+ */
 #define GST_BUFFER_FLAG_SET(buf,flag)           GST_MINI_OBJECT_FLAG_SET (buf, flag)
+/**
+ * GST_BUFFER_FLAG_UNSET:
+ * @buf: a #GstBuffer to modify flags of.
+ * @flag: the #GstBufferFlag to clear.
+ *
+ * Clears a buffer flag.
+ */
 #define GST_BUFFER_FLAG_UNSET(buf,flag)         GST_MINI_OBJECT_FLAG_UNSET (buf, flag)
 
+/**
+ * GST_BUFFER_DATA:
+ * @buf: a #GstBuffer to get data pointer of.
+ *
+ * Retrieves a pointer to the data element of this buffer.
+ *
+ * Returns: the pointer to the actual data contents of the buffer.
+ */
 #define GST_BUFFER_DATA(buf)			(GST_BUFFER_CAST(buf)->data)
+/**
+ * GST_BUFFER_SIZE:
+ * @buf: a #GstBuffer to get data size of.
+ *
+ * Gets the size of the data in this buffer.
+ *
+ * Returns: the buffer size in bytes
+ */
 #define GST_BUFFER_SIZE(buf)			(GST_BUFFER_CAST(buf)->size)
+/**
+ * GST_BUFFER_TIMESTAMP:
+ * @buf: a #GstBuffer to get the timestamp of.:
+ *
+ * Gets the timestamp for this buffer.
+ *
+ * Returns: the timestamp for this buffer
+ */
 #define GST_BUFFER_TIMESTAMP(buf)		(GST_BUFFER_CAST(buf)->timestamp)
+/**
+ * GST_BUFFER_DURATION:
+ * @buf: a #GstBuffer to get the duration from.
+ *
+ * Gets the duration in nanoseconds of the data in the buffer.
+ * Value will be %GST_CLOCK_TIME_NONE if the duration is unknown.
+ *
+ * Returns: the duration of the buffer 
+ */
 #define GST_BUFFER_DURATION(buf)		(GST_BUFFER_CAST(buf)->duration)
+/**
+ * GST_BUFFER_CAPS:
+ * @buf: a #GstBuffer to get the caps of.
+ *
+ * Gets the caps for this buffer.
+ *
+ * Returns: the #GstCaps for this buffer
+ */
 #define GST_BUFFER_CAPS(buf)			(GST_BUFFER_CAST(buf)->caps)
+/**
+ * GST_BUFFER_OFFSET:
+ * @buf: a #GstBuffer to get the offset of.
+ *
+ * Gets the offset in the source file of the beginning of this buffer.
+ *
+ * Returns: the start offset for this buffer
+ */
 #define GST_BUFFER_OFFSET(buf)			(GST_BUFFER_CAST(buf)->offset)
+/**
+ * GST_BUFFER_OFFSET_END:
+ * @buf: a #GstBuffer to get the offset of.
+ *
+ * Gets the offset in the source file of the end of this buffer.
+ *
+ * Returns: the end offset for this buffer
+ */
 #define GST_BUFFER_OFFSET_END(buf)		(GST_BUFFER_CAST(buf)->offset_end)
+/**
+ * GST_BUFFER_MALLOCDATA:
+ * @buf: a #GstBuffer to get access to the malloc_data field
+ *
+ * If the buffers data should be automatically freed by buffer management at the
+ * end of the buffers lifecycle, also set the data to the mallocdata field.
+ */
 #define GST_BUFFER_MALLOCDATA(buf)		(GST_BUFFER_CAST(buf)->malloc_data)
 
+/**
+ * GST_BUFFER_OFFSET_NONE:
+ * 
+ * Constant for no-offset return results.
+ */
 #define GST_BUFFER_OFFSET_NONE	((guint64)-1)
 
+/**
+ * GST_BUFFER_DURATION_IS_VALID:
+ * @buffer: the #GstBuffer to check for the duration
+ * 
+ * Tests if the duration is known.
+ *
+ * Returns: %TRUE for success
+ */
 #define GST_BUFFER_DURATION_IS_VALID(buffer)	(GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer)))
+/**
+ * GST_BUFFER_TIMESTAMP_IS_VALID:
+ * @buffer: the #GstBuffer to check for the timestamp
+ * 
+ * Tests if the timestamp is known.
+ *
+ * Returns: %TRUE for success
+ */
 #define GST_BUFFER_TIMESTAMP_IS_VALID(buffer)	(GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer)))
+/**
+ * GST_BUFFER_OFFSET_IS_VALID:
+ * @buffer: the #GstBuffer to check for the start offset
+ * 
+ * Tests if the start offset is known.
+ *
+ * Returns: %TRUE for success
+ */
 #define GST_BUFFER_OFFSET_IS_VALID(buffer)	(GST_BUFFER_OFFSET (buffer) != GST_BUFFER_OFFSET_NONE)
+/**
+ * GST_BUFFER_OFFSET_END_IS_VALID:
+ * @buffer: the #GstBuffer to check for the end offset
+ * 
+ * Tests if the end offset is known.
+ *
+ * Returns: %TRUE for success
+ */
 #define GST_BUFFER_OFFSET_END_IS_VALID(buffer)	(GST_BUFFER_OFFSET_END (buffer) != GST_BUFFER_OFFSET_NONE)
 
 /**
@@ -115,9 +252,9 @@ struct _GstBuffer {
   guint64		 offset;
   guint64		 offset_end;
 
-  /*< private >*/
   guint8                *malloc_data;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
@@ -131,6 +268,14 @@ GType		gst_buffer_get_type		(void);
 GstBuffer*	gst_buffer_new			(void);
 GstBuffer*	gst_buffer_new_and_alloc	(guint size);
 
+/**
+ * gst_buffer_set_data:
+ * @buf: The buffer to modify
+ * @data: The data to set on the buffer
+ * @size: The size to set on the buffer
+ *
+ * A convenience function to set the data and size on a buffer.
+ */
 #define		gst_buffer_set_data(buf, data, size)	\
 G_STMT_START {						\
   GST_BUFFER_DATA (buf) = data;				\
@@ -138,13 +283,59 @@ G_STMT_START {						\
 } G_STMT_END
 
 /* refcounting */
+/**
+ * gst_buffer_ref:
+ * @buf: a #GstBuffer to increase the refcount of.
+ *
+ * Increases the refcount of the given buffer by one.
+ */
 #define		gst_buffer_ref(buf)		GST_BUFFER_CAST (gst_mini_object_ref (GST_MINI_OBJECT (buf)))
+/**
+ * gst_buffer_unref:
+ * @buf: a #GstBuffer to decrease the refcount of.
+ *
+ * Decreases the refcount of the buffer. If the refcount reaches 0, the buffer
+ * will be freed.
+ */
 #define		gst_buffer_unref(buf)		gst_mini_object_unref (GST_MINI_OBJECT (buf))
+
 /* copy buffer */
+/**
+ * gst_buffer_copy:
+ * @buf: a #GstBuffer to copy.
+ *
+ * Copies the given buffer using the copy function of the parent #GstData
+ * structure.
+ *
+ * Returns: a new #GstBuffer copy of the buffer.
+ */
 #define		gst_buffer_copy(buf)		GST_BUFFER_CAST (gst_mini_object_copy (GST_MINI_OBJECT (buf)))
+/**
+ * gst_buffer_is_writable:
+ * @buf: a #GstBuffer to check
+ *
+ * Tests if you can safely write data into a buffer's data array.
+ *
+ * Returns: %TRUE if buffer is writable
+ */
 #define		gst_buffer_is_writable(buf)	gst_mini_object_is_writable (GST_MINI_OBJECT (buf))
+/**
+ * gst_buffer_make_writable:
+ * @buf: a #GstBuffer to make writable
+ *
+ * Makes a buffer writable.
+ *
+ * Returns: a #GstBuffer that is writable
+ */
 #define		gst_buffer_make_writable(buf)   GST_BUFFER_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT (buf)))
 
+/**
+ * gst_buffer_replace:
+ * @obuf: a #GstBuffer to receive the data
+ * @nbuf: a #GstBuffer to take the data from
+ *
+ * Replaces the data in @obuf with the one in @nbuf
+ */
 #define		gst_buffer_replace(obuf,nbuf)	gst_mini_object_replace ((GstMiniObject **)(obuf), GST_MINI_OBJECT (nbuf))
 
 GstCaps*	gst_buffer_get_caps		(GstBuffer *buffer);

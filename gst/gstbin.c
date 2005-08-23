@@ -22,6 +22,46 @@
  *
  * MT safe.
  */
+/**
+ * SECTION:gstbin
+ * @short_description: Base class for elements that contain other elements
+ *
+ * GstBin is the simplest of the container elements, allowing elements to
+ * become children of itself.  Pads from the child elements can be ghosted to
+ * the bin, making the bin itself look transparently like any other element,
+ * allowing for deep nesting of predefined sub-pipelines.
+ *
+ * A new GstBin is created with gst_bin_new(). Use a #GstPipeline instead if you
+ * want to create a toplevel bin because a normal bin doesn't have a scheduler
+ * of its own.
+ * 
+ * After the bin has been created you will typically add elements to it with
+ * gst_bin_add(). You can remove elements with gst_bin_remove().
+ *
+ * An element can be retrieved from a bin with gst_bin_get_by_name(), using the
+ * elements name. gst_bin_get_by_name_recurse_up() is mainly used for internal
+ * purposes and will query the parent bins when the element is not found in the
+ * current bin.
+ * 
+ * The list of elements in a bin can be retrieved with gst_bin_get_list().
+ * 
+ * After the bin has been set to the PLAYING state (with gst_element_set_state()), 
+ * gst_bin_iterate() is used to process the elements in the bin.
+ * 
+ * The "element_added" signal is fired whenever a new element is added to the
+ * bin. Likewise the "element_removed" signal is fired whenever an element is
+ * removed from the bin.
+ *
+ * gst_bin_destroy() is used to destroy the bin. 
+ *
+ * To control the selection of the clock in a bin, you can use the following
+ * methods:
+ * gst_bin_auto_clock() to let the bin select a clock automatically,
+ * gst_bin_get_clock() to get the current clock of the bin and
+ * gst_bin_use_clock() to specify a clock explicitly.
+ * Note that the default behaviour is to automatically select a clock from one
+ * of the clock providers in the bin.
+ */
 
 #include "gst_private.h"
 
@@ -183,10 +223,24 @@ gst_bin_class_init (GstBinClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  /**
+   * GstBin::element-added:
+   * @bin: the object which emitted the signal.
+   * @element: the element that was added to the bin
+   *
+   * Will be emitted if a new element was removed/added to this bin.
+   */
   gst_bin_signals[ELEMENT_ADDED] =
       g_signal_new ("element-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstBinClass, element_added), NULL,
       NULL, gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+  /**
+   * GstBin::element-removed:
+   * @bin: the object which emitted the signal.
+   * @element: the element that was removed from the bin
+   *
+   * Will be emitted if an element was removed from this bin.
+   */
   gst_bin_signals[ELEMENT_REMOVED] =
       g_signal_new ("element-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstBinClass, element_removed), NULL,
@@ -1688,7 +1742,7 @@ gst_bin_get_by_interface (GstBin * bin, GType interface)
 }
 
 /**
- * gst_bin_get_all_by_interface:
+ * gst_bin_iterate_all_by_interface:
  * @bin: bin to find elements in
  * @interface: interface to be implemented by interface
  *

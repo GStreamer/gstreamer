@@ -135,7 +135,7 @@ set. Every element between the braces is put into the bin. Using curly braces
 (second line) is a short cut for using the first line and "thread" as the 
 BINTYPE.
 .br
-Please not the dot that has to be used after the BINTYPE.
+Please note the dot that has to be used after the BINTYPE.
 
 .B Links
 

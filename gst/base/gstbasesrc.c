@@ -251,7 +251,7 @@ gst_base_src_set_live (GstBaseSrc * src, gboolean live)
 }
 
 /**
- * gst_base_src_get_live:
+ * gst_base_src_is_live:
  * @src: base source instance
  *
  * Check if an element is in live mode.

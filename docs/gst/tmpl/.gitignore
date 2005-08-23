@@ -1,10 +1,14 @@
 *.bak
 unused-build.stamp
+gst.sgml
 gstadapter.sgml
 gstbasesink.sgml
 gstbasesrc.sgml
 gstbasetransform.sgml
+gstbin.sgml
+gstbuffer.sgml
 gstcollectpads.sgml
+gstevent.sgml
 gstfakesrc.sgml
 gstfakesink.sgml
 gstfilesrc.sgml
