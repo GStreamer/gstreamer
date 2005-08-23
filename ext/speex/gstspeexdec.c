@@ -23,7 +23,7 @@
 
 #include "gstspeexdec.h"
 #include <string.h>
-#include <gst/tag/tag.h>
+//#include <gst/tag/tag.h>
 
 GST_DEBUG_CATEGORY (speexdec_debug);
 #define GST_CAT_DEFAULT speexdec_debug
@@ -33,13 +33,6 @@ static GstElementDetails speex_dec_details = {
   "Codec/Decoder/Audio",
   "decode speex streams to audio",
   "Wim Taymans <wim@fluendo.com>",
-};
-
-/* Filter signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
 };
 
 #define DEFAULT_ENH             TRUE
@@ -70,13 +63,12 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 GST_BOILERPLATE (GstSpeexDec, gst_speex_dec, GstElement, GST_TYPE_ELEMENT);
 
-static void speex_dec_chain (GstPad * pad, GstData * data);
+static gboolean speex_dec_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn speex_dec_chain (GstPad * pad, GstBuffer * buf);
 static GstElementStateReturn speex_dec_change_state (GstElement * element);
-static const GstFormat *speex_dec_get_formats (GstPad * pad);
 
 static gboolean speex_dec_src_event (GstPad * pad, GstEvent * event);
-static gboolean speex_dec_src_query (GstPad * pad,
-    GstQueryType query, GstFormat * format, gint64 * value);
+static gboolean speex_dec_src_query (GstPad * pad, GstQuery * query);
 static gboolean speex_dec_convert (GstPad * pad,
     GstFormat src_format, gint64 src_value,
     GstFormat * dest_format, gint64 * dest_value);
@@ -120,41 +112,10 @@ gst_speex_dec_class_init (GstSpeexDecClass * klass)
       "speex decoding element");
 }
 
-static const GstFormat *
-speex_dec_get_formats (GstPad * pad)
-{
-  static GstFormat src_formats[] = {
-    GST_FORMAT_BYTES,
-    GST_FORMAT_DEFAULT,         /* samples in the audio case */
-    GST_FORMAT_TIME,
-    0
-  };
-  static GstFormat sink_formats[] = {
-    GST_FORMAT_BYTES,
-    GST_FORMAT_TIME,
-    GST_FORMAT_DEFAULT,         /* samples */
-    0
-  };
-
-  return (GST_PAD_IS_SRC (pad) ? src_formats : sink_formats);
-}
-
-static const GstEventMask *
-speex_get_event_masks (GstPad * pad)
-{
-  static const GstEventMask speex_dec_src_event_masks[] = {
-    {GST_EVENT_SEEK, GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH},
-    {0,}
-  };
-
-  return speex_dec_src_event_masks;
-}
-
 static const GstQueryType *
 speex_get_query_types (GstPad * pad)
 {
   static const GstQueryType speex_dec_src_query_types[] = {
-    GST_QUERY_TOTAL,
     GST_QUERY_POSITION,
     0
   };
@@ -169,25 +130,19 @@ gst_speex_dec_init (GstSpeexDec * dec)
       gst_pad_new_from_template (gst_static_pad_template_get
       (&speex_dec_sink_factory), "sink");
   gst_pad_set_chain_function (dec->sinkpad, speex_dec_chain);
-  gst_pad_set_formats_function (dec->sinkpad, speex_dec_get_formats);
-  gst_pad_set_convert_function (dec->sinkpad, speex_dec_convert);
+  gst_pad_set_event_function (dec->sinkpad, speex_dec_event);
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
 
   dec->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&speex_dec_src_factory), "src");
-  gst_pad_use_explicit_caps (dec->srcpad);
-  gst_pad_set_event_mask_function (dec->srcpad, speex_get_event_masks);
+  gst_pad_use_fixed_caps (dec->srcpad);
   gst_pad_set_event_function (dec->srcpad, speex_dec_src_event);
   gst_pad_set_query_type_function (dec->srcpad, speex_get_query_types);
   gst_pad_set_query_function (dec->srcpad, speex_dec_src_query);
-  gst_pad_set_formats_function (dec->srcpad, speex_dec_get_formats);
-  gst_pad_set_convert_function (dec->srcpad, speex_dec_convert);
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
   dec->enh = DEFAULT_ENH;
-
-  GST_FLAG_SET (dec, GST_ELEMENT_EVENT_AWARE);
 }
 
 static gboolean
@@ -253,29 +208,26 @@ speex_dec_convert (GstPad * pad,
 }
 
 static gboolean
-speex_dec_src_query (GstPad * pad, GstQueryType query, GstFormat * format,
-    gint64 * value)
+speex_dec_src_query (GstPad * pad, GstQuery * query)
 {
-  gint64 samples_out = 0;
-  GstSpeexDec *dec = GST_SPEEXDEC (gst_pad_get_parent (pad));
-  GstFormat my_format = GST_FORMAT_DEFAULT;
+  gint64 samples_out = 0, total_samples;
+  GstSpeexDec *dec = GST_SPEEXDEC (GST_OBJECT_PARENT (pad));
+  GstFormat my_format = GST_FORMAT_TIME;
+  GstPad *peer;
 
-  if (query == GST_QUERY_POSITION) {
-    samples_out = dec->samples_out;
-  } else {
-    /* query peer in default format */
-    if (!gst_pad_query (GST_PAD_PEER (dec->sinkpad), query, &my_format,
-            &samples_out))
-      return FALSE;
-  }
-
-  /* and convert to the final format */
-  if (!gst_pad_convert (pad, GST_FORMAT_DEFAULT, samples_out, format, value))
+  if (GST_QUERY_TYPE (query) != GST_QUERY_POSITION)
     return FALSE;
+  if (!(peer = gst_pad_get_peer (dec->sinkpad)))
+    return FALSE;
+  gst_pad_query_position (peer, &my_format, NULL, &total_samples);
+  gst_object_unref (peer);
+  samples_out = dec->samples_out;
+  speex_dec_convert (dec->srcpad, GST_FORMAT_DEFAULT, samples_out,
+      &my_format, &samples_out);
+  speex_dec_convert (dec->srcpad, GST_FORMAT_DEFAULT, total_samples,
+      &my_format, &total_samples);
+  gst_query_set_position (query, GST_FORMAT_TIME, samples_out, total_samples);
 
-  GST_LOG_OBJECT (dec,
-      "query %u: peer returned samples_out: %llu - we return %llu (format %u)\n",
-      query, samples_out, *value, *format);
   return TRUE;
 }
 
@@ -287,20 +239,24 @@ speex_dec_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:{
-      guint64 value;
-      GstFormat my_format = GST_FORMAT_DEFAULT;
+      gint64 cur, stop;
+      GstFormat format, my_format = GST_FORMAT_DEFAULT;
+      GstSeekType cur_type, stop_type;
+      GstSeekFlags flags;
+
+      gst_event_parse_seek (event, NULL, &format, &flags, &cur_type, &cur,
+          &stop_type, &stop);
 
       /* convert to samples_out */
-      res = speex_dec_convert (pad, GST_EVENT_SEEK_FORMAT (event),
-          GST_EVENT_SEEK_OFFSET (event), &my_format, &value);
-      if (res) {
-        GstEvent *real_seek = gst_event_new_seek (
-            (GST_EVENT_SEEK_TYPE (event) & ~GST_SEEK_FORMAT_MASK) |
-            GST_FORMAT_DEFAULT,
-            value);
+      if (speex_dec_convert (pad, format, cur, &my_format, &cur) &&
+          (stop == -1 ||
+              speex_dec_convert (pad, format, stop, &my_format, &stop))) {
+        GstEvent *real_seek = gst_event_new_seek (1.0, GST_FORMAT_DEFAULT,
+            flags, cur_type, cur, stop_type, stop);
 
         res = gst_pad_send_event (GST_PAD_PEER (dec->sinkpad), real_seek);
-      }
+      } else
+        res = FALSE;
       gst_event_unref (event);
       break;
     }
@@ -312,16 +268,18 @@ speex_dec_src_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
-static void
-speex_dec_event (GstSpeexDec * dec, GstEvent * event)
+static gboolean
+speex_dec_event (GstPad * pad, GstEvent * event)
 {
-  guint64 value, time, bytes;
+  GstSpeexDec *dec = GST_SPEEXDEC (GST_OBJECT_PARENT (pad));
+  gint64 value, time;
+  GstFormat fmt;
 
   GST_LOG_OBJECT (dec, "handling event");
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_DISCONTINUOUS:
-      if (gst_event_discont_get_value (event, GST_FORMAT_DEFAULT,
-              (gint64 *) & value)) {
+    case GST_EVENT_NEWSEGMENT:
+      gst_event_parse_newsegment (event, NULL, &fmt, &value, NULL, NULL);
+      if (fmt == GST_FORMAT_DEFAULT) {
         dec->samples_out = value;
         GST_DEBUG_OBJECT (dec,
             "setting samples_out to %" G_GUINT64_FORMAT " after discont",
@@ -329,77 +287,66 @@ speex_dec_event (GstSpeexDec * dec, GstEvent * event)
       } else {
         GST_WARNING_OBJECT (dec,
             "discont event didn't include offset, we might set it wrong now");
+        value = 0;
       }
       if (dec->packetno < 2) {
         if (dec->samples_out != 0)
           GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
               ("can't handle discont before parsing first 2 packets"));
         dec->packetno = 0;
-        gst_pad_push (dec->srcpad, GST_DATA (gst_event_new_discontinuous (FALSE,
-                    GST_FORMAT_TIME, (guint64) 0, GST_FORMAT_DEFAULT,
-                    (guint64) 0, GST_FORMAT_BYTES, (guint64) 0, 0)));
+        gst_pad_push_event (dec->srcpad,
+            gst_event_new_newsegment (1.0, GST_FORMAT_TIME,
+                0, GST_CLOCK_TIME_NONE, 0));
       } else {
-        GstFormat time_format, default_format, bytes_format;
-
-        time_format = GST_FORMAT_TIME;
-        default_format = GST_FORMAT_DEFAULT;
-        bytes_format = GST_FORMAT_BYTES;
+        GstFormat time_format = GST_FORMAT_TIME;
 
         dec->packetno = 2;
         /* if one of them works, all of them work */
         if (speex_dec_convert (dec->srcpad, GST_FORMAT_DEFAULT,
-                dec->samples_out, &time_format, &time)
-            && speex_dec_convert (dec->srcpad, GST_FORMAT_DEFAULT,
-                dec->samples_out, &bytes_format, &bytes)) {
-          gst_pad_push (dec->srcpad,
-              GST_DATA (gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME,
-                      time, GST_FORMAT_DEFAULT, dec->samples_out,
-                      GST_FORMAT_BYTES, bytes, 0)));
+                dec->samples_out, &time_format, &time)) {
+          gst_pad_push_event (dec->srcpad,
+              gst_event_new_newsegment (1.0, GST_FORMAT_TIME,
+                  time, GST_CLOCK_TIME_NONE, 0));
         } else {
           GST_ERROR_OBJECT (dec,
               "failed to parse data for DISCONT event, not sending any");
         }
       }
-      gst_data_unref (GST_DATA (event));
+      gst_event_unref (event);
       break;
     default:
-      gst_pad_event_default (dec->sinkpad, event);
-      break;
+      return gst_pad_event_default (dec->sinkpad, event);
   }
+
+  return TRUE;
 }
 
-static void
-speex_dec_chain (GstPad * pad, GstData * data)
+static GstFlowReturn
+speex_dec_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstBuffer *buf;
+  GstFlowReturn res;
   GstSpeexDec *dec;
 
   dec = GST_SPEEXDEC (gst_pad_get_parent (pad));
-  if (GST_IS_EVENT (data)) {
-    speex_dec_event (dec, GST_EVENT (data));
-    return;
-  }
-
-  buf = GST_BUFFER (data);
 
   if (dec->packetno == 0) {
     GstCaps *caps;
 
     /* get the header */
-    dec->header =
-        speex_packet_to_header (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
-    gst_data_unref (data);
+    dec->header = speex_packet_to_header ((char *) GST_BUFFER_DATA (buf),
+        GST_BUFFER_SIZE (buf));
+    gst_buffer_unref (buf);
     if (!dec->header) {
       GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
           (NULL), ("couldn't read header"));
-      return;
+      return GST_FLOW_ERROR;
     }
     if (dec->header->mode >= SPEEX_NB_MODES) {
       GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
           (NULL),
           ("Mode number %d does not (yet/any longer) exist in this version",
               dec->header->mode));
-      return;
+      return GST_FLOW_ERROR;
     }
 
     dec->mode = (SpeexMode *) speex_mode_list[dec->header->mode];
@@ -409,8 +356,8 @@ speex_dec_chain (GstPad * pad, GstData * data)
     if (!dec->state) {
       GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
           (NULL), ("couldn't initialize decoder"));
-      gst_data_unref (data);
-      return;
+      gst_buffer_unref (buf);
+      return GST_FLOW_ERROR;
     }
 
     speex_decoder_ctl (dec->state, SPEEX_SET_ENH, &dec->enh);
@@ -435,19 +382,23 @@ speex_dec_chain (GstPad * pad, GstData * data)
         "endianness", G_TYPE_INT, G_BYTE_ORDER,
         "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, 16, NULL);
 
-    if (!gst_pad_set_explicit_caps (dec->srcpad, caps)) {
-      gst_caps_free (caps);
-      return;
+    if (!gst_pad_set_caps (dec->srcpad, caps)) {
+      gst_caps_unref (caps);
+      return GST_FLOW_NOT_NEGOTIATED;
     }
-    gst_caps_free (caps);
+    gst_caps_unref (caps);
+    gst_pad_push_event (dec->srcpad,
+        gst_event_new_newsegment (1.0, GST_FORMAT_TIME,
+            0, GST_CLOCK_TIME_NONE, 0));
   } else if (dec->packetno == 1) {
     gchar *encoder = NULL;
 
     /* FIXME parse comments */
-    GstTagList *list = gst_tag_list_from_vorbiscomment_buffer (buf, "", 1,
-        &encoder);
+    GstTagList *list = gst_tag_list_new ();     //gst_tag_list_from_vorbiscomment_buffer (buf, "", 1,
 
-    gst_data_unref (data);
+//        &encoder);
+
+    gst_buffer_unref (buf);
 
     if (!list) {
       GST_WARNING_OBJECT (dec, "couldn't decode comments");
@@ -474,14 +425,14 @@ speex_dec_chain (GstPad * pad, GstData * data)
        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
        GST_TAG_MINIMUM_BITRATE, (guint) vd->vi.bitrate_lower, NULL);
      */
-    gst_element_found_tags_for_pad (GST_ELEMENT (dec), dec->srcpad, 0, list);
+    gst_element_found_tags_for_pad (GST_ELEMENT (dec), dec->srcpad, list);
   } else {
     gint i;
 
     /* send data to the bitstream */
-    speex_bits_read_from (&dec->bits, GST_BUFFER_DATA (buf),
+    speex_bits_read_from (&dec->bits, (char *) GST_BUFFER_DATA (buf),
         GST_BUFFER_SIZE (buf));
-    gst_data_unref (data);
+    gst_buffer_unref (buf);
 
     /* now decode each frame */
     for (i = 0; i < dec->header->frames_per_packet; i++) {
@@ -505,8 +456,10 @@ speex_dec_chain (GstPad * pad, GstData * data)
       if (dec->header->nb_channels == 2)
         speex_decode_stereo (dec->output, dec->frame_size, &dec->stereo);
 
-      outbuf = gst_pad_alloc_buffer (dec->srcpad, GST_BUFFER_OFFSET_NONE,
-          dec->frame_size * dec->header->nb_channels * 2);
+      if ((res = gst_pad_alloc_buffer (dec->srcpad, GST_BUFFER_OFFSET_NONE,
+                  dec->frame_size * dec->header->nb_channels * 2,
+                  GST_PAD_CAPS (dec->srcpad), &outbuf)) != GST_FLOW_OK)
+        return res;
       out_data = (gint16 *) GST_BUFFER_DATA (outbuf);
 
       /*PCM saturation (just in case) */
@@ -525,11 +478,15 @@ speex_dec_chain (GstPad * pad, GstData * data)
           dec->samples_out * GST_SECOND / dec->header->rate;
       GST_BUFFER_DURATION (outbuf) =
           dec->frame_size * GST_SECOND / dec->header->rate;
-      gst_pad_push (dec->srcpad, GST_DATA (outbuf));
+      res = gst_pad_push (dec->srcpad, outbuf);
+      if (res != GST_FLOW_OK && res != GST_FLOW_NOT_LINKED)
+        return res;
       dec->samples_out += dec->frame_size;
     }
   }
   dec->packetno++;
+
+  return GST_FLOW_OK;
 }
 
 static void

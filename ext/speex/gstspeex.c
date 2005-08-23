@@ -26,16 +26,11 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
-
-  if (!gst_library_load ("gsttags"))
-    return FALSE;
-
+#if 0
   if (!gst_element_register (plugin, "speexenc", GST_RANK_NONE,
           GST_TYPE_SPEEXENC))
     return FALSE;
-
+#endif
   if (!gst_element_register (plugin, "speexdec", GST_RANK_PRIMARY,
           GST_TYPE_SPEEXDEC))
     return FALSE;
