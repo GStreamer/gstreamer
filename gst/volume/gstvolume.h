@@ -24,6 +24,7 @@
 #define __GST_VOLUME_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstbasetransform.h>
 
 G_BEGIN_DECLS
 

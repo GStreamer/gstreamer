@@ -67,7 +67,7 @@ enum
   PROP_VOLUME
 };
 
-static GstStaticPadTemplate volume_sink_factory =
+static GstStaticPadTemplate volume_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -84,7 +84,8 @@ static GstStaticPadTemplate volume_sink_factory =
         "width = (int) 16, " "depth = (int) 16, " "signed = (bool) TRUE")
     );
 
-static GstStaticPadTemplate volume_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+static GstStaticPadTemplate volume_src_template = GST_STATIC_PAD_TEMPLATE
+    ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-float, "
@@ -248,9 +249,9 @@ gst_volume_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&volume_src_factory));
+      gst_static_pad_template_get (&volume_src_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&volume_sink_factory));
+      gst_static_pad_template_get (&volume_sink_template));
   gst_element_class_set_details (element_class, &volume_details);
 }
 
