@@ -18,7 +18,10 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+/**
+ * SECTION:gstbus
+ * @short_description: Asynchronous message bus subsystem
+ */
 
 #include <errno.h>
 #include <unistd.h>
@@ -151,6 +154,13 @@ gst_bus_get_property (GObject * object, guint prop_id,
   }
 }
 
+/**
+ * gst_bus_new:
+ *
+ * Creates a new #GstBuus instance.
+ *
+ * Returns: a new #GstBus instance
+ */
 GstBus *
 gst_bus_new (void)
 {

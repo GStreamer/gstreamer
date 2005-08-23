@@ -6,6 +6,7 @@
 <!ENTITY Gst SYSTEM "xml/gst.xml">
 <!ENTITY GstBin SYSTEM "xml/gstbin.xml">
 <!ENTITY GstBuffer SYSTEM "xml/gstbuffer.xml">
+<!ENTITY GstBus SYSTEM "xml/gstbus.xml">
 <!ENTITY GstCaps SYSTEM "xml/gstcaps.xml">
 <!ENTITY GstChildProxy SYSTEM "xml/gstchildproxy.xml">
 <!ENTITY GstClock SYSTEM "xml/gstclock.xml">
@@ -102,6 +103,7 @@
     &Gst;
     &GstBin;
     &GstBuffer;
+    &GstBus;
     &GstCaps;
     &GstChildProxy;
     &GstClock;

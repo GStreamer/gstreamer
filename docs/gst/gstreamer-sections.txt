@@ -22,6 +22,7 @@ gst_init_check
 gst_init_with_popt_table
 gst_init_check_with_popt_table
 gst_init_get_popt_table
+gst_deinit
 <SUBSECTION Private>
 #GstPoptOption
 </SECTION>
@@ -46,6 +47,9 @@ gst_bin_iterate_recurse
 gst_bin_iterate_sinks
 gst_bin_iterate_all_by_interface
 
+GST_BIN_CHILDREN
+GST_BIN_CHILDREN_COOKIE
+GST_BIN_NUMCHILDREN
 <SUBSECTION>
 gst_bin_add_many
 gst_bin_remove_many
@@ -59,11 +63,46 @@ GST_BIN_CLASS
 GST_IS_BIN_CLASS
 GST_BIN_GET_CLASS
 GST_TYPE_BIN_FLAGS
-
+GST_BIN_CAST
 <SUBSECTION Private>
 gst_bin_get_type
 gst_bin_flags_get_type
 
+</SECTION>
+
+<SECTION>
+<FILE>gstbus</FILE>
+<TITLE>GstBus</TITLE>
+GstBus
+GstBusFlags
+GstBusSyncReply
+GstBusHandler
+GstBusSyncHandler
+gst_bus_new
+gst_bus_post
+gst_bus_have_pending
+gst_bus_peek
+gst_bus_pop
+gst_bus_set_flushing
+gst_bus_set_sync_handler
+gst_bus_create_watch
+gst_bus_add_watch_full
+gst_bus_add_watch
+gst_bus_poll
+<SUBSECTION Standard>
+GstBusClass
+GST_BUS
+GST_IS_BUS
+GST_TYPE_BUS
+GST_BUS_CLASS
+GST_IS_BUS_CLASS
+GST_BUS_GET_CLASS
+GST_TYPE_BUS_FLAGS
+GST_BUS_CAST
+<SUBSECTION Private>
+gst_bus_get_type
+gst_bus_flags_get_type
+gst_bus_sync_reply_get_type
 </SECTION>
 
 <SECTION>
@@ -117,8 +156,10 @@ gst_buffer_join
 gst_buffer_merge
 
 <SUBSECTION Standard>
+GstBufferClass
 GST_BUFFER
 GST_BUFFER_CLASS
+GST_BUFFER_GET_CLASS
 GST_IS_BUFFER
 GST_IS_BUFFER_CLASS
 GST_TYPE_BUFFER
@@ -149,6 +190,7 @@ gst_caps_new_simple
 gst_caps_new_full
 gst_caps_new_full_valist
 gst_caps_copy
+gst_caps_copy_nth
 gst_static_caps_get
 gst_caps_append
 gst_caps_append_structure
@@ -354,6 +396,7 @@ gst_element_get_factory
 gst_element_get_manager
 gst_element_no_more_pads
 <SUBSECTION Standard>
+GstEventClass
 GST_ELEMENT
 GST_IS_ELEMENT
 GST_ELEMENT_CLASS
@@ -444,6 +487,9 @@ GST_EVENT_TYPE
 GST_EVENT_TIMESTAMP
 GST_EVENT_SRC
 GST_EVENT_IS_INTERRUPT
+GST_EVENT_IS_DOWNSTREAM
+GST_EVENT_IS_SERIALIZED
+GST_EVENT_IS_UPSTREAM
 GstEventFlag
 GST_EVENT_MASK_FUNCTION
 GstSeekType
@@ -460,6 +506,7 @@ GST_EVENT_DISCONT_OFFSET_LEN
 GST_EVENT_SIZE_FORMAT
 GST_EVENT_SIZE_VALUE
 GST_EVENT_RATE_VALUE
+GST_EVENT_MAKE_TYPE
 gst_event_ref
 gst_event_unref
 gst_event_copy
@@ -481,6 +528,9 @@ gst_event_new_navigation
 <SUBSECTION Standard>
 GST_EVENT
 GST_IS_EVENT
+GST_IS_EVENT_CLASS
+GST_EVENT_CLASS
+GST_EVENT_GET_CLASS
 GST_TYPE_EVENT
 GST_TYPE_EVENT_FLAG
 GST_TYPE_EVENT_TYPE
@@ -524,6 +574,7 @@ gst_format_get_type
 <TITLE>GstGhostPad</TITLE>
 GstGhostPad
 gst_ghost_pad_new
+gst_ghost_pad_set_target
 <SUBSECTION Standard>
 GstGhostPadClass
 GST_GHOST_PAD
@@ -1185,6 +1236,7 @@ gst_plugin_feature_get_type
 <SECTION>
 <FILE>gstquery</FILE>
 <TITLE>GstQuery</TITLE>
+GstQuery
 GstQueryType
 GST_QUERY_TYPE_RATE_DEN
 GstQueryTypeDefinition
@@ -1194,8 +1246,15 @@ gst_query_type_get_by_nick
 gst_query_types_contains
 gst_query_type_get_details
 <SUBSECTION Standard>
+GstQueryClass
+GST_QUERY
+GST_IS_QUERY
+GST_QUERY_CLASS
+GST_IS_QUERY_CLASS
+GST_TYPE_QUERY
 GST_TYPE_QUERY_TYPE
 <SUBSECTION Private>
+gst_query_get_type
 gst_query_type_get_type
 </SECTION>
 
@@ -1621,6 +1680,8 @@ gst_util_set_object_arg
 gst_util_dump_mem
 gst_print_pad_caps
 gst_print_element_args
+gst_bin_watch_for_state_change
+GST_BOILERPLATE_WITH_INTERFACE
 GST_BOILERPLATE_FULL
 GST_BOILERPLATE
 GST_CALL_PARENT
@@ -1772,15 +1833,16 @@ gst_adapter_peek
 gst_adapter_flush
 gst_adapter_available
 gst_adapter_available_fast
+gst_adapter_take
 <SUBSECTION Standard>
-GST_ADAPTER_SRC
-GST_IS_ADAPTER_SRC
-GST_TYPE_ADAPTER_SRC
-GST_ADAPTER_SRC_CLASS
-GST_IS_ADAPTER_SRC_CLASS
-GST_ADAPTER_SRC_GET_CLASS
+GST_ADAPTER
+GST_IS_ADAPTER
+GST_TYPE_ADAPTER
+GST_ADAPTER_CLASS
+GST_IS_ADAPTER_CLASS
+GST_ADAPTER_GET_CLASS
 <SUBSECTION Private>
-gst_adapter_src_get_type
+gst_adapter_get_type
 </SECTION>
 
 
@@ -1837,6 +1899,13 @@ gst_base_sink_get_type
 <INCLUDE>gst/base/gstbasetransform.h</INCLUDE>
 GstBaseTransform
 GstBaseTransformClass
+
+gst_base_transform_is_passthrough
+gst_base_transform_set_passthrough
+
+GST_BASE_TRANSFORM_SINK_NAME
+GST_BASE_TRANSFORM_SRC_NAME
+
 <SUBSECTION Standard>
 GST_BASE_TRANSFORM
 GST_IS_BASE_TRANSFORM
@@ -1856,6 +1925,7 @@ gst_base_transform_get_type
 GstCollectPads
 GstCollectPadsClass
 GstCollectData
+GstCollectPadsFunction
 gst_collectpads_new
 gst_collectpads_set_function
 gst_collectpads_add_pad
@@ -1870,6 +1940,10 @@ gst_collectpads_pop
 gst_collectpads_available
 gst_collectpads_read
 gst_collectpads_flush
+GST_COLLECTPADS_BROADCAST
+GST_COLLECTPADS_GET_COND
+GST_COLLECTPADS_SIGNAL
+GST_COLLECTPADS_WAIT
 <SUBSECTION Standard>
 GST_COLLECTPADS
 GST_IS_COLLECTPADS
@@ -1907,13 +1981,17 @@ gst_push_src_get_type
 <TITLE>GstFakeSrc</TITLE>
 <INCLUDE>gst/elements/gstfakesrc.h</INCLUDE>
 GstFakeSrc
+GstFakeSrcDataType
+GstFakeSrcFillType
+GstFakeSrcOutputType
+GstFakeSrcSizeType
 <SUBSECTION Standard>
 GstFakeSrcClass
-GST_FAKESRC
-GST_IS_FAKESRC
-GST_TYPE_FAKESRC
-GST_FAKESRC_CLASS
-GST_IS_FAKESRC_CLASS
+GST_FAKE_SRC
+GST_IS_FAKE_SRC
+GST_TYPE_FAKE_SRC
+GST_FAKE_SRC_CLASS
+GST_IS_FAKE_SRC_CLASS
 <SUBSECTION Private>
 gst_fake_src_get_type
 </SECTION>
@@ -1923,13 +2001,14 @@ gst_fake_src_get_type
 <TITLE>GstFakeSink</TITLE>
 <INCLUDE>gst/elements/gstfakesink.h</INCLUDE>
 GstFakeSink
+GstFakeSinkStateError
 <SUBSECTION Standard>
 GstFakeSinkClass
-GST_FAKESINK
-GST_IS_FAKESINK
-GST_TYPE_FAKESINK
-GST_FAKESINK_CLASS
-GST_IS_FAKESINK_CLASS
+GST_FAKE_SINK
+GST_IS_FAKE_SINK
+GST_TYPE_FAKE_SINK
+GST_FAKE_SINK_CLASS
+GST_IS_FAKE_SINK_CLASS
 <SUBSECTION Private>
 gst_fake_sink_get_type
 </SECTION>
@@ -1942,10 +2021,10 @@ GstFileSrc
 <SUBSECTION Standard>
 GstFileSrcClass
 GST_FILE_SRC
-GST_IS_FILESRC
-GST_TYPE_FILESRC
+GST_IS_FILE_SRC
+GST_TYPE_FILE_SRC
 GST_FILE_SRC_CLASS
-GST_IS_FILESRC_CLASS
+GST_IS_FILE_SRC_CLASS
 <SUBSECTION Private>
 gst_file_src_get_type
 </SECTION>
@@ -1958,10 +2037,10 @@ GstFileSink
 <SUBSECTION Standard>
 GstFileSinkClass
 GST_FILE_SINK
-GST_IS_FILESINK
-GST_TYPE_FILESINK
+GST_IS_FILE_SINK
+GST_TYPE_FILE_SINK
 GST_FILE_SINK_CLASS
-GST_IS_FILESINK_CLASS
+GST_IS_FILE_SINK_CLASS
 <SUBSECTION Private>
 gst_file_sink_get_type
 </SECTION>

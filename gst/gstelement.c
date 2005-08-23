@@ -1140,10 +1140,13 @@ gst_element_send_event (GstElement * element, GstEvent * event)
 /**
  * gst_element_seek:
  * @element: a #GstElement to send the event to.
- * @seek_method: the method to use for seeking (GST_SEEK_METHOD_*).
- * @seek_format: the #GstFormat to use for seeking (GST_FORMAT_*).
- * @seek_flags: the flags to use for seeking (GST_SEEK_FLAG_*).
- * @offset: the offset to seek to (in the given seek_format).
+ * @rate: the rate of the seek
+ * @format: the #GstFormat to use for seeking (GST_FORMAT_*).
+ * @flags: the flags to use for seeking (GST_SEEK_FLAG_*).
+ * @cur_type: the #GstSeekType for the start offset
+ * @cur: the start offset to seek to (in the given seek_format).
+ * @stop_type:  the #GstSeekType for the end offset
+ * @stop: the end offset to seek to (in the given seek_format).
  *
  * Sends a seek event to an element.
  *

@@ -10,6 +10,7 @@
 #include <gst/gstqueue.h>
 
 gst_bin_get_type
+gst_bus_get_type
 gst_clock_get_type
 gst_element_factory_get_type
 gst_element_get_type

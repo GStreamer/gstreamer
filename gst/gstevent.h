@@ -98,6 +98,7 @@ typedef enum {
 
 /**
  * GST_EVENT_TRACE_NAME:
+ *
  * The name used for memory allocation tracing 
  */
 #define GST_EVENT_TRACE_NAME	"GstEvent"

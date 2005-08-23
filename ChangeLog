@@ -1,5 +1,19 @@
 2005-08-23  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/gstreamer.types:
+	* docs/gst/tmpl/.cvsignore:
+	* gst/gstbin.h:
+	* gst/gstbus.c:
+	* gst/gstelement.c:
+	* gst/gstevent.h:
+          added about 100 symbols from gstreamer-unused.txt to the right sections
+          fixed more broken comments
+          added GstBus to docs
+
+2005-08-23  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/gst/gstreamer-sections.txt:
 	* docs/gst/tmpl/.cvsignore:
 	* docs/gst/tmpl/gstbin.sgml:

@@ -7,6 +7,7 @@ gstbasesrc.sgml
 gstbasetransform.sgml
 gstbin.sgml
 gstbuffer.sgml
+gstbus.sgml
 gstcollectpads.sgml
 gstevent.sgml
 gstfakesrc.sgml
