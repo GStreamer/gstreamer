@@ -99,14 +99,14 @@ gst_speex_dec_class_init (GstSpeexDecClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  gobject_class->set_property = gst_speexdec_set_property;
+  gobject_class->get_property = gst_speexdec_get_property;
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ENH,
       g_param_spec_boolean ("enh", "Enh", "Enable perceptual enhancement",
           DEFAULT_ENH, G_PARAM_READWRITE));
 
   gstelement_class->change_state = speex_dec_change_state;
-
-  gobject_class->set_property = gst_speexdec_set_property;
-  gobject_class->get_property = gst_speexdec_get_property;
 
   GST_DEBUG_CATEGORY_INIT (speexdec_debug, "speexdec", 0,
       "speex decoding element");

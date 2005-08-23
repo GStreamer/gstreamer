@@ -1,5 +1,11 @@
 2005-08-23  Wim Taymans  <wim@fluendo.com>
 
+	* ext/speex/gstspeexdec.c: (gst_speex_dec_class_init):
+	* ext/speex/gstspeexenc.c: (gst_speexenc_class_init):
+	Fix property warning.
+
+2005-08-23  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/gstrtpamrdec.c: (gst_rtpamrdec_init),
 	(gst_rtpamrdec_sink_setcaps), (gst_rtpamrdec_chain):
 	* gst/rtp/gstrtpamrenc.c: (gst_rtpamrenc_class_init),

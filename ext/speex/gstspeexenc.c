@@ -191,6 +191,9 @@ gst_speexenc_class_init (GstSpeexEncClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  gobject_class->set_property = gst_speexenc_set_property;
+  gobject_class->get_property = gst_speexenc_get_property;
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_QUALITY,
       g_param_spec_float ("quality", "Quality", "Encoding quality",
           0.0, 10.0, DEFAULT_QUALITY, G_PARAM_READWRITE));
@@ -224,9 +227,6 @@ gst_speexenc_class_init (GstSpeexEncClass * klass)
           "The last status message", NULL, G_PARAM_READABLE));
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
-
-  gobject_class->set_property = gst_speexenc_set_property;
-  gobject_class->get_property = gst_speexenc_get_property;
 
   gstelement_class->change_state = gst_speexenc_change_state;
 }
