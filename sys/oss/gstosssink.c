@@ -162,27 +162,22 @@ gst_oss_sink_init (GstOssSink * osssink)
 {
   GST_DEBUG ("initializing osssink");
 
-  osssink->element = g_object_new (GST_TYPE_OSSELEMENT, NULL);
+  osssink->fd = -1;
 }
 
 static GstCaps *
 gst_oss_sink_getcaps (GstBaseSink * bsink)
 {
   GstOssSink *osssink;
-  GstOssElement *element;
   GstCaps *caps;
 
   osssink = GST_OSSSINK (bsink);
-  element = osssink->element;
 
-  gst_osselement_probe_caps (element);
-
-  if (element->probed_caps == NULL) {
-    caps =
-        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD
+  if (osssink->fd == -1) {
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD
             (bsink)));
   } else {
-    caps = gst_caps_ref (element->probed_caps);
+    caps = gst_oss_helper_probe_caps (osssink->fd);
   }
 
   return caps;

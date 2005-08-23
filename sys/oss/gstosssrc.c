@@ -192,27 +192,23 @@ gst_oss_src_init (GstOssSrc * osssrc)
 {
   GST_DEBUG ("initializing osssrc");
 
+  osssrc->fd = -1;
   osssrc->device = g_strdup ("/dev/dsp");
-  osssrc->element = g_object_new (GST_TYPE_OSSELEMENT, NULL);
 }
 
 static GstCaps *
 gst_oss_src_getcaps (GstBaseSrc * bsrc)
 {
   GstOssSrc *osssrc;
-  GstOssElement *element;
   GstCaps *caps;
 
   osssrc = GST_OSS_SRC (bsrc);
-  element = osssrc->element;
 
-  gst_osselement_probe_caps (element);
-
-  if (element->probed_caps == NULL) {
-    caps =
-        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc)));
+  if (osssrc->fd == -1) {
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD
+            (bsrc)));
   } else {
-    caps = gst_caps_ref (element->probed_caps);
+    caps = gst_oss_helper_probe_caps (osssrc->fd);
   }
 
   return caps;

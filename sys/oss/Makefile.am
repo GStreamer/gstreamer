@@ -1,9 +1,9 @@
 plugin_LTLIBRARIES = libgstossaudio.la
 
 libgstossaudio_la_SOURCES = gstossaudio.c	\
-		            gstosselement.c	\
 		            gstosshelper.c	\
 			    gstossmixer.c	\
+			    gstossmixertrack.c	\
 			    gstosssink.c	\
 			    gstosssrc.c
 
@@ -17,10 +17,10 @@ libgstossaudio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstosssink.h	  \
 		gstosssrc.h	  \
-		gstosselement.h   \
                 gstosshelper.h	  \
 		gstossdmabuffer.h \
-		gstossmixer.h
+		gstossmixer.h     \
+		gstossmixertrack.h
 
 # noinst_PROGRAMS = #oss_probe
 

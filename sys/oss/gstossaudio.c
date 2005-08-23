@@ -23,7 +23,6 @@
 
 #include "gst/gst-i18n-plugin.h"
 
-#include "gstosselement.h"
 #include "gstosssink.h"
 #include "gstosssrc.h"
 

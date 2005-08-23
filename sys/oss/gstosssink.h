@@ -28,7 +28,7 @@
 #include <gst/gst.h>
 #include <gst/audio/gstaudiosink.h>
 
-#include "gstosselement.h"
+#include "gstosshelper.h"
 
 G_BEGIN_DECLS
 
@@ -43,8 +43,6 @@ typedef struct _GstOssSinkClass GstOssSinkClass;
 
 struct _GstOssSink {
   GstAudioSink    sink;
-
-  GstOssElement *element;
 
   gint fd;
   gint		 bytes_per_sample;

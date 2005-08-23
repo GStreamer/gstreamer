@@ -25,7 +25,7 @@
 
 #include <gst/gst.h>
 
-#include "gstosselement.h"
+#include "gstosshelper.h"
 #include <gst/audio/gstringbuffer.h>
 
 G_BEGIN_DECLS
