@@ -1,3 +1,9 @@
+2005-08-23  Owen Fraser-Green  <owen@discobabe.net>
+
+	* gst/realmedia/rmdemux.c (gst_rmdemux_src_event): Fixed bug
+	causing events to be passed wrong way.
+	(gst_rmdemux_parse_packet): Avoid accidentally skipping audio.
+
 2005-08-22  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/mad/gstid3tag.c: (gst_id3_tag_init),
