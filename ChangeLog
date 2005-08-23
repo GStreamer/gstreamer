@@ -1,5 +1,29 @@
 2005-08-23  Andy Wingo  <wingo@pobox.com>
 
+	* sys/oss/gstossmixer.h:
+	* sys/oss/gstossmixer.c: Refactored to be more like alsamixer.
+
+	* sys/oss/gstossmixertrack.h:
+	* sys/oss/gstossmixertrack.c: Split out from gstossmixer.[ch],
+	like gstalsamixer.
+
+	* sys/oss/gstosssrc.c:
+	* sys/oss/gstosssink.c: Where before we used a gstosselement
+	object as a helper library, now just call functions from
+	gstosshelper.
+
+	* sys/oss/gstosshelper.h:
+	* sys/oss/gstosshelper.c: Made a real library. Removed
+	propertyprobe for now, should add it back later.
+	
+	* sys/oss/gstosselement.h:
+	* sys/oss/gstosselement.c: Removed, we don't have a shared base
+	class.
+	
+	* sys/oss/gstosshelper.c (gst_oss_helper_probe_caps): Search
+	higher-to-lower, makes 16 bit appear earlier in the caps, which
+	makes it preferred.
+
 	* sys/oss/gstosssrc.h: 
 	* sys/oss/gstosssrc.c: Totally ported, dude.
 
