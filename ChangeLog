@@ -1,3 +1,13 @@
+2005-08-23  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/gstrtpamrdec.c: (gst_rtpamrdec_init),
+	(gst_rtpamrdec_sink_setcaps), (gst_rtpamrdec_chain):
+	* gst/rtp/gstrtpamrenc.c: (gst_rtpamrenc_class_init),
+	(gst_rtpamrenc_init), (gst_rtpamrenc_chain):
+	* gst/rtp/gstrtph263penc.c: (gst_rtph263penc_class_init),
+	(gst_rtph263penc_flush), (gst_rtph263penc_chain):
+	Small updates, RFC reference to payload encoders.
+
 2005-08-23  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* configure.ac:
