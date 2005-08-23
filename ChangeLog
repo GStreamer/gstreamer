@@ -1,3 +1,15 @@
+2005-08-23  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/speex/Makefile.am:
+	* ext/speex/gstspeex.c: (plugin_init):
+	* ext/speex/gstspeexdec.c: (speex_get_query_types),
+	(gst_speex_dec_init), (speex_dec_src_query), (speex_dec_src_event),
+	(speex_dec_event), (speex_dec_chain):
+	  Port speexdec. Leads to some unfamiliar warnings on console,
+	  but works otherwise.
+
 2005-08-23  Andy Wingo  <wingo@pobox.com>
 
 	* sys/oss/gstosssrc.c (gst_oss_src_open): Set the device-name
