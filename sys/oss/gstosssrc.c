@@ -47,13 +47,10 @@ enum
   PROP_DEVICE_NAME,
 };
 
-GST_BOILERPLATE (GstOssSrc, gst_oss_src, GstAudioSrc, GST_TYPE_AUDIO_SRC);
+GST_BOILERPLATE_WITH_INTERFACE (GstOssSrc, gst_oss_src, GstAudioSrc,
+    GST_TYPE_AUDIO_SRC, GstMixer, GST_TYPE_MIXER, gst_oss_src_mixer);
 
-/*
-GST_BOILERPLATE_WITH_INTERFACE (GstOssSrc, gst_oss_src, GstAudioSrc, GST_TYPE_AUDIO_SRC,
- GstMixer, GST_TYPE_MIXER, gst_oss_src_mixer);
 GST_IMPLEMENT_OSS_MIXER_METHODS (GstOssSrc, gst_oss_src_mixer);
-*/
 
 static void gst_oss_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -309,13 +306,26 @@ gst_oss_src_open (GstAudioSrc * asrc)
     return FALSE;
   }
 
+  if (!oss->mixer)
+    oss->mixer = gst_ossmixer_new ("/dev/mixer", GST_OSS_MIXER_CAPTURE);
+
   return TRUE;
 }
 
 static gboolean
 gst_oss_src_close (GstAudioSrc * asrc)
 {
-  close (GST_OSS_SRC (asrc)->fd);
+  GstOssSrc *oss;
+
+  oss = GST_OSS_SRC (asrc);
+
+  close (oss->fd);
+
+  if (oss->mixer) {
+    gst_ossmixer_free (oss->mixer);
+    oss->mixer = NULL;
+  }
+
   return TRUE;
 }
 

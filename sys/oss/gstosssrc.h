@@ -29,6 +29,7 @@
 #include <gst/audio/gstaudiosrc.h>
 
 #include "gstosshelper.h"
+#include "gstossmixer.h"
 
 G_BEGIN_DECLS
 
@@ -49,6 +50,8 @@ struct _GstOssSrc {
 
   gchar *device;
   gchar *device_name;
+
+  GstOssMixer *mixer;
 };
 
 struct _GstOssSrcClass {
