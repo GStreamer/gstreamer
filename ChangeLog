@@ -1,3 +1,17 @@
+2005-08-24  Stefan Kost  <ensonic@users.sf.net>
+
+	* check/gst-libs/controller.c: (GST_START_TEST),
+	(gst_controller_suite):
+	* docs/gst/tmpl/gstcaps.sgml:
+	* docs/gst/tmpl/gstghostpad.sgml:
+	* docs/gst/tmpl/gstquery.sgml:
+	* docs/gst/tmpl/gstutils.sgml:
+	* libs/gst/controller/gst-helper.c: (gst_object_set_controller),
+	(gst_object_sink_values), (gst_object_get_value_arrays),
+	(gst_object_get_value_array):
+          gracefully handle helper method calls to objects that are not beeing
+          controlled, added test case for that          
+
 2005-08-23  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstevent.c: (_gst_event_copy), (gst_event_new_custom),

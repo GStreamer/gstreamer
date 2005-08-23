@@ -35,3 +35,13 @@ Pseudo link pads
 @pad: 
 
 
+<!-- ##### FUNCTION gst_ghost_pad_set_target ##### -->
+<para>
+
+</para>
+
+@gpad: 
+@newtarget: 
+@Returns: 
+
+

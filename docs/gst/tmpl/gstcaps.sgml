@@ -160,6 +160,16 @@ templates.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_caps_copy_nth ##### -->
+<para>
+
+</para>
+
+@caps: 
+@nth: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_static_caps_get ##### -->
 <para>
 

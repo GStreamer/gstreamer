@@ -131,10 +131,11 @@ gst_object_set_controller (GObject * object, GstController * controller)
   g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
   g_return_val_if_fail (controller, FALSE);
 
-  ctrl = g_object_get_qdata (object, controller_key);
-  g_return_val_if_fail (!ctrl, FALSE);
-  g_object_set_qdata (object, controller_key, controller);
-  return (TRUE);
+  if (!(ctrl = g_object_get_qdata (object, controller_key))) {
+    g_object_set_qdata (object, controller_key, controller);
+    return (TRUE);
+  }
+  return (FALSE);
 }
 
 /**
@@ -155,9 +156,10 @@ gst_object_sink_values (GObject * object, GstClockTime timestamp)
   g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
 
-  ctrl = g_object_get_qdata (object, controller_key);
-  g_return_val_if_fail (ctrl, FALSE);
-  return gst_controller_sink_values (ctrl, timestamp);
+  if ((ctrl = g_object_get_qdata (object, controller_key))) {
+    return gst_controller_sink_values (ctrl, timestamp);
+  }
+  return (FALSE);
 }
 
 /**
@@ -187,9 +189,10 @@ gst_object_get_value_arrays (GObject * object, GstClockTime timestamp,
   g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
 
-  ctrl = g_object_get_qdata (object, controller_key);
-  g_return_val_if_fail (ctrl, FALSE);
-  return gst_controller_get_value_arrays (ctrl, timestamp, value_arrays);
+  if ((ctrl = g_object_get_qdata (object, controller_key))) {
+    return gst_controller_get_value_arrays (ctrl, timestamp, value_arrays);
+  }
+  return (FALSE);
 }
 
 /**
@@ -217,8 +220,8 @@ gst_object_get_value_array (GObject * object, GstClockTime timestamp,
   g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
 
-  ctrl = g_object_get_qdata (object, controller_key);
-  g_return_val_if_fail (ctrl, FALSE);
-
-  return gst_controller_get_value_array (ctrl, timestamp, value_array);
+  if ((ctrl = g_object_get_qdata (object, controller_key))) {
+    return gst_controller_get_value_array (ctrl, timestamp, value_array);
+  }
+  return (FALSE);
 }

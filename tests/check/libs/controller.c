@@ -330,8 +330,24 @@ GST_START_TEST (controller_interpolate_none)
 
 GST_END_TEST;
 
-/* @TODO write more tests (using an internal element that has controlable params)
- */
+/* tests if we can run helper methods against any GObject */
+GST_START_TEST (controller_helper_any_gobject)
+{
+  GstElement *elem;
+  gboolean res;
+
+  elem = gst_element_factory_make ("bin", "test_elem");
+
+  /* that element is not controllable */
+  res = gst_object_sink_values (G_OBJECT (elem), 0LL);
+  fail_unless (res == FALSE, NULL);
+
+  g_object_unref (elem);
+}
+
+GST_END_TEST;
+
+
 Suite *
 gst_controller_suite (void)
 {
@@ -346,6 +362,7 @@ gst_controller_suite (void)
   tcase_add_test (tc, controller_param_twice);
   tcase_add_test (tc, controller_finalize);
   tcase_add_test (tc, controller_interpolate_none);
+  tcase_add_test (tc, controller_helper_any_gobject);
 
   return s;
 }
