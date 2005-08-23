@@ -23,7 +23,7 @@
 
 
 #include <gst/gst.h>
-#include <gst/bytestream/adapter.h>
+#include <gst/base/gstadapter.h>
 
 #include <speex/speex.h>
 #include <speex/speex_header.h>
