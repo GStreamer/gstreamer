@@ -1,5 +1,12 @@
 2005-08-23  Andy Wingo  <wingo@pobox.com>
 
+	* sys/oss/gstossmixerelement.h:
+	* sys/oss/gstossmixerelement.c: Added mixer element like
+	alsamixer.
+
+	* sys/oss/Makefile.am: 
+	* sys/oss/gstossaudio.c: Register the ossmixer element.
+	
 	* sys/oss/gstossmixer.h:
 	* sys/oss/gstossmixer.c: Refactored to be more like alsamixer.
 
