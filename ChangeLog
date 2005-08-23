@@ -1,3 +1,9 @@
+2005-08-23  Wim Taymans  <wim@fluendo.com>
+
+	* examples/seeking/seek.c: (make_vorbis_pipeline),
+	(make_theora_pipeline), (make_vorbis_theora_pipeline), (do_seek):
+	Small seek updates.
+
 2005-08-23  Andy Wingo  <wingo@pobox.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosrc.c

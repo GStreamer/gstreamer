@@ -296,7 +296,7 @@ make_vorbis_pipeline (const gchar * location)
 {
   GstElement *pipeline, *audio_bin;
   GstElement *src, *demux, *decoder, *convert, *audiosink;
-  GstPad *seekable;
+  GstPad *pad, *seekable;
 
   pipeline = gst_pipeline_new ("app");
 
@@ -322,7 +322,12 @@ make_vorbis_pipeline (const gchar * location)
   gst_element_link (decoder, convert);
   gst_element_link (convert, audiosink);
 
-  setup_dynamic_link (demux, NULL, gst_element_get_pad (decoder, "sink"), NULL);
+  pad = gst_element_get_pad (decoder, "sink");
+  gst_element_add_pad (audio_bin, gst_ghost_pad_new ("sink", pad));
+  gst_object_unref (pad);
+
+  setup_dynamic_link (demux, NULL, gst_element_get_pad (audio_bin, "sink"),
+      NULL);
 
   seekable = gst_element_get_pad (decoder, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -337,14 +342,12 @@ make_theora_pipeline (const gchar * location)
 {
   GstElement *pipeline, *video_bin;
   GstElement *src, *demux, *decoder, *convert, *videosink;
-  GstElement *queue;
-  GstPad *seekable;
+  GstPad *pad, *seekable;
 
   pipeline = gst_pipeline_new ("app");
 
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   demux = gst_element_factory_make_or_warn ("oggdemux", "demux");
-  queue = gst_element_factory_make_or_warn ("queue", "queue");
   decoder = gst_element_factory_make_or_warn ("theoradec", "decoder");
   convert = gst_element_factory_make_or_warn ("ffmpegcolorspace", "convert");
   videosink = gst_element_factory_make_or_warn (VSINK, "sink");
@@ -355,18 +358,21 @@ make_theora_pipeline (const gchar * location)
 
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), demux);
-  gst_bin_add (GST_BIN (pipeline), queue);
   gst_bin_add (GST_BIN (video_bin), decoder);
   gst_bin_add (GST_BIN (video_bin), convert);
   gst_bin_add (GST_BIN (video_bin), videosink);
   gst_bin_add (GST_BIN (pipeline), video_bin);
 
   gst_element_link (src, demux);
-  gst_element_link (queue, decoder);
   gst_element_link (decoder, convert);
   gst_element_link (convert, videosink);
 
-  setup_dynamic_link (demux, NULL, gst_element_get_pad (queue, "sink"), NULL);
+  pad = gst_element_get_pad (decoder, "sink");
+  gst_element_add_pad (video_bin, gst_ghost_pad_new ("sink", pad));
+  gst_object_unref (pad);
+
+  setup_dynamic_link (demux, NULL, gst_element_get_pad (video_bin, "sink"),
+      NULL);
 
   seekable = gst_element_get_pad (decoder, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -416,7 +422,7 @@ make_vorbis_theora_pipeline (const gchar * location)
 
   pad = gst_element_get_pad (a_queue, "sink");
   gst_element_add_pad (audio_bin, gst_ghost_pad_new ("sink", pad));
-  gst_object_unref (GST_OBJECT_CAST (pad));
+  gst_object_unref (pad);
 
   setup_dynamic_link (demux, NULL, gst_element_get_pad (audio_bin, "sink"),
       NULL);
@@ -439,7 +445,7 @@ make_vorbis_theora_pipeline (const gchar * location)
 
   pad = gst_element_get_pad (v_queue, "sink");
   gst_element_add_pad (video_bin, gst_ghost_pad_new ("sink", pad));
-  gst_object_unref (GST_OBJECT_CAST (pad));
+  gst_object_unref (pad);
 
   setup_dynamic_link (demux, NULL, gst_element_get_pad (video_bin, "sink"),
       NULL);
@@ -975,9 +981,8 @@ do_seek (GtkWidget * widget)
     while (walk) {
       GstPad *seekable = GST_PAD (walk->data);
 
-      g_print ("seek to %" GST_TIME_FORMAT " on pad %s:%s\n",
+      GST_DEBUG ("seek to %" GST_TIME_FORMAT " on pad %s:%s",
           GST_TIME_ARGS (real), GST_DEBUG_PAD_NAME (seekable));
-
 
       s_event = gst_event_new_seek (1.0,
           GST_FORMAT_TIME,
@@ -993,7 +998,7 @@ do_seek (GtkWidget * widget)
     while (walk) {
       GstElement *seekable = GST_ELEMENT (walk->data);
 
-      g_print ("seek to %" GST_TIME_FORMAT " on element %s\n",
+      GST_DEBUG ("seek to %" GST_TIME_FORMAT " on element %s",
           GST_TIME_ARGS (real), GST_ELEMENT_NAME (seekable));
 
       s_event = gst_event_new_seek (1.0,
