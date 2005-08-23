@@ -1,3 +1,20 @@
+2005-08-23  David Schleef  <ds@schleef.org>
+
+	* gst/audioresample/Makefile.am: Leet audioresampling code
+	* gst/audioresample/buffer.c:
+	* gst/audioresample/buffer.h:
+	* gst/audioresample/debug.c:
+	* gst/audioresample/debug.h:
+	* gst/audioresample/functable.c:
+	* gst/audioresample/functable.h:
+	* gst/audioresample/gstaudioresample.c:
+	* gst/audioresample/gstaudioresample.h:
+	* gst/audioresample/resample.c:
+	* gst/audioresample/resample.h:
+	* gst/audioresample/resample_chunk.c:
+	* gst/audioresample/resample_functable.c:
+	* gst/audioresample/resample_ref.c:
+
 2005-08-23  Wim Taymans  <wim@fluendo.com>
 
 	* examples/seeking/seek.c: (make_vorbis_pipeline),
