@@ -21,6 +21,13 @@
 #include <string.h>
 #include "gstrtpamrdec.h"
 
+/* references:
+ *
+ * RFC 3267 - Real-Time Transport Protocol (RTP) Payload Format and File Storage Format 
+ *   for the Adaptive Multi-Rate (AMR) and Adaptive Multi-Rate Wideband (AMR-WB) Audio 
+ *   Codecs.
+ */
+
 /* elementfactory information */
 static GstElementDetails gst_rtp_amrdec_details = {
   "RTP packet parser",
