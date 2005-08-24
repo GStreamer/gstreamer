@@ -488,23 +488,33 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
       case GST_EVENT_NEWSEGMENT:
       {
         GstFormat format;
-        gdouble rate;
 
         /* the newsegment event is needed to bring the buffer timestamps to the
-         * stream time */
-        gst_event_parse_newsegment (event, &rate, &format,
-            &basesink->discont_start, &basesink->discont_stop, NULL);
+         * stream time and to drop samples outside of the playback segment. */
+        gst_event_parse_newsegment (event, &basesink->segment_rate, &format,
+            &basesink->segment_start, &basesink->segment_stop,
+            &basesink->segment_base);
 
         if (format != GST_FORMAT_TIME) {
-          /* this means this sink will not be able to sync to the clock */
-          basesink->discont_start = 0;
-          basesink->discont_stop = 0;
-        }
-        basesink->have_discont = TRUE;
+          GST_DEBUG ("received non time %d DISCONT %" G_GINT64_FORMAT
+              " -- %" G_GINT64_FORMAT ", base %" G_GINT64_FORMAT,
+              format, basesink->segment_start, basesink->segment_stop,
+              basesink->segment_base);
 
-        GST_DEBUG ("received DISCONT %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
-            GST_TIME_ARGS (basesink->discont_start),
-            GST_TIME_ARGS (basesink->discont_stop));
+          /* this means this sink will not be able to clip or drop samples
+           * and timestamps have to start from 0. */
+          basesink->segment_start = -1;
+          basesink->segment_stop = -1;
+          basesink->segment_base = -1;
+        } else {
+          GST_DEBUG ("received DISCONT %" GST_TIME_FORMAT " -- %"
+              GST_TIME_FORMAT ", base %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (basesink->segment_start),
+              GST_TIME_ARGS (basesink->segment_stop),
+              GST_TIME_ARGS (basesink->segment_base));
+        }
+        basesink->have_newsegment = TRUE;
+
         break;
       }
       default:
@@ -512,14 +522,43 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
     }
     basesink->events_queued++;
   } else {
-    if (!basesink->have_discont) {
+    GstBuffer *buf = GST_BUFFER (obj);
+
+    if (!basesink->have_newsegment) {
       GST_ELEMENT_ERROR (basesink, STREAM, STOPPED,
           ("Received buffer without a new-segment. Cannot sync to clock."),
           ("Received buffer without a new-segment. Cannot sync to clock."));
-      basesink->have_discont = TRUE;
+      basesink->have_newsegment = TRUE;
       /* this means this sink will not be able to sync to the clock */
-      basesink->discont_start = 0;
-      basesink->discont_stop = 0;
+      basesink->segment_start = 0;
+      basesink->segment_stop = 0;
+    }
+
+    /* check if the buffer needs to be dropped */
+    if (TRUE) {
+      GstClockTime start = -1, end = -1;
+
+      /* we don't use the subclassed method as it may not return
+       * valid values for our purpose here */
+      gst_base_sink_get_times (basesink, buf, &start, &end);
+
+      GST_DEBUG_OBJECT (basesink, "got times start: %" GST_TIME_FORMAT
+          ", end: %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
+          GST_TIME_ARGS (end));
+
+      /* need to drop if the timestamp is not between segment_start and
+       * segment_stop. we check if the complete sample is outside of the
+       * range since the sink might be able to clip the sample. */
+      if (GST_CLOCK_TIME_IS_VALID (end) &&
+          GST_CLOCK_TIME_IS_VALID (basesink->segment_start)) {
+        if (end <= basesink->segment_start)
+          goto dropping;
+      }
+      if (GST_CLOCK_TIME_IS_VALID (start) &&
+          GST_CLOCK_TIME_IS_VALID (basesink->segment_stop)) {
+        if (basesink->segment_stop <= start)
+          goto dropping;
+      }
     }
     basesink->preroll_queued++;
     basesink->buffers_queued++;
@@ -629,6 +668,20 @@ no_preroll:
     GST_PREROLL_UNLOCK (pad);
 
     return ret;
+  }
+dropping:
+  {
+    GstBuffer *buf;
+
+    buf = GST_BUFFER (g_queue_pop_tail (basesink->preroll_queue));
+
+    GST_DEBUG ("dropping sample outside of segment boundaries %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+
+    gst_buffer_unref (buf);
+    GST_PREROLL_UNLOCK (pad);
+
+    return GST_FLOW_OK;
   }
 playing_async:
   {
@@ -793,26 +846,13 @@ gst_base_sink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
-    GstClockTimeDiff diff;
-
-    /* bring timestamp to stream time using last
-     * discont offset. */
-    if ((diff = timestamp - basesink->discont_start) < 0)
-      goto too_late;
 
     /* get duration to calculate end time */
     duration = GST_BUFFER_DURATION (buffer);
     if (GST_CLOCK_TIME_IS_VALID (duration)) {
-      *end = diff + duration;
+      *end = timestamp + duration;
     }
-    *start = diff;
-  }
-  return;
-
-too_late:
-  {
-    *start = GST_CLOCK_TIME_NONE;
-    *end = GST_CLOCK_TIME_NONE;
+    *start = timestamp;
   }
 }
 
@@ -845,6 +885,13 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
     if (GST_CLOCK_TIME_IS_VALID (start)) {
       GstClockReturn ret;
       GstClockTime base_time;
+      GstClockTimeDiff diff;
+
+      /* bring timestamp to stream time using last segment offset. */
+      if ((diff = (gint64) start - basesink->segment_start) < 0)
+        goto too_late;
+
+      start = diff;
 
       GST_LOCK (basesink);
       base_time = GST_ELEMENT (basesink)->base_time;
@@ -873,6 +920,12 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
     }
   }
   return result;
+
+too_late:
+  {
+    GST_LOG_OBJECT (basesink, "buffer skipped, not in segment");
+    return FALSE;
+  }
 }
 
 
@@ -950,16 +1003,18 @@ gst_base_sink_handle_event (GstBaseSink * basesink, GstEvent * event)
 static inline GstFlowReturn
 gst_base_sink_handle_buffer (GstBaseSink * basesink, GstBuffer * buf)
 {
-  GstBaseSinkClass *bclass;
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
+  gboolean render;
 
-  gst_base_sink_do_sync (basesink, buf);
+  render = gst_base_sink_do_sync (basesink, buf);
 
-  bclass = GST_BASE_SINK_GET_CLASS (basesink);
-  if (bclass->render)
-    ret = bclass->render (basesink, buf);
-  else
-    ret = GST_FLOW_OK;
+  if (render) {
+    GstBaseSinkClass *bclass;
+
+    bclass = GST_BASE_SINK_GET_CLASS (basesink);
+    if (bclass->render)
+      ret = bclass->render (basesink, buf);
+  }
 
   GST_DEBUG ("buffer unref after render %p", basesink, buf);
   gst_buffer_unref (buf);
@@ -1119,9 +1174,10 @@ gst_base_sink_change_state (GstElement * element)
       basesink->have_preroll = FALSE;
       basesink->need_preroll = TRUE;
       GST_PREROLL_UNLOCK (basesink->sinkpad);
-      basesink->have_discont = FALSE;
-      basesink->discont_start = 0;
-      basesink->discont_stop = 0;
+      basesink->have_newsegment = FALSE;
+      basesink->segment_rate = 1.0;
+      basesink->segment_start = 0;
+      basesink->segment_stop = 0;
       ret = GST_STATE_ASYNC;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
