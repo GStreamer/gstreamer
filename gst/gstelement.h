@@ -93,9 +93,13 @@ typedef enum
 {
   /* ignore state changes from parent */
   GST_ELEMENT_LOCKED_STATE,
-
+  
   /* the element is a sink */
   GST_ELEMENT_IS_SINK,
+
+  /* Child is being removed from the parent bin. gst_bin_remove on a
+   * child already being removed immediately returns FALSE */
+  GST_ELEMENT_UNPARENTING,
 
   /* use some padding for future expansion */
   GST_ELEMENT_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 16

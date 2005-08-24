@@ -346,7 +346,7 @@ plugin_init (GstPlugin *plugin)
 	    <entry>
               Note that some people think that this property is very ugly, 
 	      whereas others think it is vital for the use of &GStreamer; in 
-	      proffessional audio applications. The special value zero is 
+	      professional audio applications. The special value zero is 
 	      reserved and implies that size is variable between buffers.
 	    </entry>
           </row>

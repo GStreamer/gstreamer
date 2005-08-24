@@ -582,10 +582,21 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   gchar *elem_name;
   GstIterator *it;
 
-  /* grab element name so we can print it */
   GST_LOCK (element);
+  /* Check if the element is already being removed and immediately
+   * return */
+  if (G_UNLIKELY (GST_FLAG_IS_SET (element, GST_ELEMENT_UNPARENTING)))
+    goto already_removing;
+
+  GST_FLAG_SET (element, GST_ELEMENT_UNPARENTING);
+  /* grab element name so we can print it */
   elem_name = g_strdup (GST_ELEMENT_NAME (element));
   GST_UNLOCK (element);
+
+  /* unlink all linked pads */
+  it = gst_element_iterate_pads (element);
+  gst_iterator_foreach (it, (GFunc) unlink_pads, element);
+  gst_iterator_free (it);
 
   GST_LOCK (bin);
   /* the element must be in the bin's list of children */
@@ -615,11 +626,6 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
       elem_name);
   g_free (elem_name);
 
-  /* unlink all linked pads */
-  it = gst_element_iterate_pads (element);
-  gst_iterator_foreach (it, (GFunc) unlink_pads, element);
-  gst_iterator_free (it);
-
   gst_element_set_bus (element, NULL);
 
   /* unlock any waiters for the state change. It is possible that
@@ -631,11 +637,16 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   GST_STATE_UNLOCK (element);
 
   /* we ref here because after the _unparent() the element can be disposed
-   * and we still need it to fire a signal. */
+   * and we still need it to reset the UNPARENTING flag and fire a signal. */
   gst_object_ref (element);
   gst_object_unparent (GST_OBJECT_CAST (element));
 
+  GST_LOCK (element);
+  GST_FLAG_UNSET (element, GST_ELEMENT_UNPARENTING);
+  GST_UNLOCK (element);
+
   g_signal_emit (G_OBJECT (bin), gst_bin_signals[ELEMENT_REMOVED], 0, element);
+
   /* element is really out of our control now */
   gst_object_unref (element);
 
@@ -648,6 +659,11 @@ not_in_bin:
         GST_ELEMENT_NAME (bin));
     GST_UNLOCK (bin);
     g_free (elem_name);
+    return FALSE;
+  }
+already_removing:
+  {
+    GST_UNLOCK (element);
     return FALSE;
   }
 }
