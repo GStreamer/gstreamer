@@ -21,8 +21,8 @@
 #ifndef __RESAMPLE_H__
 #define __RESAMPLE_H__
 
-#include <audioresample/functable.h>
-#include <audioresample/buffer.h>
+#include "functable.h"
+#include "buffer.h"
 
 typedef enum {
 	RESAMPLE_FORMAT_S16 = 0,
@@ -89,8 +89,8 @@ struct _ResampleState {
         double *out_tmp;
 };
 
-void resample_init(void);
-void resample_cleanup(void);
+void resample_init (void);
+void resample_cleanup (void);
 
 ResampleState *resample_new (void);
 void resample_free (ResampleState *state);
@@ -98,6 +98,8 @@ void resample_free (ResampleState *state);
 void resample_add_input_data (ResampleState * r, void *data, int size,
     ResampleCallback free_func, void *closure);
 void resample_input_eos (ResampleState *r);
+
+int resample_get_output_size_for_input (ResampleState * r, int size);
 int resample_get_output_size (ResampleState *r);
 int resample_get_output_data (ResampleState *r, void *data, int size);
 
@@ -108,7 +110,6 @@ void resample_set_n_channels (ResampleState *r, int n_channels);
 void resample_set_format (ResampleState *r, ResampleFormat format);
 void resample_set_method (ResampleState *r, int method);
 int resample_format_size (ResampleFormat format);
-
 
 #endif /* __RESAMPLE_H__ */
 

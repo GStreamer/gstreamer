@@ -3,10 +3,11 @@
 #include "config.h"
 #endif
 
-#include <audioresample/buffer.h>
 #include <glib.h>
 #include <string.h>
-#include <audioresample/debug.h>
+
+#include "buffer.h"
+#include "debug.h"
 
 static void audioresample_buffer_free_mem (AudioresampleBuffer * buffer,
     void *);

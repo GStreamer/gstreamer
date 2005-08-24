@@ -23,31 +23,32 @@
 
 
 #include <gst/gst.h>
+#include <gst/base/gstbasetransform.h>
 
-#include <audioresample/resample.h>
+#include "resample.h"
 
 
 G_BEGIN_DECLS
 
 
 #define GST_TYPE_AUDIORESAMPLE \
-  (audioresample_get_type())
+  (gst_audioresample_get_type())
 #define GST_AUDIORESAMPLE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIORESAMPLE,Audioresample))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIORESAMPLE,GstAudioresample))
 #define GST_AUDIORESAMPLE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIORESAMPLE,Audioresample))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIORESAMPLE,GstAudioresample))
 #define GST_IS_AUDIORESAMPLE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIORESAMPLE))
 #define GST_IS_AUDIORESAMPLE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIORESAMPLE))
 
-typedef struct _Audioresample Audioresample;
-typedef struct _AudioresampleClass AudioresampleClass;
+typedef struct _GstAudioresample GstAudioresample;
+typedef struct _GstAudioresampleClass GstAudioresampleClass;
 
-struct _Audioresample {
-  GstElement element;
+struct _GstAudioresample {
+  GstBaseTransform element;
 
-  GstPad *sinkpad,*srcpad;
+  GstCaps *srccaps, *sinkcaps;
 
   gboolean passthru;
 
@@ -61,8 +62,8 @@ struct _Audioresample {
   ResampleState * resample;
 };
 
-struct _AudioresampleClass {
-  GstElementClass parent_class;
+struct _GstAudioresampleClass {
+  GstBaseTransformClass parent_class;
 };
 
 GType gst_audioresample_get_type(void);

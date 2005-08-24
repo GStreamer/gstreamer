@@ -29,9 +29,9 @@
 #include <limits.h>
 #include <liboil/liboil.h>
 
-#include <audioresample/resample.h>
-#include <audioresample/buffer.h>
-#include <audioresample/debug.h>
+#include "resample.h"
+#include "buffer.h"
+#include "debug.h"
 
 static void
 func_sinc (double *fx, double *dfx, double x, void *closure)
