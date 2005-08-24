@@ -19,10 +19,10 @@ gst_implements_interface_get_type
 gst_index_factory_get_type
 gst_index_get_type
 
-% GstMiniObject is not a GObject !
+% these are not GObject derived types !
 % gst_mini_object_get_type
+% gst_message_get_type
 
-gst_message_get_type
 gst_object_get_type
 gst_pad_get_type
 gst_pad_template_get_type
