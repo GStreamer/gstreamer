@@ -474,7 +474,7 @@ foreach_fold_func (gpointer item, GValue * unused, ForeachFoldData * data)
 /**
  * gst_iterator_foreach:
  * @it: The #GstIterator to iterate
- * @function: the function to call for each element.
+ * @func: the function to call for each element.
  * @user_data: user data passed to the function
  *
  * Iterate over all element of @it and call the given function for

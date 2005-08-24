@@ -14,4 +14,8 @@ gstfakesrc.sgml
 gstfakesink.sgml
 gstfilesrc.sgml
 gstfilesink.sgml
+gstmessage.sgml
+gstprobe.sgml
 gstpushsrc.sgml
+gsttask.sgml
+gstxmlregistry.sgml

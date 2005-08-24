@@ -29,6 +29,7 @@
 <!ENTITY GstIterator SYSTEM "xml/gstiterator.xml">
 <!ENTITY GstMacros SYSTEM "xml/gstmacros.xml">
 <!ENTITY GstMemChunk SYSTEM "xml/gstmemchunk.xml">
+<!ENTITY GstMessage SYSTEM "xml/gstmessage.xml">
 <!ENTITY GstMiniObject SYSTEM "xml/gstminiobject.xml">
 <!ENTITY GstObject SYSTEM "xml/gstobject.xml">
 <!ENTITY GstPad SYSTEM "xml/gstpad.xml">
@@ -37,6 +38,7 @@
 <!ENTITY GstPipeline SYSTEM "xml/gstpipeline.xml">
 <!ENTITY GstPlugin SYSTEM "xml/gstplugin.xml">
 <!ENTITY GstPluginFeature SYSTEM "xml/gstpluginfeature.xml">
+<!ENTITY GstProbe SYSTEM "xml/gstprobe.xml">
 <!ENTITY GstQuery SYSTEM "xml/gstquery.xml">
 <!ENTITY GstQueue SYSTEM "xml/gstqueue.xml">
 <!ENTITY GstRegistry SYSTEM "xml/gstregistry.xml">
@@ -56,6 +58,7 @@
 <!ENTITY GstValue SYSTEM "xml/gstvalue.xml">
 <!ENTITY GstVersion SYSTEM "xml/gstversion.xml">
 <!ENTITY GstXML SYSTEM "xml/gstxml.xml">
+<!ENTITY GstXMLRegistry SYSTEM "xml/gstxmlregistry.xml">
 
 <!ENTITY GstAdapter SYSTEM "xml/gstadapter.xml">
 <!ENTITY GstBaseSrc SYSTEM "xml/gstbasesrc.xml">
@@ -121,6 +124,7 @@
     &GstIndexFactory;
     &GstInfo;
     &GstIterator;
+    &GstMessage;
     &GstMiniObject;
     &GstObject;
     &GstPad;
@@ -129,6 +133,7 @@
     &GstPipeline;
     &GstPlugin;
     &GstPluginFeature;
+    &GstProbe;
     &GstQuery;
     &GstQueue;
     &GstRegistry;
@@ -146,6 +151,7 @@
     &GstValue;
     &GstVersion;
     &GstXML;
+    &GstXMLRegistry;
 
   </chapter>
 

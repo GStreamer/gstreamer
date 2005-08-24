@@ -1736,7 +1736,7 @@ gst_object_default_error (GstObject * source, GError * error, gchar * debug)
  * @...: additional elements to add to the bin
  *
  * Adds a NULL-terminated list of elements to a bin.  This function is
- * equivalent to calling #gst_bin_add() for each member of the list.
+ * equivalent to calling gst_bin_add() for each member of the list.
  */
 void
 gst_bin_add_many (GstBin * bin, GstElement * element_1, ...)
@@ -1764,7 +1764,7 @@ gst_bin_add_many (GstBin * bin, GstElement * element_1, ...)
  * @...: NULL-terminated list of elements to remove from the bin
  *
  * Remove a list of elements from a bin. This function is equivalent
- * to calling #gst_bin_remove with each member of the list.
+ * to calling gst_bin_remove() with each member of the list.
  */
 void
 gst_bin_remove_many (GstBin * bin, GstElement * element_1, ...)
@@ -1806,9 +1806,9 @@ get_state_func (GstElement * element, gpointer unused)
  *
  * Spawns a thread calling gst_element_get_state on @bin with infinite timeout.
  *
- * In practice this is done because if a bin returns GST_STATE_ASYNC from a
+ * In practice this is done because if a bin returns %GST_STATE_ASYNC from a
  * state change it will not commit its state until someone calls
- * gst_element_get_state on it. Thus having another thread checking the bin's
+ * gst_element_get_state() on it. Thus having another thread checking the bin's
  * state will ensure that a state-changed message gets posted on the bus
  * eventually.
  *

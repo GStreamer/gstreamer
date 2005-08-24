@@ -678,7 +678,7 @@ already_removing:
  * so if the bin holds the only reference to the element, the element
  * will be freed in the process of removing it from the bin.  If you
  * want the element to still exist after removing, you need to call
- * #gst_object_ref before removing it from the bin.
+ * gst_object_ref() before removing it from the bin.
  *
  * If the element's pads are linked to other pads, the pads will be unlinked
  * before the element is removed from the bin.

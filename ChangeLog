@@ -1,3 +1,16 @@
+2005-08-25  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/.cvsignore:
+	* gst/gstbin.c:
+	* gst/gstiterator.c:
+	* gst/gstutils.c:
+	* gst/registries/gstxmlregistry.h:
+          added miissing classes and symbols (123 more to go)
+          removed removed symbols from section file
+          fixed many doc-comments
+
 2005-08-24  Wim Taymans  <wim@fluendo.com>
 
 	* check/generic/states.c: (GST_START_TEST):
