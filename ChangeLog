@@ -1,3 +1,8 @@
+2005-08-25  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/volume/gstvolume.c:
+          made set_caps function static
+
 2005-08-24  Wim Taymans  <wim@fluendo.com>
 
 	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_init),

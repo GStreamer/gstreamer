@@ -134,7 +134,7 @@ static void volume_update_mute (const GValue * value, gpointer data);
 
 static GstFlowReturn volume_transform (GstBaseTransform * base,
     GstBuffer * inbuf, GstBuffer * outbuf);
-gboolean volume_set_caps (GstBaseTransform * base, GstCaps * incaps,
+static gboolean volume_set_caps (GstBaseTransform * base, GstCaps * incaps,
     GstCaps * outcaps);
 
 static void volume_process_float (GstVolume * this, GstClockTime tstamp,
@@ -364,7 +364,7 @@ volume_process_int16 (GstVolume * this, GstClockTime tstamp,
 /* GstBaseTransform vmethod implementations */
 
 /* get notified of caps and plug in the correct process function */
-gboolean
+static gboolean
 volume_set_caps (GstBaseTransform * base, GstCaps * incaps, GstCaps * outcaps)
 {
   GstVolume *this = GST_VOLUME (base);
