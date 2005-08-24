@@ -1890,6 +1890,9 @@ gst_pad_fixate_caps (GstPad * pad, GstCaps * caps)
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (caps != NULL);
 
+  if (gst_caps_is_fixed (caps))
+    return;
+
   fixatefunc = GST_PAD_FIXATECAPSFUNC (pad);
   if (fixatefunc) {
     fixatefunc (pad, caps);
