@@ -304,7 +304,7 @@ gst_level_message_new (GstLevel * l, gdouble endtime)
   gst_structure_set_value (s, "peak", &v);
   gst_structure_set_value (s, "decay", &v);
 
-  return gst_message_new_application (GST_OBJECT (l), s);
+  return gst_message_new_application (G_OBJECT (l), s);
 }
 
 static void
