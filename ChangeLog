@@ -5,6 +5,18 @@
 
 2005-08-24  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasetransform.c: (gst_base_transform_init),
+	(gst_base_transform_transform_caps),
+	(gst_base_transform_transform_size),
+	(gst_base_transform_configure_caps), (gst_base_transform_setcaps),
+	(gst_base_transform_get_size), (gst_base_transform_buffer_alloc),
+	(gst_base_transform_handle_buffer):
+	* gst/base/gstbasetransform.h:
+	Many fixes and new features added by Thomas. Can now also do
+	transforms with variable sizes and a custom fixate_caps function.
+
+2005-08-24  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbuffer.c: (gst_buffer_new_and_alloc):
 	Some debugging.
 

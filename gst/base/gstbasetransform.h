@@ -54,28 +54,55 @@ struct _GstBaseTransform {
 
   gboolean	 in_place;
   guint		 out_size;
+
   gboolean	 delay_configure;
+  gboolean	 pending_configure;
 
   /*< private >*/
   gpointer       _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstBaseTransformClass::transform_caps:
+ * @pad: the pad
+ * @caps: the caps
+ *
+ * This method should answer the question "given this pad, and given these
+ * caps, what caps would you allow on the other pad inside your element ?"
+ */
 struct _GstBaseTransformClass {
   GstElementClass parent_class;
 
   /*< public >*/
   /* virtual methods for subclasses */
 
-  /* given caps on one pad, what can I do on the other pad */
+  /* given the (non-)fixed simple caps on the pad in the given direction,
+   * what can I do on the other pad ? */
+  /* FIXME: change to direction */
   GstCaps*	(*transform_caps) (GstBaseTransform *trans, GstPad *pad,
                                    GstCaps *caps);
+
+  /* given caps on one pad, how would you fixate caps on the other pad ? */
+  void		(*fixate_caps)	  (GstBaseTransform *trans,
+                                   GstPadDirection direction, GstCaps *caps,
+                                   GstCaps *othercaps);
+
+  /* given the size of a buffer in the given direction with the given caps,
+   * calculate the
+   * size of an outgoing buffer with the given outgoing caps; the default
+   * implementation uses get_size and keeps the number of units the same */
+  guint         (*transform_size) (GstBaseTransform *trans,
+                                   GstPadDirection direction,
+                                   GstCaps *incaps, guint insize,
+                                   GstCaps *outcaps);
+
+  /* get the byte size of one unit for a given caps, -1 on error.
+   * Always needs to be implemented if the transform is not in-place. */
+  guint         (*get_size)     (GstBaseTransform *trans, GstCaps *caps);
 
   /* notify the subclass of new caps */
   gboolean      (*set_caps)     (GstBaseTransform *trans, GstCaps *incaps,
                                  GstCaps *outcaps);
-
-  /* get the byte size of a given caps, -1 on error */
-  guint         (*get_size)     (GstBaseTransform *trans, GstCaps *caps);
 
   /* start and stop processing, ideal for opening/closing the resource */
   gboolean      (*start)        (GstBaseTransform *trans);
@@ -83,7 +110,8 @@ struct _GstBaseTransformClass {
 
   gboolean      (*event)        (GstBaseTransform *trans, GstEvent *event);
 
-  /* transform one incoming buffer to one outgoing buffer */
+  /* transform one incoming buffer to one outgoing buffer.
+   * Always needs to be implemented. */
   GstFlowReturn (*transform)    (GstBaseTransform *trans, GstBuffer *inbuf,
                                  GstBuffer *outbuf);
 
