@@ -1,5 +1,10 @@
 2005-08-24  Wim Taymans  <wim@fluendo.com>
 
+	* configure.ac:
+	Remove audioscale.
+
+2005-08-24  Wim Taymans  <wim@fluendo.com>
+
 	* gst/videoscale/gstvideoscale.c: (gst_videoscale_init),
 	(gst_videoscale_prepare_size), (parse_caps),
 	(gst_videoscale_set_caps), (gst_videoscale_get_size),

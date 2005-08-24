@@ -890,7 +890,6 @@ gst-plugins-base.spec
 gst/Makefile
 gst/adder/Makefile
 gst/audioconvert/Makefile
-gst/audioscale/Makefile
 gst/audiorate/Makefile
 gst/audioresample/Makefile
 gst/ffmpegcolorspace/Makefile
