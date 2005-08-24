@@ -26,8 +26,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <audioresample/functable.h>
-#include <audioresample/debug.h>
+#include "functable.h"
+#include "debug.h"
 
 
 

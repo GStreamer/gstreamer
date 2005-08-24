@@ -369,8 +369,8 @@ dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
 	adder \
 	audioconvert \
-	audioscale \
         audiorate \
+        audioresample \
 	ffmpegcolorspace \
 	playback \
 	sine \
@@ -892,6 +892,7 @@ gst/adder/Makefile
 gst/audioconvert/Makefile
 gst/audioscale/Makefile
 gst/audiorate/Makefile
+gst/audioresample/Makefile
 gst/ffmpegcolorspace/Makefile
 gst/playback/Makefile
 gst/sine/Makefile

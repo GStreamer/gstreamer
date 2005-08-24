@@ -29,9 +29,9 @@
 #include <limits.h>
 #include <liboil/liboil.h>
 
-#include <audioresample/resample.h>
-#include <audioresample/buffer.h>
-#include <audioresample/debug.h>
+#include "resample.h"
+#include "buffer.h"
+#include "debug.h"
 
 void resample_scale_ref (ResampleState * r);
 void resample_scale_functable (ResampleState * r);
@@ -101,6 +101,10 @@ resample_buffer_free (AudioresampleBuffer * buffer, void *priv)
   }
 }
 
+/**
+ * free_func: a function that frees the given closure.  If NULL, caller is
+ *            responsible for freeing.
+ */
 void
 resample_add_input_data (ResampleState * r, void *data, int size,
     void (*free_func) (void *), void *closure)
@@ -132,6 +136,12 @@ resample_input_eos (ResampleState * r)
   audioresample_buffer_queue_push (r->queue, buffer);
 
   r->eos = 1;
+}
+
+int
+resample_get_output_size_for_input (ResampleState * r, int size)
+{
+  return floor (size * r->o_rate / r->i_rate);
 }
 
 int

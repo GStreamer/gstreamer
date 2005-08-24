@@ -1,5 +1,22 @@
 2005-08-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	  compile audioresample
+	* gst/audioresample/Makefile.am:
+	* gst/audioresample/buffer.c:
+	* gst/audioresample/functable.c:
+	* gst/audioresample/gstaudioresample.c:
+	* gst/audioresample/gstaudioresample.h:
+	* gst/audioresample/resample.c:
+	(resample_get_output_size_for_input):
+	* gst/audioresample/resample.h:
+	* gst/audioresample/resample_chunk.c:
+	* gst/audioresample/resample_functable.c:
+	* gst/audioresample/resample_ref.c:
+	  port to use basetransform; doesn't work in all cases yet
+
+2005-08-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/audioconvert/gstaudioconvert.c:
 	(gst_audio_convert_class_init), (gst_audio_convert_init),
 	(audio_convert_get_unit_size), (audio_convert_transform_caps),

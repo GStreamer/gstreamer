@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) 2003,2004 David A. Schleef <ds@schleef.org>
  *
  * This library is free software; you can redistribute it and/or
@@ -19,16 +19,17 @@
  */
 /* Element-Checklist-Version: 5 */
 
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <string.h>
 #include <math.h>
 
 /*#define DEBUG_ENABLED */
 #include "gstaudioresample.h"
 #include <gst/audio/audio.h>
+#include <gst/base/gstbasetransform.h>
 
 GST_DEBUG_CATEGORY_STATIC (audioresample_debug);
 #define GST_CAT_DEFAULT audioresample_debug
@@ -40,7 +41,7 @@ GST_ELEMENT_DETAILS ("Audio scaler",
     "Resample audio",
     "David Schleef <ds@schleef.org>");
 
-/* Audioresample signals and args */
+/* GstAudioresample signals and args */
 enum
 {
   /* FILL ME */
@@ -79,63 +80,54 @@ enum
          GST_PAD_SRC, GST_PAD_ALWAYS, SUPPORTED_CAPS);
 
      static void gst_audioresample_base_init (gpointer g_class);
-     static void gst_audioresample_class_init (AudioresampleClass * klass);
-     static void gst_audioresample_init (Audioresample * audioresample);
+     static void gst_audioresample_class_init (GstAudioresampleClass * klass);
+     static void gst_audioresample_init (GstAudioresample * audioresample);
      static void gst_audioresample_dispose (GObject * object);
-
-     static void gst_audioresample_chain (GstPad * pad, GstData * _data);
 
      static void gst_audioresample_set_property (GObject * object,
          guint prop_id, const GValue * value, GParamSpec * pspec);
      static void gst_audioresample_get_property (GObject * object,
          guint prop_id, GValue * value, GParamSpec * pspec);
 
-     static GstElementClass *parent_class = NULL;
+/* vmethods */
+     gboolean audioresample_get_unit_size (GstBaseTransform * base,
+         GstCaps * caps, guint * size);
+     GstCaps *audioresample_transform_caps (GstBaseTransform * base,
+         GstPadDirection direction, GstCaps * caps);
+     gboolean audioresample_transform_size (GstBaseTransform * trans,
+         GstPadDirection direction, GstCaps * incaps, guint insize,
+         GstCaps * outcaps, guint * outsize);
+     gboolean audioresample_set_caps (GstBaseTransform * base, GstCaps * incaps,
+         GstCaps * outcaps);
+     static GstFlowReturn audioresample_transform (GstBaseTransform * base,
+         GstBuffer * inbuf, GstBuffer * outbuf);
 
 /*static guint gst_audioresample_signals[LAST_SIGNAL] = { 0 }; */
 
-     GType audioresample_get_type (void)
+#define DEBUG_INIT(bla) \
+  GST_DEBUG_CATEGORY_INIT (audioresample_debug, "audioresample", 0, "audio resampling element");
+
+GST_BOILERPLATE_FULL (GstAudioresample, gst_audioresample, GstBaseTransform,
+    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
+
+     static void gst_audioresample_base_init (gpointer g_class)
      {
-       static GType audioresample_type = 0;
+       GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
-       if (!audioresample_type)
-       {
-         static const GTypeInfo audioresample_info = {
-         sizeof (AudioresampleClass),
-               gst_audioresample_base_init,
-               NULL,
-               (GClassInitFunc) gst_audioresample_class_init,
-               NULL,
-               NULL,
-               sizeof (Audioresample), 0,
-               (GInstanceInitFunc) gst_audioresample_init,};
+       gst_element_class_add_pad_template (gstelement_class,
+           gst_static_pad_template_get (&gst_audioresample_src_template));
+       gst_element_class_add_pad_template (gstelement_class,
+           gst_static_pad_template_get (&gst_audioresample_sink_template));
 
-         audioresample_type =
-             g_type_register_static (GST_TYPE_ELEMENT, "Audioresample",
-             &audioresample_info, 0);
-       }
-       return audioresample_type;
+       gst_element_class_set_details (gstelement_class,
+           &gst_audioresample_details);
      }
 
-static void gst_audioresample_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_audioresample_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_audioresample_sink_template));
-
-  gst_element_class_set_details (gstelement_class, &gst_audioresample_details);
-}
-
-static void gst_audioresample_class_init (AudioresampleClass * klass)
+static void gst_audioresample_class_init (GstAudioresampleClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
 
   gobject_class->set_property = gst_audioresample_set_property;
   gobject_class->get_property = gst_audioresample_get_property;
@@ -145,162 +137,21 @@ static void gst_audioresample_class_init (AudioresampleClass * klass)
       g_param_spec_int ("filter_length", "filter_length", "filter_length",
           0, G_MAXINT, 16, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
-
-  GST_DEBUG_CATEGORY_INIT (audioresample_debug, "audioresample", 0,
-      "audioresample element");
+  GST_BASE_TRANSFORM_CLASS (klass)->transform_size =
+      GST_DEBUG_FUNCPTR (audioresample_transform_size);
+  GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size =
+      GST_DEBUG_FUNCPTR (audioresample_get_unit_size);
+  GST_BASE_TRANSFORM_CLASS (klass)->transform_caps =
+      GST_DEBUG_FUNCPTR (audioresample_transform_caps);
+  GST_BASE_TRANSFORM_CLASS (klass)->set_caps =
+      GST_DEBUG_FUNCPTR (audioresample_set_caps);
+  GST_BASE_TRANSFORM_CLASS (klass)->transform =
+      GST_DEBUG_FUNCPTR (audioresample_transform);
 }
 
-static void gst_audioresample_expand_caps (GstCaps * caps)
-{
-  gint i;
-
-  for (i = 0; i < gst_caps_get_size (caps); i++) {
-    GstStructure *structure = gst_caps_get_structure (caps, i);
-    const GValue *value;
-
-    value = gst_structure_get_value (structure, "rate");
-    if (value == NULL) {
-      GST_ERROR ("caps structure doesn't have required rate field");
-      return;
-    }
-
-    gst_structure_set (structure, "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT, 0);
-  }
-}
-
-static GstCaps *gst_audioresample_getcaps (GstPad * pad)
-{
-  Audioresample *audioresample;
-  GstCaps *caps;
-  GstPad *otherpad;
-
-  audioresample = GST_AUDIORESAMPLE (gst_pad_get_parent (pad));
-
-  otherpad = (pad == audioresample->srcpad) ? audioresample->sinkpad :
-      audioresample->srcpad;
-  caps = gst_pad_get_allowed_caps (otherpad);
-
-  gst_audioresample_expand_caps (caps);
-
-  return caps;
-}
-
-static GstCaps *gst_audioresample_fixate (GstPad * pad, const GstCaps * caps)
-{
-  Audioresample *audioresample;
-  GstPad *otherpad;
-  int rate;
-  GstCaps *copy;
-  GstStructure *structure;
-
-    audioresample = GST_AUDIORESAMPLE (gst_pad_get_parent (pad));
-
-  if (pad == audioresample->srcpad) {
-    otherpad = audioresample->sinkpad;
-    rate = audioresample->i_rate;
-  } else
-  {
-    otherpad = audioresample->srcpad;
-    rate = audioresample->o_rate;
-  }
-  if (!GST_PAD_IS_NEGOTIATING (otherpad))
-    return NULL;
-  if (gst_caps_get_size (caps) > 1)
-    return NULL;
-
-  copy = gst_caps_copy (caps);
-  structure = gst_caps_get_structure (copy, 0);
-  if (rate) {
-    if (gst_caps_structure_fixate_field_nearest_int (structure, "rate", rate)) {
-      return copy;
-    }
-  }
-  gst_caps_free (copy);
-  return NULL;
-}
-
-static GstPadLinkReturn gst_audioresample_link (GstPad * pad,
-    const GstCaps * caps)
-{
-  Audioresample *audioresample;
-  GstStructure *structure;
-  int rate;
-  int channels;
-  gboolean ret;
-  GstPad *otherpad;
-
-    audioresample = GST_AUDIORESAMPLE (gst_pad_get_parent (pad));
-
-    otherpad = (pad == audioresample->srcpad) ? audioresample->sinkpad :
-      audioresample->srcpad;
-
-    structure = gst_caps_get_structure (caps, 0);
-    ret = gst_structure_get_int (structure, "rate", &rate);
-    ret &= gst_structure_get_int (structure, "channels", &channels);
-  if (!ret)
-  {
-    return GST_PAD_LINK_REFUSED;
-  }
-
-  if (gst_pad_is_negotiated (otherpad))
-  {
-    GstCaps *othercaps = gst_caps_copy (caps);
-    int otherrate;
-    GstPadLinkReturn linkret;
-
-    if (pad == audioresample->srcpad) {
-      otherrate = audioresample->i_rate;
-    } else {
-      otherrate = audioresample->o_rate;
-    }
-    gst_caps_set_simple (othercaps, "rate", G_TYPE_INT, otherrate, NULL);
-    linkret = gst_pad_try_set_caps (otherpad, othercaps);
-    if (GST_PAD_LINK_FAILED (linkret)) {
-      return GST_PAD_LINK_REFUSED;
-    }
-
-  }
-
-  audioresample->channels = channels;
-  resample_set_n_channels (audioresample->resample, audioresample->channels);
-  if (pad == audioresample->srcpad) {
-    audioresample->o_rate = rate;
-    resample_set_output_rate (audioresample->resample, audioresample->o_rate);
-    GST_DEBUG ("set o_rate to %d", rate);
-  } else {
-    audioresample->i_rate = rate;
-    resample_set_input_rate (audioresample->resample, audioresample->i_rate);
-    GST_DEBUG ("set i_rate to %d", rate);
-  }
-
-  return GST_PAD_LINK_OK;
-}
-
-static void gst_audioresample_init (Audioresample * audioresample)
+static void gst_audioresample_init (GstAudioresample * audioresample)
 {
   ResampleState *r;
-
-  audioresample->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_audioresample_sink_template), "sink");
-  gst_element_add_pad (GST_ELEMENT (audioresample), audioresample->sinkpad);
-  gst_pad_set_chain_function (audioresample->sinkpad, gst_audioresample_chain);
-  gst_pad_set_link_function (audioresample->sinkpad, gst_audioresample_link);
-  gst_pad_set_getcaps_function (audioresample->sinkpad,
-      gst_audioresample_getcaps);
-  gst_pad_set_fixate_function (audioresample->sinkpad,
-      gst_audioresample_fixate);
-
-  audioresample->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_audioresample_src_template), "src");
-
-  gst_element_add_pad (GST_ELEMENT (audioresample), audioresample->srcpad);
-  gst_pad_set_link_function (audioresample->srcpad, gst_audioresample_link);
-  gst_pad_set_getcaps_function (audioresample->srcpad,
-      gst_audioresample_getcaps);
-  gst_pad_set_fixate_function (audioresample->srcpad, gst_audioresample_fixate);
 
   r = resample_new ();
   audioresample->resample = r;
@@ -311,74 +162,245 @@ static void gst_audioresample_init (Audioresample * audioresample)
 
 static void gst_audioresample_dispose (GObject * object)
 {
-  Audioresample *audioresample = GST_AUDIORESAMPLE (object);
+  GstAudioresample *audioresample = GST_AUDIORESAMPLE (object);
 
   if (audioresample->resample) {
     resample_free (audioresample->resample);
+    audioresample->resample = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-static void gst_audioresample_chain (GstPad * pad, GstData * _data)
+/* vmethods */
+gboolean
+    audioresample_get_unit_size (GstBaseTransform * base, GstCaps * caps,
+    guint * size) {
+  gint width, channels;
+  GstStructure *structure;
+  gboolean ret;
+
+  g_return_val_if_fail (size, FALSE);
+
+  /* this works for both float and int */
+  structure = gst_caps_get_structure (caps, 0);
+  ret = gst_structure_get_int (structure, "width", &width);
+  ret &= gst_structure_get_int (structure, "channels", &channels);
+  g_return_val_if_fail (ret, FALSE);
+
+  *size = width * channels / 8;
+
+  return TRUE;
+}
+
+GstCaps *audioresample_transform_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
-  Audioresample *audioresample;
+  GstCaps *temp, *res;
+  const GstCaps *templcaps;
+  GstStructure *structure;
+
+  temp = gst_caps_copy (caps);
+  structure = gst_caps_get_structure (temp, 0);
+  gst_structure_remove_field (structure, "rate");
+  templcaps = gst_pad_get_pad_template_caps (base->srcpad);
+  res = gst_caps_intersect (templcaps, temp);
+  gst_caps_unref (temp);
+
+  return res;
+}
+
+static gboolean
+    resample_set_state_from_caps (ResampleState * state, GstCaps * incaps,
+    GstCaps * outcaps, gint * channels, gint * inrate, gint * outrate)
+{
+  GstStructure *structure;
+  gboolean ret;
+  gint myinrate, myoutrate;
+  int mychannels;
+
+  GST_DEBUG ("incaps %" GST_PTR_FORMAT ", outcaps %"
+      GST_PTR_FORMAT, incaps, outcaps);
+
+  structure = gst_caps_get_structure (incaps, 0);
+
+  /* FIXME: once it does float, set the correct format */
+#if 0
+  if (g_str_equal (gst_structure_get_name (structure), "audio/x-raw-float")) {
+    r->format = GST_RESAMPLE_FLOAT;
+  } else {
+    r->format = GST_RESAMPLE_S16;
+  }
+#endif
+
+  ret = gst_structure_get_int (structure, "rate", &myinrate);
+  ret &= gst_structure_get_int (structure, "channels", &mychannels);
+  g_return_val_if_fail (ret, FALSE);
+
+  structure = gst_caps_get_structure (outcaps, 0);
+  ret = gst_structure_get_int (structure, "rate", &myoutrate);
+  g_return_val_if_fail (ret, FALSE);
+
+  if (channels)
+    *channels = mychannels;
+  if (inrate)
+    *inrate = myinrate;
+  if (outrate)
+    *outrate = myoutrate;
+
+  resample_set_n_channels (state, mychannels);
+  resample_set_input_rate (state, myinrate);
+  resample_set_output_rate (state, myoutrate);
+
+  return TRUE;
+}
+
+gboolean audioresample_transform_size (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps, guint size, GstCaps * othercaps,
+    guint * othersize)
+{
+  GstAudioresample *audioresample = GST_AUDIORESAMPLE (base);
+  ResampleState *state;
+  GstCaps *srccaps, *sinkcaps;
+  gboolean use_internal = FALSE;        /* whether we use the internal state */
+  gboolean ret = TRUE;
+
+  /* FIXME: make sure incaps/outcaps get renamed to caps/othercaps, since
+   * interpretation depends on the direction */
+  if (direction == GST_PAD_SINK) {
+    sinkcaps = caps;
+    srccaps = othercaps;
+  } else {
+    sinkcaps = othercaps;
+    srccaps = caps;
+  }
+
+  /* if the caps are the ones that _set_caps got called with; we can use
+   * our own state; otherwise we'll have to create a state */
+  if (gst_caps_is_equal (sinkcaps, audioresample->sinkcaps) &&
+      gst_caps_is_equal (srccaps, audioresample->srccaps)) {
+    use_internal = TRUE;
+    state = audioresample->resample;
+  } else {
+    state = resample_new ();
+    resample_set_state_from_caps (state, sinkcaps, srccaps, NULL, NULL, NULL);
+  }
+
+  /* we can use our own state to answer the question */
+  if (direction == GST_PAD_SINK) {
+    /* asked to convert size of an incoming buffer */
+    *othersize = resample_get_output_size_for_input (state, size);
+  } else {
+    /* take a best guess, this is called cheating */
+    *othersize = floor (size * state->i_rate / state->o_rate);
+  }
+
+  if (!use_internal) {
+    resample_free (state);
+  }
+
+  return ret;
+}
+
+gboolean audioresample_set_caps (GstBaseTransform * base, GstCaps * incaps,
+    GstCaps * outcaps)
+{
+  gboolean ret;
+  gint inrate, outrate;
+  int channels;
+  GstAudioresample *audioresample = GST_AUDIORESAMPLE (base);
+
+  GST_DEBUG_OBJECT (base, "incaps %" GST_PTR_FORMAT ", outcaps %"
+      GST_PTR_FORMAT, incaps, outcaps);
+
+  ret = resample_set_state_from_caps (audioresample->resample, incaps, outcaps,
+      &channels, &inrate, &outrate);
+
+  g_return_val_if_fail (ret, FALSE);
+
+  audioresample->channels = channels;
+  GST_DEBUG_OBJECT (audioresample, "set channels to %d", channels);
+  audioresample->i_rate = inrate;
+  GST_DEBUG_OBJECT (audioresample, "set i_rate to %d", inrate);
+  audioresample->o_rate = outrate;
+  GST_DEBUG_OBJECT (audioresample, "set o_rate to %d", outrate);
+
+  /* save caps so we can short-circuit in the size_transform if the caps
+   * are the same */
+  /* FIXME: clean them up in state change ? */
+  gst_caps_ref (incaps);
+  gst_caps_replace (&audioresample->sinkcaps, incaps);
+  gst_caps_ref (outcaps);
+  gst_caps_replace (&audioresample->srccaps, outcaps);
+
+  return TRUE;
+}
+
+static GstFlowReturn
+    audioresample_transform (GstBaseTransform * base, GstBuffer * inbuf,
+    GstBuffer * outbuf)
+{
+  /* FIXME: this-> */
+  GstAudioresample *audioresample = GST_AUDIORESAMPLE (base);
   ResampleState *r;
   guchar *data;
   gulong size;
   int outsize;
-  GstBuffer *outbuf;
 
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
-
-  audioresample = GST_AUDIORESAMPLE (gst_pad_get_parent (pad));
-
-  if (!GST_IS_BUFFER (_data)) {
-    gst_pad_push (audioresample->srcpad, _data);
-    return;
-  }
-
+  /* FIXME: move to _inplace */
+#if 0
   if (audioresample->passthru) {
     gst_pad_push (audioresample->srcpad, GST_DATA (buf));
     return;
   }
+#endif
 
   r = audioresample->resample;
 
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
+  data = GST_BUFFER_DATA (inbuf);
+  size = GST_BUFFER_SIZE (inbuf);
 
-  GST_DEBUG ("got buffer of %ld bytes", size);
+  GST_DEBUG_OBJECT (audioresample, "got buffer of %ld bytes", size);
 
-  resample_add_input_data (r, data, size, (ResampleCallback) gst_data_unref,
-      buf);
+  resample_add_input_data (r, data, size, NULL, NULL);
 
   outsize = resample_get_output_size (r);
-  /* FIXME this is audioresample being dumb.  dunno why */
-  if (outsize == 0) {
-    GST_ERROR ("overriding outbuf size");
-    outsize = size;
+  if (outsize != GST_BUFFER_SIZE (outbuf)) {
+    GST_WARNING_OBJECT (audioresample,
+        "overriding audioresample's outsize %d with outbuffer's size %d",
+        outsize, GST_BUFFER_SIZE (outbuf));
+    outsize = GST_BUFFER_SIZE (outbuf);
   }
-  outbuf = gst_buffer_new_and_alloc (outsize);
 
   outsize = resample_get_output_data (r, GST_BUFFER_DATA (outbuf), outsize);
-  GST_BUFFER_SIZE (outbuf) = outsize;
-
   GST_BUFFER_TIMESTAMP (outbuf) =
       audioresample->offset * GST_SECOND / audioresample->o_rate;
   audioresample->offset += outsize / sizeof (gint16) / audioresample->channels;
 
-  gst_pad_push (audioresample->srcpad, GST_DATA (outbuf));
+  if (outsize != GST_BUFFER_SIZE (outbuf)) {
+    GST_WARNING_OBJECT (audioresample,
+        "audioresample, you bastard ! you only gave me %d bytes, not %d",
+        outsize, GST_BUFFER_SIZE (outbuf));
+    /* if the size we get is smaller than the buffer, it's still fine; we
+     * just waste a bit of space on the end */
+    if (outsize < GST_BUFFER_SIZE (outbuf)) {
+      GST_BUFFER_SIZE (outbuf) = outsize;
+      return GST_FLOW_OK;
+    } else {
+      /* this is an error that needs fixing in the resample library; we told
+       * it we wanted only GST_BUFFER_SIZE (outbuf), and it gave us more ! */
+      return GST_FLOW_ERROR;
+    }
+  }
+
+  return GST_FLOW_OK;
 }
 
 static void
     gst_audioresample_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  Audioresample *audioresample;
+  GstAudioresample *audioresample;
 
     g_return_if_fail (GST_IS_AUDIORESAMPLE (object));
     audioresample = GST_AUDIORESAMPLE (object);
@@ -400,7 +422,7 @@ static void
     gst_audioresample_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  Audioresample *audioresample;
+  GstAudioresample *audioresample;
 
   g_return_if_fail (GST_IS_AUDIORESAMPLE (object));
   audioresample = GST_AUDIORESAMPLE (object);
@@ -431,4 +453,4 @@ static gboolean plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "audioresample",
-    "Resamples audio", plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
+    "Resamples audio", plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN);
