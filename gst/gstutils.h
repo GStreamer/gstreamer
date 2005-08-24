@@ -38,7 +38,7 @@ void 		gst_print_pad_caps 		(GString *buf, gint indent, GstPad *pad);
 void 		gst_print_element_args 		(GString *buf, gint indent, GstElement *element);
 
 
-/* Macros for defining classes.  Ideas taken from Bonobo, which took theirs 
+/* Macros for defining classes.  Ideas taken from Bonobo, which took theirs
    from Nautilus and GOB. */
 
 /* Define the boilerplate type stuff to reduce typos and code size.  Defines
@@ -46,41 +46,42 @@ void 		gst_print_element_args 		(GString *buf, gint indent, GstElement *element)
    void additional_initializations (GType type) is for initializing interfaces
    and stuff like that */
 
-#define GST_BOILERPLATE_FULL(type, type_as_function, parent_type, parent_type_macro, additional_initializations)     				\
-										\
-static void type_as_function ## _base_init     (gpointer      g_class);		\
-static void type_as_function ## _class_init    (type ## Class *g_class);	\
-static void type_as_function ## _init	       (type          *object);		\
-static parent_type ## Class *parent_class = NULL;				\
-static void									\
-type_as_function ## _class_init_trampoline (gpointer g_class,			\
-					    gpointer data)			\
-{										\
-  parent_class = (parent_type ## Class *) g_type_class_peek_parent (g_class);	\
-  type_as_function ## _class_init ((type ## Class *)g_class);			\
-}										\
-										\
-GType										\
-type_as_function ## _get_type (void)						\
-{										\
-  static GType object_type = 0;							\
-  if (object_type == 0) {							\
-    static const GTypeInfo object_info = {					\
-      sizeof (type ## Class),							\
-      type_as_function ## _base_init,						\
-      NULL,		  /* base_finalize */					\
-      type_as_function ## _class_init_trampoline,				\
-      NULL,		  /* class_finalize */					\
-      NULL,               /* class_data */					\
-      sizeof (type),								\
-      0,                  /* n_preallocs */					\
-      (GInstanceInitFunc) type_as_function ## _init				\
-    };										\
-    object_type = g_type_register_static (parent_type_macro, #type,		\
-	&object_info, (GTypeFlags) 0);							\
-    additional_initializations (object_type);					\
-  }										\
-  return object_type;								\
+#define GST_BOILERPLATE_FULL(type, type_as_function, parent_type, parent_type_macro, additional_initializations)	\
+									\
+static void type_as_function ## _base_init     (gpointer      g_class);	\
+static void type_as_function ## _class_init    (type ## Class *g_class);\
+static void type_as_function ## _init	       (type          *object);	\
+static parent_type ## Class *parent_class = NULL;			\
+static void								\
+type_as_function ## _class_init_trampoline (gpointer g_class,		\
+					    gpointer data)		\
+{									\
+  parent_class = (parent_type ## Class *)				\
+      g_type_class_peek_parent (g_class);				\
+  type_as_function ## _class_init ((type ## Class *)g_class);		\
+}									\
+									\
+GType									\
+type_as_function ## _get_type (void)					\
+{									\
+  static GType object_type = 0;						\
+  if (object_type == 0) {						\
+    static const GTypeInfo object_info = {				\
+      sizeof (type ## Class),						\
+      type_as_function ## _base_init,					\
+      NULL,		  /* base_finalize */				\
+      type_as_function ## _class_init_trampoline,			\
+      NULL,		  /* class_finalize */				\
+      NULL,               /* class_data */				\
+      sizeof (type),							\
+      0,                  /* n_preallocs */				\
+      (GInstanceInitFunc) type_as_function ## _init			\
+    };									\
+    object_type = g_type_register_static (parent_type_macro, #type,	\
+	&object_info, (GTypeFlags) 0);					\
+    additional_initializations (object_type);				\
+  }									\
+  return object_type;							\
 }
 
 #define __GST_DO_NOTHING(type)	/* NOP */

@@ -66,10 +66,10 @@ G_STMT_START { 						\
 /* timestamp debugging macros */
 #define GST_TIME_FORMAT "u:%02u:%02u.%09u"
 #define GST_TIME_ARGS(t) \
-        (guint) ((t) / (GST_SECOND * 60 * 60)), \
-        (guint) (((t) / (GST_SECOND * 60)) % 60), \
-        (guint) (((t) / GST_SECOND) % 60), \
-        (guint) ((t) % GST_SECOND)
+        (guint) (((GstClockTime)(t)) / (GST_SECOND * 60 * 60)), \
+        (guint) ((((GstClockTime)(t)) / (GST_SECOND * 60)) % 60), \
+        (guint) ((((GstClockTime)(t)) / GST_SECOND) % 60), \
+        (guint) (((GstClockTime)(t)) % GST_SECOND)
 
 #define GST_CLOCK_ENTRY_TRACE_NAME "GstClockEntry"
 

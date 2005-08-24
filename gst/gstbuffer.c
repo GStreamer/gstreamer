@@ -261,6 +261,8 @@ gst_buffer_new_and_alloc (guint size)
   GST_BUFFER_DATA (newbuf) = newbuf->malloc_data;
   GST_BUFFER_SIZE (newbuf) = size;
 
+  GST_CAT_LOG (GST_CAT_BUFFER, "new %p of size %d", newbuf, size);
+
   return newbuf;
 }
 

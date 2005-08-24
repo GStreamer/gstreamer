@@ -1,3 +1,14 @@
+2005-08-24  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbuffer.c: (gst_buffer_new_and_alloc):
+	Some debugging.
+
+	* gst/gstclock.h:
+	Cast to ClockTime before formatting to time.
+
+	* gst/gstutils.h:
+	Cleanups.
+
 2005-08-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* check/gst-libs/controller.c: (GST_START_TEST),
