@@ -1,3 +1,7 @@
+2005-08-24  Jan Schmidt  <thaytan@mad.scientist.com>
+	* gst/level/gstlevel.c: (gst_level_message_new):
+	  GST_MESSAGE_SRC became a GObject
+
 2005-08-23  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/speex/gstspeexenc.h:
