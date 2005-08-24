@@ -292,6 +292,7 @@ gst_base_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
       gst_ring_buffer_pause (sink->ringbuffer);
+      gst_ring_buffer_clear_all (sink->ringbuffer);
       break;
     case GST_EVENT_FLUSH_STOP:
       break;
@@ -342,11 +343,11 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   time = GST_BUFFER_TIMESTAMP (buf);
 
   GST_DEBUG ("time %" GST_TIME_FORMAT ", offset %llu, start %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (time), in_offset, GST_TIME_ARGS (bsink->discont_start));
+      GST_TIME_ARGS (time), in_offset, GST_TIME_ARGS (bsink->segment_start));
 
-  render_diff = time - bsink->discont_start;
+  render_diff = time - bsink->segment_start;
   /* samples should be rendered based on their timestamp. All samples
-   * arriving before the discont_start are to be thrown away */
+   * arriving before the segment_start are to be thrown away */
   /* FIXME, for now we drop the sample completely, we should
    * in fact clip the sample. Same for the segment_stop, actually. */
   if (render_diff < 0)

@@ -1,3 +1,34 @@
+2005-08-24  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_src_query),
+	(gst_ogg_pad_event), (gst_ogg_demux_factory_filter),
+	(gst_ogg_pad_submit_packet), (gst_ogg_chain_new),
+	(gst_ogg_demux_init), (gst_ogg_demux_perform_seek),
+	(gst_ogg_demux_collect_chain_info), (gst_ogg_demux_collect_info),
+	(gst_ogg_demux_chain), (gst_ogg_demux_loop), (gst_ogg_print):
+	Parse seeking events better.
+	Unref static caps.
+	Generate correct newsegment events, fixes seeking in live oggs.
+
+	* ext/theora/theoradec.c: (theora_dec_src_query),
+	(theora_dec_src_event), (theora_dec_src_getcaps),
+	(theora_dec_sink_event), (theora_dec_push), (theora_dec_chain):
+	Use newsegment values to report correct play time.
+
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_src_query),
+	(vorbis_dec_src_event), (vorbis_dec_sink_event):
+	* ext/vorbis/vorbisdec.h:
+	Parse and use newsegment values to report correct play time.
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_event), (gst_base_audio_sink_render):
+	Clear ringbuffer on flush.
+	Use newsegment values to calculate playback time.
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_get_times):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_times):
+	Basesink does newsegment calculations for us now.
+
 2005-08-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:

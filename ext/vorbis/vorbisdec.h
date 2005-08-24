@@ -58,6 +58,11 @@ struct _GstVorbisDec {
   gboolean		initialized;
 
   GList 		*queued;
+
+  gdouble segment_rate;
+  gint64  segment_start;
+  gint64  segment_stop;
+  gint64  segment_base;
 };
 
 struct _GstVorbisDecClass {

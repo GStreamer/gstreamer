@@ -271,6 +271,8 @@ vorbis_dec_src_query (GstPad * pad, GstQuery * query)
                   &value)))
         goto error;
 
+      value = (value - dec->segment_start) + dec->segment_base;
+
       gst_query_set_position (query, format, value, total);
 
       GST_LOG_OBJECT (dec,
@@ -368,7 +370,7 @@ vorbis_dec_src_event (GstPad * pad, GstEvent * event)
       real_seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
           flags, cur_type, tcur, stop_type, tstop);
 
-      res = gst_pad_send_event (GST_PAD_PEER (dec->sinkpad), real_seek);
+      res = gst_pad_push_event (dec->sinkpad, real_seek);
 
       gst_event_unref (event);
       break;
@@ -388,7 +390,7 @@ error:
 static gboolean
 vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
 {
-  gboolean ret = TRUE;
+  gboolean ret = FALSE;
   GstVorbisDec *dec;
 
   dec = GST_VORBIS_DEC (gst_pad_get_parent (pad));
@@ -401,7 +403,26 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
       GST_STREAM_UNLOCK (pad);
       break;
     case GST_EVENT_NEWSEGMENT:
+    {
+      GstFormat format;
+      gdouble rate;
+      gint64 start, stop, base;
+
       GST_STREAM_LOCK (pad);
+      gst_event_parse_newsegment (event, &rate, &format, &start, &stop, &base);
+
+      if (format != GST_FORMAT_TIME)
+        goto newseg_wrong_format;
+
+      if (rate <= 0.0)
+        goto newseg_wrong_rate;
+
+      /* now copy over the values */
+      dec->segment_rate = rate;
+      dec->segment_start = start;
+      dec->segment_stop = stop;
+      dec->segment_base = base;
+
       dec->granulepos = -1;
 #ifdef HAVE_VORBIS_SYNTHESIS_RESTART
       vorbis_synthesis_restart (&dec->vd);
@@ -409,13 +430,29 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
       ret = gst_pad_push_event (dec->srcpad, event);
       GST_STREAM_UNLOCK (pad);
       break;
+    }
     default:
       ret = gst_pad_push_event (dec->srcpad, event);
       break;
   }
+done:
   gst_object_unref (dec);
 
   return ret;
+  /* ERRORS */
+newseg_wrong_format:
+  {
+    GST_STREAM_UNLOCK (pad);
+    GST_DEBUG ("received non TIME newsegment");
+    goto done;
+  }
+newseg_wrong_rate:
+  {
+    GST_STREAM_UNLOCK (pad);
+    GST_DEBUG ("negative rates not supported yet");
+    goto done;
+  }
+
 }
 
 static GstFlowReturn
