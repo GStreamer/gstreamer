@@ -10,7 +10,7 @@ resample_SOURCES = \
 	debug.c \
 	buffer.c
 
-noinst_HEADERS = 
+noinst_HEADERS = \
 	gstaudioresample.h \
 	functable.h \
 	debug.h \
