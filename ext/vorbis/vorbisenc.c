@@ -521,8 +521,6 @@ gst_vorbisenc_init (GstVorbisEnc * vorbisenc)
   vorbisenc->setup = FALSE;
   vorbisenc->eos = FALSE;
   vorbisenc->header_sent = FALSE;
-
-  vorbisenc->tags = gst_tag_list_new ();
 }
 
 
@@ -1099,6 +1097,8 @@ gst_vorbisenc_change_state (GstElement * element)
 
   switch (transition) {
     case GST_STATE_NULL_TO_READY:
+      vorbisenc->tags = gst_tag_list_new ();
+      break;
     case GST_STATE_READY_TO_PAUSED:
       vorbisenc->eos = FALSE;
       break;
@@ -1115,10 +1115,10 @@ gst_vorbisenc_change_state (GstElement * element)
     case GST_STATE_PAUSED_TO_READY:
       vorbisenc->setup = FALSE;
       vorbisenc->header_sent = FALSE;
-      gst_tag_list_free (vorbisenc->tags);
-      vorbisenc->tags = gst_tag_list_new ();
       break;
     case GST_STATE_READY_TO_NULL:
+      gst_tag_list_free (vorbisenc->tags);
+      vorbisenc->tags = NULL;
     default:
       break;
   }

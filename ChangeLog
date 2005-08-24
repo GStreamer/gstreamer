@@ -1,5 +1,11 @@
 2005-08-24  Wim Taymans  <wim@fluendo.com>
 
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_init),
+	(gst_vorbisenc_change_state):
+	Stop leaking taglists.
+
+2005-08-24  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_src_query),
 	(gst_ogg_pad_event), (gst_ogg_demux_factory_filter),
 	(gst_ogg_pad_submit_packet), (gst_ogg_chain_new),
