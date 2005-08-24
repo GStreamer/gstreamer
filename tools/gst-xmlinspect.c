@@ -346,6 +346,7 @@ print_element_properties (GstElement * element, gint pfx)
     PUT_END_TAG (pfx + 1, "element-property");
   }
   PUT_END_TAG (pfx, "element-properties");
+  g_free (property_specs);
 }
 
 static void

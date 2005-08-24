@@ -137,6 +137,7 @@ main (int argc, char *argv[])
           }
         }
       }
+      g_free (property_specs);
     }
   }
 

@@ -125,82 +125,82 @@ gst_element_class_init (GstElementClass * klass)
   parent_class = g_type_class_ref (GST_TYPE_OBJECT);
 
   /**
-   * GstElement::state-change:
+	 * GstElement::state-change:
    * @gstelement: the object which received the signal
    * @int:
    * @int:
-   *
-   * the #GstElementState of the element has been changed
-   */
+	 *
+	 * the #GstElementState of the element has been changed
+	 */
   gst_element_signals[STATE_CHANGE] =
       g_signal_new ("state-change", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstElementClass, state_change), NULL,
       NULL, gst_marshal_VOID__INT_INT, G_TYPE_NONE, 2, G_TYPE_INT, G_TYPE_INT);
   /**
-   * GstElement::new-pad:
+	 * GstElement::new-pad:
    * @gstelement: the object which received the signal
    * @object:
-   *
-   * a new #GstPad has been added to the element
-   */
+	 *
+	 * a new #GstPad has been added to the element
+	 */
   gst_element_signals[NEW_PAD] =
       g_signal_new ("new-pad", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstElementClass, new_pad), NULL, NULL,
       gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
   /**
-   * GstElement::pad-removed:
+	 * GstElement::pad-removed:
    * @gstelement: the object which received the signal
    * @object:
-   *
-   * a #GstPad has been removed from the element
-   */
+	 *
+	 * a #GstPad has been removed from the element
+	 */
   gst_element_signals[PAD_REMOVED] =
       g_signal_new ("pad-removed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstElementClass, pad_removed), NULL, NULL,
       gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
   /**
-   * GstElement::error:
+	 * GstElement::error:
    * @gstelement: the object which received the signal
    * @element:
    * @error:
    * @message:
-   *
-   * a #GstError has occured during data processing
-   */
+	 *
+	 * a #GstError has occured during data processing
+	 */
   gst_element_signals[ERROR] =
       g_signal_new ("error", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstElementClass, error), NULL, NULL,
       gst_marshal_VOID__OBJECT_BOXED_STRING, G_TYPE_NONE, 3, GST_TYPE_ELEMENT,
       GST_TYPE_G_ERROR, G_TYPE_STRING);
   /**
-   * GstElement::eos:
+	 * GstElement::eos:
    * @gstelement: the object which received the signal
-   *
-   * the end of the stream has been reached
-   */
+	 *
+	 * the end of the stream has been reached
+	 */
   gst_element_signals[EOS] =
       g_signal_new ("eos", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstElementClass, eos), NULL, NULL,
       gst_marshal_VOID__VOID, G_TYPE_NONE, 0);
   /**
-   * GstElement::found-tag:
+	 * GstElement::found-tag:
    * @gstelement: the object which received the signal
    * @element:
    * @tags:
-   *
-   * tags for the incomming stream have been received
-   */
+	 *
+	 * tags for the incomming stream have been received
+	 */
   gst_element_signals[FOUND_TAG] =
       g_signal_new ("found-tag", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstElementClass, found_tag), NULL, NULL,
       gst_marshal_VOID__OBJECT_BOXED, G_TYPE_NONE, 2, GST_TYPE_ELEMENT,
       GST_TYPE_TAG_LIST);
   /**
-   * GstElement::no-more-pads:
+	 * GstElement::no-more-pads:
    * @gstelement: the object which received the signal
-   *
-   * ?
-   */
+	 *
+	 * ?
+	 */
   gst_element_signals[NO_MORE_PADS] =
       g_signal_new ("no-more-pads", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstElementClass, no_more_pads), NULL,
@@ -1239,10 +1239,7 @@ gst_element_add_ghost_pad (GstElement * element, GstPad * pad,
  * @pad: the #GstPad to remove from the element.
  *
  * Removes @pad from @element. @pad will be destroyed if it has not been
- * referenced elsewhere. Normally, only elements remove pads. The only
- * exception to this are ghost pads which were created by the application
- * and request pads, which applications can remove using 
- * gst_element_release_request_pad().
+ * referenced elsewhere.
  */
 void
 gst_element_remove_pad (GstElement * element, GstPad * pad)
@@ -1965,14 +1962,7 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
           GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "linked pad %s:%s to pad %s:%s",
               GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (temp));
           return TRUE;
-        } else {
-          GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
-              "no temp %p or link failed", temp);
         }
-      } else {
-        GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
-            "invalid source pad dir=%d, peer=%p", GST_PAD_DIRECTION (srcpad),
-            GST_PAD_PEER (srcpad));
       }
       /* find a better way for this mess */
       if (srcpads) {
@@ -2001,14 +1991,7 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
           GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "linked pad %s:%s to pad %s:%s",
               GST_DEBUG_PAD_NAME (temp), GST_DEBUG_PAD_NAME (destpad));
           return TRUE;
-        } else {
-          GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
-              "no temp %p or link failed", temp);
         }
-      } else {
-        GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
-            "invalid destination pad dir=%d, peer=%p",
-            GST_PAD_DIRECTION (destpad), GST_PAD_PEER (destpad));
       }
       if (destpads) {
         destpads = g_list_next (destpads);
@@ -2091,8 +2074,6 @@ gst_element_link_filtered (GstElement * src, GstElement * dest,
  * @...: the NULL-terminated list of elements to link in order.
  *
  * Chain together a series of elements. Uses gst_element_link().
- * Does not unlink partially linked elements in the case of an error
- * (use gst_element_link_many() ). 
  *
  * Returns: TRUE on success, FALSE otherwise.
  */
@@ -3222,6 +3203,8 @@ gst_element_save_thyself (GstObject * object, xmlNodePtr parent)
       g_value_unset (&value);
     }
   }
+
+  g_free (specs);
 
   pads = GST_ELEMENT_PADS (element);
 

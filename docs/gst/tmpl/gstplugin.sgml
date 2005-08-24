@@ -17,7 +17,7 @@ and will create a new #GstPlugin. It will then call the #GstPluginInitFunc funct
 that was provided in the plugin_desc.
 </para>
 <para>
-Once you have a handle to a #GstPlugin (e.g. from the #GstRegistryPool), you can
+Once you have a handle to a #GstPlugin (e.g. from the #GstRegistryPool ), you can
 add any object that subclasses #GstPluginFeature.
 </para>
 <para>
