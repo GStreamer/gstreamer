@@ -3,6 +3,7 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@/gstreamer-@GST_MAJORMINOR@
 toolsdir=${exec_prefix}/bin
+pluginsdir=@libdir@/gstreamer-@GST_MAJORMINOR@
 gstcontrol_libs=-lgstcontrol-@GST_MAJORMINOR@
 
 Name: GStreamer

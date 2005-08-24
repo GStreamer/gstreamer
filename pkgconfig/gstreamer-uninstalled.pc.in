@@ -4,6 +4,8 @@ exec_prefix=
 libdir=${pcfiledir}/..
 includedir=${pcfiledir}/..
 toolsdir=${pcfiledir}/../tools
+pluginsdir=${pcfiledir}/..
+
 gstcontrol_libs=-lgstcontrol-@GST_MAJORMINOR@
 
 Name: GStreamer Uninstalled
