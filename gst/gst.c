@@ -169,6 +169,51 @@ enum
   ARG_REGISTRY
 };
 
+/* debug-spec ::= category-spec [, category-spec]*
+ * category-spec ::= category:val | val
+ * category ::= [^:]+
+ * val ::= [0-5]
+ */
+
+#ifndef NUL
+#define NUL '\0'
+#endif
+
+static gboolean
+parse_debug_category (gchar * str, const gchar ** category)
+{
+  if (!str)
+    return FALSE;
+
+  /* works in place */
+  g_strstrip (str);
+
+  if (str[0] != NUL) {
+    *category = str;
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+static gboolean
+parse_debug_level (gchar * str, gint * level)
+{
+  if (!str)
+    return FALSE;
+
+  /* works in place */
+  g_strstrip (str);
+
+  if (str[0] != NUL && str[1] == NUL
+      && str[0] >= '0' && str[0] < '0' + GST_LEVEL_COUNT) {
+    *level = str[0] - '0';
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 static void
 parse_debug_list (const gchar * list)
 {
@@ -177,32 +222,32 @@ parse_debug_list (const gchar * list)
 
   g_return_if_fail (list != NULL);
 
-  walk = split = g_strsplit (list, ",", 0);
+  split = g_strsplit (list, ",", 0);
 
-  while (walk[0]) {
-    gchar **values = g_strsplit (walk[0], ":", 2);
+  for (walk = split; *walk; walk++) {
+    if (strchr (*walk, ':')) {
+      gchar **values = g_strsplit (*walk, ":", 2);
 
-    if (values[0] && values[1]) {
-      gint level = 0;
+      if (values[0] && values[1]) {
+        gint level;
+        const gchar *category;
 
-      g_strstrip (values[0]);
-      g_strstrip (values[1]);
-      level = strtol (values[1], NULL, 0);
-      if (level >= 0 && level < GST_LEVEL_COUNT) {
-        GST_DEBUG ("setting debugging to level %d for name \"%s\"",
-            level, values[0]);
-        gst_debug_set_threshold_for_name (values[0], level);
+        if (parse_debug_category (values[0], &category)
+            && parse_debug_level (values[1], &level))
+          gst_debug_set_threshold_for_name (category, level);
       }
+
+      g_strfreev (values);
+    } else {
+      gint level;
+
+      if (parse_debug_level (*walk, &level))
+        gst_debug_set_default_threshold (level);
     }
-    g_strfreev (values);
-    walk++;
   }
+
   g_strfreev (split);
 }
-
-#ifndef NUL
-#define NUL '\0'
-#endif
 
 /**
  * gst_init_get_popt_table:

@@ -1,3 +1,9 @@
+2005-08-24  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gst.c (parse_debug_list): Accept e.g. GST_DEBUG=4 to mean
+	the same thing as GST_DEBUG=*:4.
+	(parse_debug_level, parse_debug_category): New helper parsers.
+
 2005-08-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/base/gstbasetransform.c: (gst_base_transform_transform_caps),
