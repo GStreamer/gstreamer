@@ -161,7 +161,7 @@ MAKE_FUNC (add_int32, gint32, gint64, MIN_INT_32, MAX_INT_32)
   structure = gst_caps_get_structure (caps, 0);
   media_type = gst_structure_get_name (structure);
   if (strcmp (media_type, "audio/x-raw-int") == 0) {
-    GST_DEBUG ("parse_caps sets adder to format int");
+    GST_DEBUG_OBJECT (adder, "parse_caps sets adder to format int");
     adder->format = GST_ADDER_FORMAT_INT;
     gst_structure_get_int (structure, "width", &adder->width);
     gst_structure_get_int (structure, "depth", &adder->depth);
@@ -188,7 +188,7 @@ MAKE_FUNC (add_int32, gint32, gint64, MIN_INT_32, MAX_INT_32)
         goto not_supported;
     }
   } else if (strcmp (media_type, "audio/x-raw-float") == 0) {
-    GST_DEBUG ("parse_caps sets adder to format float");
+    GST_DEBUG_OBJECT (adder, "parse_caps sets adder to format float");
     adder->format = GST_ADDER_FORMAT_FLOAT;
     gst_structure_get_int (structure, "width", &adder->width);
 
@@ -332,7 +332,8 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   if (adder->func == NULL)
     goto not_negotiated;
 
-  GST_LOG ("starting to cycle through channels, collecting %d bytes", size);
+  GST_LOG_OBJECT (adder,
+      "starting to cycle through channels, collecting %d bytes", size);
 
   for (collected = pads->data; collected; collected = g_slist_next (collected)) {
     GstCollectData *data;
@@ -348,9 +349,9 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
     if (len == 0)
       continue;
 
-    GST_LOG (" copying %d bytes (format %d,%d)",
+    GST_LOG_OBJECT (adder, " copying %d bytes (format %d,%d)",
         len, adder->format, adder->width);
-    GST_LOG (" from channel %p from input data %p", data, bytes);
+    GST_LOG_OBJECT (adder, " from channel %p from input data %p", data, bytes);
 
     if (outbuf == NULL) {
       /* first buffer, alloc size bytes */
@@ -387,7 +388,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   }
 
   /* send it out */
-  GST_LOG ("pushing outbuf");
+  GST_LOG_OBJECT (adder, "pushing outbuf");
   ret = gst_pad_push (adder->srcpad, outbuf);
 
   return ret;
