@@ -294,6 +294,7 @@ GST_PLUGINS_ALL="\
 		goom \
 		law \
 		level \
+		mpegaudioparse \
 		qtdemux \
 		realmedia \
 		rtp	\

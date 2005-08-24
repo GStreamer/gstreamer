@@ -172,11 +172,11 @@ endif
 LADSPA_DIR=
 # endif
 
-# if USE_LAME
-# LAME_DIR=lame
-# else
+if USE_LAME
+LAME_DIR=lame
+else
 LAME_DIR=
-# endif
+endif
 
 # if USE_LCS
 # LCS_DIR=lcs
