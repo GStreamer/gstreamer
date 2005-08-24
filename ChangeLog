@@ -1,5 +1,10 @@
 2005-08-25  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/gst/gstreamer.types:
+          added missing types
+
+2005-08-25  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/gst/gstreamer-docs.sgml:
 	* docs/gst/gstreamer-sections.txt:
 	* docs/gst/tmpl/.cvsignore:

@@ -22,6 +22,7 @@ gst_index_get_type
 % GstMiniObject is not a GObject !
 % gst_mini_object_get_type
 
+gst_message_get_type
 gst_object_get_type
 gst_pad_get_type
 gst_pad_template_get_type
@@ -29,8 +30,10 @@ gst_pipeline_get_type
 gst_plugin_feature_get_type
 gst_queue_get_type
 gst_tag_setter_get_type
+gst_task_get_type
 gst_type_find_factory_get_type
 gst_xml_get_type
+gst_xml_registry_get_type
 
 % base classes
 
