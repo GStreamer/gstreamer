@@ -128,6 +128,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoscale.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttcp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux.so
+%{_libdir}/gstreamer-%{majorminor}/libgstaudioresample.so
 
 @USE_THEORA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttheora.so
 @USE_GNOME_VFS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgnomevfs.so
