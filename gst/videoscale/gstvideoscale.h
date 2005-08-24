@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
 
+#include "vs_image.h"
 
 G_BEGIN_DECLS
 
@@ -60,20 +61,21 @@ typedef struct _GstVideoscaleClass GstVideoscaleClass;
 struct _GstVideoscale {
   GstBaseTransform element;
 
-  /* video state */
-  gboolean inited;
+  GstVideoScaleMethod method;
+
+  /* negotiated stuff */
   int format;
+  VSImage src;
+  VSImage dest;
+  guint src_size;
+  guint dest_size;
   gint to_width;
   gint to_height;
   gint from_width;
   gint from_height;
-  gboolean passthru;
-  float framerate;
-
-  GstVideoScaleMethod method;
   
   /* private */
-  gint to_buf_size;
+  guint8 *tmp_buf;
 };
 
 struct _GstVideoscaleClass {

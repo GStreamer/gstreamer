@@ -1,3 +1,13 @@
+2005-08-24  Wim Taymans  <wim@fluendo.com>
+
+	* gst/videoscale/gstvideoscale.c: (gst_videoscale_init),
+	(gst_videoscale_prepare_size), (parse_caps),
+	(gst_videoscale_set_caps), (gst_videoscale_get_size),
+	(gst_videoscale_prepare_image), (gst_videoscale_transform_ip),
+	(gst_videoscale_transform):
+	* gst/videoscale/gstvideoscale.h:
+	Refactor, make use of BaseTranform really well.
+
 2005-08-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
