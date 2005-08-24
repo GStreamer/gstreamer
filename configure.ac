@@ -219,6 +219,13 @@ if test -z $GST_TOOLS_DIR; then
 fi
 AC_SUBST(GST_TOOLS_DIR)
 
+GST_PLUGINS_DIR=`pkg-config --variable=pluginsdir gstreamer-$GST_MAJORMINOR`
+if test -z $GST_PLUGINS_DIR; then
+  AC_MSG_ERROR([no plugins dir defined in GStreamer pkg-config file; core upgrade needed.])
+fi
+AC_SUBST(GST_PLUGINS_DIR)
+
+
 dnl check for gstreamer-dataprotocol; uninstalled is selected preferentially
 PKG_CHECK_MODULES(GST_GDP, gstreamer-dataprotocol-$GST_MAJORMINOR >= $GST_REQ,
   HAVE_GST_GDP="yes", HAVE_GST_GDP="no")

@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include <gst/gst-i18n-plugin.h>
 #include <string.h>
 #include "gstplaybasebin.h"
 #include "gststreamselector.h"
@@ -1100,8 +1101,7 @@ setup_substreams (GstPlayBaseBin * play_base_bin)
  * all the streams or until a preroll queue has been filled.
 */
 static gboolean
-setup_source (GstPlayBaseBin * play_base_bin,
-    gchar ** new_location, GError ** error)
+setup_source (GstPlayBaseBin * play_base_bin, gchar ** new_location)
 {
   GstElement *subbin = NULL;
 
@@ -1110,7 +1110,7 @@ setup_source (GstPlayBaseBin * play_base_bin,
 
   /* delete old src */
   if (play_base_bin->source) {
-    GST_LOG ("removing old src element");
+    GST_DEBUG_OBJECT (play_base_bin, "removing old src element");
     gst_element_set_state (play_base_bin->source, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (play_base_bin), play_base_bin->source);
   }
@@ -1127,7 +1127,7 @@ setup_source (GstPlayBaseBin * play_base_bin,
 
   /* remove the old decoder now, if any */
   if (play_base_bin->decoder) {
-    GST_LOG ("removing old decoder element");
+    GST_DEBUG_OBJECT (play_base_bin, "removing old decoder element");
     gst_bin_remove (GST_BIN (play_base_bin), play_base_bin->decoder);
     play_base_bin->decoder = NULL;
   }
@@ -1291,26 +1291,32 @@ no_source:
     gchar *prot;
 
     /* whoops, could not create the source element */
+    if (play_base_bin->uri == NULL) {
+      GST_ELEMENT_ERROR (play_base_bin, RESOURCE, NOT_FOUND,
+          (_("No URI specified to play from.")), (NULL));
+      return FALSE;
+    }
     prot = gst_uri_get_protocol (play_base_bin->uri);
     if (prot) {
-      g_set_error (error, 0, 0, "No URI handler implemented for \"%s\"", prot);
+      GST_ELEMENT_ERROR (play_base_bin, RESOURCE, NOT_FOUND,
+          (_("No URI handler implemented for \"%s\"."), prot), (NULL));
       g_free (prot);
     } else {
-      g_set_error (error, 0, 0, "Invalid URI \"%s\"", play_base_bin->uri);
+      GST_ELEMENT_ERROR (play_base_bin, RESOURCE, NOT_FOUND,
+          (_("Invalid URI \"%s\"."), play_base_bin->uri), (NULL));
     }
-    GST_WARNING ("don't know how to read %s", play_base_bin->uri);
     return FALSE;
   }
 no_decodebin:
   {
-    g_set_error (error, 0, 0, "Could not create autoplugger element");
-    GST_WARNING ("can't find decoder element");
+    GST_ELEMENT_ERROR (play_base_bin, CORE, FAILED,
+        (_("Could not create \"decodebin\" element.")), (NULL));
     return FALSE;
   }
 could_not_link:
   {
-    g_set_error (error, 0, 0, "Could not link source and autoplugger");
-    GST_WARNING ("can't link source to decoder element");
+    GST_ELEMENT_ERROR (play_base_bin, CORE, NEGOTIATION,
+        (NULL), ("Can't link source to decoder element"));
     return FALSE;
   }
 }
@@ -1370,11 +1376,10 @@ prepare_output (GstPlayBaseBin * play_base_bin)
   if (!stream_found) {
     if (!no_media) {
       GST_ELEMENT_ERROR (play_base_bin, STREAM, CODEC_NOT_FOUND,
-          ("You do not have decoders installed to handle this media file, "
-              "you might need to install the corresponding plugins"), (NULL));
+          (_("You do not have a decoder installed to handle \"%s\".  You might need to install the necessary plugins."), play_base_bin->uri), (NULL));
     } else {
       GST_ELEMENT_ERROR (play_base_bin, STREAM, WRONG_TYPE,
-          ("This is not a media file"), (NULL));
+          (_("\"%s\" is not a media file")), (NULL));
     }
     return FALSE;
   }
@@ -1652,13 +1657,12 @@ gst_play_base_bin_change_state (GstElement * element)
   GstPlayBaseBin *play_base_bin;
   gint transition = GST_STATE_TRANSITION (element);
   gchar *new_location = NULL;
-  GError *error = NULL;
 
   play_base_bin = GST_PLAY_BASE_BIN (element);
 
   switch (transition) {
     case GST_STATE_READY_TO_PAUSED:
-      if (!setup_source (play_base_bin, &new_location, &error) || error != NULL)
+      if (!setup_source (play_base_bin, &new_location))
         goto source_failed;
       break;
     default:
@@ -1689,17 +1693,6 @@ gst_play_base_bin_change_state (GstElement * element)
   /* ERRORS */
 source_failed:
   {
-    if (!error) {
-      /* opening failed but no error - hellup */
-      GST_ELEMENT_ERROR (GST_ELEMENT (play_base_bin), STREAM,
-          NOT_IMPLEMENTED,
-          ("cannot open file \"%s\"", play_base_bin->uri), (NULL));
-    } else {
-      /* just copy the cached error - type doesn't matter */
-      GST_ELEMENT_ERROR (play_base_bin, STREAM, TOO_LAZY,
-          (error->message), (NULL));
-      g_error_free (error);
-    }
     play_base_bin->need_rebuild = TRUE;
 
     return GST_STATE_FAILURE;

@@ -37,6 +37,10 @@ GST_START_TEST (test_state_changes)
 
     GST_DEBUG ("testing element %s", name);
     element = gst_element_factory_make (name, name);
+    if (GST_IS_PIPELINE (element)) {
+      GST_DEBUG ("element %s is a pipeline", name);
+      g_object_set (G_OBJECT (element), "play-timeout", (guint64) 0, NULL);
+    }
 
     gst_element_set_state (element, GST_STATE_READY);
     gst_element_set_state (element, GST_STATE_PAUSED);
