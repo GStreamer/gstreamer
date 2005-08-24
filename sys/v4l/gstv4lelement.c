@@ -445,7 +445,7 @@ gst_v4lelement_start (GstBaseSrc * src)
     return FALSE;
 
 #ifdef HAVE_XVIDEO
-  gst_v4l_xoverlay_open (v4lelement);
+  gst_v4l_xoverlay_start (v4lelement);
 #endif
 
   return TRUE;
@@ -457,7 +457,7 @@ gst_v4lelement_stop (GstBaseSrc * src)
   GstV4lElement *v4lelement = GST_V4LELEMENT (src);
 
 #ifdef HAVE_XVIDEO
-  gst_v4l_xoverlay_close (v4lelement);
+  gst_v4l_xoverlay_stop (v4lelement);
 #endif
 
   if (!gst_v4l_close (v4lelement))

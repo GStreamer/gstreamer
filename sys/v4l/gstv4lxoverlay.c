@@ -59,7 +59,7 @@ gst_v4l_xoverlay_interface_init (GstXOverlayClass * klass)
       "V4L XOverlay interface debugging");
 }
 
-void
+static void
 gst_v4l_xoverlay_open (GstV4lElement * v4lelement)
 {
   struct stat s;
@@ -73,6 +73,13 @@ gst_v4l_xoverlay_open (GstV4lElement * v4lelement)
   /* we need a display, obviously */
   if (!name || !(dpy = XOpenDisplay (name))) {
     GST_WARNING ("No $DISPLAY set or failed to open - no overlay");
+    return;
+  }
+
+  /* First let's check that XVideo extension is available */
+  if (!XQueryExtension (dpy, "XVideo", &i, &i, &i)) {
+    GST_WARNING ("Xv extension not available - no overlay");
+    XCloseDisplay (dpy);
     return;
   }
 
@@ -124,7 +131,7 @@ gst_v4l_xoverlay_open (GstV4lElement * v4lelement)
   }
 }
 
-void
+static void
 gst_v4l_xoverlay_close (GstV4lElement * v4lelement)
 {
   GstV4lXv *v4lxv = v4lelement->xv;
@@ -142,6 +149,20 @@ gst_v4l_xoverlay_close (GstV4lElement * v4lelement)
     g_source_remove (v4lxv->idle_id);
   g_free (v4lxv);
   v4lelement->xv = NULL;
+}
+
+void
+gst_v4l_xoverlay_start (GstV4lElement * v4lelement)
+{
+  if (v4lelement->xwindow_id) {
+    gst_v4l_xoverlay_open (v4lelement);
+  }
+}
+
+void
+gst_v4l_xoverlay_stop (GstV4lElement * v4lelement)
+{
+  gst_v4l_xoverlay_close (v4lelement);
 }
 
 static gboolean
@@ -171,11 +192,16 @@ static void
 gst_v4l_xoverlay_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
 {
   GstV4lElement *v4lelement = GST_V4LELEMENT (overlay);
-  GstV4lXv *v4lxv = v4lelement->xv;
+  GstV4lXv *v4lxv;
   XWindowAttributes attr;
   gboolean change = (v4lelement->xwindow_id != xwindow_id);
 
   GST_LOG_OBJECT (v4lelement, "Changing port to %lx", xwindow_id);
+
+  if (!v4lxv && GST_V4L_IS_OPEN (v4lelement))
+    gst_v4l_xoverlay_open (v4lelement);
+
+  v4lxv = v4lelement->xv;
 
   if (v4lxv)
     g_mutex_lock (v4lxv->mutex);

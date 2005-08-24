@@ -1,3 +1,19 @@
+2005-08-24  Andy Wingo  <wingo@pobox.com>
+
+	* sys/v4l/gstv4lelement.c (gst_v4lelement_start) 
+	(gst_v4lelement_stop): Call _start and _stop for xoverlay instead
+	of _open and _close.
+
+	* sys/v4l/gstv4lxoverlay.h:
+	* sys/v4l/gstv4lxoverlay.c (gst_v4l_xoverlay_set_xwindow_id): Open
+	an Xv connection here, instead of all the time. Make Xv only be
+	loaded if you axe for it. Kindof a workaround for buggy behaviour
+	of Xv when using remote xservers (XvQueryExtension would block).
+	(gst_v4l_xoverlay_stop, gst_v4l_xoverlay_start): New functions,
+	replace the _open and _close public API. Only start the xv
+	connection if necessary.
+	(gst_v4l_xoverlay_open, gst_v4l_xoverlay_close): Made static.
+
 2005-08-23  David Schleef  <ds@schleef.org>
 
 	* gst/audioresample/Makefile.am: Leet audioresampling code
