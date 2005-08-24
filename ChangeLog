@@ -1,3 +1,9 @@
+2005-08-22  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstutils.h (GST_BOILERPLATE_WITH_INTERFACE): New ghetto
+	macro, implements an interface and gstimplementsinterface for a
+	new type.
+
 2005-08-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:
