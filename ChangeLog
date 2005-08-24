@@ -1,3 +1,23 @@
+2005-08-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/audioconvert/gstaudioconvert.c:
+	(gst_audio_convert_class_init), (gst_audio_convert_init),
+	(audio_convert_get_unit_size), (audio_convert_transform_caps),
+	(audio_convert_fixate_caps), (audio_convert_set_caps),
+	(audio_convert_transform),
+	(gst_audio_convert_buffer_to_default_format),
+	(gst_audio_convert_buffer_from_default_format),
+	(gst_audio_convert_channels):
+	* gst/audioconvert/gstchannelmix.c:
+	* gst/audioconvert/gstchannelmix.h:
+	  port to basetransform
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_transform_caps), (gst_ffmpegcsp_class_init),
+	(gst_ffmpegcsp_get_unit_size):
+	* gst/videoscale/gstvideoscale.c: (gst_videoscale_class_init),
+	(gst_videoscale_transform_caps), (gst_videoscale_get_unit_size):
+	  fix for basetransform changes
+
 2005-08-24  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* check/Makefile.am:

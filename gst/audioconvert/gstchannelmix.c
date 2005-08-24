@@ -476,6 +476,7 @@ gst_audio_convert_fill_matrix (GstAudioConvert * this)
   gst_audio_convert_fill_normalize (this);
 }
 
+/* only call after this->srccaps and this->sinkcaps are filled in */
 void
 gst_audio_convert_setup_matrix (GstAudioConvert * this)
 {

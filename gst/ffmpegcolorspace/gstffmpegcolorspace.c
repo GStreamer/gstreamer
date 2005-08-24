@@ -91,11 +91,12 @@ static void gst_ffmpegcsp_init (GstFFMpegCsp * space);
 
 static gboolean gst_ffmpegcsp_set_caps (GstBaseTransform * btrans,
     GstCaps * incaps, GstCaps * outcaps);
-static guint gst_ffmpegcsp_get_size (GstBaseTransform * btrans, GstCaps * caps);
-static GstFlowReturn gst_ffmpegcsp_transform
-    (GstBaseTransform * btrans, GstBuffer * inbuf, GstBuffer * outbuf);
-static GstFlowReturn gst_ffmpegcsp_transform_ip
-    (GstBaseTransform * btrans, GstBuffer * inbuf);
+static gboolean gst_ffmpegcsp_get_unit_size (GstBaseTransform * btrans,
+    GstCaps * caps, guint * size);
+static GstFlowReturn gst_ffmpegcsp_transform (GstBaseTransform * btrans,
+    GstBuffer * inbuf, GstBuffer * outbuf);
+static GstFlowReturn gst_ffmpegcsp_transform_ip (GstBaseTransform * btrans,
+    GstBuffer * inbuf);
 
 static GstPadTemplate *sinktempl, *srctempl;
 static GstElementClass *parent_class = NULL;
@@ -140,8 +141,8 @@ gst_ffmpegcsp_caps_remove_format_info (GstCaps * caps)
 }
 
 static GstCaps *
-gst_ffmpegcsp_transform_caps (GstBaseTransform * btrans, GstPad * pad,
-    GstCaps * caps)
+gst_ffmpegcsp_transform_caps (GstBaseTransform * btrans,
+    GstPadDirection direction, GstCaps * caps)
 {
   GstFFMpegCsp *space;
   GstCaps *result;
@@ -293,11 +294,15 @@ gst_ffmpegcsp_class_init (GstFFMpegCspClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_BASE_TRANSFORM);
 
-  gstbasetransform_class->transform_caps = gst_ffmpegcsp_transform_caps;
-  gstbasetransform_class->set_caps = gst_ffmpegcsp_set_caps;
-  gstbasetransform_class->get_size = gst_ffmpegcsp_get_size;
-  gstbasetransform_class->transform = gst_ffmpegcsp_transform;
-  gstbasetransform_class->transform_ip = gst_ffmpegcsp_transform_ip;
+  gstbasetransform_class->transform_caps =
+      GST_DEBUG_FUNCPTR (gst_ffmpegcsp_transform_caps);
+  gstbasetransform_class->set_caps = GST_DEBUG_FUNCPTR (gst_ffmpegcsp_set_caps);
+  gstbasetransform_class->get_unit_size =
+      GST_DEBUG_FUNCPTR (gst_ffmpegcsp_get_unit_size);
+  gstbasetransform_class->transform =
+      GST_DEBUG_FUNCPTR (gst_ffmpegcsp_transform);
+  gstbasetransform_class->transform_ip =
+      GST_DEBUG_FUNCPTR (gst_ffmpegcsp_transform_ip);
 
   GST_DEBUG_CATEGORY_INIT (ffmpegcolorspace_debug, "ffmpegcolorspace", 0,
       "FFMPEG-based colorspace converter");
@@ -310,20 +315,23 @@ gst_ffmpegcsp_init (GstFFMpegCsp * space)
   space->palette = NULL;
 }
 
-static guint
-gst_ffmpegcsp_get_size (GstBaseTransform * btrans, GstCaps * caps)
+static gboolean
+gst_ffmpegcsp_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
+    guint * size)
 {
   GstFFMpegCsp *space;
-  guint size = -1;
+
+  g_return_val_if_fail (size, FALSE);
 
   space = GST_FFMPEGCSP (btrans);
   if (gst_caps_is_equal (caps, GST_PAD_CAPS (btrans->srcpad))) {
-    size = avpicture_get_size (space->to_pixfmt, space->width, space->height);
+    *size = avpicture_get_size (space->to_pixfmt, space->width, space->height);
   } else if (gst_caps_is_equal (caps, GST_PAD_CAPS (btrans->sinkpad))) {
-    size = avpicture_get_size (space->from_pixfmt, space->width, space->height);
+    *size =
+        avpicture_get_size (space->from_pixfmt, space->width, space->height);
   }
 
-  return size;
+  return TRUE;
 }
 
 static GstFlowReturn

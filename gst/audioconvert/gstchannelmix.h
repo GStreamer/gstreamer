@@ -23,6 +23,7 @@
 #define __GST_CHANNEL_MIX_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstbasetransform.h>
 #include <gst/audio/multichannel.h>
 
 #define GST_TYPE_AUDIO_CONVERT          (gst_audio_convert_get_type())
@@ -59,11 +60,7 @@ struct _GstAudioConvertCaps
 
 struct _GstAudioConvert
 {
-  GstElement element;
-
-  /* pads */
-  GstPad *sink;
-  GstPad *src;
+  GstBaseTransform element;
 
   GstAudioConvertCaps srccaps;
   GstAudioConvertCaps sinkcaps;
@@ -81,7 +78,7 @@ struct _GstAudioConvert
 
 struct _GstAudioConvertClass
 {
-  GstElementClass parent_class;
+  GstBaseTransformClass parent_class;
 };
 
 /*
