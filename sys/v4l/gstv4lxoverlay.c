@@ -198,7 +198,7 @@ gst_v4l_xoverlay_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
 
   GST_LOG_OBJECT (v4lelement, "Changing port to %lx", xwindow_id);
 
-  if (!v4lxv && GST_V4L_IS_OPEN (v4lelement))
+  if (!v4lelement->xv && GST_V4L_IS_OPEN (v4lelement))
     gst_v4l_xoverlay_open (v4lelement);
 
   v4lxv = v4lelement->xv;
