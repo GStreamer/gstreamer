@@ -1,3 +1,12 @@
+2005-08-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	  lame and mpegaudioparse seem to work
+	* gst/videobox/gstvideobox.c: (gst_video_box_class_init),
+	(gst_video_box_transform_caps), (gst_video_box_get_unit_size):
+	  update for basetransform changes
+
 2005-08-24  Jan Schmidt  <thaytan@mad.scientist.com>
 	* gst/level/gstlevel.c: (gst_level_message_new):
 	  GST_MESSAGE_SRC became a GObject
@@ -5,7 +14,7 @@
 2005-08-23  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/speex/gstspeexenc.h:
-          Fixed include path of adapter
+	  Fixed include path of adapter
 
 2005-08-23  Wim Taymans  <wim@fluendo.com>
 
