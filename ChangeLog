@@ -1,3 +1,8 @@
+2005-08-24  Andy Wingo  <wingo@pobox.com>
+
+	* ext/dv/gstdvdemux.c (gst_dvdemux_demux_frame): Send out valid
+	segment end timestamps.
+
 2005-08-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
@@ -327,6 +332,11 @@
 	Port lame plugin
 
 2005-08-16  Andy Wingo  <wingo@pobox.com>
+
+	* ext/dv/gstdvdemux.c (gst_dvdemux_flush): Use gst_adapter_take so
+	we have our own copy of the data.
+	(gst_dvdemux_demux_video): Set the take() data as malloc_data so
+	it will get freed later.
 
 	* ext/raw1394/gstdv1394src.c (gst_dv1394src_iso_receive): Note
 	license info in the source code -- was only in the commit log
