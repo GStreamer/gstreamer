@@ -1,3 +1,21 @@
+2005-08-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/base/gstbasetransform.c: (gst_base_transform_transform_caps),
+	(gst_base_transform_transform_size), (gst_base_transform_getcaps),
+	(gst_base_transform_setcaps), (gst_base_transform_get_unit_size),
+	(gst_base_transform_buffer_alloc),
+	(gst_base_transform_handle_buffer):
+	  use gboolean return values and pointers to size so we can use the
+	  full GST_BUFFER_SIZE range (guint) for buffer sizes
+	  use GstPadDirection for transform_caps
+	* gst/base/gstbasetransform.h:
+	  rename get_size to get_unit_size since that's what it is
+	* gst/elements/gstcapsfilter.c: (gst_capsfilter_transform_caps):
+	  use GstPadDirection for transform_caps
+	* gst/gstbuffer.c: (gst_buffer_new_and_alloc):
+	* gst/gstutils.h:
+	  cleanup and debugging
+
 2005-08-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstelement.c: (gst_element_class_init),

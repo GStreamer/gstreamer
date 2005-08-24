@@ -2,8 +2,8 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *                    2005 Wim Taymans <wim@fluendo.com>
- *
- * gstbasetransform.c:
+ *                    2005 Andy Wingo <wingo@fluendo.com>
+ *                    2005 Thomas Vander Stichele <thomas at apestaart dot org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -110,8 +110,8 @@ static gboolean gst_base_transform_src_activate_pull (GstPad * pad,
     gboolean active);
 static gboolean gst_base_transform_sink_activate_push (GstPad * pad,
     gboolean active);
-static guint gst_base_transform_get_size (GstBaseTransform * trans,
-    GstCaps * caps);
+static gboolean gst_base_transform_get_unit_size (GstBaseTransform * trans,
+    GstCaps * caps, guint * size);
 
 static GstElementStateReturn gst_base_transform_change_state (GstElement *
     element);
@@ -209,8 +209,8 @@ gst_base_transform_init (GstBaseTransform * trans, gpointer g_class)
 }
 
 static GstCaps *
-gst_base_transform_transform_caps (GstBaseTransform * trans, GstPad * pad,
-    GstCaps * caps)
+gst_base_transform_transform_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps)
 {
   GstCaps *ret;
   GstBaseTransformClass *klass;
@@ -227,7 +227,7 @@ gst_base_transform_transform_caps (GstBaseTransform * trans, GstPad * pad,
     if (gst_caps_is_any (caps)) {
       /* for any caps we still have to call the transform function */
       GST_DEBUG_OBJECT (trans, "from ANY:");
-      temp = klass->transform_caps (trans, pad, caps);
+      temp = klass->transform_caps (trans, direction, caps);
       GST_DEBUG_OBJECT (trans, "  to: %" GST_PTR_FORMAT, temp);
 
       gst_caps_append (ret, temp);
@@ -239,7 +239,7 @@ gst_base_transform_transform_caps (GstBaseTransform * trans, GstPad * pad,
 
         nth = gst_caps_copy_nth (caps, i);
         GST_DEBUG_OBJECT (trans, "from[%d]: %" GST_PTR_FORMAT, i, nth);
-        temp = klass->transform_caps (trans, pad, nth);
+        temp = klass->transform_caps (trans, direction, nth);
         gst_caps_unref (nth);
         GST_DEBUG_OBJECT (trans, "  to[%d]: %" GST_PTR_FORMAT, i, temp);
 
@@ -258,10 +258,10 @@ gst_base_transform_transform_caps (GstBaseTransform * trans, GstPad * pad,
 }
 
 /* by default, this keeps the number of samples in the buffer the same */
-guint
+gboolean
 gst_base_transform_transform_size (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * incaps,
-    guint insize, GstCaps * outcaps)
+    GstPadDirection direction, GstCaps * caps,
+    guint size, GstCaps * othercaps, guint * othersize)
 {
   guint inunitsize, outunitsize, units;
   GstBaseTransformClass *klass;
@@ -270,23 +270,28 @@ gst_base_transform_transform_size (GstBaseTransform * trans,
   klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   GST_DEBUG_OBJECT (trans, "asked to transform size %d for caps %"
-      GST_PTR_FORMAT " to size for caps %" GST_PTR_FORMAT " in direction %d",
-      insize, incaps, outcaps, direction);
+      GST_PTR_FORMAT " to size for caps %" GST_PTR_FORMAT " in direction %s",
+      size, caps, othercaps, direction == GST_PAD_SRC ? "SRC" : "SINK");
 
   /* if there is a custom transform function, use this */
   if (klass->transform_size) {
-    ret = klass->transform_size (trans, direction, incaps, insize, outcaps);
+    ret = klass->transform_size (trans, direction, caps, size, othercaps,
+        othersize);
   } else {
-    inunitsize = gst_base_transform_get_size (trans, incaps);
-    g_return_val_if_fail (inunitsize != -1, -1);
-    g_return_val_if_fail (insize % inunitsize == 0, -1);
+    g_return_val_if_fail (gst_base_transform_get_unit_size (trans, caps,
+            &inunitsize), FALSE);
+    g_return_val_if_fail (size % inunitsize == 0, -1);
 
-    units = insize / inunitsize;
-    outunitsize = gst_base_transform_get_size (trans, outcaps);
-    ret = units * outunitsize;
+    units = size / inunitsize;
+    g_return_val_if_fail (gst_base_transform_get_unit_size (trans, othercaps,
+            &outunitsize), FALSE);
+    if (!othersize) {
+      ret = FALSE;
+    } else {
+      *othersize = units * outunitsize;
+      GST_DEBUG_OBJECT (trans, "transformed size to %d", *othersize);
+    }
   }
-
-  GST_DEBUG_OBJECT (trans, "transformed size %d", ret);
 
   return ret;
 }
@@ -317,7 +322,8 @@ gst_base_transform_getcaps (GstPad * pad)
     GST_DEBUG_OBJECT (pad, "intersected %" GST_PTR_FORMAT, temp);
     gst_caps_unref (caps);
     /* then see what we can tranform this to */
-    caps = gst_base_transform_transform_caps (trans, otherpad, temp);
+    caps = gst_base_transform_transform_caps (trans,
+        GST_PAD_DIRECTION (otherpad), temp);
     GST_DEBUG_OBJECT (pad, "transformed  %" GST_PTR_FORMAT, caps);
     gst_caps_unref (temp);
     if (caps == NULL)
@@ -376,6 +382,7 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
   klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+  g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
 
   otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
   otherpeer = gst_pad_get_peer (otherpad);
@@ -386,7 +393,8 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
     goto done;
 
   /* see how we can transform the input caps. */
-  othercaps = gst_base_transform_transform_caps (trans, pad, caps);
+  othercaps = gst_base_transform_transform_caps (trans,
+      GST_PAD_DIRECTION (pad), caps);
 
   /* check if transform is empty */
   if (!othercaps || gst_caps_is_empty (othercaps))
@@ -491,7 +499,7 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
   if (!gst_caps_is_fixed (othercaps))
     goto could_not_fixate;
 
-  /* and peer should accept, don't check again if we already checked the 
+  /* and peer should accept, don't check again if we already checked the
    * othercaps against the peer. */
   if (!peer_checked && otherpeer && !gst_pad_accept_caps (otherpeer, othercaps))
     goto peer_no_accept;
@@ -572,17 +580,20 @@ failed_configure:
   }
 }
 
-static guint
-gst_base_transform_get_size (GstBaseTransform * trans, GstCaps * caps)
+static gboolean
+gst_base_transform_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
+    guint * size)
 {
-  guint res = -1;
+  gboolean res = FALSE;
   GstBaseTransformClass *bclass;
 
+  g_return_val_if_fail (size, FALSE);
+
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
-  if (bclass->get_size) {
-    res = bclass->get_size (trans, caps);
-    GST_DEBUG_OBJECT (trans, "get size(%" GST_PTR_FORMAT ") returned %d", caps,
-        res);
+  if (bclass->get_unit_size) {
+    res = bclass->get_unit_size (trans, caps, size);
+    GST_DEBUG_OBJECT (trans, "get size(%" GST_PTR_FORMAT
+        ") set size %d, returned %d", caps, *size, res);
   }
 
   return res;
@@ -606,7 +617,6 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 
   GST_DEBUG_OBJECT (trans, "allocating a buffer of size %d at offset %"
       G_GUINT64_FORMAT, size, offset);
-
   /* before any buffers are pushed, in_place is TRUE; allocating can trigger
    * a renegotiation and change that to FALSE */
   if (trans->in_place) {
@@ -621,9 +631,8 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
       goto not_configured;
 
     GST_DEBUG_OBJECT (trans, "calling transform_size");
-    new_size = gst_base_transform_transform_size (trans,
-        GST_PAD_DIRECTION (pad), caps, size, srccaps);
-    if (new_size == -1) {
+    if (!gst_base_transform_transform_size (trans,
+            GST_PAD_DIRECTION (pad), caps, size, srccaps, &new_size)) {
       gst_caps_unref (srccaps);
       goto unknown_size;
     }
@@ -644,10 +653,9 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     if (!sinkcaps)
       goto not_configured;
 
-    new_size = gst_base_transform_transform_size (trans,
-        GST_PAD_DIRECTION (trans->srcpad), srccaps, GST_BUFFER_SIZE (*buf),
-        sinkcaps);
-    if (new_size == -1) {
+    if (!gst_base_transform_transform_size (trans,
+            GST_PAD_DIRECTION (trans->srcpad), srccaps, GST_BUFFER_SIZE (*buf),
+            sinkcaps, &new_size)) {
       gst_caps_unref (srccaps);
       gst_caps_unref (sinkcaps);
       goto unknown_size;
@@ -765,13 +773,13 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
       }
     }
   } else {
-    /* non inplace case, figure out the output size */
-    out_size = gst_base_transform_transform_size (trans,
-        GST_PAD_DIRECTION (trans->sinkpad), GST_PAD_CAPS (trans->sinkpad),
-        GST_BUFFER_SIZE (inbuf), GST_PAD_CAPS (trans->srcpad));
-    if (out_size == -1)
+    /* not inplace, figure out the output size */
+    if (!gst_base_transform_transform_size (trans,
+            GST_PAD_DIRECTION (trans->sinkpad), GST_PAD_CAPS (trans->sinkpad),
+            GST_BUFFER_SIZE (inbuf), GST_PAD_CAPS (trans->srcpad), &out_size)) {
       /* we have an error */
       goto no_size;
+    }
 
     /* we cannot reconfigure the element yet as we are still processing
      * the old buffer. We will therefore delay the reconfiguration of the

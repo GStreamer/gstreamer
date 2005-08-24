@@ -99,7 +99,7 @@ static void gst_capsfilter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_capsfilter_dispose (GObject * object);
 static GstCaps *gst_capsfilter_transform_caps (GstBaseTransform * base,
-    GstPad * pad, GstCaps * caps);
+    GstPadDirection direction, GstCaps * caps);
 static GstFlowReturn gst_capsfilter_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
 
@@ -202,8 +202,8 @@ gst_capsfilter_dispose (GObject * object)
 }
 
 static GstCaps *
-gst_capsfilter_transform_caps (GstBaseTransform * base, GstPad * pad,
-    GstCaps * caps)
+gst_capsfilter_transform_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps)
 {
   GstCapsFilter *capsfilter = GST_CAPSFILTER (base);
   GstCaps *ret;

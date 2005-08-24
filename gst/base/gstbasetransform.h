@@ -2,8 +2,6 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2005 Wim Taymans <wim@fluendo.com>
  *
- * gstbasetransform.h:
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -19,7 +17,6 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
 
 #ifndef __GST_BASE_TRANSFORM_H__
 #define __GST_BASE_TRANSFORM_H__
@@ -64,7 +61,7 @@ struct _GstBaseTransform {
 
 /**
  * GstBaseTransformClass::transform_caps:
- * @pad: the pad
+ * @direction: the pad direction
  * @caps: the caps
  *
  * This method should answer the question "given this pad, and given these
@@ -78,8 +75,8 @@ struct _GstBaseTransformClass {
 
   /* given the (non-)fixed simple caps on the pad in the given direction,
    * what can I do on the other pad ? */
-  /* FIXME: change to direction */
-  GstCaps*	(*transform_caps) (GstBaseTransform *trans, GstPad *pad,
+  GstCaps*	(*transform_caps) (GstBaseTransform *trans,
+                                   GstPadDirection direction,
                                    GstCaps *caps);
 
   /* given caps on one pad, how would you fixate caps on the other pad ? */
@@ -88,17 +85,18 @@ struct _GstBaseTransformClass {
                                    GstCaps *othercaps);
 
   /* given the size of a buffer in the given direction with the given caps,
-   * calculate the
-   * size of an outgoing buffer with the given outgoing caps; the default
+   * calculate the byte size of an buffer on the other side with the given
+   * other caps; the default
    * implementation uses get_size and keeps the number of units the same */
-  guint         (*transform_size) (GstBaseTransform *trans,
+  gboolean      (*transform_size) (GstBaseTransform *trans,
                                    GstPadDirection direction,
-                                   GstCaps *incaps, guint insize,
-                                   GstCaps *outcaps);
+                                   GstCaps *caps, guint size,
+                                   GstCaps *othercaps, guint *othersize);
 
-  /* get the byte size of one unit for a given caps, -1 on error.
+  /* get the byte size of one unit for a given caps.
    * Always needs to be implemented if the transform is not in-place. */
-  guint         (*get_size)     (GstBaseTransform *trans, GstCaps *caps);
+  gboolean      (*get_unit_size)  (GstBaseTransform *trans, GstCaps *caps,
+                                   guint *size);
 
   /* notify the subclass of new caps */
   gboolean      (*set_caps)     (GstBaseTransform *trans, GstCaps *incaps,
