@@ -779,9 +779,8 @@ gst_dvdemux_demux_video (GstDVDemux * dvdemux, const guint8 * data)
 
   outbuf = gst_buffer_new ();
 
-  /* won't get freed, but still callers should not hold a ref on the buffer --
-     need to figure out how to do that in gst core */
   gst_buffer_set_data (outbuf, (guint8 *) data, dvdemux->frame_len);
+  outbuf->malloc_data = GST_BUFFER_DATA (outbuf);
 
   GST_BUFFER_TIMESTAMP (outbuf) = dvdemux->timestamp;
   GST_BUFFER_OFFSET (outbuf) = dvdemux->video_offset;
@@ -821,11 +820,15 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, const guint8 * data)
 
     dvdemux->timestamp = dvdemux->start_timestamp;
 
-    format = GST_FORMAT_TIME;
-    if (!(res = gst_pad_query_convert (dvdemux->sinkpad,
-                GST_FORMAT_BYTES,
-                dvdemux->stop_byte, &format, &dvdemux->stop_timestamp))) {
-      goto discont_error;
+    if (dvdemux->stop_byte == -1) {
+      dvdemux->stop_timestamp = -1;
+    } else {
+      format = GST_FORMAT_TIME;
+      if (!(res = gst_pad_query_convert (dvdemux->sinkpad,
+                  GST_FORMAT_BYTES,
+                  dvdemux->stop_byte, &format, &dvdemux->stop_timestamp))) {
+        goto discont_error;
+      }
     }
 
     event = gst_event_new_newsegment (1.0, GST_FORMAT_TIME,
@@ -897,12 +900,10 @@ gst_dvdemux_flush (GstDVDemux * dvdemux)
     /* if we still have enough for a frame, start decoding */
     if (gst_adapter_available (dvdemux->adapter) >= length) {
 
-      data = gst_adapter_peek (dvdemux->adapter, length);
+      data = gst_adapter_take (dvdemux->adapter, length);
 
       /* and decode the data */
       ret = gst_dvdemux_demux_frame (dvdemux, data);
-
-      gst_adapter_flush (dvdemux->adapter, length);
 
       if (ret != GST_FLOW_OK)
         goto done;
