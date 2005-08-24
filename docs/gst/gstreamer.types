@@ -33,6 +33,11 @@ gst_tag_setter_get_type
 gst_task_get_type
 gst_type_find_factory_get_type
 gst_xml_get_type
+
+%registries
+
+#include <gst/registries/gstxmlregistry.h>
+
 gst_xml_registry_get_type
 
 % base classes
