@@ -116,8 +116,8 @@ gst_element_class_init (GstElementClass * klass)
   /**
    * GstElement::state-changed:
    * @gstelement: the object which received the signal
-   * @old_state: the GST_STATE_XXX before the change
-   * @new_state: the GST_STATE_XXX after the change
+   * @int:
+   * @int:
    *
    * the #GstElementState of the element has been changed
    */
@@ -128,7 +128,7 @@ gst_element_class_init (GstElementClass * klass)
   /**
    * GstElement::pad-added:
    * @gstelement: the object which received the signal
-   * @new_pad: the pad that has been added
+   * @object:
    *
    * a new #GstPad has been added to the element
    */
@@ -139,7 +139,7 @@ gst_element_class_init (GstElementClass * klass)
   /**
    * GstElement::pad-removed:
    * @gstelement: the object which received the signal
-   * @old_pad: the pad that has been removed
+   * @object:
    *
    * a #GstPad has been removed from the element
    */
@@ -151,7 +151,7 @@ gst_element_class_init (GstElementClass * klass)
    * GstElement::no-more-pads:
    * @gstelement: the object which received the signal
    *
-   * This signals that the element will not generate more dynamic pads.
+   * ?
    */
   gst_element_signals[NO_MORE_PADS] =
       g_signal_new ("no-more-pads", G_TYPE_FROM_CLASS (klass),
@@ -1140,13 +1140,10 @@ gst_element_send_event (GstElement * element, GstEvent * event)
 /**
  * gst_element_seek:
  * @element: a #GstElement to send the event to.
- * @rate: the rate of the seek
- * @format: the #GstFormat to use for seeking (GST_FORMAT_*).
- * @flags: the flags to use for seeking (GST_SEEK_FLAG_*).
- * @cur_type: the #GstSeekType for the start offset
- * @cur: the start offset to seek to (in the given seek_format).
- * @stop_type:  the #GstSeekType for the end offset
- * @stop: the end offset to seek to (in the given seek_format).
+ * @seek_method: the method to use for seeking (GST_SEEK_METHOD_*).
+ * @seek_format: the #GstFormat to use for seeking (GST_FORMAT_*).
+ * @seek_flags: the flags to use for seeking (GST_SEEK_FLAG_*).
+ * @offset: the offset to seek to (in the given seek_format).
  *
  * Sends a seek event to an element.
  *
@@ -1768,7 +1765,6 @@ gst_element_set_state (GstElement * element, GstElementState state)
   GstElementState pending;
   GTimeVal tv;
 
-  g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
 
   /* get current element state,  need to call the method so that
    * we call the virtual method and subclasses can implement their
@@ -1782,7 +1778,6 @@ gst_element_set_state (GstElement * element, GstElementState state)
   GST_STATE_FINAL (element) = state;
   if (ret == GST_STATE_ASYNC) {
     gst_element_commit_state (element);
-    gst_element_lost_state (element);
   }
 
   /* start with the current state */
@@ -1892,8 +1887,6 @@ activate_pads (GstPad * pad, GValue * ret, gboolean * active)
 {
   if (!gst_pad_set_active (pad, *active))
     g_value_set_boolean (ret, FALSE);
-  else if (!*active)
-    gst_pad_set_caps (pad, NULL);
 
   gst_object_unref (pad);
   return TRUE;
@@ -2127,6 +2120,10 @@ gst_element_save_thyself (GstObject * object, xmlNodePtr parent)
         (xmlChar *) GST_PLUGIN_FEATURE (factory)->name);
   }
 
+/* FIXME: what is this? */
+/*  if (element->manager) */
+/*    xmlNewChild(parent, NULL, "manager", GST_ELEMENT_NAME(element->manager)); */
+
   /* params */
   specs = g_object_class_list_properties (G_OBJECT_GET_CLASS (object), &nspecs);
 
@@ -2158,6 +2155,8 @@ gst_element_save_thyself (GstObject * object, xmlNodePtr parent)
       g_value_unset (&value);
     }
   }
+
+  g_free (specs);
 
   pads = GST_ELEMENT_PADS (element);
 

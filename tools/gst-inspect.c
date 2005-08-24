@@ -489,6 +489,8 @@ print_element_properties_info (GstElement * element)
   }
   if (num_properties == 0)
     n_print ("  none\n");
+
+  g_free (property_specs);
 }
 
 static void

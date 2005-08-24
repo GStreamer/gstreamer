@@ -1,3 +1,13 @@
+2005-08-24  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstelement.c: (gst_element_class_init),
+	(gst_element_set_state), (activate_pads),
+	(gst_element_save_thyself):
+	* tools/gst-compprep.c: (main):
+	* tools/gst-inspect.c: (print_element_properties_info):
+	* tools/gst-xmlinspect.c: (print_element_properties):
+	  Fixed long standing mem-leak
+
 2005-08-24  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* check/gst/gstbin.c: (GST_START_TEST):
