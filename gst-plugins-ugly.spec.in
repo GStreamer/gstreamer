@@ -223,7 +223,7 @@ Group:          Applications/Multimedia
                                                                                 
 @USE_FAAD_TRUE@BuildRequires:  faad2-devel >= 2.0
 # @USE_GSM_TRUE@BuildRequires:  gsm-devel >= 1.0.10
-# @USE_LAME_TRUE@BuildRequires:  lame-devel >= 3.89
+@USE_LAME_TRUE@BuildRequires:  lame-devel >= 3.89
 @USE_MAD_TRUE@BuildRequires:  libid3tag-devel >= 0.15.0
 @USE_MAD_TRUE@BuildRequires:  libmad-devel >= 0.15.0
                                                                                 
@@ -233,7 +233,7 @@ Requires(post): %{_bindir}/gst-register-%{majorminor}
                                                                                 
 @USE_FAAD_TRUE@Provides:      gstreamer-faad = %{version}-%{release}
 # @USE_GSM_TRUE@Provides:       gstreamer-gsm = %{version}-%{release}
-# @USE_LAME_TRUE@Provides:      gstreamer-lame = %{version}-%{release}
+@USE_LAME_TRUE@Provides:      gstreamer-lame = %{version}-%{release}
 @USE_MAD_TRUE@Provides:       gstreamer-mad = %{version}-%{release}
                                                                                 
 %description extra-audio
@@ -252,7 +252,7 @@ This package contains extra audio plugins for GStreamer, including
 %defattr(-, root, root, -)
 @USE_FAAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaad.so
 # @USE_GSM_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgsm.so
-# @USE_LAME_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstlame.so
+@USE_LAME_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstlame.so
 @USE_MAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmad.so
 
 %package extra-dvd
