@@ -126,10 +126,11 @@ static void gst_video_box_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstCaps *gst_video_box_transform_caps (GstBaseTransform * trans,
-    GstPad * pad, GstCaps * from);
+    GstPadDirection direction, GstCaps * from);
 static gboolean gst_video_box_set_caps (GstBaseTransform * trans,
     GstCaps * in, GstCaps * out);
-static guint gst_video_box_get_size (GstBaseTransform * trans, GstCaps * caps);
+static gboolean gst_video_box_get_unit_size (GstBaseTransform * trans,
+    GstCaps * caps, guint * size);
 static GstFlowReturn gst_video_box_transform (GstBaseTransform * trans,
     GstBuffer * in, GstBuffer * out);
 
@@ -209,7 +210,7 @@ gst_video_box_class_init (GstVideoBoxClass * klass)
 
   trans_class->transform_caps = gst_video_box_transform_caps;
   trans_class->set_caps = gst_video_box_set_caps;
-  trans_class->get_size = gst_video_box_get_size;
+  trans_class->get_unit_size = gst_video_box_get_unit_size;
   trans_class->transform = gst_video_box_transform;
 }
 
@@ -325,17 +326,17 @@ gst_video_box_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static GstCaps *
-gst_video_box_transform_caps (GstBaseTransform * trans, GstPad * pad,
-    GstCaps * from)
+gst_video_box_transform_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * from)
 {
   GstVideoBox *video_box;
   GstCaps *to;
   GstStructure *structure;
-  gint direction, i, tmp;
+  gint dir, i, tmp;
 
   video_box = GST_VIDEO_BOX (trans);
   to = gst_caps_copy (from);
-  direction = (pad == trans->sinkpad) ? -1 : 1;
+  dir = (direction == GST_PAD_SINK) ? -1 : 1;
 
   /* FIXME, include AYUV */
   for (i = 0; i < gst_caps_get_size (to); i++) {
@@ -390,25 +391,26 @@ gst_video_box_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 
 #define GST_VIDEO_I420_SIZE(w,h)     (GST_VIDEO_I420_V_OFFSET(w,h)+(GST_VIDEO_I420_V_ROWSTRIDE(w)*ROUND_UP_2(h)/2))
 
-static guint
-gst_video_box_get_size (GstBaseTransform * trans, GstCaps * caps)
+static gboolean
+gst_video_box_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
+    guint * size)
 {
-  guint size = -1;
   GstVideoBox *video_box;
 
+  g_return_val_if_fail (size, FALSE);
   video_box = GST_VIDEO_BOX (trans);
 
   if (gst_caps_is_equal (caps, GST_PAD_CAPS (trans->sinkpad))) {
-    size = GST_VIDEO_I420_SIZE (video_box->in_width, video_box->in_height);
+    *size = GST_VIDEO_I420_SIZE (video_box->in_width, video_box->in_height);
   } else if (gst_caps_is_equal (caps, GST_PAD_CAPS (trans->srcpad))) {
     if (video_box->use_alpha) {
-      size = video_box->out_height * video_box->out_height * 4;
+      *size = video_box->out_height * video_box->out_height * 4;
     } else {
-      size = GST_VIDEO_I420_SIZE (video_box->out_width, video_box->out_height);
+      *size = GST_VIDEO_I420_SIZE (video_box->out_width, video_box->out_height);
     }
   }
 
-  return size;
+  return TRUE;
 }
 
 static int yuv_colors_Y[] = { 16, 150, 29 };
