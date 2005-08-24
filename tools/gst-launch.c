@@ -431,7 +431,9 @@ event_loop (GstElement * pipeline, gboolean blocking)
         gchar *debug;
 
         gst_message_parse_error (message, &gerror, &debug);
-        gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
+        if (GST_IS_OBJECT (GST_MESSAGE_SRC (message)))
+          gst_object_default_error (GST_OBJECT (GST_MESSAGE_SRC (message)),
+              gerror, debug);
         gst_message_unref (message);
         if (gerror)
           g_error_free (gerror);
@@ -444,7 +446,7 @@ event_loop (GstElement * pipeline, gboolean blocking)
 
         gst_message_parse_state_changed (message, &old, &new);
         if (!(old == GST_STATE_PLAYING && new == GST_STATE_PAUSED &&
-                GST_MESSAGE_SRC (message) == GST_OBJECT (pipeline))) {
+                GST_MESSAGE_SRC (message) == G_OBJECT (pipeline))) {
           gst_message_unref (message);
           break;
         }

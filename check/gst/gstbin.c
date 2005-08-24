@@ -170,7 +170,7 @@ GST_START_TEST (test_message_state_changed_child)
       == GST_MESSAGE_STATE_CHANGED, "did not get GST_MESSAGE_STATE_CHANGED");
 
   message = gst_bus_pop (bus);
-  fail_unless (message->src == GST_OBJECT (src));
+  fail_unless (GST_MESSAGE_SRC (message) == G_OBJECT (src));
   gst_message_unref (message);
 
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
@@ -181,7 +181,7 @@ GST_START_TEST (test_message_state_changed_child)
       == GST_MESSAGE_STATE_CHANGED, "did not get GST_MESSAGE_STATE_CHANGED");
 
   message = gst_bus_pop (bus);
-  fail_unless (message->src == GST_OBJECT (bin));
+  fail_unless (GST_MESSAGE_SRC (message) == G_OBJECT (bin));
   gst_message_unref (message);
 
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);

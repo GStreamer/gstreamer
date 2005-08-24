@@ -1539,7 +1539,13 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
 
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_EOS:{
-      gchar *name = gst_object_get_name (GST_MESSAGE_SRC (message));
+      GObject *src = GST_MESSAGE_SRC (message);
+      gchar *name;
+
+      if (src && GST_IS_OBJECT (src))
+        name = gst_object_get_name (GST_OBJECT (src));
+      else
+        name = g_strdup ("(null)");
 
       GST_DEBUG_OBJECT (bin, "got EOS message from %s", name);
       g_free (name);

@@ -108,7 +108,7 @@ struct _GstMessage
   /*< public > *//* with COW */
   GstMessageType type;
   guint64 timestamp;
-  GstObject *src;
+  GObject *src;
 
   GstStructure *structure;
   
@@ -143,7 +143,7 @@ GstMessage *	gst_message_new_state_changed 	(GstObject * src, GstElementState ol
 GstMessage *	gst_message_new_segment_start 	(GstObject * src, GstClockTime timestamp);
 GstMessage *	gst_message_new_segment_done 	(GstObject * src, GstClockTime timestamp);
 GstMessage *	gst_message_new_custom 		(GstMessageType type,
-						 GstObject    * src,
+						 GObject      * src,
 						 GstStructure * structure);
 #define		gst_message_new_application(src, str) \
   gst_message_new_custom (GST_MESSAGE_APPLICATION, src, str)
