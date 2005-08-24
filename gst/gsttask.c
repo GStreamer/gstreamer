@@ -25,6 +25,9 @@
 #include "gstinfo.h"
 #include "gsttask.h"
 
+GST_DEBUG_CATEGORY (task_debug);
+#define GST_CAT_DEFAULT (task_debug)
+
 static void gst_task_class_init (GstTaskClass * klass);
 static void gst_task_init (GstTask * task);
 static void gst_task_finalize (GObject * object);
@@ -32,6 +35,8 @@ static void gst_task_finalize (GObject * object);
 static void gst_task_func (GstTask * task, GstTaskClass * tclass);
 
 static GstObjectClass *parent_class = NULL;
+
+static GStaticMutex pool_lock = G_STATIC_MUTEX_INIT;
 
 GType
 gst_task_get_type (void)
@@ -54,6 +59,8 @@ gst_task_get_type (void)
 
     _gst_task_type =
         g_type_register_static (GST_TYPE_OBJECT, "GstTask", &task_info, 0);
+
+    GST_DEBUG_CATEGORY_INIT (task_debug, "task", 0, "Processing tasks");
   }
   return _gst_task_type;
 }
@@ -76,6 +83,7 @@ gst_task_class_init (GstTaskClass * klass)
 static void
 gst_task_init (GstTask * task)
 {
+  task->running = FALSE;
   task->lock = NULL;
   task->cond = g_cond_new ();
   task->state = GST_TASK_STOPPED;
@@ -97,16 +105,28 @@ gst_task_finalize (GObject * object)
 static void
 gst_task_func (GstTask * task, GstTaskClass * tclass)
 {
+  GStaticRecMutex *lock;
+
   GST_DEBUG ("Entering task %p, thread %p", task, g_thread_self ());
 
+  /* we have to grab the lock to get the mutex. We also
+   * mark our state running so that nobody can mess with
+   * the mutex. */
+  GST_LOCK (task);
+  if (task->state == GST_TASK_STOPPED)
+    goto exit;
+  lock = GST_TASK_GET_LOCK (task);
+  task->running = TRUE;
+  GST_UNLOCK (task);
+
   /* locking order is TASK_LOCK, LOCK */
-  GST_TASK_LOCK (task);
+  g_static_rec_mutex_lock (lock);
   GST_LOCK (task);
   while (G_LIKELY (task->state != GST_TASK_STOPPED)) {
     while (G_UNLIKELY (task->state == GST_TASK_PAUSED)) {
       gint t;
 
-      t = GST_TASK_UNLOCK_FULL (task);
+      t = g_static_rec_mutex_unlock_full (lock);
       if (t <= 0) {
         g_warning ("wrong STREAM_LOCK count %d", t);
       }
@@ -115,7 +135,7 @@ gst_task_func (GstTask * task, GstTaskClass * tclass)
       GST_UNLOCK (task);
       /* locking order.. */
       if (t > 0)
-        GST_TASK_LOCK_FULL (task, t);
+        g_static_rec_mutex_lock_full (lock, t);
 
       GST_LOCK (task);
       if (task->state == GST_TASK_STOPPED)
@@ -129,11 +149,47 @@ gst_task_func (GstTask * task, GstTaskClass * tclass)
   }
 done:
   GST_UNLOCK (task);
-  GST_TASK_UNLOCK (task);
+  g_static_rec_mutex_unlock (lock);
+
+  /* now we allow messing with the lock again */
+  GST_LOCK (task);
+  task->running = FALSE;
+exit:
+  GST_TASK_SIGNAL (task);
+  GST_UNLOCK (task);
 
   GST_DEBUG ("Exit task %p, thread %p", task, g_thread_self ());
 
   gst_object_unref (task);
+}
+
+/**
+ * gst_task_cleanup_all:
+ *
+ * Wait for all tasks to be stopped. This is mainly used internally
+ * to ensure proper cleanup of internal datastructures in testsuites.
+ *
+ * MT safe.
+ */
+void
+gst_task_cleanup_all (void)
+{
+  GstTaskClass *klass;
+
+  if ((klass = g_type_class_peek (GST_TYPE_TASK))) {
+    g_static_mutex_lock (&pool_lock);
+    if (klass->pool) {
+      /* Shut down all the threads, we still process the ones scheduled
+       * because the unref happens in the thread function.
+       * Also wait for currently running ones to finish. */
+      g_thread_pool_free (klass->pool, FALSE, TRUE);
+      /* create new pool, so we can still do something after this
+       * call. */
+      klass->pool = g_thread_pool_new (
+          (GFunc) gst_task_func, klass, -1, FALSE, NULL);
+    }
+    g_static_mutex_unlock (&pool_lock);
+  }
 }
 
 /**
@@ -176,8 +232,19 @@ void
 gst_task_set_lock (GstTask * task, GStaticRecMutex * mutex)
 {
   GST_LOCK (task);
-  task->lock = mutex;
+  if (task->running)
+    goto is_running;
+  GST_TASK_GET_LOCK (task) = mutex;
   GST_UNLOCK (task);
+
+  return;
+
+  /* ERRORS */
+is_running:
+  {
+    g_warning ("cannot call set_lock on a running task");
+    GST_UNLOCK (task);
+  }
 }
 
 
@@ -218,39 +285,51 @@ gst_task_get_state (GstTask * task)
 gboolean
 gst_task_start (GstTask * task)
 {
-  GstTaskClass *tclass;
   GstTaskState old;
-  GStaticRecMutex *lock;
 
   g_return_val_if_fail (GST_IS_TASK (task), FALSE);
-
-  tclass = GST_TASK_GET_CLASS (task);
 
   GST_DEBUG_OBJECT (task, "Starting task %p", task);
 
   GST_LOCK (task);
-  if (G_UNLIKELY (GST_TASK_GET_LOCK (task) == NULL)) {
-    lock = g_new (GStaticRecMutex, 1);
-    g_static_rec_mutex_init (lock);
-    GST_TASK_GET_LOCK (task) = lock;
-  }
+  if (G_UNLIKELY (GST_TASK_GET_LOCK (task) == NULL))
+    goto no_lock;
 
   old = task->state;
   task->state = GST_TASK_STARTED;
   switch (old) {
     case GST_TASK_STOPPED:
+    {
+      GstTaskClass *tclass;
+
+      tclass = GST_TASK_GET_CLASS (task);
+
+      /* new task, push on threadpool. We ref before so
+       * that it remains alive while on the threadpool. */
       gst_object_ref (task);
+      g_static_mutex_lock (&pool_lock);
       g_thread_pool_push (tclass->pool, task, NULL);
+      g_static_mutex_unlock (&pool_lock);
       break;
+    }
     case GST_TASK_PAUSED:
+      /* PAUSE to PLAY, signal */
       GST_TASK_SIGNAL (task);
       break;
     case GST_TASK_STARTED:
+      /* was OK */
       break;
   }
   GST_UNLOCK (task);
 
   return TRUE;
+
+  /* ERRORS */
+no_lock:
+  {
+    g_warning ("starting task without a lock");
+    return FALSE;
+  }
 }
 
 /**
@@ -305,12 +384,9 @@ gst_task_stop (GstTask * task)
 gboolean
 gst_task_pause (GstTask * task)
 {
-  GstTaskClass *tclass;
   GstTaskState old;
 
   g_return_val_if_fail (GST_IS_TASK (task), FALSE);
-
-  tclass = GST_TASK_GET_CLASS (task);
 
   GST_DEBUG_OBJECT (task, "Pausing task %p", task);
 
@@ -319,14 +395,54 @@ gst_task_pause (GstTask * task)
   task->state = GST_TASK_PAUSED;
   switch (old) {
     case GST_TASK_STOPPED:
+    {
+      GstTaskClass *tclass;
+
+      tclass = GST_TASK_GET_CLASS (task);
+
       gst_object_ref (task);
+      g_static_mutex_lock (&pool_lock);
       g_thread_pool_push (tclass->pool, task, NULL);
+      g_static_mutex_unlock (&pool_lock);
       break;
+    }
     case GST_TASK_PAUSED:
       break;
     case GST_TASK_STARTED:
       break;
   }
+  GST_UNLOCK (task);
+
+  return TRUE;
+}
+
+/**
+ * gst_task_join:
+ * @task: The #GstTask to join
+ *
+ * Joins @task. After this call, it is safe to unref the task
+ * and clean up the lock set with #gst_task_set_lock().
+ *
+ * The task will automatically be stopped with this call.
+ *
+ * This function cannot be called from within a task function.
+ *
+ * Returns: TRUE if the task could be joined.
+ *
+ * MT safe.
+ */
+gboolean
+gst_task_join (GstTask * task)
+{
+  g_return_val_if_fail (GST_IS_TASK (task), FALSE);
+
+  GST_DEBUG_OBJECT (task, "Joining task %p", task);
+
+  GST_LOCK (task);
+  task->state = GST_TASK_STOPPED;
+  GST_TASK_SIGNAL (task);
+  while (task->running)
+    GST_TASK_WAIT (task);
   GST_UNLOCK (task);
 
   return TRUE;

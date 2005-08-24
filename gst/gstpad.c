@@ -295,6 +295,14 @@ static void
 gst_pad_finalize (GObject * object)
 {
   GstPad *pad = GST_PAD (object);
+  GstTask *task;
+
+  /* in case the task is still around, clean it up */
+  if ((task = GST_PAD_TASK (pad))) {
+    gst_task_join (task);
+    GST_PAD_TASK (pad) = NULL;
+    gst_object_unref (task);
+  }
 
   if (pad->stream_rec_lock) {
     g_static_rec_mutex_free (pad->stream_rec_lock);
@@ -1878,8 +1886,8 @@ gst_pad_default_fixate (GQuark field_id, const GValue * value, gpointer data)
  * @pad: a  #GstPad to fixate
  * @caps: the  #GstCaps to fixate
  *
- * Fixate a caps on the given pad. Modifies the caps in place, so you should be
- * that the caps are actually writable (see gst_caps_make_writable()).
+ * Fixate a caps on the given pad. Modifies the caps in place, so you should
+ * make sure that the caps are actually writable (see gst_caps_make_writable()).
  */
 void
 gst_pad_fixate_caps (GstPad * pad, GstCaps * caps)
@@ -3759,7 +3767,11 @@ no_task:
  * @pad: the #GstPad to stop the task of
  *
  * Stop the task of @pad. This function will also make sure that the 
- * function executed by the task will effectively stop.
+ * function executed by the task will effectively stop if not called
+ * from the GstTaskFunction.
+ *
+ * This function will deadlock if called from the GstTaskFunction of
+ * the task. Use #gst_task_pause() instead.
  *
  * Returns: a TRUE if the task could be stopped or FALSE when the pad
  * has no task.
@@ -3781,6 +3793,8 @@ gst_pad_stop_task (GstPad * pad)
 
   GST_STREAM_LOCK (pad);
   GST_STREAM_UNLOCK (pad);
+
+  gst_task_join (task);
 
   gst_object_unref (task);
 

@@ -927,25 +927,27 @@ gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
 static gboolean
 gst_queue_sink_activate_push (GstPad * pad, gboolean active)
 {
-  gboolean result = FALSE;
+  gboolean result = TRUE;
   GstQueue *queue;
 
   queue = GST_QUEUE (gst_pad_get_parent (pad));
 
   if (active) {
+    GST_QUEUE_MUTEX_LOCK (queue);
     queue->srcresult = GST_FLOW_OK;
-    result = TRUE;
+    GST_QUEUE_MUTEX_UNLOCK (queue);
   } else {
-    /* step 1, unblock chain and loop functions */
+    /* step 1, unblock chain function */
     GST_QUEUE_MUTEX_LOCK (queue);
     queue->srcresult = GST_FLOW_WRONG_STATE;
     gst_queue_locked_flush (queue);
-    g_cond_signal (queue->item_del);
     GST_QUEUE_MUTEX_UNLOCK (queue);
 
-    /* step 2, make sure streaming finishes */
-    result = gst_pad_stop_task (pad);
+    /* and make sure the chain function finishes */
+    GST_STREAM_LOCK (pad);
+    GST_STREAM_UNLOCK (pad);
   }
+
   gst_object_unref (queue);
 
   return result;
@@ -971,9 +973,10 @@ gst_queue_src_activate_push (GstPad * pad, gboolean active)
     }
     GST_QUEUE_MUTEX_UNLOCK (queue);
   } else {
-    /* step 1, unblock chain and loop functions */
+    /* step 1, unblock loop function */
     GST_QUEUE_MUTEX_LOCK (queue);
     queue->srcresult = GST_FLOW_WRONG_STATE;
+    /* the item add signal will unblock */
     g_cond_signal (queue->item_add);
     GST_QUEUE_MUTEX_UNLOCK (queue);
 

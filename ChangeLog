@@ -1,5 +1,34 @@
 2005-08-24  Wim Taymans  <wim@fluendo.com>
 
+	* check/generic/states.c: (GST_START_TEST):
+	Make sure all tasks are stopped.
+
+	* check/gst/gstbin.c: (GST_START_TEST):
+	Unref after usage for proper valgrinding.
+
+	* gst/gstpad.c: (gst_pad_finalize), (gst_pad_stop_task):
+	Really wait for the task to stop before destroying the
+	mutex.
+
+	* gst/gstqueue.c: (gst_queue_sink_activate_push),
+	(gst_queue_src_activate_push):
+	Small cleanups. Don't stop the task when we did not start
+	it.
+
+	* gst/gsttask.c: (gst_task_get_type), (gst_task_init),
+	(gst_task_func), (gst_task_cleanup_all), (gst_task_set_lock),
+	(gst_task_get_state), (gst_task_start), (gst_task_pause),
+	(gst_task_join):
+	* gst/gsttask.h:
+	Protect the stream lock with the object lock.
+	Disallow setting the stream lock when running.
+	Add cleanup_all to wait for the threadpool to finish.
+	Remove code to autoallocate a mutex if none was provided.
+	Add _join() to wait for a task to stop.
+	Protect the thread pool with a global lock.
+
+2005-08-24  Wim Taymans  <wim@fluendo.com>
+
 	* gst/base/gstbasesink.c: (gst_base_sink_handle_object),
 	(gst_base_sink_get_times), (gst_base_sink_do_sync),
 	(gst_base_sink_handle_buffer), (gst_base_sink_change_state):

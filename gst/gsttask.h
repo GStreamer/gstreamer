@@ -55,10 +55,6 @@ typedef enum {
 #define GST_TASK_BROADCAST(task)	g_cond_breadcast(GST_TASK_GET_COND (task))
 
 #define GST_TASK_GET_LOCK(task)		(GST_TASK_CAST(task)->lock)
-#define GST_TASK_LOCK(task)		g_static_rec_mutex_lock(GST_TASK_GET_LOCK(task))
-#define GST_TASK_UNLOCK(task)		g_static_rec_mutex_unlock(GST_TASK_GET_LOCK(task))
-#define GST_TASK_UNLOCK_FULL(task)	g_static_rec_mutex_unlock_full(GST_TASK_GET_LOCK(task))
-#define GST_TASK_LOCK_FULL(task,t)	g_static_rec_mutex_lock_full(GST_TASK_GET_LOCK(task),(t))
 
 struct _GstTask {
   GstObject      object;
@@ -69,8 +65,10 @@ struct _GstTask {
 
   GStaticRecMutex *lock;
 
-  GstTaskFunction func;
-  gpointer 	 data;
+  GstTaskFunction  func;
+  gpointer 	   data;
+
+  gboolean	   running;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -86,6 +84,8 @@ struct _GstTaskClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+void		gst_task_cleanup_all	(void);
+
 GType           gst_task_get_type       (void);
 
 GstTask*	gst_task_create		(GstTaskFunction func, gpointer data);
@@ -96,6 +96,8 @@ GstTaskState	gst_task_get_state	(GstTask *task);
 gboolean	gst_task_start		(GstTask *task);
 gboolean	gst_task_stop		(GstTask *task);
 gboolean	gst_task_pause		(GstTask *task);
+
+gboolean	gst_task_join		(GstTask *task);
 
 G_END_DECLS
 

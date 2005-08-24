@@ -423,6 +423,10 @@ GST_START_TEST (test_add_linked)
   /* check if pads really are linked */
   fail_unless (gst_pad_is_linked (srcpad));
   fail_unless (gst_pad_is_linked (sinkpad));
+
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
+  gst_object_unref (pipeline);
 }
 
 GST_END_TEST;
