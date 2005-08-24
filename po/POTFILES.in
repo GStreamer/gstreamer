@@ -5,5 +5,4 @@ gst/avi/gstavimux.c
 sys/dxr3/dxr3audiosink.c
 sys/dxr3/dxr3audiosink.c
 sys/dxr3/dxr3videosink.c
-sys/oss/gstosselement.c
 sys/oss/gstossmixer.c

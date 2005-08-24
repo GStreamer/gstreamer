@@ -46,8 +46,8 @@ BuildRequires:  XFree86-devel
 @USE_ESD_TRUE@
 @USE_ESD_TRUE@Provides:		gstreamer-audiosrc
 @USE_ESD_TRUE@Provides:		gstreamer-audiosink
-# @USE_FLAC_TRUE@Requires:      flac >= 1.0.3
-# @USE_FLAC_TRUE@BuildRequires: flac-devel >= 1.0.3
+@USE_FLAC_TRUE@Requires:      flac >= 1.0.3
+@USE_FLAC_TRUE@BuildRequires: flac-devel >= 1.0.3
 @USE_GCONF_TRUE@Requires: 	GConf2
 @USE_GCONF_TRUE@BuildRequires: 	GConf2-devel
 # @USE_GNOME_VFS_TRUE@Requires:      gnome-vfs2 > 1.9.4.00
@@ -70,8 +70,8 @@ BuildRequires:  XFree86-devel
 # @USE_SDL_TRUE@#SDL-devel should require XFree86-devel because it links to it
 # @USE_SDL_TRUE@#only it doesn't seem to do that currently
 # @USE_SDL_TRUE@BuildRequires: 	XFree86-devel
-# @USE_SPEEX_TRUE@Requires:	speex
-# @USE_SPEEX_TRUE@BuildRequires:	libspeex-devel
+@USE_SPEEX_TRUE@Requires:	speex
+@USE_SPEEX_TRUE@BuildRequires:	libspeex-devel
 # @USE_SMOOTHWAVE_TRUE@Requires:	gtk2
 # @USE_SMOOTHWAVE_TRUE@BuildRequires:	gtk2-devel
 # @USE_VORBIS_TRUE@Requires:      libogg >= 1.0
@@ -151,7 +151,7 @@ rm -rf $RPM_BUILD_ROOT
 # @USE_CDPARANOIA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcdparanoia.so
 @USE_ESD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstesd.so
 # @USE_POLYP_TRUE@%{_libdir}/gstreamer-%{majorminor}/libpolypaudio.so
-# @USE_FLAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstflac.so
+@USE_FLAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstflac.so
 # @USE_HERMES_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsthermescolorspace.so
 # @USE_SMOOTHWAVE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsmoothwave.so
 @USE_JPEG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstjpeg.so
@@ -167,7 +167,7 @@ rm -rf $RPM_BUILD_ROOT
 # @USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsnapshot.so
 # @USE_PANGO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttextoverlay.so
 # @USE_PANGO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttimeoverlay.so
-# @USE_SPEEX_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstspeex.so
+@USE_SPEEX_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstspeex.so
 @USE_LIBCACA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcacasink.so
 # @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstximagesink.so
 # @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvimagesink.so
