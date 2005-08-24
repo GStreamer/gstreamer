@@ -236,6 +236,9 @@ guint64	 	gst_ring_buffer_samples_done	(GstRingBuffer *buf);
 
 void	 	gst_ring_buffer_set_sample	(GstRingBuffer *buf, guint64 sample);
 
+/* clear all segments */
+void		gst_ring_buffer_clear_all	(GstRingBuffer *buf);
+
 /* commit samples */
 guint 		gst_ring_buffer_commit 		(GstRingBuffer *buf, guint64 sample, 
 						 guchar *data, guint len);

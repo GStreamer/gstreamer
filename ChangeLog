@@ -1,3 +1,10 @@
+2005-08-24  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_set_sample),
+	(gst_ring_buffer_clear_all):
+	* gst-libs/gst/audio/gstringbuffer.h:
+	Added function to clear the ringbuffer.
+
 2005-08-24  Andy Wingo  <wingo@pobox.com>
 
 	* sys/v4l/gstv4lelement.c (gst_v4lelement_start) 

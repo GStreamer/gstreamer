@@ -822,8 +822,6 @@ gst_ring_buffer_samples_done (GstRingBuffer * buf)
 void
 gst_ring_buffer_set_sample (GstRingBuffer * buf, guint64 sample)
 {
-  gint i;
-
   g_return_if_fail (buf != NULL);
 
   if (sample == -1)
@@ -838,12 +836,32 @@ gst_ring_buffer_set_sample (GstRingBuffer * buf, guint64 sample)
   buf->segbase = buf->segdone - sample / buf->samples_per_seg;
   buf->next_sample = sample;
 
-  for (i = 0; i < buf->spec.segtotal; i++) {
-    gst_ring_buffer_clear (buf, i);
-  }
+  gst_ring_buffer_clear_all (buf);
 
   GST_DEBUG ("set sample to %llu, segbase %d", sample, buf->segbase);
 }
+
+/**
+ * gst_ring_buffer_clear_all:
+ * @buf: the #GstRingBuffer to clear
+ *
+ * Fill the ringbuffer with silence.
+ *
+ * MT safe.
+ */
+void
+gst_ring_buffer_clear_all (GstRingBuffer * buf)
+{
+  gint i;
+
+  g_return_if_fail (buf != NULL);
+  g_return_if_fail (buf->spec.segtotal > 0);
+
+  for (i = 0; i < buf->spec.segtotal; i++) {
+    gst_ring_buffer_clear (buf, i);
+  }
+}
+
 
 static gboolean
 wait_segment (GstRingBuffer * buf)
