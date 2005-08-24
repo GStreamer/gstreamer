@@ -1,3 +1,11 @@
+2005-08-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/extend/jukebox.py:
+	  use the source's set_volume method
+	  now we are releasing the correct request pad, good stuff.
+	* gst/extend/sources.py:
+	  add a set_volume and add a volume element internally
+
 2005-08-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/extend/jukebox.py:

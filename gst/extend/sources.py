@@ -48,17 +48,16 @@ class AudioSource(gst.Bin):
         self.filesrc = gst.element_factory_make("filesrc")
         self.filesrc.set_property("location", self.filename)
         self.dbin = gst.element_factory_make("decodebin")
-        self.ident = gst.element_factory_make("identity")
-        self.ident.set_property('silent', True)
         self.audioconvert = gst.element_factory_make("audioconvert")
         self.audioscale = gst.element_factory_make("audioscale")
+        self.volume = gst.element_factory_make("volume")
         
-        self.add_many(self.filesrc, self.dbin, self.ident,
-                      self.audioconvert, self.audioscale)
+        self.add_many(self.filesrc, self.dbin,
+                      self.audioconvert, self.audioscale, self.volume)
         self.filesrc.link(self.dbin)
         self.audioconvert.link(self.audioscale)
-        self.audioscale.link(self.ident, caps)
-        self.add_ghost_pad(self.ident.get_pad("src"), "src")
+        self.audioscale.link(self.volume, caps)
+        self.add_ghost_pad(self.volume.get_pad("src"), "src")
         
         self.dbin.connect("new-decoded-pad", self._new_decoded_pad_cb)
         self.dbin.connect("unknown-type", self._unknown_type_cb)
@@ -68,6 +67,10 @@ class AudioSource(gst.Bin):
     def __repr__(self):
         return "<AudioSource for %s>" % self.filename
         
+    def set_volume(self, volume):
+        gst.debug("setting volume to %f" % volume)
+        self.volume.set_property("volume", volume)
+
     def _new_decoded_pad_cb(self, dbin, pad, is_last):
         gst.debug("new decoded pad: pad %r" % pad)
         if not "audio" in pad.get_caps().to_string():
@@ -100,7 +103,12 @@ if __name__ == "__main__":
         print "Error: %s" % gerror
         main.quit()
         
-    source = AudioSource(sys.argv[1])
+    try:
+        source = AudioSource(sys.argv[1])
+    except IndexError:
+        sys.stderr.write("Please give a filename to play\n")
+        sys.exit(1)
+
     pipeline = gst.Pipeline("playing")
     # connecting on the source also catches eos emit when
     # no audio pad

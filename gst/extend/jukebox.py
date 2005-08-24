@@ -240,13 +240,9 @@ class Jukebox(gst.Bin):
         else:
             gst.debug('not going to go above 1.0 level')
 
-        volume = gst.element_factory_make('volume')
-        volume.set_property('volume', level)
-        self.add(volume)
-        source.link(volume)
-        volume.set_state(gst.STATE_PLAYING)
+        source.set_volume(level)
         
-        srcpad = volume.get_pad("src")
+        srcpad = source.get_pad("src")
         sinkpad = self._adder.get_request_pad("sink%d")
         gst.debug("Linking srcpad %r to adder pad %r using caps %r" % (
             srcpad, sinkpad, self._caps))
@@ -260,6 +256,7 @@ class Jukebox(gst.Bin):
         srcpad.unlink(sinkpad)
         self._adder.release_request_pad(sinkpad)
         source.set_state(gst.STATE_NULL)
+        gst.debug('%d pads left on adder' % len(self._adder.get_pad_list()))
 
         if len(self._adder.get_pad_list()) == 1:
             gst.debug('only a source pad left, so we are done')
@@ -290,7 +287,8 @@ if __name__ == "__main__":
     pipeline = gst.Pipeline('jukebox')
     list = open(sys.argv[1]).read().rstrip().split('\n')
     print list
-    source = Jukebox(list, random=True, loops=-1)
+    #source = Jukebox(list, random=True, loops=-1)
+    source = Jukebox(list, random=True, loops=1)
 
     def _error_cb(source, element, gerror, message):
         print "Error: %s" % gerror
