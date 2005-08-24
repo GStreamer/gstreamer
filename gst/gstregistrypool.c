@@ -3,7 +3,7 @@
  *                    2000 Wim Taymans <wtay@chello.be>
  *
  * gstregistry.c: handle registry
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -130,8 +130,8 @@ gst_registry_pool_load_all (void)
  * gst_registry_pool_plugin_list:
  *
  * Get a list of all plugins in the pool.
- * 
- * Returns: a GList of plugins, g_list_free after use.
+ *
+ * Returns: a newly allocated GList of #GstPlugin.
  */
 GList *
 gst_registry_pool_plugin_list (void)
@@ -146,10 +146,10 @@ gst_registry_pool_plugin_list (void)
  * @user_data: user data passed to the filter function
  *
  * Runs a filter against all plugins in all registries and returns a GList with
- * the results. If the first flag is set, only the first match is 
+ * the results. If the first flag is set, only the first match is
  * returned (as a list with a single object).
  *
- * Returns: a GList of plugins, g_list_free after use.
+ * Returns: a newly allocated GList of #GstPlugin.
  */
 GList *
 gst_registry_pool_plugin_filter (GstPluginFilter filter, gboolean first,
@@ -190,8 +190,8 @@ gst_registry_pool_plugin_filter (GstPluginFilter filter, gboolean first,
  * @type: the type of the features to list.
  *
  * Get a list of all pluginfeatures of the given type in the pool.
- * 
- * Returns: a GList of pluginfeatures, g_list_free after use.
+ *
+ * Returns: a newly allocated #GList of #GstPluginFeature.
  */
 GList *
 gst_registry_pool_feature_list (GType type)

@@ -125,6 +125,9 @@ gboolean		 gst_caps_is_subset				(const GstCaps *subset,
 									 const GstCaps *superset);
 gboolean		 gst_caps_is_equal				(const GstCaps *caps1,
 									 const GstCaps *caps2);
+gboolean		gst_caps_is_equal_fixed				(const GstCaps * caps1,
+									 const GstCaps * caps2);
+
 
 /* operations */
 GstCaps *                gst_caps_intersect                             (const GstCaps *caps1,

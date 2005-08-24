@@ -180,15 +180,15 @@ GST_START_TEST (test_livesrc_sink)
   fail_unless (pending == GST_STATE_VOID_PENDING, "not playing");
 }
 
-GST_END_TEST
+GST_END_TEST;
+
+
 /* test: try changing state of sinks */
-    Suite * gst_object_suite (void)
+Suite *
+gst_object_suite (void)
 {
   Suite *s = suite_create ("Sinks");
   TCase *tc_chain = tcase_create ("general");
-
-  /* turn off timeout */
-  tcase_set_timeout (tc_chain, 60);
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_sink);

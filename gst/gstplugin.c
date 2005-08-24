@@ -701,7 +701,7 @@ gst_plugin_is_loaded (GstPlugin * plugin)
  * @user_data: user data passed to the filter function
  *
  * Runs a filter against all plugin features and returns a GList with
- * the results. If the first flag is set, only the first match is 
+ * the results. If the first flag is set, only the first match is
  * returned (as a list with a single object).
  *
  * Returns: a GList of features, g_list_free after use.
@@ -740,15 +740,15 @@ _feature_filter (GstPlugin * plugin, gpointer user_data)
 }
 
 /**
- * gst_plugin_list_feature_list:
- * @list: a list of plugins to query
- * @filter: the filter to use
+ * gst_plugin_list_feature_filter:
+ * @list: a #GList of plugins to query
+ * @filter: the filter function to use
  * @first: only return first match
  * @user_data: user data passed to the filter function
  *
  * Runs a filter against all plugin features of the plugins in the given
- * list and returns a GList with the results. 
- * If the first flag is set, only the first match is 
+ * list and returns a GList with the results.
+ * If the first flag is set, only the first match is
  * returned (as a list with a single object).
  *
  * Returns: a GList of features, g_list_free after use.
