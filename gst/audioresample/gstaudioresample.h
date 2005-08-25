@@ -52,7 +52,7 @@ struct _GstAudioresample {
 
   gboolean passthru;
 
-  gint64 offset;
+  guint64 offset;
   int channels;
 
   int i_rate;

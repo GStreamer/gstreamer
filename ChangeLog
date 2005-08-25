@@ -1,6 +1,19 @@
 2005-08-25  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:
+	* check/elements/audioconvert.c: (setup_audioconvert),
+	(cleanup_audioconvert), (get_int_caps), (verify_convert),
+	(GST_START_TEST), (audioconvert_suite), (main):
+	  add a test for audioconvert
+	* gst/audioresample/gstaudioresample.c:
+	* gst/audioresample/gstaudioresample.h:
+	  set DURATION so that TIMESTAMP(a) + DURATION(a) == TIMESTAMP(b);
+	  note that for buffers of 1/3 sec this means DURATION(c) is 
+	  one nanosecond more than for a and b
+
+2005-08-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
 	* check/elements/audioresample.c: (setup_audioresample),
 	(cleanup_audioresample), (fail_unless_perfect_stream),
 	(test_perfect_stream_instance), (GST_START_TEST),

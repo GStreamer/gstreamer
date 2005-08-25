@@ -29,13 +29,14 @@ check_vorbis =
 endif
 
 check_PROGRAMS = \
+	elements/audioconvert \
+	elements/audioresample \
 	elements/volume \
 	$(check_vorbis)
 
 # these tests don't even pass
 # generic/states: elements need state fixin' before this can be added
 noinst_PROGRAMS = \
-	elements/audioresample \
 	generic/states
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS)
