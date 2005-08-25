@@ -52,16 +52,12 @@ check_PROGRAMS =				\
 	gst/gstvalue				\
 	elements/fakesrc			\
 	elements/identity			\
+	generic/states				\
 	pipelines/simple_launch_lines		\
 	pipelines/cleanup			\
 	states/sinks				\
 	gst-libs/controller			\
 	gst-libs/gdp
-
-# these really need fixing
-# generic/states generates segfaults and wrong unrefs on slaves
-noinst_PROGRAMS =				\
-	generic/states
 
 TESTS = $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@	\
 	$(check_PROGRAMS)
@@ -87,7 +83,6 @@ gst_libs_controller_LDADD = $(GST_OBJ_LIBS) \
 # valgrind testing
 # these just need valgrind fixing, period
 TESTS_TO_FIX =					\
-	generic/states				\
 	gst-libs/controller			\
 	pipelines/cleanup			\
 	pipelines/simple_launch_lines
