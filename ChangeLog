@@ -1,3 +1,10 @@
+2005-08-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/base/gstbasetransform.h:
+	  comment
+	* gst/gstpad.c:
+	  add to docs
+
 2005-08-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (bin_bus_handler):

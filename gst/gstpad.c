@@ -1730,10 +1730,14 @@ done:
  * gst_pad_get_caps:
  * @pad: a  #GstPad to get the capabilities of.
  *
- * Gets the capabilities of this pad.
+ * Gets the capabilities this pad can produce or consume.
+ * Note that this method doesn't necessarily returns the caps set by
+ * #gst_pad_set_caps - use #GST_PAD_CAPS for that instead.
+ * gst_pad_get_caps returns all possible caps a pad can operate with, using
+ * the pad's get_caps function;
+ * this returns the pad template caps if not explicitly set.
  *
- * Returns: the #GstCaps of this pad. This function returns a new caps, so use
- * gst_caps_unref to get rid of it.
+ * Returns: a newly allocated copy of the #GstCaps of this pad.
  *
  * MT safe.
  */

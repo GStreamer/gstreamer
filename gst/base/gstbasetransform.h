@@ -109,7 +109,9 @@ struct _GstBaseTransformClass {
   gboolean      (*event)        (GstBaseTransform *trans, GstEvent *event);
 
   /* transform one incoming buffer to one outgoing buffer.
-   * Always needs to be implemented. */
+   * Always needs to be implemented.
+   * transform function is allowed to change size/timestamp/duration of
+   * the outgoing buffer. */
   GstFlowReturn (*transform)    (GstBaseTransform *trans, GstBuffer *inbuf,
                                  GstBuffer *outbuf);
 
