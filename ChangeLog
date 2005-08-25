@@ -1,3 +1,17 @@
+2005-08-25  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* check/gst/gstbin.c: (GST_START_TEST):
+	* gst/gstbin.c: (bin_bus_handler):
+	* gst/gstmessage.c: (gst_message_finalize), (_gst_message_copy),
+	(gst_message_new), (gst_message_new_eos), (gst_message_new_error),
+	(gst_message_new_warning), (gst_message_new_tag),
+	(gst_message_new_state_changed), (gst_message_new_segment_start),
+	(gst_message_new_segment_done), (gst_message_new_custom):
+	* gst/gstmessage.h:
+	* tools/gst-launch.c: (event_loop):
+	* tools/gst-md5sum.c: (event_loop):
+	  Revert unpopular change for GST_MESSAGE_SRC to GObject.
+
 2005-08-25  Wim Taymans  <wim@fluendo.com>
 
 	* check/generic/states.c: (GST_START_TEST):

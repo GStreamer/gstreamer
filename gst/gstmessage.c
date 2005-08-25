@@ -105,10 +105,7 @@ gst_message_finalize (GstMessage * message)
   GST_CAT_INFO (GST_CAT_MESSAGE, "finalize message %p", message);
 
   if (GST_MESSAGE_SRC (message)) {
-    if (GST_IS_OBJECT (GST_MESSAGE_SRC (message)))
-      gst_object_unref (GST_OBJECT (GST_MESSAGE_SRC (message)));
-    else
-      g_object_unref (GST_MESSAGE_SRC (message));
+    gst_object_unref (GST_MESSAGE_SRC (message));
     GST_MESSAGE_SRC (message) = NULL;
   }
 
@@ -142,11 +139,7 @@ _gst_message_copy (GstMessage * message)
   GST_MESSAGE_TIMESTAMP (copy) = GST_MESSAGE_TIMESTAMP (message);
 
   if (GST_MESSAGE_SRC (message)) {
-    if (GST_IS_OBJECT (GST_MESSAGE_SRC (message)))
-      GST_MESSAGE_SRC (copy) =
-          gst_object_ref (GST_OBJECT (GST_MESSAGE_SRC (message)));
-    else
-      GST_MESSAGE_SRC (copy) = g_object_ref (GST_MESSAGE_SRC (message));
+    GST_MESSAGE_SRC (copy) = gst_object_ref (GST_MESSAGE_SRC (message));
   }
 
   if (message->structure) {
@@ -159,7 +152,7 @@ _gst_message_copy (GstMessage * message)
 }
 
 static GstMessage *
-gst_message_new (GstMessageType type, GObject * src)
+gst_message_new (GstMessageType type, GstObject * src)
 {
   GstMessage *message;
 
@@ -169,11 +162,7 @@ gst_message_new (GstMessageType type, GObject * src)
 
   message->type = type;
   if (src) {
-    if (GST_IS_OBJECT (src))
-      message->src = gst_object_ref (GST_OBJECT (src));
-    else
-      message->src = g_object_ref (src);
-
+    message->src = gst_object_ref (src);
     GST_CAT_DEBUG_OBJECT (GST_CAT_MESSAGE, src, "message source");
   } else {
     message->src = NULL;
@@ -200,7 +189,7 @@ gst_message_new_eos (GstObject * src)
 {
   GstMessage *message;
 
-  message = gst_message_new (GST_MESSAGE_EOS, (GObject *) (src));
+  message = gst_message_new (GST_MESSAGE_EOS, src);
 
   return message;
 }
@@ -225,7 +214,7 @@ gst_message_new_error (GstObject * src, GError * error, gchar * debug)
   GstMessage *message;
   GstStructure *s;
 
-  message = gst_message_new (GST_MESSAGE_ERROR, (GObject *) (src));
+  message = gst_message_new (GST_MESSAGE_ERROR, src);
   /* gst_structure_new takes copies of the types passed in */
   s = gst_structure_new ("GstMessageError", "gerror", GST_TYPE_G_ERROR, error,
       "debug", G_TYPE_STRING, debug, NULL);
@@ -254,7 +243,7 @@ gst_message_new_warning (GstObject * src, GError * error, gchar * debug)
   GstMessage *message;
   GstStructure *s;
 
-  message = gst_message_new (GST_MESSAGE_WARNING, (GObject *) (src));
+  message = gst_message_new (GST_MESSAGE_WARNING, src);
   /* gst_structure_new takes copies of the types passed in */
   s = gst_structure_new ("GstMessageWarning", "gerror", GST_TYPE_G_ERROR, error,
       "debug", G_TYPE_STRING, debug, NULL);
@@ -283,7 +272,7 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
 
   g_return_val_if_fail (GST_IS_STRUCTURE (tag_list), NULL);
 
-  message = gst_message_new (GST_MESSAGE_TAG, (GObject *) (src));
+  message = gst_message_new (GST_MESSAGE_TAG, src);
   gst_structure_set_parent_refcount (tag_list, &message->mini_object.refcount);
   message->structure = tag_list;
 
@@ -310,7 +299,7 @@ gst_message_new_state_changed (GstObject * src, GstElementState old,
   GstMessage *message;
   GstStructure *s;
 
-  message = gst_message_new (GST_MESSAGE_STATE_CHANGED, (GObject *) (src));
+  message = gst_message_new (GST_MESSAGE_STATE_CHANGED, src);
 
   s = gst_structure_new ("GstMessageState", "old-state", G_TYPE_INT, (gint) old,
       "new-state", G_TYPE_INT, (gint) new, NULL);
@@ -340,7 +329,7 @@ gst_message_new_segment_start (GstObject * src, GstClockTime timestamp)
   GstMessage *message;
   GstStructure *s;
 
-  message = gst_message_new (GST_MESSAGE_SEGMENT_START, (GObject *) (src));
+  message = gst_message_new (GST_MESSAGE_SEGMENT_START, src);
 
   s = gst_structure_new ("GstMessageSegmentStart", "timestamp", G_TYPE_INT64,
       (gint64) timestamp, NULL);
@@ -370,7 +359,7 @@ gst_message_new_segment_done (GstObject * src, GstClockTime timestamp)
   GstMessage *message;
   GstStructure *s;
 
-  message = gst_message_new (GST_MESSAGE_SEGMENT_DONE, (GObject *) (src));
+  message = gst_message_new (GST_MESSAGE_SEGMENT_DONE, src);
 
   s = gst_structure_new ("GstMessageSegmentDone", "timestamp", G_TYPE_INT64,
       (gint64) timestamp, NULL);
@@ -395,7 +384,7 @@ gst_message_new_segment_done (GstObject * src, GstClockTime timestamp)
  * MT safe.
  */
 GstMessage *
-gst_message_new_custom (GstMessageType type, GObject * src,
+gst_message_new_custom (GstMessageType type, GstObject * src,
     GstStructure * structure)
 {
   GstMessage *message;

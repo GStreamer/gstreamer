@@ -34,9 +34,7 @@ event_loop (GstElement * pipeline)
 
         gst_message_parse_error (message, &gerror, &debug);
         gst_message_unref (message);
-        if (GST_IS_OBJECT (GST_MESSAGE_SRC (message)))
-          gst_object_default_error (GST_OBJECT (GST_MESSAGE_SRC (message)),
-              gerror, debug);
+        gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
         g_error_free (gerror);
         g_free (debug);
         return TRUE;
