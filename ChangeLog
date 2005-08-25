@@ -1,5 +1,14 @@
 2005-08-25  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gst.c: (init_pre), (init_post):
+	  register the installed plugin path after the env var
+	* gst/registries/gstlibxmlregistry.c: (gst_xml_registry_save):
+	* gst/registries/gstxmlregistry.c: (gst_xml_registry_save):
+	  don't reverse order of paths; conserve the order of GST_PLUGIN_PATH
+	  directories, so the tests can prefer uninstalled over installed
+
+2005-08-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/base/gstbasetransform.h:
 	  comment
 	* gst/gstpad.c:

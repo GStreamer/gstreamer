@@ -571,6 +571,8 @@ split_and_iterate (const gchar * stringlist, gchar * separator, GFunc iterator,
 static gboolean
 init_pre (void)
 {
+  const gchar *plugin_path;
+
   g_type_init ();
 
   if (g_thread_supported ()) {
@@ -619,12 +621,22 @@ init_pre (void)
     gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/types");
     gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/autoplug");
     gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/indexers");
-#else
-    /* add the main (installed) library path if GST_PLUGIN_PATH_ONLY not set */
+#endif /* PLUGINS_USE_BUILDDIR */
+
+    plugin_path = g_getenv ("GST_PLUGIN_PATH");
+#ifndef GST_DISABLE_REGISTRY
+    split_and_iterate (plugin_path, G_SEARCHPATH_SEPARATOR_S, add_path_func,
+        _global_registry);
+#endif /* GST_DISABLE_REGISTRY */
+
+
+#ifndef PLUGINS_USE_BUILDDIR
+    /* add the main (installed) library path as the last path
+     * if GST_PLUGIN_PATH_ONLY not set */
     if (g_getenv ("GST_PLUGIN_PATH_ONLY") == NULL) {
       gst_registry_add_path (_global_registry, PLUGINS_DIR);
     }
-#endif /* PLUGINS_USE_BUILDDIR */
+#endif
 
     if (g_getenv ("GST_REGISTRY")) {
       user_reg = g_strdup (g_getenv ("GST_REGISTRY"));
@@ -686,7 +698,6 @@ static gboolean
 init_post (void)
 {
   GLogLevelFlags llf;
-  const gchar *plugin_path;
 
 #ifndef GST_DISABLE_TRACE
   GstTrace *gst_trace;
@@ -710,12 +721,6 @@ init_post (void)
 #ifndef GST_DISABLE_URI
   gst_uri_handler_get_type ();
 #endif /* GST_DISABLE_URI */
-
-  plugin_path = g_getenv ("GST_PLUGIN_PATH");
-#ifndef GST_DISABLE_REGISTRY
-  split_and_iterate (plugin_path, G_SEARCHPATH_SEPARATOR_S, add_path_func,
-      _global_registry);
-#endif /* GST_DISABLE_REGISTRY */
 
   /* register core plugins */
   _gst_plugin_register_static (&plugin_desc);

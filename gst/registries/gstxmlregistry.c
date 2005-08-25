@@ -1307,18 +1307,18 @@ gst_xml_registry_save (GstRegistry * registry)
   CLASS (xmlregistry)->save_func (xmlregistry, "<?xml version=\"1.0\"?>\n");
   CLASS (xmlregistry)->save_func (xmlregistry, "<GST-PluginRegistry>\n");
 
-  walk = g_list_last (gst_registry_get_path_list (GST_REGISTRY (registry)));
+  walk = gst_registry_get_path_list (GST_REGISTRY (registry));
 
   CLASS (xmlregistry)->save_func (xmlregistry, "<gst-plugin-paths>\n");
   while (walk) {
     CLASS (xmlregistry)->save_func (xmlregistry, "<path>");
     CLASS (xmlregistry)->save_func (xmlregistry, (gchar *) walk->data);
     CLASS (xmlregistry)->save_func (xmlregistry, "</path>\n");
-    walk = g_list_previous (walk);
+    walk = g_list_next (walk);
   }
   CLASS (xmlregistry)->save_func (xmlregistry, "</gst-plugin-paths>\n");
 
-  walk = g_list_last (registry->plugins);
+  walk = registry->plugins;
 
   while (walk) {
     GstPlugin *plugin = GST_PLUGIN (walk->data);
@@ -1327,7 +1327,7 @@ gst_xml_registry_save (GstRegistry * registry)
     gst_xml_registry_save_plugin (xmlregistry, plugin);
     CLASS (xmlregistry)->save_func (xmlregistry, "</plugin>\n");
 
-    walk = g_list_previous (walk);
+    walk = g_list_next (walk);
   }
   CLASS (xmlregistry)->save_func (xmlregistry, "</GST-PluginRegistry>\n");
 
