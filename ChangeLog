@@ -1,3 +1,10 @@
+2005-08-25  Owen Fraser-Green  <owen@discobabe.net>
+
+	* gst/realmedia/rmdemux.c (gst_rmdemux_loop, gst_rmdemux_chain):
+	Fixed EOS.
+	(gst_rmdemux_parse_indx_data, gst_rmdemux_parse_indx): Handle
+	malformed index headers where the packet size is incorrect.
+
 2005-08-24  Andy Wingo  <wingo@pobox.com>
 
 	* ext/dv/gstdvdemux.c (gst_dvdemux_demux_frame): Send out valid

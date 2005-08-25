@@ -57,7 +57,8 @@ typedef enum
   RMDEMUX_STATE_SEEKING,
   RMDEMUX_STATE_DATA_PACKET,
   RMDEMUX_STATE_SEEKING_EOS,
-  RMDEMUX_STATE_EOS
+  RMDEMUX_STATE_EOS,
+  RMDEMUX_STATE_INDX_DATA
 } GstRMDemuxState;
 
 typedef enum
@@ -98,13 +99,13 @@ struct _GstRMDemux {
   guint32 index_offset;
   guint32 data_offset;
   guint32 num_packets;
-  guint32 packet_number;
 
   guint offset;
   gboolean seekable;
 
   GstRMDemuxState state;
   GstRMDemuxLoopState loop_state;
+  GstRMDemuxStream *index_stream;
 
   /* playback start/stop positions */
   GstClockTime segment_start;
