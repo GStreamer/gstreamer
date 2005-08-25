@@ -157,24 +157,44 @@ verify_convert (GstElement * audioconvert, void *in, int inlength, void *out,
   ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
   fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), outlength);
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, outlength) == 0);
+  buffers = g_list_remove (buffers, outbuffer);
+  gst_buffer_unref (outbuffer);
 }
 
-GST_START_TEST (test_unity)
+#define RUN_CONVERSION(inarray, in_get_caps, outarray, out_get_caps)    \
+G_STMT_START {								\
+  GstElement *audioconvert;						\
+  GstCaps *incaps, *outcaps;						\
+									\
+  outcaps = out_get_caps;						\
+  audioconvert = setup_audioconvert (outcaps);				\
+									\
+  incaps = in_get_caps;							\
+  verify_convert (audioconvert, in, sizeof (in), out, sizeof (out),	\
+	incaps);							\
+									\
+  /* cleanup */								\
+  cleanup_audioconvert (audioconvert);					\
+} G_STMT_END;
+
+GST_START_TEST (test_int16)
 {
-  GstElement *audioconvert;
-  GstCaps *incaps, *outcaps;
+  /* stereo to mono */
+  {
+    gint16 in[] = { 16384, -256, 1024, 1024 };
+    gint16 out[] = { 8064, 1024 };
 
-  gint16 in[] = { 16384, -256 };
-  gint16 out[] = { 8064 };
+    RUN_CONVERSION (in, get_int_caps (44100, 2, "LITTLE_ENDIAN", 16, 16, TRUE),
+        out, get_int_caps (44100, 1, "LITTLE_ENDIAN", 16, 16, TRUE));
+  }
+  /* mono to stereo */
+  {
+    gint16 in[] = { 512, 1024 };
+    gint16 out[] = { 512, 512, 1024, 1024 };
 
-  outcaps = get_int_caps (44100, 1, "LITTLE_ENDIAN", 16, 16, TRUE);
-  audioconvert = setup_audioconvert (outcaps);
-
-  incaps = get_int_caps (44100, 2, "LITTLE_ENDIAN", 16, 16, TRUE);
-  verify_convert (audioconvert, in, sizeof (in), out, sizeof (out), incaps);
-
-  /* cleanup */
-  cleanup_audioconvert (audioconvert);
+    RUN_CONVERSION (in, get_int_caps (44100, 1, "LITTLE_ENDIAN", 16, 16, TRUE),
+        out, get_int_caps (44100, 2, "LITTLE_ENDIAN", 16, 16, TRUE));
+  }
 }
 
 GST_END_TEST;
@@ -186,7 +206,7 @@ audioconvert_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_unity);
+  tcase_add_test (tc_chain, test_int16);
 
   return s;
 }
