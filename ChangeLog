@@ -1,3 +1,8 @@
+2005-08-25  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/level/gstlevel.c: (gst_level_message_new):
+	Revert unpopular change for GST_MESSAGE_SRC to GObject.
+
 2005-08-25  Andy Wingo  <wingo@pobox.com>
 
 	* ext/ladspa/gstladspa.h: 
