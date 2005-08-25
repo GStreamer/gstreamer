@@ -88,6 +88,8 @@ resample_scale_ref (ResampleState * r)
   }
 
   RESAMPLE_DEBUG ("asked to resample %d bytes", r->o_size);
+  RESAMPLE_DEBUG ("%d bytes in queue",
+      audioresample_buffer_queue_get_depth (r->queue));
 
   while (r->o_size >= r->sample_size) {
     double midpoint;
@@ -95,8 +97,10 @@ resample_scale_ref (ResampleState * r)
     int j;
 
     midpoint = r->i_start + (r->filter_length - 1) * 0.5 * r->i_inc;
-    RESAMPLE_DEBUG ("still need to output %d bytes, i_start %g, midpoint %f",
-        r->o_size, r->i_start, midpoint);
+    RESAMPLE_DEBUG
+        ("still need to output %d bytes, %d input left, i_start %g, midpoint %f",
+        r->o_size, audioresample_buffer_queue_get_depth (r->queue), r->i_start,
+        midpoint);
     if (midpoint > 0.5 * r->i_inc) {
       RESAMPLE_ERROR ("inconsistent state");
     }
