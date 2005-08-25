@@ -205,7 +205,8 @@ gst_base_transform_init (GstBaseTransform * trans, gpointer g_class)
   trans->passthrough = FALSE;
   trans->delay_configure = FALSE;
   trans->pending_configure = FALSE;
-  trans->out_size = -1;
+  trans->cache_caps1 = NULL;
+  trans->cache_caps2 = NULL;
 }
 
 static GstCaps *
@@ -258,7 +259,7 @@ gst_base_transform_transform_caps (GstBaseTransform * trans,
 }
 
 /* by default, this keeps the number of samples in the buffer the same */
-gboolean
+static gboolean
 gst_base_transform_transform_size (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps,
     guint size, GstCaps * othercaps, guint * othersize)
@@ -269,9 +270,8 @@ gst_base_transform_transform_size (GstBaseTransform * trans,
 
   klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
-  GST_DEBUG_OBJECT (trans, "asked to transform size %d for caps %"
-      GST_PTR_FORMAT " to size for caps %" GST_PTR_FORMAT " in direction %s",
-      size, caps, othercaps, direction == GST_PAD_SRC ? "SRC" : "SINK");
+  GST_DEBUG_OBJECT (trans, "asked to transform size %d in direction %s",
+      size, direction == GST_PAD_SRC ? "SRC" : "SINK");
 
   /* if there is a custom transform function, use this */
   if (klass->transform_size) {
@@ -280,17 +280,14 @@ gst_base_transform_transform_size (GstBaseTransform * trans,
   } else {
     g_return_val_if_fail (gst_base_transform_get_unit_size (trans, caps,
             &inunitsize), FALSE);
-    g_return_val_if_fail (size % inunitsize == 0, -1);
+    g_return_val_if_fail (size % inunitsize == 0, FALSE);
 
     units = size / inunitsize;
     g_return_val_if_fail (gst_base_transform_get_unit_size (trans, othercaps,
             &outunitsize), FALSE);
-    if (!othersize) {
-      ret = FALSE;
-    } else {
-      *othersize = units * outunitsize;
-      GST_DEBUG_OBJECT (trans, "transformed size to %d", *othersize);
-    }
+
+    *othersize = units * outunitsize;
+    GST_DEBUG_OBJECT (trans, "transformed size to %d", *othersize);
   }
 
   return ret;
@@ -358,6 +355,10 @@ gst_base_transform_configure_caps (GstBaseTransform * trans, GstCaps * in,
   GstBaseTransformClass *klass;
 
   klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+
+  /* clear the cache */
+  gst_caps_replace (&trans->cache_caps1, NULL);
+  gst_caps_replace (&trans->cache_caps2, NULL);
 
   /* now configure the element with the caps */
   if (klass->set_caps) {
@@ -587,15 +588,34 @@ gst_base_transform_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
   gboolean res = FALSE;
   GstBaseTransformClass *bclass;
 
-  g_return_val_if_fail (size, FALSE);
+  /* see if we have the result cached */
+  if (trans->cache_caps1 == caps) {
+    *size = trans->cache_caps1_size;
+    GST_DEBUG_OBJECT (trans, "get size returned cached 1 %d", *size);
+    return TRUE;
+  }
+  if (trans->cache_caps2 == caps) {
+    *size = trans->cache_caps2_size;
+    GST_DEBUG_OBJECT (trans, "get size returned cached 2 %d", *size);
+    return TRUE;
+  }
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
   if (bclass->get_unit_size) {
     res = bclass->get_unit_size (trans, caps, size);
     GST_DEBUG_OBJECT (trans, "get size(%" GST_PTR_FORMAT
         ") set size %d, returned %d", caps, *size, res);
-  }
 
+    if (res) {
+      if (trans->cache_caps1 == NULL) {
+        gst_caps_replace (&trans->cache_caps1, caps);
+        trans->cache_caps1_size = *size;
+      } else if (trans->cache_caps2 == NULL) {
+        gst_caps_replace (&trans->cache_caps2, caps);
+        trans->cache_caps2_size = *size;
+      }
+    }
+  }
   return res;
 }
 
@@ -612,6 +632,10 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   guint new_size;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
+
+  /* we cannot run this when we are processing data or doing another
+   * negotiation in the streaming thread. */
+  GST_STREAM_LOCK (pad);
 
   *buf = NULL;
 
@@ -671,6 +695,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     gst_caps_unref (srccaps);
     gst_caps_unref (sinkcaps);
   }
+  GST_STREAM_UNLOCK (pad);
 
   gst_object_unref (trans);
 
@@ -684,6 +709,7 @@ not_configured:
       gst_buffer_unref (*buf);
       *buf = NULL;
     }
+    GST_STREAM_UNLOCK (pad);
     gst_object_unref (trans);
     return GST_FLOW_OK;
   }
@@ -695,6 +721,7 @@ unknown_size:
       gst_buffer_unref (*buf);
       *buf = NULL;
     }
+    GST_STREAM_UNLOCK (pad);
     gst_object_unref (trans);
     return GST_FLOW_OK;
   }
@@ -979,7 +1006,8 @@ gst_base_transform_change_state (GstElement * element)
             GST_PAD_CAPS (trans->srcpad)) || trans->passthrough;
       else
         trans->in_place = trans->passthrough;
-      trans->out_size = -1;
+      gst_caps_replace (&trans->cache_caps1, NULL);
+      gst_caps_replace (&trans->cache_caps2, NULL);
       GST_UNLOCK (trans);
       break;
     case GST_STATE_PAUSED_TO_PLAYING:

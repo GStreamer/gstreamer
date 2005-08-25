@@ -50,7 +50,11 @@ struct _GstBaseTransform {
   gboolean	 passthrough;
 
   gboolean	 in_place;
-  guint		 out_size;
+
+  GstCaps	*cache_caps1;
+  guint		 cache_caps1_size;
+  GstCaps	*cache_caps2;
+  guint		 cache_caps2_size;
 
   gboolean	 delay_configure;
   gboolean	 pending_configure;
