@@ -86,6 +86,15 @@ G_STMT_START {								\
     "'" #a "' (%d) is not equal to '" #b"' (%d)", first, second);	\
 } G_STMT_END;
 
+#define fail_unless_equals_uint64(a, b)					\
+G_STMT_START {								\
+  guint64 first = a;							\
+  guint64 second = b;							\
+  fail_unless(first == second,						\
+    "'" #a "' (%" G_GUINT64_FORMAT ") is not equal to '" #b"' (%"	\
+    G_GUINT64_FORMAT ")", first, second);				\
+} G_STMT_END;
+
 #define fail_unless_equals_string(a, b)					\
 G_STMT_START {								\
   gchar * first = a;							\
