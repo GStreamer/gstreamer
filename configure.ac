@@ -379,6 +379,19 @@ GST_CHECK_FEATURE(AMRNB, [AMR-NB], amrnbdec amrnbenc, [
 		      AC_SUBST(AMRNB_LIBS))
 ])
 
+dnl **** ESound ****
+translit(dnm, m, l) AM_CONDITIONAL(USE_ESD, true)
+GST_CHECK_FEATURE(ESD, [esound plug-ins], esdsink, [
+  PKG_CHECK_MODULES(ESD, esound >= 0.2.12, [
+    HAVE_ESD="yes"
+    AC_SUBST(ESD_CFLAGS)
+    AC_SUBST(ESD_LIBS)
+  ], [
+    AM_PATH_ESD(0.2.12, HAVE_ESD="yes", HAVE_ESD="no")
+    AS_SCRUB_INCLUDE(ESD_CFLAGS)
+  ])
+])
+
 dnl **** Free AAC Decoder (FAAD) ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_FAAD, true)
 GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
@@ -426,6 +439,33 @@ GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flacenc flacdec, [
   AC_SUBST(FLAC_LIBS)
 ])
 
+dnl *** jpeg ***
+dnl FIXME: we could use header checks here as well IMO
+translit(dnm, m, l) AM_CONDITIONAL(USE_JPEG, true)
+GST_CHECK_FEATURE(JPEG, [jpeg], jpegenc jpegdec, [
+  AC_ARG_WITH(jpeg-mmx,
+    [  --with-jpeg-mmx, path to MMX'ified JPEG library])
+  OLD_LIBS="$LIBS"
+  if test x$with_jpeg_mmx != x; then
+    LIBS="$LIBS -L$with_jpeg_mmx"
+  fi
+  AC_CHECK_LIB(jpeg-mmx, jpeg_set_defaults, HAVE_JPEG="yes", HAVE_JPEG="no")
+  JPEG_LIBS="$LIBS -ljpeg-mmx"
+  LIBS="$OLD_LIBS"
+  if test x$HAVE_JPEG != xyes; then
+    AC_CHECK_LIB(jpeg, jpeg_set_defaults, HAVE_JPEG="yes", HAVE_JPEG="no")
+    JPEG_LIBS="-ljpeg"
+  fi
+  AC_SUBST(JPEG_LIBS)
+])
+
+
+dnl *** ladspa ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LADSPA, true)
+GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
+  AC_CHECK_HEADER(ladspa.h, HAVE_LADSPA="yes", HAVE_LADSPA="no")
+])
+
 dnl *** lame ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LAME, true)
 GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
@@ -467,46 +507,13 @@ GST_CHECK_FEATURE(LIBDV, [libdv DV/video decoder], dvdec, [
   AC_SUBST(LIBDV_LIBS)
 ])
 
-dnl *** shout2 ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_SHOUT2, true)
-GST_CHECK_FEATURE(SHOUT2, [shout2 plug-in], shout2send, [
-  PKG_CHECK_MODULES(SHOUT2, shout >= 2.0, [
-    HAVE_SHOUT2="yes"
-    AC_SUBST(SHOUT2_CFLAGS)
-    AC_SUBST(SHOUT2_LIBS)
-  ], [
-    AM_PATH_SHOUT2(HAVE_SHOUT2="yes", HAVE_SHOUT2="no")
-    AC_SUBST(SHOUT2_CFLAGS)
-    AC_SUBST(SHOUT2_LIBS)
-  ])
+dnl *** libpng ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBPNG, true)
+GST_CHECK_FEATURE(LIBPNG, [libpng PNG encoder], pngenc, [
+  PKG_CHECK_MODULES(LIBPNG, libpng12, HAVE_LIBPNG="yes", HAVE_LIBPNG="no")
+  AC_SUBST(LIBPNG_CFLAGS)
+  AC_SUBST(LIBPNG_LIBS)
 ])
-
-dnl *** sidplay : works with libsidplay 1.36.x (not 2.x.x) ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_SIDPLAY, true)
-GST_CHECK_FEATURE(SIDPLAY, [sidplay plug-in], sidplay, [
-  GST_PATH_SIDPLAY()
-])
-
-dnl *** jpeg ***
-dnl FIXME: we could use header checks here as well IMO
-translit(dnm, m, l) AM_CONDITIONAL(USE_JPEG, true)
-GST_CHECK_FEATURE(JPEG, [jpeg], jpegenc jpegdec, [
-  AC_ARG_WITH(jpeg-mmx,
-    [  --with-jpeg-mmx, path to MMX'ified JPEG library])
-  OLD_LIBS="$LIBS"
-  if test x$with_jpeg_mmx != x; then
-    LIBS="$LIBS -L$with_jpeg_mmx"
-  fi
-  AC_CHECK_LIB(jpeg-mmx, jpeg_set_defaults, HAVE_JPEG="yes", HAVE_JPEG="no")
-  JPEG_LIBS="$LIBS -ljpeg-mmx"
-  LIBS="$OLD_LIBS"
-  if test x$HAVE_JPEG != xyes; then
-    AC_CHECK_LIB(jpeg, jpeg_set_defaults, HAVE_JPEG="yes", HAVE_JPEG="no")
-    JPEG_LIBS="-ljpeg"
-  fi
-  AC_SUBST(JPEG_LIBS)
-])
-
 
 dnl *** mad ***
 dnl FIXME: we could use header checks here as well IMO
@@ -563,25 +570,24 @@ GST_CHECK_FEATURE(DV1394, [raw1394 and avc1394 library], dv1394src, [
   fi
 ])
 
-dnl **** ESound ****
-translit(dnm, m, l) AM_CONDITIONAL(USE_ESD, true)
-GST_CHECK_FEATURE(ESD, [esound plug-ins], esdsink, [
-  PKG_CHECK_MODULES(ESD, esound >= 0.2.12, [
-    HAVE_ESD="yes"
-    AC_SUBST(ESD_CFLAGS)
-    AC_SUBST(ESD_LIBS)
+dnl *** shout2 ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SHOUT2, true)
+GST_CHECK_FEATURE(SHOUT2, [shout2 plug-in], shout2send, [
+  PKG_CHECK_MODULES(SHOUT2, shout >= 2.0, [
+    HAVE_SHOUT2="yes"
+    AC_SUBST(SHOUT2_CFLAGS)
+    AC_SUBST(SHOUT2_LIBS)
   ], [
-    AM_PATH_ESD(0.2.12, HAVE_ESD="yes", HAVE_ESD="no")
-    AS_SCRUB_INCLUDE(ESD_CFLAGS)
+    AM_PATH_SHOUT2(HAVE_SHOUT2="yes", HAVE_SHOUT2="no")
+    AC_SUBST(SHOUT2_CFLAGS)
+    AC_SUBST(SHOUT2_LIBS)
   ])
 ])
 
-dnl *** libpng ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBPNG, true)
-GST_CHECK_FEATURE(LIBPNG, [libpng PNG encoder], pngenc, [
-  PKG_CHECK_MODULES(LIBPNG, libpng12, HAVE_LIBPNG="yes", HAVE_LIBPNG="no")
-  AC_SUBST(LIBPNG_CFLAGS)
-  AC_SUBST(LIBPNG_LIBS)
+dnl *** sidplay : works with libsidplay 1.36.x (not 2.x.x) ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SIDPLAY, true)
+GST_CHECK_FEATURE(SIDPLAY, [sidplay plug-in], sidplay, [
+  GST_PATH_SIDPLAY()
 ])
 
 dnl *** speex >= 1.0.4 or >= 1.1.5 ***
@@ -713,6 +719,7 @@ ext/aalib/Makefile
 ext/dv/Makefile
 ext/flac/Makefile
 ext/gconf/Makefile
+ext/ladspa/Makefile
 ext/lame/Makefile
 ext/libcaca/Makefile
 ext/libpng/Makefile
