@@ -1,3 +1,7 @@
+2005-08-25  Jan Schmidt  <thaytan@mad.scientist.com>
+	* gst/playback/gstplaybasebin.c: (fill_buffer):
+	Revert unpopular change for GST_MESSAGE_SRC to GObject.
+
 2005-08-25  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/volume/gstvolume.c:

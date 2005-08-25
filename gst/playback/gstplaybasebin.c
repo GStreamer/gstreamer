@@ -440,7 +440,7 @@ fill_buffer (GstPlayBaseBin * play_base_bin, gint percent)
 {
   gst_element_post_message (GST_ELEMENT (play_base_bin),
       gst_message_new_custom (GST_MESSAGE_BUFFERING,
-          G_OBJECT (play_base_bin),
+          GST_OBJECT (play_base_bin),
           gst_structure_new ("GstMessageBuffering",
               "buffer-percent", G_TYPE_INT, percent, NULL)));
 }
