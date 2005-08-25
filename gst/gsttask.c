@@ -99,7 +99,7 @@ gst_task_finalize (GObject * object)
   g_cond_free (task->cond);
   task->cond = NULL;
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void

@@ -50,9 +50,8 @@ GST_START_TEST (test_state_changes)
     gst_element_set_state (element, GST_STATE_PAUSED);
     gst_element_set_state (element, GST_STATE_NULL);
     gst_object_unref (GST_OBJECT (element));
-
-    gst_task_cleanup_all ();
   }
+  gst_task_cleanup_all ();
 }
 
 GST_END_TEST;
