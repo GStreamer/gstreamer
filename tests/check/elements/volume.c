@@ -72,15 +72,6 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (VOLUME_CAPS_TEMPLATE_STRING)
     );
 
-GstFlowReturn
-chain_func (GstPad * pad, GstBuffer * buffer)
-{
-  GST_DEBUG ("chain_func: received buffer %p", buffer);
-  buffers = g_list_append (buffers, buffer);
-
-  return GST_FLOW_OK;
-}
-
 GstElement *
 setup_volume ()
 {

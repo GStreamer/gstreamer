@@ -111,6 +111,9 @@ resample_scale_ref (ResampleState * r)
           -0.5 * r->i_inc, r->i_inc);
       buffer = audioresample_buffer_queue_pull (r->queue, r->sample_size);
       if (buffer == NULL) {
+        /* FIXME: for the first buffer, this isn't necessarily an error,
+         * since because of the filter length we'll output less buffers.
+         * deal with that so we don't print to console */
         RESAMPLE_ERROR ("buffer_queue_pull returned NULL");
         return;
       }

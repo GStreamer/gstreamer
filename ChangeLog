@@ -1,5 +1,20 @@
 2005-08-25  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* check/Makefile.am:
+	* check/elements/audioresample.c: (setup_audioresample),
+	(cleanup_audioresample), (fail_unless_perfect_stream),
+	(test_perfect_stream_instance), (GST_START_TEST),
+	  add a check for audioresample
+	(audioresample_suite), (main):
+	* check/elements/volume.c: (GST_START_TEST):
+	  remove unused method
+	* gst/audioresample/gstaudioresample.c:
+	  set correct buffer parameters since we're changing them
+	* gst/audioresample/resample_ref.c: (resample_scale_ref):
+	  add some debug
+
+2005-08-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/audioresample/debug.c:
 	* gst/audioresample/gstaudioresample.c:
 	  add room for extra overlap samples when asked to transform size

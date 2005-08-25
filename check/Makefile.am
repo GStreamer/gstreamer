@@ -35,6 +35,7 @@ check_PROGRAMS = \
 # these tests don't even pass
 # generic/states: elements need state fixin' before this can be added
 noinst_PROGRAMS = \
+	elements/audioresample \
 	generic/states
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS)
