@@ -855,7 +855,7 @@ gst_pad_is_blocked (GstPad * pad)
 /**
  * gst_pad_set_activate_function:
  * @pad: a sink #GstPad.
- * @chain: the #GstPadActivateFunction to set.
+ * @activate: the #GstPadActivateFunction to set.
  *
  * Sets the given activate function for the pad. The activate function will
  * dispatch to activate_push or activate_pull to perform the actual activation.
@@ -876,7 +876,7 @@ gst_pad_set_activate_function (GstPad * pad, GstPadActivateFunction activate)
 /**
  * gst_pad_set_activatepull_function:
  * @pad: a sink #GstPad.
- * @chain: the #GstPadActivateModeFunction to set.
+ * @activatepull: the #GstPadActivateModeFunction to set.
  *
  * Sets the given activate_pull function for the pad. An activate_pull function
  * prepares the element and any upstream connections for pulling. See XXX
@@ -896,7 +896,7 @@ gst_pad_set_activatepull_function (GstPad * pad,
 /**
  * gst_pad_set_activatepush_function:
  * @pad: a sink #GstPad.
- * @chain: the #GstPadActivateModeFunction to set.
+ * @activatepush: the #GstPadActivateModeFunction to set.
  *
  * Sets the given activate_push function for the pad. An activate_push function
  * prepares the element for pushing. See XXX part-activation.txt for details.
@@ -3140,9 +3140,9 @@ not_connected:
 /**
  * gst_pad_get_range:
  * @pad: a src #GstPad.
- * @buffer: a pointer to hold the #GstBuffer.
  * @offset: The start offset of the buffer
- * @length: The length of the buffer
+ * @size: The length of the buffer
+ * @buffer: a pointer to hold the #GstBuffer.
  *
  * Calls the getrange function of @pad. 
  *
@@ -3223,9 +3223,9 @@ dropping:
 /**
  * gst_pad_pull_range:
  * @pad: a sink #GstPad.
- * @buffer: a pointer to hold the #GstBuffer.
  * @offset: The start offset of the buffer
- * @length: The length of the buffer
+ * @size: The length of the buffer
+ * @buffer: a pointer to hold the #GstBuffer.
  *
  * Pulls a buffer from the peer pad. @pad must be linked.
  *

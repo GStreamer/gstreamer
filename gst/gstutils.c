@@ -1234,7 +1234,7 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
  * @srcpadname: the name of the #GstPad in source element or NULL for any pad.
  * @dest: the #GstElement containing the destination pad.
  * @destpadname: the name of the #GstPad in destination element or NULL for any pad.
- * @caps: the #GstCaps to filter the link, or #NULL for no filter.
+ * @filter: the #GstCaps to filter the link, or #NULL for no filter.
  *
  * Links the two named pads of the source and destination elements. Side effect
  * is that if one of the pads has no parent, it becomes a child of the parent of
@@ -1673,7 +1673,7 @@ gst_pad_get_parent_element (GstPad * pad)
 
 /**
  * gst_flow_get_name:
- * @state: a #GstFlowReturn to get the name of.
+ * @ret: a #GstFlowReturn to get the name of.
  *
  * Gets a string representing the given flow return.
  *
@@ -1708,8 +1708,7 @@ gst_flow_get_name (GstFlowReturn ret)
 
 /**
  * gst_object_default_error:
- * @object: a #GObject that signalled the error.
- * @orig: the #GstObject that initiated the error.
+ * @source: the #GstObject that initiated the error.
  * @error: the GError.
  * @debug: an additional debug information string, or NULL.
  *
@@ -2208,25 +2207,25 @@ gst_pad_query_position (GstPad * pad, GstFormat * format, gint64 * cur,
  */
 gboolean
 gst_pad_query_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
-    GstFormat * dest_fmt, gint64 * dest_val)
+    GstFormat * dest_format, gint64 * dest_val)
 {
   GstQuery *query;
   gboolean ret;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (dest_fmt != NULL, FALSE);
+  g_return_val_if_fail (dest_format != NULL, FALSE);
   g_return_val_if_fail (dest_val != NULL, FALSE);
 
-  if (*dest_fmt == src_format) {
+  if (*dest_format == src_format) {
     *dest_val = src_val;
     return TRUE;
   }
 
-  query = gst_query_new_convert (src_format, src_val, *dest_fmt);
+  query = gst_query_new_convert (src_format, src_val, *dest_format);
   ret = gst_pad_query (pad, query);
 
   if (ret)
-    gst_query_parse_convert (query, NULL, NULL, dest_fmt, dest_val);
+    gst_query_parse_convert (query, NULL, NULL, dest_format, dest_val);
 
   gst_query_unref (query);
 

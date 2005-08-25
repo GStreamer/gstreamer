@@ -65,7 +65,7 @@ typedef struct _GstBinClass GstBinClass;
  *
  * Returns: the number of child objects
  */
-#define GST_BIN_NUMCHILDREN(bin)	(GST_BIN_CAST(bin)->numchildren);
+#define GST_BIN_NUMCHILDREN(bin)	(GST_BIN_CAST(bin)->numchildren)
 /**
  * GST_BIN_CHILDREN:
  * @bin: the bin to get the list with children from
@@ -74,7 +74,7 @@ typedef struct _GstBinClass GstBinClass;
  *
  * Returns: the children list
  */
-#define GST_BIN_CHILDREN(bin)		(GST_BIN_CAST(bin)->children);
+#define GST_BIN_CHILDREN(bin)		(GST_BIN_CAST(bin)->children)
 /**
  * GST_BIN_CHILDREN_COOKIE:
  * @bin: the bin to get the children cookie from 
@@ -83,7 +83,7 @@ typedef struct _GstBinClass GstBinClass;
  *
  * Returns: the children cookie
  */
-#define GST_BIN_CHILDREN_COOKIE(bin)	(GST_BIN_CAST(bin)->children_cookie);
+#define GST_BIN_CHILDREN_COOKIE(bin)	(GST_BIN_CAST(bin)->children_cookie)
 
 struct _GstBin {
   GstElement	 element;

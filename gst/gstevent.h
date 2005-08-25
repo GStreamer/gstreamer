@@ -272,11 +272,11 @@ GstEvent *	gst_event_new_flush_stop	(void);
 GstEvent *	gst_event_new_eos		(void);
 
 /* newsegment events */
-GstEvent*	gst_event_new_newsegment	(gdouble rate,
-						 GstFormat format, gint64 start_value, gint64 stop_value,
+GstEvent*	gst_event_new_newsegment	(gdouble rate, GstFormat format,
+                                                 gint64 start_value, gint64 stop_value,
 						 gint64 base);
 void		gst_event_parse_newsegment	(GstEvent *event, gdouble *rate, GstFormat *format, 
-						 gint64 *start_value, gint64 *end_value, gint64 *base);
+						 gint64 *start_value, gint64 *stop_value, gint64 *base);
 /* tag event */
 GstEvent*	gst_event_new_tag		(GstTagList *taglist);
 void		gst_event_parse_tag		(GstEvent *event, GstTagList **taglist);

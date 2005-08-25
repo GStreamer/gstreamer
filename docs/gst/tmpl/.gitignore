@@ -8,6 +8,7 @@ gstbasetransform.sgml
 gstbin.sgml
 gstbuffer.sgml
 gstbus.sgml
+gstcheck.sgml
 gstcollectpads.sgml
 gstevent.sgml
 gstfakesrc.sgml
@@ -15,6 +16,7 @@ gstfakesink.sgml
 gstfilesrc.sgml
 gstfilesink.sgml
 gstmessage.sgml
+gstminiobject.sgml
 gstprobe.sgml
 gstpushsrc.sgml
 gsttask.sgml

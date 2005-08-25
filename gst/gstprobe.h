@@ -54,7 +54,7 @@ GstProbe*		gst_probe_new			(gboolean single_shot,
 							 gpointer user_data);
 void			gst_probe_destroy		(GstProbe *probe);
 
-gboolean		gst_probe_perform		(GstProbe *probe, GstMiniObject **data);
+gboolean		gst_probe_perform		(GstProbe *probe, GstMiniObject **mini_object);
 
 typedef struct _GstProbeDispatcher GstProbeDispatcher;
 

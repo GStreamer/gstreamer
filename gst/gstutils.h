@@ -339,7 +339,7 @@ G_CONST_RETURN gchar*   gst_flow_get_name      		(GstFlowReturn ret);
 gboolean                gst_pad_query_position          (GstPad *pad, GstFormat *format,
 		                                         gint64 *cur, gint64 *end);
 gboolean                gst_pad_query_convert           (GstPad *pad, GstFormat src_format, gint64 src_val,
-		                                         GstFormat *dest_fmt, gint64 *dest_val);
+		                                         GstFormat *dest_format, gint64 *dest_val);
 
 /* bin functions */
 void            	gst_bin_add_many                (GstBin *bin, GstElement *element_1, ...);

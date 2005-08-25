@@ -279,8 +279,8 @@ gst_event_new_eos (void)
  * gst_event_new_newsegment:
  * @rate: a new rate for playback
  * @format: The format of the segment values
- * @start_val: the start value of the segment
- * @stop_val: the stop value of the segment
+ * @start_value: the start value of the segment
+ * @stop_value: the stop value of the segment
  * @base: base value for buffer timestamps.
  *
  * Allocate a new newsegment event with the given format/values tripplets.
@@ -299,30 +299,30 @@ gst_event_new_eos (void)
  */
 GstEvent *
 gst_event_new_newsegment (gdouble rate, GstFormat format,
-    gint64 start_val, gint64 stop_val, gint64 base)
+    gint64 start_value, gint64 stop_value, gint64 base)
 {
   if (format == GST_FORMAT_TIME) {
     GST_CAT_INFO (GST_CAT_EVENT,
         "creating newsegment rate %lf, format GST_FORMAT_TIME, "
         "start %" GST_TIME_FORMAT ", stop %" GST_TIME_FORMAT
         ", base %" GST_TIME_FORMAT,
-        rate, GST_TIME_ARGS (start_val),
-        GST_TIME_ARGS (stop_val), GST_TIME_ARGS (base));
+        rate, GST_TIME_ARGS (start_value),
+        GST_TIME_ARGS (stop_value), GST_TIME_ARGS (base));
   } else {
     GST_CAT_INFO (GST_CAT_EVENT,
         "creating newsegment rate %lf, format %d, "
         "start %lld, stop %lld, base %lld",
-        rate, format, start_val, stop_val, base);
+        rate, format, start_value, stop_value, base);
   }
 
-  if (start_val != -1 && stop_val != -1)
-    g_return_val_if_fail (start_val < stop_val, NULL);
+  if (start_value != -1 && stop_value != -1)
+    g_return_val_if_fail (start_value < stop_value, NULL);
 
   return gst_event_new_custom (GST_EVENT_NEWSEGMENT,
       gst_structure_new ("GstEventNewsegment", "rate", G_TYPE_DOUBLE, rate,
           "format", GST_TYPE_FORMAT, format,
-          "start_val", G_TYPE_INT64, start_val,
-          "stop_val", G_TYPE_INT64, stop_val,
+          "start_val", G_TYPE_INT64, start_value,
+          "stop_val", G_TYPE_INT64, stop_value,
           "base", G_TYPE_INT64, base, NULL));
 }
 

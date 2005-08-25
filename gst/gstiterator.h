@@ -90,7 +90,7 @@ GstIterator*		gst_iterator_new_list		(GMutex *lock,
 							 GstIteratorDisposeFunction free);
 
 /* using iterators */
-GstIteratorResult	gst_iterator_next		(GstIterator *it, gpointer *result);
+GstIteratorResult	gst_iterator_next		(GstIterator *it, gpointer *elem);
 void			gst_iterator_resync		(GstIterator *it);
 void			gst_iterator_free		(GstIterator *it);
 

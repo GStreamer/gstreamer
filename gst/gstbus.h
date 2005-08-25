@@ -52,7 +52,29 @@ typedef enum
   GST_BUS_ASYNC = 2,            /* pass message to async queue, continue if message is handled */
 } GstBusSyncReply;
 
+/**
+ * GstBusSyncHandler:
+ * @bus: the #GstBus that sent the message
+ * @messages: the #GstMessage
+ * @data: user data that has been given, when registering the handler
+ *
+ * Handler will be invoked synchronously, when a new message has been injected
+ * into the bus.
+ *
+ * Returns: #GstBusSyncReply stating what to do with the message
+ */
 typedef GstBusSyncReply (*GstBusSyncHandler) 	(GstBus * bus, GstMessage * message, gpointer data);
+/**
+ * GstBusHandler:
+ * @bus: the #GstBus that sent the message
+ * @messages: the #GstMessage
+ * @data: user data that has been given, when registering the handler
+ *
+ * Handler will be invoked asynchronously, after a new message has been injected
+ * into the bus.
+ *
+ * Returns: %TRUE if message should be taken from the bus
+ */
 typedef gboolean 	(*GstBusHandler) 	(GstBus * bus, GstMessage * message, gpointer data);
 
 struct _GstBus
