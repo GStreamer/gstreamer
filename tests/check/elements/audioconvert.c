@@ -112,20 +112,20 @@ cleanup_audioconvert (GstElement * audioconvert)
 }
 
 GstCaps *
-get_int_caps (guint rate, guint channels, gchar * endianness, guint width,
+get_int_caps (guint channels, gchar * endianness, guint width,
     guint depth, gboolean signedness)
 {
   GstCaps *caps;
   gchar *string;
 
   string = g_strdup_printf ("audio/x-raw-int, "
-      "rate = (int) %d, "
+      "rate = (int) 44100, "
       "channels = (int) %d, "
       "endianness = (int) %s, "
       "width = (int) %d, "
       "depth = (int) %d, "
       "signed = (boolean) %s ",
-      rate, channels, endianness, width, depth, signedness ? "true" : "false");
+      channels, endianness, width, depth, signedness ? "true" : "false");
   GST_DEBUG ("creating caps from %s", string);
   caps = gst_caps_from_string (string);
   fail_unless (caps != NULL);
@@ -170,7 +170,8 @@ G_STMT_START {								\
   audioconvert = setup_audioconvert (outcaps);				\
 									\
   incaps = in_get_caps;							\
-  verify_convert (audioconvert, in, sizeof (in), out, sizeof (out),	\
+  verify_convert (audioconvert, inarray, sizeof (inarray),		\
+	outarray, sizeof (outarray),					\
 	incaps);							\
 									\
   /* cleanup */								\
@@ -184,20 +185,72 @@ GST_START_TEST (test_int16)
     gint16 in[] = { 16384, -256, 1024, 1024 };
     gint16 out[] = { 8064, 1024 };
 
-    RUN_CONVERSION (in, get_int_caps (44100, 2, "LITTLE_ENDIAN", 16, 16, TRUE),
-        out, get_int_caps (44100, 1, "LITTLE_ENDIAN", 16, 16, TRUE));
+    RUN_CONVERSION (in, get_int_caps (2, "LITTLE_ENDIAN", 16, 16, TRUE),
+        out, get_int_caps (1, "LITTLE_ENDIAN", 16, 16, TRUE));
   }
   /* mono to stereo */
   {
     gint16 in[] = { 512, 1024 };
     gint16 out[] = { 512, 512, 1024, 1024 };
 
-    RUN_CONVERSION (in, get_int_caps (44100, 1, "LITTLE_ENDIAN", 16, 16, TRUE),
-        out, get_int_caps (44100, 2, "LITTLE_ENDIAN", 16, 16, TRUE));
+    RUN_CONVERSION (in, get_int_caps (1, "LITTLE_ENDIAN", 16, 16, TRUE),
+        out, get_int_caps (2, "LITTLE_ENDIAN", 16, 16, TRUE));
+  }
+  /* signed -> unsigned */
+  {
+    gint16 in[] = { 0, -32767, 32767, -32768 };
+    guint16 out[] = { 32768, 1, 65535, 0 };
+
+    RUN_CONVERSION (in, get_int_caps (1, "LITTLE_ENDIAN", 16, 16, TRUE),
+        out, get_int_caps (1, "LITTLE_ENDIAN", 16, 16, FALSE));
+    RUN_CONVERSION (out, get_int_caps (1, "LITTLE_ENDIAN", 16, 16, FALSE),
+        in, get_int_caps (1, "LITTLE_ENDIAN", 16, 16, TRUE));
   }
 }
 
 GST_END_TEST;
+
+GST_START_TEST (test_int_conversion)
+{
+  /* 8 <-> 16 signed */
+  /* NOTE: if audioconvert was doing dithering we'd have a problem */
+  {
+    gint8 in[] = { 0, 1, 2, 127, -127 };
+    gint16 out[] = { 0, 256, 512, 32512, -32512 };
+
+    RUN_CONVERSION (in, get_int_caps (1, "LITTLE_ENDIAN", 8, 8, TRUE),
+        out, get_int_caps (1, "LITTLE_ENDIAN", 16, 16, TRUE)
+        );
+    RUN_CONVERSION (out, get_int_caps (1, "LITTLE_ENDIAN", 16, 16, TRUE),
+        in, get_int_caps (1, "LITTLE_ENDIAN", 8, 8, TRUE)
+        );
+  }
+  /* 16 -> 8 signed */
+  {
+    gint16 in[] = { 0, 255, 256, 257 };
+    gint8 out[] = { 0, 0, 1, 1 };
+
+    RUN_CONVERSION (in, get_int_caps (1, "LITTLE_ENDIAN", 16, 16, TRUE),
+        out, get_int_caps (1, "LITTLE_ENDIAN", 8, 8, TRUE)
+        );
+  }
+  /* 8 unsigned <-> 16 signed */
+  /* NOTE: if audioconvert was doing dithering we'd have a problem */
+  {
+    guint8 in[] = { 128, 129, 130, 255, 1 };
+    gint16 out[] = { 0, 256, 512, 32512, -32512 };
+
+    RUN_CONVERSION (in, get_int_caps (1, "LITTLE_ENDIAN", 8, 8, FALSE),
+        out, get_int_caps (1, "LITTLE_ENDIAN", 16, 16, TRUE)
+        );
+    RUN_CONVERSION (out, get_int_caps (1, "LITTLE_ENDIAN", 16, 16, TRUE),
+        in, get_int_caps (1, "LITTLE_ENDIAN", 8, 8, FALSE)
+        );
+  }
+}
+
+GST_END_TEST;
+
 
 Suite *
 audioconvert_suite (void)
@@ -207,6 +260,7 @@ audioconvert_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_int16);
+  tcase_add_test (tc_chain, test_int_conversion);
 
   return s;
 }
