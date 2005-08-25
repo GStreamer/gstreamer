@@ -353,6 +353,7 @@ static GstFlowReturn
   guchar *data;
   gulong size;
   int outsize;
+  int outsamples;
 
   /* FIXME: move to _inplace */
 #if 0
@@ -390,10 +391,17 @@ static GstFlowReturn
   }
 
   outsize = resample_get_output_data (r, GST_BUFFER_DATA (outbuf), outsize);
+  outsamples = outsize / r->sample_size;
+  GST_LOG_OBJECT (audioresample, "resample gave me %d bytes or %d samples",
+      outsize, outsamples);
+
   GST_BUFFER_TIMESTAMP (outbuf) =
       audioresample->offset * GST_SECOND / audioresample->o_rate;
-  audioresample->offset += outsize / sizeof (gint16) / audioresample->channels;
-  GST_BUFFER_DURATION (outbuf) = outsize * GST_SECOND / audioresample->o_rate;
+  GST_BUFFER_DURATION (outbuf) =
+      outsamples * GST_SECOND / audioresample->o_rate;
+  GST_BUFFER_OFFSET (outbuf) = audioresample->offset;
+  audioresample->offset += outsamples;
+  GST_BUFFER_OFFSET_END (outbuf) = audioresample->offset;
 
   /* check for possible mem corruption */
   if (outsize > GST_BUFFER_SIZE (outbuf)) {
