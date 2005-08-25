@@ -54,7 +54,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 GstElement *
-setup_audioresample (int inchannels, int inrate, int outchannels, int outrate)
+setup_audioresample (int channels, int inrate, int outrate)
 {
   GstElement *audioresample;
   GstCaps *caps;
@@ -66,7 +66,7 @@ setup_audioresample (int inchannels, int inrate, int outchannels, int outrate)
 
   caps = gst_caps_from_string (RESAMPLE_CAPS_TEMPLATE_STRING);
   structure = gst_caps_get_structure (caps, 0);
-  gst_structure_set (structure, "channels", G_TYPE_INT, inchannels,
+  gst_structure_set (structure, "channels", G_TYPE_INT, channels,
       "rate", G_TYPE_INT, inrate, NULL);
   fail_unless (gst_caps_is_fixed (caps));
 
@@ -78,7 +78,7 @@ setup_audioresample (int inchannels, int inrate, int outchannels, int outrate)
 
   caps = gst_caps_from_string (RESAMPLE_CAPS_TEMPLATE_STRING);
   structure = gst_caps_get_structure (caps, 0);
-  gst_structure_set (structure, "channels", G_TYPE_INT, outchannels,
+  gst_structure_set (structure, "channels", G_TYPE_INT, channels,
       "rate", G_TYPE_INT, outrate, NULL);
   fail_unless (gst_caps_is_fixed (caps));
 
@@ -127,7 +127,10 @@ fail_unless_perfect_stream ()
 
     timestamp += duration;
     offset = offset_end;
+    gst_buffer_unref (buffer);
   }
+  g_list_free (buffers);
+  buffers = NULL;
 }
 
 static void
@@ -141,7 +144,7 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
   int i, j;
   gint16 *p;
 
-  audioresample = setup_audioresample (2, inrate, 2, outrate);
+  audioresample = setup_audioresample (2, inrate, outrate);
   caps = gst_pad_get_negotiated_caps (mysrcpad);
   fail_unless (gst_caps_is_fixed (caps));
 
@@ -171,7 +174,7 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
     /* pushing gives away my reference ... */
     fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
     /* ... but it ends up being collected on the global buffer list */
-    fail_unless (g_list_length (buffers) == j);
+    fail_unless_equals_int (g_list_length (buffers), j);
   }
 
   /* FIXME: we should make audioresample handle eos by flushing out the last
@@ -192,7 +195,21 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
  */
 GST_START_TEST (test_perfect_stream)
 {
-  test_perfect_stream_instance (4000, 2000, 1000, 20);
+  guint inrate, outrate, bytes;
+
+  /* integral scalings */
+  test_perfect_stream_instance (48000, 24000, 500, 20);
+  test_perfect_stream_instance (48000, 12000, 500, 20);
+  test_perfect_stream_instance (12000, 24000, 500, 20);
+  test_perfect_stream_instance (12000, 48000, 500, 20);
+
+  /* non-integral scalings */
+  test_perfect_stream_instance (44100, 8000, 500, 20);
+  test_perfect_stream_instance (8000, 44100, 500, 20);
+
+  /* wacky scalings */
+  test_perfect_stream_instance (12345, 54321, 500, 20);
+  test_perfect_stream_instance (101, 99, 500, 20);
 }
 
 GST_END_TEST;
