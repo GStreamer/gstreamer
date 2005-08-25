@@ -226,6 +226,9 @@ gst_audio_convert_dispose (GObject * obj)
     g_free (this->srccaps.pos);
     this->srccaps.pos = NULL;
   }
+
+  gst_audio_convert_unset_matrix (this);
+
   G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
 
@@ -242,8 +245,11 @@ audio_convert_get_unit_size (GstBaseTransform * base, GstCaps * caps,
 
   memset (&ac_caps, 0, sizeof (ac_caps));
 
-  if (!gst_audio_convert_parse_caps (caps, &ac_caps))
+  if (!gst_audio_convert_parse_caps (caps, &ac_caps)) {
+    g_free (ac_caps.pos);
     return FALSE;
+  }
+  g_free (ac_caps.pos);
 
   *size = ac_caps.width * ac_caps.channels / 8;
   return TRUE;
