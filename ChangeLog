@@ -1,3 +1,15 @@
+2005-08-25  Andy Wingo  <wingo@pobox.com>
+
+	* ext/ladspa/gstladspa.h: 
+	* ext/ladspa/gstladspa.c: Halfway-ported. Doesn't compile yet.
+
+	* ext/ladspa/gstsignalprocessor.h:
+	* ext/ladspa/gstsignalprocessor.c: New files, the start of a base
+	class for DSP elements.
+
+	* configure.ac: Sort the external libs checks, add a ladspa check,
+	output the ladspa makefile.
+
 2005-08-25  Owen Fraser-Green  <owen@discobabe.net>
 
 	* gst/realmedia/rmdemux.c (gst_rmdemux_loop, gst_rmdemux_chain):

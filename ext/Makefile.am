@@ -440,20 +440,21 @@ SUBDIRS=\
 	$(XVID_DIR)
 
 DIST_SUBDIRS=\
-	mad \
-	gconf \
-	shout2 \
-	sidplay \
 	aalib \
-	libcaca \
-	esd	\
-	raw1394 \
-	dv \
 	amrnb \
+	esd	\
+	dv \
 	faad \
 	flac \
-	mpeg2dec \
+	gconf \
 	jpeg \
-	libpng \
+	ladspa \
 	lame \
+	libcaca \
+	libpng \
+	mad \
+	mpeg2dec \
+	raw1394 \
+	shout2 \
+	sidplay \
 	speex

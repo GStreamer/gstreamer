@@ -36,50 +36,34 @@
 #define LADSPA_VERSION "1.0"
 #endif
 
-static GstStaticCaps ladspa_pad_caps =
-GST_STATIC_CAPS (GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS);
-
-static void gst_ladspa_class_init (GstLADSPAClass * klass);
-static void gst_ladspa_base_init (GstLADSPAClass * klass);
-static void gst_ladspa_init (GstLADSPA * ladspa);
-
-static void gst_ladspa_update_int (const GValue * value, gpointer data);
-static GstPadLinkReturn gst_ladspa_link (GstPad * pad, const GstCaps * caps);
+GST_BOILERPLATE (GstLADSPA, GST_TYPE_LADSPA, GstSignalProcessor,
+    GST_TYPE_SIGNAL_PROCESSOR);
 
 static void gst_ladspa_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_ladspa_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_ladspa_instantiate (GstLADSPA * ladspa);
-static void gst_ladspa_activate (GstLADSPA * ladspa);
-static void gst_ladspa_deactivate (GstLADSPA * ladspa);
+static gboolean gst_ladspa_setup (GstSignalProcessor * sigproc,
+    guint sample_rate, guint buffer_frames);
+static gboolean gst_ladspa_activate (GstSignalProcessor * sigproc);
+static gboolean gst_ladspa_deactivate (GstSignalProcessor * sigproc);
+static gboolean gst_ladspa_process (GstSignalProcessor * sigproc);
 
-static GstElementStateReturn gst_ladspa_change_state (GstElement * element);
-static void gst_ladspa_loop (GstElement * element);
-static void gst_ladspa_chain (GstPad * pad, GstData * _data);
-static GstData *gst_ladspa_get (GstPad * pad);
-
-static GstElementClass *parent_class = NULL;
 
 static GstPlugin *ladspa_plugin;
 static GHashTable *ladspa_descriptors;
 
-enum
-{
-  ARG_0,
-  ARG_SAMPLERATE,
-  ARG_BUFFERSIZE,
-  ARG_LAST
-};
 
 GST_DEBUG_CATEGORY_STATIC (ladspa_debug);
 #define GST_CAT_DEFAULT ladspa_debug
+
 
 static void
 gst_ladspa_base_init (GstLADSPAClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstSignalProcessorClass *gsp_class = GST_SIGNAL_PROCESSOR_CLASS (klass);
   GstPadTemplate *templ;
   GstElementDetails *details;
   LADSPA_Descriptor *desc;
@@ -92,27 +76,24 @@ gst_ladspa_base_init (GstLADSPAClass * klass)
   g_assert (desc);
 
   /* pad templates */
-  klass->numports = desc->PortCount;
-  klass->numsinkpads = 0;
-  klass->numsrcpads = 0;
+  gsp_class->num_audio_in = 0;
+  gsp_class->num_audio_out = 0;
+  /* control gets set in the class init */
+
   for (j = 0; j < desc->PortCount; j++) {
-    if (LADSPA_IS_PORT_AUDIO (desc->PortDescriptors[j])) {
+    LADSPA_PortDescriptor p = desc->PortDescriptors[j];
+
+    if (LADSPA_IS_PORT_AUDIO (p)) {
       gchar *name = g_strdup ((gchar *) desc->PortNames[j]);
 
       g_strcanon (name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-", '-');
 
-      /* the factories take ownership of the name */
-      if (LADSPA_IS_PORT_INPUT (desc->PortDescriptors[j])) {
-        templ = gst_pad_template_new (name, GST_PAD_SINK, GST_PAD_ALWAYS,
-            gst_caps_copy (gst_static_caps_get (&ladspa_pad_caps)));
-        klass->numsinkpads++;
-      } else {
-        templ = gst_pad_template_new (name, GST_PAD_SRC, GST_PAD_ALWAYS,
-            gst_caps_copy (gst_static_caps_get (&ladspa_pad_caps)));
-        klass->numsrcpads++;
-      }
-
-      gst_element_class_add_pad_template (element_class, templ);
+      if (LADSPA_IS_PORT_INPUT (p))
+        gst_signal_processor_class_add_pad_template (name, GST_PAD_SINK,
+            gsp_class->num_audio_in++);
+      else
+        gst_signal_processor_class_add_pad_template (name, GST_PAD_SRC,
+            gsp_class->num_audio_out++);
     }
   }
 
@@ -125,28 +106,24 @@ gst_ladspa_base_init (GstLADSPAClass * klass)
   details->author = g_locale_to_utf8 (desc->Maker, -1, NULL, NULL, NULL);
   if (!details->author)
     details->author = g_strdup ("no author available");
-  if ((klass->numsinkpads > 0) && (klass->numsrcpads > 0))
-    details->klass = "Filter/Effect/Audio/LADSPA";
-  else if ((klass->numsinkpads == 0) && (klass->numsrcpads > 0))
+  if (gsp_class->num_audio_in == 0)
     details->klass = "Source/Audio/LADSPA";
-  else if ((klass->numsinkpads > 0) && (klass->numsrcpads == 0))
+  else if (gsp_class->num_audio_out == 0)
     details->klass = "Sink/Audio/LADSPA";
   else
-    details->klass = "Filter/Effect/Audio/LADSPA";      /* whatever this is */
+    details->klass = "Filter/Effect/Audio/LADSPA";
   gst_element_class_set_details (element_class, details);
 
-  klass->srcpad_portnums = g_new0 (gint, klass->numsrcpads);
-  klass->sinkpad_portnums = g_new0 (gint, klass->numsinkpads);
-  sinkcount = 0;
-  srccount = 0;
+  klass->audio_in_portnums = g_new0 (gint, klass->num_audio_in);
+  klass->audio_out_portnums = g_new0 (gint, gsp_class->num_audio_out);
 
-  /* walk through the ports, note the portnums for srcpads, sinkpads */
+  sinkcount = srccount = 0;
   for (j = 0; j < desc->PortCount; j++) {
     if (LADSPA_IS_PORT_AUDIO (desc->PortDescriptors[j])) {
       if (LADSPA_IS_PORT_INPUT (desc->PortDescriptors[j]))
-        klass->sinkpad_portnums[sinkcount++] = j;
+        klass->audio_in_portnums[sinkcount++] = j;
       else
-        klass->srcpad_portnums[srccount++] = j;
+        klass->audio_out_portnums[srccount++] = j;
     }
   }
 
@@ -158,6 +135,7 @@ gst_ladspa_class_init (GstLADSPAClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstSignalProcessorClass *gsp_class = GST_SIGNAL_PROCESSOR_CLASS (klass);
   LADSPA_Descriptor *desc;
   gint i, current_portnum, controlcount;
   gint hintdesc;
@@ -172,6 +150,58 @@ gst_ladspa_class_init (GstLADSPAClass * klass)
   gobject_class->get_property = gst_ladspa_get_property;
 
   gstelement_class->change_state = gst_ladspa_change_state;
+
+  gsp_class->num_control_in = 0;
+  gsp_class->num_control_in = 0;
+
+  for (j = 0; j < desc->PortCount; j++) {
+    LADSPA_PortDescriptor p = desc->PortDescriptors[j];
+
+    if (LADSPA_IS_PORT_AUDIO (p)) {
+      gchar *name = g_strdup ((gchar *) desc->PortNames[j]);
+
+      g_strcanon (name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-", '-');
+
+      if (LADSPA_IS_PORT_INPUT (p))
+        gst_signal_processor_class_add_pad_template (name, GST_PAD_SINK,
+            gsp_class->num_audio_in++);
+      else
+        gst_signal_processor_class_add_pad_template (name, GST_PAD_SRC,
+            gsp_class->num_audio_out++);
+    }
+  }
+
+  /* construct the element details struct */
+  details = g_new0 (GstElementDetails, 1);
+  details->longname = g_locale_to_utf8 (desc->Name, -1, NULL, NULL, NULL);
+  if (!details->longname)
+    details->longname = g_strdup ("no description available");
+  details->description = details->longname;
+  details->author = g_locale_to_utf8 (desc->Maker, -1, NULL, NULL, NULL);
+  if (!details->author)
+    details->author = g_strdup ("no author available");
+  if (gsp_class->num_audio_in == 0)
+    details->klass = "Source/Audio/LADSPA";
+  else if (gsp_class->num_audio_out == 0)
+    details->klass = "Sink/Audio/LADSPA";
+  else
+    details->klass = "Filter/Effect/Audio/LADSPA";
+  gst_element_class_set_details (element_class, details);
+
+  klass->audio_in_portnums = g_new0 (gint, klass->num_audio_in);
+  klass->audio_out_portnums = g_new0 (gint, gsp_class->num_audio_out);
+
+  sinkcount = srccount = 0;
+  for (j = 0; j < desc->PortCount; j++) {
+    if (LADSPA_IS_PORT_AUDIO (desc->PortDescriptors[j])) {
+      if (LADSPA_IS_PORT_INPUT (desc->PortDescriptors[j]))
+        klass->audio_in_portnums[sinkcount++] = j;
+      else
+        klass->audio_out_portnums[srccount++] = j;
+    }
+  }
+
+  klass->descriptor = desc;
 
   /* look up and store the ladspa descriptor */
   desc = g_hash_table_lookup (ladspa_descriptors,

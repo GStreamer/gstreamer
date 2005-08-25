@@ -24,15 +24,15 @@
 #define __GST_LADSPA_H__
 
 
+#include <ladspa.h>
+
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
 
-#include "ladspa.h"
+#include "gstsignalprocessor.h"
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
+
 
 typedef struct _ladspa_control_info {
   gchar *name;
@@ -43,36 +43,25 @@ typedef struct _ladspa_control_info {
   gboolean toggled, logarithmic, integer, writable;
 } ladspa_control_info;
 
+
 typedef struct _GstLADSPA GstLADSPA;
 typedef struct _GstLADSPAClass GstLADSPAClass;
 
+
 struct _GstLADSPA {
-  GstElement element;
+  GstSignalProcessor parent;
 
   LADSPA_Descriptor *descriptor;
   LADSPA_Handle *handle;
 
-  gfloat *controls;
-  
-  GstPad **sinkpads, 
-         **srcpads;
-
   gboolean activated;
-
-  gint samplerate, buffer_frames;
-  gint64 timestamp;
   gboolean inplace_broken;
 };
 
 struct _GstLADSPAClass {
-  GstElementClass parent_class;
+  GstSignalProcessorClass parent_class;
 
   LADSPA_Descriptor *descriptor;
-
-  gint numports,
-       numsinkpads, 
-       numsrcpads, 
-       numcontrols;
 
   gint *sinkpad_portnums, 
        *srcpad_portnums, 
@@ -82,9 +71,7 @@ struct _GstLADSPAClass {
 };
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 
 #endif /* __GST_LADSPA_H__ */
