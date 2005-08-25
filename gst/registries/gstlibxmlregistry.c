@@ -1264,8 +1264,6 @@ gst_xml_registry_rebuild (GstRegistry * registry)
     walk = g_list_next (walk);
   }
 
-  plugins = g_list_reverse (plugins);
-
   do {
     length = g_list_length (plugins);
 
@@ -1274,7 +1272,7 @@ gst_xml_registry_rebuild (GstRegistry * registry)
       g_assert (walk->data);
       plugin = gst_plugin_load_file ((gchar *) walk->data, NULL);
       if (plugin) {
-        prune = g_list_prepend (prune, walk->data);
+        prune = g_list_append (prune, walk->data);
         gst_registry_add_plugin (registry, plugin);
       }
 

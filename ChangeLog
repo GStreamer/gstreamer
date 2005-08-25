@@ -1,3 +1,10 @@
+2005-08-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/registries/gstlibxmlregistry.c: (gst_xml_registry_rebuild):
+	* gst/registries/gstxmlregistry.c: (gst_xml_registry_rebuild):
+	  don't walk through the plugins backwards.  Where is all this
+	  reversed logic coming from ?
+
 2005-08-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasetransform.c: (gst_base_transform_init),
