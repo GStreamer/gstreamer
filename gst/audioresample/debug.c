@@ -16,7 +16,7 @@ static const char *resample_debug_level_names[] = {
   "LOG"
 };
 
-static int resample_debug_level = RESAMPLE_LEVEL_LOG;
+static int resample_debug_level = RESAMPLE_LEVEL_ERROR;
 
 void
 resample_debug_log (int level, const char *file, const char *function,

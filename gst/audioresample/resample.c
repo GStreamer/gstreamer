@@ -42,10 +42,15 @@ void
 resample_init (void)
 {
   static int inited = 0;
+  const char *debug;
 
   if (!inited) {
     oil_init ();
     inited = 1;
+  }
+
+  if ((debug = g_getenv ("RESAMPLE_DEBUG"))) {
+    resample_debug_set_level (atoi (debug));
   }
 }
 
@@ -141,14 +146,24 @@ resample_input_eos (ResampleState * r)
 int
 resample_get_output_size_for_input (ResampleState * r, int size)
 {
-  return floor (size * r->o_rate / r->i_rate);
+  int outsize;
+  double outd;
+
+  g_return_val_if_fail (r->sample_size != 0, 0);
+
+  RESAMPLE_DEBUG ("size %d, o_rate %f, i_rate %f", size, r->o_rate, r->i_rate);
+  outd = (double) size / r->i_rate * r->o_rate;
+  outsize = (int) floor (outd);
+
+  /* round off for sample size */
+  return outsize - (outsize % r->sample_size);
 }
 
 int
 resample_get_output_size (ResampleState * r)
 {
-  return floor (audioresample_buffer_queue_get_depth (r->queue) * r->o_rate /
-      r->i_rate);
+  return resample_get_output_size_for_input (r,
+      audioresample_buffer_queue_get_depth (r->queue));
 }
 
 int
@@ -196,6 +211,7 @@ void
 resample_set_n_channels (ResampleState * r, int n_channels)
 {
   r->n_channels = n_channels;
+  r->sample_size = r->n_channels * resample_format_size (r->format);
   r->need_reinit = 1;
 }
 
@@ -203,6 +219,7 @@ void
 resample_set_format (ResampleState * r, ResampleFormat format)
 {
   r->format = format;
+  r->sample_size = r->n_channels * resample_format_size (r->format);
   r->need_reinit = 1;
 }
 

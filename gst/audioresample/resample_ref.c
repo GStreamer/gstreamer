@@ -56,7 +56,6 @@ void
 resample_scale_ref (ResampleState * r)
 {
   if (r->need_reinit) {
-    r->sample_size = r->n_channels * resample_format_size (r->format);
     RESAMPLE_DEBUG ("sample size %d", r->sample_size);
 
     if (r->buffer)
@@ -88,19 +87,24 @@ resample_scale_ref (ResampleState * r)
 #endif
   }
 
-  while (r->o_size > 0) {
+  RESAMPLE_DEBUG ("asked to resample %d bytes", r->o_size);
+
+  while (r->o_size >= r->sample_size) {
     double midpoint;
     int i;
     int j;
 
-    RESAMPLE_DEBUG ("i_start %g", r->i_start);
     midpoint = r->i_start + (r->filter_length - 1) * 0.5 * r->i_inc;
+    RESAMPLE_DEBUG ("still need to output %d bytes, i_start %g, midpoint %f",
+        r->o_size, r->i_start, midpoint);
     if (midpoint > 0.5 * r->i_inc) {
       RESAMPLE_ERROR ("inconsistent state");
     }
     while (midpoint < -0.5 * r->i_inc) {
       AudioresampleBuffer *buffer;
 
+      RESAMPLE_DEBUG ("midpoint %f < %f, r->i_inc %f", midpoint,
+          -0.5 * r->i_inc, r->i_inc);
       buffer = audioresample_buffer_queue_pull (r->queue, r->sample_size);
       if (buffer == NULL) {
         RESAMPLE_ERROR ("buffer_queue_pull returned NULL");
@@ -206,5 +210,4 @@ resample_scale_ref (ResampleState * r)
     r->o_buf += r->sample_size;
     r->o_size -= r->sample_size;
   }
-
 }
