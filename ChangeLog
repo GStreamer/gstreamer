@@ -1,3 +1,27 @@
+2005-08-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/audioresample/debug.c:
+	* gst/audioresample/gstaudioresample.c:
+	  add room for extra overlap samples when asked to transform size
+	  protect against possible mem corruption and check for discrepancies
+	  between written size and outbuffer's size so we can warn for
+	  potential problems
+	* gst/audioresample/resample.c: (resample_init),
+	(resample_get_output_size_for_input), (resample_get_output_size),
+	(resample_set_n_channels), (resample_set_format):
+	  set debug level based on RESAMPLE_DEBUG env var
+	  make sure that get_output_size* returns a whole number of
+	  sample_size
+	  set sample_size each time either channel or format is set
+	* gst/audioresample/resample_chunk.c: (resample_scale_chunk):
+	* gst/audioresample/resample_functable.c:
+	(resample_scale_functable):
+	* gst/audioresample/resample_ref.c: (resample_scale_ref):
+	  remove r->sample_size, it's done in resample.c now
+	  add some debugging to the ref implementation
+	  make sure we only give back bytes that are wholes of the sample
+	  size
+
 2005-08-25  Jan Schmidt  <thaytan@mad.scientist.com>
 	* gst/playback/gstplaybasebin.c: (fill_buffer):
 	Revert unpopular change for GST_MESSAGE_SRC to GObject.
@@ -5,7 +29,7 @@
 2005-08-25  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/volume/gstvolume.c:
-          made set_caps function static
+	  made set_caps function static
 
 2005-08-24  Wim Taymans  <wim@fluendo.com>
 
@@ -43,6 +67,18 @@
 	* sys/ximage/ximagesink.c: (gst_ximagesink_get_times):
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_times):
 	Basesink does newsegment calculations for us now.
+
+2005-08-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
+	* configure.ac:
+	  add core's plugins to the mix so that playbin works
+	* check/generic/states.c: (GST_START_TEST):
+	  set a 0 timeout on pipelines, so they don't force the next
+	  state change
+	* gst/playback/gstplaybasebin.c: (setup_source), (prepare_output),
+	(gst_play_base_bin_change_state):
+	  remove the crappy error handling and do GST error handling
 
 2005-08-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 

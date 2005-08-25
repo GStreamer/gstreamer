@@ -55,14 +55,15 @@ enum
 };
 
 #define SUPPORTED_CAPS \
-  GST_STATIC_CAPS (\
+GST_STATIC_CAPS ( \
     "audio/x-raw-int, " \
       "rate = (int) [ 1, MAX ], " \
       "channels = (int) [ 1, MAX ], " \
       "endianness = (int) BYTE_ORDER, " \
       "width = (int) 16, " \
       "depth = (int) 16, " \
-      "signed = (boolean) true")
+      "signed = (boolean) true " \
+)
 
 #if 0
   /* disabled because it segfaults */
@@ -255,18 +256,18 @@ static gboolean
   return TRUE;
 }
 
-gboolean audioresample_transform_size (GstBaseTransform * base,
+gboolean
+    audioresample_transform_size (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, guint size, GstCaps * othercaps,
-    guint * othersize)
-{
+    guint * othersize) {
   GstAudioresample *audioresample = GST_AUDIORESAMPLE (base);
   ResampleState *state;
   GstCaps *srccaps, *sinkcaps;
   gboolean use_internal = FALSE;        /* whether we use the internal state */
   gboolean ret = TRUE;
 
-  /* FIXME: make sure incaps/outcaps get renamed to caps/othercaps, since
-   * interpretation depends on the direction */
+  GST_DEBUG_OBJECT (base, "asked to transform size %d in direction %s",
+      size, direction == GST_PAD_SINK ? "SINK" : "SRC");
   if (direction == GST_PAD_SINK) {
     sinkcaps = caps;
     srccaps = othercaps;
@@ -282,11 +283,12 @@ gboolean audioresample_transform_size (GstBaseTransform * base,
     use_internal = TRUE;
     state = audioresample->resample;
   } else {
+    GST_DEBUG_OBJECT (audioresample,
+        "caps are not the set caps, creating state");
     state = resample_new ();
     resample_set_state_from_caps (state, sinkcaps, srccaps, NULL, NULL, NULL);
   }
 
-  /* we can use our own state to answer the question */
   if (direction == GST_PAD_SINK) {
     /* asked to convert size of an incoming buffer */
     *othersize = resample_get_output_size_for_input (state, size);
@@ -294,6 +296,11 @@ gboolean audioresample_transform_size (GstBaseTransform * base,
     /* take a best guess, this is called cheating */
     *othersize = floor (size * state->i_rate / state->o_rate);
   }
+  *othersize += state->sample_size;
+
+  /* we make room for one extra sample, given that the resampling filter
+   * can output an extra one for non-integral i_rate/o_rate */
+  GST_DEBUG_OBJECT (base, "transformed size %d to %d", size, *othersize);
 
   if (!use_internal) {
     resample_free (state);
@@ -302,9 +309,9 @@ gboolean audioresample_transform_size (GstBaseTransform * base,
   return ret;
 }
 
-gboolean audioresample_set_caps (GstBaseTransform * base, GstCaps * incaps,
-    GstCaps * outcaps)
-{
+gboolean
+    audioresample_set_caps (GstBaseTransform * base, GstCaps * incaps,
+    GstCaps * outcaps) {
   gboolean ret;
   gint inrate, outrate;
   int channels;
@@ -365,32 +372,45 @@ static GstFlowReturn
   resample_add_input_data (r, data, size, NULL, NULL);
 
   outsize = resample_get_output_size (r);
-  if (outsize != GST_BUFFER_SIZE (outbuf)) {
+  GST_DEBUG_OBJECT (audioresample, "audioresample can give me %d bytes",
+      outsize);
+
+  /* protect against mem corruption */
+  if (outsize > GST_BUFFER_SIZE (outbuf)) {
     GST_WARNING_OBJECT (audioresample,
         "overriding audioresample's outsize %d with outbuffer's size %d",
         outsize, GST_BUFFER_SIZE (outbuf));
     outsize = GST_BUFFER_SIZE (outbuf);
+  }
+  /* catch possibly wrong size differences */
+  if (GST_BUFFER_SIZE (outbuf) - outsize > r->sample_size) {
+    GST_WARNING_OBJECT (audioresample,
+        "audioresample's outsize %d too far from outbuffer's size %d",
+        outsize, GST_BUFFER_SIZE (outbuf));
   }
 
   outsize = resample_get_output_data (r, GST_BUFFER_DATA (outbuf), outsize);
   GST_BUFFER_TIMESTAMP (outbuf) =
       audioresample->offset * GST_SECOND / audioresample->o_rate;
   audioresample->offset += outsize / sizeof (gint16) / audioresample->channels;
+  GST_BUFFER_DURATION (outbuf) = outsize * GST_SECOND / audioresample->o_rate;
 
-  if (outsize != GST_BUFFER_SIZE (outbuf)) {
+  /* check for possible mem corruption */
+  if (outsize > GST_BUFFER_SIZE (outbuf)) {
+    /* this is an error that when it happens, would need fixing in the
+     * resample library; we told
+     * it we wanted only GST_BUFFER_SIZE (outbuf), and it gave us more ! */
     GST_WARNING_OBJECT (audioresample,
-        "audioresample, you bastard ! you only gave me %d bytes, not %d",
+        "audioresample, you memory corrupting bastard. "
+        "you gave me outsize %d while my buffer was size %d",
         outsize, GST_BUFFER_SIZE (outbuf));
-    /* if the size we get is smaller than the buffer, it's still fine; we
-     * just waste a bit of space on the end */
-    if (outsize < GST_BUFFER_SIZE (outbuf)) {
-      GST_BUFFER_SIZE (outbuf) = outsize;
-      return GST_FLOW_OK;
-    } else {
-      /* this is an error that needs fixing in the resample library; we told
-       * it we wanted only GST_BUFFER_SIZE (outbuf), and it gave us more ! */
-      return GST_FLOW_ERROR;
-    }
+    return GST_FLOW_ERROR;
+  }
+  /* catch possibly wrong size differences */
+  if (GST_BUFFER_SIZE (outbuf) - outsize > r->sample_size) {
+    GST_WARNING_OBJECT (audioresample,
+        "audioresample's written outsize %d too far from outbuffer's size %d",
+        outsize, GST_BUFFER_SIZE (outbuf));
   }
 
   return GST_FLOW_OK;
@@ -408,7 +428,7 @@ static void
   switch (prop_id) {
     case ARG_FILTERLEN:
       audioresample->filter_length = g_value_get_int (value);
-      GST_DEBUG_OBJECT (GST_ELEMENT (audioresample), "new filter length %d\n",
+      GST_DEBUG_OBJECT (GST_ELEMENT (audioresample), "new filter length %d",
           audioresample->filter_length);
       resample_set_filter_length (audioresample->resample,
           audioresample->filter_length);

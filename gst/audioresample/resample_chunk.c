@@ -56,7 +56,6 @@ void
 resample_scale_chunk (ResampleState * r)
 {
   if (r->need_reinit) {
-    r->sample_size = r->n_channels * resample_format_size (r->format);
     RESAMPLE_DEBUG ("sample size %d", r->sample_size);
 
     if (r->buffer)
