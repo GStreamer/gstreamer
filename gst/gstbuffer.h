@@ -194,7 +194,7 @@ typedef struct _GstBufferClass GstBufferClass;
 /**
  * GST_BUFFER_OFFSET_END_IS_VALID:
  * @buffer: the #GstBuffer to check for the end offset
- * 
+ *
  * Tests if the end offset is known.
  *
  * Returns: %TRUE for success

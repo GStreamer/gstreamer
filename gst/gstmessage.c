@@ -19,7 +19,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #include <string.h>             /* memcpy */
 
 #include "gst_private.h"

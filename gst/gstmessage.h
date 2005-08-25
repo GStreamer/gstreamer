@@ -22,7 +22,7 @@
 #ifndef __GST_MESSAGE_H__
 #define __GST_MESSAGE_H__
 
-G_BEGIN_DECLS 
+G_BEGIN_DECLS
 
 typedef struct _GstMessage GstMessage;
 typedef struct _GstMessageClass GstMessageClass;
@@ -48,7 +48,7 @@ typedef struct _GstMessageClass GstMessageClass;
  * @GST_MESSAGE_SEGMENT_DONE: pipeline completed playback of a segment.
  * @GST_MESSAGE_ANY: mask for all of the above messages.
  */
-typedef enum _GstMessageType
+typedef enum
 {
   GST_MESSAGE_UNKNOWN           = 0,
   GST_MESSAGE_EOS               = (1 << 0),
