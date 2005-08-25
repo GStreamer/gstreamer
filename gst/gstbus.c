@@ -197,22 +197,17 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       message, GST_MESSAGE_TYPE (message));
 
   GST_LOCK (bus);
-  if (GST_FLAG_IS_SET (bus, GST_BUS_FLUSHING)) {
-    GST_DEBUG_OBJECT (bus, "bus is flushing");
-    gst_message_unref (message);
-    GST_UNLOCK (bus);
-    return FALSE;
-  }
+  /* check if the bus is flushing */
+  if (GST_FLAG_IS_SET (bus, GST_BUS_FLUSHING))
+    goto is_flushing;
 
   handler = bus->sync_handler;
   handler_data = bus->sync_handler_data;
-
   GST_UNLOCK (bus);
 
   /* first call the sync handler if it is installed */
-  if (handler) {
+  if (handler)
     reply = handler (bus, message, handler_data);
-  }
 
   /* now see what we should do with the message */
   switch (reply) {
@@ -265,9 +260,21 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       g_cond_free (cond);
       break;
     }
+    default:
+      g_warning ("invalid return from bus sync handler");
+      break;
   }
-
   return TRUE;
+
+  /* ERRORS */
+is_flushing:
+  {
+    GST_DEBUG_OBJECT (bus, "bus is flushing");
+    gst_message_unref (message);
+    GST_UNLOCK (bus);
+
+    return FALSE;
+  }
 }
 
 /**

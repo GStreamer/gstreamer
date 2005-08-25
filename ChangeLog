@@ -1,3 +1,11 @@
+2005-08-25  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (bin_bus_handler):
+	Be a bit more conservative about the posted message.
+	
+	* gst/gstbus.c: (gst_bus_post):
+	Some cleanups, warn wrong return values.
+
 2005-08-25  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* check/gst/gstbin.c: (GST_START_TEST):

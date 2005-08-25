@@ -1555,21 +1555,28 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
 
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_EOS:{
-      gchar *name = gst_object_get_name (GST_MESSAGE_SRC (message));
+      GstObject *src = GST_MESSAGE_SRC (message);
 
-      GST_DEBUG_OBJECT (bin, "got EOS message from %s", name);
-      g_free (name);
+      if (src) {
+        gchar *name;
 
-      /* collect all eos messages from the children */
-      GST_LOCK (bin->child_bus);
-      bin->eosed = g_list_prepend (bin->eosed, GST_MESSAGE_SRC (message));
-      GST_UNLOCK (bin->child_bus);
+        name = gst_object_get_name (src);
+        GST_DEBUG_OBJECT (bin, "got EOS message from %s", name);
+        g_free (name);
 
-      /* if we are completely EOS, we forward an EOS message */
-      if (is_eos (bin)) {
-        GST_DEBUG_OBJECT (bin, "all sinks posted EOS");
-        gst_element_post_message (GST_ELEMENT (bin),
-            gst_message_new_eos (GST_OBJECT (bin)));
+        /* collect all eos messages from the children */
+        GST_LOCK (bin->child_bus);
+        bin->eosed = g_list_prepend (bin->eosed, src);
+        GST_UNLOCK (bin->child_bus);
+
+        /* if we are completely EOS, we forward an EOS message */
+        if (is_eos (bin)) {
+          GST_DEBUG_OBJECT (bin, "all sinks posted EOS");
+          gst_element_post_message (GST_ELEMENT (bin),
+              gst_message_new_eos (GST_OBJECT (bin)));
+        }
+      } else {
+        GST_DEBUG_OBJECT (bin, "got EOS message from (NULL), not processing");
       }
 
       /* we drop all EOS messages */
