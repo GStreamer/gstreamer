@@ -54,16 +54,13 @@ enum
   LAST_SIGNAL
 };
 
-/* FIXME, need to figure out a better way to handle the pull mode */
 #define DEFAULT_SIZE 1024
-#define DEFAULT_HAS_LOOP FALSE
-#define DEFAULT_HAS_CHAIN TRUE
+#define DEFAULT_CAN_ACTIVATE_PULL FALSE /* fixme: enable me */
+#define DEFAULT_CAN_ACTIVATE_PUSH TRUE
 
 enum
 {
   PROP_0,
-  PROP_HAS_LOOP,
-  PROP_HAS_CHAIN,
   PROP_PREROLL_QUEUE_LEN
 };
 
@@ -116,7 +113,7 @@ static GstElementStateReturn gst_base_sink_change_state (GstElement * element);
 
 static GstFlowReturn gst_base_sink_chain (GstPad * pad, GstBuffer * buffer);
 static void gst_base_sink_loop (GstPad * pad);
-static GstFlowReturn gst_base_sink_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_base_sink_activate (GstPad * pad);
 static gboolean gst_base_sink_activate_push (GstPad * pad, gboolean active);
 static gboolean gst_base_sink_activate_pull (GstPad * pad, gboolean active);
 static gboolean gst_base_sink_event (GstPad * pad, GstEvent * event);
@@ -147,14 +144,6 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_base_sink_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_base_sink_get_property);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HAS_LOOP,
-      g_param_spec_boolean ("has-loop", "has-loop",
-          "Enable loop-based operation", DEFAULT_HAS_LOOP,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HAS_CHAIN,
-      g_param_spec_boolean ("has-chain", "has-chain",
-          "Enable chain-based operation", DEFAULT_HAS_CHAIN,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   /* FIXME, this next value should be configured using an event from the
    * upstream element */
   g_object_class_install_property (G_OBJECT_CLASS (klass),
@@ -255,11 +244,24 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
       GST_DEBUG_FUNCPTR (gst_base_sink_pad_setcaps));
   gst_pad_set_bufferalloc_function (basesink->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_sink_pad_buffer_alloc));
+  gst_pad_set_activate_function (basesink->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_base_sink_activate));
+  gst_pad_set_activatepush_function (basesink->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_base_sink_activate_push));
+  gst_pad_set_activatepull_function (basesink->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_base_sink_activate_pull));
+  gst_pad_set_event_function (basesink->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_base_sink_event));
+  gst_pad_set_chain_function (basesink->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_base_sink_chain));
   gst_element_add_pad (GST_ELEMENT (basesink), basesink->sinkpad);
 
   basesink->pad_mode = GST_ACTIVATE_NONE;
   GST_PAD_TASK (basesink->sinkpad) = NULL;
   basesink->preroll_queue = g_queue_new ();
+
+  basesink->can_activate_push = DEFAULT_CAN_ACTIVATE_PUSH;
+  basesink->can_activate_pull = DEFAULT_CAN_ACTIVATE_PULL;
 
   GST_FLAG_SET (basesink, GST_ELEMENT_IS_SINK);
 }
@@ -277,30 +279,6 @@ gst_base_sink_finalize (GObject * object)
 }
 
 static void
-gst_base_sink_set_pad_functions (GstBaseSink * this, GstPad * pad)
-{
-  gst_pad_set_activatepush_function (pad,
-      GST_DEBUG_FUNCPTR (gst_base_sink_activate_push));
-  gst_pad_set_activatepull_function (pad,
-      GST_DEBUG_FUNCPTR (gst_base_sink_activate_pull));
-  gst_pad_set_event_function (pad, GST_DEBUG_FUNCPTR (gst_base_sink_event));
-
-  if (this->has_chain)
-    gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_base_sink_chain));
-  else
-    gst_pad_set_chain_function (pad, NULL);
-}
-
-static void
-gst_base_sink_set_all_pad_functions (GstBaseSink * this)
-{
-  GList *l;
-
-  for (l = GST_ELEMENT_PADS (this); l; l = l->next)
-    gst_base_sink_set_pad_functions (this, (GstPad *) l->data);
-}
-
-static void
 gst_base_sink_set_clock (GstElement * element, GstClock * clock)
 {
   GstBaseSink *sink;
@@ -314,23 +292,9 @@ static void
 gst_base_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstBaseSink *sink;
-
-  sink = GST_BASE_SINK (object);
+  GstBaseSink *sink = GST_BASE_SINK (object);
 
   switch (prop_id) {
-    case PROP_HAS_LOOP:
-      GST_LOCK (sink);
-      sink->has_loop = g_value_get_boolean (value);
-      gst_base_sink_set_all_pad_functions (sink);
-      GST_UNLOCK (sink);
-      break;
-    case PROP_HAS_CHAIN:
-      GST_LOCK (sink);
-      sink->has_chain = g_value_get_boolean (value);
-      gst_base_sink_set_all_pad_functions (sink);
-      GST_UNLOCK (sink);
-      break;
     case PROP_PREROLL_QUEUE_LEN:
       /* preroll lock necessary to serialize with finish_preroll */
       GST_PREROLL_LOCK (sink->sinkpad);
@@ -347,18 +311,10 @@ static void
 gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstBaseSink *sink;
-
-  sink = GST_BASE_SINK (object);
+  GstBaseSink *sink = GST_BASE_SINK (object);
 
   GST_LOCK (sink);
   switch (prop_id) {
-    case PROP_HAS_LOOP:
-      g_value_set_boolean (value, sink->has_loop);
-      break;
-    case PROP_HAS_CHAIN:
-      g_value_set_boolean (value, sink->has_chain);
-      break;
     case PROP_PREROLL_QUEUE_LEN:
       g_value_set_uint (value, sink->preroll_queue_max_len);
       break;
@@ -1037,15 +993,23 @@ gst_base_sink_chain (GstPad * pad, GstBuffer * buf)
 
   basesink = GST_BASE_SINK (gst_pad_get_parent (pad));
 
+  if (!(basesink->pad_mode == GST_ACTIVATE_PUSH)) {
+    GST_LOCK (pad);
+    g_warning ("Push on pad %s:%s, but it was not activated in push mode",
+        GST_DEBUG_PAD_NAME (pad));
+    GST_UNLOCK (pad);
+    result = GST_FLOW_UNEXPECTED;
+    goto done;
+  }
+
   result = gst_base_sink_handle_object (basesink, pad, GST_MINI_OBJECT (buf));
 
+done:
   gst_object_unref (basesink);
 
   return result;
 }
 
-/* FIXME, not all sinks can operate in pull mode
- */
 static void
 gst_base_sink_loop (GstPad * pad)
 {
@@ -1061,7 +1025,7 @@ gst_base_sink_loop (GstPad * pad)
   if (result != GST_FLOW_OK)
     goto paused;
 
-  result = gst_base_sink_chain (pad, buf);
+  result = gst_base_sink_handle_object (basesink, pad, GST_MINI_OBJECT (buf));
   if (result != GST_FLOW_OK)
     goto paused;
 
@@ -1072,6 +1036,7 @@ gst_base_sink_loop (GstPad * pad)
 
 paused:
   {
+    gst_base_sink_event (pad, gst_event_new_eos ());
     gst_object_unref (basesink);
     gst_pad_pause_task (pad);
     return;
@@ -1111,23 +1076,62 @@ gst_base_sink_deactivate (GstBaseSink * basesink, GstPad * pad)
 }
 
 static gboolean
-gst_base_sink_activate_push (GstPad * pad, gboolean active)
+gst_base_sink_activate (GstPad * pad)
 {
   gboolean result = FALSE;
   GstBaseSink *basesink;
 
   basesink = GST_BASE_SINK (gst_pad_get_parent (pad));
 
-  if (active) {
-    if (!basesink->has_chain)
-      goto done;
+  GST_DEBUG_OBJECT (basesink, "Trying pull mode first");
+
+  if (basesink->can_activate_pull && gst_pad_check_pull_range (pad)
+      && gst_pad_activate_pull (pad, TRUE)) {
+    GST_DEBUG_OBJECT (basesink, "Success activating pull mode");
     result = TRUE;
   } else {
-    result = gst_base_sink_deactivate (basesink, pad);
+    GST_DEBUG_OBJECT (basesink, "Falling back to push mode");
+    if (gst_pad_activate_push (pad, TRUE)) {
+      GST_DEBUG_OBJECT (basesink, "Success activating push mode");
+      result = TRUE;
+    }
   }
-  basesink->pad_mode = GST_ACTIVATE_PUSH;
 
-done:
+  if (!result) {
+    GST_WARNING_OBJECT (basesink, "Could not activate pad in either mode");
+  }
+
+  gst_object_unref (basesink);
+
+  return result;
+}
+
+static gboolean
+gst_base_sink_activate_push (GstPad * pad, gboolean active)
+{
+  gboolean result;
+  GstBaseSink *basesink;
+
+  basesink = GST_BASE_SINK (gst_pad_get_parent (pad));
+
+  if (active) {
+    if (!basesink->can_activate_push) {
+      result = FALSE;
+      basesink->pad_mode = GST_ACTIVATE_NONE;
+    } else {
+      result = TRUE;
+      basesink->pad_mode = GST_ACTIVATE_PUSH;
+    }
+  } else {
+    if (G_UNLIKELY (basesink->pad_mode != GST_ACTIVATE_PUSH)) {
+      g_warning ("Internal GStreamer activation error!!!");
+      result = FALSE;
+    } else {
+      result = gst_base_sink_deactivate (basesink, pad);
+      basesink->pad_mode = GST_ACTIVATE_NONE;
+    }
+  }
+
   gst_object_unref (basesink);
 
   return result;
@@ -1143,15 +1147,42 @@ gst_base_sink_activate_pull (GstPad * pad, gboolean active)
   basesink = GST_BASE_SINK (gst_pad_get_parent (pad));
 
   if (active) {
-    /* if we have a scheduler we can start the task */
-    if (!basesink->has_loop)
-      goto done;
-    result =
-        gst_pad_start_task (pad, (GstTaskFunction) gst_base_sink_loop, pad);
+    if (!basesink->can_activate_pull) {
+      result = FALSE;
+      basesink->pad_mode = GST_ACTIVATE_NONE;
+    } else {
+      GstPad *peer = gst_pad_get_peer (pad);
+
+      if (G_UNLIKELY (peer == NULL)) {
+        g_warning ("Trying to activate pad in pull mode, but no peer");
+        result = FALSE;
+      } else {
+        if (gst_pad_activate_pull (peer, TRUE)) {
+          basesink->have_newsegment = TRUE;
+          basesink->segment_start = basesink->segment_stop = 0;
+          result =
+              gst_pad_start_task (pad, (GstTaskFunction) gst_base_sink_loop,
+              pad);
+        } else {
+          GST_DEBUG_OBJECT (pad, "Failed to activate peer in pull mode");
+          result = FALSE;
+        }
+        gst_object_unref (peer);
+      }
+
+      basesink->pad_mode = result ? GST_ACTIVATE_PULL : GST_ACTIVATE_NONE;
+    }
   } else {
-    result = gst_base_sink_deactivate (basesink, pad);
+    if (G_UNLIKELY (basesink->pad_mode != GST_ACTIVATE_PULL)) {
+      g_warning ("Internal GStreamer activation error!!!");
+      result = FALSE;
+    } else {
+      basesink->have_newsegment = FALSE;
+      result = gst_base_sink_deactivate (basesink, pad);
+      basesink->pad_mode = GST_ACTIVATE_NONE;
+    }
   }
-done:
+
   gst_object_unref (basesink);
 
   return result;
@@ -1216,7 +1247,14 @@ gst_base_sink_change_state (GstElement * element)
       break;
   }
 
-  GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  {
+    GstElementStateReturn bret;
+
+    bret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+    if (bret != GST_STATE_SUCCESS)
+      goto activate_failed;
+  }
 
   switch (transition) {
     case GST_STATE_PLAYING_TO_PAUSED:
@@ -1268,6 +1306,11 @@ gst_base_sink_change_state (GstElement * element)
 start_failed:
   {
     GST_DEBUG ("failed to start");
+    return GST_STATE_FAILURE;
+  }
+activate_failed:
+  {
+    GST_DEBUG ("element failed to change states -- activation problem?");
     return GST_STATE_FAILURE;
   }
 }

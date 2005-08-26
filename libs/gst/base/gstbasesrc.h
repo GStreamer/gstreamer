@@ -78,8 +78,8 @@ struct _GstBaseSrc {
 
   /* MT-protected (with LOCK) */
   gint		 blocksize;	/* size of buffers when operating push based */
-  gboolean	 has_loop;	/* some scheduling properties */
-  gboolean	 has_getrange;
+  gboolean	 can_activate_push;	/* some scheduling properties */
+  GstActivateMode pad_mode;
   gboolean       seekable;
   gboolean       random_access;
 

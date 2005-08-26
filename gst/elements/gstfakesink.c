@@ -64,16 +64,21 @@ enum
 #define DEFAULT_SYNC FALSE
 #define DEFAULT_SIGNAL_HANDOFFS FALSE
 #define DEFAULT_LAST_MESSAGE NULL
+#define DEFAULT_LAST_MESSAGE NULL
+#define DEFAULT_CAN_ACTIVATE_PUSH TRUE
+#define DEFAULT_CAN_ACTIVATE_PULL FALSE
 
 enum
 {
-  ARG_0,
-  ARG_STATE_ERROR,
-  ARG_SILENT,
-  ARG_DUMP,
-  ARG_SYNC,
-  ARG_SIGNAL_HANDOFFS,
-  ARG_LAST_MESSAGE,
+  PROP_0,
+  PROP_STATE_ERROR,
+  PROP_SILENT,
+  PROP_DUMP,
+  PROP_SYNC,
+  PROP_SIGNAL_HANDOFFS,
+  PROP_LAST_MESSAGE,
+  PROP_CAN_ACTIVATE_PUSH,
+  PROP_CAN_ACTIVATE_PULL
 };
 
 #define GST_TYPE_FAKE_SINK_STATE_ERROR (gst_fake_sink_state_error_get_type())
@@ -152,28 +157,38 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_fake_sink_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fake_sink_get_property);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STATE_ERROR,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_STATE_ERROR,
       g_param_spec_enum ("state_error", "State Error",
           "Generate a state change error", GST_TYPE_FAKE_SINK_STATE_ERROR,
           DEFAULT_STATE_ERROR, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LAST_MESSAGE,
       g_param_spec_string ("last_message", "Last Message",
           "The message describing current status", DEFAULT_LAST_MESSAGE,
           G_PARAM_READABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SYNC,
       g_param_spec_boolean ("sync", "Sync", "Sync on the clock", DEFAULT_SYNC,
           G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIGNAL_HANDOFFS,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SIGNAL_HANDOFFS,
       g_param_spec_boolean ("signal-handoffs", "Signal handoffs",
           "Send a signal before unreffing the buffer", DEFAULT_SIGNAL_HANDOFFS,
           G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SILENT,
       g_param_spec_boolean ("silent", "Silent",
           "Don't produce last_message events", DEFAULT_SILENT,
           G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUMP,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DUMP,
       g_param_spec_boolean ("dump", "Dump", "Dump received bytes to stdout",
           DEFAULT_DUMP, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_CAN_ACTIVATE_PUSH,
+      g_param_spec_boolean ("can-activate-push", "Can activate push",
+          "Can activate in push mode", DEFAULT_CAN_ACTIVATE_PUSH,
+          G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_CAN_ACTIVATE_PULL,
+      g_param_spec_boolean ("can-activate-pull", "Can activate pull",
+          "Can activate in pull mode", DEFAULT_CAN_ACTIVATE_PULL,
+          G_PARAM_READWRITE));
 
   /**
    * GstFakeSink::handoff:
@@ -218,20 +233,26 @@ gst_fake_sink_set_property (GObject * object, guint prop_id,
   sink = GST_FAKE_SINK (object);
 
   switch (prop_id) {
-    case ARG_SILENT:
+    case PROP_SILENT:
       sink->silent = g_value_get_boolean (value);
       break;
-    case ARG_STATE_ERROR:
+    case PROP_STATE_ERROR:
       sink->state_error = g_value_get_enum (value);
       break;
-    case ARG_DUMP:
+    case PROP_DUMP:
       sink->dump = g_value_get_boolean (value);
       break;
-    case ARG_SYNC:
+    case PROP_SYNC:
       sink->sync = g_value_get_boolean (value);
       break;
-    case ARG_SIGNAL_HANDOFFS:
+    case PROP_SIGNAL_HANDOFFS:
       sink->signal_handoffs = g_value_get_boolean (value);
+      break;
+    case PROP_CAN_ACTIVATE_PUSH:
+      GST_BASE_SINK (sink)->can_activate_push = g_value_get_boolean (value);
+      break;
+    case PROP_CAN_ACTIVATE_PULL:
+      GST_BASE_SINK (sink)->can_activate_pull = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -248,23 +269,29 @@ gst_fake_sink_get_property (GObject * object, guint prop_id, GValue * value,
   sink = GST_FAKE_SINK (object);
 
   switch (prop_id) {
-    case ARG_STATE_ERROR:
+    case PROP_STATE_ERROR:
       g_value_set_enum (value, sink->state_error);
       break;
-    case ARG_SILENT:
+    case PROP_SILENT:
       g_value_set_boolean (value, sink->silent);
       break;
-    case ARG_DUMP:
+    case PROP_DUMP:
       g_value_set_boolean (value, sink->dump);
       break;
-    case ARG_SYNC:
+    case PROP_SYNC:
       g_value_set_boolean (value, sink->sync);
       break;
-    case ARG_SIGNAL_HANDOFFS:
+    case PROP_SIGNAL_HANDOFFS:
       g_value_set_boolean (value, sink->signal_handoffs);
       break;
-    case ARG_LAST_MESSAGE:
+    case PROP_LAST_MESSAGE:
       g_value_set_string (value, sink->last_message);
+      break;
+    case PROP_CAN_ACTIVATE_PUSH:
+      g_value_set_boolean (value, GST_BASE_SINK (sink)->can_activate_push);
+      break;
+    case PROP_CAN_ACTIVATE_PULL:
+      g_value_set_boolean (value, GST_BASE_SINK (sink)->can_activate_pull);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

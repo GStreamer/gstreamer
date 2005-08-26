@@ -45,7 +45,10 @@ run_pipeline (GstElement * pipe, gchar * descr,
 
   bus = gst_element_get_bus (pipe);
   g_assert (bus);
-  gst_element_set_state (pipe, GST_STATE_PLAYING);
+  if (gst_element_set_state (pipe, GST_STATE_PLAYING) != GST_STATE_SUCCESS) {
+    g_critical ("Couldn't set pipeline to PLAYING");
+    goto done;
+  }
 
   while (1) {
     revent = gst_bus_poll (bus, GST_MESSAGE_ANY, GST_SECOND / 2);
@@ -67,6 +70,7 @@ run_pipeline (GstElement * pipe, gchar * descr,
         revent, tevent, descr);
   }
 
+done:
   gst_element_set_state (pipe, GST_STATE_NULL);
   gst_object_unref (pipe);
 }
@@ -75,29 +79,25 @@ GST_START_TEST (test_2_elements)
 {
   gchar *s;
 
-  /* has-loop got unimplemented at some point, so these aren't actually testing
-   * what they're supposed to -- a big ol' FIXME */
-
-  s = "fakesrc has-loop=false ! fakesink has-loop=true";
+  s = "fakesrc can-activate-push=false ! fakesink can-activate-pull=true";
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_UNKNOWN);
 
-  s = "fakesrc has-loop=true ! fakesink has-loop=false";
+  s = "fakesrc can-activate-push=true ! fakesink can-activate-pull=false";
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_UNKNOWN);
 
-  s = "fakesrc has-loop=false num-buffers=10 ! fakesink has-loop=true";
+  s = "fakesrc can-activate-push=false num-buffers=10 ! fakesink can-activate-pull=true";
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_EOS);
 
-  s = "fakesrc has-loop=true num-buffers=10 ! fakesink has-loop=false";
+  s = "fakesrc can-activate-push=true num-buffers=10 ! fakesink can-activate-pull=false";
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_EOS);
 
-  /* Should raise a critical, but doesn't with has-loop not working
-     s = "fakesrc has-loop=false ! fakesink has-loop=false";
-     ASSERT_CRITICAL (run_pipeline (setup_pipeline (s), s,
-     GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_UNKNOWN)); */
+  s = "fakesrc can-activate-push=false ! fakesink can-activate-pull=false";
+  ASSERT_CRITICAL (run_pipeline (setup_pipeline (s), s,
+          GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_UNKNOWN));
 }
 GST_END_TEST static void
 got_handoff (GstElement * sink, GstBuffer * buf, GstPad * pad, gpointer unused)

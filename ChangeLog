@@ -1,3 +1,38 @@
+2005-08-26  Andy Wingo  <wingo@pobox.com>
+
+	* check/pipelines/simple_launch_lines.c (run_pipeline): Check
+	element_set_state's return val.
+	(test_2_elements): Add test that's been disabled for months.
+
+	* gst/elements/gstfakesink.c: Cleanups. Add can-activate-push and
+	can-activate-pull properties.
+
+	* gst/elements/gstfakesrc.c: Cleanups. Add can-activate-push and
+	can-activate-pull properties. Implement is_seekable so fakesrc can
+	operate in pull mode.
+
+	* gst/base/gstbasesink.c (GstBaseSink): Remove has-loop, has-chain
+	properties.
+	(gst_base_sink_activate, gst_base_sink_activate_pull)
+	(gst_base_sink_activate_push): Make activation mode choosing work.
+	Cleanups.
+	(gst_base_sink_chain, gst_base_sink_loop): Assert activation mode
+	is right. Make pull mode work. Post an eos before pausing in pull
+	mode.
+	(gst_base_sink_change_state): Pay attention to the core's
+	change_state() return val.
+	
+	* gst/base/gstbasesrc.c (GstBaseSrc): Remove has-loop,
+	has-getrange properties. Cleanups.
+	
+	* gst/base/gstbasesrc.h (GstBaseSrc): Remove has_loop,
+	has_getrange and replace with can_activate_pull and
+	can_activate_push.
+
+	* gst/base/gstbasesink.h (GstBaseSink): Rearrange fields, add
+	locking comments. Remove has_loop, has_chain and replace with
+	can_activate_pull and can_activate_push.
+
 2005-08-26  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:

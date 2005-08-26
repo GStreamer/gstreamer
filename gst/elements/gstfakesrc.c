@@ -74,6 +74,8 @@ enum
 #define DEFAULT_SILENT		FALSE
 #define DEFAULT_DUMP		FALSE
 #define DEFAULT_PARENTSIZE	4096*10
+#define DEFAULT_CAN_ACTIVATE_PULL TRUE
+#define DEFAULT_CAN_ACTIVATE_PUSH TRUE
 
 enum
 {
@@ -93,8 +95,8 @@ enum
   PROP_DUMP,
   PROP_PARENTSIZE,
   PROP_LAST_MESSAGE,
-  PROP_HAS_LOOP,
-  PROP_HAS_GETRANGE,
+  PROP_CAN_ACTIVATE_PULL,
+  PROP_CAN_ACTIVATE_PUSH,
   PROP_IS_LIVE
 };
 
@@ -196,6 +198,7 @@ static void gst_fake_src_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_fake_src_start (GstBaseSrc * basesrc);
 static gboolean gst_fake_src_stop (GstBaseSrc * basesrc);
+static gboolean gst_fake_src_is_seekable (GstBaseSrc * basesrc);
 
 static gboolean gst_fake_src_event_handler (GstBaseSrc * src, GstEvent * event);
 static GstFlowReturn gst_fake_src_create (GstBaseSrc * src, guint64 offset,
@@ -280,13 +283,15 @@ gst_fake_src_class_init (GstFakeSrcClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DUMP,
       g_param_spec_boolean ("dump", "Dump", "Dump produced bytes to stdout",
           DEFAULT_DUMP, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HAS_LOOP,
-      g_param_spec_boolean ("has-loop", "Has loop function",
-          "True if the element exposes a loop function", TRUE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_CAN_ACTIVATE_PUSH,
+      g_param_spec_boolean ("can-activate-push", "Can activate push",
+          "Can activate in push mode", DEFAULT_CAN_ACTIVATE_PUSH,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HAS_GETRANGE,
-      g_param_spec_boolean ("has-getrange", "Has getrange function",
-          "True if the element exposes a getrange function", TRUE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_CAN_ACTIVATE_PULL,
+      g_param_spec_boolean ("can-activate-pull", "Can activate pull",
+          "Can activate in pull mode", DEFAULT_CAN_ACTIVATE_PULL,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_IS_LIVE,
       g_param_spec_boolean ("is-live", "Is this a live source",
@@ -307,7 +312,7 @@ gst_fake_src_class_init (GstFakeSrcClass * klass)
       gst_marshal_VOID__OBJECT_OBJECT, G_TYPE_NONE, 2, GST_TYPE_BUFFER,
       GST_TYPE_PAD);
 
-  /*gstbase_src_class->is_seekable = GST_DEBUG_FUNCPTR (gst_fake_src_is_seekable); */
+  gstbase_src_class->is_seekable = GST_DEBUG_FUNCPTR (gst_fake_src_is_seekable);
   gstbase_src_class->start = GST_DEBUG_FUNCPTR (gst_fake_src_start);
   gstbase_src_class->stop = GST_DEBUG_FUNCPTR (gst_fake_src_stop);
   gstbase_src_class->event = GST_DEBUG_FUNCPTR (gst_fake_src_event_handler);
@@ -430,13 +435,13 @@ gst_fake_src_set_property (GObject * object, guint prop_id,
     case PROP_DUMP:
       src->dump = g_value_get_boolean (value);
       break;
-    case PROP_HAS_LOOP:
+    case PROP_CAN_ACTIVATE_PUSH:
       g_return_if_fail (!GST_FLAG_IS_SET (object, GST_BASE_SRC_STARTED));
-      src->has_loop = g_value_get_boolean (value);
+      GST_BASE_SRC (src)->can_activate_push = g_value_get_boolean (value);
       break;
-    case PROP_HAS_GETRANGE:
+    case PROP_CAN_ACTIVATE_PULL:
       g_return_if_fail (!GST_FLAG_IS_SET (object, GST_BASE_SRC_STARTED));
-      src->has_getrange = g_value_get_boolean (value);
+      src->can_activate_pull = g_value_get_boolean (value);
       break;
     case PROP_IS_LIVE:
       gst_base_src_set_live (basesrc, g_value_get_boolean (value));
@@ -502,11 +507,11 @@ gst_fake_src_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_LAST_MESSAGE:
       g_value_set_string (value, src->last_message);
       break;
-    case PROP_HAS_LOOP:
-      g_value_set_boolean (value, src->has_loop);
+    case PROP_CAN_ACTIVATE_PUSH:
+      g_value_set_boolean (value, GST_BASE_SRC (src)->can_activate_push);
       break;
-    case PROP_HAS_GETRANGE:
-      g_value_set_boolean (value, src->has_getrange);
+    case PROP_CAN_ACTIVATE_PULL:
+      g_value_set_boolean (value, src->can_activate_pull);
       break;
     case PROP_IS_LIVE:
       g_value_set_boolean (value, gst_base_src_is_live (basesrc));
@@ -743,4 +748,12 @@ gst_fake_src_stop (GstBaseSrc * basesrc)
   src->last_message = NULL;
 
   return TRUE;
+}
+
+static gboolean
+gst_fake_src_is_seekable (GstBaseSrc * basesrc)
+{
+  GstFakeSrc *src = GST_FAKE_SRC (basesrc);
+
+  return src->can_activate_pull;
 }

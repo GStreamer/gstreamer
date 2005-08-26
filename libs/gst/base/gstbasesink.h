@@ -56,8 +56,14 @@ typedef struct _GstBaseSinkClass GstBaseSinkClass;
 struct _GstBaseSink {
   GstElement	 element;
 
+  /*< protected >*/
   GstPad	*sinkpad;
   GstActivateMode	pad_mode;
+
+  /*< protected >*/ /* with LOCK */
+  guint64	 offset;
+  gboolean	 can_activate_pull;
+  gboolean	 can_activate_push;
 
   /*< protected >*/ /* with PREROLL_LOCK */
   GQueue	*preroll_queue;
@@ -65,26 +71,22 @@ struct _GstBaseSink {
   gint		 preroll_queued;
   gint		 buffers_queued;
   gint		 events_queued;
+  gboolean       eos;
+  gboolean       need_preroll;
+  gboolean       have_preroll;
+  gboolean       playing_async;
 
-  guint64	 offset;
-  gboolean	 has_loop;
-  gboolean	 has_chain;
-
-  GstClock	*clock;
-  GstClockID     clock_id;
-  GstClockTime   end_time;
-
+  /*< protected >*/ /* with STREAM_LOCK */
   gboolean	 have_newsegment;
-
   gdouble	 segment_rate;
   gint64	 segment_start;
   gint64	 segment_stop;
   gint64	 segment_base;
 
-  gboolean       eos;
-  gboolean       need_preroll;
-  gboolean       have_preroll;
-  gboolean       playing_async;
+  /*< private >*/ /* with LOCK */
+  GstClock	*clock;
+  GstClockID     clock_id;
+  GstClockTime   end_time;
 
   /*< private >*/
   gpointer       _gst_reserved[GST_PADDING];

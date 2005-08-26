@@ -68,8 +68,6 @@ enum
 {
   PROP_0,
   PROP_BLOCKSIZE,
-  PROP_HAS_LOOP,
-  PROP_HAS_GETRANGE,
   PROP_NUM_BUFFERS,
 };
 
@@ -129,7 +127,6 @@ static gboolean gst_base_src_stop (GstBaseSrc * basesrc);
 
 static GstElementStateReturn gst_base_src_change_state (GstElement * element);
 
-static void gst_base_src_set_dataflow_funcs (GstBaseSrc * this);
 static void gst_base_src_loop (GstPad * pad);
 static gboolean gst_base_src_check_get_range (GstPad * pad);
 static GstFlowReturn gst_base_src_get_range (GstPad * pad, guint64 offset,
@@ -161,16 +158,6 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
           "Size in bytes to read per buffer", 1, G_MAXULONG, DEFAULT_BLOCKSIZE,
           G_PARAM_READWRITE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HAS_LOOP,
-      g_param_spec_boolean ("has-loop", "Has loop function",
-          "True if the element should expose a loop function", TRUE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HAS_GETRANGE,
-      g_param_spec_boolean ("has-getrange", "Has getrange function",
-          "True if the element should expose a getrange function", TRUE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_NUM_BUFFERS,
       g_param_spec_int ("num-buffers", "num-buffers",
           "Number of buffers to output before sending EOS", -1, G_MAXINT,
@@ -194,6 +181,9 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   basesrc->num_buffers = DEFAULT_NUM_BUFFERS;
   basesrc->num_buffers_left = -1;
 
+  basesrc->can_activate_push = TRUE;
+  basesrc->pad_mode = GST_ACTIVATE_NONE;
+
   pad_template =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "src");
   g_return_if_fail (pad_template != NULL);
@@ -205,6 +195,7 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   gst_pad_set_event_function (pad, gst_base_src_event_handler);
   gst_pad_set_query_function (pad, gst_base_src_query);
   gst_pad_set_checkgetrange_function (pad, gst_base_src_check_get_range);
+  gst_pad_set_getrange_function (pad, gst_base_src_get_range);
   gst_pad_set_getcaps_function (pad, gst_base_src_getcaps);
   gst_pad_set_setcaps_function (pad, gst_base_src_setcaps);
 
@@ -268,17 +259,6 @@ gst_base_src_is_live (GstBaseSrc * src)
   GST_LIVE_UNLOCK (src);
 
   return result;
-}
-
-static void
-gst_base_src_set_dataflow_funcs (GstBaseSrc * this)
-{
-  GST_DEBUG ("updating dataflow functions");
-
-  if (this->has_getrange)
-    gst_pad_set_getrange_function (this->srcpad, gst_base_src_get_range);
-  else
-    gst_pad_set_getrange_function (this->srcpad, NULL);
 }
 
 static gboolean
@@ -540,14 +520,6 @@ gst_base_src_set_property (GObject * object, guint prop_id,
     case PROP_BLOCKSIZE:
       src->blocksize = g_value_get_ulong (value);
       break;
-    case PROP_HAS_LOOP:
-      src->has_loop = g_value_get_boolean (value);
-      gst_base_src_set_dataflow_funcs (src);
-      break;
-    case PROP_HAS_GETRANGE:
-      src->has_getrange = g_value_get_boolean (value);
-      gst_base_src_set_dataflow_funcs (src);
-      break;
     case PROP_NUM_BUFFERS:
       src->num_buffers = g_value_get_int (value);
       break;
@@ -568,12 +540,6 @@ gst_base_src_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case PROP_BLOCKSIZE:
       g_value_set_ulong (value, src->blocksize);
-      break;
-    case PROP_HAS_LOOP:
-      g_value_set_boolean (value, src->has_loop);
-      break;
-    case PROP_HAS_GETRANGE:
-      g_value_set_boolean (value, src->has_getrange);
       break;
     case PROP_NUM_BUFFERS:
       g_value_set_int (value, src->num_buffers);
@@ -1008,6 +974,10 @@ gst_base_src_activate_push (GstPad * pad, gboolean active)
   /* prepare subclass first */
   if (active) {
     GST_DEBUG_OBJECT (basesrc, "Activating in push mode");
+
+    if (!basesrc->can_activate_push)
+      goto no_push_activation;
+
     if (!gst_base_src_start (basesrc))
       goto error_start;
 
@@ -1017,6 +987,11 @@ gst_base_src_activate_push (GstPad * pad, gboolean active)
     return gst_base_src_deactivate (basesrc, pad);
   }
 
+no_push_activation:
+  {
+    GST_DEBUG_OBJECT (basesrc, "Subclass disabled push-mode activation");
+    return FALSE;
+  }
 error_start:
   {
     gst_base_src_stop (basesrc);

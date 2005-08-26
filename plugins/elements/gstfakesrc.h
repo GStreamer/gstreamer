@@ -105,6 +105,7 @@ struct _GstFakeSrc {
   gboolean	 silent;
   gboolean	 signal_handoffs;
   gboolean	 dump;
+  gboolean	 can_activate_pull;
 
   guint64        bytes_sent;
 
