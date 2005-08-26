@@ -258,7 +258,6 @@ gst_base_transform_transform_caps (GstBaseTransform * trans,
   return ret;
 }
 
-/* by default, this keeps the number of samples in the buffer the same */
 static gboolean
 gst_base_transform_transform_size (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps,
@@ -270,8 +269,9 @@ gst_base_transform_transform_size (GstBaseTransform * trans,
 
   klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
-  GST_DEBUG_OBJECT (trans, "asked to transform size %d in direction %s",
-      size, direction == GST_PAD_SRC ? "SRC" : "SINK");
+  GST_DEBUG_OBJECT (trans, "asked to transform size %d for caps %"
+      GST_PTR_FORMAT " to size for caps %" GST_PTR_FORMAT " in direction %s",
+      size, caps, othercaps, direction == GST_PAD_SRC ? "SRC" : "SINK");
 
   /* if there is a custom transform function, use this */
   if (klass->transform_size) {
@@ -280,6 +280,8 @@ gst_base_transform_transform_size (GstBaseTransform * trans,
   } else {
     g_return_val_if_fail (gst_base_transform_get_unit_size (trans, caps,
             &inunitsize), FALSE);
+    GST_DEBUG_OBJECT (trans, "input size %d, input unit size %d", size,
+        inunitsize);
     g_return_val_if_fail (size % inunitsize == 0, FALSE);
 
     units = size / inunitsize;
@@ -603,8 +605,8 @@ gst_base_transform_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
   if (bclass->get_unit_size) {
     res = bclass->get_unit_size (trans, caps, size);
-    GST_DEBUG_OBJECT (trans, "get size(%" GST_PTR_FORMAT
-        ") set size %d, returned %d", caps, *size, res);
+    GST_DEBUG_OBJECT (trans, "caps %" GST_PTR_FORMAT
+        ") has unit size %d, result %s", caps, *size, res ? "TRUE" : "FALSE");
 
     if (res) {
       if (trans->cache_caps1 == NULL) {
@@ -639,8 +641,11 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 
   *buf = NULL;
 
-  GST_DEBUG_OBJECT (trans, "allocating a buffer of size %d at offset %"
-      G_GUINT64_FORMAT, size, offset);
+  GST_DEBUG_OBJECT (trans, "allocating a buffer of size %d ...", size, offset);
+  if (offset == GST_BUFFER_OFFSET_NONE)
+    GST_DEBUG_OBJECT (trans, "... and offset NONE");
+  else
+    GST_DEBUG_OBJECT (trans, "... and offset %" G_GUINT64_FORMAT, offset);
   /* before any buffers are pushed, in_place is TRUE; allocating can trigger
    * a renegotiation and change that to FALSE */
   if (trans->in_place) {
@@ -776,16 +781,25 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
+  GST_LOG_OBJECT (trans, "handling buffer %p of size %d ...", inbuf,
+      GST_BUFFER_SIZE (inbuf));
+  if (GST_BUFFER_OFFSET_IS_VALID (inbuf))
+    GST_LOG_OBJECT (trans, "... and offset %" G_GUINT64_FORMAT,
+        GST_BUFFER_OFFSET (inbuf));
+  else
+    GST_LOG_OBJECT (trans, "... and offset NONE");
+
   if (trans->in_place) {
     /* check if we can do inplace and the buffer is writable */
     if (bclass->transform_ip && gst_buffer_is_writable (inbuf)) {
+      /* in place transform and subclass supports method */
+      GST_LOG_OBJECT (trans, "doing inplace transform");
       gst_buffer_ref (inbuf);
 
-      /* in place transform and subclass supports method */
       ret = bclass->transform_ip (trans, inbuf);
-
       *outbuf = inbuf;
     } else {
+      GST_LOG_OBJECT (trans, "doing fake inplace transform");
       /* in place transform and subclass does not support method or
        * buffer is not writable. */
       if (bclass->transform) {
@@ -800,6 +814,7 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
       }
     }
   } else {
+    GST_LOG_OBJECT (trans, "doing non-inplace transform");
     /* not inplace, figure out the output size */
     if (!gst_base_transform_transform_size (trans,
             GST_PAD_DIRECTION (trans->sinkpad), GST_PAD_CAPS (trans->sinkpad),
@@ -872,7 +887,7 @@ configure_failed:
 }
 
 /* FIXME, getrange is broken, need to pull range from the other
- * end based on the transform_size result. 
+ * end based on the transform_size result.
  */
 static GstFlowReturn
 gst_base_transform_getrange (GstPad * pad, guint64 offset,

@@ -2341,6 +2341,8 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps,
   GstPadBufferAllocFunction bufferallocfunc;
   gboolean caps_changed;
 
+  GST_DEBUG_OBJECT (pad, "offset %" G_GUINT64_FORMAT, offset);
+
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
@@ -2361,9 +2363,13 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps,
     goto flushing;
 
   GST_CAT_DEBUG (GST_CAT_PADS,
-      "calling bufferallocfunc &%s (@%p) of peer pad %s:%s for size %d",
+      "calling bufferallocfunc &%s (@%p) of peer pad %s:%s for size %d ...",
       GST_DEBUG_FUNCPTR_NAME (bufferallocfunc),
       &bufferallocfunc, GST_DEBUG_PAD_NAME (peer), size);
+  if (offset == GST_BUFFER_OFFSET_NONE)
+    GST_CAT_DEBUG (GST_CAT_PADS, "... and offset NONE");
+  else
+    GST_CAT_DEBUG (GST_CAT_PADS, "... and offset %" G_GUINT64_FORMAT, offset);
   GST_UNLOCK (peer);
 
   ret = bufferallocfunc (peer, offset, size, caps, buf);

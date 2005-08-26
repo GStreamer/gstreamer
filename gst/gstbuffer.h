@@ -118,7 +118,7 @@ typedef struct _GstBufferClass GstBufferClass;
  * Gets the duration in nanoseconds of the data in the buffer.
  * Value will be %GST_CLOCK_TIME_NONE if the duration is unknown.
  *
- * Returns: the duration of the buffer 
+ * Returns: the duration of the buffer
  */
 #define GST_BUFFER_DURATION(buf)		(GST_BUFFER_CAST(buf)->duration)
 /**
@@ -159,7 +159,7 @@ typedef struct _GstBufferClass GstBufferClass;
 
 /**
  * GST_BUFFER_OFFSET_NONE:
- * 
+ *
  * Constant for no-offset return results.
  */
 #define GST_BUFFER_OFFSET_NONE	((guint64)-1)
@@ -176,7 +176,7 @@ typedef struct _GstBufferClass GstBufferClass;
 /**
  * GST_BUFFER_TIMESTAMP_IS_VALID:
  * @buffer: the #GstBuffer to check for the timestamp
- * 
+ *
  * Tests if the timestamp is known.
  *
  * Returns: %TRUE for success
@@ -185,7 +185,7 @@ typedef struct _GstBufferClass GstBufferClass;
 /**
  * GST_BUFFER_OFFSET_IS_VALID:
  * @buffer: the #GstBuffer to check for the start offset
- * 
+ *
  * Tests if the start offset is known.
  *
  * Returns: %TRUE for success
