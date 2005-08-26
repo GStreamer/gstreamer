@@ -1,3 +1,12 @@
+2005-08-26  Andy Wingo  <wingo@pobox.com>
+
+	* ext/ladspa/gstladspa.c: 
+	* ext/ladspa/gstladspa.h: Finish porting, still doesn't work but
+	it does compile and register. I have more features than you.
+	
+	* ext/ladspa/gstsignalprocessor.h: 
+	* ext/ladspa/gstsignalprocessor.c: Updates, bug fixen.
+
 2005-08-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/effectv/gstquark.c: (gst_quarktv_init),
