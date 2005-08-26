@@ -2064,6 +2064,7 @@ gst_element_dispose (GObject * object)
 
   GST_LOCK (element);
   gst_object_replace ((GstObject **) & element->clock, NULL);
+  gst_object_replace ((GstObject **) & element->bus, NULL);
   GST_UNLOCK (element);
 
   GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "dispose parent");

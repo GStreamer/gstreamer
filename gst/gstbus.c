@@ -113,7 +113,14 @@ gst_bus_dispose (GObject * object)
   bus = GST_BUS (object);
 
   if (bus->queue) {
+    GstMessage *message;
+
     g_mutex_lock (bus->queue_lock);
+    do {
+      message = g_queue_pop_head (bus->queue);
+      if (message)
+        gst_message_unref (message);
+    } while (message != NULL);
     g_queue_free (bus->queue);
     bus->queue = NULL;
     g_mutex_unlock (bus->queue_lock);

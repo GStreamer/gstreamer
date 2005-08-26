@@ -668,6 +668,7 @@ examples/helloworld/Makefile
 examples/launch/Makefile
 examples/manual/Makefile
 examples/mixer/Makefile
+examples/metadata/Makefile
 examples/pingpong/Makefile
 examples/plugins/Makefile
 examples/pwg/Makefile

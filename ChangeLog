@@ -1,3 +1,17 @@
+2005-08-26  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	* examples/Makefile.am:
+	* examples/metadata/Makefile.am:
+	* examples/metadata/read-metadata.c: (message_loop),
+	(have_pad_handler), (make_pipeline), (print_tag), (main):
+	  Add metadata reading example that loops over a list of filenames,
+	  dumping any tags found.
+
+	* gst/gstbus.c: (gst_bus_dispose):
+	* gst/gstelement.c: (gst_element_dispose):
+	  Release a few potentially-held references in dispose.
+
 2005-08-26  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/tmpl/gstminiobject.sgml:

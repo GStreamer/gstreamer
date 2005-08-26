@@ -11,6 +11,7 @@ dirs = \
 	thread				\
 	plugins				\
 	mixer				\
+	metadata                        \
 	controller			\
 	cutter				\
 	pingpong			\
