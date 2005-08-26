@@ -175,6 +175,7 @@ gst_message_new (GstMessageType type, GstObject * src)
 
 /**
  * gst_message_new_eos:
+ * @src: The object originating the message.
  *
  * Create a new eos message. This message is generated and posted in
  * the sink elements of a GstBin. The bin will only forward the EOS
@@ -371,6 +372,7 @@ gst_message_new_segment_done (GstObject * src, GstClockTime timestamp)
 
 /**
  * gst_message_new_custom:
+ * @type: The #GstMessageType to distinguish messages
  * @src: The object originating the message.
  * @structure: The structure for the message. The message will take ownership of
  * the structure.

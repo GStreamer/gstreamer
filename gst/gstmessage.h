@@ -145,6 +145,21 @@ GstMessage *	gst_message_new_segment_done 	(GstObject * src, GstClockTime timest
 GstMessage *	gst_message_new_custom 		(GstMessageType type,
 						 GstObject    * src,
 						 GstStructure * structure);
+
+/**
+ * gst_message_new_application:
+ * @src: The object originating the message.
+ * @str: The structure for the message. The message will take ownership of
+ * the structure.
+ *
+ * Create a new application-typed message. This can be used for anything not
+ * handled by other message-specific functions to pass a message to the
+ * app. The structure field can be NULL.
+ *
+ * Returns: The new message.
+ *
+ * MT safe.
+ */
 #define		gst_message_new_application(src, str) \
   gst_message_new_custom (GST_MESSAGE_APPLICATION, src, str)
 
