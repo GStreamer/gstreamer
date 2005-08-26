@@ -2396,7 +2396,9 @@ ogg_find_peek (gpointer data, gint64 offset, guint size)
 {
   OggTypeFind *find = (OggTypeFind *) data;
 
-  if (offset + size <= find->packet->bytes) {
+  /* We don't support negative offset (from stream end); nothing embedded in ogg
+   * ever needs them */
+  if (offset >= 0 && offset + size <= find->packet->bytes) {
     return ((guint8 *) find->packet->packet) + offset;
   } else {
     return NULL;

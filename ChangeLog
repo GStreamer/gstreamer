@@ -1,5 +1,14 @@
 2005-08-26  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* ext/ogg/gstoggdemux.c: (ogg_find_peek):
+	Another from MikeS:
+	During typefinding, don't support negative offsets
+	(offsets from the end of the stream) in our typefind->peek() function
+	- nothing embedded in ogg ever needs them. However, we need to recognise
+	those requests and reject them, otherwise we return invalid pointers.
+
+2005-08-26  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_dispose):
 	* ext/vorbis/vorbisdec.c: (gst_vorbis_dec_class_init),
 	(vorbisdec_finalize), (vorbis_handle_type_packet):
