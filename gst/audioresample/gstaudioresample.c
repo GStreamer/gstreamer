@@ -295,8 +295,11 @@ gboolean
   } else {
     /* take a best guess, this is called cheating */
     *othersize = floor (size * state->i_rate / state->o_rate);
+    *othersize -= *othersize % state->sample_size;
   }
   *othersize += state->sample_size;
+
+  g_assert (*othersize % state->sample_size == 0);
 
   /* we make room for one extra sample, given that the resampling filter
    * can output an extra one for non-integral i_rate/o_rate */
@@ -396,7 +399,7 @@ static GstFlowReturn
       outsize, outsamples);
 
   GST_BUFFER_OFFSET (outbuf) = audioresample->offset;
-  GST_BUFFER_TIMESTAMP (outbuf) =
+  GST_BUFFER_TIMESTAMP (outbuf) = base->segment_start +
       audioresample->offset * GST_SECOND / audioresample->o_rate;
 
   audioresample->offset += outsamples;
@@ -405,7 +408,7 @@ static GstFlowReturn
   /* we calculate DURATION as the difference between "next" timestamp
    * and current timestamp so we ensure a contiguous stream, instead of
    * having rounding errors. */
-  GST_BUFFER_DURATION (outbuf) =
+  GST_BUFFER_DURATION (outbuf) = base->segment_start +
       audioresample->offset * GST_SECOND / audioresample->o_rate -
       GST_BUFFER_TIMESTAMP (outbuf);
 
