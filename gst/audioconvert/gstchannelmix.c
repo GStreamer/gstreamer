@@ -43,7 +43,7 @@
  */
 
 void
-gst_audio_convert_unset_matrix (GstAudioConvert * this)
+gst_channel_mix_unset_matrix (AudioConvertCtx * this)
 {
   gint i;
 
@@ -52,7 +52,7 @@ gst_audio_convert_unset_matrix (GstAudioConvert * this)
     return;
 
   /* free */
-  for (i = 0; i < this->sinkcaps.channels; i++)
+  for (i = 0; i < this->in.channels; i++)
     g_free (this->matrix[i]);
   g_free (this->matrix);
 
@@ -66,17 +66,17 @@ gst_audio_convert_unset_matrix (GstAudioConvert * this)
  */
 
 static void
-gst_audio_convert_fill_identical (GstAudioConvert * this)
+gst_channel_mix_fill_identical (AudioConvertCtx * this)
 {
   gint ci, co;
 
   /* Apart from the compatible channel assignments, we can also have
    * same channel assignments. This is much simpler, we simply copy
    * the value from source to dest! */
-  for (co = 0; co < this->srccaps.channels; co++) {
+  for (co = 0; co < this->out.channels; co++) {
     /* find a channel in input with same position */
-    for (ci = 0; ci < this->sinkcaps.channels; ci++) {
-      if (this->sinkcaps.pos[ci] == this->srccaps.pos[co]) {
+    for (ci = 0; ci < this->in.channels; ci++) {
+      if (this->in.pos[ci] == this->out.pos[co]) {
         this->matrix[ci][co] = 1.0;
       }
     }
@@ -90,7 +90,7 @@ gst_audio_convert_fill_identical (GstAudioConvert * this)
  */
 
 static void
-gst_audio_convert_fill_compatible (GstAudioConvert * this)
+gst_channel_mix_fill_compatible (AudioConvertCtx * this)
 {
   /* Conversions from one-channel to compatible two-channel configs */
   struct
@@ -128,14 +128,14 @@ gst_audio_convert_fill_compatible (GstAudioConvert * this)
     gint pos1_0 = -1, pos1_1 = -1, pos2_0 = -1, n;
 
     /* Try to go from the given 2 channels to the given 1 channel */
-    for (n = 0; n < this->sinkcaps.channels; n++) {
-      if (this->sinkcaps.pos[n] == conv[c].pos1[0])
+    for (n = 0; n < this->in.channels; n++) {
+      if (this->in.pos[n] == conv[c].pos1[0])
         pos1_0 = n;
-      else if (this->sinkcaps.pos[n] == conv[c].pos1[1])
+      else if (this->in.pos[n] == conv[c].pos1[1])
         pos1_1 = n;
     }
-    for (n = 0; n < this->srccaps.channels; n++) {
-      if (this->srccaps.pos[n] == conv[c].pos2[0])
+    for (n = 0; n < this->out.channels; n++) {
+      if (this->out.pos[n] == conv[c].pos2[0])
         pos2_0 = n;
     }
 
@@ -149,14 +149,14 @@ gst_audio_convert_fill_compatible (GstAudioConvert * this)
     pos1_1 = -1;
     pos2_0 = -1;
 
-    for (n = 0; n < this->srccaps.channels; n++) {
-      if (this->srccaps.pos[n] == conv[c].pos1[0])
+    for (n = 0; n < this->out.channels; n++) {
+      if (this->out.pos[n] == conv[c].pos1[0])
         pos1_0 = n;
-      else if (this->srccaps.pos[n] == conv[c].pos1[1])
+      else if (this->out.pos[n] == conv[c].pos1[1])
         pos1_1 = n;
     }
-    for (n = 0; n < this->sinkcaps.channels; n++) {
-      if (this->sinkcaps.pos[n] == conv[c].pos2[0])
+    for (n = 0; n < this->in.channels; n++) {
+      if (this->in.pos[n] == conv[c].pos2[0])
         pos2_0 = n;
     }
 
@@ -177,7 +177,7 @@ gst_audio_convert_fill_compatible (GstAudioConvert * this)
  */
 
 static void
-gst_audio_convert_detect_pos (GstAudioConvertCaps * caps,
+gst_channel_mix_detect_pos (AudioConvertFmt * caps,
     gint * f, gboolean * has_f,
     gint * c, gboolean * has_c, gint * r, gboolean * has_r,
     gint * s, gboolean * has_s, gint * b, gboolean * has_b)
@@ -232,12 +232,12 @@ gst_audio_convert_detect_pos (GstAudioConvertCaps * caps,
 }
 
 static void
-gst_audio_convert_fill_one_other (gfloat ** matrix,
-    GstAudioConvertCaps * from_caps, gint * from_idx,
+gst_channel_mix_fill_one_other (gfloat ** matrix,
+    AudioConvertFmt * from_caps, gint * from_idx,
     GstAudioChannelPosition from_pos_l,
     GstAudioChannelPosition from_pos_r,
     GstAudioChannelPosition from_pos_c,
-    GstAudioConvertCaps * to_caps, gint * to_idx,
+    AudioConvertFmt * to_caps, gint * to_idx,
     GstAudioChannelPosition to_pos_l,
     GstAudioChannelPosition to_pos_r,
     GstAudioChannelPosition to_pos_c, gfloat ratio)
@@ -285,7 +285,7 @@ gst_audio_convert_fill_one_other (gfloat ** matrix,
 #define RATIO_CENTER_BASS (1.0 / sqrt (2.0))
 
 static void
-gst_audio_convert_fill_others (GstAudioConvert * this)
+gst_channel_mix_fill_others (AudioConvertCtx * this)
 {
   gboolean in_has_front = FALSE, out_has_front = FALSE,
       in_has_center = FALSE, out_has_center = FALSE,
@@ -305,33 +305,33 @@ gst_audio_convert_fill_others (GstAudioConvert * this)
 
   /* First see where (if at all) the various channels from/to
    * which we want to convert are located in our matrix/array. */
-  gst_audio_convert_detect_pos (&this->sinkcaps,
+  gst_channel_mix_detect_pos (&this->in,
       in_f, &in_has_front,
       in_c, &in_has_center, in_r, &in_has_rear,
       in_s, &in_has_side, in_b, &in_has_bass);
-  gst_audio_convert_detect_pos (&this->srccaps,
+  gst_channel_mix_detect_pos (&this->out,
       out_f, &out_has_front,
       out_c, &out_has_center, out_r, &out_has_rear,
       out_s, &out_has_side, out_b, &out_has_bass);
 
   /* center/front */
   if (!in_has_center && in_has_front && out_has_center) {
-    gst_audio_convert_fill_one_other (this->matrix,
-        &this->sinkcaps, in_f,
+    gst_channel_mix_fill_one_other (this->matrix,
+        &this->in, in_f,
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_MONO,
-        &this->srccaps, out_c,
+        &this->out, out_c,
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
         GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
         GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER, RATIO_FRONT_CENTER);
   } else if (in_has_center && !out_has_center && out_has_front) {
-    gst_audio_convert_fill_one_other (this->matrix,
-        &this->sinkcaps, in_c,
+    gst_channel_mix_fill_one_other (this->matrix,
+        &this->in, in_c,
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
         GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
         GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        &this->srccaps, out_f,
+        &this->out, out_f,
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_MONO, RATIO_FRONT_CENTER);
@@ -339,22 +339,22 @@ gst_audio_convert_fill_others (GstAudioConvert * this)
 
   /* rear/front */
   if (!in_has_rear && in_has_front && out_has_rear) {
-    gst_audio_convert_fill_one_other (this->matrix,
-        &this->sinkcaps, in_f,
+    gst_channel_mix_fill_one_other (this->matrix,
+        &this->in, in_f,
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_MONO,
-        &this->srccaps, out_r,
+        &this->out, out_r,
         GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
         GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_REAR_CENTER, RATIO_FRONT_REAR);
   } else if (in_has_center && !out_has_center && out_has_front) {
-    gst_audio_convert_fill_one_other (this->matrix,
-        &this->sinkcaps, in_r,
+    gst_channel_mix_fill_one_other (this->matrix,
+        &this->in, in_r,
         GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
         GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
-        &this->srccaps, out_f,
+        &this->out, out_f,
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_MONO, RATIO_FRONT_REAR);
@@ -363,68 +363,68 @@ gst_audio_convert_fill_others (GstAudioConvert * this)
   /* bass/any */
   if (in_has_bass && !out_has_bass) {
     if (out_has_front) {
-      gst_audio_convert_fill_one_other (this->matrix,
-          &this->sinkcaps, in_b,
+      gst_channel_mix_fill_one_other (this->matrix,
+          &this->in, in_b,
           GST_AUDIO_CHANNEL_POSITION_INVALID,
           GST_AUDIO_CHANNEL_POSITION_INVALID,
           GST_AUDIO_CHANNEL_POSITION_LFE,
-          &this->srccaps, out_f,
+          &this->out, out_f,
           GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
           GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
           GST_AUDIO_CHANNEL_POSITION_FRONT_MONO, RATIO_FRONT_BASS);
     }
     if (out_has_center) {
-      gst_audio_convert_fill_one_other (this->matrix,
-          &this->sinkcaps, in_b,
+      gst_channel_mix_fill_one_other (this->matrix,
+          &this->in, in_b,
           GST_AUDIO_CHANNEL_POSITION_INVALID,
           GST_AUDIO_CHANNEL_POSITION_INVALID,
           GST_AUDIO_CHANNEL_POSITION_LFE,
-          &this->srccaps, out_c,
+          &this->out, out_c,
           GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
           GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
           GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER, RATIO_CENTER_BASS);
     }
     if (out_has_rear) {
-      gst_audio_convert_fill_one_other (this->matrix,
-          &this->sinkcaps, in_b,
+      gst_channel_mix_fill_one_other (this->matrix,
+          &this->in, in_b,
           GST_AUDIO_CHANNEL_POSITION_INVALID,
           GST_AUDIO_CHANNEL_POSITION_INVALID,
           GST_AUDIO_CHANNEL_POSITION_LFE,
-          &this->srccaps, out_r,
+          &this->out, out_r,
           GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
           GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
           GST_AUDIO_CHANNEL_POSITION_REAR_CENTER, RATIO_REAR_BASS);
     }
   } else if (!in_has_bass && out_has_bass) {
     if (in_has_front) {
-      gst_audio_convert_fill_one_other (this->matrix,
-          &this->sinkcaps, in_f,
+      gst_channel_mix_fill_one_other (this->matrix,
+          &this->in, in_f,
           GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
           GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
           GST_AUDIO_CHANNEL_POSITION_FRONT_MONO,
-          &this->srccaps, out_b,
+          &this->out, out_b,
           GST_AUDIO_CHANNEL_POSITION_INVALID,
           GST_AUDIO_CHANNEL_POSITION_INVALID,
           GST_AUDIO_CHANNEL_POSITION_LFE, RATIO_FRONT_BASS);
     }
     if (in_has_center) {
-      gst_audio_convert_fill_one_other (this->matrix,
-          &this->sinkcaps, in_c,
+      gst_channel_mix_fill_one_other (this->matrix,
+          &this->in, in_c,
           GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
           GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
           GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          &this->srccaps, out_b,
+          &this->out, out_b,
           GST_AUDIO_CHANNEL_POSITION_INVALID,
           GST_AUDIO_CHANNEL_POSITION_INVALID,
           GST_AUDIO_CHANNEL_POSITION_LFE, RATIO_CENTER_BASS);
     }
     if (in_has_rear) {
-      gst_audio_convert_fill_one_other (this->matrix,
-          &this->sinkcaps, in_r,
+      gst_channel_mix_fill_one_other (this->matrix,
+          &this->in, in_r,
           GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
           GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
           GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
-          &this->srccaps, out_b,
+          &this->out, out_b,
           GST_AUDIO_CHANNEL_POSITION_INVALID,
           GST_AUDIO_CHANNEL_POSITION_INVALID,
           GST_AUDIO_CHANNEL_POSITION_LFE, RATIO_REAR_BASS);
@@ -439,15 +439,15 @@ gst_audio_convert_fill_others (GstAudioConvert * this)
  */
 
 static void
-gst_audio_convert_fill_normalize (GstAudioConvert * this)
+gst_channel_mix_fill_normalize (AudioConvertCtx * this)
 {
   gfloat sum, top = 0;
   gint i, j;
 
-  for (j = 0; j < this->srccaps.channels; j++) {
+  for (j = 0; j < this->out.channels; j++) {
     /* calculate sum */
     sum = 0.0;
-    for (i = 0; i < this->sinkcaps.channels; i++) {
+    for (i = 0; i < this->in.channels; i++) {
       sum += fabs (this->matrix[i][j]);
     }
     if (sum > top) {
@@ -456,8 +456,8 @@ gst_audio_convert_fill_normalize (GstAudioConvert * this)
   }
 
   /* normalize to this */
-  for (j = 0; j < this->srccaps.channels; j++) {
-    for (i = 0; i < this->sinkcaps.channels; i++) {
+  for (j = 0; j < this->out.channels; j++) {
+    for (i = 0; i < this->in.channels; i++) {
       this->matrix[i][j] /= top;
     }
   }
@@ -468,45 +468,45 @@ gst_audio_convert_fill_normalize (GstAudioConvert * this)
  */
 
 static void
-gst_audio_convert_fill_matrix (GstAudioConvert * this)
+gst_channel_mix_fill_matrix (AudioConvertCtx * this)
 {
-  gst_audio_convert_fill_identical (this);
-  gst_audio_convert_fill_compatible (this);
-  gst_audio_convert_fill_others (this);
-  gst_audio_convert_fill_normalize (this);
+  gst_channel_mix_fill_identical (this);
+  gst_channel_mix_fill_compatible (this);
+  gst_channel_mix_fill_others (this);
+  gst_channel_mix_fill_normalize (this);
 }
 
-/* only call after this->srccaps and this->sinkcaps are filled in */
+/* only call after this->out and this->in are filled in */
 void
-gst_audio_convert_setup_matrix (GstAudioConvert * this)
+gst_channel_mix_setup_matrix (AudioConvertCtx * this)
 {
   gint i, j;
   GString *s;
 
   /* don't lose memory */
-  gst_audio_convert_unset_matrix (this);
+  gst_channel_mix_unset_matrix (this);
 
   /* allocate */
-  this->matrix = g_new0 (gfloat *, this->sinkcaps.channels);
-  for (i = 0; i < this->sinkcaps.channels; i++) {
-    this->matrix[i] = g_new (gfloat, this->srccaps.channels);
-    for (j = 0; j < this->srccaps.channels; j++)
+  this->matrix = g_new0 (gfloat *, this->in.channels);
+  for (i = 0; i < this->in.channels; i++) {
+    this->matrix[i] = g_new (gfloat, this->out.channels);
+    for (j = 0; j < this->out.channels; j++)
       this->matrix[i][j] = 0.;
   }
 
   /* setup the matrix' internal values */
-  gst_audio_convert_fill_matrix (this);
+  gst_channel_mix_fill_matrix (this);
 
   /* debug */
   s = g_string_new ("Matrix for");
   g_string_append_printf (s, " %d -> %d: ",
-      this->sinkcaps.channels, this->srccaps.channels);
+      this->in.channels, this->out.channels);
   g_string_append (s, "{");
-  for (i = 0; i < this->sinkcaps.channels; i++) {
+  for (i = 0; i < this->in.channels; i++) {
     if (i != 0)
       g_string_append (s, ",");
     g_string_append (s, " {");
-    for (j = 0; j < this->srccaps.channels; j++) {
+    for (j = 0; j < this->out.channels; j++) {
       if (j != 0)
         g_string_append (s, ",");
       g_string_append_printf (s, " %f", this->matrix[i][j]);
@@ -519,16 +519,16 @@ gst_audio_convert_setup_matrix (GstAudioConvert * this)
 }
 
 gboolean
-gst_audio_convert_passthrough (GstAudioConvert * this)
+gst_channel_mix_passthrough (AudioConvertCtx * this)
 {
   gint i;
 
   /* only NxN matrices can be identities */
-  if (this->sinkcaps.channels != this->srccaps.channels)
+  if (this->in.channels != this->out.channels)
     return FALSE;
 
   /* this assumes a normalized matrix */
-  for (i = 0; i < this->sinkcaps.channels; i++)
+  for (i = 0; i < this->in.channels; i++)
     if (this->matrix[i][i] != 1.)
       return FALSE;
 
@@ -538,23 +538,22 @@ gst_audio_convert_passthrough (GstAudioConvert * this)
 /* IMPORTANT: out_data == in_data is possible, make sure to not overwrite data
  * you might need later on! */
 void
-gst_audio_convert_mix (GstAudioConvert * this,
+gst_channel_mix_mix (AudioConvertCtx * this,
     gint32 * in_data, gint32 * out_data, gint samples)
 {
   gint in, out, n;
   gint64 res;
-  gint32 tmp[this->srccaps.channels];
-  gboolean backwards = this->srccaps.channels > this->sinkcaps.channels;
+  gint32 tmp[this->out.channels];
+  gboolean backwards = this->out.channels > this->in.channels;
 
   /* FIXME: use liboil here? */
   for (n = (backwards ? samples - 1 : 0); n < samples && n >= 0;
       backwards ? n-- : n++) {
-    for (out = 0; out < this->srccaps.channels; out++) {
+    for (out = 0; out < this->out.channels; out++) {
       /* convert */
       res = 0;
-      for (in = 0; in < this->sinkcaps.channels; in++) {
-        res += in_data[n * this->sinkcaps.channels + in] *
-            this->matrix[in][out];
+      for (in = 0; in < this->in.channels; in++) {
+        res += in_data[n * this->in.channels + in] * this->matrix[in][out];
       }
 
       /* clip (shouldn't we use doubles instead as intermediate format?) */
@@ -564,7 +563,7 @@ gst_audio_convert_mix (GstAudioConvert * this,
         res = G_MAXINT32;
       tmp[out] = res;
     }
-    memcpy (&out_data[n * this->srccaps.channels], tmp,
-        sizeof (gint32) * this->srccaps.channels);
+    memcpy (&out_data[n * this->out.channels], tmp,
+        sizeof (gint32) * this->out.channels);
   }
 }

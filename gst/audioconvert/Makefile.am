@@ -2,6 +2,7 @@ plugin_LTLIBRARIES = libgstaudioconvert.la
 
 libgstaudioconvert_la_SOURCES = \
 	gstaudioconvert.c \
+	audioconvert.c \
 	gstchannelmix.c \
 	bufferframesconvert.c \
 	plugin.c
@@ -13,6 +14,8 @@ libgstaudioconvert_la_LIBADD = \
 	$(GST_LIBS)
 
 noinst_HEADERS = \
+	gstaudioconvert.h \
+	audioconvert.h \
 	gstchannelmix.h \
 	plugin.h
 
