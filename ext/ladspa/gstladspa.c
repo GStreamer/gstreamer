@@ -36,7 +36,7 @@
 #define LADSPA_VERSION "1.0"
 #endif
 
-GST_BOILERPLATE (GstLADSPA, GST_TYPE_LADSPA, GstSignalProcessor,
+GST_BOILERPLATE (GstLADSPA, gst_ladspa, GstSignalProcessor,
     GST_TYPE_SIGNAL_PROCESSOR);
 
 static void gst_ladspa_set_property (GObject * object, guint prop_id,
@@ -45,10 +45,11 @@ static void gst_ladspa_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static gboolean gst_ladspa_setup (GstSignalProcessor * sigproc,
-    guint sample_rate, guint buffer_frames);
-static gboolean gst_ladspa_activate (GstSignalProcessor * sigproc);
-static gboolean gst_ladspa_deactivate (GstSignalProcessor * sigproc);
-static gboolean gst_ladspa_process (GstSignalProcessor * sigproc);
+    guint sample_rate);
+static gboolean gst_ladspa_start (GstSignalProcessor * sigproc);
+static void gst_ladspa_stop (GstSignalProcessor * sigproc);
+static void gst_ladspa_cleanup (GstSignalProcessor * sigproc);
+static void gst_ladspa_process (GstSignalProcessor * sigproc, guint nframes);
 
 
 static GstPlugin *ladspa_plugin;
@@ -60,11 +61,11 @@ GST_DEBUG_CATEGORY_STATIC (ladspa_debug);
 
 
 static void
-gst_ladspa_base_init (GstLADSPAClass * klass)
+gst_ladspa_base_init (gpointer g_class)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstSignalProcessorClass *gsp_class = GST_SIGNAL_PROCESSOR_CLASS (klass);
-  GstPadTemplate *templ;
+  GstLADSPAClass *klass = (GstLADSPAClass *) g_class;
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstSignalProcessorClass *gsp_class = GST_SIGNAL_PROCESSOR_CLASS (g_class);
   GstElementDetails *details;
   LADSPA_Descriptor *desc;
   gint j, sinkcount, srccount;
@@ -73,6 +74,8 @@ gst_ladspa_base_init (GstLADSPAClass * klass)
       GINT_TO_POINTER (G_TYPE_FROM_CLASS (klass)));
   if (!desc)
     desc = g_hash_table_lookup (ladspa_descriptors, GINT_TO_POINTER (0));
+  g_assert (desc);
+  klass->descriptor = desc;
   g_assert (desc);
 
   /* pad templates */
@@ -89,11 +92,11 @@ gst_ladspa_base_init (GstLADSPAClass * klass)
       g_strcanon (name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-", '-');
 
       if (LADSPA_IS_PORT_INPUT (p))
-        gst_signal_processor_class_add_pad_template (name, GST_PAD_SINK,
-            gsp_class->num_audio_in++);
+        gst_signal_processor_class_add_pad_template (gsp_class, name,
+            GST_PAD_SINK, gsp_class->num_audio_in++);
       else
-        gst_signal_processor_class_add_pad_template (name, GST_PAD_SRC,
-            gsp_class->num_audio_out++);
+        gst_signal_processor_class_add_pad_template (gsp_class, name,
+            GST_PAD_SRC, gsp_class->num_audio_out++);
     }
   }
 
@@ -114,7 +117,7 @@ gst_ladspa_base_init (GstLADSPAClass * klass)
     details->klass = "Filter/Effect/Audio/LADSPA";
   gst_element_class_set_details (element_class, details);
 
-  klass->audio_in_portnums = g_new0 (gint, klass->num_audio_in);
+  klass->audio_in_portnums = g_new0 (gint, gsp_class->num_audio_in);
   klass->audio_out_portnums = g_new0 (gint, gsp_class->num_audio_out);
 
   sinkcount = srccount = 0;
@@ -128,790 +131,424 @@ gst_ladspa_base_init (GstLADSPAClass * klass)
   }
 
   klass->descriptor = desc;
+}
+
+static gchar *
+gst_ladspa_class_get_param_name (GstLADSPAClass * klass, gint portnum)
+{
+  LADSPA_Descriptor *desc;
+  gchar *ret, *paren;
+
+  desc = klass->descriptor;
+
+  ret = g_strdup (desc->PortNames[portnum]);
+
+  paren = g_strrstr (ret, " (");
+  if (paren != NULL)
+    *paren = '\0';
+
+  /* this is the same thing that param_spec_* will do */
+  g_strcanon (ret, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-", '-');
+  /* satisfy glib2 (argname[0] must be [A-Za-z]) */
+  if (!((ret[0] >= 'a' && ret[0] <= 'z') || (ret[0] >= 'A' && ret[0] <= 'Z'))) {
+    gchar *tempstr = ret;
+
+    ret = g_strconcat ("param-", ret, NULL);
+    g_free (tempstr);
+  }
+
+  /* check for duplicate property names */
+  if (g_object_class_find_property (G_OBJECT_CLASS (klass), ret)) {
+    gint n = 1;
+    gchar *nret = g_strdup_printf ("%s-%d", ret, n++);
+
+    while (g_object_class_find_property (G_OBJECT_CLASS (klass), nret)) {
+      g_free (nret);
+      nret = g_strdup_printf ("%s-%d", ret, n++);
+    }
+    ret = nret;
+  }
+
+  return ret;
+}
+
+static GParamSpec *
+gst_ladspa_class_get_param_spec (GstLADSPAClass * klass, gint portnum)
+{
+  LADSPA_Descriptor *desc;
+  GParamSpec *ret;
+  gchar *name;
+  gint hintdesc, perms;
+  gfloat lower, upper, def;
+
+  desc = klass->descriptor;
+
+  name = gst_ladspa_class_get_param_name (klass, portnum);
+  perms = G_PARAM_READABLE;
+  if (LADSPA_IS_PORT_INPUT (desc->PortDescriptors[portnum]))
+    perms |= G_PARAM_WRITABLE;
+
+  /* short name for hint descriptor */
+  hintdesc = desc->PortRangeHints[portnum].HintDescriptor;
+
+  if (LADSPA_IS_HINT_TOGGLED (hintdesc)) {
+    ret = g_param_spec_boolean (name, name, name, FALSE, perms);
+    g_free (name);
+    return ret;
+  }
+
+  if (LADSPA_IS_HINT_BOUNDED_BELOW (hintdesc))
+    lower = desc->PortRangeHints[portnum].LowerBound;
+  else
+    lower = -G_MAXFLOAT;
+
+  if (LADSPA_IS_HINT_BOUNDED_ABOVE (hintdesc))
+    upper = desc->PortRangeHints[portnum].UpperBound;
+  else
+    upper = G_MAXFLOAT;
+
+  if (LADSPA_IS_HINT_SAMPLE_RATE (hintdesc)) {
+    /* FIXME! */
+    lower *= 44100;
+    upper *= 44100;
+  }
+
+  if (LADSPA_IS_HINT_INTEGER (hintdesc)) {
+    lower = CLAMP (lower, G_MININT, G_MAXINT);
+    upper = CLAMP (upper, G_MININT, G_MAXINT);
+  }
+
+  /* default to lower bound */
+  def = lower;
+
+#ifdef LADSPA_IS_HINT_HAS_DEFAULT
+  if (LADSPA_IS_HINT_HAS_DEFAULT (hintdesc)) {
+    if (LADSPA_IS_HINT_DEFAULT_0 (hintdesc))
+      def = 0.0;
+    else if (LADSPA_IS_HINT_DEFAULT_1 (hintdesc))
+      def = 1.0;
+    else if (LADSPA_IS_HINT_DEFAULT_100 (hintdesc))
+      def = 100.0;
+    else if (LADSPA_IS_HINT_DEFAULT_440 (hintdesc))
+      def = 440.0;
+    if (LADSPA_IS_HINT_DEFAULT_MINIMUM (hintdesc))
+      def = lower;
+    else if (LADSPA_IS_HINT_DEFAULT_MAXIMUM (hintdesc))
+      def = upper;
+    else if (LADSPA_IS_HINT_LOGARITHMIC (hintdesc)) {
+      if (LADSPA_IS_HINT_DEFAULT_LOW (hintdesc))
+        def = exp (0.75 * log (lower) + 0.25 * log (upper));
+      else if (LADSPA_IS_HINT_DEFAULT_MIDDLE (hintdesc))
+        def = exp (0.5 * log (lower) + 0.5 * log (upper));
+      else if (LADSPA_IS_HINT_DEFAULT_HIGH (hintdesc))
+        def = exp (0.25 * log (lower) + 0.75 * log (upper));
+    } else {
+      if (LADSPA_IS_HINT_DEFAULT_LOW (hintdesc))
+        def = 0.75 * lower + 0.25 * upper;
+      else if (LADSPA_IS_HINT_DEFAULT_MIDDLE (hintdesc))
+        def = 0.5 * lower + 0.5 * upper;
+      else if (LADSPA_IS_HINT_DEFAULT_HIGH (hintdesc))
+        def = 0.25 * lower + 0.75 * upper;
+    }
+  }
+#endif /* LADSPA_IS_HINT_HAS_DEFAULT */
+
+  if (lower > upper) {
+    gfloat tmp;
+
+    /* silently swap */
+    tmp = lower;
+    lower = upper;
+    upper = tmp;
+  }
+
+  def = CLAMP (def, lower, upper);
+
+  if (LADSPA_IS_HINT_INTEGER (hintdesc)) {
+    ret = g_param_spec_int (name, name, name, lower, upper, def, perms);
+  } else {
+    ret = g_param_spec_float (name, name, name, lower, upper, def, perms);
+  }
+
+  g_free (name);
+
+  return ret;
 }
 
 static void
 gst_ladspa_class_init (GstLADSPAClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstSignalProcessorClass *gsp_class = GST_SIGNAL_PROCESSOR_CLASS (klass);
+  GstSignalProcessorClass *gsp_class;
   LADSPA_Descriptor *desc;
-  gint i, current_portnum, controlcount;
-  gint hintdesc;
-  gint argtype, argperms;
-  GParamSpec *paramspec = NULL;
-  gchar *argname, *tempstr, *paren;
+  gint i, control_in_count, control_out_count;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-
   gobject_class->set_property = gst_ladspa_set_property;
   gobject_class->get_property = gst_ladspa_get_property;
 
-  gstelement_class->change_state = gst_ladspa_change_state;
+  gsp_class = GST_SIGNAL_PROCESSOR_CLASS (klass);
+  gsp_class->setup = gst_ladspa_setup;
+  gsp_class->start = gst_ladspa_start;
+  gsp_class->stop = gst_ladspa_stop;
+  gsp_class->cleanup = gst_ladspa_cleanup;
+  gsp_class->process = gst_ladspa_process;
 
-  gsp_class->num_control_in = 0;
-  gsp_class->num_control_in = 0;
-
-  for (j = 0; j < desc->PortCount; j++) {
-    LADSPA_PortDescriptor p = desc->PortDescriptors[j];
-
-    if (LADSPA_IS_PORT_AUDIO (p)) {
-      gchar *name = g_strdup ((gchar *) desc->PortNames[j]);
-
-      g_strcanon (name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-", '-');
-
-      if (LADSPA_IS_PORT_INPUT (p))
-        gst_signal_processor_class_add_pad_template (name, GST_PAD_SINK,
-            gsp_class->num_audio_in++);
-      else
-        gst_signal_processor_class_add_pad_template (name, GST_PAD_SRC,
-            gsp_class->num_audio_out++);
-    }
-  }
-
-  /* construct the element details struct */
-  details = g_new0 (GstElementDetails, 1);
-  details->longname = g_locale_to_utf8 (desc->Name, -1, NULL, NULL, NULL);
-  if (!details->longname)
-    details->longname = g_strdup ("no description available");
-  details->description = details->longname;
-  details->author = g_locale_to_utf8 (desc->Maker, -1, NULL, NULL, NULL);
-  if (!details->author)
-    details->author = g_strdup ("no author available");
-  if (gsp_class->num_audio_in == 0)
-    details->klass = "Source/Audio/LADSPA";
-  else if (gsp_class->num_audio_out == 0)
-    details->klass = "Sink/Audio/LADSPA";
-  else
-    details->klass = "Filter/Effect/Audio/LADSPA";
-  gst_element_class_set_details (element_class, details);
-
-  klass->audio_in_portnums = g_new0 (gint, klass->num_audio_in);
-  klass->audio_out_portnums = g_new0 (gint, gsp_class->num_audio_out);
-
-  sinkcount = srccount = 0;
-  for (j = 0; j < desc->PortCount; j++) {
-    if (LADSPA_IS_PORT_AUDIO (desc->PortDescriptors[j])) {
-      if (LADSPA_IS_PORT_INPUT (desc->PortDescriptors[j]))
-        klass->audio_in_portnums[sinkcount++] = j;
-      else
-        klass->audio_out_portnums[srccount++] = j;
-    }
-  }
-
-  klass->descriptor = desc;
-
-  /* look up and store the ladspa descriptor */
-  desc = g_hash_table_lookup (ladspa_descriptors,
-      GINT_TO_POINTER (G_TYPE_FROM_CLASS (klass)));
-  if (!desc)
-    desc = g_hash_table_lookup (ladspa_descriptors, GINT_TO_POINTER (0));
+  desc = klass->descriptor;
   g_assert (desc);
 
-  klass->numcontrols = 0;
+  gsp_class->num_control_in = 0;
+  gsp_class->num_control_out = 0;
 
-  /* walk through the ports, count the input, output and control ports */
   for (i = 0; i < desc->PortCount; i++) {
-    if (!LADSPA_IS_PORT_AUDIO (desc->PortDescriptors[i]) &&
-        LADSPA_IS_PORT_INPUT (desc->PortDescriptors[i]))
-      klass->numcontrols++;
+    LADSPA_PortDescriptor p = desc->PortDescriptors[i];
+
+    if (!LADSPA_IS_PORT_AUDIO (p)) {
+      if (LADSPA_IS_PORT_INPUT (p))
+        gsp_class->num_control_in++;
+      else
+        gsp_class->num_control_out++;
+    }
   }
 
-  GST_DEBUG ("ladspa element class: init %s with %d sink, %d src, %d control\n",
-      g_type_name (G_TYPE_FROM_CLASS (klass)),
-      klass->numsinkpads, klass->numsrcpads, klass->numcontrols);
+  klass->control_in_portnums = g_new0 (gint, gsp_class->num_control_in);
+  klass->control_out_portnums = g_new0 (gint, gsp_class->num_control_out);
 
-  klass->control_portnums = g_new0 (gint, klass->numcontrols);
-  controlcount = 0;
-
-  /* walk through the ports, note the portnums for control params */
+  control_in_count = control_out_count = 0;
   for (i = 0; i < desc->PortCount; i++) {
-    if (!LADSPA_IS_PORT_AUDIO (desc->PortDescriptors[i]) &&
-        LADSPA_IS_PORT_INPUT (desc->PortDescriptors[i]))
-      klass->control_portnums[controlcount++] = i;
+    LADSPA_PortDescriptor p = desc->PortDescriptors[i];
+
+    if (!LADSPA_IS_PORT_AUDIO (p)) {
+      if (LADSPA_IS_PORT_INPUT (p))
+        klass->control_in_portnums[control_in_count++] = i;
+      else
+        klass->control_out_portnums[control_out_count++] = i;
+    }
   }
+  g_assert (control_in_count == gsp_class->num_control_in);
+  g_assert (control_out_count == gsp_class->num_control_out);
 
-  /* now build the control info from the control ports */
-  klass->control_info = g_new0 (ladspa_control_info, klass->numcontrols);
+  for (i = 0; i < gsp_class->num_control_in; i++) {
+    GParamSpec *p;
 
-  for (i = 0; i < klass->numcontrols; i++) {
-    current_portnum = klass->control_portnums[i];
-
-    /* short name for hint descriptor */
-    hintdesc = desc->PortRangeHints[current_portnum].HintDescriptor;
-
-    /* get the various bits */
-    if (LADSPA_IS_HINT_TOGGLED (hintdesc))
-      klass->control_info[i].toggled = TRUE;
-    if (LADSPA_IS_HINT_LOGARITHMIC (hintdesc))
-      klass->control_info[i].logarithmic = TRUE;
-    if (LADSPA_IS_HINT_INTEGER (hintdesc))
-      klass->control_info[i].integer = TRUE;
-
-    /* figure out the argument details */
-    if (klass->control_info[i].toggled)
-      argtype = G_TYPE_BOOLEAN;
-    else if (klass->control_info[i].integer)
-      argtype = G_TYPE_INT;
-    else
-      argtype = G_TYPE_FLOAT;
-
-    /* grab the bounds */
-    if (LADSPA_IS_HINT_BOUNDED_BELOW (hintdesc)) {
-      klass->control_info[i].lower = TRUE;
-      klass->control_info[i].lowerbound =
-          desc->PortRangeHints[current_portnum].LowerBound;
-    } else {
-      if (argtype == G_TYPE_INT)
-        klass->control_info[i].lowerbound = (gfloat) G_MININT;
-      if (argtype == G_TYPE_FLOAT)
-        klass->control_info[i].lowerbound = -G_MAXFLOAT;
-    }
-
-    if (LADSPA_IS_HINT_BOUNDED_ABOVE (hintdesc)) {
-      klass->control_info[i].upper = TRUE;
-      klass->control_info[i].upperbound =
-          desc->PortRangeHints[current_portnum].UpperBound;
-      if (LADSPA_IS_HINT_SAMPLE_RATE (hintdesc)) {
-        klass->control_info[i].samplerate = TRUE;
-        klass->control_info[i].upperbound *= 44100;     /* FIXME? */
-      }
-    } else {
-      if (argtype == G_TYPE_INT)
-        klass->control_info[i].upperbound = (gfloat) G_MAXINT;
-      if (argtype == G_TYPE_FLOAT)
-        klass->control_info[i].upperbound = G_MAXFLOAT;
-    }
-
-    /* use the lowerbound as the default value */
-    klass->control_info[i].def = klass->control_info[i].lowerbound;
-
-#ifdef LADSPA_IS_HINT_HAS_DEFAULT
-    /* figure out the defaults */
-    if (LADSPA_IS_HINT_HAS_DEFAULT (hintdesc)) {
-      if (LADSPA_IS_HINT_DEFAULT_MINIMUM (hintdesc))
-        klass->control_info[i].def = klass->control_info[i].lowerbound;
-      else if (LADSPA_IS_HINT_DEFAULT_LOW (hintdesc))
-        if (LADSPA_IS_HINT_LOGARITHMIC (hintdesc))
-          klass->control_info[i].def =
-              exp (0.75 * log (klass->control_info[i].lowerbound) +
-              0.25 * log (klass->control_info[i].upperbound));
-        else
-          klass->control_info[i].def =
-              (0.75 * klass->control_info[i].lowerbound +
-              0.25 * klass->control_info[i].upperbound);
-      else if (LADSPA_IS_HINT_DEFAULT_MIDDLE (hintdesc))
-        if (LADSPA_IS_HINT_LOGARITHMIC (hintdesc))
-          klass->control_info[i].def =
-              exp (0.5 * log (klass->control_info[i].lowerbound) +
-              0.5 * log (klass->control_info[i].upperbound));
-        else
-          klass->control_info[i].def =
-              (0.5 * klass->control_info[i].lowerbound +
-              0.5 * klass->control_info[i].upperbound);
-      else if (LADSPA_IS_HINT_DEFAULT_HIGH (hintdesc))
-        if (LADSPA_IS_HINT_LOGARITHMIC (hintdesc))
-          klass->control_info[i].def =
-              exp (0.25 * log (klass->control_info[i].lowerbound) +
-              0.75 * log (klass->control_info[i].upperbound));
-        else
-          klass->control_info[i].def =
-              (0.25 * klass->control_info[i].lowerbound +
-              0.75 * klass->control_info[i].upperbound);
-      else if (LADSPA_IS_HINT_DEFAULT_MAXIMUM (hintdesc))
-        klass->control_info[i].def = klass->control_info[i].upperbound;
-      else if (LADSPA_IS_HINT_DEFAULT_0 (hintdesc))
-        klass->control_info[i].def = 0.0;
-      else if (LADSPA_IS_HINT_DEFAULT_1 (hintdesc))
-        klass->control_info[i].def = 1.0;
-      else if (LADSPA_IS_HINT_DEFAULT_100 (hintdesc))
-        klass->control_info[i].def = 100.0;
-      else if (LADSPA_IS_HINT_DEFAULT_440 (hintdesc))
-        klass->control_info[i].def = 440.0;
-    }
-#endif /* LADSPA_IS_HINT_HAS_DEFAULT */
-
-    klass->control_info[i].def = CLAMP (klass->control_info[i].def,
-        klass->control_info[i].lowerbound, klass->control_info[i].upperbound);
-
-    if (LADSPA_IS_PORT_INPUT (desc->PortDescriptors[current_portnum])) {
-      argperms = G_PARAM_READWRITE;
-      klass->control_info[i].writable = TRUE;
-    } else {
-      argperms = G_PARAM_READABLE;
-      klass->control_info[i].writable = FALSE;
-    }
-
-    klass->control_info[i].name = g_strdup (desc->PortNames[current_portnum]);
-    argname = g_strdup (klass->control_info[i].name);
-    /* find out if there is a (unitname) at the end of the argname and get rid
-       of it */
-    paren = g_strrstr (argname, " (");
-    if (paren != NULL) {
-      *paren = '\0';
-    }
-    /* this is the same thing that param_spec_* will do */
-    g_strcanon (argname, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-", '-');
-    /* satisfy glib2 (argname[0] must be [A-Za-z]) */
-    if (!((argname[0] >= 'a' && argname[0] <= 'z') || (argname[0] >= 'A'
-                && argname[0] <= 'Z'))) {
-      tempstr = argname;
-      argname = g_strconcat ("param-", argname, NULL);
-      g_free (tempstr);
-    }
-
-    /* check for duplicate property names */
-    if (g_object_class_find_property (G_OBJECT_CLASS (klass), argname) != NULL) {
-      gint numarg = 1;
-      gchar *numargname = g_strdup_printf ("%s_%d", argname, numarg++);
-
-      while (g_object_class_find_property (G_OBJECT_CLASS (klass),
-              numargname) != NULL) {
-        g_free (numargname);
-        numargname = g_strdup_printf ("%s_%d", argname, numarg++);
-      }
-      argname = numargname;
-    }
-
-    klass->control_info[i].param_name = argname;
-
-    GST_DEBUG ("adding arg %s from %s with access-mode=%d", argname,
-        klass->control_info[i].name, argperms);
-
-    if (argtype == G_TYPE_BOOLEAN) {
-      paramspec =
-          g_param_spec_boolean (argname, argname, argname, FALSE, argperms);
-    } else if (argtype == G_TYPE_INT) {
-      if (klass->control_info[i].lowerbound > klass->control_info[i].upperbound) {
-        gfloat swap;
-
-        GST_ERROR
-            ("  wrong order of parameter bounds %f ... %f ... %f in \"%s\" plugin",
-            klass->control_info[i].lowerbound, klass->control_info[i].def,
-            klass->control_info[i].upperbound, klass->descriptor->Name);
-
-        swap = klass->control_info[i].upperbound;
-        klass->control_info[i].upperbound = klass->control_info[i].lowerbound;
-        klass->control_info[i].lowerbound = swap;
-      }
-      paramspec = g_param_spec_int (argname, argname, argname,
-          (gint) klass->control_info[i].lowerbound,
-          (gint) klass->control_info[i].upperbound,
-          (gint) klass->control_info[i].def, argperms);
-    } else if (klass->control_info[i].samplerate) {
-      paramspec = g_param_spec_float (argname, argname, argname,
-          0.0, G_MAXFLOAT, 0.0, argperms);
-    } else {
-      if (klass->control_info[i].lowerbound > klass->control_info[i].upperbound) {
-        gfloat swap;
-
-        GST_ERROR
-            ("  wrong order of parameter bounds %f ... %f ... %f in \"%s\" plugin",
-            klass->control_info[i].lowerbound, klass->control_info[i].def,
-            klass->control_info[i].upperbound, klass->descriptor->Name);
-
-        swap = klass->control_info[i].upperbound;
-        klass->control_info[i].upperbound = klass->control_info[i].lowerbound;
-        klass->control_info[i].lowerbound = swap;
-      }
-      paramspec = g_param_spec_float (argname, argname, argname,
-          klass->control_info[i].lowerbound, klass->control_info[i].upperbound,
-          klass->control_info[i].def, argperms);
-    }
+    p = gst_ladspa_class_get_param_spec (klass, klass->control_in_portnums[i]);
 
     /* properties have an offset of 1 */
-    g_object_class_install_property (G_OBJECT_CLASS (klass), i + 1, paramspec);
+    g_object_class_install_property (G_OBJECT_CLASS (klass), i + 1, p);
+  }
+
+  for (i = 0; i < gsp_class->num_control_out; i++) {
+    GParamSpec *p;
+
+    p = gst_ladspa_class_get_param_spec (klass, klass->control_out_portnums[i]);
+
+    /* properties have an offset of 1, and we already added num_control_in */
+    g_object_class_install_property (G_OBJECT_CLASS (klass),
+        gsp_class->num_control_in + i + 1, p);
   }
 }
 
 static void
 gst_ladspa_init (GstLADSPA * ladspa)
 {
-  GstLADSPAClass *oclass;
-  ladspa_control_info cinfo;
-  GList *l;
-  LADSPA_Descriptor *desc;
-  gint i, sinkcount, srccount;
+  /* whoopee, nothing to do */
 
-  oclass = (GstLADSPAClass *) G_OBJECT_GET_CLASS (ladspa);
-  desc = oclass->descriptor;
-  ladspa->descriptor = oclass->descriptor;
-
-  /* allocate the various arrays */
-  ladspa->srcpads = g_new0 (GstPad *, oclass->numsrcpads);
-  ladspa->sinkpads = g_new0 (GstPad *, oclass->numsinkpads);
-  ladspa->controls = g_new (gfloat, oclass->numcontrols);
-
-  /* set up pads */
-  sinkcount = 0;
-  srccount = 0;
-  for (l = GST_ELEMENT_CLASS (oclass)->padtemplates; l; l = l->next) {
-    GstPad *pad = gst_pad_new_from_template (GST_PAD_TEMPLATE (l->data),
-        GST_PAD_TEMPLATE_NAME_TEMPLATE (l->data));
-
-    gst_pad_set_link_function (pad, gst_ladspa_link);
-    gst_element_add_pad ((GstElement *) ladspa, pad);
-
-    if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK)
-      ladspa->sinkpads[sinkcount++] = pad;
-    else
-      ladspa->srcpads[srccount++] = pad;
-  }
-
-  /* nonzero default needed to instantiate() some plugins */
-  ladspa->samplerate = 44100;
-
-  ladspa->buffer_frames = 0;    /* should be set with caps */
+  ladspa->descriptor =
+      ((GstLADSPAClass *) G_OBJECT_GET_CLASS (ladspa))->descriptor;
   ladspa->activated = FALSE;
   ladspa->inplace_broken =
       LADSPA_IS_INPLACE_BROKEN (ladspa->descriptor->Properties);
-
-  if (sinkcount == 0 && srccount == 1) {
-    /* get mode (no sink pads) */
-    GST_DEBUG_OBJECT (ladspa, "mono get mode with 1 src pad");
-
-    gst_pad_set_get_function (ladspa->srcpads[0], gst_ladspa_get);
-  } else if (sinkcount == 1) {
-    /* with one sink we can use the chain function */
-    GST_DEBUG_OBJECT (ladspa, "chain mode");
-
-    gst_pad_set_chain_function (ladspa->sinkpads[0], gst_ladspa_chain);
-  } else if (sinkcount > 1) {
-    /* more than one sink pad needs loop mode */
-    GST_DEBUG_OBJECT (ladspa, "loop mode with %d sink pads and %d src pads",
-        sinkcount, srccount);
-
-    gst_element_set_loop_function (GST_ELEMENT (ladspa), gst_ladspa_loop);
-  } else if (sinkcount == 0 && srccount == 0) {
-    /* for example, a plugin with only control inputs and output -- just ignore
-     * it for now */
-  } else {
-    g_warning ("%d sink pads, %d src pads not yet supported", sinkcount,
-        srccount);
-  }
-
-  gst_ladspa_instantiate (ladspa);
 }
-
-static void
-gst_ladspa_update_int (const GValue * value, gpointer data)
-{
-  gfloat *target = (gfloat *) data;
-
-  *target = (gfloat) g_value_get_int (value);
-}
-
-static GstPadLinkReturn
-gst_ladspa_link (GstPad * pad, const GstCaps * caps)
-{
-  GstElement *element = (GstElement *) GST_PAD_PARENT (pad);
-  GstLADSPA *ladspa = (GstLADSPA *) element;
-  const GList *l = NULL;
-  gint rate;
-  GstStructure *structure;
-
-  /* if this fails in some other plugin, the graph is left in an inconsistent
-     state */
-  for (l = gst_element_get_pad_list (element); l; l = l->next)
-    if (pad != (GstPad *) l->data)
-      if (gst_pad_try_set_caps ((GstPad *) l->data, caps) <= 0)
-        return GST_PAD_LINK_REFUSED;
-
-  /* we assume that the ladspa plugin can handle any sample rate, so this
-     check gets put last */
-  structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "rate", &rate);
-  /* have to instantiate ladspa plugin when samplerate changes (groan) */
-  if (ladspa->samplerate != rate) {
-    ladspa->samplerate = rate;
-    if (!gst_ladspa_instantiate (ladspa))
-      return GST_PAD_LINK_REFUSED;
-  }
-
-  gst_structure_get_int (structure, "buffer-frames", &ladspa->buffer_frames);
-
-  return GST_PAD_LINK_OK;
-}
-
-#if 0
-static void
-gst_ladspa_force_src_caps (GstLADSPA * ladspa, GstPad * pad)
-{
-  if (!ladspa->buffer_frames) {
-    ladspa->buffer_frames = 256;        /* 5 ms at 44100 kHz (just a default...) */
-  }
-
-  GST_DEBUG_OBJECT (ladspa, "forcing caps with rate=%d, buffer-frames=%d",
-      ladspa->samplerate, ladspa->buffer_frames);
-
-  gst_pad_try_set_caps (pad,
-      gst_caps_new ("ladspa_src_caps",
-          "audio/x-raw-float",
-          gst_props_new ("width", G_TYPE_INT (32),
-              "endianness", G_TYPE_INT (G_BYTE_ORDER),
-              "rate", G_TYPE_INT (ladspa->samplerate),
-              "buffer-frames", G_TYPE_INT (ladspa->buffer_frames),
-              "channels", G_TYPE_INT (1), NULL)));
-}
-#endif
 
 static void
 gst_ladspa_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
-  GstLADSPA *ladspa = (GstLADSPA *) object;
-  GstLADSPAClass *oclass;
-  ladspa_control_info *control_info;
+  GstSignalProcessor *gsp;
+  GstSignalProcessorClass *gsp_class;
 
-  oclass = (GstLADSPAClass *) (G_OBJECT_GET_CLASS (object));
+  gsp = GST_SIGNAL_PROCESSOR (object);
+  gsp_class = GST_SIGNAL_PROCESSOR_GET_CLASS (object);
 
   /* remember, properties have an offset of 1 */
   prop_id--;
 
-  /* verify it exists */
-  g_return_if_fail (prop_id < oclass->numcontrols);
-
-  control_info = &(oclass->control_info[prop_id]);
-  g_return_if_fail (control_info->name != NULL);
-
-  /* check to see if it's writable */
-  g_return_if_fail (control_info->writable);
+  /* only input ports */
+  g_return_if_fail (prop_id < gsp_class->num_control_in);
 
   /* now see what type it is */
-  if (control_info->toggled)
-    ladspa->controls[prop_id] = g_value_get_boolean (value) ? 1.f : 0.f;
-  else if (control_info->integer)
-    ladspa->controls[prop_id] = g_value_get_int (value);
-  else
-    ladspa->controls[prop_id] = g_value_get_float (value);
-
-  GST_DEBUG_OBJECT (object, "set arg %s to %f", control_info->name,
-      ladspa->controls[prop_id]);
+  switch (pspec->value_type) {
+    case G_TYPE_BOOLEAN:
+      gsp->control_in[prop_id] = g_value_get_boolean (value) ? 1.f : 0.f;
+      break;
+    case G_TYPE_INT:
+      gsp->control_in[prop_id] = g_value_get_int (value);
+      break;
+    case G_TYPE_FLOAT:
+      gsp->control_in[prop_id] = g_value_get_float (value);
+      break;
+    default:
+      g_assert_not_reached ();
+  }
 }
 
 static void
 gst_ladspa_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstLADSPA *ladspa = (GstLADSPA *) object;
-  GstLADSPAClass *oclass = (GstLADSPAClass *) (G_OBJECT_GET_CLASS (object));
-  ladspa_control_info *control_info;
+  GstSignalProcessor *gsp;
+  GstSignalProcessorClass *gsp_class;
+  gfloat *controls;
+
+  gsp = GST_SIGNAL_PROCESSOR (object);
+  gsp_class = GST_SIGNAL_PROCESSOR_GET_CLASS (object);
 
   /* remember, properties have an offset of 1 */
   prop_id--;
 
-  /* verify it exists */
-  g_return_if_fail (prop_id < oclass->numcontrols);
-
-  control_info = &(oclass->control_info[prop_id]);
-  g_return_if_fail (control_info->name != NULL);
+  if (prop_id < gsp_class->num_control_in) {
+    controls = gsp->control_in;
+  } else if (prop_id < gsp_class->num_control_in + gsp_class->num_control_out) {
+    controls = gsp->control_out;
+    prop_id -= gsp_class->num_control_in;
+  } else {
+    g_assert_not_reached ();
+  }
 
   /* now see what type it is */
-  if (control_info->toggled)
-    g_value_set_boolean (value, ladspa->controls[prop_id] == 1.0);
-  else if (control_info->integer)
-    g_value_set_int (value, (gint) ladspa->controls[prop_id]);
-  else
-    g_value_set_float (value, ladspa->controls[prop_id]);
-
-  GST_DEBUG_OBJECT (object, "got arg %s as %f", control_info->name,
-      ladspa->controls[prop_id]);
+  switch (pspec->value_type) {
+    case G_TYPE_BOOLEAN:
+      g_value_set_boolean (value, controls[prop_id] > 0.5);
+      break;
+    case G_TYPE_INT:
+      g_value_set_int (value, CLAMP (controls[prop_id], G_MININT, G_MAXINT));
+      break;
+    case G_TYPE_FLOAT:
+      g_value_set_float (value, controls[prop_id]);
+      break;
+    default:
+      g_assert_not_reached ();
+  }
 }
 
 static gboolean
-gst_ladspa_instantiate (GstLADSPA * ladspa)
+gst_ladspa_setup (GstSignalProcessor * gsp, guint sample_rate)
 {
+  GstLADSPA *ladspa;
+  GstLADSPAClass *oclass;
+  GstSignalProcessorClass *gsp_class;
   LADSPA_Descriptor *desc;
   int i;
-  GstLADSPAClass *oclass = (GstLADSPAClass *) (G_OBJECT_GET_CLASS (ladspa));
-  gboolean was_activated;
 
+  gsp_class = GST_SIGNAL_PROCESSOR_GET_CLASS (gsp);
+  ladspa = (GstLADSPA *) gsp;
+  oclass = (GstLADSPAClass *) gsp_class;
   desc = ladspa->descriptor;
 
-  /* check for old handle */
-  was_activated = ladspa->activated;
-  if (ladspa->handle != NULL) {
-    gst_ladspa_deactivate (ladspa);
-    desc->cleanup (ladspa->handle);
-  }
+  g_return_val_if_fail (ladspa->handle == NULL, FALSE);
+  g_return_val_if_fail (ladspa->activated == FALSE, FALSE);
 
-  /* instantiate the plugin */
-  GST_DEBUG_OBJECT (ladspa, "instantiating the plugin at %d Hz",
-      ladspa->samplerate);
+  GST_DEBUG_OBJECT (ladspa, "instantiating the plugin at %d Hz", sample_rate);
 
-  ladspa->handle = desc->instantiate (desc, ladspa->samplerate);
+  ladspa->handle = desc->instantiate (desc, sample_rate);
+
   g_return_val_if_fail (ladspa->handle != NULL, FALSE);
 
   /* connect the control ports */
-  for (i = 0; i < oclass->numcontrols; i++)
+  for (i = 0; i < gsp_class->num_control_in; i++)
     desc->connect_port (ladspa->handle,
-        oclass->control_portnums[i], &(ladspa->controls[i]));
-
-  /* reactivate if it was activated before the reinstantiation */
-  if (was_activated)
-    gst_ladspa_activate (ladspa);
+        oclass->control_in_portnums[i], &(gsp->control_in[i]));
+  for (i = 0; i < gsp_class->num_control_out; i++)
+    desc->connect_port (ladspa->handle,
+        oclass->control_out_portnums[i], &(gsp->control_out[i]));
 
   return TRUE;
 }
 
-static GstElementStateReturn
-gst_ladspa_change_state (GstElement * element)
+static gboolean
+gst_ladspa_start (GstSignalProcessor * gsp)
 {
-  LADSPA_Descriptor *desc;
-  GstLADSPA *ladspa = (GstLADSPA *) element;
-
-  desc = ladspa->descriptor;
-
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
-      gst_ladspa_activate (ladspa);
-      break;
-    case GST_STATE_READY_TO_NULL:
-      gst_ladspa_deactivate (ladspa);
-      break;
-    default:
-      break;
-  }
-
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
-}
-
-static void
-gst_ladspa_activate (GstLADSPA * ladspa)
-{
+  GstLADSPA *ladspa;
   LADSPA_Descriptor *desc;
 
+  ladspa = (GstLADSPA *) gsp;
   desc = ladspa->descriptor;
 
-  if (ladspa->activated)
-    gst_ladspa_deactivate (ladspa);
+  g_return_val_if_fail (ladspa->activated == FALSE, FALSE);
+  g_return_val_if_fail (ladspa->handle != NULL, FALSE);
 
   GST_DEBUG_OBJECT (ladspa, "activating");
 
-  /* activate the plugin (function might be null) */
-  if (desc->activate != NULL)
+  if (desc->activate)
     desc->activate (ladspa->handle);
 
   ladspa->activated = TRUE;
+
+  return TRUE;
 }
 
 static void
-gst_ladspa_deactivate (GstLADSPA * ladspa)
+gst_ladspa_stop (GstSignalProcessor * gsp)
 {
+  GstLADSPA *ladspa;
   LADSPA_Descriptor *desc;
 
+  ladspa = (GstLADSPA *) gsp;
   desc = ladspa->descriptor;
+
+  g_return_if_fail (ladspa->activated == TRUE);
+  g_return_if_fail (ladspa->handle != NULL);
 
   GST_DEBUG_OBJECT (ladspa, "deactivating");
 
-  /* deactivate the plugin (function might be null) */
-  if (ladspa->activated && (desc->deactivate != NULL))
-    desc->deactivate (ladspa->handle);
+  if (desc->activate)
+    desc->activate (ladspa->handle);
 
   ladspa->activated = FALSE;
 }
 
 static void
-gst_ladspa_loop (GstElement * element)
+gst_ladspa_cleanup (GstSignalProcessor * gsp)
 {
-  guint i, j, numsrcpads, numsinkpads;
-  glong num_samples;
-  LADSPA_Data **data_in, **data_out;
-  GstBuffer **buffers_in, **buffers_out;
+  GstLADSPA *ladspa;
+  LADSPA_Descriptor *desc;
 
-  GstLADSPA *ladspa = (GstLADSPA *) element;
-  GstLADSPAClass *oclass = (GstLADSPAClass *) (G_OBJECT_GET_CLASS (ladspa));
-  LADSPA_Descriptor *desc = ladspa->descriptor;
+  ladspa = (GstLADSPA *) gsp;
+  desc = ladspa->descriptor;
 
-  numsinkpads = oclass->numsinkpads;
-  numsrcpads = oclass->numsrcpads;
+  g_return_if_fail (ladspa->activated == FALSE);
+  g_return_if_fail (ladspa->handle != NULL);
 
-  /* fixme: these mallocs need to die */
-  data_in = g_new0 (LADSPA_Data *, numsinkpads);
-  data_out = g_new0 (LADSPA_Data *, numsrcpads);
-  buffers_in = g_new0 (GstBuffer *, numsinkpads);
-  buffers_out = g_new0 (GstBuffer *, numsrcpads);
+  GST_DEBUG_OBJECT (ladspa, "cleaning up");
 
-  /* determine largest buffer */
-  num_samples = -1;
+  if (desc->cleanup)
+    desc->cleanup (ladspa->handle);
 
-  /* first get all the necessary data from the input ports */
-  for (i = 0; i < numsinkpads; i++) {
-  get_buffer:
-    buffers_in[i] = GST_BUFFER (gst_pad_pull (ladspa->sinkpads[i]));
-
-    if (GST_IS_EVENT (buffers_in[i])) {
-      /* push it out on all pads */
-      gst_data_ref_by_count ((GstData *) buffers_in[i], numsrcpads);
-      for (j = 0; j < numsrcpads; j++)
-        gst_pad_push (ladspa->srcpads[j], GST_DATA (buffers_in[i]));
-      if (GST_EVENT_TYPE (buffers_in[i]) == GST_EVENT_EOS) {
-        /* shut down */
-        gst_element_set_eos (element);
-        return;
-      } else {
-        goto get_buffer;
-      }
-    }
-
-    if (num_samples < 0)
-      num_samples = GST_BUFFER_SIZE (buffers_in[i]) / sizeof (gfloat);
-    else
-      num_samples =
-          MIN (GST_BUFFER_SIZE (buffers_in[i]) / sizeof (gfloat), num_samples);
-    data_in[i] = (LADSPA_Data *) GST_BUFFER_DATA (buffers_in[i]);
-    GST_BUFFER_TIMESTAMP (buffers_in[i]) = ladspa->timestamp;
-  }
-
-  i = 0;
-  if (!ladspa->inplace_broken) {
-    for (; i < numsrcpads && i < numsinkpads; i++) {
-      /* reuse input buffers */
-      buffers_out[i] = buffers_in[i];
-      data_out[i] = data_in[i];
-    }
-  }
-  for (; i < numsrcpads; i++) {
-    buffers_out[i] =
-        gst_buffer_new_and_alloc (ladspa->buffer_frames * sizeof (gfloat));
-    GST_BUFFER_TIMESTAMP (buffers_out[i]) = ladspa->timestamp;
-    data_out[i] = (LADSPA_Data *) GST_BUFFER_DATA (buffers_out[i]);
-  }
-
-  /* process chunk */
-  for (i = 0; i < numsinkpads; i++)
-    desc->connect_port (ladspa->handle, oclass->sinkpad_portnums[i],
-        data_in[i]);
-  for (i = 0; i < numsrcpads; i++)
-    desc->connect_port (ladspa->handle, oclass->srcpad_portnums[i],
-        data_out[i]);
-
-  desc->run (ladspa->handle, num_samples);
-
-  for (i = 0; i < numsinkpads; i++) {
-    if (i >= numsrcpads || buffers_out[i] != buffers_in[i])
-      gst_buffer_unref (buffers_in[i]);
-    data_in[i] = NULL;
-    buffers_in[i] = NULL;
-  }
-  for (i = 0; i < numsrcpads; i++) {
-    GST_DEBUG_OBJECT (ladspa, "pushing buffer (%p) on src pad %d",
-        buffers_out[i], i);
-    gst_pad_push (ladspa->srcpads[i], GST_DATA (buffers_out[i]));
-
-    data_out[i] = NULL;
-    buffers_out[i] = NULL;
-  }
-
-  ladspa->timestamp += ladspa->buffer_frames * GST_SECOND / ladspa->samplerate;
-
-  /* FIXME: move these mallocs and frees to the state-change handler */
-
-  g_free (buffers_out);
-  g_free (buffers_in);
-  g_free (data_out);
-  g_free (data_in);
+  ladspa->handle = NULL;
 }
 
 static void
-gst_ladspa_chain (GstPad * pad, GstData * _data)
+gst_ladspa_process (GstSignalProcessor * gsp, guint nframes)
 {
-  GstBuffer *buffer_in = GST_BUFFER (_data);
-  LADSPA_Descriptor *desc;
-  LADSPA_Data *data_in, **data_out = NULL;
-  GstBuffer **buffers_out = NULL;
-  gulong num_samples;
-  guint i, numsrcpads;
+  GstSignalProcessorClass *gsp_class;
   GstLADSPA *ladspa;
   GstLADSPAClass *oclass;
-
-  ladspa = (GstLADSPA *) GST_OBJECT_PARENT (pad);
-  oclass = (GstLADSPAClass *) (G_OBJECT_GET_CLASS (ladspa));
-  data_in = (LADSPA_Data *) GST_BUFFER_DATA (buffer_in);
-  num_samples = GST_BUFFER_SIZE (buffer_in) / sizeof (gfloat);
-  numsrcpads = oclass->numsrcpads;
-  desc = ladspa->descriptor;
-
-  /* we shouldn't get events here... */
-  g_return_if_fail (GST_IS_BUFFER (buffer_in));
-
-  /* FIXME: this function shouldn't need to malloc() anything */
-  if (numsrcpads > 0) {
-    buffers_out = g_new (GstBuffer *, numsrcpads);
-    data_out = g_new (LADSPA_Data *, numsrcpads);
-  }
-
-  i = 0;
-  if (!ladspa->inplace_broken && numsrcpads) {
-    /* reuse the first (chained) buffer */
-    buffers_out[i] = buffer_in;
-    GST_DEBUG ("reuse: %d", GST_BUFFER_SIZE (buffer_in));
-    data_out[i] = data_in;
-    i++;
-  }
-  for (; i < numsrcpads; i++) {
-    buffers_out[i] = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (buffer_in));
-    GST_DEBUG ("new %d", GST_BUFFER_SIZE (buffer_in));
-    GST_BUFFER_TIMESTAMP (buffers_out[i]) = ladspa->timestamp;
-    data_out[i] = (LADSPA_Data *) GST_BUFFER_DATA (buffers_out[i]);
-  }
-
-  /* process chunk */
-  desc->connect_port (ladspa->handle, oclass->sinkpad_portnums[0], data_in);
-  for (i = 0; i < numsrcpads; i++)
-    desc->connect_port (ladspa->handle, oclass->srcpad_portnums[i],
-        data_out[i]);
-
-  desc->run (ladspa->handle, num_samples);
-
-  if (!numsrcpads || buffers_out[0] != buffer_in)
-    gst_buffer_unref (buffer_in);
-
-  if (numsrcpads) {
-    for (i = 0; i < numsrcpads; i++) {
-      GST_DEBUG_OBJECT (ladspa,
-          "pushing buffer (%p, length %u bytes) on src pad %d", buffers_out[i],
-          GST_BUFFER_SIZE (buffers_out[i]), i);
-      gst_pad_push (ladspa->srcpads[i], GST_DATA (buffers_out[i]));
-    }
-
-    g_free (buffers_out);
-    g_free (data_out);
-  }
-}
-
-static GstData *
-gst_ladspa_get (GstPad * pad)
-{
-  GstLADSPA *ladspa;
-  GstLADSPAClass *oclass;
-  GstBuffer *buf;
-  LADSPA_Data *data;
   LADSPA_Descriptor *desc;
+  guint i;
 
-  ladspa = (GstLADSPA *) gst_pad_get_parent (pad);
-  oclass = (GstLADSPAClass *) (G_OBJECT_GET_CLASS (ladspa));
+  gsp_class = GST_SIGNAL_PROCESSOR_GET_CLASS (gsp);
+  ladspa = (GstLADSPA *) gsp;
+  oclass = (GstLADSPAClass *) gsp_class;
   desc = ladspa->descriptor;
 
-  /* 4096 is arbitrary */
-  buf = gst_buffer_new_and_alloc (4096);
-  GST_BUFFER_TIMESTAMP (buf) = ladspa->timestamp;
-  data = (LADSPA_Data *) GST_BUFFER_DATA (buf);
+  for (i = 0; i < gsp_class->num_audio_in; i++)
+    desc->connect_port (ladspa->handle, oclass->audio_in_portnums[i],
+        gsp->audio_in[i]);
+  for (i = 0; i < gsp_class->num_audio_out; i++)
+    desc->connect_port (ladspa->handle, oclass->audio_out_portnums[i],
+        gsp->audio_out[i]);
 
-  /* update timestamp */
-  ladspa->timestamp += num_to_process * GST_SECOND / ladspa->samplerate;
-
-  /* process chunk */
-  desc->connect_port (ladspa->handle, oclass->srcpad_portnums[0], data);
-
-  desc->run (ladspa->handle, ladspa->buffer_frames);
-
-  return GST_DATA (buf);
+  desc->run (ladspa->handle, nframes);
 }
 
 static void
@@ -952,7 +589,9 @@ ladspa_describe_plugin (const char *pcFullFilename,
         GINT_TO_POINTER (0), (gpointer) desc);
 
     /* create the type now */
-    type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
+    type =
+        g_type_register_static (GST_TYPE_SIGNAL_PROCESSOR, type_name, &typeinfo,
+        0);
     if (!gst_element_register (ladspa_plugin, type_name, GST_RANK_NONE, type))
       continue;
 

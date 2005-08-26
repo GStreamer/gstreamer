@@ -214,7 +214,10 @@ gst_signal_processor_add_pad_from_template (GstSignalProcessor * self,
 static void
 gst_signal_processor_init (GstSignalProcessor * self)
 {
+  GstSignalProcessorClass *klass;
   GList *templates;
+
+  klass = GST_SIGNAL_PROCESSOR_GET_CLASS (self);
 
   GST_DEBUG ("gst_signal_processor_init");
 
@@ -227,11 +230,27 @@ gst_signal_processor_init (GstSignalProcessor * self)
     gst_signal_processor_add_pad_from_template (self, templ);
     templates = templates->next;
   }
+
+  self->audio_in = g_new0 (gfloat *, klass->num_audio_in);
+  self->control_in = g_new0 (gfloat, klass->num_control_in);
+  self->audio_out = g_new0 (gfloat *, klass->num_audio_out);
+  self->control_out = g_new0 (gfloat, klass->num_control_out);
 }
 
 static void
 gst_signal_processor_finalize (GObject * object)
 {
+  GstSignalProcessor *self = GST_SIGNAL_PROCESSOR (object);
+
+  g_free (self->audio_in);
+  self->audio_in = NULL;
+  g_free (self->control_in);
+  self->control_in = NULL;
+  g_free (self->audio_out);
+  self->audio_out = NULL;
+  g_free (self->control_out);
+  self->control_out = NULL;
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -254,7 +273,7 @@ gst_signal_processor_setcaps (GstPad * pad, GstCaps * caps)
     if (!gst_structure_get_int (s, "buffer-frames", &buffer_frames))
       return FALSE;
 
-    if (!klass->setup (self, sample_rate, buffer_frames))
+    if (!klass->setup (self, sample_rate))
       return FALSE;
 
     self->sample_rate = sample_rate;
@@ -654,22 +673,18 @@ gst_signal_processor_src_activate_pull (GstPad * pad, gboolean active)
 static GstElementStateReturn
 gst_signal_processor_change_state (GstElement * element)
 {
-  GstSignalProcessor *self;
-  GstSignalProcessorClass *klass;
+  /* GstSignalProcessor *self;
+     GstSignalProcessorClass *klass; */
   GstElementState transition;
   GstElementStateReturn result;
 
-  self = GST_SIGNAL_PROCESSOR (element);
-  klass = GST_SIGNAL_PROCESSOR_GET_CLASS (self);
+  /* self = GST_SIGNAL_PROCESSOR (element);
+     klass = GST_SIGNAL_PROCESSOR_GET_CLASS (self); */
 
   transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
     case GST_STATE_NULL_TO_READY:
-      self->audio_in = g_new0 (gfloat *, klass->num_audio_in);
-      self->control_in = g_new0 (gfloat, klass->num_control_in);
-      self->audio_out = g_new0 (gfloat *, klass->num_audio_out);
-      self->control_out = g_new0 (gfloat, klass->num_control_out);
       break;
     case GST_STATE_READY_TO_PAUSED:
       break;
@@ -687,14 +702,7 @@ gst_signal_processor_change_state (GstElement * element)
     case GST_STATE_PAUSED_TO_READY:
       break;
     case GST_STATE_READY_TO_NULL:
-      g_free (self->audio_in);
-      self->audio_in = NULL;
-      g_free (self->control_in);
-      self->control_in = NULL;
-      g_free (self->audio_out);
-      self->audio_out = NULL;
-      g_free (self->control_out);
-      self->control_out = NULL;
+      /* gst_signal_processor_cleanup (self); */
       break;
     default:
       break;

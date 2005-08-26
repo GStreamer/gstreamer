@@ -74,11 +74,11 @@ struct _GstSignalProcessorClass {
 
   /* virtual methods for subclasses */
 
-  gboolean	(*setup)        (GstSignalProcessor *self, guint sample_rate,
-                                 guint buffer_frames);
+  gboolean	(*setup)        (GstSignalProcessor *self, guint sample_rate);
   gboolean      (*start)        (GstSignalProcessor *self);
-  gboolean      (*stop)         (GstSignalProcessor *self);
-  gboolean      (*process)      (GstSignalProcessor *self, guint num_frames);
+  void		(*stop)         (GstSignalProcessor *self);
+  void		(*cleanup)      (GstSignalProcessor *self);
+  void		(*process)      (GstSignalProcessor *self, guint num_frames);
   gboolean      (*event)        (GstSignalProcessor *self, GstEvent *event);
 };
 
