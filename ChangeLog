@@ -1,5 +1,17 @@
 2005-08-26  Stefan Kost  <ensonic@users.sf.net>
 
+	* libs/gst/bytestream/.cvsignore:
+	* libs/gst/bytestream/Makefile.am:
+	* libs/gst/bytestream/adapter.c:
+	* libs/gst/bytestream/adapter.h:
+	* libs/gst/bytestream/bytestream.c:
+	* libs/gst/bytestream/bytestream.h:
+	* libs/gst/bytestream/filepad.c:
+	* libs/gst/bytestream/filepad.h:
+	  removing obsolete files
+
+2005-08-26  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/gst/gstreamer-docs.sgml:
 	* docs/libs/gstreamer-libs-docs.sgml:
 	  disabed additional index entries again, as this makes docs-gen just
