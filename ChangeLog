@@ -1,3 +1,12 @@
+2005-08-26  Wim Taymans  <wim@fluendo.com>
+
+	* gst/audioconvert/audioconvert.c: (if), (float),
+	(audio_convert_get_func_index), (check_default),
+	(audio_convert_clean_fmt), (audio_convert_prepare_context),
+	(audio_convert_clean_context), (audio_convert_get_sizes),
+	(get_temp_buffer), (audio_convert_convert):
+	Use realloc else we lose our original data.
+
 2005-08-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/audioresample/gstaudioresample.c:

@@ -312,8 +312,7 @@ get_temp_buffer (AudioConvertCtx * ctx, gpointer src, gint srcsize,
     result = src;
   } else {
     if (ctx->tmpbufsize < tmpsize) {
-      g_free (ctx->tmpbuf);
-      ctx->tmpbuf = g_malloc (tmpsize);
+      ctx->tmpbuf = g_realloc (ctx->tmpbuf, tmpsize);
       ctx->tmpbufsize = tmpsize;
     }
     result = ctx->tmpbuf;
