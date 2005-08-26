@@ -1,5 +1,10 @@
 2005-08-26  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/gst/tmpl/gstminiobject.sgml:
+	  do *not* add tmpl/*.sgml files to CVS!
+
+2005-08-26  Stefan Kost  <ensonic@users.sf.net>
+
 	* libs/gst/bytestream/.cvsignore:
 	* libs/gst/bytestream/Makefile.am:
 	* libs/gst/bytestream/adapter.c:
