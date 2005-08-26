@@ -1,3 +1,9 @@
+2005-08-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/effectv/gstquark.c: (gst_quarktv_init),
+	(gst_quarktv_change_state):
+	  do proper cleanup/creation, fixes state changes
+
 2005-08-25  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/level/gstlevel.c: (gst_level_message_new):

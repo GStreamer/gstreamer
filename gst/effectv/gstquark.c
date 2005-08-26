@@ -225,9 +225,6 @@ gst_quarktv_init (GstQuarkTV * filter)
 
   filter->planes = PLANES;
   filter->current_plane = filter->planes - 1;
-  filter->planetable =
-      (GstBuffer **) g_malloc (filter->planes * sizeof (GstBuffer *));
-  memset (filter->planetable, 0, filter->planes * sizeof (GstBuffer *));
 }
 
 static GstFlowReturn
@@ -301,6 +298,13 @@ gst_quarktv_change_state (GstElement * element)
       }
       g_free (filter->planetable);
       filter->planetable = NULL;
+      break;
+    }
+    case GST_STATE_READY_TO_PAUSED:
+    {
+      filter->planetable =
+          (GstBuffer **) g_malloc (filter->planes * sizeof (GstBuffer *));
+      memset (filter->planetable, 0, filter->planes * sizeof (GstBuffer *));
       break;
     }
     default:
