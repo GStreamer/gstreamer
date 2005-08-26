@@ -302,36 +302,13 @@ audio_convert_get_sizes (AudioConvertCtx * ctx, gint samples, gint * srcsize,
   return TRUE;
 }
 
-static gpointer
-get_temp_buffer (AudioConvertCtx * ctx, gpointer src, gint srcsize,
-    gboolean writable, gint tmpsize)
-{
-  gpointer result;
-
-  if (srcsize >= tmpsize && writable) {
-    result = src;
-  } else {
-    if (ctx->tmpbufsize < tmpsize) {
-      ctx->tmpbuf = g_realloc (ctx->tmpbuf, tmpsize);
-      ctx->tmpbufsize = tmpsize;
-    }
-    result = ctx->tmpbuf;
-  }
-
-  return result;
-}
-
 gboolean
 audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
     gpointer dst, gint samples, gboolean src_writable)
 {
   gint insize, outsize;
   gboolean final;
-  gpointer buf;
-  gint bufsize;
-  gboolean bufwritable;
-  gpointer tmpdst;
-  gint tmpsize = 0;
+  gpointer inbuf, outbuf, tmpbuf;
 
   g_return_val_if_fail (ctx != NULL, FALSE);
   g_return_val_if_fail (src != NULL, FALSE);
@@ -344,54 +321,63 @@ audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
   insize = ctx->in.unit_size * samples;
   outsize = ctx->out.unit_size * samples;
 
+  /* find biggest temp buffer size */
+  {
+    gint biggest = 0;
+
+    if (!ctx->in_default)
+      biggest = insize * 32 / ctx->in.width;
+
+    if (!ctx->mix_passthrough)
+      biggest = MAX (biggest, outsize * 32 / ctx->out.width);
+
+    /* see if one of the buffers can be used as temp */
+    if (insize >= biggest && src_writable)
+      tmpbuf = src;
+    else if (outsize >= biggest)
+      tmpbuf = dst;
+    else {
+      if (biggest > ctx->tmpbufsize) {
+        ctx->tmpbuf = g_realloc (ctx->tmpbuf, biggest);
+        ctx->tmpbufsize = biggest;
+      }
+      tmpbuf = ctx->tmpbuf;
+    }
+  }
+
   /* this is our source data, we start with the input src data. */
-  buf = src;
-  bufsize = insize;
-  bufwritable = src_writable;
+  inbuf = src;
+  outbuf = dst;
 
   if (!ctx->in_default) {
     /* check if final conversion */
     final = (ctx->out_default && ctx->mix_passthrough);
 
-    if (final)
-      tmpdst = dst;
-    else {
-      tmpsize = insize * 32 / ctx->in.width;
-      tmpdst = get_temp_buffer (ctx, buf, bufsize, bufwritable, tmpsize);
-    }
+    if (!final)
+      outbuf = tmpbuf;
 
-    ctx->unpack (buf, tmpdst, ctx->scale, samples * ctx->in.channels);
+    ctx->unpack (inbuf, outbuf, ctx->scale, samples * ctx->in.channels);
 
-    if (!final) {
-      /* new source data, it is writable */
-      buf = tmpdst;
-      bufsize = tmpsize;
-      bufwritable = TRUE;
-    }
+    inbuf = outbuf;
   }
 
   if (!ctx->mix_passthrough) {
     /* see if we need an intermediate step */
     final = ctx->out_default;
 
-    if (final)
-      tmpdst = dst;
-    else {
-      tmpsize = outsize * 32 / ctx->out.width;
-      tmpdst = get_temp_buffer (ctx, buf, bufsize, bufwritable, tmpsize);
-    }
+    if (!final)
+      outbuf = tmpbuf;
+    else
+      outbuf = dst;
 
     /* convert */
-    gst_channel_mix_mix (ctx, buf, tmpdst, samples);
+    gst_channel_mix_mix (ctx, inbuf, outbuf, samples);
 
-    if (!final) {
-      buf = tmpdst;
-    }
+    inbuf = outbuf;
   }
 
   if (!ctx->out_default) {
-    /* output always to dst buffer */
-    ctx->pack (buf, dst, ctx->depth, samples * ctx->out.channels);
+    ctx->pack (inbuf, dst, ctx->depth, samples * ctx->out.channels);
   }
 
   return TRUE;
