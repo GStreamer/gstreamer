@@ -1,10 +1,14 @@
 # GStreamer Libraries API reference sections
 
-# please add section in the alpahbetical order to each library
-# using the following template
+## please add sections in alphabetical order using the following template
+# leave two empty lines between sections
 # <SECTION>
 # <FILE>gstxxx</FILE>
 # <TITLE>GstXxx</TITLE>
+# typedefs
+# macros
+# constructor
+# methods
 # <SUBSECTION Standard>
 # <SUBSECTION Private>
 # </SECTION>
@@ -94,6 +98,12 @@ swab32
 GstDPHeaderFlag
 GstDPPayloadType
 
+GST_DP_HEADER_LENGTH
+GST_DP_VERSION_MAJOR
+GST_DP_VERSION_MINOR
+
+gst_dp_init
+
 gst_dp_header_payload_length
 gst_dp_header_payload_type
 
@@ -142,6 +152,9 @@ GST_IS_CONTROLLER_CLASS
 GST_CONTROLLER_GET_CLASS
 GST_TYPE_CONTROLLER
 <SUBSECTION Private>
+InterpolateGet
+InterpolateGetValueArray
+GST_CONTROLLED_PROPERTY
 gst_controller_get_type
 </SECTION>
 
