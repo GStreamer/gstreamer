@@ -1,3 +1,8 @@
+2005-08-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/audioresample/gstaudioresample.c:
+	  use base class' newsegment to properly timestamp
+
 2005-08-26  Wim Taymans  <wim@fluendo.com>
 
 	* gst/audioconvert/audioconvert.c: (if), (float),
