@@ -63,11 +63,10 @@ struct _GstLADSPAClass {
 
   LADSPA_Descriptor *descriptor;
 
-  gint *sinkpad_portnums, 
-       *srcpad_portnums, 
-       *control_portnums;
-
-  ladspa_control_info *control_info;
+  gint *audio_in_portnums;
+  gint *audio_out_portnums;
+  gint *control_in_portnums;
+  gint *control_out_portnums;
 };
 
 
