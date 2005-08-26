@@ -285,22 +285,21 @@ static gboolean
 gst_audio_convert_get_unit_size (GstBaseTransform * base, GstCaps * caps,
     guint * size)
 {
-  AudioConvertFmt ac_caps = { 0 };
+  AudioConvertFmt fmt = { 0 };
 
   g_return_val_if_fail (size, FALSE);
 
-  if (!gst_audio_convert_parse_caps (caps, &ac_caps))
+  if (!gst_audio_convert_parse_caps (caps, &fmt))
     goto parse_error;
 
-  g_free (ac_caps.pos);
+  *size = fmt.unit_size;
 
-  *size = ac_caps.unit_size;
+  audio_convert_clean_fmt (&fmt);
 
   return TRUE;
 
 parse_error:
   {
-    g_free (ac_caps.pos);
     return FALSE;
   }
 }

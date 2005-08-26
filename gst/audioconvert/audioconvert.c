@@ -312,11 +312,13 @@ get_temp_buffer (AudioConvertCtx * ctx, gpointer src, gint srcsize,
     result = src;
   } else {
     if (ctx->tmpbufsize < tmpsize) {
-      ctx->tmpbuf = g_realloc (ctx->tmpbuf, tmpsize);
+      g_free (ctx->tmpbuf);
+      ctx->tmpbuf = g_malloc (tmpsize);
       ctx->tmpbufsize = tmpsize;
     }
     result = ctx->tmpbuf;
   }
+
   return result;
 }
 
@@ -324,13 +326,13 @@ gboolean
 audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
     gpointer dst, gint samples, gboolean src_writable)
 {
-  gint insize;
+  gint insize, outsize;
   gboolean final;
   gpointer buf;
   gint bufsize;
   gboolean bufwritable;
   gpointer tmpdst;
-  gint tmpsize;
+  gint tmpsize = 0;
 
   g_return_val_if_fail (ctx != NULL, FALSE);
   g_return_val_if_fail (src != NULL, FALSE);
@@ -341,7 +343,7 @@ audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
     return TRUE;
 
   insize = ctx->in.unit_size * samples;
-  tmpsize = insize * 32 / ctx->in.width;
+  outsize = ctx->out.unit_size * samples;
 
   /* this is our source data, we start with the input src data. */
   buf = src;
@@ -354,8 +356,10 @@ audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
 
     if (final)
       tmpdst = dst;
-    else
+    else {
+      tmpsize = insize * 32 / ctx->in.width;
       tmpdst = get_temp_buffer (ctx, buf, bufsize, bufwritable, tmpsize);
+    }
 
     ctx->unpack (buf, tmpdst, ctx->scale, samples * ctx->in.channels);
 
@@ -373,8 +377,10 @@ audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
 
     if (final)
       tmpdst = dst;
-    else
+    else {
+      tmpsize = outsize * 32 / ctx->out.width;
       tmpdst = get_temp_buffer (ctx, buf, bufsize, bufwritable, tmpsize);
+    }
 
     /* convert */
     gst_channel_mix_mix (ctx, buf, tmpdst, samples);

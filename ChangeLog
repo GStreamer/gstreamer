@@ -1,5 +1,19 @@
 2005-08-26  Wim Taymans  <wim@fluendo.com>
 
+	* gst/audioconvert/audioconvert.c: (if), (float),
+	(audio_convert_get_func_index), (check_default),
+	(audio_convert_clean_fmt), (audio_convert_prepare_context),
+	(audio_convert_clean_context), (audio_convert_get_sizes),
+	(get_temp_buffer), (audio_convert_convert):
+	* gst/audioconvert/gstaudioconvert.c:
+	(gst_audio_convert_parse_caps), (gst_audio_convert_get_unit_size),
+	(gst_audio_convert_transform_caps),
+	(gst_audio_convert_fixate_caps), (gst_audio_convert_transform):
+	* gst/audioconvert/gstchannelmix.c: (gst_channel_mix_mix):
+	Oops, allocate enough space to perform the channel mix.
+
+2005-08-26  Wim Taymans  <wim@fluendo.com>
+
 	* gst/audioconvert/Makefile.am:
 	* gst/audioconvert/audioconvert.c: (if), (float),
 	(audio_convert_get_func_index), (check_default),

@@ -545,15 +545,19 @@ gst_channel_mix_mix (AudioConvertCtx * this,
   gint64 res;
   gint32 tmp[this->out.channels];
   gboolean backwards = this->out.channels > this->in.channels;
+  gint inchannels, outchannels;
+
+  inchannels = this->in.channels;
+  outchannels = this->out.channels;
 
   /* FIXME: use liboil here? */
   for (n = (backwards ? samples - 1 : 0); n < samples && n >= 0;
       backwards ? n-- : n++) {
-    for (out = 0; out < this->out.channels; out++) {
+    for (out = 0; out < outchannels; out++) {
       /* convert */
       res = 0;
-      for (in = 0; in < this->in.channels; in++) {
-        res += in_data[n * this->in.channels + in] * this->matrix[in][out];
+      for (in = 0; in < inchannels; in++) {
+        res += in_data[n * inchannels + in] * this->matrix[in][out];
       }
 
       /* clip (shouldn't we use doubles instead as intermediate format?) */
@@ -563,7 +567,6 @@ gst_channel_mix_mix (AudioConvertCtx * this,
         res = G_MAXINT32;
       tmp[out] = res;
     }
-    memcpy (&out_data[n * this->out.channels], tmp,
-        sizeof (gint32) * this->out.channels);
+    memcpy (&out_data[n * outchannels], tmp, sizeof (gint32) * outchannels);
   }
 }
