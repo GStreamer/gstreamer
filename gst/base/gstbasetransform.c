@@ -282,6 +282,7 @@ gst_base_transform_transform_size (GstBaseTransform * trans,
             &inunitsize), FALSE);
     GST_DEBUG_OBJECT (trans, "input size %d, input unit size %d", size,
         inunitsize);
+    g_return_val_if_fail (inunitsize != 0, FALSE);
     g_return_val_if_fail (size % inunitsize == 0, FALSE);
 
     units = size / inunitsize;

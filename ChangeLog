@@ -1,3 +1,8 @@
+2005-08-27  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/base/gstbasetransform.c: (gst_base_transform_transform_size):
+          fix div-by-zero
+
 2005-08-26  Andy Wingo  <wingo@pobox.com>
 
 	* check/pipelines/simple_launch_lines.c (run_pipeline): Check
