@@ -1,3 +1,9 @@
+2005-08-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/__init__.py:
+	  if using ltihooks, import interfaces and then uninstall our
+	  module importer so we don't crap all over someone else's
+
 2005-08-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/extend/jukebox.py:

@@ -21,8 +21,10 @@
 # 
 # Author: David I. Lehn <dlehn@users.sourceforge.net>
 
+__ltihooks_used__ = False
 try:
-   import ltihooks
+    import ltihooks
+    __ltihooks_used__ = True
 except:
    pass
 
@@ -73,3 +75,9 @@ class Fraction(Value):
       return '<gst.Fraction %d/%d>' % (self.num, self.denom)
 
 from _gst import *
+# this restores previously installed importhooks, so we don't interfere
+# with other people's module importers
+if __ltihooks_used__:
+    import gst.interfaces as interfaces
+    ltihooks.uninstall()
+    __ltihooks_used__ = False
