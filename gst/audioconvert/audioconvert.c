@@ -61,27 +61,26 @@ MAKE_UNPACK_FUNC_NAME (name) (gpointer src, gint32 *dst,  		\
   UNPACK_CODE(type, 0, E_FUNC);						\
 }
 
-MAKE_UNPACK_FUNC_U (u8, guint8, /* nothing */ )
-    MAKE_UNPACK_FUNC_S (s8, gint8, /* nothing */ )
-    MAKE_UNPACK_FUNC_U (u16_le, guint16, GUINT16_FROM_LE)
-    MAKE_UNPACK_FUNC_S (s16_le, gint16, GINT16_FROM_LE)
-    MAKE_UNPACK_FUNC_U (u16_be, guint16, GUINT16_FROM_BE)
-    MAKE_UNPACK_FUNC_S (s16_be, gint16, GINT16_FROM_BE)
-    MAKE_UNPACK_FUNC_U (u32_le, guint32, GUINT32_FROM_LE)
-    MAKE_UNPACK_FUNC_S (s32_le, gint32, GINT32_FROM_LE)
-    MAKE_UNPACK_FUNC_U (u32_be, guint32, GUINT32_FROM_BE)
-    MAKE_UNPACK_FUNC_S (s32_be, gint32, GINT32_FROM_BE)
+MAKE_UNPACK_FUNC_U (u8, guint8, /* nothing */ );
+MAKE_UNPACK_FUNC_S (s8, gint8, /* nothing */ );
+MAKE_UNPACK_FUNC_U (u16_le, guint16, GUINT16_FROM_LE);
+MAKE_UNPACK_FUNC_S (s16_le, gint16, GINT16_FROM_LE);
+MAKE_UNPACK_FUNC_U (u16_be, guint16, GUINT16_FROM_BE);
+MAKE_UNPACK_FUNC_S (s16_be, gint16, GINT16_FROM_BE);
+MAKE_UNPACK_FUNC_U (u32_le, guint32, GUINT32_FROM_LE);
+MAKE_UNPACK_FUNC_S (s32_le, gint32, GINT32_FROM_LE);
+MAKE_UNPACK_FUNC_U (u32_be, guint32, GUINT32_FROM_BE);
+MAKE_UNPACK_FUNC_S (s32_be, gint32, GINT32_FROM_BE);
 
 /* FIXME 24 bits */
 #if 0
-     gint64 cur = 0;
+gint64 cur = 0;
 
         /* FIXME */
 
         /* Read 24-bits LE/BE into signed 64 host-endian */
-if (this->sinkcaps.endianness == G_LITTLE_ENDIAN)
-{
-cur = src[0] | (src[1] << 8) | (src[2] << 16);
+if (this->sinkcaps.endianness == G_LITTLE_ENDIAN) {
+  cur = src[0] | (src[1] << 8) | (src[2] << 16);
 } else {
   cur = src[2] | (src[1] << 8) | (src[0] << 16);
 }
@@ -307,8 +306,8 @@ audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
     gpointer dst, gint samples, gboolean src_writable)
 {
   gint insize, outsize;
-  gboolean final;
-  gpointer inbuf, outbuf, tmpbuf;
+  gpointer outbuf, tmpbuf;
+  gint biggest = 0;
 
   g_return_val_if_fail (ctx != NULL, FALSE);
   g_return_val_if_fail (src != NULL, FALSE);
@@ -322,62 +321,54 @@ audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
   outsize = ctx->out.unit_size * samples;
 
   /* find biggest temp buffer size */
-  {
-    gint biggest = 0;
+  if (!ctx->in_default)
+    biggest = insize * 32 / ctx->in.width;
+  if (!ctx->mix_passthrough)
+    biggest = MAX (biggest, outsize * 32 / ctx->out.width);
 
-    if (!ctx->in_default)
-      biggest = insize * 32 / ctx->in.width;
-
-    if (!ctx->mix_passthrough)
-      biggest = MAX (biggest, outsize * 32 / ctx->out.width);
-
-    /* see if one of the buffers can be used as temp */
-    if (insize >= biggest && src_writable)
-      tmpbuf = src;
-    else if (outsize >= biggest)
-      tmpbuf = dst;
-    else {
-      if (biggest > ctx->tmpbufsize) {
-        ctx->tmpbuf = g_realloc (ctx->tmpbuf, biggest);
-        ctx->tmpbufsize = biggest;
-      }
-      tmpbuf = ctx->tmpbuf;
+  /* see if one of the buffers can be used as temp */
+  if (outsize >= biggest)
+    tmpbuf = dst;
+  else if (insize >= biggest && src_writable)
+    tmpbuf = src;
+  else {
+    if (biggest > ctx->tmpbufsize) {
+      ctx->tmpbuf = g_realloc (ctx->tmpbuf, biggest);
+      ctx->tmpbufsize = biggest;
     }
+    tmpbuf = ctx->tmpbuf;
   }
 
-  /* this is our source data, we start with the input src data. */
-  inbuf = src;
-  outbuf = dst;
-
+  /* start conversion */
   if (!ctx->in_default) {
     /* check if final conversion */
-    final = (ctx->out_default && ctx->mix_passthrough);
-
-    if (!final)
-      outbuf = tmpbuf;
-
-    ctx->unpack (inbuf, outbuf, ctx->scale, samples * ctx->in.channels);
-
-    inbuf = outbuf;
-  }
-
-  if (!ctx->mix_passthrough) {
-    /* see if we need an intermediate step */
-    final = ctx->out_default;
-
-    if (!final)
+    if (!(ctx->out_default && ctx->mix_passthrough))
       outbuf = tmpbuf;
     else
       outbuf = dst;
 
-    /* convert */
-    gst_channel_mix_mix (ctx, inbuf, outbuf, samples);
+    /* unpack to default format */
+    ctx->unpack (src, outbuf, ctx->scale, samples * ctx->in.channels);
 
-    inbuf = outbuf;
+    src = outbuf;
+  }
+
+  if (!ctx->mix_passthrough) {
+    /* check if final conversion */
+    if (!ctx->out_default)
+      outbuf = tmpbuf;
+    else
+      outbuf = dst;
+
+    /* convert channels */
+    gst_channel_mix_mix (ctx, src, outbuf, samples);
+
+    src = outbuf;
   }
 
   if (!ctx->out_default) {
-    ctx->pack (inbuf, dst, ctx->depth, samples * ctx->out.channels);
+    /* pack default format into dst */
+    ctx->pack (src, dst, ctx->depth, samples * ctx->out.channels);
   }
 
   return TRUE;

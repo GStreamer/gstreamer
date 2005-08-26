@@ -5,6 +5,15 @@
 	(audio_convert_clean_fmt), (audio_convert_prepare_context),
 	(audio_convert_clean_context), (audio_convert_get_sizes),
 	(audio_convert_convert):
+	Cleanups.
+
+2005-08-26  Wim Taymans  <wim@fluendo.com>
+
+	* gst/audioconvert/audioconvert.c: (if), (float),
+	(audio_convert_get_func_index), (check_default),
+	(audio_convert_clean_fmt), (audio_convert_prepare_context),
+	(audio_convert_clean_context), (audio_convert_get_sizes),
+	(audio_convert_convert):
 	More elegant and working temp buffer selection algo.
 
 2005-08-26  Wim Taymans  <wim@fluendo.com>
