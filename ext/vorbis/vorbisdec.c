@@ -72,6 +72,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 GST_BOILERPLATE (GstVorbisDec, gst_vorbis_dec, GstElement, GST_TYPE_ELEMENT);
 
+static void vorbisdec_finalize (GObject * object);
 static gboolean vorbis_dec_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn vorbis_dec_chain (GstPad * pad, GstBuffer * buffer);
 static GstElementStateReturn vorbis_dec_change_state (GstElement * element);
@@ -103,7 +104,10 @@ gst_vorbis_dec_base_init (gpointer g_class)
 static void
 gst_vorbis_dec_class_init (GstVorbisDecClass * klass)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+
+  gobject_class->finalize = vorbisdec_finalize;
 
   gstelement_class->change_state = vorbis_dec_change_state;
 }
@@ -173,6 +177,20 @@ gst_vorbis_dec_init (GstVorbisDec * dec)
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
   dec->queued = NULL;
+}
+
+static void
+vorbisdec_finalize (GObject * object)
+{
+  /* Release any possibly allocated libvorbis data. 
+   * _clear functions can safely be called multiple times
+   */
+  GstVorbisDec *vd = GST_VORBIS_DEC (object);
+
+  vorbis_block_clear (&vd->vb);
+  vorbis_dsp_clear (&vd->vd);
+  vorbis_comment_clear (&vd->vc);
+  vorbis_info_clear (&vd->vi);
 }
 
 static gboolean
@@ -598,6 +616,8 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
 static GstFlowReturn
 vorbis_handle_type_packet (GstVorbisDec * vd)
 {
+  g_assert (vd->initialized == FALSE);
+
   vorbis_synthesis_init (&vd->vd, &vd->vi);
   vorbis_block_init (&vd->vd, &vd->vb);
   vd->initialized = TRUE;
