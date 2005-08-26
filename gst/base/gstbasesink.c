@@ -496,7 +496,8 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
             &basesink->segment_base);
 
         if (format != GST_FORMAT_TIME) {
-          GST_DEBUG ("received non time %d DISCONT %" G_GINT64_FORMAT
+          GST_DEBUG_OBJECT (basesink,
+              "received non time %d NEW_SEGMENT %" G_GINT64_FORMAT
               " -- %" G_GINT64_FORMAT ", base %" G_GINT64_FORMAT,
               format, basesink->segment_start, basesink->segment_stop,
               basesink->segment_base);
@@ -507,7 +508,8 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
           basesink->segment_stop = -1;
           basesink->segment_base = -1;
         } else {
-          GST_DEBUG ("received DISCONT %" GST_TIME_FORMAT " -- %"
+          GST_DEBUG_OBJECT (basesink,
+              "received DISCONT %" GST_TIME_FORMAT " -- %"
               GST_TIME_FORMAT ", base %" GST_TIME_FORMAT,
               GST_TIME_ARGS (basesink->segment_start),
               GST_TIME_ARGS (basesink->segment_stop),
@@ -551,13 +553,21 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
        * range since the sink might be able to clip the sample. */
       if (GST_CLOCK_TIME_IS_VALID (end) &&
           GST_CLOCK_TIME_IS_VALID (basesink->segment_start)) {
-        if (end <= basesink->segment_start)
+        if (end <= basesink->segment_start) {
+          GST_DEBUG ("buffer end %" GST_TIME_FORMAT " <= segment start %"
+              GST_TIME_FORMAT ", dropping buffer", GST_TIME_ARGS (end),
+              GST_TIME_ARGS (basesink->segment_start));
           goto dropping;
+        }
       }
       if (GST_CLOCK_TIME_IS_VALID (start) &&
           GST_CLOCK_TIME_IS_VALID (basesink->segment_stop)) {
-        if (basesink->segment_stop <= start)
+        if (basesink->segment_stop <= start) {
+          GST_DEBUG ("buffer start %" GST_TIME_FORMAT " >= segment stop %"
+              GST_TIME_FORMAT ", dropping buffer", GST_TIME_ARGS (start),
+              GST_TIME_ARGS (basesink->segment_stop));
           goto dropping;
+        }
       }
     }
     basesink->preroll_queued++;
@@ -674,9 +684,6 @@ dropping:
     GstBuffer *buf;
 
     buf = GST_BUFFER (g_queue_pop_tail (basesink->preroll_queue));
-
-    GST_DEBUG ("dropping sample outside of segment boundaries %"
-        GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
     gst_buffer_unref (buf);
     GST_PREROLL_UNLOCK (pad);

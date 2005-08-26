@@ -182,6 +182,13 @@ output with the function name of the message.
 </para>
 
 
+<!-- ##### USER_FUNCTION GstDebugFuncPtr ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### USER_FUNCTION GstLogFunction ##### -->
 <para>
 
@@ -463,6 +470,13 @@ output with the function name of the message.
 
 @colorinfo: 
 @Returns: 
+
+
+<!-- ##### MACRO GST_CAT_DEFAULT ##### -->
+<para>
+
+</para>
+
 
 
 <!-- ##### MACRO GST_CAT_LEVEL_LOG ##### -->

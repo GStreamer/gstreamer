@@ -97,3 +97,171 @@ A Query Type definition
 @Param1: 
 
 
+<!-- ##### MACRO gst_query_copy ##### -->
+<para>
+
+</para>
+
+@msg: 
+
+
+<!-- ##### FUNCTION gst_query_get_structure ##### -->
+<para>
+
+</para>
+
+@query: 
+@Returns: 
+
+
+<!-- ##### MACRO gst_query_make_writable ##### -->
+<para>
+
+</para>
+
+@msg: 
+
+
+<!-- ##### FUNCTION gst_query_new_application ##### -->
+<para>
+
+</para>
+
+@type: 
+@structure: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_query_new_convert ##### -->
+<para>
+
+</para>
+
+@src_fmt: 
+@value: 
+@dest_fmt: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_query_new_position ##### -->
+<para>
+
+</para>
+
+@format: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_query_parse_convert ##### -->
+<para>
+
+</para>
+
+@query: 
+@src_format: 
+@src_value: 
+@dest_format: 
+@dest_value: 
+
+
+<!-- ##### FUNCTION gst_query_parse_position ##### -->
+<para>
+
+</para>
+
+@query: 
+@format: 
+@cur: 
+@end: 
+
+
+<!-- ##### FUNCTION gst_query_parse_seeking_query ##### -->
+<para>
+
+</para>
+
+@query: 
+@format: 
+
+
+<!-- ##### FUNCTION gst_query_parse_seeking_response ##### -->
+<para>
+
+</para>
+
+@query: 
+@format: 
+@seekable: 
+@segment_start: 
+@segment_end: 
+
+
+<!-- ##### MACRO gst_query_ref ##### -->
+<para>
+
+</para>
+
+@msg: 
+
+
+<!-- ##### FUNCTION gst_query_set_convert ##### -->
+<para>
+
+</para>
+
+@query: 
+@src_format: 
+@src_value: 
+@dest_format: 
+@dest_value: 
+
+
+<!-- ##### FUNCTION gst_query_set_formats ##### -->
+<para>
+
+</para>
+
+@query: 
+@n_formats: 
+@Varargs: 
+
+
+<!-- ##### FUNCTION gst_query_set_position ##### -->
+<para>
+
+</para>
+
+@query: 
+@format: 
+@cur: 
+@end: 
+
+
+<!-- ##### FUNCTION gst_query_set_seeking ##### -->
+<para>
+
+</para>
+
+@query: 
+@format: 
+@seekable: 
+@segment_start: 
+@segment_end: 
+
+
+<!-- ##### FUNCTION gst_query_type_iterate_definitions ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO gst_query_unref ##### -->
+<para>
+
+</para>
+
+@msg: 
+
+

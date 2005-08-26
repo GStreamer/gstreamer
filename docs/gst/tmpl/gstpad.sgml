@@ -397,6 +397,159 @@ Indicates when this pad will become available.
 @GST_PAD_REQUEST: the pad is only available on request with 
 gst_element_request_pad_by_name() or gst_element_request_compatible_pad().
 
+<!-- ##### ENUM GstFlowReturn ##### -->
+<para>
+
+</para>
+
+@GST_FLOW_RESEND: 
+@GST_FLOW_OK: 
+@GST_FLOW_NOT_LINKED: 
+@GST_FLOW_WRONG_STATE: 
+@GST_FLOW_UNEXPECTED: 
+@GST_FLOW_NOT_NEGOTIATED: 
+@GST_FLOW_ERROR: 
+@GST_FLOW_NOT_SUPPORTED: 
+
+<!-- ##### ENUM GstActivateMode ##### -->
+<para>
+
+</para>
+
+@GST_ACTIVATE_NONE: 
+@GST_ACTIVATE_PUSH: 
+@GST_ACTIVATE_PULL: 
+
+<!-- ##### MACRO GST_PREROLL_BROADCAST ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_PREROLL_GET_COND ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_PREROLL_GET_LOCK ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_PREROLL_LOCK ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_PREROLL_SIGNAL ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_PREROLL_TIMED_WAIT ##### -->
+<para>
+
+</para>
+
+@pad: 
+@timeval: 
+
+
+<!-- ##### MACRO GST_PREROLL_TRYLOCK ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_PREROLL_UNLOCK ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_PREROLL_WAIT ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_STREAM_GET_LOCK ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_STREAM_LOCK ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_STREAM_LOCK_FULL ##### -->
+<para>
+
+</para>
+
+@pad: 
+@t: 
+
+
+<!-- ##### MACRO GST_STREAM_TRYLOCK ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_STREAM_UNLOCK ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_STREAM_UNLOCK_FULL ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_FLOW_IS_FATAL ##### -->
+<para>
+
+</para>
+
+@ret: 
+
+
 <!-- ##### FUNCTION gst_pad_new ##### -->
 <para>
 
@@ -1062,9 +1215,11 @@ gst_element_request_pad_by_name() or gst_element_request_compatible_pad().
 @pad: 
 @src_format: 
 @src_val: 
-@dest_fmt: 
+@dest_format: 
 @dest_val: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@dest_fmt: 
 
 
 <!-- ##### FUNCTION gst_pad_set_internal_link_function ##### -->

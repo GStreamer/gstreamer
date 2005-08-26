@@ -124,6 +124,23 @@ Convert a GstClockTime to a GTimeVal
 @tv: The target timeval
 
 
+<!-- ##### MACRO GST_TIMESPEC_TO_TIME ##### -->
+<para>
+
+</para>
+
+@ts: 
+
+
+<!-- ##### MACRO GST_TIME_TO_TIMESPEC ##### -->
+<para>
+
+</para>
+
+@t: 
+@ts: 
+
+
 <!-- ##### MACRO GST_CLOCK_ENTRY_TRACE_NAME ##### -->
 <para>
 The name used for tracing clock entry allocations.
@@ -239,6 +256,47 @@ Get the clock flags
 @clock: the clock to query
 
 
+<!-- ##### MACRO GST_CLOCK_BROADCAST ##### -->
+<para>
+
+</para>
+
+@clock: 
+
+
+<!-- ##### MACRO GST_CLOCK_CAST ##### -->
+<para>
+
+</para>
+
+@clock: 
+
+
+<!-- ##### MACRO GST_CLOCK_COND ##### -->
+<para>
+
+</para>
+
+@clock: 
+
+
+<!-- ##### MACRO GST_CLOCK_TIMED_WAIT ##### -->
+<para>
+
+</para>
+
+@clock: 
+@tv: 
+
+
+<!-- ##### MACRO GST_CLOCK_WAIT ##### -->
+<para>
+
+</para>
+
+@clock: 
+
+
 <!-- ##### FUNCTION gst_clock_set_resolution ##### -->
 <para>
 
@@ -288,6 +346,25 @@ Get the clock flags
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_clock_adjust_unlocked ##### -->
+<para>
+
+</para>
+
+@clock: 
+@internal: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_set_time_adjust ##### -->
+<para>
+
+</para>
+
+@clock: 
+@adjust: 
+
+
 <!-- ##### FUNCTION gst_clock_id_get_time ##### -->
 <para>
 
@@ -319,6 +396,33 @@ Get the clock flags
 
 
 <!-- ##### FUNCTION gst_clock_id_unschedule ##### -->
+<para>
+
+</para>
+
+@id: 
+
+
+<!-- ##### FUNCTION gst_clock_id_compare_func ##### -->
+<para>
+
+</para>
+
+@id1: 
+@id2: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_id_ref ##### -->
+<para>
+
+</para>
+
+@id: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_id_unref ##### -->
 <para>
 
 </para>

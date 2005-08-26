@@ -122,6 +122,22 @@ Checks if the give GValue contains a FRACTION value.
 @x: the #GValue to check
 
 
+<!-- ##### MACRO GST_VALUE_HOLDS_ARRAY ##### -->
+<para>
+
+</para>
+
+@x: 
+
+
+<!-- ##### MACRO GST_VALUE_HOLDS_MINI_OBJECT ##### -->
+<para>
+
+</para>
+
+@value: 
+
+
 <!-- ##### MACRO GST_VALUE_LESS_THAN ##### -->
 <para>
 Indicates that the first value provided to a comparison function
@@ -439,6 +455,32 @@ GST_VALUE_GREATER_THAN or GST_VALUE_UNORDERED
 @value: 
 @numerator: 
 @denominator: 
+
+
+<!-- ##### MACRO gst_value_get_buffer ##### -->
+<para>
+
+</para>
+
+@v: 
+
+
+<!-- ##### MACRO gst_value_set_buffer ##### -->
+<para>
+
+</para>
+
+@v: 
+@b: 
+
+
+<!-- ##### MACRO gst_value_take_buffer ##### -->
+<para>
+
+</para>
+
+@v: 
+@b: 
 
 
 <!-- ##### FUNCTION gst_value_fraction_multiply ##### -->

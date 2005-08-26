@@ -759,6 +759,30 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
       GST_STREAM_LOCK (pad);
       unlock = TRUE;
       break;
+    case GST_EVENT_NEWSEGMENT:
+    {
+      GstFormat format;
+      gdouble rate;
+      gint64 start, stop, base;
+
+      GST_STREAM_LOCK (pad);
+      gst_event_parse_newsegment (event, &rate, &format, &start, &stop, &base);
+      if (format == GST_FORMAT_TIME) {
+        GST_DEBUG_OBJECT (trans, "received NEW_SEGMENT %" GST_TIME_FORMAT
+            " -- %" GST_TIME_FORMAT ", base %" GST_TIME_FORMAT,
+            start, stop, base);
+        trans->have_newsegment = TRUE;
+        trans->segment_start = start;
+        trans->segment_stop = stop;
+        trans->segment_base = base;
+        trans->segment_rate = rate;
+      } else {
+        GST_DEBUG_OBJECT (trans,
+            "received NEW_SEGMENT in non-time format, ignoring");
+      }
+      GST_STREAM_UNLOCK (pad);
+      break;
+    }
     default:
       break;
   }

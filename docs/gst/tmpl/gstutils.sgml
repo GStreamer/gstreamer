@@ -17,62 +17,6 @@ various utility functions
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### FUNCTION gst_util_set_value_from_string ##### -->
-<para>
-
-</para>
-
-@value: 
-@value_str: 
-
-
-<!-- ##### FUNCTION gst_util_set_object_arg ##### -->
-<para>
-
-</para>
-
-@object: 
-@name: 
-@value: 
-
-
-<!-- ##### FUNCTION gst_util_dump_mem ##### -->
-<para>
-
-</para>
-
-@mem: 
-@size: 
-
-
-<!-- ##### FUNCTION gst_print_pad_caps ##### -->
-<para>
-
-</para>
-
-@buf: 
-@indent: 
-@pad: 
-
-
-<!-- ##### FUNCTION gst_print_element_args ##### -->
-<para>
-
-</para>
-
-@buf: 
-@indent: 
-@element: 
-
-
-<!-- ##### FUNCTION gst_bin_watch_for_state_change ##### -->
-<para>
-
-</para>
-
-@bin: 
-
-
 <!-- ##### MACRO GST_BOILERPLATE_WITH_INTERFACE ##### -->
 <para>
 
@@ -100,9 +44,17 @@ various utility functions
 @\
     parent_type_as_macro:
 @\
+    parent_type_as_macro:
+@\
+    parent_type_as_macro:
+@\
     parent_type_as_macro: 
 @interface_type: 
 @interface_type_as_macro: 
+@\
+    interface_as_function:
+@\
+    interface_as_function:
 @\
     interface_as_function:
 @\
@@ -334,5 +286,79 @@ various utility functions
 </para>
 
 @num: 
+
+
+<!-- ##### FUNCTION gst_atomic_int_set ##### -->
+<para>
+
+</para>
+
+@atomic_int: 
+@value: 
+
+
+<!-- ##### FUNCTION gst_bin_watch_for_state_change ##### -->
+<para>
+
+</para>
+
+@bin: 
+
+
+<!-- ##### FUNCTION gst_flow_get_name ##### -->
+<para>
+
+</para>
+
+@ret: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_print_element_args ##### -->
+<para>
+
+</para>
+
+@buf: 
+@indent: 
+@element: 
+
+
+<!-- ##### FUNCTION gst_print_pad_caps ##### -->
+<para>
+
+</para>
+
+@buf: 
+@indent: 
+@pad: 
+
+
+<!-- ##### FUNCTION gst_util_dump_mem ##### -->
+<para>
+
+</para>
+
+@mem: 
+@size: 
+
+
+<!-- ##### FUNCTION gst_util_set_object_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@name: 
+@value: 
+
+
+<!-- ##### FUNCTION gst_util_set_value_from_string ##### -->
+<para>
+
+</para>
+
+@value: 
+@value_str: 
 
 

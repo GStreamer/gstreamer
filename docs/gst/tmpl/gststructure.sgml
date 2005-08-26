@@ -35,6 +35,17 @@ Generic structure containing fields of names and values
 @Returns: 
 
 
+<!-- ##### USER_FUNCTION GstStructureMapFunc ##### -->
+<para>
+
+</para>
+
+@field_id: 
+@value: 
+@user_data: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_structure_empty_new ##### -->
 <para>
 
@@ -360,6 +371,36 @@ Generic structure containing fields of names and values
 @Returns: 
 <!-- # Unused Parameters # -->
 @field: 
+
+
+<!-- ##### FUNCTION gst_structure_map_in_place ##### -->
+<para>
+
+</para>
+
+@structure: 
+@func: 
+@user_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_structure_nth_field_name ##### -->
+<para>
+
+</para>
+
+@structure: 
+@index: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_structure_set_parent_refcount ##### -->
+<para>
+
+</para>
+
+@structure: 
+@refcount: 
 
 
 <!-- ##### FUNCTION gst_structure_to_string ##### -->

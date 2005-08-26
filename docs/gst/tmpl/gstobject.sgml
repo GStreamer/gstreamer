@@ -218,6 +218,78 @@ Acquire a reference to the mutex of this object.
 @obj: Object to get the mutex of.
 
 
+<!-- ##### MACRO GST_OBJECT_IS_DESTROYED ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_OBJECT_IS_DISPOSING ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_OBJECT_IS_FLOATING ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_OBJECT_REFCOUNT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_OBJECT_REFCOUNT_VALUE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_CLASS_GET_LOCK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_CLASS_LOCK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_CLASS_TRYLOCK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_CLASS_UNLOCK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
 <!-- ##### FUNCTION gst_object_set_name ##### -->
 <para>
 
@@ -264,6 +336,24 @@ Acquire a reference to the mutex of this object.
 @object: 
 
 
+<!-- ##### FUNCTION gst_object_get_name_prefix ##### -->
+<para>
+
+</para>
+
+@object: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_object_set_name_prefix ##### -->
+<para>
+
+</para>
+
+@object: 
+@name_prefix: 
+
+
 <!-- ##### FUNCTION gst_object_default_deep_notify ##### -->
 <para>
 
@@ -273,6 +363,16 @@ Acquire a reference to the mutex of this object.
 @orig: 
 @pspec: 
 @excluded_props: 
+
+
+<!-- ##### FUNCTION gst_object_default_error ##### -->
+<para>
+
+</para>
+
+@source: 
+@error: 
+@debug: 
 
 
 <!-- ##### FUNCTION gst_object_check_uniqueness ##### -->

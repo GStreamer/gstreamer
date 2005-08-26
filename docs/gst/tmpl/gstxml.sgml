@@ -36,6 +36,94 @@ XML save/restore operations of pipelines
 @arg1: 
 @arg2: 
 
+<!-- ##### USER_FUNCTION GstXMLRegistryClose ##### -->
+<para>
+
+</para>
+
+@registry: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GstXMLRegistryGetPerms ##### -->
+<para>
+
+</para>
+
+@registry: 
+
+
+<!-- ##### USER_FUNCTION GstXMLRegistryLoad ##### -->
+<para>
+
+</para>
+
+@registry: 
+@dest: 
+@size: 
+@Returns: 
+
+
+<!-- ##### ENUM GstXMLRegistryMode ##### -->
+<para>
+
+</para>
+
+@GST_XML_REGISTRY_READ: 
+@GST_XML_REGISTRY_WRITE: 
+
+<!-- ##### USER_FUNCTION GstXMLRegistryOpen ##### -->
+<para>
+
+</para>
+
+@registry: 
+@mode: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GstXMLRegistryParser ##### -->
+<para>
+
+</para>
+
+@context: 
+@tag: 
+@text: 
+@text_len: 
+@registry: 
+@error: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GstXMLRegistrySave ##### -->
+<para>
+
+</para>
+
+@registry: 
+@format: 
+@Varargs: 
+@Returns: 
+
+
+<!-- ##### ENUM GstXMLRegistryState ##### -->
+<para>
+
+</para>
+
+@GST_XML_REGISTRY_NONE: 
+@GST_XML_REGISTRY_TOP: 
+@GST_XML_REGISTRY_PATHS: 
+@GST_XML_REGISTRY_PATH: 
+@GST_XML_REGISTRY_PATHS_DONE: 
+@GST_XML_REGISTRY_PLUGIN: 
+@GST_XML_REGISTRY_FEATURE: 
+@GST_XML_REGISTRY_PADTEMPLATE: 
+@GST_XML_REGISTRY_CAPS: 
+@GST_XML_REGISTRY_STRUCTURE: 
+@GST_XML_REGISTRY_PROPERTIES: 
+
 <!-- ##### FUNCTION gst_xml_write ##### -->
 <para>
 

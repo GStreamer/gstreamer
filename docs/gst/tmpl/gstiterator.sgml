@@ -172,8 +172,10 @@ GstIterator
 </para>
 
 @it: 
-@result: 
+@elem: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@result: 
 
 
 <!-- ##### FUNCTION gst_iterator_resync ##### -->

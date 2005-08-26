@@ -1,7 +1,20 @@
+2005-08-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object):
+	* gst/base/gstbasetransform.c: (gst_base_transform_transform_size),
+	  fix up some debugging
+	(gst_base_transform_get_unit_size),
+	(gst_base_transform_buffer_alloc), (gst_base_transform_event),
+	(gst_base_transform_handle_buffer):
+	* gst/base/gstbasetransform.h:
+	  handle and store timed NEWSEGMENT events so that subclasses that
+	  calculate time by counting samples have a segment_start time they
+	  need to add to their timestamps - see audioresample
+
 2005-08-26  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstbin.h:
-          removed ';' from the end of macro defs
+	  removed ';' from the end of macro defs
 	* docs/gst/gstreamer-docs.sgml:
 	* docs/gst/gstreamer-sections.txt:
 	* docs/gst/tmpl/.cvsignore:
@@ -17,9 +30,9 @@
 	* gst/gstprobe.h:
 	* gst/gstutils.c: (gst_pad_query_convert):
 	* gst/gstutils.h:
-          fixed parameter name mismatches between source, header and docs
-          added some more docs, resolved the last batch of unused elements in
-          docs (now someone needs to doc them)
+	  fixed parameter name mismatches between source, header and docs
+	  added some more docs, resolved the last batch of unused elements in
+	  docs (now someone needs to doc them)
 
 2005-08-25  Thomas Vander Stichele  <thomas at apestaart dot org>
 

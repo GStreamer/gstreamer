@@ -186,6 +186,13 @@ The main tracing object
 @trace: 
 
 
+<!-- ##### FUNCTION gst_alloc_trace_print_live ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### FUNCTION gst_alloc_trace_set_flags ##### -->
 <para>
 

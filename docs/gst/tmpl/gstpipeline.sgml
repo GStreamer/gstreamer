@@ -44,6 +44,14 @@ the pipeline, use gst_object_unref() to free its resources.
 
 </para>
 
+<!-- ##### ENUM GstPipelineFlags ##### -->
+<para>
+
+</para>
+
+@GST_PIPELINE_FLAG_FIXED_CLOCK: 
+@GST_PIPELINE_FLAG_LAST: 
+
 <!-- ##### FUNCTION gst_pipeline_new ##### -->
 <para>
 
@@ -51,5 +59,67 @@ the pipeline, use gst_object_unref() to free its resources.
 
 @name: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gst_pipeline_auto_clock ##### -->
+<para>
+
+</para>
+
+@pipeline: 
+
+
+<!-- ##### FUNCTION gst_pipeline_get_bus ##### -->
+<para>
+
+</para>
+
+@pipeline: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pipeline_get_clock ##### -->
+<para>
+
+</para>
+
+@pipeline: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pipeline_get_last_stream_time ##### -->
+<para>
+
+</para>
+
+@pipeline: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pipeline_set_clock ##### -->
+<para>
+
+</para>
+
+@pipeline: 
+@clock: 
+
+
+<!-- ##### FUNCTION gst_pipeline_set_new_stream_time ##### -->
+<para>
+
+</para>
+
+@pipeline: 
+@time: 
+
+
+<!-- ##### FUNCTION gst_pipeline_use_clock ##### -->
+<para>
+
+</para>
+
+@pipeline: 
+@clock: 
 
 

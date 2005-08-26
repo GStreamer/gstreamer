@@ -45,3 +45,22 @@ Pseudo link pads
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_ghost_pad_get_target ##### -->
+<para>
+
+</para>
+
+@gpad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_ghost_pad_new_notarget ##### -->
+<para>
+
+</para>
+
+@name: 
+@dir: 
+@Returns: 
+
+

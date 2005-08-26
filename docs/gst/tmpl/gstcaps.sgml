@@ -58,6 +58,22 @@ undefined media type that can not be detected.
 
 
 
+<!-- ##### MACRO GST_CAPS_REFCOUNT ##### -->
+<para>
+
+</para>
+
+@caps: 
+
+
+<!-- ##### MACRO GST_CAPS_REFCOUNT_VALUE ##### -->
+<para>
+
+</para>
+
+@caps: 
+
+
 <!-- ##### MACRO GST_STATIC_CAPS_ANY ##### -->
 <para>
 Creates a static caps that matches anything. This can be used in pad
@@ -277,6 +293,16 @@ templates.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_caps_is_equal_fixed ##### -->
+<para>
+
+</para>
+
+@caps1: 
+@caps2: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_caps_is_always_compatible ##### -->
 <para>
 
@@ -389,5 +415,50 @@ templates.
 @minuend: 
 @subtrahend: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_make_writable ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_ref ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_structure_fixate_field_boolean ##### -->
+<para>
+
+</para>
+
+@structure: 
+@field_name: 
+@target: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_truncate ##### -->
+<para>
+
+</para>
+
+@caps: 
+
+
+<!-- ##### FUNCTION gst_caps_unref ##### -->
+<para>
+
+</para>
+
+@caps: 
 
 

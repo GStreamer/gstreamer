@@ -36,6 +36,23 @@ GstMiniObject
 @GST_MINI_OBJECT_FLAG_STATIC: 
 @GST_MINI_OBJECT_FLAG_LAST: 
 
+<!-- ##### USER_FUNCTION GstMiniObjectCopyFunction ##### -->
+<para>
+
+</para>
+
+@Param1: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GstMiniObjectFinalizeFunction ##### -->
+<para>
+
+</para>
+
+@Param1: 
+
+
 <!-- ##### MACRO GST_MINI_OBJECT_FLAGS ##### -->
 <para>
 
@@ -69,6 +86,22 @@ GstMiniObject
 
 @obj: 
 @flag: 
+
+
+<!-- ##### MACRO GST_MINI_OBJECT_REFCOUNT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_MINI_OBJECT_REFCOUNT_VALUE ##### -->
+<para>
+
+</para>
+
+@obj: 
 
 
 <!-- ##### FUNCTION gst_mini_object_new ##### -->

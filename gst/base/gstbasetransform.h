@@ -59,6 +59,13 @@ struct _GstBaseTransform {
   gboolean	 delay_configure;
   gboolean	 pending_configure;
 
+  gboolean       have_newsegment;
+
+  gdouble        segment_rate;
+  gint64         segment_start;
+  gint64         segment_stop;
+  gint64         segment_base;
+
   /*< private >*/
   gpointer       _gst_reserved[GST_PADDING];
 };
