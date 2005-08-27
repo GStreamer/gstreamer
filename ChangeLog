@@ -1,5 +1,10 @@
 2005-08-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/extend/jukebox.py:
+	  clean up leveller and remove sources from jukebox
+
+2005-08-27  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/extend/leveller.py:
 	  add a .stop method to free resources by setting pipe to NULL
 
