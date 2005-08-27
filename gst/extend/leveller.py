@@ -31,7 +31,12 @@ from gst.extend import sources
 from gst.extend.sources import EOS, ERROR, UNKNOWN_TYPE, WRONG_TYPE
 
 class Leveller(gst.Pipeline):
-    """A pipeline that calculates RMS values and mix-in/out points"""
+    """
+    I am a pipeline that calculates RMS values and mix-in/out points.
+    I will signal 'done' when I'm done scanning the file, with return value
+    EOS, ERROR, UNKNOWN_TYPE, or WRONG_TYPE from gst.extend.sources
+    """
+
     gsignal('done', str)
 
     def __init__(self, filename, threshold=-9.0):
@@ -49,6 +54,7 @@ class Leveller(gst.Pipeline):
         self._level.connect("level", self._level_cb)
 
         self._fakesink = gst.element_factory_make("fakesink")
+        # FIXME: make this syntax possible
         #self.add(self._source, self._level, self._fakesink)
         self.add(self._source)
         self.add(self._level)
@@ -175,25 +181,40 @@ class Leveller(gst.Pipeline):
         gst.debug("Setting to PLAYING")
         self.set_state(gst.STATE_PLAYING)
         gst.debug("Set to PLAYING")
+
+    # FIXME: we might want to do this ourselves automatically ?
+    def stop(self):
+        """
+        Stop the leveller, freeing all resources.
+        Call after the leveller emitted 'done' to clean up.
+        """
+        gst.debug("Setting to NULL")
+        self.set_state(gst.STATE_NULL)
 gobject.type_register(Leveller)
 
 if __name__ == "__main__":
     main = gobject.MainLoop()
 
-    def _done_cb(element, reason, l):
+    def _done_cb(leveller, reason, l):
         print "Done"
         if reason != EOS:
             print "Error: %s" % reason
         else:
             print "in: %f, out: %f, length: %f" % (l.mixin, l.mixout, l.length)
             print "rms: %f, %f dB" % (l.rms, l.rmsdB)
+        leveller.stop()
         main.quit()
 
-    def _error_cb(element, source, gerror, message):
+    def _error_cb(leveller, source, gerror, message):
         print "Error: %s" % gerror
         main.quit()
 
-    leveller = Leveller(sys.argv[1])
+    try:
+        leveller = Leveller(sys.argv[1])
+    except IndexError:
+        sys.stderr.write("Please give a file to calculate level of")
+        sys.exit(1)
+
     leveller.connect('done', _done_cb, leveller)
     leveller.connect('error', _error_cb)
 
