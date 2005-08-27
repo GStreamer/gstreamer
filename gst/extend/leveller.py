@@ -190,6 +190,8 @@ class Leveller(gst.Pipeline):
         """
         gst.debug("Setting to NULL")
         self.set_state(gst.STATE_NULL)
+        gst.debug("Set to NULL")
+
 gobject.type_register(Leveller)
 
 if __name__ == "__main__":

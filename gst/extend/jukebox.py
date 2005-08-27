@@ -39,7 +39,7 @@ class Jukebox(gst.Bin):
     gsignal('changed', str, gobject.TYPE_UINT64) # clocktime, filename
     gsignal('looped')
 
-    def __init__(self, files, rms=0.1, loops=0, random=False,
+    def __init__(self, files, rms=0.2, loops=0, random=False,
                  caps="audio/x-raw-int,channels=2,rate=44100",
                  picklepath='level.pck'):
         # with pygtk 2.4 this call is needed for the gsignal to work
@@ -78,11 +78,6 @@ class Jukebox(gst.Bin):
         self.add_ghost_pad(self._adder.get_pad("src"), "src")
         probe = gst.Probe(False, self._probe_cb)
         self._adder.get_pad("src").add_probe(probe)
-
-    def log(self, *args):
-        print " ".join(args)
-        sys.stdout.flush()
-        pass
 
     def _probe_cb(self, probe, buffer):
         if not self._triggers:
