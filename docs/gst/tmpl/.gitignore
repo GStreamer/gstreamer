@@ -8,7 +8,9 @@ gstbasetransform.sgml
 gstbin.sgml
 gstbuffer.sgml
 gstbus.sgml
+gstcaps.sgml
 gstcheck.sgml
+gstclock.sgml
 gstcollectpads.sgml
 gstevent.sgml
 gstfakesrc.sgml

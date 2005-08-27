@@ -1,5 +1,21 @@
 2005-08-27  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/design/part-messages.txt:
+          update info
+	* docs/gst/tmpl/.cvsignore:
+	* docs/gst/tmpl/gstcaps.sgml:
+	* docs/gst/tmpl/gstclock.sgml:
+	* gst/gstbus.c:
+	* gst/gstcaps.c:
+	* gst/gstcaps.h:
+	* gst/gstclock.c:
+	* gst/gstclock.h:
+	* gst/gstmessage.c:
+          added descriptions for bus and message
+          inline caps and clock docs
+
+2005-08-27  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstmessage.c:
 	* gst/gstmessage.h:
           doc fixes

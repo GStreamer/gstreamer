@@ -21,6 +21,38 @@
 /**
  * SECTION:gstbus
  * @short_description: Asynchronous message bus subsystem
+ * @see_also: #GstMessage, #GstElement
+ *
+ * The #GstBus is an object responsible for delivering #GstMessages in
+ * a first-in first-out way from the streaming threads to the application.
+ * 
+ * Since the application typically only wants to deal with delivery of these
+ * messages from one thread, the GstBus will marshall the messages between
+ * different threads. This is important since the actual streaming of media
+ * is done in another thread than the application.
+ * 
+ * The GstBus provides support for #GSource based notifications. This makes it
+ * possible to handle the delivery in the glib mainloop.
+ * 
+ * A message is posted on the bus with the gst_bus_post() method. With the
+ * gst_bus_peek() and _pop() methods one can look at or retrieve a previously
+ * posted message.
+ * 
+ * The bus can be polled with the gst_bus_poll() method. This methods blocks
+ * up to the specified timeout value until one of the specified messages types
+ * is posted on the bus. The application can then _pop() the messages from the
+ * bus to handle them.
+ * Alternatively the application can register an asynchronous bus handler using
+ * gst_bus_add_watch_full() orgst_bus_add_watch(). This handler will receive
+ * messages a short while after they have been posted.
+ * 
+ * It is also possible to get messages from the bus without any thread 
+ * marshalling with the gst_bus_set_sync_handler() method. This makes it
+ * possible to react to a message in the same thread that posted the
+ * message on the bus. This should only be used if the application is able
+ * to deal with messages from different threads.
+ * 
+ * Every #GstElement has its own bus.
  */
 
 #include <errno.h>

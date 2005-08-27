@@ -20,7 +20,20 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+/**
+ * SECTION:gstclock
+ * @short_description: Abstract class for global clocks
+ * @see_also: #GstSystemClock
+ *
+ * GStreamer uses a global clock to synchronise the plugins in a pipeline.
+ * Different clock implementations are possible by implementing this abstract
+ * base class.
+ *
+ * The clock time is always measured in nanoseconds and always increases. The
+ * pipeline uses the clock to calculate the stream time.
+ * Usually all renderers sync to the global clock so that the clock is always 
+ * a good measure of the current playback time in the pipeline.
+ */
 #include <time.h>
 
 #include "gst_private.h"

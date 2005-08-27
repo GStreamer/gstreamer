@@ -29,21 +29,81 @@ G_BEGIN_DECLS
 #define GST_CAPS(object)          ((GstCaps*)object)
 #define GST_IS_CAPS(object)       ((object) && (GST_CAPS(object)->type == GST_TYPE_CAPS))
 
+/**
+ * GST_CAPS_FLAGS_ANY:
+ *
+ * Flags that this caps has no specific content, but can contain anything.
+ */
 #define GST_CAPS_FLAGS_ANY	  (1 << 0)
 
+/**
+ * GST_CAPS_ANY:
+ *
+ * Means that the element/pad can output 'anything'. Useful for elements
+ * that output unknown media, such as filesrc.
+ */
 #define GST_CAPS_ANY              gst_caps_new_any()
+/**
+ * GST_CAPS_NONE:
+ *
+ * The opposite of %GST_CAPS_ANY: it means that the pad/element outputs an
+ * undefined media type that can not be detected.
+ */
 #define GST_CAPS_NONE             gst_caps_new_empty()
 
+/**
+ * GST_STATIC_CAPS_ANY:
+ *
+ * Creates a static caps that matches anything. This can be used in pad
+ * templates.
+ *
+ * Returns: a new #GstCaps instance
+ */
 #define GST_STATIC_CAPS_ANY       GST_STATIC_CAPS("ANY")
+/**
+ * GST_STATIC_CAPS_NONE:
+ *
+ * Creates a static caps that matches nothing. This can be used in pad
+ * templates.
+ *
+ * Returns: a new #GstCaps instance
+ */
 #define GST_STATIC_CAPS_NONE      GST_STATIC_CAPS("NONE")
 
+/**
+ * GST_CAPS_IS_SIMPLE:
+ * @caps: the #GstCaps instance to check
+ *
+ * Convinience macro that checks if the number of structures in the gives caps
+ * is exactly one.
+ *
+ * Returns: %TRUE if caps has exactly one structure
+ */
 #define GST_CAPS_IS_SIMPLE(caps) (gst_caps_get_size(caps) == 1)
 
 #ifndef GST_DISABLE_DEPRECATED
+/**
+ * GST_DEBUG_CAPS:
+ * @string: a string the should be prepend to the caps data.
+ * @caps: the #GstCaps instance to print
+ *
+ * Convinience macro for prining out the contents of caps with GST_DEBUG().
+ *
+ * Deprecated: do not use anymore
+ */
 #define GST_DEBUG_CAPS(string, caps) \
   GST_DEBUG ( string "%s: " GST_PTR_FORMAT, caps)
 #endif
 
+/**
+ * GST_STATIC_CAPS:
+ * @caps: the string describing the caps.
+ *
+ * Creates a static caps from an input string. This can be used in pad
+ * templates.
+ *
+ * Returns: a new #GstCaps instance
+ */
 #define GST_STATIC_CAPS(string) \
 { \
   /* caps */ { 0 }, \

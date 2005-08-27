@@ -4,7 +4,7 @@ Messages
 Messages are refcounted lightweight objects to signal the application
 of pipeline events. 
 
-Messages are implemented as a subclass of GstData with a generic 
+Messages are implemented as a subclass of GstMiniObject with a generic 
 GstStructure as the content. This allows for writing custom messages without
 requiring an API change while allowing a wide range of different types
 of messages.
