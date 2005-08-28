@@ -137,7 +137,8 @@ gst_videotestsrc_class_init (GstVideoTestSrcClass * klass)
 }
 
 static void
-gst_videotestsrc_init (GstVideoTestSrc * videotestsrc)
+gst_videotestsrc_init (GstVideoTestSrc * videotestsrc,
+    GstVideoTestSrcClass * g_class)
 {
   gst_videotestsrc_set_pattern (videotestsrc, GST_VIDEOTESTSRC_SMPTE);
 

@@ -1,3 +1,7 @@
+2005-08-28  Andy Wingo  <wingo@pobox.com>
+
+	* Updates for two-arg init from GST_BOILERPLATE_FULL.
+
 2005-08-26  Wim Taymans  <wim@fluendo.com>
 
 	* gst/audioconvert/audioconvert.c: (if), (float),

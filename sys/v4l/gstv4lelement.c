@@ -352,7 +352,7 @@ gst_v4lelement_class_init (GstV4lElementClass * klass)
 
 
 static void
-gst_v4lelement_init (GstV4lElement * v4lelement)
+gst_v4lelement_init (GstV4lElement * v4lelement, GstV4lElementClass * klass)
 {
   /* some default values */
   v4lelement->video_fd = -1;

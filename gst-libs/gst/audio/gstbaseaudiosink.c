@@ -123,7 +123,8 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
 }
 
 static void
-gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink)
+gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink,
+    GstBaseAudioSinkClass * g_class)
 {
   baseaudiosink->buffer_time = DEFAULT_BUFFER_TIME;
   baseaudiosink->latency_time = DEFAULT_LATENCY_TIME;

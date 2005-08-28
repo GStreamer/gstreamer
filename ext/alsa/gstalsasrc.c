@@ -108,6 +108,7 @@ gst_alsasrc_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&alsasrc_src_factory));
 }
+
 static void
 gst_alsasrc_class_init (GstAlsaSrcClass * klass)
 {
@@ -198,7 +199,7 @@ gst_alsasrc_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_alsasrc_init (GstAlsaSrc * alsasrc)
+gst_alsasrc_init (GstAlsaSrc * alsasrc, GstAlsaSrcClass * g_class)
 {
   GST_DEBUG ("initializing alsasrc");
 

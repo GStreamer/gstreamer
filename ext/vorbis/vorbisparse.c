@@ -86,7 +86,7 @@ gst_vorbis_parse_class_init (GstVorbisParseClass * klass)
 }
 
 static void
-gst_vorbis_parse_init (GstVorbisParse * parse)
+gst_vorbis_parse_init (GstVorbisParse * parse, GstVorbisParseClass * g_class)
 {
   parse->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get

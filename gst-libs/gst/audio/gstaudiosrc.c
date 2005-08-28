@@ -64,7 +64,8 @@ struct _GstAudioRingBufferClass
 };
 
 static void gst_audioringbuffer_class_init (GstAudioRingBufferClass * klass);
-static void gst_audioringbuffer_init (GstAudioRingBuffer * ringbuffer);
+static void gst_audioringbuffer_init (GstAudioRingBuffer * ringbuffer,
+    GstAudioRingBufferClass * klass);
 static void gst_audioringbuffer_dispose (GObject * object);
 static void gst_audioringbuffer_finalize (GObject * object);
 
@@ -218,7 +219,8 @@ stop_running:
 }
 
 static void
-gst_audioringbuffer_init (GstAudioRingBuffer * ringbuffer)
+gst_audioringbuffer_init (GstAudioRingBuffer * ringbuffer,
+    GstAudioRingBufferClass * g_class)
 {
   ringbuffer->running = FALSE;
   ringbuffer->queuedseg = 0;
@@ -454,7 +456,7 @@ gst_audio_src_class_init (GstAudioSrcClass * klass)
 }
 
 static void
-gst_audio_src_init (GstAudioSrc * audiosrc)
+gst_audio_src_init (GstAudioSrc * audiosrc, GstAudioSrcClass * g_class)
 {
   gst_base_src_set_live (GST_BASE_SRC (audiosrc), TRUE);
 }

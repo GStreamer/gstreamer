@@ -256,7 +256,7 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
 }
 
 static void
-gst_theora_enc_init (GstTheoraEnc * enc)
+gst_theora_enc_init (GstTheoraEnc * enc, GstTheoraEncClass * g_class)
 {
   enc->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get

@@ -158,7 +158,7 @@ vorbis_get_query_types (GstPad * pad)
 }
 
 static void
-gst_vorbis_dec_init (GstVorbisDec * dec)
+gst_vorbis_dec_init (GstVorbisDec * dec, GstVorbisDecClass * g_class)
 {
   dec->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get

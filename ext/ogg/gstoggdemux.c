@@ -1082,7 +1082,7 @@ gst_ogg_demux_class_init (GstOggDemuxClass * klass)
 }
 
 static void
-gst_ogg_demux_init (GstOggDemux * ogg)
+gst_ogg_demux_init (GstOggDemux * ogg, GstOggDemuxClass * g_class)
 {
   /* create the sink pad */
   ogg->sinkpad =

@@ -59,9 +59,6 @@ static GstElementDetails audio_convert_details = {
 };
 
 /* type functions */
-static void gst_audio_convert_base_init (gpointer g_class);
-static void gst_audio_convert_class_init (GstAudioConvertClass * klass);
-static void gst_audio_convert_init (GstAudioConvert * audio_convert);
 static void gst_audio_convert_dispose (GObject * obj);
 
 /* gstreamer functions */
@@ -195,7 +192,7 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
 }
 
 static void
-gst_audio_convert_init (GstAudioConvert * this)
+gst_audio_convert_init (GstAudioConvert * this, GstAudioConvertClass * g_class)
 {
 }
 

@@ -172,7 +172,7 @@ gst_theora_dec_class_init (GstTheoraDecClass * klass)
 }
 
 static void
-gst_theora_dec_init (GstTheoraDec * dec)
+gst_theora_dec_init (GstTheoraDec * dec, GstTheoraDecClass * g_class)
 {
   dec->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get

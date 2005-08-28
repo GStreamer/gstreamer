@@ -59,7 +59,8 @@ gst_alsa_mixer_element_class_init (GstAlsaMixerElementClass * klass)
 }
 
 static void
-gst_alsa_mixer_element_init (GstAlsaMixerElement * this)
+gst_alsa_mixer_element_init (GstAlsaMixerElement * this,
+    GstAlsaMixerElementClass * klass)
 {
   this->mixer = NULL;
 }

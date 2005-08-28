@@ -119,7 +119,8 @@ gst_base_audio_src_class_init (GstBaseAudioSrcClass * klass)
 }
 
 static void
-gst_base_audio_src_init (GstBaseAudioSrc * baseaudiosrc)
+gst_base_audio_src_init (GstBaseAudioSrc * baseaudiosrc,
+    GstBaseAudioSrcClass * g_class)
 {
   baseaudiosrc->buffer_time = DEFAULT_BUFFER_TIME;
   baseaudiosrc->latency_time = DEFAULT_LATENCY_TIME;

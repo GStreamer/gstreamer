@@ -124,7 +124,7 @@ gst_v4lsrc_class_init (GstV4lSrcClass * klass)
 }
 
 static void
-gst_v4lsrc_init (GstV4lSrc * v4lsrc)
+gst_v4lsrc_init (GstV4lSrc * v4lsrc, GstV4lSrcClass * klass)
 {
   v4lsrc->buffer_size = 0;
 

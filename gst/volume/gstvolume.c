@@ -279,7 +279,7 @@ gst_volume_class_init (GstVolumeClass * klass)
 }
 
 static void
-gst_volume_init (GstVolume * this)
+gst_volume_init (GstVolume * this, GstVolumeClass * g_class)
 {
   GstMixerTrack *track = NULL;
 
