@@ -1,3 +1,5 @@
+import os
+
 import gobject
 import gst
 
@@ -52,3 +54,17 @@ def dump_element (element, indent):
             out = " - bytes_level: %ld" % (element.get_property('current-level-bytes'))
             print out.rjust(len(out) + indent)
 
+def gc_collect(reason=None):
+    """
+    Garbage-collect if GST_GC env var is set.
+    This helps in debugging object refcounting.
+    Sprinkle liberally around checkpoints.
+    """
+    if not os.environ.has_key('GST_GC'):
+        return
+    import gc
+    gst.debug('collecting garbage')
+    if reason:
+        gst.debug('because of %s' % reason)
+    gc.collect()
+    gst.debug('collected garbage')

@@ -1,3 +1,15 @@
+2005-08-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/extend/jukebox.py:
+	* gst/extend/leveller.py:
+	* gst/extend/sources.py:
+	  add an explicit .clean() method to source and leveller, to make
+	  sure all our elements are cleaned up correctly.  Should help
+	  for long-living processes.
+	* gst/extend/utils.py:
+	  add a gc_collect method that will explicitly garbage-collect
+	  if env var GST_GC is set.  Useful for debugging refcounting.
+
 2005-08-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/extend/jukebox.py:

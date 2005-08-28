@@ -25,6 +25,7 @@ import sys
 import gobject
 import gst
 
+import utils
 from pygobject import gsignal
 
 EOS = 'EOS'
@@ -87,14 +88,34 @@ class AudioSource(gst.Bin):
     def _have_eos_cb(self, object):
         self.eos = True
         self.emit('done', EOS)
+
+    def stop(self):
+        self.set_state(gst.STATE_NULL)
+        utils.gc_collect("Source.stop()")
+
+    def clean(self):
+        self.stop()
+        self.remove(self.filesrc)
+        self.remove(self.dbin)
+        self.remove(self.audioconvert)
+        self.remove(self.audioscale)
+        self.remove(self.volume)
+        self.filesrc = None
+        self.dbin = None
+        self.audioconvert = None
+        self.audioscale = None
+        self.volume = None
+        utils.gc_collect("Source.clean()")
 gobject.type_register(AudioSource)
 
+       
 # run us to test
 if __name__ == "__main__":
     main = gobject.MainLoop()
 
     def _done_cb(source, reason):
         print "Done"
+        sys.stdout.flush()
         if reason != EOS:
             print "Some error happened: %s" % reason
         main.quit()
@@ -139,3 +160,10 @@ if __name__ == "__main__":
     print "Left main loop"
 
     pipeline.set_state(gst.STATE_NULL)
+    pipeline.remove(source)
+    pipeline.remove(sink)
+    utils.gc_collect('cleaned out pipeline')
+    source.clean()
+    utils.gc_collect('cleaned up source')
+    source = None
+    utils.gc_collect('set source to None')

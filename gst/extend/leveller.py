@@ -25,6 +25,7 @@ import math
 import gobject
 import gst
 
+import utils
 from pygobject import gsignal
 
 from gst.extend import sources
@@ -191,6 +192,22 @@ class Leveller(gst.Pipeline):
         gst.debug("Setting to NULL")
         self.set_state(gst.STATE_NULL)
         gst.debug("Set to NULL")
+        utils.gc_collect('Leveller.stop()')
+
+    def clean(self):
+        # clean ourselves up completely
+        self.stop()
+        # let's be ghetto and clean out our bin manually
+        self.remove(self._source)
+        self.remove(self._level)
+        self.remove(self._fakesink)
+        gst.debug("Emptied myself")
+        self._source.clean()
+        utils.gc_collect('Leveller.clean() cleaned up source')
+        self._source = None
+        self._fakesink = None
+        self._level = None
+        utils.gc_collect('Leveller.clean() done')
 
 gobject.type_register(Leveller)
 
@@ -204,7 +221,6 @@ if __name__ == "__main__":
         else:
             print "in: %f, out: %f, length: %f" % (l.mixin, l.mixout, l.length)
             print "rms: %f, %f dB" % (l.rms, l.rmsdB)
-        leveller.stop()
         main.quit()
 
     def _error_cb(leveller, source, gerror, message):
@@ -225,3 +241,12 @@ if __name__ == "__main__":
 
     print "Starting"
     main.run()
+
+    leveller.stop()
+    leveller.clean()
+
+    gst.debug('deleting leveller, verify objects are freed')
+    utils.gc_collect('quit main loop')
+    del leveller
+    utils.gc_collect('deleted leveller')
+    gst.debug('stopping forever')

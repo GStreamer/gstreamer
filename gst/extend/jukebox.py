@@ -138,7 +138,7 @@ class Jukebox(gst.Bin):
         self._scan()
 
         # clean up leveller after this handler
-        gobject.timeout_add(0, l.stop)
+        gobject.timeout_add(0, l.clean)
 
     def _check_prerolled(self):
         gst.debug("_check_prerolled: index: scan %d, play %d" % (
@@ -253,14 +253,18 @@ class Jukebox(gst.Bin):
         sinkpad = srcpad.get_peer()
         srcpad.unlink(sinkpad)
         self._adder.release_request_pad(sinkpad)
-        source.set_state(gst.STATE_NULL)
         gst.debug('%d pads left on adder' % len(self._adder.get_pad_list()))
         gst.debug('%r children in jukebox' % [e.get_name() for e in self.get_list()])
 
         if len(self._adder.get_pad_list()) == 1:
             gst.debug('only a source pad left, so we are done')
             self.emit('done', sources.EOS)
-        gobject.timeout_add(0, self.remove, source)
+        gobject.timeout_add(0, self._source_clean, source)
+
+    def _source_clean(self, source):
+        source.set_state(gst.STATE_NULL)
+        self.remove(source)
+        source.clean()
         
 gobject.type_register(Jukebox)
         
