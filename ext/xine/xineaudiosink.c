@@ -78,7 +78,8 @@ gst_xine_audio_sink_class_init (GstXineAudioSinkClass * klass)
 }
 
 static void
-gst_xine_audio_sink_init (GstXineAudioSink * xine)
+gst_xine_audio_sink_init (GstXineAudioSink * xine,
+    GstXineAudioSinkClass * g_class)
 {
 }
 

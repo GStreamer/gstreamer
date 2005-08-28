@@ -50,7 +50,7 @@ gst_xine_class_init (GstXineClass * klass)
 }
 
 static void
-gst_xine_init (GstXine * filter)
+gst_xine_init (GstXine * filter, GstXineClass * g_class)
 {
 }
 

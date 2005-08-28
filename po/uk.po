@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-07-10 14:49+0200\n"
+"POT-Creation-Date: 2005-08-25 11:45+0200\n"
 "PO-Revision-Date: 2004-08-03 15:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -88,137 +88,101 @@ msgstr "Не вдається закрити відео пристрій \"%s\".
 msgid "Could not write to device \"%s\"."
 msgstr "Не вдається записати у пристрій \"%s\"."
 
-#: sys/oss/gstosselement.c:702
-#, c-format
-msgid "OSS device \"%s\" is already in use by another program."
-msgstr "OSS пристрій \"%s\" вже використовується іншою програмою."
+#~ msgid "OSS device \"%s\" is already in use by another program."
+#~ msgstr "OSS пристрій \"%s\" вже використовується іншою програмою."
 
-#: sys/oss/gstosselement.c:709 sys/oss/gstosselement.c:713
-#, c-format
-msgid "Could not access device \"%s\", check its permissions."
-msgstr ""
-"Не вдається отримати доступ до пристрою \"%s\", перевірте права доступу до "
-"нього."
+#~ msgid "Could not access device \"%s\", check its permissions."
+#~ msgstr ""
+#~ "Не вдається отримати доступ до пристрою \"%s\", перевірте права доступу "
+#~ "до нього."
 
-#: sys/oss/gstosselement.c:720
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Пристрій \"%s\" не існує."
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Пристрій \"%s\" не існує."
 
-#: sys/oss/gstosselement.c:726
-#, c-format
-msgid "Could not open device \"%s\" for writing."
-msgstr "Не вдається відкрити пристрій \"%s\" для запису."
+#~ msgid "Could not open device \"%s\" for writing."
+#~ msgstr "Не вдається відкрити пристрій \"%s\" для запису."
 
-#: sys/oss/gstosselement.c:730
-#, c-format
-msgid "Could not open device \"%s\" for reading."
-msgstr "Не вдається відкрити пристрій \"%s\" для читання."
+#~ msgid "Could not open device \"%s\" for reading."
+#~ msgstr "Не вдається відкрити пристрій \"%s\" для читання."
 
-#: sys/oss/gstosselement.c:1079
 #, fuzzy
-msgid "Your OSS device could not be probed correctly"
-msgstr "Ваш OSS пристрій неможливо коректно перевірити"
+#~ msgid "Your OSS device could not be probed correctly"
+#~ msgstr "Ваш OSS пристрій неможливо коректно перевірити"
 
-#: sys/oss/gstossmixer.c:84
-msgid "Volume"
-msgstr "Гучність"
+#~ msgid "Volume"
+#~ msgstr "Гучність"
 
-#: sys/oss/gstossmixer.c:86
-msgid "Bass"
-msgstr "Низькі"
+#~ msgid "Bass"
+#~ msgstr "Низькі"
 
-#: sys/oss/gstossmixer.c:88
-msgid "Treble"
-msgstr "Високі"
+#~ msgid "Treble"
+#~ msgstr "Високі"
 
-#: sys/oss/gstossmixer.c:90
-msgid "Synth"
-msgstr "Синтезатор"
+#~ msgid "Synth"
+#~ msgstr "Синтезатор"
 
-#: sys/oss/gstossmixer.c:92
-msgid "PCM"
-msgstr "КІМ"
+#~ msgid "PCM"
+#~ msgstr "КІМ"
 
-#: sys/oss/gstossmixer.c:94
-msgid "Speaker"
-msgstr "Гучномовець"
+#~ msgid "Speaker"
+#~ msgstr "Гучномовець"
 
-#: sys/oss/gstossmixer.c:96
-msgid "Line-in"
-msgstr "Лінійний вхід"
+#~ msgid "Line-in"
+#~ msgstr "Лінійний вхід"
 
-#: sys/oss/gstossmixer.c:98
-msgid "Microphone"
-msgstr "Мікрофон"
+#~ msgid "Microphone"
+#~ msgstr "Мікрофон"
 
-#: sys/oss/gstossmixer.c:100
-msgid "CD"
-msgstr "Компакт-диск"
+#~ msgid "CD"
+#~ msgstr "Компакт-диск"
 
-#: sys/oss/gstossmixer.c:102
-msgid "Mixer"
-msgstr "Мікшер"
+#~ msgid "Mixer"
+#~ msgstr "Мікшер"
 
-#: sys/oss/gstossmixer.c:104
-msgid "PCM-2"
-msgstr "КІМ-2"
+#~ msgid "PCM-2"
+#~ msgstr "КІМ-2"
 
-#: sys/oss/gstossmixer.c:106
-msgid "Record"
-msgstr "Запис"
+#~ msgid "Record"
+#~ msgstr "Запис"
 
-#: sys/oss/gstossmixer.c:108
-msgid "In-gain"
-msgstr "Вх. підсилення"
+#~ msgid "In-gain"
+#~ msgstr "Вх. підсилення"
 
-#: sys/oss/gstossmixer.c:110
-msgid "Out-gain"
-msgstr "Вих. підсилення"
+#~ msgid "Out-gain"
+#~ msgstr "Вих. підсилення"
 
-#: sys/oss/gstossmixer.c:112
-msgid "Line-1"
-msgstr "Лінія-1"
+#~ msgid "Line-1"
+#~ msgstr "Лінія-1"
 
-#: sys/oss/gstossmixer.c:114
-msgid "Line-2"
-msgstr "Лінія-2"
+#~ msgid "Line-2"
+#~ msgstr "Лінія-2"
 
-#: sys/oss/gstossmixer.c:116
-msgid "Line-3"
-msgstr "Лінія-3"
+#~ msgid "Line-3"
+#~ msgstr "Лінія-3"
 
-#: sys/oss/gstossmixer.c:118
-msgid "Digital-1"
-msgstr "Цифровий-1"
+#~ msgid "Digital-1"
+#~ msgstr "Цифровий-1"
 
-#: sys/oss/gstossmixer.c:120
-msgid "Digital-2"
-msgstr "Цифровий-2"
+#~ msgid "Digital-2"
+#~ msgstr "Цифровий-2"
 
-#: sys/oss/gstossmixer.c:122
-msgid "Digital-3"
-msgstr "Цифровий-3"
+#~ msgid "Digital-3"
+#~ msgstr "Цифровий-3"
 
-#: sys/oss/gstossmixer.c:124
-msgid "Phone-in"
-msgstr "Вх. телефону"
+#~ msgid "Phone-in"
+#~ msgstr "Вх. телефону"
 
-#: sys/oss/gstossmixer.c:126
-msgid "Phone-out"
-msgstr "Вих. телефону"
+#~ msgid "Phone-out"
+#~ msgstr "Вих. телефону"
 
-#: sys/oss/gstossmixer.c:128
-msgid "Video"
-msgstr "Відео"
+#~ msgid "Video"
+#~ msgstr "Відео"
 
-#: sys/oss/gstossmixer.c:130
-msgid "Radio"
-msgstr "Радіо"
+#~ msgid "Radio"
+#~ msgstr "Радіо"
 
-#: sys/oss/gstossmixer.c:132
-msgid "Monitor"
-msgstr "Монітор"
+#~ msgid "Monitor"
+#~ msgstr "Монітор"
 
 #, fuzzy
 #~ msgid "PC Speaker"

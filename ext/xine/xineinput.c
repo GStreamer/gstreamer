@@ -99,7 +99,7 @@ gst_xine_input_class_init (GstXineInputClass * klass)
 }
 
 static void
-gst_xine_input_init (GstXineInput * xine)
+gst_xine_input_init (GstXineInput * xine, GstXineInputClass * g_class)
 {
 }
 

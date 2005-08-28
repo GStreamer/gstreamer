@@ -199,7 +199,7 @@ gst_cdaudio_class_init (GstCDAudioClass * klass)
 }
 
 static void
-gst_cdaudio_init (GstCDAudio * cdaudio)
+gst_cdaudio_init (GstCDAudio * cdaudio, GstCDAudioClass * g_class)
 {
   cdaudio->device = g_strdup ("/dev/cdrom");
   cdaudio->was_playing = FALSE;

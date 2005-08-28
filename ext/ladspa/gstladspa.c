@@ -70,6 +70,8 @@ gst_ladspa_base_init (gpointer g_class)
   LADSPA_Descriptor *desc;
   gint j, sinkcount, srccount;
 
+  GST_DEBUG ("base_init %p", g_class);
+
   desc = g_hash_table_lookup (ladspa_descriptors,
       GINT_TO_POINTER (G_TYPE_FROM_CLASS (klass)));
   if (!desc)
@@ -186,7 +188,7 @@ gst_ladspa_class_get_param_spec (GstLADSPAClass * klass, gint portnum)
   name = gst_ladspa_class_get_param_name (klass, portnum);
   perms = G_PARAM_READABLE;
   if (LADSPA_IS_PORT_INPUT (desc->PortDescriptors[portnum]))
-    perms |= G_PARAM_WRITABLE;
+    perms |= G_PARAM_WRITABLE | G_PARAM_CONSTRUCT;
 
   /* short name for hint descriptor */
   hintdesc = desc->PortRangeHints[portnum].HintDescriptor;
@@ -283,6 +285,8 @@ gst_ladspa_class_init (GstLADSPAClass * klass)
   LADSPA_Descriptor *desc;
   gint i, control_in_count, control_out_count;
 
+  GST_DEBUG ("class_init %p", klass);
+
   gobject_class = (GObjectClass *) klass;
   gobject_class->set_property = gst_ladspa_set_property;
   gobject_class->get_property = gst_ladspa_get_property;
@@ -349,12 +353,11 @@ gst_ladspa_class_init (GstLADSPAClass * klass)
 }
 
 static void
-gst_ladspa_init (GstLADSPA * ladspa)
+gst_ladspa_init (GstLADSPA * ladspa, GstLADSPAClass * klass)
 {
   /* whoopee, nothing to do */
 
-  ladspa->descriptor =
-      ((GstLADSPAClass *) G_OBJECT_GET_CLASS (ladspa))->descriptor;
+  ladspa->descriptor = klass->descriptor;
   ladspa->activated = FALSE;
   ladspa->inplace_broken =
       LADSPA_IS_INPLACE_BROKEN (ladspa->descriptor->Properties);

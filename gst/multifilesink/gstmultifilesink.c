@@ -161,7 +161,8 @@ gst_multifilesink_class_init (GstMultiFileSinkClass * klass)
   gobject_class->dispose = gst_multifilesink_dispose;
 }
 static void
-gst_multifilesink_init (GstMultiFileSink * filesink)
+gst_multifilesink_init (GstMultiFileSink * filesink,
+    GstMultiFileSinkClass * g_class)
 {
   GstPad *pad;
 

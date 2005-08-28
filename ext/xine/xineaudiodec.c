@@ -279,7 +279,7 @@ gst_xine_audio_dec_class_init (GstXineAudioDecClass * klass)
 }
 
 static void
-gst_xine_audio_dec_init (GstXineAudioDec * xine)
+gst_xine_audio_dec_init (GstXineAudioDec * xine, GstXineAudioDecClass * g_class)
 {
   xine->setup = FALSE;
 }
