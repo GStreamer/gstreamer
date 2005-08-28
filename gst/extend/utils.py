@@ -66,5 +66,5 @@ def gc_collect(reason=None):
     gst.debug('collecting garbage')
     if reason:
         gst.debug('because of %s' % reason)
-    gc.collect()
-    gst.debug('collected garbage')
+    count = gc.collect()
+    gst.debug('collected garbage, %d left' % count)
