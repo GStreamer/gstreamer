@@ -43,6 +43,8 @@ class Leveller(gst.Pipeline):
     def __init__(self, filename, threshold=-9.0):
         self.__gobject_init__()
 
+        self._filename = filename
+
         self._thresholddB = threshold
         self._threshold = math.pow(10, self._thresholddB / 10.0)
 
@@ -172,7 +174,16 @@ class Leveller(gst.Pipeline):
                 break
 
         # calculate
-        ms = weightedsquaresums / (self.mixout - self.mixin)
+        try:
+            ms = weightedsquaresums / (self.mixout - self.mixin)
+        except ZeroDivisionError:
+            # this is possible when, for example, the whole sound file is
+            # empty
+            gst.warning('ZeroDivisionError on %s, mixin %d, mixout %d' % (
+                self._filename, self.mixin, self.mixout))
+            self.emit('done', WRONG_TYPE)
+            return
+
         self.rms = math.sqrt(ms)
         self.rmsdB = 10 * math.log10(ms)
 

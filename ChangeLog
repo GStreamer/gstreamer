@@ -1,5 +1,10 @@
 2005-08-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/extend/leveller.py:
+	  catch ZeroDivisionError
+
+2005-08-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/extend/jukebox.py:
 	* gst/extend/leveller.py:
 	* gst/extend/sources.py:
