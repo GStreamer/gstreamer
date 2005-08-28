@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-07-10 14:49+0200\n"
+"POT-Creation-Date: 2005-08-25 11:45+0200\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -89,134 +89,95 @@ msgstr "Не могу да затворим видео уређај „%s“."
 msgid "Could not write to device \"%s\"."
 msgstr "Не могу да пишем на видео уређај „%s“."
 
-#: sys/oss/gstosselement.c:702
-#, c-format
-msgid "OSS device \"%s\" is already in use by another program."
-msgstr "OSS уређај „%s“ већ користи неки програм."
+#~ msgid "OSS device \"%s\" is already in use by another program."
+#~ msgstr "OSS уређај „%s“ већ користи неки програм."
 
-#: sys/oss/gstosselement.c:709 sys/oss/gstosselement.c:713
-#, c-format
-msgid "Could not access device \"%s\", check its permissions."
-msgstr "Не могу да приступим уређају „%s“, проверите његова овлашћења."
+#~ msgid "Could not access device \"%s\", check its permissions."
+#~ msgstr "Не могу да приступим уређају „%s“, проверите његова овлашћења."
 
-#: sys/oss/gstosselement.c:720
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Не постоји уређај „%s“."
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Не постоји уређај „%s“."
 
-#: sys/oss/gstosselement.c:726
-#, c-format
-msgid "Could not open device \"%s\" for writing."
-msgstr "Не могу да отворим уређај „%s“ ради уписа."
+#~ msgid "Could not open device \"%s\" for writing."
+#~ msgstr "Не могу да отворим уређај „%s“ ради уписа."
 
-#: sys/oss/gstosselement.c:730
-#, c-format
-msgid "Could not open device \"%s\" for reading."
-msgstr "Не могу да отворим уређај „%s“ ради читања."
+#~ msgid "Could not open device \"%s\" for reading."
+#~ msgstr "Не могу да отворим уређај „%s“ ради читања."
 
-#: sys/oss/gstosselement.c:1079
-msgid "Your OSS device could not be probed correctly"
-msgstr ""
+#~ msgid "Volume"
+#~ msgstr "Јачина звука"
 
-#: sys/oss/gstossmixer.c:84
-msgid "Volume"
-msgstr "Јачина звука"
+#~ msgid "Bass"
+#~ msgstr "Бас"
 
-#: sys/oss/gstossmixer.c:86
-msgid "Bass"
-msgstr "Бас"
+#~ msgid "Treble"
+#~ msgstr "Шум"
 
-#: sys/oss/gstossmixer.c:88
-msgid "Treble"
-msgstr "Шум"
+#~ msgid "Synth"
+#~ msgstr "Синт."
 
-#: sys/oss/gstossmixer.c:90
-msgid "Synth"
-msgstr "Синт."
+#~ msgid "PCM"
+#~ msgstr "ПЦМ"
 
-#: sys/oss/gstossmixer.c:92
-msgid "PCM"
-msgstr "ПЦМ"
+#~ msgid "Speaker"
+#~ msgstr "Звучник"
 
-#: sys/oss/gstossmixer.c:94
-msgid "Speaker"
-msgstr "Звучник"
+#~ msgid "Line-in"
+#~ msgstr "Ул.лин."
 
-#: sys/oss/gstossmixer.c:96
-msgid "Line-in"
-msgstr "Ул.лин."
+#~ msgid "Microphone"
+#~ msgstr "Микрофон"
 
-#: sys/oss/gstossmixer.c:98
-msgid "Microphone"
-msgstr "Микрофон"
+#~ msgid "CD"
+#~ msgstr "ЦД"
 
-#: sys/oss/gstossmixer.c:100
-msgid "CD"
-msgstr "ЦД"
+#~ msgid "Mixer"
+#~ msgstr "Миксер"
 
-#: sys/oss/gstossmixer.c:102
-msgid "Mixer"
-msgstr "Миксер"
+#~ msgid "PCM-2"
+#~ msgstr "ПЦМ-2"
 
-#: sys/oss/gstossmixer.c:104
-msgid "PCM-2"
-msgstr "ПЦМ-2"
+#~ msgid "Record"
+#~ msgstr "Снимање"
 
-#: sys/oss/gstossmixer.c:106
-msgid "Record"
-msgstr "Снимање"
+#~ msgid "In-gain"
+#~ msgstr "Ул. пој."
 
-#: sys/oss/gstossmixer.c:108
-msgid "In-gain"
-msgstr "Ул. пој."
+#~ msgid "Out-gain"
+#~ msgstr "Из. пој."
 
-#: sys/oss/gstossmixer.c:110
-msgid "Out-gain"
-msgstr "Из. пој."
+#~ msgid "Line-1"
+#~ msgstr "Лин. 1"
 
-#: sys/oss/gstossmixer.c:112
-msgid "Line-1"
-msgstr "Лин. 1"
+#~ msgid "Line-2"
+#~ msgstr "Лин. 2"
 
-#: sys/oss/gstossmixer.c:114
-msgid "Line-2"
-msgstr "Лин. 2"
+#~ msgid "Line-3"
+#~ msgstr "Лин. 3"
 
-#: sys/oss/gstossmixer.c:116
-msgid "Line-3"
-msgstr "Лин. 3"
+#~ msgid "Digital-1"
+#~ msgstr "Диг. 1"
 
-#: sys/oss/gstossmixer.c:118
-msgid "Digital-1"
-msgstr "Диг. 1"
+#~ msgid "Digital-2"
+#~ msgstr "Диг. 2"
 
-#: sys/oss/gstossmixer.c:120
-msgid "Digital-2"
-msgstr "Диг. 2"
+#~ msgid "Digital-3"
+#~ msgstr "Диг. 3"
 
-#: sys/oss/gstossmixer.c:122
-msgid "Digital-3"
-msgstr "Диг. 3"
+#~ msgid "Phone-in"
+#~ msgstr "Тел. ул."
 
-#: sys/oss/gstossmixer.c:124
-msgid "Phone-in"
-msgstr "Тел. ул."
+#~ msgid "Phone-out"
+#~ msgstr "Тел. из."
 
-#: sys/oss/gstossmixer.c:126
-msgid "Phone-out"
-msgstr "Тел. из."
+#~ msgid "Video"
+#~ msgstr "Видео"
 
-#: sys/oss/gstossmixer.c:128
-msgid "Video"
-msgstr "Видео"
+#~ msgid "Radio"
+#~ msgstr "Радио"
 
-#: sys/oss/gstossmixer.c:130
-msgid "Radio"
-msgstr "Радио"
-
-#: sys/oss/gstossmixer.c:132
-msgid "Monitor"
-msgstr "Праћење"
+#~ msgid "Monitor"
+#~ msgstr "Праћење"
 
 #, fuzzy
 #~ msgid "PC Speaker"

@@ -161,7 +161,7 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
 }
 
 static void
-gst_aggregator_init (GstAggregator * aggregator)
+gst_aggregator_init (GstAggregator * aggregator, GstAggregatorClass * g_class)
 {
   aggregator->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),

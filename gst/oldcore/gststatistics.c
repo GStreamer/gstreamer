@@ -167,7 +167,7 @@ gst_statistics_class_init (GstStatisticsClass * klass)
 }
 
 static void
-gst_statistics_init (GstStatistics * statistics)
+gst_statistics_init (GstStatistics * statistics, GstStatisticsClass * g_class)
 {
   statistics->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&sinktemplate),

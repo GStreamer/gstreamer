@@ -134,7 +134,7 @@ gst_fdsrc_class_init (GstFdSrcClass * klass)
 }
 
 static void
-gst_fdsrc_init (GstFdSrc * fdsrc)
+gst_fdsrc_init (GstFdSrc * fdsrc, GstFdSrcClass * g_class)
 {
   // TODO set live only if it's actually a live source
   gst_base_src_set_live (GST_BASE_SRC (fdsrc), TRUE);

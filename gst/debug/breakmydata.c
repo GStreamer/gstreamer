@@ -253,7 +253,7 @@ gst_break_my_data_change_state (GstElement * element)
 }
 
 gboolean
-gst_break_my_data_plugin_init (GstPlugin * plugin)
+gst_break_my_data_plugin_init (GstPlugin * plugin, GstPluginClass * g_class)
 {
   if (!gst_element_register (plugin, "breakmydata", GST_RANK_NONE,
           GST_TYPE_BREAK_MY_DATA))

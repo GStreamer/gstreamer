@@ -125,7 +125,8 @@ gst_multifilesrc_class_init (GstMultiFileSrcClass * klass)
 }
 
 static void
-gst_multifilesrc_init (GstMultiFileSrc * multifilesrc)
+gst_multifilesrc_init (GstMultiFileSrc * multifilesrc,
+    GstMultiFileSrcClass * g_class)
 {
 /*  GST_FLAG_SET (filesrc, GST_SRC_); */
 

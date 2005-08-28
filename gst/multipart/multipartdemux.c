@@ -152,7 +152,8 @@ gst_multipart_demux_class_init (GstMultipartDemuxClass * klass)
 }
 
 static void
-gst_multipart_demux_init (GstMultipartDemux * multipart)
+gst_multipart_demux_init (GstMultipartDemux * multipart,
+    GstMultipartDemuxClass * g_class)
 {
   /* create the sink pad */
   multipart->sinkpad =
@@ -368,7 +369,7 @@ gst_multipart_demux_change_state (GstElement * element)
 }
 
 gboolean
-gst_multipart_demux_plugin_init (GstPlugin * plugin)
+gst_multipart_demux_plugin_init (GstPlugin * plugin, GstPluginClass * g_class)
 {
   GST_DEBUG_CATEGORY_INIT (gst_multipart_demux_debug,
       "multipartdemux", 0, "multipart demuxer");

@@ -84,7 +84,8 @@ gst_gconf_audio_sink_reset (GstGConfAudioSink * sink)
 }
 
 static void
-gst_gconf_audio_sink_init (GstGConfAudioSink * sink)
+gst_gconf_audio_sink_init (GstGConfAudioSink * sink,
+    GstGConfAudioSinkClass * g_class)
 {
   sink->pad = gst_ghost_pad_new_notarget ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (sink), sink->pad);

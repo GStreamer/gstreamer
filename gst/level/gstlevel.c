@@ -135,7 +135,7 @@ gst_level_class_init (GstLevelClass * klass)
 }
 
 static void
-gst_level_init (GstLevel * filter)
+gst_level_init (GstLevel * filter, GstLevelClass * g_class)
 {
   filter->CS = NULL;
   filter->peak = NULL;

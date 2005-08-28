@@ -105,7 +105,7 @@ gst_test_class_init (GstTestClass * klass)
 }
 
 static void
-gst_test_init (GstTest * test)
+gst_test_init (GstTest * test, GstTestClass * g_class)
 {
   GstTestClass *klass;
   guint i;
@@ -249,7 +249,7 @@ gst_test_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 gboolean
-gst_test_plugin_init (GstPlugin * plugin)
+gst_test_plugin_init (GstPlugin * plugin, GstPluginClass * g_class)
 {
   if (!gst_element_register (plugin, "testsink", GST_RANK_NONE, GST_TYPE_TEST))
     return FALSE;

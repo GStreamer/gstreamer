@@ -118,7 +118,7 @@ gst_pipefilter_class_init (GstPipefilterClass * klass)
 }
 
 static void
-gst_pipefilter_init (GstPipefilter * pipefilter)
+gst_pipefilter_init (GstPipefilter * pipefilter, GstPipefilterClass * g_class)
 {
   GST_FLAG_SET (pipefilter, GST_ELEMENT_DECOUPLED);
 

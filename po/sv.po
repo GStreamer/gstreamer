@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-07-10 14:49+0200\n"
+"POT-Creation-Date: 2005-08-25 11:45+0200\n"
 "PO-Revision-Date: 2004-08-03 20:53+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -89,134 +89,98 @@ msgstr "Kunde inte stänga vidoeenheten \"%s\"."
 msgid "Could not write to device \"%s\"."
 msgstr "Kunde inte skriva till enheten \"%s\"."
 
-#: sys/oss/gstosselement.c:702
-#, c-format
-msgid "OSS device \"%s\" is already in use by another program."
-msgstr "OSS-enheten \"%s\" används redan av ett annat program."
+#~ msgid "OSS device \"%s\" is already in use by another program."
+#~ msgstr "OSS-enheten \"%s\" används redan av ett annat program."
 
-#: sys/oss/gstosselement.c:709 sys/oss/gstosselement.c:713
-#, c-format
-msgid "Could not access device \"%s\", check its permissions."
-msgstr "Kunde inte komma åt enheten \"%s\". Kontrollera dess rättigheter."
+#~ msgid "Could not access device \"%s\", check its permissions."
+#~ msgstr "Kunde inte komma åt enheten \"%s\". Kontrollera dess rättigheter."
 
-#: sys/oss/gstosselement.c:720
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Enheten \"%s\" finns inte."
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Enheten \"%s\" finns inte."
 
-#: sys/oss/gstosselement.c:726
-#, c-format
-msgid "Could not open device \"%s\" for writing."
-msgstr "Kunde inte öppna enheten \"%s\" för skrivning."
+#~ msgid "Could not open device \"%s\" for writing."
+#~ msgstr "Kunde inte öppna enheten \"%s\" för skrivning."
 
-#: sys/oss/gstosselement.c:730
-#, c-format
-msgid "Could not open device \"%s\" for reading."
-msgstr "Kunde inte öppna enheten \"%s\" för läsning."
+#~ msgid "Could not open device \"%s\" for reading."
+#~ msgstr "Kunde inte öppna enheten \"%s\" för läsning."
 
-#: sys/oss/gstosselement.c:1079
-msgid "Your OSS device could not be probed correctly"
-msgstr "Din OSS-enhet kunde inte undersökas korrekt"
+#~ msgid "Your OSS device could not be probed correctly"
+#~ msgstr "Din OSS-enhet kunde inte undersökas korrekt"
 
-#: sys/oss/gstossmixer.c:84
-msgid "Volume"
-msgstr "Volym"
+#~ msgid "Volume"
+#~ msgstr "Volym"
 
-#: sys/oss/gstossmixer.c:86
-msgid "Bass"
-msgstr "Bass"
+#~ msgid "Bass"
+#~ msgstr "Bass"
 
-#: sys/oss/gstossmixer.c:88
-msgid "Treble"
-msgstr "Diskant"
+#~ msgid "Treble"
+#~ msgstr "Diskant"
 
-#: sys/oss/gstossmixer.c:90
-msgid "Synth"
-msgstr "Synt"
+#~ msgid "Synth"
+#~ msgstr "Synt"
 
-#: sys/oss/gstossmixer.c:92
-msgid "PCM"
-msgstr "PCM"
+#~ msgid "PCM"
+#~ msgstr "PCM"
 
-#: sys/oss/gstossmixer.c:94
-msgid "Speaker"
-msgstr "Högtalare"
+#~ msgid "Speaker"
+#~ msgstr "Högtalare"
 
-#: sys/oss/gstossmixer.c:96
-msgid "Line-in"
-msgstr "Linje-in"
+#~ msgid "Line-in"
+#~ msgstr "Linje-in"
 
-#: sys/oss/gstossmixer.c:98
-msgid "Microphone"
-msgstr "Mikrofon"
+#~ msgid "Microphone"
+#~ msgstr "Mikrofon"
 
-#: sys/oss/gstossmixer.c:100
-msgid "CD"
-msgstr "Cd"
+#~ msgid "CD"
+#~ msgstr "Cd"
 
-#: sys/oss/gstossmixer.c:102
-msgid "Mixer"
-msgstr "Mixer"
+#~ msgid "Mixer"
+#~ msgstr "Mixer"
 
-#: sys/oss/gstossmixer.c:104
-msgid "PCM-2"
-msgstr "PCM-2"
+#~ msgid "PCM-2"
+#~ msgstr "PCM-2"
 
-#: sys/oss/gstossmixer.c:106
-msgid "Record"
-msgstr "Spela in"
+#~ msgid "Record"
+#~ msgstr "Spela in"
 
-#: sys/oss/gstossmixer.c:108
-msgid "In-gain"
-msgstr "Införstärkning"
+#~ msgid "In-gain"
+#~ msgstr "Införstärkning"
 
-#: sys/oss/gstossmixer.c:110
-msgid "Out-gain"
-msgstr "Utförstärkning"
+#~ msgid "Out-gain"
+#~ msgstr "Utförstärkning"
 
-#: sys/oss/gstossmixer.c:112
-msgid "Line-1"
-msgstr "Linje-1"
+#~ msgid "Line-1"
+#~ msgstr "Linje-1"
 
-#: sys/oss/gstossmixer.c:114
-msgid "Line-2"
-msgstr "Linje-2"
+#~ msgid "Line-2"
+#~ msgstr "Linje-2"
 
-#: sys/oss/gstossmixer.c:116
-msgid "Line-3"
-msgstr "Linje-3"
+#~ msgid "Line-3"
+#~ msgstr "Linje-3"
 
-#: sys/oss/gstossmixer.c:118
-msgid "Digital-1"
-msgstr "Digital-1"
+#~ msgid "Digital-1"
+#~ msgstr "Digital-1"
 
-#: sys/oss/gstossmixer.c:120
-msgid "Digital-2"
-msgstr "Digital-2"
+#~ msgid "Digital-2"
+#~ msgstr "Digital-2"
 
-#: sys/oss/gstossmixer.c:122
-msgid "Digital-3"
-msgstr "Digital-3"
+#~ msgid "Digital-3"
+#~ msgstr "Digital-3"
 
-#: sys/oss/gstossmixer.c:124
-msgid "Phone-in"
-msgstr "Tele-in"
+#~ msgid "Phone-in"
+#~ msgstr "Tele-in"
 
-#: sys/oss/gstossmixer.c:126
-msgid "Phone-out"
-msgstr "Tele-ut"
+#~ msgid "Phone-out"
+#~ msgstr "Tele-ut"
 
-#: sys/oss/gstossmixer.c:128
-msgid "Video"
-msgstr "Video"
+#~ msgid "Video"
+#~ msgstr "Video"
 
-#: sys/oss/gstossmixer.c:130
-msgid "Radio"
-msgstr "Radio"
+#~ msgid "Radio"
+#~ msgstr "Radio"
 
-#: sys/oss/gstossmixer.c:132
-msgid "Monitor"
-msgstr "Monitor"
+#~ msgid "Monitor"
+#~ msgstr "Monitor"
 
 #~ msgid "Master"
 #~ msgstr "Övergripande"

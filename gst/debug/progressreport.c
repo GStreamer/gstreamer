@@ -128,7 +128,8 @@ gst_progressreport_class_init (GstProgressReportClass * g_class)
 }
 
 static void
-gst_progressreport_init (GstProgressReport * instance)
+gst_progressreport_init (GstProgressReport * instance,
+    GstProgressReportClass * g_class)
 {
   GstProgressReport *progressreport = GST_PROGRESSREPORT (instance);
 
@@ -274,7 +275,7 @@ gst_progressreport_chain (GstPad * pad, GstData * _data)
 }
 
 gboolean
-gst_progressreport_plugin_init (GstPlugin * plugin)
+gst_progressreport_plugin_init (GstPlugin * plugin, GstPluginClass * g_class)
 {
   return gst_element_register (plugin, "progressreport", GST_RANK_NONE,
       GST_TYPE_PROGRESSREPORT);

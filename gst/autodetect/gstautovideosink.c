@@ -83,7 +83,8 @@ gst_auto_video_sink_reset (GstAutoVideoSink * sink)
 }
 
 static void
-gst_auto_video_sink_init (GstAutoVideoSink * sink)
+gst_auto_video_sink_init (GstAutoVideoSink * sink,
+    GstAutoVideoSinkClass * g_class)
 {
   sink->pad = gst_ghost_pad_new_notarget ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (sink), sink->pad);

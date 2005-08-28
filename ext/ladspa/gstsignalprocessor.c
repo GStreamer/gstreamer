@@ -186,8 +186,9 @@ gst_signal_processor_add_pad_from_template (GstSignalProcessor * self,
 {
   GstPad *new;
 
-  new = g_object_new (GST_TYPE_PAD, "name", GST_OBJECT_NAME (templ),
-      "direction", templ->direction, "template", templ, NULL);
+  new = g_object_new (GST_TYPE_SIGNAL_PROCESSOR_PAD,
+      "name", GST_OBJECT_NAME (templ), "direction", templ->direction,
+      "template", templ, NULL);
   GST_SIGNAL_PROCESSOR_PAD (new)->index =
       GST_SIGNAL_PROCESSOR_PAD_TEMPLATE (templ)->index;
 
@@ -212,17 +213,13 @@ gst_signal_processor_add_pad_from_template (GstSignalProcessor * self,
 }
 
 static void
-gst_signal_processor_init (GstSignalProcessor * self)
+gst_signal_processor_init (GstSignalProcessor * self,
+    GstSignalProcessorClass * klass)
 {
-  GstSignalProcessorClass *klass;
   GList *templates;
 
-  klass = GST_SIGNAL_PROCESSOR_GET_CLASS (self);
-
-  GST_DEBUG ("gst_signal_processor_init");
-
   templates =
-      gst_element_class_get_pad_template_list (GST_ELEMENT_GET_CLASS (self));
+      gst_element_class_get_pad_template_list (GST_ELEMENT_CLASS (klass));
 
   while (templates) {
     GstPadTemplate *templ = GST_PAD_TEMPLATE (templates->data);

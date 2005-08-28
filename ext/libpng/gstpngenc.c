@@ -174,7 +174,7 @@ gst_pngenc_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 static void
-gst_pngenc_init (GstPngEnc * pngenc)
+gst_pngenc_init (GstPngEnc * pngenc, GstPngEncClass * g_class)
 {
   /* sinkpad */
   pngenc->sinkpad = gst_pad_new_from_template

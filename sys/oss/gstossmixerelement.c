@@ -59,7 +59,8 @@ gst_oss_mixer_element_class_init (GstOssMixerElementClass * klass)
 }
 
 static void
-gst_oss_mixer_element_init (GstOssMixerElement * this)
+gst_oss_mixer_element_init (GstOssMixerElement * this,
+    GstOssMixerElementClass * g_class)
 {
   this->mixer = NULL;
 }

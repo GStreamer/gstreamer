@@ -124,7 +124,7 @@ speex_get_query_types (GstPad * pad)
 }
 
 static void
-gst_speex_dec_init (GstSpeexDec * dec)
+gst_speex_dec_init (GstSpeexDec * dec, GstSpeexDecClass * g_class)
 {
   dec->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get

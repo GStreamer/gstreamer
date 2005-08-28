@@ -167,7 +167,7 @@ gst_dvdec_class_init (GstDVDecClass * klass)
 }
 
 static void
-gst_dvdec_init (GstDVDec * dvdec)
+gst_dvdec_init (GstDVDec * dvdec, GstDVDecClass * g_class)
 {
   dvdec->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&sink_temp),

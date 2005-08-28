@@ -2,13 +2,13 @@
 # Copyright (C) 2004, Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-0.8.3 package.
 # Gora Mohanty <gora_mohanty@yahoo.co.in>, 2004.
-# $Id: or.po,v 1.5 2005/05/05 09:10:38 uraeus Exp $
+# $Id: or.po,v 1.6 2005/07/10 12:52:20 thomasvs Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-07-10 14:49+0200\n"
+"POT-Creation-Date: 2005-08-25 11:45+0200\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -89,134 +89,98 @@ msgstr "\"%s\" ଭିଡିଓ ଯନ୍ତ୍ର ବନ୍ଦ କରିହେ�
 msgid "Could not write to device \"%s\"."
 msgstr "\"%s\" ଯନ୍ତ୍ରରେ ଲେଖିହେଲା ନାହିଁ."
 
-#: sys/oss/gstosselement.c:702
-#, c-format
-msgid "OSS device \"%s\" is already in use by another program."
-msgstr "\"%s\" ଓ.ଏସ.ଏସ. ଯନ୍ତ୍ର ପୂର୍ବରୁ ଅନ୍ଯ କାରିକା ଦ୍ବାରା ବ୍ଯବହାର କରାଯାଉଛି."
+#~ msgid "OSS device \"%s\" is already in use by another program."
+#~ msgstr "\"%s\" ଓ.ଏସ.ଏସ. ଯନ୍ତ୍ର ପୂର୍ବରୁ ଅନ୍ଯ କାରିକା ଦ୍ବାରା ବ୍ଯବହାର କରାଯାଉଛି."
 
-#: sys/oss/gstosselement.c:709 sys/oss/gstosselement.c:713
-#, c-format
-msgid "Could not access device \"%s\", check its permissions."
-msgstr "\"%s\" ଯନ୍ତ୍ର ବ୍ଯବହାର କରିହେଲା ନାହିଁ, ତାହାର ଅନୁମତି ଦେଖନ୍ତୁ."
+#~ msgid "Could not access device \"%s\", check its permissions."
+#~ msgstr "\"%s\" ଯନ୍ତ୍ର ବ୍ଯବହାର କରିହେଲା ନାହିଁ, ତାହାର ଅନୁମତି ଦେଖନ୍ତୁ."
 
-#: sys/oss/gstosselement.c:720
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "\"%s\" ଯନ୍ତ୍ର ଅବସ୍ଥିତ ନାହିଁ."
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "\"%s\" ଯନ୍ତ୍ର ଅବସ୍ଥିତ ନାହିଁ."
 
-#: sys/oss/gstosselement.c:726
-#, c-format
-msgid "Could not open device \"%s\" for writing."
-msgstr "\"%s\" ଯନ୍ତ୍ର ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
+#~ msgid "Could not open device \"%s\" for writing."
+#~ msgstr "\"%s\" ଯନ୍ତ୍ର ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
-#: sys/oss/gstosselement.c:730
-#, c-format
-msgid "Could not open device \"%s\" for reading."
-msgstr "\"%s\" ଯନ୍ତ୍ର ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
+#~ msgid "Could not open device \"%s\" for reading."
+#~ msgstr "\"%s\" ଯନ୍ତ୍ର ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
-#: sys/oss/gstosselement.c:1079
-msgid "Your OSS device could not be probed correctly"
-msgstr "ଆପଣଙ୍କର ଓ.ଏସ.ଏସ. ଯନ୍ତ୍ରର ଠିକ ଭାବରେ ଅନୁସନ୍ଧାନ କରିହେଲା ନାହିଁ."
+#~ msgid "Your OSS device could not be probed correctly"
+#~ msgstr "ଆପଣଙ୍କର ଓ.ଏସ.ଏସ. ଯନ୍ତ୍ରର ଠିକ ଭାବରେ ଅନୁସନ୍ଧାନ କରିହେଲା ନାହିଁ."
 
-#: sys/oss/gstossmixer.c:84
-msgid "Volume"
-msgstr "ପ୍ରବଳତା"
+#~ msgid "Volume"
+#~ msgstr "ପ୍ରବଳତା"
 
-#: sys/oss/gstossmixer.c:86
-msgid "Bass"
-msgstr "ଅନୁଚ୍ଚ ସ୍ବର"
+#~ msgid "Bass"
+#~ msgstr "ଅନୁଚ୍ଚ ସ୍ବର"
 
-#: sys/oss/gstossmixer.c:88
-msgid "Treble"
-msgstr "ଉଚ୍ଚ ସ୍ବର"
+#~ msgid "Treble"
+#~ msgstr "ଉଚ୍ଚ ସ୍ବର"
 
-#: sys/oss/gstossmixer.c:90
-msgid "Synth"
-msgstr "ସିନ୍ଥେସାଇଜର"
+#~ msgid "Synth"
+#~ msgstr "ସିନ୍ଥେସାଇଜର"
 
-#: sys/oss/gstossmixer.c:92
-msgid "PCM"
-msgstr "ପି.ସି.ଏମ."
+#~ msgid "PCM"
+#~ msgstr "ପି.ସି.ଏମ."
 
-#: sys/oss/gstossmixer.c:94
-msgid "Speaker"
-msgstr "ସ୍ବରବର୍ଦ୍ଧକ ୟନ୍ତ୍ର"
+#~ msgid "Speaker"
+#~ msgstr "ସ୍ବରବର୍ଦ୍ଧକ ୟନ୍ତ୍ର"
 
-#: sys/oss/gstossmixer.c:96
-msgid "Line-in"
-msgstr "ଲାଇନ-ଇନ"
+#~ msgid "Line-in"
+#~ msgstr "ଲାଇନ-ଇନ"
 
-#: sys/oss/gstossmixer.c:98
-msgid "Microphone"
-msgstr "ମାଇକ୍ରୋଫୋନ୍"
+#~ msgid "Microphone"
+#~ msgstr "ମାଇକ୍ରୋଫୋନ୍"
 
-#: sys/oss/gstossmixer.c:100
-msgid "CD"
-msgstr "ସି.ଡି."
+#~ msgid "CD"
+#~ msgstr "ସି.ଡି."
 
-#: sys/oss/gstossmixer.c:102
-msgid "Mixer"
-msgstr "ମିଶ୍ରଣ ଯନ୍ତ୍ର"
+#~ msgid "Mixer"
+#~ msgstr "ମିଶ୍ରଣ ଯନ୍ତ୍ର"
 
-#: sys/oss/gstossmixer.c:104
-msgid "PCM-2"
-msgstr "ପି.ସି.ଏମ.-୨"
+#~ msgid "PCM-2"
+#~ msgstr "ପି.ସି.ଏମ.-୨"
 
-#: sys/oss/gstossmixer.c:106
-msgid "Record"
-msgstr "ଅନୁଲିପିକରଣ"
+#~ msgid "Record"
+#~ msgstr "ଅନୁଲିପିକରଣ"
 
-#: sys/oss/gstossmixer.c:108
-msgid "In-gain"
-msgstr "ନିବେଶ-ବୃଦ୍ଧି"
+#~ msgid "In-gain"
+#~ msgstr "ନିବେଶ-ବୃଦ୍ଧି"
 
-#: sys/oss/gstossmixer.c:110
-msgid "Out-gain"
-msgstr "ନିର୍ଗମ-ବୃଦ୍ଧି"
+#~ msgid "Out-gain"
+#~ msgstr "ନିର୍ଗମ-ବୃଦ୍ଧି"
 
-#: sys/oss/gstossmixer.c:112
-msgid "Line-1"
-msgstr "ଲାଇନ-୧"
+#~ msgid "Line-1"
+#~ msgstr "ଲାଇନ-୧"
 
-#: sys/oss/gstossmixer.c:114
-msgid "Line-2"
-msgstr "ଲାଇନ-୨"
+#~ msgid "Line-2"
+#~ msgstr "ଲାଇନ-୨"
 
-#: sys/oss/gstossmixer.c:116
-msgid "Line-3"
-msgstr "ଲାଇନ-୩"
+#~ msgid "Line-3"
+#~ msgstr "ଲାଇନ-୩"
 
-#: sys/oss/gstossmixer.c:118
-msgid "Digital-1"
-msgstr "ସାଂଖ୍ଯିକ-୧"
+#~ msgid "Digital-1"
+#~ msgstr "ସାଂଖ୍ଯିକ-୧"
 
-#: sys/oss/gstossmixer.c:120
-msgid "Digital-2"
-msgstr "ସାଂଖ୍ଯିକ-୨"
+#~ msgid "Digital-2"
+#~ msgstr "ସାଂଖ୍ଯିକ-୨"
 
-#: sys/oss/gstossmixer.c:122
-msgid "Digital-3"
-msgstr "ସାଂଖ୍ଯିକ-୩"
+#~ msgid "Digital-3"
+#~ msgstr "ସାଂଖ୍ଯିକ-୩"
 
-#: sys/oss/gstossmixer.c:124
-msgid "Phone-in"
-msgstr "ଫୋନ-ନିବେଶ"
+#~ msgid "Phone-in"
+#~ msgstr "ଫୋନ-ନିବେଶ"
 
-#: sys/oss/gstossmixer.c:126
-msgid "Phone-out"
-msgstr "ଫୋନ-ନିର୍ଗମ"
+#~ msgid "Phone-out"
+#~ msgstr "ଫୋନ-ନିର୍ଗମ"
 
-#: sys/oss/gstossmixer.c:128
-msgid "Video"
-msgstr "ଭିଡିଓ"
+#~ msgid "Video"
+#~ msgstr "ଭିଡିଓ"
 
-#: sys/oss/gstossmixer.c:130
-msgid "Radio"
-msgstr "ରେଡିଓ"
+#~ msgid "Radio"
+#~ msgstr "ରେଡିଓ"
 
-#: sys/oss/gstossmixer.c:132
-msgid "Monitor"
-msgstr "ପ୍ରଦର୍ଶିକା"
+#~ msgid "Monitor"
+#~ msgstr "ପ୍ରଦର୍ଶିକା"
 
 #, fuzzy
 #~ msgid "PC Speaker"

@@ -215,7 +215,7 @@ gst_video_box_class_init (GstVideoBoxClass * klass)
 }
 
 static void
-gst_video_box_init (GstVideoBox * video_box)
+gst_video_box_init (GstVideoBox * video_box, GstVideoBoxClass * g_class)
 {
   video_box->box_right = DEFAULT_RIGHT;
   video_box->box_left = DEFAULT_LEFT;

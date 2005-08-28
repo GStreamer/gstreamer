@@ -185,7 +185,7 @@ gst_oss_src_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_oss_src_init (GstOssSrc * osssrc)
+gst_oss_src_init (GstOssSrc * osssrc, GstOssSrcClass * g_class)
 {
   GST_DEBUG ("initializing osssrc");
 

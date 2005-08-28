@@ -162,7 +162,7 @@ gst_dvdemux_class_init (GstDVDemuxClass * klass)
 }
 
 static void
-gst_dvdemux_init (GstDVDemux * dvdemux)
+gst_dvdemux_init (GstDVDemux * dvdemux, GstDVDemuxClass * g_class)
 {
   gint i;
 

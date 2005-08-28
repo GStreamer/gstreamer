@@ -245,7 +245,7 @@ gst_shaper_request_new_pad (GstElement * element, GstPadTemplate * templ,
 }
 
 static void
-gst_shaper_init (GstShaper * shaper)
+gst_shaper_init (GstShaper * shaper, GstShaperClass * g_class)
 {
   gst_element_set_loop_function (GST_ELEMENT (shaper), gst_shaper_loop);
 

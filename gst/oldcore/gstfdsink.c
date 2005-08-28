@@ -97,7 +97,7 @@ gst_fdsink_class_init (GstFdSinkClass * klass)
 }
 
 static void
-gst_fdsink_init (GstFdSink * fdsink)
+gst_fdsink_init (GstFdSink * fdsink, GstFdSinkClass * g_class)
 {
   fdsink->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&sinktemplate),
