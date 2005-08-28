@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-07-10 14:49+0200\n"
+"POT-Creation-Date: 2005-08-25 11:45+0200\n"
 "PO-Revision-Date: 2005-01-22 17:17+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net> \n"
@@ -91,134 +91,98 @@ msgstr "Đã không đóng được thiết bị ảnh động \"%s\"."
 msgid "Could not write to device \"%s\"."
 msgstr "Đã không ghi được vào thiết bị \"%s\"."
 
-#: sys/oss/gstosselement.c:702
-#, c-format
-msgid "OSS device \"%s\" is already in use by another program."
-msgstr "Một chương trình khác đang sử dụng thiết bị OSS \"%s\"."
+#~ msgid "OSS device \"%s\" is already in use by another program."
+#~ msgstr "Một chương trình khác đang sử dụng thiết bị OSS \"%s\"."
 
-#: sys/oss/gstosselement.c:709 sys/oss/gstosselement.c:713
-#, c-format
-msgid "Could not access device \"%s\", check its permissions."
-msgstr "Đã không truy cập được thiết bị \"%s\", nên hãy kiểm tra quyền nó."
+#~ msgid "Could not access device \"%s\", check its permissions."
+#~ msgstr "Đã không truy cập được thiết bị \"%s\", nên hãy kiểm tra quyền nó."
 
-#: sys/oss/gstosselement.c:720
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Không có thiết bị \"%s\" ."
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Không có thiết bị \"%s\" ."
 
-#: sys/oss/gstosselement.c:726
-#, c-format
-msgid "Could not open device \"%s\" for writing."
-msgstr "Đã không mở được thiết bị \"%s\" để ghi."
+#~ msgid "Could not open device \"%s\" for writing."
+#~ msgstr "Đã không mở được thiết bị \"%s\" để ghi."
 
-#: sys/oss/gstosselement.c:730
-#, c-format
-msgid "Could not open device \"%s\" for reading."
-msgstr "Đã không mở được thiết bị \"%s\" để đọc."
+#~ msgid "Could not open device \"%s\" for reading."
+#~ msgstr "Đã không mở được thiết bị \"%s\" để đọc."
 
-#: sys/oss/gstosselement.c:1079
-msgid "Your OSS device could not be probed correctly"
-msgstr "Đã không dò được cho đúng thiết bị OSS của bạn"
+#~ msgid "Your OSS device could not be probed correctly"
+#~ msgstr "Đã không dò được cho đúng thiết bị OSS của bạn"
 
-#: sys/oss/gstossmixer.c:84
-msgid "Volume"
-msgstr "Âm lượng"
+#~ msgid "Volume"
+#~ msgstr "Âm lượng"
 
-#: sys/oss/gstossmixer.c:86
-msgid "Bass"
-msgstr "Trầm"
+#~ msgid "Bass"
+#~ msgstr "Trầm"
 
-#: sys/oss/gstossmixer.c:88
-msgid "Treble"
-msgstr "Cao"
+#~ msgid "Treble"
+#~ msgstr "Cao"
 
-#: sys/oss/gstossmixer.c:90
-msgid "Synth"
-msgstr "Tổng hợp"
+#~ msgid "Synth"
+#~ msgstr "Tổng hợp"
 
-#: sys/oss/gstossmixer.c:92
-msgid "PCM"
-msgstr "PCM"
+#~ msgid "PCM"
+#~ msgstr "PCM"
 
-#: sys/oss/gstossmixer.c:94
-msgid "Speaker"
-msgstr "Loa"
+#~ msgid "Speaker"
+#~ msgstr "Loa"
 
-#: sys/oss/gstossmixer.c:96
-msgid "Line-in"
-msgstr "Dây-vào"
+#~ msgid "Line-in"
+#~ msgstr "Dây-vào"
 
-#: sys/oss/gstossmixer.c:98
-msgid "Microphone"
-msgstr "Micrô"
+#~ msgid "Microphone"
+#~ msgstr "Micrô"
 
-#: sys/oss/gstossmixer.c:100
-msgid "CD"
-msgstr "CD"
+#~ msgid "CD"
+#~ msgstr "CD"
 
-#: sys/oss/gstossmixer.c:102
-msgid "Mixer"
-msgstr "Trộn"
+#~ msgid "Mixer"
+#~ msgstr "Trộn"
 
-#: sys/oss/gstossmixer.c:104
-msgid "PCM-2"
-msgstr "PCM-2"
+#~ msgid "PCM-2"
+#~ msgstr "PCM-2"
 
-#: sys/oss/gstossmixer.c:106
-msgid "Record"
-msgstr "Ghi"
+#~ msgid "Record"
+#~ msgstr "Ghi"
 
-#: sys/oss/gstossmixer.c:108
-msgid "In-gain"
-msgstr "Vào-gia lượng"
+#~ msgid "In-gain"
+#~ msgstr "Vào-gia lượng"
 
-#: sys/oss/gstossmixer.c:110
-msgid "Out-gain"
-msgstr "Ra-gia lượng"
+#~ msgid "Out-gain"
+#~ msgstr "Ra-gia lượng"
 
-#: sys/oss/gstossmixer.c:112
-msgid "Line-1"
-msgstr "Dây-1"
+#~ msgid "Line-1"
+#~ msgstr "Dây-1"
 
-#: sys/oss/gstossmixer.c:114
-msgid "Line-2"
-msgstr "Dây-2"
+#~ msgid "Line-2"
+#~ msgstr "Dây-2"
 
-#: sys/oss/gstossmixer.c:116
-msgid "Line-3"
-msgstr "Dây-3"
+#~ msgid "Line-3"
+#~ msgstr "Dây-3"
 
-#: sys/oss/gstossmixer.c:118
-msgid "Digital-1"
-msgstr "Đoạn biến-1"
+#~ msgid "Digital-1"
+#~ msgstr "Đoạn biến-1"
 
-#: sys/oss/gstossmixer.c:120
-msgid "Digital-2"
-msgstr "Đoạn biến-2"
+#~ msgid "Digital-2"
+#~ msgstr "Đoạn biến-2"
 
-#: sys/oss/gstossmixer.c:122
-msgid "Digital-3"
-msgstr "Đoạn biến-3"
+#~ msgid "Digital-3"
+#~ msgstr "Đoạn biến-3"
 
-#: sys/oss/gstossmixer.c:124
-msgid "Phone-in"
-msgstr "Điện thoại-vào"
+#~ msgid "Phone-in"
+#~ msgstr "Điện thoại-vào"
 
-#: sys/oss/gstossmixer.c:126
-msgid "Phone-out"
-msgstr "Điạn thoại-ra"
+#~ msgid "Phone-out"
+#~ msgstr "Điạn thoại-ra"
 
-#: sys/oss/gstossmixer.c:128
-msgid "Video"
-msgstr "Ảnh động"
+#~ msgid "Video"
+#~ msgstr "Ảnh động"
 
-#: sys/oss/gstossmixer.c:130
-msgid "Radio"
-msgstr "Thu thanh"
+#~ msgid "Radio"
+#~ msgstr "Thu thanh"
 
-#: sys/oss/gstossmixer.c:132
-msgid "Monitor"
-msgstr "Màn hình"
+#~ msgid "Monitor"
+#~ msgstr "Màn hình"
 
 #, fuzzy
 #~ msgid "PC Speaker"

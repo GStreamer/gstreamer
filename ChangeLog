@@ -1,3 +1,17 @@
+2005-08-28  Andy Wingo  <wingo@pobox.com>
+
+	* Updates for two-arg init from GST_BOILERPLATE.
+
+	* ext/ladspa/gstsignalprocessor.c (gst_signal_processor_init): Use
+	the second arg for the class, because G_OBJECT_GET_CLASS (self)
+	returns the wrong thing.
+	(gst_signal_processor_add_pad_from_template): Make pads of the
+	right type.
+
+	* ext/ladspa/gstladspa.c (gst_ladspa_class_get_param_spec): Make
+	writable param specs G_PARAM_CONSTRUCT so default values work.
+	(gst_ladspa_init): Use the second arg for the class.
+
 2005-08-26  Andy Wingo  <wingo@pobox.com>
 
 	* ext/ladspa/gstladspa.c: 
