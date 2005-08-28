@@ -80,9 +80,6 @@ GST_STATIC_CAPS ( \
          GST_STATIC_PAD_TEMPLATE ("src",
          GST_PAD_SRC, GST_PAD_ALWAYS, SUPPORTED_CAPS);
 
-     static void gst_audioresample_base_init (gpointer g_class);
-     static void gst_audioresample_class_init (GstAudioresampleClass * klass);
-     static void gst_audioresample_init (GstAudioresample * audioresample);
      static void gst_audioresample_dispose (GObject * object);
 
      static void gst_audioresample_set_property (GObject * object,
@@ -150,7 +147,8 @@ static void gst_audioresample_class_init (GstAudioresampleClass * klass)
       GST_DEBUG_FUNCPTR (audioresample_transform);
 }
 
-static void gst_audioresample_init (GstAudioresample * audioresample)
+static void gst_audioresample_init (GstAudioresample * audioresample,
+    GstAudioresampleClass * klass)
 {
   ResampleState *r;
 
