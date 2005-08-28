@@ -320,7 +320,7 @@ gst_fake_src_class_init (GstFakeSrcClass * klass)
 }
 
 static void
-gst_fake_src_init (GstFakeSrc * fakesrc)
+gst_fake_src_init (GstFakeSrc * fakesrc, GstFakeSrcClass * g_class)
 {
   fakesrc->output = FAKE_SRC_FIRST_LAST_LOOP;
   fakesrc->segment_start = -1;

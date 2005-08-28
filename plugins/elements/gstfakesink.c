@@ -214,7 +214,7 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
 }
 
 static void
-gst_fake_sink_init (GstFakeSink * fakesink)
+gst_fake_sink_init (GstFakeSink * fakesink, GstFakeSinkClass * g_class)
 {
   fakesink->silent = DEFAULT_SILENT;
   fakesink->dump = DEFAULT_DUMP;

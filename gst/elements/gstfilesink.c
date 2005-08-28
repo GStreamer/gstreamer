@@ -148,7 +148,7 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
 }
 
 static void
-gst_file_sink_init (GstFileSink * filesink)
+gst_file_sink_init (GstFileSink * filesink, GstFileSinkClass * g_class)
 {
   GstPad *pad;
 

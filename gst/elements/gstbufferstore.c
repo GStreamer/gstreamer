@@ -104,7 +104,7 @@ gst_buffer_store_class_init (GstBufferStoreClass * store_class)
   store_class->buffer_added = gst_buffer_store_add_buffer_func;
 }
 static void
-gst_buffer_store_init (GstBufferStore * store)
+gst_buffer_store_init (GstBufferStore * store, GstBufferStoreClass * g_class)
 {
   store->buffers = NULL;
 }

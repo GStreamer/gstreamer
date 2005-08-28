@@ -138,7 +138,7 @@ gst_capsfilter_class_init (GstCapsFilterClass * klass)
 }
 
 static void
-gst_capsfilter_init (GstCapsFilter * filter)
+gst_capsfilter_init (GstCapsFilter * filter, GstCapsFilterClass * g_class)
 {
   gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), TRUE);
   filter->filter_caps = gst_caps_new_any ();

@@ -50,7 +50,8 @@ void 		gst_print_element_args 		(GString *buf, gint indent, GstElement *element)
 									\
 static void type_as_function ## _base_init     (gpointer      g_class);	\
 static void type_as_function ## _class_init    (type ## Class *g_class);\
-static void type_as_function ## _init	       (type          *object);	\
+static void type_as_function ## _init	       (type          *object,	\
+                                                type ## Class *g_class);\
 static parent_type ## Class *parent_class = NULL;			\
 static void								\
 type_as_function ## _class_init_trampoline (gpointer g_class,		\

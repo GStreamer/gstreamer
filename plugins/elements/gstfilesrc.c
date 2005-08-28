@@ -222,7 +222,7 @@ gst_file_src_class_init (GstFileSrcClass * klass)
 }
 
 static void
-gst_file_src_init (GstFileSrc * src)
+gst_file_src_init (GstFileSrc * src, GstFileSrcClass * g_class)
 {
 #ifdef HAVE_MMAP
   src->pagesize = getpagesize ();

@@ -217,7 +217,7 @@ gst_identity_class_init (GstIdentityClass * klass)
 }
 
 static void
-gst_identity_init (GstIdentity * identity)
+gst_identity_init (GstIdentity * identity, GstIdentityClass * g_class)
 {
   gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (identity), TRUE);
 

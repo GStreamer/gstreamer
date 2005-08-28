@@ -89,7 +89,7 @@ gst_adapter_class_init (GstAdapterClass * klass)
 }
 
 static void
-gst_adapter_init (GstAdapter * adapter)
+gst_adapter_init (GstAdapter * adapter, GstAdapterClass * g_class)
 {
   adapter->assembled_data = g_malloc (DEFAULT_SIZE);
   adapter->assembled_size = DEFAULT_SIZE;

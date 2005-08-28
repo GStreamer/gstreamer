@@ -1,3 +1,11 @@
+2005-08-28  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstutils.h (GST_BOILERPLATE_FULL): Prototype instance_init
+	as having two arguments instead of just one. Allows superclasses
+	to access information on subclasses -- see the terrible for() loop
+	in gtype.c:g_type_create_instance for the reason why. All callers
+	changed.
+
 2005-08-27  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/design/part-messages.txt:

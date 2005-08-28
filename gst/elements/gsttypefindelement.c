@@ -200,7 +200,8 @@ gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
       GST_DEBUG_FUNCPTR (gst_type_find_element_change_state);
 }
 static void
-gst_type_find_element_init (GstTypeFindElement * typefind)
+gst_type_find_element_init (GstTypeFindElement * typefind,
+    GstTypeFindElementClass * g_class)
 {
   /* sinkpad */
   typefind->sink =
