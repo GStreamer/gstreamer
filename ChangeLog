@@ -1,5 +1,8 @@
 2005-08-29  Andy Wingo  <wingo@pobox.com>
 
+	* check/elements/volume.c (cleanup_volume): Fix for running
+	CK_FORK=no.
+
 	* check/elements/audioconvert.c: Convert from native endian, not
 	little endian.
 

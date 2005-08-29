@@ -89,6 +89,10 @@ cleanup_volume (GstElement * volume)
 {
   GST_DEBUG ("cleanup_volume");
 
+  g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (buffers);
+  buffers = NULL;
+
   gst_check_teardown_src_pad (volume);
   gst_check_teardown_sink_pad (volume);
   gst_check_teardown_element (volume);
