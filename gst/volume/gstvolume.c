@@ -30,6 +30,8 @@
 #include <gst/base/gstbasetransform.h>
 #include <gst/audio/audio.h>
 #include <gst/interfaces/mixer.h>
+#include <gst/controller/gst-controller.h>
+
 #include "gstvolume.h"
 
 /* some defines for audio processing */
@@ -266,11 +268,13 @@ gst_volume_class_init (GstVolumeClass * klass)
   gobject_class->dispose = gst_volume_dispose;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MUTE,
-      g_param_spec_boolean ("mute", "mute", "mute", FALSE, G_PARAM_READWRITE));
+      g_param_spec_boolean ("mute", "mute", "mute",
+          FALSE, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VOLUME,
       g_param_spec_double ("volume", "volume", "volume",
-          0.0, VOLUME_MAX_DOUBLE, 1.0, G_PARAM_READWRITE));
+          0.0, VOLUME_MAX_DOUBLE, 1.0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   GST_BASE_TRANSFORM_CLASS (klass)->transform =
       GST_DEBUG_FUNCPTR (volume_transform);
@@ -390,6 +394,8 @@ volume_transform (GstBaseTransform * base, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstVolume *this = GST_VOLUME (base);
+
+  gst_object_sink_values (G_OBJECT (this), GST_BUFFER_TIMESTAMP (outbuf));
 
   this->process (this, GST_BUFFER_TIMESTAMP (outbuf),
       GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));

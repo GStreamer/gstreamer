@@ -1,3 +1,17 @@
+2005-08-29  Stefan Kost  <ensonic@users.sf.net>
+
+	reviewed by: <delete if not using a buddy>
+
+	* docs/libs/tmpl/gstcolorbalance.sgml:
+	* docs/libs/tmpl/gstgconf.sgml:
+	* docs/libs/tmpl/gstmixer.sgml:
+	* docs/libs/tmpl/gstringbuffer.sgml:
+	* gst/sine/gstsinesrc.c: (gst_sinesrc_class_init),
+	(gst_sinesrc_create):
+	* gst/volume/gstvolume.c: (gst_volume_class_init),
+	(volume_transform):
+          controllerized two audio plugins
+
 2005-08-29  Andy Wingo  <wingo@pobox.com>
 
 	* ext/vorbis/vorbisdec.c (vorbis_dec_convert, vorbis_dec_push) 

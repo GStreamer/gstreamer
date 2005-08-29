@@ -23,6 +23,7 @@ an implementation of an audio ringbuffer
 </para>
 
 @cond: 
+@open: 
 @acquired: 
 @data: 
 @spec: 
@@ -40,8 +41,10 @@ an implementation of an audio ringbuffer
 </para>
 
 @parent_class: 
+@open_device: 
 @acquire: 
 @release: 
+@close_device: 
 @start: 
 @pause: 
 @resume: 

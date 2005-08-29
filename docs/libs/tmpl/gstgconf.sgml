@@ -17,12 +17,3 @@ gconf default elements support
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### FUNCTION gst_gconf_get_string ##### -->
-<para>
-
-</para>
-
-@key: 
-@Returns: 
-
-

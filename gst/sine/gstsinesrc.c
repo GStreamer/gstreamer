@@ -24,9 +24,11 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <gst/controller/gst-controller.h>
 
 #include "gstsinesrc.h"
 
@@ -153,10 +155,10 @@ gst_sinesrc_class_init (GstSineSrcClass * klass)
           1, G_MAXINT, 1024, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_FREQ,
       g_param_spec_double ("freq", "Frequency", "Frequency of sine source",
-          0.0, 20000.0, 440.0, G_PARAM_READWRITE));
+          0.0, 20000.0, 440.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, ARG_VOLUME,
       g_param_spec_double ("volume", "Volume", "Volume",
-          0.0, 1.0, 0.8, G_PARAM_READWRITE));
+          0.0, 1.0, 0.8, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, ARG_SYNC,
       g_param_spec_boolean ("sync", "Sync", "Synchronize to clock",
           FALSE, G_PARAM_READWRITE));
@@ -343,6 +345,8 @@ gst_sinesrc_create (GstBaseSrc * basesrc, guint64 offset,
   GST_BUFFER_OFFSET (buf) = src->offset;
   GST_BUFFER_OFFSET_END (buf) = src->offset + src->samples_per_buffer;
   GST_BUFFER_DURATION (buf) = tdiff;
+
+  gst_object_sink_values (G_OBJECT (src), src->timestamp);
 
   samples = (gint16 *) GST_BUFFER_DATA (buf);
 
