@@ -1,6 +1,11 @@
 2005-08-29  Stefan Kost  <ensonic@users.sf.net>
 
-	reviewed by: <delete if not using a buddy>
+	* configure.ac:
+	* gst/sine/Makefile.am:
+	* gst/volume/Makefile.am:
+          controllerized elements also need to link against controller-libs ;)
+
+2005-08-29  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/libs/tmpl/gstcolorbalance.sgml:
 	* docs/libs/tmpl/gstgconf.sgml:

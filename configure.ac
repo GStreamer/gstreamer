@@ -236,6 +236,16 @@ fi
 
 AC_SUBST(GST_GDP_LIBS)
 
+dnl check for gstreamer-controller; uninstalled is selected preferentially
+PKG_CHECK_MODULES(GST_CTRL, gstreamer-controller-$GST_MAJORMINOR >= $GST_REQ,
+  HAVE_GST_CTRL="yes", HAVE_GST_CTRL="no")
+
+if test "x$HAVE_GST_CTRL" = "xno"; then
+  AC_MSG_ERROR(no GStreamer Controller Libs found)
+fi
+
+AC_SUBST(GST_CTRL_LIBS)
+
 PKG_CHECK_MODULES(GST_BASE, gstreamer-base-$GST_MAJORMINOR >= $GST_REQ,
   HAVE_GST_BASE="yes", HAVE_GST_BASE="no")
 

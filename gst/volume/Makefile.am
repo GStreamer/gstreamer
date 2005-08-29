@@ -6,7 +6,8 @@ libgstvolume_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvolume_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-$(GST_MAJORMINOR).la \
 	$(GST_BASE_LIBS) \
-	$(GST_LIBS)
+	$(GST_LIBS) \
+        $(GST_CTRL_LIBS)
 
 noinst_HEADERS = gstvolume.h
 
