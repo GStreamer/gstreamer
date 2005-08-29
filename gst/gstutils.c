@@ -273,6 +273,23 @@ gst_util_set_object_arg (GObject * object, const gchar * name,
   }
 }
 
+/**
+ * gst_util_uint64_scale:
+ * @val: the number to scale
+ * @num: the numerator of the scale ratio
+ * @denom: the denominator of the scale ratio
+ *
+ * Scale @val by @num / @denom, trying to avoid overflows.
+ *
+ * Returns: @val * @num / @denom, trying to avoid overflows.
+ */
+guint64
+gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom)
+{
+  /* implement me with fixed point, if you care */
+  return val * (((double) num) / denom);
+}
+
 /* -----------------------------------------------------
  *
  *  The following code will be moved out of the main

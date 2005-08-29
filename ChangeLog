@@ -1,3 +1,7 @@
+2005-08-29  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstutils.c (gst_util_uint64_scale): New 3733t funct10n.
+
 2005-08-28  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstutils.h (GST_BOILERPLATE_FULL): Prototype instance_init

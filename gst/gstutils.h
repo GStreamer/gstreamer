@@ -34,6 +34,8 @@ void 		gst_util_set_object_arg 	(GObject *object, const gchar *name, const gchar
 	
 void 		gst_util_dump_mem		(const guchar *mem, guint size);
 
+guint64		gst_util_uint64_scale		(guint64 val, guint64 num, guint64 denom);
+
 void 		gst_print_pad_caps 		(GString *buf, gint indent, GstPad *pad);
 void 		gst_print_element_args 		(GString *buf, gint indent, GstElement *element);
 
