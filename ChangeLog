@@ -1,3 +1,16 @@
+2005-08-29  Michael Smith <msmith@fluendo.com>
+	* ext/ogg/Makefile.am:
+	* ext/ogg/gstogg.c: (plugin_init):
+	* ext/ogg/gstoggparse.c: (gst_ogg_parse_get_type), (free_stream),
+	(gst_ogg_parse_delete_all_streams), (gst_ogg_parse_new_stream),
+	(gst_ogg_parse_find_stream), (gst_ogg_parse_base_init),
+	(gst_ogg_parse_class_init), (gst_ogg_parse_init),
+	(gst_ogg_parse_dispose), (gst_ogg_parse_submit_buffer),
+	(gst_ogg_parse_append_header), (gst_ogg_parse_is_header),
+	(gst_ogg_parse_buffer_from_page), (gst_ogg_parse_chain),
+	(gst_ogg_parse_change_state), (gst_ogg_parse_plugin_init):
+	Add an ogg parser element.
+
 2005-08-28  Andy Wingo  <wingo@pobox.com>
 
 	* Updates for two-arg init from GST_BOILERPLATE_FULL.
