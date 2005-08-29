@@ -185,26 +185,26 @@ GST_START_TEST (test_int16)
     gint16 in[] = { 16384, -256, 1024, 1024 };
     gint16 out[] = { 8064, 1024 };
 
-    RUN_CONVERSION (in, get_int_caps (2, "LITTLE_ENDIAN", 16, 16, TRUE),
-        out, get_int_caps (1, "LITTLE_ENDIAN", 16, 16, TRUE));
+    RUN_CONVERSION (in, get_int_caps (2, "BYTE_ORDER", 16, 16, TRUE),
+        out, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE));
   }
   /* mono to stereo */
   {
     gint16 in[] = { 512, 1024 };
     gint16 out[] = { 512, 512, 1024, 1024 };
 
-    RUN_CONVERSION (in, get_int_caps (1, "LITTLE_ENDIAN", 16, 16, TRUE),
-        out, get_int_caps (2, "LITTLE_ENDIAN", 16, 16, TRUE));
+    RUN_CONVERSION (in, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE),
+        out, get_int_caps (2, "BYTE_ORDER", 16, 16, TRUE));
   }
   /* signed -> unsigned */
   {
     gint16 in[] = { 0, -32767, 32767, -32768 };
     guint16 out[] = { 32768, 1, 65535, 0 };
 
-    RUN_CONVERSION (in, get_int_caps (1, "LITTLE_ENDIAN", 16, 16, TRUE),
-        out, get_int_caps (1, "LITTLE_ENDIAN", 16, 16, FALSE));
-    RUN_CONVERSION (out, get_int_caps (1, "LITTLE_ENDIAN", 16, 16, FALSE),
-        in, get_int_caps (1, "LITTLE_ENDIAN", 16, 16, TRUE));
+    RUN_CONVERSION (in, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE),
+        out, get_int_caps (1, "BYTE_ORDER", 16, 16, FALSE));
+    RUN_CONVERSION (out, get_int_caps (1, "BYTE_ORDER", 16, 16, FALSE),
+        in, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE));
   }
 }
 
@@ -218,11 +218,11 @@ GST_START_TEST (test_int_conversion)
     gint8 in[] = { 0, 1, 2, 127, -127 };
     gint16 out[] = { 0, 256, 512, 32512, -32512 };
 
-    RUN_CONVERSION (in, get_int_caps (1, "LITTLE_ENDIAN", 8, 8, TRUE),
-        out, get_int_caps (1, "LITTLE_ENDIAN", 16, 16, TRUE)
+    RUN_CONVERSION (in, get_int_caps (1, "BYTE_ORDER", 8, 8, TRUE),
+        out, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE)
         );
-    RUN_CONVERSION (out, get_int_caps (1, "LITTLE_ENDIAN", 16, 16, TRUE),
-        in, get_int_caps (1, "LITTLE_ENDIAN", 8, 8, TRUE)
+    RUN_CONVERSION (out, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE),
+        in, get_int_caps (1, "BYTE_ORDER", 8, 8, TRUE)
         );
   }
   /* 16 -> 8 signed */
@@ -230,8 +230,8 @@ GST_START_TEST (test_int_conversion)
     gint16 in[] = { 0, 255, 256, 257 };
     gint8 out[] = { 0, 0, 1, 1 };
 
-    RUN_CONVERSION (in, get_int_caps (1, "LITTLE_ENDIAN", 16, 16, TRUE),
-        out, get_int_caps (1, "LITTLE_ENDIAN", 8, 8, TRUE)
+    RUN_CONVERSION (in, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE),
+        out, get_int_caps (1, "BYTE_ORDER", 8, 8, TRUE)
         );
   }
   /* 8 unsigned <-> 16 signed */
@@ -240,11 +240,11 @@ GST_START_TEST (test_int_conversion)
     guint8 in[] = { 128, 129, 130, 255, 1 };
     gint16 out[] = { 0, 256, 512, 32512, -32512 };
 
-    RUN_CONVERSION (in, get_int_caps (1, "LITTLE_ENDIAN", 8, 8, FALSE),
-        out, get_int_caps (1, "LITTLE_ENDIAN", 16, 16, TRUE)
+    RUN_CONVERSION (in, get_int_caps (1, "BYTE_ORDER", 8, 8, FALSE),
+        out, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE)
         );
-    RUN_CONVERSION (out, get_int_caps (1, "LITTLE_ENDIAN", 16, 16, TRUE),
-        in, get_int_caps (1, "LITTLE_ENDIAN", 8, 8, FALSE)
+    RUN_CONVERSION (out, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE),
+        in, get_int_caps (1, "BYTE_ORDER", 8, 8, FALSE)
         );
   }
 }

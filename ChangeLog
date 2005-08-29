@@ -1,3 +1,8 @@
+2005-08-29  Andy Wingo  <wingo@pobox.com>
+
+	* check/elements/audioconvert.c: Convert from native endian, not
+	little endian.
+
 2005-08-29  Michael Smith <msmith@fluendo.com>
 	* ext/ogg/Makefile.am:
 	* ext/ogg/gstogg.c: (plugin_init):
