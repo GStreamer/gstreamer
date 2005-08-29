@@ -1,5 +1,12 @@
 2005-08-29  Andy Wingo  <wingo@pobox.com>
 
+	* ext/ogg/gstoggdemux.c (gst_ogg_demux_init): Init total_time to
+	-1.
+	(gst_ogg_demux_perform_seek): Clamp segment_stop only if it's
+	valid.
+	(gst_ogg_pad_submit_packet): Subtract the chain's begin_time only
+	if it's valid. Fixed streaming-mode playback.
+
 	* check/elements/volume.c (cleanup_volume): Fix for running
 	CK_FORK=no.
 

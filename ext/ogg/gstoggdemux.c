@@ -818,12 +818,19 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
       /* see if we have enough info to activate the chain */
       if (gst_ogg_demux_collect_chain_info (ogg, chain)) {
         GstEvent *event;
+        GstClockTime segment_start, segment_stop;
+
+        if (chain->begin_time != GST_CLOCK_TIME_NONE) {
+          segment_start = chain->segment_start - chain->begin_time;
+          segment_stop = chain->segment_stop - chain->begin_time;
+        } else {
+          segment_start = chain->segment_start;
+          segment_stop = chain->segment_stop;
+        }
 
         /* create the discont event we are going to send out */
         event = gst_event_new_newsegment (ogg->segment_rate,
-            GST_FORMAT_TIME,
-            chain->segment_start - chain->begin_time,
-            chain->segment_stop - chain->begin_time, 0);
+            GST_FORMAT_TIME, segment_start, segment_stop, 0);
 
         gst_ogg_demux_activate_chain (ogg, chain, event);
 
@@ -1107,6 +1114,7 @@ gst_ogg_demux_init (GstOggDemux * ogg, GstOggDemuxClass * g_class)
   ogg->segment_start = GST_CLOCK_TIME_NONE;
   ogg->segment_stop = GST_CLOCK_TIME_NONE;
   ogg->segment_play = FALSE;
+  ogg->total_time = GST_CLOCK_TIME_NONE;
 
   ogg->running = FALSE;
 }
@@ -1432,7 +1440,8 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, gboolean accurate,
     ogg->segment_stop = ogg->total_time;
 
   ogg->segment_start = CLAMP (ogg->segment_start, 0, ogg->total_time);
-  ogg->segment_stop = CLAMP (ogg->segment_stop, 0, ogg->total_time);
+  if (ogg->segment_stop != GST_CLOCK_TIME_NONE)
+    ogg->segment_stop = CLAMP (ogg->segment_stop, 0, ogg->total_time);
 
   start = ogg->segment_start;
   stop = ogg->segment_stop;
