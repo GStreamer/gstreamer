@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-05-02 19:36+0200\n"
+"POT-Creation-Date: 2005-08-29 16:46+0200\n"
 "PO-Revision-Date: 2004-04-03 03:14+0300\n"
 "Last-Translator: Baris Cicek <baris@teamforce.name.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -14,30 +14,30 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:160
+#: gst/gst.c:158
 msgid "Print the GStreamer version"
 msgstr "GStreamer sürünümü yazdır"
 
-#: gst/gst.c:162
+#: gst/gst.c:160
 msgid "Make all warnings fatal"
 msgstr "Tüm uyarıları ölümcül yap"
 
-#: gst/gst.c:166
+#: gst/gst.c:164
 msgid "Print available debug categories and exit"
 msgstr "Geçerli hata ayıklama sınıflarını yazdır ve çık"
 
-#: gst/gst.c:169
+#: gst/gst.c:167
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Öntanımlı hata ayıklama seviyesi 1'den (sadece hatalar) 5'e (her şey) kadar "
 "ya da çıktı olmaması için 0"
 
-#: gst/gst.c:171
+#: gst/gst.c:169
 msgid "LEVEL"
 msgstr "SEVİYE"
 
-#: gst/gst.c:173
+#: gst/gst.c:171
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -45,31 +45,31 @@ msgstr ""
 "Ayrı sınıfların belirli seviyeleri için sınıf_ismi:seviye çiftlerinin virgül "
 "ile ayrılmış listesi. Örnek: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:176
+#: gst/gst.c:174
 msgid "LIST"
 msgstr "LİSTE"
 
-#: gst/gst.c:178
+#: gst/gst.c:176
 msgid "Disable colored debugging output"
 msgstr "Renkli hata ayıklama çıktısını kapat"
 
-#: gst/gst.c:180
+#: gst/gst.c:178
 msgid "Disable debugging"
 msgstr "Hata ayıklamayı kapat"
 
-#: gst/gst.c:184
+#: gst/gst.c:182
 msgid "Disable accelerated CPU instructions"
 msgstr "Hızlandırılmış CPU işlemlerini kapat"
 
-#: gst/gst.c:186
+#: gst/gst.c:184
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Ayrıntılı eklenti yükleme detaylarını etkinleştir"
 
-#: gst/gst.c:188
+#: gst/gst.c:186
 msgid "PATHS"
 msgstr "YOLLAR"
 
-#: gst/gst.c:191
+#: gst/gst.c:189
 #, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -78,32 +78,32 @@ msgstr ""
 "Çevre değişkeni GST_PLUGIN_PATH içinde saklanan listeye ek olarak önceden "
 "yüklenecek eklentilerin virgün ile ayırılmış listesi"
 
-#: gst/gst.c:193
+#: gst/gst.c:191
 msgid "PLUGINS"
 msgstr "EKLENTİLER"
 
-#: gst/gst.c:196
+#: gst/gst.c:194
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Eklenti yüklenirken kesimleme hatalarını yakalamayı kapat"
 
-#: gst/gst.c:199
+#: gst/gst.c:197
 msgid "SCHEDULER"
 msgstr "ZAMANLANDIRICI"
 
-#: gst/gst.c:201
+#: gst/gst.c:199
 msgid "Registry to use"
 msgstr "Kullanılacak kayıt"
 
-#: gst/gst.c:201
+#: gst/gst.c:199
 msgid "REGISTRY"
 msgstr "KAYIT"
 
-#: gst/gst.c:214
+#: gst/gst.c:212
 #, fuzzy, c-format
 msgid "path list for loading plugins (separated by '%s')"
 msgstr "eklenti yüklemek için yol listesi (' ile ayırılmış"
 
-#: gst/gst.c:218
+#: gst/gst.c:216
 #, fuzzy, c-format
 msgid "Scheduler to use (default is '%s')"
 msgstr "Kullanılacak zamanlandırıcı ('"
@@ -608,21 +608,21 @@ msgstr "\"%s\" kapatılırken hata."
 msgid "Error while writing to file \"%s\"."
 msgstr "\"%s\" dosyası yazılırken hata."
 
-#: gst/elements/gstfilesrc.c:764 gst/elements/gstmultifilesrc.c:298
+#: gst/elements/gstfilesrc.c:765 gst/elements/gstmultifilesrc.c:298
 msgid "No file name specified for reading."
 msgstr "Okuma için hiç bir dosya adı belirtilmedi."
 
-#: gst/elements/gstfilesrc.c:779 gst/elements/gstmultifilesrc.c:306
+#: gst/elements/gstfilesrc.c:780 gst/elements/gstmultifilesrc.c:306
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "\"%s\" dosyası okuma için açılamadı."
 
-#: gst/elements/gstfilesrc.c:790
+#: gst/elements/gstfilesrc.c:791
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr ""
 
-#: gst/elements/gstfilesrc.c:796
+#: gst/elements/gstfilesrc.c:797
 #, fuzzy, c-format
 msgid "File \"%s\" is a socket."
 msgstr "\"%s\" dosyası düzenli bir dosya değil."
@@ -648,224 +648,228 @@ msgstr "asgari"
 msgid "maximum"
 msgstr "azami"
 
-#: gst/parse/grammar.y:187
+#: gst/parse/grammar.y:188
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "belirtilen boş ikili \"%s\", izin verilmedi"
 
-#: gst/parse/grammar.y:192
+#: gst/parse/grammar.y:193
 #, c-format
 msgid "no bin \"%s\", skipping"
 msgstr "\"%s\" ikilisi yok, geçiliyor"
 
-#: gst/parse/grammar.y:264
+#: gst/parse/grammar.y:270
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "\"%2$s\" öğesinde \"%1$s\" özelliği yok"
 
-#: gst/parse/grammar.y:277
+#: gst/parse/grammar.y:283
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "\"%2$s\" öğesindeki \"%1$s\" özelliğine \"%3$s\" değeri atanamadı"
 
-#: gst/parse/grammar.y:462
+#: gst/parse/grammar.y:468
 #, c-format
 msgid "could not link %s to %s"
 msgstr "%s, %s'a bağlanamadı"
 
-#: gst/parse/grammar.y:507
+#: gst/parse/grammar.y:513
 #, c-format
 msgid "no element \"%s\""
 msgstr "\"%s\" öğesi yok"
 
-#: gst/parse/grammar.y:558
+#: gst/parse/grammar.y:564
 #, fuzzy, c-format
 msgid "could not parse capabilities \"%s\""
 msgstr "\"%s\" kabiliyetleri ayrıştırılamadı"
 
-#: gst/parse/grammar.y:580 gst/parse/grammar.y:628 gst/parse/grammar.y:644
-#: gst/parse/grammar.y:702
+#: gst/parse/grammar.y:586 gst/parse/grammar.y:634 gst/parse/grammar.y:650
+#: gst/parse/grammar.y:708
 msgid "link without source element"
 msgstr "kaynak öğesi olmayan bağ"
 
-#: gst/parse/grammar.y:586 gst/parse/grammar.y:625 gst/parse/grammar.y:711
+#: gst/parse/grammar.y:592 gst/parse/grammar.y:631 gst/parse/grammar.y:717
 msgid "link without sink element"
 msgstr "'sink' öğesi olmayan bağ"
 
-#: gst/parse/grammar.y:662
+#: gst/parse/grammar.y:668
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "\"%s\" URI'si için kaynak öğesi yok"
 
-#: gst/parse/grammar.y:672
+#: gst/parse/grammar.y:678
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "\"%s\" URI'sini belirtilene bağlayacak öğe yok:"
 
-#: gst/parse/grammar.y:680
+#: gst/parse/grammar.y:686
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "\"%s\" URI'si için 'sink' öğesi yok"
 
-#: gst/parse/grammar.y:684
+#: gst/parse/grammar.y:690
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "\"%s\" URI'si için 'sink' öğesi bağlanamadı"
 
-#: gst/parse/grammar.y:696
+#: gst/parse/grammar.y:702
 msgid "empty pipeline not allowed"
 msgstr "boş boruhattına izin verilmiyor"
 
-#: tools/gst-inspect.c:1151
+#: tools/gst-inspect.c:1164
 #, fuzzy
 msgid "Print all elements"
 msgstr "\"%s\" öğesi yok"
 
-#: tools/gst-launch.c:114
+#: tools/gst-launch.c:110
 #, c-format
 msgid ""
 "Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
 "max %s ns).\n"
 msgstr ""
 
-#: tools/gst-launch.c:141
+#: tools/gst-launch.c:137
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 msgstr "Kullanım: gst-xmllaunch <dosya.xml> [ öğe.özellik=değer ... ]\n"
 
-#: tools/gst-launch.c:149
+#: tools/gst-launch.c:145
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
 msgstr "HATA: xml dosyası '%s' ayrıştırması başarısız.\n"
 
-#: tools/gst-launch.c:155
+#: tools/gst-launch.c:151
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "HATA: '%s' dosyasında üst seviye öğesi bulunamadı.\n"
 
-#: tools/gst-launch.c:162
+#: tools/gst-launch.c:158
 #, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr "UYARI: Şu anda sadece bir tane üst seviye öğesi destekleniyor."
 
-#: tools/gst-launch.c:173
+#: tools/gst-launch.c:169
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
 msgstr "HATA: komut satırı argümanı %d ayrıştırılamadı: %s.\n"
 
-#: tools/gst-launch.c:184
+#: tools/gst-launch.c:180
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "UYARI: '%s' isimli öğe bulunamadı.\n"
 
-#: tools/gst-launch.c:327
+#: tools/gst-launch.c:323
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "ETİKET BULUNDU      : \"%s\" öğesi tarafından bulundu.\n"
 
-#: tools/gst-launch.c:412
+#: tools/gst-launch.c:409
 msgid "Output tags (also known as metadata)"
 msgstr "Çıktı etiketleri (metadata olarak da bilinir)"
 
-#: tools/gst-launch.c:414
+#: tools/gst-launch.c:411
 msgid "Output status information and property notifications"
 msgstr "Çıktı durum bilgisi ve özellik uyarıları"
 
-#: tools/gst-launch.c:416
+#: tools/gst-launch.c:413
 msgid "Do not output status information of TYPE"
 msgstr "TÜRÜN durum bilgisini gösterme"
 
-#: tools/gst-launch.c:416
+#: tools/gst-launch.c:413
 msgid "TYPE1,TYPE2,..."
 msgstr "TÜR1,TÜR2,..."
 
-#: tools/gst-launch.c:419
+#: tools/gst-launch.c:416
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Boruhattının xml belirtimini DOSYA'ya kaydet ve çık"
 
-#: tools/gst-launch.c:419
+#: tools/gst-launch.c:416
 msgid "FILE"
 msgstr "DOSYA"
 
-#: tools/gst-launch.c:422
+#: tools/gst-launch.c:419
 msgid "Do not install a fault handler"
 msgstr "Hatalı işleticiyi kurma"
 
-#: tools/gst-launch.c:424
+#: tools/gst-launch.c:421
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "'alloc' takibini yazdır (derleme sırasında etkinleştirilmişse)"
 
-#: tools/gst-launch.c:426
+#: tools/gst-launch.c:423
 msgid "Number of times to iterate pipeline"
 msgstr "Boruhattının kaç defa tekrarlanacağı"
 
-#: tools/gst-launch.c:496
+#: tools/gst-launch.c:494
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "HATA: boruhattı oluşturulamadı: %s.\n"
 
-#: tools/gst-launch.c:500
+#: tools/gst-launch.c:498
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "HATA: boruhattı oluşturulamadı.\n"
 
-#: tools/gst-launch.c:504
+#: tools/gst-launch.c:502
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "UYARI: hatalı boruhattı: %s\n"
 
-#: tools/gst-launch.c:505
+#: tools/gst-launch.c:503
 #, c-format
 msgid "         Trying to run anyway.\n"
 msgstr "         Gene de çalıştırma deneniyor.\n"
 
-#: tools/gst-launch.c:532
+#: tools/gst-launch.c:530
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "HATA: 'pipeline' öğesi bulunamadı.\n"
 
-#: tools/gst-launch.c:539
+#: tools/gst-launch.c:537
 #, c-format
 msgid "RUNNING pipeline ...\n"
 msgstr "BORUHATTI çalıştırılıyor ...\n"
 
-#: tools/gst-launch.c:542
+#: tools/gst-launch.c:540
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "HATA: boruhattı çalmak istemiyor.\n"
 
-#: tools/gst-register.c:49
+#: tools/gst-register.c:43
 #, c-format
 msgid "Added plugin %s with %d feature.\n"
 msgid_plural "Added plugin %s with %d features.\n"
 msgstr[0] ""
 msgstr[1] ""
 
-#: tools/gst-register.c:112
+#: tools/gst-register.c:111
 #, c-format
 msgid "Added path   %s to %s \n"
 msgstr ""
 
-#: tools/gst-register.c:127
+#: tools/gst-register.c:126
 #, c-format
 msgid "Rebuilding %s (%s) ...\n"
 msgstr ""
 
-#: tools/gst-register.c:132
+#: tools/gst-register.c:131
 #, c-format
 msgid "Trying to load %s ...\n"
 msgstr ""
 
-#: tools/gst-register.c:134
+#: tools/gst-register.c:133
 #, fuzzy, c-format
 msgid "Error loading %s\n"
 msgstr "\"%s\" kapatılırken hata."
 
-#: tools/gst-register.c:168
+#: tools/gst-register.c:167
 #, c-format
 msgid "Loaded %d plugins with %d feature.\n"
 msgid_plural "Loaded %d plugins with %d features.\n"
 msgstr[0] ""
 msgstr[1] ""
+
+#: tools/tools.h:44
+msgid "print version information and exit"
+msgstr ""
 
 #~ msgid "caps"
 #~ msgstr "kabiliyetler"

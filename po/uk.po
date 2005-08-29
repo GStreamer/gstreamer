@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-05-02 19:36+0200\n"
+"POT-Creation-Date: 2005-08-29 16:46+0200\n"
 "PO-Revision-Date: 2004-09-06 15:16+0300\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -17,30 +17,30 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%"
 "10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: gst/gst.c:160
+#: gst/gst.c:158
 msgid "Print the GStreamer version"
 msgstr "Вивести версію GStreamer"
 
-#: gst/gst.c:162
+#: gst/gst.c:160
 msgid "Make all warnings fatal"
 msgstr "Вважати всі попередження помилками"
 
-#: gst/gst.c:166
+#: gst/gst.c:164
 msgid "Print available debug categories and exit"
 msgstr "Вивести наявні категорії налагодження та вийти"
 
-#: gst/gst.c:169
+#: gst/gst.c:167
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Типовий рівень налагодження від 1 (лише помилки) до 5 (усе), або 0 - без "
 "налагодження"
 
-#: gst/gst.c:171
+#: gst/gst.c:169
 msgid "LEVEL"
 msgstr "РІВЕНЬ"
 
-#: gst/gst.c:173
+#: gst/gst.c:171
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -48,31 +48,31 @@ msgstr ""
 "Перелік розділених комою пар \"назва_категорії:рівень\" для встановлення "
 "певних рівнів окремим категоріям. Наприклад: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:176
+#: gst/gst.c:174
 msgid "LIST"
 msgstr "ПЕРЕЛІК"
 
-#: gst/gst.c:178
+#: gst/gst.c:176
 msgid "Disable colored debugging output"
 msgstr "Вимкнути оформлення кольором налагоджувальних повідомлень"
 
-#: gst/gst.c:180
+#: gst/gst.c:178
 msgid "Disable debugging"
 msgstr "Вимкнути налагодження"
 
-#: gst/gst.c:184
+#: gst/gst.c:182
 msgid "Disable accelerated CPU instructions"
 msgstr "Вимкнути прискорені інструкції процесора"
 
-#: gst/gst.c:186
+#: gst/gst.c:184
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Вимкнути докладну діагностику завантаження модулів"
 
-#: gst/gst.c:188
+#: gst/gst.c:186
 msgid "PATHS"
 msgstr "ШЛЯХИ"
 
-#: gst/gst.c:191
+#: gst/gst.c:189
 #, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -81,32 +81,32 @@ msgstr ""
 "Перелік розділених комою назв модулів, додаткових до переліку, що "
 "зберігається у змінній оточення GST_PLUGIN_PATH"
 
-#: gst/gst.c:193
+#: gst/gst.c:191
 msgid "PLUGINS"
 msgstr "МОДУЛІ"
 
-#: gst/gst.c:196
+#: gst/gst.c:194
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Вимкнути перехоплення помилок сегментації при завантаженні модулів"
 
-#: gst/gst.c:199
+#: gst/gst.c:197
 msgid "SCHEDULER"
 msgstr "ПЛАНУВАЛЬНИК"
 
-#: gst/gst.c:201
+#: gst/gst.c:199
 msgid "Registry to use"
 msgstr "Реєстр, що використовується"
 
-#: gst/gst.c:201
+#: gst/gst.c:199
 msgid "REGISTRY"
 msgstr "РЕЄСТР"
 
-#: gst/gst.c:214
+#: gst/gst.c:212
 #, c-format
 msgid "path list for loading plugins (separated by '%s')"
 msgstr "перелік шляхів у яких шукаються модулі (розділюються символом '%s')"
 
-#: gst/gst.c:218
+#: gst/gst.c:216
 #, c-format
 msgid "Scheduler to use (default is '%s')"
 msgstr "Планувальник, що використовується (типовий '%s')"
@@ -616,21 +616,21 @@ msgstr "Помилка закривання файлу \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Помилка при записуванні у файл \"%s\"."
 
-#: gst/elements/gstfilesrc.c:764 gst/elements/gstmultifilesrc.c:298
+#: gst/elements/gstfilesrc.c:765 gst/elements/gstmultifilesrc.c:298
 msgid "No file name specified for reading."
 msgstr "Не вказана назва файлу для читання."
 
-#: gst/elements/gstfilesrc.c:779 gst/elements/gstmultifilesrc.c:306
+#: gst/elements/gstfilesrc.c:780 gst/elements/gstmultifilesrc.c:306
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не вдається відкрити файл \"%s\" для читання."
 
-#: gst/elements/gstfilesrc.c:790
+#: gst/elements/gstfilesrc.c:791
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" є каталогом."
 
-#: gst/elements/gstfilesrc.c:796
+#: gst/elements/gstfilesrc.c:797
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Файл \"%s\" є сокетом."
@@ -656,194 +656,194 @@ msgstr "мінімум"
 msgid "maximum"
 msgstr "максимум"
 
-#: gst/parse/grammar.y:187
+#: gst/parse/grammar.y:188
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "вказаний порожній контейнер \"%s\", не допускається"
 
-#: gst/parse/grammar.y:192
+#: gst/parse/grammar.y:193
 #, c-format
 msgid "no bin \"%s\", skipping"
 msgstr "немає контейнера \"%s\", пропускається"
 
-#: gst/parse/grammar.y:264
+#: gst/parse/grammar.y:270
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "немає властивості \"%s\" у елементі \"%s\""
 
-#: gst/parse/grammar.y:277
+#: gst/parse/grammar.y:283
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr ""
 "не вдається встановити властивість \"%s\" у елементі \"%s\" у значення \"%s\""
 
-#: gst/parse/grammar.y:462
+#: gst/parse/grammar.y:468
 #, c-format
 msgid "could not link %s to %s"
 msgstr "не вдається прив'язати %s до %s"
 
-#: gst/parse/grammar.y:507
+#: gst/parse/grammar.y:513
 #, c-format
 msgid "no element \"%s\""
 msgstr "немає елементу \"%s\""
 
-#: gst/parse/grammar.y:558
+#: gst/parse/grammar.y:564
 #, fuzzy, c-format
 msgid "could not parse capabilities \"%s\""
 msgstr "не вдається проаналізувати можливості \"%s\""
 
-#: gst/parse/grammar.y:580 gst/parse/grammar.y:628 gst/parse/grammar.y:644
-#: gst/parse/grammar.y:702
+#: gst/parse/grammar.y:586 gst/parse/grammar.y:634 gst/parse/grammar.y:650
+#: gst/parse/grammar.y:708
 msgid "link without source element"
 msgstr "зв'язок без елемента-джерела"
 
-#: gst/parse/grammar.y:586 gst/parse/grammar.y:625 gst/parse/grammar.y:711
+#: gst/parse/grammar.y:592 gst/parse/grammar.y:631 gst/parse/grammar.y:717
 msgid "link without sink element"
 msgstr "зв'язок без елемента-споживача"
 
-#: gst/parse/grammar.y:662
+#: gst/parse/grammar.y:668
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "відсутній елемент-джерело для URI \"%s\""
 
-#: gst/parse/grammar.y:672
+#: gst/parse/grammar.y:678
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "відсутній елемент для зв'язку URI \"%s\" до"
 
-#: gst/parse/grammar.y:680
+#: gst/parse/grammar.y:686
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "відсутній елемент-споживач для URI \"%s\""
 
-#: gst/parse/grammar.y:684
+#: gst/parse/grammar.y:690
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "не вдається прив'язати елемент-споживач для URI \"%s\""
 
-#: gst/parse/grammar.y:696
+#: gst/parse/grammar.y:702
 msgid "empty pipeline not allowed"
 msgstr "порожній канал не допускається"
 
-#: tools/gst-inspect.c:1151
+#: tools/gst-inspect.c:1164
 msgid "Print all elements"
 msgstr "Вивести усі елементи"
 
-#: tools/gst-launch.c:114
+#: tools/gst-launch.c:110
 #, c-format
 msgid ""
 "Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
 "max %s ns).\n"
 msgstr ""
 
-#: tools/gst-launch.c:141
+#: tools/gst-launch.c:137
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 msgstr ""
 "Використання: gst-xmllaunch <file.xml> [ елемент.властивість=значення ... ]\n"
 
-#: tools/gst-launch.c:149
+#: tools/gst-launch.c:145
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
 msgstr "ПОМИЛКА: помилка при аналізі xml файлу \"%s\".\n"
 
-#: tools/gst-launch.c:155
+#: tools/gst-launch.c:151
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "ПОМИЛКА: немає верхнього елементу каналу у файлі \"%s\".\n"
 
-#: tools/gst-launch.c:162
+#: tools/gst-launch.c:158
 #, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr "ПОПЕРЕДЖЕННЯ: наразі підтримується лише один верхній елемент."
 
-#: tools/gst-launch.c:173
+#: tools/gst-launch.c:169
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
 msgstr ""
 "ПОМИЛКА: не вдається проаналізувати аргумент командного рядка %d: %s.\n"
 
-#: tools/gst-launch.c:184
+#: tools/gst-launch.c:180
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "ПОПЕРЕДЖЕННЯ: елемент з назвою \"%s\" не існує.\n"
 
-#: tools/gst-launch.c:327
+#: tools/gst-launch.c:323
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "ЗНАЙДЕНО ТЕГ  : знайдено у елементі \"%s\".\n"
 
-#: tools/gst-launch.c:412
+#: tools/gst-launch.c:409
 msgid "Output tags (also known as metadata)"
 msgstr "Вивести теги (також відомі як метадані)"
 
-#: tools/gst-launch.c:414
+#: tools/gst-launch.c:411
 msgid "Output status information and property notifications"
 msgstr "Вивести інформацію про статус та сповіщення властивостей"
 
-#: tools/gst-launch.c:416
+#: tools/gst-launch.c:413
 msgid "Do not output status information of TYPE"
 msgstr "Не виводити інформацію про статус типу ТИП"
 
-#: tools/gst-launch.c:416
+#: tools/gst-launch.c:413
 msgid "TYPE1,TYPE2,..."
 msgstr "ТИП1,ТИП2,..."
 
-#: tools/gst-launch.c:419
+#: tools/gst-launch.c:416
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Зберегти xml представлення каналу у файл ФАЙЛ та завершитись"
 
-#: tools/gst-launch.c:419
+#: tools/gst-launch.c:416
 msgid "FILE"
 msgstr "ФАЙЛ"
 
-#: tools/gst-launch.c:422
+#: tools/gst-launch.c:419
 msgid "Do not install a fault handler"
 msgstr "Не встановлювати обробник збоїв"
 
-#: tools/gst-launch.c:424
+#: tools/gst-launch.c:421
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Вивести трасу розподілу (якщо ввімкнено при компіляції)"
 
-#: tools/gst-launch.c:426
+#: tools/gst-launch.c:423
 msgid "Number of times to iterate pipeline"
 msgstr "Кількість ітерацій каналу"
 
-#: tools/gst-launch.c:496
+#: tools/gst-launch.c:494
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ПОМИЛКА: канал не може бути сконструйований: %s.\n"
 
-#: tools/gst-launch.c:500
+#: tools/gst-launch.c:498
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ПОМИЛКА: канал не може бути сконструйований.\n"
 
-#: tools/gst-launch.c:504
+#: tools/gst-launch.c:502
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "ПОПЕРЕДЖЕННЯ: помилковий канал: %s\n"
 
-#: tools/gst-launch.c:505
+#: tools/gst-launch.c:503
 #, c-format
 msgid "         Trying to run anyway.\n"
 msgstr "         Спроба запуститись у будь-якому разі.\n"
 
-#: tools/gst-launch.c:532
+#: tools/gst-launch.c:530
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ПОМИЛКА: не знайдений елемент \"pipeline\".\n"
 
-#: tools/gst-launch.c:539
+#: tools/gst-launch.c:537
 #, c-format
 msgid "RUNNING pipeline ...\n"
 msgstr "ЗАПУСКАЄТЬСЯ канал ...\n"
 
-#: tools/gst-launch.c:542
+#: tools/gst-launch.c:540
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ПОМИЛКА: канал не може почати відтворення.\n"
 
-#: tools/gst-register.c:49
+#: tools/gst-register.c:43
 #, fuzzy, c-format
 msgid "Added plugin %s with %d feature.\n"
 msgid_plural "Added plugin %s with %d features.\n"
@@ -851,33 +851,37 @@ msgstr[0] "Додано модуль %s з %d %s.\n"
 msgstr[1] "Додано модуль %s з %d %s.\n"
 msgstr[2] "Додано модуль %s з %d %s.\n"
 
-#: tools/gst-register.c:112
+#: tools/gst-register.c:111
 #, c-format
 msgid "Added path   %s to %s \n"
 msgstr "Додано шлях %s до %s \n"
 
-#: tools/gst-register.c:127
+#: tools/gst-register.c:126
 #, c-format
 msgid "Rebuilding %s (%s) ...\n"
 msgstr "Перебудовується %s (%s) ...\n"
 
-#: tools/gst-register.c:132
+#: tools/gst-register.c:131
 #, c-format
 msgid "Trying to load %s ...\n"
 msgstr "Спроба завантажити %s ...\n"
 
-#: tools/gst-register.c:134
+#: tools/gst-register.c:133
 #, c-format
 msgid "Error loading %s\n"
 msgstr "Помилка при завантаженні %s\n"
 
-#: tools/gst-register.c:168
+#: tools/gst-register.c:167
 #, fuzzy, c-format
 msgid "Loaded %d plugins with %d feature.\n"
 msgid_plural "Loaded %d plugins with %d features.\n"
 msgstr[0] "Завантажено %d модулів з %d %s.\n"
 msgstr[1] "Завантажено %d модулів з %d %s.\n"
 msgstr[2] "Завантажено %d модулів з %d %s.\n"
+
+#: tools/tools.h:44
+msgid "print version information and exit"
+msgstr ""
 
 #~ msgid "caps"
 #~ msgstr "можливості"
