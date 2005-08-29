@@ -48,13 +48,12 @@ Freedesktop.org, You will then have to provide them with:
 If you do not have this yet, you can generate it by running
 "ssh-keygen -t dsa".  The resulting public key
 will be in <filename>.ssh/id_dsa.pub</filename></para></listitem>
-<listitem><para>(optionally) your GPG fingerprint.  This would allow you to
+<listitem><para>your GPG fingerprint.  This would allow you to
 add and remove ssh keys to your account.
 </para></listitem>
 </orderedlist>
 
-MAKE SURE you ATTACH these files to your mail, not paste them, because
-then the output is useless.
+Once you have all these items, see <ulink url="http://freedesktop.org/wiki/AccountRequests">http://freedesktop.org/wiki/AccountRequests</ulink> for what to do with them.
         </para>
       </answer>
     </qandaentry>
