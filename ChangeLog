@@ -1,3 +1,9 @@
+2005-08-30  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/volume/gstvolume.c: (gst_volume_class_init),
+	(volume_transform):
+          do not update controlled params, if buffer has no timestamp
+
 2005-08-29  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:
