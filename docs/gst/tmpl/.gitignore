@@ -21,5 +21,6 @@ gstmessage.sgml
 gstminiobject.sgml
 gstprobe.sgml
 gstpushsrc.sgml
+gstquery.sgml
 gsttask.sgml
 gstxmlregistry.sgml

@@ -34,24 +34,49 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstQueryType:
+ * @GST_QUERY_NONE: invalid query type
+ * @GST_QUERY_POSITION: current/end position in stream
+ * @GST_QUERY_LATENCY: latency of stream
+ * @GST_QUERY_JITTER: current jitter of stream
+ * @GST_QUERY_RATE: current rate of the stream
+ * @GST_QUERY_SEEKING: seeking start/stop positions
+ * @GST_QUERY_CONVERT: convert values
+ * @GST_QUERY_FORMATS: query supported formats for convert
+ *
+ * Standard predefined Query types
+ */
 typedef enum {
   GST_QUERY_NONE = 0,
-  GST_QUERY_POSITION,	/* get current/end position */
-  GST_QUERY_LATENCY,	/* get current latency */
+  GST_QUERY_POSITION,
+  GST_QUERY_LATENCY,
   GST_QUERY_JITTER, 	/* not in draft-query, necessary? */
-  GST_QUERY_RATE, 	/* get current playback rate */
-  GST_QUERY_SEEKING,	/* get seeking start/stop positions */
-  GST_QUERY_CONVERT,	/* convert values */
-  GST_QUERY_FORMATS	/* query supported formats for convert */
+  GST_QUERY_RATE,
+  GST_QUERY_SEEKING,
+  GST_QUERY_CONVERT,
+  GST_QUERY_FORMATS
 } GstQueryType;
 
-/* rate is relative to 1000000  */
+/**
+ * GST_QUERY_TYPE_RATE_DEN:
+ *
+ * Rates are relative to this value
+ */
 #define GST_QUERY_TYPE_RATE_DEN          G_GINT64_CONSTANT (1000000)
 
 typedef struct _GstQueryTypeDefinition GstQueryTypeDefinition;
 typedef struct _GstQuery GstQuery;
 typedef struct _GstQueryClass GstQueryClass;
 
+/**
+ * GstQueryTypeDefinition:
+ * @value: the unique id of the Query type
+ * @nick: a short nick
+ * @description: a longer description of the query type
+ *
+ * A Query Type definition
+ */
 struct _GstQueryTypeDefinition
 {
   GstQueryType   value;
@@ -101,6 +126,7 @@ gboolean        gst_query_types_contains       (const GstQueryType *types,
                                                 GstQueryType type);
 
 /* query for query details */
+
 G_CONST_RETURN GstQueryTypeDefinition*      
                 gst_query_type_get_details         (GstQueryType type);
 GstIterator*    gst_query_type_iterate_definitions (void);

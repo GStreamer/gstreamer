@@ -20,7 +20,16 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+/**
+ * SECTION:gstquery
+ * @short_description: Dynamically register new query types and parse results
+ * @see_also: #GstPad, #GstElement
+ *
+ * GstQuery functions are used to register a new query types to the gstreamer core. 
+ * Query types can be used to perform queries on pads and elements.
+ *
+ * Query answer can be parsed using gst_query_parse_xxx() helpers.
+ */
 #include <string.h>
 
 #include "gst_private.h"
@@ -316,6 +325,15 @@ gst_query_new (GstQueryType type, GstStructure * structure)
   return query;
 }
 
+/**
+ * gst_query_new_position:
+ * @format: the default #GstFormat for the new query
+ *
+ * Constructs a new query stream position query object. Use gst_query_unref()
+ * when done with it.
+ *
+ * Returns: A new #GstQuery
+ */
 GstQuery *
 gst_query_new_position (GstFormat format)
 {
@@ -331,6 +349,15 @@ gst_query_new_position (GstFormat format)
   return query;
 }
 
+/**
+ * gst_query_set_position:
+ * @query: the query to fill in
+ * @format: the requested #GstFormat
+ * @cur: the current position
+ * @end: the end position
+ *
+ * Answer a position query by setting the requested values.
+ */
 void
 gst_query_set_position (GstQuery * query, GstFormat format,
     gint64 cur, gint64 end)
@@ -345,6 +372,16 @@ gst_query_set_position (GstQuery * query, GstFormat format,
       "cur", G_TYPE_INT64, cur, "end", G_TYPE_INT64, end, NULL);
 }
 
+/**
+ * gst_query_parse_position:
+ * @query: the query to fill in
+ * @format: the requested #GstFormat or NULL for the default (used when creating
+ * the query)
+ * @cur: the storage for the current position
+ * @end: the storage for the end position
+ *
+ * Parse a position query answer.
+ */
 void
 gst_query_parse_position (GstQuery * query, GstFormat * format,
     gint64 * cur, gint64 * end)

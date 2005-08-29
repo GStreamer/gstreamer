@@ -56,9 +56,13 @@ various utility functions
 @\
     parent_type_as_macro:
 @\
+    parent_type_as_macro:
+@\
     parent_type_as_macro: 
 @interface_type: 
 @interface_type_as_macro: 
+@\
+    interface_as_function:
 @\
     interface_as_function:
 @\

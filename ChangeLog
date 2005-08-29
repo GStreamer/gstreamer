@@ -1,5 +1,14 @@
 2005-08-30  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/gst/tmpl/.cvsignore:
+	* docs/gst/tmpl/gstquery.sgml:
+	* docs/gst/tmpl/gstutils.sgml:
+	* gst/gstquery.c:
+	* gst/gstquery.h:
+          inlined and extended docs
+
+2005-08-30  Stefan Kost  <ensonic@users.sf.net>
+
 	* check/gst-libs/controller.c: (GST_START_TEST),
 	(gst_controller_suite):
           more tests
