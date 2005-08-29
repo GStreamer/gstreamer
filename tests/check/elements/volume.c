@@ -117,7 +117,7 @@ GST_START_TEST (test_unity)
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
   /* ... but it ends up being collected on the global buffer list */
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
-  fail_unless (g_list_length (buffers) == 1);
+  fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   fail_unless (memcmp (GST_BUFFER_DATA (inbuffer), in, 4) == 0);
@@ -156,7 +156,7 @@ GST_START_TEST (test_half)
   /* ... but it ends up being modified inplace and
    * collected on the global buffer list */
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
-  fail_unless (g_list_length (buffers) == 1);
+  fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, 4) == 0);
@@ -195,7 +195,7 @@ GST_START_TEST (test_double)
   /* ... but it ends up being modified inplace and
    * collected on the global buffer list */
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
-  fail_unless (g_list_length (buffers) == 1);
+  fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, 4) == 0);
