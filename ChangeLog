@@ -1,5 +1,8 @@
 2005-08-29  Andy Wingo  <wingo@pobox.com>
 
+	* ext/vorbis/vorbisdec.c (vorbis_dec_convert, vorbis_dec_push) 
+	(vorbis_handle_data_packet): Fix some int overflow errors.
+
 	* ext/ogg/gstoggdemux.c (gst_ogg_demux_init): Init total_time to
 	-1.
 	(gst_ogg_demux_perform_seek): Clamp segment_stop only if it's

@@ -234,7 +234,8 @@ vorbis_dec_convert (GstPad * pad,
           *dest_value = src_value * sizeof (float) * dec->vi.channels;
           break;
         case GST_FORMAT_TIME:
-          *dest_value = src_value * GST_SECOND / dec->vi.rate;
+          *dest_value =
+              gst_util_uint64_scale (src_value, GST_SECOND, dec->vi.rate);
           break;
         default:
           res = FALSE;
@@ -246,8 +247,8 @@ vorbis_dec_convert (GstPad * pad,
           *dest_value = src_value / (sizeof (float) * dec->vi.channels);
           break;
         case GST_FORMAT_TIME:
-          *dest_value = src_value * GST_SECOND /
-              (dec->vi.rate * sizeof (float) * dec->vi.channels);
+          *dest_value = gst_util_uint64_scale (src_value, GST_SECOND,
+              dec->vi.rate * sizeof (float) * dec->vi.channels);
           break;
         default:
           res = FALSE;
@@ -711,7 +712,8 @@ vorbis_dec_push (GstVorbisDec * dec, GstBuffer * buf)
             GST_BUFFER_SIZE (buffer) / (sizeof (float) * dec->vi.channels);
 
         GST_BUFFER_OFFSET (buffer) = outoffset;
-        GST_BUFFER_TIMESTAMP (buffer) = outoffset * GST_SECOND / dec->vi.rate;;
+        GST_BUFFER_TIMESTAMP (buffer) =
+            gst_util_uint64_scale (outoffset, GST_SECOND, dec->vi.rate);
         GST_DEBUG_OBJECT (dec, "patch buffer %" G_GUINT64_FORMAT
             " offset %" G_GUINT64_FORMAT, size, outoffset);
         size--;
@@ -764,7 +766,8 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
       GST_BUFFER_OFFSET (out) = vd->granulepos;
       if (vd->granulepos != -1) {
         GST_BUFFER_OFFSET_END (out) = vd->granulepos + sample_count;
-        GST_BUFFER_TIMESTAMP (out) = vd->granulepos * GST_SECOND / vd->vi.rate;
+        GST_BUFFER_TIMESTAMP (out) =
+            gst_util_uint64_scale (vd->granulepos, GST_SECOND, vd->vi.rate);
       } else {
         GST_BUFFER_TIMESTAMP (out) = -1;
       }
