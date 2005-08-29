@@ -26,6 +26,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/controller/gst-controller.h>
 
 #include "gst/gst-i18n-app.h"
 
@@ -264,6 +265,7 @@ print_element_properties_info (GstElement * element)
   GParamSpec **property_specs;
   guint num_properties, i;
   gboolean readable;
+  gboolean first_flag;
 
   property_specs = g_object_class_list_properties
       (G_OBJECT_GET_CLASS (element), &num_properties);
@@ -277,13 +279,27 @@ print_element_properties_info (GstElement * element)
     readable = FALSE;
 
     g_value_init (&value, param->value_type);
-    if (param->flags & G_PARAM_READABLE) {
-      g_object_get_property (G_OBJECT (element), param->name, &value);
-      readable = TRUE;
-    }
 
     n_print ("  %-20s: %s\n", g_param_spec_get_name (param),
         g_param_spec_get_blurb (param));
+
+    first_flag = TRUE;
+    n_print ("%-23.23s flags:. ", "");
+    if (param->flags & G_PARAM_READABLE) {
+      g_object_get_property (G_OBJECT (element), param->name, &value);
+      readable = TRUE;
+      g_print ((first_flag ? "readable" : ", readble"));
+      first_flag = FALSE;
+    }
+    if (param->flags & G_PARAM_WRITABLE) {
+      g_print ((first_flag ? "writable" : ", writable"));
+      first_flag = FALSE;
+    }
+    if (param->flags & GST_PARAM_CONTROLLABLE) {
+      g_print ((first_flag ? "controllable" : ", controllable"));
+      first_flag = FALSE;
+    }
+    n_print ("\n");
 
     switch (G_VALUE_TYPE (&value)) {
       case G_TYPE_STRING:

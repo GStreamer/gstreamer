@@ -50,6 +50,34 @@ network connections also need a protocol to do this.
 @GST_DP_PAYLOAD_CAPS: 
 @GST_DP_PAYLOAD_EVENT_NONE: 
 
+<!-- ##### MACRO GST_DP_HEADER_LENGTH ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DP_VERSION_MAJOR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DP_VERSION_MINOR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_dp_init ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### FUNCTION gst_dp_header_payload_length ##### -->
 <para>
 

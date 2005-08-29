@@ -15,7 +15,7 @@
 
 <SECTION>
 <FILE>gstgetbits</FILE>
-<INCLUDE>libs/getbits/gstgetbits.h</INCLUDE>
+<INCLUDE>gst/getbits/gstgetbits.h</INCLUDE>
 gst_getbits_t
 GstGetbitsCallback
 gst_getbits_init
@@ -94,7 +94,7 @@ swab32
 
 <SECTION>
 <FILE>gstdataprotocol</FILE>
-<INCLUDE>libs/dataprotocol/dataprotocol.h</INCLUDE>
+<INCLUDE>gst/dataprotocol/dataprotocol.h</INCLUDE>
 GstDPHeaderFlag
 GstDPPayloadType
 
@@ -124,7 +124,7 @@ gst_dp_validate_packet
 <SECTION>
 <FILE>gstcontroller</FILE>
 <TITLE>GstController</TITLE>
-<INCLUDE>libs/controller/gstcontroller.h</INCLUDE>
+<INCLUDE>gst/controller/gstcontroller.h</INCLUDE>
 GstController
 GstValueArray
 GstInterpolateMode

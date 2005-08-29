@@ -133,7 +133,7 @@ G_STMT_START { 						\
  * GST_TIMESPEC_TO_TIME:
  * @ts: the timespec to convert
  *
- * Convert a GstTimeSpec to a GstClockTime
+ * Convert a struct timespec (see man pselect) to a GstClockTime
  *
  * Returns: the result as #GstClockTime
  */
@@ -143,7 +143,7 @@ G_STMT_START { 						\
  * @t: The GstClockTime to convert
  * @ts: The target timespec
  *
- * Convert a GstClockTime to a GstTimeSpec
+ * Convert a GstClockTime to a struct timespec (see man pselect)
  */
 #define GST_TIME_TO_TIMESPEC(t,ts)			\
 G_STMT_START { 						\

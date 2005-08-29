@@ -181,7 +181,7 @@ GST_PLUGIN_DEFINE_STATIC (GST_VERSION_MAJOR,
 GST_END_TEST;
 
 /* tests for an element with no controlled params */
-GST_START_TEST (controller_new_fail)
+GST_START_TEST (controller_new_fail1)
 {
   GstController *ctrl;
   GstElement *elem;
@@ -190,6 +190,23 @@ GST_START_TEST (controller_new_fail)
 
   /* that property should not exist */
   ctrl = gst_controller_new (G_OBJECT (elem), "_schrompf_", NULL);
+  fail_unless (ctrl == NULL, NULL);
+
+  g_object_unref (elem);
+}
+
+GST_END_TEST;
+
+/* tests for an element with controlled params, but none given */
+GST_START_TEST (controller_new_fail2)
+{
+  GstController *ctrl;
+  GstElement *elem;
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* no property given */
+  ctrl = gst_controller_new (G_OBJECT (elem), NULL);
   fail_unless (ctrl == NULL, NULL);
 
   g_object_unref (elem);
@@ -215,8 +232,26 @@ GST_START_TEST (controller_new_okay1)
 
 GST_END_TEST;
 
-/* controlling several params should return the same controller */
+/* tests for an element with several controlled params */
 GST_START_TEST (controller_new_okay2)
+{
+  GstController *ctrl;
+  GstElement *elem;
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and should be controllable */
+  ctrl = gst_controller_new (G_OBJECT (elem), "ulong", "double", NULL);
+  fail_unless (ctrl != NULL, NULL);
+
+  g_object_unref (ctrl);
+  g_object_unref (elem);
+}
+
+GST_END_TEST;
+
+/* controlling several params should return the same controller */
+GST_START_TEST (controller_new_okay3)
 {
   GstController *ctrl1, *ctrl2;
   GstElement *elem;
@@ -356,9 +391,11 @@ gst_controller_suite (void)
 
   suite_add_tcase (s, tc);
   tcase_add_test (tc, controller_init);
-  tcase_add_test (tc, controller_new_fail);
+  tcase_add_test (tc, controller_new_fail1);
+  tcase_add_test (tc, controller_new_fail2);
   tcase_add_test (tc, controller_new_okay1);
   tcase_add_test (tc, controller_new_okay2);
+  tcase_add_test (tc, controller_new_okay3);
   tcase_add_test (tc, controller_param_twice);
   tcase_add_test (tc, controller_finalize);
   tcase_add_test (tc, controller_interpolate_none);
