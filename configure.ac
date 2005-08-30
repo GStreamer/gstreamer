@@ -33,7 +33,7 @@ AS_LIBTOOL_TAGS([CXX])
 AM_PROG_LIBTOOL
 
 dnl FIXME take something else ?
-AC_CONFIG_SRCDIR([gst/law/alaw.c])
+AC_CONFIG_SRCDIR([gst/librfb/gstrfbsrc.c])
 AM_CONFIG_HEADER(config.h)
 
 dnl Add parameters for aclocal
@@ -289,13 +289,10 @@ GST_PLUGINS_ALL="\
 		qtdemux \
 		realmedia \
 		silence \
-<<<<<<< configure.ac
-=======
 		udp     \
 		videobox \
 		wavenc \
 		wavparse \
->>>>>>> 1.580
 		mpegaudioparse \
                 "
 
