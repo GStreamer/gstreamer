@@ -71,7 +71,8 @@ typedef GstBusSyncReply (*GstBusSyncHandler) 	(GstBus * bus, GstMessage * messag
  * @data: user data that has been given, when registering the handler
  *
  * Handler will be invoked asynchronously, after a new message has been injected
- * into the bus.
+ * into the bus. Return %TRUE if the message has been handled. It will then be
+ * taken from the bus and _unref()'ed.
  *
  * Returns: %TRUE if message should be taken from the bus
  */

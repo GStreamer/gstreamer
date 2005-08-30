@@ -19,10 +19,13 @@ gstfakesrc.sgml
 gstfakesink.sgml
 gstfilesrc.sgml
 gstfilesink.sgml
+gstformat.sgml
 gstmessage.sgml
 gstminiobject.sgml
 gstprobe.sgml
 gstpushsrc.sgml
 gstquery.sgml
 gsttask.sgml
+gstversion.sgml
 gstxmlregistry.sgml
+

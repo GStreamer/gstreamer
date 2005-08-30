@@ -31,6 +31,17 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstFormat:
+ * @GST_FORMAT_UNDEFINED: undefined format
+ * @GST_FORMAT_DEFAULT: the default format of the pad/element
+ * @GST_FORMAT_BYTES: bytes
+ * @GST_FORMAT_TIME: time in nanoseconds
+ * @GST_FORMAT_BUFFERS: buffers
+ * @GST_FORMAT_PERCENT: percentage of stream
+ *
+ * Standard predefined formats
+ */
 typedef enum {
   GST_FORMAT_UNDEFINED 	=  0, /* must be first in list */
   GST_FORMAT_DEFAULT   	=  1, /* samples for audio, frames/fields for video */
@@ -41,11 +52,30 @@ typedef enum {
 } GstFormat;
 
 /* a percentage is always relative to 1000000 */
+/**
+ * GST_FORMAT_PERCENT_MAX:
+ *
+ * The PERCENT format is between 0 and this value
+ */
 #define	GST_FORMAT_PERCENT_MAX		G_GINT64_CONSTANT (1000000)
+/**
+ * GST_FORMAT_PERCENT_SCALE:
+ *
+ * The value used to scale down the reported PERCENT format value to
+ * its real value.
+ */
 #define	GST_FORMAT_PERCENT_SCALE	G_GINT64_CONSTANT (10000)
 
 typedef struct _GstFormatDefinition GstFormatDefinition;
 
+/**
+ * GstFormatDefinition:
+ * @value: The unique id of this format
+ * @nick: A short nick of the format
+ * @description: A longer description of the format
+ *
+ * A format definition
+ */
 struct _GstFormatDefinition 
 {
   GstFormat  value;

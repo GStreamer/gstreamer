@@ -1,3 +1,14 @@
+2005-08-30  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/tmpl/.cvsignore:
+	* docs/gst/tmpl/gstformat.sgml:
+	* docs/gst/tmpl/gstversion.sgml:
+	* gst/gstbus.h:
+	* gst/gstformat.c:
+	* gst/gstformat.h:
+	* gst/gstversion.h.in:
+          more docs and two more inlined
+
 2005-08-30  Wim Taymans  <wim@fluendo.com>
 
 	* gst/elements/gstfilesink.c: (gst_file_sink_class_init):
