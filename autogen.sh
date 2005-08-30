@@ -3,7 +3,7 @@
 
 DIE=0
 package=gst-plugins
-srcfile=gst/law/alaw.c
+srcfile=gst/librfb/gstrfbsrc.c
 
 # a quick cvs co if necessary to alleviate the pain - may remove this
 # when developers get a clue ;)
