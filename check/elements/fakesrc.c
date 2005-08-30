@@ -59,6 +59,7 @@ setup_fakesrc ()
   fakesrc = gst_check_setup_element ("fakesrc");
   mysinkpad = gst_check_setup_sink_pad (fakesrc, &sinktemplate, NULL);
   gst_pad_set_event_function (mysinkpad, event_func);
+  gst_pad_set_active (mysinkpad, TRUE);
   return fakesrc;
 }
 

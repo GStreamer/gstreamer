@@ -1,5 +1,11 @@
 2005-08-30  Wim Taymans  <wim@fluendo.com>
 
+	* check/elements/fakesrc.c: (setup_fakesrc):
+	* check/elements/identity.c: (setup_identity):
+	Activate pads before using them.
+
+2005-08-30  Wim Taymans  <wim@fluendo.com>
+
 	* gst/base/gstadapter.c: (gst_adapter_flush):
 	Flushing out 0 bytes is ok for this function.
 
