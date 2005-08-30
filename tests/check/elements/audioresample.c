@@ -75,6 +75,7 @@ setup_audioresample (int channels, int inrate, int outrate)
   gst_pad_set_caps (pad, caps);
   gst_object_unref (GST_OBJECT (pad));
   gst_caps_unref (caps);
+  gst_pad_set_active (mysrcpad, TRUE);
 
   caps = gst_caps_from_string (RESAMPLE_CAPS_TEMPLATE_STRING);
   structure = gst_caps_get_structure (caps, 0);
@@ -90,6 +91,7 @@ setup_audioresample (int channels, int inrate, int outrate)
   gst_pad_set_caps (pad, caps);
   gst_object_unref (GST_OBJECT (pad));
   gst_caps_unref (caps);
+  gst_pad_set_active (mysinkpad, TRUE);
 
   return audioresample;
 }

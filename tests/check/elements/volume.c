@@ -81,6 +81,9 @@ setup_volume ()
   volume = gst_check_setup_element ("volume");
   mysrcpad = gst_check_setup_src_pad (volume, &srctemplate, NULL);
   mysinkpad = gst_check_setup_sink_pad (volume, &sinktemplate, NULL);
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_pad_set_active (mysinkpad, TRUE);
+
   return volume;
 }
 

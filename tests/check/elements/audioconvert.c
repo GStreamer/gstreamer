@@ -98,6 +98,9 @@ setup_audioconvert (GstCaps * outcaps)
   fail_unless (gst_caps_is_fixed (outcaps));
   gst_caps_unref (outcaps);
 
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_pad_set_active (mysinkpad, TRUE);
+
   return audioconvert;
 }
 

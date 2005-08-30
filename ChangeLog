@@ -1,3 +1,10 @@
+2005-08-30  Wim Taymans  <wim@fluendo.com>
+
+	* check/elements/audioconvert.c: (setup_audioconvert):
+	* check/elements/audioresample.c: (setup_audioresample):
+	* check/elements/volume.c: (setup_volume):
+	Fix checks.
+
 2005-08-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* common/gtk-doc-plugins.mak:
