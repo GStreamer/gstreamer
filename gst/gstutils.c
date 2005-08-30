@@ -1272,6 +1272,8 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
   if (filter) {
     GstElement *capsfilter;
     GstObject *parent;
+    GstElementState state, pending;
+    GTimeVal tv;
 
     capsfilter = gst_element_factory_make ("capsfilter", NULL);
     if (!capsfilter) {
@@ -1282,12 +1284,20 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
     parent = gst_object_get_parent (GST_OBJECT (src));
     g_return_val_if_fail (GST_IS_BIN (parent), FALSE);
 
+    GST_TIME_TO_TIMEVAL (0, tv);
+    gst_element_get_state (GST_ELEMENT_CAST (parent), &state, &pending, &tv);
+
     if (!gst_bin_add (GST_BIN (parent), capsfilter)) {
       GST_ERROR ("Could not add capsfilter");
       gst_object_unref (capsfilter);
       gst_object_unref (parent);
       return FALSE;
     }
+
+    if (pending != GST_STATE_VOID_PENDING)
+      state = pending;
+
+    gst_element_set_state (capsfilter, state);
 
     gst_object_unref (parent);
 

@@ -1,3 +1,26 @@
+2005-08-30  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstadapter.c: (gst_adapter_flush):
+	Flushing out 0 bytes is ok for this function.
+
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object):
+	no newsegment gives a warning and sets the start/stop to 
+	invalid.
+
+	* gst/base/gstbasetransform.c: (gst_base_transform_change_state),
+	(gst_base_transform_set_passthrough):
+	Some debug info.
+
+	* gst/gstminiobject.c: (gst_mini_object_ref):
+	Check refcount here too.
+
+	* gst/gstpad.c: (gst_pad_init):
+	Pads are initially flushing and refusing data.
+
+	* gst/gstutils.c: (gst_element_link_pads_filtered):
+	When adding a capsfilter element make sure it has the
+	same state as the parent bin.
+
 2005-08-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/tmpl/.cvsignore:

@@ -247,7 +247,7 @@ gst_pad_init (GstPad * pad)
   pad->do_buffer_signals = 0;
   pad->do_event_signals = 0;
 
-  GST_PAD_UNSET_FLUSHING (pad);
+  GST_PAD_SET_FLUSHING (pad);
 
   pad->preroll_lock = g_mutex_new ();
   pad->preroll_cond = g_cond_new ();

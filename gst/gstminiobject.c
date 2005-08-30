@@ -190,6 +190,7 @@ GstMiniObject *
 gst_mini_object_ref (GstMiniObject * mini_object)
 {
   g_return_val_if_fail (mini_object != NULL, NULL);
+  g_return_val_if_fail (mini_object->refcount > 0, NULL);
 
 #ifdef DEBUG_REFCOUNT
   GST_CAT_LOG (GST_CAT_REFCOUNTING, "%p ref %d->%d",

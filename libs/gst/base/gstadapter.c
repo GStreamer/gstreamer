@@ -236,7 +236,7 @@ gst_adapter_flush (GstAdapter * adapter, guint flush)
   GstBuffer *cur;
 
   g_return_if_fail (GST_IS_ADAPTER (adapter));
-  g_return_if_fail (flush > 0);
+  g_return_if_fail (flush >= 0);
   g_return_if_fail (flush <= adapter->size);
 
   GST_LOG_OBJECT (adapter, "flushing %u bytes", flush);

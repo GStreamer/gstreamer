@@ -1046,6 +1046,7 @@ gst_base_transform_change_state (GstElement * element)
             GST_PAD_CAPS (trans->srcpad)) || trans->passthrough;
       else
         trans->in_place = trans->passthrough;
+      GST_DEBUG_OBJECT (trans, "in_place %d", trans->in_place);
       gst_caps_replace (&trans->cache_caps1, NULL);
       gst_caps_replace (&trans->cache_caps2, NULL);
       GST_UNLOCK (trans);
@@ -1089,6 +1090,8 @@ gst_base_transform_set_passthrough (GstBaseTransform * trans,
     gboolean passthrough)
 {
   g_return_if_fail (trans != NULL);
+
+  GST_DEBUG_OBJECT (trans, "setting passthrough %d", passthrough);
 
   GST_LOCK (trans);
   trans->passthrough = passthrough;

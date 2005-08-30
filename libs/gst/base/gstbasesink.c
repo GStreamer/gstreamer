@@ -483,13 +483,13 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
     GstBuffer *buf = GST_BUFFER (obj);
 
     if (!basesink->have_newsegment) {
-      GST_ELEMENT_ERROR (basesink, STREAM, STOPPED,
+      GST_ELEMENT_WARNING (basesink, STREAM, STOPPED,
           ("Received buffer without a new-segment. Cannot sync to clock."),
           ("Received buffer without a new-segment. Cannot sync to clock."));
       basesink->have_newsegment = TRUE;
       /* this means this sink will not be able to sync to the clock */
-      basesink->segment_start = 0;
-      basesink->segment_stop = 0;
+      basesink->segment_start = -1;
+      basesink->segment_stop = -1;
     }
 
     /* check if the buffer needs to be dropped */
