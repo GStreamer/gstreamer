@@ -289,10 +289,6 @@ GST_PLUGINS_ALL="\
 		qtdemux \
 		realmedia \
 		silence \
-		udp     \
-		videobox \
-		wavenc \
-		wavparse \
 		mpegaudioparse \
                 "
 
