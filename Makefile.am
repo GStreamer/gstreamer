@@ -21,6 +21,10 @@ EXTRA_DIST = \
 
 DISTCLEANFILES = _stdint.h
 
+noinst_HEADERS = \
+	gst-libs/gst/gettext.h \
+	gst-libs/gst/gst-i18n-plugin.h
+
 # check that no marshal or enumtypes files are included
 # this in turn ensures that distcheck fails for missing .list files which is currently
 # shadowed when the corresponding .c and .h files are included.
