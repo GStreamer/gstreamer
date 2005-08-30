@@ -4,10 +4,11 @@ GST_DOC_SCANOBJ = $(top_srcdir)/common/gstdoc-scangobj
 
 # The name of the module, e.g. 'glib'.
 #DOC_MODULE=gst-plugins-libs-@GST_MAJORMINOR@
-DOC_MODULE=gst-plugins-base-plugins
+MODULE=gst-plugins-base
+DOC_MODULE=$(MODULE)-plugins
 
 # for upload.mak
-DOC=gst-plugins-base-plugins
+DOC=$(MODULE)-plugins
 FORMATS=html
 html: html-build.stamp
 include $(srcdir)/../upload.mak
