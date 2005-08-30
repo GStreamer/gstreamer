@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+]>
+
+<book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
+  <bookinfo>
+    <title>GStreamer Good Plugins &GST_MAJORMINOR; Plugins Reference Manual</title>
+  </bookinfo>
+
+  <chapter>
+    <title>gst-plugins-good Elements</title>
+    <xi:include href="xml/element-level.xml" />
+  </chapter>
+
+  <chapter>
+    <title>gst-plugins-good Plugins</title>
+
+    <xi:include href="xml/plugin-1394.xml" />
+    <xi:include href="xml/plugin-aasink.xml" />
+    <xi:include href="xml/plugin-alaw.xml" />
+    <xi:include href="xml/plugin-alpha.xml" />
+    <xi:include href="xml/plugin-autodetect.xml" />
+    <xi:include href="xml/plugin-avi.xml" />
+    <xi:include href="xml/plugin-cacasink.xml" />
+    <xi:include href="xml/plugin-dv.xml" />
+    <xi:include href="xml/plugin-effectv.xml" />
+    <xi:include href="xml/plugin-esdsink.xml" />
+    <xi:include href="xml/plugin-fdsrc.xml" />
+    <xi:include href="xml/plugin-flac.xml" />
+    <xi:include href="xml/plugin-gconfelements.xml" />
+    <xi:include href="xml/plugin-goom.xml" />
+    <xi:include href="xml/plugin-gstcoreelements.xml" />
+    <xi:include href="xml/plugin-jpeg.xml" />
+    <xi:include href="xml/plugin-level.xml" />
+    <xi:include href="xml/plugin-mulaw.xml" />
+    <xi:include href="xml/plugin-ossaudio.xml" />
+    <xi:include href="xml/plugin-png.xml" />
+    <xi:include href="xml/plugin-rtp.xml" />
+    <xi:include href="xml/plugin-rtsp.xml" />
+    <xi:include href="xml/plugin-shout2send.xml" />
+    <xi:include href="xml/plugin-smpte.xml" />
+    <xi:include href="xml/plugin-speex.xml" />
+    <xi:include href="xml/plugin-udp.xml" />
+    <xi:include href="xml/plugin-videobox.xml" />
+    <xi:include href="xml/plugin-videoflip.xml" />
+    <xi:include href="xml/plugin-wavparse.xml" />
+  </chapter>
+</book>

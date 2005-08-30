@@ -1,0 +1,9 @@
+<SECTION>
+<FILE>element-level</FILE>
+GstLevel
+<TITLE>level</TITLE>
+<SUBSECTION Standard>
+GstLevelClass
+</SECTION>
+
+

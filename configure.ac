@@ -502,6 +502,12 @@ GST_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CFLAGS $G
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
 
+dnl ######################
+dnl # Checks for gtk-doc #
+dnl ######################
+
+GTK_DOC_CHECK([1.3])
+
 dnl ############################
 dnl # Set up some more defines #
 dnl ############################
@@ -587,6 +593,9 @@ common/Makefile
 common/m4/Makefile
 gconf/Makefile
 gconf/gstreamer.schemas
+docs/Makefile
+docs/plugins/Makefile
+docs/version.entities
 m4/Makefile
 gst-plugins-good.spec
 )

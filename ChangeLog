@@ -1,4 +1,13 @@
 2005-08-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.types:
+	  document elements and plugins.  Shazam !
+
+2005-08-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* split off gst-plugins-good from gst-plugins.  Old ChangeLog can
 	  be found under doc/random/ChangeLog-0.8
