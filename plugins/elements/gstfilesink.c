@@ -139,6 +139,7 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
 
   gobject_class->dispose = gst_file_sink_dispose;
 
+  gstbasesink_class->get_times = NULL;
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_file_sink_render);
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_file_sink_event);
 
