@@ -1,3 +1,8 @@
+2005-08-28  Flavio Oliveira  <flavio.oliveira@indt.org.br>
+
+	* gst/wavenc/gstwavenc.c: Ported to GStreamer 0.9.
+	Need to fix performance issues.
+
 2005-08-28  Andy Wingo  <wingo@pobox.com>
 
 	* Updates for two-arg init from GST_BOILERPLATE.

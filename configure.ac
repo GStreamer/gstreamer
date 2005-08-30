@@ -303,6 +303,7 @@ GST_PLUGINS_ALL="\
 		silence \
 		udp     \
 		videobox \
+		wavenc \
 		wavparse \
 		mpegaudioparse \
                 "
@@ -709,6 +710,7 @@ gst/videobox/Makefile
 gst/videofilter/Makefile
 ext/jpeg/Makefile
 gst/qtdemux/Makefile
+gst/wavenc/Makefile
 gst/wavparse/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
