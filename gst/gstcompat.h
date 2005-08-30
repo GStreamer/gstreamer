@@ -19,7 +19,14 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+/**
+ * SECTION:gstcompat
+ * @short_description: Deprecated API entries
+ *
+ * Please do not use these in new code.
+ * These symbols are only available by defining GST_DISABLE_DEPRECATED.
+ * This can be done in CFLAGS for compiling old code.
+ */
 
 /* API compatibility stuff */
 #ifndef __GSTCOMPAT_H__

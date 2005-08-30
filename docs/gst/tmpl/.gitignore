@@ -12,6 +12,8 @@ gstcaps.sgml
 gstcheck.sgml
 gstclock.sgml
 gstcollectpads.sgml
+gstcompat.sgml
+gstconfig.sgml
 gstevent.sgml
 gstfakesrc.sgml
 gstfakesink.sgml

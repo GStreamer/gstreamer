@@ -1,5 +1,49 @@
-/* This header interprets the various GST_* macros that are typically	*
- * provided by the gstreamer-config or gstreamer.pc files.		*/
+/* GStreamer
+ * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
+ *               2004,2005 Wim Taymans <wim@fluendo.com>
+ *
+ * gstconfig.h: GST_DISABLE_* macros for build configuration
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+/**
+ * SECTION:gstconfig
+ * @short_description: Build configuration options
+ *
+ * This describes the configuration options for GStreamer. When building 
+ * GStreamer there are a lot of parts (known internally as "subsystems" ) that can 
+ * be disabled for various reasons. The most common reasons are speed and size, 
+ * which is important because GStreamer is designed to run on embedded systems.
+ * 
+ * If a subsystem is disabled, most of this changes are done in an API compatible
+ * way, so you don't need to adapt your code in most cases. It is never done in an
+ * ABI compatible way though. So if you want to disable a suybsystem, you have to
+ * rebuild all programs depending on GStreamer, too.
+ * 
+ * If a subsystem is disabled in GStreamer, a value is defined in 
+ * &lt;gst/gst.h&gt;. You can check this if you do subsystem-specific stuff.
+ * <example>
+ * <title>Doing subsystem specific things</title>
+ * <programlisting>
+ * &hash;ifndef GST_DISABLE_GST_DEBUG
+ * // do stuff specific to the debugging subsystem
+ * &hash;endif // GST_DISABLE_GST_DEBUG
+ * </programlisting>
+ * </example>
+ */
 
 #ifndef __GST_CONFIG_H__
 #define __GST_CONFIG_H__

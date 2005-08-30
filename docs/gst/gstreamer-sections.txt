@@ -243,6 +243,7 @@ gst_caps_get_type
 <SECTION>
 <FILE>gstcheck</FILE>
 <TITLE>GstCheck</TITLE>
+<SUBSECTION Private>
 ASSERT_BUFFER_REFCOUNT
 ASSERT_CAPS_REFCOUNT
 ASSERT_CRITICAL
@@ -277,8 +278,6 @@ gst_check_setup_src_pad
 gst_check_teardown_element
 gst_check_teardown_sink_pad
 gst_check_teardown_src_pad
-
-<SUBSECTION Private>
 </SECTION>
 
 
@@ -2058,6 +2057,7 @@ gst_flow_get_name
 gst_print_element_args
 gst_print_pad_caps
 gst_util_dump_mem
+gst_util_uint64_scale
 gst_util_set_object_arg
 gst_util_set_value_from_string
 <SUBSECTION Private>

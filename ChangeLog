@@ -1,5 +1,17 @@
 2005-08-30  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/gst/gstreamer-sections.txt:
+          ultral33t func10ns deserve to appear in the docs actualy
+	* docs/gst/tmpl/.cvsignore:
+	* docs/gst/tmpl/gstcompat.sgml:
+	* docs/gst/tmpl/gstconfig.sgml:
+	* gst/check/gstcheck.c:
+	* gst/gstcompat.h:
+	* gst/gstconfig.h.in:
+          inlined more docs
+
+2005-08-30  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/gst/tmpl/.cvsignore:
 	* docs/gst/tmpl/gstquery.sgml:
 	* docs/gst/tmpl/gstutils.sgml:

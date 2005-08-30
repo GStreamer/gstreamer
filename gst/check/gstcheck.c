@@ -19,6 +19,13 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstcheck
+ * @short_description: Common code for GStreamer unittests
+ *
+ * These macros and functions are for internal use of the unittests found inside
+ * the 'check' directories of various GStreamer packages.
+ */
 
 #include "gstcheck.h"
 
