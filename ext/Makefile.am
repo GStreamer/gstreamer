@@ -4,12 +4,6 @@
 A52DEC_DIR=
 # endif
 
-if USE_AALIB
- AALIB_DIR=aalib
-else
- AALIB_DIR=
-endif
-
 if USE_AMRNB
  AMRNB_DIR=amrnb
 else
@@ -38,12 +32,6 @@ AUDIOFILE_DIR=
 # AUDIORESAMPLE_DIR=audioresample
 # else
 AUDIORESAMPLE_DIR=
-# endif
-
-# if USE_CAIRO
-# CAIRO_DIR=cairo
-# else
-CAIRO_DIR=
 # endif
 
 # if USE_CDAUDIO
@@ -94,12 +82,6 @@ DVDREAD_DIR=
 DVDNAV_DIR=
 # endif
 
-if USE_ESD
-ESD_DIR=esd
-else
-ESD_DIR=
-endif
-
 # if USE_FAAC
 # FAAC_DIR=faac
 # else
@@ -117,30 +99,6 @@ endif
 ## else
 ## FESTIVAL_DIR=
 ## endif
-
-if USE_FLAC
-FLAC_DIR=flac
-else
-FLAC_DIR=
-endif
-
-if USE_GCONF
-GCONF_DIR=gconf
-else
-GCONF_DIR=
-endif
-
-# if USE_GDK_PIXBUF
-# GDK_PIXBUF_DIR=gdk_pixbuf
-# else
-GDK_PIXBUF_DIR=
-# endif
-
-# if USE_GNOME_VFS
-# GNOMEVFS_DIR=gnomevfs
-# else
-GNOMEVFS_DIR=
-# endif
 
 # if USE_GSM
 # GSM_DIR=gsm
@@ -160,18 +118,6 @@ HERMES_DIR=
 JACK_DIR=
 # endif
 
-if USE_JPEG
-JPEG_DIR=jpeg
-else
-JPEG_DIR=
-endif
-
-# if USE_LADSPA
-# LADSPA_DIR=ladspa
-# else
-LADSPA_DIR=
-# endif
-
 if USE_LAME
 LAME_DIR=lame
 else
@@ -184,35 +130,11 @@ endif
 LCS_DIR=
 # endif
 
-if USE_LIBCACA
-LIBCACA_DIR=libcaca
-else
-LIBCACA_DIR=
-endif
-
-if USE_LIBDV
-LIBDV_DIR=dv
-else
-LIBDV_DIR=
-endif
-
 # if USE_LIBFAME
 # LIBFAME_DIR=libfame
 # else
 LIBFAME_DIR=
 # endif
-
-# if USE_LIBMNG
-# LIBMNG_DIR=libmng
-# else
-LIBMNG_DIR=
-# endif
-
-if USE_LIBPNG
-LIBPNG_DIR=libpng
-else
-LIBPNG_DIR=
-endif
 
 # if USE_POLYP
 # POLYP_DIR=polyp
@@ -237,12 +159,6 @@ MAD_DIR=mad
 else
 MAD_DIR=
 endif
-
-# if USE_MIKMOD
-# MIKMOD_DIR=mikmod
-# else
-MIKMOD_DIR=
-# endif
 
 if USE_MPEG2DEC
  MPEG2DEC_DIR=mpeg2dec
@@ -286,18 +202,6 @@ MUSICBRAINZ_DIR=
 NAS_DIR=
 # endif
 
-# if USE_PANGO
-# PANGO_DIR=pango
-# else
-PANGO_DIR=
-# endif
-
-if USE_DV1394
-DV1394_DIR=raw1394
-else
-DV1394_DIR=
-endif
-
 # if USE_SDL
 # SDL_DIR=sdl
 # else
@@ -309,12 +213,6 @@ SDL_DIR=
 # else
 SHOUT_DIR=
 # endif
-
-if USE_SHOUT2
-SHOUT2_DIR=shout2
-else
-SHOUT2_DIR=
-endif
 
 if USE_SIDPLAY
 SIDPLAY_DIR=sidplay
@@ -364,12 +262,6 @@ XVID_DIR=
 SNAPSHOT_DIR=
 # endif
 
-if USE_SPEEX
-SPEEX_DIR=speex
-else
-SPEEX_DIR=
-endif
-
 # if USE_XINE
 # XINE_DIR=xine
 # else
@@ -378,61 +270,43 @@ XINE_DIR=
 
 SUBDIRS=\
 	$(A52DEC_DIR) \
-	$(AALIB_DIR) \
 	$(AMRNB_DIR) \
 	$(ARTS_DIR) \
 	$(ARTSC_DIR) \
 	$(AUDIOFILE_DIR) \
 	$(AUDIORESAMPLE_DIR) \
-	$(CAIRO_DIR) \
 	$(CDAUDIO_DIR) \
 	$(CDPARANOIA_DIR) \
 	$(DIRAC_DIR) \
 	$(DIRECTFB_DIR) \
 	$(DIVX_DIR) \
 	$(DTS_DIR) \
-	$(DV1394_DIR) \
-	$(DVDREAD_DIR) \
 	$(DVDNAV_DIR) \
-	$(ESD_DIR) \
 	$(NAS_DIR) \
 	$(FAAC_DIR) \
 	$(FAAD_DIR) \
-	$(FLAC_DIR) \
-	$(GCONF_DIR) \
-	$(GDK_PIXBUF_DIR) \
-	$(GNOMEVFS_DIR) \
 	$(GSM_DIR) \
 	$(HERMES_DIR) \
 	$(LIBMMS_DIR) \
 	$(JACK_DIR) \
-	$(JPEG_DIR) \
-	$(LADSPA_DIR) \
 	$(LAME_DIR) \
 	$(LCS_DIR) \
-	$(LIBCACA_DIR) \
 	$(LIBDV_DIR) \
 	$(LIBFAME_DIR) \
-	$(LIBMNG_DIR) \
-	$(LIBPNG_DIR) \
 	$(LIBVISUAL_DIR) \
 	$(MAD_DIR) \
-	$(MIKMOD_DIR) \
 	$(MPEG2DEC_DIR) \
 	$(MPEG2ENC_DIR) \
 	$(MPLEX_DIR) \
 	$(MUSEPACK_DIR) \
 	$(MUSICBRAINZ_DIR) \
-	$(PANGO_DIR) \
 	$(POLYP_DIR) \
 	$(SDL_DIR) \
 	$(SHOUT_DIR) \
-	$(SHOUT2_DIR) \
 	$(SIDPLAY_DIR) \
 	$(SMOOTHWAVE_DIR) \
 	$(SNAPSHOT_DIR) \
 	$(SNDFILE_DIR) \
-	$(SPEEX_DIR) \
 	$(SWFDEC_DIR) \
 	$(TARKIN_DIR) \
 	$(IVORBIS_DIR) \
@@ -440,21 +314,9 @@ SUBDIRS=\
 	$(XVID_DIR)
 
 DIST_SUBDIRS=\
-	aalib \
 	amrnb \
-	esd	\
-	dv \
 	faad \
-	flac \
-	gconf \
-	jpeg \
-	ladspa \
 	lame \
-	libcaca \
-	libpng \
 	mad \
 	mpeg2dec \
-	raw1394 \
-	shout2 \
-	sidplay \
-	speex
+	sidplay

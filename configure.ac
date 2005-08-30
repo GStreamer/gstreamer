@@ -285,26 +285,17 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
-		videofilter \
-		alpha \
-		autodetect \
-		avi \
-		effectv \
-		fdsrc \
-		goom \
-		law \
-		level \
 		mpegaudioparse \
 		qtdemux \
 		realmedia \
-		rtp	\
-		rtsp	\
-		smpte	\
 		silence \
+<<<<<<< configure.ac
+=======
 		udp     \
 		videobox \
 		wavenc \
 		wavparse \
+>>>>>>> 1.580
 		mpegaudioparse \
                 "
 
@@ -363,13 +354,6 @@ dnl ###########################
 dnl # Configure external libs #
 dnl ###########################
 
-dnl *** aalib ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_AALIB, true)
-GST_CHECK_FEATURE(AALIB, [aasink plug-in], aasink, [
-  AM_PATH_AALIB(, HAVE_AALIB=yes, HAVE_AALIB=no)
-  AS_SCRUB_INCLUDE(AALIB_CFLAGS)
-])
-
 dnl *** AMR-NB ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AMRNB, true)
 GST_CHECK_FEATURE(AMRNB, [AMR-NB], amrnbdec amrnbenc, [
@@ -378,19 +362,6 @@ GST_CHECK_FEATURE(AMRNB, [AMR-NB], amrnbdec amrnbenc, [
 		      amrnb/interf_dec.h,
 		      AMRNB_LIBS="-lamrnb -lm"
 		      AC_SUBST(AMRNB_LIBS))
-])
-
-dnl **** ESound ****
-translit(dnm, m, l) AM_CONDITIONAL(USE_ESD, true)
-GST_CHECK_FEATURE(ESD, [esound plug-ins], esdsink, [
-  PKG_CHECK_MODULES(ESD, esound >= 0.2.12, [
-    HAVE_ESD="yes"
-    AC_SUBST(ESD_CFLAGS)
-    AC_SUBST(ESD_LIBS)
-  ], [
-    AM_PATH_ESD(0.2.12, HAVE_ESD="yes", HAVE_ESD="no")
-    AS_SCRUB_INCLUDE(ESD_CFLAGS)
-  ])
 ])
 
 dnl **** Free AAC Decoder (FAAD) ****
@@ -426,47 +397,6 @@ return 0;
   AC_SUBST(FAAD_LIBS)
 ])
 
-dnl *** FLAC ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_FLAC, true)
-GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flacenc flacdec, [
-  GST_CHECK_LIBHEADER(FLAC, FLAC, FLAC__seekable_stream_encoder_new, -lm, FLAC/all.h, FLAC_LIBS="-lFLAC -lm")
-  dnl API change in FLAC 1.1.1, so require that...
-  if test x$HAVE_FLAC = xyes; then
-    AC_CHECK_DECL(FLAC__SEEKABLE_STREAM_ENCODER_TELL_ERROR,
-                  HAVE_FLAC="yes", HAVE_FLAC="no", [
-#include <FLAC/seekable_stream_encoder.h>
-                  ])
-  fi
-  AC_SUBST(FLAC_LIBS)
-])
-
-dnl *** jpeg ***
-dnl FIXME: we could use header checks here as well IMO
-translit(dnm, m, l) AM_CONDITIONAL(USE_JPEG, true)
-GST_CHECK_FEATURE(JPEG, [jpeg], jpegenc jpegdec, [
-  AC_ARG_WITH(jpeg-mmx,
-    [  --with-jpeg-mmx, path to MMX'ified JPEG library])
-  OLD_LIBS="$LIBS"
-  if test x$with_jpeg_mmx != x; then
-    LIBS="$LIBS -L$with_jpeg_mmx"
-  fi
-  AC_CHECK_LIB(jpeg-mmx, jpeg_set_defaults, HAVE_JPEG="yes", HAVE_JPEG="no")
-  JPEG_LIBS="$LIBS -ljpeg-mmx"
-  LIBS="$OLD_LIBS"
-  if test x$HAVE_JPEG != xyes; then
-    AC_CHECK_LIB(jpeg, jpeg_set_defaults, HAVE_JPEG="yes", HAVE_JPEG="no")
-    JPEG_LIBS="-ljpeg"
-  fi
-  AC_SUBST(JPEG_LIBS)
-])
-
-
-dnl *** ladspa ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LADSPA, true)
-GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
-  AC_CHECK_HEADER(ladspa.h, HAVE_LADSPA="yes", HAVE_LADSPA="no")
-])
-
 dnl *** lame ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LAME, true)
 GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
@@ -490,30 +420,6 @@ int main (int argc, char *argv[])
   AC_SUBST(LAME_CFLAGS)
   AC_SUBST(LAME_LIBS)
   ])
-])
-
-dnl *** libcaca ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBCACA, true)
-GST_CHECK_FEATURE(LIBCACA, [libcaca], libcaca, [
-  GST_CHECK_CONFIGPROG(LIBCACA, caca-config)
-  AC_SUBST(LIBCACA_CFLAGS)
-  AC_SUBST(LIBCACA_LIBS)
-])
-
-dnl *** libdv ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBDV, true)
-GST_CHECK_FEATURE(LIBDV, [libdv DV/video decoder], dvdec, [
-  PKG_CHECK_MODULES(LIBDV, libdv >= 0.100, HAVE_LIBDV="yes", HAVE_LIBDV="no")
-  AC_SUBST(LIBDV_CFLAGS)
-  AC_SUBST(LIBDV_LIBS)
-])
-
-dnl *** libpng ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBPNG, true)
-GST_CHECK_FEATURE(LIBPNG, [libpng PNG encoder], pngenc, [
-  PKG_CHECK_MODULES(LIBPNG, libpng12, HAVE_LIBPNG="yes", HAVE_LIBPNG="no")
-  AC_SUBST(LIBPNG_CFLAGS)
-  AC_SUBST(LIBPNG_LIBS)
 ])
 
 dnl *** mad ***
@@ -545,32 +451,6 @@ GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
   AC_SUBST(MPEG2DEC_LIBS)
 ])
 
-dnl *** dv1394 ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_DV1394, true)
-GST_CHECK_FEATURE(DV1394, [raw1394 and avc1394 library], dv1394src, [
-  dnl we need to test three headers and three libs
-  GST_CHECK_LIBHEADER(RAW1394,
-    raw1394, raw1394_new_handle,,
-    libraw1394/raw1394.h, RAW1394_LIBS="-lraw1394")
-  GST_CHECK_LIBHEADER(AVC1394,
-    avc1394, avc1394_send_command, $RAW1394_LIBS,
-    libavc1394/avc1394.h, AVC1394_LIBS="-lavc1394")
-  GST_CHECK_LIBHEADER(ROM1394,
-    rom1394, rom1394_free_directory, $RAW1394_LIBS,
-    libavc1394/rom1394.h, ROM1394_LIBS="-lrom1394")
-
-  dnl now see how far we got
-  if test x$HAVE_RAW1394 = xyes && \
-     test x$HAVE_AVC1394 = xyes && \
-     test x$HAVE_ROM1394 = xyes; then
-       HAVE_DV1394=yes
-       DV1394_LIBS="$RAW1394_LIBS $AVC1394_LIBS $ROM1394_LIBS"
-       AC_SUBST(DV1394_LIBS)
-  else
-       HAVE_DV1394=no
-  fi
-])
-
 dnl *** shout2 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SHOUT2, true)
 GST_CHECK_FEATURE(SHOUT2, [shout2 plug-in], shout2send, [
@@ -589,51 +469,6 @@ dnl *** sidplay : works with libsidplay 1.36.x (not 2.x.x) ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SIDPLAY, true)
 GST_CHECK_FEATURE(SIDPLAY, [sidplay plug-in], sidplay, [
   GST_PATH_SIDPLAY()
-])
-
-dnl *** speex >= 1.0.4 or >= 1.1.5 ***
-dnl   1.1.4 and earlier were not API/ABI compatible with 1.0
-dnl   1.1.6 is the first to use a .pc/pkg-config file ***
-dnl   speex_jitter.h is 1.1.x only
-translit(dnm, m, l) AM_CONDITIONAL(USE_SPEEX, true)
-GST_CHECK_FEATURE(SPEEX, [speex plug-in], speex, [
-  PKG_CHECK_MODULES(SPEEX, speex >= 1.1.6, [
-    HAVE_SPEEX="yes"
-    AC_SUBST(SPEEX_CFLAGS)
-    AC_SUBST(SPEEX_LIBS)
-  ], [
-    GST_CHECK_LIBHEADER(SPEEX, speex, speex_bits_init, , speex/speex.h, [
-      AC_CHECK_HEADER(speex/speex_jitter.h, [
-        dnl speex 1.1.x :
-        GST_CHECK_LIBHEADER(SPEEX, speex, speex_encode_int, , speex/speex.h, [
-          dnl speex 1.1.5 or + :
-          HAVE_SPEEX="yes"
-          SPEEX_LIBS="-lspeex"
-          AC_SUBST(SPEEX_CFLAGS)
-          AC_SUBST(SPEEX_LIBS)
-        ],[
-          HAVE_SPEEX="no"
-        ])
-      ],[
-        dnl speex 1.0.x :
-          AC_CHECK_DECL(SPEEX_GET_LOOKAHEAD, [
-            dnl speex 1.0.4
-            HAVE_SPEEX="yes"
-            SPEEX_LIBS="-lspeex"
-            AC_SUBST(SPEEX_CFLAGS)
-            AC_SUBST(SPEEX_LIBS)
-
-            AC_DEFINE_UNQUOTED(SPEEX_1_0, 1,
-              [defined if speex 1.0.x API detected])
-        ],[
-            HAVE_SPEEX="no"
-            AC_MSG_NOTICE(You need at least 1.0.4 to compile the speex plugin)
-        ], [
-#include <speex/speex.h>
-        ])
-      ])
-    ])
-  ])
 ])
 
 dnl also add builddir include for enumtypes and marshal
@@ -691,49 +526,21 @@ AC_CONFIG_FILES(
 Makefile
 gst-plugins.spec
 gst/Makefile
-gst/alpha/Makefile
-gst/autodetect/Makefile
-gst/avi/Makefile
-gst/effectv/Makefile
-gst/fdsrc/Makefile
-gst/goom/Makefile
-gst/law/Makefile
-gst/level/Makefile
 gst/mpegaudioparse/Makefile
-gst/realmedia/Makefile
-gst/rtp/Makefile
-gst/rtsp/Makefile
-gst/smpte/Makefile
-gst/silence/Makefile
-gst/udp/Makefile
-gst/videobox/Makefile
-gst/videofilter/Makefile
-ext/jpeg/Makefile
 gst/qtdemux/Makefile
-gst/wavenc/Makefile
-gst/wavparse/Makefile
-gst-libs/Makefile
-gst-libs/gst/Makefile
+gst/realmedia/Makefile
+gst/silence/Makefile
 sys/Makefile
 sys/oss/Makefile
 ext/Makefile
-ext/aalib/Makefile
-ext/dv/Makefile
-ext/flac/Makefile
-ext/gconf/Makefile
-ext/ladspa/Makefile
-ext/lame/Makefile
-ext/libcaca/Makefile
-ext/libpng/Makefile
-ext/mad/Makefile
-ext/raw1394/Makefile
-ext/shout2/Makefile
-ext/sidplay/Makefile
-ext/speex/Makefile
-ext/esd/Makefile
-ext/mpeg2dec/Makefile
-ext/faad/Makefile
 ext/amrnb/Makefile
+ext/faad/Makefile
+ext/lame/Makefile
+ext/mad/Makefile
+ext/mpeg2dec/Makefile
+ext/sidplay/Makefile
+gst-libs/Makefile
+gst-libs/gst/Makefile
 po/Makefile.in
 common/Makefile
 common/m4/Makefile
