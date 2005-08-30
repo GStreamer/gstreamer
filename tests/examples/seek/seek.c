@@ -541,7 +541,7 @@ make_mp3_pipeline (const gchar * location)
   seekable_elements = g_list_prepend (seekable_elements, osssink);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
-  g_object_set (G_OBJECT (osssink), "fragment", 0x00180008, NULL);
+  //g_object_set (G_OBJECT (osssink), "fragment", 0x00180008, NULL);
 
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), decoder);
@@ -657,7 +657,7 @@ make_mpeg_pipeline (const gchar * location)
   a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
   audiosink = gst_element_factory_make_or_warn (ASINK, "a_sink");
-  g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
+  //g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
   gst_element_link (a_decoder, a_queue);
   gst_element_link (a_queue, audiosink);
   gst_bin_add (GST_BIN (audio_bin), a_decoder);
@@ -1042,7 +1042,7 @@ seek_cb (GtkWidget * widget)
 
   if (seek_timeout_id == 0) {
     seek_timeout_id =
-        gtk_timeout_add (SCRUB_TIME, (GSourceFunc) end_scrub, widget);
+        g_timeout_add (SCRUB_TIME, (GSourceFunc) end_scrub, widget);
   }
 #endif
 }
@@ -1051,7 +1051,7 @@ static gboolean
 start_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
 {
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
-  gtk_timeout_remove (update_id);
+  g_source_remove (update_id);
 
   if (changed_id == 0) {
     changed_id = gtk_signal_connect (GTK_OBJECT (hscale),
@@ -1067,7 +1067,7 @@ stop_seek (GtkWidget * widget, gpointer user_data)
   g_signal_handler_disconnect (GTK_OBJECT (hscale), changed_id);
   changed_id = 0;
   if (seek_timeout_id != 0) {
-    gtk_timeout_remove (seek_timeout_id);
+    g_source_remove (seek_timeout_id);
     seek_timeout_id = 0;
     /* Still scrubbing, so the pipeline is already playing */
   } else {
@@ -1075,7 +1075,7 @@ stop_seek (GtkWidget * widget, gpointer user_data)
   }
 
   update_id =
-      gtk_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
+      g_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
 
   return FALSE;
 }
@@ -1090,7 +1090,7 @@ play_cb (GtkButton * button, gpointer data)
     g_print ("PLAY pipeline\n");
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
     update_id =
-        gtk_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
+        g_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
   }
 }
 
@@ -1103,7 +1103,7 @@ pause_cb (GtkButton * button, gpointer data)
   if (state != GST_STATE_PAUSED) {
     g_print ("PAUSE pipeline\n");
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
-    gtk_timeout_remove (update_id);
+    g_source_remove (update_id);
   }
 }
 
@@ -1117,7 +1117,7 @@ stop_cb (GtkButton * button, gpointer data)
     g_print ("READY pipeline\n");
     gst_element_set_state (pipeline, GST_STATE_READY);
     gtk_adjustment_set_value (adjustment, 0.0);
-    gtk_timeout_remove (update_id);
+    g_source_remove (update_id);
   }
 }
 
