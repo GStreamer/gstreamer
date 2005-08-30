@@ -4,24 +4,6 @@
 # DXR3_DIR=
 # endif
 
-if USE_OSS
-OSS_DIR=oss
-else
-OSS_DIR=
-endif
-
-# if USE_OSX_AUDIO
-# OSX_AUDIO_DIR=osxaudio
-# else
-# OSX_AUDIO_DIR=
-# endif
-
-# if USE_OSX_VIDEO
-# OSX_VIDEO_DIR=osxvideo
-# else
-# OSX_VIDEO_DIR=
-# endif
-
 # if USE_QCAM
 # QCAM_DIR=qcam
 # else
