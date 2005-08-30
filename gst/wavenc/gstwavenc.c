@@ -27,10 +27,13 @@
 #include "gstwavenc.h"
 #include "riff.h"
 
+GST_DEBUG_CATEGORY_EXTERN (wavenc_debug);
+#define GST_CAT_DEFAULT wavenc_debug
+
 static void gst_wavenc_base_init (gpointer g_class);
 static void gst_wavenc_class_init (GstWavEncClass * klass);
 static void gst_wavenc_init (GstWavEnc * wavenc);
-static void gst_wavenc_chain (GstPad * pad, GstData * _data);
+static GstFlowReturn gst_wavenc_chain (GstPad * pad, GstBuffer * buf);
 
 #define WAVE_FORMAT_PCM 0x0001
 
@@ -230,16 +233,16 @@ gst_wavenc_setup (GstWavEnc * wavenc)
   return TRUE;
 }
 
-static GstPadLinkReturn
-gst_wavenc_sinkconnect (GstPad * pad, const GstCaps * caps)
+static gboolean
+gst_wavenc_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstWavEnc *wavenc;
   GstStructure *structure;
 
   wavenc = GST_WAVENC (gst_pad_get_parent (pad));
+  wavenc->setup = FALSE;
 
   structure = gst_caps_get_structure (caps, 0);
-
   gst_structure_get_int (structure, "channels", &wavenc->channels);
   gst_structure_get_int (structure, "rate", &wavenc->rate);
   gst_structure_get_int (structure, "depth", &wavenc->bits);
@@ -247,10 +250,10 @@ gst_wavenc_sinkconnect (GstPad * pad, const GstCaps * caps)
   gst_wavenc_setup (wavenc);
 
   if (wavenc->setup) {
-    return GST_PAD_LINK_OK;
+    return TRUE;
   }
 
-  return GST_PAD_LINK_REFUSED;
+  return FALSE;
 }
 
 static void
@@ -259,9 +262,10 @@ gst_wavenc_stop_file (GstWavEnc * wavenc)
   GstEvent *event;
   GstBuffer *outbuf;
 
-  event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES,
-      (guint64) 0, GST_FORMAT_UNDEFINED);
-  gst_pad_push (wavenc->srcpad, GST_DATA (event));
+  event = gst_event_new_newsegment (1.0, GST_FORMAT_TIME,
+      0, GST_CLOCK_TIME_NONE, 0);
+
+  gst_pad_push_event (wavenc->srcpad, event);
 
   outbuf = gst_buffer_new_and_alloc (WAV_HEADER_LEN);
   GST_WRITE_UINT32_LE (wavenc->header + 4,
@@ -273,7 +277,7 @@ gst_wavenc_stop_file (GstWavEnc * wavenc)
   GST_BUFFER_TIMESTAMP (outbuf) = 0;
   GST_BUFFER_DURATION (outbuf) = 0;
 
-  gst_pad_push (wavenc->srcpad, GST_DATA (outbuf));
+  gst_pad_push (wavenc->srcpad, outbuf);
 }
 
 static void
@@ -286,7 +290,7 @@ gst_wavenc_init (GstWavEnc * wavenc)
           "sink"), "sink");
   gst_element_add_pad (GST_ELEMENT (wavenc), wavenc->sinkpad);
   gst_pad_set_chain_function (wavenc->sinkpad, gst_wavenc_chain);
-  gst_pad_set_link_function (wavenc->sinkpad, gst_wavenc_sinkconnect);
+  gst_pad_set_setcaps_function (wavenc->sinkpad, gst_wavenc_sink_setcaps);
 
   wavenc->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
@@ -296,7 +300,6 @@ gst_wavenc_init (GstWavEnc * wavenc)
   wavenc->setup = FALSE;
   wavenc->flush_header = TRUE;
   wavenc->newmediacount = 0;
-  GST_FLAG_SET (wavenc, GST_ELEMENT_EVENT_AWARE);
 }
 
 struct _maps
@@ -596,11 +599,11 @@ write_labels (GstWavEnc * wavenc)
 }
 #endif
 
-static void
-gst_wavenc_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_wavenc_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
   GstWavEnc *wavenc;
+  GstFlowReturn result = GST_FLOW_OK;
 
   wavenc = GST_WAVENC (gst_pad_get_parent (pad));
 
@@ -618,30 +621,30 @@ gst_wavenc_chain (GstPad * pad, GstData * _data)
 #endif
 
       gst_wavenc_stop_file (wavenc);
-      gst_pad_push (wavenc->srcpad, _data);
-      gst_element_set_eos (GST_ELEMENT (wavenc));
-    } else if (GST_EVENT_TYPE (buf) == GST_EVENT_DISCONTINUOUS) {
-      if (GST_EVENT_DISCONT_NEW_MEDIA (buf)) {
-        /* new media */
-        if (wavenc->newmediacount++ > 0) {
-          gst_wavenc_stop_file (wavenc);
-          wavenc->setup = FALSE;
-          wavenc->flush_header = TRUE;
-          gst_wavenc_setup (wavenc);
-        }
-        gst_pad_event_default (wavenc->sinkpad, GST_EVENT (buf));
+      gst_pad_push (wavenc->srcpad, buf);
+      gst_pad_push_event (wavenc->srcpad, gst_event_new_eos ());
+    } else if (GST_EVENT_TYPE (buf) == GST_EVENT_NEWSEGMENT) {
+      //if (GST_EVENT_DISCONT_NEW_MEDIA (buf)) {
+      if (wavenc->newmediacount++ > 0) {
+        gst_wavenc_stop_file (wavenc);
+        wavenc->setup = FALSE;
+        wavenc->flush_header = TRUE;
+        gst_wavenc_setup (wavenc);
       }
+      gst_pad_event_default (wavenc->sinkpad, GST_EVENT (buf));
+      //}
     } else {
       gst_pad_event_default (wavenc->sinkpad, GST_EVENT (buf));
     }
-    return;
+
+    return result;
   }
 
   if (!wavenc->setup) {
     gst_buffer_unref (buf);
     GST_ELEMENT_ERROR (wavenc, CORE, NEGOTIATION, (NULL),
         ("encoder not initialised (input is not audio?)"));
-    return;
+    return GST_FLOW_ERROR;
   }
 
   if (GST_PAD_IS_USABLE (wavenc->srcpad)) {
@@ -652,13 +655,15 @@ gst_wavenc_chain (GstPad * pad, GstData * _data)
       memcpy (GST_BUFFER_DATA (outbuf), wavenc->header, WAV_HEADER_LEN);
       GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
 
-      gst_pad_push (wavenc->srcpad, GST_DATA (outbuf));
+      gst_pad_push (wavenc->srcpad, outbuf);
       wavenc->flush_header = FALSE;
     }
 
     wavenc->length += GST_BUFFER_SIZE (buf);
-    gst_pad_push (wavenc->srcpad, GST_DATA (buf));
+    gst_pad_push (wavenc->srcpad, buf);
   }
+
+  return result;
 }
 
 static gboolean
