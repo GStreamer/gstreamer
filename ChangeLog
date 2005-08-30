@@ -1,5 +1,10 @@
 2005-08-30  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* configure.ac:
+	  Remove plugins that should have disappeared.
+
+2005-08-30  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* autogen.sh:
 	* configure.ac:
 	  Make autogen work again.
