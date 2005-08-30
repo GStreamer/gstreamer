@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-25 11:45+0200\n"
+"POT-Creation-Date: 2005-08-30 19:21+0200\n"
 "PO-Revision-Date: 2004-03-19 18:29+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -16,78 +16,51 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.0.2\n"
 
-#: ext/audiofile/gstafsink.c:342 ext/sndfile/gstsf.c:624
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "\"%s\" faylı yazma üçün açıla bilmədi."
-
-#: ext/audiofile/gstafsink.c:364 ext/audiofile/gstafsrc.c:369
-#, c-format
-msgid "Error closing file \"%s\"."
-msgstr "\"%s\" faylı bağlana bilmədi."
-
-#: ext/audiofile/gstafsrc.c:316
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "\"%s\" faylı oxuma üçün açıla bilmədi."
-
-#: ext/sndfile/gstsf.c:585
-msgid "No filename specified."
-msgstr "Fayl adı verilməyib."
-
-#: ext/sndfile/gstsf.c:838
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "\"%s\" faylına yazıla bilmədi."
-
 #: gst/avi/gstavimux.c:1007
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Səhv ya da olmayan audio girişi, AVI yayımı pozulacaqdır."
 
-#: sys/dxr3/dxr3audiosink.c:296
-#, c-format
-msgid "Could not open audio device \"%s\" for writing."
-msgstr "\"%s\" audio avadanlığı yazma üçün açıla bilmədi."
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "\"%s\" faylı yazma üçün açıla bilmədi."
 
-#: sys/dxr3/dxr3audiosink.c:308 sys/dxr3/dxr3videosink.c:281
-#, c-format
-msgid "Could not open control device \"%s\" for writing."
-msgstr "\"%s\" idarə avadanlığı yazma üçün açıla bilmədi."
+#~ msgid "Error closing file \"%s\"."
+#~ msgstr "\"%s\" faylı bağlana bilmədi."
 
-#: sys/dxr3/dxr3audiosink.c:341
-#, c-format
-msgid "Could not configure audio device \"%s\"."
-msgstr "\"%s\" audio avadanlığı quraşdırıla bilmədi."
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "\"%s\" faylı oxuma üçün açıla bilmədi."
 
-#: sys/dxr3/dxr3audiosink.c:355 sys/dxr3/dxr3audiosink.c:392
-#, c-format
-msgid "Could not set audio device \"%s\" to %d Hz."
-msgstr "\"%s\" audio avadanlığı %d Hz-ə keçirilə bilmədi."
+#~ msgid "No filename specified."
+#~ msgstr "Fayl adı verilməyib."
 
-#: sys/dxr3/dxr3audiosink.c:420
-#, c-format
-msgid "Could not close audio device \"%s\"."
-msgstr "\"%s\" audio avadanlığı bağlana bilmədi."
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "\"%s\" faylına yazıla bilmədi."
 
-#: sys/dxr3/dxr3audiosink.c:427 sys/dxr3/dxr3videosink.c:306
-#, c-format
-msgid "Could not close control device \"%s\"."
-msgstr "\"%s\" idarə avadanlığı bağlana bilmədi."
+#~ msgid "Could not open audio device \"%s\" for writing."
+#~ msgstr "\"%s\" audio avadanlığı yazma üçün açıla bilmədi."
 
-#: sys/dxr3/dxr3videosink.c:269
-#, c-format
-msgid "Could not open video device \"%s\" for writing."
-msgstr "\"%s\" video avadanlığı yazma üçün açıla bilmədi."
+#~ msgid "Could not open control device \"%s\" for writing."
+#~ msgstr "\"%s\" idarə avadanlığı yazma üçün açıla bilmədi."
 
-#: sys/dxr3/dxr3videosink.c:299
-#, c-format
-msgid "Could not close video device \"%s\"."
-msgstr "\"%s\" video avadanlığı bağlana bilmədi."
+#~ msgid "Could not configure audio device \"%s\"."
+#~ msgstr "\"%s\" audio avadanlığı quraşdırıla bilmədi."
 
-#: sys/dxr3/dxr3videosink.c:451
-#, c-format
-msgid "Could not write to device \"%s\"."
-msgstr "\"%s\" avadanlığına yazıla bilmədi."
+#~ msgid "Could not set audio device \"%s\" to %d Hz."
+#~ msgstr "\"%s\" audio avadanlığı %d Hz-ə keçirilə bilmədi."
+
+#~ msgid "Could not close audio device \"%s\"."
+#~ msgstr "\"%s\" audio avadanlığı bağlana bilmədi."
+
+#~ msgid "Could not close control device \"%s\"."
+#~ msgstr "\"%s\" idarə avadanlığı bağlana bilmədi."
+
+#~ msgid "Could not open video device \"%s\" for writing."
+#~ msgstr "\"%s\" video avadanlığı yazma üçün açıla bilmədi."
+
+#~ msgid "Could not close video device \"%s\"."
+#~ msgstr "\"%s\" video avadanlığı bağlana bilmədi."
+
+#~ msgid "Could not write to device \"%s\"."
+#~ msgstr "\"%s\" avadanlığına yazıla bilmədi."
 
 #~ msgid "OSS device \"%s\" is already in use by another program."
 #~ msgstr "\"%s\" OSS avadanlığı başqa bir proqram tərəfindən istifadədədir."

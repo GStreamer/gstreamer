@@ -1,23 +1,22 @@
-# if USE_GCONFTOOL
-# GCONF_DIR = gconf
-# else
+if USE_GCONFTOOL
+GCONF_DIR = gconf
+else
 GCONF_DIR =
-# endif
+endif
 
 SUBDIRS = 			\
-	gst sys ext gst-libs	\
+	gst sys ext 		\
 	$(GCONF_DIR) 		\
 	m4 common po
-# disabled
-#	$(SUBDIRS_DOCS)
 
 DIST_SUBDIRS = 			\
-	gst sys ext gst-libs	\
+	gst sys ext 		\
+	gconf			\
 	m4 common po
 
 EXTRA_DIST = \
-	gst-plugins.spec depcomp \
-	AUTHORS COPYING COPYING.LIB NEWS README RELEASE REQUIREMENTS \
+	gst-plugins-good.spec depcomp \
+	AUTHORS COPYING NEWS README RELEASE REQUIREMENTS \
 	ChangeLog autogen.sh
 
 DISTCLEANFILES = _stdint.h

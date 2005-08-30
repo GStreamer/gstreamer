@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-25 11:45+0200\n"
+"POT-Creation-Date: 2005-08-30 19:21+0200\n"
 "PO-Revision-Date: 2004-08-03 20:53+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -16,78 +16,51 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:342 ext/sndfile/gstsf.c:624
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Kunde inte öppna filen \"%s\" för skrivning."
-
-#: ext/audiofile/gstafsink.c:364 ext/audiofile/gstafsrc.c:369
-#, c-format
-msgid "Error closing file \"%s\"."
-msgstr "Fel vid stängning av filen \"%s\"."
-
-#: ext/audiofile/gstafsrc.c:316
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Kunde inte öppna filen \"%s\" för läsning."
-
-#: ext/sndfile/gstsf.c:585
-msgid "No filename specified."
-msgstr "Inget filnamn angivet."
-
-#: ext/sndfile/gstsf.c:838
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Kunde inte skriva till filen \"%s\"."
-
 #: gst/avi/gstavimux.c:1007
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Inget eller ogiltigt inljud. AVI-flödet kommer att skadas."
 
-#: sys/dxr3/dxr3audiosink.c:296
-#, c-format
-msgid "Could not open audio device \"%s\" for writing."
-msgstr "Kunde inte öppna ljudenheten \"%s\" för skrivning."
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Kunde inte öppna filen \"%s\" för skrivning."
 
-#: sys/dxr3/dxr3audiosink.c:308 sys/dxr3/dxr3videosink.c:281
-#, c-format
-msgid "Could not open control device \"%s\" for writing."
-msgstr "Kunde inte öppna styrenheten \"%s\" för skrivning."
+#~ msgid "Error closing file \"%s\"."
+#~ msgstr "Fel vid stängning av filen \"%s\"."
 
-#: sys/dxr3/dxr3audiosink.c:341
-#, c-format
-msgid "Could not configure audio device \"%s\"."
-msgstr "Kunde inte konfigurera ljudenheten \"%s\"."
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Kunde inte öppna filen \"%s\" för läsning."
 
-#: sys/dxr3/dxr3audiosink.c:355 sys/dxr3/dxr3audiosink.c:392
-#, c-format
-msgid "Could not set audio device \"%s\" to %d Hz."
-msgstr "Kan inte ställa in ljudenheten \"%s\" till %d Hz."
+#~ msgid "No filename specified."
+#~ msgstr "Inget filnamn angivet."
 
-#: sys/dxr3/dxr3audiosink.c:420
-#, c-format
-msgid "Could not close audio device \"%s\"."
-msgstr "Kunde inte stänga ljudenheten \"%s\"."
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Kunde inte skriva till filen \"%s\"."
 
-#: sys/dxr3/dxr3audiosink.c:427 sys/dxr3/dxr3videosink.c:306
-#, c-format
-msgid "Could not close control device \"%s\"."
-msgstr "Kunde inte stänga styrenheten \"%s\"."
+#~ msgid "Could not open audio device \"%s\" for writing."
+#~ msgstr "Kunde inte öppna ljudenheten \"%s\" för skrivning."
 
-#: sys/dxr3/dxr3videosink.c:269
-#, c-format
-msgid "Could not open video device \"%s\" for writing."
-msgstr "Kunde inte öppna videoenheten \"%s\" för skrivning."
+#~ msgid "Could not open control device \"%s\" for writing."
+#~ msgstr "Kunde inte öppna styrenheten \"%s\" för skrivning."
 
-#: sys/dxr3/dxr3videosink.c:299
-#, c-format
-msgid "Could not close video device \"%s\"."
-msgstr "Kunde inte stänga vidoeenheten \"%s\"."
+#~ msgid "Could not configure audio device \"%s\"."
+#~ msgstr "Kunde inte konfigurera ljudenheten \"%s\"."
 
-#: sys/dxr3/dxr3videosink.c:451
-#, c-format
-msgid "Could not write to device \"%s\"."
-msgstr "Kunde inte skriva till enheten \"%s\"."
+#~ msgid "Could not set audio device \"%s\" to %d Hz."
+#~ msgstr "Kan inte ställa in ljudenheten \"%s\" till %d Hz."
+
+#~ msgid "Could not close audio device \"%s\"."
+#~ msgstr "Kunde inte stänga ljudenheten \"%s\"."
+
+#~ msgid "Could not close control device \"%s\"."
+#~ msgstr "Kunde inte stänga styrenheten \"%s\"."
+
+#~ msgid "Could not open video device \"%s\" for writing."
+#~ msgstr "Kunde inte öppna videoenheten \"%s\" för skrivning."
+
+#~ msgid "Could not close video device \"%s\"."
+#~ msgstr "Kunde inte stänga vidoeenheten \"%s\"."
+
+#~ msgid "Could not write to device \"%s\"."
+#~ msgstr "Kunde inte skriva till enheten \"%s\"."
 
 #~ msgid "OSS device \"%s\" is already in use by another program."
 #~ msgstr "OSS-enheten \"%s\" används redan av ett annat program."

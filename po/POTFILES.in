@@ -1,8 +1,2 @@
-ext/audiofile/gstafsink.c
-ext/audiofile/gstafsrc.c
-ext/sndfile/gstsf.c
 gst/avi/gstavimux.c
-sys/dxr3/dxr3audiosink.c
-sys/dxr3/dxr3audiosink.c
-sys/dxr3/dxr3videosink.c
 sys/oss/gstossmixer.c

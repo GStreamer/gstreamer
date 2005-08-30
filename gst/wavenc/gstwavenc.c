@@ -197,11 +197,11 @@ gst_wavenc_setup (GstWavEnc * wavenc)
   memset (wavenc->header, 0, WAV_HEADER_LEN);
 
   /* Fill out our wav-header with some information */
-  strncpy (wave.riff.id, "RIFF", 4);
+  strncpy ((char *) wave.riff.id, "RIFF", 4);
   wave.riff.len = size - 8;
-  strncpy (wave.riff.wav_id, "WAVE", 4);
+  strncpy ((char *) wave.riff.wav_id, "WAVE", 4);
 
-  strncpy (wave.format.id, "fmt ", 4);
+  strncpy ((char *) wave.format.id, "fmt ", 4);
   wave.format.len = 16;
 
   wave.common.wFormatTag = WAVE_FORMAT_PCM;
@@ -211,13 +211,13 @@ gst_wavenc_setup (GstWavEnc * wavenc)
   wave.common.wBlockAlign =
       wave.common.wChannels * (wave.common.wBitsPerSample >> 3);
 
-  strncpy (wave.data.id, "data", 4);
+  strncpy ((char *) wave.data.id, "data", 4);
   wave.data.len = size - 44;
 
-  strncpy (wavenc->header, wave.riff.id, 4);
+  strncpy ((char *) wavenc->header, (char *) wave.riff.id, 4);
   GST_WRITE_UINT32_LE (wavenc->header + 4, wave.riff.len);
-  strncpy (wavenc->header + 8, wave.riff.wav_id, 4);
-  strncpy (wavenc->header + 12, wave.format.id, 4);
+  strncpy ((char *) wavenc->header + 8, (char *) wave.riff.wav_id, 4);
+  strncpy ((char *) wavenc->header + 12, (char *) wave.format.id, 4);
   GST_WRITE_UINT32_LE (wavenc->header + 16, wave.format.len);
   GST_WRITE_UINT16_LE (wavenc->header + 20, wave.common.wFormatTag);
   GST_WRITE_UINT16_LE (wavenc->header + 22, wave.common.wChannels);
@@ -225,7 +225,7 @@ gst_wavenc_setup (GstWavEnc * wavenc)
   GST_WRITE_UINT32_LE (wavenc->header + 28, wave.common.dwAvgBytesPerSec);
   GST_WRITE_UINT16_LE (wavenc->header + 32, wave.common.wBlockAlign);
   GST_WRITE_UINT16_LE (wavenc->header + 34, wave.common.wBitsPerSample);
-  strncpy (wavenc->header + 36, wave.data.id, 4);
+  strncpy ((char *) wavenc->header + 36, (char *) wave.data.id, 4);
   GST_WRITE_UINT32_LE (wavenc->header + 40, wave.data.len);
 
   wavenc->length = 0;
@@ -243,9 +243,9 @@ gst_wavenc_sink_setcaps (GstPad * pad, GstCaps * caps)
   wavenc->setup = FALSE;
 
   structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "channels", &wavenc->channels);
-  gst_structure_get_int (structure, "rate", &wavenc->rate);
-  gst_structure_get_int (structure, "depth", &wavenc->bits);
+  gst_structure_get_int (structure, "channels", (gint *) & wavenc->channels);
+  gst_structure_get_int (structure, "rate", (gint *) & wavenc->rate);
+  gst_structure_get_int (structure, "depth", (gint *) & wavenc->bits);
 
   gst_wavenc_setup (wavenc);
 

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-25 11:45+0200\n"
+"POT-Creation-Date: 2005-08-30 19:21+0200\n"
 "PO-Revision-Date: 2004-07-18 11:03+0200\n"
 "Last-Translator: Laszlo Dvornik <dvornik@invitel.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -14,78 +14,51 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:342 ext/sndfile/gstsf.c:624
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Nem lehet írásra megnyitni a(z) \"%s\" fájlt."
-
-#: ext/audiofile/gstafsink.c:364 ext/audiofile/gstafsrc.c:369
-#, c-format
-msgid "Error closing file \"%s\"."
-msgstr "Hiba a(z) \"%s\" fájl bezárása közben."
-
-#: ext/audiofile/gstafsrc.c:316
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Nem lehet olvasásra megnyitni a(z) \"%s\" fájlt."
-
-#: ext/sndfile/gstsf.c:585
-msgid "No filename specified."
-msgstr "Nincs fájlnév megadva."
-
-#: ext/sndfile/gstsf.c:838
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Nem lehet írni a(z) \"%s\" fájlba."
-
 #: gst/avi/gstavimux.c:1007
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Nincs vagy érvénytelen bemeneti hang, az AVI-folyam sérült lesz."
 
-#: sys/dxr3/dxr3audiosink.c:296
-#, c-format
-msgid "Could not open audio device \"%s\" for writing."
-msgstr "Nem lehet írásra megnyitni a(z) \"%s\" audioeszközt."
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Nem lehet írásra megnyitni a(z) \"%s\" fájlt."
 
-#: sys/dxr3/dxr3audiosink.c:308 sys/dxr3/dxr3videosink.c:281
-#, c-format
-msgid "Could not open control device \"%s\" for writing."
-msgstr "Nem lehet írásra megnyitni a(z) \"%s\" vezérlőeszközt."
+#~ msgid "Error closing file \"%s\"."
+#~ msgstr "Hiba a(z) \"%s\" fájl bezárása közben."
 
-#: sys/dxr3/dxr3audiosink.c:341
-#, c-format
-msgid "Could not configure audio device \"%s\"."
-msgstr "Nem lehet beállítani a(z) \"%s\" audioeszközt."
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Nem lehet olvasásra megnyitni a(z) \"%s\" fájlt."
 
-#: sys/dxr3/dxr3audiosink.c:355 sys/dxr3/dxr3audiosink.c:392
-#, c-format
-msgid "Could not set audio device \"%s\" to %d Hz."
-msgstr "Nem lehet beállítani a(z) \"%s\" audioeszközt %d Hz-re."
+#~ msgid "No filename specified."
+#~ msgstr "Nincs fájlnév megadva."
 
-#: sys/dxr3/dxr3audiosink.c:420
-#, c-format
-msgid "Could not close audio device \"%s\"."
-msgstr "Nem lehet lezárni a(z) \"%s\" audioeszközt."
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Nem lehet írni a(z) \"%s\" fájlba."
 
-#: sys/dxr3/dxr3audiosink.c:427 sys/dxr3/dxr3videosink.c:306
-#, c-format
-msgid "Could not close control device \"%s\"."
-msgstr "Nem lehet lezárni a(z) \"%s\" vezérlőeszközt."
+#~ msgid "Could not open audio device \"%s\" for writing."
+#~ msgstr "Nem lehet írásra megnyitni a(z) \"%s\" audioeszközt."
 
-#: sys/dxr3/dxr3videosink.c:269
-#, c-format
-msgid "Could not open video device \"%s\" for writing."
-msgstr "Nem lehet írásra megnyitni a(z) \"%s\" videoeszközt."
+#~ msgid "Could not open control device \"%s\" for writing."
+#~ msgstr "Nem lehet írásra megnyitni a(z) \"%s\" vezérlőeszközt."
 
-#: sys/dxr3/dxr3videosink.c:299
-#, c-format
-msgid "Could not close video device \"%s\"."
-msgstr "Nem lehet lezárni a(z) \"%s\" videoeszközt."
+#~ msgid "Could not configure audio device \"%s\"."
+#~ msgstr "Nem lehet beállítani a(z) \"%s\" audioeszközt."
 
-#: sys/dxr3/dxr3videosink.c:451
-#, c-format
-msgid "Could not write to device \"%s\"."
-msgstr "Nem lehet írni a(z) \"%s\" eszközre."
+#~ msgid "Could not set audio device \"%s\" to %d Hz."
+#~ msgstr "Nem lehet beállítani a(z) \"%s\" audioeszközt %d Hz-re."
+
+#~ msgid "Could not close audio device \"%s\"."
+#~ msgstr "Nem lehet lezárni a(z) \"%s\" audioeszközt."
+
+#~ msgid "Could not close control device \"%s\"."
+#~ msgstr "Nem lehet lezárni a(z) \"%s\" vezérlőeszközt."
+
+#~ msgid "Could not open video device \"%s\" for writing."
+#~ msgstr "Nem lehet írásra megnyitni a(z) \"%s\" videoeszközt."
+
+#~ msgid "Could not close video device \"%s\"."
+#~ msgstr "Nem lehet lezárni a(z) \"%s\" videoeszközt."
+
+#~ msgid "Could not write to device \"%s\"."
+#~ msgstr "Nem lehet írni a(z) \"%s\" eszközre."
 
 #~ msgid "OSS device \"%s\" is already in use by another program."
 #~ msgstr "A(z) \"%s\" OSS-eszközt már használja egy másik program."

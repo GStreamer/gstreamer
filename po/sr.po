@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-25 11:45+0200\n"
+"POT-Creation-Date: 2005-08-30 19:21+0200\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -16,78 +16,51 @@ msgstr ""
 "Plural-Forms: nplurals=3;    plural=n%10==1 && n%100!=11 ? 0 :  (n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: ext/audiofile/gstafsink.c:342 ext/sndfile/gstsf.c:624
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Не могу да отворим датотеку „%s“ ради уписа."
-
-#: ext/audiofile/gstafsink.c:364 ext/audiofile/gstafsrc.c:369
-#, c-format
-msgid "Error closing file \"%s\"."
-msgstr "Грешка при затварању датотеке „%s“."
-
-#: ext/audiofile/gstafsrc.c:316
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Не могу да отворим датотеку „%s“ ради читања."
-
-#: ext/sndfile/gstsf.c:585
-msgid "No filename specified."
-msgstr "Име датотеке није задато."
-
-#: ext/sndfile/gstsf.c:838
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Не могу да пишем у датотеку „%s“."
-
 #: gst/avi/gstavimux.c:1007
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Улазног звука нема или је неисправан, АВИ ток ће бити искварен."
 
-#: sys/dxr3/dxr3audiosink.c:296
-#, c-format
-msgid "Could not open audio device \"%s\" for writing."
-msgstr "Не могу да отворим звучни уређај „%s“ ради уписа."
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Не могу да отворим датотеку „%s“ ради уписа."
 
-#: sys/dxr3/dxr3audiosink.c:308 sys/dxr3/dxr3videosink.c:281
-#, c-format
-msgid "Could not open control device \"%s\" for writing."
-msgstr "Не могу да отворим управљачки уређај „%s“ ради уписа."
+#~ msgid "Error closing file \"%s\"."
+#~ msgstr "Грешка при затварању датотеке „%s“."
 
-#: sys/dxr3/dxr3audiosink.c:341
-#, c-format
-msgid "Could not configure audio device \"%s\"."
-msgstr "Не могу да подесим звучни уређај „%s“."
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Не могу да отворим датотеку „%s“ ради читања."
 
-#: sys/dxr3/dxr3audiosink.c:355 sys/dxr3/dxr3audiosink.c:392
-#, c-format
-msgid "Could not set audio device \"%s\" to %d Hz."
-msgstr "Не могу да поставим звучни уређај „%s“ на %d Hz."
+#~ msgid "No filename specified."
+#~ msgstr "Име датотеке није задато."
 
-#: sys/dxr3/dxr3audiosink.c:420
-#, c-format
-msgid "Could not close audio device \"%s\"."
-msgstr "Не могу да отворим радио уређај '%s'"
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Не могу да пишем у датотеку „%s“."
 
-#: sys/dxr3/dxr3audiosink.c:427 sys/dxr3/dxr3videosink.c:306
-#, c-format
-msgid "Could not close control device \"%s\"."
-msgstr "Не могу да затворим управљачки уређај „%s“."
+#~ msgid "Could not open audio device \"%s\" for writing."
+#~ msgstr "Не могу да отворим звучни уређај „%s“ ради уписа."
 
-#: sys/dxr3/dxr3videosink.c:269
-#, c-format
-msgid "Could not open video device \"%s\" for writing."
-msgstr "Не могу да отворим видео уређај „%s“ ради уписа."
+#~ msgid "Could not open control device \"%s\" for writing."
+#~ msgstr "Не могу да отворим управљачки уређај „%s“ ради уписа."
 
-#: sys/dxr3/dxr3videosink.c:299
-#, c-format
-msgid "Could not close video device \"%s\"."
-msgstr "Не могу да затворим видео уређај „%s“."
+#~ msgid "Could not configure audio device \"%s\"."
+#~ msgstr "Не могу да подесим звучни уређај „%s“."
 
-#: sys/dxr3/dxr3videosink.c:451
-#, c-format
-msgid "Could not write to device \"%s\"."
-msgstr "Не могу да пишем на видео уређај „%s“."
+#~ msgid "Could not set audio device \"%s\" to %d Hz."
+#~ msgstr "Не могу да поставим звучни уређај „%s“ на %d Hz."
+
+#~ msgid "Could not close audio device \"%s\"."
+#~ msgstr "Не могу да отворим радио уређај '%s'"
+
+#~ msgid "Could not close control device \"%s\"."
+#~ msgstr "Не могу да затворим управљачки уређај „%s“."
+
+#~ msgid "Could not open video device \"%s\" for writing."
+#~ msgstr "Не могу да отворим видео уређај „%s“ ради уписа."
+
+#~ msgid "Could not close video device \"%s\"."
+#~ msgstr "Не могу да затворим видео уређај „%s“."
+
+#~ msgid "Could not write to device \"%s\"."
+#~ msgstr "Не могу да пишем на видео уређај „%s“."
 
 #~ msgid "OSS device \"%s\" is already in use by another program."
 #~ msgstr "OSS уређај „%s“ већ користи неки програм."
