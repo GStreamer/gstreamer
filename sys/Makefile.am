@@ -40,6 +40,6 @@
 # GL_DIR=
 # endif
 
-SUBDIRS=$(OSS_DIR) 
+SUBDIRS =
 
-DIST_SUBDIRS=oss
+DIST_SUBDIRS =

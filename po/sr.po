@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-25 11:45+0200\n"
+"POT-Creation-Date: 2005-08-31 16:10+0200\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -39,10 +39,6 @@ msgstr "Име датотеке није задато."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Не могу да пишем у датотеку „%s“."
-
-#: gst/avi/gstavimux.c:1007
-msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "Улазног звука нема или је неисправан, АВИ ток ће бити искварен."
 
 #: sys/dxr3/dxr3audiosink.c:296
 #, c-format
@@ -88,6 +84,9 @@ msgstr "Не могу да затворим видео уређај „%s“."
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Не могу да пишем на видео уређај „%s“."
+
+#~ msgid "No or invalid input audio, AVI stream will be corrupt."
+#~ msgstr "Улазног звука нема или је неисправан, АВИ ток ће бити искварен."
 
 #~ msgid "OSS device \"%s\" is already in use by another program."
 #~ msgstr "OSS уређај „%s“ већ користи неки програм."

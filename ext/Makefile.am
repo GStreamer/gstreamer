@@ -1,15 +1,3 @@
-# if USE_A52DEC
-# A52DEC_DIR=a52dec
-# else
-A52DEC_DIR=
-# endif
-
-if USE_AMRNB
- AMRNB_DIR=amrnb
-else
- AMRNB_DIR=
-endif
-
 # if USE_ARTS
 # ARTS_DIR=arts
 # else
@@ -70,18 +58,6 @@ DIVX_DIR=
 DTS_DIR=
 # endif
 
-# if USE_DVDREAD
-# DVDREAD_DIR=dvdread
-# else
-DVDREAD_DIR=
-# endif
-
-# if USE_DVDNAV
-# DVDNAV_DIR=dvdnav
-# else
-DVDNAV_DIR=
-# endif
-
 # if USE_FAAC
 # FAAC_DIR=faac
 # else
@@ -118,12 +94,6 @@ HERMES_DIR=
 JACK_DIR=
 # endif
 
-if USE_LAME
-LAME_DIR=lame
-else
-LAME_DIR=
-endif
-
 # if USE_LCS
 # LCS_DIR=lcs
 # else
@@ -153,18 +123,6 @@ LIBVISUAL_DIR=
 # else 
 LIBMMS_DIR=
 # endif
-
-if USE_MAD
-MAD_DIR=mad
-else
-MAD_DIR=
-endif
-
-if USE_MPEG2DEC
- MPEG2DEC_DIR=mpeg2dec
-else
- MPEG2DEC_DIR=
-endif
 
 # if USE_MPEG2ENC
 # MPEG2ENC_DIR=mpeg2enc
@@ -213,12 +171,6 @@ SDL_DIR=
 # else
 SHOUT_DIR=
 # endif
-
-if USE_SIDPLAY
-SIDPLAY_DIR=sidplay
-else
-SIDDPLAY_DIR=
-endif
 
 # if USE_SMOOTHWAVE
 # SMOOTHWAVE_DIR=smoothwave
@@ -269,8 +221,6 @@ XINE_DIR=
 # endif
 
 SUBDIRS=\
-	$(A52DEC_DIR) \
-	$(AMRNB_DIR) \
 	$(ARTS_DIR) \
 	$(ARTSC_DIR) \
 	$(AUDIOFILE_DIR) \
@@ -281,7 +231,6 @@ SUBDIRS=\
 	$(DIRECTFB_DIR) \
 	$(DIVX_DIR) \
 	$(DTS_DIR) \
-	$(DVDNAV_DIR) \
 	$(NAS_DIR) \
 	$(FAAC_DIR) \
 	$(FAAD_DIR) \
@@ -289,13 +238,10 @@ SUBDIRS=\
 	$(HERMES_DIR) \
 	$(LIBMMS_DIR) \
 	$(JACK_DIR) \
-	$(LAME_DIR) \
 	$(LCS_DIR) \
 	$(LIBDV_DIR) \
 	$(LIBFAME_DIR) \
 	$(LIBVISUAL_DIR) \
-	$(MAD_DIR) \
-	$(MPEG2DEC_DIR) \
 	$(MPEG2ENC_DIR) \
 	$(MPLEX_DIR) \
 	$(MUSEPACK_DIR) \
@@ -303,7 +249,6 @@ SUBDIRS=\
 	$(POLYP_DIR) \
 	$(SDL_DIR) \
 	$(SHOUT_DIR) \
-	$(SIDPLAY_DIR) \
 	$(SMOOTHWAVE_DIR) \
 	$(SNAPSHOT_DIR) \
 	$(SNDFILE_DIR) \

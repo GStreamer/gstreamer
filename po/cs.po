@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-25 11:45+0200\n"
+"POT-Creation-Date: 2005-08-31 16:10+0200\n"
 "PO-Revision-Date: 2004-08-08 22:58+0200\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -41,10 +41,6 @@ msgstr "Nezadán název souboru."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Nemohu zapisovat do souboru \"%s\"."
-
-#: gst/avi/gstavimux.c:1007
-msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "Žádný nebo neplatný vstup zvuku, proud AVI bude poškozen."
 
 #: sys/dxr3/dxr3audiosink.c:296
 #, c-format
@@ -90,6 +86,9 @@ msgstr "Nemohu zavřít zařízení videa \"%s\"."
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Nemohu zapisovat do zařízení \"%s\"."
+
+#~ msgid "No or invalid input audio, AVI stream will be corrupt."
+#~ msgstr "Žádný nebo neplatný vstup zvuku, proud AVI bude poškozen."
 
 #~ msgid "OSS device \"%s\" is already in use by another program."
 #~ msgstr "Zařízení OSS \"%s\" již používá jiný program."

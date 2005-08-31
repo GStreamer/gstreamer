@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-25 11:45+0200\n"
+"POT-Creation-Date: 2005-08-31 16:10+0200\n"
 "PO-Revision-Date: 2004-08-07 20:29+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -37,10 +37,6 @@ msgstr "Nuk është përcaktuar emri i file."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "I pamundur shkrimi tek file \"%s\"."
-
-#: gst/avi/gstavimux.c:1007
-msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "Input audio i gabuar ose mungon, stream AVI mund të jetë i dëmtuar."
 
 #: sys/dxr3/dxr3audiosink.c:296
 #, c-format
@@ -86,6 +82,9 @@ msgstr "E pamundur mbyllja e dispozitivit video \"%s\"."
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "I pamundur shkrimi në dispozitivin \"%s\"."
+
+#~ msgid "No or invalid input audio, AVI stream will be corrupt."
+#~ msgstr "Input audio i gabuar ose mungon, stream AVI mund të jetë i dëmtuar."
 
 #~ msgid "OSS device \"%s\" is already in use by another program."
 #~ msgstr ""

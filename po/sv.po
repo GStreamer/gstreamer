@@ -2,13 +2,13 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # Christian Rose <menthos@menthos.com>, 2004.
 #
-# $Id: sv.po,v 1.19 2005/08/28 17:59:20 wingo Exp $
+# $Id: sv.po,v 1.20 2005/08/31 18:07:28 thomasvs Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-25 11:45+0200\n"
+"POT-Creation-Date: 2005-08-31 16:10+0200\n"
 "PO-Revision-Date: 2004-08-03 20:53+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -39,10 +39,6 @@ msgstr "Inget filnamn angivet."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Kunde inte skriva till filen \"%s\"."
-
-#: gst/avi/gstavimux.c:1007
-msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "Inget eller ogiltigt inljud. AVI-flödet kommer att skadas."
 
 #: sys/dxr3/dxr3audiosink.c:296
 #, c-format
@@ -88,6 +84,9 @@ msgstr "Kunde inte stänga vidoeenheten \"%s\"."
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Kunde inte skriva till enheten \"%s\"."
+
+#~ msgid "No or invalid input audio, AVI stream will be corrupt."
+#~ msgstr "Inget eller ogiltigt inljud. AVI-flödet kommer att skadas."
 
 #~ msgid "OSS device \"%s\" is already in use by another program."
 #~ msgstr "OSS-enheten \"%s\" används redan av ett annat program."

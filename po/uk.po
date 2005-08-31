@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-25 11:45+0200\n"
+"POT-Creation-Date: 2005-08-31 16:10+0200\n"
 "PO-Revision-Date: 2004-08-03 15:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -38,10 +38,6 @@ msgstr "Не вказаний файл."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Не вдається записати у файл \"%s\"."
-
-#: gst/avi/gstavimux.c:1007
-msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "Відсутній або неправильний вхід звуку, AVI потік буде пошкоджений."
 
 #: sys/dxr3/dxr3audiosink.c:296
 #, c-format
@@ -87,6 +83,9 @@ msgstr "Не вдається закрити відео пристрій \"%s\".
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Не вдається записати у пристрій \"%s\"."
+
+#~ msgid "No or invalid input audio, AVI stream will be corrupt."
+#~ msgstr "Відсутній або неправильний вхід звуку, AVI потік буде пошкоджений."
 
 #~ msgid "OSS device \"%s\" is already in use by another program."
 #~ msgstr "OSS пристрій \"%s\" вже використовується іншою програмою."

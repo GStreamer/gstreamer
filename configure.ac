@@ -285,11 +285,7 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
-		mpegaudioparse \
 		qtdemux \
-		realmedia \
-		silence \
-		mpegaudioparse \
                 "
 
 dnl see if we can build C++ plug-ins
@@ -321,41 +317,10 @@ dnl ==========================================================================
 dnl ============================= sys plug-ins ================================
 dnl ==========================================================================
 
-dnl *** OSS audio *** (Linux, *BSD)
-translit(dnm, m, l) AM_CONDITIONAL(USE_OSS, true)
-GST_CHECK_FEATURE(OSS, [OSS audio], osssrc osssink, [
- HAVE_OSS="yes"
-dnl Linux and newer BSD versions :
- AC_CHECK_HEADER(sys/soundcard.h, [
-   AC_DEFINE(HAVE_OSS_INCLUDE_IN_SYS,, [Define if OSS includes are in /sys/])
-   ] , [
-dnl Some old BSD versions :
-   AC_CHECK_HEADER(soundcard.h, [
-     AC_DEFINE(HAVE_OSS_INCLUDE_IN_ROOT,, [Define if OSS includes are in /])
-     ], [
-  dnl Some old BSD versions :
-     AC_CHECK_HEADER(machine/soundcard.h, [
-       AC_DEFINE(HAVE_OSS_INCLUDE_IN_MACHINE,, [Define if OSS includes are in /machine/])
-       ], [
-       HAVE_OSS="no"
-     ])
-   ])
- ])
-])
 
 dnl ###########################
 dnl # Configure external libs #
 dnl ###########################
-
-dnl *** AMR-NB ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_AMRNB, true)
-GST_CHECK_FEATURE(AMRNB, [AMR-NB], amrnbdec amrnbenc, [
-  GST_CHECK_LIBHEADER(AMRNB, amrnb,
-		      Decoder_Interface_init, -lm,
-		      amrnb/interf_dec.h,
-		      AMRNB_LIBS="-lamrnb -lm"
-		      AC_SUBST(AMRNB_LIBS))
-])
 
 dnl **** Free AAC Decoder (FAAD) ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_FAAD, true)
@@ -388,80 +353,6 @@ return 0;
   fi;
   AS_SCRUB_INCLUDE(FAAD_CFLAGS)
   AC_SUBST(FAAD_LIBS)
-])
-
-dnl *** lame ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LAME, true)
-GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
-  GST_CHECK_LIBHEADER(LAME, mp3lame, lame_init, -lm, lame/lame.h,
-  [
-    HAVE_LAME="yes"
-    LAME_LIBS="-lmp3lame -lm"
-    dnl is lame presets available
-    LAME_CFLAGS=""
-    AC_TRY_RUN([
-#include <lame/lame.h>
-int main (int argc, char *argv[])
-{
-  printf("%d\n", MEDIUM);
-  return 0;
-}
-      ],
-      [LAME_CFLAGS="-DGSTLAME_PRESET"],
-      [LAME_CFLAGS=""]
-    )
-  AC_SUBST(LAME_CFLAGS)
-  AC_SUBST(LAME_LIBS)
-  ])
-])
-
-dnl *** mad ***
-dnl FIXME: we could use header checks here as well IMO
-translit(dnm, m, l) AM_CONDITIONAL(USE_MAD, true)
-GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
-  dnl check with pkg-config first
-  PKG_CHECK_MODULES(MAD, mad >= 0.15 id3tag >= 0.15, HAVE_MAD="yes", HAVE_MAD="no")
-  if test "x$HAVE_MAD" = "xno"; then
-    dnl fall back to oldskool detection
-    AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad")
-    if test "x$HAVE_MAD" = "xyes"; then
-      HAVE_MAD="no"
-      save_LIBS=$LIBS
-      LIBS="-lz"
-      AC_CHECK_LIB(id3tag, id3_tag_options, HAVE_MAD="yes" MAD_LIBS="-lmad -lid3tag -lz")
-      LIBS=$save_LIBS
-    fi
-  fi    
-])
-AC_SUBST(MAD_LIBS)
-
-dnl *** mpeg2dec ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_MPEG2DEC, true)
-GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
-  PKG_CHECK_MODULES(MPEG2DEC, libmpeg2 >= 0.4.0,
-      HAVE_MPEG2DEC="yes", HAVE_MPEG2DEC="no")
-  AC_SUBST(MPEG2DEC_CFLAGS)
-  AC_SUBST(MPEG2DEC_LIBS)
-])
-
-dnl *** shout2 ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_SHOUT2, true)
-GST_CHECK_FEATURE(SHOUT2, [shout2 plug-in], shout2send, [
-  PKG_CHECK_MODULES(SHOUT2, shout >= 2.0, [
-    HAVE_SHOUT2="yes"
-    AC_SUBST(SHOUT2_CFLAGS)
-    AC_SUBST(SHOUT2_LIBS)
-  ], [
-    AM_PATH_SHOUT2(HAVE_SHOUT2="yes", HAVE_SHOUT2="no")
-    AC_SUBST(SHOUT2_CFLAGS)
-    AC_SUBST(SHOUT2_LIBS)
-  ])
-])
-
-dnl *** sidplay : works with libsidplay 1.36.x (not 2.x.x) ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_SIDPLAY, true)
-GST_CHECK_FEATURE(SIDPLAY, [sidplay plug-in], sidplay, [
-  GST_PATH_SIDPLAY()
 ])
 
 dnl also add builddir include for enumtypes and marshal
@@ -514,28 +405,16 @@ AC_DEFINE_UNQUOTED(GST_ORIGIN, "$GST_ORIGIN", [package origin])
 dnl #########################
 dnl # Make the output files #
 dnl #########################
+dnl po/Makefile.in
 
 AC_CONFIG_FILES(
 Makefile
 gst-plugins.spec
 gst/Makefile
-gst/mpegaudioparse/Makefile
-gst/dvdlpcmdec/Makefile
 gst/qtdemux/Makefile
-gst/realmedia/Makefile
-gst/silence/Makefile
 sys/Makefile
-sys/oss/Makefile
 ext/Makefile
-ext/amrnb/Makefile
 ext/faad/Makefile
-ext/lame/Makefile
-ext/mad/Makefile
-ext/mpeg2dec/Makefile
-ext/sidplay/Makefile
-gst-libs/Makefile
-gst-libs/gst/Makefile
-po/Makefile.in
 common/Makefile
 common/m4/Makefile
 m4/Makefile

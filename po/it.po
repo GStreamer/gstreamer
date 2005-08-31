@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-25 11:45+0200\n"
+"POT-Creation-Date: 2005-08-31 16:10+0200\n"
 "PO-Revision-Date: 2004-11-07 19:11+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -38,10 +38,6 @@ msgstr "Nessun nome di file specificato."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Impossibile scrivere sul file «%s»."
-
-#: gst/avi/gstavimux.c:1007
-msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "Ingresso audio assente o non valido. Lo stream AVI risulterà corrotto."
 
 #: sys/dxr3/dxr3audiosink.c:296
 #, c-format
@@ -87,6 +83,10 @@ msgstr "Impossibile chiudere il device video «%s»."
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Impossibile scrivere sul device «%s»."
+
+#~ msgid "No or invalid input audio, AVI stream will be corrupt."
+#~ msgstr ""
+#~ "Ingresso audio assente o non valido. Lo stream AVI risulterà corrotto."
 
 #~ msgid "OSS device \"%s\" is already in use by another program."
 #~ msgstr "Il device OSS «%s» è già usato da un altro programma."

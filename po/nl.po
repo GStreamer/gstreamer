@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-25 11:45+0200\n"
+"POT-Creation-Date: 2005-08-31 16:10+0200\n"
 "PO-Revision-Date: 2004-08-05 16:26+0200\n"
 "Last-Translator: Elros Cyriatan <cyriatan@fastmail.fm>\n"
 "Language-Team: Dutch <vertaling@nl.linux.org>\n"
@@ -38,10 +38,6 @@ msgstr "Geen bestandsnaam opgegeven."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Kon niet schrijven naar bestand \"%s\"."
-
-#: gst/avi/gstavimux.c:1007
-msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "Geen of ongeldig invoergeluid, AVI-stroom zal slecht zijn."
 
 #: sys/dxr3/dxr3audiosink.c:296
 #, c-format
@@ -87,6 +83,9 @@ msgstr "Kon videoapparaat \"%s\" niet sluiten."
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Kon niet schrijven naar apparaat \"%s\"."
+
+#~ msgid "No or invalid input audio, AVI stream will be corrupt."
+#~ msgstr "Geen of ongeldig invoergeluid, AVI-stroom zal slecht zijn."
 
 #~ msgid "OSS device \"%s\" is already in use by another program."
 #~ msgstr "OSS-apparaat \"%s\" is al in gebruik door een ander programma."

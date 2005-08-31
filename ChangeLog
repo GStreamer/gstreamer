@@ -1,3 +1,55 @@
+2005-08-31  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/mad/Makefile.am:
+	* ext/mad/gstid3tag.c:
+	* ext/mad/gstmad.c:
+	* ext/mad/gstmad.h:
+	* gst/mpegaudio/.cvsignore:
+	* gst/mpegaudio/Makefile.am:
+	* gst/mpegaudio/README.crh:
+	* gst/mpegaudio/common.c:
+	* gst/mpegaudio/common.h:
+	* gst/mpegaudio/encode.c:
+	* gst/mpegaudio/encoder.h:
+	* gst/mpegaudio/fixes.txt:
+	* gst/mpegaudio/gstmpegaudio.c:
+	* gst/mpegaudio/gstmpegaudio.h:
+	* gst/mpegaudio/mpegaudio.vcproj:
+	* gst/mpegaudio/musicin.c:
+	* gst/mpegaudio/musicin.h:
+	* gst/mpegaudio/psy.c:
+	* gst/mpegaudio/putbits.c:
+	* gst/mpegaudio/putbits.h:
+	* gst/mpegaudio/readme.txt:
+	* gst/mpegaudio/release.txt:
+	* gst/mpegaudio/subs.c:
+	* gst/mpegaudio/table_absthr.h:
+	* gst/mpegaudio/table_alloc.h:
+	* gst/mpegaudio/table_cb.h:
+	* gst/mpegaudio/table_enwindow.h:
+	* gst/mpegaudio/table_th.h:
+	* gst/mpegaudio/tables.c:
+	* gst/mpegaudio/tonal.c:
+	* po/af.po:
+	* po/az.po:
+	* po/cs.po:
+	* po/en_GB.po:
+	* po/hu.po:
+	* po/it.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/uk.po:
+	* po/vi.po:
+	* sys/Makefile.am:
+
+	  all these plugins are moved to gst-plugins-ugly
+
 2005-08-31  Michael Smith <msmith@fluendo.com>
 
 	* configure.ac:
