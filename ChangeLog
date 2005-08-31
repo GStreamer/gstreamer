@@ -1,3 +1,18 @@
+2005-08-31  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/__init__.py:
+	  del ltihooks properly; fixes loading of testhelper in testsuite
+	* gst/gst.defs:
+	  wrap link_filtered
+
+2005-08-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  require base and controller as well since we wrap them
+	* gst/__init__.py:
+	  if using ltihooks, import interfaces and then uninstall our
+	  module importer so we don't crap all over someone else's
+
 2005-08-19  Andy Wingo  <wingo@pobox.com>
 
 	* gst/interfaces.defs (MixerTrack): MixerTrack is a GObject. How

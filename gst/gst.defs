@@ -5676,6 +5676,16 @@
   )
 )
 
+(define-method link_filtered
+  (of-object "GstElement")
+  (c-name "gst_element_link_filtered")
+  (return-type "gboolean")
+  (parameters
+    '("GstElement*" "dest")
+    '("GstCaps*" "filter")
+  )
+)
+
 (define-function element_unlink_many
   (c-name "gst_element_unlink_many")
   (return-type "none")
