@@ -1,5 +1,11 @@
 2005-08-31  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstminiobject.c: (gst_mini_object_ref):
+	Cannot assert that the refcount has to be positive
+	since a disposed object can be resurected.
+
+2005-08-31  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstpad.c: (gst_pad_init):
 	Revert change, need to first fix badly behaving 
 	apps.
