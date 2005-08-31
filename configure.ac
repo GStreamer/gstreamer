@@ -520,6 +520,7 @@ Makefile
 gst-plugins.spec
 gst/Makefile
 gst/mpegaudioparse/Makefile
+gst/dvdlpcmdec/Makefile
 gst/qtdemux/Makefile
 gst/realmedia/Makefile
 gst/silence/Makefile

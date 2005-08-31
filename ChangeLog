@@ -1,3 +1,13 @@
+2005-08-31  Michael Smith <msmith@fluendo.com>
+
+	* configure.ac:
+	* gst/dvdlpcmdec/Makefile.am:
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (gst_dvdlpcm_reset),
+	(gst_dvdlpcmdec_init), (gst_dvdlpcmdec_link), (update_timestamps),
+	(gst_dvdlpcmdec_chain):
+	* gst/dvdlpcmdec/gstdvdlpcmdec.h:
+	  Port LPCM decoder to 0.9
+
 2005-08-30  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:
