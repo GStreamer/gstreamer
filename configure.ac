@@ -12,12 +12,13 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins, GST_PLUGINS_VERSION, 0, 9, 0, 1, GST_CVS="no", GST_CVS="yes")
+AS_VERSION(gst-plugins-ugly, GST_PLUGINS_UGLY_VERSION, 0, 9, 0, 1,
+  GST_CVS="no", GST_CVS="yes")
 
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 
 dnl our libraries and install dirs use major.minor as a version
-GST_MAJORMINOR=$GST_PLUGINS_VERSION_MAJOR.$GST_PLUGINS_VERSION_MINOR
+GST_MAJORMINOR=$GST_PLUGINS_UGLY_VERSION_MAJOR.$GST_PLUGINS_UGLY_VERSION_MINOR
 dnl we override it here if we need to for the release candidate of new series
 GST_MAJORMINOR=0.9
 AC_SUBST(GST_MAJORMINOR)
@@ -28,12 +29,11 @@ dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
 dnl for 0.8.3 release, gst_play_get_all_by_interface was added, so update
-AS_LIBTOOL(GST_PLUGINS, 1, 0, 1)
+AS_LIBTOOL(GST_PLUGINS_GOOD, 0, 0, 0)
 AS_LIBTOOL_TAGS([CXX])
 AM_PROG_LIBTOOL
 
-dnl FIXME take something else ?
-AC_CONFIG_SRCDIR([gst/librfb/gstrfbsrc.c])
+AC_CONFIG_SRCDIR([ext/mad/gstmad.c])
 AM_CONFIG_HEADER(config.h)
 
 dnl Add parameters for aclocal
@@ -48,18 +48,18 @@ AS="${CC}"
 AS_PROG_OBJC
 
 dnl the gettext stuff needed
-AM_GNU_GETTEXT_VERSION(0.11.5)
-AM_GNU_GETTEXT([external])
+dnl AM_GNU_GETTEXT_VERSION(0.11.5)
+dnl AM_GNU_GETTEXT([external])
                                                                             
-GETTEXT_PACKAGE=gst-plugins-$GST_MAJORMINOR
-AC_SUBST(GETTEXT_PACKAGE)
-AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], "$GETTEXT_PACKAGE",
-                  [gettext package name])
+dnl GETTEXT_PACKAGE=gst-plugins-ugly-$GST_MAJORMINOR
+dnl AC_SUBST(GETTEXT_PACKAGE)
+dnl AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], "$GETTEXT_PACKAGE",
+dnl                   [gettext package name])
 
 dnl define LOCALEDIR in config.h
-AS_AC_EXPAND(LOCALEDIR, $datadir/locale)
-AC_DEFINE_UNQUOTED([LOCALEDIR], "$LOCALEDIR",
-                   [gettext locale dir])
+dnl AS_AC_EXPAND(LOCALEDIR, $datadir/locale)
+dnl AC_DEFINE_UNQUOTED([LOCALEDIR], "$LOCALEDIR",
+dnl                   [gettext locale dir])
 
 dnl decide on error flags
 AS_COMPILER_FLAG(-Wall, GST_WALL="yes", GST_WALL="no")
@@ -101,31 +101,6 @@ fi
 dnl Check for FIONREAD ioctl declaration :
 GST_CHECK_FIONREAD()
 
-DEFAULT_AUDIOSINK="autoaudiosink"
-DEFAULT_VIDEOSINK="autovideosink"
-DEFAULT_AUDIOSRC="alsasrc"
-DEFAULT_VIDEOSRC="v4lsrc"
-DEFAULT_VISUALIZER="goom"
-case "$host" in 
-  *-sun-* | *pc-solaris* )
-    DEFAULT_AUDIOSRC="sunaudiosrc"
-    ;;
-  *-darwin* )
-    DEFAULT_AUDIOSRC="osxaudiosrc"
-    ;;
-esac
-
-AC_SUBST(DEFAULT_AUDIOSINK)
-AC_DEFINE_UNQUOTED(DEFAULT_AUDIOSINK,"$DEFAULT_AUDIOSINK",[Default audio sink])
-AC_SUBST(DEFAULT_AUDIOSRC)
-AC_DEFINE_UNQUOTED(DEFAULT_AUDIOSRC,"$DEFAULT_AUDIOSRC",[Default audio source])
-AC_SUBST(DEFAULT_VIDEOSINK)
-AC_DEFINE_UNQUOTED(DEFAULT_VIDEOSINK,"$DEFAULT_VIDEOSINK",[Default video sink])
-AC_SUBST(DEFAULT_VIDEOSRC)
-AC_DEFINE_UNQUOTED(DEFAULT_VIDEOSRC,"$DEFAULT_VIDEOSRC",[Default video source])
-AC_SUBST(DEFAULT_VISUALIZER)
-AC_DEFINE_UNQUOTED(DEFAULT_VISUALIZER,"$DEFAULT_VISUALIZER",[Default visualizer])
-
 dnl ############################################
 dnl # Super Duper options for plug-in building #
 dnl ############################################
@@ -142,27 +117,6 @@ GST_CHECK_FEATURE(EXTERNAL, [enable building of plug-ins with external deps],,
 ])
 # make BUILD_EXTERNAL available to Makefile.am
 AM_CONDITIONAL(BUILD_EXTERNAL, test "x$BUILD_EXTERNAL" = "xyes")
-
-dnl experimental plug-ins; stuff that hasn't had the dust settle yet
-dnl read 'builds, but might not work'UTO
-GST_CHECK_FEATURE(EXPERIMENTAL, [enable building of experimental plug-ins],,
-[HAVE_EXPERIMENTAL=yes],disabled,
-[
-  AC_MSG_WARN(building experimental plug-ins)
-  USE_TARKIN="yes"
-],[
-  AC_MSG_NOTICE(not building experimental plug-ins)
-  USE_TARKIN="no"
-])
-
-dnl broken plug-ins; stuff that doesn't seem to build at the moment
-GST_CHECK_FEATURE(BROKEN, [enable building of broken plug-ins],,
-HAVE_BROKEN=yes,disabled,
-[  
-  AC_MSG_WARN([building broken plug-ins -- no bug reports on these, only patches :)])
-],[
-  AC_MSG_NOTICE([not building broken plug-ins])
-])
 
 dnl ##############################
 dnl # Do automated configuration #
@@ -182,31 +136,6 @@ AC_ARG_WITH(pkg-config-path,
 GST_DOC()
 dnl check architecture
 GST_ARCH()
-
-dnl check for gconftool-2
-
-dnl this macro defines an am conditional, so it needs to be run always
-AM_GCONF_SOURCE_2
-
-translit(dnm, m, l) AM_CONDITIONAL(USE_GCONFTOOL, true)
-GST_CHECK_FEATURE(GCONFTOOL, [GConf schemas], , [
-  AC_PATH_PROG(GCONFTOOL, gconftool-2, no)
-  if test x$GCONFTOOL = xno; then
-    AC_MSG_WARN(Not installing GConf schemas)
-    HAVE_GCONFTOOL="no"
-  else
-    HAVE_GCONFTOOL="yes"
-  fi
-  AC_SUBST(HAVE_GCONFTOOL)
-])
-
-dnl check for GConf libraries
-translit(dnm, m, l) AM_CONDITIONAL(USE_GCONF, true)
-GST_CHECK_FEATURE(GCONF, [GConf libraries], , [
-  PKG_CHECK_MODULES(GCONF, gconf-2.0, HAVE_GCONF="yes", HAVE_GCONF="no")
-  AC_SUBST(GCONF_CFLAGS)
-  AC_SUBST(GCONF_LIBS)
-])
 
 dnl check for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
@@ -269,7 +198,7 @@ PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.0, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
 AC_SUBST(LIBOIL_CFLAGS)
 AC_SUBST(LIBOIL_LIBS)
 if test "x${HAVE_LIBOIL}" = xyes ; then
-  #AC_DEFINE_UNQUOTED(HAVE_LIBOIL, 1, [Define if liboil is being used])
+  AC_DEFINE_UNQUOTED(HAVE_LIBOIL, 1, [Define if liboil is being used])
   true
 fi
 
@@ -285,11 +214,9 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
+		dvdlpcmdec \
 		mpegaudioparse \
-		qtdemux \
 		realmedia \
-		silence \
-		mpegaudioparse \
                 "
 
 dnl see if we can build C++ plug-ins
@@ -317,32 +244,6 @@ AC_ARG_WITH(plugins,
 
 AC_SUBST(GST_PLUGINS_SELECTED)
 
-dnl ==========================================================================
-dnl ============================= sys plug-ins ================================
-dnl ==========================================================================
-
-dnl *** OSS audio *** (Linux, *BSD)
-translit(dnm, m, l) AM_CONDITIONAL(USE_OSS, true)
-GST_CHECK_FEATURE(OSS, [OSS audio], osssrc osssink, [
- HAVE_OSS="yes"
-dnl Linux and newer BSD versions :
- AC_CHECK_HEADER(sys/soundcard.h, [
-   AC_DEFINE(HAVE_OSS_INCLUDE_IN_SYS,, [Define if OSS includes are in /sys/])
-   ] , [
-dnl Some old BSD versions :
-   AC_CHECK_HEADER(soundcard.h, [
-     AC_DEFINE(HAVE_OSS_INCLUDE_IN_ROOT,, [Define if OSS includes are in /])
-     ], [
-  dnl Some old BSD versions :
-     AC_CHECK_HEADER(machine/soundcard.h, [
-       AC_DEFINE(HAVE_OSS_INCLUDE_IN_MACHINE,, [Define if OSS includes are in /machine/])
-       ], [
-       HAVE_OSS="no"
-     ])
-   ])
- ])
-])
-
 dnl ###########################
 dnl # Configure external libs #
 dnl ###########################
@@ -357,38 +258,6 @@ GST_CHECK_FEATURE(AMRNB, [AMR-NB], amrnbdec amrnbenc, [
 		      AC_SUBST(AMRNB_LIBS))
 ])
 
-dnl **** Free AAC Decoder (FAAD) ****
-translit(dnm, m, l) AM_CONDITIONAL(USE_FAAD, true)
-GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
-  HAVE_FAAD="yes"
-  GST_CHECK_LIBHEADER(FAAD, faad, faacDecOpen, -lm, faad.h, FAAD_LIBS="-lfaad -lm", HAVE_FAAD="no")
-  if test $HAVE_FAAD = "yes"; then
-    AC_MSG_CHECKING([Checking for FAAD >= 2])
-    AC_TRY_RUN([
-
-#include <faad.h>
-#if !defined(FAAD2_VERSION) || !defined(FAAD_FMT_DOUBLE)
-#error Not faad2
-#else
-#include <string.h>
-
-int main()
-{
-char version[9] = FAAD2_VERSION;
-// a release candidate of 2.0 is not enought for us
-if ( strstr( version, "2.0 RC" ) ) { return 1; }
-
-return 0;
-}
-
-#endif
-    ],
-       [ HAVE_FAAD="yes" && AC_MSG_RESULT(yes)],
-       [ HAVE_FAAD="no"  && AC_MSG_RESULT(no)])
-  fi;
-  AS_SCRUB_INCLUDE(FAAD_CFLAGS)
-  AC_SUBST(FAAD_LIBS)
-])
 
 dnl *** lame ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LAME, true)
@@ -442,20 +311,6 @@ GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
       HAVE_MPEG2DEC="yes", HAVE_MPEG2DEC="no")
   AC_SUBST(MPEG2DEC_CFLAGS)
   AC_SUBST(MPEG2DEC_LIBS)
-])
-
-dnl *** shout2 ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_SHOUT2, true)
-GST_CHECK_FEATURE(SHOUT2, [shout2 plug-in], shout2send, [
-  PKG_CHECK_MODULES(SHOUT2, shout >= 2.0, [
-    HAVE_SHOUT2="yes"
-    AC_SUBST(SHOUT2_CFLAGS)
-    AC_SUBST(SHOUT2_LIBS)
-  ], [
-    AM_PATH_SHOUT2(HAVE_SHOUT2="yes", HAVE_SHOUT2="no")
-    AC_SUBST(SHOUT2_CFLAGS)
-    AC_SUBST(SHOUT2_LIBS)
-  ])
 ])
 
 dnl *** sidplay : works with libsidplay 1.36.x (not 2.x.x) ***
@@ -515,27 +370,21 @@ dnl #########################
 dnl # Make the output files #
 dnl #########################
 
+dnl po/Makefile.in
+
 AC_CONFIG_FILES(
 Makefile
-gst-plugins.spec
+gst-plugins-ugly.spec
 gst/Makefile
-gst/mpegaudioparse/Makefile
 gst/dvdlpcmdec/Makefile
-gst/qtdemux/Makefile
+gst/mpegaudioparse/Makefile
 gst/realmedia/Makefile
-gst/silence/Makefile
-sys/Makefile
-sys/oss/Makefile
 ext/Makefile
 ext/amrnb/Makefile
-ext/faad/Makefile
 ext/lame/Makefile
 ext/mad/Makefile
 ext/mpeg2dec/Makefile
 ext/sidplay/Makefile
-gst-libs/Makefile
-gst-libs/gst/Makefile
-po/Makefile.in
 common/Makefile
 common/m4/Makefile
 m4/Makefile
