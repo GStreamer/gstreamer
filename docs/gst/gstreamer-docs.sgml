@@ -109,7 +109,6 @@
     &GstBuffer;
     &GstBus;
     &GstCaps;
-    &GstCheck;
     &GstChildProxy;
     &GstClock;
     &GstConfig;
@@ -124,7 +123,6 @@
     &GstImplementsInterface;
     &GstIndex;
     &GstIndexFactory;
-    &GstInfo;
     &GstIterator;
     &GstMessage;
     &GstMiniObject;
@@ -160,11 +158,23 @@
   <chapter id="gstreamer-support">
     <title>GStreamer Core Support</title>
     <para>
-      Theses elements support the gstreamer core and applications using it.
+      Theses modules support the gstreamer core and applications using it.
     </para>
 
     &GstMacros;
     &GstMemChunk;
+
+  </chapter>
+
+  <chapter id="gstreamer-internal">
+    <title>GStreamer Core Internals</title>
+    <para>
+      Theses are internal modules which are rarely used by applications.
+    </para>
+
+    &GstCheck;
+    &GstInfo;
+    &GstTrace;
 
   </chapter>
 

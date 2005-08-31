@@ -15,10 +15,12 @@ gstcollectpads.sgml
 gstcompat.sgml
 gstconfig.sgml
 gstevent.sgml
+gsterror.sgml
 gstfakesrc.sgml
 gstfakesink.sgml
 gstfilesrc.sgml
 gstfilesink.sgml
+gstfilter.sgml
 gstformat.sgml
 gstmessage.sgml
 gstminiobject.sgml
@@ -26,6 +28,10 @@ gstprobe.sgml
 gstpushsrc.sgml
 gstquery.sgml
 gsttask.sgml
+gsturihandler.sgml
+gsturitype.sgml
+gstutils.sgml
 gstversion.sgml
+gstxml.sgml
 gstxmlregistry.sgml
 

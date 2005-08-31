@@ -1797,7 +1797,6 @@ gst_tag_list_get_string
 gst_tag_list_get_string_index
 gst_tag_list_get_pointer
 gst_tag_list_get_pointer_index
-gst_event_new_tag
 <SUBSECTION Standard>
 GST_TAG_LIST
 GST_IS_TAG_LIST

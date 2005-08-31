@@ -193,6 +193,11 @@ typedef enum
 #define GST_CORE_ERROR      gst_core_error_quark ()
 #define GST_STREAM_ERROR    gst_stream_error_quark ()
 
+/**
+ * GST_ERROR_SYSTEM:
+ *
+ * Generates an human readable error message out of an errno number.
+ */
 #define GST_ERROR_SYSTEM    ("system error: %s", g_strerror (errno))
 
 GType gst_g_error_get_type (void);

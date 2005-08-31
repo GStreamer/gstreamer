@@ -19,6 +19,12 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstutils
+ * @short_description: Various utility functions
+ *
+ * When defining own plugins, use the GST_BOILERPLATE ease gobject creation.
+ */
 
 #include <stdio.h>
 #include <string.h>

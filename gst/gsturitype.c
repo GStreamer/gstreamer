@@ -19,6 +19,11 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gsturitype
+ * @short_description: Describes URI types
+ *
+ */
 
 #include "gst_private.h"
 

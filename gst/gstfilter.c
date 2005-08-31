@@ -16,7 +16,16 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+/**
+ * SECTION:gstfilter
+ * @short_description: Take data in and spit data out
+ *
+ * Filters take data in and spit data out. They are the main elements in a
+ * filter graph.
+ * Filters have zero or more inputs and zero or more outputs. Filters are
+ * linked together to form filter graphs. A #GstFilter is the base class and is
+ * not very useful on its own.
+ */
 #include "gst_private.h"
 #include <gst/gstfilter.h>
 
