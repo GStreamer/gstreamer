@@ -1,3 +1,10 @@
+2005-08-31  Stefan Kost  <ensonic@users.sf.net>
+
+	* libs/gst/controller/gst-controller.c:
+	(gst_controlled_property_set_interpolation_mode),
+	(gst_controlled_property_new):
+	 fixed boolean again
+
 2005-08-31  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/faq/gst-uninstalled:

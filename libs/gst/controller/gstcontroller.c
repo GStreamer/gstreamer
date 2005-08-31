@@ -205,7 +205,7 @@ gst_controlled_property_set_interpolation_mode (GstControlledProperty * self,
         self->get = NULL;
         self->get_value_array = NULL;
     }
-    if (!self->get || !self->get_value_array) {
+    if (!self->get) {           /* || !self->get_value_array) */
       GST_WARNING ("incomplete implementation for type '%d'", self->type);
       res = FALSE;
     }
@@ -306,16 +306,22 @@ gst_controlled_property_new (GObject * object, const gchar * name)
           g_value_set_double (&prop->default_value, tpspec->default_value);
         }
           break;
+        case G_TYPE_BOOLEAN:{
+          GParamSpecBoolean *tpspec = G_PARAM_SPEC_BOOLEAN (pspec);
+
+          g_value_set_boolean (&prop->default_value, tpspec->default_value);
+        }
+          break;
         default:
           GST_WARNING ("incomplete implementation for paramspec type '%s'",
               G_PARAM_SPEC_TYPE_NAME (pspec));
       }
       /* TODO what about adding a timedval with timestamp=0 and value=default
-         + a bit easier for interpolators, example:
-         * first timestamp is at 5
-         * requested value if for timestamp=3
-         * LINEAR and Co. would need to interpolate from default value
-         to value at timestamp 5 
+       * a bit easier for interpolators, example:
+       * first timestamp is at 5
+       * requested value if for timestamp=3
+       * LINEAR and Co. would need to interpolate from default value to value
+       * at timestamp 5 
        */
       signal_name = g_alloca (8 + 1 + strlen (name));
       g_sprintf (signal_name, "notify::%s", name);
