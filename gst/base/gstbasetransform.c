@@ -368,6 +368,8 @@ gst_base_transform_configure_caps (GstBaseTransform * trans, GstCaps * in,
     ret = klass->set_caps (trans, in, out);
   }
 
+  trans->negotiated = ret;
+
   return ret;
 }
 
@@ -381,12 +383,8 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
   gboolean ret = TRUE;
   gboolean peer_checked = FALSE;
 
-  /* caps must be fixed here */
-  g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
-
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
   klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
-  g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
 
   otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
   otherpeer = gst_pad_get_peer (otherpad);
@@ -395,6 +393,10 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
    * infinite loop. */
   if (GST_PAD_IS_IN_SETCAPS (otherpad))
     goto done;
+
+  /* caps must be fixed here */
+  if (!gst_caps_is_fixed (caps))
+    goto unfixed_caps;
 
   /* see how we can transform the input caps. */
   othercaps = gst_base_transform_transform_caps (trans,
@@ -543,11 +545,19 @@ done:
   if (othercaps)
     gst_caps_unref (othercaps);
 
+  trans->negotiated = ret;
+
   gst_object_unref (trans);
 
   return ret;
 
   /* ERRORS */
+unfixed_caps:
+  {
+    GST_DEBUG_OBJECT (trans, "caps are not fixed  %" GST_PTR_FORMAT, caps);
+    ret = FALSE;
+    goto done;
+  }
 no_transform:
   {
     GST_DEBUG_OBJECT (trans,
@@ -948,6 +958,9 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
 
+  if (!trans->negotiated)
+    goto not_negotiated;
+
   ret = gst_base_transform_handle_buffer (trans, buffer, &outbuf);
   if (ret == GST_FLOW_OK) {
     ret = gst_pad_push (trans->srcpad, outbuf);
@@ -956,6 +969,11 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
   gst_object_unref (trans);
 
   return ret;
+
+not_negotiated:
+  {
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 static void
@@ -1054,6 +1072,7 @@ gst_base_transform_change_state (GstElement * element)
       GST_DEBUG_OBJECT (trans, "in_place %d", trans->in_place);
       gst_caps_replace (&trans->cache_caps1, NULL);
       gst_caps_replace (&trans->cache_caps2, NULL);
+      trans->negotiated = FALSE;
       GST_UNLOCK (trans);
       break;
     case GST_STATE_PAUSED_TO_PLAYING:

@@ -58,6 +58,7 @@ struct _GstBaseTransform {
 
   gboolean	 delay_configure;
   gboolean	 pending_configure;
+  gboolean	 negotiated;
 
   gboolean       have_newsegment;
 
