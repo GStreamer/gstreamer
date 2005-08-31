@@ -429,7 +429,12 @@ gst_mmap_buffer_class_init (gpointer g_class, gpointer class_data)
 static void
 gst_mmap_buffer_init (GTypeInstance * instance, gpointer g_class)
 {
+  GstBuffer *buf = (GstBuffer *) instance;
 
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_READONLY);
+  /* before we re-enable this flag, we probably need to fix _copy()
+   * _make_writable(), etc. in GstMiniObject/GstBuffer as well */
+  /* GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_ORIGINAL); */
 }
 
 static void
@@ -500,9 +505,6 @@ gst_file_src_map_region (GstFileSrc * src, off_t offset, size_t size)
 #endif
 
   /* fill in the rest of the fields */
-  /* FIXME */
-  //GST_BUFFER_FLAG_SET (buf, GST_BUFFER_READONLY);
-  //GST_BUFFER_FLAG_SET (buf, GST_BUFFER_ORIGINAL);
   GST_BUFFER_SIZE (buf) = size;
   GST_BUFFER_OFFSET (buf) = offset;
   GST_BUFFER_OFFSET_END (buf) = offset + size;
