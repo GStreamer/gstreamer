@@ -1,3 +1,11 @@
+2005-08-31  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_set_property),
+	(gst_v4lsrc_get_property):
+	  The 'timestamp-offset' property is registered as an int64, so
+	  let's use g_value_{set|get}_int64() in our setter and getter
+	  functions (makes it work and fixes warnings with gst-inspect).
+
 2005-08-30  Wim Taymans  <wim@fluendo.com>
 
 	* check/elements/audioconvert.c: (setup_audioconvert):

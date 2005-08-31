@@ -165,7 +165,7 @@ gst_v4lsrc_set_property (GObject * object,
       v4lsrc->copy_mode = g_value_get_boolean (value);
       break;
     case PROP_TIMESTAMP_OFFSET:
-      v4lsrc->timestamp_offset = g_value_get_int (value);
+      v4lsrc->timestamp_offset = g_value_get_int64 (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -191,7 +191,7 @@ gst_v4lsrc_get_property (GObject * object,
       g_value_set_boolean (value, v4lsrc->copy_mode);
       break;
     case PROP_TIMESTAMP_OFFSET:
-      g_value_set_int (value, v4lsrc->timestamp_offset);
+      g_value_set_int64 (value, v4lsrc->timestamp_offset);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
