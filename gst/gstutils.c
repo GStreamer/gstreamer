@@ -1375,6 +1375,27 @@ gst_element_link_many (GstElement * element_1, GstElement * element_2, ...)
 }
 
 /**
+ * gst_element_link_filtered:
+ * @src: a #GstElement containing the source pad.
+ * @dest: the #GstElement containing the destination pad.
+ * @filter: the #GstCaps to filter the link, or #NULL for no filter.
+ *
+ * Links @src to @dest using the given caps as filtercaps.
+ * The link must be from source to
+ * destination; the other direction will not be tried. The function looks for
+ * existing pads that aren't linked yet. It will request new pads if necessary.
+ * If multiple links are possible, only one is established.
+ *
+ * Returns: TRUE if the pads could be linked, FALSE otherwise.
+ */
+gboolean
+gst_element_link_filtered (GstElement * src, GstElement * dest,
+    GstCaps * filter)
+{
+  return gst_element_link_pads_filtered (src, NULL, dest, NULL, filter);
+}
+
+/**
  * gst_element_unlink_pads:
  * @src: a #GstElement containing the source pad.
  * @srcpadname: the name of the #GstPad in source element.

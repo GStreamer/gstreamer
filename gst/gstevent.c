@@ -31,7 +31,7 @@
  * provided macros. The event should be unreferenced with gst_event_unref().
  *
  * gst_event_new_seek() is a usually used to create a seek event and it takes
- * the needed parameters for a seek event. 
+ * the needed parameters for a seek event.
  *
  * gst_event_new_flush() creates a new flush event.
  */
@@ -489,7 +489,7 @@ gst_event_parse_qos (GstEvent * event, gdouble * proportion,
  *
  * Allocate a new seek event with the given parameters.
  *
- * The seek event configures playback of the pipeline from 
+ * The seek event configures playback of the pipeline from
  * @cur to @stop at the speed given in @rate.
  * The @cur and @stop values are expressed in format @format.
  *

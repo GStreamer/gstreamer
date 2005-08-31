@@ -156,27 +156,6 @@ typedef struct _GstEventClass GstEventClass;
  * a seek method and optional flags are OR-ed together. The seek event is then
  * inserted into the graph with #gst_pad_send_event() or
  * #gst_element_send_event().
-
- * Following example illustrates how to insert a seek event (1 second in the stream)
- * in a pipeline.
- * <example>
- * <title>Insertion of a seek event into a pipeline</title>
- * <programlisting>
- *  gboolean res;
- *  GstEvent *event;
- *  
- *  event = gst_event_new_seek (
- *            GST_FORMAT_TIME |		// seek on time
- *            GST_SEEK_METHOD_SET |	// set the absolute position
- *            GST_SEEK_FLAG_FLUSH,	// flush any pending data
- *            1 * GST_SECOND);		// the seek offset (1 second)
- *  
- *  res = gst_element_send_event (GST_ELEMENT (osssink), event);
- *  if (!res) {
- *    g_warning ("seek failed");
- *  }
- * </programlisting>
- * </example>
  */
 typedef enum {
   /* one of these */

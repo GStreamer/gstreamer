@@ -1,3 +1,14 @@
+2005-08-31  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/faq/gst-uninstalled:
+	  add -good
+	* gst/gstevent.c:
+	* gst/gstevent.h:
+	  remove wrong docs
+	* gst/gstutils.c: (gst_element_link_filtered):
+	* gst/gstutils.h:
+	  add gst_element_link_filtered
+
 2005-08-31  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-docs.sgml:

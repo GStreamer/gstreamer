@@ -297,6 +297,9 @@ G_CONST_RETURN gchar*   gst_element_state_get_name      (GstElementState state);
 gboolean		gst_element_link                (GstElement *src, GstElement *dest);
 gboolean		gst_element_link_many           (GstElement *element_1,
 		                                         GstElement *element_2, ...);
+gboolean		gst_element_link_filtered	(GstElement * src,
+                                                         GstElement * dest,
+                                                         GstCaps *filter);
 void                    gst_element_unlink              (GstElement *src, GstElement *dest);
 void                    gst_element_unlink_many         (GstElement *element_1,
 		                                         GstElement *element_2, ...);
