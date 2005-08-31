@@ -1,5 +1,11 @@
 2005-08-31  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasetransform.c: (gst_base_transform_setcaps),
+	(gst_base_transform_handle_buffer), (gst_base_transform_chain):
+	Don't leak refcounts on buffers.
+
+2005-08-31  Wim Taymans  <wim@fluendo.com>
+
 	* gst/base/gstbasetransform.c: (gst_base_transform_configure_caps),
 	(gst_base_transform_setcaps), (gst_base_transform_handle_buffer),
 	(gst_base_transform_chain), (gst_base_transform_change_state):

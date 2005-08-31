@@ -824,6 +824,9 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
   else
     GST_LOG_OBJECT (trans, "... and offset NONE");
 
+  if (!trans->negotiated)
+    goto not_negotiated;
+
   if (trans->in_place) {
     /* passthrough elements or when the buffer is writable
      * can be performed with the _ip method */
@@ -904,6 +907,13 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
   return ret;
 
   /* ERRORS */
+not_negotiated:
+  {
+    gst_buffer_unref (inbuf);
+    GST_ELEMENT_ERROR (trans, STREAM, NOT_IMPLEMENTED,
+        ("not negotiated"), ("not negotiated"));
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 no_size:
   {
     gst_buffer_unref (inbuf);
@@ -958,9 +968,6 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
 
-  if (!trans->negotiated)
-    goto not_negotiated;
-
   ret = gst_base_transform_handle_buffer (trans, buffer, &outbuf);
   if (ret == GST_FLOW_OK) {
     ret = gst_pad_push (trans->srcpad, outbuf);
@@ -969,11 +976,6 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
   gst_object_unref (trans);
 
   return ret;
-
-not_negotiated:
-  {
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
 }
 
 static void
