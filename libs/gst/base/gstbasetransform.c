@@ -815,8 +815,13 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
     GST_LOG_OBJECT (trans, "... and offset NONE");
 
   if (trans->in_place) {
-    /* check if we can do inplace and the buffer is writable */
-    if (bclass->transform_ip && gst_buffer_is_writable (inbuf)) {
+    /* passthrough elements or when the buffer is writable
+     * can be performed with the _ip method */
+    gboolean may_do_in_place = gst_buffer_is_writable (inbuf) ||
+        trans->passthrough;
+
+    /* check if we can and may do inplace */
+    if (bclass->transform_ip && may_do_in_place) {
       /* in place transform and subclass supports method */
       GST_LOG_OBJECT (trans, "doing inplace transform");
       gst_buffer_ref (inbuf);
