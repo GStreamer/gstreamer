@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+]>
+
+<book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
+  <bookinfo>
+    <title>GStreamer Ugly Plugins &GST_MAJORMINOR; Plugins Reference Manual</title>
+  </bookinfo>
+
+  <chapter>
+    <title>gst-plugins-ugly Elements</title>
+  </chapter>
+
+  <chapter>
+    <title>gst-plugins-ugly Plugins</title>
+
+    <xi:include href="xml/plugin-dvdlpcmdec.xml" />
+    <xi:include href="xml/plugin-gstcoreelements.xml" />
+    <xi:include href="xml/plugin-lame.xml" />
+    <xi:include href="xml/plugin-mad.xml" />
+    <xi:include href="xml/plugin-mpegaudioparse.xml" />
+    <xi:include href="xml/plugin-rmdemux.xml" />
+
+  </chapter>
+</book>

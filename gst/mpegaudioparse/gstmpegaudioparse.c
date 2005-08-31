@@ -174,7 +174,7 @@ mp3_type_frame_length_from_header (guint32 header, guint * put_layer,
   return length;
 }
 
-/**
+/*
  * The chance that random data is identified as a valid mp3 header is 63 / 2^18
  * (0.024%) per try. This makes the function for calculating false positives
  *   1 - (1 - ((63 / 2 ^18) ^ GST_MP3_TYPEFIND_MIN_HEADERS)) ^ buffersize)

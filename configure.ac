@@ -325,6 +325,12 @@ GST_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CFLAGS $G
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
 
+dnl ######################
+dnl # Checks for gtk-doc #
+dnl ######################
+
+GTK_DOC_CHECK([1.3])
+
 dnl ############################
 dnl # Set up some more defines #
 dnl ############################
@@ -374,7 +380,6 @@ dnl po/Makefile.in
 
 AC_CONFIG_FILES(
 Makefile
-gst-plugins-ugly.spec
 gst/Makefile
 gst/dvdlpcmdec/Makefile
 gst/mpegaudioparse/Makefile
@@ -385,9 +390,13 @@ ext/lame/Makefile
 ext/mad/Makefile
 ext/mpeg2dec/Makefile
 ext/sidplay/Makefile
+docs/Makefile
+docs/plugins/Makefile
+docs/version.entities
 common/Makefile
 common/m4/Makefile
 m4/Makefile
+gst-plugins-ugly.spec
 )
 AC_OUTPUT
 

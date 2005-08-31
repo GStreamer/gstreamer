@@ -674,7 +674,7 @@ dvdnavsrc_tca_seek (DVDNavSrc * src, int title, int chapter, int angle)
   g_return_val_if_fail (src->title > 0, FALSE);
 
   GST_INFO_OBJECT (src, "seeking to %d/%d/%d", title, chapter, angle);
-  /**
+  /*
    * Make sure our title number is valid.
    */
   if (dvdnav_get_number_of_titles (src->dvdnav, &titles) != DVDNAV_STATUS_OK) {
@@ -689,7 +689,7 @@ dvdnavsrc_tca_seek (DVDNavSrc * src, int title, int chapter, int angle)
     return FALSE;
   }
 
-  /**
+  /*
    * Before we can get the number of chapters (programs) we need to call
    * dvdnav_title_play so that dvdnav_get_number_of_programs knows which title
    * to operate on (also needed to get the number of angles)
@@ -701,7 +701,7 @@ dvdnavsrc_tca_seek (DVDNavSrc * src, int title, int chapter, int angle)
     return FALSE;
   }
 
-  /**
+  /*
    * Make sure the chapter number is valid for this title.
    */
   if (dvdnav_get_number_of_titles (src->dvdnav, &programs)
@@ -717,7 +717,7 @@ dvdnavsrc_tca_seek (DVDNavSrc * src, int title, int chapter, int angle)
     return FALSE;
   }
 
-  /**
+  /*
    * Make sure the angle number is valid for this title.
    */
   if (dvdnav_get_angle_info (src->dvdnav, &curangle, &angles)
@@ -733,7 +733,7 @@ dvdnavsrc_tca_seek (DVDNavSrc * src, int title, int chapter, int angle)
     return FALSE;
   }
 
-  /**
+  /*
    * We've got enough info, time to open the title set data.
    */
   if (src->chapter == 0) {
@@ -800,7 +800,7 @@ dvdnavsrc_update_streaminfo (DVDNavSrc * src)
   g_object_notify (G_OBJECT (src), "streaminfo");
 }
 
-/**
+/*
  * Check for a new DVD domain area, and update the structure if
  * necessary.
  */
@@ -825,7 +825,7 @@ dvdnavsrc_set_domain (DVDNavSrc * src)
   src->domain = domain;
 }
 
-/**
+/*
  * Check for a new highlighted area, and send an spu highlight event if
  * necessary.
  */

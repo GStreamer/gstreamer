@@ -1,5 +1,5 @@
 SUBDIRS = 			\
-	gst ext m4 common
+	gst ext docs m4 common
 
 EXTRA_DIST = \
 	gst-plugins-ugly.spec depcomp \

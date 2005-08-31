@@ -544,7 +544,7 @@ dvdreadsrc_srcpad_query (GstPad * pad, GstQueryType type,
   return res;
 }
 
-/**
+/*
  * Returns true if the pack is a NAV pack.  This check is clearly insufficient,
  * and sometimes we incorrectly think that valid other packs are NAV packs.  I
  * need to make this stronger.
@@ -579,7 +579,7 @@ _open (DVDReadSrcPrivate * priv, const gchar * location)
   g_return_val_if_fail (priv != NULL, -1);
   g_return_val_if_fail (location != NULL, -1);
 
-  /**
+  /*
    * Open the disc.
    */
   priv->dvd = DVDOpen (location);
@@ -589,7 +589,7 @@ _open (DVDReadSrcPrivate * priv, const gchar * location)
   }
 
 
-  /**
+  /*
    * Load the video manager to find out the information about the titles on
    * this disc.
    */
@@ -608,9 +608,9 @@ _seek_title (DVDReadSrcPrivate * priv, int title, int angle)
 {
   GHashTable *languagelist = NULL;
 
-    /**
-     * Make sure our title number is valid.
-     */
+  /*
+   * Make sure our title number is valid.
+   */
   GST_LOG ("There are %d titles on this DVD", priv->tt_srpt->nr_of_srpts);
   if (title < 0 || title >= priv->tt_srpt->nr_of_srpts) {
     GST_WARNING ("Invalid title %d (only %d available)",
@@ -625,9 +625,9 @@ _seek_title (DVDReadSrcPrivate * priv, int title, int angle)
   GST_LOG ("There are %d chapters in this title",
       priv->tt_srpt->title[title].nr_of_ptts);
 
-    /**
-     * Make sure the angle number is valid for this title.
-     */
+  /*
+   * Make sure the angle number is valid for this title.
+   */
   GST_LOG ("There are %d angles available in this title",
       priv->tt_srpt->title[title].nr_of_angles);
 
@@ -640,9 +640,9 @@ _seek_title (DVDReadSrcPrivate * priv, int title, int angle)
       angle = priv->tt_srpt->title[title].nr_of_angles - 1;
   }
 
-    /**
-     * Load the VTS information for the title set our title is in.
-     */
+  /*
+   * Load the VTS information for the title set our title is in.
+   */
   priv->vts_file =
       ifoOpen (priv->dvd, priv->tt_srpt->title[title].title_set_nr);
   if (!priv->vts_file) {
@@ -655,9 +655,9 @@ _seek_title (DVDReadSrcPrivate * priv, int title, int angle)
   priv->ttn = priv->tt_srpt->title[title].vts_ttn;
   priv->vts_ptt_srpt = priv->vts_file->vts_ptt_srpt;
 
-    /**
-     * We've got enough info, time to open the title set data.
-     */
+  /*
+   * We've got enough info, time to open the title set data.
+   */
   priv->dvd_title =
       DVDOpenFile (priv->dvd, priv->tt_srpt->title[title].title_set_nr,
       DVD_READ_TITLE_VOBS);
@@ -688,9 +688,9 @@ _seek_chapter (DVDReadSrcPrivate * priv, int chapter)
 {
   int i;
 
-    /**
-     * Make sure the chapter number is valid for this title.
-     */
+  /*
+   * Make sure the chapter number is valid for this title.
+   */
   if (chapter < 0 || chapter >= priv->tt_srpt->title[priv->title].nr_of_ptts) {
     GST_WARNING ("Invalid chapter %d (only %d available)",
         chapter, priv->tt_srpt->title[priv->title].nr_of_ptts);
@@ -699,10 +699,10 @@ _seek_chapter (DVDReadSrcPrivate * priv, int chapter)
     chapter = priv->tt_srpt->title[priv->title].nr_of_ptts - 1;
   }
 
-    /**
-     * Determine which program chain we want to watch.  This is based on the
-     * chapter number.
-     */
+  /*
+   * Determine which program chain we want to watch.  This is based on the
+   * chapter number.
+   */
   priv->pgc_id = priv->vts_ptt_srpt->title[priv->ttn - 1].ptt[chapter].pgcn;
   priv->pgn = priv->vts_ptt_srpt->title[priv->ttn - 1].ptt[chapter].pgn;
   priv->cur_pgc = priv->vts_file->vts_pgcit->pgci_srp[priv->pgc_id - 1].pgc;
@@ -784,9 +784,9 @@ _read (DVDReadSrcPrivate * priv, int angle, int new_seek, GstBuffer * buf)
     data = static_data;
   }
 
-    /**
-     * Playback by cell in this pgc, starting at the cell for our chapter.
-     */
+  /*
+   * Playback by cell in this pgc, starting at the cell for our chapter.
+   */
   if (new_seek)
     priv->cur_cell = priv->start_cell;
 
@@ -810,7 +810,7 @@ again:
       /* calculate next cell */
       priv->next_cell = get_next_cell_for (priv, priv->cur_cell);
 
-      /**
+      /*
        * We loop until we're out of this cell.
        */
       priv->cur_pack =
@@ -824,9 +824,9 @@ again:
       unsigned int next_vobu, next_ilvu_start, cur_output_size;
       int len;
 
-            /**
-             * Read NAV packet.
-             */
+      /*
+       * Read NAV packet.
+       */
     nav_retry:
 
       len = DVDReadBlocks (priv->dvd_title, priv->cur_pack, 1, data);
@@ -841,31 +841,31 @@ again:
       }
 
 
-            /**
-             * Parse the contained dsi packet.
-             */
+      /*
+       * Parse the contained dsi packet.
+       */
       navRead_DSI (&dsi_pack, &(data[DSI_START_BYTE]));
       assert (priv->cur_pack == dsi_pack.dsi_gi.nv_pck_lbn);
 
 
-            /**
-             * Determine where we go next.  These values are the ones we mostly
-             * care about.
-             */
+      /*
+       * Determine where we go next.  These values are the ones we mostly
+       * care about.
+       */
       next_ilvu_start = priv->cur_pack + dsi_pack.sml_agli.data[angle].address;
       cur_output_size = dsi_pack.dsi_gi.vobu_ea;
 
 
-            /**
-             * If we're not at the end of this cell, we can determine the next
-             * VOBU to display using the VOBU_SRI information section of the
-             * DSI.  Using this value correctly follows the current angle,
-             * avoiding the doubled scenes in The Matrix, and makes our life
-             * really happy.
-             *
-             * Otherwise, we set our next address past the end of this cell to
-             * force the code above to go to the next cell in the program.
-             */
+      /*
+       * If we're not at the end of this cell, we can determine the next
+       * VOBU to display using the VOBU_SRI information section of the
+       * DSI.  Using this value correctly follows the current angle,
+       * avoiding the doubled scenes in The Matrix, and makes our life
+       * really happy.
+       *
+       * Otherwise, we set our next address past the end of this cell to
+       * force the code above to go to the next cell in the program.
+       */
       if (dsi_pack.vobu_sri.next_vobu != SRI_END_OF_CELL) {
         next_vobu = priv->cur_pack + (dsi_pack.vobu_sri.next_vobu & 0x7fffffff);
       } else {
@@ -876,9 +876,9 @@ again:
       priv->cur_pack++;
 
       if (buf) {
-            /**
-             * Read in and output cursize packs.
-             */
+        /*
+         * Read in and output cursize packs.
+         */
         len =
             DVDReadBlocks (priv->dvd_title, priv->cur_pack, cur_output_size,
             data);

@@ -1,0 +1,9 @@
+<SECTION>
+<FILE>element-mad</FILE>
+GstMad
+<TITLE>mad</TITLE>
+<SUBSECTION Standard>
+GstMadClass
+</SECTION>
+
+
