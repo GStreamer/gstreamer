@@ -1,3 +1,10 @@
+2005-08-31  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_render):
+	Resync if the buffer timestamps drift more than a 10th 
+	of a second.
+
 2005-08-31  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_set_property),

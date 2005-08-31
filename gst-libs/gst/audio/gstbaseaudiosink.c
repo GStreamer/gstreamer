@@ -335,6 +335,8 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GstClockTimeDiff render_diff;
   GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (bsink);
   gint64 diff;
+  guint8 *data;
+  guint size;
 
   /* can't do anything when we don't have the device */
   if (!gst_ring_buffer_is_acquired (sink->ringbuffer))
@@ -342,6 +344,8 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   in_offset = GST_BUFFER_OFFSET (buf);
   time = GST_BUFFER_TIMESTAMP (buf);
+  data = GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf);
 
   GST_DEBUG ("time %" GST_TIME_FORMAT ", offset %llu, start %" GST_TIME_FORMAT,
       GST_TIME_ARGS (time), in_offset, GST_TIME_ARGS (bsink->segment_start));
@@ -367,16 +371,16 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GST_DEBUG ("render time %" GST_TIME_FORMAT ", render offset %llu, diff %lld",
       GST_TIME_ARGS (render_time), render_offset, diff);
 
-  /* FIXME, depends on samplerate... Also the purpose of the OFFSET fields
-   * are to detect gaps and dropouts, we might better use them if they are
-   * valid. */
-  if (diff < 10) {
+  /* we tollerate a 10th of a second diff before we start resyncing. This
+   * should be enough to compensate for various rounding errors in the timestamp
+   * and sample offset position. */
+  if (diff < sink->ringbuffer->spec.rate / 10) {
     /* just align with previous sample then */
     render_offset = -1;
+    /* FIXME, can we use the OFFSET field to detect a gap? */
   }
 
-  gst_ring_buffer_commit (sink->ringbuffer, render_offset,
-      GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  gst_ring_buffer_commit (sink->ringbuffer, render_offset, data, size);
 
   return GST_FLOW_OK;
 
