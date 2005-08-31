@@ -51,8 +51,14 @@
  * possible to react to a message in the same thread that posted the
  * message on the bus. This should only be used if the application is able
  * to deal with messages from different threads.
+ *
+ * It is important to make sure that every message is popped from the bus at
+ * some point in time. Otherwise it will be presented to the watches (#GSource
+ * elements) again and again. One way to implement it is having one watch with a
+ * low priority (see gst_add_watch_full()) that pops all messages.
  * 
  * Every #GstElement has its own bus.
+ *
  */
 
 #include <errno.h>

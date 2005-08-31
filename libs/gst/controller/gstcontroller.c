@@ -161,11 +161,15 @@ gst_timed_value_find (gconstpointer p1, gconstpointer p2)
  *
  * Sets the given Interpolation mode for the controlled property and activates
  * the respective interpolation hooks.
+ *
+ * Returns: %TRUE for success
  */
 static gboolean
 gst_controlled_property_set_interpolation_mode (GstControlledProperty * self,
     GstInterpolateMode mode)
 {
+  gboolean res = TRUE;
+
   self->interpolation = mode;
   if (mode != GST_INTERPOLATE_USER) {
     switch (self->type) {
@@ -191,17 +195,27 @@ gst_controlled_property_set_interpolation_mode (GstControlledProperty * self,
         self->get_value_array =
             interpolation_methods[mode]->get_double_value_array;
         break;
+      case G_TYPE_BOOLEAN:
+        self->get = interpolation_methods[mode]->get_boolean;
+        self->get_value_array =
+            interpolation_methods[mode]->get_boolean_value_array;
+        break;
+        break;
       default:
         self->get = NULL;
         self->get_value_array = NULL;
-        GST_WARNING ("incomplete implementation for type '%d'", self->type);
+    }
+    if (!self->get || !self->get_value_array) {
+      GST_WARNING ("incomplete implementation for type '%d'", self->type);
+      res = FALSE;
     }
   } else {
     /* TODO shouldn't this also get a GstInterpolateMethod *user_method
        for the case mode==GST_INTERPOLATE_USER
      */
+    res = FALSE;
   }
-  return (TRUE);
+  return (res);
 }
 
 /*
@@ -227,10 +241,13 @@ gst_controlled_property_new (GObject * object, const gchar * name)
           g_object_class_find_property (G_OBJECT_GET_CLASS (object), name))) {
     GST_DEBUG ("  psec->flags : 0x%08x", pspec->flags);
 
-    // check if this param is controlable
-    g_return_val_if_fail (!(pspec->
-            flags & (G_PARAM_CONSTRUCT | G_PARAM_CONSTRUCT_ONLY)), NULL);
-    //g_return_val_if_fail((pspec->flags&GST_PARAM_CONTROLLABLE),NULL);
+    // check if this param is witable
+    g_return_val_if_fail ((pspec->flags & G_PARAM_WRITABLE), NULL);
+    // check if property is controlable
+    g_return_val_if_fail ((pspec->flags & GST_PARAM_CONTROLLABLE), NULL);
+    // check if this param is not construct-only
+    g_return_val_if_fail (!(pspec->flags & G_PARAM_CONSTRUCT_ONLY), NULL);
+
     /* TODO do sanity checks
        we don't control some pspec->value_type:
        G_TYPE_PARAM_BOXED

@@ -123,6 +123,8 @@ typedef struct _GstInterpolateMethod
   InterpolateGetValueArray get_float_value_array;
   InterpolateGet get_double;
   InterpolateGetValueArray get_double_value_array;
+  InterpolateGet get_boolean;
+  InterpolateGetValueArray get_boolean_value_array;
 } GstInterpolateMethod;
 
 /**

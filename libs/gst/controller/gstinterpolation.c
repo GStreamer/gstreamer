@@ -111,6 +111,7 @@ DEFINE_NONE_GET (int)
     DEFINE_NONE_GET (long)
 DEFINE_NONE_GET (float)
 DEFINE_NONE_GET (double)
+DEFINE_NONE_GET (boolean)
 
      static GstInterpolateMethod interpolate_none = {
        interpolate_none_get,
@@ -120,7 +121,9 @@ DEFINE_NONE_GET (double)
        interpolate_none_get,
        interpolate_none_get_float_value_array,
        interpolate_none_get,
-       interpolate_none_get_double_value_array
+       interpolate_none_get_double_value_array,
+       interpolate_none_get,
+       interpolate_none_get_boolean_value_array
      };
 
 // returns the default value of the property, except for times with specific values
@@ -153,6 +156,8 @@ interpolate_trigger_get_value_array (GstControlledProperty * prop,
 static GstInterpolateMethod interpolate_trigger = {
   interpolate_trigger_get,
   interpolate_trigger_get_value_array,
+  interpolate_trigger_get,
+  NULL,
   interpolate_trigger_get,
   NULL,
   interpolate_trigger_get,
@@ -231,6 +236,8 @@ DEFINE_LINEAR_GET (double)
        interpolate_linear_get_float_value_array,
        interpolate_linear_get_double,
        interpolate_linear_get_double_value_array,
+       NULL,
+       NULL
      };
 
 // square interpolation

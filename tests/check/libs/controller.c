@@ -31,6 +31,9 @@ enum
   ARG_ULONG = 1,
   ARG_DOUBLE,
   ARG_BOOLEAN,
+  ARG_READONLY,
+  ARG_STATIC,
+  ARG_CONSTRUCTONLY,
   ARG_COUNT
 };
 
@@ -49,7 +52,7 @@ struct _GstTestMonoSource
   GstElement parent;
   gulong val_ulong;
   gdouble val_double;
-  gboolean val_bool;
+  gboolean val_boolean;
 };
 struct _GstTestMonoSourceClass
 {
@@ -71,6 +74,9 @@ gst_test_mono_source_get_property (GObject * object,
     case ARG_DOUBLE:
       g_value_set_double (value, self->val_double);
       break;
+    case ARG_BOOLEAN:
+      g_value_set_boolean (value, self->val_boolean);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -89,6 +95,11 @@ gst_test_mono_source_set_property (GObject * object,
       break;
     case ARG_DOUBLE:
       self->val_double = g_value_get_double (value);
+      break;
+    case ARG_BOOLEAN:
+      self->val_boolean = g_value_get_boolean (value);
+      break;
+    case ARG_CONSTRUCTONLY:
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -115,6 +126,30 @@ gst_test_mono_source_class_init (GstTestMonoSourceClass * klass)
           "double prop",
           "double number parameter for the test_mono_source",
           0.0, 100.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+
+  g_object_class_install_property (gobject_class, ARG_BOOLEAN,
+      g_param_spec_boolean ("boolean",
+          "boolean prop",
+          "boolean parameter for the test_mono_source",
+          FALSE, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+
+  g_object_class_install_property (gobject_class, ARG_READONLY,
+      g_param_spec_ulong ("readonly",
+          "readonly prop",
+          "readonly parameter for the test_mono_source",
+          0, G_MAXULONG, 0, G_PARAM_READABLE | GST_PARAM_CONTROLLABLE));
+
+  g_object_class_install_property (gobject_class, ARG_STATIC,
+      g_param_spec_ulong ("static",
+          "static prop",
+          "static parameter for the test_mono_source",
+          0, G_MAXULONG, 0, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, ARG_CONSTRUCTONLY,
+      g_param_spec_ulong ("construct-only",
+          "construct-only prop",
+          "construct-only parameter for the test_mono_source",
+          0, G_MAXULONG, 0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void
@@ -213,6 +248,60 @@ GST_START_TEST (controller_new_fail2)
 }
 
 GST_END_TEST;
+
+/* tests for readonly params */
+GST_START_TEST (controller_new_fail3)
+{
+  GstController *ctrl;
+  GstElement *elem;
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and but is readonly */
+  ASSERT_CRITICAL (ctrl =
+      gst_controller_new (G_OBJECT (elem), "readonly", NULL));
+  fail_unless (ctrl == NULL, NULL);
+
+  g_object_unref (elem);
+}
+
+GST_END_TEST;
+
+/* tests for static params */
+GST_START_TEST (controller_new_fail4)
+{
+  GstController *ctrl;
+  GstElement *elem;
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and but is not controlable */
+  ASSERT_CRITICAL (ctrl = gst_controller_new (G_OBJECT (elem), "static", NULL));
+  fail_unless (ctrl == NULL, NULL);
+
+  g_object_unref (elem);
+}
+
+GST_END_TEST;
+
+/* tests for static params */
+GST_START_TEST (controller_new_fail5)
+{
+  GstController *ctrl;
+  GstElement *elem;
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and but is construct-only */
+  ASSERT_CRITICAL (ctrl =
+      gst_controller_new (G_OBJECT (elem), "construct-only", NULL));
+  fail_unless (ctrl == NULL, NULL);
+
+  g_object_unref (elem);
+}
+
+GST_END_TEST;
+
 
 /* tests for an element with controlled params */
 GST_START_TEST (controller_new_okay1)
@@ -393,6 +482,9 @@ gst_controller_suite (void)
   tcase_add_test (tc, controller_init);
   tcase_add_test (tc, controller_new_fail1);
   tcase_add_test (tc, controller_new_fail2);
+  tcase_add_test (tc, controller_new_fail3);
+  tcase_add_test (tc, controller_new_fail4);
+  tcase_add_test (tc, controller_new_fail5);
   tcase_add_test (tc, controller_new_okay1);
   tcase_add_test (tc, controller_new_okay2);
   tcase_add_test (tc, controller_new_okay3);
