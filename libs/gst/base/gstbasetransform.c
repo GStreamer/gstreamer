@@ -824,7 +824,7 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
   else
     GST_LOG_OBJECT (trans, "... and offset NONE");
 
-  if (!trans->negotiated)
+  if (!trans->negotiated && !trans->passthrough)
     goto not_negotiated;
 
   if (trans->in_place) {
