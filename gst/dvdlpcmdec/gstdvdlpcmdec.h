@@ -44,6 +44,8 @@ struct _GstDvdLpcmDec {
 
   GstPad *sinkpad,*srcpad;
 
+  guint32 header;
+
   gint rate;
   gint channels;
   gint width;
@@ -52,7 +54,6 @@ struct _GstDvdLpcmDec {
   gint emphasis;
   gint mute;
   
-  guint64 offset;  
   GstClockTime timestamp;
 };
 

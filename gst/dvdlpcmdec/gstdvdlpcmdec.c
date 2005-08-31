@@ -35,19 +35,20 @@ static GstElementDetails gst_dvdlpcmdec_details =
 GST_ELEMENT_DETAILS ("DVD LPCM Audio decoder",
     "Codec/Demuxer/Audio",
     "Decode DVD LPCM frames into standard PCM audio",
-    "Jan Schmidt <jan@noraisin.net>");
+    "Jan Schmidt <jan@noraisin.net>\n" "Michael Smith <msmith@fluendo.com>");
 
 static GstStaticPadTemplate gst_dvdlpcmdec_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-dvd-lpcm, "
+    GST_STATIC_CAPS ("audio/x-private1-lpcm; "
+        "audio/x-lpcm, "
         "width = (int) { 16, 20, 24 }, "
         "rate = (int) { 48000, 96000 }, "
         "channels = (int) [ 1, 8 ], "
         "dynamic_range = (int) [ 0, 255 ], "
         "emphasis = (boolean) { TRUE, FALSE }, "
-        "mute = (boolean) { TRUE, FALSE }")
+        "mute = (boolean) { TRUE, FALSE } ")
     );
 
 static GstStaticPadTemplate gst_dvdlpcmdec_src_template =
@@ -79,8 +80,11 @@ static void gst_dvdlpcmdec_base_init (gpointer g_class);
 static void gst_dvdlpcmdec_class_init (GstDvdLpcmDecClass * klass);
 static void gst_dvdlpcmdec_init (GstDvdLpcmDec * dvdlpcmdec);
 
-static GstFlowReturn gst_dvdlpcmdec_chain (GstPad * pad, GstBuffer * buffer);
-static GstPadLinkReturn gst_dvdlpcmdec_link (GstPad * pad, GstPad * peer);
+static GstFlowReturn gst_dvdlpcmdec_chain_raw (GstPad * pad,
+    GstBuffer * buffer);
+static GstFlowReturn gst_dvdlpcmdec_chain_dvd (GstPad * pad,
+    GstBuffer * buffer);
+static GstPadLinkReturn gst_dvdlpcmdec_setcaps (GstPad * pad, GstCaps * caps);
 
 static GstElementStateReturn gst_dvdlpcmdec_change_state (GstElement * element);
 
@@ -145,8 +149,9 @@ gst_dvdlpcm_reset (GstDvdLpcmDec * dvdlpcmdec)
   dvdlpcmdec->dynamic_range = 0;
   dvdlpcmdec->emphasis = FALSE;
   dvdlpcmdec->mute = FALSE;
-  dvdlpcmdec->offset = 0;
   dvdlpcmdec->timestamp = 0;
+
+  dvdlpcmdec->header = 0;
 
   GST_LOG_OBJECT (dvdlpcmdec, "Setting NULL caps on src pad");
   gst_pad_set_caps (dvdlpcmdec->srcpad, NULL);
@@ -158,35 +163,40 @@ gst_dvdlpcmdec_init (GstDvdLpcmDec * dvdlpcmdec)
   dvdlpcmdec->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_dvdlpcmdec_sink_template), "sink");
-  gst_pad_set_link_function (dvdlpcmdec->sinkpad, gst_dvdlpcmdec_link);
-  gst_pad_set_chain_function (dvdlpcmdec->sinkpad, gst_dvdlpcmdec_chain);
+  gst_pad_set_setcaps_function (dvdlpcmdec->sinkpad, gst_dvdlpcmdec_setcaps);
   gst_element_add_pad (GST_ELEMENT (dvdlpcmdec), dvdlpcmdec->sinkpad);
 
   dvdlpcmdec->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_dvdlpcmdec_src_template), "src");
+  gst_pad_use_fixed_caps (dvdlpcmdec->srcpad);
   gst_element_add_pad (GST_ELEMENT (dvdlpcmdec), dvdlpcmdec->srcpad);
 
   gst_dvdlpcm_reset (dvdlpcmdec);
 }
 
-
-static GstPadLinkReturn
-gst_dvdlpcmdec_link (GstPad * pad, GstPad * peer)
+static gboolean
+gst_dvdlpcmdec_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstStructure *structure;
   gboolean res = TRUE;
   GstDvdLpcmDec *dvdlpcmdec;
   GstCaps *src_caps;
-  GstCaps *caps;
 
-  g_return_val_if_fail (peer != NULL, GST_PAD_LINK_REFUSED);
-  g_return_val_if_fail (pad != NULL, GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (caps != NULL, FALSE);
+  g_return_val_if_fail (pad != NULL, FALSE);
 
   dvdlpcmdec = GST_DVDLPCMDEC (gst_pad_get_parent (pad));
 
-  caps = gst_pad_get_caps (peer);
   structure = gst_caps_get_structure (caps, 0);
+
+  /* If we have the DVD structured LPCM (including header) */
+  if (gst_structure_has_name (structure, "audio/x-private1-lpcm")) {
+    gst_pad_set_chain_function (dvdlpcmdec->sinkpad, gst_dvdlpcmdec_chain_dvd);
+    return TRUE;
+  }
+
+  gst_pad_set_chain_function (dvdlpcmdec->sinkpad, gst_dvdlpcmdec_chain_raw);
 
   res &= gst_structure_get_int (structure, "rate", &dvdlpcmdec->rate);
   res &= gst_structure_get_int (structure, "channels", &dvdlpcmdec->channels);
@@ -201,7 +211,6 @@ gst_dvdlpcmdec_link (GstPad * pad, GstPad * peer)
     GST_DEBUG_OBJECT (dvdlpcmdec, "Couldn't get parameters; missing caps?");
     return GST_PAD_LINK_REFUSED;
   }
-
   /* Output width is the input width rounded up to the nearest byte */
   if (dvdlpcmdec->width == 20)
     dvdlpcmdec->out_width = 24;
@@ -232,9 +241,9 @@ gst_dvdlpcmdec_link (GstPad * pad, GstPad * peer)
   gst_caps_unref (src_caps);
 
   if (!res)
-    return GST_PAD_LINK_REFUSED;
+    return FALSE;
 
-  return GST_PAD_LINK_OK;
+  return TRUE;
 }
 
 static void
@@ -253,10 +262,47 @@ update_timestamps (GstDvdLpcmDec * dvdlpcmdec, GstBuffer * buf, int samples)
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 }
 
+static void
+parse_header (GstDvdLpcmDec * dec, guint32 header)
+{
+  /* We don't actually use 'dynamic range', 'mute', or 'emphasis' currently, 
+   * but parse them out */
+  dec->dynamic_range = header & 0xff;
+
+  dec->mute = (header & 0x400000) != 0;
+  dec->emphasis = (header & 0x800000) != 0;
+
+  /* These two bits tell us the bit depth */
+  switch (header & 0xC000) {
+    case 0x8000:
+      dec->width = 24;
+      dec->out_width = 24;
+      break;
+    case 0x4000:
+      dec->width = 20;
+      dec->out_width = 24;
+      break;
+    default:
+      dec->width = 16;
+      dec->out_width = 16;
+      break;
+  }
+
+  /* Only two sample rates supported */
+  if (header & 0x1000)
+    dec->rate = 96000;
+  else
+    dec->rate = 48000;
+
+  /* And, of course, the number of channels (up to 8) */
+  dec->channels = ((header >> 8) & 0x7) + 1;
+}
+
 static GstFlowReturn
-gst_dvdlpcmdec_chain (GstPad * pad, GstBuffer * buf)
+gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstBuffer * buf)
 {
   GstDvdLpcmDec *dvdlpcmdec;
+  guchar *data;
   gint64 size;
 
   g_return_val_if_fail (pad != NULL, GST_FLOW_ERROR);
@@ -266,6 +312,87 @@ gst_dvdlpcmdec_chain (GstPad * pad, GstBuffer * buf)
   dvdlpcmdec = GST_DVDLPCMDEC (gst_pad_get_parent (pad));
 
   size = GST_BUFFER_SIZE (buf);
+  data = GST_BUFFER_DATA (buf);
+
+  /* We have a 5 byte header, now.
+   * The first two bytes are a (big endian) 16 bit offset into our buffer.
+   * The buffer timestamp refers to this offset.
+   *
+   * The other three bytes are a (big endian) number in which the header is
+   * encoded.
+   */
+  gint first_access = (data[0] << 8) | data[1];
+  guint32 header = (data[2] << 16) | (data[3] << 8) | data[2];
+  GstBuffer *subbuf;
+  GstFlowReturn ret;
+  int off, len;
+
+  if (header != dvdlpcmdec->header) {
+    GstCaps *src_caps;
+
+    parse_header (dvdlpcmdec, header);
+
+    /* Build caps to set on the src pad from what we've just parsed */
+    src_caps = gst_caps_new_simple ("audio/x-raw-int",
+        "rate", G_TYPE_INT, dvdlpcmdec->rate,
+        "channels", G_TYPE_INT, dvdlpcmdec->channels,
+        "endianness", G_TYPE_INT, G_BIG_ENDIAN,
+        "depth", G_TYPE_INT, dvdlpcmdec->out_width,
+        "width", G_TYPE_INT, dvdlpcmdec->out_width,
+        "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+
+    GST_DEBUG_OBJECT (dvdlpcmdec, "Set rate %d, channels %d, width %d",
+        dvdlpcmdec->rate, dvdlpcmdec->channels, dvdlpcmdec->width);
+
+    if (!gst_pad_set_caps (dvdlpcmdec->srcpad, src_caps)) {
+      GST_DEBUG_OBJECT (dvdlpcmdec, "Failed to set caps!");
+      GST_DEBUG_OBJECT (dvdlpcmdec, "Couldn't negotiate caps on src pad");
+      return GST_FLOW_ERROR;
+    }
+
+    gst_caps_unref (src_caps);
+
+    dvdlpcmdec->header = header;
+  }
+
+  GST_LOG_OBJECT (dvdlpcmdec, "Creating sub-buffers for first_access %d",
+      first_access);
+
+  off = 5;
+  len = first_access - 1;
+
+  if (len > 0) {
+    subbuf = gst_buffer_create_sub (buf, off, len);
+    GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
+    ret = gst_dvdlpcmdec_chain_raw (pad, subbuf);
+    if (ret != GST_FLOW_OK)
+      return ret;
+  }
+
+  off += len;
+  len = size - len;
+
+  subbuf = gst_buffer_create_sub (buf, off, len);
+  GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
+
+  return gst_dvdlpcmdec_chain_raw (pad, subbuf);
+}
+
+static GstFlowReturn
+gst_dvdlpcmdec_chain_raw (GstPad * pad, GstBuffer * buf)
+{
+  GstDvdLpcmDec *dvdlpcmdec;
+  guchar *data;
+  gint64 size;
+
+  g_return_val_if_fail (pad != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
+
+  dvdlpcmdec = GST_DVDLPCMDEC (gst_pad_get_parent (pad));
+
+  size = GST_BUFFER_SIZE (buf);
+  data = GST_BUFFER_DATA (buf);
 
   GST_LOG_OBJECT (dvdlpcmdec, "got buffer %p of size %" G_GINT64_FORMAT, buf,
       size);
@@ -294,12 +421,13 @@ gst_dvdlpcmdec_chain (GstPad * pad, GstBuffer * buf)
 
       samples = size / dvdlpcmdec->channels / 2;
 
+      buf = gst_buffer_make_writable (buf);
+
       /* Set appropriate caps on it to pass downstream */
       gst_buffer_set_caps (buf, GST_PAD_CAPS (dvdlpcmdec->srcpad));
 
       update_timestamps (dvdlpcmdec, buf, samples);
 
-      dvdlpcmdec->offset += size;
       gst_pad_push (dvdlpcmdec->srcpad, buf);
       return GST_FLOW_OK;
     }
@@ -315,7 +443,7 @@ gst_dvdlpcmdec_chain (GstPad * pad, GstBuffer * buf)
       GstFlowReturn newbufret;
       GstCaps *bufcaps = GST_PAD_CAPS (dvdlpcmdec->srcpad);
 
-      newbufret = gst_pad_alloc_buffer (dvdlpcmdec->srcpad, dvdlpcmdec->offset,
+      newbufret = gst_pad_alloc_buffer (dvdlpcmdec->srcpad, 0,
           samples * 3, bufcaps, &outbuf);
       if (newbufret != GST_FLOW_OK) {
         GST_ELEMENT_ERROR (dvdlpcmdec, RESOURCE, FAILED, (NULL),
@@ -327,7 +455,7 @@ gst_dvdlpcmdec_chain (GstPad * pad, GstBuffer * buf)
 
       update_timestamps (dvdlpcmdec, buf, samples / dvdlpcmdec->channels);
 
-      src = GST_BUFFER_DATA (buf);
+      src = data;
       dest = GST_BUFFER_DATA (outbuf);
 
       /* Copy 20-bit LPCM format to 24-bit buffers, with 0x00 in the lowest 
@@ -351,7 +479,6 @@ gst_dvdlpcmdec_chain (GstPad * pad, GstBuffer * buf)
       }
 
       gst_buffer_unref (buf);
-      dvdlpcmdec->offset += GST_BUFFER_SIZE (outbuf);
       gst_pad_push (dvdlpcmdec->srcpad, outbuf);
       return GST_FLOW_OK;
     }
@@ -371,7 +498,7 @@ gst_dvdlpcmdec_chain (GstPad * pad, GstBuffer * buf)
       gst_buffer_set_caps (buf, GST_PAD_CAPS (dvdlpcmdec->srcpad));
       update_timestamps (dvdlpcmdec, buf, samples);
 
-      src = GST_BUFFER_DATA (buf);
+      src = data;
 
       for (i = 0; i < count; i++) {
         guchar temp[9];
@@ -390,7 +517,6 @@ gst_dvdlpcmdec_chain (GstPad * pad, GstBuffer * buf)
         src += 12;
       }
 
-      dvdlpcmdec->offset += GST_BUFFER_SIZE (buf);
       gst_pad_push (dvdlpcmdec->srcpad, buf);
       return GST_FLOW_OK;
     }

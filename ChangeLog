@@ -1,3 +1,14 @@
+2005-08-31  Michael Smith <msmith@fluendo.com>
+
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (gst_dvdlpcm_reset),
+	(gst_dvdlpcmdec_init), (gst_dvdlpcmdec_setcaps),
+	(update_timestamps), (parse_header), (gst_dvdlpcmdec_chain_dvd),
+	(gst_dvdlpcmdec_chain_raw):
+	* gst/dvdlpcmdec/gstdvdlpcmdec.h:
+	  Restructure LPCM decoder to not expect the demuxer to parse the LPCM
+	  header; instead do this internally. Also support the old way, using
+	  a different mime-type.
+
 2005-08-31  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:
