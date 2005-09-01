@@ -11,6 +11,7 @@ gstbus.sgml
 gstcaps.sgml
 gstcheck.sgml
 gstclock.sgml
+gstchildproxy.sgml
 gstcollectpads.sgml
 gstcompat.sgml
 gstconfig.sgml
@@ -27,6 +28,7 @@ gstminiobject.sgml
 gstprobe.sgml
 gstpushsrc.sgml
 gstquery.sgml
+gstreamer-unused.sgml
 gsttask.sgml
 gsturihandler.sgml
 gsturitype.sgml
@@ -34,4 +36,3 @@ gstutils.sgml
 gstversion.sgml
 gstxml.sgml
 gstxmlregistry.sgml
-

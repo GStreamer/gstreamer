@@ -846,12 +846,3 @@ List of tags and values used to describe media metadata
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_event_new_tag ##### -->
-<para>
-
-</para>
-
-@taglist: 
-@Returns: 
-
-
