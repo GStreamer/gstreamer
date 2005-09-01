@@ -1331,7 +1331,7 @@
   (return-type "GType")
 )
 
-(define-function gst_event_type_get_type
+(define-function event_type_get_type
   (c-name "gst_event_type_get_type")
   (return-type "GType")
 )
@@ -1563,12 +1563,12 @@
 
 ;; From ../gstreamer/gst/gstevent.h
 
-(define-function gst_event_get_type
+(define-function event_get_type
   (c-name "gst_event_get_type")
   (return-type "GType")
 )
 
-(define-function gst_event_new_custom
+(define-function event_new_custom
   (c-name "gst_event_new_custom")
   (return-type "GstEvent*")
   (parameters
@@ -1583,22 +1583,22 @@
   (return-type "const-GstStructure*")
 )
 
-(define-function gst_event_new_flush_start
+(define-function event_new_flush_start
   (c-name "gst_event_new_flush_start")
   (return-type "GstEvent*")
 )
 
-(define-function gst_event_new_flush_stop
+(define-function event_new_flush_stop
   (c-name "gst_event_new_flush_stop")
   (return-type "GstEvent*")
 )
 
-(define-function gst_event_new_eos
+(define-function event_new_eos
   (c-name "gst_event_new_eos")
   (return-type "GstEvent*")
 )
 
-(define-function gst_event_new_newsegment
+(define-function event_new_newsegment
   (c-name "gst_event_new_newsegment")
   (return-type "GstEvent*")
   (parameters
@@ -1623,7 +1623,7 @@
   )
 )
 
-(define-function gst_event_new_tag
+(define-function event_new_tag
   (c-name "gst_event_new_tag")
   (return-type "GstEvent*")
   (parameters
@@ -1640,12 +1640,12 @@
   )
 )
 
-(define-function gst_event_new_filler
+(define-function event_new_filler
   (c-name "gst_event_new_filler")
   (return-type "GstEvent*")
 )
 
-(define-function gst_event_new_qos
+(define-function event_new_qos
   (c-name "gst_event_new_qos")
   (return-type "GstEvent*")
   (parameters
@@ -1666,7 +1666,7 @@
   )
 )
 
-(define-function gst_event_new_seek
+(define-function event_new_seek
   (c-name "gst_event_new_seek")
   (return-type "GstEvent*")
   (parameters
@@ -1695,7 +1695,7 @@
   )
 )
 
-(define-function gst_event_new_navigation
+(define-function event_new_navigation
   (c-name "gst_event_new_navigation")
   (return-type "GstEvent*")
   (parameters

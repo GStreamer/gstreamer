@@ -1,5 +1,10 @@
 2005-09-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gst.defs:
+	  make gst.event_new_* available
+
+2005-09-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* testsuite/Makefile.am:
 	* testsuite/test_bin.py:
 	  add an example of a bin that overrides the change_state vmethod
