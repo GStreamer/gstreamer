@@ -239,7 +239,6 @@ SUBDIRS=\
 	$(LIBMMS_DIR) \
 	$(JACK_DIR) \
 	$(LCS_DIR) \
-	$(LIBDV_DIR) \
 	$(LIBFAME_DIR) \
 	$(LIBVISUAL_DIR) \
 	$(MPEG2ENC_DIR) \
