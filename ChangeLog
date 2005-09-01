@@ -1,3 +1,17 @@
+2005-09-01  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object),
+	(gst_base_sink_event), (gst_base_sink_do_sync),
+	(gst_base_sink_handle_event):
+	* gst/base/gstbasesink.h:
+	Handle newsegments more correctly.
+
+	* gst/gstbus.c:
+	Fix docs.
+
+	* gst/gstevent.c: (gst_event_new_newsegment):
+	A newsegment cannot have a start_time of -1
+
 2005-09-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* win32/gstenumtypes.c:

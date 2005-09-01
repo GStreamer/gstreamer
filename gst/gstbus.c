@@ -411,7 +411,7 @@ gst_bus_pop (GstBus * bus)
  * @bus: a #GstBus
  *
  * Peek the message on the top of the bus' queue. The message will remain 
- * on the bus' message queue. A reference is returned, and needs to be freed
+ * on the bus' message queue. A reference is returned, and needs to be unreffed
  * by the caller.
  *
  * Returns: The #GstMessage that is on the bus, or NULL if the bus is empty.

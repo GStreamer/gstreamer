@@ -444,12 +444,15 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
       case GST_EVENT_NEWSEGMENT:
       {
         GstFormat format;
+        gint64 segment_start;
+        gint64 segment_stop;
 
         /* the newsegment event is needed to bring the buffer timestamps to the
          * stream time and to drop samples outside of the playback segment. */
         gst_event_parse_newsegment (event, &basesink->segment_rate, &format,
-            &basesink->segment_start, &basesink->segment_stop,
-            &basesink->segment_base);
+            &segment_start, &segment_stop, &basesink->segment_base);
+
+        basesink->have_newsegment = TRUE;
 
         if (format != GST_FORMAT_TIME) {
           GST_DEBUG_OBJECT (basesink,
@@ -463,16 +466,40 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
           basesink->segment_start = -1;
           basesink->segment_stop = -1;
           basesink->segment_base = -1;
-        } else {
-          GST_DEBUG_OBJECT (basesink,
-              "received DISCONT %" GST_TIME_FORMAT " -- %"
-              GST_TIME_FORMAT ", base %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (basesink->segment_start),
-              GST_TIME_ARGS (basesink->segment_stop),
-              GST_TIME_ARGS (basesink->segment_base));
+          goto done_newsegment;
         }
-        basesink->have_newsegment = TRUE;
+        /* check if we really have a new segment or the previous one is
+         * closed */
+        if (basesink->segment_start != segment_start) {
+          /* the new segment has to be aligned with the old segment.
+           * We first update the accumulated time of the previous
+           * segment. the accumulated time is used when syncing to the
+           * clock. A flush event sets the accumulated time back to 0
+           */
+          if (GST_CLOCK_TIME_IS_VALID (basesink->segment_stop)) {
+            basesink->segment_accum +=
+                basesink->segment_stop - basesink->segment_start;
+          } else if (GST_CLOCK_TIME_IS_VALID (basesink->current_end)) {
+            /* else use last seen timestamp as segment stop */
+            basesink->segment_accum +=
+                basesink->current_end - basesink->segment_start;
+          } else {
+            basesink->segment_accum = 0;
+          }
+        }
 
+        basesink->segment_start = segment_start;
+        basesink->segment_stop = segment_stop;
+
+        GST_DEBUG_OBJECT (basesink,
+            "received DISCONT %" GST_TIME_FORMAT " -- %"
+            GST_TIME_FORMAT ", base %" GST_TIME_FORMAT ", accum %"
+            GST_TIME_FORMAT,
+            GST_TIME_ARGS (basesink->segment_start),
+            GST_TIME_ARGS (basesink->segment_stop),
+            GST_TIME_ARGS (basesink->segment_base),
+            GST_TIME_ARGS (basesink->segment_accum));
+      done_newsegment:
         break;
       }
       default:
@@ -784,6 +811,14 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       /* now we are completely unblocked and the _chain method
        * will return */
       GST_STREAM_LOCK (pad);
+      /* we need new segment info after the flush. */
+      basesink->segment_start = -1;
+      basesink->segment_stop = -1;
+      basesink->current_start = -1;
+      basesink->current_end = -1;
+      GST_DEBUG ("reset accum %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (basesink->segment_accum));
+      basesink->segment_accum = 0;
       GST_STREAM_UNLOCK (pad);
 
       GST_DEBUG ("event unref %p %p", basesink, event);
@@ -832,59 +867,99 @@ static gboolean
 gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
 {
   gboolean result = TRUE;
+  GstClockTime start, end;
+  GstClockTimeDiff stream_start, stream_end;
+  GstBaseSinkClass *bclass;
+  gboolean start_valid, end_valid;
 
-  if (basesink->clock) {
-    GstClockTime start, end;
-    GstBaseSinkClass *bclass;
+  bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
-    bclass = GST_BASE_SINK_GET_CLASS (basesink);
-    start = end = -1;
-    if (bclass->get_times)
-      bclass->get_times (basesink, buffer, &start, &end);
+  start = end = -1;
+  if (bclass->get_times)
+    bclass->get_times (basesink, buffer, &start, &end);
 
-    GST_DEBUG_OBJECT (basesink, "got times start: %" GST_TIME_FORMAT
-        ", end: %" GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (end));
+  start_valid = GST_CLOCK_TIME_IS_VALID (start);
+  end_valid = GST_CLOCK_TIME_IS_VALID (start);
 
-    if (GST_CLOCK_TIME_IS_VALID (start)) {
-      GstClockReturn ret;
-      GstClockTime base_time;
-      GstClockTimeDiff diff;
+  GST_DEBUG_OBJECT (basesink, "got times start: %" GST_TIME_FORMAT
+      ", end: %" GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (end));
 
-      /* bring timestamp to stream time using last segment offset. */
-      if ((diff = (gint64) start - basesink->segment_start) < 0)
-        goto too_late;
+  /* if we don't have a timestamp, we don't sync */
+  if (!start_valid)
+    goto done;
 
-      start = diff;
+  /* save last times seen. */
+  basesink->current_start = start;
+  if (end_valid)
+    basesink->current_end = end;
+  else
+    basesink->current_end = start;
 
-      GST_LOCK (basesink);
-      base_time = GST_ELEMENT (basesink)->base_time;
-
-      GST_LOG_OBJECT (basesink,
-          "waiting for clock, base time %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (base_time));
-      /* save clock id so that we can unlock it if needed */
-      basesink->clock_id = gst_clock_new_single_shot_id (basesink->clock,
-          start + base_time);
-      basesink->end_time = end;
-      GST_UNLOCK (basesink);
-
-      ret = gst_clock_id_wait (basesink->clock_id, NULL);
-
-      GST_LOCK (basesink);
-      if (basesink->clock_id) {
-        gst_clock_id_unref (basesink->clock_id);
-        basesink->clock_id = NULL;
-      }
-      GST_UNLOCK (basesink);
-
-      GST_LOG_OBJECT (basesink, "clock entry done: %d", ret);
-      if (ret == GST_CLOCK_UNSCHEDULED)
-        result = FALSE;
-    }
+  if (GST_CLOCK_TIME_IS_VALID (basesink->segment_stop)) {
+    /* check if not outside of the segment range, start is
+     * always valid here. */
+    if (start > basesink->segment_stop)
+      goto out_of_segment;
   }
+
+  /* bring timestamp to stream time using last segment offset. */
+  if (GST_CLOCK_TIME_IS_VALID (basesink->segment_start)) {
+    /* check if not outside of the segment range */
+    if (end_valid && end < basesink->segment_start)
+      goto out_of_segment;
+
+    stream_start = (gint64) start - basesink->segment_start;
+    stream_end = (gint64) end - basesink->segment_start;
+  } else {
+    stream_start = (gint64) start;
+    stream_end = (gint64) end;
+  }
+
+  stream_start += basesink->segment_accum;
+  if (end_valid)
+    stream_end += basesink->segment_accum;
+
+  /* now do clocking */
+  if (basesink->clock) {
+    GstClockReturn ret;
+    GstClockTime base_time;
+
+    GST_LOCK (basesink);
+    base_time = GST_ELEMENT (basesink)->base_time;
+
+    GST_LOG_OBJECT (basesink,
+        "waiting for clock, base time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (base_time));
+
+    /* save clock id so that we can unlock it if needed */
+    basesink->clock_id = gst_clock_new_single_shot_id (basesink->clock,
+        stream_start + base_time);
+    /* also save end_time of this buffer so that we can wait
+     * to signal EOS */
+    if (end_valid)
+      basesink->end_time = stream_end + base_time;
+    else
+      basesink->end_time = GST_CLOCK_TIME_NONE;
+    GST_UNLOCK (basesink);
+
+    ret = gst_clock_id_wait (basesink->clock_id, NULL);
+
+    GST_LOCK (basesink);
+    if (basesink->clock_id) {
+      gst_clock_id_unref (basesink->clock_id);
+      basesink->clock_id = NULL;
+    }
+    GST_UNLOCK (basesink);
+
+    GST_LOG_OBJECT (basesink, "clock entry done: %d", ret);
+    if (ret == GST_CLOCK_UNSCHEDULED)
+      result = FALSE;
+  }
+
+done:
   return result;
 
-too_late:
+out_of_segment:
   {
     GST_LOG_OBJECT (basesink, "buffer skipped, not in segment");
     return FALSE;
@@ -910,7 +985,7 @@ gst_base_sink_handle_event (GstBaseSink * basesink, GstEvent * event)
         /* wait for last buffer to finish if we have a valid end time */
         if (GST_CLOCK_TIME_IS_VALID (basesink->end_time)) {
           basesink->clock_id = gst_clock_new_single_shot_id (basesink->clock,
-              basesink->end_time + GST_ELEMENT (basesink)->base_time);
+              basesink->end_time);
           GST_UNLOCK (basesink);
 
           gst_clock_id_wait (basesink->clock_id, NULL);

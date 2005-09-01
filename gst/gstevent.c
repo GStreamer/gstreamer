@@ -286,10 +286,15 @@ gst_event_new_eos (void)
  * Allocate a new newsegment event with the given format/values tripplets.
  *
  * The newsegment event marks the range of buffers to be processed. All
- * data not within the segment range is not to be processed.
+ * data not within the segment range is not to be processed. This can be
+ * used intelligently by plugins to use more efficient methods of skipping
+ * unneeded packets.
  *
- * The base time of the segment is used to convert the buffer timestamps
+ * The base time of the segment is also used to convert the buffer timestamps
  * into the stream time again.
+ *
+ * The @start_value cannot be -1, the @stop_value can be -1. If there
+ * is a valid @stop_value given, it must be smaller than @start_value.
  *
  * After a newsegment event, the buffer stream time is calculated with:
  *
@@ -314,8 +319,10 @@ gst_event_new_newsegment (gdouble rate, GstFormat format,
         "start %lld, stop %lld, base %lld",
         rate, format, start_value, stop_value, base);
   }
+  if (start_value == -1)
+    g_return_val_if_fail (start_value != -1, NULL);
 
-  if (start_value != -1 && stop_value != -1)
+  if (stop_value != -1)
     g_return_val_if_fail (start_value < stop_value, NULL);
 
   return gst_event_new_custom (GST_EVENT_NEWSEGMENT,

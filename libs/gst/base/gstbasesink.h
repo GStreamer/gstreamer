@@ -82,6 +82,11 @@ struct _GstBaseSink {
   gint64	 segment_start;
   gint64	 segment_stop;
   gint64	 segment_base;
+  gint64	 segment_accum;
+
+  gint64	 current_start;
+  gint64	 current_duration;
+  gint64	 current_end;
 
   /*< private >*/ /* with LOCK */
   GstClock	*clock;
