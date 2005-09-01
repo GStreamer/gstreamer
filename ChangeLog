@@ -1,3 +1,9 @@
+2005-09-01  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* win32/gstenumtypes.c:
+	* win32/gstenumtypes.h:
+	  Update
+
 2005-08-31  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/controller/gst-controller.c:
