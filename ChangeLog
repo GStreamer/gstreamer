@@ -1,3 +1,10 @@
+2005-08-31  Flavio Oliveira  <flavio.oliveira@indt.org.br>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/faac/Makefile.am:
+	* ext/faac/gstfaac.c: Ported to GStreamer 0.9.
+
 2005-08-31  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

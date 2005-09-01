@@ -58,11 +58,11 @@ DIVX_DIR=
 DTS_DIR=
 # endif
 
-# if USE_FAAC
-# FAAC_DIR=faac
-# else
+if USE_FAAC
+FAAC_DIR=faac
+else
 FAAC_DIR=
-# endif
+endif
 
 if USE_FAAD
  FAAD_DIR=faad
@@ -259,6 +259,7 @@ SUBDIRS=\
 
 DIST_SUBDIRS=\
 	amrnb \
+	faac \
 	faad \
 	lame \
 	mad \

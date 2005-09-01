@@ -322,6 +322,14 @@ dnl ###########################
 dnl # Configure external libs #
 dnl ###########################
 
+dnl **** Free AAC Encoder (FAAC) ****
+translit(dnm, m, l) AM_CONDITIONAL(USE_FAAC, true)
+GST_CHECK_FEATURE(FAAC, [AAC encoder plug-in], faac, [
+  GST_CHECK_LIBHEADER(FAAC, faac, faacEncOpen, -lm, faac.h, FAAC_LIBS="-lfaac -lm")
+  AS_SCRUB_INCLUDE(FAAC_CFLAGS)
+  AC_SUBST(FAAC_LIBS)
+])
+
 dnl **** Free AAC Decoder (FAAD) ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_FAAD, true)
 GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
@@ -414,6 +422,7 @@ gst/Makefile
 gst/qtdemux/Makefile
 sys/Makefile
 ext/Makefile
+ext/faac/Makefile
 ext/faad/Makefile
 common/Makefile
 common/m4/Makefile
