@@ -131,16 +131,56 @@ _wrap_gst_buffer_set_data(PyObject *self, PyObject *args, PyObject *kwargs)
 	Py_INCREF(Py_None);
 	return Py_None;
 }
+
 %%
 override-slot GstBuffer.tp_str
 static PyObject *
-_wrap_gst_buffer_tp_str(PyGstMiniObject *self)
+_wrap_gst_buffer_tp_str (PyGstMiniObject *self)
 {
-	GstBuffer *buf = pyg_boxed_get(self, GstBuffer);
+	GstBuffer *buf;
+
+	g_assert (self);
+	buf = pyg_boxed_get (self, GstBuffer);
+	g_assert (buf);
 
 	return PyString_FromStringAndSize((const gchar*) GST_BUFFER_DATA(buf),
 					  (gint) GST_BUFFER_SIZE(buf));
 }
+
+%%
+override-slot GstBuffer.tp_repr
+static PyObject *
+_wrap_gst_buffer_tp_repr (PyGstMiniObject *self)
+{
+    GstBuffer *buf;
+    guchar *data;
+    gchar *repr;
+    gint size = 0;
+    PyObject *ret;
+
+    g_assert (self);
+    buf = pyg_boxed_get (self, GstBuffer);
+    g_assert (buf);
+
+    size = GST_BUFFER_SIZE (buf);
+    
+    if (size == 0) {
+        repr = g_strdup_printf ("<gst.Buffer %p of size %d>", buf, size);
+    } else {
+        data = GST_BUFFER_DATA (buf);
+        repr = g_strdup_printf (
+            "<gst.Buffer %p of size %d and data 0x%02x%02x%02x%02x>", buf, size,
+            *data,
+            size > 0 ? *(data + 1) : 0,
+            size > 1 ? *(data + 2) : 0,
+            size > 2 ? *(data + 3) : 0
+            );
+    }
+    ret = PyString_FromStringAndSize(repr, strlen (repr));
+    g_free (repr);
+    return ret;
+}
+
 %%
 override-slot GstBuffer.tp_as_buffer
 static PyBufferProcs _wrap_gst_buffer_tp_as_buffer = {
@@ -367,6 +407,7 @@ _wrap_gst_buffer_flag_unset(PyObject *self, PyObject *args)
 	Py_INCREF(Py_None);
 	return Py_None;
 }
+
 %%
 override-attr GstBuffer.timestamp
 static PyObject *
@@ -417,57 +458,73 @@ _wrap_gst_buffer__set_duration(PyGstMiniObject *self, PyObject *value, void *clo
     GST_BUFFER(self->obj)->duration = val;
     return 0;
 }
+
 %%
 override-attr GstBuffer.offset
 static PyObject *
-_wrap_gst_buffer__get_offset(PyObject *self, void *closure)
+_wrap_gst_buffer__get_offset (PyObject *self, void *closure)
 {
     guint64 ret;
+    GstMiniObject *miniobject;
+    g_assert (self);
 
-    ret = GST_BUFFER(pygstminiobject_get(self))->offset;
-    return PyLong_FromUnsignedLongLong(ret);
+    miniobject = pygstminiobject_get (self);
+    g_assert (miniobject);
+
+    ret = GST_BUFFER_OFFSET (GST_BUFFER (miniobject));
+    return PyLong_FromUnsignedLongLong (ret);
 }
+
 static int
-_wrap_gst_buffer__set_offset(PyGstMiniObject *self, PyObject *value, void *closure)
+_wrap_gst_buffer__set_offset (PyGstMiniObject *self, PyObject *value, void *closure)
 {
     guint64 val;
+    g_assert (self);
 
-    if (PyInt_CheckExact(value))
-      val = PyInt_AsUnsignedLongLongMask(value);
+    if (PyInt_CheckExact (value))
+      val = PyInt_AsUnsignedLongLongMask (value);
     else
-      val = PyLong_AsUnsignedLongLong(value);
+      val = PyLong_AsUnsignedLongLong (value);
     if (PyErr_Occurred())
         return -1;
     
-    GST_BUFFER(self->obj)->offset = val;
+    GST_BUFFER_OFFSET (GST_BUFFER (self->obj)) = val;
     return 0;
 }
+
 %%
 override-attr GstBuffer.offset_end
 static PyObject *
-_wrap_gst_buffer__get_offset_end(PyObject *self, void *closure)
+_wrap_gst_buffer__get_offset_end (PyObject *self, void *closure)
 {
     guint64 ret;
+    GstMiniObject *miniobject;
+    g_assert (self);
+
+    miniobject = pygstminiobject_get (self);
+    g_assert (miniobject);
     
-    ret = GST_BUFFER(pygstminiobject_get(self))->offset_end;
-    return PyLong_FromUnsignedLongLong(ret);
+    ret = GST_BUFFER_OFFSET_END (GST_BUFFER (miniobject));
+    return PyLong_FromUnsignedLongLong (ret);
 }
 
 static int
-_wrap_gst_buffer__set_offset_end(PyGstMiniObject *self, PyObject *value, void *closure)
+_wrap_gst_buffer__set_offset_end (PyGstMiniObject *self, PyObject *value, void *closure)
 {
     guint64 val;
+    g_assert (self);
 
-    if (PyInt_CheckExact(value))
-      val = PyInt_AsUnsignedLongLongMask(value);
+    if (PyInt_CheckExact (value))
+      val = PyInt_AsUnsignedLongLongMask (value);
     else
-      val = PyLong_AsUnsignedLongLong(value);
-    if (PyErr_Occurred())
+      val = PyLong_AsUnsignedLongLong (value);
+    if (PyErr_Occurred ())
         return -1;
     
-    GST_BUFFER(self->obj)->offset_end = val;
+    GST_BUFFER_OFFSET_END (GST_BUFFER (self->obj)) = val;
     return 0;
 }
+
 %%
 override gst_buffer_stamp kwargs
 static PyObject *

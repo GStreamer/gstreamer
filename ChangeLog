@@ -1,3 +1,22 @@
+2005-09-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.override:
+	* gst/gstmodule.c: (init_gst):
+	  add a pygst debug category for bindings themselves to use
+	* gst/gstbuffer.override:
+	  add a repr method; add some assertions
+	* gst/pygstminiobject.c: (pygst_miniobject_init),
+	(pygstminiobject_register_wrapper), (pygstminiobject_new),
+	(pygstminiobject_new_noref), (pygstminiobject_dealloc),
+	(pygstminiobject_clear):
+	  make the miniobjs hash private with an underscore
+	  add debugging for inserting/removal in hash
+	  fix pygstminiobject_clear - it also needs to remove
+	  from the global hash.  Fixes a nasty race problem in
+	  test_buffer
+	* testsuite/test_buffer.py:
+	  expand on the subbuffer test
+
 2005-09-01  Andy Wingo  <wingo@pobox.com>
 
 	* examples/Makefile.am (examples_DATA): Dist fixer.

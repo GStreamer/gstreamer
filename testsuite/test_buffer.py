@@ -34,10 +34,10 @@ class BufferTest(unittest.TestCase):
         assert str(buffer) == 'test'
 
     def testBufferAlloc(self):
-	bla = 'mooooooo'
-	buffer = gst.Buffer(bla + '12345')
-	gc.collect ()
-	assert str(buffer) == 'mooooooo12345'
+        bla = 'mooooooo'
+        buffer = gst.Buffer(bla + '12345')
+        gc.collect ()
+        assert str(buffer) == 'mooooooo12345'
 		
     def testBufferBadConstructor(self):
         self.assertRaises(TypeError, gst.Buffer, 'test', 0)
@@ -60,10 +60,12 @@ class BufferTest(unittest.TestCase):
             s += '%02d' % i
             
         buffer = gst.Buffer(s)
-        assert len(buffer) == 128
+        self.assertEquals(len(buffer), 128)
 
         sub = buffer.create_sub(16, 16)
-        assert sub.offset == gst.CLOCK_TIME_NONE, sub.offset
+        self.assertEquals(sub.size, 16)
+        #self.assertEquals(sub.data, buffer.data[16:32])
+        self.assertEquals(sub.offset, gst.CLOCK_TIME_NONE)
 
     def testBufferMerge(self):
         buffer1 = gst.Buffer('foo')

@@ -42,7 +42,8 @@ extern GSList *mainloops;
 extern void _pygst_main_quit(void);
 extern PyObject *PyGstExc_LinkError;
 
-GST_DEBUG_CATEGORY (gst_python);
+GST_DEBUG_CATEGORY (pygst_debug);  /* for bindings code */
+GST_DEBUG_CATEGORY (python_debug); /* for python code */
 
 /* This is a timeout that gets added to the mainloop to handle SIGINT (Ctrl-C)
  * Other signals get handled at some other point where transition from
@@ -170,7 +171,8 @@ init_gst (void)
      pygst_add_constants (m, "GST_");
 
      /* Initialize debugging category */
-     GST_DEBUG_CATEGORY_INIT (gst_python, "python", 0, "GStreamer python bindings");
+     GST_DEBUG_CATEGORY_INIT (pygst_debug, "pygst", 0, "GStreamer python bindings");
+     GST_DEBUG_CATEGORY_INIT (python_debug, "python", 0, "python code using gst-python");
 
      g_timeout_add_full (0, 100, python_do_pending_calls, NULL, NULL);
      

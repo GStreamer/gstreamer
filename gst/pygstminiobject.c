@@ -31,12 +31,15 @@ static void pygstminiobject_dealloc(PyGstMiniObject *self);
 static int  pygstminiobject_traverse(PyGstMiniObject *self, visitproc visit, void *arg);
 static int  pygstminiobject_clear(PyGstMiniObject *self);
 
-static GHashTable *miniobjs;
+GST_DEBUG_CATEGORY_EXTERN (pygst_debug);
+#define GST_CAT_DEFAULT pygst_debug
+
+static GHashTable *_miniobjs;
 
 void
-pygst_miniobject_init()
+pygst_miniobject_init ()
 {
-    miniobjs = g_hash_table_new (NULL, NULL);
+    _miniobjs = g_hash_table_new (NULL, NULL);
 }
 
 /**
@@ -133,16 +136,17 @@ pygstminiobject_register_class(PyObject *dict, const gchar *type_name,
  * floating references on the Gstminiobject.
  */
 void
-pygstminiobject_register_wrapper(PyObject *self)
+pygstminiobject_register_wrapper (PyObject *self)
 {
-    GstMiniObject *obj = ((PyGstMiniObject *)self)->obj;
+    GstMiniObject *obj = ((PyGstMiniObject *) self)->obj;
     PyGILState_STATE state;
 
-    Py_INCREF(self);
-    state = pyg_gil_state_ensure();
-    g_hash_table_insert (miniobjs, (gpointer) obj, (gpointer) self);
-
-    pyg_gil_state_release(state);
+    g_assert (obj);
+    Py_INCREF (self);
+    GST_DEBUG ("inserting self %p in the table for object %p", self, obj);
+    state = pyg_gil_state_ensure ();
+    g_hash_table_insert (_miniobjs, (gpointer) obj, (gpointer) self);
+    pyg_gil_state_release (state);
 }
 
 
@@ -158,50 +162,56 @@ pygstminiobject_register_wrapper(PyObject *self)
  * Returns: a reference to the wrapper for the GstMiniObject.
  */
 PyObject *
-pygstminiobject_new(GstMiniObject *obj)
+pygstminiobject_new (GstMiniObject *obj)
 {
     PyGILState_STATE state;
-    PyGstMiniObject *self;
+    PyGstMiniObject *self = NULL;
 
     if (obj == NULL) {
-	Py_INCREF(Py_None);
+	Py_INCREF (Py_None);
 	return Py_None;
     }
-    
-    /* we already have a wrapper for this object -- return it. */
-    state = pyg_gil_state_ensure();
-    self = (PyGstMiniObject *)g_hash_table_lookup (miniobjs, (gpointer) obj);
-    pyg_gil_state_release(state);
+
+    /* see if we already have a wrapper for this object */
+    state = pyg_gil_state_ensure ();
+    self = (PyGstMiniObject *) g_hash_table_lookup (_miniobjs, (gpointer) obj);
+    pyg_gil_state_release (state);
 
     if (self != NULL) {
-	Py_INCREF(self);
+        GST_DEBUG ("had self %p in the table for object %p", self, obj);
+	/* make sure the lookup returned our object */
+        g_assert (self->obj);
+        g_assert (self->obj == obj);
+	Py_INCREF (self);
     } else {
-	/* create wrapper */
-	PyTypeObject *tp = pygstminiobject_lookup_class(G_OBJECT_TYPE(obj));
+        GST_DEBUG ("have to create wrapper for object %p", obj);
+	/* we don't, so create one */
+	PyTypeObject *tp = pygstminiobject_lookup_class (G_OBJECT_TYPE (obj));
 	if (!tp)
 	    g_warning ("Couldn't get class for type object : %p", obj);
 	/* need to bump type refcount if created with
 	   pygstminiobject_new_with_interfaces(). fixes bug #141042 */
 	if (tp->tp_flags & Py_TPFLAGS_HEAPTYPE)
-	    Py_INCREF(tp);
-	self = PyObject_GC_New(PyGstMiniObject, tp);
+	    Py_INCREF (tp);
+	self = PyObject_GC_New (PyGstMiniObject, tp);
 	if (self == NULL)
 	    return NULL;
- 	self->obj = gst_mini_object_ref(obj);
-	
+	self->obj = gst_mini_object_ref (obj);
+
 	self->inst_dict = NULL;
 	self->weakreflist = NULL;
 
-	Py_INCREF(self);
-	state = pyg_gil_state_ensure();
+	Py_INCREF (self);
 
 	/* save wrapper pointer so we can access it later */
-	g_hash_table_insert (miniobjs, (gpointer) obj, (gpointer) self);
-	pyg_gil_state_release(state);
-	
-	PyObject_GC_Track((PyObject *)self);
+        GST_DEBUG ("inserting self %p in the table for object %p", self, obj);
+	state = pyg_gil_state_ensure ();
+	g_hash_table_insert (_miniobjs, (gpointer) obj, (gpointer) self);
+	pyg_gil_state_release (state);
+
+	PyObject_GC_Track ((PyObject *)self);
     }
-    return (PyObject *)self;
+    return (PyObject *) self;
 }
 
 /**
@@ -223,7 +233,7 @@ pygstminiobject_new_noref(GstMiniObject *obj)
 	Py_INCREF(Py_None);
 	return Py_None;
     }
-    
+
     /* create wrapper */
     PyTypeObject *tp = pygstminiobject_lookup_class(G_OBJECT_TYPE(obj));
     if (!tp)
@@ -238,31 +248,28 @@ pygstminiobject_new_noref(GstMiniObject *obj)
     /* DO NOT REF !! */
     self->obj = obj;
     /*self->obj = gst_mini_object_ref(obj);*/
-    
+
     self->inst_dict = NULL;
     self->weakreflist = NULL;
     /* save wrapper pointer so we can access it later */
     Py_INCREF(self);
+
+    GST_DEBUG ("inserting self %p in the table for object %p", self, obj);
     state = pyg_gil_state_ensure();
-    
-    g_hash_table_insert (miniobjs, (gpointer) obj, (gpointer) self);
+    g_hash_table_insert (_miniobjs, (gpointer) obj, (gpointer) self);
     pyg_gil_state_release(state);
-    
+
     PyObject_GC_Track((PyObject *)self);
     return (PyObject *)self;
 }
 
-
-
 static void
 pygstminiobject_dealloc(PyGstMiniObject *self)
 {
-    GstMiniObject	*obj = NULL;
-
     g_return_if_fail (self != NULL);
 
     PyGILState_STATE state;
-    
+
     state = pyg_gil_state_ensure();
 
     PyObject_ClearWeakRefs((PyObject *)self);
@@ -270,19 +277,20 @@ pygstminiobject_dealloc(PyGstMiniObject *self)
     PyObject_GC_UnTrack((PyObject *)self);
 
     if (self->obj) {
- 	gst_mini_object_unref(self->obj);
-	obj = self->obj;
+        /* the following causes problems with subclassed types */
+        /* self->ob_type->tp_free((PyObject *)self); */
+        GST_DEBUG ("removing self %p from the table for object %p", self,
+             self->obj);
+        g_assert (g_hash_table_remove (_miniobjs, (gpointer) self->obj));
+	gst_mini_object_unref(self->obj);
     }
+    GST_DEBUG ("setting self %p -> obj to NULL", self);
     self->obj = NULL;
 
     if (self->inst_dict) {
 	Py_DECREF(self->inst_dict);
     }
     self->inst_dict = NULL;
-
-    /* the following causes problems with subclassed types */
-    /* self->ob_type->tp_free((PyObject *)self); */
-    g_hash_table_remove (miniobjs, (gpointer) obj);
 
     PyObject_GC_Del(self);
     pyg_gil_state_release(state);
@@ -333,15 +341,20 @@ pygstminiobject_traverse(PyGstMiniObject *self, visitproc visit, void *arg)
 static int
 pygstminiobject_clear(PyGstMiniObject *self)
 {
-
     if (self->inst_dict) {
 	Py_DECREF(self->inst_dict);
     }
     self->inst_dict = NULL;
 
     if (self->obj) {
-	gst_mini_object_unref(self->obj);
+        /* the following causes problems with subclassed types */
+        /* self->ob_type->tp_free((PyObject *)self); */
+        GST_DEBUG ("removing self %p from the table for object %p", self,
+             self->obj);
+        g_assert (g_hash_table_remove (_miniobjs, (gpointer) self->obj));
+	gst_mini_object_unref (self->obj);
     }
+    GST_DEBUG ("setting self %p -> obj to NULL", self);
     self->obj = NULL;
 
     return 0;
