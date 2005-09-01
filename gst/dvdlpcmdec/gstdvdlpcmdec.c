@@ -322,7 +322,7 @@ gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstBuffer * buf)
    * encoded.
    */
   gint first_access = (data[0] << 8) | data[1];
-  guint32 header = (data[2] << 16) | (data[3] << 8) | data[2];
+  guint32 header = (data[2] << 16) | (data[3] << 8) | data[4];
   GstBuffer *subbuf;
   GstFlowReturn ret;
   int off, len;

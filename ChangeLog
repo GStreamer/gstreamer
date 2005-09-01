@@ -4,6 +4,14 @@
 	(gst_dvdlpcmdec_init), (gst_dvdlpcmdec_setcaps),
 	(update_timestamps), (parse_header), (gst_dvdlpcmdec_chain_dvd),
 	(gst_dvdlpcmdec_chain_raw):
+	  Use the right bytes to parse the LPCM dvd header
+
+2005-09-01  Michael Smith <msmith@fluendo.com>
+
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (gst_dvdlpcm_reset),
+	(gst_dvdlpcmdec_init), (gst_dvdlpcmdec_setcaps),
+	(update_timestamps), (parse_header), (gst_dvdlpcmdec_chain_dvd),
+	(gst_dvdlpcmdec_chain_raw):
 	  Return the correct values from chain function.
 
 2005-08-31  Michael Smith <msmith@fluendo.com>
