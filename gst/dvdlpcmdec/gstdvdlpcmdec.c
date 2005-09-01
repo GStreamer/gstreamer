@@ -428,8 +428,7 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstBuffer * buf)
 
       update_timestamps (dvdlpcmdec, buf, samples);
 
-      gst_pad_push (dvdlpcmdec->srcpad, buf);
-      return GST_FLOW_OK;
+      return gst_pad_push (dvdlpcmdec->srcpad, buf);
     }
     case 20:
     {
@@ -479,8 +478,7 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstBuffer * buf)
       }
 
       gst_buffer_unref (buf);
-      gst_pad_push (dvdlpcmdec->srcpad, outbuf);
-      return GST_FLOW_OK;
+      return gst_pad_push (dvdlpcmdec->srcpad, outbuf);
     }
     case 24:
     {
@@ -517,12 +515,11 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstBuffer * buf)
         src += 12;
       }
 
-      gst_pad_push (dvdlpcmdec->srcpad, buf);
-      return GST_FLOW_OK;
+      return gst_pad_push (dvdlpcmdec->srcpad, buf);
     }
     default:
       GST_ELEMENT_ERROR (dvdlpcmdec, STREAM, WRONG_TYPE, (NULL),
-          ("Invalid sample width configured"));
+          ("Invalid sample width configured: %d", dvdlpcmdec->width));
       gst_buffer_unref (buf);
       return GST_FLOW_ERROR;
   }
