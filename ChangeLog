@@ -1,3 +1,10 @@
+2005-09-01  Wim Taymans  <wim@fluendo.com>
+
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (gst_dvdlpcmdec_setcaps),
+	(gst_dvdlpcmdec_chain_dvd), (gst_dvdlpcmdec_chain_raw),
+	(gst_dvdlpcmdec_change_state):
+	Cleanups, fixed header parsing and stripping.
+
 2005-09-01  Michael Smith <msmith@fluendo.com>
 
 	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (gst_dvdlpcm_reset),
