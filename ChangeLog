@@ -1,3 +1,15 @@
+2005-09-01  Andy Wingo  <wingo@pobox.com>
+
+	* examples/Makefile.am (examples_DATA): Dist fixer.
+
+	* examples/debugslider.py: Renamed from debug-slider.py so it can
+	be imported.
+
+	* examples/pipeline-tester: Add a debugslider.
+
+	* pygst.py.in (require): If pygst.require() is called multiple
+	times, don't pollute sys.path with unneeded path entries.
+
 2005-08-31  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/__init__.py:

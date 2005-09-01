@@ -35,6 +35,9 @@ import pygst
 pygst.require('0.9')
 import gst
 
+print sys.path
+import debugslider
+
 
 data = (('Video capture via V4L',
          'v4lsrc name=source \n'
@@ -147,6 +150,9 @@ class Window(gtk.Window):
         tv.set_headers_visible(False)
         tv.show()
         sw.add(tv)
+        ds = debugslider.DebugSlider()
+        ds.show()
+        b.pack_start(ds, False, False, 0)
         l = gtk.Label()
         l.set_selectable(True)
         l.show()

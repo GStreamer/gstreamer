@@ -51,7 +51,9 @@ def require(version):
     assert version == _pygst_version, \
            "Only version '%s' is available" % version
 
-    # prepend the pygst path ...
+    # move the pygst path to the front
+    while _pygst_dir in sys.path:
+        sys.path.remove(_pygst_dir)
     sys.path.insert(0, _pygst_dir)
     
     _pygst_required_version = version

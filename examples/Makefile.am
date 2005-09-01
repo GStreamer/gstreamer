@@ -2,7 +2,7 @@ examplesdir = $(pkgdatadir)/examples
 examples_DATA = 	\
 	bps.py		\
 	cp.py		\
-	debug-slider.py \
+	debugslider.py  \
 	f2f.py		\
 	filesrc.py	\
 	gst123		\
