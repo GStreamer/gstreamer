@@ -1,6 +1,12 @@
 2005-09-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* testsuite/Makefile.am:
+	* testsuite/test_bin.py:
+	  add an example of a bin that overrides the change_state vmethod
+
+2005-09-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* testsuite/Makefile.am:
 	* testsuite/test_caps.py:
 	* testsuite/test_element.py:
 	* testsuite/test_event.py:

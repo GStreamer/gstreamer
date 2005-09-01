@@ -18,6 +18,7 @@ testhelper.la: $(testhelper_la_OBJECTS) $(testhelper_la_DEPENDENCIES)
 	$(LINK) -rpath $(pkgpyexecdir) $(testhelper_la_LDFLAGS) $(testhelper_la_OBJECTS) $(testhelper_la_LIBADD) $(LIBS)
 
 tests =  \
+	test_bin.py \
 	test_buffer.py \
         test_caps.py \
 	test_element.py \
