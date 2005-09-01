@@ -5,12 +5,12 @@ GCONF_DIR =
 endif
 
 SUBDIRS = 			\
-	gst sys ext 		\
+	gst sys ext docs	\
 	$(GCONF_DIR) 		\
 	m4 common po
 
 DIST_SUBDIRS = 			\
-	gst sys ext 		\
+	gst sys ext docs	\
 	gconf			\
 	m4 common po
 

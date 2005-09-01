@@ -77,8 +77,7 @@ struct _GstLevelClass {
   GstBaseTransformClass parent_class;
 };
 
-
-GType gst_level_get_type(void);
+GType gst_level_get_type (void);
 
 
 G_END_DECLS

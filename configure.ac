@@ -33,7 +33,6 @@ AS_LIBTOOL(GST_PLUGINS_GOOD, 0, 0, 0)
 AS_LIBTOOL_TAGS([CXX])
 AM_PROG_LIBTOOL
 
-dnl FIXME take something else ?
 AC_CONFIG_SRCDIR([gst/law/alaw.c])
 AM_CONFIG_HEADER(config.h)
 
@@ -589,13 +588,13 @@ ext/speex/Makefile
 sys/Makefile
 sys/oss/Makefile
 po/Makefile.in
-common/Makefile
-common/m4/Makefile
 gconf/Makefile
 gconf/gstreamer.schemas
 docs/Makefile
 docs/plugins/Makefile
 docs/version.entities
+common/Makefile
+common/m4/Makefile
 m4/Makefile
 gst-plugins-good.spec
 )

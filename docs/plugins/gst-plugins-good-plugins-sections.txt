@@ -1,4 +1,12 @@
 <SECTION>
+<FILE>element-goom</FILE>
+GstGoom
+<TITLE>goom</TITLE>
+<SUBSECTION Standard>
+GstGoomClass
+</SECTION>
+
+<SECTION>
 <FILE>element-level</FILE>
 GstLevel
 <TITLE>level</TITLE>

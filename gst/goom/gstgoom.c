@@ -17,62 +17,32 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-goom
+ * @see_also: synaesthesia
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch -v sinesrc ! goom ! ffmpegcolorspace ! xvimagesink
+ * </programlisting>
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 #include <string.h>
 #include <gst/gst.h>
+#include "gstgoom.h"
 #include <gst/video/video.h>
-#include <gst/base/gstadapter.h>
 #include "goom_core.h"
 
 GST_DEBUG_CATEGORY_STATIC (goom_debug);
 #define GST_CAT_DEFAULT goom_debug
-
-#define GOOM_SAMPLES 512
-
-#define GST_TYPE_GOOM (gst_goom_get_type())
-#define GST_GOOM(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GOOM,GstGOOM))
-#define GST_GOOM_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GOOM,GstGOOM))
-#define GST_IS_GOOM(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GOOM))
-#define GST_IS_GOOM_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GOOM))
-
-typedef struct _GstGOOM GstGOOM;
-typedef struct _GstGOOMClass GstGOOMClass;
-
-struct _GstGOOM
-{
-  GstElement element;
-
-  /* pads */
-  GstPad *sinkpad, *srcpad;
-  GstAdapter *adapter;
-
-  /* input tracking */
-  gint sample_rate;
-
-  gint16 datain[2][GOOM_SAMPLES];
-  /* the timestamp of the next frame */
-  GstClockTime audio_basetime;
-  guint64 samples_consumed;
-
-  /* video state */
-  gdouble fps;
-  gint width;
-  gint height;
-  gint channels;
-
-  gboolean disposed;
-};
-
-struct _GstGOOMClass
-{
-  GstElementClass parent_class;
-};
-
-GType gst_goom_get_type (void);
-
 
 /* elementfactory information */
 static GstElementDetails gst_goom_details = {
@@ -113,9 +83,9 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",    
     );
 
 
-static void gst_goom_class_init (GstGOOMClass * klass);
-static void gst_goom_base_init (GstGOOMClass * klass);
-static void gst_goom_init (GstGOOM * goom);
+static void gst_goom_class_init (GstGoomClass * klass);
+static void gst_goom_base_init (GstGoomClass * klass);
+static void gst_goom_init (GstGoom * goom);
 static void gst_goom_dispose (GObject * object);
 
 static GstElementStateReturn gst_goom_change_state (GstElement * element);
@@ -135,24 +105,24 @@ gst_goom_get_type (void)
 
   if (!type) {
     static const GTypeInfo info = {
-      sizeof (GstGOOMClass),
+      sizeof (GstGoomClass),
       (GBaseInitFunc) gst_goom_base_init,
       NULL,
       (GClassInitFunc) gst_goom_class_init,
       NULL,
       NULL,
-      sizeof (GstGOOM),
+      sizeof (GstGoom),
       0,
       (GInstanceInitFunc) gst_goom_init,
     };
 
-    type = g_type_register_static (GST_TYPE_ELEMENT, "GstGOOM", &info, 0);
+    type = g_type_register_static (GST_TYPE_ELEMENT, "GstGoom", &info, 0);
   }
   return type;
 }
 
 static void
-gst_goom_base_init (GstGOOMClass * klass)
+gst_goom_base_init (GstGoomClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -164,7 +134,7 @@ gst_goom_base_init (GstGOOMClass * klass)
 }
 
 static void
-gst_goom_class_init (GstGOOMClass * klass)
+gst_goom_class_init (GstGoomClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -182,7 +152,7 @@ gst_goom_class_init (GstGOOMClass * klass)
 }
 
 static void
-gst_goom_init (GstGOOM * goom)
+gst_goom_init (GstGoom * goom)
 {
   /* create the sink and src pads */
   goom->sinkpad =
@@ -216,7 +186,7 @@ gst_goom_init (GstGOOM * goom)
 static void
 gst_goom_dispose (GObject * object)
 {
-  GstGOOM *goom = GST_GOOM (object);
+  GstGoom *goom = GST_GOOM (object);
 
   if (!goom->disposed) {
     goom_close ();
@@ -232,7 +202,7 @@ gst_goom_dispose (GObject * object)
 static gboolean
 gst_goom_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstGOOM *goom;
+  GstGoom *goom;
   GstStructure *structure;
 
   goom = GST_GOOM (GST_PAD_PARENT (pad));
@@ -248,7 +218,7 @@ gst_goom_sink_setcaps (GstPad * pad, GstCaps * caps)
 static gboolean
 gst_goom_src_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstGOOM *goom;
+  GstGoom *goom;
   GstStructure *structure;
 
   goom = GST_GOOM (GST_PAD_PARENT (pad));
@@ -265,7 +235,7 @@ gst_goom_src_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 static gboolean
-gst_goom_src_negotiate (GstGOOM * goom)
+gst_goom_src_negotiate (GstGoom * goom)
 {
   GstCaps *othercaps, *target, *intersect;
   GstStructure *structure;
@@ -310,7 +280,7 @@ static gboolean
 gst_goom_event (GstPad * pad, GstEvent * event)
 {
   gboolean res;
-  GstGOOM *goom;
+  GstGoom *goom;
 
   goom = GST_GOOM (GST_PAD_PARENT (pad));
 
@@ -336,7 +306,7 @@ gst_goom_event (GstPad * pad, GstEvent * event)
 static GstFlowReturn
 gst_goom_chain (GstPad * pad, GstBuffer * bufin)
 {
-  GstGOOM *goom;
+  GstGoom *goom;
   guint32 bytesperread;
   gint16 *data;
   gint samples_per_frame;
@@ -426,14 +396,14 @@ gst_goom_chain (GstPad * pad, GstBuffer * bufin)
 not_negotiated:
   {
     GST_ELEMENT_ERROR (goom, CORE, NEGOTIATION, (NULL),
-        ("Format wasn't negotiated before chain function"));
+        ("Format wasn't negotiated before chain function."));
     gst_buffer_unref (bufin);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 no_format:
   {
     GST_ELEMENT_ERROR (goom, CORE, NEGOTIATION, (NULL),
-        ("Could not negotiate format"));
+        ("Could not negotiate format on source pad."));
     gst_buffer_unref (bufin);
     return GST_FLOW_ERROR;
   }
@@ -442,7 +412,7 @@ no_format:
 static GstElementStateReturn
 gst_goom_change_state (GstElement * element)
 {
-  GstGOOM *goom = GST_GOOM (element);
+  GstGoom *goom = GST_GOOM (element);
   gint transition;
   GstElementStateReturn ret;
 

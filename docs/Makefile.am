@@ -8,8 +8,8 @@ SUBDIRS = $(GTK_DOC_DIRS)
 DIST_SUBDIRS = plugins
 
 EXTRA_DIST = \
-        random/ChangeLog-0.8
-upload.mak \
+        random/ChangeLog-0.8 \
+	upload.mak \
         version.entities.in
 
 #upload:

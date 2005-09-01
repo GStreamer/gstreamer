@@ -1,3 +1,27 @@
+2005-09-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* configure.ac:
+	  add docs to build
+	* common/plugins.xsl:
+	  wrap Description into a refsect2
+	* docs/Makefile.am:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* gst/goom/Makefile.am:
+	* gst/goom/gstgoom.c: (gst_goom_get_type), (gst_goom_base_init),
+	(gst_goom_class_init), (gst_goom_init), (gst_goom_dispose),
+	(gst_goom_sink_setcaps), (gst_goom_src_setcaps),
+	(gst_goom_src_negotiate), (gst_goom_event), (gst_goom_chain),
+	(gst_goom_change_state):
+	* gst/goom/gstgoom.h:
+	  GstGOOM -> GstGoom
+	  add an example launch line
+	* gst/level/gstlevel.h:
+	* gst/monoscope/gstmonoscope.c:
+	  cleanups
+
 2005-08-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

@@ -12,6 +12,7 @@
 
   <chapter>
     <title>gst-plugins-good Elements</title>
+    <xi:include href="xml/element-goom.xml" />
     <xi:include href="xml/element-level.xml" />
   </chapter>
 
