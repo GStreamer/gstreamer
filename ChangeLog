@@ -1,3 +1,17 @@
+2005-09-01  Michael Smith <msmith@fluendo.com>
+
+	* configure.ac:
+	* gst/iec958/Makefile.am:
+	* gst/iec958/ac3_padder.c: (ac3p_init), (ac3p_push_data),
+	(ac3p_parse):
+	* gst/iec958/ac3_padder.h:
+	* gst/iec958/ac3iec.c: (ac3iec_get_type), (ac3iec_base_init),
+	(ac3iec_class_init), (ac3iec_init), (ac3iec_finalize),
+	(ac3iec_set_property), (ac3iec_get_property), (ac3iec_chain),
+	(ac3iec_change_state), (plugin_init):
+	* gst/iec958/ac3iec.h:
+	  AC3 -> IEC958 (S/PDIF) framer, port of Martin Soto's 0.8 plugin.
+
 2005-09-01  Wim Taymans  <wim@fluendo.com>
 
 	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (gst_dvdlpcmdec_setcaps),

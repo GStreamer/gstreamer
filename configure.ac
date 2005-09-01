@@ -215,6 +215,7 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
 		dvdlpcmdec \
+                iec958 \
 		mpegaudioparse \
 		realmedia \
                 "
@@ -382,6 +383,7 @@ AC_CONFIG_FILES(
 Makefile
 gst/Makefile
 gst/dvdlpcmdec/Makefile
+gst/iec958/Makefile
 gst/mpegaudioparse/Makefile
 gst/realmedia/Makefile
 ext/Makefile
