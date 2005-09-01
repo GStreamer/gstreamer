@@ -64,7 +64,7 @@ class BufferTest(unittest.TestCase):
 
         sub = buffer.create_sub(16, 16)
         self.assertEquals(sub.size, 16)
-        #self.assertEquals(sub.data, buffer.data[16:32])
+        self.assertEquals(sub.data, buffer.data[16:32])
         self.assertEquals(sub.offset, gst.CLOCK_TIME_NONE)
 
     def testBufferMerge(self):

@@ -145,12 +145,13 @@
   (c-name "GstBuffer")
   (gtype-id "GST_TYPE_BUFFER")
   (fields
+   '("guint8" "data")
    '("guint" "size")
    '("GstClockTime" "timestamp")
    '("GstClockTime" "duration")
-   '("GstCaps*" "caps")
    '("guint64" "offset")
    '("guint64" "offset_end")
+   '("GstCaps*" "caps")
   )
 )
 

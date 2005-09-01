@@ -1,5 +1,15 @@
 2005-09-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gst-types.defs:
+	* gst/gstbuffer.override:
+	* gst/pygstminiobject.c: (pygstminiobject_new_noref):
+	* testsuite/test_buffer.py:
+	  add a .data to buffers; it feels more natural to me than doing
+	  str(buffer) compared to the other properties.
+	  make sub_buffer test for data
+
+2005-09-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gst.override:
 	* gst/gstmodule.c: (init_gst):
 	  add a pygst debug category for bindings themselves to use

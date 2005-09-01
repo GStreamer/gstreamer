@@ -224,25 +224,25 @@ pygstminiobject_new (GstMiniObject *obj)
  * Returns: a reference to the wrapper for the GstMiniObject.
  */
 PyObject *
-pygstminiobject_new_noref(GstMiniObject *obj)
+pygstminiobject_new_noref (GstMiniObject *obj)
 {
     PyGILState_STATE state;
     PyGstMiniObject *self;
 
     if (obj == NULL) {
-	Py_INCREF(Py_None);
+	Py_INCREF (Py_None);
 	return Py_None;
     }
 
     /* create wrapper */
-    PyTypeObject *tp = pygstminiobject_lookup_class(G_OBJECT_TYPE(obj));
+    PyTypeObject *tp = pygstminiobject_lookup_class (G_OBJECT_TYPE (obj));
     if (!tp)
 	g_warning ("Couldn't get class for type object : %p", obj);
     /* need to bump type refcount if created with
        pygstminiobject_new_with_interfaces(). fixes bug #141042 */
     if (tp->tp_flags & Py_TPFLAGS_HEAPTYPE)
-	Py_INCREF(tp);
-    self = PyObject_GC_New(PyGstMiniObject, tp);
+	Py_INCREF (tp);
+    self = PyObject_GC_New (PyGstMiniObject, tp);
     if (self == NULL)
 	return NULL;
     /* DO NOT REF !! */
@@ -252,15 +252,15 @@ pygstminiobject_new_noref(GstMiniObject *obj)
     self->inst_dict = NULL;
     self->weakreflist = NULL;
     /* save wrapper pointer so we can access it later */
-    Py_INCREF(self);
+    Py_INCREF (self);
 
     GST_DEBUG ("inserting self %p in the table for object %p", self, obj);
     state = pyg_gil_state_ensure();
     g_hash_table_insert (_miniobjs, (gpointer) obj, (gpointer) self);
     pyg_gil_state_release(state);
 
-    PyObject_GC_Track((PyObject *)self);
-    return (PyObject *)self;
+    PyObject_GC_Track ((PyObject *)self);
+    return (PyObject *) self;
 }
 
 static void
