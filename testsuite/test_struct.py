@@ -35,26 +35,26 @@ class StructureTest(unittest.TestCase):
     def testInt(self):
         assert self.struct.has_key('width')
         assert isinstance(self.struct['width'], int)
-	assert self.struct['width'] == 10, self.struct['width']
-	self.struct['width'] = 5
+        assert self.struct['width'] == 10, self.struct['width']
+        self.struct['width'] = 5
         assert self.struct.has_key('width')
         assert isinstance(self.struct['width'], int)
-	assert self.struct['width'] == 5, self.struct['width']
+        assert self.struct['width'] == 5, self.struct['width']
 
     def testString(self):
         assert self.struct.has_key('foo')
         assert isinstance(self.struct['foo'], str)
-	assert self.struct['foo'] == 'bar', self.struct['foo']
-	self.struct['foo'] = 'baz'
+        assert self.struct['foo'] == 'bar', self.struct['foo']
+        self.struct['foo'] = 'baz'
         assert self.struct.has_key('foo')
         assert isinstance(self.struct['foo'], str)
-	assert self.struct['foo'] == 'baz', self.struct['foo']
+        assert self.struct['foo'] == 'baz', self.struct['foo']
 
     def testCreateInt(self):
-	self.struct['integer'] = 5
+        self.struct['integer'] = 5
         assert self.struct.has_key('integer')
         assert isinstance(self.struct['integer'], int)
-	assert self.struct['integer'] == 5, self.struct['integer']
+        assert self.struct['integer'] == 5, self.struct['integer']
         
     def testGstValue(self):
         s = self.struct
@@ -83,9 +83,9 @@ class StructureTest(unittest.TestCase):
         assert s['rlist'] == [([(['a', 'b'], ['c', 'd']),'e'], ['f', 'g']), 'h']
 
     def testStructureChange(self):
-	assert self.struct['framerate'] == 5.0
-	self.struct['framerate'] = 10.0
-	assert self.struct['framerate'] == 10.0
+        assert self.struct['framerate'] == 5.0
+        self.struct['framerate'] = 10.0
+        assert self.struct['framerate'] == 10.0
         self.struct['pixel-aspect-ratio'] = gst.Fraction(4, 2)
         assert self.struct['pixel-aspect-ratio'].num == 2
         assert self.struct['pixel-aspect-ratio'].denom == 1

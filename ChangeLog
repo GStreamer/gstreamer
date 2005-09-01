@@ -1,5 +1,18 @@
 2005-09-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* testsuite/Makefile.am:
+	* testsuite/test_caps.py:
+	* testsuite/test_element.py:
+	* testsuite/test_event.py:
+	* testsuite/test_pad.py:
+	* testsuite/test_pipeline.py:
+	* testsuite/test_struct.py:
+	  updated/bits commented out
+	* testsuite/test_probe.py:
+	  removed
+
+2005-09-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gst-types.defs:
 	* gst/gstbuffer.override:
 	* gst/pygstminiobject.c: (pygstminiobject_new_noref):

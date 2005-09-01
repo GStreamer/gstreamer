@@ -20,6 +20,8 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 
+import time
+
 from common import gst, unittest
 
 class PipelineConstructor(unittest.TestCase):
@@ -29,12 +31,6 @@ class PipelineConstructor(unittest.TestCase):
         assert pipeline is not None, 'pipeline is None'
         assert isinstance(pipeline, gst.Pipeline), 'pipeline is not a GstPipline'
         assert pipeline.get_name() == name, 'pipelines name is wrong'
-        
-## class ThreadConstructor(unittest.TestCase):
-##     def testCreate(self):
-##         thread = gst.Thread('test-thread')
-##         assert thread is not None, 'thread is None'
-##         assert isinstance(thread, gst.Thread)
         
 class Pipeline(unittest.TestCase):
     def setUp(self):
@@ -50,10 +46,9 @@ class Pipeline(unittest.TestCase):
         self.pipeline.set_state(gst.STATE_PLAYING)
         self.assertEqual(self.pipeline.get_state(), gst.STATE_PLAYING)
         
-        while self.pipeline.iterate():
-            pass
+        time.sleep(1)
 
-        self.assertEqual(self.pipeline.get_state(), gst.STATE_PAUSED)
+        self.assertEqual(self.pipeline.get_state(), gst.STATE_PLAYING)
         self.pipeline.set_state(gst.STATE_NULL)
         self.assertEqual(self.pipeline.get_state(), gst.STATE_NULL)
         

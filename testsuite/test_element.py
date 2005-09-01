@@ -101,7 +101,8 @@ class FakeSinkTest(ElementTest):
         assert self.element.set_state(old)
         assert self.element.get_state() == old
 
-        self.element.connect('state-change', state_change_cb)
+# FIXME: replace with messages
+#        self.element.connect('state-change', state_change_cb)
 
         assert self.element.set_state(new)
         assert self.element.get_state() == new

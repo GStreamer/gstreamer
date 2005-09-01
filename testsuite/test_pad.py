@@ -26,13 +26,35 @@ class PadTest(unittest.TestCase):
     def setUp(self):
         self.pipeline = gst.parse_launch('fakesrc name=source ! fakesink')
         src = self.pipeline.get_by_name('source')
-        self.sink = src.get_pad('src')
+        self.srcpad = src.get_pad('src')
         
-    def testQuery(self):
-        assert self.sink.query(gst.QUERY_TOTAL, gst.FORMAT_BYTES) == -1
-        assert self.sink.query(gst.QUERY_POSITION, gst.FORMAT_BYTES) == 0
-        assert self.sink.query(gst.QUERY_POSITION, gst.FORMAT_TIME) == 0
+# FIXME: now that GstQuery is a miniobject with various _new_ factory
+# functions, we need to figure out a way to deal with them in python
+#    def testQuery(self):
+#        assert self.sink.query(gst.QUERY_TOTAL, gst.FORMAT_BYTES) == -1
+#        assert self.srcpad.query(gst.QUERY_POSITION, gst.FORMAT_BYTES) == 0
+#        assert self.srcpad.query(gst.QUERY_POSITION, gst.FORMAT_TIME) == 0
+
+class PadProbeTest(unittest.TestCase):
+    def testFakeSrcProbe(self):
+        pipeline = gst.Pipeline()
+        fakesrc = gst.element_factory_make('fakesrc')
+        fakesrc.set_property('num-buffers', 1)
+        fakesink = gst.element_factory_make('fakesink')
+
+        pipeline.add_many(fakesrc, fakesink)
+        fakesrc.link(fakesink)
+        pad = fakesrc.get_pad('src')
+        pad.add_buffer_probe(self._probe_callback_fakesrc)
+        self._got_fakesrc_buffer = False
+        pipeline.set_state(gst.STATE_PLAYING)
+        while not self._got_fakesrc_buffer:
+            pass
+
+    def _probe_callback_fakesrc(self, pad, buffer):
+        self.failUnless(isinstance(pad, gst.Pad))
+        self.failUnless(isinstance(buffer, gst.Buffer))
+        self._got_fakesrc_buffer = True
 
 if __name__ == "__main__":
     unittest.main()
-        
