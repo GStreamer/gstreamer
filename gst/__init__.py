@@ -28,8 +28,6 @@ try:
 except:
    pass
 
-import ltihooks
-
 import gobject
 del gobject
 
