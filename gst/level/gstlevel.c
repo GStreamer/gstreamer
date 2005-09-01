@@ -1,8 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- *
- * gstlevel.c: signals RMS, peak and decaying peak levels
- * Copyright (C) 2000,2001,2002,2003
+ * Copyright (C) 2000,2001,2002,2003,2005
  *           Thomas Vander Stichele <thomas at apestaart dot org>
  *
  * This library is free software; you can redistribute it and/or
@@ -34,7 +32,7 @@ GST_DEBUG_CATEGORY (level_debug);
 static GstElementDetails level_details = {
   "Level",
   "Filter/Analyzer/Audio",
-  "RMS/Peak/Decaying Peak Level signaller for audio/raw",
+  "RMS/Peak/Decaying Peak Level messager for audio/raw",
   "Thomas <thomas@apestaart.org>"
 };
 
@@ -113,11 +111,11 @@ gst_level_class_init (GstLevelClass * klass)
   gobject_class->get_property = gst_level_get_property;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SIGNAL_LEVEL,
-      g_param_spec_boolean ("signal", "Signal",
-          "Emit level signals for each interval", TRUE, G_PARAM_READWRITE));
+      g_param_spec_boolean ("message", "mesage",
+          "Post a level message for each interval", TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SIGNAL_INTERVAL,
       g_param_spec_double ("interval", "Interval",
-          "Interval between emissions (in seconds)",
+          "Interval between posts (in seconds)",
           0.01, 100.0, 0.1, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PEAK_TTL,
       g_param_spec_double ("peak_ttl", "Peak TTL",
@@ -158,7 +156,7 @@ gst_level_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_SIGNAL_LEVEL:
-      filter->signal = g_value_get_boolean (value);
+      filter->message = g_value_get_boolean (value);
       break;
     case PROP_SIGNAL_INTERVAL:
       filter->interval = g_value_get_double (value);
@@ -182,7 +180,7 @@ gst_level_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_SIGNAL_LEVEL:
-      g_value_set_boolean (value, filter->signal);
+      g_value_set_boolean (value, filter->message);
       break;
     case PROP_SIGNAL_INTERVAL:
       g_value_set_double (value, filter->interval);
@@ -356,7 +354,7 @@ gst_level_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
     CS = 0.0;
     switch (filter->width) {
       case 16:
-        gst_level_calculate_gint16 (in_data + i, num_int_samples,
+        gst_level_calculate_gint16 (((gint16 *) in_data) + i, num_int_samples,
             filter->channels, filter->width - 1, &CS, &filter->peak[i]);
         break;
       case 8:
@@ -365,7 +363,7 @@ gst_level_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
         break;
     }
     GST_LOG_OBJECT (filter,
-        "channel %d, cumulative sum %f, peak %f, over %d channels/%d samples",
+        "channel %d, cumulative sum %f, peak %f, over %d samples/%d channels",
         i, CS, filter->peak[i], num_int_samples, filter->channels);
     filter->CS[i] += CS;
   }
@@ -413,8 +411,8 @@ gst_level_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
 
   /* do we need to emit ? */
 
-  if (filter->num_samples >= filter->interval * (gdouble) filter->rate) {
-    if (filter->signal) {
+  if (filter->num_samples >= (gint) (filter->interval * filter->rate)) {
+    if (filter->message) {
       GstMessage *m;
       double endtime, RMS;
       double RMSdB, lastdB, decaydB;
@@ -428,7 +426,7 @@ gst_level_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
       for (i = 0; i < filter->channels; ++i) {
         RMS = sqrt (filter->CS[i] / filter->num_samples);
         GST_LOG_OBJECT (filter,
-            "CS: %f, num_samples %f, channel %d, RMS %f",
+            "CS: %f, num_samples %d, channel %d, RMS %f",
             filter->CS[i], filter->num_samples, i, RMS);
         /* RMS values are calculated in amplitude, so 20 * log 10 */
         RMSdB = 20 * log10 (RMS);

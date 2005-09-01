@@ -1,8 +1,6 @@
 /* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- *
- * gstlevel.c: signals RMS, peak and decaying peak levels
- * Copyright (C) 2000,2001,2002,2003
+ * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 2000,2001,2002,2003,2005
  *           Thomas Vander Stichele <thomas at apestaart dot org>
  *
  * This library is free software; you can redistribute it and/or
@@ -52,7 +50,7 @@ typedef struct _GstLevelClass GstLevelClass;
 struct _GstLevel {
   GstBaseTransform element;
 
-  gboolean signal;		/* whether or not to emit signals */
+  gboolean message;		/* whether or not to post messages */
   gdouble interval;		/* how many seconds between emits */
 
   gint rate;			/* caps variables */
@@ -61,7 +59,7 @@ struct _GstLevel {
 
   gdouble decay_peak_ttl;	/* time to live for peak in seconds */
   gdouble decay_peak_falloff;	/* falloff in dB/sec */
-  gdouble num_samples;		/* one-channel sample count since last emit */
+  gint num_samples;		/* one-channel sample count since last emit */
 
   /* per-channel arrays for intermediate values */
   gdouble *CS;			/* normalized Cumulative Square */

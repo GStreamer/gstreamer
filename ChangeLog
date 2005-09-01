@@ -1,6 +1,26 @@
 2005-09-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:
+	* check/.cvsignore:
+	* check/Makefile.am:
+	* check/elements/.cvsignore:
+	* check/elements/level.c: (setup_level), (cleanup_level),
+	(GST_START_TEST), (level_suite), (main):
+	  add a test for level
+	* common/release.mak:
+	  move the enum checking to release.mak
+	* configure.ac:
+	  add valgrind and check checking
+	* gst/level/gstlevel.c: (gst_level_transform):
+	* gst/level/gstlevel.h:
+	  fix Andy's cast bug
+	  convert a field to int
+	  fix the arithmetic to int when checking for emit so that a
+	  100-sample buffer of a 1000Hz stream triggers after 0.1 sec
+
+2005-09-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
 	* configure.ac:
 	  add docs to build
 	* common/plugins.xsl:

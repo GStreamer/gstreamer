@@ -4,15 +4,19 @@ else
 GCONF_DIR =
 endif
 
+ALWAYS_SUBDIRS =		\
+	gst sys ext 		\
+	check docs		\
+	po			\
+	m4 common
+
 SUBDIRS = 			\
-	gst sys ext docs	\
-	$(GCONF_DIR) 		\
-	m4 common po
+	$(ALWAYS_SUBDIRS)	\
+	$(GCONF_DIR)
 
 DIST_SUBDIRS = 			\
-	gst sys ext docs	\
-	gconf			\
-	m4 common po
+	$(ALWAYS_SUBDIRS)	\
+	gconf
 
 EXTRA_DIST = \
 	gst-plugins-good.spec depcomp \
@@ -25,17 +29,5 @@ noinst_HEADERS = \
 	gst-libs/gst/gettext.h \
 	gst-libs/gst/gst-i18n-plugin.h
 
-# check that no marshal or enumtypes files are included
-# this in turn ensures that distcheck fails for missing .list files which is currently
-# shadowed when the corresponding .c and .h files are included.
-distcheck-hook:
-	@test "x" = "x`find $(distdir) -name \*-enumtypes.[ch]`" && \
-	test "x" = "x`find $(distdir) -name \*-marshal.[ch]`" || \
-	( $(ECHO) "*** Leftover enumtypes or marshal files in the tarball." && \
-          $(ECHO) "*** Make sure the following files are not disted:" && \
-          find $(distdir) -name \*-enumtypes.[ch] && \
-          find $(distdir) -name \*-marshal.[ch] && \
-          false )
-
-# include $(top_srcdir)/common/release.mak
+include $(top_srcdir)/common/release.mak
 # include $(top_srcdir)/common/po.mak
