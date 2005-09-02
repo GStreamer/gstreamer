@@ -1,3 +1,12 @@
+2005-09-02  Flavio Oliveira  <flavio.oliveira@indt.org.br>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/gsm/Makefile.am:
+	* ext/gsm/gstgsm.c: 
+	* ext/gsm/gstgsmenc.c: Ported GSM Encoder to GStreamer 0.9.
+	* PORTED_09:
+
 2005-08-31  Flavio Oliveira  <flavio.oliveira@indt.org.br>
 
 	* configure.ac:

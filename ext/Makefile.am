@@ -76,11 +76,11 @@ endif
 ## FESTIVAL_DIR=
 ## endif
 
-# if USE_GSM
-# GSM_DIR=gsm
-# else
+if USE_GSM
+GSM_DIR=gsm
+else
 GSM_DIR=
-# endif
+endif
 
 # if USE_HERMES
 # HERMES_DIR=hermes
@@ -261,6 +261,7 @@ DIST_SUBDIRS=\
 	amrnb \
 	faac \
 	faad \
+	gsm \
 	lame \
 	mad \
 	mpeg2dec \

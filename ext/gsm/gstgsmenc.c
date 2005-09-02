@@ -51,7 +51,7 @@ static void gst_gsmenc_base_init (gpointer g_class);
 static void gst_gsmenc_class_init (GstGSMEnc * klass);
 static void gst_gsmenc_init (GstGSMEnc * gsmenc);
 
-static void gst_gsmenc_chain (GstPad * pad, GstData * _data);
+static GstFlowReturn gst_gsmenc_chain (GstPad * pad, GstBuffer * buf);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_gsmenc_signals[LAST_SIGNAL] = { 0 };
@@ -148,27 +148,28 @@ gst_gsmenc_init (GstGSMEnc * gsmenc)
   gsmenc->next_ts = 0;
 }
 
-static void
-gst_gsmenc_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_gsmenc_chain (GstPad * pad, GstBuffer * buf)
 {
   GstGSMEnc *gsmenc;
 
+/*
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (_data != NULL);
-
+*/
   gsmenc = GST_GSMENC (GST_OBJECT_PARENT (pad));
 
-  if (GST_IS_EVENT (_data)) {
-    GstEvent *event = GST_EVENT (_data);
+  if (GST_IS_EVENT (buf)) {
+    GstEvent *event = GST_EVENT (buf);
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:{
-        gst_element_set_eos (GST_ELEMENT (gsmenc));
-        gst_pad_push (gsmenc->srcpad, _data);
+        gst_pad_push_event (gsmenc->srcpad, gst_event_new_eos ());
+        gst_pad_push (gsmenc->srcpad, buf);
         break;
       }
-      case GST_EVENT_DISCONTINUOUS:{
+      case GST_EVENT_NEWSEGMENT:{
         /* drop the discontinuity */
         break;
       }
@@ -177,9 +178,8 @@ gst_gsmenc_chain (GstPad * pad, GstData * _data)
         break;
       }
     }
-    return;
-  } else if (GST_IS_BUFFER (_data)) {
-    GstBuffer *buf = GST_BUFFER (_data);
+    return GST_FLOW_OK;
+  } else if (GST_IS_BUFFER (buf)) {
     gsm_signal *data;
     guint size;
 
@@ -200,7 +200,7 @@ gst_gsmenc_chain (GstPad * pad, GstData * _data)
       gsm_encode (gsmenc->state, gsmenc->buffer,
           (gsm_byte *) GST_BUFFER_DATA (outbuf));
 
-      gst_pad_push (gsmenc->srcpad, GST_DATA (outbuf));
+      gst_pad_push (gsmenc->srcpad, outbuf);
 
       size -= (160 - gsmenc->bufsize);
       data += (160 - gsmenc->bufsize);
@@ -217,7 +217,7 @@ gst_gsmenc_chain (GstPad * pad, GstData * _data)
 
       gsm_encode (gsmenc->state, data, (gsm_byte *) GST_BUFFER_DATA (outbuf));
 
-      gst_pad_push (gsmenc->srcpad, GST_DATA (outbuf));
+      gst_pad_push (gsmenc->srcpad, outbuf);
 
       size -= 160;
       data += 160;
@@ -229,7 +229,8 @@ gst_gsmenc_chain (GstPad * pad, GstData * _data)
       gsmenc->bufsize += size;
     }
 
-    gst_buffer_unref (buf);
-    return;
+    /*gst_buffer_unref (buf); */
+    return GST_FLOW_OK;
   }
+  return GST_FLOW_OK;
 }

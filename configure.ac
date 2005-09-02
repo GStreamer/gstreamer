@@ -363,6 +363,19 @@ return 0;
   AC_SUBST(FAAD_LIBS)
 ])
 
+dnl *** gsm ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_GSM, true)
+GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
+  GST_CHECK_LIBHEADER(GSM, gsm, gsm_create, , gsm.h, GSM_LIBS="-lgsm")
+  if test $HAVE_GSM != "yes"; then
+    GST_CHECK_LIBHEADER(GSM, gsm, gsm_create, , gsm/gsm.h, GSM_LIBS="-lgsm")
+    if test $HAVE_GSM = "yes"; then 
+      AC_DEFINE(GSM_HEADER_IN_SUBDIR, 1, [Define if GSM header in gsm/ subdir])
+    fi
+  fi
+  AC_SUBST(GSM_LIBS)
+])
+
 dnl also add builddir include for enumtypes and marshal
 GST_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CFLAGS $GST_ERROR"
 
@@ -424,6 +437,7 @@ sys/Makefile
 ext/Makefile
 ext/faac/Makefile
 ext/faad/Makefile
+ext/gsm/Makefile
 common/Makefile
 common/m4/Makefile
 m4/Makefile
