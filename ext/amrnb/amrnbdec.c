@@ -50,7 +50,7 @@ static void gst_amrnbdec_init (GstAmrnbDec * amrnbdec);
 
 static GstFlowReturn gst_amrnbdec_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_amrnbdec_setcaps (GstPad * pad, GstCaps * caps);
-static GstElementStateReturn gst_amrnbdec_state_change (GstElement * element);
+static GstStateChangeReturn gst_amrnbdec_state_change (GstElement * element);
 
 static GstElementClass *parent_class = NULL;
 
@@ -225,22 +225,20 @@ not_negotiated:
   }
 }
 
-static GstElementStateReturn
+static GstStateChangeReturn
 gst_amrnbdec_state_change (GstElement * element)
 {
   GstAmrnbDec *amrnbdec;
-  GstElementStateReturn ret;
-  gint transition;
+  GstStateChangeReturn ret;
 
   amrnbdec = GST_AMRNBDEC (element);
-  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (!(amrnbdec->handle = Decoder_Interface_init ()))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_adapter_clear (amrnbdec->adapter);
       amrnbdec->ts = 0;
       break;
@@ -248,10 +246,10 @@ gst_amrnbdec_state_change (GstElement * element)
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       Decoder_Interface_exit (amrnbdec->handle);
       break;
     default:

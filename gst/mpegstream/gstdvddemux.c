@@ -169,7 +169,8 @@ static void gst_dvd_demux_set_cur_subpicture
 static void gst_dvd_demux_reset (GstDVDDemux * dvd_demux);
 
 
-static GstElementStateReturn gst_dvd_demux_change_state (GstElement * element);
+static GstStateChangeReturn gst_dvd_demux_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstMPEGDemuxClass *parent_class = NULL;
 
@@ -1043,20 +1044,20 @@ gst_dvd_demux_reset (GstDVDDemux * dvd_demux)
   dvd_demux->discont_time = GST_CLOCK_TIME_NONE;
 }
 
-static GstElementStateReturn
-gst_dvd_demux_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_dvd_demux_change_state (GstElement * element, GstStateChange transition)
 {
   GstDVDDemux *dvd_demux = GST_DVD_DEMUX (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_dvd_demux_reset (dvd_demux);
       break;
     default:
       break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 }
 
 gboolean

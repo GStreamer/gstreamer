@@ -109,8 +109,8 @@ static void gst_synaesthesia_dispose (GObject * object);
 
 static void gst_synaesthesia_chain (GstPad * pad, GstData * _data);
 
-static GstElementStateReturn
-gst_synaesthesia_change_state (GstElement * element);
+static GstStateChangeReturn
+gst_synaesthesia_change_state (GstElement * element, GstStateChange transition);
 
 static GstCaps *gst_synaesthesia_src_getcaps (GstPad * pad);
 static GstPadLinkReturn
@@ -395,24 +395,24 @@ gst_synaesthesia_chain (GstPad * pad, GstData * _data)
   }
 }
 
-static GstElementStateReturn
-gst_synaesthesia_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_synaesthesia_change_state (GstElement * element, GstStateChange transition)
 {
   GstSynaesthesia *synaesthesia;
 
   synaesthesia = GST_SYNAESTHESIA (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_PAUSED:
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       synaesthesia->audio_basetime = GST_CLOCK_TIME_NONE;
       gst_adapter_clear (synaesthesia->adapter);
       break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 

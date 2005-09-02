@@ -68,7 +68,8 @@ static gboolean gst_asf_demux_add_audio_stream (GstASFDemux * asf_demux,
 static gboolean gst_asf_demux_setup_pad (GstASFDemux * asf_demux,
     GstPad * src_pad, GstCaps * caps, guint16 id);
 
-static GstElementStateReturn gst_asf_demux_change_state (GstElement * element);
+static GstStateChangeReturn gst_asf_demux_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstPadTemplate *videosrctempl, *audiosrctempl;
 static GstElementClass *parent_class = NULL;
@@ -1668,18 +1669,18 @@ gst_asf_demux_get_property (GObject * object,
   }
 }
 
-static GstElementStateReturn
-gst_asf_demux_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_asf_demux_change_state (GstElement * element, GstStateChange transition)
 {
   GstASFDemux *asf_demux = GST_ASF_DEMUX (element);
   gint i;
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_PAUSED:
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       asf_demux->bs = gst_bytestream_new (asf_demux->sinkpad);
       asf_demux->last_seek = 0;
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_bytestream_destroy (asf_demux->bs);
       for (i = 0; i < GST_ASF_DEMUX_NUM_VIDEO_PADS; i++) {
         asf_demux->video_PTS[i] = 0;
@@ -1695,13 +1696,13 @@ gst_asf_demux_change_state (GstElement * element)
       asf_demux->seek_pending = GST_CLOCK_TIME_NONE;
       asf_demux->seek_discont = FALSE;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 }
 
 static guint32

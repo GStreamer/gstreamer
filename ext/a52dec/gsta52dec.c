@@ -84,7 +84,8 @@ static void gst_a52dec_class_init (GstA52DecClass * klass);
 static void gst_a52dec_init (GstA52Dec * a52dec);
 
 static void gst_a52dec_chain (GstPad * pad, GstData * data);
-static GstElementStateReturn gst_a52dec_change_state (GstElement * element);
+static GstStateChangeReturn gst_a52dec_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void gst_a52dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -498,15 +499,15 @@ gst_a52dec_chain (GstPad * pad, GstData * _data)
   gst_buffer_unref (buf);
 }
 
-static GstElementStateReturn
-gst_a52dec_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_a52dec_change_state (GstElement * element, GstStateChange transition)
 {
   GstA52Dec *a52dec = GST_A52DEC (element);
   GstCPUFlags cpuflags;
   uint32_t a52_cpuflags = 0;
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       cpuflags = gst_cpu_get_flags ();
       if (cpuflags & GST_CPU_FLAG_MMX)
         a52_cpuflags |= MM_ACCEL_X86_MMX;
@@ -517,7 +518,7 @@ gst_a52dec_change_state (GstElement * element)
 
       a52dec->state = a52_init (a52_cpuflags);
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       a52dec->samples = a52_samples (a52dec->state);
       a52dec->bit_rate = -1;
       a52dec->sample_rate = -1;
@@ -528,18 +529,18 @@ gst_a52dec_change_state (GstElement * element)
       a52dec->bias = 0;
       a52dec->time = 0;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       a52dec->samples = NULL;
       if (a52dec->cache) {
         gst_buffer_unref (a52dec->cache);
         a52dec->cache = NULL;
       }
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       a52_free (a52dec->state);
       a52dec->state = NULL;
       break;
@@ -548,9 +549,9 @@ gst_a52dec_change_state (GstElement * element)
 
   }
 
-  GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static void

@@ -122,7 +122,8 @@ static gboolean dvdreadsrc_srcpad_query (GstPad * pad, GstQueryType type,
     GstFormat * format, gint64 * value);
 
 static GstData *dvdreadsrc_get (GstPad * pad);
-static GstElementStateReturn dvdreadsrc_change_state (GstElement * element);
+static GstStateChangeReturn dvdreadsrc_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void dvdreadsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
 
@@ -1080,22 +1081,22 @@ dvdreadsrc_close_file (DVDReadSrc * src)
   GST_FLAG_UNSET (src, DVDREADSRC_OPEN);
 }
 
-static GstElementStateReturn
-dvdreadsrc_change_state (GstElement * element)
+static GstStateChangeReturn
+dvdreadsrc_change_state (GstElement * element, GstStateChange transition)
 {
   DVDReadSrc *dvdreadsrc = DVDREADSRC (element);
 
-  g_return_val_if_fail (GST_IS_DVDREADSRC (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_DVDREADSRC (element), GST_STATE_CHANGE_FAILURE);
 
   GST_DEBUG ("gstdvdreadsrc: state pending %d", GST_STATE_PENDING (element));
 
   /* if going down into NULL state, close the file if it's open */
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (!dvdreadsrc_open_file (DVDREADSRC (element)))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       dvdreadsrc->priv->new_cell = TRUE;
       dvdreadsrc->priv->new_seek = TRUE;
       dvdreadsrc->priv->chapter = 0;
@@ -1104,7 +1105,7 @@ dvdreadsrc_change_state (GstElement * element)
       dvdreadsrc->priv->seek_pend = FALSE;
       dvdreadsrc->priv->seek_pend_fmt = GST_FORMAT_UNDEFINED;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       dvdreadsrc_close_file (DVDREADSRC (element));
       break;
     default:
@@ -1113,9 +1114,9 @@ dvdreadsrc_change_state (GstElement * element)
 
   /* if we haven't failed already, give the parent class a chance to ;-) */
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 /*

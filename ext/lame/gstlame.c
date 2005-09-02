@@ -233,7 +233,8 @@ static void gst_lame_get_property (GObject * object, guint prop_id,
 static gboolean gst_lame_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_lame_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_lame_setup (GstLame * lame);
-static GstElementStateReturn gst_lame_change_state (GstElement * element);
+static GstStateChangeReturn gst_lame_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -1199,19 +1200,17 @@ gst_lame_setup (GstLame * lame)
 #undef CHECK_ERROR
 }
 
-static GstElementStateReturn
-gst_lame_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_lame_change_state (GstElement * element, GstStateChange transition)
 {
   GstLame *lame;
-  gint transition;
-  GstElementStateReturn result;
+  GstStateChangeReturn result;
 
   lame = GST_LAME (element);
 
-  transition = GST_STATE_TRANSITION (lame);
 
   switch (transition) {
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       lame->last_ts = GST_CLOCK_TIME_NONE;
       break;
     default:
@@ -1219,10 +1218,10 @@ gst_lame_change_state (GstElement * element)
   }
 
   /* if we haven't failed already, give the parent class a chance to ;-) */
-  result = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (lame->initialized) {
         lame_close (lame->lgf);
         lame->lgf = lame_init ();

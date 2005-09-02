@@ -87,7 +87,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 static void gst_mpeg_parse_class_init (GstMPEGParseClass * klass);
 static void gst_mpeg_parse_base_init (GstMPEGParseClass * klass);
 static void gst_mpeg_parse_init (GstMPEGParse * mpeg_parse);
-static GstElementStateReturn gst_mpeg_parse_change_state (GstElement * element);
+static GstStateChangeReturn gst_mpeg_parse_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void gst_mpeg_parse_set_clock (GstElement * element, GstClock * clock);
 
@@ -1017,13 +1018,13 @@ gst_mpeg_parse_handle_src_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
-static GstElementStateReturn
-gst_mpeg_parse_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_mpeg_parse_change_state (GstElement * element, GstStateChange transition)
 {
   GstMPEGParse *mpeg_parse = GST_MPEG_PARSE (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_PAUSED:
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!mpeg_parse->packetize) {
         mpeg_parse->packetize =
             gst_mpeg_packetize_new (mpeg_parse->sinkpad,
@@ -1032,7 +1033,7 @@ gst_mpeg_parse_change_state (GstElement * element)
       /* initialize parser state */
       gst_mpeg_parse_reset (mpeg_parse);
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (mpeg_parse->packetize) {
         gst_mpeg_packetize_destroy (mpeg_parse->packetize);
         mpeg_parse->packetize = NULL;
@@ -1043,7 +1044,7 @@ gst_mpeg_parse_change_state (GstElement * element)
       break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 }
 
 static void

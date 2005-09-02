@@ -250,7 +250,8 @@ static void dvdnavsrc_update_streaminfo (DVDNavSrc * src);
 static void dvdnavsrc_set_domain (DVDNavSrc * src);
 static void dvdnavsrc_update_highlight (DVDNavSrc * src);
 static void dvdnavsrc_user_op (DVDNavSrc * src, int op);
-static GstElementStateReturn dvdnavsrc_change_state (GstElement * element);
+static GstStateChangeReturn dvdnavsrc_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void dvdnavsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
 
@@ -1582,47 +1583,47 @@ dvdnavsrc_close (DVDNavSrc * src)
   return TRUE;
 }
 
-static GstElementStateReturn
-dvdnavsrc_change_state (GstElement * element)
+static GstStateChangeReturn
+dvdnavsrc_change_state (GstElement * element, GstStateChange transition)
 {
   DVDNavSrc *src;
 
-  g_return_val_if_fail (GST_IS_DVDNAVSRC (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_DVDNAVSRC (element), GST_STATE_CHANGE_FAILURE);
 
   src = DVDNAVSRC (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!dvdnavsrc_is_open (src)) {
         if (!dvdnavsrc_open (src)) {
-          return GST_STATE_FAILURE;
+          return GST_STATE_CHANGE_FAILURE;
         }
       }
       src->streaminfo = NULL;
       src->need_newmedia = TRUE;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (dvdnavsrc_is_open (src)) {
         if (!dvdnavsrc_close (src)) {
-          return GST_STATE_FAILURE;
+          return GST_STATE_CHANGE_FAILURE;
         }
       }
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
   }
 
   /* if we haven't failed already, give the parent class a chance to ;-) */
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static const GstEventMask *

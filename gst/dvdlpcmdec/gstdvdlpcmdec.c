@@ -86,7 +86,8 @@ static GstFlowReturn gst_dvdlpcmdec_chain_dvd (GstPad * pad,
     GstBuffer * buffer);
 static gboolean gst_dvdlpcmdec_setcaps (GstPad * pad, GstCaps * caps);
 
-static GstElementStateReturn gst_dvdlpcmdec_change_state (GstElement * element);
+static GstStateChangeReturn gst_dvdlpcmdec_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -584,23 +585,23 @@ invalid_width:
   }
 }
 
-static GstElementStateReturn
-gst_dvdlpcmdec_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_dvdlpcmdec_change_state (GstElement * element, GstStateChange transition)
 {
   GstDvdLpcmDec *dvdlpcmdec = GST_DVDLPCMDEC (element);
-  GstElementStateReturn res;
+  GstStateChangeReturn res;
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_PAUSED:
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_dvdlpcm_reset (dvdlpcmdec);
       break;
     default:
       break;
   }
 
-  res = parent_class->change_state (element);
+  res = parent_class->change_state (element, transition);
 
-  switch (GST_STATE_TRANSITION (element)) {
+  switch (transition) {
     default:
       break;
   }

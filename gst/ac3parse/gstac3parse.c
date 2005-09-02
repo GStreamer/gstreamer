@@ -120,7 +120,8 @@ static void gst_ac3parse_set_property (GObject * object,
 static void gst_ac3parse_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn gst_ac3parse_change_state (GstElement * element);
+static GstStateChangeReturn gst_ac3parse_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -413,22 +414,22 @@ gst_ac3parse_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstElementStateReturn
-gst_ac3parse_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_ac3parse_change_state (GstElement * element, GstStateChange transition)
 {
   GstAc3Parse *ac3parse = GST_AC3PARSE (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* reset stream info */
       ac3parse->channels = ac3parse->sample_rate = -1;
       break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static gboolean

@@ -170,7 +170,8 @@ static gboolean gst_mad_convert_src (GstPad * pad, GstFormat src_format,
 static gboolean gst_mad_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_mad_chain (GstPad * pad, GstBuffer * buffer);
 
-static GstElementStateReturn gst_mad_change_state (GstElement * element);
+static GstStateChangeReturn gst_mad_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void gst_mad_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_mad_get_index (GstElement * element);
@@ -1548,20 +1549,18 @@ end:
   return result;
 }
 
-static GstElementStateReturn
-gst_mad_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_mad_change_state (GstElement * element, GstStateChange transition)
 {
   GstMad *mad;
-  GstElementStateReturn ret;
-  gint transition;
+  GstStateChangeReturn ret;
 
   mad = GST_MAD (element);
-  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
     {
       guint options = 0;
 
@@ -1588,18 +1587,18 @@ gst_mad_change_state (GstElement * element)
       mad_stream_options (&mad->stream, options);
       break;
     }
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     default:
       break;
   }
 
-  ret = parent_class->change_state (element);
+  ret = parent_class->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       mad_synth_finish (&mad->synth);
       mad_frame_finish (&mad->frame);
       mad_stream_finish (&mad->stream);
@@ -1609,7 +1608,7 @@ gst_mad_change_state (GstElement * element)
         mad->tags = NULL;
       }
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;

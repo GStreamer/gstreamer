@@ -161,7 +161,8 @@ static void gst_asfmux_loop (GstElement * element);
 static gboolean gst_asfmux_handle_event (GstPad * pad, GstEvent * event);
 static GstPad *gst_asfmux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
-static GstElementStateReturn gst_asfmux_change_state (GstElement * element);
+static GstStateChangeReturn gst_asfmux_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -1272,18 +1273,17 @@ gst_asfmux_loop (GstElement * element)
   gst_asfmux_do_one_buffer (asfmux);
 }
 
-static GstElementStateReturn
-gst_asfmux_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_asfmux_change_state (GstElement * element, GstStateChange transition)
 {
   GstAsfMux *asfmux;
-  gint transition = GST_STATE_TRANSITION (element), n;
 
-  g_return_val_if_fail (GST_IS_ASFMUX (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_ASFMUX (element), GST_STATE_CHANGE_FAILURE);
 
   asfmux = GST_ASFMUX (element);
 
   switch (transition) {
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       for (n = 0; n < asfmux->num_outputs; n++) {
         asfmux->output[n].eos = FALSE;
       }
@@ -1291,7 +1291,7 @@ gst_asfmux_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }

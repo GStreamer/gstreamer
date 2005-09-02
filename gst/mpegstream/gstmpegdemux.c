@@ -136,7 +136,8 @@ static gboolean gst_mpeg_demux_handle_src_event (GstPad * pad,
 static void gst_mpeg_demux_reset (GstMPEGDemux * mpeg_demux);
 
 
-static GstElementStateReturn gst_mpeg_demux_change_state (GstElement * element);
+static GstStateChangeReturn gst_mpeg_demux_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void gst_mpeg_demux_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_mpeg_demux_get_index (GstElement * element);
@@ -1119,20 +1120,20 @@ gst_mpeg_demux_reset (GstMPEGDemux * mpeg_demux)
 
 }
 
-static GstElementStateReturn
-gst_mpeg_demux_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_mpeg_demux_change_state (GstElement * element, GstStateChange transition)
 {
   GstMPEGDemux *mpeg_demux = GST_MPEG_DEMUX (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_mpeg_demux_reset (mpeg_demux);
       break;
     default:
       break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 }
 
 static void

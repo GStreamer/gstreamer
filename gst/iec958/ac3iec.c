@@ -98,7 +98,8 @@ static GstFlowReturn ac3iec_chain_dvd (GstPad * pad, GstBuffer * buf);
 static GstFlowReturn ac3iec_chain_raw (GstPad * pad, GstBuffer * buf);
 static gboolean ac3iec_setcaps (GstPad * pad, GstCaps * caps);
 
-static GstElementStateReturn ac3iec_change_state (GstElement * element);
+static GstStateChangeReturn ac3iec_change_state (GstElement * element,
+    GstStateChange transition);
 
 
 static GstElementClass *parent_class = NULL;
@@ -363,36 +364,36 @@ buffer_alloc_failed:
 }
 
 
-static GstElementStateReturn
-ac3iec_change_state (GstElement * element)
+static GstStateChangeReturn
+ac3iec_change_state (GstElement * element, GstStateChange transition)
 {
   AC3IEC *ac3iec;
 
-  g_return_val_if_fail (GST_IS_AC3IEC (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_AC3IEC (element), GST_STATE_CHANGE_FAILURE);
 
   ac3iec = AC3IEC (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       ac3p_init (ac3iec->padder);
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state) {
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   }
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 

@@ -168,7 +168,8 @@ static gboolean gst_mpeg2dec_sink_convert (GstPad * pad, GstFormat src_format,
 static gboolean gst_mpeg2dec_src_convert (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 
-static GstElementStateReturn gst_mpeg2dec_change_state (GstElement * element);
+static GstStateChangeReturn gst_mpeg2dec_change_state (GstElement * element,
+    GstStateChange transition);
 
 static gboolean gst_mpeg2dec_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_mpeg2dec_chain (GstPad * pad, GstBuffer * buf);
@@ -1668,33 +1669,33 @@ gst_mpeg2dec_src_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
-static GstElementStateReturn
-gst_mpeg2dec_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_mpeg2dec_change_state (GstElement * element, GstStateChange transition)
 {
-  GstElementStateReturn ret;
+  GstStateChangeReturn ret;
   GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       mpeg2dec->next_time = 0;
       gst_mpeg2dec_reset (mpeg2dec);
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     default:
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PLAYING_TO_PAUSED:
+  switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_mpeg2dec_close_decoder (mpeg2dec);
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;

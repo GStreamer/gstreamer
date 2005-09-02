@@ -169,7 +169,8 @@ static gboolean gst_id3_tag_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer);
 static GstPadLinkReturn gst_id3_tag_src_link (GstPad * pad, GstPad * peer);
 
-static GstElementStateReturn gst_id3_tag_change_state (GstElement * element);
+static GstStateChangeReturn gst_id3_tag_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -1302,16 +1303,16 @@ gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer)
   return GST_FLOW_OK;
 }
 
-static GstElementStateReturn
-gst_id3_tag_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_id3_tag_change_state (GstElement * element, GstStateChange transition)
 {
   GstID3Tag *tag;
-  GstElementStateReturn ret = GST_STATE_SUCCESS;
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
   tag = GST_ID3_TAG (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_PAUSED:
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       g_assert (tag->parsed_tags == NULL);
       g_assert (tag->buffer == NULL);
       tag->v1tag_size = 0;
@@ -1327,10 +1328,10 @@ gst_id3_tag_change_state (GstElement * element)
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (tag->parsed_tags) {
         gst_tag_list_free (tag->parsed_tags);
         tag->parsed_tags = NULL;

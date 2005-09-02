@@ -115,7 +115,8 @@ static void gst_rmdemux_class_init (GstRMDemuxClass * klass);
 static void gst_rmdemux_base_init (GstRMDemuxClass * klass);
 static void gst_rmdemux_init (GstRMDemux * rmdemux);
 static void gst_rmdemux_dispose (GObject * object);
-static GstElementStateReturn gst_rmdemux_change_state (GstElement * element);
+static GstStateChangeReturn gst_rmdemux_change_state (GstElement * element,
+    GstStateChange transition);
 static GstFlowReturn gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer);
 static void gst_rmdemux_loop (GstPad * pad);
 static gboolean gst_rmdemux_sink_activate (GstPad * sinkpad);
@@ -487,19 +488,17 @@ gst_rmdemux_src_query_types (GstPad * pad)
   return query_types;
 }
 
-static GstElementStateReturn
-gst_rmdemux_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_rmdemux_change_state (GstElement * element, GstStateChange transition)
 {
   GstRMDemux *rmdemux = GST_RMDEMUX (element);
-  gint transition;
-  GstElementStateReturn res;
+  GstStateChangeReturn res;
 
-  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       rmdemux->state = RMDEMUX_STATE_HEADER;
       rmdemux->have_pads = FALSE;
       rmdemux->segment_start = GST_CLOCK_TIME_NONE;
@@ -507,22 +506,24 @@ gst_rmdemux_change_state (GstElement * element)
       rmdemux->segment_play = FALSE;
       rmdemux->running = FALSE;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      break;
+    default:
       break;
   }
 
-  res = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  res = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_adapter_clear (rmdemux->adapter);
       GST_LOCK (rmdemux);
       rmdemux->running = FALSE;
       GST_UNLOCK (rmdemux);
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;
