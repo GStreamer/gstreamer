@@ -75,12 +75,13 @@ class Fraction(Value):
       return '<gst.Fraction %d/%d>' % (self.num, self.denom)
 
 from _gst import *
+import interfaces
+
 # this restores previously installed importhooks, so we don't interfere
 # with other people's module importers
 # it also clears out the module completely as if it were never loaded,
 # so that if anyone else imports ltihooks the hooks get installed
 if __ltihooks_used__:
-    import gst.interfaces as interfaces
     ltihooks.uninstall()
     __ltihooks_used__ = False
     del ltihooks

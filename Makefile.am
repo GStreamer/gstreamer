@@ -11,7 +11,7 @@ EXTRA_DIST = \
 
 include $(top_srcdir)/common/release.mak
 
-pygst.py: pygst.py.in Makefile
+pygst.py: $(top_srcdir)/pygst.py.in Makefile
 	if test -f $@; then chmod +w $@; fi
 	sed -e "s|@PYGSTDIR\@|$(shell pwd)|g" \
 	    -e "s|@GST_MAJORMINOR\@|$(GST_MAJORMINOR)|g" \
