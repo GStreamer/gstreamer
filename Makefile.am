@@ -1,9 +1,3 @@
-if USE_GCONFTOOL
-SUBDIRS_GCONF = gconf
-else
-SUBDIRS_GCONF =
-endif
-
 if BUILD_EXTERNAL
 SUBDIRS_EXT = ext
 else
@@ -27,7 +21,6 @@ SUBDIRS = 			\
 	gst sys $(SUBDIRS_EXT) 	\
 	$(SUBDIRS_EXAMPLES) 	\
 	tools 			\
-	$(SUBDIRS_GCONF) 	\
 	$(SUBDIRS_CHECK)	\
 	docs			\
 	po 			\
@@ -42,7 +35,6 @@ DIST_SUBDIRS = 			\
 	gst sys ext		\
 	examples		\
 	tools 			\
-	gconf 			\
 	po 			\
 	common 			\
 	m4 			\
@@ -54,18 +46,6 @@ EXTRA_DIST = \
 	ChangeLog autogen.sh
 
 DISTCLEANFILES = _stdint.h
-
-# check that no marshal or enumtypes files are included
-# this in turn ensures that distcheck fails for missing .list files which is currently
-# shadowed when the corresponding .c and .h files are included.
-distcheck-hook:
-	@test "x" = "x`find $(distdir) -name \*-enumtypes.[ch]`" && \
-	test "x" = "x`find $(distdir) -name \*-marshal.[ch]`" || \
-	( $(ECHO) "*** Leftover enumtypes or marshal files in the tarball." && \
-          $(ECHO) "*** Make sure the following files are not disted:" && \
-          find $(distdir) -name \*-enumtypes.[ch] && \
-          find $(distdir) -name \*-marshal.[ch] && \
-          false )
 
 include $(top_srcdir)/common/release.mak
 include $(top_srcdir)/common/po.mak
