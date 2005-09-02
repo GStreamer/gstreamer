@@ -35,10 +35,13 @@ class MyBin(gst.Bin):
         # name manually 
         self.set_property('name', name)
 
-    def do_change_state(self):
-        self._state_changed = True
+    def do_change_state(self, state_change):
+        if state_change == gst.STATE_CHANGE_PAUSED_TO_PLAYING:
+            self._state_changed = True
+
         # chain up to parent
-        return gst.Bin.do_change_state(self)
+        return gst.Bin.do_change_state(self, state_change)
+
 # we need to register the type for PyGTK < 2.8
 gobject.type_register(MyBin)
 
