@@ -143,7 +143,7 @@ static gboolean gst_signal_processor_src_activate_pull (GstPad * pad,
     gboolean active);
 static gboolean gst_signal_processor_sink_activate_push (GstPad * pad,
     gboolean active);
-static GstElementStateReturn gst_signal_processor_change_state (GstElement *
+static GstStateChangeReturn gst_signal_processor_change_state (GstElement *
     element);
 
 static gboolean gst_signal_processor_event (GstPad * pad, GstEvent * event);
@@ -667,38 +667,37 @@ gst_signal_processor_src_activate_pull (GstPad * pad, gboolean active)
   return result;
 }
 
-static GstElementStateReturn
-gst_signal_processor_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_signal_processor_change_state (GstElement * element,
+    GstStateChange transition)
 {
   /* GstSignalProcessor *self;
      GstSignalProcessorClass *klass; */
-  GstElementState transition;
-  GstElementStateReturn result;
+  GstStateChangeReturn result;
 
   /* self = GST_SIGNAL_PROCESSOR (element);
      klass = GST_SIGNAL_PROCESSOR_GET_CLASS (self); */
 
-  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     default:
       break;
   }
 
-  result = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       /* gst_signal_processor_cleanup (self); */
       break;
     default:
