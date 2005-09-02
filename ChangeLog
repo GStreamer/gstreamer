@@ -1,3 +1,14 @@
+2005-09-02  Michael Smith <msmith@fluendo.com>
+
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (gst_dvdlpcmdec_chain_dvd):
+	* gst/iec958/ac3iec.c: (ac3iec_get_type), (ac3iec_base_init),
+	(ac3iec_class_init), (ac3iec_init), (ac3iec_finalize),
+	(ac3iec_setcaps), (ac3iec_set_property), (ac3iec_get_property),
+	(ac3iec_chain_dvd), (ac3iec_chain_raw), (ac3iec_change_state),
+	(plugin_init):
+	  Changes to use the first_access parameter correctly in ac3 and lpcm
+	  plugins. General cleanups in iec958 framer.
+
 2005-09-01  Michael Smith <msmith@fluendo.com>
 
 	* configure.ac:

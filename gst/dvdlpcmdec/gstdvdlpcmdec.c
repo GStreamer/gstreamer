@@ -175,7 +175,7 @@ gst_dvdlpcmdec_init (GstDvdLpcmDec * dvdlpcmdec)
   gst_dvdlpcm_reset (dvdlpcmdec);
 }
 
-static gboolean
+static GstPadLinkReturn
 gst_dvdlpcmdec_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstStructure *structure;
@@ -358,36 +358,53 @@ gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstBuffer * buf)
     dvdlpcmdec->header = header;
   }
 
-  GST_LOG_OBJECT (dvdlpcmdec, "first_access %d", first_access);
+  GST_LOG_OBJECT (dvdlpcmdec, "first_access %d, buffer length %d", first_access,
+      size);
+
+  /* After first_access, we have an additional 3 bytes of data we've parsed and
+   * don't want to handle; this is included within the value of first_access.
+   * So a first_access value of between 1 and 3 is just broken, we treat that
+   * the same as zero. first_access == 4 means we only need to create a single
+   * sub-buffer, greater than that we need to create two. */
 
   /* skip access unit bytes and info */
   off = 5;
-  /* length before access unit */
-  len = first_access + 1;
 
-  GST_LOG_OBJECT (dvdlpcmdec, "Creating first sub-buffer off %d, len %d", off,
-      len);
+  if (first_access > 4) {
+    /* length of first blength before access unit */
+    len = first_access - 4;
 
-  /* see if we need a subbuffer without timestamp */
-  if (len > off) {
+    GST_LOG_OBJECT (dvdlpcmdec, "Creating first sub-buffer off %d, len %d", off,
+        len);
+
+    /* see if we need a subbuffer without timestamp */
+    if (len > 0) {
+      subbuf = gst_buffer_create_sub (buf, off, len);
+      GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
+      ret = gst_dvdlpcmdec_chain_raw (pad, subbuf);
+      if (ret != GST_FLOW_OK)
+        goto done;
+    }
+
+    /* then the buffer with new timestamp */
+    off += len;
+    len = size - off;
+
+    GST_LOG_OBJECT (dvdlpcmdec, "Creating next sub-buffer off %d, len %d", off,
+        len);
+
     subbuf = gst_buffer_create_sub (buf, off, len);
+    GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
+
+    ret = gst_dvdlpcmdec_chain_raw (pad, subbuf);
+  } else {
+    GST_LOG_OBJECT (dvdlpcmdec, "Creating single sub-buffer off %d, len %d",
+        off, size - off);
+    /* We don't have a valid timestamp at all */
+    subbuf = gst_buffer_create_sub (buf, off, size - off);
     GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
     ret = gst_dvdlpcmdec_chain_raw (pad, subbuf);
-    if (ret != GST_FLOW_OK)
-      goto done;
   }
-
-  /* then the buffer with new timestamp */
-  off = len;
-  len = size - len;
-
-  GST_LOG_OBJECT (dvdlpcmdec, "Creating next sub-buffer off %d, len %d", off,
-      len);
-
-  subbuf = gst_buffer_create_sub (buf, off, len);
-  GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
-
-  ret = gst_dvdlpcmdec_chain_raw (pad, subbuf);
 
 done:
   gst_buffer_unref (buf);

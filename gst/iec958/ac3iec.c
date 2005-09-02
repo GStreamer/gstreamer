@@ -41,7 +41,7 @@ GST_DEBUG_CATEGORY_STATIC (ac3iec_debug);
 /* ElementFactory information. */
 static GstElementDetails ac3iec_details = {
   "AC3 to IEC958 filter",
-  "audio/x-ac3",
+  "audio/x-private1-ac3",
   "Pads AC3 frames into IEC958 frames suitable for a raw SP/DIF interface",
   "Martin Soto <martinsoto@users.sourceforge.net>"
 };
@@ -94,7 +94,9 @@ static void ac3iec_set_property (GObject * object,
 static void ac3iec_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn ac3iec_chain (GstPad * pad, GstBuffer * buf);
+static GstFlowReturn ac3iec_chain_dvd (GstPad * pad, GstBuffer * buf);
+static GstFlowReturn ac3iec_chain_raw (GstPad * pad, GstBuffer * buf);
+static GstPadLinkReturn ac3iec_setcaps (GstPad * pad, GstCaps * caps);
 
 static GstElementStateReturn ac3iec_change_state (GstElement * element);
 
@@ -129,7 +131,6 @@ ac3iec_get_type (void)
   }
   return ac3iec_type;
 }
-
 
 static void
 ac3iec_base_init (gpointer g_class)
@@ -170,11 +171,12 @@ ac3iec_init (AC3IEC * ac3iec)
       gst_pad_new_from_template (gst_static_pad_template_get
       (&ac3iec_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (ac3iec), ac3iec->sink);
-  gst_pad_set_chain_function (ac3iec->sink, ac3iec_chain);
+  gst_pad_set_chain_function (ac3iec->sink, ac3iec_chain_dvd);
 
   ac3iec->src =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&ac3iec_src_template), "src");
+  gst_pad_set_setcaps_function (ac3iec->src, ac3iec_setcaps);
   gst_element_add_pad (GST_ELEMENT (ac3iec), ac3iec->src);
 
   ac3iec->cur_ts = GST_CLOCK_TIME_NONE;
@@ -191,6 +193,24 @@ ac3iec_finalize (GObject * object)
   g_free (ac3iec->padder);
 }
 
+static GstPadLinkReturn
+ac3iec_setcaps (GstPad * pad, GstCaps * caps)
+{
+  AC3IEC *ac3iec = AC3IEC (gst_pad_get_parent (pad));
+  gboolean res = TRUE;
+  GstCaps *src_caps;
+
+  src_caps = gst_caps_new_simple ("audio/x-iec958", NULL);
+
+  if (!gst_pad_set_caps (ac3iec->src, src_caps)) {
+    res = FALSE;
+  }
+
+  gst_caps_unref (src_caps);
+  gst_object_unref (ac3iec);
+
+  return res;
+}
 
 static void
 ac3iec_set_property (GObject * object, guint prop_id,
@@ -227,7 +247,58 @@ ac3iec_get_property (GObject * object, guint prop_id,
 }
 
 static GstFlowReturn
-ac3iec_chain (GstPad * pad, GstBuffer * buf)
+ac3iec_chain_dvd (GstPad * pad, GstBuffer * buf)
+{
+  guint first_access;
+  guint8 *data;
+  guint size;
+  gint offset;
+  gint len;
+  GstBuffer *subbuf;
+  GstFlowReturn ret;
+
+  size = GST_BUFFER_SIZE (buf);
+  data = GST_BUFFER_DATA (buf);
+
+  first_access = (data[0] << 8) | data[1];
+
+  /* Skip the first_access header */
+  offset = 2;
+
+  if (first_access > 1) {
+    /* Length of data before first_access */
+    len = first_access - 1;
+
+    if (len > 0) {
+      subbuf = gst_buffer_create_sub (buf, offset, len);
+      GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
+      ret = ac3iec_chain_raw (pad, subbuf);
+      if (ret != GST_FLOW_OK)
+        goto done;
+    }
+
+    offset += len;
+    len = size - offset;
+
+    subbuf = gst_buffer_create_sub (buf, offset, len);
+    GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
+
+    ret = ac3iec_chain_raw (pad, subbuf);
+  } else {
+    /* No first_access, so no timestamp */
+    subbuf = gst_buffer_create_sub (buf, offset, size - offset);
+    GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
+    ret = ac3iec_chain_raw (pad, subbuf);
+  }
+
+done:
+  gst_buffer_unref (buf);
+
+  return ret;
+}
+
+static GstFlowReturn
+ac3iec_chain_raw (GstPad * pad, GstBuffer * buf)
 {
   GstBuffer *new;
   AC3IEC *ac3iec;
@@ -254,9 +325,14 @@ ac3iec_chain (GstPad * pad, GstBuffer * buf)
   while (event != AC3P_EVENT_PUSH) {
     if (event == AC3P_EVENT_FRAME) {
       /* We have a new frame: */
+      GstCaps *bufcaps = GST_PAD_CAPS (ac3iec->src);
 
       /* Create a new buffer, and copy the frame data into it. */
-      new = gst_buffer_new_and_alloc (AC3P_IEC_FRAME_SIZE);
+      ret = gst_pad_alloc_buffer (ac3iec->src, 0, AC3P_IEC_FRAME_SIZE,
+          bufcaps, &new);
+      if (ret != GST_FLOW_OK)
+        goto buffer_alloc_failed;
+
       memcpy (GST_BUFFER_DATA (new), ac3p_frame (ac3iec->padder),
           AC3P_IEC_FRAME_SIZE);
 
@@ -275,7 +351,15 @@ ac3iec_chain (GstPad * pad, GstBuffer * buf)
 
   gst_buffer_unref (buf);
 
+done:
+  gst_object_unref (ac3iec);
+
   return ret;
+
+buffer_alloc_failed:
+  gst_buffer_unref (buf);
+  goto done;
+
 }
 
 
