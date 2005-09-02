@@ -1,5 +1,11 @@
 2005-09-02  Michael Smith <msmith@fluendo.com>
 
+	* gst/iec958/ac3iec.c:
+	  Use the right mime-type for AC3 input, audio/x-private1-ac3, as
+	  output by demux
+
+2005-09-02  Michael Smith <msmith@fluendo.com>
+
 	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (gst_dvdlpcmdec_chain_dvd):
 	* gst/iec958/ac3iec.c: (ac3iec_get_type), (ac3iec_base_init),
 	(ac3iec_class_init), (ac3iec_init), (ac3iec_finalize),

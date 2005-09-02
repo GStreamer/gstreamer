@@ -63,7 +63,7 @@ static GstStaticPadTemplate ac3iec_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-ac3")
+    GST_STATIC_CAPS ("audio/x-private1-ac3")
     );
 
 static GstStaticPadTemplate ac3iec_src_template =
