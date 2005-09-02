@@ -11,6 +11,7 @@ EXTRA_DIST = \
 	RELEASE
 
 BUILT_SOURCES = pygst.py
+CLEANFILES = pygst.py
 
 include $(top_srcdir)/common/release.mak
 
@@ -20,8 +21,6 @@ pygst.py: $(top_srcdir)/pygst.py.in Makefile
 	    -e "s|@GST_MAJORMINOR\@|$(GST_MAJORMINOR)|g" \
 	    $< > $@
 	chmod -w $@
-
-all-local: pygst.py
 
 # rewrite pygst path in installed pygst.py, install pth file.
 install-data-local: Makefile
