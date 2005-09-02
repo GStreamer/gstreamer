@@ -5,6 +5,7 @@ DIST_SUBDIRS = $(UNCONDDIRS)
 
 EXTRA_DIST = \
 	ltihooks.py \
+	pygst.py.in \
 	gst-python.spec.in \
 	gst-python.spec \
 	RELEASE
