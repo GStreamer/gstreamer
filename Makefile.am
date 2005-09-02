@@ -27,10 +27,15 @@ install-data-local: Makefile
 	sed -e "s|@PYGSTDIR\@|$(PYTHONDIR)/gst-$(GST_MAJORMINOR)|g" \
 	    -e "s|@GST_MAJORMINOR\@|$(GST_MAJORMINOR)|g" \
 	    $(srcdir)/pygst.py.in > $(DESTDIR)$(pythondir)/pygst.py
-	chmod 644 $(DESTDIR)$(pyexecdir)/pygst.py
+	chmod 644 $(DESTDIR)$(pythondir)/pygst.py
 	echo "gst-$(GST_MAJORMINOR)" > $(DESTDIR)$(pythondir)/pygst.pth
 
 # also install pth file in pyexec.
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)$(pyexecdir)
 	echo "gst-$(GST_MAJORMINOR)" > $(DESTDIR)$(pyexecdir)/pygst.pth
+
+uninstall-local:
+	@rm $(DESTDIR)/$(pythondir)/pygst.py > /dev/null 2>&1 || true
+	@rm $(DESTDIR)/$(pythondir)/pygst.pth > /dev/null 2>&1 || true
+	@rm $(DESTDIR)/$(pyexecdir)/pygst.pth > /dev/null 2>&1 || true
