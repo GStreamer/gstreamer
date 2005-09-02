@@ -1,3 +1,14 @@
+2005-09-03  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstelement.sgml:
+	* gst/gstpad.c:
+	* libs/gst/controller/gst-controller.c:
+	(gst_controlled_property_set_interpolation_mode),
+	(gst_controlled_property_new),
+	(gst_controller_find_controlled_property):
+	 run the wingo-magic script against the docs
+
 2005-09-02  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-docs.sgml:

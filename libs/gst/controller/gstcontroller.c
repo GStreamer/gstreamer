@@ -24,8 +24,10 @@
  * SECTION:gstcontroller
  * @short_description: dynamic parameter control subsystem
  *
- * The controller subsystem offers a lighwight way to adjust gobject properties
- * over time. 
+ * The controller subsystem offers a lightweight way to adjust gobject
+ * properties over stream-time. It works by using time-stampled value pairs that
+ * are queued for element-properties. At run-time the elements continously pulls
+ * values changes for the current stream-time.
  *
  * What needs to be changed in a #GstElement?
  * Very little - it is just two steps to make a plugin controllable!
@@ -379,7 +381,7 @@ gst_controller_find_controlled_property (GstController * self,
       return (prop);
     }
   }
-  GST_WARNING ("controller does not manage property '%s'", name);
+  GST_DEBUG ("controller does not (yet) manage property '%s'", name);
 
   return (NULL);
 }

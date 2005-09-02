@@ -45,10 +45,10 @@ each element by name.
 </para>
 
 <para>
-Each element has a state (see #GstElementState).  You can get and set the state
+Each element has a state (see #GstState).  You can get and set the state
 of an element with gst_element_get_state() and gst_element_set_state().  
 You can wait for an element to change it's state with gst_element_wait_state_change().
-To get a string representation of a #GstElementState, use 
+To get a string representation of a #GstState, use 
 gst_element_state_get_name().
 </para>
 
@@ -221,7 +221,7 @@ This macro returns the currently pending state of the element.
 @elem: 
 
 
-<!-- ##### MACRO GST_STATE_NO_PREROLL ##### -->
+<!-- ##### MACRO GST_STATE_CHANGE_NO_PREROLL ##### -->
 <para>
 
 </para>
