@@ -76,7 +76,7 @@ gst_base_rtp_depayload_get_type (void)
   return plugin_type;
 }
 
-//static GstElementStateReturn gst_base_rtp_depayload_change_state (GstElement * element);
+//static GstStateChangeReturn gst_base_rtp_depayload_change_state (GstElement * element, GstStateChange transition);
 static void gst_base_rtp_depayload_finalize (GObject * object);
 static void gst_base_rtp_depayload_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -88,8 +88,8 @@ static gboolean gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_base_rtp_depayload_chain (GstPad * pad,
     GstBuffer * in);
 
-static GstElementStateReturn gst_base_rtp_depayload_change_state (GstElement *
-    element);
+static GstStateChangeReturn gst_base_rtp_depayload_change_state (GstElement *
+    element, GstStateChange transition);
 static GstFlowReturn gst_base_rtp_depayload_add_to_queue (GstBaseRTPDepayload *
     filter, GstBuffer * in);
 
@@ -413,53 +413,55 @@ gst_base_rtp_depayload_stop_thread (GstBaseRTPDepayload * filter)
   return TRUE;
 }
 
-static GstElementStateReturn
-gst_base_rtp_depayload_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_base_rtp_depayload_change_state (GstElement * element,
+    GstStateChange transition)
 {
   GstBaseRTPDepayload *filter;
-  gint transition;
 
-//    GstElementStateReturn ret;
+//    GstStateChangeReturn ret;
 
-  g_return_val_if_fail (GST_IS_BASE_RTP_DEPAYLOAD (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_BASE_RTP_DEPAYLOAD (element),
+      GST_STATE_CHANGE_FAILURE);
   filter = GST_BASE_RTP_DEPAYLOAD (element);
 
   /* we disallow changing the state from the thread */
   if (g_thread_self () == filter->thread)
-    return GST_STATE_FAILURE;
+    return GST_STATE_CHANGE_FAILURE;
 
-  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (!gst_base_rtp_depayload_start_thread (filter))
         goto start_failed;
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     default:
       break;
   }
 
-//    ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+//    ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       gst_base_rtp_depayload_stop_thread (filter);
       break;
+    default:
+      break;
   }
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 
   /* ERRORS */
 start_failed:
   {
-    return GST_STATE_FAILURE;
+    return GST_STATE_CHANGE_FAILURE;
   }
 }
 

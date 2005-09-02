@@ -151,7 +151,8 @@ static gboolean gst_ogm_parse_sink_convert (GstPad * pad, GstFormat src_format,
 
 static GstFlowReturn gst_ogm_parse_chain (GstPad * pad, GstBuffer * buffer);
 
-static GstElementStateReturn gst_ogm_parse_change_state (GstElement * element);
+static GstStateChangeReturn gst_ogm_parse_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -703,13 +704,13 @@ gst_ogm_parse_chain (GstPad * pad, GstBuffer * buffer)
   return GST_FLOW_OK;
 }
 
-static GstElementStateReturn
-gst_ogm_parse_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_ogm_parse_change_state (GstElement * element, GstStateChange transition)
 {
   GstOgmParse *ogm = GST_OGM_PARSE (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (ogm->srcpad) {
         gst_element_remove_pad (element, ogm->srcpad);
         ogm->srcpad = NULL;
@@ -721,7 +722,7 @@ gst_ogm_parse_change_state (GstElement * element)
       break;
   }
 
-  return parent_class->change_state (element);
+  return parent_class->change_state (element, transition);
 }
 
 gboolean

@@ -119,7 +119,8 @@ static void gst_decode_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
 static void gst_decode_bin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * spec);
-static GstElementStateReturn gst_decode_bin_change_state (GstElement * element);
+static GstStateChangeReturn gst_decode_bin_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void type_found (GstElement * typefind, guint probability,
     GstCaps * caps, GstDecodeBin * decode_bin);
@@ -1041,36 +1042,34 @@ gst_decode_bin_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstElementStateReturn
-gst_decode_bin_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
 {
-  GstElementStateReturn ret;
+  GstStateChangeReturn ret;
   GstDecodeBin *decode_bin;
   GList *dyns;
-  gint transition;
 
   decode_bin = GST_DECODE_BIN (element);
 
-  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       decode_bin->numpads = 0;
       decode_bin->dynamics = NULL;
       break;
-    case GST_STATE_READY_TO_PAUSED:
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     default:
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       for (dyns = decode_bin->dynamics; dyns; dyns = g_list_next (dyns)) {
         GstDynamic *dynamic = (GstDynamic *) dyns->data;
 

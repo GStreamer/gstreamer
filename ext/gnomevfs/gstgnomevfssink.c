@@ -117,7 +117,7 @@ static void gst_gnomevfssink_close_file (GstGnomeVFSSink * sink);
 
 static void gst_gnomevfssink_chain (GstPad * pad, GstData * _data);
 
-static GstElementStateReturn gst_gnomevfssink_change_state (GstElement *
+static GstStateChangeReturn gst_gnomevfssink_change_state (GstElement *
     element);
 
 static GstElementClass *parent_class = NULL;
@@ -616,19 +616,20 @@ gst_gnomevfssink_chain (GstPad * pad, GstData * _data)
   gst_data_unref (_data);
 }
 
-static GstElementStateReturn
-gst_gnomevfssink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_gnomevfssink_change_state (GstElement * element, GstStateChange transition)
 {
-  g_return_val_if_fail (GST_IS_GNOMEVFSSINK (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_GNOMEVFSSINK (element),
+      GST_STATE_CHANGE_FAILURE);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_PAUSED:
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!GST_FLAG_IS_SET (element, GST_GNOMEVFSSINK_OPEN)) {
         if (!gst_gnomevfssink_open_file (GST_GNOMEVFSSINK (element)))
-          return GST_STATE_FAILURE;
+          return GST_STATE_CHANGE_FAILURE;
       }
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (GST_FLAG_IS_SET (element, GST_GNOMEVFSSINK_OPEN))
         gst_gnomevfssink_close_file (GST_GNOMEVFSSINK (element));
       break;
@@ -637,7 +638,7 @@ gst_gnomevfssink_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }

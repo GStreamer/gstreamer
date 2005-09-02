@@ -109,7 +109,8 @@ GST_START_TEST (test_unity)
 
   volume = setup_volume ();
   fail_unless (gst_element_set_state (volume,
-          GST_STATE_PLAYING) == GST_STATE_SUCCESS, "could not set to playing");
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (4);
   memcpy (GST_BUFFER_DATA (inbuffer), in, 4);
@@ -142,7 +143,8 @@ GST_START_TEST (test_half)
   volume = setup_volume ();
   g_object_set (G_OBJECT (volume), "volume", 0.5, NULL);
   fail_unless (gst_element_set_state (volume,
-          GST_STATE_PLAYING) == GST_STATE_SUCCESS, "could not set to playing");
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (4);
   memcpy (GST_BUFFER_DATA (inbuffer), in, 4);
@@ -181,7 +183,8 @@ GST_START_TEST (test_double)
   volume = setup_volume ();
   g_object_set (G_OBJECT (volume), "volume", 2.0, NULL);
   fail_unless (gst_element_set_state (volume,
-          GST_STATE_PLAYING) == GST_STATE_SUCCESS, "could not set to playing");
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (4);
   memcpy (GST_BUFFER_DATA (inbuffer), in, 4);
@@ -221,7 +224,8 @@ GST_START_TEST (test_wrong_caps)
   bus = gst_bus_new ();
 
   fail_unless (gst_element_set_state (volume,
-          GST_STATE_PLAYING) == GST_STATE_SUCCESS, "could not set to playing");
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (4);
   memcpy (GST_BUFFER_DATA (inbuffer), in, 4);

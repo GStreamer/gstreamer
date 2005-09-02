@@ -230,8 +230,8 @@ static void gst_multifdsink_remove_client_link (GstMultiFdSink * sink,
 
 static GstFlowReturn gst_multifdsink_render (GstBaseSink * bsink,
     GstBuffer * buf);
-static GstElementStateReturn gst_multifdsink_change_state (GstElement *
-    element);
+static GstStateChangeReturn gst_multifdsink_change_state (GstElement *
+    element, GstStateChange transition);
 
 static void gst_multifdsink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -1771,43 +1771,43 @@ gst_multifdsink_stop (GstBaseSink * bsink)
   return TRUE;
 }
 
-static GstElementStateReturn
-gst_multifdsink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_multifdsink_change_state (GstElement * element, GstStateChange transition)
 {
   GstMultiFdSink *sink;
-  gint transition;
-  GstElementStateReturn ret;
+  GstStateChangeReturn ret;
 
   sink = GST_MULTIFDSINK (element);
 
   /* we disallow changing the state from the streaming thread */
   if (g_thread_self () == sink->thread)
-    return GST_STATE_FAILURE;
+    return GST_STATE_CHANGE_FAILURE;
 
-  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (!gst_multifdsink_start (GST_BASE_SINK (sink)))
         goto start_failed;
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     default:
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       gst_multifdsink_stop (GST_BASE_SINK (sink));
+      break;
+    default:
       break;
   }
   return ret;
@@ -1815,6 +1815,6 @@ gst_multifdsink_change_state (GstElement * element)
   /* ERRORS */
 start_failed:
   {
-    return GST_STATE_FAILURE;
+    return GST_STATE_CHANGE_FAILURE;
   }
 }

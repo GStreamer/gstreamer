@@ -24,7 +24,7 @@ main (gint argc, gchar * argv[])
   GstElement *decoder;
   GstElement *source;
   GstElement *pipeline;
-  GstElementStateReturn res;
+  GstStateChangeReturn res;
 
   gst_init (&argc, &argv);
 
@@ -43,7 +43,7 @@ main (gint argc, gchar * argv[])
   gst_element_link_pads (source, "src", decoder, "sink");
 
   res = gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  if (res != GST_STATE_SUCCESS) {
+  if (res != GST_STATE_CHANGE_SUCCESS) {
     g_print ("could not play\n");
     return -1;
   }

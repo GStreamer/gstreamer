@@ -1115,20 +1115,20 @@ wrong_aspect:
   }
 }
 
-static GstElementStateReturn
-gst_ximagesink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_ximagesink_change_state (GstElement * element, GstStateChange transition)
 {
   GstXImageSink *ximagesink;
 
   ximagesink = GST_XIMAGESINK (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       /* Initializing the XContext */
       if (!ximagesink->xcontext)
         ximagesink->xcontext = gst_ximagesink_xcontext_get (ximagesink);
       if (!ximagesink->xcontext)
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       /* call XSynchronize with the current value of synchronous */
       GST_DEBUG_OBJECT (ximagesink, "XSynchronize called with %s",
           ximagesink->synchronous ? "TRUE" : "FALSE");
@@ -1136,14 +1136,14 @@ gst_ximagesink_change_state (GstElement * element)
       XSynchronize (ximagesink->xcontext->disp, ximagesink->synchronous);
       g_mutex_unlock (ximagesink->x_lock);
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       ximagesink->time = 0;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       g_mutex_lock (ximagesink->stream_lock);
       if (ximagesink->xwindow)
         gst_ximagesink_xwindow_clear (ximagesink, ximagesink->xwindow);
@@ -1153,7 +1153,7 @@ gst_ximagesink_change_state (GstElement * element)
       GST_VIDEO_SINK_HEIGHT (ximagesink) = 0;
       g_mutex_unlock (ximagesink->stream_lock);
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       /* We are cleaning our resources here, yes i know chain is not running
          but the interface can be called to set a window from a different thread
          and that would crash */
@@ -1180,9 +1180,9 @@ gst_ximagesink_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static void

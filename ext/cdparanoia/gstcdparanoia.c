@@ -174,7 +174,8 @@ _do_init (GType cdparanoia_type)
 GST_BOILERPLATE_FULL (CDParanoia, cdparanoia, GstElement, GST_TYPE_ELEMENT,
     _do_init);
 
-static GstElementStateReturn cdparanoia_change_state (GstElement * element);
+static GstStateChangeReturn cdparanoia_change_state (GstElement * element,
+    GstStateChange transition);
 
 static guint cdparanoia_signals[LAST_SIGNAL] = { 0 };
 
@@ -787,35 +788,35 @@ cdparanoia_close (CDParanoia * src)
   GST_FLAG_UNSET (src, CDPARANOIA_OPEN);
 }
 
-static GstElementStateReturn
-cdparanoia_change_state (GstElement * element)
+static GstStateChangeReturn
+cdparanoia_change_state (GstElement * element, GstStateChange transition)
 {
   CDParanoia *cdparanoia;
 
-  g_return_val_if_fail (GST_IS_CDPARANOIA (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_CDPARANOIA (element), GST_STATE_CHANGE_FAILURE);
 
   cdparanoia = CDPARANOIA (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (!cdparanoia_open (CDPARANOIA (element))) {
         g_warning ("cdparanoia: failed opening cd");
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       }
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (cdparanoia->uri_track > 0) {
         cdparanoia->seek_request = cdparanoia->uri_track;
       }
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* FIXME: Need code here to reset element to start of cd */
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       cdparanoia_close (CDPARANOIA (element));
       cdparanoia->seek_request = -1;
       break;
@@ -825,9 +826,9 @@ cdparanoia_change_state (GstElement * element)
 
   /* if we haven't failed already, give the parent class a chance too ;-) */
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static const GstEventMask *

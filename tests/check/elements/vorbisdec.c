@@ -97,7 +97,8 @@ GST_START_TEST (test_wrong_channels_identification_header)
 
   vorbisdec = setup_vorbisdec ();
   fail_unless (gst_element_set_state (vorbisdec,
-          GST_STATE_PLAYING) == GST_STATE_SUCCESS, "could not set to playing");
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
   bus = gst_bus_new ();
 
   inbuffer = gst_buffer_new_and_alloc (30);
@@ -139,7 +140,8 @@ GST_START_TEST (test_empty_identification_header)
   bus = gst_bus_new ();
 
   fail_unless (gst_element_set_state (vorbisdec,
-          GST_STATE_PLAYING) == GST_STATE_SUCCESS, "could not set to playing");
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (0);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -175,7 +177,8 @@ GST_START_TEST (test_identification_header)
 
   vorbisdec = setup_vorbisdec ();
   fail_unless (gst_element_set_state (vorbisdec,
-          GST_STATE_PLAYING) == GST_STATE_SUCCESS, "could not set to playing");
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
   bus = gst_bus_new ();
 
   inbuffer = gst_buffer_new_and_alloc (30);

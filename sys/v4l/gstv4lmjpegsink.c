@@ -72,7 +72,7 @@ static void gst_v4lmjpegsink_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_v4lmjpegsink_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-static GstElementStateReturn gst_v4lmjpegsink_change_state (GstElement *
+static GstStateChangeReturn gst_v4lmjpegsink_change_state (GstElement *
     element);
 static void gst_v4lmjpegsink_set_clock (GstElement * element, GstClock * clock);
 
@@ -387,46 +387,48 @@ gst_v4lmjpegsink_get_property (GObject * object,
 }
 
 
-static GstElementStateReturn
-gst_v4lmjpegsink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_v4lmjpegsink_change_state (GstElement * element, GstStateChange transition)
 {
   GstV4lMjpegSink *v4lmjpegsink;
-  GstElementStateReturn parent_value;
+  GstStateChangeReturn parent_value;
 
-  g_return_val_if_fail (GST_IS_V4LMJPEGSINK (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_V4LMJPEGSINK (element),
+      GST_STATE_CHANGE_FAILURE);
   v4lmjpegsink = GST_V4LMJPEGSINK (element);
 
   /* set up change state */
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_PAUSED:
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       /* we used to do buffer setup here, but that's now done
        * right after capsnego */
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       /* start */
       if (!gst_v4lmjpegsink_playback_start (v4lmjpegsink))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       /* de-queue all queued buffers */
       if (!gst_v4lmjpegsink_playback_stop (v4lmjpegsink))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* stop playback, unmap all buffers */
       if (!gst_v4lmjpegsink_playback_deinit (v4lmjpegsink))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state) {
-    parent_value = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    parent_value =
+        GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   } else {
-    parent_value = GST_STATE_FAILURE;
+    parent_value = GST_STATE_CHANGE_FAILURE;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
     return parent_value;
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }

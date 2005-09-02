@@ -47,7 +47,8 @@ static void sinesrc_init (SineSrc * src);
 static void sinesrc_class_init (SineSrcClass * klass);
 
 static GstData *sinesrc_get (GstPad * pad);
-static GstElementStateReturn sinesrc_change_state (GstElement * element);
+static GstStateChangeReturn sinesrc_change_state (GstElement * element,
+    GstStateChange transition);
 
 
 GType
@@ -318,31 +319,31 @@ sinesrc_set_pre_get_func (SineSrc * src, PreGetFunc func)
   src->pre_get_func = func;
 }
 
-static GstElementStateReturn
-sinesrc_change_state (GstElement * element)
+static GstStateChangeReturn
+sinesrc_change_state (GstElement * element, GstStateChange transition)
 {
   SineSrc *sinesrc;
 
   g_return_val_if_fail (element != NULL, FALSE);
   sinesrc = SINESRC (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
-    case GST_STATE_READY_TO_PAUSED:
-    case GST_STATE_PAUSED_TO_PLAYING:
-    case GST_STATE_PLAYING_TO_PAUSED:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       sinesrc->newcaps = TRUE;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       g_assert_not_reached ();
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }

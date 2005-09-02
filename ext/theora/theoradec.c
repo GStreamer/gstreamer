@@ -119,7 +119,8 @@ static void theora_dec_set_property (GObject * object, guint prop_id,
 
 static gboolean theora_dec_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn theora_dec_chain (GstPad * pad, GstBuffer * buffer);
-static GstElementStateReturn theora_dec_change_state (GstElement * element);
+static GstStateChangeReturn theora_dec_change_state (GstElement * element,
+    GstStateChange transition);
 static gboolean theora_dec_src_event (GstPad * pad, GstEvent * event);
 static gboolean theora_dec_src_query (GstPad * pad, GstQuery * query);
 static gboolean theora_dec_src_convert (GstPad * pad,
@@ -1044,19 +1045,17 @@ done:
   return result;
 }
 
-static GstElementStateReturn
-theora_dec_change_state (GstElement * element)
+static GstStateChangeReturn
+theora_dec_change_state (GstElement * element, GstStateChange transition)
 {
   GstTheoraDec *dec = GST_THEORA_DEC (element);
-  gint transition;
-  GstElementStateReturn ret;
+  GstStateChangeReturn ret;
 
-  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       theora_info_init (&dec->info);
       theora_comment_init (&dec->comment);
       dec->have_header = FALSE;
@@ -1064,25 +1063,25 @@ theora_dec_change_state (GstElement * element)
       dec->last_timestamp = -1;
       dec->granulepos = -1;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     default:
       break;
   }
 
-  ret = parent_class->change_state (element);
+  ret = parent_class->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       theora_clear (&dec->state);
       theora_comment_clear (&dec->comment);
       theora_info_clear (&dec->info);
       dec->have_header = FALSE;
       dec->granulepos = -1;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;

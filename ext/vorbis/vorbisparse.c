@@ -63,7 +63,8 @@ GST_BOILERPLATE (GstVorbisParse, gst_vorbis_parse, GstElement,
     GST_TYPE_ELEMENT);
 
 static GstFlowReturn vorbis_parse_chain (GstPad * pad, GstBuffer * buffer);
-static GstElementStateReturn vorbis_parse_change_state (GstElement * element);
+static GstStateChangeReturn vorbis_parse_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void
 gst_vorbis_parse_base_init (gpointer g_class)
@@ -186,18 +187,18 @@ vorbis_parse_chain (GstPad * pad, GstBuffer * buffer)
   return GST_FLOW_OK;
 }
 
-static GstElementStateReturn
-vorbis_parse_change_state (GstElement * element)
+static GstStateChangeReturn
+vorbis_parse_change_state (GstElement * element, GstStateChange transition)
 {
   GstVorbisParse *parse = GST_VORBIS_PARSE (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       parse->packetno = 0;
       break;
     default:
       break;
   }
 
-  return parent_class->change_state (element);
+  return parent_class->change_state (element, transition);
 }

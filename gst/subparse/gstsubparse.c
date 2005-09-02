@@ -54,7 +54,8 @@ static const GstEventMask *gst_subparse_src_eventmask (GstPad * pad);
 #endif
 static gboolean gst_subparse_src_event (GstPad * pad, GstEvent * event);
 
-static GstElementStateReturn gst_subparse_change_state (GstElement * element);
+static GstStateChangeReturn gst_subparse_change_state (GstElement * element,
+    GstStateChange transition);
 
 #if 0
 static void gst_subparse_loop (GstPad * sinkpad);
@@ -630,17 +631,17 @@ gst_subparse_chain (GstPad * sinkpad, GstBuffer * buf)
   return ret;
 }
 
-static GstElementStateReturn
-gst_subparse_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_subparse_change_state (GstElement * element, GstStateChange transition)
 {
   GstSubparse *self = GST_SUBPARSE (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       parser_state_dispose (&self->state);
       self->parser_type = GST_SUB_PARSE_FORMAT_UNKNOWN;
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       /* format detection will init the parser state */
       self->offset = self->next_offset = 0;
       self->parser_type = GST_SUB_PARSE_FORMAT_UNKNOWN;
@@ -649,7 +650,7 @@ gst_subparse_change_state (GstElement * element)
       break;
   }
 
-  return parent_class->change_state (element);
+  return parent_class->change_state (element, transition);
 }
 
 #if 0

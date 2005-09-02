@@ -189,7 +189,7 @@ stop_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
 static void
 play_cb (GtkButton * button, gpointer data)
 {
-  GstElementState state;
+  GstState state;
 
   gst_element_get_state (pipeline, &state, NULL, NULL);
   if (state != GST_STATE_PLAYING) {
@@ -202,7 +202,7 @@ play_cb (GtkButton * button, gpointer data)
 static void
 pause_cb (GtkButton * button, gpointer data)
 {
-  GstElementState state;
+  GstState state;
 
   gst_element_get_state (pipeline, &state, NULL, NULL);
   if (state != GST_STATE_PAUSED) {
@@ -214,7 +214,7 @@ pause_cb (GtkButton * button, gpointer data)
 static void
 stop_cb (GtkButton * button, gpointer data)
 {
-  GstElementState state;
+  GstState state;
 
   gst_element_get_state (pipeline, &state, NULL, NULL);
   if (state != GST_STATE_READY) {

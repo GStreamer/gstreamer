@@ -99,8 +99,7 @@ static void gst_v4lmjpegsrc_get_property (GObject * object,
 static void gst_v4lmjpegsrc_set_clock (GstElement * element, GstClock * clock);
 
 /* state handling */
-static GstElementStateReturn gst_v4lmjpegsrc_change_state (GstElement *
-    element);
+static GstStateChangeReturn gst_v4lmjpegsrc_change_state (GstElement * element);
 
 /* requeue buffer after use */
 static void gst_v4lmjpegsrc_buffer_free (GstBuffer * buffer);
@@ -736,18 +735,18 @@ gst_v4lmjpegsrc_get_property (GObject * object,
 }
 
 
-static GstElementStateReturn
-gst_v4lmjpegsrc_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_v4lmjpegsrc_change_state (GstElement * element, GstStateChange transition)
 {
   GstV4lMjpegSrc *v4lmjpegsrc;
   GTimeVal time;
 
-  g_return_val_if_fail (GST_IS_V4LMJPEGSRC (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_V4LMJPEGSRC (element), GST_STATE_CHANGE_FAILURE);
 
   v4lmjpegsrc = GST_V4LMJPEGSRC (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_PAUSED:
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       /* actual buffer set-up used to be done here - but I moved
        * it to capsnego itself */
       v4lmjpegsrc->handled = 0;
@@ -755,37 +754,37 @@ gst_v4lmjpegsrc_change_state (GstElement * element)
       v4lmjpegsrc->last_frame = 0;
       v4lmjpegsrc->substract_time = 0;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       /* queue all buffer, start streaming capture */
       if (GST_V4LELEMENT (v4lmjpegsrc)->buffer &&
           !gst_v4lmjpegsrc_capture_start (v4lmjpegsrc))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       g_get_current_time (&time);
       v4lmjpegsrc->substract_time = GST_TIMEVAL_TO_TIME (time) -
           v4lmjpegsrc->substract_time;
       v4lmjpegsrc->last_seq = 0;
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       g_get_current_time (&time);
       v4lmjpegsrc->substract_time = GST_TIMEVAL_TO_TIME (time) -
           v4lmjpegsrc->substract_time;
       /* de-queue all queued buffers */
       if (v4lmjpegsrc->is_capturing &&
           !gst_v4lmjpegsrc_capture_stop (v4lmjpegsrc))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* stop capturing, unmap all buffers */
       if (GST_V4LELEMENT (v4lmjpegsrc)->buffer &&
           !gst_v4lmjpegsrc_capture_deinit (v4lmjpegsrc))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 

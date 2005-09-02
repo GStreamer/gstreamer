@@ -87,7 +87,8 @@ static void gst_adder_init (GstAdder * adder);
 
 static GstPad *gst_adder_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * unused);
-static GstElementStateReturn gst_adder_change_state (GstElement * element);
+static GstStateChangeReturn gst_adder_change_state (GstElement * element,
+    GstStateChange transition);
 
 static gboolean gst_adder_setcaps (GstPad * pad, GstCaps * caps);
 
@@ -400,34 +401,32 @@ not_negotiated:
   }
 }
 
-static GstElementStateReturn
-gst_adder_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_adder_change_state (GstElement * element, GstStateChange transition)
 {
   GstAdder *adder;
-  GstElementStateReturn ret;
-  gint transition;
+  GstStateChangeReturn ret;
 
   adder = GST_ADDER (element);
-  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       adder->timestamp = 0;
       adder->offset = 0;
       gst_collectpads_start (adder->collect);
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_collectpads_stop (adder->collect);
       break;
     default:
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   return ret;
 }

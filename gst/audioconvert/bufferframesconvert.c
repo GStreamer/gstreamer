@@ -87,8 +87,8 @@ static void buffer_frames_convert_class_init (BufferFramesConvertClass * klass);
 static void buffer_frames_convert_base_init (BufferFramesConvertClass * klass);
 static void buffer_frames_convert_init (BufferFramesConvert * this);
 
-static GstElementStateReturn buffer_frames_convert_change_state (GstElement *
-    element);
+static GstStateChangeReturn buffer_frames_convert_change_state (GstElement *
+    element, GstStateChange transition);
 
 static GstCaps *buffer_frames_convert_getcaps (GstPad * pad);
 static gboolean buffer_frames_convert_setcaps (GstPad * pad, GstCaps * caps);
@@ -171,17 +171,18 @@ buffer_frames_convert_init (BufferFramesConvert * this)
   this->samples_out_remaining = 0;
 }
 
-static GstElementStateReturn
-buffer_frames_convert_change_state (GstElement * element)
+static GstStateChangeReturn
+buffer_frames_convert_change_state (GstElement * element,
+    GstStateChange transition)
 {
   BufferFramesConvert *this = (BufferFramesConvert *) element;
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_PAUSED:
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       this->offset = 0;
       break;
 
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (this->buf_out)
         gst_buffer_unref (this->buf_out);
       this->buf_out = NULL;
@@ -193,8 +194,8 @@ buffer_frames_convert_change_state (GstElement * element)
   }
 
   if (parent_class->change_state)
-    return parent_class->change_state (element);
-  return GST_STATE_SUCCESS;
+    return parent_class->change_state (element, transition);
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static GstCaps *

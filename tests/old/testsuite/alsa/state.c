@@ -23,9 +23,9 @@
 GstElement *pipeline;
 
 static void
-set_state (GstElementState state)
+set_state (GstState state)
 {
-  GstElementState old_state = gst_element_get_state (pipeline);
+  GstState old_state = gst_element_get_state (pipeline);
 
   g_print ("Setting state from %s to %s...",
       gst_element_state_get_name (old_state),

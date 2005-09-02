@@ -116,7 +116,8 @@ static void gst_videorate_set_property (GObject * object,
 static void gst_videorate_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn gst_videorate_change_state (GstElement * element);
+static GstStateChangeReturn gst_videorate_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -572,25 +573,23 @@ gst_videorate_get_property (GObject * object,
   }
 }
 
-static GstElementStateReturn
-gst_videorate_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_videorate_change_state (GstElement * element, GstStateChange transition)
 {
-  GstElementStateReturn ret;
+  GstStateChangeReturn ret;
   GstVideorate *videorate;
-  gint transition;
 
   videorate = GST_VIDEORATE (element);
-  transition = GST_STATE_TRANSITION (videorate);
 
   switch (transition) {
     default:
       break;
   }
 
-  ret = parent_class->change_state (element);
+  ret = parent_class->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_videorate_blank_data (videorate);
       break;
     default:

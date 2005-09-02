@@ -1424,19 +1424,19 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   return TRUE;
 }
 
-static GstElementStateReturn
-gst_xvimagesink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_xvimagesink_change_state (GstElement * element, GstStateChange transition)
 {
   GstXvImageSink *xvimagesink;
 
   xvimagesink = GST_XVIMAGESINK (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       /* Initializing the XContext */
       if (!xvimagesink->xcontext &&
           !(xvimagesink->xcontext = gst_xvimagesink_xcontext_get (xvimagesink)))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       /* update object's par with calculated one if not set yet */
       if (!xvimagesink->par) {
         xvimagesink->par = g_new0 (GValue, 1);
@@ -1449,20 +1449,20 @@ gst_xvimagesink_change_state (GstElement * element)
       XSynchronize (xvimagesink->xcontext->disp, xvimagesink->synchronous);
       gst_xvimagesink_update_colorbalance (xvimagesink);
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (xvimagesink->xwindow)
         gst_xvimagesink_xwindow_clear (xvimagesink, xvimagesink->xwindow);
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       xvimagesink->framerate = 0;
       GST_VIDEO_SINK_WIDTH (xvimagesink) = 0;
       GST_VIDEO_SINK_HEIGHT (xvimagesink) = 0;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       if (xvimagesink->xvimage) {
         gst_xvimage_buffer_free (xvimagesink->xvimage);
         xvimagesink->xvimage = NULL;
@@ -1483,7 +1483,7 @@ gst_xvimagesink_change_state (GstElement * element)
       break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 }
 
 static void

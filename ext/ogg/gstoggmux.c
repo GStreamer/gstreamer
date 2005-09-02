@@ -167,7 +167,8 @@ static void gst_ogg_mux_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_ogg_mux_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-static GstElementStateReturn gst_ogg_mux_change_state (GstElement * element);
+static GstStateChangeReturn gst_ogg_mux_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -1126,34 +1127,32 @@ gst_ogg_mux_set_property (GObject * object,
   }
 }
 
-static GstElementStateReturn
-gst_ogg_mux_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_ogg_mux_change_state (GstElement * element, GstStateChange transition)
 {
   GstOggMux *ogg_mux;
-  gint transition;
-  GstElementStateReturn ret;
+  GstStateChangeReturn ret;
 
-  transition = GST_STATE_TRANSITION (element);
   ogg_mux = GST_OGG_MUX (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_NULL_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       ogg_mux->next_ts = 0;
       ogg_mux->offset = 0;
       ogg_mux->pulling = NULL;
       gst_collectpads_start (ogg_mux->collect);
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_collectpads_stop (ogg_mux->collect);
       break;
     default:
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   return ret;
 }

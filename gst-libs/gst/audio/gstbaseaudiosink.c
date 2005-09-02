@@ -56,8 +56,8 @@ static void gst_base_audio_sink_set_property (GObject * object, guint prop_id,
 static void gst_base_audio_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn gst_base_audio_sink_change_state (GstElement *
-    element);
+static GstStateChangeReturn gst_base_audio_sink_change_state (GstElement *
+    element, GstStateChange transition);
 
 static GstClock *gst_base_audio_sink_get_clock (GstElement * elem);
 static GstClockTime gst_base_audio_sink_get_time (GstClock * clock,
@@ -416,43 +416,43 @@ gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
   //GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (data);
 }
 
-static GstElementStateReturn
-gst_base_audio_sink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_base_audio_sink_change_state (GstElement * element,
+    GstStateChange transition)
 {
-  GstElementStateReturn ret = GST_STATE_SUCCESS;
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (element);
-  GstElementState transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (sink->ringbuffer == NULL) {
         sink->ringbuffer = gst_base_audio_sink_create_ringbuffer (sink);
         gst_ring_buffer_set_callback (sink->ringbuffer,
             gst_base_audio_sink_callback, sink);
       }
       if (!gst_ring_buffer_open_device (sink->ringbuffer))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     default:
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       gst_ring_buffer_pause (sink->ringbuffer);
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_ring_buffer_stop (sink->ringbuffer);
       gst_pad_set_caps (GST_BASE_SINK_PAD (sink), NULL);
       gst_ring_buffer_release (sink->ringbuffer);
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       gst_ring_buffer_close_device (sink->ringbuffer);
       break;
     default:

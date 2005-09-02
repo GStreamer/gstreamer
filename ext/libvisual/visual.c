@@ -102,7 +102,8 @@ static void gst_visual_class_init (gpointer g_class, gpointer class_data);
 static void gst_visual_init (GstVisual * visual);
 static void gst_visual_dispose (GObject * object);
 
-static GstElementStateReturn gst_visual_change_state (GstElement * element);
+static GstStateChangeReturn gst_visual_change_state (GstElement * element,
+    GstStateChange transition);
 static void gst_visual_chain (GstPad * pad, GstData * _data);
 
 static GstPadLinkReturn gst_visual_sinklink (GstPad * pad,
@@ -338,36 +339,36 @@ gst_visual_chain (GstPad * pad, GstData * _data)
   visual_video_set_buffer (visual->video, NULL);
 }
 
-static GstElementStateReturn
-gst_visual_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_visual_change_state (GstElement * element, GstStateChange transition)
 {
   GstVisual *visual = GST_VISUAL (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       visual->actor =
           visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->info->
           plugname);
       if (!visual->actor)
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
 
       if (visual_actor_realize (visual->actor) != 0) {
         visual_object_unref (VISUAL_OBJECT (visual->actor));
         visual->actor = NULL;
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       }
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_adapter_clear (visual->adapter);
       visual->count = 0;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       visual_object_unref (VISUAL_OBJECT (visual->actor));
       visual->actor = NULL;
       break;
@@ -376,9 +377,9 @@ gst_visual_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static void

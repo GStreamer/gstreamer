@@ -56,8 +56,8 @@ static void gst_base_audio_src_get_property (GObject * object, guint prop_id,
 
 static void gst_base_audio_src_fixate (GstPad * pad, GstCaps * caps);
 
-static GstElementStateReturn gst_base_audio_src_change_state (GstElement *
-    element);
+static GstStateChangeReturn gst_base_audio_src_change_state (GstElement *
+    element, GstStateChange transition);
 
 static GstClock *gst_base_audio_src_get_clock (GstElement * elem);
 static GstClockTime gst_base_audio_src_get_time (GstClock * clock,
@@ -362,42 +362,42 @@ gst_base_audio_src_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
   //GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (data);
 }
 
-static GstElementStateReturn
-gst_base_audio_src_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_base_audio_src_change_state (GstElement * element,
+    GstStateChange transition)
 {
-  GstElementStateReturn ret = GST_STATE_SUCCESS;
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (element);
-  GstElementState transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (src->ringbuffer == NULL) {
         src->ringbuffer = gst_base_audio_src_create_ringbuffer (src);
         gst_ring_buffer_set_callback (src->ringbuffer,
             gst_base_audio_src_callback, src);
       }
       if (!gst_ring_buffer_open_device (src->ringbuffer))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     default:
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       gst_ring_buffer_pause (src->ringbuffer);
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_ring_buffer_stop (src->ringbuffer);
       gst_ring_buffer_release (src->ringbuffer);
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       gst_ring_buffer_close_device (src->ringbuffer);
       gst_object_unref (GST_OBJECT (src->ringbuffer));
       src->ringbuffer = NULL;

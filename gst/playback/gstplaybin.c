@@ -101,7 +101,8 @@ static void gst_play_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
 static void gst_play_bin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * spec);
-static GstElementStateReturn gst_play_bin_change_state (GstElement * element);
+static GstStateChangeReturn gst_play_bin_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class;
 
@@ -842,19 +843,17 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
   }
 }
 
-static GstElementStateReturn
-gst_play_bin_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_play_bin_change_state (GstElement * element, GstStateChange transition)
 {
-  GstElementStateReturn ret;
+  GstStateChangeReturn ret;
   GstPlayBin *play_bin;
-  int transition;
 
   play_bin = GST_PLAY_BIN (element);
 
-  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       /* this really is the easiest way to make the state change return
        * ASYNC until we added the sinks */
       if (!play_bin->fakesink) {
@@ -866,12 +865,12 @@ gst_play_bin_change_state (GstElement * element)
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
-  if (ret == GST_STATE_FAILURE)
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
     return ret;
 
   switch (transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       /* Set audio sink state to NULL to release the sound device,
        * but only if we own it (else we might be in chain-transition). */
       //if (play_bin->audio_sink != NULL &&
@@ -879,7 +878,7 @@ gst_play_bin_change_state (GstElement * element)
       //  gst_element_set_state (play_bin->audio_sink, GST_STATE_NULL);
       //}
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* Check for NULL because the state transition may be done by
        * gst_bin_dispose which is called by gst_play_bin_dispose, and in that
        * case, we don't want to run remove_sinks.

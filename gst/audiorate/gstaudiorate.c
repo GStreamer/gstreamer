@@ -110,7 +110,8 @@ static void gst_audiorate_set_property (GObject * object,
 static void gst_audiorate_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn gst_audiorate_change_state (GstElement * element);
+static GstStateChangeReturn gst_audiorate_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -379,15 +380,15 @@ gst_audiorate_get_property (GObject * object,
   }
 }
 
-static GstElementStateReturn
-gst_audiorate_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_audiorate_change_state (GstElement * element, GstStateChange transition)
 {
   GstAudiorate *audiorate = GST_AUDIORATE (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       audiorate->next_offset = 0;
       break;
     default:
@@ -395,9 +396,9 @@ gst_audiorate_change_state (GstElement * element)
   }
 
   if (parent_class->change_state)
-    return parent_class->change_state (element);
+    return parent_class->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static gboolean

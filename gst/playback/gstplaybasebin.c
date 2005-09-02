@@ -63,8 +63,8 @@ static void gst_play_base_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
 static void gst_play_base_bin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * spec);
-static GstElementStateReturn gst_play_base_bin_change_state (GstElement *
-    element);
+static GstStateChangeReturn gst_play_base_bin_change_state (GstElement *
+    element, GstStateChange transition);
 const GList *gst_play_base_bin_get_streaminfo (GstPlayBaseBin * play_base_bin);
 
 static gboolean prepare_output (GstPlayBaseBin * play_base_bin);
@@ -1166,7 +1166,7 @@ setup_source (GstPlayBaseBin * play_base_bin, gchar ** new_location)
        */
       g_mutex_lock (play_base_bin->group_lock);
       if (gst_element_set_state (subbin, GST_STATE_PLAYING) ==
-          GST_STATE_SUCCESS) {
+          GST_STATE_CHANGE_SUCCESS) {
         GST_DEBUG ("waiting for first group...");
         sig6 = g_signal_connect (G_OBJECT (subbin),
             "state-changed", G_CALLBACK (state_change), play_base_bin);
@@ -1650,18 +1650,17 @@ gst_play_base_bin_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstElementStateReturn
-gst_play_base_bin_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_play_base_bin_change_state (GstElement * element, GstStateChange transition)
 {
-  GstElementStateReturn ret;
+  GstStateChangeReturn ret;
   GstPlayBaseBin *play_base_bin;
-  gint transition = GST_STATE_TRANSITION (element);
   gchar *new_location = NULL;
 
   play_base_bin = GST_PLAY_BASE_BIN (element);
 
   switch (transition) {
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!setup_source (play_base_bin, &new_location))
         goto source_failed;
       break;
@@ -1669,11 +1668,11 @@ gst_play_base_bin_change_state (GstElement * element)
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_READY_TO_PAUSED:
-      if (ret == GST_STATE_SUCCESS) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      if (ret == GST_STATE_CHANGE_SUCCESS) {
         finish_source (play_base_bin);
       } else {
         /* clean up leftover groups */
@@ -1681,7 +1680,7 @@ gst_play_base_bin_change_state (GstElement * element)
         play_base_bin->need_rebuild = TRUE;
       }
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       play_base_bin->need_rebuild = TRUE;
       remove_groups (play_base_bin);
       break;
@@ -1695,7 +1694,7 @@ source_failed:
   {
     play_base_bin->need_rebuild = TRUE;
 
-    return GST_STATE_FAILURE;
+    return GST_STATE_CHANGE_FAILURE;
   }
 }
 

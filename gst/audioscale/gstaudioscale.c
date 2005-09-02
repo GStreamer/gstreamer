@@ -110,7 +110,8 @@ static void gst_audioscale_init (Audioscale * audioscale);
 static void gst_audioscale_dispose (GObject * object);
 
 static void gst_audioscale_chain (GstPad * pad, GstData * _data);
-static GstElementStateReturn gst_audioscale_change_state (GstElement * element);
+static GstStateChangeReturn gst_audioscale_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void gst_audioscale_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -654,20 +655,20 @@ gst_audioscale_chain (GstPad * pad, GstData * _data)
 
 }
 
-static GstElementStateReturn
-gst_audioscale_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_audioscale_change_state (GstElement * element, GstStateChange transition)
 {
   Audioscale *audioscale = GST_AUDIOSCALE (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       audioscale->gst_resample_offset = 0;
       break;
     default:
       break;
   }
 
-  return parent_class->change_state (element);
+  return parent_class->change_state (element, transition);
 }
 
 static void

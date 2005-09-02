@@ -143,7 +143,8 @@ verify_convert (GstElement * audioconvert, void *in, int inlength, void *out,
   GstBuffer *inbuffer, *outbuffer;
 
   fail_unless (gst_element_set_state (audioconvert,
-          GST_STATE_PLAYING) == GST_STATE_SUCCESS, "could not set to playing");
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
 
   GST_DEBUG ("Creating buffer of %d bytes", inlength);
   inbuffer = gst_buffer_new_and_alloc (inlength);

@@ -22,7 +22,7 @@ gint
 main (gint argc, gchar * argv[])
 {
   GstElement *player;
-  GstElementStateReturn res;
+  GstStateChangeReturn res;
 
   gst_init (&argc, &argv);
 
@@ -32,7 +32,7 @@ main (gint argc, gchar * argv[])
   g_object_set (G_OBJECT (player), "uri", argv[1], NULL);
 
   res = gst_element_set_state (player, GST_STATE_PLAYING);
-  if (res != GST_STATE_SUCCESS) {
+  if (res != GST_STATE_CHANGE_SUCCESS) {
     g_print ("could not play\n");
     return -1;
   }

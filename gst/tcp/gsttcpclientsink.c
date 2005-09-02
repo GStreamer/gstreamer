@@ -61,8 +61,8 @@ static void gst_tcpclientsink_finalize (GObject * gobject);
 static gboolean gst_tcpclientsink_setcaps (GstBaseSink * bsink, GstCaps * caps);
 static GstFlowReturn gst_tcpclientsink_render (GstBaseSink * bsink,
     GstBuffer * buf);
-static GstElementStateReturn gst_tcpclientsink_change_state (GstElement *
-    element);
+static GstStateChangeReturn gst_tcpclientsink_change_state (GstElement *
+    element, GstStateChange transition);
 
 static void gst_tcpclientsink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -403,29 +403,27 @@ gst_tcpclientsink_stop (GstTCPClientSink * this)
   return TRUE;
 }
 
-static GstElementStateReturn
-gst_tcpclientsink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_tcpclientsink_change_state (GstElement * element, GstStateChange transition)
 {
   GstTCPClientSink *sink;
-  gint transition;
-  GstElementStateReturn res;
+  GstStateChangeReturn res;
 
   sink = GST_TCPCLIENTSINK (element);
-  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_NULL_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!gst_tcpclientsink_start (GST_TCPCLIENTSINK (element)))
         goto start_failure;
       break;
     default:
       break;
   }
-  res = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  res = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       gst_tcpclientsink_stop (GST_TCPCLIENTSINK (element));
     default:
       break;
@@ -434,6 +432,6 @@ gst_tcpclientsink_change_state (GstElement * element)
 
 start_failure:
   {
-    return GST_STATE_FAILURE;
+    return GST_STATE_CHANGE_FAILURE;
   }
 }

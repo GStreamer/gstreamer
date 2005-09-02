@@ -75,7 +75,8 @@ GST_BOILERPLATE (GstVorbisDec, gst_vorbis_dec, GstElement, GST_TYPE_ELEMENT);
 static void vorbisdec_finalize (GObject * object);
 static gboolean vorbis_dec_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn vorbis_dec_chain (GstPad * pad, GstBuffer * buffer);
-static GstElementStateReturn vorbis_dec_change_state (GstElement * element);
+static GstStateChangeReturn vorbis_dec_change_state (GstElement * element,
+    GstStateChange transition);
 
 #if 0
 static const GstFormat *vorbis_dec_get_formats (GstPad * pad);
@@ -864,44 +865,42 @@ done:
   return result;
 }
 
-static GstElementStateReturn
-vorbis_dec_change_state (GstElement * element)
+static GstStateChangeReturn
+vorbis_dec_change_state (GstElement * element, GstStateChange transition)
 {
   GstVorbisDec *vd = GST_VORBIS_DEC (element);
-  GstElementState transition;
-  GstElementStateReturn res;
+  GstStateChangeReturn res;
 
-  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       vorbis_info_init (&vd->vi);
       vorbis_comment_init (&vd->vc);
       vd->initialized = FALSE;
       vd->granulepos = -1;
       vd->packetno = 0;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     default:
       break;
   }
 
-  res = parent_class->change_state (element);
+  res = parent_class->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG_OBJECT (vd, "PAUSED -> READY, clearing vorbis structures");
       vorbis_block_clear (&vd->vb);
       vorbis_dsp_clear (&vd->vd);
       vorbis_comment_clear (&vd->vc);
       vorbis_info_clear (&vd->vi);
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;

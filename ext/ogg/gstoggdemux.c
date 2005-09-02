@@ -1053,7 +1053,8 @@ static gboolean gst_ogg_demux_sink_activate_pull (GstPad * sinkpad,
     gboolean active);
 static gboolean gst_ogg_demux_sink_activate_push (GstPad * sinkpad,
     gboolean active);
-static GstElementStateReturn gst_ogg_demux_change_state (GstElement * element);
+static GstStateChangeReturn gst_ogg_demux_change_state (GstElement * element,
+    GstStateChange transition);
 static void gst_ogg_demux_send_event (GstOggDemux * ogg, GstEvent * event);
 
 static void gst_ogg_print (GstOggDemux * demux);
@@ -2348,37 +2349,39 @@ gst_ogg_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
   }
 }
 
-static GstElementStateReturn
-gst_ogg_demux_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_ogg_demux_change_state (GstElement * element, GstStateChange transition)
 {
   GstOggDemux *ogg;
-  GstElementStateReturn result = GST_STATE_FAILURE;
+  GstStateChangeReturn result = GST_STATE_CHANGE_FAILURE;
 
   ogg = GST_OGG_DEMUX (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       ogg_sync_init (&ogg->sync);
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       ogg_sync_reset (&ogg->sync);
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      break;
+    default:
       break;
   }
 
-  result = parent_class->change_state (element);
+  result = parent_class->change_state (element, transition);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PLAYING_TO_PAUSED:
+  switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_ogg_demux_clear_chains (ogg);
       GST_LOCK (ogg);
       ogg->running = FALSE;
       GST_UNLOCK (ogg);
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       ogg_sync_clear (&ogg->sync);
       break;
     default:

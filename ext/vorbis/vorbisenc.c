@@ -120,7 +120,8 @@ static void gst_vorbisenc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_vorbisenc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static GstElementStateReturn gst_vorbisenc_change_state (GstElement * element);
+static GstStateChangeReturn gst_vorbisenc_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -1086,37 +1087,35 @@ gst_vorbisenc_set_property (GObject * object, guint prop_id,
   }
 }
 
-static GstElementStateReturn
-gst_vorbisenc_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_vorbisenc_change_state (GstElement * element, GstStateChange transition)
 {
   GstVorbisEnc *vorbisenc = GST_VORBISENC (element);
-  GstElementState transition;
-  GstElementStateReturn res;
+  GstStateChangeReturn res;
 
-  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       vorbisenc->tags = gst_tag_list_new ();
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       vorbisenc->eos = FALSE;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     default:
       break;
   }
 
-  res = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  res = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       vorbisenc->setup = FALSE;
       vorbisenc->header_sent = FALSE;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       gst_tag_list_free (vorbisenc->tags);
       vorbisenc->tags = NULL;
     default:

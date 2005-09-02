@@ -175,7 +175,8 @@ GST_BOILERPLATE (GstTheoraEnc, gst_theora_enc, GstElement, GST_TYPE_ELEMENT);
 
 static gboolean theora_enc_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn theora_enc_chain (GstPad * pad, GstBuffer * buffer);
-static GstElementStateReturn theora_enc_change_state (GstElement * element);
+static GstStateChangeReturn theora_enc_change_state (GstElement * element,
+    GstStateChange transition);
 static gboolean theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps);
 static void theora_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -711,44 +712,42 @@ data_push:
   }
 }
 
-static GstElementStateReturn
-theora_enc_change_state (GstElement * element)
+static GstStateChangeReturn
+theora_enc_change_state (GstElement * element, GstStateChange transition)
 {
   GstTheoraEnc *enc;
-  gint transition;
-  GstElementStateReturn ret;
+  GstStateChangeReturn ret;
 
-  transition = GST_STATE_TRANSITION (element);
   enc = GST_THEORA_ENC (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       theora_info_init (&enc->info);
       theora_comment_init (&enc->comment);
       enc->packetno = 0;
       enc->initial_delay = 0;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     default:
       break;
   }
 
-  ret = parent_class->change_state (element);
+  ret = parent_class->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_STREAM_LOCK (enc->sinkpad);
       theora_clear (&enc->state);
       theora_comment_clear (&enc->comment);
       theora_info_clear (&enc->info);
       GST_STREAM_UNLOCK (enc->sinkpad);
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;
