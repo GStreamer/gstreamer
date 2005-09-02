@@ -84,7 +84,7 @@ static GstFlowReturn gst_dvdlpcmdec_chain_raw (GstPad * pad,
     GstBuffer * buffer);
 static GstFlowReturn gst_dvdlpcmdec_chain_dvd (GstPad * pad,
     GstBuffer * buffer);
-static GstPadLinkReturn gst_dvdlpcmdec_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_dvdlpcmdec_setcaps (GstPad * pad, GstCaps * caps);
 
 static GstElementStateReturn gst_dvdlpcmdec_change_state (GstElement * element);
 
@@ -175,7 +175,7 @@ gst_dvdlpcmdec_init (GstDvdLpcmDec * dvdlpcmdec)
   gst_dvdlpcm_reset (dvdlpcmdec);
 }
 
-static GstPadLinkReturn
+static gboolean
 gst_dvdlpcmdec_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstStructure *structure;

@@ -96,7 +96,7 @@ static void ac3iec_get_property (GObject * object,
 
 static GstFlowReturn ac3iec_chain_dvd (GstPad * pad, GstBuffer * buf);
 static GstFlowReturn ac3iec_chain_raw (GstPad * pad, GstBuffer * buf);
-static GstPadLinkReturn ac3iec_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean ac3iec_setcaps (GstPad * pad, GstCaps * caps);
 
 static GstElementStateReturn ac3iec_change_state (GstElement * element);
 
@@ -193,7 +193,7 @@ ac3iec_finalize (GObject * object)
   g_free (ac3iec->padder);
 }
 
-static GstPadLinkReturn
+static gboolean
 ac3iec_setcaps (GstPad * pad, GstCaps * caps)
 {
   AC3IEC *ac3iec = AC3IEC (gst_pad_get_parent (pad));
