@@ -221,7 +221,7 @@ gst_base_sink_pad_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   if (bclass->buffer_alloc)
     result = bclass->buffer_alloc (bsink, offset, size, caps, buf);
   else
-    *buf = NULL;
+    *buf = NULL;                /* fallback in gstpad.c will allocate generic buffer */
 
   gst_object_unref (bsink);
 

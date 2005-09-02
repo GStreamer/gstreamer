@@ -64,7 +64,6 @@ enum
 #define DEFAULT_SYNC FALSE
 #define DEFAULT_SIGNAL_HANDOFFS FALSE
 #define DEFAULT_LAST_MESSAGE NULL
-#define DEFAULT_LAST_MESSAGE NULL
 #define DEFAULT_CAN_ACTIVATE_PUSH TRUE
 #define DEFAULT_CAN_ACTIVATE_PULL FALSE
 
@@ -220,7 +219,7 @@ gst_fake_sink_init (GstFakeSink * fakesink, GstFakeSinkClass * g_class)
   fakesink->silent = DEFAULT_SILENT;
   fakesink->dump = DEFAULT_DUMP;
   fakesink->sync = DEFAULT_SYNC;
-  fakesink->last_message = DEFAULT_LAST_MESSAGE;
+  fakesink->last_message = g_strdup (DEFAULT_LAST_MESSAGE);
   fakesink->state_error = DEFAULT_STATE_ERROR;
   fakesink->signal_handoffs = DEFAULT_SIGNAL_HANDOFFS;
 }
@@ -402,6 +401,13 @@ gst_fake_sink_change_state (GstElement * element, GstStateChange transition)
       if (fakesink->state_error == FAKE_SINK_STATE_ERROR_PAUSED_PLAYING)
         goto error;
       break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       if (fakesink->state_error == FAKE_SINK_STATE_ERROR_PLAYING_PAUSED)
         goto error;
@@ -419,8 +425,6 @@ gst_fake_sink_change_state (GstElement * element, GstStateChange transition)
     default:
       break;
   }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   return ret;
 

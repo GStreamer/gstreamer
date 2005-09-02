@@ -2418,6 +2418,7 @@ fallback:
     GST_CAT_DEBUG (GST_CAT_PADS,
         "%s:%s fallback buffer alloc", GST_DEBUG_PAD_NAME (pad));
     *buf = gst_buffer_new_and_alloc (size);
+    GST_BUFFER_OFFSET (*buf) = offset;
     gst_buffer_set_caps (*buf, caps);
 
     ret = GST_FLOW_OK;
