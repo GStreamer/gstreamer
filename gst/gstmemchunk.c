@@ -20,6 +20,18 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstmacros
+ * @short_description: Atomic chunk allocator
+ * @see_also: #GstBuffer, #GstEvent, #GstData
+ *
+ * GstMemChunk is an atomic chunk allocator. It uses atomic operations to
+ * allocate fixed size memory regions and is therefore thread safe without the
+ * overhead of mutexes or other heavyweight locking mechanisms.
+ *
+ * The GstMemChunk is used to allocate critical resources for #GstBuffer and
+ * #GstEvent.
+ */
 #include "gst_private.h"
 
 #include <string.h>             /* memset */

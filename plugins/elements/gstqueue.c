@@ -21,6 +21,20 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstqueue
+ * @short_description: Simple asynchronous data queue.
+ *
+ * Data is queued till max_level buffers have been stored. Any subsequent
+ * buffers sent to this filter will block until free space becomes available in
+ * the buffer. The queue is typically used in conjunction with a thread.
+ * 
+ * You can query how many buffers are queued with the level argument.
+ * 
+ * The default queue length is set to 100.
+ * 
+ * The queue blocks by default.
+ */
 
 
 #include "gst_private.h"

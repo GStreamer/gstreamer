@@ -20,7 +20,12 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+/**
+ * SECTION:gstghostpad
+ * @short_description: Pseudo link pads
+ * @see_also: #GstPad
+ *
+ */
 
 #include "gst_private.h"
 

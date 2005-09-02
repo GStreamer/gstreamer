@@ -1,3 +1,27 @@
+2005-09-02  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/tmpl/.cvsignore:
+	* docs/gst/tmpl/gstghostpad.sgml:
+	* docs/gst/tmpl/gstiterator.sgml:
+	* docs/gst/tmpl/gstmacros.sgml:
+	* docs/gst/tmpl/gstrealpad.sgml:
+	* docs/gst/tmpl/gstregistry.sgml:
+	* docs/gst/tmpl/gstregistrypool.sgml:
+	* docs/gst/tmpl/gststructure.sgml:
+	* docs/gst/tmpl/gstsystemclock.sgml:
+	* docs/gst/tmpl/gsttrace.sgml:
+	* gst/gstghostpad.c:
+	* gst/gstmacros.h:
+	* gst/gstmemchunk.c:
+	* gst/gstmemchunk.h:
+	* gst/gstqueue.c:
+	* gst/gstregistry.c:
+	* gst/gstregistrypool.c:
+	* gst/gststructure.c:
+	* gst/gstsystemclock.c:
+          more docs inlined
+
 2005-09-02  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstelement.h (GstState): Renamed from GstElementState,

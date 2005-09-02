@@ -19,6 +19,13 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstregistrypool
+ * @short_description: Management of a group of #GstRegistry objects
+ * @see_also: #GstRegistry
+ *
+ * The registry pool manages the available registries and plugins in the system.
+ */
 
 #include <string.h>
 

@@ -24,6 +24,11 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstMemChunk:
+ *
+ * The memchunk data structure
+ */
 typedef struct _GstMemChunk GstMemChunk;
 
 GstMemChunk*	gst_mem_chunk_new 	(gchar *name,

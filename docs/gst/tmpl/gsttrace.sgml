@@ -224,7 +224,7 @@ Use the tracer to trace a new memory allocation
 Trace a memory free operation
 </para>
 
-@trace: The traver to use
+@trace: The tracer to use
 @mem: The memory that is freed
 
 

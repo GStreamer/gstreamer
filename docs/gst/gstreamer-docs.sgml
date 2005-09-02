@@ -158,22 +158,14 @@
   <chapter id="gstreamer-support">
     <title>GStreamer Core Support</title>
     <para>
-      Theses modules support the gstreamer core and applications using it.
-    </para>
-
-    &GstMacros;
-    &GstMemChunk;
-
-  </chapter>
-
-  <chapter id="gstreamer-internal">
-    <title>GStreamer Core Internals</title>
-    <para>
-      Theses are internal modules which are rarely used by applications.
+      Theses modules support the gstreamer core and plugin development.
+      Application developers will rarely need to know about it.
     </para>
 
     &GstCheck;
     &GstInfo;
+    &GstMacros;
+    &GstMemChunk;
     &GstTrace;
 
   </chapter>

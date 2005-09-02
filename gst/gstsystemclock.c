@@ -19,6 +19,13 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstsystemclock
+ * @short_description: Default clock that uses the current system time
+ * @see_also: #GstClock
+ *
+ * The System clock is an implementation of GstClock using the system time.
+ */
 
 #include "gst_private.h"
 #include "gstinfo.h"

@@ -19,6 +19,14 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstregistry
+ * @short_description: Abstract base class for management of #GstPlugin objects
+ * @see_also: #GstPlugin, #GstPluginFeature
+ *
+ * One registry holds the metadata of a set of plugins.
+ * All registries build the #GstRegistryPool.
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
