@@ -1,3 +1,11 @@
+2005-09-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/__init__.py:
+	  fix make distcheck
+	* gst/extend/jukebox.py:
+	* gst/extend/utils.py:
+	  add some more stuff for GC debugging
+
 2005-08-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/extend/leveller.py:

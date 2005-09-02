@@ -60,11 +60,16 @@ def gc_collect(reason=None):
     This helps in debugging object refcounting.
     Sprinkle liberally around checkpoints.
     """
-    if not os.environ.has_key('GST_GC'):
+    env = os.environ.get('GST_GC', None)
+    if not env:
         return
     import gc
+    if env == 'DEBUG_LEAK':
+        gc.set_debug(gc.DEBUG_LEAK)
+
     gst.debug('collecting garbage')
     if reason:
         gst.debug('because of %s' % reason)
     count = gc.collect()
-    gst.debug('collected garbage, %d left' % count)
+    gst.debug('collected garbage, %d objects collected, %d left' % (
+        count, len(gc.get_objects())))

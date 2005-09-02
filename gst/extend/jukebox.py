@@ -156,6 +156,7 @@ class Jukebox(gst.Bin):
         if not self._prerolled:
             raise Exception, "baby"
         gst.debug("START of mixing")
+        utils.gc_collect('before START of mixing')
         file = self._get_next_play()
         (rms, mixin, mixout, length) = self._levels[file]
         gst.debug("START with %s (%f/%f/%f)" % (file, mixin, mixout, length))
@@ -255,7 +256,6 @@ class Jukebox(gst.Bin):
         self._adder.release_request_pad(sinkpad)
         gst.debug('%d pads left on adder' % len(self._adder.get_pad_list()))
         gst.debug('%r children in jukebox' % [e.get_name() for e in self.get_list()])
-
         if len(self._adder.get_pad_list()) == 1:
             gst.debug('only a source pad left, so we are done')
             self.emit('done', sources.EOS)
