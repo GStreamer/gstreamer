@@ -323,7 +323,7 @@ gst_gdk_animation_iter_create_pipeline (GstGdkAnimationIter * iter)
   if (!gst_element_link_filtered (colorspace, sink, caps))
     goto error;
   if (gst_element_set_state (iter->pipeline,
-          GST_STATE_PLAYING) != GST_STATE_SUCCESS)
+          GST_STATE_PLAYING) != GST_STATE_CHANGE_SUCCESS)
     goto error;
 
   return TRUE;

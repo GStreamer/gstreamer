@@ -76,7 +76,8 @@ static void gst_esdmon_init (GTypeInstance * instance, gpointer g_class);
 
 static gboolean gst_esdmon_open_audio (GstEsdmon * src);
 static void gst_esdmon_close_audio (GstEsdmon * src);
-static GstElementStateReturn gst_esdmon_change_state (GstElement * element);
+static GstStateChangeReturn gst_esdmon_change_state (GstElement * element,
+    GstStateChange transition);
 static gboolean gst_esdmon_sync_parms (GstEsdmon * esdmon);
 
 static GstData *gst_esdmon_get (GstPad * pad);
@@ -422,8 +423,8 @@ gst_esdmon_close_audio (GstEsdmon * src)
   GST_DEBUG ("esdmon: closed sound device");
 }
 
-static GstElementStateReturn
-gst_esdmon_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_esdmon_change_state (GstElement * element, GstStateChange transition)
 {
   g_return_val_if_fail (GST_IS_ESDMON (element), FALSE);
 
@@ -435,11 +436,11 @@ gst_esdmon_change_state (GstElement * element)
   } else {
     if (!GST_FLAG_IS_SET (element, GST_ESDMON_OPEN)) {
       if (!gst_esdmon_open_audio (GST_ESDMON (element)))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
     }
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-  return GST_STATE_SUCCESS;
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  return GST_STATE_CHANGE_SUCCESS;
 }

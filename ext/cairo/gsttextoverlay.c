@@ -77,8 +77,7 @@ static void gst_textoverlay_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_textoverlay_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-static GstElementStateReturn gst_textoverlay_change_state (GstElement *
-    element);
+static GstStateChangeReturn gst_textoverlay_change_state (GstElement * element);
 static void gst_textoverlay_finalize (GObject * object);
 
 
@@ -550,25 +549,25 @@ gst_textoverlay_font_init (GstTextOverlay * overlay)
   overlay->need_render = TRUE;
 }
 
-static GstElementStateReturn
-gst_textoverlay_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_textoverlay_change_state (GstElement * element, GstStateChange transition)
 {
   GstTextOverlay *overlay;
 
   overlay = GST_TEXTOVERLAY (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_PLAYING:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
   }
 
-  parent_class->change_state (element);
+  parent_class->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static void

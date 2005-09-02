@@ -72,7 +72,8 @@ static void gst_cacasink_set_property (GObject * object, guint prop_id,
 static void gst_cacasink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn gst_cacasink_change_state (GstElement * element);
+static GstStateChangeReturn gst_cacasink_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -356,27 +357,25 @@ gst_cacasink_close (GstCACASink * cacasink)
   caca_end ();
 }
 
-static GstElementStateReturn
-gst_cacasink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_cacasink_change_state (GstElement * element, GstStateChange transition)
 {
-  GstElementStateReturn ret;
-  gint transition;
+  GstStateChangeReturn ret;
 
-  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!gst_cacasink_open (GST_CACASINK (element)))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       break;
     default:
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_cacasink_close (GST_CACASINK (element));
       break;
     default:

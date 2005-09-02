@@ -86,7 +86,8 @@ static void gst_jpegenc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_jpegenc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static GstElementStateReturn gst_jpegenc_change_state (GstElement * element);
+static GstStateChangeReturn gst_jpegenc_change_state (GstElement * element,
+    GstStateChange transition);
 
 
 static GstElementClass *parent_class = NULL;
@@ -503,21 +504,21 @@ gst_jpegenc_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstElementStateReturn
-gst_jpegenc_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_jpegenc_change_state (GstElement * element, GstStateChange transition)
 {
 
   GstJpegEnc *filter = GST_JPEGENC (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       GST_DEBUG ("gst_jpegenc_change_state: setting line buffers");
       filter->line[0] = NULL;
       filter->line[1] = NULL;
       filter->line[2] = NULL;
       gst_jpegenc_resync (filter);
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       g_free (filter->line[0]);
       g_free (filter->line[1]);
       g_free (filter->line[2]);
@@ -530,7 +531,7 @@ gst_jpegenc_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }

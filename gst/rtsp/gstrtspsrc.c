@@ -88,7 +88,8 @@ static void gst_rtspsrc_base_init (gpointer g_class);
 static void gst_rtspsrc_class_init (GstRTSPSrc * klass);
 static void gst_rtspsrc_init (GstRTSPSrc * rtspsrc);
 
-static GstElementStateReturn gst_rtspsrc_change_state (GstElement * element);
+static GstStateChangeReturn gst_rtspsrc_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void gst_rtspsrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -248,13 +249,13 @@ gst_rtspsrc_add_element (GstRTSPSrc * src, GstElement * element)
   return TRUE;
 }
 
-static GstElementStateReturn
-gst_rtspsrc_set_state (GstRTSPSrc * src, GstElementState state)
+static GstStateChangeReturn
+gst_rtspsrc_set_state (GstRTSPSrc * src, GstState state)
 {
-  GstElementStateReturn ret;
+  GstStateChangeReturn ret;
   GList *streams;
 
-  ret = GST_STATE_SUCCESS;
+  ret = GST_STATE_CHANGE_SUCCESS;
 
   /* for all streams */
   for (streams = src->streams; streams; streams = g_list_next (streams)) {
@@ -264,20 +265,21 @@ gst_rtspsrc_set_state (GstRTSPSrc * src, GstElementState state)
 
     /* first our rtp session manager */
     if ((ret =
-            gst_element_set_state (stream->rtpdec, state)) == GST_STATE_FAILURE)
+            gst_element_set_state (stream->rtpdec,
+                state)) == GST_STATE_CHANGE_FAILURE)
       goto done;
 
     /* then our sources */
     if (stream->rtpsrc) {
       if ((ret =
               gst_element_set_state (stream->rtpsrc,
-                  state)) == GST_STATE_FAILURE)
+                  state)) == GST_STATE_CHANGE_FAILURE)
         goto done;
     }
     if (stream->rtcpsrc) {
       if ((ret =
               gst_element_set_state (stream->rtcpsrc,
-                  state)) == GST_STATE_FAILURE)
+                  state)) == GST_STATE_CHANGE_FAILURE)
         goto done;
     }
   }
@@ -290,7 +292,7 @@ static gboolean
 gst_rtspsrc_stream_setup_rtp (GstRTSPStream * stream, gint * rtpport,
     gint * rtcpport)
 {
-  GstElementStateReturn ret;
+  GstStateChangeReturn ret;
   GstRTSPSrc *src;
 
   src = stream->parent;
@@ -303,7 +305,7 @@ gst_rtspsrc_stream_setup_rtp (GstRTSPStream * stream, gint * rtpport,
   gst_rtspsrc_add_element (src, stream->rtpsrc);
 
   ret = gst_element_set_state (stream->rtpsrc, GST_STATE_PAUSED);
-  if (ret == GST_STATE_FAILURE)
+  if (ret == GST_STATE_CHANGE_FAILURE)
     goto start_rtp_failure;
 
   if (!(stream->rtcpsrc =
@@ -314,7 +316,7 @@ gst_rtspsrc_stream_setup_rtp (GstRTSPStream * stream, gint * rtpport,
   gst_rtspsrc_add_element (src, stream->rtcpsrc);
 
   ret = gst_element_set_state (stream->rtcpsrc, GST_STATE_PAUSED);
-  if (ret == GST_STATE_FAILURE)
+  if (ret == GST_STATE_CHANGE_FAILURE)
     goto start_rtcp_failure;
 
   g_object_get (G_OBJECT (stream->rtpsrc), "port", rtpport, NULL);
@@ -351,7 +353,7 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
 {
   GstRTSPSrc *src;
   GstPad *pad;
-  GstElementStateReturn ret;
+  GstStateChangeReturn ret;
   gchar *name;
 
   src = stream->parent;
@@ -364,7 +366,7 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
 
   if ((ret =
           gst_element_set_state (stream->rtpdec,
-              GST_STATE_PAUSED)) != GST_STATE_SUCCESS)
+              GST_STATE_PAUSED)) != GST_STATE_CHANGE_SUCCESS)
     goto start_rtpdec_failure;
 
   stream->rtpdecrtp = gst_element_get_pad (stream->rtpdec, "sinkrtp");
@@ -966,49 +968,47 @@ send_error:
   }
 }
 
-static GstElementStateReturn
-gst_rtspsrc_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
 {
   GstRTSPSrc *rtspsrc;
-  GstElementState transition;
-  GstElementStateReturn ret;
+  GstStateChangeReturn ret;
 
   rtspsrc = GST_RTSPSRC (element);
 
-  transition = GST_STATE_TRANSITION (rtspsrc);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       rtspsrc->interleaved = FALSE;
       rtspsrc->options = 0;
       if (!gst_rtspsrc_open (rtspsrc))
         goto open_failed;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       gst_rtspsrc_play (rtspsrc);
       break;
     default:
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
-  if (ret == GST_STATE_FAILURE)
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
     goto done;
 
   ret = gst_rtspsrc_set_state (rtspsrc, GST_STATE_PENDING (rtspsrc));
-  if (ret == GST_STATE_FAILURE)
+  if (ret == GST_STATE_CHANGE_FAILURE)
     goto done;
 
   switch (transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       gst_rtspsrc_pause (rtspsrc);
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_rtspsrc_close (rtspsrc);
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;
@@ -1019,6 +1019,6 @@ done:
 
 open_failed:
   {
-    return GST_STATE_FAILURE;
+    return GST_STATE_CHANGE_FAILURE;
   }
 }

@@ -36,7 +36,8 @@ enum
 
 static void gst_ebml_write_class_init (GstEbmlWriteClass * klass);
 static void gst_ebml_write_init (GstEbmlWrite * ebml);
-static GstElementStateReturn gst_ebml_write_change_state (GstElement * element);
+static GstStateChangeReturn gst_ebml_write_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -85,13 +86,13 @@ gst_ebml_write_init (GstEbmlWrite * ebml)
   ebml->cache = NULL;
 }
 
-static GstElementStateReturn
-gst_ebml_write_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_ebml_write_change_state (GstElement * element, GstStateChange transition)
 {
   GstEbmlWrite *ebml = GST_EBML_WRITE (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       ebml->pos = 0;
       break;
     default:
@@ -99,9 +100,9 @@ gst_ebml_write_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 /*

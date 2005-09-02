@@ -64,7 +64,8 @@ static void gst_avi_demux_loop (GstPad * pad);
 static gboolean gst_avi_demux_sink_activate (GstPad * sinkpad);
 static gboolean gst_avi_demux_sink_activate_pull (GstPad * sinkpad,
     gboolean active);
-static GstElementStateReturn gst_avi_demux_change_state (GstElement * element);
+static GstStateChangeReturn gst_avi_demux_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -2189,13 +2190,13 @@ gst_avi_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
   return TRUE;
 }
 
-static GstElementStateReturn
-gst_avi_demux_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_avi_demux_change_state (GstElement * element, GstStateChange transition)
 {
   GstAviDemux *avi = GST_AVI_DEMUX (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_avi_demux_reset (avi);
       break;
     default:
@@ -2203,7 +2204,7 @@ gst_avi_demux_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }

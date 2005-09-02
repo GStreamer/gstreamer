@@ -84,7 +84,8 @@ static void gst_shout2send_set_property (GObject * object, guint prop_id,
 static void gst_shout2send_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn gst_shout2send_change_state (GstElement * element);
+static GstStateChangeReturn gst_shout2send_change_state (GstElement * element,
+    GstStateChange transition);
 static gboolean gst_shout2send_setcaps (GstPad * pad, GstCaps * caps);
 
 static guint gst_shout2send_signals[LAST_SIGNAL] = { 0 };
@@ -529,26 +530,26 @@ gst_shout2send_setcaps (GstPad * pad, GstCaps * caps)
 
 }
 
-static GstElementStateReturn
-gst_shout2send_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_shout2send_change_state (GstElement * element, GstStateChange transition)
 {
   GstShout2send *shout2send;
-  GstElementStateReturn ret;
+  GstStateChangeReturn ret;
 
   guint major, minor, micro;
   gshort proto = 3;
 
   gchar *version_string;
 
-  g_return_val_if_fail (GST_IS_SHOUT2SEND (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_SHOUT2SEND (element), GST_STATE_CHANGE_FAILURE);
 
   shout2send = GST_SHOUT2SEND (element);
 
   GST_DEBUG ("state pending %d", GST_STATE_PENDING (element));
 
   /* if going down into NULL state, close the file if it's open */
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       shout2send->conn = shout_new ();
 
       switch (shout2send->protocol) {
@@ -637,9 +638,9 @@ gst_shout2send_change_state (GstElement * element)
 
 
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
 
       /* connect */
       GST_DEBUG ("Connection format is: %s",
@@ -660,7 +661,7 @@ gst_shout2send_change_state (GstElement * element)
         GST_ERROR ("Couldn't connect to server: %s",
             shout_get_error (shout2send->conn));
         shout2send->conn = FALSE;
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       }
       break;
 
@@ -669,17 +670,17 @@ gst_shout2send_change_state (GstElement * element)
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PLAYING_TO_PAUSED:
+  switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       shout_close (shout2send->conn);
       shout_free (shout2send->conn);
       shout2send->started = FALSE;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;

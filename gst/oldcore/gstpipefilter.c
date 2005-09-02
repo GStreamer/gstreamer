@@ -86,7 +86,8 @@ static GstData *gst_pipefilter_get (GstPad * pad);
 static void gst_pipefilter_chain (GstPad * pad, GstData * _data);
 static gboolean gst_pipefilter_handle_event (GstPad * pad, GstEvent * event);
 
-static GstElementStateReturn gst_pipefilter_change_state (GstElement * element);
+static GstStateChangeReturn gst_pipefilter_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void
 gst_pipefilter_base_init (gpointer g_class)
@@ -331,8 +332,8 @@ gst_pipefilter_close_file (GstPipefilter * src)
   GST_FLAG_UNSET (src, GST_PIPEFILTER_OPEN);
 }
 
-static GstElementStateReturn
-gst_pipefilter_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_pipefilter_change_state (GstElement * element, GstStateChange transition)
 {
   g_return_val_if_fail (GST_IS_PIPEFILTER (element), FALSE);
 
@@ -344,11 +345,11 @@ gst_pipefilter_change_state (GstElement * element)
   } else {
     if (!GST_FLAG_IS_SET (element, GST_PIPEFILTER_OPEN)) {
       if (!gst_pipefilter_open_file (GST_PIPEFILTER (element)))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
     }
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-  return GST_STATE_SUCCESS;
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  return GST_STATE_CHANGE_SUCCESS;
 }

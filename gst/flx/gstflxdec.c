@@ -72,7 +72,8 @@ static void gst_flxdec_init (GstFlxDec * flxdec);
 
 static void gst_flxdec_loop (GstElement * element);
 
-static GstElementStateReturn gst_flxdec_change_state (GstElement * element);
+static GstStateChangeReturn gst_flxdec_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void gst_flxdec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -574,38 +575,38 @@ gst_flxdec_loop (GstElement * element)
   }
 }
 
-static GstElementStateReturn
-gst_flxdec_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_flxdec_change_state (GstElement * element, GstStateChange transition)
 {
   GstFlxDec *flxdec;
 
   flxdec = GST_FLXDEC (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       flxdec->bs = gst_bytestream_new (flxdec->sinkpad);
       flxdec->state = GST_FLXDEC_READ_HEADER;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_buffer_unref (flxdec->frame);
       flxdec->frame = NULL;
       gst_buffer_unref (flxdec->delta);
       flxdec->delta = NULL;
       gst_bytestream_destroy (flxdec->bs);
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
   }
 
-  parent_class->change_state (element);
+  parent_class->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static void

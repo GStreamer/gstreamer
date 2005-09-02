@@ -80,7 +80,8 @@ static void gst_jpeg_dec_init (GstJpegDec * jpegdec);
 
 static GstFlowReturn gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_jpeg_dec_setcaps (GstPad * pad, GstCaps * caps);
-static GstElementStateReturn gst_jpeg_dec_change_state (GstElement * element);
+static GstStateChangeReturn gst_jpeg_dec_change_state (GstElement * element,
+    GstStateChange transition);
 
 GType
 gst_jpeg_dec_get_type (void)
@@ -882,16 +883,16 @@ done:
   return ret;
 }
 
-static GstElementStateReturn
-gst_jpeg_dec_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_jpeg_dec_change_state (GstElement * element, GstStateChange transition)
 {
-  GstElementStateReturn ret;
+  GstStateChangeReturn ret;
   GstJpegDec *dec;
 
   dec = GST_JPEG_DEC (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       dec->next_ts = 0;
       dec->packetized = FALSE;
       break;
@@ -899,10 +900,10 @@ gst_jpeg_dec_change_state (GstElement * element)
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (dec->tempbuf) {
         gst_buffer_unref (dec->tempbuf);
         dec->tempbuf = NULL;

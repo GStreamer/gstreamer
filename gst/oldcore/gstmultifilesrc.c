@@ -80,7 +80,7 @@ static GstData *gst_multifilesrc_get (GstPad * pad);
 
 /*static GstBuffer *	gst_multifilesrc_get_region	(GstPad *pad,GstRegionType type,guint64 offset,guint64 len);*/
 
-static GstElementStateReturn gst_multifilesrc_change_state (GstElement *
+static GstStateChangeReturn gst_multifilesrc_change_state (GstElement *
     element);
 
 static gboolean gst_multifilesrc_open_file (GstMultiFileSrc * src,
@@ -345,10 +345,11 @@ gst_multifilesrc_close_file (GstMultiFileSrc * src)
   GST_FLAG_UNSET (src, GST_MULTIFILESRC_OPEN);
 }
 
-static GstElementStateReturn
-gst_multifilesrc_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_multifilesrc_change_state (GstElement * element, GstStateChange transition)
 {
-  g_return_val_if_fail (GST_IS_MULTIFILESRC (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_MULTIFILESRC (element),
+      GST_STATE_CHANGE_FAILURE);
 
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
     if (GST_FLAG_IS_SET (element, GST_MULTIFILESRC_OPEN))
@@ -356,7 +357,7 @@ gst_multifilesrc_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }

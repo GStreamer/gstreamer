@@ -50,7 +50,8 @@ static void gst_mngdec_get_property (GObject * object,
 static void gst_mngdec_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn gst_mngdec_change_state (GstElement * element);
+static GstStateChangeReturn gst_mngdec_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void gst_mngdec_loop (GstElement * element);
 
@@ -486,20 +487,20 @@ mngdec_refresh (mng_handle mng, mng_uint32 x, mng_uint32 y,
   return MNG_TRUE;
 }
 
-static GstElementStateReturn
-gst_mngdec_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_mngdec_change_state (GstElement * element, GstStateChange transition)
 {
   GstMngDec *mngdec = GST_MNGDEC (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       /* init library, make sure to pass an alloc function that sets the
        * memory to 0 */
       mngdec->mng =
           mng_initialize (mngdec, (mng_memalloc) g_malloc0,
           (mng_memfree) g_free, MNG_NULL);
       if (mngdec->mng == MNG_NULL) {
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       }
       /* set the callbacks */
       mng_setcb_errorproc (mngdec->mng, mngdec_error);
@@ -514,16 +515,16 @@ gst_mngdec_change_state (GstElement * element)
       mng_set_canvasstyle (mngdec->mng, MNG_CANVAS_RGBA8);
       mng_set_doprogressive (mngdec->mng, MNG_FALSE);
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       mngdec->first = TRUE;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       mng_cleanup (&mngdec->mng);
       break;
     default:
@@ -531,7 +532,7 @@ gst_mngdec_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }

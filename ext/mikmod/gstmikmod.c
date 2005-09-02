@@ -101,7 +101,8 @@ static GstPadLinkReturn gst_mikmod_srclink (GstPad * pad, const GstCaps * caps);
 static GstCaps *gst_mikmod_srcfixate (GstPad * pad, const GstCaps * caps);
 static void gst_mikmod_loop (GstElement * element);
 static gboolean gst_mikmod_setup (GstMikMod * mikmod);
-static GstElementStateReturn gst_mikmod_change_state (GstElement * element);
+static GstStateChangeReturn gst_mikmod_change_state (GstElement * element,
+    GstStateChange transition);
 
 
 
@@ -388,12 +389,12 @@ gst_mikmod_setup (GstMikMod * mikmod)
 }
 
 
-static GstElementStateReturn
-gst_mikmod_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_mikmod_change_state (GstElement * element, GstStateChange transition)
 {
   GstMikMod *mikmod;
 
-  g_return_val_if_fail (GST_IS_MIKMOD (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_MIKMOD (element), GST_STATE_CHANGE_FAILURE);
 
   mikmod = GST_MIKMOD (element);
 
@@ -426,9 +427,9 @@ gst_mikmod_change_state (GstElement * element)
 
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 

@@ -81,7 +81,8 @@ static void gst_aasink_set_property (GObject * object, guint prop_id,
 static void gst_aasink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn gst_aasink_change_state (GstElement * element);
+static GstStateChangeReturn gst_aasink_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_aasink_signals[LAST_SIGNAL] = { 0 };
@@ -492,35 +493,33 @@ gst_aasink_close (GstAASink * aasink)
   return TRUE;
 }
 
-static GstElementStateReturn
-gst_aasink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_aasink_change_state (GstElement * element, GstStateChange transition)
 {
-  GstElementStateReturn ret;
-  gint transition;
+  GstStateChangeReturn ret;
 
-  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!gst_aasink_open (GST_AASINK (element)))
         goto open_failed;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     default:
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       gst_aasink_close (GST_AASINK (element));
       break;
     default:
@@ -531,7 +530,7 @@ gst_aasink_change_state (GstElement * element)
 
 open_failed:
   {
-    return GST_STATE_FAILURE;
+    return GST_STATE_CHANGE_FAILURE;
   }
 }
 

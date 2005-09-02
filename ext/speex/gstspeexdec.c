@@ -65,7 +65,8 @@ GST_BOILERPLATE (GstSpeexDec, gst_speex_dec, GstElement, GST_TYPE_ELEMENT);
 
 static gboolean speex_dec_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn speex_dec_chain (GstPad * pad, GstBuffer * buf);
-static GstElementStateReturn speex_dec_change_state (GstElement * element);
+static GstStateChangeReturn speex_dec_change_state (GstElement * element,
+    GstStateChange transition);
 
 static gboolean speex_dec_src_event (GstPad * pad, GstEvent * event);
 static gboolean speex_dec_src_query (GstPad * pad, GstQuery * query);
@@ -530,29 +531,29 @@ gst_speexdec_set_property (GObject * object, guint prop_id,
 }
 
 
-static GstElementStateReturn
-speex_dec_change_state (GstElement * element)
+static GstStateChangeReturn
+speex_dec_change_state (GstElement * element, GstStateChange transition)
 {
   GstSpeexDec *vd = GST_SPEEXDEC (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       vd->packetno = 0;
       vd->samples_out = 0;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;
   }
 
-  return parent_class->change_state (element);
+  return parent_class->change_state (element, transition);
 }

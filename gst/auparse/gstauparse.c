@@ -86,7 +86,8 @@ static void gst_auparse_init (GstAuParse * auparse);
 
 static void gst_auparse_chain (GstPad * pad, GstData * _data);
 
-static GstElementStateReturn gst_auparse_change_state (GstElement * element);
+static GstStateChangeReturn gst_auparse_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -376,13 +377,13 @@ Samples :
   gst_pad_push (auparse->srcpad, GST_DATA (buf));
 }
 
-static GstElementStateReturn
-gst_auparse_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_auparse_change_state (GstElement * element, GstStateChange transition)
 {
   GstAuParse *auparse = GST_AUPARSE (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (auparse->srcpad) {
         gst_element_remove_pad (element, auparse->srcpad);
         auparse->srcpad = NULL;
@@ -393,9 +394,9 @@ gst_auparse_change_state (GstElement * element)
   }
 
   if (parent_class->change_state)
-    return parent_class->change_state (element);
+    return parent_class->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static gboolean

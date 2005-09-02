@@ -72,7 +72,8 @@ static void gst_md5sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static void gst_md5sink_chain (GstPad * pad, GstData * _data);
-static GstElementStateReturn gst_md5sink_change_state (GstElement * element);
+static GstStateChangeReturn gst_md5sink_change_state (GstElement * element,
+    GstStateChange transition);
 
 
 /* MD5 stuff */
@@ -415,22 +416,22 @@ gst_md5sink_init (GstMD5Sink * md5sink)
   md5_init_ctx (md5sink);
 }
 
-static GstElementStateReturn
-gst_md5sink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_md5sink_change_state (GstElement * element, GstStateChange transition)
 {
   GstMD5Sink *sink;
 
   /* element check */
   sink = GST_MD5SINK (element);
 
-  g_return_val_if_fail (GST_IS_MD5SINK (sink), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_MD5SINK (sink), GST_STATE_CHANGE_FAILURE);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_PAUSED:
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       md5_init_ctx (sink);
       g_object_notify (G_OBJECT (element), "md5");
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       md5_finish_ctx (sink, sink->md5);
       g_object_notify (G_OBJECT (element), "md5");
       break;
@@ -439,9 +440,9 @@ gst_md5sink_change_state (GstElement * element)
   }
 
   if ((GST_ELEMENT_CLASS (parent_class)->change_state))
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static void

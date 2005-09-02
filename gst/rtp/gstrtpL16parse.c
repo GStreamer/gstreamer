@@ -70,8 +70,7 @@ static void gst_rtpL16parse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtpL16parse_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static GstElementStateReturn gst_rtpL16parse_change_state (GstElement *
-    element);
+static GstStateChangeReturn gst_rtpL16parse_change_state (GstElement * element);
 
 static GstElementClass *parent_class = NULL;
 
@@ -310,21 +309,22 @@ gst_rtpL16parse_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstElementStateReturn
-gst_rtpL16parse_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_rtpL16parse_change_state (GstElement * element, GstStateChange transition)
 {
   GstRtpL16Parse *rtpL16parse;
 
-  g_return_val_if_fail (GST_IS_RTP_L16_PARSE (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_RTP_L16_PARSE (element),
+      GST_STATE_CHANGE_FAILURE);
 
   rtpL16parse = GST_RTP_L16_PARSE (element);
 
   GST_DEBUG ("state pending %d\n", GST_STATE_PENDING (element));
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;
@@ -332,9 +332,9 @@ gst_rtpL16parse_change_state (GstElement * element)
 
   /* if we haven't failed already, give the parent class a chance to ;-) */
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 gboolean

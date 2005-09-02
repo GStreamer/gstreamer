@@ -56,7 +56,7 @@ static void gst_osxaudioelement_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_osxaudioelement_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-static GstElementStateReturn gst_osxaudioelement_change_state (GstElement *
+static GstStateChangeReturn gst_osxaudioelement_change_state (GstElement *
     element);
 
 static GstElementClass *parent_class = NULL;
@@ -411,8 +411,9 @@ gst_osxaudioelement_get_property (GObject * object,
   }
 }
 
-static GstElementStateReturn
-gst_osxaudioelement_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_osxaudioelement_change_state (GstElement * element,
+    GstStateChange transition)
 {
   GstOsxAudioElement *osxaudio = GST_OSXAUDIOELEMENT (element);
   const GList *padlist;
@@ -426,14 +427,14 @@ gst_osxaudioelement_change_state (GstElement * element)
       input = FALSE;
     }
   }
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (!gst_osxaudioelement_open_audio (osxaudio, input)) {
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       }
       GST_INFO ("osxaudioelement: opened sound device");
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       gst_osxaudioelement_close_audio (osxaudio, input);
       GST_INFO ("osxaudioelement: closed sound device");
       break;
@@ -442,7 +443,7 @@ gst_osxaudioelement_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }

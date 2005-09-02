@@ -63,8 +63,7 @@ static void gst_osxaudiosrc_class_init (GstOsxAudioSrcClass * klass);
 static void gst_osxaudiosrc_init (GstOsxAudioSrc * osxaudiosrc);
 static void gst_osxaudiosrc_dispose (GObject * object);
 
-static GstElementStateReturn gst_osxaudiosrc_change_state (GstElement *
-    element);
+static GstStateChangeReturn gst_osxaudiosrc_change_state (GstElement * element);
 
 static GstData *gst_osxaudiosrc_get (GstPad * pad);
 
@@ -178,40 +177,40 @@ gst_osxaudiosrc_get (GstPad * pad)
   return GST_DATA (buf);
 }
 
-static GstElementStateReturn
-gst_osxaudiosrc_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_osxaudiosrc_change_state (GstElement * element, GstStateChange transition)
 {
   GstOsxAudioSrc *osxaudiosrc = GST_OSXAUDIOSRC (element);
   OSErr status;
 
   GST_DEBUG ("osxaudiosrc: state change");
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_PAUSED:
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       osxaudiosrc->curoffset = 0;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       status =
           AudioDeviceStart (GST_OSXAUDIOELEMENT (osxaudiosrc)->device_id,
           inputAudioDeviceIOProc);
       if (status)
         GST_DEBUG ("AudioDeviceStart returned %d\n", (int) status);
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       status =
           AudioDeviceStop (GST_OSXAUDIOELEMENT (osxaudiosrc)->device_id,
           inputAudioDeviceIOProc);
       if (status)
         GST_DEBUG ("AudioDeviceStop returned %d\n", (int) status);
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
     default:
       break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }

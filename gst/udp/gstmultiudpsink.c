@@ -68,8 +68,8 @@ static void gst_multiudpsink_finalize (GObject * object);
 
 static GstFlowReturn gst_multiudpsink_render (GstBaseSink * sink,
     GstBuffer * buffer);
-static GstElementStateReturn gst_multiudpsink_change_state (GstElement *
-    element);
+static GstStateChangeReturn gst_multiudpsink_change_state (GstElement *
+    element, GstStateChange transition);
 
 static void gst_multiudpsink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -428,18 +428,16 @@ gst_multiudpsink_get_stats (GstMultiUDPSink * sink, const gchar * host,
   return NULL;
 }
 
-static GstElementStateReturn
-gst_multiudpsink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_multiudpsink_change_state (GstElement * element, GstStateChange transition)
 {
-  GstElementStateReturn ret;
+  GstStateChangeReturn ret;
   GstMultiUDPSink *sink;
-  gint transition;
 
   sink = GST_MULTIUDPSINK (element);
-  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!gst_multiudpsink_init_send (sink))
         goto no_init;
       break;
@@ -447,10 +445,10 @@ gst_multiudpsink_change_state (GstElement * element)
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_multiudpsink_close (sink);
       break;
     default:
@@ -461,6 +459,6 @@ gst_multiudpsink_change_state (GstElement * element)
   /* ERRORS */
 no_init:
   {
-    return GST_STATE_FAILURE;
+    return GST_STATE_CHANGE_FAILURE;
   }
 }

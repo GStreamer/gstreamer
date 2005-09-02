@@ -27,8 +27,9 @@
 static void gst_gconf_video_sink_dispose (GObject * object);
 static void cb_toggle_element (GConfClient * client,
     guint connection_id, GConfEntry * entry, gpointer data);
-static GstElementStateReturn
-gst_gconf_video_sink_change_state (GstElement * element);
+static GstStateChangeReturn
+gst_gconf_video_sink_change_state (GstElement * element,
+    GstStateChange transition);
 
 GST_BOILERPLATE (GstGConfVideoSink, gst_gconf_video_sink, GstBin, GST_TYPE_BIN);
 
@@ -150,17 +151,18 @@ cb_toggle_element (GConfClient * client,
   do_toggle_element (GST_GCONF_VIDEO_SINK (data));
 }
 
-static GstElementStateReturn
-gst_gconf_video_sink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_gconf_video_sink_change_state (GstElement * element,
+    GstStateChange transition)
 {
   GstGConfVideoSink *sink = GST_GCONF_VIDEO_SINK (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (!do_toggle_element (sink))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       gst_gconf_video_sink_reset (sink);
       break;
     default:
@@ -168,5 +170,5 @@ gst_gconf_video_sink_change_state (GstElement * element)
   }
 
   return GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS, change_state,
-      (element), GST_STATE_SUCCESS);
+      (element, transition), GST_STATE_CHANGE_SUCCESS);
 }

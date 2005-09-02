@@ -88,7 +88,8 @@ static void gst_goom_base_init (GstGoomClass * klass);
 static void gst_goom_init (GstGoom * goom);
 static void gst_goom_dispose (GObject * object);
 
-static GstElementStateReturn gst_goom_change_state (GstElement * element);
+static GstStateChangeReturn gst_goom_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstFlowReturn gst_goom_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_goom_event (GstPad * pad, GstEvent * event);
@@ -409,19 +410,17 @@ no_format:
   }
 }
 
-static GstElementStateReturn
-gst_goom_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_goom_change_state (GstElement * element, GstStateChange transition)
 {
   GstGoom *goom = GST_GOOM (element);
-  gint transition;
-  GstElementStateReturn ret;
+  GstStateChangeReturn ret;
 
-  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       goom->audio_basetime = GST_CLOCK_TIME_NONE;
       gst_adapter_clear (goom->adapter);
       goom->channels = 0;
@@ -430,12 +429,12 @@ gst_goom_change_state (GstElement * element)
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;

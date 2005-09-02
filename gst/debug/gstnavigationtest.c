@@ -66,8 +66,9 @@ static void gst_navigationtest_set_property (GObject * object, guint prop_id,
 static void gst_navigationtest_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn
-gst_navigationtest_change_state (GstElement * element);
+static GstStateChangeReturn
+gst_navigationtest_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void gst_navigationtest_planar411 (GstVideofilter * videofilter,
     void *dest, void *src);
@@ -355,13 +356,14 @@ gst_navigationtest_planar411 (GstVideofilter * videofilter,
       rint (navigationtest->y), 0, 128, 128);
 }
 
-static GstElementStateReturn
-gst_navigationtest_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_navigationtest_change_state (GstElement * element,
+    GstStateChange transition)
 {
   GstNavigationtest *navigation = GST_NAVIGATIONTEST (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       while (navigation->clicks) {
         g_free (navigation->clicks->data);
         navigation->clicks =
@@ -371,7 +373,7 @@ gst_navigationtest_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }

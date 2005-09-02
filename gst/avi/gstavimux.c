@@ -155,7 +155,8 @@ static void gst_avimux_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_avimux_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-static GstElementStateReturn gst_avimux_change_state (GstElement * element);
+static GstStateChangeReturn gst_avimux_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -1308,21 +1309,20 @@ gst_avimux_set_property (GObject * object,
   }
 }
 
-static GstElementStateReturn
-gst_avimux_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_avimux_change_state (GstElement * element, GstStateChange transition)
 {
   GstAviMux *avimux;
-  gint transition = GST_STATE_TRANSITION (element);
 
-  g_return_val_if_fail (GST_IS_AVIMUX (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_AVIMUX (element), GST_STATE_CHANGE_FAILURE);
 
   avimux = GST_AVIMUX (element);
 
   switch (transition) {
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       avimux->video_pad_eos = avimux->audio_pad_eos = FALSE;
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (avimux->tags) {
         gst_tag_list_free (avimux->tags);
         avimux->tags = NULL;
@@ -1331,7 +1331,7 @@ gst_avimux_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }

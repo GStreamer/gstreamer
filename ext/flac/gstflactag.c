@@ -127,7 +127,8 @@ static void gst_flac_tag_init (GstFlacTag * tag);
 
 static void gst_flac_tag_chain (GstPad * pad, GstData * data);
 
-static GstElementStateReturn gst_flac_tag_change_state (GstElement * element);
+static GstStateChangeReturn gst_flac_tag_change_state (GstElement * element,
+    GstStateChange transition);
 
 
 static GstElementClass *parent_class = NULL;
@@ -553,24 +554,24 @@ gst_flac_tag_chain (GstPad * pad, GstData * data)
 }
 
 
-static GstElementStateReturn
-gst_flac_tag_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_flac_tag_change_state (GstElement * element, GstStateChange transition)
 {
   GstFlacTag *tag;
 
   tag = GST_FLAC_TAG (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       /* do something to get out of the chain function faster */
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (tag->buffer) {
         gst_buffer_unref (tag->buffer);
         tag->buffer = NULL;
@@ -584,9 +585,9 @@ gst_flac_tag_change_state (GstElement * element)
       }
       tag->state = GST_FLAC_TAG_STATE_INIT;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
   }
 
-  return parent_class->change_state (element);
+  return parent_class->change_state (element, transition);
 }

@@ -48,7 +48,8 @@ static void gst_flacdec_init (FlacDec * flacdec);
 static void gst_flacdec_finalize (GObject * object);
 
 static void gst_flacdec_loop (GstPad * pad);
-static GstElementStateReturn gst_flacdec_change_state (GstElement * element);
+static GstStateChangeReturn gst_flacdec_change_state (GstElement * element,
+    GstStateChange transition);
 static const GstQueryType *gst_flacdec_get_src_query_types (GstPad * pad);
 static gboolean gst_flacdec_src_query (GstPad * pad, GstQuery * query);
 static gboolean gst_flacdec_convert_src (GstPad * pad, GstFormat src_format,
@@ -766,13 +767,13 @@ gst_flacdec_sink_activate_pull (GstPad * sinkpad, gboolean active)
   return TRUE;
 }
 
-static GstElementStateReturn
-gst_flacdec_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_flacdec_change_state (GstElement * element, GstStateChange transition)
 {
   FlacDec *flacdec = GST_FLACDEC (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_PAUSED:
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       flacdec->seek_pending = FALSE;
       flacdec->total_samples = 0;
       flacdec->eos = FALSE;
@@ -781,7 +782,7 @@ gst_flacdec_change_state (GstElement * element)
         FLAC__seekable_stream_decoder_reset (flacdec->decoder);
       }
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       flacdec->eos = FALSE;
       break;
     default:
@@ -789,7 +790,7 @@ gst_flacdec_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }

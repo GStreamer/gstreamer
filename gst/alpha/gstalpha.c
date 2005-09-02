@@ -159,7 +159,8 @@ static void gst_alpha_get_property (GObject * object, guint prop_id,
 static gboolean gst_alpha_sink_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_alpha_chain (GstPad * pad, GstBuffer * buffer);
 
-static GstElementStateReturn gst_alpha_change_state (GstElement * element);
+static GstStateChangeReturn gst_alpha_change_state (GstElement * element,
+    GstStateChange transition);
 
 
 static GstElementClass *parent_class = NULL;
@@ -853,32 +854,32 @@ gst_alpha_chain (GstPad * pad, GstBuffer * buffer)
   return ret;
 }
 
-static GstElementStateReturn
-gst_alpha_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_alpha_change_state (GstElement * element, GstStateChange transition)
 {
   GstAlpha *alpha;
 
   alpha = GST_ALPHA (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_alpha_init_params (alpha);
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
   }
 
-  parent_class->change_state (element);
+  parent_class->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static gboolean

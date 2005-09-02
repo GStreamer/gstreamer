@@ -92,7 +92,8 @@ static void gst_dv1394src_set_property (GObject * object, guint prop_id,
 static void gst_dv1394src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn gst_dv1394src_change_state (GstElement * element);
+static GstStateChangeReturn gst_dv1394src_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstFlowReturn gst_dv1394src_create (GstPushSrc * psrc, GstBuffer ** buf);
 
@@ -557,18 +558,16 @@ gst_dv1394src_discover_avc_node (GstDV1394Src * src)
   return node;
 }
 
-static GstElementStateReturn
-gst_dv1394src_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_dv1394src_change_state (GstElement * element, GstStateChange transition)
 {
   GstDV1394Src *dv1394src;
-  gint transition;
-  GstElementStateReturn ret;
+  GstStateChangeReturn ret;
 
   dv1394src = GST_DV1394SRC (element);
-  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       /* create a handle */
       if ((dv1394src->handle = raw1394_new_handle ()) == NULL)
         goto no_handle;
@@ -599,7 +598,7 @@ gst_dv1394src_change_state (GstElement * element)
 
       GST_DEBUG_OBJECT (dv1394src, "successfully opened up 1394 connection");
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       if (raw1394_start_iso_rcv (dv1394src->handle, dv1394src->channel) < 0)
         goto cannot_start;
 
@@ -617,10 +616,10 @@ gst_dv1394src_change_state (GstElement * element)
   }
 
   /* if we haven't failed already, give the parent class a chance to ;-) */
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       /* we need to lock here as the _create function has to be completed.
        * The base source will not call the _create() function again. */
       GST_DV_LOCK (dv1394src);
@@ -635,10 +634,10 @@ gst_dv1394src_change_state (GstElement * element)
       }
       GST_DV_UNLOCK (dv1394src);
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       dv1394src->negotiated = FALSE;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       if (dv1394src->use_avc) {
         /* stop the VCR */
         avc1394_vcr_stop (dv1394src->handle, dv1394src->avc_node);
@@ -655,25 +654,25 @@ no_handle:
   {
     GST_ELEMENT_ERROR (dv1394src, RESOURCE, NOT_FOUND, (NULL),
         ("can't get raw1394 handle"));
-    return GST_STATE_FAILURE;
+    return GST_STATE_CHANGE_FAILURE;
   }
 no_ports:
   {
     GST_ELEMENT_ERROR (dv1394src, RESOURCE, NOT_FOUND, (NULL),
         ("no ports available for raw1394"));
-    return GST_STATE_FAILURE;
+    return GST_STATE_CHANGE_FAILURE;
   }
 cannot_set_port:
   {
     GST_ELEMENT_ERROR (dv1394src, RESOURCE, SETTINGS, (NULL),
         ("can't set 1394 port %d", dv1394src->port));
-    return GST_STATE_FAILURE;
+    return GST_STATE_CHANGE_FAILURE;
   }
 cannot_start:
   {
     GST_ELEMENT_ERROR (dv1394src, RESOURCE, READ, (NULL),
         ("can't start 1394 iso receive"));
-    return GST_STATE_FAILURE;
+    return GST_STATE_CHANGE_FAILURE;
   }
 }
 

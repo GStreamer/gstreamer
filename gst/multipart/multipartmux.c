@@ -121,7 +121,7 @@ static void gst_multipart_mux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_multipart_mux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static GstElementStateReturn gst_multipart_mux_change_state (GstElement *
+static GstStateChangeReturn gst_multipart_mux_change_state (GstElement *
     element);
 
 static GstElementClass *parent_class = NULL;
@@ -563,33 +563,33 @@ gst_multipart_mux_set_property (GObject * object,
   }
 }
 
-static GstElementStateReturn
-gst_multipart_mux_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_multipart_mux_change_state (GstElement * element, GstStateChange transition)
 {
   GstMultipartMux *multipart_mux;
-  gint transition = GST_STATE_TRANSITION (element);
 
-  g_return_val_if_fail (GST_IS_MULTIPART_MUX (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_MULTIPART_MUX (element),
+      GST_STATE_CHANGE_FAILURE);
 
   multipart_mux = GST_MULTIPART_MUX (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_NULL_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       multipart_mux->offset = 0;
       multipart_mux->negotiated = FALSE;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
-    case GST_STATE_PLAYING_TO_PAUSED:
-    case GST_STATE_PAUSED_TO_READY:
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 gboolean

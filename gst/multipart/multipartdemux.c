@@ -119,7 +119,7 @@ static void gst_multipart_demux_finalize (GObject * object);
 
 static void gst_multipart_demux_chain (GstPad * pad, GstData * buffer);
 
-static GstElementStateReturn gst_multipart_demux_change_state (GstElement *
+static GstStateChangeReturn gst_multipart_demux_change_state (GstElement *
     element);
 
 
@@ -336,36 +336,37 @@ gst_multipart_demux_chain (GstPad * pad, GstData * buffer)
   gst_buffer_unref (buffer);
 }
 
-static GstElementStateReturn
-gst_multipart_demux_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_multipart_demux_change_state (GstElement * element,
+    GstStateChange transition)
 {
   GstMultipartDemux *multipart;
 
   multipart = GST_MULTIPART_DEMUX (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       multipart->buffer = g_malloc (multipart->maxlen);
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       g_free (multipart->parsing_mime);
       multipart->parsing_mime = NULL;
       g_free (multipart->buffer);
       multipart->buffer = NULL;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;
   }
 
-  return parent_class->change_state (element);
+  return parent_class->change_state (element, transition);
 }
 
 gboolean

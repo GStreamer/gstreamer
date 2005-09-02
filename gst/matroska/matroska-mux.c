@@ -129,8 +129,8 @@ static GstPad *gst_matroska_mux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
 
 /* gst internal change state handler */
-static GstElementStateReturn
-gst_matroska_mux_change_state (GstElement * element);
+static GstStateChangeReturn
+gst_matroska_mux_change_state (GstElement * element, GstStateChange transition);
 
 /* gobject bla bla */
 static void gst_matroska_mux_set_property (GObject * object,
@@ -1157,13 +1157,13 @@ gst_matroska_mux_loop (GstElement * element)
   gst_matroska_mux_write_data (mux);
 }
 
-static GstElementStateReturn
-gst_matroska_mux_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_matroska_mux_change_state (GstElement * element, GstStateChange transition)
 {
   GstMatroskaMux *mux = GST_MATROSKA_MUX (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_matroska_mux_reset (GST_ELEMENT (mux));
       break;
     default:
@@ -1171,9 +1171,10 @@ gst_matroska_mux_change_state (GstElement * element)
   }
 
   if (((GstElementClass *) parent_class)->change_state)
-    return ((GstElementClass *) parent_class)->change_state (element);
+    return ((GstElementClass *) parent_class)->change_state (element,
+        transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static void

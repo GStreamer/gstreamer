@@ -67,7 +67,8 @@ static void gst_dynudpsink_get_times (GstBaseSink * sink, GstBuffer * buffer,
 static GstFlowReturn gst_dynudpsink_render (GstBaseSink * sink,
     GstBuffer * buffer);
 static void gst_dynudpsink_close (GstDynUDPSink * sink);
-static GstElementStateReturn gst_dynudpsink_change_state (GstElement * element);
+static GstStateChangeReturn gst_dynudpsink_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void gst_dynudpsink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -296,18 +297,16 @@ gst_dynudpsink_close (GstDynUDPSink * sink)
   close (sink->sock);
 }
 
-static GstElementStateReturn
-gst_dynudpsink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_dynudpsink_change_state (GstElement * element, GstStateChange transition)
 {
-  GstElementStateReturn ret;
+  GstStateChangeReturn ret;
   GstDynUDPSink *sink;
-  gint transition;
 
   sink = GST_DYNUDPSINK (element);
-  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!gst_dynudpsink_init_send (sink))
         goto no_init;
       break;
@@ -315,10 +314,10 @@ gst_dynudpsink_change_state (GstElement * element)
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_dynudpsink_close (sink);
       break;
     default:
@@ -329,6 +328,6 @@ gst_dynudpsink_change_state (GstElement * element)
   /* ERRORS */
 no_init:
   {
-    return GST_STATE_FAILURE;
+    return GST_STATE_CHANGE_FAILURE;
   }
 }

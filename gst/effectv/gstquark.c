@@ -88,7 +88,8 @@ static void gst_quarktv_base_init (gpointer g_class);
 static void gst_quarktv_class_init (GstQuarkTVClass * klass);
 static void gst_quarktv_init (GstQuarkTV * filter);
 
-static GstElementStateReturn gst_quarktv_change_state (GstElement * element);
+static GstStateChangeReturn gst_quarktv_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void gst_quarktv_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -281,13 +282,13 @@ no_buffer:
   }
 }
 
-static GstElementStateReturn
-gst_quarktv_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_quarktv_change_state (GstElement * element, GstStateChange transition)
 {
   GstQuarkTV *filter = GST_QUARKTV (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
     {
       gint i;
 
@@ -300,7 +301,7 @@ gst_quarktv_change_state (GstElement * element)
       filter->planetable = NULL;
       break;
     }
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
     {
       filter->planetable =
           (GstBuffer **) g_malloc (filter->planes * sizeof (GstBuffer *));
@@ -311,7 +312,7 @@ gst_quarktv_change_state (GstElement * element)
       break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 }
 
 

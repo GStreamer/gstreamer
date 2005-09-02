@@ -42,7 +42,7 @@ static void gst_osxaudiosink_class_init (GstOsxAudioSinkClass * klass);
 static void gst_osxaudiosink_init (GstOsxAudioSink * osxaudiosink);
 static void gst_osxaudiosink_dispose (GObject * object);
 
-static GstElementStateReturn gst_osxaudiosink_change_state (GstElement *
+static GstStateChangeReturn gst_osxaudiosink_change_state (GstElement *
     element);
 
 static void gst_osxaudiosink_chain (GstPad * pad, GstData * _data);
@@ -191,39 +191,39 @@ gst_osxaudiosink_chain (GstPad * pad, GstData * _data)
   gst_buffer_unref (buf);
 }
 
-static GstElementStateReturn
-gst_osxaudiosink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_osxaudiosink_change_state (GstElement * element, GstStateChange transition)
 {
   GstOsxAudioSink *osxaudiosink;
   OSErr status;
 
   osxaudiosink = GST_OSXAUDIOSINK (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_PAUSED:
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       status =
           AudioDeviceStart (GST_OSXAUDIOELEMENT (osxaudiosink)->device_id,
           outputAudioDeviceIOProc);
       if (status)
         GST_DEBUG ("AudioDeviceStart returned %d\n", (int) status);
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       status =
           AudioDeviceStop (GST_OSXAUDIOELEMENT (osxaudiosink)->device_id,
           outputAudioDeviceIOProc);
       if (status)
         GST_DEBUG ("AudioDeviceStop returned %d\n", (int) status);
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
     default:
       break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }

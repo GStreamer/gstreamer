@@ -103,7 +103,8 @@ GST_START_TEST (test_int16)
   g_object_set (level, "message", TRUE, "interval", 0.1, NULL);
 
   fail_unless (gst_element_set_state (level,
-          GST_STATE_PLAYING) == GST_STATE_SUCCESS, "could not set to playing");
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
 
   /* create a fake 0.1 sec buffer with a half-amplitude block signal */
   inbuffer = gst_buffer_new_and_alloc (400);

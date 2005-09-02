@@ -68,7 +68,8 @@ static void gst_rtpmpadec_set_property (GObject * object, guint prop_id,
 static void gst_rtpmpadec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn gst_rtpmpadec_change_state (GstElement * element);
+static GstStateChangeReturn gst_rtpmpadec_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -236,27 +237,25 @@ gst_rtpmpadec_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstElementStateReturn
-gst_rtpmpadec_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_rtpmpadec_change_state (GstElement * element, GstStateChange transition)
 {
   GstRtpMPADec *rtpmpadec;
-  gint transition;
-  GstElementStateReturn ret;
+  GstStateChangeReturn ret;
 
   rtpmpadec = GST_RTP_MPA_DEC (element);
-  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     default:
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;

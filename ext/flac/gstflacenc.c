@@ -78,7 +78,8 @@ static void gst_flacenc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_flacenc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static GstElementStateReturn gst_flacenc_change_state (GstElement * element);
+static GstStateChangeReturn gst_flacenc_change_state (GstElement * element,
+    GstStateChange transition);
 
 static FLAC__StreamEncoderWriteStatus
 gst_flacenc_write_callback (const FLAC__SeekableStreamEncoder * encoder,
@@ -778,21 +779,21 @@ gst_flacenc_get_property (GObject * object, guint prop_id,
   }
 }
 
-static GstElementStateReturn
-gst_flacenc_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_flacenc_change_state (GstElement * element, GstStateChange transition)
 {
   FlacEnc *flacenc = GST_FLACENC (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
-    case GST_STATE_READY_TO_PAUSED:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       flacenc->first = TRUE;
       flacenc->stopped = FALSE;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (FLAC__seekable_stream_encoder_get_state (flacenc->encoder) !=
           FLAC__STREAM_ENCODER_UNINITIALIZED) {
         flacenc->stopped = TRUE;
@@ -811,13 +812,13 @@ gst_flacenc_change_state (GstElement * element)
         flacenc->meta = NULL;
       }
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
     default:
       break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }

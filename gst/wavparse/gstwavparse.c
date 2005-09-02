@@ -42,7 +42,8 @@ static void gst_wavparse_init (GstWavParse * wavparse);
 static gboolean gst_wavparse_sink_activate (GstPad * sinkpad);
 static gboolean gst_wavparse_sink_activate_pull (GstPad * sinkpad,
     gboolean active);
-static GstElementStateReturn gst_wavparse_change_state (GstElement * element);
+static GstStateChangeReturn gst_wavparse_change_state (GstElement * element,
+    GstStateChange transition);
 
 static gboolean gst_wavparse_pad_query (GstPad * pad, GstQuery * query);
 static const GstQueryType *gst_wavparse_get_query_types (GstPad * pad);
@@ -1181,38 +1182,38 @@ gst_wavparse_sink_activate_pull (GstPad * sinkpad, gboolean active)
   return TRUE;
 };
 
-static GstElementStateReturn
-gst_wavparse_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_wavparse_change_state (GstElement * element, GstStateChange transition)
 {
   GstWavParse *wav = GST_WAVPARSE (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
 
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       wav->state = GST_WAVPARSE_START;
       break;
 
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
 
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
 
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_wavparse_destroy_sourcepad (wav);
       gst_wavparse_reset (wav);
       break;
 
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static gboolean

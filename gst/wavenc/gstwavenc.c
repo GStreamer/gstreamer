@@ -122,13 +122,13 @@ gst_wavenc_get_type (void)
   return type;
 }
 
-static GstElementStateReturn
-gst_wavenc_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_wavenc_change_state (GstElement * element, GstStateChange transition)
 {
   GstWavEnc *wavenc = GST_WAVENC (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       wavenc->setup = FALSE;
       wavenc->flush_header = TRUE;
       break;
@@ -137,10 +137,10 @@ gst_wavenc_change_state (GstElement * element)
   }
 
   if (parent_class->change_state) {
-    return parent_class->change_state (element);
+    return parent_class->change_state (element, transition);
   }
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static void

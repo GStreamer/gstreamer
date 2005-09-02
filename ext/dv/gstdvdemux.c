@@ -130,7 +130,8 @@ static GstFlowReturn gst_dvdemux_flush (GstDVDemux * dvdemux);
 static GstFlowReturn gst_dvdemux_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_dvdemux_handle_sink_event (GstPad * pad, GstEvent * event);
 
-static GstElementStateReturn gst_dvdemux_change_state (GstElement * element);
+static GstStateChangeReturn gst_dvdemux_change_state (GstElement * element,
+    GstStateChange transition);
 
 
 static void
@@ -955,21 +956,19 @@ gst_dvdemux_chain (GstPad * pad, GstBuffer * buffer)
   return ret;
 }
 
-static GstElementStateReturn
-gst_dvdemux_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_dvdemux_change_state (GstElement * element, GstStateChange transition)
 {
   GstDVDemux *dvdemux = GST_DVDEMUX (element);
-  GstElementStateReturn ret;
-  gint transition;
+  GstStateChangeReturn ret;
 
-  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (!dvdemux->videosrcpad)
         gst_dvdemux_add_pads (dvdemux);
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       dvdemux->decoder = dv_decoder_new (0, FALSE, FALSE);
       dvdemux->audio_offset = 0;
       dvdemux->video_offset = 0;
@@ -977,23 +976,23 @@ gst_dvdemux_change_state (GstElement * element)
       dvdemux->found_header = FALSE;
       dvdemux->frame_len = -1;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     default:
       break;
   }
 
-  ret = parent_class->change_state (element);
+  ret = parent_class->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_adapter_clear (dvdemux->adapter);
       dv_decoder_free (dvdemux->decoder);
       dvdemux->decoder = NULL;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;

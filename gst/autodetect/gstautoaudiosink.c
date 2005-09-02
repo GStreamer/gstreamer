@@ -26,8 +26,9 @@
 #include "gstautoaudiosink.h"
 #include "gstautodetect.h"
 
-static GstElementStateReturn
-gst_auto_audio_sink_change_state (GstElement * element);
+static GstStateChangeReturn
+gst_auto_audio_sink_change_state (GstElement * element,
+    GstStateChange transition);
 
 GST_BOILERPLATE (GstAutoAudioSink, gst_auto_audio_sink, GstBin, GST_TYPE_BIN);
 
@@ -170,7 +171,8 @@ gst_auto_audio_sink_find_best (GstAutoAudioSink * sink)
             }
           }
           GST_LOG ("Testing %s", GST_PLUGIN_FEATURE (f)->name);
-          if (gst_element_set_state (el, GST_STATE_READY) == GST_STATE_SUCCESS) {
+          if (gst_element_set_state (el,
+                  GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS) {
             gst_element_set_state (el, GST_STATE_NULL);
             GST_LOG ("This worked!");
             choice = el;
@@ -225,25 +227,25 @@ gst_auto_audio_sink_detect (GstAutoAudioSink * sink)
   return TRUE;
 }
 
-static GstElementStateReturn
-gst_auto_audio_sink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_auto_audio_sink_change_state (GstElement * element,
+    GstStateChange transition)
 {
   GstAutoAudioSink *sink = GST_AUTO_AUDIO_SINK (element);
 
-  GST_DEBUG_OBJECT (element, "Change state 0x%x",
-      GST_STATE_TRANSITION (element));
+  GST_DEBUG_OBJECT (element, "Change state 0x%x", transition);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (!gst_auto_audio_sink_detect (sink))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       gst_auto_audio_sink_reset (sink);
       break;
     default:
       break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 }

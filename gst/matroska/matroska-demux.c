@@ -77,8 +77,9 @@ static gboolean gst_matroska_demux_handle_src_query (GstPad * pad,
     GstQueryType type, GstFormat * format, gint64 * value);
 
 /* gst internal change state handler */
-static GstElementStateReturn
-gst_matroska_demux_change_state (GstElement * element);
+static GstStateChangeReturn
+gst_matroska_demux_change_state (GstElement * element,
+    GstStateChange transition);
 static void gst_matroska_demux_set_clock (GstElement * element,
     GstClock * clock);
 
@@ -2864,13 +2865,14 @@ gst_matroska_demux_subtitle_caps (GstMatroskaTrackSubtitleContext *
   return caps;
 }
 
-static GstElementStateReturn
-gst_matroska_demux_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_matroska_demux_change_state (GstElement * element,
+    GstStateChange transition)
 {
   GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_matroska_demux_reset (GST_ELEMENT (demux));
       break;
     default:
@@ -2878,9 +2880,10 @@ gst_matroska_demux_change_state (GstElement * element)
   }
 
   if (((GstElementClass *) parent_class)->change_state)
-    return ((GstElementClass *) parent_class)->change_state (element);
+    return ((GstElementClass *) parent_class)->change_state (element,
+        transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 gboolean

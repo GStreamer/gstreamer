@@ -84,7 +84,7 @@ GST_BOILERPLATE (GstBreakMyData, gst_break_my_data, GstElement,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
      static void gst_break_my_data_chain (GstPad * pad, GstData * _data);
-     static GstElementStateReturn gst_break_my_data_change_state (GstElement *
+     static GstStateChangeReturn gst_break_my_data_change_state (GstElement *
     element);
 
      static void gst_break_my_data_base_init (gpointer g_class)
@@ -231,17 +231,17 @@ gst_break_my_data_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstElementStateReturn
-gst_break_my_data_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_break_my_data_change_state (GstElement * element, GstStateChange transition)
 {
   GstBreakMyData *bmd = GST_BREAK_MY_DATA (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_PAUSED:
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       bmd->rand = g_rand_new_with_seed (bmd->seed);
       bmd->skipped = 0;
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       g_rand_free (bmd->rand);
       break;
     default:
@@ -249,7 +249,7 @@ gst_break_my_data_change_state (GstElement * element)
   }
 
   return GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS, change_state,
-      (element), GST_STATE_SUCCESS);
+      (element), GST_STATE_CHANGE_SUCCESS);
 }
 
 gboolean

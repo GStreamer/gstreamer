@@ -38,8 +38,8 @@ GST_BOILERPLATE_WITH_INTERFACE (GstOssMixerElement, gst_oss_mixer_element,
 
 GST_IMPLEMENT_OSS_MIXER_METHODS (GstOssMixerElement, gst_oss_mixer_element);
 
-static GstElementStateReturn gst_oss_mixer_element_change_state (GstElement *
-    element);
+static GstStateChangeReturn gst_oss_mixer_element_change_state (GstElement *
+    element, GstStateChange transition);
 
 static void
 gst_oss_mixer_element_base_init (gpointer klass)
@@ -65,18 +65,19 @@ gst_oss_mixer_element_init (GstOssMixerElement * this,
   this->mixer = NULL;
 }
 
-static GstElementStateReturn
-gst_oss_mixer_element_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_oss_mixer_element_change_state (GstElement * element,
+    GstStateChange transition)
 {
   GstOssMixerElement *this = GST_OSS_MIXER_ELEMENT (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (!this->mixer) {
         this->mixer = gst_ossmixer_new ("/dev/mixer", GST_OSS_MIXER_ALL);
       }
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       if (this->mixer) {
         gst_ossmixer_free (this->mixer);
         this->mixer = NULL;
@@ -87,7 +88,7 @@ gst_oss_mixer_element_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
