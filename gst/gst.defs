@@ -1038,10 +1038,10 @@
 (define-method get_state
   (of-object "GstElement")
   (c-name "gst_element_get_state")
-  (return-type "GstElementStateReturn")
+  (return-type "GstStateChangeReturn")
   (parameters
-    '("GstElementState*" "state")
-    '("GstElementState*" "pending")
+    '("GstState*" "state")
+    '("GstState*" "pending")
     '("GTimeVal*" "timeout")
   )
 )
@@ -1049,9 +1049,9 @@
 (define-method set_state
   (of-object "GstElement")
   (c-name "gst_element_set_state")
-  (return-type "GstElementStateReturn")
+  (return-type "GstStateChangeReturn")
   (parameters
-    '("GstElementState" "state")
+    '("GstState" "state")
   )
 )
 
@@ -1102,17 +1102,20 @@
 
 (define-virtual get_state
   (of-object "GstElement")
-  (return-type "GstElementStateReturn")
+  (return-type "GstStateChangeReturn")
   (parameters
-   '("GstElementState*" "state")
-   '("GstElementState*" "pending")
+   '("GstState*" "state")
+   '("GstState*" "pending")
    '("GTimeVal*" "timeout")
   )
 )
 
 (define-virtual change_state
   (of-object "GstElement")
-  (return-type "GstElementStateReturn")
+  (return-type "GstStateChangeReturn")
+  (parameters
+    '("GstStateChange" "transition")
+  )
 )
 
 (define-virtual request_new_pad
@@ -2544,8 +2547,8 @@
   (return-type "GstMessage*")
   (parameters
     '("GstObject*" "src")
-    '("GstElementState" "old_state")
-    '("GstElementState" "new_state")
+    '("GstState" "old_state")
+    '("GstState" "new_state")
   )
 )
 
@@ -2611,8 +2614,8 @@
   (c-name "gst_message_parse_state_changed")
   (return-type "none")
   (parameters
-    '("GstElementState*" "old_state")
-    '("GstElementState*" "new_state")
+    '("GstState*" "old_state")
+    '("GstState*" "new_state")
   )
 )
 
@@ -5635,7 +5638,7 @@
 )
 
 (define-method get_name
-  (of-object "GstElementState")
+  (of-object "GstState")
   (c-name "gst_element_state_get_name")
   (return-type "const-gchar*")
 )
@@ -5643,7 +5646,7 @@
 (define-function element_state_get_name
   (c-name "gst_element_state_get_name")
   (parameters
-    '("GstElementState" "state")
+    '("GstState" "state")
   )
   (return-type "const-gchar*")
 )

@@ -874,10 +874,10 @@
   )
 )
 
-(define-flags ElementState
+(define-enum State
   (in-module "Gst")
-  (c-name "GstElementState")
-  (gtype-id "GST_TYPE_ELEMENT_STATE")
+  (c-name "GstState")
+  (gtype-id "GST_TYPE_STATE")
   (values
     '("void-pending" "GST_STATE_VOID_PENDING")
     '("null" "GST_STATE_NULL")
@@ -887,15 +887,29 @@
   )
 )
 
-(define-enum ElementStateReturn
+(define-enum StateChangeReturn
   (in-module "Gst")
-  (c-name "GstElementStateReturn")
-  (gtype-id "GST_TYPE_ELEMENT_STATE_RETURN")
+  (c-name "GstStateChangeReturn")
+  (gtype-id "GST_TYPE_STATE_CHANGE_RETURN")
   (values
-    '("failure" "GST_STATE_FAILURE")
-    '("success" "GST_STATE_SUCCESS")
-    '("async" "GST_STATE_ASYNC")
-    '("no-preroll" "GST_STATE_NO_PREROLL")
+    '("failure" "GST_STATE_CHANGE_FAILURE")
+    '("success" "GST_STATE_CHANGE_SUCCESS")
+    '("async" "GST_STATE_CHANGE_ASYNC")
+    '("no-preroll" "GST_STATE_CHANGE_NO_PREROLL")
+  )
+)
+
+(define-enum StateChange
+  (in-module "Gst")
+  (c-name "GstStateChange")
+  (gtype-id "GST_TYPE_STATE_CHANGE")
+  (values
+    '("null-to-ready" "GST_STATE_CHANGE_NULL_TO_READY")
+    '("ready-to-paused" "GST_STATE_CHANGE_READY_TO_PAUSED")
+    '("paused-to-playing" "GST_STATE_CHANGE_PAUSED_TO_PLAYING")
+    '("playing-to-paused" "GST_STATE_CHANGE_PLAYING_TO_PAUSED")
+    '("paused-to-ready" "GST_STATE_CHANGE_PAUSED_TO_READY")
+    '("ready-to-null" "GST_STATE_CHANGE_READY_TO_NULL")
   )
 )
 

@@ -25,8 +25,8 @@ override gst_message_parse_state_changed noargs
 static PyObject *
 _wrap_gst_message_parse_state_changed (PyGstMiniObject *self)
 {
-  GstElementState	old;
-  GstElementState	new;
+  GstState	old;
+  GstState	new;
   PyObject		*ret;
 
   /* Should raise an exception if it's not a state-changed message */
@@ -37,8 +37,8 @@ _wrap_gst_message_parse_state_changed (PyGstMiniObject *self)
   gst_message_parse_state_changed (GST_MESSAGE(self->obj), &old, &new);
   /* Return this as a tuple */
   ret = PyList_New(2);
-  PyList_SET_ITEM(ret, 0, pyg_flags_from_gtype(GST_TYPE_ELEMENT_STATE, old));
-  PyList_SET_ITEM(ret, 1, pyg_flags_from_gtype(GST_TYPE_ELEMENT_STATE, new));
+  PyList_SET_ITEM(ret, 0, pyg_enum_from_gtype(GST_TYPE_STATE, old));
+  PyList_SET_ITEM(ret, 1, pyg_enum_from_gtype(GST_TYPE_STATE, new));
   return ret;
 }
 %%
@@ -242,14 +242,14 @@ _wrap_gst_message_new_state_changed(PyObject *self, PyObject *args, PyObject *kw
     static char *kwlist[] = { "src", "old_state", "new_state", NULL };
     PyGObject *src;
     PyObject *py_old_state = NULL, *py_new_state = NULL;
-    GstElementState old_state, new_state;
+    GstState old_state, new_state;
     GstMessage *ret;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!OO:message_new_state_changed", kwlist, &PyGstObject_Type, &src, &py_old_state, &py_new_state))
         return NULL;
-    if (pyg_flags_get_value(GST_TYPE_ELEMENT_STATE, py_old_state, (gint *)&old_state))
+    if (pyg_enum_get_value(GST_TYPE_STATE, py_old_state, (gint *)&old_state))
         return NULL;
-    if (pyg_flags_get_value(GST_TYPE_ELEMENT_STATE, py_new_state, (gint *)&new_state))
+    if (pyg_enum_get_value(GST_TYPE_STATE, py_new_state, (gint *)&new_state))
         return NULL;
     ret = gst_message_new_state_changed(GST_OBJECT(src->obj), old_state, new_state);
     /* pygobject_new handles NULL checking */

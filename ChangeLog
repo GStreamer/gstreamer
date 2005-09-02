@@ -1,3 +1,9 @@
+2005-09-02  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstmessage.override: 
+	* gst/gst-types.defs (State, StateChangeReturn, StateChange):
+	* gst/gst.defs (change_state): Update for core changes.
+
 2005-09-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gst.defs:

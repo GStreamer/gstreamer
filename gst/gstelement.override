@@ -92,12 +92,12 @@ _wrap_gst_element_set_state(PyGObject *self, PyObject *args, PyObject *kwargs)
 {
 	static char *kwlist[] = { "state", NULL };
 	PyObject *py_state = NULL;
-	GstElementState state;
+	GstState state;
 	gint ret;
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:GstElement.set_state", kwlist, &py_state))
 		return NULL;
-	if (pyg_flags_get_value(GST_TYPE_ELEMENT_STATE, py_state, (gint *)&state))
+	if (pyg_enum_get_value(GST_TYPE_STATE, py_state, (gint *)&state))
 		return NULL;
 
 	pyg_begin_allow_threads;
@@ -113,8 +113,8 @@ override gst_element_get_state kwargs
 static PyObject *
 _wrap_gst_element_get_state(PyGObject *self, PyObject *args, PyObject *kwargs)
 {
-    GstElementState state;
-    GstElementStateReturn	ret;
+    GstState state;
+    GstStateChangeReturn	ret;
 
 	/* Only returns the state for the time being */
     ret = gst_element_get_state(GST_ELEMENT (self->obj), &state, NULL, NULL);
@@ -122,7 +122,7 @@ _wrap_gst_element_get_state(PyGObject *self, PyObject *args, PyObject *kwargs)
 	PyErr_SetString(PyExc_RuntimeError, "Element is in an error state");
 	return NULL;
     }
-    return pyg_flags_from_gtype(GST_TYPE_ELEMENT_STATE, state);
+    return pyg_enum_from_gtype(GST_TYPE_STATE, state);
 }
 %%
 /* override gst_element_query kwargs */
