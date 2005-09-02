@@ -10,6 +10,8 @@ EXTRA_DIST = \
 	gst-python.spec \
 	RELEASE
 
+BUILT_SOURCES = pygst.py
+
 include $(top_srcdir)/common/release.mak
 
 pygst.py: $(top_srcdir)/pygst.py.in Makefile
