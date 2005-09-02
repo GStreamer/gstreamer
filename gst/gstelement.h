@@ -98,7 +98,7 @@ _gst_element_get_state_change (GstElement *e)
 #endif
 
 /* FIXME: How to deal with lost_state ? */
-typedef enum 
+typedef enum /*< flags=0 >*/
 {
   GST_STATE_CHANGE_NULL_TO_READY	= 1<<(GST_STATE_NULL+8) | 1<<GST_STATE_READY,
   GST_STATE_CHANGE_READY_TO_PAUSED	= 1<<(GST_STATE_READY+8) | 1<<GST_STATE_PAUSED,
