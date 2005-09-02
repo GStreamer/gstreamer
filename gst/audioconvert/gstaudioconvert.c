@@ -115,13 +115,6 @@ GST_STATIC_CAPS ( \
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, 8 ], " \
     "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
-    "width = (int) 24, " \
-    "depth = (int) [ 1, 24 ], " \
-    "signed = (boolean) { true, false }; " \
-  "audio/x-raw-int, " \
-    "rate = (int) [ 1, MAX ], " \
-    "channels = (int) [ 1, 8 ], " \
-    "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
     "width = (int) 16, " \
     "depth = (int) [ 1, 16 ], " \
     "signed = (boolean) { true, false }; " \
@@ -134,6 +127,15 @@ GST_STATIC_CAPS ( \
     "signed = (boolean) { true, false } " \
 )
 
+/* FIXME: put back 24 bit audio */
+#if 0
+"audio/x-raw-int, "
+    "rate = (int) [ 1, MAX ], "
+    "channels = (int) [ 1, 8 ], "
+    "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, "
+    "width = (int) 24, "
+    "depth = (int) [ 1, 24 ], " "signed = (boolean) { true, false }; "
+#endif
 static GstAudioChannelPosition *supported_positions;
 
 static GstStaticCaps gst_audio_convert_static_caps = STATIC_CAPS;
