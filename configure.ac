@@ -12,12 +12,13 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins-base, GST_PLUGINS_VERSION, 0, 9, 1, 1, GST_CVS="no", GST_CVS="yes")
+AS_VERSION(gst-plugins-base, GST_PLUGINS_BASE_VERSION, 0, 9, 1, 1,
+    GST_CVS="no", GST_CVS="yes")
 
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 
 dnl our libraries and install dirs use major.minor as a version
-GST_MAJORMINOR=$GST_PLUGINS_VERSION_MAJOR.$GST_PLUGINS_VERSION_MINOR
+GST_MAJORMINOR=$GST_PLUGINS_BASE_VERSION_MAJOR.$GST_PLUGINS_BASE_VERSION_MINOR
 dnl we override it here if we need to for the release candidate of new series
 GST_MAJORMINOR=0.9
 AC_SUBST(GST_MAJORMINOR)
@@ -178,31 +179,6 @@ GST_DOC()
 dnl check architecture
 GST_ARCH()
 
-dnl check for gconftool-2
-
-dnl this macro defines an am conditional, so it needs to be run always
-AM_GCONF_SOURCE_2
-
-translit(dnm, m, l) AM_CONDITIONAL(USE_GCONFTOOL, true)
-GST_CHECK_FEATURE(GCONFTOOL, [GConf schemas], , [
-  AC_PATH_PROG(GCONFTOOL, gconftool-2, no)
-  if test x$GCONFTOOL = xno; then
-    AC_MSG_WARN(Not installing GConf schemas)
-    HAVE_GCONFTOOL="no"
-  else
-    HAVE_GCONFTOOL="yes"
-  fi
-  AC_SUBST(HAVE_GCONFTOOL)
-])
-
-dnl check for GConf libraries
-translit(dnm, m, l) AM_CONDITIONAL(USE_GCONF, true)
-GST_CHECK_FEATURE(GCONF, [GConf libraries], , [
-  PKG_CHECK_MODULES(GCONF, gconf-2.0, HAVE_GCONF="yes", HAVE_GCONF="no")
-  AC_SUBST(GCONF_CFLAGS)
-  AC_SUBST(GCONF_LIBS)
-])
-
 dnl check for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
 GST_REQ=0.9.0
@@ -283,8 +259,6 @@ if test "x$HAVE_GTK_22" = "xyes"; then
   GTK_VERSION=`$PKG_CONFIG --variable=gtk_binary_version gtk+-2.0`
   AC_SUBST(GTK_VERSION)
   GTK_PREFIX=`$PKG_CONFIG --variable=prefix gdk-pixbuf-2.0`
-  GDK_PIXBUF_LIBDIR=`$PKG_CONFIG --variable=libdir gdk-pixbuf-2.0`
-  GDK_PIXBUF_PREFIXDIR=`$PKG_CONFIG --variable=prefix gdk-pixbuf-2.0`
   AC_SUBST(GTK_BASE_DIR)
 else
   PKG_CHECK_MODULES(GTK2, gtk+-2.0, HAVE_GTK_20=yes, HAVE_GTK_20=no)
@@ -297,71 +271,6 @@ GTK_LIBS=$GTK2_LIBS
 AC_SUBST(GTK_LIBS)
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(HAVE_GTK)
-
-# gdk_pixbuf gstreamer loader is considered experimental, so disable
-# by default
-if test "x$HAVE_GTK_22" = "xyes"; then
-  HAVE_GDK_LOADERS=yes
-else
-  HAVE_GDK_LOADERS=no
-fi
-
-# we set the defaults always to make sure we have non-empty variables
-# for the Makefile
-
-# by default, stick to prefix
-GDK_PIXBUF_LOADER_DIR=${libdir}/gtk-2.0/\${GTK_VERSION}/loaders
-GDK_PIXBUF_CONF_DIR=${sysconfdir}/gtk-2.0
-
-
-AC_ARG_ENABLE(gdk-pixbuf-loader,
-  AC_HELP_STRING([--enable-gdk-pixbuf-loader],
-              [whether to enable building of gdk_pixbuf loader]),
-              :, HAVE_GDK_LOADERS="no")
-
-if test "x$HAVE_GDK_LOADERS" = "xyes"; then
-  AC_PATH_PROG(QUERYLOADERS, gdk-pixbuf-query-loaders, no)
-  # allow customization of pixbuf loader install location
-  # when nothing specified, adhere to prefix settings
-  # when called without any option with this argument, autodetect
-  # when called with a path, set to the given path
-
-  AC_ARG_WITH(gdk-pixbuf-loader-dir, 
-     AC_HELP_STRING([--with-gdk-pixbuf-loader-dir],
-     	[directory to install the gdk_pixbuf loader (none for pkg-config default)]),
-     [
-      if test "x${withval}" != xyes ; then
-     	GDK_PIXBUF_LOADER_DIR="${withval}"
-      else
-        GDK_PIXBUF_LOADER_DIR="$GDK_PIXBUF_LIBDIR/gtk-2.0/\$GTK_VERSION/loaders"
-      fi
-     ]
-  )
-  AS_AC_EXPAND(GDK_PIXBUF_LOADER_DIR, $GDK_PIXBUF_LOADER_DIR)
-  AC_SUBST(GDK_PIXBUF_LOADER_DIR)
-  AC_MSG_NOTICE([Putting GTK+-2 pixbuf loaders in $GDK_PIXBUF_LOADER_DIR])
-  
-  # allow customization of pixbuf loader configuration file
-  # when nothing specified, adhere to prefix settings
-  # when called without any option with this argument, autodetect
-  # when called with a path, set to the given path
-
-  AC_ARG_WITH(gdk-pixbuf-conf-dir, 
-     AC_HELP_STRING([--with-gdk-pixbuf-conf-dir],
-     	[directory to install the gdk_pixbuf config (none for pkg-config default)]),
-     [
-      if test "x${withval}" != xyes ; then
-        GDK_PIXBUF_CONF_DIR="${withval}"
-      else
-        GDK_PIXBUF_CONF_DIR="$GDK_PIXBUF_PREFIXDIR/etc/gtk-2.0/"
-      fi
-     ]
-  )
-  AS_AC_EXPAND(GDK_PIXBUF_CONF_DIR, $GDK_PIXBUF_CONF_DIR)
-  AC_SUBST(GDK_PIXBUF_CONF_DIR)
-  AC_MSG_NOTICE([Putting GTK+-2 pixbuf loader config in $GDK_PIXBUF_CONF_DIR])
-fi
-AM_CONDITIONAL(HAVE_GDK_LOADERS, test "x$HAVE_GDK_LOADERS" = "xyes")
 
 PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.2, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
 AC_SUBST(LIBOIL_CFLAGS)
@@ -945,8 +854,6 @@ gst-libs/ext/Makefile
 examples/seeking/Makefile
 examples/Makefile
 tools/Makefile
-gconf/Makefile
-gconf/gstreamer.schemas
 pkgconfig/Makefile
 pkgconfig/gstreamer-plugins-base.pc
 pkgconfig/gstreamer-plugins-base-uninstalled.pc

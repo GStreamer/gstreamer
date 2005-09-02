@@ -1,43 +1,30 @@
-# This SPEC file is created in a way that tries to solve various demands. 
-# First of all it tries to create packages that will easily replace both the 
-# Fedora Core default packages and also replace the extra rpms provided 
-# by Fedora.us or freshrpms.net.
-# At the same time they will only include plugins for which you have the needed
-# packages installed at the time you run autogen.sh. This means that if you
-# are not careful you might end up with less plugins than what the standard 
-# packages provide, which in turn means things might stop working for you. 
-# So make sure you have an idea of what you do before creating RPMS using this 
-# SPEC file.
+%define majorminor  @GST_MAJORMINOR@
+%define gstreamer   gstreamer09
+%define gstregister %{_bindir}/gst-register-%{majorminor}
+%define register    %{gstregister} > /dev/null 2>&1 || :
 
-%define         register        %{_bindir}/gst-register-%{majorminor} > /dev/null 2>&1 || :
-%define         gst_minver      0.7.6
-%define         gstp_minver     0.7.6
+%define gst_minver  0.9.1
 
-Name: 		gstreamer-plugins-base
+Name: 		%{gstreamer}-plugins-base
 Version: 	@VERSION@
-Release: 	@GST_PLUGINS_VERSION_RELEASE@
-Summary: 	GStreamer Streaming-media framework plug-ins.
-
-%define 	majorminor	@GST_MAJORMINOR@
+Release: 	@GST_PLUGINS_BASE_VERSION_RELEASE@.gst
+Summary: 	GStreamer streaming media framework plug-ins
 
 Group: 		Applications/Multimedia
 License: 	LGPL
-URL:		http://gstreamer.net/
-Vendor:         GStreamer Backpackers Team <package@gstreamer.net>
+URL:		http://gstreamer.freedesktop.org/
+Vendor:         GStreamer Backpackers Team <package@gstreamer.freedesktop.org>
 Source:         http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-%{version}.tar.gz
-BuildRoot: 	%{_tmppath}/%{name}-%{version}-root
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-%define         _glib2          @GLIB2_REQ@
+Requires: 	  %{gstreamer} >= %{gst_minver}
+BuildRequires: 	  %{gstreamer}-devel >= %{gst_minver}
+Requires(post):   %{gstregister}
+Requires(postun): %{gstregister}
 
-Requires:       glib2 >= %_glib2
-BuildRequires:  glib2-devel >= %_glib2
-Requires: 	gstreamer09 >= %{gst_minver}
-BuildRequires: 	gstreamer09-devel >= %{gst_minver}
 BuildRequires:  gcc-c++
 BuildRequires:  XFree86-devel
 
-@USE_GCONF_TRUE@Requires: 	GConf2
-@USE_GCONF_TRUE@BuildRequires: 	GConf2-devel
 @USE_GNOME_VFS_TRUE@Requires:      gnome-vfs2 > 1.9.4.00
 @USE_GNOME_VFS_TRUE@BuildRequires: gnome-vfs2-devel > 1.9.4.00
 @USE_VORBIS_TRUE@Requires:      libogg >= 1.0
@@ -48,7 +35,7 @@ BuildRequires:  XFree86-devel
 @USE_XVIDEO_TRUE@BuildRequires: XFree86-devel
 
 %description
-GStreamer is a streaming-media framework, based on graphs of filters which
+GStreamer is a streaming media framework, based on graphs of filters which
 operate on media data. Applications using this library can do anything
 from real-time sound processing to playing videos, and just about anything
 else media-related.  Its plugin-based architecture means that new data
@@ -56,10 +43,9 @@ types or processing capabilities can be added simply by installing new
 plug-ins.
 
 %prep
-%setup -n gst-plugins-base-%{version}
+%setup -q -n gst-plugins-base-%{version}
 %build
 %configure \
-  --with-gdk-pixbuf-loader-dir=$RPM_BUILD_ROOT%{_libdir}/gtk-2.0/2.2.0/loaders \
   --enable-debug \
   --enable-DEBUG 
 
@@ -68,28 +54,26 @@ make %{?_smp_mflags}
 %install
 rm -rf $RPM_BUILD_ROOT
 
-export GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL=1
 %makeinstall
-unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
-                                                                                
+
 # Clean out files that should not be part of the rpm.
 rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/*.la
 rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
-rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/libgstgdkpixbuf.so
+
+%find_lang gst-plugins-base-%{majorminor}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %post
-@USE_GCONF_TRUE@export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source` 
-@USE_GCONF_TRUE@gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer-%{majorminor}.schemas > /dev/null
 %{register}
+
 %postun
 %{register}
 
-%files
+%files -f gst-plugins-base-%{majorminor}.lang
 %defattr(-, root, root)
 %doc AUTHORS COPYING README REQUIREMENTS
 
@@ -98,9 +82,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/gst-visualise-%{majorminor}
 %{_mandir}/man1/gst-launch-ext-%{majorminor}.*
 %{_mandir}/man1/gst-visualise-%{majorminor}*
-%{_datadir}/locale
-# schema files
-@USE_GCONF_TRUE@%{_sysconfdir}/gconf/schemas/gstreamer-%{majorminor}.schemas
 
 # libraries
 %{_libdir}/libgstinterfaces-%{majorminor}.so.*
@@ -138,15 +119,15 @@ rm -rf $RPM_BUILD_ROOT
 @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvimagesink.so
 
                                                                                 
-%package -n gstreamer-plugins-base-devel
-Summary: 	GStreamer Plugin Library Headers.
+%package devel
+Summary: 	GStreamer Plugin Library Headers
 Group: 		Development/Libraries
-Requires: 	gstreamer-plugins-base = %{version}
+Requires: 	%{gstreamer}-plugins-base = %{version}
 
-%description -n gstreamer-plugins-base-devel
-GStreamer support libraries header files.
+%description devel
+GStreamer Plugins Base library development and header files.
 
-%files -n gstreamer-plugins-base-devel
+%files devel
 %defattr(-, root, root)
 # plugin helper library headers
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/audio.h
@@ -203,11 +184,9 @@ GStreamer support libraries header files.
 # Here are packages not in the base plugins package but not dependant
 # on an external lib
 
-# Here are all the packages depending on external libs #
-
 ### VIDEO 4 LINUX 2 ###
 # @USE_GST_V4L2_TRUE@%package -n gstreamer-plugins-v4l2
-# @USE_GST_V4L2_TRUE@Summary:       GStreamer Video for Linux 2 plug-in.
+# @USE_GST_V4L2_TRUE@Summary:       GStreamer Video for Linux 2 plug-in
 # @USE_GST_V4L2_TRUE@Group:         Applications/Multimedia
 # @USE_GST_V4L2_TRUE@Requires:      gstreamer-plugins09 = %{version}
 # @USE_GST_V4L2_TRUE@BuildRequires: glibc-devel
@@ -227,6 +206,9 @@ GStreamer support libraries header files.
 # @USE_GST_V4L2_TRUE@%{register}
 
 %changelog
+* Fri Sep 02 2005 Thomas Vander Stichele <thomas at apestaart dot org>
+- clean up a little
+
 * Fri May 6 2005 Christian Schaller <christian at fluendo dot com>
 - Added libgstaudiorate and libgstsubparse to spec file
 
