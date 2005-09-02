@@ -1,13 +1,14 @@
 %define         majorminor      @GST_MAJORMINOR@
+%define		gstreamer	gstreamer09
 
-Name: 		gstreamer09
+Name: 		%{gstreamer}
 Version: 	@VERSION@
 Release: 	@GST_VERSION_RELEASE@
 Summary: 	GStreamer streaming media framework runtime.
 
-Group: 		Libraries/Multimedia
+Group: 		Applications/Multimedia
 License: 	LGPL
-URL:		http://gstreamer.net/
+URL:		http://gstreamer.freedesktop.org/
 Vendor:         GStreamer Backpackers Team <package@gstreamer.net>
 Source: 	http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
@@ -27,12 +28,14 @@ BuildRequires: 	libxml2-devel >= %_libxml2
 BuildRequires: 	bison
 BuildRequires: 	flex
 BuildRequires: 	m4
+BuildRequires: 	check
 BuildRequires: 	gtk-doc >= 1.1
 BuildRequires: 	gcc
 BuildRequires: 	gettext
 BuildRequires: 	zlib-devel
 BuildRequires:  popt > 1.6
-Prereq:		/sbin/ldconfig
+Requires(pre):	/sbin/ldconfig
+Requires(post):	/sbin/ldconfig
 
 ### documentation requirements
 BuildRequires:  python2
@@ -56,13 +59,12 @@ types or processing capabilities can be added simply by installing new
 plugins.
 
 %package devel
-Summary: 	Libraries/include files for GStreamer streaming media framework.
+Summary: 	Libraries/include files for GStreamer streaming media framework
 Group: 		Development/Libraries
 
 Requires: 	%{name} = %{version}-%{release}
 Requires: 	glib2-devel >= %_glib2
 Requires: 	libxml2-devel >= %_libxml2
-Provides:	gstreamer-devel09 = %{version}-%{release}
 
 %description devel
 GStreamer is a streaming-media framework, based on graphs of filters which
@@ -75,11 +77,11 @@ plugins.
 This package contains the libraries and includes files necessary to develop
 applications and plugins for GStreamer.
 
-%package -n gstreamer09-tools
-Summary: 	tools for GStreamer streaming media framework.
-Group: 		Libraries/Multimedia
+%package -n gstreamer-tools
+Summary: 	tools for GStreamer streaming media framework
+Group: 		Applications/Multimedia
 
-%description -n gstreamer09-tools
+%description -n gstreamer-tools
 GStreamer is a streaming-media framework, based on graphs of filters which
 operate on media data. Applications using this library can do anything
 from real-time sound processing to playing videos, and just about anything
@@ -91,29 +93,29 @@ This package contains wrapper scripts for the command-line tools that work
 with different major/minor versions of GStreamer.
                                                                                 
 %prep
-%setup -n gstreamer-%{version}
+%setup -q -n gstreamer-%{version}
 
 %build
 %configure \
   --enable-debug \
   --with-cachedir=%{_localstatedir}/cache/gstreamer-%{majorminor} \
-  --disable-tests --disable-examples --disable-docs-build
+  --disable-tests --disable-examples
                                                                                 
-make ERROR_CFLAGS=""
+make
 
 %install  
 rm -rf $RPM_BUILD_ROOT
 
-# build documentation to a different location so it doesn't end up in
-# a gstreamer-devel-(version) dir and doesn't get deleted by %doc scripts
-%makeinstall docdir=$RPM_BUILD_ROOT%{_datadir}/gstreamer-%{majorminor}/doc
-                                                                                
+# Install doc temporarily in order to be included later by rpm
+%makeinstall docdir="`pwd`/installed-doc"
+
 %find_lang gstreamer-%{majorminor}
 # Clean out files that should not be part of the rpm.
 rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/*.la
 rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
+
 # Create empty cache directory
 mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/cache/gstreamer-%{majorminor}
                                                                                 
@@ -122,10 +124,9 @@ rm -rf $RPM_BUILD_ROOT
 
 %post
 /sbin/ldconfig
-%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
+%{_bindir}/gst-register-%{majorminor} > /dev/null 2>&1 || true
 
-%postun
-/sbin/ldconfig
+%postun -p /sbin/ldconfig
 
 %files -f gstreamer-%{majorminor}.lang
 %defattr(-, root, root, -)
@@ -134,12 +135,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libgstreamer-%{majorminor}.so.*
 %{_libdir}/libgstbase-%{majorminor}.so.*
 %{_libdir}/libgstcontroller-%{majorminor}.so.*
+%{_libdir}/libgstdataprotocol-%{majorminor}.so.*
 
 %dir %{_libdir}/gstreamer-%{majorminor}
 %{_libdir}/gstreamer-%{majorminor}/libgstelements.so
 %{_libdir}/gstreamer-%{majorminor}/libgstgetbits.so
 %{_libdir}/gstreamer-%{majorminor}/libgstindexers.so
-%{_libdir}/libgstdataprotocol-%{majorminor}.so
 
 %{_bindir}/gst-complete-%{majorminor}
 %{_bindir}/gst-compprep-%{majorminor}
@@ -164,7 +165,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %dir %{_localstatedir}/cache/gstreamer-%{majorminor}
 
-%files -n gstreamer09-tools
+%files -n gstreamer-tools
 %defattr(-, root, root, -)
 %{_bindir}/gst-complete
 %{_bindir}/gst-compprep
@@ -179,28 +180,33 @@ rm -rf $RPM_BUILD_ROOT
 
 %files devel
 %defattr(-, root, root, -)
+%doc installed-doc/*
 %dir %{_includedir}/gstreamer-%{majorminor}
 %dir %{_includedir}/gstreamer-%{majorminor}/gst
 %{_includedir}/gstreamer-%{majorminor}/gst/*.h
 %{_includedir}/gstreamer-%{majorminor}/gst/controller/gst-controller.h
 
 %{_includedir}/gstreamer-%{majorminor}/gst/base
+%{_includedir}/gstreamer-%{majorminor}/gst/check
 %{_includedir}/gstreamer-%{majorminor}/gst/dataprotocol
 %{_includedir}/gstreamer-%{majorminor}/gst/getbits
 
-%{_libdir}/libgstdataprotocol-%{majorminor}.so.*
+%{_libdir}/libgstdataprotocol-%{majorminor}.so
 %{_libdir}/libgstreamer-%{majorminor}.so
 %{_libdir}/libgstbase-%{majorminor}.so
 %{_libdir}/libgstcontroller-%{majorminor}.so
+
+%{_libdir}/libgstcheck-%{majorminor}.so*
 
 %{_datadir}/aclocal/gst-element-check-%{majorminor}.m4
 %{_libdir}/pkgconfig/gstreamer-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-base-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-dataprotocol-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-controller-%{majorminor}.pc
+%{_libdir}/pkgconfig/gstreamer-check-%{majorminor}.pc
 
-# %doc %{_datadir}/gtk-doc/html/gstreamer-%{majorminor}
-# %doc %{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}
+%doc %{_datadir}/gtk-doc/html/gstreamer-%{majorminor}
+%doc %{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}
                                                                                 
 %changelog
 * Thu Jun 09 2005 Thomas Vander Stichele <thomas at apestaart dot org>

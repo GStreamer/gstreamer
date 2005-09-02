@@ -111,7 +111,8 @@ gst_trace_flush (GstTrace * trace)
       return;
   }
 
-  write (trace->fd, trace->buf, trace->bufoffset * sizeof (GstTraceEntry));
+  g_return_if_fail (write (trace->fd, trace->buf,
+          trace->bufoffset * sizeof (GstTraceEntry)) != -1);
   trace->bufoffset = 0;
 }
 
@@ -133,7 +134,7 @@ gst_trace_text_flush (GstTrace * trace)
     g_snprintf (str, STRSIZE, "%20" G_GINT64_FORMAT " %10d %10d %s\n",
         trace->buf[i].timestamp,
         trace->buf[i].sequence, trace->buf[i].data, trace->buf[i].message);
-    write (trace->fd, str, strlen (str));
+    g_return_if_fail (write (trace->fd, str, strlen (str)) != -1);
   }
   trace->bufoffset = 0;
 #undef STRSIZE

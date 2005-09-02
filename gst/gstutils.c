@@ -102,28 +102,28 @@ gst_util_set_value_from_string (GValue * value, const gchar * value_str)
     case G_TYPE_INT:{
       gint i;
 
-      sscanf (value_str, "%d", &i);
+      g_return_if_fail (sscanf (value_str, "%d", &i) == 1);
       g_value_set_int (value, i);
       break;
     }
     case G_TYPE_UINT:{
       guint i;
 
-      sscanf (value_str, "%u", &i);
+      g_return_if_fail (sscanf (value_str, "%u", &i) == 1);
       g_value_set_uint (value, i);
       break;
     }
     case G_TYPE_LONG:{
       glong i;
 
-      sscanf (value_str, "%ld", &i);
+      g_return_if_fail (sscanf (value_str, "%ld", &i) == 1);
       g_value_set_long (value, i);
       break;
     }
     case G_TYPE_ULONG:{
       gulong i;
 
-      sscanf (value_str, "%lu", &i);
+      g_return_if_fail (sscanf (value_str, "%lu", &i) == 1);
       g_value_set_ulong (value, i);
       break;
     }
@@ -138,28 +138,28 @@ gst_util_set_value_from_string (GValue * value, const gchar * value_str)
     case G_TYPE_CHAR:{
       gchar i;
 
-      sscanf (value_str, "%c", &i);
+      g_return_if_fail (sscanf (value_str, "%c", &i) == 1);
       g_value_set_char (value, i);
       break;
     }
     case G_TYPE_UCHAR:{
       guchar i;
 
-      sscanf (value_str, "%c", &i);
+      g_return_if_fail (sscanf (value_str, "%c", &i) == 1);
       g_value_set_uchar (value, i);
       break;
     }
     case G_TYPE_FLOAT:{
       gfloat i;
 
-      sscanf (value_str, "%f", &i);
+      g_return_if_fail (sscanf (value_str, "%f", &i) == 1);
       g_value_set_float (value, i);
       break;
     }
     case G_TYPE_DOUBLE:{
       gfloat i;
 
-      sscanf (value_str, "%g", &i);
+      g_return_if_fail (sscanf (value_str, "%g", &i) == 1);
       g_value_set_double (value, (gdouble) i);
       break;
     }
@@ -203,28 +203,28 @@ gst_util_set_object_arg (GObject * object, const gchar * name,
         case G_TYPE_INT:{
           gint i;
 
-          sscanf (value, "%d", &i);
+          g_return_if_fail (sscanf (value, "%d", &i) == 1);
           g_object_set (G_OBJECT (object), name, i, NULL);
           break;
         }
         case G_TYPE_UINT:{
           guint i;
 
-          sscanf (value, "%u", &i);
+          g_return_if_fail (sscanf (value, "%u", &i) == 1);
           g_object_set (G_OBJECT (object), name, i, NULL);
           break;
         }
         case G_TYPE_LONG:{
           glong i;
 
-          sscanf (value, "%ld", &i);
+          g_return_if_fail (sscanf (value, "%ld", &i) == 1);
           g_object_set (G_OBJECT (object), name, i, NULL);
           break;
         }
         case G_TYPE_ULONG:{
           gulong i;
 
-          sscanf (value, "%lu", &i);
+          g_return_if_fail (sscanf (value, "%lu", &i) == 1);
           g_object_set (G_OBJECT (object), name, i, NULL);
           break;
         }
@@ -239,28 +239,28 @@ gst_util_set_object_arg (GObject * object, const gchar * name,
         case G_TYPE_CHAR:{
           gchar i;
 
-          sscanf (value, "%c", &i);
+          g_return_if_fail (sscanf (value, "%c", &i) == 1);
           g_object_set (G_OBJECT (object), name, i, NULL);
           break;
         }
         case G_TYPE_UCHAR:{
           guchar i;
 
-          sscanf (value, "%c", &i);
+          g_return_if_fail (sscanf (value, "%c", &i) == 1);
           g_object_set (G_OBJECT (object), name, i, NULL);
           break;
         }
         case G_TYPE_FLOAT:{
           gfloat i;
 
-          sscanf (value, "%f", &i);
+          g_return_if_fail (sscanf (value, "%f", &i) == 1);
           g_object_set (G_OBJECT (object), name, i, NULL);
           break;
         }
         case G_TYPE_DOUBLE:{
           gfloat i;
 
-          sscanf (value, "%g", &i);
+          g_return_if_fail (sscanf (value, "%g", &i) == 1);
           g_object_set (G_OBJECT (object), name, (gdouble) i, NULL);
           break;
         }
@@ -268,7 +268,7 @@ gst_util_set_object_arg (GObject * object, const gchar * name,
           if (G_IS_PARAM_SPEC_ENUM (paramspec)) {
             gint i;
 
-            sscanf (value, "%d", &i);
+            g_return_if_fail (sscanf (value, "%d", &i) == 1);
             g_object_set (G_OBJECT (object), name, i, NULL);
           } else if (paramspec->value_type == GST_TYPE_URI) {
             g_object_set (G_OBJECT (object), name, value, NULL);

@@ -145,9 +145,13 @@ main (int argc, char *argv[])
             } else if (!strcmp ((char *) argnode->name, "option")) {
               argument->type = ARG_ENUM;
               option = g_new0 (enum_value, 1);
-              sscanf ((char *) xmlNodeGetContent (argnode), "%d",
-                  &option->value);
-              argument->enums = g_slist_prepend (argument->enums, option);
+              if (sscanf ((char *) xmlNodeGetContent (argnode), "%d",
+                      &option->value) != 1) {
+                g_warning ("Could not read option");
+                g_free (option);
+              } else {
+                argument->enums = g_slist_prepend (argument->enums, option);
+              }
             }
             argnode = argnode->next;
           }
