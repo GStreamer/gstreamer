@@ -92,7 +92,7 @@ static char *video_file = NULL;
 #define TEST_RUN(iters) G_STMT_START{ \
   gint it = iters; \
   g_print ("TEST %2d line %3d   RUN\n", test, __LINE__); \
-  if (gst_element_set_state (cur, GST_STATE_PLAYING) == GST_STATE_FAILURE) { \
+  if (gst_element_set_state (cur, GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) { \
     g_print ("TEST %2d line %3d  FAILED  : pipeline could not be set to state PLAYING\n", test, __LINE__); \
     return -test; \
   } \
@@ -101,7 +101,7 @@ static char *video_file = NULL;
     iterations++; \
     it--; \
   } \
-  if (gst_element_set_state (cur, GST_STATE_NULL) == GST_STATE_FAILURE) { \
+  if (gst_element_set_state (cur, GST_STATE_NULL) == GST_STATE_CHANGE_FAILURE) { \
     g_print ("TEST %2d line %3d  FAILED  : pipeline could not be reset to state NULL\n", test, __LINE__); \
     return -test; \
   } \

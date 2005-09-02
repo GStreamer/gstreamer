@@ -121,7 +121,8 @@ static void gst_fake_sink_set_property (GObject * object, guint prop_id,
 static void gst_fake_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn gst_fake_sink_change_state (GstElement * element);
+static GstStateChangeReturn gst_fake_sink_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstFlowReturn gst_fake_sink_preroll (GstBaseSink * bsink,
     GstBuffer * buffer);
@@ -382,35 +383,34 @@ gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   return GST_FLOW_OK;
 }
 
-static GstElementStateReturn
-gst_fake_sink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_fake_sink_change_state (GstElement * element, GstStateChange transition)
 {
-  GstElementStateReturn ret = GST_STATE_SUCCESS;
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstFakeSink *fakesink = GST_FAKE_SINK (element);
-  GstElementState transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (fakesink->state_error == FAKE_SINK_STATE_ERROR_NULL_READY)
         goto error;
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (fakesink->state_error == FAKE_SINK_STATE_ERROR_READY_PAUSED)
         goto error;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       if (fakesink->state_error == FAKE_SINK_STATE_ERROR_PAUSED_PLAYING)
         goto error;
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       if (fakesink->state_error == FAKE_SINK_STATE_ERROR_PLAYING_PAUSED)
         goto error;
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (fakesink->state_error == FAKE_SINK_STATE_ERROR_PAUSED_READY)
         goto error;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       if (fakesink->state_error == FAKE_SINK_STATE_ERROR_READY_NULL)
         goto error;
       g_free (fakesink->last_message);
@@ -420,11 +420,11 @@ gst_fake_sink_change_state (GstElement * element)
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   return ret;
 
 error:
   GST_ELEMENT_ERROR (element, CORE, STATE_CHANGE, (NULL), (NULL));
-  return GST_STATE_FAILURE;
+  return GST_STATE_CHANGE_FAILURE;
 }

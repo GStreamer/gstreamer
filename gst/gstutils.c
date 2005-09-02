@@ -703,14 +703,14 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
 
 /**
  * gst_element_state_get_name:
- * @state: a #GstElementState to get the name of.
+ * @state: a #GstState to get the name of.
  *
  * Gets a string representing the given state.
  *
  * Returns: a string with the name of the state.
  */
 const gchar *
-gst_element_state_get_name (GstElementState state)
+gst_element_state_get_name (GstState state)
 {
   switch (state) {
 #ifdef GST_DEBUG_COLOR
@@ -1278,7 +1278,7 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
   if (filter) {
     GstElement *capsfilter;
     GstObject *parent;
-    GstElementState state, pending;
+    GstState state, pending;
     GTimeVal tv;
 
     capsfilter = gst_element_factory_make ("capsfilter", NULL);
@@ -1841,13 +1841,13 @@ gst_bin_remove_many (GstBin * bin, GstElement * element_1, ...)
 static void
 get_state_func (GstElement * element, gpointer unused)
 {
-  GstElementStateReturn ret = GST_STATE_ASYNC;
+  GstStateChangeReturn ret = GST_STATE_CHANGE_ASYNC;
 
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
       "new thread waiting on state change");
 
   /* wait indefinitely */
-  while (ret == GST_STATE_ASYNC)
+  while (ret == GST_STATE_CHANGE_ASYNC)
     ret = gst_element_get_state (element, NULL, NULL, NULL);
 
   gst_object_unref (element);
@@ -1859,7 +1859,7 @@ get_state_func (GstElement * element, gpointer unused)
  *
  * Spawns a thread calling gst_element_get_state on @bin with infinite timeout.
  *
- * In practice this is done because if a bin returns %GST_STATE_ASYNC from a
+ * In practice this is done because if a bin returns %GST_STATE_CHANGE_ASYNC from a
  * state change it will not commit its state until someone calls
  * gst_element_get_state() on it. Thus having another thread checking the bin's
  * state will ensure that a state-changed message gets posted on the bus

@@ -1,3 +1,23 @@
+2005-09-02  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstelement.h (GstState): Renamed from GstElementState,
+	changed to be a normal enum instead of flags.
+	(GstStateChangeReturn): Renamed from GstElementStateReturn, names
+	munged to be GST_STATE_CHANGE_*.
+	(GST_STATE_CHANGE): Renamed from GST_STATE_TRANSITION, updated to
+	work with the new state representation.
+	(GstStateChange): New enumeration of possible state transitions.
+	Replaces GST_STATE_FOO_TO_BAR with GST_STATE_CHANGE_FOO_TO_BAR.
+	(GstElementClass::change_state): Pass the GstStateChange along as
+	an argument. Helps language bindings, so they don't have to use
+	tricky lock-needing macros like GST_STATE_CHANGE ().
+
+	* scripts/update-states (file): New script. Run it on a file to
+	update it for state naming and API changes. Updates files in
+	place.
+
+	* All files updated for the new API.
+
 2005-09-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gsttrace.c: (gst_trace_flush), (gst_trace_text_flush):

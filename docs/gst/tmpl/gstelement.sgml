@@ -157,13 +157,6 @@ This enum defines the standard flags that an element may have.
 @GST_ELEMENT_UNPARENTING: 
 @GST_ELEMENT_FLAG_LAST: 
 
-<!-- ##### MACRO GST_NUM_STATES ##### -->
-<para>
-The maximun number of states.
-</para>
-
-
-
 <!-- ##### MACRO GST_STATE ##### -->
 <para>
 This macro returns the current state of the element.
@@ -178,56 +171,6 @@ This macro returns the currently pending state of the element.
 </para>
 
 @obj: Element to return the pending state for.
-
-
-<!-- ##### MACRO GST_STATE_TRANSITION ##### -->
-<para>
-Returns the state transition this object is going through.
-</para>
-
-@obj: the Element to return the state transition for
-
-
-<!-- ##### MACRO GST_STATE_NULL_TO_READY ##### -->
-<para>
-The Element is going from the NULL state to the READY state.
-</para>
-
-
-
-<!-- ##### MACRO GST_STATE_READY_TO_PAUSED ##### -->
-<para>
-The Element is going from the READY state to the PAUSED state.
-</para>
-
-
-
-<!-- ##### MACRO GST_STATE_PAUSED_TO_PLAYING ##### -->
-<para>
-The Element is going from the PAUSED state to the PLAYING state.
-</para>
-
-
-
-<!-- ##### MACRO GST_STATE_PLAYING_TO_PAUSED ##### -->
-<para>
-The Element is going from the PLAYING state to the PAUSED state.
-</para>
-
-
-
-<!-- ##### MACRO GST_STATE_PAUSED_TO_READY ##### -->
-<para>
-The Element is going from the PAUSED state to the READY state.
-</para>
-
-
-
-<!-- ##### MACRO GST_STATE_READY_TO_NULL ##### -->
-<para>
-The Element is going from the READY state to the NULL state.
-</para>
-
 
 
 <!-- ##### MACRO GST_STATE_BROADCAST ##### -->

@@ -17,29 +17,6 @@ various global enums and constants
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### ENUM GstElementState ##### -->
-<para>
-These contants describe the state a #GstElement is in and transition scheduled for the #GstElement (the pending state).
-</para>
-
-@GST_STATE_VOID_PENDING: no transition is schedules for this element
-@GST_STATE_NULL: this is the default state all elements are in, after they have been created and are doing nothing
-@GST_STATE_READY: the element is ready to start doing something
-@GST_STATE_PAUSED: the element is paused for a period of time
-@GST_STATE_PLAYING: the element is doing something
-
-<!-- ##### ENUM GstElementStateReturn ##### -->
-<para>
-One of these values is returned from a gst_element_set_state() call.
-As GST_STATE_FAILURE is equal to 0, one can use a boolean comparission
-against the GstElementStateReturn value.
-</para>
-
-@GST_STATE_FAILURE: the state of the element could not be changed
-@GST_STATE_SUCCESS: the state of the element has already be changed
-@GST_STATE_ASYNC: the state of the element will change in the near future
-@GST_STATE_NO_PREROLL: 
-
 <!-- ##### ENUM GstRank ##### -->
 <para>
 Element priority ranks. Defines the order in which the autoplugger (or similar

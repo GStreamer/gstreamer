@@ -125,7 +125,8 @@ static gboolean gst_base_src_get_size (GstBaseSrc * basesrc, guint64 * size);
 static gboolean gst_base_src_start (GstBaseSrc * basesrc);
 static gboolean gst_base_src_stop (GstBaseSrc * basesrc);
 
-static GstElementStateReturn gst_base_src_change_state (GstElement * element);
+static GstStateChangeReturn gst_base_src_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void gst_base_src_loop (GstPad * pad);
 static gboolean gst_base_src_check_get_range (GstPad * pad);
@@ -1041,30 +1042,28 @@ error_stop:
   }
 }
 
-static GstElementStateReturn
-gst_base_src_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_base_src_change_state (GstElement * element, GstStateChange transition)
 {
   GstBaseSrc *basesrc;
-  GstElementStateReturn result = GST_STATE_SUCCESS;
-  GstElementStateReturn presult;
-  GstElementState transition;
+  GstStateChangeReturn result = GST_STATE_CHANGE_SUCCESS;
+  GstStateChangeReturn presult;
 
   basesrc = GST_BASE_SRC (element);
 
-  transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_LIVE_LOCK (element);
       if (basesrc->is_live) {
-        result = GST_STATE_NO_PREROLL;
+        result = GST_STATE_CHANGE_NO_PREROLL;
         basesrc->live_running = FALSE;
       }
       GST_LIVE_UNLOCK (element);
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_LIVE_LOCK (element);
       if (basesrc->is_live) {
         basesrc->live_running = TRUE;
@@ -1076,26 +1075,27 @@ gst_base_src_change_state (GstElement * element)
       break;
   }
 
-  if ((presult = GST_ELEMENT_CLASS (parent_class)->change_state (element)) !=
-      GST_STATE_SUCCESS) {
+  if ((presult =
+          GST_ELEMENT_CLASS (parent_class)->change_state (element,
+              transition)) != GST_STATE_CHANGE_SUCCESS) {
     gst_base_src_stop (basesrc);
     return presult;
   }
 
   switch (transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       GST_LIVE_LOCK (element);
       if (basesrc->is_live) {
-        result = GST_STATE_NO_PREROLL;
+        result = GST_STATE_CHANGE_NO_PREROLL;
         basesrc->live_running = FALSE;
       }
       GST_LIVE_UNLOCK (element);
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (!gst_base_src_stop (basesrc))
-        result = GST_STATE_FAILURE;
+        result = GST_STATE_CHANGE_FAILURE;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;

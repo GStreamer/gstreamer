@@ -9,10 +9,11 @@ handoff_src (GstElement * element)
 {
   g_print ("identity handoff\n");
 
-  if (gst_element_set_state (thread, GST_STATE_PAUSED) != GST_STATE_SUCCESS)
+  if (gst_element_set_state (thread,
+          GST_STATE_PAUSED) != GST_STATE_CHANGE_SUCCESS)
     g_assert_not_reached ();
 
-  if (gst_element_set_state (sink, GST_STATE_READY) != GST_STATE_SUCCESS)
+  if (gst_element_set_state (sink, GST_STATE_READY) != GST_STATE_CHANGE_SUCCESS)
     g_assert_not_reached ();
 
   gst_bin_remove (GST_BIN (thread), src);
@@ -42,7 +43,8 @@ main (int argc, char **argv)
     g_assert_not_reached ();
 
   /* run a bit */
-  if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
+  if (gst_element_set_state (pipeline,
+          GST_STATE_PLAYING) != GST_STATE_CHANGE_SUCCESS)
     g_assert_not_reached ();
 
   sleep (2);

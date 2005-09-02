@@ -218,9 +218,10 @@ GST_START_TEST (test_ghost_pads)
   assert_gstrefcount (isrc, 3); /* parent and gsrc */
 
   fail_unless (gst_element_set_state (b1,
-          GST_STATE_PLAYING) == GST_STATE_SUCCESS);
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
 
-  fail_unless (gst_element_set_state (b1, GST_STATE_NULL) == GST_STATE_SUCCESS);
+  fail_unless (gst_element_set_state (b1,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
 
   gst_object_unref (b1);
   /* unreffing the bin will unref all elements, which will unlink and unparent

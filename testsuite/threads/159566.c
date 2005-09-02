@@ -85,7 +85,8 @@ main (int argc, char **argv)
     g_assert_not_reached ();
 
   /* run a bit */
-  if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
+  if (gst_element_set_state (pipeline,
+          GST_STATE_PLAYING) != GST_STATE_CHANGE_SUCCESS)
     g_assert_not_reached ();
 
   sleep (10000);

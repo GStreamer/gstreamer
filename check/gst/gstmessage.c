@@ -120,7 +120,7 @@ GST_START_TEST (test_parsing)
   }
   /* GST_MESSAGE_STATE_CHANGED   */
   {
-    GstElementState oldstate, newstate;
+    GstState oldstate, newstate;
 
     oldstate = GST_STATE_PAUSED;
     newstate = GST_STATE_PLAYING;
@@ -175,8 +175,8 @@ GST_START_TEST (test_parsing)
 
   /*
      void            gst_message_parse_tag           (GstMessage *message, GstTagList **tag_list);
-     void            gst_message_parse_state_changed (GstMessage *message, GstElementState *old_state,
-     GstElementState *new_state);
+     void            gst_message_parse_state_changed (GstMessage *message, GstState *old_state,
+     GstState *new_state);
      void            gst_message_parse_error         (GstMessage *message, GError **gerror, gchar **debug);
      void            gst_message_parse_warning       (GstMessage *message, GError **gerror, gchar **debug);
    */

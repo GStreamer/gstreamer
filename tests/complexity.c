@@ -110,7 +110,8 @@ main (gint argc, gchar * argv[])
       GST_TIME_ARGS (end - start), i);
 
   start = gst_get_current_time ();
-  if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
+  if (gst_element_set_state (pipeline,
+          GST_STATE_PLAYING) != GST_STATE_CHANGE_SUCCESS)
     g_assert_not_reached ();
   end = gst_get_current_time ();
   g_print ("%" GST_TIME_FORMAT " - setting pipeline to playing\n",

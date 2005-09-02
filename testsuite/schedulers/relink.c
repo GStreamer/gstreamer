@@ -60,7 +60,8 @@ main (gint argc, gchar ** argv)
 
   /* run pipeline */
   g_print ("running...\n");
-  if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
+  if (gst_element_set_state (pipeline,
+          GST_STATE_PLAYING) != GST_STATE_CHANGE_SUCCESS)
     g_assert_not_reached ();
   while (i++ < 10 && gst_bin_iterate (GST_BIN (pipeline)));
 

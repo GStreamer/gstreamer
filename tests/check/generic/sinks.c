@@ -26,30 +26,30 @@
 GST_START_TEST (test_sink)
 {
   GstElement *sink;
-  GstElementStateReturn ret;
-  GstElementState current, pending;
+  GstStateChangeReturn ret;
+  GstState current, pending;
   GTimeVal tv;
 
   sink = gst_element_factory_make ("fakesink", "sink");
 
   ret = gst_element_set_state (sink, GST_STATE_PAUSED);
-  fail_unless (ret == GST_STATE_ASYNC, "no async state return");
+  fail_unless (ret == GST_STATE_CHANGE_ASYNC, "no async state return");
 
   ret = gst_element_set_state (sink, GST_STATE_PLAYING);
-  fail_unless (ret == GST_STATE_ASYNC, "no forced async state change");
+  fail_unless (ret == GST_STATE_CHANGE_ASYNC, "no forced async state change");
 
   GST_TIME_TO_TIMEVAL ((GstClockTime) 0, tv);
 
   ret = gst_element_get_state (sink, &current, &pending, &tv);
-  fail_unless (ret == GST_STATE_ASYNC, "not changing state async");
+  fail_unless (ret == GST_STATE_CHANGE_ASYNC, "not changing state async");
   fail_unless (current == GST_STATE_PAUSED, "bad current state");
   fail_unless (pending == GST_STATE_PLAYING, "bad pending state");
 
   ret = gst_element_set_state (sink, GST_STATE_PAUSED);
-  fail_unless (ret == GST_STATE_ASYNC, "no async going back to paused");
+  fail_unless (ret == GST_STATE_CHANGE_ASYNC, "no async going back to paused");
 
   ret = gst_element_set_state (sink, GST_STATE_READY);
-  fail_unless (ret == GST_STATE_SUCCESS, "failed to go to ready");
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "failed to go to ready");
 
   gst_object_unref (sink);
 }
@@ -60,8 +60,8 @@ GST_END_TEST
 GST_START_TEST (test_src_sink)
 {
   GstElement *sink, *src, *pipeline;
-  GstElementStateReturn ret;
-  GstElementState current, pending;
+  GstStateChangeReturn ret;
+  GstState current, pending;
   GstPad *srcpad, *sinkpad;
 
   pipeline = gst_pipeline_new ("pipeline");
@@ -79,13 +79,13 @@ GST_START_TEST (test_src_sink)
 
   ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
   ret = gst_element_get_state (pipeline, NULL, NULL, NULL);
-  fail_unless (ret == GST_STATE_SUCCESS, "no success state return");
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "no success state return");
 
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  fail_unless (ret == GST_STATE_SUCCESS, "cannot start play");
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "cannot start play");
 
   ret = gst_element_get_state (pipeline, &current, &pending, NULL);
-  fail_unless (ret == GST_STATE_SUCCESS, "not playing");
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "not playing");
   fail_unless (current == GST_STATE_PLAYING, "not playing");
   fail_unless (pending == GST_STATE_VOID_PENDING, "not playing");
 }
@@ -97,8 +97,8 @@ GST_END_TEST
 GST_START_TEST (test_livesrc_remove)
 {
   GstElement *sink, *src, *pipeline;
-  GstElementStateReturn ret;
-  GstElementState current, pending;
+  GstStateChangeReturn ret;
+  GstState current, pending;
   GstPad *srcpad, *sinkpad;
   GTimeVal tv;
 
@@ -117,10 +117,11 @@ GST_START_TEST (test_livesrc_remove)
   gst_object_unref (sinkpad);
 
   ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
-  fail_unless (ret == GST_STATE_NO_PREROLL, "no no_preroll state return");
+  fail_unless (ret == GST_STATE_CHANGE_NO_PREROLL,
+      "no no_preroll state return");
 
   ret = gst_element_get_state (src, &current, &pending, NULL);
-  fail_unless (ret == GST_STATE_NO_PREROLL, "not paused");
+  fail_unless (ret == GST_STATE_CHANGE_NO_PREROLL, "not paused");
   fail_unless (current == GST_STATE_PAUSED, "not paused");
   fail_unless (pending == GST_STATE_VOID_PENDING, "not playing");
 
@@ -128,7 +129,7 @@ GST_START_TEST (test_livesrc_remove)
 
   GST_TIME_TO_TIMEVAL (0, tv);
   ret = gst_element_get_state (pipeline, &current, &pending, &tv);
-  fail_unless (ret == GST_STATE_ASYNC, "not async");
+  fail_unless (ret == GST_STATE_CHANGE_ASYNC, "not async");
   fail_unless (current == GST_STATE_PAUSED, "not paused");
   fail_unless (pending == GST_STATE_VOID_PENDING, "not playing");
 
@@ -140,8 +141,8 @@ GST_END_TEST
 GST_START_TEST (test_livesrc_sink)
 {
   GstElement *sink, *src, *pipeline;
-  GstElementStateReturn ret;
-  GstElementState current, pending;
+  GstStateChangeReturn ret;
+  GstState current, pending;
   GstPad *srcpad, *sinkpad;
 
   pipeline = gst_pipeline_new ("pipeline");
@@ -159,23 +160,24 @@ GST_START_TEST (test_livesrc_sink)
   gst_object_unref (sinkpad);
 
   ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
-  fail_unless (ret == GST_STATE_NO_PREROLL, "no no_preroll state return");
+  fail_unless (ret == GST_STATE_CHANGE_NO_PREROLL,
+      "no no_preroll state return");
 
   ret = gst_element_get_state (src, &current, &pending, NULL);
-  fail_unless (ret == GST_STATE_NO_PREROLL, "not paused");
+  fail_unless (ret == GST_STATE_CHANGE_NO_PREROLL, "not paused");
   fail_unless (current == GST_STATE_PAUSED, "not paused");
   fail_unless (pending == GST_STATE_VOID_PENDING, "not playing");
 
   ret = gst_element_get_state (pipeline, &current, &pending, NULL);
-  fail_unless (ret == GST_STATE_NO_PREROLL, "not paused");
+  fail_unless (ret == GST_STATE_CHANGE_NO_PREROLL, "not paused");
   fail_unless (current == GST_STATE_PAUSED, "not paused");
   fail_unless (pending == GST_STATE_VOID_PENDING, "not playing");
 
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  fail_unless (ret == GST_STATE_SUCCESS, "cannot force play");
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "cannot force play");
 
   ret = gst_element_get_state (pipeline, &current, &pending, NULL);
-  fail_unless (ret == GST_STATE_SUCCESS, "not playing");
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "not playing");
   fail_unless (current == GST_STATE_PLAYING, "not playing");
   fail_unless (pending == GST_STATE_VOID_PENDING, "not playing");
 }

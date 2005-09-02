@@ -86,7 +86,8 @@ static void gst_example_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_example_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static GstElementStateReturn gst_example_change_state (GstElement * element);
+static GstStateChangeReturn gst_example_change_state (GstElement * element,
+    GstStateChange transition);
 
 /* The parent class pointer needs to be kept around for some object
  * operations.
@@ -338,8 +339,8 @@ gst_example_get_property (GObject * object, guint prop_id, GValue * value,
  * The plugin can prepare itself and its internal data structures
  * in the various state transitions.
  */
-static GstElementStateReturn
-gst_example_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_example_change_state (GstElement * element, GstStateChange transition)
 {
   GstExample *example;
 
@@ -348,33 +349,33 @@ gst_example_change_state (GstElement * element)
 
   /* we perform our actions based on the state transition
    * of the element */
-  switch (GST_STATE_TRANSITION (element)) {
+  switch (transition) {
       /* The NULL to READY transition is used to
        * create threads (if any), and/or open devices */
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
       /* In the PAUSED to PLAYING state, the element should
        * prepare itself for operation or continue after a PAUSE */
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
       /* In the PLAYING to PAUSED state, the element should
        * PAUSE itself and make sure it can resume operation */
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
       /* In the PAUSED to READY state, the element should reset
        * its internal state and close any devices. */
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
       /* The element should free all resources, terminate threads
        * and put itself into its initial state again */
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
   }
 
   /* Then we call the parent state change handler */
-  return parent_class->change_state (element);
+  return parent_class->change_state (element, transition);
 }
 
 

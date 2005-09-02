@@ -259,7 +259,7 @@ gst_file_src_set_location (GstFileSrc * src, const gchar * location)
   /* the element must be stopped in order to do this */
   GST_STATE_LOCK (src);
   {
-    GstElementState state;
+    GstState state;
 
     state = GST_STATE (src);
     if (state != GST_STATE_READY && state != GST_STATE_NULL)

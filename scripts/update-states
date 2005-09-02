@@ -1,0 +1,66 @@
+#!/bin/bash
+
+set -e
+
+if test -z "$1" -o -n "$2"; then
+    echo "Usage: $0 FILE" >&2
+    exit 1
+fi
+
+file=$1
+
+if grep -q GstElementState $file; then
+    echo "$file: GstElementState->GstState"
+    perl -i -p -e 's/GstElementState/GstState/g' $file
+fi
+
+if grep -q GstStateReturn $file; then
+    echo "$file: GstStateReturn->GstStateChangeReturn"
+    perl -i -p -e 's/GstStateReturn/GstStateChangeReturn/g' $file
+fi
+
+if egrep 'GST_STATE_(ASYNC|SUCCESS|FAILURE|NO_PREROLL)' $file | grep -q -v 'NO_PREROLL ('; then
+    echo "$file: GST_STATE_SUCCESS -> GST_STATE_CHANGE_SUCCESS"
+    perl -i -p -e 's/GST_STATE_SUCCESS/GST_STATE_CHANGE_SUCCESS/g' $file
+    perl -i -p -e 's/GST_STATE_ASYNC/GST_STATE_CHANGE_ASYNC/g' $file
+    perl -i -p -e 's/GST_STATE_FAILURE/GST_STATE_CHANGE_FAILURE/g' $file
+    perl -i -p -e 's/GST_STATE_NO_PREROLL/GST_STATE_CHANGE_NO_PREROLL/g' $file
+    # hack around the overloaded macro in 0.9
+    perl -i -p -e 's/GST_STATE_CHANGE_NO_PREROLL \(/GST_STATE_NO_PREROLL (/g' $file
+fi
+
+if grep 'change_state (' $file | grep -q 'element)'; then
+    echo "$file: change_state (GstElement) -> change_state (GstElement, GstStateChange)"
+    perl -i -p -e 's/^(static.*)change_state \(GstElement \* element\);/$1change_state (GstElement * element,\n    GstStateChange transition);/g' $file
+    perl -i -p -e 's/change_state \(GstElement \* element\)/change_state (GstElement * element, GstStateChange transition)/g' $file
+    perl -i -p -e 's/change_state \(element\)/change_state (element, transition)/g' $file
+    egrep -v '^[[:space:]]+GstState transition;' < $file > $file.tmp
+    mv $file.tmp $file
+    grep -v 'transition = ' < $file > $file.tmp
+    mv $file.tmp $file
+fi
+
+if grep  -q GST_STATE_TRANSITION $file; then
+    echo "$file: CHECK ME: GST_STATE_TRANSITION (element) -> transition"
+    perl -i -p -e 's/GST_STATE_TRANSITION \(element\)/transition/g' $file
+fi
+
+if grep 'transition' $file | grep -q int; then
+    echo "$file: Removing ghetto int transitions"
+    egrep -v '^[[:space:]]+g?u?int.* transition;' < $file > $file.tmp
+    mv $file.tmp $file
+fi
+
+if egrep -q 'GST_STATE_[A-Z]+_TO_[A-Z]+' $file; then
+    echo "$file: GST_STATE_NULL_TO_READY -> GST_STATE_CHANGE_NULL_TO_READY"
+    perl -i -p -e 's/GST_STATE_([A-Z]+)_TO_([A-Z]+)/GST_STATE_CHANGE_$1_TO_$2/g' $file
+fi
+
+if grep -q GstStateReturn $file; then
+    echo "$file: GST_STATE_SUCCESS -> GST_STATE_CHANGE_SUCCESS"
+    perl -i -p -e 's/GstStateReturn/GstStateChangeReturn/g' $file
+    perl -i -p -e 's/GST_STATE_SUCCESS/GST_STATE_CHANGE_SUCCESS/g' $file
+    perl -i -p -e 's/GST_STATE_ASYNC/GST_STATE_CHANGE_ASYNC/g' $file
+    perl -i -p -e 's/GST_STATE_FAILURE/GST_STATE_CHANGE_FAILURE/g' $file
+    perl -i -p -e 's/GST_STATE_NO_PREROLL/GST_STATE_CHANGE_NO_PREROLL/g' $file
+fi

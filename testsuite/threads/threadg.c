@@ -36,7 +36,8 @@ main (int argc, char **argv)
     g_assert_not_reached ();
 
 
-  if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
+  if (gst_element_set_state (pipeline,
+          GST_STATE_PLAYING) != GST_STATE_CHANGE_SUCCESS)
     g_assert_not_reached ();
 
   for (i = 0; i < 100; i++) {
@@ -45,17 +46,20 @@ main (int argc, char **argv)
     g_print ("%d\n", i);
   }
 
-  if (gst_element_set_state (pipeline, GST_STATE_PAUSED) != GST_STATE_SUCCESS)
+  if (gst_element_set_state (pipeline,
+          GST_STATE_PAUSED) != GST_STATE_CHANGE_SUCCESS)
     g_assert_not_reached ();
 
   gst_bin_remove_many (GST_BIN (thread), queue, sink, NULL);
 
-  if (gst_element_set_state (thread, GST_STATE_NULL) != GST_STATE_SUCCESS)
+  if (gst_element_set_state (thread,
+          GST_STATE_NULL) != GST_STATE_CHANGE_SUCCESS)
     g_assert_not_reached ();
 
   gst_bin_remove (GST_BIN (pipeline), thread);
 
-  if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
+  if (gst_element_set_state (pipeline,
+          GST_STATE_PLAYING) != GST_STATE_CHANGE_SUCCESS)
     g_assert_not_reached ();
 
 

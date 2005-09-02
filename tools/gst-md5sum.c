@@ -92,7 +92,8 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS) {
+  if (gst_element_set_state (pipeline,
+          GST_STATE_PLAYING) != GST_STATE_CHANGE_SUCCESS) {
     g_warning ("pipeline doesn't want to play\n");
     return 1;
   }

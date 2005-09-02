@@ -109,7 +109,8 @@ static GstFlowReturn gst_base_sink_buffer_alloc (GstBaseSink * sink,
 static void gst_base_sink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end);
 
-static GstElementStateReturn gst_base_sink_change_state (GstElement * element);
+static GstStateChangeReturn gst_base_sink_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstFlowReturn gst_base_sink_chain (GstPad * pad, GstBuffer * buffer);
 static void gst_base_sink_loop (GstPad * pad);
@@ -1263,23 +1264,22 @@ gst_base_sink_activate_pull (GstPad * pad, gboolean active)
   return result;
 }
 
-static GstElementStateReturn
-gst_base_sink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_base_sink_change_state (GstElement * element, GstStateChange transition)
 {
-  GstElementStateReturn ret = GST_STATE_SUCCESS;
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstBaseSink *basesink = GST_BASE_SINK (element);
-  GstElementState transition = GST_STATE_TRANSITION (element);
   GstBaseSinkClass *bclass;
 
   bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (bclass->start)
         if (!bclass->start (basesink))
           goto start_failed;
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       /* need to complete preroll before this state change completes, there
        * is no data flow in READY so we can safely assume we need to preroll. */
       basesink->offset = 0;
@@ -1291,9 +1291,9 @@ gst_base_sink_change_state (GstElement * element)
       basesink->segment_rate = 1.0;
       basesink->segment_start = 0;
       basesink->segment_stop = 0;
-      ret = GST_STATE_ASYNC;
+      ret = GST_STATE_CHANGE_ASYNC;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     {
       GST_PREROLL_LOCK (basesink->sinkpad);
       /* if we have EOS, we should empty the queue now as there will
@@ -1307,7 +1307,7 @@ gst_base_sink_change_state (GstElement * element)
         /* don't need preroll, but do queue a commit_state */
         basesink->need_preroll = FALSE;
         basesink->playing_async = TRUE;
-        ret = GST_STATE_ASYNC;
+        ret = GST_STATE_CHANGE_ASYNC;
         /* we know it's not waiting, no need to signal */
       } else {
         /* don't need the preroll anymore */
@@ -1323,16 +1323,16 @@ gst_base_sink_change_state (GstElement * element)
   }
 
   {
-    GstElementStateReturn bret;
+    GstStateChangeReturn bret;
 
-    bret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    bret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-    if (bret != GST_STATE_SUCCESS)
+    if (bret != GST_STATE_CHANGE_SUCCESS)
       goto activate_failed;
   }
 
   switch (transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
     {
       GstBaseSinkClass *bclass;
 
@@ -1358,14 +1358,14 @@ gst_base_sink_change_state (GstElement * element)
           basesink->eos);
       if (!basesink->have_preroll && !basesink->eos) {
         basesink->need_preroll = TRUE;
-        ret = GST_STATE_ASYNC;
+        ret = GST_STATE_CHANGE_ASYNC;
       }
       GST_PREROLL_UNLOCK (basesink->sinkpad);
       break;
     }
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       if (bclass->stop)
         if (!bclass->stop (basesink)) {
           GST_WARNING ("failed to stop");
@@ -1381,11 +1381,11 @@ gst_base_sink_change_state (GstElement * element)
 start_failed:
   {
     GST_DEBUG ("failed to start");
-    return GST_STATE_FAILURE;
+    return GST_STATE_CHANGE_FAILURE;
   }
 activate_failed:
   {
     GST_DEBUG ("element failed to change states -- activation problem?");
-    return GST_STATE_FAILURE;
+    return GST_STATE_CHANGE_FAILURE;
   }
 }

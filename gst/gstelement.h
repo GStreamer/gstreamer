@@ -28,15 +28,15 @@
 typedef struct _GstElement GstElement;
 typedef struct _GstElementClass GstElementClass;
 
-/* gstmessage.h needs ElementState */
-#define GST_NUM_STATES 4
+/* gstmessage.h needs State */
 typedef enum {
-  GST_STATE_VOID_PENDING        = 0,
-  GST_STATE_NULL                = (1 << 0),
-  GST_STATE_READY               = (1 << 1),
-  GST_STATE_PAUSED              = (1 << 2),
-  GST_STATE_PLAYING             = (1 << 3)
-} GstElementState;
+  GST_STATE_VOID_PENDING        = 0, /* used for GstElement->pending_state when
+                                        there is no pending state */
+  GST_STATE_NULL                = 1,
+  GST_STATE_READY               = 2,
+  GST_STATE_PAUSED              = 3,
+  GST_STATE_PLAYING             = 4
+} GstState;
 
 
 #include <gst/gstconfig.h>
@@ -65,11 +65,11 @@ GST_EXPORT GType _gst_element_type;
 #define GST_ELEMENT_CAST(obj)		((GstElement*)(obj))
 
 typedef enum {
-  GST_STATE_FAILURE             = 0,
-  GST_STATE_SUCCESS             = 1,
-  GST_STATE_ASYNC               = 2,
-  GST_STATE_NO_PREROLL          = 3
-} GstElementStateReturn;
+  GST_STATE_CHANGE_FAILURE             = 0,
+  GST_STATE_CHANGE_SUCCESS             = 1,
+  GST_STATE_CHANGE_ASYNC               = 2,
+  GST_STATE_CHANGE_NO_PREROLL          = 3
+} GstStateChangeReturn;
 
 /* NOTE: this probably should be done with an #ifdef to decide
  * whether to safe-cast or to just do the non-checking cast.
@@ -80,14 +80,33 @@ typedef enum {
 #define GST_STATE_ERROR(obj)		(GST_ELEMENT(obj)->state_error)
 #define GST_STATE_NO_PREROLL(obj)	(GST_ELEMENT(obj)->no_preroll)
 
-/* Note: using 8 bit shift mostly "just because", it leaves us enough room to grow <g> */
-#define GST_STATE_TRANSITION(obj)	((GST_STATE(obj)<<8) | GST_STATE_PENDING(obj))
-#define GST_STATE_NULL_TO_READY		((GST_STATE_NULL<<8) | GST_STATE_READY)
-#define GST_STATE_READY_TO_PAUSED	((GST_STATE_READY<<8) | GST_STATE_PAUSED)
-#define GST_STATE_PAUSED_TO_PLAYING	((GST_STATE_PAUSED<<8) | GST_STATE_PLAYING)
-#define GST_STATE_PLAYING_TO_PAUSED	((GST_STATE_PLAYING<<8) | GST_STATE_PAUSED)
-#define GST_STATE_PAUSED_TO_READY	((GST_STATE_PAUSED<<8) | GST_STATE_READY)
-#define GST_STATE_READY_TO_NULL		((GST_STATE_READY<<8) | GST_STATE_NULL)
+#ifndef GST_DEBUG_STATE_CHANGE
+#define GST_STATE_CHANGE(obj) ((1<<(GST_STATE(obj)+8)) | 1<<GST_STATE_PENDING(obj))
+#else
+inline GstStateChange
+_gst_element_get_state_change (GstElement *e)
+{
+  if (e->state < GST_STATE_NULL || e->state > GST_STATE_PLAYING)
+    g_assert_not_reached ();
+  if (e->pending_state < GST_STATE_NULL || e->pending_state > GST_STATE_PLAYING)
+    g_assert_not_reached ();
+  if (e->state - e->pending_state != 1 && e->pending_state - e->state != 1)
+    g_assert_not_reached ();
+  return (1<<(GST_STATE(obj)+8)) | 1<<GST_STATE_PENDING(obj);
+}
+#define GST_STATE_CHANGE(obj) _gst_element_get_state_change(obj)
+#endif
+
+/* FIXME: How to deal with lost_state ? */
+typedef enum 
+{
+  GST_STATE_CHANGE_NULL_TO_READY	= 1<<(GST_STATE_NULL+8) | 1<<GST_STATE_READY,
+  GST_STATE_CHANGE_READY_TO_PAUSED	= 1<<(GST_STATE_READY+8) | 1<<GST_STATE_PAUSED,
+  GST_STATE_CHANGE_PAUSED_TO_PLAYING	= 1<<(GST_STATE_PAUSED+8) | 1<<GST_STATE_PLAYING,
+  GST_STATE_CHANGE_PLAYING_TO_PAUSED	= 1<<(GST_STATE_PLAYING+8) | 1<<GST_STATE_PAUSED,
+  GST_STATE_CHANGE_PAUSED_TO_READY	= 1<<(GST_STATE_PAUSED+8) | 1<<GST_STATE_READY,
+  GST_STATE_CHANGE_READY_TO_NULL	= 1<<(GST_STATE_READY+8) | 1<<GST_STATE_NULL
+} GstStateChange;
 
 typedef enum
 {
@@ -219,7 +238,7 @@ struct _GstElementClass
 
   /*< private >*/
   /* signal callbacks */
-  void (*state_changed)	(GstElement *element, GstElementState old, GstElementState state);
+  void (*state_changed)	(GstElement *element, GstState old, GstState state);
   void (*pad_added)	(GstElement *element, GstPad *pad);
   void (*pad_removed)	(GstElement *element, GstPad *pad);
   void (*no_more_pads)	(GstElement *element);
@@ -232,9 +251,9 @@ struct _GstElementClass
   void			(*release_pad)		(GstElement *element, GstPad *pad);
 
   /* state changes */
-  GstElementStateReturn (*get_state)		(GstElement * element, GstElementState * state,
-						 GstElementState * pending, GTimeVal * timeout);
-  GstElementStateReturn (*change_state)		(GstElement *element);
+  GstStateChangeReturn (*get_state)		(GstElement * element, GstState * state,
+						 GstState * pending, GTimeVal * timeout);
+  GstStateChangeReturn (*change_state)		(GstElement *element, GstStateChange transition);
 
   /* bus */
   void			(*set_bus)		(GstElement * element, GstBus * bus);
@@ -329,11 +348,11 @@ gboolean		gst_element_is_locked_state	(GstElement *element);
 gboolean		gst_element_set_locked_state	(GstElement *element, gboolean locked_state);
 gboolean		gst_element_sync_state_with_parent (GstElement *element);
 
-GstElementStateReturn	gst_element_get_state		(GstElement * element,
-							 GstElementState * state,
-							 GstElementState * pending,
+GstStateChangeReturn	gst_element_get_state		(GstElement * element,
+							 GstState * state,
+							 GstState * pending,
 							 GTimeVal * timeout);
-GstElementStateReturn	gst_element_set_state		(GstElement *element, GstElementState state);
+GstStateChangeReturn	gst_element_set_state		(GstElement *element, GstState state);
 
 void			gst_element_abort_state		(GstElement * element);
 void			gst_element_commit_state	(GstElement * element);

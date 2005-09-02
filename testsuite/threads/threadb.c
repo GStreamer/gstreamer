@@ -31,7 +31,7 @@ construct_pipeline (GstElement * pipeline)
 void
 state_changed (GstElement * el, gint arg1, gint arg2, gpointer user_data)
 {
-  GstElementState state = gst_element_get_state (el);
+  GstState state = gst_element_get_state (el);
 
   g_print ("element %s has changed state to %s\n",
       GST_ELEMENT_NAME (el), gst_element_state_get_name (state));

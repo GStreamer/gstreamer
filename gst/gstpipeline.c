@@ -64,7 +64,8 @@ static gboolean gst_pipeline_send_event (GstElement * element,
     GstEvent * event);
 
 static GstClock *gst_pipeline_get_clock_func (GstElement * element);
-static GstElementStateReturn gst_pipeline_change_state (GstElement * element);
+static GstStateChangeReturn gst_pipeline_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstBinClass *parent_class = NULL;
 
@@ -204,7 +205,7 @@ gst_pipeline_send_event (GstElement * element, GstEvent * event)
 {
   gboolean was_playing;
   gboolean res;
-  GstElementState state;
+  GstState state;
   GstEventType event_type = GST_EVENT_TYPE (event);
   GTimeVal timeout;
 
@@ -249,25 +250,24 @@ gst_pipeline_new (const gchar * name)
 }
 
 /* MT safe */
-static GstElementStateReturn
-gst_pipeline_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_pipeline_change_state (GstElement * element, GstStateChange transition)
 {
-  GstElementStateReturn result = GST_STATE_SUCCESS;
+  GstStateChangeReturn result = GST_STATE_CHANGE_SUCCESS;
   GstPipeline *pipeline = GST_PIPELINE (element);
-  gint transition = GST_STATE_TRANSITION (element);
   GstClockTime play_timeout;
   GstClock *clock;
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       GST_LOCK (element);
       if (element->bus)
         gst_bus_set_flushing (element->bus, FALSE);
       GST_UNLOCK (element);
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       /* when going to playing, select a clock */
       if ((clock = gst_element_get_clock (element))) {
         GstClockTime start_time;
@@ -293,21 +293,23 @@ gst_pipeline_change_state (GstElement * element)
         gst_element_set_base_time (element, 0);
       }
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
-    case GST_STATE_PAUSED_TO_READY:
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
   }
 
-  result = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_pipeline_set_new_stream_time (pipeline, 0);
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       GST_LOCK (element);
       if ((clock = element->clock)) {
         GstClockTime now;
@@ -329,9 +331,9 @@ gst_pipeline_change_state (GstElement * element)
       }
       GST_UNLOCK (element);
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       GST_LOCK (element);
       if (element->bus) {
         gst_bus_set_flushing (element->bus, TRUE);
@@ -340,7 +342,7 @@ gst_pipeline_change_state (GstElement * element)
       break;
   }
 
-  if (result == GST_STATE_ASYNC) {
+  if (result == GST_STATE_CHANGE_ASYNC) {
     GST_LOCK (pipeline);
     play_timeout = pipeline->play_timeout;
     GST_UNLOCK (pipeline);
@@ -363,11 +365,11 @@ gst_pipeline_change_state (GstElement * element)
     }
 
     result = gst_element_get_state (element, NULL, NULL, timeval);
-    if (result == GST_STATE_ASYNC) {
+    if (result == GST_STATE_CHANGE_ASYNC) {
       GST_WARNING_OBJECT (pipeline,
           "timeout in PREROLL, forcing next state change");
       g_warning ("timeout in PREROLL, forcing next state change");
-      result = GST_STATE_SUCCESS;
+      result = GST_STATE_CHANGE_SUCCESS;
     }
 
     GST_STATE_LOCK (pipeline);

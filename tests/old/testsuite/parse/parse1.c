@@ -68,7 +68,7 @@ static gchar *s;
   alarm(10);								\
   g_print ("TEST %2d line %3d   RUN\n", test, __LINE__);		\
   if (gst_element_set_state (cur, GST_STATE_PLAYING)			\
-      == GST_STATE_FAILURE) {						\
+      == GST_STATE_CHANGE_FAILURE) {						\
     g_print ("TEST %2d line %3d  FAILED  : "				\
         "pipeline could not be set to PLAYING\n", test, __LINE__);	\
     return -test;							\
@@ -76,7 +76,7 @@ static gchar *s;
   iterations = 0;							\
   while (gst_bin_iterate (GST_BIN (cur))) iterations++;			\
   if (gst_element_set_state (cur, GST_STATE_NULL)			\
-      == GST_STATE_FAILURE) {						\
+      == GST_STATE_CHANGE_FAILURE) {						\
     g_print ("TEST %2d line %3d  FAILED  : "				\
         "pipeline could not be reset to state NULL\n", test, __LINE__);	\
     return -test;							\

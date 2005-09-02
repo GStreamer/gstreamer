@@ -160,7 +160,7 @@ GST_START_TEST (test_message_state_changed_child)
    * - second for bin, causing an incref on the bin */
   GST_DEBUG ("setting bin to READY");
   fail_unless (gst_element_set_state (GST_ELEMENT (bin), GST_STATE_READY)
-      == GST_STATE_SUCCESS);
+      == GST_STATE_CHANGE_SUCCESS);
 
   ASSERT_OBJECT_REFCOUNT (src, "src", 2);
   ASSERT_OBJECT_REFCOUNT (bin, "bin", 2);
@@ -228,7 +228,7 @@ GST_START_TEST (test_message_state_changed_children)
   /* change state to READY, spawning three messages */
   GST_DEBUG ("setting pipeline to READY");
   fail_unless (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_READY)
-      == GST_STATE_SUCCESS);
+      == GST_STATE_CHANGE_SUCCESS);
 
   /* each object is referenced by a message */
   ASSERT_OBJECT_REFCOUNT (bus, "bus", 1);
@@ -247,7 +247,7 @@ GST_START_TEST (test_message_state_changed_children)
   /* change state to PAUSED, spawning three messages */
   GST_DEBUG ("setting pipeline to PAUSED");
   fail_unless (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED)
-      == GST_STATE_SUCCESS);
+      == GST_STATE_CHANGE_SUCCESS);
 
   /* each object is referenced by a message;
    * base_sink_chain has taken a refcount on the sink, and is blocked on
@@ -267,7 +267,7 @@ GST_START_TEST (test_message_state_changed_children)
   /* change state to PLAYING, spawning three messages */
   GST_DEBUG ("setting pipeline to PLAYING");
   fail_unless (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING)
-      == GST_STATE_SUCCESS);
+      == GST_STATE_CHANGE_SUCCESS);
 
   /* each object is referenced by one message
    * sink might have an extra reference if it's still blocked on preroll */
@@ -287,7 +287,7 @@ GST_START_TEST (test_message_state_changed_children)
   /* go back to READY, spawning six messages */
   GST_DEBUG ("setting pipeline to READY");
   fail_unless (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_READY)
-      == GST_STATE_SUCCESS);
+      == GST_STATE_CHANGE_SUCCESS);
 
   /* each object is referenced by two messages */
   ASSERT_OBJECT_REFCOUNT (src, "src", 3);
@@ -303,7 +303,7 @@ GST_START_TEST (test_message_state_changed_children)
 
   /* setting pipeline to NULL flushes the bus automatically */
   fail_unless (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL)
-      == GST_STATE_SUCCESS);
+      == GST_STATE_CHANGE_SUCCESS);
 
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
@@ -337,7 +337,7 @@ GST_START_TEST (test_watch_for_state_change)
 
   /* change state, spawning two times three messages, minus one async */
   fail_unless (gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED)
-      == GST_STATE_ASYNC);
+      == GST_STATE_CHANGE_ASYNC);
 
   pop_messages (bus, 5);
 
@@ -353,7 +353,7 @@ GST_START_TEST (test_watch_for_state_change)
       "Unexpected messages on bus");
 
   fail_unless (gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING)
-      == GST_STATE_SUCCESS);
+      == GST_STATE_CHANGE_SUCCESS);
 
   pop_messages (bus, 3);
 
@@ -369,7 +369,7 @@ GST_START_TEST (test_watch_for_state_change)
 
   /* setting bin to NULL flushes the bus automatically */
   fail_unless (gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL)
-      == GST_STATE_SUCCESS);
+      == GST_STATE_CHANGE_SUCCESS);
 
   /* clean up */
   gst_object_unref (bin);

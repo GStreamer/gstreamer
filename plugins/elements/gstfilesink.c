@@ -91,7 +91,8 @@ static gboolean gst_file_sink_query (GstPad * pad, GstQuery * query);
 static void gst_file_sink_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
-static GstElementStateReturn gst_file_sink_change_state (GstElement * element);
+static GstStateChangeReturn gst_file_sink_change_state (GstElement * element,
+    GstStateChange transition);
 
 //static guint gst_file_sink_signals[LAST_SIGNAL] = { 0 };
 
@@ -401,36 +402,33 @@ handle_error:
   return GST_FLOW_ERROR;
 }
 
-static GstElementStateReturn
-gst_file_sink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_file_sink_change_state (GstElement * element, GstStateChange transition)
 {
-  GstElementStateReturn ret;
-  gint transition;
-
-  transition = GST_STATE_TRANSITION (element);
+  GstStateChangeReturn ret;
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!gst_file_sink_open_file (GST_FILE_SINK (element)))
         goto open_error;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     default:
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_file_sink_close_file (GST_FILE_SINK (element));
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;
@@ -440,7 +438,7 @@ gst_file_sink_change_state (GstElement * element)
 
 open_error:
   {
-    return GST_STATE_FAILURE;
+    return GST_STATE_CHANGE_FAILURE;
   }
 }
 

@@ -270,7 +270,8 @@ main (gint argc, gchar ** argv)
   g_assert (size >= MIN_SIZE);
   g_assert (size <= MAX_SIZE);
 
-  if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
+  if (gst_element_set_state (pipeline,
+          GST_STATE_PLAYING) != GST_STATE_CHANGE_SUCCESS)
     g_assert_not_reached ();
   while (gst_bin_iterate (GST_BIN (pipeline)));
 

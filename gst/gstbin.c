@@ -94,9 +94,10 @@ GType _gst_bin_type = 0;
 
 static void gst_bin_dispose (GObject * object);
 
-static GstElementStateReturn gst_bin_change_state (GstElement * element);
-static GstElementStateReturn gst_bin_get_state (GstElement * element,
-    GstElementState * state, GstElementState * pending, GTimeVal * timeout);
+static GstStateChangeReturn gst_bin_change_state (GstElement * element,
+    GstStateChange transition);
+static GstStateChangeReturn gst_bin_get_state (GstElement * element,
+    GstState * state, GstState * pending, GTimeVal * timeout);
 
 static gboolean gst_bin_add_func (GstBin * bin, GstElement * element);
 static gboolean gst_bin_remove_func (GstBin * bin, GstElement * element);
@@ -959,12 +960,12 @@ gst_bin_iterate_sinks (GstBin * bin)
  *
  * MT safe
  */
-static GstElementStateReturn
-gst_bin_get_state (GstElement * element, GstElementState * state,
-    GstElementState * pending, GTimeVal * timeout)
+static GstStateChangeReturn
+gst_bin_get_state (GstElement * element, GstState * state,
+    GstState * pending, GTimeVal * timeout)
 {
   GstBin *bin = GST_BIN (element);
-  GstElementStateReturn ret = GST_STATE_SUCCESS;
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GList *children;
   guint32 children_cookie;
   gboolean have_no_preroll;
@@ -1014,14 +1015,14 @@ restart:
 
       switch (ret) {
           /* report FAILURE  immediatly */
-        case GST_STATE_FAILURE:
+        case GST_STATE_CHANGE_FAILURE:
           goto done;
-        case GST_STATE_NO_PREROLL:
+        case GST_STATE_CHANGE_NO_PREROLL:
           /* we have to continue scanning as there might be
            * ERRORS too */
           have_no_preroll = TRUE;
           break;
-        case GST_STATE_ASYNC:
+        case GST_STATE_CHANGE_ASYNC:
           have_async = TRUE;
           break;
         default:
@@ -1032,7 +1033,7 @@ restart:
     /* if we get here, we have no FAILURES, check for any NO_PREROLL
      * elements then. */
     if (have_no_preroll) {
-      ret = GST_STATE_NO_PREROLL;
+      ret = GST_STATE_CHANGE_NO_PREROLL;
       goto done;
     }
 
@@ -1042,7 +1043,7 @@ restart:
     /* if no ASYNC elements exist we don't even have to poll with a
      * timeout again */
     if (!have_async) {
-      ret = GST_STATE_SUCCESS;
+      ret = GST_STATE_CHANGE_SUCCESS;
       goto done;
     }
   }
@@ -1075,13 +1076,13 @@ restart:
     }
 
     switch (ret) {
-      case GST_STATE_SUCCESS:
+      case GST_STATE_CHANGE_SUCCESS:
         break;
-      case GST_STATE_FAILURE:
-      case GST_STATE_NO_PREROLL:
+      case GST_STATE_CHANGE_FAILURE:
+      case GST_STATE_CHANGE_NO_PREROLL:
         /* report FAILURE and NO_PREROLL immediatly */
         goto done;
-      case GST_STATE_ASYNC:
+      case GST_STATE_CHANGE_ASYNC:
         goto done;
       default:
         g_assert_not_reached ();
@@ -1100,11 +1101,11 @@ done:
    * added after this function completed. */
   GST_STATE_LOCK (bin);
   switch (ret) {
-    case GST_STATE_SUCCESS:
+    case GST_STATE_CHANGE_SUCCESS:
       /* we can commit the state */
       gst_element_commit_state (element);
       break;
-    case GST_STATE_FAILURE:
+    case GST_STATE_CHANGE_FAILURE:
       /* some element failed, abort the state change */
       gst_element_abort_state (element);
       break;
@@ -1206,12 +1207,12 @@ remove_all_from_queue (GQueue * queue, gpointer elem, gboolean unref)
  */
 /* FIXME,  make me more elegant, want to use a topological sort algorithm
  * based on indegrees (or outdegrees in our case) */
-static GstElementStateReturn
-gst_bin_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_bin_change_state (GstElement * element, GstStateChange transition)
 {
   GstBin *bin;
-  GstElementStateReturn ret;
-  GstElementState old_state, pending;
+  GstStateChangeReturn ret;
+  GstState old_state, pending;
   gboolean have_async = FALSE;
   gboolean have_no_preroll = FALSE;
   GList *children;
@@ -1233,10 +1234,10 @@ gst_bin_change_state (GstElement * element)
       gst_element_state_get_name (pending));
 
   if (pending == GST_STATE_VOID_PENDING)
-    return GST_STATE_SUCCESS;
+    return GST_STATE_CHANGE_SUCCESS;
 
   /* Clear eosed element list on READY-> PAUSED */
-  if (GST_STATE_TRANSITION (element) == GST_STATE_READY_TO_PAUSED) {
+  if (transition == GST_STATE_CHANGE_READY_TO_PAUSED) {
     g_list_free (bin->eosed);
     bin->eosed = NULL;
   }
@@ -1399,28 +1400,28 @@ restart:
     GST_UNLOCK (bin);
 
     switch (ret) {
-      case GST_STATE_SUCCESS:
+      case GST_STATE_CHANGE_SUCCESS:
         GST_CAT_DEBUG (GST_CAT_STATES,
             "child '%s' changed state to %d(%s) successfully",
             GST_ELEMENT_NAME (qelement), pending,
             gst_element_state_get_name (pending));
         break;
-      case GST_STATE_ASYNC:
+      case GST_STATE_CHANGE_ASYNC:
         GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
             "child '%s' is changing state asynchronously",
             GST_ELEMENT_NAME (qelement));
         have_async = TRUE;
         break;
-      case GST_STATE_FAILURE:
+      case GST_STATE_CHANGE_FAILURE:
         GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
             "child '%s' failed to go to state %d(%s)",
             GST_ELEMENT_NAME (qelement),
             pending, gst_element_state_get_name (pending));
-        ret = GST_STATE_FAILURE;
+        ret = GST_STATE_CHANGE_FAILURE;
         /* release refcount of element we popped off the queue */
         gst_object_unref (qelement);
         goto exit;
-      case GST_STATE_NO_PREROLL:
+      case GST_STATE_CHANGE_NO_PREROLL:
         GST_CAT_DEBUG (GST_CAT_STATES,
             "child '%s' changed state to %d(%s) successfully without preroll",
             GST_ELEMENT_NAME (qelement), pending,
@@ -1448,11 +1449,11 @@ restart:
   }
 
   if (have_no_preroll) {
-    ret = GST_STATE_NO_PREROLL;
+    ret = GST_STATE_CHANGE_NO_PREROLL;
   } else if (have_async) {
-    ret = GST_STATE_ASYNC;
+    ret = GST_STATE_CHANGE_ASYNC;
   } else {
-    ret = parent_class->change_state (element);
+    ret = parent_class->change_state (element, transition);
   }
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,

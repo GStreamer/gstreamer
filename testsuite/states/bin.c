@@ -21,10 +21,10 @@
 
 #include <gst/gst.h>
 
-#define RETURN_NAME(x) ((x) == GST_STATE_SUCCESS ? "GST_STATE_SUCCESS" : \
-    (x) == GST_STATE_ASYNC ? "GST_STATE_ASYNC" : "GST_STATE_FAILURE")
+#define RETURN_NAME(x) ((x) == GST_STATE_CHANGE_SUCCESS ? "GST_STATE_CHANGE_SUCCESS" : \
+    (x) == GST_STATE_CHANGE_ASYNC ? "GST_STATE_CHANGE_ASYNC" : "GST_STATE_CHANGE_FAILURE")
 static void
-assert_state (GstElement * element, GstElementState state)
+assert_state (GstElement * element, GstState state)
 {
   if (gst_element_get_state (element) != state) {
     g_printerr ("%s: state is %s instead of %s",
@@ -36,10 +36,10 @@ assert_state (GstElement * element, GstElementState state)
 }
 
 static void
-assert_state_change (GstElement * element, GstElementState new_state,
-    GstElementStateReturn result, GstElementState result_state)
+assert_state_change (GstElement * element, GstState new_state,
+    GstStateChangeReturn result, GstState result_state)
 {
-  GstElementStateReturn ret = gst_element_set_state (element, new_state);
+  GstStateChangeReturn ret = gst_element_set_state (element, new_state);
 
   if (ret != result) {
     g_printerr ("%s: change state to %s returned %s instead of %s",
@@ -56,15 +56,18 @@ empty_bin (gchar * bin_name)
   /* Test the behaviour of empty bins. Since a bin's state is always the state
    * of its highest child, nothing should change in here
    * Return values when no error occured but the state didn't change should be
-   * GST_STATE_ASYNC */
+   * GST_STATE_CHANGE_ASYNC */
   GstElement *bin = gst_element_factory_make (bin_name, NULL);
 
   /* obvious */
   assert_state (bin, GST_STATE_NULL);
   /* see above */
-  assert_state_change (bin, GST_STATE_READY, GST_STATE_ASYNC, GST_STATE_NULL);
-  assert_state_change (bin, GST_STATE_PAUSED, GST_STATE_ASYNC, GST_STATE_NULL);
-  assert_state_change (bin, GST_STATE_PLAYING, GST_STATE_ASYNC, GST_STATE_NULL);
+  assert_state_change (bin, GST_STATE_READY, GST_STATE_CHANGE_ASYNC,
+      GST_STATE_NULL);
+  assert_state_change (bin, GST_STATE_PAUSED, GST_STATE_CHANGE_ASYNC,
+      GST_STATE_NULL);
+  assert_state_change (bin, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC,
+      GST_STATE_NULL);
 }
 
 static void
@@ -72,11 +75,11 @@ test_adding_one_element (GstElement * bin)
 {
   /* Tests behaviour of adding/removing elements to/from bins. It makes sure the
    * state of the bin is always the highest of all contained children. */
-  GstElementState test_states[] = { GST_STATE_READY, GST_STATE_PAUSED,
+  GstState test_states[] = { GST_STATE_READY, GST_STATE_PAUSED,
     GST_STATE_PLAYING, GST_STATE_PAUSED, GST_STATE_READY, GST_STATE_NULL
   };
   GstElement *test = gst_element_factory_make ("identity", NULL);
-  GstElementState bin_state = gst_element_get_state (bin);
+  GstState bin_state = gst_element_get_state (bin);
   gint i;
 
   g_assert (test);
@@ -85,9 +88,10 @@ test_adding_one_element (GstElement * bin)
   gst_bin_add (GST_BIN (bin), test);
   assert_state (bin, MAX (bin_state, GST_STATE_NULL));
   for (i = 0; i < G_N_ELEMENTS (test_states); i++) {
-    GstElementState test_state = test_states[i];
+    GstState test_state = test_states[i];
 
-    assert_state_change (test, test_state, GST_STATE_SUCCESS, test_state);
+    assert_state_change (test, test_state, GST_STATE_CHANGE_SUCCESS,
+        test_state);
     assert_state (test, test_state);
     assert_state (bin, MAX (bin_state, test_state));
     gst_bin_remove (GST_BIN (bin), test);
@@ -105,7 +109,7 @@ static void
 test_element_in_bin (gchar * bin_name)
 {
   gint i;
-  GstElementState test_states[] = { GST_STATE_NULL, GST_STATE_READY,
+  GstState test_states[] = { GST_STATE_NULL, GST_STATE_READY,
     GST_STATE_PAUSED, GST_STATE_PLAYING
   };
   GstElement *id, *bin = gst_element_factory_make (bin_name, NULL);
@@ -121,9 +125,9 @@ test_element_in_bin (gchar * bin_name)
   gst_bin_add (GST_BIN (bin), id);
   /* test correct behaviour in bins which contain elements in various states */
   for (i = 0; i < G_N_ELEMENTS (test_states); i++) {
-    GstElementState test_state = test_states[i];
+    GstState test_state = test_states[i];
 
-    assert_state_change (bin, test_state, GST_STATE_SUCCESS, test_state);
+    assert_state_change (bin, test_state, GST_STATE_CHANGE_SUCCESS, test_state);
     assert_state (id, test_state);
     test_adding_one_element (bin);
   }

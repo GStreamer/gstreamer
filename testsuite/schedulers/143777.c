@@ -51,12 +51,13 @@ main (gint argc, gchar ** argv)
   while (i < 100) {
     g_print ("running... (%d iterations)\n", i);
     if (gst_element_set_state (pipeline,
-            GST_STATE_PLAYING) != GST_STATE_SUCCESS)
+            GST_STATE_PLAYING) != GST_STATE_CHANGE_SUCCESS)
       g_assert_not_reached ();
     gst_element_link_many (src, id, sink, NULL);
     for (j = 0; j < i; j++)
       gst_bin_iterate (GST_BIN (pipeline));
-    if (gst_element_set_state (pipeline, GST_STATE_PAUSED) != GST_STATE_SUCCESS)
+    if (gst_element_set_state (pipeline,
+            GST_STATE_PAUSED) != GST_STATE_CHANGE_SUCCESS)
       g_assert_not_reached ();
     gst_element_unlink_many (src, id, sink, NULL);
     i++;

@@ -77,7 +77,8 @@ GST_START_TEST (test_num_buffers)
   src = setup_fakesrc ();
   g_object_set (G_OBJECT (src), "num-buffers", 3, NULL);
   fail_unless (gst_element_set_state (src,
-          GST_STATE_PLAYING) == GST_STATE_SUCCESS, "could not set to playing");
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
 
   while (!have_eos) {
     g_usleep (1000);
@@ -104,7 +105,8 @@ GST_START_TEST (test_sizetype_empty)
   g_object_set (G_OBJECT (src), "num-buffers", 100, NULL);
 
   fail_unless (gst_element_set_state (src,
-          GST_STATE_PLAYING) == GST_STATE_SUCCESS, "could not set to playing");
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
 
   while (!have_eos) {
     g_usleep (1000);
@@ -139,7 +141,8 @@ GST_START_TEST (test_sizetype_fixed)
   g_object_set (G_OBJECT (src), "num-buffers", 100, NULL);
 
   fail_unless (gst_element_set_state (src,
-          GST_STATE_PLAYING) == GST_STATE_SUCCESS, "could not set to playing");
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
 
   while (!have_eos) {
     g_usleep (1000);
@@ -175,7 +178,8 @@ GST_START_TEST (test_sizetype_random)
   g_object_set (G_OBJECT (src), "num-buffers", 100, NULL);
 
   fail_unless (gst_element_set_state (src,
-          GST_STATE_PLAYING) == GST_STATE_SUCCESS, "could not set to playing");
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
 
   while (!have_eos) {
     g_usleep (1000);

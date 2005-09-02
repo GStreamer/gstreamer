@@ -440,7 +440,7 @@ event_loop (GstElement * pipeline, gboolean blocking)
         return TRUE;
       }
       case GST_MESSAGE_STATE_CHANGED:{
-        GstElementState old, new;
+        GstState old, new;
 
         gst_message_parse_state_changed (message, &old, &new);
         if (!(old == GST_STATE_PLAYING && new == GST_STATE_PAUSED &&
@@ -592,8 +592,8 @@ main (int argc, char *argv[])
 #endif
 
   if (!savefile) {
-    GstElementState state, pending;
-    GstElementStateReturn ret;
+    GstState state, pending;
+    GstStateChangeReturn ret;
 
     if (!GST_IS_BIN (pipeline)) {
       GstElement *real_pipeline = gst_element_factory_make ("pipeline", NULL);
@@ -610,18 +610,18 @@ main (int argc, char *argv[])
     ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
     switch (ret) {
-      case GST_STATE_FAILURE:
+      case GST_STATE_CHANGE_FAILURE:
         fprintf (stderr, _("ERROR: pipeline doesn't want to pause.\n"));
         res = -1;
         goto end;
-      case GST_STATE_NO_PREROLL:
+      case GST_STATE_CHANGE_NO_PREROLL:
         fprintf (stderr, _("NO_PREROLL pipeline ...\n"));
         break;
-      case GST_STATE_ASYNC:
+      case GST_STATE_CHANGE_ASYNC:
         fprintf (stderr, _("PREROLL pipeline ...\n"));
         gst_element_get_state (pipeline, &state, &pending, NULL);
         /* fallthrough */
-      case GST_STATE_SUCCESS:
+      case GST_STATE_CHANGE_SUCCESS:
         fprintf (stderr, _("PREROLLED pipeline ...\n"));
         break;
     }
@@ -636,7 +636,7 @@ main (int argc, char *argv[])
 
       fprintf (stderr, _("RUNNING pipeline ...\n"));
       if (gst_element_set_state (pipeline,
-              GST_STATE_PLAYING) == GST_STATE_FAILURE) {
+              GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
         fprintf (stderr, _("ERROR: pipeline doesn't want to play.\n"));
         res = -1;
         goto end;

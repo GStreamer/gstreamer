@@ -53,7 +53,8 @@ main (gint argc, gchar ** argv)
   gst_element_link_pads (queue, "src", id1, "sink");
   gst_element_link_pads (id1, "src", sink, "sink");
 
-  if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
+  if (gst_element_set_state (pipeline,
+          GST_STATE_PLAYING) != GST_STATE_CHANGE_SUCCESS)
     g_assert_not_reached ();
 
   g_print ("unlinking...\n");

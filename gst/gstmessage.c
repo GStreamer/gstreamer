@@ -307,8 +307,7 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
  * MT safe.
  */
 GstMessage *
-gst_message_new_state_changed (GstObject * src, GstElementState old,
-    GstElementState new)
+gst_message_new_state_changed (GstObject * src, GstState old, GstState new)
 {
   GstMessage *message;
   GstStructure *s;
@@ -460,8 +459,8 @@ gst_message_parse_tag (GstMessage * message, GstTagList ** tag_list)
  * MT safe.
  */
 void
-gst_message_parse_state_changed (GstMessage * message, GstElementState * old,
-    GstElementState * new)
+gst_message_parse_state_changed (GstMessage * message, GstState * old,
+    GstState * new)
 {
   g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STATE_CHANGED);

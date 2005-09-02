@@ -160,38 +160,65 @@ gst_clock_flags_get_type (void)
 
 /* enumerations from "gstelement.h" */
 GType
-gst_element_state_get_type (void)
-{
-  static GType etype = 0;
-
-  if (etype == 0) {
-    static const GFlagsValue values[] = {
-      {GST_STATE_VOID_PENDING, "GST_STATE_VOID_PENDING", "state-void-pending"},
-      {GST_STATE_NULL, "GST_STATE_NULL", "state-null"},
-      {GST_STATE_READY, "GST_STATE_READY", "state-ready"},
-      {GST_STATE_PAUSED, "GST_STATE_PAUSED", "state-paused"},
-      {GST_STATE_PLAYING, "GST_STATE_PLAYING", "state-playing"},
-      {0, NULL, NULL}
-    };
-    etype = g_flags_register_static ("GstElementState", values);
-  }
-  return etype;
-}
-
-GType
-gst_element_state_return_get_type (void)
+gst_state_get_type (void)
 {
   static GType etype = 0;
 
   if (etype == 0) {
     static const GEnumValue values[] = {
-      {GST_STATE_FAILURE, "GST_STATE_FAILURE", "failure"},
-      {GST_STATE_SUCCESS, "GST_STATE_SUCCESS", "success"},
-      {GST_STATE_ASYNC, "GST_STATE_ASYNC", "async"},
-      {GST_STATE_NO_PREROLL, "GST_STATE_NO_PREROLL", "no-preroll"},
+      {GST_STATE_VOID_PENDING, "GST_STATE_VOID_PENDING", "void-pending"},
+      {GST_STATE_NULL, "GST_STATE_NULL", "null"},
+      {GST_STATE_READY, "GST_STATE_READY", "ready"},
+      {GST_STATE_PAUSED, "GST_STATE_PAUSED", "paused"},
+      {GST_STATE_PLAYING, "GST_STATE_PLAYING", "playing"},
       {0, NULL, NULL}
     };
-    etype = g_enum_register_static ("GstElementStateReturn", values);
+    etype = g_enum_register_static ("GstState", values);
+  }
+  return etype;
+}
+
+GType
+gst_state_change_return_get_type (void)
+{
+  static GType etype = 0;
+
+  if (etype == 0) {
+    static const GEnumValue values[] = {
+      {GST_STATE_CHANGE_FAILURE, "GST_STATE_CHANGE_FAILURE", "failure"},
+      {GST_STATE_CHANGE_SUCCESS, "GST_STATE_CHANGE_SUCCESS", "success"},
+      {GST_STATE_CHANGE_ASYNC, "GST_STATE_CHANGE_ASYNC", "async"},
+      {GST_STATE_CHANGE_NO_PREROLL, "GST_STATE_CHANGE_NO_PREROLL",
+            "no-preroll"},
+      {0, NULL, NULL}
+    };
+    etype = g_enum_register_static ("GstStateChangeReturn", values);
+  }
+  return etype;
+}
+
+GType
+gst_state_change_get_type (void)
+{
+  static GType etype = 0;
+
+  if (etype == 0) {
+    static const GFlagsValue values[] = {
+      {GST_STATE_CHANGE_NULL_TO_READY, "GST_STATE_CHANGE_NULL_TO_READY",
+            "null-to-ready"},
+      {GST_STATE_CHANGE_READY_TO_PAUSED, "GST_STATE_CHANGE_READY_TO_PAUSED",
+            "ready-to-paused"},
+      {GST_STATE_CHANGE_PAUSED_TO_PLAYING, "GST_STATE_CHANGE_PAUSED_TO_PLAYING",
+            "paused-to-playing"},
+      {GST_STATE_CHANGE_PLAYING_TO_PAUSED, "GST_STATE_CHANGE_PLAYING_TO_PAUSED",
+            "playing-to-paused"},
+      {GST_STATE_CHANGE_PAUSED_TO_READY, "GST_STATE_CHANGE_PAUSED_TO_READY",
+            "paused-to-ready"},
+      {GST_STATE_CHANGE_READY_TO_NULL, "GST_STATE_CHANGE_READY_TO_NULL",
+            "ready-to-null"},
+      {0, NULL, NULL}
+    };
+    etype = g_flags_register_static ("GstStateChange", values);
   }
   return etype;
 }

@@ -63,8 +63,8 @@ cb_data (gpointer data)
 #endif
 
 static void
-cb_state (GstElement * element, GstElementState old_state,
-    GstElementState new_state, gpointer data)
+cb_state (GstElement * element, GstState old_state,
+    GstState new_state, gpointer data)
 {
   g_print ("Changed state from %d to %d\n", old_state, new_state);
 }
@@ -72,7 +72,7 @@ cb_state (GstElement * element, GstElementState old_state,
 static gboolean
 cb_play (gpointer data)
 {
-  GstElementStateReturn res;
+  GstStateChangeReturn res;
 
 #if TESTNUM != 999999
   g_print ("Setting state on fakesrc\n");
@@ -87,7 +87,7 @@ cb_play (gpointer data)
 #endif
   g_print ("Syncing state in pipeline\n");
   res = gst_bin_sync_children_state (GST_BIN (data));
-  g_assert (res == GST_STATE_SUCCESS);
+  g_assert (res == GST_STATE_CHANGE_SUCCESS);
   g_print ("Set to playing correctly: %d\n", GST_STATE (pipeline));
 
   /* once */

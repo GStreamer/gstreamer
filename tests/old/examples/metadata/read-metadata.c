@@ -182,8 +182,8 @@ main (int argc, char *argv[])
 
   make_pipeline ();
   while (i < argc) {
-    GstElementStateReturn sret;
-    GstElementState state;
+    GstStateChangeReturn sret;
+    GstState state;
 
     filename = argv[i];
     g_object_set (source, "location", filename, NULL);
@@ -194,13 +194,13 @@ main (int argc, char *argv[])
      * otherwise the state change fails */
     sret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
 
-    if (GST_STATE_ASYNC == sret) {
-      if (GST_STATE_FAILURE ==
+    if (GST_STATE_CHANGE_ASYNC == sret) {
+      if (GST_STATE_CHANGE_FAILURE ==
           gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL, NULL)) {
         g_print ("State change failed. Aborting");
         break;
       }
-    } else if (sret != GST_STATE_SUCCESS) {
+    } else if (sret != GST_STATE_CHANGE_SUCCESS) {
       g_print ("%s - Could not read file\n", argv[i]);
     } else {
       GstTagList *tags = NULL;
@@ -226,8 +226,8 @@ main (int argc, char *argv[])
         g_print ("No metadata found for %s\n", argv[i]);
 
       sret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
-      if (GST_STATE_ASYNC == sret) {
-        if (GST_STATE_FAILURE ==
+      if (GST_STATE_CHANGE_ASYNC == sret) {
+        if (GST_STATE_CHANGE_FAILURE ==
             gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL, NULL))
         {
           g_print ("State change failed. Aborting");

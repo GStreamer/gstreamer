@@ -42,7 +42,7 @@ construct_pipeline (GstElement * pipeline, gint identities)
 void
 state_changed (GstElement * el, gint arg1, gint arg2, gpointer user_data)
 {
-  GstElementState state = gst_element_get_state (el);
+  GstState state = gst_element_get_state (el);
 
   g_print ("element %s has changed state to %s\n",
       GST_ELEMENT_NAME (el), gst_element_state_get_name (state));
@@ -75,7 +75,8 @@ main (gint argc, gchar * argv[])
     g_print ("Setting thread to play with %d identities\n",
         i / RUNS_PER_IDENTITY + 1);
     done = FALSE;
-    if (gst_element_set_state (thread, GST_STATE_PLAYING) == GST_STATE_FAILURE) {
+    if (gst_element_set_state (thread,
+            GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
       g_warning ("failed to go to PLAYING");
     } else {
       g_print ("Waiting for thread PLAYING->PAUSED\n");

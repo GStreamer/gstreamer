@@ -96,10 +96,12 @@ main (gint argc, gchar ** argv)
   gst_element_link_pads (queue, "src", id, "sink");
   gst_element_link_pads (id, "src", sink, "sink");
 
-  if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
+  if (gst_element_set_state (pipeline,
+          GST_STATE_PLAYING) != GST_STATE_CHANGE_SUCCESS)
     g_assert_not_reached ();
 
-  if (gst_element_set_state (pipeline2, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
+  if (gst_element_set_state (pipeline2,
+          GST_STATE_PLAYING) != GST_STATE_CHANGE_SUCCESS)
     g_assert_not_reached ();
 
   g_print ("running...\n");
@@ -110,7 +112,8 @@ main (gint argc, gchar ** argv)
   }
   g_assert (!bug);
 
-  if (gst_element_set_state (pipeline2, GST_STATE_READY) != GST_STATE_SUCCESS)
+  if (gst_element_set_state (pipeline2,
+          GST_STATE_READY) != GST_STATE_CHANGE_SUCCESS)
     g_assert_not_reached ();
 
   g_print ("relinking...\n");
@@ -118,7 +121,8 @@ main (gint argc, gchar ** argv)
   gst_element_unlink_pads (id, "src", sink, "sink");
   gst_element_link_pads (id, "src", sink, "sink");
 
-  if (gst_element_set_state (pipeline2, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
+  if (gst_element_set_state (pipeline2,
+          GST_STATE_PLAYING) != GST_STATE_CHANGE_SUCCESS)
     g_assert_not_reached ();
 
   g_print ("running again...\n");

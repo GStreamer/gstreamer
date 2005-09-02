@@ -82,7 +82,8 @@ static void gst_fdsrc_set_property (GObject * object, guint prop_id,
 static void gst_fdsrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn gst_fdsrc_change_state (GstElement * element);
+static GstStateChangeReturn gst_fdsrc_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstFlowReturn gst_fdsrc_create (GstPushSrc * psrc, GstBuffer ** outbuf);
 
@@ -147,29 +148,29 @@ gst_fdsrc_init (GstFdSrc * fdsrc)
   fdsrc->seq = 0;
 }
 
-static GstElementStateReturn
-gst_fdsrc_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_fdsrc_change_state (GstElement * element, GstStateChange transition)
 {
   GstFdSrc *src = GST_FDSRC (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       src->curoffset = 0;
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
     default:
       break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 

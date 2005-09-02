@@ -64,12 +64,15 @@ main (gint argc, gchar ** argv)
   gst_bin_add_many (GST_BIN (pipeline), src, id1, NULL);
   gst_element_link_pads (src, "src", id1, "sink");
 
-  if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
+  if (gst_element_set_state (pipeline,
+          GST_STATE_PLAYING) != GST_STATE_CHANGE_SUCCESS)
     g_assert_not_reached ();
 
-  if (gst_element_set_state (id2, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
+  if (gst_element_set_state (id2,
+          GST_STATE_PLAYING) != GST_STATE_CHANGE_SUCCESS)
     g_assert_not_reached ();
-  if (gst_element_set_state (sink, GST_STATE_PLAYING) != GST_STATE_SUCCESS)
+  if (gst_element_set_state (sink,
+          GST_STATE_PLAYING) != GST_STATE_CHANGE_SUCCESS)
     g_assert_not_reached ();
 
   gst_bin_add_many (GST_BIN (pipeline), sink, NULL);

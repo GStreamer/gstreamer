@@ -93,7 +93,8 @@ GST_START_TEST (test_one_buffer)
 
   identity = setup_identity ();
   fail_unless (gst_element_set_state (identity,
-          GST_STATE_PLAYING) == GST_STATE_SUCCESS, "could not set to playing");
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
 
   buffer = gst_buffer_new_and_alloc (4);
   ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);

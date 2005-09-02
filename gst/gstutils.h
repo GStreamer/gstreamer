@@ -292,7 +292,7 @@ GstPad*                 gst_element_get_compatible_pad  (GstElement *element, Gs
 
 GstPadTemplate*         gst_element_get_compatible_pad_template (GstElement *element, GstPadTemplate *compattempl);
 
-G_CONST_RETURN gchar*   gst_element_state_get_name      (GstElementState state);
+G_CONST_RETURN gchar*   gst_element_state_get_name      (GstState state);
 
 gboolean		gst_element_link                (GstElement *src, GstElement *dest);
 gboolean		gst_element_link_many           (GstElement *element_1,
