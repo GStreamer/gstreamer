@@ -57,8 +57,7 @@
  * elements) again and again. One way to implement it is having one watch with a
  * low priority (see gst_add_watch_full()) that pops all messages.
  * 
- * Every #GstElement has its own bus.
- *
+ * Every #GstPipeline has one bus.
  */
 
 #include <errno.h>

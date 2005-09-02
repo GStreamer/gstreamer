@@ -46,7 +46,7 @@
  *
  * <example>
  * <title>Initializing the gstreamer library</title>
- * <programlisting>
+ * <programlisting language="c">
  * int 
  * main (int argc, char *argv[])
  * {

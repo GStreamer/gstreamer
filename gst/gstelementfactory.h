@@ -38,21 +38,48 @@ G_BEGIN_DECLS
 
 typedef struct _GstElementDetails GstElementDetails;
 
+/**
+ * GstElementDetails:
+ * @longname: long, english name
+ * @klass: type of element, as hierarchy
+ * @description: what the element is about
+ * @author: who wrote this thing?
+ *
+ * This struct defines the public information about a #GstElement. It contains
+ * meta-data about the element that is mostly for the benefit of editors.
+ */
 /* FIXME: need translatable stuff in here (how handle in registry)? */
 struct _GstElementDetails
 {
   /*< public > */
-  gchar *longname;              /* long, english name */
-  gchar *klass;                 /* type of element, as hierarchy */
-  gchar *description;           /* insights of one form or another */
-  gchar *author;                /* who wrote this thing? */
+  gchar *longname;
+  gchar *klass;
+  gchar *description;
+  gchar *author;
 
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GST_ELEMENT_DETAILS:
+ * @longname: long, english name
+ * @klass: type of element, as hierarchy
+ * @description: what the element is about
+ * @author: who wrote this thing?
+ *
+ * Macro to initialize #GstElementDetails.
+ */
 #define GST_ELEMENT_DETAILS(longname,klass,description,author)		\
   { longname, klass, description, author, {0} }
+
+/**
+ * GST_IS_ELEMENT_DETAILS:
+ * @details: the #GstElementDetails to check
+ *
+ * Tests if element details are initialized.
+ */
+/* FIXME: what about adding '&& (*__gst_reserved==NULL)' */
 #define GST_IS_ELEMENT_DETAILS(details) (					\
   (details) && ((details)->longname != NULL) && ((details)->klass != NULL)	\
   && ((details)->description != NULL) && ((details)->author != NULL))

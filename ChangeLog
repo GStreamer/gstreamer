@@ -1,3 +1,17 @@
+2005-09-02  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/.cvsignore:
+	* docs/gst/tmpl/gstelementdetails.sgml:
+	* docs/gst/tmpl/gstelementfactory.sgml:
+	* gst/gst.c:
+	* gst/gstbus.c:
+	* gst/gstelementfactory.c:
+	* gst/gstelementfactory.h:
+          merged elementdetails docs into elementfactory docs
+          inlined both
+
 2005-09-02  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstelement.h: Add magical pixie dust to make glib-mkenums

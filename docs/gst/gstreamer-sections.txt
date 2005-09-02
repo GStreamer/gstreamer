@@ -524,19 +524,12 @@ gst_element_flags_get_type
 
 
 <SECTION>
-<FILE>gstelementdetails</FILE>
-<TITLE>GstElementDetails</TITLE>
-GstElementDetails
-<SUBSECTION Standard>
-GST_ELEMENT_DETAILS
-GST_IS_ELEMENT_DETAILS
-</SECTION>
-
-
-<SECTION>
 <FILE>gstelementfactory</FILE>
 <TITLE>GstElementFactory</TITLE>
 GstElementFactory
+GstElementDetails
+GST_ELEMENT_DETAILS
+GST_IS_ELEMENT_DETAILS
 gst_element_register
 gst_element_factory_find
 gst_element_factory_get_element_type
