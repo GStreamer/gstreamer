@@ -4,16 +4,15 @@
 Name: 		%{gstreamer}
 Version: 	@VERSION@
 Release: 	@GST_VERSION_RELEASE@
-Summary: 	GStreamer streaming media framework runtime.
+Summary: 	GStreamer streaming media framework runtime
 
 Group: 		Applications/Multimedia
 License: 	LGPL
 URL:		http://gstreamer.freedesktop.org/
-Vendor:         GStreamer Backpackers Team <package@gstreamer.net>
+Vendor:         GStreamer Backpackers Team <package@gstreamer.freedesktop.org>
 Source: 	http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-%define		majorminor	@GST_MAJORMINOR@
 %define 	_glib2		@GLIB2_REQ@
 %define 	_libxml2	@LIBXML2_REQ@
 
@@ -51,7 +50,7 @@ BuildRequires:  netpbm-progs
 BuildRequires:  ghostscript
 
 %description
-GStreamer is a streaming-media framework, based on graphs of filters which
+GStreamer is a streaming media framework, based on graphs of filters which
 operate on media data. Applications using this library can do anything
 from real-time sound processing to playing videos, and just about anything
 else media-related.  Its plugin-based architecture means that new data
@@ -209,6 +208,9 @@ rm -rf $RPM_BUILD_ROOT
 %doc %{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}
                                                                                 
 %changelog
+* Fri Sep 02 2005 Thomas Vander Stichele <thomas at apestaart dot org>
+- clean up a little
+
 * Thu Jun 09 2005 Thomas Vander Stichele <thomas at apestaart dot org>
 - clean up spec for 0.9 builds
 
