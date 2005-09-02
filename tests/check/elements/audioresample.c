@@ -151,7 +151,8 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
   fail_unless (gst_caps_is_fixed (caps));
 
   fail_unless (gst_element_set_state (audioresample,
-          GST_STATE_PLAYING) == GST_STATE_SUCCESS, "could not set to playing");
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
 
   for (j = 1; j <= numbuffers; ++j) {
 
