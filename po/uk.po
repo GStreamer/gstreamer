@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-07-10 17:07+0200\n"
+"POT-Creation-Date: 2005-09-02 14:11+0200\n"
 "PO-Revision-Date: 2004-08-03 15:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -86,6 +86,36 @@ msgstr "Не вказано файл"
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Не вдається закрити файл віртуальної файлової системи \"%s\"."
+
+#: gst/playback/gstplaybasebin.c:1296
+msgid "No URI specified to play from."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1302
+#, c-format
+msgid "No URI handler implemented for \"%s\"."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1306
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1313
+msgid "Could not create \"decodebin\" element."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1379
+#, c-format
+msgid ""
+"You do not have a decoder installed to handle \"%s\".  You might need to "
+"install the necessary plugins."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1382
+#, fuzzy, c-format
+msgid "\"%s\" is not a media file"
+msgstr "Пристрій \"%s\" не є пристроєм захоплення."
 
 #~ msgid "No device specified."
 #~ msgstr "Пристрій не вказано."
@@ -230,9 +260,6 @@ msgstr "Не вдається закрити файл віртуальної ф�
 
 #~ msgid "Monitor"
 #~ msgstr "Монітор"
-
-#~ msgid "Device \"%s\" is not a capture device."
-#~ msgstr "Пристрій \"%s\" не є пристроєм захоплення."
 
 #~ msgid "Could not get buffers from device \"%s\"."
 #~ msgstr "Не вдається отримати буфери від пристрою \"%s\"."

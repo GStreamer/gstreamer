@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-07-10 17:07+0200\n"
+"POT-Creation-Date: 2005-09-02 14:11+0200\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -86,6 +86,36 @@ msgstr "Geen lêernaam gespesifiseer."
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kon nie vfs-lêer \"%s\" toemaak nie."
+
+#: gst/playback/gstplaybasebin.c:1296
+msgid "No URI specified to play from."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1302
+#, c-format
+msgid "No URI handler implemented for \"%s\"."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1306
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1313
+msgid "Could not create \"decodebin\" element."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1379
+#, c-format
+msgid ""
+"You do not have a decoder installed to handle \"%s\".  You might need to "
+"install the necessary plugins."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1382
+#, fuzzy, c-format
+msgid "\"%s\" is not a media file"
+msgstr "Toestel \"%s\" is nie 'n vasleggingtoestel nie."
 
 #~ msgid "No device specified."
 #~ msgstr "Geen toestel gespesifiseer"
@@ -219,9 +249,6 @@ msgstr "Kon nie vfs-lêer \"%s\" toemaak nie."
 
 #~ msgid "Monitor"
 #~ msgstr "Monitor"
-
-#~ msgid "Device \"%s\" is not a capture device."
-#~ msgstr "Toestel \"%s\" is nie 'n vasleggingtoestel nie."
 
 #~ msgid "Could not get buffers from device \"%s\"."
 #~ msgstr "Kon nie buffers vanaf toestel \"%s\" verkry nie."

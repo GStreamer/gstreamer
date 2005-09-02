@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-07-10 17:07+0200\n"
+"POT-Creation-Date: 2005-09-02 14:11+0200\n"
 "PO-Revision-Date: 2004-08-07 20:29+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -84,6 +84,36 @@ msgstr "Nuk është dhënë asnjë emër file"
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "E pamundur mbyllja e file vfs \"%s\"."
+
+#: gst/playback/gstplaybasebin.c:1296
+msgid "No URI specified to play from."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1302
+#, c-format
+msgid "No URI handler implemented for \"%s\"."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1306
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1313
+msgid "Could not create \"decodebin\" element."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1379
+#, c-format
+msgid ""
+"You do not have a decoder installed to handle \"%s\".  You might need to "
+"install the necessary plugins."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1382
+#, fuzzy, c-format
+msgid "\"%s\" is not a media file"
+msgstr "Dispozitivi \"%s\" nuk është një dispozitiv marrje."
 
 #~ msgid "No device specified."
 #~ msgstr "Nuk është përcaktuar asnjë dispozitiv."
@@ -242,9 +272,6 @@ msgstr "E pamundur mbyllja e file vfs \"%s\"."
 
 #~ msgid "Monitor"
 #~ msgstr "Ekrani"
-
-#~ msgid "Device \"%s\" is not a capture device."
-#~ msgstr "Dispozitivi \"%s\" nuk është një dispozitiv marrje."
 
 #~ msgid "Could not get buffers from device \"%s\"."
 #~ msgstr "E pamundur marrja e buffers nga dispozitivi \"%s\"."

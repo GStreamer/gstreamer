@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-07-10 17:07+0200\n"
+"POT-Creation-Date: 2005-09-02 14:11+0200\n"
 "PO-Revision-Date: 2004-10-04 15:54+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@broadpark.no>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -84,6 +84,36 @@ msgstr "Ingen filnavn oppgitt"
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kunne ikke lukke VFS-fil «%s»."
+
+#: gst/playback/gstplaybasebin.c:1296
+msgid "No URI specified to play from."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1302
+#, c-format
+msgid "No URI handler implemented for \"%s\"."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1306
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1313
+msgid "Could not create \"decodebin\" element."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1379
+#, c-format
+msgid ""
+"You do not have a decoder installed to handle \"%s\".  You might need to "
+"install the necessary plugins."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1382
+#, fuzzy, c-format
+msgid "\"%s\" is not a media file"
+msgstr "Enhet «%s» kan ikke fange data."
 
 #~ msgid "No device specified."
 #~ msgstr "Ingen enhet oppgitt."
@@ -171,6 +201,3 @@ msgstr "Kunne ikke lukke VFS-fil «%s»."
 
 #~ msgid "Monitor"
 #~ msgstr "Monitor"
-
-#~ msgid "Device \"%s\" is not a capture device."
-#~ msgstr "Enhet «%s» kan ikke fange data."
