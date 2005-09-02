@@ -34,24 +34,24 @@ struct _GstTrashStackElement {
 
 typedef volatile gpointer gst_vgpointer;/* gtk-doc volatile workaround */
 typedef volatile gulong gst_vgulong;    /* gtk-doc volatile workaround */
-                                                                                
+
 struct _GstTrashStack {
-  gst_vgpointer 	head;  
-  gst_vgulong		count; 		/* for the ABA problem */
+  gst_vgpointer		head;
+  gst_vgulong		count;		/* for the ABA problem */
   GMutex                *lock;		/* lock for C fallback */
 };
 
-GST_INLINE_FUNC GstTrashStack* 	gst_trash_stack_new 	(void);
-GST_INLINE_FUNC void 		gst_trash_stack_init 	(GstTrashStack *stack);
-GST_INLINE_FUNC void 		gst_trash_stack_destroy (GstTrashStack *stack);
-GST_INLINE_FUNC void 		gst_trash_stack_free 	(GstTrashStack *stack);
+GST_INLINE_FUNC GstTrashStack*	gst_trash_stack_new	(void);
+GST_INLINE_FUNC void		gst_trash_stack_init	(GstTrashStack *stack);
+GST_INLINE_FUNC void		gst_trash_stack_destroy (GstTrashStack *stack);
+GST_INLINE_FUNC void		gst_trash_stack_free	(GstTrashStack *stack);
 
-GST_INLINE_FUNC void 		gst_trash_stack_push 	(GstTrashStack *stack, gpointer mem);
-GST_INLINE_FUNC gpointer 	gst_trash_stack_pop 	(GstTrashStack *stack);
+GST_INLINE_FUNC void		gst_trash_stack_push	(GstTrashStack *stack, gpointer mem);
+GST_INLINE_FUNC gpointer	gst_trash_stack_pop	(GstTrashStack *stack);
 
 #if defined (GST_CAN_INLINE) || defined (__GST_TRASH_STACK_C__)
 
-#if defined (USE_FAST_STACK_TRASH) && defined (__i386__) && defined (__GNUC__) && __GNUC__ >= 2 
+#if defined (USE_FAST_STACK_TRASH) && defined (__i386__) && defined (__GNUC__) && __GNUC__ >= 2
 
 #ifdef GST_CONFIG_NO_SMP
 #define SMP_LOCK ""
@@ -158,7 +158,7 @@ GST_INLINE_FUNC gpointer
 gst_trash_stack_pop (GstTrashStack *stack)
 {
   GstTrashStackElement *head;
-  
+
   g_mutex_lock (stack->lock);
   head = (GstTrashStackElement *) stack->head;
   if (head)
