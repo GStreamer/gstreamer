@@ -375,9 +375,14 @@ gst_plugin_check_file (const gchar * filename, GError ** error)
   }
 
   module = g_module_open (filename, G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL);
+  if (!module) {
+    check = FALSE;
+    goto beach;
+  }
   check = gst_plugin_check_module (module, filename, error, NULL);
   g_module_close (module);
 
+beach:
   GST_INFO ("file \"%s\" %s look like a gst plugin", filename,
       check ? "does" : "doesn't");
   return check;
