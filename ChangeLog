@@ -1,5 +1,11 @@
 2005-09-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gst.override:
+	  don't mangle plugin.get_version() to a tuple of int; it segfaults
+	  when the version contains non-ints like '-'
+
+2005-09-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* testsuite/test_bin.py:
 	  fix state change test
 

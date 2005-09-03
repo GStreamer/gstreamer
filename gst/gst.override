@@ -831,32 +831,7 @@ _wrap_gst_tag_setter_get_list(PyGObject *self)
     /* pyg_boxed_new handles NULL checking */
     return pyg_boxed_new(GST_TYPE_TAG_LIST, ret, TRUE, TRUE);
 }
-%%
-override gst_plugin_get_version noargs
-static PyObject *
-_wrap_gst_plugin_get_version(PyGObject *self)
-{
-        PyObject *tuple;
-        const gchar *version;
-        gchar **items, **p;
-        gint i = 0;
-        gint count = 0;
-        
-        version = gst_plugin_get_version(GST_PLUGIN(self->obj));
-        items = g_strsplit(version, ".", 4);
-        for (p = items; *p; ++p) ++count;
 
-	tuple = PyTuple_New(count);
-        for (p = items; *p; ++p) {
-                PyObject *item;
-                item = PyInt_FromString(*p, NULL, 10);
-                PyTuple_SetItem(tuple, i, item);
-                i++;
-        }
-
-        g_strfreev(items);
-        return tuple;
-}
 %%
 override gst_element_register kwargs
 
