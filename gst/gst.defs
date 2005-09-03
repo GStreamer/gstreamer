@@ -3674,6 +3674,12 @@
   (return-type "const-gchar*")
 )
 
+(define-method get_source
+  (of-object "GstPlugin")
+  (c-name "gst_plugin_get_source")
+  (return-type "const-gchar*")
+)
+
 (define-method get_package
   (of-object "GstPlugin")
   (c-name "gst_plugin_get_package")
