@@ -1,5 +1,4 @@
-PACKAGE = @PACKAGE@
-VERSION = @VERSION@
+DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc --enable-docbook
 
 if BUILD_TESTS
 ## SUBDIRS_TESTS = tests testsuite

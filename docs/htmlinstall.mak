@@ -8,7 +8,7 @@ install-data-local: html
 	cp -pr $(HTML_DAT) $(DESTDIR)$(docdir)/$(DOC)
 
 uninstall-local:
-	for part in $(HTML_DAT); do rm -rf $(DESTDIR)$(docdir)/$$part; done
+	for part in $(HTML_DAT); do rm -rf $(DESTDIR)$(docdir)/$(DOC)/$$part; done
 	if test -d $(DESTDIR)$(docdir)/$(DOC); then rmdir $(DESTDIR)$(docdir)/$(DOC); fi
 else
 install-data-local:
