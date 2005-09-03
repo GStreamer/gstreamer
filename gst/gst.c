@@ -677,6 +677,7 @@ static GstPluginDesc plugin_desc = {
   NULL,
   VERSION,
   GST_LICENSE,
+  PACKAGE,
   GST_PACKAGE,
   GST_ORIGIN,
 

@@ -838,6 +838,9 @@ load_plugin (xmlTextReaderPtr reader)
       } else if (g_str_equal (tag, "license")) {
         if (!read_string (reader, &plugin->desc.license))
           break;
+      } else if (g_str_equal (tag, "source")) {
+        if (!read_string (reader, &plugin->desc.source))
+          break;
       } else if (g_str_equal (tag, "package")) {
         if (!read_string (reader, &plugin->desc.package))
           break;
@@ -1134,6 +1137,7 @@ gst_xml_registry_save_plugin (GstXMLRegistry * xmlregistry, GstPlugin * plugin)
   PUT_ESCAPED ("filename", plugin->filename);
   PUT_ESCAPED ("version", plugin->desc.version);
   PUT_ESCAPED ("license", plugin->desc.license);
+  PUT_ESCAPED ("source", plugin->desc.source);
   PUT_ESCAPED ("package", plugin->desc.package);
   PUT_ESCAPED ("origin", plugin->desc.origin);
 

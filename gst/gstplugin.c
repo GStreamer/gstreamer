@@ -190,7 +190,8 @@ gst_plugin_register_func (GstPlugin * plugin, GModule * module,
     return NULL;
   }
 
-  if (!desc->license || !desc->description || !desc->package || !desc->origin) {
+  if (!desc->license || !desc->description || !desc->source ||
+      !desc->package || !desc->origin) {
     if (GST_CAT_DEFAULT)
       GST_INFO ("plugin \"%s\" has incorrect GstPluginDesc, not loading",
           plugin->filename);
@@ -498,6 +499,8 @@ gst_plugin_desc_copy (GstPluginDesc * dest, const GstPluginDesc * src)
   dest->version = g_strdup (src->version);
   g_free (dest->license);
   dest->license = g_strdup (src->license);
+  g_free (dest->source);
+  dest->source = g_strdup (src->source);
   g_free (dest->package);
   dest->package = g_strdup (src->package);
   g_free (dest->origin);
@@ -513,6 +516,7 @@ gst_plugin_desc_free (GstPluginDesc * desc)
   g_free (desc->description);
   g_free (desc->version);
   g_free (desc->license);
+  g_free (desc->source);
   g_free (desc->package);
   g_free (desc->origin);
 
@@ -625,6 +629,22 @@ gst_plugin_get_license (GstPlugin * plugin)
   g_return_val_if_fail (plugin != NULL, NULL);
 
   return plugin->desc.license;
+}
+
+/**
+ * gst_plugin_get_source:
+ * @plugin: plugin to get the source of
+ *
+ * get the source module the plugin belongs to.
+ *
+ * Returns: the source of the plugin
+ */
+G_CONST_RETURN gchar *
+gst_plugin_get_source (GstPlugin * plugin)
+{
+  g_return_val_if_fail (plugin != NULL, NULL);
+
+  return plugin->desc.source;
 }
 
 /**

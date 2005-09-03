@@ -1,5 +1,24 @@
 2005-09-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/gst/tmpl/gstplugin.sgml:
+	* gst/elements/gstelements.c:
+	* gst/gst.c:
+	* gst/gstplugin.c: (gst_plugin_register_func),
+	(gst_plugin_desc_copy), (gst_plugin_desc_free),
+	(gst_plugin_get_source):
+	* gst/gstplugin.h:
+	* gst/registries/gstlibxmlregistry.c: (load_plugin),
+	(gst_xml_registry_save_plugin):
+	* gst/registries/gstxmlregistry.c: (gst_xml_registry_parse_plugin),
+	(gst_xml_registry_save_plugin):
+	* tools/gst-inspect.c: (print_plugin_info):
+	  add a "source" plugin description field, to represent the source
+	  module this plugin is a part of.  By default GST_PLUGIN_DEFINE
+	  will set it to PACKAGE, which is automake's idea of the name of
+	  the source project.
+
+2005-09-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* Makefile.am:
 	* autogen.sh:
 	* configure.ac:

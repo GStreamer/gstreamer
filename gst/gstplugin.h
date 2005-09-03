@@ -58,10 +58,11 @@ struct _GstPluginDesc {
   gchar *name;				/* unique name of plugin */
   gchar *description;			/* description of plugin */
   GstPluginInitFunc plugin_init;	/* pointer to plugin_init function */
-  GstPluginExitFunc plugin_exit;	/* pointer to exiting function */
+  GstPluginExitFunc plugin_exit;	/* pointer to plugin_exit function */
   gchar *version;			/* version of the plugin */
   gchar *license;			/* effective license of plugin */
-  gchar *package;			/* package plugin belongs to */
+  gchar *source;			/* source module plugin belongs to */
+  gchar *package;			/* shipped package plugin belongs to */
   gchar *origin;			/* URL to provider of plugin */
 
   gpointer _gst_reserved[GST_PADDING];
@@ -90,6 +91,7 @@ GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {	\
   NULL,							\
   version,						\
   license,						\
+  PACKAGE,						\
   package,						\
   origin,						\
   GST_PADDING_INIT				        \
@@ -108,6 +110,7 @@ _gst_plugin_static_init__ ##init (void)			\
     NULL,						\
     version,						\
     license,						\
+    PACKAGE,						\
     package,						\
     origin,						\
     GST_PADDING_INIT				        \
@@ -132,6 +135,7 @@ G_CONST_RETURN gchar*	gst_plugin_get_description	(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_filename		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_version		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_license		(GstPlugin *plugin);
+G_CONST_RETURN gchar*	gst_plugin_get_source		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_package		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_origin		(GstPlugin *plugin);
 GModule *		gst_plugin_get_module		(GstPlugin *plugin);
