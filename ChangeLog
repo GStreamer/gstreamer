@@ -1,3 +1,10 @@
+2005-09-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* common/gst-xmlinspect.py:
+	* common/gtk-doc-plugins.mak:
+	  only inspect plugins for this given package
+	  require gst-python 0.9
+
 2005-09-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:
