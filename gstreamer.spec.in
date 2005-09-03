@@ -96,8 +96,8 @@ with different major/minor versions of GStreamer.
 
 %build
 %configure \
-  --enable-debug \
   --with-cachedir=%{_localstatedir}/cache/gstreamer-%{majorminor} \
+  --enable-gtk-doc --enable-docbook \
   --disable-tests --disable-examples
                                                                                 
 make
@@ -179,7 +179,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files devel
 %defattr(-, root, root, -)
-%doc installed-doc/*
+%doc installed-doc/faq installed-doc/pwg installed-doc/manual
 %dir %{_includedir}/gstreamer-%{majorminor}
 %dir %{_includedir}/gstreamer-%{majorminor}/gst
 %{_includedir}/gstreamer-%{majorminor}/gst/*.h

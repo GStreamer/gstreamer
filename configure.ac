@@ -113,14 +113,18 @@ AC_ARG_WITH(pkg-config-path,
                   [colon-separated list of pkg-config(1) dirs]),
    [export PKG_CONFIG_PATH=${withval}])
 
-GST_DOC()
 GST_ARCH()
+
+dnl ### Documentation checks
 
 dnl Perl is used in building documentation
 AC_PATH_PROG(PERL_PATH, perl, no)
 if test x$PERL_PATH = xno; then
   AC_MSG_ERROR(Could not find perl)
 fi
+
+GST_DOCBOOK_CHECK
+GTK_DOC_CHECK([1.3])
 
 AC_PROG_AWK
 
@@ -685,8 +689,6 @@ docs/faq/Makefile
 docs/gst/Makefile
 docs/libs/Makefile
 docs/manual/Makefile
-docs/plugins/Makefile
-docs/plugins/gstreamer-plugins.types
 docs/pwg/Makefile
 docs/xsl/Makefile
 docs/version.entities

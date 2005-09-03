@@ -1,3 +1,41 @@
+2005-09-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* autogen.sh:
+	* configure.ac:
+	* docs/Makefile.am:
+	* docs/faq/Makefile.am:
+	* docs/gst/tmpl/gstelement.sgml:
+	* docs/gst/tmpl/gsttypes.sgml:
+	* docs/htmlinstall.mak:
+	* docs/manual/Makefile.am:
+	* docs/pwg/Makefile.am:
+	  reorganize doc build a little
+	  split out docbook and gtk-doc stuff
+	  have two separate --enable's and enable them through autogen
+	  but disable by default in configure (to be similar to other
+	  projects)
+	* gstreamer.spec.in:
+	  clean up docs install
+	* po/af.po:
+	* po/az.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/fr.po:
+	* po/it.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/ru.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	  translation updates
+
 2005-09-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_pad_buffer_alloc):

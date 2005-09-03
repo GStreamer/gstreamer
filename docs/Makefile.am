@@ -1,32 +1,21 @@
-
-if BUILD_PLUGIN_DOCS
-SUBDIRS_PLUGINS = plugins
+if ENABLE_GTK_DOC
+SUBDIRS_GTK_DOC = gst libs
 else
-SUBDIRS_PLUGINS =
+SUBDIRS_GTK_DOC =
 endif
 
-# FIXME: separate this out into docbook and gtk-doc so it doesn't descend
-# for docs it can't build
-if BUILD_DOCS
-SUBDIRS_DOCS = faq manual pwg gst libs
+if ENABLE_DOCBOOK
+SUBDIRS_DOCBOOK = faq manual pwg
 else
-SUBDIRS_DOCS =
+SUBDIRS_DOCBOOK =
 endif
 
-SUBDIRS = $(SUBDIRS_DOCS) $(SUBDIRS_PLUGINS)
-DIST_SUBDIRS = gst faq manual pwg libs plugins xsl
+SUBDIRS = $(SUBDIRS_DOCBOOK) $(SUBDIRS_GTK_DOC)
+DIST_SUBDIRS = gst faq manual pwg libs xsl
 
 EXTRA_DIST = \
 	slides manuals.mak htmlinstall.mak upload.mak \
 	image-png image-pdf image-eps url.entities version.entities.in
 
 upload:
-	@if test "x$(SUBDIRS_DOCS)" != x; then for a in $(SUBDIRS_DOCS); do cd $$a; make upload; cd ..; done; fi
-
-dist-hook:
-	$(RM) -rf $(distdir)/random/CVS
-	$(RM) -rf $(distdir)/random/*~
-	$(RM) -rf $(distdir)/random/.\#*
-	$(RM) -rf $(distdir)/slides/CVS
-	$(RM) -rf $(distdir)/slides/*~
-	$(RM) -rf $(distdir)/slides/.\#*
+	@if test "x$(SUBDIRS)" != x; then for a in $(SUBDIRS); do cd $$a; make upload; cd ..; done; fi

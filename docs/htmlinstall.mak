@@ -4,12 +4,12 @@
 
 if DOC_HTML
 install-data-local: html
-	$(mkinstalldirs) $(DESTDIR)$(docdir)
-	cp -pr $(HTML_DAT) $(DESTDIR)$(docdir)
+	$(mkinstalldirs) $(DESTDIR)$(docdir)/$(DOC)
+	cp -pr $(HTML_DAT) $(DESTDIR)$(docdir)/$(DOC)
 
 uninstall-local:
 	for part in $(HTML_DAT); do rm -rf $(DESTDIR)$(docdir)/$$part; done
-	if test -d $(DESTDIR)$(docdir); then rmdir $(DESTDIR)$(docdir); fi
+	if test -d $(DESTDIR)$(docdir)/$(DOC); then rmdir $(DESTDIR)$(docdir)/$(DOC); fi
 else
 install-data-local:
 uninstall-local:

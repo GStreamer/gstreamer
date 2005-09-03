@@ -221,14 +221,6 @@ This macro returns the currently pending state of the element.
 @elem: 
 
 
-<!-- ##### MACRO GST_STATE_CHANGE_NO_PREROLL ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
 <!-- ##### MACRO GST_STATE_SIGNAL ##### -->
 <para>
 

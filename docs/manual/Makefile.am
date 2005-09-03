@@ -32,7 +32,7 @@ include $(srcdir)/../upload.mak
 EXTRA_DIST = $(SRC) README
 
 # install documentation
-docdir = $(datadir)/doc/$(PACKAGE)-$(VERSION)/$(DOC)
-doc_DATA = $(PDF_DAT) $(PS_DAT)
+manualdir = $(docdir)/$(DOC)
+manual_DATA = $(PDF_DAT) $(PS_DAT)
 
 include $(srcdir)/../htmlinstall.mak

@@ -1,12 +1,6 @@
 PACKAGE = @PACKAGE@
 VERSION = @VERSION@
 
-if BUILD_DOCS
-SUBDIRS_DOCS = docs
-else
-SUBDIRS_DOCS =
-endif
-
 if BUILD_TESTS
 ## SUBDIRS_TESTS = tests testsuite
 ## FIXME: write tests from scratch
@@ -44,9 +38,9 @@ SUBDIRS = \
 	$(SUBDIRS_CHECK) \
 	$(SUBDIRS_TESTS) \
 	$(SUBDIRS_EXAMPLES) \
+	docs \
 	pkgconfig po \
-	common \
-	$(SUBDIRS_DOCS)
+	common
 
 # These are all the possible subdirs
 DIST_SUBDIRS = \
@@ -55,10 +49,10 @@ DIST_SUBDIRS = \
 	check \
 	tests testsuite \
 	examples \
+	docs \
 	pkgconfig \
 	po \
-	common \
-	docs
+	common
 
 win32 = $(shell cat $(top_srcdir)/win32/MANIFEST)
 
