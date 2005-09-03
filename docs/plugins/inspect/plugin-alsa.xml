@@ -9,6 +9,13 @@
   <origin>http://gstreamer.freedesktop.org/</origin>
   <elements>
     <element>
+      <name>alsamixer</name>
+      <longname>Alsa Mixer</longname>
+      <class>Generic/Audio</class>
+      <description>Control sound input and output levels with ALSA</description>
+      <author>Leif Johnson &lt;leif@ambient.2y.net&gt;</author>
+    </element>
+    <element>
       <name>alsasink</name>
       <longname>Audio Sink (ALSA)</longname>
       <class>Sink/Audio</class>

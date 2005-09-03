@@ -23,6 +23,7 @@ Requires(post):   %{gstregister}
 Requires(postun): %{gstregister}
 
 BuildRequires:  gcc-c++
+BuildRequires:  gtk-doc >= 1.3
 BuildRequires:  XFree86-devel
 
 @USE_GNOME_VFS_TRUE@Requires:      gnome-vfs2 > 1.9.4.00
@@ -46,8 +47,7 @@ plug-ins.
 %setup -q -n gst-plugins-base-%{version}
 %build
 %configure \
-  --enable-debug \
-  --enable-DEBUG 
+  --enable-gtk-doc
 
 make %{?_smp_mflags}
                                                                                 
@@ -93,7 +93,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libgstnet-%{majorminor}.so.*
 %{_libdir}/libgstrtp-%{majorminor}.so.*
 
-# non-core plugins without external dependencies
+# base plugins without external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstadder.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudioconvert.so
 %{_libdir}/gstreamer-%{majorminor}/libgstffmpegcolorspace.so
@@ -111,13 +111,38 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudioresample.so
 
+# Here are packages not in the base plugins package but not dependant
+# on an external lib
+
+### VIDEO 4 LINUX 2 ###
+# @USE_GST_V4L2_TRUE@%package -n gstreamer-plugins-v4l2
+# @USE_GST_V4L2_TRUE@Summary:       GStreamer Video for Linux 2 plug-in
+# @USE_GST_V4L2_TRUE@Group:         Applications/Multimedia
+# @USE_GST_V4L2_TRUE@Requires:      gstreamer-plugins09 = %{version}
+# @USE_GST_V4L2_TRUE@BuildRequires: glibc-devel
+# @USE_GST_V4L2_TRUE@Obsoletes:	  gstreamer-v4l2
+# @USE_GST_V4L2_TRUE@
+# @USE_GST_V4L2_TRUE@%description -n gstreamer-plugins-v4l2
+# @USE_GST_V4L2_TRUE@Plug-in for accessing Video for Linux devices.
+# @USE_GST_V4L2_TRUE@
+# @USE_GST_V4L2_TRUE@%files -n gstreamer-plugins-v4l2
+# @USE_GST_V4L2_TRUE@%defattr(-, root, root)
+# @USE_GST_V4L2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux2.so
+# @USE_GST_V4L2_TRUE@
+# @USE_GST_V4L2_TRUE@%post -n gstreamer-plugins-v4l2
+# @USE_GST_V4L2_TRUE@%{register}
+# @USE_GST_V4L2_TRUE@
+# @USE_GST_V4L2_TRUE@%postun -n gstreamer-plugins-v4l2
+# @USE_GST_V4L2_TRUE@%{register}
+
+# base plugins with dependencies
+@USE_ALSA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstalsa.so
 @USE_THEORA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttheora.so
 @USE_GNOME_VFS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgnomevfs.so
 @USE_VORBIS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvorbis.so
 @USE_VORBIS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstogg.so
 @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstximage.so
 @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvimagesink.so
-
                                                                                 
 %package devel
 Summary: 	GStreamer Plugin Library Headers
@@ -156,13 +181,13 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/multichannel-enumtypes.h
 %{_includedir}/gstreamer-%{majorminor}/gst/rtp/gstbasertpdepayload.h
 %{_includedir}/gstreamer-%{majorminor}/gst/rtp/gstrtpbuffer.h
-
-# plugin interface headers
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudioclock.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudiosink.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstbaseaudiosink.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstringbuffer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/net/gstnetbuffer.h
+%{_includedir}/gstreamer-%{majorminor}/gst/tag/tag.h
+
 %{_libdir}/libgstaudio-%{majorminor}.so
 %{_libdir}/libgstaudiofilter-%{majorminor}.so
 %{_libdir}/libgstriff-%{majorminor}.so
@@ -170,40 +195,14 @@ GStreamer Plugins Base library development and header files.
 %{_libdir}/libgstvideo-%{majorminor}.so
 %{_libdir}/libgstnet-%{majorminor}.so
 %{_libdir}/libgstrtp-%{majorminor}.so
+%{_libdir}/libgstinterfaces-%{majorminor}.so
 
-
-# library headers
-%{_includedir}/gstreamer-%{majorminor}/gst/tag/tag.h
 # pkg-config files
 %{_libdir}/pkgconfig/gstreamer-plugins-base-%{majorminor}.pc
-# .so files
-%{_libdir}/libgstinterfaces-%{majorminor}.so
-@USE_ALSA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstalsa.so
 
-
-# Here are packages not in the base plugins package but not dependant
-# on an external lib
-
-### VIDEO 4 LINUX 2 ###
-# @USE_GST_V4L2_TRUE@%package -n gstreamer-plugins-v4l2
-# @USE_GST_V4L2_TRUE@Summary:       GStreamer Video for Linux 2 plug-in
-# @USE_GST_V4L2_TRUE@Group:         Applications/Multimedia
-# @USE_GST_V4L2_TRUE@Requires:      gstreamer-plugins09 = %{version}
-# @USE_GST_V4L2_TRUE@BuildRequires: glibc-devel
-# @USE_GST_V4L2_TRUE@Obsoletes:	  gstreamer-v4l2
-# @USE_GST_V4L2_TRUE@
-# @USE_GST_V4L2_TRUE@%description -n gstreamer-plugins-v4l2
-# @USE_GST_V4L2_TRUE@Plug-in for accessing Video for Linux devices.
-# @USE_GST_V4L2_TRUE@
-# @USE_GST_V4L2_TRUE@%files -n gstreamer-plugins-v4l2
-# @USE_GST_V4L2_TRUE@%defattr(-, root, root)
-# @USE_GST_V4L2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux2.so
-# @USE_GST_V4L2_TRUE@
-# @USE_GST_V4L2_TRUE@%post -n gstreamer-plugins-v4l2
-# @USE_GST_V4L2_TRUE@%{register}
-# @USE_GST_V4L2_TRUE@
-# @USE_GST_V4L2_TRUE@%postun -n gstreamer-plugins-v4l2
-# @USE_GST_V4L2_TRUE@%{register}
+# gtk-doc documentation
+%doc %{_datadir}/gtk-doc/html/gst-plugins-base-libs-%{majorminor}
+%doc %{_datadir}/gtk-doc/html/gst-plugins-base-plugins-%{majorminor}
 
 %changelog
 * Fri Sep 02 2005 Thomas Vander Stichele <thomas at apestaart dot org>

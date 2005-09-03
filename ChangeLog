@@ -1,3 +1,21 @@
+2005-09-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* autogen.sh:
+	* common/gst-xmlinspect.py:
+	* configure.ac:
+	* docs/Makefile.am:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-ffmpegcolorspace.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/tmpl/element-gnomevfssink.sgml:
+	* docs/plugins/tmpl/element-multifdsink.sgml:
+	* docs/plugins/tmpl/element-tcpserversink.sgml:
+	* docs/plugins/tmpl/element-vorbisenc.sgml:
+	* gst-plugins-base.spec.in:
+	  various doc-related updates
+
 2005-08-31  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:

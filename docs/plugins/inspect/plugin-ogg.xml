@@ -23,6 +23,13 @@
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
+      <name>oggparse</name>
+      <longname>ogg parser</longname>
+      <class>Codec/Parser</class>
+      <description>parse ogg streams into pages (info about ogg: http://xiph.org)</description>
+      <author>Michael Smith &lt;msmith@fluendo.com&gt;</author>
+    </element>
+    <element>
       <name>ogmaudioparse</name>
       <longname>OGM audio stream parser</longname>
       <class>Codec/Decoder/Audio</class>

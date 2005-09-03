@@ -28,7 +28,6 @@ dnl - library source changed -> increment REVISION
 dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
-dnl for 0.8.3 release, gst_play_get_all_by_interface was added, so update
 AS_LIBTOOL(GST_PLUGINS, 1, 0, 1)
 AS_LIBTOOL_TAGS([])
 AM_PROG_LIBTOOL
@@ -175,7 +174,6 @@ AC_ARG_WITH(pkg-config-path,
    AC_HELP_STRING([--with-pkg-config-path],[colon-separated list of pkg-config(1) dirs]),
    [export PKG_CONFIG_PATH=${withval}])
 
-GST_DOC()
 dnl check architecture
 GST_ARCH()
 
@@ -728,11 +726,12 @@ if test "x$USE_DEBUG" = xyes; then
   GST_CFLAGS="$GST_CFLAGS -g"
 fi
 
-dnl ######################
-dnl # Checks for gtk-doc #
-dnl ######################
+dnl ############################
+dnl # Checks for documentation #
+dnl ############################
 
 GTK_DOC_CHECK([1.3])
+AS_PATH_PYTHON([2.1])
 
 dnl #############################
 dnl # Set automake conditionals #

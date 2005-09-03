@@ -1,0 +1,19 @@
+<plugin>
+  <name>audioresample</name>
+  <description>Resamples audio</description>
+  <filename>../../gst/audioresample/.libs/libgstaudioresample.so</filename>
+  <basename>libgstaudioresample.so</basename>
+  <version>0.9.1.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>audioresample</name>
+      <longname>Audio scaler</longname>
+      <class>Filter/Converter/Audio</class>
+      <description>Resample audio</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
+    </element>
+  </elements>
+</plugin>

@@ -1,3 +1,5 @@
+DISTCHECK_CONFIGURE_OPTIONS = --enable-gtk-doc
+
 if BUILD_EXTERNAL
 SUBDIRS_EXT = ext
 else
