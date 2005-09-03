@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-09-02 14:11+0200\n"
+"POT-Creation-Date: 2005-09-02 19:32+0200\n"
 "PO-Revision-Date: 2004-10-04 15:54+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@broadpark.no>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -59,15 +59,15 @@ msgstr ""
 msgid "Capture"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoia.c:278
+#: ext/cdparanoia/gstcdparanoia.c:279
 msgid "discid"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoia.c:278
+#: ext/cdparanoia/gstcdparanoia.c:279
 msgid "CDDA discid for metadata retrieval"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoia.c:682 ext/cdparanoia/gstcdparanoia.c:698
+#: ext/cdparanoia/gstcdparanoia.c:683 ext/cdparanoia/gstcdparanoia.c:699
 msgid "Could not open CD device for reading."
 msgstr "Kunne ikke åpne CD-enheten for lesing."
 

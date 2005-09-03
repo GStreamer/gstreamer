@@ -2,13 +2,13 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # Christian Rose <menthos@menthos.com>, 2004.
 #
-# $Id: sv.po,v 1.25 2005/09/02 13:48:23 thomasvs Exp $
+# $Id: sv.po,v 1.26 2005/09/03 14:05:25 thomasvs Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-09-02 14:11+0200\n"
+"POT-Creation-Date: 2005-09-02 19:32+0200\n"
 "PO-Revision-Date: 2004-08-03 20:53+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -63,16 +63,16 @@ msgstr "Spela"
 msgid "Capture"
 msgstr "Satir"
 
-#: ext/cdparanoia/gstcdparanoia.c:278
+#: ext/cdparanoia/gstcdparanoia.c:279
 #, fuzzy
 msgid "discid"
 msgstr "Ingen skiva"
 
-#: ext/cdparanoia/gstcdparanoia.c:278
+#: ext/cdparanoia/gstcdparanoia.c:279
 msgid "CDDA discid for metadata retrieval"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoia.c:682 ext/cdparanoia/gstcdparanoia.c:698
+#: ext/cdparanoia/gstcdparanoia.c:683 ext/cdparanoia/gstcdparanoia.c:699
 msgid "Could not open CD device for reading."
 msgstr "Kunde inte öppna cd-enheten för läsning."
 
