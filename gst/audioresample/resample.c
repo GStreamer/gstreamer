@@ -106,7 +106,7 @@ resample_buffer_free (AudioresampleBuffer * buffer, void *priv)
   }
 }
 
-/**
+/*
  * free_func: a function that frees the given closure.  If NULL, caller is
  *            responsible for freeing.
  */
