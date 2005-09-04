@@ -1,3 +1,12 @@
+=== release 0.8.11 ===
+
+2005-09-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	  Releasing 0.8.11, "So Long ..."
+
 2005-08-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/tmpl/gstplugin.sgml:

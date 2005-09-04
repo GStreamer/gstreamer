@@ -1,4 +1,18 @@
-This is GStreamer 0.8.10, "No Fun".
+This is GStreamer 0.8.11, "So Long ...".
+
+Bugs fixed since 0.8.10:
+
+      * 170809 : Error compiling on Solaris 9 x86
+      * 304123 : update to POTFILES.in
+      * 305653 : build fixes for gstreamer and gst-plugins
+      * 307352 : PATCH: pass the --libdir argument to autogen
+      * 308067 : GST_TYPE_BUFFER crashes in gstvalue handling
+      * 308438 : Registering the same tag twice leads to assertion warnings
+      * 308559 : gst_value_deserialize to a gint64 does not work
+      * 308647 : [filesink] not handling errors properly?
+      * 308766 : gst_element_factory_create() may invalidate pad templates...
+      * 309125 : [patch] memleak in gst/gstvalues.c
+
 
 Changes since 0.8.9:
 

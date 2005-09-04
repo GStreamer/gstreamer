@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer 0.8.10 "No Fun"
+GStreamer: Release notes for GStreamer 0.8.10 "So Long ..."
         
 
 The GStreamer team is happy to announce a new release
@@ -17,61 +17,29 @@ additional plugins.  GStreamer FFmpeg contains a plugin based on the popular
 FFmpeg decoding library.  These modules need not have the same source version
 as the core, as long as they are in the 0.8.x series.
 
+
+A special "thank you" to Ronald Bultje, who has done most of the work on 0.8
+in the past year.  We wish him luck on his new adventure in NYC.  Thanks for
+all the fix !
+
   
 Features of this release
     
       * Parallel installability with 0.6.x series
       * Internationalization
-      * Fixes for 64-bit platforms
-      * Fixes for gcc 4
-      * New translation added: Russian (Peter Astakhov)
-      * Registry now uses libxml for faster startup
 
 Bugs fixed in this release
     
-      * 137485 : [strings] Please don't unnecessarily abbreviate in Gstrea...
-      * 147782 : [build] When compiling, CPPFLAGS don't propagate to GTKDO...
-      * 149791 : fdsrc w/o timeout can hang exiting threads
-      * 159676 : [playbin] audible click after 3s of playback using playbin
-      * 161991 : gst_init is slow
-      * 164479 : [cli-tools] gst_parse_launch can't handle spaces
-      * 164821 : [docs] GstLibraryError misses (proper) descriptions
-      * 165354 : Tests failure report for gstreamer 0.8.8
-      * 166073 : [threads] wrong error handling
-      * 166250 : [PATCH] [queue] When two threads are connected with queue...
-      * 166699 : Typo in gstreamer-0.8.9/tools/gst-launch.1.in
-      * 167701 : [PATCH, strings] Please do not split translatable strings...
-      * 168493 : [API] gst_index_factory_new() doesn't increase refcount o...
-      * 168659 : [build] Need to patch gst-element-check-0.8.m4 to check f...
-      * 168703 : [API] Add gst_index_add_associationv() to gstindex.h
-      * 169111 : [API] GstEvent NEED_RESPONSE flag
-      * 169123 : [build] false dependence on libxml2 if registry is enabled
-      * 169405 : [API] GST_TYPE_EVENT and gst_event_get_type unusable befo...
-      * 169732 : gstreamer (element) does not build on cygwin
-      * 170067 : Typefind leaks
-      * 170464 : Bad variable's name mp3player in sample source code
-      * 170499 : spider no decode some .mp3
-      * 171400 : mmapsize property on gstfilesrc borked.
-      * 172526 : gst-register fails on a lot of plugins on MacOSX
-      * 300339 : assertion with gst_pad_relink_filtered
-      * 300736 : Plug a bunch of leaks in the registry code
-      * 300932 : [PATCH] add a GST_ELEMENT_WORK_IN_PLACE flag to gstelement
-      * 301128 : cvs login command line is incorrect in PWG
-      * 301313 : [decodebin] seek while reading (non-existant) ID3v2 tag d...
-      * 301331 : gst_element_unlink only unlinks real pads
-
-API changed in this release
-     
-
-- API additions:
-    
-* GST_EVENT_COMMON_FLAGS_NEED_RESPONSE has been added, to indicate whether a reply is expected to an upstream event
-* GST_TAG_LANGUAGE_CODE has been added
-* GstChildProxy, a new interface to uniformly access elements' children and their properties, has been added
-
-- API depreciations:
-    
-* gst_buffer_set_data was deprecated
+      * 170809 : Error compiling on Solaris 9 x86
+      * 304123 : update to POTFILES.in
+      * 305653 : build fixes for gstreamer and gst-plugins
+      * 307352 : PATCH: pass the --libdir argument to autogen
+      * 308067 : GST_TYPE_BUFFER crashes in gstvalue handling
+      * 308438 : Registering the same tag twice leads to assertion warnings
+      * 308559 : gst_value_deserialize to a gint64 does not work
+      * 308647 : [filesink] not handling errors properly?
+      * 308766 : gst_element_factory_create() may invalidate pad templates...
+      * 309125 : [patch] memleak in gst/gstvalues.c
 
 Download
 
@@ -101,36 +69,21 @@ Applications
 
 Applications already ported to use GStreamer 0.8.x include the GNOME
 desktop components like gnome-media and nautilus-media, as well as other
-GNOME applications including sound-juicer, totem and rhythmbox.
-
-
-Users of Flumotion on 64-bit systems need to upgrade to this release, as it
-contains an important bug fix needed for the TCP elements.
-
-
-Users of Totem and Rhythmbox (development) having small pauses when playing
-MP3 files should also upgrade, as this is fixed in the queue element.
+GNOME applications including sound-juicer, totem and RhythmBox.
 
   
 Contributors to this release
     
+      * Akos Maroy
+      * Andreas Schwab
+      * Antoine Tremblay
       * Benjamin Otte
       * David Schleef
-      * Jamey Hicks
       * Jan Schmidt
-      * Jean de Largentaye
-      * Kjartan Maraas
       * Luca Ognibene
-      * Maciej Katafiasz
-      * Peter Astakhov
-      * Phil Blundell
       * Ronald Bultje
       * Stefan Kost
       * Thomas Vander Stichele
       * Tim-Philipp Müller
       * Torsten Schoenfeld
-      * Tristan van Berkom
-      * Wim Taymans
-      * Wouter Paesen
-      * Zaheer Abbas Merali
  
