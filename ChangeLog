@@ -1,5 +1,13 @@
 2005-09-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* common/gtk-doc-plugins.mak:
+	* docs/plugins/Makefile.am:
+	  fix distcheck
+	* gst/audioresample/resample.c:
+	  fix wrong docstring
+
+2005-09-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* common/gst-xmlinspect.py:
 	* common/gtk-doc-plugins.mak:
 	  only inspect plugins for this given package

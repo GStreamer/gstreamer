@@ -44,8 +44,6 @@ DOC_SOURCE_DIR = $(top_srcdir)
 # Extra options to supply to gtkdoc-scan.
 SCAN_OPTIONS=
 
-extra_files = inspect.stamp inspect
-
 # Extra options to supply to gtkdoc-mkdb.
 MKDB_OPTIONS=--sgml-mode
 
@@ -90,7 +88,7 @@ HTML_IMAGES =
 content_files =
 
 # Other files to distribute.
-extra_files =
+extra_files = inspect.stamp inspect-build.stamp $(srcdir)/inspect/*.xml
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed if your app/lib
 # contains GtkObjects/GObjects and you want to document signals and properties.
