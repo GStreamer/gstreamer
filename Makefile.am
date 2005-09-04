@@ -1,3 +1,5 @@
+DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
+
 if USE_GCONFTOOL
 GCONF_DIR = gconf
 else
