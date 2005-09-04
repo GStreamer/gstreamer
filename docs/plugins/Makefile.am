@@ -49,6 +49,8 @@ SCAN_OPTIONS=
 # maybe it doesn't resolve; we're adding it below for now
 #EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt gstreamer-sections.txt $(DOC_MAIN_SGML_FILE)
 
+EXTRA_DIST = inspect.stamp inspect
+
 # Extra options to supply to gtkdoc-mkdb.
 MKDB_OPTIONS=--sgml-mode
 
