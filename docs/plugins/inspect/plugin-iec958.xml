@@ -1,0 +1,19 @@
+<plugin>
+  <name>iec958</name>
+  <description>Conversion elements to the iec958 SP/DIF format</description>
+  <filename>../../gst/iec958/.libs/libgstiec958.so</filename>
+  <basename>libgstiec958.so</basename>
+  <version>0.9.0.1</version>
+  <license>LGPL</license>
+  <package>gst-plugins-ugly</package>
+  <origin>http://seamless.sourceforge.net</origin>
+  <elements>
+    <element>
+      <name>ac3iec958</name>
+      <longname>AC3 to IEC958 filter</longname>
+      <class>audio/x-private1-ac3</class>
+      <description>Pads AC3 frames into IEC958 frames suitable for a raw SP/DIF interface</description>
+      <author>Martin Soto &lt;martinsoto@users.sourceforge.net&gt;</author>
+    </element>
+  </elements>
+</plugin>

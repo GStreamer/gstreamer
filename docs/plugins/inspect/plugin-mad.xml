@@ -1,0 +1,40 @@
+<plugin>
+  <name>mad</name>
+  <description>id3 tag manipulation and mp3 decoding based on the mad library</description>
+  <filename>../../ext/mad/.libs/libgstmad.so</filename>
+  <basename>libgstmad.so</basename>
+  <version>0.9.0.1</version>
+  <license>GPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>id3demux</name>
+      <longname>id3 tag extractor</longname>
+      <class>Codec/Demuxer/Audio</class>
+      <description>Extract ID3 tagging information</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+    </element>
+    <element>
+      <name>id3mux</name>
+      <longname>id3 muxer</longname>
+      <class>Codec/Muxer/Audio</class>
+      <description>Add ID3 tagging information</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+    </element>
+    <element>
+      <name>id3tag</name>
+      <longname>id3 tag extractor</longname>
+      <class>Tag</class>
+      <description>Extract tagging information from mp3s</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+    </element>
+    <element>
+      <name>mad</name>
+      <longname>mad mp3 decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>Uses mad code to decode mp3 streams</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+    </element>
+  </elements>
+</plugin>

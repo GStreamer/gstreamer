@@ -25,7 +25,7 @@ then
 fi
 . common/gst-autogen.sh
 
-CONFIGURE_DEF_OPT='--enable-maintainer-mode --enable-plugin-builddir --enable-debug --enable-DEBUG'
+CONFIGURE_DEF_OPT='--enable-maintainer-mode --enable-gtk-doc'
 
 autogen_options $@
 

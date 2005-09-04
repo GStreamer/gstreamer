@@ -1,0 +1,20 @@
+<plugin>
+  <name>dvdlpcmdec</name>
+  <description>Decode DVD LPCM frames into standard PCM</description>
+  <filename>../../gst/dvdlpcmdec/.libs/libgstdvdlpcmdec.so</filename>
+  <basename>libgstdvdlpcmdec.so</basename>
+  <version>0.9.0.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>dvdlpcmdec</name>
+      <longname>DVD LPCM Audio decoder</longname>
+      <class>Codec/Demuxer/Audio</class>
+      <description>Decode DVD LPCM frames into standard PCM audio</description>
+      <author>Jan Schmidt &lt;jan@noraisin.net&gt;
+    Michael Smith &lt;msmith@fluendo.com&gt;</author>
+    </element>
+  </elements>
+</plugin>

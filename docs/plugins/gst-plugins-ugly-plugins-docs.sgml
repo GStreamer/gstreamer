@@ -18,7 +18,6 @@
     <title>gst-plugins-ugly Plugins</title>
 
     <xi:include href="xml/plugin-dvdlpcmdec.xml" />
-    <xi:include href="xml/plugin-gstcoreelements.xml" />
     <xi:include href="xml/plugin-lame.xml" />
     <xi:include href="xml/plugin-mad.xml" />
     <xi:include href="xml/plugin-mpegaudioparse.xml" />
