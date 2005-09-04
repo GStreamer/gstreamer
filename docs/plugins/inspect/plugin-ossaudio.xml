@@ -1,0 +1,33 @@
+<plugin>
+  <name>ossaudio</name>
+  <description>OSS (Open Sound System) support for GStreamer</description>
+  <filename>../../sys/oss/.libs/libgstossaudio.so</filename>
+  <basename>libgstossaudio.so</basename>
+  <version>0.9.0.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>ossmixer</name>
+      <longname>OSS Mixer</longname>
+      <class>Generic/Audio</class>
+      <description>Control sound input and output levels with OSS</description>
+      <author>Andrew Vander Wingo &lt;wingo@pobox.com&gt;</author>
+    </element>
+    <element>
+      <name>osssink</name>
+      <longname>Audio Sink (OSS)</longname>
+      <class>Sink/Audio</class>
+      <description>Output to a sound card via OSS</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+    </element>
+    <element>
+      <name>osssrc</name>
+      <longname>Audio Source (OSS)</longname>
+      <class>Source/Audio</class>
+      <description>Capture from a sound card via OSS</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+  </elements>
+</plugin>

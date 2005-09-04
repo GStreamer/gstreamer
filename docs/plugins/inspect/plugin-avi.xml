@@ -1,0 +1,21 @@
+<plugin>
+  <name>avi</name>
+  <description>AVI stream handling</description>
+  <filename>../../gst/avi/.libs/libgstavi.so</filename>
+  <basename>libgstavi.so</basename>
+  <version>0.9.0.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>avidemux</name>
+      <longname>Avi demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>Demultiplex an avi file into audio and video</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;
+    Wim Taymans &lt;wim.taymans@chello.be&gt;
+    Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+  </elements>
+</plugin>

@@ -1,0 +1,26 @@
+<plugin>
+  <name>alaw</name>
+  <description>ALaw audio conversion routines</description>
+  <filename>../../gst/law/.libs/libgstalaw.so</filename>
+  <basename>libgstalaw.so</basename>
+  <version>0.9.0.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>alawdec</name>
+      <longname>A Law to PCM conversion</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>Convert 8bit A law to 16bit PCM</description>
+      <author>Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
+    </element>
+    <element>
+      <name>alawenc</name>
+      <longname>PCM to A Law conversion</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>Convert 16bit PCM to 8bit A law</description>
+      <author>Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
+    </element>
+  </elements>
+</plugin>

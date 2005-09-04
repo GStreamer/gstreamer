@@ -33,7 +33,6 @@
     <xi:include href="xml/plugin-flac.xml" />
     <xi:include href="xml/plugin-gconfelements.xml" />
     <xi:include href="xml/plugin-goom.xml" />
-    <xi:include href="xml/plugin-gstcoreelements.xml" />
     <xi:include href="xml/plugin-jpeg.xml" />
     <xi:include href="xml/plugin-level.xml" />
     <xi:include href="xml/plugin-mulaw.xml" />

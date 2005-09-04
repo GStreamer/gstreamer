@@ -1,0 +1,19 @@
+<plugin>
+  <name>videoflip</name>
+  <description>Flips and rotates video</description>
+  <filename>../../gst/videofilter/.libs/libgstvideoflip.so</filename>
+  <basename>libgstvideoflip.so</basename>
+  <version>0.9.0.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>videoflip</name>
+      <longname>Video Flipper</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Flips and rotates video</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
+    </element>
+  </elements>
+</plugin>

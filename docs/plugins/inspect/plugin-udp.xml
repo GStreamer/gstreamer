@@ -1,0 +1,40 @@
+<plugin>
+  <name>udp</name>
+  <description>transfer data via UDP</description>
+  <filename>../../gst/udp/.libs/libgstudp.so</filename>
+  <basename>libgstudp.so</basename>
+  <version>0.9.0.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>dynudpsink</name>
+      <longname>UDP packet sender</longname>
+      <class>Sink/Network</class>
+      <description>Send data over the network via UDP</description>
+      <author>Philippe Khalaf &lt;burger@speedy.org&gt;</author>
+    </element>
+    <element>
+      <name>multiudpsink</name>
+      <longname>UDP packet sender</longname>
+      <class>Sink/Network</class>
+      <description>Send data over the network via UDP</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>udpsink</name>
+      <longname>UDP packet sender</longname>
+      <class>Sink/Network</class>
+      <description>Send data over the network via UDP</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>udpsrc</name>
+      <longname>UDP packet receiver</longname>
+      <class>Source/Network</class>
+      <description>Receive data over the network via UDP</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+  </elements>
+</plugin>

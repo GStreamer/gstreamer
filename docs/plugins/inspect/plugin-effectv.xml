@@ -1,0 +1,68 @@
+<plugin>
+  <name>effectv</name>
+  <description>effect plugins from the effectv project</description>
+  <filename>../../gst/effectv/.libs/libgsteffectv.so</filename>
+  <basename>libgsteffectv.so</basename>
+  <version>0.9.0.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>agingTV</name>
+      <longname>AgingTV</longname>
+      <class>Filter/Effect/Video</class>
+      <description>AgingTV adds age to video input using scratches and dust</description>
+      <author>Sam Lantinga &lt;slouken@devolution.com&gt;</author>
+    </element>
+    <element>
+      <name>diceTV</name>
+      <longname>DiceTV</longname>
+      <class>Filter/Effect/Video</class>
+      <description>'Dices' the screen up into many small squares</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+    </element>
+    <element>
+      <name>edgeTV</name>
+      <longname>EdgeTV</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Apply edge detect on video</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+    </element>
+    <element>
+      <name>quarkTV</name>
+      <longname>QuarkTV</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Motion dissolver</description>
+      <author>FUKUCHI, Kentarou &lt;fukuchi@users.sourceforge.net&gt;</author>
+    </element>
+    <element>
+      <name>revTV</name>
+      <longname>RevTV</longname>
+      <class>Filter/Effect/Video</class>
+      <description>A video waveform monitor for each line of video processed</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+    </element>
+    <element>
+      <name>shagadelicTV</name>
+      <longname>ShagadelicTV</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Oh behave, ShagedelicTV makes images shagadelic!</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+    </element>
+    <element>
+      <name>vertigoTV</name>
+      <longname>VertigoTV</longname>
+      <class>Filter/Effect/Video</class>
+      <description>A loopback alpha blending effector with rotating and scaling</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+    </element>
+    <element>
+      <name>warpTV</name>
+      <longname>WarpTV</longname>
+      <class>Filter/Effect/Video</class>
+      <description>WarpTV does realtime goo'ing of the video input</description>
+      <author>Sam Lantinga &lt;slouken@devolution.com&gt;</author>
+    </element>
+  </elements>
+</plugin>

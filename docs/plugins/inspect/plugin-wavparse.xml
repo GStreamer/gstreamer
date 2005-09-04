@@ -1,0 +1,19 @@
+<plugin>
+  <name>wavparse</name>
+  <description>Parse a .wav file into raw audio</description>
+  <filename>../../gst/wavparse/.libs/libgstwavparse.so</filename>
+  <basename>libgstwavparse.so</basename>
+  <version>0.9.0.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>wavparse</name>
+      <longname>.wav demuxer</longname>
+      <class>Codec/Demuxer/Audio</class>
+      <description>Parse a .wav file into raw audio</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;</author>
+    </element>
+  </elements>
+</plugin>

@@ -1,0 +1,19 @@
+<plugin>
+  <name>cacasink</name>
+  <description>Colored ASCII Art video sink</description>
+  <filename>../../ext/libcaca/.libs/libgstcacasink.so</filename>
+  <basename>libgstcacasink.so</basename>
+  <version>0.9.0.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>cacasink</name>
+      <longname>CACA sink</longname>
+      <class>Sink/Video</class>
+      <description>A colored ASCII art videosink</description>
+      <author>Zeeshan Ali &lt;zak147@yahoo.com&gt;</author>
+    </element>
+  </elements>
+</plugin>

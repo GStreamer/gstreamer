@@ -512,6 +512,7 @@ dnl # Checks for gtk-doc #
 dnl ######################
 
 GTK_DOC_CHECK([1.3])
+AS_PATH_PYTHON([2.1])
 
 dnl ############################
 dnl # Set up some more defines #

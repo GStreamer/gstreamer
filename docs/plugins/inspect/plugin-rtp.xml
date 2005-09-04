@@ -1,0 +1,61 @@
+<plugin>
+  <name>rtp</name>
+  <description>Real-time protocol plugins</description>
+  <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
+  <basename>libgstrtp.so</basename>
+  <version>0.9.0.1</version>
+  <license>GPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>rtpamrdec</name>
+      <longname>RTP packet parser</longname>
+      <class>Codec/Parser/Network</class>
+      <description>Extracts MPEG audio from RTP packets</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>rtpamrenc</name>
+      <longname>RTP packet parser</longname>
+      <class>Codec/Parser/Network</class>
+      <description>Encode AMR audio into RTP packets</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>rtpdec</name>
+      <longname>RTP Decoder</longname>
+      <class>Codec/Parser/Network</class>
+      <description>Accepts raw RTP and RTCP packets and sends them forward</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>rtph263pdec</name>
+      <longname>RTP packet parser</longname>
+      <class>Codec/Parser/Network</class>
+      <description>Extracts H263+ video from RTP packets (RFC 2429)</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>rtph263penc</name>
+      <longname>RTP packet parser</longname>
+      <class>Codec/Parser/Network</class>
+      <description>Extracts H263+ video from RTP packets</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>rtpmpadec</name>
+      <longname>RTP packet parser</longname>
+      <class>Codec/Parser/Network</class>
+      <description>Extracts MPEG audio from RTP packets</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>rtpmpaenc</name>
+      <longname>RTP packet parser</longname>
+      <class>Codec/Parser/Network</class>
+      <description>Encode MPEG audio as RTP packets</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+  </elements>
+</plugin>

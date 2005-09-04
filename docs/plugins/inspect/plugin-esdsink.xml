@@ -1,0 +1,19 @@
+<plugin>
+  <name>esdsink</name>
+  <description>ESD Element Plugins</description>
+  <filename>../../ext/esd/.libs/libgstesd.so</filename>
+  <basename>libgstesd.so</basename>
+  <version>0.9.0.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>esdsink</name>
+      <longname>Esound audio sink</longname>
+      <class>Sink/Audio</class>
+      <description>Plays audio to an esound server</description>
+      <author>Arwed von Merkatz &lt;v.merkatz@gmx.net&gt;</author>
+    </element>
+  </elements>
+</plugin>

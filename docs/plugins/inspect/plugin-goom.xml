@@ -1,0 +1,19 @@
+<plugin>
+  <name>goom</name>
+  <description>GOOM visualization filter</description>
+  <filename>../../gst/goom/.libs/libgstgoom.so</filename>
+  <basename>libgstgoom.so</basename>
+  <version>0.9.0.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>goom</name>
+      <longname>GOOM: what a GOOM!</longname>
+      <class>Visualization</class>
+      <description>Takes frames of data and outputs video frames using the GOOM filter</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+    </element>
+  </elements>
+</plugin>

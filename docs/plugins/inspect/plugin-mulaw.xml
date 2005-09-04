@@ -1,0 +1,26 @@
+<plugin>
+  <name>mulaw</name>
+  <description>MuLaw audio conversion routines</description>
+  <filename>../../gst/law/.libs/libgstmulaw.so</filename>
+  <basename>libgstmulaw.so</basename>
+  <version>0.9.0.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>mulawdec</name>
+      <longname>Mu Law to PCM conversion</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>Convert 8bit mu law to 16bit PCM</description>
+      <author>Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
+    </element>
+    <element>
+      <name>mulawenc</name>
+      <longname>PCM to Mu Law conversion</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>Convert 16bit PCM to 8bit mu law</description>
+      <author>Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
+    </element>
+  </elements>
+</plugin>

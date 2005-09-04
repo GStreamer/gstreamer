@@ -1,0 +1,19 @@
+<plugin>
+  <name>level</name>
+  <description>Audio level plugin</description>
+  <filename>../../gst/level/.libs/libgstlevel.so</filename>
+  <basename>libgstlevel.so</basename>
+  <version>0.9.0.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>level</name>
+      <longname>Level</longname>
+      <class>Filter/Analyzer/Audio</class>
+      <description>RMS/Peak/Decaying Peak Level messager for audio/raw</description>
+      <author>Thomas &lt;thomas@apestaart.org&gt;</author>
+    </element>
+  </elements>
+</plugin>

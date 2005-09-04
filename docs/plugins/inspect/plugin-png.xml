@@ -1,0 +1,19 @@
+<plugin>
+  <name>png</name>
+  <description>PNG plugin library</description>
+  <filename>../../ext/libpng/.libs/libgstpng.so</filename>
+  <basename>libgstpng.so</basename>
+  <version>0.9.0.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>pngenc</name>
+      <longname>PNG encoder</longname>
+      <class>Codec/Encoder/Image</class>
+      <description>Encode a video frame to a .png image</description>
+      <author>Jeremy SIMON &lt;jsimon13@yahoo.fr&gt;</author>
+    </element>
+  </elements>
+</plugin>

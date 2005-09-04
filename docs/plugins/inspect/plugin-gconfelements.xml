@@ -1,0 +1,26 @@
+<plugin>
+  <name>gconfelements</name>
+  <description>elements wrapping the GStreamer/GConf audio/video output settings</description>
+  <filename>../../ext/gconf/.libs/libgstgconfelements.so</filename>
+  <basename>libgstgconfelements.so</basename>
+  <version>0.9.0.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>gconfaudiosink</name>
+      <longname>GConf audio sink</longname>
+      <class>Sink/Audio</class>
+      <description>Audio sink embedding the GConf-settings for audio output</description>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>gconfvideosink</name>
+      <longname>GConf video sink</longname>
+      <class>Sink/Video</class>
+      <description>Video sink embedding the GConf-settings for video output</description>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+  </elements>
+</plugin>

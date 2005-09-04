@@ -1,0 +1,26 @@
+<plugin>
+  <name>autodetect</name>
+  <description>Plugin contains auto-detection plugins for video/audio outputs</description>
+  <filename>../../gst/autodetect/.libs/libgstautodetect.so</filename>
+  <basename>libgstautodetect.so</basename>
+  <version>0.9.0.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>autoaudiosink</name>
+      <longname>Auto audio sink</longname>
+      <class>Sink/Audio</class>
+      <description>Audio sink embedding the Auto-settings for audio output</description>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>autovideosink</name>
+      <longname>Auto video sink</longname>
+      <class>Sink/Video</class>
+      <description>Video sink embedding the Auto-settings for video output</description>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+  </elements>
+</plugin>

@@ -1,0 +1,19 @@
+<plugin>
+  <name>smpte</name>
+  <description>Apply the standard SMPTE transitions on video images</description>
+  <filename>../../gst/smpte/.libs/libgstsmpte.so</filename>
+  <basename>libgstsmpte.so</basename>
+  <version>0.9.0.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>smpte</name>
+      <longname>SMPTE transitions</longname>
+      <class>Filter/Editor/Video</class>
+      <description>Apply the standard SMPTE transitions on video images</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+    </element>
+  </elements>
+</plugin>

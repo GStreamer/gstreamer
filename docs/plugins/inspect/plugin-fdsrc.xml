@@ -1,0 +1,19 @@
+<plugin>
+  <name>fdsrc</name>
+  <description>A source that reads from a file descriptor</description>
+  <filename>../../gst/fdsrc/.libs/libgstfdsrc.so</filename>
+  <basename>libgstfdsrc.so</basename>
+  <version>0.9.0.1</version>
+  <license>LGPL</license>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>fdsrc</name>
+      <longname>Disk Source</longname>
+      <class>Source/File</class>
+      <description>Synchronous read from a file</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;</author>
+    </element>
+  </elements>
+</plugin>
