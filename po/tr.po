@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-09-02 19:11+0200\n"
+"POT-Creation-Date: 2005-09-04 12:04+0200\n"
 "PO-Revision-Date: 2004-04-03 03:14+0300\n"
 "Last-Translator: Baris Cicek <baris@teamforce.name.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -695,7 +695,7 @@ msgstr "\"%s\" URI'si için 'sink' öğesi bağlanamadı"
 msgid "empty pipeline not allowed"
 msgstr "boş boruhattına izin verilmiyor"
 
-#: tools/gst-inspect.c:1064
+#: tools/gst-inspect.c:1065
 #, fuzzy
 msgid "Print all elements"
 msgstr "\"%s\" öğesi yok"

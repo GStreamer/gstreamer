@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.7pre2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-09-02 19:11+0200\n"
+"POT-Creation-Date: 2005-09-04 12:04+0200\n"
 "PO-Revision-Date: 2004-12-21 14:49+0100\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -703,7 +703,7 @@ msgstr "kunde inte länka utgångselementet för URI:n \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "tom rörledning är inte tillåtet"
 
-#: tools/gst-inspect.c:1064
+#: tools/gst-inspect.c:1065
 msgid "Print all elements"
 msgstr "Skriv ut alla element"
 

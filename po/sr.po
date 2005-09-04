@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-09-02 19:11+0200\n"
+"POT-Creation-Date: 2005-09-04 12:04+0200\n"
 "PO-Revision-Date: 2004-03-13 01:47+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -702,7 +702,7 @@ msgstr "не могу да вежем завршни елемент за адр�
 msgid "empty pipeline not allowed"
 msgstr "није допуштен празан цевовод"
 
-#: tools/gst-inspect.c:1064
+#: tools/gst-inspect.c:1065
 #, fuzzy
 msgid "Print all elements"
 msgstr "нема елемента „%s“"

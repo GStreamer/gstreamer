@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.7pre2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-09-02 19:11+0200\n"
+"POT-Creation-Date: 2005-09-04 12:04+0200\n"
 "PO-Revision-Date: 2004-12-27 17:23+0100\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -694,7 +694,7 @@ msgstr "nemohu připojit element spotřebiče pro URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "prázdná roura není povolena"
 
-#: tools/gst-inspect.c:1064
+#: tools/gst-inspect.c:1065
 msgid "Print all elements"
 msgstr "Vypsat všechny elementy"
 

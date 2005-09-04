@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.7pre2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-09-02 19:11+0200\n"
+"POT-Creation-Date: 2005-09-04 12:04+0200\n"
 "PO-Revision-Date: 2004-12-22 17:44+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -716,7 +716,7 @@ msgstr "No s'ha pogut enllaçar l'element de sortida per a l'URI «%s»"
 msgid "empty pipeline not allowed"
 msgstr "no es permet un conducte buit"
 
-#: tools/gst-inspect.c:1064
+#: tools/gst-inspect.c:1065
 msgid "Print all elements"
 msgstr "Imprimeix tots els elements"
 

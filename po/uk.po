@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-09-02 19:11+0200\n"
+"POT-Creation-Date: 2005-09-04 12:04+0200\n"
 "PO-Revision-Date: 2004-08-03 10:53+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -702,7 +702,7 @@ msgstr "не вдається прив'язати елемент-спожива�
 msgid "empty pipeline not allowed"
 msgstr "порожній канал не допускається"
 
-#: tools/gst-inspect.c:1064
+#: tools/gst-inspect.c:1065
 #, fuzzy
 msgid "Print all elements"
 msgstr "немає елементу \"%s\""

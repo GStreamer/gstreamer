@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-09-02 19:11+0200\n"
+"POT-Creation-Date: 2005-09-04 12:04+0200\n"
 "PO-Revision-Date: 2005-02-05 16:35+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net> \n"
@@ -705,7 +705,7 @@ msgstr ""
 msgid "empty pipeline not allowed"
 msgstr "không cho phép đường ống trống"
 
-#: tools/gst-inspect.c:1064
+#: tools/gst-inspect.c:1065
 msgid "Print all elements"
 msgstr "Hiển thị tất cả yếu tố"
 
