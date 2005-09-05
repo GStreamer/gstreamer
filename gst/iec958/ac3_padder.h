@@ -111,7 +111,7 @@ ac3p_parse(ac3_padder *padder);
 
 /**
  * ac3p_frame
- * @padder The padder structure.
+ * @padder: The padder structure.
  *
  * Returns a pointer to the padded frame contained in the padder.
  */
@@ -119,7 +119,7 @@ ac3p_parse(ac3_padder *padder);
 
 /**
  * ac3p_frame_size
- * @padder The padder structure.
+ * @padder: The padder structure.
  *
  * Returns the length in bytes of the last read raw AC3 frame.
  */
@@ -127,7 +127,7 @@ ac3p_parse(ac3_padder *padder);
 
 /**
  * ac3p_pending
- * @padder The padder structure.
+ * @padder: The padder structure.
  *
  * Returns a boolean value telling if there are pending material in
  * the padder.
