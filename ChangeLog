@@ -3,6 +3,11 @@
 	* gst/registries/gstxmlregistry.h:
 	* gst/registries/gstxmlregistry.c: Um... resurrect...
 	
+	* gst/registries/gstxmlregistry.h:
+	* gst/registries/gstxmlregistry.c: and update to newer API.
+	Incidentally they should be a bit faster now that they don't have
+	to parse the caps.
+	
 2005-09-05  Andy Wingo  <wingo@pobox.com>
 
 	* gst/registries/gstxmlregistry.h:

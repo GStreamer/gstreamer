@@ -893,13 +893,8 @@ gst_xml_registry_parse_padtemplate (GMarkupParseContext * context,
     char *s;
 
     s = g_strndup (text, text_len);
-    g_assert (registry->caps == NULL);
-    registry->caps = gst_caps_from_string (s);
-    if (registry->caps == NULL) {
-      g_critical ("Could not parse caps: length %d, content: %*s",
-          (int) text_len, (int) text_len, text);
-    }
-    g_free (s);
+    g_assert (registry->caps_string == NULL);
+    registry->caps_string = s;
     return TRUE;
   }
   return TRUE;
@@ -951,7 +946,7 @@ gst_xml_registry_start_element (GMarkupParseContext * context,
           if (GST_IS_ELEMENT_FACTORY (feature)) {
             GstElementFactory *factory = GST_ELEMENT_FACTORY (feature);
 
-            factory->padtemplates = NULL;
+            factory->staticpadtemplates = NULL;
             xmlregistry->parser = gst_xml_registry_parse_element_factory;
             break;
           } else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
@@ -971,7 +966,7 @@ gst_xml_registry_start_element (GMarkupParseContext * context,
         xmlregistry->name_template = NULL;
         xmlregistry->direction = 0;
         xmlregistry->presence = 0;
-        xmlregistry->caps = NULL;
+        xmlregistry->caps_string = NULL;
       }
       break;
     default:
@@ -1014,17 +1009,20 @@ gst_xml_registry_end_element (GMarkupParseContext * context,
       break;
     case GST_XML_REGISTRY_PADTEMPLATE:
       if (!strcmp (element_name, "padtemplate")) {
-        GstPadTemplate *template;
+        GstStaticPadTemplate *template;
 
-        template = gst_pad_template_new (xmlregistry->name_template,
-            xmlregistry->direction, xmlregistry->presence, xmlregistry->caps);
+        template = g_new0 (GstStaticPadTemplate, 1);
+        template->name_template = xmlregistry->name_template;
+        template->presence = xmlregistry->presence;
+        template->direction = xmlregistry->direction;
+        template->static_caps.string = xmlregistry->caps_string;
 
-        g_free (xmlregistry->name_template);
         xmlregistry->name_template = NULL;
-        xmlregistry->caps = NULL;
+        xmlregistry->caps_string = NULL;
 
-        __gst_element_factory_add_pad_template (GST_ELEMENT_FACTORY
+        __gst_element_factory_add_static_pad_template (GST_ELEMENT_FACTORY
             (xmlregistry->current_feature), template);
+
         xmlregistry->state = GST_XML_REGISTRY_FEATURE;
         xmlregistry->parser = gst_xml_registry_parse_element_factory;
       }
@@ -1213,7 +1211,7 @@ gst_xml_registry_save_feature (GstXMLRegistry * xmlregistry,
     PUT_ESCAPED ("description", factory->details.description);
     PUT_ESCAPED ("author", factory->details.author);
 
-    walk = factory->padtemplates;
+    walk = factory->staticpadtemplates;
 
     while (walk) {
       GstPadTemplate *template = GST_PAD_TEMPLATE (walk->data);
