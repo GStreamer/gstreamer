@@ -72,8 +72,8 @@ static void gst_v4l2element_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_v4l2element_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-static GstElementStateReturn
-gst_v4l2element_change_state (GstElement * element);
+static GstStateChangeReturn
+gst_v4l2element_change_state (GstElement * element, GstStateChange transition);
 
 
 static GstElementClass *parent_class = NULL;
@@ -562,22 +562,22 @@ gst_v4l2element_get_property (GObject * object,
 }
 
 
-static GstElementStateReturn
-gst_v4l2element_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_v4l2element_change_state (GstElement * element, GstStateChange transition)
 {
   GstV4l2Element *v4l2element;
 
-  g_return_val_if_fail (GST_IS_V4L2ELEMENT (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_V4L2ELEMENT (element), GST_STATE_CHANGE_FAILURE);
 
   v4l2element = GST_V4L2ELEMENT (element);
 
   /* if going down into NULL state, close the device if it's open
    * if going to READY, open the device (and set some options)
    */
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (!gst_v4l2_open (v4l2element))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
 
 #ifdef HAVE_XVIDEO
       gst_v4l2_xoverlay_open (v4l2element);
@@ -587,13 +587,13 @@ gst_v4l2element_change_state (GstElement * element)
       g_signal_emit (G_OBJECT (v4l2element),
           gst_v4l2element_signals[SIGNAL_OPEN], 0, v4l2element->device);
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
 #ifdef HAVE_XVIDEO
       gst_v4l2_xoverlay_close (v4l2element);
 #endif
 
       if (!gst_v4l2_close (v4l2element))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
 
       /* emit yet another signal! wheehee! */
       g_signal_emit (G_OBJECT (v4l2element),
@@ -602,7 +602,7 @@ gst_v4l2element_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
