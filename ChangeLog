@@ -1,3 +1,8 @@
+2005-09-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst-libs/ext/Makefile.am:
+	  Use the autotools defined make, fixes bug #314320
+
 2005-08-17  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_connect):
