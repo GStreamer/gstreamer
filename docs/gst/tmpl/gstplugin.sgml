@@ -89,7 +89,7 @@ loaded will use this variable to initialize the plugin.
 @plugin_exit: 
 @version: version of the plugin
 @license: effective license of plugin
-@module: 
+@source: 
 @package: package plugin belongs to
 @origin: URL to provider of plugin
 @_gst_reserved: 
