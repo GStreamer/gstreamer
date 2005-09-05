@@ -1,3 +1,8 @@
+2005-09-05  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	GST_CAT_SEEK disappeared from the public API at some point
+
 2005-09-02  Michael Smith <msmith@fluendo.com>
 
 	* gst/iec958/ac3iec.c:

@@ -39,7 +39,6 @@ typedef gint mpeg2_state_t;
 #define STATE_BUFFER 0
 #endif
 
-GST_DEBUG_CATEGORY_EXTERN (GST_CAT_SEEK);
 GST_DEBUG_CATEGORY_STATIC (mpeg2dec_debug);
 #define GST_CAT_DEFAULT (mpeg2dec_debug)
 
@@ -1492,7 +1491,7 @@ index_seek (GstPad * pad, GstEvent * event)
       if (gst_index_entry_assoc_map (entry, *try_formats, &value)) {
         GstEvent *seek_event;
 
-        GST_CAT_DEBUG (GST_CAT_SEEK, "index %s %" G_GINT64_FORMAT
+        GST_DEBUG_OBJECT (mpeg2dec, "index %s %" G_GINT64_FORMAT
             " -> %s %" G_GINT64_FORMAT,
             gst_format_get_details (format)->nick,
             cur, gst_format_get_details (*try_formats)->nick, value);
