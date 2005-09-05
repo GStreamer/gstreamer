@@ -76,7 +76,8 @@ static GstPadTemplate *gst_jack_src_request_pad_factory ();
 static GstPadTemplate *gst_jack_sink_request_pad_factory ();
 static GstPad *gst_jack_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
-static GstElementStateReturn gst_jack_change_state (GstElement * element);
+static GstStateChangeReturn gst_jack_change_state (GstElement * element,
+    GstStateChange transition);
 static GstPadLinkReturn gst_jack_link (GstPad * pad, const GstCaps * caps);
 
 static void gst_jack_loop (GstElement * element);
@@ -360,8 +361,8 @@ gst_jack_request_new_pad (GstElement * element, GstPadTemplate * templ,
   return pad->pad;
 }
 
-static GstElementStateReturn
-gst_jack_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_jack_change_state (GstElement * element, GstStateChange transition)
 {
   GstJack *this;
   GList *l = NULL, **pads;
@@ -386,7 +387,7 @@ gst_jack_change_state (GstElement * element)
           this->bin = NULL;
           g_warning ("jack element %s needs to be contained in a jack bin.",
               GST_OBJECT_NAME (element));
-          return GST_STATE_FAILURE;
+          return GST_STATE_CHANGE_FAILURE;
         }
 
         /* fixme: verify that all names are unique */
@@ -417,7 +418,7 @@ gst_jack_change_state (GstElement * element)
               "rate", G_TYPE_INT, (int) this->bin->rate,
               "buffer-frames", G_TYPE_INT, (gint) this->bin->nframes, NULL);
           if (gst_pad_try_set_caps (pad->pad, caps) <= 0)
-            return GST_STATE_FAILURE;
+            return GST_STATE_CHANGE_FAILURE;
           l = g_list_next (l);
         }
       }
@@ -430,9 +431,9 @@ gst_jack_change_state (GstElement * element)
   JACK_DEBUG ("%s: state change finished", GST_OBJECT_NAME (this));
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static GstPadLinkReturn

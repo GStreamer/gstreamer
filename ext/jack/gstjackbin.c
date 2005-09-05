@@ -32,7 +32,8 @@ static GstBinClass *parent_class = NULL;
 static void gst_jack_bin_init (GstJackBin * this);
 static void gst_jack_bin_class_init (GstJackBinClass * klass);
 
-static GstElementStateReturn gst_jack_bin_change_state (GstElement * element);
+static GstStateChangeReturn gst_jack_bin_change_state (GstElement * element,
+    GstStateChange transition);
 
 /* jack callbacks */
 static int process (jack_nframes_t nframes, void *arg);
@@ -98,8 +99,8 @@ gst_jack_bin_init (GstJackBin * this)
   gst_scheduler_factory_make (NULL, GST_ELEMENT (this));
 }
 
-static GstElementStateReturn
-gst_jack_bin_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_jack_bin_change_state (GstElement * element, GstStateChange transition)
 {
   GstJackBin *this;
   GList *l = NULL;
@@ -122,7 +123,8 @@ gst_jack_bin_change_state (GstElement * element)
       _jackbin = NULL;
 
       if (GST_ELEMENT_CLASS (parent_class)->change_state)
-        return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+        return GST_ELEMENT_CLASS (parent_class)->change_state (element,
+            transition);
       break;
 
     case GST_STATE_READY:
@@ -134,7 +136,7 @@ gst_jack_bin_change_state (GstElement * element)
       if (!this->client) {
         if (!(this->client = jack_client_new ("gst-jack"))) {
           g_warning ("jack server not running?");
-          return GST_STATE_FAILURE;
+          return GST_STATE_CHANGE_FAILURE;
         }
 
         gst_scheduler_setup (GST_ELEMENT_SCHED (this));
@@ -171,7 +173,8 @@ gst_jack_bin_change_state (GstElement * element)
       }
 
       if (GST_ELEMENT_CLASS (parent_class)->change_state)
-        return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+        return GST_ELEMENT_CLASS (parent_class)->change_state (element,
+            transition);
       break;
 
     case GST_STATE_PAUSED:
@@ -216,7 +219,7 @@ gst_jack_bin_change_state (GstElement * element)
                   jack_port_name (pad->port))) {
             g_warning ("jackbin: could not connect %s and %s", pad->peer_name,
                 jack_port_name (pad->port));
-            return GST_STATE_FAILURE;
+            return GST_STATE_CHANGE_FAILURE;
           }
           l = g_list_next (l);
         }
@@ -229,7 +232,7 @@ gst_jack_bin_change_state (GstElement * element)
                   pad->peer_name)) {
             g_warning ("jackbin: could not connect %s and %s", pad->peer_name,
                 jack_port_name (pad->port));
-            return GST_STATE_FAILURE;
+            return GST_STATE_CHANGE_FAILURE;
           }
           l = g_list_next (l);
         }
@@ -238,10 +241,12 @@ gst_jack_bin_change_state (GstElement * element)
         GST_FLAG_SET (GST_OBJECT (this), GST_JACK_OPEN);
 
         if (GST_ELEMENT_CLASS (parent_class)->change_state)
-          return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+          return GST_ELEMENT_CLASS (parent_class)->change_state (element,
+              transition);
       } else {
         if (GST_ELEMENT_CLASS (parent_class)->change_state)
-          return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+          return GST_ELEMENT_CLASS (parent_class)->change_state (element,
+              transition);
       }
 
       break;
@@ -249,13 +254,14 @@ gst_jack_bin_change_state (GstElement * element)
       JACK_DEBUG ("jackbin: PLAYING");
 
       if (GST_ELEMENT_CLASS (parent_class)->change_state)
-        return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+        return GST_ELEMENT_CLASS (parent_class)->change_state (element,
+            transition);
       break;
   }
 
   JACK_DEBUG ("jackbin: state change finished");
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 /* jack callbacks */
