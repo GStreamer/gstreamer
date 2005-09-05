@@ -230,7 +230,7 @@ gst_vorbisenc_class_init (GstVorbisEncClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_QUALITY,
       g_param_spec_float ("quality", "Quality",
           "Specify quality instead of specifying a particular bitrate.",
-          0.0, 1.0, QUALITY_DEFAULT, G_PARAM_READWRITE));
+          -0.1, 1.0, QUALITY_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MANAGED,
       g_param_spec_boolean ("managed", "Managed",
           "Enable bitrate management engine", FALSE, G_PARAM_READWRITE));
