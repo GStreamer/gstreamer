@@ -16,3 +16,8 @@ html
 sgml
 xml
 *.stamp
+
+gst-plugins-base-plugins-scan
+gst-plugins-base-plugins-scan.c
+inspect-registry.xml
+

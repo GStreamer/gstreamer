@@ -1,3 +1,5 @@
 .dirstamp
+audioconvert
+audioresample
 volume
 vorbisdec
