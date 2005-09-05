@@ -28,12 +28,6 @@ AUDIORESAMPLE_DIR=
 CDAUDIO_DIR=
 # endif
 
-# if USE_CDPARANOIA
-# CDPARANOIA_DIR=cdparanoia
-# else
-CDPARANOIA_DIR=
-# endif
-
 # if USE_DIRAC
 # DIRAC_DIR=dirac
 # else
@@ -70,12 +64,6 @@ else
  FAAD_DIR=
 endif
 
-## if USE_FESTIVAL
-## FESTIVAL_DIR=festival
-## else
-## FESTIVAL_DIR=
-## endif
-
 if USE_GSM
 GSM_DIR=gsm
 else
@@ -86,6 +74,12 @@ endif
 # HERMES_DIR=hermes
 # else
 HERMES_DIR=
+# endif
+
+# if USE_IVORBIS
+# IVORBIS_DIR=ivorbis
+# else
+IVORBIS_DIR=
 # endif
 
 # if USE_JACK
@@ -106,18 +100,6 @@ LCS_DIR=
 LIBFAME_DIR=
 # endif
 
-# if USE_POLYP
-# POLYP_DIR=polyp
-# else
-POLYP_DIR=
-# endif
-
-# if USE_LIBVISUAL
-# LIBVISUAL_DIR=libvisual
-# else
-LIBVISUAL_DIR=
-# endif
-
 # if USE_LIBMMS
 # LIBMMS_DIR=libmms
 # else 
@@ -136,12 +118,6 @@ MPEG2ENC_DIR=
 MPLEX_DIR=
 # endif
 
-#if USE_MAS
-#MAS_DIR=mas
-#else
-#MAS_DIR=
-#endif
-
 # if USE_MUSEPACK
 # MUSEPACK_DIR=musepack
 # else
@@ -158,6 +134,12 @@ MUSICBRAINZ_DIR=
 # NAS_DIR=nas
 # else
 NAS_DIR=
+# endif
+
+# if USE_POLYP
+# POLYP_DIR=polyp
+# else
+POLYP_DIR=
 # endif
 
 # if USE_SDL
@@ -196,10 +178,10 @@ SWFDEC_DIR=
 TARKIN_DIR=
 # endif
 
-# if USE_IVORBIS
-# IVORBIS_DIR=ivorbis
+# if USE_XINE
+# XINE_DIR=xine
 # else
-IVORBIS_DIR=
+XINE_DIR=
 # endif
 
 # if USE_XVID
@@ -208,43 +190,31 @@ IVORBIS_DIR=
 XVID_DIR=
 # endif
 
-# if USE_LIBPNG
-# SNAPSHOT_DIR=snapshot
-# else
-SNAPSHOT_DIR=
-# endif
-
-# if USE_XINE
-# XINE_DIR=xine
-# else
-XINE_DIR=
-# endif
-
 SUBDIRS=\
 	$(ARTS_DIR) \
 	$(ARTSC_DIR) \
 	$(AUDIOFILE_DIR) \
 	$(AUDIORESAMPLE_DIR) \
 	$(CDAUDIO_DIR) \
-	$(CDPARANOIA_DIR) \
 	$(DIRAC_DIR) \
 	$(DIRECTFB_DIR) \
 	$(DIVX_DIR) \
 	$(DTS_DIR) \
-	$(NAS_DIR) \
 	$(FAAC_DIR) \
 	$(FAAD_DIR) \
 	$(GSM_DIR) \
 	$(HERMES_DIR) \
-	$(LIBMMS_DIR) \
+	$(IVORBIS_DIR) \
 	$(JACK_DIR) \
 	$(LCS_DIR) \
 	$(LIBFAME_DIR) \
+	$(LIBMMS_DIR) \
 	$(LIBVISUAL_DIR) \
 	$(MPEG2ENC_DIR) \
 	$(MPLEX_DIR) \
 	$(MUSEPACK_DIR) \
 	$(MUSICBRAINZ_DIR) \
+	$(NAS_DIR) \
 	$(POLYP_DIR) \
 	$(SDL_DIR) \
 	$(SHOUT_DIR) \
@@ -253,16 +223,10 @@ SUBDIRS=\
 	$(SNDFILE_DIR) \
 	$(SWFDEC_DIR) \
 	$(TARKIN_DIR) \
-	$(IVORBIS_DIR) \
 	$(XINE_DIR) \
 	$(XVID_DIR)
 
-DIST_SUBDIRS=\
-	amrnb \
+DIST_SUBDIRS= \
 	faac \
 	faad \
-	gsm \
-	lame \
-	mad \
-	mpeg2dec \
-	sidplay
+	gsm
