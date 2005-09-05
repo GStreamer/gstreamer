@@ -1,3 +1,8 @@
+2005-09-05  Andy Wingo  <wingo@pobox.com>
+
+	* examples/pipeline-tester: Update pipelines. The fixed-rate v4l
+	one doesn't work here, but the rest of them do.
+
 2005-09-05  Edward Hervey  <edward@fluendo.com>
 
 	* examples/pipeline-tester: (Window.play): 

@@ -35,7 +35,6 @@ import pygst
 pygst.require('0.9')
 import gst
 
-print sys.path
 import debugslider
 
 
@@ -52,7 +51,7 @@ data = (('Video capture via V4L',
         ('Sound capture via ALSA',
          'alsasrc\n'
          '    ! audio/x-raw-int,rate=22050,depth=16,channels=1,width=16,signed=(boolean)TRUE,endianness=1234\n'
-         '    ! level signal=true\n'
+         '    ! level message=true\n'
          '    ! fakesink'),
         ('Streaming Ogg/Theora+Vorbis playback, tee to disk',
          'gnomevfssrc location=http://gstreamer.freedesktop.org/media/small/cooldance.ogg \n'
@@ -76,9 +75,10 @@ data = (('Video capture via V4L',
          '    ! mulawenc ! mulawdec ! alsasink'),
         ('Capture DV via firewire, transcode into Ogg',
          'dv1394src \n'
-         '    ! dvdec name=dec drop-factor=2 \n'
-         '    ! video/x-raw-yuv,format=(fourcc)YUY2 \n'
+         '    ! dvdemux name=demux \n'
          '    ! queue \n'
+         '    ! video/x-dv,systemstream=(boolean)false \n'
+         '    ! dvdec drop-factor=2 \n'
          '    ! videorate \n'
          '    ! videoscale \n'
          '    ! video/x-raw-yuv,width=360,height=288 \n'
@@ -89,7 +89,7 @@ data = (('Video capture via V4L',
          '    ! oggmux name=mux \n'
          '    ! filesink location=dv.ogg \n'
          ' \n'
-         '    dec. \n'
+         '    demux. \n'
          '    ! audio/x-raw-int \n'
          '    ! queue \n'
          '    ! audioconvert \n'
