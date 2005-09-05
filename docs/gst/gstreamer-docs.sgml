@@ -54,6 +54,7 @@
 <!ENTITY GstTypes SYSTEM "xml/gsttypes.xml">
 <!ENTITY GstUriHandler SYSTEM "xml/gsturihandler.xml">
 <!ENTITY GstUriType SYSTEM "xml/gsturitype.xml">
+<!ENTITY GstUtils SYSTEM "xml/gstutils.xml">
 <!ENTITY GstValue SYSTEM "xml/gstvalue.xml">
 <!ENTITY GstVersion SYSTEM "xml/gstversion.xml">
 <!ENTITY GstXML SYSTEM "xml/gstxml.xml">
@@ -144,6 +145,7 @@
     &GstTypes;
     &GstUriHandler;
     &GstUriType;
+    &GstUtils;
     &GstValue;
     &GstVersion;
     &GstXML;
