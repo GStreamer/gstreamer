@@ -123,7 +123,8 @@ static GstPadLinkReturn
 gst_ffmpegscale_pad_link (GstPad * pad, const GstCaps * caps);
 
 static void gst_ffmpegscale_chain (GstPad * pad, GstData * data);
-static GstElementStateReturn gst_ffmpegscale_change_state (GstElement * element);
+static GstStateChangeReturn gst_ffmpegscale_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -387,24 +388,24 @@ gst_ffmpegscale_chain (GstPad * pad, GstData * data)
   
 }
 
-static GstElementStateReturn
-gst_ffmpegscale_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_ffmpegscale_change_state (GstElement * element, GstStateChange transition)
 {
   GstFFMpegScale *scale;
 
   scale = GST_FFMPEGSCALE (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_NULL:
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
       if (scale->res != NULL)
 	img_resample_close (scale->res);
       break;
   }
 
   if (parent_class->change_state)
-    return parent_class->change_state (element);
+    return parent_class->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static void

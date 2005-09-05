@@ -102,7 +102,8 @@ static GstPadLinkReturn
 gst_ffmpegcsp_pad_link (GstPad * pad, const GstCaps * caps);
 
 static void gst_ffmpegcsp_chain (GstPad * pad, GstData * data);
-static GstElementStateReturn gst_ffmpegcsp_change_state (GstElement * element);
+static GstStateChangeReturn gst_ffmpegcsp_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstPadTemplate *srctempl, *sinktempl;
 static GstElementClass *parent_class = NULL;
@@ -384,15 +385,15 @@ gst_ffmpegcsp_chain (GstPad * pad, GstData * data)
   gst_pad_push (space->srcpad, GST_DATA (outbuf));
 }
 
-static GstElementStateReturn
-gst_ffmpegcsp_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_ffmpegcsp_change_state (GstElement * element, GstStateChange transition)
 {
   GstFFMpegCsp *space;
 
   space = GST_FFMPEGCSP (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (space->palette)
         av_free (space->palette);
       space->palette = NULL;
@@ -400,9 +401,9 @@ gst_ffmpegcsp_change_state (GstElement * element)
   }
 
   if (parent_class->change_state)
-    return parent_class->change_state (element);
+    return parent_class->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static void

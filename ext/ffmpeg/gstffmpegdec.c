@@ -125,7 +125,8 @@ static gboolean gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_ffmpegdec_chain (GstPad * pad, GstBuffer * buf);
 
-static GstElementStateReturn gst_ffmpegdec_change_state (GstElement * element);
+static GstStateChangeReturn gst_ffmpegdec_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void gst_ffmpegdec_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -1071,17 +1072,16 @@ not_negotiated:
   }
 }
 
-static GstElementStateReturn
-gst_ffmpegdec_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_ffmpegdec_change_state (GstElement * element, GstStateChange transition)
 {
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) element;
-  gint transition = GST_STATE_TRANSITION (element);
-  GstElementStateReturn ret;
+  GstStateChangeReturn ret;
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_ffmpegdec_close (ffmpegdec);
       if (ffmpegdec->last_buffer != NULL) {
 	gst_buffer_unref (ffmpegdec->last_buffer);

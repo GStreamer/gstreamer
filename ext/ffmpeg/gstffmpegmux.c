@@ -105,7 +105,8 @@ static GstPad *gst_ffmpegmux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
 static void gst_ffmpegmux_loop (GstElement * element);
 
-static GstElementStateReturn gst_ffmpegmux_change_state (GstElement * element);
+static GstStateChangeReturn gst_ffmpegmux_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -507,14 +508,13 @@ gst_ffmpegmux_loop (GstElement * element)
   }
 }
 
-static GstElementStateReturn
-gst_ffmpegmux_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_ffmpegmux_change_state (GstElement * element, GstStateChange transition)
 {
   GstFFMpegMux *ffmpegmux = (GstFFMpegMux *) (element);
-  gint transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (ffmpegmux->tags) {
         gst_tag_list_free (ffmpegmux->tags);
         ffmpegmux->tags = NULL;
@@ -527,9 +527,9 @@ gst_ffmpegmux_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 GstCaps *

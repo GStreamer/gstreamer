@@ -103,8 +103,8 @@ static void gst_ffmpegdemux_init (GstFFMpegDemux * demux);
 
 static void gst_ffmpegdemux_loop (GstElement * element);
 
-static GstElementStateReturn
-gst_ffmpegdemux_change_state (GstElement * element);
+static GstStateChangeReturn
+gst_ffmpegdemux_change_state (GstElement * element, GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -672,22 +672,21 @@ gst_ffmpegdemux_loop (GstElement * element)
   pkt.destruct (&pkt);
 }
 
-static GstElementStateReturn
-gst_ffmpegdemux_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_ffmpegdemux_change_state (GstElement * element, GstStateChange transition)
 {
   GstFFMpegDemux *demux = (GstFFMpegDemux *) (element);
-  gint transition = GST_STATE_TRANSITION (element);
 
   switch (transition) {
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_ffmpegdemux_close (demux);
       break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 gboolean

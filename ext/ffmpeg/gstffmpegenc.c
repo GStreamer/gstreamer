@@ -142,7 +142,8 @@ static void gst_ffmpegenc_set_property (GObject * object,
 static void gst_ffmpegenc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn gst_ffmpegenc_change_state (GstElement * element);
+static GstStateChangeReturn gst_ffmpegenc_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -655,22 +656,21 @@ gst_ffmpegenc_get_property (GObject * object,
   }
 }
 
-static GstElementStateReturn
-gst_ffmpegenc_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_ffmpegenc_change_state (GstElement * element, GstStateChange transition)
 {
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) element;
-  gint transition = GST_STATE_TRANSITION (element);
-  GstElementStateReturn result;
+  GstStateChangeReturn result;
 
   switch (transition) {
     default:
       break;
   }
 
-  result = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (ffmpegenc->opened) {
         avcodec_close (ffmpegenc->context);
         ffmpegenc->opened = FALSE;
