@@ -68,7 +68,8 @@ static void gst_y4mencode_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static void gst_y4mencode_chain (GstPad * pad, GstData * _data);
-static GstElementStateReturn gst_y4mencode_change_state (GstElement * element);
+static GstStateChangeReturn gst_y4mencode_change_state (GstElement * element,
+    GstStateChange transition);
 
 
 static GstElementClass *parent_class = NULL;
@@ -257,23 +258,23 @@ gst_y4mencode_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstElementStateReturn
-gst_y4mencode_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_y4mencode_change_state (GstElement * element, GstStateChange transition)
 {
   GstY4mEncode *filter;
 
-  g_return_val_if_fail (GST_IS_Y4MENCODE (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_Y4MENCODE (element), GST_STATE_CHANGE_FAILURE);
 
   filter = GST_Y4MENCODE (element);
 
-  if (GST_STATE_TRANSITION (element) == GST_STATE_NULL_TO_READY) {
+  if (transition == GST_STATE_CHANGE_NULL_TO_READY) {
     filter->init = TRUE;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static gboolean
