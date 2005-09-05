@@ -145,15 +145,34 @@ GTK-DOC NOTES
     in the project root to find them
 
 * what happens during a gtk-doc build ?
-  - headers are scanned based on $(MODULE).types
-    $(MODULE)-scan is created
-    gtkdoc-scan is called with a sourcedir and a module name,
-    where the module name is  $(MODULE)
-    $(MODULE)-sections.txt is created if it doesn't exist yet (it should),
-    as well as $(MODULE)-decl.txt and $(MODULE)-decl-list.txt
-    and .args, .hierarchy and .signals files are created
-    gtkdoc-scan is called
-  - if it not works, try e.g. 'rm docs/gst/*.stamp'
+  - Scan step:
+    - based on a $(MODULE).types file:
+      - gtkdoc-scangobj creates a gtkdoc-scan binary
+        - using CC, LD, CFLAGS, LDFLAGS env var
+        - using --type-init-func and --module parameters
+        - gtkdoc-scan creates
+          - $MODULE.signals.new
+          - $MODULE.hierarchy.new
+          - $MODULE.interfaces.new
+          - $MODULE.prerequisites.new
+          - $MODULE.args.new
+        - generated source and objects get deleted
+        - gtkdoc-scangobj merges changes into the original files
+    - gtkdoc-scan
+      - extracts decls of functions, macros, enums, structs, unions from headers
+      - generates
+        - $MODULE-decl.txt
+        - $MODULE-decl-list.txt
+      - $MODULE-decl-list.txt then should get copied to $MODULE-sections.txt
+    - scan-build.stamp gets created
+  
+  - Template generation step:
+    - gtkdoc-mktmpl --module=$MODULE
+      - reads in tmpl/*.sgml
+      - moves them to tmpl/*.sgml.bak
+      - recreates tmpl/*.sgml according to $MODULE-sections.txt
+      - moves unused stuff to $MODULE-unused.txt
+    - tmpl-build.stamp gets generated
 
 * Possible errors and how to fix them
   - Warning: multiple "IDs" for constraint linkend: gst-tag-register.
@@ -185,4 +204,5 @@ RANDOM THINGS I'VE LEARNED
   xsltproc has a --path option (that xmlto doesn't use yet), but it
   resolves single files to $(specified_path)/$(srcdir)/$(file)
   For now, we need to hack around it by copying xml to the build dir.
+
 

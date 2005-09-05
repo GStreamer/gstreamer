@@ -1,8 +1,8 @@
 boilerplate.c
 caps.func
+chain2.c
 chain.c
 chain.func
-chain2.c
 convertcaps.c
 filter.h
 forwardcaps.c
@@ -10,7 +10,9 @@ getcaps.c
 init.func
 pads.c
 properties.c
+range.c
 register.func
 state.c
 state.func
+task.c
 test.c

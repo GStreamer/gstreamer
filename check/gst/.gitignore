@@ -6,6 +6,7 @@ gstbus
 gstcaps
 gstdata
 gstelement
+gstevent
 gstghostpad
 gstiterator
 gstmessage
