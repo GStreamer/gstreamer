@@ -935,8 +935,8 @@ gst_glimagesink_sink_link (GstPad * pad, const GstCaps * caps)
   return GST_PAD_LINK_OK;
 }
 
-static GstElementStateReturn
-gst_glimagesink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_glimagesink_change_state (GstElement * element, GstStateChange transition)
 {
   GstGLImageSink *glimagesink;
 
@@ -944,32 +944,32 @@ gst_glimagesink_change_state (GstElement * element)
 
   glimagesink = GST_GLIMAGESINK (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       /* Initializing the XContext */
       if (!glimagesink->xcontext) {
         glimagesink->xcontext = gst_glimagesink_xcontext_get (glimagesink);
         if (!glimagesink->xcontext)
-          return GST_STATE_FAILURE;
+          return GST_STATE_CHANGE_FAILURE;
       }
       printf ("null to ready done\n");
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       printf ("ready to paused\n");
       //if (glimagesink->window) // not needed with OpenGL
       //  gst_glimagesink_xwindow_clear (glimagesink, glimagesink->window);
       glimagesink->time = 0;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       glimagesink->framerate = 0;
       GST_VIDEOSINK_WIDTH (glimagesink) = 0;
       GST_VIDEOSINK_HEIGHT (glimagesink) = 0;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       if (glimagesink->glimage) {
         gst_glimagesink_ximage_destroy (glimagesink, glimagesink->glimage);
         glimagesink->glimage = NULL;
@@ -991,9 +991,9 @@ gst_glimagesink_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static void
