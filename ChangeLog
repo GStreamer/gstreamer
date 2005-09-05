@@ -1,3 +1,13 @@
+2005-09-05  Andy Wingo  <wingo@pobox.com>
+
+	* ext/dv/gstdvdemux.c (gst_dvdemux_chain): Move the pad adding
+	here from the state change handler, so we fire signals without
+	holding the state lock.
+
+2005-09-02  Andy Wingo  <wingo@pobox.com>
+
+	* All plugins updated for element state changes.
+
 2005-09-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:

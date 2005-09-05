@@ -936,6 +936,10 @@ gst_dvdemux_chain (GstPad * pad, GstBuffer * buffer)
 
   dvdemux = GST_DVDEMUX (gst_pad_get_parent (pad));
 
+  /* temporary hack? Can't do this from the state change */
+  if (!dvdemux->videosrcpad)
+    gst_dvdemux_add_pads (dvdemux);
+
   gst_adapter_push (dvdemux->adapter, buffer);
 
   /* Apparently dv_parse_header can read from the body of the frame
@@ -965,8 +969,6 @@ gst_dvdemux_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!dvdemux->videosrcpad)
-        gst_dvdemux_add_pads (dvdemux);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       dvdemux->decoder = dv_decoder_new (0, FALSE, FALSE);
