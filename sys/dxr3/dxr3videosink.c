@@ -117,7 +117,8 @@ static void dxr3videosink_parse_data (Dxr3VideoSink * sink);
 static gboolean dxr3videosink_handle_event (GstPad * pad, GstEvent * event);
 static void dxr3videosink_chain (GstPad * pad, GstData * _data);
 
-static GstElementStateReturn dxr3videosink_change_state (GstElement * element);
+static GstStateChangeReturn dxr3videosink_change_state (GstElement * element,
+    GstStateChange transition);
 
 /* static void	dxr3videosink_wait		(Dxr3VideoSink *sink, */
 /*                                                  GstClockTime time); */
@@ -633,32 +634,33 @@ dxr3videosink_chain (GstPad * pad, GstData * _data)
 }
 
 
-static GstElementStateReturn
-dxr3videosink_change_state (GstElement * element)
+static GstStateChangeReturn
+dxr3videosink_change_state (GstElement * element, GstStateChange transition)
 {
-  g_return_val_if_fail (GST_IS_DXR3VIDEOSINK (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_DXR3VIDEOSINK (element),
+      GST_STATE_CHANGE_FAILURE);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (!GST_FLAG_IS_SET (element, DXR3VIDEOSINK_OPEN)) {
         if (!dxr3videosink_open (DXR3VIDEOSINK (element))) {
-          return GST_STATE_FAILURE;
+          return GST_STATE_CHANGE_FAILURE;
         }
       }
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       dxr3videosink_mvcommand (DXR3VIDEOSINK (element), MVCOMMAND_PAUSE);
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       dxr3videosink_mvcommand (DXR3VIDEOSINK (element), MVCOMMAND_START);
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       dxr3videosink_mvcommand (DXR3VIDEOSINK (element), MVCOMMAND_PAUSE);
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       dxr3videosink_mvcommand (DXR3VIDEOSINK (element), MVCOMMAND_STOP);
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       if (GST_FLAG_IS_SET (element, DXR3VIDEOSINK_OPEN)) {
         dxr3videosink_close (DXR3VIDEOSINK (element));
       }
@@ -666,10 +668,10 @@ dxr3videosink_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state) {
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   }
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 #if 0

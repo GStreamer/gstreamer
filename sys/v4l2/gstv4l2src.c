@@ -123,7 +123,8 @@ static void gst_v4l2src_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 /* state handling */
-static GstElementStateReturn gst_v4l2src_change_state (GstElement * element);
+static GstStateChangeReturn gst_v4l2src_change_state (GstElement * element,
+    GstStateChange transition);
 
 /* set_clock function for A/V sync */
 static void gst_v4l2src_set_clock (GstElement * element, GstClock * clock);
@@ -1014,63 +1015,63 @@ gst_v4l2src_get_property (GObject * object,
 }
 
 
-static GstElementStateReturn
-gst_v4l2src_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_v4l2src_change_state (GstElement * element, GstStateChange transition)
 {
   GstV4l2Src *v4l2src;
-  gint transition = GST_STATE_TRANSITION (element);
-  GstElementStateReturn parent_return;
+  GstStateChangeReturn parent_return;
   GTimeVal time;
 
-  g_return_val_if_fail (GST_IS_V4L2SRC (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_V4L2SRC (element), GST_STATE_CHANGE_FAILURE);
   v4l2src = GST_V4L2SRC (element);
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state) {
-    parent_return = GST_ELEMENT_CLASS (parent_class)->change_state (element);
-    if (parent_return != GST_STATE_SUCCESS)
+    parent_return =
+        GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+    if (parent_return != GST_STATE_CHANGE_SUCCESS)
       return parent_return;
   }
 
   switch (transition) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (!gst_v4l2src_get_capture (v4l2src))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       v4l2src->handled = 0;
       v4l2src->need_writes = 0;
       v4l2src->substract_time = 0;
       /* buffer setup moved to capsnego */
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       /* queue all buffer, start streaming capture */
       if (GST_V4L2ELEMENT (v4l2src)->buffer &&
           !gst_v4l2src_capture_start (v4l2src))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       g_get_current_time (&time);
       v4l2src->substract_time = GST_TIMEVAL_TO_TIME (time) -
           v4l2src->substract_time;
       v4l2src->last_seq = 0;
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       g_get_current_time (&time);
       v4l2src->substract_time = GST_TIMEVAL_TO_TIME (time) -
           v4l2src->substract_time;
       /* de-queue all queued buffers */
       if (v4l2src->is_capturing && !gst_v4l2src_capture_stop (v4l2src))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* stop capturing, unmap all buffers */
       if (GST_V4L2ELEMENT (v4l2src)->buffer &&
           !gst_v4l2src_capture_deinit (v4l2src))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
   }
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 

@@ -158,7 +158,7 @@ main (int argc, char *argv[])
 
   /* Change state to PLAYING */
   if (gst_element_set_state (GST_ELEMENT (play),
-          GST_STATE_PLAYING) == GST_STATE_FAILURE)
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE)
     g_error ("Could not set state to PLAYING");
 
   g_timeout_add (20000, (GSourceFunc) seek_timer, play);

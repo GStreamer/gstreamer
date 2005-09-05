@@ -75,7 +75,8 @@ static void gst_mp3parse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_mp3parse_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static GstElementStateReturn gst_mp3parse_change_state (GstElement * element);
+static GstStateChangeReturn gst_mp3parse_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -529,16 +530,16 @@ gst_mp3parse_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstElementStateReturn
-gst_mp3parse_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_mp3parse_change_state (GstElement * element, GstStateChange transition)
 {
   GstMPEGAudioParse *src;
-  GstElementStateReturn result;
+  GstStateChangeReturn result;
 
   src = GST_MP3PARSE (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       src->channels = -1;
       src->rate = -1;
       src->layer = -1;
@@ -547,7 +548,7 @@ gst_mp3parse_change_state (GstElement * element)
       break;
   }
 
-  result = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   return result;
 }

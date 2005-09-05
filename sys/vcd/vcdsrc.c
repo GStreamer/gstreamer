@@ -78,7 +78,8 @@ static gboolean gst_vcdsrc_srcpad_query (GstPad * pad, GstQueryType type,
     GstFormat * format, gint64 * value);
 
 static GstData *gst_vcdsrc_get (GstPad * pad);
-static GstElementStateReturn gst_vcdsrc_change_state (GstElement * element);
+static GstStateChangeReturn gst_vcdsrc_change_state (GstElement * element,
+    GstStateChange transition);
 static inline guint64 gst_vcdsrc_msf (GstVCDSrc * vcdsrc, gint track);
 static void gst_vcdsrc_recalculate (GstVCDSrc * vcdsrc);
 
@@ -544,33 +545,33 @@ gst_vcdsrc_close_file (GstVCDSrc * src)
   GST_FLAG_UNSET (src, VCDSRC_OPEN);
 }
 
-static GstElementStateReturn
-gst_vcdsrc_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_vcdsrc_change_state (GstElement * element, GstStateChange transition)
 {
   GstVCDSrc *vcdsrc = GST_VCDSRC (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_NULL:
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
       if (GST_FLAG_IS_SET (element, VCDSRC_OPEN))
         gst_vcdsrc_close_file (vcdsrc);
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       vcdsrc->curoffset = 0;
       vcdsrc->discont = vcdsrc->flush = FALSE;
       break;
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (!GST_FLAG_IS_SET (element, VCDSRC_OPEN))
         if (!gst_vcdsrc_open_file (vcdsrc))
-          return GST_STATE_FAILURE;
+          return GST_STATE_CHANGE_FAILURE;
       break;
     default:
       break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static inline guint64

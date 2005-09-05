@@ -1,3 +1,87 @@
+2005-09-05  Jan Schmidt  <thaytan@mad.scientist.com>
+	* examples/gstplay/player.c: (main):
+	* examples/stats/mp2ogg.c: (main):
+	* ext/artsd/gstartsdsink.c: (gst_artsdsink_change_state):
+	* ext/audiofile/gstafsink.c: (gst_afsink_change_state):
+	* ext/audiofile/gstafsrc.c: (gst_afsrc_change_state):
+	* ext/cdaudio/gstcdaudio.c: (gst_cdaudio_change_state):
+	* ext/dirac/gstdiracdec.cc:
+	* ext/directfb/directfbvideosink.c:
+	(gst_directfbvideosink_change_state):
+	* ext/dts/gstdtsdec.c: (gst_dtsdec_change_state):
+	* ext/faac/gstfaac.c: (gst_faac_change_state):
+	* ext/hermes/gsthermescolorspace.c:
+	(gst_hermes_colorspace_change_state):
+	* ext/ivorbis/vorbisfile.c: (gst_ivorbisfile_change_state):
+	* ext/jack/gstjack.c: (gst_jack_change_state):
+	* ext/jack/gstjackbin.c: (gst_jack_bin_change_state):
+	* ext/lcs/gstcolorspace.c: (gst_colorspace_change_state):
+	* ext/libmms/gstmms.c: (gst_mms_change_state):
+	* ext/mpeg2enc/gstmpeg2enc.cc:
+	* ext/mplex/gstmplex.cc:
+	* ext/musepack/gstmusepackdec.c: (gst_musepackdec_change_state):
+	* ext/musicbrainz/gsttrm.c: (gst_musicbrainz_change_state):
+	* ext/nas/nassink.c: (gst_nassink_change_state):
+	* ext/polyp/polypsink.c: (gst_polypsink_change_state),
+	(context_state_callback), (gst_polypsink_link):
+	* ext/sdl/sdlvideosink.c: (gst_sdlvideosink_change_state):
+	* ext/shout/gstshout.c: (gst_icecastsend_change_state):
+	* ext/smoothwave/gstsmoothwave.c: (gst_sw_change_state):
+	* ext/sndfile/gstsf.c: (gst_sf_change_state):
+	* ext/swfdec/gstswfdec.c: (gst_swfdec_change_state):
+	* ext/tarkin/gsttarkindec.c: (gst_tarkindec_change_state):
+	* ext/xine/xine.c: (gst_xine_change_state):
+	* ext/xine/xineaudiodec.c: (gst_xine_audio_dec_change_state):
+	* ext/xine/xineaudiosink.c: (gst_xine_audio_sink_change_state):
+	* ext/xine/xineinput.c: (gst_xine_input_change_state):
+	* ext/xvid/gstxviddec.c: (gst_xviddec_change_state):
+	* ext/xvid/gstxvidenc.c: (gst_xvidenc_change_state):
+	* gst/apetag/apedemux.c: (gst_ape_demux_change_state):
+	* gst/cdxaparse/gstcdxaparse.c: (gst_cdxaparse_change_state):
+	* gst/cdxaparse/gstcdxastrip.c: (gst_cdxastrip_change_state):
+	* gst/colorspace/gstcolorspace.c: (gst_colorspace_change_state):
+	* gst/festival/gstfestival.c: (gst_festival_change_state):
+	* gst/librfb/gstrfbsrc.c: (gst_rfbsrc_change_state):
+	* gst/modplug/gstmodplug.cc:
+	* gst/mpeg1videoparse/gstmp1videoparse.c:
+	(gst_mp1videoparse_change_state):
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3parse_change_state):
+	* gst/multifilesink/gstmultifilesink.c:
+	(gst_multifilesink_change_state):
+	* gst/speed/gstspeed.c: (speed_change_state):
+	* gst/switch/gstswitch.c: (gst_switch_change_state):
+	* gst/videocrop/gstvideocrop.c: (gst_video_crop_change_state):
+	* gst/videodrop/gstvideodrop.c: (gst_videodrop_change_state):
+	* gst/y4m/gsty4mencode.c: (gst_y4mencode_change_state):
+	* po/af.po:
+	* po/az.po:
+	* po/cs.po:
+	* po/en_GB.po:
+	* po/hu.po:
+	* po/it.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/uk.po:
+	* po/vi.po:
+	* sys/cdrom/gstcdplayer.c: (cdplayer_change_state):
+	* sys/dxr3/dxr3audiosink.c: (dxr3audiosink_change_state):
+	* sys/dxr3/dxr3spusink.c: (dxr3spusink_change_state):
+	* sys/dxr3/dxr3videosink.c: (dxr3videosink_change_state):
+	* sys/glsink/glimagesink.c: (gst_glimagesink_change_state):
+	* sys/qcam/gstqcamsrc.c: (gst_qcamsrc_change_state):
+	* sys/sunaudio/gstsunaudio.c: (gst_sunaudiosink_change_state):
+	* sys/sunaudio/gstsunaudiosrc.c: (gst_sunaudiosrc_change_state):
+	* sys/sunaudio/gstsunelement.c: (gst_sunaudioelement_change_state):
+	* sys/v4l2/gstv4l2element.c: (gst_v4l2element_change_state):
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_change_state):
+	* sys/vcd/vcdsrc.c: (gst_vcdsrc_change_state):
+	  Fix up all the state change functions.
+
 2005-09-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* created gst-plugins-bad

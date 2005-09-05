@@ -62,7 +62,8 @@ static void gst_faac_get_property (GObject * object,
 static gboolean gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_faac_src_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_faac_chain (GstPad * pad, GstBuffer * data);
-static GstElementStateReturn gst_faac_change_state (GstElement * element);
+static GstStateChangeReturn gst_faac_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -598,13 +599,13 @@ gst_faac_get_property (GObject * object,
   }
 }
 
-static GstElementStateReturn
-gst_faac_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_faac_change_state (GstElement * element, GstStateChange transition)
 {
   GstFaac *faac = GST_FAAC (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (faac->handle) {
         faacEncClose (faac->handle);
         faac->handle = NULL;
@@ -623,9 +624,9 @@ gst_faac_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static gboolean

@@ -111,7 +111,8 @@ static const GstQueryType *gst_modplug_get_query_types (GstPad * pad);
 static gboolean gst_modplug_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_modplug_src_query (GstPad * pad,
     GstQueryType type, GstFormat * format, gint64 * value);
-static GstElementStateReturn gst_modplug_change_state (GstElement * element);
+static GstStateChangeReturn gst_modplug_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -673,26 +674,26 @@ gst_modplug_loop (GstElement * element)
 }
 
 
-static GstElementStateReturn
-gst_modplug_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_modplug_change_state (GstElement * element, GstStateChange transition)
 {
   GstModPlug *modplug;
 
   modplug = GST_MODPLUG (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       modplug->bs = gst_bytestream_new (modplug->sinkpad);
       modplug->song_size = 0;
       modplug->state = MODPLUG_STATE_NEED_TUNE;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_bytestream_destroy (modplug->bs);
       modplug->bs = NULL;
       if (modplug->opened) {
@@ -705,16 +706,16 @@ gst_modplug_change_state (GstElement * element)
       modplug->audiobuffer = NULL;
       modplug->state = MODPLUG_STATE_NEED_TUNE;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 

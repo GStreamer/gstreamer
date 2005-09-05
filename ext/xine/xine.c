@@ -25,7 +25,8 @@
 
 GST_BOILERPLATE (GstXine, gst_xine, GstElement, GST_TYPE_ELEMENT)
 
-     static GstElementStateReturn gst_xine_change_state (GstElement * element);
+     static GstStateChangeReturn gst_xine_change_state (GstElement * element,
+    GstStateChange transition);
 
      static xine_ao_driver_t *_xine_create_audio_driver (GstXine * xine);
      static xine_vo_driver_t *_xine_create_video_driver (GstXine * xine);
@@ -54,23 +55,23 @@ gst_xine_init (GstXine * filter, GstXineClass * g_class)
 {
 }
 
-static GstElementStateReturn
-gst_xine_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_xine_change_state (GstElement * element, GstStateChange transition)
 {
   GstXine *xine = GST_XINE (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       if (xine->stream != NULL)
         gst_xine_free_stream (xine);
       break;
@@ -80,7 +81,7 @@ gst_xine_change_state (GstElement * element)
   }
 
   return GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS, change_state,
-      (element), GST_STATE_SUCCESS);
+      (element), GST_STATE_CHANGE_SUCCESS);
 }
 
 static xine_ao_driver_t *

@@ -113,7 +113,8 @@ static void gst_qcamsrc_set_property (GObject * object, guint prop_id,
 static void gst_qcamsrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn gst_qcamsrc_change_state (GstElement * element);
+static GstStateChangeReturn gst_qcamsrc_change_state (GstElement * element,
+    GstStateChange transition);
 static void gst_qcamsrc_close (GstQCamSrc * src);
 static gboolean gst_qcamsrc_open (GstQCamSrc * src);
 
@@ -381,22 +382,22 @@ gst_qcamsrc_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstElementStateReturn
-gst_qcamsrc_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_qcamsrc_change_state (GstElement * element, GstStateChange transition)
 {
   g_return_val_if_fail (GST_IS_QCAMSRC (element), FALSE);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_NULL:
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
       if (GST_FLAG_IS_SET (element, GST_QCAMSRC_OPEN))
         gst_qcamsrc_close (GST_QCAMSRC (element));
       break;
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (!GST_FLAG_IS_SET (element, GST_QCAMSRC_OPEN)) {
         GST_DEBUG ("opening");
         if (!gst_qcamsrc_open (GST_QCAMSRC (element))) {
           GST_DEBUG ("open failed");
-          return GST_STATE_FAILURE;
+          return GST_STATE_CHANGE_FAILURE;
         }
       }
       break;
@@ -405,9 +406,9 @@ gst_qcamsrc_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static gboolean

@@ -82,8 +82,9 @@ static void gst_mp1videoparse_chain (GstPad * pad, GstData * _data);
 static void gst_mp1videoparse_real_chain (Mp1VideoParse * mp1videoparse,
     GstBuffer * buf, GstPad * outpad);
 static void gst_mp1videoparse_flush (Mp1VideoParse * mp1videoparse);
-static GstElementStateReturn
-gst_mp1videoparse_change_state (GstElement * element);
+static GstStateChangeReturn
+gst_mp1videoparse_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -543,17 +544,18 @@ gst_mp1videoparse_real_chain (Mp1VideoParse * mp1videoparse, GstBuffer * buf,
   } while (mp1videoparse->partialbuf != NULL);
 }
 
-static GstElementStateReturn
-gst_mp1videoparse_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_mp1videoparse_change_state (GstElement * element, GstStateChange transition)
 {
   Mp1VideoParse *mp1videoparse;
 
-  g_return_val_if_fail (GST_IS_MP1VIDEOPARSE (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_MP1VIDEOPARSE (element),
+      GST_STATE_CHANGE_FAILURE);
 
   mp1videoparse = GST_MP1VIDEOPARSE (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_mp1videoparse_flush (mp1videoparse);
       mp1videoparse->need_discont = TRUE;
       mp1videoparse->width = mp1videoparse->height = -1;
@@ -564,9 +566,9 @@ gst_mp1videoparse_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static gboolean

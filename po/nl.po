@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-31 16:10+0200\n"
+"POT-Creation-Date: 2005-09-05 18:47+0200\n"
 "PO-Revision-Date: 2004-08-05 16:26+0200\n"
 "Last-Translator: Elros Cyriatan <cyriatan@fastmail.fm>\n"
 "Language-Team: Dutch <vertaling@nl.linux.org>\n"
@@ -15,71 +15,71 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:342 ext/sndfile/gstsf.c:624
+#: ext/audiofile/gstafsink.c:343 ext/sndfile/gstsf.c:625
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Kon \"%s\" niet openen om te schrijven."
 
-#: ext/audiofile/gstafsink.c:364 ext/audiofile/gstafsrc.c:369
+#: ext/audiofile/gstafsink.c:365 ext/audiofile/gstafsrc.c:370
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Fout bij sluiten bestand \"%s\"."
 
-#: ext/audiofile/gstafsrc.c:316
+#: ext/audiofile/gstafsrc.c:317
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kon \"%s\" niet openen om te lezen."
 
-#: ext/sndfile/gstsf.c:585
+#: ext/sndfile/gstsf.c:586
 msgid "No filename specified."
 msgstr "Geen bestandsnaam opgegeven."
 
-#: ext/sndfile/gstsf.c:838
+#: ext/sndfile/gstsf.c:839
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Kon niet schrijven naar bestand \"%s\"."
 
-#: sys/dxr3/dxr3audiosink.c:296
+#: sys/dxr3/dxr3audiosink.c:297
 #, c-format
 msgid "Could not open audio device \"%s\" for writing."
 msgstr "Kon geluidsapparaat \"%s\" niet openen om te schrijven."
 
-#: sys/dxr3/dxr3audiosink.c:308 sys/dxr3/dxr3videosink.c:281
+#: sys/dxr3/dxr3audiosink.c:309 sys/dxr3/dxr3videosink.c:282
 #, c-format
 msgid "Could not open control device \"%s\" for writing."
 msgstr "Kon instelapparaat \"%s\" niet openen om te schrijven."
 
-#: sys/dxr3/dxr3audiosink.c:341
+#: sys/dxr3/dxr3audiosink.c:342
 #, c-format
 msgid "Could not configure audio device \"%s\"."
 msgstr "Kon geluidsapparaat \"%s\" niet configureren."
 
-#: sys/dxr3/dxr3audiosink.c:355 sys/dxr3/dxr3audiosink.c:392
+#: sys/dxr3/dxr3audiosink.c:356 sys/dxr3/dxr3audiosink.c:393
 #, c-format
 msgid "Could not set audio device \"%s\" to %d Hz."
 msgstr "Kon geluidsapparaat \"%s\" niet instellen op %d Hz."
 
-#: sys/dxr3/dxr3audiosink.c:420
+#: sys/dxr3/dxr3audiosink.c:421
 #, c-format
 msgid "Could not close audio device \"%s\"."
 msgstr "Kon geluidsapparaat \"%s\" niet sluiten."
 
-#: sys/dxr3/dxr3audiosink.c:427 sys/dxr3/dxr3videosink.c:306
+#: sys/dxr3/dxr3audiosink.c:428 sys/dxr3/dxr3videosink.c:307
 #, c-format
 msgid "Could not close control device \"%s\"."
 msgstr "Kon instelapparaat \"%s\" niet sluiten."
 
-#: sys/dxr3/dxr3videosink.c:269
+#: sys/dxr3/dxr3videosink.c:270
 #, c-format
 msgid "Could not open video device \"%s\" for writing."
 msgstr "Kon videoapparaat \"%s\" niet openen om te schrijven."
 
-#: sys/dxr3/dxr3videosink.c:299
+#: sys/dxr3/dxr3videosink.c:300
 #, c-format
 msgid "Could not close video device \"%s\"."
 msgstr "Kon videoapparaat \"%s\" niet sluiten."
 
-#: sys/dxr3/dxr3videosink.c:451
+#: sys/dxr3/dxr3videosink.c:452
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Kon niet schrijven naar apparaat \"%s\"."

@@ -82,7 +82,8 @@ static void gst_festival_class_init (GstFestivalClass * klass);
 static void gst_festival_init (GstFestival * festival);
 
 static void gst_festival_chain (GstPad * pad, GstData * _data);
-static GstElementStateReturn gst_festival_change_state (GstElement * element);
+static GstStateChangeReturn gst_festival_change_state (GstElement * element,
+    GstStateChange transition);
 
 static FT_Info *festival_default_info (void);
 static char *socket_receive_file_to_buff (int fd, int *size);
@@ -410,10 +411,10 @@ gst_festival_close (GstFestival * festival)
   return;
 }
 
-static GstElementStateReturn
-gst_festival_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_festival_change_state (GstElement * element, GstStateChange transition)
 {
-  g_return_val_if_fail (GST_IS_FESTIVAL (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_FESTIVAL (element), GST_STATE_CHANGE_FAILURE);
 
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
     if (GST_FLAG_IS_SET (element, GST_FESTIVAL_OPEN))
@@ -421,14 +422,14 @@ gst_festival_change_state (GstElement * element)
   } else {
     if (!GST_FLAG_IS_SET (element, GST_FESTIVAL_OPEN)) {
       if (!gst_festival_open (GST_FESTIVAL (element)))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
     }
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static gboolean

@@ -104,7 +104,7 @@ static void gst_multifilesink_chain (GstPad * pad, GstData * _data);
 static void gst_multifilesink_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
-static GstElementStateReturn gst_multifilesink_change_state (GstElement *
+static GstStateChangeReturn gst_multifilesink_change_state (GstElement *
     element);
 
 static guint gst_multifilesink_signals[LAST_SIGNAL] = { 0 };
@@ -587,29 +587,30 @@ gst_multifilesink_chain (GstPad * pad, GstData * _data)
       gst_multifilesink_signals[SIGNAL_HANDOFF], 0, filesink);
 }
 
-static GstElementStateReturn
-gst_multifilesink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_multifilesink_change_state (GstElement * element, GstStateChange transition)
 {
-  g_return_val_if_fail (GST_IS_MULTIFILESINK (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_MULTIFILESINK (element),
+      GST_STATE_CHANGE_FAILURE);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (GST_FLAG_IS_SET (element, GST_MULTIFILESINK_OPEN))
         gst_multifilesink_close_file (GST_MULTIFILESINK (element));
       break;
 
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!GST_FLAG_IS_SET (element, GST_MULTIFILESINK_OPEN)) {
         if (!gst_multifilesink_open_file (GST_MULTIFILESINK (element)))
-          return GST_STATE_FAILURE;
+          return GST_STATE_CHANGE_FAILURE;
       }
       break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 /*** GSTURIHANDLER INTERFACE *************************************************/

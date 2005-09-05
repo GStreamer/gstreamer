@@ -91,7 +91,8 @@ static void gst_colorspace_get_property (GObject * object, guint prop_id,
 static GstPadLinkReturn
 gst_colorspace_link (GstPad * pad, const GstCaps * caps);
 static void gst_colorspace_chain (GstPad * pad, GstData * _data);
-static GstElementStateReturn gst_colorspace_change_state (GstElement * element);
+static GstStateChangeReturn gst_colorspace_change_state (GstElement * element,
+    GstStateChange transition);
 
 
 static GstElementClass *parent_class = NULL;
@@ -563,23 +564,23 @@ gst_colorspace_chain (GstPad * pad, GstData * _data)
   gst_pad_push (space->srcpad, GST_DATA (outbuf));
 }
 
-static GstElementStateReturn
-gst_colorspace_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_colorspace_change_state (GstElement * element, GstStateChange transition)
 {
   GstColorspace *space;
 
   space = GST_COLORSPACE (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_PLAYING:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
   }
 
-  return parent_class->change_state (element);
+  return parent_class->change_state (element, transition);
 }
 
 static void

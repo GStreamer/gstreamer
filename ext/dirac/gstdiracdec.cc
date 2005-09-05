@@ -59,7 +59,8 @@ static void gst_diracdec_init (GstDiracDec * diracdec);
 static void gst_diracdec_dispose (GObject * object);
 
 static void gst_diracdec_chain (GstPad * pad, GstData * data);
-static GstElementStateReturn gst_diracdec_change_state (GstElement * element);
+static GstStateChangeReturn gst_diracdec_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -340,17 +341,17 @@ gst_diracdec_chain (GstPad * pad, GstData * _data)
   }
 }
 
-static GstElementStateReturn
-gst_diracdec_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_diracdec_change_state (GstElement * element, GstStateChange transition)
 {
   GstDiracDec *diracdec = GST_DIRACDEC (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (!(diracdec->decoder = dirac_decoder_init (0)))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       dirac_decoder_close (diracdec->decoder);
       diracdec->width = diracdec->height = -1;
       diracdec->fps = 0.;
@@ -360,5 +361,5 @@ gst_diracdec_change_state (GstElement * element)
       break;
   }
 
-  return parent_class->change_state (element);
+  return parent_class->change_state (element, transition);
 }

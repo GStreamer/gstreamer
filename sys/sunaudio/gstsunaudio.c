@@ -120,7 +120,7 @@ static void gst_sunaudiosink_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_sunaudiosink_setparams (GstSunAudioSink * sunaudiosink);
 static void gst_sunaudiosink_chain (GstPad * pad, GstData * _data);
-static GstElementStateReturn gst_sunaudiosink_change_state (GstElement *
+static GstStateChangeReturn gst_sunaudiosink_change_state (GstElement *
     element);
 
 static GstElementClass *parent_class = NULL;
@@ -357,34 +357,34 @@ gst_sunaudiosink_close (GstSunAudioSink * sunaudiosink)
   close (sunaudiosink->fd);
 }
 
-static GstElementStateReturn
-gst_sunaudiosink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_sunaudiosink_change_state (GstElement * element, GstStateChange transition)
 {
   GstSunAudioSink *sunaudiosink = GST_SUNAUDIOSINK (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (!gst_sunaudiosink_open (sunaudiosink)) {
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       }
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       gst_sunaudiosink_close (sunaudiosink);
       break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static void

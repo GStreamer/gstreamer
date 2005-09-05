@@ -158,7 +158,8 @@ static void gst_sf_set_clock (GstElement * element, GstClock * clock);
 static GstPad *gst_sf_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * unused);
 static void gst_sf_release_request_pad (GstElement * element, GstPad * pad);
-static GstElementStateReturn gst_sf_change_state (GstElement * element);
+static GstStateChangeReturn gst_sf_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstPadLinkReturn gst_sf_link (GstPad * pad, const GstCaps * caps);
 
@@ -441,35 +442,35 @@ gst_sf_get_time (GstClock * clock, gpointer data)
   return this->time;
 }
 
-static GstElementStateReturn
-gst_sf_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_sf_change_state (GstElement * element, GstStateChange transition)
 {
   GstSF *this = GST_SF (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       gst_audio_clock_set_active (GST_AUDIO_CLOCK (this->provided_clock), TRUE);
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       gst_audio_clock_set_active (GST_AUDIO_CLOCK (this->provided_clock),
           FALSE);
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       if (GST_FLAG_IS_SET (this, GST_SF_OPEN))
         gst_sf_close_file (this);
       break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static GstPad *

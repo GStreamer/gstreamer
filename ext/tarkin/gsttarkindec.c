@@ -55,7 +55,8 @@ static void gst_tarkindec_init (TarkinDec * arkindec);
 
 static void gst_tarkindec_chain (GstPad * pad, GstData * _data);
 static void gst_tarkindec_setup (TarkinDec * tarkindec);
-static GstElementStateReturn gst_tarkindec_change_state (GstElement * element);
+static GstStateChangeReturn gst_tarkindec_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void gst_tarkindec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -278,24 +279,24 @@ gst_tarkindec_chain (GstPad * pad, GstData * _data)
   }
 }
 
-static GstElementStateReturn
-gst_tarkindec_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_tarkindec_change_state (GstElement * element, GstStateChange transition)
 {
   TarkinDec *tarkindec;
 
   tarkindec = GST_TARKINDEC (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_PAUSED:
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_tarkindec_setup (tarkindec);
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
     default:
       break;
   }
 
-  return parent_class->change_state (element);
+  return parent_class->change_state (element, transition);
 }
 
 static void

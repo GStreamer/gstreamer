@@ -2,13 +2,13 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # Christian Rose <menthos@menthos.com>, 2004.
 #
-# $Id: sv.po,v 1.20 2005/08/31 18:07:28 thomasvs Exp $
+# $Id: sv.po,v 1.21 2005/09/05 17:20:27 thaytan Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-31 16:10+0200\n"
+"POT-Creation-Date: 2005-09-05 18:47+0200\n"
 "PO-Revision-Date: 2004-08-03 20:53+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -16,71 +16,71 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:342 ext/sndfile/gstsf.c:624
+#: ext/audiofile/gstafsink.c:343 ext/sndfile/gstsf.c:625
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Kunde inte öppna filen \"%s\" för skrivning."
 
-#: ext/audiofile/gstafsink.c:364 ext/audiofile/gstafsrc.c:369
+#: ext/audiofile/gstafsink.c:365 ext/audiofile/gstafsrc.c:370
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Fel vid stängning av filen \"%s\"."
 
-#: ext/audiofile/gstafsrc.c:316
+#: ext/audiofile/gstafsrc.c:317
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunde inte öppna filen \"%s\" för läsning."
 
-#: ext/sndfile/gstsf.c:585
+#: ext/sndfile/gstsf.c:586
 msgid "No filename specified."
 msgstr "Inget filnamn angivet."
 
-#: ext/sndfile/gstsf.c:838
+#: ext/sndfile/gstsf.c:839
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Kunde inte skriva till filen \"%s\"."
 
-#: sys/dxr3/dxr3audiosink.c:296
+#: sys/dxr3/dxr3audiosink.c:297
 #, c-format
 msgid "Could not open audio device \"%s\" for writing."
 msgstr "Kunde inte öppna ljudenheten \"%s\" för skrivning."
 
-#: sys/dxr3/dxr3audiosink.c:308 sys/dxr3/dxr3videosink.c:281
+#: sys/dxr3/dxr3audiosink.c:309 sys/dxr3/dxr3videosink.c:282
 #, c-format
 msgid "Could not open control device \"%s\" for writing."
 msgstr "Kunde inte öppna styrenheten \"%s\" för skrivning."
 
-#: sys/dxr3/dxr3audiosink.c:341
+#: sys/dxr3/dxr3audiosink.c:342
 #, c-format
 msgid "Could not configure audio device \"%s\"."
 msgstr "Kunde inte konfigurera ljudenheten \"%s\"."
 
-#: sys/dxr3/dxr3audiosink.c:355 sys/dxr3/dxr3audiosink.c:392
+#: sys/dxr3/dxr3audiosink.c:356 sys/dxr3/dxr3audiosink.c:393
 #, c-format
 msgid "Could not set audio device \"%s\" to %d Hz."
 msgstr "Kan inte ställa in ljudenheten \"%s\" till %d Hz."
 
-#: sys/dxr3/dxr3audiosink.c:420
+#: sys/dxr3/dxr3audiosink.c:421
 #, c-format
 msgid "Could not close audio device \"%s\"."
 msgstr "Kunde inte stänga ljudenheten \"%s\"."
 
-#: sys/dxr3/dxr3audiosink.c:427 sys/dxr3/dxr3videosink.c:306
+#: sys/dxr3/dxr3audiosink.c:428 sys/dxr3/dxr3videosink.c:307
 #, c-format
 msgid "Could not close control device \"%s\"."
 msgstr "Kunde inte stänga styrenheten \"%s\"."
 
-#: sys/dxr3/dxr3videosink.c:269
+#: sys/dxr3/dxr3videosink.c:270
 #, c-format
 msgid "Could not open video device \"%s\" for writing."
 msgstr "Kunde inte öppna videoenheten \"%s\" för skrivning."
 
-#: sys/dxr3/dxr3videosink.c:299
+#: sys/dxr3/dxr3videosink.c:300
 #, c-format
 msgid "Could not close video device \"%s\"."
 msgstr "Kunde inte stänga vidoeenheten \"%s\"."
 
-#: sys/dxr3/dxr3videosink.c:451
+#: sys/dxr3/dxr3videosink.c:452
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Kunde inte skriva till enheten \"%s\"."

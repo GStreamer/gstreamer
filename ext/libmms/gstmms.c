@@ -67,7 +67,7 @@ static const GstQueryType *gst_mms_get_query_types (GstPad * pad);
 static const GstFormat *gst_mms_get_formats (GstPad * pad);
 static gboolean gst_mms_srcpad_query (GstPad * pad, GstQueryType type,
     GstFormat * fmt, gint64 * value);
-static GstElementStateReturn gst_mms_change_state (GstElement * elem);
+static GstStateChangeReturn gst_mms_change_state (GstElement * elem);
 
 static GstData *gst_mms_get (GstPad * pad);
 
@@ -286,26 +286,26 @@ gst_mms_get (GstPad * pad)
   return GST_DATA (buf);
 }
 
-static GstElementStateReturn
+static GstStateChangeReturn
 gst_mms_change_state (GstElement * elem)
 {
   GstMMS *mms = GST_MMS (elem);
 
   switch (GST_STATE_TRANSITION (elem)) {
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!mms->uri_name)
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       /* FIXME: pass some sane arguments here */
       mms->connection = mms_connect (NULL, NULL, mms->uri_name, 128 * 1024);
       if (!mms->connection) {
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       }
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     default:
       break;
@@ -314,7 +314,7 @@ gst_mms_change_state (GstElement * elem)
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
     return GST_ELEMENT_CLASS (parent_class)->change_state (elem);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static void

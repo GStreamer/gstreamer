@@ -71,7 +71,8 @@ static void gst_videodrop_set_property (GObject * object,
 static void gst_videodrop_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn gst_videodrop_change_state (GstElement * element);
+static GstStateChangeReturn gst_videodrop_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -347,13 +348,13 @@ gst_videodrop_get_property (GObject * object,
   }
 }
 
-static GstElementStateReturn
-gst_videodrop_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_videodrop_change_state (GstElement * element, GstStateChange transition)
 {
   GstVideodrop *videodrop = GST_VIDEODROP (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       videodrop->inited = FALSE;
       videodrop->time_adjust = 0;
       videodrop->total = videodrop->pass = 0;
@@ -363,9 +364,9 @@ gst_videodrop_change_state (GstElement * element)
   }
 
   if (parent_class->change_state)
-    return parent_class->change_state (element);
+    return parent_class->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static gboolean

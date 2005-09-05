@@ -71,7 +71,8 @@ static void gst_nassink_finalize (GObject * object);
 
 static gboolean gst_nassink_open_audio (GstNassink * sink);
 static void gst_nassink_close_audio (GstNassink * sink);
-static GstElementStateReturn gst_nassink_change_state (GstElement * element);
+static GstStateChangeReturn gst_nassink_change_state (GstElement * element,
+    GstStateChange transition);
 static GstCaps *gst_nassink_getcaps (GstPad * pad);
 static gboolean gst_nassink_sync_parms (GstNassink * nassink);
 static GstPadLinkReturn gst_nassink_sinkconnect (GstPad * pad,
@@ -459,8 +460,8 @@ gst_nassink_close_audio (GstNassink * sink)
   GST_CAT_DEBUG (NAS, "closed audio device");
 }
 
-static GstElementStateReturn
-gst_nassink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_nassink_change_state (GstElement * element, GstStateChange transition)
 {
   GstNassink *nassink;
 
@@ -489,9 +490,9 @@ gst_nassink_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static void

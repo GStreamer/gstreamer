@@ -60,7 +60,8 @@ static void gst_artsdsink_init (GstArtsdsink * artsdsink);
 
 static gboolean gst_artsdsink_open_audio (GstArtsdsink * sink);
 static void gst_artsdsink_close_audio (GstArtsdsink * sink);
-static GstElementStateReturn gst_artsdsink_change_state (GstElement * element);
+static GstStateChangeReturn gst_artsdsink_change_state (GstElement * element,
+    GstStateChange transition);
 static gboolean gst_artsdsink_sync_parms (GstArtsdsink * artsdsink);
 static GstPadLinkReturn gst_artsdsink_link (GstPad * pad, const GstCaps * caps);
 static void gst_artsdsink_chain (GstPad * pad, GstData * _data);
@@ -323,8 +324,8 @@ gst_artsdsink_close_audio (GstArtsdsink * sink)
   g_print ("artsdsink: closed connection\n");
 }
 
-static GstElementStateReturn
-gst_artsdsink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_artsdsink_change_state (GstElement * element, GstStateChange transition)
 {
   g_return_val_if_fail (GST_IS_ARTSDSINK (element), FALSE);
 
@@ -336,11 +337,11 @@ gst_artsdsink_change_state (GstElement * element)
   } else {
     if (!GST_FLAG_IS_SET (element, GST_ARTSDSINK_OPEN)) {
       if (!gst_artsdsink_open_audio (GST_ARTSDSINK (element)))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
     }
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-  return GST_STATE_SUCCESS;
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  return GST_STATE_CHANGE_SUCCESS;
 }

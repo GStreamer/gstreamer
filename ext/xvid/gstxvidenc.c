@@ -92,7 +92,8 @@ static void gst_xvidenc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_xvidenc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-static GstElementStateReturn gst_xvidenc_change_state (GstElement * element);
+static GstStateChangeReturn gst_xvidenc_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_xvidenc_signals[LAST_SIGNAL] = { 0 };
@@ -473,13 +474,13 @@ gst_xvidenc_get_property (GObject * object,
   }
 }
 
-static GstElementStateReturn
-gst_xvidenc_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_xvidenc_change_state (GstElement * element, GstStateChange transition)
 {
   GstXvidEnc *xvidenc = GST_XVIDENC (element);
 
   switch (GST_STATE_PENDING (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (xvidenc->handle) {
         xvid_encore (xvidenc->handle, XVID_ENC_DESTROY, NULL, NULL);
         xvidenc->handle = NULL;
@@ -490,7 +491,7 @@ gst_xvidenc_change_state (GstElement * element)
   }
 
   if (parent_class->change_state)
-    return parent_class->change_state (element);
+    return parent_class->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }

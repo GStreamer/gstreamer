@@ -59,7 +59,8 @@ main (gint argc, gchar * argv[])
   dec_sink = gst_element_get_pad (decoder, "sink");
   enc_src = gst_element_get_pad (encoder, "src");
 
-  if (gst_element_set_state (pipeline, GST_STATE_PLAYING) != GST_STATE_SUCCESS) {
+  if (gst_element_set_state (pipeline,
+          GST_STATE_PLAYING) != GST_STATE_CHANGE_SUCCESS) {
     g_print ("pipeline doesn't want to play\n");
     return -1;
   }

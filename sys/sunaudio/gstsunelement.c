@@ -65,7 +65,7 @@ static void gst_sunaudioelement_set_property (GObject * object,
 static void gst_sunaudioelement_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn gst_sunaudioelement_change_state (GstElement *
+static GstStateChangeReturn gst_sunaudioelement_change_state (GstElement *
     element);
 
 static GstElementClass *parent_class = NULL;
@@ -417,19 +417,20 @@ gst_sunaudioelement_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-static GstElementStateReturn
-gst_sunaudioelement_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_sunaudioelement_change_state (GstElement * element,
+    GstStateChange transition)
 {
   GstSunAudioElement *sunaudio = GST_SUNAUDIOELEMENT (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (!gst_sunaudioelement_open_audio (sunaudio)) {
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       }
       GST_INFO ("opened sound device");
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       gst_sunaudioelement_close_audio (sunaudio);
       gst_sunaudioelement_reset (sunaudio);
       GST_INFO ("closed sound device");
@@ -439,9 +440,9 @@ gst_sunaudioelement_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static gboolean

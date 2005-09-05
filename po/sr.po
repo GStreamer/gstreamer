@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-31 16:10+0200\n"
+"POT-Creation-Date: 2005-09-05 18:47+0200\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -16,71 +16,71 @@ msgstr ""
 "Plural-Forms: nplurals=3;    plural=n%10==1 && n%100!=11 ? 0 :  (n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: ext/audiofile/gstafsink.c:342 ext/sndfile/gstsf.c:624
+#: ext/audiofile/gstafsink.c:343 ext/sndfile/gstsf.c:625
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Не могу да отворим датотеку „%s“ ради уписа."
 
-#: ext/audiofile/gstafsink.c:364 ext/audiofile/gstafsrc.c:369
+#: ext/audiofile/gstafsink.c:365 ext/audiofile/gstafsrc.c:370
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Грешка при затварању датотеке „%s“."
 
-#: ext/audiofile/gstafsrc.c:316
+#: ext/audiofile/gstafsrc.c:317
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не могу да отворим датотеку „%s“ ради читања."
 
-#: ext/sndfile/gstsf.c:585
+#: ext/sndfile/gstsf.c:586
 msgid "No filename specified."
 msgstr "Име датотеке није задато."
 
-#: ext/sndfile/gstsf.c:838
+#: ext/sndfile/gstsf.c:839
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Не могу да пишем у датотеку „%s“."
 
-#: sys/dxr3/dxr3audiosink.c:296
+#: sys/dxr3/dxr3audiosink.c:297
 #, c-format
 msgid "Could not open audio device \"%s\" for writing."
 msgstr "Не могу да отворим звучни уређај „%s“ ради уписа."
 
-#: sys/dxr3/dxr3audiosink.c:308 sys/dxr3/dxr3videosink.c:281
+#: sys/dxr3/dxr3audiosink.c:309 sys/dxr3/dxr3videosink.c:282
 #, c-format
 msgid "Could not open control device \"%s\" for writing."
 msgstr "Не могу да отворим управљачки уређај „%s“ ради уписа."
 
-#: sys/dxr3/dxr3audiosink.c:341
+#: sys/dxr3/dxr3audiosink.c:342
 #, c-format
 msgid "Could not configure audio device \"%s\"."
 msgstr "Не могу да подесим звучни уређај „%s“."
 
-#: sys/dxr3/dxr3audiosink.c:355 sys/dxr3/dxr3audiosink.c:392
+#: sys/dxr3/dxr3audiosink.c:356 sys/dxr3/dxr3audiosink.c:393
 #, c-format
 msgid "Could not set audio device \"%s\" to %d Hz."
 msgstr "Не могу да поставим звучни уређај „%s“ на %d Hz."
 
-#: sys/dxr3/dxr3audiosink.c:420
+#: sys/dxr3/dxr3audiosink.c:421
 #, c-format
 msgid "Could not close audio device \"%s\"."
 msgstr "Не могу да отворим радио уређај '%s'"
 
-#: sys/dxr3/dxr3audiosink.c:427 sys/dxr3/dxr3videosink.c:306
+#: sys/dxr3/dxr3audiosink.c:428 sys/dxr3/dxr3videosink.c:307
 #, c-format
 msgid "Could not close control device \"%s\"."
 msgstr "Не могу да затворим управљачки уређај „%s“."
 
-#: sys/dxr3/dxr3videosink.c:269
+#: sys/dxr3/dxr3videosink.c:270
 #, c-format
 msgid "Could not open video device \"%s\" for writing."
 msgstr "Не могу да отворим видео уређај „%s“ ради уписа."
 
-#: sys/dxr3/dxr3videosink.c:299
+#: sys/dxr3/dxr3videosink.c:300
 #, c-format
 msgid "Could not close video device \"%s\"."
 msgstr "Не могу да затворим видео уређај „%s“."
 
-#: sys/dxr3/dxr3videosink.c:451
+#: sys/dxr3/dxr3videosink.c:452
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Не могу да пишем на видео уређај „%s“."

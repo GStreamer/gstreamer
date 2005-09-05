@@ -71,8 +71,8 @@ static void gst_sdlvideosink_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_sdlvideosink_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-static GstElementStateReturn
-gst_sdlvideosink_change_state (GstElement * element);
+static GstStateChangeReturn
+gst_sdlvideosink_change_state (GstElement * element, GstStateChange transition);
 
 
 static GstPadTemplate *sink_template;
@@ -669,24 +669,25 @@ gst_sdlvideosink_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 
-static GstElementStateReturn
-gst_sdlvideosink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_sdlvideosink_change_state (GstElement * element, GstStateChange transition)
 {
   GstSDLVideoSink *sdlvideosink;
 
-  g_return_val_if_fail (GST_IS_SDLVIDEOSINK (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_SDLVIDEOSINK (element),
+      GST_STATE_CHANGE_FAILURE);
   sdlvideosink = GST_SDLVIDEOSINK (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (!gst_sdlvideosink_initsdl (sdlvideosink))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       GST_FLAG_SET (sdlvideosink, GST_SDLVIDEOSINK_OPEN);
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_sdlvideosink_destroy (sdlvideosink);
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       gst_sdlvideosink_deinitsdl (sdlvideosink);
       GST_FLAG_UNSET (sdlvideosink, GST_SDLVIDEOSINK_OPEN);
       break;
@@ -695,9 +696,9 @@ gst_sdlvideosink_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 

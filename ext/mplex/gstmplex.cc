@@ -71,7 +71,8 @@ static void gst_mplex_loop (GstElement * element);
 static GstPad *gst_mplex_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
 
-static GstElementStateReturn gst_mplex_change_state (GstElement * element);
+static GstStateChangeReturn gst_mplex_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void gst_mplex_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
@@ -338,13 +339,13 @@ gst_mplex_set_property (GObject * object,
   GST_MPLEX (object)->job->setProperty (prop_id, value);
 }
 
-static GstElementStateReturn
-gst_mplex_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_mplex_change_state (GstElement * element, GstStateChange transition)
 {
   GstMplex *mplex = GST_MPLEX (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       delete mplex->mux;
       mplex->mux = NULL;
       mplex->num_apads = 0;
@@ -355,9 +356,9 @@ gst_mplex_change_state (GstElement * element)
   }
 
   if (parent_class->change_state)
-    return parent_class->change_state (element);
+    return parent_class->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static gboolean

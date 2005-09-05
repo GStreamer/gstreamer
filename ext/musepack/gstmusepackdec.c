@@ -67,8 +67,8 @@ static gboolean gst_musepackdec_src_convert (GstPad * pad,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 
 static void gst_musepackdec_loop (GstElement * element);
-static GstElementStateReturn
-gst_musepackdec_change_state (GstElement * element);
+static GstStateChangeReturn
+gst_musepackdec_change_state (GstElement * element, GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -473,20 +473,20 @@ gst_musepackdec_loop (GstElement * element)
   gst_pad_push (musepackdec->srcpad, GST_DATA (out));
 }
 
-static GstElementStateReturn
-gst_musepackdec_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_musepackdec_change_state (GstElement * element, GstStateChange transition)
 {
   GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       musepackdec->bs = gst_bytestream_new (musepackdec->sinkpad);
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       musepackdec->seek_pending = FALSE;
       musepackdec->init = FALSE;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       gst_bytestream_destroy (musepackdec->bs);
       break;
     default:
@@ -494,9 +494,9 @@ gst_musepackdec_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static gboolean

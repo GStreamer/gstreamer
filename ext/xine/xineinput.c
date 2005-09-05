@@ -74,8 +74,9 @@ GST_BOILERPLATE (GstXineInput, gst_xine_input, GstXine, GST_TYPE_XINE)
     const GValue * value, GParamSpec * pspec);
      static void gst_xine_input_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-     static GstElementStateReturn
-         gst_xine_input_change_state (GstElement * element);
+     static GstStateChangeReturn
+         gst_xine_input_change_state (GstElement * element,
+    GstStateChange transition);
 
      static void gst_xine_input_base_init (gpointer g_class)
 {
@@ -202,37 +203,37 @@ gst_xine_input_get (GstPad * pad)
   return GST_DATA (buf);
 }
 
-static GstElementStateReturn
-gst_xine_input_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_xine_input_change_state (GstElement * element, GstStateChange transition)
 {
   GstXineInput *xine = GST_XINE_INPUT (element);
   input_class_t *input =
       (input_class_t *) GST_XINE_INPUT_GET_CLASS (xine)->plugin_node->
       plugin_class;
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       xine->input =
           input->get_instance (input, gst_xine_get_stream (GST_XINE (xine)),
           xine->location);
       if (!xine->input)
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       if (xine->input->open (xine->input) == 0)
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       xine->blocksize = xine->input->get_blocksize (xine->input);
       if (xine->blocksize == 0)
         xine->blocksize = BUFFER_SIZE;
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* FIXME: reset stream */
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       xine->input->dispose (xine->input);
       xine->input = NULL;
       break;
@@ -242,7 +243,7 @@ gst_xine_input_change_state (GstElement * element)
   }
 
   return GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS, change_state,
-      (element), GST_STATE_SUCCESS);
+      (element), GST_STATE_CHANGE_SUCCESS);
 }
 
 /** GstXineInput subclasses ************************************************/

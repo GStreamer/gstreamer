@@ -118,7 +118,8 @@ static void dxr3audiosink_chain_ac3 (GstPad * pad, GstData * buf);
 /* static int	dxr3audiosink_mvcommand		(Dxr3AudioSink *sink, */
 /*                                                  int command); */
 
-static GstElementStateReturn dxr3audiosink_change_state (GstElement * element);
+static GstStateChangeReturn dxr3audiosink_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void dxr3audiosink_flushed (Dxr3AudioSink * sink);
 
@@ -701,10 +702,11 @@ dxr3audiosink_mvcommand (Dxr3AudioSink * sink, int command)
 }
 #endif
 
-static GstElementStateReturn
-dxr3audiosink_change_state (GstElement * element)
+static GstStateChangeReturn
+dxr3audiosink_change_state (GstElement * element, GstStateChange transition)
 {
-  g_return_val_if_fail (GST_IS_DXR3AUDIOSINK (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_DXR3AUDIOSINK (element),
+      GST_STATE_CHANGE_FAILURE);
 
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
     if (GST_FLAG_IS_SET (element, DXR3AUDIOSINK_OPEN)) {
@@ -713,16 +715,16 @@ dxr3audiosink_change_state (GstElement * element)
   } else {
     if (!GST_FLAG_IS_SET (element, DXR3AUDIOSINK_OPEN)) {
       if (!dxr3audiosink_open (DXR3AUDIOSINK (element))) {
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       }
     }
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state) {
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   }
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 

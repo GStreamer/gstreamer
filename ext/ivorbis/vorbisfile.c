@@ -106,8 +106,8 @@ static void gst_ivorbisfile_base_init (gpointer g_class);
 static void gst_ivorbisfile_class_init (IvorbisfileClass * klass);
 static void gst_ivorbisfile_init (Ivorbisfile * ivorbisfile);
 
-static GstElementStateReturn
-gst_ivorbisfile_change_state (GstElement * element);
+static GstStateChangeReturn
+gst_ivorbisfile_change_state (GstElement * element, GstStateChange transition);
 
 static const GstFormat *gst_ivorbisfile_get_formats (GstPad * pad);
 static gboolean gst_ivorbisfile_src_convert (GstPad * pad,
@@ -1037,34 +1037,34 @@ done:
   return res;
 }
 
-static GstElementStateReturn
-gst_ivorbisfile_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_ivorbisfile_change_state (GstElement * element, GstStateChange transition)
 {
   Ivorbisfile *ivorbisfile = GST_IVORBISFILE (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
-    case GST_STATE_READY_TO_PAUSED:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       ivorbisfile->restart = TRUE;
       ivorbisfile->bs = gst_bytestream_new (ivorbisfile->sinkpad);
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       ivorbisfile->eos = FALSE;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       ov_clear (&ivorbisfile->vf);
       gst_bytestream_destroy (ivorbisfile->bs);
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
     default:
       break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static void

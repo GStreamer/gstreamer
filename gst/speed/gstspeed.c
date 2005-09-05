@@ -87,7 +87,8 @@ static gboolean speed_parse_caps (GstSpeed * filter, const GstCaps * caps);
 
 static void speed_chain (GstPad * pad, GstData * data);
 
-static GstElementStateReturn speed_change_state (GstElement * element);
+static GstStateChangeReturn speed_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class;   /* NULL */
 
@@ -471,15 +472,15 @@ speed_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstElementStateReturn
-speed_change_state (GstElement * element)
+static GstStateChangeReturn
+speed_change_state (GstElement * element, GstStateChange transition)
 {
   GstSpeed *speed = GST_SPEED (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       speed->offset = 0;
       speed->timestamp = 0;
       speed->sample_size = 0;
@@ -489,9 +490,9 @@ speed_change_state (GstElement * element)
   }
 
   if (parent_class->change_state)
-    return parent_class->change_state (element);
+    return parent_class->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static gboolean

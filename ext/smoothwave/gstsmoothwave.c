@@ -47,7 +47,8 @@ static void gst_smoothwave_base_init (gpointer g_class);
 static void gst_smoothwave_class_init (GstSmoothWaveClass * klass);
 static void gst_smoothwave_init (GstSmoothWave * smoothwave);
 static void gst_smoothwave_dispose (GObject * object);
-static GstElementStateReturn gst_sw_change_state (GstElement * element);
+static GstStateChangeReturn gst_sw_change_state (GstElement * element,
+    GstStateChange transition);
 static void gst_smoothwave_chain (GstPad * pad, GstData * _data);
 static GstPadLinkReturn gst_sw_sinklink (GstPad * pad, const GstCaps * caps);
 static GstPadLinkReturn gst_sw_srclink (GstPad * pad, const GstCaps * caps);
@@ -401,28 +402,28 @@ gst_smoothwave_chain (GstPad * pad, GstData * _data)
   }
 }
 
-static GstElementStateReturn
-gst_sw_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_sw_change_state (GstElement * element, GstStateChange transition)
 {
   GstSmoothWave *sw = GST_SMOOTHWAVE (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       sw->audio_basetime = GST_CLOCK_TIME_NONE;
       gst_adapter_clear (sw->adapter);
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       sw->channels = 0;
       break;
     default:
       break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 }
 
 static gboolean

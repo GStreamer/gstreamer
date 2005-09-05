@@ -100,8 +100,7 @@ gst_rfbsrc_get_type (void)
      static void gst_rfbsrc_base_init (gpointer g_class);
      static void gst_rfbsrc_class_init (GstRfbsrcClass * klass);
      static void gst_rfbsrc_init (GstRfbsrc * rfbsrc);
-     static GstElementStateReturn gst_rfbsrc_change_state (GstElement *
-    element);
+     static GstStateChangeReturn gst_rfbsrc_change_state (GstElement * element);
 
      static void gst_rfbsrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -206,31 +205,31 @@ gst_rfbsrc_class_init (GstRfbsrcClass * klass)
   gstelement_class->change_state = gst_rfbsrc_change_state;
 }
 
-static GstElementStateReturn
-gst_rfbsrc_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_rfbsrc_change_state (GstElement * element, GstStateChange transition)
 {
   GstRfbsrc *rfbsrc;
 
   rfbsrc = GST_RFBSRC (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       rfbsrc->decoder = rfb_decoder_new ();
       rfb_decoder_connect_tcp (rfbsrc->decoder, rfbsrc->server, rfbsrc->port);
       rfbsrc->decoder->paint_rect = gst_rfbsrc_paint_rect;
       rfbsrc->decoder->decoder_private = rfbsrc;
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       //rfbsrc->timestamp_offset = 0;
       //rfbsrc->n_frames = 0;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       if (rfbsrc->frame) {
         g_free (rfbsrc->frame);
         rfbsrc->frame = NULL;
@@ -238,7 +237,7 @@ gst_rfbsrc_change_state (GstElement * element)
       break;
   }
 
-  return parent_class->change_state (element);
+  return parent_class->change_state (element, transition);
 }
 
 static void

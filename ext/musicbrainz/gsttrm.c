@@ -79,8 +79,8 @@ static void gst_musicbrainz_set_property (GObject * object, guint prop_id,
 static void gst_musicbrainz_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn
-gst_musicbrainz_change_state (GstElement * element);
+static GstStateChangeReturn
+gst_musicbrainz_change_state (GstElement * element, GstStateChange transition);
 
 
 static GstElementClass *parent_class = NULL;
@@ -361,20 +361,20 @@ gst_musicbrainz_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 
-static GstElementStateReturn
-gst_musicbrainz_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_musicbrainz_change_state (GstElement * element, GstStateChange transition)
 {
   GstMusicBrainz *musicbrainz;
 
-  g_return_val_if_fail (GST_IS_MUSICBRAINZ (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_MUSICBRAINZ (element), GST_STATE_CHANGE_FAILURE);
 
   musicbrainz = GST_MUSICBRAINZ (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_PAUSED:
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       musicbrainz->trm = trm_New ();
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       trm_Delete (musicbrainz->trm);
       musicbrainz->trm = NULL;
       musicbrainz->linked = FALSE;
@@ -387,9 +387,9 @@ gst_musicbrainz_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static gboolean

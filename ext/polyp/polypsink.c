@@ -127,24 +127,24 @@ gst_polypsink_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstElementStateReturn
-gst_polypsink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_polypsink_change_state (GstElement * element, GstStateChange transition)
 {
   GstPolypSink *polypsink;
 
   polypsink = GST_POLYPSINK (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
+  switch (transition) {
 
-    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY:
       create_context (polypsink);
       break;
 
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       destroy_context (polypsink);
       break;
 
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
 
       create_stream (polypsink);
 
@@ -153,7 +153,7 @@ gst_polypsink_change_state (GstElement * element)
         pa_operation_unref (pa_stream_cork (polypsink->stream, 1, NULL, NULL));
       break;
 
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
 
       if (polypsink->stream
           && pa_stream_get_state (polypsink->stream) == PA_STREAM_READY)
@@ -161,7 +161,7 @@ gst_polypsink_change_state (GstElement * element)
 
       break;
 
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
 
       create_stream (polypsink);
 
@@ -171,16 +171,16 @@ gst_polypsink_change_state (GstElement * element)
 
       break;
 
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
 
       destroy_stream (polypsink);
       break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 
@@ -265,7 +265,7 @@ context_state_callback (struct pa_context *c, void *userdata)
       break;
 
     case PA_CONTEXT_READY:{
-      GstElementState state;
+      GstState state;
 
       g_assert (!polypsink->stream);
 
@@ -500,7 +500,7 @@ gst_polypsink_link (GstPad * pad, const GstCaps * caps)
   GstStructure *structure;
   const char *n;
   char t[256];
-  GstElementState state;
+  GstState state;
   int n_channels;
 
   polypsink = GST_POLYPSINK (gst_pad_get_parent (pad));

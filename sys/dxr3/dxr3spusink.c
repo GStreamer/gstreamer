@@ -87,7 +87,8 @@ static void dxr3spusink_set_clock (GstElement * element, GstClock * clock);
 static gboolean dxr3spusink_handle_event (GstPad * pad, GstEvent * event);
 static void dxr3spusink_chain (GstPad * pad, GstData * _data);
 
-static GstElementStateReturn dxr3spusink_change_state (GstElement * element);
+static GstStateChangeReturn dxr3spusink_change_state (GstElement * element,
+    GstStateChange transition);
 
 /* static void	dxr3spusink_wait		(Dxr3SpuSink *sink, */
 /*                                                  GstClockTime time); */
@@ -397,28 +398,28 @@ dxr3spusink_chain (GstPad * pad, GstData * _data)
 }
 
 
-static GstElementStateReturn
-dxr3spusink_change_state (GstElement * element)
+static GstStateChangeReturn
+dxr3spusink_change_state (GstElement * element, GstStateChange transition)
 {
-  g_return_val_if_fail (GST_IS_DXR3SPUSINK (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_DXR3SPUSINK (element), GST_STATE_CHANGE_FAILURE);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (!GST_FLAG_IS_SET (element, DXR3SPUSINK_OPEN)) {
         if (!dxr3spusink_open (DXR3SPUSINK (element))) {
-          return GST_STATE_FAILURE;
+          return GST_STATE_CHANGE_FAILURE;
         }
       }
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       if (GST_FLAG_IS_SET (element, DXR3SPUSINK_OPEN)) {
         dxr3spusink_close (DXR3SPUSINK (element));
       }
@@ -426,10 +427,10 @@ dxr3spusink_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state) {
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   }
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 #if 0

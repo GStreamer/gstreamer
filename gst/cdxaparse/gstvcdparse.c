@@ -37,7 +37,8 @@ static gboolean gst_cdxastrip_handle_src_query (GstPad * pad,
     GstQueryType type, GstFormat * format, gint64 * value);
 
 static void gst_cdxastrip_chain (GstPad * pad, GstData * data);
-static GstElementStateReturn gst_cdxastrip_change_state (GstElement * element);
+static GstStateChangeReturn gst_cdxastrip_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstStaticPadTemplate sink_template_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -388,13 +389,13 @@ gst_cdxastrip_chain (GstPad * pad, GstData * data)
   cdxa->cache = buf;
 }
 
-static GstElementStateReturn
-gst_cdxastrip_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_cdxastrip_change_state (GstElement * element, GstStateChange transition)
 {
   GstCDXAStrip *cdxa = GST_CDXASTRIP (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (cdxa->cache) {
         gst_buffer_unref (cdxa->cache);
         cdxa->cache = NULL;
@@ -405,7 +406,7 @@ gst_cdxastrip_change_state (GstElement * element)
   }
 
   if (parent_class->change_state)
-    return parent_class->change_state (element);
+    return parent_class->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }

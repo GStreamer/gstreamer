@@ -233,8 +233,9 @@ _gst_xine_audio_dec_create_audio_driver (GstXine * xine)
 GST_BOILERPLATE (GstXineAudioDec, gst_xine_audio_dec, GstXine, GST_TYPE_XINE)
 
      static void gst_xine_audio_dec_chain (GstPad * pad, GstData * in);
-     static GstElementStateReturn
-         gst_xine_audio_dec_change_state (GstElement * element);
+     static GstStateChangeReturn
+         gst_xine_audio_dec_change_state (GstElement * element,
+    GstStateChange transition);
 
 /* this function handles the link with other plug-ins */
      static GstPadLinkReturn
@@ -401,26 +402,27 @@ _load_decoder (GstXineAudioDec * dec)
   return ret;
 }
 
-static GstElementStateReturn
-gst_xine_audio_dec_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_xine_audio_dec_change_state (GstElement * element,
+    GstStateChange transition)
 {
   GstXineAudioDec *xine = GST_XINE_AUDIO_DEC (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       xine->decoder = _load_decoder (xine);
       if (!xine->decoder)
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       xine->setup = FALSE;
       _x_free_audio_decoder (gst_xine_get_stream (GST_XINE (xine)),
           xine->decoder);
@@ -431,7 +433,7 @@ gst_xine_audio_dec_change_state (GstElement * element)
   }
 
   return GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS, change_state,
-      (element), GST_STATE_SUCCESS);
+      (element), GST_STATE_CHANGE_SUCCESS);
 }
 
 /** GstXineAudioDec subclasses ************************************************/

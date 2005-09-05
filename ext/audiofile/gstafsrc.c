@@ -109,7 +109,8 @@ static void gst_afsrc_set_property (GObject * object, guint prop_id,
 static void gst_afsrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn gst_afsrc_change_state (GstElement * element);
+static GstStateChangeReturn gst_afsrc_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_afsrc_signals[LAST_SIGNAL] = { 0 };
@@ -372,10 +373,10 @@ gst_afsrc_close_file (GstAFSrc * src)
   }
 }
 
-static GstElementStateReturn
-gst_afsrc_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_afsrc_change_state (GstElement * element, GstStateChange transition)
 {
-  g_return_val_if_fail (GST_IS_AFSRC (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_AFSRC (element), GST_STATE_CHANGE_FAILURE);
 
   /* if going to NULL then close the file */
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
@@ -390,13 +391,13 @@ gst_afsrc_change_state (GstElement * element)
 /*      g_print ("DEBUG: GST_AFSRC_OPEN not set\n"); */
       if (!gst_afsrc_open_file (GST_AFSRC (element))) {
 /*        g_print ("DEBUG: element tries to open file\n"); */
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       }
     }
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }

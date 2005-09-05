@@ -62,8 +62,9 @@ struct _GstXineAudioSinkClass
 
 GST_BOILERPLATE (GstXineAudioSink, gst_xine_audio_sink, GstXine, GST_TYPE_XINE)
 
-     static GstElementStateReturn
-         gst_xine_audio_sink_change_state (GstElement * element);
+     static GstStateChangeReturn
+         gst_xine_audio_sink_change_state (GstElement * element,
+    GstStateChange transition);
 
      static void gst_xine_audio_sink_base_init (gpointer g_class)
 {
@@ -94,46 +95,47 @@ gst_xine_audio_sink_chain (GstPad * pad, GstData * data)
   gst_data_unref (GST_DATA (data));
 }
 
-static GstElementStateReturn
-gst_xine_audio_sink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_xine_audio_sink_change_state (GstElement * element,
+    GstStateChange transition)
 {
   GstXineAudioSink *xine = GST_XINE_AUDIO_SINK (element);
   audio_driver_class_t *driver =
       (audio_driver_class_t *) GST_XINE_AUDIO_SINK_GET_CLASS (xine)->
       plugin_node->plugin_class;
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (driver == NULL) {
         xine_audio_port_t *port =
             xine_open_audio_driver (GST_XINE_GET_CLASS (xine)->xine,
             GST_XINE_AUDIO_SINK_GET_CLASS (xine)->plugin_node->info->id, NULL);
 
         if (!port)
-          return GST_STATE_FAILURE;
+          return GST_STATE_CHANGE_FAILURE;
         port->exit (port);
         driver =
             (audio_driver_class_t *) GST_XINE_AUDIO_SINK_GET_CLASS (xine)->
             plugin_node->plugin_class;
         if (driver == NULL)
-          return GST_STATE_FAILURE;
+          return GST_STATE_CHANGE_FAILURE;
       }
       xine->driver = driver->open_plugin (driver, NULL);
       if (!xine->driver)
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (xine->open != 0)
         xine->driver->close (xine->driver);
       xine->open = 0;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       xine->driver->exit (xine->driver);
       xine->driver = NULL;
       break;
@@ -143,7 +145,7 @@ gst_xine_audio_sink_change_state (GstElement * element)
   }
 
   return GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS, change_state,
-      (element), GST_STATE_SUCCESS);
+      (element), GST_STATE_CHANGE_SUCCESS);
 }
 
 static GstCaps *

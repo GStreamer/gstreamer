@@ -89,7 +89,8 @@ static void gst_cdaudio_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
 static void gst_cdaudio_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * spec);
-static GstElementStateReturn gst_cdaudio_change_state (GstElement * element);
+static GstStateChangeReturn gst_cdaudio_change_state (GstElement * element,
+    GstStateChange transition);
 
 static const GstEventMask *gst_cdaudio_get_event_masks (GstElement * element);
 static gboolean gst_cdaudio_send_event (GstElement * element, GstEvent * event);
@@ -294,27 +295,27 @@ debug_track_info (GstCDAudio * cdaudio)
   }
 }
 
-static GstElementStateReturn
-gst_cdaudio_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_cdaudio_change_state (GstElement * element, GstStateChange transition)
 {
   GstCDAudio *cdaudio;
 
   cdaudio = GST_CDAUDIO (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       cdaudio->cd_desc = cd_init_device (cdaudio->device);
       if (cdaudio->cd_desc < 0)
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
 
       /* close tray */
       if (cd_close (cdaudio->cd_desc) < 0)
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
 
       if (cd_stat (cdaudio->cd_desc, &cdaudio->info) < 0)
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
 
       debug_track_info (cdaudio);
 
@@ -323,7 +324,7 @@ gst_cdaudio_change_state (GstElement * element)
 
       cdaudio->was_playing = FALSE;
       break;
-    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     {
       gint res;
 
@@ -333,34 +334,34 @@ gst_cdaudio_change_state (GstElement * element)
         res = cd_play (cdaudio->cd_desc, 1);
 
       if (res < 0)
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
 
       cdaudio->was_playing = TRUE;
       g_timer_start (cdaudio->timer);
       break;
     }
-    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       if (cd_pause (cdaudio->cd_desc) < 0)
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       g_timer_stop (cdaudio->timer);
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (cd_stop (cdaudio->cd_desc) < 0)
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       if (cd_finish (cdaudio->cd_desc) < 0)
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state) {
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   }
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static const GstEventMask *

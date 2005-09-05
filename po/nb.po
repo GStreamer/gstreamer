@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-31 16:10+0200\n"
+"POT-Creation-Date: 2005-09-05 18:47+0200\n"
 "PO-Revision-Date: 2004-10-04 15:54+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@broadpark.no>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -14,71 +14,71 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:342 ext/sndfile/gstsf.c:624
+#: ext/audiofile/gstafsink.c:343 ext/sndfile/gstsf.c:625
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Kunne ikke åpne filen «%s» for skriving."
 
-#: ext/audiofile/gstafsink.c:364 ext/audiofile/gstafsrc.c:369
+#: ext/audiofile/gstafsink.c:365 ext/audiofile/gstafsrc.c:370
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Feil under lukking av fil «%s»."
 
-#: ext/audiofile/gstafsrc.c:316
+#: ext/audiofile/gstafsrc.c:317
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunne ikke åpne filen «%s» for lesing."
 
-#: ext/sndfile/gstsf.c:585
+#: ext/sndfile/gstsf.c:586
 msgid "No filename specified."
 msgstr "Ingen filnavn oppgitt."
 
-#: ext/sndfile/gstsf.c:838
+#: ext/sndfile/gstsf.c:839
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Kunne ikke skrive til fil «%s»."
 
-#: sys/dxr3/dxr3audiosink.c:296
+#: sys/dxr3/dxr3audiosink.c:297
 #, c-format
 msgid "Could not open audio device \"%s\" for writing."
 msgstr ""
 
-#: sys/dxr3/dxr3audiosink.c:308 sys/dxr3/dxr3videosink.c:281
+#: sys/dxr3/dxr3audiosink.c:309 sys/dxr3/dxr3videosink.c:282
 #, c-format
 msgid "Could not open control device \"%s\" for writing."
 msgstr ""
 
-#: sys/dxr3/dxr3audiosink.c:341
+#: sys/dxr3/dxr3audiosink.c:342
 #, c-format
 msgid "Could not configure audio device \"%s\"."
 msgstr "Kunne ikke konfigurere lydenhet «%s»."
 
-#: sys/dxr3/dxr3audiosink.c:355 sys/dxr3/dxr3audiosink.c:392
+#: sys/dxr3/dxr3audiosink.c:356 sys/dxr3/dxr3audiosink.c:393
 #, c-format
 msgid "Could not set audio device \"%s\" to %d Hz."
 msgstr ""
 
-#: sys/dxr3/dxr3audiosink.c:420
+#: sys/dxr3/dxr3audiosink.c:421
 #, c-format
 msgid "Could not close audio device \"%s\"."
 msgstr ""
 
-#: sys/dxr3/dxr3audiosink.c:427 sys/dxr3/dxr3videosink.c:306
+#: sys/dxr3/dxr3audiosink.c:428 sys/dxr3/dxr3videosink.c:307
 #, c-format
 msgid "Could not close control device \"%s\"."
 msgstr ""
 
-#: sys/dxr3/dxr3videosink.c:269
+#: sys/dxr3/dxr3videosink.c:270
 #, c-format
 msgid "Could not open video device \"%s\" for writing."
 msgstr ""
 
-#: sys/dxr3/dxr3videosink.c:299
+#: sys/dxr3/dxr3videosink.c:300
 #, c-format
 msgid "Could not close video device \"%s\"."
 msgstr ""
 
-#: sys/dxr3/dxr3videosink.c:451
+#: sys/dxr3/dxr3videosink.c:452
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr ""

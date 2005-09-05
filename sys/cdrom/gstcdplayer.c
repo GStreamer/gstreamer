@@ -52,7 +52,8 @@ static void cdplayer_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * spec);
 static gboolean cdplayer_iterate (GstBin * bin);
 
-static GstElementStateReturn cdplayer_change_state (GstElement * element);
+static GstStateChangeReturn cdplayer_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class;
 static guint cdplayer_signals[LAST_SIGNAL] = { 0 };
@@ -285,14 +286,14 @@ cdplayer_iterate (GstBin * bin)
 }
 
 
-static GstElementStateReturn
-cdplayer_change_state (GstElement * element)
+static GstStateChangeReturn
+cdplayer_change_state (GstElement * element, GstStateChange transition)
 {
   CDPlayer *cdp;
-  GstElementState state = GST_STATE (element);
-  GstElementState pending = GST_STATE_PENDING (element);
+  GstState state = GST_STATE (element);
+  GstState pending = GST_STATE_PENDING (element);
 
-  g_return_val_if_fail (GST_IS_CDPLAYER (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_CDPLAYER (element), GST_STATE_CHANGE_FAILURE);
 
   cdp = CDPLAYER (element);
 
@@ -300,7 +301,7 @@ cdplayer_change_state (GstElement * element)
     case GST_STATE_READY:
       if (state != GST_STATE_PAUSED) {
         if (cd_init (CDPLAYER_CD (cdp), cdp->device) == FALSE) {
-          return GST_STATE_FAILURE;
+          return GST_STATE_CHANGE_FAILURE;
         }
         cdp->num_tracks = cdp->cd.num_tracks;
         cdp->cddb_discid = cd_cddb_discid (CDPLAYER_CD (cdp));
@@ -310,7 +311,7 @@ cdplayer_change_state (GstElement * element)
       /* ready->paused is not useful */
       if (state != GST_STATE_READY) {
         if (cd_pause (CDPLAYER_CD (cdp)) == FALSE) {
-          return GST_STATE_FAILURE;
+          return GST_STATE_CHANGE_FAILURE;
         }
 
         cdp->paused = TRUE;
@@ -320,14 +321,14 @@ cdplayer_change_state (GstElement * element)
     case GST_STATE_PLAYING:
       if (cdp->paused == TRUE) {
         if (cd_resume (CDPLAYER_CD (cdp)) == FALSE) {
-          return GST_STATE_FAILURE;
+          return GST_STATE_CHANGE_FAILURE;
         }
 
         cdp->paused = FALSE;
       } else {
         if (cd_start (CDPLAYER_CD (cdp), cdp->start_track,
                 cdp->end_track) == FALSE) {
-          return GST_STATE_FAILURE;
+          return GST_STATE_CHANGE_FAILURE;
         }
       }
 
@@ -336,7 +337,7 @@ cdplayer_change_state (GstElement * element)
       /* stop & close fd */
       if (cd_stop (CDPLAYER_CD (cdp)) == FALSE
           || cd_close (CDPLAYER_CD (cdp)) == FALSE) {
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       }
 
       break;
@@ -345,10 +346,10 @@ cdplayer_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state) {
-    GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   }
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 

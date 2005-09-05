@@ -78,7 +78,8 @@ gst_xviddec_sink_link (GstPad * pad, const GstCaps * vscapslist);
 static GstPadLinkReturn
 gst_xviddec_src_link (GstPad * pad, const GstCaps * vscapslist);
 static GstCaps *gst_xviddec_src_getcaps (GstPad * pad);
-static GstElementStateReturn gst_xviddec_change_state (GstElement * element);
+static GstStateChangeReturn gst_xviddec_change_state (GstElement * element,
+    GstStateChange transition);
 
 
 static GstElementClass *parent_class = NULL;
@@ -350,13 +351,13 @@ gst_xviddec_sink_link (GstPad * pad, const GstCaps * vscaps)
   return ret;
 }
 
-static GstElementStateReturn
-gst_xviddec_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_xviddec_change_state (GstElement * element, GstStateChange transition)
 {
   GstXvidDec *xviddec = GST_XVIDDEC (element);
 
   switch (GST_STATE_PENDING (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (xviddec->handle) {
         gst_xviddec_unset (xviddec);
       }
@@ -366,7 +367,7 @@ gst_xviddec_change_state (GstElement * element)
   }
 
   if (parent_class->change_state)
-    return parent_class->change_state (element);
+    return parent_class->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }

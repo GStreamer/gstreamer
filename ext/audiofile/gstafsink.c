@@ -112,7 +112,8 @@ static void gst_afsink_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_afsink_handle_event (GstPad * pad, GstEvent * event);
 
-static GstElementStateReturn gst_afsink_change_state (GstElement * element);
+static GstStateChangeReturn gst_afsink_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_afsink_signals[LAST_SIGNAL] = { 0 };
@@ -428,10 +429,10 @@ gst_afsink_chain (GstPad * pad, GstData * _data)
   g_signal_emit (G_OBJECT (afsink), gst_afsink_signals[SIGNAL_HANDOFF], 0);
 }
 
-static GstElementStateReturn
-gst_afsink_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_afsink_change_state (GstElement * element, GstStateChange transition)
 {
-  g_return_val_if_fail (GST_IS_AFSINK (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_AFSINK (element), GST_STATE_CHANGE_FAILURE);
 
   /* if going to NULL? then close the file */
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
@@ -454,16 +455,16 @@ gst_afsink_change_state (GstElement * element)
       if (!gst_afsink_open_file (GST_AFSINK (element)))
       {
         g_print ("DEBUG: element tries to open file\n"); 
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       }
     }
   }
 */
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 /* this function was copied from sinesrc */

@@ -33,8 +33,7 @@ static void
 add_fps (GstCaps * caps)
 {
   GstStructure *structure = gst_caps_get_structure (caps, 0);
-  GValue list = { 0 }, fps =
-  {
+  GValue list = { 0 }, fps = {
   0};
   gdouble fpss[] = { 24.0 / 1.001, 24.0, 25.0,
     30.0 / 1.001, 30.0, 50.0,
@@ -105,7 +104,8 @@ static void gst_mpeg2enc_loop (GstElement * element);
 static GstPadLinkReturn
 gst_mpeg2enc_sink_link (GstPad * pad, const GstCaps * caps);
 
-static GstElementStateReturn gst_mpeg2enc_change_state (GstElement * element);
+static GstStateChangeReturn gst_mpeg2enc_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void gst_mpeg2enc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
@@ -295,13 +295,13 @@ gst_mpeg2enc_set_property (GObject * object,
   GST_MPEG2ENC (object)->options->setProperty (prop_id, value);
 }
 
-static GstElementStateReturn
-gst_mpeg2enc_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_mpeg2enc_change_state (GstElement * element, GstStateChange transition)
 {
   GstMpeg2enc *enc = GST_MPEG2ENC (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       delete enc->encoder;
       enc->encoder = NULL;
       break;
@@ -310,9 +310,9 @@ gst_mpeg2enc_change_state (GstElement * element)
   }
 
   if (parent_class->change_state)
-    return parent_class->change_state (element);
+    return parent_class->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static gboolean
