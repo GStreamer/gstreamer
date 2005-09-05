@@ -1,3 +1,8 @@
+2005-09-05  Edward Hervey  <edward@fluendo.com>
+
+	* examples/pipeline-tester: (Window.play): 
+	New API: STATE_SUCCESS -> STATE_CHANGE_SUCCESS
+
 2005-09-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gst.defs:

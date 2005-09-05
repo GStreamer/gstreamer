@@ -224,7 +224,7 @@ class Window(gtk.Window):
             self.error('Could not create pipeline', str(e))
             return False
         watch_id = pipeline.get_bus().add_watch(self.on_message)
-        if pipeline.set_state(gst.STATE_PLAYING) != gst.STATE_SUCCESS:
+        if pipeline.set_state(gst.STATE_PLAYING) != gst.STATE_CHANGE_SUCCESS:
             # make sure we get error messages
             while gtk.events_pending():
                 gtk.main_iteration()
