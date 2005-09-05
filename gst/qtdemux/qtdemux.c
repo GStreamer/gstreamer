@@ -153,7 +153,8 @@ static GstElementClass *parent_class = NULL;
 static void gst_qtdemux_class_init (GstQTDemuxClass * klass);
 static void gst_qtdemux_base_init (GstQTDemuxClass * klass);
 static void gst_qtdemux_init (GstQTDemux * quicktime_demux);
-static GstElementStateReturn gst_qtdemux_change_state (GstElement * element);
+static GstStateChangeReturn gst_qtdemux_change_state (GstElement * element,
+    GstStateChange transition);
 static void gst_qtdemux_loop_header (GstPad * pad);
 static gboolean qtdemux_sink_activate (GstPad * sinkpad);
 static gboolean qtdemux_sink_activate_pull (GstPad * sinkpad, gboolean active);
@@ -463,13 +464,13 @@ gst_qtdemux_handle_sink_event (GstQTDemux * qtdemux)
 }
 #endif
 
-static GstElementStateReturn
-gst_qtdemux_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
 {
   GstQTDemux *qtdemux = GST_QTDEMUX (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:{
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:{
       gint n;
 
       qtdemux->state = QTDEMUX_STATE_HEADER;
@@ -489,7 +490,7 @@ gst_qtdemux_change_state (GstElement * element)
       break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 }
 
 static void

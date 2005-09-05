@@ -94,7 +94,8 @@ static gboolean gst_faad_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_faad_srcgetcaps (GstPad * pad);
 static gboolean gst_faad_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_faad_chain (GstPad * pad, GstBuffer * buffer);
-static GstElementStateReturn gst_faad_change_state (GstElement * element);
+static GstStateChangeReturn gst_faad_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class;   /* NULL */
 
@@ -888,16 +889,16 @@ out:
   return ret;
 }
 
-static GstElementStateReturn
-gst_faad_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_faad_change_state (GstElement * element, GstStateChange transition)
 {
   GstFaad *faad = GST_FAAD (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
     {
       if (!(faad->handle = faacDecOpen ()))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       else {
         faacDecConfiguration *conf;
 
@@ -906,11 +907,11 @@ gst_faad_change_state (GstElement * element)
         /* conf->dontUpSampleImplicitSBR = 1; */
         conf->outputFormat = FAAD_FMT_16BIT;
         if (faacDecSetConfiguration (faad->handle, conf) == 0)
-          return GST_STATE_FAILURE;
+          return GST_STATE_CHANGE_FAILURE;
       }
       break;
     }
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       faad->samplerate = -1;
       faad->channels = -1;
       faad->need_channel_setup = TRUE;
@@ -919,7 +920,7 @@ gst_faad_change_state (GstElement * element)
       faad->channel_positions = NULL;
       faad->next_ts = 0;
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       faacDecClose (faad->handle);
       faad->handle = NULL;
       if (faad->tempbuf) {
@@ -932,9 +933,9 @@ gst_faad_change_state (GstElement * element)
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_SUCCESS;
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static gboolean

@@ -12,12 +12,13 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins, GST_PLUGINS_VERSION, 0, 9, 0, 1, GST_CVS="no", GST_CVS="yes")
+AS_VERSION(gst-plugins, GST_PLUGINS_BAD_VERSION, 0, 9, 0, 1,
+    GST_CVS="no", GST_CVS="yes")
 
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 
 dnl our libraries and install dirs use major.minor as a version
-GST_MAJORMINOR=$GST_PLUGINS_VERSION_MAJOR.$GST_PLUGINS_VERSION_MINOR
+GST_MAJORMINOR=$GST_PLUGINS_BAD_VERSION_MAJOR.$GST_PLUGINS_BAD_VERSION_MINOR
 dnl we override it here if we need to for the release candidate of new series
 GST_MAJORMINOR=0.9
 AC_SUBST(GST_MAJORMINOR)
@@ -441,6 +442,7 @@ ext/gsm/Makefile
 common/Makefile
 common/m4/Makefile
 m4/Makefile
+po/Makefile.in
 )
 AC_OUTPUT
 
