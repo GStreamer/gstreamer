@@ -1,3 +1,9 @@
+2005-09-05  Andy Wingo  <wingo@pobox.com>
+
+	* gst/registries/gstxmlregistry.h:
+	* gst/registries/gstxmlregistry.c: Remove from CVS, they were
+	replaced by the libxml registry a while back
+
 2005-09-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/tmpl/gstplugin.sgml:
