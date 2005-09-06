@@ -1,3 +1,14 @@
+=== release 0.9.1 ===
+
+2005-09-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* NEWS:
+	* README:
+	* RELEASE:
+	* autogen.sh:
+	* configure.ac:
+	  releasing 0.9.1, "Blondie"
+
 2005-09-05  Andy Wingo  <wingo@pobox.com>
 
 	* ext/dv/gstdvdemux.c (gst_dvdemux_chain): Move the pad adding
