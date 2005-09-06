@@ -33,6 +33,7 @@ check_PROGRAMS = \
 	elements/audioconvert \
 	elements/audioresample \
 	elements/volume \
+        pipelines/simple_launch_lines \
 	$(check_vorbis)
 
 # these tests don't even pass
