@@ -1,3 +1,8 @@
+2005-09-07  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/libvisual/Makefile.am:
+          link against gst-base-libs
+
 2005-09-06  David Schleef  <ds@schleef.org>
 
 	* configure.ac: Enable libvisual plugin.
