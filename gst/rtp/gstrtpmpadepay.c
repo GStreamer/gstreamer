@@ -25,7 +25,7 @@
 static GstElementDetails gst_rtp_mpadec_details = {
   "RTP packet parser",
   "Codec/Parser/Network",
-  "Extracts MPEG audio from RTP packets",
+  "Extracts MPEG audio from RTP packets (RFC 2038)",
   "Wim Taymans <wim@fluendo.com>"
 };
 
@@ -171,7 +171,14 @@ gst_rtpmpadec_chain (GstPad * pad, GstBuffer * buf)
 
     frag_offset = (payload[2] << 8) | payload[3];
 
-    /* strip off header */
+    /* strip off header
+     *
+     *  0                   1                   2                   3
+     *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     * |             MBZ               |          Frag_offset          |
+     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     */
     payload_len -= 4;
     payload += 4;
 
@@ -188,6 +195,8 @@ gst_rtpmpadec_chain (GstPad * pad, GstBuffer * buf)
 
     gst_buffer_unref (buf);
 
+    /* FIXME, we can push half mpeg frames when they are split over multiple
+     * RTP packets */
     ret = gst_pad_push (rtpmpadec->srcpad, outbuf);
   }
 

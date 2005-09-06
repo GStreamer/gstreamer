@@ -26,7 +26,7 @@
 static GstElementDetails gst_rtp_mpaenc_details = {
   "RTP packet parser",
   "Codec/Parser/Network",
-  "Encode MPEG audio as RTP packets",
+  "Encode MPEG audio as RTP packets (RFC 2038)",
   "Wim Taymans <wim@fluendo.com>"
 };
 
@@ -200,6 +200,13 @@ gst_rtpmpaenc_flush (GstRtpMPAEnc * rtpmpaenc)
     gst_rtpbuffer_set_payload_type (outbuf, GST_RTP_PAYLOAD_MPA);
     gst_rtpbuffer_set_seq (outbuf, rtpmpaenc->seqnum++);
 
+    /*
+     *  0                   1                   2                   3
+     *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     * |             MBZ               |          Frag_offset          |
+     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+     */
     payload = gst_rtpbuffer_get_payload (outbuf);
     payload[0] = 0;
     payload[1] = 0;
@@ -210,12 +217,15 @@ gst_rtpmpaenc_flush (GstRtpMPAEnc * rtpmpaenc)
     memcpy (&payload[4], data, payload_len);
     gst_adapter_flush (rtpmpaenc->adapter, payload_len);
 
+    avail -= payload_len;
+    frag_offset += payload_len;
+
+    if (avail == 0)
+      gst_rtpbuffer_set_marker (outbuf, TRUE);
+
     GST_BUFFER_TIMESTAMP (outbuf) = rtpmpaenc->first_ts;
 
     ret = gst_pad_push (rtpmpaenc->srcpad, outbuf);
-
-    avail -= payload_len;
-    frag_offset += payload_len;
   }
 
   return ret;

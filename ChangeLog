@@ -1,3 +1,26 @@
+2005-09-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpmp4vdec.c: (gst_rtpmp4vdec_get_type),
+	(gst_rtpmp4vdec_base_init), (gst_rtpmp4vdec_class_init),
+	(gst_rtpmp4vdec_init), (gst_rtpmp4vdec_setcaps),
+	(gst_rtpmp4vdec_chain), (gst_rtpmp4vdec_set_property),
+	(gst_rtpmp4vdec_get_property), (gst_rtpmp4vdec_change_state),
+	(gst_rtpmp4vdec_plugin_init):
+	* gst/rtp/gstrtpmp4vdec.h:
+	* gst/rtp/gstrtpmp4venc.c: (gst_rtpmp4venc_get_type),
+	(gst_rtpmp4venc_base_init), (gst_rtpmp4venc_class_init),
+	(gst_rtpmp4venc_init), (gst_rtpmp4venc_setcaps),
+	(gst_rtpmp4venc_flush), (gst_rtpmp4venc_chain),
+	(gst_rtpmp4venc_set_property), (gst_rtpmp4venc_get_property),
+	(gst_rtpmp4venc_change_state), (gst_rtpmp4venc_plugin_init):
+	* gst/rtp/gstrtpmp4venc.h:
+	* gst/rtp/gstrtpmpadec.c: (gst_rtpmpadec_chain):
+	* gst/rtp/gstrtpmpaenc.c: (gst_rtpmpaenc_flush):
+	Added mpeg4 video payload encoder/decoder.
+	Added some docs in mpa payloader.
+
 === release 0.9.1 ===
 
 2005-09-06  Thomas Vander Stichele  <thomas at apestaart dot org>
