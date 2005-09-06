@@ -77,7 +77,7 @@ The Lowdown
 
   --- "I've never seen so many plug-ins wasted so badly."
 
-GStreamer Plugins has grown so big that it's hard to separate the wheat from
+GStreamer Plug-ins has grown so big that it's hard to separate the wheat from
 the chaff.  Also, distributors have brought up issues about the legal status
 of some of the plug-ins we ship.  To remedy this, we've divided the previous
 set of available plug-ins into four modules:

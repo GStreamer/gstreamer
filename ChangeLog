@@ -1,3 +1,12 @@
+=== release 0.9.2 ===
+
+2005-09-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	  releasing 0.9.2, "South"
+
 2005-09-05  Andy Wingo  <wingo@pobox.com>
 
 	* gst/registries/gstxmlregistry.h:
@@ -105,8 +114,8 @@
 	* gst/gstbus.c:
 	* gst/gstelementfactory.c:
 	* gst/gstelementfactory.h:
-          merged elementdetails docs into elementfactory docs
-          inlined both
+	  merged elementdetails docs into elementfactory docs
+	  inlined both
 
 2005-09-02  Andy Wingo  <wingo@pobox.com>
 
@@ -135,7 +144,7 @@
 	* gst/gstregistrypool.c:
 	* gst/gststructure.c:
 	* gst/gstsystemclock.c:
-          more docs inlined
+	  more docs inlined
 
 2005-09-02  Andy Wingo  <wingo@pobox.com>
 
@@ -223,7 +232,7 @@
 	* gst/gsturitype.c:
 	* gst/gstutils.c:
 	* gst/gstxml.c:
-          inlined more docs, fixed double id-ref
+	  inlined more docs, fixed double id-ref
 
 2005-08-31  Wim Taymans  <wim@fluendo.com>
 
@@ -264,21 +273,21 @@
 	(gst_test_mono_source_set_property),
 	(gst_test_mono_source_class_init), (GST_START_TEST),
 	(gst_controller_suite):
-          more tests (hehe I have the most)
+	  more tests (hehe I have the most)
 	* gst/gstbus.c:
-          describe popping messages whenusing mulltiple sources
+	  describe popping messages whenusing mulltiple sources
 	* libs/gst/controller/gst-controller.c:
 	(gst_controlled_property_set_interpolation_mode),
 	(gst_controlled_property_new):
 	* libs/gst/controller/gst-controller.h:
 	* libs/gst/controller/gst-interpolation.c:
-          implement boolean properties
+	  implement boolean properties
 
 2005-08-31  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstminiobject.c: (gst_mini_object_ref):
 	Cannot assert that the refcount has to be positive
-	since a disposed object can be resurected.
+	since a disposed object can be resurrected.
 
 2005-08-31  Wim Taymans  <wim@fluendo.com>
 
@@ -324,7 +333,7 @@
 	* gst/gstformat.c:
 	* gst/gstformat.h:
 	* gst/gstversion.h.in:
-          more docs and two more inlined
+	  more docs and two more inlined
 
 2005-08-30  Wim Taymans  <wim@fluendo.com>
 
@@ -334,14 +343,14 @@
 2005-08-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:
-          ultral33t func10ns deserve to appear in the docs actualy
+	  ultral33t func10ns deserve to appear in the docs actually
 	* docs/gst/tmpl/.cvsignore:
 	* docs/gst/tmpl/gstcompat.sgml:
 	* docs/gst/tmpl/gstconfig.sgml:
 	* gst/check/gstcheck.c:
 	* gst/gstcompat.h:
 	* gst/gstconfig.h.in:
-          inlined more docs
+	  inlined more docs
 
 2005-08-30  Stefan Kost  <ensonic@users.sf.net>
 
@@ -350,23 +359,23 @@
 	* docs/gst/tmpl/gstutils.sgml:
 	* gst/gstquery.c:
 	* gst/gstquery.h:
-          inlined and extended docs
+	  inlined and extended docs
 
 2005-08-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* check/gst-libs/controller.c: (GST_START_TEST),
 	(gst_controller_suite):
-          more tests
+	  more tests
 	* docs/gst/tmpl/gstutils.sgml:
 	* docs/libs/gstreamer-libs-sections.txt:
 	* docs/libs/tmpl/gstdataprotocol.sgml:
-          include path fixes
+	  include path fixes
 	* examples/controller/audio-example.c: (main):
-          controller example works now
+	  controller example works now
 	* gst/gstclock.h:
-          doc fixes
+	  doc fixes
 	* tools/gst-inspect.c: (print_element_properties_info):
-          show param spec flags
+	  show param spec flags
 
 2005-08-29  Andy Wingo  <wingo@pobox.com>
 
@@ -383,7 +392,7 @@
 2005-08-27  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/design/part-messages.txt:
-          update info
+	  update info
 	* docs/gst/tmpl/.cvsignore:
 	* docs/gst/tmpl/gstcaps.sgml:
 	* docs/gst/tmpl/gstclock.sgml:
@@ -393,19 +402,19 @@
 	* gst/gstclock.c:
 	* gst/gstclock.h:
 	* gst/gstmessage.c:
-          added descriptions for bus and message
-          inline caps and clock docs
+	  added descriptions for bus and message
+	  inline caps and clock docs
 
 2005-08-27  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstmessage.c:
 	* gst/gstmessage.h:
-          doc fixes
+	  doc fixes
 
 2005-08-27  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/base/gstbasetransform.c: (gst_base_transform_transform_size):
-          fix div-by-zero
+	  fix div-by-zero
 
 2005-08-26  Andy Wingo  <wingo@pobox.com>
 
@@ -589,7 +598,7 @@
 2005-08-25  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer.types:
-          added missing types
+	  added missing types
 
 2005-08-25  Stefan Kost  <ensonic@users.sf.net>
 
@@ -600,9 +609,9 @@
 	* gst/gstiterator.c:
 	* gst/gstutils.c:
 	* gst/registries/gstxmlregistry.h:
-          added miissing classes and symbols (123 more to go)
-          removed removed symbols from section file
-          fixed many doc-comments
+	  added missing classes and symbols (123 more to go)
+	  removed removed symbols from section file
+	  fixed many doc-comments
 
 2005-08-24  Wim Taymans  <wim@fluendo.com>
 
@@ -767,8 +776,8 @@
 	* libs/gst/controller/gst-helper.c: (gst_object_set_controller),
 	(gst_object_sink_values), (gst_object_get_value_arrays),
 	(gst_object_get_value_array):
-          gracefully handle helper method calls to objects that are not beeing
-          controlled, added test case for that          
+	  gracefully handle helper method calls to objects that are not beeing
+	  controlled, added test case for that          
 
 2005-08-23  Wim Taymans  <wim@fluendo.com>
 
@@ -793,9 +802,9 @@
 	* gst/gstbus.c:
 	* gst/gstelement.c:
 	* gst/gstevent.h:
-          added about 100 symbols from gstreamer-unused.txt to the right sections
-          fixed more broken comments
-          added GstBus to docs
+	  added 100 symbols from gstreamer-unused.txt to the right sections
+	  fixed more broken comments
+	  added GstBus to docs
 
 2005-08-23  Stefan Kost  <ensonic@users.sf.net>
 
@@ -808,8 +817,8 @@
 	* gst/gstbuffer.c:
 	* gst/gstbuffer.h:
 	* tools/gst-launch.1.in:
-          inlined more doc comments, added missing comments and fixed comments
-          fixed typos
+	  inlined more doc comments, added missing comments and fixed comments
+	  fixed typos
 
 2005-08-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
@@ -845,8 +854,8 @@
 	* gst/parse/grammar.y:
 	* tools/gst-inspect.c: (print_interfaces),
 	(print_element_properties_info), (print_element_info):
-         ported gstchildproxy over from 0.8
-         ported gst-inspect fixes and enhancements over from 0.8
+	  ported gstchildproxy over from 0.8
+	  ported gst-inspect fixes and enhancements over from 0.8
 
 2005-08-22  Wim Taymans  <wim@fluendo.com>
 
@@ -896,7 +905,7 @@
 	* docs/gst/tmpl/gstevent.sgml:
 	* gst/gstevent.c:
 	* gst/gstevent.h:
-          inlined remaining docs, added missing doc comments
+	  inlined remaining docs, added missing doc comments
 
 2005-08-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
@@ -1252,7 +1261,7 @@
 	* check/gstcheck.h:
 	  add ASSERT_BUFFER_REFCOUNT
 
-2005-08-13  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gsttag.c: (_gst_tag_initialize), (gst_tag_register):
@@ -1262,7 +1271,7 @@
 	  is re-registered, unless it is re-registered with a 
 	  different type (#308438).
 
-2005-08-12  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/pwg/appendix-porting.xml:
 	* docs/pwg/building-state.xml:
@@ -1292,13 +1301,13 @@
 	Actually implement (re)setting the target on a ghostpad
 	as described in the docs.
 
-2005-08-10  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gst.c: (gst_init_check_with_popt_table), (init_pre):
 	  Check whether GST_DEBUG_NO_COLOR environment variable is
 	  set and disable coloured debug output if that is the case.
 
-2005-08-10  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gsttypefindhelper.c: (helper_find_peek),
 	(gst_type_find_helper):
@@ -1310,7 +1319,7 @@
 	  returned by _peek() until typefinding is done and only
 	  free them then.
 
-2005-08-09  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstutils.h:
@@ -1321,7 +1330,7 @@
 	* gst/base/gstbasetransform.c: (gst_base_transform_buffer_alloc):
 	  Fix a pretty good memleak.
 
-2005-08-08  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstiterator.h:
 	  Fix wrong include and 'make distcheck'.
@@ -1331,7 +1340,7 @@
 	* gst/gstbin.c: (bin_bus_handler):
 	  Use gst_element_post_message() instead.
 
-2005-08-08  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gstadapter.h:
 	* gst/base/gstbasesink.h:
@@ -1412,9 +1421,9 @@
 	(gst_object_get_controller), (gst_object_set_controller),
 	(gst_object_sink_values), (gst_object_get_value_arrays),
 	(gst_object_get_value_array):
-          more tests (and fixes) for the controller
-          more docs for the controller
-          integrated companies docs for the adapter 
+	  more tests (and fixes) for the controller
+	  more docs for the controller
+	  integrated companies docs for the adapter 
 
 2005-08-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
@@ -1532,8 +1541,8 @@
 	* testsuite/controller/.cvsignore:
 	* testsuite/controller/Makefile.am:
 	* testsuite/controller/interpolator.c: (main):
-          added controller code
-          removed dparam pc files
+	  added controller code
+	  removed dparam pc files
 
 2005-08-01  Jan Schmidt  <thaytan@mad.scientist.com>
 	* gst/base/gstcollectpads.c: (gst_collectpads_finalize),
@@ -1590,9 +1599,9 @@
 	* tools/Makefile.am:
 	* tools/gst-inspect.c: (print_element_info), (main):
 	* tools/gst-xmlinspect.c: (print_element_info), (main):
-          deactivate and remove dparams (libgstcontrol)
+	  deactivate and remove dparams (libgstcontrol)
 
-2005-08-01  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/elements/gsttypefindelement.c:
 	(gst_type_find_element_have_type), (gst_type_find_element_init),
@@ -1601,7 +1610,7 @@
 	* gst/elements/gsttypefindelement.h:
 	  Set caps on all outgoing buffers, not just the first one.
 
-2005-08-01  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/elements/gsttypefindelement.c:
 	(gst_type_find_element_have_type),
@@ -1612,7 +1621,7 @@
 	* gst/elements/gsttypefindelement.h:
 	  Set caps on first outgoing buffer when we've found the type.
 
-2005-08-01  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-docs.sgml:
 	* docs/gst/gstreamer-sections.txt:
@@ -1620,7 +1629,7 @@
 	* docs/gst/tmpl/gstschedulerfactory.sgml:
 	  Remove some old cruft from docs.
 
-2005-07-31  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-07-31  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstpad.h:
 	  Fix inline docs for GstPadLinkReturn.
@@ -1630,7 +1639,7 @@
 	* docs/gst/gstreamer-sections.txt:
 	  New API: gst_structure_has_name().
 
-2005-07-30  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-07-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
 	  Use AC_SYS_LARGEFILE, which will set _FILE_OFFSET_BITS=64
@@ -2231,6 +2240,7 @@
 	Fix nasty refcount bug.
 
 2005-07-16 Philippe Khalaf <burger@speedy.org>
+
 	* gst/elements/gstfdsrc.c:
 	* gst/elements/gstfdsrc.h:
 	* gst/elements/gstelements.c:
@@ -2294,7 +2304,7 @@
 	* gst/gstghostpad.c: (gst_ghost_pad_do_activate_push):
 	Don't hold the lock for too long.
 
-2005-07-16  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-07-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gstbasesrc.c: (gst_base_src_default_negotiate):
 	  Don't unref the caps we passed to gst_caps_make_writable() after
@@ -2320,7 +2330,7 @@
 	* docs/design/part-gstpipeline.txt:
 	Updated docs, mostly DISCONT related.
 
-2005-07-15  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-07-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/pwg/building-pads.xml:
 	  s/GST_PAD_LINK_REFUSED/FALSE/ in gst_my_filter_setcaps()
@@ -2861,7 +2871,7 @@
 	* examples/helloworld/helloworld.c: (event_loop), (main):
 	* examples/queue/queue.c: (event_loop), (main):
 	* examples/queue2/queue2.c: (main):
-          Update a couple of the examples to work again.
+	  Update a couple of the examples to work again.
 
 	* gst/base/gstbasesink.c: (gst_base_sink_preroll_queue_empty),
 	(gst_base_sink_preroll_queue_flush), (gst_base_sink_handle_event):
@@ -3187,7 +3197,7 @@
 	* gst/gstpad.c: (_gst_do_pass_data_accumulator):
 	  Make work (??).
 
-2005-06-29  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-06-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/elements/gstfilesink.c: (gst_filesink_render):
 	  Simplify code so that we don't have to handle short
@@ -3845,7 +3855,7 @@
 	(gst_system_clock_obtain): Set the name on object construction.
 	Avoid double-checked locking.
 
-2005-06-20  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-06-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gsturi.c: (gst_element_make_from_uri):
 	  Fix potential endless loop.
@@ -4455,7 +4465,7 @@
 	Clear queue when going to READY.
 	Remove IN_SETCAPS flag too.
 
-2005-05-17  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-05-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gstbasesrc.c: (gst_basesrc_change_state):
 	  Remove implicit cast from gboolean to GstElementStateReturn;
@@ -4596,12 +4606,12 @@
 	(find_common_root, object_has_ancestor, ghost_up, remove_pad):
 	Helpers for pad_link_maybe_ghosting.
 
-2005-05-13  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-05-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
 	  Require GLib >= 2.4.0 (for the g_atomic_* funcs)
 
-2005-05-13  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-05-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/design/part-element-source.txt:
 	  Mention GstPushSrc
@@ -4629,7 +4639,7 @@
 	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_query):
 	  Implement _query on a bin, similar to _send_event.
 
-2005-05-12  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-05-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gstbasesrc.c: (gst_basesrc_do_seek):
 	  Discont event offset format should be GST_FORMAT_BYTES,
@@ -4864,7 +4874,7 @@
 	* gst/gstpad.c: (gst_pad_alloc_buffer), (gst_pad_push):
 	Also set caps if we use the fallback buffer alloc.
 
-2005-05-06  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-05-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/Makefile.am:
 	* docs/gst/gstreamer-docs.sgml:

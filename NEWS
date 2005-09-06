@@ -1,1 +1,14 @@
-This is GStreamer 0.9.1
+This is GStreamer 0.9.2, "South".
+
+Bugs fixed since 0.9.1:
+
+      * 121015 : [api] gst_clock_entry_new() seems broken
+      * 134227 : [api] gst_clock_id_wait_async, wrong return code for defa...
+      * 142209 : [build] Large file support broken
+      * 154785 : Clock does not run if audio stream lacks data for a short...
+      * 305256 : [API] Change gst_element_seek to not mix enum/flags types
+      * 309253 : GST_DEBUG_FUNCPTR macro does illegal casting from functio...
+      * 311004 : ghostpad bugginess
+      * 311009 : valgrind shows undesired messages
+      * 311848 : Renegotiation broken
+      * 314708 : filesrc doesn't set GST_BUFFER_FLAG_READONLY on mmaped bu...
