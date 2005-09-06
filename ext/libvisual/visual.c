@@ -22,7 +22,7 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/bytestream/adapter.h>
+#include <gst/base/gstadapter.h>
 #include <gst/video/video.h>
 #include <gst/audio/audio.h>
 #include <libvisual/libvisual.h>
@@ -104,11 +104,10 @@ static void gst_visual_dispose (GObject * object);
 
 static GstStateChangeReturn gst_visual_change_state (GstElement * element,
     GstStateChange transition);
-static void gst_visual_chain (GstPad * pad, GstData * _data);
+static GstFlowReturn gst_visual_chain (GstPad * pad, GstBuffer * buffer);
 
-static GstPadLinkReturn gst_visual_sinklink (GstPad * pad,
-    const GstCaps * caps);
-static GstPadLinkReturn gst_visual_srclink (GstPad * pad, const GstCaps * caps);
+static GstPadLinkReturn gst_visual_sink_setcaps (GstPad * pad, GstCaps * caps);
+static GstPadLinkReturn gst_visual_src_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_visual_getcaps (GstPad * pad);
 static void libvisual_log_handler (const char *message, const char *funcname,
     void *priv);
@@ -200,14 +199,14 @@ gst_visual_init (GstVisual * visual)
   visual->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
       "sink");
-  gst_pad_set_link_function (visual->sinkpad, gst_visual_sinklink);
+  gst_pad_set_setcaps_function (visual->sinkpad, gst_visual_sink_setcaps);
   gst_pad_set_chain_function (visual->sinkpad, gst_visual_chain);
   gst_element_add_pad (GST_ELEMENT (visual), visual->sinkpad);
 
   visual->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
       "src");
-  gst_pad_set_link_function (visual->srcpad, gst_visual_srclink);
+  gst_pad_set_setcaps_function (visual->srcpad, gst_visual_src_setcaps);
   gst_pad_set_getcaps_function (visual->srcpad, gst_visual_getcaps);
   gst_element_add_pad (GST_ELEMENT (visual), visual->srcpad);
 
@@ -265,7 +264,7 @@ gst_visual_getcaps (GstPad * pad)
 }
 
 static GstPadLinkReturn
-gst_visual_srclink (GstPad * pad, const GstCaps * caps)
+gst_visual_src_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstVisual *visual = GST_VISUAL (gst_pad_get_parent (pad));
   GstStructure *structure;
@@ -295,7 +294,7 @@ gst_visual_srclink (GstPad * pad, const GstCaps * caps)
 }
 
 static GstPadLinkReturn
-gst_visual_sinklink (GstPad * pad, const GstCaps * caps)
+gst_visual_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstVisual *visual = GST_VISUAL (gst_pad_get_parent (pad));
   GstStructure *structure;
@@ -307,36 +306,41 @@ gst_visual_sinklink (GstPad * pad, const GstCaps * caps)
   return GST_PAD_LINK_OK;
 }
 
-static void
-gst_visual_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_visual_chain (GstPad * pad, GstBuffer * buffer)
 {
-  GstBuffer *ret;
+  GstBuffer *outbuf;
   guint i;
   GstVisual *visual = GST_VISUAL (gst_pad_get_parent (pad));
 
   /* spf = samples per frame */
   guint spf = visual->rate / visual->fps;
 
-  gst_adapter_push (visual->adapter, GST_BUFFER (_data));
+  gst_adapter_push (visual->adapter, buffer);
   while (gst_adapter_available (visual->adapter) > MAX (512, spf) * 4) {
     const guint16 *data =
         (const guint16 *) gst_adapter_peek (visual->adapter, 512);
+    int ret;
+
     for (i = 0; i < 512; i++) {
       visual->audio.plugpcm[0][i] = *data++;
       visual->audio.plugpcm[1][i] = *data++;
     }
     ret = gst_pad_alloc_buffer (visual->srcpad, GST_BUFFER_OFFSET_NONE,
-        visual->video->width * visual->video->width * visual->video->bpp);
-    visual_video_set_buffer (visual->video, GST_BUFFER_DATA (ret));
+        visual->video->width * visual->video->width * visual->video->bpp,
+        visual->srcpad->caps, &outbuf);
+    visual_video_set_buffer (visual->video, GST_BUFFER_DATA (outbuf));
     visual_audio_analyze (&visual->audio);
     visual_actor_run (visual->actor, &visual->audio);
-    GST_BUFFER_TIMESTAMP (ret) = GST_SECOND * visual->count++ / visual->fps;
-    GST_BUFFER_DURATION (ret) = GST_SECOND / visual->fps;
-    gst_pad_push (visual->srcpad, GST_DATA (ret));
+    GST_BUFFER_TIMESTAMP (outbuf) = GST_SECOND * visual->count++ / visual->fps;
+    GST_BUFFER_DURATION (outbuf) = GST_SECOND / visual->fps;
+    gst_pad_push (visual->srcpad, outbuf);
     gst_adapter_flush (visual->adapter, spf * 4);
   }
   /* so we're on the safe side */
   visual_video_set_buffer (visual->video, NULL);
+
+  return GST_FLOW_OK;
 }
 
 static GstStateChangeReturn

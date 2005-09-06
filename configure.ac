@@ -566,7 +566,6 @@ GST_CHECK_FEATURE(GNOME_VFS, [Gnome VFS], gnomevfssrc, [
 ])
 
 dnl *** libvisual ***
-USE_LIBVISUAL=no
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBVISUAL, true)
 GST_CHECK_FEATURE(LIBVISUAL, [libvisual visualization plugins], libvisual, [
   PKG_CHECK_MODULES(LIBVISUAL, libvisual = 0.2.0, HAVE_LIBVISUAL="yes", HAVE_LIBVISUAL="no")

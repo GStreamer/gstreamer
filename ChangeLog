@@ -1,3 +1,9 @@
+2005-09-06  David Schleef  <ds@schleef.org>
+
+	* configure.ac: Enable libvisual plugin.
+	* ext/libvisual/Makefile.am:
+	* ext/libvisual/visual.c: Fixes to make it compile.
+
 === release 0.9.2 ===
 
 2005-09-06  Thomas Vander Stichele  <thomas at apestaart dot org>

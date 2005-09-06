@@ -4,5 +4,4 @@ libgstlibvisual_la_SOURCES = visual.c
 libgstlibvisual_la_CFLAGS = $(GST_CFLAGS) $(LIBVISUAL_CFLAGS)
 libgstlibvisual_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstlibvisual_la_LIBADD = \
-	libgstbytestream-$(GST_MAJORMINOR).la \
 	$(LIBVISUAL_LIBS)
