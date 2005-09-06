@@ -5,16 +5,16 @@ DIE=0
 package=gst-plugins-ugly
 srcfile=ext/mad/gstmad.c
 
-# a quick cvs co if necessary to alleviate the pain - may remove this
-# when developers get a clue ;)
-if test ! -d common; 
-then 
+# a quick cvs co to ease the transition
+if test ! -d common;
+then
   echo "+ getting common/ from cvs"
-  cvs co common 
+  if test -e CVS/Tag
+  then
+    TAG="-r `tail -c +2 CVS/Tag`"
+  fi
+  cvs co $TAG common
 fi
-
-# ensure that we have the dirs we put ext libs in to appease automake
-#mkdir -p gst-libs/ext/ffmpeg/ffmpeg
 
 # source helper functions
 if test ! -f common/gst-autogen.sh;
