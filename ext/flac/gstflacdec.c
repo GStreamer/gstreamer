@@ -84,8 +84,6 @@ static void gst_flacdec_error_callback (const FLAC__SeekableStreamDecoder *
 
 static GstElementClass *parent_class = NULL;
 
-/*static guint gst_flacdec_signals[LAST_SIGNAL] = { 0 }; */
-
 GType
 flacdec_get_type (void)
 {
@@ -117,19 +115,18 @@ flac_caps_factory (void)
 {
   return gst_caps_new_simple ("audio/x-flac", NULL);
   /* "rate",            GST_PROPS_INT_RANGE (11025, 48000),
-   * "channels",        GST_PROPS_INT_RANGE (1, 2), */
+   * "channels",        GST_PROPS_INT_RANGE (1, 6), */
 }
 
 static GstCaps *
 raw_caps_factory (void)
 {
-  return gst_caps_new_simple ("audio/x-raw-int",
-      "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "signed", G_TYPE_BOOLEAN, TRUE,
-      "width", G_TYPE_INT, 16,
-      "depth", G_TYPE_INT, 16,
-      "rate", GST_TYPE_INT_RANGE, 11025, 48000,
-      "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
+  return gst_caps_from_string ("audio/x-raw-int,"
+      "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
+      "signed = (boolean) true, "
+      "width = (int) { 8, 16, 32 }, "
+      "depth = (int) { 8, 16, 24, 32 }, "
+      "rate = (int) [ 11025, 48000 ], " "channels = (int) [ 1, 6 ]");
 }
 
 static void
@@ -416,6 +413,7 @@ gst_flacdec_write (const FLAC__SeekableStreamDecoder * decoder,
   FlacDec *flacdec;
   GstBuffer *outbuf;
   guint depth = frame->header.bits_per_sample;
+  guint width = (depth == 24) ? 32 : depth;
   guint channels = frame->header.channels;
   guint samples = frame->header.blocksize;
   guint j, i;
@@ -424,9 +422,9 @@ gst_flacdec_write (const FLAC__SeekableStreamDecoder * decoder,
   flacdec = GST_FLACDEC (client_data);
 
   if (flacdec->need_discont) {
-    gint64 time = 0, bytes = 0;
+    gint64 time = 0;
     GstFormat format;
-    GstEvent *discont;
+    GstEvent *newsegment;
 
     flacdec->need_discont = FALSE;
 
@@ -434,18 +432,15 @@ gst_flacdec_write (const FLAC__SeekableStreamDecoder * decoder,
       flacdec->total_samples = flacdec->seek_value;
     }
 
-    GST_DEBUG ("send discont to %" G_GUINT64_FORMAT, flacdec->seek_value);
+    GST_DEBUG ("newsegment from %" G_GUINT64_FORMAT, flacdec->seek_value);
 
     format = GST_FORMAT_TIME;
     gst_flacdec_convert_src (flacdec->srcpad, GST_FORMAT_DEFAULT,
         flacdec->total_samples, &format, &time);
-    format = GST_FORMAT_BYTES;
-    gst_flacdec_convert_src (flacdec->srcpad, GST_FORMAT_DEFAULT,
-        flacdec->total_samples, &format, &bytes);
-    discont = gst_event_new_newsegment (1.0, GST_FORMAT_TIME, time,
+    newsegment = gst_event_new_newsegment (1.0, GST_FORMAT_TIME, time,
         GST_CLOCK_TIME_NONE, 0);
 
-    if (!gst_pad_push_event (flacdec->srcpad, discont))
+    if (!gst_pad_push_event (flacdec->srcpad, newsegment))
       return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
   }
 
@@ -457,19 +452,20 @@ gst_flacdec_write (const FLAC__SeekableStreamDecoder * decoder,
             gst_caps_new_simple ("audio/x-raw-int",
                 "endianness", G_TYPE_INT, G_BYTE_ORDER,
                 "signed", G_TYPE_BOOLEAN, TRUE,
-                "width", G_TYPE_INT, depth,
+                "width", G_TYPE_INT, width,
                 "depth", G_TYPE_INT, depth,
                 "rate", G_TYPE_INT, frame->header.sample_rate,
                 "channels", G_TYPE_INT, channels, NULL)))
       return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
 
     flacdec->depth = depth;
+    flacdec->width = width;
     flacdec->channels = channels;
     flacdec->frequency = frame->header.sample_rate;
   }
 
   gst_pad_alloc_buffer (flacdec->srcpad, flacdec->total_samples,
-      samples * channels * ((depth + 7) >> 3), GST_PAD_CAPS (flacdec->srcpad),
+      samples * channels * ((width + 7) >> 3), GST_PAD_CAPS (flacdec->srcpad),
       &outbuf);
   GST_BUFFER_TIMESTAMP (outbuf) =
       flacdec->total_samples * GST_SECOND / frame->header.sample_rate;
@@ -492,14 +488,25 @@ gst_flacdec_write (const FLAC__SeekableStreamDecoder * decoder,
         *outbuffer++ = (guint16) buffer[j][i];
       }
     }
+  } else if (depth == 24 || depth == 32) {
+    guint32 *outbuffer = (guint32 *) GST_BUFFER_DATA (outbuf);
+
+    for (i = 0; i < samples; i++) {
+      for (j = 0; j < channels; j++) {
+        *outbuffer++ = (guint32) buffer[j][i];
+      }
+    }
   } else {
     g_warning ("flacdec: invalid depth %d found\n", depth);
     return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
   }
-  GST_DEBUG ("Writing %d samples", samples);
+  GST_DEBUG ("Pushing %d samples, %" GST_TIME_FORMAT ":%" GST_TIME_FORMAT,
+      samples, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
+
   ret = gst_pad_push (flacdec->srcpad, outbuf);
   if (ret != GST_FLOW_NOT_LINKED && ret != GST_FLOW_OK) {
-    GST_DEBUG ("Invalid return code");
+    GST_DEBUG ("Invalid return code %d", (gint) ret);
     return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
   }
   flacdec->total_samples += samples;
@@ -601,7 +608,7 @@ gst_flacdec_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
   guint scale = 1;
   gint bytes_per_sample;
 
-  bytes_per_sample = flacdec->channels * ((flacdec->depth + 7) >> 3);
+  bytes_per_sample = flacdec->channels * ((flacdec->width + 7) >> 3);
 
   switch (src_format) {
     case GST_FORMAT_BYTES:

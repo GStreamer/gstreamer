@@ -49,6 +49,7 @@ struct _FlacDec {
   FLAC__SeekableStreamDecoder *decoder;
   gint		 channels;
   gint		 depth;
+  gint           width;
   gint		 frequency;
 
   gboolean	 need_discont;

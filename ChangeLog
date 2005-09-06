@@ -1,3 +1,11 @@
+2005-09-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/flac/gstflacdec.c: (flac_caps_factory), (raw_caps_factory),
+	(gst_flacdec_write), (gst_flacdec_convert_src):
+	* ext/flac/gstflacdec.h:
+	  Add support for flac files with 24/32 bits per sample; and misc.
+	  minor clean-ups. Seeking is still partly broken (for me at least).
+
 2005-09-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/Makefile.am:
