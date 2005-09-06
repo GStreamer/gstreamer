@@ -29,7 +29,7 @@ assert_gstrefcount (gpointer p, gint i)
         GST_OBJECT_REFCOUNT_VALUE (p));
 }
 
-/* test if removing a bin also cleans up the ghostpads 
+/* test if removing a bin also cleans up the ghostpads
  */
 GST_START_TEST (test_remove1)
 {
@@ -70,7 +70,7 @@ GST_START_TEST (test_remove1)
 
 GST_END_TEST;
 
-/* test if removing a bin also cleans up the ghostpads 
+/* test if removing a bin also cleans up the ghostpads
  */
 GST_START_TEST (test_remove2)
 {
@@ -109,6 +109,35 @@ GST_START_TEST (test_remove2)
 }
 
 GST_END_TEST;
+
+#if 0
+/* test if a ghost pad without a target can be linked
+ *
+ */
+GST_START_TEST (test_ghost_pad_notarget)
+{
+  GstElement *b1, *b2, *sink;
+  GstPad *srcpad, *sinkpad;
+  GstPadLinkReturn ret;
+
+  b1 = gst_element_factory_make ("pipeline", NULL);
+  b2 = gst_element_factory_make ("bin", NULL);
+  sink = gst_element_factory_make ("fakesink", NULL);
+
+  fail_unless (gst_bin_add (GST_BIN (b1), sink));
+  fail_unless (gst_bin_add (GST_BIN (b1), b2));
+
+  srcpad = gst_ghost_pad_new_notarget ("src", GST_PAD_SRC);
+  fail_unless (srcpad != NULL);
+  sinkpad = gst_element_get_pad (sink, "sink");
+  fail_unless (sinkpad != NULL);
+
+  ret = gst_pad_link (srcpad, sinkpad);
+  fail_unless (ret == GST_PAD_LINK_OK);
+}
+
+GST_END_TEST;
+#endif
 
 /* test if linking fails over different bins using a pipeline
  * like this:
@@ -160,7 +189,7 @@ GST_END_TEST;
 /* test if ghostpads are created automagically when using
  * gst_element_link_pads.
  *
- * fakesrc num_buffers=10 ! ( identity ) ! fakesink 
+ * fakesrc num_buffers=10 ! ( identity ) ! fakesink
  */
 GST_START_TEST (test_ghost_pads)
 {
@@ -270,6 +299,7 @@ gst_ghost_pad_suite (void)
   tcase_add_test (tc_chain, test_remove2);
   tcase_add_test (tc_chain, test_link);
   tcase_add_test (tc_chain, test_ghost_pads);
+/*  tcase_add_test (tc_chain, test_ghost_pad_notarget); */
 
   return s;
 }
