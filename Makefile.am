@@ -8,3 +8,5 @@ EXTRA_DIST = \
 	ChangeLog autogen.sh
 
 DISTCLEANFILES = _stdint.h
+
+include $(top_srcdir)/common/release.mak

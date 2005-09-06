@@ -12,7 +12,7 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins, GST_PLUGINS_BAD_VERSION, 0, 9, 0, 1,
+AS_VERSION(gst-plugins-bad, GST_PLUGINS_BAD_VERSION, 0, 9, 1, 0,
     GST_CVS="no", GST_CVS="yes")
 
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
@@ -431,7 +431,7 @@ dnl po/Makefile.in
 
 AC_CONFIG_FILES(
 Makefile
-gst-plugins.spec
+gst-plugins-bad.spec
 gst/Makefile
 gst/qtdemux/Makefile
 sys/Makefile

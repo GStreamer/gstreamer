@@ -1,114 +1,73 @@
 
-GStreamer: Release notes for GStreamer Plugins 0.8.7 "Hyperspace"
+GStreamer: Release notes for GStreamer Bad Plug-ins 0.9.1 "Angel Eyes"
         
 
-The GStreamer team is happy to announce a new release
-in the 0.8.x stable series of the GStreamer Plugins.
+The GStreamer team is petrified to announce a new release
+in the 0.9.x development series of the
+GStreamer Bad Plug-ins.
 
 
-The 0.8.x series is a stable series aimed at end users.
-It is not API or ABI compatible with the stable 0.6.x series.
-It is, however, parallel installable with the 0.6.x series.
+The 0.9.x series is a development series and not recommended for end users.
+It is not API or ABI compatible with the stable 0.8.x series.
+It is, however, parallel installable with the 0.8.x series.
 
 
-This module contains plugins providing media encoding and decoding,
-conversion, effects, and other elements that provide actual media
-handling functionality to the core.  You need the GStreamer core module
-to make them work.  The versions do not need to match exactly, as long
-as all of them are in the 0.8.x series.
+
+"That an accusation?"
 
 
-The FFmpeg-based decoder element has been moved to its own module.  If you
-want support for a lot of popular video formats, you need to install this
-module along with the GStreamer Core and Plugins.  An FFmpeg-based colorspace
-element has been added to the Plugins however.
+No perfectly groomed moustache or any amount of fine clothing is going to
+cover up the truth - these plug-ins are Bad with a capital B.
+They look fine on the outside, and might even appear to get the job done, but
+at the end of the day they're a black sheep. Without a golden-haired angel
+to watch over them, they'll probably land in an unmarked grave at the final
+showdown.
+
+
+Don't bug us about their quality - exercise your Free Software rights,
+patch up the offender and send us the patch on the fastest steed you can
+steal from the Confederates. Because you see, in this world, there's two
+kinds of people, my friend: those with loaded guns and those who dig.
+You dig.
+
+
+This module contains a set of plug-ins that aren't up to par compared to the
+rest.  They might be close to being good quality, but they're missing something
+- be it a good code review, some documentation, a set of tests, a real live
+maintainer, or some actual wide use.  If the blanks are filled in they might be
+upgraded to become part of either gst-plugins-good or gst-plugins-ugly,
+depending on the other factors.
+If the plug-ins break, you can't complain - instead, you can fix the
+problem and send us a patch, or bribe someone into fixing them for you.
+New contributors can start here for things to work on.
+
+
+Other modules containing plug-ins are:
+
+
+gst-plugins-base
+contains a basic set of well-supported plug-ins
+gst-plugins-good
+contains a set of well-supported plug-ins under our preferred license
+gst-plugins-ugly
+contains a set of well-supported plug-ins, but might pose problems for
+    distributors
+
+
 
   
 Features of this release
     
-      * Parallel installability with 0.6.x series
-      * Internationalization
-      * Translations: af az cs en_GB hu nb nl or sq sr sv uk
-      * multichannel audio support
-      * new element: apetag
-      * new element: ttadec, ttaparse
-      * new element: directfbvideosink
-      * vcd fixes
-      * playbin fixes
-      * dvdread fixes
-      * a52dec fixes
-      * sunaudiosrc fixes
-      * osssrc fixes
-      * avidemux fixes
-      * licensing updates
+      * Parallel installability with 0.8.x series
+      * Threadsafe design and API
 
 Bugs fixed in this release
     
-      * 147919 : [playbin] broken wav seeking
-      * 148559 : [monoscope] grinds to a halt
-      * 149102 : gstreamer license problems
-      * 149613 : [PATCH}Add proxy server support to the musicbrainz plugin
-      * 151624 : Multichannel support
-      * 152339 : [PATCH]  [build] gst-plugins cross compiling
-      * 154773 : [playbin] crashes trying to play short wave files (1 or 2...
-      * 154775 : [qtdemux] Quicktime movie causing some weird debug spew
-      * 154814 : Selection of totem crashing videos
-      * 154815 : [PATCH] ffmpegcolorspace leaks caps
-      * 155348 : Various MP3 files cannot be detected or played
-      * 155879 : [libriff] Bug in lib-riff
-      * 156798 :  " An error occured "  " Could not write to resource " this sa...
-      * 157233 : [PATCH] playbin leak fixes
-      * 158258 : Patch for polypsink to make it work with both threaded an...
-      * 158382 : [PATCH] [build] debian speex detection patch
-      * 158650 : [PATCH] [videocrop] video crop is completely buggered
-      * 158704 : Fix/finish (S)VCD support
-      * 159215 : [PATCH] Memory leaks in audioscale
-      * 159296 : Playing benow.mp3 file cause totem to hang on EOS with de...
-      * 159297 : dark.441-16-s.flac hangs on eos in totem with debug spew
-      * 159301 : gstreamer.avi file plays, but have broken seeking in totem
-      * 159338 : alaw/mulaw decoders caps warning
-      * 159433 : [osssink] doesn't check for supported channels
-      * 159512 : Progress bar with m4a (aac) broken
-      * 159651 : [decodebin] totem crash
-      * 159759 : DVD LCPM asserts
-      * 159847 : [build] hardcoded path for musepack headers in configure
-      * 159864 : avidemux sends GST_EVENT_DISCONTINUOUS
-      * 159986 : [PATCH] Videorate doesn't handle seek and doesn't reset w...
-      * 160276 : [PATCH] mpegdemux and dvddemux don't reset themselves in ...
-      * 160439 : Can't compile gst-plugins without GCONF
-      * 160514 : [avidemux] seek after EOF for truncated avi files (to non...
-      * 160532 : [avidemux] avi[cvid+PCM] : no image, sound is noise
-      * 160808 : 'ERROR: pipeline doesn't want to play' when using xvimage...
-      * 160869 : [playbin] ogg file (theora/vorbis) causes segfault near end
-      * 161039 : [PATCH] [deinterlace] rowstrides need fixing
-      * 161538 : [playbin] AVI files with mp3 audio are out-of-sync in pla...
-      * 161624 : [alsasink] crash at end of playing this file
-      * 161980 : Volume control applet does not set value correctly.
-      * 162819 : [audioscale] cleanup
-      * 162913 : [mms] missing NULL terminator to g_object_set() in uri ha...
-      * 162924 : [playbin] totem assertion failures when playing cd / pote...
-
-API changed in this release
-     
-
-- API additions:
-    
-* A new cdparanoia property, device, has been added.
-* A new dvdnavsrc property, device, has been added.
-* A new dvdreadsrc property, device, has been added.
-* A new vcdsrc property, device, has been added.
-
-- API depreciations:
-    
-* A cdparanoia property, location, has been marked for deprecation.
-* A dvdnavsrc property, location, has been marked for deprecation.
-* A dvdreadsrc property, location, has been marked for deprecation.
-* A vcdsrc property, location, has been marked for deprecation.
 
 Download
 
-You can find source releases of gst-plugins in the download directory:
-http://gstreamer.freedesktop.org/src/gst-plugins/
+You can find source releases of gst-plugins-bad in the download directory:
+http://gstreamer.freedesktop.org/src/gst-plugins-bad/
 
 GStreamer Homepage
 
@@ -130,34 +89,20 @@ will create more lists as necessary.
 
         
 Applications
-
-The GConf settings have moved to a versioned location and can now be found
-under /system/gstreamer/0.8.  Applications should use the gconf library,
-as provided by gstreamer-gconf-0.8.pc, to access the default settings.
-
   
 Contributors to this release
     
-      * Archana Shah
-      * Arwed v. Merkatz
-      * Balamurali Viswanathan
-      * Benjamin Otte
+      * Andy Wingo
       * Christian Schaller
-      * Christophe Fergeau
       * David Schleef
       * Edward Hervey
-      * Iain Holmes
-      * James Bowes
-      * Julien Moutte
-      * Maciej Katafiasz
-      * Martin Soto
+      * Jan Schmidt
+      * Michael Smith
+      * Philippe Khalaf
       * Ronald Bultje
-      * Sebastien Cote
       * Stefan Kost
-      * Stephane Loeuillet
       * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Toni Willberg
       * Wim Taymans
       * Zaheer Abbas Merali
  

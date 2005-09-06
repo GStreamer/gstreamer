@@ -1,3 +1,14 @@
+=== release 0.9.1 ===
+
+2005-09-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* NEWS:
+	* README:
+	* RELEASE:
+	* configure.ac:
+	* autogen.sh:
+	  releasing 0.9.1, "Angel Eyes"
+
 2005-09-05  Jan Schmidt  <thaytan@mad.scientist.com>
 	* examples/gstplay/player.c: (main):
 	* examples/stats/mp2ogg.c: (main):
