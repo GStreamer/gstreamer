@@ -47,7 +47,8 @@ static void gst_amrnbenc_finalize (GObject * object);
 
 static GstFlowReturn gst_amrnbenc_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_amrnbenc_setcaps (GstPad * pad, GstCaps * caps);
-static GstStateChangeReturn gst_amrnbenc_state_change (GstElement * element);
+static GstStateChangeReturn gst_amrnbenc_state_change (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -237,7 +238,7 @@ not_negotiated:
 }
 
 static GstStateChangeReturn
-gst_amrnbenc_state_change (GstElement * element)
+gst_amrnbenc_state_change (GstElement * element, GstStateChange transition)
 {
   GstAmrnbEnc *amrnbenc;
   GstStateChangeReturn ret;

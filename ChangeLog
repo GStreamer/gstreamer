@@ -1,3 +1,10 @@
+2005-09-06  Wim Taymans  <wim@fluendo.com>
+
+	* ext/amrnb/amrnbdec.c: (gst_amrnbdec_state_change):
+	* ext/amrnb/amrnbenc.c: (gst_amrnbenc_state_change):
+	* ext/amrnb/amrnbparse.c: (gst_amrnbparse_state_change):
+	State change function updates.
+
 2005-09-05  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/mpeg2dec/gstmpeg2dec.c:

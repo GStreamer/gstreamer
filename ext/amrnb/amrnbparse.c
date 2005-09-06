@@ -56,7 +56,8 @@ static gboolean gst_amrnbparse_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_amrnbparse_chain (GstPad * pad, GstBuffer * buffer);
 static void gst_amrnbparse_loop (GstPad * pad);
 static gboolean gst_amrnbparse_sink_activate (GstPad * sinkpad);
-static GstStateChangeReturn gst_amrnbparse_state_change (GstElement * element);
+static GstStateChangeReturn gst_amrnbparse_state_change (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -473,7 +474,7 @@ gst_amrnbparse_sink_activate (GstPad * sinkpad)
 }
 
 static GstStateChangeReturn
-gst_amrnbparse_state_change (GstElement * element)
+gst_amrnbparse_state_change (GstElement * element, GstStateChange transition)
 {
   GstAmrnbParse *amrnbparse;
   GstStateChangeReturn ret;
