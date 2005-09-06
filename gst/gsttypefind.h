@@ -68,6 +68,11 @@ struct _GstTypeFind {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstTypeFindFactory:
+ *
+ * Object that stores information about a typefind function.
+ */
 struct _GstTypeFindFactory {
   GstPluginFeature		feature;
   /* <private> */

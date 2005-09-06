@@ -20,6 +20,13 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstparse
+ * @short_description: Get a pipeline from a text pipeline description
+ *
+ * These function allow to create a pipeline based on the syntax used in the
+ * gst-launch utillity.
+ */
 
 #include <string.h>
 
@@ -69,10 +76,10 @@ _gst_parse_escape (const gchar * str)
  * @error: pointer to a #GError
  *
  * Create a new element based on command line syntax.
- * #error will contain an error message if an erroneuos pipeline is specified.
+ * @error will contain an error message if an erroneuos pipeline is specified.
  * An error does not mean that the pipeline could not be constructed.
  *
- * Returns: a new element on success and NULL on failure.
+ * Returns: a new element on success and %NULL on failure.
  */
 GstElement *
 gst_parse_launchv (const gchar ** argv, GError ** error)
@@ -110,13 +117,13 @@ gst_parse_launchv (const gchar ** argv, GError ** error)
  * @error: the error message in case of an erroneous pipeline.
  *
  * Create a new pipeline based on command line syntax.
- * Please note that you might get a return value that is not NULL even though
- * the error is set. In this case there was a recoverable parsing error and you
+ * Please note that you might get a return value that is not %NULL even though
+ * the @error is set. In this case there was a recoverable parsing error and you
  * can try to play the pipeline.
  *
- * Returns: a new element on success, NULL on failure. If more than one toplevel
- * element is specified by the pipeline_description, all elements are put into
- * a #GstPipeline ant that is returned.
+ * Returns: a new element on success, %NULL on failure. If more than one toplevel
+ * element is specified by the @pipeline_description, all elements are put into
+ * a #GstPipeline, which than is returned.
  */
 GstElement *
 gst_parse_launch (const gchar * pipeline_description, GError ** error)

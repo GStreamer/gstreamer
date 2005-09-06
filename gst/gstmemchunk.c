@@ -21,7 +21,7 @@
  * Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION:gstmacros
+ * SECTION:gstmemchunk
  * @short_description: Atomic chunk allocator
  * @see_also: #GstBuffer, #GstEvent, #GstData
  *

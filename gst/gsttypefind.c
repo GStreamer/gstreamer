@@ -18,6 +18,69 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gsttypefind
+ * @short_description: Stream type detection
+ *
+ */
+ /**
+ * SECTION:gsttypefindfactory
+ * @short_description: Information about registered typefind functions
+ *
+ * These functions allow querying informations about registered typefind 
+ * functions. How to create and register these functions is described in
+ * the section <link linkend="gstreamer-Writing-typefind-functions">
+ * "Writing typefind functions"</link>.
+ *
+ * <example>
+ *   <title>how to write a simple typefinder</title>
+ *   <programlisting>
+ *   typedef struct {
+ *     guint8 *data;
+ *     guint size;
+ *     guint probability;
+ *     GstCaps *data;
+ *   } MyTypeFind;
+ *   static void
+ *   my_peek (gpointer data, gint64 offset, guint size)
+ *   {
+ *     MyTypeFind *find = (MyTypeFind *) data;
+ *     if (offset &gt;= 0 &amp;&amp; offset + size &lt;= find->size) {
+ *       return find->data + offset;
+ *     }
+ *     return NULL;
+ *   }
+ *   static void
+ *   my_suggest (gpointer data, guint probability, GstCaps *caps)
+ *   {
+ *     MyTypeFind *find = (MyTypeFind *) data;
+ *     if (probability &gt; find->probability) {
+ *       find->probability = probability;
+ *       gst_caps_replace (&amp;find->caps, caps);
+ *     }
+ *   }
+ *   static GstCaps *
+ *   find_type (guint8 *data, guint size)
+ *   {
+ *     GList *walk, *type_list;
+ *     MyTypeFind find = {data, size, 0, NULL};
+ *     GstTypeFind gst_find = {my_peek, my_suggest, &amp;find, };
+ *     
+ *     walk = type_list = gst_type_find_factory_get_list ();
+ *     while (walk) {
+ *       GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (walk->data);
+ *       walk = g_list_next (walk)
+ *       gst_type_find_factory_call_function (factory, &amp;gst_find);
+ *     }
+ *     g_list_free (type_list);
+ *     return find.caps;
+ *   };
+ *   </programlisting>
+ * </example>
+ *
+ * The above example shows how to write a very simple typefinder that identifies
+ * the given data. You can get quite a bit more complicated than that though.
+ */
 
 #include "gst_private.h"
 #include "gstinfo.h"

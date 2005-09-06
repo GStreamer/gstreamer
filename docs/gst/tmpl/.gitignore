@@ -28,9 +28,10 @@ gstformat.sgml
 gstghostpad.sgml
 gstiterator.sgml
 gstmacros.sgml
-gstmemchunck.sgml
+gstmemchunk.sgml
 gstmessage.sgml
 gstminiobject.sgml
+gstparse.sgml
 gstprobe.sgml
 gstpushsrc.sgml
 gstqueue.sgml
@@ -40,7 +41,11 @@ gstregistry.sgml
 gstregistrypool.sgml
 gststructure.sgml
 gstsystemclock.sgml
+gsttaglist.sgml
+gsttagsetter.sgml
 gsttask.sgml
+gsttypefind.sgml
+gsttypefindfactory.sgml
 gsturihandler.sgml
 gsturitype.sgml
 gstutils.sgml

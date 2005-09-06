@@ -33,8 +33,14 @@ setup_pipeline (gchar * pipe_descr)
   return pipeline;
 }
 
-/* events is a mask of expected events. tevent is the expected terminal event.
-   the poll call will time out after half a second.
+/* 
+ * run_pipeline:
+ * @pipe: the pipeline to run
+ * @desc: the description for use in messages
+ * @events: is a mask of expected events
+ * @tevent: is the expected terminal event.
+ *
+ * the poll call will time out after half a second.
  */
 static void
 run_pipeline (GstElement * pipe, gchar * descr,
@@ -43,6 +49,7 @@ run_pipeline (GstElement * pipe, gchar * descr,
   GstBus *bus;
   GstMessageType revent;
 
+  g_assert (pipe);
   bus = gst_element_get_bus (pipe);
   g_assert (bus);
   if (gst_element_set_state (pipe,
@@ -162,8 +169,7 @@ GST_START_TEST (test_stop_from_app)
 
   assert_live_count (GST_TYPE_BUFFER, 0);
 }
-GST_END_TEST Suite *
-simple_launch_lines_suite (void)
+GST_END_TEST Suite * simple_launch_lines_suite (void)
 {
   Suite *s = suite_create ("Pipelines");
   TCase *tc_chain = tcase_create ("linear");

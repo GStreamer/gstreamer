@@ -18,6 +18,11 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gsttaglist
+ * @short_description: List of tags and values used to describe media metadata
+ *
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
