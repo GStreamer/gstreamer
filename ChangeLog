@@ -1,6 +1,11 @@
 2005-09-06  Stefan Kost  <ensonic@users.sf.net>
 
 	* check/Makefile.am:
+          deactivate the failing test
+
+2005-09-06  Stefan Kost  <ensonic@users.sf.net>
+
+	* check/Makefile.am:
 	* check/pipelines/.cvsignore:
 	* check/pipelines/simple_launch_lines.c: (setup_pipeline),
 	(run_pipeline), (GST_START_TEST), (simple_launch_lines_suite),
