@@ -1,3 +1,9 @@
+2005-09-07  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstpad.c: (gst_pad_alloc_buffer):
+	  Catch misbehaving pad_alloc functions that don't
+	  set up caps and do it for them.
+
 2005-09-07  Stefan Kost  <ensonic@users.sf.net>
 
 	* check/pipelines/simple_launch_lines.c: (run_pipeline):

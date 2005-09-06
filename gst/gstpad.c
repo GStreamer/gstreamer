@@ -2379,6 +2379,15 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps,
   if (G_UNLIKELY (*buf == NULL))
     goto fallback;
 
+  /* If the buffer alloc function didn't set up the caps like it should,
+   * do it for it */
+  if (caps && (GST_BUFFER_CAPS (*buf) == NULL)) {
+    GST_WARNING ("Buffer allocation function for pad % " GST_PTR_FORMAT
+        " did not set up caps. Setting", peer);
+
+    gst_buffer_set_caps (*buf, caps);
+  }
+
 do_caps:
   gst_object_unref (peer);
 
