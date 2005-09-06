@@ -867,8 +867,8 @@ m4/Makefile
 )
 AC_OUTPUT
 
-echo -n "configure: *** Core plug-ins, always built:"
-( for i in $GST_PLUGINS_ALL; do echo $i; done ) | sort
+echo "configure: *** Core plug-ins, always built:"
+( for i in $GST_PLUGINS_ALL; do echo -e '\t'$i; done ) | sort
 echo
 echo -n "configure: *** Plug-ins relying on libraries that will be built:"
 echo -e "$GST_PLUGINS_YES" | sort

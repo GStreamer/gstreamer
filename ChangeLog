@@ -1,3 +1,21 @@
+2005-09-07  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  In the output at the end, don't show the first plugin on the same
+	  line as "Core plug-ins, always built:".
+	  Indent the output as for other plugin categories
+	* gst/videotestsrc/gstvideotestsrc.c: (gst_videotestsrc_create):
+	  #define that can be used to not use peer buffer_alloc functions for
+	  test purposes.
+	* sys/ximage/ximagesink.c: (gst_ximage_buffer_init),
+	(gst_ximage_buffer_get_type), (gst_ximagesink_ximage_new),
+	(gst_ximagesink_show_frame):
+	* sys/xvimage/xvimagesink.c: (gst_xvimage_buffer_init),
+	(gst_xvimage_buffer_get_type), (gst_xvimagesink_setcaps),
+	(gst_xvimagesink_show_frame):
+	  Error case handling fixes. gst-launch fakesrc ! x[v]imagesink now
+	  fails gracefully instead of XError aborting or deadlocking.
+
 2005-09-07  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/libvisual/Makefile.am:

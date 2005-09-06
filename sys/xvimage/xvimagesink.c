@@ -202,8 +202,10 @@ gst_xvimage_buffer_free (GstXvImageBuffer * xvimage)
 }
 
 static void
-gst_xvimage_buffer_init (GTypeInstance * instance, gpointer g_class)
+gst_xvimage_buffer_init (GstXvImageBuffer * xvimage, gpointer g_class)
 {
+  xvimage->SHMInfo.shmaddr = ((void *) -1);
+  xvimage->SHMInfo.shmid = -1;
 }
 
 static void
@@ -230,7 +232,7 @@ gst_xvimage_buffer_get_type (void)
       NULL,
       sizeof (GstXvImageBuffer),
       0,
-      gst_xvimage_buffer_init,
+      (GInstanceInitFunc) gst_xvimage_buffer_init,
       NULL
     };
     _gst_xvimage_buffer_type = g_type_register_static (GST_TYPE_BUFFER,
@@ -1309,7 +1311,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   xvimagesink = GST_XVIMAGESINK (bsink);
 
   GST_DEBUG_OBJECT (xvimagesink,
-      "sinkconnect possible caps %" GST_PTR_FORMAT " with given caps %"
+      "In setcaps. Possible caps %" GST_PTR_FORMAT ", setting caps %"
       GST_PTR_FORMAT, xvimagesink->xcontext->caps, caps);
 
   structure = gst_caps_get_structure (caps, 0);
@@ -1548,7 +1550,6 @@ gst_xvimagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 no_image:
   {
     /* No image available. That's very bad ! */
-    gst_buffer_unref (buf);
     GST_DEBUG ("could not create image");
     GST_ELEMENT_ERROR (xvimagesink, CORE, NEGOTIATION, (NULL),
         ("Failed creating an XvImage in xvimagesink chain function."));

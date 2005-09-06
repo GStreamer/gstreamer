@@ -141,9 +141,10 @@ gst_ximage_buffer_finalize (GstXImageBuffer * ximage_buffer)
 }
 
 static void
-gst_ximage_buffer_init (GTypeInstance * instance, gpointer g_class)
+gst_ximage_buffer_init (GstXImageBuffer * ximage_buffer, gpointer g_class)
 {
-
+  ximage_buffer->SHMInfo.shmaddr = ((void *) -1);
+  ximage_buffer->SHMInfo.shmid = -1;
 }
 
 static void
@@ -170,7 +171,7 @@ gst_ximage_buffer_get_type (void)
       NULL,
       sizeof (GstXImageBuffer),
       0,
-      gst_ximage_buffer_init,
+      (GInstanceInitFunc) gst_ximage_buffer_init,
       NULL
     };
     _gst_ximage_buffer_type = g_type_register_static (GST_TYPE_BUFFER,
@@ -354,9 +355,9 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, gint width, gint height)
   GST_BUFFER_DATA (ximage) = (guchar *) ximage->ximage->data;
   GST_BUFFER_SIZE (ximage) = ximage->size;
 
+beach:
   g_mutex_unlock (ximagesink->x_lock);
 
-beach:
   if (!succeeded) {
     gst_buffer_unref (GST_BUFFER (ximage));
     ximage = NULL;
@@ -1253,7 +1254,7 @@ no_ximage:
   {
     /* No image available. That's very bad ! */
     g_mutex_unlock (ximagesink->stream_lock);
-    gst_buffer_unref (buf);
+    GST_DEBUG ("could not create image");
     GST_ELEMENT_ERROR (ximagesink, CORE, NEGOTIATION, (NULL),
         ("Failed creating an XImage in ximagesink chain function."));
     return GST_FLOW_ERROR;

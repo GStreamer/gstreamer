@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <liboil/liboil.h>
 
+#define USE_PEER_BUFFERALLOC
 
 GST_DEBUG_CATEGORY (videotestsrc_debug);
 #define GST_CAT_DEFAULT videotestsrc_debug
@@ -402,11 +403,20 @@ gst_videotestsrc_create (GstPushSrc * psrc, GstBuffer ** buffer)
   GST_LOG_OBJECT (videotestsrc, "creating buffer of %ld bytes for %dx%d image",
       newsize, videotestsrc->width, videotestsrc->height);
 
+#ifdef USE_PEER_BUFFERALLOC
   res =
       gst_pad_alloc_buffer (GST_BASE_SRC_PAD (psrc), GST_BUFFER_OFFSET_NONE,
       newsize, GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)), &outbuf);
   if (res != GST_FLOW_OK)
     goto no_buffer;
+#else
+  res = GST_FLOW_OK;
+
+  outbuf = gst_buffer_new_and_alloc (newsize);
+  if (outbuf == NULL)
+    goto no_buffer;
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)));
+#endif
 
   videotestsrc->make_image (videotestsrc, (void *) GST_BUFFER_DATA (outbuf),
       videotestsrc->width, videotestsrc->height);
