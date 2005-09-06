@@ -1,5 +1,5 @@
 
-plugin_LTLIBRARIES = libgstefence.la libgstnavigationtest.la libgstdebug.la
+plugin_LTLIBRARIES = libgstefence.la # libgstnavigationtest.la libgstdebug.la
 
 noinst_HEADERS = efence.h gstnavigationtest.h gstnavseek.h tests.h
 

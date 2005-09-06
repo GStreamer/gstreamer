@@ -1,3 +1,14 @@
+2005-09-07  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	* gst/debug/Makefile.am:
+	* gst/debug/efence.c: (gst_efence_class_init), (gst_efence_init),
+	(gst_efence_chain), (gst_efence_buffer_alloc), (plugin_init),
+	(gst_fenced_buffer_finalize), (gst_fenced_buffer_copy),
+	(gst_fenced_buffer_alloc), (gst_fenced_buffer_class_init),
+	(gst_fenced_buffer_init), (gst_fenced_buffer_get_type):
+	  Port to 0.9 and re-enable efence plugin.
+
 2005-09-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/flac/gstflacdec.c: (flac_caps_factory), (raw_caps_factory),

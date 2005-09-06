@@ -269,6 +269,7 @@ GST_PLUGINS_ALL="\
 		alpha \
 		autodetect \
 		avi \
+		debug \
 		effectv \
 		fdsrc \
 		goom \
@@ -566,6 +567,7 @@ gst/Makefile
 gst/alpha/Makefile
 gst/autodetect/Makefile
 gst/avi/Makefile
+gst/debug/Makefile
 gst/effectv/Makefile
 gst/fdsrc/Makefile
 gst/goom/Makefile
