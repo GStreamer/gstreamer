@@ -282,10 +282,12 @@ gboolean
 gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
 {
   g_return_val_if_fail (GST_IS_REGISTRY (registry), FALSE);
+  g_return_val_if_fail (plugin != NULL, FALSE);
   if (gst_registry_pool_find_plugin (gst_plugin_get_name (plugin))) {
     GST_WARNING_OBJECT (registry, "Not adding plugin %s, "
         "because a plugin with same name already exists",
         gst_plugin_get_name (plugin));
+    gst_plugin_free (plugin);
     return FALSE;
   }
 

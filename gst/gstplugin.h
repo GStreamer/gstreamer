@@ -126,6 +126,7 @@ typedef gboolean        (*GstPluginFilter)              (GstPlugin *plugin,
 GType                   gst_plugin_get_type             (void);
 void			_gst_plugin_initialize		(void);
 void			_gst_plugin_register_static	(GstPluginDesc *desc);
+void                    gst_plugin_free                 (GstPlugin *plugin);
 
 G_CONST_RETURN gchar*	gst_plugin_get_name		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_description	(GstPlugin *plugin);

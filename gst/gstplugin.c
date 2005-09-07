@@ -376,7 +376,8 @@ gst_plugin_check_file (const gchar * filename, GError ** error)
 
   module = g_module_open (filename, G_MODULE_BIND_LAZY);
   check = gst_plugin_check_module (module, filename, error, NULL);
-  g_module_close (module);
+  if (module != NULL)
+    g_module_close (module);
 
   GST_INFO ("file \"%s\" %s look like a gst plugin", filename,
       check ? "does" : "doesn't");
@@ -409,8 +410,11 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
 
   module = g_module_open (filename, G_MODULE_BIND_LAZY);
 
-  if (!gst_plugin_check_module (module, filename, error, &ptr)) /* handles module == NULL case */
+  if (!gst_plugin_check_module (module, filename, error, &ptr)) {       /* handles module == NULL case */
+    if (module != NULL)
+      g_module_close (module);
     return NULL;
+  }
 
   desc = (GstPluginDesc *) ptr;
 
@@ -435,7 +439,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
             "loaded, aborting loading of \"%s\"", plugin, plugin->filename,
             plugin->desc.name, filename);
         if (free_plugin)
-          g_free (plugin);
+          gst_plugin_free (plugin);
         return NULL;
       }
       GST_LOG ("Plugin %p for file \"%s\" already loaded, returning it now",
@@ -478,7 +482,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
         "gst_plugin_register_func failed for plugin \"%s\"", filename);
     g_module_close (module);
     if (free_plugin)
-      g_free (plugin);
+      gst_plugin_free (plugin);
     return NULL;
   }
 }
@@ -920,4 +924,28 @@ gst_library_load (const gchar * name)
   res = gst_plugin_load (name);
 
   return res;
+}
+
+/**
+ * gst_plugin_free:
+ * @plugin: Plugin structure to clean up and free.
+ *
+ * Frees the memory associated with a plugin
+ */
+void
+gst_plugin_free (GstPlugin * plugin)
+{
+  g_return_if_fail (plugin != NULL);
+
+  g_free (plugin->filename);
+
+  if (plugin->module)
+    g_module_close (plugin->module);
+
+  /* anything to clean up in these?
+   * GstPluginDesc desc
+   * GList *       features;       
+   */
+
+  g_free (plugin);
 }
