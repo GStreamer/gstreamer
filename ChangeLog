@@ -1,3 +1,8 @@
+2005-09-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* configure.ac:
+	  v4l2 is no longer in gst-plugins-base
+
 2005-09-07  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:
