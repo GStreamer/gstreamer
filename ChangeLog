@@ -1,5 +1,11 @@
 2005-09-07  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/vorbis/vorbisenc.c:
+	* gst-libs/gst/tag/gstvorbistag.c:
+	  gsttaginterface.h -> gsttagsetter.h
+
+2005-09-07  Stefan Kost  <ensonic@users.sf.net>
+
 	* check/pipelines/simple_launch_lines.c: (GST_START_TEST):
 	  added another test that failes for me (test is not active by default)
 

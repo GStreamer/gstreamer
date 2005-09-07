@@ -33,7 +33,7 @@
 #include <time.h>
 #include <vorbis/vorbisenc.h>
 
-#include <gst/gsttaginterface.h>
+#include <gst/gsttagsetter.h>
 #include <gst/tag/tag.h>
 #include "vorbisenc.h"
 
