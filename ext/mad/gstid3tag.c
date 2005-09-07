@@ -25,7 +25,7 @@
 #include "gstmad.h"
 #include <stdlib.h>
 #include <string.h>
-#include <gst/gsttaginterface.h>
+#include <gst/gsttagsetter.h>
 
 #define ID3_TYPE_FIND_SIZE 40960
 GST_DEBUG_CATEGORY_STATIC (gst_id3_tag_debug);
