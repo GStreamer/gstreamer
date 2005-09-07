@@ -109,8 +109,8 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstqueue.c		\
 	gststructure.c		\
 	gstsystemclock.c	\
-	gsttag.c		\
-	gsttaginterface.c	\
+	gsttaglist.c		\
+	gsttagsetter.c	\
 	gsttask.c		\
 	$(GST_TRACE_SRC)	\
 	gsttrashstack.c		\
@@ -186,8 +186,8 @@ gst_headers =			\
 	gstqueue.h		\
 	gststructure.h		\
 	gstsystemclock.h	\
-	gsttag.h		\
-	gsttaginterface.h	\
+	gsttaglist.h		\
+	gsttagsetter.h	\
 	gsttask.h		\
 	gsttrace.h		\
 	gsttrashstack.h		\

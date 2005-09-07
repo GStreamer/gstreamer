@@ -39,7 +39,7 @@
 #include "gstinfo.h"
 #include "gstmemchunk.h"
 #include "gstmessage.h"
-#include "gsttag.h"
+#include "gsttaglist.h"
 #include "gstutils.h"
 
 

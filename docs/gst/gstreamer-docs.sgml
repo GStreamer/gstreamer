@@ -165,6 +165,7 @@
     &GstMacros;
     &GstMemChunk;
     &GstTrace;
+    &GstTrashStack;
 
   </chapter>
 
@@ -213,18 +214,19 @@
   </chapter>
 
   <chapter id="gstreamer-base">
-    <title>GStreamer Base Classes</title>
+    <title>GStreamer Base and Utillity Classes</title>
     <para>
       libgstbase-&GST_MAJORMINOR;.so provides some base classes to be extended
-      by elements.
+      by elements and utillity classes that are most useful for plugin developers.
     </para>
 
-    &GstAdapter;
     &GstBaseSrc;
     &GstBaseSink;
     &GstBaseTransform;
-    &GstCollectPads;
     &GstPushSrc;
+
+    &GstAdapter;
+    &GstCollectPads;
 
   </chapter>
 

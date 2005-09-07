@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gsttrace.h: Header for tracing functions (depracated)
+ * gsttrace.h: Header for tracing functions (deprecated)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -69,14 +69,29 @@ void 		_gst_trace_add_entry		(GstTrace *trace, guint32 seq,
 void 		gst_trace_read_tsc		(gint64 *dst);
 
 
-typedef enum
-{
+/**
+ * GstAllocTraceFlags:
+ * @GST_ALLOC_TRACE_LIVE: Trace number of non-freed memory
+ * @GST_ALLOC_TRACE_MEM_LIVE: trace pointers of unfreed memory
+ *
+ * Flags indicating which tracing feature to enable.
+ */
+typedef enum {
   GST_ALLOC_TRACE_LIVE		= (1 << 0),
   GST_ALLOC_TRACE_MEM_LIVE	= (1 << 1)
 } GstAllocTraceFlags;
 
 typedef struct _GstAllocTrace 	GstAllocTrace;
 
+/**
+ * GstAllocTrace:
+ * @name: The name of the tracing object
+ * @flags: Flags for this object
+ * @live: counter for live memory
+ * @mem_live: list with pointers to unfreed memory
+ *
+ * The main tracing object
+ */
 struct _GstAllocTrace {
   gchar		*name;
   gint		 flags;
@@ -100,7 +115,21 @@ void			gst_alloc_trace_set_flags	(GstAllocTrace *trace, GstAllocTraceFlags flags
 
 
 #ifndef GST_DISABLE_ALLOC_TRACE
+/**
+ * gst_alloc_trace_register:
+ * @name: The name of the tracer object
+ *
+ * Register a new alloc tracer with the given name
+ */
 #define	gst_alloc_trace_register(name) _gst_alloc_trace_register (name);
+
+/**
+ * gst_alloc_trace_new:
+ * @trace: The tracer to use
+ * @mem: The memory allocated
+ *
+ * Use the tracer to trace a new memory allocation
+ */
 #define	gst_alloc_trace_new(trace, mem) 		\
 G_STMT_START {						\
   if ((trace)->flags & GST_ALLOC_TRACE_LIVE) 		\
@@ -110,6 +139,13 @@ G_STMT_START {						\
       g_slist_prepend ((trace)->mem_live, mem);		\
 } G_STMT_END
 
+/**
+ * gst_alloc_trace_free:
+ * @trace: The tracer to use
+ * @mem: The memory that is freed
+ *
+ * Trace a memory free operation
+ */
 #define	gst_alloc_trace_free(trace, mem) 		\
 G_STMT_START {						\
   if ((trace)->flags & GST_ALLOC_TRACE_LIVE) 		\

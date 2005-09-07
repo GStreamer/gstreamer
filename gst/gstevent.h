@@ -30,7 +30,7 @@
 #include <gst/gstobject.h>
 #include <gst/gstclock.h>
 #include <gst/gststructure.h>
-#include <gst/gsttag.h>
+#include <gst/gsttaglist.h>
 
 G_BEGIN_DECLS
 

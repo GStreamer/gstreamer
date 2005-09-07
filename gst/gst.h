@@ -53,8 +53,8 @@
 #include <gst/gstqueryutils.h>
 #include <gst/gststructure.h>
 #include <gst/gstsystemclock.h>
-#include <gst/gsttag.h>
-#include <gst/gsttaginterface.h>
+#include <gst/gsttaglist.h>
+#include <gst/gsttagsetter.h>
 #include <gst/gsttask.h>
 #include <gst/gsttrace.h>
 #include <gst/gsttypefind.h>

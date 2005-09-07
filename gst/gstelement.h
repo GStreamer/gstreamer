@@ -50,7 +50,7 @@ typedef enum {
 #include <gst/gstindex.h>
 #include <gst/gstiterator.h>
 #include <gst/gstmessage.h>
-#include <gst/gsttag.h>
+#include <gst/gsttaglist.h>
 
 G_BEGIN_DECLS
 

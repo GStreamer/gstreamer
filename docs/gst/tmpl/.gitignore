@@ -44,6 +44,8 @@ gstsystemclock.sgml
 gsttaglist.sgml
 gsttagsetter.sgml
 gsttask.sgml
+gsttrace.sgml
+gsttrashstack.sgml
 gsttypefind.sgml
 gsttypefindfactory.sgml
 gsturihandler.sgml

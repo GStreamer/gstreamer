@@ -71,7 +71,7 @@ typedef enum
 #include <gst/gstminiobject.h>
 #include <gst/gstobject.h>
 #include <gst/gstelement.h>
-#include <gst/gsttag.h>
+#include <gst/gsttaglist.h>
 #include <gst/gststructure.h>
 
 #define GST_MESSAGE_TRACE_NAME	"GstMessage"

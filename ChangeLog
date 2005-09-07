@@ -1,5 +1,31 @@
 2005-09-07  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/tmpl/.cvsignore:
+	* docs/gst/tmpl/gsttrace.sgml:
+	* docs/gst/tmpl/gsttrashstack.sgml:
+	* gst/Makefile.am:
+	* gst/gst.h:
+	* gst/gstelement.h:
+	* gst/gstevent.h:
+	* gst/gstmessage.c:
+	* gst/gstmessage.h:
+	* gst/gsttag.c:
+	* gst/gsttag.h:
+	* gst/gsttaginterface.c:
+	* gst/gsttaginterface.h:
+	* gst/gsttaglist.c:
+	* gst/gsttaglist.h:
+	* gst/gsttagsetter.c:
+	* gst/gsttagsetter.h:
+	* gst/gsttrace.c:
+	* gst/gsttrace.h:
+	* gst/gsttrashstack.c:
+          renamed gsttag -> gsttaglist, gsttaginterface -> gsttagsetter
+          inlined docs for gsttrace, gsttrashstack
+
+2005-09-07  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/Makefile.am:
 	* gst/elements/gstbufferstore.h:
 	* gst/elements/gsttypefindelement.c:

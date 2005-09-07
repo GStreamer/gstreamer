@@ -16,6 +16,12 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gsttrashstack
+ * @short_description:
+ *
+ */
+
 
 #define GST_IMPLEMENT_INLINES 1
 #define __GST_TRASH_STACK_C__
