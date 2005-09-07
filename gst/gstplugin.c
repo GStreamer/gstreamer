@@ -414,9 +414,12 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
 
   module = g_module_open (filename, G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL);
 
-  /* handle module == NULL case */
-  if (!gst_plugin_check_module (module, filename, error, &ptr))
+  /* gst_plugin_check_module handles module == NULL case */
+  if (!gst_plugin_check_module (module, filename, error, &ptr)) {
+    if (module != NULL)
+      g_module_close (module);
     return NULL;
+  }
 
   desc = (GstPluginDesc *) ptr;
 

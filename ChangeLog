@@ -1,3 +1,12 @@
+2005-09-07  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstplugin.c: (gst_plugin_load_file):
+	  Call g_module_close when we don't load the module
+
+	* gst/registries/gstlibxmlregistry.c:
+	(gst_xml_registry_get_property):
+	  Port leak fix from 0.8
+
 2005-09-07  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-docs.sgml:
