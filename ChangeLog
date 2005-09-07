@@ -1,3 +1,11 @@
+2005-09-07  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/libvisual/visual.c: (gst_visual_dispose),
+	(gst_visual_getcaps), (gst_visual_src_setcaps),
+	(gst_visual_sink_setcaps), (get_buffer), (gst_visual_chain),
+	(gst_visual_change_state):
+	  Finish fixing up libvisual plugin so that it runs. 
+
 2005-09-07  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/vorbis/vorbisenc.c:
