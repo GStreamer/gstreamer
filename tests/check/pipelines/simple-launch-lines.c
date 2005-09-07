@@ -92,8 +92,16 @@ GST_START_TEST (test_element_negotiation)
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
       GST_MESSAGE_UNKNOWN);
+
+#ifdef HAVE_LIBVISUAL
+  s = "sinesrc ! tee name=t ! alsasink t. ! audioconvert ! libvisual_lv_scope ! ffmpegcolorspace ! xvimagesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
+#endif
 }
-GST_END_TEST Suite * simple_launch_lines_suite (void)
+GST_END_TEST Suite *
+simple_launch_lines_suite (void)
 {
   Suite *s = suite_create ("Pipelines");
   TCase *tc_chain = tcase_create ("linear");
