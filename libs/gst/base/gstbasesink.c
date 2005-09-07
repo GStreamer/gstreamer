@@ -1232,21 +1232,28 @@ gst_base_sink_activate_pull (GstPad * pad, gboolean active)
       if (G_UNLIKELY (peer == NULL)) {
         g_warning ("Trying to activate pad in pull mode, but no peer");
         result = FALSE;
+        basesink->pad_mode = GST_ACTIVATE_NONE;
       } else {
         if (gst_pad_activate_pull (peer, TRUE)) {
           basesink->have_newsegment = TRUE;
           basesink->segment_start = basesink->segment_stop = 0;
+
+          /* set the pad mode before starting the task so that it's in the
+             correct state for the new thread... */
+          basesink->pad_mode = GST_ACTIVATE_PULL;
           result =
               gst_pad_start_task (pad, (GstTaskFunction) gst_base_sink_loop,
               pad);
+          /* but if starting the thread fails, set it back */
+          if (!result)
+            basesink->pad_mode = GST_ACTIVATE_NONE;
         } else {
           GST_DEBUG_OBJECT (pad, "Failed to activate peer in pull mode");
           result = FALSE;
+          basesink->pad_mode = GST_ACTIVATE_NONE;
         }
         gst_object_unref (peer);
       }
-
-      basesink->pad_mode = result ? GST_ACTIVATE_PULL : GST_ACTIVATE_NONE;
     }
   } else {
     if (G_UNLIKELY (basesink->pad_mode != GST_ACTIVATE_PULL)) {

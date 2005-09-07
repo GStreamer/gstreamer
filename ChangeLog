@@ -1,3 +1,9 @@
+2005-09-07  Andy Wingo  <wingo@pobox.com>
+
+	* gst/base/gstbasesink.c (gst_base_sink_activate_pull): Fix a race
+	condition whereby the pad's task function is entered before the
+	pad_mode variable was set.
+
 2005-09-07  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstpad.c: (gst_pad_alloc_buffer):
