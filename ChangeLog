@@ -1,3 +1,25 @@
+2005-09-07  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/Makefile.am:
+	* gst/elements/gstbufferstore.h:
+	* gst/elements/gsttypefindelement.c:
+	* gst/elements/gsttypefindelement.h:
+	* gst/gst.h:
+	* gst/gsttypefind.c:
+	* gst/gsttypefind.h:
+	* gst/gsttypefindfactory.c: (gst_type_find_factory_get_type),
+	(gst_type_find_factory_class_init), (gst_type_find_factory_init),
+	(gst_type_find_factory_dispose),
+	(gst_type_find_factory_unload_thyself),
+	(gst_type_find_load_plugin), (gst_type_find_factory_get_list),
+	(gst_type_find_factory_get_caps),
+	(gst_type_find_factory_get_extensions),
+	(gst_type_find_factory_call_function):
+	* gst/gsttypefindfactory.h:
+	* gst/registries/gstlibxmlregistry.c:
+	* gst/registries/gstxmlregistry.c:
+	  splitted gsttypefind into gsttypefind, gsttypefindfactory
+
 2005-09-07  Andy Wingo  <wingo@pobox.com>
 
 	* gst/base/gstbasesink.c (gst_base_sink_activate_pull): Fix a race

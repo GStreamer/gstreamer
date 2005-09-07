@@ -115,6 +115,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	$(GST_TRACE_SRC)	\
 	gsttrashstack.c		\
 	gsttypefind.c		\
+	gsttypefindfactory.c	\
 	$(GST_URI_SRC)		\
 	gsturitype.c		\
 	gstutils.c		\
@@ -191,6 +192,7 @@ gst_headers =			\
 	gsttrace.h		\
 	gsttrashstack.h		\
 	gsttypefind.h		\
+	gsttypefindfactory.h	\
 	gsturi.h		\
 	gsturitype.h		\
 	gstutils.h		\

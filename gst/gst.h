@@ -58,6 +58,7 @@
 #include <gst/gsttask.h>
 #include <gst/gsttrace.h>
 #include <gst/gsttypefind.h>
+#include <gst/gsttypefindfactory.h>
 #include <gst/gsturi.h>
 #include <gst/gsturitype.h>
 #include <gst/gstutils.h>

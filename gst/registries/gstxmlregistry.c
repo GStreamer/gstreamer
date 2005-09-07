@@ -54,6 +54,7 @@
 #include <gst/gst_private.h>
 #include <gst/gstelement.h>
 #include <gst/gsttypefind.h>
+#include <gst/gsttypefindfactory.h>
 #include <gst/gsturi.h>
 #include <gst/gstinfo.h>
 
