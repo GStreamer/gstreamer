@@ -26,7 +26,7 @@
 
 #include <gstflacenc.h>
 #include <gst/tag/tag.h>
-#include <gst/gsttaginterface.h>
+#include <gst/gsttagsetter.h>
 #include "flac_compat.h"
 
 static GstPadTemplate *src_template, *sink_template;

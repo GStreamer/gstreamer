@@ -28,7 +28,7 @@
 #include <speex/speex.h>
 #include <speex/speex_stereo.h>
 
-#include <gst/gsttaginterface.h>
+#include <gst/gsttagsetter.h>
 #include <gst/tag/tag.h>
 #include "gstspeexenc.h"
 

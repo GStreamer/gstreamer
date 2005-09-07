@@ -23,7 +23,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <gst/gsttaginterface.h>
+#include <gst/gsttagsetter.h>
 #include <gst/tag/tag.h>
 #include <string.h>
 
