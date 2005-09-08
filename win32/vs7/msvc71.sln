@@ -16,6 +16,7 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gst-inspect", "gst-inspect.vcproj", "{0CCB8AFC-97D8-4251-9B9D-08E7DC41BB7F}"
 	ProjectSection(ProjectDependencies) = postProject
 		{FC47A187-6B10-4B19-93B5-ED7BCC75D466} = {FC47A187-6B10-4B19-93B5-ED7BCC75D466}
+		{0CCB8AFC-97D8-4251-9B9D-08E8DC41BB7D} = {0CCB8AFC-97D8-4251-9B9D-08E8DC41BB7D}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gstelements", "gstelements.vcproj", "{0CCB8AFC-97D8-4251-9B9D-08E7DC41BB7C}"
@@ -43,7 +44,15 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gstgetbits", "gstgetbits.vc
 		{FC47A187-6B10-4B19-93B5-ED7BCC75D466} = {FC47A187-6B10-4B19-93B5-ED7BCC75D466}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gstcontrol", "gstcontrol.vcproj", "{0CCB8AFC-97D8-4251-9B9D-08E8DC41BB7D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FC47A187-6B10-4B19-93B5-ED7BCC75D466} = {FC47A187-6B10-4B19-93B5-ED7BCC75D466}
+	EndProjectSection
+EndProject
 Global
+	GlobalSection(DPCodeReviewSolutionGUID) = preSolution
+		DPCodeReviewSolutionGUID = {00000000-0000-0000-0000-000000000000}
+	EndGlobalSection
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
 		Release = Release
@@ -85,6 +94,10 @@ Global
 		{0CCB8AFC-97D8-4251-9B9D-08E7DC41BA7D}.Debug.Build.0 = Debug|Win32
 		{0CCB8AFC-97D8-4251-9B9D-08E7DC41BA7D}.Release.ActiveCfg = Release|Win32
 		{0CCB8AFC-97D8-4251-9B9D-08E7DC41BA7D}.Release.Build.0 = Release|Win32
+		{0CCB8AFC-97D8-4251-9B9D-08E8DC41BB7D}.Debug.ActiveCfg = Debug|Win32
+		{0CCB8AFC-97D8-4251-9B9D-08E8DC41BB7D}.Debug.Build.0 = Debug|Win32
+		{0CCB8AFC-97D8-4251-9B9D-08E8DC41BB7D}.Release.ActiveCfg = Release|Win32
+		{0CCB8AFC-97D8-4251-9B9D-08E8DC41BB7D}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
