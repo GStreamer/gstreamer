@@ -1780,7 +1780,7 @@
   )
 )
 
-(define-function gst_ghost_pad_new_notarget
+(define-function ghost_pad_new_notarget
   (c-name "gst_ghost_pad_new_notarget")
   (return-type "GstPad*")
   (parameters

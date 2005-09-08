@@ -22,7 +22,26 @@
 
 from common import gst, unittest
 
+class PadTemplateTest(unittest.TestCase):
+    def testConstructor(self):
+        self.failUnless(gst.PadTemplate("template", gst.PAD_SINK,
+            gst.PAD_ALWAYS, gst.caps_from_string("audio/x-raw-int")))
+
 class PadTest(unittest.TestCase):
+    def testConstructor(self):
+        # first style uses gst_pad_new
+        gst.debug('creating pad with name src')
+        self.failUnless(gst.Pad("src", gst.PAD_SRC))
+        gst.debug('creating pad with no name')
+        self.failUnless(gst.Pad(None, gst.PAD_SRC))
+        self.failUnless(gst.Pad(name=None, direction=gst.PAD_SRC))
+        self.failUnless(gst.Pad(direction=gst.PAD_SRC, name=None))
+        self.failUnless(gst.Pad(direction=gst.PAD_SRC, name="src"))
+
+        # second uses gst_pad_new_from_template
+        #template = gst.PadTemplate()
+
+class PadPipelineTest(unittest.TestCase):
     def setUp(self):
         self.pipeline = gst.parse_launch('fakesrc name=source ! fakesink')
         src = self.pipeline.get_by_name('source')

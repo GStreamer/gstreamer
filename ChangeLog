@@ -1,3 +1,12 @@
+2005-09-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.defs:
+	  add gst.ghost_pad_new_notarget
+	* gst/gstpad.override:
+	  change wrap_gst_pad_new a little and add logging
+	* testsuite/test_pad.py:
+	  add tests for constructors of gst.Pad
+
 2005-09-05  Andy Wingo  <wingo@pobox.com>
 
 	* examples/pipeline-tester: Update pipelines. The fixed-rate v4l
