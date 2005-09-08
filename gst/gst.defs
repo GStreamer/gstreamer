@@ -2284,6 +2284,8 @@
    )
 )
 
+
+
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gst.h
 
 (define-function init
@@ -3073,7 +3075,53 @@
   )
 )
 
+;; OBJECT DEBUGGING FUNCTIONS FROM PYTHON
+;; The c functions don't actually exist
 
+(define-method log
+  (of-object "GstObject")
+  (c-name "gst_object_log")
+  (return-type "none")
+  (parameters
+   '("gchar *" "msg")
+   )
+)
+
+(define-method debug
+  (of-object "GstObject")
+  (c-name "gst_object_debug")
+  (return-type "none")
+  (parameters
+   '("gchar *" "msg")
+   )
+)
+
+(define-method info
+  (of-object "GstObject")
+  (c-name "gst_object_info")
+  (return-type "none")
+  (parameters
+   '("gchar *" "msg")
+   )
+)
+
+(define-method warning
+  (of-object "GstObject")
+  (c-name "gst_object_warning")
+  (return-type "none")
+  (parameters
+   '("gchar *" "msg")
+   )
+)
+
+(define-method error
+  (of-object "GstObject")
+  (c-name "gst_object_error")
+  (return-type "none")
+  (parameters
+   '("gchar *" "msg")
+   )
+)
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstpad.h
 

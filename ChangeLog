@@ -1,5 +1,12 @@
 2005-09-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gst.defs:
+	* gst/gst.override:
+	* testsuite/test_element.py:
+	  add debug methods to GstObject
+
+2005-09-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/__init__.py:
 	  make sure play works uninstalled as well; helps running a single
 	  testsuite app

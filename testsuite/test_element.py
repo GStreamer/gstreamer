@@ -171,5 +171,15 @@ class QueueTest(unittest.TestCase):
         assert isinstance(queue, gst.Queue)
         assert queue.get_name() == 'queue0'
 
+class DebugTest(unittest.TestCase):
+    def testDebug(self):
+        e = gst.element_factory_make('fakesrc')
+        e.error('I am an error string')
+        e.warning('I am a warning string')
+        e.info('I am an info string')
+        e.debug('I am a debug string')
+        e.log('I am a log string')
+        e.debug('I am a formatted %s %s' % ('log', 'string'))
+        
 if __name__ == "__main__":
     unittest.main()
