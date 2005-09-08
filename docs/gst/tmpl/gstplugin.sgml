@@ -344,7 +344,7 @@ to get a list of plugins that match certain criteria.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_library_load ##### -->
+<!-- ##### FUNCTION gst_plugin_new ##### -->
 <para>
 
 </para>
@@ -352,4 +352,12 @@ to get a list of plugins that match certain criteria.
 @name: 
 @Returns: 
 
+
+<!-- ##### FUNCTION gst_library_load ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
 
