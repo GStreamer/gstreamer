@@ -281,7 +281,8 @@ print_element_properties_info (GstElement * element)
         GParamSpecString *pstring = G_PARAM_SPEC_STRING (param);
 
         n_print ("%-23.23s String. ", "");
-        g_print ("Default: \"%s\" ", pstring->default_value);
+        g_print ("Default: \"%s\" ",
+            pstring->default_value ? pstring->default_value : "");
         if (readable) {
           const char *string_val = g_value_get_string (&value);
 
