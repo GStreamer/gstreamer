@@ -22,6 +22,10 @@
 
 
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -35,10 +39,6 @@
 #include <process.h>
 #endif
 #include <errno.h>
-
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
 
 #include "../gst-i18n-lib.h"
 #include "gstpipefilter.h"
