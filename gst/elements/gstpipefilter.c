@@ -27,7 +27,13 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#ifdef _MSC_VER
+#include <io.h>
+#include <process.h>
+#endif
 #include <errno.h>
 
 #ifdef HAVE_CONFIG_H
@@ -289,17 +295,26 @@ gst_pipefilter_open_file (GstPipefilter * src)
   pipe (src->fdin);
   pipe (src->fdout);
 
+#ifdef _MSC_VER
+  src->childpid = 0;
+#else
   if ((src->childpid = fork ()) == -1) {
     GST_ELEMENT_ERROR (src, RESOURCE, TOO_LAZY, (NULL), GST_ERROR_SYSTEM);
     return FALSE;
   }
+#endif
 
   if (src->childpid == 0) {
     close (src->fdin[1]);
     close (src->fdout[0]);
     /* child */
+#ifdef _MSC_VER
+    dup2 (src->fdin[0], fileno (stdin));        /* set the childs input stream */
+    dup2 (src->fdout[1], fileno (stdout));      /* set the childs output stream */
+#else
     dup2 (src->fdin[0], STDIN_FILENO);  /* set the childs input stream */
     dup2 (src->fdout[1], STDOUT_FILENO);        /* set the childs output stream */
+#endif
     execvp (src->command[0], &src->command[0]);
     /* will only be reached if execvp has an error */
     GST_ELEMENT_ERROR (src, RESOURCE, TOO_LAZY, (NULL), GST_ERROR_SYSTEM);

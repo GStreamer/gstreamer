@@ -62,7 +62,11 @@ struct _GstPipefilter {
   /* fd */
   gint fdout[2];
   gint fdin[2];
+#ifdef _MSC_VER
+  int childpid;
+#else
   pid_t   childpid;
+#endif
 
   gulong curoffset;                     /* current offset in file */
   gulong bytes_per_read;                /* bytes per read */

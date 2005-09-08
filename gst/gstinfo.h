@@ -629,7 +629,11 @@ guint		gst_debug_remove_log_function_by_data (gpointer		data);
 #define gst_debug_unset_threshold_for_name(name)	/* NOP */
 
 #define GST_DEBUG_CATEGORY(var)				/* NOP */
+#if defined(G_HAVE_ISO_VARARGS)
 #define GST_DEBUG_CATEGORY_EXTERN(var)			/* NOP */
+#else
+#define GST_DEBUG_CATEGORY_EXTERN(cat) extern GstDebugCategory *cat
+#endif
 #if !defined(G_HAVE_GNUC_VARARGS) && !defined(G_HAVE_ISO_VARARGS)
 #define GST_DEBUG_CATEGORY_STATIC(var)			static GstDebugCategory *var = NULL
 #else
