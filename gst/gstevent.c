@@ -323,7 +323,7 @@ gst_event_new_newsegment (gdouble rate, GstFormat format,
     g_return_val_if_fail (start_value != -1, NULL);
 
   if (stop_value != -1)
-    g_return_val_if_fail (start_value < stop_value, NULL);
+    g_return_val_if_fail (start_value <= stop_value, NULL);
 
   return gst_event_new_custom (GST_EVENT_NEWSEGMENT,
       gst_structure_new ("GstEventNewsegment", "rate", G_TYPE_DOUBLE, rate,

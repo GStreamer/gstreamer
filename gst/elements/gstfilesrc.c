@@ -473,7 +473,8 @@ gst_mmap_buffer_finalize (GstMmapBuffer * mmap_buffer)
 }
 
 static GstBuffer *
-gst_file_src_map_region (GstFileSrc * src, off_t offset, size_t size)
+gst_file_src_map_region (GstFileSrc * src, off_t offset, size_t size,
+    gboolean testonly)
 {
   GstBuffer *buf;
   void *mmapregion;
@@ -515,9 +516,11 @@ gst_file_src_map_region (GstFileSrc * src, off_t offset, size_t size)
   /* ERROR */
 mmap_failed:
   {
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
-        ("mmap (0x%08lx, %d, 0x%llx) failed: %s",
-            (gulong) size, src->fd, offset, strerror (errno)));
+    if (!testonly) {
+      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
+          ("mmap (0x%08lx, %d, 0x%llx) failed: %s",
+              (gulong) size, src->fd, offset, strerror (errno)));
+    }
     return NULL;
   }
 }
@@ -550,7 +553,7 @@ gst_file_src_map_small_region (GstFileSrc * src, off_t offset, size_t size)
         "not on page boundaries, resizing to map to %llu+%d",
         (unsigned long long) mapbase, (gint) mapsize);
 
-    map = gst_file_src_map_region (src, mapbase, mapsize);
+    map = gst_file_src_map_region (src, mapbase, mapsize, FALSE);
     if (map == NULL)
       return NULL;
 
@@ -559,7 +562,7 @@ gst_file_src_map_small_region (GstFileSrc * src, off_t offset, size_t size)
 
     gst_buffer_unref (map);
   } else {
-    ret = gst_file_src_map_region (src, offset, size);
+    ret = gst_file_src_map_region (src, offset, size, FALSE);
   }
 
   return ret;
@@ -660,7 +663,7 @@ gst_file_src_create_mmap (GstFileSrc * src, guint64 offset, guint length,
         mapsize <<= 1;
       }
       /* create a new one */
-      src->mapbuf = gst_file_src_map_region (src, nextmap, mapsize);
+      src->mapbuf = gst_file_src_map_region (src, nextmap, mapsize, FALSE);
       if (src->mapbuf == NULL)
         goto could_not_mmap;
 
@@ -792,9 +795,11 @@ gst_file_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
 }
 
 static gboolean
-gst_file_src_is_seekable (GstBaseSrc * src)
+gst_file_src_is_seekable (GstBaseSrc * basesrc)
 {
-  return TRUE;
+  GstFileSrc *src = GST_FILE_SRC (basesrc);
+
+  return src->seekable;
 }
 
 static gboolean
@@ -804,6 +809,12 @@ gst_file_src_get_size (GstBaseSrc * basesrc, guint64 * size)
   GstFileSrc *src;
 
   src = GST_FILE_SRC (basesrc);
+
+  if (!src->seekable) {
+    /* If it isn't seekable, we won't know the length (but fstat will still
+     * succeed, and wrongly say our length is zero. */
+    return FALSE;
+  }
 
   if (fstat (src->fd, &stat_results) < 0)
     goto could_not_stat;
@@ -856,12 +867,30 @@ gst_file_src_start (GstBaseSrc * basesrc)
 #ifdef HAVE_MMAP
   /* FIXME: maybe we should only try to mmap if it's a regular file */
   /* allocate the first mmap'd region if it's a regular file ? */
-  src->mapbuf = gst_file_src_map_region (src, 0, src->mapsize);
+  src->mapbuf = gst_file_src_map_region (src, 0, src->mapsize, TRUE);
   if (src->mapbuf != NULL) {
     GST_DEBUG_OBJECT (src, "using mmap for file");
     src->using_mmap = TRUE;
-  }
+    src->seekable = TRUE;
+  } else
 #endif
+  {
+    /* If not in mmap mode, we need to check if the underlying file is 
+     * seekable. */
+    off_t res = lseek (src->fd, 0, SEEK_CUR);
+
+    if (res < 0) {
+      GST_LOG_OBJECT (src, "disabling seeking, not in mmap mode and lseek "
+          "failed: %s", strerror (errno));
+      src->seekable = FALSE;
+    } else {
+      src->seekable = TRUE;
+    }
+  }
+
+  /* We can only really do seeking on regular files - for other file types, we
+   * don't know their length, so seeking isn't useful/meaningful */
+  src->seekable = src->seekable && src->is_regular;
 
   return TRUE;
 
@@ -881,8 +910,8 @@ open_failed:
         break;
       default:
         GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-            (_("Could not open file \"%s\" for reading."), src->filename),
-            GST_ERROR_SYSTEM);
+            (_("Could not open file \"%s\" for reading: %s."), src->filename,
+                strerror (errno)), GST_ERROR_SYSTEM);
         break;
     }
     return FALSE;

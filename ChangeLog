@@ -1,3 +1,17 @@
+2005-09-08  Michael Smith <msmith@fluendo.com>
+
+	* gst/elements/gstfilesrc.c: (gst_file_src_map_region),
+	(gst_file_src_map_small_region), (gst_file_src_create_mmap),
+	(gst_file_src_is_seekable), (gst_file_src_get_size),
+	(gst_file_src_start):
+	* gst/elements/gstfilesrc.h:
+	  Various fixes for unseekable, unmmapable, and non-normal files, so
+	  that fallback to read() rather than mmap() works.
+	* gst/gstevent.c: (gst_event_new_newsegment):
+	  Allow newsegment events with segment_start == segment_end, as will
+	  correctly happen if you use filesrc on a zero-size file, for
+	  example.
+
 2005-09-07  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstplugin.c: (gst_plugin_load_file):
