@@ -1,4 +1,14 @@
 EXPORTS
+	_getbits_masks
+	gst_getbits_init
+	gst_getbits_nBitMask
+	gst_getbits_newbuf
+	_gst_getbyte
 	gst_plugin_desc
-    gst_getbits_init
-    gst_getbits_newbuf
+	_gst_flushbits_int
+	_gst_get1bit_int
+	_gst_getbits_back_int
+	_gst_getbits_fast_int
+	_gst_getbits_int
+	_gst_getbits_int_cb
+	_gst_showbits_int

@@ -1,17 +1,37 @@
 EXPORTS
-	gst_plugin_desc
-	gst_bytestream_new
 	gst_bytestream_destroy
-	gst_bytestream_reset
-	gst_bytestream_read
-	gst_bytestream_tell
-	gst_bytestream_length
-	gst_bytestream_size_hint
-	gst_bytestream_seek
-	gst_bytestream_peek
-	gst_bytestream_peek_bytes
 	gst_bytestream_flush
 	gst_bytestream_flush_fast
 	gst_bytestream_get_status
 	gst_bytestream_get_timestamp
+	gst_bytestream_length
+	gst_bytestream_new
+	gst_bytestream_peek
+	gst_bytestream_peek_bytes
 	gst_bytestream_print_status
+	gst_bytestream_read
+	gst_bytestream_reset
+	gst_bytestream_seek
+	gst_bytestream_size_hint
+	gst_bytestream_tell
+	gst_plugin_desc
+	gst_adapter_available
+	gst_adapter_available_fast
+	gst_adapter_clear
+	gst_adapter_flush
+	gst_adapter_get_type
+	gst_adapter_new
+	gst_adapter_peek
+	gst_adapter_push
+	gst_file_pad_available
+	gst_file_pad_eof
+	gst_file_pad_error
+	gst_file_pad_get_length
+	gst_file_pad_get_type
+	gst_file_pad_new
+	gst_file_pad_read
+	gst_file_pad_seek
+	gst_file_pad_set_event_function
+	gst_file_pad_set_iterate_function
+	gst_file_pad_tell
+	gst_file_pad_try_read
