@@ -76,9 +76,12 @@ class Fraction(Value):
 
 from _gst import *
 import interfaces
+import play
 
 # this restores previously installed importhooks, so we don't interfere
 # with other people's module importers
+# it also clears out the module completely as if it were never loaded,
+# so that if anyone else imports ltihooks the hooks get installed
 if __ltihooks_used__:
     ltihooks.uninstall()
     __ltihooks_used__ = False
