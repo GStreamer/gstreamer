@@ -86,7 +86,6 @@ enum
 };
 
 static GstVideoSinkClass *parent_class = NULL;
-static gboolean error_caught = FALSE;
 
 /* ============================================================= */
 /*                                                               */
@@ -204,8 +203,10 @@ gst_xvimage_buffer_free (GstXvImageBuffer * xvimage)
 static void
 gst_xvimage_buffer_init (GstXvImageBuffer * xvimage, gpointer g_class)
 {
+#ifdef HAVE_XSHM
   xvimage->SHMInfo.shmaddr = ((void *) -1);
   xvimage->SHMInfo.shmid = -1;
+#endif
 }
 
 static void
@@ -243,6 +244,9 @@ gst_xvimage_buffer_get_type (void)
 
 /* X11 stuff */
 
+#ifdef HAVE_XSHM
+static gboolean error_caught = FALSE;
+
 static int
 gst_xvimagesink_handle_xerror (Display * display, XErrorEvent * xevent)
 {
@@ -259,9 +263,6 @@ gst_xvimagesink_handle_xerror (Display * display, XErrorEvent * xevent)
 static gboolean
 gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
 {
-#ifndef HAVE_XSHM
-  return FALSE;
-#else
   XvImage *xvimage;
   XShmSegmentInfo SHMInfo;
   gint size;
@@ -322,8 +323,8 @@ beach:
   if (xvimage)
     XFree (xvimage);
   return result;
-#endif /* HAVE_XSHM */
 }
+#endif /* HAVE_XSHM */
 
 /* This function handles GstXvImage creation depending on XShm availability */
 static GstXvImageBuffer *

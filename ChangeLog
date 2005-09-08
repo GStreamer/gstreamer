@@ -1,3 +1,11 @@
+2005-09-08  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* sys/ximage/ximagesink.c: (gst_ximage_buffer_init),
+	(gst_ximagesink_check_xshm_calls), (gst_ximagesink_xcontext_get):
+	* sys/xvimage/xvimagesink.c: (gst_xvimage_buffer_init),
+	(gst_xvimagesink_check_xshm_calls):
+	  Fix compilation when XShm is not available.
+
 2005-09-07  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/libvisual/visual.c: (gst_visual_dispose),

@@ -81,7 +81,6 @@ enum
 };
 
 static GstVideoSinkClass *parent_class = NULL;
-static gboolean error_caught = FALSE;
 
 /* ============================================================= */
 /*                                                               */
@@ -143,8 +142,10 @@ gst_ximage_buffer_finalize (GstXImageBuffer * ximage_buffer)
 static void
 gst_ximage_buffer_init (GstXImageBuffer * ximage_buffer, gpointer g_class)
 {
+#ifdef HAVE_XSHM
   ximage_buffer->SHMInfo.shmaddr = ((void *) -1);
   ximage_buffer->SHMInfo.shmid = -1;
+#endif
 }
 
 static void
@@ -182,6 +183,9 @@ gst_ximage_buffer_get_type (void)
 
 /* X11 stuff */
 
+#ifdef HAVE_XSHM
+static gboolean error_caught = FALSE;
+
 static int
 gst_ximagesink_handle_xerror (Display * display, XErrorEvent * xevent)
 {
@@ -198,9 +202,6 @@ gst_ximagesink_handle_xerror (Display * display, XErrorEvent * xevent)
 static gboolean
 gst_ximagesink_check_xshm_calls (GstXContext * xcontext)
 {
-#ifndef HAVE_XSHM
-  return FALSE;
-#else
   GstXImageBuffer *ximage = NULL;
   int (*handler) (Display *, XErrorEvent *);
   gboolean result = FALSE;
@@ -267,8 +268,8 @@ beach:
 
   XSync (xcontext->disp, FALSE);
   return result;
-#endif /* HAVE_XSHM */
 }
+#endif /* HAVE_XSHM */
 
 /* This function handles GstXImageBuffer creation depending on XShm availability */
 static GstXImageBuffer *
@@ -881,17 +882,18 @@ gst_ximagesink_xcontext_get (GstXImageSink * ximagesink)
       (ImageByteOrder (xcontext->disp) ==
       LSBFirst) ? G_LITTLE_ENDIAN : G_BIG_ENDIAN;
 
-#ifdef HAVE_XSHM
   /* Search for XShm extension support */
+#ifdef HAVE_XSHM
   if (XShmQueryExtension (xcontext->disp) &&
       gst_ximagesink_check_xshm_calls (xcontext)) {
     xcontext->use_xshm = TRUE;
     GST_DEBUG ("ximagesink is using XShm extension");
-  } else {
+  } else
+#endif
+  {
     xcontext->use_xshm = FALSE;
     GST_DEBUG ("ximagesink is not using XShm extension");
   }
-#endif /* HAVE_XSHM */
 
   /* our caps system handles 24/32bpp RGB as big-endian. */
   if ((xcontext->bpp == 24 || xcontext->bpp == 32) &&
