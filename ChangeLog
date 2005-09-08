@@ -1,3 +1,10 @@
+2005-09-08  Flavio Oliveira  <flavio.oliveira@indt.org.br>
+
+	* ext/jpeg/Makefile.am:
+	* ext/jpeg/gstjpeg.c
+	* ext/jpeg/gstjpegenc.c:
+	* ext/jpeg/gstsmokeenc.c:
+
 2005-09-07  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/flac/gstflacdec.c:
