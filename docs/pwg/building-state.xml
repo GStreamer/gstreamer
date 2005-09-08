@@ -41,10 +41,10 @@
     READY state, an element has all default resources (runtime-libraries,
     runtime-memory) allocated. However, it has not yet allocated or defined
     anything that is stream-specific. When going from NULL to READY state
-    (<symbol>GST_STATE_NULL_TO_READY</symbol>), an element should
+    (<symbol>GST_STATE_CHANGE_NULL_TO_READY</symbol>), an element should
     allocate any non-stream-specific resources and should load runtime-loadable
     libraries (if any). When going the other way around (from READY to NULL,
-    <symbol>GST_STATE_READY_TO_NULL</symbol>), an element should unload
+    <symbol>GST_STATE_CHANGE_READY_TO_NULL</symbol>), an element should unload
     these libraries and free all allocated resources. Examples of such
     resources are hardware devices. Note that files are generally streams,
     and these should thus be considered as stream-specific resources; therefore,
@@ -100,8 +100,8 @@
     the GstElement base class.
   </para>
   <programlisting>
-static GstElementStateReturn
-		gst_my_filter_change_state	(GstElement *element);
+static GstStateChangeReturn
+gst_my_filter_change_state (GstElement *element, GstStateChange transition);
 
 static void
 gst_my_filter_class_init (GstMyFilterClass *klass)
@@ -128,25 +128,25 @@ gst_my_filter_free_memory (GstMyFilter * filter)
 }
 --><!-- example-end state.func a -->
 <!-- example-begin state.func b -->
-static GstElementStateReturn
-gst_my_filter_change_state (GstElement *element)
+static GstStateChangeReturn
+gst_my_filter_change_state (GstElement *element, GstStateChange transition)
 {
   GstElementStateReturn ret = GST_STATE_SUCCESS;
   GstMyFilter *filter = GST_MY_FILTER (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
       if (!gst_my_filter_allocate_memory (filter))
-        return GST_STATE_FAILURE;
+        return GST_STATE_CHANGE_FAILURE;
       break;
     default:
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)-&gt;change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)-&gt;change_state (element, transition);
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_NULL:
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
       gst_my_filter_free_memory (filter);
       break;
     default:
