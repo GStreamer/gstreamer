@@ -1203,6 +1203,7 @@ gst_plugin_load_file
 gst_plugin_unload_plugin
 gst_plugin_add_feature
 gst_plugin_load
+gst_plugin_free
 gst_library_load
 <SUBSECTION Standard>
 GST_PLUGIN
