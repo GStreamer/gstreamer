@@ -1,5 +1,12 @@
 === release 0.9.1 ===
 
+2005-09-08  Flavio Oliveira  <flavio.oliveira@indt.org.br>
+
+	* configure.ac:
+	* gst/speed/Makefile.am:
+	* gst/speed/gstspeed.c: Ported to GStreamer 0.9.
+	* PORTED_09:
+
 2005-09-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* NEWS:

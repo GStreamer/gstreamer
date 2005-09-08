@@ -1,6 +1,7 @@
 When porting a plugin start with 0.8 CVS head, not the old code in this module. There are many bugfixes which have gone into 0.8 which you want to keep.
 
 List of ported plugins (update when you commit a ported plugin):
+speed   (fcarvalho)
 gsmenc  (fcarvalho)
 faac    (fcarvalho)
 wavenc  (fcarvalho)

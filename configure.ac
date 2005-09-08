@@ -434,6 +434,7 @@ Makefile
 gst-plugins-bad.spec
 gst/Makefile
 gst/qtdemux/Makefile
+gst/speed/Makefile
 sys/Makefile
 ext/Makefile
 ext/faac/Makefile
