@@ -113,16 +113,45 @@ override gst_element_get_state kwargs
 static PyObject *
 _wrap_gst_element_get_state(PyGObject *self, PyObject *args, PyObject *kwargs)
 {
+    static char *kwlist[] = { "timeout", NULL };
     GstState state;
-    GstStateChangeReturn	ret;
+    GstState pending;
+    GstStateChangeReturn ret;
+    PyObject *timeout;
+    GTimeVal *timevalp = NULL;
+    GTimeVal timeval;
+    PyObject *tuple;
 
-	/* Only returns the state for the time being */
-    ret = gst_element_get_state(GST_ELEMENT (self->obj), &state, NULL, NULL);
-    if (!ret) {
-	PyErr_SetString(PyExc_RuntimeError, "Element is in an error state");
-	return NULL;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+                                     "O:GstElement.get_state", kwlist,
+                                     &timeout)) {
+	PyErr_SetString(PyExc_RuntimeError, "Timeout not specified correctly");
+        return NULL;
     }
-    return pyg_enum_from_gtype(GST_TYPE_STATE, state);
+    if (timeout != Py_None) {
+        gdouble timeoutd;
+
+        if (!PyFloat_Check (timeout)) {
+            PyErr_SetString(PyExc_TypeError, "Timeout not specified as double");
+            return NULL;
+        }
+        timeoutd = PyFloat_AsDouble (timeout);
+
+        timeval.tv_sec = (glong) timeoutd;
+        timeval.tv_usec = (glong) ((timeoutd - (gdouble) timeval.tv_sec)
+                                   * 1000.0 * 1000.0);
+	timevalp = &timeval;
+    }
+	
+    ret = gst_element_get_state(GST_ELEMENT (self->obj), &state, &pending,
+        &timeval);
+
+    tuple = Py_BuildValue("OOO",
+        pyg_enum_from_gtype (GST_TYPE_STATE_CHANGE_RETURN, ret),
+        pyg_enum_from_gtype (GST_TYPE_STATE, state),
+        pyg_enum_from_gtype (GST_TYPE_STATE, pending));
+
+    return tuple;
 }
 %%
 /* override gst_element_query kwargs */

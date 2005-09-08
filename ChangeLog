@@ -1,5 +1,12 @@
 2005-09-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstelement.override:
+	* testsuite/test_bin.py:
+	  wrap gst.Element.get_state, returning a tuple
+	  add tests for it
+
+2005-09-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gst.defs:
 	* gst/gst.override:
 	* testsuite/test_element.py:

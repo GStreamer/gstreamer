@@ -52,5 +52,23 @@ class BinSubclassTest(unittest.TestCase):
         bin.set_state(gst.STATE_PLAYING)
         self.failUnless(bin._state_changed)
 
+        # test get_state with no timeout
+        (ret, state, pending) = bin.get_state(None)
+        self.failIfEqual(ret, gst.STATE_CHANGE_FAILURE)
+
+        if ret == gst.STATE_CHANGE_SUCCESS:
+            self.assertEquals(state, gst.STATE_PLAYING)
+            self.assertEquals(pending, gst.STATE_VOID_PENDING)
+
+        # test get_state with a timeout
+        (ret, state, pending) = bin.get_state(0.1)
+        self.failIfEqual(ret, gst.STATE_CHANGE_FAILURE)
+
+        if ret == gst.STATE_CHANGE_SUCCESS:
+            self.assertEquals(state, gst.STATE_PLAYING)
+            self.assertEquals(pending, gst.STATE_VOID_PENDING)
+
+        (ret, state, pending) = bin.get_state(timeout=0.1)
+
 if __name__ == "__main__":
     unittest.main()
