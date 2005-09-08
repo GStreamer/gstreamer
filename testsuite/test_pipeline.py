@@ -42,15 +42,15 @@ class Pipeline(unittest.TestCase):
         gst.element_link_many(source, sink)
 
     def testRun(self):
-        self.assertEqual(self.pipeline.get_state(), gst.STATE_NULL)        
+        self.assertEqual(self.pipeline.get_state(None)[1], gst.STATE_NULL)
         self.pipeline.set_state(gst.STATE_PLAYING)
-        self.assertEqual(self.pipeline.get_state(), gst.STATE_PLAYING)
+        self.assertEqual(self.pipeline.get_state(None)[1], gst.STATE_PLAYING)
         
         time.sleep(1)
 
-        self.assertEqual(self.pipeline.get_state(), gst.STATE_PLAYING)
+        self.assertEqual(self.pipeline.get_state(None)[1], gst.STATE_PLAYING)
         self.pipeline.set_state(gst.STATE_NULL)
-        self.assertEqual(self.pipeline.get_state(), gst.STATE_NULL)
+        self.assertEqual(self.pipeline.get_state(None)[1], gst.STATE_NULL)
         
 if __name__ == "__main__":
     unittest.main()

@@ -99,13 +99,13 @@ class FakeSinkTest(ElementTest):
             assert new_s == new
             
         assert self.element.set_state(old)
-        assert self.element.get_state() == old
+        assert self.element.get_state(0.0)[1] == old
 
 # FIXME: replace with messages
 #        self.element.connect('state-change', state_change_cb)
 
         assert self.element.set_state(new)
-        assert self.element.get_state() == new
+        assert self.element.get_state(0.0)[1] == new
         
     def testStateChangeNullReady(self):
         self.checkStateChange(gst.STATE_NULL, gst.STATE_READY)
