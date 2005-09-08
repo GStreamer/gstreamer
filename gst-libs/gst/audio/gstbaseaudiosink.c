@@ -368,8 +368,10 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   /* roundoff errors in timestamp conversion */
   diff = ABS ((gint64) render_offset - (gint64) sink->ringbuffer->next_sample);
 
-  GST_DEBUG ("render time %" GST_TIME_FORMAT ", render offset %llu, diff %lld",
-      GST_TIME_ARGS (render_time), render_offset, diff);
+  GST_DEBUG ("render time %" GST_TIME_FORMAT
+      ", render offset %llu, diff %lld, size %lu", GST_TIME_ARGS (render_time),
+      render_offset, diff, size);
+  GST_DEBUG ("ringgbuffer rate %lu", sink->ringbuffer->spec.rate);
 
   /* we tollerate a 10th of a second diff before we start resyncing. This
    * should be enough to compensate for various rounding errors in the timestamp
@@ -379,8 +381,9 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     render_offset = -1;
     /* FIXME, can we use the OFFSET field to detect a gap? */
   }
-
+  //GST_DEBUG ("ringgbuffer next (before) %llu", sink->ringbuffer->next_sample);
   gst_ring_buffer_commit (sink->ringbuffer, render_offset, data, size);
+  //GST_DEBUG ("ringgbuffer next (after) %llu", sink->ringbuffer->next_sample);
 
   return GST_FLOW_OK;
 

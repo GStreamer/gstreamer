@@ -904,11 +904,11 @@ not_started:
  * @data: the data to commit
  * @len: the length of the data to commit
  *
- * Commit @length samples pointed to by @data to the ringbuffer
+ * Commit @len samples pointed to by @data to the ringbuffer
  * @buf. The first sample should be written at position @sample in
  * the ringbuffer.
  *
- * @len should not be a multiple of the segment size of the ringbuffer
+ * @len not needs to be a multiple of the segment size of the ringbuffer
  * although it is recommended.
  *
  * Returns: The number of samples written to the ringbuffer or -1 on
@@ -935,6 +935,8 @@ gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
     if (sample != buf->next_sample) {
       GST_WARNING ("discontinuity found got %" G_GUINT64_FORMAT
           ", expected %" G_GUINT64_FORMAT, sample, buf->next_sample);
+      /* also sync here */
+      sample = buf->next_sample;
     }
   }
 
