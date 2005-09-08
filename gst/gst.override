@@ -963,6 +963,7 @@ _wrap_gst_flow_get_name(PyObject *self, PyObject *args, PyObject *kwargs)
     Py_INCREF(Py_None);
     return Py_None;
 }
+
 %%
 override gst_log args
 static PyObject *
@@ -985,16 +986,52 @@ _wrap_gst_info (PyObject *whatever, PyObject *string)
     return pygst_debug_log (whatever, string, GST_LEVEL_INFO);
 }
 %%
-override gst_warning
+override gst_warning args
 static PyObject *
 _wrap_gst_warning (PyObject *whatever, PyObject *string)
 {
     return pygst_debug_log (whatever, string, GST_LEVEL_WARNING);
 }
 %%
-override gst_error
+override gst_error args
 static PyObject *
 _wrap_gst_error (PyObject *whatever, PyObject *string)
+{
+    return pygst_debug_log (whatever, string, GST_LEVEL_ERROR);
+}
+
+%%
+override gst_object_log args
+static PyObject *
+_wrap_gst_object_log (PyObject *whatever, PyObject *string)
+{
+    return pygst_debug_log (whatever, string, GST_LEVEL_LOG);
+}
+%%
+override gst_object_debug args
+static PyObject *
+_wrap_gst_object_debug (PyObject *whatever, PyObject *string)
+{
+    return pygst_debug_log (whatever, string, GST_LEVEL_DEBUG);
+}
+%%
+override gst_object_info args
+static PyObject *
+_wrap_gst_object_info (PyObject *whatever, PyObject *string)
+{
+    return pygst_debug_log (whatever, string, GST_LEVEL_INFO);
+}
+%%
+override gst_object_warning args
+static PyObject *
+_wrap_gst_object_warning (PyObject *whatever, PyObject *string)
+{
+    return pygst_debug_log (whatever, string, GST_LEVEL_WARNING);
+}
+%%
+override gst_object_error args
+static PyObject *
+_wrap_gst_object_error (PyObject *whatever, PyObject *string)
 {
     return pygst_debug_log (whatever, string, GST_LEVEL_ERROR);
 }

@@ -1,6 +1,13 @@
 2005-09-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gst.defs:
+	* gst/gst.override:
+	* testsuite/test_element.py:
+	  add debug methods to gst.Object
+
+2005-09-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.defs:
 	  add gst.ghost_pad_new_notarget
 	* gst/gstpad.override:
 	  change wrap_gst_pad_new a little and add logging
