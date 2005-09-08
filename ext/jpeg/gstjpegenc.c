@@ -77,8 +77,8 @@ static void gst_jpegenc_class_init (GstJpegEnc * klass);
 static void gst_jpegenc_init (GstJpegEnc * jpegenc);
 static void gst_jpegenc_finalize (GObject * object);
 
-static void gst_jpegenc_chain (GstPad * pad, GstData * _data);
-static GstPadLinkReturn gst_jpegenc_link (GstPad * pad, const GstCaps * caps);
+static GstFlowReturn gst_jpegenc_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_jpegenc_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_jpegenc_getcaps (GstPad * pad);
 
 static void gst_jpegenc_resync (GstJpegEnc * jpegenc);
@@ -101,7 +101,7 @@ gst_jpegenc_get_type (void)
   if (!jpegenc_type) {
     static const GTypeInfo jpegenc_info = {
       sizeof (GstJpegEnc),
-      gst_jpegenc_base_init,
+      (GBaseInitFunc) gst_jpegenc_base_init,
       NULL,
       (GClassInitFunc) gst_jpegenc_class_init,
       NULL,
@@ -162,6 +162,10 @@ gst_jpegenc_class_init (GstJpegEnc * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstJpegEncClass, frame_encoded), NULL,
       NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
+  gobject_class->set_property = gst_jpegenc_set_property;
+  gobject_class->get_property = gst_jpegenc_get_property;
+
+
   g_object_class_install_property (gobject_class, ARG_QUALITY,
       g_param_spec_int ("quality", "Quality", "Quality of encoding",
           0, 100, JPEG_DEFAULT_QUALITY, G_PARAM_READWRITE));
@@ -172,8 +176,6 @@ gst_jpegenc_class_init (GstJpegEnc * klass)
           0, 100, 0, G_PARAM_READWRITE));
 #endif
 
-  gobject_class->set_property = gst_jpegenc_set_property;
-  gobject_class->get_property = gst_jpegenc_get_property;
   gstelement_class->change_state = gst_jpegenc_change_state;
 
   gobject_class->finalize = gst_jpegenc_finalize;
@@ -210,14 +212,15 @@ gst_jpegenc_init (GstJpegEnc * jpegenc)
       (&gst_jpegenc_sink_pad_template), "sink");
   gst_pad_set_chain_function (jpegenc->sinkpad, gst_jpegenc_chain);
   gst_pad_set_getcaps_function (jpegenc->sinkpad, gst_jpegenc_getcaps);
-  gst_pad_set_link_function (jpegenc->sinkpad, gst_jpegenc_link);
+  gst_pad_set_setcaps_function (jpegenc->sinkpad, gst_jpegenc_setcaps);
   gst_element_add_pad (GST_ELEMENT (jpegenc), jpegenc->sinkpad);
 
   jpegenc->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_jpegenc_src_pad_template), "src");
   gst_pad_set_getcaps_function (jpegenc->sinkpad, gst_jpegenc_getcaps);
-  gst_pad_set_link_function (jpegenc->sinkpad, gst_jpegenc_link);
+  /*gst_pad_set_setcaps_function (jpegenc->sinkpad, gst_jpegenc_setcaps); */
+  gst_pad_use_fixed_caps (jpegenc->sinkpad);
   gst_element_add_pad (GST_ELEMENT (jpegenc), jpegenc->srcpad);
 
   /* reset the initial video state */
@@ -284,14 +287,14 @@ gst_jpegenc_getcaps (GstPad * pad)
   return caps;
 }
 
-static GstPadLinkReturn
-gst_jpegenc_link (GstPad * pad, const GstCaps * caps)
+static gboolean
+gst_jpegenc_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstJpegEnc *jpegenc = GST_JPEGENC (gst_pad_get_parent (pad));
   GstStructure *structure;
-  GstPadLinkReturn ret;
   GstCaps *othercaps;
   GstPad *otherpad;
+  gboolean ret;
 
   otherpad = (pad == jpegenc->srcpad) ? jpegenc->sinkpad : jpegenc->srcpad;
 
@@ -306,8 +309,8 @@ gst_jpegenc_link (GstPad * pad, const GstCaps * caps)
       "height", G_TYPE_INT, jpegenc->height,
       "framerate", G_TYPE_DOUBLE, jpegenc->fps, NULL);
 
-  ret = gst_pad_try_set_caps (jpegenc->srcpad, othercaps);
-  gst_caps_free (othercaps);
+  ret = gst_pad_set_caps (jpegenc->srcpad, othercaps);
+  gst_caps_unref (othercaps);
 
   if (GST_PAD_LINK_SUCCESSFUL (ret)) {
     gst_jpegenc_resync (jpegenc);
@@ -383,10 +386,9 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
   GST_DEBUG ("gst_jpegenc_resync: resync done");
 }
 
-static void
-gst_jpegenc_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
   GstJpegEnc *jpegenc;
   guchar *data, *outdata;
   gulong size, outsize;
@@ -396,11 +398,6 @@ gst_jpegenc_chain (GstPad * pad, GstData * _data)
   guint height, width;
   guchar *base[3];
   gint i, j, k;
-
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
-  /*g_return_if_fail(GST_IS_BUFFER(buf)); */
 
   /*usleep(10000); */
   jpegenc = GST_JPEGENC (GST_OBJECT_PARENT (pad));
@@ -454,11 +451,13 @@ gst_jpegenc_chain (GstPad * pad, GstData * _data)
   GST_BUFFER_SIZE (outbuf) =
       (((outsize - jpegenc->jdest.free_in_buffer) + 3) & ~3);
 
-  gst_pad_push (jpegenc->srcpad, GST_DATA (outbuf));
+  gst_pad_push (jpegenc->srcpad, outbuf);
 
   g_signal_emit (G_OBJECT (jpegenc), gst_jpegenc_signals[FRAME_ENCODED], 0);
 
-  gst_buffer_unref (buf);
+  /*gst_buffer_unref (buf); */
+
+  return GST_FLOW_OK;
 }
 
 static void

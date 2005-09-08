@@ -64,8 +64,8 @@ static void gst_smokeenc_base_init (gpointer g_class);
 static void gst_smokeenc_class_init (GstSmokeEnc * klass);
 static void gst_smokeenc_init (GstSmokeEnc * smokeenc);
 
-static void gst_smokeenc_chain (GstPad * pad, GstData * _data);
-static GstPadLinkReturn gst_smokeenc_link (GstPad * pad, const GstCaps * caps);
+static GstFlowReturn gst_smokeenc_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_smokeenc_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_smokeenc_getcaps (GstPad * pad);
 
 static void gst_smokeenc_resync (GstSmokeEnc * smokeenc);
@@ -86,7 +86,7 @@ gst_smokeenc_get_type (void)
   if (!smokeenc_type) {
     static const GTypeInfo smokeenc_info = {
       sizeof (GstSmokeEncClass),
-      gst_smokeenc_base_init,
+      (GBaseInitFunc) gst_smokeenc_base_init,
       NULL,
       (GClassInitFunc) gst_smokeenc_class_init,
       NULL,
@@ -142,6 +142,9 @@ gst_smokeenc_class_init (GstSmokeEnc * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  gobject_class->set_property = gst_smokeenc_set_property;
+  gobject_class->get_property = gst_smokeenc_get_property;
+
   g_object_class_install_property (gobject_class, ARG_MIN_QUALITY,
       g_param_spec_int ("qmin", "Qmin", "Minimum quality",
           0, 100, SMOKEENC_DEFAULT_MIN_QUALITY, G_PARAM_READWRITE));
@@ -156,9 +159,6 @@ gst_smokeenc_class_init (GstSmokeEnc * klass)
           "Insert keyframe every N frames", 1, 100000,
           SMOKEENC_DEFAULT_KEYFRAME, G_PARAM_READWRITE));
 
-  gobject_class->set_property = gst_smokeenc_set_property;
-  gobject_class->get_property = gst_smokeenc_get_property;
-
   GST_DEBUG_CATEGORY_INIT (smokeenc_debug, "smokeenc", 0,
       "Smoke encoding element");
 }
@@ -172,14 +172,15 @@ gst_smokeenc_init (GstSmokeEnc * smokeenc)
       (&gst_smokeenc_sink_pad_template), "sink");
   gst_pad_set_chain_function (smokeenc->sinkpad, gst_smokeenc_chain);
   gst_pad_set_getcaps_function (smokeenc->sinkpad, gst_smokeenc_getcaps);
-  gst_pad_set_link_function (smokeenc->sinkpad, gst_smokeenc_link);
+  gst_pad_set_setcaps_function (smokeenc->sinkpad, gst_smokeenc_setcaps);
   gst_element_add_pad (GST_ELEMENT (smokeenc), smokeenc->sinkpad);
 
   smokeenc->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_smokeenc_src_pad_template), "src");
   gst_pad_set_getcaps_function (smokeenc->sinkpad, gst_smokeenc_getcaps);
-  gst_pad_set_link_function (smokeenc->sinkpad, gst_smokeenc_link);
+  gst_pad_use_fixed_caps (smokeenc->sinkpad);
+  /*gst_pad_set_link_function (smokeenc->sinkpad, gst_smokeenc_link); */
   gst_element_add_pad (GST_ELEMENT (smokeenc), smokeenc->srcpad);
 
   /* reset the initial video state */
@@ -230,12 +231,12 @@ gst_smokeenc_getcaps (GstPad * pad)
   return caps;
 }
 
-static GstPadLinkReturn
-gst_smokeenc_link (GstPad * pad, const GstCaps * caps)
+static gboolean
+gst_smokeenc_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstSmokeEnc *smokeenc = GST_SMOKEENC (gst_pad_get_parent (pad));
   GstStructure *structure;
-  GstPadLinkReturn ret;
+  gboolean ret = TRUE;
   GstCaps *othercaps;
   GstPad *otherpad;
 
@@ -252,8 +253,8 @@ gst_smokeenc_link (GstPad * pad, const GstCaps * caps)
       "height", G_TYPE_INT, smokeenc->height,
       "framerate", G_TYPE_DOUBLE, smokeenc->fps, NULL);
 
-  ret = gst_pad_try_set_caps (smokeenc->srcpad, othercaps);
-  gst_caps_free (othercaps);
+  ret = gst_pad_set_caps (smokeenc->srcpad, othercaps);
+  gst_caps_unref (othercaps);
 
   if (GST_PAD_LINK_SUCCESSFUL (ret)) {
     gst_smokeenc_resync (smokeenc);
@@ -286,10 +287,9 @@ gst_smokeenc_resync (GstSmokeEnc * smokeenc)
   GST_DEBUG ("gst_smokeenc_resync: resync done");
 }
 
-static void
-gst_smokeenc_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_smokeenc_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
   GstSmokeEnc *smokeenc;
   guchar *data, *outdata;
   gulong size;
@@ -316,7 +316,7 @@ gst_smokeenc_chain (GstPad * pad, GstData * _data)
 
     GST_BUFFER_SIZE (outbuf) = encsize;
 
-    gst_pad_push (smokeenc->srcpad, GST_DATA (outbuf));
+    gst_pad_push (smokeenc->srcpad, outbuf);
 
     smokeenc->need_header = FALSE;
   }
@@ -336,15 +336,17 @@ gst_smokeenc_chain (GstPad * pad, GstData * _data)
       smokeenc->max_quality);
   smokecodec_set_threshold (smokeenc->info, smokeenc->threshold);
   smokecodec_encode (smokeenc->info, data, flags, outdata, &encsize);
-  gst_buffer_unref (buf);
+  /*gst_buffer_unref (buf); */
 
   GST_BUFFER_SIZE (outbuf) = encsize;
   GST_BUFFER_OFFSET (outbuf) = smokeenc->frame;
   GST_BUFFER_OFFSET_END (outbuf) = smokeenc->frame + 1;
 
-  gst_pad_push (smokeenc->srcpad, GST_DATA (outbuf));
+  gst_pad_push (smokeenc->srcpad, outbuf);
 
   smokeenc->frame++;
+
+  return GST_FLOW_OK;
 }
 
 static void

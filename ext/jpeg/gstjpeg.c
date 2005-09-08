@@ -25,14 +25,13 @@
 #include <gst/gst.h>
 
 #include "gstjpegdec.h"
-
-#if 0
 #include "gstjpegenc.h"
 #include "gstsmokeenc.h"
+/*
 #include "gstsmokedec.h"
 
-static GstStaticCaps smoke_caps = GST_STATIC_CAPS ("video/x-smoke");
 
+static GstStaticCaps smoke_caps = GST_STATIC_CAPS ("video/x-smoke");
 #define SMOKE_CAPS (gst_static_caps_get(&smoke_caps))
 static void
 smoke_type_find (GstTypeFind * tf, gpointer private)
@@ -47,34 +46,32 @@ smoke_type_find (GstTypeFind * tf, gpointer private)
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, SMOKE_CAPS);
   }
 }
-#endif
+*/
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-#if 0
+
   if (!gst_element_register (plugin, "jpegenc", GST_RANK_NONE,
           GST_TYPE_JPEGENC))
     return FALSE;
-#endif
 
   if (!gst_element_register (plugin, "jpegdec", GST_RANK_PRIMARY,
           GST_TYPE_JPEG_DEC))
     return FALSE;
 
-#if 0
   if (!gst_element_register (plugin, "smokeenc", GST_RANK_PRIMARY,
           GST_TYPE_SMOKEENC))
     return FALSE;
-
+/*
   if (!gst_element_register (plugin, "smokedec", GST_RANK_PRIMARY,
           GST_TYPE_SMOKEDEC))
-    return FALSE;
+    return FALSE;  
 
   if (!gst_type_find_register (plugin, "video/x-smoke", GST_RANK_PRIMARY,
           smoke_type_find, NULL, SMOKE_CAPS, NULL))
     return FALSE;
-#endif
+*/
 
   return TRUE;
 }

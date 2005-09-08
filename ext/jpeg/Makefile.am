@@ -3,12 +3,12 @@ plugin_LTLIBRARIES = libgstjpeg.la
 
 libgstjpeg_la_SOURCES = \
 	gstjpeg.c \
-	gstjpegdec.c
+	gstjpegenc.c \
+	gstjpegdec.c \
+	gstsmokeenc.c \
+	smokecodec.c
 
-#	gstjpegenc.c
-#	gstsmokeenc.c 
 #	gstsmokedec.c
-#	smokecodec.c
 
 libgstjpeg_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
 libgstjpeg_la_LIBADD = $(JPEG_LIBS) 
