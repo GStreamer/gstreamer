@@ -3479,7 +3479,8 @@ gst_pad_collectv (GstPad ** selected, const GList * padlist)
 {
   /* need to use alloca here because we must not leak data */
   GstPad **pads;
-  GstPad *test, *_tmp;
+  GstPad *test;
+  GstData *_tmp;
   GstElement *element = NULL;
   int i = 0;
 
@@ -3545,7 +3546,7 @@ GstData *
 gst_pad_collect_valist (GstPad ** selected, GstPad * pad, va_list var_args)
 {
   GstPad **padlist;
-  GstPad *_tmp;
+  GstData *_tmp;
   GstElement *element = NULL;
   gint i = 0, maxlength;
 
