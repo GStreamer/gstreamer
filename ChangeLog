@@ -1,3 +1,20 @@
+2005-09-08  Steve Lhomme  <steve.lhomme@free.fr>
+	* gst/elements/gstpipefilter.c:
+      Try to include config.h first
+    * tools/gst-inspect.c:
+      Fix a possible use of NULL string
+    * docs/gst/gstreamer-sections.txt:
+    * docs/gst/tmpl/gstplugin.sgml:
+      Added missing gst_plugin_free
+    * win32/gstbytestream.def:
+    * win32/gstgetbits.def:
+    * win32/gstreamer.def:
+      Update the DLL exports
+    * win32/GStreamer.vcproj:
+    * win32/gstbytestream.vcproj:
+    * win32/msvc71.sln:
+      Update the MSVC7 projects with latest files
+
 2005-09-07  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstplugin.c: (gst_plugin_check_file), (gst_plugin_load_file),
