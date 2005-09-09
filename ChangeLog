@@ -1,3 +1,8 @@
+2005-09-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.override:
+	  fix for header changes
+
 2005-09-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* testsuite/test_element.py:

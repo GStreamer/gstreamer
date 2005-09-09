@@ -36,10 +36,9 @@ headers
 #include <gst/gsterror.h>
 #include <gst/gstqueue.h>
 #include <gst/gsttypefind.h>
-#include <gst/gsttag.h>
-#include <gst/gsttaginterface.h>
+#include <gst/gsttagsetter.h>
 
-#include <gst/controller/gst-controller.h>
+#include <gst/controller/gstcontroller.h>
 #include <gst/dataprotocol/dataprotocol.h>
 #include <gst/base/gstadapter.h>
 
