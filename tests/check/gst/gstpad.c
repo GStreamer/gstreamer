@@ -193,6 +193,41 @@ GST_START_TEST (test_get_allowed_caps)
 
 GST_END_TEST;
 
+static gboolean
+name_is_valid (const gchar * name, GstPadPresence presence)
+{
+  GstPadTemplate *new;
+
+  new = gst_pad_template_new (name, GST_PAD_SRC, presence, GST_CAPS_ANY);
+  if (new) {
+    gst_object_unref (GST_OBJECT (new));
+    return TRUE;
+  }
+  return FALSE;
+}
+
+GST_START_TEST (test_name_is_valid)
+{
+  gboolean result = FALSE;
+
+  fail_unless (name_is_valid ("src", GST_PAD_ALWAYS));
+  ASSERT_WARNING (name_is_valid ("src%", GST_PAD_ALWAYS));
+  ASSERT_WARNING (result = name_is_valid ("src%d", GST_PAD_ALWAYS));
+  fail_if (result);
+
+  fail_unless (name_is_valid ("src", GST_PAD_REQUEST));
+  ASSERT_WARNING (name_is_valid ("src%s%s", GST_PAD_REQUEST));
+  ASSERT_WARNING (name_is_valid ("src%c", GST_PAD_REQUEST));
+  ASSERT_WARNING (name_is_valid ("src%", GST_PAD_REQUEST));
+  ASSERT_WARNING (name_is_valid ("src%dsrc", GST_PAD_REQUEST));
+
+  fail_unless (name_is_valid ("src", GST_PAD_SOMETIMES));
+  fail_unless (name_is_valid ("src%c", GST_PAD_SOMETIMES));
+}
+
+GST_END_TEST;
+
+
 Suite *
 gst_pad_suite (void)
 {
@@ -207,6 +242,7 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_refcount);
   tcase_add_test (tc_chain, test_get_allowed_caps);
   tcase_add_test (tc_chain, test_link_unlink_threaded);
+  tcase_add_test (tc_chain, test_name_is_valid);
   return s;
 }
 

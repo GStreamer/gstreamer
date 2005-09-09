@@ -45,6 +45,7 @@ GCond *sync_cond;               /* used to synchronize all threads and main thre
 
 gboolean _gst_check_debug = FALSE;
 gboolean _gst_check_raised_critical = FALSE;
+gboolean _gst_check_raised_warning = FALSE;
 gboolean _gst_check_expecting_log = FALSE;
 
 void gst_check_log_message_func
@@ -52,7 +53,7 @@ void gst_check_log_message_func
     const gchar * message, gpointer user_data)
 {
   if (_gst_check_debug) {
-    g_print (message);
+    g_print ("%s", message);
   }
 }
 
@@ -71,6 +72,8 @@ void gst_check_log_critical_func
 
   if (log_level & G_LOG_LEVEL_CRITICAL)
     _gst_check_raised_critical = TRUE;
+  if (log_level & G_LOG_LEVEL_WARNING)
+    _gst_check_raised_warning = TRUE;
 }
 
 /* initialize GStreamer testing */

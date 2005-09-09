@@ -3541,8 +3541,8 @@ gst_pad_template_dispose (GObject * object)
   G_OBJECT_CLASS (padtemplate_parent_class)->dispose (object);
 }
 
-/* ALWAYS padtemplates cannot have conversion specifications, it doesn't make
- * sense.
+/* ALWAYS padtemplates cannot have conversion specifications (like src_%d),
+ * since it doesn't make sense.
  * SOMETIMES padtemplates can do whatever they want, they are provided by the
  * element.
  * REQUEST padtemplates can be reverse-parsed (the user asks for 'sink1', the
@@ -3636,8 +3636,10 @@ gst_pad_template_new (const gchar * name_template,
   g_return_val_if_fail (presence == GST_PAD_ALWAYS
       || presence == GST_PAD_SOMETIMES || presence == GST_PAD_REQUEST, NULL);
 
-  if (!name_is_valid (name_template, presence))
+  if (!name_is_valid (name_template, presence)) {
+    gst_caps_unref (caps);
     return NULL;
+  }
 
   new = g_object_new (gst_pad_template_get_type (),
       "name", name_template, NULL);

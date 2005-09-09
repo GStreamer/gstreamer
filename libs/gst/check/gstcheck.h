@@ -41,6 +41,7 @@ GST_DEBUG_CATEGORY_EXTERN (check_debug);
  */
 extern gboolean _gst_check_threads_running;
 extern gboolean _gst_check_raised_critical;
+extern gboolean _gst_check_raised_warning;
 extern gboolean _gst_check_expecting_log;
 
 /* global variables used in test methods */
@@ -203,9 +204,20 @@ G_STMT_START {							\
   _gst_check_raised_critical = FALSE;				\
   code;								\
   _fail_unless (_gst_check_raised_critical, __FILE__, __LINE__, \
-                "Expected g_critical, got nothing: '"#code"'"); \
+                "Expected g_critical, got nothing");            \
   _gst_check_expecting_log = FALSE;				\
 } G_STMT_END
+
+#define ASSERT_WARNING(code)					\
+G_STMT_START {							\
+  _gst_check_expecting_log = TRUE;				\
+  _gst_check_raised_warning = FALSE;				\
+  code;								\
+  _fail_unless (_gst_check_raised_warning, __FILE__, __LINE__,  \
+                "Expected g_warning, got nothing");             \
+  _gst_check_expecting_log = FALSE;				\
+} G_STMT_END
+
 
 #define ASSERT_OBJECT_REFCOUNT(object, name, value)		\
 G_STMT_START {							\
