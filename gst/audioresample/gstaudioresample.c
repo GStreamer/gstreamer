@@ -145,6 +145,8 @@ static void gst_audioresample_class_init (GstAudioresampleClass * klass)
       GST_DEBUG_FUNCPTR (audioresample_set_caps);
   GST_BASE_TRANSFORM_CLASS (klass)->transform =
       GST_DEBUG_FUNCPTR (audioresample_transform);
+
+  GST_BASE_TRANSFORM_CLASS (klass)->passthrough_on_same_caps = TRUE;
 }
 
 static void gst_audioresample_init (GstAudioresample * audioresample,

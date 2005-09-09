@@ -191,6 +191,8 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_convert_transform_ip);
   GST_BASE_TRANSFORM_CLASS (klass)->transform =
       GST_DEBUG_FUNCPTR (gst_audio_convert_transform);
+
+  GST_BASE_TRANSFORM_CLASS (klass)->passthrough_on_same_caps = TRUE;
 }
 
 static void

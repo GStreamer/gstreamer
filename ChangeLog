@@ -1,3 +1,32 @@
+2005-09-09  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* check/Makefile.am:
+	* check/pipelines/simple_launch_lines.c: (setup_pipeline),
+	(run_pipeline), (GST_START_TEST), (simple_launch_lines_suite):
+	  Add extra tests for basetransform based components. 
+	  Comment out the test_element_negotiation test until we decide
+          if it's testing correct behaviour.
+	* ext/libvisual/visual.c: (gst_visual_init), (get_buffer),
+	(gst_visual_chain), (gst_visual_change_state):
+	  Slightly more correct but still bogus timestamping.
+	  Fix state change function.
+	* gst/audioconvert/gstaudioconvert.c:
+	(gst_audio_convert_class_init):
+	* gst/audioresample/gstaudioresample.c:
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_class_init):
+	* gst/videoscale/gstvideoscale.c: (gst_videoscale_class_init),
+	(gst_videoscale_prepare_size), (gst_videoscale_set_caps),
+	(gst_videoscale_prepare_image):
+	* gst/volume/gstvolume.c: (gst_volume_class_init),
+	(volume_transform_ip):
+	  Basetransform updates. Enable passthrough modes.
+	* sys/ximage/ximagesink.c: (gst_ximage_buffer_init),
+	(gst_ximagesink_renegotiate_size), (gst_ximagesink_xcontext_get),
+	(gst_ximagesink_setcaps), (gst_ximagesink_buffer_alloc):
+	  Negotiation fix that allows the window to return to the original
+	  size and renegotiate passthrough upstream. Extra debug output.
+
 2005-09-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/sine/gstsinesrc.c:

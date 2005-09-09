@@ -134,8 +134,8 @@ static void volume_get_property (GObject * object, guint prop_id,
 static void volume_update_volume (const GValue * value, gpointer data);
 static void volume_update_mute (const GValue * value, gpointer data);
 
-static GstFlowReturn volume_transform (GstBaseTransform * base,
-    GstBuffer * inbuf, GstBuffer * outbuf);
+static GstFlowReturn volume_transform_ip (GstBaseTransform * base,
+    GstBuffer * outbuf);
 static gboolean volume_set_caps (GstBaseTransform * base, GstCaps * incaps,
     GstCaps * outcaps);
 
@@ -276,8 +276,8 @@ gst_volume_class_init (GstVolumeClass * klass)
           0.0, VOLUME_MAX_DOUBLE, 1.0,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
-  GST_BASE_TRANSFORM_CLASS (klass)->transform =
-      GST_DEBUG_FUNCPTR (volume_transform);
+  GST_BASE_TRANSFORM_CLASS (klass)->transform_ip =
+      GST_DEBUG_FUNCPTR (volume_transform_ip);
   GST_BASE_TRANSFORM_CLASS (klass)->set_caps =
       GST_DEBUG_FUNCPTR (volume_set_caps);
 }
@@ -390,8 +390,7 @@ volume_set_caps (GstBaseTransform * base, GstCaps * incaps, GstCaps * outcaps)
  * a class-global method
  */
 static GstFlowReturn
-volume_transform (GstBaseTransform * base, GstBuffer * inbuf,
-    GstBuffer * outbuf)
+volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 {
   GstVolume *this = GST_VOLUME (base);
 

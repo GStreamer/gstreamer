@@ -151,8 +151,6 @@ static gboolean gst_videoscale_set_caps (GstBaseTransform * trans,
     GstCaps * in, GstCaps * out);
 static gboolean gst_videoscale_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, guint * size);
-static GstFlowReturn gst_videoscale_transform_ip (GstBaseTransform * trans,
-    GstBuffer * in);
 static GstFlowReturn gst_videoscale_transform (GstBaseTransform * trans,
     GstBuffer * in, GstBuffer * out);
 
@@ -221,8 +219,9 @@ gst_videoscale_class_init (GstVideoscaleClass * klass)
   trans_class->transform_caps = gst_videoscale_transform_caps;
   trans_class->set_caps = gst_videoscale_set_caps;
   trans_class->get_unit_size = gst_videoscale_get_unit_size;
-  trans_class->transform_ip = gst_videoscale_transform_ip;
   trans_class->transform = gst_videoscale_transform;
+
+  trans_class->passthrough_on_same_caps = TRUE;
 
   parent_class = g_type_class_peek_parent (klass);
 }
@@ -317,10 +316,6 @@ gst_videoscale_get_format (GstCaps * caps)
   return -1;
 }
 
-#define ROUND_UP_2(x)  (((x)+1)&~1)
-#define ROUND_UP_4(x)  (((x)+3)&~3)
-#define ROUND_UP_8(x)  (((x)+7)&~7)
-
 /* calculate the size of a buffer */
 static gboolean
 gst_videoscale_prepare_size (gint format,
@@ -342,17 +337,17 @@ gst_videoscale_prepare_size (gint format,
       break;
     case GST_VIDEOSCALE_RGB:
     case GST_VIDEOSCALE_BGR:
-      img->stride = ROUND_UP_4 (img->width * 3);
+      img->stride = GST_ROUND_UP_4 (img->width * 3);
       *size = img->stride * img->height;
       break;
     case GST_VIDEOSCALE_YUY2:
     case GST_VIDEOSCALE_YVYU:
     case GST_VIDEOSCALE_UYVY:
-      img->stride = ROUND_UP_4 (img->width * 2);
+      img->stride = GST_ROUND_UP_4 (img->width * 2);
       *size = img->stride * img->height;
       break;
     case GST_VIDEOSCALE_Y:
-      img->stride = ROUND_UP_4 (img->width);
+      img->stride = GST_ROUND_UP_4 (img->width);
       *size = img->stride * img->height;
       break;
     case GST_VIDEOSCALE_I420:
@@ -360,21 +355,21 @@ gst_videoscale_prepare_size (gint format,
     {
       gulong img_u_stride, img_u_height;
 
-      img->stride = ROUND_UP_4 (img->width);
+      img->stride = GST_ROUND_UP_4 (img->width);
 
-      img_u_height = ROUND_UP_2 (img->height) / 2;
-      img_u_stride = ROUND_UP_4 (img->stride / 2);
+      img_u_height = GST_ROUND_UP_2 (img->height) / 2;
+      img_u_stride = GST_ROUND_UP_4 (img->stride / 2);
 
-      *size = img->stride * ROUND_UP_2 (img->height) +
+      *size = img->stride * GST_ROUND_UP_2 (img->height) +
           2 * img_u_stride * img_u_height;
       break;
     }
     case GST_VIDEOSCALE_RGB565:
-      img->stride = ROUND_UP_4 (img->width * 2);
+      img->stride = GST_ROUND_UP_4 (img->width * 2);
       *size = img->stride * img->height;
       break;
     case GST_VIDEOSCALE_RGB555:
-      img->stride = ROUND_UP_4 (img->width * 2);
+      img->stride = GST_ROUND_UP_4 (img->width * 2);
       *size = img->stride * img->height;
       break;
     default:
@@ -436,6 +431,7 @@ gst_videoscale_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   GST_DEBUG_OBJECT (videoscale, "from=%dx%d, size %d -> to=%dx%d, size %d",
       videoscale->from_width, videoscale->from_height, videoscale->src_size,
       videoscale->to_width, videoscale->to_height, videoscale->dest_size);
+
 done:
   return ret;
 }
@@ -472,10 +468,10 @@ gst_videoscale_prepare_image (gint format, GstBuffer * buf,
   switch (format) {
     case GST_VIDEOSCALE_I420:
     case GST_VIDEOSCALE_YV12:
-      img_u->pixels = img->pixels + ROUND_UP_2 (img->height) * img->stride;
-      img_u->height = ROUND_UP_2 (img->height) / 2;
-      img_u->width = ROUND_UP_2 (img->width) / 2;
-      img_u->stride = ROUND_UP_4 (img->stride / 2);
+      img_u->pixels = img->pixels + GST_ROUND_UP_2 (img->height) * img->stride;
+      img_u->height = GST_ROUND_UP_2 (img->height) / 2;
+      img_u->width = GST_ROUND_UP_2 (img->width) / 2;
+      img_u->stride = GST_ROUND_UP_4 (img->stride / 2);
       memcpy (img_v, img_u, sizeof (*img_v));
       img_v->pixels = img_u->pixels + img_u->height * img_u->stride;
       break;
@@ -483,13 +479,6 @@ gst_videoscale_prepare_image (gint format, GstBuffer * buf,
       break;
   }
   return res;
-}
-
-static GstFlowReturn
-gst_videoscale_transform_ip (GstBaseTransform * trans, GstBuffer * in)
-{
-  /* nothing to be done in passthrough */
-  return GST_FLOW_OK;
 }
 
 static GstFlowReturn

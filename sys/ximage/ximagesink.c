@@ -635,6 +635,11 @@ gst_ximagesink_renegotiate_size (GstXImageSink * ximagesink)
       GST_VIDEO_SINK_HEIGHT (ximagesink) != ximagesink->xwindow->height) {
     GstCaps *caps;
 
+    GST_DEBUG_OBJECT (ximagesink,
+        "Window changed size to %dx%d from %dx%d. Setting desired caps",
+        ximagesink->xwindow->width, ximagesink->xwindow->height,
+        GST_VIDEO_SINK_WIDTH (ximagesink), GST_VIDEO_SINK_HEIGHT (ximagesink));
+
     caps = gst_caps_new_simple ("video/x-raw-rgb",
         "bpp", G_TYPE_INT, ximagesink->xcontext->bpp,
         "depth", G_TYPE_INT, ximagesink->xcontext->depth,
@@ -1049,6 +1054,7 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   gboolean ret = TRUE;
   GstStructure *structure;
   const GValue *par;
+  gint new_width, new_height;
 
   ximagesink = GST_XIMAGESINK (bsink);
 
@@ -1060,12 +1066,25 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
       GST_PTR_FORMAT, ximagesink->xcontext->caps, caps);
 
   structure = gst_caps_get_structure (caps, 0);
+
+/* We used to only get the new width and height if we don't 
+ * yet have one, which means GST_VIDEO_SINK_WIDTH/HEIGHT never change
+ * after the first buffer, which seems totally bogus. I don't understand
+ * why it might have been this way...
+ */
+#if 0
   if (GST_VIDEO_SINK_WIDTH (ximagesink) == 0) {
-    ret &= gst_structure_get_int (structure, "width",
-        &(GST_VIDEO_SINK_WIDTH (ximagesink)));
-    ret &= gst_structure_get_int (structure, "height",
-        &(GST_VIDEO_SINK_HEIGHT (ximagesink)));
+    ret &= gst_structure_get_int (structure, "width", &new_width);
+    ret &= gst_structure_get_int (structure, "height", &new_height);
+  } else {
+    new_width = GST_VIDEO_SINK_WIDTH (ximagesink);
+    new_height = GST_VIDEO_SINK_HEIGHT (ximagesink);
   }
+#else
+  ret &= gst_structure_get_int (structure, "width", &new_width);
+  ret &= gst_structure_get_int (structure, "height", &new_height);
+#endif
+
   ret &= gst_structure_get_double (structure,
       "framerate", &ximagesink->framerate);
   if (!ret)
@@ -1078,6 +1097,16 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   par = gst_structure_get_value (structure, "pixel-aspect-ratio");
   if (par && gst_value_compare (par, ximagesink->par) != GST_VALUE_EQUAL)
     goto wrong_aspect;
+
+  if (GST_VIDEO_SINK_WIDTH (ximagesink) != new_width ||
+      GST_VIDEO_SINK_HEIGHT (ximagesink) != new_height) {
+    GST_DEBUG_OBJECT (ximagesink, "Input caps changed size %dx%d -> %dx%d",
+        GST_VIDEO_SINK_WIDTH (ximagesink), GST_VIDEO_SINK_HEIGHT (ximagesink),
+        new_width, new_height);
+  }
+
+  GST_VIDEO_SINK_WIDTH (ximagesink) = new_width;
+  GST_VIDEO_SINK_HEIGHT (ximagesink) = new_height;
 
   /* Creating our window and our image */
   g_assert (GST_VIDEO_SINK_WIDTH (ximagesink) > 0);
@@ -1349,9 +1378,11 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
     GST_DEBUG_OBJECT (ximagesink, "no usable image in pool, creating ximage");
     ximage = gst_ximagesink_ximage_new (ximagesink, width, height);
 
-    if (ximagesink->desired_caps)
+    if (ximagesink->desired_caps) {
+      GST_DEBUG_OBJECT (ximagesink, "Returning buffer with my desired caps %"
+          GST_PTR_FORMAT, ximagesink->desired_caps);
       gst_buffer_set_caps (GST_BUFFER (ximage), ximagesink->desired_caps);
-    else
+    } else
       /* fixme we have no guarantee that the ximage is actually of these caps,
          do we? */
       gst_buffer_set_caps (GST_BUFFER (ximage), caps);

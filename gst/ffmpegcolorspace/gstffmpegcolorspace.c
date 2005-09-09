@@ -95,8 +95,10 @@ static gboolean gst_ffmpegcsp_get_unit_size (GstBaseTransform * btrans,
     GstCaps * caps, guint * size);
 static GstFlowReturn gst_ffmpegcsp_transform (GstBaseTransform * btrans,
     GstBuffer * inbuf, GstBuffer * outbuf);
+#if 0
 static GstFlowReturn gst_ffmpegcsp_transform_ip (GstBaseTransform * btrans,
     GstBuffer * inbuf);
+#endif
 
 static GstPadTemplate *sinktempl, *srctempl;
 static GstElementClass *parent_class = NULL;
@@ -301,8 +303,12 @@ gst_ffmpegcsp_class_init (GstFFMpegCspClass * klass)
       GST_DEBUG_FUNCPTR (gst_ffmpegcsp_get_unit_size);
   gstbasetransform_class->transform =
       GST_DEBUG_FUNCPTR (gst_ffmpegcsp_transform);
+#if 0
   gstbasetransform_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_ffmpegcsp_transform_ip);
+#endif
+
+  gstbasetransform_class->passthrough_on_same_caps = TRUE;
 
   GST_DEBUG_CATEGORY_INIT (ffmpegcolorspace_debug, "ffmpegcolorspace", 0,
       "FFMPEG-based colorspace converter");
@@ -334,12 +340,15 @@ gst_ffmpegcsp_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
   return TRUE;
 }
 
+#if 0
+/* FIXME: Could use transform_ip to implement endianness swap type operations */
 static GstFlowReturn
 gst_ffmpegcsp_transform_ip (GstBaseTransform * btrans, GstBuffer * inbuf)
 {
   /* do nothing */
   return GST_FLOW_OK;
 }
+#endif
 
 static GstFlowReturn
 gst_ffmpegcsp_transform (GstBaseTransform * btrans, GstBuffer * inbuf,

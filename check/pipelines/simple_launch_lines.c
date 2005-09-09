@@ -24,7 +24,7 @@
 
 
 static GstElement *
-setup_pipeline (gchar * pipe_descr)
+setup_pipeline (const gchar * pipe_descr)
 {
   GstElement *pipeline;
 
@@ -43,7 +43,7 @@ setup_pipeline (gchar * pipe_descr)
  * the poll call will time out after half a second.
  */
 static void
-run_pipeline (GstElement * pipe, gchar * descr,
+run_pipeline (GstElement * pipe, const gchar * descr,
     GstMessageType events, GstMessageType tevent)
 {
   GstBus *bus;
@@ -100,8 +100,44 @@ GST_START_TEST (test_element_negotiation)
       GST_MESSAGE_UNKNOWN);
 #endif
 }
-GST_END_TEST Suite *
-simple_launch_lines_suite (void)
+
+GST_END_TEST
+GST_START_TEST (test_basetransform_based)
+{
+  /* Each of these tests is to check whether various basetransform based elements can
+   * select output caps when not allowed to do passthrough and going to a generic sink
+   * such as fakesink or filesink */
+  const gchar *s;
+
+  /* Check that videoscale can pick a height given only a width */
+  s = "videotestsrc ! video/x-raw-yuv,format=(fourcc)I420,width=320,height=240 ! " "videoscale ! video/x-raw-yuv,width=640 ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
+
+  /* Test that ffmpegcolorspace can pick an output format that isn't passthrough without 
+   * completely specified output caps */
+  s = "videotestsrc ! video/x-raw-yuv,format=(fourcc)I420,width=320,height=240 ! " "ffmpegcolorspace ! video/x-raw-rgb ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
+
+  /* Check that audioresample can pick a samplerate to use from a 
+   * range that doesn't include the input */
+  s = "sinesrc ! audio/x-raw-int,width=16,depth=16,rate=8000 ! audioresample ! "
+      "audio/x-raw-int,rate=[16000,48000] ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
+
+  /* Check that audioconvert can pick a depth to use, given a width */
+  s = "sinesrc ! audio/x-raw-int,width=16,depth=16 ! audioconvert ! "
+      "audio/x-raw-int,width=32 ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
+}
+GST_END_TEST Suite * simple_launch_lines_suite (void)
 {
   Suite *s = suite_create ("Pipelines");
   TCase *tc_chain = tcase_create ("linear");
@@ -110,7 +146,8 @@ simple_launch_lines_suite (void)
   tcase_set_timeout (tc_chain, 20);
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_element_negotiation);
+//  tcase_add_test (tc_chain, test_element_negotiation);
+  tcase_add_test (tc_chain, test_basetransform_based);
   return s;
 }
 

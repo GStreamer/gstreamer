@@ -47,6 +47,7 @@ struct _GstVisual
   /* pads */
   GstPad *sinkpad;
   GstPad *srcpad;
+  GstClockTime next_ts;
 
   /* libvisual stuff */
   VisAudio audio;
@@ -210,6 +211,7 @@ gst_visual_init (GstVisual * visual)
   gst_pad_set_getcaps_function (visual->srcpad, gst_visual_getcaps);
   gst_element_add_pad (GST_ELEMENT (visual), visual->srcpad);
 
+  visual->next_ts = 0;
   visual->adapter = gst_adapter_new ();
 }
 
@@ -369,6 +371,9 @@ get_buffer (GstVisual * visual, GstBuffer ** outbuf)
         visual->video->bpp, GST_PAD_CAPS (visual->srcpad), outbuf);
   }
 
+  if (*outbuf == NULL)
+    return GST_FLOW_ERROR;
+
   return GST_FLOW_OK;
 }
 
@@ -390,6 +395,9 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
       return ret;
     }
   }
+
+  if (GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE)
+    visual->next_ts = GST_BUFFER_TIMESTAMP (buffer);
 
   /* spf = samples per frame */
   spf = visual->rate / visual->fps;
@@ -419,9 +427,9 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
       visual_actor_run (visual->actor, &visual->audio);
 
       /* FIXME: Match timestamps from the incoming audio */
-      GST_BUFFER_TIMESTAMP (outbuf) =
-          GST_SECOND * visual->count++ / visual->fps;
+      GST_BUFFER_TIMESTAMP (outbuf) = visual->next_ts;
       GST_BUFFER_DURATION (outbuf) = GST_SECOND / visual->fps;
+      visual->next_ts += GST_BUFFER_DURATION (outbuf);
       ret = gst_pad_push (visual->srcpad, outbuf);
       outbuf = NULL;
     }
@@ -449,6 +457,7 @@ static GstStateChangeReturn
 gst_visual_change_state (GstElement * element, GstStateChange transition)
 {
   GstVisual *visual = GST_VISUAL (element);
+  GstStateChangeReturn ret;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -469,13 +478,20 @@ gst_visual_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_adapter_clear (visual->adapter);
-      visual->count = 0;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      visual->next_ts = 0;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       if (visual->actor)
@@ -489,10 +505,7 @@ gst_visual_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  return GST_STATE_CHANGE_SUCCESS;
+  return ret;
 }
 
 static void

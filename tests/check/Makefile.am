@@ -33,13 +33,12 @@ check_PROGRAMS = \
 	elements/audioconvert \
 	elements/audioresample \
 	elements/volume \
+        pipelines/simple_launch_lines \
 	$(check_vorbis)
 
 # these tests don't even pass
 # generic/states: elements need state fixin' before this can be added
-# pipelines/simple_launch_lines: needs negotioation fixing
 noinst_PROGRAMS = \
-        pipelines/simple_launch_lines \
 	generic/states
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS)
