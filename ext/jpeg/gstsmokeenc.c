@@ -293,7 +293,8 @@ gst_smokeenc_chain (GstPad * pad, GstBuffer * buf)
   GstSmokeEnc *smokeenc;
   guchar *data, *outdata;
   gulong size;
-  gint outsize, encsize;
+  gint outsize;
+  guint encsize;
   GstBuffer *outbuf;
   SmokeCodecFlags flags;
 

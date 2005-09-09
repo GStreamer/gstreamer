@@ -279,7 +279,7 @@ smokecodec_get_bitrate (SmokeCodecInfo * info, unsigned int *bitrate)
 }
 
 static void
-find_best_size (int blocks, int *width, int *height)
+find_best_size (int blocks, unsigned int *width, unsigned int *height)
 {
   int sqchng;
   int w, h;
