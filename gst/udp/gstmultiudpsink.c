@@ -62,7 +62,7 @@ enum
 };
 
 static void gst_multiudpsink_base_init (gpointer g_class);
-static void gst_multiudpsink_class_init (GstMultiUDPSink * klass);
+static void gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass);
 static void gst_multiudpsink_init (GstMultiUDPSink * udpsink);
 static void gst_multiudpsink_finalize (GObject * object);
 
@@ -118,7 +118,7 @@ gst_multiudpsink_base_init (gpointer g_class)
 }
 
 static void
-gst_multiudpsink_class_init (GstMultiUDPSink * klass)
+gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -168,6 +168,10 @@ gst_multiudpsink_class_init (GstMultiUDPSink * klass)
   gstelement_class->change_state = gst_multiudpsink_change_state;
 
   gstbasesink_class->render = gst_multiudpsink_render;
+  klass->add = gst_multiudpsink_add;
+  klass->remove = gst_multiudpsink_remove;
+  klass->clear = gst_multiudpsink_clear;
+  klass->get_stats = gst_multiudpsink_get_stats;
 
   GST_DEBUG_CATEGORY_INIT (multiudpsink_debug, "multiudpsink", 0, "UDP sink");
 }
@@ -195,7 +199,7 @@ static GstFlowReturn
 gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
 {
   GstMultiUDPSink *sink;
-  gint ret, size;
+  gint ret, size, num = 0;
   guint8 *data;
   GList *clients;
 
@@ -204,14 +208,15 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   size = GST_BUFFER_SIZE (buffer);
   data = GST_BUFFER_DATA (buffer);
 
-  GST_DEBUG ("about to send %d bytes", size);
-
   g_mutex_lock (sink->client_lock);
+  GST_LOG_OBJECT (bsink, "about to send %d bytes", size);
+
   for (clients = sink->clients; clients; clients = g_list_next (clients)) {
     GstUDPClient *client;
 
     client = (GstUDPClient *) clients->data;
-    GST_DEBUG ("sending %d bytes to client %p", size, client);
+    ++num;
+    GST_LOG_OBJECT (sink, "sending %d bytes to client %p", size, client);
 
     while (TRUE) {
       ret = sendto (*client->sock, data, size, 0,
@@ -227,7 +232,7 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   }
   g_mutex_unlock (sink->client_lock);
 
-  GST_DEBUG ("sent %d bytes", size);
+  GST_LOG_OBJECT (sink, "sent %d bytes to %d clients", size, num);
 
   return GST_FLOW_OK;
 
@@ -316,6 +321,7 @@ gst_multiudpsink_add (GstMultiUDPSink * sink, const gchar * host, gint port)
   struct ip_mreq multi_addr;
   GstUDPClient *client;
 
+  GST_DEBUG_OBJECT (sink, "adding client on host %s, port %d", host, port);
   client = g_new0 (GstUDPClient, 1);
   client->host = g_strdup (host);
   client->port = port;
@@ -414,6 +420,7 @@ gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
 void
 gst_multiudpsink_clear (GstMultiUDPSink * sink)
 {
+  GST_DEBUG_OBJECT (sink, "clearing");
   g_mutex_lock (sink->client_lock);
   g_list_foreach (sink->clients, (GFunc) free_client, sink);
   g_list_free (sink->clients);

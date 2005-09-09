@@ -456,6 +456,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
 
   src = GST_UDPSRC (bsrc);
 
+  GST_DEBUG_OBJECT (src, "creating socket pair");
   if ((ret = socketpair (PF_UNIX, SOCK_STREAM, 0, CONTROL_SOCKETS (src))) < 0)
     goto no_socket_pair;
 
@@ -478,6 +479,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
   src->myaddr.sin_port = htons (src->port);     /* short, network byte order */
   src->myaddr.sin_addr.s_addr = INADDR_ANY;
 
+  GST_DEBUG_OBJECT (src, "binding on port %d", src->port);
   if ((ret =
           bind (src->sock, (struct sockaddr *) &src->myaddr,
               sizeof (src->myaddr))) < 0)
@@ -498,8 +500,10 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
     goto getsockname_error;
 
   port = ntohs (my_addr.sin_port);
+  GST_DEBUG_OBJECT (src, "bound, on port %d", port);
   if (port != src->port) {
     src->port = port;
+    GST_DEBUG_OBJECT (src, "notifying %d", port);
     g_object_notify (G_OBJECT (src), "port");
   }
 

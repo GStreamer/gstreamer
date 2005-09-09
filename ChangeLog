@@ -1,3 +1,15 @@
+2005-09-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-plugins-good.spec.in:
+	  spec file fixes
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_class_init),
+	(gst_multiudpsink_render), (gst_multiudpsink_add),
+	(gst_multiudpsink_clear):
+	  it actually helps to actually stream if we hook up the
+	  "add" signal to an actual implementation
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_start):
+	  some debugging
+
 2005-09-08  Flavio Oliveira  <flavio.oliveira@indt.org.br>
 
 	* ext/jpeg/Makefile.am:

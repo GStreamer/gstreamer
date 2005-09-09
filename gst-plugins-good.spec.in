@@ -24,32 +24,26 @@ Requires(postun): %{gstregister}
 
 BuildRequires:  gcc-c++
 
-@USE_ESD_TRUE@Requires:      esound >= 0.2.8
 @USE_ESD_TRUE@BuildRequires: esound-devel >= 0.2.8
 @USE_ESD_TRUE@Obsoletes:     gstreamer-esd
 @USE_ESD_TRUE@
 @USE_ESD_TRUE@Provides:		gstreamer-audiosrc
 @USE_ESD_TRUE@Provides:		gstreamer-audiosink
-@USE_FLAC_TRUE@Requires:      flac >= 1.0.3
 @USE_FLAC_TRUE@BuildRequires: flac-devel >= 1.0.3
-@USE_GCONF_TRUE@Requires: 	GConf2
 @USE_GCONF_TRUE@BuildRequires: 	GConf2-devel
-@USE_JPEG_TRUE@Requires:      libjpeg
 @USE_JPEG_TRUE@BuildRequires: libjpeg-devel
-@USE_LIBPNG_TRUE@Requires:      libpng >= 1.2.0
+@USE_LIBCACA_TRUE@BuildRequires: libcaca-devel
+@USE_LIBDV_TRUE@BuildRequires: libdv-devel
 @USE_LIBPNG_TRUE@BuildRequires: libpng-devel >= 1.2.0
-# @USE_MIKMOD_TRUE@Requires:      mikmod
-# @USE_MIKMOD_TRUE@BuildRequires: mikmod
+@USE_MIKMOD_TRUE@BuildRequires: mikmod
 @USE_OSS_TRUE@BuildRequires: glibc-devel
-# @USE_PANGO_TRUE@Requires:        pango
-# @USE_PANGO_TRUE@BuildRequires:   pango-devel
-# @USE_RAW1394_TRUE@Requires:      libraw1394
-# @USE_RAW1394_TRUE@BuildRequires: libraw1394-devel
-@USE_SPEEX_TRUE@Requires:	speex
+@USE_PANGO_TRUE@BuildRequires:   pango-devel
+@USE_RAW1394_TRUE@BuildRequires: libraw1394-devel
+@USE_RAW1394_TRUE@BuildRequires: libavc1394-devel
 @USE_SPEEX_TRUE@BuildRequires:	speex-devel
 
 @USE_SHOUT2_TRUE@BuildRequires: libshout-devel >= 2.0
-# @USE_LADSPA_TRUE@BuildRequires: ladspa-devel
+@USE_LADSPA_TRUE@BuildRequires: ladspa-devel
 @USE_AALIB_TRUE@BuildRequires:  aalib-devel >= 1.3
 @USE_AALIB_TRUE@Provides:       gstreamer-aasink = %{version}-%{release}
 
@@ -106,7 +100,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstrtp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrtsp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsmpte.so
-# %{_libdir}/gstreamer-%{majorminor}/libgsttcp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstudp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideobox.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoflip.so
