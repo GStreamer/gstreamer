@@ -26,7 +26,7 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/controller/gst-controller.h>
+#include <gst/controller/gstcontroller.h>
 
 #include "gst/gst-i18n-app.h"
 

@@ -1,4 +1,4 @@
 #include <gst/gst.h>
-#include <gst/controller/gst-controller.h>
+#include <gst/controller/gstcontroller.h>
 
 gst_controller_get_type

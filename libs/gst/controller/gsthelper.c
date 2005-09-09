@@ -2,7 +2,7 @@
  *
  * Copyright (C) <2005> Stefan Kost <ensonic at users dot sf dot net>
  *
- * gst-helper.c: GObject convinience methods for using dynamic properties
+ * gsthelper.c: GObject convenience methods for using dynamic properties
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -30,7 +30,7 @@
  */
 
 #include "config.h"
-#include "gst-controller.h"
+#include "gstcontroller.h"
 
 #define GST_CAT_DEFAULT gst_controller_debug
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DEFAULT);

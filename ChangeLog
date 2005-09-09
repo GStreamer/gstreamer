@@ -1,5 +1,25 @@
 2005-09-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	reviewed by: <delete if not using a buddy>
+
+	* check/gst/gstpad.c: (GST_START_TEST), (name_is_valid),
+	(gst_pad_suite):
+	* configure.ac:
+	* docs/libs/gstreamer-libs.types:
+	* gst/check/gstcheck.c: (gst_check_log_message_func):
+	* gst/gstpad.c:
+	* libs/gst/controller/Makefile.am:
+	* libs/gst/controller/gst-controller.c:
+	* libs/gst/controller/gst-controller.h:
+	* libs/gst/controller/gst-helper.c:
+	* libs/gst/controller/gst-interpolation.c:
+	* libs/gst/controller/gstcontroller.c:
+	* libs/gst/controller/gsthelper.c:
+	* libs/gst/controller/gstinterpolation.c:
+	* tools/gst-inspect.c: (print_plugin_info):
+
+2005-09-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* check/Makefile.am:
 	* check/gst/.cvsignore:
 	* check/gst/gstpipeline.c: (pop_messages), (GST_START_TEST),

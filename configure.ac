@@ -285,7 +285,13 @@ dnl Check for ucontext.h
 AC_CHECK_HEADER(ucontext.h, AC_DEFINE(HAVE_UCONTEXT_H, 1, [defined if we have ucontext.h]))
 
 dnl check for "check", unit testing library/header
-AM_PATH_CHECK(0.9.2, HAVE_CHECK=yes, HAVE_CHECK=no)
+AM_PATH_CHECK(0.9.2,
+    [
+        HAVE_CHECK=yes
+        AC_MSG_NOTICE(CHECK_CFLAGS: $CHECK_CFLAGS)
+        AC_MSG_NOTICE(CHECK_LIBS: $CHECK_LIBS)
+    ]
+    HAVE_CHECK=no)
 AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
 
 dnl ######################################################################

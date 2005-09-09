@@ -2,7 +2,7 @@
  *
  * Copyright (C) <2005> Stefan Kost <ensonic at users dot sf dot net>
  *
- * gst-interpolation.c: Interpolation methodws for dynamic properties
+ * gstinterpolation.c: Interpolation methods for dynamic properties
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,12 +21,12 @@
  */
 
 #include "config.h"
-#include "gst-controller.h"
+#include "gstcontroller.h"
 
 #define GST_CAT_DEFAULT gst_controller_debug
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DEFAULT);
 
-// common helper
+/* common helper */
 
 /*
  * gst_controlled_property_find_timed_value_node:

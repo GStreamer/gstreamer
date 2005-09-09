@@ -2,7 +2,7 @@
  *
  * Copyright (C) <2005> Stefan Kost <ensonic at users dot sf dot net>
  *
- * gst-controller.c: dynamic parameter control subsystem
+ * gstcontroller.c: dynamic parameter control subsystem
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -48,8 +48,8 @@
  * Again its not a lot to change.
  * <orderedlist>
  *   <listitem><para>
- *     first put some properties under control, by calling 
- *     controller=g_object_control_properties(object, "prop1", "prop2",...);
+ *     first put some properties under control, by calling
+ *     controller = g_object_control_properties(object, "prop1", "prop2",...);
  *   </para></listitem>
  *   <listitem><para>
  *     set how the controller will smooth inbetween values.
@@ -57,8 +57,8 @@
  *   </para></listitem>
  *   <listitem><para>
  *     set key values
- *     gst_controller_set(controller,"prop1",0*GST_SECOND,value1);
- *     gst_controller_set(controller,"prop1",1*GST_SECOND,value2);
+ *     gst_controller_set (controller, "prop1" ,0 * GST_SECOND, value1);
+ *     gst_controller_set (controller, "prop1" ,1 * GST_SECOND, value2);
  *   </para></listitem>
  *   <listitem><para>
  *     start your pipeline
@@ -67,7 +67,7 @@
  */
 
 #include "config.h"
-#include "gst-controller.h"
+#include "gstcontroller.h"
 
 #define GST_CAT_DEFAULT gst_controller_debug
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DEFAULT);
