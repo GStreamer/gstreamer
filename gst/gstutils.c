@@ -1850,6 +1850,9 @@ get_state_func (GstElement * element, gpointer unused)
   while (ret == GST_STATE_CHANGE_ASYNC)
     ret = gst_element_get_state (element, NULL, NULL, NULL);
 
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+      "thread done waiting on state change");
+
   gst_object_unref (element);
 }
 
@@ -1859,8 +1862,8 @@ get_state_func (GstElement * element, gpointer unused)
  *
  * Spawns a thread calling gst_element_get_state on @bin with infinite timeout.
  *
- * In practice this is done because if a bin returns %GST_STATE_CHANGE_ASYNC from a
- * state change it will not commit its state until someone calls
+ * In practice this is done because if a bin returns %GST_STATE_CHANGE_ASYNC
+ * from a state change, it will not commit its state until someone calls
  * gst_element_get_state() on it. Thus having another thread checking the bin's
  * state will ensure that a state-changed message gets posted on the bus
  * eventually.

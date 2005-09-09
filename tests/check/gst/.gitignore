@@ -13,6 +13,7 @@ gstmessage
 gstminiobject
 gstobject
 gstpad
+gstpipeline
 gststructure
 gstsystemclock
 gsttag

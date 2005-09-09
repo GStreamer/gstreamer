@@ -190,8 +190,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/gstreamer-%{majorminor}/gst/dataprotocol
 %{_includedir}/gstreamer-%{majorminor}/gst/getbits
 
-%{_libdir}/libgstdataprotocol-%{majorminor}.so
 %{_libdir}/libgstreamer-%{majorminor}.so
+%{_libdir}/libgstdataprotocol-%{majorminor}.so
 %{_libdir}/libgstbase-%{majorminor}.so
 %{_libdir}/libgstcontroller-%{majorminor}.so
 

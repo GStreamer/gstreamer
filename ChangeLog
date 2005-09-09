@@ -1,3 +1,15 @@
+2005-09-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
+	* check/gst/.cvsignore:
+	* check/gst/gstpipeline.c: (pop_messages), (GST_START_TEST),
+	(gst_pipeline_suite), (main):
+	  adding a test for pipelines and state changes
+	* gst/gstutils.c: (get_state_func):
+	  add some debugging
+	* gstreamer.spec.in:
+	  fix up spec file
+
 2005-09-08  Michael Smith <msmith@fluendo.com>
 
 	* gst/elements/gstfilesrc.c: (gst_file_src_map_region),
