@@ -290,6 +290,12 @@ gst_video_box_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+
+  if (video_box->box_left == 0 && video_box->box_right == 0 &&
+      video_box->box_top == 0 && video_box->box_bottom == 0)
+    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (video_box), TRUE);
+  else
+    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (video_box), FALSE);
 }
 static void
 gst_video_box_get_property (GObject * object, guint prop_id, GValue * value,
@@ -376,20 +382,16 @@ gst_video_box_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   return ret;
 }
 
-#define ROUND_UP_2(x)  (((x)+1)&~1)
-#define ROUND_UP_4(x)  (((x)+3)&~3)
-#define ROUND_UP_8(x)  (((x)+7)&~7)
-
 /* see gst-plugins/gst/games/gstvideoimage.c, paint_setup_I420() */
-#define GST_VIDEO_I420_Y_ROWSTRIDE(width) (ROUND_UP_4(width))
-#define GST_VIDEO_I420_U_ROWSTRIDE(width) (ROUND_UP_8(width)/2)
-#define GST_VIDEO_I420_V_ROWSTRIDE(width) ((ROUND_UP_8(GST_VIDEO_I420_Y_ROWSTRIDE(width)))/2)
+#define GST_VIDEO_I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
+#define GST_VIDEO_I420_U_ROWSTRIDE(width) (GST_ROUND_UP_8(width)/2)
+#define GST_VIDEO_I420_V_ROWSTRIDE(width) ((GST_ROUND_UP_8(GST_VIDEO_I420_Y_ROWSTRIDE(width)))/2)
 
 #define GST_VIDEO_I420_Y_OFFSET(w,h) (0)
-#define GST_VIDEO_I420_U_OFFSET(w,h) (GST_VIDEO_I420_Y_OFFSET(w,h)+(GST_VIDEO_I420_Y_ROWSTRIDE(w)*ROUND_UP_2(h)))
-#define GST_VIDEO_I420_V_OFFSET(w,h) (GST_VIDEO_I420_U_OFFSET(w,h)+(GST_VIDEO_I420_U_ROWSTRIDE(w)*ROUND_UP_2(h)/2))
+#define GST_VIDEO_I420_U_OFFSET(w,h) (GST_VIDEO_I420_Y_OFFSET(w,h)+(GST_VIDEO_I420_Y_ROWSTRIDE(w)*GST_ROUND_UP_2(h)))
+#define GST_VIDEO_I420_V_OFFSET(w,h) (GST_VIDEO_I420_U_OFFSET(w,h)+(GST_VIDEO_I420_U_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
 
-#define GST_VIDEO_I420_SIZE(w,h)     (GST_VIDEO_I420_V_OFFSET(w,h)+(GST_VIDEO_I420_V_ROWSTRIDE(w)*ROUND_UP_2(h)/2))
+#define GST_VIDEO_I420_SIZE(w,h)     (GST_VIDEO_I420_V_OFFSET(w,h)+(GST_VIDEO_I420_V_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
 
 static gboolean
 gst_video_box_get_unit_size (GstBaseTransform * trans, GstCaps * caps,

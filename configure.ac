@@ -271,7 +271,6 @@ GST_PLUGINS_ALL="\
 		avi \
 		debug \
 		effectv \
-		fdsrc \
 		goom \
 		law \
 		level \
@@ -569,7 +568,6 @@ gst/autodetect/Makefile
 gst/avi/Makefile
 gst/debug/Makefile
 gst/effectv/Makefile
-gst/fdsrc/Makefile
 gst/goom/Makefile
 gst/law/Makefile
 gst/level/Makefile

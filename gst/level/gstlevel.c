@@ -74,7 +74,6 @@ enum
 GST_BOILERPLATE (GstLevel, gst_level, GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM);
 
-
 static void gst_level_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_level_get_property (GObject * object, guint prop_id,
@@ -82,8 +81,8 @@ static void gst_level_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_level_set_caps (GstBaseTransform * trans, GstCaps * in,
     GstCaps * out);
-static GstFlowReturn gst_level_transform (GstBaseTransform * trans,
-    GstBuffer * in, GstBuffer * out);
+static GstFlowReturn gst_level_transform_ip (GstBaseTransform * trans,
+    GstBuffer * in);
 
 
 static void
@@ -129,7 +128,8 @@ gst_level_class_init (GstLevelClass * klass)
   GST_DEBUG_CATEGORY_INIT (level_debug, "level", 0, "Level calculation");
 
   trans_class->set_caps = gst_level_set_caps;
-  trans_class->transform = gst_level_transform;
+  trans_class->transform_ip = gst_level_transform_ip;
+  trans_class->passthrough_on_same_caps = TRUE;
 }
 
 static void
@@ -331,7 +331,7 @@ gst_level_message_append_channel (GstMessage * m, gdouble rms, gdouble peak,
 }
 
 static GstFlowReturn
-gst_level_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
+gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 {
   GstLevel *filter;
   gpointer in_data;
