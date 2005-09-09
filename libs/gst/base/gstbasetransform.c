@@ -797,8 +797,8 @@ gst_base_transform_default_prepare_buf (GstBaseTransform * trans,
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   /* See if we want to prepare the buffer for in place output */
-  if (GST_BUFFER_SIZE (input) == size && bclass->transform_ip) {
-    if (gst_buffer_is_writable (input) && (*buf == NULL)) {
+  if (*buf == NULL && GST_BUFFER_SIZE (input) == size && bclass->transform_ip) {
+    if (gst_buffer_is_writable (input)) {
       /* Input buffer is already writable, just ref and return it */
       *buf = input;
       gst_buffer_ref (input);
@@ -823,14 +823,14 @@ gst_base_transform_default_prepare_buf (GstBaseTransform * trans,
    * buffer flags */
   if (*buf != input && GST_MINI_OBJECT_REFCOUNT_VALUE (*buf) == 1) {
 
+    if (copy_inbuf && gst_buffer_is_writable (*buf))
+      memcpy (GST_BUFFER_DATA (*buf), GST_BUFFER_DATA (input), size);
+
     gst_buffer_stamp (*buf, input);
     GST_BUFFER_FLAGS (*buf) |= GST_BUFFER_FLAGS (input) &
         (GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_IN_CAPS |
         GST_BUFFER_FLAG_DELTA_UNIT);
   }
-
-  if (copy_inbuf && gst_buffer_is_writable (*buf))
-    memcpy (GST_BUFFER_DATA (*buf), GST_BUFFER_DATA (input), size);
 
   return ret;
 }
@@ -1070,7 +1070,11 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
     GST_LOG_OBJECT (trans, "handling buffer %p of size %d and offset NONE",
         inbuf, GST_BUFFER_SIZE (inbuf));
 
-  if (!trans->negotiated && !trans->passthrough)
+  /* Don't allow buffer handling before negotiation, except in passthrough mode
+   * or if the class doesn't implement a set_caps function (in which case it doesn't
+   * care about caps)
+   */
+  if (!trans->negotiated && !trans->passthrough && (bclass->set_caps != NULL))
     goto not_negotiated;
 
   if (trans->passthrough) {
@@ -1088,6 +1092,7 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
   }
 
   want_in_place = (bclass->transform_ip != NULL) && trans->always_in_place;
+  *outbuf = NULL;
 
   if (want_in_place) {
     /* If want_in_place is TRUE, we may need to prepare a new output buffer 

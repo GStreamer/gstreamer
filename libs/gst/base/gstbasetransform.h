@@ -51,9 +51,6 @@ struct _GstBaseTransform {
   gboolean	 passthrough;
   gboolean	 always_in_place;
 
-  /* Set if caps on each pad are equal */
-  gboolean	 have_same_caps;
-
   GstCaps	*cache_caps1;
   guint		 cache_caps1_size;
   GstCaps	*cache_caps2;
@@ -70,8 +67,12 @@ struct _GstBaseTransform {
   gint64         segment_stop;
   gint64         segment_base;
 
+  /* FIXME: When adjusting the padding, move this to a nice place in the structure */
+  /* Set if caps on each pad are equal */
+  gboolean	 have_same_caps;
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING];
+  gpointer       _gst_reserved[GST_PADDING - 1];
 };
 
 /**

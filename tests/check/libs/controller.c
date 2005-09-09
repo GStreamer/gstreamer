@@ -22,7 +22,7 @@
 
 #include "config.h"
 #include <gst/check/gstcheck.h>
-#include <gst/controller/gst-controller.h>
+#include <gst/controller/gstcontroller.h>
 
 /* LOCAL TEST ELEMENT */
 

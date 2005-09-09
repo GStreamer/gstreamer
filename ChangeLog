@@ -1,3 +1,19 @@
+2005-09-10  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* check/gst-libs/controller.c:
+	  Header include fix.
+	* gst/base/gstbasetransform.c:
+	(gst_base_transform_default_prepare_buf),
+	(gst_base_transform_handle_buffer):
+	* gst/base/gstbasetransform.h:
+	  Some more basetransform changes and fixes to enable sub-classes
+	  that modify buffer metadata only.
+	* gst/elements/gstcapsfilter.c: (gst_capsfilter_class_init),
+	(gst_capsfilter_init), (gst_capsfilter_transform_ip),
+	(gst_capsfilter_prepare_buf):
+	  If the output pad has fixed allowed caps and input buffers 
+	  don't have any, set the fixed caps on outgoing buffers.
+
 2005-09-09  Jan Schmidt  <thaytan@mad.scientist.com>
 	* check/elements/identity.c: (GST_START_TEST):
 	  Make the error a little clearer when the test fails because

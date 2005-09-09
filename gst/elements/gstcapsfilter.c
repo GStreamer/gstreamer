@@ -102,7 +102,8 @@ static GstCaps *gst_capsfilter_transform_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps);
 static GstFlowReturn gst_capsfilter_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
-
+static GstFlowReturn gst_capsfilter_prepare_buf (GstBaseTransform * trans,
+    GstBuffer * input, gint size, GstCaps * caps, GstBuffer ** buf);
 
 static void
 gst_capsfilter_base_init (gpointer g_class)
@@ -135,12 +136,12 @@ gst_capsfilter_class_init (GstCapsFilterClass * klass)
   trans_class = (GstBaseTransformClass *) klass;
   trans_class->transform_caps = gst_capsfilter_transform_caps;
   trans_class->transform_ip = gst_capsfilter_transform_ip;
+  trans_class->prepare_output_buffer = gst_capsfilter_prepare_buf;
 }
 
 static void
 gst_capsfilter_init (GstCapsFilter * filter, GstCapsFilterClass * g_class)
 {
-  gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), TRUE);
   filter->filter_caps = gst_caps_new_any ();
 }
 
@@ -216,15 +217,61 @@ gst_capsfilter_transform_caps (GstBaseTransform * base,
 static GstFlowReturn
 gst_capsfilter_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 {
-  /* Ensure that outgoing buffers have caps if we can, so that pipelines
-   * like:
-   *   gst-launch filesrc location=rawsamples.raw ! 
-   *       audio/x-raw-int,width=16,depth=16,rate=48000,channels=2,
-   *       endianness=4321,signed='(boolean)'true ! alsasink
-   * will work.
-   */
-  if (GST_BUFFER_CAPS (buf) == NULL) {
+  /* No actual work here. It's all done in the prepare output buffer
+   * func. */
+  return GST_FLOW_OK;
+}
+
+/* Output buffer preparation... if the buffer has no caps, and
+ * our allowed output caps is fixed, then give the caps to the
+ * buffer.
+ * This ensures that outgoing buffers have caps if we can, so 
+ * that pipelines like:
+ *   gst-launch filesrc location=rawsamples.raw ! 
+ *       audio/x-raw-int,width=16,depth=16,rate=48000,channels=2,
+ *       endianness=4321,signed='(boolean)'true ! alsasink
+ * will work.
+ */
+static GstFlowReturn
+gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
+    gint size, GstCaps * caps, GstBuffer ** buf)
+{
+  if (GST_BUFFER_CAPS (input) != NULL) {
+    /* Output buffer already has caps */
+    GST_DEBUG_OBJECT (trans, "Input buffer already has caps");
+    gst_buffer_ref (input);
+    *buf = input;
+  } else {
+    /* Buffer has no caps. See if the output pad only supports fixed caps */
+    GstCaps *out_caps;
+
+    if (GST_PAD_CAPS (trans->srcpad) != NULL) {
+      gst_caps_ref (GST_PAD_CAPS (trans->srcpad));
+      out_caps = GST_PAD_CAPS (trans->srcpad);
+    } else {
+      out_caps = gst_pad_get_allowed_caps (trans->srcpad);
+      g_return_val_if_fail (out_caps != NULL, GST_FLOW_ERROR);
+    }
+
+    if (gst_caps_is_fixed (out_caps) && !gst_caps_is_empty (out_caps)) {
+      GST_DEBUG_OBJECT (trans, "Have fixed output caps %"
+          GST_PTR_FORMAT " to apply to buffer with no caps", out_caps);
+      if (gst_buffer_is_writable (input)) {
+        gst_buffer_ref (input);
+        *buf = input;
+      } else {
+        GST_DEBUG_OBJECT (trans, "Creating sub-buffer and setting caps");
+        *buf = gst_buffer_create_sub (input, 0, GST_BUFFER_SIZE (input));
+      }
+      GST_BUFFER_CAPS (input) = out_caps;
+
+      if (GST_PAD_CAPS (trans->srcpad) == NULL)
+        gst_pad_set_caps (trans->srcpad, out_caps);
+    } else {
+      gst_caps_unref (out_caps);
+    }
   }
 
-  return GST_FLOW_OK;
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->
+      prepare_output_buffer (trans, input, size, caps, buf);
 }
