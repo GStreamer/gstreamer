@@ -29,6 +29,7 @@
 
 #include "gstfakesink.h"
 #include "gstfakesrc.h"
+#include "gstfdsrc.h"
 #include "gstfilesink.h"
 #include "gstfilesrc.h"
 #include "gstidentity.h"
@@ -50,6 +51,7 @@ static struct _elements_entry _elements[] = {
   {"capsfilter", GST_RANK_NONE, gst_capsfilter_get_type},
   {"fakesrc", GST_RANK_NONE, gst_fake_src_get_type},
   {"fakesink", GST_RANK_NONE, gst_fake_sink_get_type},
+  {"fdsrc", GST_RANK_NONE, gst_fdsrc_get_type},
   {"filesrc", GST_RANK_NONE, gst_file_src_get_type},
   {"identity", GST_RANK_NONE, gst_identity_get_type},
   {"filesink", GST_RANK_NONE, gst_file_sink_get_type},

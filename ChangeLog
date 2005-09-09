@@ -1,3 +1,35 @@
+2005-09-09  Jan Schmidt  <thaytan@mad.scientist.com>
+	* check/elements/identity.c: (GST_START_TEST):
+	  Make the error a little clearer when the test fails because
+	  identity made a copy of the buffer.
+	* docs/gst/gstreamer-sections.txt:
+	  New symbols in gstbasetransform.h
+	* gst/base/gstbasetransform.c: (gst_base_transform_class_init),
+	(gst_base_transform_init), (gst_base_transform_transform_size),
+	(gst_base_transform_configure_caps), (gst_base_transform_setcaps),
+	(gst_base_transform_default_prepare_buf),
+	(gst_base_transform_get_unit_size),
+	(gst_base_transform_buffer_alloc),
+	(gst_base_transform_handle_buffer), (gst_base_transform_chain),
+	(gst_base_transform_change_state),
+	(gst_base_transform_set_passthrough),
+	(gst_base_transform_set_in_place),
+	(gst_base_transform_is_in_place):
+	* gst/base/gstbasetransform.h:
+	  Change BaseTransform to separate in_place operate from same_caps
+	  output. in_place implies that the element can perform the transform
+	  on incoming buffers in-place, even if the caps on the output are
+	  different.
+	  Sub-class elements can now implement special buffer allocation
+	  methods for outgoing buffers if they wish to.
+	  Big documentation addition.
+	* gst/elements/gstcapsfilter.c: (gst_capsfilter_transform_ip):
+	* gst/elements/gstelements.c:
+	  Changes for basetransform modifications.
+	* gst/elements/Makefile.am:
+	* gst/elements/gstfdsrc.c: (gst_fdsrc_init), (gst_fdsrc_create):
+	  Compile fix. Extra debug output.
+
 2005-09-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/gst/gstpad.c: (GST_START_TEST), (name_is_valid),

@@ -216,5 +216,15 @@ gst_capsfilter_transform_caps (GstBaseTransform * base,
 static GstFlowReturn
 gst_capsfilter_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 {
+  /* Ensure that outgoing buffers have caps if we can, so that pipelines
+   * like:
+   *   gst-launch filesrc location=rawsamples.raw ! 
+   *       audio/x-raw-int,width=16,depth=16,rate=48000,channels=2,
+   *       endianness=4321,signed='(boolean)'true ! alsasink
+   * will work.
+   */
+  if (GST_BUFFER_CAPS (buf) == NULL) {
+  }
+
   return GST_FLOW_OK;
 }

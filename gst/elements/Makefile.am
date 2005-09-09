@@ -12,6 +12,7 @@ libgstelements_la_SOURCES =	\
 	gstcapsfilter.c		\
 	gstfakesrc.c		\
 	gstfakesink.c		\
+	gstfdsrc.c		\
 	gstfilesink.c		\
 	gstfilesrc.c		\
 	gstidentity.c		\
@@ -29,6 +30,7 @@ noinst_HEADERS =		\
 	gstbufferstore.h	\
 	gstfakesink.h		\
 	gstfakesrc.h		\
+	gstfdsrc.h		\
 	gstfilesink.h		\
 	gstfilesrc.h		\
 	gstidentity.h		\

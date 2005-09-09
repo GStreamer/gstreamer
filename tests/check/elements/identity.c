@@ -101,7 +101,9 @@ GST_START_TEST (test_one_buffer)
   memcpy (GST_BUFFER_DATA (buffer), "data", 4);
   /* pushing gives away my reference ... */
   gst_pad_push (mysrcpad, buffer);
-  /* ... but it ends up being collected on the global buffer list */
+  /* ... but it should end up being collected on the global buffer list */
+  fail_unless (g_list_length (buffers) == 1);
+  fail_unless ((GstBuffer *) (g_list_first (buffers)->data) == buffer);
   ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
 
   /* cleanup */

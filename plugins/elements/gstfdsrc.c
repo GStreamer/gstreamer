@@ -136,7 +136,7 @@ gst_fdsrc_class_init (GstFdSrcClass * klass)
 }
 
 static void
-gst_fdsrc_init (GstFdSrc * fdsrc)
+gst_fdsrc_init (GstFdSrc * fdsrc, GstFdSrcClass * klass)
 {
   // TODO set live only if it's actually a live source
   gst_base_src_set_live (GST_BASE_SRC (fdsrc), TRUE);
@@ -260,9 +260,11 @@ gst_fdsrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   if (retval == -1) {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("select on file descriptor: %s.", g_strerror (errno)));
+    GST_DEBUG_OBJECT (psrc, "Error during select");
     return GST_FLOW_ERROR;
   } else if (retval == 0) {
     g_signal_emit (G_OBJECT (src), gst_fdsrc_signals[SIGNAL_TIMEOUT], 0);
+    GST_DEBUG_OBJECT (psrc, "Timeout in select");
     return GST_FLOW_ERROR;
   }
 #endif
@@ -277,14 +279,18 @@ gst_fdsrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
     GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
     src->curoffset += readbytes;
 
+    GST_DEBUG_OBJECT (psrc, "Read buffer of size %u.", readbytes);
+
     /* we're done, return the buffer */
     *outbuf = buf;
     return GST_FLOW_OK;
   } else if (readbytes == 0) {
+    GST_DEBUG_OBJECT (psrc, "Read 0 bytes. EOS.");
     return GST_FLOW_ERROR;
   } else {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("read on file descriptor: %s.", g_strerror (errno)));
+    GST_DEBUG_OBJECT (psrc, "Error reading from fd");
     return GST_FLOW_ERROR;
   }
 }

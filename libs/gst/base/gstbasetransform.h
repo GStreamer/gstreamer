@@ -47,9 +47,12 @@ struct _GstBaseTransform {
   GstPad	*sinkpad;
   GstPad	*srcpad;
 
+  /* Set by sub-class */
   gboolean	 passthrough;
+  gboolean	 always_in_place;
 
-  gboolean	 in_place;
+  /* Set if caps on each pad are equal */
+  gboolean	 have_same_caps;
 
   GstCaps	*cache_caps1;
   guint		 cache_caps1_size;
@@ -121,7 +124,7 @@ struct _GstBaseTransformClass {
   gboolean      (*event)        (GstBaseTransform *trans, GstEvent *event);
 
   /* transform one incoming buffer to one outgoing buffer.
-   * Always needs to be implemented.
+   * Always needs to be implemented unless always operating in-place.
    * transform function is allowed to change size/timestamp/duration of
    * the outgoing buffer. */
   GstFlowReturn (*transform)    (GstBaseTransform *trans, GstBuffer *inbuf,
@@ -130,12 +133,28 @@ struct _GstBaseTransformClass {
   /* transform a buffer inplace */
   GstFlowReturn (*transform_ip) (GstBaseTransform *trans, GstBuffer *buf);
 
+  /* FIXME: When adjusting the padding, more these to nicer places in the class */
+  /* Set by child classes to automatically do passthrough mode */
+  gboolean       passthrough_on_same_caps;
+
+  /* Subclasses can override this to do their own allocation of output buffers.
+   * Elements that only do analysis can return a subbuffer or even just 
+   * increment the reference to the input buffer (if in passthrough mode)
+   */
+  GstFlowReturn (*prepare_output_buffer) (GstBaseTransform * trans, 
+     GstBuffer *input, gint size, GstCaps *caps, GstBuffer **buf);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING];
+  gpointer       _gst_reserved[GST_PADDING - 2];
 };
 
-void		gst_base_transform_set_passthrough (GstBaseTransform *trans, gboolean passthrough);
+void		gst_base_transform_set_passthrough (GstBaseTransform *trans, 
+	            gboolean passthrough);
 gboolean	gst_base_transform_is_passthrough (GstBaseTransform *trans);
+
+void		gst_base_transform_set_in_place (GstBaseTransform *trans, 
+	            gboolean in_place);
+gboolean	gst_base_transform_is_in_place (GstBaseTransform *trans);
 
 GType gst_base_transform_get_type (void);
 

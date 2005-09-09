@@ -28,27 +28,173 @@
  *
  * This base class is for filter elements that process data.
  *
+ * It provides for:
  * <itemizedlist>
  *   <listitem><para>one sinkpad and one srcpad</para></listitem>
  *   <listitem><para>
- *      possible formats on sink and source pad implemented
+ *      Possible formats on sink and source pad implemented
  *      with custom transform_caps function. By default uses
  *      same format on sink and source.
  *   </para></listitem>
- *   <listitem><para>handles state changes</para></listitem>
- *   <listitem><para>does flushing</para></listitem>
- *   <listitem><para>push mode</para></listitem>
+ *   <listitem><para>Handles state changes</para></listitem>
+ *   <listitem><para>Does flushing</para></listitem>
+ *   <listitem><para>Push mode</para></listitem>
  *   <listitem><para>
- *       pull mode if transform can operate on arbitrary data
+ *       Pull mode if the sub-class transform can operate on arbitrary data
  *    </para></listitem>
  * </itemizedlist>
+ *
+ * Use Cases:
+ * <orderedlist>
+ * <listitem>
+ *   <itemizedlist><title>Passthrough mode</title>
+ *   <listitem><para>
+ *     Element has no interest in modifying the buffer. It may want to inspect it,
+ *     in which case the element should have a transform_ip function. If there
+ *     is no transform_ip function in passthrough mode, the buffer is pushed
+ *     intact.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     On the GstBaseTransformClass is the passthrough_on_same_caps variable
+ *     which will automatically set/unset passthrough based on whether the
+ *     element negotiates the same caps on both pads.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     passthrough_on_same_caps on an element that doesn't implement a transform_caps
+ *     function is useful for elements that only inspect data (such as level)
+ *   </para></listitem>
+ *   </itemizedlist>
+ *   <itemizedlist>
+ *   <title>Example elements</title>
+ *     <listitem>Level</listitem>
+ *     <listitem>Videoscale, audioconvert, ffmpegcolorspace, audioresample in certain modes.</listitem>
+ *   </itemizedlist>
+ * </listitem>
+ * <listitem>
+ *   <itemizedlist><title>Modifications in-place - input buffer and output buffer are the same thing.</title>
+ *   <listitem><para>
+ *     The element must implement a transform_ip function.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Output buffer size must <= input buffer size
+ *   </para></listitem>
+ *   <listitem><para>
+ *     If the always_in_place flag is set, non-writable buffers will be copied and
+ *     passed to the transform_ip function, otherwise a new buffer will be created
+ *     and the transform function called.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Incoming writable buffers will be passed to the transform_ip function immediately.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     only implementing transform_ip and not transform implies always_in_place =
+ *     TRUE
+ *   </para></listitem>
+ *   </itemizedlist>
+ *   <itemizedlist>
+ *   <title>Example elements</title>
+ *     <listitem>Volume</listitem>
+ *     <listitem>Audioconvert in certain modes (signed/unsigned conversion)</listitem>
+ *     <listitem>ffmpegcolorspace in certain modes (endianness swapping)</listitem>
+ *   </itemizedlist>
+ *  </listitem>
+ * <listitem>
+ *   <itemizedlist><title>Modifications only to the caps/metadata of a buffer</title>
+ *   <listitem><para>
+ *     The element does not require writable data, but non-writable buffers should
+ *     be subbuffered so that the meta-information can be replaced.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Elements wishing to operate in this mode should replace the
+ *     prepare_output_buffer method to create subbuffers of the input buffer and
+ *     set always_in_place to TRUE
+ *   </para></listitem>
+ *   </itemizedlist>
+ *   <itemizedlist>
+ *   <title>Example elements</title>
+ *     <listitem>Capsfilter when setting caps on outgoing buffers that have none.</listitem>
+ *     <listitem>identity when it is going to re-timestamp buffers by datarate.</listitem>
+ *   </itemizedlist>
+ * </listitem>
+ * <listitem>
+ *   <itemizedlist><title>Normal mode</title>
+ *   <listitem><para>
+ *     always_in_place flag is not set, or there is no transform_ip function
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Element will receive an input buffer and output buffer to operate on.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Output buffer is allocated by calling the prepare_output_buffer function.
+ *   </para></listitem>
+ *   </itemizedlist>
+ *   <itemizedlist>
+ *   <title>Example elements</title>
+ *     <listitem>Videoscale, ffmpegcolorspace, audioconvert when doing scaling/conversions</listitem>
+ *   </itemizedlist>
+ * </listitem>
+ * <listitem>
+ *   <itemizedlist><title>Special output buffer allocations</title>
+ *   <listitem><para>
+ *     Elements which need to do special allocation of their output buffers other
+ *     than what gst_buffer_pad_alloc allows should implement a
+ *     prepare_output_buffer method, which calls the parent implementation and
+ *     passes the newly allocated buffer.
+ *   </para></listitem>
+ *   </itemizedlist>
+ *   <itemizedlist>
+ *   <title>Example elements</title>
+ *     <listitem>efence</listitem>
+ *   </itemizedlist>
+ * </listitem>
+ * </orderedlist>
+ *
+ * <itemizedlist><title>Sub-class settable flags on GstBaseTransform</title>
+ * <listitem><para>
+ *   <itemizedlist><title>passthrough</title>
+ *     <listitem><para>
+ *       Implies that in the current configuration, the sub-class is not
+ *       interested in modifying the buffers.
+ *     </para></listitem>
+ *     <listitem><para>
+ *       Elements which are always in passthrough mode whenever the same caps has 
+ *       been negotiated on both pads can set the class variable 
+ *       passthrough_on_same_caps to have this behaviour automatically.
+ *     </para></listitem>
+ *   </itemizedlist>
+ * </para></listitem>
+ * <listitem><para>
+ *   <itemizedlist><title>always_in_place</title>
+ *     <listitem><para>
+ *       Determines whether a non-writable buffer will be copied before passing
+ *       to the transform_ip function.
+ *     </para></listitem>
+ *     <listitem><para>
+ *       Implied TRUE if no transform function is implemented.
+ *     </para></listitem>
+ *     <listitem><para>
+ *       Implied FALSE if ONLY transform function is implemented.
+ *     </para></listitem>
+ *   </itemizedlist>
+ * </para></listitem>
+ * </itemizedlist>
+ *
+ * <itemizedlist><title>Retrictions on sub-class behaviour</title>
+ * <listitem><para>
+ *    Sub-classes which override the prepare_output_buffer function need to call
+ *    the parent implementation if they allocate a new buffer, which will copy
+ *    buffer flags onto the new buffer.
+ * </para></listitem>
+ * </itemizedlist>
+ * 
 */
-
-#include <stdlib.h>
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
+
+#include <stdlib.h>
+#include <string.h>
 
 #include "../gst-i18n-lib.h"
 #include "gstbasetransform.h"
@@ -75,7 +221,9 @@ static GstElementClass *parent_class = NULL;
 static void gst_base_transform_base_init (gpointer g_class);
 static void gst_base_transform_class_init (GstBaseTransformClass * klass);
 static void gst_base_transform_init (GstBaseTransform * trans,
-    gpointer g_class);
+    GstBaseTransformClass * klass);
+static GstFlowReturn gst_base_transform_default_prepare_buf (GstBaseTransform *
+    trans, GstBuffer * input, gint size, GstCaps * caps, GstBuffer ** buf);
 
 GType
 gst_base_transform_get_type (void)
@@ -161,17 +309,22 @@ gst_base_transform_class_init (GstBaseTransformClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_transform_change_state);
+
+  klass->prepare_output_buffer =
+      GST_DEBUG_FUNCPTR (gst_base_transform_default_prepare_buf);
+  klass->passthrough_on_same_caps = FALSE;
 }
 
 static void
-gst_base_transform_init (GstBaseTransform * trans, gpointer g_class)
+gst_base_transform_init (GstBaseTransform * trans,
+    GstBaseTransformClass * bclass)
 {
   GstPadTemplate *pad_template;
 
   GST_DEBUG ("gst_base_transform_init");
 
   pad_template =
-      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "sink");
+      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (bclass), "sink");
   g_return_if_fail (pad_template != NULL);
   trans->sinkpad = gst_pad_new_from_template (pad_template, "sink");
   gst_pad_set_getcaps_function (trans->sinkpad,
@@ -189,7 +342,7 @@ gst_base_transform_init (GstBaseTransform * trans, gpointer g_class)
   gst_element_add_pad (GST_ELEMENT (trans), trans->sinkpad);
 
   pad_template =
-      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "src");
+      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (bclass), "src");
   g_return_if_fail (pad_template != NULL);
   trans->srcpad = gst_pad_new_from_template (pad_template, "src");
   gst_pad_set_getcaps_function (trans->srcpad,
@@ -202,11 +355,20 @@ gst_base_transform_init (GstBaseTransform * trans, gpointer g_class)
       GST_DEBUG_FUNCPTR (gst_base_transform_src_activate_pull));
   gst_element_add_pad (GST_ELEMENT (trans), trans->srcpad);
 
-  trans->passthrough = FALSE;
   trans->delay_configure = FALSE;
   trans->pending_configure = FALSE;
   trans->cache_caps1 = NULL;
   trans->cache_caps2 = NULL;
+
+  trans->passthrough = FALSE;
+  if (bclass->transform == NULL) {
+    /* If no transform function, always_in_place is TRUE */
+    GST_DEBUG_OBJECT (trans, "setting in_place TRUE");
+    trans->always_in_place = TRUE;
+
+    if (bclass->transform_ip == NULL)
+      trans->passthrough = TRUE;
+  }
 }
 
 static GstCaps *
@@ -283,7 +445,10 @@ gst_base_transform_transform_size (GstBaseTransform * trans,
     GST_DEBUG_OBJECT (trans, "input size %d, input unit size %d", size,
         inunitsize);
     g_return_val_if_fail (inunitsize != 0, FALSE);
-    g_return_val_if_fail (size % inunitsize == 0, FALSE);
+    if (size % inunitsize != 0) {
+      g_warning ("Size %u is not a multiple of unit size %u", size, inunitsize);
+      return FALSE;
+    }
 
     units = size / inunitsize;
     g_return_val_if_fail (gst_base_transform_get_unit_size (trans, othercaps,
@@ -363,8 +528,20 @@ gst_base_transform_configure_caps (GstBaseTransform * trans, GstCaps * in,
   gst_caps_replace (&trans->cache_caps1, NULL);
   gst_caps_replace (&trans->cache_caps2, NULL);
 
+  /* If we've a transform_ip method and same input/output caps, set in_place
+   * by default. If for some reason the sub-class prefers using a transform
+   * function, it can clear the in place flag in the set_caps */
+  gst_base_transform_set_in_place (trans,
+      klass->transform_ip && trans->have_same_caps);
+
+  /* Set the passthrough if the class wants passthrough_on_same_caps
+   * and we have the same caps on each pad */
+  if (klass->passthrough_on_same_caps)
+    gst_base_transform_set_passthrough (trans, trans->have_same_caps);
+
   /* now configure the element with the caps */
   if (klass->set_caps) {
+    GST_DEBUG_OBJECT (trans, "Calling set_caps method to setup caps");
     ret = klass->set_caps (trans, in, out);
   }
 
@@ -401,6 +578,19 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
   /* see how we can transform the input caps. */
   othercaps = gst_base_transform_transform_caps (trans,
       GST_PAD_DIRECTION (pad), caps);
+
+  /* The caps we can actually output is the intersection of the transformed
+   * caps with the pad template for the pad */
+  if (othercaps) {
+    GstCaps *intersect;
+    const GstCaps *templ_caps;
+
+    templ_caps = gst_pad_get_pad_template_caps (otherpad);
+    intersect = gst_caps_intersect (othercaps, templ_caps);
+
+    gst_caps_unref (othercaps);
+    othercaps = intersect;
+  }
 
   /* check if transform is empty */
   if (!othercaps || gst_caps_is_empty (othercaps))
@@ -512,8 +702,8 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
 
   GST_DEBUG_OBJECT (trans, "got final caps %" GST_PTR_FORMAT, othercaps);
 
-  trans->in_place = gst_caps_is_equal (caps, othercaps);
-  GST_DEBUG_OBJECT (trans, "in_place: %d", trans->in_place);
+  trans->have_same_caps = gst_caps_is_equal (caps, othercaps);
+  GST_DEBUG_OBJECT (trans, "have_same_caps: %d", trans->have_same_caps);
 
   /* see if we have to configure the element now */
   if (!trans->delay_configure) {
@@ -590,8 +780,59 @@ failed_configure:
   {
     GST_DEBUG_OBJECT (trans, "FAILED to configure caps %" GST_PTR_FORMAT
         " to accept %" GST_PTR_FORMAT, otherpad, othercaps);
+    ret = FALSE;
     goto done;
   }
+}
+
+/* Allocate a buffer using gst_pad_alloc_buffer */
+static GstFlowReturn
+gst_base_transform_default_prepare_buf (GstBaseTransform * trans,
+    GstBuffer * input, gint size, GstCaps * caps, GstBuffer ** buf)
+{
+  GstBaseTransformClass *bclass;
+  GstFlowReturn ret = GST_FLOW_OK;
+  gboolean copy_inbuf = FALSE;
+
+  bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+
+  /* See if we want to prepare the buffer for in place output */
+  if (GST_BUFFER_SIZE (input) == size && bclass->transform_ip) {
+    if (gst_buffer_is_writable (input) && (*buf == NULL)) {
+      /* Input buffer is already writable, just ref and return it */
+      *buf = input;
+      gst_buffer_ref (input);
+      gst_caps_replace (&GST_BUFFER_CAPS (*buf), caps);
+
+      return GST_FLOW_OK;
+    } else {
+      /* Make a writable buffer below and copy the data */
+      copy_inbuf = TRUE;
+    }
+  }
+
+  if (*buf == NULL) {
+    /* Sub-class didn't already implement a buffer for us. Make one */
+    ret = gst_pad_alloc_buffer (trans->srcpad, GST_BUFFER_OFFSET (input),
+        size, caps, buf);
+    if (ret != GST_FLOW_OK || *buf == NULL)
+      return ret;
+  }
+
+  /* If the output buffer metadata is modifiable, copy timestamps and 
+   * buffer flags */
+  if (*buf != input && GST_MINI_OBJECT_REFCOUNT_VALUE (*buf) == 1) {
+
+    gst_buffer_stamp (*buf, input);
+    GST_BUFFER_FLAGS (*buf) |= GST_BUFFER_FLAGS (input) &
+        (GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_IN_CAPS |
+        GST_BUFFER_FLAG_DELTA_UNIT);
+  }
+
+  if (copy_inbuf && gst_buffer_is_writable (*buf))
+    memcpy (GST_BUFFER_DATA (*buf), GST_BUFFER_DATA (input), size);
+
+  return ret;
 }
 
 static gboolean
@@ -628,6 +869,8 @@ gst_base_transform_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
         trans->cache_caps2_size = *size;
       }
     }
+  } else {
+    GST_DEBUG ("Sub-class does not implement get_unit_size");
   }
   return res;
 }
@@ -657,11 +900,13 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     GST_DEBUG_OBJECT (trans, "... and offset NONE");
   else
     GST_DEBUG_OBJECT (trans, "... and offset %" G_GUINT64_FORMAT, offset);
-  /* before any buffers are pushed, in_place is TRUE; allocating can trigger
+
+  /* before any buffers are pushed, have_same_caps is TRUE; allocating can trigger
    * a renegotiation and change that to FALSE */
-  if (trans->in_place) {
+  if (trans->have_same_caps) {
     /* request a buffer with the same caps */
     GST_DEBUG_OBJECT (trans, "requesting buffer with same caps, size %d", size);
+
     res = gst_pad_alloc_buffer (trans->srcpad, offset, size, caps, buf);
   } else {
     /* if we are configured, request a buffer with the src caps */
@@ -681,8 +926,8 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     gst_caps_unref (srccaps);
   }
 
-  if (res == GST_FLOW_OK && !trans->in_place) {
-    /* note that we might have been in place before, but calling the
+  if (res == GST_FLOW_OK && !trans->have_same_caps) {
+    /* note that we might have had same caps before, but calling the
        alloc_buffer caused setcaps to switch us out of in_place -- in any case
        the alloc_buffer served to transmit caps information but we can't use the
        buffer. fall through and allocate a buffer corresponding to our sink
@@ -813,94 +1058,101 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
   GstBaseTransformClass *bclass;
   GstFlowReturn ret = GST_FLOW_OK;
   guint out_size;
+  gboolean want_in_place;
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
-  GST_LOG_OBJECT (trans, "handling buffer %p of size %d ...", inbuf,
-      GST_BUFFER_SIZE (inbuf));
   if (GST_BUFFER_OFFSET_IS_VALID (inbuf))
-    GST_LOG_OBJECT (trans, "... and offset %" G_GUINT64_FORMAT,
+    GST_LOG_OBJECT (trans, "handling buffer %p of size %d and offset %"
+        G_GUINT64_FORMAT, inbuf, GST_BUFFER_SIZE (inbuf),
         GST_BUFFER_OFFSET (inbuf));
   else
-    GST_LOG_OBJECT (trans, "... and offset NONE");
+    GST_LOG_OBJECT (trans, "handling buffer %p of size %d and offset NONE",
+        inbuf, GST_BUFFER_SIZE (inbuf));
 
   if (!trans->negotiated && !trans->passthrough)
     goto not_negotiated;
 
-  if (trans->in_place) {
-    /* passthrough elements or when the buffer is writable
-     * can be performed with the _ip method */
-    gboolean may_do_in_place = gst_buffer_is_writable (inbuf) ||
-        trans->passthrough;
+  if (trans->passthrough) {
+    /* In passthrough mode, give transform_ip a look at the
+     * buffer, without making it writable, or just push the
+     * data through */
+    GST_LOG_OBJECT (trans, "element is in passthrough mode");
 
-    /* check if we can and may do inplace */
-    if (bclass->transform_ip && may_do_in_place) {
-      /* in place transform and subclass supports method */
-      GST_LOG_OBJECT (trans, "doing inplace transform");
-      gst_buffer_ref (inbuf);
-
+    if (bclass->transform_ip)
       ret = bclass->transform_ip (trans, inbuf);
-      *outbuf = inbuf;
-    } else {
-      GST_LOG_OBJECT (trans, "doing fake inplace transform");
-      /* in place transform and subclass does not support method or
-       * buffer is not writable. */
-      if (bclass->transform) {
-        /* make a copy of the buffer. We really need a copy since the
-         * element might not be able to really do inplace. */
-        *outbuf = inbuf;
-        inbuf = gst_buffer_copy (inbuf);
 
-        ret = bclass->transform (trans, inbuf, *outbuf);
-      } else {
-        ret = GST_FLOW_NOT_SUPPORTED;
-      }
-    }
+    *outbuf = inbuf;
+
+    return ret;
+  }
+
+  want_in_place = (bclass->transform_ip != NULL) && trans->always_in_place;
+
+  if (want_in_place) {
+    /* If want_in_place is TRUE, we may need to prepare a new output buffer 
+     * Sub-classes can implement a prepare_output_buffer function as they
+     * wish. */
+    GST_LOG_OBJECT (trans, "doing inplace transform");
+
+    /* we cannot reconfigure the element yet as we are still processing
+     * the old buffer. We will therefore delay the reconfiguration of the
+     * element until we have processed this last buffer. */
+    trans->delay_configure = TRUE;
+    ret = bclass->prepare_output_buffer (trans, inbuf,
+        GST_BUFFER_SIZE (inbuf), GST_PAD_CAPS (trans->srcpad), outbuf);
+    trans->delay_configure = FALSE;
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      goto no_buffer;
+
+    ret = bclass->transform_ip (trans, *outbuf);
+
   } else {
     GST_LOG_OBJECT (trans, "doing non-inplace transform");
-    /* not inplace, figure out the output size */
-    if (!gst_base_transform_transform_size (trans,
-            GST_PAD_DIRECTION (trans->sinkpad), GST_PAD_CAPS (trans->sinkpad),
-            GST_BUFFER_SIZE (inbuf), GST_PAD_CAPS (trans->srcpad), &out_size)) {
-      /* we have an error */
-      goto no_size;
+
+    /* not transforming inplace, figure out the output size */
+    if (trans->always_in_place) {
+      out_size = GST_BUFFER_SIZE (inbuf);
+    } else {
+      if (!gst_base_transform_transform_size (trans,
+              GST_PAD_DIRECTION (trans->sinkpad), GST_PAD_CAPS (trans->sinkpad),
+              GST_BUFFER_SIZE (inbuf), GST_PAD_CAPS (trans->srcpad),
+              &out_size)) {
+        /* we have an error */
+        goto no_size;
+      }
     }
 
     /* we cannot reconfigure the element yet as we are still processing
      * the old buffer. We will therefore delay the reconfiguration of the
      * element until we have processed this last buffer. */
     trans->delay_configure = TRUE;
-
     /* no in place transform, get buffer, this might renegotiate. */
-    ret = gst_pad_alloc_buffer (trans->srcpad,
-        GST_BUFFER_OFFSET (inbuf), out_size,
+    ret = bclass->prepare_output_buffer (trans, inbuf, out_size,
         GST_PAD_CAPS (trans->srcpad), outbuf);
-
     trans->delay_configure = FALSE;
 
     if (ret != GST_FLOW_OK)
       goto no_buffer;
 
-    gst_buffer_stamp (*outbuf, inbuf);
-
     if (bclass->transform)
       ret = bclass->transform (trans, inbuf, *outbuf);
     else
       ret = GST_FLOW_NOT_SUPPORTED;
+  }
 
-    /* if we got renegotiated we can configure now */
-    if (trans->pending_configure) {
-      gboolean success;
+  /* if we got renegotiated we can configure now */
+  if (trans->pending_configure) {
+    gboolean success;
 
-      success =
-          gst_base_transform_configure_caps (trans,
-          GST_PAD_CAPS (trans->sinkpad), GST_PAD_CAPS (trans->srcpad));
+    success =
+        gst_base_transform_configure_caps (trans,
+        GST_PAD_CAPS (trans->sinkpad), GST_PAD_CAPS (trans->srcpad));
 
-      trans->pending_configure = FALSE;
+    trans->pending_configure = FALSE;
 
-      if (!success)
-        goto configure_failed;
-    }
+    if (!success)
+      goto configure_failed;
   }
   gst_buffer_unref (inbuf);
 
@@ -964,14 +1216,15 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstBaseTransform *trans;
   GstFlowReturn ret;
-  GstBuffer *outbuf;
+  GstBuffer *outbuf = NULL;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
 
   ret = gst_base_transform_handle_buffer (trans, buffer, &outbuf);
   if (ret == GST_FLOW_OK) {
     ret = gst_pad_push (trans->srcpad, outbuf);
-  }
+  } else if (outbuf != NULL)
+    gst_buffer_unref (outbuf);
 
   gst_object_unref (trans);
 
@@ -1066,11 +1319,12 @@ gst_base_transform_change_state (GstElement * element,
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_LOCK (trans);
       if (GST_PAD_CAPS (trans->sinkpad) && GST_PAD_CAPS (trans->srcpad))
-        trans->in_place = gst_caps_is_equal (GST_PAD_CAPS (trans->sinkpad),
+        trans->have_same_caps =
+            gst_caps_is_equal (GST_PAD_CAPS (trans->sinkpad),
             GST_PAD_CAPS (trans->srcpad)) || trans->passthrough;
       else
-        trans->in_place = trans->passthrough;
-      GST_DEBUG_OBJECT (trans, "in_place %d", trans->in_place);
+        trans->have_same_caps = trans->passthrough;
+      GST_DEBUG_OBJECT (trans, "have_same_caps %d", trans->have_same_caps);
       gst_caps_replace (&trans->cache_caps1, NULL);
       gst_caps_replace (&trans->cache_caps2, NULL);
       trans->negotiated = FALSE;
@@ -1106,7 +1360,10 @@ gst_base_transform_change_state (GstElement * element,
  * @passthrough: boolean indicating passthrough mode.
  *
  * Set passthrough mode for this filter by default. This is mostly
- * usefull for filters that do not care about negotiation.
+ * useful for filters that do not care about negotiation. 
+ * 
+ * Always TRUE for filters which don't implement either a transform 
+ * or transform_ip method.
  *
  * MT safe.
  */
@@ -1114,12 +1371,21 @@ void
 gst_base_transform_set_passthrough (GstBaseTransform * trans,
     gboolean passthrough)
 {
+  GstBaseTransformClass *bclass;
+
   g_return_if_fail (trans != NULL);
 
-  GST_DEBUG_OBJECT (trans, "setting passthrough %d", passthrough);
+  bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   GST_LOCK (trans);
-  trans->passthrough = passthrough;
+  if (passthrough == FALSE) {
+    if (bclass->transform_ip || bclass->transform)
+      trans->passthrough = FALSE;
+  } else {
+    trans->passthrough = TRUE;
+  }
+
+  GST_DEBUG_OBJECT (trans, "set passthrough %d", trans->passthrough);
   GST_UNLOCK (trans);
 }
 
@@ -1142,6 +1408,71 @@ gst_base_transform_is_passthrough (GstBaseTransform * trans)
 
   GST_LOCK (trans);
   result = trans->passthrough;
+  GST_UNLOCK (trans);
+
+  return result;
+}
+
+/**
+ * gst_base_transform_set_in_place:
+ * @trans: the #GstBaseTransform to modify
+ * @in_place: Boolean value indicating that we would like to operate
+ * on in_place buffers.
+ *
+ * Determines whether a non-writable buffer will be copied before passing 
+ * to the transform_ip function.
+ * <itemizedlist>
+ *   <listitem>Always TRUE if no transform function is implemented.</listitem>
+ *   <listitem>Always FALSE if ONLY transform_ip function is implemented.</listitem>
+ * </itemizedlist>
+ *
+ * MT safe.
+ */
+void
+gst_base_transform_set_in_place (GstBaseTransform * trans, gboolean in_place)
+{
+  GstBaseTransformClass *bclass;
+
+  g_return_if_fail (trans != NULL);
+
+  bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+
+  GST_LOCK (trans);
+
+  if (in_place) {
+    if (bclass->transform_ip) {
+      GST_DEBUG_OBJECT (trans, "setting in_place TRUE");
+      trans->always_in_place = TRUE;
+    }
+  } else {
+    if (bclass->transform) {
+      GST_DEBUG_OBJECT (trans, "setting in_place FALSE");
+      trans->always_in_place = FALSE;
+    }
+  }
+
+  GST_UNLOCK (trans);
+}
+
+/**
+ * gst_base_transform_is_in_place:
+ * @trans: the #GstBaseTransform to query
+ *
+ * See if @trans is configured as a in_place transform.
+ *
+ * Returns: TRUE is the transform is configured in in_place mode.
+ *
+ * MT safe.
+ */
+gboolean
+gst_base_transform_is_in_place (GstBaseTransform * trans)
+{
+  gboolean result;
+
+  g_return_val_if_fail (trans != NULL, FALSE);
+
+  GST_LOCK (trans);
+  result = trans->always_in_place;
   GST_UNLOCK (trans);
 
   return result;
