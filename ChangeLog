@@ -1,3 +1,9 @@
+2005-09-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/sine/gstsinesrc.c:
+	* gst/volume/gstvolume.c:
+	  fix up header include
+
 2005-09-09  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
@@ -5,7 +11,7 @@
 	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_commit):
 	* gst/volume/gstvolume.c: (gst_volume_class_init),
 	(volume_transform):
-          fixing lost sync, some more debugging
+	  fixing lost sync, some more debugging
 
 2005-09-08  Jan Schmidt  <thaytan@mad.scientist.com>
 
