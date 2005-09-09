@@ -3479,12 +3479,12 @@ gst_pad_collectv (GstPad ** selected, const GList * padlist)
 {
   /* need to use alloca here because we must not leak data */
   GstPad **pads;
-  GstPad *test;
+  GstPad *test, *_tmp;
   GstElement *element = NULL;
   int i = 0;
 
   g_return_val_if_fail (padlist != NULL, NULL);
-  pads = g_alloca (sizeof (gpointer) * (g_list_length ((GList *) padlist) + 1));
+  pads = g_malloc (sizeof (gpointer) * (g_list_length ((GList *) padlist) + 1));
   for (; padlist; padlist = g_list_next (padlist)) {
     test = GST_PAD (padlist->data);
     g_return_val_if_fail (GST_IS_PAD (test), NULL);
@@ -3498,7 +3498,10 @@ gst_pad_collectv (GstPad ** selected, const GList * padlist)
   }
   pads[i] = NULL;
 
-  return gst_pad_collect_array (GST_ELEMENT_SCHED (element), selected, pads);
+  _tmp = gst_pad_collect_array (GST_ELEMENT_SCHED (element), selected, pads);
+  g_free (pads);
+
+  return _tmp;
 }
 
 /**
@@ -3542,6 +3545,7 @@ GstData *
 gst_pad_collect_valist (GstPad ** selected, GstPad * pad, va_list var_args)
 {
   GstPad **padlist;
+  GstPad *_tmp;
   GstElement *element = NULL;
   gint i = 0, maxlength;
 
@@ -3550,7 +3554,7 @@ gst_pad_collect_valist (GstPad ** selected, GstPad * pad, va_list var_args)
   element = gst_pad_get_parent (pad);
   maxlength = element->numsinkpads;
   /* can we make this list a bit smaller than this upper limit? */
-  padlist = g_alloca (sizeof (gpointer) * (maxlength + 1));
+  padlist = g_malloc (sizeof (gpointer) * (maxlength + 1));
   while (pad) {
     g_return_val_if_fail (i < maxlength, NULL);
     g_return_val_if_fail (element == gst_pad_get_parent (pad), NULL);
@@ -3558,7 +3562,10 @@ gst_pad_collect_valist (GstPad ** selected, GstPad * pad, va_list var_args)
     pad = va_arg (var_args, GstPad *);
   }
   padlist[i] = NULL;
-  return gst_pad_collect_array (GST_ELEMENT_SCHED (element), selected, padlist);
+  _tmp = gst_pad_collect_array (GST_ELEMENT_SCHED (element), selected, padlist);
+  g_free (padlist);
+
+  return _tmp;
 }
 
 /**

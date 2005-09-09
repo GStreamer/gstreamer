@@ -1,3 +1,7 @@
+2005-09-09  Steve Lhomme  <steve.lhomme@free.fr>
+	* gst/gstpad.c:
+	   replace g_alloca by more portable alternatives
+
 2005-09-08  Steve Lhomme  <steve.lhomme@free.fr>
 	* gst/elements/gstpipefilter.c:
       Try to include config.h first
