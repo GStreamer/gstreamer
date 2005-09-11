@@ -3,8 +3,9 @@
   <description>Realmedia stream demuxer</description>
   <filename>../../gst/realmedia/.libs/libgstrmdemux.so</filename>
   <basename>libgstrmdemux.so</basename>
-  <version>0.9.0.1</version>
+  <version>0.9.1.1</version>
   <license>LGPL</license>
+  <source>gst-plugins-ugly</source>
   <package>GStreamer CVS/prerelease</package>
   <origin>http://gstreamer.freedesktop.org/</origin>
   <elements>
