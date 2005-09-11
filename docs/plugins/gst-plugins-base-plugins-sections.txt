@@ -1,4 +1,11 @@
 <SECTION>
+<FILE>element-ffmpegcolorspace</FILE>
+GstFFMpegColorspace
+<TITLE>ffmpegcolorspace</TITLE>
+<SUBSECTION Standard>
+GstFFMpegColorspaceClass
+</SECTION>
+
 <FILE>element-multifdsink</FILE>
 GstMultiFdSink
 GstMultiFdSinkFlags
@@ -35,6 +42,20 @@ GstGnomeVFSSink
 GstGnomeVFSSinkClass
 </SECTION>
 
+<SECTION>
+<FILE>element-videotestsrc</FILE>
+<TITLE>videotestsrc</TITLE>
+<SUBSECTION Standard>
+GstVideoTestSrcClass
+</SECTION>
+
+
+<FILE>element-volume</FILE>
+GstVolume
+<TITLE>volume</TITLE>
+<SUBSECTION Standard>
+GstVolumeClass
+</SECTION>
 
 <SECTION>
 <FILE>element-vorbisenc</FILE>

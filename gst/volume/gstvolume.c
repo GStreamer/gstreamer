@@ -21,6 +21,21 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-volume
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch -v -m sinesrc ! volume volume=0.5 ! level ! fakesink silent=TRUE
+ * </programlisting>
+ * This pipeline shows that the level of sinesrc has been halved compared to
+ * the same pipeline without the volume element.
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

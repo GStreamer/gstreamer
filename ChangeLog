@@ -1,3 +1,15 @@
+2005-09-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-ffmpegcolorspace.xml:
+	* docs/plugins/tmpl/element-tcpserversink.sgml:
+	* gst/ffmpegcolorspace/gstffmpeg.c:
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	* gst/videotestsrc/gstvideotestsrc.c:
+	* gst/volume/gstvolume.c:
+	  add more elements to the docs
+
 2005-09-09  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* check/Makefile.am:
@@ -5,7 +17,7 @@
 	(run_pipeline), (GST_START_TEST), (simple_launch_lines_suite):
 	  Add extra tests for basetransform based components. 
 	  Comment out the test_element_negotiation test until we decide
-          if it's testing correct behaviour.
+	  if it's testing correct behaviour.
 	* ext/libvisual/visual.c: (gst_visual_init), (get_buffer),
 	(gst_visual_chain), (gst_visual_change_state):
 	  Slightly more correct but still bogus timestamping.

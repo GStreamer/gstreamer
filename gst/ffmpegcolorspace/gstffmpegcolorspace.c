@@ -19,6 +19,19 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-ffmpegcolorspace
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch -v videotestsrc ! video/x-raw-yuv,format=\(fourcc\)YUY2 ! ffmpegcolorspace ! ximagesink
+ * </programlisting>
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

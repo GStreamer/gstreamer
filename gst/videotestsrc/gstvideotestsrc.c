@@ -18,6 +18,18 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-videotestsrc
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch -v videotestsrc pattern=snow ! ximagesink
+ * </programlisting>
+ * </para>
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

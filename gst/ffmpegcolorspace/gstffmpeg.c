@@ -44,6 +44,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "ffmpegcolorspace",
-    "colorspace conversion copied from FFMpeg",
-    plugin_init,
-    FFMPEG_VERSION, "LGPL", "FFMpeg", "http://ffmpeg.sourceforge.net/")
+    "colorspace conversion copied from FFMpeg " FFMPEG_VERSION,
+    plugin_init, VERSION, "LGPL", "FFMpeg", "http://ffmpeg.sourceforge.net/")
