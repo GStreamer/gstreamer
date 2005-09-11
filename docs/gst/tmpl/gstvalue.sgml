@@ -17,85 +17,143 @@ GValue implementations specific to GStreamer
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### MACRO GST_MAKE_FOURCC ##### -->
-<para>
-will transform four characters into a host-endiannness guint32 fourcc:
-<informalexample>
-<programlisting>
-guint32 fourcc = GST_MAKE_FOURCC ('M','J','P','G');
-</programlisting>
-</informalexample>
-</para>
+<!-- ##### MACRO GST_VALUE_HOLDS_FOURCC ##### -->
 
-@a: the first component
-@b: the second component
-@c: the third component
-@d: the fourth component
+
+@x: 
+
+
+<!-- ##### MACRO GST_MAKE_FOURCC ##### -->
+
+
+@a: 
+@b: 
+@c: 
+@d: 
 
 
 <!-- ##### MACRO GST_STR_FOURCC ##### -->
-<para>
-Creates a fourcc from an input string. The input string should consisnt
-of at least four characters (this is not checked for!).
-<informalexample>
-<programlisting>
-guint32 fourcc = GST_STR_FOURCC("MJPG");
-</programlisting>
-</informalexample>
-</para>
 
-@f: a string with four characters
+
+@f: 
 
 
 <!-- ##### MACRO GST_FOURCC_FORMAT ##### -->
-<para>
-Can be used to properly output a fourcc (a guint32) value in a
-printf()-style text message.
-<informalexample>
-<programlisting>
-printf ("fourcc: %" GST_FOURCC_FORMAT "\n", GST_FOURCC_ARGS (fcc));
-</programlisting>
-</informalexample>
-</para>
+
 
 
 
 <!-- ##### MACRO GST_FOURCC_ARGS ##### -->
+
+
+@fourcc: 
+
+
+<!-- ##### MACRO GST_TYPE_FOURCC ##### -->
 <para>
-Can be used to properly output a fourcc (a guint32) value in a
-printf()-style text message.
-<informalexample>
-<programlisting>
-printf ("fourcc: %" GST_FOURCC_FORMAT "\n", GST_FOURCC_ARGS (fcc));
-</programlisting>
-</informalexample>
+
 </para>
 
-@fourcc: the fourcc value to print
 
 
-<!-- ##### MACRO GST_VALUE_HOLDS_FOURCC ##### -->
+<!-- ##### FUNCTION gst_value_set_fourcc ##### -->
 <para>
-Checks if the give GValue contains a FOURCC value.
+
 </para>
 
-@x: the #GValue to check
+@value: 
+@fourcc: 
+
+
+<!-- ##### FUNCTION gst_value_get_fourcc ##### -->
+<para>
+
+</para>
+
+@value: 
+@Returns: 
 
 
 <!-- ##### MACRO GST_VALUE_HOLDS_INT_RANGE ##### -->
+
+
+@x: 
+
+
+<!-- ##### MACRO GST_TYPE_INT_RANGE ##### -->
 <para>
-Checks if the give GValue contains a INT_RANGE value.
+
 </para>
 
-@x: the #GValue to check
+
+
+<!-- ##### FUNCTION gst_value_set_int_range ##### -->
+<para>
+
+</para>
+
+@value: 
+@start: 
+@end: 
+
+
+<!-- ##### FUNCTION gst_value_get_int_range_min ##### -->
+<para>
+
+</para>
+
+@value: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_value_get_int_range_max ##### -->
+<para>
+
+</para>
+
+@value: 
+@Returns: 
 
 
 <!-- ##### MACRO GST_VALUE_HOLDS_DOUBLE_RANGE ##### -->
+
+
+@x: 
+
+
+<!-- ##### MACRO GST_TYPE_DOUBLE_RANGE ##### -->
 <para>
-Checks if the give GValue contains a DOUBLE_RANGE value.
+
 </para>
 
-@x: the #GValue to check
+
+
+<!-- ##### FUNCTION gst_value_set_double_range ##### -->
+<para>
+
+</para>
+
+@value: 
+@start: 
+@end: 
+
+
+<!-- ##### FUNCTION gst_value_get_double_range_min ##### -->
+<para>
+
+</para>
+
+@value: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_value_get_double_range_max ##### -->
+<para>
+
+</para>
+
+@value: 
+@Returns: 
 
 
 <!-- ##### MACRO GST_VALUE_HOLDS_LIST ##### -->
@@ -106,20 +164,11 @@ Checks if the give GValue contains a LIST value.
 @x: the #GValue to check
 
 
-<!-- ##### MACRO GST_VALUE_HOLDS_CAPS ##### -->
+<!-- ##### MACRO GST_TYPE_LIST ##### -->
 <para>
-Checks if the give GValue contains a CAPS value.
+
 </para>
 
-@x: the #GValue to check
-
-
-<!-- ##### MACRO GST_VALUE_HOLDS_FRACTION ##### -->
-<para>
-Checks if the give GValue contains a FRACTION value.
-</para>
-
-@x: the #GValue to check
 
 
 <!-- ##### MACRO GST_VALUE_HOLDS_ARRAY ##### -->
@@ -130,12 +179,182 @@ Checks if the give GValue contains a FRACTION value.
 @x: 
 
 
+<!-- ##### MACRO GST_TYPE_ARRAY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_value_list_append_value ##### -->
+<para>
+
+</para>
+
+@value: 
+@append_value: 
+
+
+<!-- ##### FUNCTION gst_value_list_prepend_value ##### -->
+<para>
+
+</para>
+
+@value: 
+@prepend_value: 
+
+
+<!-- ##### FUNCTION gst_value_list_concat ##### -->
+<para>
+
+</para>
+
+@dest: 
+@value1: 
+@value2: 
+
+
+<!-- ##### FUNCTION gst_value_list_get_size ##### -->
+<para>
+
+</para>
+
+@value: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_value_list_get_value ##### -->
+<para>
+
+</para>
+
+@value: 
+@index: 
+@Returns: 
+
+
+<!-- ##### MACRO GST_VALUE_HOLDS_FRACTION ##### -->
+<para>
+Checks if the give GValue contains a FRACTION value.
+</para>
+
+@x: the #GValue to check
+
+
+<!-- ##### MACRO GST_TYPE_FRACTION ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_value_set_fraction ##### -->
+<para>
+
+</para>
+
+@value: 
+@numerator: 
+@denominator: 
+
+
+<!-- ##### FUNCTION gst_value_get_fraction_numerator ##### -->
+<para>
+
+</para>
+
+@value: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_value_get_fraction_denominator ##### -->
+<para>
+
+</para>
+
+@value: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_value_fraction_multiply ##### -->
+<para>
+
+</para>
+
+@product: 
+@factor1: 
+@factor2: 
+@Returns: 
+
+
+<!-- ##### MACRO GST_VALUE_HOLDS_CAPS ##### -->
+<para>
+Checks if the give GValue contains a CAPS value.
+</para>
+
+@x: the #GValue to check
+
+
+<!-- ##### FUNCTION gst_value_set_caps ##### -->
+<para>
+
+</para>
+
+@value: 
+@caps: 
+<!-- # Unused Parameters # -->
+@calue: 
+
+
+<!-- ##### FUNCTION gst_value_get_caps ##### -->
+<para>
+
+</para>
+
+@value: 
+@Returns: 
+
+
 <!-- ##### MACRO GST_VALUE_HOLDS_MINI_OBJECT ##### -->
 <para>
 
 </para>
 
 @value: 
+
+
+<!-- ##### MACRO GST_VALUE_HOLDS_BUFFER ##### -->
+<para>
+
+</para>
+
+@x: 
+
+
+<!-- ##### MACRO gst_value_get_buffer ##### -->
+<para>
+
+</para>
+
+@v: 
+
+
+<!-- ##### MACRO gst_value_set_buffer ##### -->
+<para>
+
+</para>
+
+@v: 
+@b: 
+
+
+<!-- ##### MACRO gst_value_take_buffer ##### -->
+<para>
+
+</para>
+
+@v: 
+@b: 
 
 
 <!-- ##### MACRO GST_VALUE_LESS_THAN ##### -->
@@ -285,212 +504,6 @@ GST_VALUE_GREATER_THAN or GST_VALUE_UNORDERED
 
 @dest: 
 @src: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_value_list_append_value ##### -->
-<para>
-
-</para>
-
-@value: 
-@append_value: 
-
-
-<!-- ##### FUNCTION gst_value_list_prepend_value ##### -->
-<para>
-
-</para>
-
-@value: 
-@prepend_value: 
-
-
-<!-- ##### FUNCTION gst_value_list_concat ##### -->
-<para>
-
-</para>
-
-@dest: 
-@value1: 
-@value2: 
-
-
-<!-- ##### FUNCTION gst_value_list_get_size ##### -->
-<para>
-
-</para>
-
-@value: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_value_list_get_value ##### -->
-<para>
-
-</para>
-
-@value: 
-@index: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_value_set_fourcc ##### -->
-<para>
-
-</para>
-
-@value: 
-@fourcc: 
-
-
-<!-- ##### FUNCTION gst_value_get_fourcc ##### -->
-<para>
-
-</para>
-
-@value: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_value_set_int_range ##### -->
-<para>
-
-</para>
-
-@value: 
-@start: 
-@end: 
-
-
-<!-- ##### FUNCTION gst_value_get_int_range_min ##### -->
-<para>
-
-</para>
-
-@value: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_value_get_int_range_max ##### -->
-<para>
-
-</para>
-
-@value: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_value_set_double_range ##### -->
-<para>
-
-</para>
-
-@value: 
-@start: 
-@end: 
-
-
-<!-- ##### FUNCTION gst_value_get_double_range_min ##### -->
-<para>
-
-</para>
-
-@value: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_value_get_double_range_max ##### -->
-<para>
-
-</para>
-
-@value: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_value_get_caps ##### -->
-<para>
-
-</para>
-
-@value: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_value_set_caps ##### -->
-<para>
-
-</para>
-
-@value: 
-@caps: 
-<!-- # Unused Parameters # -->
-@calue: 
-
-
-<!-- ##### FUNCTION gst_value_get_fraction_numerator ##### -->
-<para>
-
-</para>
-
-@value: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_value_get_fraction_denominator ##### -->
-<para>
-
-</para>
-
-@value: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_value_set_fraction ##### -->
-<para>
-
-</para>
-
-@value: 
-@numerator: 
-@denominator: 
-
-
-<!-- ##### MACRO gst_value_get_buffer ##### -->
-<para>
-
-</para>
-
-@v: 
-
-
-<!-- ##### MACRO gst_value_set_buffer ##### -->
-<para>
-
-</para>
-
-@v: 
-@b: 
-
-
-<!-- ##### MACRO gst_value_take_buffer ##### -->
-<para>
-
-</para>
-
-@v: 
-@b: 
-
-
-<!-- ##### FUNCTION gst_value_fraction_multiply ##### -->
-<para>
-
-</para>
-
-@product: 
-@factor1: 
-@factor2: 
 @Returns: 
 
 

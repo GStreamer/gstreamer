@@ -2059,19 +2059,65 @@ GST_HAVE_UNALIGNED_ACCESS
 
 <SECTION>
 <FILE>gstvalue</FILE>
-<TITLE>GstValue</TITLE>
+<TITLE>GStreamer GValue types</TITLE>
+
+<SUBSECTION fourcc>
+GST_VALUE_HOLDS_FOURCC
 GST_MAKE_FOURCC
 GST_STR_FOURCC
 GST_FOURCC_FORMAT
 GST_FOURCC_ARGS
-GST_VALUE_HOLDS_FOURCC
+GST_TYPE_FOURCC
+gst_value_set_fourcc
+gst_value_get_fourcc
+
+<SUBSECTION intrange>
 GST_VALUE_HOLDS_INT_RANGE
+GST_TYPE_INT_RANGE
+gst_value_set_int_range
+gst_value_get_int_range_min
+gst_value_get_int_range_max
+
+<SUBSECTION doublerange>
 GST_VALUE_HOLDS_DOUBLE_RANGE
+GST_TYPE_DOUBLE_RANGE
+gst_value_set_double_range
+gst_value_get_double_range_min
+gst_value_get_double_range_max
+
+<SUBSECTION valuelist>
 GST_VALUE_HOLDS_LIST
-GST_VALUE_HOLDS_CAPS
-GST_VALUE_HOLDS_FRACTION
+GST_TYPE_LIST
 GST_VALUE_HOLDS_ARRAY
+GST_TYPE_ARRAY
+gst_value_list_append_value
+gst_value_list_prepend_value
+gst_value_list_concat
+gst_value_list_get_size
+gst_value_list_get_value
+
+<SUBSECTION fraction>
+GST_VALUE_HOLDS_FRACTION
+GST_TYPE_FRACTION
+gst_value_set_fraction
+gst_value_get_fraction_numerator
+gst_value_get_fraction_denominator
+gst_value_fraction_multiply
+
+<SUBSECTION caps>
+GST_VALUE_HOLDS_CAPS
+gst_value_set_caps
+gst_value_get_caps
+
+<SUBSECTION miniobject>
 GST_VALUE_HOLDS_MINI_OBJECT
+
+GST_VALUE_HOLDS_BUFFER
+gst_value_get_buffer
+gst_value_set_buffer
+gst_value_take_buffer
+
+<SUBSECTION>
 GST_VALUE_LESS_THAN
 GST_VALUE_EQUAL
 GST_VALUE_GREATER_THAN
@@ -2090,28 +2136,6 @@ gst_value_register
 gst_value_init_and_copy
 gst_value_serialize
 gst_value_deserialize
-gst_value_list_append_value
-gst_value_list_prepend_value
-gst_value_list_concat
-gst_value_list_get_size
-gst_value_list_get_value
-gst_value_set_fourcc
-gst_value_get_fourcc
-gst_value_set_int_range
-gst_value_get_int_range_min
-gst_value_get_int_range_max
-gst_value_set_double_range
-gst_value_get_double_range_min
-gst_value_get_double_range_max
-gst_value_get_caps
-gst_value_set_caps
-gst_value_get_fraction_numerator
-gst_value_get_fraction_denominator
-gst_value_set_fraction
-gst_value_get_buffer
-gst_value_set_buffer
-gst_value_take_buffer
-gst_value_fraction_multiply
 gst_value_compare
 gst_value_can_compare
 gst_value_union
@@ -2124,14 +2148,7 @@ gst_value_intersect
 gst_value_can_intersect
 gst_value_register_intersect_func
 <SUBSECTION Standard>
-GST_TYPE_FOURCC
-GST_TYPE_INT_RANGE
-GST_TYPE_DOUBLE_RANGE
-GST_TYPE_LIST
-GST_TYPE_FRACTION
-GST_TYPE_ARRAY
 </SECTION>
-
 
 <SECTION>
 <FILE>gstversion</FILE>

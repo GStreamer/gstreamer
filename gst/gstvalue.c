@@ -274,7 +274,7 @@ gst_value_list_append_value (GValue * value, const GValue * append_value)
 
 /**
  * gst_value_list_get_size:
- * @value: a GstValueList
+ * @value: a #GValue of type #GST_LIST_TYPE or #GST_ARRAY_TYPE
  *
  * Gets the number of values contained in @value.
  *
@@ -291,7 +291,7 @@ gst_value_list_get_size (const GValue * value)
 
 /**
  * gst_value_list_get_value:
- * @value: a GstValueList
+ * @value: a #GValue of type #GST_LIST_TYPE or #GST_ARRAY_TYPE
  * @index: index of value to get from the list
  *
  * Gets the value that is a member of the list contained in @value and
@@ -466,8 +466,8 @@ gst_value_lcopy_fourcc (const GValue * value, guint n_collect_values,
 
 /**
  * gst_value_set_fourcc:
- * @value: a GValue initialized to GST_TYPE_FOURCC
- * @fourcc: the fourcc to set
+ * @value: a GValue initialized to #GST_TYPE_FOURCC
+ * @fourcc: the #guint32 fourcc to set
  *
  * Sets @value to @fourcc.
  */
@@ -481,11 +481,11 @@ gst_value_set_fourcc (GValue * value, guint32 fourcc)
 
 /**
  * gst_value_get_fourcc:
- * @value: a GValue initialized to GST_TYPE_FOURCC
+ * @value: a GValue initialized to #GST_TYPE_FOURCC
  *
- * Gets the fourcc contained in @value.
+ * Gets the #guint32 fourcc contained in @value.
  *
- * Returns: the fourcc contained in @value.
+ * Returns: the #guint32 fourcc contained in @value.
  */
 guint32
 gst_value_get_fourcc (const GValue * value)
@@ -2685,7 +2685,7 @@ gst_value_lcopy_fraction (const GValue * value, guint n_collect_values,
 
 /**
  * gst_value_set_fraction:
- * @value: a GValue initialized to GST_TYPE_FRACTION
+ * @value: a GValue initialized to #GST_TYPE_FRACTION
  * @numerator: the numerator of the fraction
  * @denominator: the denominator of the fraction
  *
@@ -2721,7 +2721,7 @@ gst_value_set_fraction (GValue * value, gint numerator, gint denominator)
 
 /**
  * gst_value_get_fraction_numerator:
- * @value: a GValue initialized to GST_TYPE_FRACTION
+ * @value: a GValue initialized to #GST_TYPE_FRACTION
  *
  * Gets the numerator of the fraction specified by @value.
  *
@@ -2737,7 +2737,7 @@ gst_value_get_fraction_numerator (const GValue * value)
 
 /**
  * gst_value_get_fraction_denominator:
- * @value: a GValue initialized to GST_TYPE_FRACTION
+ * @value: a GValue initialized to #GST_TYPE_FRACTION
  *
  * Gets the denominator of the fraction specified by @value.
  *
@@ -2753,9 +2753,9 @@ gst_value_get_fraction_denominator (const GValue * value)
 
 /**
  * gst_value_fraction_multiply:
- * @product: a GValue initialized to GST_TYPE_FRACTION
- * @factor1: a GValue initialized to GST_TYPE_FRACTION
- * @factor2: a GValue initialized to GST_TYPE_FRACTION
+ * @product: a GValue initialized to #GST_TYPE_FRACTION
+ * @factor1: a GValue initialized to #GST_TYPE_FRACTION
+ * @factor2: a GValue initialized to #GST_TYPE_FRACTION
  *
  * Multiplies the two GValues containing a GstFraction and sets @product
  * to the product of the two fractions.
@@ -3142,11 +3142,6 @@ _gst_value_initialize (void)
       gst_value_deserialize_buffer,
     };
 
-#if 0
-    info.value_table = &value_table;
-    gst_type_fourcc =
-        g_type_register_static (G_TYPE_BOXED, "GstFourcc", &info, 0);
-#endif
     gst_value.type = GST_TYPE_BUFFER;
     gst_value_register (&gst_value);
   }

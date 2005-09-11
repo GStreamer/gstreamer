@@ -25,29 +25,129 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GST_MAKE_FOURCC:
+ * @a: the first character
+ * @b: the second character
+ * @c: the third character
+ * @d: the fourth character
+ *
+ * Transform four characters into a #guint32 fourcc value with host
+ * endianness.
+ * <informalexample>
+ * <programlisting>
+ * guint32 fourcc = GST_MAKE_FOURCC ('M', 'J', 'P', 'G');
+ * </programlisting>
+ * </informalexample>
+ */
 #define GST_MAKE_FOURCC(a,b,c,d)        (guint32)((a)|(b)<<8|(c)<<16|(d)<<24)
+
+/**
+ * GST_STR_FOURCC:
+ * @f: a string with at least four characters
+ *
+ * Transform an input string into a #guint32 fourcc value with host
+ * endianness.
+ * Caller is responsible for ensuring the input string consists of at least
+ * four characters.
+ * <informalexample>
+ * <programlisting>
+ * guint32 fourcc = GST_STR_FOURCC ("MJPG");
+ * </programlisting>
+ * </informalexample>
+ */
 #define GST_STR_FOURCC(f)               (guint32)(((f)[0])|((f)[1]<<8)|((f)[2]<<16)|((f)[3]<<24))
 
+/**
+ * GST_FOURCC_FORMAT:
+ *
+ * Can be used together with #GST_FOURCC_ARGS to properly output a
+ * #guint32 fourcc value in a printf()-style text message.
+ * <informalexample>
+ * <programlisting>
+ * printf ("fourcc: %" GST_FOURCC_FORMAT "\n", GST_FOURCC_ARGS (fcc));
+ * </programlisting>
+ * </informalexample>
+ */
 #define GST_FOURCC_FORMAT "%c%c%c%c"
+
+/**
+ * GST_FOURCC_ARGS:
+ * @fourcc: a #guint32 fourcc value to output
+ *
+ * Can be used together with #GST_FOURCC_FORMAT to properly output a
+ * #guint32 fourcc value in a printf()-style text message.
+ */
 #define GST_FOURCC_ARGS(fourcc) \
         ((gchar) ((fourcc)     &0xff)), \
         ((gchar) (((fourcc)>>8 )&0xff)), \
         ((gchar) (((fourcc)>>16)&0xff)), \
         ((gchar) (((fourcc)>>24)&0xff))
 
+/**
+ * GST_VALUE_HOLDS_FOURCC:
+ *
+ * Checks if the given #GValue contains a #GST_TYPE_FOURCC value.
+ *
+ * @x: the #GValue to check
+ */
 #define GST_VALUE_HOLDS_FOURCC(x)       (G_VALUE_HOLDS(x, gst_type_fourcc))
+
+/**
+ * GST_VALUE_HOLDS_INT_RANGE:
+ *
+ * Checks if the given #GValue contains a #GST_TYPE_INT_RANGE value.
+ *
+ * @x: the #GValue to check
+ */
 #define GST_VALUE_HOLDS_INT_RANGE(x)    (G_VALUE_HOLDS(x, gst_type_int_range))
+
+/**
+ * GST_VALUE_HOLDS_DOUBLE_RANGE:
+ *
+ * Checks if the given #GValue contains a #GST_TYPE_DOUBLE_RANGE value.
+ *
+ * @x: the #GValue to check
+ */
 #define GST_VALUE_HOLDS_DOUBLE_RANGE(x) (G_VALUE_HOLDS(x, gst_type_double_range))
 #define GST_VALUE_HOLDS_LIST(x)		(G_VALUE_HOLDS(x, gst_type_list))
 #define GST_VALUE_HOLDS_ARRAY(x)	(G_VALUE_HOLDS(x, gst_type_array))
 #define GST_VALUE_HOLDS_CAPS(x)		(G_VALUE_HOLDS(x, GST_TYPE_CAPS))
+#define GST_VALUE_HOLDS_BUFFER(x)       (G_VALUE_HOLDS(x, GST_TYPE_BUFFER))
+
 #define GST_VALUE_HOLDS_FRACTION(x)	(G_VALUE_HOLDS(x, gst_type_fraction))
 
 #define GST_TYPE_FOURCC                  gst_type_fourcc
 #define GST_TYPE_INT_RANGE               gst_type_int_range
 #define GST_TYPE_DOUBLE_RANGE            gst_type_double_range
+/**
+ * GST_TYPE_LIST:
+ *
+ * a #GValue type that represents an unordered list of #GValue values
+ *
+ * Returns: the #GType of GstValueList (which is not explicitly typed)
+ */
+
 #define GST_TYPE_LIST                    gst_type_list
+
+/**
+ * GST_TYPE_ARRAY:
+ *
+ * a #GValue type that represents an ordered list of #GValue values
+ *
+ * Returns: the #GType of GstArrayList (which is not explicitly typed)
+ */
 #define GST_TYPE_ARRAY			 gst_type_array
+
+/**
+ * GST_TYPE_FRACTION:
+ *
+ * a #GValue type that represents a fraction of an integer numerator over
+ * an integer denominator
+ *
+ * Returns: the #GType of GstFraction (which is not explicitly typed)
+ */
+
 #define GST_TYPE_FRACTION                gst_type_fraction
 
 #define GST_VALUE_LESS_THAN              (-1)

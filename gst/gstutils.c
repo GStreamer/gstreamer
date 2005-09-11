@@ -715,7 +715,7 @@ gst_element_state_get_name (GstState state)
   switch (state) {
 #ifdef GST_DEBUG_COLOR
     case GST_STATE_VOID_PENDING:
-      return "NONE_PENDING";
+      return "VOID_PENDING";
       break;
     case GST_STATE_NULL:
       return "\033[01;34mNULL\033[00m";
@@ -734,7 +734,7 @@ gst_element_state_get_name (GstState state)
       return g_strdup_printf ("\033[01;35;41mUNKNOWN!\033[00m(%d)", state);
 #else
     case GST_STATE_VOID_PENDING:
-      return "NONE_PENDING";
+      return "VOID_PENDING";
       break;
     case GST_STATE_NULL:
       return "NULL";
