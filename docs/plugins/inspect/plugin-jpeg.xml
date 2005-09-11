@@ -3,8 +3,9 @@
   <description>JPeg plugin library</description>
   <filename>../../ext/jpeg/.libs/libgstjpeg.so</filename>
   <basename>libgstjpeg.so</basename>
-  <version>0.9.0.1</version>
+  <version>0.9.1.1</version>
   <license>LGPL</license>
+  <source>gst-plugins-good</source>
   <package>GStreamer CVS/prerelease</package>
   <origin>http://gstreamer.freedesktop.org/</origin>
   <elements>
@@ -14,6 +15,20 @@
       <class>Codec/Decoder/Image</class>
       <description>Decode images from JPEG format</description>
       <author>Wim Taymans &lt;wim.taymans@tvd.be&gt;</author>
+    </element>
+    <element>
+      <name>jpegenc</name>
+      <longname>JPEG image encoder</longname>
+      <class>Codec/Encoder/Image</class>
+      <description>Encode images in JPEG format</description>
+      <author>Wim Taymans &lt;wim.taymans@tvd.be&gt;</author>
+    </element>
+    <element>
+      <name>smokeenc</name>
+      <longname>Smoke image encoder</longname>
+      <class>Codec/Encoder/Image</class>
+      <description>Encode images in the Smoke format</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
   </elements>
 </plugin>

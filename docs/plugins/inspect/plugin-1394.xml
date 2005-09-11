@@ -3,8 +3,9 @@
   <description>Source for DV data via IEEE1394 interface</description>
   <filename>../../ext/raw1394/.libs/libgst1394.so</filename>
   <basename>libgst1394.so</basename>
-  <version>0.9.0.1</version>
+  <version>0.9.1.1</version>
   <license>LGPL</license>
+  <source>gst-plugins-good</source>
   <package>GStreamer CVS/prerelease</package>
   <origin>http://gstreamer.freedesktop.org/</origin>
   <elements>

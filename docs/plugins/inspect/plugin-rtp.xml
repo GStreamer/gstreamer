@@ -3,8 +3,9 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>0.9.0.1</version>
+  <version>0.9.1.1</version>
   <license>GPL</license>
+  <source>gst-plugins-good</source>
   <package>GStreamer CVS/prerelease</package>
   <origin>http://gstreamer.freedesktop.org/</origin>
   <elements>
@@ -44,17 +45,31 @@
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
+      <name>rtpmp4vdec</name>
+      <longname>RTP packet parser</longname>
+      <class>Codec/Parser/Network</class>
+      <description>Extracts MPEG4 video from RTP packets (RFC 3016)</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>rtpmp4venc</name>
+      <longname>RTP packet parser</longname>
+      <class>Codec/Parser/Network</class>
+      <description>Encode MPEG4 video as RTP packets (RFC 3016)</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
       <name>rtpmpadec</name>
       <longname>RTP packet parser</longname>
       <class>Codec/Parser/Network</class>
-      <description>Extracts MPEG audio from RTP packets</description>
+      <description>Extracts MPEG audio from RTP packets (RFC 2038)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>rtpmpaenc</name>
       <longname>RTP packet parser</longname>
       <class>Codec/Parser/Network</class>
-      <description>Encode MPEG audio as RTP packets</description>
+      <description>Encode MPEG audio as RTP packets (RFC 2038)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
   </elements>

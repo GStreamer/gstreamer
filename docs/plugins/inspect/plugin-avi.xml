@@ -3,8 +3,9 @@
   <description>AVI stream handling</description>
   <filename>../../gst/avi/.libs/libgstavi.so</filename>
   <basename>libgstavi.so</basename>
-  <version>0.9.0.1</version>
+  <version>0.9.1.1</version>
   <license>LGPL</license>
+  <source>gst-plugins-good</source>
   <package>GStreamer CVS/prerelease</package>
   <origin>http://gstreamer.freedesktop.org/</origin>
   <elements>
