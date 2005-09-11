@@ -220,7 +220,7 @@ to get a list of plugins that match certain criteria.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_plugin_get_module ##### -->
+<!-- ##### FUNCTION gst_plugin_get_source ##### -->
 <para>
 
 </para>
@@ -230,6 +230,15 @@ to get a list of plugins that match certain criteria.
 
 
 <!-- ##### FUNCTION gst_plugin_get_version ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_get_module ##### -->
 <para>
 
 </para>

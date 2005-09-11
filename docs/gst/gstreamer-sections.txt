@@ -247,6 +247,7 @@ gst_caps_get_type
 ASSERT_BUFFER_REFCOUNT
 ASSERT_CAPS_REFCOUNT
 ASSERT_CRITICAL
+ASSERT_WARNING
 ASSERT_MINI_OBJECT_REFCOUNT
 ASSERT_OBJECT_REFCOUNT
 ASSERT_OBJECT_REFCOUNT_BETWEEN
@@ -414,19 +415,14 @@ GstElementClass
 GstElementFlags
 GST_STATE
 GST_STATE_PENDING
-GST_STATE_CHANGE_NULL_TO_READY
-GST_STATE_CHANGE_READY_TO_PAUSED
-GST_STATE_CHANGE_PAUSED_TO_PLAYING
-GST_STATE_CHANGE_PLAYING_TO_PAUSED
-GST_STATE_CHANGE_PAUSED_TO_READY
-GST_STATE_CHANGE_READY_TO_NULL
+GST_STATE_CHANGE
 GST_STATE_BROADCAST
 GST_STATE_ERROR
 GST_STATE_FINAL
 GST_STATE_GET_COND
 GST_STATE_GET_LOCK
 GST_STATE_LOCK
-GST_STATE_CHANGE_NO_PREROLL
+GST_STATE_NO_PREROLL
 GST_STATE_SIGNAL
 GST_STATE_TIMED_WAIT
 GST_STATE_TRYLOCK
@@ -478,6 +474,7 @@ gst_element_iterate_sink_pads
 gst_element_iterate_src_pads
 gst_element_link
 gst_element_link_many
+gst_element_link_filtered
 gst_element_link_pads
 gst_element_link_pads_filtered
 gst_element_lost_state
@@ -1415,8 +1412,9 @@ gst_plugin_get_filename
 gst_plugin_get_license
 gst_plugin_get_package
 gst_plugin_get_origin
-gst_plugin_get_module
+gst_plugin_get_source
 gst_plugin_get_version
+gst_plugin_get_module
 gst_plugin_is_loaded
 gst_plugin_feature_filter
 gst_plugin_list_feature_filter
@@ -1924,6 +1922,7 @@ gst_type_find_peek
 gst_type_find_suggest
 gst_type_find_get_length
 gst_type_find_register
+gst_type_find_helper
 <SUBSECTION Standard>
 GST_TYPE_TYPE_FIND_PROBABILITY
 <SUBSECTION Private>

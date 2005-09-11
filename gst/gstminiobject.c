@@ -377,7 +377,7 @@ gst_value_take_mini_object (GValue * value, GstMiniObject * mini_object)
  * Get the contents of a %GST_TYPE_MINI_OBJECT derived #GValue.
  * Does not increase the refcount of the returned object.
  *
- * @Returns: mini object contents of @value
+ * Returns: mini object contents of @value
  */
 GstMiniObject *
 gst_value_get_mini_object (const GValue * value)

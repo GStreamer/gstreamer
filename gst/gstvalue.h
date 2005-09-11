@@ -86,28 +86,25 @@ G_BEGIN_DECLS
 
 /**
  * GST_VALUE_HOLDS_FOURCC:
+ * @x: the #GValue to check
  *
  * Checks if the given #GValue contains a #GST_TYPE_FOURCC value.
- *
- * @x: the #GValue to check
  */
 #define GST_VALUE_HOLDS_FOURCC(x)       (G_VALUE_HOLDS(x, gst_type_fourcc))
 
 /**
  * GST_VALUE_HOLDS_INT_RANGE:
+ * @x: the #GValue to check
  *
  * Checks if the given #GValue contains a #GST_TYPE_INT_RANGE value.
- *
- * @x: the #GValue to check
  */
 #define GST_VALUE_HOLDS_INT_RANGE(x)    (G_VALUE_HOLDS(x, gst_type_int_range))
 
 /**
  * GST_VALUE_HOLDS_DOUBLE_RANGE:
+ * @x: the #GValue to check
  *
  * Checks if the given #GValue contains a #GST_TYPE_DOUBLE_RANGE value.
- *
- * @x: the #GValue to check
  */
 #define GST_VALUE_HOLDS_DOUBLE_RANGE(x) (G_VALUE_HOLDS(x, gst_type_double_range))
 #define GST_VALUE_HOLDS_LIST(x)		(G_VALUE_HOLDS(x, gst_type_list))

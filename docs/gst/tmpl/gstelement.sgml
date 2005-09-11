@@ -173,6 +173,14 @@ This macro returns the currently pending state of the element.
 @obj: Element to return the pending state for.
 
 
+<!-- ##### MACRO GST_STATE_CHANGE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
 <!-- ##### MACRO GST_STATE_BROADCAST ##### -->
 <para>
 
@@ -219,6 +227,14 @@ This macro returns the currently pending state of the element.
 </para>
 
 @elem: 
+
+
+<!-- ##### MACRO GST_STATE_NO_PREROLL ##### -->
+<para>
+
+</para>
+
+@obj: 
 
 
 <!-- ##### MACRO GST_STATE_SIGNAL ##### -->
@@ -685,6 +701,17 @@ Gets the parent of an element.
 @element_1: 
 @element_2: 
 @Varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_link_filtered ##### -->
+<para>
+
+</para>
+
+@src: 
+@dest: 
+@filter: 
 @Returns: 
 
 
