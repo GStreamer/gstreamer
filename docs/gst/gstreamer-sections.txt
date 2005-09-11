@@ -413,6 +413,7 @@ GST_PLUGIN_EXPORT
 GstElement
 GstElementClass
 GstElementFlags
+GstStateChange
 GST_STATE
 GST_STATE_PENDING
 GST_STATE_CHANGE
