@@ -28,13 +28,16 @@ G_BEGIN_DECLS
 #define GST_TYPE_ADAPTER \
   (gst_adapter_get_type())
 #define GST_ADAPTER(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ADAPTER,GstAdapter))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_ADAPTER, GstAdapter))
 #define GST_ADAPTER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ADAPTER,GstAdapterClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_ADAPTER, GstAdapterClass))
+#define GST_ADAPTER_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_ADAPTER, GstAdapterClass))
+
 #define GST_IS_ADAPTER(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ADAPTER))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_ADAPTER))
 #define GST_IS_ADAPTER_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ADAPTER))
+  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_ADAPTER))
 
 typedef struct _GstAdapter GstAdapter;
 typedef struct _GstAdapterClass GstAdapterClass;

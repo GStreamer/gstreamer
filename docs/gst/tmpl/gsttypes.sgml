@@ -28,6 +28,18 @@ various global enums and constants
 @GST_STATE_PAUSED: 
 @GST_STATE_PLAYING: 
 
+<!-- ##### ENUM GstStateChange ##### -->
+<para>
+
+</para>
+
+@GST_STATE_CHANGE_NULL_TO_READY: 
+@GST_STATE_CHANGE_READY_TO_PAUSED: 
+@GST_STATE_CHANGE_PAUSED_TO_PLAYING: 
+@GST_STATE_CHANGE_PLAYING_TO_PAUSED: 
+@GST_STATE_CHANGE_PAUSED_TO_READY: 
+@GST_STATE_CHANGE_READY_TO_NULL: 
+
 <!-- ##### ENUM GstStateChangeReturn ##### -->
 <para>
 

@@ -54,19 +54,15 @@ G_BEGIN_DECLS
 /**
  * GST_STATIC_CAPS_ANY:
  *
- * Creates a static caps that matches anything. This can be used in pad
- * templates.
- *
- * Returns: a new #GstCaps instance
+ * Creates a new #GstCaps static caps that matches anything.
+ * This can be used in pad templates.
  */
 #define GST_STATIC_CAPS_ANY       GST_STATIC_CAPS("ANY")
 /**
  * GST_STATIC_CAPS_NONE:
  *
- * Creates a static caps that matches nothing. This can be used in pad
- * templates.
- *
- * Returns: a new #GstCaps instance
+ * Creates a new #GstCaps static caps that matches nothing.
+ * This can be used in pad templates.
  */
 #define GST_STATIC_CAPS_NONE      GST_STATIC_CAPS("NONE")
 
@@ -74,20 +70,18 @@ G_BEGIN_DECLS
  * GST_CAPS_IS_SIMPLE:
  * @caps: the #GstCaps instance to check
  *
- * Convinience macro that checks if the number of structures in the gives caps
+ * Convenience macro that checks if the number of structures in the given caps
  * is exactly one.
- *
- * Returns: %TRUE if caps has exactly one structure
  */
 #define GST_CAPS_IS_SIMPLE(caps) (gst_caps_get_size(caps) == 1)
 
 #ifndef GST_DISABLE_DEPRECATED
 /**
  * GST_DEBUG_CAPS:
- * @string: a string the should be prepend to the caps data.
+ * @string: a string that should be prepended to the caps data.
  * @caps: the #GstCaps instance to print
  *
- * Convinience macro for prining out the contents of caps with GST_DEBUG().
+ * Convenience macro for printing out the contents of caps with GST_DEBUG().
  *
  * Deprecated: do not use anymore
  */
@@ -97,12 +91,10 @@ G_BEGIN_DECLS
 
 /**
  * GST_STATIC_CAPS:
- * @caps: the string describing the caps.
+ * @string: the string describing the caps
  *
- * Creates a static caps from an input string. This can be used in pad
- * templates.
- *
- * Returns: a new #GstCaps instance
+ * Creates a new #GstCaps static caps from an input string.
+ * This can be used in pad templates.
  */
 #define GST_STATIC_CAPS(string) \
 { \

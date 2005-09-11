@@ -34,6 +34,8 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_XML_REGISTRY,GstXMLRegistry))
 #define GST_XML_REGISTRY_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_XML_REGISTRY,GstXMLRegistryClass))
+#define GST_XML_REGISTRY_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_XML_REGISTRY, GstXMLRegistryClass))
 #define GST_IS_XML_REGISTRY(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_XML_REGISTRY))
 #define GST_IS_XML_REGISTRY_CLASS(obj) \
@@ -102,7 +104,7 @@ struct _GstXMLRegistryClass {
 /* normal GObject stuff */
 GType		gst_xml_registry_get_type		(void);
 
-GstRegistry* 	gst_xml_registry_new 			(const gchar *name, const gchar *location);
+GstRegistry*	gst_xml_registry_new			(const gchar *name, const gchar *location);
 
 G_END_DECLS
 

@@ -1,6 +1,28 @@
 2005-09-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/gstreamer.types:
+	* docs/gst/tmpl/gstpad.sgml:
+	* docs/gst/tmpl/gsttypes.sgml:
+	* gst/base/gstadapter.h:
+	* gst/base/gstbasesink.h:
+	* gst/base/gstbasesrc.h:
+	* gst/gstbin.h:
+	* gst/gstbuffer.h:
+	* gst/gstbus.h:
+	* gst/gstcaps.h:
+	* gst/gstclock.h:
+	* gst/gstelement.h:
+	* gst/gstevent.h:
+	* gst/gstmessage.h:
+	* gst/gstpad.h:
+	* gst/gststructure.c:
+	* gst/registries/gstlibxmlregistry.h:
+	  various documentation fixes
+
+2005-09-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/gstreamer-sections.txt:
 	* docs/gst/tmpl/gstvalue.sgml:
 	  rearrange gstvalue section
 	* gst/gstutils.c: (gst_element_state_get_name):

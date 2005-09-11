@@ -52,9 +52,7 @@ typedef struct _GstBufferClass GstBufferClass;
  * GST_BUFFER_FLAGS:
  * @buf: a #GstBuffer to retrieve the flags from.
  *
- * Gets the flags from this buffer.
- *
- * Returns: the set of #GstBufferFlag items
+ * Gets the #GstBufferFlag flags from this buffer.
  */
 #define GST_BUFFER_FLAGS(buf)                   GST_MINI_OBJECT_FLAGS(buf)
 /**
@@ -63,8 +61,6 @@ typedef struct _GstBufferClass GstBufferClass;
  * @flag: the #GstBufferFlag to check.
  *
  * Gives the status of a given flag of a buffer.
- *
- * Returns: %TRUE if flag is set.
  */
 #define GST_BUFFER_FLAG_IS_SET(buf,flag)        GST_MINI_OBJECT_FLAG_IS_SET (buf, flag)
 /**
@@ -89,8 +85,6 @@ typedef struct _GstBufferClass GstBufferClass;
  * @buf: a #GstBuffer to get data pointer of.
  *
  * Retrieves a pointer to the data element of this buffer.
- *
- * Returns: the pointer to the actual data contents of the buffer.
  */
 #define GST_BUFFER_DATA(buf)			(GST_BUFFER_CAST(buf)->data)
 /**
@@ -98,8 +92,6 @@ typedef struct _GstBufferClass GstBufferClass;
  * @buf: a #GstBuffer to get data size of.
  *
  * Gets the size of the data in this buffer.
- *
- * Returns: the buffer size in bytes
  */
 #define GST_BUFFER_SIZE(buf)			(GST_BUFFER_CAST(buf)->size)
 /**
@@ -107,8 +99,6 @@ typedef struct _GstBufferClass GstBufferClass;
  * @buf: a #GstBuffer to get the timestamp of.:
  *
  * Gets the timestamp for this buffer.
- *
- * Returns: the timestamp for this buffer
  */
 #define GST_BUFFER_TIMESTAMP(buf)		(GST_BUFFER_CAST(buf)->timestamp)
 /**
@@ -117,8 +107,6 @@ typedef struct _GstBufferClass GstBufferClass;
  *
  * Gets the duration in nanoseconds of the data in the buffer.
  * Value will be %GST_CLOCK_TIME_NONE if the duration is unknown.
- *
- * Returns: the duration of the buffer
  */
 #define GST_BUFFER_DURATION(buf)		(GST_BUFFER_CAST(buf)->duration)
 /**
@@ -126,8 +114,6 @@ typedef struct _GstBufferClass GstBufferClass;
  * @buf: a #GstBuffer to get the caps of.
  *
  * Gets the caps for this buffer.
- *
- * Returns: the #GstCaps for this buffer
  */
 #define GST_BUFFER_CAPS(buf)			(GST_BUFFER_CAST(buf)->caps)
 /**
@@ -135,8 +121,6 @@ typedef struct _GstBufferClass GstBufferClass;
  * @buf: a #GstBuffer to get the offset of.
  *
  * Gets the offset in the source file of the beginning of this buffer.
- *
- * Returns: the start offset for this buffer
  */
 #define GST_BUFFER_OFFSET(buf)			(GST_BUFFER_CAST(buf)->offset)
 /**
@@ -144,8 +128,6 @@ typedef struct _GstBufferClass GstBufferClass;
  * @buf: a #GstBuffer to get the offset of.
  *
  * Gets the offset in the source file of the end of this buffer.
- *
- * Returns: the end offset for this buffer
  */
 #define GST_BUFFER_OFFSET_END(buf)		(GST_BUFFER_CAST(buf)->offset_end)
 /**
@@ -167,10 +149,8 @@ typedef struct _GstBufferClass GstBufferClass;
 /**
  * GST_BUFFER_DURATION_IS_VALID:
  * @buffer: the #GstBuffer to check for the duration
- * 
- * Tests if the duration is known.
  *
- * Returns: %TRUE for success
+ * Tests if the duration is known.
  */
 #define GST_BUFFER_DURATION_IS_VALID(buffer)	(GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer)))
 /**
@@ -178,8 +158,6 @@ typedef struct _GstBufferClass GstBufferClass;
  * @buffer: the #GstBuffer to check for the timestamp
  *
  * Tests if the timestamp is known.
- *
- * Returns: %TRUE for success
  */
 #define GST_BUFFER_TIMESTAMP_IS_VALID(buffer)	(GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer)))
 /**
@@ -187,8 +165,6 @@ typedef struct _GstBufferClass GstBufferClass;
  * @buffer: the #GstBuffer to check for the start offset
  *
  * Tests if the start offset is known.
- *
- * Returns: %TRUE for success
  */
 #define GST_BUFFER_OFFSET_IS_VALID(buffer)	(GST_BUFFER_OFFSET (buffer) != GST_BUFFER_OFFSET_NONE)
 /**
@@ -196,8 +172,6 @@ typedef struct _GstBufferClass GstBufferClass;
  * @buffer: the #GstBuffer to check for the end offset
  *
  * Tests if the end offset is known.
- *
- * Returns: %TRUE for success
  */
 #define GST_BUFFER_OFFSET_END_IS_VALID(buffer)	(GST_BUFFER_OFFSET_END (buffer) != GST_BUFFER_OFFSET_NONE)
 
@@ -306,8 +280,6 @@ G_STMT_START {						\
  *
  * Copies the given buffer using the copy function of the parent #GstData
  * structure.
- *
- * Returns: a new #GstBuffer copy of the buffer.
  */
 #define		gst_buffer_copy(buf)		GST_BUFFER_CAST (gst_mini_object_copy (GST_MINI_OBJECT (buf)))
 /**
@@ -315,17 +287,13 @@ G_STMT_START {						\
  * @buf: a #GstBuffer to check
  *
  * Tests if you can safely write data into a buffer's data array.
- *
- * Returns: %TRUE if buffer is writable
  */
 #define		gst_buffer_is_writable(buf)	gst_mini_object_is_writable (GST_MINI_OBJECT (buf))
 /**
  * gst_buffer_make_writable:
  * @buf: a #GstBuffer to make writable
  *
- * Makes a buffer writable.
- *
- * Returns: a #GstBuffer that is writable
+ * Makes a writable buffer from the given buffer.
  */
 #define		gst_buffer_make_writable(buf)   GST_BUFFER_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT (buf)))
 

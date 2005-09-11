@@ -39,14 +39,14 @@ G_BEGIN_DECLS
  * GST_BASE_SINK_CLOCK:
  * @obj: base sink instance
  *
- * Returns the pointer to the #GstClock object of the element.
+ * Gives the pointer to the #GstClock object of the element.
  */
 #define GST_BASE_SINK_CLOCK(obj)	(GST_BASE_SINK (obj)->clock)
 /**
  * GST_BASE_SINK_PAD:
  * @obj: base sink instance
  *
- * Returns the pointer to the #GstPad object of the element.
+ * Gives the pointer to the #GstPad object of the element.
  */
 #define GST_BASE_SINK_PAD(obj)		(GST_BASE_SINK (obj)->sinkpad)
 

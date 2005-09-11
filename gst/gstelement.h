@@ -64,6 +64,13 @@ GST_EXPORT GType _gst_element_type;
 #define GST_ELEMENT_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_ELEMENT, GstElementClass))
 #define GST_ELEMENT_CAST(obj)		((GstElement*)(obj))
 
+/**
+ * GstStateChangeReturn:
+ * @GST_STATE_CHANGE_FAILURE   : the state change failed
+ * @GST_STATE_CHANGE_SUCCESS   : the state change succeeded
+ * @GST_STATE_CHANGE_ASYNC     : the state change will happen asynchronously
+ * @GST_STATE_CHANGE_NO_PREROLL: the state change cannot be prerolled
+ */
 typedef enum {
   GST_STATE_CHANGE_FAILURE             = 0,
   GST_STATE_CHANGE_SUCCESS             = 1,
@@ -98,6 +105,15 @@ _gst_element_get_state_change (GstElement *e)
 #endif
 
 /* FIXME: How to deal with lost_state ? */
+/**
+ * GstStateChange:
+ * @GST_STATE_CHANGE_NULL_TO_READY    : state change from NULL to READY
+ * @GST_STATE_CHANGE_READY_TO_PAUSED  : state change from READY to PAUSED
+ * @GST_STATE_CHANGE_PAUSED_TO_PLAYING: state change from PAUSED to PLAYING
+ * @GST_STATE_CHANGE_PLAYING_TO_PAUSED: state change from PLAYING to PAUSED
+ * @GST_STATE_CHANGE_PAUSED_TO_READY  : state change from PAUSED to READY
+ * @GST_STATE_CHANGE_READY_TO_NULL    : state change from READY to NULL
+ */
 typedef enum /*< flags=0 >*/
 {
   GST_STATE_CHANGE_NULL_TO_READY	= 1<<(GST_STATE_NULL+8) | 1<<GST_STATE_READY,

@@ -54,16 +54,14 @@ typedef enum {
   GST_BIN_FLAG_LAST		= GST_ELEMENT_FLAG_LAST + 5
 } GstBinFlags;
 
-typedef struct _GstBin GstBin; 
-typedef struct _GstBinClass GstBinClass; 
+typedef struct _GstBin GstBin;
+typedef struct _GstBinClass GstBinClass;
 
 /**
  * GST_BIN_NUMCHILDREN:
  * @bin: the bin to get the number of children from
  *
  * Gets the number of children a bin manages.
- *
- * Returns: the number of child objects
  */
 #define GST_BIN_NUMCHILDREN(bin)	(GST_BIN_CAST(bin)->numchildren)
 /**
@@ -71,17 +69,13 @@ typedef struct _GstBinClass GstBinClass;
  * @bin: the bin to get the list with children from
  *
  * Gets the list with children a bin manages.
- *
- * Returns: the children list
  */
 #define GST_BIN_CHILDREN(bin)		(GST_BIN_CAST(bin)->children)
 /**
  * GST_BIN_CHILDREN_COOKIE:
- * @bin: the bin to get the children cookie from 
+ * @bin: the bin to get the children cookie from
  *
  * Gets the children cookie that watches the children list.
- *
- * Returns: the children cookie
  */
 #define GST_BIN_CHILDREN_COOKIE(bin)	(GST_BIN_CAST(bin)->children_cookie)
 

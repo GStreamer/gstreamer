@@ -191,8 +191,6 @@ gst_structure_new_valist (const gchar * name,
  * determine whether a structure is mutable or not. This function should only be
  * called by code implementing parent objects of GstStructure, as described in
  * the MT Refcounting section of the design documents.
- *
- * Returns: a new #GstStructure.
  */
 void
 gst_structure_set_parent_refcount (GstStructure * structure, int *refcount)

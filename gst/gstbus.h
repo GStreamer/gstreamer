@@ -55,7 +55,7 @@ typedef enum
 /**
  * GstBusSyncHandler:
  * @bus: the #GstBus that sent the message
- * @messages: the #GstMessage
+ * @message: the #GstMessage
  * @data: user data that has been given, when registering the handler
  *
  * Handler will be invoked synchronously, when a new message has been injected
@@ -63,11 +63,11 @@ typedef enum
  *
  * Returns: #GstBusSyncReply stating what to do with the message
  */
-typedef GstBusSyncReply (*GstBusSyncHandler) 	(GstBus * bus, GstMessage * message, gpointer data);
+typedef GstBusSyncReply (*GstBusSyncHandler)	(GstBus * bus, GstMessage * message, gpointer data);
 /**
  * GstBusHandler:
  * @bus: the #GstBus that sent the message
- * @messages: the #GstMessage
+ * @message: the #GstMessage
  * @data: user data that has been given, when registering the handler
  *
  * Handler will be invoked asynchronously, after a new message has been injected

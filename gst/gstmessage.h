@@ -156,8 +156,6 @@ GstMessage *	gst_message_new_custom 		(GstMessageType type,
  * handled by other message-specific functions to pass a message to the
  * app. The structure field can be NULL.
  *
- * Returns: The new message.
- *
  * MT safe.
  */
 #define		gst_message_new_application(src, str) \

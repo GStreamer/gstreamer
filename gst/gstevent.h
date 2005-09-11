@@ -117,27 +117,23 @@ typedef struct _GstEventClass GstEventClass;
  * GST_EVENT_TYPE:
  * @event: the event to query
  *
- * Get the event type.
- *
- * Returns: the #GstEventType of the given event
+ * Get the #GstEventType of the event.
  */
 #define GST_EVENT_TYPE(event)		(GST_EVENT(event)->type)
+
 /**
  * GST_EVENT_TIMESTAMP:
  * @event: the event to query
  *
- * Get the timestamp of the event.
- *
- * Returns: the timestamp of the given event
+ * Get the #GstClockTime timestamp of the event.
  */
 #define GST_EVENT_TIMESTAMP(event)	(GST_EVENT(event)->timestamp)
+
 /**
  * GST_EVENT_SRC:
  * @event: the event to query
  *
- * The source object that generated this event.
- *
- * Returns: the source #GstObject for the given event
+ * The source #GstObject that generated this event.
  */
 #define GST_EVENT_SRC(event)		(GST_EVENT(event)->src)
 
@@ -232,8 +228,6 @@ GType		gst_event_get_type		(void);
  * @ev: The event to copy
  *
  * Copy the event using the event specific copy function.
- *
- * Returns: A new event that is a copy of the given input event
  */
 #define         gst_event_copy(ev)		GST_EVENT (gst_mini_object_copy (GST_MINI_OBJECT (ev)))
 
