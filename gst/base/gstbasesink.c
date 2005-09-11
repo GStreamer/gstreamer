@@ -787,6 +787,7 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
 
       GST_PREROLL_LOCK (pad);
       /* we need preroll after the flush */
+      GST_DEBUG_OBJECT (basesink, "flushing, need preroll after flush");
       basesink->need_preroll = TRUE;
       /* unlock from a possible state change/preroll */
       gst_base_sink_preroll_queue_flush (basesink, pad);
@@ -1143,6 +1144,8 @@ gst_base_sink_deactivate (GstBaseSink * basesink, GstPad * pad)
     bclass->unlock (basesink);
 
   /* flush out the data thread if it's locked in finish_preroll */
+  GST_DEBUG_OBJECT (basesink,
+      "flushing out data thread, need preroll to FALSE");
   basesink->need_preroll = FALSE;
   gst_base_sink_preroll_queue_flush (basesink, pad);
   GST_PREROLL_SIGNAL (pad);
@@ -1295,6 +1298,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       basesink->offset = 0;
       GST_PREROLL_LOCK (basesink->sinkpad);
       basesink->have_preroll = FALSE;
+      GST_DEBUG_OBJECT (basesink, "READY to PAUSED, need preroll to FALSE");
       basesink->need_preroll = TRUE;
       GST_PREROLL_UNLOCK (basesink->sinkpad);
       basesink->have_newsegment = FALSE;
@@ -1315,6 +1319,8 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
         gst_base_sink_preroll_queue_empty (basesink, basesink->sinkpad);
       } else if (!basesink->have_preroll) {
         /* don't need preroll, but do queue a commit_state */
+        GST_DEBUG_OBJECT (basesink,
+            "PAUSED to PLAYING, !eos, !have_preroll, need preroll to FALSE");
         basesink->need_preroll = FALSE;
         basesink->playing_async = TRUE;
         ret = GST_STATE_CHANGE_ASYNC;
@@ -1322,6 +1328,8 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       } else {
         /* don't need the preroll anymore */
         basesink->need_preroll = FALSE;
+        GST_DEBUG_OBJECT (basesink,
+            "PAUSED to PLAYING, !eos, have_preroll, need preroll to FALSE");
         /* now let it play */
         GST_PREROLL_SIGNAL (basesink->sinkpad);
       }
@@ -1367,6 +1375,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       GST_DEBUG_OBJECT (basesink, "have_preroll: %d, EOS: %d",
           basesink->have_preroll, basesink->eos);
       if (!basesink->have_preroll && !basesink->eos) {
+        GST_DEBUG_OBJECT (basesink, "PLAYING to PAUSED, need preroll to TRUE");
         basesink->need_preroll = TRUE;
         ret = GST_STATE_CHANGE_ASYNC;
       }
