@@ -5,6 +5,7 @@
   <basename>libgstffmpegcolorspace.so</basename>
   <version>0.4.9-pre1</version>
   <license>LGPL</license>
+  <source>gst-plugins-base</source>
   <package>FFMpeg</package>
   <origin>http://ffmpeg.sourceforge.net/</origin>
   <elements>

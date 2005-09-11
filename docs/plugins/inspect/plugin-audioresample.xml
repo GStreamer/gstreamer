@@ -3,8 +3,9 @@
   <description>Resamples audio</description>
   <filename>../../gst/audioresample/.libs/libgstaudioresample.so</filename>
   <basename>libgstaudioresample.so</basename>
-  <version>0.9.1.1</version>
+  <version>0.9.2.1</version>
   <license>LGPL</license>
+  <source>gst-plugins-base</source>
   <package>GStreamer CVS/prerelease</package>
   <origin>http://gstreamer.freedesktop.org/</origin>
   <elements>

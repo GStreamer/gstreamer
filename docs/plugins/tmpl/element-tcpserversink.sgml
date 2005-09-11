@@ -2,9 +2,10 @@
 tcpserversink
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Send data as a server over the network via TCP
 
 <!-- ##### SECTION Long_Description ##### -->
+<include xmlns="http://www.w3.org/2003/XInclude" href="element-tcpserversink-details.xml" />
 <para>
 
 </para>
