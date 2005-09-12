@@ -30,14 +30,13 @@
 G_BEGIN_DECLS
 
 void		gst_util_set_value_from_string	(GValue *value, const gchar *value_str);
-void 		gst_util_set_object_arg 	(GObject *object, const gchar *name, const gchar *value);
-	
-void 		gst_util_dump_mem		(const guchar *mem, guint size);
+void		gst_util_set_object_arg		(GObject *object, const gchar *name, const gchar *value);
+void		gst_util_dump_mem		(const guchar *mem, guint size);
 
 guint64		gst_util_uint64_scale		(guint64 val, guint64 num, guint64 denom);
 
-void 		gst_print_pad_caps 		(GString *buf, gint indent, GstPad *pad);
-void 		gst_print_element_args 		(GString *buf, gint indent, GstElement *element);
+void		gst_print_pad_caps		(GString *buf, gint indent, GstPad *pad);
+void		gst_print_element_args		(GString *buf, gint indent, GstElement *element);
 
 
 /* Macros for defining classes.  Ideas taken from Bonobo, which took theirs
@@ -98,53 +97,55 @@ type_as_function ## _get_type (void)					\
  * After this you will need to implement interface_as_function ## _supported
  * and interface_as_function ## _interface_init
  */
-#define GST_BOILERPLATE_WITH_INTERFACE(type, type_as_function, parent_type,             \
-    parent_type_as_macro, interface_type, interface_type_as_macro,                      \
-    interface_as_function)                                                              \
-                                                                                        \
+#define GST_BOILERPLATE_WITH_INTERFACE(type, type_as_function,		\
+    parent_type, parent_type_as_macro, interface_type,			\
+    interface_type_as_macro, interface_as_function)			\
+                                                                        \
 static void interface_as_function ## _interface_init (interface_type ## Class *klass);  \
 static gboolean interface_as_function ## _supported (type *object, GType iface_type);   \
-                                                                                        \
-static void                                                                             \
+                                                                        \
+static void                                                             \
 type_as_function ## _implements_interface_init (GstImplementsInterfaceClass *klass)     \
-{                                                                                       \
-  klass->supported = (gpointer)interface_as_function ## _supported;                     \
-}                                                                                       \
-                                                                                        \
-static void                                                                             \
-type_as_function ## _init_interfaces (GType type)                                       \
-{                                                                                       \
-  static const GInterfaceInfo implements_iface_info = {                                 \
-    (GInterfaceInitFunc) type_as_function ## _implements_interface_init,                \
-    NULL,                                                                               \
-    NULL,                                                                               \
-  };                                                                                    \
-  static const GInterfaceInfo iface_info = {                                            \
-    (GInterfaceInitFunc) interface_as_function ## _interface_init,                      \
-    NULL,                                                                               \
-    NULL,                                                                               \
-  };                                                                                    \
-                                                                                        \
-  g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,                     \
-      &implements_iface_info);                                                          \
-  g_type_add_interface_static (type, interface_type_as_macro, &iface_info);             \
-}                                                                                       \
-                                                                                        \
-GST_BOILERPLATE_FULL (type, type_as_function, parent_type,                              \
+{                                                                       \
+  klass->supported = (gpointer)interface_as_function ## _supported;     \
+}                                                                       \
+                                                                        \
+static void                                                             \
+type_as_function ## _init_interfaces (GType type)                       \
+{                                                                       \
+  static const GInterfaceInfo implements_iface_info = {                 \
+    (GInterfaceInitFunc) type_as_function ## _implements_interface_init,\
+    NULL,                                                               \
+    NULL,                                                               \
+  };                                                                    \
+  static const GInterfaceInfo iface_info = {                            \
+    (GInterfaceInitFunc) interface_as_function ## _interface_init,      \
+    NULL,                                                               \
+    NULL,                                                               \
+  };                                                                    \
+                                                                        \
+  g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,     \
+      &implements_iface_info);                                          \
+  g_type_add_interface_static (type, interface_type_as_macro,		\
+      &iface_info);							\
+}                                                                       \
+                                                                        \
+GST_BOILERPLATE_FULL (type, type_as_function, parent_type,              \
     parent_type_as_macro, type_as_function ## _init_interfaces)
 
 /* Just call the parent handler.  This assumes that there is a variable
  * named parent_class that points to the (duh!) parent class.  Note that
  * this macro is not to be used with things that return something, use
  * the _WITH_DEFAULT version for that */
-#define GST_CALL_PARENT(parent_class_cast, name, args)				\
-	((parent_class_cast(parent_class)->name != NULL) ?			\
+#define GST_CALL_PARENT(parent_class_cast, name, args)			\
+	((parent_class_cast(parent_class)->name != NULL) ?		\
 	 parent_class_cast(parent_class)->name args : (void) 0)
 
 /* Same as above, but in case there is no implementation, it evaluates
  * to def_return */
-#define GST_CALL_PARENT_WITH_DEFAULT(parent_class_cast, name, args, def_return)	\
-	((parent_class_cast(parent_class)->name != NULL) ?			\
+#define GST_CALL_PARENT_WITH_DEFAULT(parent_class_cast, name, args,	\
+    def_return)								\
+	((parent_class_cast(parent_class)->name != NULL) ?		\
 	 parent_class_cast(parent_class)->name args : def_return)
 
 /* Define possibly unaligned memory access method whether the type of
@@ -160,7 +161,7 @@ GST_BOILERPLATE_FULL (type, type_as_function, parent_type,                      
 #define GST_READ_UINT32_LE(data)        _GST_GET (data, 32, LE)
 #define GST_READ_UINT16_BE(data)        _GST_GET (data, 16, BE)
 #define GST_READ_UINT16_LE(data)        _GST_GET (data, 16, LE)
-#define GST_READ_UINT8(data) 		(* ((guint8 *) (data)))
+#define GST_READ_UINT8(data)		(* ((guint8 *) (data)))
 
 #define _GST_PUT(__data, __size, __end, __num) \
     ((* (guint##__size *) (__data)) = GUINT##__size##_TO_##__end (__num))
@@ -171,7 +172,7 @@ GST_BOILERPLATE_FULL (type, type_as_function, parent_type,                      
 #define GST_WRITE_UINT32_LE(data, num)  _GST_PUT(data, 32, LE, num)
 #define GST_WRITE_UINT16_BE(data, num)  _GST_PUT(data, 16, BE, num)
 #define GST_WRITE_UINT16_LE(data, num)  _GST_PUT(data, 16, LE, num)
-#define GST_WRITE_UINT8(data, num) 	((* (guint8 *) (data)) = (num))
+#define GST_WRITE_UINT8(data, num)	((* (guint8 *) (data)) = (num))
 
 #else /* GST_HAVE_UNALIGNED_ACCESS */
 
@@ -278,13 +279,13 @@ GST_BOILERPLATE_FULL (type, type_as_function, parent_type,                      
 #define GST_ROUND_UP_32(num) (((num)+31)&~31)
 #define GST_ROUND_UP_64(num) (((num)+63)&~63)
 
-void 			gst_object_default_error 	(GstObject * source, 
+void			gst_object_default_error	(GstObject * source,
 							 GError * error, gchar * debug);
 
 
 /* element functions */
-GstFlowReturn 		gst_element_abort_preroll 	(GstElement *element);
-GstFlowReturn 		gst_element_finish_preroll 	(GstElement *element, GstPad *pad);
+GstFlowReturn		gst_element_abort_preroll	(GstElement *element);
+GstFlowReturn		gst_element_finish_preroll	(GstElement *element, GstPad *pad);
 
 void                    gst_element_create_all_pads     (GstElement *element);
 GstPad*                 gst_element_get_compatible_pad  (GstElement *element, GstPad *pad,
@@ -312,6 +313,7 @@ void                    gst_element_unlink_pads         (GstElement *src, const 
 gboolean		gst_element_link_pads_filtered	(GstElement * src, const gchar * srcpadname,
                                                          GstElement * dest, const gchar * destpadname,
                                                          GstCaps *filter);
+GstStateChangeReturn    gst_element_set_state_async     (GstElement * element, GstState state);
 
 /* util elementfactory functions */
 gboolean		gst_element_factory_can_src_caps(GstElementFactory *factory, const GstCaps *caps);
@@ -324,8 +326,8 @@ gboolean                gst_element_query_convert       (GstElement *element, Gs
 		                                         GstFormat *dest_fmt, gint64 *dest_val);
 
 /* element class functions */
-void 			gst_element_class_install_std_props (GstElementClass * klass,
-   							 const gchar * first_name, ...);
+void			gst_element_class_install_std_props (GstElementClass * klass,
+							 const gchar * first_name, ...);
 
 /* pad functions */
 gboolean                gst_pad_can_link                (GstPad *srcpad, GstPad *sinkpad);
@@ -338,7 +340,7 @@ gboolean		gst_pad_proxy_setcaps		(GstPad * pad, GstCaps * caps);
 GstElement*		gst_pad_get_parent_element	(GstPad *pad);
 
 /* flow */
-G_CONST_RETURN gchar*   gst_flow_get_name      		(GstFlowReturn ret);
+G_CONST_RETURN gchar*   gst_flow_get_name		(GstFlowReturn ret);
 
 
 /* util query functions */
@@ -348,8 +350,8 @@ gboolean                gst_pad_query_convert           (GstPad *pad, GstFormat 
 		                                         GstFormat *dest_format, gint64 *dest_val);
 
 /* bin functions */
-void            	gst_bin_add_many                (GstBin *bin, GstElement *element_1, ...);
-void            	gst_bin_remove_many             (GstBin *bin, GstElement *element_1, ...);
+void			gst_bin_add_many                (GstBin *bin, GstElement *element_1, ...);
+void			gst_bin_remove_many             (GstBin *bin, GstElement *element_1, ...);
 void			gst_bin_watch_for_state_change  (GstBin *bin);
 
 /* buffer functions */

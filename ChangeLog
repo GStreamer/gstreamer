@@ -1,5 +1,16 @@
 2005-09-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* check/gst/gstpipeline.c: (GST_START_TEST):
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstutils.c: (set_state_async_thread_func),
+	(gst_element_set_state_async):
+	* gst/gstutils.h:
+	  add a "gst_element_set_state_async" method that
+	  sets the state and starts a thread to make sure the state
+	  change completes as best as it can
+
+2005-09-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* check/gst/gstpipeline.c: (GST_START_TEST), (gst_pipeline_suite):
 	  codify design+behaviour in testsuite after discussion
 

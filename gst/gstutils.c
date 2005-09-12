@@ -1888,6 +1888,92 @@ gst_bin_watch_for_state_change (GstBin * bin)
 }
 
 static void
+set_state_async_thread_func (GstElement * element, gpointer statep)
+{
+  GstState state = GPOINTER_TO_INT (statep);
+  GstState current, pending;
+  GstStateChangeReturn ret = GST_STATE_CHANGE_ASYNC;
+
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+      "new thread ensuring state change to %s",
+      gst_element_state_get_name (state));
+
+  while (TRUE) {
+    /* wait indefinitely */
+    ret = gst_element_get_state (element, &current, &pending, NULL);
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+        "get_state returned %d, current %s, pending %s", ret,
+        gst_element_state_get_name (current),
+        gst_element_state_get_name (pending));
+
+    /* can only be SUCCESS or FAILURE */
+    if (ret == GST_STATE_CHANGE_FAILURE) {
+      /* we can only break, hopefully an error message was posted as well */
+      GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+          "FAILURE during state change");
+      break;
+    } else if (ret == GST_STATE_CHANGE_SUCCESS) {
+      if (current == state) {
+        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+            "successfully reached final state");
+        break;
+      }
+      GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+          "setting target state %s again", gst_element_state_get_name (state));
+      gst_element_set_state (element, state);
+    } else {
+      g_assert_not_reached ();
+    }
+  }
+
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+      "thread done waiting on state change");
+
+  gst_object_unref (element);
+}
+
+/**
+ * gst_element_set_state_async:
+ * @element: a #GstElement to change state of
+ * @state: the element's new #GstState
+ *
+ * Sets the state of the element. This function will try to set the
+ * requested state by going through all the intermediary states and calling
+ * the class's state change function for each.  If the state change returns
+ * #GST_STATE_CHANGE_ASYNC at any time, a thread will be started to
+ * monitor the state change and make sure the element is brought to the
+ * requested state.
+ *
+ * Returns: Result of the state change using #GstStateChangeReturn.
+ *
+ * MT safe.
+ */
+GstStateChangeReturn
+gst_element_set_state_async (GstElement * element, GstState state)
+{
+  GstStateChangeReturn ret;
+
+  ret = gst_element_set_state (element, state);
+  if (ret == GST_STATE_CHANGE_ASYNC) {
+    static GThreadPool *pool = NULL;
+    static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
+
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+        "starting new thread to ensure state change to %s",
+        gst_element_state_get_name (state));
+    g_static_mutex_lock (&mutex);
+    if (pool == NULL)
+      pool = g_thread_pool_new ((GFunc) set_state_async_thread_func,
+          GINT_TO_POINTER (state), -1, FALSE, NULL);
+    g_static_mutex_unlock (&mutex);
+
+    g_thread_pool_push (pool, gst_object_ref (element), NULL);
+  }
+
+  return ret;
+}
+
+static void
 gst_element_populate_std_props (GObjectClass * klass, const gchar * prop_name,
     guint arg_id, GParamFlags flags)
 {

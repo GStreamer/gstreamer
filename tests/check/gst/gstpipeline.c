@@ -21,26 +21,6 @@
 
 #include <gst/check/gstcheck.h>
 
-#if 0
-static void
-pop_messages (GstBus * bus, int count)
-{
-  GstMessage *message;
-
-  int i;
-
-  GST_DEBUG ("popping %d messages", count);
-  for (i = 0; i < count; ++i) {
-    fail_unless (gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, -1)
-        == GST_MESSAGE_STATE_CHANGED, "did not get GST_MESSAGE_STATE_CHANGED");
-
-    message = gst_bus_pop (bus);
-    gst_message_unref (message);
-  }
-  GST_DEBUG ("popped %d messages", count);
-}
-#endif
-
 /* an empty pipeline can go to PLAYING in one go */
 GST_START_TEST (test_async_state_change_empty)
 {
@@ -87,6 +67,7 @@ GST_START_TEST (test_async_state_change_fake)
   GstPipeline *pipeline;
   GstElement *src, *sink;
   GstBus *bus;
+  gboolean done = FALSE;
 
   pipeline = GST_PIPELINE (gst_pipeline_new (NULL));
   fail_unless (pipeline != NULL, "Could not create pipeline");
@@ -100,37 +81,28 @@ GST_START_TEST (test_async_state_change_fake)
 
   bus = gst_pipeline_get_bus (pipeline);
 
-  fail_unless_equals_int (gst_element_set_state (GST_ELEMENT (pipeline),
+  fail_unless_equals_int (gst_element_set_state_async (GST_ELEMENT (pipeline),
           GST_STATE_PLAYING), GST_STATE_CHANGE_ASYNC);
 
-#if 0
-  /* FIXME: Wim is implementing a set_state_async, which will
-   * spawn a thread and make sure the pipeline gets to the
-   * requested final state, or errors out before */
-  gst_bin_watch_for_state_change (GST_BIN (pipeline));
-
-  while ((type = gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, -1))) {
+  while (!done) {
     GstMessage *message;
-    GstMessageType type;
     GstState old, new;
-    GstState state, pending;
-    GstStateChange ret;
-    GTimeVal timeval;
+    GstMessageType type;
 
+    type = gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, -1);
     message = gst_bus_pop (bus);
     gst_message_parse_state_changed (message, &old, &new);
     GST_DEBUG_OBJECT (message->src, "state change from %d to %d", old, new);
-    g_print ("message\n");
-    g_print ("%s: %d -> %d\n", GST_OBJECT_NAME (message->src), old, new);
+    if (message->src == GST_OBJECT (pipeline) && new == GST_STATE_PLAYING)
+      done = TRUE;
     gst_message_unref (message);
-
-    timeval.tv_sec = 0;
-    timeval.tv_usec = 0;
-    ret = gst_element_get_state (GST_ELEMENT (pipeline), &state, &pending,
-        &timeval);
   }
-#endif
 
+  g_object_set (G_OBJECT (pipeline), "play-timeout", 3 * GST_SECOND, NULL);
+  fail_unless_equals_int (gst_element_set_state (GST_ELEMENT (pipeline),
+          GST_STATE_NULL), GST_STATE_CHANGE_SUCCESS);
+
+  gst_object_unref (bus);
   gst_object_unref (pipeline);
 }
 
