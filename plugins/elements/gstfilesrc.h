@@ -63,6 +63,7 @@ struct _GstFileSrc {
   off_t filelen;			/* what's the file length?*/
 
   off_t curoffset;			/* current offset in file*/
+  off_t lastoffset;			/* last offset seen in file*/
   off_t block_size;			/* bytes per read */
   gboolean touch;			/* whether to touch every page */
   gboolean using_mmap;                  /* whether we opened it with mmap */

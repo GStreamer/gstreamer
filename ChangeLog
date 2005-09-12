@@ -1,3 +1,8 @@
+2005-09-12  Steve Lhomme  <steve.lhomme@free.fr>
+	* gst/elements/gstfilesrc.c: (gst_filesrc_get_read)
+	* gst/elements/gstfilesrc.h:
+	   fix the pb of seeking when mmap is not used
+
 2005-09-09  Steve Lhomme  <steve.lhomme@free.fr>
 	* gst/gstpad.c:
 	   replace g_alloca by more portable alternatives

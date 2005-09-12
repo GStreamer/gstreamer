@@ -108,8 +108,8 @@ GstElementDetails gst_filesrc_details = GST_ELEMENT_DETAILS ("File Source",
     "Read from arbitrary point in a file",
     "Erik Walthinsen <omega@cse.ogi.edu>");
 
-#define DEFAULT_BLOCKSIZE 	4*1024
-#define DEFAULT_MMAPSIZE 	4*1024*1024
+#define DEFAULT_BLOCKSIZE    4*1024
+#define DEFAULT_MMAPSIZE     4*1024*1024
 
 /* FileSrc signals and args */
 enum
@@ -268,6 +268,7 @@ gst_filesrc_init (GstFileSrc * src)
   src->uri = NULL;
 
   src->curoffset = 0;
+  src->lastoffset = 0;
   src->block_size = DEFAULT_BLOCKSIZE;
   src->touch = FALSE;
 
@@ -659,6 +660,15 @@ gst_filesrc_get_read (GstFileSrc * src)
   buf = gst_buffer_new_and_alloc (readsize);
   g_return_val_if_fail (buf != NULL, NULL);
 
+  GST_LOG_OBJECT (src, "Seeking at location %d", src->curoffset);
+  if (src->lastoffset != src->curoffset) {
+    ret = lseek (src->fd, src->curoffset, SEEK_SET);
+    if (ret < 0) {
+      GST_ELEMENT_ERROR (src, RESOURCE, SEEK, (NULL), GST_ERROR_SYSTEM);
+      return NULL;
+    }
+  }
+
   GST_LOG_OBJECT (src, "Reading %d bytes", readsize);
   ret = read (src->fd, GST_BUFFER_DATA (buf), readsize);
   if (ret < 0) {
@@ -685,6 +695,7 @@ gst_filesrc_get_read (GstFileSrc * src)
   GST_BUFFER_OFFSET (buf) = src->curoffset;
   GST_BUFFER_OFFSET_END (buf) = src->curoffset + readsize;
   src->curoffset += readsize;
+  src->lastoffset = src->curoffset;
 
   return GST_DATA (buf);
 }
@@ -821,6 +832,7 @@ gst_filesrc_open_file (GstFileSrc * src)
 #endif
 
     src->curoffset = 0;
+    src->lastoffset = 0;
 
     GST_FLAG_SET (src, GST_FILESRC_OPEN);
   }
@@ -840,6 +852,7 @@ gst_filesrc_close_file (GstFileSrc * src)
   src->fd = 0;
   src->filelen = 0;
   src->curoffset = 0;
+  src->lastoffset = 0;
   src->is_regular = FALSE;
 
   if (src->mapbuf) {
