@@ -1,5 +1,10 @@
 2005-09-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* check/gst/gstpipeline.c: (GST_START_TEST), (gst_pipeline_suite):
+	  codify design+behaviour in testsuite after discussion
+
+2005-09-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/gst/tmpl/gstelement.sgml:
 	* docs/manual/appendix-quotes.xml:
 	  add a quote

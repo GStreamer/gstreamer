@@ -41,8 +41,7 @@ pop_messages (GstBus * bus, int count)
 }
 #endif
 
-/* FIXME: even though this is a pathological case, it would make sense
- * to have it return ASYNC as well */
+/* an empty pipeline can go to PLAYING in one go */
 GST_START_TEST (test_async_state_change_empty)
 {
   GstPipeline *pipeline;
@@ -51,18 +50,14 @@ GST_START_TEST (test_async_state_change_empty)
   fail_unless (pipeline != NULL, "Could not create pipeline");
   g_object_set (G_OBJECT (pipeline), "play-timeout", 0LL, NULL);
 
-/*
   fail_unless_equals_int (gst_element_set_state (GST_ELEMENT (pipeline),
-      GST_STATE_PLAYING), GST_STATE_CHANGE_ASYNC);
-*/
+          GST_STATE_PLAYING), GST_STATE_CHANGE_SUCCESS);
 
   gst_object_unref (pipeline);
 }
 
 GST_END_TEST;
 
-/* FIXME: this is less of a pathological case, it would make sense
- * to have it return ASYNC as well */
 GST_START_TEST (test_async_state_change_fake_ready)
 {
   GstPipeline *pipeline;
@@ -78,10 +73,8 @@ GST_START_TEST (test_async_state_change_fake_ready)
   gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
   gst_element_link (src, sink);
 
-/*
   fail_unless_equals_int (gst_element_set_state (GST_ELEMENT (pipeline),
-      GST_STATE_READY), GST_STATE_CHANGE_ASYNC);
-*/
+          GST_STATE_READY), GST_STATE_CHANGE_SUCCESS);
 
   gst_object_unref (pipeline);
 }
@@ -89,13 +82,11 @@ GST_START_TEST (test_async_state_change_fake_ready)
 GST_END_TEST;
 
 
-#if 0
 GST_START_TEST (test_async_state_change_fake)
 {
   GstPipeline *pipeline;
   GstElement *src, *sink;
   GstBus *bus;
-  GstMessageType type;
 
   pipeline = GST_PIPELINE (gst_pipeline_new (NULL));
   fail_unless (pipeline != NULL, "Could not create pipeline");
@@ -112,10 +103,15 @@ GST_START_TEST (test_async_state_change_fake)
   fail_unless_equals_int (gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_PLAYING), GST_STATE_CHANGE_ASYNC);
 
+#if 0
+  /* FIXME: Wim is implementing a set_state_async, which will
+   * spawn a thread and make sure the pipeline gets to the
+   * requested final state, or errors out before */
   gst_bin_watch_for_state_change (GST_BIN (pipeline));
 
   while ((type = gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, -1))) {
     GstMessage *message;
+    GstMessageType type;
     GstState old, new;
     GstState state, pending;
     GstStateChange ret;
@@ -133,11 +129,12 @@ GST_START_TEST (test_async_state_change_fake)
     ret = gst_element_get_state (GST_ELEMENT (pipeline), &state, &pending,
         &timeval);
   }
+#endif
+
   gst_object_unref (pipeline);
 }
 
 GST_END_TEST;
-#endif
 
 Suite *
 gst_pipeline_suite (void)
@@ -148,9 +145,7 @@ gst_pipeline_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_async_state_change_empty);
   tcase_add_test (tc_chain, test_async_state_change_fake_ready);
-#if 0
   tcase_add_test (tc_chain, test_async_state_change_fake);
-#endif
 
   return s;
 }
