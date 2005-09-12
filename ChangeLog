@@ -1,5 +1,11 @@
 2005-09-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gst.defs:
+	* testsuite/test_pipeline.py:
+	  wrap state_change_async and show that it works
+
+2005-09-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* examples/vumeter.py:
 	  update for property name change
 	* gst/gst.override:

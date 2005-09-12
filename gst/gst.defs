@@ -1055,6 +1055,15 @@
   )
 )
 
+(define-method set_state_async
+  (of-object "GstElement")
+  (c-name "gst_element_set_state_async")
+  (return-type "GstStateChangeReturn")
+  (parameters
+    '("GstState" "state")
+  )
+)
+
 (define-method abort_state
   (of-object "GstElement")
   (c-name "gst_element_abort_state")
