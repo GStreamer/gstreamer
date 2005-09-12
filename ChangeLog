@@ -1,3 +1,11 @@
+2005-09-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* examples/vumeter.py:
+	  update for property name change
+	* gst/gst.override:
+	* testsuite/test_element.py:
+	  actually log on objects, yay
+
 2005-09-12  Andy Wingo  <wingo@pobox.com>
 
 	* testsuite/test_element.py (ElementName.testElementStateGetName):

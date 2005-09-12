@@ -83,7 +83,7 @@ class Window(gtk.Dialog):
     def run(self):
         try:
             self.set_sensitive(False)
-            s = 'alsasrc ! level signal=true ! fakesink'
+            s = 'alsasrc ! level message=true ! fakesink'
             pipeline = gst.parse_launch(s)
             self.set_sensitive(True)
             watch_id = pipeline.get_bus().add_watch(self.on_message)

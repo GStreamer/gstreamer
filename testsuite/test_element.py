@@ -22,6 +22,12 @@
 
 from common import gst, unittest
 
+# since I can't subclass gst.Element for some reason, I use a bin here
+# it don't matter to Jesus
+class TestElement(gst.Bin):
+    def break_it_down(self):
+        self.debug('Hammer Time')
+
 class ElementTest(unittest.TestCase):
     name = 'fakesink'
     alias = 'sink'
@@ -184,7 +190,11 @@ class DebugTest(unittest.TestCase):
         e.debug('I am a debug string')
         e.log('I am a log string')
         e.debug('I am a formatted %s %s' % ('log', 'string'))
-        
+
+    def testElementDebug(self):
+        e = TestElement("testelement")
+        e.set_property("name", "testelement")
+        e.break_it_down()
         
 if __name__ == "__main__":
     unittest.main()
