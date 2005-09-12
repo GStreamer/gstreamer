@@ -11,6 +11,26 @@
   </para>
 
   <variablelist>
+    <varlistentry>
+      <term>12 Sep 2005</term>
+      <listitem>
+<para><emphasis>&lt;wingo&gt;</emphasis>
+we just need to get rid of that mmap stuff
+</para>
+<para><emphasis>&lt;wingo&gt;</emphasis>
+i think gnomevfssrc is faster for files even
+</para>
+<para><emphasis>&lt;BBB&gt;</emphasis>
+wingo, no
+</para>
+<para><emphasis>&lt;BBB&gt;</emphasis>
+and no
+</para>
+<para><emphasis>&lt;wingo&gt;</emphasis>
+good points ronald
+</para>
+      </listitem>
+    </varlistentry>
 
     <varlistentry>
       <term>23 Jun 2005</term>
@@ -22,15 +42,15 @@
 <para><emphasis>* everybody</emphasis> back back</para>
 <para><emphasis>&lt;everybody&gt;</emphasis> now break it down</para>
 <para>--- You are now known as thomasvs</para>
-<para><emphasis>&lt;bilboed&gt;</emphasis> back</para>
+<para><emphasis>* bilboed</emphasis> back</para>
 <para>--- bilboed is now known as john-sebastian</para>
-<para><emphasis>&lt;john-sebastian&gt;</emphasis> bach</para>
+<para><emphasis>* john-sebastian</emphasis> bach</para>
 <para>--- john-sebastian is now known as bilboed</para>
 <para>--- You are now known as scratch_my</para>
 <para><emphasis>* scratch_my</emphasis> back</para>
 <para>--- bilboed is now known as Illbe</para>
 <para>--- You are now known as thomasvs</para>
-<para><emphasis>&lt;Illbe&gt;</emphasis> back</para>
+<para><emphasis>* Illbe</emphasis> back</para>
 <para>--- Illbe is now known as bilboed</para>
       </listitem>
     </varlistentry>
