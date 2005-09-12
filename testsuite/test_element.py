@@ -152,7 +152,7 @@ class ElementName(unittest.TestCase):
             attr = getattr(gst, name)
             assert get_name(attr) == state
             
-        assert get_name(gst.STATE_VOID_PENDING) == 'NONE_PENDING'
+        assert get_name(gst.STATE_VOID_PENDING) == 'VOID_PENDING'
         assert get_name(-1) == 'UNKNOWN!(-1)'
         self.assertRaises(TypeError, get_name, '')
         
