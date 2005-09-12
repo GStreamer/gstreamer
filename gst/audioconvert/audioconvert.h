@@ -48,8 +48,8 @@ struct _AudioConvertFmt
   gint unit_size;
 };
 
-typedef void (*AudioConvertUnpack) (gpointer src, gint32 *dst, gint64 scale, gint count);
-typedef void (*AudioConvertPack) (gint32 *src, gpointer dst, gint depth, gint count);
+typedef void (*AudioConvertUnpack) (gpointer src, gint32 *dst, gint scale, gint count);
+typedef void (*AudioConvertPack) (gint32 *src, gpointer dst, gint scale, gint count);
 
 struct _AudioConvertCtx
 {
@@ -70,8 +70,8 @@ struct _AudioConvertCtx
   gpointer tmpbuf;
   gint tmpbufsize;
 
-  gint64 scale;
-  gint depth;
+  gint in_scale;
+  gint out_scale;
 };
 
 gboolean	audio_convert_clean_fmt		(AudioConvertFmt *fmt); 

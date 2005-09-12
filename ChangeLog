@@ -1,3 +1,11 @@
+2005-09-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/audioconvert/audioconvert.c: (float),
+	(audio_convert_prepare_context), (audio_convert_convert):
+	* gst/audioconvert/audioconvert.h:
+	Cleanups, speedups, simplifications, added back support
+	for 24 bits.
+
 2005-09-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
