@@ -15,18 +15,6 @@
 	* gst/videobox/gstvideobox.c: (gst_video_box_set_property):
 	  Basetransform changes.
 
-2005-09-09  Jan Schmidt  <thaytan@mad.scientist.com>
-
-	reviewed by: <delete if not using a buddy>
-
-	* configure.ac:
-	* gst/fdsrc/Makefile.am:
-	* gst/fdsrc/gstfdsrc.c:
-	* gst/fdsrc/gstfdsrc.h:
-	* gst/level/gstlevel.c: (gst_level_class_init),
-	(gst_level_transform_ip):
-	* gst/videobox/gstvideobox.c: (gst_video_box_set_property):
-
 2005-09-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/jpeg/gstsmokeenc.c: (gst_smokeenc_chain):
