@@ -1,3 +1,17 @@
+2005-09-12  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/base/gstbasetransform.c: (gst_base_transform_class_init),
+	(gst_base_transform_prepare_output_buf),
+	(gst_base_transform_handle_buffer):
+	* gst/elements/gstcapsfilter.c: (gst_capsfilter_transform_ip),
+	(gst_capsfilter_prepare_buf):
+	  Remove the requirement for sub-classes to call the parent
+	  implementation of prepare_output_buffer with a wrapper function.
+	  
+	* gst/gsttaglist.h:
+	* gst/gsttagsetter.h:
+	  Fix #define wrapper
+
 2005-09-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:

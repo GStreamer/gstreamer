@@ -179,14 +179,6 @@
  * </para></listitem>
  * </itemizedlist>
  *
- * <itemizedlist><title>Retrictions on sub-class behaviour</title>
- * <listitem><para>
- *    Sub-classes which override the prepare_output_buffer function need to call
- *    the parent implementation if they allocate a new buffer, which will copy
- *    buffer flags onto the new buffer.
- * </para></listitem>
- * </itemizedlist>
- * 
 */
 
 #ifdef HAVE_CONFIG_H
@@ -222,7 +214,7 @@ static void gst_base_transform_base_init (gpointer g_class);
 static void gst_base_transform_class_init (GstBaseTransformClass * klass);
 static void gst_base_transform_init (GstBaseTransform * trans,
     GstBaseTransformClass * klass);
-static GstFlowReturn gst_base_transform_default_prepare_buf (GstBaseTransform *
+static GstFlowReturn gst_base_transform_prepare_output_buf (GstBaseTransform *
     trans, GstBuffer * input, gint size, GstCaps * caps, GstBuffer ** buf);
 
 GType
@@ -310,8 +302,6 @@ gst_base_transform_class_init (GstBaseTransformClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_transform_change_state);
 
-  klass->prepare_output_buffer =
-      GST_DEBUG_FUNCPTR (gst_base_transform_default_prepare_buf);
   klass->passthrough_on_same_caps = FALSE;
 }
 
@@ -787,7 +777,7 @@ failed_configure:
 
 /* Allocate a buffer using gst_pad_alloc_buffer */
 static GstFlowReturn
-gst_base_transform_default_prepare_buf (GstBaseTransform * trans,
+gst_base_transform_prepare_output_buf (GstBaseTransform * trans,
     GstBuffer * input, gint size, GstCaps * caps, GstBuffer ** buf)
 {
   GstBaseTransformClass *bclass;
@@ -796,13 +786,24 @@ gst_base_transform_default_prepare_buf (GstBaseTransform * trans,
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
+  if (bclass->prepare_output_buffer) {
+    ret = bclass->prepare_output_buffer (trans, input, size, caps, buf);
+    if (ret != GST_FLOW_OK)
+      return ret;
+  }
+
   /* See if we want to prepare the buffer for in place output */
   if (*buf == NULL && GST_BUFFER_SIZE (input) == size && bclass->transform_ip) {
     if (gst_buffer_is_writable (input)) {
-      /* Input buffer is already writable, just ref and return it */
-      *buf = input;
-      gst_buffer_ref (input);
-      gst_caps_replace (&GST_BUFFER_CAPS (*buf), caps);
+      if (trans->have_same_caps) {
+        /* Input buffer is already writable and caps are the same, just ref and return it */
+        *buf = input;
+        gst_buffer_ref (input);
+      } else {
+        /* Writable buffer, but need to change caps => subbuffer */
+        *buf = gst_buffer_create_sub (input, 0, GST_BUFFER_SIZE (input));
+        gst_caps_replace (&GST_BUFFER_CAPS (*buf), caps);
+      }
 
       return GST_FLOW_OK;
     } else {
@@ -1104,7 +1105,7 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
      * the old buffer. We will therefore delay the reconfiguration of the
      * element until we have processed this last buffer. */
     trans->delay_configure = TRUE;
-    ret = bclass->prepare_output_buffer (trans, inbuf,
+    ret = gst_base_transform_prepare_output_buf (trans, inbuf,
         GST_BUFFER_SIZE (inbuf), GST_PAD_CAPS (trans->srcpad), outbuf);
     trans->delay_configure = FALSE;
     if (G_UNLIKELY (ret != GST_FLOW_OK))
@@ -1133,7 +1134,7 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
      * element until we have processed this last buffer. */
     trans->delay_configure = TRUE;
     /* no in place transform, get buffer, this might renegotiate. */
-    ret = bclass->prepare_output_buffer (trans, inbuf, out_size,
+    ret = gst_base_transform_prepare_output_buf (trans, inbuf, out_size,
         GST_PAD_CAPS (trans->srcpad), outbuf);
     trans->delay_configure = FALSE;
 

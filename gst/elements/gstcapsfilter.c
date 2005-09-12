@@ -272,6 +272,5 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
     }
   }
 
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->
-      prepare_output_buffer (trans, input, size, caps, buf);
+  return GST_FLOW_OK;
 }

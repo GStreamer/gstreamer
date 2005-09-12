@@ -19,8 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_TAG_INTERFACE_H__
-#define __GST_TAG_INTERFACE_H__
+#ifndef __GST_TAG_SETTER_H__
+#define __GST_TAG_SETTER_H__
 
 #include <gst/gst.h>
 
@@ -80,4 +80,4 @@ GstTagMergeMode	gst_tag_setter_get_merge_mode	(GstTagSetter *		setter);
 
 G_END_DECLS
 
-#endif /* __GST_TAG_INTERFACE_H__ */
+#endif /* __GST_TAG_SETTER_H__ */

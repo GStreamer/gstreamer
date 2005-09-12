@@ -20,8 +20,8 @@
  */
 
 
-#ifndef __GST_TAG_H__
-#define __GST_TAG_H__
+#ifndef __GST_TAGLIST_H__
+#define __GST_TAGLIST_H__
 
 #include <gst/gststructure.h>
 
@@ -435,4 +435,4 @@ gboolean	gst_tag_list_get_pointer_index	(const GstTagList *	list,
 
 G_END_DECLS
 
-#endif /* __GST_EVENT_H__ */
+#endif /* __GST_TAGLIST_H__ */
