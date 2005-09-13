@@ -322,6 +322,13 @@ gst_ffmpegenc_getcaps (GstPad * pad)
   /* makes it silent */
   ctx->strict_std_compliance = -1;
 
+   /* shut up the logging while we autoprobe; we don't want warnings and
+    * errors about unsupported formats */
+   /* FIXME: if someone cares about this disabling the logging for other
+    * instances/threads/..., one could investigate if there is a way to
+    * set this as a struct member on the av context, and check it from the
+    * log handler */
+  _shut_up_I_am_probing = TRUE;
   for (pixfmt = 0; pixfmt < PIX_FMT_NB; pixfmt++) {
     ctx->pix_fmt = pixfmt;
     if (avcodec_open (ctx, oclass->in_plugin) >= 0 &&
@@ -337,6 +344,7 @@ gst_ffmpegenc_getcaps (GstPad * pad)
       avcodec_close (ctx);
   }
   av_free (ctx);
+  _shut_up_I_am_probing = FALSE;
 
   /* make sure we have something */
   if (!caps) {

@@ -22,7 +22,7 @@
  */
 
 #ifndef __GST_FFMPEG_H__
-#define __GST_FFMPEG_H
+#define __GST_FFMPEG_H__
 
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <avcodec.h>
@@ -39,6 +39,10 @@ GST_DEBUG_CATEGORY_EXTERN (ffmpeg_debug);
 
 G_BEGIN_DECLS
 
+#ifndef GST_DISABLE_GST_DEBUG
+extern gboolean _shut_up_I_am_probing;
+#endif
+
 extern gboolean gst_ffmpegdemux_register (GstPlugin * plugin);
 extern gboolean gst_ffmpegdec_register (GstPlugin * plugin);
 extern gboolean gst_ffmpegenc_register (GstPlugin * plugin);
@@ -51,7 +55,7 @@ G_END_DECLS
 
 extern URLProtocol gstreamer_protocol;
 
-/* use GST_FFMPEG URL_STREAMHEADER with URL_WRONLY if the first 
+/* use GST_FFMPEG URL_STREAMHEADER with URL_WRONLY if the first
  * buffer should be used as streamheader property on the pad's caps. */
 #define GST_FFMPEG_URL_STREAMHEADER 16
 

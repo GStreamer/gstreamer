@@ -43,6 +43,9 @@ gst_ffmpeg_log_callback (void * ptr, int level, const char * fmt, va_list vl)
 {
   GstDebugLevel gst_level;
 
+  if (_shut_up_I_am_probing)
+    return;
+
   switch (level) {
     case AV_LOG_QUIET:
       gst_level = GST_LEVEL_NONE;
@@ -65,11 +68,16 @@ gst_ffmpeg_log_callback (void * ptr, int level, const char * fmt, va_list vl)
 }
 #endif
 
+#ifndef GST_DISABLE_GST_DEBUG
+gboolean _shut_up_I_am_probing = FALSE;
+#endif
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (ffmpeg_debug, "ffmpeg", 0, "FFmpeg elements");
 #ifndef GST_DISABLE_GST_DEBUG
+
   av_log_set_callback (gst_ffmpeg_log_callback);
 #endif
   av_register_all ();
