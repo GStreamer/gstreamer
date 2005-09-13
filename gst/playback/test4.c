@@ -46,7 +46,7 @@ main (gint argc, gchar * argv[])
   }
 
   g_print ("sleep 2...\n");
-  sleep (2);
+  g_usleep (2 * G_USEC_PER_SEC);
 
   g_print ("pause...\n");
   res = gst_element_set_state (player, GST_STATE_PAUSED);
@@ -56,7 +56,7 @@ main (gint argc, gchar * argv[])
   }
 
   g_print ("sleep 2...\n");
-  sleep (2);
+  g_usleep (2 * G_USEC_PER_SEC);
 
   g_print ("play...\n");
   res = gst_element_set_state (player, GST_STATE_PLAYING);
@@ -66,7 +66,7 @@ main (gint argc, gchar * argv[])
   }
 
   g_print ("sleep 2...\n");
-  sleep (2);
+  g_usleep (2 * G_USEC_PER_SEC);
 
   g_print ("ready...\n");
   res = gst_element_set_state (player, GST_STATE_READY);
@@ -76,7 +76,7 @@ main (gint argc, gchar * argv[])
   }
 
   g_print ("sleep 2...\n");
-  sleep (2);
+  g_usleep (2 * G_USEC_PER_SEC);
 
   g_print ("play...\n");
   res = gst_element_set_state (player, GST_STATE_PLAYING);

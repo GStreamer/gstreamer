@@ -1,3 +1,14 @@
+2005-09-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/audioconvert/Makefile.am:
+	  Audioconvert derives from GstBaseTransform and should
+	  link to the library with our base elements to avoid
+	  unresolved symbols. Makes things work with MinGW (#316160)
+ 
+	* gst/playback/test4.c: (main):
+	  Fix MinGW build problem and use g_usleep() instead of 
+	  sleep() (#316162)
+
 2005-09-12  Wim Taymans  <wim@fluendo.com>
 
 	* gst/audioconvert/audioconvert.c: (float),
