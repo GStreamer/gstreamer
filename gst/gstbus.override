@@ -32,43 +32,48 @@ bus_sync_handler (GstBus *bus, GstMessage *message, gpointer user_data)
     PyObject    *py_msg;
     PyObject    *callback, *args;
     PyObject    *ret;
-    gint        i,len;
+    gint        i, len;
 
     g_return_val_if_fail (user_data != NULL, GST_BUS_PASS);
 
-    state = pyg_gil_state_ensure();
+    state = pyg_gil_state_ensure ();
 
     py_userdata = (PyObject *) user_data;
-    py_msg = pygstminiobject_new(GST_MINI_OBJECT(message));
-    callback = PyTuple_GetItem(py_userdata, 0);
-    args = Py_BuildValue("(NN)",
-                 pygobject_new(G_OBJECT(bus)),
-                 py_msg);
+    py_msg = pygstminiobject_new (GST_MINI_OBJECT (message));
+    callback = PyTuple_GetItem (py_userdata, 0);
 
-    len = PyTuple_Size(py_userdata);
+    /* Using N we give away our references to the args tuple */
+    args = Py_BuildValue ("(NN)",
+                          pygobject_new (G_OBJECT (bus)),
+                          py_msg);
+
+    /* add all *args to the args tuple object */
+    len = PyTuple_Size (py_userdata);
     for (i = 1; i < len; ++i) {
         PyObject *tuple = args;
-        args = PySequence_Concat(tuple, PyTuple_GetItem(py_userdata, i));
-        Py_DECREF(tuple);
+        args = PySequence_Concat (tuple, PyTuple_GetItem (py_userdata, i));
+        Py_DECREF (tuple);
     }
-    ret = PyObject_CallObject(callback, args);
+    ret = PyObject_CallObject (callback, args);
 
     if (!ret) {
-        PyErr_Print();
+        PyErr_Print ();
         res = GST_BUS_PASS;
     } else {
         if (ret == Py_None) {
-            PyErr_SetString(PyExc_TypeError, "callback should return a BusSyncReply");
-            PyErr_Print();
+            PyErr_SetString (PyExc_TypeError,
+                "callback should return a BusSyncReply");
+            PyErr_Print ();
             res = GST_BUS_PASS;    
-        } else if (pyg_enum_get_value(GST_TYPE_BUS_SYNC_REPLY, ret, (gint *) &res))
+        } else if (pyg_enum_get_value (GST_TYPE_BUS_SYNC_REPLY, ret,
+                                       (gint *) &res))
             res = GST_BUS_PASS;
+
         Py_DECREF (ret);
     }
-    Py_DECREF(py_msg);
-    Py_DECREF(args);
+    Py_DECREF (args);
 
-    pyg_gil_state_release(state);
+    pyg_gil_state_release (state);
 
     return res;
 }
@@ -79,46 +84,49 @@ bus_handler (GstBus *bus, GstMessage *message, gpointer user_data)
     PyGILState_STATE state;
     gboolean    res;
     PyObject    *py_userdata;
-     PyObject    *py_msg;
+    PyObject    *py_msg;
     PyObject    *callback, *args;
     PyObject    *ret;
-    gint        i,len;
+    gint        i, len;
 
     g_return_val_if_fail (user_data != NULL, TRUE);
 
-    state = pyg_gil_state_ensure();
+    state = pyg_gil_state_ensure ();
 
     py_userdata = (PyObject *) user_data;
-     py_msg = pygstminiobject_new(GST_MINI_OBJECT(message));
-    callback = PyTuple_GetItem(py_userdata, 0);
-    args = Py_BuildValue("(NN)",
-                 pygobject_new(G_OBJECT(bus)),
-                 py_msg);
+    py_msg = pygstminiobject_new (GST_MINI_OBJECT (message));
+    callback = PyTuple_GetItem (py_userdata, 0);
 
-    len = PyTuple_Size(py_userdata);
+    /* Using N we give away our references to the args tuple */
+    args = Py_BuildValue ("(NN)",
+                          pygobject_new (G_OBJECT (bus)),
+                          py_msg);
+
+    /* add all *args to the args tuple object */
+    len = PyTuple_Size (py_userdata);
     for (i = 1; i < len; ++i) {
         PyObject *tuple = args;
-        args = PySequence_Concat(tuple, PyTuple_GetItem(py_userdata, i));
-        Py_DECREF(tuple);
+        args = PySequence_Concat (tuple, PyTuple_GetItem (py_userdata, i));
+        Py_DECREF (tuple);
     }
     ret = PyObject_CallObject(callback, args);
 
     if (!ret) {
-        PyErr_Print();
+        PyErr_Print ();
         res = TRUE;
     } else {
         if (ret == Py_None) {
-            PyErr_SetString(PyExc_TypeError, "callback should return True or False");
-            PyErr_Print();
+            PyErr_SetString (PyExc_TypeError,
+                "callback should return True or False");
+            PyErr_Print ();
             res = TRUE;
         } else 
-            res = PyObject_IsTrue(ret);
-        Py_DECREF(ret);
+            res = PyObject_IsTrue (ret);
+        Py_DECREF (ret);
     }
-    Py_DECREF(py_msg);
-    Py_DECREF(args);
+    Py_DECREF (args);
 
-    pyg_gil_state_release(state);
+    pyg_gil_state_release (state);
 
     return res;
 }
