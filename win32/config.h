@@ -32,7 +32,7 @@
 #define GST_VERSION "0.8.11"
 
 /* Define the release version */
-#define GST_VERSION_RELEASE "20040129_103536"
+#define GST_VERSION_RELEASE "0.20050912.123839"
 
 /* Define if atomic.h header file is available */
 #undef HAVE_ATOMIC_H
@@ -190,7 +190,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.8.11.0"
+#define VERSION "0.8.11.1"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
@@ -201,4 +201,5 @@
 #define LIBDIR PLUGINS_DIR
 
 #define HAVE_FFMPEG_UNINSTALLED
+#define HAVE_LAME_UNINSTALLED
 #define HAVE_AV_CONFIG_H

@@ -49,6 +49,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gstcontrol", "gstcontrol.vc
 		{FC47A187-6B10-4B19-93B5-ED7BCC75D466} = {FC47A187-6B10-4B19-93B5-ED7BCC75D466}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "threads", "testsuite\threads.vcproj", "{5B645596-556B-4BAB-8612-3AC4F17BC630}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FC47A187-6B10-4B19-93B5-ED7BCC75D466} = {FC47A187-6B10-4B19-93B5-ED7BCC75D466}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(DPCodeReviewSolutionGUID) = preSolution
 		DPCodeReviewSolutionGUID = {00000000-0000-0000-0000-000000000000}
@@ -98,6 +103,10 @@ Global
 		{0CCB8AFC-97D8-4251-9B9D-08E8DC41BB7D}.Debug.Build.0 = Debug|Win32
 		{0CCB8AFC-97D8-4251-9B9D-08E8DC41BB7D}.Release.ActiveCfg = Release|Win32
 		{0CCB8AFC-97D8-4251-9B9D-08E8DC41BB7D}.Release.Build.0 = Release|Win32
+		{5B645596-556B-4BAB-8612-3AC4F17BC630}.Debug.ActiveCfg = Debug|Win32
+		{5B645596-556B-4BAB-8612-3AC4F17BC630}.Debug.Build.0 = Debug|Win32
+		{5B645596-556B-4BAB-8612-3AC4F17BC630}.Release.ActiveCfg = Release|Win32
+		{5B645596-556B-4BAB-8612-3AC4F17BC630}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
