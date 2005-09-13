@@ -1,3 +1,8 @@
+2005-09-13  Michael Smith <msmith@fluendo.com>
+
+	* gst/gstconfig.h.in:
+	  Don't Use windows linking attributes for MinGW. Fixes #316157
+
 2005-09-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstutils.c: (set_state_async_thread_func),
