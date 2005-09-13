@@ -1,3 +1,8 @@
+2005-09-13  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/gstregistry.c: (gst_registry_add_plugin): duplicate plugin
+	should never be freed as this the original one we are receiving here.
+
 2005-09-12  Steve Lhomme  <steve.lhomme@free.fr>
 	* gst/elements/gstfilesrc.c: (gst_filesrc_get_read)
 	* gst/elements/gstfilesrc.h:

@@ -287,7 +287,10 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
     GST_WARNING_OBJECT (registry, "Not adding plugin %s, "
         "because a plugin with same name already exists",
         gst_plugin_get_name (plugin));
-    gst_plugin_free (plugin);
+    /* We don't free the plugin here because when gst_plugin_load_file detects 
+     * and already loaded plugin it just returns the loaded one. So basically 
+     * if we free this plugin we are freeing the original one which is already
+     * in the registry (dolphy, 09/13/2005) */
     return FALSE;
   }
 
