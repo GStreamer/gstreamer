@@ -1,5 +1,7 @@
-/* -*- Mode: C; ; c-file-style: "python" -*- */
-/* gst-python
+/* -*- Mode: C; c-basic-offset: 4 -*- */
+ * vi:si:et:sw=4:sts=4:ts=4
+ *
+ * gst-python
  * Copyright (C) 2005 Edward Hervey
  *
  * This library is free software; you can redistribute it and/or
@@ -24,101 +26,101 @@ headers
 static GstBusSyncReply
 bus_sync_handler (GstBus *bus, GstMessage *message, gpointer user_data)
 {
-	PyGILState_STATE state;
-	GstBusSyncReply	res;
-	PyObject	*py_userdata;
-	PyObject	*py_msg;
-	PyObject	*callback, *args;
-	PyObject	*ret;
-	gint		i,len;
+    PyGILState_STATE state;
+    GstBusSyncReply    res;
+    PyObject    *py_userdata;
+    PyObject    *py_msg;
+    PyObject    *callback, *args;
+    PyObject    *ret;
+    gint        i,len;
 
-	g_return_val_if_fail (user_data != NULL, GST_BUS_PASS);
+    g_return_val_if_fail (user_data != NULL, GST_BUS_PASS);
 
-	state = pyg_gil_state_ensure();
+    state = pyg_gil_state_ensure();
 
-	py_userdata = (PyObject *) user_data;
-	py_msg = pygstminiobject_new(GST_MINI_OBJECT(message));
-	callback = PyTuple_GetItem(py_userdata, 0);
-	args = Py_BuildValue("(NN)",
-			     pygobject_new(G_OBJECT(bus)),
-			     py_msg);
+    py_userdata = (PyObject *) user_data;
+    py_msg = pygstminiobject_new(GST_MINI_OBJECT(message));
+    callback = PyTuple_GetItem(py_userdata, 0);
+    args = Py_BuildValue("(NN)",
+                 pygobject_new(G_OBJECT(bus)),
+                 py_msg);
 
-	len = PyTuple_Size(py_userdata);
-	for (i = 1; i < len; ++i) {
-		PyObject *tuple = args;
-		args = PySequence_Concat(tuple, PyTuple_GetItem(py_userdata, i));
-		Py_DECREF(tuple);
-	}
-	ret = PyObject_CallObject(callback, args);
+    len = PyTuple_Size(py_userdata);
+    for (i = 1; i < len; ++i) {
+        PyObject *tuple = args;
+        args = PySequence_Concat(tuple, PyTuple_GetItem(py_userdata, i));
+        Py_DECREF(tuple);
+    }
+    ret = PyObject_CallObject(callback, args);
 
-	if (!ret) {
-		PyErr_Print();
-		res = GST_BUS_PASS;
-	} else {
-		if (ret == Py_None) {
-			PyErr_SetString(PyExc_TypeError, "callback should return a BusSyncReply");
-			PyErr_Print();
-			res = GST_BUS_PASS;	
-		} else if (pyg_enum_get_value(GST_TYPE_BUS_SYNC_REPLY, ret, (gint *) &res))
-			res = GST_BUS_PASS;
-		Py_DECREF (ret);
-	}
-	Py_DECREF(py_msg);
-	Py_DECREF(args);
+    if (!ret) {
+        PyErr_Print();
+        res = GST_BUS_PASS;
+    } else {
+        if (ret == Py_None) {
+            PyErr_SetString(PyExc_TypeError, "callback should return a BusSyncReply");
+            PyErr_Print();
+            res = GST_BUS_PASS;    
+        } else if (pyg_enum_get_value(GST_TYPE_BUS_SYNC_REPLY, ret, (gint *) &res))
+            res = GST_BUS_PASS;
+        Py_DECREF (ret);
+    }
+    Py_DECREF(py_msg);
+    Py_DECREF(args);
 
-	pyg_gil_state_release(state);
+    pyg_gil_state_release(state);
 
-	return res;
+    return res;
 }
 
 static gboolean
 bus_handler (GstBus *bus, GstMessage *message, gpointer user_data)
 {
-	PyGILState_STATE state;
-	gboolean	res;
-	PyObject	*py_userdata;
- 	PyObject	*py_msg;
-	PyObject	*callback, *args;
-	PyObject	*ret;
-	gint		i,len;
+    PyGILState_STATE state;
+    gboolean    res;
+    PyObject    *py_userdata;
+     PyObject    *py_msg;
+    PyObject    *callback, *args;
+    PyObject    *ret;
+    gint        i,len;
 
-	g_return_val_if_fail (user_data != NULL, TRUE);
+    g_return_val_if_fail (user_data != NULL, TRUE);
 
-	state = pyg_gil_state_ensure();
+    state = pyg_gil_state_ensure();
 
-	py_userdata = (PyObject *) user_data;
- 	py_msg = pygstminiobject_new(GST_MINI_OBJECT(message));
-	callback = PyTuple_GetItem(py_userdata, 0);
-	args = Py_BuildValue("(NN)",
-			     pygobject_new(G_OBJECT(bus)),
-			     py_msg);
+    py_userdata = (PyObject *) user_data;
+     py_msg = pygstminiobject_new(GST_MINI_OBJECT(message));
+    callback = PyTuple_GetItem(py_userdata, 0);
+    args = Py_BuildValue("(NN)",
+                 pygobject_new(G_OBJECT(bus)),
+                 py_msg);
 
-	len = PyTuple_Size(py_userdata);
-	for (i = 1; i < len; ++i) {
-		PyObject *tuple = args;
-		args = PySequence_Concat(tuple, PyTuple_GetItem(py_userdata, i));
-		Py_DECREF(tuple);
-	}
-	ret = PyObject_CallObject(callback, args);
+    len = PyTuple_Size(py_userdata);
+    for (i = 1; i < len; ++i) {
+        PyObject *tuple = args;
+        args = PySequence_Concat(tuple, PyTuple_GetItem(py_userdata, i));
+        Py_DECREF(tuple);
+    }
+    ret = PyObject_CallObject(callback, args);
 
-	if (!ret) {
-		PyErr_Print();
-		res = TRUE;
-	} else {
-		if (ret == Py_None) {
-			PyErr_SetString(PyExc_TypeError, "callback should return True or False");
-			PyErr_Print();
-			res = TRUE;
-		} else 
-			res = PyObject_IsTrue(ret);
-		Py_DECREF(ret);
-	}
-	Py_DECREF(py_msg);
-	Py_DECREF(args);
+    if (!ret) {
+        PyErr_Print();
+        res = TRUE;
+    } else {
+        if (ret == Py_None) {
+            PyErr_SetString(PyExc_TypeError, "callback should return True or False");
+            PyErr_Print();
+            res = TRUE;
+        } else 
+            res = PyObject_IsTrue(ret);
+        Py_DECREF(ret);
+    }
+    Py_DECREF(py_msg);
+    Py_DECREF(args);
 
-	pyg_gil_state_release(state);
+    pyg_gil_state_release(state);
 
-	return res;
+    return res;
 }
 
 %%
@@ -132,23 +134,23 @@ _wrap_gst_bus_set_sync_handler (PyGObject *self, PyObject *args)
     len = PyTuple_Size(args);
 
     if (len < 1) {
-	PyErr_SetString(PyExc_TypeError, "Bus requires at least 1 arg");
-	return NULL;
+    PyErr_SetString(PyExc_TypeError, "Bus requires at least 1 arg");
+    return NULL;
     }
     callback = PySequence_GetItem(args, 0);
     if (!PyCallable_Check(callback)) {
-	PyErr_SetString(PyExc_TypeError, "callback is not callable");
-	return NULL;
+    PyErr_SetString(PyExc_TypeError, "callback is not callable");
+    return NULL;
     }
     cbargs = PySequence_GetSlice(args, 1, len);
     if (cbargs == NULL)
-	return NULL;
+    return NULL;
     data = Py_BuildValue("(ON)", callback, cbargs);
     if (data == NULL)
-	return NULL;
+    return NULL;
     gst_bus_set_sync_handler (GST_BUS (self->obj),
-				      (GstBusSyncHandler) bus_sync_handler, 
-				      data);
+                      (GstBusSyncHandler) bus_sync_handler, 
+                      data);
 
     return (PyObject*) self;
 
@@ -165,20 +167,20 @@ _wrap_gst_bus_add_watch (PyGObject *self, PyObject *args)
     len = PyTuple_Size(args);
 
     if (len < 1) {
-	PyErr_SetString(PyExc_TypeError, "Bus requires at least 1 arg");
-	return NULL;
+    PyErr_SetString(PyExc_TypeError, "Bus requires at least 1 arg");
+    return NULL;
     }
     callback = PySequence_GetItem(args, 0);
     if (!PyCallable_Check(callback)) {
-	PyErr_SetString(PyExc_TypeError, "callback is not callable");
-	return NULL;
+    PyErr_SetString(PyExc_TypeError, "callback is not callable");
+    return NULL;
     }
     cbargs = PySequence_GetSlice(args, 1, len);
     if (cbargs == NULL)
-	return NULL;
+    return NULL;
     data = Py_BuildValue("(ON)", callback, cbargs);
     if (data == NULL)
-	return NULL;
+    return NULL;
     sigid = gst_bus_add_watch (GST_BUS (self->obj), (GstBusHandler) bus_handler, data);
 
     return PyInt_FromLong(sigid);
