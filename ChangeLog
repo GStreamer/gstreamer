@@ -1,5 +1,10 @@
 2005-09-14  Michael Smith <msmith@fluendo.com>
 
+	* gst/wavenc/gstwavenc.c: (gst_wavenc_class_init):
+	  Actually define the debug object being used in wavenc. Fixes #316205
+
+2005-09-14  Michael Smith <msmith@fluendo.com>
+
 	* gst/smpte/Makefile.am:
 	  Link against GST_BASE_LIBS, to get it linked against libgstbase;
 	  needed to build on windows (bug 316204)

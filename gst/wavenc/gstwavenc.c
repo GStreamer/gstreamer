@@ -27,7 +27,7 @@
 #include "gstwavenc.h"
 #include "riff.h"
 
-GST_DEBUG_CATEGORY_EXTERN (wavenc_debug);
+GST_DEBUG_CATEGORY_STATIC (wavenc_debug);
 #define GST_CAT_DEFAULT wavenc_debug
 
 static void gst_wavenc_base_init (gpointer g_class);
@@ -182,6 +182,8 @@ gst_wavenc_class_init (GstWavEncClass * klass)
   element_class->change_state = gst_wavenc_change_state;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+
+  GST_DEBUG_CATEGORY_INIT (wavenc_debug, "wavenc", 0, "WAV encoder element");
 }
 
 static gboolean
