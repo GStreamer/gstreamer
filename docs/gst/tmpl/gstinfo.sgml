@@ -68,9 +68,6 @@ categories. These are explained at GST_DEBUG_CATEGORY_INIT().
 and environment variables that affect the debugging output.
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### ENUM GstDebugLevel ##### -->
 <para>
 The level defines the importance of a debugging message. The more important a 

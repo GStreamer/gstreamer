@@ -65,9 +65,6 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 
 <!-- basic object functions -->
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### STRUCT GstElement ##### -->
 <para>
 
@@ -964,6 +961,16 @@ Sets the parent of an element.
 
 
 <!-- ##### FUNCTION gst_element_set_state ##### -->
+<para>
+
+</para>
+
+@element: 
+@state: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_set_state_async ##### -->
 <para>
 
 </para>

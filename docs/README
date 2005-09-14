@@ -195,6 +195,47 @@ d) have verified your changes build documentation locally.
 Then, after updating any of the docs, run "make upload" from that directory.
 Or, run "make upload" from this (docs) directory.
 
+DOCUMENTING ELEMENTS
+====================
+As of september 2005 we have some system to document plugins and elements
+in the various plugin packages.
+
+- in a submodule, docs go in docs/plugins
+- template can be copied from gst-plugins-base
+- to add an element to be documented:
+  - add an include href in the Elements chapter for the element
+  - add a section for it in -sections.txt with
+      <FILE>element-(element)</FILE>
+      <TITLE>(element)</TITLE>
+  - add a gtk-doc section to the source code like:
+/**
+ * SECTION:element-multifdsink
+
+  and fill it with documentation about the element, preferably inside
+  a <refsect2> docbook container.
+  - add an example:
+    - either a few pipelines, inside <programlisting>
+    - or a piece of code:
+      - create an example program (element)-example.c in the plugin dir
+      - add the full path (starting with $(top_srcdir)) for this example
+        to the EXAMPLE_CFILES variable in Makefile.am
+      - add an xinclude of a file named "element-(element)-example.xml"
+        to the docbook documentation piece in the element source code
+  - add the header to EXTRA_HFILES in Makefile.am to be able to document
+    signals and args
+    (FIXME: are we sure we can both do the xinclude from the tmpl/ sgml,
+     as well as an override from the source itself ? maybe we should just
+     make sure the xinclude is in the source itself instead ?)
+  - to rebuild the docs, do:
+    make clean
+    make inspect-update
+    make
+
+- to add a plugin to be documented:
+  - make sure inspect/ has generated a .xml file for it
+  - add it to CVS
+  - add an include in -docs.sgml in the Plugins list for that plugin
+
 RANDOM THINGS I'VE LEARNED
 ==========================
 
