@@ -1,5 +1,14 @@
 2005-09-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/tmpl/element-tcpserversink.sgml:
+	* ext/theora/theoraenc.c:
+	  add libvisual plugin and theoraenc element to docs
+
+2005-09-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-base-plugins-sections.txt:
 	* ext/theora/theoraenc.c:

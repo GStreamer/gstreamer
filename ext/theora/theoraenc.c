@@ -18,7 +18,7 @@
  */
 
 /**
- * SECTION:theoraenc
+ * SECTION:element-theoraenc
  * @see_also: theoradec, oggmux
  *
  * <refsect2>
