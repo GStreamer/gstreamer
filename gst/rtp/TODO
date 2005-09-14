@@ -7,3 +7,5 @@
 
 *For Video:
   * payload_t 
+
+* sequence number should not start at 0, but randomly

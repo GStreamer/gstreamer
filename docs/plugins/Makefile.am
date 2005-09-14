@@ -77,6 +77,10 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/level/gstlevel.h \
 	$(top_srcdir)/gst/goom/gstgoom.h
 
+# example code that needs to be converted to xml and placed in xml/
+EXAMPLE_CFILES = \
+	$(top_srcdir)/gst/level/level-example.c
+
 # Images to copy into HTML directory.
 HTML_IMAGES =
 

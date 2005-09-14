@@ -19,6 +19,38 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-level
+ *
+ * <refsect2>
+ * <para>
+ * Level analyses incoming audio buffers and generates an application
+ * message per given interval of time.
+ * The message's structure contains four fields:
+ * <itemizedlist>
+ * <listitem>
+ *   <para>
+ *   <link linkend="gdouble">gdouble</link>
+ *   <classname>&quot;endtime&quot;</classname>:
+ *   the end time of the buffer that
+ *   triggered the message</para>
+ * </listitem>
+ * <listitem>
+ *   <para>
+ *   <link linkend="gdouble">gdouble</link>
+ *   <classname>&quot;endtime&quot;</classname>:
+ *   the end time of the buffer that
+ *   triggered the message</para>
+ * </listitem>
+  * </itemizedlist>
+ * </para>
+ * <title>Example application</title>
+ * <para>
+ * <include xmlns="http://www.w3.org/2003/XInclude" href="element-level-example.xml" />
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -146,6 +178,8 @@ gst_level_init (GstLevel * filter, GstLevelClass * g_class)
   filter->interval = 0.1;
   filter->decay_peak_ttl = 0.4;
   filter->decay_peak_falloff = 10.0;    /* dB falloff (/sec) */
+
+  filter->message = TRUE;
 }
 
 static void
@@ -257,6 +291,9 @@ gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
  * samples for multiple channels are interleaved
  * input sample data enters in *in_data as 8 or 16 bit data
  * this filter only accepts signed audio data, so mid level is always 0
+ *
+ * for 16 bit, this code considers the non-existant 32768 value to be
+ * full-scale; so 32767 will not map to 1.0
  */
 
 #define DEFINE_LEVEL_CALCULATOR(TYPE)                                         \
@@ -268,7 +305,7 @@ gst_level_calculate_##TYPE (TYPE * in, guint num, gint channels,              \
   double squaresum = 0.0;        /* square sum of the integer samples */      \
   register double square = 0.0;	 /* Square */                                 \
   register double PSS = 0.0;     /* Peak Square Sample */                     \
-  gdouble normalizer;            /* divisor to get a [-1, - 1] range */       \
+  gdouble normalizer;            /* divisor to get a [-1.0, 1.0] range */     \
                                                                               \
   *CS = 0.0;                     /* Cumulative Square for this block */       \
                                                                               \

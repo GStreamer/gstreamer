@@ -1,3 +1,17 @@
+2005-09-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* common/c-to-xml.py:
+	* common/gtk-doc-plugins.mak:
+	  a simple py script to generate valid xml from a C example
+	  probably also need to strip an MIT license when we decide
+	* docs/plugins/Makefile.am:
+	* gst/level/Makefile.am:
+	* gst/level/gstlevel.c: (gst_level_init):
+	* gst/level/level-example.c: (message_handler), (main):
+	  add an example to level that will show up in the docs
+	* gst/rtp/TODO:
+	  add a note for the future
+
 2005-09-14  Michael Smith <msmith@fluendo.com>
 
 	* gst/wavenc/gstwavenc.c: (gst_wavenc_class_init):
