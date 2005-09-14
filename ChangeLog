@@ -1,10 +1,17 @@
+2005-09-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	* ext/theora/theoraenc.c:
+	  add theoraenc
+
 2005-09-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/audioconvert/Makefile.am:
 	  Audioconvert derives from GstBaseTransform and should
 	  link to the library with our base elements to avoid
 	  unresolved symbols. Makes things work with MinGW (#316160)
- 
+
 	* gst/playback/test4.c: (main):
 	  Fix MinGW build problem and use g_usleep() instead of 
 	  sleep() (#316162)

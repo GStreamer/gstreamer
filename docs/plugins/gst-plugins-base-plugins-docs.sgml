@@ -13,13 +13,14 @@
   <chapter>
     <title>gst-plugins-base Elements</title>
     <xi:include href="xml/element-ffmpegcolorspace.xml" />
-    <xi:include href="xml/element-multifdsink.xml" />
-    <xi:include href="xml/element-tcpserversink.xml" />
-    <xi:include href="xml/element-videotestsrc.xml" />
-    <xi:include href="xml/element-volume.xml" />
 <!--
     <xi:include href="xml/element-gnomevfssink.xml" />
 -->
+    <xi:include href="xml/element-multifdsink.xml" />
+    <xi:include href="xml/element-tcpserversink.xml" />
+    <xi:include href="xml/element-theoraenc.xml" />
+    <xi:include href="xml/element-videotestsrc.xml" />
+    <xi:include href="xml/element-volume.xml" />
     <xi:include href="xml/element-vorbisenc.xml" />
   </chapter>
 

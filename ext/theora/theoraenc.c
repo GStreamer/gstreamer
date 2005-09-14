@@ -17,6 +17,24 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:theoraenc
+ * @see_also: theoradec, oggmux
+ *
+ * <refsect2>
+ * <para>
+ * This element encodes raw video into a Theora stream.
+ * <ulink url="http://www.theora.org/">Theora</ulink> is a royalty-free
+ * video codec maintained by the <ulink url="http://www.xiph.org/">Xiph.org
+ * Foundation</ulink>, based on the VP3 codec.
+ * </para>
+ * <title>Example pipeline</title>
+ * <programlisting>
+ * gst-launch -v videotestsrc num-buffers=1000 ! theoraenc ! oggmux ! filesink location=videotestsrc.ogg
+ * </programlisting>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif

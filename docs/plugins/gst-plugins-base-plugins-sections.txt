@@ -19,28 +19,29 @@ GstMultiFdSinkClass
 </SECTION>
 
 <SECTION>
-<FILE>element-tcpserversink</FILE>
-GstTCPServerSink
-<TITLE>tcpserversink</TITLE>
-<SUBSECTION Standard>
-GstTCPServerSinkClass
-</SECTION>
-
-<SECTION>
-<FILE>element-tcpserversink</FILE>
-GstTCPServerSink
-<TITLE>tcpserversink</TITLE>
-<SUBSECTION Standard>
-GstTCPServerSinkClass
-</SECTION>
-
-<SECTION>
 <FILE>element-gnomevfssink</FILE>
 GstGnomeVFSSink
 <TITLE>gnomevfssink</TITLE>
 <SUBSECTION Standard>
 GstGnomeVFSSinkClass
 </SECTION>
+
+<SECTION>
+<FILE>element-tcpserversink</FILE>
+GstTCPServerSink
+<TITLE>tcpserversink</TITLE>
+<SUBSECTION Standard>
+GstTCPServerSinkClass
+</SECTION>
+
+<SECTION>
+<FILE>element-theoraenc</FILE>
+GstTheoraEnc
+<TITLE>theoraenc</TITLE>
+<SUBSECTION Standard>
+GstTheoraEncClass
+</SECTION>
+
 
 <SECTION>
 <FILE>element-videotestsrc</FILE>
