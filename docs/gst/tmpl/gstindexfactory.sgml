@@ -14,6 +14,9 @@ GstIndexFactory is used to dynamically create GstIndex implementations.
 #GstIndex
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GstIndexFactory ##### -->
 <para>
 The GstIndexFactory object

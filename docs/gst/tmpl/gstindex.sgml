@@ -15,6 +15,9 @@ in a pipeline.
 #GstIndexFactory
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GstIndex ##### -->
 <para>
 

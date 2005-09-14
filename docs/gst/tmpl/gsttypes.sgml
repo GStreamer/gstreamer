@@ -14,6 +14,9 @@ various global enums and constants
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### ENUM GstState ##### -->
 <para>
 

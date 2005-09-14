@@ -14,6 +14,9 @@ GValue implementations specific to GStreamer
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### MACRO GST_VALUE_HOLDS_FOURCC ##### -->
 
 

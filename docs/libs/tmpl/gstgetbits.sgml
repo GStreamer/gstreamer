@@ -14,6 +14,9 @@ accelerated routines for getting bits from a data stream.
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT gst_getbits_t ##### -->
 <para>
 
