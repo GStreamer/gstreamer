@@ -1,3 +1,9 @@
+2005-09-14  Michael Smith <msmith@fluendo.com>
+
+	* gst/smpte/Makefile.am:
+	  Link against GST_BASE_LIBS, to get it linked against libgstbase;
+	  needed to build on windows (bug 316204)
+
 2005-09-12  Andy Wingo  <wingo@pobox.com>
 
 	* autogen.sh (package): Now type 'make' to build gst-plugins-good.
