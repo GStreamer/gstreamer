@@ -1,5 +1,19 @@
 2005-09-14  David Schleef  <ds@schleef.org>
 
+	* configure.ac: Remove getbits library.  Nothing uses it, and
+	  it should be in something like liboil if someone did want
+	  to use it.
+	* libs/gst/Makefile.am:
+	* libs/gst/getbits/Makefile.am:
+	* libs/gst/getbits/gbtest.c:
+	* libs/gst/getbits/getbits.c:
+	* libs/gst/getbits/getbits.h:
+	* libs/gst/getbits/gstgetbits_generic.c:
+	* libs/gst/getbits/gstgetbits_i386.s:
+	* libs/gst/getbits/gstgetbits_inl.h:
+
+2005-09-14  David Schleef  <ds@schleef.org>
+
 	* gst/Makefile.am: Dist glib-compat.h
 
 2005-09-14  David Schleef  <ds@schleef.org>

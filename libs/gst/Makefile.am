@@ -1,1 +1,1 @@
-SUBDIRS = controller dataprotocol getbits 
+SUBDIRS = controller dataprotocol

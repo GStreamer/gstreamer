@@ -643,7 +643,6 @@ libs/Makefile
 libs/gst/Makefile
 libs/gst/controller/Makefile
 libs/gst/dataprotocol/Makefile
-libs/gst/getbits/Makefile
 po/Makefile.in
 check/Makefile
 tests/Makefile
