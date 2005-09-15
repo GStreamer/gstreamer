@@ -1,5 +1,9 @@
 2005-09-14  David Schleef  <ds@schleef.org>
 
+	* gst/Makefile.am: Dist glib-compat.h
+
+2005-09-14  David Schleef  <ds@schleef.org>
+
 	* configure.ac: Remove gst/registries, since it's no longer used.
 	* gst/registries/Makefile.am:
 	* gst/registries/gstlibxmlregistry.c:

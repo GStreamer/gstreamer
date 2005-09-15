@@ -199,6 +199,7 @@ nodist_libgstreamer_@GST_MAJORMINOR@include_HEADERS = \
 
 noinst_HEADERS = 		\
 	gettext.h		\
+	glib-compat.h		\
 	gst-i18n-lib.h		\
 	gst-i18n-app.h		\
 	gst_private.h
