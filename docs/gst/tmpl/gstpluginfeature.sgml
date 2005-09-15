@@ -50,23 +50,6 @@ to get a list of pluginfeature that match certain criteria.
 @Returns: TRUE for a positive match, FALSE otherwise
 
 
-<!-- ##### FUNCTION gst_plugin_feature_ensure_loaded ##### -->
-<para>
-
-</para>
-
-@feature: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_plugin_feature_unload_thyself ##### -->
-<para>
-
-</para>
-
-@feature: 
-
-
 <!-- ##### FUNCTION gst_plugin_feature_type_name_filter ##### -->
 <para>
 

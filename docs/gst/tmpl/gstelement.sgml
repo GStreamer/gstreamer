@@ -973,6 +973,16 @@ Sets the parent of an element.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_element_set_state_async ##### -->
+<para>
+
+</para>
+
+@element: 
+@state: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_element_state_get_name ##### -->
 <para>
 

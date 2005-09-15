@@ -67,13 +67,6 @@ The plugin loading errors
 The plugin object
 </para>
 
-@desc: 
-@filename: 
-@features: 
-@numfeatures: 
-@manager: 
-@module: 
-@_gst_reserved: 
 
 <!-- ##### STRUCT GstPluginDesc ##### -->
 <para>
@@ -86,7 +79,6 @@ loaded will use this variable to initialize the plugin.
 @name: a unique name of the plugin
 @description: 
 @plugin_init: The init function of this plugin.
-@plugin_exit: 
 @version: version of the plugin
 @license: effective license of plugin
 @source: 
@@ -106,14 +98,6 @@ It will be called by the loader at statup.
 @module: The <classname>GModule</classname> it was loaded from
 
 
-<!-- ##### USER_FUNCTION GstPluginExitFunc ##### -->
-<para>
-Exiting function when plugin is unloaded.
-</para>
-
-@plugin: The plugin object that can be used to unregister stuff for this plugin.
-
-
 <!-- ##### MACRO GST_PLUGIN_DEFINE ##### -->
 <para>
 This macro needs to be used to define the entry point and meta data of a plugin.
@@ -129,6 +113,8 @@ One would use this macro to export a plugin, so that it can be used by other app
 @license: under which licence the package has been released, e.g. GPL, LGPL.
 @package: the package-name (e.g. PACKAGE_NAME from config.h)
 @origin: a description from where the package comes from (e.g. the homepage URL)
+<!-- # Unused Parameters # -->
+@domain: 
 
 
 <!-- ##### MACRO GST_PLUGIN_DEFINE_STATIC ##### -->
@@ -146,6 +132,8 @@ One would use this macro to define a local plugin that can only be used by the o
 @license: under which licence the package has been released, e.g. GPL, LGPL.
 @package: the package-name (e.g. PACKAGE_NAME from config.h)
 @origin: a description from where the package comes from (e.g. the homepage URL)
+<!-- # Unused Parameters # -->
+@domain: 
 
 
 <!-- ##### MACRO GST_LICENSE_UNKNOWN ##### -->
@@ -330,15 +318,6 @@ to get a list of plugins that match certain criteria.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_plugin_unload_plugin ##### -->
-<para>
-
-</para>
-
-@plugin: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_plugin_add_feature ##### -->
 <para>
 
@@ -353,7 +332,9 @@ to get a list of plugins that match certain criteria.
 
 </para>
 
-@name: 
+@plugin: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@name: 
 
 

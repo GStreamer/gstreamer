@@ -2198,23 +2198,6 @@ gst_xml_get_type
 
 
 <SECTION>
-<FILE>gstxmlregistry</FILE>
-<TITLE>GstXMLRegistry</TITLE>
-GstXMLRegistry
-gst_xml_registry_new
-<SUBSECTION Standard>
-GstXMLRegistryClass
-GST_XML_REGISTRY
-GST_IS_XML_REGISTRY
-GST_XML_REGISTRY_CLASS
-GST_IS_XML_REGISTRY_CLASS
-GST_XML_REGISTRY_GET_CLASS
-GST_TYPE_XML_REGISTRY
-<SUBSECTION Private>
-gst_xml_registry_get_type
-</SECTION>
-
-<SECTION>
 <FILE>gstenumtypes</FILE>
 <TITLE>GstEnumTypes</TITLE>
 </SECTION>
