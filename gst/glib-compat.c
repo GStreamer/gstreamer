@@ -28,28 +28,28 @@
 #include "config.h"
 
 #include <glib.h>
+#if GLIB_CHECK_VERSION (2, 6, 0)
 #include <glib/gstdio.h>
+#endif
 
 #include <stdio.h>
 #include <errno.h>
 
 #include "glib-compat.h"
 
-#if 0
 #include <sys/stat.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#include <sys/types.h>
+#if 0
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #ifndef G_OS_WIN32
 #include <sys/wait.h>
 #endif
 #include <fcntl.h>
-#include <stdlib.h>
 #endif
 
 

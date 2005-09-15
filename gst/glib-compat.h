@@ -18,6 +18,8 @@ int g_mkdir (const gchar *filename, int          mode);
 #endif
 
 #if !GLIB_CHECK_VERSION (2, 6, 0)
+struct stat;
+
 int g_stat (const gchar *filename, struct stat *buf);
 #endif
 
