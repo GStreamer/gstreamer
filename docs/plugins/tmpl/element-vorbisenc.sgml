@@ -23,34 +23,26 @@ Encodes audio in Vorbis format
 
 </para>
 
-
-<!-- ##### ARG GstVorbisEnc:bitrate ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstVorbisEnc:last-message ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstVorbisEnc:managed ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstVorbisEnc:max-bitrate ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstVorbisEnc:min-bitrate ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstVorbisEnc:quality ##### -->
-<para>
-
-</para>
+@element: 
+@sinkpad: 
+@srcpad: 
+@vi: 
+@vc: 
+@vd: 
+@vb: 
+@eos: 
+@managed: 
+@bitrate: 
+@min_bitrate: 
+@max_bitrate: 
+@quality: 
+@quality_set: 
+@channels: 
+@frequency: 
+@samples_in: 
+@bytes_out: 
+@tags: 
+@setup: 
+@header_sent: 
+@last_message: 
 

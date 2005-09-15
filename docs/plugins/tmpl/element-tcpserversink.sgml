@@ -23,14 +23,9 @@ Send data as a server over the network via TCP
 
 </para>
 
-
-<!-- ##### ARG GstTCPServerSink:host ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstTCPServerSink:port ##### -->
-<para>
-
-</para>
+@element: 
+@server_port: 
+@host: 
+@server_sin: 
+@server_sock: 
 

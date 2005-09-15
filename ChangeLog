@@ -1,3 +1,8 @@
+2005-09-15  Andy Wingo  <wingo@pobox.com>
+
+	* configure.ac (plugindir): Remove the EOL matcher from the
+	regexp, as it causes me problems. Libtool? Make? Who knows?
+
 2005-09-14  David Schleef  <ds@schleef.org>
 
 	* check/generic/states.c: 

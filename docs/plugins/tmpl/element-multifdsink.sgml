@@ -23,110 +23,31 @@ Send data to multiple filedescriptors
 
 </para>
 
-
-<!-- ##### SIGNAL GstMultiFdSink::add ##### -->
-<para>
-
-</para>
-
-@gstmultifdsink: the object which received the signal.
-@arg1: 
-
-<!-- ##### SIGNAL GstMultiFdSink::clear ##### -->
-<para>
-
-</para>
-
-@gstmultifdsink: the object which received the signal.
-
-<!-- ##### SIGNAL GstMultiFdSink::client-added ##### -->
-<para>
-
-</para>
-
-@gstmultifdsink: the object which received the signal.
-@arg1: 
-
-<!-- ##### SIGNAL GstMultiFdSink::client-removed ##### -->
-<para>
-
-</para>
-
-@gstmultifdsink: the object which received the signal.
-@arg1: 
-@arg2: 
-
-<!-- ##### SIGNAL GstMultiFdSink::get-stats ##### -->
-<para>
-
-</para>
-
-@gstmultifdsink: the object which received the signal.
-@arg1: 
-@Returns: 
-
-<!-- ##### SIGNAL GstMultiFdSink::remove ##### -->
-<para>
-
-</para>
-
-@gstmultifdsink: the object which received the signal.
-@arg1: 
-
-<!-- ##### ARG GstMultiFdSink:buffers-max ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstMultiFdSink:buffers-queued ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstMultiFdSink:buffers-soft-max ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstMultiFdSink:bytes-served ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstMultiFdSink:bytes-to-serve ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstMultiFdSink:mode ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstMultiFdSink:protocol ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstMultiFdSink:recover-policy ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstMultiFdSink:sync-clients ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstMultiFdSink:sync-method ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstMultiFdSink:timeout ##### -->
-<para>
-
-</para>
+@element: 
+@bytes_to_serve: 
+@bytes_served: 
+@clientslock: 
+@clients: 
+@fd_hash: 
+@mode: 
+@fdset: 
+@control_sock: 
+@streamheader: 
+@previous_buffer_in_caps: 
+@protocol: 
+@mtu: 
+@bufqueue: 
+@running: 
+@thread: 
+@unit_type: 
+@units_max: 
+@units_soft_max: 
+@recover_policy: 
+@timeout: 
+@sync_method: 
+@buffers_queued: 
+@bytes_queued: 
+@time_queued: 
 
 <!-- ##### ENUM GstMultiFdSinkFlags ##### -->
 <para>
