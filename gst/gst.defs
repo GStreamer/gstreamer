@@ -1518,16 +1518,6 @@
   (return-type "GType")
 )
 
-(define-function gst_registry_return_get_type
-  (c-name "gst_registry_return_get_type")
-  (return-type "GType")
-)
-
-(define-function gst_registry_flags_get_type
-  (c-name "gst_registry_flags_get_type")
-  (return-type "GType")
-)
-
 (define-function gst_parse_error_get_type
   (c-name "gst_parse_error_get_type")
   (return-type "GType")
@@ -3826,12 +3816,6 @@
   )
 )
 
-(define-method unload_plugin
-  (of-object "GstPlugin")
-  (c-name "gst_plugin_unload_plugin")
-  (return-type "gboolean")
-)
-
 (define-method add_feature
   (of-object "GstPlugin")
   (c-name "gst_plugin_add_feature")
@@ -3841,12 +3825,10 @@
   )
 )
 
-(define-function plugin_load
+(define-method load
+  (of-object "GstPlugin")
   (c-name "gst_plugin_load")
-  (return-type "gboolean")
-  (parameters
-    '("const-gchar*" "name")
-  )
+  (return-type "GstPlugin*")
 )
 
 
@@ -3858,16 +3840,10 @@
   (return-type "GType")
 )
 
-(define-method ensure_loaded
+(define-method load
   (of-object "GstPluginFeature")
-  (c-name "gst_plugin_feature_ensure_loaded")
-  (return-type "gboolean")
-)
-
-(define-method unload_thyself
-  (of-object "GstPluginFeature")
-  (c-name "gst_plugin_feature_unload_thyself")
-  (return-type "none")
+  (c-name "gst_plugin_feature_load")
+  (return-type "GstPluginFeature*")
 )
 
 (define-method type_name_filter
@@ -3907,11 +3883,6 @@
   (of-object "GstPluginFeature")
   (c-name "gst_plugin_feature_get_name")
   (return-type "const-gchar*")
-)
-
-(define-virtual unload_thyself
-  (of-object "GstPluginFeature")
-  (return-type "none")
 )
 
 ;; From ../gstreamer/gst/gstquery.h
@@ -4102,39 +4073,14 @@
   (return-type "GType")
 )
 
-(define-method load
-  (of-object "GstRegistry")
-  (c-name "gst_registry_load")
-  (return-type "gboolean")
+(define-function gst_registry_get_default
+  (c-name "gst_registry_get_default")
+  (return-type "GstRegistry*")
 )
 
-(define-method is_loaded
+(define-method scan_path
   (of-object "GstRegistry")
-  (c-name "gst_registry_is_loaded")
-  (return-type "gboolean")
-)
-
-(define-method save
-  (of-object "GstRegistry")
-  (c-name "gst_registry_save")
-  (return-type "gboolean")
-)
-
-(define-method rebuild
-  (of-object "GstRegistry")
-  (c-name "gst_registry_rebuild")
-  (return-type "gboolean")
-)
-
-(define-method unload
-  (of-object "GstRegistry")
-  (c-name "gst_registry_unload")
-  (return-type "gboolean")
-)
-
-(define-method add_path
-  (of-object "GstRegistry")
-  (c-name "gst_registry_add_path")
+  (c-name "gst_registry_scan_path")
   (return-type "none")
   (parameters
     '("const-gchar*" "path")
@@ -4171,6 +4117,12 @@
   )
 )
 
+(define-method get_plugin_list
+  (of-object "GstRegistry")
+  (c-name "gst_registry_get_plugin_list")
+  (return-type "GList*")
+)
+
 (define-method plugin_filter
   (of-object "GstRegistry")
   (c-name "gst_registry_plugin_filter")
@@ -4193,6 +4145,15 @@
   )
 )
 
+(define-method get_feature_list
+  (of-object "GstRegistry")
+  (c-name "gst_registry_get_feature_list")
+  (return-type "GList*")
+  (parameters
+    '("GType" "type")
+  )
+)
+
 (define-method find_plugin
   (of-object "GstRegistry")
   (c-name "gst_registry_find_plugin")
@@ -4212,125 +4173,30 @@
   )
 )
 
-(define-method load_plugin
+(define-method lookup
   (of-object "GstRegistry")
-  (c-name "gst_registry_load_plugin")
-  (return-type "GstRegistryReturn")
-  (parameters
-    '("GstPlugin*" "plugin")
-  )
-)
-
-(define-method unload_plugin
-  (of-object "GstRegistry")
-  (c-name "gst_registry_unload_plugin")
-  (return-type "GstRegistryReturn")
-  (parameters
-    '("GstPlugin*" "plugin")
-  )
-)
-
-(define-method update_plugin
-  (of-object "GstRegistry")
-  (c-name "gst_registry_update_plugin")
-  (return-type "GstRegistryReturn")
-  (parameters
-    '("GstPlugin*" "plugin")
-  )
-)
-
-
-
-;; From ../gstreamer/gst/gstregistrypool.h
-
-(define-function registry_pool_list
-  (c-name "gst_registry_pool_list")
-  (return-type "GList*")
-)
-
-(define-method pool_add
-  (of-object "GstRegistry")
-  (c-name "gst_registry_pool_add")
-  (return-type "none")
-  (parameters
-    '("guint" "priority")
-  )
-)
-
-(define-method pool_remove
-  (of-object "GstRegistry")
-  (c-name "gst_registry_pool_remove")
-  (return-type "none")
-)
-
-(define-function registry_pool_add_plugin
-  (c-name "gst_registry_pool_add_plugin")
-  (return-type "none")
-  (parameters
-    '("GstPlugin*" "plugin")
-  )
-)
-
-(define-function registry_pool_load_all
-  (c-name "gst_registry_pool_load_all")
-  (return-type "none")
-)
-
-(define-function registry_pool_plugin_filter
-  (c-name "gst_registry_pool_plugin_filter")
-  (return-type "GList*")
-  (parameters
-    '("GstPluginFilter" "filter")
-    '("gboolean" "first")
-    '("gpointer" "user_data")
-  )
-)
-
-(define-function registry_pool_feature_filter
-  (c-name "gst_registry_pool_feature_filter")
-  (return-type "GList*")
-  (parameters
-    '("GstPluginFeatureFilter" "filter")
-    '("gboolean" "first")
-    '("gpointer" "user_data")
-  )
-)
-
-(define-function registry_pool_plugin_list
-  (c-name "gst_registry_pool_plugin_list")
-  (return-type "GList*")
-)
-
-(define-function registry_pool_feature_list
-  (c-name "gst_registry_pool_feature_list")
-  (return-type "GList*")
-  (parameters
-    '("GType" "type")
-  )
-)
-
-(define-function registry_pool_find_plugin
-  (c-name "gst_registry_pool_find_plugin")
+  (c-name "gst_registry_lookup")
   (return-type "GstPlugin*")
   (parameters
-    '("const-gchar*" "name")
+    '("const-char*" "location")
   )
 )
 
-(define-function registry_pool_find_feature
-  (c-name "gst_registry_pool_find_feature")
-  (return-type "GstPluginFeature*")
+(define-method xml_read_cache
+  (of-object "GstRegistry")
+  (c-name "gst_registry_xml_read_cache")
+  (return-type "gboolean")
   (parameters
-    '("const-gchar*" "name")
-    '("GType" "type")
+    '("const-char*" "location")
   )
 )
 
-(define-function registry_pool_get_prefered
-  (c-name "gst_registry_pool_get_prefered")
-  (return-type "GstRegistry*")
+(define-method xml_write_cache
+  (of-object "GstRegistry")
+  (c-name "gst_registry_xml_write_cache")
+  (return-type "gboolean")
   (parameters
-    '("GstRegistryFlags" "flags")
+    '("const-char*" "location")
   )
 )
 

@@ -785,32 +785,6 @@
   )
 )
 
-(define-flags RegistryReturn
-  (in-module "Gst")
-  (c-name "GstRegistryReturn")
-  (gtype-id "GST_TYPE_REGISTRY_RETURN")
-  (values
-    '("ok" "GST_REGISTRY_OK")
-    '("load-error" "GST_REGISTRY_LOAD_ERROR")
-    '("save-error" "GST_REGISTRY_SAVE_ERROR")
-    '("plugin-load-error" "GST_REGISTRY_PLUGIN_LOAD_ERROR")
-    '("plugin-signature-error" "GST_REGISTRY_PLUGIN_SIGNATURE_ERROR")
-  )
-)
-
-(define-flags RegistryFlags
-  (in-module "Gst")
-  (c-name "GstRegistryFlags")
-  (gtype-id "GST_TYPE_REGISTRY_FLAGS")
-  (values
-    '("readable" "GST_REGISTRY_READABLE")
-    '("writable" "GST_REGISTRY_WRITABLE")
-    '("exists" "GST_REGISTRY_EXISTS")
-    '("remote" "GST_REGISTRY_REMOTE")
-    '("delayed-loading" "GST_REGISTRY_DELAYED_LOADING")
-  )
-)
-
 (define-enum TagMergeMode
   (in-module "Gst")
   (c-name "GstTagMergeMode")
