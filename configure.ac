@@ -586,7 +586,7 @@ AC_SUBST(GST_OBJ_CFLAGS, "$GST_OBJ_CFLAGS")
 AC_SUBST(GST_OBJ_LIBS, "$GST_OBJ_LIBS")
 
 dnl specific additional LDFLAGS for plugins
-GST_PLUGIN_LDFLAGS="-module -avoid-version $EXPORT_LDFLAGS"
+GST_PLUGIN_LDFLAGS="-module -avoid-version -no-undefined $EXPORT_LDFLAGS"
 AC_SUBST(GST_PLUGIN_LDFLAGS, "$GST_PLUGIN_LDFLAGS")
 
 plugindir="\$(libdir)/gstreamer-$GST_MAJORMINOR"

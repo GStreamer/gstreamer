@@ -1,5 +1,14 @@
 2005-09-14  David Schleef  <ds@schleef.org>
 
+	* configure.ac: Add -no-undefined to GST_PLUGIN_LDFLAGS (bug
+	  #316076)
+	* gst/base/Makefile.am: Add -no-undefined to LDFLAGS for libs
+	* gst/check/Makefile.am:
+	* libs/gst/controller/Makefile.am:
+	* libs/gst/dataprotocol/Makefile.am:
+
+2005-09-14  David Schleef  <ds@schleef.org>
+
 	* configure.ac: Remove getbits library.  Nothing uses it, and
 	  it should be in something like liboil if someone did want
 	  to use it.
