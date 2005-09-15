@@ -22,6 +22,8 @@
 #endif
 
 #include "gstrtpdec.h"
+#include "gstrtpgsmenc.h"
+#include "gstrtpgsmparse.h"
 #include "gstrtpamrenc.h"
 #include "gstrtpamrdec.h"
 #include "gstrtpmpaenc.h"
@@ -35,6 +37,12 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_rtpdec_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtpgsmparse_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtpgsmenc_plugin_init (plugin))
     return FALSE;
 
   if (!gst_rtpamrdec_plugin_init (plugin))

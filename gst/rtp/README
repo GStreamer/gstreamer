@@ -1,3 +1,70 @@
+The application/x-rtp mime type
+-------------------------------
+
+For valid RTP packets encapsulated in GstBuffers, we use the caps with
+mime type application/x-rtp.
+
+The following fields can or must (*) be specified in the structure:
+
+ * media: (String) [ "audio", "video", "application", "data", "control" ]
+     Defined in RFC 2327 in the SDP media announcement field.
+
+ * payload: (int) [0, 255]
+     For audio and video, these will normally be a media payload type as 
+     defined in the RTP Audio/Video Profile. For dynamicaly allocated 
+     payload types, this value will be >= 96 and the encoding_name must be
+     set.
+
+ * clock_rate: (int) [0 - MAXINT]
+    the RTP clock rate
+
+   ssrc: (uint) [0 - MAXINT]
+    The ssrc value currently in use.
+
+   clock_base: (uint) [0 - MAXINT]
+    The RTP time representing time 0
+
+   seqnum_base:
+    The RTP sequence number representing the first rtp packet
+
+   encoding_name: (String) ANY
+     typically second part of the mime type. ex. MP4V-ES. only required if
+     payload type >= 96
+
+   encoding_params: (String) ANY
+     extra encoding parameters (as in the SDP a=rtpmap: field). only required
+     if different from the default of the encoding_name.
+     
+   Optional parameters as key/value pairs, media type specific.
+
+ Example:
+
+  "application/x-rtp",
+      "media", G_TYPE_STRING, "audio",		-]
+      "payload", G_TYPE_INT, 96,                 ] - required
+      "clock_rate", G_TYPE_INT, 8000,           -]
+      "encoding_name", G_TYPE_STRING, "AMR",    -] - required since payload >= 96
+      "encoding_params", G_TYPE_STRING, "1",	-] - optional param for AMR
+      "octet-align", G_TYPE_BOOLEAN, TRUE,	-]
+      "crc", G_TYPE_BOOLEAN, FALSE,              ]
+      "robust-sorting", G_TYPE_BOOLEAN, FALSE,   ]  AMR specific params.
+      "interleaving", G_TYPE_BOOLEAN, FALSE,    -]
+  
+ Mapping of caps to and from SDP fields:
+
+   m=<media> <udp port> RTP/AVP <payload>       -] media and payload from caps
+   a=rtpmap:<payload> <encoding_name>/<clock_rate>[/<encoding_params>]
+              -> when <payload> >= 96
+   a=fmtp:<payload> <param>=<value>;...
+
+ For above caps:
+
+   m=audio <udp port> RTP/AVP 96
+   a=rtpmap:96 AMR/8000/1
+   a=fmtp:96 octet-align=1;crc=0;robust-sorting=0;interleaving=0
+
+ in RTSP, the SSRC is also sent.
+
 
 TODO
 ----

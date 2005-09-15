@@ -23,6 +23,8 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <gst/rtp/gstrtpbuffer.h>
+
 #include "gstrtpgsmenc.h"
 
 /* elementfactory information */
@@ -31,19 +33,6 @@ static GstElementDetails gst_rtpgsmenc_details = {
   "Codec/Encoder/Network",
   "Encodes GSM audio into a RTP packet",
   "Zeeshan Ali <zak147@yahoo.com>"
-};
-
-/* RtpGSMEnc signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  /* FILL ME */
-  ARG_0
 };
 
 static GstStaticPadTemplate gst_rtpgsmenc_sink_template =
@@ -57,24 +46,23 @@ static GstStaticPadTemplate gst_rtpgsmenc_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-rtp")
+    GST_STATIC_CAPS ("application/x-rtp, "
+        "media = (string) \"audio\", "
+        "payload = (int) [ 96, 255 ], "
+        "clock_rate = (int) 8000, " "encoding_name = (string) \"GSM\"")
     );
 
 
 static void gst_rtpgsmenc_class_init (GstRtpGSMEncClass * klass);
 static void gst_rtpgsmenc_base_init (GstRtpGSMEncClass * klass);
 static void gst_rtpgsmenc_init (GstRtpGSMEnc * rtpgsmenc);
-static void gst_rtpgsmenc_chain (GstPad * pad, GstData * _data);
-static void gst_rtpgsmenc_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_rtpgsmenc_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-static GstPadLinkReturn gst_rtpgsmenc_sinkconnect (GstPad * pad,
-    const GstCaps * caps);
-static GstStateChangeReturn gst_rtpgsmenc_change_state (GstElement * element,
-    GstStateChange transition);
 
-static GstElementClass *parent_class = NULL;
+static gboolean gst_rtpgsmenc_setcaps (GstBaseRTPPayload * payload,
+    GstCaps * caps);
+static GstFlowReturn gst_rtpgsmenc_handle_buffer (GstBaseRTPPayload * payload,
+    GstBuffer * buffer);
+
+static GstBaseRTPPayloadClass *parent_class = NULL;
 
 static GType
 gst_rtpgsmenc_get_type (void)
@@ -95,7 +83,7 @@ gst_rtpgsmenc_get_type (void)
     };
 
     rtpgsmenc_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstRtpGSMEnc",
+        g_type_register_static (GST_TYPE_BASE_RTP_PAYLOAD, "GstRtpGSMEnc",
         &rtpgsmenc_info, 0);
   }
   return rtpgsmenc_type;
@@ -118,209 +106,91 @@ gst_rtpgsmenc_class_init (GstRtpGSMEncClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstBaseRTPPayloadClass *gstbasertppayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_PAYLOAD);
 
-  gobject_class->set_property = gst_rtpgsmenc_set_property;
-  gobject_class->get_property = gst_rtpgsmenc_get_property;
-
-  gstelement_class->change_state = gst_rtpgsmenc_change_state;
+  gstbasertppayload_class->set_caps = gst_rtpgsmenc_setcaps;
+  gstbasertppayload_class->handle_buffer = gst_rtpgsmenc_handle_buffer;
 }
 
 static void
 gst_rtpgsmenc_init (GstRtpGSMEnc * rtpgsmenc)
 {
-  rtpgsmenc->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpgsmenc_sink_template), "sink");
-  rtpgsmenc->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpgsmenc_src_template), "src");
-  gst_element_add_pad (GST_ELEMENT (rtpgsmenc), rtpgsmenc->sinkpad);
-  gst_element_add_pad (GST_ELEMENT (rtpgsmenc), rtpgsmenc->srcpad);
-  gst_pad_set_chain_function (rtpgsmenc->sinkpad, gst_rtpgsmenc_chain);
-  gst_pad_set_link_function (rtpgsmenc->sinkpad, gst_rtpgsmenc_sinkconnect);
-
   rtpgsmenc->frequency = 8000;
-
-  rtpgsmenc->next_time = 0;
-  rtpgsmenc->time_interval = 0;
-
-  rtpgsmenc->seq = 0;
-  rtpgsmenc->ssrc = random ();
 }
 
-static GstPadLinkReturn
-gst_rtpgsmenc_sinkconnect (GstPad * pad, const GstCaps * caps)
+static gboolean
+gst_rtpgsmenc_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
   GstRtpGSMEnc *rtpgsmenc;
   GstStructure *structure;
   gboolean ret;
+  GstCaps *srccaps;
 
-  rtpgsmenc = GST_RTP_GSM_ENC (gst_pad_get_parent (pad));
+  rtpgsmenc = GST_RTP_GSM_ENC (payload);
 
   structure = gst_caps_get_structure (caps, 0);
 
   ret = gst_structure_get_int (structure, "rate", &rtpgsmenc->frequency);
   if (!ret)
-    return GST_PAD_LINK_REFUSED;
+    return FALSE;
 
-  /* Pre-calculate what we can */
-  rtpgsmenc->time_interval = GST_SECOND / (2 * rtpgsmenc->frequency);
+  srccaps = gst_caps_new_simple ("application/x-rtp", NULL);
+  gst_pad_set_caps (GST_BASE_RTP_PAYLOAD_SRCPAD (rtpgsmenc), srccaps);
+  gst_caps_unref (srccaps);
 
-  return GST_PAD_LINK_OK;
+  return TRUE;
 }
 
-
-void
-gst_rtpgsmenc_htons (GstBuffer * buf)
+static GstFlowReturn
+gst_rtpgsmenc_handle_buffer (GstBaseRTPPayload * basepayload,
+    GstBuffer * buffer)
 {
-  gint16 *i, *len;
-
-  /* FIXME: is this code correct or even sane at all? */
-  i = (gint16 *) GST_BUFFER_DATA (buf);
-  len = i + GST_BUFFER_SIZE (buf) / sizeof (gint16 *);
-
-  for (; i < len; i++) {
-    *i = g_htons (*i);
-  }
-}
-
-static void
-gst_rtpgsmenc_chain (GstPad * pad, GstData * _data)
-{
-  GstBuffer *buf = GST_BUFFER (_data);
   GstRtpGSMEnc *rtpgsmenc;
+  guint size, payload_len;
   GstBuffer *outbuf;
-  Rtp_Packet packet;
+  guint8 *payload, *data;
+  GstClockTime timestamp;
+  GstFlowReturn ret;
 
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
+  rtpgsmenc = GST_RTP_GSM_ENC (basepayload);
 
-  rtpgsmenc = GST_RTP_GSM_ENC (GST_OBJECT_PARENT (pad));
+  size = GST_BUFFER_SIZE (buffer);
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
-  g_return_if_fail (rtpgsmenc != NULL);
-  g_return_if_fail (GST_IS_RTP_GSM_ENC (rtpgsmenc));
+  /* FIXME, only one GSM frame per RTP packet for now */
+  payload_len = size;
 
-  if (GST_IS_EVENT (buf)) {
-    GstEvent *event = GST_EVENT (buf);
+  outbuf = gst_rtpbuffer_new_allocate (payload_len, 0, 0);
+  /* FIXME, assert for now */
+  g_assert (GST_BUFFER_SIZE (outbuf) < GST_BASE_RTP_PAYLOAD_MTU (rtpgsmenc));
 
-    switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_DISCONTINUOUS:
-        GST_DEBUG ("discont");
-        rtpgsmenc->next_time = 0;
-        gst_pad_event_default (pad, event);
-        return;
-      default:
-        gst_pad_event_default (pad, event);
-        return;
-    }
-  }
+  gst_rtpbuffer_set_timestamp (outbuf, timestamp * 8000 / GST_SECOND);
 
-  /* We only need the header */
-  packet = rtp_packet_new_allocate (0, 0, 0);
+  /* copy timestamp */
+  GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
-  rtp_packet_set_csrc_count (packet, 0);
-  rtp_packet_set_extension (packet, 0);
-  rtp_packet_set_padding (packet, 0);
-  rtp_packet_set_version (packet, RTP_VERSION);
-  rtp_packet_set_marker (packet, 0);
-  rtp_packet_set_ssrc (packet, g_htonl (rtpgsmenc->ssrc));
-  rtp_packet_set_seq (packet, g_htons (rtpgsmenc->seq));
-  rtp_packet_set_timestamp (packet,
-      g_htonl ((guint32) rtpgsmenc->next_time / GST_SECOND));
-  rtp_packet_set_payload_type (packet, (guint8) PAYLOAD_GSM);
+  /* get payload */
+  payload = gst_rtpbuffer_get_payload (outbuf);
 
-  /* FIXME: According to RFC 1890, this is required, right? */
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  gst_rtpgsmenc_htons (buf);
-#endif
+  data = GST_BUFFER_DATA (buffer);
 
-  outbuf = gst_buffer_new ();
-  GST_BUFFER_SIZE (outbuf) =
-      rtp_packet_get_packet_len (packet) + GST_BUFFER_SIZE (buf);
-  GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
-  GST_BUFFER_TIMESTAMP (outbuf) = rtpgsmenc->next_time;
+  /* copy data in payload */
+  memcpy (&payload[0], data, size);
 
-  memcpy (GST_BUFFER_DATA (outbuf), packet->data,
-      rtp_packet_get_packet_len (packet));
-  memcpy (GST_BUFFER_DATA (outbuf) + rtp_packet_get_packet_len (packet),
-      GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  gst_buffer_unref (buffer);
 
   GST_DEBUG ("gst_rtpgsmenc_chain: pushing buffer of size %d",
       GST_BUFFER_SIZE (outbuf));
-  gst_pad_push (rtpgsmenc->srcpad, GST_DATA (outbuf));
 
-  ++rtpgsmenc->seq;
-  rtpgsmenc->next_time += rtpgsmenc->time_interval * GST_BUFFER_SIZE (buf);
+  ret = gst_basertppayload_push (basepayload, outbuf);
 
-  rtp_packet_free (packet);
-  gst_buffer_unref (buf);
-}
-
-static void
-gst_rtpgsmenc_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstRtpGSMEnc *rtpgsmenc;
-
-  g_return_if_fail (GST_IS_RTP_GSM_ENC (object));
-  rtpgsmenc = GST_RTP_GSM_ENC (object);
-
-  switch (prop_id) {
-    default:
-      break;
-  }
-}
-
-static void
-gst_rtpgsmenc_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  GstRtpGSMEnc *rtpgsmenc;
-
-  g_return_if_fail (GST_IS_RTP_GSM_ENC (object));
-  rtpgsmenc = GST_RTP_GSM_ENC (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static GstStateChangeReturn
-gst_rtpgsmenc_change_state (GstElement * element, GstStateChange transition)
-{
-  GstRtpGSMEnc *rtpgsmenc;
-
-  g_return_val_if_fail (GST_IS_RTP_GSM_ENC (element), GST_STATE_CHANGE_FAILURE);
-
-  rtpgsmenc = GST_RTP_GSM_ENC (element);
-
-  GST_DEBUG ("state pending %d\n", GST_STATE_PENDING (element));
-
-  /* if going down into NULL state, close the file if it's open */
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-
-    default:
-      break;
-  }
-
-  /* if we haven't failed already, give the parent class a chance to ;-) */
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  return GST_STATE_CHANGE_SUCCESS;
+  return ret;
 }
 
 gboolean

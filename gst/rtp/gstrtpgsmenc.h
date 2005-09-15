@@ -22,42 +22,13 @@
 #define __GST_RTP_GSM_ENC_H__
 
 #include <gst/gst.h>
-#include "rtp-packet.h"
-#include "gstrtp-common.h"
+#include <gst/rtp/gstbasertppayload.h>
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+G_BEGIN_DECLS
 
-/* Definition of structure storing data for this element. */
 typedef struct _GstRtpGSMEnc GstRtpGSMEnc;
-struct _GstRtpGSMEnc
-{
-  GstElement element;
-
-  GstPad *sinkpad;
-  GstPad *srcpad;
-
-  guint frequency;
-
-  /* the timestamp of the next frame */
-  guint64 next_time;
-  /* the interval between frames */
-  guint64 time_interval;
-  
-  guint32 ssrc;
-  guint16 seq;
-};
-
-/* Standard definition defining a class for this element. */
 typedef struct _GstRtpGSMEncClass GstRtpGSMEncClass;
-struct _GstRtpGSMEncClass
-{
-  GstElementClass parent_class;
-};
 
-/* Standard macros for defining types for this element.  */
 #define GST_TYPE_RTP_GSM_ENC \
   (gst_rtpgsmenc_get_type())
 #define GST_RTP_GSM_ENC(obj) \
@@ -69,11 +40,20 @@ struct _GstRtpGSMEncClass
 #define GST_IS_RTP_GSM_ENC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_GSM_ENC))
 
+struct _GstRtpGSMEnc
+{
+  GstBaseRTPPayload payload;
+
+  gint frequency;
+};
+
+struct _GstRtpGSMEncClass
+{
+  GstBaseRTPPayloadClass parent_class;
+};
+
 gboolean gst_rtpgsmenc_plugin_init (GstPlugin * plugin);
 
-#ifdef __cplusplus
-}
-#endif				/* __cplusplus */
+G_END_DECLS
 
-
-#endif				/* __GST_RTP_GSM_ENC_H__ */
+#endif /* __GST_RTP_GSM_ENC_H__ */

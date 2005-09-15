@@ -32,7 +32,7 @@
 static GstElementDetails gst_rtp_amrdec_details = {
   "RTP packet parser",
   "Codec/Parser/Network",
-  "Extracts MPEG audio from RTP packets",
+  "Extracts AMR audio from RTP packets (RFC 3267)",
   "Wim Taymans <wim@fluendo.com>"
 };
 
@@ -58,11 +58,14 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
+        "media = (string) \"audio\", "
+        "payload = (int) [ 96, 255 ], "
+        "clock_rate = (int) 8000, "
+        "encoding_name = (string) \"AMR\", "
+        "encoding_params = (string) \"1\", "
         "octet-align = (boolean) TRUE, "
         "crc = (boolean) FALSE, "
-        "robust-sorting = (boolean) FALSE, "
-        "interleaving = (boolean) FALSE, "
-        "channels = (int) 1, " "rate = (int) 8000"
+        "robust-sorting = (boolean) FALSE, " "interleaving = (boolean) FALSE"
         /* following options are not needed for a decoder 
          *
          "mode-set = (int) [ 0, 7 ], "
@@ -156,17 +159,9 @@ gst_rtpamrdec_class_init (GstRtpAMRDecClass * klass)
 static void
 gst_rtpamrdec_init (GstRtpAMRDec * rtpamrdec)
 {
-  GstCaps *srccaps;
-
   rtpamrdec->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_rtpamrdec_src_template), "src");
-
-  /* FIXME */
-  srccaps = gst_caps_new_simple ("audio/AMR",
-      "channels", G_TYPE_INT, 1, "rate", G_TYPE_INT, 8000, NULL);
-  gst_pad_set_caps (rtpamrdec->srcpad, srccaps);
-  gst_caps_unref (srccaps);
 
   gst_element_add_pad (GST_ELEMENT (rtpamrdec), rtpamrdec->srcpad);
 
@@ -184,6 +179,7 @@ gst_rtpamrdec_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstStructure *structure;
   GstCaps *srccaps;
   GstRtpAMRDec *rtpamrdec;
+  const gchar *params;
 
   rtpamrdec = GST_RTP_AMR_DEC (GST_OBJECT_PARENT (pad));
 
@@ -192,10 +188,6 @@ gst_rtpamrdec_sink_setcaps (GstPad * pad, GstCaps * caps)
   if (!gst_structure_get_boolean (structure, "octet-align",
           &rtpamrdec->octet_align))
     rtpamrdec->octet_align = FALSE;
-
-  /* FIXME, force octect align for now until all elements negotiate 
-   * correctly*/
-  rtpamrdec->octet_align = TRUE;
 
   if (!gst_structure_get_boolean (structure, "crc", &rtpamrdec->crc))
     rtpamrdec->crc = FALSE;
@@ -223,9 +215,13 @@ gst_rtpamrdec_sink_setcaps (GstPad * pad, GstCaps * caps)
     rtpamrdec->octet_align = TRUE;
   }
 
-  if (!gst_structure_get_int (structure, "channels", &rtpamrdec->channels))
+  if (!(params = gst_structure_get_string (structure, "encoding_params")))
     rtpamrdec->channels = 1;
-  if (!gst_structure_get_int (structure, "rate", &rtpamrdec->rate))
+  else {
+    rtpamrdec->channels = atoi (params);
+  }
+
+  if (!gst_structure_get_int (structure, "clock_rate", &rtpamrdec->rate))
     rtpamrdec->rate = 8000;
 
   /* we require 1 channel, 8000 Hz, octet aligned, no CRC, 
@@ -288,7 +284,7 @@ gst_rtpamrdec_chain (GstPad * pad, GstBuffer * buf)
     /* parse header 
      *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 
      * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+..
-     * | CMR=6 |R|R|R|R|0|FT#1=5 |Q|P|P|
+     * | CMR   |R|R|R|R|F|  FT   |Q|P|P|
      * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+..
      */
     CMR = (payload[0] & 0xf0) >> 4;
@@ -314,7 +310,7 @@ gst_rtpamrdec_chain (GstPad * pad, GstBuffer * buf)
 
     outbuf = gst_buffer_new_and_alloc (payload_len);
 
-    GST_BUFFER_TIMESTAMP (outbuf) = timestamp * GST_SECOND / 8000;
+    GST_BUFFER_TIMESTAMP (outbuf) = timestamp * GST_SECOND / rtpamrdec->rate;
 
     memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
 
@@ -392,9 +388,6 @@ gst_rtpamrdec_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      /* FIXME, don't require negotiation until all elements
-       * do */
-      rtpamrdec->negotiated = TRUE;
       break;
     default:
       break;

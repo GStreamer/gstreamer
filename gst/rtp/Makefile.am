@@ -4,6 +4,8 @@ libgstrtp_la_SOURCES = gstrtp.c \
 		       gstrtpdec.c \
 		       gstrtpmpadec.c \
 		       gstrtpmpaenc.c \
+		       gstrtpgsmenc.c \
+		       gstrtpgsmparse.c \
 		       gstrtpamrdec.c \
 		       gstrtpamrenc.c \
 		       gstrtph263pdec.c \

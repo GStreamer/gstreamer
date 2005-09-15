@@ -21,34 +21,12 @@
 #define __GST_RTP_GSM_PARSE_H__
 
 #include <gst/gst.h>
-#include "rtp-packet.h"
-#include "gstrtp-common.h"
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+G_BEGIN_DECLS
 
-/* Definition of structure storing data for this element. */
 typedef struct _GstRtpGSMParse GstRtpGSMParse;
-struct _GstRtpGSMParse
-{
-  GstElement element;
-
-  GstPad *sinkpad;
-  GstPad *srcpad;
-
-  guint frequency;
-};
-
-/* Standard definition defining a class for this element. */
 typedef struct _GstRtpGSMParseClass GstRtpGSMParseClass;
-struct _GstRtpGSMParseClass
-{
-  GstElementClass parent_class;
-};
 
-/* Standard macros for defining types for this element.  */
 #define GST_TYPE_RTP_GSM_PARSE \
   (gst_rtpgsmparse_get_type())
 #define GST_RTP_GSM_PARSE(obj) \
@@ -60,11 +38,23 @@ struct _GstRtpGSMParseClass
 #define GST_IS_RTP_GSM_PARSE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_GSM_PARSE))
 
+struct _GstRtpGSMParse
+{
+  GstElement element;
+
+  GstPad *sinkpad;
+  GstPad *srcpad;
+
+  guint frequency;
+};
+
+struct _GstRtpGSMParseClass
+{
+  GstElementClass parent_class;
+};
+
 gboolean gst_rtpgsmparse_plugin_init (GstPlugin * plugin);
 
-#ifdef __cplusplus
-}
-#endif				/* __cplusplus */
+G_END_DECLS
 
-
-#endif				/* __GST_RTP_GSM_PARSE_H__ */
+#endif /* __GST_RTP_GSM_PARSE_H__ */

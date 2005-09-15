@@ -30,21 +30,6 @@ static GstElementDetails gst_rtp_mpaenc_details = {
   "Wim Taymans <wim@fluendo.com>"
 };
 
-/* RtpMPAEnc signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-#define DEFAULT_MTU	1024
-
-enum
-{
-  PROP_0,
-  PROP_MTU
-};
-
 static GstStaticPadTemplate gst_rtpmpaenc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -56,25 +41,23 @@ static GstStaticPadTemplate gst_rtpmpaenc_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-rtp")
+    GST_STATIC_CAPS ("application/x-rtp, "
+        "media = (string) \"audio\", "
+        "payload = (int) [ 96, 255 ], "
+        "clock_rate = (int) 90000, " "encoding_name = (string) \"MPA\"")
     );
-
 
 static void gst_rtpmpaenc_class_init (GstRtpMPAEncClass * klass);
 static void gst_rtpmpaenc_base_init (GstRtpMPAEncClass * klass);
 static void gst_rtpmpaenc_init (GstRtpMPAEnc * rtpmpaenc);
+static void gst_rtpmpaenc_finalize (GObject * object);
 
-static GstFlowReturn gst_rtpmpaenc_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_rtpmpaenc_setcaps (GstBaseRTPPayload * payload,
+    GstCaps * caps);
+static GstFlowReturn gst_rtpmpaenc_handle_buffer (GstBaseRTPPayload * payload,
+    GstBuffer * buffer);
 
-static void gst_rtpmpaenc_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_rtpmpaenc_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
-static GstStateChangeReturn gst_rtpmpaenc_change_state (GstElement * element,
-    GstStateChange transition);
-
-static GstElementClass *parent_class = NULL;
+static GstBaseRTPPayloadClass *parent_class = NULL;
 
 static GType
 gst_rtpmpaenc_get_type (void)
@@ -95,7 +78,7 @@ gst_rtpmpaenc_get_type (void)
     };
 
     rtpmpaenc_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstRtpMPAEnc",
+        g_type_register_static (GST_TYPE_BASE_RTP_PAYLOAD, "GstRtpMPAEnc",
         &rtpmpaenc_info, 0);
   }
   return rtpmpaenc_type;
@@ -119,39 +102,46 @@ gst_rtpmpaenc_class_init (GstRtpMPAEncClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstBaseRTPPayloadClass *gstbasertppayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_PAYLOAD);
 
-  gobject_class->set_property = gst_rtpmpaenc_set_property;
-  gobject_class->get_property = gst_rtpmpaenc_get_property;
+  gobject_class->finalize = gst_rtpmpaenc_finalize;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MTU,
-      g_param_spec_uint ("mtu", "MTU",
-          "Maximum size of one packet",
-          28, G_MAXUINT, DEFAULT_MTU, G_PARAM_READWRITE));
-
-  gstelement_class->change_state = gst_rtpmpaenc_change_state;
+  gstbasertppayload_class->set_caps = gst_rtpmpaenc_setcaps;
+  gstbasertppayload_class->handle_buffer = gst_rtpmpaenc_handle_buffer;
 }
 
 static void
 gst_rtpmpaenc_init (GstRtpMPAEnc * rtpmpaenc)
 {
-  rtpmpaenc->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpmpaenc_src_template), "src");
-  gst_element_add_pad (GST_ELEMENT (rtpmpaenc), rtpmpaenc->srcpad);
-
-  rtpmpaenc->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpmpaenc_sink_template), "sink");
-  gst_pad_set_chain_function (rtpmpaenc->sinkpad, gst_rtpmpaenc_chain);
-  gst_element_add_pad (GST_ELEMENT (rtpmpaenc), rtpmpaenc->sinkpad);
-
   rtpmpaenc->adapter = gst_adapter_new ();
-  rtpmpaenc->mtu = DEFAULT_MTU;
+}
+
+static void
+gst_rtpmpaenc_finalize (GObject * object)
+{
+  GstRtpMPAEnc *rtpmpaenc;
+
+  rtpmpaenc = GST_RTP_MPA_ENC (object);
+
+  g_object_unref (rtpmpaenc->adapter);
+  rtpmpaenc->adapter = NULL;
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static gboolean
+gst_rtpmpaenc_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
+{
+  gst_basertppayload_set_options (payload, "audio", TRUE, "MPA", 90000);
+  gst_basertppayload_set_outcaps (payload, NULL);
+
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -184,7 +174,7 @@ gst_rtpmpaenc_flush (GstRtpMPAEnc * rtpmpaenc)
     packet_len = gst_rtpbuffer_calc_packet_len (4 + avail, 0, 0);
 
     /* fill one MTU or all available bytes */
-    towrite = MIN (packet_len, rtpmpaenc->mtu);
+    towrite = MIN (packet_len, GST_BASE_RTP_PAYLOAD_MTU (rtpmpaenc));
 
     /* this is the payload length */
     payload_len = gst_rtpbuffer_calc_payload_len (towrite, 0, 0);
@@ -194,11 +184,7 @@ gst_rtpmpaenc_flush (GstRtpMPAEnc * rtpmpaenc)
 
     payload_len -= 4;
 
-    /* set timestamp */
-    gst_rtpbuffer_set_timestamp (outbuf,
-        rtpmpaenc->first_ts * 90000 / GST_SECOND);
     gst_rtpbuffer_set_payload_type (outbuf, GST_RTP_PAYLOAD_MPA);
-    gst_rtpbuffer_set_seq (outbuf, rtpmpaenc->seqnum++);
 
     /*
      *  0                   1                   2                   3
@@ -225,21 +211,22 @@ gst_rtpmpaenc_flush (GstRtpMPAEnc * rtpmpaenc)
 
     GST_BUFFER_TIMESTAMP (outbuf) = rtpmpaenc->first_ts;
 
-    ret = gst_pad_push (rtpmpaenc->srcpad, outbuf);
+    ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpmpaenc), outbuf);
   }
 
   return ret;
 }
 
 static GstFlowReturn
-gst_rtpmpaenc_chain (GstPad * pad, GstBuffer * buffer)
+gst_rtpmpaenc_handle_buffer (GstBaseRTPPayload * basepayload,
+    GstBuffer * buffer)
 {
   GstRtpMPAEnc *rtpmpaenc;
   GstFlowReturn ret;
   guint size, avail;
   guint packet_len;
 
-  rtpmpaenc = GST_RTP_MPA_ENC (gst_pad_get_parent (pad));
+  rtpmpaenc = GST_RTP_MPA_ENC (basepayload);
 
   size = GST_BUFFER_SIZE (buffer);
   avail = gst_adapter_available (rtpmpaenc->adapter);
@@ -250,9 +237,11 @@ gst_rtpmpaenc_chain (GstPad * pad, GstBuffer * buffer)
 
   /* if this buffer is going to overflow the packet, flush what we
    * have. */
-  if (packet_len > rtpmpaenc->mtu) {
+  if (packet_len > GST_BASE_RTP_PAYLOAD_MTU (rtpmpaenc)) {
     ret = gst_rtpmpaenc_flush (rtpmpaenc);
     avail = 0;
+  } else {
+    ret = GST_FLOW_OK;
   }
 
   gst_adapter_push (rtpmpaenc->adapter, buffer);
@@ -260,75 +249,7 @@ gst_rtpmpaenc_chain (GstPad * pad, GstBuffer * buffer)
   if (avail == 0) {
     rtpmpaenc->first_ts = GST_BUFFER_TIMESTAMP (buffer);
   }
-  gst_object_unref (rtpmpaenc);
 
-  ret = GST_FLOW_OK;
-
-  return ret;
-}
-
-static void
-gst_rtpmpaenc_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstRtpMPAEnc *rtpmpaenc;
-
-  rtpmpaenc = GST_RTP_MPA_ENC (object);
-
-  switch (prop_id) {
-    case PROP_MTU:
-      rtpmpaenc->mtu = g_value_get_uint (value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_rtpmpaenc_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  GstRtpMPAEnc *rtpmpaenc;
-
-  rtpmpaenc = GST_RTP_MPA_ENC (object);
-
-  switch (prop_id) {
-    case PROP_MTU:
-      g_value_set_uint (value, rtpmpaenc->mtu);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static GstStateChangeReturn
-gst_rtpmpaenc_change_state (GstElement * element, GstStateChange transition)
-{
-  GstRtpMPAEnc *rtpmpaenc;
-  GstStateChangeReturn ret;
-
-  rtpmpaenc = GST_RTP_MPA_ENC (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      rtpmpaenc->seqnum = 0;
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-    default:
-      break;
-  }
   return ret;
 }
 

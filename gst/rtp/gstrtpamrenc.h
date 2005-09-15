@@ -21,6 +21,7 @@
 #define __GST_RTP_AMR_ENC_H__
 
 #include <gst/gst.h>
+#include <gst/rtp/gstbasertppayload.h>
 #include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
@@ -41,21 +42,12 @@ typedef struct _GstRtpAMREncClass GstRtpAMREncClass;
 
 struct _GstRtpAMREnc
 {
-  GstElement element;
-
-  GstPad *sinkpad;
-  GstPad *srcpad;
-
-  guint16 seqnum;
-  guint   pt;
-  guint   ssrc;
-
-  guint mtu;
+  GstBaseRTPPayload payload;
 };
 
 struct _GstRtpAMREncClass
 {
-  GstElementClass parent_class;
+  GstBaseRTPPayloadClass parent_class;
 };
 
 gboolean gst_rtpamrenc_plugin_init (GstPlugin * plugin);

@@ -1,3 +1,51 @@
+2005-09-15  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/README:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpamrdec.c: (gst_rtpamrdec_init),
+	(gst_rtpamrdec_sink_setcaps), (gst_rtpamrdec_chain),
+	(gst_rtpamrdec_change_state):
+	* gst/rtp/gstrtpamrenc.c: (gst_rtpamrenc_get_type),
+	(gst_rtpamrenc_class_init), (gst_rtpamrenc_init),
+	(gst_rtpamrenc_setcaps), (gst_rtpamrenc_handle_buffer):
+	* gst/rtp/gstrtpamrenc.h:
+	* gst/rtp/gstrtpgsmenc.c: (gst_rtpgsmenc_get_type),
+	(gst_rtpgsmenc_class_init), (gst_rtpgsmenc_init),
+	(gst_rtpgsmenc_setcaps), (gst_rtpgsmenc_handle_buffer):
+	* gst/rtp/gstrtpgsmenc.h:
+	* gst/rtp/gstrtpgsmparse.c: (gst_rtpgsmparse_class_init),
+	(gst_rtpgsm_caps_nego), (gst_rtpgsmparse_chain),
+	(gst_rtpgsmparse_set_property), (gst_rtpgsmparse_get_property),
+	(gst_rtpgsmparse_change_state):
+	* gst/rtp/gstrtpgsmparse.h:
+	* gst/rtp/gstrtph263pdec.c: (gst_rtph263pdec_class_init),
+	(gst_rtph263pdec_finalize), (gst_rtph263pdec_change_state):
+	* gst/rtp/gstrtph263penc.c: (gst_rtph263penc_get_type),
+	(gst_rtph263penc_class_init), (gst_rtph263penc_init),
+	(gst_rtph263penc_finalize), (gst_rtph263penc_setcaps),
+	(gst_rtph263penc_flush), (gst_rtph263penc_handle_buffer):
+	* gst/rtp/gstrtph263penc.h:
+	* gst/rtp/gstrtpmp4vdec.c: (gst_rtpmp4vdec_setcaps),
+	(gst_rtpmp4vdec_chain), (gst_rtpmp4vdec_change_state):
+	* gst/rtp/gstrtpmp4venc.c: (gst_rtpmp4venc_get_type),
+	(gst_rtpmp4venc_class_init), (gst_rtpmp4venc_init),
+	(gst_rtpmp4venc_finalize), (gst_rtpmp4venc_new_caps),
+	(gst_rtpmp4venc_setcaps), (gst_rtpmp4venc_flush),
+	(gst_rtpmp4venc_parse_data), (gst_rtpmp4venc_handle_buffer):
+	* gst/rtp/gstrtpmp4venc.h:
+	* gst/rtp/gstrtpmpadec.c:
+	* gst/rtp/gstrtpmpaenc.c: (gst_rtpmpaenc_get_type),
+	(gst_rtpmpaenc_class_init), (gst_rtpmpaenc_init),
+	(gst_rtpmpaenc_finalize), (gst_rtpmpaenc_setcaps),
+	(gst_rtpmpaenc_flush), (gst_rtpmpaenc_handle_buffer):
+	* gst/rtp/gstrtpmpaenc.h:
+	Updates to payloader/depayloaders, make payloaders use
+	the base classes.
+	Updated README with suggested RTP caps and how to convert
+	to/from SDP.
+	Added config descriptor in mp4v payloader.
+
 2005-09-15  Andy Wingo  <wingo@pobox.com>
 
 	* gst/autodetect/gstautoaudiosink.c (gst_auto_audio_sink_find_best): 

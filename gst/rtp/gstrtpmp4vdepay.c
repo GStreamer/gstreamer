@@ -54,10 +54,12 @@ static GstStaticPadTemplate gst_rtpmp4vdec_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-rtp"
+    GST_STATIC_CAPS ("application/x-rtp, "
+        "media = (string) \"video\", "
+        "payload = (int) [ 96, 255 ], "
+        "clock_rate = (int) [1, MAX ], " "encoding_name = (string) \"MP4V-ES\""
         /* All optional parameters
          *
-         * "rate=(int) [1, MAX],"
          * "profile-level-id=[1,MAX]"
          * "config=" 
          */
@@ -164,7 +166,7 @@ gst_rtpmp4vdec_setcaps (GstPad * pad, GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
-  if (!gst_structure_get_int (structure, "rate", &rtpmp4vdec->rate))
+  if (!gst_structure_get_int (structure, "clock_rate", &rtpmp4vdec->rate))
     rtpmp4vdec->rate = 90000;
 
   srccaps = gst_caps_new_simple ("video/mpeg",
@@ -282,7 +284,6 @@ gst_rtpmp4vdec_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_adapter_clear (rtpmp4vdec->adapter);
-      rtpmp4vdec->rate = 90000;
       break;
     default:
       break;

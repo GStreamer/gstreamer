@@ -17,8 +17,8 @@
 #endif
 
 #include <string.h>
+#include <gst/rtp/gstrtpbuffer.h>
 #include "gstrtpgsmparse.h"
-#include "gstrtp-common.h"
 
 /* elementfactory information */
 static GstElementDetails gst_rtp_gsmparse_details = {
@@ -60,13 +60,15 @@ static void gst_rtpgsmparse_class_init (GstRtpGSMParseClass * klass);
 static void gst_rtpgsmparse_base_init (GstRtpGSMParseClass * klass);
 static void gst_rtpgsmparse_init (GstRtpGSMParse * rtpgsmparse);
 
-static void gst_rtpgsmparse_chain (GstPad * pad, GstData * _data);
+static GstFlowReturn gst_rtpgsmparse_chain (GstPad * pad, GstBuffer * buffer);
 
 static void gst_rtpgsmparse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtpgsmparse_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static GstStateChangeReturn gst_rtpgsmparse_change_state (GstElement * element);
+
+static GstStateChangeReturn gst_rtpgsmparse_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -118,12 +120,12 @@ gst_rtpgsmparse_class_init (GstRtpGSMParseClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  gobject_class->set_property = gst_rtpgsmparse_set_property;
+  gobject_class->get_property = gst_rtpgsmparse_get_property;
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FREQUENCY,
       g_param_spec_int ("frequency", "frequency", "frequency",
           G_MININT, G_MAXINT, 8000, G_PARAM_READWRITE));
-
-  gobject_class->set_property = gst_rtpgsmparse_set_property;
-  gobject_class->get_property = gst_rtpgsmparse_get_property;
 
   gstelement_class->change_state = gst_rtpgsmparse_change_state;
 }
@@ -144,21 +146,7 @@ gst_rtpgsmparse_init (GstRtpGSMParse * rtpgsmparse)
   rtpgsmparse->frequency = 8000;
 }
 
-void
-gst_rtpgsmparse_ntohs (GstBuffer * buf)
-{
-  gint16 *i, *len;
-
-  /* FIXME: is this code correct or even sane at all? */
-  i = (gint16 *) GST_BUFFER_DATA (buf);
-  len = i + GST_BUFFER_SIZE (buf) / sizeof (gint16 *);
-
-  for (; i < len; i++) {
-    *i = g_ntohs (*i);
-  }
-}
-
-void
+static void
 gst_rtpgsm_caps_nego (GstRtpGSMParse * rtpgsmparse)
 {
   GstCaps *caps;
@@ -166,72 +154,67 @@ gst_rtpgsm_caps_nego (GstRtpGSMParse * rtpgsmparse)
   caps = gst_caps_new_simple ("audio/x-gsm",
       "rate", G_TYPE_INT, rtpgsmparse->frequency, NULL);
 
-  gst_pad_try_set_caps (rtpgsmparse->srcpad, caps);
+  gst_pad_set_caps (rtpgsmparse->srcpad, caps);
+  gst_caps_unref (caps);
 }
 
-static void
-gst_rtpgsmparse_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_rtpgsmparse_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
   GstRtpGSMParse *rtpgsmparse;
   GstBuffer *outbuf;
-  Rtp_Packet packet;
-  rtp_payload_t pt;
+  GstFlowReturn ret;
+  guint8 pt;
 
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
-
-  rtpgsmparse = GST_RTP_GSM_PARSE (GST_OBJECT_PARENT (pad));
-
-  g_return_if_fail (rtpgsmparse != NULL);
-  g_return_if_fail (GST_IS_RTP_GSM_PARSE (rtpgsmparse));
-
-  if (GST_IS_EVENT (buf)) {
-    GstEvent *event = GST_EVENT (buf);
-
-    gst_pad_event_default (pad, event);
-
-    return;
-  }
+  rtpgsmparse = GST_RTP_GSM_PARSE (gst_pad_get_parent (pad));
 
   if (GST_PAD_CAPS (rtpgsmparse->srcpad) == NULL) {
     gst_rtpgsm_caps_nego (rtpgsmparse);
   }
 
-  packet =
-      rtp_packet_new_copy_data (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  if (!gst_rtpbuffer_validate (buf))
+    goto bad_packet;
 
-  pt = rtp_packet_get_payload_type (packet);
+  if ((pt = gst_rtpbuffer_get_payload_type (buf)) != GST_RTP_PAYLOAD_GSM)
+    goto bad_payload;
 
-  if (pt != PAYLOAD_GSM) {
-    g_warning ("Unexpected paload type %u\n", pt);
-    rtp_packet_free (packet);
+  {
+    gint payload_len;
+    guint8 *payload;
+    guint32 timestamp;
+
+    payload_len = gst_rtpbuffer_get_payload_len (buf);
+    payload = gst_rtpbuffer_get_payload (buf);
+
+    timestamp = gst_rtpbuffer_get_timestamp (buf);
+
+    outbuf = gst_buffer_new_and_alloc (payload_len);
+
+    GST_BUFFER_TIMESTAMP (outbuf) = timestamp * GST_SECOND / 8000;
+
+    memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
+
+    GST_DEBUG ("pushing buffer of size %d", GST_BUFFER_SIZE (outbuf));
+
     gst_buffer_unref (buf);
-    return;
+
+    ret = gst_pad_push (rtpgsmparse->srcpad, outbuf);
   }
 
-  outbuf = gst_buffer_new ();
-  GST_BUFFER_SIZE (outbuf) = rtp_packet_get_payload_len (packet);
-  GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
-  GST_BUFFER_TIMESTAMP (outbuf) =
-      g_ntohl (rtp_packet_get_timestamp (packet)) * GST_SECOND;
+  return ret;
 
-  memcpy (GST_BUFFER_DATA (outbuf), rtp_packet_get_payload (packet),
-      GST_BUFFER_SIZE (outbuf));
-
-  GST_DEBUG ("gst_rtpgsmparse_chain: pushing buffer of size %d",
-      GST_BUFFER_SIZE (outbuf));
-
-/* FIXME: According to RFC 1890, this is required, right? */
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  gst_rtpgsmparse_ntohs (outbuf);
-#endif
-
-  gst_pad_push (rtpgsmparse->srcpad, GST_DATA (outbuf));
-
-  rtp_packet_free (packet);
-  gst_buffer_unref (buf);
+bad_packet:
+  {
+    GST_DEBUG ("Packet did not validate");
+    gst_buffer_unref (buf);
+    return GST_FLOW_ERROR;
+  }
+bad_payload:
+  {
+    GST_DEBUG ("Unexpected payload type %u", pt);
+    gst_buffer_unref (buf);
+    return GST_FLOW_ERROR;
+  }
 }
 
 static void
@@ -240,7 +223,6 @@ gst_rtpgsmparse_set_property (GObject * object, guint prop_id,
 {
   GstRtpGSMParse *rtpgsmparse;
 
-  g_return_if_fail (GST_IS_RTP_GSM_PARSE (object));
   rtpgsmparse = GST_RTP_GSM_PARSE (object);
 
   switch (prop_id) {
@@ -258,7 +240,6 @@ gst_rtpgsmparse_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstRtpGSMParse *rtpgsmparse;
 
-  g_return_if_fail (GST_IS_RTP_GSM_PARSE (object));
   rtpgsmparse = GST_RTP_GSM_PARSE (object);
 
   switch (prop_id) {
@@ -275,28 +256,26 @@ static GstStateChangeReturn
 gst_rtpgsmparse_change_state (GstElement * element, GstStateChange transition)
 {
   GstRtpGSMParse *rtpgsmparse;
-
-  g_return_val_if_fail (GST_IS_RTP_GSM_PARSE (element),
-      GST_STATE_CHANGE_FAILURE);
+  GstStateChangeReturn ret;
 
   rtpgsmparse = GST_RTP_GSM_PARSE (element);
 
-  GST_DEBUG ("state pending %d\n", GST_STATE_PENDING (element));
-
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;
   }
 
-  /* if we haven't failed already, give the parent class a chance to ;-) */
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_CHANGE_SUCCESS;
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      break;
+    default:
+      break;
+  }
+  return ret;
 }
 
 gboolean

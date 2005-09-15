@@ -21,6 +21,7 @@
 #define __GST_RTP_MPA_ENC_H__
 
 #include <gst/gst.h>
+#include <gst/rtp/gstbasertppayload.h>
 #include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
@@ -41,21 +42,15 @@ typedef struct _GstRtpMPAEncClass GstRtpMPAEncClass;
 
 struct _GstRtpMPAEnc
 {
-  GstElement element;
-
-  GstPad *sinkpad;
-  GstPad *srcpad;
+  GstBaseRTPPayload payload;
 
   GstAdapter *adapter;
   GstClockTime first_ts;
-  guint16 seqnum;
-
-  guint mtu;
 };
 
 struct _GstRtpMPAEncClass
 {
-  GstElementClass parent_class;
+  GstBaseRTPPayloadClass parent_class;
 };
 
 gboolean gst_rtpmpaenc_plugin_init (GstPlugin * plugin);

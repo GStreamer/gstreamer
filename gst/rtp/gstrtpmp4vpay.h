@@ -21,6 +21,7 @@
 #define __GST_RTP_MP4V_ENC_H__
 
 #include <gst/gst.h>
+#include <gst/rtp/gstbasertppayload.h>
 #include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
@@ -41,26 +42,19 @@ typedef struct _GstRtpMP4VEncClass GstRtpMP4VEncClass;
 
 struct _GstRtpMP4VEnc
 {
-  GstElement    element;
-
-  GstPad       *sinkpad;
-  GstPad       *srcpad;
+  GstBaseRTPPayload    payload;
 
   GstAdapter   *adapter;
   GstClockTime  first_ts;
-  guint16       seqnum;
 
   gint		rate;
   gint		profile;
-
-  guint 	mtu;
-  guint	 	pt;
-  guint 	ssrc;
+  GstBuffer    *config;
 };
 
 struct _GstRtpMP4VEncClass
 {
-  GstElementClass parent_class;
+  GstBaseRTPPayloadClass parent_class;
 };
 
 gboolean gst_rtpmp4venc_plugin_init (GstPlugin * plugin);

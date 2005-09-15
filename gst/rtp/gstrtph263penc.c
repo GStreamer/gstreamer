@@ -26,27 +26,8 @@
 static GstElementDetails gst_rtp_h263penc_details = {
   "RTP packet parser",
   "Codec/Parser/Network",
-  "Extracts H263+ video from RTP packets",
+  "Encodes H263+ video in RTP packets (RFC 2429)",
   "Wim Taymans <wim@fluendo.com>"
-};
-
-/* RtpH263PEnc signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-#define DEFAULT_MTU     1024
-#define DEFAULT_PT      96
-#define DEFAULT_SSRC    0
-
-enum
-{
-  PROP_0,
-  PROP_MTU,
-  PROP_PT,
-  PROP_SSRC
 };
 
 static GstStaticPadTemplate gst_rtph263penc_sink_template =
@@ -60,25 +41,23 @@ static GstStaticPadTemplate gst_rtph263penc_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-rtp")
+    GST_STATIC_CAPS ("application/x-rtp, "
+        "media = (string) \"video\", "
+        "payload = (int) [ 96, 255 ], "
+        "clock_rate = (int) 90000, " "encoding_name = (string) \"H263-1998\"")
     );
-
 
 static void gst_rtph263penc_class_init (GstRtpH263PEncClass * klass);
 static void gst_rtph263penc_base_init (GstRtpH263PEncClass * klass);
 static void gst_rtph263penc_init (GstRtpH263PEnc * rtph263penc);
+static void gst_rtph263penc_finalize (GObject * object);
 
-static GstFlowReturn gst_rtph263penc_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_rtph263penc_setcaps (GstBaseRTPPayload * payload,
+    GstCaps * caps);
+static GstFlowReturn gst_rtph263penc_handle_buffer (GstBaseRTPPayload * payload,
+    GstBuffer * buffer);
 
-static void gst_rtph263penc_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_rtph263penc_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
-static GstStateChangeReturn gst_rtph263penc_change_state (GstElement *
-    element, GstStateChange transition);
-
-static GstElementClass *parent_class = NULL;
+static GstBaseRTPPayloadClass *parent_class = NULL;
 
 static GType
 gst_rtph263penc_get_type (void)
@@ -99,7 +78,7 @@ gst_rtph263penc_get_type (void)
     };
 
     rtph263penc_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstRtpH263PEnc",
+        g_type_register_static (GST_TYPE_BASE_RTP_PAYLOAD, "GstRtpH263PEnc",
         &rtph263penc_info, 0);
   }
   return rtph263penc_type;
@@ -123,48 +102,48 @@ gst_rtph263penc_class_init (GstRtpH263PEncClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstBaseRTPPayloadClass *gstbasertppayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_PAYLOAD);
 
-  gobject_class->set_property = gst_rtph263penc_set_property;
-  gobject_class->get_property = gst_rtph263penc_get_property;
+  gobject_class->finalize = gst_rtph263penc_finalize;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MTU,
-      g_param_spec_uint ("mtu", "MTU",
-          "Maximum size of one packet",
-          28, G_MAXUINT, DEFAULT_MTU, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PT,
-      g_param_spec_uint ("pt", "payload type",
-          "The payload type of the packets",
-          0, 0x80, DEFAULT_PT, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SSRC,
-      g_param_spec_uint ("ssrc", "SSRC",
-          "The SSRC of the packets",
-          0, G_MAXUINT, DEFAULT_SSRC, G_PARAM_READWRITE));
-
-  gstelement_class->change_state = gst_rtph263penc_change_state;
+  gstbasertppayload_class->set_caps = gst_rtph263penc_setcaps;
+  gstbasertppayload_class->handle_buffer = gst_rtph263penc_handle_buffer;
 }
 
 static void
 gst_rtph263penc_init (GstRtpH263PEnc * rtph263penc)
 {
-  rtph263penc->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtph263penc_src_template), "src");
-  gst_element_add_pad (GST_ELEMENT (rtph263penc), rtph263penc->srcpad);
-
-  rtph263penc->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtph263penc_sink_template), "sink");
-  gst_pad_set_chain_function (rtph263penc->sinkpad, gst_rtph263penc_chain);
-  gst_element_add_pad (GST_ELEMENT (rtph263penc), rtph263penc->sinkpad);
-
   rtph263penc->adapter = gst_adapter_new ();
-  rtph263penc->mtu = DEFAULT_MTU;
 }
+
+static void
+gst_rtph263penc_finalize (GObject * object)
+{
+  GstRtpH263PEnc *rtph263penc;
+
+  rtph263penc = GST_RTP_H263P_ENC (object);
+
+  g_object_unref (rtph263penc->adapter);
+  rtph263penc->adapter = NULL;
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static gboolean
+gst_rtph263penc_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
+{
+  gst_basertppayload_set_options (payload, "video", TRUE, "H263-1998", 90000);
+  gst_basertppayload_set_outcaps (payload, NULL);
+
+  return TRUE;
+}
+
 
 static GstFlowReturn
 gst_rtph263penc_flush (GstRtpH263PEnc * rtph263penc)
@@ -189,7 +168,7 @@ gst_rtph263penc_flush (GstRtpH263PEnc * rtph263penc)
 
     /* FIXME, do better mtu packing, header len etc should be
      * included in this calculation. */
-    towrite = MIN (avail, rtph263penc->mtu);
+    towrite = MIN (avail, GST_BASE_RTP_PAYLOAD_MTU (rtph263penc));
     /* for fragmented frames we need 2 bytes header, for other
      * frames we must reuse the first 2 bytes of the data as the
      * header */
@@ -197,11 +176,6 @@ gst_rtph263penc_flush (GstRtpH263PEnc * rtph263penc)
     payload_len = header_len + towrite;
 
     outbuf = gst_rtpbuffer_new_allocate (payload_len, 0, 0);
-    gst_rtpbuffer_set_timestamp (outbuf,
-        rtph263penc->first_ts * 90000 / GST_SECOND);
-    gst_rtpbuffer_set_payload_type (outbuf, rtph263penc->pt);
-    gst_rtpbuffer_set_ssrc (outbuf, rtph263penc->ssrc);
-    gst_rtpbuffer_set_seq (outbuf, rtph263penc->seqnum++);
     /* last fragment gets the marker bit set */
     gst_rtpbuffer_set_marker (outbuf, avail > towrite ? 0 : 1);
 
@@ -222,7 +196,7 @@ gst_rtph263penc_flush (GstRtpH263PEnc * rtph263penc)
     GST_BUFFER_TIMESTAMP (outbuf) = rtph263penc->first_ts;
     gst_adapter_flush (rtph263penc->adapter, towrite);
 
-    ret = gst_pad_push (rtph263penc->srcpad, outbuf);
+    ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtph263penc), outbuf);
 
     avail -= towrite;
     fragmented = TRUE;
@@ -232,13 +206,13 @@ gst_rtph263penc_flush (GstRtpH263PEnc * rtph263penc)
 }
 
 static GstFlowReturn
-gst_rtph263penc_chain (GstPad * pad, GstBuffer * buffer)
+gst_rtph263penc_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
 {
   GstRtpH263PEnc *rtph263penc;
   GstFlowReturn ret;
   guint size;
 
-  rtph263penc = GST_RTP_H263P_ENC (GST_OBJECT_PARENT (pad));
+  rtph263penc = GST_RTP_H263P_ENC (payload);
 
   size = GST_BUFFER_SIZE (buffer);
   rtph263penc->first_ts = GST_BUFFER_TIMESTAMP (buffer);
@@ -247,80 +221,6 @@ gst_rtph263penc_chain (GstPad * pad, GstBuffer * buffer)
   gst_adapter_push (rtph263penc->adapter, buffer);
   ret = gst_rtph263penc_flush (rtph263penc);
 
-  return ret;
-}
-
-static void
-gst_rtph263penc_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstRtpH263PEnc *rtph263penc;
-
-  rtph263penc = GST_RTP_H263P_ENC (object);
-
-  switch (prop_id) {
-    case PROP_MTU:
-      rtph263penc->mtu = g_value_get_uint (value);
-      break;
-    case PROP_PT:
-      rtph263penc->pt = g_value_get_uint (value);
-      break;
-    case PROP_SSRC:
-      rtph263penc->ssrc = g_value_get_uint (value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_rtph263penc_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  GstRtpH263PEnc *rtph263penc;
-
-  rtph263penc = GST_RTP_H263P_ENC (object);
-
-  switch (prop_id) {
-    case PROP_MTU:
-      g_value_set_uint (value, rtph263penc->mtu);
-      break;
-    case PROP_PT:
-      g_value_set_uint (value, rtph263penc->pt);
-      break;
-    case PROP_SSRC:
-      g_value_set_uint (value, rtph263penc->ssrc);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static GstStateChangeReturn
-gst_rtph263penc_change_state (GstElement * element, GstStateChange transition)
-{
-  GstRtpH263PEnc *rtph263penc;
-  GstStateChangeReturn ret;
-
-  rtph263penc = GST_RTP_H263P_ENC (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-    default:
-      break;
-  }
   return ret;
 }
 

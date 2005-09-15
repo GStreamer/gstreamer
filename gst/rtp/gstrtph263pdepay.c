@@ -53,13 +53,17 @@ static GstStaticPadTemplate gst_rtph263pdec_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-rtp")
+    GST_STATIC_CAPS ("application/x-rtp, "
+        "media = (string) \"video\", "
+        "payload = (int) [ 96, 255 ], "
+        "clock_rate = (int) 90000, " "encoding_name = (string) \"H263-1998\"")
     );
 
 
 static void gst_rtph263pdec_class_init (GstRtpH263PDecClass * klass);
 static void gst_rtph263pdec_base_init (GstRtpH263PDecClass * klass);
 static void gst_rtph263pdec_init (GstRtpH263PDec * rtph263pdec);
+static void gst_rtph263pdec_finalize (GObject * object);
 
 static GstFlowReturn gst_rtph263pdec_chain (GstPad * pad, GstBuffer * buffer);
 
@@ -122,6 +126,8 @@ gst_rtph263pdec_class_init (GstRtpH263PDecClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  gobject_class->finalize = gst_rtph263pdec_finalize;
+
   gobject_class->set_property = gst_rtph263pdec_set_property;
   gobject_class->get_property = gst_rtph263pdec_get_property;
 
@@ -143,6 +149,19 @@ gst_rtph263pdec_init (GstRtpH263PDec * rtph263pdec)
   gst_element_add_pad (GST_ELEMENT (rtph263pdec), rtph263pdec->sinkpad);
 
   rtph263pdec->adapter = gst_adapter_new ();
+}
+
+static void
+gst_rtph263pdec_finalize (GObject * object)
+{
+  GstRtpH263PDec *rtph263pdec;
+
+  rtph263pdec = GST_RTP_H263P_DEC (object);
+
+  g_object_unref (rtph263pdec->adapter);
+  rtph263pdec->adapter = NULL;
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstFlowReturn
@@ -291,6 +310,9 @@ gst_rtph263pdec_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_adapter_clear (rtph263pdec->adapter);
       break;
     default:
       break;

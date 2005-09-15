@@ -21,6 +21,7 @@
 #define __GST_RTP_H263P_ENC_H__
 
 #include <gst/gst.h>
+#include <gst/rtp/gstbasertppayload.h>
 #include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
@@ -41,24 +42,15 @@ typedef struct _GstRtpH263PEncClass GstRtpH263PEncClass;
 
 struct _GstRtpH263PEnc
 {
-  GstElement element;
-
-  GstPad *sinkpad;
-  GstPad *srcpad;
+  GstBaseRTPPayload payload;
 
   GstAdapter *adapter;
   GstClockTime first_ts;
-
-  guint16 seqnum;
-  guint   pt;
-  guint   ssrc;
-
-  guint mtu;
 };
 
 struct _GstRtpH263PEncClass
 {
-  GstElementClass parent_class;
+  GstBaseRTPPayloadClass parent_class;
 };
 
 gboolean gst_rtph263penc_plugin_init (GstPlugin * plugin);
