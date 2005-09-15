@@ -33,7 +33,7 @@ enum CodecType {
     CODEC_TYPE_DATA,
 };
 
-/**
+/*
  * Pixel format. Notes: 
  *
  * PIX_FMT_RGBA32 is handled in an endian-specific manner. A RGBA
@@ -80,7 +80,7 @@ enum PixelFormat {
     PIX_FMT_UYVY411,   ///< Packed pixel, Cb Y0 Y1 Cr Y2 Y3
 
     PIX_FMT_AYUV4444,  ///< Packed pixel, A0 Y0 Cb Cr
-    PIX_FMT_NB,
+    PIX_FMT_NB
 };
 
 /* currently unused, may be used if 24/32 bits samples ever supported */

@@ -19,11 +19,8 @@
  */
 
 /**
- * SECTION:multifdsink
- * @short_description: a sink that writes to multiple file descriptors
+ * SECTION:element-multifdsink
  * @see_also: tcpserversink
- *
- * Incredibly, still a sink that writes to multiple file descriptors
  */
 
 #ifdef HAVE_CONFIG_H

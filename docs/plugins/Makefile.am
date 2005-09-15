@@ -77,12 +77,13 @@ IGNORE_CFILES = utils.c mem.c imgconvert.c
 #	$(top_srcdir)/ext/gnomevfs/gstgnomevfssink.c 
 
 EXTRA_HFILES = \
+	$(top_srcdir)/ext/theora/gsttheoraenc.h \
+	$(top_srcdir)/ext/vorbis/vorbisenc.h \
+	$(top_srcdir)/gst/ffmpegcolorspace/gstffmpegcolorspace.h \
 	$(top_srcdir)/gst/tcp/gstmultifdsink.h \
 	$(top_srcdir)/gst/tcp/gsttcpserversink.h \
 	$(top_srcdir)/gst/videotestsrc/gstvideotestsrc.h \
-	$(top_srcdir)/ext/theora/gsttheoraenc.h \
-	$(top_srcdir)/gst/volume/gstvolume.h \
-	$(top_srcdir)/ext/vorbis/vorbisenc.h
+	$(top_srcdir)/gst/volume/gstvolume.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES =

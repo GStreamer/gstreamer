@@ -14,6 +14,7 @@ libgstffmpegcolorspace_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstffmpegcolorspace_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS)
 
 noinst_HEADERS = \
+	gstffmpegcolorspace.h \
 	gstffmpegcodecmap.h \
 	imgconvert_template.h \
 	dsputil.h \

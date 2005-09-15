@@ -1,45 +1,46 @@
 <SECTION>
 <FILE>element-ffmpegcolorspace</FILE>
-GstFFMpegColorspace
 <TITLE>ffmpegcolorspace</TITLE>
+GstFFMpegCsp
 <SUBSECTION Standard>
-GstFFMpegColorspaceClass
+GstFFMpegCspClass
 </SECTION>
 
 <FILE>element-multifdsink</FILE>
+<TITLE>multifdsink</TITLE>
 GstMultiFdSink
+
 GstMultiFdSinkFlags
 GstRecoverPolicy
 GstSyncMethod
 GstUnitType
 GstClientStatus
-<TITLE>multifdsink</TITLE>
 <SUBSECTION Standard>
 GstMultiFdSinkClass
 </SECTION>
 
 <SECTION>
 <FILE>element-gnomevfssink</FILE>
-GstGnomeVFSSink
 <TITLE>gnomevfssink</TITLE>
+GstGnomeVFSSink
 <SUBSECTION Standard>
 GstGnomeVFSSinkClass
 </SECTION>
 
 <SECTION>
 <FILE>element-tcpserversink</FILE>
-GstTCPServerSink
 <TITLE>tcpserversink</TITLE>
+GstTCPServerSink
 <SUBSECTION Standard>
 GstTCPServerSinkClass
 </SECTION>
 
 <SECTION>
 <FILE>element-theoraenc</FILE>
-GstTheoraEnc
-GstTheoraEncClass
 <TITLE>theoraenc</TITLE>
+GstTheoraEnc
 <SUBSECTION Standard>
+GstTheoraEncClass
 </SECTION>
 
 

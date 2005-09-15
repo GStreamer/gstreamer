@@ -33,47 +33,14 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#  include "config.h"
 #endif
 
-#include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
-#include <avcodec.h>
-
+#include "gstffmpegcolorspace.h"
 #include "gstffmpegcodecmap.h"
 
 GST_DEBUG_CATEGORY (ffmpegcolorspace_debug);
 #define GST_CAT_DEFAULT ffmpegcolorspace_debug
-
-#define GST_TYPE_FFMPEGCSP \
-  (gst_ffmpegcsp_get_type())
-#define GST_FFMPEGCSP(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGCSP,GstFFMpegCsp))
-#define GST_FFMPEGCSP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGCSP,GstFFMpegCsp))
-#define GST_IS_FFMPEGCSP(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGCSP))
-#define GST_IS_FFMPEGCSP_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGCSP))
-
-typedef struct _GstFFMpegCsp GstFFMpegCsp;
-typedef struct _GstFFMpegCspClass GstFFMpegCspClass;
-
-struct _GstFFMpegCsp
-{
-  GstBaseTransform element;
-
-  gint width, height;
-  gfloat fps;
-  enum PixelFormat from_pixfmt, to_pixfmt;
-  AVPicture from_frame, to_frame;
-  AVPaletteControl *palette;
-};
-
-struct _GstFFMpegCspClass
-{
-  GstBaseTransformClass parent_class;
-};
 
 /* elementfactory information */
 static GstElementDetails ffmpegcsp_details = {
