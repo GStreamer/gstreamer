@@ -1,5 +1,14 @@
 2005-09-15  David Schleef  <ds@schleef.org>
 
+	* check/Makefile.am:
+	* check/gst/gstplugin.c: Add test
+	* gst/gstplugin.c: Fix problems noticed by testsuite
+	* gst/gstplugin.h:
+	* gst/gstregistry.c: 
+	* gst/gstregistry.h:
+
+2005-09-15  David Schleef  <ds@schleef.org>
+
 	* gst/gstplugin.c: Implement semi-decent recounting and locking
 	  in plugins and plugin features.
 	* gst/gstplugin.h:

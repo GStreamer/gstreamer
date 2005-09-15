@@ -39,6 +39,7 @@ check_PROGRAMS =				\
 	gst/gstobject				\
 	gst/gstpad				\
 	gst/gstpipeline				\
+	gst/gstplugin				\
 	gst/gstsystemclock			\
 	gst/gststructure			\
 	gst/gsttag				\

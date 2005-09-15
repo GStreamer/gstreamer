@@ -402,6 +402,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
   _gst_plugin_fault_handler_filename = NULL;
   GST_INFO ("plugin \"%s\" loaded", plugin->filename);
 
+  gst_object_ref (plugin);
   gst_default_registry_add_plugin (plugin);
 
   g_static_mutex_unlock (&gst_plugin_loading_mutex);
@@ -857,6 +858,7 @@ GstPlugin *
 gst_plugin_load (GstPlugin * plugin)
 {
   GError *error = NULL;
+  GstPlugin *newplugin;
 
   if (gst_plugin_is_loaded (plugin)) {
     return plugin;
@@ -866,12 +868,26 @@ gst_plugin_load (GstPlugin * plugin)
     return plugin;
   }
 
-  plugin = gst_plugin_load_file (plugin->filename, &error);
-  if (!plugin) {
+  newplugin = gst_plugin_load_file (plugin->filename, &error);
+  if (newplugin == NULL) {
     GST_WARNING ("load_plugin error: %s\n", error->message);
     g_error_free (error);
+    gst_object_unref (plugin);
     return NULL;
   }
 
-  return plugin;
+  gst_object_unref (plugin);
+
+  return newplugin;
+}
+
+void
+gst_plugin_list_free (GList * list)
+{
+  GList *g;
+
+  for (g = list; g; g = g->next) {
+    gst_object_unref (GST_PLUGIN (g->data));
+  }
+  g_list_free (list);
 }

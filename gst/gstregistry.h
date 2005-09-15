@@ -39,7 +39,7 @@ typedef struct _GstRegistry GstRegistry;
 typedef struct _GstRegistryClass GstRegistryClass;
 
 struct _GstRegistry {
-  GObject 	 object;
+  GstObject 	 object;
 
   GList		*plugins;
 
@@ -52,7 +52,7 @@ struct _GstRegistry {
 };
 
 struct _GstRegistryClass {
-  GObjectClass		parent_class;
+  GstObjectClass	parent_class;
 
   /* signals */
   void 			(*plugin_added)		(GstRegistry *registry, GstPlugin *plugin);
@@ -68,7 +68,6 @@ GstRegistry *           gst_registry_get_default        (void);
 
 void			gst_registry_scan_path		(GstRegistry *registry, const gchar *path);
 GList*			gst_registry_get_path_list	(GstRegistry *registry);
-void 			gst_registry_clear_paths	(GstRegistry *registry);
 
 gboolean		gst_registry_add_plugin		(GstRegistry *registry, GstPlugin *plugin);
 void			gst_registry_remove_plugin	(GstRegistry *registry, GstPlugin *plugin);

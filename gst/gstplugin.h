@@ -150,9 +150,6 @@ typedef gboolean        (*GstPluginFilter)              (GstPlugin *plugin,
 
 GType                   gst_plugin_get_type             (void);
 
-GstPlugin *             gst_plugin_new                  (void);
-void                    gst_plugin_free                 (GstPlugin *plugin);
-
 void			_gst_plugin_initialize		(void);
 void			_gst_plugin_register_static	(GstPluginDesc *desc);
 
@@ -175,6 +172,7 @@ GList*			gst_plugin_list_feature_filter	(GList *list,
 							 GstPluginFeatureFilter filter,
 							 gboolean first,
 							 gpointer user_data);
+void gst_plugin_list_free (GList *list);
 gboolean		gst_plugin_name_filter		(GstPlugin *plugin, const gchar *name);
 
 GList*			gst_plugin_get_feature_list	(GstPlugin *plugin);

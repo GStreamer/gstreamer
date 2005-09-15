@@ -117,10 +117,12 @@ enum
 static void gst_registry_class_init (GstRegistryClass * klass);
 static void gst_registry_init (GstRegistry * registry);
 
-static GObjectClass *parent_class = NULL;
 static guint gst_registry_signals[LAST_SIGNAL] = { 0 };
 
-G_DEFINE_TYPE (GstRegistry, gst_registry, G_TYPE_OBJECT);
+static GstPlugin *gst_registry_lookup_locked (GstRegistry * registry,
+    const char *filename);
+
+G_DEFINE_TYPE (GstRegistry, gst_registry, GST_TYPE_OBJECT);
 
 static void
 gst_registry_class_init (GstRegistryClass * klass)
@@ -128,8 +130,6 @@ gst_registry_class_init (GstRegistryClass * klass)
   GObjectClass *gobject_class;
 
   gobject_class = (GObjectClass *) klass;
-
-  parent_class = g_type_class_ref (G_TYPE_OBJECT);
 
   gst_registry_signals[PLUGIN_ADDED] =
       g_signal_new ("plugin-added", G_TYPE_FROM_CLASS (klass),
@@ -176,13 +176,16 @@ gst_registry_add_path (GstRegistry * registry, const gchar * path)
     return;
   }
 
+  GST_LOCK (registry);
   if (g_list_find_custom (registry->paths, path, (GCompareFunc) strcmp)) {
     g_warning ("path %s already added to registry", path);
+    GST_UNLOCK (registry);
     return;
   }
 
   GST_INFO ("Adding plugin path: \"%s\"", path);
   registry->paths = g_list_append (registry->paths, g_strdup (path));
+  GST_UNLOCK (registry);
 }
 
 /**
@@ -196,28 +199,19 @@ gst_registry_add_path (GstRegistry * registry, const gchar * path)
 GList *
 gst_registry_get_path_list (GstRegistry * registry)
 {
+  GList *list;
+
   g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
 
-  return g_list_copy (registry->paths);
+  GST_LOCK (registry);
+  /* We don't need to copy the strings, because they won't be deleted
+   * as long as the GstRegistry is around */
+  list = g_list_copy (registry->paths);
+  GST_UNLOCK (registry);
+
+  return list;
 }
 
-
-/**
- * gst_registry_clear_paths:
- * @registry: the registry to clear the paths of
- *
- * Clear the paths of the given registry
- */
-void
-gst_registry_clear_paths (GstRegistry * registry)
-{
-  g_return_if_fail (GST_IS_REGISTRY (registry));
-
-  g_list_foreach (registry->paths, (GFunc) g_free, NULL);
-  g_list_free (registry->paths);
-
-  registry->paths = NULL;
-}
 
 /**
  * gst_registry_add_plugin:
@@ -235,25 +229,26 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
 
   g_return_val_if_fail (GST_IS_REGISTRY (registry), FALSE);
 
-  existing_plugin = gst_registry_lookup (registry, plugin->filename);
+  GST_LOCK (registry);
+  existing_plugin = gst_registry_lookup_locked (registry, plugin->filename);
   if (existing_plugin) {
-    GST_DEBUG ("Replacing existing plugin for filename \"%s\"",
-        plugin->filename);
+    GST_DEBUG ("Replacing existing plugin %p for filename \"%s\"",
+        existing_plugin, plugin->filename);
     registry->plugins = g_list_remove (registry->plugins, existing_plugin);
     gst_object_unref (existing_plugin);
   }
+
+  GST_DEBUG ("Adding plugin %p for filename \"%s\"", plugin, plugin->filename);
 
   registry->plugins = g_list_prepend (registry->plugins, plugin);
 
   gst_object_ref (plugin);
   gst_object_sink (plugin);
+  GST_UNLOCK (registry);
 
   GST_DEBUG ("emitting plugin-added for filename %s", plugin->filename);
   g_signal_emit (G_OBJECT (registry), gst_registry_signals[PLUGIN_ADDED], 0,
       plugin);
-
-  /* FIXME hack to fix unref later */
-  gst_object_ref (plugin);
 
   return TRUE;
 }
@@ -270,7 +265,10 @@ gst_registry_remove_plugin (GstRegistry * registry, GstPlugin * plugin)
 {
   g_return_if_fail (GST_IS_REGISTRY (registry));
 
+  GST_LOCK (registry);
   registry->plugins = g_list_remove (registry->plugins, plugin);
+  GST_UNLOCK (registry);
+  gst_object_unref (plugin);
 }
 
 /**
@@ -284,16 +282,26 @@ gst_registry_remove_plugin (GstRegistry * registry, GstPlugin * plugin)
  * the results. If the first flag is set, only the first match is
  * returned (as a list with a single object).
  *
- * Returns: a GList of plugins, g_list_free after use.
+ * Returns: a GList of plugins, gst_plugin_list_free after use.
  */
 GList *
 gst_registry_plugin_filter (GstRegistry * registry,
     GstPluginFilter filter, gboolean first, gpointer user_data)
 {
+  GList *list;
+  GList *g;
+
   g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
 
-  return gst_filter_run (registry->plugins, (GstFilterFunc) filter, first,
+  GST_LOCK (registry);
+  list = gst_filter_run (registry->plugins, (GstFilterFunc) filter, first,
       user_data);
+  for (g = list; g; g = g->next) {
+    gst_object_ref (GST_PLUGIN (g->data));
+  }
+  GST_UNLOCK (registry);
+
+  return list;
 }
 
 /**
@@ -308,16 +316,22 @@ gst_registry_plugin_filter (GstRegistry * registry,
  * If the first flag is set, only the first match is
  * returned (as a list with a single object).
  *
- * Returns: a GList of plugin features, g_list_free after use.
+ * Returns: a GList of plugin features, gst_plugin_feature_list_free after use.
  */
 GList *
 gst_registry_feature_filter (GstRegistry * registry,
     GstPluginFeatureFilter filter, gboolean first, gpointer user_data)
 {
+  GList *list;
+
   g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
 
-  return gst_plugin_list_feature_filter (registry->plugins, filter, first,
+  GST_LOCK (registry);
+  list = gst_plugin_list_feature_filter (registry->plugins, filter, first,
       user_data);
+  GST_UNLOCK (registry);
+
+  return list;
 }
 
 /**
@@ -343,7 +357,8 @@ gst_registry_find_plugin (GstRegistry * registry, const gchar * name)
   if (walk)
     result = GST_PLUGIN (walk->data);
 
-  g_list_free (walk);
+  gst_object_ref (result);
+  gst_plugin_list_free (walk);
 
   return result;
 }
@@ -380,7 +395,8 @@ gst_registry_find_feature (GstRegistry * registry, const gchar * name,
   if (walk)
     feature = GST_PLUGIN_FEATURE (walk->data);
 
-  g_list_free (walk);
+  gst_object_ref (feature->plugin);
+  gst_plugin_feature_list_free (walk);
 
   return feature;
 }
@@ -401,14 +417,27 @@ gst_registry_get_feature_list (GstRegistry * registry, GType type)
 GList *
 gst_registry_get_plugin_list (GstRegistry * registry)
 {
-  return g_list_copy (registry->plugins);
+  GList *list;
+  GList *g;
+
+  GST_LOCK (registry);
+  list = g_list_copy (registry->plugins);
+  for (g = list; g; g = g->next) {
+    gst_object_ref (GST_PLUGIN (g->data));
+  }
+  GST_UNLOCK (registry);
+
+  return list;
 }
 
-GstPlugin *
-gst_registry_lookup (GstRegistry * registry, const char *filename)
+static GstPlugin *
+gst_registry_lookup_locked (GstRegistry * registry, const char *filename)
 {
   GList *g;
   GstPlugin *plugin;
+
+  if (filename == NULL)
+    return NULL;
 
   for (g = registry->plugins; g; g = g_list_next (g)) {
     plugin = GST_PLUGIN (g->data);
@@ -418,6 +447,18 @@ gst_registry_lookup (GstRegistry * registry, const char *filename)
   }
 
   return NULL;
+}
+
+GstPlugin *
+gst_registry_lookup (GstRegistry * registry, const char *filename)
+{
+  GstPlugin *plugin;
+
+  GST_LOCK (registry);
+  plugin = gst_registry_lookup_locked (registry, filename);
+  GST_UNLOCK (registry);
+
+  return plugin;
 }
 
 static void
