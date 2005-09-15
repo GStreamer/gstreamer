@@ -79,7 +79,6 @@ IGNORE_CFILES = utils.c mem.c imgconvert.c
 EXTRA_HFILES = \
 	$(top_srcdir)/gst/tcp/gstmultifdsink.h \
 	$(top_srcdir)/gst/tcp/gsttcpserversink.h \
-	$(top_srcdir)/ext/theora/theoraenc.h \
 	$(top_srcdir)/ext/vorbis/vorbisenc.h
 
 # Images to copy into HTML directory.

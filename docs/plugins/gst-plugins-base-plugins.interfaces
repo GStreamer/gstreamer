@@ -1,0 +1,15 @@
+GstBin GstChildProxy
+GstPipeline GstChildProxy
+GstPlayBaseBin GstChildProxy
+GstPlayBin GstChildProxy
+GstDecodeBin GstChildProxy
+GstVorbisTag GstTagSetter
+GstVorbisEnc GstTagSetter
+GstGnomeVFSSrc GstURIHandler
+GstAlsaSrc GstImplementsInterface GstMixer
+GstV4lElement GstImplementsInterface GstTuner GstXOverlay GstColorBalance GstPropertyProbe
+GstV4lSrc GstImplementsInterface GstTuner GstXOverlay GstColorBalance GstPropertyProbe
+GstAlsaMixerElement GstImplementsInterface GstMixer
+GstXvImageSink GstImplementsInterface GstXOverlay GstColorBalance GstNavigation
+GstXImageSink GstImplementsInterface GstXOverlay GstNavigation
+GstVolume GstImplementsInterface GstMixer

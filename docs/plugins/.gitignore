@@ -6,16 +6,9 @@ Makefile.in
 *-undocumented.txt
 *-unused.txt
 
-*.args
-*.hierarchy
-*.interfaces
-*.prerequisites
-*.signals
-
 html
 sgml
 xml
-*.stamp
 
 gst-plugins-base-plugins-scan
 gst-plugins-base-plugins-scan.c

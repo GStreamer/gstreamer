@@ -1,0 +1,1120 @@
+<ARG>
+<NAME>GstVorbisEnc::bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,250001]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Target Bitrate</NICK>
+<BLURB>Attempt to encode at a bitrate averaging this (in bps). This uses the bitrate management engine, and is not recommended for most users. Quality is a better alternative. (-1 == disabled).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVorbisEnc::last-message</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>last-message</NICK>
+<BLURB>The last status message.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVorbisEnc::managed</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Managed</NICK>
+<BLURB>Enable bitrate management engine.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVorbisEnc::max-bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,250001]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Bitrate</NICK>
+<BLURB>Specify a maximum bitrate (in bps). Useful for streaming applications. (-1 == disabled).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVorbisEnc::min-bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,250001]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum Bitrate</NICK>
+<BLURB>Specify a minimum bitrate (in bps). Useful for encoding for a fixed-size channel. (-1 == disabled).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVorbisEnc::quality</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-0.1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Specify quality instead of specifying a particular bitrate.</BLURB>
+<DEFAULT>0.3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraDec::crop</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Crop</NICK>
+<BLURB>Crop the image to the visible region.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraEnc::bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate</NICK>
+<BLURB>Compressed video bitrate (kbps).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraEnc::border</NAME>
+<TYPE>GstTheoraEncBorderMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Border</NICK>
+<BLURB>Border color to add when sizes not multiple of 16.</BLURB>
+<DEFAULT>BORDER_BLACK</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraEnc::center</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Center</NICK>
+<BLURB>Center image when sizes not multiple of 16.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraEnc::keyframe-auto</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Keyframe Auto</NICK>
+<BLURB>Automatic keyframe detection.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraEnc::keyframe-force</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,32768]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Keyframe force</NICK>
+<BLURB>Force keyframe every N frames.</BLURB>
+<DEFAULT>64</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraEnc::keyframe-freq</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,32768]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Keyframe frequency</NICK>
+<BLURB>Keyframe frequency.</BLURB>
+<DEFAULT>64</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraEnc::keyframe-mindistance</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,32768]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Keyframe mindistance</NICK>
+<BLURB>Keyframe mindistance.</BLURB>
+<DEFAULT>8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraEnc::keyframe-threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,32768]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Keyframe threshold</NICK>
+<BLURB>Keyframe threshold.</BLURB>
+<DEFAULT>80</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraEnc::noise-sensitivity</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,32768]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Noise sensitivity</NICK>
+<BLURB>Noise sensitivity.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraEnc::quality</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,63]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Video quality.</BLURB>
+<DEFAULT>16</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraEnc::quick</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quick</NICK>
+<BLURB>Quick encoding.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraEnc::sharpness</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,2]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sharpness</NICK>
+<BLURB>Sharpness.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOggMux::max-delay</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max delay</NICK>
+<BLURB>Maximum delay in multiplexing streams.</BLURB>
+<DEFAULT>500000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOggMux::max-page-delay</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max page delay</NICK>
+<BLURB>Maximum delay for sending out a page.</BLURB>
+<DEFAULT>500000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGnomeVFSSrc::handle</NAME>
+<TYPE>gpointer</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>GnomeVFSHandle</NICK>
+<BLURB>Handle for GnomeVFS.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGnomeVFSSrc::iradio-genre</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>iradio-genre</NICK>
+<BLURB>Genre of the stream.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGnomeVFSSrc::iradio-mode</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>iradio-mode</NICK>
+<BLURB>Enable internet radio mode (extraction of icecast/audiocast metadata).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGnomeVFSSrc::iradio-name</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>iradio-name</NICK>
+<BLURB>Name of the stream.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGnomeVFSSrc::iradio-title</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>iradio-title</NICK>
+<BLURB>Name of currently playing song.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGnomeVFSSrc::iradio-url</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>iradio-url</NICK>
+<BLURB>Homepage URL for radio stream.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGnomeVFSSrc::location</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>File Location</NICK>
+<BLURB>Location of the file to read.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAlsaSrc::device</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device</NICK>
+<BLURB>ALSA device, as defined in an asound configuration file.</BLURB>
+<DEFAULT>"default"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAlsaSrc::device-name</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Device name</NICK>
+<BLURB>Human-readable name of the sound device.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAlsaSink::device</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device</NICK>
+<BLURB>ALSA device, as defined in an asound configuration file.</BLURB>
+<DEFAULT>"default"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAlsaSink::device-name</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Device name</NICK>
+<BLURB>Human-readable name of the sound device.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4lSrc::autoprobe</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Autoprobe</NICK>
+<BLURB>Whether the device should be probed for all possible features.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4lSrc::autoprobe-fps</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Autoprobe FPS</NICK>
+<BLURB>Whether the device should be probed for framerates.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4lSrc::copy-mode</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Copy mode</NICK>
+<BLURB>Whether to send out copies of buffers, or direct pointers to the mmap region.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4lSrc::timestamp-offset</NAME>
+<TYPE>gint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Timestamp offset</NICK>
+<BLURB>A time offset subtracted from timestamps set on buffers (in ns).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvImageSink::brightness</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1000,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Brightness</NICK>
+<BLURB>The brightness of the video.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvImageSink::contrast</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1000,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Contrast</NICK>
+<BLURB>The contrast of the video.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvImageSink::display</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Display</NICK>
+<BLURB>X Display name.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvImageSink::hue</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1000,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Hue</NICK>
+<BLURB>The hue of the video.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvImageSink::pixel-aspect-ratio</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pixel Aspect Ratio</NICK>
+<BLURB>The pixel aspect ratio of the device.</BLURB>
+<DEFAULT>"1/1"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvImageSink::saturation</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1000,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Saturation</NICK>
+<BLURB>The saturation of the video.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvImageSink::synchronous</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Synchronous</NICK>
+<BLURB>When enabled, runs the X display in synchronous mode. (used only for debugging).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXImageSink::display</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Display</NICK>
+<BLURB>X Display name.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXImageSink::pixel-aspect-ratio</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pixel Aspect Ratio</NICK>
+<BLURB>The pixel aspect ratio of the device.</BLURB>
+<DEFAULT>"1/1"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXImageSink::synchronous</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Synchronous</NICK>
+<BLURB>When enabled, runs the X display in synchronous mode. (used only for debugging).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVolume::mute</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>mute</NICK>
+<BLURB>mute.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVolume::volume</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,4]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>volume</NICK>
+<BLURB>volume.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoscale::method</NAME>
+<TYPE>GstVideoscaleMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>method</NICK>
+<BLURB>method.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideorate::drop</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Drop</NICK>
+<BLURB>Number of dropped frames.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideorate::duplicate</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Duplicate</NICK>
+<BLURB>Number of duplicated frames.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideorate::in</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>In</NICK>
+<BLURB>Number of input frames.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideorate::new-pref</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>New Pref</NICK>
+<BLURB>Value indicating how much to prefer new frames.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideorate::out</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Out</NICK>
+<BLURB>Number of output frames.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideorate::silent</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>silent</NICK>
+<BLURB>Don't emit notify for dropped and duplicated frames.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoTestSrc::pattern</NAME>
+<TYPE>GstVideoTestSrcPattern</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pattern</NICK>
+<BLURB>Type of test pattern to generate.</BLURB>
+<DEFAULT>snow</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoTestSrc::timestamp-offset</NAME>
+<TYPE>gint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Timestamp offset</NICK>
+<BLURB>An offset added to timestamps set on buffers (in ns).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTCPClientSink::host</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Host</NICK>
+<BLURB>The host/IP to send the packets to.</BLURB>
+<DEFAULT>"localhost"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTCPClientSink::port</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Port</NICK>
+<BLURB>The port to send the packets to.</BLURB>
+<DEFAULT>4953</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTCPClientSink::protocol</NAME>
+<TYPE>GstTCPProtocol</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Protocol</NICK>
+<BLURB>The protocol to wrap data in.</BLURB>
+<DEFAULT>GST_TCP_PROTOCOL_NONE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTCPClientSrc::host</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Host</NICK>
+<BLURB>The host IP address to receive packets from.</BLURB>
+<DEFAULT>"localhost"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTCPClientSrc::port</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Port</NICK>
+<BLURB>The port to receive packets from.</BLURB>
+<DEFAULT>4953</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTCPClientSrc::protocol</NAME>
+<TYPE>GstTCPProtocol</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Protocol</NICK>
+<BLURB>The protocol to wrap data in.</BLURB>
+<DEFAULT>GST_TCP_PROTOCOL_NONE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTCPServerSink::host</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>host</NICK>
+<BLURB>The host/IP to send the packets to.</BLURB>
+<DEFAULT>"localhost"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTCPServerSink::port</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>port</NICK>
+<BLURB>The port to send the packets to.</BLURB>
+<DEFAULT>4953</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTCPServerSrc::host</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Host</NICK>
+<BLURB>The hostname to listen as.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTCPServerSrc::port</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Port</NICK>
+<BLURB>The port to listen to.</BLURB>
+<DEFAULT>4953</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTCPServerSrc::protocol</NAME>
+<TYPE>GstTCPProtocol</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Protocol</NICK>
+<BLURB>The protocol to wrap data in.</BLURB>
+<DEFAULT>GST_TCP_PROTOCOL_NONE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFdSink::buffers-max</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffers max</NICK>
+<BLURB>max number of buffers to queue (-1 = no limit).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFdSink::buffers-queued</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Buffers queued</NICK>
+<BLURB>Number of buffers currently queued.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFdSink::buffers-soft-max</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffers soft max</NICK>
+<BLURB>Recover client when going over this limit (-1 = no limit).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFdSink::bytes-served</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Bytes served</NICK>
+<BLURB>Total number of bytes send to all clients.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFdSink::bytes-to-serve</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Bytes to serve</NICK>
+<BLURB>Number of bytes received to serve to clients.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFdSink::mode</NAME>
+<TYPE>GstFDSetMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>The mode for selecting activity on the fds.</BLURB>
+<DEFAULT>GST_FDSET_MODE_POLL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFdSink::protocol</NAME>
+<TYPE>GstTCPProtocol</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Protocol</NICK>
+<BLURB>The protocol to wrap data in.</BLURB>
+<DEFAULT>GST_TCP_PROTOCOL_NONE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFdSink::recover-policy</NAME>
+<TYPE>GstRecoverPolicy</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Recover Policy</NICK>
+<BLURB>How to recover when client reaches the soft max.</BLURB>
+<DEFAULT>GST_RECOVER_POLICY_NONE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFdSink::sync-clients</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sync clients</NICK>
+<BLURB>(DEPRECATED) Sync clients to a keyframe.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFdSink::sync-method</NAME>
+<TYPE>GstSyncMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sync Method</NICK>
+<BLURB>How to sync new clients to the stream.</BLURB>
+<DEFAULT>GST_SYNC_METHOD_NONE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFdSink::timeout</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Timeout</NICK>
+<BLURB>Maximum inactivity timeout in nanoseconds for a client (0 = no limit).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSineSrc::freq</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,20000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Frequency</NICK>
+<BLURB>Frequency of sine source.</BLURB>
+<DEFAULT>440</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSineSrc::samplesperbuffer</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Samples per buffer</NICK>
+<BLURB>Number of samples in each outgoing buffer.</BLURB>
+<DEFAULT>1024</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSineSrc::sync</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sync</NICK>
+<BLURB>Synchronize to clock.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSineSrc::tablesize</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>tablesize</NICK>
+<BLURB>tablesize.</BLURB>
+<DEFAULT>1024</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSineSrc::timestamp-offset</NAME>
+<TYPE>gint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Timestamp offset</NICK>
+<BLURB>An offset added to timestamps set on buffers (in ns).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSineSrc::volume</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Volume</NICK>
+<BLURB>Volume.</BLURB>
+<DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecodeBin::threaded</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threaded</NICK>
+<BLURB>Use threads.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin::audio-sink</NAME>
+<TYPE>GstElement</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Audio Sink</NICK>
+<BLURB>the audio output element to use (NULL = default sink).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin::frame</NAME>
+<TYPE>GstBuffer</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Frame</NICK>
+<BLURB>The last frame (NULL = no video available).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin::subtitle-font-desc</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>Subtitle font description</NICK>
+<BLURB>Pango font description of font to be used for subtitle rendering.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin::video-sink</NAME>
+<TYPE>GstElement</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Video Sink</NICK>
+<BLURB>the video output element to use (NULL = default sink).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin::vis-plugin</NAME>
+<TYPE>GstElement</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Vis plugin</NICK>
+<BLURB>the visualization element to use (NULL = none).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin::volume</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,4]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>volume</NICK>
+<BLURB>volume.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioresample::filter-length</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>filter_length</NICK>
+<BLURB>filter_length.</BLURB>
+<DEFAULT>16</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudiorate::add</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Add</NICK>
+<BLURB>Number of added samples.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudiorate::drop</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Drop</NICK>
+<BLURB>Number of dropped samples.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudiorate::in</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>In</NICK>
+<BLURB>Number of input samples.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudiorate::out</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Out</NICK>
+<BLURB>Number of output samples.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudiorate::silent</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>silent</NICK>
+<BLURB>Don't emit notify for dropped and duplicated frames.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue::block-timeout</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Timeout for Block</NICK>
+<BLURB>Nanoseconds until blocked queue times out and returns filler event. Value of -1 disables timeout.</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue::current-level-buffers</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Current level (buffers)</NICK>
+<BLURB>Current number of buffers in the queue.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue::current-level-bytes</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Current level (kB)</NICK>
+<BLURB>Current amount of data in the queue (bytes).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue::current-level-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Current level (ns)</NICK>
+<BLURB>Current amount of data in the queue (in ns).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue::leaky</NAME>
+<TYPE>GstQueueLeaky</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Leaky</NICK>
+<BLURB>Where the queue leaks, if at all.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue::max-size-buffers</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. size (buffers)</NICK>
+<BLURB>Max. number of buffers in the queue (0=disable).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue::max-size-bytes</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. size (kB)</NICK>
+<BLURB>Max. amount of data in the queue (bytes, 0=disable).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue::max-size-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. size (ns)</NICK>
+<BLURB>Max. amount of data in the queue (in ns, 0=disable).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue::may-deadlock</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>May Deadlock</NICK>
+<BLURB>The queue may deadlock if it's full and not PLAYING.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue::min-threshold-buffers</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Min. threshold (buffers)</NICK>
+<BLURB>Min. number of buffers in the queue to allow reading (0=disable).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue::min-threshold-bytes</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Min. threshold (kB)</NICK>
+<BLURB>Min. amount of data in the queue to allow reading (bytes, 0=disable).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue::min-threshold-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Min. threshold (ns)</NICK>
+<BLURB>Min. amount of data in the queue to allow reading (in ns, 0=disable).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPipeline::delay</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Delay</NICK>
+<BLURB>Expected delay needed for elements to spin up to PLAYING in nanoseconds.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPipeline::play-timeout</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Play Timeout</NICK>
+<BLURB>Max timeout for going to PLAYING in nanoseconds.</BLURB>
+<DEFAULT>2000000000</DEFAULT>
+</ARG>
+
