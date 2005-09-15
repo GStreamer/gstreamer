@@ -28,6 +28,7 @@
 #include "config.h"
 
 #include <glib.h>
+#include <glib/gstdio.h>
 
 #include <stdio.h>
 #include <errno.h>
