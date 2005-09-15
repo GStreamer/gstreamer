@@ -45,10 +45,6 @@
 
 GST_DEBUG_CATEGORY (audio_convert_debug);
 
-/* int to float conversion: int2float(i) = 1 / (2^31-1) * i */
-#define INT2FLOAT(i) (4.6566128752457969e-10 * ((gfloat)i))
-
-
 /*** DEFINITIONS **************************************************************/
 
 static GstElementDetails audio_convert_details = {
@@ -111,6 +107,12 @@ GST_STATIC_CAPS ( \
     "width = (int) 32, " \
     "depth = (int) [ 1, 32 ], " \
     "signed = (boolean) { true, false }; " \
+  "audio/x-raw-int, "	\
+    "rate = (int) [ 1, MAX ], "	\
+    "channels = (int) [ 1, 8 ], "	\
+    "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, "	\
+    "width = (int) 24, "	\
+    "depth = (int) [ 1, 24 ], " "signed = (boolean) { true, false }; "	\
   "audio/x-raw-int, " \
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, 8 ], " \
@@ -127,15 +129,6 @@ GST_STATIC_CAPS ( \
     "signed = (boolean) { true, false } " \
 )
 
-/* FIXME: put back 24 bit audio */
-#if 0
-"audio/x-raw-int, "
-    "rate = (int) [ 1, MAX ], "
-    "channels = (int) [ 1, 8 ], "
-    "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, "
-    "width = (int) 24, "
-    "depth = (int) [ 1, 24 ], " "signed = (boolean) { true, false }; "
-#endif
 static GstAudioChannelPosition *supported_positions;
 
 static GstStaticCaps gst_audio_convert_static_caps = STATIC_CAPS;

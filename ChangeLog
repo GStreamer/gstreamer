@@ -1,5 +1,10 @@
 2005-09-15  Wim Taymans  <wim@fluendo.com>
 
+	* gst/audioconvert/gstaudioconvert.c:
+	And enable 24 bits mode as well..
+
+2005-09-15  Wim Taymans  <wim@fluendo.com>
+
 	* gst-libs/gst/rtp/Makefile.am:
 	* gst-libs/gst/rtp/gstbasertppayload.c:
 	(gst_basertppayload_get_type), (gst_basertppayload_base_init),
