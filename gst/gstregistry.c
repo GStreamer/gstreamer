@@ -402,13 +402,17 @@ gst_registry_find_feature (GstRegistry * registry, const gchar * name,
   return feature;
 }
 
-
 GList *
 gst_registry_get_feature_list (GstRegistry * registry, GType type)
 {
-  /* FIXME */
+  GstTypeNameData data;
 
-  return NULL;
+  data.type = type;
+  data.name = NULL;
+
+  return gst_registry_feature_filter (registry,
+      (GstPluginFeatureFilter) gst_plugin_feature_type_name_filter,
+      FALSE, &data);
 }
 
 GList *
