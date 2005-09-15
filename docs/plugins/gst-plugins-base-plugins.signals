@@ -63,35 +63,3 @@ GstPad *arg1
 GstCaps *arg2
 </SIGNAL>
 
-<SIGNAL>
-<NAME>GstQueue::overrun</NAME>
-<RETURNS>void</RETURNS>
-GstQueue *gstqueue
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstQueue::running</NAME>
-<RETURNS>void</RETURNS>
-GstQueue *gstqueue
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstQueue::underrun</NAME>
-<RETURNS>void</RETURNS>
-GstQueue *gstqueue
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstBin::element-added</NAME>
-<RETURNS>void</RETURNS>
-GstBin *gstbin
-GstElement *arg1
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstBin::element-removed</NAME>
-<RETURNS>void</RETURNS>
-GstBin *gstbin
-GstElement *arg1
-</SIGNAL>
-

@@ -1,3 +1,16 @@
+2005-09-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* common/gstdoc-scangobj:
+	* common/gtk-doc-plugins.mak:
+	* docs/libs/Makefile.am:
+	* docs/plugins/gst-plugins-base-plugins.args:
+	* docs/plugins/gst-plugins-base-plugins.hierarchy:
+	* docs/plugins/gst-plugins-base-plugins.interfaces:
+	* docs/plugins/gst-plugins-base-plugins.prerequisites:
+	* docs/plugins/gst-plugins-base-plugins.signals:
+	  only scanobj stuff from our source module.  Not sure yet
+	  if that's correct, given the hierarchy stuff :)
+
 2005-09-15  Wim Taymans  <wim@fluendo.com>
 
 	* gst/audioconvert/gstaudioconvert.c:
