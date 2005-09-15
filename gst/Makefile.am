@@ -68,6 +68,7 @@ EXTRA_libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstmarshal.list gstxml.c gstparse.c gsttrace.c
 
 libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
+	glib-compat.c		\
 	gst.c			\
 	gstobject.c		\
 	gstbin.c		\
