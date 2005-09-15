@@ -81,7 +81,7 @@
 #include "gstinfo.h"
 #include "gsttypefind.h"
 #include "gsttypefindfactory.h"
-#include "gstregistrypool.h"
+#include "gstregistry.h"
 
 GST_DEBUG_CATEGORY (gst_type_find_debug);
 #define GST_CAT_DEFAULT gst_type_find_debug
@@ -91,8 +91,6 @@ static void gst_type_find_factory_class_init (gpointer g_class,
 static void gst_type_find_factory_init (GTypeInstance * instance,
     gpointer g_class);
 static void gst_type_find_factory_dispose (GObject * object);
-
-static void gst_type_find_factory_unload_thyself (GstPluginFeature * feature);
 
 static void gst_type_find_load_plugin (GstTypeFind * find, gpointer data);
 
@@ -128,16 +126,11 @@ gst_type_find_factory_get_type (void)
 static void
 gst_type_find_factory_class_init (gpointer g_class, gpointer class_data)
 {
-  GstPluginFeatureClass *gstpluginfeature_class =
-      GST_PLUGIN_FEATURE_CLASS (g_class);
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
 
   parent_class = g_type_class_peek_parent (g_class);
 
   object_class->dispose = gst_type_find_factory_dispose;
-
-  gstpluginfeature_class->unload_thyself =
-      GST_DEBUG_FUNCPTR (gst_type_find_factory_unload_thyself);
 }
 static void
 gst_type_find_factory_init (GTypeInstance * instance, gpointer g_class)
@@ -162,14 +155,6 @@ gst_type_find_factory_dispose (GObject * object)
   }
 }
 static void
-gst_type_find_factory_unload_thyself (GstPluginFeature * feature)
-{
-  GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (feature);
-
-  factory->function = gst_type_find_load_plugin;
-  factory->user_data = factory;
-}
-static void
 gst_type_find_load_plugin (GstTypeFind * find, gpointer data)
 {
   GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (data);
@@ -177,7 +162,10 @@ gst_type_find_load_plugin (GstTypeFind * find, gpointer data)
   GST_DEBUG_OBJECT (factory, "need to load typefind function %s",
       GST_PLUGIN_FEATURE_NAME (factory));
 
-  if (gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory))) {
+  factory =
+      GST_TYPE_FIND_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
+          (factory)));
+  if (factory) {
     if (factory->function == gst_type_find_load_plugin) {
       /* looks like we didn't get a real typefind function */
       g_warning ("could not load valid typefind function for feature '%s'\n",
@@ -200,7 +188,8 @@ gst_type_find_load_plugin (GstTypeFind * find, gpointer data)
 GList *
 gst_type_find_factory_get_list (void)
 {
-  return gst_registry_pool_feature_list (GST_TYPE_TYPE_FIND_FACTORY);
+  return gst_registry_get_feature_list (gst_registry_get_default (),
+      GST_TYPE_TYPE_FIND_FACTORY);
 }
 
 /**

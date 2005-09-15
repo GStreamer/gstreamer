@@ -55,7 +55,7 @@ struct _GstPluginFeature {
   gchar 	*name;
   guint   	 rank;
 
-  gpointer 	 manager;
+  struct _GstPlugin     *plugin;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -63,8 +63,6 @@ struct _GstPluginFeature {
 
 struct _GstPluginFeatureClass {
   GObjectClass	parent_class;
-
-  void          (*unload_thyself)      (GstPluginFeature *feature);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -82,8 +80,8 @@ typedef gboolean        (*GstPluginFeatureFilter)       (GstPluginFeature *featu
 /* normal GObject stuff */
 GType		gst_plugin_feature_get_type		(void);
 
-gboolean	gst_plugin_feature_ensure_loaded 	(GstPluginFeature *feature);
-void		gst_plugin_feature_unload_thyself 	(GstPluginFeature *feature);
+GstPluginFeature *
+                gst_plugin_feature_load         	(GstPluginFeature *feature);
 
 gboolean	gst_plugin_feature_type_name_filter	(GstPluginFeature *feature,
 							 GstTypeNameData *data);

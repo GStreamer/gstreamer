@@ -67,20 +67,15 @@
 #include "gst_private.h"
 
 #include "gstelement.h"
-#include "gstregistrypool.h"
 #include "gstinfo.h"
 #include "gsturi.h"
-#ifndef GST_DISABLE_REGISTRY
-#include "registries/gstxmlregistry.h"  /* g_critical in gst_element_factory_create */
-#endif
+#include "gstregistry.h"
 
 GST_DEBUG_CATEGORY_STATIC (element_factory_debug);
 #define GST_CAT_DEFAULT element_factory_debug
 
 static void gst_element_factory_class_init (GstElementFactoryClass * klass);
 static void gst_element_factory_init (GstElementFactory * factory);
-
-static void gst_element_factory_unload_thyself (GstPluginFeature * feature);
 
 static GstPluginFeatureClass *parent_class = NULL;
 
@@ -126,8 +121,6 @@ gst_element_factory_class_init (GstElementFactoryClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gstpluginfeature_class->unload_thyself =
-      GST_DEBUG_FUNCPTR (gst_element_factory_unload_thyself);
 }
 static void
 gst_element_factory_init (GstElementFactory * factory)
@@ -156,7 +149,8 @@ gst_element_factory_find (const gchar * name)
 
   g_return_val_if_fail (name != NULL, NULL);
 
-  feature = gst_registry_pool_find_feature (name, GST_TYPE_ELEMENT_FACTORY);
+  feature = gst_registry_find_feature (gst_registry_get_default (), name,
+      GST_TYPE_ELEMENT_FACTORY);
   if (feature)
     return GST_ELEMENT_FACTORY (feature);
 
@@ -265,21 +259,11 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
   g_return_val_if_fail (name != NULL, FALSE);
   g_return_val_if_fail (g_type_is_a (type, GST_TYPE_ELEMENT), FALSE);
 
-  factory = gst_element_factory_find (name);
-
-  if (!factory) {
-    factory =
-        GST_ELEMENT_FACTORY (g_object_new (GST_TYPE_ELEMENT_FACTORY, NULL));
-    gst_plugin_feature_set_name (GST_PLUGIN_FEATURE (factory), name);
-    GST_LOG_OBJECT (factory, "Created new elementfactory for type %s",
-        g_type_name (type));
-    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-  } else {
-    g_return_val_if_fail (factory->type == 0, FALSE);
-    gst_element_factory_cleanup (factory);
-    GST_LOG_OBJECT (factory, "Reuse existing elementfactory for type %s",
-        g_type_name (type));
-  }
+  factory = GST_ELEMENT_FACTORY (g_object_new (GST_TYPE_ELEMENT_FACTORY, NULL));
+  gst_plugin_feature_set_name (GST_PLUGIN_FEATURE (factory), name);
+  GST_LOG_OBJECT (factory, "Created new elementfactory for type %s",
+      g_type_name (type));
+  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
   klass = GST_ELEMENT_CLASS (g_type_class_ref (type));
   factory->type = type;
@@ -348,8 +332,10 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
 
   g_return_val_if_fail (factory != NULL, NULL);
 
-  if (!gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory))) {
-    GST_INFO ("could not load element factory for element \"%s\"", name);
+  factory =
+      GST_ELEMENT_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
+          (factory)));
+  if (factory == NULL) {
     return NULL;
   }
 
@@ -360,19 +346,8 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
     GST_INFO ("creating \"%s\"", GST_PLUGIN_FEATURE_NAME (factory));
 
   if (factory->type == 0) {
-#ifndef GST_DISABLE_REGISTRY
-    GstPlugin *plugin = GST_PLUGIN_FEATURE (factory)->manager;
+    g_critical ("Plugin didn't set object type in feature.");
 
-    g_critical
-        ("Factory for `%s' has no type. This probably means the plugin wasn't found because the registry is broken. The plugin GStreamer was looking for is named '%s' and is expected in file '%s'. The registry for this plugin is located at '%s'",
-        GST_PLUGIN_FEATURE_NAME (factory),
-        gst_plugin_get_name (plugin), gst_plugin_get_filename (plugin),
-        GST_IS_XML_REGISTRY (plugin->manager) ? GST_XML_REGISTRY (plugin->
-            manager)->location : "Unknown");
-#else
-    g_critical ("Factory for `%s' has no type",
-        GST_PLUGIN_FEATURE_NAME (factory));
-#endif
     return NULL;
   }
 
@@ -607,17 +582,4 @@ gst_element_factory_get_uri_protocols (GstElementFactory * factory)
   g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
 
   return factory->uri_protocols;
-}
-
-static void
-gst_element_factory_unload_thyself (GstPluginFeature * feature)
-{
-  GstElementFactory *factory;
-
-  factory = GST_ELEMENT_FACTORY (feature);
-
-  if (factory->type) {
-    g_type_class_unref (g_type_class_peek (factory->type));
-    factory->type = 0;
-  }
 }

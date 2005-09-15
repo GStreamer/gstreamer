@@ -23,9 +23,9 @@
 #include "gst_private.h"
 
 #include "gstinfo.h"
-#include "gstregistrypool.h"
 #include "gstindex.h"
 #include "gstmarshal.h"
+#include "gstregistry.h"
 /* for constructing an entry name */
 #include "gstelement.h"
 #include "gstpad.h"
@@ -959,7 +959,8 @@ gst_index_factory_find (const gchar * name)
 
   GST_DEBUG ("gstindex: find \"%s\"", name);
 
-  feature = gst_registry_pool_find_feature (name, GST_TYPE_INDEX_FACTORY);
+  feature = gst_registry_find_feature (gst_registry_get_default (), name,
+      GST_TYPE_INDEX_FACTORY);
   if (feature)
     return GST_INDEX_FACTORY (feature);
 
@@ -982,11 +983,13 @@ gst_index_factory_create (GstIndexFactory * factory)
 
   g_return_val_if_fail (factory != NULL, NULL);
 
-  if (gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory))) {
-    g_return_val_if_fail (factory->type != 0, NULL);
+  factory =
+      GST_INDEX_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
+          (factory)));
+  if (factory == NULL)
+    return NULL;
 
-    new = GST_INDEX (g_object_new (factory->type, NULL));
-  }
+  new = GST_INDEX (g_object_new (factory->type, NULL));
 
   return new;
 }

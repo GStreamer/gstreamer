@@ -26,7 +26,7 @@ main (int argc, char *argv[])
 {
   xmlDocPtr doc;
   xmlNodePtr factorynode, padnode, argnode, optionnode;
-  GList *plugins, *features, *padtemplates;
+  GList *element_factories, *padtemplates, *g;
   const GList *pads;
   GstElement *element;
   GstPad *pad;
@@ -44,93 +44,80 @@ main (int argc, char *argv[])
   doc->xmlRootNode = xmlNewDocNode (doc, NULL,
       (xmlChar *) "GST-CompletionRegistry", NULL);
 
-  plugins = g_list_copy (gst_registry_pool_plugin_list ());
-  while (plugins) {
-    GstPlugin *plugin;
+  element_factories =
+      gst_registry_get_feature_list (gst_registry_get_default (),
+      GST_TYPE_ELEMENT_FACTORY);
+  for (g = element_factories; g; g = g_list_next (g)) {
+    GstElementFactory *factory;
 
-    plugin = (GstPlugin *) (plugins->data);
-    plugins = g_list_next (plugins);
+    factory = GST_ELEMENT_FACTORY (g->data);
 
-    features = g_list_copy (gst_plugin_get_feature_list (plugin));
-    while (features) {
-      GstPluginFeature *feature;
-      GstElementFactory *factory;
+    factorynode = xmlNewChild (doc->xmlRootNode, NULL, (xmlChar *) "element",
+        NULL);
+    xmlNewChild (factorynode, NULL, (xmlChar *) "name",
+        (xmlChar *) GST_PLUGIN_FEATURE_NAME (factory));
 
-      feature = GST_PLUGIN_FEATURE (features->data);
-      features = g_list_next (features);
+    element = gst_element_factory_create (factory, NULL);
+    GST_DEBUG ("adding factory %s", GST_PLUGIN_FEATURE_NAME (factory));
+    if (element == NULL) {
+      GST_ERROR ("couldn't construct element from factory %s\n",
+          gst_object_get_name (GST_OBJECT (factory)));
+      return 1;
+    }
 
-      if (!GST_IS_ELEMENT_FACTORY (feature))
-        continue;
+    /* write out the padtemplates */
+    padtemplates = factory->staticpadtemplates;
+    while (padtemplates) {
+      padtemplate = (GstStaticPadTemplate *) (padtemplates->data);
+      padtemplates = g_list_next (padtemplates);
 
-      factory = GST_ELEMENT_FACTORY (feature);
+      if (padtemplate->direction == GST_PAD_SRC)
+        padnode =
+            xmlNewChild (factorynode, NULL, (xmlChar *) "srcpadtemplate",
+            (xmlChar *) padtemplate->name_template);
+      else if (padtemplate->direction == GST_PAD_SINK)
+        padnode =
+            xmlNewChild (factorynode, NULL, (xmlChar *) "sinkpadtemplate",
+            (xmlChar *) padtemplate->name_template);
+    }
 
-      factorynode = xmlNewChild (doc->xmlRootNode, NULL, (xmlChar *) "element",
-          NULL);
-      xmlNewChild (factorynode, NULL, (xmlChar *) "name",
-          (xmlChar *) GST_PLUGIN_FEATURE_NAME (factory));
+    pads = element->pads;
+    while (pads) {
+      pad = (GstPad *) (pads->data);
+      pads = g_list_next (pads);
 
-      element = gst_element_factory_create (factory, NULL);
-      GST_DEBUG ("adding factory %s", GST_PLUGIN_FEATURE_NAME (factory));
-      if (element == NULL) {
-        GST_ERROR ("couldn't construct element from factory %s\n",
-            gst_object_get_name (GST_OBJECT (factory)));
-        return 1;
-      }
+      if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC)
+        padnode = xmlNewChild (factorynode, NULL, (xmlChar *) "srcpad",
+            (xmlChar *) GST_PAD_NAME (pad));
+      else if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK)
+        padnode = xmlNewChild (factorynode, NULL, (xmlChar *) "sinkpad",
+            (xmlChar *) GST_PAD_NAME (pad));
+    }
 
-      /* write out the padtemplates */
-      padtemplates = factory->staticpadtemplates;
-      while (padtemplates) {
-        padtemplate = (GstStaticPadTemplate *) (padtemplates->data);
-        padtemplates = g_list_next (padtemplates);
+    /* write out the args */
+    property_specs =
+        g_object_class_list_properties (G_OBJECT_GET_CLASS (element),
+        &num_properties);
+    for (i = 0; i < num_properties; i++) {
+      GParamSpec *param = property_specs[i];
 
-        if (padtemplate->direction == GST_PAD_SRC)
-          padnode =
-              xmlNewChild (factorynode, NULL, (xmlChar *) "srcpadtemplate",
-              (xmlChar *) padtemplate->name_template);
-        else if (padtemplate->direction == GST_PAD_SINK)
-          padnode =
-              xmlNewChild (factorynode, NULL, (xmlChar *) "sinkpadtemplate",
-              (xmlChar *) padtemplate->name_template);
-      }
+      argnode = xmlNewChild (factorynode, NULL, (xmlChar *) "argument",
+          (xmlChar *) param->name);
+      if (param->value_type == GST_TYPE_URI) {
+        xmlNewChild (argnode, NULL, (xmlChar *) "filename", NULL);
+      } else if (G_IS_PARAM_SPEC_ENUM (param) == G_TYPE_ENUM) {
+        GEnumValue *values;
+        gint j;
 
-      pads = element->pads;
-      while (pads) {
-        pad = (GstPad *) (pads->data);
-        pads = g_list_next (pads);
+        values = G_ENUM_CLASS (g_type_class_ref (param->value_type))->values;
+        for (j = 0; values[j].value_name; j++) {
+          gchar *value = g_strdup_printf ("%d", values[j].value);
 
-        if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC)
-          padnode = xmlNewChild (factorynode, NULL, (xmlChar *) "srcpad",
-              (xmlChar *) GST_PAD_NAME (pad));
-        else if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK)
-          padnode = xmlNewChild (factorynode, NULL, (xmlChar *) "sinkpad",
-              (xmlChar *) GST_PAD_NAME (pad));
-      }
-
-      /* write out the args */
-      property_specs =
-          g_object_class_list_properties (G_OBJECT_GET_CLASS (element),
-          &num_properties);
-      for (i = 0; i < num_properties; i++) {
-        GParamSpec *param = property_specs[i];
-
-        argnode = xmlNewChild (factorynode, NULL, (xmlChar *) "argument",
-            (xmlChar *) param->name);
-        if (param->value_type == GST_TYPE_URI) {
-          xmlNewChild (argnode, NULL, (xmlChar *) "filename", NULL);
-        } else if (G_IS_PARAM_SPEC_ENUM (param) == G_TYPE_ENUM) {
-          GEnumValue *values;
-          gint j;
-
-          values = G_ENUM_CLASS (g_type_class_ref (param->value_type))->values;
-          for (j = 0; values[j].value_name; j++) {
-            gchar *value = g_strdup_printf ("%d", values[j].value);
-
-            optionnode = xmlNewChild (argnode, NULL, (xmlChar *) "option",
-                (xmlChar *) value);
-            xmlNewChild (optionnode, NULL, (xmlChar *) "value_nick",
-                (xmlChar *) values[j].value_nick);
-            g_free (value);
-          }
+          optionnode = xmlNewChild (argnode, NULL, (xmlChar *) "option",
+              (xmlChar *) value);
+          xmlNewChild (optionnode, NULL, (xmlChar *) "value_nick",
+              (xmlChar *) values[j].value_nick);
+          g_free (value);
         }
       }
       g_free (property_specs);

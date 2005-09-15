@@ -1,3 +1,37 @@
+2005-09-14  David Schleef  <ds@schleef.org>
+
+	* check/Makefile.am:
+	* check/generic/states.c:
+	* gst/Makefile.am:
+	* gst/gst.c:
+	* gst/gst.h:
+	* gst/gst_private.h:
+	* gst/gstelementfactory.c:
+	* gst/gstindex.c:
+	* gst/gstinfo.c:
+	* gst/gstplugin.c:
+	* gst/gstplugin.h:
+	* gst/gstpluginfeature.c:
+	* gst/gstpluginfeature.h:
+	* gst/gstregistry.c:
+	* gst/gstregistry.h:
+	* gst/gstregistrypool.c: remove
+	* gst/gstregistrypool.h: remove
+	* gst/gsttypefind.c:
+	* gst/gsttypefindfactory.c:
+	* gst/gsturi.c:
+	* tools/Makefile.am:
+	* tools/gst-compprep.c:
+	* tools/gst-inspect.c:
+	* tools/gst-register.c: remove
+	* tools/gst-xmlinspect.c:
+	  Registry rewrite.  Changes registry from being a file created
+	  by a tool into a simple cache file created automatically by 
+	  libgstreamer.  Removed gst-register (because it's no longer
+	  needed).  Remove registry pools, because we only have one
+	  registry implementation (XML).  Fix up other subsystems as
+	  necessary.
+
 2005-09-13  Michael Smith <msmith@fluendo.com>
 
 	* gst/gstconfig.h.in:

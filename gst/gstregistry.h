@@ -26,59 +26,8 @@
 
 #include <gst/gstplugin.h>
 
-#define GLOBAL_REGISTRY_DIR      GST_CACHE_DIR
-#define GLOBAL_REGISTRY_FILE     GLOBAL_REGISTRY_DIR"/registry.xml"
-#define GLOBAL_REGISTRY_FILE_TMP GLOBAL_REGISTRY_DIR"/.registry.xml.tmp"
-
-#define LOCAL_REGISTRY_DIR       ".gstreamer-"GST_MAJORMINOR
-#define LOCAL_REGISTRY_FILE      LOCAL_REGISTRY_DIR"/registry.xml"
-#define LOCAL_REGISTRY_FILE_TMP  LOCAL_REGISTRY_DIR"/.registry.xml.tmp"
-
-/* compatibility for pre-POSIX defines */
-#ifdef S_IRUSR
-#if defined(_WIN32) && defined(__MINGW32__)
-#define REGISTRY_DIR_PERMS (S_ISGID | \
-                            S_IRUSR | S_IWUSR | S_IXUSR)
-#else
-#define REGISTRY_DIR_PERMS (S_ISGID | \
-                            S_IRUSR | S_IWUSR | S_IXUSR | \
-		            S_IRGRP | S_IXGRP | \
-			    S_IROTH | S_IXOTH)
-#endif
-#define REGISTRY_TMPFILE_PERMS (S_IRUSR | S_IWUSR)
-#if defined(_WIN32) && defined(__MINGW32__)
-#define REGISTRY_FILE_PERMS (S_IRUSR | S_IWUSR
-#else
-#define REGISTRY_FILE_PERMS (S_IRUSR | S_IWUSR | \
-                             S_IRGRP | S_IWGRP | \
-			     S_IROTH | S_IWOTH)
-#endif
-#else
-#define REGISTRY_DIR_PERMS (S_ISGID | \
-                            S_IREAD | S_IWRITE | S_IEXEC)
-#define REGISTRY_TMPFILE_PERMS (S_IREAD | S_IWRITE)
-#define REGISTRY_FILE_PERMS (S_IREAD | S_IWRITE)
-#endif
-
 G_BEGIN_DECLS
 
-typedef enum {
-  GST_REGISTRY_OK			= (0),
-  GST_REGISTRY_LOAD_ERROR		= (1 << 1),
-  GST_REGISTRY_SAVE_ERROR		= (1 << 2),
-  GST_REGISTRY_PLUGIN_LOAD_ERROR	= (1 << 3),
-  GST_REGISTRY_PLUGIN_SIGNATURE_ERROR	= (1 << 4)
-} GstRegistryReturn;
-
-typedef enum {
-  GST_REGISTRY_READABLE			= (1 << 1),
-  GST_REGISTRY_WRITABLE			= (1 << 2),
-  GST_REGISTRY_EXISTS			= (1 << 3),
-  GST_REGISTRY_REMOTE			= (1 << 4),
-  GST_REGISTRY_DELAYED_LOADING		= (1 << 5)
-} GstRegistryFlags;
-
-  
 #define GST_TYPE_REGISTRY 		(gst_registry_get_type ())
 #define GST_REGISTRY(obj) 		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_REGISTRY, GstRegistry))
 #define GST_IS_REGISTRY(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_REGISTRY))
@@ -92,32 +41,18 @@ typedef struct _GstRegistryClass GstRegistryClass;
 struct _GstRegistry {
   GObject 	 object;
 
-  gint 		 priority;
-  GstRegistryFlags flags;
-
-  gchar 	*name;
-  gchar 	*details;
-
-  gboolean	 loaded;
   GList		*plugins;
 
   GList 	*paths;
+
+  /* FIXME move elsewhere */
+  FILE          *cache_file;
 
   gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstRegistryClass {
   GObjectClass		parent_class;
-
-  /* vtable */
-  gboolean		(*load)      		(GstRegistry *registry);
-  gboolean 		(*save)      		(GstRegistry *registry);
-  gboolean		(*rebuild)     		(GstRegistry *registry);
-  gboolean		(*unload)     		(GstRegistry *registry);
-
-  GstRegistryReturn 	(*load_plugin) 		(GstRegistry *registry, GstPlugin *plugin);
-  GstRegistryReturn 	(*unload_plugin) 	(GstRegistry *registry, GstPlugin *plugin);
-  GstRegistryReturn    	(*update_plugin) 	(GstRegistry *registry, GstPlugin *plugin);
 
   /* signals */
   void 			(*plugin_added)		(GstRegistry *registry, GstPlugin *plugin);
@@ -129,19 +64,16 @@ struct _GstRegistryClass {
 /* normal GObject stuff */
 GType			gst_registry_get_type		(void);
 
-gboolean		gst_registry_load		(GstRegistry *registry);
-gboolean		gst_registry_is_loaded		(GstRegistry *registry);
-gboolean		gst_registry_save		(GstRegistry *registry);
-gboolean		gst_registry_rebuild		(GstRegistry *registry);
-gboolean		gst_registry_unload		(GstRegistry *registry);
+GstRegistry *           gst_registry_get_default        (void);
 
-void			gst_registry_add_path		(GstRegistry *registry, const gchar *path);
+void			gst_registry_scan_path		(GstRegistry *registry, const gchar *path);
 GList*			gst_registry_get_path_list	(GstRegistry *registry);
 void 			gst_registry_clear_paths	(GstRegistry *registry);
 
 gboolean		gst_registry_add_plugin		(GstRegistry *registry, GstPlugin *plugin);
 void			gst_registry_remove_plugin	(GstRegistry *registry, GstPlugin *plugin);
 
+GList*                  gst_registry_get_plugin_list    (GstRegistry *registry);
 GList*			gst_registry_plugin_filter	(GstRegistry *registry, 
 							 GstPluginFilter filter, 
 							 gboolean first, 
@@ -150,14 +82,35 @@ GList*			gst_registry_feature_filter	(GstRegistry *registry,
 							 GstPluginFeatureFilter filter, 
 							 gboolean first,
 							 gpointer user_data);
+GList *                 gst_registry_get_feature_list   (GstRegistry *registry,
+                                                         GType type);
 
 GstPlugin*		gst_registry_find_plugin	(GstRegistry *registry, const gchar *name);
 GstPluginFeature*	gst_registry_find_feature	(GstRegistry *registry, const gchar *name, GType type);
+GstPlugin * gst_registry_lookup (GstRegistry *registry, const char *filename);
 
-GstRegistryReturn	gst_registry_load_plugin	(GstRegistry *registry, GstPlugin *plugin);
-GstRegistryReturn	gst_registry_unload_plugin	(GstRegistry *registry, GstPlugin *plugin);
-GstRegistryReturn	gst_registry_update_plugin	(GstRegistry *registry, GstPlugin *plugin);
+gboolean gst_registry_xml_read_cache (GstRegistry * registry, const char *location);
+gboolean gst_registry_xml_write_cache (GstRegistry * registry, const char *location);
+
+void gst_registry_scan_paths (GstRegistry *registry);
+void _gst_registry_remove_cache_plugins (GstRegistry *registry);
+
+#define gst_default_registry_add_plugin(plugin) \
+  gst_registry_add_plugin (gst_registry_get_default(), plugin)
+#define gst_default_registry_add_path(path) \
+  gst_registry_add_path (gst_registry_get_default(), path)
+#define gst_default_registry_get_path_list() \
+  gst_registry_get_path_list (gst_registry_get_default())
+#define gst_default_registry_get_plugin_list() \
+  gst_registry_get_plugin_list (gst_registry_get_default())
+#define gst_default_registry_find_feature(name,type) \
+  gst_registry_find_feature (gst_registry_get_default(),name,type)
+#define gst_default_registry_find_plugin(name) \
+  gst_registry_find_plugin (gst_registry_get_default(),name)
+#define gst_default_registry_feature_filter(filter,first,user_data) \
+  gst_registry_feature_filter (gst_registry_get_default(),filter,first,user_data)
 
 G_END_DECLS
 
 #endif /* __GST_REGISTRY_H__ */
+

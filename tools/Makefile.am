@@ -1,11 +1,4 @@
 ### assemble a list of programs we want to build and install
-if GST_DISABLE_REGISTRY
-GST_REGISTRY_SRC = 
-GST_REGISTRY_SRC_V = 
-else
-GST_REGISTRY_SRC = gst-register
-GST_REGISTRY_SRC_V = gst-register-@GST_MAJORMINOR@
-endif
 
 if GST_DISABLE_LOADSAVE
 GST_LOADSAVE_SRC = 
@@ -34,17 +27,11 @@ GST_OTHER_SRC_V = \
 
 ### so all of the programs we want to build
 bin_PROGRAMS = \
-	$(GST_REGISTRY_SRC) $(GST_REGISTRY_SRC_V) \
 	$(GST_LOADSAVE_SRC) $(GST_LOADSAVE_SRC_V) \
 	$(GST_OTHER_SRC) $(GST_OTHER_SRC_V)
 bin_SCRIPTS = gst-feedback-@GST_MAJORMINOR@
 
 # make sure each versioned tool has the right source file and flags
-if !GST_DISABLE_REGISTRY
-gst_register_@GST_MAJORMINOR@_SOURCES = gst-register.c
-gst_register_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
-gst_register_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
-endif
 if !GST_DISABLE_LOADSAVE
 gst_complete_@GST_MAJORMINOR@_SOURCES = gst-complete.c
 gst_complete_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
@@ -77,9 +64,6 @@ gst-feedback-@GST_MAJORMINOR@: gst-feedback-m.m
 	chmod +x $@
 
 # make sure each unversioned tool comes from gst-run.c
-if !GST_DISABLE_REGISTRY
-gst_register_SOURCES = gst-run.c
-endif
 if !GST_DISABLE_LOADSAVE
 gst_complete_SOURCES = gst-run.c
 gst_compprep_SOURCES = gst-run.c
@@ -99,12 +83,6 @@ LDADD = $(GLIB_ONLY_LIBS) $(POPT_LIBS)
 AM_CPPFLAGS = $(GLIB_ONLY_CFLAGS) $(POPT_CFLAGS)
 
 ### man pages we want to install
-if GST_DISABLE_REGISTRY
-GST_REGISTRY_MAN=
-else
-GST_REGISTRY_MAN = gst-register-@GST_MAJORMINOR@.1
-endif
-
 if GST_DISABLE_LOADSAVE
 GST_LOADSAVE_MAN=
 else
@@ -122,7 +100,7 @@ GST_OTHER_MAN = \
 	gst-typefind-@GST_MAJORMINOR@.1 \
 	gst-xmlinspect-@GST_MAJORMINOR@.1
 
-manpages = $(GST_REGISTRY_MAN) $(GST_LOADSAVE_MAN) $(GST_OTHER_MAN)
+manpages = $(GST_LOADSAVE_MAN) $(GST_OTHER_MAN)
 
 CLEANFILES = $(manpages) $(bin_SCRIPTS)
 man_MANS = $(manpages)
@@ -138,7 +116,6 @@ EXTRA_DIST = \
 	gst-inspect.1.in \
 	gst-launch.1.in \
 	gst-md5sum.1.in \
-	gst-register.1.in \
 	gst-typefind.1.in \
 	gst-xmlinspect.1.in \
 	gst-xmllaunch.1.in \
@@ -152,7 +129,6 @@ EXTRA_DIST = \
 		-e s,gst-inspect,gst-inspect-@GST_MAJORMINOR@,g \
 		-e s,gst-launch,gst-launch-@GST_MAJORMINOR@,g \
 		-e s,gst-md5sum,gst-md5sum-@GST_MAJORMINOR@,g \
-		-e s,gst-register,gst-register-@GST_MAJORMINOR@,g \
 		-e s,gst-typefind,gst-typefind-@GST_MAJORMINOR@,g \
 		-e s,gst-xmlinspect,gst-xmlinspect-@GST_MAJORMINOR@,g \
 		-e s,gst-xmllaunch,gst-xmllaunch-@GST_MAJORMINOR@,g \

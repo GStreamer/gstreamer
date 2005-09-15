@@ -75,74 +75,47 @@ gst_plugin_feature_class_init (GstPluginFeatureClass * klass)
 static void
 gst_plugin_feature_init (GstPluginFeature * feature)
 {
-  feature->manager = NULL;
+  feature->plugin = NULL;
 }
 
 /**
- * gst_plugin_feature_ensure_loaded:
+ * gst_plugin_feature_load:
  * @feature: the plugin feature to check
  *
  * Check if the plugin containing the feature is loaded,
  * if not, the plugin will be loaded.
  *
- * Returns: a boolean indicating the feature is loaded.
+ * Returns: The new feature
  */
-gboolean
-gst_plugin_feature_ensure_loaded (GstPluginFeature * feature)
+GstPluginFeature *
+gst_plugin_feature_load (GstPluginFeature * feature)
 {
   GstPlugin *plugin;
-  static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
+  GstPluginFeature *real_feature;
 
   g_return_val_if_fail (feature != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (feature), FALSE);
 
-  plugin = (GstPlugin *) (feature->manager);
-  g_static_mutex_lock (&mutex);
-
-  if (plugin && !gst_plugin_is_loaded (plugin)) {
-#ifndef GST_DISABLE_REGISTRY
-    if (GST_IS_REGISTRY (plugin->manager)) {
-      GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING,
-          "loading plugin %s for feature", plugin->desc.name);
-
-      if (gst_registry_load_plugin (GST_REGISTRY (plugin->manager),
-              plugin) != GST_REGISTRY_OK) {
-        g_static_mutex_unlock (&mutex);
-        return FALSE;
-      }
-    } else {
-      g_static_mutex_unlock (&mutex);
-      return FALSE;
-    }
-#else /* GST_DISABLE_REGISTRY */
-    g_static_mutex_unlock (&mutex);
-    return FALSE;
-#endif
+  plugin = gst_plugin_load (feature->plugin);
+  if (!plugin) {
+    g_critical ("Failed to load plugin containing feature '%s'.",
+        GST_PLUGIN_FEATURE_NAME (feature));
+    return NULL;
+  }
+  if (plugin == feature->plugin) {
+    return feature;
   }
 
-  g_static_mutex_unlock (&mutex);
-  return TRUE;
-}
+  real_feature = gst_plugin_find_feature_by_name (plugin, feature->name);
 
-/**
- * gst_plugin_feature_unload_thyself:
- * @feature: the plugin feature to check
- *
- * Unload the given feature. This will decrease the refcount
- * in the plugin and will eventually unload the plugin
- */
-void
-gst_plugin_feature_unload_thyself (GstPluginFeature * feature)
-{
-  GstPluginFeatureClass *oclass;
+  if (real_feature == NULL) {
+    g_critical
+        ("Loaded plugin containing feature '%s', but feature disappeared.",
+        feature->name);
+    return NULL;
+  }
 
-  g_return_if_fail (feature != NULL);
-  g_return_if_fail (GST_IS_PLUGIN_FEATURE (feature));
-
-  oclass = GST_PLUGIN_FEATURE_GET_CLASS (feature);
-
-  if (oclass->unload_thyself)
-    oclass->unload_thyself (feature);
+  return real_feature;
 }
 
 gboolean

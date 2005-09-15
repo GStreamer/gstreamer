@@ -827,7 +827,7 @@ print_element_list (gboolean print_all)
 {
   GList *plugins;
 
-  plugins = gst_registry_pool_plugin_list ();
+  plugins = gst_default_registry_get_plugin_list ();
   while (plugins) {
     GList *features;
     GstPlugin *plugin;
@@ -990,21 +990,22 @@ print_element_features (const gchar * element_name)
 
   /* FIXME implement other pretty print function for these */
 #ifndef GST_DISABLE_INDEX
-  feature = gst_registry_pool_find_feature (element_name,
+  feature = gst_default_registry_find_feature (element_name,
       GST_TYPE_INDEX_FACTORY);
   if (feature) {
     n_print ("%s: an index\n", element_name);
     return 0;
   }
 #endif
-  feature = gst_registry_pool_find_feature (element_name,
+  feature = gst_default_registry_find_feature (element_name,
       GST_TYPE_TYPE_FIND_FACTORY);
   if (feature) {
     n_print ("%s: a typefind function\n", element_name);
     return 0;
   }
 #ifndef GST_DISABLE_URI
-  feature = gst_registry_pool_find_feature (element_name, GST_TYPE_URI_HANDLER);
+  feature = gst_default_registry_find_feature (element_name,
+      GST_TYPE_URI_HANDLER);
   if (feature) {
     n_print ("%s: an uri handler\n", element_name);
     return 0;
@@ -1020,6 +1021,10 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
   GstElement *element;
   gint maxlevel = 0;
 
+  factory =
+      GST_ELEMENT_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
+          (factory)));
+
   element = gst_element_factory_create (factory, NULL);
   if (!element) {
     g_print ("couldn't construct element for some reason\n");
@@ -1032,8 +1037,8 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
     _name = "";
 
   print_factory_details_info (factory);
-  if (GST_PLUGIN_FEATURE (factory)->manager) {
-    GstPlugin *plugin = (GstPlugin *) GST_PLUGIN_FEATURE (factory)->manager;
+  if (GST_PLUGIN_FEATURE (factory)->plugin) {
+    GstPlugin *plugin = (GstPlugin *) GST_PLUGIN_FEATURE (factory)->plugin;
 
     print_plugin_info (plugin);
   }
@@ -1100,7 +1105,7 @@ main (int argc, char *argv[])
 
     /* otherwise check if it's a plugin */
     if (retval) {
-      plugin = gst_registry_pool_find_plugin (arg);
+      plugin = gst_default_registry_find_plugin (arg);
 
       /* if there is such a plugin, print out info */
       if (plugin) {

@@ -153,6 +153,7 @@ GstDebugCategory *GST_CAT_PARAMS = NULL;
 GstDebugCategory *GST_CAT_CALL_TRACE = NULL;
 GstDebugCategory *GST_CAT_SIGNAL = NULL;
 GstDebugCategory *GST_CAT_PROBE = NULL;
+GstDebugCategory *GST_CAT_REGISTRY = NULL;
 
 /* FIXME: export this? */
 gboolean
@@ -276,6 +277,7 @@ _gst_debug_init (void)
       GST_DEBUG_BOLD | GST_DEBUG_FG_WHITE | GST_DEBUG_BG_RED, NULL);
   GST_CAT_PROBE = _gst_debug_category_new ("GST_PROBE",
       GST_DEBUG_BOLD | GST_DEBUG_FG_GREEN, "pad probes");
+  GST_CAT_REGISTRY = _gst_debug_category_new ("GST_REGISTRY", 0, "registry");
 
 
   /* print out the valgrind message if we're in valgrind */

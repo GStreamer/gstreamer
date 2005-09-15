@@ -10,13 +10,9 @@ REGISTRY_ENVIRONMENT = \
 TESTS_ENVIRONMENT = \
         $(REGISTRY_ENVIRONMENT)                                 \
         GST_PLUGIN_PATH_ONLY=yes                                \
-        GST_PLUGIN_PATH=$(top_builddir)/gst
+        GST_PLUGIN_PATH=$(top_builddir)/gst/elements/.libs:$(top_builddir)/gst/indexers/.libs
 
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
-
-# rebuild gst-register-@GST_MAJORMINOR@ if needed
-$(top_builddir)/tools/gst-register-@GST_MAJORMINOR@$(EXEEXT):
-	cd $(top_builddir)/tools && make
 
 # override to _not_ install the test plugins
 install-pluginLTLIBRARIES:
@@ -27,10 +23,6 @@ CLEANFILES = core.* test-registry.xml
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp
 
 clean-local: clean-local-check
-
-$(CHECK_REGISTRY):
-	$(TESTS_ENVIRONMENT)					\
-	$(top_builddir)/tools/gst-register-@GST_MAJORMINOR@
 
 check_PROGRAMS =				\
 	gst/gst				     	\
@@ -60,8 +52,7 @@ check_PROGRAMS =				\
 	gst-libs/controller			\
 	gst-libs/gdp
 
-TESTS = $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@	\
-	$(check_PROGRAMS)
+TESTS = $(check_PROGRAMS)
 
 noinst_HEADERS = gst/capslist.h
 
@@ -94,6 +85,5 @@ TESTS_THREADED =				\
 	gst/gstobject
 
 VALGRIND_TESTS_DISABLE = 					\
-	$(top_builddir)/tools/gst-register-@GST_MAJORMINOR@	\
 	$(TESTS_THREADED)					\
 	$(TESTS_TO_FIX)

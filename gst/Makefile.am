@@ -28,16 +28,6 @@ else
 GST_TRACE_SRC = gsttrace.c
 endif
 
-if GST_DISABLE_REGISTRY
-GST_REGISTRY_SRC = 
-SUBDIRS_REGISTRY =
-GST_REGISTRY_LA = 
-else
-GST_REGISTRY_SRC = gstregistry.c
-SUBDIRS_REGISTRY = registries
-GST_REGISTRY_LA = registries/libgstxmlregistry.la
-endif
-
 if GST_DISABLE_ENUMTYPES
 GST_ENUMTYPES_SRC = 
 else
@@ -64,8 +54,8 @@ else
 GST_URI_SRC = gsturi.c
 endif
 
-SUBDIRS = $(SUBDIRS_PARSE) $(SUBDIRS_REGISTRY) . base elements $(SUBDIRS_INDEX) $(SUBDIRS_CHECK)
-DIST_SUBDIRS = base elements parse registries indexers check
+SUBDIRS = $(SUBDIRS_PARSE) . base elements $(SUBDIRS_INDEX) $(SUBDIRS_CHECK)
+DIST_SUBDIRS = base elements parse indexers check
 
 # make variables for all generated source and header files to make the
 # distinction clear
@@ -107,6 +97,8 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstquery.c		\
 	gstqueryutils.c		\
 	gstqueue.c		\
+	gstregistry.c		\
+	gstregistryxml.c	\
 	gststructure.c		\
 	gstsystemclock.c	\
 	gsttaglist.c		\
@@ -120,8 +112,6 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gsturitype.c		\
 	gstutils.c		\
 	gstvalue.c		\
-	$(GST_REGISTRY_SRC)	\
-	gstregistrypool.c	\
 	$(GST_PARSE_SRC)	\
 	$(GSTARCH_SRCS)		\
 	$(GST_LOADSAVE_SRC)
@@ -145,10 +135,11 @@ libgstreamer_@GST_MAJORMINOR@_la_CFLAGS =	\
 	-DG_LOG_DOMAIN=g_log_domain_gstreamer 	\
 	-DGST_MAJORMINOR=\""$(GST_MAJORMINOR)"\" 
 libgstreamer_@GST_MAJORMINOR@_la_LIBADD = \
-	$(GST_LIB_LIBS) $(GST_PARSE_LA) $(GST_REGISTRY_LA)
+	$(GST_LIB_LIBS) $(GST_PARSE_LA)
 libgstreamer_@GST_MAJORMINOR@_la_LDFLAGS = \
 	@GST_LT_LDFLAGS@ -version-info @GST_LIBVERSION@ \
-	-export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*
+	-export-symbols-regex [_]*\(gst_\|Gst\|GST_\).* \
+	-no-undefined
 
 libgstreamer_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst
 
@@ -198,7 +189,6 @@ gst_headers =			\
 	gstutils.h		\
 	gstvalue.h		\
 	gstregistry.h		\
-	gstregistrypool.h	\
 	gstparse.h		\
 	gstxml.h
 

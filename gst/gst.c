@@ -102,10 +102,6 @@
 
 #include "gst.h"
 #include "gstqueue.h"
-#ifndef GST_DISABLE_REGISTRY
-#include "registries/gstxmlregistry.h"
-#endif /* GST_DISABLE_REGISTRY */
-#include "gstregistrypool.h"
 
 #define GST_CAT_DEFAULT GST_CAT_GST_INIT
 
@@ -114,9 +110,6 @@
 
 #ifndef GST_DISABLE_REGISTRY
 gboolean _gst_registry_auto_load = TRUE;
-static GstRegistry *_global_registry;
-static GstRegistry *_user_registry;
-static gboolean _gst_registry_fixed = FALSE;
 #endif
 
 static gboolean gst_initialized = FALSE;
@@ -165,8 +158,7 @@ enum
   ARG_PLUGIN_SPEW,
   ARG_PLUGIN_PATH,
   ARG_PLUGIN_LOAD,
-  ARG_SEGTRAP_DISABLE,
-  ARG_REGISTRY
+  ARG_SEGTRAP_DISABLE
 };
 
 /* debug-spec ::= category-spec [, category-spec]*
@@ -308,8 +300,6 @@ gst_init_get_popt_table (void)
           ARG_SEGTRAP_DISABLE,
           N_("Disable trapping of segmentation faults during plugin loading"),
         NULL},
-    {"gst-registry", NUL, POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL,
-        ARG_REGISTRY, N_("Registry to use"), N_("REGISTRY")},
     POPT_TABLEEND
   };
   static gboolean inited = FALSE;
@@ -501,9 +491,8 @@ gst_init_check_with_popt_table (int *argc, char **argv[],
 static void
 add_path_func (gpointer data, gpointer user_data)
 {
-  GstRegistry *registry = GST_REGISTRY (user_data);
-
-  gst_registry_add_path (registry, (gchar *) data);
+  GST_INFO ("Adding plugin path: \"%s\"", (gchar *) data);
+  gst_registry_scan_path (gst_registry_get_default (), (gchar *) data);
 }
 #endif
 
@@ -527,7 +516,7 @@ load_plugin_func (gpointer data, gpointer user_data)
   if (plugin) {
     GST_INFO ("Loaded plugin: \"%s\"", filename);
 
-    gst_registry_pool_add_plugin (plugin);
+    gst_default_registry_add_plugin (plugin);
   } else {
     if (err) {
       /* Report error to user, and free error */
@@ -571,8 +560,6 @@ split_and_iterate (const gchar * stringlist, gchar * separator, GFunc iterator,
 static gboolean
 init_pre (void)
 {
-  const gchar *plugin_path;
-
   g_type_init ();
 
   if (g_thread_supported ()) {
@@ -606,50 +593,6 @@ init_pre (void)
   GST_INFO ("Initializing GStreamer Core Library version %s", VERSION);
   GST_INFO ("Using library from %s", LIBDIR);
 
-#ifndef GST_DISABLE_REGISTRY
-  {
-    gchar *user_reg;
-    const gchar *homedir;
-
-    _global_registry =
-        gst_xml_registry_new ("global_registry", GLOBAL_REGISTRY_FILE);
-
-#ifdef PLUGINS_USE_BUILDDIR
-    /* location libgstelements.so */
-    gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/libs/gst");
-    gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/elements");
-    gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/types");
-    gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/autoplug");
-    gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/indexers");
-#endif /* PLUGINS_USE_BUILDDIR */
-
-    plugin_path = g_getenv ("GST_PLUGIN_PATH");
-#ifndef GST_DISABLE_REGISTRY
-    split_and_iterate (plugin_path, G_SEARCHPATH_SEPARATOR_S, add_path_func,
-        _global_registry);
-#endif /* GST_DISABLE_REGISTRY */
-
-
-#ifndef PLUGINS_USE_BUILDDIR
-    /* add the main (installed) library path as the last path
-     * if GST_PLUGIN_PATH_ONLY not set */
-    if (g_getenv ("GST_PLUGIN_PATH_ONLY") == NULL) {
-      gst_registry_add_path (_global_registry, PLUGINS_DIR);
-    }
-#endif
-
-    if (g_getenv ("GST_REGISTRY")) {
-      user_reg = g_strdup (g_getenv ("GST_REGISTRY"));
-    } else {
-      homedir = g_get_home_dir ();
-      user_reg = g_strjoin ("/", homedir, LOCAL_REGISTRY_FILE, NULL);
-    }
-    _user_registry = gst_xml_registry_new ("user_registry", user_reg);
-
-    g_free (user_reg);
-  }
-#endif /* GST_DISABLE_REGISTRY */
-
   return TRUE;
 }
 
@@ -674,7 +617,6 @@ static GstPluginDesc plugin_desc = {
   "gstcoreelements",
   "core elements of the GStreamer library",
   gst_register_core_elements,
-  NULL,
   VERSION,
   GST_LICENSE,
   PACKAGE,
@@ -736,25 +678,66 @@ init_post (void)
   _gst_tag_initialize ();
 
 #ifndef GST_DISABLE_REGISTRY
-  if (!_gst_registry_fixed) {
-    /* don't override command-line options */
-    if (g_getenv ("GST_REGISTRY")) {
-      g_object_set (_global_registry, "location", g_getenv ("GST_REGISTRY"),
-          NULL);
-      _gst_registry_fixed = TRUE;
+  {
+    char *registry_file;
+    const char *plugin_path;
+    GstRegistry *default_registry;
+
+    default_registry = gst_registry_get_default ();
+    registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
+    if (registry_file == NULL) {
+      registry_file = g_build_filename (g_get_home_dir (),
+          ".gstreamer-0.9", "registry.xml", NULL);
     }
-  }
+    gst_registry_xml_read_cache (default_registry, registry_file);
 
-  if (!_gst_registry_fixed) {
-    gst_registry_pool_add (_global_registry, 100);
-    gst_registry_pool_add (_user_registry, 50);
-  } else {
+    plugin_path = g_getenv ("GST_PLUGIN_SYSTEM_PATH");
+    if (plugin_path == NULL) {
+#ifdef PLUGINS_USE_BUILDDIR
+      /* location libgstelements.so */
+      gst_registry_scan_path (default_registry,
+          PLUGINS_BUILDDIR "/gst/elements/.libs");
+      gst_registry_scan_path (default_registry,
+          PLUGINS_BUILDDIR "/gst/indexers/.libs");
+#else
+      char *home_plugins;
 
-    gst_registry_pool_add (_global_registry, 100);
-  }
+      /* add the main (installed) library path */
+      gst_registry_scan_path (default_registry, PLUGINS_DIR);
 
-  if (_gst_registry_auto_load) {
-    gst_registry_pool_load_all ();
+      home_plugins = g_build_filename (g_get_home_dir (),
+          ".gstreamer-0.9", "plugins", NULL);
+      gst_registry_scan_path (default_registry, home_plugins);
+      g_free (home_plugins);
+#endif /* PLUGINS_USE_BUILDDIR */
+    } else {
+      char **list;
+      int i;
+
+      /* FIXME this doesn't split paths correctly on windows */
+      list = g_strsplit (plugin_path, ":", 0);
+      for (i = 0; list[i]; i++) {
+        gst_registry_scan_path (default_registry, list[i]);
+      }
+    }
+
+    plugin_path = g_getenv ("GST_PLUGIN_PATH");
+    if (plugin_path) {
+      char **list;
+      int i;
+
+      /* FIXME this doesn't split paths correctly on windows */
+      list = g_strsplit (plugin_path, ":", 0);
+      for (i = 0; list[i]; i++) {
+        gst_registry_scan_path (default_registry, list[i]);
+      }
+    }
+
+    gst_registry_xml_write_cache (default_registry, registry_file);
+
+    _gst_registry_remove_cache_plugins (default_registry);
+
+    g_free (registry_file);
   }
 #endif /* GST_DISABLE_REGISTRY */
 
@@ -776,6 +759,12 @@ init_post (void)
 }
 
 #ifndef GST_DISABLE_GST_DEBUG
+static gboolean
+select_all (GstPlugin * plugin, gpointer user_data)
+{
+  return TRUE;
+}
+
 static gint
 sort_by_category_name (gconstpointer a, gconstpointer b)
 {
@@ -786,29 +775,19 @@ static void
 gst_debug_help (void)
 {
   GSList *list, *walk;
-  GList *list2, *walk2;
+  GList *list2, *g;
 
   if (!init_post ())
     exit (1);
 
-  walk2 = list2 = gst_registry_pool_plugin_list ();
-  while (walk2) {
-    GstPlugin *plugin = GST_PLUGIN (walk2->data);
+  list2 = gst_registry_plugin_filter (gst_registry_get_default (),
+      select_all, FALSE, NULL);
 
-    walk2 = g_list_next (walk2);
+  /* FIXME this is gross.  why don't debug have categories PluginFeatures? */
+  for (g = list2; g; g = g_list_next (g)) {
+    GstPlugin *plugin = GST_PLUGIN (g->data);
 
-    if (!gst_plugin_is_loaded (plugin)) {
-#ifndef GST_DISABLE_REGISTRY
-      if (GST_IS_REGISTRY (plugin->manager)) {
-        GST_CAT_LOG (GST_CAT_PLUGIN_LOADING, "loading plugin %s",
-            plugin->desc.name);
-        if (gst_registry_load_plugin (GST_REGISTRY (plugin->manager),
-                plugin) != GST_REGISTRY_OK)
-          GST_CAT_WARNING (GST_CAT_PLUGIN_LOADING, "loading plugin %s failed",
-              plugin->desc.name);
-      }
-#endif /* GST_DISABLE_REGISTRY */
-    }
+    gst_plugin_load (plugin);
   }
   g_list_free (list2);
 
@@ -896,7 +875,7 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
         case ARG_PLUGIN_PATH:
 #ifndef GST_DISABLE_REGISTRY
           split_and_iterate (arg, G_SEARCHPATH_SEPARATOR_S, add_path_func,
-              _user_registry);
+              NULL);
 #endif /* GST_DISABLE_REGISTRY */
           break;
         case ARG_PLUGIN_LOAD:
@@ -904,12 +883,6 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
           break;
         case ARG_SEGTRAP_DISABLE:
           _gst_disable_segtrap = TRUE;
-          break;
-        case ARG_REGISTRY:
-#ifndef GST_DISABLE_REGISTRY
-          g_object_set (G_OBJECT (_user_registry), "location", arg, NULL);
-          _gst_registry_fixed = TRUE;
-#endif /* GST_DISABLE_REGISTRY */
           break;
         default:
           g_warning ("option %d not recognized", option->val);

@@ -35,8 +35,8 @@
 #include "gst_private.h"
 #include "gsturi.h"
 #include "gstinfo.h"
-#include "gstregistrypool.h"
 #include "gstmarshal.h"
+#include "gstregistry.h"
 
 #include <string.h>
 
@@ -474,8 +474,8 @@ gst_element_make_from_uri (const GstURIType type, const gchar * uri,
 
   entry.type = type;
   entry.protocol = gst_uri_get_protocol (uri);
-  possibilities =
-      gst_registry_pool_feature_filter (search_by_entry, FALSE, &entry);
+  possibilities = gst_registry_feature_filter (gst_registry_get_default (),
+      search_by_entry, FALSE, &entry);
   g_free (entry.protocol);
 
   if (!possibilities) {

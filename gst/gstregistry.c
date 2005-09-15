@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2005 David A. Schleef <ds@schleef.org>
  *
  * gstregistry.c: handle registry
  *
@@ -45,11 +46,66 @@
 
 #include "gstinfo.h"
 #include "gstregistry.h"
-#include "gstregistrypool.h"
 #include "gstmarshal.h"
 #include "gstfilter.h"
 
-#define GST_CAT_DEFAULT GST_CAT_GST_INIT
+#define GST_CAT_DEFAULT GST_CAT_REGISTRY
+
+/*
+ * Design:
+ *
+ * The GstRegistry object is a list of plugins and some functions
+ * for dealing with them.  Plugins are matched 1-1 with a file on
+ * disk, and may or may not be loaded at a given time.  There may
+ * be multiple GstRegistry objects, but the "default registry" is
+ * the only object that has any meaning to the core.
+ *
+ * The registry.xml file in 0.9 is actually a cache of plugin
+ * information.  This is unlike previous versions, where the registry
+ * file was the primary source of plugin information, and was created
+ * by the gst-register command.
+ *
+ * In 0.9, the primary source, at all times, of plugin information
+ * is each plugin file itself.  Thus, if an application wants
+ * information about a particular plugin, or wants to search for
+ * a feature that satisfies given criteria, the primary means of
+ * doing so is to load every plugin and look at the resulting
+ * information that is gathered in the default registry.  Clearly,
+ * this is a time consuming process, so we cache information in
+ * the registry.xml file.
+ *
+ * On startup, plugins are searched for in the plugin search path.
+ * This path can be set directly using the GST_PLUGIN_PATH
+ * environment variable.  The registry file is loaded from
+ * ~/.gstreamer-0.9/registry.xml or the file listed in the
+ * GST_REGISTRY env var.  The only reason to change the registry
+ * location is for testing.
+ *
+ * For each plugin that is found in the plugin search path, there
+ * could be 3 possibilities for cached information:
+ *  - the cache may not contain information about a given file.
+ *  - the cache may have stale information.
+ *  - the cache may have current information.
+ * In the first two cases, the plugin is loaded and the cache
+ * updated.  In addition to these cases, the cache may have entries
+ * for plugins that are not relevant to the current process.  These
+ * are marked as not available to the current process.  If the
+ * cache is updated for whatever reason, it is marked dirty.
+ *
+ * A dirty cache is written out at the end of initialization.  Each
+ * entry is checked to make sure the information is minimally valid.
+ * If not, the entry is simply dropped.
+ *
+ * Implementation notes:
+ *
+ * The "cache" and "default registry" are different concepts and
+ * can represent different sets of plugins.  For various reasons,
+ * at init time, the cache is stored in the default registry, and
+ * plugins not relevant to the current process are marked with the
+ * GST_PLUGIN_FLAG_CACHED bit.  These plugins are removed at the
+ * end of intitialization.
+ *
+ */
 
 /* Element signals and args */
 enum
@@ -84,7 +140,7 @@ gst_registry_get_type (void)
     };
 
     registry_type = g_type_register_static (G_TYPE_OBJECT, "GstRegistry",
-        &registry_info, G_TYPE_FLAG_ABSTRACT);
+        &registry_info, 0);
   }
   return registry_type;
 }
@@ -109,117 +165,18 @@ gst_registry_class_init (GstRegistryClass * klass)
 static void
 gst_registry_init (GstRegistry * registry)
 {
-  registry->priority = 0;
-  registry->loaded = FALSE;
-  registry->paths = NULL;
+
 }
 
-/**
- * gst_registry_load:
- * @registry: the registry to load
- *
- * Load the given registry
- *
- * Returns: TRUE on success.
- */
-gboolean
-gst_registry_load (GstRegistry * registry)
+GstRegistry *
+gst_registry_get_default (void)
 {
-  GstRegistryClass *rclass;
+  static GstRegistry *_gst_registry_default;
 
-  g_return_val_if_fail (GST_IS_REGISTRY (registry), FALSE);
-
-  rclass = GST_REGISTRY_GET_CLASS (registry);
-
-  if (rclass->load)
-    return rclass->load (registry);
-
-  return FALSE;
-}
-
-/**
- * gst_registry_is_loaded:
- * @registry: the registry to check
- *
- * Check if the given registry is loaded
- *
- * Returns: TRUE if loaded.
- */
-gboolean
-gst_registry_is_loaded (GstRegistry * registry)
-{
-  g_return_val_if_fail (GST_IS_REGISTRY (registry), FALSE);
-
-  return registry->loaded;
-}
-
-/**
- * gst_registry_save:
- * @registry: the registry to save
- *
- * Save the contents of the given registry
- *
- * Returns: TRUE on success
- */
-gboolean
-gst_registry_save (GstRegistry * registry)
-{
-  GstRegistryClass *rclass;
-
-  g_return_val_if_fail (GST_IS_REGISTRY (registry), FALSE);
-
-  rclass = GST_REGISTRY_GET_CLASS (registry);
-
-  if (rclass->save)
-    return rclass->save (registry);
-
-  return FALSE;
-}
-
-/**
- * gst_registry_rebuild:
- * @registry: the registry to rebuild
- *
- * Rebuild the given registry
- *
- * Returns: TRUE on success
- */
-gboolean
-gst_registry_rebuild (GstRegistry * registry)
-{
-  GstRegistryClass *rclass;
-
-  g_return_val_if_fail (GST_IS_REGISTRY (registry), FALSE);
-
-  rclass = GST_REGISTRY_GET_CLASS (registry);
-
-  if (rclass->rebuild)
-    return rclass->rebuild (registry);
-
-  return FALSE;
-}
-
-/**
- * gst_registry_unload:
- * @registry: the registry to unload
- *
- * Unload the given registry
- *
- * Returns: TRUE on success
- */
-gboolean
-gst_registry_unload (GstRegistry * registry)
-{
-  GstRegistryClass *rclass;
-
-  g_return_val_if_fail (GST_IS_REGISTRY (registry), FALSE);
-
-  rclass = GST_REGISTRY_GET_CLASS (registry);
-
-  if (rclass->unload)
-    return rclass->unload (registry);
-
-  return FALSE;
+  if (!_gst_registry_default) {
+    _gst_registry_default = g_object_new (GST_TYPE_REGISTRY, NULL);
+  }
+  return _gst_registry_default;
 }
 
 /**
@@ -297,15 +254,18 @@ gst_registry_clear_paths (GstRegistry * registry)
 gboolean
 gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
 {
+  GstPlugin *existing_plugin;
+
   g_return_val_if_fail (GST_IS_REGISTRY (registry), FALSE);
-  if (gst_registry_pool_find_plugin (gst_plugin_get_name (plugin))) {
-    GST_WARNING_OBJECT (registry, "Not adding plugin %s, "
-        "because a plugin with same name already exists",
-        gst_plugin_get_name (plugin));
-    return FALSE;
+
+  existing_plugin = gst_registry_lookup (registry, plugin->filename);
+  if (existing_plugin) {
+    GST_DEBUG ("Replacing existing plugin for filename \"%s\"",
+        plugin->filename);
+    registry->plugins = g_list_remove (registry->plugins, existing_plugin);
+    g_object_unref (existing_plugin);
   }
 
-  plugin->manager = registry;
   registry->plugins = g_list_prepend (registry->plugins, plugin);
 
   GST_DEBUG ("emitting plugin-added for filename %s", plugin->filename);
@@ -443,77 +403,140 @@ gst_registry_find_feature (GstRegistry * registry, const gchar * name,
 }
 
 
-/**
- * gst_registry_load_plugin:
- * @registry: the registry to load the plugin from
- * @plugin: the plugin to load
- *
- * Bring the plugin from the registry into memory.
- *
- * Returns: a value indicating the result
- */
-GstRegistryReturn
-gst_registry_load_plugin (GstRegistry * registry, GstPlugin * plugin)
+GList *
+gst_registry_get_feature_list (GstRegistry * registry, GType type)
 {
-  GstRegistryClass *rclass;
+  /* FIXME */
 
-  g_return_val_if_fail (GST_IS_REGISTRY (registry),
-      GST_REGISTRY_PLUGIN_LOAD_ERROR);
+  return NULL;
+}
 
-  rclass = GST_REGISTRY_GET_CLASS (registry);
+GList *
+gst_registry_get_plugin_list (GstRegistry * registry)
+{
+  return g_list_copy (registry->plugins);
+}
 
-  if (rclass->load_plugin)
-    return rclass->load_plugin (registry, plugin);
+GstPlugin *
+gst_registry_lookup (GstRegistry * registry, const char *filename)
+{
+  GList *g;
+  GstPlugin *plugin;
 
-  return GST_REGISTRY_PLUGIN_LOAD_ERROR;
+  for (g = registry->plugins; g; g = g_list_next (g)) {
+    plugin = GST_PLUGIN (g->data);
+    if (plugin->filename && strcmp (filename, plugin->filename) == 0) {
+      return plugin;
+    }
+  }
+
+  return NULL;
+}
+
+static void
+gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
+    int level)
+{
+  GDir *dir;
+  const gchar *dirent;
+  gchar *filename;
+  GstPlugin *plugin;
+
+  dir = g_dir_open (path, 0, NULL);
+  if (!dir)
+    return;
+
+  while ((dirent = g_dir_read_name (dir))) {
+    filename = g_strjoin ("/", path, dirent, NULL);
+
+    GST_DEBUG ("examining file: %s", filename);
+
+    if (g_file_test (filename, G_FILE_TEST_IS_DIR)) {
+      if (level > 0) {
+        GST_DEBUG ("found directory, recursing");
+        gst_registry_scan_path_level (registry, filename, level - 1);
+      } else {
+        GST_DEBUG ("found directory, but recursion level is too deep");
+      }
+      g_free (filename);
+      continue;
+    }
+    if (!g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
+      GST_DEBUG ("not a regular file, ignoring");
+      g_free (filename);
+      continue;
+    }
+    if (!g_str_has_suffix (filename, ".so") &&
+        !g_str_has_suffix (filename, ".dll") &&
+        !g_str_has_suffix (filename, ".dynlib")) {
+      GST_DEBUG ("extension is not recognized as module file, ignoring");
+      g_free (filename);
+      continue;
+    }
+
+    plugin = gst_registry_lookup (registry, filename);
+    if (plugin) {
+      struct stat file_status;
+
+      if (stat (filename, &file_status)) {
+        /* FIXME remove from cache */
+        g_free (filename);
+        continue;
+      }
+
+      if (plugin->file_mtime == file_status.st_mtime &&
+          plugin->file_size == file_status.st_size) {
+        GST_DEBUG ("file %s cached", filename);
+        plugin->flags &= ~GST_PLUGIN_FLAG_CACHED;
+      } else {
+        GST_DEBUG ("cached info for %s is stale", filename);
+        GST_DEBUG ("mtime %ld != %ld or size %" G_GSIZE_FORMAT " != %"
+            G_GSIZE_FORMAT, plugin->file_mtime, file_status.st_mtime,
+            plugin->file_size, file_status.st_size);
+        gst_registry_remove_plugin (gst_registry_get_default (), plugin);
+        gst_plugin_load_file (filename, NULL);
+      }
+
+    } else {
+      gst_plugin_load_file (filename, NULL);
+    }
+
+    g_free (filename);
+  }
+
+  g_dir_close (dir);
 }
 
 /**
- * gst_registry_unload_plugin:
- * @registry: the registry to unload the plugin from
- * @plugin: the plugin to unload
+ * gst_registry_scan_path:
+ * @registry: the registry to add the path to
+ * @path: the path to add to the registry
  *
- * Unload the plugin from the given registry.
- *
- * Returns: a value indicating the result
+ * Add the given path to the registry. The syntax of the
+ * path is specific to the registry. If the path has already been
+ * added, do nothing.
  */
-GstRegistryReturn
-gst_registry_unload_plugin (GstRegistry * registry, GstPlugin * plugin)
+void
+gst_registry_scan_path (GstRegistry * registry, const gchar * path)
 {
-  GstRegistryClass *rclass;
-
-  g_return_val_if_fail (GST_IS_REGISTRY (registry),
-      GST_REGISTRY_PLUGIN_LOAD_ERROR);
-
-  rclass = GST_REGISTRY_GET_CLASS (registry);
-
-  if (rclass->unload_plugin)
-    return rclass->unload_plugin (registry, plugin);
-
-  return GST_REGISTRY_PLUGIN_LOAD_ERROR;
+  gst_registry_scan_path_level (registry, path, 10);
 }
 
-/**
- * gst_registry_update_plugin:
- * @registry: the registry to update
- * @plugin: the plugin to update
- *
- * Update the plugin in the given registry.
- *
- * Returns: a value indicating the result
- */
-GstRegistryReturn
-gst_registry_update_plugin (GstRegistry * registry, GstPlugin * plugin)
+void
+_gst_registry_remove_cache_plugins (GstRegistry * registry)
 {
-  GstRegistryClass *rclass;
+  GList *g;
+  GList *g_next;
+  GstPlugin *plugin;
 
-  g_return_val_if_fail (GST_IS_REGISTRY (registry),
-      GST_REGISTRY_PLUGIN_LOAD_ERROR);
-
-  rclass = GST_REGISTRY_GET_CLASS (registry);
-
-  if (rclass->update_plugin)
-    return rclass->update_plugin (registry, plugin);
-
-  return GST_REGISTRY_PLUGIN_LOAD_ERROR;
+  g = registry->plugins;
+  while (g) {
+    g_next = g->next;
+    plugin = g->data;
+    if (plugin->flags & GST_PLUGIN_FLAG_CACHED) {
+      registry->plugins = g_list_remove (registry->plugins, plugin);
+      g_object_unref (plugin);
+    }
+    g = g_next;
+  }
 }

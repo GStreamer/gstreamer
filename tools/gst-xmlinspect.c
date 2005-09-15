@@ -612,7 +612,7 @@ print_element_list (void)
 {
   GList *plugins;
 
-  plugins = gst_registry_pool_plugin_list ();
+  plugins = gst_default_registry_get_plugin_list ();
   while (plugins) {
     GList *features;
     GstPlugin *plugin;
@@ -796,21 +796,21 @@ main (int argc, char *argv[])
 
         /* FIXME implement other pretty print function for these */
 #ifndef GST_DISABLE_INDEX
-        feature = gst_registry_pool_find_feature (argv[1],
+        feature = gst_default_registry_find_feature (argv[1],
             GST_TYPE_INDEX_FACTORY);
         if (feature) {
           g_print ("%s: an index\n", argv[1]);
           return 0;
         }
 #endif
-        feature = gst_registry_pool_find_feature (argv[1],
+        feature = gst_default_registry_find_feature (argv[1],
             GST_TYPE_TYPE_FIND_FACTORY);
         if (feature) {
           g_print ("%s: a type find function\n", argv[1]);
           return 0;
         }
 #ifndef GST_DISABLE_URI
-        feature = gst_registry_pool_find_feature (argv[1],
+        feature = gst_default_registry_find_feature (argv[1],
             GST_TYPE_URI_HANDLER);
         if (feature) {
           g_print ("%s: an uri handler\n", argv[1]);
@@ -825,7 +825,7 @@ main (int argc, char *argv[])
     }
 
     /* otherwise assume it's a plugin */
-    plugin = gst_registry_pool_find_plugin (argv[1]);
+    plugin = gst_default_registry_find_plugin (argv[1]);
 
     /* if there is such a plugin, print out info */
 

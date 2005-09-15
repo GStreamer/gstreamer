@@ -27,8 +27,8 @@
 #include "gst_private.h"
 #include "gstinfo.h"
 #include "gsttypefind.h"
+#include "gstregistry.h"
 #include "gsttypefindfactory.h"
-#include "gstregistrypool.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_type_find_debug);
 #define GST_CAT_DEFAULT gst_type_find_debug
@@ -63,8 +63,8 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
 
   GST_INFO ("registering typefind function for %s", name);
   factory =
-      GST_TYPE_FIND_FACTORY (gst_registry_pool_find_feature (name,
-          GST_TYPE_TYPE_FIND_FACTORY));
+      GST_TYPE_FIND_FACTORY (gst_registry_find_feature (gst_registry_get_default
+          (), name, GST_TYPE_TYPE_FIND_FACTORY));
   if (!factory) {
     factory = g_object_new (GST_TYPE_TYPE_FIND_FACTORY, NULL);
     GST_DEBUG_OBJECT (factory, "using new typefind factory for %s", name);

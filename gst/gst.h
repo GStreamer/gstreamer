@@ -67,7 +67,6 @@
 
 #include <gst/gstparse.h>
 #include <gst/gstregistry.h>
-#include <gst/gstregistrypool.h>
 
 /* API compatibility stuff */
 #include <gst/gstcompat.h>
