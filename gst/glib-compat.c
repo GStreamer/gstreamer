@@ -29,16 +29,19 @@
 
 #include <glib.h>
 
+#include <stdio.h>
+#include <errno.h>
+
+#include "glib-compat.h"
+
 #if 0
 #include <sys/stat.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #ifndef G_OS_WIN32

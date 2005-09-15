@@ -1,5 +1,10 @@
 2005-09-14  David Schleef  <ds@schleef.org>
 
+	* gst/glib-compat.c: (g_mkdir_with_parents), (g_mkdir), (g_stat):
+	Attempt #2.
+
+2005-09-14  David Schleef  <ds@schleef.org>
+
 	* gst/Makefile.am: Oh yeah, libgstreamer.so needs to contain
 	  the new functions.
 
