@@ -18,6 +18,34 @@
  */
 
 /**
+ * SECTION:element-vorbisenc
+ * @see_also: vorbisdec, oggmux
+ *
+ * <refsect2>
+ * <para>
+ * This element encodes raw float audio into a Vorbis stream.
+ * <ulink url="http://www.vorbis.com/">Vorbis</ulink> is a royalty-free
+ * audio codec maintained by the <ulink url="http://www.xiph.org/">Xiph.org
+ * Foundation</ulink>.
+ * </para>
+ * <title>Example pipelines</title>
+ * <para>
+ * Encode a test sine signal to Ogg/Vorbis.  Note that the resulting file
+ * will be really small because a sine signal compresses very well.
+ * </para>
+ * <programlisting>
+ * gst-launch -v sinesrc num-buffers=100 ! audioconvert ! vorbisenc ! oggmux ! filesink location=sinesrc.ogg
+ * </programlisting>
+ * <para>
+ * Record from a sound card using ALSA and encode to Ogg/Vorbis.
+ * </para>
+ * <programlisting>
+ * gst-launch -v alsasrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=alsasrc.ogg
+ * </programlisting>
+  * </refsect2>
+ */
+
+/**
  * SECTION:vorbisenc
  * @short_description: an encoder that encodes to Ogg/Vorbis
  * @see_also: oggdemux

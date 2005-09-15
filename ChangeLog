@@ -1,5 +1,16 @@
 2005-09-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* common/gtk-doc-plugins.mak:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	* ext/theora/Makefile.am:
+	* ext/theora/gsttheoraenc.h:
+	* ext/theora/theoraenc.c:
+	* ext/vorbis/vorbisenc.c:
+	  pick up signals and args for vorbis; add some docs for vorbis
+
+2005-09-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* common/gstdoc-scangobj:
 	* common/gtk-doc-plugins.mak:
 	* docs/libs/Makefile.am:

@@ -37,23 +37,24 @@ GstTCPServerSinkClass
 <SECTION>
 <FILE>element-theoraenc</FILE>
 GstTheoraEnc
+GstTheoraEncClass
 <TITLE>theoraenc</TITLE>
 <SUBSECTION Standard>
-GstTheoraEncClass
 </SECTION>
 
 
 <SECTION>
 <FILE>element-videotestsrc</FILE>
 <TITLE>videotestsrc</TITLE>
+GstVideoTestSrc
 <SUBSECTION Standard>
 GstVideoTestSrcClass
 </SECTION>
 
-
+<SECTION>
 <FILE>element-volume</FILE>
-GstVolume
 <TITLE>volume</TITLE>
+GstVolume
 <SUBSECTION Standard>
 GstVolumeClass
 </SECTION>

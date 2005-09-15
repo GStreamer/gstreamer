@@ -39,35 +39,12 @@
 #  include "config.h"
 #endif
 
-#include <gst/gst.h>
-#include <theora/theora.h>
+#include "gsttheoraenc.h"
 #include <string.h>
 #include <gst/tag/tag.h>
 
 GST_DEBUG_CATEGORY (theoraenc_debug);
 #define GST_CAT_DEFAULT theoraenc_debug
-
-#define GST_TYPE_THEORA_ENC \
-  (gst_theora_enc_get_type())
-#define GST_THEORA_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_THEORA_ENC,GstTheoraEnc))
-#define GST_THEORA_ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_THEORA_ENC,GstTheoraEnc))
-#define GST_IS_THEORA_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_THEORA_ENC))
-#define GST_IS_THEORA_ENC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_THEORA_ENC))
-
-typedef struct _GstTheoraEnc GstTheoraEnc;
-typedef struct _GstTheoraEncClass GstTheoraEncClass;
-
-typedef enum
-{
-  BORDER_NONE,
-  BORDER_BLACK,
-  BORDER_MIRROR
-}
-GstTheoraEncBorderMode;
 
 #define GST_TYPE_BORDER_MODE (gst_border_mode_get_type())
 static GType
@@ -88,56 +65,14 @@ gst_border_mode_get_type (void)
   return border_mode_type;
 }
 
-struct _GstTheoraEnc
-{
-  GstElement element;
-
-  GstPad *sinkpad;
-  GstPad *srcpad;
-
-  ogg_stream_state to;
-
-  theora_state state;
-  theora_info info;
-  theora_comment comment;
-
-  gboolean center;
-  GstTheoraEncBorderMode border;
-
-  gint video_bitrate;           /* bitrate target for Theora video */
-  gint video_quality;           /* Theora quality selector 0 = low, 63 = high */
-  gboolean quick;
-  gboolean keyframe_auto;
-  gint keyframe_freq;
-  gint keyframe_force;
-  gint keyframe_threshold;
-  gint keyframe_mindistance;
-  gint noise_sensitivity;
-  gint sharpness;
-
-  gint info_width, info_height;
-  gint width, height;
-  gint offset_x, offset_y;
-  gdouble fps;
-
-  guint packetno;
-  guint64 bytes_out;
-  guint64 initial_delay;
-};
-
-struct _GstTheoraEncClass
-{
-  GstElementClass parent_class;
-};
-
 #define ROUND_UP_2(x) (((x) + 1) & ~1)
 #define ROUND_UP_4(x) (((x) + 3) & ~3)
 #define ROUND_UP_8(x) (((x) + 7) & ~7)
 
-#define THEORA_DEF_CENTER 		TRUE
-#define THEORA_DEF_BORDER 		BORDER_BLACK
-#define THEORA_DEF_BITRATE 		0
-#define THEORA_DEF_QUALITY 		16
+#define THEORA_DEF_CENTER		TRUE
+#define THEORA_DEF_BORDER		BORDER_BLACK
+#define THEORA_DEF_BITRATE		0
+#define THEORA_DEF_QUALITY		16
 #define THEORA_DEF_QUICK		TRUE
 #define THEORA_DEF_KEYFRAME_AUTO	TRUE
 #define THEORA_DEF_KEYFRAME_FREQ	64
