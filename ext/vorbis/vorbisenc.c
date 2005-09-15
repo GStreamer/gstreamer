@@ -96,6 +96,8 @@ enum
   ARG_LAST_MESSAGE
 };
 
+static void gst_vorbisenc_output_buffers (GstVorbisEnc * vorbisenc);
+
 /* FIXME:
  * vorbis_granule_time was added between 1.0 and 1.0.1; it's too silly
  * to require a new version for such a simple function, but once we move
@@ -548,7 +550,6 @@ gst_vorbisenc_init (GstVorbisEnc * vorbisenc)
   vorbisenc->last_message = NULL;
 
   vorbisenc->setup = FALSE;
-  vorbisenc->eos = FALSE;
   vorbisenc->header_sent = FALSE;
 }
 
@@ -862,14 +863,18 @@ gst_vorbisenc_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      /* end of file.  this can be done implicitly in the mainline,
-         but it's easier to see here in non-clever fashion.
-         Tell the library we're at end of stream so that it can handle
-         the last frame and mark end of stream in the output properly */
-      GST_DEBUG_OBJECT (vorbisenc, "received EOS, will process later");
+      /* Tell the library we're at end of stream so that it can handle
+       * the last frame and mark end of stream in the output properly */
+      GST_DEBUG_OBJECT (vorbisenc, "EOS, clearing state and sending event on");
       vorbis_analysis_wrote (&vorbisenc->vd, 0);
-      vorbisenc->eos = TRUE;
-      gst_event_unref (event);
+      gst_vorbisenc_output_buffers (vorbisenc);
+
+      /* clean up and exit.  vorbis_info_clear() must be called last */
+      vorbis_block_clear (&vorbisenc->vb);
+      vorbis_dsp_clear (&vorbisenc->vd);
+      vorbis_info_clear (&vorbisenc->vi);
+
+      res = gst_pad_event_default (pad, event);
       break;
     case GST_EVENT_TAG:
       if (vorbisenc->tags) {
@@ -978,6 +983,14 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer)
     gst_buffer_unref (buf);
   }
 
+  gst_vorbisenc_output_buffers (vorbisenc);
+
+  return GST_FLOW_OK;
+}
+
+static void
+gst_vorbisenc_output_buffers (GstVorbisEnc * vorbisenc)
+{
   /* vorbis does some data preanalysis, then divides up blocks for
      more involved (potentially parallel) processing.  Get a single
      block for encoding now */
@@ -995,17 +1008,6 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer)
       gst_vorbisenc_push_packet (vorbisenc, &op);
     }
   }
-
-  if (vorbisenc->eos) {
-    GST_DEBUG_OBJECT (vorbisenc, "EOS, clearing state and sending event on");
-    /* clean up and exit.  vorbis_info_clear() must be called last */
-    vorbis_block_clear (&vorbisenc->vb);
-    vorbis_dsp_clear (&vorbisenc->vd);
-    vorbis_info_clear (&vorbisenc->vi);
-    gst_pad_push_event (vorbisenc->srcpad, gst_event_new_eos ());
-    //gst_element_set_eos (GST_ELEMENT (vorbisenc));
-  }
-  return GST_FLOW_OK;
 }
 
 static void
@@ -1127,8 +1129,6 @@ gst_vorbisenc_change_state (GstElement * element, GstStateChange transition)
       vorbisenc->tags = gst_tag_list_new ();
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      vorbisenc->eos = FALSE;
-      break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     default:
       break;

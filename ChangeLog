@@ -1,5 +1,14 @@
 2005-09-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_init),
+	(gst_vorbisenc_sink_event), (gst_vorbisenc_chain),
+	(gst_vorbisenc_output_buffers), (gst_vorbisenc_change_state):
+	* ext/vorbis/vorbisenc.h:
+	  Fix EOS handling.  Still needs a fix in the ogg muxer to
+	  mark the last page as eos somehow.
+
+2005-09-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* common/gtk-doc-plugins.mak:
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-base-plugins-sections.txt:

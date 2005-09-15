@@ -57,8 +57,6 @@ struct _GstVorbisEnc {
   vorbis_dsp_state vd; /* central working state for the packet->PCM decoder */
   vorbis_block     vb; /* local working space for packet->PCM decode */
 
-  gboolean         eos;
-
   gboolean         managed;
   gint             bitrate;
   gint             min_bitrate;
