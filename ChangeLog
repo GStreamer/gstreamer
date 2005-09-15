@@ -1,5 +1,15 @@
 2005-09-14  David Schleef  <ds@schleef.org>
 
+	* configure.ac: Remove gst/registries, since it's no longer used.
+	* gst/registries/Makefile.am:
+	* gst/registries/gstlibxmlregistry.c:
+	* gst/registries/gstlibxmlregistry.h:
+	* gst/registries/gstxmlregistry.c:
+	* gst/registries/gstxmlregistry.h:
+	* gst/registries/registrytest.c:
+
+2005-09-14  David Schleef  <ds@schleef.org>
+
 	* gst/glib-compat.h:
 	* gst/gstregistryxml.c:
 	  Convergence is near.  Seriously.

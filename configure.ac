@@ -639,7 +639,6 @@ gst/check/Makefile
 gst/indexers/Makefile
 gst/elements/Makefile
 gst/parse/Makefile
-gst/registries/Makefile
 libs/Makefile
 libs/gst/Makefile
 libs/gst/controller/Makefile
