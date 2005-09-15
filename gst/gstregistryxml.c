@@ -130,33 +130,67 @@ get_time (const char *path, gboolean * is_dir)
 }
 #endif
 
-static gboolean
-make_dir (gchar * filename)
+/* The following function was copied from GLIB-2.8.  When the glib
+ * requirement gets bumped to an appropriate level, this can be
+ * removed.  */
+/* gfileutils.c - File utility functions
+ *
+ *  Copyright 2000 Red Hat, Inc.
+ *
+ *  LGPL
+ */
+static int
+private_g_mkdir_with_parents (const gchar * pathname, int mode)
 {
-  struct stat dirstat;
-  gchar *dirname;
+  gchar *fn, *p;
 
-  if (strrchr (filename, '/') == NULL)
-    return FALSE;
-
-  dirname = g_strndup (filename, strrchr (filename, '/') - filename);
-
-  if (stat (dirname, &dirstat) == -1 && errno == ENOENT) {
-    if (g_mkdir (dirname, 0755) != 0) {
-      if (make_dir (dirname) != TRUE) {
-        g_free (dirname);
-        return FALSE;
-      } else {
-        if (g_mkdir (dirname, 0755) != 0) {
-          return FALSE;
-        }
-      }
-    }
+  if (pathname == NULL || *pathname == '\0') {
+    errno = EINVAL;
+    return -1;
   }
 
-  g_free (dirname);
-  return TRUE;
+  fn = g_strdup (pathname);
+
+  if (g_path_is_absolute (fn))
+    p = (gchar *) g_path_skip_root (fn);
+  else
+    p = fn;
+
+  do {
+    while (*p && !G_IS_DIR_SEPARATOR (*p))
+      p++;
+
+    if (!*p)
+      p = NULL;
+    else
+      *p = '\0';
+
+    if (!g_file_test (fn, G_FILE_TEST_EXISTS)) {
+      if (g_mkdir (fn, mode) == -1) {
+        int errno_save = errno;
+
+        g_free (fn);
+        errno = errno_save;
+        return -1;
+      }
+    } else if (!g_file_test (fn, G_FILE_TEST_IS_DIR)) {
+      g_free (fn);
+      errno = ENOTDIR;
+      return -1;
+    }
+    if (p) {
+      *p++ = G_DIR_SEPARATOR;
+      while (*p && G_IS_DIR_SEPARATOR (*p))
+        p++;
+    }
+  }
+  while (p);
+
+  g_free (fn);
+
+  return 0;
 }
+
 
 #if 0
 static void
@@ -989,7 +1023,7 @@ gst_registry_xml_write_cache (GstRegistry * registry, const char *location)
 
     /* oops, I bet the directory doesn't exist */
     dir = g_path_get_dirname (location);
-    g_mkdir_with_parents (dir, 0777);
+    private_g_mkdir_with_parents (dir, 0777);
     g_free (dir);
 
     registry->cache_file = fopen (tmp_location, "w");
