@@ -133,7 +133,7 @@ gst_auto_video_sink_find_best (GstAutoVideoSink * sink)
 {
   GList *list;
 
-  list = gst_registry_pool_feature_filter (
+  list = gst_registry_feature_filter (gst_registry_get_default (),
       (GstPluginFeatureFilter) gst_auto_video_sink_factory_filter, FALSE, sink);
   list = g_list_sort (list, (GCompareFunc) gst_auto_video_sink_compare_ranks);
 

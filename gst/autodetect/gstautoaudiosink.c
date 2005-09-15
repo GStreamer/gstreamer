@@ -135,7 +135,7 @@ gst_auto_audio_sink_find_best (GstAutoAudioSink * sink)
   GstElement *choice = NULL;
   gboolean ss = TRUE;
 
-  list = gst_registry_pool_feature_filter (
+  list = gst_registry_feature_filter (gst_registry_get_default (),
       (GstPluginFeatureFilter) gst_auto_audio_sink_factory_filter, FALSE, sink);
   list = g_list_sort (list, (GCompareFunc) gst_auto_audio_sink_compare_ranks);
 
