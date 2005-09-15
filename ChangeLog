@@ -1,3 +1,18 @@
+2005-09-15  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/rtp/Makefile.am:
+	* gst-libs/gst/rtp/gstbasertppayload.c:
+	(gst_basertppayload_get_type), (gst_basertppayload_base_init),
+	(gst_basertppayload_class_init), (gst_basertppayload_init),
+	(gst_basertppayload_finalize), (gst_basertppayload_setcaps),
+	(gst_basertppayload_chain), (gst_basertppayload_set_options),
+	(gst_basertppayload_set_outcaps), (gst_basertppayload_push),
+	(gst_basertppayload_set_property),
+	(gst_basertppayload_get_property),
+	(gst_basertppayload_change_state):
+	* gst-libs/gst/rtp/gstbasertppayload.h:
+	Added rtp payloader base class.
+
 2005-09-15  Andy Wingo  <wingo@pobox.com>
 
 	* configure.ac (plugindir): Remove the EOL matcher from the
