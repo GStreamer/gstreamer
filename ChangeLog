@@ -1,5 +1,9 @@
 2005-09-14  David Schleef  <ds@schleef.org>
 
+	* po/POTFILES.in: remove gst-register.c
+
+2005-09-14  David Schleef  <ds@schleef.org>
+
 	* docs/gst/gstreamer-docs.sgml:
 	* docs/gst/gstreamer-sections.txt:
 	* docs/gst/gstreamer.types:
