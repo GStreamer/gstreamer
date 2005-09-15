@@ -1,3 +1,16 @@
+2005-09-14  David Schleef  <ds@schleef.org>
+
+	* check/generic/states.c: 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_typefind):
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_init):
+	  Fixes for changes in registry API.
+
+	* configure.ac: Only export gst_plugins_desc.  Add -no-undefined
+	  to GST_PLUGIN_LDFLAGS.
+	* ext/libvisual/visual.c: Make the library shut up.
+	* gst-libs/gst/audio/audio.c: Don't define a plugin in a library.
+	* gst-libs/gst/audio/gstaudiofilter.c: same
+
 2005-09-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/plugins/Makefile.am:

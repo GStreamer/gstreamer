@@ -29,7 +29,8 @@ GST_START_TEST (test_state_changes)
   GstElement *element;
   GList *features, *f;
 
-  features = gst_registry_pool_feature_list (GST_TYPE_ELEMENT_FACTORY);
+  features = gst_registry_get_feature_list (gst_registry_get_default (),
+      GST_TYPE_ELEMENT_FACTORY);
 
   for (f = features; f; f = f->next) {
     GstPluginFeature *feature = f->data;

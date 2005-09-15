@@ -296,7 +296,7 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
   GList *factories;
 
   /* first filter out the interesting element factories */
-  factories = gst_registry_pool_feature_filter (
+  factories = gst_default_registry_feature_filter (
       (GstPluginFeatureFilter) gst_decode_bin_factory_filter,
       FALSE, decode_bin);
 

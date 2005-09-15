@@ -264,17 +264,3 @@ gst_audio_structure_set_int (GstStructure * structure, GstAudioFieldFlag flag)
     gst_structure_set (structure, "buffer-frames", GST_TYPE_INT_RANGE, 1,
         G_MAXINT, NULL);
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gst_audio_channel_position_get_type ();
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "gstaudio",
-    "Support services for audio plugins",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN);

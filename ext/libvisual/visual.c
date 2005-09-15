@@ -134,18 +134,6 @@ gst_visual_get_type (void)
     };
 
     type = g_type_register_static (GST_TYPE_ELEMENT, "GstVisual", &info, 0);
-
-    GST_DEBUG_CATEGORY_INIT (libvisual_debug, "libvisual", 0,
-        "libvisual audio visualisations");
-    visual_log_set_verboseness (VISUAL_LOG_VERBOSENESS_MEDIUM);
-    visual_log_set_info_handler (libvisual_log_handler,
-        (void *) GST_LEVEL_INFO);
-    visual_log_set_warning_handler (libvisual_log_handler,
-        (void *) GST_LEVEL_WARNING);
-    visual_log_set_critical_handler (libvisual_log_handler,
-        (void *) GST_LEVEL_ERROR);
-    visual_log_set_error_handler (libvisual_log_handler,
-        (void *) GST_LEVEL_ERROR);
   }
   return type;
 }
@@ -532,9 +520,22 @@ plugin_init (GstPlugin * plugin)
   guint i;
   VisList *list;
 
+  GST_DEBUG_CATEGORY_INIT (libvisual_debug, "libvisual", 0,
+      "libvisual audio visualisations");
+
   if (!visual_is_initialized ())
     if (visual_init (NULL, NULL) != 0)
       return FALSE;
+
+  GST_ERROR ("got here");
+  visual_log_set_verboseness (VISUAL_LOG_VERBOSENESS_LOW);
+  visual_log_set_info_handler (libvisual_log_handler, (void *) GST_LEVEL_INFO);
+  visual_log_set_warning_handler (libvisual_log_handler,
+      (void *) GST_LEVEL_WARNING);
+  visual_log_set_critical_handler (libvisual_log_handler,
+      (void *) GST_LEVEL_ERROR);
+  visual_log_set_error_handler (libvisual_log_handler,
+      (void *) GST_LEVEL_ERROR);
 
   list = visual_actor_get_list ();
   for (i = 0; i < visual_list_count (list); i++) {

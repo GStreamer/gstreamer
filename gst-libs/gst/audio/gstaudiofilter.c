@@ -302,15 +302,3 @@ gst_audio_filter_class_add_pad_templates (GstAudiofilterClass *
       gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
           gst_caps_copy (caps)));
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "gstaudiofilter",
-    "Audio filter parent class",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)

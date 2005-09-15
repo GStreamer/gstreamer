@@ -621,7 +621,7 @@ gst_ogg_pad_typefind (GstOggPad * pad, ogg_packet * packet)
     GList *factories;
 
     /* first filter out the interesting element factories */
-    factories = gst_registry_pool_feature_filter (
+    factories = gst_default_registry_feature_filter (
         (GstPluginFeatureFilter) gst_ogg_demux_factory_filter, FALSE, caps);
 
     /* sort them according to their ranks */
