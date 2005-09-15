@@ -47,6 +47,8 @@
 
 #include <libxml/xmlreader.h>
 
+#include "glib-compat.h"
+
 #define BLOCK_SIZE 1024*10
 
 #define GST_CAT_DEFAULT GST_CAT_REGISTRY
@@ -129,67 +131,6 @@ get_time (const char *path, gboolean * is_dir)
   return statbuf.st_ctime;
 }
 #endif
-
-/* The following function was copied from GLIB-2.8.  When the glib
- * requirement gets bumped to an appropriate level, this can be
- * removed.  */
-/* gfileutils.c - File utility functions
- *
- *  Copyright 2000 Red Hat, Inc.
- *
- *  LGPL
- */
-static int
-private_g_mkdir_with_parents (const gchar * pathname, int mode)
-{
-  gchar *fn, *p;
-
-  if (pathname == NULL || *pathname == '\0') {
-    errno = EINVAL;
-    return -1;
-  }
-
-  fn = g_strdup (pathname);
-
-  if (g_path_is_absolute (fn))
-    p = (gchar *) g_path_skip_root (fn);
-  else
-    p = fn;
-
-  do {
-    while (*p && !G_IS_DIR_SEPARATOR (*p))
-      p++;
-
-    if (!*p)
-      p = NULL;
-    else
-      *p = '\0';
-
-    if (!g_file_test (fn, G_FILE_TEST_EXISTS)) {
-      if (g_mkdir (fn, mode) == -1) {
-        int errno_save = errno;
-
-        g_free (fn);
-        errno = errno_save;
-        return -1;
-      }
-    } else if (!g_file_test (fn, G_FILE_TEST_IS_DIR)) {
-      g_free (fn);
-      errno = ENOTDIR;
-      return -1;
-    }
-    if (p) {
-      *p++ = G_DIR_SEPARATOR;
-      while (*p && G_IS_DIR_SEPARATOR (*p))
-        p++;
-    }
-  }
-  while (p);
-
-  g_free (fn);
-
-  return 0;
-}
 
 
 #if 0
@@ -1023,7 +964,7 @@ gst_registry_xml_write_cache (GstRegistry * registry, const char *location)
 
     /* oops, I bet the directory doesn't exist */
     dir = g_path_get_dirname (location);
-    private_g_mkdir_with_parents (dir, 0777);
+    g_mkdir_with_parents (dir, 0777);
     g_free (dir);
 
     registry->cache_file = fopen (tmp_location, "w");
