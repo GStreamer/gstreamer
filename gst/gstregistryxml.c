@@ -43,7 +43,6 @@
 #include <gst/gstinfo.h>
 #include <gst/gstenumtypes.h>
 #include <gst/gstregistry.h>
-#include <glib/gstdio.h>
 
 #include <libxml/xmlreader.h>
 

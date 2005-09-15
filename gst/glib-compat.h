@@ -6,6 +6,9 @@
  */
 
 #include <glib.h>
+#if GLIB_CHECK_VERSION (2, 6, 0)
+#include <glib/gstdio.h>
+#endif
 
 G_BEGIN_DECLS
 
