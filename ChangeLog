@@ -1,5 +1,10 @@
 2005-09-14  David Schleef  <ds@schleef.org>
 
+	* gst/gstregistryxml.c: Added.  Essentially moved out of the
+	  registries directory.
+
+2005-09-14  David Schleef  <ds@schleef.org>
+
 	* check/Makefile.am:
 	* check/generic/states.c:
 	* gst/Makefile.am:
