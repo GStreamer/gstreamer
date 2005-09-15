@@ -120,30 +120,7 @@ static void gst_registry_init (GstRegistry * registry);
 static GObjectClass *parent_class = NULL;
 static guint gst_registry_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gst_registry_get_type (void)
-{
-  static GType registry_type = 0;
-
-  if (!registry_type) {
-    static const GTypeInfo registry_info = {
-      sizeof (GstRegistryClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_registry_class_init,
-      NULL,
-      NULL,
-      sizeof (GstRegistry),
-      0,
-      (GInstanceInitFunc) gst_registry_init,
-      NULL
-    };
-
-    registry_type = g_type_register_static (G_TYPE_OBJECT, "GstRegistry",
-        &registry_info, 0);
-  }
-  return registry_type;
-}
+G_DEFINE_TYPE (GstRegistry, gst_registry, G_TYPE_OBJECT);
 
 static void
 gst_registry_class_init (GstRegistryClass * klass)
@@ -263,14 +240,20 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
     GST_DEBUG ("Replacing existing plugin for filename \"%s\"",
         plugin->filename);
     registry->plugins = g_list_remove (registry->plugins, existing_plugin);
-    g_object_unref (existing_plugin);
+    gst_object_unref (existing_plugin);
   }
 
   registry->plugins = g_list_prepend (registry->plugins, plugin);
 
+  gst_object_ref (plugin);
+  gst_object_sink (plugin);
+
   GST_DEBUG ("emitting plugin-added for filename %s", plugin->filename);
   g_signal_emit (G_OBJECT (registry), gst_registry_signals[PLUGIN_ADDED], 0,
       plugin);
+
+  /* FIXME hack to fix unref later */
+  gst_object_ref (plugin);
 
   return TRUE;
 }
@@ -539,7 +522,7 @@ _gst_registry_remove_cache_plugins (GstRegistry * registry)
     plugin = g->data;
     if (plugin->flags & GST_PLUGIN_FLAG_CACHED) {
       registry->plugins = g_list_remove (registry->plugins, plugin);
-      g_object_unref (plugin);
+      gst_object_unref (plugin);
     }
     g = g_next;
   }

@@ -91,6 +91,8 @@ void		gst_plugin_feature_set_name		(GstPluginFeature *feature, const gchar *name
 guint		gst_plugin_feature_get_rank		(GstPluginFeature *feature);
 G_CONST_RETURN gchar *gst_plugin_feature_get_name	(GstPluginFeature *feature);
 
+void            gst_plugin_feature_list_free            (GList *list);
+
 G_END_DECLS
 
 

@@ -1,3 +1,12 @@
+2005-09-15  David Schleef  <ds@schleef.org>
+
+	* gst/gstplugin.c: Implement semi-decent recounting and locking
+	  in plugins and plugin features.
+	* gst/gstplugin.h:
+	* gst/gstpluginfeature.c:
+	* gst/gstpluginfeature.h:
+	* gst/gstregistry.c:
+
 2005-09-15  Michael Smith <msmith@fluendo.com>
 
 	* gst/gstregistry.c: (gst_registry_get_feature_list):

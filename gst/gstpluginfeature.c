@@ -32,50 +32,20 @@
 static void gst_plugin_feature_class_init (GstPluginFeatureClass * klass);
 static void gst_plugin_feature_init (GstPluginFeature * feature);
 
-static GObjectClass *parent_class = NULL;
-
 /* static guint gst_plugin_feature_signals[LAST_SIGNAL] = { 0 }; */
 
-GType
-gst_plugin_feature_get_type (void)
-{
-  static GType plugin_feature_type = 0;
-
-  if (!plugin_feature_type) {
-    static const GTypeInfo plugin_feature_info = {
-      sizeof (GObjectClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_plugin_feature_class_init,
-      NULL,
-      NULL,
-      sizeof (GObject),
-      0,
-      (GInstanceInitFunc) gst_plugin_feature_init,
-      NULL
-    };
-
-    plugin_feature_type =
-        g_type_register_static (G_TYPE_OBJECT, "GstPluginFeature",
-        &plugin_feature_info, G_TYPE_FLAG_ABSTRACT);
-  }
-  return plugin_feature_type;
-}
+G_DEFINE_ABSTRACT_TYPE (GstPluginFeature, gst_plugin_feature, G_TYPE_OBJECT);
 
 static void
 gst_plugin_feature_class_init (GstPluginFeatureClass * klass)
 {
-  GObjectClass *gobject_class;
 
-  gobject_class = (GObjectClass *) klass;
-
-  parent_class = g_type_class_ref (G_TYPE_OBJECT);
 }
 
 static void
 gst_plugin_feature_init (GstPluginFeature * feature)
 {
-  feature->plugin = NULL;
+
 }
 
 /**
@@ -197,4 +167,17 @@ gst_plugin_feature_get_rank (GstPluginFeature * feature)
   g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (feature), GST_RANK_NONE);
 
   return feature->rank;
+}
+
+void
+gst_plugin_feature_list_free (GList * list)
+{
+  GList *g;
+
+  for (g = list; g; g = g->next) {
+    GstPluginFeature *feature = GST_PLUGIN_FEATURE (g->data);
+
+    gst_object_unref (feature->plugin);
+  }
+  g_list_free (list);
 }

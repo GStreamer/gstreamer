@@ -29,6 +29,7 @@
 #include <gmodule.h>
 #include <gst/gstpluginfeature.h>
 #include <gst/gstmacros.h>
+#include <gst/gstobject.h>
 
 G_BEGIN_DECLS
 
@@ -79,7 +80,7 @@ struct _GstPluginDesc {
 
 
 struct _GstPlugin {
-  GObject       object;
+  GstObject       object;
 
   GstPluginDesc	desc;
 
@@ -100,7 +101,7 @@ struct _GstPlugin {
 };
 
 struct _GstPluginClass {
-  GObjectClass  object_class;
+  GstObjectClass  object_class;
 
 };
 

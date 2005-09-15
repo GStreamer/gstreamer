@@ -80,7 +80,7 @@ static void
 gst_plugin_desc_copy (GstPluginDesc * dest, const GstPluginDesc * src);
 
 
-G_DEFINE_TYPE (GstPlugin, gst_plugin, G_TYPE_OBJECT);
+G_DEFINE_TYPE (GstPlugin, gst_plugin, GST_TYPE_OBJECT);
 
 static void
 gst_plugin_init (GstPlugin * plugin)
@@ -294,6 +294,8 @@ _gst_plugin_fault_handler_setup (void)
 
 static void _gst_plugin_fault_handler_setup ();
 
+GStaticMutex gst_plugin_loading_mutex = G_STATIC_MUTEX_INIT;
+
 /**
  * gst_plugin_load_file:
  * @filename: the plugin filename to load
@@ -311,13 +313,19 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
   gboolean ret;
   gpointer ptr;
   struct stat file_status;
+  GstRegistry *registry;
 
   g_return_val_if_fail (filename != NULL, NULL);
 
-  plugin = gst_registry_lookup (gst_registry_get_default (), filename);
+  registry = gst_registry_get_default ();
+  g_static_mutex_lock (&gst_plugin_loading_mutex);
+
+  plugin = gst_registry_lookup (registry, filename);
   if (plugin && plugin->module) {
+    g_static_mutex_unlock (&gst_plugin_loading_mutex);
     return plugin;
   }
+
 
   GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING, "attempt to load plugin \"%s\"",
       filename);
@@ -327,7 +335,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
     g_set_error (error,
         GST_PLUGIN_ERROR,
         GST_PLUGIN_ERROR_MODULE, "Dynamic loading not supported");
-    return NULL;
+    goto return_error;
   }
 
   if (stat (filename, &file_status)) {
@@ -336,7 +344,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
         GST_PLUGIN_ERROR,
         GST_PLUGIN_ERROR_MODULE, "Problem accessing file %s: %s\n", filename,
         strerror (errno));
-    return NULL;
+    goto return_error;
   }
 
   module = g_module_open (filename, G_MODULE_BIND_LOCAL);
@@ -345,7 +353,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
         g_module_error ());
     g_set_error (error,
         GST_PLUGIN_ERROR, GST_PLUGIN_ERROR_MODULE, "Opening module failed");
-    return NULL;
+    goto return_error;
   }
 
   plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
@@ -362,8 +370,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
         GST_PLUGIN_ERROR,
         GST_PLUGIN_ERROR_MODULE,
         "Could not find plugin entry point in \"%s\"", filename);
-    g_object_unref (plugin);
-    return NULL;
+    goto return_error;
   }
   plugin->orig_desc = (GstPluginDesc *) ptr;
 
@@ -387,7 +394,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
         GST_PLUGIN_ERROR_MODULE,
         "gst_plugin_register_func failed for plugin \"%s\"", filename);
     g_module_close (module);
-    return NULL;
+    goto return_error;
   }
 
   /* remove signal handler */
@@ -397,7 +404,11 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
 
   gst_default_registry_add_plugin (plugin);
 
+  g_static_mutex_unlock (&gst_plugin_loading_mutex);
   return plugin;
+return_error:
+  g_static_mutex_unlock (&gst_plugin_loading_mutex);
+  return NULL;
 }
 
 static void
@@ -405,20 +416,13 @@ gst_plugin_desc_copy (GstPluginDesc * dest, const GstPluginDesc * src)
 {
   dest->major_version = src->major_version;
   dest->minor_version = src->minor_version;
-  g_free (dest->name);
   dest->name = g_strdup (src->name);
-  g_free (dest->description);
   dest->description = g_strdup (src->description);
   dest->plugin_init = src->plugin_init;
-  g_free (dest->version);
   dest->version = g_strdup (src->version);
-  g_free (dest->license);
   dest->license = g_strdup (src->license);
-  g_free (dest->source);
   dest->source = g_strdup (src->source);
-  g_free (dest->package);
   dest->package = g_strdup (src->package);
-  g_free (dest->origin);
   dest->origin = g_strdup (src->origin);
 }
 
@@ -438,33 +442,6 @@ gst_plugin_desc_free (GstPluginDesc * desc)
   memset (desc, 0, sizeof (GstPluginDesc));
 }
 #endif
-/**
- * gst_plugin_unload_plugin:
- * @plugin: The plugin to unload
- *
- * Unload the given plugin.
- *
- * Returns: whether or not the plugin unloaded
- */
-gboolean
-gst_plugin_unload_plugin (GstPlugin * plugin)
-{
-  g_return_val_if_fail (plugin != NULL, FALSE);
-
-  if (!plugin->module)
-    return TRUE;
-
-  if (g_module_close (plugin->module)) {
-    plugin->module = NULL;
-    GST_CAT_INFO (GST_CAT_PLUGIN_LOADING, "plugin \"%s\" unloaded",
-        plugin->filename);
-    return TRUE;
-  } else {
-    GST_CAT_INFO (GST_CAT_PLUGIN_LOADING, "failed to unload plugin \"%s\"",
-        plugin->filename);
-    return FALSE;
-  }
-}
 
 /**
  * gst_plugin_get_name:
@@ -645,8 +622,16 @@ GList *
 gst_plugin_feature_filter (GstPlugin * plugin,
     GstPluginFeatureFilter filter, gboolean first, gpointer user_data)
 {
-  return gst_filter_run (plugin->features, (GstFilterFunc) filter, first,
+  GList *list;
+  GList *g;
+
+  list = gst_filter_run (plugin->features, (GstFilterFunc) filter, first,
       user_data);
+  for (g = list; g; g = g->next) {
+    gst_object_ref (plugin);
+  }
+
+  return list;
 }
 
 typedef struct
@@ -664,8 +649,7 @@ _feature_filter (GstPlugin * plugin, gpointer user_data)
   GList *result;
   FeatureFilterData *data = (FeatureFilterData *) user_data;
 
-  result =
-      gst_plugin_feature_filter (plugin, data->filter, data->first,
+  result = gst_plugin_feature_filter (plugin, data->filter, data->first,
       data->user_data);
   if (result) {
     data->result = g_list_concat (data->result, result);
@@ -750,7 +734,7 @@ gst_plugin_find_feature (GstPlugin * plugin, const gchar * name, GType type)
   if (walk)
     result = GST_PLUGIN_FEATURE (walk->data);
 
-  g_list_free (walk);
+  gst_plugin_feature_list_free (walk);
 
   return result;
 }
@@ -784,7 +768,7 @@ gst_plugin_find_feature_by_name (GstPlugin * plugin, const gchar * name)
   if (walk)
     result = GST_PLUGIN_FEATURE (walk->data);
 
-  g_list_free (walk);
+  gst_plugin_feature_list_free (walk);
 
   return result;
 }
@@ -801,31 +785,18 @@ gst_plugin_find_feature_by_name (GstPlugin * plugin, const gchar * name)
 void
 gst_plugin_add_feature (GstPlugin * plugin, GstPluginFeature * feature)
 {
-  GstPluginFeature *oldfeature;
-
   /* FIXME 0.9: get reference counting somewhat right in here,
    * GstPluginFeatures should probably be GstObjects that are sinked when
    * adding them to a plugin */
   g_return_if_fail (plugin != NULL);
   g_return_if_fail (GST_IS_PLUGIN_FEATURE (feature));
   g_return_if_fail (feature != NULL);
+  g_return_if_fail (feature->plugin == NULL);
 
-  oldfeature = gst_plugin_find_feature (plugin,
-      GST_PLUGIN_FEATURE_NAME (feature), G_OBJECT_TYPE (feature));
-
-  if (oldfeature == feature) {
-    GST_WARNING ("feature %s has already been added",
-        GST_PLUGIN_FEATURE_NAME (feature));
-    /* g_object_unref (feature); */
-  } else if (oldfeature) {
-    GST_WARNING ("feature %s already present in plugin",
-        GST_PLUGIN_FEATURE_NAME (feature));
-    /* g_object_unref (feature); */
-  } else {
-    feature->plugin = plugin;
-    plugin->features = g_list_prepend (plugin->features, feature);
-    plugin->numfeatures++;
-  }
+  /* gst_object_sink (feature); */
+  feature->plugin = plugin;
+  plugin->features = g_list_prepend (plugin->features, feature);
+  plugin->numfeatures++;
 }
 
 /**
@@ -839,11 +810,20 @@ gst_plugin_add_feature (GstPlugin * plugin, GstPluginFeature * feature)
 GList *
 gst_plugin_get_feature_list (GstPlugin * plugin)
 {
+  GList *list;
+  GList *g;
+
   g_return_val_if_fail (plugin != NULL, NULL);
 
-  return g_list_copy (plugin->features);
+  list = g_list_copy (plugin->features);
+  for (g = list; g; g = g->next) {
+    gst_object_ref (plugin);
+  }
+
+  return list;
 }
 
+/* FIXME is this function necessary? */
 /**
  * gst_plugin_load_1:
  * @name: name of plugin to load
