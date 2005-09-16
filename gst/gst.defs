@@ -4093,12 +4093,6 @@
   (return-type "GList*")
 )
 
-(define-method clear_paths
-  (of-object "GstRegistry")
-  (c-name "gst_registry_clear_paths")
-  (return-type "none")
-)
-
 (define-method add_plugin
   (of-object "GstRegistry")
   (c-name "gst_registry_add_plugin")

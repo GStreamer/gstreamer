@@ -1,3 +1,8 @@
+2005-09-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.defs:
+	  remove a function that went away
+
 2005-09-15  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gst-types.defs: 
