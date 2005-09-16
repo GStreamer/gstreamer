@@ -527,7 +527,6 @@ plugin_init (GstPlugin * plugin)
     if (visual_init (NULL, NULL) != 0)
       return FALSE;
 
-  GST_ERROR ("got here");
   visual_log_set_verboseness (VISUAL_LOG_VERBOSENESS_LOW);
   visual_log_set_info_handler (libvisual_log_handler, (void *) GST_LEVEL_INFO);
   visual_log_set_warning_handler (libvisual_log_handler,
