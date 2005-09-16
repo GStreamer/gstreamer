@@ -936,12 +936,16 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
       } else if (ffmpegdec->context->bit_rate && fmt == GST_FORMAT_BYTES) {
         ffmpegdec->next_ts = start * GST_SECOND / ffmpegdec->context->bit_rate;
         GST_DEBUG_OBJECT (ffmpegdec,
-            "Discont to byte %lld, time %" GST_TIME_FORMAT,
-            start, GST_TIME_ARGS (ffmpegdec->next_ts));
+            "Newsegment in bytes from byte %" G_GINT64_FORMAT
+            " (time %" GST_TIME_FORMAT ") to byte % "G_GINT64_FORMAT
+            " (time %" GST_TIME_FORMAT ")",
+            start, GST_TIME_ARGS (ffmpegdec->next_ts),
+            end,
+            GST_TIME_ARGS (end * GST_SECOND / ffmpegdec->context->bit_rate));
         gst_event_unref (event);
         event = gst_event_new_newsegment (rate, fmt,
             start * GST_SECOND / ffmpegdec->context->bit_rate,
-            end * GST_SECOND / ffmpegdec->context->bit_rate,
+            end == -1 ? -1 : end * GST_SECOND / ffmpegdec->context->bit_rate,
             base * GST_SECOND / ffmpegdec->context->bit_rate);
       } else {
         GST_WARNING_OBJECT (ffmpegdec,
