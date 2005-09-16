@@ -4073,7 +4073,7 @@
   (return-type "GType")
 )
 
-(define-function gst_registry_get_default
+(define-function registry_get_default
   (c-name "gst_registry_get_default")
   (return-type "GstRegistry*")
 )
