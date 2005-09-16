@@ -1,3 +1,10 @@
+2005-09-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/lame/gstlame.c:
+	* ext/lame/gstlame.h:
+	  clean up further so we don't try to set up five times for
+	  a simple pipeline
+
 2005-09-16  Michael Smith <msmith@fluendo.com>
 
 	* gst/iec958/ac3iec.c: (ac3iec_init):
