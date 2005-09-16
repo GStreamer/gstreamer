@@ -70,7 +70,7 @@ static GstStaticPadTemplate ac3iec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-#if 1
+#if 0
     GST_STATIC_CAPS ("audio/x-raw-int, "
         "law = (int) 0, "
         "endianness = (int) " G_STRINGIFY (G_LITTLE_ENDIAN) ", "
@@ -78,7 +78,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "width = (int) 16, "
         "depth = (int) 16, " "rate = (int) 48000, " "channels = (int) 2")
 #endif
-#if 0
+#if 1
     GST_STATIC_CAPS ("audio/x-iec958")
 #endif
     );
@@ -172,12 +172,12 @@ ac3iec_init (AC3IEC * ac3iec)
       gst_pad_new_from_template (gst_static_pad_template_get
       (&ac3iec_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (ac3iec), ac3iec->sink);
+  gst_pad_set_setcaps_function (ac3iec->sink, ac3iec_setcaps);
   gst_pad_set_chain_function (ac3iec->sink, ac3iec_chain_dvd);
 
   ac3iec->src =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&ac3iec_src_template), "src");
-  gst_pad_set_setcaps_function (ac3iec->src, ac3iec_setcaps);
   gst_element_add_pad (GST_ELEMENT (ac3iec), ac3iec->src);
 
   ac3iec->cur_ts = GST_CLOCK_TIME_NONE;
