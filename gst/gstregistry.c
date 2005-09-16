@@ -354,11 +354,12 @@ gst_registry_find_plugin (GstRegistry * registry, const gchar * name)
 
   walk = gst_registry_plugin_filter (registry,
       (GstPluginFilter) gst_plugin_name_filter, TRUE, (gpointer) name);
-  if (walk)
+  if (walk) {
     result = GST_PLUGIN (walk->data);
 
-  gst_object_ref (result);
-  gst_plugin_list_free (walk);
+    gst_object_ref (result);
+    gst_plugin_list_free (walk);
+  }
 
   return result;
 }
@@ -392,11 +393,12 @@ gst_registry_find_feature (GstRegistry * registry, const gchar * name,
       (GstPluginFeatureFilter) gst_plugin_feature_type_name_filter,
       TRUE, &data);
 
-  if (walk)
+  if (walk) {
     feature = GST_PLUGIN_FEATURE (walk->data);
 
-  gst_object_ref (feature->plugin);
-  gst_plugin_feature_list_free (walk);
+    gst_object_ref (feature->plugin);
+    gst_plugin_feature_list_free (walk);
+  }
 
   return feature;
 }

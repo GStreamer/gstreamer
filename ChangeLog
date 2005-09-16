@@ -1,5 +1,11 @@
 2005-09-15  David Schleef  <ds@schleef.org>
 
+	* gst/gstindex.c: get refcounting correct.
+	* gst/gstregistry.c: Handle the case where a feature/plugin is
+	  not found.
+
+2005-09-15  David Schleef  <ds@schleef.org>
+
 	* check/Makefile.am:
 	* check/gst/gstplugin.c: Add test
 	* gst/gstplugin.c: Fix problems noticed by testsuite
