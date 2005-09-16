@@ -2,7 +2,7 @@
 gstringbuffer
 
 <!-- ##### SECTION Short_Description ##### -->
-an implementation of an audio ringbuffer
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -13,9 +13,6 @@ an implementation of an audio ringbuffer
 <para>
 
 </para>
-
-<!-- ##### SECTION Stability_Level ##### -->
-
 
 <!-- ##### STRUCT GstRingBuffer ##### -->
 <para>

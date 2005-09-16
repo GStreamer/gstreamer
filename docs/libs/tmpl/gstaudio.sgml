@@ -2,7 +2,7 @@
 gstaudio
 
 <!-- ##### SECTION Short_Description ##### -->
-a support library for audio elements
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -13,9 +13,6 @@ a support library for audio elements
 <para>
 
 </para>
-
-<!-- ##### SECTION Stability_Level ##### -->
-
 
 <!-- ##### ENUM GstAudioFieldFlag ##### -->
 <para>

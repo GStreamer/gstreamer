@@ -5,7 +5,7 @@
 	(gst_vorbisenc_output_buffers), (gst_vorbisenc_change_state):
 	* ext/vorbis/vorbisenc.h:
 	  Fix EOS handling.  Still needs a fix in the ogg muxer to
-	  mark the last page as eos somehow.
+	  mark the last page as eos.
 
 2005-09-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 

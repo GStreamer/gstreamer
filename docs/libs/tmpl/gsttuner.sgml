@@ -2,7 +2,7 @@
 gsttuner
 
 <!-- ##### SECTION Short_Description ##### -->
-interface for elements that provide tuner operations
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -13,9 +13,6 @@ interface for elements that provide tuner operations
 <para>
 
 </para>
-
-<!-- ##### SECTION Stability_Level ##### -->
-
 
 <!-- ##### STRUCT GstTuner ##### -->
 <para>
@@ -96,8 +93,6 @@ interface for elements that provide tuner operations
 
 @tuner: 
 @norm: 
-<!-- # Unused Parameters # -->
-@channel: 
 
 
 <!-- ##### FUNCTION gst_tuner_set_frequency ##### -->

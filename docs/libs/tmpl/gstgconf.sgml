@@ -2,7 +2,7 @@
 gstgconf
 
 <!-- ##### SECTION Short_Description ##### -->
-gconf default elements support
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -13,7 +13,4 @@ gconf default elements support
 <para>
 
 </para>
-
-<!-- ##### SECTION Stability_Level ##### -->
-
 
