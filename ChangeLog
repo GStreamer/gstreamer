@@ -1,3 +1,9 @@
+2005-09-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
+	* tools/gst-register.1.in:
+	  remove gst-register
+
 2005-09-15  David Schleef  <ds@schleef.org>
 
 	* check/gst/gstplugin.c:
