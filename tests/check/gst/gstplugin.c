@@ -121,7 +121,7 @@ GST_START_TEST (test_find_feature)
       "identity", GST_TYPE_ELEMENT_FACTORY);
   fail_if (feature == NULL, "Failed to find identity element factory");
   fail_if (feature->plugin != plugin,
-      "Expected indentity to be from gstelements plugin");
+      "Expected identity to be from gstelements plugin");
 
   fail_if (plugin->object.refcount != 3,
       "Refcount of plugin in registry+feature should be 3");
@@ -136,6 +136,34 @@ GST_START_TEST (test_find_feature)
 
 GST_END_TEST;
 
+GST_START_TEST (test_find_element)
+{
+  GstPlugin *plugin;
+  GstElementFactory *element_factory;
+
+  plugin = gst_default_registry_find_plugin ("gstelements");
+  fail_if (plugin->object.refcount != 2,
+      "Refcount of plugin in registry should be 2");
+
+  element_factory = gst_element_factory_find ("identity");
+  fail_if (element_factory == NULL, "Failed to find identity element factory");
+  fail_if (GST_PLUGIN_FEATURE (element_factory)->plugin != plugin,
+      "Expected identity to be from gstelements plugin");
+
+  fail_if (plugin->object.refcount != 3,
+      "Refcount of plugin in registry+feature should be 3");
+
+  gst_object_unref (GST_PLUGIN_FEATURE (element_factory)->plugin);
+
+  fail_if (plugin->object.refcount != 2,
+      "Refcount of plugin in after list free should be 2");
+
+  gst_object_unref (plugin);
+}
+
+GST_END_TEST;
+
+#if 0
 guint8 *
 peek (gpointer data, gint64 offset, guint size)
 {
@@ -170,7 +198,7 @@ GST_START_TEST (test_typefind)
       "audio/x-au", GST_TYPE_TYPE_FIND_FACTORY);
   fail_if (feature == NULL, "Failed to find audio/x-aw typefind factory");
   fail_if (feature->plugin != plugin,
-      "Expected indentity to be from gstelements plugin");
+      "Expected identity to be from gstelements plugin");
 
   fail_if (plugin->object.refcount != 3,
       "Refcount of plugin in registry+feature should be 3");
@@ -187,6 +215,7 @@ GST_START_TEST (test_typefind)
 }
 
 GST_END_TEST;
+#endif
 
 Suite *
 gst_plugin_suite (void)
@@ -202,7 +231,8 @@ gst_plugin_suite (void)
   tcase_add_test (tc_chain, test_load_gstelements);
   tcase_add_test (tc_chain, test_registry_get_plugin_list);
   tcase_add_test (tc_chain, test_find_feature);
-  tcase_add_test (tc_chain, test_typefind);
+  tcase_add_test (tc_chain, test_find_element);
+  //tcase_add_test (tc_chain, test_typefind);
 
   return s;
 }

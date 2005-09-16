@@ -235,7 +235,7 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
     GST_DEBUG ("Replacing existing plugin %p for filename \"%s\"",
         existing_plugin, plugin->filename);
     registry->plugins = g_list_remove (registry->plugins, existing_plugin);
-    gst_object_unref (existing_plugin);
+    //gst_object_unref (existing_plugin);
   }
 
   GST_DEBUG ("Adding plugin %p for filename \"%s\"", plugin, plugin->filename);
@@ -268,7 +268,7 @@ gst_registry_remove_plugin (GstRegistry * registry, GstPlugin * plugin)
   GST_LOCK (registry);
   registry->plugins = g_list_remove (registry->plugins, plugin);
   GST_UNLOCK (registry);
-  gst_object_unref (plugin);
+  //gst_object_unref (plugin);
 }
 
 /**
@@ -565,7 +565,7 @@ _gst_registry_remove_cache_plugins (GstRegistry * registry)
     plugin = g->data;
     if (plugin->flags & GST_PLUGIN_FLAG_CACHED) {
       registry->plugins = g_list_remove (registry->plugins, plugin);
-      gst_object_unref (plugin);
+      //gst_object_unref (plugin);
     }
     g = g_next;
   }

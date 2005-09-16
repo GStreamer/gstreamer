@@ -89,11 +89,25 @@ gst_plugin_init (GstPlugin * plugin)
 }
 
 static void
+gst_plugin_finalize (GstPlugin * plugin)
+{
+  GstRegistry *registry = gst_registry_get_default ();
+  GList *g;
+
+  GST_ERROR ("finalizing plugin %p", plugin);
+  for (g = registry->plugins; g; g = g->next) {
+    if (g->data == (gpointer) plugin) {
+      g_warning ("removing plugin that is still in registry");
+    }
+  }
+}
+
+static void
 gst_plugin_class_init (GstPluginClass * klass)
 {
 
+  G_OBJECT_CLASS (klass)->finalize = (GObjectFinalizeFunc) gst_plugin_finalize;
 }
-
 
 GQuark
 gst_plugin_error_quark (void)
@@ -732,10 +746,12 @@ gst_plugin_find_feature (GstPlugin * plugin, const gchar * name, GType type)
   walk = gst_filter_run (plugin->features,
       (GstFilterFunc) gst_plugin_feature_type_name_filter, TRUE, &data);
 
-  if (walk)
+  if (walk) {
     result = GST_PLUGIN_FEATURE (walk->data);
 
-  gst_plugin_feature_list_free (walk);
+    gst_object_ref (result->plugin);
+    gst_plugin_feature_list_free (walk);
+  }
 
   return result;
 }
@@ -766,10 +782,12 @@ gst_plugin_find_feature_by_name (GstPlugin * plugin, const gchar * name)
   walk = gst_filter_run (plugin->features,
       (GstFilterFunc) gst_plugin_feature_name_filter, TRUE, (void *) name);
 
-  if (walk)
+  if (walk) {
     result = GST_PLUGIN_FEATURE (walk->data);
 
-  gst_plugin_feature_list_free (walk);
+    gst_object_ref (result->plugin);
+    gst_plugin_feature_list_free (walk);
+  }
 
   return result;
 }
@@ -872,11 +890,12 @@ gst_plugin_load (GstPlugin * plugin)
   if (newplugin == NULL) {
     GST_WARNING ("load_plugin error: %s\n", error->message);
     g_error_free (error);
-    gst_object_unref (plugin);
+    //gst_object_unref (plugin);
     return NULL;
   }
 
-  gst_object_unref (plugin);
+  /* FIXME hack to keep plugins from disappearing */
+  //gst_object_unref (plugin);
 
   return newplugin;
 }
@@ -887,7 +906,7 @@ gst_plugin_list_free (GList * list)
   GList *g;
 
   for (g = list; g; g = g->next) {
-    gst_object_unref (GST_PLUGIN (g->data));
+    //gst_object_unref (GST_PLUGIN(g->data));
   }
   g_list_free (list);
 }

@@ -82,9 +82,8 @@ gst_plugin_feature_load (GstPluginFeature * feature)
     g_critical
         ("Loaded plugin containing feature '%s', but feature disappeared.",
         feature->name);
-    return NULL;
   }
-
+  //gst_object_unref (feature->plugin);
   return real_feature;
 }
 
@@ -172,12 +171,14 @@ gst_plugin_feature_get_rank (GstPluginFeature * feature)
 void
 gst_plugin_feature_list_free (GList * list)
 {
+#if 0
   GList *g;
 
   for (g = list; g; g = g->next) {
     GstPluginFeature *feature = GST_PLUGIN_FEATURE (g->data);
 
-    gst_object_unref (feature->plugin);
+    //gst_object_unref (feature->plugin);
   }
+#endif
   g_list_free (list);
 }

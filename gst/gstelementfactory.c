@@ -345,11 +345,13 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
   else
     GST_INFO ("creating \"%s\"", GST_PLUGIN_FEATURE_NAME (factory));
 
+#if 0
   if (factory->type == 0) {
     g_critical ("Plugin didn't set object type in feature.");
 
     return NULL;
   }
+#endif
 
   oclass = GST_ELEMENT_CLASS (g_type_class_ref (factory->type));
   if (oclass->elementfactory == NULL)

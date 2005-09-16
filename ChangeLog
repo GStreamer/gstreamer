@@ -1,5 +1,16 @@
 2005-09-15  David Schleef  <ds@schleef.org>
 
+	* check/gst/gstplugin.c:
+	* gst/gstelementfactory.c:
+	* gst/gstplugin.c:
+	* gst/gstpluginfeature.c:
+	* gst/gstregistry.c:
+	  Getting tired of debugging.  Disabled all the unreffing of
+	  plugins and features, which fixes the segfaults, but of
+	  course leaks like crazy.  At least playbin works.
+
+2005-09-15  David Schleef  <ds@schleef.org>
+
 	* check/gst/gstplugin.c: (register_check_elements),
 	(GST_START_TEST), (peek), (suggest), (gst_plugin_suite):
 	More testing
