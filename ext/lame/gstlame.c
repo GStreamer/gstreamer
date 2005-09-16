@@ -1,5 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) <2004> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2005> Thomas Vander Stichele <thomas at apestaart dot org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -416,97 +418,6 @@ gst_lame_class_init (GstLameClass * klass)
   gstelement_class->change_state = gst_lame_change_state;
 }
 
-static GstCaps *
-gst_lame_src_getcaps (GstPad * pad)
-{
-  GstLame *lame;
-  GstCaps *caps;
-
-  lame = GST_LAME (gst_pad_get_parent (pad));
-
-  if (!gst_lame_setup (lame)) {
-    GST_DEBUG_OBJECT (lame, "problem doing lame setup");
-    caps =
-        gst_caps_copy (gst_pad_template_get_caps (gst_static_pad_template_get
-            (&gst_lame_src_template)));
-  } else {
-    caps = gst_caps_new_simple ("audio/mpeg",
-        "mpegversion", G_TYPE_INT, 1,
-        "layer", G_TYPE_INT, 3,
-        "rate", G_TYPE_INT, lame_get_out_samplerate (lame->lgf),
-        "channels", G_TYPE_INT, lame->num_channels, NULL);
-  }
-
-  gst_object_unref (lame);
-
-  return caps;
-}
-
-#if 0
-static gboolean
-gst_lame_src_setcaps (GstPad * pad, GstCaps * caps)
-{
-  GstLame *lame;
-  gint out_samplerate;
-  GstStructure *structure;
-  GstCaps *othercaps, *channelcaps;
-  GstPadLinkReturn result;
-
-  lame = GST_LAME (GST_PAD_PARENT (pad));
-  structure = gst_caps_get_structure (caps, 0);
-
-  /* we need channels and rate */
-  if (!gst_structure_get_int (structure, "rate", &out_samplerate));
-  goto no_rate;
-  if (!gst_structure_get_int (structure, "channels", &lame->num_channels));
-  goto no_channels;
-
-  if (lame_set_out_samplerate (lame->lgf, out_samplerate) != 0)
-    goto could_not_set_samplerate;
-
-  /* we don't do channel conversion */
-  channelcaps = gst_caps_new_simple ("audio/x-raw-int", "channels", G_TYPE_INT,
-      lame->num_channels, NULL);
-  othercaps = gst_caps_intersect (gst_pad_get_pad_template_caps (lame->sinkpad),
-      channelcaps);
-  gst_caps_free (channelcaps);
-
-  result = gst_pad_try_set_caps_nonfixed (lame->sinkpad, othercaps);
-
-  if (GST_PAD_LINK_FAILED (result))
-    return result;
-
-  caps = gst_pad_get_negotiated_caps (lame->sinkpad);
-  structure = gst_caps_get_structure (caps, 0);
-  if (!gst_structure_get_int (structure, "rate", &lame->samplerate))
-    g_return_val_if_reached (GST_PAD_LINK_REFUSED);
-
-  if (!gst_lame_setup (lame)) {
-    GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
-        ("could not initialize encoder (wrong parameters?)"));
-    return GST_PAD_LINK_REFUSED;
-  }
-
-  return result;
-
-no_rate:
-  {
-    GST_DEBUG ("no rate specified in caps");
-    return FALSE;
-  }
-no_channels:
-  {
-    GST_DEBUG ("no channels specified in caps");
-    return FALSE;
-  }
-could_not_set_samplerate:
-  {
-    GST_DEBUG ("could not set samplerate");
-    return FALSE;
-  }
-}
-#endif
-
 static gboolean
 gst_lame_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
@@ -523,12 +434,15 @@ gst_lame_sink_setcaps (GstPad * pad, GstCaps * caps)
   if (!gst_structure_get_int (structure, "channels", &lame->num_channels))
     goto no_channels;
 
-  /* let lame choose a default samplerate */
-  lame_set_out_samplerate (lame->lgf, 0);
+  GST_DEBUG_OBJECT (lame, "sink_setcaps, setting up lame");
   if (!gst_lame_setup (lame))
     goto setup_failed;
 
+
   out_samplerate = lame_get_out_samplerate (lame->lgf);
+  if (out_samplerate == 0)
+    goto zero_output_rate;
+
   othercaps =
       gst_caps_new_simple ("audio/mpeg",
       "mpegversion", G_TYPE_INT, 1,
@@ -552,6 +466,12 @@ no_channels:
   {
     GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
         ("no channels specified in input"));
+    return FALSE;
+  }
+zero_output_rate:
+  {
+    GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
+        ("lame decided on a zero sample rate"));
     return FALSE;
   }
 setup_failed:
@@ -578,19 +498,22 @@ gst_lame_init (GstLame * lame)
   lame->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_lame_src_template), "src");
-  gst_pad_set_getcaps_function (lame->srcpad, gst_lame_src_getcaps);
   gst_element_add_pad (GST_ELEMENT (lame), lame->srcpad);
 
-  GST_DEBUG ("setting up lame encoder");
+  /* create an encoder state so we can ask about defaults */
   lame->lgf = lame_init ();
 
   lame->samplerate = 44100;
   lame->num_channels = 2;
-  lame->initialized = FALSE;
+  lame->setup = FALSE;
 
-  lame->bitrate = 128;          /* lame_get_brate (lame->lgf); => 0/out of range */
-  lame->compression_ratio = 0.0;        /* lame_get_compression_ratio (lame->lgf); => 0/out of range ... NOTE: 0.0 makes bitrate take precedence */
-  lame->quality = 5;            /* lame_get_quality (lame->lgf); => -1/out of range */
+  lame->bitrate = 128;          /* lame_get_brate (lame->lgf);
+                                 * => 0/out of range */
+  lame->compression_ratio = 0.0;        /* lame_get_compression_ratio (lame->lgf);
+                                         * => 0/out of range ...
+                                         * NOTE: 0.0 makes bitrate take precedence */
+  lame->quality = 5;            /* lame_get_quality (lame->lgf);
+                                 * => -1/out of range */
   lame->mode = lame_get_mode (lame->lgf);
   lame->force_ms = lame_get_force_ms (lame->lgf);
   lame->free_format = lame_get_free_format (lame->lgf);
@@ -605,13 +528,17 @@ gst_lame_init (GstLame * lame)
   lame->vbr_quality = 5;
   lame->vbr_mean_bitrate = lame_get_VBR_mean_bitrate_kbps (lame->lgf);
   lame->vbr_min_bitrate = lame_get_VBR_min_bitrate_kbps (lame->lgf);
-  lame->vbr_max_bitrate = 320;  /* lame_get_VBR_max_bitrate_kbps (lame->lgf); => 0/no vbr possible */
+  lame->vbr_max_bitrate = 320;  /* lame_get_VBR_max_bitrate_kbps (lame->lgf);
+                                 * => 0/no vbr possible */
   lame->vbr_hard_min = lame_get_VBR_hard_min (lame->lgf);
-  //lame->lowpass_freq = 50000;   /* lame_get_lowpassfreq (lame->lgf); => 0/lowpass on everything ? */
+  /* lame->lowpass_freq = 50000;    lame_get_lowpassfreq (lame->lgf);
+   * => 0/lowpass on everything ? */
   lame->lowpass_freq = 0;
-  lame->lowpass_width = 0;      /* lame_get_lowpasswidth (lame->lgf); => -1/out of range */
+  lame->lowpass_width = 0;      /* lame_get_lowpasswidth (lame->lgf);
+                                 * => -1/out of range */
   lame->highpass_freq = lame_get_highpassfreq (lame->lgf);
-  lame->highpass_width = 0;     /* lame_get_highpasswidth (lame->lgf); => -1/out of range */
+  lame->highpass_width = 0;     /* lame_get_highpasswidth (lame->lgf);
+                                 * => -1/out of range */
   lame->ath_only = lame_get_ATHonly (lame->lgf);
   lame->ath_short = lame_get_ATHshort (lame->lgf);
   lame->no_ath = lame_get_noATH (lame->lgf);
@@ -623,9 +550,8 @@ gst_lame_init (GstLame * lame)
   lame->emphasis = lame_get_emphasis (lame->lgf);
   lame->xingheader = FALSE;
   lame->preset = 0;
-  lame->tags = gst_tag_list_new ();
-
-  id3tag_init (lame->lgf);
+  lame_close (lame->lgf);
+  lame->lgf = NULL;
 
   GST_DEBUG_OBJECT (lame, "done initializing");
 }
@@ -668,7 +594,8 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
   }
 
   if (tag_matches[i].tag_func == NULL) {
-    g_print ("Couldn't find matching gstreamer tag for %s\n", tag);
+    GST_WARNING_OBJECT (lame,
+        "Couldn't find matching gstreamer tag for \"%s\"", tag);
     return;
   }
 
@@ -677,7 +604,7 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
       guint ivalue;
 
       if (!gst_tag_list_get_uint (list, tag, &ivalue)) {
-        GST_DEBUG ("Error reading \"%s\" tag value\n", tag);
+        GST_WARNING_OBJECT (lame, "Error reading \"%s\" tag value", tag);
         return;
       }
       value = g_strdup_printf ("%u", ivalue);
@@ -685,12 +612,12 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
     }
     case G_TYPE_STRING:
       if (!gst_tag_list_get_string (list, tag, &value)) {
-        GST_DEBUG ("Error reading \"%s\" tag value\n", tag);
+        GST_WARNING_OBJECT (lame, "Error reading \"%s\" tag value", tag);
         return;
       };
       break;
     default:
-      GST_DEBUG ("Couldn't write tag %s", tag);
+      GST_WARNING_OBJECT (lame, "Couldn't write tag %s", tag);
       break;
   }
 
@@ -708,6 +635,7 @@ gst_lame_set_metadata (GstLame * lame)
   GstTagList *copy;
 
   g_return_if_fail (lame != NULL);
+
   user_tags = gst_tag_setter_get_list (GST_TAG_SETTER (lame));
   if ((lame->tags == NULL) && (user_tags == NULL)) {
     return;
@@ -1031,8 +959,8 @@ gst_lame_chain (GstPad * pad, GstBuffer * buf)
 
   GST_LOG_OBJECT (lame, "entered chain");
 
-  if (!lame->initialized)
-    goto not_initialized;
+  if (!lame->setup)
+    goto not_setup;
 
   num_samples = GST_BUFFER_SIZE (buf) / 2;
 
@@ -1102,7 +1030,7 @@ gst_lame_chain (GstPad * pad, GstBuffer * buf)
   return result;
 
   /* ERRORS */
-not_initialized:
+not_setup:
   {
     gst_buffer_unref (buf);
     GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
@@ -1112,7 +1040,7 @@ not_initialized:
   }
 }
 
-/* transition to the READY state by configuring the gst_lame encoder */
+/* set up the encoder state */
 static gboolean
 gst_lame_setup (GstLame * lame)
 {
@@ -1126,13 +1054,19 @@ gst_lame_setup (GstLame * lame)
 
   GST_DEBUG_OBJECT (lame, "starting setup");
 
-  /* check if we're already initialized; if we are, we might want to check
+  /* check if we're already setup; if we are, we might want to check
    * if this initialization is compatible with the previous one */
   /* FIXME: do this */
-  if (lame->initialized) {
-    GST_WARNING_OBJECT (lame, "already initialized");
-    lame->initialized = FALSE;
+  if (lame->setup) {
+    GST_WARNING_OBJECT (lame, "already setup");
+    lame->setup = FALSE;
   }
+
+  lame->lgf = lame_init ();
+  id3tag_init (lame->lgf);
+
+  /* let lame choose a default samplerate */
+  lame_set_out_samplerate (lame->lgf, 0);
 
   /* copy the parameters over */
   lame_set_in_samplerate (lame->lgf, lame->samplerate);
@@ -1186,9 +1120,9 @@ gst_lame_setup (GstLame * lame)
 
   /* initialize the lame encoder */
   if ((retval = lame_init_params (lame->lgf)) >= 0) {
-    lame->initialized = TRUE;
+    lame->setup = TRUE;
     /* FIXME: it would be nice to print out the mode here */
-    GST_INFO ("lame encoder initialized (%d kbit/s, %d Hz, %d channels)",
+    GST_INFO ("lame encoder setup (%d kbit/s, %d Hz, %d channels)",
         lame->bitrate, lame->samplerate, lame->num_channels);
   } else {
     GST_ERROR_OBJECT (lame, "lame_init_params returned %d", retval);
@@ -1196,7 +1130,7 @@ gst_lame_setup (GstLame * lame)
 
   GST_DEBUG_OBJECT (lame, "done with setup");
 
-  return lame->initialized;
+  return lame->setup;
 #undef CHECK_ERROR
 }
 
@@ -1210,6 +1144,8 @@ gst_lame_change_state (GstElement * element, GstStateChange transition)
 
 
   switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      lame->tags = gst_tag_list_new ();
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       lame->last_ts = GST_CLOCK_TIME_NONE;
       break;
@@ -1221,12 +1157,8 @@ gst_lame_change_state (GstElement * element, GstStateChange transition)
   result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (lame->initialized) {
-        lame_close (lame->lgf);
-        lame->lgf = lame_init ();
-        lame->initialized = FALSE;
-      }
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_tag_list_free (lame->tags);
       break;
     default:
       break;
