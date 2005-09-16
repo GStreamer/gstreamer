@@ -632,7 +632,7 @@ gst_type_find_element_chain (GstPad * pad, GstBuffer * buffer)
               g_list_prepend (typefind->possibilities, entry);
           all_factories = g_list_next (all_factories);
         }
-        g_list_free (all_factories);
+        gst_plugin_feature_list_free (all_factories);
       }
 
       /* call every typefind function once */

@@ -70,9 +70,9 @@ GType           gst_type_find_factory_get_type		(void);
     
 GList *		gst_type_find_factory_get_list		(void);
 
-gchar **	gst_type_find_factory_get_extensions	(const GstTypeFindFactory *factory);
-const GstCaps *	gst_type_find_factory_get_caps	  	(const GstTypeFindFactory *factory);
-void		gst_type_find_factory_call_function	(const GstTypeFindFactory *factory,
+gchar **	gst_type_find_factory_get_extensions	(GstTypeFindFactory *factory);
+GstCaps *	gst_type_find_factory_get_caps	  	(GstTypeFindFactory *factory);
+void		gst_type_find_factory_call_function	(GstTypeFindFactory *factory,
 							 GstTypeFind *find);
 
 G_END_DECLS

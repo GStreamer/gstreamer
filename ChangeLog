@@ -1,5 +1,15 @@
 2005-09-15  David Schleef  <ds@schleef.org>
 
+	* check/gst/gstplugin.c: (register_check_elements),
+	(GST_START_TEST), (peek), (suggest), (gst_plugin_suite):
+	More testing
+	* gst/elements/gsttypefindelement.c: Fix refcounting.
+	* gst/gsttypefind.c:
+	* gst/gsttypefindfactory.c:
+	* gst/gsttypefindfactory.h:
+
+2005-09-15  David Schleef  <ds@schleef.org>
+
 	* gst/gstindex.c: get refcounting correct.
 	* gst/gstregistry.c: Handle the case where a feature/plugin is
 	  not found.

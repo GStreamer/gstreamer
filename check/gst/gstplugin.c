@@ -136,6 +136,58 @@ GST_START_TEST (test_find_feature)
 
 GST_END_TEST;
 
+guint8 *
+peek (gpointer data, gint64 offset, guint size)
+{
+  return NULL;
+}
+
+void
+suggest (gpointer data, guint probability, const GstCaps * caps)
+{
+
+}
+
+GST_START_TEST (test_typefind)
+{
+  GstPlugin *plugin;
+  GstPluginFeature *feature;
+  GstTypeFind typefind = {
+    peek,
+    suggest,
+    NULL,
+    NULL,
+    GST_PADDING_INIT
+  };
+
+  plugin = gst_default_registry_find_plugin ("typefindfunctions");
+  fail_if (plugin == NULL, "Failed to find typefind functions");
+  fail_if (plugin->object.refcount != 2,
+      "Refcount of plugin in registry should be 2");
+  fail_if (gst_plugin_is_loaded (plugin), "Expected plugin to be unloaded");
+
+  feature = gst_registry_find_feature (gst_registry_get_default (),
+      "audio/x-au", GST_TYPE_TYPE_FIND_FACTORY);
+  fail_if (feature == NULL, "Failed to find audio/x-aw typefind factory");
+  fail_if (feature->plugin != plugin,
+      "Expected indentity to be from gstelements plugin");
+
+  fail_if (plugin->object.refcount != 3,
+      "Refcount of plugin in registry+feature should be 3");
+
+  gst_type_find_factory_call_function (GST_TYPE_FIND_FACTORY (feature),
+      &typefind);
+
+  gst_object_unref (feature->plugin);
+
+  fail_if (plugin->object.refcount != 1,
+      "Refcount of plugin in after list free should be 1");
+
+  gst_object_unref (plugin);
+}
+
+GST_END_TEST;
+
 Suite *
 gst_plugin_suite (void)
 {
@@ -150,6 +202,7 @@ gst_plugin_suite (void)
   tcase_add_test (tc_chain, test_load_gstelements);
   tcase_add_test (tc_chain, test_registry_get_plugin_list);
   tcase_add_test (tc_chain, test_find_feature);
+  tcase_add_test (tc_chain, test_typefind);
 
   return s;
 }

@@ -62,18 +62,12 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
   g_return_val_if_fail (func != NULL, FALSE);
 
   GST_INFO ("registering typefind function for %s", name);
-  factory =
-      GST_TYPE_FIND_FACTORY (gst_registry_find_feature (gst_registry_get_default
-          (), name, GST_TYPE_TYPE_FIND_FACTORY));
-  if (!factory) {
-    factory = g_object_new (GST_TYPE_TYPE_FIND_FACTORY, NULL);
-    GST_DEBUG_OBJECT (factory, "using new typefind factory for %s", name);
-    g_assert (GST_IS_TYPE_FIND_FACTORY (factory));
-    gst_plugin_feature_set_name (GST_PLUGIN_FEATURE (factory), name);
-    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-  } else {
-    GST_DEBUG_OBJECT (factory, "using old typefind factory for %s", name);
-  }
+
+  factory = g_object_new (GST_TYPE_TYPE_FIND_FACTORY, NULL);
+  GST_DEBUG_OBJECT (factory, "using new typefind factory for %s", name);
+  g_assert (GST_IS_TYPE_FIND_FACTORY (factory));
+  gst_plugin_feature_set_name (GST_PLUGIN_FEATURE (factory), name);
+  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
   gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE (factory), rank);
   if (factory->extensions)

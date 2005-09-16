@@ -92,8 +92,6 @@ static void gst_type_find_factory_init (GTypeInstance * instance,
     gpointer g_class);
 static void gst_type_find_factory_dispose (GObject * object);
 
-static void gst_type_find_load_plugin (GstTypeFind * find, gpointer data);
-
 static GstPluginFeatureClass *parent_class = NULL;
 
 GType
@@ -123,6 +121,7 @@ gst_type_find_factory_get_type (void)
 
   return typefind_type;
 }
+
 static void
 gst_type_find_factory_class_init (gpointer g_class, gpointer class_data)
 {
@@ -132,14 +131,15 @@ gst_type_find_factory_class_init (gpointer g_class, gpointer class_data)
 
   object_class->dispose = gst_type_find_factory_dispose;
 }
+
 static void
 gst_type_find_factory_init (GTypeInstance * instance, gpointer g_class)
 {
   GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (instance);
 
   factory->user_data = factory;
-  factory->function = gst_type_find_load_plugin;
 }
+
 static void
 gst_type_find_factory_dispose (GObject * object)
 {
@@ -152,28 +152,6 @@ gst_type_find_factory_dispose (GObject * object)
   if (factory->extensions) {
     g_strfreev (factory->extensions);
     factory->extensions = NULL;
-  }
-}
-static void
-gst_type_find_load_plugin (GstTypeFind * find, gpointer data)
-{
-  GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (data);
-
-  GST_DEBUG_OBJECT (factory, "need to load typefind function %s",
-      GST_PLUGIN_FEATURE_NAME (factory));
-
-  factory =
-      GST_TYPE_FIND_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
-          (factory)));
-  if (factory) {
-    if (factory->function == gst_type_find_load_plugin) {
-      /* looks like we didn't get a real typefind function */
-      g_warning ("could not load valid typefind function for feature '%s'\n",
-          GST_PLUGIN_FEATURE_NAME (factory));
-    } else {
-      g_assert (factory->function);
-      gst_type_find_factory_call_function (factory, find);
-    }
   }
 }
 
@@ -200,8 +178,8 @@ gst_type_find_factory_get_list (void)
  *
  * Returns: the #GstCaps associated with this factory
  */
-const GstCaps *
-gst_type_find_factory_get_caps (const GstTypeFindFactory * factory)
+GstCaps *
+gst_type_find_factory_get_caps (GstTypeFindFactory * factory)
 {
   g_return_val_if_fail (GST_IS_TYPE_FIND_FACTORY (factory), NULL);
 
@@ -220,7 +198,7 @@ gst_type_find_factory_get_caps (const GstTypeFindFactory * factory)
  * Returns: a NULL-terminated array of extensions associated with this factory
  */
 gchar **
-gst_type_find_factory_get_extensions (const GstTypeFindFactory * factory)
+gst_type_find_factory_get_extensions (GstTypeFindFactory * factory)
 {
   g_return_val_if_fail (GST_IS_TYPE_FIND_FACTORY (factory), NULL);
 
@@ -236,16 +214,27 @@ gst_type_find_factory_get_extensions (const GstTypeFindFactory * factory)
  * Calls the typefinding function associated with this factory.
  */
 void
-gst_type_find_factory_call_function (const GstTypeFindFactory * factory,
+gst_type_find_factory_call_function (GstTypeFindFactory * factory,
     GstTypeFind * find)
 {
+  GstTypeFindFactory *new_factory;
+
   g_return_if_fail (GST_IS_TYPE_FIND_FACTORY (factory));
   g_return_if_fail (find != NULL);
   g_return_if_fail (find->peek != NULL);
   g_return_if_fail (find->suggest != NULL);
 
-  /* should never happen */
-  g_assert (factory->function != NULL);
+  /* gst_plugin_feature_load will steal our ref */
+  gst_object_ref (factory->feature.plugin);
+  new_factory =
+      GST_TYPE_FIND_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
+          (factory)));
+  if (new_factory) {
+    g_assert (new_factory->function != NULL);
 
-  factory->function (find, factory->user_data);
+    new_factory->function (find, new_factory->user_data);
+    /* FIXME hack.  somehow, this refcount gets destroyed */
+    gst_object_ref (new_factory->feature.plugin);
+    //gst_object_unref (new_factory->feature.plugin);
+  }
 }
