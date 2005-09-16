@@ -90,7 +90,7 @@ struct _GstBaseSrc {
   gint64	 segment_start;	/* start and end positions for seeking */
   gint64	 segment_end;
   gboolean	 segment_loop;
-  gboolean 	 need_discont;
+  gboolean	 need_discont;
 
   guint64	 offset;	/* current offset in the resource */
   guint64        size;		/* total size of the resource */
@@ -150,7 +150,7 @@ struct _GstBaseSrcClass {
   gpointer       _gst_reserved[GST_PADDING];
 };
 
-GType gst_base_src_get_type(void);
+GType gst_base_src_get_type (void);
 
 void		gst_base_src_set_live	(GstBaseSrc *src, gboolean live);
 gboolean	gst_base_src_is_live	(GstBaseSrc *src);
