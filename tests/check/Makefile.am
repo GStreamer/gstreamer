@@ -15,12 +15,7 @@ CLEANFILES = core.* test-registry.xml
 
 clean-local: clean-local-check
 
-$(CHECK_REGISTRY):
-	$(TESTS_ENVIRONMENT)					\
-	$(GST_TOOLS_DIR)/gst-register-@GST_MAJORMINOR@
-
-TESTS = $(GST_TOOLS_DIR)/gst-register-@GST_MAJORMINOR@		\
-	$(check_PROGRAMS)
+TESTS = $(check_PROGRAMS)
 
 check_PROGRAMS = \
 	elements/level
@@ -32,7 +27,6 @@ AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS)
 LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
 
 # valgrind testing
-VALGRIND_TESTS_DISABLE = 			\
-	$(GST_TOOLS_DIR)/gst-register-@GST_MAJORMINOR@
+VALGRIND_TESTS_DISABLE =
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp
