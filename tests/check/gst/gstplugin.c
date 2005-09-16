@@ -57,7 +57,8 @@ GST_START_TEST (test_register_static)
   gst_object_unref (plugin);
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 GST_START_TEST (test_load_gstelements)
 {
   GstPlugin *unloaded_plugin;
@@ -81,7 +82,8 @@ GST_START_TEST (test_load_gstelements)
   gst_object_unref (loaded_plugin);
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 GST_START_TEST (test_registry_get_plugin_list)
 {
   GList *list;
@@ -104,7 +106,8 @@ GST_START_TEST (test_registry_get_plugin_list)
   gst_object_unref (plugin);
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 GST_START_TEST (test_find_feature)
 {
   GstPlugin *plugin;
@@ -130,7 +133,11 @@ GST_START_TEST (test_find_feature)
 
   gst_object_unref (plugin);
 }
-GST_END_TEST Suite * gst_plugin_suite (void)
+
+GST_END_TEST;
+
+Suite *
+gst_plugin_suite (void)
 {
   Suite *s = suite_create ("GstPlugin");
   TCase *tc_chain = tcase_create ("general");
@@ -158,7 +165,7 @@ main (int argc, char **argv)
 
   gst_check_init (&argc, &argv);
 
-  srunner_run_all (sr, CK_VERBOSE);
+  srunner_run_all (sr, CK_NORMAL);
   nf = srunner_ntests_failed (sr);
   srunner_free (sr);
 
