@@ -251,6 +251,20 @@ GST_START_TEST (test_int_conversion)
         in, get_int_caps (1, "BYTE_ORDER", 8, 8, FALSE)
         );
   }
+
+  /* 8 <-> 24 signed */
+  /* NOTE: if audioconvert was doing dithering we'd have a problem */
+  {
+    gint8 in[] = { 0, 1, 127 };
+    guint8 out[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x7f };
+
+    RUN_CONVERSION (in, get_int_caps (1, "BYTE_ORDER", 8, 8, TRUE),
+        out, get_int_caps (1, "BYTE_ORDER", 24, 24, TRUE)
+        );
+    RUN_CONVERSION (out, get_int_caps (1, "BYTE_ORDER", 24, 24, TRUE),
+        in, get_int_caps (1, "BYTE_ORDER", 8, 8, TRUE)
+        );
+  }
 }
 
 GST_END_TEST;
