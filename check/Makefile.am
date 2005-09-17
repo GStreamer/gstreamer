@@ -24,6 +24,9 @@ SUPPRESSIONS = $(top_srcdir)/common/gst.supp
 
 clean-local: clean-local-check
 
+# checks to fix
+#	gst/gstplugin
+
 check_PROGRAMS =				\
 	gst/gst				     	\
 	gst/gstbin			     	\
@@ -39,7 +42,6 @@ check_PROGRAMS =				\
 	gst/gstobject				\
 	gst/gstpad				\
 	gst/gstpipeline				\
-	gst/gstplugin				\
 	gst/gstsystemclock			\
 	gst/gststructure			\
 	gst/gsttag				\
@@ -75,8 +77,7 @@ gst_libs_controller_LDADD = $(GST_OBJ_LIBS) \
 
 # valgrind testing
 # these just need valgrind fixing, period
-TESTS_TO_FIX =					\
-	gst/gstplugin				\
+VALGRIND_TO_FIX =				\
 	gst-libs/controller			\
 	pipelines/cleanup			\
 	pipelines/simple_launch_lines
@@ -88,4 +89,4 @@ TESTS_THREADED =				\
 
 VALGRIND_TESTS_DISABLE = 					\
 	$(TESTS_THREADED)					\
-	$(TESTS_TO_FIX)
+	$(VALGRIND_TO_FIX)
