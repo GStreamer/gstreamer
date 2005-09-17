@@ -120,3 +120,6 @@ test-coverage-report.html:
 check-coverage:
 	echo "Need to reconfigure with --enable-gcov"
 endif
+
+check-valgrind:
+	cd check && make check-valgrind
