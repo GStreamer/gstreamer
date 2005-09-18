@@ -1,3 +1,9 @@
+2005-09-18  David Schleef  <ds@schleef.org>
+
+	* gst/playback/gstdecodebin.c: free plugin list correctly
+	* gst/playback/gstplaybin.c: emit warning if autovideosink
+	  and autoaudiosink can't be found (instead of segfaulting)
+
 2005-09-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/elements/audioconvert.c: (GST_START_TEST):
