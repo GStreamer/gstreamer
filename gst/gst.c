@@ -719,6 +719,7 @@ init_post (void)
       for (i = 0; list[i]; i++) {
         gst_registry_scan_path (default_registry, list[i]);
       }
+      g_strfreev (list);
     }
 
     plugin_path = g_getenv ("GST_PLUGIN_PATH");

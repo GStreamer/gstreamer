@@ -1,5 +1,13 @@
 2005-09-18  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* common/check.mak:
+	  use GST_PLUGIN settings for valgrind tests as well, so we're
+	  valgrinding the correct thing
+	* gst/gst.c: (init_post):
+	  plug another leak
+
+2005-09-18  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gst.c: (init_post), (gst_deinit):
 	* gst/gstelementfactory.c: (gst_element_factory_class_init),
 	(gst_element_factory_finalize), (gst_element_factory_cleanup):
