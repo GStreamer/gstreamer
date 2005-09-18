@@ -76,6 +76,9 @@ GST_DEBUG_CATEGORY_STATIC (element_factory_debug);
 
 static void gst_element_factory_class_init (GstElementFactoryClass * klass);
 static void gst_element_factory_init (GstElementFactory * factory);
+static void gst_element_factory_finalize (GObject * object);
+void __gst_element_details_clear (GstElementDetails * dp);
+static void gst_element_factory_cleanup (GstElementFactory * factory);
 
 static GstPluginFeatureClass *parent_class = NULL;
 
@@ -121,7 +124,9 @@ gst_element_factory_class_init (GstElementFactoryClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_element_factory_finalize);
 }
+
 static void
 gst_element_factory_init (GstElementFactory * factory)
 {
@@ -132,6 +137,15 @@ gst_element_factory_init (GstElementFactory * factory)
   factory->uri_protocols = NULL;
 
   factory->interfaces = NULL;
+}
+
+static void
+gst_element_factory_finalize (GObject * object)
+{
+  GstElementFactory *factory = GST_ELEMENT_FACTORY (object);
+
+  gst_element_factory_cleanup (factory);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 /**
@@ -217,7 +231,8 @@ gst_element_factory_cleanup (GstElementFactory * factory)
     GstStaticPadTemplate *templ = item->data;
 
     g_free (templ->name_template);
-    /* FIXME: free caps... */
+    g_free ((gchar *) templ->static_caps.string);
+    memset (&(templ->static_caps), 0, sizeof (GstStaticCaps));
     g_free (templ);
   }
   g_list_free (factory->staticpadtemplates);

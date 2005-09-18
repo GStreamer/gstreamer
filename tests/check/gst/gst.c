@@ -25,7 +25,7 @@ GST_START_TEST (test_init)
 {
   /* don't segfault with NULL, NULL */
   gst_init (NULL, NULL);
-  /* allow calling twice */
+  /* allow calling twice. well, actually, thrice. */
   gst_init (NULL, NULL);
 }
 

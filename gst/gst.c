@@ -731,6 +731,7 @@ init_post (void)
       for (i = 0; list[i]; i++) {
         gst_registry_scan_path (default_registry, list[i]);
       }
+      g_strfreev (list);
     }
 
     gst_registry_xml_write_cache (default_registry, registry_file);
@@ -904,6 +905,8 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
  * Call only once, before exiting.
  * After this call GStreamer should not be used anymore.
  */
+
+extern GstRegistry *_gst_registry_default;
 void
 gst_deinit (void)
 {
@@ -912,6 +915,8 @@ gst_deinit (void)
   clock = gst_system_clock_obtain ();
   gst_object_unref (clock);
   gst_object_unref (clock);
+
+  gst_registry_deinit ();
 
   gst_initialized = FALSE;
 }

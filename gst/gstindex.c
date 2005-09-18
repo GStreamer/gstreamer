@@ -849,6 +849,7 @@ gst_index_entry_assoc_map (GstIndexEntry * entry,
 
 static void gst_index_factory_class_init (GstIndexFactoryClass * klass);
 static void gst_index_factory_init (GstIndexFactory * factory);
+static void gst_index_factory_finalize (GObject * object);
 
 static GstPluginFeatureClass *factory_parent_class = NULL;
 
@@ -891,11 +892,24 @@ gst_index_factory_class_init (GstIndexFactoryClass * klass)
   gstpluginfeature_class = (GstPluginFeatureClass *) klass;
 
   factory_parent_class = g_type_class_ref (GST_TYPE_PLUGIN_FEATURE);
+
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_index_factory_finalize);
 }
 
 static void
 gst_index_factory_init (GstIndexFactory * factory)
 {
+}
+
+static void
+gst_index_factory_finalize (GObject * object)
+{
+  GstIndexFactory *factory = GST_INDEX_FACTORY (object);
+
+  g_free (factory->longdesc);
+
+  G_OBJECT_CLASS (factory_parent_class)->finalize (object);
+
 }
 
 /**

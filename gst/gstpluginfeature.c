@@ -31,18 +31,20 @@
 
 static void gst_plugin_feature_class_init (GstPluginFeatureClass * klass);
 static void gst_plugin_feature_init (GstPluginFeature * feature);
-static void gst_plugin_feature_finalize (GstPluginFeature * feature);
+static void gst_plugin_feature_finalize (GObject * object);
 
 /* static guint gst_plugin_feature_signals[LAST_SIGNAL] = { 0 }; */
 
 G_DEFINE_ABSTRACT_TYPE (GstPluginFeature, gst_plugin_feature, GST_TYPE_OBJECT);
+GstObjectClass *parent_class = NULL;
 
 static void
 gst_plugin_feature_class_init (GstPluginFeatureClass * klass)
 {
+  parent_class = g_type_class_ref (GST_TYPE_OBJECT);
 
   G_OBJECT_CLASS (klass)->finalize =
-      (GObjectFinalizeFunc) gst_plugin_feature_finalize;
+      GST_DEBUG_FUNCPTR (gst_plugin_feature_finalize);
 }
 
 static void
@@ -52,9 +54,15 @@ gst_plugin_feature_init (GstPluginFeature * feature)
 }
 
 static void
-gst_plugin_feature_finalize (GstPluginFeature * feature)
+gst_plugin_feature_finalize (GObject * object)
 {
+  GstPluginFeature *feature = GST_PLUGIN_FEATURE (object);
+
   GST_DEBUG ("finalizing feature %p", feature);
+  g_free (feature->name);
+  g_free (feature->plugin_name);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 /**

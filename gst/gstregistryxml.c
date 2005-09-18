@@ -374,6 +374,7 @@ add_to_char_array (gchar *** array, gchar * value)
   *array = new;
 }
 
+/* read a string and copy it into the given location */
 static gboolean
 read_string (xmlTextReaderPtr reader, gchar ** write_to)
 {
@@ -502,19 +503,24 @@ load_feature (xmlTextReaderPtr reader)
 {
   int ret;
   int depth = xmlTextReaderDepth (reader);
-  const gchar *feature_name =
-      (const gchar *) xmlTextReaderGetAttribute (reader, BAD_CAST "typename");
+  gchar *feature_name =
+      (gchar *) xmlTextReaderGetAttribute (reader, BAD_CAST "typename");
   GstPluginFeature *feature;
   GType type;
 
   if (!feature_name)
     return NULL;
   type = g_type_from_name (feature_name);
-  if (!type)
+  g_free (feature_name);
+  feature_name = NULL;
+
+  if (!type) {
     return NULL;
+  }
   feature = g_object_new (type, NULL);
-  if (!feature)
+  if (!feature) {
     return NULL;
+  }
   if (!GST_IS_PLUGIN_FEATURE (feature)) {
     g_object_unref (feature);
     return NULL;
@@ -554,6 +560,7 @@ load_feature (xmlTextReaderPtr reader)
             } else if (g_ascii_strncasecmp (s, "source", 5) == 0) {
               factory->uri_type = GST_URI_SRC;
             }
+            g_free (s);
           }
         } else if (g_str_equal (tag, "uri_protocol")) {
           gchar *s = NULL;
@@ -563,8 +570,11 @@ load_feature (xmlTextReaderPtr reader)
         } else if (g_str_equal (tag, "interface")) {
           gchar *s = NULL;
 
-          if (read_string (reader, &s))
+          if (read_string (reader, &s)) {
             __gst_element_factory_add_interface (factory, s);
+            /* add_interface strdup's s */
+            g_free (s);
+          }
         } else if (g_str_equal (tag, "padtemplate")) {
           GstStaticPadTemplate *template = load_pad_template (reader);
 
@@ -600,6 +610,7 @@ load_feature (xmlTextReaderPtr reader)
     }
   }
 
+  g_assert_not_reached ();
   return NULL;
 }
 
@@ -663,6 +674,7 @@ load_plugin (xmlTextReaderPtr reader, GList ** feature_list)
         }
         plugin->file_mtime = strtol (s, NULL, 0);
         GST_DEBUG ("mtime %d", (int) plugin->file_mtime);
+        g_free (s);
       } else if (g_str_equal (tag, "size")) {
         unsigned int x;
 
@@ -685,7 +697,7 @@ load_plugin (xmlTextReaderPtr reader, GList ** feature_list)
       }
     }
   }
-  g_object_unref (plugin);
+  gst_object_unref (plugin);
 
   GST_DEBUG ("problem reading plugin");
 

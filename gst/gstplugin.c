@@ -78,9 +78,12 @@ static GstPlugin *gst_plugin_register_func (GstPlugin * plugin,
     GModule * module, GstPluginDesc * desc);
 static void
 gst_plugin_desc_copy (GstPluginDesc * dest, const GstPluginDesc * src);
+static void gst_plugin_desc_free (GstPluginDesc * desc);
 
 
 G_DEFINE_TYPE (GstPlugin, gst_plugin, GST_TYPE_OBJECT);
+
+static GstObjectClass *parent_class = NULL;
 
 static void
 gst_plugin_init (GstPlugin * plugin)
@@ -89,8 +92,9 @@ gst_plugin_init (GstPlugin * plugin)
 }
 
 static void
-gst_plugin_finalize (GstPlugin * plugin)
+gst_plugin_finalize (GObject * object)
 {
+  GstPlugin *plugin = GST_PLUGIN (object);
   GstRegistry *registry = gst_registry_get_default ();
   GList *g;
 
@@ -100,13 +104,18 @@ gst_plugin_finalize (GstPlugin * plugin)
       g_warning ("removing plugin that is still in registry");
     }
   }
+  g_free (plugin->filename);
+  gst_plugin_desc_free (&plugin->desc);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
 gst_plugin_class_init (GstPluginClass * klass)
 {
+  parent_class = g_type_class_ref (GST_TYPE_OBJECT);
 
-  G_OBJECT_CLASS (klass)->finalize = (GObjectFinalizeFunc) gst_plugin_finalize;
+  G_OBJECT_CLASS (klass)->finalize = GST_DEBUG_FUNCPTR (gst_plugin_finalize);
 }
 
 GQuark
@@ -425,6 +434,8 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
   g_static_mutex_unlock (&gst_plugin_loading_mutex);
   return plugin;
 return_error:
+  if (plugin)
+    gst_object_unref (plugin);
   g_static_mutex_unlock (&gst_plugin_loading_mutex);
   return NULL;
 }
@@ -444,7 +455,6 @@ gst_plugin_desc_copy (GstPluginDesc * dest, const GstPluginDesc * src)
   dest->origin = g_strdup (src->origin);
 }
 
-#if 0
 /* unused */
 static void
 gst_plugin_desc_free (GstPluginDesc * desc)
@@ -459,7 +469,6 @@ gst_plugin_desc_free (GstPluginDesc * desc)
 
   memset (desc, 0, sizeof (GstPluginDesc));
 }
-#endif
 
 /**
  * gst_plugin_get_name:

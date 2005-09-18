@@ -51,6 +51,9 @@
 
 #define GST_CAT_DEFAULT GST_CAT_REGISTRY
 
+/* the one instance of the default registry */
+static GstRegistry *_gst_registry_default = NULL;
+
 /*
  * Design:
  *
@@ -117,6 +120,7 @@ enum
 
 static void gst_registry_class_init (GstRegistryClass * klass);
 static void gst_registry_init (GstRegistry * registry);
+static void gst_registry_finalize (GObject * object);
 
 static guint gst_registry_signals[LAST_SIGNAL] = { 0 };
 
@@ -126,6 +130,7 @@ static GstPlugin *gst_registry_lookup_locked (GstRegistry * registry,
     const char *filename);
 
 G_DEFINE_TYPE (GstRegistry, gst_registry, GST_TYPE_OBJECT);
+static GstObjectClass *parent_class = NULL;
 
 static void
 gst_registry_class_init (GstRegistryClass * klass)
@@ -133,6 +138,8 @@ gst_registry_class_init (GstRegistryClass * klass)
   GObjectClass *gobject_class;
 
   gobject_class = (GObjectClass *) klass;
+
+  parent_class = g_type_class_ref (GST_TYPE_OBJECT);
 
   gst_registry_signals[PLUGIN_ADDED] =
       g_signal_new ("plugin-added", G_TYPE_FROM_CLASS (klass),
@@ -143,20 +150,61 @@ gst_registry_class_init (GstRegistryClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRegistryClass, feature_added),
       NULL, NULL, gst_marshal_VOID__POINTER, G_TYPE_NONE, 1, G_TYPE_POINTER);
 
-  gobject_class->dispose = NULL;
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_registry_finalize);
 }
 
 static void
 gst_registry_init (GstRegistry * registry)
 {
+}
 
+static void
+gst_registry_finalize (GObject * object)
+{
+  GstRegistry *registry = GST_REGISTRY (object);
+  GList *plugins, *p;
+  GList *features, *f;
+
+  plugins = registry->plugins;
+  registry->plugins = NULL;
+
+  GST_DEBUG_OBJECT (registry, "registry finalize");
+  p = plugins;
+  while (p) {
+    GstPlugin *plugin = p->data;
+
+    if (plugin) {
+      GST_DEBUG_OBJECT (registry, "removing plugin %s",
+          gst_plugin_get_name (plugin));
+      gst_registry_remove_plugin (registry, plugin);
+    }
+    p = g_list_next (p);
+  }
+  g_list_free (plugins);
+
+  features = registry->features;
+  registry->features = NULL;
+
+  f = features;
+  while (f) {
+    GstPluginFeature *feature = f->data;
+
+    if (feature) {
+      GST_DEBUG_OBJECT (registry, "removing feature %s",
+          gst_plugin_feature_get_name (feature));
+      gst_registry_remove_feature (registry, feature);
+    }
+    f = g_list_next (f);
+  }
+  g_list_free (features);
+
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 GstRegistry *
 gst_registry_get_default (void)
 {
-  static GstRegistry *_gst_registry_default;
-
   if (!_gst_registry_default) {
     _gst_registry_default = g_object_new (GST_TYPE_REGISTRY, NULL);
   }
@@ -699,4 +747,14 @@ gst_registry_get_feature_list_by_plugin (GstRegistry * registry,
 {
   return gst_registry_feature_filter (registry,
       _gst_plugin_feature_filter_plugin_name, FALSE, (gpointer) name);
+}
+
+void
+gst_registry_deinit ()
+{
+  if (!_gst_registry_default)
+    return;
+
+  gst_object_unref (_gst_registry_default);
+  _gst_registry_default = NULL;
 }

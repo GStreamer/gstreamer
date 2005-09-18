@@ -100,6 +100,8 @@ gboolean gst_registry_xml_write_cache (GstRegistry * registry, const char *locat
 void gst_registry_scan_paths (GstRegistry *registry);
 void _gst_registry_remove_cache_plugins (GstRegistry *registry);
 
+void gst_registry_deinit (void);
+
 #define gst_default_registry_add_plugin(plugin) \
   gst_registry_add_plugin (gst_registry_get_default(), plugin)
 #define gst_default_registry_add_path(path) \

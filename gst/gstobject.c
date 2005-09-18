@@ -421,9 +421,9 @@ gst_object_dispose (GObject * object)
   GST_UNLOCK (object);
 
   /* need to patch refcount so it is finalized */
-  PATCH_REFCOUNT1 (object)
+  PATCH_REFCOUNT1 (object);
 
-      parent_class->dispose (object);
+  parent_class->dispose (object);
 }
 
 /* finalize is called when the object has to free its resources */
