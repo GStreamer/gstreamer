@@ -1,3 +1,10 @@
+2005-09-18  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst-types.defs:
+	* gst/gst.override:
+	* testsuite/test_registry.py:
+	  commit intermediate wrapper updates
+
 2005-09-16  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gst.defs (registry_get_default): Renamed from

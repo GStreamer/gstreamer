@@ -694,55 +694,51 @@ _wrap_gst_main_quit(PyObject *self)
     Py_INCREF(Py_None);
     return Py_None;
 }
+
 %%
-override gst_registry_pool_plugin_list noargs
+override gst_registry_get_plugin_list
 static PyObject *
-_wrap_gst_registry_pool_plugin_list(PyGObject *self)
+_wrap_gst_registry_get_plugin_list (PyGObject *self)
 {
+	GstRegistry *registry;
 	GList *l, *plugins;
 	PyObject *list;
 	
-	plugins = gst_registry_pool_plugin_list();
+        registry = GST_REGISTRY (self->obj);
 
-	list = PyList_New(0);
+	plugins = gst_registry_get_plugin_list (registry);
+
+	list = PyList_New (0);
 	for (l = plugins; l; l = l->next) {
-		GstPlugin *plugin = (GstPlugin*)l->data;
-		PyList_Append(list,
-			      pyg_boxed_new(GST_TYPE_PLUGIN, plugin, TRUE, TRUE));
+		GstPlugin *plugin = (GstPlugin *) l->data;
+		PyList_Append (list, pygobject_new (G_OBJECT (plugin)));
 	}
-	g_list_free(plugins);
+	g_list_free (plugins);
 	
 	return list;
 }
-%%
-override gst_registry_pool_feature_list
+
 static PyObject *
-_wrap_gst_registry_pool_feature_list(PyGObject *self, PyObject *args)
+_wrap_gst_registry_get_feature_list (PyGObject *self)
 {
+	GstRegistry *registry;
 	GList *l, *features;
-	PyObject *pygtype, *list;
-	GType gtype;
+	PyObject *list;
 	
-	if (!PyArg_ParseTuple(args, "O:registry_pool_feature_list",
-			      &pygtype))
-		return NULL;
+        registry = GST_REGISTRY (self->obj);
 
-	gtype = pyg_type_from_object (pygtype);
-	if (!gtype)
-		return NULL;
-	
-	features = gst_registry_pool_feature_list(gtype);
+	features = gst_registry_get_feature_list (registry);
 
-	list = PyList_New(0);
+	list = PyList_New (0);
 	for (l = features; l; l = l->next) {
-		GstPluginFeature *feature = (GstPluginFeature*)l->data;
-		PyList_Append(list, pygobject_new (G_OBJECT (feature)));
-
+		GstPluginFeature *feature = (GstPluginFeature *) l->data;
+		PyList_Append (list, pygobject_new (G_OBJECT (feature)));
 	}
-	g_list_free(features);
-		
+	g_list_free (features);
+	
 	return list;
 }
+
 %%
 override gst_xml_new noargs
 

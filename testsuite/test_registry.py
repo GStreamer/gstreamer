@@ -23,16 +23,22 @@
 import sys
 from common import gst, unittest
 
-class RegistryPoolTest(unittest.TestCase):
+class RegistryTest(unittest.TestCase):
+    def testGetDefault(self):
+        registry = gst.registry_get_default()
+
     def testPluginList(self):
-        plugins = gst.registry_pool_plugin_list()
-        elements = map(lambda p: p.get_name(), plugins)
-        assert 'gstcoreelements' in elements
-        
+        registry = gst.registry_get_default()
+        plugins = registry.get_plugin_list()
+        names = map(lambda p: p.get_name(), plugins)
+        self.failUnless('gstcoreelements' in names)
+
     def testFeatureList(self):
-        plugins = gst.registry_pool_feature_list(gst.ElementFactory)
-        elements = map(lambda p: p.get_name(), plugins)
-        assert 'fakesink' in elements, elements
+        registry = gst.registry_get_default()
+        features = registry.get_feature_list()
+        elements = map(lambda f: f.get_name(), features)
+        self.failUnless('fakesink' in elements)
+
 
 if __name__ == "__main__":
     unittest.main()

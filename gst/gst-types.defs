@@ -202,9 +202,9 @@
   (gtype-id "GST_TYPE_CAPS")
 )
 
-(define-boxed Plugin
+(define-object Plugin
   (in-module "Gst")
-  (parent "GObject")
+  (parent "GstObject")
   (c-name "GstPlugin")
   (gtype-id "GST_TYPE_PLUGIN")
 )
