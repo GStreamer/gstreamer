@@ -634,13 +634,15 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
             plugin->file_size, file_status.st_size);
         gst_registry_remove_plugin (gst_registry_get_default (), plugin);
         newplugin = gst_plugin_load_file (filename, NULL);
-        gst_object_unref (newplugin);
+        if (newplugin)
+          gst_object_unref (newplugin);
       }
       gst_object_unref (plugin);
 
     } else {
       newplugin = gst_plugin_load_file (filename, NULL);
-      gst_object_unref (newplugin);
+      if (newplugin)
+        gst_object_unref (newplugin);
     }
 
     g_free (filename);
