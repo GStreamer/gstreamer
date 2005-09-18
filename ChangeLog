@@ -1,3 +1,8 @@
+2005-09-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
+	  mark a bunch of the tests as to fix until we fix them
+
 2005-09-18  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* common/check.mak:
