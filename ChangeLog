@@ -1,5 +1,14 @@
 2005-09-18  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	* gst/gst.defs:
+	* gst/gst.override:
+	* gst/gstmodule.c: (init_gst):
+	* testsuite/test_registry.py:
+	  update for new plugin API
+
+2005-09-18  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gst-types.defs:
 	* gst/gst.override:
 	* testsuite/test_registry.py:

@@ -35,10 +35,25 @@ class RegistryTest(unittest.TestCase):
 
     def testFeatureList(self):
         registry = gst.registry_get_default()
-        features = registry.get_feature_list()
+        self.assertRaises(TypeError, registry.get_feature_list, "kaka")
+        
+        features = registry.get_feature_list(gst.TYPE_ELEMENT_FACTORY)
         elements = map(lambda f: f.get_name(), features)
         self.failUnless('fakesink' in elements)
 
+        features = registry.get_feature_list(gst.TYPE_TYPE_FIND_FACTORY)
+        typefinds = map(lambda f: f.get_name(), features)
+
+        features = registry.get_feature_list(gst.TYPE_INDEX_FACTORY)
+        indexers = map(lambda f: f.get_name(), features)
+        self.failUnless('memindex' in indexers)
+
+    def testGetPathList(self):
+        # FIXME: this returns an empty list; probably due to core;
+        # examine problem
+        registry = gst.registry_get_default()
+        
+        paths = registry.get_path_list()
 
 if __name__ == "__main__":
     unittest.main()

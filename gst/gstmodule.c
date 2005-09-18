@@ -45,6 +45,22 @@ extern PyObject *PyGstExc_LinkError;
 GST_DEBUG_CATEGORY (pygst_debug);  /* for bindings code */
 GST_DEBUG_CATEGORY (python_debug); /* for python code */
 
+/* copied from pygtk to register GType */
+#define REGISTER_TYPE(d, type, name) \
+    type.ob_type = &PyType_Type; \
+    type.tp_alloc = PyType_GenericAlloc; \
+    type.tp_new = PyType_GenericNew; \
+    if (PyType_Ready(&type)) \
+        return; \
+    PyDict_SetItemString(d, name, (PyObject *)&type);
+
+#define REGISTER_GTYPE(d, type, name, gtype) \
+    REGISTER_TYPE(d, type, name); \
+    PyDict_SetItemString(type.tp_dict, "__gtype__", \
+                         o=pyg_type_wrapper_new(gtype)); \
+    Py_DECREF(o);
+
+
 /* This is a timeout that gets added to the mainloop to handle SIGINT (Ctrl-C)
  * Other signals get handled at some other point where transition from
  * C -> Python is being made.
@@ -148,6 +164,7 @@ init_gst (void)
      PyDict_SetItemString(d, "pygst_version", tuple);
      Py_DECREF(tuple);
 
+     /* clock stuff */
      PyModule_AddIntConstant(m, "SECOND", GST_SECOND);
      PyModule_AddIntConstant(m, "MSECOND", GST_MSECOND);
      PyModule_AddIntConstant(m, "NSECOND", GST_NSECOND);
@@ -169,6 +186,14 @@ init_gst (void)
      
      pygst_register_classes (d);
      pygst_add_constants (m, "GST_");
+
+     /* make our types available */
+     PyModule_AddObject (m, "TYPE_ELEMENT_FACTORY",
+                         pyg_type_wrapper_new(GST_TYPE_ELEMENT_FACTORY));
+     PyModule_AddObject (m, "TYPE_INDEX_FACTORY",
+                         pyg_type_wrapper_new(GST_TYPE_INDEX_FACTORY));
+     PyModule_AddObject (m, "TYPE_TYPE_FIND_FACTORY",
+                         pyg_type_wrapper_new(GST_TYPE_TYPE_FIND_FACTORY));
 
      /* Initialize debugging category */
      GST_DEBUG_CATEGORY_INIT (pygst_debug, "pygst", 0, "GStreamer python bindings");

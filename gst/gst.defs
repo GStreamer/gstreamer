@@ -3782,22 +3782,6 @@
   )
 )
 
-(define-method get_feature_list
-  (of-object "GstPlugin")
-  (c-name "gst_plugin_get_feature_list")
-  (return-type "GList*")
-)
-
-(define-method find_feature
-  (of-object "GstPlugin")
-  (c-name "gst_plugin_find_feature")
-  (return-type "GstPluginFeature*")
-  (parameters
-    '("const-gchar*" "name")
-    '("GType" "type")
-  )
-)
-
 (define-function plugin_check_file
   (c-name "gst_plugin_check_file")
   (return-type "gboolean")
@@ -3816,14 +3800,6 @@
   )
 )
 
-(define-method add_feature
-  (of-object "GstPlugin")
-  (c-name "gst_plugin_add_feature")
-  (return-type "none")
-  (parameters
-    '("GstPluginFeature*" "feature")
-  )
-)
 
 (define-method load
   (of-object "GstPlugin")
@@ -4128,6 +4104,15 @@
   )
 )
 
+(define-method find_plugin
+  (of-object "GstRegistry")
+  (c-name "gst_registry_find_plugin")
+  (return-type "GstPlugin*")
+  (parameters
+    '("const-gchar*" "name")
+  )
+)
+
 (define-method feature_filter
   (of-object "GstRegistry")
   (c-name "gst_registry_feature_filter")
@@ -4148,14 +4133,24 @@
   )
 )
 
-(define-method find_plugin
+(define-method add_feature
   (of-object "GstRegistry")
-  (c-name "gst_registry_find_plugin")
-  (return-type "GstPlugin*")
+  (c-name "gst_registry_add_feature")
+  (return-type "none")
   (parameters
-    '("const-gchar*" "name")
+    '("GstPluginFeature*" "feature")
   )
 )
+
+(define-method remove_feature
+  (of-object "GstRegistry")
+  (c-name "gst_registry_remove_feature")
+  (return-type "none")
+  (parameters
+    '("GstPluginFeature*" "feature")
+  )
+)
+
 
 (define-method find_feature
   (of-object "GstRegistry")
@@ -4164,6 +4159,15 @@
   (parameters
     '("const-gchar*" "name")
     '("GType" "type")
+  )
+)
+
+(define-method lookup_feature
+  (of-object "GstRegistry")
+  (c-name "gst_registry_lookup_feature")
+  (return-type "GstPluginFeature*")
+  (parameters
+    '("const-char*" "name")
   )
 )
 
