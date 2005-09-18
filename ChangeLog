@@ -1,3 +1,8 @@
+2005-09-18  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* common/check.mak:
+	  add a check-valgrind target
+
 2005-09-18  David Schleef  <ds@schleef.org>
 
 	* tools/gst-inspect.c: Revert the GOption code.
