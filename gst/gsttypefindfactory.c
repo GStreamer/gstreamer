@@ -225,7 +225,7 @@ gst_type_find_factory_call_function (GstTypeFindFactory * factory,
   g_return_if_fail (find->suggest != NULL);
 
   /* gst_plugin_feature_load will steal our ref */
-  gst_object_ref (factory->feature.plugin);
+  gst_object_ref (factory);
   new_factory =
       GST_TYPE_FIND_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
           (factory)));
@@ -233,8 +233,6 @@ gst_type_find_factory_call_function (GstTypeFindFactory * factory,
     g_assert (new_factory->function != NULL);
 
     new_factory->function (find, new_factory->user_data);
-    /* FIXME hack.  somehow, this refcount gets destroyed */
-    gst_object_ref (new_factory->feature.plugin);
-    //gst_object_unref (new_factory->feature.plugin);
+    gst_object_unref (new_factory);
   }
 }

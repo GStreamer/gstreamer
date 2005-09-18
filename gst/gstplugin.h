@@ -90,8 +90,6 @@ struct _GstPlugin {
   unsigned int  flags;
 
   gchar *	filename;
-  GList *	features;	/* list of features provided */
-  gint		numfeatures;
 
   GModule *	module;		/* contains the module if plugin is loaded */
 
@@ -165,30 +163,15 @@ G_CONST_RETURN gchar*	gst_plugin_get_origin		(GstPlugin *plugin);
 GModule *		gst_plugin_get_module		(GstPlugin *plugin);
 gboolean		gst_plugin_is_loaded		(GstPlugin *plugin);
 
-GList*			gst_plugin_feature_filter	(GstPlugin *plugin,
-							 GstPluginFeatureFilter filter,
-							 gboolean first,
-							 gpointer user_data);
-GList*			gst_plugin_list_feature_filter	(GList *list,
-							 GstPluginFeatureFilter filter,
-							 gboolean first,
-							 gpointer user_data);
-void gst_plugin_list_free (GList *list);
 gboolean		gst_plugin_name_filter		(GstPlugin *plugin, const gchar *name);
-
-GList*			gst_plugin_get_feature_list	(GstPlugin *plugin);
-GstPluginFeature*	gst_plugin_find_feature		(GstPlugin *plugin, const gchar *name, GType type);
-GstPluginFeature*	gst_plugin_find_feature_by_name	(GstPlugin *plugin, const gchar *name);
 
 gboolean		gst_plugin_check_file		(const gchar *filename, GError** error);
 GstPlugin *		gst_plugin_load_file		(const gchar *filename, GError** error);
 
-void			gst_plugin_add_feature		(GstPlugin *plugin, GstPluginFeature *feature);
-
 GstPlugin *             gst_plugin_load                 (GstPlugin *plugin);
+GstPlugin *             gst_plugin_load_by_name         (const gchar *name);
 
-/* shortcuts to load from the registry pool */
-gboolean		gst_plugin_load_1		(const gchar *name);
+void gst_plugin_list_free (GList *list);
 
 G_END_DECLS
 

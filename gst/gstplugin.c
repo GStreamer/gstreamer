@@ -94,7 +94,7 @@ gst_plugin_finalize (GstPlugin * plugin)
   GstRegistry *registry = gst_registry_get_default ();
   GList *g;
 
-  GST_ERROR ("finalizing plugin %p", plugin);
+  GST_DEBUG ("finalizing plugin %p", plugin);
   for (g = registry->plugins; g; g = g->next) {
     if (g->data == (gpointer) plugin) {
       g_warning ("removing plugin that is still in registry");
@@ -335,11 +335,14 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
   g_static_mutex_lock (&gst_plugin_loading_mutex);
 
   plugin = gst_registry_lookup (registry, filename);
-  if (plugin && plugin->module) {
-    g_static_mutex_unlock (&gst_plugin_loading_mutex);
-    return plugin;
+  if (plugin) {
+    if (plugin->module) {
+      g_static_mutex_unlock (&gst_plugin_loading_mutex);
+      return plugin;
+    } else {
+      gst_object_unref (plugin);
+    }
   }
-
 
   GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING, "attempt to load plugin \"%s\"",
       filename);
@@ -617,9 +620,10 @@ gst_plugin_is_loaded (GstPlugin * plugin)
 {
   g_return_val_if_fail (plugin != NULL, FALSE);
 
-  return (plugin->module != NULL);
+  return (plugin->module != NULL || plugin->filename == NULL);
 }
 
+#if 0
 /**
  * gst_plugin_feature_list:
  * @plugin: plugin to query
@@ -704,6 +708,7 @@ gst_plugin_list_feature_filter (GList * list,
 
   return data.result;
 }
+#endif
 
 /**
  * gst_plugin_name_filter:
@@ -721,6 +726,7 @@ gst_plugin_name_filter (GstPlugin * plugin, const gchar * name)
   return (plugin->desc.name && !strcmp (plugin->desc.name, name));
 }
 
+#if 0
 /**
  * gst_plugin_find_feature:
  * @plugin: plugin to get the feature from
@@ -749,19 +755,23 @@ gst_plugin_find_feature (GstPlugin * plugin, const gchar * name, GType type)
   if (walk) {
     result = GST_PLUGIN_FEATURE (walk->data);
 
-    gst_object_ref (result->plugin);
+    gst_object_ref (result);
     gst_plugin_feature_list_free (walk);
   }
 
   return result;
 }
+#endif
 
+#if 0
 static gboolean
 gst_plugin_feature_name_filter (GstPluginFeature * feature, const gchar * name)
 {
   return !strcmp (name, GST_PLUGIN_FEATURE_NAME (feature));
 }
+#endif
 
+#if 0
 /**
  * gst_plugin_find_feature_by_name:
  * @plugin: plugin to get the feature from
@@ -785,74 +795,24 @@ gst_plugin_find_feature_by_name (GstPlugin * plugin, const gchar * name)
   if (walk) {
     result = GST_PLUGIN_FEATURE (walk->data);
 
-    gst_object_ref (result->plugin);
+    gst_object_ref (result);
     gst_plugin_feature_list_free (walk);
   }
 
   return result;
 }
+#endif
 
 /**
- * gst_plugin_add_feature:
- * @plugin: plugin to add feature to
- * @feature: feature to add
- *
- * Add feature to the list of those provided by the plugin.
- * There is a separate namespace for each plugin feature type.
- * See #gst_plugin_get_feature_list
- */
-void
-gst_plugin_add_feature (GstPlugin * plugin, GstPluginFeature * feature)
-{
-  /* FIXME 0.9: get reference counting somewhat right in here,
-   * GstPluginFeatures should probably be GstObjects that are sinked when
-   * adding them to a plugin */
-  g_return_if_fail (plugin != NULL);
-  g_return_if_fail (GST_IS_PLUGIN_FEATURE (feature));
-  g_return_if_fail (feature != NULL);
-  g_return_if_fail (feature->plugin == NULL);
-
-  /* gst_object_sink (feature); */
-  feature->plugin = plugin;
-  plugin->features = g_list_prepend (plugin->features, feature);
-  plugin->numfeatures++;
-}
-
-/**
- * gst_plugin_get_feature_list:
- * @plugin: the plugin to get the features from
- *
- * get a list of all the features that this plugin provides
- *
- * Returns: a GList of features, use g_list_free to free the list.
- */
-GList *
-gst_plugin_get_feature_list (GstPlugin * plugin)
-{
-  GList *list;
-  GList *g;
-
-  g_return_val_if_fail (plugin != NULL, NULL);
-
-  list = g_list_copy (plugin->features);
-  for (g = list; g; g = g->next) {
-    gst_object_ref (plugin);
-  }
-
-  return list;
-}
-
-/* FIXME is this function necessary? */
-/**
- * gst_plugin_load_1:
+ * gst_plugin_load_by_name:
  * @name: name of plugin to load
  *
  * Load the named plugin.  
  *
  * Returns: whether the plugin was loaded or not
  */
-gboolean
-gst_plugin_load_1 (const gchar * name)
+GstPlugin *
+gst_plugin_load_by_name (const gchar * name)
 {
   GstPlugin *plugin;
   GError *error = NULL;
@@ -863,13 +823,13 @@ gst_plugin_load_1 (const gchar * name)
     if (!plugin) {
       GST_WARNING ("load_plugin error: %s\n", error->message);
       g_error_free (error);
-      return FALSE;
+      return NULL;
     }
-    return TRUE;;
+    return plugin;
   }
 
-  GST_DEBUG ("Could not find %s in registry pool", name);
-  return FALSE;
+  GST_DEBUG ("Could not find plugin %s in registry", name);
+  return NULL;
 }
 
 GstPlugin *
@@ -882,20 +842,15 @@ gst_plugin_load (GstPlugin * plugin)
     return plugin;
   }
 
-  if (!plugin->filename) {
-    return plugin;
-  }
-
   newplugin = gst_plugin_load_file (plugin->filename, &error);
   if (newplugin == NULL) {
     GST_WARNING ("load_plugin error: %s\n", error->message);
     g_error_free (error);
-    //gst_object_unref (plugin);
+    gst_object_unref (plugin);
     return NULL;
   }
 
-  /* FIXME hack to keep plugins from disappearing */
-  //gst_object_unref (plugin);
+  gst_object_unref (plugin);
 
   return newplugin;
 }
@@ -906,7 +861,7 @@ gst_plugin_list_free (GList * list)
   GList *g;
 
   for (g = list; g; g = g->next) {
-    //gst_object_unref (GST_PLUGIN(g->data));
+    gst_object_unref (GST_PLUGIN (g->data));
   }
   g_list_free (list);
 }

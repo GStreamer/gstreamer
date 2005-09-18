@@ -620,7 +620,9 @@ print_element_list (void)
     plugin = (GstPlugin *) (plugins->data);
     plugins = g_list_next (plugins);
 
-    features = gst_plugin_get_feature_list (plugin);
+    features =
+        gst_registry_get_feature_list_by_plugin (gst_registry_get_default (),
+        plugin->desc.name);
     while (features) {
       GstPluginFeature *feature;
 
@@ -688,7 +690,9 @@ print_plugin_info (GstPlugin * plugin)
   g_print ("  Origin URL:\t%s\n", plugin->desc.origin);
   g_print ("\n");
 
-  features = gst_plugin_get_feature_list (plugin);
+  features =
+      gst_registry_get_feature_list_by_plugin (gst_registry_get_default (),
+      plugin->desc.name);
 
   while (features) {
     GstPluginFeature *feature;

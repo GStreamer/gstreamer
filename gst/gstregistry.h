@@ -42,6 +42,7 @@ struct _GstRegistry {
   GstObject 	 object;
 
   GList		*plugins;
+  GList *features;
 
   GList 	*paths;
 
@@ -56,6 +57,7 @@ struct _GstRegistryClass {
 
   /* signals */
   void 			(*plugin_added)		(GstRegistry *registry, GstPlugin *plugin);
+  void 			(*feature_added)	(GstRegistry *registry, GstPluginFeature *feature);
 
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -71,6 +73,8 @@ GList*			gst_registry_get_path_list	(GstRegistry *registry);
 
 gboolean		gst_registry_add_plugin		(GstRegistry *registry, GstPlugin *plugin);
 void			gst_registry_remove_plugin	(GstRegistry *registry, GstPlugin *plugin);
+gboolean                gst_registry_add_feature        (GstRegistry * registry, GstPluginFeature * feature);
+void                    gst_registry_remove_feature     (GstRegistry * registry, GstPluginFeature * feature);
 
 GList*                  gst_registry_get_plugin_list    (GstRegistry *registry);
 GList*			gst_registry_plugin_filter	(GstRegistry *registry, 
@@ -83,10 +87,12 @@ GList*			gst_registry_feature_filter	(GstRegistry *registry,
 							 gpointer user_data);
 GList *                 gst_registry_get_feature_list   (GstRegistry *registry,
                                                          GType type);
+GList *                 gst_registry_get_feature_list_by_plugin (GstRegistry *registry, const gchar *name);
 
 GstPlugin*		gst_registry_find_plugin	(GstRegistry *registry, const gchar *name);
 GstPluginFeature*	gst_registry_find_feature	(GstRegistry *registry, const gchar *name, GType type);
 GstPlugin * gst_registry_lookup (GstRegistry *registry, const char *filename);
+GstPluginFeature * gst_registry_lookup_feature (GstRegistry *registry, const char *name);
 
 gboolean gst_registry_xml_read_cache (GstRegistry * registry, const char *location);
 gboolean gst_registry_xml_write_cache (GstRegistry * registry, const char *location);

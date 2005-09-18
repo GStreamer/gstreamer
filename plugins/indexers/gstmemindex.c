@@ -411,10 +411,16 @@ gst_mem_index_plugin_init (GstPlugin * plugin)
   factory = gst_index_factory_new ("memindex",
       "A index that stores entries in memory", gst_mem_index_get_type ());
 
-  if (factory != NULL) {
-    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-  } else {
-    g_warning ("could not register memindex");
+  if (factory == NULL) {
+    g_warning ("failed to create memindex factory");
+    return FALSE;
   }
+
+  GST_PLUGIN_FEATURE (factory)->plugin_name = g_strdup (plugin->desc.name);
+  GST_PLUGIN_FEATURE (factory)->loaded = TRUE;
+
+  gst_registry_add_feature (gst_registry_get_default (),
+      GST_PLUGIN_FEATURE (factory));
+
   return TRUE;
 }

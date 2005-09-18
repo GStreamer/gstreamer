@@ -263,7 +263,6 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
   gst_plugin_feature_set_name (GST_PLUGIN_FEATURE (factory), name);
   GST_LOG_OBJECT (factory, "Created new elementfactory for type %s",
       g_type_name (type));
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
   klass = GST_ELEMENT_CLASS (g_type_class_ref (type));
   factory->type = type;
@@ -304,7 +303,12 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
   }
   g_free (interfaces);
 
+  GST_PLUGIN_FEATURE (factory)->plugin_name = g_strdup (plugin->desc.name);
   gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE (factory), rank);
+  GST_PLUGIN_FEATURE (factory)->loaded = TRUE;
+
+  gst_registry_add_feature (gst_registry_get_default (),
+      GST_PLUGIN_FEATURE (factory));
 
   return TRUE;
 
@@ -332,6 +336,7 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
 
   g_return_val_if_fail (factory != NULL, NULL);
 
+  gst_object_ref (factory);
   factory =
       GST_ELEMENT_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
           (factory)));
@@ -367,6 +372,8 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
     gst_object_set_name (GST_OBJECT (element), name);
 
   GST_DEBUG ("created \"%s\"", GST_PLUGIN_FEATURE_NAME (factory));
+  gst_object_unref (factory);
+
   return element;
 }
 

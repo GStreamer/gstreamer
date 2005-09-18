@@ -992,11 +992,16 @@ gst_file_index_plugin_init (GstPlugin * plugin)
   factory = gst_index_factory_new ("fileindex",
       "A index that stores entries in file", gst_file_index_get_type ());
 
-  if (factory != NULL) {
-    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-  } else {
+  if (factory == NULL) {
     return FALSE;
   }
+
+  GST_PLUGIN_FEATURE (factory)->plugin_name = g_strdup (plugin->desc.name);
+  GST_PLUGIN_FEATURE (factory)->loaded = TRUE;
+
+  gst_registry_add_feature (gst_registry_get_default (),
+      GST_PLUGIN_FEATURE (factory));
+
   GST_DEBUG_CATEGORY_INIT (DC, "GST_FILEINDEX", 0, NULL);
 
   return TRUE;

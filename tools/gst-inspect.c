@@ -835,7 +835,9 @@ print_element_list (gboolean print_all)
     plugin = (GstPlugin *) (plugins->data);
     plugins = g_list_next (plugins);
 
-    features = gst_plugin_get_feature_list (plugin);
+    features =
+        gst_registry_get_feature_list_by_plugin (gst_registry_get_default (),
+        plugin->desc.name);
     while (features) {
       GstPluginFeature *feature;
 
@@ -920,7 +922,9 @@ print_plugin_features (GstPlugin * plugin)
   gint num_indexes = 0;
   gint num_other = 0;
 
-  features = gst_plugin_get_feature_list (plugin);
+  features =
+      gst_registry_get_feature_list_by_plugin (gst_registry_get_default (),
+      plugin->desc.name);
 
   while (features) {
     GstPluginFeature *feature;
@@ -1037,10 +1041,14 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
     _name = "";
 
   print_factory_details_info (factory);
-  if (GST_PLUGIN_FEATURE (factory)->plugin) {
-    GstPlugin *plugin = (GstPlugin *) GST_PLUGIN_FEATURE (factory)->plugin;
+  if (GST_PLUGIN_FEATURE (factory)->plugin_name) {
+    GstPlugin *plugin;
 
-    print_plugin_info (plugin);
+    plugin = gst_registry_find_plugin (gst_registry_get_default (),
+        GST_PLUGIN_FEATURE (factory)->plugin_name);
+    if (plugin) {
+      print_plugin_info (plugin);
+    }
   }
 
   print_hierarchy (G_OBJECT_TYPE (element), 0, &maxlevel);
@@ -1062,15 +1070,19 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
   return 0;
 }
 
+gboolean print_all = FALSE;
+GOptionEntry options[] = {
+  {"print-all", 'a', 0, G_OPTION_ARG_NONE, &print_all,
+      N_("Print all elements"), NULL}
+  ,
+  {NULL}
+};
+
 int
 main (int argc, char *argv[])
 {
-  gboolean print_all = FALSE;
-  struct poptOption options[] = {
-    {"print-all", 'a', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &print_all, 0,
-        N_("Print all elements"), NULL},
-    POPT_TABLEEND
-  };
+  GOptionContext *context;
+  GError *error = NULL;
 
 #ifdef GETTEXT_PACKAGE
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
@@ -1078,7 +1090,12 @@ main (int argc, char *argv[])
   textdomain (GETTEXT_PACKAGE);
 #endif
 
-  gst_init_with_popt_table (&argc, &argv, options);
+  context = g_option_context_new ("- inspect plugins");
+  g_option_context_add_main_entries (context, options, GETTEXT_PACKAGE);
+//  g_option_context_add_group (context, gst_get_option_group ());
+  g_option_context_parse (context, &argc, &argv, &error);
+
+  gst_init (NULL, NULL);
 
   if (print_all && argc > 2) {
     g_print ("-a requires no extra arguments\n");

@@ -604,10 +604,12 @@ load_feature (xmlTextReaderPtr reader)
 }
 
 static GstPlugin *
-load_plugin (xmlTextReaderPtr reader)
+load_plugin (xmlTextReaderPtr reader, GList ** feature_list)
 {
   int ret;
   GstPlugin *plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
+
+  *feature_list = NULL;
 
   GST_DEBUG ("parsing plugin");
 
@@ -673,8 +675,11 @@ load_plugin (xmlTextReaderPtr reader)
       } else if (g_str_equal (tag, "feature")) {
         GstPluginFeature *feature = load_feature (reader);
 
-        if (feature)
-          gst_plugin_add_feature (plugin, feature);
+        feature->plugin_name = g_strdup (plugin->desc.name);
+
+        if (feature) {
+          *feature_list = g_list_prepend (*feature_list, feature);
+        }
       } else {
         GST_DEBUG ("unknown tag %s", tag);
       }
@@ -727,12 +732,18 @@ gst_registry_xml_read_cache (GstRegistry * registry, const char *location)
         const gchar *tag = (const gchar *) xmlTextReaderConstName (reader);
 
         if (g_str_equal (tag, "plugin")) {
-          GstPlugin *plugin = load_plugin (reader);
+          GList *feature_list;
+          GstPlugin *plugin = load_plugin (reader, &feature_list);
 
           if (plugin) {
-            GST_DEBUG ("adding plugin %s with %d features", plugin->desc.name,
-                plugin->numfeatures);
+            GList *g;
+
+            GST_DEBUG ("adding plugin %s", plugin->desc.name);
             gst_registry_add_plugin (registry, plugin);
+            for (g = feature_list; g; g = g_list_next (g)) {
+              gst_registry_add_feature (registry, GST_PLUGIN_FEATURE (g->data));
+            }
+            g_list_free (feature_list);
           }
         }
       }
@@ -918,6 +929,7 @@ gst_registry_xml_save_feature (GstRegistry * registry,
 static gboolean
 gst_registry_xml_save_plugin (GstRegistry * registry, GstPlugin * plugin)
 {
+  GList *list;
   GList *walk;
   char s[100];
 
@@ -933,18 +945,19 @@ gst_registry_xml_save_plugin (GstRegistry * registry, GstPlugin * plugin)
   PUT_ESCAPED (" ", "package", plugin->desc.package);
   PUT_ESCAPED (" ", "origin", plugin->desc.origin);
 
-  walk = plugin->features;
+  list = gst_registry_get_feature_list_by_plugin (registry, plugin->desc.name);
 
-  while (walk) {
+  for (walk = list; walk; walk = g_list_next (walk)) {
     GstPluginFeature *feature = GST_PLUGIN_FEATURE (walk->data);
 
     gst_registry_xml_save (registry, " <feature typename=\"%s\">\n",
         g_type_name (G_OBJECT_TYPE (feature)));
     gst_registry_xml_save_feature (registry, feature);
     gst_registry_xml_save (registry, " </feature>\n");
-
-    walk = g_list_next (walk);
   }
+
+  gst_plugin_feature_list_free (list);
+
   return TRUE;
 }
 

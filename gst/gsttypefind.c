@@ -67,7 +67,6 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
   GST_DEBUG_OBJECT (factory, "using new typefind factory for %s", name);
   g_assert (GST_IS_TYPE_FIND_FACTORY (factory));
   gst_plugin_feature_set_name (GST_PLUGIN_FEATURE (factory), name);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
   gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE (factory), rank);
   if (factory->extensions)
@@ -77,6 +76,11 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
   gst_caps_replace (&factory->caps, (GstCaps *) possible_caps);
   factory->function = func;
   factory->user_data = data;
+  GST_PLUGIN_FEATURE (factory)->plugin_name = g_strdup (plugin->desc.name);
+  GST_PLUGIN_FEATURE (factory)->loaded = TRUE;
+
+  gst_registry_add_feature (gst_registry_get_default (),
+      GST_PLUGIN_FEATURE (factory));
 
   return TRUE;
 }

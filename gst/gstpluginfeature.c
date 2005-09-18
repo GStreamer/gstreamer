@@ -31,21 +31,30 @@
 
 static void gst_plugin_feature_class_init (GstPluginFeatureClass * klass);
 static void gst_plugin_feature_init (GstPluginFeature * feature);
+static void gst_plugin_feature_finalize (GstPluginFeature * feature);
 
 /* static guint gst_plugin_feature_signals[LAST_SIGNAL] = { 0 }; */
 
-G_DEFINE_ABSTRACT_TYPE (GstPluginFeature, gst_plugin_feature, G_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE (GstPluginFeature, gst_plugin_feature, GST_TYPE_OBJECT);
 
 static void
 gst_plugin_feature_class_init (GstPluginFeatureClass * klass)
 {
 
+  G_OBJECT_CLASS (klass)->finalize =
+      (GObjectFinalizeFunc) gst_plugin_feature_finalize;
 }
 
 static void
 gst_plugin_feature_init (GstPluginFeature * feature)
 {
 
+}
+
+static void
+gst_plugin_feature_finalize (GstPluginFeature * feature)
+{
+  GST_DEBUG ("finalizing feature %p", feature);
 }
 
 /**
@@ -66,24 +75,27 @@ gst_plugin_feature_load (GstPluginFeature * feature)
   g_return_val_if_fail (feature != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (feature), FALSE);
 
-  plugin = gst_plugin_load (feature->plugin);
+  if (feature->loaded)
+    return feature;
+
+  plugin = gst_plugin_load_by_name (feature->plugin_name);
   if (!plugin) {
     g_critical ("Failed to load plugin containing feature '%s'.",
         GST_PLUGIN_FEATURE_NAME (feature));
     return NULL;
   }
-  if (plugin == feature->plugin) {
-    return feature;
-  }
+  gst_object_unref (plugin);
 
-  real_feature = gst_plugin_find_feature_by_name (plugin, feature->name);
+  real_feature =
+      gst_registry_lookup_feature (gst_registry_get_default (), feature->name);
 
   if (real_feature == NULL) {
     g_critical
         ("Loaded plugin containing feature '%s', but feature disappeared.",
         feature->name);
   }
-  //gst_object_unref (feature->plugin);
+  gst_object_unref (feature);
+
   return real_feature;
 }
 
@@ -117,6 +129,7 @@ gst_plugin_feature_set_name (GstPluginFeature * feature, const gchar * name)
   } else {
     feature->name = g_strdup (name);
   }
+  gst_object_set_name (GST_OBJECT (feature), feature->name);
 }
 
 /**
@@ -171,14 +184,12 @@ gst_plugin_feature_get_rank (GstPluginFeature * feature)
 void
 gst_plugin_feature_list_free (GList * list)
 {
-#if 0
   GList *g;
 
   for (g = list; g; g = g->next) {
     GstPluginFeature *feature = GST_PLUGIN_FEATURE (g->data);
 
-    //gst_object_unref (feature->plugin);
+    gst_object_unref (feature);
   }
-#endif
   g_list_free (list);
 }

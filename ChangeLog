@@ -1,3 +1,25 @@
+2005-09-17  David Schleef  <ds@schleef.org>
+
+	* check/Makefile.am: Fix environment variables.
+	* check/gst/gstplugin.c: Fix for API changes.
+	* tools/gst-inspect.c: Fix for API changes.
+	* tools/gst-xmlinspect.c: Fix for API changes.
+	* gst/gstelementfactory.c:
+	* gst/gstplugin.c:
+	* gst/gstplugin.h:
+	* gst/gstpluginfeature.c:
+	* gst/gstpluginfeature.h:
+	* gst/gstregistry.c:
+	* gst/gstregistry.h:
+	* gst/gstregistryxml.c:
+	* gst/gsttypefind.c:
+	* gst/gsttypefindfactory.c:
+	* gst/indexers/gstfileindex.c:
+	* gst/indexers/gstmemindex.c:
+	* gst/schedulers/Makefile.am:
+	  Change registry to keep track of both plugins and features,
+	  removing the feature tracking from plugins themselves.
+
 2005-09-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:
