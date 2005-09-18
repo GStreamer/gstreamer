@@ -40,3 +40,6 @@ uninstall-local:
 	@rm $(DESTDIR)/$(pythondir)/pygst.py > /dev/null 2>&1 || true
 	@rm $(DESTDIR)/$(pythondir)/pygst.pth > /dev/null 2>&1 || true
 	@rm $(DESTDIR)/$(pyexecdir)/pygst.pth > /dev/null 2>&1 || true
+
+check-valgrind:
+	@true
