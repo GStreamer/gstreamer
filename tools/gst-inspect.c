@@ -1070,19 +1070,15 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
   return 0;
 }
 
-gboolean print_all = FALSE;
-GOptionEntry options[] = {
-  {"print-all", 'a', 0, G_OPTION_ARG_NONE, &print_all,
-      N_("Print all elements"), NULL}
-  ,
-  {NULL}
-};
-
 int
 main (int argc, char *argv[])
 {
-  GOptionContext *context;
-  GError *error = NULL;
+  gboolean print_all = FALSE;
+  struct poptOption options[] = {
+    {"print-all", 'a', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &print_all, 0,
+        N_("Print all elements"), NULL},
+    POPT_TABLEEND
+  };
 
 #ifdef GETTEXT_PACKAGE
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
@@ -1090,12 +1086,7 @@ main (int argc, char *argv[])
   textdomain (GETTEXT_PACKAGE);
 #endif
 
-  context = g_option_context_new ("- inspect plugins");
-  g_option_context_add_main_entries (context, options, GETTEXT_PACKAGE);
-//  g_option_context_add_group (context, gst_get_option_group ());
-  g_option_context_parse (context, &argc, &argv, &error);
-
-  gst_init (NULL, NULL);
+  gst_init_with_popt_table (&argc, &argv, options);
 
   if (print_all && argc > 2) {
     g_print ("-a requires no extra arguments\n");
