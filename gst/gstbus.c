@@ -322,7 +322,7 @@ is_flushing:
  * @events: a mask of #GstMessageType, representing the set of message types to
  * watch for.
  *
- * Check if there are pending messages on the bus of the given types that 
+ * Check if there are pending messages on the bus of the given types that
  * should be handled.
  *
  * Returns: TRUE if there are messages on the bus to be handled.
