@@ -1,5 +1,10 @@
 2005-09-19  Wim Taymans  <wim@fluendo.com>
 
+	* check/elements/level.c: (GST_START_TEST):
+	Fix for bus API change.
+
+2005-09-19  Wim Taymans  <wim@fluendo.com>
+
 	* gst/level/level-example.c: (main):
 	Fix for new bus API.
 
