@@ -364,6 +364,35 @@ return 0;
   AC_SUBST(FAAD_LIBS)
 ])
 
+dnl Check for X11
+
+dnl now try to find the HEADER
+AC_CHECK_HEADER(X11/Xlib.h, HAVE_X="yes", HAVE_X="no")
+
+if test "x$HAVE_X" = "xno"
+then
+  AC_MSG_NOTICE([cannot find X11 development files])
+else
+  dnl this is much more than we want
+  X_LIBS="$X_LIBS $X_PRE_LIBS $X_EXTRA_LIBS"
+  dnl AC_PATH_XTRA only defines the path needed to find the X libs,
+  dnl it does not add the libs; therefore we add them here
+  X_LIBS="$X_LIBS -lX11"
+  AC_SUBST(X_CFLAGS)
+  AC_SUBST(X_LIBS)
+fi
+
+
+dnl *** SDL ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SDL, true)
+GST_CHECK_FEATURE(SDL, [SDL plug-in], sdlvideosink, [
+  dnl sdlvideosink depends on the xoverlay interface, which depends on X
+  if test x$HAVE_X = xyes; then
+    AM_PATH_SDL(, HAVE_SDL=yes, HAVE_SDL=no)
+  fi
+])
+
+
 dnl *** gsm ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GSM, true)
 GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
@@ -440,6 +469,7 @@ ext/Makefile
 ext/faac/Makefile
 ext/faad/Makefile
 ext/gsm/Makefile
+ext/sdl/Makefile
 common/Makefile
 common/m4/Makefile
 m4/Makefile

@@ -142,11 +142,11 @@ NAS_DIR=
 POLYP_DIR=
 # endif
 
-# if USE_SDL
-# SDL_DIR=sdl
-# else
+if USE_SDL
+SDL_DIR=sdl
+else
 SDL_DIR=
-# endif
+endif
 
 # if USE_SHOUT
 # SHOUT_DIR=shout
@@ -229,4 +229,5 @@ SUBDIRS=\
 DIST_SUBDIRS= \
 	faac \
 	faad \
-	gsm
+	gsm \
+	sdl
