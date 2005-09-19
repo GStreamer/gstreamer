@@ -1,3 +1,24 @@
+2005-09-19  Wim Taymans  <wim@fluendo.com>
+
+	* check/pipelines/simple_launch_lines.c: (run_pipeline):
+	Fix for bus API.
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_chain),
+	(gst_base_rtp_depayload_add_to_queue),
+	(gst_base_rtp_depayload_push),
+	(gst_base_rtp_depayload_set_gst_timestamp),
+	(gst_base_rtp_depayload_queue_release):
+	Some cleanups.
+
+	* gst-libs/gst/rtp/gstbasertppayload.c:
+	(gst_basertppayload_class_init), (gst_basertppayload_init),
+	(gst_basertppayload_setcaps), (gst_basertppayload_set_options),
+	(gst_basertppayload_set_outcaps), (gst_basertppayload_push),
+	(gst_basertppayload_get_property),
+	(gst_basertppayload_change_state):
+	Added debugging category.
+
 2005-09-18  David Schleef  <ds@schleef.org>
 
 	* gst/playback/gstdecodebin.c: free plugin list correctly

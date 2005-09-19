@@ -211,17 +211,14 @@ static GstFlowReturn
 gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
 {
   GstBaseRTPDepayload *filter;
+  GstBaseRTPDepayloadClass *bclass;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_BUFFER (in) != NULL, GST_FLOW_ERROR);
-
   filter = GST_BASE_RTP_DEPAYLOAD (GST_OBJECT_PARENT (pad));
-  g_return_val_if_fail (GST_IS_BASE_RTP_DEPAYLOAD (filter), GST_FLOW_ERROR);
 
   g_return_val_if_fail (filter->clock_rate > 0, GST_FLOW_ERROR);
 
-  GstBaseRTPDepayloadClass *bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
+  bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
 
   if (filter->process_only) {
     GST_DEBUG ("Pushing directly!");
@@ -330,7 +327,7 @@ gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
   // if this is the first buf send a discont
   if (first) {
     // send discont
-    GstEvent *event = gst_event_new_newsegment (1.0, GST_FORMAT_TIME,
+    GstEvent *event = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME,
         ts, GST_CLOCK_TIME_NONE, 0);
 
     gst_pad_push_event (filter->srcpad, event);

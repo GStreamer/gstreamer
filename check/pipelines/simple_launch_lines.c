@@ -47,6 +47,7 @@ run_pipeline (GstElement * pipe, const gchar * descr,
     GstMessageType events, GstMessageType tevent)
 {
   GstBus *bus;
+  GstMessage *message;
   GstMessageType revent;
 
   g_assert (pipe);
@@ -59,11 +60,16 @@ run_pipeline (GstElement * pipe, const gchar * descr,
   }
 
   while (1) {
-    revent = gst_bus_poll (bus, GST_MESSAGE_ANY, GST_SECOND / 2);
+    message = gst_bus_poll (bus, GST_MESSAGE_ANY, GST_SECOND / 2);
+
 
     /* always have to pop the message before getting back into poll */
-    if (revent != GST_MESSAGE_UNKNOWN)
+    if (message) {
+      revent = GST_MESSAGE_TYPE (message);
       gst_message_unref (gst_bus_pop (bus));
+    } else {
+      revent = GST_MESSAGE_UNKNOWN;
+    }
 
     if (revent == tevent) {
       break;
@@ -137,7 +143,8 @@ GST_START_TEST (test_basetransform_based)
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
       GST_MESSAGE_UNKNOWN);
 }
-GST_END_TEST Suite * simple_launch_lines_suite (void)
+GST_END_TEST Suite *
+simple_launch_lines_suite (void)
 {
   Suite *s = suite_create ("Pipelines");
   TCase *tc_chain = tcase_create ("linear");

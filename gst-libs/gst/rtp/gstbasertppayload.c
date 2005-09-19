@@ -22,6 +22,9 @@
 
 #include "gstbasertppayload.h"
 
+GST_DEBUG_CATEGORY (basertppayload_debug);
+#define GST_CAT_DEFAULT (basertppayload_debug)
+
 /* BaseRTPPayload signals and args */
 enum
 {
@@ -131,6 +134,9 @@ gst_basertppayload_class_init (GstBaseRTPPayloadClass * klass)
           0, G_MAXUINT, 0, G_PARAM_READABLE));
 
   gstelement_class->change_state = gst_basertppayload_change_state;
+
+  GST_DEBUG_CATEGORY_INIT (basertppayload_debug, "basertppayload", 0,
+      "Base class for RTP Payloaders");
 }
 
 static void
