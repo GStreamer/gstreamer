@@ -375,7 +375,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
 
   module = g_module_open (filename, G_MODULE_BIND_LOCAL);
   if (module == NULL) {
-    GST_CAT_ERROR (GST_CAT_PLUGIN_LOADING, "module_open failed: %s",
+    GST_CAT_WARNING (GST_CAT_PLUGIN_LOADING, "module_open failed: %s",
         g_module_error ());
     g_set_error (error,
         GST_PLUGIN_ERROR, GST_PLUGIN_ERROR_MODULE, "Opening module failed");
