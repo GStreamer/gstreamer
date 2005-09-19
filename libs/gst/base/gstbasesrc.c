@@ -1077,10 +1077,8 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
 
   if ((presult =
           GST_ELEMENT_CLASS (parent_class)->change_state (element,
-              transition)) != GST_STATE_CHANGE_SUCCESS) {
-    gst_base_src_stop (basesrc);
-    return presult;
-  }
+              transition)) == GST_STATE_CHANGE_FAILURE)
+    goto failure;
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
@@ -1102,4 +1100,11 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
   }
 
   return result;
+
+  /* ERRORS */
+failure:
+  {
+    gst_base_src_stop (basesrc);
+    return presult;
+  }
 }

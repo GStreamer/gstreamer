@@ -1,3 +1,8 @@
+2005-09-19  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesrc.c: (gst_base_src_change_state):
+	Handle state change failure more correctly.
+
 2005-09-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:
