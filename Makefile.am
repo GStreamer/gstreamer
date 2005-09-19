@@ -10,3 +10,6 @@ EXTRA_DIST = \
 DISTCLEANFILES = _stdint.h
 
 include $(top_srcdir)/common/release.mak
+
+check-valgrind:
+	@true
