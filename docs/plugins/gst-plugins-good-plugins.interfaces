@@ -1,0 +1,30 @@
+GstBin GstChildProxy
+GstPipeline GstChildProxy
+GstPlayBaseBin GstChildProxy
+GstPlayBin GstChildProxy
+GstAutoVideoSink GstChildProxy
+GstAutoAudioSink GstChildProxy
+GstGConfVideoSink GstChildProxy
+GstGConfAudioSink GstChildProxy
+GstDecodeBin GstChildProxy
+GstID3Mux GstTagSetter
+GstID3Tag GstTagSetter
+GstLame GstTagSetter
+GstOssMixerElement GstImplementsInterface GstMixer
+GstOssSrc GstImplementsInterface GstMixer
+GstAlsaSrc GstImplementsInterface GstMixer
+GstUDPSrc GstURIHandler
+DV1394Src GstURIHandler
+GstV4lElement GstImplementsInterface GstXOverlay GstColorBalance GstTuner GstPropertyProbe
+GstV4lSrc GstImplementsInterface GstXOverlay GstColorBalance GstTuner GstPropertyProbe
+GstGnomeVFSSrc GstURIHandler
+GstFileSrc GstURIHandler
+GstUDPSink GstURIHandler
+GstShout2send GstTagSetter
+GstXvImageSink GstImplementsInterface GstNavigation GstXOverlay GstColorBalance
+GstXImageSink GstImplementsInterface GstNavigation GstXOverlay
+GstFileSink GstURIHandler
+GstVolume GstImplementsInterface GstMixer
+GstVorbisTag GstTagSetter
+GstVorbisEnc GstTagSetter
+GstAlsaMixerElement GstImplementsInterface GstMixer

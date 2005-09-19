@@ -1,0 +1,246 @@
+<SIGNAL>
+<NAME>GstQTDemux::got-redirect</NAME>
+<RETURNS>void</RETURNS>
+GstQTDemux *gstqtdemux
+gchar *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstGSMEnc::frame-encoded</NAME>
+<RETURNS>void</RETURNS>
+GstGSMEnc *gstgsmenc
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiUDPSink::add</NAME>
+<RETURNS>void</RETURNS>
+GstMultiUDPSink *gstmultiudpsink
+gchar *arg1
+gint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiUDPSink::clear</NAME>
+<RETURNS>void</RETURNS>
+GstMultiUDPSink *gstmultiudpsink
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiUDPSink::client-added</NAME>
+<RETURNS>void</RETURNS>
+GstMultiUDPSink *gstmultiudpsink
+gchar *arg1
+gint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiUDPSink::client-removed</NAME>
+<RETURNS>void</RETURNS>
+GstMultiUDPSink *gstmultiudpsink
+gchar *arg1
+gint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiUDPSink::get-stats</NAME>
+<RETURNS>GValueArray*</RETURNS>
+GstMultiUDPSink *gstmultiudpsink
+gchar *arg1
+gint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiUDPSink::remove</NAME>
+<RETURNS>void</RETURNS>
+GstMultiUDPSink *gstmultiudpsink
+gchar *arg1
+gint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDynUDPSink::get-stats</NAME>
+<RETURNS>GValueArray*</RETURNS>
+GstDynUDPSink *gstdynudpsink
+gchar *arg1
+gint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstFdSrc::timeout</NAME>
+<RETURNS>void</RETURNS>
+GstFdSrc *gstfdsrc
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDiceTV::reset</NAME>
+<RETURNS>void</RETURNS>
+GstDiceTV *gstdicetv
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstVertigoTV::reset-parms</NAME>
+<RETURNS>void</RETURNS>
+GstVertigoTV *gstvertigotv
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstShout2send::connection-problem</NAME>
+<RETURNS>void</RETURNS>
+GstShout2send *gstshout2send
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>DV1394Src::frame-dropped</NAME>
+<RETURNS>void</RETURNS>
+DV1394Src *dv1394src
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstJpegEnc::frame-encoded</NAME>
+<RETURNS>void</RETURNS>
+GstJpegEnc *gstjpegenc
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstAASink::frame-displayed</NAME>
+<RETURNS>void</RETURNS>
+GstAASink *gstaasink
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstAASink::have-size</NAME>
+<RETURNS>void</RETURNS>
+GstAASink *gstaasink
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiFdSink::add</NAME>
+<RETURNS>void</RETURNS>
+GstMultiFdSink *gstmultifdsink
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiFdSink::clear</NAME>
+<RETURNS>void</RETURNS>
+GstMultiFdSink *gstmultifdsink
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiFdSink::client-added</NAME>
+<RETURNS>void</RETURNS>
+GstMultiFdSink *gstmultifdsink
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiFdSink::client-removed</NAME>
+<RETURNS>void</RETURNS>
+GstMultiFdSink *gstmultifdsink
+gint  arg1
+GstClientStatus  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiFdSink::get-stats</NAME>
+<RETURNS>GValueArray*</RETURNS>
+GstMultiFdSink *gstmultifdsink
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiFdSink::remove</NAME>
+<RETURNS>void</RETURNS>
+GstMultiFdSink *gstmultifdsink
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDecodeBin::new-decoded-pad</NAME>
+<RETURNS>void</RETURNS>
+GstDecodeBin *gstdecodebin
+GstPad *arg1
+gboolean  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDecodeBin::removed-decoded-pad</NAME>
+<RETURNS>void</RETURNS>
+GstDecodeBin *gstdecodebin
+GstPad *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDecodeBin::unknown-type</NAME>
+<RETURNS>void</RETURNS>
+GstDecodeBin *gstdecodebin
+GstPad *arg1
+GstCaps *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstFakeSrc::handoff</NAME>
+<RETURNS>void</RETURNS>
+GstFakeSrc *gstfakesrc
+GstBuffer  arg1
+GstPad *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstFakeSink::handoff</NAME>
+<RETURNS>void</RETURNS>
+GstFakeSink *gstfakesink
+GstBuffer  arg1
+GstPad *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstIdentity::handoff</NAME>
+<RETURNS>void</RETURNS>
+GstIdentity *gstidentity
+GstBuffer  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstTypeFindElement::have-type</NAME>
+<RETURNS>void</RETURNS>
+GstTypeFindElement *gsttypefindelement
+guint  arg1
+GstCaps *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstQueue::overrun</NAME>
+<RETURNS>void</RETURNS>
+GstQueue *gstqueue
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstQueue::running</NAME>
+<RETURNS>void</RETURNS>
+GstQueue *gstqueue
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstQueue::underrun</NAME>
+<RETURNS>void</RETURNS>
+GstQueue *gstqueue
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstBin::element-added</NAME>
+<RETURNS>void</RETURNS>
+GstBin *gstbin
+GstElement *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstBin::element-removed</NAME>
+<RETURNS>void</RETURNS>
+GstBin *gstbin
+GstElement *arg1
+</SIGNAL>
+

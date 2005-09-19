@@ -6,12 +6,6 @@ Makefile.in
 *-undocumented.txt
 *-unused.txt
 
-*.args
-*.hierarchy
-*.interfaces
-*.prerequisites
-*.signals
-
 html
 sgml
 xml
