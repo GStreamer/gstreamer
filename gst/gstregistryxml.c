@@ -508,6 +508,8 @@ load_feature (xmlTextReaderPtr reader)
   GstPluginFeature *feature;
   GType type;
 
+  GST_DEBUG ("loading feature");
+
   if (!feature_name)
     return NULL;
   type = g_type_from_name (feature_name);
@@ -526,8 +528,10 @@ load_feature (xmlTextReaderPtr reader)
     return NULL;
   }
   while ((ret = xmlTextReaderRead (reader)) == 1) {
-    if (xmlTextReaderDepth (reader) == depth)
+    if (xmlTextReaderDepth (reader) == depth) {
+      GST_DEBUG ("loaded feature %p with name %s", feature, feature->name);
       return feature;
+    }
     if (xmlTextReaderNodeType (reader) == XML_READER_TYPE_ELEMENT &&
         xmlTextReaderDepth (reader) == depth + 1) {
       const gchar *tag = (gchar *) xmlTextReaderConstName (reader);
@@ -618,11 +622,13 @@ static GstPlugin *
 load_plugin (xmlTextReaderPtr reader, GList ** feature_list)
 {
   int ret;
-  GstPlugin *plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
+  GstPlugin *plugin;
 
   *feature_list = NULL;
 
-  GST_DEBUG ("parsing plugin");
+  GST_DEBUG ("creating new plugin and parsing");
+
+  plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
 
   plugin->flags |= GST_PLUGIN_FLAG_CACHED;
   while ((ret = xmlTextReaderRead (reader)) == 1) {

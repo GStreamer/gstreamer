@@ -78,15 +78,9 @@ gst_libs_controller_LDADD = $(GST_OBJ_LIBS) \
 # valgrind testing
 # these just need valgrind fixing, period
 VALGRIND_TO_FIX =				\
-	gst/gstbin				\
-	gst/gstelement				\
-	gst/gstevent				\
-	gst/gstghostpad				\
-	gst/gstpipeline				\
 	elements/fakesrc			\
-	elements/identity			\
+	gst/gstevent				\
 	generic/states				\
-	states/sinks				\
 	gst-libs/controller			\
 	pipelines/cleanup			\
 	pipelines/simple_launch_lines

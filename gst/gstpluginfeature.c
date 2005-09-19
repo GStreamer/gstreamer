@@ -83,15 +83,18 @@ gst_plugin_feature_load (GstPluginFeature * feature)
   g_return_val_if_fail (feature != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (feature), FALSE);
 
+  GST_DEBUG ("loading plugin for feature %p", feature);
   if (feature->loaded)
     return feature;
 
+  GST_DEBUG ("loading plugin %s", feature->plugin_name);
   plugin = gst_plugin_load_by_name (feature->plugin_name);
   if (!plugin) {
     g_critical ("Failed to load plugin containing feature '%s'.",
         GST_PLUGIN_FEATURE_NAME (feature));
     return NULL;
   }
+  GST_DEBUG ("loaded plugin %s", feature->plugin_name);
   gst_object_unref (plugin);
 
   real_feature =

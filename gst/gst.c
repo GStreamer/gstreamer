@@ -689,6 +689,7 @@ init_post (void)
       registry_file = g_build_filename (g_get_home_dir (),
           ".gstreamer-0.9", "registry.xml", NULL);
     }
+    GST_DEBUG ("Reading registry cache");
     gst_registry_xml_read_cache (default_registry, registry_file);
 
     plugin_path = g_getenv ("GST_PLUGIN_SYSTEM_PATH");
@@ -913,6 +914,7 @@ gst_deinit (void)
 {
   GstClock *clock;
 
+  GST_INFO ("deinitializing GStreamer");
   clock = gst_system_clock_obtain ();
   gst_object_unref (clock);
   gst_object_unref (clock);
@@ -920,6 +922,7 @@ gst_deinit (void)
   gst_registry_deinit ();
 
   gst_initialized = FALSE;
+  GST_INFO ("deinitialized GStreamer");
 }
 
 /**

@@ -324,7 +324,7 @@ GStaticMutex gst_plugin_loading_mutex = G_STATIC_MUTEX_INIT;
  * @filename: the plugin filename to load
  * @error: pointer to a NULL-valued GError
  *
- * Loads the given plugin.
+ * Loads the given plugin and refs it.  Caller needs to unref after use.
  *
  * Returns: a new GstPlugin or NULL, if an error occurred.
  */
@@ -816,25 +816,30 @@ gst_plugin_find_feature_by_name (GstPlugin * plugin, const gchar * name)
  * gst_plugin_load_by_name:
  * @name: name of plugin to load
  *
- * Load the named plugin.  
+ * Load the named plugin. Refs the plugin.
  *
  * Returns: whether the plugin was loaded or not
  */
 GstPlugin *
 gst_plugin_load_by_name (const gchar * name)
 {
-  GstPlugin *plugin;
+  GstPlugin *plugin, *newplugin;
   GError *error = NULL;
 
+  GST_DEBUG ("looking up plugin %s in default registry", name);
   plugin = gst_registry_find_plugin (gst_registry_get_default (), name);
   if (plugin) {
-    plugin = gst_plugin_load_file (plugin->filename, &error);
-    if (!plugin) {
+    GST_DEBUG ("loading plugin %s from file %s", name, plugin->filename);
+    newplugin = gst_plugin_load_file (plugin->filename, &error);
+    gst_object_unref (plugin);
+
+    if (!newplugin) {
       GST_WARNING ("load_plugin error: %s\n", error->message);
       g_error_free (error);
       return NULL;
     }
-    return plugin;
+    /* newplugin was reffed by load_file */
+    return newplugin;
   }
 
   GST_DEBUG ("Could not find plugin %s in registry", name);

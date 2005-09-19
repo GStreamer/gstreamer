@@ -54,6 +54,28 @@ GST_START_TEST (test_deinit_sysclock)
 
 GST_END_TEST;
 
+/* tests if we can create an element from a compiled-in plugin */
+GST_START_TEST (test_new_pipeline)
+{
+  GstElement *pipeline;
+
+  pipeline = gst_pipeline_new ("pipeline");
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
+/* tests if we can load an element from a plugin */
+GST_START_TEST (test_new_fakesrc)
+{
+  GstElement *element;
+
+  element = gst_element_factory_make ("fakesrc", NULL);
+  gst_object_unref (element);
+}
+
+GST_END_TEST;
+
 
 Suite *
 gst_suite (void)
@@ -65,6 +87,8 @@ gst_suite (void)
   tcase_add_test (tc_chain, test_init);
   tcase_add_test (tc_chain, test_deinit);
   tcase_add_test (tc_chain, test_deinit_sysclock);
+  tcase_add_test (tc_chain, test_new_pipeline);
+  tcase_add_test (tc_chain, test_new_fakesrc);
 
   return s;
 }

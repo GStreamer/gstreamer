@@ -152,7 +152,8 @@ gst_element_factory_finalize (GObject * object)
  * gst_element_factory_find:
  * @name: name of factory to find
  *
- * Search for an element factory of the given name.
+ * Search for an element factory of the given name. Refs the returned
+ * element factory; caller is responsible for unreffing.
  *
  * Returns: #GstElementFactory if found, NULL otherwise
  */
@@ -351,11 +352,11 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
 
   g_return_val_if_fail (factory != NULL, NULL);
 
-  gst_object_ref (factory);
   factory =
       GST_ELEMENT_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
           (factory)));
   if (factory == NULL) {
+    GST_DEBUG ("warning: loading the plugin for this factory returned NULL");
     return NULL;
   }
 
@@ -373,6 +374,10 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
   }
 #endif
 
+  /* FIXME: the object class gets a pointer to the factory that might
+   * be disposed at the end of this call if it was newly loaded;
+   * to fix that, we should ref and then unref in an object class finalize,
+   * which we don't have currently. */
   oclass = GST_ELEMENT_CLASS (g_type_class_ref (factory->type));
   if (oclass->elementfactory == NULL)
     oclass->elementfactory = factory;
@@ -421,6 +426,7 @@ gst_element_factory_make (const gchar * factoryname, const gchar * name)
     GST_INFO ("no such element factory \"%s\"!", factoryname);
     return NULL;
   }
+  GST_LOG ("gstelementfactory: found factory %p", factory);
   element = gst_element_factory_create (factory, name);
   if (element == NULL) {
     GST_INFO_OBJECT (factory, "couldn't create instance!");

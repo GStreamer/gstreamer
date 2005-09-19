@@ -1,3 +1,29 @@
+2005-09-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
+	  re-enable tests now that leaks are plugged
+	* check/gst/gst.c:
+	* check/gst/gstbin.c:
+	* check/gst/gstpipeline.c:
+	  add some more tests while fixing leaks
+	* common/check.mak:
+	  make sure binaries are uptodate when valgrinding/gdbing
+	* gst/gst.c:
+	* gst/gstelementfactory.c:
+	  remove a ref too many, and add a FIXME for when we get
+	  round to disposing of classes
+	* gst/gstplugin.c:
+	  fix the refcounting when loading a plugin from a file and
+	  the code pretends that the pointer is the same even though
+	  of course it can change
+	* gst/gstpluginfeature.c:
+	  unref plugins marked cached (a bit confusing as a name)
+	  as the docs state should be done
+	  various doc additions to explain refcounting
+	* gst/gstregistry.c:
+	* gst/gstregistryxml.c:
+	  debugging
+
 2005-09-19  Wim Taymans  <wim@fluendo.com>
 
 	* check/gst/gstbin.c: (pop_messages), (GST_START_TEST):

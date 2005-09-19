@@ -190,8 +190,6 @@ gst_registry_finalize (GObject * object)
     GstPluginFeature *feature = f->data;
 
     if (feature) {
-      GST_DEBUG_OBJECT (registry, "removing feature %s",
-          gst_plugin_feature_get_name (feature));
       gst_registry_remove_feature (registry, feature);
     }
     f = g_list_next (f);
@@ -287,13 +285,14 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
   GST_LOCK (registry);
   existing_plugin = gst_registry_lookup_locked (registry, plugin->filename);
   if (existing_plugin) {
-    GST_DEBUG ("Replacing existing plugin %p for filename \"%s\"",
-        existing_plugin, plugin->filename);
+    GST_DEBUG
+        ("Replacing existing plugin %p with new plugin %p for filename \"%s\"",
+        existing_plugin, plugin, plugin->filename);
     registry->plugins = g_list_remove (registry->plugins, existing_plugin);
     gst_object_unref (existing_plugin);
   }
 
-  GST_DEBUG ("Adding plugin %p for filename \"%s\"", plugin, plugin->filename);
+  GST_DEBUG ("adding plugin %p for filename \"%s\"", plugin, plugin->filename);
 
   registry->plugins = g_list_prepend (registry->plugins, plugin);
 
@@ -349,13 +348,13 @@ gst_registry_add_feature (GstRegistry * registry, GstPluginFeature * feature)
   existing_feature = gst_registry_lookup_feature_locked (registry,
       feature->name);
   if (existing_feature) {
-    GST_DEBUG ("Replacing existing feature %p (%s)",
+    GST_DEBUG_OBJECT (registry, "Replacing existing feature %p (%s)",
         existing_feature, feature->name);
     registry->features = g_list_remove (registry->features, existing_feature);
     gst_object_unref (existing_feature);
   }
 
-  GST_DEBUG ("Adding feature %p (%s)", feature, feature->name);
+  GST_DEBUG_OBJECT (registry, "adding feature %p (%s)", feature, feature->name);
 
   registry->features = g_list_prepend (registry->features, feature);
 
@@ -363,7 +362,7 @@ gst_registry_add_feature (GstRegistry * registry, GstPluginFeature * feature)
   gst_object_sink (feature);
   GST_UNLOCK (registry);
 
-  GST_DEBUG ("emitting feature-added for %s", feature->name);
+  GST_DEBUG_OBJECT (registry, "emitting feature-added for %s", feature->name);
   g_signal_emit (G_OBJECT (registry), gst_registry_signals[FEATURE_ADDED], 0,
       feature);
 
@@ -381,6 +380,8 @@ void
 gst_registry_remove_feature (GstRegistry * registry, GstPluginFeature * feature)
 {
   g_return_if_fail (GST_IS_REGISTRY (registry));
+  GST_DEBUG_OBJECT (registry, "removing feature %p (%s)",
+      feature, gst_plugin_feature_get_name (feature));
 
   GST_LOCK (registry);
   registry->features = g_list_remove (registry->features, feature);
@@ -398,8 +399,10 @@ gst_registry_remove_feature (GstRegistry * registry, GstPluginFeature * feature)
  * Runs a filter against all plugins in the registry and returns a GList with
  * the results. If the first flag is set, only the first match is
  * returned (as a list with a single object).
+ * Every plugin is reffed; use gst_plugin_list_free() after use, which
+ * will unref again.
  *
- * Returns: a GList of plugins, gst_plugin_list_free after use.
+ * Returns: a #GList of #GstPlugin
  */
 GList *
 gst_registry_plugin_filter (GstRegistry * registry,
@@ -461,6 +464,7 @@ gst_registry_feature_filter (GstRegistry * registry,
  * @name: the plugin name to find
  *
  * Find the plugin with the given name in the registry.
+ * The plugin will be reffed; caller is responsible for unreffing.
  *
  * Returns: The plugin with the given name or NULL if the plugin was not found.
  */
@@ -605,6 +609,16 @@ gst_registry_lookup_locked (GstRegistry * registry, const char *filename)
   return NULL;
 }
 
+/**
+ * gst_registry_lookup:
+ * @registry: the registry to look up in
+ * @filename: the name of the file to look up
+ *
+ * Look up a plugin in the given registry with the given filename.
+ * If found, plugin is reffed.  Caller must unref after use.
+ *
+ * Returns: the #GstPlugin if found, or NULL if not.
+ */
 GstPlugin *
 gst_registry_lookup (GstRegistry * registry, const char *filename)
 {
@@ -721,13 +735,16 @@ _gst_registry_remove_cache_plugins (GstRegistry * registry)
   GList *g_next;
   GstPlugin *plugin;
 
+  GST_DEBUG_OBJECT (registry, "removing cached plugins");
   g = registry->plugins;
   while (g) {
     g_next = g->next;
     plugin = g->data;
     if (plugin->flags & GST_PLUGIN_FLAG_CACHED) {
+      GST_DEBUG_OBJECT (registry, "removing cached plugin %s",
+          plugin->filename);
       registry->plugins = g_list_remove (registry->plugins, plugin);
-      //gst_object_unref (plugin);
+      gst_object_unref (plugin);
     }
     g = g_next;
   }
