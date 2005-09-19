@@ -4,6 +4,9 @@
 #include <gst/gst.h>
 #include <string.h>
 
+GST_DEBUG_CATEGORY (seek_debug);
+#define GST_CAT_DEFAULT (seek_debug)
+
 static GList *seekable_pads = NULL;
 static GList *rate_pads = NULL;
 static GList *seekable_elements = NULL;
@@ -171,14 +174,12 @@ make_wav_pipeline (const gchar * location)
 {
   GstElement *pipeline;
   GstElement *src, *decoder, *audiosink;
-  GstPad *seekable;
 
   pipeline = gst_pipeline_new ("app");
 
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   decoder = gst_element_factory_make_or_warn ("wavparse", "decoder");
   audiosink = gst_element_factory_make_or_warn (ASINK, "sink");
-  //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
@@ -187,12 +188,14 @@ make_wav_pipeline (const gchar * location)
   gst_bin_add (GST_BIN (pipeline), audiosink);
 
   gst_element_link (src, decoder);
-  gst_element_link (decoder, audiosink);
 
-  seekable = gst_element_get_pad (decoder, "src");
-  seekable_pads = g_list_prepend (seekable_pads, seekable);
-  rate_pads = g_list_prepend (rate_pads, seekable);
-  rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (decoder, "sink"));
+  setup_dynamic_link (decoder, "src", gst_element_get_pad (audiosink, "sink"),
+      NULL);
+
+  seekable_elements = g_list_prepend (seekable_elements, audiosink);
+
+  /* force element seeking on this pipeline */
+  elem_seek = TRUE;
 
   return pipeline;
 }
@@ -1178,6 +1181,9 @@ main (int argc, char **argv)
   gint type;
 
   gst_init_with_popt_table (&argc, &argv, options);
+
+  GST_DEBUG_CATEGORY_INIT (seek_debug, "seek", 0, "seek example");
+
   gtk_init (&argc, &argv);
 
   if (argc != 3) {

@@ -1,5 +1,10 @@
 2005-09-19  Wim Taymans  <wim@fluendo.com>
 
+	* examples/seeking/seek.c: (make_wav_pipeline), (main):
+	Fixed wav pipeline.
+
+2005-09-19  Wim Taymans  <wim@fluendo.com>
+
 	* gst-libs/gst/rtp/gstbasertppayload.c:
 	(gst_basertppayload_class_init), (gst_basertppayload_init),
 	(gst_basertppayload_setcaps), (gst_basertppayload_chain),
