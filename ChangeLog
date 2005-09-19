@@ -1,3 +1,8 @@
+2005-09-19  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_to_pixfmt):
+	Better framerate setting.
+
 2005-09-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_sink_event):

@@ -1111,8 +1111,21 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
   gst_structure_get_int (structure, "bpp", &context->bits_per_sample);
 
   if (gst_structure_get_double (structure, "framerate", &fps)) {
-    context->time_base.den = fps * DEFAULT_FRAME_RATE_BASE;
-    context->time_base.num = DEFAULT_FRAME_RATE_BASE;
+    GValue dfps = { 0 };
+    GValue framerate = { 0 };
+
+    /* convert double to fraction for the framerate */
+    g_value_init (&dfps, G_TYPE_DOUBLE);
+    g_value_init (&framerate, GST_TYPE_FRACTION);
+    g_value_set_double (&dfps, fps);
+    g_value_transform (&dfps, &framerate);
+
+    /* somehow these seem mixed up.. */
+    context->time_base.den = gst_value_get_fraction_numerator (&framerate);
+    context->time_base.num = gst_value_get_fraction_denominator (&framerate);
+
+    GST_DEBUG ("setting framerate %d/%d = %lf",
+		    context->time_base.den, context->time_base.num, fps);
   }
 
   if (!raw)
