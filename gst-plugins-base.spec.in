@@ -64,10 +64,8 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 rm -rf $RPM_BUILD_ROOT
 
 %post
-%{register}
 
 %postun
-%{register}
 
 %files -f gst-plugins-base-%{majorminor}.lang
 %defattr(-, root, root)
@@ -126,10 +124,8 @@ rm -rf $RPM_BUILD_ROOT
 # @USE_GST_V4L2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux2.so
 # @USE_GST_V4L2_TRUE@
 # @USE_GST_V4L2_TRUE@%post -n gstreamer-plugins-v4l2
-# @USE_GST_V4L2_TRUE@%{register}
 # @USE_GST_V4L2_TRUE@
 # @USE_GST_V4L2_TRUE@%postun -n gstreamer-plugins-v4l2
-# @USE_GST_V4L2_TRUE@%{register}
 
 # base plugins with dependencies
 @USE_ALSA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstalsa.so
