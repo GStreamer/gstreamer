@@ -1,3 +1,15 @@
+2005-09-19  Torsten Schoenfeld  <kaffeetisch at gmx dot net>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/interfaces/propertyprobe.c:
+	(gst_property_probe_probe_property_name),
+	(gst_property_probe_needs_probe_name),
+	(gst_property_probe_get_values_name),
+	(gst_property_probe_probe_and_get_values_name):
+	  Fix wrong macro usage; it's G_OBJECT_GET_CLASS(obj) or
+	  G_OBJECT_CLASS(klass), not G_OBJECT_CLASS(obj). (#316571)
+
 2005-09-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:

@@ -163,7 +163,7 @@ gst_property_probe_probe_property_name (GstPropertyProbe * probe,
   g_return_if_fail (probe != NULL);
   g_return_if_fail (name != NULL);
 
-  pspec = g_object_class_find_property (G_OBJECT_CLASS (probe), name);
+  pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (probe), name);
   if (!pspec) {
     g_warning ("No such property %s", name);
     return;
@@ -222,7 +222,7 @@ gst_property_probe_needs_probe_name (GstPropertyProbe * probe,
   g_return_val_if_fail (probe != NULL, FALSE);
   g_return_val_if_fail (name != NULL, FALSE);
 
-  pspec = g_object_class_find_property (G_OBJECT_CLASS (probe), name);
+  pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (probe), name);
   if (!pspec) {
     g_warning ("No such property %s", name);
     return FALSE;
@@ -278,7 +278,7 @@ gst_property_probe_get_values_name (GstPropertyProbe * probe,
   g_return_val_if_fail (probe != NULL, NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
-  pspec = g_object_class_find_property (G_OBJECT_CLASS (probe), name);
+  pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (probe), name);
   if (!pspec) {
     g_warning ("No such property %s", name);
     return NULL;
@@ -335,7 +335,7 @@ gst_property_probe_probe_and_get_values_name (GstPropertyProbe * probe,
   g_return_val_if_fail (probe != NULL, NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
-  pspec = g_object_class_find_property (G_OBJECT_CLASS (probe), name);
+  pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (probe), name);
   if (!pspec) {
     g_warning ("No such property %s", name);
     return NULL;
