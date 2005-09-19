@@ -33,7 +33,7 @@ setup_pipeline (gchar * pipe_descr)
   return pipeline;
 }
 
-/* 
+/*
  * run_pipeline:
  * @pipe: the pipeline to run
  * @desc: the description for use in messages
@@ -43,16 +43,16 @@ setup_pipeline (gchar * pipe_descr)
  * the poll call will time out after half a second.
  */
 static void
-run_pipeline (GstElement * pipe, gchar * descr,
+run_pipeline (GstElement * pipeline, gchar * descr,
     GstMessageType events, GstMessageType tevent)
 {
   GstBus *bus;
   GstMessageType revent;
 
-  g_assert (pipe);
-  bus = gst_element_get_bus (pipe);
+  g_assert (pipeline);
+  bus = gst_element_get_bus (pipeline);
   g_assert (bus);
-  if (gst_element_set_state (pipe,
+  if (gst_element_set_state (pipeline,
           GST_STATE_PLAYING) != GST_STATE_CHANGE_SUCCESS) {
     g_critical ("Couldn't set pipeline to PLAYING");
     goto done;
@@ -82,8 +82,9 @@ run_pipeline (GstElement * pipe, gchar * descr,
   }
 
 done:
-  gst_element_set_state (pipe, GST_STATE_NULL);
-  gst_object_unref (pipe);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+  gst_object_unref (bus);
 }
 
 GST_START_TEST (test_2_elements)
@@ -110,7 +111,10 @@ GST_START_TEST (test_2_elements)
   ASSERT_CRITICAL (run_pipeline (setup_pipeline (s), s,
           GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_UNKNOWN));
 }
-GST_END_TEST static void
+
+GST_END_TEST;
+
+static void
 got_handoff (GstElement * sink, GstBuffer * buf, GstPad * pad, gpointer unused)
 {
   gst_element_post_message
@@ -174,6 +178,7 @@ GST_START_TEST (test_stop_from_app)
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
+  gst_object_unref (bus);
 
   assert_live_count (GST_TYPE_BUFFER, 0);
 }

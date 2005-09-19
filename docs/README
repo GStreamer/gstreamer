@@ -222,7 +222,9 @@ in the various plugin packages.
       - add an xinclude of a file named "element-(element)-example.xml"
         to the docbook documentation piece in the element source code
   - add the header to EXTRA_HFILES in Makefile.am to be able to document
-    signals and args
+    signals and args; in that case, the object struct needs to be in
+    -sections.txt outside of the Standard Subsection (which is annoying,
+    but ...)
     (FIXME: are we sure we can both do the xinclude from the tmpl/ sgml,
      as well as an override from the source itself ? maybe we should just
      make sure the xinclude is in the source itself instead ?)

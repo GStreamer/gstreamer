@@ -1,6 +1,16 @@
 2005-09-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:
+	* check/pipelines/cleanup.c: (run_pipeline):
+	* check/pipelines/simple_launch_lines.c: (run_pipeline),
+	(GST_START_TEST):
+	  enable cleanup again after fixing the leak
+	* docs/README:
+	  some more info on docs
+
+2005-09-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
 	  re-enable tests now that leaks are plugged
 	* check/gst/gst.c:
 	* check/gst/gstbin.c:

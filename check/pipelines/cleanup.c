@@ -37,15 +37,15 @@ setup_pipeline (gchar * pipe_descr)
    the poll call will time out after half a second.
  */
 static void
-run_pipeline (GstElement * pipe, gchar * descr,
+run_pipeline (GstElement * pipeline, gchar * descr,
     GstMessageType events, GstMessageType tevent)
 {
   GstBus *bus;
   GstMessageType revent;
 
-  bus = gst_element_get_bus (pipe);
+  bus = gst_element_get_bus (pipeline);
   g_assert (bus);
-  gst_element_set_state (pipe, GST_STATE_PLAYING);
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   while (1) {
     GstMessage *message = gst_bus_poll (bus, GST_MESSAGE_ANY, GST_SECOND / 2);
@@ -70,8 +70,9 @@ run_pipeline (GstElement * pipe, gchar * descr,
         revent, tevent, descr);
   }
 
-  gst_element_set_state (pipe, GST_STATE_NULL);
-  gst_object_unref (pipe);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+  gst_object_unref (bus);
 }
 
 GST_START_TEST (test_pipeline_unref)

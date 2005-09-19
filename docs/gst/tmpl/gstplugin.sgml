@@ -244,30 +244,6 @@ to get a list of plugins that match certain criteria.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_plugin_feature_filter ##### -->
-<para>
-
-</para>
-
-@plugin: 
-@filter: 
-@first: 
-@user_data: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_plugin_list_feature_filter ##### -->
-<para>
-
-</para>
-
-@list: 
-@filter: 
-@first: 
-@user_data: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_plugin_name_filter ##### -->
 <para>
 
@@ -275,26 +251,6 @@ to get a list of plugins that match certain criteria.
 
 @plugin: 
 @name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_plugin_get_feature_list ##### -->
-<para>
-
-</para>
-
-@plugin: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_plugin_find_feature ##### -->
-<para>
-
-</para>
-
-@plugin: 
-@name: 
-@type: 
 @Returns: 
 
 
@@ -316,15 +272,6 @@ to get a list of plugins that match certain criteria.
 @filename: 
 @error: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_plugin_add_feature ##### -->
-<para>
-
-</para>
-
-@plugin: 
-@feature: 
 
 
 <!-- ##### FUNCTION gst_plugin_load ##### -->
