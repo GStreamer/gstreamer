@@ -12,18 +12,16 @@ static gboolean
 event_loop (GstElement * pipeline)
 {
   GstBus *bus;
-  GstMessageType revent;
   GstMessage *message = NULL;
 
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
 
   while (TRUE) {
-    revent = gst_bus_poll (bus, GST_MESSAGE_ANY, -1);
+    message = gst_bus_poll (bus, GST_MESSAGE_ANY, -1);
 
-    message = gst_bus_pop (bus);
     g_return_val_if_fail (message != NULL, TRUE);
 
-    switch (revent) {
+    switch (GST_MESSAGE_TYPE (message)) {
       case GST_MESSAGE_EOS:
         gst_message_unref (message);
         return FALSE;

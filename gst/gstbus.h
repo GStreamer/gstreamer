@@ -59,24 +59,29 @@ typedef enum
  * @data: user data that has been given, when registering the handler
  *
  * Handler will be invoked synchronously, when a new message has been injected
- * into the bus.
+ * into the bus. This function is mostly used internally. Only one sync handler
+ * can be attached to a given bus.
  *
  * Returns: #GstBusSyncReply stating what to do with the message
  */
-typedef GstBusSyncReply (*GstBusSyncHandler)	(GstBus * bus, GstMessage * message, gpointer data);
+typedef GstBusSyncReply (*GstBusSyncHandler) 	(GstBus * bus, GstMessage * message, gpointer data);
+
 /**
- * GstBusHandler:
+ * GstBusFunc:
  * @bus: the #GstBus that sent the message
  * @message: the #GstMessage
  * @data: user data that has been given, when registering the handler
  *
- * Handler will be invoked asynchronously, after a new message has been injected
- * into the bus. Return %TRUE if the message has been handled. It will then be
- * taken from the bus and _unref()'ed.
+ * Specifies the type of function passed to #gst_bus_add_watch() or 
+ * #gst_bus_add_watch_full(), which is called from the mainloop when a message
+ * is available on the bus.
  *
- * Returns: %TRUE if message should be taken from the bus
+ * The message passed to the function will be unreffed after execution of this
+ * function so it should not be freed in the function. 
+ *
+ * Returns: %FALSE if the event source should be removed. 
  */
-typedef gboolean 	(*GstBusHandler) 	(GstBus * bus, GstMessage * message, gpointer data);
+typedef gboolean 	(*GstBusFunc)	 	(GstBus * bus, GstMessage * message, gpointer data);
 
 struct _GstBus
 {
@@ -107,7 +112,7 @@ GstBus*			gst_bus_new	 		(void);
 
 gboolean 		gst_bus_post 			(GstBus * bus, GstMessage * message);
 
-gboolean 		gst_bus_have_pending 		(GstBus * bus);
+gboolean 		gst_bus_have_pending 		(GstBus * bus, GstMessageType events);
 GstMessage *		gst_bus_peek 			(GstBus * bus);
 GstMessage *		gst_bus_pop 			(GstBus * bus);
 void			gst_bus_set_flushing		(GstBus * bus, gboolean flushing);
@@ -115,16 +120,19 @@ void			gst_bus_set_flushing		(GstBus * bus, gboolean flushing);
 void 			gst_bus_set_sync_handler 	(GstBus * bus, GstBusSyncHandler func,
     							 gpointer data);
 
-GSource *		gst_bus_create_watch 		(GstBus * bus);
+GSource *		gst_bus_create_watch 		(GstBus * bus, GstMessageType events);
 guint 			gst_bus_add_watch_full 		(GstBus * bus,
     							 gint priority,
-    							 GstBusHandler handler, 
+							 GstMessageType events,
+    							 GstBusFunc func, 
 							 gpointer user_data, 
 							 GDestroyNotify notify);
 guint 			gst_bus_add_watch 		(GstBus * bus,
-    							 GstBusHandler handler, 
+							 GstMessageType events,
+    							 GstBusFunc func, 
 							 gpointer user_data);
-GstMessageType		gst_bus_poll			(GstBus *bus, GstMessageType events,
+
+GstMessage*		gst_bus_poll			(GstBus *bus, GstMessageType events,
                                                          GstClockTimeDiff timeout);
 
 G_END_DECLS

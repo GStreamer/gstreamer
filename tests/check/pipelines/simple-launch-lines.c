@@ -59,11 +59,14 @@ run_pipeline (GstElement * pipe, gchar * descr,
   }
 
   while (1) {
-    revent = gst_bus_poll (bus, GST_MESSAGE_ANY, GST_SECOND / 2);
+    GstMessage *message = gst_bus_poll (bus, GST_MESSAGE_ANY, GST_SECOND / 2);
 
-    /* always have to pop the message before getting back into poll */
-    if (revent != GST_MESSAGE_UNKNOWN)
-      gst_message_unref (gst_bus_pop (bus));
+    if (message) {
+      revent = GST_MESSAGE_TYPE (message);
+      gst_message_unref (message);
+    } else {
+      revent = GST_MESSAGE_UNKNOWN;
+    }
 
     if (revent == tevent) {
       break;
@@ -138,6 +141,7 @@ GST_START_TEST (test_stop_from_app)
   GstElement *fakesrc, *fakesink, *pipeline;
   GstBus *bus;
   GstMessageType revent;
+  GstMessage *message;
 
   assert_live_count (GST_TYPE_BUFFER, 0);
 
@@ -159,17 +163,22 @@ GST_START_TEST (test_stop_from_app)
   g_assert (bus);
 
   /* will time out after half a second */
-  revent = gst_bus_poll (bus, GST_MESSAGE_APPLICATION, GST_SECOND / 2);
-
+  message = gst_bus_poll (bus, GST_MESSAGE_APPLICATION, GST_SECOND / 2);
+  if (message) {
+    revent = GST_MESSAGE_TYPE (message);
+    gst_message_unref (message);
+  } else {
+    revent = GST_MESSAGE_UNKNOWN;
+  }
   g_return_if_fail (revent == GST_MESSAGE_APPLICATION);
-  gst_message_unref (gst_bus_pop (bus));
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
 
   assert_live_count (GST_TYPE_BUFFER, 0);
 }
-GST_END_TEST Suite * simple_launch_lines_suite (void)
+GST_END_TEST Suite *
+simple_launch_lines_suite (void)
 {
   Suite *s = suite_create ("Pipelines");
   TCase *tc_chain = tcase_create ("linear");

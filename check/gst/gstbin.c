@@ -31,10 +31,11 @@ pop_messages (GstBus * bus, int count)
 
   GST_DEBUG ("popping %d messages", count);
   for (i = 0; i < count; ++i) {
-    fail_unless (gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, -1)
+    message = gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, -1);
+
+    fail_unless (message && GST_MESSAGE_TYPE (message)
         == GST_MESSAGE_STATE_CHANGED, "did not get GST_MESSAGE_STATE_CHANGED");
 
-    message = gst_bus_pop (bus);
     gst_message_unref (message);
   }
   GST_DEBUG ("popped %d messages", count);
@@ -121,11 +122,11 @@ GST_START_TEST (test_message_state_changed)
   ASSERT_OBJECT_REFCOUNT (bin, "bin", 2);
 
   /* get and unref the message, causing a decref on the bin */
-  fail_unless (gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED,
-          -1) == GST_MESSAGE_STATE_CHANGED,
-      "did not get GST_MESSAGE_STATE_CHANGED");
+  message = gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, -1);
 
-  message = gst_bus_pop (bus);
+  fail_unless (message && GST_MESSAGE_TYPE (message)
+      == GST_MESSAGE_STATE_CHANGED, "did not get GST_MESSAGE_STATE_CHANGED");
+
   gst_message_unref (message);
 
   ASSERT_OBJECT_REFCOUNT (bin, "bin", 1);
@@ -166,10 +167,10 @@ GST_START_TEST (test_message_state_changed_child)
   ASSERT_OBJECT_REFCOUNT (bin, "bin", 2);
 
   /* get and unref the message, causing a decref on the src */
-  fail_unless (gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, -1)
+  message = gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, -1);
+  fail_unless (message && GST_MESSAGE_TYPE (message)
       == GST_MESSAGE_STATE_CHANGED, "did not get GST_MESSAGE_STATE_CHANGED");
 
-  message = gst_bus_pop (bus);
   fail_unless (message->src == GST_OBJECT (src));
   gst_message_unref (message);
 
@@ -177,10 +178,10 @@ GST_START_TEST (test_message_state_changed_child)
   ASSERT_OBJECT_REFCOUNT (bin, "bin", 2);
 
   /* get and unref message 2, causing a decref on the bin */
-  fail_unless (gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, -1)
+  message = gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, -1);
+  fail_unless (message && GST_MESSAGE_TYPE (message)
       == GST_MESSAGE_STATE_CHANGED, "did not get GST_MESSAGE_STATE_CHANGED");
 
-  message = gst_bus_pop (bus);
   fail_unless (message->src == GST_OBJECT (bin));
   gst_message_unref (message);
 
@@ -341,7 +342,7 @@ GST_START_TEST (test_watch_for_state_change)
 
   pop_messages (bus, 5);
 
-  fail_unless (gst_bus_have_pending (bus) == FALSE,
+  fail_unless (gst_bus_have_pending (bus, GST_MESSAGE_ANY) == FALSE,
       "Unexpected messages on bus");
 
   gst_bin_watch_for_state_change (GST_BIN (bin));
@@ -349,7 +350,7 @@ GST_START_TEST (test_watch_for_state_change)
   /* should get the bin's state change message now */
   pop_messages (bus, 1);
 
-  fail_unless (gst_bus_have_pending (bus) == FALSE,
+  fail_unless (gst_bus_have_pending (bus, GST_MESSAGE_ANY) == FALSE,
       "Unexpected messages on bus");
 
   fail_unless (gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING)
@@ -364,7 +365,7 @@ GST_START_TEST (test_watch_for_state_change)
 
   pop_messages (bus, 3);
 
-  fail_unless (gst_bus_have_pending (bus) == FALSE,
+  fail_unless (gst_bus_have_pending (bus, GST_MESSAGE_ANY) == FALSE,
       "Unexpected messages on bus");
 
   /* setting bin to NULL flushes the bus automatically */

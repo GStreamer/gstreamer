@@ -42,8 +42,8 @@
  * up to the specified timeout value until one of the specified messages types
  * is posted on the bus. The application can then _pop() the messages from the
  * bus to handle them.
- * Alternatively the application can register an asynchronous bus handler using
- * gst_bus_add_watch_full() orgst_bus_add_watch(). This handler will receive
+ * Alternatively the application can register an asynchronous bus function using
+ * gst_bus_add_watch_full() orgst_bus_add_watch(). This function will receive
  * messages a short while after they have been posted.
  * 
  * It is also possible to get messages from the bus without any thread 
@@ -52,12 +52,7 @@
  * message on the bus. This should only be used if the application is able
  * to deal with messages from different threads.
  *
- * It is important to make sure that every message is popped from the bus at
- * some point in time. Otherwise it will be presented to the watches (#GSource
- * elements) again and again. One way to implement it is having one watch with a
- * low priority (see gst_add_watch_full()) that pops all messages.
- * 
- * Every #GstPipeline has one bus.
+ * Every #GstBin has one bus.
  */
 
 #include <errno.h>
@@ -324,26 +319,35 @@ is_flushing:
 /**
  * gst_bus_have_pending:
  * @bus: a #GstBus to check
+ * @events: a mask of #GstMessageType, representing the set of message types to
+ * watch for.
  *
- * Check if there are pending messages on the bus that should be 
- * handled.
+ * Check if there are pending messages on the bus of the given types that 
+ * should be handled.
  *
  * Returns: TRUE if there are messages on the bus to be handled.
  *
  * MT safe.
  */
 gboolean
-gst_bus_have_pending (GstBus * bus)
+gst_bus_have_pending (GstBus * bus, GstMessageType events)
 {
-  gint length;
+  GstMessage *message;
+  gboolean result;
 
   g_return_val_if_fail (GST_IS_BUS (bus), FALSE);
 
   g_mutex_lock (bus->queue_lock);
-  length = g_queue_get_length (bus->queue);
+  /* see if there is a message on the bus that satisfies the
+   * event mask */
+  message = g_queue_peek_head (bus->queue);
+  if (message)
+    result = (GST_MESSAGE_TYPE (message) & events) != 0;
+  else
+    result = FALSE;
   g_mutex_unlock (bus->queue_lock);
 
-  return (length > 0);
+  return result;
 }
 
 /**
@@ -470,29 +474,34 @@ typedef struct
 {
   GSource source;
   GstBus *bus;
+  GstMessageType events;
 } GstBusSource;
 
 static gboolean
 gst_bus_source_prepare (GSource * source, gint * timeout)
 {
+  GstBusSource *bsrc = (GstBusSource *) source;
+
   *timeout = -1;
-  return gst_bus_have_pending (((GstBusSource *) source)->bus);
+  return gst_bus_have_pending (bsrc->bus, bsrc->events);
 }
 
 static gboolean
 gst_bus_source_check (GSource * source)
 {
-  return gst_bus_have_pending (((GstBusSource *) source)->bus);
+  GstBusSource *bsrc = (GstBusSource *) source;
+
+  return gst_bus_have_pending (bsrc->bus, bsrc->events);
 }
 
 static gboolean
 gst_bus_source_dispatch (GSource * source, GSourceFunc callback,
     gpointer user_data)
 {
-  GstBusHandler handler = (GstBusHandler) callback;
+  GstBusFunc handler = (GstBusFunc) callback;
   GstBusSource *bsource = (GstBusSource *) source;
   GstMessage *message;
-  gboolean needs_pop = TRUE;
+  gboolean keep;
   GstBus *bus;
 
   g_return_val_if_fail (bsource != NULL, FALSE);
@@ -501,34 +510,20 @@ gst_bus_source_dispatch (GSource * source, GSourceFunc callback,
 
   g_return_val_if_fail (GST_IS_BUS (bus), FALSE);
 
-  message = gst_bus_peek (bus);
-
-  GST_DEBUG_OBJECT (bus, "source %p have message %p", source, message);
-
-  g_return_val_if_fail (message != NULL, TRUE);
+  message = gst_bus_pop (bus);
+  g_return_val_if_fail (message != NULL, FALSE);
 
   if (!handler)
     goto no_handler;
 
   GST_DEBUG_OBJECT (bus, "source %p calling dispatch with %p", source, message);
 
-  needs_pop = handler (bus, message, user_data);
+  keep = handler (bus, message, user_data);
   gst_message_unref (message);
 
-  GST_DEBUG_OBJECT (bus, "source %p handler returns %d", source, needs_pop);
-  if (needs_pop) {
-    message = gst_bus_pop (bus);
-    if (message) {
-      gst_message_unref (message);
-    } else {
-      /* after executing the handler, the app could have disposed
-       * the pipeline and set the bus to flushing. It is possible
-       * then that there are no more messages on the bus. this is
-       * not a problem. */
-      GST_DEBUG ("handler requested pop but no message on the bus");
-    }
-  }
-  return TRUE;
+  GST_DEBUG_OBJECT (bus, "source %p handler returns %d", source, keep);
+
+  return keep;
 
 no_handler:
   {
@@ -558,13 +553,19 @@ static GSourceFuncs gst_bus_source_funcs = {
 /**
  * gst_bus_create_watch:
  * @bus: a #GstBus to create the watch for
+ * @events: a mask of #GstMessageType, representing the set of message types to
+ * watch for.
  *
- * Create watch for this bus. 
+ * Create watch for this bus. The source will only act on messages of the
+ * given types, messages of other types will simply remain on the bus and 
+ * this GSource will not be dispatched again before the message is popped off
+ * the bus. For this reason one typically has a low priority GSource that
+ * pops all remaining messages from the bus not handled by the other GSources.
  *
  * Returns: A #GSource that can be added to a mainloop.
  */
 GSource *
-gst_bus_create_watch (GstBus * bus)
+gst_bus_create_watch (GstBus * bus, GstMessageType events)
 {
   GstBusSource *source;
 
@@ -574,6 +575,7 @@ gst_bus_create_watch (GstBus * bus)
       sizeof (GstBusSource));
   gst_object_ref (bus);
   source->bus = bus;
+  source->events = events;
 
   return (GSource *) source;
 }
@@ -582,34 +584,37 @@ gst_bus_create_watch (GstBus * bus)
  * gst_bus_add_watch_full:
  * @bus: a #GstBus to create the watch for.
  * @priority: The priority of the watch.
- * @handler: A function to call when a message is received.
- * @user_data: user data passed to @handler.
+ * @events: a mask of #GstMessageType, representing the set of message types to
+ * watch for.
+ * @func: A function to call when a message is received.
+ * @user_data: user data passed to @func.
  * @notify: the function to call when the source is removed.
  *
- * Adds the bus to the mainloop with the given priority. If the handler returns
- * TRUE, the message will then be popped off the queue. When the handler is
- * called, the message belongs to the caller; if you want to keep a copy of it,
- * call gst_message_ref before leaving the handler.
+ * Adds the bus to the mainloop with the given priority. If the func returns
+ * FALSE, the func will be removed. 
+ *
+ * When the func is called, the message belongs to the caller; if you want to 
+ * keep a copy of it, call gst_message_ref before leaving the func.
  *
  * Returns: The event source id.
  *
  * MT safe.
  */
 guint
-gst_bus_add_watch_full (GstBus * bus, gint priority,
-    GstBusHandler handler, gpointer user_data, GDestroyNotify notify)
+gst_bus_add_watch_full (GstBus * bus, gint priority, GstMessageType events,
+    GstBusFunc func, gpointer user_data, GDestroyNotify notify)
 {
   guint id;
   GSource *source;
 
   g_return_val_if_fail (GST_IS_BUS (bus), 0);
 
-  source = gst_bus_create_watch (bus);
+  source = gst_bus_create_watch (bus, events);
 
   if (priority != G_PRIORITY_DEFAULT)
     g_source_set_priority (source, priority);
 
-  g_source_set_callback (source, (GSourceFunc) handler, user_data, notify);
+  g_source_set_callback (source, (GSourceFunc) func, user_data, notify);
 
   id = g_source_attach (source, NULL);
   g_source_unref (source);
@@ -621,8 +626,10 @@ gst_bus_add_watch_full (GstBus * bus, gint priority,
 /**
  * gst_bus_add_watch:
  * @bus: a #GstBus to create the watch for
- * @handler: A function to call when a message is received.
- * @user_data: user data passed to @handler.
+ * @events: a mask of #GstMessageType, representing the set of message types to
+ * watch for.
+ * @func: A function to call when a message is received.
+ * @user_data: user data passed to @func.
  *
  * Adds the bus to the mainloop with the default priority.
  *
@@ -631,10 +638,11 @@ gst_bus_add_watch_full (GstBus * bus, gint priority,
  * MT safe.
  */
 guint
-gst_bus_add_watch (GstBus * bus, GstBusHandler handler, gpointer user_data)
+gst_bus_add_watch (GstBus * bus, GstMessageType events, GstBusFunc func,
+    gpointer user_data)
 {
-  return gst_bus_add_watch_full (bus, G_PRIORITY_DEFAULT, handler, user_data,
-      NULL);
+  return gst_bus_add_watch_full (bus, G_PRIORITY_DEFAULT, events, func,
+      user_data, NULL);
 }
 
 typedef struct
@@ -643,25 +651,26 @@ typedef struct
   guint timeout_id;
   gboolean source_running;
   GstMessageType events;
-  GstMessageType revent;
+  GstMessage *message;
 } GstBusPollData;
 
 static gboolean
-poll_handler (GstBus * bus, GstMessage * message, GstBusPollData * poll_data)
+poll_func (GstBus * bus, GstMessage * message, GstBusPollData * poll_data)
 {
   if (!g_main_loop_is_running (poll_data->loop))
-    return FALSE;
+    return TRUE;
 
   if (GST_MESSAGE_TYPE (message) & poll_data->events) {
-    poll_data->revent = GST_MESSAGE_TYPE (message);
+    g_return_val_if_fail (poll_data->message == NULL, FALSE);
+    /* keep ref to message */
+    poll_data->message = gst_message_ref (message);
     g_main_loop_quit (poll_data->loop);
-
-    /* keep the message on the queue */
-    return FALSE;
   } else {
-    /* pop and unref the message */
-    return TRUE;
+    /* don't remove the source. */
   }
+  /* we always keep the source alive so that we don't accidentialy
+   * free the poll_data */
+  return TRUE;
 }
 
 static gboolean
@@ -669,8 +678,9 @@ poll_timeout (GstBusPollData * poll_data)
 {
   g_main_loop_quit (poll_data->loop);
 
-  /* returning FALSE will remove the source id */
-  return FALSE;
+  /* we don't remove the GSource as this would free our poll_data,
+   * which we still need */
+  return TRUE;
 }
 
 static void
@@ -706,24 +716,21 @@ poll_destroy_timeout (GstBusPollData * poll_data)
  *
  * This function will enter the default mainloop while polling.
  *
- * Returns: The type of the message that was received, or GST_MESSAGE_UNKNOWN if
- * the poll timed out. The message will remain in the bus queue; you will need
- * to gst_bus_pop() it off before entering gst_bus_poll() again.
+ * Returns: The message that was received, or NULL if the poll timed out. 
+ * The message is taken from the bus and needs to be unreffed after usage.
  */
-GstMessageType
+GstMessage *
 gst_bus_poll (GstBus * bus, GstMessageType events, GstClockTimeDiff timeout)
 {
   GstBusPollData *poll_data;
-  GstMessageType ret;
+  GstMessage *ret;
   guint id;
 
   poll_data = g_new0 (GstBusPollData, 1);
-  g_return_val_if_fail (poll_data != NULL, GST_MESSAGE_UNKNOWN);
-
   poll_data->source_running = TRUE;
   poll_data->loop = g_main_loop_new (NULL, FALSE);
   poll_data->events = events;
-  poll_data->revent = GST_MESSAGE_UNKNOWN;
+  poll_data->message = NULL;
 
   if (timeout >= 0)
     poll_data->timeout_id = g_timeout_add_full (G_PRIORITY_DEFAULT_IDLE,
@@ -732,10 +739,12 @@ gst_bus_poll (GstBus * bus, GstMessageType events, GstClockTimeDiff timeout)
   else
     poll_data->timeout_id = 0;
 
-  id = gst_bus_add_watch_full (bus, G_PRIORITY_DEFAULT_IDLE,
-      (GstBusHandler) poll_handler, poll_data, (GDestroyNotify) poll_destroy);
+  id = gst_bus_add_watch_full (bus, G_PRIORITY_DEFAULT_IDLE, GST_MESSAGE_ANY,
+      (GstBusFunc) poll_func, poll_data, (GDestroyNotify) poll_destroy);
+
   g_main_loop_run (poll_data->loop);
-  ret = poll_data->revent;
+  /* holds a ref */
+  ret = poll_data->message;
 
   if (poll_data->timeout_id)
     g_source_remove (poll_data->timeout_id);
@@ -743,7 +752,7 @@ gst_bus_poll (GstBus * bus, GstMessageType events, GstClockTimeDiff timeout)
   /* poll_data may get destroyed at any time now */
   g_source_remove (id);
 
-  GST_DEBUG_OBJECT (bus, "finished poll with messagetype %d", ret);
+  GST_DEBUG_OBJECT (bus, "finished poll with message %p", ret);
 
   return ret;
 }

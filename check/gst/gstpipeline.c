@@ -87,15 +87,15 @@ GST_START_TEST (test_async_state_change_fake)
   while (!done) {
     GstMessage *message;
     GstState old, new;
-    GstMessageType type;
 
-    type = gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, -1);
-    message = gst_bus_pop (bus);
-    gst_message_parse_state_changed (message, &old, &new);
-    GST_DEBUG_OBJECT (message->src, "state change from %d to %d", old, new);
-    if (message->src == GST_OBJECT (pipeline) && new == GST_STATE_PLAYING)
-      done = TRUE;
-    gst_message_unref (message);
+    message = gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, -1);
+    if (message) {
+      gst_message_parse_state_changed (message, &old, &new);
+      GST_DEBUG_OBJECT (message->src, "state change from %d to %d", old, new);
+      if (message->src == GST_OBJECT (pipeline) && new == GST_STATE_PLAYING)
+        done = TRUE;
+      gst_message_unref (message);
+    }
   }
 
   g_object_set (G_OBJECT (pipeline), "play-timeout", 3 * GST_SECOND, NULL);

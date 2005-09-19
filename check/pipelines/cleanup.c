@@ -48,11 +48,14 @@ run_pipeline (GstElement * pipe, gchar * descr,
   gst_element_set_state (pipe, GST_STATE_PLAYING);
 
   while (1) {
-    revent = gst_bus_poll (bus, GST_MESSAGE_ANY, GST_SECOND / 2);
+    GstMessage *message = gst_bus_poll (bus, GST_MESSAGE_ANY, GST_SECOND / 2);
 
-    /* always have to pop the message before getting back into poll */
-    if (revent != GST_MESSAGE_UNKNOWN)
-      gst_message_unref (gst_bus_pop (bus));
+    if (message) {
+      revent = GST_MESSAGE_TYPE (message);
+      gst_message_unref (message);
+    } else {
+      revent = GST_MESSAGE_UNKNOWN;
+    }
 
     if (revent == tevent) {
       break;

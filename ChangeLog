@@ -1,3 +1,29 @@
+2005-09-19  Wim Taymans  <wim@fluendo.com>
+
+	* check/gst/gstbin.c: (pop_messages), (GST_START_TEST):
+	* check/gst/gstbus.c: (message_func_eos), (message_func_app),
+	(send_messages), (GST_START_TEST), (gstbus_suite):
+	* check/gst/gstpipeline.c: (GST_START_TEST):
+	* check/pipelines/cleanup.c: (run_pipeline):
+	* check/pipelines/simple_launch_lines.c: (run_pipeline),
+	(GST_START_TEST):
+	* gst/gstbus.c: (gst_bus_have_pending), (gst_bus_source_prepare),
+	(gst_bus_source_check), (gst_bus_source_dispatch),
+	(gst_bus_create_watch), (gst_bus_add_watch_full),
+	(gst_bus_add_watch), (poll_func), (poll_timeout), (gst_bus_poll):
+	* gst/gstbus.h:
+	* tools/gst-launch.c: (event_loop):
+	* tools/gst-md5sum.c: (event_loop):
+	GstBusHandler -> GstBusFunc, return value has the same meaning as
+	any other GSource (FALSE == remove source).
+	_add_watch() and _add_watch_full() now take a MessageType mask to
+	only handle specific types of messages.
+	_poll() returns the GstMessage instead of the message type to avoid
+	race conditions.
+	_have_pending() takes a MessageType mask now too.
+	Added testsuite for multiple bus watches.
+	Fix testsuites and applications for new bus API.
+
 2005-09-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:

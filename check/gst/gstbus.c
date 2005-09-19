@@ -19,11 +19,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #include <gst/check/gstcheck.h>
 
-
 static GstBus *test_bus = NULL;
+static GMainLoop *main_loop;
 
 #define NUM_MESSAGES 1000
 #define NUM_THREADS 10
@@ -99,8 +98,86 @@ GST_START_TEST (test_hammer_bus)
 
   gst_object_unref ((GstObject *) test_bus);
 }
-GST_END_TEST Suite *
-gstbus_suite (void)
+GST_END_TEST static gboolean
+message_func_eos (GstBus * bus, GstMessage * message, gpointer data)
+{
+  const GstStructure *s;
+  gint i;
+
+  g_return_val_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_EOS, FALSE);
+
+  GST_DEBUG ("got EOS message");
+
+  s = gst_message_get_structure (message);
+  if (!gst_structure_get_int (s, "msg_id", &i))
+    g_critical ("Invalid message");
+
+  return i != 9;
+}
+
+static gboolean
+message_func_app (GstBus * bus, GstMessage * message, gpointer data)
+{
+  const GstStructure *s;
+  gint i;
+
+  g_return_val_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_APPLICATION,
+      FALSE);
+
+  GST_DEBUG ("got APP message");
+
+  s = gst_message_get_structure (message);
+  if (!gst_structure_get_int (s, "msg_id", &i))
+    g_critical ("Invalid message");
+
+  return i != 9;
+}
+
+static gboolean
+send_messages (gpointer data)
+{
+  GstMessage *m;
+  GstStructure *s;
+  gint i;
+
+  for (i = 0; i < 10; i++) {
+    s = gst_structure_new ("test_message", "msg_id", G_TYPE_INT, i, NULL);
+    m = gst_message_new_application (NULL, s);
+    gst_bus_post (test_bus, m);
+    s = gst_structure_new ("test_message", "msg_id", G_TYPE_INT, i, NULL);
+    m = gst_message_new_custom (GST_MESSAGE_EOS, NULL, s);
+    gst_bus_post (test_bus, m);
+  }
+
+  return FALSE;
+}
+
+/* test id adding two watches for different message types calls the
+ * respective callbacks. */
+GST_START_TEST (test_watch)
+{
+  guint id1, id2;
+
+  test_bus = gst_bus_new ();
+
+  main_loop = g_main_loop_new (NULL, FALSE);
+
+  id2 = gst_bus_add_watch (test_bus, GST_MESSAGE_EOS, message_func_eos, NULL);
+  id1 =
+      gst_bus_add_watch (test_bus, GST_MESSAGE_APPLICATION, message_func_app,
+      NULL);
+
+  g_idle_add ((GSourceFunc) send_messages, NULL);
+  while (g_main_context_pending (NULL))
+    g_main_context_iteration (NULL, FALSE);
+
+  g_source_remove (id1);
+  g_source_remove (id2);
+  g_main_loop_unref (main_loop);
+
+  gst_object_unref ((GstObject *) test_bus);
+}
+GST_END_TEST Suite * gstbus_suite (void)
 {
   Suite *s = suite_create ("GstBus");
   TCase *tc_chain = tcase_create ("stresstest");
@@ -109,6 +186,7 @@ gstbus_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_hammer_bus);
+  tcase_add_test (tc_chain, test_watch);
   return s;
 }
 

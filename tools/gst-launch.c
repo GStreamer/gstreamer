@@ -356,7 +356,6 @@ static gboolean
 event_loop (GstElement * pipeline, gboolean blocking)
 {
   GstBus *bus;
-  GstMessageType revent;
   GstMessage *message = NULL;
 
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
@@ -364,16 +363,13 @@ event_loop (GstElement * pipeline, gboolean blocking)
   g_timeout_add (50, (GSourceFunc) check_intr, pipeline);
 
   while (TRUE) {
-    revent = gst_bus_poll (bus, GST_MESSAGE_ANY, blocking ? -1 : 0);
+    message = gst_bus_poll (bus, GST_MESSAGE_ANY, blocking ? -1 : 0);
 
     /* if the poll timed out, only when !blocking */
-    if (revent == GST_MESSAGE_UNKNOWN) {
+    if (message == NULL) {
       gst_object_unref (bus);
       return FALSE;
     }
-
-    message = gst_bus_pop (bus);
-    g_return_val_if_fail (message != NULL, TRUE);
 
     if (messages) {
       const GstStructure *s;
@@ -390,7 +386,7 @@ event_loop (GstElement * pipeline, gboolean blocking)
       }
     }
 
-    switch (revent) {
+    switch (GST_MESSAGE_TYPE (message)) {
       case GST_MESSAGE_EOS:
         g_print (_
             ("Got EOS from element \"%s\".\n"),
