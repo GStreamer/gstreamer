@@ -197,37 +197,62 @@ gst_pipeline_get_property (GObject * object, guint prop_id,
   GST_UNLOCK (pipeline);
 }
 
-/* sending an event on the pipeline pauses the pipeline if it
- * was playing.
- */
 static gboolean
-gst_pipeline_send_event (GstElement * element, GstEvent * event)
+do_pipeline_seek (GstElement * element, GstEvent * event)
 {
-  gboolean was_playing;
+  gdouble rate;
+  GstSeekFlags flags;
+  gboolean flush;
+  gboolean was_playing = FALSE;
   gboolean res;
-  GstState state;
-  GstEventType event_type = GST_EVENT_TYPE (event);
-  GTimeVal timeout;
 
-  /* need to call _get_state() since a bin state is only updated
-   * with this call. */
-  GST_TIME_TO_TIMEVAL (0, timeout);
+  gst_event_parse_seek (event, &rate, NULL, &flags, NULL, NULL, NULL, NULL);
 
-  gst_element_get_state (element, &state, NULL, &timeout);
-  was_playing = state == GST_STATE_PLAYING;
+  flush = flags & GST_SEEK_FLAG_FLUSH;
 
-  if (event_type == GST_EVENT_SEEK) {
+  if (flush) {
+    GstState state;
+    GTimeVal timeout;
+
+    GST_TIME_TO_TIMEVAL (0, timeout);
+    /* need to call _get_state() since a bin state is only updated
+     * with this call. */
+    gst_element_get_state (element, &state, NULL, &timeout);
+    was_playing = state == GST_STATE_PLAYING;
+
     if (was_playing)
       gst_element_set_state (element, GST_STATE_PAUSED);
   }
 
   res = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
 
-  if (res && event_type == GST_EVENT_SEEK) {
-    /* need to set the stream time to the seek time */
+  if (flush && res) {
+    /* need to reset the stream time to 0 after a flushing seek */
     gst_pipeline_set_new_stream_time (GST_PIPELINE (element), 0);
-    if (was_playing)
+    if (was_playing) {
+      /* and continue playing */
       gst_element_set_state (element, GST_STATE_PLAYING);
+    }
+  }
+  return res;
+}
+
+/* sending a seek event on the pipeline pauses the pipeline if it
+ * was playing.
+ */
+static gboolean
+gst_pipeline_send_event (GstElement * element, GstEvent * event)
+{
+  gboolean res;
+  GstEventType event_type = GST_EVENT_TYPE (event);
+
+  switch (event_type) {
+    case GST_EVENT_SEEK:
+      res = do_pipeline_seek (element, event);
+      break;
+    default:
+      res = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
+      break;
   }
 
   return res;

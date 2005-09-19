@@ -1,3 +1,9 @@
+2005-09-19  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstpipeline.c: (do_pipeline_seek), (gst_pipeline_send_event):
+	Automatically PAUSE and RESUME a pipeline when a flushing seek
+	is performed.
+
 2005-09-19  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstregistry.h: Spacing fixen.

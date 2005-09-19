@@ -76,7 +76,7 @@ typedef enum
 
 #define GST_MESSAGE_TRACE_NAME	"GstMessage"
 
-#define GST_TYPE_MESSAGE				(gst_message_get_type())
+#define GST_TYPE_MESSAGE			 (gst_message_get_type())
 #define GST_IS_MESSAGE(obj)                      (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MESSAGE))
 #define GST_IS_MESSAGE_CLASS(klass)              (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MESSAGE))
 #define GST_MESSAGE_GET_CLASS(obj)               (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MESSAGE, GstMessageClass))
