@@ -1,3 +1,11 @@
+2005-09-19  Wim Taymans  <wim@fluendo.com>
+
+	* gst/level/level-example.c: (main):
+	Fix for new bus API.
+
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_set_property):
+	Set caps on pads.
+
 2005-09-15  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/Makefile.am:
