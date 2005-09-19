@@ -123,7 +123,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %post
 /sbin/ldconfig
-%{_bindir}/gst-register-%{majorminor} > /dev/null 2>&1 || true
 
 %postun -p /sbin/ldconfig
 
@@ -138,7 +137,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %dir %{_libdir}/gstreamer-%{majorminor}
 %{_libdir}/gstreamer-%{majorminor}/libgstelements.so
-%{_libdir}/gstreamer-%{majorminor}/libgstgetbits.so
 %{_libdir}/gstreamer-%{majorminor}/libgstindexers.so
 
 %{_bindir}/gst-complete-%{majorminor}
@@ -147,7 +145,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/gst-inspect-%{majorminor}
 %{_bindir}/gst-launch-%{majorminor}
 %{_bindir}/gst-md5sum-%{majorminor}
-%{_bindir}/gst-register-%{majorminor}
 %{_bindir}/gst-typefind-%{majorminor}
 %{_bindir}/gst-xmlinspect-%{majorminor}
 %{_bindir}/gst-xmllaunch-%{majorminor}
@@ -157,7 +154,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man1/gst-inspect-%{majorminor}.*
 %{_mandir}/man1/gst-launch-%{majorminor}.*
 %{_mandir}/man1/gst-md5sum-%{majorminor}.*
-%{_mandir}/man1/gst-register-%{majorminor}.*
 %{_mandir}/man1/gst-typefind-%{majorminor}.*
 %{_mandir}/man1/gst-xmlinspect-%{majorminor}.*
 %{_mandir}/man1/gst-xmllaunch-%{majorminor}.*
@@ -172,7 +168,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/gst-inspect
 %{_bindir}/gst-launch
 %{_bindir}/gst-md5sum
-%{_bindir}/gst-register
 %{_bindir}/gst-typefind
 %{_bindir}/gst-xmlinspect
 %{_bindir}/gst-xmllaunch
@@ -183,12 +178,11 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_includedir}/gstreamer-%{majorminor}
 %dir %{_includedir}/gstreamer-%{majorminor}/gst
 %{_includedir}/gstreamer-%{majorminor}/gst/*.h
-%{_includedir}/gstreamer-%{majorminor}/gst/controller/gst-controller.h
+%{_includedir}/gstreamer-%{majorminor}/gst/controller/gstcontroller.h
 
 %{_includedir}/gstreamer-%{majorminor}/gst/base
 %{_includedir}/gstreamer-%{majorminor}/gst/check
 %{_includedir}/gstreamer-%{majorminor}/gst/dataprotocol
-%{_includedir}/gstreamer-%{majorminor}/gst/getbits
 
 %{_libdir}/libgstreamer-%{majorminor}.so
 %{_libdir}/libgstdataprotocol-%{majorminor}.so
