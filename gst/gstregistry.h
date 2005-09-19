@@ -91,16 +91,17 @@ GList *                 gst_registry_get_feature_list_by_plugin (GstRegistry *re
 
 GstPlugin*		gst_registry_find_plugin	(GstRegistry *registry, const gchar *name);
 GstPluginFeature*	gst_registry_find_feature	(GstRegistry *registry, const gchar *name, GType type);
-GstPlugin * gst_registry_lookup (GstRegistry *registry, const char *filename);
-GstPluginFeature * gst_registry_lookup_feature (GstRegistry *registry, const char *name);
 
-gboolean gst_registry_xml_read_cache (GstRegistry * registry, const char *location);
-gboolean gst_registry_xml_write_cache (GstRegistry * registry, const char *location);
+GstPlugin * 		gst_registry_lookup 		(GstRegistry *registry, const char *filename);
+GstPluginFeature * 	gst_registry_lookup_feature 	(GstRegistry *registry, const char *name);
 
-void gst_registry_scan_paths (GstRegistry *registry);
-void _gst_registry_remove_cache_plugins (GstRegistry *registry);
+gboolean 		gst_registry_xml_read_cache 	(GstRegistry * registry, const char *location);
+gboolean 		gst_registry_xml_write_cache 	(GstRegistry * registry, const char *location);
 
-void gst_registry_deinit (void);
+void 			gst_registry_scan_paths 	(GstRegistry *registry);
+void 			_gst_registry_remove_cache_plugins (GstRegistry *registry);
+
+void 			gst_registry_deinit 		(void);
 
 #define gst_default_registry_add_plugin(plugin) \
   gst_registry_add_plugin (gst_registry_get_default(), plugin)

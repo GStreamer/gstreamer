@@ -1,3 +1,7 @@
+2005-09-19  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstregistry.h: Spacing fixen.
+
 2005-09-19  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesrc.c: (gst_base_src_change_state):
