@@ -26,10 +26,7 @@
 #include "gst/riff/riff-ids.h"
 #include "gst/riff/riff-read.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_WAVPARSE \
   (gst_wavparse_get_type())
@@ -72,11 +69,19 @@ struct _GstWavParse {
   guint16 width;
   guint32 bps;
 
+  guint bytes_per_sample;
+
   guint64 dataleft, datasize, datastart;
   
   gboolean seek_pending;
   GstEvent *seek_event;
-  guint64 seek_offset;
+
+  /* configured segment, start/stop expressed in
+   * bytes */
+  gdouble segment_rate;
+  GstSeekFlags segment_flags;
+  gint64 segment_start;
+  gint64 segment_stop;
 };
 
 struct _GstWavParseClass {
@@ -85,9 +90,6 @@ struct _GstWavParseClass {
 
 GType gst_wavparse_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_WAVPARSE_H__ */

@@ -1,5 +1,17 @@
 2005-09-19  Wim Taymans  <wim@fluendo.com>
 
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_reset),
+	(gst_wavparse_init), (gst_wavparse_parse_file_header),
+	(gst_wavparse_stream_init), (gst_wavparse_handle_seek),
+	(gst_wavparse_stream_headers), (gst_wavparse_stream_data),
+	(gst_wavparse_loop), (gst_wavparse_pad_convert),
+	(gst_wavparse_pad_query), (gst_wavparse_srcpad_event),
+	(gst_wavparse_change_state):
+	* gst/wavparse/gstwavparse.h:
+	Fix wavparse some more.
+
+2005-09-19  Wim Taymans  <wim@fluendo.com>
+
 	* check/elements/level.c: (GST_START_TEST):
 	Fix for bus API change.
 
