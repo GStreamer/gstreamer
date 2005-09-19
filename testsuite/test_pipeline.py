@@ -64,7 +64,7 @@ class PipelineAndBus(unittest.TestCase):
         gst.element_link_many(source, sink)
 
         self.bus = self.pipeline.get_bus()
-        self.bus.add_watch(self._message_received)
+        self.bus.add_watch(gst.MESSAGE_ANY, self._message_received)
 
         self.loop = gobject.MainLoop()
 

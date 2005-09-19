@@ -1,3 +1,11 @@
+2005-09-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.defs:
+	* gst/gstbus.override:
+	* testsuite/test_pipeline.py:
+	* testsuite/test_bus.py:
+	  fix up for new bus API
+
 2005-09-18  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

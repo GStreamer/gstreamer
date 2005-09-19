@@ -79,7 +79,7 @@ bus_sync_handler (GstBus *bus, GstMessage *message, gpointer user_data)
 }
 
 static gboolean
-bus_handler (GstBus *bus, GstMessage *message, gpointer user_data)
+bus_func (GstBus *bus, GstMessage *message, gpointer user_data)
 {
     PyGILState_STATE state;
     gboolean    res;
@@ -94,6 +94,8 @@ bus_handler (GstBus *bus, GstMessage *message, gpointer user_data)
     state = pyg_gil_state_ensure ();
 
     py_userdata = (PyObject *) user_data;
+    g_assert (PyTuple_Check (py_userdata));
+
     py_msg = pygstminiobject_new (GST_MINI_OBJECT (message));
     callback = PyTuple_GetItem (py_userdata, 0);
 
@@ -101,12 +103,20 @@ bus_handler (GstBus *bus, GstMessage *message, gpointer user_data)
     args = Py_BuildValue ("(NN)",
                           pygobject_new (G_OBJECT (bus)),
                           py_msg);
+    g_assert (args);
 
     /* add all *args to the args tuple object */
     len = PyTuple_Size (py_userdata);
     for (i = 1; i < len; ++i) {
+        PyObject *item;
         PyObject *tuple = args;
-        args = PySequence_Concat (tuple, PyTuple_GetItem (py_userdata, i));
+
+        item = PyTuple_GetItem (py_userdata, i);
+        g_assert (item);
+
+        args = PySequence_Concat (tuple, item);
+        g_assert (args);
+
         Py_DECREF (tuple);
     }
     ret = PyObject_CallObject(callback, args);
@@ -168,28 +178,38 @@ override gst_bus_add_watch args
 static PyObject *
 _wrap_gst_bus_add_watch (PyGObject *self, PyObject *args)
 {
-    PyObject *callback, *cbargs = NULL, *data;
+    PyObject *callback, *py_events, *cbargs = NULL, *data;
     guint sigid;
     guint len;
+    GstMessageType events;
 
     len = PyTuple_Size(args);
 
-    if (len < 1) {
-    PyErr_SetString(PyExc_TypeError, "Bus requires at least 1 arg");
-    return NULL;
+    if (len < 2) {
+        PyErr_SetString(PyExc_TypeError, "Bus requires at least 2 args");
+        return NULL;
     }
-    callback = PySequence_GetItem(args, 0);
+    py_events = PySequence_GetItem(args, 0);
+    if (pyg_flags_get_value (GST_TYPE_MESSAGE_TYPE, py_events,
+        (gint *)&events)) {
+        PyErr_SetString(PyExc_TypeError,
+            "message type is not a GST_TYPE_MESSAGE_TYPE");
+        return NULL;
+    }
+    
+    callback = PySequence_GetItem(args, 1);
     if (!PyCallable_Check(callback)) {
-    PyErr_SetString(PyExc_TypeError, "callback is not callable");
-    return NULL;
+        PyErr_SetString(PyExc_TypeError, "callback is not callable");
+        return NULL;
     }
-    cbargs = PySequence_GetSlice(args, 1, len);
+    cbargs = PySequence_GetSlice(args, 2, len);
     if (cbargs == NULL)
-    return NULL;
+        return NULL;
     data = Py_BuildValue("(ON)", callback, cbargs);
     if (data == NULL)
-    return NULL;
-    sigid = gst_bus_add_watch (GST_BUS (self->obj), (GstBusHandler) bus_handler, data);
+        return NULL;
+    sigid = gst_bus_add_watch (GST_BUS (self->obj), events,
+        (GstBusFunc) bus_func, data);
 
     return PyInt_FromLong(sigid);
 }

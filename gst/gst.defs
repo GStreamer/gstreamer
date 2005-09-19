@@ -249,6 +249,9 @@
   (of-object "GstBus")
   (c-name "gst_bus_have_pending")
   (return-type "gboolean")
+  (parameters
+    '("GstMessageType" "type")
+  )
 )
 
 (define-method peek
@@ -294,7 +297,8 @@
   (return-type "guint")
   (parameters
     '("gint" "priority")
-    '("GstBusHandler" "handler")
+    '("GstMessageType" "type")
+    '("GstBusFunc" "func")
     '("gpointer" "user_data")
     '("GDestroyNotify" "notify")
   )
@@ -305,7 +309,8 @@
   (c-name "gst_bus_add_watch")
   (return-type "guint")
   (parameters
-    '("GstBusHandler" "handler")
+    '("GstMessageType" "type")
+    '("GstBusFunc" "func")
     '("gpointer" "user_data")
   )
 )
@@ -313,7 +318,7 @@
 (define-method poll
   (of-object "GstBus")
   (c-name "gst_bus_poll")
-  (return-type "GstMessageType")
+  (return-type "GstMessage*")
   (parameters
     '("GstMessageType" "events")
     '("GstClockTimeDiff" "timeout")
