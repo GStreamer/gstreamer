@@ -459,6 +459,8 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
   GstStructure *structure;
   const GValue *par;
 
+  GST_DEBUG ("setcaps called");
+
   /* close old session */
   gst_ffmpegdec_close (ffmpegdec);
 
@@ -472,7 +474,9 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
   /* get size and so */
   gst_ffmpeg_caps_with_codecid (oclass->in_plugin->id,
       oclass->in_plugin->type, caps, ffmpegdec->context);
+
   if (!ffmpegdec->context->time_base.den) {
+    GST_DEBUG ("forcing 25/1 framerate");
     ffmpegdec->context->time_base.num = 1;
     ffmpegdec->context->time_base.den = 25;
   }
@@ -692,6 +696,9 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
       (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
   GstBuffer *outbuf = NULL;
   gint have_data = 0, len = 0;
+
+  if (ffmpegdec->context->codec == NULL)
+    return -1;
 
   ffmpegdec->context->frame_number++;
 
