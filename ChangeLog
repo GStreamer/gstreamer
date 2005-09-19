@@ -1,3 +1,12 @@
+2005-09-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
+	  have some tests be disabled for valgrinding
+	* check/elements/vorbisdec.c: (cleanup_vorbisdec),
+	(GST_START_TEST):
+	* ext/vorbis/vorbisdec.c: (vorbisdec_finalize):
+	  Fix A Leak.  Chain To Parent Finalize.
+
 2005-09-19  Wim Taymans  <wim@fluendo.com>
 
 	* examples/seeking/seek.c: (make_wav_pipeline), (main):

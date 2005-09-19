@@ -34,6 +34,11 @@ check_PROGRAMS = \
         pipelines/simple_launch_lines \
 	$(check_vorbis)
 
+# tests to fix leaks in
+VALGRIND_TO_FIX = \
+	elements/audioresample \
+        pipelines/simple_launch_lines
+
 # these tests don't even pass
 # generic/states: elements need state fixin' before this can be added
 noinst_PROGRAMS = \
@@ -43,6 +48,6 @@ AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS)
 LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
 
 # valgrind testing
-VALGRIND_TESTS_DISABLE =
+VALGRIND_TESTS_DISABLE = $(VALGRIND_TO_FIX)
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp

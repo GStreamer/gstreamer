@@ -183,7 +183,7 @@ gst_vorbis_dec_init (GstVorbisDec * dec, GstVorbisDecClass * g_class)
 static void
 vorbisdec_finalize (GObject * object)
 {
-  /* Release any possibly allocated libvorbis data. 
+  /* Release any possibly allocated libvorbis data.
    * _clear functions can safely be called multiple times
    */
   GstVorbisDec *vd = GST_VORBIS_DEC (object);
@@ -192,6 +192,8 @@ vorbisdec_finalize (GObject * object)
   vorbis_dsp_clear (&vd->vd);
   vorbis_comment_clear (&vd->vc);
   vorbis_info_clear (&vd->vi);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean

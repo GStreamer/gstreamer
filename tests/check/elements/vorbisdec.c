@@ -82,6 +82,7 @@ void
 cleanup_vorbisdec (GstElement * vorbisdec)
 {
   GST_DEBUG ("cleanup_vorbisdec");
+  gst_element_set_state (vorbisdec, GST_STATE_NULL);
 
   gst_check_teardown_src_pad (vorbisdec);
   gst_check_teardown_sink_pad (vorbisdec);
@@ -213,11 +214,13 @@ GST_START_TEST (test_identification_header)
       1);
   fail_unless (gst_tag_list_get_string (tag_list, GST_TAG_ARTIST, &artist));
   fail_unless_equals_string (artist, "me");
+  g_free (artist);
   fail_unless_equals_int (gst_tag_list_get_tag_size (tag_list, "album"), 0);
   gst_tag_list_free (tag_list);
   gst_message_unref (message);
 
   /* cleanup */
+  gst_bus_set_flushing (bus, TRUE);
   gst_element_set_bus (vorbisdec, NULL);
   gst_object_unref (GST_OBJECT (bus));
   cleanup_vorbisdec (vorbisdec);
