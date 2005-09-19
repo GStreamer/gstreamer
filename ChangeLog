@@ -1,3 +1,9 @@
+2005-09-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* win32/gstenumtypes.c:
+	* win32/gstenumtypes.h:
+	  Update.
+
 2005-09-19  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstpipeline.c: (do_pipeline_seek), (gst_pipeline_send_event):

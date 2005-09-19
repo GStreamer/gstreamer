@@ -142,15 +142,15 @@ gst_clock_flags_get_type (void)
   if (etype == 0) {
     static const GFlagsValue values[] = {
       {GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC, "GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC",
-            "do-single-sync"},
+          "do-single-sync"},
       {GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC, "GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC",
-            "do-single-async"},
+          "do-single-async"},
       {GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC,
-            "GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC", "do-periodic-sync"},
+          "GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC", "do-periodic-sync"},
       {GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC,
-            "GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC", "do-periodic-async"},
+          "GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC", "do-periodic-async"},
       {GST_CLOCK_FLAG_CAN_SET_RESOLUTION, "GST_CLOCK_FLAG_CAN_SET_RESOLUTION",
-            "set-resolution"},
+          "set-resolution"},
       {0, NULL, NULL}
     };
     etype = g_flags_register_static ("GstClockFlags", values);
@@ -189,7 +189,7 @@ gst_state_change_return_get_type (void)
       {GST_STATE_CHANGE_SUCCESS, "GST_STATE_CHANGE_SUCCESS", "success"},
       {GST_STATE_CHANGE_ASYNC, "GST_STATE_CHANGE_ASYNC", "async"},
       {GST_STATE_CHANGE_NO_PREROLL, "GST_STATE_CHANGE_NO_PREROLL",
-            "no-preroll"},
+          "no-preroll"},
       {0, NULL, NULL}
     };
     etype = g_enum_register_static ("GstStateChangeReturn", values);
@@ -203,22 +203,22 @@ gst_state_change_get_type (void)
   static GType etype = 0;
 
   if (etype == 0) {
-    static const GFlagsValue values[] = {
+    static const GEnumValue values[] = {
       {GST_STATE_CHANGE_NULL_TO_READY, "GST_STATE_CHANGE_NULL_TO_READY",
-            "null-to-ready"},
+          "null-to-ready"},
       {GST_STATE_CHANGE_READY_TO_PAUSED, "GST_STATE_CHANGE_READY_TO_PAUSED",
-            "ready-to-paused"},
+          "ready-to-paused"},
       {GST_STATE_CHANGE_PAUSED_TO_PLAYING, "GST_STATE_CHANGE_PAUSED_TO_PLAYING",
-            "paused-to-playing"},
+          "paused-to-playing"},
       {GST_STATE_CHANGE_PLAYING_TO_PAUSED, "GST_STATE_CHANGE_PLAYING_TO_PAUSED",
-            "playing-to-paused"},
+          "playing-to-paused"},
       {GST_STATE_CHANGE_PAUSED_TO_READY, "GST_STATE_CHANGE_PAUSED_TO_READY",
-            "paused-to-ready"},
+          "paused-to-ready"},
       {GST_STATE_CHANGE_READY_TO_NULL, "GST_STATE_CHANGE_READY_TO_NULL",
-            "ready-to-null"},
+          "ready-to-null"},
       {0, NULL, NULL}
     };
-    etype = g_flags_register_static ("GstStateChange", values);
+    etype = g_enum_register_static ("GstStateChange", values);
   }
   return etype;
 }
@@ -252,9 +252,9 @@ gst_core_error_get_type (void)
       {GST_CORE_ERROR_FAILED, "GST_CORE_ERROR_FAILED", "failed"},
       {GST_CORE_ERROR_TOO_LAZY, "GST_CORE_ERROR_TOO_LAZY", "too-lazy"},
       {GST_CORE_ERROR_NOT_IMPLEMENTED, "GST_CORE_ERROR_NOT_IMPLEMENTED",
-            "not-implemented"},
+          "not-implemented"},
       {GST_CORE_ERROR_STATE_CHANGE, "GST_CORE_ERROR_STATE_CHANGE",
-            "state-change"},
+          "state-change"},
       {GST_CORE_ERROR_PAD, "GST_CORE_ERROR_PAD", "pad"},
       {GST_CORE_ERROR_THREAD, "GST_CORE_ERROR_THREAD", "thread"},
       {GST_CORE_ERROR_NEGOTIATION, "GST_CORE_ERROR_NEGOTIATION", "negotiation"},
@@ -284,7 +284,7 @@ gst_library_error_get_type (void)
       {GST_LIBRARY_ERROR_SETTINGS, "GST_LIBRARY_ERROR_SETTINGS", "settings"},
       {GST_LIBRARY_ERROR_ENCODE, "GST_LIBRARY_ERROR_ENCODE", "encode"},
       {GST_LIBRARY_ERROR_NUM_ERRORS, "GST_LIBRARY_ERROR_NUM_ERRORS",
-            "num-errors"},
+          "num-errors"},
       {0, NULL, NULL}
     };
     etype = g_enum_register_static ("GstLibraryError", values);
@@ -302,14 +302,14 @@ gst_resource_error_get_type (void)
       {GST_RESOURCE_ERROR_FAILED, "GST_RESOURCE_ERROR_FAILED", "failed"},
       {GST_RESOURCE_ERROR_TOO_LAZY, "GST_RESOURCE_ERROR_TOO_LAZY", "too-lazy"},
       {GST_RESOURCE_ERROR_NOT_FOUND, "GST_RESOURCE_ERROR_NOT_FOUND",
-            "not-found"},
+          "not-found"},
       {GST_RESOURCE_ERROR_BUSY, "GST_RESOURCE_ERROR_BUSY", "busy"},
       {GST_RESOURCE_ERROR_OPEN_READ, "GST_RESOURCE_ERROR_OPEN_READ",
-            "open-read"},
+          "open-read"},
       {GST_RESOURCE_ERROR_OPEN_WRITE, "GST_RESOURCE_ERROR_OPEN_WRITE",
-            "open-write"},
+          "open-write"},
       {GST_RESOURCE_ERROR_OPEN_READ_WRITE, "GST_RESOURCE_ERROR_OPEN_READ_WRITE",
-            "open-read-write"},
+          "open-read-write"},
       {GST_RESOURCE_ERROR_CLOSE, "GST_RESOURCE_ERROR_CLOSE", "close"},
       {GST_RESOURCE_ERROR_READ, "GST_RESOURCE_ERROR_READ", "read"},
       {GST_RESOURCE_ERROR_WRITE, "GST_RESOURCE_ERROR_WRITE", "write"},
@@ -317,7 +317,7 @@ gst_resource_error_get_type (void)
       {GST_RESOURCE_ERROR_SYNC, "GST_RESOURCE_ERROR_SYNC", "sync"},
       {GST_RESOURCE_ERROR_SETTINGS, "GST_RESOURCE_ERROR_SETTINGS", "settings"},
       {GST_RESOURCE_ERROR_NUM_ERRORS, "GST_RESOURCE_ERROR_NUM_ERRORS",
-            "num-errors"},
+          "num-errors"},
       {0, NULL, NULL}
     };
     etype = g_enum_register_static ("GstResourceError", values);
@@ -335,13 +335,13 @@ gst_stream_error_get_type (void)
       {GST_STREAM_ERROR_FAILED, "GST_STREAM_ERROR_FAILED", "failed"},
       {GST_STREAM_ERROR_TOO_LAZY, "GST_STREAM_ERROR_TOO_LAZY", "too-lazy"},
       {GST_STREAM_ERROR_NOT_IMPLEMENTED, "GST_STREAM_ERROR_NOT_IMPLEMENTED",
-            "not-implemented"},
+          "not-implemented"},
       {GST_STREAM_ERROR_TYPE_NOT_FOUND, "GST_STREAM_ERROR_TYPE_NOT_FOUND",
-            "type-not-found"},
+          "type-not-found"},
       {GST_STREAM_ERROR_WRONG_TYPE, "GST_STREAM_ERROR_WRONG_TYPE",
-            "wrong-type"},
+          "wrong-type"},
       {GST_STREAM_ERROR_CODEC_NOT_FOUND, "GST_STREAM_ERROR_CODEC_NOT_FOUND",
-            "codec-not-found"},
+          "codec-not-found"},
       {GST_STREAM_ERROR_DECODE, "GST_STREAM_ERROR_DECODE", "decode"},
       {GST_STREAM_ERROR_ENCODE, "GST_STREAM_ERROR_ENCODE", "encode"},
       {GST_STREAM_ERROR_DEMUX, "GST_STREAM_ERROR_DEMUX", "demux"},
@@ -349,7 +349,7 @@ gst_stream_error_get_type (void)
       {GST_STREAM_ERROR_FORMAT, "GST_STREAM_ERROR_FORMAT", "format"},
       {GST_STREAM_ERROR_STOPPED, "GST_STREAM_ERROR_STOPPED", "stopped"},
       {GST_STREAM_ERROR_NUM_ERRORS, "GST_STREAM_ERROR_NUM_ERRORS",
-            "num-errors"},
+          "num-errors"},
       {0, NULL, NULL}
     };
     etype = g_enum_register_static ("GstStreamError", values);
@@ -380,7 +380,7 @@ gst_event_type_get_type (void)
       {GST_EVENT_CUSTOM_DS_OOB, "GST_EVENT_CUSTOM_DS_OOB", "custom-ds-oob"},
       {GST_EVENT_CUSTOM_BOTH, "GST_EVENT_CUSTOM_BOTH", "custom-both"},
       {GST_EVENT_CUSTOM_BOTH_OOB, "GST_EVENT_CUSTOM_BOTH_OOB",
-            "custom-both-oob"},
+          "custom-both-oob"},
       {0, NULL, NULL}
     };
     etype = g_enum_register_static ("GstEventType", values);
@@ -473,7 +473,7 @@ gst_index_entry_type_get_type (void)
     static const GEnumValue values[] = {
       {GST_INDEX_ENTRY_ID, "GST_INDEX_ENTRY_ID", "id"},
       {GST_INDEX_ENTRY_ASSOCIATION, "GST_INDEX_ENTRY_ASSOCIATION",
-            "association"},
+          "association"},
       {GST_INDEX_ENTRY_OBJECT, "GST_INDEX_ENTRY_OBJECT", "object"},
       {GST_INDEX_ENTRY_FORMAT, "GST_INDEX_ENTRY_FORMAT", "format"},
       {0, NULL, NULL}
@@ -509,9 +509,9 @@ gst_assoc_flags_get_type (void)
     static const GFlagsValue values[] = {
       {GST_ASSOCIATION_FLAG_NONE, "GST_ASSOCIATION_FLAG_NONE", "none"},
       {GST_ASSOCIATION_FLAG_KEY_UNIT, "GST_ASSOCIATION_FLAG_KEY_UNIT",
-            "key-unit"},
+          "key-unit"},
       {GST_ASSOCIATION_FLAG_DELTA_UNIT, "GST_ASSOCIATION_FLAG_DELTA_UNIT",
-            "delta-unit"},
+          "delta-unit"},
       {GST_ASSOCIATION_FLAG_LAST, "GST_ASSOCIATION_FLAG_LAST", "last"},
       {0, NULL, NULL}
     };
@@ -663,7 +663,7 @@ gst_message_type_get_type (void)
       {GST_MESSAGE_STEP_DONE, "GST_MESSAGE_STEP_DONE", "step-done"},
       {GST_MESSAGE_NEW_CLOCK, "GST_MESSAGE_NEW_CLOCK", "new-clock"},
       {GST_MESSAGE_STRUCTURE_CHANGE, "GST_MESSAGE_STRUCTURE_CHANGE",
-            "structure-change"},
+          "structure-change"},
       {GST_MESSAGE_STREAM_STATUS, "GST_MESSAGE_STREAM_STATUS", "stream-status"},
       {GST_MESSAGE_APPLICATION, "GST_MESSAGE_APPLICATION", "application"},
       {GST_MESSAGE_SEGMENT_START, "GST_MESSAGE_SEGMENT_START", "segment-start"},
@@ -685,7 +685,7 @@ gst_mini_object_flags_get_type (void)
   if (etype == 0) {
     static const GFlagsValue values[] = {
       {GST_MINI_OBJECT_FLAG_READONLY, "GST_MINI_OBJECT_FLAG_READONLY",
-            "readonly"},
+          "readonly"},
       {GST_MINI_OBJECT_FLAG_STATIC, "GST_MINI_OBJECT_FLAG_STATIC", "static"},
       {GST_MINI_OBJECT_FLAG_LAST, "GST_MINI_OBJECT_FLAG_LAST", "last"},
       {0, NULL, NULL}
@@ -705,10 +705,10 @@ gst_pad_link_return_get_type (void)
     static const GEnumValue values[] = {
       {GST_PAD_LINK_OK, "GST_PAD_LINK_OK", "ok"},
       {GST_PAD_LINK_WRONG_HIERARCHY, "GST_PAD_LINK_WRONG_HIERARCHY",
-            "wrong-hierarchy"},
+          "wrong-hierarchy"},
       {GST_PAD_LINK_WAS_LINKED, "GST_PAD_LINK_WAS_LINKED", "was-linked"},
       {GST_PAD_LINK_WRONG_DIRECTION, "GST_PAD_LINK_WRONG_DIRECTION",
-            "wrong-direction"},
+          "wrong-direction"},
       {GST_PAD_LINK_NOFORMAT, "GST_PAD_LINK_NOFORMAT", "noformat"},
       {GST_PAD_LINK_NOSCHED, "GST_PAD_LINK_NOSCHED", "nosched"},
       {GST_PAD_LINK_REFUSED, "GST_PAD_LINK_REFUSED", "refused"},
@@ -836,7 +836,7 @@ gst_pipeline_flags_get_type (void)
   if (etype == 0) {
     static const GEnumValue values[] = {
       {GST_PIPELINE_FLAG_FIXED_CLOCK, "GST_PIPELINE_FLAG_FIXED_CLOCK",
-            "fixed-clock"},
+          "fixed-clock"},
       {GST_PIPELINE_FLAG_LAST, "GST_PIPELINE_FLAG_LAST", "last"},
       {0, NULL, NULL}
     };
@@ -855,12 +855,27 @@ gst_plugin_error_get_type (void)
     static const GEnumValue values[] = {
       {GST_PLUGIN_ERROR_MODULE, "GST_PLUGIN_ERROR_MODULE", "module"},
       {GST_PLUGIN_ERROR_DEPENDENCIES, "GST_PLUGIN_ERROR_DEPENDENCIES",
-            "dependencies"},
+          "dependencies"},
       {GST_PLUGIN_ERROR_NAME_MISMATCH, "GST_PLUGIN_ERROR_NAME_MISMATCH",
-            "name-mismatch"},
+          "name-mismatch"},
       {0, NULL, NULL}
     };
     etype = g_enum_register_static ("GstPluginError", values);
+  }
+  return etype;
+}
+
+GType
+gst_plugin_flags_get_type (void)
+{
+  static GType etype = 0;
+
+  if (etype == 0) {
+    static const GFlagsValue values[] = {
+      {GST_PLUGIN_FLAG_CACHED, "GST_PLUGIN_FLAG_CACHED", "cached"},
+      {0, NULL, NULL}
+    };
+    etype = g_flags_register_static ("GstPluginFlags", values);
   }
   return etype;
 }
@@ -907,7 +922,7 @@ gst_query_type_get_type (void)
   return etype;
 }
 
-/* enumerations from "gsttag.h" */
+/* enumerations from "gsttaglist.h" */
 GType
 gst_tag_merge_mode_get_type (void)
 {
@@ -996,7 +1011,7 @@ gst_type_find_probability_get_type (void)
       {GST_TYPE_FIND_POSSIBLE, "GST_TYPE_FIND_POSSIBLE", "possible"},
       {GST_TYPE_FIND_LIKELY, "GST_TYPE_FIND_LIKELY", "likely"},
       {GST_TYPE_FIND_NEARLY_CERTAIN, "GST_TYPE_FIND_NEARLY_CERTAIN",
-            "nearly-certain"},
+          "nearly-certain"},
       {GST_TYPE_FIND_MAXIMUM, "GST_TYPE_FIND_MAXIMUM", "maximum"},
       {0, NULL, NULL}
     };
@@ -1023,48 +1038,6 @@ gst_uri_type_get_type (void)
   return etype;
 }
 
-/* enumerations from "gstregistry.h" */
-GType
-gst_registry_return_get_type (void)
-{
-  static GType etype = 0;
-
-  if (etype == 0) {
-    static const GFlagsValue values[] = {
-      {GST_REGISTRY_OK, "GST_REGISTRY_OK", "ok"},
-      {GST_REGISTRY_LOAD_ERROR, "GST_REGISTRY_LOAD_ERROR", "load-error"},
-      {GST_REGISTRY_SAVE_ERROR, "GST_REGISTRY_SAVE_ERROR", "save-error"},
-      {GST_REGISTRY_PLUGIN_LOAD_ERROR, "GST_REGISTRY_PLUGIN_LOAD_ERROR",
-            "plugin-load-error"},
-      {GST_REGISTRY_PLUGIN_SIGNATURE_ERROR,
-            "GST_REGISTRY_PLUGIN_SIGNATURE_ERROR", "plugin-signature-error"},
-      {0, NULL, NULL}
-    };
-    etype = g_flags_register_static ("GstRegistryReturn", values);
-  }
-  return etype;
-}
-
-GType
-gst_registry_flags_get_type (void)
-{
-  static GType etype = 0;
-
-  if (etype == 0) {
-    static const GFlagsValue values[] = {
-      {GST_REGISTRY_READABLE, "GST_REGISTRY_READABLE", "readable"},
-      {GST_REGISTRY_WRITABLE, "GST_REGISTRY_WRITABLE", "writable"},
-      {GST_REGISTRY_EXISTS, "GST_REGISTRY_EXISTS", "exists"},
-      {GST_REGISTRY_REMOTE, "GST_REGISTRY_REMOTE", "remote"},
-      {GST_REGISTRY_DELAYED_LOADING, "GST_REGISTRY_DELAYED_LOADING",
-            "delayed-loading"},
-      {0, NULL, NULL}
-    };
-    etype = g_flags_register_static ("GstRegistryFlags", values);
-  }
-  return etype;
-}
-
 /* enumerations from "gstparse.h" */
 GType
 gst_parse_error_get_type (void)
@@ -1075,12 +1048,12 @@ gst_parse_error_get_type (void)
     static const GEnumValue values[] = {
       {GST_PARSE_ERROR_SYNTAX, "GST_PARSE_ERROR_SYNTAX", "syntax"},
       {GST_PARSE_ERROR_NO_SUCH_ELEMENT, "GST_PARSE_ERROR_NO_SUCH_ELEMENT",
-            "no-such-element"},
+          "no-such-element"},
       {GST_PARSE_ERROR_NO_SUCH_PROPERTY, "GST_PARSE_ERROR_NO_SUCH_PROPERTY",
-            "no-such-property"},
+          "no-such-property"},
       {GST_PARSE_ERROR_LINK, "GST_PARSE_ERROR_LINK", "link"},
       {GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
-            "GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY", "could-not-set-property"},
+          "GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY", "could-not-set-property"},
       {GST_PARSE_ERROR_EMPTY_BIN, "GST_PARSE_ERROR_EMPTY_BIN", "empty-bin"},
       {GST_PARSE_ERROR_EMPTY, "GST_PARSE_ERROR_EMPTY", "empty"},
       {0, NULL, NULL}
