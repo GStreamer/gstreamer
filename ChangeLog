@@ -1,5 +1,15 @@
 2005-09-19  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/rtp/gstbasertppayload.c:
+	(gst_basertppayload_class_init), (gst_basertppayload_init),
+	(gst_basertppayload_setcaps), (gst_basertppayload_chain),
+	(gst_basertppayload_set_options), (gst_basertppayload_set_outcaps),
+	(gst_basertppayload_push), (gst_basertppayload_get_property),
+	(gst_basertppayload_change_state):
+	Posting ERROR and WARNING messages is good.
+
+2005-09-19  Wim Taymans  <wim@fluendo.com>
+
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
 	(gst_base_rtp_depayload_add_to_queue),
 	(gst_base_rtp_depayload_push),

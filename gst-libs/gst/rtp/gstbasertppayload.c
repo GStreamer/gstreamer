@@ -233,7 +233,8 @@ gst_basertppayload_chain (GstPad * pad, GstBuffer * buffer)
   /* ERRORS */
 no_function:
   {
-    GST_DEBUG ("subclass did not implement handle_buffer function");
+    GST_ELEMENT_ERROR (basertppayload, STREAM, NOT_IMPLEMENTED, (NULL),
+        ("subclass did not implement handle_buffer function"));
     gst_object_unref (basertppayload);
     return GST_FLOW_ERROR;
   }
@@ -322,7 +323,8 @@ gst_basertppayload_push (GstBaseRTPPayload * payload, GstBuffer * buffer)
   /* ERRORS */
 no_rate:
   {
-    GST_DEBUG ("subclass did not specify clock_rate");
+    GST_ELEMENT_ERROR (payload, STREAM, NOT_IMPLEMENTED, (NULL),
+        ("subclass did not specify clock_rate"));
     gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
   }
