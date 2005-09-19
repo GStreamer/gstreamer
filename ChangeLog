@@ -1,5 +1,10 @@
 2005-09-19  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/gstrtph263pdec.c: (gst_rtph263pdec_chain):
+	Don't check payload for now.
+
+2005-09-19  Wim Taymans  <wim@fluendo.com>
+
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_reset),
 	(gst_wavparse_init), (gst_wavparse_parse_file_header),
 	(gst_wavparse_stream_init), (gst_wavparse_handle_seek),

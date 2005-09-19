@@ -170,15 +170,18 @@ gst_rtph263pdec_chain (GstPad * pad, GstBuffer * buf)
   GstRtpH263PDec *rtph263pdec;
   GstBuffer *outbuf;
   GstFlowReturn ret;
-  GstRTPPayload pt;
+
+  /* GstRTPPayload pt; */
 
   rtph263pdec = GST_RTP_H263P_DEC (GST_OBJECT_PARENT (pad));
 
   if (!gst_rtpbuffer_validate (buf))
     goto bad_packet;
 
-  if ((pt = gst_rtpbuffer_get_payload_type (buf)) != 0)
-    goto bad_payload;
+  /*
+     if ((pt = gst_rtpbuffer_get_payload_type (buf)) != 0)
+     goto bad_payload;
+   */
 
   {
     gint payload_len;
@@ -261,13 +264,15 @@ bad_packet:
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
-bad_payload:
-  {
-    GST_DEBUG ("Unexpected payload type %u", pt);
+  /*
+     bad_payload:
+     {
+     GST_DEBUG ("Unexpected payload type %u", pt);
 
-    gst_buffer_unref (buf);
-    return GST_FLOW_ERROR;
-  }
+     gst_buffer_unref (buf);
+     return GST_FLOW_ERROR;
+     }
+   */
 }
 
 static void
