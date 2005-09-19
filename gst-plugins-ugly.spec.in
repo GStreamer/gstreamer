@@ -33,7 +33,7 @@ BuildRequires:  gcc-c++
 @USE_SIDPLAY_TRUE@Provides:       gstreamer-sid = %{version}-%{release}
 @USE_LAME_TRUE@Provides:      gstreamer-lame = %{version}-%{release}
 @USE_MAD_TRUE@Provides:       gstreamer-mad = %{version}-%{release}
-# @USE_A52DEC_TRUE@Provides:       gstreamer-       = %{version}-%{release}
+# @USE_A52DEC_TRUE@Provides:       gstreamer-a52dec = %{version}-%{release}
 # @USE_DVDNAV_TRUE@Provides:       gstreamer-dvdnavsrc = %{version}-%{release}
 # @USE_DVDREAD_TRUE@Provides:       gstreamer-dvdreadsrc = %{version}-%{release}
 @USE_MPEG2DEC_TRUE@Provides:       gstreamer-mpeg2dec = %{version}-%{release}
@@ -71,7 +71,7 @@ gstreamer-plugins-good because:
 %build
 %configure \
   --enable-debug \
-  --enable-DEBUG 
+  --enable-gtk-doc 
 
 make %{?_smp_mflags}
                                                                                 
