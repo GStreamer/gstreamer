@@ -1,7 +1,5 @@
 %define majorminor  @GST_MAJORMINOR@
 %define gstreamer   gstreamer09
-%define gstregister %{_bindir}/gst-register-%{majorminor}
-%define register    %{gstregister} > /dev/null 2>&1 || :
 
 %define gst_minver  0.9.1
 
@@ -19,8 +17,6 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Requires: 	  %{gstreamer} >= %{gst_minver}
 BuildRequires: 	  %{gstreamer}-devel >= %{gst_minver}
-Requires(post):   %{gstregister}
-Requires(postun): %{gstregister}
 
 BuildRequires:  gcc-c++
 BuildRequires:  gtk-doc >= 1.3
