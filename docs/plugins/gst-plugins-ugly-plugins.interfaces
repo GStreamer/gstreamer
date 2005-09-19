@@ -1,0 +1,5 @@
+GstBin GstChildProxy
+GstPipeline GstChildProxy
+GstID3Mux GstTagSetter
+GstID3Tag GstTagSetter
+GstLame GstTagSetter

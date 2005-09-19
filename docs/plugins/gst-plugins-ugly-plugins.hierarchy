@@ -1,0 +1,31 @@
+GObject
+  GstObject
+    GstPad
+    GstPluginFeature
+      GstElementFactory
+      GstTypeFindFactory
+      GstIndexFactory
+    GstElement
+      GstBin
+        GstPipeline
+      GstQueue
+      AC3IEC
+      GstDvdLpcmDec
+      GstRMDemux
+      GstMPEGAudioParse
+      GstSidDec
+      GstMad
+      GstID3TagBase
+        GstID3Demux
+        GstID3Mux
+        GstID3Tag
+      GstMpeg2dec
+      GstLame
+    GstPlugin
+    GstRegistry
+    GstPadTemplate
+  GstSignalObject
+GInterface
+  GstChildProxy
+  GstURIHandler
+  GstTagSetter

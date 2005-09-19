@@ -1,3 +1,13 @@
+2005-09-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/plugins/gst-plugins-ugly-plugins.args:
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/gst-plugins-ugly-plugins.interfaces:
+	* docs/plugins/gst-plugins-ugly-plugins.prerequisites:
+	  commit missing files
+	* docs/plugins/inspect/plugin-lame.xml:
+	  update
+
 2005-09-19  Wim Taymans  <wim@fluendo.com>
 
 	* ext/lame/gstlame.c: (gst_lame_chain):
