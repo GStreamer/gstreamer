@@ -1017,6 +1017,7 @@ gst_lame_chain (GstPad * pad, GstBuffer * buf)
     GST_BUFFER_TIMESTAMP (outbuf) = lame->last_ts;
     GST_BUFFER_OFFSET (outbuf) = lame->last_offs;
     GST_BUFFER_DURATION (outbuf) = lame->last_duration;
+    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (lame->srcpad));
 
     result = gst_pad_push (lame->srcpad, outbuf);
 
