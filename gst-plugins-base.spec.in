@@ -91,7 +91,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libgsttagedit-%{majorminor}.so.*
 %{_libdir}/libgstvideo-%{majorminor}.so.*
 %{_libdir}/libgstnet-%{majorminor}.so.*
-%{_libdir}/libgstrtp-%{majorminor}.so.*
+%{_libdir}/libgstrtp-%{majorminor}.so*
 
 # base plugins without external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstadder.so
@@ -143,6 +143,7 @@ rm -rf $RPM_BUILD_ROOT
 @USE_VORBIS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstogg.so
 @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstximage.so
 @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvimagesink.so
+@USE_LIBVISUAL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstlibvisual.so
                                                                                 
 %package devel
 Summary: 	GStreamer Plugin Library Headers
@@ -187,6 +188,7 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstringbuffer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/net/gstnetbuffer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tag/tag.h
+%{_includedir}/gstreamer-%{majorminor}/gst/rtp/gstbasertppayload.h
 
 %{_libdir}/libgstaudio-%{majorminor}.so
 %{_libdir}/libgstaudiofilter-%{majorminor}.so
