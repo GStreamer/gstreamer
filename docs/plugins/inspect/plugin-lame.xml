@@ -1,0 +1,20 @@
+<plugin>
+  <name>lame</name>
+  <description>Encode MP3's with LAME</description>
+  <filename>../../ext/lame/.libs/libgstlame.so</filename>
+  <basename>libgstlame.so</basename>
+  <version>0.9.1.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>lame</name>
+      <longname>L.A.M.E. mp3 encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>High-quality free MP3 encoder</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+  </elements>
+</plugin>
