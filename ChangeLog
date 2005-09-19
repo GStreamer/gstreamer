@@ -1,3 +1,8 @@
+2005-09-19  Wim Taymans  <wim@fluendo.com>
+
+	* ext/lame/gstlame.c: (gst_lame_chain):
+	Set caps on outgoing buffers.
+
 2005-09-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/lame/gstlame.c:
