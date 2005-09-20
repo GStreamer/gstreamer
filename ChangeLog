@@ -1,3 +1,8 @@
+2005-09-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* libs/gst/controller/gstcontroller.c: (gst_controller_new_valist):
+	  fix a leak
+
 2005-09-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/elements/gstfilesink.c: (gst_file_sink_init):

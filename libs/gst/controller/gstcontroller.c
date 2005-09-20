@@ -430,7 +430,6 @@ gst_controller_new_valist (GObject * object, va_list var_args)
         // if we don't have a controller object yet, now is the time to create one
         if (!self) {
           self = g_object_new (GST_TYPE_CONTROLLER, NULL);
-          self->lock = g_mutex_new ();
           self->object = object;
           // store the controller
           g_object_set_qdata (object, controller_key, self);
