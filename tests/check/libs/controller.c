@@ -339,6 +339,7 @@ GST_START_TEST (controller_new_okay1)
   ctrl = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
   fail_unless (ctrl != NULL, NULL);
 
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
   g_object_unref (ctrl);
   gst_object_unref (elem);
 }
@@ -357,6 +358,7 @@ GST_START_TEST (controller_new_okay2)
   ctrl = gst_controller_new (G_OBJECT (elem), "ulong", "double", NULL);
   fail_unless (ctrl != NULL, NULL);
 
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
   g_object_unref (ctrl);
   gst_object_unref (elem);
 }
@@ -380,7 +382,7 @@ GST_START_TEST (controller_new_okay3)
   fail_unless (ctrl2 != NULL, NULL);
   fail_unless (ctrl1 == ctrl2, NULL);
 
-  g_object_unref (ctrl2);
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl1)->ref_count);
   g_object_unref (ctrl1);
   gst_object_unref (elem);
 }
@@ -408,6 +410,7 @@ GST_START_TEST (controller_param_twice)
   res = gst_controller_remove_properties (ctrl, "ulong", NULL);
   fail_unless (!res, NULL);
 
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
   g_object_unref (ctrl);
   gst_object_unref (elem);
 }
@@ -472,6 +475,7 @@ GST_START_TEST (controller_interpolate_none)
   gst_controller_sink_values (ctrl, 2 * GST_SECOND);
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
 
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
   g_object_unref (ctrl);
   gst_object_unref (elem);
 }

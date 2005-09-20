@@ -435,8 +435,9 @@ gst_controller_new_valist (GObject * object, va_list var_args)
           // store the controller
           g_object_set_qdata (object, controller_key, self);
         } else {
-          // increment ref-count
-          self = g_object_ref (self);
+          // increment ref-count (this causes red-count-leaks
+          //self = g_object_ref (self);
+          GST_INFO ("returning existing controller");
         }
         self->properties = g_list_prepend (self->properties, prop);
       }
@@ -446,6 +447,8 @@ gst_controller_new_valist (GObject * object, va_list var_args)
   }
   va_end (var_args);
 
+  if (self)
+    GST_INFO ("controller->ref_count=%d", G_OBJECT (self)->ref_count);
   return (self);
 }
 
