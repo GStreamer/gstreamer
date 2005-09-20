@@ -37,7 +37,6 @@
 #include "gst_private.h"
 #include "gsterror.h"
 #include "gstinfo.h"
-#include "gstmemchunk.h"
 #include "gstmessage.h"
 #include "gsttaglist.h"
 #include "gstutils.h"

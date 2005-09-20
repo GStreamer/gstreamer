@@ -1,5 +1,10 @@
 2005-09-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstmessage.c:
+	  remove include of gstmemchunk.h
+
+2005-09-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstclock.c: (_gst_clock_id_free):
 	  Commit from the Political Party For More Atomic CVS Commits,
 	  so that people don't waste too much of their day fishing
