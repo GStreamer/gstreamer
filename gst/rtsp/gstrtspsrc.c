@@ -88,6 +88,9 @@ static void gst_rtspsrc_base_init (gpointer g_class);
 static void gst_rtspsrc_class_init (GstRTSPSrc * klass);
 static void gst_rtspsrc_init (GstRTSPSrc * rtspsrc);
 
+static void gst_rtspsrc_uri_handler_init (gpointer g_iface,
+    gpointer iface_data);
+
 static GstStateChangeReturn gst_rtspsrc_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -120,10 +123,18 @@ gst_rtspsrc_get_type (void)
       (GInstanceInitFunc) gst_rtspsrc_init,
       NULL
     };
+    static const GInterfaceInfo urihandler_info = {
+      gst_rtspsrc_uri_handler_init,
+      NULL,
+      NULL
+    };
 
     rtspsrc_type =
         g_type_register_static (GST_TYPE_ELEMENT, "GstRTSPSrc", &rtspsrc_info,
         0);
+
+    g_type_add_interface_static (rtspsrc_type, GST_TYPE_URI_HANDLER,
+        &urihandler_info);
   }
   return rtspsrc_type;
 }
@@ -289,11 +300,125 @@ done:
 }
 
 static gboolean
-gst_rtspsrc_stream_setup_rtp (GstRTSPStream * stream, gint * rtpport,
-    gint * rtcpport)
+gst_rtspsrc_parse_rtpmap (gchar * rtpmap, gint * payload, gchar ** name,
+    gint * rate, gchar ** params)
+{
+  gchar *p, *t;
+
+  t = p = rtpmap;
+
+  p = strstr (p, " ");
+  if (p == NULL)
+    return FALSE;
+  *p = '\0';
+  p++;
+
+  *payload = atoi (t);
+
+  while (*p && g_ascii_isspace (*p))
+    p++;
+
+  if (*p == '\0')
+    return FALSE;
+
+  t = p;
+  p = strstr (p, "/");
+  if (p == NULL)
+    return FALSE;
+  *p = '\0';
+  p++;
+  *name = t;
+
+  t = p;
+  p = strstr (p, "/");
+  if (p == NULL) {
+    *rate = atoi (t);
+    return TRUE;
+  }
+  *p = '\0';
+  p++;
+  *rate = atoi (t);
+
+  t = p;
+  if (*p == '\0')
+    return TRUE;
+  *params = t;
+
+  return TRUE;
+}
+
+/*
+ *  Mapping of caps to and from SDP fields:
+ *
+ *   m=<media> <udp port> RTP/AVP <payload> 
+ *   a=rtpmap:<payload> <encoding_name>/<clock_rate>[/<encoding_params>]
+ *   a=fmtp:<payload> <param>=<value>;...
+ */
+static GstCaps *
+gst_rtspsrc_media_to_caps (SDPMedia * media)
+{
+  GstCaps *caps;
+  gchar *payload;
+  gchar *rtpmap;
+
+  //gchar *fmtp;
+  gint pt;
+  gchar *name = NULL;
+  gint rate = -1;
+  gchar *params = NULL;
+  GstStructure *s;
+
+  payload = sdp_media_get_format (media, 0);
+  if (payload == NULL) {
+    g_warning ("payload type not given");
+    return NULL;
+  }
+  pt = atoi (payload);
+
+  if (pt >= 96) {
+    gint payload = 0;
+    gboolean ret;
+
+    rtpmap = sdp_media_get_attribute_val (media, "rtpmap");
+    if (rtpmap == NULL) {
+      g_warning ("rtpmap type not given");
+      return NULL;
+    }
+    ret = gst_rtspsrc_parse_rtpmap (rtpmap, &payload, &name, &rate, &params);
+    if (!ret) {
+      g_warning ("error parsing rtpmap");
+    }
+    if (payload != pt) {
+      g_warning ("rtpmap of wrong payload type");
+      name = NULL;
+      rate = -1;
+      params = NULL;
+    }
+  }
+
+  caps = gst_caps_new_simple ("application/x-rtp",
+      "media", G_TYPE_STRING, media->media, "payload", G_TYPE_INT, pt, NULL);
+  s = gst_caps_get_structure (caps, 0);
+
+  if (rate != -1)
+    gst_structure_set (s, "clock-rate", G_TYPE_INT, rate, NULL);
+
+  if (name != NULL)
+    gst_structure_set (s, "encoding-name", G_TYPE_STRING, name, NULL);
+
+  if (params != NULL)
+    gst_structure_set (s, "encoding-params", G_TYPE_STRING, params, NULL);
+
+  return caps;
+}
+
+static gboolean
+gst_rtspsrc_stream_setup_rtp (GstRTSPStream * stream, SDPMedia * media,
+    gint * rtpport, gint * rtcpport)
 {
   GstStateChangeReturn ret;
   GstRTSPSrc *src;
+  GstCaps *caps;
 
   src = stream->parent;
 
@@ -318,6 +443,10 @@ gst_rtspsrc_stream_setup_rtp (GstRTSPStream * stream, gint * rtpport,
   ret = gst_element_set_state (stream->rtcpsrc, GST_STATE_PAUSED);
   if (ret == GST_STATE_CHANGE_FAILURE)
     goto start_rtcp_failure;
+
+  caps = gst_rtspsrc_media_to_caps (media);
+
+  g_object_set (G_OBJECT (stream->rtpsrc), "caps", caps, NULL);
 
   g_object_get (G_OBJECT (stream->rtpsrc), "port", rtpport, NULL);
   g_object_get (G_OBJECT (stream->rtcpsrc), "port", rtcpport, NULL);
@@ -514,12 +643,11 @@ gst_rtspsrc_send (GstRTSPSrc * src, RTSPMessage * request,
     *code = response->type_data.response.code;
   }
 
-  if (response->type_data.response.code != RTSP_STS_OK)
-    goto error_response;
-
   if (src->debug) {
     rtsp_message_dump (response);
   }
+  if (response->type_data.response.code != RTSP_STS_OK)
+    goto error_response;
 
   return TRUE;
 
@@ -537,9 +665,9 @@ receive_error:
   }
 error_response:
   {
-    rtsp_message_dump (request);
-    rtsp_message_dump (response);
-    GST_ELEMENT_ERROR (src, RESOURCE, READ, ("Got error response."), (NULL));
+    GST_ELEMENT_ERROR (src, RESOURCE, READ, ("Got error response: %d (%s).",
+            response->type_data.response.code,
+            response->type_data.response.reason), (NULL));
     return FALSE;
   }
 }
@@ -706,7 +834,7 @@ gst_rtspsrc_open (GstRTSPSrc * src)
         gchar *trxparams;
 
         /* allocate two udp ports */
-        if (!gst_rtspsrc_stream_setup_rtp (stream, &rtpport, &rtcpport))
+        if (!gst_rtspsrc_stream_setup_rtp (stream, media, &rtpport, &rtcpport))
           goto setup_rtp_failed;
 
         trxparams = g_strdup_printf ("client_port=%d-%d", rtpport, rtcpport);
@@ -1021,4 +1149,49 @@ open_failed:
   {
     return GST_STATE_CHANGE_FAILURE;
   }
+}
+
+/*** GSTURIHANDLER INTERFACE *************************************************/
+
+static guint
+gst_rtspsrc_uri_get_type (void)
+{
+  return GST_URI_SRC;
+}
+static gchar **
+gst_rtspsrc_uri_get_protocols (void)
+{
+  static gchar *protocols[] = { "rtsp", NULL };
+
+  return protocols;
+}
+
+static const gchar *
+gst_rtspsrc_uri_get_uri (GstURIHandler * handler)
+{
+  GstRTSPSrc *src = GST_RTSPSRC (handler);
+
+  return g_strdup (src->location);
+}
+
+static gboolean
+gst_rtspsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+{
+  GstRTSPSrc *src = GST_RTSPSRC (handler);
+
+  g_free (src->location);
+  src->location = g_strdup (uri);
+
+  return TRUE;
+}
+
+static void
+gst_rtspsrc_uri_handler_init (gpointer g_iface, gpointer iface_data)
+{
+  GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
+
+  iface->get_type = gst_rtspsrc_uri_get_type;
+  iface->get_protocols = gst_rtspsrc_uri_get_protocols;
+  iface->get_uri = gst_rtspsrc_uri_get_uri;
+  iface->set_uri = gst_rtspsrc_uri_set_uri;
 }

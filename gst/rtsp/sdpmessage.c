@@ -399,6 +399,14 @@ sdp_media_get_attribute_val (SDPMedia * media, gchar * key)
   return NULL;
 }
 
+gchar *
+sdp_media_get_format (SDPMedia * media, gint i)
+{
+  if (i >= media->fmts->len)
+    return NULL;
+  return g_array_index (media->fmts, gchar *, i);
+}
+
 static void
 read_string (gchar * dest, gint size, gchar ** src)
 {

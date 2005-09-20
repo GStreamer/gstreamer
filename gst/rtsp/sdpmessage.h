@@ -158,6 +158,7 @@ RTSPResult 	sdp_media_clean 		(SDPMedia *media);
 RTSPResult 	sdp_media_free 			(SDPMedia *media);
 
 gchar*		sdp_media_get_attribute_val	(SDPMedia *media, gchar *key);
+gchar*		sdp_media_get_format		(SDPMedia *media, gint i);
 
 
 G_END_DECLS

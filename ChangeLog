@@ -1,3 +1,16 @@
+2005-09-20  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_get_type),
+	(gst_rtspsrc_parse_rtpmap), (gst_rtspsrc_media_to_caps),
+	(gst_rtspsrc_stream_setup_rtp), (gst_rtspsrc_send),
+	(gst_rtspsrc_open), (gst_rtspsrc_uri_get_type),
+	(gst_rtspsrc_uri_get_protocols), (gst_rtspsrc_uri_get_uri),
+	(gst_rtspsrc_uri_set_uri), (gst_rtspsrc_uri_handler_init):
+	* gst/rtsp/sdpmessage.c: (sdp_media_get_format):
+	* gst/rtsp/sdpmessage.h:
+	Add URI handler.
+	Parse SDP and create caps.
+
 2005-09-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/alpha/gstalpha.c:
