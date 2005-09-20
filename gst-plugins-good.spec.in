@@ -1,7 +1,5 @@
 %define majorminor  @GST_MAJORMINOR@
 %define gstreamer   gstreamer09
-%define gstregister %{_bindir}/gst-register-%{majorminor}
-%define register    %{gstregister} > /dev/null 2>&1 || :
 
 %define gst_minver   0.9.1
 
@@ -19,8 +17,6 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Requires: 	  %{gstreamer} >= %{gst_minver}
 BuildRequires: 	  %{gstreamer}-devel >= %{gst_minver}
-Requires(post):   %{gstregister}
-Requires(postun): %{gstregister}
 
 BuildRequires:  gcc-c++
 
@@ -135,10 +131,8 @@ rm -rf $RPM_BUILD_ROOT
 %post
 @USE_GCONF_TRUE@export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
 @USE_GCONF_TRUE@gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer-%{majorminor}.schemas > /dev/null
-%{register}
 
 %postun
-%{register}
                                                                                
 %changelog
 * Fri Sep 02 2005 Thomas Vander Stichele <thomas at apestaart dot org>
