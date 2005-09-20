@@ -73,7 +73,6 @@ enum
   PROP_STATE_ERROR,
   PROP_SILENT,
   PROP_DUMP,
-  PROP_SYNC,
   PROP_SIGNAL_HANDOFFS,
   PROP_LAST_MESSAGE,
   PROP_CAN_ACTIVATE_PUSH,
@@ -128,8 +127,6 @@ static GstFlowReturn gst_fake_sink_preroll (GstBaseSink * bsink,
 static GstFlowReturn gst_fake_sink_render (GstBaseSink * bsink,
     GstBuffer * buffer);
 static gboolean gst_fake_sink_event (GstBaseSink * bsink, GstEvent * event);
-static void gst_fake_sink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
-    GstClockTime * start, GstClockTime * end);
 
 static guint gst_fake_sink_signals[LAST_SIGNAL] = { 0 };
 
@@ -165,9 +162,6 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
       g_param_spec_string ("last_message", "Last Message",
           "The message describing current status", DEFAULT_LAST_MESSAGE,
           G_PARAM_READABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SYNC,
-      g_param_spec_boolean ("sync", "Sync", "Sync on the clock", DEFAULT_SYNC,
-          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SIGNAL_HANDOFFS,
       g_param_spec_boolean ("signal-handoffs", "Signal handoffs",
           "Send a signal before unreffing the buffer", DEFAULT_SIGNAL_HANDOFFS,
@@ -210,7 +204,6 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
   gstbase_sink_class->event = GST_DEBUG_FUNCPTR (gst_fake_sink_event);
   gstbase_sink_class->preroll = GST_DEBUG_FUNCPTR (gst_fake_sink_preroll);
   gstbase_sink_class->render = GST_DEBUG_FUNCPTR (gst_fake_sink_render);
-  gstbase_sink_class->get_times = GST_DEBUG_FUNCPTR (gst_fake_sink_get_times);
 }
 
 static void
@@ -218,7 +211,6 @@ gst_fake_sink_init (GstFakeSink * fakesink, GstFakeSinkClass * g_class)
 {
   fakesink->silent = DEFAULT_SILENT;
   fakesink->dump = DEFAULT_DUMP;
-  fakesink->sync = DEFAULT_SYNC;
   fakesink->last_message = g_strdup (DEFAULT_LAST_MESSAGE);
   fakesink->state_error = DEFAULT_STATE_ERROR;
   fakesink->signal_handoffs = DEFAULT_SIGNAL_HANDOFFS;
@@ -241,9 +233,6 @@ gst_fake_sink_set_property (GObject * object, guint prop_id,
       break;
     case PROP_DUMP:
       sink->dump = g_value_get_boolean (value);
-      break;
-    case PROP_SYNC:
-      sink->sync = g_value_get_boolean (value);
       break;
     case PROP_SIGNAL_HANDOFFS:
       sink->signal_handoffs = g_value_get_boolean (value);
@@ -278,9 +267,6 @@ gst_fake_sink_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_DUMP:
       g_value_set_boolean (value, sink->dump);
       break;
-    case PROP_SYNC:
-      g_value_set_boolean (value, sink->sync);
-      break;
     case PROP_SIGNAL_HANDOFFS:
       g_value_set_boolean (value, sink->signal_handoffs);
       break;
@@ -296,17 +282,6 @@ gst_fake_sink_get_property (GObject * object, guint prop_id, GValue * value,
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
-  }
-}
-
-static void
-gst_fake_sink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
-    GstClockTime * start, GstClockTime * end)
-{
-  GstFakeSink *sink = GST_FAKE_SINK (bsink);
-
-  if (sink->sync) {
-    GST_BASE_SINK_CLASS (parent_class)->get_times (bsink, buffer, start, end);
   }
 }
 

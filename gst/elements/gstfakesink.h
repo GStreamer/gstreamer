@@ -59,7 +59,6 @@ struct _GstFakeSink {
 
   gboolean		silent;
   gboolean		dump;
-  gboolean		sync;
   gboolean		signal_handoffs;
   GstFakeSinkStateError state_error;
   gchar			*last_message;

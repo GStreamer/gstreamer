@@ -304,6 +304,8 @@ GST_START_TEST (send_custom_events)
   gst_bin_add_many (pipeline, fakesrc, queue, fakesink, NULL);
   fail_unless (gst_element_link_many (fakesrc, queue, fakesink, NULL));
 
+  g_object_set (G_OBJECT (fakesink), "sync", FALSE, NULL);
+
   /* Send 100 buffers per sec */
   g_object_set (G_OBJECT (fakesrc), "silent", TRUE, "datarate", 100,
       "sizemax", 1, "sizetype", 2, NULL);

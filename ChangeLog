@@ -1,14 +1,24 @@
+2005-09-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/gst/gstevent.c:
+	* gst/elements/gstfakesink.c:
+	* gst/elements/gstfakesink.h:
+	  remove the sync property from fakesink.
+	  has the side effect of setting sync TRUE
+	  for fakesink, which is a change.  Anyone who knows how
+	  to fix this nicely in a GObject-y way, feel free.
+
 2005-09-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-docs.sgml:
-          remove probe refsection
+	  remove probe refsection
 
 2005-09-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* check/Makefile.am:
-          disable valgrinding the controller test again
+	  disable valgrinding the controller test again
 	* docs/gst/gstreamer-sections.txt:
-          update for api-changes
+	  update for api-changes
 
 2005-09-20  Wim Taymans  <wim@fluendo.com>
 

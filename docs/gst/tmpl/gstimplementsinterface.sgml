@@ -14,9 +14,6 @@ Core interface implemented by #GstElements that allows runtime querying of inter
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### STRUCT GstImplementsInterface ##### -->
 <para>
 
