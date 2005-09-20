@@ -1,3 +1,8 @@
+2005-09-20  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	Avoid division by 0 errors.
+
 2005-09-19  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_setcaps),
