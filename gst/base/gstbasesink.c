@@ -157,7 +157,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SYNC,
       g_param_spec_boolean ("sync", "Sync", "Sync on the clock", DEFAULT_SYNC,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE));
 
   gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_base_sink_set_clock);
   gstelement_class->change_state =
@@ -269,6 +269,8 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
 
   basesink->can_activate_push = DEFAULT_CAN_ACTIVATE_PUSH;
   basesink->can_activate_pull = DEFAULT_CAN_ACTIVATE_PULL;
+
+  basesink->sync = DEFAULT_SYNC;
 
   GST_FLAG_SET (basesink, GST_ELEMENT_IS_SINK);
 }

@@ -1,5 +1,15 @@
 2005-09-20  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasesink.c: (gst_base_sink_class_init),
+	(gst_base_sink_init):
+	Make sync property settable from subclass.
+
+	* gst/elements/gstfakesink.c: (gst_fake_sink_init),
+	(gst_fake_sink_change_state):
+	Set sync to FALSE by default.
+
+2005-09-20  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbus.c: (poll_func), (poll_timeout), (gst_bus_poll):
 	* tools/gst-launch.c: (main):
 	The timeout handler should have lower priority than the source

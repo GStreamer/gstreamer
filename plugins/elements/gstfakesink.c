@@ -58,10 +58,11 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_SYNC FALSE
+
 #define DEFAULT_STATE_ERROR FAKE_SINK_STATE_ERROR_NONE
 #define DEFAULT_SILENT FALSE
 #define DEFAULT_DUMP FALSE
-#define DEFAULT_SYNC FALSE
 #define DEFAULT_SIGNAL_HANDOFFS FALSE
 #define DEFAULT_LAST_MESSAGE NULL
 #define DEFAULT_CAN_ACTIVATE_PUSH TRUE
@@ -211,6 +212,7 @@ gst_fake_sink_init (GstFakeSink * fakesink, GstFakeSinkClass * g_class)
 {
   fakesink->silent = DEFAULT_SILENT;
   fakesink->dump = DEFAULT_DUMP;
+  GST_BASE_SINK (fakesink)->sync = DEFAULT_SYNC;
   fakesink->last_message = g_strdup (DEFAULT_LAST_MESSAGE);
   fakesink->state_error = DEFAULT_STATE_ERROR;
   fakesink->signal_handoffs = DEFAULT_SIGNAL_HANDOFFS;
@@ -403,6 +405,7 @@ gst_fake_sink_change_state (GstElement * element, GstStateChange transition)
 
   return ret;
 
+  /* ERROR */
 error:
   GST_ELEMENT_ERROR (element, CORE, STATE_CHANGE, (NULL), (NULL));
   return GST_STATE_CHANGE_FAILURE;
