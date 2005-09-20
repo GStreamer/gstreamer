@@ -1,3 +1,11 @@
+2005-09-19  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstobject.c:
+      added missing symbols to api docs
+      disable ref-count hack if we have glib >= 2.8
+
 2005-09-19  David Schleef  <ds@schleef.org>
 
 	* docs/gst/Makefile.am: Ignore a few more internal headers

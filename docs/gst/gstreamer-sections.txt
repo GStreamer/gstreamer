@@ -84,7 +84,7 @@ GstBus
 GstBusFunc
 GstBusFlags
 GstBusSyncReply
-GstBusHandler
+GstBusFunc
 GstBusSyncHandler
 gst_bus_new
 gst_bus_post
@@ -1569,7 +1569,11 @@ gst_registry_save
 gst_registry_rebuild
 gst_registry_unload
 gst_registry_add_path
+gst_registry_get_default
+gst_registry_get_feature_list
+gst_registry_get_feature_list_by_plugin
 gst_registry_get_path_list
+gst_registry_get_plugin_list
 gst_registry_clear_paths
 gst_registry_add_plugin
 gst_registry_remove_plugin
@@ -1577,6 +1581,7 @@ gst_registry_plugin_filter
 gst_registry_feature_filter
 gst_registry_find_plugin
 gst_registry_find_feature
+gst_registry_lookup_feature
 gst_registry_load_plugin
 gst_registry_unload_plugin
 gst_registry_update_plugin

@@ -33,13 +33,19 @@
 #endif
 
 #define DEBUG_REFCOUNT
+#ifndef HAVE_GLIB_2_8
 #define REFCOUNT_HACK
+#endif
 
 /* Refcount hack: since glib is not threadsafe, the glib refcounter can be
  * screwed up and the object can be freed unexpectedly. We use an evil hack
  * to work around this problem. We set the glib refcount to a high value so
  * that glib will never unref the object under realistic circumstances. Then
  * we use our own atomic refcounting to do proper MT safe refcounting.
+ *
+ * The hack has several side-effect. At first you should use
+ * gst_object_ref/unref() whenever you can. Next When using g_value_set/get_object();
+ * you need to manually fix the refcount.
  *
  * A proper fix is of course to make the glib refcounting threadsafe which is
  * planned. Update: atomic refcounting is now in glib >= 2.7.3
