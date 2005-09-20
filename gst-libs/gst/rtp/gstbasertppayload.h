@@ -68,6 +68,7 @@ struct _GstBaseRTPPayload
 
   gint32   ts_offset;
   guint32  timestamp;
+  gint16   seqnum_offset;
   guint16  seqnum;
   guint    pt;
   guint    ssrc;

@@ -36,6 +36,7 @@ enum
 #define DEFAULT_PT			96
 #define DEFAULT_SSRC			0
 #define DEFAULT_TIMESTAMP_OFFSET	-1
+#define DEFAULT_SEQNUM_OFFSET		-1
 
 enum
 {
@@ -44,6 +45,7 @@ enum
   PROP_PT,
   PROP_SSRC,
   PROP_TIMESTAMP_OFFSET,
+  PROP_SEQNUM_OFFSET,
   PROP_TIMESTAMP,
   PROP_SEQNUM
 };
@@ -131,14 +133,19 @@ gst_basertppayload_class_init (GstBaseRTPPayloadClass * klass)
           "Timestamp Offset",
           "Offset to add to all outgoing timestamps (-1 = random)", -1,
           G_MAXINT, DEFAULT_TIMESTAMP_OFFSET, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SEQNUM_OFFSET,
+      g_param_spec_int ("seqnum-offset", "Sequence number Offset",
+          "Offset to add to all outgoing seqnum (-1 = random)", -1, G_MAXINT,
+          DEFAULT_SEQNUM_OFFSET, G_PARAM_READWRITE));
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TIMESTAMP,
       g_param_spec_uint ("timestamp", "Timestamp",
-          "The RTP timestamp of the last processed packet", 0, G_MAXUINT, 0,
-          G_PARAM_READABLE));
+          "The RTP timestamp of the last processed packet",
+          0, G_MAXUINT, 0, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SEQNUM,
       g_param_spec_uint ("seqnum", "Sequence number",
-          "The RTP sequence number of the last processed packet", 0, G_MAXUINT,
-          0, G_PARAM_READABLE));
+          "The RTP sequence number of the last processed packet",
+          0, G_MAXUINT, 0, G_PARAM_READABLE));
 
   gstelement_class->change_state = gst_basertppayload_change_state;
 
@@ -175,11 +182,9 @@ gst_basertppayload_init (GstBaseRTPPayload * basertppayload, gpointer g_class)
 
   basertppayload->mtu = DEFAULT_MTU;
   basertppayload->pt = DEFAULT_PT;
-  basertppayload->seqnum =
-      g_rand_int_range (basertppayload->seq_rand, 0, G_MAXUINT16);
+  basertppayload->seqnum_offset = DEFAULT_SEQNUM_OFFSET;
   basertppayload->ssrc = DEFAULT_SSRC;
   basertppayload->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
-  basertppayload->ts_base = g_rand_int (basertppayload->ts_rand);
 
   basertppayload->clock_rate = 0;
 }
@@ -359,6 +364,9 @@ gst_basertppayload_set_property (GObject * object, guint prop_id,
     case PROP_TIMESTAMP_OFFSET:
       basertppayload->ts_offset = g_value_get_int (value);
       break;
+    case PROP_SEQNUM_OFFSET:
+      basertppayload->seqnum_offset = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -386,6 +394,9 @@ gst_basertppayload_get_property (GObject * object, guint prop_id,
     case PROP_TIMESTAMP_OFFSET:
       g_value_set_int (value, basertppayload->ts_offset);
       break;
+    case PROP_SEQNUM_OFFSET:
+      g_value_set_int (value, basertppayload->seqnum_offset);
+      break;
     case PROP_TIMESTAMP:
       g_value_set_uint (value, basertppayload->timestamp);
       break;
@@ -411,13 +422,19 @@ gst_basertppayload_change_state (GstElement * element,
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      basertppayload->seqnum_base =
-          g_rand_int_range (basertppayload->seq_rand, 0, G_MAXUINT16);
+
+      if (basertppayload->seqnum_offset == -1)
+        basertppayload->seqnum_base =
+            g_rand_int_range (basertppayload->seq_rand, 0, G_MAXUINT16);
+      else
+        basertppayload->seqnum_base = basertppayload->seqnum_offset;
       basertppayload->seqnum = basertppayload->seqnum_base;
+
       if (basertppayload->ssrc == 0)
         basertppayload->current_ssrc = g_rand_int (basertppayload->ssrc_rand);
       else
         basertppayload->current_ssrc = basertppayload->ssrc;
+
       if (basertppayload->ts_offset == -1)
         basertppayload->ts_base = g_rand_int (basertppayload->ts_rand);
       else
