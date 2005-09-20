@@ -1,3 +1,10 @@
+2005-09-19  David Schleef  <ds@schleef.org>
+
+	* docs/libs/gstreamer-libs-docs.sgml: Remove docs for getbits
+	* docs/libs/gstreamer-libs-sections.txt:
+	* docs/libs/tmpl/gstgetbits.sgml:
+	* docs/libs/tmpl/gstputbits.sgml:
+
 2005-09-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* win32/gstenumtypes.c:
