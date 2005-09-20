@@ -1,3 +1,8 @@
+2005-09-20  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gst.h: Re-add marshal to gst.h's include list -- if we
+	really want it out, you should fix plugins at the same time.
+
 2005-09-19  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:

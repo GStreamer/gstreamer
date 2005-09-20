@@ -42,6 +42,7 @@
 #include <gst/gstinfo.h>
 #include <gst/gstinterface.h>
 #include <gst/gstiterator.h>
+#include <gst/gstmarshal.h>
 #include <gst/gstmessage.h>
 #include <gst/gstminiobject.h>
 #include <gst/gstobject.h>
