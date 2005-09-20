@@ -90,5 +90,14 @@ class StructureTest(unittest.TestCase):
         assert self.struct['pixel-aspect-ratio'].num == 2
         assert self.struct['pixel-aspect-ratio'].denom == 1
 
+    def testKeys(self):
+        k = self.struct.keys()
+        self.failUnless(k)
+        self.assertEquals(len(k), 4)
+        self.failUnless("width" in k)
+        self.failUnless("foo" in k)
+        self.failUnless("framerate" in k)
+        self.failUnless("pixel-aspect-ratio" in k)
+ 
 if __name__ == "__main__":
     unittest.main()

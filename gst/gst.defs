@@ -4457,6 +4457,13 @@
   )
 )
 
+(define-method keys
+  (of-object "GstStructure")
+  (c-name "gst_structure_keys")
+  (return-type "GList*")
+)
+
+
 (define-method get_boolean
   (of-object "GstStructure")
   (c-name "gst_structure_get_boolean")
