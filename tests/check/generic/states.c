@@ -42,6 +42,8 @@ GST_START_TEST (test_state_changes)
     gst_element_set_state (element, GST_STATE_READY);
     gst_element_set_state (element, GST_STATE_PAUSED);
     gst_element_set_state (element, GST_STATE_PLAYING);
+    /* Sleep to give any pad tasks time to start */
+    g_usleep (0.2 * G_USEC_PER_SEC);
     gst_element_set_state (element, GST_STATE_PAUSED);
     gst_element_set_state (element, GST_STATE_READY);
     gst_element_set_state (element, GST_STATE_NULL);
@@ -62,6 +64,10 @@ states_suite (void)
 {
   Suite *s = suite_create ("states");
   TCase *tc_chain = tcase_create ("general");
+
+  /* Use a long timeout, as we test all elements and take
+   * at least 0.2 seconds each */
+  tcase_set_timeout (tc_chain, 120);
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_state_changes);

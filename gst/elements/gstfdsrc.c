@@ -138,7 +138,8 @@ gst_fdsrc_class_init (GstFdSrcClass * klass)
 static void
 gst_fdsrc_init (GstFdSrc * fdsrc, GstFdSrcClass * klass)
 {
-  // TODO set live only if it's actually a live source
+  /* TODO set live only if it's actually a live source (check
+   * for seekable fd) */
   gst_base_src_set_live (GST_BASE_SRC (fdsrc), TRUE);
 
   fdsrc->fd = 0;
@@ -226,12 +227,15 @@ gst_fdsrc_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
+#define SELECT_TIMEOUT (GST_SECOND / 20)
+
 static GstFlowReturn
 gst_fdsrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
   GstFdSrc *src;
   GstBuffer *buf;
   glong readbytes;
+  GstClockTime timeout;
 
 #ifndef HAVE_WIN32
   fd_set readfds;
@@ -241,21 +245,32 @@ gst_fdsrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 
   src = GST_FDSRC (psrc);
 
-  /* create the buffer */
-  buf = gst_buffer_new_and_alloc (src->blocksize);
-
 #ifndef HAVE_WIN32
   FD_ZERO (&readfds);
   FD_SET (src->fd, &readfds);
 
   if (src->timeout != 0) {
-    GST_TIME_TO_TIMEVAL (src->timeout, t);
-  } else
-    tp = NULL;
+    timeout = MIN (SELECT_TIMEOUT, src->timeout);
+  } else {
+    timeout = SELECT_TIMEOUT;
+  }
 
   do {
+    GST_TIME_TO_TIMEVAL (timeout, t);
+    if (src->timeout != 0)
+      timeout -= MIN (timeout, SELECT_TIMEOUT);
+
     retval = select (src->fd + 1, &readfds, NULL, NULL, tp);
-  } while (retval == -1 && errno == EINTR);     /* retry if interrupted */
+
+    /* Check whether the element got shutdown before full timeout */
+    if (retval == 0) {
+      if (GST_PAD_IS_FLUSHING (GST_BASE_SRC_PAD (src))) {
+        GST_DEBUG_OBJECT (src, "Shutting down with no buffer.");
+        return GST_FLOW_WRONG_STATE;
+      }
+    }
+  } while ((retval == -1 && errno == EINTR) ||  /* retry if interrupted */
+      (retval == 0 && timeout > 0));    /* Retry on incomplete timeout */
 
   if (retval == -1) {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
@@ -268,6 +283,9 @@ gst_fdsrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
     return GST_FLOW_ERROR;
   }
 #endif
+
+  /* create the buffer */
+  buf = gst_buffer_new_and_alloc (src->blocksize);
 
   do {
     readbytes = read (src->fd, GST_BUFFER_DATA (buf), src->blocksize);
@@ -286,11 +304,13 @@ gst_fdsrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
     return GST_FLOW_OK;
   } else if (readbytes == 0) {
     GST_DEBUG_OBJECT (psrc, "Read 0 bytes. EOS.");
+    gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   } else {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("read on file descriptor: %s.", g_strerror (errno)));
     GST_DEBUG_OBJECT (psrc, "Error reading from fd");
+    gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
 }
