@@ -19,6 +19,13 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstpluginfeature
+ * @short_description: Base class for contents of a GstPlugin
+ * @see_also: #GstPlugin
+ *
+ * This is a base class for anything that can be added to a #GstPlugin.
+ */
 
 #include "gst_private.h"
 

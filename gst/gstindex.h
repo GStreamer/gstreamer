@@ -44,12 +44,29 @@ typedef struct _GstIndexGroup GstIndexGroup;
 typedef struct _GstIndex GstIndex;
 typedef struct _GstIndexClass GstIndexClass;
 
+/**
+ * GstIndexCertainty:
+ * @GST_INDEX_UNKNOWN: accuracy is not known
+ * @GST_INDEX_CERTAIN: accuracy is perfect
+ * @GST_INDEX_FUZZY: accuracy is fuzzy
+ * 
+ * The certainty of a group in the index.
+ */
 typedef enum {
   GST_INDEX_UNKNOWN,
   GST_INDEX_CERTAIN,
   GST_INDEX_FUZZY
 } GstIndexCertainty;
 
+/**
+ * GstIndexEntryType:
+ * @GST_INDEX_ENTRY_ID: This entry is an id that maps an index id to its owner object
+ * @GST_INDEX_ENTRY_ASSOCIATION: This entry is an association between formats
+ * @GST_INDEX_ENTRY_OBJECT: An object
+ * @GST_INDEX_ENTRY_FORMAT: A format definition
+ * 
+ * The different types of entries in the index.
+ */
 typedef enum {
   GST_INDEX_ENTRY_ID,
   GST_INDEX_ENTRY_ASSOCIATION,
@@ -57,24 +74,79 @@ typedef enum {
   GST_INDEX_ENTRY_FORMAT
 } GstIndexEntryType;
 
+/**
+ * GstIndexLookupMethod:
+ * @GST_INDEX_LOOKUP_EXACT: There has to be an exact indexentry with the given format/value
+ * @GST_INDEX_LOOKUP_BEFORE: The exact entry or the one before it
+ * @GST_INDEX_LOOKUP_AFTER: The exact entry or the one after it
+ * 
+ * Specify the method to find an index entry in the index.
+ */
 typedef enum {
   GST_INDEX_LOOKUP_EXACT,
   GST_INDEX_LOOKUP_BEFORE,
   GST_INDEX_LOOKUP_AFTER
 } GstIndexLookupMethod;
 
+/**
+ * GST_INDEX_NASSOCS:
+ * @entry: The entry to query
+ *
+ * Get the number of associations in the entry.
+ */
 #define GST_INDEX_NASSOCS(entry)		((entry)->data.assoc.nassocs)
+
+/**
+ * GST_INDEX_ASSOC_FLAGS:
+ * @entry: The entry to query
+ *
+ *  Get the flags for this entry.
+ */
 #define GST_INDEX_ASSOC_FLAGS(entry)		((entry)->data.assoc.flags)
+
+/**
+ * GST_INDEX_ASSOC_FORMAT:
+ * @entry: The entry to query
+ * @i: The format index
+ *
+ * Get the i-th format of the entry.
+ */
 #define GST_INDEX_ASSOC_FORMAT(entry,i)		((entry)->data.assoc.assocs[(i)].format)
+
+/**
+ * GST_INDEX_ASSOC_VALUE:
+ * @entry: The entry to query
+ * @i: The value index
+ *
+ * Get the i-th value of the entry.
+ */
 #define GST_INDEX_ASSOC_VALUE(entry,i)		((entry)->data.assoc.assocs[(i)].value)
 
 typedef struct _GstIndexAssociation GstIndexAssociation;
 
+/**
+ * GstIndexAssociation:
+ * @format: the format of the association
+ * @value: the value of the association
+ *
+ * An association in an entry.
+ */
 struct _GstIndexAssociation {
   GstFormat 	format;
   gint64 	value;
 };
 
+/**
+ * GstAssocFlags:
+ * @GST_ASSOCIATION_FLAG_NONE: no extra flags
+ * @GST_ASSOCIATION_FLAG_KEY_UNIT: the entry marks a key unit, a key unit is one
+ *  that marks a place where one can randomly seek to.
+ * @GST_ASSOCIATION_FLAG_DELTA_UNIT: the entry marks a delta unit, a delta unit
+ *  is one that marks a place where one can relatively seek to.
+ * @GST_ASSOCIATION_FLAG_LAST: extra user defined flags should start here.
+ *
+ * Flags for an association entry.
+ */
 typedef enum {
   GST_ASSOCIATION_FLAG_NONE 	= 0,
   GST_ASSOCIATION_FLAG_KEY_UNIT = (1 << 0),
@@ -84,13 +156,42 @@ typedef enum {
   GST_ASSOCIATION_FLAG_LAST	= (1 << 8)
 } GstAssocFlags;
 
+/**
+ * GST_INDEX_FORMAT_FORMAT:
+ * @entry: The entry to query
+ *
+ * Get the format of the format entry
+ */
 #define GST_INDEX_FORMAT_FORMAT(entry)		((entry)->data.format.format)
+
+/**
+ * GST_INDEX_FORMAT_KEY:
+ * @entry: The entry to query
+ *
+ * Get the key of the format entry
+ */
 #define GST_INDEX_FORMAT_KEY(entry)		((entry)->data.format.key)
 
+/**
+ * GST_INDEX_ID_INVALID:
+ *
+ * Constant for an invalid index id
+ */
 #define GST_INDEX_ID_INVALID			(-1)
 
+/**
+ * GST_INDEX_ID_DESCRIPTION:
+ * @entry: The entry to query
+ *
+ * Get the description of the id entry
+ */
 #define GST_INDEX_ID_DESCRIPTION(entry)		((entry)->data.id.description)
 
+/**
+ * GstIndexEntry:
+ *
+ * The basic element of an index.
+ */
 struct _GstIndexEntry {
   GstIndexEntryType	 type;
   gint			 id;
@@ -117,6 +218,12 @@ struct _GstIndexEntry {
   } data;
 };
 
+/**
+ * GstIndexGroup:
+ *
+ * A group of related entries in an index.
+ */
+
 struct _GstIndexGroup {
   /* unique ID of group in index */
   gint groupnum;
@@ -131,19 +238,57 @@ struct _GstIndexGroup {
   gint peergroup;
 };
 
+/**
+ * GstIndexFilter:
+ * @index: The index being queried
+ * @entry: The entry to be added.
+ *
+ * Function to filter out entries in the index.
+ *
+ * Returns: This function should return %TRUE if the entry is to be added
+ * to the index, %FALSE otherwise.
+ *
+ */
 typedef gboolean 	(*GstIndexFilter)	 	(GstIndex *index, 
 							 GstIndexEntry *entry);
-
+/**
+ * GstIndexResolverMethod:
+ * @GST_INDEX_RESOLVER_CUSTOM: Use a custom resolver
+ * @GST_INDEX_RESOLVER_GTYPE: Resolve based on the GType of the object
+ * @GST_INDEX_RESOLVER_PATH: Resolve on the path in graph
+ *
+ * The method used to resolve index writers
+ */
 typedef enum {
   GST_INDEX_RESOLVER_CUSTOM,
   GST_INDEX_RESOLVER_GTYPE,
   GST_INDEX_RESOLVER_PATH
 } GstIndexResolverMethod;
 
+/**
+ * GstIndexResolver:
+ * @index: the index being queried.
+ * @writer: The object that wants to write
+ * @writer_string: A description of the writer.
+ * @user_data: user_data as registered
+ *
+ * Function to resolve ids to writer descriptions.
+ *
+ * Returns: %TRUE if an id could be assigned to the writer.
+ */
 typedef gboolean 	(*GstIndexResolver) 		(GstIndex *index, 
 						   	 GstObject *writer, 
 						   	 gchar **writer_string,
 						   	 gpointer user_data);
+
+/**
+ * GstIndexFlags:
+ * @GST_INDEX_WRITABLE: The index is writable
+ * @GST_INDEX_READABLE: The index is readable
+ * @GST_INDEX_FLAG_LAST: First flag that can be used by subclasses
+ *
+ * Flags for this index
+ */
 typedef enum {
   GST_INDEX_WRITABLE 		= GST_OBJECT_FLAG_LAST,	
   GST_INDEX_READABLE,	
@@ -151,7 +296,20 @@ typedef enum {
   GST_INDEX_FLAG_LAST 		= GST_OBJECT_FLAG_LAST + 8
 } GstIndexFlags;
 
+/**
+ * GST_INDEX_IS_READABLE:
+ * @obj: The index to check
+ *
+ * Check if the index can be read from
+ */
 #define GST_INDEX_IS_READABLE(obj)    (GST_FLAG_IS_SET (obj, GST_INDEX_READABLE))
+
+/**
+ * GST_INDEX_IS_WRITABLE:
+ * @obj: The index to check
+ *
+ * Check if the index can be written to
+ */
 #define GST_INDEX_IS_WRITABLE(obj)    (GST_FLAG_IS_SET (obj, GST_INDEX_WRITABLE))
 
 struct _GstIndex {
@@ -237,45 +395,6 @@ GstIndexEntry *         gst_index_entry_copy            (GstIndexEntry *entry);
 void			gst_index_entry_free		(GstIndexEntry *entry);
 gboolean		gst_index_entry_assoc_map	(GstIndexEntry *entry,
 		                                         GstFormat format, gint64 *value);
-/*
- * creating indexs
- *
- */
-#define GST_TYPE_INDEX_FACTORY  		(gst_index_factory_get_type())
-#define GST_INDEX_FACTORY(obj) 			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_INDEX_FACTORY, GstIndexFactory))
-#define GST_IS_INDEX_FACTORY(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_INDEX_FACTORY))
-#define GST_INDEX_FACTORY_CLASS(klass) 		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_INDEX_FACTORY, GstIndexFactoryClass))
-#define GST_IS_INDEX_FACTORY_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_INDEX_FACTORY))
-#define GST_INDEX_FACTORY_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_INDEX_FACTORY, GstIndexFactoryClass))
-
-typedef struct _GstIndexFactory GstIndexFactory;
-typedef struct _GstIndexFactoryClass GstIndexFactoryClass;
-
-struct _GstIndexFactory {
-  GstPluginFeature feature;
-	    
-  gchar *longdesc;            /* long description of the index (well, don't overdo it..) */
-  GType type;                 /* unique GType of the index */
-
-  gpointer _gst_reserved[GST_PADDING];
-};
-
-struct _GstIndexFactoryClass {
-  GstPluginFeatureClass parent; 
-
-  gpointer _gst_reserved[GST_PADDING];
-};
-
-GType 			gst_index_factory_get_type 	(void);
-
-GstIndexFactory*	gst_index_factory_new 		(const gchar *name, 
-							 const gchar *longdesc, GType type);
-void 			gst_index_factory_destroy	(GstIndexFactory *factory);
-
-GstIndexFactory*	gst_index_factory_find		(const gchar *name);
-
-GstIndex*		gst_index_factory_create 	(GstIndexFactory *factory);
-GstIndex*		gst_index_factory_make   	(const gchar *name);
 
 G_END_DECLS
 

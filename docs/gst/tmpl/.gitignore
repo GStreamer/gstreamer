@@ -26,13 +26,15 @@ gstfilesink.sgml
 gstfilter.sgml
 gstformat.sgml
 gstghostpad.sgml
+gstindex.sgml
+gstindexfactory.sgml
 gstiterator.sgml
 gstmacros.sgml
 gstmemchunk.sgml
 gstmessage.sgml
 gstminiobject.sgml
 gstparse.sgml
-gstprobe.sgml
+gstpluginfeature.sgml
 gstpushsrc.sgml
 gstqueue.sgml
 gstquery.sgml
@@ -48,6 +50,7 @@ gsttrace.sgml
 gsttrashstack.sgml
 gsttypefind.sgml
 gsttypefindfactory.sgml
+gsttypes.sgml
 gsturihandler.sgml
 gsturitype.sgml
 gstutils.sgml

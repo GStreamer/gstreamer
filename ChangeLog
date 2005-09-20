@@ -1,9 +1,31 @@
+2005-09-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/.cvsignore:
+	* gst/Makefile.am:
+	* gst/gst.h:
+	* gst/gstbin.c:
+	* gst/gstelement.h:
+	* gst/gstindex.c: (gst_index_class_init):
+	* gst/gstindex.h:
+	* gst/gstindexfactory.c: (gst_index_factory_get_type),
+	(gst_index_factory_class_init), (gst_index_factory_init),
+	(gst_index_factory_finalize), (gst_index_factory_new),
+	(gst_index_factory_destroy), (gst_index_factory_find),
+	(gst_index_factory_create), (gst_index_factory_make):
+	* gst/gstindexfactory.h:
+	* gst/gstpluginfeature.c:
+	* gst/gstpluginfeature.h:
+	* libs/gst/controller/gstcontroller.c: (gst_controller_new_valist):
+          more docs inlined, splitted gstindex.{c,h}
+
 2005-09-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* libs/gst/controller/gstcontroller.c: (gst_controller_new_valist):
 	  fix a leak
 
-2005-09-20  Tim-Philipp Müller  <tim at centricular dot net>
+2005-09-20  Tim-Philipp M??ller  <tim at centricular dot net>
 
 	* gst/elements/gstfilesink.c: (gst_file_sink_init):
 	  Set sync to FALSE by default.
@@ -26,7 +48,7 @@
 	so we don't timeout before popping a message with 0 timeout.
 	Dump error messages after failed state change.
 
-2005-09-20  Tim-Philipp Müller  <tim at centricular dot net>
+2005-09-20  Tim-Philipp M??ller  <tim at centricular dot net>
 
 	* tools/gst-inspect.c: (print_element_properties_info):
 	  Fix two typos.
@@ -157,7 +179,7 @@
 	* docs/libs/tmpl/gstgetbits.sgml:
 	* docs/libs/tmpl/gstputbits.sgml:
 
-2005-09-19  Tim-Philipp Müller  <tim at centricular dot net>
+2005-09-19  Tim-Philipp M??ller  <tim at centricular dot net>
 
 	* win32/gstenumtypes.c:
 	* win32/gstenumtypes.h:

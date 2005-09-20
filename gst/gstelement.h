@@ -48,6 +48,7 @@ typedef enum {
 #include <gst/gstplugin.h>
 #include <gst/gstpluginfeature.h>
 #include <gst/gstindex.h>
+#include <gst/gstindexfactory.h>
 #include <gst/gstiterator.h>
 #include <gst/gstmessage.h>
 #include <gst/gsttaglist.h>

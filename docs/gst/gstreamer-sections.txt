@@ -404,6 +404,8 @@ GST_DISABLE_URI
 GST_PTR_FORMAT
 GST_EXPORT
 GST_PLUGIN_EXPORT
+GST_PADDING
+GST_PADDING_INIT
 </SECTION>
 
 
@@ -413,7 +415,10 @@ GST_PLUGIN_EXPORT
 GstElement
 GstElementClass
 GstElementFlags
+GstState
 GstStateChange
+GstStateChangeReturn
+
 GST_STATE
 GST_STATE_PENDING
 GST_STATE_CHANGE
@@ -514,9 +519,15 @@ GST_ELEMENT_GET_CLASS
 GST_TYPE_ELEMENT
 GST_TYPE_ELEMENT_FLAGS
 GST_ELEMENT_CAST
+GST_TYPE_STATE
+GST_TYPE_STATE_CHANGE
+GST_TYPE_STATE_CHANGE_RETURN
 <SUBSECTION Private>
 gst_element_get_type
 gst_element_flags_get_type
+gst_state_get_type
+gst_state_change_get_type
+gst_state_change_return_get_type
 </SECTION>
 
 
@@ -1438,6 +1449,8 @@ GstPluginFeature
 GST_PLUGIN_FEATURE_NAME
 GstTypeNameData
 GstPluginFeatureFilter
+GstRank
+
 gst_plugin_feature_type_name_filter
 gst_plugin_feature_set_rank
 gst_plugin_feature_set_name
@@ -1453,8 +1466,10 @@ GST_PLUGIN_FEATURE_CLASS
 GST_IS_PLUGIN_FEATURE_CLASS
 GST_PLUGIN_FEATURE_GET_CLASS
 GST_TYPE_PLUGIN_FEATURE
+GST_TYPE_RANK
 <SUBSECTION Private>
 gst_plugin_feature_get_type
+gst_rank_get_type
 </SECTION>
 
 
@@ -1886,28 +1901,6 @@ GST_TYPE_FIND_FACTORY_GET_CLASS
 GST_TYPE_TYPE_FIND_FACTORY
 <SUBSECTION Private>
 gst_type_find_factory_get_type
-</SECTION>
-
-
-<SECTION>
-<FILE>gsttypes</FILE>
-<TITLE>GstTypes</TITLE>
-GstState
-GstStateChange
-GstStateChangeReturn
-GstRank
-<SUBSECTION Standard>
-GST_TYPE_STATE
-GST_TYPE_STATE_CHANGE
-GST_TYPE_STATE_CHANGE_RETURN
-GST_TYPE_RANK
-<SUBSECTION Private>
-GST_PADDING
-GST_PADDING_INIT
-gst_state_get_type
-gst_state_change_get_type
-gst_state_change_return_get_type
-gst_rank_get_type
 </SECTION>
 
 

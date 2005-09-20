@@ -39,6 +39,7 @@
 #include <gst/gstevent.h>
 #include <gst/gstghostpad.h>
 #include <gst/gstindex.h>
+#include <gst/gstindexfactory.h>
 #include <gst/gstinfo.h>
 #include <gst/gstinterface.h>
 #include <gst/gstiterator.h>

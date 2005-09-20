@@ -38,7 +38,7 @@ if GST_DISABLE_INDEX
 GST_INDEX_SRC = 
 SUBDIRS_INDEX =
 else
-GST_INDEX_SRC = gstindex.c
+GST_INDEX_SRC = gstindex.c gstindexfactory.c
 SUBDIRS_INDEX = indexers
 endif
 
@@ -160,6 +160,7 @@ gst_headers =			\
 	gstformat.h		\
 	gstghostpad.h		\
 	gstindex.h		\
+	gstindexfactory.h	\
 	gstinfo.h		\
 	gstinterface.h		\
 	gstiterator.h		\

@@ -46,7 +46,6 @@
 <!ENTITY GstTrace SYSTEM "xml/gsttrace.xml">
 <!ENTITY GstTypeFind SYSTEM "xml/gsttypefind.xml">
 <!ENTITY GstTypeFindFactory SYSTEM "xml/gsttypefindfactory.xml">
-<!ENTITY GstTypes SYSTEM "xml/gsttypes.xml">
 <!ENTITY GstUriHandler SYSTEM "xml/gsturihandler.xml">
 <!ENTITY GstUriType SYSTEM "xml/gsturitype.xml">
 <!ENTITY GstUtils SYSTEM "xml/gstutils.xml">
@@ -134,7 +133,6 @@
     &GstTagSetter;
     &GstTypeFind;
     &GstTypeFindFactory;
-    &GstTypes;
     &GstUriHandler;
     &GstUriType;
     &GstUtils;

@@ -36,12 +36,32 @@ G_BEGIN_DECLS
 #define GST_IS_PLUGIN_FEATURE_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PLUGIN_FEATURE))
 #define GST_PLUGIN_FEATURE_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PLUGIN_FEATURE, GstPluginFeatureClass))
 
+/**
+ * GST_PLUGIN_FEATURE_NAME:
+ * @feature: The feature to query
+ *
+ * Get the name of the feature
+ */
 #define GST_PLUGIN_FEATURE_NAME(feature)  (GST_PLUGIN_FEATURE (feature)->name)
 
 typedef struct _GstPluginFeature GstPluginFeature;
 typedef struct _GstPluginFeatureClass GstPluginFeatureClass;
 
-/* some predefined ranks */
+/**
+ * GstRank:
+ * @GST_RANK_NONE: will be chosen last or not at all
+ * @GST_RANK_MARGINAL: unlikly to be chosen
+ * @GST_RANK_SECONDARY: likely to be chosen
+ * @GST_RANK_PRIMARY: will be chosen first
+ *
+ * Element priority ranks. Defines the order in which the autoplugger (or
+ * similar rank-picking mechanisms) will choose this element over an alternative
+ * one with the same function.
+ *
+ * The rank is a unsigned integer ranging from 0 (GST_RANK_NONE) to 256
+ * (GST_RANK_PRIMARY). These constants serve as a rough guidiance for defining
+ * the rank of a #GstPlugin using gst_plugin_feature_set_rank().
+ */
 typedef enum {
   GST_RANK_NONE                 = 0,
   GST_RANK_MARGINAL             = 64,
@@ -76,7 +96,17 @@ typedef struct {
   GType		 type;
 } GstTypeNameData;
 
-/* filter */
+/**
+ * GstPluginFeatureFilter:
+ * @feature: the pluginfeature to check
+ * @user_data: the user_data that has been passed on e.g.
+ *  gst_registry_feature_filter()
+ *
+ * A function that can be used with e.g. gst_registry_feature_filter()
+ * to get a list of pluginfeature that match certain criteria.
+ *
+ * Returns: %TRUE for a positive match, %FALSE otherwise
+ */
 typedef gboolean        (*GstPluginFeatureFilter)       (GstPluginFeature *feature,
                                                          gpointer user_data);
 

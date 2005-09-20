@@ -73,6 +73,7 @@
 #include "gsterror.h"
 
 #include "gstindex.h"
+#include "gstindexfactory.h"
 #include "gstutils.h"
 #include "gstchildproxy.h"
 
