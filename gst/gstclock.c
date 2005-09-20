@@ -127,6 +127,7 @@ _gst_clock_id_free (GstClockID id)
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_free (_gst_clock_entry_trace, id);
 #endif
+  g_free (id);
 }
 
 /**

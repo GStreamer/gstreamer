@@ -1,8 +1,17 @@
+2005-09-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstclock.c: (_gst_clock_id_free):
+	  Commit from the Political Party For More Atomic CVS Commits,
+	  so that people don't waste too much of their day fishing
+	  out obvious leaks out of massive commits.
+	  Oh, and fix a pretty damn obvious leak in the memchunk
+	  removal code.
+
 2005-09-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* check/Makefile.am:
 	* check/gst-libs/controller.c: (plugin_init), (GST_START_TEST):
-          plug mem-leak, re-add to valgrindable tests
+	  plug mem-leak, re-add to valgrindable tests
 
 2005-09-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
