@@ -1,5 +1,10 @@
 2005-09-20  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/gst/gstreamer-docs.sgml:
+          remove probe refsection
+
+2005-09-20  Stefan Kost  <ensonic@users.sf.net>
+
 	* check/Makefile.am:
           disable valgrinding the controller test again
 	* docs/gst/gstreamer-sections.txt:
