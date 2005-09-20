@@ -42,7 +42,6 @@
 #include <gst/gstinfo.h>
 #include <gst/gstinterface.h>
 #include <gst/gstiterator.h>
-#include <gst/gstmarshal.h>
 #include <gst/gstmessage.h>
 #include <gst/gstminiobject.h>
 #include <gst/gstobject.h>
@@ -51,6 +50,7 @@
 #include <gst/gstplugin.h>
 #include <gst/gstquery.h>
 #include <gst/gstqueryutils.h>
+#include <gst/gstregistry.h>
 #include <gst/gststructure.h>
 #include <gst/gstsystemclock.h>
 #include <gst/gsttaglist.h>
@@ -66,7 +66,6 @@
 #include <gst/gstxml.h>
 
 #include <gst/gstparse.h>
-#include <gst/gstregistry.h>
 
 /* API compatibility stuff */
 #include <gst/gstcompat.h>

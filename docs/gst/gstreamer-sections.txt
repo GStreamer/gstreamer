@@ -81,6 +81,7 @@ gst_bin_flags_get_type
 <FILE>gstbus</FILE>
 <TITLE>GstBus</TITLE>
 GstBus
+GstBusFunc
 GstBusFlags
 GstBusSyncReply
 GstBusHandler
@@ -930,28 +931,6 @@ gst_iterator_result_get_type
 
 
 <SECTION>
-<FILE>gstmacros</FILE>
-<TITLE>GstMacros</TITLE>
-<SUBSECTION Private>
-GST_GNUC_CONSTRUCTOR
-GST_INLINE_FUNC
-GST_CAN_INLINE
-</SECTION>
-
-
-<SECTION>
-<FILE>gstmemchunk</FILE>
-<TITLE>GstMemChunk</TITLE>
-GstMemChunk
-gst_mem_chunk_new
-gst_mem_chunk_destroy
-gst_mem_chunk_alloc
-gst_mem_chunk_alloc0
-gst_mem_chunk_free
-</SECTION>
-
-
-<SECTION>
 <FILE>gstmessage</FILE>
 <TITLE>GstMessage</TITLE>
 GstMessage
@@ -1428,14 +1407,24 @@ gst_plugin_load_file
 gst_plugin_unload_plugin
 gst_plugin_add_feature
 gst_plugin_load
+gst_plugin_load_by_name
+gst_plugin_list_free
 <SUBSECTION Standard>
+GstPluginClass
 GST_PLUGIN
+GST_PLUGIN_CLASS
+GST_PLUGIN_GET_CLASS
 GST_TYPE_PLUGIN
 GST_TYPE_PLUGIN_ERROR
+GST_IS_PLUGIN
+GST_IS_PLUGIN_CLASS
+GstPluginFlags
+GST_TYPE_PLUGIN_FLAGS
 <SUBSECTION Private>
 gst_plugin_get_type
 <SUBSECTION Private>
 gst_plugin_error_get_type
+gst_plugin_flags_get_type
 </SECTION>
 
 
@@ -1453,6 +1442,8 @@ gst_plugin_feature_set_rank
 gst_plugin_feature_set_name
 gst_plugin_feature_get_rank
 gst_plugin_feature_get_name
+gst_plugin_feature_load
+gst_plugin_feature_list_free
 <SUBSECTION Standard>
 GstPluginFeatureClass
 GST_PLUGIN_FEATURE
@@ -1589,6 +1580,27 @@ gst_registry_find_feature
 gst_registry_load_plugin
 gst_registry_unload_plugin
 gst_registry_update_plugin
+gst_registry_scan_path
+gst_registry_get_feature_list
+gst_registry_xml_read_cache
+gst_registry_xml_write_cache
+gst_registry_scan_paths
+gst_registry_get_default
+gst_registry_lookup
+gst_registry_remove_feature
+gst_registry_get_feature_list_by_plugin
+gst_registry_lookup_feature
+gst_registry_get_plugin_list
+gst_registry_add_feature
+<SUBSECTION Default Registry>
+gst_default_registry_find_feature
+gst_default_registry_get_path_list
+gst_default_registry_add_plugin
+gst_default_registry_add_path
+gst_default_registry_scan_paths
+gst_default_registry_find_plugin
+gst_default_registry_get_plugin_list
+gst_default_registry_feature_filter
 <SUBSECTION Standard>
 GstRegistryClass
 GST_REGISTRY
@@ -1603,24 +1615,6 @@ GST_TYPE_REGISTRY_RETURN
 gst_registry_get_type
 gst_registry_flags_get_type
 gst_registry_return_get_type
-</SECTION>
-
-
-<SECTION>
-<FILE>gstregistrypool</FILE>
-<TITLE>GstRegistryPool</TITLE>
-gst_registry_pool_list
-gst_registry_pool_add
-gst_registry_pool_remove
-gst_registry_pool_add_plugin
-gst_registry_pool_load_all
-gst_registry_pool_plugin_filter
-gst_registry_pool_feature_filter
-gst_registry_pool_plugin_list
-gst_registry_pool_feature_list
-gst_registry_pool_find_plugin
-gst_registry_pool_find_feature
-gst_registry_pool_get_prefered
 </SECTION>
 
 
@@ -1900,17 +1894,6 @@ gst_trace_add_entry
 GST_TYPE_ALLOC_TRACE_FLAGS
 <SUBSECTION Private>
 gst_alloc_trace_flags_get_type
-</SECTION>
-
-
-<SECTION>
-<FILE>gsttrashstack</FILE>
-<TITLE>GstTrashStack</TITLE>
-GstTrashStack
-GstTrashStackElement
-gst_vgpointer
-gst_vgulong
-SMP_LOCK
 </SECTION>
 
 

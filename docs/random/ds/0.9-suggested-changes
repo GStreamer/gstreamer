@@ -4,12 +4,7 @@ API:
 
   - MAKE A DOCUMENT THAT LISTS ALL API CHANGES AND HOW TO DEAL WITH THEM
 
- - GstElementState should be a real enum, not something that looks like flags
-   changing state can be done with ++ and -- instead of >> and <<
-
  - replace object/structure set/get macros with actual functions.
-
- - events should all use GstStructure
 
  - reorganize headers (split app headers vs plugin headers maybe)
    while at it also make sure to only allow including of the main headers like
@@ -37,30 +32,16 @@ API:
    (Though the main reason for identities atm is to be able to connect without
     plugging - Company)
 
- - remove float support from dparams
-
- - dparams: should be converted into some kind of special pad and
-   object property combination.
-
  - read/write locks on buffers
 
  - be able to send events to unlinked pads (bug #114442)
 
  - caps should have a flag on fields to indicate that the field is optional
 
- - deprecate gst_buffer_merge() and replace with a function that takes
-   ownership of the buffers.  (bug #136408)
-
  - fakesrc handoff should be changed to return a GstData * or carry a
     GstData **, wo the user can provide own buffers and events.
 
- - remove GST_OBJECT_DESTROYED()
-
- - fix plugin code to load plugins with RTLD_LOCAL
-
  - don't install gstmarshal.h
-
- - remove unnecessary headers from gst.h (gstqueue.h in particular)
 
  - make sure GstClockTime is used wherever it should (e.g. gstplay)
 
@@ -76,8 +57,6 @@ API:
  - talk to vektor about various wierdness with NTSC video (combinations of
    24 fps pulled down to 60 and straight video, etc) and make sure our
    video stream descriptions make sense.
-
- - remove GstMemChunk
 
  - do an audit to remove GtkObject-isms from gtk-1.2
 

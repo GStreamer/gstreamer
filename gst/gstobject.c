@@ -416,7 +416,6 @@ gst_object_dispose (GObject * object)
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
 
   GST_LOCK (object);
-  GST_FLAG_SET (GST_OBJECT (object), GST_OBJECT_DESTROYED);
   GST_OBJECT_PARENT (object) = NULL;
   GST_UNLOCK (object);
 

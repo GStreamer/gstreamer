@@ -767,7 +767,7 @@ gst_registry_get_feature_list_by_plugin (GstRegistry * registry,
 }
 
 void
-gst_registry_deinit ()
+_gst_registry_cleanup ()
 {
   if (!_gst_registry_default)
     return;

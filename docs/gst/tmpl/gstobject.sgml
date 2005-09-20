@@ -129,7 +129,6 @@ Flags for an object
 </para>
 
 @GST_OBJECT_DISPOSING: 
-@GST_OBJECT_DESTROYED: 
 @GST_OBJECT_FLOATING: 
 @GST_OBJECT_FLAG_LAST: subclasses can add additional flags starting from this flag
 
@@ -216,14 +215,6 @@ Acquire a reference to the mutex of this object.
 </para>
 
 @obj: Object to get the mutex of.
-
-
-<!-- ##### MACRO GST_OBJECT_IS_DESTROYED ##### -->
-<para>
-
-</para>
-
-@obj: 
 
 
 <!-- ##### MACRO GST_OBJECT_IS_DISPOSING ##### -->

@@ -25,6 +25,7 @@
 #define __GST_REGISTRY_H__
 
 #include <gst/gstplugin.h>
+#include <gst/gstpluginfeature.h>
 
 G_BEGIN_DECLS
 
@@ -101,7 +102,7 @@ gboolean 		gst_registry_xml_write_cache 	(GstRegistry * registry, const char *lo
 void 			gst_registry_scan_paths 	(GstRegistry *registry);
 void 			_gst_registry_remove_cache_plugins (GstRegistry *registry);
 
-void 			gst_registry_deinit 		(void);
+void                    _gst_registry_cleanup           (void);
 
 #define gst_default_registry_add_plugin(plugin) \
   gst_registry_add_plugin (gst_registry_get_default(), plugin)

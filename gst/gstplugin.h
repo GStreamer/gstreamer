@@ -28,8 +28,6 @@
 
 #include <time.h> /* time_t */
 #include <gmodule.h>
-#include <gst/gstpluginfeature.h>
-#include <gst/gstmacros.h>
 #include <gst/gstobject.h>
 
 G_BEGIN_DECLS
@@ -83,6 +81,7 @@ struct _GstPluginDesc {
 struct _GstPlugin {
   GstObject       object;
 
+  /*< private >*/
   GstPluginDesc	desc;
 
   GstPluginDesc *orig_desc;
@@ -102,6 +101,7 @@ struct _GstPlugin {
 struct _GstPluginClass {
   GstObjectClass  object_class;
 
+  /*< private >*/
 };
 
 

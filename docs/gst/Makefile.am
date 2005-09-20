@@ -71,6 +71,7 @@ IGNORE_HFILES= \
 	gthread-cothreads.h \
 	faircothreads.h \
 	types.h \
+	glib-compat.h \
 	grammar.tab.h \
 	gstmarshal.h \
 	gstaggregator.h \
@@ -78,6 +79,7 @@ IGNORE_HFILES= \
 	gstfdsink.h \
 	gstfdsrc.h \
 	gstidentity.h \
+	gstmacros.h \
 	gstmd5sink.h \
 	gstmultifilesrc.h \
 	gstmultifdsink.h \
@@ -85,10 +87,12 @@ IGNORE_HFILES= \
 	gstshaper.h \
 	gststatistics.h \
 	gsttee.h \
+	gsttrashstack.h \
 	gsttypefindelement.h \
 	gstspider.h \
 	gstspideridentity.h \
 	gstsearchfuncs.h \
+	gsttrashstack.h \
 	gstxmlregistry.h
 
 # Images to copy into HTML directory.

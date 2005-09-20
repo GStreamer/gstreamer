@@ -34,7 +34,6 @@
 
 #include "gst_private.h"
 #include "gstquery.h"
-#include "gstmemchunk.h"
 #include "gstenumtypes.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_query_debug);
@@ -51,8 +50,6 @@ static GList *_gst_queries = NULL;
 static GHashTable *_nick_to_query = NULL;
 static GHashTable *_query_type_to_nick = NULL;
 static guint32 _n_values = 1;   /* we start from 1 because 0 reserved for NONE */
-
-static GstMemChunk *chunk;
 
 static GstQueryTypeDefinition standard_definitions[] = {
   {GST_QUERY_POSITION, "position", "Current Position"},
@@ -92,9 +89,6 @@ _gst_query_initialize (void)
   g_static_mutex_unlock (&mutex);
 
   gst_query_get_type ();
-
-  chunk = gst_mem_chunk_new ("GstQueryChunk", sizeof (GstQuery),
-      sizeof (GstQuery) * 20, 0);
 }
 
 GType

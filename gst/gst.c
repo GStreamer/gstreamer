@@ -919,7 +919,7 @@ gst_deinit (void)
   gst_object_unref (clock);
   gst_object_unref (clock);
 
-  gst_registry_deinit ();
+  _gst_registry_cleanup ();
 
   gst_initialized = FALSE;
   GST_INFO ("deinitialized GStreamer");

@@ -27,8 +27,6 @@
 <!ENTITY GstIndexFactory SYSTEM "xml/gstindexfactory.xml">
 <!ENTITY GstInfo SYSTEM "xml/gstinfo.xml">
 <!ENTITY GstIterator SYSTEM "xml/gstiterator.xml">
-<!ENTITY GstMacros SYSTEM "xml/gstmacros.xml">
-<!ENTITY GstMemChunk SYSTEM "xml/gstmemchunk.xml">
 <!ENTITY GstMessage SYSTEM "xml/gstmessage.xml">
 <!ENTITY GstMiniObject SYSTEM "xml/gstminiobject.xml">
 <!ENTITY GstObject SYSTEM "xml/gstobject.xml">
@@ -42,13 +40,11 @@
 <!ENTITY GstQuery SYSTEM "xml/gstquery.xml">
 <!ENTITY GstQueue SYSTEM "xml/gstqueue.xml">
 <!ENTITY GstRegistry SYSTEM "xml/gstregistry.xml">
-<!ENTITY GstRegistryPool SYSTEM "xml/gstregistrypool.xml">
 <!ENTITY GstStructure SYSTEM "xml/gststructure.xml">
 <!ENTITY GstSystemClock SYSTEM "xml/gstsystemclock.xml">
 <!ENTITY GstTagList SYSTEM "xml/gsttaglist.xml">
 <!ENTITY GstTagSetter SYSTEM "xml/gsttagsetter.xml">
 <!ENTITY GstTrace SYSTEM "xml/gsttrace.xml">
-<!ENTITY GstTrashStack SYSTEM "xml/gsttrashstack.xml">
 <!ENTITY GstTypeFind SYSTEM "xml/gsttypefind.xml">
 <!ENTITY GstTypeFindFactory SYSTEM "xml/gsttypefindfactory.xml">
 <!ENTITY GstTypes SYSTEM "xml/gsttypes.xml">
@@ -134,7 +130,6 @@
     &GstQuery;
     &GstQueue;
     &GstRegistry;
-    &GstRegistryPool;
     &GstStructure;
     &GstSystemClock;
     &GstTagList;
@@ -160,10 +155,7 @@
 
     &GstCheck;
     &GstInfo;
-    &GstMacros;
-    &GstMemChunk;
     &GstTrace;
-    &GstTrashStack;
 
   </chapter>
 

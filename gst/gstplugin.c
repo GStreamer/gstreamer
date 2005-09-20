@@ -41,6 +41,7 @@
 #include "gstinfo.h"
 #include "gstfilter.h"
 #include "gstregistry.h"
+#include "gstmacros.h"
 
 
 #define GST_CAT_DEFAULT GST_CAT_PLUGIN_LOADING

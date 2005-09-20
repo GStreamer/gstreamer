@@ -39,6 +39,7 @@
 #include "gst_private.h"
 
 #include "gstchildproxy.h"
+#include "gstmarshal.h"
 #include <gobject/gvaluecollector.h>
 
 /* signals */

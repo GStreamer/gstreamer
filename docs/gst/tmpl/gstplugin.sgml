@@ -285,3 +285,20 @@ to get a list of plugins that match certain criteria.
 @name: 
 
 
+<!-- ##### FUNCTION gst_plugin_load_by_name ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_list_free ##### -->
+<para>
+
+</para>
+
+@list: 
+
+

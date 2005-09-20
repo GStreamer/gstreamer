@@ -50,7 +50,6 @@ GST_EXPORT GType _gst_object_type;
 typedef enum
 {
   GST_OBJECT_DISPOSING   = 0,
-  GST_OBJECT_DESTROYED   = 1,
   GST_OBJECT_FLOATING,
 
   GST_OBJECT_FLAG_LAST   = 4
@@ -76,7 +75,6 @@ typedef enum
 #define GST_FLAG_UNSET(obj,flag)        G_STMT_START{ (GST_FLAGS (obj) &= ~(1<<(flag))); }G_STMT_END
 
 #define GST_OBJECT_IS_DISPOSING(obj)    (GST_FLAG_IS_SET (obj, GST_OBJECT_DISPOSING))
-#define GST_OBJECT_IS_DESTROYED(obj)    (GST_FLAG_IS_SET (obj, GST_OBJECT_DESTROYED))
 #define GST_OBJECT_IS_FLOATING(obj)     (GST_FLAG_IS_SET (obj, GST_OBJECT_FLOATING))
 
 typedef struct _GstObject GstObject;

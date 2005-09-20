@@ -88,7 +88,6 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstinfo.c		\
 	gstinterface.c		\
 	gstiterator.c		\
-	gstmemchunk.c		\
 	gstmessage.c		\
 	gstminiobject.c		\
 	gstpad.c		\
@@ -106,7 +105,6 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gsttagsetter.c	\
 	gsttask.c		\
 	$(GST_TRACE_SRC)	\
-	gsttrashstack.c		\
 	gsttypefind.c		\
 	gsttypefindfactory.c	\
 	$(GST_URI_SRC)		\
@@ -166,7 +164,6 @@ gst_headers =			\
 	gstinterface.h		\
 	gstiterator.h		\
 	gstmacros.h		\
-	gstmemchunk.h		\
 	gstmessage.h		\
 	gstminiobject.h		\
 	gstpad.h		\
@@ -182,7 +179,6 @@ gst_headers =			\
 	gsttagsetter.h	\
 	gsttask.h		\
 	gsttrace.h		\
-	gsttrashstack.h		\
 	gsttypefind.h		\
 	gsttypefindfactory.h	\
 	gsturi.h		\

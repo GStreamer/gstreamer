@@ -1,5 +1,29 @@
 2005-09-19  David Schleef  <ds@schleef.org>
 
+	* docs/gst/Makefile.am: Ignore a few more internal headers
+	* docs/gst/gstreamer-docs.sgml: Remove old sections
+	* docs/gst/gstreamer-sections.txt: Remove old sections
+	* docs/gst/tmpl/gstobject.sgml: update
+	* docs/gst/tmpl/gstplugin.sgml: update
+	* docs/gst/tmpl/gstpluginfeature.sgml: update
+	* docs/random/ds/0.9-suggested-changes: update.
+	* gst/Makefile.am: remove memchunk and trashstack, since they're
+	  not used.
+	* gst/gst.c: (gst_deinit): rename gst_registry_deinit to _cleanup
+	* gst/gst.h: don't include some headers
+	* gst/gstchildproxy.c: add gstmarshal.h
+	* gst/gstclock.c: Don't use memchunks
+	* gst/gstminiobject.c: Add some docs
+	* gst/gstobject.c: remove DESTROYED flag, since it's redundant
+	* gst/gstobject.h: same
+	* gst/gstplugin.c: include gstmacros.h
+	* gst/gstplugin.h: don't include gstmacros.h, since it's private
+	* gst/gstquery.c: don't use memchunks
+	* gst/gstregistry.c: rename gst_registry_deinit()
+	* gst/gstregistry.h: same
+
+2005-09-19  David Schleef  <ds@schleef.org>
+
 	* docs/libs/gstreamer-libs-docs.sgml: Remove docs for getbits
 	* docs/libs/gstreamer-libs-sections.txt:
 	* docs/libs/tmpl/gstgetbits.sgml:

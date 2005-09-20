@@ -118,6 +118,16 @@ gst_mini_object_init (GTypeInstance * instance, gpointer klass)
   mini_object->refcount = 1;
 }
 
+/**
+ * gst_mini_object_new:
+ * @type: the GType of the mini-object to create
+ *
+ * Creates a new mini-object of the desired type.
+ *
+ * MT safe
+ *
+ * Returns: the new mini-object.
+ */
 GstMiniObject *
 gst_mini_object_new (GType type)
 {
@@ -154,6 +164,16 @@ gst_mini_object_new (GType type)
   return mini_object;
 }
 
+/**
+ * gst_mini_object_copy:
+ * @mini_object: the mini-object to copy
+ *
+ * Creates a copy of the mini-object.
+ *
+ * MT safe
+ *
+ * Returns: the new mini-object.
+ */
 GstMiniObject *
 gst_mini_object_copy (const GstMiniObject * mini_object)
 {
@@ -164,6 +184,19 @@ gst_mini_object_copy (const GstMiniObject * mini_object)
   return mo_class->copy (mini_object);
 }
 
+/**
+ * gst_mini_object_is_writable:
+ * @mini_object: the mini-object to check
+ *
+ * Checks if a mini-object is writable.  A mini-object is writable
+ * if the reference count is one and the GST_MINI_OBJECT_FLAG_READONLY
+ * flag is not set.  Modification of a mini-object should only be
+ * done after verifying that it is writable.
+ * 
+ * MT safe
+ *
+ * Returns: TRUE if the object is writable.
+ */
 gboolean
 gst_mini_object_is_writable (const GstMiniObject * mini_object)
 {
@@ -171,6 +204,17 @@ gst_mini_object_is_writable (const GstMiniObject * mini_object)
       ((mini_object->flags & GST_MINI_OBJECT_FLAG_READONLY) == 0);
 }
 
+/**
+ * gst_mini_object_make_writable:
+ * @mini_object: the mini-object to make writable
+ *
+ * Checks if a mini-object is writable.  If not, a copy is made and
+ * the copy is returned.
+ *
+ * MT safe
+ *
+ * Returns: a mini-object (possibly a duplicate) that it writable.
+ */
 GstMiniObject *
 gst_mini_object_make_writable (GstMiniObject * mini_object)
 {
@@ -186,6 +230,14 @@ gst_mini_object_make_writable (GstMiniObject * mini_object)
   return ret;
 }
 
+/**
+ * gst_mini_object_ref:
+ * @mini_object: the mini-object
+ *
+ * Increase the reference count of the mini-object.
+ *
+ * Returns: the mini-object.
+ */
 GstMiniObject *
 gst_mini_object_ref (GstMiniObject * mini_object)
 {
@@ -237,6 +289,13 @@ gst_mini_object_free (GstMiniObject * mini_object)
   }
 }
 
+/**
+ * gst_mini_object_unref:
+ * @mini_object: the mini-object
+ *
+ * Decreases the reference count of the mini-object, possibly freeing
+ * the mini-object.
+ */
 void
 gst_mini_object_unref (GstMiniObject * mini_object)
 {
@@ -255,6 +314,15 @@ gst_mini_object_unref (GstMiniObject * mini_object)
   }
 }
 
+/**
+ * gst_mini_object_replace:
+ * @olddata: pointer to a pointer to a mini-object to be replaced
+ * @newdata: pointer to new mini-object
+ *
+ * Modifies a pointer to point to a new mini-object.  The modification
+ * is done atomically, and the reference counts are updated correctly.
+ * Either @newdata and the value pointed to by @olddata may be NULL.
+ */
 void
 gst_mini_object_replace (GstMiniObject ** olddata, GstMiniObject * newdata)
 {

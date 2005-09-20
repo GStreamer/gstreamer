@@ -40,7 +40,6 @@
 
 #include "gstclock.h"
 #include "gstinfo.h"
-#include "gstmemchunk.h"
 #include "gstutils.h"
 
 #ifndef GST_DISABLE_TRACE
@@ -59,8 +58,6 @@ enum
   ARG_MAX_DIFF,
   ARG_EVENT_DIFF
 };
-
-static GstMemChunk *_gst_clock_entries_chunk;
 
 static void gst_clock_class_init (GstClockClass * klass);
 static void gst_clock_init (GstClock * clock);
@@ -83,7 +80,7 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
 {
   GstClockEntry *entry;
 
-  entry = gst_mem_chunk_alloc (_gst_clock_entries_chunk);
+  entry = g_malloc0 (sizeof (GstClockEntry));
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_new (_gst_clock_entry_trace, entry);
 #endif
@@ -130,7 +127,6 @@ _gst_clock_id_free (GstClockID id)
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_free (_gst_clock_entry_trace, id);
 #endif
-  gst_mem_chunk_free (_gst_clock_entries_chunk, id);
 }
 
 /**
@@ -461,9 +457,6 @@ gst_clock_class_init (GstClockClass * klass)
 
   if (!g_thread_supported ())
     g_thread_init (NULL);
-
-  _gst_clock_entries_chunk = gst_mem_chunk_new ("GstClockEntries",
-      sizeof (GstClockEntry), sizeof (GstClockEntry) * 32, G_ALLOC_AND_FREE);
 
 #ifndef GST_DISABLE_TRACE
   _gst_clock_entry_trace =
