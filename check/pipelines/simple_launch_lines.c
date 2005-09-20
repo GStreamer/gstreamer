@@ -66,7 +66,7 @@ run_pipeline (GstElement * pipe, const gchar * descr,
     /* always have to pop the message before getting back into poll */
     if (message) {
       revent = GST_MESSAGE_TYPE (message);
-      gst_message_unref (gst_bus_pop (bus));
+      gst_message_unref (message);
     } else {
       revent = GST_MESSAGE_UNKNOWN;
     }

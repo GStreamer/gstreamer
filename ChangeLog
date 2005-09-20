@@ -1,3 +1,8 @@
+2005-09-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/pipelines/simple_launch_lines.c: (run_pipeline):
+	  fix wrong pop/unref
+
 2005-09-19  Torsten Schoenfeld  <kaffeetisch at gmx dot net>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
