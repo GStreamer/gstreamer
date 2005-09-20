@@ -1,3 +1,9 @@
+2005-09-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstplugin.h:
+	  unbreak the build for those who have chronic arthritis
+	  and typing "make check" is just too taxing on the hands
+
 2005-09-20  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gst.h: Re-add marshal to gst.h's include list -- if we
@@ -8,8 +14,8 @@
 	* configure.ac:
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstobject.c:
-      added missing symbols to api docs
-      disable ref-count hack if we have glib >= 2.8
+	  added missing symbols to api docs
+	  disable ref-count hack if we have glib >= 2.8
 
 2005-09-19  David Schleef  <ds@schleef.org>
 

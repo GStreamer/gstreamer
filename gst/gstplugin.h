@@ -29,6 +29,7 @@
 #include <time.h> /* time_t */
 #include <gmodule.h>
 #include <gst/gstobject.h>
+#include <gst/gstmacros.h>
 
 G_BEGIN_DECLS
 
