@@ -44,7 +44,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
         "payload = (int) [ 96, 255 ], "
-        "clock_rate = (int) 90000, " "encoding_name = (string) \"H263-1998\"")
+        "clock-rate = (int) 90000, " "encoding-name = (string) \"H263-1998\"")
     );
 
 static void gst_rtph263penc_class_init (GstRtpH263PEncClass * klass);

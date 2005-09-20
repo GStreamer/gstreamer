@@ -60,13 +60,13 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", "
         "payload = (int) [ 96, 255 ], "
-        "clock_rate = (int) 8000, "
-        "encoding_name = (string) \"AMR\", "
-        "encoding_params = (string) \"1\", "
+        "clock-rate = (int) 8000, "
+        "encoding-name = (string) \"AMR\", "
+        "encoding-params = (string) \"1\", "
         "octet-align = (boolean) TRUE, "
         "crc = (boolean) FALSE, "
         "robust-sorting = (boolean) FALSE, " "interleaving = (boolean) FALSE"
-        /* following options are not needed for a decoder 
+        /* following options are not needed for a decoder
          *
          "mode-set = (int) [ 0, 7 ], "
          "mode-change-period = (int) [ 1, MAX ], "
@@ -215,16 +215,16 @@ gst_rtpamrdec_sink_setcaps (GstPad * pad, GstCaps * caps)
     rtpamrdec->octet_align = TRUE;
   }
 
-  if (!(params = gst_structure_get_string (structure, "encoding_params")))
+  if (!(params = gst_structure_get_string (structure, "encoding-params")))
     rtpamrdec->channels = 1;
   else {
     rtpamrdec->channels = atoi (params);
   }
 
-  if (!gst_structure_get_int (structure, "clock_rate", &rtpamrdec->rate))
+  if (!gst_structure_get_int (structure, "clock-rate", &rtpamrdec->rate))
     rtpamrdec->rate = 8000;
 
-  /* we require 1 channel, 8000 Hz, octet aligned, no CRC, 
+  /* we require 1 channel, 8000 Hz, octet aligned, no CRC,
    * no robust sorting, no interleaving for now */
   if (rtpamrdec->channels != 1)
     return FALSE;

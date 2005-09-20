@@ -45,8 +45,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
         "payload = (int) [ 96, 255 ], "
-        "clock_rate = (int) [1, MAX ], "
-        "encoding_name = (string) \"MP4V-ES\", " "profile-level-id=[1,MAX]"
+        "clock-rate = (int) [1, MAX ], "
+        "encoding-name = (string) \"MP4V-ES\", " "profile-level-id=[1,MAX]"
         /* All optional parameters
          *
          * "config="

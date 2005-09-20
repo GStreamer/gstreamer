@@ -44,7 +44,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", "
         "payload = (int) [ 96, 255 ], "
-        "clock_rate = (int) 90000, " "encoding_name = (string) \"MPA\"")
+        "clock-rate = (int) 90000, " "encoding-name = (string) \"MPA\"")
     );
 
 static void gst_rtpmpaenc_class_init (GstRtpMPAEncClass * klass);

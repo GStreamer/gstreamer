@@ -51,9 +51,9 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", "
         "payload = (int) [ 96, 255 ], "
-        "clock_rate = (int) 8000, "
-        "encoding_name = (string) \"AMR\", "
-        "encoding_params = (string) \"1\", "
+        "clock-rate = (int) 8000, "
+        "encoding-name = (string) \"AMR\", "
+        "encoding-params = (string) \"1\", "
         "octet-align = (boolean) TRUE, "
         "crc = (boolean) FALSE, "
         "robust-sorting = (boolean) FALSE, "
@@ -144,7 +144,7 @@ gst_rtpamrenc_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
 
   gst_basertppayload_set_options (basepayload, "audio", TRUE, "AMR", 8000);
   gst_basertppayload_set_outcaps (basepayload,
-      "encoding_params", G_TYPE_STRING, "1",
+      "encoding-params", G_TYPE_STRING, "1",
       "octet-align", G_TYPE_BOOLEAN, TRUE,
       "crc", G_TYPE_BOOLEAN, FALSE,
       "robust-sorting", G_TYPE_BOOLEAN, FALSE,

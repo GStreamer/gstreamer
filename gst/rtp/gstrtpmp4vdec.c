@@ -57,7 +57,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
         "payload = (int) [ 96, 255 ], "
-        "clock_rate = (int) [1, MAX ], " "encoding_name = (string) \"MP4V-ES\""
+        "clock-rate = (int) [1, MAX ], " "encoding-name = (string) \"MP4V-ES\""
         /* All optional parameters
          *
          * "profile-level-id=[1,MAX]"
@@ -166,7 +166,7 @@ gst_rtpmp4vdec_setcaps (GstPad * pad, GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
-  if (!gst_structure_get_int (structure, "clock_rate", &rtpmp4vdec->rate))
+  if (!gst_structure_get_int (structure, "clock-rate", &rtpmp4vdec->rate))
     rtpmp4vdec->rate = 90000;
 
   srccaps = gst_caps_new_simple ("video/mpeg",

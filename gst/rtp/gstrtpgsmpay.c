@@ -49,7 +49,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", "
         "payload = (int) [ 96, 255 ], "
-        "clock_rate = (int) 8000, " "encoding_name = (string) \"GSM\"")
+        "clock-rate = (int) 8000, " "encoding-name = (string) \"GSM\"")
     );
 
 
