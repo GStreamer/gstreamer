@@ -1,3 +1,11 @@
+2005-09-20  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbus.c: (poll_func), (poll_timeout), (gst_bus_poll):
+	* tools/gst-launch.c: (main):
+	The timeout handler should have lower priority than the source
+	so we don't timeout before popping a message with 0 timeout.
+	Dump error messages after failed state change.
+
 2005-09-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tools/gst-inspect.c: (print_element_properties_info):

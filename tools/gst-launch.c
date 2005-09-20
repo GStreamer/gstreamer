@@ -609,6 +609,7 @@ main (int argc, char *argv[])
       case GST_STATE_CHANGE_FAILURE:
         fprintf (stderr, _("ERROR: pipeline doesn't want to pause.\n"));
         res = -1;
+        event_loop (pipeline, FALSE);
         goto end;
       case GST_STATE_CHANGE_NO_PREROLL:
         fprintf (stderr, _("NO_PREROLL pipeline ...\n"));
