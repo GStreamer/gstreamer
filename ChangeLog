@@ -1,14 +1,21 @@
-=== release 0.9.1 ===
+
+2005-09-20  Edgard Lima  <edgard.lima@indt.org.br>
+
+        * configure.ac:
+        * ext/sdl/Makefile.am:
+        Fixed Makefile.am - removed hard coded flags from Makefile.am.
+	Added AC_PATH_XTRA to configure.ac to be used by Makefile.am.
 
 2005-09-19  Edgard Lima  <edgard.lima@indt.org.br>
 
-	* Makefile.am 
-	* configure.ac
-	* ext/sdl/Makefile.am
-	* ext/sdl/sdlvideosink.c
-	* ext/sdl/sdlvideosink.h
-	* PORTED_09
-	Ported to 0.9.
+        * Makefile.am:
+        * configure.ac:
+        * ext/sdl/Makefile.am:
+        * ext/sdl/sdlvideosink.c:
+        * PORTED_09:
+        Ported to 0.9.
+
+=== release 0.9.1 ===
 
 2005-09-08  Flavio Oliveira  <flavio.oliveira@indt.org.br>
 

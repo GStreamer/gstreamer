@@ -369,6 +369,8 @@ dnl Check for X11
 dnl now try to find the HEADER
 AC_CHECK_HEADER(X11/Xlib.h, HAVE_X="yes", HAVE_X="no")
 
+AC_PATH_XTRA
+
 if test "x$HAVE_X" = "xno"
 then
   AC_MSG_NOTICE([cannot find X11 development files])
