@@ -35,11 +35,11 @@ BuildRequires:  gcc-c++
 @USE_LIBCACA_TRUE@BuildRequires: libcaca-devel
 @USE_LIBDV_TRUE@BuildRequires: libdv-devel
 @USE_LIBPNG_TRUE@BuildRequires: libpng-devel >= 1.2.0
-@USE_MIKMOD_TRUE@BuildRequires: mikmod
+# @USE_MIKMOD_TRUE@BuildRequires: mikmod
 @USE_OSS_TRUE@BuildRequires: glibc-devel
-@USE_PANGO_TRUE@BuildRequires:   pango-devel
-@USE_RAW1394_TRUE@BuildRequires: libraw1394-devel
-@USE_RAW1394_TRUE@BuildRequires: libavc1394-devel
+# @USE_PANGO_TRUE@BuildRequires:   pango-devel
+# @USE_RAW1394_TRUE@BuildRequires: libraw1394-devel
+# @USE_RAW1394_TRUE@BuildRequires: libavc1394-devel
 @USE_SPEEX_TRUE@BuildRequires:	speex-devel
 
 @USE_SHOUT2_TRUE@BuildRequires: libshout-devel >= 2.0
@@ -93,9 +93,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstautodetect.so
 %{_libdir}/gstreamer-%{majorminor}/libgstavi.so
 %{_libdir}/gstreamer-%{majorminor}/libgsteffectv.so
-%{_libdir}/gstreamer-%{majorminor}/libgstfdsrc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstgoom.so
 %{_libdir}/gstreamer-%{majorminor}/libgstlevel.so
+%{_libdir}/gstreamer-%{majorminor}/libgstefence.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmulaw.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrtp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrtsp.so
