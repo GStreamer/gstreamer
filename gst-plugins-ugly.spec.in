@@ -1,7 +1,5 @@
 %define majorminor  @GST_MAJORMINOR@
 %define gstreamer   gstreamer09
-%define gstregister %{_bindir}/gst-register-%{majorminor}
-%define register    %{gstregister} > /dev/null 2>&1 || :
 
 %define gst_minver  0.9.1
 
@@ -93,10 +91,8 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 rm -rf $RPM_BUILD_ROOT
 
 %post
-%{register}
 
 %postun
-%{register}
 
 %files
 #%files -f gst-plugins-ugly-%{majorminor}.lang
@@ -111,7 +107,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegaudioparse.so
 #%{_libdir}/gstreamer-%{majorminor}/libgstmpegstream.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrmdemux.so
-#%{_libdir}/gstreamer-%{majorminor}/libgstsynaesthesia.so
 
 # plugins with dependencies
 @USE_SIDPLAY_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsid.so
@@ -121,10 +116,7 @@ rm -rf $RPM_BUILD_ROOT
 # @USE_DVDNAV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdvdnavsrc.so
 # @USE_DVDREAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdvdreadsrc.so
 @USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2dec.so
- 
-# %files devel
-# %defattr(-, root, root, -)
-# %doc %{_datadir}/gtk-doc/html/gstreamer-plugins-ugly-plugins-%{majorminor}/*
+%doc %{_datadir}/gtk-doc/html/gst-plugins-ugly-plugins-%{majorminor}/*
 
 %changelog
 * Fri Sep 02 2005 Thomas Vander Stichele <thomas at apestaart dot org>
