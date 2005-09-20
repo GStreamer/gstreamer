@@ -92,6 +92,7 @@ struct _GstBaseSink {
   GstClock	*clock;
   GstClockID     clock_id;
   GstClockTime   end_time;
+  gboolean       sync;
 
   /*< private >*/
   gpointer       _gst_reserved[GST_PADDING];

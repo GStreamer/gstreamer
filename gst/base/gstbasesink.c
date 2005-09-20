@@ -58,10 +58,13 @@ enum
 #define DEFAULT_CAN_ACTIVATE_PULL FALSE /* fixme: enable me */
 #define DEFAULT_CAN_ACTIVATE_PUSH TRUE
 
+#define DEFAULT_SYNC TRUE
+
 enum
 {
   PROP_0,
-  PROP_PREROLL_QUEUE_LEN
+  PROP_PREROLL_QUEUE_LEN,
+  PROP_SYNC
 };
 
 static GstElementClass *parent_class = NULL;
@@ -151,6 +154,9 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
       PROP_PREROLL_QUEUE_LEN,
       g_param_spec_uint ("preroll-queue-len", "preroll-queue-len",
           "Number of buffers to queue during preroll", 0, G_MAXUINT, 0,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SYNC,
+      g_param_spec_boolean ("sync", "Sync", "Sync on the clock", DEFAULT_SYNC,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_base_sink_set_clock);
@@ -302,6 +308,9 @@ gst_base_sink_set_property (GObject * object, guint prop_id,
       sink->preroll_queue_max_len = g_value_get_uint (value);
       GST_PREROLL_UNLOCK (sink->sinkpad);
       break;
+    case PROP_SYNC:
+      sink->sync = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -318,6 +327,9 @@ gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case PROP_PREROLL_QUEUE_LEN:
       g_value_set_uint (value, sink->preroll_queue_max_len);
+      break;
+    case PROP_SYNC:
+      g_value_set_boolean (value, sink->sync);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -925,7 +937,7 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
     stream_end += basesink->segment_accum;
 
   /* now do clocking */
-  if (basesink->clock) {
+  if (basesink->clock && basesink->sync) {
     GstClockReturn ret;
     GstClockTime base_time;
 
