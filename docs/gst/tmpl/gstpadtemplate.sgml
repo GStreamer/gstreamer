@@ -73,6 +73,9 @@ The following example shows you how to add the padtemplate to an elementfactory:
 #GstPad, #GstElementFactory
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GstPadTemplate ##### -->
 <para>
 The padtemplate object.

@@ -65,6 +65,9 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 
 <!-- basic object functions -->
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GstElement ##### -->
 <para>
 
@@ -154,6 +157,17 @@ This enum defines the standard flags that an element may have.
 @GST_ELEMENT_UNPARENTING: 
 @GST_ELEMENT_FLAG_LAST: 
 
+<!-- ##### ENUM GstState ##### -->
+<para>
+
+</para>
+
+@GST_STATE_VOID_PENDING: 
+@GST_STATE_NULL: 
+@GST_STATE_READY: 
+@GST_STATE_PAUSED: 
+@GST_STATE_PLAYING: 
+
 <!-- ##### ENUM GstStateChange ##### -->
 <para>
 
@@ -165,6 +179,16 @@ This enum defines the standard flags that an element may have.
 @GST_STATE_CHANGE_PLAYING_TO_PAUSED: 
 @GST_STATE_CHANGE_PAUSED_TO_READY: 
 @GST_STATE_CHANGE_READY_TO_NULL: 
+
+<!-- ##### ENUM GstStateChangeReturn ##### -->
+<para>
+
+</para>
+
+@GST_STATE_CHANGE_FAILURE: 
+@GST_STATE_CHANGE_SUCCESS: 
+@GST_STATE_CHANGE_ASYNC: 
+@GST_STATE_CHANGE_NO_PREROLL: 
 
 <!-- ##### MACRO GST_STATE ##### -->
 <para>
