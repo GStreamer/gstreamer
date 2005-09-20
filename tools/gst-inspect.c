@@ -284,11 +284,11 @@ print_element_properties_info (GstElement * element)
         g_param_spec_get_blurb (param));
 
     first_flag = TRUE;
-    n_print ("%-23.23s flags:. ", "");
+    n_print ("%-23.23s flags: ", "");
     if (param->flags & G_PARAM_READABLE) {
       g_object_get_property (G_OBJECT (element), param->name, &value);
       readable = TRUE;
-      g_print ((first_flag ? "readable" : ", readble"));
+      g_print ((first_flag ? "readable" : ", readable"));
       first_flag = FALSE;
     }
     if (param->flags & G_PARAM_WRITABLE) {

@@ -1,3 +1,8 @@
+2005-09-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tools/gst-inspect.c: (print_element_properties_info):
+	  Fix two typos.
+
 2005-09-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/gst/gstevent.c:
