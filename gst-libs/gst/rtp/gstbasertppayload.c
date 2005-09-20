@@ -32,9 +32,10 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_MTU	1024
-#define DEFAULT_PT	96
-#define DEFAULT_SSRC	0
+#define DEFAULT_MTU			1024
+#define DEFAULT_PT			96
+#define DEFAULT_SSRC			0
+#define DEFAULT_TIMESTAMP_OFFSET	-1
 
 enum
 {
@@ -42,6 +43,7 @@ enum
   PROP_MTU,
   PROP_PT,
   PROP_SSRC,
+  PROP_TIMESTAMP_OFFSET,
   PROP_TIMESTAMP,
   PROP_SEQNUM
 };
@@ -124,14 +126,19 @@ gst_basertppayload_class_init (GstBaseRTPPayloadClass * klass)
       g_param_spec_uint ("ssrc", "SSRC",
           "The SSRC of the packets (0 == random)",
           0, G_MAXUINT, DEFAULT_SSRC, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_TIMESTAMP_OFFSET, g_param_spec_int ("timestamp-offset",
+          "Timestamp Offset",
+          "Offset to add to all outgoing timestamps (-1 = random)", -1,
+          G_MAXINT, DEFAULT_TIMESTAMP_OFFSET, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TIMESTAMP,
       g_param_spec_uint ("timestamp", "Timestamp",
-          "The RTP timestamp of the last processed packet",
-          0, G_MAXUINT, 0, G_PARAM_READABLE));
+          "The RTP timestamp of the last processed packet", 0, G_MAXUINT, 0,
+          G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SEQNUM,
       g_param_spec_uint ("seqnum", "Sequence number",
-          "The RTP sequence number of the last processed packet",
-          0, G_MAXUINT, 0, G_PARAM_READABLE));
+          "The RTP sequence number of the last processed packet", 0, G_MAXUINT,
+          0, G_PARAM_READABLE));
 
   gstelement_class->change_state = gst_basertppayload_change_state;
 
@@ -171,6 +178,7 @@ gst_basertppayload_init (GstBaseRTPPayload * basertppayload, gpointer g_class)
   basertppayload->seqnum =
       g_rand_int_range (basertppayload->seq_rand, 0, G_MAXUINT16);
   basertppayload->ssrc = DEFAULT_SSRC;
+  basertppayload->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
   basertppayload->ts_base = g_rand_int (basertppayload->ts_rand);
 
   basertppayload->clock_rate = 0;
@@ -265,11 +273,11 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload, gchar * fieldname,
   srccaps = gst_caps_new_simple ("application/x-rtp",
       "media", G_TYPE_STRING, payload->media,
       "payload", G_TYPE_INT, GST_BASE_RTP_PAYLOAD_PT (payload),
-      "clock_rate", G_TYPE_INT, payload->clock_rate,
-      "encoding_name", G_TYPE_STRING, payload->encoding_name,
+      "clock-rate", G_TYPE_INT, payload->clock_rate,
+      "encoding-name", G_TYPE_STRING, payload->encoding_name,
       "ssrc", G_TYPE_UINT, payload->current_ssrc,
-      "clock_base", G_TYPE_UINT, payload->ts_base,
-      "seqnum_base", G_TYPE_UINT, payload->seqnum_base, NULL);
+      "clock-base", G_TYPE_UINT, payload->ts_base,
+      "seqnum-base", G_TYPE_UINT, payload->seqnum_base, NULL);
   s = gst_caps_get_structure (srccaps, 0);
 
   if (fieldname) {
@@ -348,6 +356,9 @@ gst_basertppayload_set_property (GObject * object, guint prop_id,
     case PROP_SSRC:
       basertppayload->ssrc = g_value_get_uint (value);
       break;
+    case PROP_TIMESTAMP_OFFSET:
+      basertppayload->ts_offset = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -371,6 +382,9 @@ gst_basertppayload_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SSRC:
       g_value_set_uint (value, basertppayload->ssrc);
+      break;
+    case PROP_TIMESTAMP_OFFSET:
+      g_value_set_int (value, basertppayload->ts_offset);
       break;
     case PROP_TIMESTAMP:
       g_value_set_uint (value, basertppayload->timestamp);
@@ -404,7 +418,10 @@ gst_basertppayload_change_state (GstElement * element,
         basertppayload->current_ssrc = g_rand_int (basertppayload->ssrc_rand);
       else
         basertppayload->current_ssrc = basertppayload->ssrc;
-      basertppayload->ts_base = g_rand_int (basertppayload->ts_rand);
+      if (basertppayload->ts_offset == -1)
+        basertppayload->ts_base = g_rand_int (basertppayload->ts_rand);
+      else
+        basertppayload->ts_base = basertppayload->ts_offset;
       break;
     default:
       break;

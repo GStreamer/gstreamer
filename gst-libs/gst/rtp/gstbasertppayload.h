@@ -66,6 +66,7 @@ struct _GstBaseRTPPayload
   gboolean dynamic;
   guint32  clock_rate;
 
+  gint32   ts_offset;
   guint32  timestamp;
   guint16  seqnum;
   guint    pt;
