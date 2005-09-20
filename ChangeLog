@@ -1,3 +1,8 @@
+2005-09-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/alpha/gstalpha.c:
+      fix element description
+
 2005-09-19  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/gstrtph263pdec.c: (gst_rtph263pdec_chain):
