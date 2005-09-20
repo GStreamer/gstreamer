@@ -1,3 +1,10 @@
+2005-09-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* check/Makefile.am:
+          disable valgrinding the controller test again
+	* docs/gst/gstreamer-sections.txt:
+          update for api-changes
+
 2005-09-20  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_class_init),

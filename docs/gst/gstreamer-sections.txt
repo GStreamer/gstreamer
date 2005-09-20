@@ -81,7 +81,6 @@ gst_bin_flags_get_type
 <FILE>gstbus</FILE>
 <TITLE>GstBus</TITLE>
 GstBus
-GstBusFunc
 GstBusFlags
 GstBusSyncReply
 GstBusFunc
@@ -931,6 +930,18 @@ gst_iterator_result_get_type
 
 
 <SECTION>
+<FILE>gstmemchunk</FILE>
+<TITLE>GstMemChunk</TITLE>
+GstMemChunk
+gst_mem_chunk_alloc0
+gst_mem_chunk_destroy
+gst_mem_chunk_new
+gst_mem_chunk_alloc
+gst_mem_chunk_free
+</SECTION>
+
+
+<SECTION>
 <FILE>gstmessage</FILE>
 <TITLE>GstMessage</TITLE>
 GstMessage
@@ -1040,7 +1051,6 @@ GST_LOCK
 GST_TRYLOCK
 GST_UNLOCK
 GST_GET_LOCK
-GST_OBJECT_IS_DESTROYED
 GST_OBJECT_IS_DISPOSING
 GST_OBJECT_IS_FLOATING
 GST_OBJECT_REFCOUNT
@@ -1382,7 +1392,6 @@ GstPluginError
 GstPlugin
 GstPluginDesc
 GstPluginInitFunc
-GstPluginExitFunc
 GST_PLUGIN_DEFINE
 GST_PLUGIN_DEFINE_STATIC
 GST_LICENSE_UNKNOWN
@@ -1397,15 +1406,9 @@ gst_plugin_get_source
 gst_plugin_get_version
 gst_plugin_get_module
 gst_plugin_is_loaded
-gst_plugin_feature_filter
-gst_plugin_list_feature_filter
 gst_plugin_name_filter
-gst_plugin_get_feature_list
-gst_plugin_find_feature
 gst_plugin_check_file
 gst_plugin_load_file
-gst_plugin_unload_plugin
-gst_plugin_add_feature
 gst_plugin_load
 gst_plugin_load_by_name
 gst_plugin_list_free
@@ -1435,8 +1438,6 @@ GstPluginFeature
 GST_PLUGIN_FEATURE_NAME
 GstTypeNameData
 GstPluginFeatureFilter
-gst_plugin_feature_ensure_loaded
-gst_plugin_feature_unload_thyself
 gst_plugin_feature_type_name_filter
 gst_plugin_feature_set_rank
 gst_plugin_feature_set_name
@@ -1454,33 +1455,6 @@ GST_PLUGIN_FEATURE_GET_CLASS
 GST_TYPE_PLUGIN_FEATURE
 <SUBSECTION Private>
 gst_plugin_feature_get_type
-</SECTION>
-
-
-<SECTION>
-<FILE>gstprobe</FILE>
-<TITLE>GstProbe</TITLE>
-GstProbe
-GstProbeCallback
-GstProbeDispatcher
-
-gst_probe_new
-
-gst_probe_destroy
-gst_probe_dispatcher_add_probe
-gst_probe_dispatcher_destroy
-gst_probe_dispatcher_dispatch
-gst_probe_dispatcher_init
-gst_probe_dispatcher_new
-gst_probe_dispatcher_remove_probe
-gst_probe_dispatcher_set_active
-gst_probe_perform
-
-<SUBSECTION Standard>
-GST_PROBE
-GST_TYPE_PROBE
-<SUBSECTION Private>
-gst_probe_get_type
 </SECTION>
 
 
@@ -1552,29 +1526,11 @@ gst_queue_get_type
 <FILE>gstregistry</FILE>
 <TITLE>GstRegistry</TITLE>
 GstRegistry
-GLOBAL_REGISTRY_DIR
-GLOBAL_REGISTRY_FILE
-GLOBAL_REGISTRY_FILE_TMP
-LOCAL_REGISTRY_DIR
-LOCAL_REGISTRY_FILE
-LOCAL_REGISTRY_FILE_TMP
-REGISTRY_DIR_PERMS
-REGISTRY_TMPFILE_PERMS
-REGISTRY_FILE_PERMS
-GstRegistryReturn
-GstRegistryFlags
-gst_registry_load
-gst_registry_is_loaded
-gst_registry_save
-gst_registry_rebuild
-gst_registry_unload
-gst_registry_add_path
 gst_registry_get_default
 gst_registry_get_feature_list
 gst_registry_get_feature_list_by_plugin
 gst_registry_get_path_list
 gst_registry_get_plugin_list
-gst_registry_clear_paths
 gst_registry_add_plugin
 gst_registry_remove_plugin
 gst_registry_plugin_filter
@@ -1582,9 +1538,6 @@ gst_registry_feature_filter
 gst_registry_find_plugin
 gst_registry_find_feature
 gst_registry_lookup_feature
-gst_registry_load_plugin
-gst_registry_unload_plugin
-gst_registry_update_plugin
 gst_registry_scan_path
 gst_registry_get_feature_list
 gst_registry_xml_read_cache
@@ -1598,12 +1551,11 @@ gst_registry_lookup_feature
 gst_registry_get_plugin_list
 gst_registry_add_feature
 <SUBSECTION Default Registry>
-gst_default_registry_find_feature
 gst_default_registry_get_path_list
 gst_default_registry_add_plugin
 gst_default_registry_add_path
-gst_default_registry_scan_paths
 gst_default_registry_find_plugin
+gst_default_registry_find_feature
 gst_default_registry_get_plugin_list
 gst_default_registry_feature_filter
 <SUBSECTION Standard>
@@ -1614,12 +1566,8 @@ GST_REGISTRY_CLASS
 GST_IS_REGISTRY_CLASS
 GST_REGISTRY_GET_CLASS
 GST_TYPE_REGISTRY
-GST_TYPE_REGISTRY_FLAGS
-GST_TYPE_REGISTRY_RETURN
 <SUBSECTION Private>
 gst_registry_get_type
-gst_registry_flags_get_type
-gst_registry_return_get_type
 </SECTION>
 
 
@@ -2154,14 +2102,6 @@ gst_version
 <FILE>gstxml</FILE>
 <TITLE>GstXML</TITLE>
 GstXML
-GstXMLRegistryClose
-GstXMLRegistryGetPerms
-GstXMLRegistryLoad
-GstXMLRegistryMode
-GstXMLRegistryOpen
-GstXMLRegistryParser
-GstXMLRegistrySave
-GstXMLRegistryState
 
 gst_xml_write
 gst_xml_write_file
