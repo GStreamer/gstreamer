@@ -160,6 +160,8 @@ gst_file_sink_init (GstFileSink * filesink, GstFileSinkClass * g_class)
 
   filesink->filename = NULL;
   filesink->file = NULL;
+
+  GST_BASE_SINK (filesink)->sync = FALSE;
 }
 
 static void

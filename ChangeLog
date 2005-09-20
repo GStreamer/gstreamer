@@ -1,3 +1,8 @@
+2005-09-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/elements/gstfilesink.c: (gst_file_sink_init):
+	  Set sync to FALSE by default.
+
 2005-09-20  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_class_init),
