@@ -81,7 +81,6 @@ VALGRIND_TO_FIX =				\
 	elements/fakesrc			\
 	gst/gstevent				\
 	generic/states				\
-	gst-libs/controller			\
 	pipelines/simple_launch_lines
 
 # these need fixing because the threads cause segfaults under valgrind

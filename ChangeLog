@@ -1,3 +1,9 @@
+2005-09-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* check/Makefile.am:
+	* check/gst-libs/controller.c: (plugin_init), (GST_START_TEST):
+          plug mem-leak, re-add to valgrindable tests
+
 2005-09-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstplugin.h:

@@ -20,7 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
+#include <gst/gst.h>
 #include <gst/check/gstcheck.h>
 #include <gst/controller/gstcontroller.h>
 
@@ -192,23 +195,44 @@ gst_test_mono_source_get_type (void)
 }
 
 static gboolean
-gst_test_plugin_init (GstPlugin * plugin)
+plugin_init (GstPlugin * plugin)
 {
-  gst_element_register (plugin, "testmonosource", GST_RANK_NONE,
+  gboolean res = TRUE;
+
+  res &= gst_element_register (plugin, "testmonosource", GST_RANK_NONE,
       GST_TYPE_TEST_MONO_SOURCE);
-  return TRUE;
+  return res;
 }
 
 GST_PLUGIN_DEFINE_STATIC (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "gst-test",
     "controller test plugin - several unit test support elements",
-    gst_test_plugin_init, VERSION, "LGPL", PACKAGE_NAME,
-    "http://gstreamer.freedesktop.org")
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN);
 
+/*
+static void __attribute__ ((constructor))
+_gst_plugin_static_init__plugin_init (void)
+{
+  static GstPluginDesc plugin_desc_ = {
+    GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "gst-test",
+    "controller test plugin - several unit test support elements",
+    plugin_init,
+    VERSION,
+    GST_LICENSE,
+    PACKAGE,
+    GST_PACKAGE,
+    GST_ORIGIN,
+    GST_PADDING_INIT
+  };
+  _gst_plugin_register_static (&plugin_desc_);
+}
+*/
 /* TESTS */
 /* double init should not harm */
-    GST_START_TEST (controller_init)
+GST_START_TEST (controller_init)
 {
   gst_controller_init (NULL, NULL);
 }
@@ -227,7 +251,7 @@ GST_START_TEST (controller_new_fail1)
   ctrl = gst_controller_new (G_OBJECT (elem), "_schrompf_", NULL);
   fail_unless (ctrl == NULL, NULL);
 
-  g_object_unref (elem);
+  gst_object_unref (elem);
 }
 
 GST_END_TEST;
@@ -244,7 +268,7 @@ GST_START_TEST (controller_new_fail2)
   ctrl = gst_controller_new (G_OBJECT (elem), NULL);
   fail_unless (ctrl == NULL, NULL);
 
-  g_object_unref (elem);
+  gst_object_unref (elem);
 }
 
 GST_END_TEST;
@@ -262,7 +286,7 @@ GST_START_TEST (controller_new_fail3)
       gst_controller_new (G_OBJECT (elem), "readonly", NULL));
   fail_unless (ctrl == NULL, NULL);
 
-  g_object_unref (elem);
+  gst_object_unref (elem);
 }
 
 GST_END_TEST;
@@ -279,7 +303,7 @@ GST_START_TEST (controller_new_fail4)
   ASSERT_CRITICAL (ctrl = gst_controller_new (G_OBJECT (elem), "static", NULL));
   fail_unless (ctrl == NULL, NULL);
 
-  g_object_unref (elem);
+  gst_object_unref (elem);
 }
 
 GST_END_TEST;
@@ -297,7 +321,7 @@ GST_START_TEST (controller_new_fail5)
       gst_controller_new (G_OBJECT (elem), "construct-only", NULL));
   fail_unless (ctrl == NULL, NULL);
 
-  g_object_unref (elem);
+  gst_object_unref (elem);
 }
 
 GST_END_TEST;
@@ -316,7 +340,7 @@ GST_START_TEST (controller_new_okay1)
   fail_unless (ctrl != NULL, NULL);
 
   g_object_unref (ctrl);
-  g_object_unref (elem);
+  gst_object_unref (elem);
 }
 
 GST_END_TEST;
@@ -334,7 +358,7 @@ GST_START_TEST (controller_new_okay2)
   fail_unless (ctrl != NULL, NULL);
 
   g_object_unref (ctrl);
-  g_object_unref (elem);
+  gst_object_unref (elem);
 }
 
 GST_END_TEST;
@@ -358,7 +382,7 @@ GST_START_TEST (controller_new_okay3)
 
   g_object_unref (ctrl2);
   g_object_unref (ctrl1);
-  g_object_unref (elem);
+  gst_object_unref (elem);
 }
 
 GST_END_TEST;
@@ -385,7 +409,7 @@ GST_START_TEST (controller_param_twice)
   fail_unless (!res, NULL);
 
   g_object_unref (ctrl);
-  g_object_unref (elem);
+  gst_object_unref (elem);
 }
 
 GST_END_TEST;
@@ -409,7 +433,7 @@ GST_START_TEST (controller_finalize)
   ctrl = gst_object_get_controller (G_OBJECT (elem));
   fail_unless (ctrl == NULL, NULL);
 
-  g_object_unref (elem);
+  gst_object_unref (elem);
 }
 
 GST_END_TEST;
@@ -449,7 +473,7 @@ GST_START_TEST (controller_interpolate_none)
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
 
   g_object_unref (ctrl);
-  g_object_unref (elem);
+  gst_object_unref (elem);
 }
 
 GST_END_TEST;
@@ -466,7 +490,7 @@ GST_START_TEST (controller_helper_any_gobject)
   res = gst_object_sink_values (G_OBJECT (elem), 0LL);
   fail_unless (res == FALSE, NULL);
 
-  g_object_unref (elem);
+  gst_object_unref (elem);
 }
 
 GST_END_TEST;
