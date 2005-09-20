@@ -1,7 +1,7 @@
 # Italian translation for gstreamer package of GStreamer project.
 # Copyright (C) 2004 GStreamer core team
 # This file is distributed under the same license as the gstreamer package.
-# Luca Ferretti <elle.uca@infinito.it>, 2004.
+# Luca Ferretti <elle.uca@infinito.it>, 2004-2005.
 #
 #
 #
@@ -106,10 +106,10 @@
 # ----------------------------------------
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.8.7pre2\n"
+"Project-Id-Version: gstreamer 0.8.11\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2005-08-29 16:46+0200\n"
-"PO-Revision-Date: 2004-12-21 08:23+0100\n"
+"PO-Revision-Date: 2005-09-19 20:05+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
 "MIME-Version: 1.0\n"
@@ -130,24 +130,16 @@ msgid "Print available debug categories and exit"
 msgstr "Stampa le categorie di debug disponibili ed esce"
 
 #: gst/gst.c:167
-msgid ""
-"Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
-msgstr ""
-"Livello di debug predefinito da 1 (solo errori) a 5 (tutto), oppure 0 per "
-"nessun output"
+msgid "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+msgstr "Livello di debug predefinito da 1 (solo errori) a 5 (tutto), oppure 0 per nessun output"
 
 #: gst/gst.c:169
 msgid "LEVEL"
 msgstr "LIVELLO"
 
 #: gst/gst.c:171
-msgid ""
-"Comma-separated list of category_name:level pairs to set specific levels for "
-"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
-msgstr ""
-"Elenco di coppie \"nome_categoria=livello\" separate da virgole per "
-"impostare i livelli specifici per ogni singola categoria. Esempio: "
-"GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr "Elenco di coppie \"nome_categoria=livello\" separate da virgole per impostare i livelli specifici per ogni singola categoria. Esempio: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 #: gst/gst.c:174
 msgid "LIST"
@@ -174,13 +166,8 @@ msgid "PATHS"
 msgstr "PERCORSI"
 
 #: gst/gst.c:189
-#, fuzzy
-msgid ""
-"Comma-separated list of plugins to preload in addition to the list stored in "
-"environment variable GST_PLUGIN_PATH"
-msgstr ""
-"Elenco separato da virgole dei plugin da pre-caricare in aggiunta all'elenco "
-"memorizzato nella variabile d'ambiente GST_PLUGIN_PATH"
+msgid "Comma-separated list of plugins to preload in addition to the list stored in environment variable GST_PLUGIN_PATH"
+msgstr "Elenco separato da virgole dei plugin da pre-caricare in aggiunta all'elenco memorizzato nella variabile d'ambiente GST_PLUGIN_PATH"
 
 #: gst/gst.c:191
 msgid "PLUGINS"
@@ -231,22 +218,16 @@ msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer ha incontrato un errore generale delle librerie di base."
 
 #: gst/gsterror.c:58 gst/gsterror.c:95 gst/gsterror.c:116 gst/gsterror.c:146
-msgid ""
-"GStreamer developers were too lazy to assign an error code to this error.  "
-"Please file a bug."
-msgstr ""
-"Gli sviluppatori di GStreamer sono stati troppo pigri per assegnare un "
-"codice d'errore a questo errore. Si prega di notificare un bug."
+msgid "GStreamer developers were too lazy to assign an error code to this error.  Please file a bug."
+msgstr "Gli sviluppatori di GStreamer sono stati troppo pigri per assegnare un codice d'errore a questo errore. Si prega di notificare un bug."
 
 #: gst/gsterror.c:61
 msgid "Internal GStreamer error: code not implemented.  File a bug."
-msgstr ""
-"Errore interno di GStreamer: codice non implementato. Notificare un bug."
+msgstr "Errore interno di GStreamer: codice non implementato. Notificare un bug."
 
 #: gst/gsterror.c:63
 msgid "Internal GStreamer error: state change failed.  File a bug."
-msgstr ""
-"Errore interno di GStreamer: cambio di stato fallito. Notificare un bug."
+msgstr "Errore interno di GStreamer: cambio di stato fallito. Notificare un bug."
 
 #: gst/gsterror.c:65
 msgid "Internal GStreamer error: pad problem.  File a bug."
@@ -258,13 +239,11 @@ msgstr "Errore interno di GStreamer: problema di thread. Notificare un bug."
 
 #: gst/gsterror.c:69
 msgid "Internal GStreamer error: scheduler problem.  File a bug."
-msgstr ""
-"Errore interno di GStreamer: problema dello scheduler. Notificare un bug."
+msgstr "Errore interno di GStreamer: problema dello scheduler. Notificare un bug."
 
 #: gst/gsterror.c:71
 msgid "Internal GStreamer error: negotiation problem.  File a bug."
-msgstr ""
-"Errore interno di GStreamer: problema di negoziazione. Notificare un bug."
+msgstr "Errore interno di GStreamer: problema di negoziazione. Notificare un bug."
 
 #: gst/gsterror.c:73
 msgid "Internal GStreamer error: event problem.  File a bug."
@@ -275,9 +254,8 @@ msgid "Internal GStreamer error: seek problem.  File a bug."
 msgstr "Errore interno di GStreamer: problema nel seek. Notificare un bug."
 
 #: gst/gsterror.c:77
-#, fuzzy
 msgid "Internal GStreamer error: capabilities problem.  File a bug."
-msgstr "Errore interno di GStreamer: problema di caps. Notificare un bug."
+msgstr "Errore interno di GStreamer: problema di capabilities. Notificare un bug."
 
 #: gst/gsterror.c:79
 msgid "Internal GStreamer error: tag problem.  File a bug."
@@ -296,18 +274,16 @@ msgid "Could not close supporting library."
 msgstr "Impossibile chiudere la libreria di supporto."
 
 #: gst/gsterror.c:99
-#, fuzzy
 msgid "Could not set settings."
-msgstr "Impossibile impostare o ottenere le impostazioni dalla risorsa."
+msgstr "Impossibile impostare le impostazioni."
 
 #: gst/gsterror.c:100
 msgid "Failed to encode image."
-msgstr ""
+msgstr "Codifica dell'immagine fallita."
 
 #: gst/gsterror.c:114
-#, fuzzy
 msgid "GStreamer encountered a general resource error."
-msgstr "GStreamer ha incontrato un errore generale delle librerie di base."
+msgstr "GStreamer ha incontrato un errore generale di risorse."
 
 #: gst/gsterror.c:118
 msgid "Resource not found."
@@ -354,15 +330,12 @@ msgid "Could not get/set settings from/on resource."
 msgstr "Impossibile impostare o ottenere le impostazioni dalla risorsa."
 
 #: gst/gsterror.c:144
-#, fuzzy
 msgid "GStreamer encountered a general stream error."
-msgstr "GStreamer ha incontrato un errore generale delle librerie di base."
+msgstr "GStreamer ha incontrato un errore generale di stream."
 
 #: gst/gsterror.c:149
 msgid "Element doesn't implement handling of this stream. Please file a bug."
-msgstr ""
-"L'elemento non implementa la gestione di questo stream. Si prega di "
-"notificare un bug."
+msgstr "L'elemento non implementa la gestione di questo stream. Si prega di notificare un bug."
 
 #: gst/gsterror.c:151
 msgid "Could not determine type of stream."
@@ -370,8 +343,7 @@ msgstr "Impossibile determinare in tipo di stream."
 
 #: gst/gsterror.c:153
 msgid "The stream is of a different type than handled by this element."
-msgstr ""
-"Lo stream è di un tipo differente da quello gestito da questo elemento."
+msgstr "Lo stream è di un tipo differente da quello gestito da questo elemento."
 
 #: gst/gsterror.c:155
 msgid "There is no codec present that can handle the stream's type."
@@ -437,8 +409,7 @@ msgstr "data"
 
 #: gst/gsttag.c:95
 msgid "date the data was created (in Julian calendar days)"
-msgstr ""
-"la data in cui i dati sono stati creati (come giorni del calendario giuliano)"
+msgstr "la data in cui i dati sono stati creati (come giorni del calendario giuliano)"
 
 #: gst/gsttag.c:98
 msgid "genre"
@@ -470,9 +441,7 @@ msgstr "totale tracce"
 
 #: gst/gsttag.c:111
 msgid "count of tracks inside collection this track belongs to"
-msgstr ""
-"il totale delle tracce all'interno della collezione a cui questa traccia "
-"appartiene"
+msgstr "il totale delle tracce all'interno della collezione a cui questa traccia appartiene"
 
 #: gst/gsttag.c:115
 msgid "disc number"
@@ -488,9 +457,7 @@ msgstr "totale dischi"
 
 #: gst/gsttag.c:120
 msgid "count of discs inside collection this disc belongs to"
-msgstr ""
-"il totale dei dischi all'interno della collezione a cui questo disco "
-"appartiene"
+msgstr "il totale dei dischi all'interno della collezione a cui questo disco appartiene"
 
 #: gst/gsttag.c:124
 msgid "location"
@@ -522,8 +489,7 @@ msgstr "ISRC"
 
 #: gst/gsttag.c:138
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
-msgstr ""
-"International Standard Recording Code - consultare http://www.ifpi.org/isrc"
+msgstr "International Standard Recording Code - consultare http://www.ifpi.org/isrc"
 
 #: gst/gsttag.c:140
 msgid "organization"
@@ -683,11 +649,11 @@ msgstr "il picco dell'album"
 
 #: gst/gsttag.c:192
 msgid "language code"
-msgstr ""
+msgstr "codice lingua"
 
 #: gst/gsttag.c:193
 msgid "language code for this stream, conforming to ISO-639-1"
-msgstr ""
+msgstr "codice della lingua per questo stream, conforme a ISO-639-1"
 
 #: gst/gsttag.c:232
 msgid ", "
@@ -696,8 +662,7 @@ msgstr ", "
 #: gst/autoplug/gstspider.c:466
 #, c-format
 msgid "There is no element present to handle the stream's mime type %s."
-msgstr ""
-"Non vi è alcun elemento presente per gestire il tipo MIME %s dello stream."
+msgstr "Non vi è alcun elemento presente per gestire il tipo MIME %s dello stream."
 
 #: gst/elements/gstfilesink.c:268
 msgid "No file name specified for writing."
@@ -744,12 +709,11 @@ msgstr "Fallito dopo le iterazioni come richiesto."
 
 #: gst/elements/gsttypefindelement.c:157
 msgid "stream type"
-msgstr ""
+msgstr "tipo di stream"
 
 #: gst/elements/gsttypefindelement.c:158
-#, fuzzy
 msgid "detected type of stream"
-msgstr "capabilities rilevate nello stream"
+msgstr "tipo di stream rilevato"
 
 #: gst/elements/gsttypefindelement.c:161
 msgid "minimum"
@@ -790,9 +754,9 @@ msgid "no element \"%s\""
 msgstr "nessun elemento «%s»"
 
 #: gst/parse/grammar.y:564
-#, fuzzy, c-format
+#, c-format
 msgid "could not parse capabilities \"%s\""
-msgstr "impossibile analizzare caps «%s»"
+msgstr "impossibile analizzare capabilities «%s»"
 
 #: gst/parse/grammar.y:586 gst/parse/grammar.y:634 gst/parse/grammar.y:650
 #: gst/parse/grammar.y:708
@@ -833,12 +797,8 @@ msgstr "Stampa tutti gli elementi"
 
 #: tools/gst-launch.c:110
 #, c-format
-msgid ""
-"Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
-"max %s ns).\n"
-msgstr ""
-"Eseuzione terminata dopo %s iterazioni (somma %s ns, media %s ns, min %s ns, "
-"max %s ns).\n"
+msgid "Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, max %s ns).\n"
+msgstr "Eseuzione terminata dopo %s iterazioni (somma %s ns, media %s ns, min %s ns, max %s ns).\n"
 
 #: tools/gst-launch.c:137
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
@@ -862,8 +822,7 @@ msgstr "AVVISO: al momento è supportato sono un elemento toplevel."
 #: tools/gst-launch.c:169
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr ""
-"ERRORE: impossibile analizzare l'argomento %d della riga di comando: %s.\n"
+msgstr "ERRORE: impossibile analizzare l'argomento %d della riga di comando: %s.\n"
 
 #: tools/gst-launch.c:180
 #, c-format
@@ -947,11 +906,11 @@ msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ERRORE: la pipeline non vuole riprodurre.\n"
 
 #: tools/gst-register.c:43
-#, fuzzy, c-format
+#, c-format
 msgid "Added plugin %s with %d feature.\n"
 msgid_plural "Added plugin %s with %d features.\n"
-msgstr[0] "Plugin %s aggiunto con %d %s.\n"
-msgstr[1] "Plugin %s aggiunto con %d %s.\n"
+msgstr[0] "Plugin %s aggiunto con %d funzionalità.\n"
+msgstr[1] "Plugin %s aggiunto con %d funzionalità.\n"
 
 #: tools/gst-register.c:111
 #, c-format
@@ -974,38 +933,12 @@ msgid "Error loading %s\n"
 msgstr "Errore nel caricare %s\n"
 
 #: tools/gst-register.c:167
-#, fuzzy, c-format
+#, c-format
 msgid "Loaded %d plugins with %d feature.\n"
 msgid_plural "Loaded %d plugins with %d features.\n"
-msgstr[0] "Caricati %d plugin con %d %s.\n"
-msgstr[1] "Caricati %d plugin con %d %s.\n"
+msgstr[0] "Caricati %d plugin con %d funzionalità.\n"
+msgstr[1] "Caricati %d plugin con %d funzionalità.\n"
 
 #: tools/tools.h:44
 msgid "print version information and exit"
-msgstr ""
-
-#~ msgid "caps"
-#~ msgstr "caps"
-
-#~ msgid "feature"
-#~ msgid_plural "features"
-#~ msgstr[0] "caratteristica"
-#~ msgstr[1] "caratteristiche"
-
-#~ msgid "Execution ended after %"
-#~ msgstr "Esecuzione terminata dopo %"
-
-#~ msgid " iterations (sum %"
-#~ msgstr " iterazioni (somma %"
-
-#~ msgid " ns, average %"
-#~ msgstr " ns, media %"
-
-#~ msgid " ns, min %"
-#~ msgstr " ns, min %"
-
-#~ msgid " ns, max %"
-#~ msgstr " ns, max %"
-
-#~ msgid " ns).\n"
-#~ msgstr " ns).\n"
+msgstr "stampa informazioni sulla versione ed esce"
