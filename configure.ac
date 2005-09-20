@@ -238,10 +238,12 @@ AC_SUBST(GLIB_CFLAGS)
 AC_MSG_CHECKING([glib version >= 2.8])
 if pkg-config --atleast-version=2.8 glib-2.0; then
   AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_GLIB_2_8, [1], [Define to 1 if we can use API new in glib-2.8])
+  GST_HAVE_GLIB_2_8_DEFINE="#define GST_HAVE_GLIB_2_8 1"
 else
   AC_MSG_RESULT(no)
+  GST_HAVE_GLIB_2_8_DEFINE="/* #undef GST_HAVE_GLIB_2_8 */"
 fi
+AC_SUBST(GST_HAVE_GLIB_2_8_DEFINE)
 
 if test "x$HAVE_GLIB2" = "xno"; then
   AC_MSG_ERROR([GStreamer requires GLib $GLIB2_REQ to compile.])

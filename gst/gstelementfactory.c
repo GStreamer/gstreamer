@@ -349,15 +349,27 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
 {
   GstElement *element;
   GstElementClass *oclass;
+  GstElementFactory *newfactory;
 
   g_return_val_if_fail (factory != NULL, NULL);
 
-  factory =
+  gst_object_ref (factory);
+
+  newfactory =
       GST_ELEMENT_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
           (factory)));
-  if (factory == NULL) {
-    GST_DEBUG ("warning: loading the plugin for this factory returned NULL");
+  if (newfactory == NULL) {
+    /* it could be factory is invalid. with ref-eating functions nothing is
+       certain! */
+    GST_WARNING ("loading the plugin for factory %p returned NULL", factory);
     return NULL;
+  } else if (newfactory != factory) {
+    /* gst_plugin_feature_load ate the ref we added to the factory */
+    factory = newfactory;
+  } else {
+    /* strip off our extra ref */
+    gst_object_unref (factory);
+    factory = newfactory;
   }
 
   if (name)
@@ -392,7 +404,6 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
     gst_object_set_name (GST_OBJECT (element), name);
 
   GST_DEBUG ("created \"%s\"", GST_PLUGIN_FEATURE_NAME (factory));
-  gst_object_unref (factory);
 
   return element;
 }

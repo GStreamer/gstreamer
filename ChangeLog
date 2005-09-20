@@ -1,3 +1,21 @@
+2005-09-20  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstelementfactory.c (gst_element_factory_create): Avoid
+	eating the caller's refcount.
+
+	* gst/gstobject.h (GST_OBJECT_REFCOUNT) 
+	(GST_OBJECT_REFCOUNT_VALUE): Conditionally fondle the right
+	refcount.
+
+	* gst/gstconfig.h.in (GST_HAVE_GLIB_2_8):
+	* configure.ac (GST_HAVE_GLIB_2_8_DEFINE): Make the availability
+	of GLib 2.8 public, so we can know which refcount to check in
+	tests.
+
+	* gst/gstobject.c: Use the GST_HAVE_GLIB_2_8 define.
+	(gst_object_init): Only set the gst refcount if we're going ahead
+	with the refcount hack.
+
 2005-09-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* check/gst-libs/controller.c: (plugin_init), (GST_START_TEST):

@@ -33,7 +33,7 @@
 #endif
 
 #define DEBUG_REFCOUNT
-#ifndef HAVE_GLIB_2_8
+#ifndef GST_HAVE_GLIB_2_8
 #define REFCOUNT_HACK
 #endif
 
@@ -218,7 +218,9 @@ gst_object_init (GTypeInstance * instance, gpointer g_class)
   object->parent = NULL;
   object->name = NULL;
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p new", object);
+#ifdef REFCOUNT_HACK
   gst_atomic_int_set (&object->refcount, 1);
+#endif
   PATCH_REFCOUNT (object);
 
   object->flags = 0;
