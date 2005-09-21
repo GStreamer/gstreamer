@@ -1,3 +1,10 @@
+2005-09-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/.cvsignore:
+	* docs/gst/tmpl/gstenumtypes.sgml:
+          remove obsolete doc file
+
 2005-09-21  David Schleef  <ds@schleef.org>
 
 	* gst/gstelementfactory.c: (gst_element_factory_make): Drink a

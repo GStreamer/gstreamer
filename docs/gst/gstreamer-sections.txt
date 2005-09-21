@@ -2118,12 +2118,6 @@ gst_xml_get_type
 </SECTION>
 
 
-<SECTION>
-<FILE>gstenumtypes</FILE>
-<TITLE>GstEnumTypes</TITLE>
-</SECTION>
-
-
 # base classes
 
 <SECTION>

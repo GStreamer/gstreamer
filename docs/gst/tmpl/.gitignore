@@ -17,6 +17,7 @@ gstcompat.sgml
 gstconfig.sgml
 gstelementdetails.sgml
 gstelementfactory.sgml
+gstenumtypes.sgml
 gstevent.sgml
 gsterror.sgml
 gstfakesrc.sgml
