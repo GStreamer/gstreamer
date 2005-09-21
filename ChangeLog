@@ -1,5 +1,12 @@
 2005-09-21  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/gst/tmpl/.cvsignore:
+	* docs/gst/tmpl/gstimplementsinterface.sgml:
+	* gst/gstinterface.c:
+          inlined more docs
+
+2005-09-21  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/gst/gstreamer-sections.txt:
 	* docs/gst/tmpl/.cvsignore:
 	* docs/gst/tmpl/gstenumtypes.sgml:

@@ -27,6 +27,7 @@ gstfilesink.sgml
 gstfilter.sgml
 gstformat.sgml
 gstghostpad.sgml
+gstimplementsinterface.sgml
 gstindex.sgml
 gstindexfactory.sgml
 gstiterator.sgml

@@ -20,6 +20,15 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstimplementsinterface
+ * @short_description: Core interface implemented by #GstElement instances that
+ * allows runtime querying of interface availabillity
+ * @see_also: #GstElement
+ *
+ * Provides interface functionality on per instance basis and not per class
+ * basis, which is the case for gobject.
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
