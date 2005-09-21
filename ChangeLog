@@ -1,3 +1,16 @@
+2005-09-21  Francis Labonte  <francis_labonte at hotmail dot com>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstinfo.c: (_gst_debug_nameof_funcptr),
+	(_gst_debug_register_funcptr):
+	  Add mutex to serialise access to the hash table with
+	  the function pointer => function name string mapping;
+	  make that hash table static scope (#316809).
+
+	* gst/registries/.cvsignore:
+	  Remove left-over file.
+
 2005-09-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/pwg/appendix-porting.xml:
