@@ -1,3 +1,11 @@
+2005-09-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/tmpl/.cvsignore:
+	* docs/gst/tmpl/gstvalue.sgml:
+	* gst/gstvalue.c:
+	* gst/gstvalue.h:
+          inlied another one and added  some obvious docs
+
 2005-09-21  Wim Taymans  <wim@fluendo.com>
 
 	* gst/elements/gstfdsrc.c: (gst_fdsrc_class_init),

@@ -107,16 +107,74 @@ G_BEGIN_DECLS
  * Checks if the given #GValue contains a #GST_TYPE_DOUBLE_RANGE value.
  */
 #define GST_VALUE_HOLDS_DOUBLE_RANGE(x) (G_VALUE_HOLDS(x, gst_type_double_range))
+
+/**
+ * GST_VALUE_HOLDS_LIST:
+ * @x: the #GValue to check
+ *
+ * Checks if the given #GValue contains a #GST_TYPE_LIST value.
+ */
 #define GST_VALUE_HOLDS_LIST(x)		(G_VALUE_HOLDS(x, gst_type_list))
+
+/**
+ * GST_VALUE_HOLDS_ARRAY:
+ * @x: the #GValue to check
+ *
+ * Checks if the given #GValue contains a #GST_TYPE_ARRAY value.
+ */
 #define GST_VALUE_HOLDS_ARRAY(x)	(G_VALUE_HOLDS(x, gst_type_array))
+
+/**
+ * GST_VALUE_HOLDS_CAPS:
+ * @x: the #GValue to check
+ *
+ * Checks if the given #GValue contains a #GST_TYPE_CAPS value.
+ */
 #define GST_VALUE_HOLDS_CAPS(x)		(G_VALUE_HOLDS(x, GST_TYPE_CAPS))
+
+/**
+ * GST_VALUE_HOLDS_BUFFER:
+ * @x: the #GValue to check
+ *
+ * Checks if the given #GValue contains a #GST_TYPE_BUFFER value.
+ */
 #define GST_VALUE_HOLDS_BUFFER(x)       (G_VALUE_HOLDS(x, GST_TYPE_BUFFER))
 
+/**
+ * GST_VALUE_HOLDS_FRACTION:
+ * @x: the #GValue to check
+ *
+ * Checks if the given #GValue contains a #GST_TYPE_FRACTION value.
+ */
 #define GST_VALUE_HOLDS_FRACTION(x)	(G_VALUE_HOLDS(x, gst_type_fraction))
 
+/**
+ * GST_TYPE_FOURCC:
+ *
+ * a #GValue type that represents 4 byte identifier (e.g. used for codecs)
+ *
+ * Returns: the #GType of GstFourcc
+ */
 #define GST_TYPE_FOURCC                  gst_type_fourcc
+
+/**
+ * GST_TYPE_INT_RANGE:
+ *
+ * a #GValue type that represents an integer range
+ *
+ * Returns: the #GType of GstIntRange
+ */
 #define GST_TYPE_INT_RANGE               gst_type_int_range
+
+/**
+ * GST_TYPE_DOUBLE_RANGE:
+ *
+ * a #GValue type that represents a floating point range with double precission
+ *
+ * Returns: the #GType of GstIntRange
+ */
 #define GST_TYPE_DOUBLE_RANGE            gst_type_double_range
+
 /**
  * GST_TYPE_LIST:
  *
@@ -124,7 +182,6 @@ G_BEGIN_DECLS
  *
  * Returns: the #GType of GstValueList (which is not explicitly typed)
  */
-
 #define GST_TYPE_LIST                    gst_type_list
 
 /**
@@ -147,22 +204,65 @@ G_BEGIN_DECLS
 
 #define GST_TYPE_FRACTION                gst_type_fraction
 
+
+/**
+ * GST_VALUE_LESS_THAN:
+ *
+ * Indicates that the first value provided to a comparison function
+ * (gst_value_compare()) is lesser than the second one.
+ */
 #define GST_VALUE_LESS_THAN              (-1)
+
+/**
+ * GST_VALUE_EQUAL:
+ *
+ * Indicates that the first value provided to a comparison function
+ * (gst_value_compare()) is equal to the second one.
+ */
 #define GST_VALUE_EQUAL                   0
+
+/**
+ * GST_VALUE_GREATER_THAN:
+ *
+ * Indicates that the first value provided to a comparison function
+ * (gst_value_compare()) is greater than the second one.
+ */
 #define GST_VALUE_GREATER_THAN            1
+
+/**
+ * GST_VALUE_UNORDERED:
+ *
+ * Indicates that the comparison function (gst_value_compare()) can not
+ * determine a order for the two provided values.
+ */
 #define GST_VALUE_UNORDERED               2
 
+/**
+ * GstValueCompareFunc:
+ * @value1: first value for comparission
+ * @value2: second value for comparission 
+ *
+ * Used together with gst_value_compare() to compare #GValues.
+ *
+ * Returns: one of GST_VALUE_LESS_THAN, GST_VALUE_EQUAL, GST_VALUE_GREATER_THAN
+ * or GST_VALUE_UNORDERED
+ */
 typedef int      (* GstValueCompareFunc)     (const GValue *value1,
 					      const GValue *value2);
+                                              
 typedef char *   (* GstValueSerializeFunc)   (const GValue *value1);
+
 typedef gboolean (* GstValueDeserializeFunc) (GValue       *dest,
 					      const char   *s);
+                                              
 typedef int      (* GstValueUnionFunc)       (GValue       *dest,
 					      const GValue *value1,
 					      const GValue *value2);
+                                              
 typedef int      (* GstValueIntersectFunc)   (GValue       *dest,
 					      const GValue *value1,
 					      const GValue *value2);
+                                              
 typedef int      (* GstValueSubtractFunc)    (GValue       *dest,
 					      const GValue *minuend,
 					      const GValue *subtrahend);
