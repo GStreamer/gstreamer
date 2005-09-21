@@ -1,3 +1,30 @@
+2005-09-21  Andy Wingo  <wingo@pobox.com>
+
+	* check/gst/gstutils.c (test_buffer_probe_n_times): Add tests for
+	data and event probes on the same pad.
+
+2005-09-21  Andy Wingo  <wingo@pobox.com>
+
+	* check/gst/gstutils.c: New file.
+	(test_buffer_probe_n_times): A simple buffer probe test. More to
+	come, foolios.
+
+	* gst/gstutils.c (gst_pad_add_buffer_probe): Connect to
+	have-data::buffer, not have-data.
+	(gst_pad_add_event_probe): Likewise for have-data::event.
+	(gst_pad_add_data_probe): More docs. The part about 'resolving the
+	peer' isn't quite right yet though.
+	(gst_pad_remove_buffer_probe, gst_pad_remove_event_probe) 
+	(gst_pad_remove_data_probe): Change to take the guint handler_id
+	as their arg, not the function+data, which is more glib-like.
+
+	* gst/gstpad.c (gst_pad_emit_have_data_signal): Add a detail to
+	the signal emission to indicate if the data is a buffer or an
+	event.
+	(gst_pad_get_type): Initialize buffer and event quarks.
+	(gst_pad_class_init): have-data is now a detailed signal, yes it
+	is.
+
 2005-09-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gstbasetransform.c: (gst_base_transform_transform_size):

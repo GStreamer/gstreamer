@@ -21,14 +21,36 @@
 
 #include <gst/check/gstcheck.h>
 
-#define SPECIAL_POINTER (void*)19283847
+#define SPECIAL_POINTER(x) ((void*)(19283847+(x)))
+
+static int n_data_probes = 0;
 static int n_buffer_probes = 0;
+static int n_event_probes = 0;
+
+static gboolean
+data_probe (GstPad * pad, GstMiniObject * obj, gpointer data)
+{
+  n_data_probes++;
+  g_assert (GST_IS_MINI_OBJECT (obj));
+  g_assert (data == SPECIAL_POINTER (0));
+  return TRUE;
+}
 
 static gboolean
 buffer_probe (GstPad * pad, GstBuffer * obj, gpointer data)
 {
   n_buffer_probes++;
-  g_assert (data == SPECIAL_POINTER);
+  g_assert (GST_IS_BUFFER (obj));
+  g_assert (data == SPECIAL_POINTER (1));
+  return TRUE;
+}
+
+static gboolean
+event_probe (GstPad * pad, GstEvent * obj, gpointer data)
+{
+  n_event_probes++;
+  g_assert (GST_IS_EVENT (obj));
+  g_assert (data == SPECIAL_POINTER (2));
   return TRUE;
 }
 
@@ -38,7 +60,6 @@ GST_START_TEST (test_buffer_probe_n_times)
   GstBus *bus;
   GstMessage *message;
   GstPad *pad;
-  guint id;
 
   pipeline = gst_element_factory_make ("pipeline", NULL);
   fakesrc = gst_element_factory_make ("fakesrc", NULL);
@@ -50,8 +71,10 @@ GST_START_TEST (test_buffer_probe_n_times)
   gst_element_link (fakesrc, fakesink);
 
   pad = gst_element_get_pad (fakesink, "sink");
-  id = gst_pad_add_buffer_probe (pad, G_CALLBACK (buffer_probe),
-      SPECIAL_POINTER);
+  gst_pad_add_data_probe (pad, G_CALLBACK (data_probe), SPECIAL_POINTER (0));
+  gst_pad_add_buffer_probe (pad, G_CALLBACK (buffer_probe),
+      SPECIAL_POINTER (1));
+  gst_pad_add_event_probe (pad, G_CALLBACK (event_probe), SPECIAL_POINTER (2));
   gst_object_unref (pad);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
@@ -64,7 +87,9 @@ GST_START_TEST (test_buffer_probe_n_times)
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
 
-  g_assert (n_buffer_probes == 10);
+  g_assert (n_buffer_probes == 10);     /* one for every buffer */
+  g_assert (n_event_probes == 2);       /* new segment and eos */
+  g_assert (n_data_probes == 12);       /* duh */
 } GST_END_TEST;
 
 Suite *
