@@ -598,20 +598,20 @@ _wrap_gst_pad_add_data_probe(PyGObject *self, PyObject *args)
     len = PyTuple_Size(args);
 
     if (len < 1) {
-    PyErr_SetString(PyExc_TypeError, "Probe requires at least 1 arg");
-    return NULL;
+        PyErr_SetString(PyExc_TypeError, "Probe requires at least 1 arg");
+        return NULL;
     }
     callback = PySequence_GetItem(args, 0);
     if (!PyCallable_Check(callback)) {
-    PyErr_SetString(PyExc_TypeError, "callback is not callable");
-    return NULL;
+        PyErr_SetString(PyExc_TypeError, "callback is not callable");
+        return NULL;
     }
     cbargs = PySequence_GetSlice(args, 1, len);
     if (cbargs == NULL)
-    return NULL;
+        return NULL;
     data = Py_BuildValue("(ON)", callback, cbargs);
     if (data == NULL)
-    return NULL;
+        return NULL;
     sigid = gst_pad_add_data_probe (GST_PAD (self->obj), (GCallback) probe_handler_marshal, data);
 
     return PyLong_FromUnsignedLong(sigid);
@@ -628,20 +628,20 @@ _wrap_gst_pad_add_event_probe(PyGObject *self, PyObject *args)
     len = PyTuple_Size(args);
 
     if (len < 1) {
-    PyErr_SetString(PyExc_TypeError, "Probe requires at least 1 arg");
-    return NULL;
+        PyErr_SetString(PyExc_TypeError, "Probe requires at least 1 arg");
+        return NULL;
     }
     callback = PySequence_GetItem(args, 0);
     if (!PyCallable_Check(callback)) {
-    PyErr_SetString(PyExc_TypeError, "callback is not callable");
-    return NULL;
+        PyErr_SetString(PyExc_TypeError, "callback is not callable");
+        return NULL;
     }
     cbargs = PySequence_GetSlice(args, 1, len);
     if (cbargs == NULL)
-    return NULL;
+        return NULL;
     data = Py_BuildValue("(ON)", callback, cbargs);
     if (data == NULL)
-    return NULL;
+        return NULL;
     sigid = gst_pad_add_event_probe (GST_PAD (self->obj), (GCallback) probe_handler_marshal, data);
 
     return PyLong_FromUnsignedLong(sigid);
@@ -658,102 +658,23 @@ _wrap_gst_pad_add_buffer_probe(PyGObject *self, PyObject *args)
     len = PyTuple_Size(args);
 
     if (len < 1) {
-    PyErr_SetString(PyExc_TypeError, "Probe requires at least 1 arg");
-    return NULL;
+        PyErr_SetString(PyExc_TypeError, "Probe requires at least 1 arg");
+        return NULL;
     }
     callback = PySequence_GetItem(args, 0);
     if (!PyCallable_Check(callback)) {
-    PyErr_SetString(PyExc_TypeError, "callback is not callable");
-    return NULL;
+        PyErr_SetString(PyExc_TypeError, "callback is not callable");
+        return NULL;
     }
     cbargs = PySequence_GetSlice(args, 1, len);
     if (cbargs == NULL)
-    return NULL;
+        return NULL;
     data = Py_BuildValue("(ON)", callback, cbargs);
     if (data == NULL)
-    return NULL;
+        return NULL;
     sigid = gst_pad_add_buffer_probe (GST_PAD (self->obj), (GCallback) probe_handler_marshal, data);
 
     return PyLong_FromUnsignedLong(sigid);
-}
-%%
-override gst_pad_remove_data_probe kwargs
-static PyObject *
-_wrap_gst_pad_remove_data_probe(PyGObject *self, PyObject *args, PyObject *kwargs)
-{
-    static char *kwlist[] = { "signalid", NULL };
-    gulong    signalid;
-    GstPad    *pad = GST_PAD (self->obj);
-    
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-                     "k:GstPad.remove_data_probe",
-                     kwlist, &signalid))
-    return NULL;
-    GST_LOCK (pad);
-    if (!g_signal_handler_is_connected ((gpointer) pad, signalid)) {
-    GST_UNLOCK (pad);
-    Py_INCREF (Py_False);
-    return Py_False;
-    }
-    g_signal_handler_disconnect ((gpointer) pad, signalid);
-    GST_PAD_DO_BUFFER_SIGNALS (pad) -= 1;
-    GST_PAD_DO_EVENT_SIGNALS (pad) -= 1;
-    
-    GST_UNLOCK (pad);
-    Py_INCREF (Py_True);
-    return Py_True;
-}
-%%
-override gst_pad_remove_event_probe kwargs
-static PyObject *
-_wrap_gst_pad_remove_event_probe(PyGObject *self, PyObject *args, PyObject *kwargs)
-{
-    static char *kwlist[] = { "signalid", NULL };
-    gulong    signalid;
-    GstPad    *pad = GST_PAD (self->obj);
-    
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-                     "k:GstPad.remove_event_probe",
-                     kwlist, &signalid))
-    return NULL;
-    GST_LOCK (pad);
-    if (!g_signal_handler_is_connected ((gpointer) pad, signalid)) {
-    GST_UNLOCK (pad);
-    Py_INCREF (Py_False);
-    return Py_False;
-    }
-    g_signal_handler_disconnect ((gpointer) pad, signalid);
-    GST_PAD_DO_EVENT_SIGNALS (pad) -= 1;
-    
-    GST_UNLOCK (pad);
-    Py_INCREF (Py_True);
-    return Py_True;
-}
-%%
-override gst_pad_remove_buffer_probe kwargs
-static PyObject *
-_wrap_gst_pad_remove_buffer_probe(PyGObject *self, PyObject *args, PyObject *kwargs)
-{
-    static char *kwlist[] = { "signalid", NULL };
-    gulong    signalid;
-    GstPad    *pad = GST_PAD (self->obj);
-    
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-                     "k:GstPad.remove_buffer_probe",
-                     kwlist, &signalid))
-    return NULL;
-    GST_LOCK (pad);
-    if (!g_signal_handler_is_connected ((gpointer) pad, signalid)) {
-    GST_UNLOCK (pad);
-    Py_INCREF (Py_False);
-    return Py_False;
-    }
-    g_signal_handler_disconnect ((gpointer) pad, signalid);
-    GST_PAD_DO_BUFFER_SIGNALS (pad) -= 1;
-    
-    GST_UNLOCK (pad);
-    Py_INCREF (Py_True);
-    return Py_True;
 }
 %%
 override-slot GstPadTemplate.tp_getattr

@@ -3497,8 +3497,7 @@
   (c-name "gst_pad_remove_data_probe")
   (return-type "none")
   (parameters
-    '("GCallback" "handler")
-    '("gpointer" "data")
+    '("guint" "handler_id")
   )
 )
 
@@ -3517,8 +3516,7 @@
   (c-name "gst_pad_remove_event_probe")
   (return-type "none")
   (parameters
-    '("GCallback" "handler")
-    '("gpointer" "data")
+    '("guint" "handler_id")
   )
 )
 
@@ -3537,8 +3535,7 @@
   (c-name "gst_pad_remove_buffer_probe")
   (return-type "none")
   (parameters
-    '("GCallback" "handler")
-    '("gpointer" "data")
+    '("guint" "handler_id")
   )
 )
 

@@ -1,3 +1,14 @@
+2005-09-21  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gst.defs: Update for probe removal api
+
+	* gst/gstpad.override (_wrap_gst_pad_remove_data_probe) 
+	(_wrap_gst_pad_remove_event_probe) 
+	(_wrap_gst_pad_remove_buffer_probe): Removed, upstream does the
+	right thing now.
+	(_wrap_gst_pad_add_data_probe, _wrap_gst_pad_add_event_probe) 
+	(_wrap_gst_pad_add_buffer_probe): Indent.
+
 2005-09-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gst.defs:
