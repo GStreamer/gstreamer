@@ -21,13 +21,31 @@
     <itemizedlist>
       <listitem>
         <para>
+        Discont events have been replaced by newsegment events. In 0.9, it is
+        essential that you send a newsegment event downstream before you send 
+        your first buffer (in 0.8 the scheduler would invent discont events if
+        you forgot them, in 0.9 this is no longer the case).
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+        In 0.9, buffers have caps attached to them. Elements should allocate
+        new buffers with <function>gst_pad_alloc_buffer ()</function>. See
+        <xref linkend="chapter-negotiation"/> for more details.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
           Most functions returning an object or an object property have
           been changed to return its own reference rather than a constant
           reference of the one owned by the object itself. The reason for
           this change is primarily threadsafety. This means effectively
           that return values of functions such as
           <function>gst_element_get_pad ()</function>,
-          <function>gst_pad_get_name ()</function> and many more like these
+          <function>gst_pad_get_name ()</function>,
+          <function>gst_pad_get_parent ()</function>,
+          <function>gst_object_get_parent ()</function>,
+          and many more like these
           have to be free'ed or unreferenced after use. Check the API
           references of each function to know for sure whether return
           values should be free'ed or not.

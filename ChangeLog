@@ -1,3 +1,9 @@
+2005-09-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/pwg/appendix-porting.xml:
+	  And something about newsegment events and caps-on-buffers to
+	  the porting guide (feel free to improve).
+
 2005-09-21  Andy Wingo  <wingo@pobox.com>
 
 	* check/gst/gstutils.c (test_buffer_probe_n_times): Add tests for
