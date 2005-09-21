@@ -2,6 +2,8 @@
 
 	* check/gst/gstutils.c (test_buffer_probe_n_times): Add tests for
 	data and event probes on the same pad.
+	(test_buffer_probe_once): Test that removing probes from within
+	the probe functions works.
 
 2005-09-21  Andy Wingo  <wingo@pobox.com>
 
