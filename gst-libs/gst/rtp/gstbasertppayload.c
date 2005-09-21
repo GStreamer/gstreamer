@@ -34,7 +34,7 @@ enum
 
 #define DEFAULT_MTU			1024
 #define DEFAULT_PT			96
-#define DEFAULT_SSRC			0
+#define DEFAULT_SSRC			-1
 #define DEFAULT_TIMESTAMP_OFFSET	-1
 #define DEFAULT_SEQNUM_OFFSET		-1
 
@@ -126,7 +126,7 @@ gst_basertppayload_class_init (GstBaseRTPPayloadClass * klass)
           0, 0x80, DEFAULT_PT, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SSRC,
       g_param_spec_uint ("ssrc", "SSRC",
-          "The SSRC of the packets (0 == random)",
+          "The SSRC of the packets (-1 == random)",
           0, G_MAXUINT, DEFAULT_SSRC, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_TIMESTAMP_OFFSET, g_param_spec_int ("timestamp-offset",
@@ -309,7 +309,7 @@ gst_basertppayload_push (GstBaseRTPPayload * payload, GstBuffer * buffer)
   if (payload->clock_rate == 0)
     goto no_rate;
 
-  gst_rtpbuffer_set_ssrc (buffer, payload->ssrc);
+  gst_rtpbuffer_set_ssrc (buffer, payload->current_ssrc);
 
   gst_rtpbuffer_set_payload_type (buffer, payload->pt);
 
@@ -430,7 +430,7 @@ gst_basertppayload_change_state (GstElement * element,
         basertppayload->seqnum_base = basertppayload->seqnum_offset;
       basertppayload->seqnum = basertppayload->seqnum_base;
 
-      if (basertppayload->ssrc == 0)
+      if (basertppayload->ssrc == -1)
         basertppayload->current_ssrc = g_rand_int (basertppayload->ssrc_rand);
       else
         basertppayload->current_ssrc = basertppayload->ssrc;
