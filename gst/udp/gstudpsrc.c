@@ -407,7 +407,8 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
 
       old_caps = udpsrc->caps;
       udpsrc->caps = new_caps;
-      gst_caps_unref (old_caps);
+      if (old_caps)
+        gst_caps_unref (old_caps);
       gst_pad_set_caps (GST_BASE_SRC (udpsrc)->srcpad, new_caps);
       break;
     }

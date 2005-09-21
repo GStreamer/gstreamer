@@ -287,6 +287,7 @@ gst_rtspsrc_set_state (GstRTSPSrc * src, GstState state)
                   state)) == GST_STATE_CHANGE_FAILURE)
         goto done;
     }
+
     if (stream->rtcpsrc) {
       if ((ret =
               gst_element_set_state (stream->rtcpsrc,
@@ -299,6 +300,36 @@ done:
   return ret;
 }
 
+#define PARSE_INT(p, del, res) 		\
+G_STMT_START {				\
+  gchar *t = p;				\
+  p = strstr (p, del);			\
+  if (p == NULL)			\
+    res = -1;				\
+  else {				\
+    *p = '\0';				\
+    p++;				\
+    res = atoi (t);			\
+  }					\
+} G_STMT_END
+
+#define PARSE_STRING(p, del, res) 	\
+G_STMT_START {				\
+  gchar *t = p;				\
+  p = strstr (p, del);			\
+  if (p == NULL)			\
+    res = NULL;				\
+  else {				\
+    *p = '\0';				\
+    p++;				\
+    res = t;				\
+  }					\
+} G_STMT_END
+
+#define SKIP_SPACES(p) 			\
+  while (*p && g_ascii_isspace (*p))	\
+    p++;
+
 static gboolean
 gst_rtspsrc_parse_rtpmap (gchar * rtpmap, gint * payload, gchar ** name,
     gint * rate, gchar ** params)
@@ -307,27 +338,17 @@ gst_rtspsrc_parse_rtpmap (gchar * rtpmap, gint * payload, gchar ** name,
 
   t = p = rtpmap;
 
-  p = strstr (p, " ");
-  if (p == NULL)
+  PARSE_INT (p, " ", *payload);
+  if (*payload == -1)
     return FALSE;
-  *p = '\0';
-  p++;
 
-  *payload = atoi (t);
-
-  while (*p && g_ascii_isspace (*p))
-    p++;
-
+  SKIP_SPACES (p);
   if (*p == '\0')
     return FALSE;
 
-  t = p;
-  p = strstr (p, "/");
-  if (p == NULL)
+  PARSE_STRING (p, "/", *name);
+  if (*name == NULL)
     return FALSE;
-  *p = '\0';
-  p++;
-  *name = t;
 
   t = p;
   p = strstr (p, "/");
@@ -360,8 +381,7 @@ gst_rtspsrc_media_to_caps (SDPMedia * media)
   GstCaps *caps;
   gchar *payload;
   gchar *rtpmap;
-
-  //gchar *fmtp;
+  gchar *fmtp;
   gint pt;
   gchar *name = NULL;
   gint rate = -1;
@@ -379,20 +399,22 @@ gst_rtspsrc_media_to_caps (SDPMedia * media)
     gint payload = 0;
     gboolean ret;
 
-    rtpmap = sdp_media_get_attribute_val (media, "rtpmap");
-    if (rtpmap == NULL) {
-      g_warning ("rtpmap type not given");
+    if ((rtpmap = sdp_media_get_attribute_val (media, "rtpmap"))) {
+      if ((ret =
+              gst_rtspsrc_parse_rtpmap (rtpmap, &payload, &name, &rate,
+                  &params))) {
+        if (payload != pt) {
+          g_warning ("rtpmap of wrong payload type");
+          name = NULL;
+          rate = -1;
+          params = NULL;
+        }
+      } else {
+        g_warning ("error parsing rtpmap");
+      }
+    } else {
+      g_warning ("rtpmap type not given fot dynamic payload %d", pt);
       return NULL;
-    }
-    ret = gst_rtspsrc_parse_rtpmap (rtpmap, &payload, &name, &rate, &params);
-    if (!ret) {
-      g_warning ("error parsing rtpmap");
-    }
-    if (payload != pt) {
-      g_warning ("rtpmap of wrong payload type");
-      name = NULL;
-      rate = -1;
-      params = NULL;
     }
   }
 
@@ -408,6 +430,32 @@ gst_rtspsrc_media_to_caps (SDPMedia * media)
 
   if (params != NULL)
     gst_structure_set (s, "encoding-params", G_TYPE_STRING, params, NULL);
+
+  /* parse optional fmtp: field */
+  if ((fmtp = sdp_media_get_attribute_val (media, "fmtp"))) {
+    gchar *p;
+    gint payload = 0;
+
+    p = fmtp;
+
+    PARSE_INT (p, " ", payload);
+    if (payload != -1 && payload == pt) {
+      gchar **pairs;
+      gint i;
+
+      pairs = g_strsplit (p, ";", 0);
+      for (i = 0; pairs[i]; i++) {
+        gchar **keyval;
+
+        keyval = g_strsplit (pairs[i], "=", 0);
+        if (keyval[0] && keyval[1]) {
+          gst_structure_set (s, keyval[0], G_TYPE_STRING, keyval[1], NULL);
+        }
+        g_strfreev (keyval);
+      }
+      g_strfreev (pairs);
+    }
+  }
 
   return caps;
 }
@@ -450,6 +498,9 @@ gst_rtspsrc_stream_setup_rtp (GstRTSPStream * stream, SDPMedia * media,
 
   g_object_get (G_OBJECT (stream->rtpsrc), "port", rtpport, NULL);
   g_object_get (G_OBJECT (stream->rtcpsrc), "port", rtcpport, NULL);
+
+  gst_element_set_state (stream->rtpsrc, GST_STATE_READY);
+  gst_element_set_state (stream->rtcpsrc, GST_STATE_READY);
 
   return TRUE;
 

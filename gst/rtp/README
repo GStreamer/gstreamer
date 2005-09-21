@@ -35,7 +35,8 @@ The following fields can or must (*) be specified in the structure:
      extra encoding parameters (as in the SDP a=rtpmap: field). only required
      if different from the default of the encoding-name.
      
-   Optional parameters as key/value pairs, media type specific.
+   Optional parameters as key/value pairs, media type specific. The value type
+   should be of type G_TYPE_STRING.
 
  Example:
 
@@ -45,10 +46,10 @@ The following fields can or must (*) be specified in the structure:
       "clock-rate", G_TYPE_INT, 8000,           -]
       "encoding-name", G_TYPE_STRING, "AMR",    -] - required since payload >= 96
       "encoding-params", G_TYPE_STRING, "1",	-] - optional param for AMR
-      "octet-align", G_TYPE_BOOLEAN, TRUE,	-]
-      "crc", G_TYPE_BOOLEAN, FALSE,              ]
-      "robust-sorting", G_TYPE_BOOLEAN, FALSE,   ]  AMR specific params.
-      "interleaving", G_TYPE_BOOLEAN, FALSE,    -]
+      "octet-align", G_TYPE_STRING, "1",	-]
+      "crc", G_TYPE_STRING, "0",                 ]
+      "robust-sorting", G_TYPE_STRING, "0",      ]  AMR specific params.
+      "interleaving", G_TYPE_STRING, "0",       -]
   
  Mapping of caps to and from SDP fields:
 

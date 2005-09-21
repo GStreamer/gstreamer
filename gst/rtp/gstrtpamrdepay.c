@@ -63,10 +63,10 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "clock-rate = (int) 8000, "
         "encoding-name = (string) \"AMR\", "
         "encoding-params = (string) \"1\", "
-        "octet-align = (boolean) TRUE, "
-        "crc = (boolean) FALSE, "
-        "robust-sorting = (boolean) FALSE, " "interleaving = (boolean) FALSE"
-        /* following options are not needed for a decoder
+        "octet-align = (string) 1, "
+        "crc = (string) 0, "
+        "robust-sorting = (string) 0, " "interleaving = (string) 0"
+        /* following options are not needed for a decoder 
          *
          "mode-set = (int) [ 0, 7 ], "
          "mode-change-period = (int) [ 1, MAX ], "
@@ -180,35 +180,41 @@ gst_rtpamrdec_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstCaps *srccaps;
   GstRtpAMRDec *rtpamrdec;
   const gchar *params;
+  const gchar *str;
 
   rtpamrdec = GST_RTP_AMR_DEC (GST_OBJECT_PARENT (pad));
 
   structure = gst_caps_get_structure (caps, 0);
 
-  if (!gst_structure_get_boolean (structure, "octet-align",
-          &rtpamrdec->octet_align))
+  if (!(str = gst_structure_get_string (structure, "octet-align")))
     rtpamrdec->octet_align = FALSE;
+  else
+    rtpamrdec->octet_align = (atoi (str) == 1);
 
-  if (!gst_structure_get_boolean (structure, "crc", &rtpamrdec->crc))
+  if (!(str = gst_structure_get_string (structure, "crc")))
     rtpamrdec->crc = FALSE;
+  else
+    rtpamrdec->crc = (atoi (str) == 1);
 
   if (rtpamrdec->crc) {
     /* crc mode implies octet aligned mode */
     rtpamrdec->octet_align = TRUE;
   }
 
-  if (!gst_structure_get_boolean (structure, "robust-sorting",
-          &rtpamrdec->robust_sorting))
+  if (!(str = gst_structure_get_string (structure, "robust-sorting")))
     rtpamrdec->robust_sorting = FALSE;
+  else
+    rtpamrdec->robust_sorting = (atoi (str) == 1);
 
   if (rtpamrdec->robust_sorting) {
     /* robust_sorting mode implies octet aligned mode */
     rtpamrdec->octet_align = TRUE;
   }
 
-  if (!gst_structure_get_boolean (structure, "interleaving",
-          &rtpamrdec->interleaving))
+  if (!(str = gst_structure_get_string (structure, "interleaving")))
     rtpamrdec->interleaving = FALSE;
+  else
+    rtpamrdec->interleaving = (atoi (str) == 1);
 
   if (rtpamrdec->interleaving) {
     /* interleaving mode implies octet aligned mode */
