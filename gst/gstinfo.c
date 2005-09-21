@@ -1038,7 +1038,9 @@ gst_debug_get_all_categories (void)
 
 /*** FUNCTION POINTERS ********************************************************/
 
-GHashTable *__gst_function_pointers = NULL;
+static GHashTable *__gst_function_pointers;     /* NULL */
+static GStaticMutex __dbg_functions_mutex = G_STATIC_MUTEX_INIT;
+
 const gchar *
 _gst_debug_nameof_funcptr (void *ptr)
     G_GNUC_NO_INSTRUMENT;
@@ -1052,9 +1054,12 @@ _gst_debug_nameof_funcptr (void *ptr)
   Dl_info dlinfo;
 #endif
 
-  if (__gst_function_pointers
-      && (ptrname = g_hash_table_lookup (__gst_function_pointers, ptr))) {
-    return ptrname;
+  if (__gst_function_pointers) {
+    g_static_mutex_lock (&__dbg_functions_mutex);
+    ptrname = g_hash_table_lookup (__gst_function_pointers, ptr);
+    g_static_mutex_unlock (&__dbg_functions_mutex);
+    if (ptrname)
+      return ptrname;
   }
   /* we need to create an entry in the hash table for this one so we don't leak
    * the name */
@@ -1077,10 +1082,14 @@ _gst_debug_nameof_funcptr (void *ptr)
 void *
 _gst_debug_register_funcptr (void *ptr, gchar * ptrname)
 {
+  g_static_mutex_lock (&__dbg_functions_mutex);
+
   if (!__gst_function_pointers)
     __gst_function_pointers = g_hash_table_new (g_direct_hash, g_direct_equal);
   if (!g_hash_table_lookup (__gst_function_pointers, ptr))
     g_hash_table_insert (__gst_function_pointers, ptr, ptrname);
+
+  g_static_mutex_unlock (&__dbg_functions_mutex);
 
   return ptr;
 }
