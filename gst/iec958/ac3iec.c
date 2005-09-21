@@ -1,7 +1,8 @@
 /* GStreamer
  * Copyright (C) 2004 Martin Soto <martinsoto@users.sourceforge.net>
+                 2005 Michael Smith <msmith@fluendo.com>
  *
- * ac3iec.c: Pad AC3 frames into IEC958 frames for the SP/DIF interface.
+ * ac3iec.c: Pad AC3 frames into IEC958 frames for the S/PDIF interface.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -42,7 +43,7 @@ GST_DEBUG_CATEGORY_STATIC (ac3iec_debug);
 static GstElementDetails ac3iec_details = {
   "AC3 to IEC958 filter",
   "audio/x-private1-ac3",
-  "Pads AC3 frames into IEC958 frames suitable for a raw SP/DIF interface",
+  "Pads AC3 frames into IEC958 frames suitable for a raw S/PDIF interface",
   "Martin Soto <martinsoto@users.sourceforge.net>"
 };
 
@@ -70,19 +71,8 @@ static GstStaticPadTemplate ac3iec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-#if 0
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "law = (int) 0, "
-        "endianness = (int) " G_STRINGIFY (G_LITTLE_ENDIAN) ", "
-        "signed = (boolean) true, "
-        "width = (int) 16, "
-        "depth = (int) 16, " "rate = (int) 48000, " "channels = (int) 2")
-#endif
-#if 1
     GST_STATIC_CAPS ("audio/x-iec958")
-#endif
     );
-
 
 static void ac3iec_base_init (gpointer g_class);
 static void ac3iec_class_init (AC3IECClass * klass);
@@ -384,6 +374,7 @@ ac3iec_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      ac3p_clear (ac3iec->padder);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
@@ -412,5 +403,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "iec958",
-    "Conversion elements to the iec958 SP/DIF format",
-    plugin_init, VERSION, "LGPL", PACKAGE, "http://seamless.sourceforge.net");
+    "Convert raw AC3 into IEC958 (S/PDIF) frames",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN);

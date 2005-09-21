@@ -77,21 +77,27 @@ typedef struct {
 typedef struct {
   guint state;       /* State of the reading automaton. */
 
-  guchar *in_ptr;    /* Input pointer, marking the current
-                        postion in the input buffer. */
-  guint remaining;   /* The number of bytes remaining in the current
-                        reading buffer. */
+  guchar *buffer;    /* Input buffer */
+
+  gint buffer_end;   /* End offset, in bytes, of currently valid data in
+                        buffer */
+
+  gint buffer_size;  /* Allocated size of buffer */
+
+  gint buffer_cur;   /* Current position in buffer */
 
   guchar *out_ptr;   /* Output pointer, marking the current
                         position in the output frame. */
-  guint bytes_to_copy;
+  gint bytes_to_copy;
                      /* Number of bytes that still must be copied
                         to the output frame *during this reading
                         stage*. */
 
-  guint ac3_frame_size;
-                     /* The size in bytes of the pure AC3 portion
+  gint ac3_frame_size;
+                     /* The size in 16-bit units of the pure AC3 portion
                         of the current frame. */
+
+  gint skipped;      /* Number of bytes skipped while trying to find sync */
 
   ac3p_iec958_burst_frame frame;
                      /* The current output frame. */
@@ -101,6 +107,9 @@ typedef struct {
 
 extern void
 ac3p_init(ac3_padder *padder);
+
+extern void
+ac3p_clear(ac3_padder *padder);
 
 extern void
 ac3p_push_data(ac3_padder *padder, guchar *data, guint size);
@@ -123,16 +132,6 @@ ac3p_parse(ac3_padder *padder);
  *
  * Returns the length in bytes of the last read raw AC3 frame.
  */
-#define ac3p_frame_size(padder) ((padder)->ac3_frame_size)
-
-/**
- * ac3p_pending
- * @padder: The padder structure.
- *
- * Returns a boolean value telling if there are pending material in
- * the padder.
- */
-#define ac3p_pending(padder) ((padder)->remaining > 0)
-
+#define ac3p_frame_size(padder) ((padder)->ac3_frame_size * 2)
 
 #endif
