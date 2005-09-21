@@ -1,5 +1,22 @@
 2005-09-21  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/gstrtpamrdec.c: (gst_rtpamrdec_sink_setcaps),
+	(gst_rtpamrdec_chain):
+	Handle multiple AMr packets per payload. Handle CRC and
+	parse ILL/ILP.
+
+	* gst/rtp/gstrtpamrenc.c: (gst_rtpamrenc_setcaps):
+	Make caps params strings for easy SDP mapping.
+	
+	* gst/rtp/gstrtpdec.c: (gst_rtpdec_init), (gst_rtpdec_getcaps):
+	Handle capsnego better.
+
+	* gst/rtp/gstrtpmp4vdec.c: (gst_rtpmp4vdec_setcaps):
+	* gst/rtp/gstrtpmp4venc.c: (gst_rtpmp4venc_new_caps):
+	Generate and parse config string in the caps.
+
+2005-09-21  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/README:
 	Update README
 

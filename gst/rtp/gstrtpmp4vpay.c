@@ -45,11 +45,11 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
         "payload = (int) [ 96, 255 ], "
-        "clock-rate = (int) [1, MAX ], "
-        "encoding-name = (string) \"MP4V-ES\", " "profile-level-id=[1,MAX]"
-        /* All optional parameters
+        "clock-rate = (int) [1, MAX ], " "encoding-name = (string) \"MP4V-ES\""
+        /* two string params
          *
-         * "config="
+         "profile-level-id = (string) [1,MAX]"
+         "config = (string) [1,MAX]"
          */
     )
     );
@@ -148,9 +148,22 @@ gst_rtpmp4venc_finalize (GObject * object)
 static void
 gst_rtpmp4venc_new_caps (GstRtpMP4VEnc * rtpmp4venc)
 {
+  gchar *profile, *config;
+  GValue v = { 0 };
+
+  profile = g_strdup_printf ("%d", rtpmp4venc->profile);
+  g_value_init (&v, GST_TYPE_BUFFER);
+  gst_value_set_buffer (&v, rtpmp4venc->config);
+  config = gst_value_serialize (&v);
+
   gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4venc),
-      "profile-level-id", G_TYPE_INT, rtpmp4venc->profile,
-      "config", GST_TYPE_BUFFER, rtpmp4venc->config, NULL);
+      "profile-level-id", G_TYPE_STRING, profile,
+      "config", G_TYPE_STRING, config, NULL);
+
+  g_value_unset (&v);
+
+  g_free (profile);
+  g_free (config);
 }
 
 static gboolean

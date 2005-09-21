@@ -54,13 +54,13 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "clock-rate = (int) 8000, "
         "encoding-name = (string) \"AMR\", "
         "encoding-params = (string) \"1\", "
-        "octet-align = (boolean) TRUE, "
-        "crc = (boolean) FALSE, "
-        "robust-sorting = (boolean) FALSE, "
-        "interleaving = (boolean) FALSE, "
+        "octet-align = (string) \"1\", "
+        "crc = (string) \"0\", "
+        "robust-sorting = (string) \"0\", "
+        "interleaving = (string) \"0\", "
         "mode-set = (int) [ 0, 7 ], "
         "mode-change-period = (int) [ 1, MAX ], "
-        "mode-change-neighbor = (boolean) { TRUE, FALSE }, "
+        "mode-change-neighbor = (string) { \"0\", \"1\" }, "
         "maxptime = (int) [ 20, MAX ], " "ptime = (int) [ 20, MAX ]")
     );
 
@@ -144,11 +144,14 @@ gst_rtpamrenc_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
 
   gst_basertppayload_set_options (basepayload, "audio", TRUE, "AMR", 8000);
   gst_basertppayload_set_outcaps (basepayload,
-      "encoding-params", G_TYPE_STRING, "1",
-      "octet-align", G_TYPE_BOOLEAN, TRUE,
-      "crc", G_TYPE_BOOLEAN, FALSE,
-      "robust-sorting", G_TYPE_BOOLEAN, FALSE,
-      "interleaving", G_TYPE_BOOLEAN, FALSE, NULL);
+      "encoding-params", G_TYPE_STRING, "1", "octet-align", G_TYPE_STRING, "1",
+      /* don't set the defaults 
+       * 
+       * "crc", G_TYPE_STRING, "0",
+       * "robust-sorting", G_TYPE_STRING, "0",
+       * "interleaving", G_TYPE_STRING, "0", 
+       */
+      NULL);
 
   return TRUE;
 }

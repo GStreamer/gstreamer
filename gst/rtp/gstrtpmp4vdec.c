@@ -161,6 +161,7 @@ gst_rtpmp4vdec_setcaps (GstPad * pad, GstCaps * caps)
   GstStructure *structure;
   GstRtpMP4VDec *rtpmp4vdec;
   GstCaps *srccaps;
+  const gchar *str;
 
   rtpmp4vdec = GST_RTP_MP4V_DEC (GST_OBJECT_PARENT (pad));
 
@@ -174,6 +175,29 @@ gst_rtpmp4vdec_setcaps (GstPad * pad, GstCaps * caps)
       "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
   gst_pad_set_caps (rtpmp4vdec->srcpad, srccaps);
   gst_caps_unref (srccaps);
+
+  if ((str = gst_structure_get_string (structure, "config"))) {
+    GValue v = { 0 };
+
+    g_print ("config=%s\n", str);
+
+    g_value_init (&v, GST_TYPE_BUFFER);
+    if (gst_value_deserialize (&v, str)) {
+      GstBuffer *buffer;
+
+      buffer = gst_value_get_buffer (&v);
+      gst_buffer_ref (buffer);
+      g_value_unset (&v);
+
+      g_print ("buf=%p\n", buffer);
+
+      gst_buffer_set_caps (buffer, GST_PAD_CAPS (rtpmp4vdec->srcpad));
+
+      gst_pad_push (rtpmp4vdec->srcpad, buffer);
+    } else {
+      g_warning ("cannot convert config to buffer");
+    }
+  }
 
   return TRUE;
 }

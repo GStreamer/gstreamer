@@ -63,9 +63,9 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "clock-rate = (int) 8000, "
         "encoding-name = (string) \"AMR\", "
         "encoding-params = (string) \"1\", "
-        "octet-align = (string) 1, "
-        "crc = (string) 0, "
-        "robust-sorting = (string) 0, " "interleaving = (string) 0"
+        "octet-align = (string) \"1\", "
+        "crc = (string) { \"0\", \"1\" }, "
+        "robust-sorting = (string) \"0\", " "interleaving = (string) \"0\""
         /* following options are not needed for a decoder 
          *
          "mode-set = (int) [ 0, 7 ], "
@@ -238,8 +238,6 @@ gst_rtpamrdec_sink_setcaps (GstPad * pad, GstCaps * caps)
     return FALSE;
   if (rtpamrdec->octet_align != TRUE)
     return FALSE;
-  if (rtpamrdec->crc != FALSE)
-    return FALSE;
   if (rtpamrdec->robust_sorting != FALSE)
     return FALSE;
   if (rtpamrdec->interleaving != FALSE)
@@ -255,6 +253,12 @@ gst_rtpamrdec_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   return TRUE;
 }
+
+/* -1 is invalid */
+static gint frame_size[16] = {
+  12, 13, 15, 17, 19, 20, 26, 31,
+  5, -1, -1, -1, -1, -1, -1, 0
+};
 
 static GstFlowReturn
 gst_rtpamrdec_chain (GstPad * pad, GstBuffer * buf)
@@ -275,9 +279,12 @@ gst_rtpamrdec_chain (GstPad * pad, GstBuffer * buf)
    * no robust sorting, no interleaving data is to be parsed */
   {
     gint payload_len;
-    guint8 *payload;
+    guint8 *payload, *p, *dp;
     guint32 timestamp;
-    guint8 CMR, F, FT, Q;
+    guint8 CMR;
+    gint i, num_packets, num_nonempty_packets;
+    gint amr_len;
+    gint ILL, ILP;
 
     payload_len = gst_rtpbuffer_get_payload_len (buf);
 
@@ -287,46 +294,111 @@ gst_rtpamrdec_chain (GstPad * pad, GstBuffer * buf)
 
     payload = gst_rtpbuffer_get_payload (buf);
 
-    /* parse header 
-     *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 
-     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+..
-     * | CMR   |R|R|R|R|F|  FT   |Q|P|P|
-     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+..
+    /* parse CMR. The CMR is used by the sender to request
+     * a new encoding mode.
+     *
+     *  0 1 2 3 4 5 6 7 
+     * +-+-+-+-+-+-+-+-+
+     * | CMR   |R|R|R|R|
+     * +-+-+-+-+-+-+-+-+
      */
     CMR = (payload[0] & 0xf0) >> 4;
-    F = (payload[1] & 0x80) >> 7;
-    /* we only support 1 packet per RTP packet for now */
-    if (F != 0)
-      goto one_packet_only;
 
-    FT = (payload[1] & 0x78) >> 3;
-    Q = (payload[1] & 0x04) >> 2;
-
-    /* skip packet */
-    if (FT > 9 && FT < 15) {
-      ret = GST_FLOW_OK;
-      goto skip;
-    }
-
-    /* strip header now, leave FT in the data for the decoder */
+    /* strip CMR header now, pack FT and the data for the decoder */
     payload_len -= 1;
     payload += 1;
+
+    if (rtpamrdec->interleaving) {
+      ILL = (payload[0] & 0xf0) >> 4;
+      ILP = (payload[0] & 0x0f);
+
+      payload_len -= 1;
+      payload += 1;
+
+      if (ILP > ILL)
+        goto bad_packet;
+    }
+
+    /* 
+     *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 
+     * +-+-+-+-+-+-+-+-+..
+     * |F|  FT   |Q|P|P| more FT..
+     * +-+-+-+-+-+-+-+-+..
+     */
+    /* count number of packets by counting the FTs. Also
+     * count number of amr data bytes and number of non-empty
+     * packets (this is also the number of CRCs if present). */
+    amr_len = 0;
+    num_nonempty_packets = 0;
+    num_packets = 0;
+    for (i = 0; i < payload_len; i++) {
+      gint fr_size;
+      guint8 FT;
+
+      FT = (payload[i] & 0x78) >> 3;
+
+      fr_size = frame_size[FT];
+      if (fr_size == -1)
+        goto bad_packet;
+
+      if (fr_size > 0) {
+        amr_len += fr_size;
+        num_nonempty_packets++;
+      }
+      num_packets++;
+
+      if ((payload[i] & 0x80) == 0)
+        break;
+    }
+
+    /* this is impossible */
+    if (num_packets == payload_len)
+      goto bad_packet;
+
+    if (rtpamrdec->crc) {
+      /* data len + CRC len + header bytes should be smaller than payload_len */
+      if (num_packets + num_nonempty_packets + amr_len > payload_len)
+        goto bad_packet;
+    } else {
+      /* data len + header bytes should be smaller than payload_len */
+      if (num_packets + amr_len > payload_len)
+        goto bad_packet;
+    }
 
     timestamp = gst_rtpbuffer_get_timestamp (buf);
 
     outbuf = gst_buffer_new_and_alloc (payload_len);
-
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp * GST_SECOND / rtpamrdec->rate;
 
-    memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
+    /* point to destination */
+    p = GST_BUFFER_DATA (outbuf);
+    /* point to first data packet */
+    dp = payload + num_packets;
+    if (rtpamrdec->crc) {
+      /* skip CRC if present */
+      dp += num_nonempty_packets;
+    }
 
+    for (i = 0; i < num_packets; i++) {
+      gint fr_size;
+
+      fr_size = frame_size[(payload[i] & 0x78) >> 3];
+      if (fr_size > 0) {
+        /* copy FT */
+        *p++ = payload[i];
+        /* copy data packet, FIXME, calc CRC here. */
+        memcpy (p, dp, fr_size);
+
+        p += fr_size;
+        dp += fr_size;
+      }
+    }
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (rtpamrdec->srcpad));
 
     GST_DEBUG ("gst_rtpamrdec_chain: pushing buffer of size %d",
         GST_BUFFER_SIZE (outbuf));
     ret = gst_pad_push (rtpamrdec->srcpad, outbuf);
 
-  skip:
     gst_buffer_unref (buf);
   }
 
@@ -334,21 +406,17 @@ gst_rtpamrdec_chain (GstPad * pad, GstBuffer * buf)
 
 not_negotiated:
   {
-    GST_DEBUG ("not_negotiated");
+    GST_ELEMENT_ERROR (rtpamrdec, STREAM, NOT_IMPLEMENTED,
+        ("not negotiated"), (NULL));
     gst_buffer_unref (buf);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 bad_packet:
   {
-    GST_DEBUG ("Packet did not validate");
+    GST_ELEMENT_WARNING (rtpamrdec, STREAM, DECODE,
+        ("amr packet did not validate"), (NULL));
     gst_buffer_unref (buf);
-    return GST_FLOW_ERROR;
-  }
-one_packet_only:
-  {
-    GST_DEBUG ("One packet per RTP packet only");
-    gst_buffer_unref (buf);
-    return GST_FLOW_ERROR;
+    return GST_FLOW_OK;
   }
 }
 

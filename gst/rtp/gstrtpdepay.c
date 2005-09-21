@@ -74,6 +74,7 @@ GST_STATIC_PAD_TEMPLATE ("sinkrtcp",
 static void gst_rtpdec_class_init (gpointer g_class);
 static void gst_rtpdec_init (GstRTPDec * rtpdec);
 
+static GstCaps *gst_rtpdec_getcaps (GstPad * pad);
 static GstFlowReturn gst_rtpdec_chain_rtp (GstPad * pad, GstBuffer * buffer);
 static GstFlowReturn gst_rtpdec_chain_rtcp (GstPad * pad, GstBuffer * buffer);
 
@@ -153,6 +154,7 @@ gst_rtpdec_init (GstRTPDec * rtpdec)
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_rtpdec_sink_rtp_template), "sinkrtp");
   gst_element_add_pad (GST_ELEMENT (rtpdec), rtpdec->sink_rtp);
+  gst_pad_set_getcaps_function (rtpdec->sink_rtp, gst_rtpdec_getcaps);
   gst_pad_set_chain_function (rtpdec->sink_rtp, gst_rtpdec_chain_rtp);
 
   /* the input rtcp pad */
@@ -166,6 +168,7 @@ gst_rtpdec_init (GstRTPDec * rtpdec)
   rtpdec->src_rtp =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_rtpdec_src_rtp_template), "srcrtp");
+  gst_pad_set_getcaps_function (rtpdec->src_rtp, gst_rtpdec_getcaps);
   gst_element_add_pad (GST_ELEMENT (rtpdec), rtpdec->src_rtp);
 
   /* the output rtcp pad */
@@ -173,6 +176,19 @@ gst_rtpdec_init (GstRTPDec * rtpdec)
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_rtpdec_src_rtcp_template), "srcrtcp");
   gst_element_add_pad (GST_ELEMENT (rtpdec), rtpdec->src_rtcp);
+}
+
+static GstCaps *
+gst_rtpdec_getcaps (GstPad * pad)
+{
+  GstRTPDec *src;
+  GstPad *other;
+
+  src = GST_RTPDEC (GST_PAD_PARENT (pad));
+
+  other = pad == src->src_rtp ? src->sink_rtp : src->src_rtp;
+
+  return gst_pad_peer_get_caps (other);
 }
 
 static GstFlowReturn
