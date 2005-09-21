@@ -75,5 +75,29 @@ class PadProbeTest(unittest.TestCase):
         self.failUnless(isinstance(buffer, gst.Buffer))
         self._got_fakesrc_buffer = True
 
+    def testRemovingProbe(self):
+        pipeline = gst.Pipeline()
+        fakesrc = gst.element_factory_make('fakesrc')
+        fakesrc.set_property('num-buffers', 10)
+        fakesink = gst.element_factory_make('fakesink')
+
+        handle = None
+        self._num_times_called = 0
+        def buffer_probe(pad, buffer):
+            self._num_times_called += 1
+            pad.remove_buffer_probe(handle)
+            return True
+
+        pipeline.add_many(fakesrc, fakesink)
+        fakesrc.link(fakesink)
+        pad = fakesrc.get_pad('src')
+        handle = pad.add_buffer_probe(buffer_probe)
+        self._got_fakesrc_buffer = False
+        pipeline.set_state(gst.STATE_PLAYING)
+        m = pipeline.get_bus().poll(gst.MESSAGE_EOS, -1)
+        assert m
+        assert self._num_times_called == 1
+
+
 if __name__ == "__main__":
     unittest.main()

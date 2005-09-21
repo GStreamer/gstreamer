@@ -1,5 +1,9 @@
 2005-09-21  Andy Wingo  <wingo@pobox.com>
 
+	* testsuite/test_pad.py (PadProbeTest.testRemovingProbe): Add
+	probe removal test. Passes, but some other test sporadically fails
+	-- will check that later.
+
 	* gst/gst.defs: Update for probe removal api
 
 	* gst/gstpad.override (_wrap_gst_pad_remove_data_probe) 
