@@ -1,4 +1,10 @@
 
+2005-09-20  Flavio Oliveira  <flavio.oliveira@indt.org.br>
+
+        * ext/gsm/gstgsmenc.c:
+        Setting caps on the outgoing buffers.
+        Need to fix: rtpencoder does not know what it is handling and errors out
+
 2005-09-20  Edgard Lima  <edgard.lima@indt.org.br>
 
         * configure.ac:

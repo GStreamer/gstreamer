@@ -153,11 +153,6 @@ gst_gsmenc_chain (GstPad * pad, GstBuffer * buf)
 {
   GstGSMEnc *gsmenc;
 
-/*
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (_data != NULL);
-*/
   gsmenc = GST_GSMENC (GST_OBJECT_PARENT (pad));
 
   if (GST_IS_EVENT (buf)) {
@@ -182,6 +177,7 @@ gst_gsmenc_chain (GstPad * pad, GstBuffer * buf)
   } else if (GST_IS_BUFFER (buf)) {
     gsm_signal *data;
     guint size;
+    GstCaps *tempcaps = NULL;
 
     data = (gsm_signal *) GST_BUFFER_DATA (buf);
     size = GST_BUFFER_SIZE (buf) / sizeof (gsm_signal);
@@ -200,6 +196,10 @@ gst_gsmenc_chain (GstPad * pad, GstBuffer * buf)
       gsm_encode (gsmenc->state, gsmenc->buffer,
           (gsm_byte *) GST_BUFFER_DATA (outbuf));
 
+      tempcaps = gst_caps_new_simple ("audio/x-gsm",
+          "rate", G_TYPE_INT, 8000, "channels", G_TYPE_INT, 1, NULL);
+
+      gst_buffer_set_caps (outbuf, tempcaps);
       gst_pad_push (gsmenc->srcpad, outbuf);
 
       size -= (160 - gsmenc->bufsize);
@@ -217,6 +217,13 @@ gst_gsmenc_chain (GstPad * pad, GstBuffer * buf)
 
       gsm_encode (gsmenc->state, data, (gsm_byte *) GST_BUFFER_DATA (outbuf));
 
+      /* I was wondering that gst_buffer_set_caps (outbuf, GST_PAD_CAPS (gsmenc->srcpad)); 
+       * could work, but it doens't work */
+
+      tempcaps = gst_caps_new_simple ("audio/x-gsm",
+          "rate", G_TYPE_INT, 8000, "channels", G_TYPE_INT, 1, NULL);
+
+      gst_buffer_set_caps (outbuf, tempcaps);
       gst_pad_push (gsmenc->srcpad, outbuf);
 
       size -= 160;
