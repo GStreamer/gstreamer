@@ -1,3 +1,12 @@
+2005-09-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/base/gstbasetransform.c: (gst_base_transform_transform_size):
+	* gst/gstutils.c: (gst_util_set_value_from_string),
+	(gst_util_set_object_arg):
+	  Don't put functional code in g_return_if_fail() or
+	  g_return_val_if_fail() statements, otherwise things will 
+	  break when G_DISABLE_CHECKS is defined during compilation.
+
 2005-09-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/tmpl/.cvsignore:

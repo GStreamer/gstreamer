@@ -430,8 +430,11 @@ gst_base_transform_transform_size (GstBaseTransform * trans,
     ret = klass->transform_size (trans, direction, caps, size, othercaps,
         othersize);
   } else {
-    g_return_val_if_fail (gst_base_transform_get_unit_size (trans, caps,
-            &inunitsize), FALSE);
+    gboolean got_in_unit_size, got_out_unit_size;
+
+    got_in_unit_size = gst_base_transform_get_unit_size (trans, caps,
+        &inunitsize);
+    g_return_val_if_fail (got_in_unit_size == TRUE, FALSE);
     GST_DEBUG_OBJECT (trans, "input size %d, input unit size %d", size,
         inunitsize);
     g_return_val_if_fail (inunitsize != 0, FALSE);
@@ -441,8 +444,9 @@ gst_base_transform_transform_size (GstBaseTransform * trans,
     }
 
     units = size / inunitsize;
-    g_return_val_if_fail (gst_base_transform_get_unit_size (trans, othercaps,
-            &outunitsize), FALSE);
+    got_out_unit_size = gst_base_transform_get_unit_size (trans, othercaps,
+        &outunitsize);
+    g_return_val_if_fail (got_out_unit_size == TRUE, FALSE);
 
     *othersize = units * outunitsize;
     GST_DEBUG_OBJECT (trans, "transformed size to %d", *othersize);
