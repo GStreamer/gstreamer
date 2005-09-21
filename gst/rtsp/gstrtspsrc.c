@@ -449,14 +449,16 @@ gst_rtspsrc_media_to_caps (SDPMedia * media)
 
         keyval = g_strsplit (pairs[i], "=", 0);
         if (keyval[0]) {
-          gchar *val;
+          gchar *val, *key;
 
           if (keyval[1])
-            val = keyval[1];
+            val = g_strstrip (keyval[1]);
           else
             val = "1";
 
-          gst_structure_set (s, keyval[0], G_TYPE_STRING, val, NULL);
+          key = g_strstrip (keyval[0]);
+
+          gst_structure_set (s, key, G_TYPE_STRING, val, NULL);
         }
         g_strfreev (keyval);
       }

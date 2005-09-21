@@ -2,6 +2,13 @@
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_parse_rtpmap),
 	(gst_rtspsrc_media_to_caps), (gst_rtspsrc_stream_setup_rtp),
+	(gst_rtspsrc_send):
+	Strip spaces for key/value pairs.
+
+2005-09-21  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_parse_rtpmap),
+	(gst_rtspsrc_media_to_caps), (gst_rtspsrc_stream_setup_rtp),
 	(gst_rtspsrc_stream_configure_transport), (gst_rtspsrc_send),
 	(gst_rtspsrc_change_state):
 	More SDP parsing and caps setting.
