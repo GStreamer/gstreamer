@@ -82,8 +82,8 @@ gst_amrnbenc_base_init (GstAmrnbEncClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstElementDetails gst_amrnbenc_details = {
-    "AMR-NB decoder",
-    "Codec/Decoder/Audio",
+    "AMR-NB encoder",
+    "Codec/Encoder/Audio",
     "Adaptive Multi-Rate Narrow-Band audio encoder",
     "Ronald Bultje <rbultje@ronald.bitfreak.net>, "
         "Wim Taymans <wim@fluendo.com>"

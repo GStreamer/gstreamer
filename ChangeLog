@@ -1,3 +1,8 @@
+2005-09-21  Flavio Oliveira  <flavio.oliveira@indt.org.br>
+
+	* ext/amrnb/amrnbenc.c: (gst_amrnbenc_base_init):
+	Changed amrnbenc description, it is an encoder, not decoder.
+
 2005-09-21  Michael Smith <msmith@fluendo.com>
 
 	* gst/ac3parse/gstac3parse.c: (gst_ac3parse_class_init),
