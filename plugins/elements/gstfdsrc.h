@@ -52,11 +52,9 @@ struct _GstFdSrc {
   /* fd */
   gint fd;
 
+  gint control_sock[2];
+
   gulong curoffset; /* current offset in file */
-  gulong blocksize; /* bytes per read */
-  guint64 timeout;  /* read timeout, in nanoseconds */
-  
-  gulong seq;       /* buffer sequence number */
 };
 
 struct _GstFdSrcClass {

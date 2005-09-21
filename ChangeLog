@@ -1,3 +1,13 @@
+2005-09-21  Wim Taymans  <wim@fluendo.com>
+
+	* gst/elements/gstfdsrc.c: (gst_fdsrc_class_init),
+	(gst_fdsrc_init), (gst_fdsrc_start), (gst_fdsrc_stop),
+	(gst_fdsrc_unlock), (gst_fdsrc_set_property),
+	(gst_fdsrc_get_property), (gst_fdsrc_create):
+	* gst/elements/gstfdsrc.h:
+	Properly implement fdsrc. Removed signal and timeout,
+	better implemented somewhere else.
+
 2005-09-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/tmpl/.cvsignore:
