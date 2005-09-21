@@ -1,3 +1,11 @@
+2005-09-21  Andy Wingo  <wingo@pobox.com>
+
+	* gst/playback/gstplaybasebin.c: Attempt to fix up buffer probe
+	thingies.
+
+	* gst/playback/gstdecodebin.c (gst_decode_bin_dispose): Dispose
+	can be called multiple times, dogs.
+
 2005-09-21  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/rtp/gstbasertppayload.c:

@@ -348,7 +348,9 @@ gst_decode_bin_dispose (GObject * object)
 
   decode_bin = GST_DECODE_BIN (object);
 
-  gst_plugin_feature_list_free (decode_bin->factories);
+  if (decode_bin->factories)
+    gst_plugin_feature_list_free (decode_bin->factories);
+  decode_bin->factories = NULL;
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -567,8 +569,8 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
 
     /* make an element from the factory first */
     if ((element = gst_element_factory_create (factory, NULL)) == NULL) {
-      /* hmm, strange. Like with all things in live, let's move on.. */
-      GST_WARNING_OBJECT (decode_bin, "could not create  an element from %s",
+      /* hmm, strange. Like with all things in life, let's move on.. */
+      GST_WARNING_OBJECT (decode_bin, "could not create an element from %s",
           gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
       continue;
     }

@@ -483,12 +483,15 @@ queue_overrun (GstElement * element, GstPlayBaseBin * play_base_bin)
 static void
 queue_threshold_reached (GstElement * queue, GstPlayBaseBin * play_base_bin)
 {
+  gpointer data;
+
   GST_DEBUG ("Running");
 
   /* play */
   g_object_set (queue, "min-threshold-time", (guint64) 0, NULL);
 
-  if (g_object_get_data (G_OBJECT (queue), "probe")) {
+  data = g_object_get_data (G_OBJECT (queue), "probe");
+  if (data) {
     GstPad *sinkpad;
 
     sinkpad = gst_element_get_pad (queue, "sink");
@@ -499,7 +502,7 @@ queue_threshold_reached (GstElement * queue, GstPlayBaseBin * play_base_bin)
     fill_buffer (play_base_bin, 100);
 
     g_object_set_data (G_OBJECT (queue), "probe", NULL);
-    gst_pad_remove_buffer_probe (sinkpad, G_CALLBACK (check_queue), queue);
+    gst_pad_remove_buffer_probe (sinkpad, GPOINTER_TO_INT (data));
 
     gst_object_unref (sinkpad);
   }
@@ -519,10 +522,11 @@ queue_out_of_data (GstElement * queue, GstPlayBaseBin * play_base_bin)
   /* re-connect probe */
   if (!g_object_get_data (G_OBJECT (queue), "probe")) {
     GstPad *sinkpad;
+    guint id;
 
     sinkpad = gst_element_get_pad (queue, "sink");
-    gst_pad_add_buffer_probe (sinkpad, G_CALLBACK (check_queue), queue);
-    g_object_set_data (G_OBJECT (queue), "probe", (gpointer) 0x1);
+    id = gst_pad_add_buffer_probe (sinkpad, G_CALLBACK (check_queue), queue);
+    g_object_set_data (G_OBJECT (queue), "probe", GINT_TO_POINTER (id));
     GST_DEBUG_OBJECT (play_base_bin,
         "Re-attaching buffering probe to pad %s:%s",
         GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
@@ -587,6 +591,7 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
           (type == GST_STREAM_TYPE_AUDIO &&
               group->type[GST_STREAM_TYPE_VIDEO - 1].npads == 0))) {
     GstPad *sinkpad;
+    guint id;
 
     g_signal_connect (G_OBJECT (preroll), "running",
         G_CALLBACK (queue_threshold_reached), play_base_bin);
@@ -595,12 +600,12 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
 
     /* give updates on queue size */
     sinkpad = gst_element_get_pad (preroll, "sink");
-    gst_pad_add_buffer_probe (sinkpad, G_CALLBACK (check_queue), preroll);
+    id = gst_pad_add_buffer_probe (sinkpad, G_CALLBACK (check_queue), preroll);
     GST_DEBUG_OBJECT (play_base_bin, "Attaching probe to pad %s:%s (%p)",
         GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
     gst_object_unref (sinkpad);
     g_object_set_data (G_OBJECT (preroll), "pbb", play_base_bin);
-    g_object_set_data (G_OBJECT (preroll), "probe", (gpointer) 0x1);
+    g_object_set_data (G_OBJECT (preroll), "probe", GINT_TO_POINTER (id));
 
     g_signal_connect (G_OBJECT (preroll), "underrun",
         G_CALLBACK (queue_out_of_data), play_base_bin);
@@ -874,12 +879,14 @@ static gboolean
 mute_stream (GstPad * pad, GstBuffer * buf, gpointer data)
 {
   GstStreamInfo *info = GST_STREAM_INFO (data);
+  guint id;
 
   GST_DEBUG ("mute stream triggered");
 
   g_object_set (G_OBJECT (info), "mute", TRUE, NULL);
-  gst_pad_remove_buffer_probe (GST_PAD_CAST (info->object),
-      G_CALLBACK (mute_stream), data);
+  id = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (info), "mute_probe"));
+  g_object_set_data (G_OBJECT (info), "mute_probe", NULL);
+  gst_pad_remove_buffer_probe (GST_PAD_CAST (info->object), id);
 
   /* no data */
   return FALSE;
@@ -968,9 +975,11 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
 
   /* select 1st for now - we'll select a preferred one after preroll */
   if (type == GST_STREAM_TYPE_UNKNOWN || group->type[type - 1].npads > 0) {
-    gst_pad_add_data_probe (GST_PAD_CAST (pad),
+    guint id;
+
+    id = gst_pad_add_data_probe (GST_PAD_CAST (pad),
         G_CALLBACK (silence_stream), info);
-    g_object_set_data (G_OBJECT (pad), "eat_probe", (gpointer) 0x1);
+    g_object_set_data (G_OBJECT (pad), "eat_probe", GINT_TO_POINTER (id));
   }
 
   add_stream (group, info);
@@ -1067,17 +1076,22 @@ setup_substreams (GstPlayBaseBin * play_base_bin)
   group = get_active_group (play_base_bin);
   for (item = group->streaminfo; item; item = item->next) {
     GstStreamInfo *info = item->data;
+    gpointer data;
 
-    if (g_object_get_data (G_OBJECT (info->object), "eat_probe")) {
+    data = g_object_get_data (G_OBJECT (info->object), "eat_probe");
+    if (data) {
       gst_pad_remove_data_probe (GST_PAD_CAST (info->object),
-          G_CALLBACK (silence_stream), info);
+          GPOINTER_TO_INT (data));
       g_object_set_data (G_OBJECT (info->object), "eat_probe", NULL);
     }
 
     /* now remove unknown pads */
     if (info->type == GST_STREAM_TYPE_UNKNOWN) {
-      gst_pad_add_buffer_probe (GST_PAD_CAST (info->object),
+      guint id;
+
+      id = gst_pad_add_buffer_probe (GST_PAD_CAST (info->object),
           G_CALLBACK (mute_stream), info);
+      g_object_set_data (G_OBJECT (info), "mute_probe", GINT_TO_POINTER (id));
     }
   }
 
@@ -1497,8 +1511,11 @@ set_active_source (GstPlayBaseBin * play_base_bin,
         g_object_set (s->data, "mute", FALSE, NULL);
         have_active = TRUE;
       } else {
-        gst_pad_add_buffer_probe (GST_PAD_CAST (info->object),
+        guint id;
+
+        id = gst_pad_add_buffer_probe (GST_PAD_CAST (info->object),
             G_CALLBACK (mute_stream), info);
+        g_object_set_data (G_OBJECT (info), "mute_probe", GINT_TO_POINTER (id));
       }
       num++;
     }
