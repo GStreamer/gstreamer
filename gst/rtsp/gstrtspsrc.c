@@ -448,8 +448,15 @@ gst_rtspsrc_media_to_caps (SDPMedia * media)
         gchar **keyval;
 
         keyval = g_strsplit (pairs[i], "=", 0);
-        if (keyval[0] && keyval[1]) {
-          gst_structure_set (s, keyval[0], G_TYPE_STRING, keyval[1], NULL);
+        if (keyval[0]) {
+          gchar *val;
+
+          if (keyval[1])
+            val = keyval[1];
+          else
+            val = "1";
+
+          gst_structure_set (s, keyval[0], G_TYPE_STRING, val, NULL);
         }
         g_strfreev (keyval);
       }
@@ -498,9 +505,6 @@ gst_rtspsrc_stream_setup_rtp (GstRTSPStream * stream, SDPMedia * media,
 
   g_object_get (G_OBJECT (stream->rtpsrc), "port", rtpport, NULL);
   g_object_get (G_OBJECT (stream->rtcpsrc), "port", rtcpport, NULL);
-
-  gst_element_set_state (stream->rtpsrc, GST_STATE_READY);
-  gst_element_set_state (stream->rtcpsrc, GST_STATE_READY);
 
   return TRUE;
 
@@ -552,13 +556,6 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
   stream->rtpdecrtp = gst_element_get_pad (stream->rtpdec, "sinkrtp");
   stream->rtpdecrtcp = gst_element_get_pad (stream->rtpdec, "sinkrtcp");
 
-  /* FIXME, make sure it outputs the caps */
-  pad = gst_element_get_pad (stream->rtpdec, "srcrtp");
-  name = g_strdup_printf ("rtp_stream%d", stream->id);
-  gst_element_add_pad (GST_ELEMENT (src), gst_ghost_pad_new (name, pad));
-  g_free (name);
-  gst_object_unref (GST_OBJECT (pad));
-
   if (transport->lower_transport == RTSP_LOWER_TRANS_TCP) {
     /* configure for interleaved delivery, nothing needs to be done
      * here, the loop function will call the chain functions of the
@@ -574,6 +571,13 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     gst_pad_link (pad, stream->rtpdecrtcp);
     gst_object_unref (GST_OBJECT (pad));
   }
+
+  pad = gst_element_get_pad (stream->rtpdec, "srcrtp");
+  name = g_strdup_printf ("rtp_stream%d", stream->id);
+  gst_element_add_pad (GST_ELEMENT (src), gst_ghost_pad_new (name, pad));
+  g_free (name);
+  gst_object_unref (GST_OBJECT (pad));
+
   return TRUE;
 
 no_element:
@@ -1181,6 +1185,9 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
     goto done;
 
   switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      ret = GST_STATE_CHANGE_NO_PREROLL;
+      break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       gst_rtspsrc_pause (rtspsrc);
       break;

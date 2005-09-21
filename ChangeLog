@@ -1,5 +1,19 @@
 2005-09-21  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_parse_rtpmap),
+	(gst_rtspsrc_media_to_caps), (gst_rtspsrc_stream_setup_rtp),
+	(gst_rtspsrc_stream_configure_transport), (gst_rtspsrc_send),
+	(gst_rtspsrc_change_state):
+	More SDP parsing and caps setting.
+	Do NO_PREROLL differently.
+	add pads only after negotiated.
+
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_class_init),
+	(gst_udpsrc_getcaps):
+	Implement the getcaps function.
+
+2005-09-21  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/gstrtpamrdec.c: (gst_rtpamrdec_sink_setcaps),
 	(gst_rtpamrdec_chain):
 	Handle multiple AMr packets per payload. Handle CRC and

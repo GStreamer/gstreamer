@@ -93,6 +93,7 @@ static void gst_udpsrc_init (GstUDPSrc * udpsrc);
 
 static void gst_udpsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
 
+static GstCaps *gst_udpsrc_getcaps (GstBaseSrc * src);
 static GstFlowReturn gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf);
 static gboolean gst_udpsrc_start (GstBaseSrc * bsrc);
 static gboolean gst_udpsrc_stop (GstBaseSrc * bsrc);
@@ -189,6 +190,7 @@ gst_udpsrc_class_init (GstUDPSrc * klass)
   gstbasesrc_class->start = gst_udpsrc_start;
   gstbasesrc_class->stop = gst_udpsrc_stop;
   gstbasesrc_class->unlock = gst_udpsrc_unlock;
+  gstbasesrc_class->get_caps = gst_udpsrc_getcaps;
 
   gstpushsrc_class->create = gst_udpsrc_create;
 
@@ -203,6 +205,19 @@ gst_udpsrc_init (GstUDPSrc * udpsrc)
   udpsrc->sock = -1;
   udpsrc->multi_group = g_strdup (UDP_DEFAULT_MULTICAST_GROUP);
   udpsrc->uri = g_strdup (UDP_DEFAULT_URI);
+}
+
+static GstCaps *
+gst_udpsrc_getcaps (GstBaseSrc * src)
+{
+  GstUDPSrc *udpsrc;
+
+  udpsrc = GST_UDPSRC (src);
+
+  if (udpsrc->caps)
+    return gst_caps_ref (udpsrc->caps);
+  else
+    return gst_caps_new_any ();
 }
 
 static GstFlowReturn
