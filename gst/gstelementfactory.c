@@ -439,6 +439,7 @@ gst_element_factory_make (const gchar * factoryname, const gchar * name)
   }
   GST_LOG ("gstelementfactory: found factory %p", factory);
   element = gst_element_factory_create (factory, name);
+  gst_object_unref (factory);
   if (element == NULL) {
     GST_INFO_OBJECT (factory, "couldn't create instance!");
     return NULL;

@@ -1,3 +1,8 @@
+2005-09-21  David Schleef  <ds@schleef.org>
+
+	* gst/gstelementfactory.c: (gst_element_factory_make): Drink a
+	little beer, fix a little leak.
+
 2005-09-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-docs.sgml:
