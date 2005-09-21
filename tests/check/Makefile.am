@@ -45,6 +45,7 @@ check_PROGRAMS =				\
 	gst/gstsystemclock			\
 	gst/gststructure			\
 	gst/gsttag				\
+	gst/gstutils				\
 	gst/gstvalue				\
 	elements/fakesrc			\
 	elements/identity			\

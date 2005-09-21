@@ -1306,6 +1306,8 @@ gst_element_request_pad_by_name() or gst_element_request_compatible_pad().
 </para>
 
 @pad: 
+@handler_id: 
+<!-- # Unused Parameters # -->
 @handler: 
 @data: 
 
@@ -1316,6 +1318,8 @@ gst_element_request_pad_by_name() or gst_element_request_compatible_pad().
 </para>
 
 @pad: 
+@handler_id: 
+<!-- # Unused Parameters # -->
 @handler: 
 @data: 
 
@@ -1326,6 +1330,8 @@ gst_element_request_pad_by_name() or gst_element_request_compatible_pad().
 </para>
 
 @pad: 
+@handler_id: 
+<!-- # Unused Parameters # -->
 @handler: 
 @data: 
 

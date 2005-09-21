@@ -96,6 +96,9 @@ static xmlNodePtr gst_pad_save_thyself (GstObject * object, xmlNodePtr parent);
 static GstObjectClass *pad_parent_class = NULL;
 static guint gst_pad_signals[PAD_LAST_SIGNAL] = { 0 };
 
+static GQuark buffer_quark;
+static GQuark event_quark;
+
 GType
 gst_pad_get_type (void)
 {
@@ -110,6 +113,9 @@ gst_pad_get_type (void)
 
     _gst_pad_type = g_type_register_static (GST_TYPE_OBJECT, "GstPad",
         &pad_info, 0);
+
+    buffer_quark = g_quark_from_static_string ("buffer");
+    event_quark = g_quark_from_static_string ("event");
 
     GST_DEBUG_CATEGORY_INIT (debug_dataflow, "GST_DATAFLOW",
         GST_DEBUG_BOLD | GST_DEBUG_FG_GREEN, "dataflow inside pads");
@@ -200,7 +206,8 @@ gst_pad_class_init (GstPadClass * klass)
    */
   gst_pad_signals[PAD_HAVE_DATA] =
       g_signal_new ("have-data", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstPadClass, have_data),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+      G_STRUCT_OFFSET (GstPadClass, have_data),
       _gst_do_pass_data_accumulator,
       NULL, gst_marshal_BOOLEAN__POINTER, G_TYPE_BOOLEAN, 1,
       GST_TYPE_MINI_OBJECT);
@@ -2888,6 +2895,7 @@ gst_pad_emit_have_data_signal (GstPad * pad, GstMiniObject * obj)
   GValue ret = { 0 };
   GValue args[2] = { {0}, {0} };
   gboolean res;
+  GQuark detail;
 
   /* init */
   g_value_init (&ret, G_TYPE_BOOLEAN);
@@ -2897,8 +2905,13 @@ gst_pad_emit_have_data_signal (GstPad * pad, GstMiniObject * obj)
   g_value_init (&args[1], GST_TYPE_MINI_OBJECT);        // G_TYPE_POINTER);
   gst_value_set_mini_object (&args[1], obj);
 
+  if (GST_IS_EVENT (obj))
+    detail = event_quark;
+  else
+    detail = buffer_quark;
+
   /* actually emit */
-  g_signal_emitv (args, gst_pad_signals[PAD_HAVE_DATA], 0, &ret);
+  g_signal_emitv (args, gst_pad_signals[PAD_HAVE_DATA], detail, &ret);
   res = g_value_get_boolean (&ret);
 
   /* clean up */

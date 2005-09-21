@@ -366,21 +366,15 @@ void                    gst_atomic_int_set              (gint * atomic_int, gint
 gulong			gst_pad_add_data_probe		(GstPad * pad,
 							 GCallback handler,
 							 gpointer data);
-void			gst_pad_remove_data_probe	(GstPad * pad,
-							 GCallback handler,
-							 gpointer data);
+void			gst_pad_remove_data_probe	(GstPad * pad, guint handler_id);
 gulong			gst_pad_add_event_probe		(GstPad * pad,
 							 GCallback handler,
 							 gpointer data);
-void			gst_pad_remove_event_probe	(GstPad * pad,
-							 GCallback handler,
-							 gpointer data);
+void			gst_pad_remove_event_probe	(GstPad * pad, guint handler_id);
 gulong			gst_pad_add_buffer_probe	(GstPad * pad,
 							 GCallback handler,
 							 gpointer data);
-void			gst_pad_remove_buffer_probe	(GstPad * pad,
-							 GCallback handler,
-							 gpointer data);
+void			gst_pad_remove_buffer_probe	(GstPad * pad, guint handler_id);
 
 /* tag emission utility functions */
 void			gst_element_found_tags_for_pad	(GstElement * element,
