@@ -1,3 +1,9 @@
+2005-09-22  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstplaybin.c: (gst_play_bin_class_init),
+	(gst_play_bin_send_event):
+	Only seek on one sink, the first one that succeeds.
+
 2005-09-22  Michael Smith <msmith@fluendo.com>
 
 	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_clear),

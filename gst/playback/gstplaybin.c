@@ -101,6 +101,9 @@ static void gst_play_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
 static void gst_play_bin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * spec);
+
+static gboolean gst_play_bin_send_event (GstElement * element,
+    GstEvent * event);
 static GstStateChangeReturn gst_play_bin_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -190,6 +193,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_play_bin_change_state);
+  gstelement_klass->send_event = GST_DEBUG_FUNCPTR (gst_play_bin_send_event);
 
   playbasebin_klass->setup_output_pads = setup_sinks;
 }
@@ -847,6 +851,28 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
     gst_bin_remove (GST_BIN (play_bin), play_bin->fakesink);
     play_bin->fakesink = NULL;
   }
+}
+
+static gboolean
+gst_play_bin_send_event (GstElement * element, GstEvent * event)
+{
+  GstPlayBin *play_bin;
+  GList *sinks;
+  gboolean res = FALSE;
+
+  play_bin = GST_PLAY_BIN (element);
+
+  sinks = play_bin->sinks;
+  while (sinks) {
+    GstElement *sink = GST_ELEMENT_CAST (sinks->data);
+
+    if ((res = gst_element_send_event (sink, event)))
+      break;
+
+    sinks = g_list_next (sinks);
+  }
+
+  return res;
 }
 
 static GstStateChangeReturn
