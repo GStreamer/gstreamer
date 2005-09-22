@@ -31,12 +31,12 @@ GST_START_TEST (test_caps)
   caps = gst_caps_from_string ("audio/x-raw-int");
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
 
-  fail_unless (gst_buffer_get_caps (buffer) == NULL);
+  fail_unless (GST_BUFFER_CAPS (buffer) == NULL);
 
   gst_buffer_set_caps (buffer, caps);
   ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
 
-  fail_unless (gst_buffer_get_caps (buffer) == caps);
+  fail_unless (GST_BUFFER_CAPS (buffer) == caps);
   ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
 
   caps2 = gst_caps_from_string ("audio/x-raw-float");

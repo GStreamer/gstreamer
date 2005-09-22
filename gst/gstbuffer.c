@@ -274,21 +274,24 @@ gst_buffer_new_and_alloc (guint size)
  * is not media type attached to this buffer or when the media
  * type is the same as the previous received buffer.
  *
- * This function does not increment the refcount of the caps. The
- * caps pointer will therefore remain valid until the buffer is
- * unreffed.
- *
- * Returns: the #GstCaps, or NULL if there was an error or there
- * were no caps on this buffer.
+ * Returns: a reference to the #GstCaps, or NULL if there were no caps on this
+ * buffer.
  */
 /* FIXME can we make this threadsafe without a lock on the buffer?
  * We can use compare and swap and atomic reads. */
 GstCaps *
 gst_buffer_get_caps (GstBuffer * buffer)
 {
+  GstCaps *ret;
+
   g_return_val_if_fail (buffer != NULL, NULL);
 
-  return GST_BUFFER_CAPS (buffer);
+  ret = GST_BUFFER_CAPS (buffer);
+
+  if (ret)
+    gst_caps_ref (ret);
+
+  return ret;
 }
 
 /**

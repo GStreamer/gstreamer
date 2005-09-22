@@ -1,3 +1,11 @@
+2005-09-22  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstbuffer.c (gst_buffer_get_caps): Like all our _get
+	accessors returning refcounted objects, return a ref.
+
+	* check/gst/gstbuffer.c (GST_START_TEST): Use refcount-idempotent
+	accessor for caps. IDEMPOTENCE. Oh yes.
+
 2005-09-21  Francis Labonte  <francis_labonte at hotmail dot com>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
