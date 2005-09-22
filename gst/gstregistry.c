@@ -200,6 +200,12 @@ gst_registry_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+/**
+ * gst_registry_get_default:
+ *
+ * Retrieves the default registry. The caller does not own a reference on the
+ * registry, as it is alive as long as GStreamer is initialized.
+ */
 GstRegistry *
 gst_registry_get_default (void)
 {

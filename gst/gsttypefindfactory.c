@@ -224,8 +224,6 @@ gst_type_find_factory_call_function (GstTypeFindFactory * factory,
   g_return_if_fail (find->peek != NULL);
   g_return_if_fail (find->suggest != NULL);
 
-  /* gst_plugin_feature_load will steal our ref */
-  gst_object_ref (factory);
   new_factory =
       GST_TYPE_FIND_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
           (factory)));

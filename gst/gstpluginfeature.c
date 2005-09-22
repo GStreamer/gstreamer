@@ -76,10 +76,21 @@ gst_plugin_feature_finalize (GObject * object)
  * gst_plugin_feature_load:
  * @feature: the plugin feature to check
  *
- * Check if the plugin containing the feature is loaded,
- * if not, the plugin will be loaded.
+ * Loads the plugin containing @feature if it's not already loaded. @feature is
+ * unaffected; use the return value instead.
  *
- * Returns: The new feature
+ * Normally this function is used like this:
+ *  
+ * <programlisting>
+ * GstPluginFeature *loaded_feature;
+ * loaded_feature = gst_plugin_feature_load (feature);
+ *  
+ * // presumably, we're no longer interested in the potentially-unloaded feature
+ * gst_object_unref (feature);
+ * feature = loaded_feature;
+ * </programlisting>
+ *
+ * Returns: A reference to the loaded feature, or NULL on error.
  */
 GstPluginFeature *
 gst_plugin_feature_load (GstPluginFeature * feature)
@@ -112,7 +123,6 @@ gst_plugin_feature_load (GstPluginFeature * feature)
         ("Loaded plugin containing feature '%s', but feature disappeared.",
         feature->name);
   }
-  gst_object_unref (feature);
 
   return real_feature;
 }
@@ -199,6 +209,12 @@ gst_plugin_feature_get_rank (GstPluginFeature * feature)
   return feature->rank;
 }
 
+/**
+ * gst_plugin_feature_list_free:
+ * @list: list of #GstPluginFeature
+ *
+ * Unrefs each member of @list, then frees the list.
+ */
 void
 gst_plugin_feature_list_free (GList * list)
 {

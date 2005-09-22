@@ -327,7 +327,8 @@ GStaticMutex gst_plugin_loading_mutex = G_STATIC_MUTEX_INIT;
  *
  * Loads the given plugin and refs it.  Caller needs to unref after use.
  *
- * Returns: a new GstPlugin or NULL, if an error occurred.
+ * Returns: a reference to the existing loaded GstPlugin, a reference to the
+ * newly-loaded GstPlugin, or NULL if an error occurred.
  */
 GstPlugin *
 gst_plugin_load_file (const gchar * filename, GError ** error)
@@ -351,6 +352,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
       return plugin;
     } else {
       gst_object_unref (plugin);
+      plugin = NULL;
     }
   }
 
@@ -847,6 +849,24 @@ gst_plugin_load_by_name (const gchar * name)
   return NULL;
 }
 
+/**
+ * gst_plugin_load:
+ * @plugin: plugin to load
+ *
+ * Loads @plugin. Note that the *return value* is the loaded plugin; @plugin is
+ * untouched. The normal use pattern of this function goes like this:
+ *  
+ * <programlisting>
+ * GstPlugin *loaded_plugin;
+ * loaded_plugin = gst_plugin_load (plugin);
+ *  
+ * // presumably, we're no longer interested in the potentially-unloaded plugin
+ * gst_object_unref (plugin);
+ * plugin = loaded_plugin;
+ * </programlisting>
+ *
+ * Returns: A reference to a loaded plugin, or NULL on error.
+ */
 GstPlugin *
 gst_plugin_load (GstPlugin * plugin)
 {
@@ -857,19 +877,25 @@ gst_plugin_load (GstPlugin * plugin)
     return plugin;
   }
 
-  newplugin = gst_plugin_load_file (plugin->filename, &error);
-  if (newplugin == NULL) {
-    GST_WARNING ("load_plugin error: %s\n", error->message);
-    g_error_free (error);
-    gst_object_unref (plugin);
-    return NULL;
-  }
-
-  gst_object_unref (plugin);
+  if (!(newplugin = gst_plugin_load_file (plugin->filename, &error)))
+    goto load_error;
 
   return newplugin;
+
+load_error:
+  {
+    GST_WARNING ("load_plugin error: %s\n", error->message);
+    g_error_free (error);
+    return NULL;
+  }
 }
 
+/**
+ * gst_plugin_list_free:
+ * @list: list of #GstPlugin
+ *
+ * Unrefs each member of @list, then frees the list.
+ */
 void
 gst_plugin_list_free (GList * list)
 {

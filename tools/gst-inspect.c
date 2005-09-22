@@ -825,17 +825,17 @@ print_children_info (GstElement * element)
 static void
 print_element_list (gboolean print_all)
 {
-  GList *plugins;
+  GList *plugins, *orig_plugins;
 
-  plugins = gst_default_registry_get_plugin_list ();
+  orig_plugins = plugins = gst_default_registry_get_plugin_list ();
   while (plugins) {
-    GList *features;
+    GList *features, *orig_features;
     GstPlugin *plugin;
 
     plugin = (GstPlugin *) (plugins->data);
     plugins = g_list_next (plugins);
 
-    features =
+    orig_features = features =
         gst_registry_get_feature_list_by_plugin (gst_registry_get_default (),
         plugin->desc.name);
     while (features) {
@@ -893,7 +893,11 @@ print_element_list (gboolean print_all)
 
       features = g_list_next (features);
     }
+
+    gst_plugin_feature_list_free (orig_features);
   }
+
+  gst_plugin_list_free (plugins);
 }
 
 static void
@@ -1063,6 +1067,8 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
   print_element_properties_info (element);
   print_signal_info (element);
   print_children_info (element);
+
+  gst_object_unref (factory);
 
   if (_name != "")
     g_free (_name);

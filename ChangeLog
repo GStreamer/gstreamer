@@ -1,5 +1,29 @@
 2005-09-22  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstconfig.h.in: Psych out gtk-doc.
+
+	* docs/gst/gstreamer-sections.txt: Add GST_HAVE_GLIB_2_8.
+
+	* check/Makefile.am (check_PROGRAMS): Add gstplugin to the tests.
+
+	* tools/gst-inspect.c (print_element_list): Plug some
+	inconsequential leaks.
+
+	* gst/gstregistry.c (gst_registry_get_default): Doc.
+
+	* check/gst/gstplugin.c: 
+	* gst/gsttypefindfactory.c (gst_type_find_factory_call_function):
+	* gst/gstelementfactory.c (gst_element_factory_create): 
+	* gst/gstindexfactory.c (gst_index_factory_create): Update for
+	refcount changes.
+
+	* gst/gstpluginfeature.c (gst_plugin_feature_list_free): Doc.
+	(gst_plugin_feature_load): Doc, don't eat refs.
+
+	* gst/gstplugin.c (gst_plugin_load): Doc, don't eat refs.
+	(gst_plugin_list_free): Doc.
+	(gst_plugin_load_file): Doc updates.
+
 	* gst/gstbuffer.c (gst_buffer_get_caps): Like all our _get
 	accessors returning refcounted objects, return a ref.
 

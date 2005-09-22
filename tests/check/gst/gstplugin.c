@@ -69,17 +69,18 @@ GST_START_TEST (test_registry)
   for (g = registry->plugins; g; g = g->next) {
     GstPlugin *plugin = GST_PLUGIN (g->data);
 
-    fail_if (GST_OBJECT (plugin)->refcount != 1,
+    fail_if (GST_OBJECT_REFCOUNT_VALUE (plugin) != 1,
         "Plugin in registry should have refcount of 1");
-    GST_DEBUG ("refcount %d %s", GST_OBJECT (plugin)->refcount,
+    GST_DEBUG ("refcount %d %s", GST_OBJECT_REFCOUNT_VALUE (plugin),
         plugin->desc.name);
   }
   for (g = registry->features; g; g = g->next) {
     GstPluginFeature *feature = GST_PLUGIN_FEATURE (g->data);
 
-    fail_if (GST_OBJECT (feature)->refcount != 1,
+    fail_if (GST_OBJECT_REFCOUNT_VALUE (feature) != 1,
         "Feature in registry should have refcount of 1");
-    GST_DEBUG ("refcount %d %s", GST_OBJECT (feature)->refcount, feature->name);
+    GST_DEBUG ("refcount %d %s", GST_OBJECT_REFCOUNT_VALUE (feature),
+        feature->name);
   }
 }
 
@@ -92,21 +93,20 @@ GST_START_TEST (test_load_gstelements)
 
   unloaded_plugin = gst_default_registry_find_plugin ("gstelements");
   fail_if (unloaded_plugin == NULL, "Failed to find gstelements plugin");
-  fail_if (GST_OBJECT (unloaded_plugin)->refcount != 2,
+  fail_if (GST_OBJECT_REFCOUNT_VALUE (unloaded_plugin) != 2,
       "Refcount of unloaded plugin in registry initially should be 2");
-  GST_DEBUG ("refcount %d", GST_OBJECT (unloaded_plugin)->refcount);
+  GST_DEBUG ("refcount %d", GST_OBJECT_REFCOUNT_VALUE (unloaded_plugin));
 
-  gst_object_ref (unloaded_plugin);
   loaded_plugin = gst_plugin_load (unloaded_plugin);
   fail_if (loaded_plugin == NULL, "Failed to load plugin");
 
   if (loaded_plugin != unloaded_plugin) {
-    fail_if (GST_OBJECT (loaded_plugin)->refcount != 2,
+    fail_if (GST_OBJECT_REFCOUNT_VALUE (loaded_plugin) != 2,
         "Refcount of loaded plugin in registry should be 2");
-    GST_DEBUG ("refcount %d", GST_OBJECT (loaded_plugin)->refcount);
-    fail_if (GST_OBJECT (unloaded_plugin)->refcount != 1,
+    GST_DEBUG ("refcount %d", GST_OBJECT_REFCOUNT_VALUE (loaded_plugin));
+    fail_if (GST_OBJECT_REFCOUNT_VALUE (unloaded_plugin) != 1,
         "Refcount of replaced plugin should be 1");
-    GST_DEBUG ("refcount %d", GST_OBJECT (unloaded_plugin)->refcount);
+    GST_DEBUG ("refcount %d", GST_OBJECT_REFCOUNT_VALUE (unloaded_plugin));
   }
 
   gst_object_unref (unloaded_plugin);
@@ -121,17 +121,17 @@ GST_START_TEST (test_registry_get_plugin_list)
   GstPlugin *plugin;
 
   plugin = gst_default_registry_find_plugin ("gstelements");
-  fail_if (GST_OBJECT (plugin)->refcount != 2,
+  fail_if (GST_OBJECT_REFCOUNT_VALUE (plugin) != 2,
       "Refcount of plugin in registry should be 2");
 
   list = gst_registry_get_plugin_list (gst_registry_get_default ());
 
-  fail_if (plugin->object.refcount != 3,
+  fail_if (GST_OBJECT_REFCOUNT_VALUE (plugin) != 3,
       "Refcount of plugin in registry+list should be 3");
 
   gst_plugin_list_free (list);
 
-  fail_if (GST_OBJECT (plugin)->refcount != 2,
+  fail_if (GST_OBJECT_REFCOUNT_VALUE (plugin) != 2,
       "Refcount of plugin in after list free should be 2");
 
   gst_object_unref (plugin);
@@ -149,9 +149,9 @@ GST_START_TEST (test_find_feature)
   fail_if (strcmp (feature->plugin_name, "gstelements"),
       "Expected identity to be from gstelements plugin");
 
-  fail_if (GST_OBJECT (feature)->refcount != 2,
+  fail_if (GST_OBJECT_REFCOUNT_VALUE (feature) != 2,
       "Refcount of feature should be 2");
-  GST_DEBUG ("refcount %d", GST_OBJECT (feature)->refcount);
+  GST_DEBUG ("refcount %d", GST_OBJECT_REFCOUNT_VALUE (feature));
 
   gst_object_unref (feature);
 }
@@ -165,7 +165,7 @@ GST_START_TEST (test_find_element)
   element_factory = gst_element_factory_find ("identity");
   fail_if (element_factory == NULL, "Failed to find identity element factory");
 
-  fail_if (GST_OBJECT (element_factory)->refcount != 2,
+  fail_if (GST_OBJECT_REFCOUNT_VALUE (element_factory) != 2,
       "Refcount of plugin in registry+feature should be 2");
 
   gst_object_unref (element_factory);
@@ -200,7 +200,7 @@ GST_START_TEST (test_typefind)
 
   plugin = gst_default_registry_find_plugin ("typefindfunctions");
   fail_if (plugin == NULL, "Failed to find typefind functions");
-  fail_if (plugin->object.refcount != 2,
+  fail_if (GST_OBJECT_REFCOUNT_VALUE (plugin) != 2,
       "Refcount of plugin in registry should be 2");
   fail_if (gst_plugin_is_loaded (plugin), "Expected plugin to be unloaded");
 
@@ -210,7 +210,7 @@ GST_START_TEST (test_typefind)
   fail_if (feature->plugin != plugin,
       "Expected identity to be from gstelements plugin");
 
-  fail_if (plugin->object.refcount != 3,
+  fail_if (GST_OBJECT_REFCOUNT_VALUE (plugin) != 3,
       "Refcount of plugin in registry+feature should be 3");
 
   gst_type_find_factory_call_function (GST_TYPE_FIND_FACTORY (feature),
@@ -218,7 +218,7 @@ GST_START_TEST (test_typefind)
 
   gst_object_unref (feature->plugin);
 
-  fail_if (plugin->object.refcount != 1,
+  fail_if (GST_OBJECT_REFCOUNT_VALUE (plugin) != 1,
       "Refcount of plugin in after list free should be 1");
 
   gst_object_unref (plugin);

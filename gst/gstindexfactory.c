@@ -179,17 +179,20 @@ gst_index_factory_find (const gchar * name)
 GstIndex *
 gst_index_factory_create (GstIndexFactory * factory)
 {
+  GstIndexFactory *newfactory;
   GstIndex *new = NULL;
 
   g_return_val_if_fail (factory != NULL, NULL);
 
-  factory =
+  newfactory =
       GST_INDEX_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
           (factory)));
-  if (factory == NULL)
+  if (newfactory == NULL)
     return NULL;
 
-  new = GST_INDEX (g_object_new (factory->type, NULL));
+  new = GST_INDEX (g_object_new (newfactory->type, NULL));
+
+  gst_object_unref (newfactory);
 
   return new;
 }

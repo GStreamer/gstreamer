@@ -62,6 +62,7 @@
 #define GST_DISABLE_INDEX 1
 #define GST_DISABLE_PLUGIN 1
 #define GST_DISABLE_URI 1
+#define GST_HAVE_GLIB_2_8 1
 #endif
 
 /***** default padding of structures *****/

@@ -359,15 +359,9 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
       GST_ELEMENT_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
           (factory)));
   if (newfactory == NULL) {
-    /* it could be factory is invalid. with ref-eating functions nothing is
-       certain! */
-    GST_WARNING ("loading the plugin for factory %p returned NULL", factory);
+    GST_WARNING_OBJECT (factory, "loading plugin returned NULL!");
     return NULL;
-  } else if (newfactory != factory) {
-    /* gst_plugin_feature_load ate the ref we added to the factory */
-    factory = newfactory;
   } else {
-    /* strip off our extra ref */
     gst_object_unref (factory);
     factory = newfactory;
   }
