@@ -70,6 +70,7 @@ struct _GstBaseRTPPayload
   guint32  timestamp;
   gint16   seqnum_offset;
   guint16  seqnum;
+  gint64   max_ptime;
   guint    pt;
   guint    ssrc;
   guint    current_ssrc;
@@ -97,6 +98,9 @@ void		gst_basertppayload_set_options		(GstBaseRTPPayload *payload,
 
 gboolean	gst_basertppayload_set_outcaps 		(GstBaseRTPPayload *payload, 
 							 gchar *fieldname, ...);
+
+gboolean	gst_basertppayload_is_filled		(GstBaseRTPPayload *payload,
+							 guint size, GstClockTime duration);
 
 GstFlowReturn	gst_basertppayload_push 		(GstBaseRTPPayload *payload, 
 							 GstBuffer *buffer);

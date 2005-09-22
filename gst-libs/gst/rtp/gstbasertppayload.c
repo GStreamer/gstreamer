@@ -37,6 +37,7 @@ enum
 #define DEFAULT_SSRC			-1
 #define DEFAULT_TIMESTAMP_OFFSET	-1
 #define DEFAULT_SEQNUM_OFFSET		-1
+#define DEFAULT_MAX_PTIME		-1
 
 enum
 {
@@ -46,6 +47,7 @@ enum
   PROP_SSRC,
   PROP_TIMESTAMP_OFFSET,
   PROP_SEQNUM_OFFSET,
+  PROP_MAX_PTIME,
   PROP_TIMESTAMP,
   PROP_SEQNUM
 };
@@ -137,6 +139,10 @@ gst_basertppayload_class_init (GstBaseRTPPayloadClass * klass)
       g_param_spec_int ("seqnum-offset", "Sequence number Offset",
           "Offset to add to all outgoing seqnum (-1 = random)", -1, G_MAXINT,
           DEFAULT_SEQNUM_OFFSET, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MAX_PTIME,
+      g_param_spec_int64 ("max-ptime", "Max packet time",
+          "Maximum duration of the packet data in ns (-1 = unlimited up to MTU)",
+          -1, G_MAXINT64, DEFAULT_MAX_PTIME, G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TIMESTAMP,
       g_param_spec_uint ("timestamp", "Timestamp",
@@ -185,6 +191,7 @@ gst_basertppayload_init (GstBaseRTPPayload * basertppayload, gpointer g_class)
   basertppayload->seqnum_offset = DEFAULT_SEQNUM_OFFSET;
   basertppayload->ssrc = DEFAULT_SSRC;
   basertppayload->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
+  basertppayload->max_ptime = DEFAULT_MAX_PTIME;
 
   basertppayload->clock_rate = 0;
 }
@@ -299,6 +306,19 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload, gchar * fieldname,
   return TRUE;
 }
 
+gboolean
+gst_basertppayload_is_filled (GstBaseRTPPayload * payload,
+    guint size, GstClockTime duration)
+{
+  if (size > payload->mtu)
+    return TRUE;
+
+  if (payload->max_ptime != -1 && duration >= payload->max_ptime)
+    return TRUE;
+
+  return FALSE;
+}
+
 GstFlowReturn
 gst_basertppayload_push (GstBaseRTPPayload * payload, GstBuffer * buffer)
 {
@@ -367,6 +387,9 @@ gst_basertppayload_set_property (GObject * object, guint prop_id,
     case PROP_SEQNUM_OFFSET:
       basertppayload->seqnum_offset = g_value_get_int (value);
       break;
+    case PROP_MAX_PTIME:
+      basertppayload->max_ptime = g_value_get_int64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -396,6 +419,9 @@ gst_basertppayload_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SEQNUM_OFFSET:
       g_value_set_int (value, basertppayload->seqnum_offset);
+      break;
+    case PROP_MAX_PTIME:
+      g_value_set_int64 (value, basertppayload->max_ptime);
       break;
     case PROP_TIMESTAMP:
       g_value_set_uint (value, basertppayload->timestamp);

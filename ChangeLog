@@ -1,3 +1,16 @@
+2005-09-22  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/rtp/gstbasertppayload.c:
+	(gst_basertppayload_class_init), (gst_basertppayload_init),
+	(gst_basertppayload_setcaps), (gst_basertppayload_chain),
+	(gst_basertppayload_set_options), (gst_basertppayload_set_outcaps),
+	(gst_basertppayload_is_filled), (gst_basertppayload_push),
+	(gst_basertppayload_set_property),
+	(gst_basertppayload_get_property),
+	(gst_basertppayload_change_state):
+	* gst-libs/gst/rtp/gstbasertppayload.h:
+	Added max-ptime to control amount of data in the rtp packets.
+
 2005-09-21  Andy Wingo  <wingo@pobox.com>
 
 	* gst/playback/gstplaybasebin.c: Attempt to fix up buffer probe
