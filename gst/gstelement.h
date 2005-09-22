@@ -128,7 +128,7 @@ typedef enum /*< flags=0 >*/
 typedef enum
 {
   /* ignore state changes from parent */
-  GST_ELEMENT_LOCKED_STATE,
+  GST_ELEMENT_LOCKED_STATE 	= GST_OBJECT_FLAG_LAST,
   
   /* the element is a sink */
   GST_ELEMENT_IS_SINK,

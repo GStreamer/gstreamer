@@ -41,7 +41,8 @@ G_BEGIN_DECLS
  * @GST_QUERY_LATENCY: latency of stream
  * @GST_QUERY_JITTER: current jitter of stream
  * @GST_QUERY_RATE: current rate of the stream
- * @GST_QUERY_SEEKING: seeking start/stop positions
+ * @GST_QUERY_SEEKING: seeking capabilities
+ * @GST_QUERY_SEGMENT: segment start/stop positions
  * @GST_QUERY_CONVERT: convert values
  * @GST_QUERY_FORMATS: query supported formats for convert
  *
@@ -54,6 +55,7 @@ typedef enum {
   GST_QUERY_JITTER, 	/* not in draft-query, necessary? */
   GST_QUERY_RATE,
   GST_QUERY_SEEKING,
+  GST_QUERY_SEGMENT,
   GST_QUERY_CONVERT,
   GST_QUERY_FORMATS
 } GstQueryType;

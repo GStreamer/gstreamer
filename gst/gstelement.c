@@ -1120,21 +1120,16 @@ gst_element_send_event (GstElement * element, GstEvent * event)
     GstPad *pad = gst_element_get_random_pad (element, GST_PAD_SINK);
 
     if (pad) {
-      GstPad *peer = gst_pad_get_peer (pad);
+      GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
+          "pushing event to random pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
-      if (peer) {
-        GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
-            "sending event to random pad %s:%s", GST_DEBUG_PAD_NAME (pad));
-
-        result = gst_pad_send_event (peer, event);
-        gst_object_unref (peer);
-      }
+      result = gst_pad_push_event (pad, event);
       gst_object_unref (pad);
+    } else {
+      GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "can't send event on element %s",
+          GST_ELEMENT_NAME (element));
     }
   }
-  GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "can't send event on element %s",
-      GST_ELEMENT_NAME (element));
-
   return result;
 }
 

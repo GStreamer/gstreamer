@@ -473,8 +473,11 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
     goto had_parent;
 
   /* if we add a sink we become a sink */
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK))
+  if (GST_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK)) {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, bin, "element \"%s\" was sink",
+        elem_name);
     GST_FLAG_SET (bin, GST_ELEMENT_IS_SINK);
+  }
 
   bin->children = g_list_prepend (bin->children, element);
   bin->numchildren++;
