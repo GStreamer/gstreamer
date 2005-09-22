@@ -1,3 +1,13 @@
+2005-09-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	patch by: Wim Taymans
+
+	* gst-libs/ext/ffmpeg/libavcodec/h263.c:
+	(h263_encode_picture_header), (mpeg4_encode_vol_header):
+	* gst-libs/ext/ffmpeg/patches/h263.patch:
+	* gst-libs/ext/ffmpeg/patches/series:
+	  fix frame rate encoding for h263
+
 2005-09-20  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegcodecmap.h:
