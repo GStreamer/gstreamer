@@ -52,11 +52,12 @@ static GHashTable *_query_type_to_nick = NULL;
 static guint32 _n_values = 1;   /* we start from 1 because 0 reserved for NONE */
 
 static GstQueryTypeDefinition standard_definitions[] = {
-  {GST_QUERY_POSITION, "position", "Current Position"},
+  {GST_QUERY_POSITION, "position", "Current position and total duration"},
   {GST_QUERY_LATENCY, "latency", "Latency"},
   {GST_QUERY_JITTER, "jitter", "Jitter"},
   {GST_QUERY_RATE, "rate", "Configured rate 1000000 = 1"},
   {GST_QUERY_SEEKING, "seeking", "Seeking capabilities and parameters"},
+  {GST_QUERY_SEGMENT, "segment", "currently configured segment"},
   {GST_QUERY_CONVERT, "convert", "Converting between formats"},
   {GST_QUERY_FORMATS, "formats", "Supported formats for conversion"},
   {0, NULL, NULL}
@@ -368,9 +369,8 @@ gst_query_set_position (GstQuery * query, GstFormat format,
 
 /**
  * gst_query_parse_position:
- * @query: the query to fill in
- * @format: the requested #GstFormat or NULL for the default (used when creating
- * the query)
+ * @query: the query to parse
+ * @format: the storage for the #GstFormat of the position values
  * @cur: the storage for the current position
  * @end: the storage for the end position
  *
@@ -393,6 +393,17 @@ gst_query_parse_position (GstQuery * query, GstFormat * format,
     *end = g_value_get_int64 (gst_structure_get_value (structure, "end"));
 }
 
+/**
+ * gst_query_new_convert:
+ * @src_fmt: the source #GstFormat for the new query
+ * @value: the value to convert
+ * @dest_fmt: the target #GstFormat
+ *
+ * Constructs a new query convert object. Use gst_query_unref()
+ * when done with it.
+ *
+ * Returns: A new #GstQuery
+ */
 GstQuery *
 gst_query_new_convert (GstFormat src_fmt, gint64 value, GstFormat dest_fmt)
 {
@@ -411,6 +422,16 @@ gst_query_new_convert (GstFormat src_fmt, gint64 value, GstFormat dest_fmt)
   return query;
 }
 
+/**
+ * gst_query_set_convert:
+ * @query: the query to fill in
+ * @src_format: the source #GstFormat
+ * @src_value: the source value
+ * @dest_format: the destination #GstFormat
+ * @dest_value: the destination value
+ *
+ * Answer a convert query by setting the requested values.
+ */
 void
 gst_query_set_convert (GstQuery * query, GstFormat src_format, gint64 src_value,
     GstFormat dest_format, gint64 dest_value)
@@ -427,6 +448,16 @@ gst_query_set_convert (GstQuery * query, GstFormat src_format, gint64 src_value,
       "dest_value", G_TYPE_INT64, dest_value, NULL);
 }
 
+/**
+ * gst_query_parse_convert:
+ * @query: the query to parse
+ * @src_format: the storage for the #GstFormat of the source value
+ * @src_value: the storage for the source value
+ * @dest_format: the storage for the #GstFormat of the destination value
+ * @dest_value: the storage for the destination value
+ *
+ * Parse a convert query answer.
+ */
 void
 gst_query_parse_convert (GstQuery * query, GstFormat * src_format,
     gint64 * src_value, GstFormat * dest_format, gint64 * dest_value)
@@ -450,7 +481,99 @@ gst_query_parse_convert (GstQuery * query, GstFormat * src_format,
         g_value_get_int64 (gst_structure_get_value (structure, "dest_value"));
 }
 
+/**
+ * gst_query_new_segment:
+ * @format: the #GstFormat for the new query
+ *
+ * Constructs a new query segment object. Use gst_query_unref()
+ * when done with it.
+ *
+ * Returns: A new #GstQuery
+ */
+GstQuery *
+gst_query_new_segment (GstFormat format)
+{
+  GstQuery *query;
+  GstStructure *structure;
 
+  structure = gst_structure_new ("GstQuerySegment",
+      "format", GST_TYPE_FORMAT, format, NULL);
+  query = gst_query_new (GST_QUERY_SEGMENT, structure);
+
+  return query;
+}
+
+/**
+ * gst_query_set_segment:
+ * @query: the query to fill in
+ * @rate: the rate of the segment
+ * @format: the #GstFormat of the segment values
+ * @start_value: the start value
+ * @stop_value: the stop value
+ * @base: the base value
+ *
+ * Answer a segment query by setting the requested values.
+ */
+void
+gst_query_set_segment (GstQuery * query, gdouble rate, GstFormat format,
+    gint64 start_value, gint64 stop_value, gint64 base)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_SEGMENT);
+
+  structure = gst_query_get_structure (query);
+  gst_structure_set (structure,
+      "rate", G_TYPE_DOUBLE, rate,
+      "format", GST_TYPE_FORMAT, format,
+      "start_value", G_TYPE_INT64, start_value,
+      "stop_value", G_TYPE_INT64, stop_value, "base", G_TYPE_INT64, base, NULL);
+}
+
+/**
+ * gst_query_parse_segment:
+ * @query: the query to parse
+ * @rate: the storage for the rate of the segment
+ * @format: the storage for the #GstFormat of the values
+ * @start_value: the storage for the start value
+ * @stop_value: the storage for the stop value
+ * @base: the storage for the base value
+ *
+ * Parse a segment query answer.
+ */
+void
+gst_query_parse_segment (GstQuery * query, gdouble * rate, GstFormat * format,
+    gint64 * start_value, gint64 * stop_value, gint64 * base)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_SEGMENT);
+
+  structure = gst_query_get_structure (query);
+  if (rate)
+    *rate = g_value_get_double (gst_structure_get_value (structure, "rate"));
+  if (format)
+    *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
+  if (start_value)
+    *start_value =
+        g_value_get_int64 (gst_structure_get_value (structure, "start_value"));
+  if (stop_value)
+    *stop_value =
+        g_value_get_int64 (gst_structure_get_value (structure, "stop_value"));
+  if (base)
+    *base = g_value_get_int64 (gst_structure_get_value (structure, "base"));
+}
+
+/**
+ * gst_query_new_application:
+ * @type: the query type
+ * @structure: a structure for the query
+ *
+ * Constructs a new custom application query object. Use gst_query_unref()
+ * when done with it.
+ *
+ * Returns: A new #GstQuery
+ */
 GstQuery *
 gst_query_new_application (GstQueryType type, GstStructure * structure)
 {
@@ -460,6 +583,15 @@ gst_query_new_application (GstQueryType type, GstStructure * structure)
   return gst_query_new (type, structure);
 }
 
+/**
+ * gst_query_get_structure:
+ * @query: the query to parse
+ *
+ * Get the structure of a query.
+ *
+ * Returns: The #GstStructure of the query. The structure is still owned
+ * by the query and will therefore be freed when the query is unreffed.
+ */
 GstStructure *
 gst_query_get_structure (GstQuery * query)
 {

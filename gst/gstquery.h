@@ -152,6 +152,13 @@ void		gst_query_set_convert		(GstQuery *query, GstFormat src_format, gint64 src_
 						 GstFormat dest_format, gint64 dest_value);
 void		gst_query_parse_convert		(GstQuery *query, GstFormat *src_format, gint64 *src_value,
 						 GstFormat *dest_format, gint64 *dest_value);
+/* segment query */
+GstQuery*       gst_query_new_segment           (GstFormat format);
+void            gst_query_set_segment           (GstQuery *query, gdouble rate, GstFormat format,
+                                                 gint64 start_value, gint64 stop_value, gint64 base);
+void            gst_query_parse_segment         (GstQuery *query, gdouble *rate, GstFormat *format,
+                                                 gint64 *start_value, gint64 *stop_value, gint64 *base);
+
 
 /* application specific query */
 GstQuery *	gst_query_new_application 	(GstQueryType type,

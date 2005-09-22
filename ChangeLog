@@ -1,5 +1,13 @@
 2005-09-22  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstquery.c: (gst_query_new_segment), (gst_query_set_segment),
+	(gst_query_parse_segment):
+	* gst/gstquery.h:
+	More documentation.
+	Add segment query for future use.
+
+2005-09-22  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbin.c: (gst_bin_add_func):
 	Some more debug info.
 
