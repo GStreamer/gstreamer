@@ -1,5 +1,11 @@
 2005-09-22  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* check/gst/gstvalue.c: (test_date), (gst_value_suite):
+	  Add simplistic test suite for GST_TYPE_DATE serialisation and
+	  deserialisation.
+
+2005-09-22  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gststructure.c: (gst_structure_set_valist),
 	(gst_structure_get_date):

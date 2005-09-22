@@ -919,6 +919,61 @@ GST_START_TEST (test_value_subtract_double)
 
 GST_END_TEST;
 
+GST_START_TEST (test_date)
+{
+  GstStructure *s;
+  GDate *date, *date2;
+  gchar *str;
+
+  date = g_date_new_dmy (22, 9, 2005);
+
+  s = gst_structure_new ("media/x-type", "SOME_DATE_TAG", GST_TYPE_DATE,
+      date, NULL);
+
+  fail_unless (gst_structure_has_field_typed (s, "SOME_DATE_TAG",
+          GST_TYPE_DATE));
+  fail_unless (gst_structure_get_date (s, "SOME_DATE_TAG", &date2));
+  fail_unless (date2 != NULL);
+  fail_unless (g_date_valid (date2));
+  fail_unless (g_date_compare (date, date2) == 0);
+
+  g_date_free (date);
+  date = NULL;
+
+  str = gst_structure_to_string (s);
+  gst_structure_free (s);
+  s = NULL;
+
+  fail_unless (g_str_equal (str,
+          "media/x-type, SOME_DATE_TAG=(GstDate)2005-09-22"));
+
+  s = gst_structure_from_string (str, NULL);
+  g_free (str);
+  str = NULL;
+
+  fail_unless (s != NULL);
+  fail_unless (gst_structure_has_name (s, "media/x-type"));
+  fail_unless (gst_structure_has_field_typed (s, "SOME_DATE_TAG",
+          GST_TYPE_DATE));
+  fail_unless (gst_structure_get_date (s, "SOME_DATE_TAG", &date));
+  fail_unless (date != NULL);
+  fail_unless (g_date_valid (date));
+  fail_unless (g_date_get_day (date) == 22);
+  fail_unless (g_date_get_month (date) == 9);
+  fail_unless (g_date_get_year (date) == 2005);
+
+  str = gst_structure_to_string (s);
+  gst_structure_free (s);
+  s = NULL;
+
+  fail_unless (g_str_equal (str,
+          "media/x-type, SOME_DATE_TAG=(GstDate)2005-09-22"));
+  g_free (str);
+  str = NULL;
+}
+
+GST_END_TEST;
+
 Suite *
 gst_value_suite (void)
 {
@@ -938,6 +993,7 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_value_intersect);
   tcase_add_test (tc_chain, test_value_subtract_int);
   tcase_add_test (tc_chain, test_value_subtract_double);
+  tcase_add_test (tc_chain, test_date);
 
   return s;
 }
