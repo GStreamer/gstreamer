@@ -105,6 +105,10 @@ static void gst_base_sink_set_property (GObject * object, guint prop_id,
 static void gst_base_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static gboolean gst_base_sink_send_event (GstElement * element,
+    GstEvent * event);
+static gboolean gst_base_sink_query (GstElement * element, GstQuery * query);
+
 static GstCaps *gst_base_sink_get_caps (GstBaseSink * sink);
 static gboolean gst_base_sink_set_caps (GstBaseSink * sink, GstCaps * caps);
 static GstFlowReturn gst_base_sink_buffer_alloc (GstBaseSink * sink,
@@ -162,6 +166,8 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_base_sink_set_clock);
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_sink_change_state);
+  gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_base_sink_send_event);
+  gstelement_class->query = GST_DEBUG_FUNCPTR (gst_base_sink_query);
 
   klass->get_caps = GST_DEBUG_FUNCPTR (gst_base_sink_get_caps);
   klass->set_caps = GST_DEBUG_FUNCPTR (gst_base_sink_set_caps);
@@ -1289,6 +1295,79 @@ gst_base_sink_activate_pull (GstPad * pad, gboolean active)
   gst_object_unref (basesink);
 
   return result;
+}
+
+static gboolean
+gst_base_sink_send_event (GstElement * element, GstEvent * event)
+{
+  GstPad *pad;
+  GstBaseSink *basesink = GST_BASE_SINK (element);
+  gboolean result;
+
+  GST_LOCK (element);
+  pad = basesink->sinkpad;
+  gst_object_ref (pad);
+  GST_UNLOCK (element);
+
+  result = gst_pad_push_event (pad, event);
+
+  gst_object_unref (pad);
+
+  return result;
+}
+
+static gboolean
+gst_base_sink_peer_query (GstBaseSink * sink, GstQuery * query)
+{
+  GstPad *peer;
+  gboolean res = FALSE;
+
+  if ((peer = gst_pad_get_peer (sink->sinkpad))) {
+    res = gst_pad_query (peer, query);
+    gst_object_unref (peer);
+  }
+  return res;
+}
+
+static gboolean
+gst_base_sink_query (GstElement * element, GstQuery * query)
+{
+  gboolean res = FALSE;
+
+  GstBaseSink *basesink = GST_BASE_SINK (element);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+      res = gst_base_sink_peer_query (basesink, query);
+      break;
+    case GST_QUERY_LATENCY:
+      break;
+    case GST_QUERY_JITTER:
+      break;
+    case GST_QUERY_RATE:
+      //gst_query_set_rate (query, basesink->segment_rate);
+      res = TRUE;
+      break;
+    case GST_QUERY_SEEKING:
+      res = gst_base_sink_peer_query (basesink, query);
+      break;
+    case GST_QUERY_SEGMENT:
+    {
+      gst_query_set_segment (query, basesink->segment_rate,
+          GST_FORMAT_TIME, basesink->segment_start, basesink->segment_stop,
+          basesink->segment_base);
+      break;
+    }
+    case GST_QUERY_CONVERT:
+      res = gst_base_sink_peer_query (basesink, query);
+      break;
+    case GST_QUERY_FORMATS:
+      res = gst_base_sink_peer_query (basesink, query);
+      break;
+    default:
+      break;
+  }
+  return res;
 }
 
 static GstStateChangeReturn

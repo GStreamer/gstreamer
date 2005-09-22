@@ -1,5 +1,17 @@
 2005-09-22  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasesink.c: (gst_base_sink_class_init),
+	(gst_base_sink_send_event), (gst_base_sink_peer_query),
+	(gst_base_sink_query):
+	Prepare for more accurate position reporting and query
+	handling.
+
+	* gst/gstelement.c: (gst_element_send_event),
+	(gst_element_set_state):
+	Add some comment.
+
+2005-09-22  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstquery.c: (gst_query_new_segment), (gst_query_set_segment),
 	(gst_query_parse_segment):
 	* gst/gstquery.h:

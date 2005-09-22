@@ -1780,6 +1780,8 @@ gst_element_set_state (GstElement * element, GstState state)
   /* this is the state we should go to */
   GST_STATE_FINAL (element) = state;
   if (ret == GST_STATE_CHANGE_ASYNC) {
+    /* force next state keeping ASYNC, this is atomic as we hold
+     * the STATE_LOCK */
     gst_element_commit_state (element);
     gst_element_lost_state (element);
   }
