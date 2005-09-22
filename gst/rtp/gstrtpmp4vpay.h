@@ -50,6 +50,7 @@ struct _GstRtpMP4VEnc
   gint		rate;
   gint		profile;
   GstBuffer    *config;
+  gboolean      send_config;
 };
 
 struct _GstRtpMP4VEncClass

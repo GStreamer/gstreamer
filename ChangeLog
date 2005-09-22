@@ -1,3 +1,18 @@
+2005-09-22  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/TODO:
+	* gst/rtp/gstrtpmp4vdec.c: (gst_rtpmp4vdec_setcaps):
+	* gst/rtp/gstrtpmp4venc.c: (gst_rtpmp4venc_class_init),
+	(gst_rtpmp4venc_init), (gst_rtpmp4venc_parse_data),
+	(gst_rtpmp4venc_handle_buffer), (gst_rtpmp4venc_set_property),
+	(gst_rtpmp4venc_get_property):
+	* gst/rtp/gstrtpmp4venc.h:
+	Remove g_print.
+	Update TODO
+	Make payload encoder a bit smarter and more correct with
+	timestamps.
+	Added option in payloader to include config string in-band.
+
 2005-09-21  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_parse_rtpmap),

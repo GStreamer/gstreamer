@@ -54,11 +54,24 @@ GST_STATIC_PAD_TEMPLATE ("src",
     )
     );
 
+#define DEFAULT_SEND_CONFIG	FALSE
+
+enum
+{
+  ARG_0,
+  ARG_SEND_CONFIG
+};
+
 
 static void gst_rtpmp4venc_class_init (GstRtpMP4VEncClass * klass);
 static void gst_rtpmp4venc_base_init (GstRtpMP4VEncClass * klass);
 static void gst_rtpmp4venc_init (GstRtpMP4VEnc * rtpmp4venc);
 static void gst_rtpmp4venc_finalize (GObject * object);
+
+static void gst_rtpmp4venc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_rtpmp4venc_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static gboolean gst_rtpmp4venc_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
@@ -118,6 +131,14 @@ gst_rtpmp4venc_class_init (GstRtpMP4VEncClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_PAYLOAD);
 
+  gobject_class->set_property = gst_rtpmp4venc_set_property;
+  gobject_class->get_property = gst_rtpmp4venc_get_property;
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SEND_CONFIG,
+      g_param_spec_boolean ("send-config", "Send Config",
+          "Send the config parameters in RTP packets as well",
+          DEFAULT_SEND_CONFIG, G_PARAM_READWRITE));
+
   gobject_class->finalize = gst_rtpmp4venc_finalize;
 
   gstbasertppayload_class->set_caps = gst_rtpmp4venc_setcaps;
@@ -130,6 +151,7 @@ gst_rtpmp4venc_init (GstRtpMP4VEnc * rtpmp4venc)
   rtpmp4venc->adapter = gst_adapter_new ();
   rtpmp4venc->rate = 90000;
   rtpmp4venc->profile = 1;
+  rtpmp4venc->send_config = DEFAULT_SEND_CONFIG;
 }
 
 static void
@@ -241,10 +263,13 @@ gst_rtpmp4venc_flush (GstRtpMP4VEnc * rtpmp4venc)
 #define VOP_STARTCODE                  	0x000001B6
 
 static gboolean
-gst_rtpmp4venc_parse_data (GstRtpMP4VEnc * enc, guint8 * data, guint size)
+gst_rtpmp4venc_parse_data (GstRtpMP4VEnc * enc, guint8 * data, guint size,
+    gint * strip)
 {
   guint32 code;
   gboolean result;
+
+  *strip = 0;
 
   if (size < 5)
     return FALSE;
@@ -291,13 +316,17 @@ gst_rtpmp4venc_parse_data (GstRtpMP4VEnc * enc, guint8 * data, guint size)
         memcpy (GST_BUFFER_DATA (enc->config), data, i);
         gst_rtpmp4venc_new_caps (enc);
       }
+      *strip = i;
+      /* we need to flush out the current packet. */
       result = TRUE;
       break;
     }
     case VOP_STARTCODE:
+      /* VOP startcode, we don't have to flush the packet */
       result = FALSE;
       break;
     default:
+      /* all other startcodes need a flush */
       result = TRUE;
       break;
   }
@@ -316,6 +345,9 @@ gst_rtpmp4venc_handle_buffer (GstBaseRTPPayload * basepayload,
   guint packet_len;
   guint8 *data;
   gboolean flush;
+  gint strip;
+
+  ret = GST_FLOW_OK;
 
   rtpmp4venc = GST_RTP_MP4V_ENC (basepayload);
 
@@ -323,30 +355,81 @@ gst_rtpmp4venc_handle_buffer (GstBaseRTPPayload * basepayload,
   data = GST_BUFFER_DATA (buffer);
   avail = gst_adapter_available (rtpmp4venc->adapter);
 
-  /* parse incomming data and see if we need to start a new RTP
-   * packet */
-  flush = gst_rtpmp4venc_parse_data (rtpmp4venc, data, size);
-
-  /* get packet length of previous data and this new data */
-  packet_len = gst_rtpbuffer_calc_packet_len (avail + size, 0, 0);
-
-  /* if this buffer is going to overflow the packet, flush what we
-   * have. */
-  if (flush || packet_len > GST_BASE_RTP_PAYLOAD_MTU (rtpmp4venc)) {
-    ret = gst_rtpmp4venc_flush (rtpmp4venc);
-    avail = 0;
-  }
-
-  gst_adapter_push (rtpmp4venc->adapter, buffer);
-
-
+  /* empty buffer, take timestamp */
   if (avail == 0) {
     rtpmp4venc->first_ts = GST_BUFFER_TIMESTAMP (buffer);
   }
 
-  ret = GST_FLOW_OK;
+  /* parse incomming data and see if we need to start a new RTP
+   * packet */
+  flush = gst_rtpmp4venc_parse_data (rtpmp4venc, data, size, &strip);
+  if (strip) {
+    /* strip off config if requested */
+    if (!rtpmp4venc->send_config) {
+      GstBuffer *subbuf;
+
+      /* strip off header */
+      subbuf = gst_buffer_create_sub (buffer, strip, size - strip);
+      gst_buffer_unref (buffer);
+      buffer = subbuf;
+
+      size = GST_BUFFER_SIZE (buffer);
+      data = GST_BUFFER_DATA (buffer);
+    }
+  }
+
+  /* if we need to flush, do so now */
+  if (flush) {
+    ret = gst_rtpmp4venc_flush (rtpmp4venc);
+  }
+
+  /* push new data */
+  gst_adapter_push (rtpmp4venc->adapter, buffer);
+
+  avail = gst_adapter_available (rtpmp4venc->adapter);
+
+  /* get packet length of data and see if we exceeded MTU. */
+  packet_len = gst_rtpbuffer_calc_packet_len (avail, 0, 0);
+
+  if (packet_len > GST_BASE_RTP_PAYLOAD_MTU (rtpmp4venc)) {
+    ret = gst_rtpmp4venc_flush (rtpmp4venc);
+  }
 
   return ret;
+}
+
+static void
+gst_rtpmp4venc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstRtpMP4VEnc *rtpmp4venc;
+
+  rtpmp4venc = GST_RTP_MP4V_ENC (object);
+
+  switch (prop_id) {
+    case ARG_SEND_CONFIG:
+      rtpmp4venc->send_config = g_value_get_boolean (value);
+      break;
+    default:
+      break;
+  }
+}
+
+static void
+gst_rtpmp4venc_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstRtpMP4VEnc *rtpmp4venc;
+
+  rtpmp4venc = GST_RTP_MP4V_ENC (object);
+
+  switch (prop_id) {
+    case ARG_SEND_CONFIG:
+      g_value_set_boolean (value, rtpmp4venc->send_config);
+      break;
+    default:
+      break;
+  }
 }
 
 gboolean
