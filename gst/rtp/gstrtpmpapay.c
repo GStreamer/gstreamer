@@ -225,11 +225,18 @@ gst_rtpmpaenc_handle_buffer (GstBaseRTPPayload * basepayload,
   GstFlowReturn ret;
   guint size, avail;
   guint packet_len;
+  GstClockTime duration;
 
   rtpmpaenc = GST_RTP_MPA_ENC (basepayload);
 
   size = GST_BUFFER_SIZE (buffer);
+  duration = GST_BUFFER_DURATION (buffer);
+
   avail = gst_adapter_available (rtpmpaenc->adapter);
+  if (avail == 0) {
+    rtpmpaenc->first_ts = GST_BUFFER_TIMESTAMP (buffer);
+    rtpmpaenc->duration = 0;
+  }
 
   /* get packet length of previous data and this new data, 
    * payload length includes a 4 byte header */
@@ -237,18 +244,17 @@ gst_rtpmpaenc_handle_buffer (GstBaseRTPPayload * basepayload,
 
   /* if this buffer is going to overflow the packet, flush what we
    * have. */
-  if (packet_len > GST_BASE_RTP_PAYLOAD_MTU (rtpmpaenc)) {
+  if (gst_basertppayload_is_filled (basepayload,
+          packet_len, rtpmpaenc->duration + duration)) {
     ret = gst_rtpmpaenc_flush (rtpmpaenc);
-    avail = 0;
+    rtpmpaenc->first_ts = GST_BUFFER_TIMESTAMP (buffer);
+    rtpmpaenc->duration = 0;
   } else {
     ret = GST_FLOW_OK;
   }
 
   gst_adapter_push (rtpmpaenc->adapter, buffer);
-
-  if (avail == 0) {
-    rtpmpaenc->first_ts = GST_BUFFER_TIMESTAMP (buffer);
-  }
+  rtpmpaenc->duration += duration;
 
   return ret;
 }

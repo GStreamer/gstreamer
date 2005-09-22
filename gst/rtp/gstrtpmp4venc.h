@@ -46,6 +46,7 @@ struct _GstRtpMP4VEnc
 
   GstAdapter   *adapter;
   GstClockTime  first_ts;
+  GstClockTime  duration;
 
   gint		rate;
   gint		profile;

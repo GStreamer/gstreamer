@@ -46,6 +46,7 @@ struct _GstRtpMPAEnc
 
   GstAdapter *adapter;
   GstClockTime first_ts;
+  GstClockTime duration;
 };
 
 struct _GstRtpMPAEncClass

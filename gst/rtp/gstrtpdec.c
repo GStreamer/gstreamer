@@ -183,12 +183,18 @@ gst_rtpdec_getcaps (GstPad * pad)
 {
   GstRTPDec *src;
   GstPad *other;
+  GstCaps *caps;
 
   src = GST_RTPDEC (GST_PAD_PARENT (pad));
 
   other = pad == src->src_rtp ? src->sink_rtp : src->src_rtp;
 
-  return gst_pad_peer_get_caps (other);
+  caps = gst_pad_peer_get_caps (other);
+
+  if (caps == NULL)
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+
+  return caps;
 }
 
 static GstFlowReturn

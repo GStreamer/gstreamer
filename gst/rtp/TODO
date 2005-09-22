@@ -1,26 +1,14 @@
-*GstRtpRecv:
-  *gstrtprecv.c
-
-*For Sequencing:
-  * timestamp
-  * algorithm
-
-*For Video:
-  * payload_t 
-
-* sequence number should not start at 0, but randomly
-
 * MPEG4 header
   - ffmpeg mpeg4 decoder gives error message when sending only the config
     string, parsing is OK, error just means no picture was found in the
     stream.
-
 
 * compare H263 encoders and H263+
 
 * better RTP packetizing for h263
 
 * bitrate tuning in ffmpeg
+  - fixed the qmax values so we can quantize more.
 
 * make ffmpeg negotiate only with accepted framerates
 
