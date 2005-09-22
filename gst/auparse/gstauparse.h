@@ -25,10 +25,7 @@
 #include <gst/gst.h>
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_AUPARSE \
   (gst_auparse_get_type())
@@ -64,10 +61,6 @@ struct _GstAuParseClass {
 
 GType gst_auparse_get_type (void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_AUPARSE_H__ */

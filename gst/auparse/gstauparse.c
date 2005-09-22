@@ -67,13 +67,6 @@ static GstStaticPadTemplate gst_auparse_src_template =
         "audio/x-adpcm, " "layout = (string) { g721, g722, g723_3, g723_5 }")
     );
 
-/* AuParse signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
 enum
 {
   ARG_0
@@ -84,12 +77,13 @@ static void gst_auparse_base_init (gpointer g_class);
 static void gst_auparse_class_init (GstAuParseClass * klass);
 static void gst_auparse_init (GstAuParse * auparse);
 
-static void gst_auparse_chain (GstPad * pad, GstData * _data);
+static GstFlowReturn gst_auparse_chain (GstPad * pad, GstBuffer * buf);
 
 static GstStateChangeReturn gst_auparse_change_state (GstElement * element,
     GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
+
 
 /*static guint gst_auparse_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -157,7 +151,7 @@ gst_auparse_init (GstAuParse * auparse)
   gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_auparse_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (auparse), auparse->srcpad);
-  gst_pad_use_explicit_caps (auparse->srcpad);
+  gst_pad_use_fixed_caps (auparse->srcpad);
 #endif
 
   auparse->offset = 0;
@@ -167,10 +161,10 @@ gst_auparse_init (GstAuParse * auparse)
   auparse->channels = 0;
 }
 
-static void
-gst_auparse_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_auparse_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
+  GstFlowReturn ret;
   GstAuParse *auparse;
   gchar *data;
   glong size;
@@ -180,9 +174,9 @@ gst_auparse_chain (GstPad * pad, GstData * _data)
 
   layout[0] = 0;
 
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
+  g_return_val_if_fail (pad != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
 
   auparse = GST_AUPARSE (gst_pad_get_parent (pad));
 
@@ -232,12 +226,11 @@ gst_auparse_chain (GstPad * pad, GstData * _data)
 
     } else {
       GST_ELEMENT_ERROR (auparse, STREAM, WRONG_TYPE, (NULL), (NULL));
-      gst_buffer_unref (buf);
-      return;
+      return GST_FLOW_ERROR;
     }
 
     GST_DEBUG
-        ("offset %ld, size %ld, encoding %ld, frequency %ld, channels %ld",
+        ("offset %ld, size %ld, encoding %ld, frequency %ld, channels %ld\n",
         auparse->offset, auparse->size, auparse->encoding, auparse->frequency,
         auparse->channels);
 
@@ -318,14 +311,17 @@ Samples :
 
       default:
         GST_ELEMENT_ERROR (auparse, STREAM, FORMAT, (NULL), (NULL));
-        gst_buffer_unref (buf);
-        return;
+        return GST_FLOW_ERROR;
     }
 
     auparse->srcpad =
         gst_pad_new_from_template (gst_static_pad_template_get
         (&gst_auparse_src_template), "src");
-    gst_pad_use_explicit_caps (auparse->srcpad);
+
+    g_return_val_if_fail (auparse->srcpad != NULL, GST_FLOW_ERROR);
+
+
+    gst_pad_use_fixed_caps (auparse->srcpad);
 
     if (law) {
       tempcaps =
@@ -352,47 +348,45 @@ Samples :
           NULL);
     }
 
-    if (!gst_pad_set_explicit_caps (auparse->srcpad, tempcaps)) {
-      GST_ELEMENT_ERROR (auparse, CORE, NEGOTIATION, (NULL), (NULL));
-      gst_buffer_unref (buf);
-      gst_object_unref (GST_OBJECT (auparse->srcpad));
-      auparse->srcpad = NULL;
-      return;
-    }
-
+    gst_pad_use_fixed_caps (auparse->srcpad);
+    gst_pad_set_active (auparse->srcpad, TRUE);
+    gst_pad_set_caps (auparse->srcpad, tempcaps);
     gst_element_add_pad (GST_ELEMENT (auparse), auparse->srcpad);
 
-    newbuf = gst_buffer_new ();
-    GST_BUFFER_DATA (newbuf) = (gpointer) malloc (size - (auparse->offset));
+    if ((ret = gst_pad_alloc_buffer (auparse->srcpad, GST_BUFFER_OFFSET_NONE,
+                size - (auparse->offset),
+                GST_PAD_CAPS (auparse->srcpad), &newbuf)) != GST_FLOW_OK) {
+      printf ("failed gst_pad_alloc_buffer\n");
+      return ret;
+    }
+    ret = GST_FLOW_OK;
+
+
     memcpy (GST_BUFFER_DATA (newbuf), data + (auparse->offset),
         size - (auparse->offset));
     GST_BUFFER_SIZE (newbuf) = size - (auparse->offset);
 
-    gst_buffer_unref (buf);
+    GstEvent *event;
 
-    gst_pad_push (auparse->srcpad, GST_DATA (newbuf));
-    return;
+    event = NULL;
+
+    event = gst_event_new_newsegment (1.0, GST_FORMAT_DEFAULT,
+        0, GST_CLOCK_TIME_NONE, 0);
+
+
+    gst_pad_push_event (auparse->srcpad, event);
+
+    return gst_pad_push (auparse->srcpad, newbuf);
+
   }
 
-  gst_pad_push (auparse->srcpad, GST_DATA (buf));
+  return gst_pad_push (auparse->srcpad, buf);
+
 }
 
 static GstStateChangeReturn
 gst_auparse_change_state (GstElement * element, GstStateChange transition)
 {
-  GstAuParse *auparse = GST_AUPARSE (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (auparse->srcpad) {
-        gst_element_remove_pad (element, auparse->srcpad);
-        auparse->srcpad = NULL;
-      }
-      break;
-    default:
-      break;
-  }
-
   if (parent_class->change_state)
     return parent_class->change_state (element, transition);
 

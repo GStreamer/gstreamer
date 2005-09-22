@@ -1,3 +1,12 @@
+
+2005-09-22 Edgard Lima (edgard.lima@indt.org.br)
+
+	* configure.ac:
+	* PORTED_09:
+	* gst/auparse/gstauparse.c:
+	* gst/auparse/gstauparse.h:
+	Auparse ported to 0.9.
+
 2005-09-22  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/TODO:
