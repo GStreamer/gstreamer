@@ -386,9 +386,9 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
   ffmpegenc->context->me_method = ffmpegenc->me_method;
 
   /* general properties */
-  ffmpegenc->context->qmin = 3;
-  ffmpegenc->context->qmax = 15;
-  ffmpegenc->context->max_qdiff = 3;
+  ffmpegenc->context->qmin = 1;
+  ffmpegenc->context->qmax = 31;
+  ffmpegenc->context->max_qdiff = 15;
 
   /* fetch pix_fmt and so on */
   gst_ffmpeg_caps_with_codectype (oclass->in_plugin->type,

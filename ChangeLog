@@ -1,3 +1,9 @@
+2005-09-22  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_setcaps):
+	Do not limit quantizer values so we can get realy low
+	bitrates.
+
 2005-09-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	patch by: Wim Taymans
