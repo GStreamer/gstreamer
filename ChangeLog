@@ -1,3 +1,8 @@
+2005-09-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/gst/gstvalue.c: (GST_START_TEST):
+	  fix leaks in the test itself
+
 2005-09-22  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_class_init),

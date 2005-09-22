@@ -938,7 +938,9 @@ GST_START_TEST (test_date)
   fail_unless (g_date_compare (date, date2) == 0);
 
   g_date_free (date);
+  g_date_free (date2);
   date = NULL;
+  date2 = NULL;
 
   str = gst_structure_to_string (s);
   gst_structure_free (s);
@@ -961,6 +963,8 @@ GST_START_TEST (test_date)
   fail_unless (g_date_get_day (date) == 22);
   fail_unless (g_date_get_month (date) == 9);
   fail_unless (g_date_get_year (date) == 2005);
+  g_date_free (date);
+  date = NULL;
 
   str = gst_structure_to_string (s);
   gst_structure_free (s);
