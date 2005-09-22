@@ -777,6 +777,24 @@ gst_vorbisenc_setup (GstVorbisEnc * vorbisenc)
   return TRUE;
 }
 
+static void
+gst_vorbisenc_clear (GstVorbisEnc * vorbisenc)
+{
+  if (vorbisenc->setup) {
+    vorbis_analysis_wrote (&vorbisenc->vd, 0);
+    gst_vorbisenc_output_buffers (vorbisenc);
+
+    vorbisenc->setup = FALSE;
+  }
+
+  /* clean up and exit.  vorbis_info_clear() must be called last */
+  vorbis_block_clear (&vorbisenc->vb);
+  vorbis_dsp_clear (&vorbisenc->vd);
+  vorbis_info_clear (&vorbisenc->vi);
+
+  vorbisenc->header_sent = FALSE;
+}
+
 /* prepare a buffer for transmission by passing data through libvorbis */
 static GstBuffer *
 gst_vorbisenc_buffer_from_packet (GstVorbisEnc * vorbisenc, ogg_packet * packet)
@@ -866,13 +884,7 @@ gst_vorbisenc_sink_event (GstPad * pad, GstEvent * event)
       /* Tell the library we're at end of stream so that it can handle
        * the last frame and mark end of stream in the output properly */
       GST_DEBUG_OBJECT (vorbisenc, "EOS, clearing state and sending event on");
-      vorbis_analysis_wrote (&vorbisenc->vd, 0);
-      gst_vorbisenc_output_buffers (vorbisenc);
-
-      /* clean up and exit.  vorbis_info_clear() must be called last */
-      vorbis_block_clear (&vorbisenc->vb);
-      vorbis_dsp_clear (&vorbisenc->vd);
-      vorbis_info_clear (&vorbisenc->vi);
+      gst_vorbisenc_clear (vorbisenc);
 
       res = gst_pad_event_default (pad, event);
       break;
@@ -1140,8 +1152,7 @@ gst_vorbisenc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      vorbisenc->setup = FALSE;
-      vorbisenc->header_sent = FALSE;
+      gst_vorbisenc_clear (vorbisenc);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_tag_list_free (vorbisenc->tags);

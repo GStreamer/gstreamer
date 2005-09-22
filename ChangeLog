@@ -1,3 +1,10 @@
+2005-09-22  Michael Smith <msmith@fluendo.com>
+
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_clear),
+	(gst_vorbisenc_sink_event), (gst_vorbisenc_change_state):
+	Don't flush encoder state unless we have an initialised encoder.
+	Clear out encoder state on PAUSED_TO_READY.
+
 2005-09-22  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/rtp/gstbasertppayload.c:
