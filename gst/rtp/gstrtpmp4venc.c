@@ -370,6 +370,7 @@ gst_rtpmp4venc_handle_buffer (GstBaseRTPPayload * basepayload,
 
       /* strip off header */
       subbuf = gst_buffer_create_sub (buffer, strip, size - strip);
+      GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buffer);
       gst_buffer_unref (buffer);
       buffer = subbuf;
 
@@ -381,19 +382,23 @@ gst_rtpmp4venc_handle_buffer (GstBaseRTPPayload * basepayload,
   /* if we need to flush, do so now */
   if (flush) {
     ret = gst_rtpmp4venc_flush (rtpmp4venc);
+    avail = 0;
+    rtpmp4venc->first_ts = GST_BUFFER_TIMESTAMP (buffer);
   }
-
-  /* push new data */
-  gst_adapter_push (rtpmp4venc->adapter, buffer);
 
   avail = gst_adapter_available (rtpmp4venc->adapter);
 
   /* get packet length of data and see if we exceeded MTU. */
-  packet_len = gst_rtpbuffer_calc_packet_len (avail, 0, 0);
+  packet_len = gst_rtpbuffer_calc_packet_len (avail + size, 0, 0);
 
   if (packet_len > GST_BASE_RTP_PAYLOAD_MTU (rtpmp4venc)) {
     ret = gst_rtpmp4venc_flush (rtpmp4venc);
+    avail = 0;
+    rtpmp4venc->first_ts = GST_BUFFER_TIMESTAMP (buffer);
   }
+
+  /* push new data */
+  gst_adapter_push (rtpmp4venc->adapter, buffer);
 
   return ret;
 }

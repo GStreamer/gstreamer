@@ -1,5 +1,12 @@
 2005-09-22  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/gstrtpmp4venc.c: (gst_rtpmp4venc_class_init),
+	(gst_rtpmp4venc_parse_data), (gst_rtpmp4venc_handle_buffer),
+	(gst_rtpmp4venc_set_property):
+	Don't fragment packets with multiple frames.
+
+2005-09-22  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/TODO:
 	* gst/rtp/gstrtpmp4vdec.c: (gst_rtpmp4vdec_setcaps):
 	* gst/rtp/gstrtpmp4venc.c: (gst_rtpmp4venc_class_init),
