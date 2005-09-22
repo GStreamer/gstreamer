@@ -1,6 +1,11 @@
 2005-09-22  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstbuffer.override:
+	Revert Buffer.caps change, since wingo fixed it upstream
+
+2005-09-22  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstbuffer.override:
 	Increment the refcount when fetching GST_BUFFER_CAPS. 
 	Python gurus, please fix if there's a better way this should be done.
 

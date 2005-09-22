@@ -560,14 +560,3 @@ _wrap_gst_buffer_stamp (PyGstMiniObject *self, PyObject *args, PyObject *kwargs)
 	Py_INCREF(Py_None);
 	return Py_None;
 }
-%%
-override-attr GstBuffer.caps
-static PyObject *
-_wrap_gst_buffer__get_caps(PyGstMiniObject *self)
-{
-    GstCaps *ret;
-
-    ret = gst_buffer_get_caps(GST_BUFFER(self->obj));
-    gst_caps_ref (ret);
-    return pyg_boxed_new (GST_TYPE_CAPS, ret, FALSE, TRUE);
-}
