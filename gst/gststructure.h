@@ -130,6 +130,9 @@ gboolean                gst_structure_get_fourcc           (const GstStructure  
 gboolean                gst_structure_get_double           (const GstStructure      *structure,
 							    const gchar             *fieldname,
 							    gdouble                 *value);
+gboolean                gst_structure_get_date             (const GstStructure      *structure,
+							    const gchar             *fieldname,
+                                                            GDate                  **date_out);
 G_CONST_RETURN gchar *  gst_structure_get_string           (const GstStructure      *structure,
 							    const gchar             *fieldname);
 

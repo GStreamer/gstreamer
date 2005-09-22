@@ -438,6 +438,14 @@ gst_structure_set_valist (GstStructure * structure,
     field.name = g_quark_from_string (fieldname);
 
     type = va_arg (varargs, GType);
+
+#if GLIB_CHECK_VERSION(2,8,0)
+    if (type == G_TYPE_DATE) {
+      g_warning ("Don't use G_TYPE_DATE, use GST_TYPE_DATE instead\n");
+      type = GST_TYPE_DATE;
+    }
+#endif
+
     g_value_init (&field.value, type);
     G_VALUE_COLLECT (&field.value, varargs, 0, &err);
     if (err) {
@@ -940,6 +948,40 @@ gst_structure_get_fourcc (const GstStructure * structure,
     return FALSE;
 
   *value = gst_value_get_fourcc (&field->value);
+
+  return TRUE;
+}
+
+/**
+ * gst_structure_get_date:
+ * @structure: a #GstStructure
+ * @fieldname: the name of a field
+ * @value: a pointer to a #GDate to set
+ *
+ * Sets the date pointed to by @date_out corresponding to the date of the
+ * given field.  Caller is responsible for making sure the field exists
+ * and has the correct type.
+ *
+ * Returns: TRUE if the value could be set correctly
+ */
+gboolean
+gst_structure_get_date (const GstStructure * structure, const gchar * fieldname,
+    GDate ** date_out)
+{
+  GstStructureField *field;
+
+  g_return_val_if_fail (structure != NULL, FALSE);
+  g_return_val_if_fail (fieldname != NULL, FALSE);
+  g_return_val_if_fail (date_out != NULL, FALSE);
+
+  field = gst_structure_get_field (structure, fieldname);
+
+  if (field == NULL)
+    return FALSE;
+  if (!GST_VALUE_HOLDS_DATE (&field->value))
+    return FALSE;
+
+  *date_out = g_value_dup_boxed (&field->value);
 
   return TRUE;
 }

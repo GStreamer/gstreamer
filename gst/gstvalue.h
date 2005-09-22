@@ -149,6 +149,14 @@ G_BEGIN_DECLS
 #define GST_VALUE_HOLDS_FRACTION(x)	(G_VALUE_HOLDS(x, gst_type_fraction))
 
 /**
+ * GST_VALUE_HOLDS_DATE:
+ * @x: the #GValue to check
+ *
+ * Checks if the given #GValue contains a #GST_TYPE_DATE value.
+ */
+#define GST_VALUE_HOLDS_DATE(x)         (G_VALUE_HOLDS(x, gst_type_date))
+
+/**
  * GST_TYPE_FOURCC:
  *
  * a #GValue type that represents 4 byte identifier (e.g. used for codecs)
@@ -204,6 +212,15 @@ G_BEGIN_DECLS
 
 #define GST_TYPE_FRACTION                gst_type_fraction
 
+/**
+ * GST_TYPE_DATE:
+ *
+ * a boxed #GValue type for #GDate that represents a date.
+ *
+ * Returns: the #GType of GstDate
+ */
+
+#define GST_TYPE_DATE                    gst_type_date
 
 /**
  * GST_VALUE_LESS_THAN:
@@ -284,6 +301,7 @@ GST_EXPORT GType gst_type_double_range;
 GST_EXPORT GType gst_type_list;
 GST_EXPORT GType gst_type_array;
 GST_EXPORT GType gst_type_fraction;
+GST_EXPORT GType gst_type_date;
 
 void		gst_value_register		(const GstValueTable   *table);
 void		gst_value_init_and_copy		(GValue                *dest,
@@ -340,6 +358,12 @@ int		gst_value_get_fraction_denominator(const GValue	*value);
 gboolean	gst_value_fraction_multiply	(GValue		*product,
 						 const GValue	*factor1,
 						 const GValue	*factor2);
+
+/* date */
+G_CONST_RETURN GDate *
+		gst_value_get_date		(const GValue	*value);
+void		gst_value_set_date		(GValue		*value,
+						 const GDate    *date);
 
 /* compare */
 int		gst_value_compare		(const GValue	*value1,

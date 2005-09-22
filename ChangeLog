@@ -1,3 +1,20 @@
+2005-09-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gststructure.c: (gst_structure_set_valist),
+	(gst_structure_get_date):
+	* gst/gststructure.h:
+	* gst/gstvalue.c: (gst_value_set_date), (gst_value_get_date),
+	(gst_date_copy), (gst_value_compare_date),
+	(gst_value_serialize_date), (gst_value_deserialize_date),
+	(gst_value_transform_date_string),
+	(gst_value_transform_string_date), (_gst_value_initialize):
+	* gst/gstvalue.h:
+	  Add GST_TYPE_DATE, a boxed type that wraps GDate, and the usual
+	  bunch of utility functions along with a hack that checks that
+	  developers don't accidentally use G_TYPE_DATE where GST_TYPE_DATE
+	  is required. Part of the grand scheme in #170777.
+
 2005-09-22  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstconfig.h.in: Psych out gtk-doc.

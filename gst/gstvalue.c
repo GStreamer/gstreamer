@@ -64,6 +64,7 @@ GType gst_type_double_range;
 GType gst_type_list;
 GType gst_type_array;
 GType gst_type_fraction;
+GType gst_type_date;
 
 static GArray *gst_value_table;
 static GArray *gst_value_union_funcs;
@@ -2970,6 +2971,125 @@ gst_value_compare_fraction (const GValue * value1, const GValue * value2)
   return GST_VALUE_UNORDERED;
 }
 
+/*********
+ * GDate *
+ *********/
+
+/**
+ * gst_value_set_date:
+ * @value: a GValue initialized to GST_TYPE_DATE
+ * @caps: the date to set the value to
+ *
+ * Sets the contents of @value to coorespond to @date.  The actual
+ * #GDate structure is copied before it is used.
+ */
+void
+gst_value_set_date (GValue * value, const GDate * date)
+{
+  g_return_if_fail (G_VALUE_TYPE (value) == GST_TYPE_DATE);
+
+  g_value_set_boxed (value, date);
+}
+
+/**
+ * gst_value_get_date:
+ * @value: a GValue initialized to GST_TYPE_DATE
+ *
+ * Gets the contents of @value.
+ *
+ * Returns: the contents of @value
+ */
+const GDate *
+gst_value_get_date (const GValue * value)
+{
+  g_return_val_if_fail (G_VALUE_TYPE (value) == GST_TYPE_DATE, NULL);
+
+  return (const GDate *) g_value_get_boxed (value);
+}
+
+static gpointer
+gst_date_copy (gpointer boxed)
+{
+  const GDate *date = (const GDate *) boxed;
+
+  return g_date_new_julian (g_date_get_julian (date));
+}
+
+static int
+gst_value_compare_date (const GValue * value1, const GValue * value2)
+{
+  const GDate *date1 = (const GDate *) g_value_get_boxed (value1);
+  const GDate *date2 = (const GDate *) g_value_get_boxed (value2);
+  guint32 j1, j2;
+
+  if (date1 == date2)
+    return GST_VALUE_EQUAL;
+
+  if ((date1 == NULL || !g_date_valid (date1))
+      && (date2 != NULL && g_date_valid (date2))) {
+    return GST_VALUE_LESS_THAN;
+  }
+
+  if ((date2 == NULL || !g_date_valid (date2))
+      && (date1 != NULL && g_date_valid (date1))) {
+    return GST_VALUE_GREATER_THAN;
+  }
+
+  if (date1 == NULL || date2 == NULL || !g_date_valid (date1)
+      || !g_date_valid (date2)) {
+    return GST_VALUE_UNORDERED;
+  }
+
+  j1 = g_date_get_julian (date1);
+  j2 = g_date_get_julian (date2);
+
+  if (j1 == j2)
+    return GST_VALUE_EQUAL;
+  else if (j1 < j2)
+    return GST_VALUE_LESS_THAN;
+  else
+    return GST_VALUE_GREATER_THAN;
+}
+
+static char *
+gst_value_serialize_date (const GValue * val)
+{
+  const GDate *date = (const GDate *) g_value_get_boxed (val);
+
+  if (date == NULL || !g_date_valid (date))
+    return g_strdup ("9999-99-99");
+
+  return g_strdup_printf ("%04u-%02u-%02u", g_date_get_year (date),
+      g_date_get_month (date), g_date_get_day (date));
+}
+
+static gboolean
+gst_value_deserialize_date (GValue * dest, const char *s)
+{
+  guint year, month, day;
+
+  if (!s || sscanf (s, "%04u-%02u-%02u", &year, &month, &day) != 3)
+    return FALSE;
+
+  if (!g_date_valid_dmy (day, month, year))
+    return FALSE;
+
+  g_value_take_boxed (dest, g_date_new_dmy (day, month, year));
+  return TRUE;
+}
+
+static void
+gst_value_transform_date_string (const GValue * src_value, GValue * dest_value)
+{
+  dest_value->data[0].v_pointer = gst_value_serialize_date (src_value);
+}
+
+static void
+gst_value_transform_string_date (const GValue * src_value, GValue * dest_value)
+{
+  gst_value_deserialize_date (dest_value, src_value->data[0].v_pointer);
+}
+
 void
 _gst_value_initialize (void)
 {
@@ -3186,7 +3306,25 @@ _gst_value_initialize (void)
     gst_value.type = GST_TYPE_CAPS;
     gst_value_register (&gst_value);
   }
+  {
+    static GstValueTable gst_value = {
+      0,
+      gst_value_compare_date,
+      gst_value_serialize_date,
+      gst_value_deserialize_date,
+    };
 
+    /* Not using G_TYPE_DATE here on purpose, even if we could
+     * if GLIB_CHECK_VERSION(2,8,0) was true: we don't want the
+     * serialised strings to have different type strings depending
+     * on what version is used, so FIXME in 0.11 when we 
+     * require GLib-2.8 */
+    gst_type_date = g_boxed_type_register_static ("GstDate",
+        (GBoxedCopyFunc) gst_date_copy, (GBoxedFreeFunc) g_date_free);
+
+    gst_value.type = gst_type_date;
+    gst_value_register (&gst_value);
+  }
 
   REGISTER_SERIALIZATION (G_TYPE_DOUBLE, double);
   REGISTER_SERIALIZATION (G_TYPE_FLOAT, float);
@@ -3224,6 +3362,10 @@ _gst_value_initialize (void)
       gst_value_transform_fraction_double);
   g_value_register_transform_func (G_TYPE_DOUBLE, GST_TYPE_FRACTION,
       gst_value_transform_double_fraction);
+  g_value_register_transform_func (GST_TYPE_DATE, G_TYPE_STRING,
+      gst_value_transform_date_string);
+  g_value_register_transform_func (G_TYPE_STRING, GST_TYPE_DATE,
+      gst_value_transform_string_date);
 
   gst_value_register_intersect_func (G_TYPE_INT, GST_TYPE_INT_RANGE,
       gst_value_intersect_int_int_range);

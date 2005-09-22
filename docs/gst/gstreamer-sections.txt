@@ -1623,6 +1623,7 @@ gst_structure_get_int
 gst_structure_get_fourcc
 gst_structure_get_double
 gst_structure_get_string
+gst_structure_get_date
 gst_structure_map_in_place
 gst_structure_nth_field_name
 gst_structure_set_parent_refcount
@@ -2035,6 +2036,12 @@ gst_value_set_fraction
 gst_value_get_fraction_numerator
 gst_value_get_fraction_denominator
 gst_value_fraction_multiply
+
+<SUBSECTION date>
+GST_VALUE_HOLDS_DATE
+GST_TYPE_DATE
+gst_value_set_date
+gst_value_get_date
 
 <SUBSECTION caps>
 GST_VALUE_HOLDS_CAPS
