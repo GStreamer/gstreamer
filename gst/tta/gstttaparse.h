@@ -42,7 +42,6 @@ typedef struct _GstTtaParse      GstTtaParse;
 typedef struct _GstTtaParseClass GstTtaParseClass;
 
 typedef struct _GstTtaIndex {
-  guint32   frameno;
   guint32   size;     /* size of frame frameno */
   guint64   pos;      /* start of the frame */
   guint64   time;     /* in nanoseconds */
@@ -54,16 +53,14 @@ struct _GstTtaParse
 
   GstPad *sinkpad, *srcpad;
 
-  gboolean silent;
   gboolean header_parsed;
-  GstBuffer *partialbuf;
   guint32 samplerate;
   guint16 channels;
   guint16 bits;
   guint32 data_length;
-  GstTtaIndex *index;
   guint num_frames;
-  gboolean seek_ok;
+
+  GstTtaIndex *index;
 
   guint32 current_frame;
 };

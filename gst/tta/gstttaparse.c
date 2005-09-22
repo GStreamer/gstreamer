@@ -30,17 +30,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_tta_parse_debug);
 #define GST_CAT_DEFAULT gst_tta_parse_debug
 
-/* Filter signals and args */
-enum
-{
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0
-};
-
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -59,9 +48,16 @@ static void gst_tta_parse_class_init (GstTtaParseClass * klass);
 static void gst_tta_parse_base_init (GstTtaParseClass * klass);
 static void gst_tta_parse_init (GstTtaParse * ttaparse);
 
-static void gst_tta_parse_chain (GstPad * pad, GstData * in);
+static gboolean gst_tta_parse_src_event (GstPad * pad, GstEvent * event);
+static const GstQueryType *gst_tta_parse_get_query_types (GstPad * pad);
+static gboolean gst_tta_parse_query (GstPad * pad, GstQuery * query);
+static gboolean gst_tta_parse_activate (GstPad * pad);
+static gboolean gst_tta_parse_activate_pull (GstPad * pad, gboolean active);
+static void gst_tta_parse_loop (GstTtaParse * ttaparse);
+static GstStateChangeReturn gst_tta_parse_change_state (GstElement * element,
+    GstStateChange transition);
 
-static GstElementClass *parent = NULL;
+static GstElementClass *parent_class = NULL;
 
 GType
 gst_tta_parse_get_type (void)
@@ -111,7 +107,7 @@ gst_tta_parse_dispose (GObject * object)
 
   g_free (ttaparse->index);
 
-  G_OBJECT_CLASS (parent)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -123,76 +119,19 @@ gst_tta_parse_class_init (GstTtaParseClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   gobject_class->dispose = gst_tta_parse_dispose;
+  gstelement_class->change_state = gst_tta_parse_change_state;
 }
 
-static gboolean
-gst_tta_src_query (GstPad * pad, GstQueryType type,
-    GstFormat * format, gint64 * value)
+static void
+gst_tta_parse_reset (GstTtaParse * ttaparse)
 {
-  GstTtaParse *ttaparse = GST_TTA_PARSE (gst_pad_get_parent (pad));
-
-  if (type == GST_QUERY_TOTAL) {
-    if (*format == GST_FORMAT_TIME) {
-      if ((ttaparse->data_length == 0) || (ttaparse->samplerate == 0)) {
-        *value = 0;
-        return FALSE;
-      }
-      *value =
-          ((gdouble) ttaparse->data_length / (gdouble) ttaparse->samplerate) *
-          GST_SECOND;
-      GST_DEBUG_OBJECT (ttaparse, "got queried for time, returned %lli",
-          *value);
-      return TRUE;
-    }
-  } else {
-    return gst_pad_query_default (pad, type, format, value);
-  }
-  return FALSE;
-}
-
-static gboolean
-gst_tta_src_event (GstPad * pad, GstEvent * event)
-{
-  GstTtaParse *ttaparse = GST_TTA_PARSE (gst_pad_get_parent (pad));
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEEK:
-    {
-      if (GST_EVENT_SEEK_FORMAT (event) == GST_FORMAT_TIME) {
-        GstEvent *seek_event;
-        guint64 time;
-        guint64 seek_frame;
-        guint64 seekpos;
-
-        time = GST_EVENT_SEEK_OFFSET (event);
-        seek_frame = time / (FRAME_TIME * 1000000000);
-        seekpos = ttaparse->index[seek_frame].pos;
-
-        GST_DEBUG_OBJECT (ttaparse, "seeking to %u", (guint) seekpos);
-        seek_event =
-            gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_SET |
-            GST_SEEK_FLAG_ACCURATE, seekpos);
-        gst_event_unref (event);
-        if (gst_pad_send_event (GST_PAD_PEER (ttaparse->sinkpad), seek_event)) {
-          gst_pad_event_default (ttaparse->srcpad,
-              gst_event_new (GST_EVENT_FLUSH));
-          return TRUE;
-        } else {
-          GST_LOG_OBJECT (ttaparse, "seek failed");
-          return FALSE;
-        }
-      } else {
-        return gst_pad_send_event (pad, event);
-      }
-      break;
-    }
-    default:
-      return gst_pad_send_event (pad, event);
-      break;
-  }
+  ttaparse->header_parsed = FALSE;
+  ttaparse->current_frame = 0;
+  ttaparse->data_length = 0;
+  ttaparse->samplerate = 0;
 }
 
 static void
@@ -207,203 +146,335 @@ gst_tta_parse_init (GstTtaParse * ttaparse)
   ttaparse->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
           "src"), "src");
-  gst_pad_use_explicit_caps (ttaparse->srcpad);
-  gst_pad_set_query_function (ttaparse->srcpad, gst_tta_src_query);
-  gst_pad_set_event_function (ttaparse->srcpad, gst_tta_src_event);
+  gst_pad_use_fixed_caps (ttaparse->srcpad);
+  gst_pad_set_query_type_function (ttaparse->srcpad,
+      gst_tta_parse_get_query_types);
+  gst_pad_set_query_function (ttaparse->srcpad, gst_tta_parse_query);
+  gst_pad_set_event_function (ttaparse->srcpad, gst_tta_parse_src_event);
 
   gst_element_add_pad (GST_ELEMENT (ttaparse), ttaparse->sinkpad);
   gst_element_add_pad (GST_ELEMENT (ttaparse), ttaparse->srcpad);
-  gst_pad_set_chain_function (ttaparse->sinkpad, gst_tta_parse_chain);
+  gst_pad_set_activate_function (ttaparse->sinkpad, gst_tta_parse_activate);
+  gst_pad_set_activatepull_function (ttaparse->sinkpad,
+      gst_tta_parse_activate_pull);
 
-  ttaparse->silent = FALSE;
-  ttaparse->header_parsed = FALSE;
-  ttaparse->partialbuf = NULL;
-  ttaparse->seek_ok = FALSE;
-  ttaparse->current_frame = 0;
-  ttaparse->data_length = 0;
-  ttaparse->samplerate = 0;
-
-  GST_FLAG_SET (ttaparse, GST_ELEMENT_EVENT_AWARE);
+  gst_tta_parse_reset (ttaparse);
 }
 
-static void
-gst_tta_handle_event (GstPad * pad, GstBuffer * buffer)
+static gboolean
+gst_tta_parse_src_event (GstPad * pad, GstEvent * event)
 {
-  GstEvent *event = GST_EVENT (buffer);
-  GstTtaParse *ttaparse = GST_TTA_PARSE (gst_pad_get_parent (pad));
+  GstTtaParse *ttaparse = GST_TTA_PARSE (GST_PAD_PARENT (pad));
 
-  GST_DEBUG_OBJECT (ttaparse, "got some event");
+  gboolean res = TRUE;
+
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_DISCONTINUOUS:
+    case GST_EVENT_SEEK:
     {
-      GstEvent *discont;
-      guint64 offset = GST_EVENT_DISCONT_OFFSET (event, 0).value;
-      int i;
+      gdouble rate;
+      GstFormat format;
+      GstSeekFlags flags;
+      GstSeekType start_type, stop_type;
+      gint64 start, stop;
 
-      GST_DEBUG_OBJECT (ttaparse, "discont with offset: %u", offset);
-      for (i = 0; i < ttaparse->num_frames; i++) {
-        if (offset == ttaparse->index[i].pos) {
-          GST_DEBUG_OBJECT (ttaparse, "setting current frame to %i", i);
-          discont = gst_event_new_discontinuous (FALSE,
-              GST_FORMAT_TIME, ttaparse->index[i].time, NULL);
-          gst_event_unref (event);
-          gst_buffer_unref (ttaparse->partialbuf);
-          ttaparse->partialbuf = NULL;
-          ttaparse->current_frame = i;
-          gst_pad_event_default (pad, gst_event_new (GST_EVENT_FLUSH));
-          gst_pad_event_default (pad, discont);
-          GST_DEBUG_OBJECT (ttaparse, "sent discont event");
-          return;
+      gst_event_parse_seek (event, &rate, &format, &flags,
+          &start_type, &start, &stop_type, &stop);
+
+      if (format == GST_FORMAT_TIME) {
+        if (flags & GST_SEEK_FLAG_FLUSH) {
+          gst_pad_push_event (ttaparse->srcpad, gst_event_new_flush_start ());
+          gst_pad_push_event (ttaparse->sinkpad, gst_event_new_flush_start ());
+        } else {
+          gst_pad_pause_task (ttaparse->sinkpad);
         }
+        GST_STREAM_LOCK (ttaparse->sinkpad);
+
+        switch (start_type) {
+          case GST_SEEK_TYPE_CUR:
+            ttaparse->current_frame += (start / GST_SECOND) / FRAME_TIME;
+            break;
+          case GST_SEEK_TYPE_END:
+            ttaparse->current_frame += (start / GST_SECOND) / FRAME_TIME;
+            break;
+          case GST_SEEK_TYPE_SET:
+            ttaparse->current_frame = (start / GST_SECOND) / FRAME_TIME;
+            break;
+          case GST_SEEK_TYPE_NONE:
+            break;
+        }
+        res = TRUE;
+
+        if (flags & GST_SEEK_FLAG_FLUSH) {
+          gst_pad_push_event (ttaparse->srcpad, gst_event_new_flush_stop ());
+          gst_pad_push_event (ttaparse->sinkpad, gst_event_new_flush_stop ());
+        }
+
+        gst_pad_push_event (ttaparse->srcpad, gst_event_new_newsegment (1.0,
+                GST_FORMAT_TIME, 0,
+                ttaparse->num_frames * FRAME_TIME * GST_SECOND, 0));
+
+        gst_pad_start_task (ttaparse->sinkpad,
+            (GstTaskFunction) gst_tta_parse_loop, ttaparse);
+
+        GST_STREAM_UNLOCK (ttaparse->sinkpad);
+
+      } else {
+        res = FALSE;
       }
+
+      gst_event_unref (event);
       break;
     }
     default:
-      gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, event);
       break;
+  }
+
+  return res;
+}
+
+static const GstQueryType *
+gst_tta_parse_get_query_types (GstPad * pad)
+{
+  static const GstQueryType types[] = {
+    GST_QUERY_POSITION,
+    0
+  };
+
+  return types;
+}
+
+static gboolean
+gst_tta_parse_query (GstPad * pad, GstQuery * query)
+{
+  GstTtaParse *ttaparse = GST_TTA_PARSE (gst_pad_get_parent (pad));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+    {
+      GstFormat format;
+      gint64 cur, end;
+
+      gst_query_parse_position (query, &format, NULL, NULL);
+      switch (format) {
+        case GST_FORMAT_TIME:
+          cur = ttaparse->index[ttaparse->current_frame].time;
+          end = ((gdouble) ttaparse->data_length /
+              (gdouble) ttaparse->samplerate) * GST_SECOND;
+          break;
+        default:
+          format = GST_FORMAT_BYTES;
+          cur = ttaparse->index[ttaparse->current_frame].pos;
+          end = ttaparse->index[ttaparse->num_frames].pos +
+              ttaparse->index[ttaparse->num_frames].size;
+          break;
+      }
+      gst_query_set_position (query, format, cur, end);
+      break;
+    }
+    default:
+      return FALSE;
+      break;
+  }
+  return TRUE;
+}
+
+static gboolean
+gst_tta_parse_activate (GstPad * pad)
+{
+  if (gst_pad_check_pull_range (pad)) {
+    return gst_pad_activate_pull (pad, TRUE);
+  }
+  return FALSE;
+}
+
+static gboolean
+gst_tta_parse_activate_pull (GstPad * pad, gboolean active)
+{
+  GstTtaParse *ttaparse = GST_TTA_PARSE (GST_OBJECT_PARENT (pad));
+
+  if (active) {
+    gst_pad_start_task (pad, (GstTaskFunction) gst_tta_parse_loop, ttaparse);
+  } else {
+    gst_pad_stop_task (pad);
+  }
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_tta_parse_parse_header (GstTtaParse * ttaparse)
+{
+  GstFlowReturn res;
+  guchar *data;
+  GstBuffer *buf = NULL;
+  guint32 crc;
+  double frame_length;
+  int num_frames;
+  GstCaps *caps;
+  int i;
+  guint32 offset;
+  GstEvent *discont;
+
+  if ((res = gst_pad_pull_range (ttaparse->sinkpad,
+              0, 22, &buf)) != GST_FLOW_OK)
+    goto pull_fail;
+  data = GST_BUFFER_DATA (buf);
+  ttaparse->channels = GST_READ_UINT16_LE (data + 6);
+  ttaparse->bits = GST_READ_UINT16_LE (data + 8);
+  ttaparse->samplerate = GST_READ_UINT32_LE (data + 10);
+  ttaparse->data_length = GST_READ_UINT32_LE (data + 14);
+  crc = crc32 (data, 18);
+  if (crc != GST_READ_UINT32_LE (data + 18)) {
+    GST_DEBUG ("Header CRC wrong!");
+  }
+  frame_length = FRAME_TIME * ttaparse->samplerate;
+  num_frames = (ttaparse->data_length / frame_length) + 1;
+  ttaparse->num_frames = num_frames;
+  gst_buffer_unref (buf);
+
+  ttaparse->index =
+      (GstTtaIndex *) g_malloc (num_frames * sizeof (GstTtaIndex));
+  if ((res = gst_pad_pull_range (ttaparse->sinkpad,
+              22, num_frames * 4 + 4, &buf)) != GST_FLOW_OK)
+    goto pull_fail;
+  data = GST_BUFFER_DATA (buf);
+
+  offset = 22 + num_frames * 4 + 4;     // header size + seektable size
+  for (i = 0; i < num_frames; i++) {
+    ttaparse->index[i].size = GST_READ_UINT32_LE (data + i * 4);
+    ttaparse->index[i].pos = offset;
+    offset += ttaparse->index[i].size;
+    ttaparse->index[i].time = i * FRAME_TIME * GST_SECOND;
+  }
+  crc = crc32 (data, num_frames * 4);
+  if (crc != GST_READ_UINT32_LE (data + num_frames * 4)) {
+    GST_DEBUG ("Seektable CRC wrong!");
+  }
+
+  GST_DEBUG
+      ("channels: %u, bits: %u, samplerate: %u, data_length: %u, num_frames: %u",
+      ttaparse->channels, ttaparse->bits, ttaparse->samplerate,
+      ttaparse->data_length, num_frames);
+
+  ttaparse->header_parsed = TRUE;
+  caps = gst_caps_new_simple ("audio/x-tta",
+      "width", G_TYPE_INT, ttaparse->bits,
+      "channels", G_TYPE_INT, ttaparse->channels,
+      "rate", G_TYPE_INT, ttaparse->samplerate, NULL);
+  gst_pad_set_caps (ttaparse->srcpad, caps);
+
+  discont =
+      gst_event_new_newsegment (1.0, GST_FORMAT_TIME, 0,
+      num_frames * FRAME_TIME * GST_SECOND, 0);
+
+  gst_pad_push_event (ttaparse->srcpad, discont);
+
+  return GST_FLOW_OK;
+
+pull_fail:
+  {
+    GST_ELEMENT_ERROR (ttaparse, STREAM, DEMUX, (NULL),
+        ("Couldn't read header"));
+    return GST_FLOW_ERROR;
+  }
+}
+
+static GstFlowReturn
+gst_tta_parse_stream_data (GstTtaParse * ttaparse)
+{
+  GstBuffer *buf = NULL;
+  GstFlowReturn res = GST_FLOW_OK;
+
+  if (ttaparse->current_frame >= ttaparse->num_frames)
+    goto found_eos;
+
+  GST_DEBUG ("playing frame %u of %u", ttaparse->current_frame + 1,
+      ttaparse->num_frames);
+  if ((res = gst_pad_pull_range (ttaparse->sinkpad,
+              ttaparse->index[ttaparse->current_frame].pos,
+              ttaparse->index[ttaparse->current_frame].size,
+              &buf)) != GST_FLOW_OK)
+    goto pull_error;
+
+  GST_BUFFER_OFFSET (buf) = ttaparse->index[ttaparse->current_frame].pos;
+  GST_BUFFER_TIMESTAMP (buf) = ttaparse->index[ttaparse->current_frame].time;
+  if (ttaparse->current_frame + 1 == ttaparse->num_frames) {
+    guint32 samples =
+        ttaparse->data_length % (gint64) (ttaparse->samplerate * FRAME_TIME);
+    gdouble frametime = (gdouble) samples / (gdouble) ttaparse->samplerate;
+
+    GST_BUFFER_DURATION (buf) = (guint64) (frametime * GST_SECOND);
+  } else {
+    GST_BUFFER_DURATION (buf) = FRAME_TIME * GST_SECOND;
+  }
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (ttaparse->srcpad));
+
+  if ((res = gst_pad_push (ttaparse->srcpad, buf)) != GST_FLOW_OK)
+    goto push_error;
+  ttaparse->current_frame++;
+
+  return res;
+
+found_eos:
+  {
+    GST_DEBUG ("found EOS");
+    gst_pad_push_event (ttaparse->srcpad, gst_event_new_eos ());
+    return GST_FLOW_WRONG_STATE;
+  }
+pull_error:
+  {
+    GST_DEBUG ("Error getting frame from the sinkpad");
+    return res;
+  }
+push_error:
+  {
+    GST_DEBUG ("Error pushing on srcpad");
+    return res;
   }
 }
 
 static void
-gst_tta_parse_chain (GstPad * pad, GstData * in)
+gst_tta_parse_loop (GstTtaParse * ttaparse)
 {
-  GstTtaParse *ttaparse;
-  GstBuffer *outbuf, *buf = GST_BUFFER (in);
-  guchar *data;
-  gint i;
-  guint64 size, offset = 0;
-  GstCaps *caps;
+  GstFlowReturn ret;
 
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
+  if (!ttaparse->header_parsed)
+    if ((ret = gst_tta_parse_parse_header (ttaparse)) != GST_FLOW_OK)
+      goto pause;
+  if ((ret = gst_tta_parse_stream_data (ttaparse)) != GST_FLOW_OK)
+    goto pause;
 
-  ttaparse = GST_TTA_PARSE (GST_OBJECT_PARENT (pad));
-  g_return_if_fail (GST_IS_TTA_PARSE (ttaparse));
+  return;
 
-  if (GST_IS_EVENT (buf)) {
-    gst_tta_handle_event (pad, buf);
-    return;
+pause:
+  GST_LOG_OBJECT (ttaparse, "pausing task %d", ret);
+  gst_pad_pause_task (ttaparse->sinkpad);
+  if (GST_FLOW_IS_FATAL (ret)) {
+    GST_ELEMENT_ERROR (ttaparse, STREAM, STOPPED,
+        ("streaming stopped, reason %d", ret),
+        ("streaming stopped, reason %d", ret));
+    gst_pad_push_event (ttaparse->srcpad, gst_event_new_eos ());
+  }
+}
+
+static GstStateChangeReturn
+gst_tta_parse_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret;
+  GstTtaParse *ttaparse = GST_TTA_PARSE (element);
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_tta_parse_reset (ttaparse);
+      break;
+    default:
+      break;
   }
 
-  if (ttaparse->partialbuf) {
-    GstBuffer *newbuf;
-
-    newbuf = gst_buffer_merge (ttaparse->partialbuf, buf);
-    gst_buffer_unref (buf);
-    gst_buffer_unref (ttaparse->partialbuf);
-    ttaparse->partialbuf = newbuf;
-  } else {
-    ttaparse->partialbuf = buf;
-  }
-
-  size = GST_BUFFER_SIZE (ttaparse->partialbuf);
-  data = GST_BUFFER_DATA (ttaparse->partialbuf);
-  if (!ttaparse->header_parsed) {
-    if ((*data == 'T') && (*(data + 1) == 'T') && (*(data + 2) == 'A')) {
-      double frame_length;
-      int num_frames;
-      guint32 datasize = 0;
-      guint32 crc;
-
-      offset = offset + 4;
-      offset = offset + 2;
-      ttaparse->channels = GST_READ_UINT16_LE (data + offset);
-      offset = offset + 2;
-      ttaparse->bits = GST_READ_UINT16_LE (data + offset);
-      offset += 2;
-      ttaparse->samplerate = GST_READ_UINT32_LE (data + offset);
-      frame_length = FRAME_TIME * ttaparse->samplerate;
-      offset += 4;
-      ttaparse->data_length = GST_READ_UINT32_LE (data + offset);
-      offset += 4;
-      num_frames = (ttaparse->data_length / frame_length) + 1;
-      crc = crc32 (data, 18);
-      if (crc != GST_READ_UINT32_LE (data + offset)) {
-        GST_WARNING_OBJECT (ttaparse, "Header CRC wrong!");
-      }
-      offset += 4;
-      GST_INFO_OBJECT (ttaparse,
-          "channels: %u, bits: %u, samplerate: %u, data_length: %u, num_frames: %u",
-          ttaparse->channels, ttaparse->bits, ttaparse->samplerate,
-          ttaparse->data_length, num_frames);
-      ttaparse->index =
-          (GstTtaIndex *) g_malloc (num_frames * sizeof (GstTtaIndex));
-      ttaparse->num_frames = num_frames;
-      for (i = 0; i < num_frames; i++) {
-        ttaparse->index[i].size = GST_READ_UINT32_LE (data + offset);
-        ttaparse->index[i].pos = GST_BUFFER_OFFSET (ttaparse->partialbuf) + (num_frames) * 4 + 4 + datasize + 22;       // 22 == header size, +4 for the TTA1
-        ttaparse->index[i].time = i * FRAME_TIME * 1000000000;
-        offset += 4;
-        datasize += ttaparse->index[i].size;
-      }
-      GST_DEBUG_OBJECT (ttaparse, "Datasize: %u", datasize);
-      crc = crc32 (data + 22, num_frames * 4);
-      if (crc != GST_READ_UINT32_LE (data + offset)) {
-        GST_WARNING_OBJECT (ttaparse, "Seek table CRC wrong!");
-      } else {
-        ttaparse->seek_ok = TRUE;
-        /*
-           g_print("allowing seeking!\n");
-           g_print("dumping index:\n");
-           for (i = 0; i < ttaparse->num_frames; i++) {
-           g_print("frame %u: offset = %llu, time=%llu, size=%u\n",
-           i,
-           ttaparse->index[i].pos,
-           ttaparse->index[i].time,
-           ttaparse->index[i].size);
-           }
-         */
-      }
-      offset += 4;
-      ttaparse->header_parsed = TRUE;
-      caps = gst_caps_new_simple ("audio/x-tta",
-          "width", G_TYPE_INT, ttaparse->bits,
-          "channels", G_TYPE_INT, ttaparse->channels,
-          "rate", G_TYPE_INT, ttaparse->samplerate, NULL);
-      gst_pad_set_explicit_caps (ttaparse->srcpad, caps);
-    }
-  }
-
-  i = ttaparse->current_frame;
-  while (size - offset >= ttaparse->index[i].size) {
-    guint32 crc;
-
-    crc = crc32 (data + offset, ttaparse->index[i].size - 4);
-    if (crc != GST_READ_UINT32_LE (data + offset + ttaparse->index[i].size - 4)) {
-      GST_WARNING_OBJECT (ttaparse, "Frame %u corrupted :(", i);
-      GST_WARNING_OBJECT (ttaparse, "calculated crc: %u, got crc: %u", crc,
-          GST_READ_UINT32_LE (data + offset + ttaparse->index[i].size - 4));
-    }
-    outbuf =
-        gst_buffer_create_sub (ttaparse->partialbuf, offset,
-        ttaparse->index[i].size - 4);
-    GST_BUFFER_TIMESTAMP (outbuf) = ttaparse->index[i].time;
-    if (ttaparse->current_frame + 1 == ttaparse->num_frames) {
-      guint32 samples =
-          ttaparse->data_length % (gint64) (ttaparse->samplerate * FRAME_TIME);
-      gdouble frametime = (gdouble) samples / (gdouble) ttaparse->samplerate;
-
-      GST_BUFFER_DURATION (outbuf) = (guint64) (frametime * GST_SECOND);
-    } else {
-      GST_BUFFER_DURATION (outbuf) = FRAME_TIME * 1000000000;
-    }
-    gst_pad_push (ttaparse->srcpad, GST_DATA (outbuf));
-    offset += ttaparse->index[i].size;
-    ttaparse->current_frame++;
-    i = ttaparse->current_frame;
-  }
-
-  if (size - offset > 0) {
-    glong remainder = size - offset;
-
-    outbuf = gst_buffer_create_sub (ttaparse->partialbuf, offset, remainder);
-    gst_buffer_unref (ttaparse->partialbuf);
-    ttaparse->partialbuf = outbuf;
-  } else {
-    gst_buffer_unref (ttaparse->partialbuf);
-    ttaparse->partialbuf = NULL;
-  }
-
+  return ret;
 }
 
 gboolean

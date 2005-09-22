@@ -96,24 +96,27 @@ static void gst_tta_dec_class_init (GstTtaDecClass * klass);
 static void gst_tta_dec_base_init (GstTtaDecClass * klass);
 static void gst_tta_dec_init (GstTtaDec * ttadec);
 
-static void gst_tta_dec_chain (GstPad * pad, GstData * in);
+static GstFlowReturn gst_tta_dec_chain (GstPad * pad, GstBuffer * in);
 
 static GstElementClass *parent = NULL;
 
-static GstPadLinkReturn
-gst_tta_dec_link (GstPad * pad, const GstCaps * caps)
+static gboolean
+gst_tta_dec_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstTtaDec *ttadec = GST_TTA_DEC (gst_pad_get_parent (pad));
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   GstCaps *srccaps;
   guint64 outsize;
-  guint bits;
+  gint bits, channels;
+  gint32 samplerate;
 
-  if (!gst_caps_is_fixed (caps))
-    return GST_PAD_LINK_DELAYED;
+//  if (!gst_caps_is_fixed (caps))
+//    return GST_PAD_LINK_DELAYED;
 
-  gst_structure_get_int (structure, "rate", &ttadec->samplerate);
-  gst_structure_get_int (structure, "channels", &ttadec->channels);
+  gst_structure_get_int (structure, "rate", &samplerate);
+  ttadec->samplerate = (guint32) samplerate;
+  gst_structure_get_int (structure, "channels", &channels);
+  ttadec->channels = (guint) channels;
   gst_structure_get_int (structure, "width", &bits);
   ttadec->bytes = bits / 8;
 
@@ -125,7 +128,8 @@ gst_tta_dec_link (GstPad * pad, const GstCaps * caps)
       "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
       "signed", G_TYPE_BOOLEAN, TRUE, NULL);
 
-  gst_pad_set_explicit_caps (ttadec->srcpad, srccaps);
+  if (!gst_pad_set_caps (ttadec->srcpad, srccaps))
+    return FALSE;
 
   ttadec->frame_length = FRAME_TIME * ttadec->samplerate;
 
@@ -138,7 +142,7 @@ gst_tta_dec_link (GstPad * pad, const GstCaps * caps)
       (guchar *) g_malloc (ttadec->channels * ttadec->frame_length *
       ttadec->bytes * sizeof (guchar));
 
-  return GST_PAD_LINK_OK;
+  return TRUE;
 }
 
 GType
@@ -216,19 +220,18 @@ gst_tta_dec_init (GstTtaDec * ttadec)
   ttadec->sinkpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
           "sink"), "sink");
-  gst_pad_set_link_function (ttadec->sinkpad, gst_tta_dec_link);
+  gst_pad_set_setcaps_function (ttadec->sinkpad, gst_tta_dec_setcaps);
 
   ttadec->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
           "src"), "src");
-  gst_pad_use_explicit_caps (ttadec->srcpad);
+  gst_pad_use_fixed_caps (ttadec->srcpad);
 
   gst_element_add_pad (GST_ELEMENT (ttadec), ttadec->sinkpad);
   gst_element_add_pad (GST_ELEMENT (ttadec), ttadec->srcpad);
   gst_pad_set_chain_function (ttadec->sinkpad, gst_tta_dec_chain);
   ttadec->tta_buf.buffer = (guchar *) g_malloc (TTA_BUFFER_SIZE + 4);
   ttadec->tta_buf.buffer_end = ttadec->tta_buf.buffer + TTA_BUFFER_SIZE;
-  GST_FLAG_SET (ttadec, GST_ELEMENT_EVENT_AWARE);
 }
 
 void
@@ -311,8 +314,8 @@ get_unary (tta_buffer * tta_buf, guchar * buffer, unsigned long buffersize,
   tta_buf->bit_count--;
 }
 
-static void
-gst_tta_dec_chain (GstPad * pad, GstData * in)
+static GstFlowReturn
+gst_tta_dec_chain (GstPad * pad, GstBuffer * in)
 {
   GstTtaDec *ttadec;
   GstBuffer *outbuf, *buf = GST_BUFFER (in);
@@ -324,16 +327,8 @@ gst_tta_dec_chain (GstPad * pad, GstData * in)
   long res;
   long *prev;
 
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
-
   ttadec = GST_TTA_DEC (GST_OBJECT_PARENT (pad));
-  g_return_if_fail (GST_IS_TTA_DEC (ttadec));
 
-  if (GST_IS_EVENT (buf)) {
-    gst_pad_event_default (pad, GST_EVENT (buf));
-    return;
-  }
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
 
@@ -447,7 +442,8 @@ gst_tta_dec_chain (GstPad * pad, GstData * in)
   memcpy (GST_BUFFER_DATA (outbuf), ttadec->decdata, outsize);
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
-  gst_pad_push (ttadec->srcpad, GST_DATA (outbuf));
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ttadec->srcpad));
+  return gst_pad_push (ttadec->srcpad, outbuf);
 }
 
 gboolean

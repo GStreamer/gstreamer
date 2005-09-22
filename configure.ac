@@ -287,6 +287,7 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
 		qtdemux \
+		tta     \
                 "
 
 dnl see if we can build C++ plug-ins
@@ -466,6 +467,7 @@ gst-plugins-bad.spec
 gst/Makefile
 gst/qtdemux/Makefile
 gst/speed/Makefile
+gst/tta/Makefile
 sys/Makefile
 ext/Makefile
 ext/faac/Makefile
