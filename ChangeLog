@@ -1,5 +1,12 @@
 2005-09-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* examples/fvumeter.py:
+	  condense code by using table and loop
+	* examples/vumeter.py:
+	  fix up example for new API for both bus and level element
+
+2005-09-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gst.defs:
 	* gst/gst.override:
 	  add another registry method

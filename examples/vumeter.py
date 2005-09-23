@@ -51,9 +51,13 @@ class Window(gtk.Dialog):
         self.set_default_size(200,60)
         self.set_title('Volume Level')
         self.connect('delete-event', lambda *x: gtk.main_quit())
-        self.vu = fvumeter.FVUMeter()
-        self.vu.show()
-        self.vbox.pack_start(self.vu)
+        self.vus = []
+        self.vus.append(fvumeter.FVUMeter())
+        self.vus.append(fvumeter.FVUMeter())
+        self.vbox.add(self.vus[0])
+        self.vbox.add(self.vus[1])
+        self.vus[0].show()
+        self.vus[1].show()
 
     def error(self, message, secondary=None):
         m = gtk.MessageDialog(self,
@@ -66,18 +70,13 @@ class Window(gtk.Dialog):
         m.run()
                               
     def on_message(self, bus, message):
-        t = message.type
-        if t == gst.MESSAGE_STATE_CHANGED:
-            pass
-        if (t == gst.MESSAGE_APPLICATION and
-            message.structure.get_name() == 'level'):
+        if  message.structure.get_name() == 'level':
             s = message.structure
-            self.vu.set_property('peak', clamp(s['peak'][0], -90.0, 0.0))
-            self.vu.set_property('decay', clamp(s['decay'][0], -90.0, 0.0))
-        else:
-            print '%s: %s:' % (message.src.get_path_string(),
-                               message.type.value_nicks[1])
-            print '    %s' % message.structure.to_string()
+            for i in range(0, len(s['peak'])):
+                self.vus[i].set_property('peak',
+                    clamp(s['peak'][i], -90.0, 0.0))
+                self.vus[i].set_property('decay',
+                    clamp(s['decay'][i], -90.0, 0.0))
         return True
 
     def run(self):
@@ -86,8 +85,12 @@ class Window(gtk.Dialog):
             s = 'alsasrc ! level message=true ! fakesink'
             pipeline = gst.parse_launch(s)
             self.set_sensitive(True)
-            watch_id = pipeline.get_bus().add_watch(self.on_message)
-            if pipeline.set_state(gst.STATE_PLAYING) == gst.STATE_SUCCESS:
+            # FIXME: using gst.MESSAGE_APPLICATION does not give me
+            # any messages at all
+            watch_id = pipeline.get_bus().add_watch(gst.MESSAGE_ANY,
+                self.on_message)
+            if pipeline.set_state(gst.STATE_PLAYING) == gst.STATE_CHANGE_SUCCESS:
+                print "going into main"
                 gtk.Dialog.run(self)
             else:
                 self.error('Could not set state')
@@ -99,5 +102,5 @@ class Window(gtk.Dialog):
         
 if __name__ == '__main__':
     w = Window()
-    w.show()
+    w.show_all()
     w.run()

@@ -194,89 +194,31 @@ class FVUMeter(gtk.DrawingArea):
                 self.topborder + vumeter_height)
 
         # draw tick marks
-        # - 90.0 dB
-        self.window.draw_line(self.style.black_gc, self.leftborder, 
-            h - self.bottomborder, self.leftborder, 
-            h - self.bottomborder + 5)
-        layout = self.create_pango_layout("-90")
-        layout_width, layout_height = layout.get_pixel_size()
-        self.window.draw_layout(self.style.black_gc,
-            self.leftborder - int(layout_width/2),
-            h - self.bottomborder + 7, layout)
+        scalers = [
+            ('-90', 0.0),
+            ('-40', 0.15),
+            ('-30', 0.30),
+            ('-20', 0.50),
+            ('-10', 0.75),
+            ( '-5', 0.875),
+            (  '0', 1.0),
+        ]
+        for level, scale in scalers:
+            self.window.draw_line(self.style.black_gc, 
+                self.leftborder + int (scale * vumeter_width),
+                h - self.bottomborder,
+                self.leftborder + int(scale * vumeter_width),
+                h - self.bottomborder + 5)
+            self.window.draw_line(self.style.black_gc,
+                self.leftborder, h - self.bottomborder,
+                self.leftborder, h - self.bottomborder + 5)
+            layout = self.create_pango_layout(level)
+            layout_width, layout_height = layout.get_pixel_size()
+            self.window.draw_layout(self.style.black_gc,
+                self.leftborder + int(scale * vumeter_width) - int(layout_width / 2),
+                h - self.bottomborder + 7, layout)
 
-        # -40.0 dB
-        self.window.draw_line(self.style.black_gc, 
-            self.leftborder + int(0.15*vumeter_width),
-            h - self.bottomborder,
-            self.leftborder + int(0.15*vumeter_width),
-            h - self.bottomborder + 5)
-        layout = self.create_pango_layout("-40")
-        layout_width, layout_height = layout.get_pixel_size()
-        self.window.draw_layout(self.style.black_gc,
-            self.leftborder + int(0.15*vumeter_width) - int(layout_width/2),
-            h - self.bottomborder + 7, layout)
-
-        # -30.0 dB
-        self.window.draw_line(self.style.black_gc, 
-            self.leftborder + int(0.30*vumeter_width),
-            h - self.bottomborder,
-            self.leftborder + int(0.30*vumeter_width),
-            h - self.bottomborder + 5)
-        layout = self.create_pango_layout("-30")
-        layout_width, layout_height = layout.get_pixel_size()
-        self.window.draw_layout(self.style.black_gc,
-            self.leftborder + int(0.30*vumeter_width) - int(layout_width/2),
-            h - self.bottomborder + 7, layout)
-
-        # -20.0 dB
-        self.window.draw_line(self.style.black_gc, 
-            self.leftborder + int(0.50*vumeter_width),
-            h - self.bottomborder,
-            self.leftborder + int(0.50*vumeter_width),
-            h - self.bottomborder + 5)
-        layout = self.create_pango_layout("-20")
-        layout_width, layout_height = layout.get_pixel_size()
-        self.window.draw_layout(self.style.black_gc,
-            self.leftborder + int(0.50*vumeter_width) - int(layout_width/2),
-            h - self.bottomborder + 7, layout)
-
-        # -10.0dB
-        self.window.draw_line(self.style.black_gc,
-            self.leftborder + int(0.75*vumeter_width),
-            h - self.bottomborder,
-            self.leftborder + int(0.75*vumeter_width),
-            h - self.bottomborder + 5)
-        layout = self.create_pango_layout("-10")
-        layout_width, layout_height = layout.get_pixel_size()
-        self.window.draw_layout(self.style.black_gc,
-            self.leftborder + int(0.75*vumeter_width) - int(layout_width/2),
-            h - self.bottomborder + 7, layout)
-
-        # - 5.0dB
-        self.window.draw_line(self.style.black_gc,
-            self.leftborder + int(0.875*vumeter_width),
-            h - self.bottomborder,
-            self.leftborder + int(0.875*vumeter_width),
-            h - self.bottomborder + 5)
-        layout = self.create_pango_layout("-5")
-        layout_width, layout_height = layout.get_pixel_size()
-        self.window.draw_layout(self.style.black_gc,
-            self.leftborder + int(0.875*vumeter_width) - int(layout_width/2),
-            h - self.bottomborder + 7, layout)
-
-        # 0.0dB
-        self.window.draw_line(self.style.black_gc,
-            self.leftborder + vumeter_width,
-            h - self.bottomborder,
-            self.leftborder + vumeter_width,
-            h - self.bottomborder + 5)
-        layout = self.create_pango_layout("0")
-        layout_width, layout_height = layout.get_pixel_size()
-        self.window.draw_layout(self.style.black_gc,
-            self.leftborder + vumeter_width - int(layout_width/2),
-            h - self.bottomborder + 7, layout)
-
-        # draw the value to the right
+        # draw the peak level to the right
         layout = self.create_pango_layout("%.2fdB" % self.peaklevel)
         layout_width, layout_height = layout.get_pixel_size()
         self.window.draw_layout(self.style.black_gc,
