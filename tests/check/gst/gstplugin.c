@@ -69,8 +69,7 @@ GST_START_TEST (test_registry)
   for (g = registry->plugins; g; g = g->next) {
     GstPlugin *plugin = GST_PLUGIN (g->data);
 
-    fail_if (GST_OBJECT_REFCOUNT_VALUE (plugin) != 1,
-        "Plugin in registry should have refcount of 1");
+    ASSERT_OBJECT_REFCOUNT (plugin, "plugin in registry", 1);
     GST_DEBUG ("refcount %d %s", GST_OBJECT_REFCOUNT_VALUE (plugin),
         plugin->desc.name);
   }
@@ -138,6 +137,27 @@ GST_START_TEST (test_registry_get_plugin_list)
 }
 
 GST_END_TEST;
+
+GST_START_TEST (test_find_plugin)
+{
+  GstPlugin *plugin;
+
+  plugin = gst_registry_find_plugin (gst_registry_get_default (),
+      "gstelements");
+  fail_if (plugin == NULL, "Failed to find gstelements plugin");
+  ASSERT_OBJECT_REFCOUNT (plugin, "plugin", 2);
+
+  fail_unless_equals_string (plugin->desc.version, VERSION);
+  fail_unless_equals_string (plugin->desc.license, "LGPL");
+  fail_unless_equals_string (plugin->desc.source, "gstreamer");
+  fail_unless_equals_string (plugin->desc.package, GST_PACKAGE);
+  fail_unless_equals_string (plugin->desc.origin, GST_ORIGIN);
+
+  gst_object_unref (plugin);
+}
+
+GST_END_TEST;
+
 
 GST_START_TEST (test_find_feature)
 {
@@ -241,6 +261,7 @@ gst_plugin_suite (void)
   tcase_add_test (tc_chain, test_registry);
   tcase_add_test (tc_chain, test_load_gstelements);
   tcase_add_test (tc_chain, test_registry_get_plugin_list);
+  tcase_add_test (tc_chain, test_find_plugin);
   tcase_add_test (tc_chain, test_find_feature);
   tcase_add_test (tc_chain, test_find_element);
   //tcase_add_test (tc_chain, test_typefind);

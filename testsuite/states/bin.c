@@ -26,7 +26,10 @@
 static void
 assert_state (GstElement * element, GstState state)
 {
-  if (gst_element_get_state (element) != state) {
+  GstState current, pending;
+
+  gst_element_get_state (element, &current, &pending, NULL);
+  if (current != state) {
     g_printerr ("%s: state is %s instead of %s",
         GST_OBJECT_NAME (element),
         gst_element_state_get_name (GST_STATE (element)),
@@ -59,15 +62,16 @@ empty_bin (gchar * bin_name)
    * GST_STATE_CHANGE_ASYNC */
   GstElement *bin = gst_element_factory_make (bin_name, NULL);
 
+  g_assert (bin);
   /* obvious */
   assert_state (bin, GST_STATE_NULL);
   /* see above */
-  assert_state_change (bin, GST_STATE_READY, GST_STATE_CHANGE_ASYNC,
-      GST_STATE_NULL);
-  assert_state_change (bin, GST_STATE_PAUSED, GST_STATE_CHANGE_ASYNC,
-      GST_STATE_NULL);
-  assert_state_change (bin, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC,
-      GST_STATE_NULL);
+  assert_state_change (bin, GST_STATE_READY, GST_STATE_CHANGE_SUCCESS,
+      GST_STATE_READY);
+  assert_state_change (bin, GST_STATE_PAUSED, GST_STATE_CHANGE_SUCCESS,
+      GST_STATE_PAUSED);
+  assert_state_change (bin, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS,
+      GST_STATE_PLAYING);
 }
 
 static void
@@ -79,9 +83,10 @@ test_adding_one_element (GstElement * bin)
     GST_STATE_PLAYING, GST_STATE_PAUSED, GST_STATE_READY, GST_STATE_NULL
   };
   GstElement *test = gst_element_factory_make ("identity", NULL);
-  GstState bin_state = gst_element_get_state (bin);
+  GstState bin_state;
   gint i;
 
+  gst_element_get_state (bin, &bin_state, NULL, NULL);
   g_assert (test);
   gst_object_ref (test);
   assert_state (test, GST_STATE_NULL);
@@ -142,12 +147,11 @@ main (gint argc, gchar * argv[])
 
   /* test behaviour of empty bins */
   empty_bin ("bin");
-  empty_bin ("thread");
   empty_bin ("pipeline");
 
+  g_print ("how far\n");
   /* test behaviour of adding/removing elements to/from all core bin types */
   test_element_in_bin ("bin");
-  test_element_in_bin ("thread");
   test_element_in_bin ("pipeline");
 
   return 0;

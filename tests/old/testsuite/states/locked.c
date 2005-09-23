@@ -52,7 +52,8 @@ main (gint argc, gchar * argv[])
 
   loop = g_main_loop_new (NULL, FALSE);
   bus = gst_element_get_bus (pipeline);
-  gst_bus_add_watch (bus, (GstBusHandler) message_received, pipeline);
+  gst_bus_add_watch (bus, GST_MESSAGE_EOS, (GstBusFunc) message_received,
+      (gpointer) pipeline);
   gst_object_unref (bus);
 
   fakesrc1 = gst_element_factory_make ("fakesrc", "fakesrc1");

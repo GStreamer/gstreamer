@@ -1,3 +1,15 @@
+2005-09-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/gst/.cvsignore:
+	* check/gst/gstplugin.c: (GST_START_TEST), (gst_plugin_suite):
+	* gst/gstregistryxml.c: (load_plugin),
+	(gst_registry_xml_save_plugin):
+	  put back source in registry.  add checks for find_plugin.
+	* testsuite/states/bin.c: (assert_state), (empty_bin),
+	(test_adding_one_element), (main):
+	* testsuite/states/locked.c: (main):
+	  some compile/run fixes
+
 2005-09-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/gst/gstvalue.c: (GST_START_TEST):

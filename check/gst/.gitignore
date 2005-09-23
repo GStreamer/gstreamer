@@ -18,4 +18,5 @@ gstplugin
 gststructure
 gstsystemclock
 gsttag
+gstutils
 gstvalue

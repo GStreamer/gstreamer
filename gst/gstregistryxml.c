@@ -662,6 +662,10 @@ load_plugin (xmlTextReaderPtr reader, GList ** feature_list)
         if (!read_string (reader, &plugin->desc.license))
           break;
         GST_DEBUG ("license %s", plugin->desc.license);
+      } else if (g_str_equal (tag, "source")) {
+        if (!read_string (reader, &plugin->desc.source))
+          break;
+        GST_DEBUG ("source %s", plugin->desc.source);
       } else if (g_str_equal (tag, "package")) {
         if (!read_string (reader, &plugin->desc.package))
           break;
@@ -960,6 +964,7 @@ gst_registry_xml_save_plugin (GstRegistry * registry, GstPlugin * plugin)
   PUT_ESCAPED (" ", "m32p", s);
   PUT_ESCAPED (" ", "version", plugin->desc.version);
   PUT_ESCAPED (" ", "license", plugin->desc.license);
+  PUT_ESCAPED (" ", "source", plugin->desc.source);
   PUT_ESCAPED (" ", "package", plugin->desc.package);
   PUT_ESCAPED (" ", "origin", plugin->desc.origin);
 
