@@ -13,35 +13,41 @@ message_handler (GstBus * bus, GstMessage * message, gpointer data)
 
     if (strcmp (name, "level") == 0) {
       gint channels;
-      gdouble endtime, rms_dB, peak_dB, decay_dB;
+      GstClockTime endtime;
+      gdouble rms_dB, peak_dB, decay_dB;
       gdouble rms;
       const GValue *list;
       const GValue *value;
 
-      if (!gst_structure_get_double (s, "endtime", &endtime))
+      gint i;
+
+      if (!gst_structure_get_clock_time (s, "endtime", &endtime))
         g_warning ("Could not parse endtime");
-      list = gst_structure_get_value (s, "rms");
       /* we can get the number of channels as the length of any of the value
        * lists */
+      list = gst_structure_get_value (s, "rms");
       channels = gst_value_list_get_size (list);
 
-      /* we will only get values for the first channel, since we know sinesrc
-       * is mono */
-      value = gst_value_list_get_value (list, 0);
-      rms_dB = g_value_get_double (value);
-      list = gst_structure_get_value (s, "peak");
-      value = gst_value_list_get_value (list, 0);
-      peak_dB = g_value_get_double (value);
-      list = gst_structure_get_value (s, "decay");
-      value = gst_value_list_get_value (list, 0);
-      decay_dB = g_value_get_double (value);
-      g_print ("endtime: %f, channels: %d\n", endtime, channels);
-      g_print ("RMS: %f dB, peak: %f dB, decay: %f dB\n",
-          rms_dB, peak_dB, decay_dB);
+      g_print ("endtime: %" GST_TIME_FORMAT ", channels: %d\n",
+          GST_TIME_ARGS (endtime), channels);
+      for (i = 0; i < channels; ++i) {
+        g_print ("channel %d\n", i);
+        list = gst_structure_get_value (s, "rms");
+        value = gst_value_list_get_value (list, i);
+        rms_dB = g_value_get_double (value);
+        list = gst_structure_get_value (s, "peak");
+        value = gst_value_list_get_value (list, i);
+        peak_dB = g_value_get_double (value);
+        list = gst_structure_get_value (s, "decay");
+        value = gst_value_list_get_value (list, i);
+        decay_dB = g_value_get_double (value);
+        g_print ("    RMS: %f dB, peak: %f dB, decay: %f dB\n",
+            rms_dB, peak_dB, decay_dB);
 
-      /* converting from dB to normal gives us a value between 0.0 and 1.0 */
-      rms = pow (10, rms_dB / 20);
-      g_print ("normalized rms value: %f\n", rms);
+        /* converting from dB to normal gives us a value between 0.0 and 1.0 */
+        rms = pow (10, rms_dB / 20);
+        g_print ("    normalized rms value: %f\n", rms);
+      }
     }
   }
   /* we handled the message we want, and ignored the ones we didn't want.
@@ -52,26 +58,33 @@ message_handler (GstBus * bus, GstMessage * message, gpointer data)
 int
 main (int argc, char *argv[])
 {
-  GstElement *sinesrc, *level, *fakesink;
+  GstElement *sinesrc, *audioconvert, *level, *fakesink;
   GstElement *pipeline;
+  GstCaps *caps;
   GstBus *bus;
   gint watch_id;
   GMainLoop *loop;
 
   gst_init (&argc, &argv);
 
+  caps = gst_caps_from_string ("audio/x-raw-int,channels=2");
+
   pipeline = gst_pipeline_new (NULL);
   g_assert (pipeline);
   sinesrc = gst_element_factory_make ("sinesrc", NULL);
   g_assert (sinesrc);
+  audioconvert = gst_element_factory_make ("audioconvert", NULL);
+  g_assert (audioconvert);
   level = gst_element_factory_make ("level", NULL);
   g_assert (level);
   fakesink = gst_element_factory_make ("fakesink", NULL);
   g_assert (fakesink);
 
-  gst_bin_add_many (GST_BIN (pipeline), sinesrc, level, fakesink, NULL);
-  gst_element_link (sinesrc, level);
-  gst_element_link (level, fakesink);
+  gst_bin_add_many (GST_BIN (pipeline), sinesrc, audioconvert, level,
+      fakesink, NULL);
+  g_assert (gst_element_link (sinesrc, audioconvert));
+  g_assert (gst_element_link_filtered (audioconvert, level, caps));
+  g_assert (gst_element_link (level, fakesink));
 
   /* make sure we'll get messages */
   g_object_set (G_OBJECT (level), "message", TRUE, NULL);

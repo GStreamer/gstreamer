@@ -35,4 +35,4 @@ include $(top_srcdir)/common/release.mak
 # include $(top_srcdir)/common/po.mak
 
 check-valgrind:
-	@true
+	cd check && make check-valgrind

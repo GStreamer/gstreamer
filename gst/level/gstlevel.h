@@ -59,7 +59,8 @@ struct _GstLevel {
 
   gdouble decay_peak_ttl;	/* time to live for peak in seconds */
   gdouble decay_peak_falloff;	/* falloff in dB/sec */
-  gint num_samples;		/* one-channel sample count since last emit */
+  gint num_frames;		/* frame count (1 sample per channel)
+                                 * since last emit */
 
   /* per-channel arrays for intermediate values */
   gdouble *CS;			/* normalized Cumulative Square */
@@ -68,7 +69,7 @@ struct _GstLevel {
   gdouble *decay_peak;		/* running decaying normalized Peak */
   gdouble *MS;			/* normalized Mean Square of buffer */
   gdouble *RMS_dB;		/* RMS in dB to emit */
-  gdouble *decay_peak_age;	/* age of last peak in one-channel samples */
+  GstClockTime *decay_peak_age;	/* age of last peak */
 };
 
 struct _GstLevelClass {

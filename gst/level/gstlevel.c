@@ -24,23 +24,47 @@
  *
  * <refsect2>
  * <para>
- * Level analyses incoming audio buffers and generates an application
- * message per given interval of time.
+ * Level analyses incoming audio buffers and, if the
+ * <link linkend="GstLevel--message">message property</link> is #TRUE.
+ * generates an application message named
+ * <classname>&quot;level&quot;</classname>:
+ * after each interval of time given by the
+ * <link linkend="GstLevel--interval">interval property</link>.
  * The message's structure contains four fields:
  * <itemizedlist>
  * <listitem>
  *   <para>
- *   <link linkend="gdouble">gdouble</link>
+ *   #GstClockTime
  *   <classname>&quot;endtime&quot;</classname>:
- *   the end time of the buffer that
- *   triggered the message</para>
+ *   the end time of the buffer that triggered the message
+ *   </para>
  * </listitem>
  * <listitem>
  *   <para>
- *   <link linkend="gdouble">gdouble</link>
- *   <classname>&quot;endtime&quot;</classname>:
- *   the end time of the buffer that
- *   triggered the message</para>
+ *   #GstValueList of #gdouble
+ *   <classname>&quot;peak&quot;</classname>:
+ *   the peak power level in dB for each channel
+ *   </para>
+ * </listitem>
+ * <listitem>
+ *   <para>
+ *   #GstValueList of #gdouble
+ *   <classname>&quot;decay&quot;</classname>:
+ *   the decaying peak power level in dB for each channel
+ *   the decaying peak level follows the peak level, but starts dropping
+ *   if no new peak is reached after the time given by
+ *   the <link linkend="GstLevel--peak-ttl">the time to live</link>.
+ *   When the decaying peak level drops, it does so at the decay rate
+ *   as specified by the
+ *   <link linkend="GstLevel--peak-falloff">the peak fallof rate</link>.
+ *   </para>
+ * </listitem>
+ * <listitem>
+ *   <para>
+ *   #GstValueList of #gdouble
+ *   <classname>&quot;rms&quot;</classname>:
+ *   the Root Mean Square (or average power) level in dB for each channel
+ *   </para>
  * </listitem>
   * </itemizedlist>
  * </para>
@@ -55,6 +79,7 @@
 #include "config.h"
 #endif
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 #include "gstlevel.h"
 #include "math.h"
 
@@ -143,15 +168,16 @@ gst_level_class_init (GstLevelClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SIGNAL_LEVEL,
       g_param_spec_boolean ("message", "mesage",
-          "Post a level message for each interval", TRUE, G_PARAM_READWRITE));
+          "Post a level message for each passed interval",
+          TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SIGNAL_INTERVAL,
-      g_param_spec_double ("interval", "Interval",
-          "Interval between posts (in seconds)",
-          0.01, 100.0, 0.1, G_PARAM_READWRITE));
+      g_param_spec_uint64 ("interval", "Interval",
+          "Interval of time between message posts (in nanoseconds)",
+          1, G_MAXUINT64, GST_SECOND / 10, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PEAK_TTL,
-      g_param_spec_double ("peak_ttl", "Peak TTL",
-          "Time To Live of decay peak before it falls back",
-          0, 100.0, 0.3, G_PARAM_READWRITE));
+      g_param_spec_uint64 ("peak_ttl", "Peak TTL",
+          "Time To Live of decay peak before it falls back (in nanoseconds)",
+          0, G_MAXUINT64, GST_SECOND / 10 * 3, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PEAK_FALLOFF,
       g_param_spec_double ("peak_falloff", "Peak Falloff",
           "Decay rate of decay peak after TTL (in dB/sec)",
@@ -175,8 +201,8 @@ gst_level_init (GstLevel * filter, GstLevelClass * g_class)
   filter->width = 0;
   filter->channels = 0;
 
-  filter->interval = 0.1;
-  filter->decay_peak_ttl = 0.4;
+  filter->interval = GST_SECOND / 10;
+  filter->decay_peak_ttl = GST_SECOND / 10 * 3;
   filter->decay_peak_falloff = 10.0;    /* dB falloff (/sec) */
 
   filter->message = TRUE;
@@ -193,10 +219,10 @@ gst_level_set_property (GObject * object, guint prop_id,
       filter->message = g_value_get_boolean (value);
       break;
     case PROP_SIGNAL_INTERVAL:
-      filter->interval = g_value_get_double (value);
+      filter->interval = g_value_get_uint64 (value);
       break;
     case PROP_PEAK_TTL:
-      filter->decay_peak_ttl = g_value_get_double (value);
+      filter->decay_peak_ttl = g_value_get_uint64 (value);
       break;
     case PROP_PEAK_FALLOFF:
       filter->decay_peak_falloff = g_value_get_double (value);
@@ -217,10 +243,10 @@ gst_level_get_property (GObject * object, guint prop_id,
       g_value_set_boolean (value, filter->message);
       break;
     case PROP_SIGNAL_INTERVAL:
-      g_value_set_double (value, filter->interval);
+      g_value_set_uint64 (value, filter->interval);
       break;
     case PROP_PEAK_TTL:
-      g_value_set_double (value, filter->decay_peak_ttl);
+      g_value_set_uint64 (value, filter->decay_peak_ttl);
       break;
     case PROP_PEAK_FALLOFF:
       g_value_set_double (value, filter->decay_peak_falloff);
@@ -251,7 +277,7 @@ gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 
   filter = GST_LEVEL (trans);
 
-  filter->num_samples = 0;
+  filter->num_frames = 0;
 
   structure = gst_caps_get_structure (in, 0);
   filter->rate = structure_get_int (structure, "rate");
@@ -269,13 +295,14 @@ gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   filter->peak = g_new (double, filter->channels);
   filter->last_peak = g_new (double, filter->channels);
   filter->decay_peak = g_new (double, filter->channels);
-  filter->decay_peak_age = g_new (double, filter->channels);
+
+  filter->decay_peak_age = g_new (GstClockTime, filter->channels);
   filter->RMS_dB = g_new (double, filter->channels);
 
   for (i = 0; i < filter->channels; ++i) {
     filter->CS[i] = filter->peak[i] = filter->last_peak[i] =
-        filter->decay_peak[i] = filter->decay_peak_age[i] =
-        filter->RMS_dB[i] = 0.0;
+        filter->decay_peak[i] = filter->RMS_dB[i] = 0.0;
+    filter->decay_peak_age[i] = 0LL;
   }
 
   return TRUE;
@@ -326,14 +353,15 @@ DEFINE_LEVEL_CALCULATOR (gint16);
 DEFINE_LEVEL_CALCULATOR (gint8);
 
 static GstMessage *
-gst_level_message_new (GstLevel * l, gdouble endtime)
+gst_level_message_new (GstLevel * l, GstClockTime endtime)
 {
   GstStructure *s;
   GValue v = { 0, };
 
   g_value_init (&v, GST_TYPE_LIST);
 
-  s = gst_structure_new ("level", "endtime", G_TYPE_DOUBLE, endtime, NULL);
+  s = gst_structure_new ("level", "endtime", GST_TYPE_CLOCK_TIME,
+      endtime, NULL);
   /* will copy-by-value */
   gst_structure_set_value (s, "rms", &v);
   gst_structure_set_value (s, "peak", &v);
@@ -373,7 +401,9 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
   GstLevel *filter;
   gpointer in_data;
   double CS = 0.0;
-  gint num_int_samples = 0;     /* number of samples for all channels combined */
+  gint num_frames = 0;
+  gint num_int_samples = 0;     /* number of interleaved samples
+                                 * ie. total count for all channels combined */
   gint i;
 
   filter = GST_LEVEL (trans);
@@ -386,6 +416,8 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
   g_return_val_if_fail (num_int_samples % filter->channels == 0,
       GST_FLOW_ERROR);
+
+  num_frames = num_int_samples / filter->channels;
 
   for (i = 0; i < filter->channels; ++i) {
     CS = 0.0;
@@ -405,12 +437,14 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
     filter->CS[i] += CS;
   }
 
-  filter->num_samples += num_int_samples / filter->channels;
+  filter->num_frames += num_frames;
 
   for (i = 0; i < filter->channels; ++i) {
-    filter->decay_peak_age[i] += num_int_samples / filter->channels;
-    GST_LOG_OBJECT (filter, "filter peak info [%d]: peak %f, age %f\n", i,
-        filter->last_peak[i], filter->decay_peak_age[i]);
+    filter->decay_peak_age[i] +=
+        GST_FRAMES_TO_CLOCK_TIME (num_frames, filter->rate);
+    GST_LOG_OBJECT (filter, "filter peak info [%d]: peak %f, age %"
+        GST_TIME_FORMAT, i,
+        filter->last_peak[i], GST_TIME_ARGS (filter->decay_peak_age[i]));
 
     /* update running peak */
     if (filter->peak[i] > filter->last_peak[i])
@@ -418,28 +452,29 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
     /* update decay peak */
     if (filter->peak[i] >= filter->decay_peak[i]) {
-      GST_LOG_OBJECT (filter, "new peak, %f\n", filter->peak[i]);
+      GST_LOG_OBJECT (filter, "new peak, %f", filter->peak[i]);
       filter->decay_peak[i] = filter->peak[i];
-      filter->decay_peak_age[i] = 0;
+      filter->decay_peak_age[i] = 0LL;
     } else {
       /* make decay peak fall off if too old */
-      if (filter->decay_peak_age[i] > filter->rate * filter->decay_peak_ttl) {
+      if (filter->decay_peak_age[i] > filter->decay_peak_ttl) {
         double falloff_dB;
         double falloff;
         double length;          /* length of buffer in seconds */
 
 
-        length = (double) num_int_samples / (filter->channels * filter->rate);
+        length = (double) num_frames / filter->rate;
         falloff_dB = filter->decay_peak_falloff * length;
         falloff = pow (10, falloff_dB / -20.0);
 
         GST_LOG_OBJECT (filter,
-            "falloff: length %f, dB falloff %f, falloff factor %e\n",
+            "falloff: length %f, dB falloff %f, falloff factor %e",
             length, falloff_dB, falloff);
         filter->decay_peak[i] *= falloff;
         GST_LOG_OBJECT (filter,
-            "peak is %f samples old, decayed with factor %e to %f\n",
-            filter->decay_peak_age[i], falloff, filter->decay_peak[i]);
+            "peak is %" GST_TIME_FORMAT " old, decayed with factor %e to %f",
+            GST_TIME_ARGS (filter->decay_peak_age[i]), falloff,
+            filter->decay_peak[i]);
       } else {
         GST_LOG_OBJECT (filter, "peak not old enough, not decaying");
       }
@@ -448,23 +483,25 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
   /* do we need to emit ? */
 
-  if (filter->num_samples >= (gint) (filter->interval * filter->rate)) {
+  if (filter->num_frames >=
+      (gint) ((gdouble) filter->interval / GST_SECOND * filter->rate)) {
     if (filter->message) {
       GstMessage *m;
-      double endtime, RMS;
+      GstClockTime endtime;
+      double RMS;
       double RMSdB, lastdB, decaydB;
 
       /* FIXME: convert to a GstClockTime instead */
-      endtime = (double) GST_BUFFER_TIMESTAMP (in) / GST_SECOND
-          + (double) num_int_samples / (filter->rate * filter->channels);
+      endtime = GST_BUFFER_TIMESTAMP (in)
+          + GST_FRAMES_TO_CLOCK_TIME (num_frames, filter->rate);
 
       m = gst_level_message_new (filter, endtime);
 
       for (i = 0; i < filter->channels; ++i) {
-        RMS = sqrt (filter->CS[i] / filter->num_samples);
+        RMS = sqrt (filter->CS[i] / filter->num_frames);
         GST_LOG_OBJECT (filter,
-            "CS: %f, num_samples %d, channel %d, RMS %f",
-            filter->CS[i], filter->num_samples, i, RMS);
+            "CS: %f, num_frames %d, channel %d, RMS %f",
+            filter->CS[i], filter->num_frames, i, RMS);
         /* RMS values are calculated in amplitude, so 20 * log 10 */
         RMSdB = 20 * log10 (RMS);
         /* peak values are square sums, ie. power, so 10 * log 10 */
@@ -472,8 +509,9 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
         decaydB = 10 * log10 (filter->decay_peak[i]);
 
         GST_LOG_OBJECT (filter,
-            "time %f, channel %d, RMS %f dB, peak %f dB, decay %f dB",
-            endtime, i, RMSdB, lastdB, decaydB);
+            "time %" GST_TIME_FORMAT
+            ", channel %d, RMS %f dB, peak %f dB, decay %f dB",
+            GST_TIME_ARGS (endtime), i, RMSdB, lastdB, decaydB);
 
         gst_level_message_append_channel (m, RMSdB, lastdB, decaydB);
 
@@ -484,7 +522,7 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
       gst_element_post_message (GST_ELEMENT (filter), m);
     }
-    filter->num_samples = 0;
+    filter->num_frames = 0;
   }
 
   return GST_FLOW_OK;

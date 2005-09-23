@@ -97,6 +97,7 @@ GST_START_TEST (test_int16)
   int i, j;
   gint16 *data;
   const GValue *list, *value;
+  GstClockTime endtime;
   gdouble dB;
 
   level = setup_level ();
@@ -137,6 +138,7 @@ GST_START_TEST (test_int16)
   fail_if (structure == NULL);
   fail_unless_equals_string ((char *) gst_structure_get_name (structure),
       "level");
+  fail_unless (gst_structure_get_clock_time (structure, "endtime", &endtime));
 
   /* block wave of half amplitude has -5.94 dB for rms, peak and decay */
   for (i = 0; i < 2; ++i) {
