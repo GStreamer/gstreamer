@@ -392,7 +392,7 @@ GST_START_TEST (test_add_linked)
   src = gst_element_factory_make ("fakesrc", NULL);
   fail_if (src == NULL, "Could not create fakesrc");
   sink = gst_element_factory_make ("fakesink", NULL);
-  fail_if (src == NULL, "Could not create fakesink");
+  fail_if (sink == NULL, "Could not create fakesink");
 
   srcpad = gst_element_get_pad (src, "src");
   fail_unless (srcpad != NULL);
@@ -432,6 +432,183 @@ GST_START_TEST (test_add_linked)
 
 GST_END_TEST;
 
+/* g_print ("%10s: %4d => %4d\n", GST_OBJECT_NAME (msg->src), old, new); */
+
+#define ASSERT_STATE_CHANGE_MSG(bus,element,old_state,new_state,num)          \
+  {                                                                           \
+    GstMessage *msg;                                                          \
+    GstState old = 0, new = 0;                                                \
+    msg = gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, GST_SECOND);          \
+    fail_if (msg == NULL, "No state change message within 1 second (#"        \
+        G_STRINGIFY (num) ")");                                               \
+    gst_message_parse_state_changed (msg, &old, &new);                        \
+    fail_if (msg->src != GST_OBJECT (element), G_STRINGIFY(element)           \
+        " should have changed state next (#" G_STRINGIFY (num) ")");          \
+    fail_if (old != old_state || new != new_state, "state change is not "     \
+        G_STRINGIFY (old_state) " => " G_STRINGIFY (new_state));              \
+    gst_message_unref (msg);                                                  \
+  }
+
+GST_START_TEST (test_children_state_change_order_flagged_sink)
+{
+  GstElement *src, *identity, *sink, *pipeline;
+  GstStateChangeReturn ret;
+  GstBus *bus;
+
+  pipeline = gst_pipeline_new (NULL);
+  fail_unless (pipeline != NULL, "Could not create pipeline");
+
+  bus = GST_ELEMENT_BUS (pipeline);
+  fail_unless (bus != NULL, "Pipeline has no bus?!");
+
+  src = gst_element_factory_make ("fakesrc", NULL);
+  fail_if (src == NULL, "Could not create fakesrc");
+
+  identity = gst_element_factory_make ("identity", NULL);
+  fail_if (identity == NULL, "Could not create identity");
+
+  sink = gst_element_factory_make ("fakesink", NULL);
+  fail_if (sink == NULL, "Could not create fakesink");
+
+  gst_bin_add_many (GST_BIN (pipeline), src, identity, sink, NULL);
+
+  fail_unless (gst_element_link (src, identity) == TRUE);
+  fail_unless (gst_element_link (identity, sink) == TRUE);
+
+  /* (1) Test state change with fakesink being a regular sink */
+  ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  fail_if (ret != GST_STATE_CHANGE_SUCCESS, "State change to PLAYING failed");
+
+  /* NULL => READY */
+  ASSERT_STATE_CHANGE_MSG (bus, sink, GST_STATE_NULL, GST_STATE_READY, 101);
+  ASSERT_STATE_CHANGE_MSG (bus, identity, GST_STATE_NULL, GST_STATE_READY, 102);
+  ASSERT_STATE_CHANGE_MSG (bus, src, GST_STATE_NULL, GST_STATE_READY, 103);
+  ASSERT_STATE_CHANGE_MSG (bus, pipeline, GST_STATE_NULL, GST_STATE_READY, 104);
+
+  /* READY => PAUSED */
+  /* because of pre-rolling, sink will return ASYNC on state 
+   * change and change state later when it has a buffer */
+  ASSERT_STATE_CHANGE_MSG (bus, identity, GST_STATE_READY, GST_STATE_PAUSED,
+      105);
+  ASSERT_STATE_CHANGE_MSG (bus, src, GST_STATE_READY, GST_STATE_PAUSED, 106);
+  ASSERT_STATE_CHANGE_MSG (bus, sink, GST_STATE_READY, GST_STATE_PAUSED, 107);
+  ASSERT_STATE_CHANGE_MSG (bus, pipeline, GST_STATE_READY, GST_STATE_PAUSED,
+      108);
+
+  /* PAUSED => PLAYING */
+  ASSERT_STATE_CHANGE_MSG (bus, sink, GST_STATE_PAUSED, GST_STATE_PLAYING, 109);
+  ASSERT_STATE_CHANGE_MSG (bus, identity, GST_STATE_PAUSED, GST_STATE_PLAYING,
+      110);
+  ASSERT_STATE_CHANGE_MSG (bus, src, GST_STATE_PAUSED, GST_STATE_PLAYING, 111);
+  ASSERT_STATE_CHANGE_MSG (bus, pipeline, GST_STATE_PAUSED, GST_STATE_PLAYING,
+      112);
+
+  /* don't set to NULL that will set the bus flushing and kill our messages */
+  ret = gst_element_set_state (pipeline, GST_STATE_READY);
+  fail_if (ret != GST_STATE_CHANGE_SUCCESS, "State change to READY failed");
+
+  /* TODO: do we need to check downwards state change order as well? */
+  pop_messages (bus, 4);        /* pop playing => paused messages off the bus */
+  pop_messages (bus, 4);        /* pop paused => ready messages off the bus */
+
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
+
+  ret = gst_element_set_state (pipeline, GST_STATE_NULL);
+  fail_if (ret != GST_STATE_CHANGE_SUCCESS, "State change to NULL failed");
+
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
+
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_children_state_change_order_semi_sink)
+{
+  GstElement *src, *identity, *sink, *pipeline;
+  GstStateChangeReturn ret;
+  GstBus *bus;
+
+  /* (2) Now again, but check other code path where we don't have
+   *     a proper sink correctly flagged as such, but a 'semi-sink' */
+  pipeline = gst_pipeline_new (NULL);
+  fail_unless (pipeline != NULL, "Could not create pipeline");
+
+  bus = GST_ELEMENT_BUS (pipeline);
+  fail_unless (bus != NULL, "Pipeline has no bus?!");
+
+  src = gst_element_factory_make ("fakesrc", NULL);
+  fail_if (src == NULL, "Could not create fakesrc");
+
+  identity = gst_element_factory_make ("identity", NULL);
+  fail_if (identity == NULL, "Could not create identity");
+
+  sink = gst_element_factory_make ("fakesink", NULL);
+  fail_if (sink == NULL, "Could not create fakesink");
+
+  gst_bin_add_many (GST_BIN (pipeline), src, identity, sink, NULL);
+
+  fail_unless (gst_element_link (src, identity) == TRUE);
+  fail_unless (gst_element_link (identity, sink) == TRUE);
+
+  GST_FLAG_UNSET (sink, GST_ELEMENT_IS_SINK);   /* <======== */
+
+  ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  fail_if (ret != GST_STATE_CHANGE_SUCCESS, "State change to PLAYING failed");
+
+  /* NULL => READY */
+  ASSERT_STATE_CHANGE_MSG (bus, sink, GST_STATE_NULL, GST_STATE_READY, 201);
+  ASSERT_STATE_CHANGE_MSG (bus, identity, GST_STATE_NULL, GST_STATE_READY, 202);
+  ASSERT_STATE_CHANGE_MSG (bus, src, GST_STATE_NULL, GST_STATE_READY, 203);
+  ASSERT_STATE_CHANGE_MSG (bus, pipeline, GST_STATE_NULL, GST_STATE_READY, 204);
+
+  /* READY => PAUSED */
+  /* because of pre-rolling, sink will return ASYNC on state 
+   * change and change state later when it has a buffer */
+  ASSERT_STATE_CHANGE_MSG (bus, identity, GST_STATE_READY, GST_STATE_PAUSED,
+      205);
+  ASSERT_STATE_CHANGE_MSG (bus, src, GST_STATE_READY, GST_STATE_PAUSED, 206);
+  ASSERT_STATE_CHANGE_MSG (bus, sink, GST_STATE_READY, GST_STATE_PAUSED, 207);
+  ASSERT_STATE_CHANGE_MSG (bus, pipeline, GST_STATE_READY, GST_STATE_PAUSED,
+      208);
+
+  /* PAUSED => PLAYING */
+  ASSERT_STATE_CHANGE_MSG (bus, sink, GST_STATE_PAUSED, GST_STATE_PLAYING, 209);
+  ASSERT_STATE_CHANGE_MSG (bus, identity, GST_STATE_PAUSED, GST_STATE_PLAYING,
+      210);
+  ASSERT_STATE_CHANGE_MSG (bus, src, GST_STATE_PAUSED, GST_STATE_PLAYING, 211);
+  ASSERT_STATE_CHANGE_MSG (bus, pipeline, GST_STATE_PAUSED, GST_STATE_PLAYING,
+      212);
+
+  /* don't set to NULL that will set the bus flushing and kill our messages */
+  ret = gst_element_set_state (pipeline, GST_STATE_READY);
+  fail_if (ret != GST_STATE_CHANGE_SUCCESS, "State change to READY failed");
+
+  /* TODO: do we need to check downwards state change order as well? */
+  pop_messages (bus, 4);        /* pop playing => paused messages off the bus */
+  pop_messages (bus, 4);        /* pop paused => ready messages off the bus */
+
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
+
+  ret = gst_element_set_state (pipeline, GST_STATE_NULL);
+  fail_if (ret != GST_STATE_CHANGE_SUCCESS, "State change to NULL failed");
+
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
+
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 Suite *
 gst_bin_suite (void)
 {
@@ -440,6 +617,8 @@ gst_bin_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_interface);
+  tcase_add_test (tc_chain, test_children_state_change_order_flagged_sink);
+  tcase_add_test (tc_chain, test_children_state_change_order_semi_sink);
   tcase_add_test (tc_chain, test_message_state_changed);
   tcase_add_test (tc_chain, test_message_state_changed_child);
   tcase_add_test (tc_chain, test_message_state_changed_children);

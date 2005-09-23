@@ -223,7 +223,7 @@ gst_bin_class_init (GstBinClass * klass)
   gstobject_class = (GstObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   /**
    * GstBin::element-added:
@@ -1359,7 +1359,7 @@ restart:
 
               /* was reffed before pushing on the queue by the
                * gst_object_get_parent() call we used to get the element. */
-              g_queue_push_tail (elem_queue, peer_parent);
+              g_queue_push_head (elem_queue, peer_parent);
               /* so that we don't unref it */
               peer_parent = NULL;
             } else {

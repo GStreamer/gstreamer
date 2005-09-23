@@ -1737,7 +1737,8 @@ gst_element_commit_state (GstElement * element)
     GstState old_state = GST_STATE (element);
 
     GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
-        "commiting state from %s to %s", gst_element_state_get_name (old_state),
+        "committing state from %s to %s",
+        gst_element_state_get_name (old_state),
         gst_element_state_get_name (pending));
 
     GST_STATE (element) = pending;
@@ -1892,7 +1893,7 @@ gst_element_set_state (GstElement * element, GstState state)
             "element changed state successfully");
         /* we can commit the state now and proceed to the next state */
         gst_element_commit_state (element);
-        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "commited state");
+        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "committed state");
         break;
       case GST_STATE_CHANGE_NO_PREROLL:
         GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
@@ -1900,7 +1901,7 @@ gst_element_set_state (GstElement * element, GstState state)
         /* we can commit the state now and proceed to the next state */
         gst_element_commit_state (element);
         GST_STATE_NO_PREROLL (element) = TRUE;
-        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "commited state");
+        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "committed state");
         break;
       default:
         goto invalid_return;

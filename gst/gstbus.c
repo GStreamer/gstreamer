@@ -43,7 +43,7 @@
  * is posted on the bus. The application can then _pop() the messages from the
  * bus to handle them.
  * Alternatively the application can register an asynchronous bus function using
- * gst_bus_add_watch_full() orgst_bus_add_watch(). This function will receive
+ * gst_bus_add_watch_full() or gst_bus_add_watch(). This function will receive
  * messages a short while after they have been posted.
  * 
  * It is also possible to get messages from the bus without any thread 
@@ -65,10 +65,6 @@
 
 #include "gstbus.h"
 
-enum
-{
-  ARG_0,
-};
 
 static void gst_bus_class_init (GstBusClass * klass);
 static void gst_bus_init (GstBus * bus);
@@ -116,7 +112,7 @@ gst_bus_class_init (GstBusClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstobject_class = (GstObjectClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_OBJECT);
+  parent_class = g_type_class_peek_parent (klass);
 
   if (!g_thread_supported ())
     g_thread_init (NULL);
@@ -590,11 +586,11 @@ gst_bus_create_watch (GstBus * bus, GstMessageType events)
  * @user_data: user data passed to @func.
  * @notify: the function to call when the source is removed.
  *
- * Adds the bus to the mainloop with the given priority. If the func returns
- * FALSE, the func will be removed. 
+ * Adds a bus watch to the default main context with the given priority. 
+ * If the func returns FALSE, the source will be removed. 
  *
  * When the func is called, the message belongs to the caller; if you want to 
- * keep a copy of it, call gst_message_ref before leaving the func.
+ * keep a copy of it, call gst_message_ref() before leaving the func.
  *
  * Returns: The event source id.
  *
@@ -631,7 +627,7 @@ gst_bus_add_watch_full (GstBus * bus, gint priority, GstMessageType events,
  * @func: A function to call when a message is received.
  * @user_data: user data passed to @func.
  *
- * Adds the bus to the mainloop with the default priority.
+ * Adds a bus watch to the default main context with the default priority.
  *
  * Returns: The event source id.
  *
