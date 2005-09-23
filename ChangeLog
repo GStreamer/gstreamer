@@ -1,3 +1,14 @@
+2005-09-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	* gst/volume/gstvolume.c:
+	  add/fix docs
+	* gst-libs/gst/audio/audio.c: (gst_audio_frame_byte_size):
+	* gst-libs/gst/audio/audio.h:
+	  add conversion macros for frames <-> clocktime
+
 2005-09-23  David Schleef  <ds@schleef.org>
 
 	* gst/audioresample/Makefile.am:

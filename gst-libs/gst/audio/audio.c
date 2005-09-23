@@ -32,7 +32,7 @@ gst_audio_frame_byte_size (GstPad * pad)
 /* calculate byte size of an audio frame
  * this should be moved closer to the gstreamer core
  * and be implemented for every mime type IMO
- * returns -1 if there's an error (to avoid division by zero), 
+ * returns -1 if there's an error (to avoid division by zero),
  * or the byte size if everything's ok
  */
 

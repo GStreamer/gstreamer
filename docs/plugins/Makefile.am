@@ -79,6 +79,7 @@ IGNORE_CFILES = utils.c mem.c imgconvert.c
 EXTRA_HFILES = \
 	$(top_srcdir)/ext/theora/gsttheoraenc.h \
 	$(top_srcdir)/ext/vorbis/vorbisenc.h \
+	$(top_srcdir)/gst/audioconvert/gstaudioconvert.h \
 	$(top_srcdir)/gst/ffmpegcolorspace/gstffmpegcolorspace.h \
 	$(top_srcdir)/gst/tcp/gstmultifdsink.h \
 	$(top_srcdir)/gst/tcp/gsttcpserversink.h \

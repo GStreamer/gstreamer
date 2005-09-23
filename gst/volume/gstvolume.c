@@ -30,7 +30,8 @@
  * <programlisting>
  * gst-launch -v -m sinesrc ! volume volume=0.5 ! level ! fakesink silent=TRUE
  * </programlisting>
- * This pipeline shows that the level of sinesrc has been halved compared to
+ * This pipeline shows that the level of sinesrc has been halved
+ * (peak values are around -6 dB and RMS around -9 dB) compared to
  * the same pipeline without the volume element.
  * </para>
  * </refsect2>

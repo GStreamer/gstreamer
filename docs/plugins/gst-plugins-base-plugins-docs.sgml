@@ -12,6 +12,7 @@
 
   <chapter>
     <title>gst-plugins-base Elements</title>
+    <xi:include href="xml/element-audioconvert.xml" />
     <xi:include href="xml/element-ffmpegcolorspace.xml" />
 <!--
     <xi:include href="xml/element-gnomevfssink.xml" />

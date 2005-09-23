@@ -49,6 +49,13 @@ G_BEGIN_DECLS
  * Andy Wingo, 18 August 2001
  * Thomas, 6 September 2002 */
 
+/* conversion macros */
+#define GST_FRAMES_TO_CLOCK_TIME(frames, rate) \
+  ((GstClockTime) (((gdouble) frames / rate) * GST_SECOND))
+
+#define GST_CLOCK_TIME_TO_FRAMES(clocktime, rate) \
+  ((gint64) (((gdouble) clocktime / GST_SECOND) * rate))
+
 #define GST_AUDIO_DEF_RATE 44100
 
 #define GST_AUDIO_INT_PAD_TEMPLATE_CAPS \

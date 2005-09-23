@@ -1,3 +1,12 @@
+
+<SECTION>
+<FILE>element-audioconvert</FILE>
+<TITLE>audioconvert</TITLE>
+GstAudioConvert
+<SUBSECTION Standard>
+GstAudioConvertClass
+</SECTION>
+
 <SECTION>
 <FILE>element-ffmpegcolorspace</FILE>
 <TITLE>ffmpegcolorspace</TITLE>
@@ -6,6 +15,7 @@ GstFFMpegCsp
 GstFFMpegCspClass
 </SECTION>
 
+<SECTION>
 <FILE>element-multifdsink</FILE>
 <TITLE>multifdsink</TITLE>
 GstMultiFdSink
@@ -39,15 +49,16 @@ GstTCPServerSinkClass
 <FILE>element-theoraenc</FILE>
 <TITLE>theoraenc</TITLE>
 GstTheoraEnc
+GstTheoraEncBorderMode
 <SUBSECTION Standard>
 GstTheoraEncClass
 </SECTION>
-
 
 <SECTION>
 <FILE>element-videotestsrc</FILE>
 <TITLE>videotestsrc</TITLE>
 GstVideoTestSrc
+GstVideoTestSrcPattern
 <SUBSECTION Standard>
 GstVideoTestSrcClass
 </SECTION>
