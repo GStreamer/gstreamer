@@ -41,12 +41,20 @@ GST_EXPORT GType _gst_object_type;
 #define GST_OBJECT_CAST(obj)            ((GstObject*)(obj))
 #define GST_OBJECT_CLASS_CAST(klass)    ((GstObjectClass*)(klass))
 
-/* make sure we don't change the object size but stil make it compile
+/* make sure we don't change the object size but still make it compile
  * without libxml */
 #ifdef GST_DISABLE_LOADSAVE_REGISTRY
 #define xmlNodePtr	gpointer
 #endif
 
+/**
+ * GstObjectFlags:
+ * @GST_OBJECT_DISPOSING: the object is been destroyed, do use it anymore
+ * @GST_OBJECT_FLOATING:  the object has a floating reference count (e.g. its
+ *  not assigned to a bin)
+ * @GST_OBJECT_FLAG_LAST: subclasses can add additional flags starting from this flag
+ *
+ */
 typedef enum
 {
   GST_OBJECT_DISPOSING   = 0,
@@ -65,26 +73,112 @@ typedef enum
 
 /* we do a GST_OBJECT_CAST to avoid type checking, better call these
  * function with a valid object! */
+ 
+/**
+ * GST_LOCK:
+ * @obj: Object to lock.
+ *
+ * This macro will obtain a lock on the object, making serialization possible.
+ * It block until the lock can be obtained.
+ */
 #define GST_LOCK(obj)                   g_mutex_lock(GST_OBJECT_CAST(obj)->lock)
+/**
+ * GST_TRYLOCK:
+ * @obj: Object to try to get a lock on.
+ *
+ * This macro will try to obtain a lock on the object, but will return with
+ * FALSE if it can't get it immediately.
+ */
 #define GST_TRYLOCK(obj)                g_mutex_trylock(GST_OBJECT_CAST(obj)->lock)
+/**
+ * GST_LOCK:
+ * @obj: Object to unlock.
+ *
+ * This macro releases a lock on the object.
+ */
 #define GST_UNLOCK(obj)                 g_mutex_unlock(GST_OBJECT_CAST(obj)->lock)
+/**
+ * GST_LOCK:
+ * @obj: Object to get the mutex of.
+ *
+ * Acquire a reference to the mutex of this object.
+ */
 #define GST_GET_LOCK(obj)               (GST_OBJECT_CAST(obj)->lock)
 
+
+/**
+ * GST_OBJECT_NAME:
+ * @obj: Object to get the name of.
+ *
+ * Get the name of this object
+ */
 #define GST_OBJECT_NAME(obj)            (GST_OBJECT_CAST(obj)->name)
+/**
+ * GST_OBJECT_PARENT:
+ * @obj: Object to get the parent of.
+ *
+ * Get the parent of this object
+ */
 #define GST_OBJECT_PARENT(obj)          (GST_OBJECT_CAST(obj)->parent)
 
-/* for the flags we double-not to make them comparable to TRUE and FALSE */
+
+/**
+ * GST_FLAGS:
+ * @obj: Object to return flags for.
+ *
+ * This macro returns the entire set of flags for the object.
+ */
 #define GST_FLAGS(obj)                  (GST_OBJECT_CAST (obj)->flags)
+/* for the flags we double-not to make them comparable to TRUE and FALSE */
+/**
+ * GST_FLAG_IS_SET:
+ * @obj: Object to check for flags.
+ * @flag: Flag to check for, must be a single bit in guint32.
+ *
+ * This macro checks to see if the given flag is set.
+ */
 #define GST_FLAG_IS_SET(obj,flag)       (!!(GST_FLAGS (obj) & (1<<(flag))))
+/**
+ * GST_FLAG_SET:
+ * @obj: Object to set flag in.
+ * @flag: Flag to set, can by any number of bits in guint32.
+ *
+ * This macro sets the given bits.
+ */
 #define GST_FLAG_SET(obj,flag)          G_STMT_START{ (GST_FLAGS (obj) |= (1<<(flag))); }G_STMT_END
+/**
+ * GST_FLAG_UNSET:
+ * @obj: Object to unset flag in.
+ * @flag: Flag to set, must be a single bit in guint32.
+ *
+ * This macro usets the given bits.
+ */
 #define GST_FLAG_UNSET(obj,flag)        G_STMT_START{ (GST_FLAGS (obj) &= ~(1<<(flag))); }G_STMT_END
 
+
+/**
+ * GST_OBJECT_IS_DISPOSING:
+ * @obj: Object to check
+ *
+ * Check if the given object is beeing destroyed.
+ */
 #define GST_OBJECT_IS_DISPOSING(obj)    (GST_FLAG_IS_SET (obj, GST_OBJECT_DISPOSING))
+/**
+ * GST_OBJECT_IS_FLOATING:
+ * @obj:Object to check
+ *
+ * Check if the given object is floating (has no owner).
+ */
 #define GST_OBJECT_IS_FLOATING(obj)     (GST_FLAG_IS_SET (obj, GST_OBJECT_FLOATING))
 
 typedef struct _GstObject GstObject;
 typedef struct _GstObjectClass GstObjectClass;
 
+/**
+ * GstObject:
+ * @name: The name of the object
+ *
+ */
 struct _GstObject {
   GObject 	 object;
 

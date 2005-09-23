@@ -20,6 +20,64 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstinfo
+ * @short_description: Debugging and logging facillities
+ * @see_also: #GstConfig, #Gst for command line parameters
+ * and environment variables that affect the debugging output.
+ *
+ * GStreamer's debugging subsystem is an easy way to get information about what
+ * the application is doing.
+ * It is not meant for programming errors. Use GLibs methods (g_warning and so
+ * on for that.
+ *
+ * The debugging subsystem works only after GStreamer has been initilized
+ * - for example by calling gst_init().
+ *
+ * The debugging subsystem is used to log informational messages while the
+ * application runs. 
+ * Each messages has some properties attached to it. Among these properties
+ * are the debugging category, the severity (called "level" here) and an obtional
+ * #GObject it belongs to. Each of these messages is sent to all registered
+ * debugging handlers, which then handle the messages. GStreamer attaches a
+ * default handler on startup, which outputs requested messages to stderr.
+ *
+ * Messages are output by using shortcut macros like #GST_DEBUG, 
+ * #GST_CAT_ERROR_OBJECT or similar. These all expand to calling gst_debug_log()
+ * with the right parameters.
+ * The only thing a developer will probably want to do is define his own 
+ * categories. This is easily done with 3 lines. At the top of your code, declare
+ * the variables and set the default category.
+ * <informalexample>
+ * <programlisting>
+ * GST_DEBUG_CATEGORY (my_category);	// define category
+ * &hash;define GST_CAT_DEFAULT my_category     // set as default
+ * </programlisting>
+ * </informalexample>
+ * After that you only need to initialize the category.
+ * <informalexample>
+ * <programlisting>
+ * GST_DEBUG_CATEGORY_INIT (my_category, "my category", 0, "This is my very own");
+ * </programlisting>
+ * </informalexample>
+ * Initialization must be done before the category is used first. Plugins do this 
+ * in their plugin_init function, libraries and applications should do that
+ * during their initialization.
+ *
+ * The whole debugging subsystem can be disabled at build time with passing the
+ * --disable-gst-debug switch to configure. If this is done, every function, macro
+ * and even structs described in this file evaluate to default values or nothing
+ * at all. So don't take addresses of these functions or use other tricks.
+ * If you must do that for some reason, there is still an option. If the debugging
+ * subsystem was compiled out, #GST_DISABLE_GST_DEBUG is defined in &lt;gst/gst.h&gt;,
+ * so you can check that before doing your trick.
+ * Disabling the debugging subsystem will give you a slight (read: unnoticable) 
+ * speed increase and will reduce the size of your compiled code. The GStreamer 
+ * library itself becomes around 10% smaller.
+ *
+ * Please note that there are naming conventions for the names of debugging 
+ * categories. These are explained at GST_DEBUG_CATEGORY_INIT().
+ */
 
 #include "gst_private.h"
 #include "gstinfo.h"

@@ -20,6 +20,60 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstobject
+ * @short_description: Base class for the GStreamer object hierarchy
+ *
+ * GstObject provides a root for the object hierarchy tree filed in by the
+ * GST library.  It is currently a thin wrapper on top of
+ * #GObject. It is an abstract class that is not very usable on its own.
+ *
+ * GstObject gives us basic refcounting, parenting functionality and locking.
+ * Most of the function are just extended for special gstreamer needs and can be
+ * found under the same name in the base class of GstObject which is GObject
+ * (e.g. g_object_ref() becomes gst_object_ref()).
+ *
+ * The most interesting difference between GstObject and GObject is the "floating"
+ * reference count. A GObject is created with a reference count of 1, owned by the
+ * creator of the GObject. (The owner of a reference is the code section that has
+ * the right to call gst_object_unref() in order to remove that reference.)
+ * A GstObject is created with a reference count of 1 also, but it isn't owned by
+ * anyone; calling gst_object_unref() on the newly-created GtkObject is incorrect.
+ * Instead, the initial reference count of a GstObject is "floating". The floating
+ * reference can be removed by anyone at any time, by calling gst_object_sink().
+ * gst_object_sink() does nothing if an object is already sunk (has no floating
+ * reference).
+ * 
+ * When you add a GstElement to its parent container, the parent container will do
+ * this:
+ * <informalexample>
+ * <programlisting>
+ *   gst_object_ref (GST_OBJECT (child_element));
+ *   gst_object_sink (GST_OBJECT (child_element));
+ * </programlisting>
+ * </informalexample>
+ * This means that the container now owns a reference to the child element (since
+ * it called gst_object_ref()), and the child element has no floating reference.
+ *
+ * The purpose of the floating reference is to keep the child element alive until
+ * you add it to a parent container:
+ * <informalexample>
+ * <programlisting>
+ *    element = gst_element_factory_make (factoryname, name);
+ *    // element has one floating reference to keep it alive
+ *    gst_bin_add (GST_BIN (bin), element);
+ *    // element has one non-floating reference owned by the container
+ * </programlisting>
+ * </informalexample>
+ *
+ * Another effect of this is, that calling gst_object_unref() on a bin object, will
+ * also destoy all the GstElement objects in it. The same is true for calling
+ * gst_bin_remove().
+ * 
+ * In contrast to GObject instances GstObject add a name property. The functions
+ * gst_object_set_name() and gst_object_get_name() are used to set/get the name
+ * of the object.
+ */
 
 #include "gst_private.h"
 
@@ -44,7 +98,7 @@
  * we use our own atomic refcounting to do proper MT safe refcounting.
  *
  * The hack has several side-effect. At first you should use
- * gst_object_ref/unref() whenever you can. Next When using g_value_set/get_object();
+ * gst_object_ref/unref() whenever you can. Next when using g_value_set/get_object();
  * you need to manually fix the refcount.
  *
  * A proper fix is of course to make the glib refcounting threadsafe which is
@@ -168,16 +222,42 @@ gst_object_class_init (GstObjectClass * klass)
       g_param_spec_string ("name", "Name", "The name of the object",
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
+  /**
+   * GstObject::parent-set:
+   * @gstobject: the object which received the signal.
+   * @parent: the new parent
+   *
+   * Is emitted when the parent of an object is set.
+   */
   gst_object_signals[PARENT_SET] =
       g_signal_new ("parent-set", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstObjectClass, parent_set), NULL, NULL,
       g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
+
+  /**
+   * GstObject::parent-unset:
+   * @gstobject: the object which received the signal.
+   * @parent: the old parent
+   *
+   * Is emitted when the parent of an object is unset.
+   */
   gst_object_signals[PARENT_UNSET] =
       g_signal_new ("parent-unset", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstObjectClass, parent_unset), NULL,
       NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
+
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
-  /* FIXME This should be the GType of xmlNodePtr instead of G_TYPE_POINTER */
+  /**
+   * GstObject::object-saved:
+   * @gstobject: the object which received the signal.
+   * @xml_node: the xmlNodePtr of the parent node
+   *
+   * Is trigered whenever a new object is saved to XML. You can connect to this
+   * signal to insert custom XML tags into the core XML.
+   */
+  /* FIXME This should be the GType of xmlNodePtr instead of G_TYPE_POINTER
+   *       (if libxml would use GObject)
+   */
   gst_object_signals[OBJECT_SAVED] =
       g_signal_new ("object-saved", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstObjectClass, object_saved), NULL,
@@ -185,6 +265,17 @@ gst_object_class_init (GstObjectClass * klass)
 
   klass->restore_thyself = gst_object_real_restore_thyself;
 #endif
+
+  /**
+   * GstObject::deep-notify:
+   * @gstobject: the object which received the signal.
+   * @prop_object: the object that originated the signal
+   * @prop: the property that changed
+   *
+   * The deep notify signal is used to be notified of property changes. It is
+   * typically attached to the toplevel bin to receive notifications from all
+   * the elements contained in that bin.
+   */
   gst_object_signals[DEEP_NOTIFY] =
       g_signal_new ("deep-notify", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE | G_SIGNAL_DETAILED |

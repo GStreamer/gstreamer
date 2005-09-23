@@ -19,7 +19,52 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+/**
+ * SECTION:gstelement
+ * @short_description: Abstract base class for all pipeline elements
+ * @see_also: #GstElementFactory, #GstPad
+ *
+ * GstElement is the base class needed to construct an element that can be
+ * used in a GStreamer pipeline.  As such, it is not a functional entity, and
+ * cannot do anything when placed in a pipeline.
+ * 
+ * The name of a GstElement can be get with gst_element_get_name() and set with
+ * gst_element_set_name().  For speed, GST_ELEMENT_NAME() can be used in the 
+ * core. Do not use this in plug-ins or applications in order to retain ABI 
+ * compatibility.
+ * 
+ * All elements have pads (of the type #GstPad).  These pads link to pads on
+ * other elements.  Buffers flow between these linked pads.
+ * A GstElement has a GList of #GstPad structures for all their input (or sink)
+ * and output (or source) pads.  
+ * Core and plug-in writers can add and remove pads with gst_element_add_pad()
+ * and gst_element_remove_pad().
+ * Application writers can manipulate ghost pads (copies of real pads inside a bin)
+ * with gst_element_add_ghost_pad() and gst_element_remove_ghost_pad().
+ * A pad of an element can be retrieved by name with gst_element_get_pad().
+ * A GList of all pads can be retrieved with gst_element_get_pad_list().
+ * 
+ * Elements can be linked through their pads.
+ * If the link is straightforward, use the gst_element_link() 
+ * convenience function to link two elements, or gst_element_link_many() 
+ * for more elements in a row.
+ * Use gst_element_link_filtered() to link two elements constrained by
+ * a specified set of #GstCaps.
+ * For finer control, use gst_element_link_pads() and 
+ * gst_element_link_pads_filtered() to specify the pads to link on 
+ * each element by name.
+ * 
+ * Each element has a state (see #GstState).  You can get and set the state
+ * of an element with gst_element_get_state() and gst_element_set_state().  
+ * You can wait for an element to change it's state with gst_element_wait_state_change().
+ * To get a string representation of a #GstState, use 
+ * gst_element_state_get_name().
+ * 
+ * You can get and set a #GstClock on an element using gst_element_get_clock()
+ * and gst_element_set_clock().  You can wait for the clock to reach a given
+ * #GstClockTime using gst_element_clock_wait().
+ * 
+ */
 #include "gst_private.h"
 #include <glib.h>
 #include <stdarg.h>

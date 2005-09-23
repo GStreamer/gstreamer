@@ -30,14 +30,36 @@
 
 G_BEGIN_DECLS
 
-/*
- * GStreamer's debugging subsystem is an easy way to get information about what
- * the application is doing.
- * It is not meant for programming errors. Use GLibs methods (g_warning and so
- * on for that.
+/**
+ * GstDebugLevel:
+ * @GST_LEVEL_NONE: No debugging level specified or desired. Used to deactivate
+ *  debugging output.
+ * @GST_LEVEL_ERROR: Error messages are to be used only when an error occured 
+ *  that stops the application from keeping working correctly.
+ *  An examples is gst_element_error, which outputs a message with this priority.
+ *  It does not mean that the application is terminating as with g_errror.
+ * @GST_LEVEL_WARNING: Warning messages are to inform about abnormal behaviour
+ *  that could lead to problems or weird behaviour later on. An example of this 
+ *  would be clocking issues ("your computer is pretty slow") or broken input
+ *  data ("Can't synchronize to stream.")
+ * @GST_LEVEL_INFO: Informational messages should be used to keep the developer
+ *  updated about what is happening.
+ *  Examples where this should be used are when a typefind function has 
+ *  successfully determined the type of the stream or when an mp3 plugin detects
+ *  the format to be used. ("This file has mono sound.")
+ * @GST_LEVEL_DEBUG: Debugging messages should be used when something common
+ *  happens that is not the expected default behavior. 
+ *  An example would be notifications about state changes or receiving/sending of
+ *  events.
+ * @GST_LEVEL_LOG: Log messages are messages that are very common but might be 
+ *  useful to know. As a rule of thumb a pipeline that is iterating as expected
+ *  should never output anzthing else but LOG messages.
+ *  Examples for this are referencing/dereferencing of objects or cothread switches.
+ * @GST_LEVEL_COUNT: The number of defined debugging levels.
+ * 
+ * The level defines the importance of a debugging message. The more important a 
+ * message is, the greater the probability that the debugging system outputs it.
  */
-
-/* log levels */
 typedef enum {
   GST_LEVEL_NONE = 0,
   GST_LEVEL_ERROR,
@@ -49,8 +71,16 @@ typedef enum {
   GST_LEVEL_COUNT
 } GstDebugLevel;
 
-/* we can now override this to be more general in maintainer builds
- * or cvs checkouts */
+/**
+ * GST_LEVEL_DEFAULT:
+ *
+ * Defines the default debugging level to be used with GStreamer. It is normally
+ * set to #GST_LEVEL_NONE so nothing get printed.
+ * As it can be configured at compile time, developer builds may chose to
+ * override that though.
+ * You can use this as an argument to gst_debug_set_default_threshold() to
+ * reset the debugging output to default behaviour.
+ */
 #ifndef GST_LEVEL_DEFAULT
 #define GST_LEVEL_DEFAULT GST_LEVEL_NONE
 #endif
@@ -63,6 +93,30 @@ typedef enum {
  * 30=black 31=red 32=green 33=yellow 34=blue 35=magenta 36=cyan 37=white
  * Background color codes:
  * 40=black 41=red 42=green 43=yellow 44=blue 45=magenta 46=cyan 47=white
+ */
+/**
+ * GstDebugColorFlags:
+ * @GST_DEBUG_FG_BLACK: Use black as foreground color.
+ * @GST_DEBUG_FG_RED: Use red as foreground color.
+ * @GST_DEBUG_FG_GREEN: Use green as foreground color.
+ * @GST_DEBUG_FG_YELLOW: Use yellow as foreground color.
+ * @GST_DEBUG_FG_BLUE: Use blue as foreground color.
+ * @GST_DEBUG_FG_MAGENTA: Use magenta as foreground color.
+ * @GST_DEBUG_FG_CYAN: Use cyan as foreground color.
+ * @GST_DEBUG_FG_WHITE: Use white as foreground color.
+ * @GST_DEBUG_BG_BLACK: Use black as background color.
+ * @GST_DEBUG_BG_RED: Use red as background color.
+ * @GST_DEBUG_BG_GREEN: Use green as background color.
+ * @GST_DEBUG_BG_YELLOW: Use yellow as background color.
+ * @GST_DEBUG_BG_BLUE: Use blue as background color.
+ * @GST_DEBUG_BG_MAGENTA: Use magenta as background color.
+ * @GST_DEBUG_BG_CYAN: Use cyan as background color.
+ * @GST_DEBUG_BG_WHITE: Use white as background color.
+ * @GST_DEBUG_BOLD: Make the output bold.
+ * @GST_DEBUG_UNDERLINE: Underline the output.
+ * 
+ * These are some terminal style flags you can use when creating your
+ * debugging categories to make them stand out in debugging output.
  */
 typedef enum {
   /* colors */
@@ -93,6 +147,12 @@ typedef enum {
 #define GST_DEBUG_FORMAT_MASK	(0xFF00)
 
 typedef struct _GstDebugCategory GstDebugCategory;
+/**
+ * GstDebugCategory:
+ *
+ * This is the struct that describes the categories. Once initialized with
+ * #GST_DEBUG_CATEGORY_INIT, its values can't be changed anymore.
+ */
 struct _GstDebugCategory {
   /*< private >*/
   gint                  threshold;
@@ -104,17 +164,39 @@ struct _GstDebugCategory {
 
 /********** some convenience macros for debugging **********/
 
-/* This is needed in printf's if a char* might be NULL. Solaris crashes then. */
+/**
+ * GST_STR_NULL:
+ * @str: The string to check.
+ *
+ * Macro to use when a string must not be NULL, but may be NULL. If the string
+ * is NULL, "(NULL)" is printed instead.
+ * In GStreamer printf string arguments may not be NULL, because on some
+ * platforms (ie Solaris) the libc crashes in that case. This includes debugging
+ * strings.
+ */
 #define GST_STR_NULL(str) ((str) ? (str) : "(NULL)")
 
-/* easier debugging for pad names */
 /* FIXME, not MT safe */
+/**
+ * GST_DEBUG_PAD_NAME:
+ * @pad: The pad to debug.
+ *
+ * Evaluates to 2 strings, that describe the pad. Often used in debugging
+ * statements.
+ */
 #define GST_DEBUG_PAD_NAME(pad) \
   (GST_OBJECT_PARENT(pad) != NULL) ? \
   GST_STR_NULL (GST_OBJECT_NAME (GST_OBJECT_PARENT(pad))) : \
   "''", GST_OBJECT_NAME (pad)
 
-/* You might want to define GST_FUNCTION in apps' configure script. */
+/**
+ * GST_FUNCTION:
+ *
+ * This macro should evaluate to the name of the current function and be should
+ * be defined when configuring your project, as it is compiler dependant. If it
+ * is not defined, some default value is used. It is used to provide debugging
+ * output with the function name of the message.
+ */
 #ifndef GST_FUNCTION
 #if defined (__GNUC__)
 #  define GST_FUNCTION     ((const char*) (__PRETTY_FUNCTION__))
@@ -275,10 +357,26 @@ GSList *
 gchar *	gst_debug_construct_term_color	(guint colorinfo);
 
 
+/**
+ * GST_CAT_DEFAULT:
+ *
+ * Default gstreamer core debug log category. Please define your own.
+ */
 GST_EXPORT GstDebugCategory *	GST_CAT_DEFAULT;
 /* this symbol may not be used */
 extern gboolean			__gst_debug_enabled;
 
+/**
+ * GST_CAT_LEVEL_LOG:
+ * @cat: category to use
+ * @level: the severity of the message
+ * @object: the #GObject the message belongs to or NULL if none
+ * @...: A printf-style message to output
+ *
+ * Outputs a debugging message. This is the most general macro for outputting
+ * debugging messages. You will probably want to use one of the ones described
+ * below.
+ */
 #ifdef G_HAVE_ISO_VARARGS
 #define GST_CAT_LEVEL_LOG(cat,level,object,...) G_STMT_START{		\
   if (__gst_debug_enabled) {						\
@@ -317,6 +415,156 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
 }
 #endif
 #endif /* G_HAVE_ISO_VARARGS */
+
+/**
+ * GST_CAT_ERROR_OBJECT:
+ * @cat: category to use
+ * @obj: the #GObject the message belongs to
+ * @...: printf-style message to output
+ *
+ * Output an error message belonging to the given object in the given category.
+ */
+/**
+ * GST_CAT_WARNING_OBJECT:
+ * @cat: category to use
+ * @obj: the #GObject the message belongs to
+ * @...: printf-style message to output
+ *
+ * Output a warning message belonging to the given object in the given category.
+ */
+/**
+ * GST_CAT_INFO_OBJECT:
+ * @cat: category to use
+ * @obj: the #GObject the message belongs to
+ * @...: printf-style message to output
+ *
+ * Output an informational message belonging to the given object in the given
+ * category.
+ */
+/**
+ * GST_CAT_DEBUG_OBJECT:
+ * @cat: category to use
+ * @obj: the #GObject the message belongs to
+ * @...: printf-style message to output
+ *
+ * Output an debugging message belonging to the given object in the given category.
+ */
+/**
+ * GST_CAT_LOG_OBJECT:
+ * @cat: category to use
+ * @obj: the #GObject the message belongs to
+ * @...: printf-style message to output
+ *
+ * Output an logging message belonging to the given object in the given category.
+ */
+
+
+/**
+ * GST_CAT_ERROR:
+ * @cat: category to use
+ * @...: printf-style message to output
+ *
+ * Output an error message in the given category.
+ */
+/**
+ * GST_CAT_WARNING:
+ * @cat: category to use
+ * @...: printf-style message to output
+ *
+ * Output an warning message in the given category.
+ */
+/**
+ * GST_CAT_INFO:
+ * @cat: category to use
+ * @...: printf-style message to output
+ *
+ * Output an informational message in the given category.
+ */
+/**
+ * GST_CAT_DEBUG:
+ * @cat: category to use
+ * @...: printf-style message to output
+ *
+ * Output an debugging message in the given category.
+ */
+/**
+ * GST_CAT_LOG:
+ * @cat: category to use
+ * @...: printf-style message to output
+ *
+ * Output an logging message in the given category.
+ */
+
+
+/**
+ * GST_ERROR_OBJECT:
+ * @obj: the #GObject the message belongs to
+ * @...: printf-style message to output
+ *
+ * Output an error message belonging to the given object in the default category.
+ */
+/**
+ * GST_WARNING_OBJECT:
+ * @obj: the #GObject the message belongs to
+ * @...: printf-style message to output
+ *
+ * Output a warning message belonging to the given object in the default category.
+ */
+/**
+ * GST_INFO_OBJECT:
+ * @obj: the #GObject the message belongs to
+ * @...: printf-style message to output
+ *
+ * Output an informational message belonging to the given object in the default 
+ * category.
+ */
+/**
+ * GST_DEBUG_OBJECT:
+ * @obj: the #GObject the message belongs to
+ * @...: printf-style message to output
+ *
+ * Output a debugging message belonging to the given object in the default 
+ * category.
+ */
+/**
+ * GST_LOG_OBJECT:
+ * @obj: the #GObject the message belongs to
+ * @...: printf-style message to output
+ *
+ * Output a logging message belonging to the given object in the default category.
+ */
+
+ 
+/**
+ * GST_ERROR:
+ * @...: printf-style message to output
+ *
+ * Output an error message in the default category.
+ */
+/**
+ * GST_WARNING:
+ * @...: printf-style message to output
+ *
+ * Output a warning message in the default category.
+ */
+/**
+ * GST_INFO:
+ * @...: printf-style message to output
+ *
+ * Output an informational message in the default category.
+ */
+/**
+ * GST_DEBUG:
+ * @...: printf-style message to output
+ *
+ * Output a debugging message in the default category.
+ */
+/**
+ * GST_LOG:
+ * @...: printf-style message to output
+ *
+ * Output a logging message in the default category.
+ */
 
 #ifdef G_HAVE_ISO_VARARGS
 
@@ -592,14 +840,36 @@ GST_LOG (const char *format, ...)
 
 
 /********** function pointer stuff **********/
+
 typedef	void (* GstDebugFuncPtr)	(void);
 void	_gst_debug_register_funcptr	(GstDebugFuncPtr	func,
 					 gchar *		ptrname);
 G_CONST_RETURN gchar *
 	_gst_debug_nameof_funcptr	(GstDebugFuncPtr	func);
 
+/**
+ * GST_DEBUG_FUNCPTR:
+ * @ptr: pointer to the function to register
+ *
+ * Register a pointer to a function with its name, so it can later be used by
+ * GST_DEBUG_FUNCPTR_NAME().
+ *
+ * Returns: The ptr to the function
+ */
 #define GST_DEBUG_FUNCPTR(ptr) \
   (_gst_debug_register_funcptr((GstDebugFuncPtr)(ptr), #ptr) , ptr)
+
+/**
+ * GST_DEBUG_FUNCPTR_NAME:
+ * @ptr: pointer to the function to look up the name
+ *
+ * Retrieves the name of the function, if it was previously registered with
+ * GST_DEBUG_FUNCPTR(). If not, it returns a description of the pointer.
+ *
+ * Make sure you free the string after use.
+ *
+ * Returns: The name of the function
+ */
 #define GST_DEBUG_FUNCPTR_NAME(ptr) \
   _gst_debug_nameof_funcptr((GstDebugFuncPtr)ptr)
 

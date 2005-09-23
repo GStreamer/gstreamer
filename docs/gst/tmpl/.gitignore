@@ -15,6 +15,7 @@ gstchildproxy.sgml
 gstcollectpads.sgml
 gstcompat.sgml
 gstconfig.sgml
+gstelement.sgml
 gstelementdetails.sgml
 gstelementfactory.sgml
 gstenumtypes.sgml
@@ -30,11 +31,13 @@ gstghostpad.sgml
 gstimplementsinterface.sgml
 gstindex.sgml
 gstindexfactory.sgml
+gstinfo.sgml
 gstiterator.sgml
 gstmacros.sgml
 gstmemchunk.sgml
 gstmessage.sgml
 gstminiobject.sgml
+gstobject.sgml
 gstparse.sgml
 gstpluginfeature.sgml
 gstpushsrc.sgml

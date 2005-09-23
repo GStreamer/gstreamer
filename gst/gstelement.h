@@ -82,7 +82,21 @@ typedef enum {
 /* NOTE: this probably should be done with an #ifdef to decide
  * whether to safe-cast or to just do the non-checking cast.
  */
+
+/**
+ * GST_STATE:
+ * @obj: Element to return state for.
+ *
+ * This macro returns the current state of the element.
+ */
 #define GST_STATE(obj)			(GST_ELEMENT(obj)->current_state)
+
+/**
+ * GST_STATE_PENDING:
+ * @obj: Element to return the pending state for.
+ *
+ * This macro returns the currently pending state of the element.
+ */
 #define GST_STATE_PENDING(obj)		(GST_ELEMENT(obj)->pending_state)
 #define GST_STATE_FINAL(obj)		(GST_ELEMENT(obj)->final_state)
 #define GST_STATE_ERROR(obj)		(GST_ELEMENT(obj)->state_error)
@@ -125,28 +139,72 @@ typedef enum /*< flags=0 >*/
   GST_STATE_CHANGE_READY_TO_NULL	= 1<<(GST_STATE_READY+8) | 1<<GST_STATE_NULL
 } GstStateChange;
 
+/**
+ * GstElementFlags:
+ * @GST_ELEMENT_LOCKED_STATE: ignore state changes from parent
+ * @GST_ELEMENT_IS_SINK: the element is a sink
+ * @GST_ELEMENT_UNPARENTING: Child is being removed from the parent bin.
+ *  gst_bin_remove() on a child already being removed immediately returns FALSE
+ * @GST_ELEMENT_FLAG_LAST: offset to define more flags
+ *
+ * The standard flags that an element may have.
+ */
 typedef enum
 {
-  /* ignore state changes from parent */
   GST_ELEMENT_LOCKED_STATE 	= GST_OBJECT_FLAG_LAST,
-  
-  /* the element is a sink */
   GST_ELEMENT_IS_SINK,
-
-  /* Child is being removed from the parent bin. gst_bin_remove on a
-   * child already being removed immediately returns FALSE */
   GST_ELEMENT_UNPARENTING,
-
-  /* use some padding for future expansion */
   GST_ELEMENT_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 16
 } GstElementFlags;
 
+/**
+ * GST_ELEMENT_IS_LOCKED_STATE:
+ * @obj: A #GstElement to query
+ *
+ * Check if the element is in the loacked state and therefore will ignore state
+ * changes from its parent object.
+ */
 #define GST_ELEMENT_IS_LOCKED_STATE(obj)        (GST_FLAG_IS_SET(obj,GST_ELEMENT_LOCKED_STATE))
 
+/**
+ * GST_ELEMENT_NAME:
+ * @obj: A #GstElement to query
+ *
+ * Gets the name of this element. Use only in core as this is not
+ * ABI-compatible. Others use gst_element_get_name()
+ */
 #define GST_ELEMENT_NAME(obj)			(GST_OBJECT_NAME(obj))
+
+/**
+ * GST_ELEMENT_PARENT:
+ * @obj: A #GstElement to query
+ *
+ * Get the parent object of this element.
+ */
 #define GST_ELEMENT_PARENT(obj)			(GST_ELEMENT_CAST(GST_OBJECT_PARENT(obj)))
+
+/**
+ * GST_ELEMENT_BUS:
+ * @obj: A #GstElement to query
+ *
+ * Get the message bus of this element.
+ */
 #define GST_ELEMENT_BUS(obj)			(GST_ELEMENT_CAST(obj)->bus)
+
+/**
+ * GST_ELEMENT_CLOCK:
+ * @obj: A #GstElement to query
+ *
+ * Get the clock of this element
+ */
 #define GST_ELEMENT_CLOCK(obj)			(GST_ELEMENT_CAST(obj)->clock)
+
+/**
+ * GST_ELEMENT_PADS:
+ * @obj: A #GstElement to query
+ *
+ * Get the pads of this elements.
+ */
 #define GST_ELEMENT_PADS(obj)			(GST_ELEMENT_CAST(obj)->pads)
 
 /**
@@ -176,7 +234,20 @@ G_STMT_START {								\
     __txt, __dbg, __FILE__, GST_FUNCTION, __LINE__);			\
 } G_STMT_END
 
-/* log a (non-fatal) warning message and post it on the bus */
+/**
+ * GST_ELEMENT_WARNING:
+ * @el:     the element that throws the error
+ * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see #GstError)
+ * @code:   error code defined for that domain (see #GstError)
+ * @text:   the message to display (format string and args enclosed in
+            parentheses)
+ * @debug:  debugging information for the message (format string and args
+            enclosed in parentheses)
+ *
+ * Utility function that elements can use in case they encountered a non-fatal
+ * data processing problem. The pipeline will throw a warning signal and the
+ * application will be informed.
+ */
 #define GST_ELEMENT_WARNING(el, domain, code, text, debug)		\
 G_STMT_START {								\
   gchar *__txt = _gst_element_error_printf text;			\
@@ -304,9 +375,43 @@ void			gst_element_class_set_details		(GstElementClass *klass,
 GType			gst_element_get_type		(void);
 
 /* basic name and parentage stuff from GstObject */
+
+/**
+ * gst_element_get_name:
+ * @elem: a #GstElement to set the name of.
+ * @name: the new name of the element.
+ *
+ * Gets the name of the element.
+ */
 #define			gst_element_get_name(elem)	gst_object_get_name(GST_OBJECT(elem))
+
+/**
+ * gst_element_set_name:
+ * @elem: a #GstElement to set the name of.
+ *
+ * Sets the name of the element, getting rid of the old name if there was one.
+ *
+ * Returns: the name of the element.
+ */
 #define			gst_element_set_name(elem,name)	gst_object_set_name(GST_OBJECT(elem),name)
+
+/**
+ * gst_element_get_parent:
+ * @elem: a #GstElement to get the parent of.
+ *
+ * Gets the parent of an element.
+ *
+ * Returns: the #GstObject parent of the element.
+ */
 #define			gst_element_get_parent(elem)	gst_object_get_parent(GST_OBJECT(elem))
+
+/**
+ * gst_element_set_parent:
+ * @elem: a #GstElement to set the parent of.
+ * @name: the new parent #GstObject of the element.
+ *
+ * Sets the parent of an element.
+ */
 #define			gst_element_set_parent(elem,parent)	gst_object_set_parent(GST_OBJECT(elem),parent)
 
 /* clocking */
