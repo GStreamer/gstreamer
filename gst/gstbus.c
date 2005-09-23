@@ -53,6 +53,9 @@
  * to deal with messages from different threads.
  *
  * Every #GstBin has one bus.
+ *
+ * Note that a #GstBin will set its bus into flushing state when changing from
+ * READY to NULL state.
  */
 
 #include <errno.h>

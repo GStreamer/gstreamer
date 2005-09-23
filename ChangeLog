@@ -1,3 +1,12 @@
+2005-09-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/design/part-gstbin.txt:
+	* docs/design/part-gstbus.txt:
+	* gst/gstbus.c:
+	  Add blurb about how the bus goes into flushing mode and
+	  drops all messages when its bin goes from READY into NULL 
+	  state.
+
 2005-09-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/gstreamer-sections.txt:

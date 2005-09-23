@@ -55,6 +55,13 @@ external message bus, except for EOS which is handled specially.
 The application can retrieve the external GstBus and integrate it in the
 mainloop or it can just _pop() messages off in its own thread.
 
+When a bin goes from READY into NULL state, it will set its bus to flushing, 
+ie. the bus will drop all existing and new messages on the bus. This is 
+necessary because bus messages hold references to the bin or its elements, 
+so there are circular references that need to be broken if one ever wants 
+to be able to destroy the bin properly. 
+
+
 EOS
 ---
 
