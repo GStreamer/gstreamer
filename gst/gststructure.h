@@ -132,7 +132,7 @@ gboolean                gst_structure_get_double           (const GstStructure  
 							    gdouble                 *value);
 gboolean                gst_structure_get_date             (const GstStructure      *structure,
 							    const gchar             *fieldname,
-                                                            GDate                  **date_out);
+                                                            GDate                  **value);
 G_CONST_RETURN gchar *  gst_structure_get_string           (const GstStructure      *structure,
 							    const gchar             *fieldname);
 

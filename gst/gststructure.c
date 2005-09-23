@@ -966,13 +966,13 @@ gst_structure_get_fourcc (const GstStructure * structure,
  */
 gboolean
 gst_structure_get_date (const GstStructure * structure, const gchar * fieldname,
-    GDate ** date_out)
+    GDate ** value)
 {
   GstStructureField *field;
 
   g_return_val_if_fail (structure != NULL, FALSE);
   g_return_val_if_fail (fieldname != NULL, FALSE);
-  g_return_val_if_fail (date_out != NULL, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
 
   field = gst_structure_get_field (structure, fieldname);
 
@@ -981,7 +981,7 @@ gst_structure_get_date (const GstStructure * structure, const gchar * fieldname,
   if (!GST_VALUE_HOLDS_DATE (&field->value))
     return FALSE;
 
-  *date_out = g_value_dup_boxed (&field->value);
+  *value = g_value_dup_boxed (&field->value);
 
   return TRUE;
 }

@@ -47,7 +47,6 @@ gst_dp_validate_packet
 <TITLE>GstController</TITLE>
 <INCLUDE>gst/controller/gstcontroller.h</INCLUDE>
 GstController
-GstValueArray
 GstInterpolateMode
 gst_controller_init
 gst_controller_new

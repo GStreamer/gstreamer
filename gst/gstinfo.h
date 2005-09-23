@@ -853,8 +853,6 @@ G_CONST_RETURN gchar *
  *
  * Register a pointer to a function with its name, so it can later be used by
  * GST_DEBUG_FUNCPTR_NAME().
- *
- * Returns: The ptr to the function
  */
 #define GST_DEBUG_FUNCPTR(ptr) \
   (_gst_debug_register_funcptr((GstDebugFuncPtr)(ptr), #ptr) , ptr)
@@ -867,8 +865,6 @@ G_CONST_RETURN gchar *
  * GST_DEBUG_FUNCPTR(). If not, it returns a description of the pointer.
  *
  * Make sure you free the string after use.
- *
- * Returns: The name of the function
  */
 #define GST_DEBUG_FUNCPTR_NAME(ptr) \
   _gst_debug_nameof_funcptr((GstDebugFuncPtr)ptr)

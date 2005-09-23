@@ -42,6 +42,9 @@ G_BEGIN_DECLS
  * A datatype to hold a time, measured in nanoseconds.
  */
 typedef guint64	GstClockTime;
+
+#define GST_TYPE_CLOCK_TIME G_TYPE_UINT64
+
 /**
  * GstClockTimeDiff:
  *

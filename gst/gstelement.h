@@ -379,7 +379,6 @@ GType			gst_element_get_type		(void);
 /**
  * gst_element_get_name:
  * @elem: a #GstElement to set the name of.
- * @name: the new name of the element.
  *
  * Gets the name of the element.
  */
@@ -390,8 +389,6 @@ GType			gst_element_get_type		(void);
  * @elem: a #GstElement to set the name of.
  *
  * Sets the name of the element, getting rid of the old name if there was one.
- *
- * Returns: the name of the element.
  */
 #define			gst_element_set_name(elem,name)	gst_object_set_name(GST_OBJECT(elem),name)
 
@@ -400,15 +397,13 @@ GType			gst_element_get_type		(void);
  * @elem: a #GstElement to get the parent of.
  *
  * Gets the parent of an element.
- *
- * Returns: the #GstObject parent of the element.
  */
 #define			gst_element_get_parent(elem)	gst_object_get_parent(GST_OBJECT(elem))
 
 /**
  * gst_element_set_parent:
  * @elem: a #GstElement to set the parent of.
- * @name: the new parent #GstObject of the element.
+ * @parent: the new parent #GstObject of the element.
  *
  * Sets the parent of an element.
  */

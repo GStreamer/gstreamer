@@ -16,6 +16,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 /**
  * SECTION:gstvalue
  * @short_description: GValue implementations specific to GStreamer
@@ -2978,7 +2979,7 @@ gst_value_compare_fraction (const GValue * value1, const GValue * value2)
 /**
  * gst_value_set_date:
  * @value: a GValue initialized to GST_TYPE_DATE
- * @caps: the date to set the value to
+ * @date: the date to set the value to
  *
  * Sets the contents of @value to coorespond to @date.  The actual
  * #GDate structure is copied before it is used.

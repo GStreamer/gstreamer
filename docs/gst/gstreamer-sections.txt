@@ -1505,6 +1505,10 @@ gst_query_set_seeking
 gst_query_type_iterate_definitions
 gst_query_unref
 
+gst_query_set_segment
+gst_query_new_segment
+gst_query_parse_segment
+
 <SUBSECTION Standard>
 GstQueryClass
 GST_QUERY
