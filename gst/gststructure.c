@@ -719,6 +719,7 @@ gst_structure_n_fields (const GstStructure * structure)
 /**
  * gst_structure_nth_field_name:
  * @structure: a #GstStructure
+ * @index: the index to get the name of
  *
  * Returns: the name of the given field number, counting from 0 onwards.
  */

@@ -422,6 +422,7 @@ gst_pipeline_get_bus (GstPipeline * pipeline)
 /**
  * gst_pipeline_set_new_stream_time:
  * @pipeline: the pipeline
+ * @GstClockTime: the new stream time to set
  *
  * Set the new stream time of the pipeline. The stream time is used to
  * set the base time on the elements (see @gst_element_set_base_time())

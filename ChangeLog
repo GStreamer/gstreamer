@@ -1,3 +1,13 @@
+2005-09-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* common/gtk-doc.mak:
+	  don't fail on building XML, FC4 slave shows a bunch of doc
+	  missing bits that I don't get
+	* gst/gstpad.c:
+	* gst/gstpipeline.c:
+	* gst/gststructure.c:
+	  some doc updates
+
 2005-09-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/design/part-gstbin.txt:

@@ -1927,7 +1927,8 @@ gst_pad_fixate_caps (GstPad * pad, GstCaps * caps)
 
 /**
  * gst_pad_accept_caps:
- * @pad: a  #GstPad to check
+ * @pad: a #GstPad to check
+ * @caps: a #GstCaps to check on the pad
  *
  * Check if the given pad accepts the caps.
  *
@@ -1979,6 +1980,7 @@ gst_pad_accept_caps (GstPad * pad, GstCaps * caps)
 /**
  * gst_pad_peer_accept_caps:
  * @pad: a  #GstPad to check
+ * @caps: a #GstCaps to check on the pad
  *
  * Check if the given pad accepts the caps.
  *
