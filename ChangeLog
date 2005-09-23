@@ -1,3 +1,14 @@
+2005-09-23  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/gsm/Makefile.am:
+	* ext/gsm/gstgsm.c:
+	* ext/gsm/gstgsmdec.c:
+	* PORTED_09:
+	Gsmdec ported to 0.9.
+
+
+
+
 2005-09-22  Arwed v. Merkatz  <v.merkatz@gmx.net>
 
 	* configure.ac:

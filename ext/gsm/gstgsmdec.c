@@ -50,7 +50,7 @@ static void gst_gsmdec_base_init (gpointer g_class);
 static void gst_gsmdec_class_init (GstGSMDec * klass);
 static void gst_gsmdec_init (GstGSMDec * gsmdec);
 
-static void gst_gsmdec_chain (GstPad * pad, GstData * _data);
+static GstFlowReturn gst_gsmdec_chain (GstPad * pad, GstBuffer * buffer);
 
 static GstElementClass *parent_class = NULL;
 
@@ -143,89 +143,67 @@ gst_gsmdec_init (GstGSMDec * gsmdec)
   gsmdec->next_of = 0;
 }
 
-static void
-gst_gsmdec_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_gsmdec_chain (GstPad * pad, GstBuffer * buf)
 {
   GstGSMDec *gsmdec;
 
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (_data != NULL);
-
   gsmdec = GST_GSMDEC (gst_pad_get_parent (pad));
 
-  if (GST_IS_EVENT (_data)) {
-    GstEvent *event = GST_EVENT (_data);
+  gsm_byte *data = (gsm_byte *) GST_BUFFER_DATA (buf);
+  guint size = GST_BUFFER_SIZE (buf);
 
-    switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_EOS:{
-        gst_element_set_eos (GST_ELEMENT (gsmdec));
-        gst_pad_push (gsmdec->srcpad, _data);
-        break;
-      }
-      case GST_EVENT_DISCONTINUOUS:{
-        /* drop the discontinuity */
-        break;
-      }
-      default:{
-        gst_pad_event_default (pad, event);
-        break;
-      }
-    }
-    return;
-  } else if (GST_IS_BUFFER (_data)) {
-    GstBuffer *buf = GST_BUFFER (_data);
-    gsm_byte *data = (gsm_byte *) GST_BUFFER_DATA (buf);
-    guint size = GST_BUFFER_SIZE (buf);
+  if (gsmdec->bufsize && (gsmdec->bufsize + size >= 33)) {
+    GstBuffer *outbuf;
 
-    if (gsmdec->bufsize && (gsmdec->bufsize + size >= 33)) {
-      GstBuffer *outbuf;
+    memcpy (gsmdec->buffer + gsmdec->bufsize, data,
+        (33 - gsmdec->bufsize) * sizeof (gsm_byte));
 
-      memcpy (gsmdec->buffer + gsmdec->bufsize, data,
-          (33 - gsmdec->bufsize) * sizeof (gsm_byte));
+    outbuf = gst_buffer_new_and_alloc (160 * sizeof (gsm_signal));
+    GST_BUFFER_TIMESTAMP (outbuf) = gsmdec->next_ts;
+    GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;
+    GST_BUFFER_OFFSET (outbuf) = gsmdec->next_of;
+    GST_BUFFER_OFFSET_END (outbuf) = gsmdec->next_of + 160 - 1;
+    gst_buffer_set_caps (outbuf, gst_pad_get_caps (gsmdec->srcpad));
 
-      outbuf = gst_buffer_new_and_alloc (160 * sizeof (gsm_signal));
-      GST_BUFFER_TIMESTAMP (outbuf) = gsmdec->next_ts;
-      GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;
-      GST_BUFFER_OFFSET (outbuf) = gsmdec->next_of;
-      GST_BUFFER_OFFSET_END (outbuf) = gsmdec->next_of + 160 - 1;
-      gsmdec->next_ts += 20 * GST_MSECOND;
-      gsmdec->next_of += 160;
+    gsmdec->next_ts += 20 * GST_MSECOND;
+    gsmdec->next_of += 160;
 
-      gsm_decode (gsmdec->state, gsmdec->buffer,
-          (gsm_signal *) GST_BUFFER_DATA (outbuf));
+    gsm_decode (gsmdec->state, gsmdec->buffer,
+        (gsm_signal *) GST_BUFFER_DATA (outbuf));
 
-      gst_pad_push (gsmdec->srcpad, GST_DATA (outbuf));
+    gst_pad_push (gsmdec->srcpad, outbuf);
 
-      size -= (33 - gsmdec->bufsize);
-      data += (33 - gsmdec->bufsize);
-      gsmdec->bufsize = 0;
-    }
-
-    while (size >= 33) {
-      GstBuffer *outbuf;
-
-      outbuf = gst_buffer_new_and_alloc (160 * sizeof (gsm_signal));
-      GST_BUFFER_TIMESTAMP (outbuf) = gsmdec->next_ts;
-      GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;
-      GST_BUFFER_OFFSET (outbuf) = gsmdec->next_of;
-      GST_BUFFER_OFFSET_END (outbuf) = gsmdec->next_of + 160 - 1;
-      gsmdec->next_ts += 20 * GST_MSECOND;
-      gsmdec->next_of += 160;
-
-      gsm_decode (gsmdec->state, data, (gsm_signal *) GST_BUFFER_DATA (outbuf));
-      gst_pad_push (gsmdec->srcpad, GST_DATA (outbuf));
-
-      size -= 33;
-      data += 33;
-    }
-
-    if (size) {
-      memcpy (gsmdec->buffer + gsmdec->bufsize, data, size * sizeof (gsm_byte));
-      gsmdec->bufsize += size;
-    }
-
-    gst_buffer_unref (buf);
-    return;
+    size -= (33 - gsmdec->bufsize);
+    data += (33 - gsmdec->bufsize);
+    gsmdec->bufsize = 0;
   }
+
+  while (size >= 33) {
+    GstBuffer *outbuf;
+
+    outbuf = gst_buffer_new_and_alloc (160 * sizeof (gsm_signal));
+    GST_BUFFER_TIMESTAMP (outbuf) = gsmdec->next_ts;
+    GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;
+    GST_BUFFER_OFFSET (outbuf) = gsmdec->next_of;
+    GST_BUFFER_OFFSET_END (outbuf) = gsmdec->next_of + 160 - 1;
+    gst_buffer_set_caps (outbuf, gst_pad_get_caps (gsmdec->srcpad));
+
+    gsmdec->next_ts += 20 * GST_MSECOND;
+    gsmdec->next_of += 160;
+
+    gsm_decode (gsmdec->state, data, (gsm_signal *) GST_BUFFER_DATA (outbuf));
+    gst_pad_push (gsmdec->srcpad, outbuf);
+
+    size -= 33;
+    data += 33;
+  }
+
+  if (size) {
+    memcpy (gsmdec->buffer + gsmdec->bufsize, data, size * sizeof (gsm_byte));
+    gsmdec->bufsize += size;
+  }
+
+  return GST_FLOW_OK;
+
 }
