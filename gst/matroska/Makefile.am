@@ -16,5 +16,5 @@ noinst_HEADERS = \
 	matroska-mux.h
 
 libgstmatroska_la_CFLAGS = $(GST_CFLAGS)
-libgstmatroska_la_LIBADD =
+libgstmatroska_la_LIBADD = $(GST_LIBS)
 libgstmatroska_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

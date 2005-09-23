@@ -15,10 +15,10 @@ libgstrtp_la_SOURCES = gstrtp.c \
 
 #gstrtpL16enc.c gstrtpL16parse.c gstrtpgsmenc.c gstrtpgsmparse.c 
 
-libgstrtp_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
-libgstrtp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 
-libgstrtp_la_LIBADD = $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
+libgstrtp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+libgstrtp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
                 -lgstrtp-@GST_MAJORMINOR@
+libgstrtp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 
 
 noinst_HEADERS = gstrtpL16enc.h 	\
 		 gstrtpL16parse.h 	\

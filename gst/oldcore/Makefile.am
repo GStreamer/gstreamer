@@ -12,7 +12,7 @@ libgststandardelements_la_SOURCES =	\
 	gststatistics.c
 
 libgststandardelements_la_CFLAGS = $(GST_CFLAGS)
-libgststandardelements_la_LIBADD =
+libgststandardelements_la_LIBADD = $(GST_LIBS)
 libgststandardelements_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS =		\

@@ -1,10 +1,9 @@
-
 plugin_LTLIBRARIES = libgstdv.la
 
 libgstdv_la_SOURCES = gstdv.c gstdvdec.c gstdvdemux.c
 libgstdv_la_CFLAGS = $(GST_CFLAGS) $(LIBDV_CFLAGS)
-libgstdv_la_LIBADD = $(LIBDV_LIBS) $(GST_BASE_LIBS)
-libgstdv_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GST_PLUGINS_BASE_LIBS)
+libgstdv_la_LIBADD = $(GST_BASE_LIBS) $(LIBDV_LIBS)
+libgstdv_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstdvdemux.h gstdvdec.h
 

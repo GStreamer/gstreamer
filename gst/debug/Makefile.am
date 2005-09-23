@@ -4,6 +4,7 @@ noinst_HEADERS = efence.h gstnavigationtest.h gstnavseek.h tests.h
 
 libgstefence_la_SOURCES = efence.c
 libgstefence_la_CFLAGS = $(GST_CFLAGS)
+libgstefence_la_LIBADD = $(GST_LIBS)
 libgstefence_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 # libgstnavigationtest_la_SOURCES = gstnavigationtest.c

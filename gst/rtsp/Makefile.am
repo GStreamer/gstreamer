@@ -1,4 +1,3 @@
-
 plugin_LTLIBRARIES = libgstrtsp.la
 
 libgstrtsp_la_SOURCES = gstrtsp.c gstrtspsrc.c \
@@ -10,7 +9,7 @@ libgstrtsp_la_SOURCES = gstrtsp.c gstrtspsrc.c \
 			sdpmessage.c
 
 libgstrtsp_la_CFLAGS = $(GST_CFLAGS)
-libgstrtsp_la_LIBADD =
+libgstrtsp_la_LIBADD = $(GST_LIBS)
 libgstrtsp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 check_PROGRAMS = test

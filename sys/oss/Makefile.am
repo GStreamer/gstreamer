@@ -10,10 +10,12 @@ libgstossaudio_la_SOURCES = gstossaudio.c	 \
 
 #		            gstossdmabuffer.c
 
-libgstossaudio_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
-libgstossaudio_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
-                -lgstinterfaces-@GST_MAJORMINOR@ \
-		-lgstaudio-@GST_MAJORMINOR@
+libgstossaudio_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+libgstossaudio_la_LIBADD = \
+        -lgstinterfaces-@GST_MAJORMINOR@ \
+	-lgstaudio-@GST_MAJORMINOR@ \
+	$(GST_PLUGINS_BASE_LIBS) \
+	$(GST_LIBS)
 libgstossaudio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 
 
 noinst_HEADERS = gstosssink.h	     \

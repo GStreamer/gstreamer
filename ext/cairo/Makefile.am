@@ -9,6 +9,6 @@ libgstcairo_la_SOURCES = \
 	gstcairo.c
 libgstcairo_la_CFLAGS = $(GST_CFLAGS) $(CAIRO_CFLAGS) \
 	-I$(top_srcdir)/gst/videofilter
-libgstcairo_la_LIBADD =
-libgstcairo_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(CAIRO_LIBS) -lm
+libgstcairo_la_LIBADD = $(GST_LIBS) $(CAIRO_LIBS) -lm
+libgstcairo_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 

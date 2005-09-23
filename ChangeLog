@@ -1,3 +1,59 @@
+2005-09-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/auparse/Makefile.am:
+	* gst/auparse/gstauparse.c: (gst_auparse_chain):
+	  fix up build
+	* configure.ac:
+	* ext/cairo/Makefile.am:
+	* ext/dv/Makefile.am:
+	* ext/esd/Makefile.am:
+	* ext/flac/Makefile.am:
+	* ext/gconf/Makefile.am:
+	* ext/gdk_pixbuf/Makefile.am:
+	* ext/jpeg/Makefile.am:
+	* ext/ladspa/Makefile.am:
+	* ext/libcaca/Makefile.am:
+	* ext/libmng/Makefile.am:
+	* ext/libpng/Makefile.am:
+	* ext/mikmod/Makefile.am:
+	* ext/pango/Makefile.am:
+	* ext/raw1394/Makefile.am:
+	* ext/shout2/Makefile.am:
+	* ext/speex/Makefile.am:
+	* gst/alpha/Makefile.am:
+	* gst/autodetect/Makefile.am:
+	* gst/avi/Makefile.am:
+	* gst/cutter/Makefile.am:
+	* gst/debug/Makefile.am:
+	* gst/effectv/Makefile.am:
+	* gst/flx/Makefile.am:
+	* gst/goom/Makefile.am:
+	* gst/interleave/Makefile.am:
+	* gst/law/Makefile.am:
+	* gst/matroska/Makefile.am:
+	* gst/median/Makefile.am:
+	* gst/monoscope/Makefile.am:
+	* gst/multipart/Makefile.am:
+	* gst/oldcore/Makefile.am:
+	* gst/rtp/Makefile.am:
+	* gst/rtsp/Makefile.am:
+	* gst/smoothwave/Makefile.am:
+	* gst/smpte/Makefile.am:
+	* gst/videobox/Makefile.am:
+	* gst/videofilter/Makefile.am:
+	* gst/videomixer/Makefile.am:
+	* gst/wavenc/Makefile.am:
+	* gst/wavparse/Makefile.am:
+	* sys/oss/Makefile.am:
+	* sys/osxaudio/Makefile.am:
+	* sys/osxvideo/Makefile.am:
+	  fix up GST_LIBS use
+
+2005-09-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/auparse/Makefile.am:
+	* gst/auparse/gstauparse.c: (gst_auparse_chain):
+	  fix build of auparse
 
 2005-09-22 Edgard Lima (edgard.lima@indt.org.br)
 

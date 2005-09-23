@@ -1,9 +1,8 @@
-
 plugin_LTLIBRARIES = libgstsmoothwave.la
 
 libgstsmoothwave_la_SOURCES = gstsmoothwave.c
 libgstsmoothwave_la_CFLAGS = $(GST_CFLAGS) 
-libgstsmoothwave_la_LIBADD = 
+libgstsmoothwave_la_LIBADD = $(GST_LIBS)
 libgstsmoothwave_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstsmoothwave.h

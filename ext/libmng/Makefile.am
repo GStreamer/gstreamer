@@ -1,4 +1,3 @@
-
 plugin_LTLIBRARIES = libgstmng.la
 
 libgstmng_la_SOURCES = gstmng.c gstmngdec.c gstmngenc.c
