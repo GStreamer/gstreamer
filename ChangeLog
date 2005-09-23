@@ -1,3 +1,10 @@
+2005-09-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gststructure.c: (gst_structure_get_clock_time):
+	* gst/gststructure.h:
+	  add a method to get a GstClockTime out of a structure
+
 2005-09-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* check/gst/gstbin.c: (test_children_state_change_order_flagged_sink),

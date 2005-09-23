@@ -359,6 +359,7 @@ gst_clock_id_unschedule
 gst_clock_id_compare_func
 gst_clock_id_ref
 gst_clock_id_unref
+GST_TYPE_CLOCK_TIME
 
 <SUBSECTION Standard>
 GstClockClass
@@ -1628,6 +1629,7 @@ gst_structure_get_fourcc
 gst_structure_get_double
 gst_structure_get_string
 gst_structure_get_date
+gst_structure_get_clock_time
 gst_structure_map_in_place
 gst_structure_nth_field_name
 gst_structure_set_parent_refcount

@@ -958,7 +958,7 @@ gst_structure_get_fourcc (const GstStructure * structure,
  * @fieldname: the name of a field
  * @value: a pointer to a #GDate to set
  *
- * Sets the date pointed to by @date_out corresponding to the date of the
+ * Sets the date pointed to by @value corresponding to the date of the
  * given field.  Caller is responsible for making sure the field exists
  * and has the correct type.
  *
@@ -982,6 +982,40 @@ gst_structure_get_date (const GstStructure * structure, const gchar * fieldname,
     return FALSE;
 
   *value = g_value_dup_boxed (&field->value);
+
+  return TRUE;
+}
+
+/**
+ * gst_structure_get_clock_time:
+ * @structure: a #GstStructure
+ * @fieldname: the name of a field
+ * @value: a pointer to a #GstClockTime to set
+ *
+ * Sets the clock time pointed to by @value corresponding to the clock time
+ * of the given field.  Caller is responsible for making sure the field exists
+ * and has the correct type.
+ *
+ * Returns: TRUE if the value could be set correctly
+ */
+gboolean
+gst_structure_get_clock_time (const GstStructure * structure,
+    const gchar * fieldname, GstClockTime * value)
+{
+  GstStructureField *field;
+
+  g_return_val_if_fail (structure != NULL, FALSE);
+  g_return_val_if_fail (fieldname != NULL, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
+
+  field = gst_structure_get_field (structure, fieldname);
+
+  if (field == NULL)
+    return FALSE;
+  if (!G_VALUE_HOLDS_UINT64 (&field->value))
+    return FALSE;
+
+  *value = g_value_get_uint64 (&field->value);
 
   return TRUE;
 }
