@@ -1,5 +1,14 @@
 2005-09-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* gst/level/gstlevel.c: (gst_level_set_caps),
+	(gst_level_transform_ip):
+	  updating docs
+
+2005-09-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* Makefile.am:
 	* check/elements/level.c: (GST_START_TEST):
 	* gst/level/Makefile.am:

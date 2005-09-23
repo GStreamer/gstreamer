@@ -25,7 +25,7 @@
  * <refsect2>
  * <para>
  * Level analyses incoming audio buffers and, if the
- * <link linkend="GstLevel--message">message property</link> is #TRUE.
+ * <link linkend="GstLevel--message">message property</link> is #TRUE,
  * generates an application message named
  * <classname>&quot;level&quot;</classname>:
  * after each interval of time given by the

@@ -13,14 +13,14 @@
       <name>rtpamrdec</name>
       <longname>RTP packet parser</longname>
       <class>Codec/Parser/Network</class>
-      <description>Extracts MPEG audio from RTP packets</description>
+      <description>Extracts AMR audio from RTP packets (RFC 3267)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>rtpamrenc</name>
       <longname>RTP packet parser</longname>
       <class>Codec/Parser/Network</class>
-      <description>Encode AMR audio into RTP packets</description>
+      <description>Encode AMR audio into RTP packets (RFC 3267)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
@@ -29,6 +29,20 @@
       <class>Codec/Parser/Network</class>
       <description>Accepts raw RTP and RTCP packets and sends them forward</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>rtpgsmenc</name>
+      <longname>RTP GSM Audio Encoder</longname>
+      <class>Codec/Encoder/Network</class>
+      <description>Encodes GSM audio into a RTP packet</description>
+      <author>Zeeshan Ali &lt;zak147@yahoo.com&gt;</author>
+    </element>
+    <element>
+      <name>rtpgsmparse</name>
+      <longname>RTP packet parser</longname>
+      <class>Codec/Parser/Network</class>
+      <description>Extracts GSM audio from RTP packets</description>
+      <author>Zeeshan Ali &lt;zak147@yahoo.com&gt;</author>
     </element>
     <element>
       <name>rtph263pdec</name>
@@ -41,7 +55,7 @@
       <name>rtph263penc</name>
       <longname>RTP packet parser</longname>
       <class>Codec/Parser/Network</class>
-      <description>Extracts H263+ video from RTP packets</description>
+      <description>Encodes H263+ video in RTP packets (RFC 2429)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>

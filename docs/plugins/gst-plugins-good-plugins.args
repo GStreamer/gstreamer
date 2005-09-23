@@ -4239,13 +4239,23 @@
 </ARG>
 
 <ARG>
+<NAME>GstRtpMP4VEnc::send-config</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Send Config</NICK>
+<BLURB>Send the config parameters in RTP packets as well.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstLevel::interval</NAME>
-<TYPE>gdouble</TYPE>
-<RANGE>[0.01,100]</RANGE>
+<TYPE>guint64</TYPE>
+<RANGE>>= 1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Interval</NICK>
-<BLURB>Interval between posts (in seconds).</BLURB>
-<DEFAULT>0.1</DEFAULT>
+<BLURB>Interval of time between message posts (in nanoseconds).</BLURB>
+<DEFAULT>100000000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4254,7 +4264,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>mesage</NICK>
-<BLURB>Post a level message for each interval.</BLURB>
+<BLURB>Post a level message for each passed interval.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -4270,12 +4280,12 @@
 
 <ARG>
 <NAME>GstLevel::peak-ttl</NAME>
-<TYPE>gdouble</TYPE>
-<RANGE>[0,100]</RANGE>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Peak TTL</NICK>
-<BLURB>Time To Live of decay peak before it falls back.</BLURB>
-<DEFAULT>0.3</DEFAULT>
+<BLURB>Time To Live of decay peak before it falls back (in nanoseconds).</BLURB>
+<DEFAULT>300000000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -6496,5 +6506,15 @@
 <NICK>Play Timeout</NICK>
 <BLURB>Max timeout for going to PLAYING in nanoseconds.</BLURB>
 <DEFAULT>2000000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpGSMParse::frequency</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>frequency</NICK>
+<BLURB>frequency.</BLURB>
+<DEFAULT>8000</DEFAULT>
 </ARG>
 

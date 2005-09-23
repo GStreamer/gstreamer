@@ -1,6 +1,6 @@
 <plugin>
   <name>alpha</name>
-  <description>resizes a video by adding borders or cropping</description>
+  <description>adds an alpha channel to video</description>
   <filename>../../gst/alpha/.libs/libgstalpha.so</filename>
   <basename>libgstalpha.so</basename>
   <version>0.9.1.1</version>
