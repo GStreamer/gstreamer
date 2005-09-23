@@ -31,7 +31,7 @@
 #include <gst/audio/audio.h>
 #include <gst/base/gstbasetransform.h>
 
-GST_DEBUG_CATEGORY_STATIC (audioresample_debug);
+GST_DEBUG_CATEGORY (audioresample_debug);
 #define GST_CAT_DEFAULT audioresample_debug
 
 /* elementfactory information */
