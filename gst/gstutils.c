@@ -2446,7 +2446,7 @@ gst_atomic_int_set (gint * atomic_int, gint value)
  * to drop it. Dropping data is rarely useful, but occasionally comes in handy
  * with events.
  *
- * Although probes are implemeted internally by connecting @handler to the
+ * Although probes are implemented internally by connecting @handler to the
  * have-data signal on the pad, if you want to remove a probe it is insufficient
  * to only call g_signal_handler_disconnect on the returned handler id. To
  * remove a probe, use the appropriate function, such as

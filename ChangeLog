@@ -1,3 +1,13 @@
+2005-09-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/README:
+	* gst/gstpad.c: (gst_pad_class_init), (gst_pad_chain):
+	* gst/gstpluginfeature.c:
+	* gst/gstutils.c:
+	  various doc updates
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object):
+	  change an assert into an error until it gets fixed properly
+
 2005-09-23  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:

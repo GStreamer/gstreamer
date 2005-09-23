@@ -650,9 +650,16 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
     if (!basesink->need_preroll)
       goto no_preroll;
 
+
     length = basesink->preroll_queued;
 
-    g_assert (length == 1);
+    /* FIXME: a pad probe could have made us lose the buffer, according
+     * to one of the python tests */
+    if (length == 0) {
+      GST_ERROR_OBJECT (basesink,
+          "preroll_queued dropped from 1 to 0 while committing state change");
+    }
+    g_assert (length <= 1);
   }
 
   /* see if we need to block now. We cannot block on events, only

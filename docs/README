@@ -204,6 +204,7 @@ in the various plugin packages.
 - template can be copied from gst-plugins-base
 - to add an element to be documented:
   - add an include href in the Elements chapter for the element
+    in the main .sgml
   - add a section for it in -sections.txt with
       <FILE>element-(element)</FILE>
       <TITLE>(element)</TITLE>
@@ -232,11 +233,18 @@ in the various plugin packages.
     make clean
     make inspect-update
     make
+  - examples will only show up using gtk-doc 1.4 or later - it relies on
+    merging stuff from .sgml with inline docs.  We might want to change
+    this to only get stuff from the source.
 
 - to add a plugin to be documented:
   - make sure inspect/ has generated a .xml file for it
   - add it to CVS
   - add an include in -docs.sgml in the Plugins list for that plugin
+
+- possible errors:
+  "multiple constraints for linkend ID": check if each section in
+  -sections.txt actually starts and ends with <SECTION> and </SECTION>
 
 RANDOM THINGS I'VE LEARNED
 ==========================

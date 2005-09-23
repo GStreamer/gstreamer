@@ -198,8 +198,8 @@ gst_pad_class_init (GstPadClass * klass)
    * @pad: the pad that emitted the signal
    * @mini_obj: new data
    *
-   * Signals that new data is available on the pad. This signal is used 
-   * internally for implementing pad probes. 
+   * Signals that new data is available on the pad. This signal is used
+   * internally for implementing pad probes.
    * See gst_pad_add_*_probe functions.
    *
    * Returns: %TRUE to keep the data, %FALSE to drop it
@@ -3009,7 +3009,7 @@ flushing:
 dropping:
   {
     gst_buffer_unref (buffer);
-    GST_DEBUG ("Dropping buffer due to FALSE probe return");
+    GST_DEBUG_OBJECT (pad, "Dropping buffer due to FALSE probe return");
     GST_STREAM_UNLOCK (pad);
     return GST_FLOW_OK;
   }
