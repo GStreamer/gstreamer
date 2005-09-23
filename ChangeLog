@@ -1,3 +1,15 @@
+2005-09-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.defs:
+	* gst/gst.override:
+	  add another registry method
+	* testsuite/Makefile.am:
+	  add check-verbose
+	* testsuite/runtests.py:
+	  check for VERBOSE env var
+	* testsuite/test_pad.py:
+	  refactor a test and add one more for probes
+
 2005-09-22  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstbuffer.override:

@@ -41,7 +41,14 @@ loader = unittest.TestLoader()
 for name in gettestnames():
     suite.addTest(loader.loadTestsFromName(name))
     
-testRunner = unittest.TextTestRunner()
+descriptions = 1
+verbosity = 1
+if os.environ.has_key('VERBOSE'):
+    descriptions = 2
+    verbosity = 2
+
+testRunner = unittest.TextTestRunner(descriptions=descriptions,
+    verbosity=verbosity)
 result = testRunner.run(suite)
 if result.failures or result.errors:
     sys.exit(1)

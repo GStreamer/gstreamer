@@ -748,6 +748,37 @@ _wrap_gst_registry_get_feature_list (PyGObject *self, PyObject *args, PyObject *
 }
 
 %%
+override gst_registry_get_feature_list_by_plugin kwargs
+static PyObject *
+_wrap_gst_registry_get_feature_list_by_plugin (PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", NULL };
+    gchar * name = NULL;
+
+    GstRegistry *registry;
+    GList *l, *features;
+    PyObject *list;
+	
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+            "s:GstRegistry.get_feature_list_by_plugin", kwlist, &name))
+        return NULL;
+
+    registry = GST_REGISTRY (self->obj);
+
+    features = gst_registry_get_feature_list_by_plugin (registry, name);
+
+    list = PyList_New (0);
+    for (l = features; l; l = l->next) {
+        GstPluginFeature *feature = (GstPluginFeature *) l->data;
+        PyList_Append (list, pygobject_new (G_OBJECT (feature)));
+    }
+    g_list_free (features);
+	
+    return list;
+}
+
+%%
 override gst_xml_new noargs
 
 extern PyObject * libxml_xmlDocPtrWrap(xmlDocPtr doc);

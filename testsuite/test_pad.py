@@ -55,31 +55,45 @@ class PadPipelineTest(unittest.TestCase):
 #        assert self.srcpad.query(gst.QUERY_POSITION, gst.FORMAT_TIME) == 0
 
 class PadProbeTest(unittest.TestCase):
-    def testFakeSrcProbe(self):
-        pipeline = gst.Pipeline()
-        fakesrc = gst.element_factory_make('fakesrc')
-        fakesrc.set_property('num-buffers', 1)
-        fakesink = gst.element_factory_make('fakesink')
+    def setUp(self):
+        self.pipeline = gst.Pipeline()
+        self.fakesrc = gst.element_factory_make('fakesrc')
+        self.fakesink = gst.element_factory_make('fakesink')
+        self.pipeline.add_many(self.fakesrc, self.fakesink)
+        self.fakesrc.link(self.fakesink)
 
-        pipeline.add_many(fakesrc, fakesink)
-        fakesrc.link(fakesink)
-        pad = fakesrc.get_pad('src')
+    def testFakeSrcProbeOnce(self):
+        self.fakesrc.set_property('num-buffers', 1)
+
+        pad = self.fakesrc.get_pad('src')
         pad.add_buffer_probe(self._probe_callback_fakesrc)
-        self._got_fakesrc_buffer = False
-        pipeline.set_state(gst.STATE_PLAYING)
+        self._got_fakesrc_buffer = 0
+        self.pipeline.set_state(gst.STATE_PLAYING)
         while not self._got_fakesrc_buffer:
             pass
+
+        self.pipeline.set_state(gst.STATE_NULL)
+
+    def testFakeSrcProbeMany(self):
+        self.fakesrc.set_property('num-buffers', 1000)
+
+        pad = self.fakesrc.get_pad('src')
+        pad.add_buffer_probe(self._probe_callback_fakesrc)
+        self._got_fakesrc_buffer = 0
+        self.pipeline.set_state(gst.STATE_PLAYING)
+        while not self._got_fakesrc_buffer == 1000:
+            pass
+
+        self.pipeline.set_state(gst.STATE_NULL)
+
 
     def _probe_callback_fakesrc(self, pad, buffer):
         self.failUnless(isinstance(pad, gst.Pad))
         self.failUnless(isinstance(buffer, gst.Buffer))
-        self._got_fakesrc_buffer = True
+        self._got_fakesrc_buffer += 1
 
     def testRemovingProbe(self):
-        pipeline = gst.Pipeline()
-        fakesrc = gst.element_factory_make('fakesrc')
-        fakesrc.set_property('num-buffers', 10)
-        fakesink = gst.element_factory_make('fakesink')
+        self.fakesrc.set_property('num-buffers', 10)
 
         handle = None
         self._num_times_called = 0
@@ -88,15 +102,13 @@ class PadProbeTest(unittest.TestCase):
             pad.remove_buffer_probe(handle)
             return True
 
-        pipeline.add_many(fakesrc, fakesink)
-        fakesrc.link(fakesink)
-        pad = fakesrc.get_pad('src')
+        pad = self.fakesrc.get_pad('src')
         handle = pad.add_buffer_probe(buffer_probe)
-        self._got_fakesrc_buffer = False
-        pipeline.set_state(gst.STATE_PLAYING)
-        m = pipeline.get_bus().poll(gst.MESSAGE_EOS, -1)
+        self.pipeline.set_state(gst.STATE_PLAYING)
+        m = self.pipeline.get_bus().poll(gst.MESSAGE_EOS, -1)
         assert m
         assert self._num_times_called == 1
+        self.pipeline.set_state(gst.STATE_NULL)
 
 
 if __name__ == "__main__":

@@ -4135,6 +4135,14 @@
   )
 )
 
+(define-method get_feature_list_by_plugin
+  (of-object "GstRegistry")
+  (c-name "gst_registry_get_feature_list_by_plugin")
+  (return-type "GList*")
+  (parameters
+    '("const gchar*" "name")
+  )
+)
 (define-method add_feature
   (of-object "GstRegistry")
   (c-name "gst_registry_add_feature")
