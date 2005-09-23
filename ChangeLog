@@ -1,3 +1,10 @@
+2005-09-23  David Schleef  <ds@schleef.org>
+
+	* gst/audioresample/Makefile.am:
+	* gst/audioresample/debug.h:
+	* gst/audioresample/gstaudioresample.c:
+	* gst/audioresample/resample.c: Convert to using gst debugging
+
 2005-09-22  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstplaybin.c: (gst_play_bin_class_init),

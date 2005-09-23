@@ -7,7 +7,6 @@ resample_SOURCES = \
 	resample_ref.c \
 	resample_chunk.c \
 	resample.h \
-	debug.c \
 	buffer.c
 
 noinst_HEADERS = \

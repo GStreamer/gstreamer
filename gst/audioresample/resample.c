@@ -37,20 +37,14 @@ void resample_scale_ref (ResampleState * r);
 void resample_scale_functable (ResampleState * r);
 
 
-
 void
 resample_init (void)
 {
   static int inited = 0;
-  const char *debug;
 
   if (!inited) {
     oil_init ();
     inited = 1;
-  }
-
-  if ((debug = g_getenv ("RESAMPLE_DEBUG"))) {
-    resample_debug_set_level (atoi (debug));
   }
 }
 
