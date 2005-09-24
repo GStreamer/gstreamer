@@ -172,26 +172,32 @@ class FVUMeter(gtk.DrawingArea):
                                    vumeter_width, 
                                    vumeter_height)
         # draw peak level
+        # 0 maps to width of 0, full scale maps to total width
         peaklevelpct = self.iec_scale(self.peaklevel)
-        peakwidth = int(vumeter_width * (peaklevelpct/100))
+        peakwidth = int(vumeter_width * (peaklevelpct / 100))
         draw_gc = self.green_gc
         if self.peaklevel >= self.orange_threshold:
             draw_gc = self.orange_gc
         if self.peaklevel >= self.red_threshold:
             draw_gc = self.red_gc
-        self.window.draw_rectangle(draw_gc, True,
-                self.leftborder, self.topborder,
-                peakwidth, vumeter_height)
- 
+        if peakwidth > 0:
+            self.window.draw_rectangle(draw_gc, True,
+                    self.leftborder, self.topborder,
+                    peakwidth, vumeter_height)
+     
         # draw yellow decay level
         if self.decaylevel > -90.0:
             decaylevelpct = self.iec_scale(self.decaylevel)
-            decaywidth = int(vumeter_width * (decaylevelpct/100)) 
+            decaywidth = int(vumeter_width) * (decaylevelpct / 100)
+            # cheat the geometry by drawing 0% level at pixel 0,
+            # which is same position as just above 0%
+            if decaywidth == 0:
+                decaywidth = 1
             self.window.draw_line(self.yellow_gc,
-                self.leftborder + decaywidth,
+                self.leftborder + decaywidth - 1,
                 self.topborder,
-                self.leftborder + decaywidth,
-                self.topborder + vumeter_height)
+                self.leftborder + decaywidth - 1,
+                self.topborder + vumeter_height - 1)
 
         # draw tick marks
         scalers = [
@@ -204,18 +210,19 @@ class FVUMeter(gtk.DrawingArea):
             (  '0', 1.0),
         ]
         for level, scale in scalers:
+            # tick mark, 6 pixels high
+            # we cheat again here by putting the 0 at the first pixel
             self.window.draw_line(self.style.black_gc, 
-                self.leftborder + int (scale * vumeter_width),
+                self.leftborder + int(scale * (vumeter_width - 1)),
                 h - self.bottomborder,
-                self.leftborder + int(scale * vumeter_width),
+                self.leftborder + int(scale * (vumeter_width - 1)),
                 h - self.bottomborder + 5)
-            self.window.draw_line(self.style.black_gc,
-                self.leftborder, h - self.bottomborder,
-                self.leftborder, h - self.bottomborder + 5)
+            # tick label
             layout = self.create_pango_layout(level)
             layout_width, layout_height = layout.get_pixel_size()
             self.window.draw_layout(self.style.black_gc,
-                self.leftborder + int(scale * vumeter_width) - int(layout_width / 2),
+                self.leftborder + int(scale * vumeter_width)
+                    - int(layout_width / 2),
                 h - self.bottomborder + 7, layout)
 
         # draw the peak level to the right
@@ -223,7 +230,7 @@ class FVUMeter(gtk.DrawingArea):
         layout_width, layout_height = layout.get_pixel_size()
         self.window.draw_layout(self.style.black_gc,
             self.leftborder + vumeter_width + 5,
-            self.topborder + int(vumeter_height/2 - layout_height/2),
+            self.topborder + int(vumeter_height / 2 - layout_height / 2),
             layout)
 
 gobject.type_register(FVUMeter)
