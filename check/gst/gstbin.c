@@ -490,6 +490,11 @@ GST_START_TEST (test_children_state_change_order_flagged_sink)
    * change and change state later when it has a buffer */
   ASSERT_STATE_CHANGE_MSG (bus, identity, GST_STATE_READY, GST_STATE_PAUSED,
       105);
+#if 0
+  /* From here on, all bets are off. Usually the source changes state next,
+   * but it might just as well be that the first buffer produced by the 
+   * source reaches the sink before the source has finished its state change,
+   * in which case the sink will commit its new state before the source ...  */
   ASSERT_STATE_CHANGE_MSG (bus, src, GST_STATE_READY, GST_STATE_PAUSED, 106);
   ASSERT_STATE_CHANGE_MSG (bus, sink, GST_STATE_READY, GST_STATE_PAUSED, 107);
   ASSERT_STATE_CHANGE_MSG (bus, pipeline, GST_STATE_READY, GST_STATE_PAUSED,
@@ -502,6 +507,10 @@ GST_START_TEST (test_children_state_change_order_flagged_sink)
   ASSERT_STATE_CHANGE_MSG (bus, src, GST_STATE_PAUSED, GST_STATE_PLAYING, 111);
   ASSERT_STATE_CHANGE_MSG (bus, pipeline, GST_STATE_PAUSED, GST_STATE_PLAYING,
       112);
+#else
+  pop_messages (bus, 3);        /* pop remaining ready => paused messages off the bus */
+  pop_messages (bus, 4);        /* pop paused => playing messages off the bus */
+#endif
 
   /* don't set to NULL that will set the bus flushing and kill our messages */
   ret = gst_element_set_state (pipeline, GST_STATE_READY);
@@ -572,6 +581,11 @@ GST_START_TEST (test_children_state_change_order_semi_sink)
    * change and change state later when it has a buffer */
   ASSERT_STATE_CHANGE_MSG (bus, identity, GST_STATE_READY, GST_STATE_PAUSED,
       205);
+#if 0
+  /* From here on, all bets are off. Usually the source changes state next,
+   * but it might just as well be that the first buffer produced by the 
+   * source reaches the sink before the source has finished its state change,
+   * in which case the sink will commit its new state before the source ...  */
   ASSERT_STATE_CHANGE_MSG (bus, src, GST_STATE_READY, GST_STATE_PAUSED, 206);
   ASSERT_STATE_CHANGE_MSG (bus, sink, GST_STATE_READY, GST_STATE_PAUSED, 207);
   ASSERT_STATE_CHANGE_MSG (bus, pipeline, GST_STATE_READY, GST_STATE_PAUSED,
@@ -584,6 +598,10 @@ GST_START_TEST (test_children_state_change_order_semi_sink)
   ASSERT_STATE_CHANGE_MSG (bus, src, GST_STATE_PAUSED, GST_STATE_PLAYING, 211);
   ASSERT_STATE_CHANGE_MSG (bus, pipeline, GST_STATE_PAUSED, GST_STATE_PLAYING,
       212);
+#else
+  pop_messages (bus, 3);        /* pop remaining ready => paused messages off the bus */
+  pop_messages (bus, 4);        /* pop paused => playing messages off the bus */
+#endif
 
   /* don't set to NULL that will set the bus flushing and kill our messages */
   ret = gst_element_set_state (pipeline, GST_STATE_READY);

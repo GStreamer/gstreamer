@@ -1,3 +1,13 @@
+2005-09-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* check/gst/gstbin.c: (test_children_state_change_order_flagged_sink),
+	(test_children_state_change_order_semi_sink):
+	  Fix test case: we can't rely on a fixed state change order when
+	  going from READY => PAUSED because the sink might commit its 
+	  new state first when the first buffer created by the source 
+	  reaches the sink before the source has finished its change state.
+	  (Test case still fails at times, see #316856, comment 5 onwards)
+
 2005-09-24  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-events.txt:
