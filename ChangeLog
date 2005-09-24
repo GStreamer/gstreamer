@@ -1,3 +1,9 @@
+2005-09-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstclock.h:
+	  Well, that's embarassing.  Luckily we weren't using
+	  GST_CLOCK_DIFF anywhere.
+
 2005-09-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* common/gtk-doc.mak:

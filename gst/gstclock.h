@@ -104,7 +104,7 @@ typedef gpointer GstClockID;
  *
  * Calculate a difference between two clock times as a #GstClockTimeDiff.
  */
-#define GST_CLOCK_DIFF(s, e)		(GstClockTimeDiff)((s) - (e))
+#define GST_CLOCK_DIFF(s, e)		(GstClockTimeDiff)((e) - (s))
 
 /**
  * GST_TIMEVAL_TO_TIME:
