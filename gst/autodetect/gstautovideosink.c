@@ -91,6 +91,8 @@ gst_auto_video_sink_init (GstAutoVideoSink * sink,
   gst_element_add_pad (GST_ELEMENT (sink), sink->pad);
 
   gst_auto_video_sink_reset (sink);
+
+  GST_FLAG_SET (sink, GST_ELEMENT_IS_SINK);
 }
 
 static gboolean

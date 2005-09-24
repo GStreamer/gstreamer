@@ -1,3 +1,9 @@
+2005-09-24  Wim Taymans  <wim@fluendo.com>
+
+	* gst/autodetect/gstautoaudiosink.c: (gst_auto_audio_sink_init):
+	* gst/autodetect/gstautovideosink.c: (gst_auto_video_sink_init):
+	These are sinks.
+
 2005-09-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/elements/level.c: (GST_START_TEST):
