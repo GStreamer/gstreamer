@@ -67,6 +67,7 @@ struct _GstLevel {
   gdouble *peak;		/* normalized Peak value over buffer */
   gdouble *last_peak;		/* last normalized Peak value over interval */
   gdouble *decay_peak;		/* running decaying normalized Peak */
+  gdouble *decay_peak_base;	/* value of last peak we are decaying from */
   gdouble *MS;			/* normalized Mean Square of buffer */
   gdouble *RMS_dB;		/* RMS in dB to emit */
   GstClockTime *decay_peak_age;	/* age of last peak */

@@ -101,7 +101,7 @@ GST_START_TEST (test_int16)
   gdouble dB;
 
   level = setup_level ();
-  g_object_set (level, "message", TRUE, "interval", 0.1, NULL);
+  g_object_set (level, "message", TRUE, "interval", GST_SECOND / 10, NULL);
 
   fail_unless (gst_element_set_state (level,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
@@ -153,6 +153,8 @@ GST_START_TEST (test_int16)
   }
 
   gst_message_unref (message);
+  // FIXME: need to fix leaks in level object first
+  //gst_object_unref (level);
 }
 
 GST_END_TEST;

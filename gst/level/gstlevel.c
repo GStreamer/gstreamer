@@ -56,7 +56,7 @@
  *   the <link linkend="GstLevel--peak-ttl">the time to live</link>.
  *   When the decaying peak level drops, it does so at the decay rate
  *   as specified by the
- *   <link linkend="GstLevel--peak-falloff">the peak fallof rate</link>.
+ *   <link linkend="GstLevel--peak-falloff">the peak falloff rate</link>.
  *   </para>
  * </listitem>
  * <listitem>
@@ -195,7 +195,6 @@ gst_level_init (GstLevel * filter, GstLevelClass * g_class)
 {
   filter->CS = NULL;
   filter->peak = NULL;
-  filter->RMS_dB = NULL;
 
   filter->rate = 0;
   filter->width = 0;
@@ -289,19 +288,19 @@ gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   g_free (filter->peak);
   g_free (filter->last_peak);
   g_free (filter->decay_peak);
+  g_free (filter->decay_peak_base);
   g_free (filter->decay_peak_age);
-  g_free (filter->RMS_dB);
   filter->CS = g_new (double, filter->channels);
   filter->peak = g_new (double, filter->channels);
   filter->last_peak = g_new (double, filter->channels);
   filter->decay_peak = g_new (double, filter->channels);
+  filter->decay_peak_base = g_new (double, filter->channels);
 
   filter->decay_peak_age = g_new (GstClockTime, filter->channels);
-  filter->RMS_dB = g_new (double, filter->channels);
 
   for (i = 0; i < filter->channels; ++i) {
     filter->CS[i] = filter->peak[i] = filter->last_peak[i] =
-        filter->decay_peak[i] = filter->RMS_dB[i] = 0.0;
+        filter->decay_peak[i] = filter->decay_peak_base[i] = 0.0;
     filter->decay_peak_age[i] = 0LL;
   }
 
@@ -409,7 +408,7 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
   filter = GST_LEVEL (trans);
 
   for (i = 0; i < filter->channels; ++i)
-    filter->peak[i] = filter->RMS_dB[i] = 0.0;
+    filter->peak[i] = 0.0;
 
   in_data = GST_BUFFER_DATA (in);
   num_int_samples = GST_BUFFER_SIZE (in) / (filter->width / 8);
@@ -442,76 +441,91 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
   for (i = 0; i < filter->channels; ++i) {
     filter->decay_peak_age[i] +=
         GST_FRAMES_TO_CLOCK_TIME (num_frames, filter->rate);
-    GST_LOG_OBJECT (filter, "filter peak info [%d]: peak %f, age %"
+    GST_LOG_OBJECT (filter, "filter peak info [%d]: decay peak %f, age %"
         GST_TIME_FORMAT, i,
-        filter->last_peak[i], GST_TIME_ARGS (filter->decay_peak_age[i]));
+        filter->decay_peak[i], GST_TIME_ARGS (filter->decay_peak_age[i]));
 
     /* update running peak */
     if (filter->peak[i] > filter->last_peak[i])
       filter->last_peak[i] = filter->peak[i];
 
-    /* update decay peak */
+    /* make decay peak fall off if too old */
+    if (filter->decay_peak_age[i] > filter->decay_peak_ttl) {
+      double falloff_dB;
+      double falloff;
+      GstClockTimeDiff falloff_time;
+      double length;            /* length of falloff time in seconds */
+
+      falloff_time = GST_CLOCK_DIFF (filter->decay_peak_ttl,
+          filter->decay_peak_age[i]);
+      length = (gdouble) falloff_time / GST_SECOND;
+      falloff_dB = filter->decay_peak_falloff * length;
+      falloff = pow (10, falloff_dB / -20.0);
+
+      GST_LOG_OBJECT (filter,
+          "falloff: current %f, base %f, interval %" GST_TIME_FORMAT
+          ", dB falloff %f, factor %e",
+          filter->decay_peak[i], filter->decay_peak_base[i],
+          GST_TIME_ARGS (falloff_time), falloff_dB, falloff);
+      filter->decay_peak[i] = filter->decay_peak_base[i] * falloff;
+      GST_LOG_OBJECT (filter,
+          "peak is %" GST_TIME_FORMAT " old, decayed with factor %e to %f",
+          GST_TIME_ARGS (filter->decay_peak_age[i]), falloff,
+          filter->decay_peak[i]);
+    } else {
+      GST_LOG_OBJECT (filter, "peak not old enough, not decaying");
+    }
+
+    /* if the peak of this run is higher, the decay peak gets reset */
     if (filter->peak[i] >= filter->decay_peak[i]) {
       GST_LOG_OBJECT (filter, "new peak, %f", filter->peak[i]);
       filter->decay_peak[i] = filter->peak[i];
+      filter->decay_peak_base[i] = filter->peak[i];
       filter->decay_peak_age[i] = 0LL;
-    } else {
-      /* make decay peak fall off if too old */
-      if (filter->decay_peak_age[i] > filter->decay_peak_ttl) {
-        double falloff_dB;
-        double falloff;
-        double length;          /* length of buffer in seconds */
-
-
-        length = (double) num_frames / filter->rate;
-        falloff_dB = filter->decay_peak_falloff * length;
-        falloff = pow (10, falloff_dB / -20.0);
-
-        GST_LOG_OBJECT (filter,
-            "falloff: length %f, dB falloff %f, falloff factor %e",
-            length, falloff_dB, falloff);
-        filter->decay_peak[i] *= falloff;
-        GST_LOG_OBJECT (filter,
-            "peak is %" GST_TIME_FORMAT " old, decayed with factor %e to %f",
-            GST_TIME_ARGS (filter->decay_peak_age[i]), falloff,
-            filter->decay_peak[i]);
-      } else {
-        GST_LOG_OBJECT (filter, "peak not old enough, not decaying");
-      }
     }
   }
 
-  /* do we need to emit ? */
-
+  /* do we need to message ? */
   if (filter->num_frames >=
-      (gint) ((gdouble) filter->interval / GST_SECOND * filter->rate)) {
+      GST_CLOCK_TIME_TO_FRAMES (filter->interval, filter->rate)) {
     if (filter->message) {
       GstMessage *m;
       GstClockTime endtime;
-      double RMS;
-      double RMSdB, lastdB, decaydB;
 
-      /* FIXME: convert to a GstClockTime instead */
       endtime = GST_BUFFER_TIMESTAMP (in)
           + GST_FRAMES_TO_CLOCK_TIME (num_frames, filter->rate);
 
       m = gst_level_message_new (filter, endtime);
 
+      GST_LOG_OBJECT (filter,
+          "message: end time %" GST_TIME_FORMAT ", num_frames %d",
+          GST_TIME_ARGS (endtime), filter->num_frames);
+
       for (i = 0; i < filter->channels; ++i) {
+        double RMS;
+        double RMSdB, lastdB, decaydB;
+
         RMS = sqrt (filter->CS[i] / filter->num_frames);
         GST_LOG_OBJECT (filter,
-            "CS: %f, num_frames %d, channel %d, RMS %f",
-            filter->CS[i], filter->num_frames, i, RMS);
+            "message: channel %d, CS %f, num_frames %d, RMS %f",
+            i, filter->CS[i], filter->num_frames, RMS);
+        GST_LOG_OBJECT (filter,
+            "message: last_peak: %f, decay_peak: %f",
+            filter->last_peak[i], filter->decay_peak[i]);
         /* RMS values are calculated in amplitude, so 20 * log 10 */
         RMSdB = 20 * log10 (RMS);
         /* peak values are square sums, ie. power, so 10 * log 10 */
         lastdB = 10 * log10 (filter->last_peak[i]);
         decaydB = 10 * log10 (filter->decay_peak[i]);
 
+        if (filter->decay_peak[i] < filter->last_peak[i]) {
+          GST_ERROR_OBJECT (filter,
+              "message: decay peak dB %f smaller than last peak dB %f",
+              decaydB, lastdB);
+        }
         GST_LOG_OBJECT (filter,
-            "time %" GST_TIME_FORMAT
-            ", channel %d, RMS %f dB, peak %f dB, decay %f dB",
-            GST_TIME_ARGS (endtime), i, RMSdB, lastdB, decaydB);
+            "message: RMS %f dB, peak %f dB, decay %f dB",
+            RMSdB, lastdB, decaydB);
 
         gst_level_message_append_channel (m, RMSdB, lastdB, decaydB);
 
@@ -538,4 +552,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "level",
     "Audio level plugin",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN);

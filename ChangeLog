@@ -1,3 +1,13 @@
+2005-09-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/elements/level.c: (GST_START_TEST):
+	  fix test for new GstClockTime use
+	* gst/level/gstlevel.c: (gst_level_init), (gst_level_set_caps),
+	(gst_level_transform_ip):
+	* gst/level/gstlevel.h:
+	  fix up the decay peak, ensuring the decay peak is never lower
+	  than the peak for that interval
+
 2005-09-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/plugins/gst-plugins-good-plugins.args:
