@@ -727,8 +727,6 @@ gst_ring_buffer_stop (GstRingBuffer * buf)
 
   if (!res) {
     buf->state = GST_RING_BUFFER_STATE_STARTED;
-  } else {
-    gst_ring_buffer_set_sample (buf, 0);
   }
 done:
   GST_UNLOCK (buf);
@@ -834,7 +832,6 @@ gst_ring_buffer_set_sample (GstRingBuffer * buf, guint64 sample)
    * position, round down to the beginning and keep track of
    * offset when calculating the processed samples. */
   buf->segbase = buf->segdone - sample / buf->samples_per_seg;
-  buf->next_sample = sample;
 
   gst_ring_buffer_clear_all (buf);
 
@@ -856,6 +853,8 @@ gst_ring_buffer_clear_all (GstRingBuffer * buf)
 
   g_return_if_fail (buf != NULL);
   g_return_if_fail (buf->spec.segtotal > 0);
+
+  GST_DEBUG ("clear all segments");
 
   for (i = 0; i < buf->spec.segtotal; i++) {
     gst_ring_buffer_clear (buf, i);
@@ -928,27 +927,11 @@ gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
   g_return_val_if_fail (buf->data != NULL, -1);
   g_return_val_if_fail (data != NULL, -1);
 
-  if (sample == -1) {
-    /* process aligned with last sample */
-    sample = buf->next_sample;
-  } else {
-    if (sample != buf->next_sample) {
-      GST_WARNING ("discontinuity found got %" G_GUINT64_FORMAT
-          ", expected %" G_GUINT64_FORMAT, sample, buf->next_sample);
-      /* also sync here */
-      sample = buf->next_sample;
-    }
-  }
-
   dest = GST_BUFFER_DATA (buf->data);
   segsize = buf->spec.segsize;
   segtotal = buf->spec.segtotal;
   bps = buf->spec.bytes_per_sample;
   sps = buf->samples_per_seg;
-
-  /* we assume the complete buffer will be consumed and the next sample
-   * should be written after this */
-  buf->next_sample = sample + len / bps;
 
   /* write out all bytes */
   while (len > 0) {
@@ -1048,25 +1031,11 @@ gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
   g_return_val_if_fail (buf->data != NULL, -1);
   g_return_val_if_fail (data != NULL, -1);
 
-  if (sample == -1) {
-    /* process aligned with last sample */
-    sample = buf->next_sample;
-  } else {
-    if (sample != buf->next_sample) {
-      GST_WARNING ("discontinuity found got %" G_GUINT64_FORMAT
-          ", expected %" G_GUINT64_FORMAT, sample, buf->next_sample);
-    }
-  }
-
   dest = GST_BUFFER_DATA (buf->data);
   segsize = buf->spec.segsize;
   segtotal = buf->spec.segtotal;
   bps = buf->spec.bytes_per_sample;
   sps = buf->samples_per_seg;
-
-  /* we assume the complete buffer will be consumed and the next sample
-   * should be written after this */
-  buf->next_sample = sample + len / bps;
 
   /* read enough bytes */
   while (len > 0) {

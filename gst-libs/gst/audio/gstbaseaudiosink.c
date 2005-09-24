@@ -34,6 +34,11 @@ enum
   LAST_SIGNAL
 };
 
+/* we tollerate a 10th of a second diff before we start resyncing. This
+ * should be enough to compensate for various rounding errors in the timestamp
+ * and sample offset position. */
+#define DIFF_TOLERANCE	10
+
 #define DEFAULT_BUFFER_TIME	500 * GST_USECOND
 #define DEFAULT_LATENCY_TIME	10 * GST_USECOND
 enum
@@ -296,6 +301,9 @@ gst_base_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
       gst_ring_buffer_clear_all (sink->ringbuffer);
       break;
     case GST_EVENT_FLUSH_STOP:
+      /* always resync on sample after a flush */
+      sink->next_sample = -1;
+      gst_ring_buffer_clear_all (sink->ringbuffer);
       break;
     case GST_EVENT_EOS:
       break;
@@ -366,24 +374,31 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   render_offset = render_time * sink->ringbuffer->spec.rate / GST_SECOND;
 
   /* roundoff errors in timestamp conversion */
-  diff = ABS ((gint64) render_offset - (gint64) sink->ringbuffer->next_sample);
+  if (sink->next_sample != -1)
+    diff = ABS ((gint64) render_offset - (gint64) sink->next_sample);
+  else
+    diff = sink->ringbuffer->spec.rate;
 
   GST_DEBUG ("render time %" GST_TIME_FORMAT
       ", render offset %llu, diff %lld, size %lu", GST_TIME_ARGS (render_time),
       render_offset, diff, size);
-  GST_DEBUG ("ringgbuffer rate %lu", sink->ringbuffer->spec.rate);
 
   /* we tollerate a 10th of a second diff before we start resyncing. This
    * should be enough to compensate for various rounding errors in the timestamp
    * and sample offset position. */
-  if (diff < sink->ringbuffer->spec.rate / 10) {
+  if (diff < sink->ringbuffer->spec.rate / DIFF_TOLERANCE) {
+    GST_DEBUG ("align with prev sample, %" G_GINT64_FORMAT " < %lu", diff,
+        sink->ringbuffer->spec.rate / DIFF_TOLERANCE);
     /* just align with previous sample then */
-    render_offset = -1;
-    /* FIXME, can we use the OFFSET field to detect a gap? */
+    render_offset = sink->next_sample;
+  } else {
+    GST_DEBUG ("resync");
   }
-  //GST_DEBUG ("ringgbuffer next (before) %llu", sink->ringbuffer->next_sample);
   gst_ring_buffer_commit (sink->ringbuffer, render_offset, data, size);
-  //GST_DEBUG ("ringgbuffer next (after) %llu", sink->ringbuffer->next_sample);
+
+  /* the next sample should be current sample and its length */
+  sink->next_sample =
+      render_offset + size / sink->ringbuffer->spec.bytes_per_sample;
 
   return GST_FLOW_OK;
 
@@ -435,6 +450,7 @@ gst_base_audio_sink_change_state (GstElement * element,
       }
       if (!gst_ring_buffer_open_device (sink->ringbuffer))
         return GST_STATE_CHANGE_FAILURE;
+      sink->next_sample = 0;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;

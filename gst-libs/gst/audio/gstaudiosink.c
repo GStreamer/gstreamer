@@ -132,6 +132,7 @@ gst_audioringbuffer_class_init (GstAudioRingBufferClass * klass)
   gstringbuffer_class->release =
       GST_DEBUG_FUNCPTR (gst_audioringbuffer_release);
   gstringbuffer_class->start = GST_DEBUG_FUNCPTR (gst_audioringbuffer_start);
+  gstringbuffer_class->pause = GST_DEBUG_FUNCPTR (gst_audioringbuffer_stop);
   gstringbuffer_class->resume = GST_DEBUG_FUNCPTR (gst_audioringbuffer_start);
   gstringbuffer_class->stop = GST_DEBUG_FUNCPTR (gst_audioringbuffer_stop);
 
@@ -172,9 +173,9 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
 
       left = len;
       do {
-        GST_DEBUG ("transfer %d bytes from segment %d", left, readseg);
         written = writefunc (sink, readptr + written, left);
-        GST_DEBUG ("transfered %d bytes", written);
+        GST_DEBUG ("transfered %d bytes of %d from segment %d", written, left,
+            readseg);
         if (written < 0 || written > left) {
           GST_WARNING ("error writing data (reason: %s), skipping segment\n",
               strerror (errno));
@@ -393,7 +394,7 @@ gst_audioringbuffer_stop (GstRingBuffer * buf)
 
   GST_DEBUG ("stop, waiting...");
   GST_AUDIORING_BUFFER_WAIT (buf);
-  GST_DEBUG ("stoped");
+  GST_DEBUG ("stopped");
 
   return TRUE;
 }

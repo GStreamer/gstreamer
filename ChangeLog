@@ -1,3 +1,19 @@
+2005-09-24  Wim Taymans  <wim@fluendo.com>
+
+	* ext/alsa/gstalsasink.c: (gst_alsasink_reset):
+	* gst-libs/gst/audio/gstaudiosink.c:
+	(gst_audioringbuffer_class_init), (audioringbuffer_thread_func),
+	(gst_audioringbuffer_stop):
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_event), (gst_base_audio_sink_render),
+	(gst_base_audio_sink_change_state):
+	* gst-libs/gst/audio/gstbaseaudiosink.h:
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_stop),
+	(gst_ring_buffer_set_sample), (gst_ring_buffer_clear_all),
+	(gst_ring_buffer_commit), (gst_ring_buffer_read):
+	* gst-libs/gst/audio/gstringbuffer.h:
+	Fix sync again. Moved sample alignment to basesink.
+
 2005-09-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/plugins/Makefile.am:

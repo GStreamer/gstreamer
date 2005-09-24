@@ -707,7 +707,6 @@ gst_alsasink_delay (GstAudioSink * asink)
 static void
 gst_alsasink_reset (GstAudioSink * asink)
 {
-
 #if 0
   GstAlsaSink *alsa;
   gint err;

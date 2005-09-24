@@ -169,7 +169,6 @@ struct _GstRingBuffer {
   gint			 waiting;	/* when waiting for a segment to be freed */
 
   /*< private >*/
-  guint64		 next_sample;	/* the next sample we need to process */
   GstRingBufferCallback  callback;
   gpointer               cb_data;
 
