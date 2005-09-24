@@ -188,7 +188,7 @@ class FVUMeter(gtk.DrawingArea):
         # draw yellow decay level
         if self.decaylevel > -90.0:
             decaylevelpct = self.iec_scale(self.decaylevel)
-            decaywidth = int(vumeter_width) * (decaylevelpct / 100)
+            decaywidth = int(vumeter_width * (decaylevelpct / 100))
             # cheat the geometry by drawing 0% level at pixel 0,
             # which is same position as just above 0%
             if decaywidth == 0:

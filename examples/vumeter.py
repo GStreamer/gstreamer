@@ -76,7 +76,6 @@ class Window(gtk.Dialog):
                 self.vus[i].freeze_notify()
                 decay = clamp(s['decay'][i], -90.0, 0.0)
                 peak = clamp(s['peak'][i], -90.0, 0.0)
-                print "decay/peak", decay, peak
                 if peak > decay:
                     print "ERROR: peak bigger than decay!"
             
