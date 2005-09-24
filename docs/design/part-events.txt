@@ -66,6 +66,10 @@ The downstream element should forward the EOS event to its downstream peer
 elements. This way the event will eventually reach the renderers which should
 then post an EOS message on the bus.
 
+An element might want to flush its internally queued data before forwarding
+the EOS event downstream. This flushing can be done in the same thread as
+the one handling the EOS event.
+
 For elements with multiple sink pads it might be possible to wait for EOS on
 all the pads before forwarding the event.
 

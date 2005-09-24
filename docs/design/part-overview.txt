@@ -465,7 +465,7 @@ Pipeline seeking
      always stop because of step 1).
   3) perform the seek operation
   4) send a FLUSH done event to all downstream and upstream peer elements.
-  5) send DISCONT event to inform all elements of the new position and to complete
+  5) send NEWSEGMENT event to inform all elements of the new position and to complete
      the seek.
 
  In step 1) all dowstream elements have to return from any blocking operations
@@ -509,7 +509,7 @@ Pipeline seeking
 	      | 2) stop streaming
 	      | 3) perform seek
               --------------------------> 4) FLUSH done event
-              --------------------------> 5) DISCONT event
+              --------------------------> 5) NEWSEGMENT event
   
                                       | e) update stream time
 				      | f) PLAY pipeline

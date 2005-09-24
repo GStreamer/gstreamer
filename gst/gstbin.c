@@ -32,8 +32,8 @@
  * allowing for deep nesting of predefined sub-pipelines.
  *
  * A new GstBin is created with gst_bin_new(). Use a #GstPipeline instead if you
- * want to create a toplevel bin because a normal bin doesn't have a scheduler
- * of its own.
+ * want to create a toplevel bin because a normal bin doesn't have a bus or
+ * handle clock distribution of its own.
  * 
  * After the bin has been created you will typically add elements to it with
  * gst_bin_add(). You can remove elements with gst_bin_remove().
@@ -43,24 +43,15 @@
  * purposes and will query the parent bins when the element is not found in the
  * current bin.
  * 
- * The list of elements in a bin can be retrieved with gst_bin_get_list().
- * 
- * After the bin has been set to the PLAYING state (with gst_element_set_state()), 
- * gst_bin_iterate() is used to process the elements in the bin.
+ * An iterator of elements in a bin can be retrieved with 
+ * gst_bin_iterate_elements(). Various other iterators exist to retrieve the
+ * elements in a bin.
  * 
  * The "element_added" signal is fired whenever a new element is added to the
  * bin. Likewise the "element_removed" signal is fired whenever an element is
  * removed from the bin.
  *
- * gst_bin_destroy() is used to destroy the bin. 
- *
- * To control the selection of the clock in a bin, you can use the following
- * methods:
- * gst_bin_auto_clock() to let the bin select a clock automatically,
- * gst_bin_get_clock() to get the current clock of the bin and
- * gst_bin_use_clock() to specify a clock explicitly.
- * Note that the default behaviour is to automatically select a clock from one
- * of the clock providers in the bin.
+ * gst_bin_unref() is used to destroy the bin. 
  */
 
 #include "gst_private.h"

@@ -39,10 +39,9 @@
  * and output (or source) pads.  
  * Core and plug-in writers can add and remove pads with gst_element_add_pad()
  * and gst_element_remove_pad().
- * Application writers can manipulate ghost pads (copies of real pads inside a bin)
- * with gst_element_add_ghost_pad() and gst_element_remove_ghost_pad().
+ *
  * A pad of an element can be retrieved by name with gst_element_get_pad().
- * A GList of all pads can be retrieved with gst_element_get_pad_list().
+ * An iterator of all pads can be retrieved with gst_element_iterate_pads().
  * 
  * Elements can be linked through their pads.
  * If the link is straightforward, use the gst_element_link() 
@@ -61,9 +60,7 @@
  * gst_element_state_get_name().
  * 
  * You can get and set a #GstClock on an element using gst_element_get_clock()
- * and gst_element_set_clock().  You can wait for the clock to reach a given
- * #GstClockTime using gst_element_clock_wait().
- * 
+ * and gst_element_set_clock().  
  */
 #include "gst_private.h"
 #include <glib.h>

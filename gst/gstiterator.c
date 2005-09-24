@@ -18,6 +18,18 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstiterator
+ * @short_description: Object to retrieve multiple elements in a threadsafe
+ * way.
+ * @see_also: #GstElement, #GstBin
+ *
+ * A GstIterator is used to retrieve multiple objects from another object in
+ * a threadsafe way.
+ *
+ * Various GStreamer objects provide access to their internal structures using
+ * an iterator.
+ */
 
 #include "gst_private.h"
 #include <gst/gstiterator.h>

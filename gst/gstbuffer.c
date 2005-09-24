@@ -58,6 +58,11 @@
  * If an element knows what pad you will push the buffer out on, it should use
  * gst_pad_alloc_buffer() instead to create a buffer.  This allows downstream
  * elements to provide special buffers to write in, like hardware buffers.
+ *
+ * A buffer has a pointer to a #GstCaps describing the media type of the data
+ * in the buffer. Attach caps to the buffer with gst_buffer_set_caps(); this
+ * is typically done before pushing out a buffer using gst_pad_push() so that
+ * the downstream element knows the type of the buffer.
  * 
  * gst_buffer_ref() is used to increase the refcount of a buffer. This must be
  * done when you want to keep a handle to the buffer after pushing it to the
@@ -80,12 +85,10 @@
  * An element should either unref the buffer or push it out on a src pad
  * using gst_pad_push() (see #GstPad).
  * 
- * Buffers usually are freed by unreffing them with gst_buffer_unref().
- * Do not use gst_buffer_free() : this function effectively frees the buffer
- * regardless of the refcount, which is dangerous.
+ * Buffers usually are freed by unreffing them with gst_buffer_unref(). When
+ * the refcount drops to 0, the buffer memory will be freed again.
  *
- * Last reviewed on August 12th, 2004 (0.8.5)
- *
+ * Last reviewed on September 24th, 2005 (0.9.0)
  */
 #include "gst_private.h"
 

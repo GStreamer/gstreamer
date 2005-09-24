@@ -73,3 +73,14 @@ Message types
 
     An element posted an application specific message.
 
+  GST_MESSAGE_SEGMENT_START:
+
+    An element started playback of a new segment. This message is not forwarded
+    the the application but is used internally to scheduler SEGMENT_DONE messages.
+
+  GST_MESSAGE_SEGMENT_DONE:
+
+    An element or bin completed playback of a segment. This message is only posted
+    on the bus if a SEGMENT seek is performed on a pipeline.
+
+

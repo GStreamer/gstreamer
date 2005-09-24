@@ -31,8 +31,10 @@
  *
  * The clock time is always measured in nanoseconds and always increases. The
  * pipeline uses the clock to calculate the stream time.
- * Usually all renderers sync to the global clock so that the clock is always 
- * a good measure of the current playback time in the pipeline.
+ * Usually all renderers sync to the global clock using the buffer timestamps
+ * and the segment events.
+ *
+ * The time of the clock in itself is not very usefull for an application.
  */
 #include <time.h>
 

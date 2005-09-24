@@ -1,3 +1,20 @@
+2005-09-24  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-events.txt:
+	* docs/design/part-gstbus.txt:
+	* docs/design/part-gstpipeline.txt:
+	* docs/design/part-messages.txt:
+	* docs/design/part-overview.txt:
+	* docs/design/part-segments.txt:
+	* gst/gstbin.c:
+	* gst/gstbuffer.c:
+	* gst/gstclock.c:
+	* gst/gstelement.c:
+	* gst/gstevent.c:
+	* gst/gstfilter.c:
+	* gst/gstiterator.c:
+	Various documentation updates.
+
 2005-09-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstclock.h:

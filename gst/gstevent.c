@@ -26,9 +26,10 @@
  *
  * The event classes are used to construct and query events.
  *
- * Events are usually created with gst_event_new() which takes the event type as
- * an argument. Properties specific to the event can be set afterwards with the
- * provided macros. The event should be unreferenced with gst_event_unref().
+ * Events are usually created with gst_event_new_*() which takes the extra event 
+ * paramters as arguments. 
+ * Events can be parsed with their respective gst_event_parse_*() functions.
+ * The event should be unreferenced with gst_event_unref().
  *
  * gst_event_new_seek() is a usually used to create a seek event and it takes
  * the needed parameters for a seek event.

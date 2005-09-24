@@ -18,13 +18,8 @@
  */
 /**
  * SECTION:gstfilter
- * @short_description: Take data in and spit data out
+ * @short_description: A utility function to filter GLists.
  *
- * Filters take data in and spit data out. They are the main elements in a
- * filter graph.
- * Filters have zero or more inputs and zero or more outputs. Filters are
- * linked together to form filter graphs. A #GstFilter is the base class and is
- * not very useful on its own.
  */
 #include "gst_private.h"
 #include <gst/gstfilter.h>
