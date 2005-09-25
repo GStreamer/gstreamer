@@ -52,10 +52,6 @@ GST_EXPORT GType _gst_pad_type;
 typedef struct _GstPad GstPad;
 typedef struct _GstPadClass GstPadClass;
 
-typedef struct _GstPadTemplate GstPadTemplate;
-typedef struct _GstPadTemplateClass GstPadTemplateClass;
-typedef struct _GstStaticPadTemplate GstStaticPadTemplate;
-
 /**
  * GstPadLinkReturn:
  * @GST_PAD_LINK_OK		: link succeeded
@@ -76,7 +72,22 @@ typedef enum {
   GST_PAD_LINK_REFUSED          = -6,
 } GstPadLinkReturn;
 
+/**
+ * GST_PAD_LINK_FAILED:
+ * @ret: the #GstPadLinkReturn value
+ *
+ * Macro to test if the given #GstPadLinkReturn value indicates a failed
+ * negotiation step (REFUSED/DELAYED).
+ */
 #define GST_PAD_LINK_FAILED(ret) ((ret) < GST_PAD_LINK_OK)
+
+/**
+ * GST_PAD_LINK_SUCCESSFUL:
+ * @ret: the #GstPadLinkReturn value
+ *
+ * Macro to test if the given #GstPadLinkReturn value indicates a successfull
+ * negotiation step (OK/DONE).
+ */
 #define GST_PAD_LINK_SUCCESSFUL(ret) ((ret) >= GST_PAD_LINK_OK)
 
 typedef enum {
@@ -106,38 +117,136 @@ typedef enum {
 typedef gboolean		(*GstPadActivateFunction)	(GstPad *pad);
 typedef gboolean		(*GstPadActivateModeFunction)	(GstPad *pad, gboolean active);
 
+
 /* data passing */
+/**
+ * GstPadChainFunction:
+ * @pad: the #GstPad that performed the chain.
+ * @buffer: the #GstBuffer that is chained.
+ * 
+ * A function that will be called when chaining buffers.
+ *
+ * 
+ */
 typedef GstFlowReturn		(*GstPadChainFunction)		(GstPad *pad, GstBuffer *buffer);
 typedef GstFlowReturn		(*GstPadGetRangeFunction)	(GstPad *pad, guint64 offset,
 		                                                 guint length, GstBuffer **buffer);
+
+/**
+ * GstPadEventFunction:
+ * @pad: the #GstPad to handle the event.
+ * @event: the #GstEvent to handle.
+ *
+ * Function signature to handle an event for the pad.
+ *
+ * Returns: TRUE if the pad could handle the event.
+ */
 typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstEvent *event);
+
 
 /* deprecate me, check range should use seeking query */
 typedef gboolean		(*GstPadCheckGetRangeFunction)	(GstPad *pad);
 
+
 /* internal links */
+/**
+ * GstPadIntLinkFunction:
+ * @pad: The #GstPad to query.
+ *
+ * The signature of the internal pad link function.
+ *
+ * Returns: a newly allocated #GList of pads that are linked to the given pad on
+ *  the inside of the parent element.
+ *  The caller must call g_list_free() on it after use.
+ *
+ */
 typedef GList*			(*GstPadIntLinkFunction)	(GstPad *pad);
 
+
 /* generic query function */
+/**
+ * GstPadQueryTypeFunction:
+ * @pad: a #GstPad to query
+ *
+ * The signature of the query types function.
+ *
+ * Returns: an array of query types
+ */
 typedef const GstQueryType*	(*GstPadQueryTypeFunction)	(GstPad *pad);
+
+/**
+ * GstPadQueryFunction:
+ * @pad: the #GstPad to query.
+ * @query: the #GstQuery object to execute
+ *
+ * The signature of the query function.
+ * 
+ * Returns: TRUE if the query could be performed.
+ */
 typedef gboolean		(*GstPadQueryFunction)		(GstPad *pad, GstQuery *query);
 
+
 /* linking */
+/**
+ * GstPadLinkFunction
+ * @pad: the #GstPad that is linked.
+ * @peer: the peer #GstPad of the link
+ *
+ * Function signature to handle a new link on the pad.
+ *
+ * Returns: the result of the link with the specified peer.
+ */
 typedef GstPadLinkReturn	(*GstPadLinkFunction)		(GstPad *pad, GstPad *peer);
+/**
+ * GstPadUnlinkFunction
+ * @pad: the #GstPad that is linked.
+ *
+ * Function signature to handle a unlinking the pad prom its peer.
+ */
 typedef void			(*GstPadUnlinkFunction)		(GstPad *pad);
 
+
 /* caps nego */
+/**
+ * GstPadGetCapsFunction:
+ * @pad: the #GstPad to get the capabilities of.
+ *
+ * Returns a copy of the capabilities of the specified pad. By default this
+ * function will return the pad template capabilities, but can optionally
+ * be overridden.
+ *
+ * Returns: a newly allocated copy #GstCaps of the pad.
+ */
 typedef GstCaps*		(*GstPadGetCapsFunction)	(GstPad *pad);
 typedef gboolean		(*GstPadSetCapsFunction)	(GstPad *pad, GstCaps *caps);
 typedef gboolean		(*GstPadAcceptCapsFunction)	(GstPad *pad, GstCaps *caps);
 typedef void			(*GstPadFixateCapsFunction)	(GstPad *pad, GstCaps *caps);
 typedef GstFlowReturn		(*GstPadBufferAllocFunction)	(GstPad *pad, guint64 offset, guint size,
 								 GstCaps *caps, GstBuffer **buf);
+
 /* misc */
+/**
+ * GstPadDispatcherFunction:
+ * @pad: the #GstPad that is dispatched.
+ * @data: the gpointer to optional user data.
+ *
+ * A dispatcher function is called for all internally linked pads, see 
+ * gst_pad_dispatcher().
+ *
+ * Returns: TRUE if the dispatching procedure has to be stopped.
+ */
 typedef gboolean		(*GstPadDispatcherFunction)	(GstPad *pad, gpointer data);
 
 typedef void			(*GstPadBlockCallback)		(GstPad *pad, gboolean blocked, gpointer user_data);
 
+/**
+ * GstPadDirection:
+ * @GST_PAD_UNKNOWN: direction is unknown.
+ * @GST_PAD_SRC: the pad is a source pad.
+ * @GST_PAD_SINK: the pad is a sink pad.
+ *
+ * The direction of a pad.
+ */
 typedef enum {
   GST_PAD_UNKNOWN,
   GST_PAD_SRC,
@@ -152,6 +261,9 @@ typedef enum {
 
   GST_PAD_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 8
 } GstPadFlags;
+
+/* FIXME: this awful circular dependency need to be resolved properly (see padtemplate.h) */
+typedef struct _GstPadTemplate GstPadTemplate;
 
 struct _GstPad {
   GstObject			object;
@@ -306,67 +418,8 @@ struct _GstPadClass {
 #define GST_PAD_BLOCK_WAIT(pad)         (g_cond_wait(GST_PAD_BLOCK_GET_COND (pad), GST_GET_LOCK (pad)))
 #define GST_PAD_BLOCK_SIGNAL(pad)       (g_cond_signal(GST_PAD_BLOCK_GET_COND (pad)))
 
-/***** PadTemplate *****/
-#define GST_TYPE_PAD_TEMPLATE		(gst_pad_template_get_type ())
-#define GST_PAD_TEMPLATE(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PAD_TEMPLATE,GstPadTemplate))
-#define GST_PAD_TEMPLATE_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PAD_TEMPLATE,GstPadTemplateClass))
-#define GST_IS_PAD_TEMPLATE(obj)	(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PAD_TEMPLATE))
-#define GST_IS_PAD_TEMPLATE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PAD_TEMPLATE))
-
-typedef enum {
-  GST_PAD_ALWAYS,
-  GST_PAD_SOMETIMES,
-  GST_PAD_REQUEST
-} GstPadPresence;
-
-#define GST_PAD_TEMPLATE_NAME_TEMPLATE(templ)	(((GstPadTemplate *)(templ))->name_template)
-#define GST_PAD_TEMPLATE_DIRECTION(templ)	(((GstPadTemplate *)(templ))->direction)
-#define GST_PAD_TEMPLATE_PRESENCE(templ)	(((GstPadTemplate *)(templ))->presence)
-#define GST_PAD_TEMPLATE_CAPS(templ)		(((GstPadTemplate *)(templ))->caps)
-
-typedef enum {
-  GST_PAD_TEMPLATE_FIXED	= GST_OBJECT_FLAG_LAST,
-
-  GST_PAD_TEMPLATE_FLAG_LAST	= GST_OBJECT_FLAG_LAST + 4
-} GstPadTemplateFlags;
-
-#define GST_PAD_TEMPLATE_IS_FIXED(templ)	(GST_FLAG_IS_SET(templ, GST_PAD_TEMPLATE_FIXED))
-
-struct _GstPadTemplate {
-  GstObject	   object;
-
-  gchar           *name_template;
-  GstPadDirection  direction;
-  GstPadPresence   presence;
-  GstCaps	  *caps;
-
-  gpointer _gst_reserved[GST_PADDING];
-};
-
-struct _GstPadTemplateClass {
-  GstObjectClass   parent_class;
-
-  /* signal callbacks */
-  void (*pad_created)	(GstPadTemplate *templ, GstPad *pad);
-
-  gpointer _gst_reserved[GST_PADDING];
-};
-
-struct _GstStaticPadTemplate {
-  gchar           *name_template;
-  GstPadDirection  direction;
-  GstPadPresence   presence;
-  GstStaticCaps   static_caps;
-};
-
-#define GST_STATIC_PAD_TEMPLATE(padname, dir, pres, caps) \
-  { \
-  /* name_template */    padname, \
-  /* direction */        dir, \
-  /* presence */         pres, \
-  /* caps */             caps \
-  }
-
+/* FIXME: this awful circular dependency need to be resolved properly (see padtemplate.h) */
+#include <gst/gstpadtemplate.h>
 
 GType			gst_pad_get_type			(void);
 
@@ -481,19 +534,6 @@ gboolean		gst_pad_dispatcher			(GstPad *pad, GstPadDispatcherFunction dispatch,
 #ifndef GST_DISABLE_LOADSAVE
 void			gst_pad_load_and_link			(xmlNodePtr self, GstObject *parent);
 #endif
-
-
-/* templates and factories */
-GType			gst_pad_template_get_type		(void);
-
-GstPadTemplate*		gst_pad_template_new			(const gchar *name_template,
-								 GstPadDirection direction, GstPadPresence presence,
-								 GstCaps *caps);
-
-GstPadTemplate *	gst_static_pad_template_get             (GstStaticPadTemplate *pad_template);
-GstCaps*		gst_static_pad_template_get_caps	(GstStaticPadTemplate *templ);
-GstCaps*		gst_pad_template_get_caps		(GstPadTemplate *templ);
-
 
 G_END_DECLS
 

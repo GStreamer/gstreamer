@@ -38,6 +38,8 @@ gstmemchunk.sgml
 gstmessage.sgml
 gstminiobject.sgml
 gstobject.sgml
+gstpad.sgml
+gstpadtemplate.sgml
 gstparse.sgml
 gstpluginfeature.sgml
 gstpushsrc.sgml

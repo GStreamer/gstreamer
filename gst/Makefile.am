@@ -91,6 +91,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstmessage.c		\
 	gstminiobject.c		\
 	gstpad.c		\
+        gstpadtemplate.c	\
 	gstpipeline.c		\
 	gstplugin.c		\
 	gstpluginfeature.c	\
@@ -168,6 +169,7 @@ gst_headers =			\
 	gstmessage.h		\
 	gstminiobject.h		\
 	gstpad.h		\
+	gstpadtemplate.h	\
 	gstpipeline.h		\
 	gstplugin.h		\
 	gstpluginfeature.h	\

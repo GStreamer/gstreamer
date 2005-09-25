@@ -1,3 +1,23 @@
+2005-09-25  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/.cvsignore:
+	* docs/gst/tmpl/gstpad.sgml:
+	* docs/gst/tmpl/gstpadtemplate.sgml:
+	* gst/Makefile.am:
+	* gst/gstpad.c: (gst_pad_class_init), (gst_pad_dispose),
+	(gst_pad_finalize), (gst_pad_set_pad_template):
+	* gst/gstpad.h:
+	* gst/gstpadtemplate.c: (gst_pad_template_get_type),
+	(gst_pad_template_class_init), (gst_pad_template_init),
+	(gst_pad_template_dispose), (name_is_valid),
+	(gst_static_pad_template_get), (gst_pad_template_new),
+	(gst_static_pad_template_get_caps), (gst_pad_template_get_caps),
+	(gst_pad_template_pad_created):
+	* gst/gstpadtemplate.h:
+          inlined two more docs
+          factored gstpadtemplate out of gstpad
+
 2005-09-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* check/gst/gstbin.c: (test_children_state_change_order_flagged_sink),

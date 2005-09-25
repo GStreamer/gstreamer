@@ -19,10 +19,52 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstpad
+ * @short_description: Object contained by elements that allows links to other elements
+ * @see_also: #GstPadTemplate, #GstElement, #GstEvent
+ *
+ * A #GstElement is linked to other elements via "pads", which are extremely 
+ * light-weight generic link points. 
+ * After two pads are retrieved from an element with gst_element_get_pad(), 
+ * the pads can be link with gst_pad_link(). (For quick links,
+ * you can also use gst_element_link(), which will make the obvious
+ * link for you if it's straightforward.)
+ *
+ * Pads are typically created from a #GstPadTemplate with 
+ * gst_pad_new_from_template().
+ *
+ * Pads have #GstCaps attached to it to describe the media type they are capable
+ * of dealing with. 
+ * gst_pad_get_caps() and gst_pad_try_set_caps() are used to manipulate the caps
+ * of the pads. 
+ * Pads created from a pad template cannot set capabilities that are 
+ * incompatible with the pad template capabilities.
+ *
+ * Pads without pad templates can be created with gst_pad_new(),
+ * which takes a direction and a name as an argument.  If the name is NULL,
+ * then a guaranteed unique name will be assigned to it.
+ *
+ * gst_pad_get_parent() will retrieve the #GstElement that owns the pad.
+ *
+ * A #GstElement creating a pad will typically use the various 
+ * gst_pad_set_*_function() calls to register callbacks for various events 
+ * on the pads.
+ *
+ * GstElements will use gst_pad_push() and gst_pad_pull() to push out 
+ * or pull in a buffer.
+ * gst_pad_select() and gst_pad_selectv() are used by plugins to wait for the
+ * first incoming buffer or event on any of the given set of pads.
+ *
+ * To send a #GstEvent on a pad, use gst_pad_send_event().
+ *
+ * Last reviewed on December 13th, 2002 (0.5.0.1)
+ */
 
 #include "gst_private.h"
 
 #include "gstpad.h"
+#include "gstpadtemplate.h"
 #include "gstenumtypes.h"
 #include "gstmarshal.h"
 #include "gstutils.h"
@@ -44,16 +86,6 @@ GST_DEBUG_CATEGORY_STATIC (debug_dataflow);
 }G_STMT_END
 #define GST_CAT_DEFAULT GST_CAT_PADS
 
-enum
-{
-  TEMPL_PAD_CREATED,
-  /* FILL ME */
-  TEMPL_LAST_SIGNAL
-};
-
-static GstObject *padtemplate_parent_class = NULL;
-static guint gst_pad_template_signals[TEMPL_LAST_SIGNAL] = { 0 };
-
 /* Pad signals and args */
 enum
 {
@@ -62,7 +94,7 @@ enum
   PAD_REQUEST_LINK,
   PAD_HAVE_DATA,
   /* FILL ME */
-  PAD_LAST_SIGNAL
+  LAST_SIGNAL
 };
 
 enum
@@ -93,8 +125,8 @@ static gboolean gst_pad_activate_default (GstPad * pad);
 static xmlNodePtr gst_pad_save_thyself (GstObject * object, xmlNodePtr parent);
 #endif
 
-static GstObjectClass *pad_parent_class = NULL;
-static guint gst_pad_signals[PAD_LAST_SIGNAL] = { 0 };
+static GstObjectClass *parent_class = NULL;
+static guint gst_pad_signals[LAST_SIGNAL] = { 0 };
 
 static GQuark buffer_quark;
 static GQuark event_quark;
@@ -152,7 +184,7 @@ gst_pad_class_init (GstPadClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstobject_class = (GstObjectClass *) klass;
 
-  pad_parent_class = g_type_class_ref (GST_TYPE_OBJECT);
+  parent_class = g_type_class_ref (GST_TYPE_OBJECT);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_pad_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_pad_finalize);
@@ -295,7 +327,7 @@ gst_pad_dispose (GObject * object)
     gst_element_remove_pad (GST_ELEMENT (GST_OBJECT_PARENT (pad)), pad);
   }
 
-  G_OBJECT_CLASS (pad_parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -327,7 +359,7 @@ gst_pad_finalize (GObject * object)
     pad->block_cond = NULL;
   }
 
-  G_OBJECT_CLASS (pad_parent_class)->finalize (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -1628,11 +1660,8 @@ gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ)
   gst_object_replace ((GstObject **) & pad->padtemplate, (GstObject *) templ);
   GST_UNLOCK (pad);
 
-  if (templ) {
-    gst_object_sink (GST_OBJECT (templ));
-    g_signal_emit (G_OBJECT (templ),
-        gst_pad_template_signals[TEMPL_PAD_CREATED], 0, pad);
-  }
+  if (templ)
+    gst_pad_template_pad_created (templ, pad);
 }
 
 /**
@@ -3485,220 +3514,6 @@ dropping:
     gst_event_unref (event);
     return FALSE;
   }
-}
-
-/************************************************************************
- *
- * templates
- *
- */
-static void gst_pad_template_class_init (GstPadTemplateClass * klass);
-static void gst_pad_template_init (GstPadTemplate * templ);
-static void gst_pad_template_dispose (GObject * object);
-
-GType
-gst_pad_template_get_type (void)
-{
-  static GType padtemplate_type = 0;
-
-  if (!padtemplate_type) {
-    static const GTypeInfo padtemplate_info = {
-      sizeof (GstPadTemplateClass), NULL, NULL,
-      (GClassInitFunc) gst_pad_template_class_init, NULL, NULL,
-      sizeof (GstPadTemplate),
-      0,
-      (GInstanceInitFunc) gst_pad_template_init, NULL
-    };
-
-    padtemplate_type =
-        g_type_register_static (GST_TYPE_OBJECT, "GstPadTemplate",
-        &padtemplate_info, 0);
-  }
-  return padtemplate_type;
-}
-
-static void
-gst_pad_template_class_init (GstPadTemplateClass * klass)
-{
-  GObjectClass *gobject_class;
-  GstObjectClass *gstobject_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstobject_class = (GstObjectClass *) klass;
-
-  padtemplate_parent_class = g_type_class_ref (GST_TYPE_OBJECT);
-
-  gst_pad_template_signals[TEMPL_PAD_CREATED] =
-      g_signal_new ("pad-created", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstPadTemplateClass, pad_created),
-      NULL, NULL, gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_PAD);
-
-  gobject_class->dispose = gst_pad_template_dispose;
-
-  gstobject_class->path_string_separator = "*";
-}
-
-static void
-gst_pad_template_init (GstPadTemplate * templ)
-{
-}
-
-static void
-gst_pad_template_dispose (GObject * object)
-{
-  GstPadTemplate *templ = GST_PAD_TEMPLATE (object);
-
-  g_free (GST_PAD_TEMPLATE_NAME_TEMPLATE (templ));
-  if (GST_PAD_TEMPLATE_CAPS (templ)) {
-    gst_caps_unref (GST_PAD_TEMPLATE_CAPS (templ));
-  }
-
-  G_OBJECT_CLASS (padtemplate_parent_class)->dispose (object);
-}
-
-/* ALWAYS padtemplates cannot have conversion specifications (like src_%d),
- * since it doesn't make sense.
- * SOMETIMES padtemplates can do whatever they want, they are provided by the
- * element.
- * REQUEST padtemplates can be reverse-parsed (the user asks for 'sink1', the
- * 'sink%d' template is automatically selected), so we need to restrict their
- * naming.
- */
-static gboolean
-name_is_valid (const gchar * name, GstPadPresence presence)
-{
-  const gchar *str;
-
-  if (presence == GST_PAD_ALWAYS) {
-    if (strchr (name, '%')) {
-      g_warning ("invalid name template %s: conversion specifications are not"
-          " allowed for GST_PAD_ALWAYS padtemplates", name);
-      return FALSE;
-    }
-  } else if (presence == GST_PAD_REQUEST) {
-    if ((str = strchr (name, '%')) && strchr (str + 1, '%')) {
-      g_warning ("invalid name template %s: only one conversion specification"
-          " allowed in GST_PAD_REQUEST padtemplate", name);
-      return FALSE;
-    }
-    if (str && (*(str + 1) != 's' && *(str + 1) != 'd')) {
-      g_warning ("invalid name template %s: conversion specification must be of"
-          " type '%%d' or '%%s' for GST_PAD_REQUEST padtemplate", name);
-      return FALSE;
-    }
-    if (str && (*(str + 2) != '\0')) {
-      g_warning ("invalid name template %s: conversion specification must"
-          " appear at the end of the GST_PAD_REQUEST padtemplate name", name);
-      return FALSE;
-    }
-  }
-
-  return TRUE;
-}
-
-/**
- * gst_static_pad_template_get:
- * @pad_template: the static pad template
- *
- * Converts a #GstStaticPadTemplate into a #GstPadTemplate.
- *
- * Returns: a new #GstPadTemplate.
- */
-GstPadTemplate *
-gst_static_pad_template_get (GstStaticPadTemplate * pad_template)
-{
-  GstPadTemplate *new;
-
-  if (!name_is_valid (pad_template->name_template, pad_template->presence))
-    return NULL;
-
-  new = g_object_new (gst_pad_template_get_type (),
-      "name", pad_template->name_template, NULL);
-
-  GST_PAD_TEMPLATE_NAME_TEMPLATE (new) = g_strdup (pad_template->name_template);
-  GST_PAD_TEMPLATE_DIRECTION (new) = pad_template->direction;
-  GST_PAD_TEMPLATE_PRESENCE (new) = pad_template->presence;
-
-  GST_PAD_TEMPLATE_CAPS (new) =
-      gst_caps_copy (gst_static_caps_get (&pad_template->static_caps));
-
-  return new;
-}
-
-/**
- * gst_pad_template_new:
- * @name_template: the name template.
- * @direction: the #GstPadDirection of the template.
- * @presence: the #GstPadPresence of the pad.
- * @caps: a #GstCaps set for the template. The caps are taken ownership of.
- *
- * Creates a new pad template with a name according to the given template
- * and with the given arguments. This functions takes ownership of the provided
- * caps, so be sure to not use them afterwards.
- *
- * Returns: a new #GstPadTemplate.
- */
-GstPadTemplate *
-gst_pad_template_new (const gchar * name_template,
-    GstPadDirection direction, GstPadPresence presence, GstCaps * caps)
-{
-  GstPadTemplate *new;
-
-  g_return_val_if_fail (name_template != NULL, NULL);
-  g_return_val_if_fail (caps != NULL, NULL);
-  g_return_val_if_fail (direction == GST_PAD_SRC
-      || direction == GST_PAD_SINK, NULL);
-  g_return_val_if_fail (presence == GST_PAD_ALWAYS
-      || presence == GST_PAD_SOMETIMES || presence == GST_PAD_REQUEST, NULL);
-
-  if (!name_is_valid (name_template, presence)) {
-    gst_caps_unref (caps);
-    return NULL;
-  }
-
-  new = g_object_new (gst_pad_template_get_type (),
-      "name", name_template, NULL);
-
-  GST_PAD_TEMPLATE_NAME_TEMPLATE (new) = g_strdup (name_template);
-  GST_PAD_TEMPLATE_DIRECTION (new) = direction;
-  GST_PAD_TEMPLATE_PRESENCE (new) = presence;
-  GST_PAD_TEMPLATE_CAPS (new) = caps;
-
-  return new;
-}
-
-/**
- * gst_static_pad_template_get_caps:
- * @templ: a #GstStaticPadTemplate to get capabilities of.
- *
- * Gets the capabilities of the static pad template.
- *
- * Returns: the #GstCaps of the static pad template. If you need to keep a 
- * reference to the caps, take a ref (see gst_caps_ref ()).
- */
-GstCaps *
-gst_static_pad_template_get_caps (GstStaticPadTemplate * templ)
-{
-  g_return_val_if_fail (templ, NULL);
-
-  return (GstCaps *) gst_static_caps_get (&templ->static_caps);
-}
-
-/**
- * gst_pad_template_get_caps:
- * @templ: a #GstPadTemplate to get capabilities of.
- *
- * Gets the capabilities of the pad template.
- *
- * Returns: the #GstCaps of the pad template. If you need to keep a reference to
- * the caps, take a ref (see gst_caps_ref ()).
- */
-GstCaps *
-gst_pad_template_get_caps (GstPadTemplate * templ)
-{
-  g_return_val_if_fail (GST_IS_PAD_TEMPLATE (templ), NULL);
-
-  return GST_PAD_TEMPLATE_CAPS (templ);
 }
 
 /**
