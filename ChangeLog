@@ -1,5 +1,12 @@
 2005-09-25  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/base/gstbasetransform.h:
+	* gst/gstindex.h:
+	  added more docs
+
+2005-09-25  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/gst/.cvsignore:
 	* docs/gst/tmpl/.cvsignore:
 	* docs/gst/tmpl/gstpipeline.sgml:

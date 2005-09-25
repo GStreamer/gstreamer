@@ -38,7 +38,6 @@ thread_list
 <FILE>gstbin</FILE>
 <TITLE>GstBin</TITLE>
 GstBin
-GstBinClass
 GstBinFlags
 
 GST_BIN_CHILDREN
@@ -415,7 +414,6 @@ GST_PADDING_INIT
 <FILE>gstelement</FILE>
 <TITLE>GstElement</TITLE>
 GstElement
-GstElementClass
 GstElementFlags
 GstState
 GstStateChange
@@ -513,6 +511,7 @@ gst_element_unlink
 gst_element_unlink_many
 gst_element_unlink_pads
 <SUBSECTION Standard>
+GstElementClass
 GST_ELEMENT
 GST_IS_ELEMENT
 GST_ELEMENT_CLASS
@@ -2141,7 +2140,6 @@ gst_xml_get_type
 <TITLE>GstAdapter</TITLE>
 <INCLUDE>gst/base/gstadapter.h</INCLUDE>
 GstAdapter
-GstAdapterClass
 gst_adapter_new
 gst_adapter_clear
 gst_adapter_push
@@ -2151,6 +2149,7 @@ gst_adapter_available
 gst_adapter_available_fast
 gst_adapter_take
 <SUBSECTION Standard>
+GstAdapterClass
 GST_ADAPTER
 GST_IS_ADAPTER
 GST_TYPE_ADAPTER
@@ -2167,7 +2166,6 @@ gst_adapter_get_type
 <TITLE>GstBaseSrc</TITLE>
 <INCLUDE>gst/base/gstbasesrc.h</INCLUDE>
 GstBaseSrc
-GstBaseSrcClass
 GstBaseSrcFlags
 
 gst_base_src_is_live
@@ -2175,6 +2173,7 @@ gst_base_src_set_live
 
 GST_BASE_SRC_PAD
 <SUBSECTION Standard>
+GstBaseSrcClass
 GST_BASE_SRC
 GST_IS_BASE_SRC
 GST_TYPE_BASE_SRC
@@ -2191,7 +2190,6 @@ gst_base_src_get_type
 <TITLE>GstBaseSink</TITLE>
 <INCLUDE>gst/base/gstbasesink.h</INCLUDE>
 GstBaseSink
-GstBaseSinkClass
 
 GST_BASE_SINK_CLOCK
 GST_BASE_SINK_PAD
@@ -2224,7 +2222,6 @@ gst_base_sink_get_type
 <TITLE>GstBaseTransform</TITLE>
 <INCLUDE>gst/base/gstbasetransform.h</INCLUDE>
 GstBaseTransform
-GstBaseTransformClass
 
 gst_base_transform_is_passthrough
 gst_base_transform_set_passthrough
@@ -2235,6 +2232,7 @@ GST_BASE_TRANSFORM_SINK_NAME
 GST_BASE_TRANSFORM_SRC_NAME
 
 <SUBSECTION Standard>
+GstBaseTransformClass
 GST_BASE_TRANSFORM
 GST_IS_BASE_TRANSFORM
 GST_TYPE_BASE_TRANSFORM
@@ -2251,7 +2249,6 @@ gst_base_transform_get_type
 <TITLE>GstCollectPads</TITLE>
 <INCLUDE>gst/base/gstcollectpads.h</INCLUDE>
 GstCollectPads
-GstCollectPadsClass
 GstCollectPadsFunction
 gst_collectpads_new
 gst_collectpads_set_function
@@ -2272,6 +2269,7 @@ GST_COLLECTPADS_GET_COND
 GST_COLLECTPADS_SIGNAL
 GST_COLLECTPADS_WAIT
 <SUBSECTION Standard>
+GstCollectPadsClass
 GST_COLLECTPADS
 GST_IS_COLLECTPADS
 GST_TYPE_COLLECTPADS
@@ -2288,8 +2286,8 @@ gst_collectpads_get_type
 <TITLE>GstPushSrc</TITLE>
 <INCLUDE>gst/base/gstpushsrc.h</INCLUDE>
 GstPushSrc
-GstPushSrcClass
 <SUBSECTION Standard>
+GstPushSrcClass
 GST_PUSH_SRC
 GST_IS_PUSH_SRC
 GST_TYPE_PUSH_SRC

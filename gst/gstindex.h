@@ -193,6 +193,7 @@ typedef enum {
  * The basic element of an index.
  */
 struct _GstIndexEntry {
+  /*< private >*/
   GstIndexEntryType	 type;
   gint			 id;
 
@@ -225,6 +226,7 @@ struct _GstIndexEntry {
  */
 
 struct _GstIndexGroup {
+  /*< private >*/
   /* unique ID of group in index */
   gint groupnum;
 

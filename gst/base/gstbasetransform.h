@@ -33,8 +33,17 @@ G_BEGIN_DECLS
 #define GST_IS_BASE_TRANSFORM(obj)	(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_TRANSFORM))
 #define GST_IS_BASE_TRANSFORM_CLASS(obj)(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_TRANSFORM))
 
-/* the names of the templates for the sink and source pads */
+/**
+ * GST_BASE_TRANSFORM_SINK_NAME:
+ *
+ * the name of the templates for the sink pad
+ */
 #define GST_BASE_TRANSFORM_SINK_NAME	"sink"
+/**
+ * GST_BASE_TRANSFORM_SRC_NAME:
+ *
+ * the name of the templates for the source pad
+ */
 #define GST_BASE_TRANSFORM_SRC_NAME	"src"
 
 typedef struct _GstBaseTransform GstBaseTransform;
