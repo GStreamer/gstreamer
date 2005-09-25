@@ -19,6 +19,20 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstpipeline
+ * @short_description: Top-level bin with scheduling and pipeline management functionality.
+ * @see_also: #GstBin
+ *
+ * In almost all cases, you'll want to use a GstPipeline when creating a filter
+ * graph.  The GstPipeline will manage all the scheduling issues, including
+ * threading, as well as provide simple interfaces to common functions, like
+ * 'Play'.
+ *
+ * gst_pipeline_new() is used to create a pipeline. when you are done with 
+ * the pipeline, use gst_object_unref() to free its resources including all
+ * added #GstElement objects (if not otherwiese referenced).
+ */
 
 #include "gst_private.h"
 

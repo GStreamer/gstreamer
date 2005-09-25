@@ -19,6 +19,30 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstplugin
+ * @short_description: Container for features loaded from a shared object module
+ * @see_also: #GstPluginFeature, #GstElementFactory
+ *
+ * GStreamer is extensible, so #GstElement instances can be loaded at runtime.
+ * A plugin system can provide one or more of the basic <application>GStreamer</application>
+ * #GstPluginFeature subclasses.
+ *
+ * A plugin should export a symbol <symbol>plugin_desc</symbol> that is a struct of type #GstPluginDesc.
+ * the plugin loader will check the version of the core library the plugin was linked against
+ * and will create a new #GstPlugin. It will then call the #GstPluginInitFunc function
+ * that was provided in the plugin_desc.
+ *
+ * Once you have a handle to a #GstPlugin (e.g. from the #GstRegistryPool), you can
+ * add any object that subclasses #GstPluginFeature.
+ *
+ * Use gst_plugin_find_feature() and gst_plugin_get_feature_list() to find features in a plugin.
+ *
+ * Usually plugins are always automaticlly loaded so you don't need to call gst_plugin_load() explicitly 
+ * to bring it into memory. There are options to statically link plugins to an app or even
+ * use GStreamer without a plugin repository in which case gst_plugin_load() can be needed 
+ * to bring the plugin into memory.
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

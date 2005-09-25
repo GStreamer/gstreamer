@@ -1,5 +1,17 @@
 2005-09-25  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/gst/.cvsignore:
+	* docs/gst/tmpl/.cvsignore:
+	* docs/gst/tmpl/gstpipeline.sgml:
+	* docs/gst/tmpl/gstplugin.sgml:
+	* gst/gstpipeline.c:
+	* gst/gstplugin.c:
+	* gst/gstplugin.h:
+          inlined the last two docs files
+          removed the tmpl directory from cvs (no more conflicts here!)
+
+2005-09-25  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/gst/gstreamer-sections.txt:
 	* docs/gst/tmpl/.cvsignore:
 	* docs/gst/tmpl/gstpad.sgml:

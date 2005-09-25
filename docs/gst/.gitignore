@@ -13,6 +13,7 @@ gstreamer.signals
 
 html
 sgml
+tmpl
 *.stamp
 
 gstreamer.html

@@ -37,9 +37,29 @@ typedef struct _GstPlugin GstPlugin;
 typedef struct _GstPluginClass GstPluginClass;
 typedef struct _GstPluginDesc GstPluginDesc;
 
+/**
+ * gst_plugin_error_quark:
+ *
+ * Get the error quark.
+ *
+ * Returns: The error quark used in GError messages
+ */
 GQuark gst_plugin_error_quark (void);
+/**
+ * GST_PLUGIN_ERROR:
+ *
+ * The error message category quark
+ */
 #define GST_PLUGIN_ERROR gst_plugin_error_quark ()
 
+/**
+ * GstPluginError:
+ * @GST_PLUGIN_ERROR_MODULE: The plugin could not be loaded
+ * @GST_PLUGIN_ERROR_DEPENDENCIES: The plugin has unresolved dependencies
+ * @GST_PLUGIN_ERROR_NAME_MISMATCH: The plugin has already be loaded from a different file
+ *
+ * The plugin loading errors
+ */
 typedef enum
 {
   GST_PLUGIN_ERROR_MODULE,
@@ -47,25 +67,53 @@ typedef enum
   GST_PLUGIN_ERROR_NAME_MISMATCH
 } GstPluginError;
 
+
 typedef enum
 {
   GST_PLUGIN_FLAG_CACHED = (1<<0),
 } GstPluginFlags;
 
-/* Initialiser function: returns TRUE if plugin initialised successfully */
+/**
+ * GstPluginInitFunc:
+ * @plugin: The plugin object that can be used to register #GstPluginFeatures for this plugin.
+ *
+ * A plugin should provide a pointer to a function of this type in the
+ * plugin_desc struct.
+ * This function will be called by the loader at startup.
+ *
+ * Returns: %TRUE if plugin initialised successfully 
+ */
 typedef gboolean (*GstPluginInitFunc) (GstPlugin *plugin);
 
+/**
+ * GstPluginDesc:
+ * @major_version: the major version number of core that plugin was compiled for
+ * @minor_version: the minor version number of core that plugin was compiled for
+ * @name: a unique name of the plugin
+ * @description: description of plugin
+ * @plugin_init: pointer to the init function of this plugin.
+ * @version: version of the plugin
+ * @license: effective license of plugin
+ * @source: source module plugin belongs to
+ * @package: shipped package plugin belongs to
+ * @origin: URL to provider of plugin
+ * @_gst_reserved: private, for later expansion
+ * 
+ *
+ * A plugins should export a variable of this type called plugin_desc. This plugin
+ * loaded will use this variable to initialize the plugin.
+ */
 struct _GstPluginDesc {
-  gint major_version;			/* major version of core that plugin was compiled for */
-  gint minor_version;			/* minor version of core that plugin was compiled for */
-  gchar *name;				/* unique name of plugin */
-  gchar *description;			/* description of plugin */
-  GstPluginInitFunc plugin_init;	/* pointer to plugin_init function */
-  gchar *version;			/* version of the plugin */
-  gchar *license;			/* effective license of plugin */
-  gchar *source;			/* source module plugin belongs to */
-  gchar *package;			/* shipped package plugin belongs to */
-  gchar *origin;			/* URL to provider of plugin */
+  gint major_version;
+  gint minor_version;
+  gchar *name;
+  gchar *description;
+  GstPluginInitFunc plugin_init;
+  gchar *version;
+  gchar *license;
+  gchar *source;
+  gchar *package;
+  gchar *origin;
 
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -78,7 +126,11 @@ struct _GstPluginDesc {
 #define GST_PLUGIN(obj)                (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PLUGIN, GstPlugin))
 #define GST_PLUGIN_CLASS(klass)        (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PLUGIN, GstPluginClass))
 
-
+/**
+ * GstPlugin:
+ *
+ * The plugin object
+ */
 struct _GstPlugin {
   GstObject       object;
 
@@ -105,7 +157,22 @@ struct _GstPluginClass {
   /*< private >*/
 };
 
-
+/**
+ * GST_PLUGIN_DEFINE:
+ * @major: major version number of the gstreamer-core that plugin was compiled for
+ * @minor: minor version number of the gstreamer-core that plugin was compiled for
+ * @name: short, but unique name of the plugin
+ * @description: information about the purpose of the plugin
+ * @init: function pointer to the plugin_init method with the signature of <code>static gboolean plugin_init (GstPlugin * plugin)</code>.
+ * @version: full version string (e.g. VERSION from config.h)
+ * @license: under which licence the package has been released, e.g. GPL, LGPL.
+ * @package: the package-name (e.g. PACKAGE_NAME from config.h)
+ * @origin: a description from where the package comes from (e.g. the homepage URL)
+ *
+ * This macro needs to be used to define the entry point and meta data of a
+ * plugin. One would use this macro to export a plugin, so that it can be used
+ * by other applications
+ */
 #define GST_PLUGIN_DEFINE(major,minor,name,description,init,version,license,package,origin)	\
 GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {	\
   major,						\
@@ -121,6 +188,22 @@ GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {	\
   GST_PADDING_INIT				        \
 };
 
+/**
+ * GST_PLUGIN_DEFINE_STATIC:
+ * @major: major version number of the gstreamer-core that plugin was compiled for
+ * @minor: minor version number of the gstreamer-core that plugin was compiled for
+ * @name: short, but unique name of the plugin
+ * @description: information about the purpose of the plugin
+ * @init: function pointer to the plugin_init method with the signature of <code>static gboolean plugin_init (GstPlugin * plugin)</code>.
+ * @version: full version string (e.g. VERSION from config.h)
+ * @license: under which licence the package has been released, e.g. GPL, LGPL.
+ * @package: the package-name (e.g. PACKAGE_NAME from config.h)
+ * @origin: a description from where the package comes from (e.g. the homepage URL)
+ *
+ * This macro needs to be used to define the entry point and meta data of a
+ * local plugin. One would use this macro to define a local plugin that can only
+ * be used by the own application.
+ */
 #define GST_PLUGIN_DEFINE_STATIC(major,minor,name,description,init,version,license,package,origin)  \
 static void GST_GNUC_CONSTRUCTOR			\
 _gst_plugin_static_init__ ##init (void)			\
@@ -141,10 +224,26 @@ _gst_plugin_static_init__ ##init (void)			\
   _gst_plugin_register_static (&plugin_desc_);		\
 }
 
+/**
+ * GST_LICENSE_UNKNOWN:
+ *
+ * To be used in GST_PLUGIN_DEFINE or GST_PLUGIN_DEFINE_STATIC if usure about
+ * the licence.
+ */
 #define GST_LICENSE_UNKNOWN "unknown"
 
 
 /* function for filters */
+/**
+ * GstPluginFilter:
+ * @plugin: the plugin to check
+ * @user_data: the user_data that has been passed on e.g. gst_registry_plugin_filter()
+ *
+ * A function that can be used with e.g. gst_registry_plugin_filter()
+ * to get a list of plugins that match certain criteria.
+ *
+ * Returns: TRUE for a positive match, FALSE otherwise
+ */
 typedef gboolean        (*GstPluginFilter)              (GstPlugin *plugin,
                                                          gpointer user_data);
 
