@@ -1,3 +1,10 @@
+2005-09-26  Wim Taymans  <wim@fluendo.com>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_init),
+	(gst_mp3parse_sink_event), (gst_mp3parse_chain):
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	Put timestamps on buffers.
+
 2005-09-21  Flavio Oliveira  <flavio.oliveira@indt.org.br>
 
 	* ext/amrnb/amrnbenc.c: (gst_amrnbenc_base_init):
