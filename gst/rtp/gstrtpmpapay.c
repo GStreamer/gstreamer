@@ -210,6 +210,7 @@ gst_rtpmpaenc_flush (GstRtpMPAEnc * rtpmpaenc)
       gst_rtpbuffer_set_marker (outbuf, TRUE);
 
     GST_BUFFER_TIMESTAMP (outbuf) = rtpmpaenc->first_ts;
+    GST_BUFFER_DURATION (outbuf) = rtpmpaenc->duration;
 
     ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpmpaenc), outbuf);
   }
