@@ -3392,6 +3392,11 @@ _gst_value_initialize (void)
   gst_value_register_subtract_func (GST_TYPE_DOUBLE_RANGE,
       GST_TYPE_DOUBLE_RANGE, gst_value_subtract_double_range_double_range);
 
+#if GLIB_CHECK_VERSION(2,8,0)
+  /* see bug #317246 */
+  GST_LOG ("Faking out the compiler: %d", G_TYPE_DATE);
+#endif
+
   gst_value_register_union_func (G_TYPE_INT, GST_TYPE_INT_RANGE,
       gst_value_union_int_int_range);
   gst_value_register_union_func (GST_TYPE_INT_RANGE, GST_TYPE_INT_RANGE,

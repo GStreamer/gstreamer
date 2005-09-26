@@ -1,5 +1,5 @@
 
-SUBDIRS = instantiate memchunk muxing sched threadstate seeking
+SUBDIRS = instantiate muxing sched threadstate seeking
 
 if GST_DISABLE_TRACE
 LAT = 
@@ -15,4 +15,4 @@ LIBS = $(GST_OBJ_LIBS) \
 	$(top_builddir)/gst/base/libgstbase-@GST_MAJORMINOR@.la
 
 EXTRA_DIST = README
-DIST_SUBDIRS= instantiate memchunk muxing sched threadstate seeking
+DIST_SUBDIRS= instantiate muxing sched threadstate seeking

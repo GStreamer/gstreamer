@@ -38,7 +38,7 @@
  *   </para></listitem>
  *   <listitem><para>
  *     when processing data (get, chain, loop function) at the beginning call
- *     gst_object_sink_values(element,timestamp).
+ *     gst_object_sync_values(element,timestamp).
  *     This will made the controller to update all gobject properties that are under
  *     control with the current values based on timestamp.
  *   </para></listitem>
@@ -73,7 +73,7 @@
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DEFAULT);
 
 static GObjectClass *parent_class = NULL;
-GQuark controller_key;
+GQuark __gst_controller_key;
 
 
 /* imports from gst-interpolation.c */
@@ -94,7 +94,7 @@ on_object_controlled_property_changed (const GObject * object, GParamSpec * arg,
 
   GST_INFO ("notify for '%s'", prop->name);
 
-  ctrl = g_object_get_qdata (G_OBJECT (object), controller_key);
+  ctrl = g_object_get_qdata (G_OBJECT (object), __gst_controller_key);
   g_return_if_fail (ctrl);
 
   if (g_mutex_trylock (ctrl->lock)) {
@@ -420,7 +420,7 @@ gst_controller_new_valist (GObject * object, va_list var_args)
      GstParent will be in core after all.
    */
 
-  self = g_object_get_qdata (object, controller_key);
+  self = g_object_get_qdata (object, __gst_controller_key);
   // create GstControlledProperty for each property
   while ((name = va_arg (var_args, gchar *))) {
     // test if this property isn't yet controlled
@@ -432,7 +432,7 @@ gst_controller_new_valist (GObject * object, va_list var_args)
           self = g_object_new (GST_TYPE_CONTROLLER, NULL);
           self->object = object;
           // store the controller
-          g_object_set_qdata (object, controller_key, self);
+          g_object_set_qdata (object, __gst_controller_key, self);
         } else {
           // increment ref-count (this causes red-count-leaks
           //self = g_object_ref (self);
@@ -730,7 +730,7 @@ gst_controller_get_all (GstController * self, gchar * property_name)
 }
 
 /**
- * gst_controller_sink_values:
+ * gst_controller_sync_values:
  * @self: the controller that handles the values
  * @timestamp: the time that should be processed
  *
@@ -742,7 +742,7 @@ gst_controller_get_all (GstController * self, gchar * property_name)
  * Since: 0.9
  */
 gboolean
-gst_controller_sink_values (GstController * self, GstClockTime timestamp)
+gst_controller_sync_values (GstController * self, GstClockTime timestamp)
 {
   GstControlledProperty *prop;
   GList *node;
@@ -752,7 +752,7 @@ gst_controller_sink_values (GstController * self, GstClockTime timestamp)
   g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
 
-  GST_INFO ("sink_values");
+  GST_INFO ("sync_values");
 
   g_mutex_lock (self->lock);
   // go over the controlled properties of the controller
@@ -954,7 +954,7 @@ _gst_controller_finalize (GObject * object)
   }
   g_mutex_free (self->lock);
   /* remove controller from objects qdata list */
-  g_object_set_qdata (self->object, controller_key, NULL);
+  g_object_set_qdata (self->object, __gst_controller_key, NULL);
 
   if (G_OBJECT_CLASS (parent_class)->finalize)
     (G_OBJECT_CLASS (parent_class)->finalize) (object);
@@ -978,7 +978,7 @@ _gst_controller_class_init (GstControllerClass * klass)
 
   gobject_class->finalize = _gst_controller_finalize;
 
-  controller_key = g_quark_from_string ("gst::controller");
+  __gst_controller_key = g_quark_from_string ("gst::controller");
 
   // register properties
   // register signals

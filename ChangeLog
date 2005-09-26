@@ -1,3 +1,26 @@
+2005-09-26  Andy Wingo  <wingo@pobox.com>
+
+	* configure.ac: 
+	* tests/Makefile.am:
+	* tests/memchunk: Remove memchunk benchmark stuff, this is taken
+	over by GLib bug 118439.
+	
+	* gst/base/gstbasesink.c (gst_base_sink_wait): Factor out the wait
+	routines to a function.
+
+	* docs/libs/gstreamer-libs-sections.txt: I am a good person today.
+
+	* libs/gst/controller/gsthelper.c:
+	* libs/gst/controller/gstcontroller.h (gst_controller_sync_values)
+	(gst_object_sync_values): Renamed from sink_values. Ugh.
+
+	* libs/gst/controller/gsthelper.c: Update for __gst_controller_key.
+
+	* libs/gst/controller/gstcontroller.c (__gst_controller_key):
+	Renamed from controller_key, as it is exported.
+
+	* gst/gstvalue.c (_gst_value_initialize): Fake out the compiler.
+
 2005-09-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/Makefile.am:

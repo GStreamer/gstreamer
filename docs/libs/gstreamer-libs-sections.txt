@@ -58,7 +58,7 @@ gst_controller_set_from_list
 gst_controller_unset
 gst_controller_get
 gst_controller_get_all
-gst_controller_sink_values
+gst_controller_sync_values
 gst_controller_get_value_arrays
 gst_controller_get_value_array
 gst_controller_set_interpolation_mode
@@ -86,7 +86,7 @@ gst_object_control_properties
 gst_object_uncontrol_properties
 gst_object_get_controller
 gst_object_set_controller
-gst_object_sink_values
+gst_object_sync_values
 gst_object_get_value_arrays
 gst_object_get_value_array
 <SUBSECTION Standard>

@@ -886,6 +886,29 @@ gst_base_sink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
   }
 }
 
+/* with STREAM_LOCK and LOCK*/
+static GstClockReturn
+gst_base_sink_wait (GstBaseSink * basesink, GstClockTime time)
+{
+  GstClockReturn ret;
+
+  /* clock_id should be NULL outside of this function */
+  g_assert (basesink->clock_id == NULL);
+  g_assert (GST_CLOCK_TIME_IS_VALID (time));
+
+  basesink->clock_id = gst_clock_new_single_shot_id (basesink->clock, time);
+
+  /* release the object lock while waiting */
+  GST_UNLOCK (basesink);
+  ret = gst_clock_id_wait (basesink->clock_id, NULL);
+  GST_LOCK (basesink);
+
+  gst_clock_id_unref (basesink->clock_id);
+  basesink->clock_id = NULL;
+
+  return ret;
+}
+
 /* perform synchronisation on a buffer
  * 
  * 1) check if we have a clock, if not, do nothing
@@ -957,30 +980,22 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
     GstClockTime base_time;
 
     GST_LOCK (basesink);
+
     base_time = GST_ELEMENT (basesink)->base_time;
 
     GST_LOG_OBJECT (basesink,
         "waiting for clock, base time %" GST_TIME_FORMAT,
         GST_TIME_ARGS (base_time));
 
-    /* save clock id so that we can unlock it if needed */
-    basesink->clock_id = gst_clock_new_single_shot_id (basesink->clock,
-        stream_start + base_time);
     /* also save end_time of this buffer so that we can wait
      * to signal EOS */
     if (end_valid)
       basesink->end_time = stream_end + base_time;
     else
       basesink->end_time = GST_CLOCK_TIME_NONE;
-    GST_UNLOCK (basesink);
 
-    ret = gst_clock_id_wait (basesink->clock_id, NULL);
+    ret = gst_base_sink_wait (basesink, stream_start + base_time);
 
-    GST_LOCK (basesink);
-    if (basesink->clock_id) {
-      gst_clock_id_unref (basesink->clock_id);
-      basesink->clock_id = NULL;
-    }
     GST_UNLOCK (basesink);
 
     GST_LOG_OBJECT (basesink, "clock entry done: %d", ret);
@@ -1016,17 +1031,7 @@ gst_base_sink_handle_event (GstBaseSink * basesink, GstEvent * event)
       if (basesink->clock) {
         /* wait for last buffer to finish if we have a valid end time */
         if (GST_CLOCK_TIME_IS_VALID (basesink->end_time)) {
-          basesink->clock_id = gst_clock_new_single_shot_id (basesink->clock,
-              basesink->end_time);
-          GST_UNLOCK (basesink);
-
-          gst_clock_id_wait (basesink->clock_id, NULL);
-
-          GST_LOCK (basesink);
-          if (basesink->clock_id) {
-            gst_clock_id_unref (basesink->clock_id);
-            basesink->clock_id = NULL;
-          }
+          gst_base_sink_wait (basesink, basesink->end_time);
           basesink->end_time = GST_CLOCK_TIME_NONE;
         }
       }

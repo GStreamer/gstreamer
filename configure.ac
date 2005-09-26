@@ -657,7 +657,6 @@ po/Makefile.in
 check/Makefile
 tests/Makefile
 tests/instantiate/Makefile
-tests/memchunk/Makefile
 tests/muxing/Makefile
 tests/seeking/Makefile
 tests/sched/Makefile

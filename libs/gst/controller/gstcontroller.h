@@ -225,7 +225,7 @@ const GList *gst_controller_get_all (GstController * self,
     gchar * property_name);
 
 
-gboolean gst_controller_sink_values (GstController * self,
+gboolean gst_controller_sync_values (GstController * self,
     GstClockTime timestamp);
     
 gboolean gst_controller_get_value_arrays (GstController * self,
@@ -245,7 +245,7 @@ gboolean gst_object_uncontrol_properties (GObject * object, ...);
 GstController *gst_object_get_controller (GObject * object);
 gboolean gst_object_set_controller (GObject * object, GstController * controller);
 
-gboolean gst_object_sink_values (GObject * object, GstClockTime timestamp);
+gboolean gst_object_sync_values (GObject * object, GstClockTime timestamp);
 
 gboolean gst_object_get_value_arrays (GObject * object,
     GstClockTime timestamp, GSList * value_arrays);
