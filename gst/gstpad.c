@@ -312,10 +312,10 @@ gst_pad_dispose (GObject * object)
   /* FIXME: what about if g_object_dispose is explicitly called on the pad? Is
      that legal? otherwise we could assert GST_OBJECT_PARENT (pad) == NULL as
      well... */
-  g_assert (GST_PAD_PEER (pad) == NULL);
-
   GST_CAT_DEBUG (GST_CAT_REFCOUNTING, "dispose %s:%s",
       GST_DEBUG_PAD_NAME (pad));
+
+  g_assert (GST_PAD_PEER (pad) == NULL);
 
   /* clear the caps */
   gst_caps_replace (&GST_PAD_CAPS (pad), NULL);

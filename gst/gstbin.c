@@ -1128,12 +1128,6 @@ done:
   return ret;
 }
 
-static void
-append_child (gpointer child, GQueue * queue)
-{
-  g_queue_push_tail (queue, child);
-}
-
 /**
  * gst_bin_iterate_state_order:
  * @bin: #Gstbin to iterate on
@@ -1290,12 +1284,8 @@ restart:
    * bin. We operate on the snapshot taken above. Applications
    * should serialize their add/remove and set_state. */
 
-  /* now change state for semi sink elements first so add them in
-   * front of the other elements */
-  g_queue_foreach (temp, (GFunc) append_child, semi_queue);
-  clear_queue (temp, FALSE);
-
-  /* if we don't have real sinks, we continue with the other elements */
+  /* if we don't have real sinks, we continue with the other elements, there
+   * has to be at least one element in the semi queue. */
   if (g_queue_is_empty (elem_queue) && !g_queue_is_empty (semi_queue)) {
     GQueue *q = elem_queue;
 
@@ -1315,6 +1305,7 @@ restart:
     qelement = g_queue_pop_head (elem_queue);
     /* we don't need any duplicates in the other queue anymore */
     remove_all_from_queue (semi_queue, qelement, TRUE);
+    remove_all_from_queue (temp, qelement, TRUE);
 
     /* queue all elements connected to the sinkpads of this element */
     GST_LOCK (qelement);
@@ -1347,10 +1338,11 @@ restart:
               /* make sure we don't have duplicates */
               remove_all_from_queue (semi_queue, peer_parent, TRUE);
               remove_all_from_queue (elem_queue, peer_parent, TRUE);
+              remove_all_from_queue (temp, peer_parent, TRUE);
 
               /* was reffed before pushing on the queue by the
                * gst_object_get_parent() call we used to get the element. */
-              g_queue_push_head (elem_queue, peer_parent);
+              g_queue_push_tail (elem_queue, peer_parent);
               /* so that we don't unref it */
               peer_parent = NULL;
             } else {
@@ -1437,8 +1429,14 @@ restart:
       GST_DEBUG ("sinks and upstream elements exhausted");
       non_sink = g_queue_pop_head (semi_queue);
       if (non_sink) {
-        GST_DEBUG ("found lefover non-sink %s", GST_OBJECT_NAME (non_sink));
+        GST_DEBUG ("found lefover semi-sink %s", GST_OBJECT_NAME (non_sink));
         g_queue_push_tail (elem_queue, non_sink);
+      } else {
+        non_sink = g_queue_pop_head (temp);
+        if (non_sink) {
+          GST_DEBUG ("found lefover non-sink %s", GST_OBJECT_NAME (non_sink));
+          g_queue_push_tail (elem_queue, non_sink);
+        }
       }
     }
   }
@@ -1462,6 +1460,7 @@ exit:
    * had an error. */
   clear_queue (elem_queue, TRUE);
   clear_queue (semi_queue, TRUE);
+  clear_queue (temp, TRUE);
   g_queue_free (elem_queue);
   g_queue_free (semi_queue);
   g_queue_free (temp);

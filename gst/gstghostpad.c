@@ -604,6 +604,8 @@ gst_ghost_pad_do_unlink (GstPad * pad)
 
   g_return_if_fail (target != NULL);
 
+  GST_DEBUG_OBJECT (pad, "unlinking ghostpad");
+
   if (target->unlinkfunc)
     target->unlinkfunc (target);
 

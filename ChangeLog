@@ -1,3 +1,15 @@
+2005-09-26  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (gst_bin_change_state):
+	Make state change function use 3 queues again, we were
+	adding elements in the wrong order.
+
+	* gst/gstghostpad.c: (gst_ghost_pad_do_unlink):
+	Some debug info,
+
+	* gst/gstpad.c: (gst_pad_dispose):
+	Added some debug info first.
+
 2005-09-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/design/draft-push-pull.txt:
