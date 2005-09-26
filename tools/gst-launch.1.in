@@ -55,14 +55,14 @@ Prints the version string of the \fIGStreamer\fP core library.
 Causes \fIGStreamer\fP to abort if a warning message occurs.
 .TP 8
 .B  \-\-gst\-debug=STRING
-A colon seperated list of category_name=level pairs to specify debugging levels
+A comma seperated list of category_name:level pairs to specify debugging levels
 for each category. Level is in the range 0-5 where 0 will show no messages, and
 5 will show all messages. The wildcard * can be used to match category names.
 
 Use \-\-gst\-debug\-help to show category names
 
 Example:
-GST_CAT=5:GST_ELEMENT_*=3
+GST_CAT:5,GST_ELEMENT_*:3
 .TP 8
 .B  \-\-gst\-debug\-level=LEVEL
 Sets the threshold for printing debugging messages.  A higher level
