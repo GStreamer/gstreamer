@@ -1,5 +1,10 @@
 2005-09-26  Wim Taymans  <wim@fluendo.com>
 
+	* check/gst/gstbin.c: (GST_START_TEST), (gst_bin_suite):
+	Added check that shows error in state change order.
+
+2005-09-26  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbin.c: (gst_bin_change_state):
 	Make state change function use 3 queues again, we were
 	adding elements in the wrong order.

@@ -565,6 +565,7 @@ GST_START_TEST (test_children_state_change_order_semi_sink)
   fail_unless (gst_element_link (src, identity) == TRUE);
   fail_unless (gst_element_link (identity, sink) == TRUE);
 
+  /* this is not very nice but should work just fine in this case. */
   GST_FLAG_UNSET (sink, GST_ELEMENT_IS_SINK);   /* <======== */
 
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
@@ -627,6 +628,104 @@ GST_START_TEST (test_children_state_change_order_semi_sink)
 
 GST_END_TEST;
 
+GST_START_TEST (test_children_state_change_order_two_sink)
+{
+  /* current algorithm does not handle these state changes correct */
+#if 0
+  GstElement *src, *tee, *identity, *sink1, *sink2, *pipeline;
+  GstStateChangeReturn ret;
+  GstBus *bus;
+
+  pipeline = gst_pipeline_new (NULL);
+  fail_unless (pipeline != NULL, "Could not create pipeline");
+
+  bus = GST_ELEMENT_BUS (pipeline);
+  fail_unless (bus != NULL, "Pipeline has no bus?!");
+
+  src = gst_element_factory_make ("fakesrc", NULL);
+  fail_if (src == NULL, "Could not create fakesrc");
+
+  tee = gst_element_factory_make ("tee", NULL);
+  fail_if (tee == NULL, "Could not create tee");
+
+  identity = gst_element_factory_make ("identity", NULL);
+  fail_if (identity == NULL, "Could not create identity");
+
+  sink1 = gst_element_factory_make ("fakesink", NULL);
+  fail_if (sink1 == NULL, "Could not create fakesink1");
+
+  sink2 = gst_element_factory_make ("fakesink", NULL);
+  fail_if (sink2 == NULL, "Could not create fakesink2");
+
+  gst_bin_add_many (GST_BIN (pipeline), src, tee, identity, sink1, sink2, NULL);
+
+  fail_unless (gst_element_link (src, tee) == TRUE);
+  fail_unless (gst_element_link (tee, identity) == TRUE);
+  fail_unless (gst_element_link (identity, sink1) == TRUE);
+  fail_unless (gst_element_link (tee, sink2) == TRUE);
+
+  ret = gst_element_set_state (pipeline, GST_STATE_READY);
+  fail_if (ret != GST_STATE_CHANGE_SUCCESS, "State change to READY failed");
+
+  /* NULL => READY */
+  {
+    GstMessage *msg;
+    GstState old = 0, new = 0;
+    GstObject *first, *second;
+
+    msg = gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, GST_SECOND);
+    fail_if (msg == NULL, "No state change message within 1 second (#201)");
+
+    gst_message_parse_state_changed (msg, &old, &new);
+    first = gst_object_ref (msg->src);
+
+    fail_if (first != GST_OBJECT (sink1) && first != GST_OBJECT (sink2),
+        "sink1 or sink2 should have changed state next #(202)");
+    gst_message_unref (msg);
+
+    msg = gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, GST_SECOND);
+    fail_if (msg == NULL, "No state change message within 1 second (#201)");
+
+    gst_message_parse_state_changed (msg, &old, &new);
+    second = gst_object_ref (msg->src);
+
+    fail_if (second != GST_OBJECT (sink1) && second != GST_OBJECT (sink2),
+        "sink1 or sink2 should have changed state next #(202)");
+    gst_message_unref (msg);
+
+    fail_if (second == first, "got state change from same object");
+
+    gst_object_unref (first);
+    gst_object_unref (second);
+  }
+  ASSERT_STATE_CHANGE_MSG (bus, identity, GST_STATE_NULL, GST_STATE_READY, 203);
+  ASSERT_STATE_CHANGE_MSG (bus, tee, GST_STATE_NULL, GST_STATE_READY, 204);
+  ASSERT_STATE_CHANGE_MSG (bus, src, GST_STATE_NULL, GST_STATE_READY, 205);
+  ASSERT_STATE_CHANGE_MSG (bus, pipeline, GST_STATE_NULL, GST_STATE_READY, 206);
+
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (tee, "tee", 1);
+  ASSERT_OBJECT_REFCOUNT (identity, "identity", 1);
+  ASSERT_OBJECT_REFCOUNT (sink1, "sink1", 1);
+  ASSERT_OBJECT_REFCOUNT (sink2, "sink2", 1);
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
+
+  ret = gst_element_set_state (pipeline, GST_STATE_NULL);
+  fail_if (ret != GST_STATE_CHANGE_SUCCESS, "State change to NULL failed");
+
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (tee, "tee", 1);
+  ASSERT_OBJECT_REFCOUNT (identity, "identity", 1);
+  ASSERT_OBJECT_REFCOUNT (sink1, "sink1", 1);
+  ASSERT_OBJECT_REFCOUNT (sink2, "sink2", 1);
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
+
+  gst_object_unref (pipeline);
+#endif
+}
+
+GST_END_TEST;
+
 Suite *
 gst_bin_suite (void)
 {
@@ -637,6 +736,7 @@ gst_bin_suite (void)
   tcase_add_test (tc_chain, test_interface);
   tcase_add_test (tc_chain, test_children_state_change_order_flagged_sink);
   tcase_add_test (tc_chain, test_children_state_change_order_semi_sink);
+  tcase_add_test (tc_chain, test_children_state_change_order_two_sink);
   tcase_add_test (tc_chain, test_message_state_changed);
   tcase_add_test (tc_chain, test_message_state_changed_child);
   tcase_add_test (tc_chain, test_message_state_changed_children);
