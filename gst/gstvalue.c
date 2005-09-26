@@ -3094,8 +3094,6 @@ gst_value_transform_string_date (const GValue * src_value, GValue * dest_value)
 void
 _gst_value_initialize (void)
 {
-  volatile GType date_type;
-
   GTypeInfo info = {
     0,
     NULL,
@@ -3396,8 +3394,11 @@ _gst_value_initialize (void)
 
 #if GLIB_CHECK_VERSION(2,8,0)
   /* see bug #317246, #64994, #65041 */
-  date_type = G_TYPE_DATE;
-  GST_LOG ("Faking out the compiler: %d", date_type);
+  {
+    volatile GType date_type = G_TYPE_DATE;
+
+    GST_LOG ("Faking out the compiler: %d", date_type);
+  }
 #endif
 
   gst_value_register_union_func (G_TYPE_INT, GST_TYPE_INT_RANGE,
