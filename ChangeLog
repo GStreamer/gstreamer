@@ -1,3 +1,10 @@
+2005-09-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.defs:
+	* gst/gstquery.override:
+	* gst/libs.defs:
+	  update for API removals and changes
+
 2005-09-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* examples/fvumeter.py:

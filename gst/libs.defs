@@ -201,9 +201,9 @@
   )
 )
 
-(define-method sink_values
+(define-method sync_values
   (of-object "GstController")
-  (c-name "gst_controller_sink_values")
+  (c-name "gst_controller_sync_values")
   (return-type "gboolean")
   (parameters
     '("GstClockTime" "timestamp")
@@ -273,9 +273,9 @@
   )
 )
 
-(define-method sink_values
+(define-method sync_values
   (of-object "GObject")
-  (c-name "g_object_sink_values")
+  (c-name "g_object_sync_values")
   (return-type "gboolean")
   (parameters
     '("GstClockTime" "timestamp")

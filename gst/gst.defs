@@ -3988,17 +3988,6 @@
 
 
 
-;; From ../gstreamer/gst/gstqueryutils.h
-
-(define-method parse_seeking_query
-  (of-object "GstQuery")
-  (c-name "gst_query_parse_seeking_query")
-  (return-type "none")
-  (parameters
-    '("GstFormat*" "format")
-  )
-)
-
 (define-method set_seeking
   (of-object "GstQuery")
   (c-name "gst_query_set_seeking")
@@ -4008,18 +3997,6 @@
     '("gboolean" "seekable")
     '("gint64" "segment_start")
     '("gint64" "segment_end")
-  )
-)
-
-(define-method parse_seeking_response
-  (of-object "GstQuery")
-  (c-name "gst_query_parse_seeking_response")
-  (return-type "none")
-  (parameters
-    '("GstFormat*" "format")
-    '("gboolean*" "seekable")
-    '("gint64*" "segment_start")
-    '("gint64*" "segment_end")
   )
 )
 

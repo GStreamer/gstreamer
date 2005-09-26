@@ -69,49 +69,7 @@ _wrap_gst_query_parse_convert (PyGstMiniObject *self)
 
 	return ret;
 }
-%%
-override gst_query_parse_seeking_query noargs
-static PyObject *
-_wrap_gst_query_parse_seeking_query (PyGstMiniObject *self)
-{
-	GstFormat	format;
 
-	if (GST_QUERY_TYPE(self->obj) != GST_QUERY_SEEKING) {
-		PyErr_SetString(PyExc_TypeError, "Query is not a seeking query");
-		return NULL;
-	}
-
-	gst_query_parse_seeking_query (GST_QUERY(self->obj), &format);
-
-	return pyg_enum_from_gtype(GST_TYPE_FORMAT, format);
-}
-%%
-override gst_query_parse_seeking_response noargs
-static PyObject *
-_wrap_gst_query_parse_seeking_response (PyGstMiniObject *self)
-{
-	GstFormat	format;
-	gboolean	seekable;
-	gint64		segstart;
-	gint64		segend;
-	PyObject	*ret;
-
-	if (GST_QUERY_TYPE(self->obj) != GST_QUERY_SEEKING) {
-		PyErr_SetString(PyExc_TypeError, "Query is not a seeking query");
-		return NULL;
-	}
-
-	gst_query_parse_seeking_response (GST_QUERY(self->obj), &format,
-					  &seekable, &segstart, &segend);
-
-	ret = PyList_New(0);
-	PyList_Append(ret, pyg_enum_from_gtype(GST_TYPE_FORMAT, format));
-	PyList_Append(ret, PyInt_FromLong((long) seekable));
-	PyList_Append(ret, PyLong_FromLongLong(segstart));
-	PyList_Append(ret, PyLong_FromLongLong(segend));
-
-	return ret;
-}
 %%
 override gst_query_new_position kwargs
 static PyObject *
