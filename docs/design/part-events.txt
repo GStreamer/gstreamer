@@ -48,8 +48,8 @@ Flushing happens in two stages.
 After the flush completes the second stage, data is flowing again in the pipeline
 and all buffers are more recent than those before the flush.
 
-For elements that use the pullregion function, they send both flush events to
-the upstream pads in the same way top make sure that the pullregion function
+For elements that use the pullrange function, they send both flush events to
+the upstream pads in the same way to make sure that the pullrange function
 unlocks and any pending buffers are cleared in the upstream elements.
 
 

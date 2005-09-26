@@ -193,7 +193,7 @@ Dataflow and buffers
  When an element whishes to send a buffer to another element is does this using one
  of the pads that is linked to a pad of the other element. In the push model, a 
  buffer is pushed to the peer pad with gst_pad_push(). In the pull model, a buffer
- is pulled from the peer with the gst_pad_pull_region() function.
+ is pulled from the peer with the gst_pad_pull_range() function.
 
  Before an element pushes out a buffer, it should make sure that the peer element
  can understand the buffer contents.  It does this by querying the peer element
