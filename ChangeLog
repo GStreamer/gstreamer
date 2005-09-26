@@ -1,5 +1,11 @@
 2005-09-26  Wim Taymans  <wim@fluendo.com>
 
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3parse_sink_event), (gst_mp3parse_chain):
+	Set correct caps on buffers too.
+
+2005-09-26  Wim Taymans  <wim@fluendo.com>
+
 	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_init),
 	(gst_mp3parse_sink_event), (gst_mp3parse_chain):
 	* gst/mpegaudioparse/gstmpegaudioparse.h:

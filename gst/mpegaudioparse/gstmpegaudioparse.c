@@ -458,7 +458,7 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
 
           mp3parse->last_ts += GST_BUFFER_DURATION (outbuf);
 
-          gst_buffer_set_caps (outbuf, GST_PAD_CAPS (pad));
+          gst_buffer_set_caps (outbuf, GST_PAD_CAPS (mp3parse->srcpad));
 
           gst_pad_push (mp3parse->srcpad, outbuf);
 
