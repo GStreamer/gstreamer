@@ -32,7 +32,7 @@
 
 #include "gstsinesrc.h"
 
-/* elementfactory information */
+
 GstElementDetails gst_sinesrc_details = {
   "Sine-wave src",
   "Source/Audio",
@@ -41,23 +41,16 @@ GstElementDetails gst_sinesrc_details = {
 };
 
 
-/* SineSrc signals and args */
 enum
 {
-  /* FILL ME */
-  LAST_SIGNAL
+  PROP_0,
+  PROP_SAMPLES_PER_BUFFER,
+  PROP_FREQ,
+  PROP_VOLUME,
+  PROP_IS_LIVE,
+  PROP_TIMESTAMP_OFFSET,
 };
 
-enum
-{
-  ARG_0,
-  ARG_TABLESIZE,
-  ARG_SAMPLES_PER_BUFFER,
-  ARG_FREQ,
-  ARG_VOLUME,
-  ARG_SYNC,
-  ARG_TIMESTAMP_OFFSET,
-};
 
 static GstStaticPadTemplate gst_sinesrc_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -70,10 +63,9 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "depth = (int) 16, " "rate = (int) [ 1, MAX ], " "channels = (int) 1")
     );
 
-static void gst_sinesrc_class_init (GstSineSrcClass * klass);
-static void gst_sinesrc_base_init (GstSineSrcClass * klass);
-static void gst_sinesrc_init (GstSineSrc * src);
-static void gst_sinesrc_dispose (GObject * object);
+
+GST_BOILERPLATE (GstSineSrc, gst_sinesrc, GstBaseSrc, GST_TYPE_BASE_SRC);
+
 
 static void gst_sinesrc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -83,10 +75,6 @@ static void gst_sinesrc_get_property (GObject * object,
 static gboolean gst_sinesrc_setcaps (GstBaseSrc * basesrc, GstCaps * caps);
 static void gst_sinesrc_src_fixate (GstPad * pad, GstCaps * caps);
 
-static void gst_sinesrc_update_freq (const GValue * value, gpointer data);
-static void gst_sinesrc_populate_sinetable (GstSineSrc * src);
-static inline void gst_sinesrc_update_table_inc (GstSineSrc * src);
-
 static const GstQueryType *gst_sinesrc_get_query_types (GstPad * pad);
 static gboolean gst_sinesrc_src_query (GstPad * pad, GstQuery * query);
 
@@ -94,34 +82,11 @@ static GstFlowReturn gst_sinesrc_create (GstBaseSrc * basesrc, guint64 offset,
     guint length, GstBuffer ** buffer);
 static gboolean gst_sinesrc_start (GstBaseSrc * basesrc);
 
-static GstElementClass *parent_class = NULL;
-
-/*static guint gst_sinesrc_signals[LAST_SIGNAL] = { 0 }; */
-
-GType
-gst_sinesrc_get_type (void)
-{
-  static GType sinesrc_type = 0;
-
-  if (!sinesrc_type) {
-    static const GTypeInfo sinesrc_info = {
-      sizeof (GstSineSrcClass),
-      (GBaseInitFunc) gst_sinesrc_base_init, NULL,
-      (GClassInitFunc) gst_sinesrc_class_init, NULL, NULL,
-      sizeof (GstSineSrc), 0,
-      (GInstanceInitFunc) gst_sinesrc_init,
-    };
-
-    sinesrc_type = g_type_register_static (GST_TYPE_BASE_SRC, "GstSineSrc",
-        &sinesrc_info, 0);
-  }
-  return sinesrc_type;
-}
 
 static void
-gst_sinesrc_base_init (GstSineSrcClass * klass)
+gst_sinesrc_base_init (gpointer g_class)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_sinesrc_src_template));
@@ -132,86 +97,57 @@ static void
 gst_sinesrc_class_init (GstSineSrcClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
-
-  parent_class = g_type_class_ref (GST_TYPE_BASE_SRC);
 
   gobject_class->set_property = gst_sinesrc_set_property;
   gobject_class->get_property = gst_sinesrc_get_property;
-  gobject_class->dispose = gst_sinesrc_dispose;
 
-  g_object_class_install_property (gobject_class, ARG_TABLESIZE,
-      g_param_spec_int ("tablesize", "tablesize", "tablesize",
-          1, G_MAXINT, 1024, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
-      ARG_SAMPLES_PER_BUFFER,
+      PROP_SAMPLES_PER_BUFFER,
       g_param_spec_int ("samplesperbuffer", "Samples per buffer",
           "Number of samples in each outgoing buffer",
           1, G_MAXINT, 1024, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_FREQ,
+  g_object_class_install_property (gobject_class, PROP_FREQ,
       g_param_spec_double ("freq", "Frequency", "Frequency of sine source",
           0.0, 20000.0, 440.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
-  g_object_class_install_property (gobject_class, ARG_VOLUME,
+  g_object_class_install_property (gobject_class, PROP_VOLUME,
       g_param_spec_double ("volume", "Volume", "Volume",
           0.0, 1.0, 0.8, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
-  g_object_class_install_property (gobject_class, ARG_SYNC,
-      g_param_spec_boolean ("sync", "Sync", "Synchronize to clock",
-          FALSE, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TIMESTAMP_OFFSET,
+  g_object_class_install_property (gobject_class, PROP_IS_LIVE,
+      g_param_spec_boolean ("is-live", "Is Live",
+          "Whether to act as a live source", FALSE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_TIMESTAMP_OFFSET,
       g_param_spec_int64 ("timestamp-offset", "Timestamp offset",
           "An offset added to timestamps set on buffers (in ns)", G_MININT64,
           G_MAXINT64, 0, G_PARAM_READWRITE));
 
-
-
-  //gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR ();
   gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_sinesrc_setcaps);
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_sinesrc_start);
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_sinesrc_create);
 }
 
 static void
-gst_sinesrc_init (GstSineSrc * src)
+gst_sinesrc_init (GstSineSrc * src, GstSineSrcClass * g_class)
 {
-  src->srcpad = GST_BASE_SRC (src)->srcpad;
+  GstPad *pad = GST_BASE_SRC_PAD (src);
 
-  gst_pad_set_fixatecaps_function (src->srcpad, gst_sinesrc_src_fixate);
-  gst_pad_set_query_function (src->srcpad, gst_sinesrc_src_query);
-  gst_pad_set_query_type_function (src->srcpad, gst_sinesrc_get_query_types);
+  gst_pad_set_fixatecaps_function (pad, gst_sinesrc_src_fixate);
+  gst_pad_set_query_function (pad, gst_sinesrc_src_query);
+  gst_pad_set_query_type_function (pad, gst_sinesrc_get_query_types);
 
   src->samplerate = 44100;
   src->volume = 1.0;
   src->freq = 440.0;
-  src->sync = FALSE;
+  gst_base_src_set_live (GST_BASE_SRC (src), FALSE);
 
-  src->table_pos = 0.0;
-  src->table_size = 1024;
   src->samples_per_buffer = 1024;
   src->timestamp = G_GINT64_CONSTANT (0);
   src->offset = G_GINT64_CONSTANT (0);
   src->timestamp_offset = G_GINT64_CONSTANT (0);
-
-  src->seq = 0;
-
-  gst_sinesrc_populate_sinetable (src);
-  gst_sinesrc_update_table_inc (src);
-
-}
-
-static void
-gst_sinesrc_dispose (GObject * object)
-{
-  GstSineSrc *sinesrc = GST_SINESRC (object);
-
-  g_free (sinesrc->table_data);
-  sinesrc->table_data = NULL;
-
-  GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
 
 static void
@@ -294,6 +230,29 @@ gst_sinesrc_src_query (GstPad * pad, GstQuery * query)
   return res;
 }
 
+/* with STREAM_LOCK */
+static GstClockReturn
+gst_sinesrc_wait (GstSineSrc * src, GstClockTime time)
+{
+  GstClockReturn ret;
+
+  GST_LOCK (src);
+  /* clock_id should be NULL outside of this function */
+  g_assert (src->clock_id == NULL);
+  g_assert (GST_CLOCK_TIME_IS_VALID (time));
+  src->clock_id = gst_clock_new_single_shot_id (GST_ELEMENT_CLOCK (src), time);
+  GST_UNLOCK (src);
+
+  ret = gst_clock_id_wait (src->clock_id, NULL);
+
+  GST_LOCK (src);
+  gst_clock_id_unref (src->clock_id);
+  src->clock_id = NULL;
+  GST_UNLOCK (src);
+
+  return ret;
+}
+
 static GstFlowReturn
 gst_sinesrc_create (GstBaseSrc * basesrc, guint64 offset,
     guint length, GstBuffer ** buffer)
@@ -301,7 +260,7 @@ gst_sinesrc_create (GstBaseSrc * basesrc, guint64 offset,
   GstSineSrc *src;
   GstBuffer *buf;
   guint tdiff;
-
+  gdouble step;
   gint16 *samples;
   gint i;
 
@@ -321,23 +280,17 @@ gst_sinesrc_create (GstBaseSrc * basesrc, guint64 offset,
     src->tags_pushed = TRUE;
   }
 
-  /* not negotiated, fixate and set */
-  if (GST_PAD_CAPS (basesrc->srcpad) == NULL) {
-    GstCaps *caps;
-
-    /* see whatever we are allowed to do */
-    caps = gst_pad_get_allowed_caps (basesrc->srcpad);
-    /* fix unfixed values */
-    gst_sinesrc_src_fixate (basesrc->srcpad, caps);
-    /* and use those */
-    gst_pad_set_caps (basesrc->srcpad, caps);
-    gst_caps_unref (caps);
-  }
-
   tdiff = src->samples_per_buffer * GST_SECOND / src->samplerate;
 
-  /* note: the 2 is because of the format we use */
-  buf = gst_buffer_new_and_alloc (src->samples_per_buffer * 2);
+  if (gst_base_src_is_live (basesrc)) {
+    GstClockReturn ret;
+
+    ret = gst_sinesrc_wait (src, src->timestamp + src->timestamp_offset);
+    if (ret == GST_CLOCK_UNSCHEDULED)
+      goto unscheduled;
+  }
+
+  buf = gst_buffer_new_and_alloc (src->samples_per_buffer * sizeof (gint16));
   gst_buffer_set_caps (buf, GST_PAD_CAPS (basesrc->srcpad));
 
   GST_BUFFER_TIMESTAMP (buf) = src->timestamp + src->timestamp_offset;
@@ -346,83 +299,58 @@ gst_sinesrc_create (GstBaseSrc * basesrc, guint64 offset,
   GST_BUFFER_OFFSET_END (buf) = src->offset + src->samples_per_buffer;
   GST_BUFFER_DURATION (buf) = tdiff;
 
-  gst_object_sink_values (G_OBJECT (src), src->timestamp);
+  gst_object_sync_values (G_OBJECT (src), src->timestamp);
 
   samples = (gint16 *) GST_BUFFER_DATA (buf);
 
   src->timestamp += tdiff;
   src->offset += src->samples_per_buffer;
 
+  step = 2 * M_PI * src->freq / src->samplerate;
+
   for (i = 0; i < src->samples_per_buffer; i++) {
-#if 0
-    src->table_lookup = (gint) (src->table_pos);
-    src->table_lookup_next = src->table_lookup + 1;
-    src->table_interp = src->table_pos - src->table_lookup;
-
-    /* wrap the array lookups if we're out of bounds */
-    if (src->table_lookup_next >= src->table_size) {
-      src->table_lookup_next -= src->table_size;
-      if (src->table_lookup >= src->table_size) {
-        src->table_lookup -= src->table_size;
-        src->table_pos -= src->table_size;
-      }
-    }
-
-    src->table_pos += src->table_inc;
-
-    /*no interpolation */
-    /*samples[i] = src->table_data[src->table_lookup] * src->volume * 32767.0; */
-
-    /*linear interpolation */
-    samples[i] = ((src->table_interp * (src->table_data[src->table_lookup_next]
-                - src->table_data[src->table_lookup]
-            )
-        ) + src->table_data[src->table_lookup]
-        ) * src->volume * 32767.0;
-#endif
-    src->accumulator += 2 * M_PI * src->freq / src->samplerate;
-    if (src->accumulator >= 2 * M_PI) {
+    src->accumulator += step;
+    if (src->accumulator >= 2 * M_PI)
       src->accumulator -= 2 * M_PI;
-    }
-    *samples++ = sin (src->accumulator) * src->volume * 32767.0;
+
+    samples[i] = sin (src->accumulator) * src->volume * 32767.0;
   }
 
   *buffer = buf;
 
   return GST_FLOW_OK;
+
+unscheduled:
+  {
+    GST_DEBUG_OBJECT (src, "Unscheduled while waiting for clock");
+    return GST_FLOW_WRONG_STATE;        /* is this the right return? */
+  }
 }
 
 static void
 gst_sinesrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstSineSrc *src;
-
-  g_return_if_fail (GST_IS_SINESRC (object));
-  src = GST_SINESRC (object);
+  GstSineSrc *src = GST_SINESRC (object);
 
   switch (prop_id) {
-    case ARG_TABLESIZE:
-      src->table_size = g_value_get_int (value);
-      gst_sinesrc_populate_sinetable (src);
-      gst_sinesrc_update_table_inc (src);
-      break;
-    case ARG_SAMPLES_PER_BUFFER:
+    case PROP_SAMPLES_PER_BUFFER:
       src->samples_per_buffer = g_value_get_int (value);
       break;
-    case ARG_FREQ:
-      gst_sinesrc_update_freq (value, src);
+    case PROP_FREQ:
+      src->freq = g_value_get_double (value);
       break;
-    case ARG_VOLUME:
+    case PROP_VOLUME:
       src->volume = g_value_get_double (value);
       break;
-    case ARG_SYNC:
-      src->sync = g_value_get_boolean (value);
+    case PROP_IS_LIVE:
+      gst_base_src_set_live (GST_BASE_SRC (src), g_value_get_boolean (value));
       break;
-    case ARG_TIMESTAMP_OFFSET:
+    case PROP_TIMESTAMP_OFFSET:
       src->timestamp_offset = g_value_get_int64 (value);
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -431,28 +359,22 @@ static void
 gst_sinesrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstSineSrc *src;
-
-  g_return_if_fail (GST_IS_SINESRC (object));
-  src = GST_SINESRC (object);
+  GstSineSrc *src = GST_SINESRC (object);
 
   switch (prop_id) {
-    case ARG_TABLESIZE:
-      g_value_set_int (value, src->table_size);
-      break;
-    case ARG_SAMPLES_PER_BUFFER:
+    case PROP_SAMPLES_PER_BUFFER:
       g_value_set_int (value, src->samples_per_buffer);
       break;
-    case ARG_FREQ:
+    case PROP_FREQ:
       g_value_set_double (value, src->freq);
       break;
-    case ARG_VOLUME:
+    case PROP_VOLUME:
       g_value_set_double (value, src->volume);
       break;
-    case ARG_SYNC:
-      g_value_set_boolean (value, src->sync);
+    case PROP_IS_LIVE:
+      g_value_set_boolean (value, gst_base_src_is_live (GST_BASE_SRC (src)));
       break;
-    case ARG_TIMESTAMP_OFFSET:
+    case PROP_TIMESTAMP_OFFSET:
       g_value_set_int64 (value, src->timestamp_offset);
       break;
     default:
@@ -470,40 +392,6 @@ gst_sinesrc_start (GstBaseSrc * basesrc)
   src->offset = G_GINT64_CONSTANT (0);
 
   return TRUE;
-}
-
-static void
-gst_sinesrc_populate_sinetable (GstSineSrc * src)
-{
-  gint i;
-  gdouble pi2scaled = M_PI * 2 / src->table_size;
-  gdouble *table = g_new (gdouble, src->table_size);
-
-  for (i = 0; i < src->table_size; i++) {
-    table[i] = (gdouble) sin (i * pi2scaled);
-  }
-
-  g_free (src->table_data);
-  src->table_data = table;
-}
-
-static void
-gst_sinesrc_update_freq (const GValue * value, gpointer data)
-{
-  GstSineSrc *src = (GstSineSrc *) data;
-
-  g_return_if_fail (GST_IS_SINESRC (src));
-
-  src->freq = g_value_get_double (value);
-  src->table_inc = src->table_size * src->freq / src->samplerate;
-
-  GST_DEBUG ("freq %f", src->freq);
-}
-
-static inline void
-gst_sinesrc_update_table_inc (GstSineSrc * src)
-{
-  src->table_inc = src->table_size * src->freq / src->samplerate;
 }
 
 static gboolean

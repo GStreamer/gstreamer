@@ -1,3 +1,13 @@
+2005-09-26  Andy Wingo  <wingo@pobox.com>
+
+	* gst/sine/gstsinesrc.h:
+	* gst/sine/gstsinesrc.c: Refactor, remove the table lookup code,
+	change the 'sync' property to 'is-live' and implement it halfway,
+	update for controller api change.
+
+	* gst/volume/gstvolume.c (volume_transform_ip): Update for
+	controller api change.
+
 2005-09-24  Wim Taymans  <wim@fluendo.com>
 
 	* ext/alsa/gstalsasink.c: (gst_alsasink_reset):

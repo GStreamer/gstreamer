@@ -411,7 +411,7 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   GstVolume *this = GST_VOLUME (base);
 
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (outbuf)))
-    gst_object_sink_values (G_OBJECT (this), GST_BUFFER_TIMESTAMP (outbuf));
+    gst_object_sync_values (G_OBJECT (this), GST_BUFFER_TIMESTAMP (outbuf));
 
   this->process (this, GST_BUFFER_TIMESTAMP (outbuf),
       GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));

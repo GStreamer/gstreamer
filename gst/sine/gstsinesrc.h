@@ -31,9 +31,6 @@
 G_BEGIN_DECLS
 
 
-GstElementDetails gst_sinesrc_details;
-
-
 #define GST_TYPE_SINESRC \
   (gst_sinesrc_get_type())
 #define GST_SINESRC(obj) \
@@ -51,28 +48,14 @@ typedef struct _GstSineSrcClass GstSineSrcClass;
 struct _GstSineSrc {
   GstBaseSrc parent;
 
-  /* pads */
-  GstPad *srcpad;
-
   /* parameters */
   gdouble volume;
   gdouble freq;
-  gboolean sync;
   
-  /* lookup table data */
-  gdouble *table_data;
-  gdouble table_pos;
-  gdouble table_inc;
-  gint table_size;
-  gdouble table_interp;
-  gint table_lookup;
-  gint table_lookup_next;
-    
   /* audio parameters */
   gint samplerate;
 
   gint samples_per_buffer;
-  gulong seq;
   
   guint64 timestamp;
   guint64 offset;
@@ -81,7 +64,7 @@ struct _GstSineSrc {
 
   gboolean tags_pushed;
 
-  GstClock *clock;
+  GstClockID clock_id;
   GstClockTimeDiff timestamp_offset;
 };
 
