@@ -1,5 +1,7 @@
 2005-09-26  Andy Wingo  <wingo@pobox.com>
 
+	* check/gst-libs/controller.c: Update for controller api change.
+
 	* configure.ac: 
 	* tests/Makefile.am:
 	* tests/memchunk: Remove memchunk benchmark stuff, this is taken

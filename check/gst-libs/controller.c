@@ -468,11 +468,11 @@ GST_START_TEST (controller_interpolate_none)
   fail_unless (res, NULL);
 
   /* now pull in values for some timestamps */
-  gst_controller_sink_values (ctrl, 0 * GST_SECOND);
+  gst_controller_sync_values (ctrl, 0 * GST_SECOND);
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
-  gst_controller_sink_values (ctrl, 1 * GST_SECOND);
+  gst_controller_sync_values (ctrl, 1 * GST_SECOND);
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
-  gst_controller_sink_values (ctrl, 2 * GST_SECOND);
+  gst_controller_sync_values (ctrl, 2 * GST_SECOND);
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
@@ -491,7 +491,7 @@ GST_START_TEST (controller_helper_any_gobject)
   elem = gst_element_factory_make ("bin", "test_elem");
 
   /* that element is not controllable */
-  res = gst_object_sink_values (G_OBJECT (elem), 0LL);
+  res = gst_object_sync_values (G_OBJECT (elem), 0LL);
   fail_unless (res == FALSE, NULL);
 
   gst_object_unref (elem);
