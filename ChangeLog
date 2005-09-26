@@ -1,5 +1,7 @@
 2005-09-26  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstvalue.c (_gst_value_initialize): Better fakeout.
+
 	* check/gst-libs/controller.c: Update for controller api change.
 
 	* configure.ac: 
