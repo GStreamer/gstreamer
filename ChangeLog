@@ -1,3 +1,14 @@
+2005-09-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_base_init),
+	(gst_avi_demux_class_init), (gst_avi_demux_parse_stream),
+	(gst_avi_demux_change_state):
+	  Don't crash when encountering a stream with an unknown fourcc or
+	  codec id. Instead, create a pad of type video/x-avi-unknown or
+	  audio/x-avi-unknown, which as a side-effect also results in less
+	  confusing error messages in players ('no decoder' vs. 'no streams');
+	  minor fixes to state change function and class_init function.
+
 2005-09-24  Wim Taymans  <wim@fluendo.com>
 
 	* gst/autodetect/gstautoaudiosink.c: (gst_auto_audio_sink_init):

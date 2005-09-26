@@ -110,11 +110,13 @@ gst_avi_demux_base_init (GstAviDemuxClass * klass)
   GstCaps *audcaps, *vidcaps;
 
   audcaps = gst_riff_create_audio_template_caps ();
+  gst_caps_append (audcaps, gst_caps_new_simple ("audio/x-avi-unknown", NULL));
   audiosrctempl = gst_pad_template_new ("audio_%02d",
       GST_PAD_SRC, GST_PAD_SOMETIMES, audcaps);
 
   vidcaps = gst_riff_create_video_template_caps ();
   gst_caps_append (vidcaps, gst_riff_create_iavs_template_caps ());
+  gst_caps_append (vidcaps, gst_caps_new_simple ("video/x-avi-unknown", NULL));
   videosrctempl = gst_pad_template_new ("video_%02d",
       GST_PAD_SRC, GST_PAD_SOMETIMES, vidcaps);
 
@@ -133,7 +135,7 @@ gst_avi_demux_class_init (GstAviDemuxClass * klass)
   GST_DEBUG_CATEGORY_INIT (avidemux_debug, "avidemux",
       0, "Demuxer for AVI streams");
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gstelement_class->change_state = gst_avi_demux_change_state;
 }
@@ -991,34 +993,52 @@ gst_avi_demux_parse_stream (GstElement * element, GstBuffer * buf)
   /* we now have all info, let´s set up a pad and a caps and be done */
   /* create stream name + pad */
   switch (stream->strh->type) {
-    case GST_RIFF_FCC_vids:
+    case GST_RIFF_FCC_vids:{
+      guint32 fourcc;
+
+      fourcc = (stream->strf.vids->compression) ?
+          stream->strf.vids->compression : stream->strh->fcc_handler;
       padname = g_strdup_printf ("video_%02d", avi->num_v_streams);
       templ = gst_element_class_get_pad_template (klass, "video_%02d");
-      caps = gst_riff_create_video_caps (stream->strf.vids->compression ?
-          stream->strf.vids->compression : stream->strh->fcc_handler,
-          stream->strh, stream->strf.vids,
-          stream->extradata, stream->initdata, &codec_name);
+      caps = gst_riff_create_video_caps (fourcc, stream->strh,
+          stream->strf.vids, stream->extradata, stream->initdata, &codec_name);
+      if (!caps) {
+        caps = gst_caps_new_simple ("video/x-avi-unknown", "fourcc",
+            GST_TYPE_FOURCC, fourcc, NULL);
+      }
       tag_name = GST_TAG_VIDEO_CODEC;
       avi->num_v_streams++;
       break;
-    case GST_RIFF_FCC_auds:
+    }
+    case GST_RIFF_FCC_auds:{
       padname = g_strdup_printf ("audio_%02d", avi->num_a_streams);
       templ = gst_element_class_get_pad_template (klass, "audio_%02d");
       caps = gst_riff_create_audio_caps (stream->strf.auds->format,
-          stream->strh, stream->strf.auds,
-          stream->extradata, stream->initdata, &codec_name);
+          stream->strh, stream->strf.auds, stream->extradata,
+          stream->initdata, &codec_name);
+      if (!caps) {
+        caps = gst_caps_new_simple ("audio/x-avi-unknown", "codec_id",
+            G_TYPE_INT, stream->strf.auds->format, NULL);
+      }
       tag_name = GST_TAG_AUDIO_CODEC;
       avi->num_a_streams++;
       break;
-    case GST_RIFF_FCC_iavs:
+    }
+    case GST_RIFF_FCC_iavs:{
+      guint32 fourcc = stream->strh->fcc_handler;
+
       padname = g_strdup_printf ("video_%02d", avi->num_v_streams);
       templ = gst_element_class_get_pad_template (klass, "video_%02d");
-      caps = gst_riff_create_iavs_caps (stream->strh->fcc_handler,
-          stream->strh, stream->strf.iavs,
-          stream->extradata, stream->initdata, &codec_name);
+      caps = gst_riff_create_iavs_caps (fourcc, stream->strh,
+          stream->strf.iavs, stream->extradata, stream->initdata, &codec_name);
+      if (!caps) {
+        caps = gst_caps_new_simple ("video/x-avi-unknown", "fourcc",
+            GST_TYPE_FOURCC, fourcc, NULL);
+      }
       tag_name = GST_TAG_VIDEO_CODEC;
       avi->num_v_streams++;
       break;
+    }
     default:
       g_assert_not_reached ();
   }
@@ -2196,15 +2216,27 @@ gst_avi_demux_change_state (GstElement * element, GstStateChange transition)
   GstAviDemux *avi = GST_AVI_DEMUX (element);
 
   switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      break;
+    default:
+      break;
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state) {
+    GstStateChangeReturn ret;
+
+    ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+    if (ret != GST_STATE_CHANGE_SUCCESS)
+      return ret;
+  }
+
+  switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_avi_demux_reset (avi);
       break;
     default:
       break;
   }
-
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   return GST_STATE_CHANGE_SUCCESS;
 }
