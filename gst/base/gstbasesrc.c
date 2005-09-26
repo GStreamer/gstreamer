@@ -585,6 +585,10 @@ gst_base_src_get_range (GstPad * pad, guint64 offset, guint length,
   if (!bclass->create)
     goto no_function;
 
+  GST_DEBUG_OBJECT (src,
+      "reading offset %" G_GUINT64_FORMAT ", length %u, size %"
+      G_GUINT64_FORMAT, offset, length, src->size);
+
   /* check size */
   if (src->size != -1) {
     if (offset > src->size)
@@ -771,6 +775,8 @@ gst_base_src_is_seekable (GstBaseSrc * basesrc)
     basesrc->seekable = bclass->is_seekable (basesrc);
   else
     basesrc->seekable = FALSE;
+
+  GST_DEBUG_OBJECT (basesrc, "is seekable: %d", basesrc->seekable);
 
   return basesrc->seekable;
 }

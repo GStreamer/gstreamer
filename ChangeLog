@@ -1,3 +1,9 @@
+2005-09-26  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesrc.c: (gst_base_src_get_range),
+	(gst_base_src_is_seekable), (gst_base_src_change_state):
+	Some more debugging info.
+
 2005-09-25  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:
