@@ -33,8 +33,7 @@ AS_LIBTOOL(GST_PLUGINS, 1, 0, 1)
 AS_LIBTOOL_TAGS([CXX])
 AM_PROG_LIBTOOL
 
-dnl FIXME take something else ?
-AC_CONFIG_SRCDIR([gst/librfb/gstrfbsrc.c])
+AC_CONFIG_SRCDIR([gst/qtdemux/qtdemux.c])
 AM_CONFIG_HEADER(config.h)
 
 dnl Add parameters for aclocal
@@ -288,8 +287,6 @@ dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
 		qtdemux \
 		tta     \
-		librfb  \
-		speed   \
                 "
 
 dnl see if we can build C++ plug-ins
