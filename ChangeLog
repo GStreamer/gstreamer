@@ -1,3 +1,8 @@
+2005-09-26  Christian Schaller  <uraeus@gnome.org>
+
+	* configure.ac: add speed and rfb where needed
+	* gst/librfb/Makefile.am: add rfbsrc.c file to files getting disted
+
 2005-09-23  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/gsm/Makefile.am:

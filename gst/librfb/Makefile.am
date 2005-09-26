@@ -23,7 +23,8 @@ librfb_la_SOURCES = \
 	rfbbuffer.c \
 	rfbbuffer.h \
 	rfbbytestream.c \
-	rfbbytestream.h
+	rfbbytestream.h \
+	gstrfbsrc.c
 
 librfb_la_CFLAGS = $(GST_CFLAGS) -I$(srcdir)/..
 librfb_la_LIBADD = $(GLIB_LIBS)

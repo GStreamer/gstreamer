@@ -288,6 +288,8 @@ dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
 		qtdemux \
 		tta     \
+		librfb  \
+		speed   \
                 "
 
 dnl see if we can build C++ plug-ins
@@ -465,6 +467,7 @@ AC_CONFIG_FILES(
 Makefile
 gst-plugins-bad.spec
 gst/Makefile
+gst/librfb/Makefile
 gst/qtdemux/Makefile
 gst/speed/Makefile
 gst/tta/Makefile
