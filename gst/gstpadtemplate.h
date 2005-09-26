@@ -31,7 +31,6 @@
 #include <gst/gstcaps.h>
 #include <gst/gstevent.h>
 #include <gst/gstquery.h>
-#include <gst/gstqueryutils.h>
 #include <gst/gsttask.h>
 
 G_BEGIN_DECLS

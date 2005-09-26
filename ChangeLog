@@ -1,3 +1,16 @@
+2005-09-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/Makefile.am:
+	* gst/gst.h:
+	* gst/gstpad.h:
+	* gst/gstpadtemplate.h:
+	* gst/gstquery.c:
+	* gst/gstquery.h:
+	* gst/gstqueryutils.c:
+	* gst/gstqueryutils.h:
+	  remove queryutils headers after moving the two used functions
+	  to gstquery.  also fixes build problem for gstsiddec
+
 2005-09-26  Michael Smith <msmith@fluendo.com>
 
 	* tools/gst-launch.1.in:

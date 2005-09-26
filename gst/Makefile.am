@@ -96,14 +96,13 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstplugin.c		\
 	gstpluginfeature.c	\
 	gstquery.c		\
-	gstqueryutils.c		\
 	gstqueue.c		\
 	gstregistry.c		\
 	gstregistryxml.c	\
 	gststructure.c		\
 	gstsystemclock.c	\
 	gsttaglist.c		\
-	gsttagsetter.c	\
+	gsttagsetter.c		\
 	gsttask.c		\
 	$(GST_TRACE_SRC)	\
 	gsttypefind.c		\
@@ -174,12 +173,11 @@ gst_headers =			\
 	gstplugin.h		\
 	gstpluginfeature.h	\
 	gstquery.h		\
-	gstqueryutils.h		\
 	gstqueue.h		\
 	gststructure.h		\
 	gstsystemclock.h	\
 	gsttaglist.h		\
-	gsttagsetter.h	\
+	gsttagsetter.h		\
 	gsttask.h		\
 	gsttrace.h		\
 	gsttypefind.h		\

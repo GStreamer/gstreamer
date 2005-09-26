@@ -25,7 +25,8 @@
  * @short_description: Dynamically register new query types and parse results
  * @see_also: #GstPad, #GstElement
  *
- * GstQuery functions are used to register a new query types to the gstreamer core. 
+ * GstQuery functions are used to register a new query types to the gstreamer
+ * core. 
  * Query types can be used to perform queries on pads and elements.
  *
  * Query answer can be parsed using gst_query_parse_xxx() helpers.
@@ -34,6 +35,7 @@
 
 #include "gst_private.h"
 #include "gstquery.h"
+#include "gstvalue.h"
 #include "gstenumtypes.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_query_debug);
@@ -598,4 +600,46 @@ gst_query_get_structure (GstQuery * query)
   g_return_val_if_fail (GST_IS_QUERY (query), NULL);
 
   return query->structure;
+}
+
+void
+gst_query_set_seeking (GstQuery * query, GstFormat format,
+    gboolean seekable, gint64 segment_start, gint64 segment_end)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_SEEKING);
+
+  structure = gst_query_get_structure (query);
+  gst_structure_set (structure,
+      "format", GST_TYPE_FORMAT, format,
+      "seekable", G_TYPE_BOOLEAN, seekable,
+      "segment-start", G_TYPE_INT64, segment_start,
+      "segment-end", G_TYPE_INT64, segment_end, NULL);
+}
+
+void
+gst_query_set_formats (GstQuery * query, gint n_formats, ...)
+{
+  va_list ap;
+  GValue list = { 0, };
+  GValue item = { 0, };
+  GstStructure *structure;
+  gint i;
+
+  g_value_init (&list, GST_TYPE_LIST);
+
+  va_start (ap, n_formats);
+
+  for (i = 0; i < n_formats; i++) {
+    g_value_init (&item, GST_TYPE_FORMAT);
+    g_value_set_enum (&item, va_arg (ap, GstFormat));
+    gst_value_list_append_value (&list, &item);
+    g_value_unset (&item);
+  }
+
+  va_end (ap);
+
+  structure = gst_query_get_structure (query);
+  gst_structure_set_value (structure, "formats", &list);
 }
