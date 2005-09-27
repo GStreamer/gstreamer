@@ -185,7 +185,6 @@ typedef enum
   GST_STREAM_ERROR_NUM_ERRORS
 } GstStreamError;
 
-/* This should go away once we convinced glib people to register GError */
 #define GST_TYPE_G_ERROR    (gst_g_error_get_type ())
 
 #define GST_LIBRARY_ERROR   gst_library_error_quark ()

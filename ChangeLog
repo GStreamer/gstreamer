@@ -1,3 +1,10 @@
+2005-09-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gsterror.h:
+	  Remove comment. GST_TYPE_G_ERROR is here to stay,
+	  G_TYPE_ERROR has been WONTFIX'ed by the GLib folks
+	  (#316961, #300610).
+
 2005-09-26  Wim Taymans  <wim@fluendo.com>
 
 	* check/gst/gstbin.c: (GST_START_TEST), (gst_bin_suite):
