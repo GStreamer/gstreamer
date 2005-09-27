@@ -29,18 +29,14 @@
 #include <string.h>             /* memset */
 #include <unistd.h>
 #include <arpa/inet.h>
-#include <sys/ioctl.h>
 
-#ifdef HAVE_FIONREAD_IN_SYS_FILIO
-#include <sys/filio.h>
-#endif
 
 GST_DEBUG_CATEGORY (tcpclientsrc_debug);
 #define GST_CAT_DEFAULT tcpclientsrc_debug
 
 #define MAX_READ_SIZE			4 * 1024
 
-/* elementfactory information */
+
 static GstElementDetails gst_tcpclientsrc_details =
 GST_ELEMENT_DETAILS ("TCP Client source",
     "Source/Network",
@@ -52,23 +48,20 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-/* TCPClientSrc signals and args */
-enum
-{
-  LAST_SIGNAL
-};
 
 enum
 {
-  ARG_0,
-  ARG_HOST,
-  ARG_PORT,
-  ARG_PROTOCOL
+  PROP_0,
+  PROP_HOST,
+  PROP_PORT,
+  PROP_PROTOCOL
 };
 
-static void gst_tcpclientsrc_base_init (gpointer g_class);
-static void gst_tcpclientsrc_class_init (GstTCPClientSrc * klass);
-static void gst_tcpclientsrc_init (GstTCPClientSrc * tcpclientsrc);
+
+GST_BOILERPLATE (GstTCPClientSrc, gst_tcpclientsrc, GstPushSrc,
+    GST_TYPE_PUSH_SRC);
+
+
 static void gst_tcpclientsrc_finalize (GObject * gobject);
 
 static GstCaps *gst_tcpclientsrc_getcaps (GstBaseSrc * psrc);
@@ -84,35 +77,6 @@ static void gst_tcpclientsrc_set_property (GObject * object, guint prop_id,
 static void gst_tcpclientsrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstElementClass *parent_class = NULL;
-
-/*static guint gst_tcpclientsrc_signals[LAST_SIGNAL] = { 0 }; */
-
-GType
-gst_tcpclientsrc_get_type (void)
-{
-  static GType tcpclientsrc_type = 0;
-
-  if (!tcpclientsrc_type) {
-    static const GTypeInfo tcpclientsrc_info = {
-      sizeof (GstTCPClientSrcClass),
-      gst_tcpclientsrc_base_init,
-      NULL,
-      (GClassInitFunc) gst_tcpclientsrc_class_init,
-      NULL,
-      NULL,
-      sizeof (GstTCPClientSrc),
-      0,
-      (GInstanceInitFunc) gst_tcpclientsrc_init,
-      NULL
-    };
-
-    tcpclientsrc_type =
-        g_type_register_static (GST_TYPE_PUSH_SRC, "GstTCPClientSrc",
-        &tcpclientsrc_info, 0);
-  }
-  return tcpclientsrc_type;
-}
 
 static void
 gst_tcpclientsrc_base_init (gpointer g_class)
@@ -126,32 +90,28 @@ gst_tcpclientsrc_base_init (gpointer g_class)
 }
 
 static void
-gst_tcpclientsrc_class_init (GstTCPClientSrc * klass)
+gst_tcpclientsrc_class_init (GstTCPClientSrcClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
   GstPushSrcClass *gstpush_src_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstpush_src_class = (GstPushSrcClass *) klass;
-
-  parent_class = g_type_class_ref (GST_TYPE_PUSH_SRC);
 
   gobject_class->set_property = gst_tcpclientsrc_set_property;
   gobject_class->get_property = gst_tcpclientsrc_get_property;
   gobject_class->finalize = gst_tcpclientsrc_finalize;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HOST,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HOST,
       g_param_spec_string ("host", "Host",
           "The host IP address to receive packets from", TCP_DEFAULT_HOST,
           G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
       g_param_spec_int ("port", "Port", "The port to receive packets from", 0,
           TCP_HIGHEST_PORT, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_PROTOCOL,
+  g_object_class_install_property (gobject_class, PROP_PROTOCOL,
       g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in",
           GST_TYPE_TCP_PROTOCOL, GST_TCP_PROTOCOL_NONE, G_PARAM_READWRITE));
 
@@ -167,7 +127,7 @@ gst_tcpclientsrc_class_init (GstTCPClientSrc * klass)
 }
 
 static void
-gst_tcpclientsrc_init (GstTCPClientSrc * this)
+gst_tcpclientsrc_init (GstTCPClientSrc * this, GstTCPClientSrcClass * g_class)
 {
   this->port = TCP_DEFAULT_PORT;
   this->host = g_strdup (TCP_DEFAULT_HOST);
@@ -266,7 +226,7 @@ gst_tcpclientsrc_set_property (GObject * object, guint prop_id,
   GstTCPClientSrc *tcpclientsrc = GST_TCPCLIENTSRC (object);
 
   switch (prop_id) {
-    case ARG_HOST:
+    case PROP_HOST:
       if (!g_value_get_string (value)) {
         g_warning ("host property cannot be NULL");
         break;
@@ -274,10 +234,10 @@ gst_tcpclientsrc_set_property (GObject * object, guint prop_id,
       g_free (tcpclientsrc->host);
       tcpclientsrc->host = g_strdup (g_value_get_string (value));
       break;
-    case ARG_PORT:
+    case PROP_PORT:
       tcpclientsrc->port = g_value_get_int (value);
       break;
-    case ARG_PROTOCOL:
+    case PROP_PROTOCOL:
       tcpclientsrc->protocol = g_value_get_enum (value);
       break;
 
@@ -294,13 +254,13 @@ gst_tcpclientsrc_get_property (GObject * object, guint prop_id, GValue * value,
   GstTCPClientSrc *tcpclientsrc = GST_TCPCLIENTSRC (object);
 
   switch (prop_id) {
-    case ARG_HOST:
+    case PROP_HOST:
       g_value_set_string (value, tcpclientsrc->host);
       break;
-    case ARG_PORT:
+    case PROP_PORT:
       g_value_set_int (value, tcpclientsrc->port);
       break;
-    case ARG_PROTOCOL:
+    case PROP_PROTOCOL:
       g_value_set_enum (value, tcpclientsrc->protocol);
       break;
 

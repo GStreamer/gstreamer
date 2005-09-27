@@ -1,5 +1,7 @@
 2005-09-27  Andy Wingo  <wingo@pobox.com>
 
+	* gst/tcp/gsttcpclientsrc.c: Cleaned up.
+
 	* gst/tcp/gsttcpserversrc.c: Cleaned up.
 
 	* gst/tcp/gsttcpclientsrc.c: Updated for new gsttcp API.
