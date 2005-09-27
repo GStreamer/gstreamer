@@ -1,3 +1,10 @@
+2005-09-27  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* po/LINGUAS:
+	* po/fi.po:
+	  Added Finnish translation from
+	  Tommi Vainikainen <Tommi.Vainikainen@iki.fi>
+
 2005-09-21  Francis Labonte  <francis_labonte at hotmail dot com>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
@@ -11,9 +18,9 @@
 2005-09-13  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* win32/config.h:
-        update some defines for cleaner and better compilation
+	  update some defines for cleaner and better compilation
 	* win32/gst-typefind.vcproj:
-        added gst-typefind to the MSVC7 build
+	  added gst-typefind to the MSVC7 build
 
 2005-09-13  Julien MOUTTE  <julien@moutte.net>
 
