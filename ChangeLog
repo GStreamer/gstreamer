@@ -1,5 +1,10 @@
 2005-09-27  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* check/gst/gstbuffer.c: (test_make_writable):
+	  Plug leak in test case and fix 'make check-valgrind'
+
+2005-09-27  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstbuffer.c: (gst_subbuffer_init):
 	  Set READONLY flag on subbuffers, so that gst_buffer_make_writable()
 	  works correctly in all circumstances (we could have just copied

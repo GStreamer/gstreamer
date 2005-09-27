@@ -240,6 +240,7 @@ GST_START_TEST (test_make_writable)
   buf2 = gst_buffer_make_writable (buf);
   fail_unless (buf != buf2, "_make_writable() should have returned a copy!");
   gst_buffer_unref (buf2);
+  gst_buffer_unref (buf);
 }
 
 GST_END_TEST;
