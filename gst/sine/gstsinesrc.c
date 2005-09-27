@@ -235,12 +235,15 @@ static GstClockReturn
 gst_sinesrc_wait (GstSineSrc * src, GstClockTime time)
 {
   GstClockReturn ret;
+  GstClockTime base_time;
 
   GST_LOCK (src);
   /* clock_id should be NULL outside of this function */
   g_assert (src->clock_id == NULL);
   g_assert (GST_CLOCK_TIME_IS_VALID (time));
-  src->clock_id = gst_clock_new_single_shot_id (GST_ELEMENT_CLOCK (src), time);
+  base_time = GST_ELEMENT (src)->base_time;
+  src->clock_id = gst_clock_new_single_shot_id (GST_ELEMENT_CLOCK (src),
+      time + base_time);
   GST_UNLOCK (src);
 
   ret = gst_clock_id_wait (src->clock_id, NULL);
