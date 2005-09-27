@@ -1,0 +1,849 @@
+# Finnish translations for gstreamer package.
+# Copyright (C) 2005 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gstreamer
+# package, but never under the non-free "GNU Free Documentation Licence".
+# Tommi Vainikainen <Tommi.Vainikainen@iki.fi>, 2005.
+#
+# Words:
+#
+# bin (a container element) = säiliö
+# sink = nielu
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gstreamer 0.8.11\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-08-29 16:46+0200\n"
+"PO-Revision-Date: 2005-09-22 20:07+0300\n"
+"Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
+"Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: gst/gst.c:158
+msgid "Print the GStreamer version"
+msgstr "Näytä GStreamerin versio"
+
+#: gst/gst.c:160
+msgid "Make all warnings fatal"
+msgstr "Tee kaikista varoituksista vakavia"
+
+#: gst/gst.c:164
+msgid "Print available debug categories and exit"
+msgstr "Tulosta saatavilla olevat vianetsintäluokat ja poistu"
+
+#: gst/gst.c:167
+msgid "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+msgstr "Oletusvianetsintätaso väliltä 1:stä (vain virheet) 5:een (kaikki) tai 0 ei tulostetta"
+
+#: gst/gst.c:169
+msgid "LEVEL"
+msgstr "TASO"
+
+#: gst/gst.c:171
+msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr "Pilkuin eroteltu luettelo luokkanimi:taso-pareista, joilla asetetaan tietyt tasot yksittäisille luokille. Esimerkki: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+
+#: gst/gst.c:174
+msgid "LIST"
+msgstr "LUETTELO"
+
+#: gst/gst.c:176
+msgid "Disable colored debugging output"
+msgstr "Ei väritettyjä vianetsintätietoja"
+
+#: gst/gst.c:178
+msgid "Disable debugging"
+msgstr "Ei vianetsintää"
+
+#: gst/gst.c:182
+msgid "Disable accelerated CPU instructions"
+msgstr "Ei kiihdytettyjä suoritinkäskyjä"
+
+#: gst/gst.c:184
+msgid "Enable verbose plugin loading diagnostics"
+msgstr "Käytä monisanaista liitännäisten latausdiagnostiikka"
+
+#: gst/gst.c:186
+msgid "PATHS"
+msgstr "POLUT"
+
+#: gst/gst.c:189
+msgid "Comma-separated list of plugins to preload in addition to the list stored in environment variable GST_PLUGIN_PATH"
+msgstr "Pilkuin eroteltu luettelo liitännäisistä, jotka esiladataan ympäristömuuttujassa GST_PLUGIN_PATH lueteltujen lisäksi"
+
+#: gst/gst.c:191
+msgid "PLUGINS"
+msgstr "LIITÄNNÄISET"
+
+#: gst/gst.c:194
+msgid "Disable trapping of segmentation faults during plugin loading"
+msgstr "Ei muistialueen ylityksen tarkkailua liitännäisten latauksen aikana"
+
+#: gst/gst.c:197
+msgid "SCHEDULER"
+msgstr "VUOROTIN"
+
+#: gst/gst.c:199
+msgid "Registry to use"
+msgstr "Käytettävä rekisteri"
+
+#: gst/gst.c:199
+msgid "REGISTRY"
+msgstr "REKISTERI"
+
+#: gst/gst.c:212
+#, c-format
+msgid "path list for loading plugins (separated by '%s')"
+msgstr "polkuluettelo liitännäisten lataukseen (erottimena \"%s\")"
+
+#: gst/gst.c:216
+#, c-format
+msgid "Scheduler to use (default is '%s')"
+msgstr "Käytettävä vuorotin (oletus on \"%s\")"
+
+#: gst/gstelement.c:312
+#, c-format
+msgid "ERROR: from element %s: %s\n"
+msgstr "VIRHE: elementiltä %s: %s\n"
+
+#: gst/gstelement.c:314
+#, c-format
+msgid ""
+"Additional debug info:\n"
+"%s\n"
+msgstr ""
+"Lisätietoja vianetsintään:\n"
+"%s\n"
+
+#: gst/gsterror.c:56
+msgid "GStreamer encountered a general core library error."
+msgstr "GStreamer kohtasi virheen yleisessä ydinkirjastossa."
+
+#: gst/gsterror.c:58 gst/gsterror.c:95 gst/gsterror.c:116 gst/gsterror.c:146
+msgid "GStreamer developers were too lazy to assign an error code to this error.  Please file a bug."
+msgstr "GStreamer-kehittäjät olivat liian laiskoja antaakseen tälle virheelle omaa virhekoodia. Ole hyvä ja tee vikailmoitus."
+
+#: gst/gsterror.c:61
+msgid "Internal GStreamer error: code not implemented.  File a bug."
+msgstr "Sisäinen GStreamer-virhe: koodia ei toteutettu. Tee vikailmoitus."
+
+#: gst/gsterror.c:63
+msgid "Internal GStreamer error: state change failed.  File a bug."
+msgstr "Sisäinen GStreamer-virhe: tilasiirtymä epäonnistui. Tee vikailmoitus."
+
+#: gst/gsterror.c:65
+msgid "Internal GStreamer error: pad problem.  File a bug."
+msgstr "Sisäinen GStreamer-virhe: täyteongelma. Tee vikailmoitus."
+
+#: gst/gsterror.c:67
+msgid "Internal GStreamer error: thread problem.  File a bug."
+msgstr "Sisäinen GStreamer-virhe: säieongelma. Tee vikailmoitus."
+
+#: gst/gsterror.c:69
+msgid "Internal GStreamer error: scheduler problem.  File a bug."
+msgstr "Sisäinen GStreamer-virhe: vuorotinongelma. Tee vikailmoitus."
+
+#: gst/gsterror.c:71
+msgid "Internal GStreamer error: negotiation problem.  File a bug."
+msgstr "Sisäinen GStreamer-virhe: neuvotteluongelma. Tee vikailmoitus."
+
+#: gst/gsterror.c:73
+msgid "Internal GStreamer error: event problem.  File a bug."
+msgstr "Sisäinen GStreamer-virhe: tapahtumaongelma. Tee vikailmoitus."
+
+#: gst/gsterror.c:75
+msgid "Internal GStreamer error: seek problem.  File a bug."
+msgstr "Sisäinen GStreamer-virhe: kelausongelma. Tee vikailmoitus."
+
+#: gst/gsterror.c:77
+msgid "Internal GStreamer error: capabilities problem.  File a bug."
+msgstr "Sisäinen GStreamer-virhe: kykyongelma. Tee vikailmoitus."
+
+#: gst/gsterror.c:79
+msgid "Internal GStreamer error: tag problem.  File a bug."
+msgstr "Sisäinen GStreamer-virhe: merkintäongelma. Tee vikailmoitus."
+
+#: gst/gsterror.c:93
+msgid "GStreamer encountered a general supporting library error."
+msgstr "GStreamer kohtasi virheen yleisessä tukikirjastossa."
+
+#: gst/gsterror.c:97
+msgid "Could not initialize supporting library."
+msgstr "Tukikirjastoa ei voitu alustaa."
+
+#: gst/gsterror.c:98
+msgid "Could not close supporting library."
+msgstr "Tukikirjastoa ei voitu sulkea."
+
+#: gst/gsterror.c:99
+msgid "Could not set settings."
+msgstr "Asetuksia ei voitu asettaa."
+
+#: gst/gsterror.c:100
+msgid "Failed to encode image."
+msgstr "Kuvan koodaus epäonnistui."
+
+#: gst/gsterror.c:114
+msgid "GStreamer encountered a general resource error."
+msgstr "GStreamer kohtasi yleisen resurssivirheen."
+
+#: gst/gsterror.c:118
+msgid "Resource not found."
+msgstr "Resurssia ei löytynyt."
+
+#: gst/gsterror.c:119
+msgid "Resource busy or not available."
+msgstr "Resurssi on varattu tai ei saatavilla."
+
+#: gst/gsterror.c:120
+msgid "Could not open resource for reading."
+msgstr "Resurssia ei voitu avata lukemista varten."
+
+#: gst/gsterror.c:121
+msgid "Could not open resource for writing."
+msgstr "Resurssia ei voitu avata kirjoittamista varten."
+
+#: gst/gsterror.c:123
+msgid "Could not open resource for reading and writing."
+msgstr "Resurssia ei voitu avata lukemista ja kirjoittamista varten."
+
+#: gst/gsterror.c:124
+msgid "Could not close resource."
+msgstr "Resurssia ei voitu sulkea."
+
+#: gst/gsterror.c:125
+msgid "Could not read from resource."
+msgstr "Resurssista ei voitu lukea."
+
+#: gst/gsterror.c:126
+msgid "Could not write to resource."
+msgstr "Resurssiin ei voitu kirjoittaa."
+
+#: gst/gsterror.c:127
+msgid "Could not perform seek on resource."
+msgstr "Resurssia ei voitu kelata."
+
+#: gst/gsterror.c:128
+msgid "Could not synchronize on resource."
+msgstr "Resurssia ei voitu synkronisoida."
+
+#: gst/gsterror.c:130
+msgid "Could not get/set settings from/on resource."
+msgstr "Resurssin asetuksia ei saatu/voitu asettaa."
+
+#: gst/gsterror.c:144
+msgid "GStreamer encountered a general stream error."
+msgstr "GStreamer kohtasi yleisen tietovirtavirheen."
+
+#: gst/gsterror.c:149
+msgid "Element doesn't implement handling of this stream. Please file a bug."
+msgstr "Elementti ei toteuta tämän tietovirran käsittelyä. Tee vikailmoitus."
+
+#: gst/gsterror.c:151
+msgid "Could not determine type of stream."
+msgstr "Tietovirran tyyppiä ei voitu määrittää."
+
+#: gst/gsterror.c:153
+msgid "The stream is of a different type than handled by this element."
+msgstr "Tietovirta on eri tyyppiä kuin mitä tämä elementti käsittelee."
+
+#: gst/gsterror.c:155
+msgid "There is no codec present that can handle the stream's type."
+msgstr "Saatavilla ei ole koodekkia, joka osaa käsitellä tämän tyyppistä tietovirtaa."
+
+#: gst/gsterror.c:156
+msgid "Could not decode stream."
+msgstr "Tietovirtaa ei voitu purkaa."
+
+#: gst/gsterror.c:157
+msgid "Could not encode stream."
+msgstr "Tietovirtaa ei voitu koodata."
+
+#: gst/gsterror.c:158
+msgid "Could not demultiplex stream."
+msgstr "Tietovirran kanavointia ei voitu purkaa."
+
+#: gst/gsterror.c:159
+msgid "Could not multiplex stream."
+msgstr "Tietovirtaa ei voitu kanavoida."
+
+#: gst/gsterror.c:160
+msgid "Stream is of the wrong format."
+msgstr "Tietovirta on väärässä muodossa."
+
+#: gst/gsterror.c:208
+#, c-format
+msgid "No error message for domain %s."
+msgstr "Virheviestiä alueelle %s ei ole."
+
+#: gst/gsterror.c:216
+#, c-format
+msgid "No standard error message for domain %s and code %d."
+msgstr "Standardia virheviestiä alueelle %s ja koodille %d ei ole."
+
+#: gst/gsttag.c:83
+msgid "title"
+msgstr "nimi"
+
+#: gst/gsttag.c:83
+msgid "commonly used title"
+msgstr "yleensä käytetty nimi"
+
+#: gst/gsttag.c:86
+msgid "artist"
+msgstr "esittäjä"
+
+#: gst/gsttag.c:87
+msgid "person(s) responsible for the recording"
+msgstr "nauhoituksesta vastuussa oleva(t) henkilö(t)"
+
+#: gst/gsttag.c:91
+msgid "album"
+msgstr "levy"
+
+#: gst/gsttag.c:92
+msgid "album containing this data"
+msgstr "levy, joka sisältää tämän datan"
+
+#: gst/gsttag.c:94
+msgid "date"
+msgstr "päiväys"
+
+#: gst/gsttag.c:95
+msgid "date the data was created (in Julian calendar days)"
+msgstr "päiväys, jolloin data luotiin (juliaanisen kalenterin päivinä)"
+
+#: gst/gsttag.c:98
+msgid "genre"
+msgstr "laji"
+
+#: gst/gsttag.c:99
+msgid "genre this data belongs to"
+msgstr "laji, johon tämä data kuuluu"
+
+#: gst/gsttag.c:102
+msgid "comment"
+msgstr "kommentti"
+
+#: gst/gsttag.c:103
+msgid "free text commenting the data"
+msgstr "vapaa kommenttiteksti datalle"
+
+#: gst/gsttag.c:106
+msgid "track number"
+msgstr "raidan numero"
+
+#: gst/gsttag.c:107
+msgid "track number inside a collection"
+msgstr "raidan numero kokoelman sisällä"
+
+#: gst/gsttag.c:110
+msgid "track count"
+msgstr "raitojen määrä"
+
+#: gst/gsttag.c:111
+msgid "count of tracks inside collection this track belongs to"
+msgstr "tähän kokoelmaan kuuluvien raitojen lukumäärä"
+
+#: gst/gsttag.c:115
+msgid "disc number"
+msgstr "levynumero"
+
+#: gst/gsttag.c:116
+msgid "disc number inside a collection"
+msgstr "levynumero kokoelman sisällä"
+
+#: gst/gsttag.c:119
+msgid "disc count"
+msgstr "levymäärä"
+
+#: gst/gsttag.c:120
+msgid "count of discs inside collection this disc belongs to"
+msgstr "tämän levyn kokoelmaan kuuluvien levyjen lukumäärä"
+
+#: gst/gsttag.c:124
+msgid "location"
+msgstr "sijainti"
+
+#: gst/gsttag.c:125
+msgid "original location of file as a URI"
+msgstr "tiedoston alkuperäinen sijainti URI:na"
+
+#: gst/gsttag.c:129
+msgid "description"
+msgstr "kuvaus"
+
+#: gst/gsttag.c:130
+msgid "short text describing the content of the data"
+msgstr "lyhyt teksti, joka kuvaa datan sisältöä"
+
+#: gst/gsttag.c:133
+msgid "version"
+msgstr "versio"
+
+#: gst/gsttag.c:133
+msgid "version of this data"
+msgstr "tämän datan versio"
+
+#: gst/gsttag.c:136
+msgid "ISRC"
+msgstr "ISRC"
+
+#: gst/gsttag.c:138
+msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
+msgstr "Kansainvälinen standardoitu äänitekoodi ISRC - katso http://www.ifpi.org/isrc/"
+
+#: gst/gsttag.c:140
+msgid "organization"
+msgstr "organisaatio"
+
+#: gst/gsttag.c:143
+msgid "copyright"
+msgstr "tekijänoikeus"
+
+#: gst/gsttag.c:143
+msgid "copyright notice of the data"
+msgstr "huomautus datan tekijänoikeuksista"
+
+#: gst/gsttag.c:146
+msgid "contact"
+msgstr "yhteystiedot"
+
+#: gst/gsttag.c:146
+msgid "contact information"
+msgstr "yhteystiedot"
+
+#: gst/gsttag.c:148
+msgid "license"
+msgstr "lisenssi"
+
+#: gst/gsttag.c:148
+msgid "license of data"
+msgstr "datan lisenssi"
+
+#: gst/gsttag.c:151
+msgid "performer"
+msgstr "esittäjä"
+
+#: gst/gsttag.c:152
+msgid "person(s) performing"
+msgstr "esittämässä oleva(t) henkilö(t)"
+
+#: gst/gsttag.c:155
+msgid "duration"
+msgstr "kesto"
+
+#: gst/gsttag.c:155
+msgid "length in GStreamer time units (nanoseconds)"
+msgstr "pituus GStreamerin aikayksikköinä (nanosekuntia)"
+
+#: gst/gsttag.c:158
+msgid "codec"
+msgstr "koodekki"
+
+#: gst/gsttag.c:159
+msgid "codec the data is stored in"
+msgstr "koodekki, jolla data on tallennettu"
+
+#: gst/gsttag.c:162
+msgid "video codec"
+msgstr "videokoodekki"
+
+#: gst/gsttag.c:162
+msgid "codec the video data is stored in"
+msgstr "koodekki, jolla videodata on tallennettu"
+
+#: gst/gsttag.c:165
+msgid "audio codec"
+msgstr "äänikoodekki"
+
+#: gst/gsttag.c:165
+msgid "codec the audio data is stored in"
+msgstr "koodekki, jolla äänidata on tallennettu"
+
+#: gst/gsttag.c:167
+msgid "bitrate"
+msgstr "bittinopeus"
+
+#: gst/gsttag.c:167
+msgid "exact or average bitrate in bits/s"
+msgstr "tarkka tai keskimääräinen bittinopeus [bittiä/s]"
+
+#: gst/gsttag.c:169
+msgid "nominal bitrate"
+msgstr "nimellinen bittinopeus"
+
+#: gst/gsttag.c:169
+msgid "nominal bitrate in bits/s"
+msgstr "nimellinen bittinopeus [bittiä/s]"
+
+#: gst/gsttag.c:171
+msgid "minimum bitrate"
+msgstr "vähimmäisbittinopeus"
+
+#: gst/gsttag.c:171
+msgid "minimum bitrate in bits/s"
+msgstr "vähimmäisbittinopeus [bittiä/s]"
+
+#: gst/gsttag.c:173
+msgid "maximum bitrate"
+msgstr "enimmäisbittinopeus"
+
+#: gst/gsttag.c:173
+msgid "maximum bitrate in bits/s"
+msgstr "enimmäisbittinopeus [bittiä/s]"
+
+#: gst/gsttag.c:176
+msgid "encoder"
+msgstr "koodain"
+
+#: gst/gsttag.c:176
+msgid "encoder used to encode this stream"
+msgstr "koodain, joka koodaa tämän virran"
+
+#: gst/gsttag.c:179
+msgid "encoder version"
+msgstr "koodaimen versio"
+
+#: gst/gsttag.c:180
+msgid "version of the encoder used to encode this stream"
+msgstr "tämän virran koodaamiseen käytetyn koodaimen versio"
+
+#: gst/gsttag.c:182
+msgid "serial"
+msgstr "sarjanumero"
+
+#: gst/gsttag.c:182
+msgid "serial number of track"
+msgstr "raidan sarjanumero"
+
+#: gst/gsttag.c:184
+msgid "replaygain track gain"
+msgstr "raidan replaygain-vahvistus"
+
+#: gst/gsttag.c:184
+msgid "track gain in db"
+msgstr "raidan vahvistus desibeleissä"
+
+#: gst/gsttag.c:186
+msgid "replaygain track peak"
+msgstr "raidan replaygain-huippu"
+
+#: gst/gsttag.c:186
+msgid "peak of the track"
+msgstr "raidan huippu"
+
+#: gst/gsttag.c:188
+msgid "replaygain album gain"
+msgstr "levyn replaygain-vahvistus"
+
+#: gst/gsttag.c:188
+msgid "album gain in db"
+msgstr "levyn vahvistus desibeleissä"
+
+#: gst/gsttag.c:190
+msgid "replaygain album peak"
+msgstr "levyn replaygain-huippu"
+
+#: gst/gsttag.c:190
+msgid "peak of the album"
+msgstr "levyn huippu"
+
+#: gst/gsttag.c:192
+msgid "language code"
+msgstr "kielikoodi"
+
+#: gst/gsttag.c:193
+msgid "language code for this stream, conforming to ISO-639-1"
+msgstr "tämän virran kielikoodi ISO-639-1-standardin mukaisesti"
+
+#: gst/gsttag.c:232
+msgid ", "
+msgstr ", "
+
+#: gst/autoplug/gstspider.c:466
+#, c-format
+msgid "There is no element present to handle the stream's mime type %s."
+msgstr "Käytettävissä ei ole elementtiä, joka käsittelisi tietovirran MIME-tyypin %s."
+
+#: gst/elements/gstfilesink.c:268
+msgid "No file name specified for writing."
+msgstr "Kirjoitusta varten ei määritetty tiedostonimeä."
+
+#: gst/elements/gstfilesink.c:275
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Tiedostoa \"%s\" ei voitu avata kirjoittamista varten."
+
+#: gst/elements/gstfilesink.c:294
+#, c-format
+msgid "Error closing file \"%s\"."
+msgstr "Virhe suljettaessa tiedostoa \"%s\"."
+
+#: gst/elements/gstfilesink.c:364 gst/elements/gstfilesink.c:400
+#: gst/elements/gstfilesink.c:453
+#, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "Virhe kirjoitettaessa tiedostoon \"%s\"."
+
+#: gst/elements/gstfilesrc.c:765 gst/elements/gstmultifilesrc.c:298
+msgid "No file name specified for reading."
+msgstr "Lukemista varten ei ole määritetty tiedostonimeä."
+
+#: gst/elements/gstfilesrc.c:780 gst/elements/gstmultifilesrc.c:306
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Tiedostoa \"%s\" ei voitu avata lukemista varten."
+
+#: gst/elements/gstfilesrc.c:791
+#, c-format
+msgid "\"%s\" is a directory."
+msgstr "\"%s\" on hakemisto."
+
+#: gst/elements/gstfilesrc.c:797
+#, c-format
+msgid "File \"%s\" is a socket."
+msgstr "Tiedosto \"%s\" on pistoke."
+
+#: gst/elements/gstidentity.c:306
+msgid "Failed after iterations as requested."
+msgstr "Epäonnistui, kuten pyydettiin, yritysten jälkeen."
+
+#: gst/elements/gsttypefindelement.c:157
+msgid "stream type"
+msgstr "tietovirran tyyppi"
+
+#: gst/elements/gsttypefindelement.c:158
+msgid "detected type of stream"
+msgstr "tietovirran tyyppi tunnistettu"
+
+#: gst/elements/gsttypefindelement.c:161
+msgid "minimum"
+msgstr "vähintään"
+
+#: gst/elements/gsttypefindelement.c:165
+msgid "maximum"
+msgstr "enintään"
+
+#: gst/parse/grammar.y:188
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "määritetty tyhjä säiliö \"%s\", ei sallittu"
+
+#: gst/parse/grammar.y:193
+#, c-format
+msgid "no bin \"%s\", skipping"
+msgstr "ei säiliötä \"%s\", ohitetaan"
+
+#: gst/parse/grammar.y:270
+#, c-format
+msgid "no property \"%s\" in element \"%s\""
+msgstr "ominaisuutta \"%s\" ei ole elementissä \"%s\""
+
+#: gst/parse/grammar.y:283
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "elementin \"%2$s\" ominaisuutta \"%1$s\" ei voitu asettaa arvoon \"%3$s\""
+
+#: gst/parse/grammar.y:468
+#, c-format
+msgid "could not link %s to %s"
+msgstr "elementtiä %s ei voitu linkittää elementtiin %s"
+
+#: gst/parse/grammar.y:513
+#, c-format
+msgid "no element \"%s\""
+msgstr "ei elementtiä \"%s\""
+
+#: gst/parse/grammar.y:564
+#, c-format
+msgid "could not parse capabilities \"%s\""
+msgstr "kykyjä \"%s\" ei voitu jäsentää"
+
+#: gst/parse/grammar.y:586 gst/parse/grammar.y:634 gst/parse/grammar.y:650
+#: gst/parse/grammar.y:708
+msgid "link without source element"
+msgstr "linkki ilman lähde-elementtiä"
+
+#: gst/parse/grammar.y:592 gst/parse/grammar.y:631 gst/parse/grammar.y:717
+msgid "link without sink element"
+msgstr "linkki ilman nieluelementtiä"
+
+#: gst/parse/grammar.y:668
+#, c-format
+msgid "no source element for URI \"%s\""
+msgstr "ei lähde-elementtiä URI:lle \"%s\""
+
+#: gst/parse/grammar.y:678
+#, c-format
+msgid "no element to link URI \"%s\" to"
+msgstr "ei elementtiä, jota linkittää URIin \"%s\""
+
+#: gst/parse/grammar.y:686
+#, c-format
+msgid "no sink element for URI \"%s\""
+msgstr "ei nieluelementtiä URIlle \"%s\""
+
+#: gst/parse/grammar.y:690
+#, c-format
+msgid "could not link sink element for URI \"%s\""
+msgstr "nieluelementtiä ei voitu linkittää URIlle \"%s\""
+
+#: gst/parse/grammar.y:702
+msgid "empty pipeline not allowed"
+msgstr "tyhjää liukuhihnaa ei sallita"
+
+#: tools/gst-inspect.c:1164
+msgid "Print all elements"
+msgstr "Tulosta kaikki elementit"
+
+#: tools/gst-launch.c:110
+#, c-format
+msgid "Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, max %s ns).\n"
+msgstr "Suoritus päättyi %s läpikäynnin jälkeen (summa %s ns, keskiarvo %s ns, alin %s ns, ylin %s ns).\n"
+
+#: tools/gst-launch.c:137
+msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+msgstr "Käyttö: gst-xmllaunch <tiedosto.xml> [ elementti.ominaisuus=arvo ... ]\n"
+
+#: tools/gst-launch.c:145
+#, c-format
+msgid "ERROR: parse of xml file '%s' failed.\n"
+msgstr "VIRHE: XML-tiedoston \"%s\" jäsentäminen epäonnistui.\n"
+
+#: tools/gst-launch.c:151
+#, c-format
+msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+msgstr "VIRHE: päätason liukuhihnaelementtiä ei ole tiedostossa \"%s\".\n"
+
+#: tools/gst-launch.c:158
+#, c-format
+msgid "WARNING: only one toplevel element is supported at this time."
+msgstr "VAROITUS: vain yhtä päätason elementtiä tuetaan tällä kertaa."
+
+#: tools/gst-launch.c:169
+#, c-format
+msgid "ERROR: could not parse command line argument %d: %s.\n"
+msgstr "VIRHE: ei voitu jäsentää komentoriviargumenttia %d: %s.\n"
+
+#: tools/gst-launch.c:180
+#, c-format
+msgid "WARNING: element named '%s' not found.\n"
+msgstr "VAROITUS: elementtiä nimeltä \"%s\" ei löytynyt.\n"
+
+#: tools/gst-launch.c:323
+#, c-format
+msgid "FOUND TAG      : found by element \"%s\".\n"
+msgstr "LÖYTYI MERKINTÄ: sen löysi elementti \"%s\".\n"
+
+#: tools/gst-launch.c:409
+msgid "Output tags (also known as metadata)"
+msgstr "Tulostemerkinnät (tunnetaan myös metadatana)"
+
+#: tools/gst-launch.c:411
+msgid "Output status information and property notifications"
+msgstr "Tulostetilatiedot ja ominaisuushuomiot"
+
+#: tools/gst-launch.c:413
+msgid "Do not output status information of TYPE"
+msgstr "Älä tulosta tilatietoa TYYPPI"
+
+#: tools/gst-launch.c:413
+msgid "TYPE1,TYPE2,..."
+msgstr "TYYPPI1,TYYPPI2,..."
+
+#: tools/gst-launch.c:416
+msgid "Save xml representation of pipeline to FILE and exit"
+msgstr "Tallenna liukuhihnan XML-esitys TIEDOSTOon ja poistu"
+
+#: tools/gst-launch.c:416
+msgid "FILE"
+msgstr "TIEDOSTO"
+
+#: tools/gst-launch.c:419
+msgid "Do not install a fault handler"
+msgstr "Älä asenna virheenkäsittelintä"
+
+#: tools/gst-launch.c:421
+msgid "Print alloc trace (if enabled at compile time)"
+msgstr "Tulosta varausjälki (jos valittu käännöksen yhteydessä)"
+
+#: tools/gst-launch.c:423
+msgid "Number of times to iterate pipeline"
+msgstr "Kuinka monta kertaa liukuhihna käydään läpi"
+
+#: tools/gst-launch.c:494
+#, c-format
+msgid "ERROR: pipeline could not be constructed: %s.\n"
+msgstr "VIRHE: liukuhihnaa ei voitu rakentaa: %s.\n"
+
+#: tools/gst-launch.c:498
+#, c-format
+msgid "ERROR: pipeline could not be constructed.\n"
+msgstr "VIRHE: liukuhihnaa ei voitu rakentaa.\n"
+
+#: tools/gst-launch.c:502
+#, c-format
+msgid "WARNING: erroneous pipeline: %s\n"
+msgstr "VAROITUS: virheellinen liukuhihna: %s\n"
+
+#: tools/gst-launch.c:503
+#, c-format
+msgid "         Trying to run anyway.\n"
+msgstr "         Yritetään suorittaa joka tapauksessa.\n"
+
+#: tools/gst-launch.c:530
+#, c-format
+msgid "ERROR: the 'pipeline' element wasn't found.\n"
+msgstr "VIRHE: \"liukuhihna\"-elementtiä ei löytynyt.\n"
+
+#: tools/gst-launch.c:537
+#, c-format
+msgid "RUNNING pipeline ...\n"
+msgstr "SUORITETAAN liukuhihna ...\n"
+
+#: tools/gst-launch.c:540
+#, c-format
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "VIRHE: Liukuhihna ei halua toistaa.\n"
+
+#: tools/gst-register.c:43
+#, c-format
+msgid "Added plugin %s with %d feature.\n"
+msgid_plural "Added plugin %s with %d features.\n"
+msgstr[0] "Lisätty liitännäinen %s, jolla on %d ominaisuus.\n"
+msgstr[1] "Lisätty liitännäinen %s, jolla on %d ominaisuutta.\n"
+
+#: tools/gst-register.c:111
+#, c-format
+msgid "Added path   %s to %s \n"
+msgstr "Lisätty polku  %s rekisteriin %s \n"
+
+#: tools/gst-register.c:126
+#, c-format
+msgid "Rebuilding %s (%s) ...\n"
+msgstr "Uudelleenrakennetaan %s (%s) ...\n"
+
+#: tools/gst-register.c:131
+#, c-format
+msgid "Trying to load %s ...\n"
+msgstr "Yritetään ladata %s ...\n"
+
+#: tools/gst-register.c:133
+#, c-format
+msgid "Error loading %s\n"
+msgstr "Virhe ladattaessa %s\n"
+
+#: tools/gst-register.c:167
+#, c-format
+msgid "Loaded %d plugins with %d feature.\n"
+msgid_plural "Loaded %d plugins with %d features.\n"
+msgstr[0] "Ladattu %d liitännäistä, joilla on %d ominaisuus.\n"
+msgstr[1] "Ladattu %d liitännäistä, joilla on %d ominaisuutta.\n"
+
+#: tools/tools.h:44
+msgid "print version information and exit"
+msgstr "tulosta versiotiedot ja poistu"
