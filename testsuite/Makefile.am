@@ -31,11 +31,11 @@ tests =  \
 	test_xml.py
 
 check-local: testhelper.la
-	@G_DEBUG=fatal_warnings GST_DEBUG=*:0 PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/runtests.py
+	@G_DEBUG=fatal_warnings PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/runtests.py
 	@rm -fr *.pyc
 
 check-verbose: testhelper.la
-	@VERBOSE=yes G_DEBUG=fatal_warnings GST_DEBUG=*:0 PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/runtests.py
+	@VERBOSE=yes G_DEBUG=fatal_warnings PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/runtests.py
 	@rm -fr *.pyc
 
 EXTRA_DIST = $(tests) common.py runtests.py test-object.h
