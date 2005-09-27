@@ -212,7 +212,7 @@ static GstFlowReturn
 gst_tcpclientsrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
   GstTCPClientSrc *src;
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   src = GST_TCPCLIENTSRC (psrc);
 
