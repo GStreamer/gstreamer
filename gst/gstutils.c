@@ -2212,6 +2212,7 @@ intersect_caps_func (GstPad * pad, GValue * ret, GstPad * orig)
     gst_caps_unref (existing);
     gst_caps_unref (peercaps);
   }
+  gst_object_unref (pad);
   return TRUE;
 }
 
@@ -2254,11 +2255,10 @@ gst_pad_proxy_getcaps (GstPad * pad)
       &ret, pad);
   gst_iterator_free (iter);
 
-  if (res != GST_ITERATOR_DONE) {
-    g_warning ("Pad list changed during capsnego for element %s",
-        GST_ELEMENT_NAME (element));
-    return NULL;
-  }
+  if (res != GST_ITERATOR_DONE)
+    goto pads_changed;
+
+  gst_object_unref (element);
 
   caps = g_value_get_pointer (&ret);
   g_value_unset (&ret);
@@ -2267,6 +2267,15 @@ gst_pad_proxy_getcaps (GstPad * pad)
   gst_caps_unref (caps);
 
   return intersected;
+
+  /* ERRORS */
+pads_changed:
+  {
+    g_warning ("Pad list changed during capsnego for element %s",
+        GST_ELEMENT_NAME (element));
+    gst_object_unref (element);
+    return NULL;
+  }
 }
 
 typedef struct
@@ -2284,6 +2293,7 @@ link_fold_func (GstPad * pad, GValue * ret, LinkData * data)
     success = gst_pad_set_caps (pad, data->caps);
     g_value_set_boolean (ret, success);
   }
+  gst_object_unref (pad);
 
   return success;
 }
@@ -2314,6 +2324,8 @@ gst_pad_proxy_setcaps (GstPad * pad, GstCaps * caps)
   GST_DEBUG ("proxying pad link for %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   element = gst_pad_get_parent_element (pad);
+  if (element == NULL)
+    return FALSE;
 
   iter = gst_element_iterate_pads (element);
 
@@ -2326,14 +2338,22 @@ gst_pad_proxy_setcaps (GstPad * pad, GstCaps * caps)
       &ret, &data);
   gst_iterator_free (iter);
 
-  if (res != GST_ITERATOR_DONE) {
-    g_warning ("Pad list changed during proxy_pad_link for element %s",
-        GST_ELEMENT_NAME (element));
-    return FALSE;
-  }
+  if (res != GST_ITERATOR_DONE)
+    goto pads_changed;
+
+  gst_object_unref (element);
 
   /* ok not to unset the gvalue */
   return g_value_get_boolean (&ret);
+
+  /* ERRORS */
+pads_changed:
+  {
+    g_warning ("Pad list changed during proxy_pad_link for element %s",
+        GST_ELEMENT_NAME (element));
+    gst_object_unref (element);
+    return FALSE;
+  }
 }
 
 /**

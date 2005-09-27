@@ -142,11 +142,11 @@ gst_tee_init (GstTee * tee, GstTeeClass * g_class)
   tee->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&sinktemplate),
       "sink");
-  gst_element_add_pad (GST_ELEMENT (tee), tee->sinkpad);
   gst_pad_set_setcaps_function (tee->sinkpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_setcaps));
   gst_pad_set_getcaps_function (tee->sinkpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+  gst_element_add_pad (GST_ELEMENT (tee), tee->sinkpad);
 
   tee->last_message = NULL;
 }
@@ -276,6 +276,8 @@ gst_tee_do_push (GstPad * pad, GValue * ret, PushData * data)
 
   res = gst_pad_push (pad, gst_buffer_ref (data->buffer));
   g_value_set_enum (ret, res);
+  gst_object_unref (pad);
+
   return (res == GST_FLOW_OK);
 }
 

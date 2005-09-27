@@ -1,3 +1,11 @@
+2005-09-27  Wim Taymans  <wim@fluendo.com>
+
+	* gst/elements/gsttee.c: (gst_tee_init), (gst_tee_do_push):
+	* gst/gstutils.c: (intersect_caps_func), (gst_pad_proxy_getcaps),
+	(link_fold_func), (gst_pad_proxy_setcaps):
+	Leak fixes, the fold functions need to unref the passed object and
+	_get_parent_*() returns ref to parent.
+
 2005-09-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* check/gst/gstbuffer.c: (test_make_writable):
