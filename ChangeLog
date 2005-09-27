@@ -1,3 +1,10 @@
+2005-09-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* sys/oss/gstosssink.c: (gst_oss_sink_prepare):
+	  Fix playback of mono streams (bytes_per_sample should be set
+	  from the sample width and the number of channels negotiated,
+	  and not just be set to 4) (#317338)
+
 2005-09-26  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/gstrtpmpaenc.c: (gst_rtpmpaenc_flush),

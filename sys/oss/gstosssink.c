@@ -325,8 +325,12 @@ gst_oss_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 
   spec->segsize = info.fragsize;
   spec->segtotal = info.fragstotal;
-  spec->bytes_per_sample = 4;
-  oss->bytes_per_sample = 4;
+
+  if (spec->width != 16 && spec->width != 8)
+    goto dodgy_width;
+
+  spec->bytes_per_sample = (spec->width / 8) * spec->channels;
+  oss->bytes_per_sample = (spec->width / 8) * spec->channels;
   memset (spec->silence_sample, 0, spec->bytes_per_sample);
 
   GST_DEBUG ("got segsize: %d, segtotal: %d, value: %08x", spec->segsize,
@@ -337,6 +341,11 @@ gst_oss_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 wrong_format:
   {
     GST_DEBUG ("wrong format %d\n", spec->format);
+    return FALSE;
+  }
+dodgy_width:
+  {
+    GST_DEBUG ("unexpected width %d\n", spec->width);
     return FALSE;
   }
 }
