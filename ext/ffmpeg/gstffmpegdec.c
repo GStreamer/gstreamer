@@ -72,6 +72,7 @@ struct _GstFFMpegDec
   GValue *par;		/* pixel aspect ratio of incoming data */
 
   gint hurry_up, lowres;
+  GMutex *mainlock;
 };
 
 typedef struct _GstFFMpegDecClass GstFFMpegDecClass;
@@ -116,7 +117,7 @@ static GHashTable *global_plugins;
 static void gst_ffmpegdec_base_init (GstFFMpegDecClass * klass);
 static void gst_ffmpegdec_class_init (GstFFMpegDecClass * klass);
 static void gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec);
-static void gst_ffmpegdec_dispose (GObject * object);
+static void gst_ffmpegdec_finalize (GObject * object);
 
 static gboolean gst_ffmpegdec_query (GstPad * pad, GstQueryType type,
     GstFormat * fmt, gint64 * value);
@@ -246,7 +247,7 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass * klass)
           "At which resolution to decode images",
           GST_FFMPEGDEC_TYPE_LOWRES, 0, G_PARAM_READWRITE));
 
-  gobject_class->dispose = gst_ffmpegdec_dispose;
+  gobject_class->finalize = gst_ffmpegdec_finalize;
   gobject_class->set_property = gst_ffmpegdec_set_property;
   gobject_class->get_property = gst_ffmpegdec_get_property;
   gstelement_class->change_state = gst_ffmpegdec_change_state;
@@ -283,22 +284,25 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->hurry_up = ffmpegdec->lowres = 0;
 
   ffmpegdec->last_buffer = NULL;
+  ffmpegdec->mainlock = g_mutex_new ();
 
   GST_FLAG_SET (ffmpegdec, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void
-gst_ffmpegdec_dispose (GObject * object)
+gst_ffmpegdec_finalize (GObject * object)
 {
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) object;
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-  /* old session should have been closed in element_class->dispose */
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+  /* old session should have been closed in element_class->finalize */
   g_assert (!ffmpegdec->opened);
 
   /* clean up remaining allocated data */
   av_free (ffmpegdec->context);
   av_free (ffmpegdec->picture);
+  
+  g_mutex_free (ffmpegdec->mainlock);
 }
 
 static gboolean
@@ -440,6 +444,8 @@ gst_ffmpegdec_connect (GstPad * pad, const GstCaps * caps)
   GstStructure *structure;
   const GValue *par;
 
+  g_mutex_lock (ffmpegdec->mainlock);
+
   /* close old session */
   gst_ffmpegdec_close (ffmpegdec);
 
@@ -486,9 +492,12 @@ gst_ffmpegdec_connect (GstPad * pad, const GstCaps * caps)
       g_free (ffmpegdec->par);
       ffmpegdec->par = NULL;
     }
+
+    g_mutex_unlock (ffmpegdec->mainlock);
     return GST_PAD_LINK_REFUSED;
   }
 
+  g_mutex_unlock (ffmpegdec->mainlock);
   return GST_PAD_LINK_OK;
 }
 
@@ -932,9 +941,12 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
   gint bsize, size, len, have_data;
   guint64 in_ts;
 
+  g_mutex_lock (ffmpegdec->mainlock);
+
   /* event handling */
   if (GST_IS_EVENT (_data)) {
     gst_ffmpegdec_handle_event (ffmpegdec, GST_EVENT (_data));
+    g_mutex_unlock (ffmpegdec->mainlock);
     return;
   }
 
@@ -945,6 +957,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
     GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
         ("ffdec_%s: input format was not set before data start",
             oclass->in_plugin->name));
+    g_mutex_unlock (ffmpegdec->mainlock);
     return;
   }
 
@@ -1023,6 +1036,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
   } else if (bsize > 0) {
     GST_DEBUG_OBJECT (ffmpegdec, "Dropping %d bytes of data", bsize);
   }
+
+  g_mutex_unlock (ffmpegdec->mainlock);
   gst_buffer_unref (inbuf);
 }
 

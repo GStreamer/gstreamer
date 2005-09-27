@@ -1,3 +1,17 @@
+2005-09-27  Luca Ognibene  <luogni@tin.it>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_class_init),
+	(gst_ffmpegdec_init), (gst_ffmpegdec_finalize),
+	(gst_ffmpegdec_connect), (gst_ffmpegdec_chain):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_class_init),
+	(gst_ffmpegenc_init), (gst_ffmpegenc_finalize),
+	(gst_ffmpegenc_link), (gst_ffmpegenc_chain_video),
+	(gst_ffmpegenc_chain_audio):
+	  Move from dispose to finalize.
+	  Add a lock around _chain and _link functions. This prevent
+	  a segfault that can happens if the _link function is called while
+	  the _chain function is running.
+
 2005-09-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst-libs/ext/Makefile.am:

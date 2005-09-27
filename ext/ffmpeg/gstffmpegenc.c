@@ -55,6 +55,8 @@ struct _GstFFMpegEnc
   gint me_method;
   gint gop_size;
   gulong buffer_size;
+  
+  GMutex *mainlock;
 };
 
 typedef struct _GstFFMpegEncClass GstFFMpegEncClass;
@@ -130,7 +132,7 @@ static GHashTable *enc_global_plugins;
 static void gst_ffmpegenc_class_init (GstFFMpegEncClass * klass);
 static void gst_ffmpegenc_base_init (GstFFMpegEncClass * klass);
 static void gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc);
-static void gst_ffmpegenc_dispose (GObject * object);
+static void gst_ffmpegenc_finalize (GObject * object);
 
 static GstPadLinkReturn gst_ffmpegenc_link (GstPad * pad,
     const GstCaps * caps);
@@ -232,7 +234,7 @@ gst_ffmpegenc_class_init (GstFFMpegEncClass * klass)
 
   gstelement_class->change_state = gst_ffmpegenc_change_state;
 
-  gobject_class->dispose = gst_ffmpegenc_dispose;
+  gobject_class->finalize = gst_ffmpegenc_finalize;
 }
 
 static void
@@ -267,10 +269,12 @@ gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc)
 
   gst_element_add_pad (GST_ELEMENT (ffmpegenc), ffmpegenc->sinkpad);
   gst_element_add_pad (GST_ELEMENT (ffmpegenc), ffmpegenc->srcpad);
+  
+  ffmpegenc->mainlock = g_mutex_new ();
 }
 
 static void
-gst_ffmpegenc_dispose (GObject * object)
+gst_ffmpegenc_finalize (GObject * object)
 {
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) object;
 
@@ -283,8 +287,10 @@ gst_ffmpegenc_dispose (GObject * object)
   /* clean up remaining allocated data */
   av_free (ffmpegenc->context);
   av_free (ffmpegenc->picture);
+  
+  g_mutex_free (ffmpegenc->mainlock);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstCaps *
@@ -358,7 +364,9 @@ gst_ffmpegenc_link (GstPad * pad, const GstCaps * caps)
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) gst_pad_get_parent (pad);
   GstFFMpegEncClass *oclass =
       (GstFFMpegEncClass *) G_OBJECT_GET_CLASS (ffmpegenc);
-
+  
+  g_mutex_lock (ffmpegenc->mainlock);
+  
   /* close old session */
   if (ffmpegenc->opened) {
     avcodec_close (ffmpegenc->context);
@@ -399,6 +407,7 @@ gst_ffmpegenc_link (GstPad * pad, const GstCaps * caps)
       avcodec_close (ffmpegenc->context);
     GST_DEBUG ("ffenc_%s: Failed to open FFMPEG codec",
         oclass->in_plugin->name);
+    g_mutex_unlock (ffmpegenc->mainlock);
     return GST_PAD_LINK_REFUSED;
   }
 
@@ -407,6 +416,7 @@ gst_ffmpegenc_link (GstPad * pad, const GstCaps * caps)
     avcodec_close (ffmpegenc->context);
     GST_DEBUG ("ffenc_%s: AV wants different colourspace (%d given, %d wanted)",
         oclass->in_plugin->name, pix_fmt, ffmpegenc->context->pix_fmt);
+    g_mutex_unlock (ffmpegenc->mainlock);
     return GST_PAD_LINK_REFUSED;
   }
 
@@ -422,6 +432,7 @@ gst_ffmpegenc_link (GstPad * pad, const GstCaps * caps)
   if (!other_caps) {
     avcodec_close (ffmpegenc->context);
     GST_DEBUG ("Unsupported codec - no caps found");
+    g_mutex_unlock (ffmpegenc->mainlock);
     return GST_PAD_LINK_REFUSED;
   }
 
@@ -430,6 +441,7 @@ gst_ffmpegenc_link (GstPad * pad, const GstCaps * caps)
   gst_caps_free (other_caps);
   if (gst_caps_is_empty (icaps)) {
     gst_caps_free (icaps);
+    g_mutex_unlock (ffmpegenc->mainlock);
     return GST_PAD_LINK_REFUSED;
   }
 
@@ -448,12 +460,15 @@ gst_ffmpegenc_link (GstPad * pad, const GstCaps * caps)
   if (!gst_pad_set_explicit_caps (ffmpegenc->srcpad, icaps)) {
     avcodec_close (ffmpegenc->context);
     gst_caps_free (icaps);
+    g_mutex_unlock (ffmpegenc->mainlock);
     return GST_PAD_LINK_REFUSED;
   }
   gst_caps_free (icaps);
 
   /* success! */
   ffmpegenc->opened = TRUE;
+
+  g_mutex_unlock (ffmpegenc->mainlock);
 
   return GST_PAD_LINK_OK;
 }
@@ -468,6 +483,8 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data)
   gint ret_size = 0, frame_size;
   const AVRational bq = { 1, 1000000000 };
 
+  g_mutex_lock (ffmpegenc->mainlock);
+
   /* FIXME: events (discont (flush!) and eos (close down) etc.) */
 
   GST_DEBUG_OBJECT (ffmpegenc,
@@ -478,7 +495,12 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data)
       GST_BUFFER_DATA (inbuf),
       ffmpegenc->context->pix_fmt,
       ffmpegenc->context->width, ffmpegenc->context->height);
-  g_return_if_fail (frame_size == GST_BUFFER_SIZE (inbuf));
+  if (frame_size != GST_BUFFER_SIZE (inbuf)) {
+    gst_buffer_unref (inbuf);
+    g_warning ("frame_size != GST_BUFFER_SIZE (inbuf)");
+    g_mutex_unlock (ffmpegenc->mainlock);
+    return ;
+  }
 
   ffmpegenc->picture->pts =
       gst_ffmpeg_time_gst_to_ff (GST_BUFFER_TIMESTAMP (inbuf),
@@ -494,6 +516,7 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data)
         "ffenc_%s: failed to encode buffer", oclass->in_plugin->name);
     gst_buffer_unref (inbuf);
     gst_buffer_unref (outbuf);
+    g_mutex_unlock (ffmpegenc->mainlock);
     return;
   }
 
@@ -507,6 +530,8 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data)
   gst_pad_push (ffmpegenc->srcpad, GST_DATA (outbuf));
 
   gst_buffer_unref (inbuf);
+
+  g_mutex_unlock (ffmpegenc->mainlock);
 }
 
 static void
@@ -516,6 +541,8 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstData * _data)
   GstBuffer *outbuf = NULL, *subbuf;
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) (gst_pad_get_parent (pad));
   gint size, ret_size = 0, in_size, frame_size;
+
+  g_mutex_lock (ffmpegenc->mainlock);
 
   size = GST_BUFFER_SIZE (inbuf);
 
@@ -556,6 +583,7 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstData * _data)
         gst_buffer_unref (inbuf);
       }
 
+      g_mutex_unlock (ffmpegenc->mainlock);
       return;
     }
 
@@ -587,6 +615,7 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstData * _data)
       gst_buffer_unref (inbuf);
       gst_buffer_unref (outbuf);
       gst_buffer_unref (subbuf);
+      g_mutex_unlock (ffmpegenc->mainlock);
       return;
     }
 
@@ -597,6 +626,8 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstData * _data)
 
     in_size -= frame_size;
     gst_buffer_unref (subbuf);
+
+    g_mutex_unlock (ffmpegenc->mainlock);
   }
 }
 
