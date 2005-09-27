@@ -13,7 +13,7 @@ static guint mhz = 0;
 void
 handoff_src (GstElement * src, GstBuffer * buf, gpointer user_data)
 {
-  gst_trace_read_tsc (&GST_BUFFER_TIMESTAMP (buf));
+  gst_trace_read_tsc ((gint64 *) & GST_BUFFER_TIMESTAMP (buf));
 }
 
 void
@@ -22,7 +22,7 @@ handoff_sink (GstElement * sink, GstBuffer * buf, gpointer user_data)
   guint64 end, d, avg;
   guint avg_ns;
 
-  gst_trace_read_tsc (&end);
+  gst_trace_read_tsc ((gint64 *) & end);
   d = end - GST_BUFFER_TIMESTAMP (buf);
   if (d > max)
     max = d;

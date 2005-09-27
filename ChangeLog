@@ -1,3 +1,21 @@
+2005-09-27  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (bin_element_is_semi_sink), (gst_bin_change_state):
+	use gst_object_has_ancestor().
+
+	* gst/gstobject.c: (gst_object_has_ancestor):
+	* gst/gstobject.h:
+	gst_object_has_ancestor() copied from gstbin.c as it is a
+	usefull function.
+
+	* tests/instantiate/create.c: (create_all_elements):
+	* tests/lat.c: (handoff_src), (handoff_sink):
+	* tests/sched/runxml.c: (main):
+	* tests/seeking/seeking1.c: (main):
+	* tests/threadstate/threadstate2.c: (bus_handler), (timeout_func),
+	(main):
+	Fix compilation of some tests.
+
 2005-09-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gsterror.h:

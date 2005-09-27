@@ -954,6 +954,38 @@ gst_object_unparent (GstObject * object)
 }
 
 /**
+ * gst_object_has_ancestor:
+ * @object: GstObject to check
+ * @ancestor: GstObject to check as ancestor
+ *
+ * Check if @object has an ancestor @ancestor somewhere up in
+ * the hierarchy.
+ *
+ * Returns: TRUE if @ancestor is an ancestor of @object.
+ *
+ * MT safe. Grabs and releases the object's locks.
+ */
+gboolean
+gst_object_has_ancestor (GstObject * object, GstObject * ancestor)
+{
+  GstObject *parent;
+  gboolean result = FALSE;
+
+  if (object == NULL)
+    return FALSE;
+
+  if (object == ancestor)
+    return TRUE;
+
+  parent = gst_object_get_parent (object);
+  result = gst_object_has_ancestor (parent, ancestor);
+  if (parent)
+    gst_object_unref (parent);
+
+  return result;
+}
+
+/**
  * gst_object_check_uniqueness:
  * @list: a list of #GstObject to check through
  * @name: the name to search for

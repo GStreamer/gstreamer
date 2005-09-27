@@ -44,7 +44,7 @@ main (int argc, char *argv[])
   g_print ("\n *** using testfile %s\n", argv[1]);
 
   xml = gst_xml_new ();
-  gst_xml_parse_file (xml, argv[1], NULL);
+  gst_xml_parse_file (xml, (const guchar *) argv[1], NULL);
 
   toplevelelements = gst_xml_get_topelements (xml);
 

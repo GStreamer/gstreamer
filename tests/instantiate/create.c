@@ -31,9 +31,13 @@ create_all_elements (void)
   const GList *elements;
   GstElementFactory *factory;
   GstElement *element;
+  GstRegistry *registry;
+
+  registry = gst_registry_get_default ();
 
   /* get list of elements */
-  for (elements = gst_registry_pool_feature_list (GST_TYPE_ELEMENT_FACTORY);
+  for (elements =
+      gst_registry_get_feature_list (registry, GST_TYPE_ELEMENT_FACTORY);
       elements != NULL; elements = elements->next) {
     factory = (GstElementFactory *) elements->data;
     if ((element = gst_element_factory_create (factory, "test"))) {

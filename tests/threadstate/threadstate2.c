@@ -72,7 +72,7 @@ main (int argc, char *argv[])
   g_timeout_add (2 * 1000, (GSourceFunc) timeout_func, loop);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
-  gst_bus_add_watch (bus, (GstBusHandler) bus_handler, pipeline);
+  gst_bus_add_watch (bus, GST_MESSAGE_ANY, (GstBusFunc) bus_handler, pipeline);
 
   for (x = 0; x < 10; x++) {
     g_print ("playing %d\n", x);

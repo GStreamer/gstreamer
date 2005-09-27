@@ -237,6 +237,7 @@ gchar*		gst_object_get_name_prefix	(GstObject *object);
 gboolean	gst_object_set_parent		(GstObject *object, GstObject *parent);
 GstObject*	gst_object_get_parent		(GstObject *object);
 void		gst_object_unparent		(GstObject *object);
+gboolean	gst_object_has_ancestor		(GstObject *object, GstObject *ancestor);
 
 void            gst_object_default_deep_notify 	(GObject *object, GstObject *orig, 
                                                  GParamSpec *pspec, gchar **excluded_props);

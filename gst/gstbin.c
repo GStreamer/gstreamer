@@ -824,29 +824,6 @@ bin_element_is_sink (GstElement * child, GstBin * bin)
   return is_sink ? 0 : 1;
 }
 
-/* check if object has the given ancestor somewhere up in
- * the hierarchy
- */
-static gboolean
-has_ancestor (GstObject * object, GstObject * ancestor)
-{
-  GstObject *parent;
-  gboolean result = FALSE;
-
-  if (object == NULL)
-    return FALSE;
-
-  if (object == ancestor)
-    return TRUE;
-
-  parent = gst_object_get_parent (object);
-  result = has_ancestor (parent, ancestor);
-  if (parent)
-    gst_object_unref (parent);
-
-  return result;
-}
-
 /* returns 0 when TRUE because this is a GCompareFunc.
  * This function returns elements that have no connected srcpads and
  * are therefore not reachable from a real sink. */
@@ -879,7 +856,8 @@ bin_element_is_semi_sink (GstElement * child, GstBin * bin)
       GST_DEBUG ("looking at pad %p", pads->data);
       if ((peer = gst_pad_get_peer (GST_PAD_CAST (pads->data)))) {
         connected_src =
-            has_ancestor (GST_OBJECT_CAST (peer), GST_OBJECT_CAST (bin));
+            gst_object_has_ancestor (GST_OBJECT_CAST (peer),
+            GST_OBJECT_CAST (bin));
         gst_object_unref (peer);
         if (connected_src) {
           break;

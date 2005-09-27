@@ -53,8 +53,9 @@ main (gint argc, gchar * argv[])
   g_print ("doing segment seek from 5 to 10\n");
 
   gst_pad_send_event (pad,
-      gst_event_new_segment_seek (GST_FORMAT_DEFAULT |
-          GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, 5, 10));
+      gst_event_new_seek (1.0, GST_FORMAT_DEFAULT,
+          GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SEGMENT,
+          GST_SEEK_TYPE_SET, 5, GST_SEEK_TYPE_SET, 10));
 
   format = GST_FORMAT_DEFAULT;
 
@@ -77,9 +78,10 @@ main (gint argc, gchar * argv[])
       ("doing segment seek from 50 to 55 with looping (2 times), then 20 to 25 without looping\n");
   looping = 3;
 
-  event = gst_event_new_segment_seek (GST_FORMAT_DEFAULT |
-      GST_SEEK_METHOD_SET |
-      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SEGMENT_LOOP, 50, 55);
+  event =
+      gst_event_new_seek (1.0, GST_FORMAT_DEFAULT,
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SEGMENT,
+      GST_SEEK_TYPE_SET, 50, GST_SEEK_TYPE_SET, 55);
   gst_pad_send_event (pad, event);
 
   g_signal_connect (G_OBJECT (gst_element_get_pad (fakesink, "sink")),
