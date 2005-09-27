@@ -29,9 +29,6 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
-#ifdef HAVE_FIONREAD_IN_SYS_FILIO
-#include <sys/filio.h>
-#endif
 
 GST_DEBUG_CATEGORY (tcpserversrc_debug);
 #define GST_CAT_DEFAULT tcpserversrc_debug
@@ -39,7 +36,7 @@ GST_DEBUG_CATEGORY (tcpserversrc_debug);
 #define TCP_DEFAULT_LISTEN_HOST		NULL    /* listen on all interfaces */
 #define TCP_BACKLOG			1       /* client connection queue */
 
-/* elementfactory information */
+
 static GstElementDetails gst_tcpserversrc_details =
 GST_ELEMENT_DETAILS ("TCP Server source",
     "Source/Network",
@@ -52,23 +49,19 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS_ANY);
 
 
-/* TCPServerSrc signals and args */
 enum
 {
-  LAST_SIGNAL
+  PROP_0,
+  PROP_HOST,
+  PROP_PORT,
+  PROP_PROTOCOL
 };
 
-enum
-{
-  ARG_0,
-  ARG_HOST,
-  ARG_PORT,
-  ARG_PROTOCOL
-};
 
-static void gst_tcpserversrc_base_init (gpointer g_class);
-static void gst_tcpserversrc_class_init (GstTCPServerSrc * klass);
-static void gst_tcpserversrc_init (GstTCPServerSrc * tcpserversrc);
+GST_BOILERPLATE (GstTCPServerSrc, gst_tcpserversrc, GstPushSrc,
+    GST_TYPE_PUSH_SRC);
+
+
 static void gst_tcpserversrc_finalize (GObject * gobject);
 
 static gboolean gst_tcpserversrc_start (GstBaseSrc * bsrc);
@@ -81,36 +74,6 @@ static void gst_tcpserversrc_set_property (GObject * object, guint prop_id,
 static void gst_tcpserversrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstElementClass *parent_class = NULL;
-
-/*static guint gst_tcpserversrc_signals[LAST_SIGNAL] = { 0 }; */
-
-GType
-gst_tcpserversrc_get_type (void)
-{
-  static GType tcpserversrc_type = 0;
-
-
-  if (!tcpserversrc_type) {
-    static const GTypeInfo tcpserversrc_info = {
-      sizeof (GstTCPServerSrcClass),
-      gst_tcpserversrc_base_init,
-      NULL,
-      (GClassInitFunc) gst_tcpserversrc_class_init,
-      NULL,
-      NULL,
-      sizeof (GstTCPServerSrc),
-      0,
-      (GInstanceInitFunc) gst_tcpserversrc_init,
-      NULL
-    };
-
-    tcpserversrc_type =
-        g_type_register_static (GST_TYPE_PUSH_SRC, "GstTCPServerSrc",
-        &tcpserversrc_info, 0);
-  }
-  return tcpserversrc_type;
-}
 
 static void
 gst_tcpserversrc_base_init (gpointer g_class)
@@ -124,31 +87,27 @@ gst_tcpserversrc_base_init (gpointer g_class)
 }
 
 static void
-gst_tcpserversrc_class_init (GstTCPServerSrc * klass)
+gst_tcpserversrc_class_init (GstTCPServerSrcClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
   GstPushSrcClass *gstpush_src_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstpush_src_class = (GstPushSrcClass *) klass;
-
-  parent_class = g_type_class_ref (GST_TYPE_PUSH_SRC);
 
   gobject_class->set_property = gst_tcpserversrc_set_property;
   gobject_class->get_property = gst_tcpserversrc_get_property;
   gobject_class->finalize = gst_tcpserversrc_finalize;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HOST,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HOST,
       g_param_spec_string ("host", "Host", "The hostname to listen as",
           TCP_DEFAULT_LISTEN_HOST, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
       g_param_spec_int ("port", "Port", "The port to listen to",
           0, TCP_HIGHEST_PORT, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_PROTOCOL,
+  g_object_class_install_property (gobject_class, PROP_PROTOCOL,
       g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in",
           GST_TYPE_TCP_PROTOCOL, GST_TCP_PROTOCOL_NONE, G_PARAM_READWRITE));
 
@@ -162,7 +121,7 @@ gst_tcpserversrc_class_init (GstTCPServerSrc * klass)
 }
 
 static void
-gst_tcpserversrc_init (GstTCPServerSrc * src)
+gst_tcpserversrc_init (GstTCPServerSrc * src, GstTCPServerSrcClass * g_class)
 {
   src->server_port = TCP_DEFAULT_PORT;
   src->host = g_strdup (TCP_DEFAULT_HOST);
@@ -264,13 +223,10 @@ static void
 gst_tcpserversrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstTCPServerSrc *tcpserversrc;
-
-  g_return_if_fail (GST_IS_TCPSERVERSRC (object));
-  tcpserversrc = GST_TCPSERVERSRC (object);
+  GstTCPServerSrc *tcpserversrc = GST_TCPSERVERSRC (object);
 
   switch (prop_id) {
-    case ARG_HOST:
+    case PROP_HOST:
       if (!g_value_get_string (value)) {
         g_warning ("host property cannot be NULL");
         break;
@@ -278,10 +234,10 @@ gst_tcpserversrc_set_property (GObject * object, guint prop_id,
       g_free (tcpserversrc->host);
       tcpserversrc->host = g_strdup (g_value_get_string (value));
       break;
-    case ARG_PORT:
+    case PROP_PORT:
       tcpserversrc->server_port = g_value_get_int (value);
       break;
-    case ARG_PROTOCOL:
+    case PROP_PROTOCOL:
       tcpserversrc->protocol = g_value_get_enum (value);
       break;
 
@@ -295,19 +251,16 @@ static void
 gst_tcpserversrc_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstTCPServerSrc *tcpserversrc;
-
-  g_return_if_fail (GST_IS_TCPSERVERSRC (object));
-  tcpserversrc = GST_TCPSERVERSRC (object);
+  GstTCPServerSrc *tcpserversrc = GST_TCPSERVERSRC (object);
 
   switch (prop_id) {
-    case ARG_HOST:
+    case PROP_HOST:
       g_value_set_string (value, tcpserversrc->host);
       break;
-    case ARG_PORT:
+    case PROP_PORT:
       g_value_set_int (value, tcpserversrc->server_port);
       break;
-    case ARG_PROTOCOL:
+    case PROP_PROTOCOL:
       g_value_set_enum (value, tcpserversrc->protocol);
       break;
 
