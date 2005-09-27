@@ -630,8 +630,6 @@ GST_END_TEST;
 
 GST_START_TEST (test_children_state_change_order_two_sink)
 {
-  /* current algorithm does not handle these state changes correct */
-#if 0
   GstElement *src, *tee, *identity, *sink1, *sink2, *pipeline;
   GstStateChangeReturn ret;
   GstBus *bus;
@@ -721,7 +719,6 @@ GST_START_TEST (test_children_state_change_order_two_sink)
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
 
   gst_object_unref (pipeline);
-#endif
 }
 
 GST_END_TEST;

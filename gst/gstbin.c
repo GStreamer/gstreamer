@@ -824,62 +824,6 @@ bin_element_is_sink (GstElement * child, GstBin * bin)
   return is_sink ? 0 : 1;
 }
 
-/* returns 0 when TRUE because this is a GCompareFunc.
- * This function returns elements that have no connected srcpads and
- * are therefore not reachable from a real sink. */
-/* MT safe */
-static gint
-bin_element_is_semi_sink (GstElement * child, GstBin * bin)
-{
-  int ret = 1;
-
-  /* we lock the child here for the remainder of the function to
-   * get its pads and name safely. */
-  GST_LOCK (child);
-
-  /* check if this is a sink element, these are the elements
-   * without (linked) source pads. */
-  if (child->numsrcpads == 0) {
-    /* shortcut */
-    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
-        "adding child %s as sink", GST_OBJECT_NAME (child));
-    ret = 0;
-  } else {
-    /* loop over all pads, try to figure out if this element
-     * is a semi sink because it has no linked source pads */
-    GList *pads;
-    gboolean connected_src = FALSE;
-
-    for (pads = child->srcpads; pads; pads = g_list_next (pads)) {
-      GstPad *peer;
-
-      GST_DEBUG ("looking at pad %p", pads->data);
-      if ((peer = gst_pad_get_peer (GST_PAD_CAST (pads->data)))) {
-        connected_src =
-            gst_object_has_ancestor (GST_OBJECT_CAST (peer),
-            GST_OBJECT_CAST (bin));
-        gst_object_unref (peer);
-        if (connected_src) {
-          break;
-        }
-      }
-    }
-    if (connected_src) {
-      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
-          "not adding child %s as sink: linked source pads",
-          GST_OBJECT_NAME (child));
-    } else {
-      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
-          "adding child %s as sink since it has unlinked source pads in this bin",
-          GST_OBJECT_NAME (child));
-      ret = 0;
-    }
-  }
-  GST_UNLOCK (child);
-
-  return ret;
-}
-
 static gint
 sink_iterator_filter (GstElement * child, GstBin * bin)
 {
@@ -1106,90 +1050,272 @@ done:
   return ret;
 }
 
-/**
- * gst_bin_iterate_state_order:
- * @bin: #Gstbin to iterate on
- *
- * Get an iterator for the elements in this bin in the order
- * in which a state change should be performed on them. This 
- * means that first the sinks and then the other elements will
- * be returned.
- * Each element will have its refcount increased, so unref
- * after use.
- *
- * Not implemented yet.
- *
- * MT safe.
- *
- * Returns: a #GstIterator of #GstElements. gst_iterator_free after use.
+/***********************************************
+ * Topologically sorted iterator 
+ * see http://en.wikipedia.org/wiki/Topological_sorting
  */
-GstIterator *
-gst_bin_iterate_state_order (GstBin * bin)
+typedef struct _GstBinSortIterator
 {
-  GstIterator *result;
+  GstIterator it;
+  GQueue *queue;
+  GstBin *bin;
+  gint mode;
+  GstElement *best;
+} GstBinSortIterator;
 
-  g_return_val_if_fail (GST_IS_BIN (bin), NULL);
-
-  result = NULL;
-
-  return result;
+/* add element to queue of next elements in the iterator.
+ * We push at the tail to give higher priority elements a
+ * chance first */
+static void
+add_to_queue (GQueue * queue, GstElement * element)
+{
+  GST_DEBUG ("%s add to queue", GST_ELEMENT_NAME (element));
+  gst_object_ref (element);
+  g_queue_push_tail (queue, element);
+  element->outdegree = -1;
 }
 
+/* clear the queue, unref all objects as we took a ref when
+ * we added them to the queue */
 static void
-clear_queue (GQueue * queue, gboolean unref)
+clear_queue (GQueue * queue)
 {
   gpointer p;
 
   while ((p = g_queue_pop_head (queue)))
-    if (unref)
-      gst_object_unref (p);
+    gst_object_unref (p);
 }
 
+/* set all outdegrees to 0. Elements marked as a sink are
+ * added to the queue immediatly. */
 static void
-remove_all_from_queue (GQueue * queue, gpointer elem, gboolean unref)
+reset_outdegree (GstElement * element, GstBinSortIterator * bit)
 {
-  gpointer p;
-
-  while ((p = g_queue_find (queue, elem))) {
-    if (unref)
-      gst_object_unref (elem);
-    g_queue_delete_link (queue, p);
+  /* sinks are added right away */
+  if (GST_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK)) {
+    add_to_queue (bit->queue, element);
+  } else {
+    /* others are marked with 0 and handled when sinks are done */
+    element->outdegree = 0;
   }
 }
 
-/* this function is called with the STATE_LOCK held. It works
- * as follows:
+/* adjust the outdegree of all elements connected to the given
+ * element. If an outdegree of an element drops to 0, it is
+ * added to the queue of elements to schedule next.
  *
- * 1) put all sink elements on the queue.
- * 2) put all semisink elements on the queue.
- * 3) change state of elements in queue, put linked elements to queue.
- * 4) while queue not empty goto 3)
- *
- * This will effectively change the state of all elements in the bin
- * from the sinks to the sources. We have to change the states this
- * way so that when a source element pushes data, the downstream element
- * is in the right state to receive the data.
- *
- * MT safe.
+ * We have to make sure not to cross the bin boundary this element
+ * belongs to.
  */
-/* FIXME,  make me more elegant, want to use a topological sort algorithm
- * based on indegrees (or outdegrees in our case) */
+static void
+update_outdegree (GstElement * element, GstBinSortIterator * bit)
+{
+  gboolean linked = FALSE;
+
+  GST_LOCK (element);
+  /* don't touch outdegree is element has no sourcepads */
+  if (element->numsinkpads != 0) {
+    /* loop over all sinkpads, decrement outdegree for all connected
+     * elements in this bin */
+    GList *pads;
+
+    for (pads = element->sinkpads; pads; pads = g_list_next (pads)) {
+      GstPad *peer;
+
+      if ((peer = gst_pad_get_peer (GST_PAD_CAST (pads->data)))) {
+        GstElement *peer_element;
+
+        if ((peer_element = gst_pad_get_parent_element (peer))) {
+          GST_LOCK (peer_element);
+          if (GST_OBJECT_CAST (peer_element)->parent ==
+              GST_OBJECT_CAST (bit->bin)) {
+
+            GST_DEBUG ("change element %s, degree %d->%d, linked to %s",
+                GST_ELEMENT_NAME (peer_element),
+                peer_element->outdegree, peer_element->outdegree + bit->mode,
+                GST_ELEMENT_NAME (element));
+
+            /* update outdegree */
+            peer_element->outdegree += bit->mode;
+            if (peer_element->outdegree == 0) {
+              /* outdegree hit 0, add to queue */
+              add_to_queue (bit->queue, peer_element);
+            }
+            linked = TRUE;
+          }
+          GST_UNLOCK (peer_element);
+          gst_object_unref (peer_element);
+        }
+        gst_object_unref (peer);
+      }
+    }
+  }
+  if (!linked) {
+    GST_DEBUG ("element %s not linked to anything", GST_ELEMENT_NAME (element));
+  }
+  GST_UNLOCK (element);
+}
+
+/* find the next best element not handled yet. This is the one
+ * with the lowest non-negative outdegree */
+static void
+find_element (GstElement * element, GstBinSortIterator * bit)
+{
+  gint outdegree;
+
+  /* element is already handled */
+  if ((outdegree = element->outdegree) < 0)
+    return;
+
+  /* first element or element with smaller outdegree */
+  if (bit->best == NULL || bit->best->outdegree > outdegree) {
+    bit->best = element;
+  }
+}
+
+/* get next element in iterator. the returned element has the
+ * refcount increased */
+static GstIteratorResult
+gst_bin_sort_iterator_next (GstBinSortIterator * bit, gpointer * result)
+{
+  /* empty queue, we have to find a next best element */
+  if (g_queue_is_empty (bit->queue)) {
+    bit->best = NULL;
+    g_list_foreach (bit->bin->children, (GFunc) find_element, bit);
+    if (bit->best) {
+      if (bit->best->outdegree != 0) {
+        /* we don't fail on this one yet */
+        g_warning ("loop detected in the graph !!");
+      }
+      /* best unhandled elements, add to queue */
+      GST_DEBUG ("queue empty, next best: %s", GST_ELEMENT_NAME (bit->best));
+      gst_object_ref (bit->best);
+      bit->best->outdegree = -1;
+      *result = bit->best;
+    } else {
+      GST_DEBUG ("queue empty, elements exhausted");
+      /* no more unhandled elements, we are done */
+      return GST_ITERATOR_DONE;
+    }
+  } else {
+    /* everything added to the queue got reffed */
+    *result = g_queue_pop_head (bit->queue);
+  }
+
+  GST_DEBUG ("queue head gives %s", GST_ELEMENT_NAME (*result));
+  /* update outdegrees of linked elements */
+  update_outdegree (GST_ELEMENT_CAST (*result), bit);
+
+  return GST_ITERATOR_OK;
+}
+
+/* clear queues, recalculate the outdegrees and restart. */
+static void
+gst_bin_sort_iterator_resync (GstBinSortIterator * bit)
+{
+  clear_queue (bit->queue);
+  /* reset outdegrees */
+  g_list_foreach (bit->bin->children, (GFunc) reset_outdegree, bit);
+  /* calc outdegrees, incrementing */
+  bit->mode = 1;
+  g_list_foreach (bit->bin->children, (GFunc) update_outdegree, bit);
+  /* for the rest of the function we decrement the outdegrees */
+  bit->mode = -1;
+}
+
+/* clear queues, unref bin and free iterator. */
+static void
+gst_bin_sort_iterator_free (GstBinSortIterator * bit)
+{
+  clear_queue (bit->queue);
+  g_queue_free (bit->queue);
+  gst_object_unref (bit->bin);
+  g_free (bit);
+}
+
+/**
+ * gst_bin_iterate_sorted:
+ * @bin: #Gstbin to iterate on
+ *
+ * Get an iterator for the elements in this bin in topologically
+ * sorted order. This means that the elements are returned from
+ * the most downstream elements (sinks) to the sources.
+ *
+ * This function is used internally to perform the state changes 
+ * of the bin elements.
+ *
+ * Each element will have its refcount increased, so unref
+ * after use.
+ *
+ * MT safe. 
+ *
+ * FIXME: No two iterators can run at the same time since the iterators
+ * use a shared element field.
+ *
+ * Returns: a #GstIterator of #GstElements. gst_iterator_free after use.
+ */
+GstIterator *
+gst_bin_iterate_sorted (GstBin * bin)
+{
+  GstBinSortIterator *result;
+
+  g_return_val_if_fail (GST_IS_BIN (bin), NULL);
+
+  GST_LOCK (bin);
+  gst_object_ref (bin);
+  /* we don't need a NextFunction because we ref the items in the _next
+   * method already */
+  result = (GstBinSortIterator *)
+      gst_iterator_new (sizeof (GstBinSortIterator),
+      GST_GET_LOCK (bin),
+      &bin->children_cookie,
+      (GstIteratorNextFunction) gst_bin_sort_iterator_next,
+      (GstIteratorItemFunction) NULL,
+      (GstIteratorResyncFunction) gst_bin_sort_iterator_resync,
+      (GstIteratorFreeFunction) gst_bin_sort_iterator_free);
+  result->queue = g_queue_new ();
+  result->bin = bin;
+  gst_bin_sort_iterator_resync (result);
+  GST_UNLOCK (bin);
+
+  return (GstIterator *) result;
+}
+
+static GstStateChangeReturn
+gst_bin_element_set_state (GstBin * bin, GstElement * element, GstState pending)
+{
+  GstStateChangeReturn ret;
+  gboolean locked;
+
+  /* peel off the locked flag */
+  GST_LOCK (element);
+  locked = GST_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
+  GST_UNLOCK (element);
+
+  /* skip locked elements */
+  if (G_UNLIKELY (locked)) {
+    ret = GST_STATE_CHANGE_SUCCESS;
+    goto done;
+  }
+
+  /* change state */
+  ret = gst_element_set_state (element, pending);
+
+done:
+  return ret;
+}
+
 static GstStateChangeReturn
 gst_bin_change_state (GstElement * element, GstStateChange transition)
 {
   GstBin *bin;
   GstStateChangeReturn ret;
   GstState old_state, pending;
-  gboolean have_async = FALSE;
-  gboolean have_no_preroll = FALSE;
-  GList *children;
-  guint32 children_cookie;
-  GQueue *elem_queue;           /* list of elements waiting for a state change */
-  GQueue *semi_queue;           /* list of elements with no connected srcpads */
-  GQueue *temp;                 /* queue of leftovers */
+  gboolean have_async;
+  gboolean have_no_preroll;
   GstClockTime base_time;
-
-  bin = GST_BIN (element);
+  GstIterator *it;
+  gboolean done;
 
   /* we don't need to take the STATE_LOCK, it is already taken */
   old_state = GST_STATE (element);
@@ -1203,219 +1329,83 @@ gst_bin_change_state (GstElement * element, GstStateChange transition)
   if (pending == GST_STATE_VOID_PENDING)
     return GST_STATE_CHANGE_SUCCESS;
 
+  bin = GST_BIN_CAST (element);
+
   /* Clear eosed element list on READY-> PAUSED */
   if (transition == GST_STATE_CHANGE_READY_TO_PAUSED) {
     g_list_free (bin->eosed);
     bin->eosed = NULL;
   }
 
-  /* all elements added to these queues should have their refcount
-   * incremented */
-  elem_queue = g_queue_new ();
-  semi_queue = g_queue_new ();
-  temp = g_queue_new ();
-
-  /* first step, find all sink elements, these are the elements
-   * without (linked) source pads. */
-  GST_LOCK (bin);
+  /* iterate in state change order */
+  it = gst_bin_iterate_sorted (bin);
 
 restart:
   /* take base time */
   base_time = element->base_time;
 
-  /* make sure queues are empty, they could be filled when
-   * restarting. */
-  clear_queue (elem_queue, TRUE);
-  clear_queue (semi_queue, TRUE);
-  clear_queue (temp, TRUE);
+  have_async = FALSE;
+  have_no_preroll = FALSE;
 
-  children = bin->children;
-  children_cookie = bin->children_cookie;
-  GST_DEBUG_OBJECT (bin, "reffing and examining children");
-  while (children) {
-    GstElement *child = GST_ELEMENT_CAST (children->data);
+  done = FALSE;
+  while (!done) {
+    gpointer data;
 
-    gst_object_ref (child);
-    GST_UNLOCK (bin);
+    switch (gst_iterator_next (it, &data)) {
+      case GST_ITERATOR_OK:
+      {
+        GstElement *element;
 
-    if (bin_element_is_sink (child, bin) == 0) {
-      g_queue_push_tail (elem_queue, child);
-    } else if (bin_element_is_semi_sink (child, bin) == 0) {
-      g_queue_push_tail (semi_queue, child);
-    } else {
-      g_queue_push_tail (temp, child);
-    }
+        element = GST_ELEMENT_CAST (data);
 
-    GST_LOCK (bin);
-    if (G_UNLIKELY (children_cookie != bin->children_cookie)) {
-      GST_INFO_OBJECT (bin, "bin->children_cookie changed, restarting");
-      /* restart will unref the children in the queues so that we don't
-       * leak refcounts. */
-      goto restart;
-    }
-    children = g_list_next (children);
-  }
-  GST_DEBUG_OBJECT (bin, "reffed and examined children");
-  GST_UNLOCK (bin);
+        /* set base time on element */
+        gst_element_set_base_time (element, base_time);
 
-  /* after this point new elements can be added/removed from the
-   * bin. We operate on the snapshot taken above. Applications
-   * should serialize their add/remove and set_state. */
+        /* set state now */
+        ret = gst_bin_element_set_state (bin, element, pending);
 
-  /* if we don't have real sinks, we continue with the other elements, there
-   * has to be at least one element in the semi queue. */
-  if (g_queue_is_empty (elem_queue) && !g_queue_is_empty (semi_queue)) {
-    GQueue *q = elem_queue;
-
-    /* we swap the queues as oposed to copy them over */
-    elem_queue = semi_queue;
-    semi_queue = q;
-  }
-
-  /* second step, change state of elements in the queue */
-  GST_DEBUG_OBJECT (bin, "change state of elements in the queue");
-  while (!g_queue_is_empty (elem_queue)) {
-    GstElement *qelement;
-    GList *pads;
-    gboolean locked;
-
-    /* take element */
-    qelement = g_queue_pop_head (elem_queue);
-    /* we don't need any duplicates in the other queue anymore */
-    remove_all_from_queue (semi_queue, qelement, TRUE);
-    remove_all_from_queue (temp, qelement, TRUE);
-
-    /* queue all elements connected to the sinkpads of this element */
-    GST_LOCK (qelement);
-    pads = qelement->sinkpads;
-    while (pads) {
-      GstPad *pad = GST_PAD_CAST (pads->data);
-      GstPad *peer;
-
-      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-          "found sinkpad %s:%s", GST_DEBUG_PAD_NAME (pad));
-
-      peer = gst_pad_get_peer (pad);
-      if (peer) {
-        GstObject *peer_parent;
-
-        /*  get parent */
-        peer_parent = gst_object_get_parent (GST_OBJECT (peer));
-
-        /* if we have an element parent, follow it */
-        if (peer_parent && GST_IS_ELEMENT (peer_parent)) {
-          GstObject *parent;
-
-          /* see if this element is in the bin we are currently handling */
-          parent = gst_object_get_parent (peer_parent);
-          if (parent) {
-            if (parent == GST_OBJECT_CAST (bin)) {
-              GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-                  "adding element %s to queue", GST_ELEMENT_NAME (peer_parent));
-
-              /* make sure we don't have duplicates */
-              remove_all_from_queue (semi_queue, peer_parent, TRUE);
-              remove_all_from_queue (elem_queue, peer_parent, TRUE);
-              remove_all_from_queue (temp, peer_parent, TRUE);
-
-              /* was reffed before pushing on the queue by the
-               * gst_object_get_parent() call we used to get the element. */
-              g_queue_push_tail (elem_queue, peer_parent);
-              /* so that we don't unref it */
-              peer_parent = NULL;
-            } else {
-              GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-                  "not adding element %s to queue, it is in another bin",
-                  GST_ELEMENT_NAME (peer_parent));
-            }
-            gst_object_unref (parent);
-          }
+        switch (ret) {
+          case GST_STATE_CHANGE_SUCCESS:
+            GST_CAT_DEBUG (GST_CAT_STATES,
+                "child '%s' changed state to %d(%s) successfully",
+                GST_ELEMENT_NAME (element), pending,
+                gst_element_state_get_name (pending));
+            break;
+          case GST_STATE_CHANGE_ASYNC:
+            GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+                "child '%s' is changing state asynchronously",
+                GST_ELEMENT_NAME (element));
+            have_async = TRUE;
+            break;
+          case GST_STATE_CHANGE_FAILURE:
+            GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+                "child '%s' failed to go to state %d(%s)",
+                GST_ELEMENT_NAME (element),
+                pending, gst_element_state_get_name (pending));
+            gst_object_unref (element);
+            goto done;
+          case GST_STATE_CHANGE_NO_PREROLL:
+            GST_CAT_DEBUG (GST_CAT_STATES,
+                "child '%s' changed state to %d(%s) successfully without preroll",
+                GST_ELEMENT_NAME (element), pending,
+                gst_element_state_get_name (pending));
+            have_no_preroll = TRUE;
+            break;
+          default:
+            g_assert_not_reached ();
+            break;
         }
-        if (peer_parent)
-          gst_object_unref (peer_parent);
-
-        gst_object_unref (peer);
-      } else {
-        GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-            "pad %s:%s does not have a peer", GST_DEBUG_PAD_NAME (pad));
+        gst_object_unref (element);
+        break;
       }
-      pads = g_list_next (pads);
-    }
-    /* peel off the locked flag and release the element lock */
-    locked = GST_FLAG_IS_SET (qelement, GST_ELEMENT_LOCKED_STATE);
-    GST_UNLOCK (qelement);
-
-    /* skip locked elements */
-    if (G_UNLIKELY (locked))
-      goto next_element;
-
-    /* set base time on element */
-    gst_element_set_base_time (qelement, base_time);
-
-    /* then change state */
-    ret = gst_element_set_state (qelement, pending);
-
-    /* the set state could have cause elements to be added/removed,
-     * we support that. */
-    GST_LOCK (bin);
-    if (G_UNLIKELY (children_cookie != bin->children_cookie)) {
-      gst_object_unref (qelement);
-      goto restart;
-    }
-    GST_UNLOCK (bin);
-
-    switch (ret) {
-      case GST_STATE_CHANGE_SUCCESS:
-        GST_CAT_DEBUG (GST_CAT_STATES,
-            "child '%s' changed state to %d(%s) successfully",
-            GST_ELEMENT_NAME (qelement), pending,
-            gst_element_state_get_name (pending));
-        break;
-      case GST_STATE_CHANGE_ASYNC:
-        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
-            "child '%s' is changing state asynchronously",
-            GST_ELEMENT_NAME (qelement));
-        have_async = TRUE;
-        break;
-      case GST_STATE_CHANGE_FAILURE:
-        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
-            "child '%s' failed to go to state %d(%s)",
-            GST_ELEMENT_NAME (qelement),
-            pending, gst_element_state_get_name (pending));
-        ret = GST_STATE_CHANGE_FAILURE;
-        /* release refcount of element we popped off the queue */
-        gst_object_unref (qelement);
-        goto exit;
-      case GST_STATE_CHANGE_NO_PREROLL:
-        GST_CAT_DEBUG (GST_CAT_STATES,
-            "child '%s' changed state to %d(%s) successfully without preroll",
-            GST_ELEMENT_NAME (qelement), pending,
-            gst_element_state_get_name (pending));
-        have_no_preroll = TRUE;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (it);
+        goto restart;
         break;
       default:
-        g_assert_not_reached ();
+      case GST_ITERATOR_DONE:
+        done = TRUE;
         break;
-    }
-  next_element:
-    gst_object_unref (qelement);
-
-    /* if queue is empty now, continue with a non-sink */
-    if (g_queue_is_empty (elem_queue)) {
-      GstElement *non_sink;
-
-      GST_DEBUG ("sinks and upstream elements exhausted");
-      non_sink = g_queue_pop_head (semi_queue);
-      if (non_sink) {
-        GST_DEBUG ("found lefover semi-sink %s", GST_OBJECT_NAME (non_sink));
-        g_queue_push_tail (elem_queue, non_sink);
-      } else {
-        non_sink = g_queue_pop_head (temp);
-        if (non_sink) {
-          GST_DEBUG ("found lefover non-sink %s", GST_OBJECT_NAME (non_sink));
-          g_queue_push_tail (elem_queue, non_sink);
-        }
-      }
     }
   }
 
@@ -1427,21 +1417,14 @@ restart:
     ret = parent_class->change_state (element, transition);
   }
 
+done:
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
       "done changing bin's state from %s to %s, now in %s, ret %d",
       gst_element_state_get_name (old_state),
       gst_element_state_get_name (pending),
       gst_element_state_get_name (GST_STATE (element)), ret);
 
-exit:
-  /* release refcounts in queue, should normally be empty unless we
-   * had an error. */
-  clear_queue (elem_queue, TRUE);
-  clear_queue (semi_queue, TRUE);
-  clear_queue (temp, TRUE);
-  g_queue_free (elem_queue);
-  g_queue_free (semi_queue);
-  g_queue_free (temp);
+  gst_iterator_free (it);
 
   return ret;
 }

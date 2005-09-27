@@ -1,5 +1,23 @@
 2005-09-27  Wim Taymans  <wim@fluendo.com>
 
+	* check/gst/gstbin.c: (GST_START_TEST):
+	Enable check that works now.
+
+	* gst/gstbin.c: (add_to_queue), (clear_queue), (reset_outdegree),
+	(update_outdegree), (find_element), (gst_bin_sort_iterator_next),
+	(gst_bin_sort_iterator_resync), (gst_bin_sort_iterator_free),
+	(gst_bin_iterate_sorted), (gst_bin_element_set_state),
+	(gst_bin_change_state):
+	* gst/gstbin.h:
+	Redid the state change algorithm using a topological sort algo.
+	Handles all cases correctly.
+	Exposed iterator for state change order.
+
+	* gst/gstelement.h:
+	Temp storage for state changes. Need to get rid of this soon.
+
+2005-09-27  Wim Taymans  <wim@fluendo.com>
+
 	* gst/elements/gsttee.c: (gst_tee_init), (gst_tee_do_push):
 	* gst/gstutils.c: (intersect_caps_func), (gst_pad_proxy_getcaps),
 	(link_fold_func), (gst_pad_proxy_setcaps):

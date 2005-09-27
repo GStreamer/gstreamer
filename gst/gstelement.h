@@ -304,6 +304,10 @@ struct _GstElement
   GList                *sinkpads;
   guint32               pads_cookie;
 
+  /* used in bin state change to calculate number of connections
+   * on the srcpad */
+  gint			outdegree;
+
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
