@@ -417,7 +417,7 @@ gst_dp_buffer_from_header (guint header_length, const guint8 * header)
   GstBuffer *buffer;
 
   g_return_val_if_fail (GST_DP_HEADER_PAYLOAD_TYPE (header) ==
-      GST_DP_PAYLOAD_BUFFER, FALSE);
+      GST_DP_PAYLOAD_BUFFER, NULL);
   buffer =
       gst_buffer_new_and_alloc ((guint) GST_DP_HEADER_PAYLOAD_LENGTH (header));
   GST_BUFFER_TIMESTAMP (buffer) = GST_DP_HEADER_TIMESTAMP (header);
@@ -446,10 +446,10 @@ gst_dp_caps_from_packet (guint header_length, const guint8 * header,
   GstCaps *caps;
   const gchar *string;
 
-  g_return_val_if_fail (header, FALSE);
-  g_return_val_if_fail (payload, FALSE);
+  g_return_val_if_fail (header, NULL);
+  g_return_val_if_fail (payload, NULL);
   g_return_val_if_fail (GST_DP_HEADER_PAYLOAD_TYPE (header) ==
-      GST_DP_PAYLOAD_CAPS, FALSE);
+      GST_DP_PAYLOAD_CAPS, NULL);
 
   string = (gchar *) payload;
   caps = gst_caps_from_string (string);
@@ -473,7 +473,7 @@ gst_dp_event_from_packet (guint header_length, const guint8 * header,
   GstEvent *event = NULL;
   GstEventType type;
 
-  g_return_val_if_fail (header, FALSE);
+  g_return_val_if_fail (header, NULL);
   /* payload can be NULL, e.g. for an EOS event */
 
   type = GST_DP_HEADER_PAYLOAD_TYPE (header) - GST_DP_PAYLOAD_EVENT_NONE;
