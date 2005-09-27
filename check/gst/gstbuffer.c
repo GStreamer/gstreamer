@@ -191,6 +191,82 @@ GST_START_TEST (test_span)
 GST_END_TEST;
 
 
+static const char ro_memory[] = "abcdefghijklmnopqrstuvwxyz";
+
+static GstBuffer *
+create_read_only_buffer (void)
+{
+  GstBuffer *buf;
+
+  buf = (GstBuffer *) gst_mini_object_new (GST_TYPE_BUFFER);
+
+  /* assign some read-only data to the new buffer */
+  GST_BUFFER_DATA (buf) = (guint8 *) ro_memory;
+  GST_BUFFER_SIZE (buf) = sizeof (ro_memory);
+
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_READONLY);
+
+  return buf;
+}
+
+GST_START_TEST (test_make_writable)
+{
+  GstBuffer *buf, *buf2;
+
+  /* create read-only buffer and make it writable */
+  buf = create_read_only_buffer ();
+  fail_unless (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_READONLY),
+      "read-only buffer should have read-only flag set");
+  buf = gst_buffer_make_writable (buf);
+  fail_unless (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_READONLY),
+      "writable buffer must not have read-only flag set");
+  GST_BUFFER_DATA (buf)[4] = 'a';
+  gst_buffer_unref (buf);
+
+  /* alloc'ed buffer with refcount 1 should be writable */
+  buf = gst_buffer_new_and_alloc (32);
+  fail_unless (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_READONLY),
+      "_new_and_alloc'ed buffer must not have read-only flag set");
+  buf2 = gst_buffer_make_writable (buf);
+  fail_unless (buf == buf2,
+      "_make_writable() should have returned same buffer");
+  gst_buffer_unref (buf2);
+
+  /* alloc'ed buffer with refcount >1 should be copied */
+  buf = gst_buffer_new_and_alloc (32);
+  fail_unless (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_READONLY),
+      "_new_and_alloc'ed buffer must not have read-only flag set");
+  gst_buffer_ref (buf);
+  buf2 = gst_buffer_make_writable (buf);
+  fail_unless (buf != buf2, "_make_writable() should have returned a copy!");
+  gst_buffer_unref (buf2);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_subbuffer_make_writable)
+{
+  GstBuffer *buf, *sub_buf;
+
+  /* create sub-buffer of read-only buffer and make it writable */
+  buf = create_read_only_buffer ();
+  fail_unless (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_READONLY),
+      "read-only buffer should have read-only flag set");
+
+  sub_buf = gst_buffer_create_sub (buf, 0, 8);
+  fail_unless (GST_BUFFER_FLAG_IS_SET (sub_buf, GST_BUFFER_FLAG_READONLY),
+      "sub-buffer of read-only buffer should have read-only flag set");
+
+  sub_buf = gst_buffer_make_writable (sub_buf);
+  fail_unless (!GST_BUFFER_FLAG_IS_SET (sub_buf, GST_BUFFER_FLAG_READONLY),
+      "writable buffer must not have read-only flag set");
+  GST_BUFFER_DATA (sub_buf)[4] = 'a';
+  gst_buffer_unref (sub_buf);
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 Suite *
 gst_test_suite (void)
 {
@@ -200,6 +276,8 @@ gst_test_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_caps);
   tcase_add_test (tc_chain, test_subbuffer);
+  tcase_add_test (tc_chain, test_subbuffer_make_writable);
+  tcase_add_test (tc_chain, test_make_writable);
   tcase_add_test (tc_chain, test_is_span_fast);
   tcase_add_test (tc_chain, test_span);
   return s;

@@ -392,6 +392,7 @@ gst_subbuffer_finalize (GstSubBuffer * buffer)
 static void
 gst_subbuffer_init (GTypeInstance * instance, gpointer g_class)
 {
+  GST_BUFFER_FLAG_SET (GST_BUFFER_CAST (instance), GST_BUFFER_FLAG_READONLY);
 }
 
 /**

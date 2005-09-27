@@ -1,3 +1,17 @@
+2005-09-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstbuffer.c: (gst_subbuffer_init):
+	  Set READONLY flag on subbuffers, so that gst_buffer_make_writable()
+	  works correctly in all circumstances (we could have just copied
+	  the parent buffer's readonly flag, but conceptually it seems
+	  cleaner to mark all subbuffers as read-only). (based on patch
+	  by Alessandro Decina, #314710).
+	
+	* check/gst/gstbuffer.c: (create_read_only_buffer),
+	(test_make_writable), (test_subbuffer_make_writable),
+	(gst_test_suite):
+	  Add some tests for gst_buffer_make_writable().
+
 2005-09-27  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (bin_element_is_semi_sink), (gst_bin_change_state):
