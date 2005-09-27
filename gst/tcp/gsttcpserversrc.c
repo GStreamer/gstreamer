@@ -186,46 +186,30 @@ static GstFlowReturn
 gst_tcpserversrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
   GstTCPServerSrc *src;
-  size_t readsize;
-  int ret;
-  GstBuffer *buf = NULL;
-  GstCaps *caps;
+  GstFlowReturn ret;
 
   src = GST_TCPSERVERSRC (psrc);
 
-  g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_TCPSERVERSRC_OPEN),
-      GST_FLOW_ERROR);
+  if (!GST_FLAG_IS_SET (src, GST_TCPSERVERSRC_OPEN))
+    goto wrong_state;
 
-  /* read the buffer header if we're using a protocol */
+  GST_LOG_OBJECT (src, "asked for a buffer");
+
   switch (src->protocol) {
     case GST_TCP_PROTOCOL_NONE:
-    {
-      fd_set testfds;
-
-      /* do a blocking select on the socket */
-      FD_ZERO (&testfds);
-      FD_SET (src->client_sock_fd, &testfds);
-
-      /* no action (0) is an error too in our case */
-      if ((ret =
-              select (src->client_sock_fd + 1, &testfds, (fd_set *) 0,
-                  (fd_set *) 0, 0)) <= 0)
-        goto select_error;
-
-      /* ask how much is available for reading on the socket */
-      if ((ret = ioctl (src->client_sock_fd, FIONREAD, &readsize)) < 0)
-        goto ioctl_error;
-
-      buf = gst_buffer_new_and_alloc (readsize);
+      ret = gst_tcp_read_buffer (GST_ELEMENT (src), src->client_sock_fd, -1,
+          outbuf);
       break;
-    }
+
     case GST_TCP_PROTOCOL_GDP:
-      /* if we haven't received caps yet, we should get them first */
       if (!src->caps_received) {
+        GstCaps *caps;
         gchar *string;
 
-        if (!(caps =
-                gst_tcp_gdp_read_caps (GST_ELEMENT (src), src->client_sock_fd)))
+        ret = gst_tcp_gdp_read_caps (GST_ELEMENT (src), src->client_sock_fd, -1,
+            &caps);
+
+        if (ret != GST_FLOW_OK)
           goto gdp_caps_read_error;
 
         src->caps_received = TRUE;
@@ -236,82 +220,45 @@ gst_tcpserversrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
         gst_pad_set_caps (GST_BASE_SRC_PAD (psrc), caps);
       }
 
-      /* now receive the buffer header */
-      if (!(buf =
-              gst_tcp_gdp_read_buffer (GST_ELEMENT (src), src->client_sock_fd)))
-        goto gdp_buffer_read_error;
+      ret = gst_tcp_gdp_read_buffer (GST_ELEMENT (src), src->client_sock_fd, -1,
+          outbuf);
 
-      GST_LOG_OBJECT (src, "Going to read data from socket into buffer %p",
-          buf);
+      if (ret == GST_FLOW_OK)
+        gst_buffer_set_caps (*outbuf, GST_PAD_CAPS (GST_BASE_SRC_PAD (src)));
 
-      /* use this new buffer to read data into */
-      readsize = GST_BUFFER_SIZE (buf);
       break;
+
     default:
-      g_warning ("Unhandled protocol type");
+      /* need to assert as buf == NULL */
+      g_assert ("Unhandled protocol type");
       break;
   }
 
-  GST_LOG_OBJECT (src, "Reading %d bytes", readsize);
-  if ((ret =
-          gst_tcp_socket_read (src->client_sock_fd, GST_BUFFER_DATA (buf),
-              readsize)) < 0)
-    goto read_error;
-
-  /* if we read 0 bytes, and we're blocking, we hit eos */
-  if (ret == 0)
-    goto hit_eos;
-
-  readsize = ret;
-  GST_LOG_OBJECT (src, "Read %d bytes", readsize);
-  GST_BUFFER_SIZE (buf) = readsize;
-  GST_BUFFER_OFFSET (buf) = src->curoffset;
-  GST_BUFFER_OFFSET_END (buf) = src->curoffset + readsize;
-  src->curoffset += readsize;
-
-  *outbuf = buf;
-
-  return GST_FLOW_OK;
-
-  /* ERROR */
-select_error:
-  {
-    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-        ("select failed: %s", g_strerror (errno)));
-    return GST_FLOW_ERROR;
+  if (ret == GST_FLOW_OK) {
+    GST_LOG_OBJECT (src,
+        "Returning buffer from _get of size %d, ts %"
+        GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT
+        ", offset %" G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT,
+        GST_BUFFER_SIZE (*outbuf),
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (*outbuf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (*outbuf)),
+        GST_BUFFER_OFFSET (*outbuf), GST_BUFFER_OFFSET_END (*outbuf));
   }
-ioctl_error:
+
+  return ret;
+
+wrong_state:
   {
-    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-        ("ioctl failed: %s", g_strerror (errno)));
-    return GST_FLOW_ERROR;
+    GST_DEBUG_OBJECT (src, "connection to closed, cannot read data");
+    return GST_FLOW_WRONG_STATE;
   }
 gdp_caps_read_error:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("Could not read caps through GDP"));
-    return GST_FLOW_ERROR;
-  }
-gdp_buffer_read_error:
-  {
-    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-        ("Could not read buffer header through GDP"));
-    return GST_FLOW_ERROR;
-  }
-read_error:
-  {
-    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
-    gst_buffer_unref (buf);
-    return GST_FLOW_ERROR;
-  }
-hit_eos:
-  {
-    GST_DEBUG ("blocking read returns 0, EOS");
-    gst_buffer_unref (buf);
-    return GST_FLOW_WRONG_STATE;
+    return ret;
   }
 }
-
 
 static void
 gst_tcpserversrc_set_property (GObject * object, guint prop_id,

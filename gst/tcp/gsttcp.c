@@ -30,6 +30,11 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
+
+#ifdef HAVE_FIONREAD_IN_SYS_FILIO
+#include <sys/filio.h>
+#endif
 
 #include <glib.h>
 #include <gst/gst.h>
@@ -125,27 +130,84 @@ gst_tcp_socket_write (int socket, const void *buf, size_t count)
  * = 0: EOF
  * > 0: bytes read
  */
-gint
-gst_tcp_socket_read (int socket, void *buf, size_t count)
+static GstFlowReturn
+gst_tcp_socket_read (GstElement * this, int socket, void *buf, size_t count,
+    int cancel_fd)
 {
-  size_t bytes_read = 0;
+  fd_set testfds;
+  int maxfdp1;
+  ssize_t n;
+  size_t bytes_read;
+  int num_to_read;
+
+  bytes_read = 0;
 
   while (bytes_read < count) {
-    ssize_t ret = read (socket, buf + bytes_read,
-        count - bytes_read);
+    /* do a blocking select on the socket */
+    FD_ZERO (&testfds);
+    FD_SET (socket, &testfds);
+    if (cancel_fd >= 0)
+      FD_SET (cancel_fd, &testfds);
+    maxfdp1 = MAX (socket, cancel_fd) + 1;
 
-    if (ret < 0)
-      GST_WARNING ("error while reading: %s", g_strerror (errno));
-    if (ret <= 0)
-      return bytes_read;
-    bytes_read += ret;
+    /* no action (0) is an error too in our case */
+    if (select (maxfdp1, &testfds, NULL, NULL, 0) <= 0)
+      goto select_error;
+
+    if (cancel_fd >= 0 && FD_ISSET (cancel_fd, &testfds))
+      goto cancelled;
+
+    /* ask how much is available for reading on the socket */
+    if (ioctl (socket, FIONREAD, &num_to_read) < 0)
+      goto ioctl_error;
+
+    /* sizeof(ssize_t) >= sizeof(int), so I know num_to_read <= SSIZE_MAX */
+
+    num_to_read = MIN (num_to_read, count - bytes_read);
+
+    n = read (socket, ((guint8 *) buf) + bytes_read, num_to_read);
+
+    if (n < 0)
+      goto read_error;
+
+    if (n < num_to_read)
+      goto short_read;
+
+    bytes_read += num_to_read;
   }
 
-  if (bytes_read < 0)
-    GST_WARNING ("error while reading: %s", g_strerror (errno));
-  else
-    GST_LOG ("read %d bytes succesfully", bytes_read);
-  return bytes_read;
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+select_error:
+  {
+    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
+        ("select failed: %s", g_strerror (errno)));
+    return GST_FLOW_ERROR;
+  }
+cancelled:
+  {
+    GST_DEBUG_OBJECT (this, "Select was cancelled");
+    return GST_FLOW_WRONG_STATE;
+  }
+ioctl_error:
+  {
+    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
+        ("ioctl failed: %s", g_strerror (errno)));
+    return GST_FLOW_ERROR;
+  }
+read_error:
+  {
+    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
+        ("read failed: %s", g_strerror (errno)));
+    return GST_FLOW_ERROR;
+  }
+short_read:
+  {
+    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
+        ("short read: wanted %d bytes, got %d", num_to_read, n));
+    return GST_FLOW_ERROR;
+  }
 }
 
 /* close the socket and reset the fd.  Used to clean up after errors. */
@@ -162,165 +224,246 @@ gst_tcp_socket_close (int *socket)
  * - NULL, indicating a connection close or an error, to be handled with
  *         EOS
  */
-GstBuffer *
-gst_tcp_gdp_read_buffer (GstElement * this, int socket)
+GstFlowReturn
+gst_tcp_read_buffer (GstElement * this, int socket, int cancel_fd,
+    GstBuffer ** buf)
 {
-  size_t header_length = GST_DP_HEADER_LENGTH;
-  size_t readsize;
-  guint8 *header = NULL;
-  ssize_t ret;
-  GstBuffer *buffer;
+  fd_set testfds;
+  int ret;
+  int maxfdp1;
+  ssize_t bytes_read;
+  int readsize;
 
-  header = g_malloc (header_length);
-  readsize = header_length;
+  *buf = NULL;
 
-  GST_LOG_OBJECT (this, "Reading %d bytes for buffer packet header", readsize);
-  if ((ret = gst_tcp_socket_read (socket, header, readsize)) <= 0)
+  /* do a blocking select on the socket */
+  FD_ZERO (&testfds);
+  FD_SET (socket, &testfds);
+  if (cancel_fd >= 0)
+    FD_SET (cancel_fd, &testfds);
+  maxfdp1 = MAX (socket, cancel_fd) + 1;
+
+  /* no action (0) is an error too in our case */
+  if ((ret = select (maxfdp1, &testfds, NULL, NULL, 0)) <= 0)
+    goto select_error;
+
+  if (cancel_fd >= 0 && FD_ISSET (cancel_fd, &testfds))
+    goto cancelled;
+
+  /* ask how much is available for reading on the socket */
+  if ((ret = ioctl (socket, FIONREAD, &readsize)) < 0)
+    goto ioctl_error;
+
+  /* sizeof(ssize_t) >= sizeof(int), so I know readsize <= SSIZE_MAX */
+
+  *buf = gst_buffer_new_and_alloc (readsize);
+
+  bytes_read = read (socket, GST_BUFFER_DATA (*buf), readsize);
+
+  if (bytes_read < 0)
     goto read_error;
 
-  if (ret != readsize)
+  if (bytes_read < readsize)
+    /* but mom, you promised to give me readsize bytes! */
     goto short_read;
 
-  if (!gst_dp_validate_header (header_length, header))
-    goto validate_error;
-
-  GST_LOG_OBJECT (this, "validated buffer packet header");
-
-  buffer = gst_dp_buffer_from_header (header_length, header);
-  g_free (header);
-
-  GST_LOG_OBJECT (this, "created new buffer %p from packet header", buffer);
-
-  return buffer;
+  GST_DEBUG_OBJECT (this, "returning buffer of size %d", GST_BUFFER_SIZE (buf));
+  return GST_FLOW_OK;
 
   /* ERRORS */
+select_error:
+  {
+    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
+        ("select failed: %s", g_strerror (errno)));
+    return GST_FLOW_ERROR;
+  }
+cancelled:
+  {
+    GST_DEBUG_OBJECT (this, "Select was cancelled");
+    return GST_FLOW_WRONG_STATE;
+  }
+ioctl_error:
+  {
+    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
+        ("ioctl failed: %s", g_strerror (errno)));
+    return GST_FLOW_ERROR;
+  }
 read_error:
   {
-    if (ret == 0) {
-      /* if we read 0 bytes, and we're blocking, we hit eos */
-      GST_DEBUG ("blocking read returns 0, returning NULL");
-      g_free (header);
-      return NULL;
-    } else {
-      GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
-      g_free (header);
-      return NULL;
-    }
+    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
+        ("read failed: %s", g_strerror (errno)));
+    gst_buffer_unref (*buf);
+    *buf = NULL;
+    return GST_FLOW_ERROR;
   }
 short_read:
   {
-    GST_WARNING ("Wanted %d bytes, got %d bytes", (int) readsize, (int) ret);
-    g_warning ("Wanted %d bytes, got %d bytes", (int) readsize, (int) ret);
-    return NULL;
+    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
+        ("short read: wanted %d bytes, got %d", readsize, bytes_read));
+    gst_buffer_unref (*buf);
+    *buf = NULL;
+    return GST_FLOW_ERROR;
+  }
+}
+
+/* read a buffer from the given socket
+ * returns:
+ * - a GstBuffer in which data should be read
+ * - NULL, indicating a connection close or an error, to be handled with
+ *         EOS
+ */
+GstFlowReturn
+gst_tcp_gdp_read_buffer (GstElement * this, int socket, int cancel_fd,
+    GstBuffer ** buf)
+{
+  GstFlowReturn ret;
+  guint8 *header = NULL;
+
+  GST_LOG_OBJECT (this, "Reading %d bytes for buffer packet header",
+      GST_DP_HEADER_LENGTH);
+
+  *buf = NULL;
+  header = g_malloc (GST_DP_HEADER_LENGTH);
+
+  ret = gst_tcp_socket_read (this, socket, header, GST_DP_HEADER_LENGTH,
+      cancel_fd);
+
+  if (ret != GST_FLOW_OK)
+    goto header_read_error;
+
+  if (!gst_dp_validate_header (GST_DP_HEADER_LENGTH, header))
+    goto validate_error;
+
+  if (gst_dp_header_payload_type (header) != GST_DP_PAYLOAD_BUFFER)
+    goto is_not_buffer;
+
+  GST_LOG_OBJECT (this, "validated buffer packet header");
+
+  *buf = gst_dp_buffer_from_header (GST_DP_HEADER_LENGTH, header);
+
+  g_free (header);
+
+  ret = gst_tcp_socket_read (this, socket, GST_BUFFER_DATA (*buf),
+      GST_BUFFER_SIZE (*buf), cancel_fd);
+
+  if (ret != GST_FLOW_OK)
+    goto data_read_error;
+
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+header_read_error:
+  {
+    g_free (header);
+    return ret;
   }
 validate_error:
   {
     GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
         ("GDP buffer packet header does not validate"));
     g_free (header);
-    return NULL;
+    return GST_FLOW_ERROR;
+  }
+is_not_buffer:
+  {
+    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
+        ("GDP packet contains something that is not a buffer"));
+    g_free (header);
+    return GST_FLOW_ERROR;
+  }
+data_read_error:
+  {
+    gst_buffer_unref (*buf);
+    *buf = NULL;
+    return ret;
   }
 }
 
-/* read the GDP caps packet from the given socket
- * returns the caps, or NULL in case of an error */
-GstCaps *
-gst_tcp_gdp_read_caps (GstElement * this, int socket)
+GstFlowReturn
+gst_tcp_gdp_read_caps (GstElement * this, int socket, int cancel_fd,
+    GstCaps ** caps)
 {
-  size_t header_length = GST_DP_HEADER_LENGTH;
-  size_t readsize;
+  GstFlowReturn ret;
   guint8 *header = NULL;
   guint8 *payload = NULL;
-  ssize_t ret;
-  GstCaps *caps;
-  gchar *string;
+  size_t payload_length;
 
-  header = g_malloc (header_length);
-  readsize = header_length;
+  GST_LOG_OBJECT (this, "Reading %d bytes for caps packet header",
+      GST_DP_HEADER_LENGTH);
 
-  GST_LOG_OBJECT (this, "Reading %d bytes for caps packet header", readsize);
-  if ((ret = gst_tcp_socket_read (socket, header, readsize)) <= 0)
-    goto read_error;
+  *caps = NULL;
+  header = g_malloc (GST_DP_HEADER_LENGTH);
 
-  if (ret != readsize)
-    goto short_read;
+  ret = gst_tcp_socket_read (this, socket, header, GST_DP_HEADER_LENGTH,
+      cancel_fd);
 
-  if (!gst_dp_validate_header (header_length, header))
-    goto validate_error;
+  if (ret != GST_FLOW_OK)
+    goto header_read_error;
 
-  readsize = gst_dp_header_payload_length (header);
-  payload = g_malloc (readsize);
-
-  GST_LOG_OBJECT (this, "Reading %d bytes for caps packet payload", readsize);
-  if ((ret = gst_tcp_socket_read (socket, payload, readsize)) < 0)
-    goto socket_read_error;
+  if (!gst_dp_validate_header (GST_DP_HEADER_LENGTH, header))
+    goto header_validate_error;
 
   if (gst_dp_header_payload_type (header) != GST_DP_PAYLOAD_CAPS)
     goto is_not_caps;
 
-  g_assert (ret == readsize);
+  GST_LOG_OBJECT (this, "validated caps packet header");
 
-  if (!gst_dp_validate_payload (readsize, header, payload))
-    goto packet_validate_error;
+  payload_length = gst_dp_header_payload_length (header);
+  payload = g_malloc (payload_length);
 
-  caps = gst_dp_caps_from_packet (header_length, header, payload);
-  string = gst_caps_to_string (caps);
-  GST_LOG_OBJECT (this, "retrieved GDP caps from packet payload: %s", string);
-  g_free (string);
+  GST_LOG_OBJECT (this, "Reading %d bytes for caps packet payload",
+      payload_length);
+
+  ret = gst_tcp_socket_read (this, socket, payload, payload_length, cancel_fd);
+
+  if (ret != GST_FLOW_OK)
+    goto payload_read_error;
+
+  if (!gst_dp_validate_payload (payload_length, header, payload))
+    goto payload_validate_error;
+
+  *caps = gst_dp_caps_from_packet (GST_DP_HEADER_LENGTH, header, payload);
+
+  GST_DEBUG_OBJECT (this, "Got caps over GDP: %" GST_PTR_FORMAT, *caps);
 
   g_free (header);
   g_free (payload);
 
-  return caps;
+  return GST_FLOW_OK;
 
   /* ERRORS */
-read_error:
+header_read_error:
   {
-    if (ret < 0) {
-      g_free (header);
-      GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
-      return NULL;
-    }
-    if (ret == 0) {
-      GST_WARNING_OBJECT (this, "read returned EOF");
-      return NULL;
-    }
+    g_free (header);
+    return ret;
   }
-short_read:
-  {
-    GST_WARNING_OBJECT (this, "Tried to read %d bytes but only read %d bytes",
-        readsize, ret);
-    return NULL;
-  }
-validate_error:
+header_validate_error:
   {
     GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
         ("GDP caps packet header does not validate"));
     g_free (header);
-    return NULL;
-  }
-socket_read_error:
-  {
-    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
-    g_free (header);
-    g_free (payload);
-    return NULL;
+    return GST_FLOW_ERROR;
   }
 is_not_caps:
   {
     GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
-        ("Header read doesn't describe CAPS payload"));
+        ("GDP packet contains something that is not a caps"));
+    g_free (header);
+    return GST_FLOW_ERROR;
+  }
+payload_read_error:
+  {
     g_free (header);
     g_free (payload);
-    return NULL;
+    return ret;
   }
-packet_validate_error:
+payload_validate_error:
   {
     GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
         ("GDP caps packet payload does not validate"));
     g_free (header);
     g_free (payload);
-    return NULL;
+    return GST_FLOW_ERROR;
   }
 }
 

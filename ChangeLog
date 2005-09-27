@@ -1,5 +1,17 @@
 2005-09-27  Andy Wingo  <wingo@pobox.com>
 
+	* gst/tcp/gsttcpserversrc.c: 
+	* gst/tcp/gsttcpclientsrc.c: Updated for new gsttcp API.
+
+	* gst/tcp/gsttcp.h: 
+	* gst/tcp/gsttcp.c (gst_tcp_read_buffer): New function, factored
+	out of tcpclientsrc.c. Cancellable.
+	(gst_tcp_socket_read): Made private, cancellable, with better
+	diagnostics. Also the FIONREAD ioctl takes a int*, not a size_t*.
+	(gst_tcp_gdp_read_buffer): Made cancellable, actually returns the
+	whole buffer, and better diagnostics.
+	(gst_tcp_gdp_read_caps): Same.
+
 	* gst/sine/gstsinesrc.c (gst_sinesrc_wait): Add the base time.
 
 2005-09-26  Andy Wingo  <wingo@pobox.com>
