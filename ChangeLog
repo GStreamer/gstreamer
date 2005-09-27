@@ -1,3 +1,13 @@
+2005-09-27  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstbin.c: (gst_bin_dispose):
+	* gst/gstelement.c: (gst_element_dispose):
+	  remove now useless and leaky resurrection code in dispose
+	* gst/base/gstbasesrc.c: (gst_base_src_init):
+	* gst/gstelementfactory.c: (gst_element_factory_create):
+	* gst/gstobject.c: (gst_object_set_parent):
+	  add some debugging
+
 2005-09-27  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-TODO.txt:

@@ -1449,9 +1449,6 @@ gst_bin_dispose (GObject * object)
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
 
-  /* ref to not hit 0 again */
-  gst_object_ref (object);
-
   g_list_free (bin->eosed);
   bin->eosed = NULL;
   gst_object_unref (bin->child_bus);

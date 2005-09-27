@@ -367,10 +367,10 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
   }
 
   if (name)
-    GST_INFO ("creating \"%s\" named \"%s\"", GST_PLUGIN_FEATURE_NAME (factory),
-        GST_STR_NULL (name));
+    GST_INFO ("creating element \"%s\" named \"%s\"",
+        GST_PLUGIN_FEATURE_NAME (factory), GST_STR_NULL (name));
   else
-    GST_INFO ("creating \"%s\"", GST_PLUGIN_FEATURE_NAME (factory));
+    GST_INFO ("creating element \"%s\"", GST_PLUGIN_FEATURE_NAME (factory));
 
 #if 0
   if (factory->type == 0) {
@@ -397,7 +397,7 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
   if (name)
     gst_object_set_name (GST_OBJECT (element), name);
 
-  GST_DEBUG ("created \"%s\"", GST_PLUGIN_FEATURE_NAME (factory));
+  GST_DEBUG ("created element \"%s\"", GST_PLUGIN_FEATURE_NAME (factory));
 
   return element;
 }

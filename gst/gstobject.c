@@ -861,7 +861,8 @@ gst_object_set_parent (GstObject * object, GstObject * parent)
   g_return_val_if_fail (GST_IS_OBJECT (parent), FALSE);
   g_return_val_if_fail (object != parent, FALSE);
 
-  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "set parent (ref and sink)");
+  GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, object,
+      "set parent (ref and sink)");
 
   GST_LOCK (object);
   if (G_UNLIKELY (object->parent != NULL))
