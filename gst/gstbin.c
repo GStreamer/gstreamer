@@ -1057,22 +1057,30 @@ done:
 typedef struct _GstBinSortIterator
 {
   GstIterator it;
-  GQueue *queue;
-  GstBin *bin;
-  gint mode;
-  GstElement *best;
+  GQueue *queue;                /* elements queued for state change */
+  GstBin *bin;                  /* bin we iterate */
+  gint mode;                    /* adding or removing dependency */
+  GstElement *best;             /* next element with least dependencies */
+  gint best_deg;                /* best degree */
+  GHashTable *hash;             /* has table with element dependencies */
 } GstBinSortIterator;
+
+/* we add and subtract 1 to make sure we don't confuse NULL and 0 */
+#define HASH_SET_DEGREE(bit, elem, deg) \
+    g_hash_table_replace (bit->hash, elem, GINT_TO_POINTER(deg+1))
+#define HASH_GET_DEGREE(bit, elem) \
+    (GPOINTER_TO_INT(g_hash_table_lookup (bit->hash, elem))-1)
 
 /* add element to queue of next elements in the iterator.
  * We push at the tail to give higher priority elements a
  * chance first */
 static void
-add_to_queue (GQueue * queue, GstElement * element)
+add_to_queue (GstBinSortIterator * bit, GstElement * element)
 {
   GST_DEBUG ("%s add to queue", GST_ELEMENT_NAME (element));
   gst_object_ref (element);
-  g_queue_push_tail (queue, element);
-  element->outdegree = -1;
+  g_queue_push_tail (bit->queue, element);
+  HASH_SET_DEGREE (bit, element, -1);
 }
 
 /* clear the queue, unref all objects as we took a ref when
@@ -1093,10 +1101,10 @@ reset_outdegree (GstElement * element, GstBinSortIterator * bit)
 {
   /* sinks are added right away */
   if (GST_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK)) {
-    add_to_queue (bit->queue, element);
+    add_to_queue (bit, element);
   } else {
     /* others are marked with 0 and handled when sinks are done */
-    element->outdegree = 0;
+    HASH_SET_DEGREE (bit, element, 0);
   }
 }
 
@@ -1129,17 +1137,21 @@ update_outdegree (GstElement * element, GstBinSortIterator * bit)
           GST_LOCK (peer_element);
           if (GST_OBJECT_CAST (peer_element)->parent ==
               GST_OBJECT_CAST (bit->bin)) {
+            gint old_deg, new_deg;
+
+            old_deg = HASH_GET_DEGREE (bit, peer_element);
+            new_deg = old_deg + bit->mode;
 
             GST_DEBUG ("change element %s, degree %d->%d, linked to %s",
                 GST_ELEMENT_NAME (peer_element),
-                peer_element->outdegree, peer_element->outdegree + bit->mode,
-                GST_ELEMENT_NAME (element));
+                old_deg, new_deg, GST_ELEMENT_NAME (element));
 
             /* update outdegree */
-            peer_element->outdegree += bit->mode;
-            if (peer_element->outdegree == 0) {
+            if (new_deg == 0) {
               /* outdegree hit 0, add to queue */
-              add_to_queue (bit->queue, peer_element);
+              add_to_queue (bit, peer_element);
+            } else {
+              HASH_SET_DEGREE (bit, peer_element, new_deg);
             }
             linked = TRUE;
           }
@@ -1164,12 +1176,13 @@ find_element (GstElement * element, GstBinSortIterator * bit)
   gint outdegree;
 
   /* element is already handled */
-  if ((outdegree = element->outdegree) < 0)
+  if ((outdegree = HASH_GET_DEGREE (bit, element)) < 0)
     return;
 
   /* first element or element with smaller outdegree */
-  if (bit->best == NULL || bit->best->outdegree > outdegree) {
+  if (bit->best == NULL || bit->best_deg > outdegree) {
     bit->best = element;
+    bit->best_deg = outdegree;
   }
 }
 
@@ -1181,16 +1194,17 @@ gst_bin_sort_iterator_next (GstBinSortIterator * bit, gpointer * result)
   /* empty queue, we have to find a next best element */
   if (g_queue_is_empty (bit->queue)) {
     bit->best = NULL;
+    bit->best_deg = G_MAXINT;
     g_list_foreach (bit->bin->children, (GFunc) find_element, bit);
     if (bit->best) {
-      if (bit->best->outdegree != 0) {
+      if (bit->best_deg != 0) {
         /* we don't fail on this one yet */
         g_warning ("loop detected in the graph !!");
       }
-      /* best unhandled elements, add to queue */
+      /* best unhandled elements, scheduler as next element */
       GST_DEBUG ("queue empty, next best: %s", GST_ELEMENT_NAME (bit->best));
       gst_object_ref (bit->best);
-      bit->best->outdegree = -1;
+      HASH_SET_DEGREE (bit, bit->best, -1);
       *result = bit->best;
     } else {
       GST_DEBUG ("queue empty, elements exhausted");
@@ -1229,6 +1243,7 @@ gst_bin_sort_iterator_free (GstBinSortIterator * bit)
 {
   clear_queue (bit->queue);
   g_queue_free (bit->queue);
+  g_hash_table_destroy (bit->hash);
   gst_object_unref (bit->bin);
   g_free (bit);
 }
@@ -1248,9 +1263,6 @@ gst_bin_sort_iterator_free (GstBinSortIterator * bit)
  * after use.
  *
  * MT safe. 
- *
- * FIXME: No two iterators can run at the same time since the iterators
- * use a shared element field.
  *
  * Returns: a #GstIterator of #GstElements. gst_iterator_free after use.
  */
@@ -1274,6 +1286,7 @@ gst_bin_iterate_sorted (GstBin * bin)
       (GstIteratorResyncFunction) gst_bin_sort_iterator_resync,
       (GstIteratorFreeFunction) gst_bin_sort_iterator_free);
   result->queue = g_queue_new ();
+  result->hash = g_hash_table_new (NULL, NULL);
   result->bin = bin;
   gst_bin_sort_iterator_resync (result);
   GST_UNLOCK (bin);

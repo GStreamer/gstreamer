@@ -8,9 +8,6 @@
   done by making the event contain a GstStructure with input/output values, similar
   to GstMessage.
 
-- implement iterators for traversing elements upstream or dowstream. Use more simple
-  algorithm using indegree topological sort.
-
 - unlinking pads in the PAUSED state needs to make sure the stream thread is not
   executing code. Can this be done with a flush to unlock all downstream chain
   functions?
