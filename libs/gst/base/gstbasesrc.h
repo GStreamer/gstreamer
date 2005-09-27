@@ -35,6 +35,13 @@ G_BEGIN_DECLS
 #define GST_IS_BASE_SRC(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_SRC))
 #define GST_IS_BASE_SRC_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_SRC))
 
+/**
+ * GstBaseSrcFlags:
+ * @GST_BASE_SRC_STARTED: has source been started
+ * @GST_BASE_SRC_FLAG_LAST: offset to define more flags
+ *
+ * The #GstElement flags that a basesrc element may have.
+ */
 typedef enum {
   GST_BASE_SRC_STARTED           = GST_ELEMENT_FLAG_LAST,
 

@@ -387,6 +387,7 @@ GType			gst_element_get_type		(void);
 /**
  * gst_element_set_name:
  * @elem: a #GstElement to set the name of.
+ * @name: the new name
  *
  * Sets the name of the element, getting rid of the old name if there was one.
  */

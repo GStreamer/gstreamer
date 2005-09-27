@@ -54,6 +54,7 @@ GST_EXPORT GType _gst_object_type;
  *  not assigned to a bin)
  * @GST_OBJECT_FLAG_LAST: subclasses can add additional flags starting from this flag
  *
+ * The standard flags that an gstobject may have.
  */
 typedef enum
 {
@@ -176,14 +177,20 @@ typedef struct _GstObjectClass GstObjectClass;
 
 /**
  * GstObject:
+ * @refcount: only used ifndef GST_HAVE_GLIB_2_8
+ * @lock: object LOCK
  * @name: The name of the object
+ * @name_prefix: used for debugging
+ * @parent: this object's parent, weak ref
+ * @flags: use GST_OBJECT_IS_XXX macros to access the flags
  *
+ * GStreamer base object class.
  */
 struct _GstObject {
   GObject 	 object;
 
   /*< public >*/
-  gint           refcount;    /* only used ifndef GST_HAVE_GLIB_0_8 */
+  gint           refcount;
 
   /*< public >*/ /* with LOCK */
   GMutex        *lock;        /* object LOCK */

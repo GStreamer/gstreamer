@@ -125,7 +125,7 @@ typedef gboolean		(*GstPadActivateModeFunction)	(GstPad *pad, gboolean active);
  * 
  * A function that will be called when chaining buffers.
  *
- * 
+ *  Returns: GST_FLOW_OK for success
  */
 typedef GstFlowReturn		(*GstPadChainFunction)		(GstPad *pad, GstBuffer *buffer);
 typedef GstFlowReturn		(*GstPadGetRangeFunction)	(GstPad *pad, guint64 offset,
@@ -252,12 +252,23 @@ typedef enum {
   GST_PAD_SINK
 } GstPadDirection;
 
+/**
+ * GstPadFlags:
+ * @GST_PAD_BLOCKED: is dataflow on a pad blocked
+ * @GST_PAD_FLUSHING: is pad empying buffers
+ * @GST_PAD_IN_GETCAPS: GstPadGetCapsFunction() is running now
+ * @GST_PAD_IN_SETCAPS: GstPadSetCapsFunction() is running now
+ * @GST_PAD_FLAG_LAST: offset to define more flags
+ *
+ * Pad state flags
+ */
 typedef enum {
   GST_PAD_BLOCKED		= GST_OBJECT_FLAG_LAST,
   GST_PAD_FLUSHING,
   GST_PAD_IN_GETCAPS,
   GST_PAD_IN_SETCAPS,
 
+	/* padding */
   GST_PAD_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 8
 } GstPadFlags;
 

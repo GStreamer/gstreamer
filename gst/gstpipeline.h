@@ -38,8 +38,14 @@ G_BEGIN_DECLS
 typedef struct _GstPipeline GstPipeline;
 typedef struct _GstPipelineClass GstPipelineClass;
 
+/**
+ * GstPipelineFlags:
+ * @GST_PIPELINE_FLAG_FIXED_CLOCK: this pipeline works with a fixed clock
+ * @GST_PIPELINE_FLAG_LAST: offset to define more flags
+ *
+ * Pipeline flags
+ */
 typedef enum {
-  /* this pipeline works with a fixed clock */
   GST_PIPELINE_FLAG_FIXED_CLOCK        = GST_BIN_FLAG_LAST,
 
   /* padding */

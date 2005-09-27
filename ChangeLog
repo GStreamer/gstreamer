@@ -1,3 +1,19 @@
+2005-09-27  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/base/gstbasesrc.h:
+	* gst/gstelement.h:
+	* gst/gstevent.h:
+	* gst/gstobject.h:
+	* gst/gstpad.h:
+	* gst/gstpipeline.c:
+	* gst/gstpipeline.h:
+	* gst/gstutils.h:
+	* gst/gstxml.h:
+	  added two new functions to the docs
+		documents all undocumented GstXXXFlags
+		completed some incomplete docs 
+
 2005-09-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstbin.c: (gst_bin_dispose):

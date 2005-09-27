@@ -55,6 +55,7 @@ gst_bin_get_by_interface
 gst_bin_iterate_elements
 gst_bin_iterate_recurse
 gst_bin_iterate_sinks
+gst_bin_iterate_sorted
 gst_bin_iterate_all_by_interface
 <SUBSECTION>
 gst_bin_add_many
@@ -882,8 +883,6 @@ gst_debug_level_get_type
 <FILE>gstimplementsinterface</FILE>
 <TITLE>GstImplementsInterface</TITLE>
 GstImplementsInterface
-GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_CAST
-GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_TYPE
 gst_element_implements_interface
 gst_implements_interface_cast
 gst_implements_interface_check
@@ -895,6 +894,8 @@ GST_IS_IMPLEMENTS_INTERFACE
 GST_IS_IMPLEMENTS_INTERFACE_CLASS
 GST_IMPLEMENTS_INTERFACE_GET_CLASS
 GST_TYPE_IMPLEMENTS_INTERFACE
+GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_CAST
+GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_TYPE
 <SUBSECTION Private>
 gst_implements_interface_get_type
 </SECTION>
@@ -1082,6 +1083,7 @@ gst_object_set_name_prefix
 gst_object_default_deep_notify
 gst_object_default_error
 gst_object_check_uniqueness
+gst_object_has_ancestor
 gst_object_save_thyself
 gst_object_restore_thyself
 gst_object_ref

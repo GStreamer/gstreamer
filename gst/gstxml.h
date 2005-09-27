@@ -42,6 +42,11 @@ G_BEGIN_DECLS
 typedef struct _GstXML GstXML;
 typedef struct _GstXMLClass GstXMLClass;
 
+/**
+ * GstXML:
+ *
+ * XML parser object
+ */
 struct _GstXML {
   GstObject object;
 
@@ -49,6 +54,7 @@ struct _GstXML {
 
   xmlNsPtr ns;
 
+	/*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

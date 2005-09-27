@@ -42,11 +42,25 @@ void		gst_print_element_args		(GString *buf, gint indent, GstElement *element);
 /* Macros for defining classes.  Ideas taken from Bonobo, which took theirs
    from Nautilus and GOB. */
 
-/* Define the boilerplate type stuff to reduce typos and code size.  Defines
-   the get_type method and the parent_class static variable.
-   void additional_initializations (GType type) is for initializing interfaces
-   and stuff like that */
-
+/**
+ * GST_BOILERPLATE_FULL:
+ * @type: the name of the type struct
+ * @type_as_function: the prefix for the functions
+ * @parent_type: the parent type struct name
+ * @parent_type_macro: the parent type macro
+ * @additional_initializations: function pointer in the form of 
+ * void additional_initializations (GType type) that can be used for
+ * initializing interfaces and the like
+ *
+ * Define the boilerplate type stuff to reduce typos and code size.  Defines
+ * the get_type method and the parent_class static variable.
+ *
+ * <informalexample>
+ * <programlisting>
+ *   GST_BOILERPLATE_FULL (GstFdSink, gst_fdsink, GstElement, GST_TYPE_ELEMENT, _do_init);
+ * </programlisting>
+ * </informalexample>
+ */
 #define GST_BOILERPLATE_FULL(type, type_as_function, parent_type, parent_type_macro, additional_initializations)	\
 									\
 static void type_as_function ## _base_init     (gpointer      g_class);	\
@@ -87,12 +101,45 @@ type_as_function ## _get_type (void)					\
 }
 
 #define __GST_DO_NOTHING(type)	/* NOP */
+
+/**
+ * GST_BOILERPLATE:
+ * @type: the name of the type struct
+ * @type_as_function: the prefix for the functions
+ * @parent_type: the parent type struct name
+ * @parent_type_macro: the parent type macro
+ *
+ * Define the boilerplate type stuff to reduce typos and code size.  Defines
+ * the get_type method and the parent_class static variable.
+ *
+ * <informalexample>
+ * <programlisting>
+ *   GST_BOILERPLATE (GstFdSink, gst_fdsink, GstElement, GST_TYPE_ELEMENT);
+ * </programlisting>
+ * </informalexample>
+ */
 #define GST_BOILERPLATE(type,type_as_function,parent_type,parent_type_macro)	\
   GST_BOILERPLATE_FULL (type, type_as_function, parent_type, parent_type_macro,	\
       __GST_DO_NOTHING)
 
 /* Like GST_BOILERPLATE, but makes the type 1) implement an interface, and 2)
  * implement GstImplementsInterface for that type
+ *
+ * After this you will need to implement interface_as_function ## _supported
+ * and interface_as_function ## _interface_init
+ */
+/**
+ * GST_BOILERPLATE_WITH_INTERFACE:
+ * @type: the name of the type struct
+ * @type_as_function: the prefix for the functions
+ * @parent_type: the parent type struct name
+ * @parent_type_as_macro: the parent type macro
+ * @interface_type: the name of the interface type struct
+ * @interface_type_as_macro: the interface type macro
+ * @interface_as_function: the interface function name prefix
+ *
+ * Like GST_BOILERPLATE, but makes the type 1) implement an interface, and 2)
+ * implement GstImplementsInterface for that type.
  *
  * After this you will need to implement interface_as_function ## _supported
  * and interface_as_function ## _interface_init
