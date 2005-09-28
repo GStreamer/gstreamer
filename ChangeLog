@@ -1,3 +1,9 @@
+2005-09-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Fix unexpanded autoconf macro GST_DOC, which has been renamed
+	  to GST_DOCBOOK_CHECK (see common/m4/gst-doc.m4) (#316202).
+
 2005-09-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* sys/oss/gstosssink.c: (gst_oss_sink_prepare):
