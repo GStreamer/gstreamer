@@ -26,45 +26,6 @@
 #include <gst/gst.h>
 #include "common.h"
 
-/* gboolean */
-/* pygst_data_from_pyobject(PyObject *object, GstData **data) */
-/* { */
-/*   if (pyg_boxed_check(object, GST_TYPE_DATA)) { */
-/*     *data = pyg_boxed_get(object, GstData); */
-/*     return TRUE; */
-/*   } else if (pyg_boxed_check(object, GST_TYPE_BUFFER)) { */
-/*     *data = GST_DATA (pyg_boxed_get(object, GstBuffer)); */
-/*     return TRUE; */
-/*   } else if (pyg_boxed_check(object, GST_TYPE_EVENT)) { */
-/*     *data = GST_DATA (pyg_boxed_get(object, GstEvent)); */
-/*     return TRUE; */
-/*   } */
-  
-/*   PyErr_Clear(); */
-/*   PyErr_SetString(PyExc_TypeError, "could not convert to GstData"); */
-/*   return FALSE; */
-/* } */
-
-/* static PyObject * */
-/* PyGstData_from_value(const GValue *value) */
-/* { */
-/*   GstData *data = (GstData *)g_value_get_boxed(value); */
-
-/*   return pyg_boxed_new(GST_TYPE_DATA, data, TRUE, TRUE); */
-/* } */
-
-/* static int */
-/* PyGstData_to_value(GValue *value, PyObject *object) */
-/* { */
-/*   GstData* data; */
-
-/*   if (!pygst_data_from_pyobject(object, &data)) */
-/*     return -1; */
-  
-/*   g_value_set_boxed(value, data); */
-/*   return 0; */
-/* } */
-
 /* This function will return a copy, unless the following is all TRUE:
  * - The given PyObject contains a GstCaps already
  * - The copy parameter is non-NULL
@@ -103,10 +64,3 @@ pygst_caps_from_pyobject (PyObject *object, gboolean *copy)
   return NULL;
 }
 
-/* void */
-/* _pygst_register_boxed_types(PyObject *moddict) */
-/* { */
-/*     pyg_register_boxed_custom(GST_TYPE_DATA, */
-/* 			      PyGstData_from_value, */
-/* 			      PyGstData_to_value); */
-/* } */

@@ -24,32 +24,6 @@
 
 from argtypes import UInt64Arg, Int64Arg, PointerArg, ArgMatcher, ArgType, matcher
 
-class GstDataPtrArg(ArgType):
-    normal = ('    if (!pygst_data_from_pyobject(py_%(name)s, &%(name)s))\n'
-              '        return NULL;\n'
-              '    gst_data_ref (%(name)s);\n')
-    null =   ('    if (py_%(name)s == Py_None)\n'
-              '        %(name)s = NULL;\n'
-              '    else if (pyst_data_from_pyobject(py_%(name)s, %(name)s_rect))\n'
-              '        %(name)s = &%(name)s_rect;\n'
-              '    else\n'
-              '            return NULL;\n'
-              '    gst_data_ref (%(name)s);\n')
-    def write_param(self, ptype, pname, pdflt, pnull, info):
-        if pnull:
-            info.varlist.add('GstData', pname + '_data')
-            info.varlist.add('GstData', '*' + pname)
-            info.varlist.add('PyObject', '*py_' + pname + ' = Py_None')
-            info.add_parselist('O', ['&py_' + pname], [pname])
-            info.arglist.append(pname)
-            info.codebefore.append(self.null % {'name':  pname})
-        else:
-            info.varlist.add('GstData*', pname)
-            info.varlist.add('PyObject', '*py_' + pname)
-            info.add_parselist('O', ['&py_' + pname], [pname])
-            info.arglist.append(pname)
-            info.codebefore.append(self.normal % {'name':  pname})
-
 class XmlNodeArg(ArgType):
 	"""libxml2 node generator"""
 	
@@ -155,7 +129,6 @@ class GstCapsArg(ArgType):
             raise RuntimeError, "write_return not implemented for %s" % ptype
 		info.codeafter.append('    return pyg_boxed_new (GST_TYPE_CAPS, ret, '+copyval+', TRUE);')
 			
-matcher.register('GstData*', GstDataPtrArg())
 matcher.register('GstClockTime', UInt64Arg())
 matcher.register('GstClockTimeDiff', Int64Arg())
 matcher.register('xmlNodePtr', XmlNodeArg())

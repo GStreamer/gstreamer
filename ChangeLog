@@ -1,3 +1,19 @@
+2005-09-28  Edward Hervey  <edward@fluendo.com>
+
+	* gst/Makefile.am:
+	* gst/gst.override:
+	* gst/gsttaglist.override:
+	* gst/gstobject.override:
+	Let's split up gst.override,
+	Added gsttaglist.override and gstobject.override
+	
+	* gst/arg-types.py:
+	* gst/gst-argtypes.c:
+	Cleanup, removed deprecated GstData related functions
+	* gst/gst-extrafuncs.defs:
+	* gst/gst.defs:
+	Moved debug functions to gst-extrafuncs.defs
+
 2005-09-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gst.defs:

@@ -1,0 +1,263 @@
+/* -*- Mode: C; ; c-file-style: "python" -*- */
+/* gst-python
+ * Copyright (C) 2005 Edward Hervey
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ * 
+ * Author: Edward Hervey <edward@fluendo.com>
+ */
+
+%%
+ignore-glob
+  gst_tag_list_get_*
+%%
+ignore
+  gst_tag_list_add
+  gst_tag_list_add_values
+  gst_tag_list_add_valist_values
+  gst_tag_list_copy_value
+%%
+define GstTagList.keys noargs
+void
+tag_foreach_func_dict (const GstTagList *list,
+		       const gchar      *tag,
+		       PyObject         *dict)
+{
+	int count;
+	guint i;
+	const GValue *gvalue;
+	PyObject *value;
+	gchar *key;
+    
+	count = gst_tag_list_get_tag_size(GST_TAG_LIST(list), tag);
+
+	for (i = 0; i < count; i++) {
+		gvalue = gst_tag_list_get_value_index(GST_TAG_LIST(list), tag, i);
+		value = pygst_value_as_pyobject(gvalue, TRUE);
+		key = g_strdup (tag);
+		PyDict_SetItemString(dict, key, value);
+		g_free (key);
+		Py_DECREF(value);
+	}
+}
+void
+tag_foreach_func_list (const GstTagList *list,
+		       const gchar      *tag,
+		       PyObject         *py_list)
+{
+	int count;
+    
+	count = gst_tag_list_get_tag_size(GST_TAG_LIST(list), tag);
+	if (count == 0)
+		PyErr_SetString(PyExc_KeyError, tag);
+	else if (count == 1)
+		PyList_Append(py_list, PyString_FromString(tag));
+#if 0	
+	else if (count > 1)
+		PyErr_SetString(PyExc_TypeError, "lists are currently unspported");
+#endif
+	
+}
+
+static PyObject*
+_wrap_gst_tag_list_keys(PyGObject *self)
+{
+	PyObject *dict;
+
+	dict = PyList_New(0);
+    
+	gst_tag_list_foreach(GST_TAG_LIST(self->obj),
+			     (GstTagForeachFunc)tag_foreach_func_list,
+			     (gpointer)dict);
+	return dict;
+}
+%%
+override-slot GstTagList.tp_as_mapping
+static int
+_wrap_gst_tag_list_length(PyGObject *self)
+{
+	return gst_structure_n_fields((GstStructure*)self->obj);
+}
+
+static PyObject *
+_wrap_gst_tag_list_subscript(PyGObject *self, PyObject *py_key)
+{
+	PyObject *v = NULL;
+	char *key = PyString_AsString(py_key);
+	
+	int count = gst_tag_list_get_tag_size(GST_TAG_LIST(self->obj), key);
+	if (count == 0) {
+		PyErr_SetObject(PyExc_KeyError, py_key);
+	} else if (count == 1) {
+		const GValue *gvalue;
+		gvalue = gst_tag_list_get_value_index(GST_TAG_LIST(self->obj), key, 0);
+		v = pygst_value_as_pyobject(gvalue, TRUE);
+	} else {
+		PyErr_SetString(PyExc_TypeError, "lists are currently unspported");
+	}
+		
+	if (v != NULL)
+		Py_INCREF(v);
+	return v;
+}
+
+static PySequenceMethods _wrap_gst_tag_list_tp_as_mapping = {
+	(inquiry)_wrap_gst_tag_list_length,         /* mp_length */
+	(binaryfunc)_wrap_gst_tag_list_subscript,   /* mp_subscript */
+	NULL,
+};
+
+%%
+define GstTagList.has_key args
+static PyObject*
+_wrap_gst_tag_list_has_key(PyGObject *self, PyObject *args)
+{
+	gchar *key;
+	const GValue *gvalue;
+    
+	if (!PyArg_ParseTuple(args, "s:GstTagList.has_key", &key))
+		return NULL;
+
+	gvalue = gst_tag_list_get_value_index(GST_TAG_LIST(self->obj), key, 0);
+
+	return PyInt_FromLong(gvalue != NULL);
+}    
+%%
+define GstTagList.get
+static PyObject *
+_wrap_gst_tag_list_get(PyGObject *self, PyObject *args)
+{
+	char *key;
+	PyObject *failobj = Py_None;
+	PyObject *val = NULL;
+	const GValue *gvalue;
+	
+	if (!PyArg_ParseTuple(args, "s|O:GstTagList.get", &key, &failobj))
+		return NULL;
+
+	gvalue = gst_tag_list_get_value_index(GST_TAG_LIST(self->obj), key, 0);
+	if (gvalue != NULL) {
+		int count = gst_tag_list_get_tag_size(GST_TAG_LIST(self->obj), key);
+		if (count == 0) {
+			PyErr_SetString(PyExc_KeyError, key);
+		} else if (count == 1) {
+			gvalue = gst_tag_list_get_value_index(GST_TAG_LIST(self->obj), key, 0);
+			val = pygst_value_as_pyobject(gvalue, TRUE);
+		} else {
+			PyErr_SetString(PyExc_TypeError, "lists are currently unspported");
+		}
+	}
+
+	if (val == NULL)
+		val = failobj;
+	Py_INCREF(val);
+	return val;
+}
+%%
+override gst_tag_list_foreach kwargs
+static gboolean
+pygst_tag_list_foreach_marshal(GstTagList *list,
+			       const gchar *tag,
+			       gpointer user_data)
+{
+	PyGstCustomNotify *cunote = user_data;
+	PyObject *py_list;
+	PyObject *py_key, *retobj;
+	gboolean retval = TRUE;
+	PyGILState_STATE state;
+	
+	g_assert(cunote->func);
+
+	state = pyg_gil_state_ensure();
+
+	py_list = pyg_boxed_new(GST_TYPE_TAG_LIST, list, TRUE, TRUE);
+	py_key = Py_BuildValue("s", tag);
+	if (cunote->data)
+		retobj = PyEval_CallFunction(cunote->func, "(NNO)",
+					     py_list,
+					     py_key,
+					     cunote->data);
+	else
+		retobj = PyEval_CallFunction(cunote->func, "(NN)",
+					     py_list,
+					     py_key);
+
+	if (PyErr_Occurred () || (retobj == NULL) || (retobj == Py_None)) {
+		PyErr_Print ();
+		retval = FALSE;
+	} else if (retobj != Py_None) {
+		retval = PyInt_AsLong(retobj);
+	}
+
+	Py_XDECREF(retobj);
+
+	pyg_gil_state_release(state);
+	
+	return retval;
+}
+
+static PyObject *
+_wrap_gst_tag_list_foreach (PyGObject *self,
+			    PyObject *args,
+			    PyObject *kwargs)
+{
+	static char *kwlist[] = { "foreach_function", "args", NULL };
+	PyObject *pyfunc, *pyarg = NULL;
+	PyGstCustomNotify cunote;
+
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+					 "O|O:GstTagList.foreach",
+					 kwlist, &pyfunc, &pyarg))
+		return NULL;
+
+	if (!PyCallable_Check(pyfunc)) {
+		PyErr_SetString(PyExc_TypeError, "foreach_function not callable");
+		return NULL;
+	}
+
+	cunote.func = pyfunc;
+	cunote.data = pyarg;
+	gst_tag_list_foreach(pyg_boxed_get(self, GstTagList),
+			     (GstTagForeachFunc)pygst_tag_list_foreach_marshal,
+			     &cunote);
+
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+%%
+override gst_tag_list_get_value_index kwargs
+static PyObject *
+_wrap_gst_tag_list_get_value_index (PyGObject *self,
+				    PyObject *args,
+				    PyObject *kwargs)
+{
+	static char *kwlist[] = { "tag", "index", NULL };
+	char *tag;
+	int index;
+	const GValue *gvalue;
+
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+					 "si:GstTagList.get_value_index",
+					 kwlist, &tag, &index))
+		return NULL;
+
+	gvalue = gst_tag_list_get_value_index(pyg_boxed_get(self, GstTagList),
+					      tag,
+					      index);
+
+	return pygst_value_as_pyobject(gvalue, FALSE);
+}
+

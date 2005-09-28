@@ -44,9 +44,11 @@ GST_OVERRIDES = 		\
 	gstcaps.override 	\
 	gstelement.override 	\
 	gstmessage.override	\
+	gstobject.override	\
 	gstquery.override	\
 	gstpad.override		\
 	gststructure.override	\
+	gsttaglist.override	\
 	gstlibs.override
 
 GST_DEFS = gst.defs gst-types.defs gst-extrafuncs.defs libs.defs
