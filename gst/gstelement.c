@@ -61,6 +61,14 @@
  * 
  * You can get and set a #GstClock on an element using gst_element_get_clock()
  * and gst_element_set_clock().  
+ * Some elements can provide a clock for the pipeline if  
+ * gst_element_provides_clock() returns TRUE. With the gst_element_provide_clock()
+ * method one can retrieve the clock provided by such an element.
+ * Not all elements require a clock to operate correctly. If 
+ * gst_element_requires_clock() returns TRUE, a clock should be set on the element
+ * with gst_element_set_clock(). 
+ * Note that clock slection and distribution is normally handled by the toplevel 
+ * GstPipeline so the clock functions are only to be used in very specific situations.
  */
 #include "gst_private.h"
 #include <glib.h>
@@ -157,23 +165,11 @@ gst_element_class_init (GstElementClass * klass)
   parent_class = g_type_class_ref (GST_TYPE_OBJECT);
 
   /**
-   * GstElement::state-changed:
-   * @gstelement: the object which received the signal
-   * @old_state: the GST_STATE_XXX before the change
-   * @new_state: the GST_STATE_XXX after the change
-   *
-   * the #GstState of the element has been changed
-   */
-  gst_element_signals[STATE_CHANGE] =
-      g_signal_new ("state-changed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstElementClass, state_changed), NULL,
-      NULL, gst_marshal_VOID__INT_INT, G_TYPE_NONE, 2, G_TYPE_INT, G_TYPE_INT);
-  /**
    * GstElement::pad-added:
    * @gstelement: the object which received the signal
    * @new_pad: the pad that has been added
    *
-   * a new #GstPad has been added to the element
+   * a new #GstPad has been added to the element.
    */
   gst_element_signals[NEW_PAD] =
       g_signal_new ("pad-added", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -338,7 +334,34 @@ gst_element_provides_clock (GstElement * element)
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
-  result = (GST_ELEMENT_GET_CLASS (element)->get_clock != NULL);
+  result = (GST_ELEMENT_GET_CLASS (element)->provide_clock != NULL);
+
+  return result;
+}
+
+/**
+ * gst_element_provide_clock:
+ * @element: a #GstElement to query
+ *
+ * Get the clock provided by the given element.
+ *
+ * Returns: the GstClock provided by the element or NULL
+ * if no clock could be provided.
+ *
+ * MT safe.
+ */
+GstClock *
+gst_element_provide_clock (GstElement * element)
+{
+  GstClock *result = NULL;
+  GstElementClass *oclass;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+
+  oclass = GST_ELEMENT_GET_CLASS (element);
+
+  if (oclass->provide_clock)
+    result = oclass->provide_clock (element);
 
   return result;
 }
@@ -375,9 +398,7 @@ gst_element_set_clock (GstElement * element, GstClock * clock)
  * gst_element_get_clock:
  * @element: a #GstElement to get the clock of.
  *
- * Gets the clock of the element. If the element provides a clock,
- * this function will return this clock. For elements that do not
- * provide a clock, this function returns NULL.
+ * Gets the currently configured clock of the element.
  *
  * Returns: the #GstClock of the element. unref after usage.
  *
@@ -386,16 +407,16 @@ gst_element_set_clock (GstElement * element, GstClock * clock)
 GstClock *
 gst_element_get_clock (GstElement * element)
 {
-  GstElementClass *oclass;
+  GstClock *result;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
-  oclass = GST_ELEMENT_GET_CLASS (element);
+  GST_LOCK (element);
+  if ((result = element->clock))
+    gst_object_ref (result);
+  GST_UNLOCK (element);
 
-  if (oclass->get_clock)
-    return oclass->get_clock (element);
-
-  return NULL;
+  return result;
 }
 
 /**
@@ -1724,7 +1745,6 @@ void
 gst_element_commit_state (GstElement * element)
 {
   GstState pending;
-  GstMessage *message;
 
   g_return_if_fail (GST_IS_ELEMENT (element));
 
@@ -1732,6 +1752,7 @@ gst_element_commit_state (GstElement * element)
 
   if (pending != GST_STATE_VOID_PENDING) {
     GstState old_state = GST_STATE (element);
+    GstMessage *message;
 
     GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
         "committing state from %s to %s",
@@ -1742,8 +1763,6 @@ gst_element_commit_state (GstElement * element)
     GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
     GST_STATE_ERROR (element) = FALSE;
 
-    g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE],
-        0, old_state, pending);
     message = gst_message_new_state_changed (GST_OBJECT (element),
         old_state, pending);
     gst_element_post_message (element, message);
@@ -1776,12 +1795,17 @@ gst_element_lost_state (GstElement * element)
   if (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING &&
       !GST_STATE_ERROR (element)) {
     GstState current_state = GST_STATE (element);
+    GstMessage *message;
 
     GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
         "lost state of %s", gst_element_state_get_name (current_state));
 
     GST_STATE_PENDING (element) = current_state;
     GST_STATE_ERROR (element) = FALSE;
+
+    message = gst_message_new_state_changed (GST_OBJECT (element),
+        current_state, current_state);
+    gst_element_post_message (element, message);
   }
 }
 

@@ -97,7 +97,7 @@ static gboolean gst_bin_remove_func (GstBin * bin, GstElement * element);
 #ifndef GST_DISABLE_INDEX
 static void gst_bin_set_index_func (GstElement * element, GstIndex * index);
 #endif
-static GstClock *gst_bin_get_clock_func (GstElement * element);
+static GstClock *gst_bin_provide_clock_func (GstElement * element);
 static void gst_bin_set_clock_func (GstElement * element, GstClock * clock);
 
 static gboolean gst_bin_send_event (GstElement * element, GstEvent * event);
@@ -252,7 +252,8 @@ gst_bin_class_init (GstBinClass * klass)
 #ifndef GST_DISABLE_INDEX
   gstelement_class->set_index = GST_DEBUG_FUNCPTR (gst_bin_set_index_func);
 #endif
-  gstelement_class->get_clock = GST_DEBUG_FUNCPTR (gst_bin_get_clock_func);
+  gstelement_class->provide_clock =
+      GST_DEBUG_FUNCPTR (gst_bin_provide_clock_func);
   gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_bin_set_clock_func);
 
   gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_bin_send_event);
@@ -344,10 +345,14 @@ gst_bin_set_clock_func (GstElement * element, GstClock * clock)
 
 /* get the clock for this bin by asking all of the children in this bin
  *
+ * The ref of the returned clock in increased so unref after usage.
+ *
  * MT safe
+ *
+ * FIXME, clock selection is not correct here.
  */
 static GstClock *
-gst_bin_get_clock_func (GstElement * element)
+gst_bin_provide_clock_func (GstElement * element)
 {
   GstClock *result = NULL;
   GstBin *bin;
@@ -359,7 +364,7 @@ gst_bin_get_clock_func (GstElement * element)
   for (children = bin->children; children; children = g_list_next (children)) {
     GstElement *child = GST_ELEMENT (children->data);
 
-    result = gst_element_get_clock (child);
+    result = gst_element_provide_clock (child);
     if (result)
       break;
   }
@@ -1102,10 +1107,10 @@ clear_queue (GQueue * queue)
     gst_object_unref (p);
 }
 
-/* set all outdegrees to 0. Elements marked as a sink are
+/* set all degrees to 0. Elements marked as a sink are
  * added to the queue immediatly. */
 static void
-reset_outdegree (GstElement * element, GstBinSortIterator * bit)
+reset_degree (GstElement * element, GstBinSortIterator * bit)
 {
   /* sinks are added right away */
   if (GST_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK)) {
@@ -1116,22 +1121,22 @@ reset_outdegree (GstElement * element, GstBinSortIterator * bit)
   }
 }
 
-/* adjust the outdegree of all elements connected to the given
- * element. If an outdegree of an element drops to 0, it is
+/* adjust the degree of all elements connected to the given
+ * element. If an degree of an element drops to 0, it is
  * added to the queue of elements to schedule next.
  *
  * We have to make sure not to cross the bin boundary this element
  * belongs to.
  */
 static void
-update_outdegree (GstElement * element, GstBinSortIterator * bit)
+update_degree (GstElement * element, GstBinSortIterator * bit)
 {
   gboolean linked = FALSE;
 
   GST_LOCK (element);
-  /* don't touch outdegree is element has no sourcepads */
+  /* don't touch degree is element has no sourcepads */
   if (element->numsinkpads != 0) {
-    /* loop over all sinkpads, decrement outdegree for all connected
+    /* loop over all sinkpads, decrement degree for all connected
      * elements in this bin */
     GList *pads;
 
@@ -1154,9 +1159,9 @@ update_outdegree (GstElement * element, GstBinSortIterator * bit)
                 GST_ELEMENT_NAME (peer_element),
                 old_deg, new_deg, GST_ELEMENT_NAME (element));
 
-            /* update outdegree */
+            /* update degree */
             if (new_deg == 0) {
-              /* outdegree hit 0, add to queue */
+              /* degree hit 0, add to queue */
               add_to_queue (bit, peer_element);
             } else {
               HASH_SET_DEGREE (bit, peer_element, new_deg);
@@ -1177,20 +1182,20 @@ update_outdegree (GstElement * element, GstBinSortIterator * bit)
 }
 
 /* find the next best element not handled yet. This is the one
- * with the lowest non-negative outdegree */
+ * with the lowest non-negative degree */
 static void
 find_element (GstElement * element, GstBinSortIterator * bit)
 {
-  gint outdegree;
+  gint degree;
 
   /* element is already handled */
-  if ((outdegree = HASH_GET_DEGREE (bit, element)) < 0)
+  if ((degree = HASH_GET_DEGREE (bit, element)) < 0)
     return;
 
-  /* first element or element with smaller outdegree */
-  if (bit->best == NULL || bit->best_deg > outdegree) {
+  /* first element or element with smaller degree */
+  if (bit->best == NULL || bit->best_deg > degree) {
     bit->best = element;
-    bit->best_deg = outdegree;
+    bit->best_deg = degree;
   }
 }
 
@@ -1225,23 +1230,23 @@ gst_bin_sort_iterator_next (GstBinSortIterator * bit, gpointer * result)
   }
 
   GST_DEBUG ("queue head gives %s", GST_ELEMENT_NAME (*result));
-  /* update outdegrees of linked elements */
-  update_outdegree (GST_ELEMENT_CAST (*result), bit);
+  /* update degrees of linked elements */
+  update_degree (GST_ELEMENT_CAST (*result), bit);
 
   return GST_ITERATOR_OK;
 }
 
-/* clear queues, recalculate the outdegrees and restart. */
+/* clear queues, recalculate the degrees and restart. */
 static void
 gst_bin_sort_iterator_resync (GstBinSortIterator * bit)
 {
   clear_queue (bit->queue);
-  /* reset outdegrees */
-  g_list_foreach (bit->bin->children, (GFunc) reset_outdegree, bit);
-  /* calc outdegrees, incrementing */
+  /* reset degrees */
+  g_list_foreach (bit->bin->children, (GFunc) reset_degree, bit);
+  /* calc degrees, incrementing */
   bit->mode = 1;
-  g_list_foreach (bit->bin->children, (GFunc) update_outdegree, bit);
-  /* for the rest of the function we decrement the outdegrees */
+  g_list_foreach (bit->bin->children, (GFunc) update_degree, bit);
+  /* for the rest of the function we decrement the degrees */
   bit->mode = -1;
 }
 

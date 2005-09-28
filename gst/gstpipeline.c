@@ -77,7 +77,7 @@ static void gst_pipeline_get_property (GObject * object, guint prop_id,
 static gboolean gst_pipeline_send_event (GstElement * element,
     GstEvent * event);
 
-static GstClock *gst_pipeline_get_clock_func (GstElement * element);
+static GstClock *gst_pipeline_provide_clock_func (GstElement * element);
 static GstStateChangeReturn gst_pipeline_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -145,7 +145,8 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
   gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_pipeline_send_event);
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_pipeline_change_state);
-  gstelement_class->get_clock = GST_DEBUG_FUNCPTR (gst_pipeline_get_clock_func);
+  gstelement_class->provide_clock =
+      GST_DEBUG_FUNCPTR (gst_pipeline_provide_clock_func);
 }
 
 static void
@@ -308,7 +309,7 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       /* when going to playing, select a clock */
-      if ((clock = gst_element_get_clock (element))) {
+      if ((clock = gst_element_provide_clock (element))) {
         GstClockTime start_time;
 
         /* distribute the clock */
@@ -483,7 +484,7 @@ gst_pipeline_get_last_stream_time (GstPipeline * pipeline)
 }
 
 static GstClock *
-gst_pipeline_get_clock_func (GstElement * element)
+gst_pipeline_provide_clock_func (GstElement * element)
 {
   GstClock *clock = NULL;
   GstPipeline *pipeline = GST_PIPELINE (element);
@@ -500,7 +501,8 @@ gst_pipeline_get_clock_func (GstElement * element)
   } else {
     GST_UNLOCK (pipeline);
     clock =
-        GST_ELEMENT_CLASS (parent_class)->get_clock (GST_ELEMENT (pipeline));
+        GST_ELEMENT_CLASS (parent_class)->
+        provide_clock (GST_ELEMENT (pipeline));
     /* no clock, use a system clock */
     if (!clock) {
       clock = gst_system_clock_obtain ();
@@ -528,7 +530,7 @@ gst_pipeline_get_clock (GstPipeline * pipeline)
 {
   g_return_val_if_fail (GST_IS_PIPELINE (pipeline), NULL);
 
-  return gst_pipeline_get_clock_func (GST_ELEMENT (pipeline));
+  return gst_pipeline_provide_clock_func (GST_ELEMENT (pipeline));
 }
 
 
