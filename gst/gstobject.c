@@ -376,7 +376,6 @@ gst_object_ref (gpointer object)
   g_atomic_int_inc (&((GstObject *) object)->refcount);
   PATCH_REFCOUNT (object);
 #else
-  /* FIXME, not MT safe because glib is not MT safe */
   g_object_ref (object);
 #endif
 
@@ -427,7 +426,6 @@ gst_object_unref (gpointer object)
     PATCH_REFCOUNT (object);
   }
 #else
-  /* FIXME, not MT safe because glib is not MT safe */
   g_object_unref (object);
 #endif
 }

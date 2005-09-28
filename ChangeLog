@@ -1,3 +1,20 @@
+2005-09-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (add_to_queue), (clear_queue), (reset_outdegree),
+	(update_outdegree), (find_element), (gst_bin_sort_iterator_next),
+	(gst_bin_sort_iterator_resync), (gst_bin_sort_iterator_free),
+	(gst_bin_iterate_sorted), (gst_bin_element_set_state),
+	(gst_bin_change_state), (gst_bin_dispose):
+	Some documentation updates.
+	Clean up dispose handlers.
+
+	* gst/gstobject.c: (gst_object_ref), (gst_object_unref):
+	* gst/gstpad.c: (gst_pad_dispose):
+	Clean up dispose handler.
+
+	* gst/gstpipeline.c: (gst_pipeline_change_state):
+	Removed spurious UNLOCK.
+
 2005-09-27  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:

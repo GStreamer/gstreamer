@@ -302,30 +302,17 @@ gst_pad_dispose (GObject * object)
 {
   GstPad *pad = GST_PAD (object);
 
-  gst_pad_set_pad_template (pad, NULL);
-  /* FIXME, we have links to many other things like caps
-   * and the peer pad... */
-
-  /* No linked pad can ever be disposed.
-   * It has to have a parent to be linked 
-   * and a parent would hold a reference */
-  /* FIXME: what about if g_object_dispose is explicitly called on the pad? Is
-     that legal? otherwise we could assert GST_OBJECT_PARENT (pad) == NULL as
-     well... */
   GST_CAT_DEBUG (GST_CAT_REFCOUNTING, "dispose %s:%s",
       GST_DEBUG_PAD_NAME (pad));
 
-  g_assert (GST_PAD_PEER (pad) == NULL);
+  /* we don't hold a ref to the peer so we can just set the
+   * peer to NULL. */
+  GST_PAD_PEER (pad) = NULL;
 
   /* clear the caps */
   gst_caps_replace (&GST_PAD_CAPS (pad), NULL);
 
-  if (GST_IS_ELEMENT (GST_OBJECT_PARENT (pad))) {
-    GST_CAT_DEBUG (GST_CAT_REFCOUNTING, "removing pad from element '%s'",
-        GST_OBJECT_NAME (GST_OBJECT (GST_ELEMENT (GST_OBJECT_PARENT (pad)))));
-
-    gst_element_remove_pad (GST_ELEMENT (GST_OBJECT_PARENT (pad)), pad);
-  }
+  gst_pad_set_pad_template (pad, NULL);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -3287,7 +3274,8 @@ dropping:
  * @size: The length of the buffer
  * @buffer: a pointer to hold the #GstBuffer.
  *
- * Pulls a buffer from the peer pad. @pad must be linked.
+ * Pulls a buffer from the peer pad. @pad must be a linked
+ * sinkpad.
  *
  * Returns: a #GstFlowReturn from the peer pad.
  *

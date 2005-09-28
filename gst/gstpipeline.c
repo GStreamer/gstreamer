@@ -327,7 +327,6 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
             GST_TIME_ARGS (start_time), GST_TIME_ARGS (element->base_time));
         GST_UNLOCK (element);
       } else {
-        GST_UNLOCK (element);
         GST_DEBUG ("no clock, using base time of 0");
         gst_element_set_base_time (element, 0);
       }

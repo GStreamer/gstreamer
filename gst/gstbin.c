@@ -1053,6 +1053,14 @@ done:
 /***********************************************
  * Topologically sorted iterator 
  * see http://en.wikipedia.org/wiki/Topological_sorting
+ *
+ * For each element in the graph, an entry is kept in a HashTable
+ * with its number of srcpad connections (degree). 
+ * We then change state of all elements without dependencies 
+ * (degree 0) and decrement the degree of all elements connected
+ * on the sinkpads. When an element reaches degree 0, its state is
+ * changed next.
+ * When all elements are handled the algorithm stops.
  */
 typedef struct _GstBinSortIterator
 {
@@ -1201,7 +1209,7 @@ gst_bin_sort_iterator_next (GstBinSortIterator * bit, gpointer * result)
         /* we don't fail on this one yet */
         g_warning ("loop detected in the graph !!");
       }
-      /* best unhandled elements, scheduler as next element */
+      /* best unhandled element, schedule as next element */
       GST_DEBUG ("queue empty, next best: %s", GST_ELEMENT_NAME (bit->best));
       gst_object_ref (bit->best);
       HASH_SET_DEGREE (bit, bit->best, -1);
@@ -1458,9 +1466,10 @@ gst_bin_dispose (GObject * object)
   while (bin->children) {
     gst_bin_remove (bin, GST_ELEMENT (bin->children->data));
   }
-  GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose no children");
-  g_assert (bin->children == NULL);
-  g_assert (bin->numchildren == 0);
+  if (G_UNLIKELY (bin->children != NULL)) {
+    g_critical ("could not remove elements from bin %s",
+        GST_STR_NULL (GST_OBJECT_NAME (object)));
+  }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
