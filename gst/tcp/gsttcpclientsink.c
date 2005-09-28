@@ -53,6 +53,11 @@ enum
       /* FILL ME */
 };
 
+static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
 static void gst_tcpclientsink_base_init (gpointer g_class);
 static void gst_tcpclientsink_class_init (GstTCPClientSink * klass);
 static void gst_tcpclientsink_init (GstTCPClientSink * tcpclientsink);
@@ -95,7 +100,7 @@ gst_tcpclientsink_get_type (void)
     };
 
     tcpclientsink_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstTCPClientSink",
+        g_type_register_static (GST_TYPE_BASE_SINK, "GstTCPClientSink",
         &tcpclientsink_info, 0);
   }
   return tcpclientsink_type;
@@ -105,6 +110,9 @@ static void
 gst_tcpclientsink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sinktemplate));
 
   gst_element_class_set_details (element_class, &gst_tcpclientsink_details);
 }

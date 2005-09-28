@@ -28,6 +28,25 @@
 #include "gsttcpserversrc.h"
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <fcntl.h>
+
+
+/* control stuff stolen from fdsrc */
+#define CONTROL_STOP            'S'     /* stop the select call */
+#define CONTROL_SOCKETS(o)      o->control_fds
+#define WRITE_SOCKET(o)         o->control_fds[1]
+#define READ_SOCKET(o)          o->control_fds[0]
+
+#define SEND_COMMAND(o, command)          \
+G_STMT_START {                              \
+  unsigned char c; c = command;             \
+  write (WRITE_SOCKET(o), &c, 1);         \
+} G_STMT_END
+
+#define READ_COMMAND(o, command, res)        \
+G_STMT_START {                                 \
+  res = read(READ_SOCKET(o), &command, 1);   \
+} G_STMT_END
 
 
 GST_DEBUG_CATEGORY (tcpserversrc_debug);
@@ -66,6 +85,7 @@ static void gst_tcpserversrc_finalize (GObject * gobject);
 
 static gboolean gst_tcpserversrc_start (GstBaseSrc * bsrc);
 static gboolean gst_tcpserversrc_stop (GstBaseSrc * bsrc);
+static gboolean gst_tcpserversrc_unlock (GstBaseSrc * bsrc);
 static GstFlowReturn gst_tcpserversrc_create (GstPushSrc * psrc,
     GstBuffer ** buf);
 
@@ -113,6 +133,7 @@ gst_tcpserversrc_class_init (GstTCPServerSrcClass * klass)
 
   gstbasesrc_class->start = gst_tcpserversrc_start;
   gstbasesrc_class->stop = gst_tcpserversrc_stop;
+  gstbasesrc_class->unlock = gst_tcpserversrc_unlock;
 
   gstpush_src_class->create = gst_tcpserversrc_create;
 
@@ -129,6 +150,9 @@ gst_tcpserversrc_init (GstTCPServerSrc * src, GstTCPServerSrcClass * g_class)
   src->client_sock_fd = -1;
   src->curoffset = 0;
   src->protocol = GST_TCP_PROTOCOL_NONE;
+
+  READ_SOCKET (src) = -1;
+  WRITE_SOCKET (src) = -1;
 
   GST_FLAG_UNSET (src, GST_TCPSERVERSRC_OPEN);
 }
@@ -156,8 +180,8 @@ gst_tcpserversrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 
   switch (src->protocol) {
     case GST_TCP_PROTOCOL_NONE:
-      ret = gst_tcp_read_buffer (GST_ELEMENT (src), src->client_sock_fd, -1,
-          outbuf);
+      ret = gst_tcp_read_buffer (GST_ELEMENT (src), src->client_sock_fd,
+          READ_SOCKET (src), outbuf);
       break;
 
     case GST_TCP_PROTOCOL_GDP:
@@ -165,8 +189,8 @@ gst_tcpserversrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
         GstCaps *caps;
         gchar *string;
 
-        ret = gst_tcp_gdp_read_caps (GST_ELEMENT (src), src->client_sock_fd, -1,
-            &caps);
+        ret = gst_tcp_gdp_read_caps (GST_ELEMENT (src), src->client_sock_fd,
+            READ_SOCKET (src), &caps);
 
         if (ret != GST_FLOW_OK)
           goto gdp_caps_read_error;
@@ -179,8 +203,8 @@ gst_tcpserversrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
         gst_pad_set_caps (GST_BASE_SRC_PAD (psrc), caps);
       }
 
-      ret = gst_tcp_gdp_read_buffer (GST_ELEMENT (src), src->client_sock_fd, -1,
-          outbuf);
+      ret = gst_tcp_gdp_read_buffer (GST_ELEMENT (src), src->client_sock_fd,
+          READ_SOCKET (src), outbuf);
 
       if (ret == GST_FLOW_OK)
         gst_buffer_set_caps (*outbuf, GST_PAD_CAPS (GST_BASE_SRC_PAD (src)));
@@ -277,6 +301,13 @@ gst_tcpserversrc_start (GstBaseSrc * bsrc)
   int ret;
   GstTCPServerSrc *src = GST_TCPSERVERSRC (bsrc);
 
+  /* create the control sockets before anything */
+  if (socketpair (PF_UNIX, SOCK_STREAM, 0, CONTROL_SOCKETS (src)) < 0)
+    goto socket_pair;
+
+  fcntl (READ_SOCKET (src), F_SETFL, O_NONBLOCK);
+  fcntl (WRITE_SOCKET (src), F_SETFL, O_NONBLOCK);
+
   /* reset caps_received flag */
   src->caps_received = FALSE;
 
@@ -334,6 +365,12 @@ gst_tcpserversrc_start (GstBaseSrc * bsrc)
   return TRUE;
 
   /* ERRORS */
+socket_pair:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE, (NULL),
+        GST_ERROR_SYSTEM);
+    return FALSE;
+  }
 socket_error:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL), GST_ERROR_SYSTEM);
@@ -391,6 +428,22 @@ gst_tcpserversrc_stop (GstBaseSrc * bsrc)
     src->client_sock_fd = -1;
   }
   GST_FLAG_UNSET (src, GST_TCPSERVERSRC_OPEN);
+
+  close (READ_SOCKET (src));
+  close (WRITE_SOCKET (src));
+  READ_SOCKET (src) = -1;
+  WRITE_SOCKET (src) = -1;
+
+  return TRUE;
+}
+
+/* will be called only between calls to start() and stop() */
+static gboolean
+gst_tcpserversrc_unlock (GstBaseSrc * bsrc)
+{
+  GstTCPServerSrc *src = GST_TCPSERVERSRC (bsrc);
+
+  SEND_COMMAND (src, CONTROL_STOP);
 
   return TRUE;
 }

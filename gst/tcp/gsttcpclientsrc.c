@@ -34,19 +34,19 @@
 
 /* control stuff stolen from fdsrc */
 #define CONTROL_STOP            'S'     /* stop the select call */
-#define CONTROL_SOCKETS(src)   src->control_fds
-#define WRITE_SOCKET(src)      src->control_fds[1]
-#define READ_SOCKET(src)       src->control_fds[0]
+#define CONTROL_SOCKETS(o)      o->control_fds
+#define WRITE_SOCKET(o)         o->control_fds[1]
+#define READ_SOCKET(o)          o->control_fds[0]
 
-#define SEND_COMMAND(src, command)          \
+#define SEND_COMMAND(o, command)          \
 G_STMT_START {                              \
   unsigned char c; c = command;             \
-  write (WRITE_SOCKET(src), &c, 1);         \
+  write (WRITE_SOCKET(o), &c, 1);         \
 } G_STMT_END
 
-#define READ_COMMAND(src, command, res)        \
+#define READ_COMMAND(o, command, res)        \
 G_STMT_START {                                 \
-  res = read(READ_SOCKET(src), &command, 1);   \
+  res = read(READ_SOCKET(o), &command, 1);   \
 } G_STMT_END
 
 

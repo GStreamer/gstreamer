@@ -72,6 +72,8 @@ struct _GstTCPServerSrc {
   socklen_t client_sin_len;
   int client_sock_fd;
 
+  int control_fds[2];
+
   /* number of bytes we've gotten */
   off_t curoffset;
 

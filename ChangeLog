@@ -1,5 +1,12 @@
 2005-09-28  Andy Wingo  <wingo@pobox.com>
 
+	* gst/tcp/gsttcpclientsink.c (gst_tcpclientsink_base_init):
+	Actually add the pad template.
+	(gst_tcpclientsink_get_type): We're a base sink. Woot, works.
+
+	* gst/tcp/gsttcpserversrc.c: Go ahead and fix up serversrc while
+	I'm at it...
+
 	* gst/tcp/gsttcpclientsrc.c: Make interruptable -- code stolen
 	from fdsrc. Get caps in create() instead of start() so it can be
 	interrupted. Interruption somewhat untested.
