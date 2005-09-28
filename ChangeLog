@@ -1,3 +1,8 @@
+2005-09-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header):
+	No need to take stream lock here.
+
 2005-09-26  Christian Schaller  <uraeus@gnome.org>
 
 	* configure.ac: add speed and rfb where needed

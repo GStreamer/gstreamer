@@ -506,11 +506,6 @@ gst_qtdemux_loop_header (GstPad * pad)
   int size;
   GstFlowReturn ret;
 
-  /* FIXME _tell gets the offset wrong */
-  //cur_offset = gst_bytestream_tell(qtdemux->bs);
-
-  GST_STREAM_LOCK (pad);
-
   cur_offset = qtdemux->offset;
   GST_DEBUG ("loop at position %" G_GUINT64_FORMAT ", state %d",
       cur_offset, qtdemux->state);
@@ -695,14 +690,12 @@ gst_qtdemux_loop_header (GstPad * pad)
       g_error ("State=%d", qtdemux->state);
   }
 
-  GST_STREAM_UNLOCK (pad);
-
   return;
 
 pause:
   GST_LOG_OBJECT (qtdemux, "pausing task");
   gst_pad_pause_task (qtdemux->sinkpad);
-  GST_STREAM_UNLOCK (pad);
+  return;
 }
 
 static gboolean
