@@ -30,6 +30,7 @@ except ImportError:
         pass
 import os
 import sys
+import gc
 import unittest
 
 import pygtk
@@ -109,3 +110,31 @@ def run_silent(function, *args, **kwargs):
    output = enable_stderr()
 
    return output
+
+class TestCase(unittest.TestCase):
+    def gccollect(self):
+        # run the garbage collector
+        gst.debug('garbage collecting')
+        gc.collect()
+        gst.debug('done garbage collecting')
+
+    def gctrack(self):
+        # store all gst objects in the gc in a tracking dict
+        # call before doing any allocation in your test, from setUp
+        gst.debug('tracking gc GstObjects')
+        self.gccollect()
+        self._tracked = {}
+        for c in [gst.Element, gst.Pad]:
+            self._tracked[c] = [o for o in gc.get_objects() if isinstance(o, c)]
+
+    def gcverify(self):
+        # verify no new gst objects got added to the gc
+        # call after doing all cleanup in your test, from tearDown
+        gst.debug('verifying gc GstObjects')
+        new = []
+        for c in [gst.Element, gst.Pad]:
+            objs = [o for o in gc.get_objects() if isinstance(o, c)]
+            new.extend([o for o in objs if o not in self._tracked[c]])
+
+        self.failIf(new, new)
+        del self._tracked

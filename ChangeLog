@@ -1,5 +1,13 @@
 2005-09-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* testsuite/common.py:
+	  add a common.TestCase class that has methods to track and verify
+	  garbage collection of GstObject
+	* testsuite/test_pad.py:
+	  use it
+
+2005-09-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/Makefile.am:
 	* gst/common.h:
 	* gst/pygstobject.c: (pygstobject_sink), (pygstobject_new),
