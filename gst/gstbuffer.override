@@ -76,21 +76,6 @@ _wrap_gst_buffer_new(PyGstMiniObject *self, PyObject *args, PyObject *kwargs)
 	return 0;
 }
 %%
-override gst_buffer_new_and_alloc kwargs
-static PyObject *
-_wrap_gst_buffer_new_and_alloc(PyObject *self, PyObject *args, PyObject *kwargs)
-{
-    static char *kwlist[] = { "size", NULL };
-    GstBuffer *ret;
-    guint size;
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "I:buffer_new_and_alloc", kwlist, &size))
-        return NULL;
-    ret = gst_buffer_new_and_alloc(size);
-    /* pygobject_new handles NULL checking */
-    return pygstminiobject_new_noref((GstMiniObject *)ret);
-}
-%%
 override gst_buffer_get_data
 static PyObject*
 _wrap_gst_buffer_get_data(PyObject *self)

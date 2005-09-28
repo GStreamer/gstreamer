@@ -1,3 +1,35 @@
+2005-09-28  Edward Hervey  <edward@fluendo.com>
+
+	* codegen/argtypes.py:
+	Proper handling of 'caller-owns-return' for miniobjects
+	
+	* gst/gst-types.defs:
+	Updating parenting of classes,
+	added/removed/updated flags&enums
+	
+	* gst/gst.defs:
+	Updated to current core cvs,
+	Added 'caller-owns-return' properties for functions/methods that require
+	it
+	* gst/gst.override:
+	Don't make *_[un]ref() accessible
+
+	* gst/gstbuffer.override:
+	* gst/gstevent.override:
+	* gst/gstmessage.override:
+	* gst/gstquery.override:
+	Removed hack-ish wrappers since codegenerator handles
+	'caller-owns-return' methods/functions
+	* gst/gstmodule.c: (sink_gstobject), (init_gst):
+	Re-enabled sink function
+	* gst/libs.defs:
+	Updated to current core cvs
+	Removed Adapter
+	
+	* gst/pygstminiobject.c:
+	* gst/pygstminiobject.h:
+	removed _new_noref() hack
+
 2005-09-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstpad.override:

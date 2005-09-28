@@ -89,6 +89,7 @@
   (of-object "GstBin")
   (c-name "gst_bin_get_by_name")
   (return-type "GstElement*")
+  (caller-owns-return #t)
   (parameters
     '("const-gchar*" "name")
   )
@@ -98,6 +99,7 @@
   (of-object "GstBin")
   (c-name "gst_bin_get_by_name_recurse_up")
   (return-type "GstElement*")
+  (caller-owns-return #t)
   (parameters
     '("const-gchar*" "name")
   )
@@ -107,6 +109,7 @@
   (of-object "GstBin")
   (c-name "gst_bin_get_by_interface")
   (return-type "GstElement*")
+  (caller-owns-return #t)
   (parameters
     '("GType" "interface")
   )
@@ -115,6 +118,12 @@
 (define-method iterate_elements
   (of-object "GstBin")
   (c-name "gst_bin_iterate_elements")
+  (return-type "GstIterator*")
+)
+
+(define-method iterate_sorted
+  (of-object "GstBin")
+  (c-name "gst_bin_iterate_sorted")
   (return-type "GstIterator*")
 )
 
@@ -171,6 +180,7 @@
 (define-function buffer_new_and_alloc
   (c-name "gst_buffer_new_and_alloc")
   (return-type "GstBuffer*")
+  (caller-owns-return #t)
   (parameters
     '("guint" "size")
   )
@@ -180,6 +190,7 @@
   (of-object "GstBuffer")
   (c-name "gst_buffer_get_caps")
   (return-type "GstCaps*")
+  (caller-owns-return #t)
 )
 
 (define-method set_caps
@@ -195,6 +206,7 @@
   (of-object "GstBuffer")
   (c-name "gst_buffer_create_sub")
   (return-type "GstBuffer*")
+  (caller-owns-return #t)
   (parameters
     '("guint" "offset")
     '("guint" "size")
@@ -214,6 +226,7 @@
   (of-object "GstBuffer")
   (c-name "gst_buffer_span")
   (return-type "GstBuffer*")
+  (caller-owns-return #t)
   (parameters
     '("guint32" "offset")
     '("GstBuffer*" "buf2")
@@ -250,7 +263,7 @@
   (c-name "gst_bus_have_pending")
   (return-type "gboolean")
   (parameters
-    '("GstMessageType" "type")
+    '("GstMessageType" "events")
   )
 )
 
@@ -258,12 +271,14 @@
   (of-object "GstBus")
   (c-name "gst_bus_peek")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
 )
 
 (define-method pop
   (of-object "GstBus")
   (c-name "gst_bus_pop")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
 )
 
 (define-method set_flushing
@@ -289,6 +304,9 @@
   (of-object "GstBus")
   (c-name "gst_bus_create_watch")
   (return-type "GSource*")
+  (parameters
+    '("GstMessageType" "events")
+  )
 )
 
 (define-method add_watch_full
@@ -297,7 +315,7 @@
   (return-type "guint")
   (parameters
     '("gint" "priority")
-    '("GstMessageType" "type")
+    '("GstMessageType" "events")
     '("GstBusFunc" "func")
     '("gpointer" "user_data")
     '("GDestroyNotify" "notify")
@@ -309,7 +327,7 @@
   (c-name "gst_bus_add_watch")
   (return-type "guint")
   (parameters
-    '("GstMessageType" "type")
+    '("GstMessageType" "events")
     '("GstBusFunc" "func")
     '("gpointer" "user_data")
   )
@@ -319,6 +337,7 @@
   (of-object "GstBus")
   (c-name "gst_bus_poll")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
   (parameters
     '("GstMessageType" "events")
     '("GstClockTimeDiff" "timeout")
@@ -343,11 +362,13 @@
 (define-function caps_new_any
   (c-name "gst_caps_new_any")
   (return-type "GstCaps*")
+  (caller-owns-return #t)
 )
 
 (define-function caps_new_simple
   (c-name "gst_caps_new_simple")
   (return-type "GstCaps*")
+  (caller-owns-return #t)
   (parameters
     '("const-char*" "media_type")
     '("const-char*" "fieldname")
@@ -358,6 +379,7 @@
 (define-function caps_new_full
   (c-name "gst_caps_new_full")
   (return-type "GstCaps*")
+  (caller-owns-return #t)
   (parameters
     '("GstStructure*" "struct1")
   )
@@ -367,6 +389,7 @@
 (define-function caps_new_full_valist
   (c-name "gst_caps_new_full_valist")
   (return-type "GstCaps*")
+  (caller-owns-return #t)
   (parameters
     '("GstStructure*" "structure")
     '("va_list" "var_args")
@@ -383,12 +406,14 @@
   (of-object "GstCaps")
   (c-name "gst_caps_copy")
   (return-type "GstCaps*")
+  (caller-owns-return #t)
 )
 
 (define-method make_writable
   (of-object "GstCaps")
   (c-name "gst_caps_make_writable")
   (return-type "GstCaps*")
+  (caller-owns-return #t)
 )
 
 (define-method unref
@@ -440,6 +465,7 @@
   (of-object "GstCaps")
   (c-name "gst_caps_copy_nth")
   (return-type "GstCaps*")
+  (caller-owns-return #t)
   (parameters
     '("gint" "nth")
   )
@@ -520,6 +546,7 @@
   (of-object "GstCaps")
   (c-name "gst_caps_intersect")
   (return-type "GstCaps*")
+  (caller-owns-return #t)
   (parameters
     '("const-GstCaps*" "caps2")
   )
@@ -529,6 +556,7 @@
   (of-object "GstCaps")
   (c-name "gst_caps_subtract")
   (return-type "GstCaps*")
+  (caller-owns-return #t)
   (parameters
     '("const-GstCaps*" "subtrahend")
   )
@@ -538,6 +566,7 @@
   (of-object "GstCaps")
   (c-name "gst_caps_union")
   (return-type "GstCaps*")
+  (caller-owns-return #t)
   (parameters
     '("const-GstCaps*" "caps2")
   )
@@ -547,6 +576,7 @@
   (of-object "GstCaps")
   (c-name "gst_caps_normalize")
   (return-type "GstCaps*")
+  (caller-owns-return #t)
 )
 
 (define-method do_simplify
@@ -590,6 +620,7 @@
 (define-function caps_from_string
   (c-name "gst_caps_from_string")
   (return-type "GstCaps*")
+  (caller-owns-return #t)
   (parameters
     '("const-gchar*" "string")
   )
@@ -815,6 +846,7 @@
   (of-object "GstElement")
   (c-name "gst_element_get_clock")
   (return-type "GstClock*")
+  (caller-owns-return #t)
 )
 
 (define-method set_clock
@@ -860,6 +892,7 @@
   (of-object "GstElement")
   (c-name "gst_element_get_index")
   (return-type "GstIndex*")
+  (caller-owns-return #t)
 )
 
 (define-method set_bus
@@ -875,6 +908,7 @@
   (of-object "GstElement")
   (c-name "gst_element_get_bus")
   (return-type "GstBus*")
+  (caller-owns-return #t)
 )
 
 (define-method add_pad
@@ -905,6 +939,7 @@
   (of-object "GstElement")
   (c-name "gst_element_get_pad")
   (return-type "GstPad*")
+  (caller-owns-return #t)
   (parameters
     '("const-gchar*" "name")
   )
@@ -914,6 +949,7 @@
   (of-object "GstElement")
   (c-name "gst_element_get_static_pad")
   (return-type "GstPad*")
+  (caller-owns-return #t)
   (parameters
     '("const-gchar*" "name")
   )
@@ -923,6 +959,7 @@
   (of-object "GstElement")
   (c-name "gst_element_get_request_pad")
   (return-type "GstPad*")
+  (caller-owns-return #t)
   (parameters
     '("const-gchar*" "name")
   )
@@ -1256,6 +1293,7 @@
   (of-object "GstElementFactory")
   (c-name "gst_element_factory_create")
   (return-type "GstElement*")
+  (caller-owns-return #t)
   (parameters
     '("const-gchar*" "name" (null-ok) (default "NULL"))
   )
@@ -1264,6 +1302,7 @@
 (define-function element_factory_make
   (c-name "gst_element_factory_make")
   (return-type "GstElement*")
+  (caller-owns-return #t)
   (parameters
     '("const-gchar*" "factoryname")
     '("const-gchar*" "name" (null-ok) (default "NULL"))
@@ -1578,6 +1617,7 @@
 (define-function event_new_custom
   (c-name "gst_event_new_custom")
   (return-type "GstEvent*")
+  (caller-owns-return #t)
   (parameters
     '("GstEventType" "type")
     '("GstStructure*" "structure")
@@ -1593,21 +1633,25 @@
 (define-function event_new_flush_start
   (c-name "gst_event_new_flush_start")
   (return-type "GstEvent*")
+  (caller-owns-return #t)
 )
 
 (define-function event_new_flush_stop
   (c-name "gst_event_new_flush_stop")
   (return-type "GstEvent*")
+  (caller-owns-return #t)
 )
 
 (define-function event_new_eos
   (c-name "gst_event_new_eos")
   (return-type "GstEvent*")
+  (caller-owns-return #t)
 )
 
 (define-function event_new_newsegment
   (c-name "gst_event_new_newsegment")
   (return-type "GstEvent*")
+  (caller-owns-return #t)
   (parameters
     '("gdouble" "rate")
     '("GstFormat" "format")
@@ -1633,6 +1677,7 @@
 (define-function event_new_tag
   (c-name "gst_event_new_tag")
   (return-type "GstEvent*")
+  (caller-owns-return #t)
   (parameters
     '("GstTagList*" "taglist")
   )
@@ -1650,11 +1695,13 @@
 (define-function event_new_filler
   (c-name "gst_event_new_filler")
   (return-type "GstEvent*")
+  (caller-owns-return #t)
 )
 
 (define-function event_new_qos
   (c-name "gst_event_new_qos")
   (return-type "GstEvent*")
+  (caller-owns-return #t)
   (parameters
     '("gdouble" "proportion")
     '("GstClockTimeDiff" "diff")
@@ -1676,6 +1723,7 @@
 (define-function event_new_seek
   (c-name "gst_event_new_seek")
   (return-type "GstEvent*")
+  (caller-owns-return #t)
   (parameters
     '("gdouble" "rate")
     '("GstFormat" "format")
@@ -1705,6 +1753,7 @@
 (define-function event_new_navigation
   (c-name "gst_event_new_navigation")
   (return-type "GstEvent*")
+  (caller-owns-return #t)
   (parameters
     '("GstStructure*" "structure")
   )
@@ -1787,6 +1836,7 @@
 (define-function ghost_pad_new_notarget
   (c-name "gst_ghost_pad_new_notarget")
   (return-type "GstPad*")
+  (caller-owns-return #t)
   (parameters
     '("const-gchar*" "name")
     '("GstPadDirection" "dir")
@@ -1796,6 +1846,7 @@
 (define-method get_target
   (of-object "GstGhostPad")
   (c-name "gst_ghost_pad_get_target")
+  (caller-owns-return #t)
   (return-type "GstPad*")
 )
 
@@ -2002,6 +2053,7 @@
 (define-method copy
   (of-object "GstIndexEntry")
   (c-name "gst_index_entry_copy")
+  (caller-owns-return #t)
   (return-type "GstIndexEntry*")
 )
 
@@ -2055,11 +2107,13 @@
   (of-object "GstIndexFactory")
   (c-name "gst_index_factory_create")
   (return-type "GstIndex*")
+  (caller-owns-return #t)
 )
 
 (define-function index_factory_make
   (c-name "gst_index_factory_make")
   (return-type "GstIndex*")
+  (caller-owns-return #t)
   (parameters
     '("const-gchar*" "name")
   )
@@ -2512,6 +2566,7 @@
 (define-function message_new_eos
   (c-name "gst_message_new_eos")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
   )
@@ -2520,6 +2575,7 @@
 (define-function message_new_error
   (c-name "gst_message_new_error")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
     '("GError*" "error")
@@ -2530,6 +2586,7 @@
 (define-function message_new_warning
   (c-name "gst_message_new_warning")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
     '("GError*" "error")
@@ -2540,6 +2597,7 @@
 (define-function message_new_tag
   (c-name "gst_message_new_tag")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
     '("GstTagList*" "tag_list")
@@ -2549,6 +2607,7 @@
 (define-function message_new_state_changed
   (c-name "gst_message_new_state_changed")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
     '("GstState" "old_state")
@@ -2559,6 +2618,7 @@
 (define-function gst_message_new_segment_start
   (c-name "gst_message_new_segment_start")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
     '("GstClockTime" "timestamp")
@@ -2568,6 +2628,7 @@
 (define-function gst_message_new_segment_done
   (c-name "gst_message_new_segment_done")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
     '("GstClockTime" "timestamp")
@@ -2577,6 +2638,7 @@
 (define-function message_new_custom
   (c-name "gst_message_new_custom")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
   (parameters
     '("GstMessageType" "type")
     '("GstObject*" "src")
@@ -2669,6 +2731,7 @@
   (of-object "GstMiniObject")
   (c-name "gst_mini_object_copy")
   (return-type "GstMiniObject*")
+  (caller-owns-return #t)
 )
 
 (define-method is_writable
@@ -2681,6 +2744,7 @@
   (of-object "GstMiniObject")
   (c-name "gst_mini_object_make_writable")
   (return-type "GstMiniObject*")
+  (caller-owns-return #t)
 )
 
 (define-method ref
@@ -2792,12 +2856,22 @@
   (of-object "GstObject")
   (c-name "gst_object_get_parent")
   (return-type "GstObject*")
+  (caller-owns-return #t)
 )
 
 (define-method unparent
   (of-object "GstObject")
   (c-name "gst_object_unparent")
   (return-type "none")
+)
+
+(define-method has_ancestor
+  (of-object "GstObject")
+  (c-name "gst_object_has_ancestor")
+  (return-type "gboolean")
+  (parameters
+    '("GstObject*" "ancestor")
+  )
 )
 
 (define-function object_default_deep_notify
@@ -2982,6 +3056,7 @@
 (define-function pad_new_from_template
   (c-name "gst_pad_new_from_template")
   (return-type "GstPad*")
+  (caller-owns-return #t)
   (parameters
     '("GstPadTemplate*" "templ")
     '("const-gchar*" "name")
@@ -3204,6 +3279,7 @@
   (of-object "GstPad")
   (c-name "gst_pad_get_peer")
   (return-type "GstPad*")
+  (caller-owns-return #t)
 )
 
 (define-method set_getcaps_function
@@ -3252,6 +3328,7 @@
   (of-object "GstPad")
   (c-name "gst_pad_get_caps")
   (return-type "GstCaps*")
+  (caller-owns-return #t)
 )
 
 (define-method fixate_caps
@@ -3285,6 +3362,7 @@
   (of-object "GstPad")
   (c-name "gst_pad_peer_get_caps")
   (return-type "GstCaps*")
+  (caller-owns-return #t)
 )
 
 (define-method peer_accept_caps
@@ -3300,12 +3378,14 @@
   (of-object "GstPad")
   (c-name "gst_pad_get_allowed_caps")
   (return-type "GstCaps*")
+  (caller-owns-return #t)
 )
 
 (define-method get_negotiated_caps
   (of-object "GstPad")
   (c-name "gst_pad_get_negotiated_caps")
   (return-type "GstCaps*")
+  (caller-owns-return #t)
 )
 
 (define-method push
@@ -3569,20 +3649,31 @@
   (of-object "GstStaticPadTemplate")
   (c-name "gst_static_pad_template_get")
   (return-type "GstPadTemplate*")
+  (caller-owns-return #t)
 )
 
 (define-method get_caps
   (of-object "GstStaticPadTemplate")
   (c-name "gst_static_pad_template_get_caps")
   (return-type "GstCaps*")
+  (caller-owns-return #t)
 )
 
 (define-method get_caps
   (of-object "GstPadTemplate")
   (c-name "gst_pad_template_get_caps")
   (return-type "GstCaps*")
+  (caller-owns-return #t)
 )
 
+(define-method pad_created
+  (of-object "GstPadTemplate")
+  (c-name "gst_pad_template_pad_created")
+  (return-type "none")
+  (parameters
+    '("GstPad*" "pad")
+  )
+)
 
 
 ;; From ../gstreamer/gst/gstparse.h
@@ -3632,6 +3723,7 @@
   (of-object "GstPipeline")
   (c-name "gst_pipeline_get_bus")
   (return-type "GstBus*")
+  (caller-owns-return #t)
 )
 
 (define-method set_new_stream_time
@@ -3671,6 +3763,7 @@
   (of-object "GstPipeline")
   (c-name "gst_pipeline_get_clock")
   (return-type "GstClock*")
+  (caller-owns-return #t)
 )
 
 (define-method auto_clock
@@ -3753,28 +3846,6 @@
   (return-type "gboolean")
 )
 
-(define-method feature_filter
-  (of-object "GstPlugin")
-  (c-name "gst_plugin_feature_filter")
-  (return-type "GList*")
-  (parameters
-    '("GstPluginFeatureFilter" "filter")
-    '("gboolean" "first")
-    '("gpointer" "user_data")
-  )
-)
-
-(define-function plugin_list_feature_filter
-  (c-name "gst_plugin_list_feature_filter")
-  (return-type "GList*")
-  (parameters
-    '("GList*" "list")
-    '("GstPluginFeatureFilter" "filter")
-    '("gboolean" "first")
-    '("gpointer" "user_data")
-  )
-)
-
 (define-method name_filter
   (of-object "GstPlugin")
   (c-name "gst_plugin_name_filter")
@@ -3807,6 +3878,22 @@
   (of-object "GstPlugin")
   (c-name "gst_plugin_load")
   (return-type "GstPlugin*")
+)
+
+(define-function plugin_load_by_name
+  (c-name "gst_plugin_load_by_name")
+  (return-type "GstPlugin*")
+  (parameters
+    '("const-gchar*" "name")
+  )
+)
+
+(define-function plugin_list_free
+  (c-name "gst_plugin_list_free")
+  (return-type "none")
+  (parameters
+    '("GList*" "list")
+  )
 )
 
 
@@ -3863,6 +3950,14 @@
   (return-type "const-gchar*")
 )
 
+(define-function plugin_feature_list_free
+  (c-name "gst_plugin_feature_list_free")
+  (return-type "none")
+  (parameters
+    '("GList*" "list")
+  )
+)
+
 ;; From ../gstreamer/gst/gstquery.h
 
 (define-function gst_query_get_type
@@ -3910,6 +4005,7 @@
 (define-function query_new_position
   (c-name "gst_query_new_position")
   (return-type "GstQuery*")
+  (caller-owns-return #t)
   (parameters
     '("GstFormat" "format")
   )
@@ -3940,6 +4036,7 @@
 (define-function query_new_convert
   (c-name "gst_query_new_convert")
   (return-type "GstQuery*")
+  (caller-owns-return #t)
   (parameters
     '("GstFormat" "src_fmt")
     '("gint64" "value")
@@ -3971,9 +4068,45 @@
   )
 )
 
+(define-function query_new_segment
+  (c-name "gst_query_new_segment")
+  (return-type "GstQuery*")
+  (caller-owns-return #t)
+  (parameters
+    '("GstFormat" "format")
+  )
+)
+
+(define-method set_segment
+  (of-object "GstQuery")
+  (c-name "gst_query_set_segment")
+  (return-type "none")
+  (parameters
+    '("gdouble" "rate")
+    '("GstFormat" "format")
+    '("gint64" "start_value")
+    '("gint64" "stop_value")
+    '("gint64" "base")
+  )
+)
+
+(define-method parse_segment
+  (of-object "GstQuery")
+  (c-name "gst_query_parse_segment")
+  (return-type "none")
+  (parameters
+    '("gdouble*" "rate")
+    '("GstFormat*" "format")
+    '("gint64*" "start_value")
+    '("gint64*" "stop_value")
+    '("gint64*" "base")
+  )
+)
+
 (define-function query_new_application
   (c-name "gst_query_new_application")
   (return-type "GstQuery*")
+  (caller-owns-return #t)
   (parameters
     '("GstQueryType" "type")
     '("GstStructure*" "structure")
@@ -3985,7 +4118,6 @@
   (c-name "gst_query_get_structure")
   (return-type "GstStructure*")
 )
-
 
 
 (define-method set_seeking
@@ -4087,6 +4219,7 @@
   (of-object "GstRegistry")
   (c-name "gst_registry_find_plugin")
   (return-type "GstPlugin*")
+  (caller-owns-return #t)
   (parameters
     '("const-gchar*" "name")
   )
@@ -4117,13 +4250,13 @@
   (c-name "gst_registry_get_feature_list_by_plugin")
   (return-type "GList*")
   (parameters
-    '("const gchar*" "name")
+    '("const-gchar*" "name")
   )
 )
 (define-method add_feature
   (of-object "GstRegistry")
   (c-name "gst_registry_add_feature")
-  (return-type "none")
+  (return-type "gboolean")
   (parameters
     '("GstPluginFeature*" "feature")
   )
@@ -4143,6 +4276,7 @@
   (of-object "GstRegistry")
   (c-name "gst_registry_find_feature")
   (return-type "GstPluginFeature*")
+  (caller-owns-return #t)
   (parameters
     '("const-gchar*" "name")
     '("GType" "type")
@@ -4153,6 +4287,7 @@
   (of-object "GstRegistry")
   (c-name "gst_registry_lookup_feature")
   (return-type "GstPluginFeature*")
+  (caller-owns-return #t)
   (parameters
     '("const-char*" "name")
   )
@@ -4162,8 +4297,9 @@
   (of-object "GstRegistry")
   (c-name "gst_registry_lookup")
   (return-type "GstPlugin*")
+  (caller-owns-return #t)
   (parameters
-    '("const-char*" "location")
+    '("const-char*" "filename")
   )
 )
 
@@ -4183,6 +4319,12 @@
   (parameters
     '("const-char*" "location")
   )
+)
+
+(define-method scan_paths
+  (of-object "GstRegistry")
+  (c-name "gst_registry_scan_paths")
+  (return-type "none")
 )
 
 ;; From ../gstreamer/gst/gststructure.h
@@ -4224,6 +4366,7 @@
 (define-function structure_new_valist
   (c-name "gst_structure_new_valist")
   (return-type "GstStructure*")
+  (caller-owns-return #t)
   (parameters
     '("const-gchar*" "name")
     '("const-gchar*" "firstfield")
@@ -4235,6 +4378,7 @@
   (of-object "GstStructure")
   (c-name "gst_structure_copy")
   (return-type "GstStructure*")
+  (caller-owns-return #t)
 )
 
 (define-method set_parent_refcount
@@ -4486,6 +4630,26 @@
   )
 )
 
+(define-method get_date
+  (of-object "GstStructure")
+  (c-name "gst_structure_get_date")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "fieldname")
+    '("GDate**" "value")
+  )
+)
+
+(define-method get_clock_time
+  (of-object "GstStructure")
+  (c-name "gst_structure_get_clock_time")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "fieldname")
+    '("GstClockTime*" "value")
+  )
+)
+
 (define-method get_string
   (of-object "GstStructure")
   (c-name "gst_structure_get_string")
@@ -4504,6 +4668,7 @@
 (define-function structure_from_string
   (c-name "gst_structure_from_string")
   (return-type "GstStructure*")
+  (caller-owns-return #t)
   (parameters
     '("const-gchar*" "string")
     '("gchar**" "end")
@@ -4542,6 +4707,7 @@
 (define-function system_clock_obtain
   (c-name "gst_system_clock_obtain")
   (return-type "GstClock*")
+  (caller-owns-return #t)
 )
 
 
@@ -4650,6 +4816,7 @@
   (of-object "GstTagList")
   (c-name "gst_tag_list_copy")
   (return-type "GstTagList*")
+  (caller-owns-return #t)
 )
 
 (define-method insert
@@ -4666,6 +4833,7 @@
   (of-object "GstTagList")
   (c-name "gst_tag_list_merge")
   (return-type "GstTagList*")
+  (caller-owns-return #t)
   (parameters
     '("const-GstTagList*" "list2")
     '("GstTagMergeMode" "mode")
@@ -5340,7 +5508,7 @@
 (define-method get_caps
   (of-object "GstTypeFindFactory")
   (c-name "gst_type_find_factory_get_caps")
-  (return-type "const-GstCaps*")
+  (return-type "GstCaps*")
 )
 
 (define-method call_function
@@ -5485,6 +5653,16 @@
   (parameters
     '("const-guchar*" "mem")
     '("guint" "size")
+  )
+)
+
+(define-function gst_util_uint64_scale
+  (c-name "gst_util_uint64_scale")
+  (return-type "guint64")
+  (parameters
+    '("guint64" "val")
+    '("guint64" "num")
+    '("guint64" "denom")
   )
 )
 
@@ -5725,12 +5903,14 @@
   (of-object "GstPad")
   (c-name "gst_pad_get_fixed_caps_func")
   (return-type "GstCaps*")
+  (caller-owns-return #t)
 )
 
 (define-method proxy_getcaps
   (of-object "GstPad")
   (c-name "gst_pad_proxy_getcaps")
   (return-type "GstCaps*")
+  (caller-owns-return #t)
 )
 
 (define-method proxy_setcaps
@@ -5746,6 +5926,7 @@
   (of-object "GstPad")
   (c-name "gst_pad_get_parent_element")
   (return-type "GstElement*")
+  (caller-owns-return #t)
 )
 
 (define-function flow_get_name
@@ -5809,6 +5990,7 @@
   (of-object "GstBuffer")
   (c-name "gst_buffer_merge")
   (return-type "GstBuffer*")
+  (caller-owns-return #t)
   (parameters
     '("GstBuffer*" "buf2")
   )
@@ -5818,6 +6000,7 @@
   (of-object "GstBuffer")
   (c-name "gst_buffer_join")
   (return-type "GstBuffer*")
+  (caller-owns-return #t)
   (parameters
     '("GstBuffer*" "buf2")
   )
@@ -6043,6 +6226,23 @@
     '("GValue*" "product")
     '("const-GValue*" "factor1")
     '("const-GValue*" "factor2")
+  )
+)
+
+(define-function value_get_date
+  (c-name "gst_value_get_date")
+  (return-type "const-GDate*")
+  (parameters
+    '("const-GValue*" "value")
+  )
+)
+
+(define-function value_set_date
+  (c-name "gst_value_set_date")
+  (return-type "none")
+  (parameters
+    '("GValue*" "value")
+    '("const-GDate*" "date")
   )
 )
 

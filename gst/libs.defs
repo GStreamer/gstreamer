@@ -1,11 +1,5 @@
 ;; -*- scheme -*-
 ; object definitions ...
-(define-object Adapter
-  (in-module "Gst")
-  (parent "GObject")
-  (c-name "GstAdapter")
-  (gtype-id "GST_TYPE_ADAPTER")
-)
 
 (define-object Controller
   (in-module "Gst")
@@ -50,62 +44,6 @@
     '("event-none" "GST_DP_PAYLOAD_EVENT_NONE")
   )
 )
-
-
-;; From ../gstreamer/libs/gst/bytestream/adapter.h
-
-(define-function gst_adapter_new
-  (c-name "gst_adapter_new")
-  (is-constructor-of "GstAdapter")
-  (return-type "GstAdapter*")
-)
-
-(define-method clear
-  (of-object "GstAdapter")
-  (c-name "gst_adapter_clear")
-  (return-type "none")
-)
-
-(define-method push
-  (of-object "GstAdapter")
-  (c-name "gst_adapter_push")
-  (return-type "none")
-  (parameters
-    '("GstBuffer*" "buf")
-  )
-)
-
-(define-method peek
-  (of-object "GstAdapter")
-  (c-name "gst_adapter_peek")
-  (return-type "const-guint8*")
-  (parameters
-    '("guint" "size")
-  )
-)
-
-(define-method flush
-  (of-object "GstAdapter")
-  (c-name "gst_adapter_flush")
-  (return-type "none")
-  (parameters
-    '("guint" "flush")
-  )
-)
-
-(define-method available
-  (of-object "GstAdapter")
-  (c-name "gst_adapter_available")
-  (return-type "guint")
-)
-
-(define-method available_fast
-  (of-object "GstAdapter")
-  (c-name "gst_adapter_available_fast")
-  (return-type "guint")
-)
-
-
 
 ;; From ../gstreamer/libs/gst/controller/gst-controller.h
 
@@ -240,63 +178,64 @@
   )
 )
 
-(define-method control_properties
-  (of-object "GObject")
-  (c-name "g_object_control_properties")
+(define-function object_control_properties
+  (c-name "gst_object_control_properties")
   (return-type "GstController*")
   (parameters
+    '("GObject*" "object"))
+  (varargs #t)
+)
+
+(define-function object_uncontrol_properties
+  (c-name "gst_object_uncontrol_properties")
+  (return-type "gboolean")
+  (parameters
+    '("GObject*" "object")
   )
   (varargs #t)
 )
 
-(define-method uncontrol_properties
-  (of-object "GObject")
-  (c-name "g_object_uncontrol_properties")
-  (return-type "gboolean")
-  (parameters
-  )
-  (varargs #t)
-)
-
-(define-method get_controller
-  (of-object "GObject")
-  (c-name "g_object_get_controller")
+(define-function object_get_controller
+  (c-name "gst_object_get_controller")
   (return-type "GstController*")
+  (parameters
+    '("GObject*" "object")
+  )
 )
 
-(define-method set_controller
-  (of-object "GObject")
-  (c-name "g_object_set_controller")
+(define-function object_set_controller
+  (c-name "gst_object_set_controller")
   (return-type "gboolean")
   (parameters
+    '("GObject*" "object")
     '("GstController*" "controller")
   )
 )
 
-(define-method sync_values
-  (of-object "GObject")
-  (c-name "g_object_sync_values")
+(define-function object_sync_values
+  (c-name "gst_object_sync_values")
   (return-type "gboolean")
   (parameters
+    '("GObject*" "object")
     '("GstClockTime" "timestamp")
   )
 )
 
-(define-method get_value_arrays
-  (of-object "GObject")
-  (c-name "g_object_get_value_arrays")
+(define-function object_get_value_arrays
+  (c-name "gst_object_get_value_arrays")
   (return-type "gboolean")
   (parameters
+    '("GObject*" "object")
     '("GstClockTime" "timestamp")
     '("GSList*" "value_arrays")
   )
 )
 
-(define-method get_value_array
-  (of-object "GObject")
-  (c-name "g_object_get_value_array")
+(define-function object_get_value_array
+  (c-name "gst_object_get_value_array")
   (return-type "gboolean")
   (parameters
+    '("GObject*" "object")
     '("GstClockTime" "timestamp")
     '("GstValueArray*" "value_array")
   )
@@ -314,11 +253,6 @@
 
 
 ;; From ../gstreamer/libs/gst/dataprotocol/dataprotocol.h
-
-(define-function gst_dp_init
-  (c-name "gst_dp_init")
-  (return-type "none")
-)
 
 (define-function gst_dp_header_payload_length
   (c-name "gst_dp_header_payload_length")

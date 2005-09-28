@@ -287,6 +287,8 @@ ignore-glob
   *_private
   *_thyself
   *_valist
+  *_ref
+  *_unref
   gst_class_*
   gst_init*
   gst_interface_*

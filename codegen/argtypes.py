@@ -538,7 +538,8 @@ class MiniObjectArg(ArgType):
         if ownsreturn:
             info.varlist.add('PyObject', '*py_ret')
             info.codeafter.append('    py_ret = pygstminiobject_new((GstMiniObject *)ret);\n'
-                                  '    gst_mini_object_unref(ret);\n'
+                                  '    if (ret != NULL)\n'
+                                  '       gst_mini_object_unref((GstMiniObject *)ret);\n'
                                   '    return py_ret;')
         else:
             info.codeafter.append('    /* pygobject_new handles NULL checking */\n' +

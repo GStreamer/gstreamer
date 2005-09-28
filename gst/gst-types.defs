@@ -74,7 +74,7 @@
 
 (define-object PluginFeature
   (in-module "Gst")
-  (parent "GObject")
+  (parent "GstObject")
   (c-name "GstPluginFeature")
   (gtype-id "GST_TYPE_PLUGIN_FEATURE")
 )
@@ -102,7 +102,7 @@
 
 (define-object Registry
   (in-module "Gst")
-  (parent "GObject")
+  (parent "GstObject")
   (c-name "GstRegistry")
   (gtype-id "GST_TYPE_REGISTRY")
 )
@@ -640,7 +640,6 @@
   (gtype-id "GST_TYPE_OBJECT_FLAGS")
   (values
     '("disposing" "GST_OBJECT_DISPOSING")
-    '("destroyed" "GST_OBJECT_DESTROYED")
     '("floating" "GST_OBJECT_FLOATING")
     '("flag-last" "GST_OBJECT_FLAG_LAST")
   )
@@ -769,6 +768,15 @@
   )
 )
 
+(define-flags PluginFlags
+  (in-module "Gst")
+  (c-name "GstPluginFlags")
+  (gtype-id "GST_TYPE_PLUGIN_FLAGS")
+  (values
+    '("d" "GST_PLUGIN_FLAG_CACHED")
+  )
+)
+
 (define-enum QueryType
   (in-module "Gst")
   (c-name "GstQueryType")
@@ -780,6 +788,7 @@
     '("jitter" "GST_QUERY_JITTER")
     '("rate" "GST_QUERY_RATE")
     '("seeking" "GST_QUERY_SEEKING")
+    '("segment" "GST_QUERY_SEGMENT")
     '("convert" "GST_QUERY_CONVERT")
     '("formats" "GST_QUERY_FORMATS")
   )
