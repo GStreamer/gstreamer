@@ -64,7 +64,7 @@ static void gst_base_audio_sink_get_property (GObject * object, guint prop_id,
 static GstStateChangeReturn gst_base_audio_sink_change_state (GstElement *
     element, GstStateChange transition);
 
-static GstClock *gst_base_audio_sink_get_clock (GstElement * elem);
+static GstClock *gst_base_audio_sink_provide_clock (GstElement * elem);
 static GstClockTime gst_base_audio_sink_get_time (GstClock * clock,
     GstBaseAudioSink * sink);
 static void gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data,
@@ -116,8 +116,8 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_change_state);
-  gstelement_class->get_clock =
-      GST_DEBUG_FUNCPTR (gst_base_audio_sink_get_clock);
+  gstelement_class->provide_clock =
+      GST_DEBUG_FUNCPTR (gst_base_audio_sink_provide_clock);
 
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_base_audio_sink_event);
   gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_base_audio_sink_preroll);
@@ -159,7 +159,7 @@ gst_base_audio_sink_dispose (GObject * object)
 }
 
 static GstClock *
-gst_base_audio_sink_get_clock (GstElement * elem)
+gst_base_audio_sink_provide_clock (GstElement * elem)
 {
   GstBaseAudioSink *sink;
 

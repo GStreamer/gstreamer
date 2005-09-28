@@ -1,3 +1,13 @@
+2005-09-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_class_init),
+	(gst_base_audio_sink_provide_clock), (gst_base_audio_sink_render):
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	(gst_base_audio_src_class_init),
+	(gst_base_audio_src_provide_clock):
+	get_clock -> provide_clock
+
 2005-09-28  Andy Wingo  <wingo@pobox.com>
 
 	* gst/videotestsrc/gstvideotestsrc.c: Implement live source mode

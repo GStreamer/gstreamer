@@ -59,7 +59,7 @@ static void gst_base_audio_src_fixate (GstPad * pad, GstCaps * caps);
 static GstStateChangeReturn gst_base_audio_src_change_state (GstElement *
     element, GstStateChange transition);
 
-static GstClock *gst_base_audio_src_get_clock (GstElement * elem);
+static GstClock *gst_base_audio_src_provide_clock (GstElement * elem);
 static GstClockTime gst_base_audio_src_get_time (GstClock * clock,
     GstBaseAudioSrc * src);
 
@@ -107,8 +107,8 @@ gst_base_audio_src_class_init (GstBaseAudioSrcClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_audio_src_change_state);
-  gstelement_class->get_clock =
-      GST_DEBUG_FUNCPTR (gst_base_audio_src_get_clock);
+  gstelement_class->provide_clock =
+      GST_DEBUG_FUNCPTR (gst_base_audio_src_provide_clock);
 
   gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_base_audio_src_setcaps);
   gstbasesrc_class->event = GST_DEBUG_FUNCPTR (gst_base_audio_src_event);
@@ -133,7 +133,7 @@ gst_base_audio_src_init (GstBaseAudioSrc * baseaudiosrc,
 }
 
 static GstClock *
-gst_base_audio_src_get_clock (GstElement * elem)
+gst_base_audio_src_provide_clock (GstElement * elem)
 {
   GstBaseAudioSrc *src;
 
