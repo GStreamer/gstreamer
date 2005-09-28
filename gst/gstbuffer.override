@@ -76,48 +76,6 @@ _wrap_gst_buffer_new(PyGstMiniObject *self, PyObject *args, PyObject *kwargs)
 	return 0;
 }
 %%
-override gst_buffer_get_data
-static PyObject*
-_wrap_gst_buffer_get_data(PyObject *self)
-{
-	GstBuffer *buf = pyg_boxed_get(self, GstBuffer);
-	return PyString_FromStringAndSize((gchar *) GST_BUFFER_DATA(buf),
-					  GST_BUFFER_SIZE(buf));
-}
-%%
-override gst_buffer_set_data kwargs
-static PyObject*
-_wrap_gst_buffer_set_data(PyObject *self, PyObject *args, PyObject *kwargs)
-{
-	static char *kwlist[] = {"data", NULL};
-	PyObject *data;
-	GstBuffer *buf;
-	
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:GstBuffer:set_data", kwlist, &data))
-	{
-		return NULL;
-	}
-	if (!PyString_Check(data)) {
-		PyErr_SetString(PyExc_TypeError, "data should be a string");
-		return NULL;
-	}
-	buf = pyg_boxed_get(self, GstBuffer);
-	if (GST_BUFFER_FLAGS(buf) & GST_BUFFER_READONLY) {
-		PyErr_SetString(PyExc_TypeError, "set_data can't use a READONLY buffer");
-		return NULL;
-	}
-	GST_BUFFER_SIZE(buf) = PyString_Size(data);
-	GST_BUFFER_DATA(buf) = (guint8 *) g_new0(char, GST_BUFFER_SIZE(buf));
-
-	memcpy(GST_BUFFER_DATA(buf),
-	       PyString_AsString(data),
-	       PyString_Size(data));
-
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-
-%%
 override-slot GstBuffer.tp_str
 static PyObject *
 _wrap_gst_buffer_tp_str (PyGstMiniObject *self)

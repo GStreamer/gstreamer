@@ -1,5 +1,16 @@
 2005-09-28  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gst.override:
+	* gst/gstbin.override:
+	* gst/gstbuffer.override:
+	* gst/gstevent.override:
+	Remove dead code
+
+	* gst/gstelement.override:
+	Remove dead code and re-enable link with filtering and _send_event()
+
+2005-09-28  Edward Hervey  <edward@fluendo.com>
+
 	* gst/Makefile.am:
 	* gst/gst.override:
 	* gst/gsttaglist.override:

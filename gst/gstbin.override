@@ -88,50 +88,6 @@ _wrap_gst_bin_remove_many(PyGObject *self, PyObject *args)
 	return Py_None;
 }
 %%
-override gst_bin_iterate noargs
-static PyObject *
-_wrap_gst_bin_iterate(PyGObject *self)
-{
-	int ret;
-
-/* XXX: Find out which one is the most correct */
-#if 1	
-        pyg_begin_allow_threads;
-
-	ret = gst_bin_iterate(GST_BIN(self->obj));
-	
-        pyg_end_allow_threads;
-
-#else
-	PyGILState_STATE state;
-	
-        state = pyg_gil_state_ensure();
-	ret = gst_bin_iterate(GST_BIN(self->obj));
-	pyg_gil_state_release(state);
-#endif	
-	return PyInt_FromLong(ret);
-}
-%%
-override gst_bin_get_list noargs
-static PyObject *
-_wrap_gst_bin_get_list(PyGObject *self)
-{
-	GList *elements, *l;
-	PyObject *tuple;
-	int i;
-	
-	elements = (GList*)gst_bin_get_list(GST_BIN(self->obj));
-	tuple = PyTuple_New(g_list_length(elements));
-	for (i = 0, l = elements; l; l = l->next, i++) {
-		GstElement *element = (GstElement*)l->data;
-		if (!element)
-			continue;
-		PyTuple_SetItem(tuple, i, pygstobject_new(G_OBJECT(element)));
-	}
-		
-	return tuple;
-}
-%%
 override gst_bin_get_by_name kwargs
 static PyObject *
 _wrap_gst_bin_get_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)

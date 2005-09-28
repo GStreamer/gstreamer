@@ -368,36 +368,6 @@ _wrap_gst_g_error_tp_str(PyGObject *self)
 						      error->code));
 }
 %%
-override gst_main noargs
-static PyObject *
-_wrap_gst_main(PyObject *self)
-{
-        pyg_begin_allow_threads;
-
-	_pygst_main();
-
-        pyg_end_allow_threads;
-	
-	if (PyErr_Occurred())
-		return NULL;
-	
-        Py_INCREF(Py_None);
-        return Py_None;
-
-}
-%%
-override gst_main_quit args
-static PyObject *
-_wrap_gst_main_quit(PyObject *self)
-{
-
-    _pygst_main_quit();
-    
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-
-%%
 override gst_registry_get_path_list
 static PyObject *
 _wrap_gst_registry_get_path_list (PyGObject *self)
@@ -683,29 +653,6 @@ _wrap_gst_uri_handler_get_protocols (PyGObject *self)
 	PyList_Append(ret, PyString_FromString(tab[i]));
     }
 
-    return ret;
-}
-%%
-override gst_registry_pool_list noargs
-static PyObject *
-_wrap_gst_registry_pool_list (PyObject *what)
-{
-    PyObject	*ret, *item;
-    GList	*res, *tmp;
-
-    ret = PyList_New(0);
-    res = gst_registry_pool_list();
-    for (tmp = res; tmp; tmp = g_list_next(tmp)) {
-	item = pygobject_new((GObject*) GST_REGISTRY(tmp->data));
-
-	if (!item) {
-	    Py_DECREF(ret);
-	    return NULL;
-	}
-	PyList_Append(ret, item);
-
-	Py_DECREF(item);
-    }
     return ret;
 }
 %%

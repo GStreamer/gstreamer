@@ -20,41 +20,6 @@
  * Author: Johan Dahlin <johan@gnome.org>
  */
 %%
-override gst_event_discont_get_value kwargs
-static PyObject *
-_wrap_gst_event_discont_get_value(PyGstMiniObject *self, PyObject *args, PyObject *kwargs)
-{
-	static char *kwlist[] = { "format", NULL};
-	PyObject *pformat;
-	GstFormat	format;
-	gint64	start, end;
-	PyObject	*ret;
-
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-					 "O:GstEvent.discont_get_value",
-					 kwlist, &pformat))
-		return NULL;
-	if (pyg_enum_get_value (GST_TYPE_FORMAT, pformat, (gint *) &format)) {
-		PyErr_SetString(PyExc_TypeError, "argument should be a GstFormat");
-		return NULL;
-	}
-	if (GST_EVENT_TYPE(self->obj) != GST_EVENT_DISCONTINUOUS) {
-		PyErr_SetString(PyExc_TypeError, "Event is not a discontinuous event");
-		return NULL;
-	}
-	if (!gst_event_discont_get_value(GST_EVENT (self->obj), format,
-					 &start, &end)) {
-		Py_INCREF (Py_None);
-		return Py_None;
-	}
-	
-	ret = PyList_New(0);
-	PyList_Append(ret, PyLong_FromLongLong(start));
-	PyList_Append(ret, PyLong_FromLongLong(end));
-	
-	return ret;
-}
-%%
 override gst_event_get_structure noargs
 static PyObject *
 _wrap_gst_event_get_structure(PyGstMiniObject *self)
