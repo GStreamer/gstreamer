@@ -1,5 +1,8 @@
 2005-09-28  Andy Wingo  <wingo@pobox.com>
 
+	* gst/sine/gstsinesrc.c (gst_sinesrc_unlock): Actually implement
+	unlocking.
+
 	* gst/tcp/gsttcpclientsink.c (gst_tcpclientsink_base_init):
 	Actually add the pad template.
 	(gst_tcpclientsink_get_type): We're a base sink. Woot, works.

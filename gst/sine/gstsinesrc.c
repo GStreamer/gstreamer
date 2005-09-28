@@ -71,6 +71,7 @@ static void gst_sinesrc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_sinesrc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
+static gboolean gst_sinesrc_unlock (GstBaseSrc * bsrc);
 
 static gboolean gst_sinesrc_setcaps (GstBaseSrc * basesrc, GstCaps * caps);
 static void gst_sinesrc_src_fixate (GstPad * pad, GstCaps * caps);
@@ -128,6 +129,7 @@ gst_sinesrc_class_init (GstSineSrcClass * klass)
   gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_sinesrc_setcaps);
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_sinesrc_start);
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_sinesrc_create);
+  gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_sinesrc_unlock);
 }
 
 static void
@@ -254,6 +256,19 @@ gst_sinesrc_wait (GstSineSrc * src, GstClockTime time)
   GST_UNLOCK (src);
 
   return ret;
+}
+
+static gboolean
+gst_sinesrc_unlock (GstBaseSrc * bsrc)
+{
+  GstSineSrc *src = GST_SINESRC (bsrc);
+
+  GST_LOCK (src);
+  if (src->clock_id)
+    gst_clock_id_unschedule (src->clock_id);
+  GST_UNLOCK (src);
+
+  return TRUE;
 }
 
 static GstFlowReturn
