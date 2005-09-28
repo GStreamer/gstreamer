@@ -46,9 +46,6 @@ class TestConstruction(TestCase):
 
     def testParseLaunch(self):
         pipeline = gst.parse_launch('fakesrc ! fakesink')
-        del pipeline
-        pass
-
         
 class Pipeline(TestCase):
     def setUp(self):
@@ -76,9 +73,22 @@ class Pipeline(TestCase):
         self.pipeline.set_state(gst.STATE_NULL)
         self.assertEqual(self.pipeline.get_state(None)[1], gst.STATE_NULL)
 
+class Bus(TestCase):
+    def testGet(self):
+        pipeline = gst.Pipeline('test')
+        self.assertEquals(pipeline.__gstrefcount__, 1)
+        bus = pipeline.get_bus()
+        self.assertEquals(pipeline.__gstrefcount__, 1)
+        # one for python and one for the pipeline
+        self.assertEquals(bus.__gstrefcount__, 2)
+
+        del pipeline
+        self.failUnless(self.gccollect())
+        self.assertEquals(bus.__gstrefcount__, 1)
+        
 class PipelineAndBus(TestCase):
     def setUp(self):
-        self.gctrack()
+        TestCase.setUp(self)
         self.pipeline = gst.Pipeline('test-pipeline')
         self.pipeline.set_property('play-timeout', 0L)
         source = gst.element_factory_make('fakesrc', 'source')
@@ -87,16 +97,35 @@ class PipelineAndBus(TestCase):
         gst.element_link_many(source, sink)
 
         self.bus = self.pipeline.get_bus()
-        self.bus.add_watch(gst.MESSAGE_ANY, self._message_received)
+        self.assertEquals(self.bus.__gstrefcount__, 2)
+        self.handler = self.bus.add_watch(
+            gst.MESSAGE_ANY, self._message_received)
+        self.assertEquals(self.bus.__gstrefcount__, 3)
 
         self.loop = gobject.MainLoop()
 
     def tearDown(self):
         # FIXME: fix the refcount issues with the bus/pipeline
-        #del self.pipeline
-        #del self.bus
+
+        # flush the bus to be able to assert on the pipeline refcount
+        self.bus.set_flushing(True)
         self.gccollect()
-        #self.gcverify()
+        self.assertEquals(self.pipeline.__gstrefcount__, 1)
+        # one for the pipeline, two for the snake
+        # three for the watch now shake shake shake but don't you
+        self.assertEquals(self.bus.__gstrefcount__, 3)
+
+        del self.pipeline
+        self.gccollect()
+        self.assertEquals(self.bus.__gstrefcount__, 2)
+
+        self.failUnless(gobject.source_remove(self.handler))
+        self.assertEquals(self.bus.__gstrefcount__, 1)
+
+        del self.bus
+        self.gccollect()
+
+        TestCase.tearDown(self)
 
     def _message_received(self, bus, message):
         gst.debug('received message: %s, %s' % (
@@ -106,17 +135,29 @@ class PipelineAndBus(TestCase):
             old, new = message.parse_state_changed()
             gst.debug('%r state change from %r to %r' % (
                 message.src.get_path_string(), old, new))
-            if message.src == self.pipeline and new == gst.STATE_PLAYING:
+            if message.src == self.pipeline and new == self.final:
                 self.loop.quit()
 
         return True
 
     def testPlaying(self):
+        self.final = gst.STATE_PLAYING
         ret = self.pipeline.set_state_async(gst.STATE_PLAYING)
         self.assertEquals(ret, gst.STATE_CHANGE_ASYNC)
 
         # go into a main loop to wait for messages
         self.loop.run()
+
+        # we go to READY so we get messages; going to NULL would set
+        # the bus flushing
+        self.final = gst.STATE_READY
+        ret = self.pipeline.set_state_async(gst.STATE_READY)
+        self.assertEquals(ret, gst.STATE_CHANGE_ASYNC)
+        self.loop.run()
+
+        # FIXME: not setting to NULL causes a deadlock; we might want to
+        # fix this in the bindings
+        self.pipeline.set_state(gst.STATE_NULL)
         
 if __name__ == "__main__":
     unittest.main()

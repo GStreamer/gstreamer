@@ -21,7 +21,8 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 
-from common import gobject, gst, unittest
+import sys
+from common import gobject, gst, unittest, TestCase
 
 # see
 # http://www.sicem.biz/personal/lgs/docs/gobject-python/gobject-tutorial.html
@@ -38,6 +39,9 @@ class MyBin(gst.Bin):
     def do_change_state(self, state_change):
         if state_change == gst.STATE_CHANGE_PAUSED_TO_PLAYING:
             self._state_changed = True
+        # FIXME: it seems a vmethod increases the refcount without unreffing
+        # print self.__gstrefcount__
+        # print self.__grefcount__
 
         # chain up to parent
         return gst.Bin.do_change_state(self, state_change)
@@ -45,10 +49,28 @@ class MyBin(gst.Bin):
 # we need to register the type for PyGTK < 2.8
 gobject.type_register(MyBin)
 
-class BinSubclassTest(unittest.TestCase):
+# FIXME: fix leak in vmethods before removing overriding fixture
+class BinSubclassTest(TestCase):
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
     def testStateChange(self):
         bin = MyBin("mybin")
+        self.assertEquals(bin.__gstrefcount__, 1)
+        self.assertEquals(sys.getrefcount(bin), 3)
+
         self.assertEquals(bin.get_name(), "mybin")
+        self.assertEquals(bin.__gstrefcount__, 1)
+
+        # test get_state with no timeout
+        (ret, state, pending) = bin.get_state(None)
+        self.failIfEqual(ret, gst.STATE_CHANGE_FAILURE)
+        self.assertEquals(bin.__gstrefcount__, 1)
+
+        # set to playing
         bin.set_state(gst.STATE_PLAYING)
         self.failUnless(bin._state_changed)
 
@@ -69,6 +91,9 @@ class BinSubclassTest(unittest.TestCase):
             self.assertEquals(pending, gst.STATE_VOID_PENDING)
 
         (ret, state, pending) = bin.get_state(timeout=0.1)
+
+        # back to NULL
+        bin.set_state(gst.STATE_NULL)
 
 if __name__ == "__main__":
     unittest.main()

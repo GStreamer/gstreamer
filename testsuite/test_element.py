@@ -30,10 +30,10 @@ class TestElement(gst.Bin):
     def break_it_down(self):
         self.debug('Hammer Time')
 
-class ElementTest(unittest.TestCase):
+class ElementTest(TestCase):
     name = 'fakesink'
     alias = 'sink'
-    
+
     def testGoodConstructor(self):
         element = gst.element_factory_make(self.name, self.alias)
         assert element is not None, 'element is None'
@@ -52,7 +52,12 @@ class FakeSinkTest(ElementTest):
     name = 'fakesink'
     alias = 'sink'
     def setUp(self):
+        ElementTest.setUp(self)
         self.element = gst.element_factory_make('fakesink', 'sink')
+
+    def tearDown(self):
+        del self.element
+        ElementTest.tearDown(self)
 
     def checkError(self, old_state, state, name):
         assert self.element.get_state() == gst.STATE_NULL
@@ -166,7 +171,7 @@ class ElementName(unittest.TestCase):
         
 class QueryTest(TestCase):
     def setUp(self):
-        self.gctrack()
+        TestCase.setUp(self)
         self.pipeline = gst.parse_launch('fakesrc name=source ! fakesink')
         self.assertEquals(self.pipeline.__gstrefcount__, 1)
 
@@ -178,8 +183,7 @@ class QueryTest(TestCase):
     def tearDown(self):
         del self.pipeline
         del self.element
-        self.gccollect()
-        self.gcverify()
+        TestCase.tearDown(self)
         
     def testQuery(self):
         gst.debug('querying fakesrc in FORMAT_BYTES')
@@ -195,15 +199,14 @@ class QueryTest(TestCase):
         assert not res
         self.gccollect()
 
-class QueueTest(unittest.TestCase):
+class QueueTest(TestCase):
     def testConstruct(self):
         queue = gst.element_factory_make('queue')
         assert isinstance(queue, gst.Queue)
         assert queue.get_name() == 'queue0'
         self.assertEquals(queue.__gstrefcount__, 1)
 
-
-class DebugTest(unittest.TestCase):
+class DebugTest(TestCase):
     def testDebug(self):
         e = gst.element_factory_make('fakesrc')
         e.error('I am an error string')

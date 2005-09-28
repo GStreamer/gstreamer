@@ -1,3 +1,13 @@
+2005-09-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* testsuite/common.py:
+	  provide a default setUp/tearDown
+	* testsuite/test_bin.py:
+	* testsuite/test_bus.py:
+	* testsuite/test_element.py:
+	* testsuite/test_pipeline.py:
+	  adding/updating tests and gc tracking
+
 2005-09-28  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.override:

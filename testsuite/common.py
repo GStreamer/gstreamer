@@ -112,6 +112,9 @@ def run_silent(function, *args, **kwargs):
    return output
 
 class TestCase(unittest.TestCase):
+
+    _types = [gst.Element, gst.Pad, gst.Bus]
+
     def gccollect(self):
         # run the garbage collector
         ret = 0
@@ -126,20 +129,33 @@ class TestCase(unittest.TestCase):
     def gctrack(self):
         # store all gst objects in the gc in a tracking dict
         # call before doing any allocation in your test, from setUp
-        gst.debug('tracking gc GstObjects')
+        gst.debug('tracking gc GstObjects for types %r' % self._types)
         self.gccollect()
         self._tracked = {}
-        for c in [gst.Element, gst.Pad]:
+        for c in self._types:
             self._tracked[c] = [o for o in gc.get_objects() if isinstance(o, c)]
 
     def gcverify(self):
         # verify no new gst objects got added to the gc
         # call after doing all cleanup in your test, from tearDown
-        gst.debug('verifying gc GstObjects')
+        gst.debug('verifying gc GstObjects for types %r' % self._types)
         new = []
-        for c in [gst.Element, gst.Pad]:
+        for c in self._types:
             objs = [o for o in gc.get_objects() if isinstance(o, c)]
             new.extend([o for o in objs if o not in self._tracked[c]])
 
         self.failIf(new, new)
         del self._tracked
+
+    def setUp(self):
+        """
+        Override me by chaining up to me at the start of your setUp.
+        """
+        self.gctrack()
+
+    def tearDown(self):
+        """
+        Override me by chaining up to me at the end of your tearDown.
+        """
+        self.gccollect()
+        self.gcverify()
