@@ -1,5 +1,8 @@
 2005-09-28  Andy Wingo  <wingo@pobox.com>
 
+	* gst/videotestsrc/gstvideotestsrc.c: Implement live source mode
+	and unlocking.
+
 	* gst/sine/gstsinesrc.c (gst_sinesrc_unlock): Actually implement
 	unlocking.
 

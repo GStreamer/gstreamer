@@ -59,7 +59,8 @@ enum
   PROP_0,
   PROP_PATTERN,
   PROP_TIMESTAMP_OFFSET,
-  /* FILL ME */
+  PROP_IS_LIVE
+      /* FILL ME */
 };
 
 
@@ -80,6 +81,7 @@ static gboolean gst_videotestsrc_negotiate (GstBaseSrc * bsrc);
 static void gst_videotestsrc_get_times (GstBaseSrc * src, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end);
 static gboolean gst_videotestsrc_event (GstBaseSrc * bsrc, GstEvent * event);
+static gboolean gst_videotestsrc_unlock (GstBaseSrc * bsrc);
 
 static GstFlowReturn gst_videotestsrc_create (GstPushSrc * psrc,
     GstBuffer ** buffer);
@@ -139,25 +141,30 @@ gst_videotestsrc_class_init (GstVideoTestSrcClass * klass)
           "Timestamp offset",
           "An offset added to timestamps set on buffers (in ns)", G_MININT64,
           G_MAXINT64, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_IS_LIVE,
+      g_param_spec_boolean ("is-live", "Is Live",
+          "Whether to act as a live source", FALSE, G_PARAM_READWRITE));
 
   gstbasesrc_class->get_caps = gst_videotestsrc_getcaps;
   gstbasesrc_class->set_caps = gst_videotestsrc_setcaps;
   gstbasesrc_class->negotiate = gst_videotestsrc_negotiate;
   gstbasesrc_class->get_times = gst_videotestsrc_get_times;
   gstbasesrc_class->event = gst_videotestsrc_event;
+  gstbasesrc_class->unlock = gst_videotestsrc_unlock;
 
   gstpushsrc_class->create = gst_videotestsrc_create;
 }
 
 static void
-gst_videotestsrc_init (GstVideoTestSrc * videotestsrc,
-    GstVideoTestSrcClass * g_class)
+gst_videotestsrc_init (GstVideoTestSrc * src, GstVideoTestSrcClass * g_class)
 {
-  gst_videotestsrc_set_pattern (videotestsrc, GST_VIDEOTESTSRC_SMPTE);
+  gst_videotestsrc_set_pattern (src, GST_VIDEOTESTSRC_SMPTE);
 
-  videotestsrc->segment_start_frame = -1;
-  videotestsrc->segment_end_frame = -1;
-  videotestsrc->timestamp_offset = 0;
+  src->segment_start_frame = -1;
+  src->segment_end_frame = -1;
+  src->timestamp_offset = 0;
+
+  gst_base_src_set_live (GST_BASE_SRC (src), FALSE);
 }
 
 static void
@@ -186,14 +193,17 @@ static void
 gst_videotestsrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstVideoTestSrc *videotestsrc = GST_VIDEOTESTSRC (object);
+  GstVideoTestSrc *src = GST_VIDEOTESTSRC (object);
 
   switch (prop_id) {
     case PROP_PATTERN:
-      gst_videotestsrc_set_pattern (videotestsrc, g_value_get_enum (value));
+      gst_videotestsrc_set_pattern (src, g_value_get_enum (value));
       break;
     case PROP_TIMESTAMP_OFFSET:
-      videotestsrc->timestamp_offset = g_value_get_int64 (value);
+      src->timestamp_offset = g_value_get_int64 (value);
+      break;
+    case PROP_IS_LIVE:
+      gst_base_src_set_live (GST_BASE_SRC (src), g_value_get_boolean (value));
       break;
     default:
       break;
@@ -204,14 +214,17 @@ static void
 gst_videotestsrc_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstVideoTestSrc *videotestsrc = GST_VIDEOTESTSRC (object);
+  GstVideoTestSrc *src = GST_VIDEOTESTSRC (object);
 
   switch (prop_id) {
     case PROP_PATTERN:
-      g_value_set_enum (value, videotestsrc->pattern_type);
+      g_value_set_enum (value, src->pattern_type);
       break;
     case PROP_TIMESTAMP_OFFSET:
-      g_value_set_int64 (value, videotestsrc->timestamp_offset);
+      g_value_set_int64 (value, src->timestamp_offset);
+      break;
+    case PROP_IS_LIVE:
+      g_value_set_boolean (value, gst_base_src_is_live (GST_BASE_SRC (src)));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -394,27 +407,73 @@ gst_videotestsrc_event (GstBaseSrc * bsrc, GstEvent * event)
   return res;
 }
 
+/* with STREAM_LOCK */
+static GstClockReturn
+gst_videotestsrc_wait (GstVideoTestSrc * src, GstClockTime time)
+{
+  GstClockReturn ret;
+  GstClockTime base_time;
+
+  GST_LOCK (src);
+  /* clock_id should be NULL outside of this function */
+  g_assert (src->clock_id == NULL);
+  g_assert (GST_CLOCK_TIME_IS_VALID (time));
+  base_time = GST_ELEMENT (src)->base_time;
+  src->clock_id = gst_clock_new_single_shot_id (GST_ELEMENT_CLOCK (src),
+      time + base_time);
+  GST_UNLOCK (src);
+
+  ret = gst_clock_id_wait (src->clock_id, NULL);
+
+  GST_LOCK (src);
+  gst_clock_id_unref (src->clock_id);
+  src->clock_id = NULL;
+  GST_UNLOCK (src);
+
+  return ret;
+}
+
+static gboolean
+gst_videotestsrc_unlock (GstBaseSrc * bsrc)
+{
+  GstVideoTestSrc *src = GST_VIDEOTESTSRC (bsrc);
+
+  GST_LOCK (src);
+  if (src->clock_id)
+    gst_clock_id_unschedule (src->clock_id);
+  GST_UNLOCK (src);
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_videotestsrc_create (GstPushSrc * psrc, GstBuffer ** buffer)
 {
-  GstVideoTestSrc *videotestsrc;
+  GstVideoTestSrc *src;
   gulong newsize;
   GstBuffer *outbuf;
   GstFlowReturn res;
 
-  videotestsrc = GST_VIDEOTESTSRC (psrc);
+  src = GST_VIDEOTESTSRC (psrc);
 
-  if (videotestsrc->fourcc == NULL)
+  if (src->fourcc == NULL)
     goto not_negotiated;
 
-  newsize = gst_videotestsrc_get_size (videotestsrc, videotestsrc->width,
-      videotestsrc->height);
+  newsize = gst_videotestsrc_get_size (src, src->width, src->height);
 
   g_return_val_if_fail (newsize > 0, GST_FLOW_ERROR);
 
-  GST_LOG_OBJECT (videotestsrc, "creating buffer of %ld bytes for %dx%d image",
-      newsize, videotestsrc->width, videotestsrc->height);
+  GST_LOG_OBJECT (src, "creating buffer of %ld bytes for %dx%d image",
+      newsize, src->width, src->height);
 
+  if (gst_base_src_is_live (GST_BASE_SRC (src))) {
+    GstClockReturn ret;
+
+    ret =
+        gst_videotestsrc_wait (src, src->running_time + src->timestamp_offset);
+    if (ret == GST_CLOCK_UNSCHEDULED)
+      goto unscheduled;
+  }
 #ifdef USE_PEER_BUFFERALLOC
   res =
       gst_pad_alloc_buffer (GST_BASE_SRC_PAD (psrc), GST_BUFFER_OFFSET_NONE,
@@ -430,23 +489,27 @@ gst_videotestsrc_create (GstPushSrc * psrc, GstBuffer ** buffer)
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)));
 #endif
 
-  videotestsrc->make_image (videotestsrc, (void *) GST_BUFFER_DATA (outbuf),
-      videotestsrc->width, videotestsrc->height);
+  src->make_image (src, (void *) GST_BUFFER_DATA (outbuf),
+      src->width, src->height);
 
-  GST_BUFFER_TIMESTAMP (outbuf) = videotestsrc->timestamp_offset +
-      videotestsrc->running_time;
-  GST_BUFFER_DURATION (outbuf) = GST_SECOND / (double) videotestsrc->rate;
+  GST_BUFFER_TIMESTAMP (outbuf) = src->timestamp_offset + src->running_time;
+  GST_BUFFER_DURATION (outbuf) = GST_SECOND / (double) src->rate;
 
-  videotestsrc->n_frames++;
-  videotestsrc->running_time += GST_BUFFER_DURATION (outbuf);
+  src->n_frames++;
+  src->running_time += GST_BUFFER_DURATION (outbuf);
 
   *buffer = outbuf;
 
   return GST_FLOW_OK;
 
+unscheduled:
+  {
+    GST_DEBUG_OBJECT (src, "Unscheduled while waiting for clock");
+    return GST_FLOW_WRONG_STATE;
+  }
 not_negotiated:
   {
-    GST_ELEMENT_ERROR (videotestsrc, CORE, NEGOTIATION, (NULL),
+    GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, (NULL),
         ("format wasn't negotiated before get function"));
     return GST_FLOW_NOT_NEGOTIATED;
   }

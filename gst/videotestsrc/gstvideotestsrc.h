@@ -67,6 +67,7 @@ struct _GstVideoTestSrc {
   gint64 segment_start_frame;
   gint64 segment_end_frame;
   gboolean segment;
+  GstClockID clock_id;
 
   void (*make_image) (GstVideoTestSrc *v, unsigned char *dest, int w, int h);
 };
