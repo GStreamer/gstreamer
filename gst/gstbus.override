@@ -1,4 +1,4 @@
-/* -*- Mode: C; c-basic-offset: 4 -*- */
+/* -*- Mode: C; c-basic-offset: 4 -*-
  * vi:si:et:sw=4:sts=4:ts=4
  *
  * gst-python
@@ -91,6 +91,8 @@ bus_func (GstBus *bus, GstMessage *message, gpointer user_data)
 
     g_return_val_if_fail (user_data != NULL, TRUE);
 
+    GST_DEBUG_OBJECT (bus, "dispatching message %p", message);
+
     state = pyg_gil_state_ensure ();
 
     py_userdata = (PyObject *) user_data;
@@ -137,6 +139,8 @@ bus_func (GstBus *bus, GstMessage *message, gpointer user_data)
     Py_DECREF (args);
 
     pyg_gil_state_release (state);
+
+    GST_DEBUG_OBJECT (bus, "dispatched message %p", message);
 
     return res;
 }
@@ -186,7 +190,7 @@ _wrap_gst_bus_add_watch (PyGObject *self, PyObject *args)
     len = PyTuple_Size(args);
 
     if (len < 2) {
-        PyErr_SetString(PyExc_TypeError, "Bus requires at least 2 args");
+        PyErr_SetString(PyExc_TypeError, "Bus.add_watch requires at least 2 args");
         return NULL;
     }
     py_events = PySequence_GetItem(args, 0);
