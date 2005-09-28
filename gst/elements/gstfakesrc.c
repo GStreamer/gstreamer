@@ -45,7 +45,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY_STATIC (gst_fake_src_debug);
 #define GST_CAT_DEFAULT gst_fake_src_debug
 
-GstElementDetails gst_fake_src_details = GST_ELEMENT_DETAILS ("Fake Source",
+static GstElementDetails gst_fake_src_details =
+GST_ELEMENT_DETAILS ("Fake Source",
     "Source",
     "Push empty (no data) buffers around",
     "Erik Walthinsen <omega@cse.ogi.edu>, "

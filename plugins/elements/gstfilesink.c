@@ -52,7 +52,8 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 GST_DEBUG_CATEGORY_STATIC (gst_file_sink_debug);
 #define GST_CAT_DEFAULT gst_file_sink_debug
 
-GstElementDetails gst_file_sink_details = GST_ELEMENT_DETAILS ("File Sink",
+static GstElementDetails gst_file_sink_details =
+GST_ELEMENT_DETAILS ("File Sink",
     "Sink/File",
     "Write stream to a file",
     "Thomas <thomas@apestaart.org>");

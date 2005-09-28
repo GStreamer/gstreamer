@@ -1,3 +1,17 @@
+2005-09-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/elements/gstcapsfilter.c:
+	* gst/elements/gstfakesink.c:
+	* gst/elements/gstfakesrc.c:
+	* gst/elements/gstfdsink.c:
+	* gst/elements/gstfdsrc.c:
+	* gst/elements/gstfilesink.c:
+	* gst/elements/gstfilesrc.c:
+	* gst/elements/gstidentity.c:
+	* gst/elements/gsttee.c:
+	* gst/elements/gsttypefindelement.c:
+	  Make element details static.
+
 2005-09-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (add_to_queue), (clear_queue), (reset_outdegree),

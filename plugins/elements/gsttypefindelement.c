@@ -63,7 +63,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_type_find_element_debug);
 #define GST_CAT_DEFAULT gst_type_find_element_debug
 
-GstElementDetails gst_type_find_element_details =
+static GstElementDetails gst_type_find_element_details =
 GST_ELEMENT_DETAILS ("TypeFind",
     "Generic",
     "Finds the media type of a stream",

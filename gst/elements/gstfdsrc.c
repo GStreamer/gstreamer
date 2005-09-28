@@ -67,7 +67,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY_STATIC (gst_fdsrc_debug);
 #define GST_CAT_DEFAULT gst_fdsrc_debug
 
-GstElementDetails gst_fdsrc_details = GST_ELEMENT_DETAILS ("Disk Source",
+static GstElementDetails gst_fdsrc_details = GST_ELEMENT_DETAILS ("Disk Source",
     "Source/File",
     "Synchronous read from a file",
     "Erik Walthinsen <omega@cse.ogi.edu>");

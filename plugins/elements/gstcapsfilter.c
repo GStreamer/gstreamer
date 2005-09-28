@@ -29,7 +29,8 @@
 #include <gst/base/gstbasetransform.h>
 
 
-GstElementDetails gst_capsfilter_details = GST_ELEMENT_DETAILS ("CapsFilter",
+static GstElementDetails gst_capsfilter_details =
+GST_ELEMENT_DETAILS ("CapsFilter",
     "Generic",
     "Pass data without modification, limiting formats",
     "David Schleef <ds@schleef.org>");
