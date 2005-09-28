@@ -61,9 +61,18 @@
   )
 )
 
+(define-function gst_controller_new_list
+  (c-name "gst_controller_new_list")
+  (is-constructor-of "GstController")
+  (return-type "GstController*")
+  (parameters
+    '("GObject*" "object")
+    '("GList*" "list")
+  )
+)
+
 (define-function gst_controller_new
   (c-name "gst_controller_new")
-  (is-constructor-of "GstController")
   (return-type "GstController*")
   (parameters
     '("GObject*" "object")

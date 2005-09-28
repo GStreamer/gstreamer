@@ -842,9 +842,9 @@
   (return-type "gboolean")
 )
 
-(define-method get_clock
+(define-method provide_clock
   (of-object "GstElement")
-  (c-name "gst_element_get_clock")
+  (c-name "gst_element_provide_clock")
   (return-type "GstClock*")
   (caller-owns-return #t)
 )
@@ -1186,7 +1186,7 @@
   )
 )
 
-(define-virtual get_clock
+(define-virtual provide_clock
   (of-object "GstElement")
   (return-type "GstClock*")
 )

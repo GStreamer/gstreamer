@@ -20,6 +20,21 @@
  * Author: Johan Dahlin <johan@gnome.org>
  */
 %%
+ignore
+  gst_structure_get_boolean
+  gst_structure_get_int
+  gst_structure_get_fourcc
+  gst_structure_get_double
+  gst_structure_get_date
+  gst_structure_get_clock_time
+  gst_structure_get_string
+  gst_structure_get_value
+  gst_structure_set
+  gst_structure_get_name_id
+  gst_structure_id_get_value
+  gst_structure_id_set_value
+  gst_structure_set_parent_refcount
+%%
 override gst_structure_new kwargs
 static int
 _wrap_gst_structure_new(PyGBoxed *self, PyObject *args, PyObject *kwargs)
@@ -106,48 +121,6 @@ _wrap_gst_structure_set_value(PyObject *self, PyObject *args, PyObject *kwargs)
 	gst_structure_set_value(pyg_boxed_get(self, GstStructure), field,
             &value);
 
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-%%
-override gst_structure_get_int kwargs
-static PyObject *
-_wrap_gst_structure_get_int(PyObject *self, PyObject *args, PyObject *kwargs)
-{
-	static char *kwlist[] = { "fieldname", NULL };
-	char *fieldname;
-	int value;
-	
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-					 "s:GstStructure.get_int",
-					 kwlist, &fieldname))
-		return NULL;
-
-	if (gst_structure_get_int(pyg_boxed_get(self, GstStructure), fieldname, &value))
-		return PyInt_FromLong(value);
-
-	/* XXX: Raise exception? */
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-%%
-override gst_structure_get_double kwargs
-static PyObject *
-_wrap_gst_structure_get_double(PyObject *self, PyObject *args, PyObject *kwargs)
-{
-	static char *kwlist[] = { "fieldname", NULL };
-	char *fieldname;
-	gdouble value;
-	
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-					 "s:GstStructure.get_double",
-					 kwlist, &fieldname))
-		return NULL;
-
-	if (gst_structure_get_double(pyg_boxed_get(self, GstStructure), fieldname, &value))
-		return PyFloat_FromDouble(value);
-
-	/* XXX: Raise exception? */
 	Py_INCREF(Py_None);
 	return Py_None;
 }

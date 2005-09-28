@@ -302,6 +302,8 @@ ignore
   gst_error_get_message
   gst_parse_launchv
   gst_trace_read_tsc
+  gst_debug_log
+  gst_debug_log_default
 %%
 override-slot GstPluginFeature.tp_repr
 static PyObject *

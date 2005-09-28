@@ -1,3 +1,13 @@
+2005-09-28  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.defs:
+	* gst/libs.defs:
+	Updated definitions
+	* gst/gst.override:
+	* gst/gststructure.override:
+	Added functions not to be used from python, or that have better
+	existing equivalents, to the ignore list.
+	
 2005-09-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* testsuite/common.py:
