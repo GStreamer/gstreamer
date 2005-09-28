@@ -104,15 +104,6 @@ pygstminiobject_to_gvalue(GValue *value, PyObject *obj)
      return 0;
 }
 
-static void
-sink_gstobject(GObject *object)
-{
-     if (GST_OBJECT_IS_FLOATING(object)) {
-	  gst_object_ref(GST_OBJECT(object));
-	  gst_object_sink(GST_OBJECT(object));
-     }
-}
-
 DL_EXPORT(void)
 init_gst (void)
 {
@@ -156,7 +147,7 @@ init_gst (void)
      }
 
 /*      _pygst_register_boxed_types (NULL); */
-     pygobject_register_sinkfunc(GST_TYPE_OBJECT, sink_gstobject);
+     pygobject_register_sinkfunc(GST_TYPE_OBJECT, pygstobject_sink);
 
      m = Py_InitModule ("_gst", pygst_functions);
      d = PyModule_GetDict (m);

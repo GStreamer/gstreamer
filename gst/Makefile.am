@@ -22,7 +22,7 @@ defs_DATA = gst-types.defs \
 	libs.defs
 defsdir = $(pkgdatadir)/2.0/defs
 
-noinst_HEADERS = common.h pygstvalue.h pygstminiobject.h
+noinst_HEADERS = common.h pygstvalue.h pygstminiobject.h pygstobject.h
 
 INCLUDES = $(PYTHON_INCLUDES)
 EXTRA_DIST = $(defs_DATA) common.h arg-types.py
@@ -33,7 +33,7 @@ GEN_FILES = arg-types.py gst-types.defs libs.defs
 _gst_la_CFLAGS = $(common_cflags)
 _gst_la_LIBADD = $(common_libadd)
 _gst_la_LDFLAGS = $(common_ldflags) -export-symbols-regex init_gst $(GST_BASE_LIBS) $(GST_CONTROLLER_LIBS)
-_gst_la_SOURCES = gst-argtypes.c gstmodule.c pygstvalue.c pygstminiobject.c
+_gst_la_SOURCES = gst-argtypes.c gstmodule.c pygstvalue.c pygstminiobject.c pygstobject.c
 nodist__gst_la_SOURCES = gst.c
 GST_OVERRIDES = 		\
 	gst.override 		\

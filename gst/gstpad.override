@@ -94,7 +94,7 @@ pad_private(GstPad *pad)
     private = g_object_get_qdata (G_OBJECT (pad), padprivate);
     if (private == NULL) {
         private = g_new0(PyGstPadPrivate, 1);
-        private->pad = (PyGObject *) pygobject_new (G_OBJECT (pad));
+        private->pad = (PyGObject *) pygstobject_new (G_OBJECT (pad));
         Py_DECREF (private->pad);
         g_object_set_qdata_full (G_OBJECT (pad), padprivate, private, free_pad_private);
     }
@@ -128,7 +128,7 @@ probe_handler_marshal(GstPad *pad, GstMiniObject *data, gpointer user_data)
 
     callback = PyTuple_GetItem(py_user_data, 0);
     args = Py_BuildValue("(NN)",
-             pygobject_new(G_OBJECT(pad)),
+             pygstobject_new(G_OBJECT(pad)),
              py_data);
 
     len = PyTuple_Size(py_user_data);
@@ -866,7 +866,7 @@ _wrap_gst_pad_get_internal_links (PyGObject * self)
 
     ret = PyList_New(0);
     for (tmp = lst ; tmp; tmp = g_list_next(tmp)) {
-    PyList_Append(ret, pygobject_new(G_OBJECT(tmp->data)));
+    PyList_Append(ret, pygstobject_new(G_OBJECT(tmp->data)));
     }
     g_list_free(lst);
     return ret;
@@ -883,7 +883,7 @@ _wrap_gst_pad_get_internal_links_default (PyGObject * self)
 
     ret = PyList_New(0);
     for (tmp = lst ; tmp; tmp = g_list_next(tmp)) {
-    PyList_Append(ret, pygobject_new(G_OBJECT(tmp->data)));
+    PyList_Append(ret, pygstobject_new(G_OBJECT(tmp->data)));
     }
     g_list_free(lst);
     return ret;
@@ -963,7 +963,7 @@ pad_block_callback_marshal(GstPad *pad, gboolean blocked, gpointer user_data)
 
     callback = PyTuple_GetItem(py_user_data, 0);
     args = Py_BuildValue("(NN)",
-             pygobject_new(G_OBJECT(pad)),
+             pygstobject_new(G_OBJECT(pad)),
              py_data);
 
     len = PyTuple_Size(py_user_data);

@@ -126,7 +126,7 @@ _wrap_gst_bin_get_list(PyGObject *self)
 		GstElement *element = (GstElement*)l->data;
 		if (!element)
 			continue;
-		PyTuple_SetItem(tuple, i, pygobject_new(G_OBJECT(element)));
+		PyTuple_SetItem(tuple, i, pygstobject_new(G_OBJECT(element)));
 	}
 		
 	return tuple;
@@ -151,5 +151,5 @@ _wrap_gst_bin_get_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
 	    ret = gst_bin_get_by_name(GST_BIN(self->obj), name);
     
     /* pygobject_new handles NULL checking */
-    return pygobject_new((GObject *)ret);
+    return pygstobject_new((GObject *)ret);
 }

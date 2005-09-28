@@ -21,17 +21,43 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 
 from common import gst, unittest
+import sys
+import gc
 
 class PadTemplateTest(unittest.TestCase):
+    def tearDown(self):
+        gst.debug('garbage collecting')
+        gc.collect()
+        gst.debug('done garbage collecting')
+        
     def testConstructor(self):
-        self.failUnless(gst.PadTemplate("template", gst.PAD_SINK,
-            gst.PAD_ALWAYS, gst.caps_from_string("audio/x-raw-int")))
+        template = gst.PadTemplate("template", gst.PAD_SINK,
+            gst.PAD_ALWAYS, gst.caps_from_string("audio/x-raw-int"))
+        self.failUnless(template)
+        self.assertEquals(sys.getrefcount(template), 3)
+        #self.assertEquals(template.__gstrefcount__, 1)
 
 class PadTest(unittest.TestCase):
+    def tearDown(self):
+        gst.debug('garbage collecting')
+        gc.collect()
+        gst.debug('done garbage collecting')
+        #elements = [o for o in gc.get_objects() if isinstance(o, gst.Element)]
+        #self.failIf(elements, elements)
+        #pads = [o for o in gc.get_objects() if isinstance(o, gst.Pad)]
+        #self.failIf(pads, pads)
+        
     def testConstructor(self):
         # first style uses gst_pad_new
         gst.debug('creating pad with name src')
-        self.failUnless(gst.Pad("src", gst.PAD_SRC))
+        print "creating pad with src"
+        pad = gst.Pad("src", gst.PAD_SRC)
+        print pad
+        self.failUnless(pad)
+        self.assertEquals(sys.getrefcount(pad), 3)
+        self.assertEquals(pad.__gstrefcount__, 1)
+
+
         gst.debug('creating pad with no name')
         self.failUnless(gst.Pad(None, gst.PAD_SRC))
         self.failUnless(gst.Pad(name=None, direction=gst.PAD_SRC))
@@ -46,6 +72,15 @@ class PadPipelineTest(unittest.TestCase):
         self.pipeline = gst.parse_launch('fakesrc name=source ! fakesink')
         src = self.pipeline.get_by_name('source')
         self.srcpad = src.get_pad('src')
+
+    def tearDown(self):
+        del self.pipeline
+        del self.srcpad
+        gst.debug('garbage collecting')
+        gc.collect()
+        gst.debug('done garbage collecting')
+        #elements = [o for o in gc.get_objects() if isinstance(o, gst.Element)]
+        #self.failIf(elements, elements)
         
 # FIXME: now that GstQuery is a miniobject with various _new_ factory
 # functions, we need to figure out a way to deal with them in python
@@ -62,6 +97,14 @@ class PadProbeTest(unittest.TestCase):
         self.pipeline.add_many(self.fakesrc, self.fakesink)
         self.fakesrc.link(self.fakesink)
 
+    def tearDown(self):
+        del self.pipeline
+        del self.fakesrc
+        del self.fakesink
+        gst.debug('garbage collecting')
+        gc.collect()
+        gst.debug('done garbage collecting')
+        
     def testFakeSrcProbeOnce(self):
         self.fakesrc.set_property('num-buffers', 1)
 
@@ -110,6 +153,24 @@ class PadProbeTest(unittest.TestCase):
         assert self._num_times_called == 1
         self.pipeline.set_state(gst.STATE_NULL)
 
+class PadRefCountTest(unittest.TestCase):
+    def tearDown(self):
+        gst.debug('garbage collecting')
+        gc.collect()
+        gst.debug('done garbage collecting')
+        
+    def testAddPad(self):
+        # add a pad to an element
+        e = gst.element_factory_make('fakesrc')
+        gst.debug('creating pad with name mpypad')
+        pad = gst.Pad("mpypad", gst.PAD_SRC)
+        self.failUnless(pad)
+        e.add_pad(pad)
+        gst.debug('deleting element')
+        del e
+        gst.debug('garbage collecting')
+        gc.collect()
+        gst.debug('done garbage collecting')
 
 if __name__ == "__main__":
     unittest.main()

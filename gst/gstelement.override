@@ -41,7 +41,7 @@ _wrap_gst_element_get_pad_template(PyGObject *self, PyObject *args)
             (GST_ELEMENT_GET_CLASS (self->obj), name);
 
         if (tmpl) {
-                ret = pygobject_new (G_OBJECT (tmpl));
+                ret = pygstobject_new (G_OBJECT (tmpl));
         } else {
                 ret = Py_None;
                 Py_INCREF (ret);
@@ -62,7 +62,7 @@ _wrap_gst_element_get_pad_list(PyGObject *self)
 	list = PyList_New(0);
 	for (l = pads; l; l = l->next) {
 		GstPad *pad = (GstPad*)l->data;
-		PyList_Append(list, pygobject_new(G_OBJECT(pad)));
+		PyList_Append(list, pygstobject_new(G_OBJECT(pad)));
 	}
 		
 	return list;
@@ -80,7 +80,7 @@ _wrap_gst_element_get_pad_template_list(PyGObject *self)
 	list = PyList_New(0);
 	for (l = pads; l; l = l->next) {
 		GstPad *pad = (GstPad*)l->data;
-		PyList_Append(list, pygobject_new(G_OBJECT(pad)));
+		PyList_Append(list, pygstobject_new(G_OBJECT(pad)));
 	}
 		
 	return list;

@@ -65,7 +65,7 @@ _wrap_gst_tuner_list_channels(PyGObject *self)
     py_list = PyList_New(0);
     for (l = list; l; l = l->next) {
 	GstTunerChannel *channel = (GstTunerChannel*)l->data;
-	PyObject *py_channel = pygobject_new(G_OBJECT(channel));
+	PyObject *py_channel = pygstobject_new(G_OBJECT(channel));
 	PyList_Append(py_list, py_channel);
 	Py_DECREF(py_channel);
     }
@@ -87,7 +87,7 @@ _wrap_gst_tuner_list_norms(PyGObject *self)
     py_list = PyList_New(0);
     for (l = list; l; l = l->next) {
 	GstTunerNorm *norm = (GstTunerNorm*)l->data;
-	PyObject *py_norm = pygobject_new(G_OBJECT(norm));
+	PyObject *py_norm = pygstobject_new(G_OBJECT(norm));
 	PyList_Append(py_list, py_norm);
 	Py_DECREF(py_norm);
     }
@@ -109,7 +109,7 @@ _wrap_gst_mixer_list_tracks(PyGObject *self)
     py_list = PyList_New(0);
     for (l = list; l; l = l->next) {
 	GstMixerTrack *track = (GstMixerTrack*)l->data;
-	PyObject *py_track = pygobject_new(G_OBJECT(track));
+	PyObject *py_track = pygstobject_new(G_OBJECT(track));
 	PyList_Append(py_list, py_track);
 	Py_DECREF(py_track);
     }
@@ -131,7 +131,7 @@ _wrap_gst_color_balance_list_channels(PyGObject *self)
     py_list = PyList_New(0);
     for (l = list; l; l = l->next) {
         GstColorBalanceChannel *channel = (GstColorBalanceChannel*)l->data;
-        PyObject *py_channel = pygobject_new(G_OBJECT(channel));
+        PyObject *py_channel = pygstobject_new(G_OBJECT(channel));
         PyList_Append(py_list, py_channel);
         Py_DECREF(py_channel);
     }

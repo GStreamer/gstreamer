@@ -22,6 +22,9 @@
 
 from common import gst, unittest
 
+import sys
+import gc
+
 # since I can't subclass gst.Element for some reason, I use a bin here
 # it don't matter to Jesus
 class TestElement(gst.Bin):
@@ -180,6 +183,8 @@ class QueueTest(unittest.TestCase):
         queue = gst.element_factory_make('queue')
         assert isinstance(queue, gst.Queue)
         assert queue.get_name() == 'queue0'
+        self.assertEquals(queue.__gstrefcount__, 1)
+
 
 class DebugTest(unittest.TestCase):
     def testDebug(self):

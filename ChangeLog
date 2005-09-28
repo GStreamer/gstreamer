@@ -1,3 +1,29 @@
+2005-09-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/Makefile.am:
+	* gst/common.h:
+	* gst/pygstobject.c: (pygstobject_sink), (pygstobject_new),
+	(pygst_object_unref):
+	* gst/pygstobject.h:
+	* gst/gstmodule.c: (init_gst):
+	  add/move some code to handle wrapping/refcounting of possible
+	  GstObject
+	* codegen/argtypes.py:
+	* gst/gstbin.override:
+	* gst/gstbus.override:
+	* gst/gstelement.override:
+	* gst/gstpad.override:
+	* gst/interfaces.override:
+	  use this reffing code
+	* gst/gst-types.defs:
+	* gst/gst.override:
+	  add a __gstrefcount__ field to GstObject types
+	  add tp_traverse, tp_dealloc and tp_clear, so we handle refcounting
+	  properly related to garbage collection
+	* testsuite/test_element.py:
+	* testsuite/test_pad.py:
+	  add more tests, add some refcount checks
+
 2005-09-28  Edward Hervey  <edward@fluendo.com>
 
 	* codegen/argtypes.py:

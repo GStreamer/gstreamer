@@ -7,6 +7,9 @@
   (parent "GObject")
   (c-name "GstObject")
   (gtype-id "GST_TYPE_OBJECT")
+  (fields
+   '("int" "__gstrefcount__")
+  )
 )
 
 (define-object Index
