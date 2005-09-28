@@ -99,7 +99,6 @@ on_object_controlled_property_changed (const GObject * object, GParamSpec * arg,
 
   if (g_mutex_trylock (ctrl->lock)) {
     if (!G_IS_VALUE (&prop->live_value.value)) {
-      //g_value_unset (&prop->live_value.value);
       g_value_init (&prop->live_value.value, prop->type);
     }
     g_object_get_property (G_OBJECT (object), prop->name,
@@ -109,9 +108,6 @@ on_object_controlled_property_changed (const GObject * object, GParamSpec * arg,
     GST_DEBUG ("-> is live update : ts=%" G_GUINT64_FORMAT,
         prop->live_value.timestamp);
   }
-  //else {
-  //GST_DEBUG ("-> is control change");
-  //}
 }
 
 /* helper */
@@ -238,16 +234,16 @@ gst_controlled_property_new (GObject * object, const gchar * name)
 
   GST_INFO ("trying to put property '%s' under control", name);
 
-  // check if the object has a property of that name
+  /* check if the object has a property of that name */
   if ((pspec =
           g_object_class_find_property (G_OBJECT_GET_CLASS (object), name))) {
     GST_DEBUG ("  psec->flags : 0x%08x", pspec->flags);
 
-    // check if this param is witable
+    /* check if this param is witable */
     g_return_val_if_fail ((pspec->flags & G_PARAM_WRITABLE), NULL);
-    // check if property is controlable
+    /* check if property is controlable */
     g_return_val_if_fail ((pspec->flags & GST_PARAM_CONTROLLABLE), NULL);
-    // check if this param is not construct-only
+    /* check if this param is not construct-only */
     g_return_val_if_fail (!(pspec->flags & G_PARAM_CONSTRUCT_ONLY), NULL);
 
     /* TODO do sanity checks
@@ -264,7 +260,7 @@ gst_controlled_property_new (GObject * object, const gchar * name)
     if ((prop = g_new0 (GstControlledProperty, 1))) {
       gchar *signal_name;
 
-      prop->name = pspec->name; // so we don't use the same mem twice
+      prop->name = pspec->name; /* so we don't use the same mem twice */
       prop->type = G_PARAM_SPEC_VALUE_TYPE (pspec);
       gst_controlled_property_set_interpolation_mode (prop,
           GST_INTERPOLATE_NONE);
@@ -421,17 +417,17 @@ gst_controller_new_valist (GObject * object, va_list var_args)
    */
 
   self = g_object_get_qdata (object, __gst_controller_key);
-  // create GstControlledProperty for each property
+  /* create GstControlledProperty for each property */
   while ((name = va_arg (var_args, gchar *))) {
-    // test if this property isn't yet controlled
+    /* test if this property isn't yet controlled */
     if (!self || !(prop = gst_controller_find_controlled_property (self, name))) {
-      // create GstControlledProperty and add to self->propeties List
+      /* create GstControlledProperty and add to self->propeties List */
       if ((prop = gst_controlled_property_new (object, name))) {
-        // if we don't have a controller object yet, now is the time to create one
+        /* if we don't have a controller object yet, now is the time to create one */
         if (!self) {
           self = g_object_new (GST_TYPE_CONTROLLER, NULL);
           self->object = object;
-          // store the controller
+          /* store the controller */
           g_object_set_qdata (object, __gst_controller_key, self);
         } else {
           GST_INFO ("returning existing controller");
@@ -472,18 +468,18 @@ gst_controller_new_list (GObject * object, GList * list)
   GST_INFO ("setting up a new controller");
 
   self = g_object_get_qdata (object, __gst_controller_key);
-  // create GstControlledProperty for each property
+  /* create GstControlledProperty for each property */
   for (node = list; node; node = g_list_next (list)) {
     name = (gchar *) node->data;
-    // test if this property isn't yet controlled
+    /* test if this property isn't yet controlled */
     if (!self || !(prop = gst_controller_find_controlled_property (self, name))) {
-      // create GstControlledProperty and add to self->propeties List
+      /* create GstControlledProperty and add to self->propeties List */
       if ((prop = gst_controlled_property_new (object, name))) {
-        // if we don't have a controller object yet, now is the time to create one
+        /* if we don't have a controller object yet, now is the time to create one */
         if (!self) {
           self = g_object_new (GST_TYPE_CONTROLLER, NULL);
           self->object = object;
-          // store the controller
+          /* store the controller */
           g_object_set_qdata (object, __gst_controller_key, self);
         } else {
           GST_INFO ("returning existing controller");
@@ -545,7 +541,7 @@ gst_controller_remove_properties_valist (GstController * self, va_list var_args)
   g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
 
   while ((name = va_arg (var_args, gchar *))) {
-    // find the property in the properties list of the controller, remove and free it
+    /* find the property in the properties list of the controller, remove and free it */
     g_mutex_lock (self->lock);
     if ((prop = gst_controller_find_controlled_property (self, name))) {
       self->properties = g_list_remove (self->properties, prop);
@@ -615,17 +611,17 @@ gst_controller_set (GstController * self, gchar * property_name,
       GstTimedValue *tv;
       GList *node;
 
-      // check if a timed_value for the timestamp already exists
+      /* check if a timed_value for the timestamp already exists */
       if ((node = g_list_find_custom (prop->values, &timestamp,
                   gst_timed_value_find))) {
         tv = node->data;
         memcpy (&tv->value, value, sizeof (GValue));
       } else {
-        // create a new GstTimedValue
+        /* create a new GstTimedValue */
         tv = g_new (GstTimedValue, 1);
         tv->timestamp = timestamp;
         memcpy (&tv->value, value, sizeof (GValue));
-        // and sort it into the prop->values list
+        /* and sort it into the prop->values list */
         prop->values =
             g_list_insert_sorted (prop->values, tv, gst_timed_value_compare);
       }
@@ -741,7 +737,7 @@ gst_controller_get (GstController * self, gchar * property_name,
 
   g_mutex_lock (self->lock);
   if ((prop = gst_controller_find_controlled_property (self, property_name))) {
-    //get current value via interpolator
+    /* get current value via interpolator */
     val = prop->get (prop, timestamp);
   }
   g_mutex_unlock (self->lock);
@@ -804,7 +800,7 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
   GST_INFO ("sync_values");
 
   g_mutex_lock (self->lock);
-  // go over the controlled properties of the controller
+  /* go over the controlled properties of the controller */
   for (node = self->properties; node; node = g_list_next (node)) {
     prop = node->data;
     GST_DEBUG ("  property '%s' at ts=%" G_GUINT64_FORMAT, prop->name,
@@ -820,7 +816,6 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
       } else {
         GstTimedValue *tv = lnode->data;
 
-        //GST_DEBUG ("live.ts %"G_UINT64_FORMAT" <-> now %"G_UINT64_FORMAT, prop->live_value.timestamp, tv->timestamp);
         if (prop->live_value.timestamp < tv->timestamp) {
           g_value_unset (&prop->live_value.value);
           GST_DEBUG ("    live value resetted");
@@ -830,7 +825,7 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
       }
     }
     if (!live) {
-      //get current value via interpolator
+      /* get current value via interpolator */
       value = prop->get (prop, timestamp);
       prop->last_value.timestamp = timestamp;
       g_value_copy (value, &prop->last_value.value);
@@ -919,7 +914,7 @@ gst_controller_get_value_array (GstController * self, GstClockTime timestamp,
          value_array->values=g_new(sizeof(???),nbsamples);
        */
     }
-    //get current value_array via interpolator
+    /* get current value_array via interpolator */
     res = prop->get_value_array (prop, timestamp, value_array);
   }
   g_mutex_unlock (self->lock);
@@ -1029,9 +1024,9 @@ _gst_controller_class_init (GstControllerClass * klass)
 
   __gst_controller_key = g_quark_from_string ("gst::controller");
 
-  // register properties
-  // register signals
-  // set defaults for overridable methods
+  /* register properties */
+  /* register signals */
+  /* set defaults for overridable methods */
   /* TODO which of theses do we need ? 
      BilboEd : none :)
    */
@@ -1045,15 +1040,15 @@ gst_controller_get_type (void)
   if (type == 0) {
     static const GTypeInfo info = {
       sizeof (GstControllerClass),
-      NULL,                     // base_init
-      NULL,                     // base_finalize
-      (GClassInitFunc) _gst_controller_class_init,      // class_init
-      NULL,                     // class_finalize
-      NULL,                     // class_data
+      NULL,                     /* base_init */
+      NULL,                     /* base_finalize */
+      (GClassInitFunc) _gst_controller_class_init,      /* class_init */
+      NULL,                     /* class_finalize */
+      NULL,                     /* class_data */
       sizeof (GstController),
-      0,                        // n_preallocs
-      (GInstanceInitFunc) _gst_controller_init, // instance_init
-      NULL                      // value_table
+      0,                        /* n_preallocs */
+      (GInstanceInitFunc) _gst_controller_init, /* instance_init */
+      NULL                      /* value_table */
     };
     type = g_type_register_static (G_TYPE_OBJECT, "GstController", &info, 0);
   }

@@ -41,7 +41,7 @@ GList *
 gst_controlled_property_find_timed_value_node (GstControlledProperty * prop,
     GstClockTime timestamp)
 {
-  //GList *prev_node = NULL;
+  /* GList *prev_node = NULL; */
   GList *prev_node = g_list_last (prop->values);
   GList *node;
   GstTimedValue *tv;
@@ -74,8 +74,8 @@ gst_controlled_property_find_timed_value_node (GstControlledProperty * prop,
   return (prev_node);
 }
 
-// steps-like (no-)interpolation, default
-// just returns the value for the most recent key-frame
+/*  steps-like (no-)interpolation, default */
+/*  just returns the value for the most recent key-frame */
 
 static GValue *
 interpolate_none_get (GstControlledProperty * prop, GstClockTime timestamp)
@@ -126,8 +126,8 @@ DEFINE_NONE_GET (boolean)
        interpolate_none_get_boolean_value_array
      };
 
-// returns the default value of the property, except for times with specific values
-// needed for one-shot events, such as notes and triggers
+/*  returns the default value of the property, except for times with specific values */
+/*  needed for one-shot events, such as notes and triggers */
 
 static GValue *
 interpolate_trigger_get (GstControlledProperty * prop, GstClockTime timestamp)
@@ -166,8 +166,8 @@ static GstInterpolateMethod interpolate_trigger = {
   NULL
 };
 
-// linear interpolation
-// smoothes inbetween values
+/*  linear interpolation */
+/*  smoothes inbetween values */
 
 #define DEFINE_LINEAR_GET(type) \
 static g##type \
@@ -240,11 +240,11 @@ DEFINE_LINEAR_GET (double)
        NULL
      };
 
-// square interpolation
+/*  square interpolation */
 
-// cubic interpolation
+/*  cubic interpolation */
 
-// register all interpolation methods
+/*  register all interpolation methods */
 GstInterpolateMethod *interpolation_methods[] = {
   &interpolate_none,
   &interpolate_trigger,

@@ -100,6 +100,7 @@
 #ifdef HAVE_VALGRIND
 #include <valgrind/valgrind.h>
 #endif
+#include <glib/gprintf.h>       /* g_sprintf */
 
 /* underscore is to prevent conflict with GST_CAT_DEBUG define */
 GST_DEBUG_CATEGORY_STATIC (_GST_CAT_DEBUG);
@@ -539,13 +540,15 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
     const gchar * file, const gchar * function, gint line,
     GObject * object, GstDebugMessage * message, gpointer unused)
 {
-  gchar *color;
+  gchar *color = NULL;
   gchar *clear;
-  gchar *obj;
-  gchar *pidcolor;
+  gchar *obj = NULL;
+  gchar pidcolor[10];
   gint pid;
   GTimeVal now;
   GstClockTime elapsed;
+  gboolean free_color = TRUE;
+  gboolean free_obj = TRUE;
 
   if (level > gst_debug_category_get_threshold (category))
     return;
@@ -554,18 +557,23 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
 
   /* color info */
   if (gst_debug_is_colored ()) {
-    color =
-        gst_debug_construct_term_color (gst_debug_category_get_color
+    color = gst_debug_construct_term_color (gst_debug_category_get_color
         (category));
     clear = "\033[00m";
-    pidcolor = g_strdup_printf ("\033[3%1dm", pid % 6 + 31);
+    g_sprintf (pidcolor, "\033[3%1dm", pid % 6 + 31);
   } else {
-    color = g_strdup ("");
+    color = "\0";
+    free_color = FALSE;
     clear = "";
-    pidcolor = g_strdup ("");
+    pidcolor[0] = '\0';
   }
 
-  obj = object ? gst_debug_print_object (object) : g_strdup ("");
+  if (object) {
+    obj = gst_debug_print_object (object);
+  } else {
+    obj = "\0";
+    free_obj = FALSE;
+  }
 
   g_get_current_time (&now);
   elapsed = GST_TIMEVAL_TO_TIME (now) - start_time;
@@ -576,9 +584,10 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
       gst_debug_category_get_name (category), clear, pidcolor, pid, clear,
       color, file, line, function, obj, clear, gst_debug_message_get (message));
 
-  g_free (color);
-  g_free (pidcolor);
-  g_free (obj);
+  if (free_color)
+    g_free (color);
+  if (free_obj)
+    g_free (obj);
 }
 
 /**

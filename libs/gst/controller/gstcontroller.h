@@ -49,8 +49,8 @@ G_BEGIN_DECLS
  */
 typedef struct _GstTimedValue
 {
-  GstClockTime timestamp;       // timestamp of the value change
-  GValue value;                 // the new value
+  GstClockTime timestamp;       /* timestamp of the value change */
+  GValue value;                 /* the new value */
   /* TODO what about storing the difference to next timestamp and value here
      + make calculations slightly easier and faster
      - determining the GType for the value_dif is not simple
@@ -132,14 +132,14 @@ typedef struct _GstInterpolateMethod
  */
 typedef struct _GstControlledProperty
 {
-  gchar *name;                  // name of the property
-  GType type;                   // type of the handled property
-  GValue default_value;         // default value for the handled property
-  GValue result_value;          // result value location for the interpolation method
-  GstTimedValue last_value;     // the last value a _sink call wrote
-  GstTimedValue live_value;     // temporary value override for live input
-  gulong notify_handler_id;     // id of the notify::<name> signal handler
-  GstInterpolateMode interpolation;     // Interpolation mode
+  gchar *name;                  /* name of the property */
+  GType type;                   /* type of the handled property */
+  GValue default_value;         /* default value for the handled property */
+  GValue result_value;          /* result value location for the interpolation method */
+  GstTimedValue last_value;     /* the last value a _sink call wrote */
+  GstTimedValue live_value;     /* temporary value override for live input */
+  gulong notify_handler_id;     /* id of the notify::<name> signal handler */
+  GstInterpolateMode interpolation;     /* Interpolation mode */
   /* TODO instead of *method, have pointers to get() and get_value_array() here
      gst_controller_set_interpolation_mode() will pick the right ones for the
      properties value type
@@ -148,9 +148,9 @@ typedef struct _GstControlledProperty
   InterpolateGet get;
   InterpolateGetValueArray get_value_array;
 
-  GList *values;                // List of GstTimedValue
+  GList *values;                /* List of GstTimedValue */
   /* TODO keep the last search result to be able to continue
-     GList      *last_value;                    // last search result, can be used for incremental searches
+     GList      *last_value;     // last search result, can be used for incremental searches
    */
 
   /*< private >*/
@@ -171,8 +171,6 @@ typedef struct _GstControlledProperty
 typedef struct _GstController GstController;
 typedef struct _GstControllerClass GstControllerClass;
 
-//typedef struct _GstControllerPrivate GstControllerPrivate;
-
 /**
  * GstController:
  *
@@ -183,9 +181,9 @@ struct _GstController
 {
   GObject parent;
 
-  GList *properties;  // List of GstControlledProperty
-  GMutex *lock;       // Secure property access, elements will access from threads
-  GObject *object;    // the object we control
+  GList *properties;  /* List of GstControlledProperty */
+  GMutex *lock;       /* Secure property access, elements will access from threads */
+  GObject *object;    /* the object we control */
 
   /*< private >*/
   gpointer       _gst_reserved[GST_PADDING];

@@ -1,3 +1,20 @@
+2005-09-28  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstinfo.c: (gst_debug_log_default):
+          don't do dummy g_strdup()s
+	* libs/gst/controller/gstcontroller.c:
+	(on_object_controlled_property_changed),
+	(gst_controlled_property_new), (gst_controller_new_valist),
+	(gst_controller_new_list),
+	(gst_controller_remove_properties_valist), (gst_controller_set),
+	(gst_controller_get), (gst_controller_sync_values),
+	(gst_controller_get_value_array), (_gst_controller_class_init),
+	(gst_controller_get_type):
+	* libs/gst/controller/gstcontroller.h:
+	* libs/gst/controller/gstinterpolation.c:
+	(gst_controlled_property_find_timed_value_node):
+          convert // to /**/ comments
+
 2005-09-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbus.c: (marshal_VOID__MINIOBJECT), (gst_bus_class_init),
@@ -59,7 +76,7 @@
 
 	* gst/elements/gstfdsrc.c: Cleaned up a bit.
 
-2005-09-28  Tim-Philipp Müller  <tim at centricular dot net>
+2005-09-28  Tim-Philipp M??ller  <tim at centricular dot net>
 
 	* gst/elements/gstcapsfilter.c:
 	* gst/elements/gstfakesink.c:
@@ -160,12 +177,12 @@
 	Leak fixes, the fold functions need to unref the passed object and
 	_get_parent_*() returns ref to parent.
 
-2005-09-27  Tim-Philipp Müller  <tim at centricular dot net>
+2005-09-27  Tim-Philipp M??ller  <tim at centricular dot net>
 
 	* check/gst/gstbuffer.c: (test_make_writable):
 	  Plug leak in test case and fix 'make check-valgrind'
 
-2005-09-27  Tim-Philipp Müller  <tim at centricular dot net>
+2005-09-27  Tim-Philipp M??ller  <tim at centricular dot net>
 
 	* gst/gstbuffer.c: (gst_subbuffer_init):
 	  Set READONLY flag on subbuffers, so that gst_buffer_make_writable()
@@ -197,7 +214,7 @@
 	(main):
 	Fix compilation of some tests.
 
-2005-09-27  Tim-Philipp Müller  <tim at centricular dot net>
+2005-09-27  Tim-Philipp M??ller  <tim at centricular dot net>
 
 	* gst/gsterror.h:
 	  Remove comment. GST_TYPE_G_ERROR is here to stay,
@@ -221,7 +238,7 @@
 	* gst/gstpad.c: (gst_pad_dispose):
 	Added some debug info first.
 
-2005-09-26  Tim-Philipp Müller  <tim at centricular dot net>
+2005-09-26  Tim-Philipp M??ller  <tim at centricular dot net>
 
 	* docs/design/draft-push-pull.txt:
 	* docs/design/part-events.txt:
@@ -319,7 +336,7 @@
           inlined two more docs
           factored gstpadtemplate out of gstpad
 
-2005-09-24  Tim-Philipp Müller  <tim at centricular dot net>
+2005-09-24  Tim-Philipp M??ller  <tim at centricular dot net>
 
 	* check/gst/gstbin.c: (test_children_state_change_order_flagged_sink),
 	(test_children_state_change_order_semi_sink):
@@ -362,7 +379,7 @@
 	* gst/gststructure.c:
 	  some doc updates
 
-2005-09-23  Tim-Philipp Müller  <tim at centricular dot net>
+2005-09-23  Tim-Philipp M??ller  <tim at centricular dot net>
 
 	* docs/design/part-gstbin.txt:
 	* docs/design/part-gstbus.txt:
@@ -378,7 +395,7 @@
 	* gst/gststructure.h:
 	  add a method to get a GstClockTime out of a structure
 
-2005-09-23  Tim-Philipp Müller  <tim at centricular dot net>
+2005-09-23  Tim-Philipp M??ller  <tim at centricular dot net>
 
 	* check/gst/gstbin.c: (test_children_state_change_order_flagged_sink),
 	(test_children_state_change_order_semi_sink), (gst_bin_suite):
@@ -474,13 +491,13 @@
 	* gst/gstquery.h:
 	Added new query.
 
-2005-09-22  Tim-Philipp Müller  <tim at centricular dot net>
+2005-09-22  Tim-Philipp M??ller  <tim at centricular dot net>
 
 	* check/gst/gstvalue.c: (test_date), (gst_value_suite):
 	  Add simplistic test suite for GST_TYPE_DATE serialisation and
 	  deserialisation.
 
-2005-09-22  Tim-Philipp Müller  <tim at centricular dot net>
+2005-09-22  Tim-Philipp M??ller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gststructure.c: (gst_structure_set_valist),
@@ -531,7 +548,7 @@
 
 2005-09-21  Francis Labonte  <francis_labonte at hotmail dot com>
 
-	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+	Reviewed by: Tim-Philipp M??ller  <tim at centricular dot net>
 
 	* gst/gstinfo.c: (_gst_debug_nameof_funcptr),
 	(_gst_debug_register_funcptr):
@@ -542,7 +559,7 @@
 	* gst/registries/.cvsignore:
 	  Remove left-over file.
 
-2005-09-21  Tim-Philipp Müller  <tim at centricular dot net>
+2005-09-21  Tim-Philipp M??ller  <tim at centricular dot net>
 
 	* docs/pwg/appendix-porting.xml:
 	  And something about newsegment events and caps-on-buffers to
@@ -577,7 +594,7 @@
 	(gst_pad_class_init): have-data is now a detailed signal, yes it
 	is.
 
-2005-09-21  Tim-Philipp Müller  <tim at centricular dot net>
+2005-09-21  Tim-Philipp M??ller  <tim at centricular dot net>
 
 	* gst/base/gstbasetransform.c: (gst_base_transform_transform_size):
 	* gst/gstutils.c: (gst_util_set_value_from_string),
