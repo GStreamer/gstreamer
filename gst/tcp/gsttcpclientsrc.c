@@ -29,6 +29,25 @@
 #include <string.h>             /* memset */
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
+
+
+/* control stuff stolen from fdsrc */
+#define CONTROL_STOP            'S'     /* stop the select call */
+#define CONTROL_SOCKETS(src)   src->control_fds
+#define WRITE_SOCKET(src)      src->control_fds[1]
+#define READ_SOCKET(src)       src->control_fds[0]
+
+#define SEND_COMMAND(src, command)          \
+G_STMT_START {                              \
+  unsigned char c; c = command;             \
+  write (WRITE_SOCKET(src), &c, 1);         \
+} G_STMT_END
+
+#define READ_COMMAND(src, command, res)        \
+G_STMT_START {                                 \
+  res = read(READ_SOCKET(src), &command, 1);   \
+} G_STMT_END
 
 
 GST_DEBUG_CATEGORY (tcpclientsrc_debug);
@@ -136,6 +155,9 @@ gst_tcpclientsrc_init (GstTCPClientSrc * this, GstTCPClientSrcClass * g_class)
   this->caps = NULL;
   this->curoffset = 0;
 
+  READ_SOCKET (this) = -1;
+  WRITE_SOCKET (this) = -1;
+
   gst_base_src_set_live (GST_BASE_SRC (this), TRUE);
 
   GST_FLAG_UNSET (this, GST_TCPCLIENTSRC_OPEN);
@@ -184,12 +206,28 @@ gst_tcpclientsrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   /* read the buffer header if we're using a protocol */
   switch (src->protocol) {
     case GST_TCP_PROTOCOL_NONE:
-      ret = gst_tcp_read_buffer (GST_ELEMENT (src), src->sock_fd, -1, outbuf);
+      ret = gst_tcp_read_buffer (GST_ELEMENT (src), src->sock_fd,
+          READ_SOCKET (src), outbuf);
       break;
 
     case GST_TCP_PROTOCOL_GDP:
-      ret = gst_tcp_gdp_read_buffer (GST_ELEMENT (src), src->sock_fd, -1,
-          outbuf);
+      /* get the caps if we're using GDP */
+      if (!src->caps_received) {
+        GstCaps *caps;
+
+        GST_DEBUG_OBJECT (src, "getting caps through GDP");
+        ret = gst_tcp_gdp_read_caps (GST_ELEMENT (src), src->sock_fd,
+            READ_SOCKET (src), &caps);
+
+        if (ret != GST_FLOW_OK)
+          goto no_caps;
+
+        src->caps_received = TRUE;
+        src->caps = caps;
+      }
+
+      ret = gst_tcp_gdp_read_buffer (GST_ELEMENT (src), src->sock_fd,
+          READ_SOCKET (src), outbuf);
       break;
     default:
       /* need to assert as buf == NULL */
@@ -216,6 +254,12 @@ wrong_state:
   {
     GST_DEBUG_OBJECT (src, "connection to closed, cannot read data");
     return GST_FLOW_WRONG_STATE;
+  }
+no_caps:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+        ("Could not read caps through GDP"));
+    return ret;
   }
 }
 
@@ -278,6 +322,13 @@ gst_tcpclientsrc_start (GstBaseSrc * bsrc)
   gchar *ip;
   GstTCPClientSrc *src = GST_TCPCLIENTSRC (bsrc);
 
+  /* create the control sockets before anything */
+  if (socketpair (PF_UNIX, SOCK_STREAM, 0, CONTROL_SOCKETS (src)) < 0)
+    goto socket_pair;
+
+  fcntl (READ_SOCKET (src), F_SETFL, O_NONBLOCK);
+  fcntl (WRITE_SOCKET (src), F_SETFL, O_NONBLOCK);
+
   /* create receiving client socket */
   GST_DEBUG_OBJECT (src, "opening receiving client socket to %s:%d",
       src->host, src->port);
@@ -323,25 +374,14 @@ gst_tcpclientsrc_start (GstBaseSrc * bsrc)
     }
   }
 
-  /* get the caps if we're using GDP */
-  if (src->protocol == GST_TCP_PROTOCOL_GDP) {
-    /* if we haven't received caps yet, we should get them first */
-    if (!src->caps_received) {
-      GstFlowReturn fret;
-      GstCaps *caps;
-
-      GST_DEBUG_OBJECT (src, "getting caps through GDP");
-      fret = gst_tcp_gdp_read_caps (GST_ELEMENT (src), src->sock_fd, -1, &caps);
-
-      if (fret != GST_FLOW_OK)
-        goto no_caps;
-
-      src->caps_received = TRUE;
-      src->caps = caps;
-    }
-  }
   return TRUE;
 
+socket_pair:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE, (NULL),
+        GST_ERROR_SYSTEM);
+    return FALSE;
+  }
 no_socket:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL), GST_ERROR_SYSTEM);
@@ -350,13 +390,6 @@ no_socket:
 name_resolv:
   {
     gst_tcpclientsrc_stop (GST_BASE_SRC (src));
-    return FALSE;
-  }
-no_caps:
-  {
-    gst_tcpclientsrc_stop (GST_BASE_SRC (src));
-    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-        ("Could not read caps through GDP"));
     return FALSE;
   }
 }
@@ -383,11 +416,21 @@ gst_tcpclientsrc_stop (GstBaseSrc * bsrc)
   }
   GST_FLAG_UNSET (src, GST_TCPCLIENTSRC_OPEN);
 
+  close (READ_SOCKET (src));
+  close (WRITE_SOCKET (src));
+  READ_SOCKET (src) = -1;
+  WRITE_SOCKET (src) = -1;
+
   return TRUE;
 }
 
+/* will be called only between calls to start() and stop() */
 static gboolean
 gst_tcpclientsrc_unlock (GstBaseSrc * bsrc)
 {
+  GstTCPClientSrc *src = GST_TCPCLIENTSRC (bsrc);
+
+  SEND_COMMAND (src, CONTROL_STOP);
+
   return TRUE;
 }

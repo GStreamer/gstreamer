@@ -161,6 +161,9 @@ gst_tcp_socket_read (GstElement * this, int socket, void *buf, size_t count,
     if (ioctl (socket, FIONREAD, &num_to_read) < 0)
       goto ioctl_error;
 
+    if (num_to_read == 0)
+      goto got_eos;
+
     /* sizeof(ssize_t) >= sizeof(int), so I know num_to_read <= SSIZE_MAX */
 
     num_to_read = MIN (num_to_read, count - bytes_read);
@@ -195,6 +198,11 @@ ioctl_error:
     GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
         ("ioctl failed: %s", g_strerror (errno)));
     return GST_FLOW_ERROR;
+  }
+got_eos:
+  {
+    GST_DEBUG_OBJECT (this, "Got EOS on socket stream");
+    return GST_FLOW_WRONG_STATE;
   }
 read_error:
   {
@@ -254,6 +262,9 @@ gst_tcp_read_buffer (GstElement * this, int socket, int cancel_fd,
   if ((ret = ioctl (socket, FIONREAD, &readsize)) < 0)
     goto ioctl_error;
 
+  if (readsize == 0)
+    goto got_eos;
+
   /* sizeof(ssize_t) >= sizeof(int), so I know readsize <= SSIZE_MAX */
 
   *buf = gst_buffer_new_and_alloc (readsize);
@@ -287,6 +298,11 @@ ioctl_error:
     GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
         ("ioctl failed: %s", g_strerror (errno)));
     return GST_FLOW_ERROR;
+  }
+got_eos:
+  {
+    GST_DEBUG_OBJECT (this, "Got EOS on socket stream");
+    return GST_FLOW_WRONG_STATE;
   }
 read_error:
   {

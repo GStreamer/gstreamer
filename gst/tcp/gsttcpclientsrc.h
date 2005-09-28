@@ -65,6 +65,7 @@ struct _GstTCPClientSrc {
 
   /* socket */
   int sock_fd;
+  int control_fds[2];
 
   /* number of bytes we've gotten */
   off_t curoffset;
