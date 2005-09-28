@@ -204,6 +204,7 @@ GType gst_controller_get_type (void);
 /* GstController functions */
 
 GstController *gst_controller_new_valist (GObject * object, va_list var_args);
+GstController *gst_controller_new_list (GObject * object, GList *list);
 GstController *gst_controller_new (GObject * object, ...);
 
 gboolean gst_controller_remove_properties_valist (GstController * self,

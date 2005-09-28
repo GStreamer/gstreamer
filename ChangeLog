@@ -1,3 +1,11 @@
+2005-09-28  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/controller/gstcontroller.c: (gst_controller_new_valist),
+	(gst_controller_new_list):
+	* libs/gst/controller/gstcontroller.h:
+          added another constructor for language bindings
+
 2005-09-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/gst/gstpipeline.c: (GST_START_TEST), (gst_pipeline_suite):

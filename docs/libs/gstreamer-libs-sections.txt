@@ -50,6 +50,7 @@ GstController
 GstInterpolateMode
 gst_controller_init
 gst_controller_new
+gst_controller_new_list
 gst_controller_new_valist
 gst_controller_remove_properties
 gst_controller_remove_properties_valist

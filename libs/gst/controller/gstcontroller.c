@@ -434,8 +434,6 @@ gst_controller_new_valist (GObject * object, va_list var_args)
           // store the controller
           g_object_set_qdata (object, __gst_controller_key, self);
         } else {
-          // increment ref-count (this causes red-count-leaks
-          //self = g_object_ref (self);
           GST_INFO ("returning existing controller");
         }
         self->properties = g_list_prepend (self->properties, prop);
@@ -445,6 +443,57 @@ gst_controller_new_valist (GObject * object, va_list var_args)
     }
   }
   va_end (var_args);
+
+  if (self)
+    GST_INFO ("controller->ref_count=%d", G_OBJECT (self)->ref_count);
+  return (self);
+}
+
+/**
+ * gst_controller_new_list:
+ * @object: the object of which some properties should be controlled
+ * @list: list of property names that should be controlled
+ *
+ * Creates a new GstController for the given object's properties
+ *
+ * Returns: the new controller.
+ * Since: 0.9
+ */
+GstController *
+gst_controller_new_list (GObject * object, GList * list)
+{
+  GstController *self;
+  GstControlledProperty *prop;
+  gchar *name;
+  GList *node;
+
+  g_return_val_if_fail (G_IS_OBJECT (object), NULL);
+
+  GST_INFO ("setting up a new controller");
+
+  self = g_object_get_qdata (object, __gst_controller_key);
+  // create GstControlledProperty for each property
+  for (node = list; node; node = g_list_next (list)) {
+    name = (gchar *) node->data;
+    // test if this property isn't yet controlled
+    if (!self || !(prop = gst_controller_find_controlled_property (self, name))) {
+      // create GstControlledProperty and add to self->propeties List
+      if ((prop = gst_controlled_property_new (object, name))) {
+        // if we don't have a controller object yet, now is the time to create one
+        if (!self) {
+          self = g_object_new (GST_TYPE_CONTROLLER, NULL);
+          self->object = object;
+          // store the controller
+          g_object_set_qdata (object, __gst_controller_key, self);
+        } else {
+          GST_INFO ("returning existing controller");
+        }
+        self->properties = g_list_prepend (self->properties, prop);
+      }
+    } else {
+      GST_WARNING ("trying to control property again");
+    }
+  }
 
   if (self)
     GST_INFO ("controller->ref_count=%d", G_OBJECT (self)->ref_count);
