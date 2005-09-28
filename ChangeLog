@@ -1,3 +1,8 @@
+2005-09-28  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/adder/gstadder.c: (gst_adder_collected):
+          fix adder for float elements
+
 2005-09-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:

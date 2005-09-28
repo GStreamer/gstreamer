@@ -375,10 +375,8 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   {
     guint64 duration;
 
-    if (adder->format == GST_ADDER_FORMAT_FLOAT)
-      duration = size / adder->width / adder->channels;
-    else
-      duration = size * 8 / adder->width / adder->channels;
+    /* width is in bits and we need bytes */
+    duration = size * (adder->width / 8) / adder->channels;
 
     GST_BUFFER_TIMESTAMP (outbuf) = adder->timestamp;
     GST_BUFFER_OFFSET (outbuf) = adder->offset;
