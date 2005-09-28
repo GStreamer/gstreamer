@@ -47,7 +47,6 @@ static void gst_message_class_init (gpointer g_class, gpointer class_data);
 static void gst_message_finalize (GstMessage * message);
 static GstMessage *_gst_message_copy (GstMessage * message);
 
-
 void
 _gst_message_initialize (void)
 {
@@ -64,12 +63,63 @@ _gst_message_initialize (void)
   g_type_class_unref (ptr);
 }
 
+typedef struct
+{
+  gint type;
+  gchar *name;
+  GQuark quark;
+} GstMessageQuarks;
+
+static GstMessageQuarks message_quarks[] = {
+  {GST_MESSAGE_UNKNOWN, "unknown", 0},
+  {GST_MESSAGE_EOS, "eos", 0},
+  {GST_MESSAGE_ERROR, "error", 0},
+  {GST_MESSAGE_WARNING, "warning", 0},
+  {GST_MESSAGE_INFO, "info", 0},
+  {GST_MESSAGE_TAG, "tag", 0},
+  {GST_MESSAGE_BUFFERING, "buffering", 0},
+  {GST_MESSAGE_STATE_CHANGED, "state-changed", 0},
+  {GST_MESSAGE_STEP_DONE, "step-done", 0},
+  {GST_MESSAGE_NEW_CLOCK, "new-clock", 0},
+  {GST_MESSAGE_STRUCTURE_CHANGE, "structure-change", 0},
+  {GST_MESSAGE_STREAM_STATUS, "stream-status", 0},
+  {GST_MESSAGE_APPLICATION, "application", 0},
+  {GST_MESSAGE_SEGMENT_START, "segment-start", 0},
+  {GST_MESSAGE_SEGMENT_DONE, "segment-done", 0},
+  {0, NULL, 0}
+};
+
+const gchar *
+gst_message_type_get_name (GstMessageType type)
+{
+  gint i;
+
+  for (i = 0; message_quarks[i].name; i++) {
+    if (type == message_quarks[i].type)
+      return message_quarks[i].name;
+  }
+  return "unknown";
+}
+
+GQuark
+gst_message_type_to_quark (GstMessageType type)
+{
+  gint i;
+
+  for (i = 0; message_quarks[i].name; i++) {
+    if (type == message_quarks[i].type)
+      return message_quarks[i].quark;
+  }
+  return 0;
+}
+
 GType
 gst_message_get_type (void)
 {
   static GType _gst_message_type;
 
   if (G_UNLIKELY (_gst_message_type == 0)) {
+    gint i;
     static const GTypeInfo message_info = {
       sizeof (GstMessageClass),
       NULL,
@@ -85,6 +135,11 @@ gst_message_get_type (void)
 
     _gst_message_type = g_type_register_static (GST_TYPE_MINI_OBJECT,
         "GstMessage", &message_info, 0);
+
+    for (i = 0; message_quarks[i].name; i++) {
+      message_quarks[i].quark =
+          g_quark_from_static_string (message_quarks[i].name);
+    }
   }
   return _gst_message_type;
 }

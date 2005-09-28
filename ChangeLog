@@ -1,3 +1,17 @@
+2005-09-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbus.c: (marshal_VOID__MINIOBJECT), (gst_bus_class_init),
+	(gst_bus_post), (poll_func), (gst_bus_async_signal_func),
+	(gst_bus_sync_signal_handler):
+	* gst/gstbus.h:
+	Added async-message and sync-message signals to the bus.
+	Added helper BusFunc to emit signals for all posted messages.
+
+	* gst/gstmessage.c: (gst_message_type_get_name),
+	(gst_message_type_to_quark), (gst_message_get_type):
+	* gst/gstmessage.h:
+	Register quarks for message names.
+
 2005-09-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/libs/gstreamer-libs-sections.txt:

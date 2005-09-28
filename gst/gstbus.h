@@ -102,6 +102,10 @@ struct _GstBusClass
 {
   GstObjectClass parent_class;
 
+  /* signals */
+  void (*sync_message)   (GstBus *bus, GstMessage *message);
+  void (*async_message)  (GstBus *bus, GstMessage *message);
+
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -117,9 +121,10 @@ GstMessage *		gst_bus_peek 			(GstBus * bus);
 GstMessage *		gst_bus_pop 			(GstBus * bus);
 void			gst_bus_set_flushing		(GstBus * bus, gboolean flushing);
 
+/* synchronous dispatching */
 void 			gst_bus_set_sync_handler 	(GstBus * bus, GstBusSyncHandler func,
     							 gpointer data);
-
+/* GSource based dispatching */
 GSource *		gst_bus_create_watch 		(GstBus * bus, GstMessageType events);
 guint 			gst_bus_add_watch_full 		(GstBus * bus,
     							 gint priority,
@@ -132,8 +137,15 @@ guint 			gst_bus_add_watch 		(GstBus * bus,
     							 GstBusFunc func, 
 							 gpointer user_data);
 
+/* polling the bus */
 GstMessage*		gst_bus_poll			(GstBus *bus, GstMessageType events,
                                                          GstClockTimeDiff timeout);
+
+/* signal based dispatching helper functions. */
+gboolean		gst_bus_async_signal_func	(GstBus *bus, GstMessage *message,
+							 gpointer data);
+GstBusSyncReply		gst_bus_sync_signal_handler	(GstBus *bus, GstMessage *message,
+							 gpointer data);
 
 G_END_DECLS
 

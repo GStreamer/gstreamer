@@ -68,6 +68,14 @@
 
 #include "gstbus.h"
 
+/* bus signals */
+enum
+{
+  SYNC_MESSAGE,
+  ASYNC_MESSAGE,
+  /* add more above */
+  LAST_SIGNAL
+};
 
 static void gst_bus_class_init (GstBusClass * klass);
 static void gst_bus_init (GstBus * bus);
@@ -79,8 +87,7 @@ static void gst_bus_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstObjectClass *parent_class = NULL;
-
-/* static guint gst_bus_signals[LAST_SIGNAL] = { 0 }; */
+static guint gst_bus_signals[LAST_SIGNAL] = { 0 };
 
 GType
 gst_bus_get_type (void)
@@ -106,6 +113,34 @@ gst_bus_get_type (void)
   return bus_type;
 }
 
+/* fixme: do something about this */
+static void
+marshal_VOID__MINIOBJECT (GClosure * closure, GValue * return_value,
+    guint n_param_values, const GValue * param_values, gpointer invocation_hint,
+    gpointer marshal_data)
+{
+  typedef void (*marshalfunc_VOID__MINIOBJECT) (gpointer obj, gpointer arg1,
+      gpointer data2);
+  register marshalfunc_VOID__MINIOBJECT callback;
+  register GCClosure *cc = (GCClosure *) closure;
+  register gpointer data1, data2;
+
+  g_return_if_fail (n_param_values == 2);
+
+  if (G_CCLOSURE_SWAP_DATA (closure)) {
+    data1 = closure->data;
+    data2 = g_value_peek_pointer (param_values + 0);
+  } else {
+    data1 = g_value_peek_pointer (param_values + 0);
+    data2 = closure->data;
+  }
+  callback =
+      (marshalfunc_VOID__MINIOBJECT) (marshal_data ? marshal_data : cc->
+      callback);
+
+  callback (data1, gst_value_get_mini_object (param_values + 1), data2);
+}
+
 static void
 gst_bus_class_init (GstBusClass * klass)
 {
@@ -123,6 +158,34 @@ gst_bus_class_init (GstBusClass * klass)
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_bus_dispose);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_bus_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_bus_get_property);
+
+  /**
+   * GstBus::sync-message:
+   * @bus: the object which received the signal
+   * @message: the message that has been posted synchronously
+   *
+   * A message has been posted on the bus. This signal is emited from the
+   * thread that posted the message so one has to be carefull with locking.
+   */
+  gst_bus_signals[SYNC_MESSAGE] =
+      g_signal_new ("sync-message", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+      G_STRUCT_OFFSET (GstBusClass, sync_message), NULL, NULL,
+      marshal_VOID__MINIOBJECT, G_TYPE_NONE, 1, GST_TYPE_MESSAGE);
+
+  /**
+   * GstBus::async-message:
+   * @bus: the object which received the signal
+   * @message: the message that has been posted asynchronously
+   *
+   * A message has been posted on the bus. This signal is emited from a
+   * GSource added to the mainloop.
+   */
+  gst_bus_signals[ASYNC_MESSAGE] =
+      g_signal_new ("async-message", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+      G_STRUCT_OFFSET (GstBusClass, async_message), NULL, NULL,
+      marshal_VOID__MINIOBJECT, G_TYPE_NONE, 1, GST_TYPE_MESSAGE);
 }
 
 static void
@@ -231,8 +294,8 @@ gst_bus_post (GstBus * bus, GstMessage * message)
   g_return_val_if_fail (GST_IS_BUS (bus), FALSE);
   g_return_val_if_fail (GST_IS_MESSAGE (message), FALSE);
 
-  GST_DEBUG_OBJECT (bus, "[msg %p] posting on bus, type %d",
-      message, GST_MESSAGE_TYPE (message));
+  GST_DEBUG_OBJECT (bus, "[msg %p] posting on bus, type %s",
+      message, gst_message_type_get_name (GST_MESSAGE_TYPE (message)));
 
   GST_LOCK (bus);
   /* check if the bus is flushing */
@@ -381,6 +444,7 @@ gst_bus_set_flushing (GstBus * bus, gboolean flushing)
 
   GST_UNLOCK (bus);
 }
+
 
 /**
  * gst_bus_pop:
@@ -671,9 +735,8 @@ poll_func (GstBus * bus, GstMessage * message, GstBusPollData * poll_data)
     poll_data->message = gst_message_ref (message);
     GST_DEBUG ("mainloop %p quit", poll_data->loop);
     g_main_loop_quit (poll_data->loop);
-  } else {
-    /* don't remove the source. */
   }
+
   /* we always keep the source alive so that we don't accidentialy
    * free the poll_data */
   return TRUE;
@@ -721,6 +784,8 @@ poll_destroy_timeout (GstBusPollData * poll_data)
  * specify a maximum time to poll with the @timeout parameter. If @timeout is
  * negative, this function will block indefinitely.
  *
+ * All messages not in @events will be popped off the bus and will be ignored.
+ *
  * This function will enter the default mainloop while polling.
  *
  * Returns: The message that was received, or NULL if the poll timed out. 
@@ -764,4 +829,51 @@ gst_bus_poll (GstBus * bus, GstMessageType events, GstClockTimeDiff timeout)
   GST_DEBUG_OBJECT (bus, "finished poll with message %p", ret);
 
   return ret;
+}
+
+/**
+ * gst_bus_async_signal_func:
+ * @bus: a #GstBus
+ * @message: the message received
+ * @data: user data
+ *
+ * A helper GstBusFunc that can be used to convert all asynchronous messages 
+ * into signals.
+ *
+ * Returns: TRUE
+ */
+gboolean
+gst_bus_async_signal_func (GstBus * bus, GstMessage * message, gpointer data)
+{
+  GQuark detail = 0;
+
+  detail = gst_message_type_to_quark (GST_MESSAGE_TYPE (message));
+
+  g_signal_emit (bus, gst_bus_signals[ASYNC_MESSAGE], detail, message);
+
+  /* we never remove this source based on signal emission return values */
+  return TRUE;
+}
+
+/**
+ * gst_bus_sync_signal_handler:
+ * @bus: a #GstBus
+ * @message: the message received
+ * @data: user data
+ *
+ * A helper GstBusSyncHandler that can be used to convert all synchronous
+ * messages into signals.
+ *
+ * Returns: GST_BUS_PASS
+ */
+GstBusSyncReply
+gst_bus_sync_signal_handler (GstBus * bus, GstMessage * message, gpointer data)
+{
+  GQuark detail = 0;
+
+  detail = gst_message_type_to_quark (GST_MESSAGE_TYPE (message));
+
+  g_signal_emit (bus, gst_bus_signals[SYNC_MESSAGE], detail, message);
+
+  return GST_BUS_PASS;
 }

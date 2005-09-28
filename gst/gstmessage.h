@@ -127,6 +127,9 @@ void 		_gst_message_initialize 	(void);
 
 GType 		gst_message_get_type 		(void);
 
+const gchar*	gst_message_type_get_name	(GstMessageType type);
+GQuark		gst_message_type_to_quark	(GstMessageType type);
+
 /* refcounting */
 #define         gst_message_ref(msg)		GST_MESSAGE (gst_mini_object_ref (GST_MINI_OBJECT (msg)))
 #define         gst_message_unref(msg)		gst_mini_object_unref (GST_MINI_OBJECT (msg))
