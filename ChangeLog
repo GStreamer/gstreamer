@@ -76,7 +76,7 @@
 
 	* gst/elements/gstfdsrc.c: Cleaned up a bit.
 
-2005-09-28  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-09-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/elements/gstcapsfilter.c:
 	* gst/elements/gstfakesink.c:
@@ -177,12 +177,12 @@
 	Leak fixes, the fold functions need to unref the passed object and
 	_get_parent_*() returns ref to parent.
 
-2005-09-27  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-09-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* check/gst/gstbuffer.c: (test_make_writable):
 	  Plug leak in test case and fix 'make check-valgrind'
 
-2005-09-27  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-09-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstbuffer.c: (gst_subbuffer_init):
 	  Set READONLY flag on subbuffers, so that gst_buffer_make_writable()
@@ -214,7 +214,7 @@
 	(main):
 	Fix compilation of some tests.
 
-2005-09-27  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-09-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gsterror.h:
 	  Remove comment. GST_TYPE_G_ERROR is here to stay,
@@ -238,7 +238,7 @@
 	* gst/gstpad.c: (gst_pad_dispose):
 	Added some debug info first.
 
-2005-09-26  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-09-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/design/draft-push-pull.txt:
 	* docs/design/part-events.txt:
@@ -336,7 +336,7 @@
           inlined two more docs
           factored gstpadtemplate out of gstpad
 
-2005-09-24  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-09-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* check/gst/gstbin.c: (test_children_state_change_order_flagged_sink),
 	(test_children_state_change_order_semi_sink):
@@ -379,7 +379,7 @@
 	* gst/gststructure.c:
 	  some doc updates
 
-2005-09-23  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-09-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/design/part-gstbin.txt:
 	* docs/design/part-gstbus.txt:
@@ -395,7 +395,7 @@
 	* gst/gststructure.h:
 	  add a method to get a GstClockTime out of a structure
 
-2005-09-23  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-09-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* check/gst/gstbin.c: (test_children_state_change_order_flagged_sink),
 	(test_children_state_change_order_semi_sink), (gst_bin_suite):
@@ -491,13 +491,13 @@
 	* gst/gstquery.h:
 	Added new query.
 
-2005-09-22  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-09-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* check/gst/gstvalue.c: (test_date), (gst_value_suite):
 	  Add simplistic test suite for GST_TYPE_DATE serialisation and
 	  deserialisation.
 
-2005-09-22  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-09-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gststructure.c: (gst_structure_set_valist),
@@ -548,7 +548,7 @@
 
 2005-09-21  Francis Labonte  <francis_labonte at hotmail dot com>
 
-	Reviewed by: Tim-Philipp M??ller  <tim at centricular dot net>
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstinfo.c: (_gst_debug_nameof_funcptr),
 	(_gst_debug_register_funcptr):
@@ -559,7 +559,7 @@
 	* gst/registries/.cvsignore:
 	  Remove left-over file.
 
-2005-09-21  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-09-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/pwg/appendix-porting.xml:
 	  And something about newsegment events and caps-on-buffers to
@@ -594,7 +594,7 @@
 	(gst_pad_class_init): have-data is now a detailed signal, yes it
 	is.
 
-2005-09-21  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-09-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gstbasetransform.c: (gst_base_transform_transform_size):
 	* gst/gstutils.c: (gst_util_set_value_from_string),
@@ -667,7 +667,7 @@
 	* libs/gst/controller/gstcontroller.c: (gst_controller_new_valist):
 	  fix a leak
 
-2005-09-20  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-09-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/elements/gstfilesink.c: (gst_file_sink_init):
 	  Set sync to FALSE by default.
@@ -690,7 +690,7 @@
 	so we don't timeout before popping a message with 0 timeout.
 	Dump error messages after failed state change.
 
-2005-09-20  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-09-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tools/gst-inspect.c: (print_element_properties_info):
 	  Fix two typos.
@@ -821,7 +821,7 @@
 	* docs/libs/tmpl/gstgetbits.sgml:
 	* docs/libs/tmpl/gstputbits.sgml:
 
-2005-09-19  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-09-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* win32/gstenumtypes.c:
 	* win32/gstenumtypes.h:
@@ -1524,7 +1524,7 @@
 	* po/vi.po:
 	  translation updates
 
-2005-09-03  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-09-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_pad_buffer_alloc):
 	  Add comment.
@@ -1634,7 +1634,7 @@
 	* gst/gstevent.c: (gst_event_new_newsegment):
 	A newsegment cannot have a start_time of -1
 
-2005-09-01  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-09-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* win32/gstenumtypes.c:
 	* win32/gstenumtypes.h:
@@ -1698,7 +1698,7 @@
 	* gst/base/gstbasetransform.h:
 	Handle the case where we are not negotiated more gracefully.
 
-2005-08-31  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-31  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/elements/gstfilesrc.c: (gst_mmap_buffer_init),
 	(gst_file_src_map_region):
@@ -2705,7 +2705,7 @@
 	* check/gstcheck.h:
 	  add ASSERT_BUFFER_REFCOUNT
 
-2005-08-13  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gsttag.c: (_gst_tag_initialize), (gst_tag_register):
@@ -2715,7 +2715,7 @@
 	  is re-registered, unless it is re-registered with a 
 	  different type (#308438).
 
-2005-08-12  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/pwg/appendix-porting.xml:
 	* docs/pwg/building-state.xml:
@@ -2745,13 +2745,13 @@
 	Actually implement (re)setting the target on a ghostpad
 	as described in the docs.
 
-2005-08-10  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gst.c: (gst_init_check_with_popt_table), (init_pre):
 	  Check whether GST_DEBUG_NO_COLOR environment variable is
 	  set and disable coloured debug output if that is the case.
 
-2005-08-10  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gsttypefindhelper.c: (helper_find_peek),
 	(gst_type_find_helper):
@@ -2763,7 +2763,7 @@
 	  returned by _peek() until typefinding is done and only
 	  free them then.
 
-2005-08-09  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstutils.h:
@@ -2774,7 +2774,7 @@
 	* gst/base/gstbasetransform.c: (gst_base_transform_buffer_alloc):
 	  Fix a pretty good memleak.
 
-2005-08-08  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstiterator.h:
 	  Fix wrong include and 'make distcheck'.
@@ -2784,7 +2784,7 @@
 	* gst/gstbin.c: (bin_bus_handler):
 	  Use gst_element_post_message() instead.
 
-2005-08-08  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gstadapter.h:
 	* gst/base/gstbasesink.h:
@@ -3045,7 +3045,7 @@
 	* tools/gst-xmlinspect.c: (print_element_info), (main):
 	  deactivate and remove dparams (libgstcontrol)
 
-2005-08-01  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/elements/gsttypefindelement.c:
 	(gst_type_find_element_have_type), (gst_type_find_element_init),
@@ -3054,7 +3054,7 @@
 	* gst/elements/gsttypefindelement.h:
 	  Set caps on all outgoing buffers, not just the first one.
 
-2005-08-01  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/elements/gsttypefindelement.c:
 	(gst_type_find_element_have_type),
@@ -3065,7 +3065,7 @@
 	* gst/elements/gsttypefindelement.h:
 	  Set caps on first outgoing buffer when we've found the type.
 
-2005-08-01  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-docs.sgml:
 	* docs/gst/gstreamer-sections.txt:
@@ -3073,7 +3073,7 @@
 	* docs/gst/tmpl/gstschedulerfactory.sgml:
 	  Remove some old cruft from docs.
 
-2005-07-31  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-07-31  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstpad.h:
 	  Fix inline docs for GstPadLinkReturn.
@@ -3083,7 +3083,7 @@
 	* docs/gst/gstreamer-sections.txt:
 	  New API: gst_structure_has_name().
 
-2005-07-30  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-07-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
 	  Use AC_SYS_LARGEFILE, which will set _FILE_OFFSET_BITS=64
@@ -3748,7 +3748,7 @@
 	* gst/gstghostpad.c: (gst_ghost_pad_do_activate_push):
 	Don't hold the lock for too long.
 
-2005-07-16  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-07-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gstbasesrc.c: (gst_base_src_default_negotiate):
 	  Don't unref the caps we passed to gst_caps_make_writable() after
@@ -3774,7 +3774,7 @@
 	* docs/design/part-gstpipeline.txt:
 	Updated docs, mostly DISCONT related.
 
-2005-07-15  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-07-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/pwg/building-pads.xml:
 	  s/GST_PAD_LINK_REFUSED/FALSE/ in gst_my_filter_setcaps()
@@ -4641,7 +4641,7 @@
 	* gst/gstpad.c: (_gst_do_pass_data_accumulator):
 	  Make work (??).
 
-2005-06-29  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-06-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/elements/gstfilesink.c: (gst_filesink_render):
 	  Simplify code so that we don't have to handle short
@@ -5299,7 +5299,7 @@
 	(gst_system_clock_obtain): Set the name on object construction.
 	Avoid double-checked locking.
 
-2005-06-20  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-06-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gsturi.c: (gst_element_make_from_uri):
 	  Fix potential endless loop.
@@ -5909,7 +5909,7 @@
 	Clear queue when going to READY.
 	Remove IN_SETCAPS flag too.
 
-2005-05-17  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-05-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gstbasesrc.c: (gst_basesrc_change_state):
 	  Remove implicit cast from gboolean to GstElementStateReturn;
@@ -6050,12 +6050,12 @@
 	(find_common_root, object_has_ancestor, ghost_up, remove_pad):
 	Helpers for pad_link_maybe_ghosting.
 
-2005-05-13  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-05-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
 	  Require GLib >= 2.4.0 (for the g_atomic_* funcs)
 
-2005-05-13  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-05-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/design/part-element-source.txt:
 	  Mention GstPushSrc
@@ -6083,7 +6083,7 @@
 	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_query):
 	  Implement _query on a bin, similar to _send_event.
 
-2005-05-12  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-05-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gstbasesrc.c: (gst_basesrc_do_seek):
 	  Discont event offset format should be GST_FORMAT_BYTES,
@@ -6318,7 +6318,7 @@
 	* gst/gstpad.c: (gst_pad_alloc_buffer), (gst_pad_push):
 	Also set caps if we use the fallback buffer alloc.
 
-2005-05-06  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-05-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/Makefile.am:
 	* docs/gst/gstreamer-docs.sgml:
