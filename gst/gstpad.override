@@ -395,6 +395,8 @@ _wrap_gst_pad_tp_repr (PyGObject *self)
     buf = g_strdup_printf ("<GstPad (%s:%s) at %lx>",
         parent ? gst_element_get_name (parent) : "---",
         gst_pad_get_name (pad), (long) self->obj);
+    if (parent)
+        gst_object_unref (parent);
 
     retval = PyString_FromString(buf);
     g_free(buf);

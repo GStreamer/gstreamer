@@ -1,5 +1,10 @@
 2005-09-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstpad.override:
+	  don't leak the parent when repr'ing pads
+
+2005-09-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/__init__.py:
 	  require pygtk 2.0 when importing gst
 	  it only works with 2.0, and it sets up the path correctly
