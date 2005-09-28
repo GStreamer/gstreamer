@@ -1,3 +1,10 @@
+2005-09-28  Andy Wingo  <wingo@pobox.com>
+
+	* gst/base/gstbasesrc.c (gst_base_src_unlock): Comment a bit in
+	lieu of real docs...
+
+	* gst/elements/gstfdsrc.c: Cleaned up a bit.
+
 2005-09-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/elements/gstcapsfilter.c:

@@ -727,6 +727,9 @@ error:
   }
 }
 
+/* this will always be called between start() and stop(). So you can rely on
+   resources allocated by start() and freed from stop(). This needs to be added
+   to the docs at some point. */
 static gboolean
 gst_base_src_unlock (GstBaseSrc * basesrc)
 {

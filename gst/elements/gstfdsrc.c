@@ -73,19 +73,10 @@ static GstElementDetails gst_fdsrc_details = GST_ELEMENT_DETAILS ("Disk Source",
     "Erik Walthinsen <omega@cse.ogi.edu>");
 
 
-/* FdSrc signals and args */
 enum
 {
-  SIGNAL_TIMEOUT,
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0,
-  ARG_FD,
-  ARG_BLOCKSIZE,
-  ARG_TIMEOUT
+  PROP_0,
+  PROP_FD,
 };
 
 #define _do_init(bla) \
@@ -114,6 +105,7 @@ gst_fdsrc_base_init (gpointer g_class)
       gst_static_pad_template_get (&srctemplate));
   gst_element_class_set_details (gstelement_class, &gst_fdsrc_details);
 }
+
 static void
 gst_fdsrc_class_init (GstFdSrcClass * klass)
 {
@@ -132,7 +124,7 @@ gst_fdsrc_class_init (GstFdSrcClass * klass)
   gobject_class->set_property = gst_fdsrc_set_property;
   gobject_class->get_property = gst_fdsrc_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FD,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FD,
       g_param_spec_int ("fd", "fd", "An open file descriptor to read from",
           0, G_MAXINT, 0, G_PARAM_READWRITE));
 
@@ -153,7 +145,6 @@ gst_fdsrc_init (GstFdSrc * fdsrc, GstFdSrcClass * klass)
   fdsrc->fd = 0;
   fdsrc->curoffset = 0;
 }
-
 
 static gboolean
 gst_fdsrc_start (GstBaseSrc * bsrc)
@@ -208,14 +199,10 @@ static void
 gst_fdsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
-  GstFdSrc *src;
-
-  g_return_if_fail (GST_IS_FDSRC (object));
-
-  src = GST_FDSRC (object);
+  GstFdSrc *src = GST_FDSRC (object);
 
   switch (prop_id) {
-    case ARG_FD:
+    case PROP_FD:
       src->fd = g_value_get_int (value);
       break;
     default:
@@ -228,14 +215,10 @@ static void
 gst_fdsrc_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstFdSrc *src;
-
-  g_return_if_fail (GST_IS_FDSRC (object));
-
-  src = GST_FDSRC (object);
+  GstFdSrc *src = GST_FDSRC (object);
 
   switch (prop_id) {
-    case ARG_FD:
+    case PROP_FD:
       g_value_set_int (value, src->fd);
       break;
     default:
