@@ -1,5 +1,19 @@
 2005-09-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gst.defs:
+	  parse_launch also owns the return ref
+	* gst/gstbin.override:
+	  fix a leak in get_by_name()
+	* testsuite/common.py:
+	  loop when garbage collecting; necessary when deleting, say,
+	  a pipeline, that contains elements, to ensure the elements
+	  also get collected
+	* testsuite/test_element.py:
+	* testsuite/test_pipeline.py:
+	  test for garbage collection
+
+2005-09-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* testsuite/common.py:
 	  add a common.TestCase class that has methods to track and verify
 	  garbage collection of GstObject

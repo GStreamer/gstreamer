@@ -139,17 +139,21 @@ _wrap_gst_bin_get_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
     static char *kwlist[] = { "name", "recurse", NULL };
     char *name;
     gboolean recurse = FALSE;
-    GstElement *ret;
+    GstElement *el;
+    PyObject *ret;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|b:GstBin.get_by_name",
 				     kwlist, &name, &recurse))
         return NULL;
     
     if (recurse)
-	    ret = gst_bin_get_by_name_recurse_up(GST_BIN(self->obj), name);
+	    el = gst_bin_get_by_name_recurse_up(GST_BIN(self->obj), name);
     else
-	    ret = gst_bin_get_by_name(GST_BIN(self->obj), name);
+	    el = gst_bin_get_by_name(GST_BIN(self->obj), name);
     
     /* pygobject_new handles NULL checking */
-    return pygstobject_new((GObject *)ret);
+    ret = pygstobject_new((GObject *)el);
+
+    gst_object_unref (el); /* from _get_by_name */
+    return ret;
 }

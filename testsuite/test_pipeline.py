@@ -22,26 +22,48 @@
 
 import time
 
-from common import gst, unittest
+from common import gst, unittest, TestCase
 
 import gobject
 
-class PipelineConstructor(unittest.TestCase):
+class TestConstruction(TestCase):
+    def setUp(self):
+        self.gctrack()
+
+    def tearDown(self):
+        self.gccollect()
+        self.gcverify()
+
     def testGoodConstructor(self):
         name = 'test-pipeline'
         pipeline = gst.Pipeline(name)
+        self.assertEquals(pipeline.__gstrefcount__, 1)
         assert pipeline is not None, 'pipeline is None'
-        assert isinstance(pipeline, gst.Pipeline), 'pipeline is not a GstPipline'
+        self.failUnless(isinstance(pipeline, gst.Pipeline),
+            'pipeline is not a GstPipline')
         assert pipeline.get_name() == name, 'pipelines name is wrong'
+        self.assertEquals(pipeline.__gstrefcount__, 1)
+
+    def testParseLaunch(self):
+        pipeline = gst.parse_launch('fakesrc ! fakesink')
+        del pipeline
+        pass
+
         
-class Pipeline(unittest.TestCase):
+class Pipeline(TestCase):
     def setUp(self):
+        self.gctrack()
         self.pipeline = gst.Pipeline('test-pipeline')
         source = gst.element_factory_make('fakesrc', 'source')
         source.set_property('num-buffers', 5)
         sink = gst.element_factory_make('fakesink', 'sink')
         self.pipeline.add_many(source, sink)
         gst.element_link_many(source, sink)
+
+    def tearDown(self):
+        del self.pipeline
+        self.gccollect()
+        self.gcverify()
 
     def testRun(self):
         self.assertEqual(self.pipeline.get_state(None)[1], gst.STATE_NULL)
@@ -54,8 +76,9 @@ class Pipeline(unittest.TestCase):
         self.pipeline.set_state(gst.STATE_NULL)
         self.assertEqual(self.pipeline.get_state(None)[1], gst.STATE_NULL)
 
-class PipelineAndBus(unittest.TestCase):
+class PipelineAndBus(TestCase):
     def setUp(self):
+        self.gctrack()
         self.pipeline = gst.Pipeline('test-pipeline')
         self.pipeline.set_property('play-timeout', 0L)
         source = gst.element_factory_make('fakesrc', 'source')
@@ -67,6 +90,13 @@ class PipelineAndBus(unittest.TestCase):
         self.bus.add_watch(gst.MESSAGE_ANY, self._message_received)
 
         self.loop = gobject.MainLoop()
+
+    def tearDown(self):
+        # FIXME: fix the refcount issues with the bus/pipeline
+        #del self.pipeline
+        #del self.bus
+        self.gccollect()
+        #self.gcverify()
 
     def _message_received(self, bus, message):
         gst.debug('received message: %s, %s' % (

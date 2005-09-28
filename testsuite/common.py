@@ -114,9 +114,14 @@ def run_silent(function, *args, **kwargs):
 class TestCase(unittest.TestCase):
     def gccollect(self):
         # run the garbage collector
+        ret = 0
         gst.debug('garbage collecting')
-        gc.collect()
+        while True:
+            c = gc.collect()
+            ret += c
+            if c == 0: break
         gst.debug('done garbage collecting')
+        return ret
 
     def gctrack(self):
         # store all gst objects in the gc in a tracking dict

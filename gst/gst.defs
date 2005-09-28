@@ -3686,6 +3686,7 @@
 (define-function parse_launch
   (c-name "gst_parse_launch")
   (return-type "GstElement*")
+  (caller-owns-return #t)
   (parameters
     '("const-gchar*" "pipeline_description")
     '("GError**" "error")
@@ -3695,6 +3696,7 @@
 (define-function parse_launchv
   (c-name "gst_parse_launchv")
   (return-type "GstElement*")
+  (caller-owns-return #t)
   (parameters
     '("const-gchar**" "argv")
     '("GError**" "error")

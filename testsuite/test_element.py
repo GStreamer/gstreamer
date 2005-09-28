@@ -20,10 +20,9 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 
-from common import gst, unittest
+from common import gst, unittest, TestCase
 
 import sys
-import gc
 
 # since I can't subclass gst.Element for some reason, I use a bin here
 # it don't matter to Jesus
@@ -165,18 +164,36 @@ class ElementName(unittest.TestCase):
         assert get_name(-1) == 'UNKNOWN!(-1)'
         self.assertRaises(TypeError, get_name, '')
         
-class QueryTest(unittest.TestCase):
+class QueryTest(TestCase):
     def setUp(self):
+        self.gctrack()
         self.pipeline = gst.parse_launch('fakesrc name=source ! fakesink')
+        self.assertEquals(self.pipeline.__gstrefcount__, 1)
+
         self.element = self.pipeline.get_by_name('source')
+        self.assertEquals(self.pipeline.__gstrefcount__, 1)
+        self.assertEquals(self.element.__gstrefcount__, 2)
+        self.assertEquals(sys.getrefcount(self.element), 3)
+
+    def tearDown(self):
+        del self.pipeline
+        del self.element
+        self.gccollect()
+        self.gcverify()
         
     def testQuery(self):
+        gst.debug('querying fakesrc in FORMAT_BYTES')
         res = self.element.query_position(gst.FORMAT_BYTES)
+        self.assertEquals(self.pipeline.__gstrefcount__, 1)
+        self.assertEquals(sys.getrefcount(self.pipeline), 3)
+        self.assertEquals(self.element.__gstrefcount__, 2)
+        self.assertEquals(sys.getrefcount(self.element), 3)
         assert res
         assert res[0] == 0
         assert res[1] == -1
         res = self.element.query_position(gst.FORMAT_TIME)
         assert not res
+        self.gccollect()
 
 class QueueTest(unittest.TestCase):
     def testConstruct(self):
