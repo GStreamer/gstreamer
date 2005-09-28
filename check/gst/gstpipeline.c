@@ -108,6 +108,27 @@ GST_START_TEST (test_async_state_change_fake)
 
 GST_END_TEST;
 
+GST_START_TEST (test_bus)
+{
+  GstPipeline *pipeline;
+  GstBus *bus;
+
+  pipeline = GST_PIPELINE (gst_pipeline_new (NULL));
+  fail_unless (pipeline != NULL, "Could not create pipeline");
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
+
+  bus = gst_pipeline_get_bus (pipeline);
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline after get_bus", 1);
+  ASSERT_OBJECT_REFCOUNT (bus, "bus", 2);
+
+  gst_object_unref (pipeline);
+
+  ASSERT_OBJECT_REFCOUNT (bus, "bus after unref pipeline", 1);
+  gst_object_unref (bus);
+}
+
+GST_END_TEST;
+
 Suite *
 gst_pipeline_suite (void)
 {
@@ -118,6 +139,7 @@ gst_pipeline_suite (void)
   tcase_add_test (tc_chain, test_async_state_change_empty);
   tcase_add_test (tc_chain, test_async_state_change_fake_ready);
   tcase_add_test (tc_chain, test_async_state_change_fake);
+  tcase_add_test (tc_chain, test_bus);
 
   return s;
 }

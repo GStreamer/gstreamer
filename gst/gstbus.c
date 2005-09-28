@@ -595,6 +595,8 @@ gst_bus_create_watch (GstBus * bus, GstMessageType events)
  * When the func is called, the message belongs to the caller; if you want to 
  * keep a copy of it, call gst_message_ref() before leaving the func.
  *
+ * The watch can be removed using #g_source_remove().
+ *
  * Returns: The event source id.
  *
  * MT safe.
@@ -631,6 +633,8 @@ gst_bus_add_watch_full (GstBus * bus, gint priority, GstMessageType events,
  * @user_data: user data passed to @func.
  *
  * Adds a bus watch to the default main context with the default priority.
+ *
+ * The watch can be removed using #g_source_remove().
  *
  * Returns: The event source id.
  *

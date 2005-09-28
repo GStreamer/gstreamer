@@ -1,3 +1,12 @@
+2005-09-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/gst/gstpipeline.c: (GST_START_TEST), (gst_pipeline_suite):
+	  add another check
+	* gst/gstbus.c:
+	  add some doc
+	* gst/gstinfo.c: (_gst_debug_init):
+	  slightly more readable color for refcount debugging
+
 2005-09-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_provide_clock_func),
