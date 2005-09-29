@@ -1,3 +1,8 @@
+2005-09-29  Andy Wingo  <wingo@pobox.com>
+
+	* examples/pipeline-tester (Window.play): 
+	* examples/vumeter.py (Window.run): Updates for bus API.
+
 2005-09-29  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.defs:

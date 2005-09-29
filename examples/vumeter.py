@@ -89,17 +89,16 @@ class Window(gtk.Dialog):
             s = 'alsasrc ! level message=true ! fakesink'
             pipeline = gst.parse_launch(s)
             self.set_sensitive(True)
-            # FIXME: using gst.MESSAGE_APPLICATION does not give me
-            # any messages at all
-            watch_id = pipeline.get_bus().add_watch(gst.MESSAGE_ANY,
-                self.on_message)
+            pipeline.get_bus().add_signal_watch()
+            i = pipeline.get_bus().connect('message::application', self.on_message)
             if pipeline.set_state(gst.STATE_PLAYING) == gst.STATE_CHANGE_SUCCESS:
                 print "going into main"
                 gtk.Dialog.run(self)
             else:
                 self.error('Could not set state')
+            pipeline.get_bus().disconnect(i)
+            pipeline.get_bus().remove_signal_watch()
             pipeline.set_state(gst.STATE_NULL)
-            gobject.source_remove(watch_id)
         except gobject.GError, e:
             self.set_sensitive(True)
             self.error('Could not create pipeline', e.__str__)

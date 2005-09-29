@@ -44,7 +44,7 @@ data = (('Video capture via V4L',
          '    ! xvimagesink'),
         ('Video capture via V4L, fixed frame rate',
          'v4lsrc name=source autoprobe=false autoprobe-fps=false \n'
-         '    ! video/x-raw-yuv,framerate=(double)7.5 \n'
+         '    ! video/x-raw-yuv,format=(fourcc)I420,framerate=(double)7.5 \n'
          '    ! videorate \n'
          '    ! ffmpegcolorspace \n'
          '    ! xvimagesink'),
@@ -223,13 +223,17 @@ class Window(gtk.Window):
             self.set_sensitive(True)
             self.error('Could not create pipeline', str(e))
             return False
-        watch_id = pipeline.get_bus().add_watch(self.on_message)
+        
+        bus = pipeline.get_bus()
+        bus.add_signal_watch()
+        watch_id = bus.connect('message', self.on_message)
         if pipeline.set_state(gst.STATE_PLAYING) != gst.STATE_CHANGE_SUCCESS:
             # make sure we get error messages
             while gtk.events_pending():
                 gtk.main_iteration()
             pipeline.set_state(gst.STATE_NULL)
-            gobject.source_remove(watch_id)
+            bus.remove_signal_watch()
+            bus.disconnect(watch_id)
             return False
         else:
             self.pipeline = pipeline
@@ -237,9 +241,11 @@ class Window(gtk.Window):
             return True
 
     def stop(self):
+        bus = self.pipeline.get_bus()
+        bus.disconnect(self.watch_id)
+        bus.remove_signal_watch()
         self.pipeline.set_state(gst.STATE_NULL)
         self.pipeline = None
-        gobject.source_remove(self.watch_id)
         del self.watch_id
 
     def play_toggled(self):
