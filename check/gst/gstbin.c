@@ -348,7 +348,7 @@ GST_START_TEST (test_watch_for_state_change)
 
   pop_messages (bus, 5);
 
-  fail_unless (gst_bus_have_pending (bus) == FALSE,
+  fail_unless (gst_bus_have_pending (bus, GST_MESSAGE_ANY) == FALSE,
       "Unexpected messages on bus");
 
   gst_bin_watch_for_state_change (GST_BIN (bin));
@@ -356,7 +356,7 @@ GST_START_TEST (test_watch_for_state_change)
   /* should get the bin's state change message now */
   pop_messages (bus, 1);
 
-  fail_unless (gst_bus_have_pending (bus) == FALSE,
+  fail_unless (gst_bus_have_pending (bus, GST_MESSAGE_ANY) == FALSE,
       "Unexpected messages on bus");
 
   fail_unless (gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING)
@@ -371,7 +371,7 @@ GST_START_TEST (test_watch_for_state_change)
 
   pop_messages (bus, 3);
 
-  fail_unless (gst_bus_have_pending (bus) == FALSE,
+  fail_unless (gst_bus_have_pending (bus, GST_MESSAGE_ANY) == FALSE,
       "Unexpected messages on bus");
 
   /* setting bin to NULL flushes the bus automatically */

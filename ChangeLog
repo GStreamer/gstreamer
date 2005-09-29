@@ -1,6 +1,11 @@
 2005-09-29  Wim Taymans  <wim@fluendo.com>
 
 	* check/gst/gstbin.c: (GST_START_TEST):
+	Oops.
+
+2005-09-29  Wim Taymans  <wim@fluendo.com>
+
+	* check/gst/gstbin.c: (GST_START_TEST):
 	Add bus to bin.
 
 	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_init),
