@@ -1633,6 +1633,7 @@ gst_structure_get_double
 gst_structure_get_string
 gst_structure_get_date
 gst_structure_get_clock_time
+gst_structure_get_enum
 gst_structure_map_in_place
 gst_structure_nth_field_name
 gst_structure_set_parent_refcount

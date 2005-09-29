@@ -1088,6 +1088,44 @@ gst_structure_get_string (const GstStructure * structure,
   return g_value_get_string (&field->value);
 }
 
+/**
+ * gst_structure_get_enum:
+ * @structure: a #GstStructure
+ * @fieldname: the name of a field
+ * @enumtype: the enum type of a field
+ * @value: a pointer to an int to set
+ *
+ * Sets the int pointed to by @value corresponding to the value of the
+ * given field.  Caller is responsible for making sure the field exists,
+ * has the correct type and that the enumtype is correct.
+ *
+ * Returns: TRUE if the value could be set correctly
+ */
+gboolean
+gst_structure_get_enum (const GstStructure * structure,
+    const gchar * fieldname, GType enumtype, gint * value)
+{
+  GstStructureField *field;
+
+  g_return_val_if_fail (structure != NULL, FALSE);
+  g_return_val_if_fail (fieldname != NULL, FALSE);
+  g_return_val_if_fail (enumtype != G_TYPE_INVALID, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
+
+  field = gst_structure_get_field (structure, fieldname);
+
+  if (field == NULL)
+    return FALSE;
+  if (!G_VALUE_HOLDS_ENUM (&field->value))
+    return FALSE;
+  if (!G_TYPE_CHECK_VALUE_TYPE (&field->value, enumtype))
+    return FALSE;
+
+  *value = g_value_get_enum (&field->value);
+
+  return TRUE;
+}
+
 typedef struct _GstStructureAbbreviation
 {
   char *type_name;

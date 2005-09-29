@@ -370,7 +370,7 @@ gst_message_new_state_changed (GstObject * src, GstState old, GstState new)
   message = gst_message_new (GST_MESSAGE_STATE_CHANGED, src);
 
   s = gst_structure_new ("GstMessageState", "old-state", GST_TYPE_STATE,
-      old, "new-state", GST_TYPE_STATE, new, NULL);
+      (gint) old, "new-state", GST_TYPE_STATE, (gint) new, NULL);
   gst_structure_set_parent_refcount (s, &message->mini_object.refcount);
   message->structure = s;
 
@@ -520,9 +520,11 @@ gst_message_parse_state_changed (GstMessage * message, GstState * old,
   g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STATE_CHANGED);
 
-  if (!gst_structure_get_int (message->structure, "old-state", (gint *) old))
+  if (!gst_structure_get_enum (message->structure, "old-state",
+          GST_TYPE_STATE, (gint *) old))
     g_assert_not_reached ();
-  if (!gst_structure_get_int (message->structure, "new-state", (gint *) new))
+  if (!gst_structure_get_enum (message->structure, "new-state",
+          GST_TYPE_STATE, (gint *) new))
     g_assert_not_reached ();
 }
 

@@ -139,6 +139,10 @@ gboolean                gst_structure_get_clock_time       (const GstStructure  
 							    GstClockTime            *value);
 G_CONST_RETURN gchar *  gst_structure_get_string           (const GstStructure      *structure,
 							    const gchar             *fieldname);
+gboolean                gst_structure_get_enum             (const GstStructure      *structure,
+							    const gchar             *fieldname,
+							    GType                    enumtype,
+							    gint                    *value);
 
 gchar *                 gst_structure_to_string            (const GstStructure      *structure);
 GstStructure *          gst_structure_from_string          (const gchar             *string,
