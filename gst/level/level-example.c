@@ -90,7 +90,7 @@ main (int argc, char *argv[])
   g_object_set (G_OBJECT (level), "message", TRUE, NULL);
 
   bus = gst_element_get_bus (pipeline);
-  watch_id = gst_bus_add_watch (bus, GST_MESSAGE_ANY, message_handler, NULL);
+  watch_id = gst_bus_add_watch (bus, message_handler, NULL);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
