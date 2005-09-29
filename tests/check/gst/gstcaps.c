@@ -123,6 +123,176 @@ GST_START_TEST (test_static_caps)
 
 GST_END_TEST;
 
+static const gchar non_simple_caps_string[] =
+    "video/x-raw-yuv, format=(fourcc)I420, framerate=(double)[ 1, 100 ], "
+    "width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]; video/x-raw-yuv, "
+    "format=(fourcc)YUY2, framerate=(double)[ 1, 100 ], width=(int)[ 16, 4096 ], "
+    "height=(int)[ 16, 4096 ]; video/x-raw-rgb, bpp=(int)8, depth=(int)8, "
+    "endianness=(int)1234, framerate=(double)[ 1, 100 ], width=(int)[ 16, 4096 ], "
+    "height=(int)[ 16, 4096 ]; video/x-raw-yuv, "
+    "format=(fourcc){ I420, YUY2, YV12 }, width=(int)[ 16, 4096 ], "
+    "height=(int)[ 16, 4096 ], framerate=(double)[ 1, 100 ]";
+
+static gboolean
+check_fourcc_list (const GValue * format_value)
+{
+  const GValue *fourcc_value;
+  gboolean got_yv12 = FALSE;
+  gboolean got_i420 = FALSE;
+  gboolean got_yuy2 = FALSE;
+  guint32 fourcc;
+
+  fourcc_value = gst_value_list_get_value (format_value, 0);
+  fail_unless (fourcc_value != NULL);
+  fail_unless (GST_VALUE_HOLDS_FOURCC (fourcc_value));
+  fourcc = gst_value_get_fourcc (fourcc_value);
+  fail_unless (fourcc != 0);
+  got_i420 = got_i420 || (fourcc == GST_STR_FOURCC ("I420"));
+  got_yuy2 = got_yuy2 || (fourcc == GST_STR_FOURCC ("YUY2"));
+  got_yv12 = got_yv12 || (fourcc == GST_STR_FOURCC ("YV12"));
+
+  fourcc_value = gst_value_list_get_value (format_value, 1);
+  fail_unless (fourcc_value != NULL);
+  fail_unless (GST_VALUE_HOLDS_FOURCC (fourcc_value));
+  fourcc = gst_value_get_fourcc (fourcc_value);
+  fail_unless (fourcc != 0);
+  got_i420 = got_i420 || (fourcc == GST_STR_FOURCC ("I420"));
+  got_yuy2 = got_yuy2 || (fourcc == GST_STR_FOURCC ("YUY2"));
+  got_yv12 = got_yv12 || (fourcc == GST_STR_FOURCC ("YV12"));
+
+  fourcc_value = gst_value_list_get_value (format_value, 2);
+  fail_unless (fourcc_value != NULL);
+  fail_unless (GST_VALUE_HOLDS_FOURCC (fourcc_value));
+  fourcc = gst_value_get_fourcc (fourcc_value);
+  fail_unless (fourcc != 0);
+  got_i420 = got_i420 || (fourcc == GST_STR_FOURCC ("I420"));
+  got_yuy2 = got_yuy2 || (fourcc == GST_STR_FOURCC ("YUY2"));
+  got_yv12 = got_yv12 || (fourcc == GST_STR_FOURCC ("YV12"));
+
+  return (got_i420 && got_yuy2 && got_yv12);
+}
+
+GST_START_TEST (test_simplify)
+{
+  GstStructure *s1, *s2;
+  gboolean did_simplify;
+  GstCaps *caps;
+
+  caps = gst_caps_from_string (non_simple_caps_string);
+  fail_unless (caps != NULL,
+      "gst_caps_from_string (non_simple_caps_string) failed");
+
+  did_simplify = gst_caps_do_simplify (caps);
+  fail_unless (did_simplify == TRUE,
+      "gst_caps_do_simplify() should have worked");
+
+  /* check simplified caps, should be:
+   *
+   * video/x-raw-rgb, bpp=(int)8, depth=(int)8, endianness=(int)1234, 
+   *     framerate=(double)[ 1, 100 ], width=(int)[ 16, 4096 ], 
+   *     height=(int)[ 16, 4096 ]; 
+   * video/x-raw-yuv, format=(fourcc){ YV12, YUY2, I420 }, 
+   *     width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], 
+   *     framerate=(double)[ 1, 100 ]
+   */
+  fail_unless (gst_caps_get_size (caps) == 2);
+  s1 = gst_caps_get_structure (caps, 0);
+  s2 = gst_caps_get_structure (caps, 1);
+  fail_unless (s1 != NULL);
+  fail_unless (s2 != NULL);
+
+  if (!gst_structure_has_name (s1, "video/x-raw-rgb")) {
+    GstStructure *tmp;
+
+    tmp = s1;
+    s1 = s2;
+    s2 = tmp;
+  }
+
+  fail_unless (gst_structure_has_name (s1, "video/x-raw-rgb"));
+  {
+    const GValue *framerate_value;
+    const GValue *width_value;
+    const GValue *height_value;
+    gdouble min_fps, max_fps;
+    gint bpp, depth, endianness;
+    gint min_width, max_width;
+    gint min_height, max_height;
+
+    fail_unless (gst_structure_get_int (s1, "bpp", &bpp));
+    fail_unless (bpp == 8);
+
+    fail_unless (gst_structure_get_int (s1, "depth", &depth));
+    fail_unless (depth == 8);
+
+    fail_unless (gst_structure_get_int (s1, "endianness", &endianness));
+    fail_unless (endianness == G_LITTLE_ENDIAN);
+
+    framerate_value = gst_structure_get_value (s1, "framerate");
+    fail_unless (framerate_value != NULL);
+    fail_unless (GST_VALUE_HOLDS_DOUBLE_RANGE (framerate_value));
+    min_fps = gst_value_get_double_range_min (framerate_value);
+    max_fps = gst_value_get_double_range_max (framerate_value);
+    fail_unless (min_fps == 1.0 && max_fps == 100.0);
+
+    width_value = gst_structure_get_value (s1, "width");
+    fail_unless (width_value != NULL);
+    fail_unless (GST_VALUE_HOLDS_INT_RANGE (width_value));
+    min_width = gst_value_get_int_range_min (width_value);
+    max_width = gst_value_get_int_range_max (width_value);
+    fail_unless (min_width == 16 && max_width == 4096);
+
+    height_value = gst_structure_get_value (s1, "height");
+    fail_unless (height_value != NULL);
+    fail_unless (GST_VALUE_HOLDS_INT_RANGE (height_value));
+    min_height = gst_value_get_int_range_min (height_value);
+    max_height = gst_value_get_int_range_max (height_value);
+    fail_unless (min_height == 16 && max_height == 4096);
+  }
+
+  fail_unless (gst_structure_has_name (s2, "video/x-raw-yuv"));
+  {
+    const GValue *framerate_value;
+    const GValue *format_value;
+    const GValue *width_value;
+    const GValue *height_value;
+    gdouble min_fps, max_fps;
+    gint min_width, max_width;
+    gint min_height, max_height;
+
+    format_value = gst_structure_get_value (s2, "format");
+    fail_unless (format_value != NULL);
+    fail_unless (GST_VALUE_HOLDS_LIST (format_value));
+    fail_unless (gst_value_list_get_size (format_value) == 3);
+    fail_unless (check_fourcc_list (format_value) == TRUE);
+
+    framerate_value = gst_structure_get_value (s2, "framerate");
+    fail_unless (framerate_value != NULL);
+    fail_unless (GST_VALUE_HOLDS_DOUBLE_RANGE (framerate_value));
+    min_fps = gst_value_get_double_range_min (framerate_value);
+    max_fps = gst_value_get_double_range_max (framerate_value);
+    fail_unless (min_fps == 1.0 && max_fps == 100.0);
+
+    width_value = gst_structure_get_value (s2, "width");
+    fail_unless (width_value != NULL);
+    fail_unless (GST_VALUE_HOLDS_INT_RANGE (width_value));
+    min_width = gst_value_get_int_range_min (width_value);
+    max_width = gst_value_get_int_range_max (width_value);
+    fail_unless (min_width == 16 && max_width == 4096);
+
+    height_value = gst_structure_get_value (s2, "height");
+    fail_unless (height_value != NULL);
+    fail_unless (GST_VALUE_HOLDS_INT_RANGE (height_value));
+    min_height = gst_value_get_int_range_min (height_value);
+    max_height = gst_value_get_int_range_max (height_value);
+    fail_unless (min_height == 16 && max_height == 4096);
+  }
+
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 Suite *
 gst_caps_suite (void)
 {
@@ -135,6 +305,7 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_mutability);
   tcase_add_test (tc_chain, test_buffer);
   tcase_add_test (tc_chain, test_static_caps);
+  tcase_add_test (tc_chain, test_simplify);
 
   return s;
 }

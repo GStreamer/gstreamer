@@ -1,3 +1,13 @@
+2005-09-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstcaps.c: (gst_caps_do_simplify):
+	  Thou shalt not free a structure and then continue using it
+	  in the next loop iteration.
+
+	* check/gst/gstcaps.c: (check_fourcc_list), (test_simplify),
+	(gst_caps_suite):
+	  Add test case for caps simplification.
+
 2005-09-29  Wim Taymans  <wim@fluendo.com>
 
 	* check/gst/gstbin.c: (GST_START_TEST):

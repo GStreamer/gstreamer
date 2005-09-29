@@ -1428,6 +1428,7 @@ gst_caps_do_simplify (GstCaps * caps)
       if (gst_caps_structure_simplify (&result, simplify, compare)) {
         if (result) {
           gst_caps_switch_structures (caps, simplify, result, i);
+          simplify = result;
         } else {
           gst_caps_remove_structure (caps, i);
           start--;
