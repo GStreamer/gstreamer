@@ -108,7 +108,7 @@ GST_START_TEST (test_async_state_change_fake)
 
 GST_END_TEST;
 
-GST_START_TEST (test_bus)
+GST_START_TEST (test_get_bus)
 {
   GstPipeline *pipeline;
   GstBus *bus;
@@ -129,6 +129,107 @@ GST_START_TEST (test_bus)
 
 GST_END_TEST;
 
+GMainLoop *loop = NULL;
+
+gboolean
+message_received (GstBus * bus, GstMessage * message, gpointer data)
+{
+  GstElement *pipeline = GST_ELEMENT (data);
+  GstMessageType type = message->type;
+
+  GST_DEBUG ("message received");
+  switch (type) {
+    case GST_MESSAGE_STATE_CHANGED:
+    {
+      GstState old, new;
+
+      GST_DEBUG ("state change message received");
+      gst_message_parse_state_changed (message, &old, &new);
+      GST_DEBUG ("new state %d", new);
+      if (message->src == GST_OBJECT (pipeline) && new == GST_STATE_PLAYING) {
+        GST_DEBUG ("quitting main loop");
+        g_main_loop_quit (loop);
+      }
+    }
+      break;
+    case GST_MESSAGE_ERROR:
+    {
+      g_print ("error\n");
+    }
+      break;
+    default:
+      break;
+  }
+
+  return TRUE;
+}
+
+GST_START_TEST (test_bus)
+{
+  GstElement *pipeline;
+  GstElement *src, *sink;
+  GstBus *bus;
+  guint id;
+  GstState current;
+
+  pipeline = gst_pipeline_new (NULL);
+  fail_unless (pipeline != NULL, "Could not create pipeline");
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
+  g_object_set (pipeline, "play-timeout", 0LL, NULL);
+
+  src = gst_element_factory_make ("fakesrc", NULL);
+  fail_unless (src != NULL);
+  sink = gst_element_factory_make ("fakesink", NULL);
+  fail_unless (sink != NULL);
+
+  gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
+  fail_unless (gst_element_link (src, sink));
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline after get_bus", 1);
+  ASSERT_OBJECT_REFCOUNT (bus, "bus", 2);
+
+  id = gst_bus_add_watch (bus, message_received, pipeline);
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline after add_watch", 1);
+  ASSERT_OBJECT_REFCOUNT (bus, "bus after add_watch", 3);
+
+  gst_element_set_state_async (pipeline, GST_STATE_PLAYING);
+  loop = g_main_loop_new (NULL, FALSE);
+  GST_DEBUG ("going into main loop");
+  g_main_loop_run (loop);
+  GST_DEBUG ("left main loop");
+
+  /* PLAYING now */
+
+  ASSERT_OBJECT_REFCOUNT_BETWEEN (pipeline, "pipeline after gone to playing", 1,
+      3);
+
+  /* cleanup */
+  GST_DEBUG ("cleanup");
+
+  /* current semantics require us to go step by step; this will change */
+  gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  gst_element_set_state (pipeline, GST_STATE_READY);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  fail_unless (gst_element_get_state (pipeline, &current, NULL, NULL) ==
+      GST_STATE_CHANGE_SUCCESS);
+  fail_unless (current == GST_STATE_NULL, "state is not NULL but %d", current);
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline at start of cleanup", 1);
+  ASSERT_OBJECT_REFCOUNT (bus, "bus at start of cleanup", 3);
+
+  fail_unless (g_source_remove (id));
+  ASSERT_OBJECT_REFCOUNT (bus, "bus after removing source", 2);
+
+  GST_DEBUG ("unreffing pipeline");
+  gst_object_unref (pipeline);
+
+
+  ASSERT_OBJECT_REFCOUNT (bus, "bus after unref pipeline", 1);
+  gst_object_unref (bus);
+}
+
+GST_END_TEST;
+
 Suite *
 gst_pipeline_suite (void)
 {
@@ -139,6 +240,7 @@ gst_pipeline_suite (void)
   tcase_add_test (tc_chain, test_async_state_change_empty);
   tcase_add_test (tc_chain, test_async_state_change_fake_ready);
   tcase_add_test (tc_chain, test_async_state_change_fake);
+  tcase_add_test (tc_chain, test_get_bus);
   tcase_add_test (tc_chain, test_bus);
 
   return s;

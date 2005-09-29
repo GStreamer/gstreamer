@@ -1,5 +1,15 @@
 2005-09-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* check/gst/gstbin.c:
+	* check/states/sinks.c:
+	  fix tests for the new warning
+	* check/gst/gstpipeline.c:
+	  add a test for pipeline and bus interaction
+	* gst/gstelement.c:
+	  elements should be NULL if they get disposed; add a warning if not
+
+2005-09-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstobject.c:
 	  for 2.6 refcounting, make debug log more correct by printing
 	  the actual refcounts at the time of swap (Wim)

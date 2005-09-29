@@ -133,6 +133,8 @@ GST_START_TEST (test_message_state_changed)
   ASSERT_OBJECT_REFCOUNT (bin, "bin", 1);
 
   /* clean up */
+  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
+
   gst_object_unref (bus);
   gst_object_unref (bin);
 }
@@ -192,6 +194,8 @@ GST_START_TEST (test_message_state_changed_child)
   ASSERT_OBJECT_REFCOUNT (bin, "bin", 1);
 
   /* clean up */
+  fail_unless (gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL)
+      == GST_STATE_CHANGE_SUCCESS);
   gst_object_unref (bus);
   gst_object_unref (bin);
 }

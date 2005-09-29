@@ -51,6 +51,9 @@ GST_START_TEST (test_sink)
   ret = gst_element_set_state (sink, GST_STATE_READY);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "failed to go to ready");
 
+  ret = gst_element_set_state (sink, GST_STATE_NULL);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "failed to go to null");
+
   gst_object_unref (sink);
 }
 

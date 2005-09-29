@@ -2121,6 +2121,9 @@ gst_element_dispose (GObject * object)
 
   GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "dispose");
 
+  g_return_if_fail (GST_STATE (element) == GST_STATE_NULL);
+  g_return_if_fail (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING);
+
   /* first we break all our links with the outside */
   while (element->pads) {
     gst_element_remove_pad (element, GST_PAD_CAST (element->pads->data));
@@ -2135,7 +2138,7 @@ gst_element_dispose (GObject * object)
   gst_object_replace ((GstObject **) & element->bus, NULL);
   GST_UNLOCK (element);
 
-  GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "dispose parent");
+  GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "parent class dispose");
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
