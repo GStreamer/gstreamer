@@ -175,6 +175,7 @@ gst_vorbis_dec_init (GstVorbisDec * dec, GstVorbisDecClass * g_class)
   gst_pad_set_event_function (dec->srcpad, vorbis_dec_src_event);
   gst_pad_set_query_type_function (dec->srcpad, vorbis_get_query_types);
   gst_pad_set_query_function (dec->srcpad, vorbis_dec_src_query);
+  gst_pad_use_fixed_caps (dec->srcpad);
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
   dec->queued = NULL;

@@ -1,3 +1,13 @@
+2005-09-29  Wim Taymans  <wim@fluendo.com>
+
+	* ext/vorbis/vorbisdec.c: (gst_vorbis_dec_init):
+	We use fixed caps.
+
+	* gst/playback/Makefile.am:
+	* gst/playback/test5.c: (new_pad), (no_more_pads), (start_finding),
+	(dump_element_stats), (main):
+	Added example stream introspection code.
+
 2005-09-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/adder/gstadder.c: (gst_adder_collected):
