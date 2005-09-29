@@ -98,8 +98,7 @@ class PipelineAndBus(TestCase):
 
         self.bus = self.pipeline.get_bus()
         self.assertEquals(self.bus.__gstrefcount__, 2)
-        self.handler = self.bus.add_watch(
-            gst.MESSAGE_ANY, self._message_received)
+        self.handler = self.bus.add_watch(self._message_received)
         self.assertEquals(self.bus.__gstrefcount__, 3)
 
         self.loop = gobject.MainLoop()

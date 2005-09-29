@@ -1,6 +1,14 @@
 2005-09-29  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.defs:
+	* gst/gstbus.override:
+	* testsuite/test_bus.py:
+	* testsuite/test_pipeline.py:
+	Updated definitions, wrapper and testsuite for changes in GstBus API
+	
+2005-09-29  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.defs:
 	Updated definitions
 	* gst/gst.override:
 	ignoring _init, gst_param_spec* and gst_iterator_new_list functions

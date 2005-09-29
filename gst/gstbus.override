@@ -182,38 +182,30 @@ override gst_bus_add_watch args
 static PyObject *
 _wrap_gst_bus_add_watch (PyGObject *self, PyObject *args)
 {
-    PyObject *callback, *py_events, *cbargs = NULL, *data;
+    PyObject *callback, *cbargs = NULL, *data;
     guint sigid;
     guint len;
-    GstMessageType events;
 
     len = PyTuple_Size(args);
 
-    if (len < 2) {
-        PyErr_SetString(PyExc_TypeError, "Bus.add_watch requires at least 2 args");
+    if (len < 1) {
+        PyErr_SetString(PyExc_TypeError, "Bus.add_watch requires at least 1 argument");
         return NULL;
     }
-    py_events = PySequence_GetItem(args, 0);
-    if (pyg_flags_get_value (GST_TYPE_MESSAGE_TYPE, py_events,
-        (gint *)&events)) {
-        PyErr_SetString(PyExc_TypeError,
-            "message type is not a GST_TYPE_MESSAGE_TYPE");
-        return NULL;
-    }
-    
-    callback = PySequence_GetItem(args, 1);
+
+    callback = PySequence_GetItem(args, 0);
     if (!PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "callback is not callable");
         return NULL;
     }
-    cbargs = PySequence_GetSlice(args, 2, len);
+    cbargs = PySequence_GetSlice(args, 1, len);
     if (cbargs == NULL)
         return NULL;
     /* FIXME: thomas: I'm pretty sure the second N needs to be O */
     data = Py_BuildValue("(ON)", callback, cbargs);
     if (data == NULL)
         return NULL;
-    sigid = gst_bus_add_watch (GST_BUS (self->obj), events,
+    sigid = gst_bus_add_watch (GST_BUS (self->obj),
         (GstBusFunc) bus_func, data);
 
     return PyInt_FromLong(sigid);

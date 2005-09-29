@@ -34,7 +34,7 @@ class BusAddWatchTest(TestCase):
         bus = pipeline.get_bus()
         self.assertEquals(bus.__gstrefcount__, 2)
         self.assertEquals(pipeline.__gstrefcount__, 1)
-        watch_id = bus.add_watch(gst.MESSAGE_ANY, self._message_received, pipeline, loop, "one")
+        watch_id = bus.add_watch(self._message_received, pipeline, loop, "one")
         self.assertEquals(bus.__gstrefcount__, 3)
         self.assertEquals(pipeline.__gstrefcount__, 1)
 
