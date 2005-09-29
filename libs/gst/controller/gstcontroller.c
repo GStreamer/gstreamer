@@ -469,7 +469,7 @@ gst_controller_new_list (GObject * object, GList * list)
 
   self = g_object_get_qdata (object, __gst_controller_key);
   /* create GstControlledProperty for each property */
-  for (node = list; node; node = g_list_next (list)) {
+  for (node = list; node; node = g_list_next (node)) {
     name = (gchar *) node->data;
     /* test if this property isn't yet controlled */
     if (!self || !(prop = gst_controller_find_controlled_property (self, name))) {

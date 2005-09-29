@@ -1,3 +1,8 @@
+2005-09-29  Edward Hervey  <edward@fluendo.com>
+
+	* libs/gst/controller/gstcontroller.c: (gst_controller_new_list): 
+	Better if we actually iterate the list :)
+
 2005-09-29  Wim Taymans  <wim@fluendo.com>
 
 	* check/gst/gstbin.c: (GST_START_TEST):
