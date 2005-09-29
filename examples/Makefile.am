@@ -1,5 +1,6 @@
 examplesdir = $(pkgdatadir)/examples
 examples_DATA = 	\
+	audio-controller.py \
 	bps.py		\
 	cp.py		\
 	debugslider.py  \

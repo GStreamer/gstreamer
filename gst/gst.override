@@ -274,6 +274,7 @@ init
     if (!pygst_value_init())
         return;
     pygst_miniobject_init();
+    gst_controller_init(NULL, NULL);
 }
 %%
 modulename gst

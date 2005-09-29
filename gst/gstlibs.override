@@ -1,4 +1,4 @@
-/* -*- Mode: C; ; c-file-style: "python" -*- */
+/* -*- Mode: C; ; c-basic-offset: 4 -*- */
 /* gst-python
  * Copyright (C) 2005 Edward Hervey
  *
@@ -65,4 +65,39 @@ _wrap_gst_controller_set (PyGObject *self, PyObject *args)
   }
   Py_INCREF (Py_False);
   return Py_False;
+}
+%%
+override gst_controller_new_list args
+static int
+_wrap_gst_controller_new_list(PyGObject *self, PyObject *args)
+{
+    PyGObject	*target;
+    gint	len;
+    GList	*list = NULL;
+
+    if ((len = PyTuple_Size(args)) < 1) {
+	PyErr_SetString(PyExc_TypeError, "Controller requires at least a target object");
+	return -1;
+    }
+    target = (PyGObject *) PyTuple_GetItem(args, 0);
+    if (len > 1)
+	while (len-- > 1) {
+	    PyObject	*temp;
+	    gchar	*str;
+
+	    temp = PyTuple_GetItem(args, len);
+	    str = PyString_AsString(temp);
+	    GST_INFO("prepending %s [%d]", str, len);
+	    list = g_list_prepend(list, PyString_AsString(temp));
+	}
+
+    self->obj = (GObject *) gst_controller_new_list(target->obj, list);
+
+    if (!self->obj) {
+	PyErr_SetString(PyExc_RuntimeError, "could not create GstController object");
+	return -1;
+    }
+    
+    pygobject_register_wrapper((PyObject *) self);
+    return 0;
 }
