@@ -2823,20 +2823,13 @@ static gboolean
 gst_value_deserialize_fraction (GValue * dest, const char *s)
 {
   gint num, den;
-  char *div;
-  char *tmp;
 
-  div = strstr (s, "/");
-  if (!div)
-    return FALSE;
-  tmp = g_strndup (s, (size_t) (div - s));
-  num = atoi (tmp);
-  g_free (tmp);
-  den = atoi (div + 1);
+  if (s && sscanf (s, "%d/%d", &num, &den) == 2) {
+    gst_value_set_fraction (dest, num, den);
+    return TRUE;
+  }
 
-  gst_value_set_fraction (dest, num, den);
-
-  return TRUE;
+  return FALSE;
 }
 
 static void

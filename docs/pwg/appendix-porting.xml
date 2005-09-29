@@ -176,6 +176,13 @@
           then override the <function>set_caps ()</function>.
         </para>
       </listitem>
+      <listitem>
+        <para>
+          <function>gst_pad_use_explicit_caps ()</function> has been replaced by
+          <function>gst_pad_use_fixed_caps ()</function>. You can then set the
+          fixed caps to use on a pad with <function>gst_pad_set_caps ()</function>.
+        </para>
+      </listitem>
     </itemizedlist>
   </sect1>
 </chapter>

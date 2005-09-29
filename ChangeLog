@@ -1,5 +1,13 @@
 2005-09-29  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstvalue.c: (gst_value_deserialize_fraction):
+	  More robust fraction string parsing.
+
+	* docs/pwg/appendix-porting.xml:
+	  Mention gst_pad_use_explicit_caps() => gst_pad_use_fixed_caps()
+
+2005-09-29  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstcaps.c: (gst_caps_do_simplify):
 	  Thou shalt not free a structure and then continue using it
 	  in the next loop iteration.
