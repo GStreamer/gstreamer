@@ -116,6 +116,7 @@ class Discoverer(gst.Pipeline):
         """iterate on ourself to find the information on the given file"""
         if self.finished:
             return
+        self.info("setting to PLAY")
         if not self.set_state(gst.STATE_PLAYING):
             # the pipeline wasn't able to be set to playing
             self.finished = True
@@ -123,34 +124,35 @@ class Discoverer(gst.Pipeline):
         bus = self.get_bus()
         while 1:
             if self.finished:
-                #print "self.finished, stopping"
+                self.debug("self.finished, stopping")
                 break
             msg = bus.poll(gst.MESSAGE_ANY, gst.SECOND)
-            if msg:
-                msg = bus.pop()
-            else:
-                continue
+            if not msg:
+                print "got empty message..."
+                break
+            #print "##", msg.type
             if msg.type & gst.MESSAGE_STATE_CHANGED:
-                #print "state changed", msg.src.get_name()
+                #print "## state changed\t", msg.src.get_name() ,
                 #print msg.parse_state_changed()
                 pass
             elif msg.type & gst.MESSAGE_EOS:
+                #print "EOS"
                 break
             elif msg.type & gst.MESSAGE_TAG:
                 for key in msg.parse_tag().keys():
                     self.tags[key] = msg.structure[key]
-                print msg.structure.to_string()
+                #print msg.structure.to_string()
             elif msg.type & gst.MESSAGE_ERROR:
-                print "whooops, error"
+                print "whooops, error", msg.parse_error()
                 break
             else:
                 print "unknown message type"
                 
-        print "going to PAUSED"
-        #self.set_state(gst.STATE_PAUSED)
-        print "going to ready"
-        #self.set_state(gst.STATE_READY)
-        print "now in ready"
+#       self.info( "going to PAUSED")
+        self.set_state(gst.STATE_PAUSED)
+#       self.info("going to ready")
+        self.set_state(gst.STATE_READY)
+#        print "now in ready"
         self.finished = True
 
     def print_info(self):
@@ -205,7 +207,7 @@ class Discoverer(gst.Pipeline):
 
     def _notify_caps_cb(self, pad, args):
         caps = pad.get_negotiated_caps()
-        print "caps notify on", pad, ":", caps
+#        print "caps notify on", pad, ":", caps
         if not caps:
             return
         # the caps are fixed
@@ -246,7 +248,7 @@ class Discoverer(gst.Pipeline):
     def _new_decoded_pad_cb(self, dbin, pad, is_last):
         # Does the file contain got audio or video ?
         caps = pad.get_caps()
-        print "new decoded pad", caps.to_string()
+#        print "new decoded pad", caps.to_string()
         if "audio" in caps.to_string():
             self.is_audio = True
             if caps.is_fixed():
@@ -267,13 +269,17 @@ class Discoverer(gst.Pipeline):
             return
         # we connect a fakesink to the new pad...
         fakesink = gst.element_factory_make("fakesink")
-        self.add(fakesink)
+        queue = gst.element_factory_make("queue")
+        self.add_many(fakesink, queue)
+        queue.link(fakesink)
         sinkpad = fakesink.get_pad("sink")
+        queuepad = queue.get_pad("sink")
         # ... and connect a callback for when the caps are fixed
         sinkpad.connect("notify::caps", self._notify_caps_cb)
-        if pad.link(sinkpad):
-            print "##### Couldn't link pad to fakesink"
-        #fakesink.set_state(gst.STATE_PLAYING)
+        if pad.link(queuepad):
+            print "##### Couldn't link pad to queue"
+        queue.set_state(gst.STATE_PLAYING)
+        fakesink.set_state(gst.STATE_PLAYING)
 
     def _found_tag_cb(self, dbin, source, tags):
         self.tags.update(tags)

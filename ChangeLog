@@ -1,5 +1,10 @@
 2005-09-29  Edward Hervey  <edward@fluendo.com>
 
+	* examples/gstfile.py:
+	Update gstfile example so that... it works :)
+
+2005-09-29  Edward Hervey  <edward@fluendo.com>
+
 	* gst/gst.defs:
 	* gst/gstbus.override:
 	* testsuite/test_bus.py:
