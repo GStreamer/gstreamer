@@ -357,25 +357,25 @@ gst_object_constructor (GType type, guint n_construct_properties,
 gpointer
 gst_object_ref (gpointer object)
 {
+#ifdef REFCOUNT_HACK
+  gint old;
+#endif
+
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
-#ifdef DEBUG_REFCOUNT
 #ifdef REFCOUNT_HACK
+  old = g_atomic_int_exchange_and_add (&((GstObject *) object)->refcount, 1);
+#ifdef DEBUG_REFCOUNT
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p ref %d->%d",
-      object,
-      GST_OBJECT_REFCOUNT_VALUE (object),
-      GST_OBJECT_REFCOUNT_VALUE (object) + 1);
+      object, old, old + 1);
+#endif
+  PATCH_REFCOUNT (object);
 #else
+#ifdef DEBUG_REFCOUNT
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p ref %d->%d",
       object,
       ((GObject *) object)->ref_count, ((GObject *) object)->ref_count + 1);
 #endif
-#endif
-
-#ifdef REFCOUNT_HACK
-  g_atomic_int_inc (&((GstObject *) object)->refcount);
-  PATCH_REFCOUNT (object);
-#else
   g_object_ref (object);
 #endif
 
@@ -396,36 +396,34 @@ gst_object_ref (gpointer object)
 void
 gst_object_unref (gpointer object)
 {
+#ifdef REFCOUNT_HACK
+  gint old;
+#endif
   g_return_if_fail (GST_IS_OBJECT (object));
 
 #ifdef REFCOUNT_HACK
   g_return_if_fail (GST_OBJECT_REFCOUNT_VALUE (object) > 0);
-#else
-  g_return_if_fail (((GObject *) object)->ref_count > 0);
-#endif
+
+  old = g_atomic_int_exchange_and_add (&((GstObject *) object)->refcount, -1);
 
 #ifdef DEBUG_REFCOUNT
-#ifdef REFCOUNT_HACK
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p unref %d->%d",
-      object,
-      GST_OBJECT_REFCOUNT_VALUE (object),
-      GST_OBJECT_REFCOUNT_VALUE (object) - 1);
-#else
-  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p unref %d->%d",
-      object,
-      ((GObject *) object)->ref_count, ((GObject *) object)->ref_count - 1);
+      object, old, old - 1);
 #endif
-#endif
-
-#ifdef REFCOUNT_HACK
-  if (G_UNLIKELY (g_atomic_int_dec_and_test (&((GstObject *) object)->
-              refcount))) {
+  if (G_UNLIKELY (old == 1)) {
     PATCH_REFCOUNT1 (object);
     g_object_unref (object);
   } else {
     PATCH_REFCOUNT (object);
   }
 #else
+  g_return_if_fail (((GObject *) object)->ref_count > 0);
+
+#ifdef DEBUG_REFCOUNT
+  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p unref %d->%d",
+      object,
+      ((GObject *) object)->ref_count, ((GObject *) object)->ref_count - 1);
+#endif
   g_object_unref (object);
 #endif
 }

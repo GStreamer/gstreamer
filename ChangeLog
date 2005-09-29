@@ -1,3 +1,9 @@
+2005-09-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstobject.c:
+	  for 2.6 refcounting, make debug log more correct by printing
+	  the actual refcounts at the time of swap (Wim)
+
 2005-09-29  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstbus.c (gst_bus_remove_signal_watch): New function,
