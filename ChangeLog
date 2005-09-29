@@ -1,3 +1,10 @@
+2005-09-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* po/LINGUAS:
+	* po/da.po:
+	  Added Danish translation from
+	  Mogens Jaeger <mogensjaeger@get2net.dk>
+
 2005-09-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/LINGUAS:

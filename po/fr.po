@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-29 16:46+0200\n"
+"POT-Creation-Date: 2005-09-27 11:18+0200\n"
 "PO-Revision-Date: 2004-01-13 16:52+0100\n"
 "Last-Translator: Julien Moutte <julien@moutte.net>\n"
 "Language-Team: French <fr@li.org>\n"
@@ -632,22 +632,22 @@ msgstr ""
 msgid "Error while writing to file \"%s\"."
 msgstr ""
 
-#: gst/elements/gstfilesrc.c:765 gst/elements/gstmultifilesrc.c:298
+#: gst/elements/gstfilesrc.c:768 gst/elements/gstmultifilesrc.c:298
 #, fuzzy
 msgid "No file name specified for reading."
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/elements/gstfilesrc.c:780 gst/elements/gstmultifilesrc.c:306
+#: gst/elements/gstfilesrc.c:783 gst/elements/gstmultifilesrc.c:306
 #, fuzzy, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/elements/gstfilesrc.c:791
+#: gst/elements/gstfilesrc.c:794
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr ""
 
-#: gst/elements/gstfilesrc.c:797
+#: gst/elements/gstfilesrc.c:800
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr ""
@@ -742,7 +742,7 @@ msgstr "impossible de lier un element destination pour l'URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "tube vide non autorisé"
 
-#: tools/gst-inspect.c:1164
+#: tools/gst-inspect.c:1165
 #, fuzzy
 msgid "Print all elements"
 msgstr "pas d'element \"%s\""

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.11\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-29 16:46+0200\n"
+"POT-Creation-Date: 2005-09-27 11:18+0200\n"
 "PO-Revision-Date: 2005-09-20 17:33+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net>\n"
@@ -29,16 +29,23 @@ msgid "Print available debug categories and exit"
 msgstr "Hiển thị tất cả các loại gỡ lỗi sẵn sàng rồi thoát"
 
 #: gst/gst.c:167
-msgid "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
-msgstr "Mức gỡ lỗi mặc định từ 1 (chỉ lỗi) đến 5 (bất cứ điều nào) hay 0 (không xuất gì)"
+msgid ""
+"Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+msgstr ""
+"Mức gỡ lỗi mặc định từ 1 (chỉ lỗi) đến 5 (bất cứ điều nào) hay 0 (không xuất "
+"gì)"
 
 #: gst/gst.c:169
 msgid "LEVEL"
 msgstr "MỨC"
 
 #: gst/gst.c:171
-msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
-msgstr "Danh sách định giới bằng dấu phẩy của đôi « tên_loại:mức » để đặt mức dứt khoát cho mỗi loại. Thí dụ: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgid ""
+"Comma-separated list of category_name:level pairs to set specific levels for "
+"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr ""
+"Danh sách định giới bằng dấu phẩy của đôi « tên_loại:mức » để đặt mức dứt "
+"khoát cho mỗi loại. Thí dụ: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 #: gst/gst.c:174
 msgid "LIST"
@@ -65,8 +72,12 @@ msgid "PATHS"
 msgstr "ĐƯỜNG DẪN"
 
 #: gst/gst.c:189
-msgid "Comma-separated list of plugins to preload in addition to the list stored in environment variable GST_PLUGIN_PATH"
-msgstr "Danh sách định giới bằng dấu phẩy của các bộ cầm phít cần tải trước, thêm vào danh sách được cất giữ trong biến môi trường <GST_PLUGIN_PATH>."
+msgid ""
+"Comma-separated list of plugins to preload in addition to the list stored in "
+"environment variable GST_PLUGIN_PATH"
+msgstr ""
+"Danh sách định giới bằng dấu phẩy của các bộ cầm phít cần tải trước, thêm "
+"vào danh sách được cất giữ trong biến môi trường <GST_PLUGIN_PATH>."
 
 #: gst/gst.c:191
 msgid "PLUGINS"
@@ -117,8 +128,12 @@ msgid "GStreamer encountered a general core library error."
 msgstr "Trình GStreamer mới gặp một lỗi thư viện lõi chung."
 
 #: gst/gsterror.c:58 gst/gsterror.c:95 gst/gsterror.c:116 gst/gsterror.c:146
-msgid "GStreamer developers were too lazy to assign an error code to this error.  Please file a bug."
-msgstr "Những lập trình viên GStreamer chưa cho lỗi này một mã lỗi. Hãy thông báo lỗi này."
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error.  "
+"Please file a bug."
+msgstr ""
+"Những lập trình viên GStreamer chưa cho lỗi này một mã lỗi. Hãy thông báo "
+"lỗi này."
 
 #: gst/gsterror.c:61
 msgid "Internal GStreamer error: code not implemented.  File a bug."
@@ -246,7 +261,8 @@ msgstr "Luồng đó khác kiểu với luồng mà yếu tối này có quản 
 
 #: gst/gsterror.c:155
 msgid "There is no codec present that can handle the stream's type."
-msgstr "Hiện không có cách mã hóa/giải mã (codec) có quản lý được luồng kiểu đó."
+msgstr ""
+"Hiện không có cách mã hóa/giải mã (codec) có quản lý được luồng kiểu đó."
 
 #: gst/gsterror.c:156
 msgid "Could not decode stream."
@@ -258,11 +274,15 @@ msgstr "Không thể mã hóa luồng."
 
 #: gst/gsterror.c:158
 msgid "Could not demultiplex stream."
-msgstr "Không thể ngăn cách những luồng đã phối hợp để truyền thông qua một kênh riêng lẻ."
+msgstr ""
+"Không thể ngăn cách những luồng đã phối hợp để truyền thông qua một kênh "
+"riêng lẻ."
 
 #: gst/gsterror.c:159
 msgid "Could not multiplex stream."
-msgstr "Không thể phối hợp luồng ấy với luồng khác để truyền thông qua một kênh riêng lẻ."
+msgstr ""
+"Không thể phối hợp luồng ấy với luồng khác để truyền thông qua một kênh "
+"riêng lẻ."
 
 #: gst/gsterror.c:160
 msgid "Stream is of the wrong format."
@@ -388,7 +408,9 @@ msgstr "ISRC"
 
 #: gst/gsttag.c:138
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
-msgstr "Luật thu chuẩn quốc tế (International Standard Recording Code) — xem địa chỉ Mạng <http://www.ifpi.org/isrc/>."
+msgstr ""
+"Luật thu chuẩn quốc tế (International Standard Recording Code) — xem địa chỉ "
+"Mạng <http://www.ifpi.org/isrc/>."
 
 #: gst/gsttag.c:140
 msgid "organization"
@@ -464,7 +486,8 @@ msgstr "tỷ lệ bit"
 
 #: gst/gsttag.c:167
 msgid "exact or average bitrate in bits/s"
-msgstr "số bit dữ liệu trong mỗi giây phát, chính xác hay trung bình, bẳng bit/giây"
+msgstr ""
+"số bit dữ liệu trong mỗi giây phát, chính xác hay trung bình, bẳng bit/giây"
 
 #: gst/gsttag.c:169
 msgid "nominal bitrate"
@@ -583,21 +606,21 @@ msgstr "Gặp lỗi khi đóng tập tin « %s »."
 msgid "Error while writing to file \"%s\"."
 msgstr "Gặp lỗi khi ghi vào tập tin « %s »."
 
-#: gst/elements/gstfilesrc.c:765 gst/elements/gstmultifilesrc.c:298
+#: gst/elements/gstfilesrc.c:768 gst/elements/gstmultifilesrc.c:298
 msgid "No file name specified for reading."
 msgstr "Chưa ghi rõ tên tập tin để đọc."
 
-#: gst/elements/gstfilesrc.c:780 gst/elements/gstmultifilesrc.c:306
+#: gst/elements/gstfilesrc.c:783 gst/elements/gstmultifilesrc.c:306
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Không mở được tập tin « %s » để đọc."
 
-#: gst/elements/gstfilesrc.c:791
+#: gst/elements/gstfilesrc.c:794
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "« %s » là thư mục."
 
-#: gst/elements/gstfilesrc.c:797
+#: gst/elements/gstfilesrc.c:800
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Tập tin « %s » là ổ cắm."
@@ -664,7 +687,8 @@ msgstr "liên kết không có yếu tố nguồn"
 
 #: gst/parse/grammar.y:592 gst/parse/grammar.y:631 gst/parse/grammar.y:717
 msgid "link without sink element"
-msgstr "liên kết không có yếu tố quản lý việc phân phối dữ liệu vào đệm khác nhau"
+msgstr ""
+"liên kết không có yếu tố quản lý việc phân phối dữ liệu vào đệm khác nhau"
 
 #: gst/parse/grammar.y:668
 #, c-format
@@ -679,29 +703,38 @@ msgstr "không có yếu tố đến đó cần liên kết địa điểm « %s
 #: gst/parse/grammar.y:686
 #, c-format
 msgid "no sink element for URI \"%s\""
-msgstr "không có yếu tố quản lý việc phân phối dữ liệu vào đệm khác nhau, cho địa điểm « %s »"
+msgstr ""
+"không có yếu tố quản lý việc phân phối dữ liệu vào đệm khác nhau, cho địa "
+"điểm « %s »"
 
 #: gst/parse/grammar.y:690
 #, c-format
 msgid "could not link sink element for URI \"%s\""
-msgstr "không kết hợp được yếu tố quản lý việc phân phối dữ liệu vào đệm khác nhau, cho địa điểm « %s »"
+msgstr ""
+"không kết hợp được yếu tố quản lý việc phân phối dữ liệu vào đệm khác nhau, "
+"cho địa điểm « %s »"
 
 #: gst/parse/grammar.y:702
 msgid "empty pipeline not allowed"
 msgstr "không cho phép đường ống trống"
 
-#: tools/gst-inspect.c:1164
+#: tools/gst-inspect.c:1165
 msgid "Print all elements"
 msgstr "Hiển thị mọi yếu tố"
 
 #: tools/gst-launch.c:110
 #, c-format
-msgid "Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, max %s ns).\n"
-msgstr "Thi hành xong sau %s lần lặp lại (tổng số %s ns (phần tỷ giây), số trung bình %s ns, tối thiểu %s ns, tối đa %s ns).\n"
+msgid ""
+"Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
+"max %s ns).\n"
+msgstr ""
+"Thi hành xong sau %s lần lặp lại (tổng số %s ns (phần tỷ giây), số trung "
+"bình %s ns, tối thiểu %s ns, tối đa %s ns).\n"
 
 #: tools/gst-launch.c:137
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr "Cách sử dụng: gst-xmllaunch <tập_tin.xml> [ yếu_tố.đặc_tính=trị_số ...]\n"
+msgstr ""
+"Cách sử dụng: gst-xmllaunch <tập_tin.xml> [ yếu_tố.đặc_tính=trị_số ...]\n"
 
 #: tools/gst-launch.c:145
 #, c-format

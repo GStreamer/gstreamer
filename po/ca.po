@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.7pre2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-29 16:46+0200\n"
+"POT-Creation-Date: 2005-09-27 11:18+0200\n"
 "PO-Revision-Date: 2004-12-22 17:44+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -631,21 +631,21 @@ msgstr "S'ha produït un error en tancar el fitxer «%s»."
 msgid "Error while writing to file \"%s\"."
 msgstr "S'ha produït un error en escriure al fitxer «%s»."
 
-#: gst/elements/gstfilesrc.c:765 gst/elements/gstmultifilesrc.c:298
+#: gst/elements/gstfilesrc.c:768 gst/elements/gstmultifilesrc.c:298
 msgid "No file name specified for reading."
 msgstr "No s'ha especificat cap fitxer per a llegir."
 
-#: gst/elements/gstfilesrc.c:780 gst/elements/gstmultifilesrc.c:306
+#: gst/elements/gstfilesrc.c:783 gst/elements/gstmultifilesrc.c:306
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "No s'ha pogut obrir el fitxer «%s» per a la lectura."
 
-#: gst/elements/gstfilesrc.c:791
+#: gst/elements/gstfilesrc.c:794
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "«%s» és un directori."
 
-#: gst/elements/gstfilesrc.c:797
+#: gst/elements/gstfilesrc.c:800
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "El fitxer «%s» és un sòcol."
@@ -739,7 +739,7 @@ msgstr "No s'ha pogut enllaçar l'element de sortida per a l'URI «%s»"
 msgid "empty pipeline not allowed"
 msgstr "no es permet un conducte buit"
 
-#: tools/gst-inspect.c:1164
+#: tools/gst-inspect.c:1165
 msgid "Print all elements"
 msgstr "Imprimeix tots els elements"
 

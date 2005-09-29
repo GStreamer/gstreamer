@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-29 16:46+0200\n"
+"POT-Creation-Date: 2005-09-27 11:18+0200\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -600,21 +600,21 @@ msgstr "Error closing file \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Error while writing to file \"%s\"."
 
-#: gst/elements/gstfilesrc.c:765 gst/elements/gstmultifilesrc.c:298
+#: gst/elements/gstfilesrc.c:768 gst/elements/gstmultifilesrc.c:298
 msgid "No file name specified for reading."
 msgstr "No file name specified for reading."
 
-#: gst/elements/gstfilesrc.c:780 gst/elements/gstmultifilesrc.c:306
+#: gst/elements/gstfilesrc.c:783 gst/elements/gstmultifilesrc.c:306
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Could not open file \"%s\" for reading."
 
-#: gst/elements/gstfilesrc.c:791
+#: gst/elements/gstfilesrc.c:794
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr ""
 
-#: gst/elements/gstfilesrc.c:797
+#: gst/elements/gstfilesrc.c:800
 #, fuzzy, c-format
 msgid "File \"%s\" is a socket."
 msgstr "File \"%s\" isn't a regular file."
@@ -708,7 +708,7 @@ msgstr "could not link sink element for URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "empty pipeline not allowed"
 
-#: tools/gst-inspect.c:1164
+#: tools/gst-inspect.c:1165
 #, fuzzy
 msgid "Print all elements"
 msgstr "no element \"%s\""

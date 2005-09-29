@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-29 16:46+0200\n"
+"POT-Creation-Date: 2005-09-27 11:18+0200\n"
 "PO-Revision-Date: 2005-04-15 14:36+0200\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -606,21 +606,21 @@ msgstr "Chyba při zavírání souboru \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Chyba při zápisu do souboru \"%s\"."
 
-#: gst/elements/gstfilesrc.c:765 gst/elements/gstmultifilesrc.c:298
+#: gst/elements/gstfilesrc.c:768 gst/elements/gstmultifilesrc.c:298
 msgid "No file name specified for reading."
 msgstr "Nezadán název souboru pro čtení."
 
-#: gst/elements/gstfilesrc.c:780 gst/elements/gstmultifilesrc.c:306
+#: gst/elements/gstfilesrc.c:783 gst/elements/gstmultifilesrc.c:306
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nemohu otevřít soubor \"%s\" pro čtení."
 
-#: gst/elements/gstfilesrc.c:791
+#: gst/elements/gstfilesrc.c:794
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" je adresář."
 
-#: gst/elements/gstfilesrc.c:797
+#: gst/elements/gstfilesrc.c:800
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Soubor \"%s\" je socket."
@@ -714,7 +714,7 @@ msgstr "nemohu připojit element spotřebiče pro URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "prázdná roura není povolena"
 
-#: tools/gst-inspect.c:1164
+#: tools/gst-inspect.c:1165
 msgid "Print all elements"
 msgstr "Vypsat všechny elementy"
 

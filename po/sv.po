@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.7pre2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-29 16:46+0200\n"
+"POT-Creation-Date: 2005-09-27 11:18+0200\n"
 "PO-Revision-Date: 2004-12-21 14:49+0100\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -611,21 +611,21 @@ msgstr "Fel vid stängning av filen \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Fel vid skrivning till filen \"%s\"."
 
-#: gst/elements/gstfilesrc.c:765 gst/elements/gstmultifilesrc.c:298
+#: gst/elements/gstfilesrc.c:768 gst/elements/gstmultifilesrc.c:298
 msgid "No file name specified for reading."
 msgstr "Inget filnamn angivet för läsning."
 
-#: gst/elements/gstfilesrc.c:780 gst/elements/gstmultifilesrc.c:306
+#: gst/elements/gstfilesrc.c:783 gst/elements/gstmultifilesrc.c:306
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunde inte öppna filen \"%s\" för läsning."
 
-#: gst/elements/gstfilesrc.c:791
+#: gst/elements/gstfilesrc.c:794
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" är en katalog."
 
-#: gst/elements/gstfilesrc.c:797
+#: gst/elements/gstfilesrc.c:800
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Filen \"%s\" är ett uttag."
@@ -721,7 +721,7 @@ msgstr "kunde inte länka utgångselementet för URI:n \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "tom rörledning är inte tillåtet"
 
-#: tools/gst-inspect.c:1164
+#: tools/gst-inspect.c:1165
 msgid "Print all elements"
 msgstr "Skriv ut alla element"
 
