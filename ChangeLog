@@ -1,3 +1,14 @@
+2005-09-29  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstbus.c (gst_bus_remove_signal_watch): New function,
+	removes signal watches previously added via
+	gst_bus_add_signal_watch.
+	(gst_bus_add_signal_watch): Don't return the source id, just store
+	it on the bus if there wasn't an id already.
+
+	* gst/gstbus.h (GstBus): Add a couple new fields. API changes for
+	add_signal_watch and remove_signal_watch.
+
 2005-09-29  Edward Hervey  <edward@fluendo.com>
 
 	* libs/gst/controller/gstcontroller.c: (gst_controller_new_list): 
