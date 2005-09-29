@@ -153,9 +153,14 @@ static void
 gst_pipeline_init (GTypeInstance * instance, gpointer g_class)
 {
   GstPipeline *pipeline = GST_PIPELINE (instance);
+  GstBus *bus;
 
   pipeline->delay = DEFAULT_DELAY;
   pipeline->play_timeout = DEFAULT_PLAY_TIMEOUT;
+
+  bus = g_object_new (gst_bus_get_type (), NULL);
+  gst_element_set_bus (GST_ELEMENT_CAST (pipeline), bus);
+  gst_object_unref (bus);
 }
 
 static void

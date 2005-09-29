@@ -114,7 +114,8 @@ GST_START_TEST (test_message_state_changed)
   fail_unless (bin != NULL, "Could not create bin");
   ASSERT_OBJECT_REFCOUNT (bin, "bin", 1);
 
-  bus = GST_ELEMENT_BUS (bin);
+  bus = g_object_new (gst_bus_get_type (), NULL);
+  gst_element_set_bus (GST_ELEMENT_CAST (bin), bus);
 
   /* change state, spawning a message, causing an incref on the bin */
   gst_element_set_state (GST_ELEMENT (bin), GST_STATE_READY);
@@ -132,6 +133,7 @@ GST_START_TEST (test_message_state_changed)
   ASSERT_OBJECT_REFCOUNT (bin, "bin", 1);
 
   /* clean up */
+  gst_object_unref (bus);
   gst_object_unref (bin);
 }
 
@@ -148,13 +150,14 @@ GST_START_TEST (test_message_state_changed_child)
   fail_unless (bin != NULL, "Could not create bin");
   ASSERT_OBJECT_REFCOUNT (bin, "bin", 1);
 
+  bus = g_object_new (gst_bus_get_type (), NULL);
+  gst_element_set_bus (GST_ELEMENT_CAST (bin), bus);
+
   src = gst_element_factory_make ("fakesrc", NULL);
   fail_if (src == NULL, "Could not create fakesrc");
   gst_bin_add (bin, src);
   ASSERT_OBJECT_REFCOUNT (bin, "bin", 1);
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
-
-  bus = GST_ELEMENT_BUS (bin);
 
   /* change state, spawning two messages:
    * - first for fakesrc, forwarded to bin's bus, causing incref on fakesrc
@@ -189,6 +192,7 @@ GST_START_TEST (test_message_state_changed_child)
   ASSERT_OBJECT_REFCOUNT (bin, "bin", 1);
 
   /* clean up */
+  gst_object_unref (bus);
   gst_object_unref (bin);
 }
 
@@ -224,7 +228,7 @@ GST_START_TEST (test_message_state_changed_children)
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
 
-  bus = GST_ELEMENT_BUS (pipeline);
+  bus = gst_pipeline_get_bus (pipeline);
 
   /* change state to READY, spawning three messages */
   GST_DEBUG ("setting pipeline to READY");
@@ -232,7 +236,7 @@ GST_START_TEST (test_message_state_changed_children)
       == GST_STATE_CHANGE_SUCCESS);
 
   /* each object is referenced by a message */
-  ASSERT_OBJECT_REFCOUNT (bus, "bus", 1);
+  ASSERT_OBJECT_REFCOUNT (bus, "bus", 2);
   ASSERT_OBJECT_REFCOUNT (src, "src", 2);
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 2);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 2);
@@ -240,7 +244,7 @@ GST_START_TEST (test_message_state_changed_children)
   pop_messages (bus, 3);
   fail_if ((gst_bus_pop (bus)) != NULL);
 
-  ASSERT_OBJECT_REFCOUNT (bus, "bus", 1);
+  ASSERT_OBJECT_REFCOUNT (bus, "bus", 2);
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
@@ -260,7 +264,7 @@ GST_START_TEST (test_message_state_changed_children)
   pop_messages (bus, 3);
   fail_if ((gst_bus_pop (bus)) != NULL);
 
-  ASSERT_OBJECT_REFCOUNT (bus, "bus", 1);
+  ASSERT_OBJECT_REFCOUNT (bus, "bus", 2);
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 2);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
@@ -279,7 +283,7 @@ GST_START_TEST (test_message_state_changed_children)
   pop_messages (bus, 3);
   fail_if ((gst_bus_pop (bus)) != NULL);
 
-  ASSERT_OBJECT_REFCOUNT (bus, "bus", 1);
+  ASSERT_OBJECT_REFCOUNT (bus, "bus", 2);
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   /* sink might have an extra reference if it's still blocked on preroll */
   ASSERT_OBJECT_REFCOUNT_BETWEEN (sink, "sink", 1, 2);
@@ -311,6 +315,7 @@ GST_START_TEST (test_message_state_changed_children)
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
 
   /* clean up */
+  gst_object_unref (bus);
   gst_object_unref (pipeline);
 }
 
@@ -324,6 +329,9 @@ GST_START_TEST (test_watch_for_state_change)
   bin = gst_element_factory_make ("bin", NULL);
   fail_unless (bin != NULL, "Could not create bin");
 
+  bus = g_object_new (gst_bus_get_type (), NULL);
+  gst_element_set_bus (GST_ELEMENT_CAST (bin), bus);
+
   src = gst_element_factory_make ("fakesrc", NULL);
   fail_if (src == NULL, "Could not create fakesrc");
   sink = gst_element_factory_make ("fakesink", NULL);
@@ -334,15 +342,13 @@ GST_START_TEST (test_watch_for_state_change)
 
   fail_unless (gst_element_link (src, sink), "could not link src and sink");
 
-  bus = GST_ELEMENT_BUS (bin);
-
   /* change state, spawning two times three messages, minus one async */
   fail_unless (gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED)
       == GST_STATE_CHANGE_ASYNC);
 
   pop_messages (bus, 5);
 
-  fail_unless (gst_bus_have_pending (bus, GST_MESSAGE_ANY) == FALSE,
+  fail_unless (gst_bus_have_pending (bus) == FALSE,
       "Unexpected messages on bus");
 
   gst_bin_watch_for_state_change (GST_BIN (bin));
@@ -350,7 +356,7 @@ GST_START_TEST (test_watch_for_state_change)
   /* should get the bin's state change message now */
   pop_messages (bus, 1);
 
-  fail_unless (gst_bus_have_pending (bus, GST_MESSAGE_ANY) == FALSE,
+  fail_unless (gst_bus_have_pending (bus) == FALSE,
       "Unexpected messages on bus");
 
   fail_unless (gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING)
@@ -365,7 +371,7 @@ GST_START_TEST (test_watch_for_state_change)
 
   pop_messages (bus, 3);
 
-  fail_unless (gst_bus_have_pending (bus, GST_MESSAGE_ANY) == FALSE,
+  fail_unless (gst_bus_have_pending (bus) == FALSE,
       "Unexpected messages on bus");
 
   /* setting bin to NULL flushes the bus automatically */
@@ -373,6 +379,7 @@ GST_START_TEST (test_watch_for_state_change)
       == GST_STATE_CHANGE_SUCCESS);
 
   /* clean up */
+  gst_object_unref (bus);
   gst_object_unref (bin);
 }
 
@@ -458,7 +465,7 @@ GST_START_TEST (test_children_state_change_order_flagged_sink)
   pipeline = gst_pipeline_new (NULL);
   fail_unless (pipeline != NULL, "Could not create pipeline");
 
-  bus = GST_ELEMENT_BUS (pipeline);
+  bus = gst_element_get_bus (pipeline);
   fail_unless (bus != NULL, "Pipeline has no bus?!");
 
   src = gst_element_factory_make ("fakesrc", NULL);
@@ -531,6 +538,7 @@ GST_START_TEST (test_children_state_change_order_flagged_sink)
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
 
+  gst_object_unref (bus);
   gst_object_unref (pipeline);
 }
 
@@ -548,7 +556,7 @@ GST_START_TEST (test_children_state_change_order_semi_sink)
   pipeline = gst_pipeline_new (NULL);
   fail_unless (pipeline != NULL, "Could not create pipeline");
 
-  bus = GST_ELEMENT_BUS (pipeline);
+  bus = gst_element_get_bus (pipeline);
   fail_unless (bus != NULL, "Pipeline has no bus?!");
 
   src = gst_element_factory_make ("fakesrc", NULL);
@@ -623,6 +631,7 @@ GST_START_TEST (test_children_state_change_order_semi_sink)
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
 
+  gst_object_unref (bus);
   gst_object_unref (pipeline);
 }
 
@@ -637,7 +646,7 @@ GST_START_TEST (test_children_state_change_order_two_sink)
   pipeline = gst_pipeline_new (NULL);
   fail_unless (pipeline != NULL, "Could not create pipeline");
 
-  bus = GST_ELEMENT_BUS (pipeline);
+  bus = gst_element_get_bus (pipeline);
   fail_unless (bus != NULL, "Pipeline has no bus?!");
 
   src = gst_element_factory_make ("fakesrc", NULL);
@@ -718,6 +727,7 @@ GST_START_TEST (test_children_state_change_order_two_sink)
   ASSERT_OBJECT_REFCOUNT (sink2, "sink2", 1);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
 
+  gst_object_unref (bus);
   gst_object_unref (pipeline);
 }
 

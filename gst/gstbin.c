@@ -273,16 +273,10 @@ gst_bin_init (GstBin * bin)
   bin->children_cookie = 0;
   bin->eosed = NULL;
 
-  /* Set up a bus for listening to child elements,
-   * and one for sending messages up the hierarchy */
+  /* Set up a bus for listening to child elements */
   bus = g_object_new (gst_bus_get_type (), NULL);
   bin->child_bus = bus;
   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bin_bus_handler, bin);
-
-  bus = g_object_new (gst_bus_get_type (), NULL);
-  gst_element_set_bus (GST_ELEMENT (bin), bus);
-  /* set_bus refs the bus via gst_object_replace, we drop our ref */
-  gst_object_unref (bus);
 }
 
 /**
@@ -1466,7 +1460,6 @@ gst_bin_dispose (GObject * object)
   bin->eosed = NULL;
   gst_object_unref (bin->child_bus);
   bin->child_bus = NULL;
-  gst_element_set_bus (GST_ELEMENT (bin), NULL);
 
   while (bin->children) {
     gst_bin_remove (bin, GST_ELEMENT (bin->children->data));

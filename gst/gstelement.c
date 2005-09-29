@@ -30,8 +30,8 @@
  * 
  * The name of a GstElement can be get with gst_element_get_name() and set with
  * gst_element_set_name().  For speed, GST_ELEMENT_NAME() can be used in the 
- * core. Do not use this in plug-ins or applications in order to retain ABI 
- * compatibility.
+ * core when using the appropriate locking. Do not use this in plug-ins or 
+ * applications in order to retain ABI compatibility.
  * 
  * All elements have pads (of the type #GstPad).  These pads link to pads on
  * other elements.  Buffers flow between these linked pads.
@@ -308,9 +308,9 @@ gst_element_release_request_pad (GstElement * element, GstPad * pad)
 gboolean
 gst_element_requires_clock (GstElement * element)
 {
-  gboolean result = FALSE;
+  gboolean result;
 
-  g_return_val_if_fail (GST_IS_ELEMENT (element), result);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
   result = (GST_ELEMENT_GET_CLASS (element)->set_clock != NULL);
 
@@ -330,7 +330,7 @@ gst_element_requires_clock (GstElement * element)
 gboolean
 gst_element_provides_clock (GstElement * element)
 {
-  gboolean result = FALSE;
+  gboolean result;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
@@ -346,7 +346,7 @@ gst_element_provides_clock (GstElement * element)
  * Get the clock provided by the given element.
  *
  * Returns: the GstClock provided by the element or NULL
- * if no clock could be provided.
+ * if no clock could be provided. Unref after usage.
  *
  * MT safe.
  */
@@ -479,9 +479,9 @@ gst_element_get_base_time (GstElement * element)
 gboolean
 gst_element_is_indexable (GstElement * element)
 {
-  gboolean result = FALSE;
+  gboolean result;
 
-  g_return_val_if_fail (GST_IS_ELEMENT (element), result);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
   result = (GST_ELEMENT_GET_CLASS (element)->set_index != NULL);
 
@@ -493,7 +493,8 @@ gst_element_is_indexable (GstElement * element)
  * @element: a #GstElement.
  * @index: a #GstIndex.
  *
- * Set the specified GstIndex on the element.
+ * Set the specified GstIndex on the element. The refcount of the index
+ * will be increased, any previously set index is unreffed.
  *
  * MT safe.
  */
@@ -547,7 +548,8 @@ gst_element_get_index (GstElement * element)
  * see gst_object_set_parent() for refcounting information.
  *
  * Pads are not automatically activated so elements should perform the needed
- * steps to activate the pad. 
+ * steps to activate the pad in case this pad is added in the PAUSED or PLAYING
+ * state. 
  *
  * The pad and the element should be unlocked when calling this function.
  *
@@ -912,7 +914,7 @@ gst_element_get_pad (GstElement * element, const gchar * name)
   return pad;
 }
 
-GstIteratorItem
+static GstIteratorItem
 iterate_pad (GstIterator * it, GstPad * pad)
 {
   gst_object_ref (pad);
@@ -923,7 +925,8 @@ iterate_pad (GstIterator * it, GstPad * pad)
  * gst_element_iterate_pads:
  * @element: a #GstElement to iterate pads of.
  *
- * Retrieves an iterattor of @element's pads. 
+ * Retrieves an iterattor of @element's pads. The iterator should
+ * be freed after usage.
  *
  * Returns: the #GstIterator of #GstPad. Unref each pad after use.
  *
@@ -1488,7 +1491,7 @@ void gst_element_message_full
 gboolean
 gst_element_is_locked_state (GstElement * element)
 {
-  gboolean result = FALSE;
+  gboolean result;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
@@ -2038,15 +2041,8 @@ gst_element_change_state (GstElement * element, GstStateChange transition)
   pending = GST_STATE_PENDING (element);
 
   /* if the element already is in the given state, we just return success */
-  if (pending == GST_STATE_VOID_PENDING || state == GST_STATE_PENDING (element)) {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-        "element is already in the %s state",
-        gst_element_state_get_name (state));
-    if (GST_STATE_NO_PREROLL (element))
-      return GST_STATE_CHANGE_NO_PREROLL;
-    else
-      return GST_STATE_CHANGE_SUCCESS;
-  }
+  if (pending == GST_STATE_VOID_PENDING || state == GST_STATE_PENDING (element))
+    goto was_ok;
 
   GST_CAT_LOG_OBJECT (GST_CAT_STATES, element,
       "default handler tries setting state from %s to %s (%04x)",
@@ -2072,9 +2068,7 @@ gst_element_change_state (GstElement * element, GstStateChange transition)
       if (!gst_element_pads_activate (element, FALSE)) {
         result = GST_STATE_CHANGE_FAILURE;
       } else {
-        GST_LOCK (element);
-        element->base_time = 0;
-        GST_UNLOCK (element);
+        gst_element_set_base_time (element, 0);
       }
       break;
     default:
@@ -2088,8 +2082,19 @@ gst_element_change_state (GstElement * element, GstStateChange transition)
           gst_element_state_get_name (pending));
       break;
   }
-
   return result;
+
+was_ok:
+  {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+        "element is already in the %s state",
+        gst_element_state_get_name (state));
+    if (GST_STATE_NO_PREROLL (element))
+      return GST_STATE_CHANGE_NO_PREROLL;
+    else
+      return GST_STATE_CHANGE_SUCCESS;
+  }
+
 }
 
 /**
@@ -2098,7 +2103,8 @@ gst_element_change_state (GstElement * element, GstStateChange transition)
  *
  * Retrieves the factory that was used to create this element.
  *
- * Returns: the #GstElementFactory used for creating this element.
+ * Returns: the #GstElementFactory used for creating this element. 
+ * no refcounting is needed.
  */
 GstElementFactory *
 gst_element_get_factory (GstElement * element)
@@ -2298,7 +2304,7 @@ gst_element_set_bus_func (GstElement * element, GstBus * bus)
 
   GST_LOCK (element);
   gst_object_replace ((GstObject **) & GST_ELEMENT_BUS (element),
-      GST_OBJECT (bus));
+      GST_OBJECT_CAST (bus));
   GST_UNLOCK (element);
 }
 
