@@ -1126,8 +1126,23 @@ main (int argc, char *argv[])
         print_plugin_info (plugin);
         print_plugin_features (plugin);
       } else {
-        g_print ("No such element or plugin '%s'\n", arg);
-        return -1;
+        GError *error = NULL;
+
+        if (g_file_test (arg, G_FILE_TEST_EXISTS)) {
+          plugin = gst_plugin_load_file (arg, &error);
+
+          if (plugin) {
+            print_plugin_info (plugin);
+            print_plugin_features (plugin);
+          } else {
+            g_print ("Error loading plugin file: %s\n", error->message);
+            g_error_free (error);
+            return -1;
+          }
+        } else {
+          g_print ("No such element or plugin '%s'\n", arg);
+          return -1;
+        }
       }
     }
   }

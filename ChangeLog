@@ -1,3 +1,10 @@
+2005-09-29  David Schleef  <ds@schleef.org>
+
+	* gst/gstplugin.c: (gst_plugin_load_file): Make some error messages
+	  more end-user friendly.
+	* tools/gst-inspect.c: (main): Check if command-line argument is
+	  a file and attempt to load that file as a plugin.
+
 2005-09-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/gst/gstbin.c:

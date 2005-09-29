@@ -422,7 +422,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
     g_set_error (error,
         GST_PLUGIN_ERROR,
         GST_PLUGIN_ERROR_MODULE,
-        "Could not find plugin entry point in \"%s\"", filename);
+        "File \"%s\" is not a GStreamer plugin", filename);
     goto return_error;
   }
   plugin->orig_desc = (GstPluginDesc *) ptr;
@@ -445,7 +445,8 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
     g_set_error (error,
         GST_PLUGIN_ERROR,
         GST_PLUGIN_ERROR_MODULE,
-        "gst_plugin_register_func failed for plugin \"%s\"", filename);
+        "File \"%s\" appears to be a GStreamer plugin, but it failed to initialize",
+        filename);
     g_module_close (module);
     goto return_error;
   }
