@@ -359,7 +359,13 @@
 (define-method add_signal_watch
   (of-object "GstBus")
   (c-name "gst_bus_add_signal_watch")
-  (return-type "guint")
+  (return-type "none")
+)
+
+(define-method remove_signal_watch
+  (of-object "GstBus")
+  (c-name "gst_bus_remove_signal_watch")
+  (return-type "none")
 )
 
 

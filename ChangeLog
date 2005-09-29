@@ -1,5 +1,10 @@
 2005-09-29  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gst.defs:
+	Definitions update
+
+2005-09-29  Edward Hervey  <edward@fluendo.com>
+
 	* gst/gst.override:
 	* gst/gstlibs.override:
 	Proper wrapping of GstController
