@@ -24,13 +24,13 @@ static GMainLoop *loop;
 static void
 new_pad (GstElement * element, GstPad * pad, gboolean last, GstElement * sink)
 {
-  g_debug ("New pad...");
+  g_print ("New pad...");
 }
 
 static void
 no_more_pads (GstElement * element)
 {
-  g_debug ("No more pads...");
+  g_print ("No more pads...");
   g_main_loop_quit (loop);
 }
 
