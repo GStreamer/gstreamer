@@ -733,7 +733,6 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
   GstFlowReturn ret;
   GstOggDemux *ogg = pad->ogg;
 
-
   ret = gst_pad_alloc_buffer (GST_PAD (pad), GST_BUFFER_OFFSET_NONE,
       packet->bytes, GST_PAD_CAPS (pad), &buf);
 
@@ -747,6 +746,8 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
     GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
 
     ret = gst_pad_push (GST_PAD (pad), buf);
+    if (ret == GST_FLOW_NOT_LINKED)
+      ret = GST_FLOW_OK;
 
     if (packet->granulepos != -1) {
       GstFormat format;

@@ -742,6 +742,7 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
 {
   float **pcm;
   guint sample_count;
+  GstBuffer *out;
   GstFlowReturn result;
 
   if (!vd->initialized)
@@ -754,43 +755,46 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
   if (vorbis_synthesis_blockin (&vd->vd, &vd->vb) < 0)
     goto not_accepted;
 
-  sample_count = vorbis_synthesis_pcmout (&vd->vd, &pcm);
-  if (sample_count > 0) {
-    GstBuffer *out;
+  /* assume all goes well here */
+  result = GST_FLOW_OK;
 
-    result = gst_pad_alloc_buffer (vd->srcpad, GST_BUFFER_OFFSET_NONE,
-        sample_count * vd->vi.channels * sizeof (float),
-        GST_PAD_CAPS (vd->srcpad), &out);
+  /* count samples ready for reading */
+  if ((sample_count = vorbis_synthesis_pcmout (&vd->vd, NULL)) == 0)
+    goto done;
 
-    if (result == GST_FLOW_OK) {
-      float *out_data = (float *) GST_BUFFER_DATA (out);
+  /* alloc buffer for it */
+  result = gst_pad_alloc_buffer (vd->srcpad, GST_BUFFER_OFFSET_NONE,
+      sample_count * vd->vi.channels * sizeof (float),
+      GST_PAD_CAPS (vd->srcpad), &out);
+  if (result != GST_FLOW_OK)
+    goto done;
 
-      copy_samples (out_data, pcm, sample_count, vd->vi.channels);
+  /* get samples ready for reading now, should be sample_count */
+  if ((vorbis_synthesis_pcmout (&vd->vd, &pcm)) != sample_count)
+    goto wrong_samples;
 
-      GST_BUFFER_OFFSET (out) = vd->granulepos;
-      if (vd->granulepos != -1) {
-        GST_BUFFER_OFFSET_END (out) = vd->granulepos + sample_count;
-        GST_BUFFER_TIMESTAMP (out) =
-            gst_util_uint64_scale (vd->granulepos, GST_SECOND, vd->vi.rate);
-      } else {
-        GST_BUFFER_TIMESTAMP (out) = -1;
-      }
-      GST_BUFFER_DURATION (out) = sample_count * GST_SECOND / vd->vi.rate;
+  /* copy samples in buffer */
+  copy_samples ((float *) GST_BUFFER_DATA (out), pcm, sample_count,
+      vd->vi.channels);
 
-      result = vorbis_dec_push (vd, out);
-
-      if (vd->granulepos != -1)
-        vd->granulepos += sample_count;
-    } else {
-      /* no buffer.. */
-      result = GST_FLOW_OK;
-    }
-    vorbis_synthesis_read (&vd->vd, sample_count);
+  GST_BUFFER_OFFSET (out) = vd->granulepos;
+  if (vd->granulepos != -1) {
+    GST_BUFFER_OFFSET_END (out) = vd->granulepos + sample_count;
+    GST_BUFFER_TIMESTAMP (out) =
+        gst_util_uint64_scale (vd->granulepos, GST_SECOND, vd->vi.rate);
   } else {
-    /* no samples.. */
-    result = GST_FLOW_OK;
+    GST_BUFFER_TIMESTAMP (out) = -1;
   }
+  GST_BUFFER_DURATION (out) = sample_count * GST_SECOND / vd->vi.rate;
 
+  if (vd->granulepos != -1)
+    vd->granulepos += sample_count;
+
+  vorbis_synthesis_read (&vd->vd, sample_count);
+
+  result = vorbis_dec_push (vd, out);
+
+done:
   /* granulepos is the last sample in the packet */
   if (packet->granulepos != -1)
     vd->granulepos = packet->granulepos;
@@ -814,6 +818,13 @@ not_accepted:
   {
     GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
         (NULL), ("vorbis decoder did not accept data packet"));
+    return GST_FLOW_ERROR;
+  }
+wrong_samples:
+  {
+    gst_buffer_unref (out);
+    GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
+        (NULL), ("vorbis decoder reported wrong number of samples"));
     return GST_FLOW_ERROR;
   }
 }

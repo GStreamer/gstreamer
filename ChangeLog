@@ -1,5 +1,12 @@
 2005-09-29  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_chain_peer):
+	* ext/theora/theoradec.c: (theora_handle_data_packet):
+	* ext/vorbis/vorbisdec.c: (vorbis_handle_data_packet):
+	Propagate error codes from alloc_buffer too.
+
+2005-09-29  Wim Taymans  <wim@fluendo.com>
+
 	* ext/vorbis/vorbisdec.c: (gst_vorbis_dec_init):
 	We use fixed caps.
 

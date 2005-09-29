@@ -987,7 +987,7 @@ wrong_dimensions:
   }
 no_buffer:
   {
-    return GST_FLOW_OK;
+    return result;
   }
 }
 
