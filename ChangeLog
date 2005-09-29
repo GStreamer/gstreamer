@@ -1,3 +1,11 @@
+2005-09-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/libs/tmpl/gstdataprotocol.sgml:
+	* docs/manual/advanced-dataaccess.xml:
+	* gst/elements/gstcapsfilter.c:
+	* gst/gstutils.c:
+	  rename filter-caps to caps property
+
 2005-09-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstvalue.c: (gst_value_deserialize_fraction):

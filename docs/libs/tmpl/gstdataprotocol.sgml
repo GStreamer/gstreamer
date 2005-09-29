@@ -27,9 +27,6 @@ network connections also need a protocol to do this.
 #GstBuffer, #GstCaps, #GstEvent
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### ENUM GstDPHeaderFlag ##### -->
 <para>
 

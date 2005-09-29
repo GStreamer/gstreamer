@@ -1327,7 +1327,7 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
 
     gst_object_unref (parent);
 
-    g_object_set (capsfilter, "filter-caps", filter, NULL);
+    g_object_set (capsfilter, "caps", filter, NULL);
 
     if (gst_element_link_pads (src, srcpadname, capsfilter, "sink")
         && gst_element_link_pads (capsfilter, "src", dest, destpadname)) {

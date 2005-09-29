@@ -130,8 +130,8 @@ gst_capsfilter_class_init (GstCapsFilterClass * klass)
   gobject_class->dispose = gst_capsfilter_dispose;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FILTER_CAPS,
-      g_param_spec_boxed ("filter_caps", _("Filter caps"),
-          _("Restrict the possible allowed formats"),
+      g_param_spec_boxed ("caps", _("Filter caps"),
+          _("Restrict the possible allowed capabilities (NULL means ANY)"),
           GST_TYPE_CAPS, G_PARAM_READWRITE));
 
   trans_class = (GstBaseTransformClass *) klass;

@@ -80,7 +80,7 @@ main (gint   argc,
   sink = gst_element_factory_make ("xvimagesink", "sink");
   gst_bin_add_many (GST_BIN (pipeline), src, filter, csp, sink, NULL);
   gst_element_link_many (src, filter, csp, sink, NULL);
-  g_object_set (G_OBJECT (filter), "filter-caps",
+  g_object_set (G_OBJECT (filter), "caps",
       gst_caps_new_simple ("video/x-raw-rgb",
 			   "width", G_TYPE_INT, 384,
 			   "height", G_TYPE_INT, 288,
@@ -181,7 +181,7 @@ main (gint   argc,
         can set a filtered caps on a link by using the
         <quote>capsfilter</quote> element in between the two elements, and
         specifying a <classname>GstCaps</classname> as
-        <quote>filter-caps</quote> property on this element. It will then
+        <quote>caps</quote> property on this element. It will then
         only allow types matching that specified capability set for
         negotiation.
       </para>
@@ -235,7 +235,7 @@ main (gint   argc,
   videosink = gst_element_factory_make ("xvimagesink", "videosink");
 
   /* setup */
-  g_object_set (G_OBJECT (flt), "filter-caps",
+  g_object_set (G_OBJECT (flt), "caps",
   		gst_caps_new_simple ("video/x-raw-rgb",
 				     "width", G_TYPE_INT, 384,
 				     "height", G_TYPE_INT, 288,
