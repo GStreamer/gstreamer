@@ -25,7 +25,7 @@ from common import gst, unittest
 
 class StructureTest(unittest.TestCase):
     def setUp(self):
-        self.struct = gst.structure_from_string('video/x-raw-yuv,width=10,foo="bar",pixel-aspect-ratio=1/2,framerate=5.0')
+        self.struct = gst.structure_from_string('video/x-raw-yuv,width=10,foo="bar",pixel-aspect-ratio=1/2,framerate=5.0,boolean=(boolean)true')
 
     def testName(self):
         assert self.struct.get_name() == 'video/x-raw-yuv'
@@ -49,6 +49,15 @@ class StructureTest(unittest.TestCase):
         assert self.struct.has_key('foo')
         assert isinstance(self.struct['foo'], str)
         assert self.struct['foo'] == 'baz', self.struct['foo']
+
+    def testBoolean(self):
+        assert self.struct.has_key('boolean')
+        assert isinstance(self.struct['boolean'], bool)
+        assert self.struct['boolean'] == True, self.struct['boolean']
+        self.struct['boolean'] = False
+        assert self.struct.has_key('boolean')
+        assert isinstance(self.struct['boolean'], bool)
+        assert self.struct['boolean'] == False, self.struct['boolean']
 
     def testCreateInt(self):
         self.struct['integer'] = 5
@@ -75,6 +84,9 @@ class StructureTest(unittest.TestCase):
         s['list'] = [4, 5, 6]
         assert isinstance(s['list'], list)
         assert s['list'] == [4, 5, 6]
+        s['boolean'] = True
+        assert isinstance(s['boolean'], bool)
+        assert s['boolean'] == True
         
         # finally, some recursive tests
         s['rflist'] = ([(['a', 'b'], ['c', 'd']),'e'], ['f', 'g'])
@@ -93,11 +105,12 @@ class StructureTest(unittest.TestCase):
     def testKeys(self):
         k = self.struct.keys()
         self.failUnless(k)
-        self.assertEquals(len(k), 4)
+        self.assertEquals(len(k), 5)
         self.failUnless("width" in k)
         self.failUnless("foo" in k)
         self.failUnless("framerate" in k)
         self.failUnless("pixel-aspect-ratio" in k)
+        self.failUnless("boolean" in k)
  
 if __name__ == "__main__":
     unittest.main()

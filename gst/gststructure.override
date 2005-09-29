@@ -29,6 +29,7 @@ ignore
   gst_structure_get_clock_time
   gst_structure_get_string
   gst_structure_get_value
+  gst_structure_get_enum
   gst_structure_set
   gst_structure_get_name_id
   gst_structure_id_get_value

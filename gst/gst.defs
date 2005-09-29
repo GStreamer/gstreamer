@@ -344,6 +344,25 @@
   )
 )
 
+(define-method async_signal_func
+  (of-object "GstBus")
+  (c-name "gst_bus_async_signal_func")
+  (return-type "gboolean")
+  (parameters
+    '("GstMessage*" "message")
+    '("gpointer" "data")
+  )
+)
+
+(define-method sync_signal_handler
+  (of-object "GstBus")
+  (c-name "gst_bus_sync_signal_handler")
+  (return-type "GstBusSyncReply")
+  (parameters
+    '("GstMessage*" "message")
+    '("gpointer" "data")
+  )
+)
 
 
 ;; From ../gstreamer/gst/gstcaps.h
@@ -2520,6 +2539,18 @@
   (return-type "GType")
 )
 
+(define-method get_name
+  (of-object "GstMessageType")
+  (c-name "gst_message_type_get_name")
+  (return-type "const-gchar*")
+)
+
+(define-method to_quark
+  (of-object "GstMessageType")
+  (c-name "gst_message_type_to_quark")
+  (return-type "GQuark")
+)
+
 (define-function message_new_eos
   (c-name "gst_message_new_eos")
   (return-type "GstMessage*")
@@ -4567,6 +4598,17 @@
   (return-type "const-gchar*")
   (parameters
     '("const-gchar*" "fieldname")
+  )
+)
+
+(define-method get_enum
+  (of-object "GstStructure")
+  (c-name "gst_structure_get_enum")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "fieldname")
+    '("GType" "enumtype")
+    '("gint*" "value")
   )
 )
 

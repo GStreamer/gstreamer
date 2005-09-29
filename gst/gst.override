@@ -291,10 +291,12 @@ ignore-glob
   *_valist
   *_ref
   *_unref
+  *_init
   gst_class_*
   gst_init*
   gst_interface_*
   gst_value_*
+  gst_param_spec_*
 %%
 ignore
   gst_alloc_trace_list
@@ -304,6 +306,7 @@ ignore
   gst_trace_read_tsc
   gst_debug_log
   gst_debug_log_default
+  gst_iterator_new_list
 %%
 override-slot GstPluginFeature.tp_repr
 static PyObject *

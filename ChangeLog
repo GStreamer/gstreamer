@@ -1,3 +1,14 @@
+2005-09-29  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.defs:
+	Updated definitions
+	* gst/gst.override:
+	ignoring _init, gst_param_spec* and gst_iterator_new_list functions
+	* gst/gststructure.override:
+	ignore gst_structure_get_enum
+	* testsuite/test_struct.py:
+	Updated test for boolean
+
 2005-09-28  Johan Dahlin  <johan@gnome.org>
 
 	* gst/gstelement.override (_wrap_gst_element_get_state): Set the
