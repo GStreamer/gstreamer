@@ -88,4 +88,6 @@ if __ltihooks_used__:
     __ltihooks_used__ = False
     del ltihooks
     import sys
-    del sys.modules['ltihooks']
+    if 'ltihooks' in sys.modules:
+        del sys.modules['ltihooks']
+
